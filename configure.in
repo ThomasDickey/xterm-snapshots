@@ -182,7 +182,7 @@ CF_ARG_DISABLE(highlighting,
 AC_MSG_RESULT($default_highlight)
 test $default_highlight = no && AC_DEFINE(OPT_HIGHLIGHT_COLOR,0)
 
-AC_MSG_CHECKING(for doublesize characters)
+AC_MSG_CHECKING(if you want support for doublesize characters)
 CF_ARG_DISABLE(doublechars,
 	[  --disable-doublechars   disable support for double-size chars],
 	[enable_doublechars=no],
@@ -239,6 +239,14 @@ if test $enable_rightbar = yes ; then
 	AC_DEFINE(SCROLLBAR_RIGHT)
 fi
 
+AC_MSG_CHECKING(if you want check for redundant name-change)
+CF_ARG_DISABLE(samename,
+	[  --disable-samename      disable check for redundant name-change],
+	[enable_samename=no],
+	[enable_samename=yes])
+AC_MSG_RESULT($enable_samename)
+test $enable_samename = no && AC_DEFINE(OPT_SAME_NAME,0)
+
 AC_MSG_CHECKING(if you want support for tek4014)
 CF_ARG_DISABLE(tek4014,
 	[  --disable-tek4014       disable tek4014 emulation],
@@ -260,6 +268,14 @@ CF_ARG_DISABLE(vt52,
 	[enable_vt52=yes])
 AC_MSG_RESULT($enable_vt52)
 test $enable_vt52 = no && AC_DEFINE(OPT_VT52_MODE,0)
+
+AC_MSG_CHECKING(if you want -ziconbeep option)
+CF_ARG_DISABLE(ziconbeep,
+	[  --disable-ziconbeep     disable -ziconbeep option],
+	[enable_ziconbeep=no],
+	[enable_ziconbeep=yes])
+AC_MSG_RESULT($enable_ziconbeep)
+test $enable_ziconbeep = no && AC_DEFINE(OPT_ZICONBEEP,0)
 
 # development/testing aids
 AC_MSG_CHECKING(if you want debugging traces)

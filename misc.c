@@ -132,8 +132,8 @@ xevents()
 		FlushScroll(screen);
 	/*
 	 * process timeouts, relying on the fact that XtAppProcessEvent
-	 * will process the timeout and return without blockng on the 
-	 * XEvent queue.  Other sources i.e. the pty are handled elsewhere 
+	 * will process the timeout and return without blockng on the
+	 * XEvent queue.  Other sources i.e. the pty are handled elsewhere
 	 * with select().
 	 */
 	while ((input_mask = XtAppPending(app_con)) & XtIMTimer)
@@ -155,7 +155,7 @@ xevents()
 		 */
 		if(OUR_EVENT(event, EnterNotify))
 		  DoSpecialEnterNotify (&event.xcrossing);
-		else 
+		else
 		if(OUR_EVENT(event, LeaveNotify))
 		  DoSpecialLeaveNotify (&event.xcrossing);
 
@@ -177,7 +177,7 @@ Cursor make_colored_cursor (cursorindex, fg, bg)
 	register TScreen *screen = &term->screen;
 	Cursor c;
 	register Display *dpy = screen->display;
-	
+
 	c = XCreateFontCursor (dpy, cursorindex);
 	if (c == (Cursor) 0) return (c);
 
@@ -452,7 +452,7 @@ VisualBell()
     if(screen->TekEmu) {
 	XFillRectangle(
 		       screen->display,
-		       TWindow(screen), 
+		       TWindow(screen),
 		       visualGC,
 		       0, 0,
 		       (unsigned) TFullWidth(screen),
@@ -460,7 +460,7 @@ VisualBell()
 	XFlush(screen->display);
 	XFillRectangle(
 		       screen->display,
-		       TWindow(screen), 
+		       TWindow(screen),
 		       visualGC,
 		       0, 0,
 		       (unsigned) TFullWidth(screen),
@@ -470,7 +470,7 @@ VisualBell()
     {
 	XFillRectangle(
 		       screen->display,
-		       VWindow(screen), 
+		       VWindow(screen),
 		       visualGC,
 		       0, 0,
 		       (unsigned) FullWidth(screen),
@@ -478,7 +478,7 @@ VisualBell()
 	XFlush(screen->display);
 	XFillRectangle(
 		       screen->display,
-		       VWindow(screen), 
+		       VWindow(screen),
 		       visualGC,
 		       0, 0,
 		       (unsigned) FullWidth(screen),
@@ -510,14 +510,14 @@ Redraw()
 	event.display = screen->display;
 	event.x = 0;
 	event.y = 0;
-	event.count = 0; 
-	
+	event.count = 0;
+
 	if(VWindow(screen)) {
 	        event.window = VWindow(screen);
 		event.width = term->core.width;
 		event.height = term->core.height;
 		(*term->core.widget_class->core_class.expose)((Widget)term, (XEvent *)&event, NULL);
-		if(Scrollbar(screen)) 
+		if(Scrollbar(screen))
 			(*screen->scrollWidget->core.widget_class->core_class.expose)(screen->scrollWidget, (XEvent *)&event, NULL);
 		}
 
@@ -598,10 +598,10 @@ creat_as(uid, gid, pathname, mode)
 
 /*
  * Logging is a security hole, since it allows a setuid program to write
- * arbitrary data to an arbitrary file.  So it is disabled by default. 
+ * arbitrary data to an arbitrary file.  So it is disabled by default.
  * (However, this version of xterm resets the setuid before opening the
  * logfile).
- */ 
+ */
 
 #ifdef ALLOWLOGFILEEXEC
 static SIGNAL_T logpipe PROTO((int sig));
@@ -767,7 +767,7 @@ int len GCC_UNUSED;
 	int state = 0;
 	char *buf = 0;
 
-	/* 
+	/*
 	 * lines should be of the form <OSC> number ; string <ST>
 	 */
 	mode = 0;
@@ -1024,6 +1024,18 @@ ChangeGroup(attribute, value)
      XtArgVal value;
 {
 	Arg args[1];
+#if OPT_SAME_NAME
+	char *buf;
+
+	/* If the attribute isn't going to change, then don't bother... */
+
+	if( sameName ) {
+	    XtSetArg( args[0], attribute, &buf );
+	    XtGetValues( toplevel, args, 1 );
+	    if (strcmp((char *)value, buf) == 0)
+		return;
+	}
+#endif /* OPT_SAME_NAME */
 
 	XtSetArg( args[0], attribute, value );
 	XtSetValues( toplevel, args, 1 );
@@ -1033,7 +1045,20 @@ void
 Changename(name)
 register char *name;
 {
-    ChangeGroup( XtNiconName, (XtArgVal)name );
+#if OPT_ZICONBEEP	/* If warning should be given then give it */
+    if ( zIconBeep && zIconBeep_flagged ) {
+	char *newname = malloc(strlen(name)+ 4 + 1);
+	if (!newname) {
+	    fprintf(stderr, "malloc failed in Changename\n");
+	    return;
+	}
+	strcpy(newname, "*** ");
+	strcat(newname, name);
+	ChangeGroup( XtNiconName, (XtArgVal)newname );
+	free(newname);
+    } else
+#endif /* OPT_ZICONBEEP */
+	ChangeGroup( XtNiconName, (XtArgVal)name );
 }
 
 void
@@ -1361,7 +1386,7 @@ int
 xioerror(dpy)
 Display *dpy;
 {
-    (void) fprintf (stderr, 
+    (void) fprintf (stderr,
 		    "%s:  fatal IO error %d (%s) or KillClient on X server \"%s\"\r\n",
 		    xterm_name, errno, SysErrorMsg (errno),
 		    DisplayString (dpy));
@@ -1417,7 +1442,7 @@ void set_vt_visibility (on)
 #if OPT_TEK4014
     else {
 	if (screen->Vshow && term) {
-	    withdraw_window (XtDisplay (term), 
+	    withdraw_window (XtDisplay (term),
 			     XtWindow(XtParent(term)),
 			     XScreenNumberOfScreen(XtScreen(term)));
 	    screen->Vshow = FALSE;
@@ -1431,7 +1456,7 @@ void set_vt_visibility (on)
 #endif
     return;
 }
-				
+
 #if OPT_TEK4014
 extern Atom wm_delete_window;	/* for ICCCM delete window */
 
@@ -1447,14 +1472,14 @@ void set_tek_visibility (on)
 	    XtOverrideTranslations(tekParent,
 				   XtParseTranslationTable
 				   ("<Message>WM_PROTOCOLS: DeleteWindow()"));
-	    (void) XSetWMProtocols (XtDisplay(tekParent), 
+	    (void) XSetWMProtocols (XtDisplay(tekParent),
 				    XtWindow(tekParent),
 				    &wm_delete_window, 1);
 	    screen->Tshow = TRUE;
 	}
     } else {
 	if (screen->Tshow && tekWidget) {
-	    withdraw_window (XtDisplay (tekWidget), 
+	    withdraw_window (XtDisplay (tekWidget),
 			     XtWindow(XtParent(tekWidget)),
 			     XScreenNumberOfScreen(XtScreen(tekWidget)));
 	    screen->Tshow = FALSE;
@@ -1480,7 +1505,7 @@ void end_tek_mode ()
 	}
 #endif
 	longjmp(Tekend, 1);
-    } 
+    }
     return;
 }
 
@@ -1497,7 +1522,7 @@ void end_vt_mode ()
 #endif
 	screen->TekEmu = TRUE;
 	longjmp(VTend, 1);
-    } 
+    }
     return;
 }
 

@@ -4,7 +4,7 @@
  */
 
 /*
- 
+
 Copyright (c) 1988  X Consortium
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -96,7 +96,7 @@ in this Software without prior written authorization from the X Consortium.
 #else
 extern char *malloc();
 extern char *realloc();
-extern void exit(); 
+extern void exit();
 #endif
 #ifndef NO_ACTIVE_ICON
 #include <X11/Shell.h>
@@ -341,15 +341,18 @@ static unsigned long ntotal;
 static jmp_buf vtjmpbuf;
 
 /* event handlers */
-static void HandleBell PROTO((Widget w, XEvent *event, String *params, Cardinal *param_count));
-static void HandleIgnore PROTO((Widget w, XEvent *event, String *params, Cardinal *param_count));
-static void HandleKeymapChange PROTO((Widget w, XEvent *event, String *params, Cardinal *param_count));
-static void HandleSetFont PROTO((Widget w, XEvent *event, String *params, Cardinal *param_count));
-static void HandleVisualBell PROTO((Widget w, XEvent *event, String *params, Cardinal *param_count));
+static void HandleBell PROTO_XT_ACTIONS_ARGS;
+static void HandleIgnore PROTO_XT_ACTIONS_ARGS;
+static void HandleKeymapChange PROTO_XT_ACTIONS_ARGS;
+static void HandleSetFont PROTO_XT_ACTIONS_ARGS;
+static void HandleVisualBell PROTO_XT_ACTIONS_ARGS;
+#if OPT_ZICONBEEP
+static void HandleMapUnmap PROTO_XT_EV_HANDLER_ARGS;
+#endif
 
 /*
- * NOTE: VTInitialize zeros out the entire ".screen" component of the 
- * XtermWidget, so make sure to add an assignment statement in VTInitialize() 
+ * NOTE: VTInitialize zeros out the entire ".screen" component of the
+ * XtermWidget, so make sure to add an assignment statement in VTInitialize()
  * for each new ".screen" field added to this resource list.
  */
 
@@ -372,7 +375,7 @@ static  int	defaultBlinkTime = 0;
 #endif
 
 /*
- * Warning, the following must be kept under 1024 bytes or else some 
+ * Warning, the following must be kept under 1024 bytes or else some
  * compilers (particularly AT&T 6386 SVR3.2) will barf).  Workaround is to
  * declare a static buffer and copy in at run time (the the Athena text widget
  * does).  Yuck.
@@ -407,7 +410,7 @@ static char defaultTranslations[] =
                        <BtnDown>:bell(0) \
 ";
 
-static XtActionsRec actionsList[] = { 
+static XtActionsRec actionsList[] = {
     { "bell",		  HandleBell },
     { "create-menu",	  HandleCreateMenu },
     { "ignore",		  HandleIgnore },
@@ -529,13 +532,13 @@ static XtResource resources[] = {
         XtRInt, (XtPointer) &defaultBlinkTime},
 #endif
 {XtNeightBitInput, XtCEightBitInput, XtRBoolean, sizeof(Boolean),
-	XtOffsetOf(XtermWidgetRec, screen.input_eight_bits), 
+	XtOffsetOf(XtermWidgetRec, screen.input_eight_bits),
 	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNeightBitOutput, XtCEightBitOutput, XtRBoolean, sizeof(Boolean),
-	XtOffsetOf(XtermWidgetRec, screen.output_eight_bits), 
+	XtOffsetOf(XtermWidgetRec, screen.output_eight_bits),
 	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNeightBitControl, XtCEightBitControl, XtRBoolean, sizeof(Boolean),
-	XtOffsetOf(XtermWidgetRec, screen.control_eight_bits), 
+	XtOffsetOf(XtermWidgetRec, screen.control_eight_bits),
 	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNgeometry,XtCGeometry, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, misc.geo_metry),
@@ -806,7 +809,7 @@ static XtResource resources[] = {
 };
 
 static void VTClassInit PROTO((void));
-static void VTInitialize PROTO((Widget wrequest, Widget wnew, ArgList args, Cardinal *num_args)); 
+static void VTInitialize PROTO((Widget wrequest, Widget wnew, ArgList args, Cardinal *num_args));
 static void VTRealize PROTO((Widget w, XtValueMask *valuemask, XSetWindowAttributes *values));
 static void VTExpose PROTO((Widget w, XEvent *event, Region region));
 static void VTResize PROTO((Widget w));
@@ -819,7 +822,7 @@ static void VTInitI18N PROTO((void));
 
 static WidgetClassRec xtermClassRec = {
   {
-/* core_class fields */	
+/* core_class fields */
     /* superclass	  */	(WidgetClass) &widgetClassRec,
     /* class_name	  */	"VT100",
     /* widget_size	  */	sizeof(XtermWidgetRec),
@@ -827,7 +830,7 @@ static WidgetClassRec xtermClassRec = {
     /* class_part_initialize */ NULL,
     /* class_inited       */	FALSE,
     /* initialize	  */	VTInitialize,
-    /* initialize_hook    */    NULL,				
+    /* initialize_hook    */    NULL,
     /* realize		  */	VTRealize,
     /* actions		  */	actionsList,
     /* num_actions	  */	XtNumber(actionsList),
@@ -1455,7 +1458,7 @@ static void VTparse()
 				    reply.a_param[count++] = 2; /* AVO */
 				    break;
 				}
-			    } else { 	
+			    } else {
 				reply.a_param[count++] = 60 + screen->terminal_id/100;
 				reply.a_param[count++] = 1; /* 132-columns */
 				/* reply.a_param[count++] = 2; NO printer */
@@ -2276,7 +2279,7 @@ v_write(f, d, len)
 	    int start = v_bufstr - v_buffer;
 	    int size = v_bufptr - v_buffer;
 	    int allocsize = size ? size : 1;
-	    
+
 	    v_buffer = realloc(v_buffer, allocsize);
 	    if (v_buffer) {
 		v_bufstr = v_buffer + start;
@@ -2421,7 +2424,7 @@ in_put()
 	    if (errno != EINTR)
 		SysError(ERROR_SELECT);
 	    continue;
-	} 
+	}
 
 	/* if there is room to write more data to the pty, go write more */
 	if (FD_ISSET (screen->respond, &write_mask)) {
@@ -2430,7 +2433,7 @@ in_put()
 
 	/* if there are X events already in our queue, it
 	   counts as being readable */
-	if (XtAppPending(app_con) || 
+	if (XtAppPending(app_con) ||
 	    FD_ISSET (ConnectionNumber(screen->display), &select_mask)) {
 	    xevents();
 	}
@@ -2481,7 +2484,7 @@ dotext(screen, charset, buf, ptr)
 					*s = XMC_GLITCH+1;
 	})
 
-	len = ptr - buf; 
+	len = ptr - buf;
 	ptr = buf;
 	while (len > 0) {
 		n = screen->max_col - screen->cur_col +1;
@@ -2513,7 +2516,21 @@ dotext(screen, charset, buf, ptr)
 		ptr += n;
 	}
 }
- 
+
+#if OPT_ZICONBEEP
+/* Flag icon name with "*** "  on window output when iconified.
+ * I'd like to do something like reverse video, but I don't
+ * know how to tell this to window managers in general.
+ *
+ * mapstate can be IsUnmapped, !IsUnmapped, or -1;
+ * -1 means no change; the other two are set by event handlers
+ * and indicate a new mapstate.  !IsMapped is done in the handler.
+ * we worry about IsUnmapped when output occurs.  -IAN!
+ */
+static int mapstate = -1;
+#include <X11/Shell.h>
+#endif /* OPT_ZICONBEEP */
+
 /*
  * write a string str of length len onto the screen at
  * the current cursor position.  update cursor position.
@@ -2527,7 +2544,7 @@ WriteText(screen, str, len)
 	unsigned flags	= term->flags;
 	int	fg_bg = makeColorPair(term->cur_foreground, term->cur_background);
 	GC	currentGC;
- 
+
 	TRACE(("WriteText (%2d,%2d) (%d) %3d:%.*s\n",
 		screen->cur_row,
 		screen->cur_col,
@@ -2576,8 +2593,71 @@ WriteText(screen, str, len)
 	}
 	ScreenWrite(screen, str, flags, fg_bg, len);
 	CursorForward(screen, len);
+#if OPT_ZICONBEEP
+	/* Flag icon name with "***"  on window output when iconified.
+	 */
+	if( zIconBeep && mapstate == IsUnmapped && ! zIconBeep_flagged) {
+	    static char *icon_name;
+	    static Arg args[] = {
+		{ XtNiconName, (XtArgVal) &icon_name }
+	    };
+
+	    icon_name = NULL;
+	    XtGetValues(toplevel,args,XtNumber(args));
+
+	    if( icon_name != NULL ) {
+		zIconBeep_flagged = True;
+		Changename(icon_name);
+	    }
+	    if (zIconBeep > 0)
+		XBell( XtDisplay(toplevel), zIconBeep );
+	}
+	mapstate = -1;
+#endif /* OPT_ZICONBEEP */
 }
- 
+
+#if OPT_ZICONBEEP
+/* Flag icon name with "***"  on window output when iconified.
+ */
+static void HandleMapUnmap(w, closure, event, cont )
+    Widget w GCC_UNUSED;
+    XtPointer closure GCC_UNUSED;
+    XEvent *event;
+    Boolean *cont GCC_UNUSED;
+{
+    static char *icon_name;
+    static Arg args[] = {
+            { XtNiconName, (XtArgVal) &icon_name }
+    };
+
+    TRACE((stderr,"HandleMapUnmap event %d\n", event->type))
+
+    switch( event->type ){
+    case MapNotify:
+	if( zIconBeep_flagged ) {
+	    zIconBeep_flagged = False;
+	    icon_name = NULL;
+	    XtGetValues(toplevel,args,XtNumber(args));
+	    if( icon_name != NULL ) {
+		char	*buf = malloc(strlen(icon_name) + 1);
+		if (buf == NULL) {
+			zIconBeep_flagged = True;
+			return;
+		}
+		strcpy(buf, icon_name + 4);
+		Changename(buf);
+		free(buf);
+	    }
+	}
+	mapstate = !IsUnmapped;
+	break;
+    case UnmapNotify:
+	mapstate = IsUnmapped;
+	break;
+    }
+}
+#endif /* OPT_ZICONBEEP */
+
 /*
  * process ANSI modes set, reset
  */
@@ -2745,7 +2825,7 @@ dpmodes(termw, func)
 		case 46:		/* logging		*/
 #ifdef ALLOWLOGFILEONOFF
 			/*
-			 * if this feature is enabled, logging may be 
+			 * if this feature is enabled, logging may be
 			 * enabled and disabled via escape sequences.
 			 */
 			if(func == bitset)
@@ -3359,10 +3439,10 @@ VTRun()
 #if OPT_TEK4014
 	register int i;
 #endif
-	
+
 	if (!screen->Vshow) {
 	    set_vt_visibility (TRUE);
-	} 
+	}
 	update_vttekmode();
 	update_vtshow();
 	update_tekshow();
@@ -3508,7 +3588,7 @@ static void RequestResize(termw, rows, cols, text)
 		askedWidth  = attrs.width;
 
 	status = XtMakeResizeRequest (
-	    (Widget) termw, 
+	    (Widget) termw,
 	     askedWidth,  askedHeight,
 	    &replyWidth, &replyHeight);
 
@@ -3523,7 +3603,7 @@ static void RequestResize(termw, rows, cols, text)
 		xevents();
 	}
 }
-				
+
 extern Atom wm_delete_window;	/* for ICCCM delete window */
 
 static String xterm_trans =
@@ -3703,13 +3783,13 @@ static void VTInitialize (wrequest, wnew, args, num_args)
 	   new->keyboard.flags |= MODE_DECBKM;
 
     /*
-     * The definition of -rv now is that it changes the definition of 
+     * The definition of -rv now is that it changes the definition of
      * XtDefaultForeground and XtDefaultBackground.  So, we no longer
      * need to do anything special.
      */
    new->screen.display = new->core.screen->display;
    new->core.height = new->core.width = 1;
-      /* dummy values so that we don't try to Realize the parent shell 
+      /* dummy values so that we don't try to Realize the parent shell
 	 with height or width of 0, which is illegal in X.  The real
 	 size is computed in the xtermWidget's Realize proc,
 	 but the shell's Realize proc is called first, and must see
@@ -3728,6 +3808,16 @@ static void VTInitialize (wrequest, wnew, args, num_args)
 		VTNonMaskableEvent, (Opaque)NULL);
    XtAddEventHandler((Widget)new, PropertyChangeMask, FALSE,
 		     HandleBellPropertyChange, (Opaque)NULL);
+
+#if OPT_ZICONBEEP
+   /* Flag icon name with "***"  on window output when iconified.
+    * Put in a handler that will tell us when we get Map/Unmap events.
+    */
+   if ( zIconBeep )
+       XtAddEventHandler(XtParent(new), StructureNotifyMask, FALSE,
+			 HandleMapUnmap, (Opaque)NULL);
+#endif /* OPT_ZICONBEEP */
+
    new->screen.bellInProgress = FALSE;
 
    set_character_class (new->screen.charClass);
@@ -3781,7 +3871,7 @@ static void VTRealize (w, valuemask, values)
 	screen->fnt_norm = screen->fnt_bold = NULL;
 	if (!LoadNewFont(screen, term->misc.f_n, term->misc.f_b, False, 0)) {
 	    if (XmuCompareISOLatin1(term->misc.f_n, "fixed") != 0) {
-		fprintf (stderr, 
+		fprintf (stderr,
 		     "%s:  unable to open font \"%s\", trying \"fixed\"....\n",
 		     xterm_name, term->misc.f_n);
 		(void) LoadNewFont (screen, "fixed", NULL, False, 0);
@@ -3797,12 +3887,12 @@ static void VTRealize (w, valuemask, values)
 	}
 
 	/* making cursor */
-	if (!screen->pointer_cursor) 
-	  screen->pointer_cursor = make_colored_cursor(XC_xterm, 
+	if (!screen->pointer_cursor)
+	  screen->pointer_cursor = make_colored_cursor(XC_xterm,
 						       screen->mousecolor,
 						       screen->mousecolorback);
-	else 
-	  recolor_cursor (screen->pointer_cursor, 
+	else
+	  recolor_cursor (screen->pointer_cursor,
 			  screen->mousecolor, screen->mousecolorback);
 
 	scrollbar_width = (term->misc.scrollbar ?
@@ -3820,7 +3910,7 @@ static void VTRealize (w, valuemask, values)
 	width = screen->fullVwin.fullwidth;
 	height = screen->fullVwin.fullheight;
 
-	if ((pr & XValue) && (XNegative&pr)) 
+	if ((pr & XValue) && (XNegative&pr))
 	  xpos += DisplayWidth(screen->display, DefaultScreen(screen->display))
 			- width - (term->core.parent->core.border_width * 2);
 	if ((pr & YValue) && (YNegative&pr))
@@ -3860,7 +3950,7 @@ static void VTRealize (w, valuemask, values)
 	}
 	sizehints.width = width;
 	sizehints.height = height;
-	if ((WidthValue&pr) || (HeightValue&pr)) 
+	if ((WidthValue&pr) || (HeightValue&pr))
 	  sizehints.flags |= USSize;
 	else sizehints.flags |= PSize;
 
@@ -3889,7 +3979,7 @@ static void VTRealize (w, valuemask, values)
 		term->core.x, term->core.y,
 		term->core.width, term->core.height, term->core.border_width,
 		(int) term->core.depth,
-		InputOutput, CopyFromParent,	
+		InputOutput, CopyFromParent,
 		*valuemask|CWBitGravity, values);
 
 #ifndef NO_ACTIVE_ICON
@@ -3907,7 +3997,7 @@ static void VTRealize (w, valuemask, values)
 	    screen->iconVwin.width =
 		(screen->max_col + 1) * screen->iconVwin.f_width;
 	    screen->iconVwin.fullwidth = screen->iconVwin.width +
-		2 * screen->border; 
+		2 * screen->border;
 
 	    screen->iconVwin.height =
 		(screen->max_row + 1) * screen->iconVwin.f_height;
@@ -3928,7 +4018,7 @@ static void VTRealize (w, valuemask, values)
 			      screen->iconVwin.fullheight,
 			      term->misc.icon_border_width,
 			      (int) term->core.depth,
-			      InputOutput, CopyFromParent,	
+			      InputOutput, CopyFromParent,
 			      *valuemask|CWBitGravity|CWBorderPixel,
 			      values);
 	    XtVaSetValues(shell, XtNiconWindow, screen->iconVwin.window, NULL);
@@ -4026,7 +4116,7 @@ static void VTInitI18N()
 	if ((p = XSetLocaleModifiers("@im=none")) != NULL && *p)
 	    xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL);
     } else {
-	for(ns=s=term->misc.input_method; ns && *s;) { 
+	for(ns=s=term->misc.input_method; ns && *s;) {
 	    while (*s && isspace(*s)) s++;
 	    if (!*s) break;
 	    if ((ns = end = strchr(s, ',')) == 0)
@@ -4035,9 +4125,9 @@ static void VTInitI18N()
 
 	    strcpy(buf, "@im=");
 	    if (end - (s + (sizeof(buf) - 5)) > 0)
-		end = s + (sizeof(buf) - 5); 
-	    strncat(buf, s, end - s); 
- 
+		end = s + (sizeof(buf) - 5);
+	    strncat(buf, s, end - s);
+
 	    if ((p = XSetLocaleModifiers(buf)) != NULL && *p
 		&& (xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL)) != NULL)
 		break;
@@ -4048,7 +4138,7 @@ static void VTInitI18N()
 
     if (xim == NULL && (p = XSetLocaleModifiers("@im=none")) != NULL && *p)
 	xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL);
-    
+
     if (!xim) {
 	fprintf(stderr, "Failed to open input method\n");
 	return;
@@ -4062,7 +4152,7 @@ static void VTInitI18N()
     }
 
     found = False;
-    for(s = term->misc.preedit_type; s && !found;) { 
+    for(s = term->misc.preedit_type; s && !found;) {
 	while (*s && isspace(*s)) s++;
 	if (!*s) break;
 	if ((ns = end = strchr(s, ',')) != 0)
@@ -4071,11 +4161,11 @@ static void VTInitI18N()
 	    end = s + strlen(s);
 	while (isspace(*end)) end--;
 
-	if (!strncmp(s, "OverTheSpot", end - s)) { 
+	if (!strncmp(s, "OverTheSpot", end - s)) {
 	    input_style = (XIMPreeditPosition | XIMStatusArea);
-	} else if (!strncmp(s, "OffTheSpot", end - s)) { 
+	} else if (!strncmp(s, "OffTheSpot", end - s)) {
 	    input_style = (XIMPreeditArea | XIMStatusArea);
-	} else if (!strncmp(s, "Root", end - s)) { 
+	} else if (!strncmp(s, "Root", end - s)) {
 	    input_style = (XIMPreeditNothing | XIMStatusNothing);
 	}
 	for (i = 0; (unsigned short)i < xim_styles->count_styles; i++)
@@ -4128,7 +4218,7 @@ static Boolean VTSetValues (cur, request, new, args, num_args)
     Cardinal *num_args GCC_UNUSED;
 {
     XtermWidget curvt = (XtermWidget) cur;
-    XtermWidget newvt = (XtermWidget) new; 
+    XtermWidget newvt = (XtermWidget) new;
     Boolean refresh_needed = FALSE;
     Boolean fonts_redone = FALSE;
 
@@ -4163,7 +4253,7 @@ static Boolean VTSetValues (cur, request, new, args, num_args)
     }
     if(curvt->screen.mousecolor != newvt->screen.mousecolor
        || curvt->screen.mousecolorback != newvt->screen.mousecolorback) {
-	recolor_cursor (newvt->screen.pointer_cursor, 
+	recolor_cursor (newvt->screen.pointer_cursor,
 			newvt->screen.mousecolor,
 			newvt->screen.mousecolorback);
 	refresh_needed = TRUE;
@@ -4271,8 +4361,8 @@ ShowCursor()
 	if (!screen->select && !screen->always_highlight) {
 		screen->box->x = x;
 		screen->box->y = y;
-		XDrawLines (screen->display, TextWindow(screen), 
-			    screen->cursoroutlineGC ? screen->cursoroutlineGC 
+		XDrawLines (screen->display, TextWindow(screen),
+			    screen->cursoroutlineGC ? screen->cursoroutlineGC
 			    			    : currentGC,
 			    screen->box, NBOX, CoordModePrevious);
 	}
@@ -4477,7 +4567,7 @@ VTReset(full, saved)
 		CursorSave(term, &screen->sc);
 	} else {	/* DECSTR */
 		/*
-		 * There's a tiny difference, to accommodate usage of xterm. 
+		 * There's a tiny difference, to accommodate usage of xterm.
 		 * We reset autowrap to the resource values rather than turning
 		 * it off.
 		 *
@@ -4502,9 +4592,9 @@ VTReset(full, saved)
 
 /*
  * set_character_class - takes a string of the form
- * 
+ *
  *                 low[-high]:val[,low[-high]:val[...]]
- * 
+ *
  * and sets the indicated ranges to the indicated values.
  */
 static int
@@ -4569,7 +4659,7 @@ set_character_class (s)
 		numbers++;
 	    }
 	    if (numbers != 2) {
-		fprintf (stderr, errfmt, ProgramName, "bad value number", 
+		fprintf (stderr, errfmt, ProgramName, "bad value number",
 			 s, i);
 	    } else if (SetCharacterClassRange (low, high, acc) != 0) {
 		fprintf (stderr, errfmt, ProgramName, "bad range", s, i);
@@ -4626,7 +4716,7 @@ static void HandleKeymapChange(w, event, params, param_count)
 	XtOverrideTranslations(w, original);
 	return;
     }
-    (void) sprintf( mapName, "%.*sKeymap", (int)sizeof(mapName) - 10, params[0] ); 
+    (void) sprintf( mapName, "%.*sKeymap", (int)sizeof(mapName) - 10, params[0] );
     (void) strcpy( mapClass, mapName );
     if (islower(mapClass[0])) mapClass[0] = toupper(mapClass[0]);
     XtGetSubresources( w, (XtPointer)&keymap, mapName, mapClass,
@@ -4731,7 +4821,7 @@ void FindFontSelection (atom_name, justprobe)
 
     target = XmuInternAtom(XtDisplay(term), *pAtom);
     if (justprobe) {
-	term->screen.menu_font_names[fontMenu_fontsel] = 
+	term->screen.menu_font_names[fontMenu_fontsel] =
 	  XGetSelectionOwner(XtDisplay(term), target) ? _Font_Selected_ : NULL;
     } else {
 	XtGetSelectionValue((Widget)term, target, XA_STRING,
@@ -4850,7 +4940,7 @@ LoadNewFont (screen, nfontname, bfontname, doresize, fontnum)
     if (nfs->ascent + nfs->descent == 0  ||  nfs->max_bounds.width == 0)
 	goto bad;		/* can't use a 0-sized font */
 
-    if (!(bfontname && 
+    if (!(bfontname &&
 	  (bfs = XLoadQueryFont (screen->display, bfontname))))
       bfs = nfs;
     else
@@ -4971,7 +5061,7 @@ update_font_info (screen, doresize)
     screen->fullVwin.f_width = screen->fnt_norm->max_bounds.width;
     screen->fullVwin.f_height = (screen->fnt_norm->ascent +
 				 screen->fnt_norm->descent);
-    scrollbar_width = (term->misc.scrollbar ? 
+    scrollbar_width = (term->misc.scrollbar ?
 		       screen->scrollWidget->core.width +
 		       screen->scrollWidget->core.border_width : 0);
     i = 2 * screen->border + scrollbar_width;

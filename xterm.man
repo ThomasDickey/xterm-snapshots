@@ -375,6 +375,16 @@ gateways.
 .TP 8
 .B \+s
 This option indicates that \fIxterm\fP should scroll synchronously.
+.TP 8 
+.B \-samename 
+Doesn't send title and icon name change requests when the request 
+would have no effect: the name isn't changed.  This has the advantage 
+of preventing flicker and the disadvantage of requiring an extra 
+round trip to the server to find out the previous value.  In practice 
+this should never be a problem. 
+.TP 8 
+.B +samename 
+Always send title and icon name change requests. 
 .TP 8
 .B \-sb
 This option indicates that some number of lines that are scrolled off the top 
@@ -479,6 +489,15 @@ responsibility to catch subsequent terminal size changes.
 .B \+wf
 This option indicates that \fIxterm\fP show not wait before starting the
 subprocess.
+.TP 8 
+.B \-ziconbeep \fIpercent\fP 
+Same as zIconBeep resource. 
+If percent is non-zero, xterms that produce output while iconified 
+will cause an XBell sound at the given volume 
+and have "***" prepened to their icon titles. 
+Most window managers will detect this change immediately, showing you 
+which window has the output. 
+(A similar feature was in x10 xterm.) 
 .TP 8
 .B \-C
 This option indicates that this window should receive console output.  This
@@ -589,6 +608,14 @@ It is not necessarily obeyed by all window managers.
 .TP 8
 .B "iconName (\fPclass\fB IconName)"
 Specifies the icon name.  The default is the application name.
+.TP 8 
+.B "sameName (\fPclass\fB SameName)" 
+If the value of this resource is "true", xterm doesn't send 
+title and icon name change requests when the request 
+would have no effect: the name isn't changed.  This has the advantage 
+of preventing flicker and the disadvantage of requiring an extra 
+round trip to the server to find out the previous value.  In practice 
+this should never be a problem.  The default is "true". 
 .TP 8
 .B "sunFunctionKeys (\fPclass\fB SunFunctionKeys)"
 Specifies whether or not Sun Function Key escape codes should be generated for
@@ -630,6 +657,15 @@ in \fI/etc/utmp\fP.
 .B "waitForMap (\fPclass\fB WaitForMap)"
 Specifies whether or not \fIxterm\fP should wait for the initial window map
 before starting the subprocess.  The default is ``false.''
+.TP 8 
+.B "zIconBeep (\fPclass\fB ZIconBeep)" 
+Same as \-ziconbeep command line argument. 
+If the value of this resource is non-zero, xterms that produce output 
+while iconified will cause an XBell sound at the given volume 
+and have "***" prepened to their icon titles. 
+Most window managers will detect this change immediately, showing you 
+which window has the output. 
+(A similar feature was in x10 xterm.) 
 .\".in 11in
 .sp
 .PP
