@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.138 2001/10/08 01:08:10 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.139 2001/10/24 01:21:24 dickey Exp $ */
 
 
 /* main.c */
@@ -773,7 +773,6 @@ static XrmOptionDescRec optionDescList[] = {
 {"-cb",		"*cutToBeginningOfLine", XrmoptionNoArg, (caddr_t) "off"},
 {"+cb",		"*cutToBeginningOfLine", XrmoptionNoArg, (caddr_t) "on"},
 {"-cc",		"*charClass",	XrmoptionSepArg,	(caddr_t) NULL},
-{"-class",	NULL,		XrmoptionSkipArg,	(caddr_t) NULL},
 {"-cm",		"*colorMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+cm",		"*colorMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-cn",		"*cutNewline",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -783,7 +782,6 @@ static XrmOptionDescRec optionDescList[] = {
 {"+cu",		"*curses",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-dc",		"*dynamicColors",XrmoptionNoArg,	(caddr_t) "off"},
 {"+dc",		"*dynamicColors",XrmoptionNoArg,	(caddr_t) "on"},
-{"-e",		NULL,		XrmoptionSkipLine,	(caddr_t) NULL},
 {"-fb",		"*boldFont",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-fbb",	"*freeBoldBox", XrmoptionNoArg,		(caddr_t)"off"},
 {"+fbb",	"*freeBoldBox", XrmoptionNoArg,		(caddr_t)"on"},
@@ -890,6 +888,11 @@ static XrmOptionDescRec optionDescList[] = {
 {"-samename",	"*sameName",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+samename",	"*sameName",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
+/* options that we process ourselves */
+{"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
+{"-version",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
+{"-class",	NULL,		XrmoptionSkipArg,	(caddr_t) NULL},
+{"-e",		NULL,		XrmoptionSkipLine,	(caddr_t) NULL},
 /* bogus old compatibility stuff for which there are
    standard XtAppInitialize options now */
 {"%",		"*tekGeometry",	XrmoptionStickyArg,	(caddr_t) NULL},
@@ -903,10 +906,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"-w",		".borderWidth", XrmoptionSepArg,	(caddr_t) NULL},
 };
 
-static struct _options {
-  char *opt;
-  char *desc;
-} options[] = {
+static OptionHelp options[] = {
 { "-version",              "print the version number" },
 { "-help",                 "print out this message" },
 { "-display displayname",  "X server to contact" },
@@ -918,8 +918,8 @@ static struct _options {
 { "-bw number",            "border width in pixels" },
 { "-fn fontname",          "normal text font" },
 { "-fb fontname",          "bold text font" },
-{"-/+fbb",                 "turn on/off bold font's box checking"},
-{"-/+fbx",                 "turn off/on linedrawing characters"},
+{ "-/+fbb",                "turn on/off bold font's box checking"},
+{ "-/+fbx",                "turn off/on linedrawing characters"},
 #ifdef XRENDERFONT
 { "-fa pattern",           "FreeType font-selection pattern" },
 { "-fs size",              "FreeType font-size" },
@@ -1035,7 +1035,7 @@ static struct _options {
 { "-ziconbeep percent",    "beep and flag icon of window having hidden output" },
 #endif
 #if OPT_SAME_NAME
-{"-/+samename",            "turn on/off the no-flicker option for title and icon name" },
+{ "-/+samename",           "turn on/off the no-flicker option for title and icon name" },
 #endif
 { NULL, NULL }};
 
@@ -1128,15 +1128,15 @@ static Boolean get_termcap(char *name, char *buffer, char *resized)
     return False;
 }
 
-static int abbrev (char *tst, char *cmp)
+static int abbrev (char *tst, char *cmp, size_t need)
 {
 	size_t len = strlen(tst);
-	return ((len >= 2) && (!strncmp(tst, cmp, len)));
+	return ((len >= need) && (!strncmp(tst, cmp, len)));
 }
 
 static void Syntax (char *badOption)
 {
-    struct _options *opt;
+    OptionHelp *opt;
     int col;
 
     fprintf (stderr, "%s:  bad command line option \"%s\"\r\n\n",
@@ -1162,12 +1162,12 @@ static void Syntax (char *badOption)
 static void Version (void)
 {
     printf("%s(%d)\n", XFREE86_VERSION, XTERM_PATCH);
-    exit (0);
+    fflush(stdout);
 }
 
 static void Help (void)
 {
-    struct _options *opt;
+    OptionHelp *opt;
     char **cpp;
 
     fprintf (stderr, "%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
@@ -1183,8 +1183,7 @@ static void Help (void)
 	putc ('\n', stderr);
     }
     putc ('\n', stderr);
-
-    exit (0);
+    fflush(stderr);
 }
 
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
@@ -1429,18 +1428,33 @@ main (int argc, char *argv[])
 
 	/* Do these first, since we may not be able to open the display */
 	ProgramName = argv[0];
+	TRACE_OPTS(options, optionDescList, XtNumber(optionDescList));
+	TRACE_ARGV("Before XtAppInitialize", argv);
 	if (argc > 1) {
 		int n;
-		if (abbrev(argv[1], "-version"))
-			Version();
-		if (abbrev(argv[1], "-help"))
-			Help();
+		int unique = 2;
+		Boolean quit = True;
+
 		for (n = 1; n < argc; n++) {
-			if (strlen(argv[n]) > 2
-			 && abbrev(argv[n], "-class"))
-				if ((my_class = argv[++n]) == 0)
+			TRACE(("parsing %s\n", argv[n]));
+			if (abbrev(argv[n], "-version", unique)) {
+				Version();
+			} else if (abbrev(argv[n], "-help", unique)) {
+				Help();
+			} else if (abbrev(argv[n], "-class", 3)) {
+				if ((my_class = argv[++n]) == 0) {
 					Help();
+				} else {
+					quit = False;
+				}
+				unique = 3;
+			} else {
+				quit = False;
+				unique = 3;
+			}
 		}
+		if (quit)
+			exit(0);
 	}
 
 	/* This dumps core on HP-UX 9.05 with X11R5 */
@@ -1838,13 +1852,18 @@ main (int argc, char *argv[])
 #endif
 
 	/* Parse the rest of the command line */
+	TRACE_ARGV("After XtAppInitialize", argv);
 	for (argc--, argv++ ; argc > 0 ; argc--, argv++) {
 	    if(**argv != '-') Syntax (*argv);
 
+	    TRACE(("parsing %s\n", argv[0]));
 	    switch(argv[0][1]) {
-	     case 'h':
-		Help ();
-		/* NOTREACHED */
+	     case 'h':	/* -help */
+		Help();
+		continue;
+	     case 'v':	/* -version */
+		Version();
+		continue;
 	     case 'C':
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 #ifndef __sgi
@@ -1875,8 +1894,9 @@ main (int argc, char *argv[])
 		debug = TRUE;
 		continue;
 #endif	/* DEBUG */
-	     case 'c':	/* -class */
-		break;
+	     case 'c':	/* -class param */
+		argc--, argv++;
+		continue;
 	     case 'e':
 		if (argc <= 1) Syntax (*argv);
 		command_to_exec = ++argv;
@@ -1952,6 +1972,11 @@ main (int argc, char *argv[])
 	      resource.icon_name = resource.title;
 	    XtSetArg (args[0], XtNtitle, resource.title);
 	    XtSetArg (args[1], XtNiconName, resource.icon_name);
+
+	    TRACE(("setting:\n\ttitle \"%s\"\n\ticon \"%s\"\n\tbased on command \"%s\"\n",
+		    resource.title,
+		    resource.icon_name,
+		    *command_to_exec));
 
 	    XtSetValues (toplevel, args, 2);
 	}
@@ -3831,6 +3856,7 @@ spawn (void)
 #endif	/* sun vs TIOCSWINSZ */
 		signal(SIGHUP, SIG_DFL);
 		if (command_to_exec) {
+			TRACE(("spawning command \"%s\"\n", *command_to_exec));
 			execvp(*command_to_exec, command_to_exec);
 			/* print error message on screen */
 			fprintf(stderr, "%s: Can't execvp %s: %s\n",
