@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: VTPrsTbl.c,v 1.10 95/06/09 22:17:06 gildea Exp $
- *	$XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.16 1999/03/14 03:22:32 dawes Exp $
+ *	$XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.17 1999/04/11 13:11:26 dawes Exp $
  */
 
 /*
