@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.21 1997/05/25 14:41:27 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.22 1997/06/29 07:54:42 dawes Exp $
  */
 
 /*
@@ -294,8 +294,16 @@ typedef struct {
 
 #define OPT_BLINK_CURS  0 /* FIXME: do this later (96/7/31) */
 
+#ifndef OPT_DEC_CHRSET
+#define OPT_DEC_CHRSET  1 /* true if xterm is configured for DEC charset */
+#endif
+
 #ifndef OPT_ISO_COLORS
 #define OPT_ISO_COLORS  1 /* true if xterm is configured with ISO colors */
+#endif
+
+#ifndef OPT_TRACE
+#define OPT_TRACE       0 /* true if we're using debugging traces */
 #endif
 
 #ifndef OPT_VT52_MODE
@@ -346,18 +354,62 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 #define if_OPT_AIX_COLORS(screen, code) /* nothing */
 #endif
 
+/***====================================================================***/
+
+#if OPT_DEC_CHRSET
+#define if_OPT_DEC_CHRSET(code) code
+	/* Use 3 bits for encoding the double high/wide sense of characters */
+#define CSET_SWL        0
+#define CSET_DHL_TOP    1
+#define CSET_DHL_BOT    2
+#define CSET_DWL        4
+	/* Use remaining bits for encoding the other character-sets */
+#define CSET_NORMAL(code)  ((code) == CSET_SWL)
+#define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
+#define CSET_EXTEND(code)  ((code) >= 8)
+#define CurMaxCol(screen, row) \
+	(CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0]) \
+	? (screen->max_col / 2) \
+	: (screen->max_col))
+#define CurCursorX(screen, row, col) \
+	(CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0]) \
+	? CursorX(screen, 2*(col)) \
+	: CursorX(screen, (col)))
+#define CurFontWidth(screen, row) \
+	(CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0]) \
+	? 2*FontWidth(screen) \
+	: FontWidth(screen))
+#else
+#define if_OPT_DEC_CHRSET(code) /*nothing*/
+#define CurMaxCol(screen, row) screen->max_col
+#define CurCursorX(screen, row, col) CursorX(screen, col)
+#define CurFontWidth(screen, row) FontWidth(screen)
+#endif
+
 	/* the number of pointers per row in 'ScrnBuf' */
-#if OPT_ISO_COLORS
+#if OPT_ISO_COLORS || OPT_DEC_CHRSET
 #define MAX_PTRS term->num_ptrs
 #else
 #define MAX_PTRS 2
 #endif
+
+/***====================================================================***/
+
+#if OPT_TRACE
+#include "trace.h"
+#else
+#define TRACE(p) /*nothing*/
+#endif
+
+/***====================================================================***/
 
 #if OPT_VT52_MODE
 #define if_OPT_VT52_MODE(screen, code) if(screen->ansi_level == 0) code
 #else
 #define if_OPT_VT52_MODE(screen, code) /* nothing */
 #endif
+
+/***====================================================================***/
 
 	/* ScrnBuf-level macros */
 #define BUF_CHARS(buf, row) (buf[MAX_PTRS * (row) + 0])
@@ -367,12 +419,20 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 #define BUF_COLOR(buf, row) (buf[MAX_PTRS * (row) + 2])
 #endif
 
+#if OPT_DEC_CHRSET
+#define BUF_CSETS(buf, row) (buf[MAX_PTRS * (row) + 3])
+#endif
+
 	/* TScreen-level macros */
 #define SCRN_BUF_CHARS(screen, row) BUF_CHARS(screen->buf, row)
 #define SCRN_BUF_ATTRS(screen, row) BUF_ATTRS(screen->buf, row)
 
 #if OPT_ISO_COLORS
 #define SCRN_BUF_COLOR(screen, row) BUF_COLOR(screen->buf, row)
+#endif
+
+#if OPT_DEC_CHRSET
+#define SCRN_BUF_CSETS(screen, row) BUF_CSETS(screen->buf, row)
 #endif
 
 typedef struct {
@@ -400,6 +460,9 @@ typedef struct {
 	Boolean		colorMode;	/* are we using color mode?	*/
 	Boolean		colorULMode;	/* use color for underline?	*/
 	Boolean		colorBDMode;	/* use color for bold?		*/
+#endif
+#if OPT_DEC_CHRSET
+	Char		chrset;		/* character-set index & code	*/
 #endif
 	int		border;		/* inner border			*/
 	Cursor		arrow;		/* arrow cursor			*/
@@ -663,6 +726,8 @@ typedef struct _XtermWidgetRec {
     unsigned    cur_background;	/* current background color	*/
 #if OPT_ISO_COLORS
     unsigned    sgr_foreground;	/* current SGR foreground color	*/
+#endif
+#if OPT_ISO_COLORS || OPT_DEC_CHRSET
     int         num_ptrs;	/* number of pointers per row in 'ScrnBuf' */
 #endif
     unsigned	initflags;	/* initial mode flags		*/
@@ -732,6 +797,7 @@ typedef struct _TekWidgetRec {
 #define OFF_PROTECT 0
 #define DEC_PROTECT 1
 #define ISO_PROTECT 2
+
 #define CursorX(screen,col) ((col) * FontWidth(screen) + screen->border \
 			+ Scrollbar(screen))
 #define CursorY(screen,row) ((((row) - screen->topline) * FontHeight(screen)) \

@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.45 1997/06/10 12:30:36 hohndel Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.46 1997/06/29 07:54:41 dawes Exp $
  */
 
 /*
@@ -135,7 +135,6 @@ static void VTGraphicsOrNoExpose PROTO((XEvent *event));
 static void VTNonMaskableEvent PROTO_XT_EV_HANDLER_ARGS;
 static void VTallocbuf PROTO((void));
 static void VTparse PROTO((void));
-static void WriteText PROTO(( TScreen *screen, char *str, int len));
 static void ansi_modes PROTO((XtermWidget termw, void (*func)(unsigned *p, unsigned mask)));
 static void bitclr PROTO((unsigned *p, unsigned mask));
 static void bitcpy PROTO((unsigned *p, unsigned q, unsigned mask));
@@ -787,7 +786,7 @@ void SGR_Foreground(color)
 	register TScreen *screen = &term->screen;
 	Pixel	fg;
 
-	HideCursor();
+	/* FIXME HideCursor(); */
 	if (color >= 0) {
 		term->flags |= FG_COLOR;
 	} else {
@@ -951,6 +950,7 @@ static void VTparse()
 	    }
 #endif
 
+	    TRACE(("parse %d -> %d\n", c, parsestate[c]))
 	    switch (parsestate[c]) {
 		 case CASE_PRINT:
 			/* printable characters */
@@ -1092,6 +1092,21 @@ static void VTparse()
 
 		 case CASE_SO:
 			screen->curgl = 1;
+			parsestate = groundtable;
+			break;
+
+		 case CASE_DECDHL:
+			xterm_DECDHL(c == '3');
+			parsestate = groundtable;
+			break;
+
+		 case CASE_DECSWL:
+			xterm_DECSWL();
+			parsestate = groundtable;
+			break;
+
+		 case CASE_DECDWL:
+			xterm_DECDWL();
 			parsestate = groundtable;
 			break;
 
@@ -2374,7 +2389,7 @@ dotext(screen, charset, buf, ptr)
 			n = len;
 		next_col = screen->cur_col + n;
 
-		WriteText(screen, (char *)ptr, n);
+		WriteText(screen, ptr, n);
 
 		/*
 		 * the call to WriteText updates screen->cur_col.
@@ -2391,10 +2406,10 @@ dotext(screen, charset, buf, ptr)
  * write a string str of length len onto the screen at
  * the current cursor position.  update cursor position.
  */
-static void
+void
 WriteText(screen, str, len)
     register TScreen	*screen;
-    register char	*str;
+    register Char	*str;
     register int	len;
 {
 	unsigned flags	= term->flags;
@@ -2402,13 +2417,19 @@ WriteText(screen, str, len)
 	unsigned bg     = term->cur_background;
 	GC	currentGC;
  
+	TRACE(("write (%2d,%2d) (%d) %3d:%.*s\n",
+		screen->cur_row,
+		screen->cur_col,
+		curXtermChrSet(screen->cur_row),
+		len, len, str))
+
 	if(screen->cur_row - screen->topline <= screen->max_row) {
 		if(screen->cursor_state)
 			HideCursor();
 
 		if (flags & INSERT)
 			InsertChar(screen, len);
-		if (!(AddToRefresh(screen))) {
+		if (!AddToRefresh(screen)) {
 			/* make sure that the correct GC is current */
 			currentGC = updatedXtermGC(screen, flags, fg, bg, False);
 
@@ -2418,9 +2439,14 @@ WriteText(screen, str, len)
 			if (flags & INVISIBLE)
 				memset(str, ' ', len);
 
+			TRACE(("%s @%d, calling drawXtermText (%d,%d)\n",
+				__FILE__, __LINE__,
+				screen->cur_col,
+				screen->cur_row))
 			drawXtermText(screen, flags, currentGC,
-				CursorX(screen, screen->cur_col),
+				CurCursorX(screen, screen->cur_row, screen->cur_col),
 				CursorY(screen, screen->cur_row),
+				curXtermChrSet(screen->cur_row),
 				str, len);
 
 			resetXtermGC(screen, flags, False);
@@ -3462,6 +3488,11 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->num_ptrs = new->screen.colorMode ? 3 : 2;
    new->sgr_foreground = -1;
 #endif /* OPT_ISO_COLORS */
+
+#if OPT_DEC_CHRSET
+   new->num_ptrs = 4;
+#endif
+
    new->screen.underline = request->screen.underline;
 
    new->cur_foreground = 0;
@@ -3969,6 +4000,11 @@ ShowCursor()
 
 	c     = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col];
 	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
+#if OPT_DEC_CHRSET
+	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cursor_row)[0])) {
+		c = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col/2];
+	}
+#endif
 
 #ifndef NO_ACTIVE_ICON
 	if (IsIcon(screen)) {
@@ -4024,10 +4060,12 @@ ShowCursor()
 		}
 	}
 
+	TRACE(("%s @%d, calling drawXtermText\n", __FILE__, __LINE__))
 	drawXtermText(screen, flags, currentGC,
 		x = CursorX(screen, screen->cur_col),
 		y = CursorY(screen, screen->cur_row),
-		(char *) &c, 1);
+		curXtermChrSet(screen->cur_row),
+		&c, 1);
 
 	if (!screen->select && !screen->always_highlight) {
 		screen->box->x = x;
@@ -4049,9 +4087,11 @@ HideCursor()
 	register TScreen *screen = &term->screen;
 	GC	currentGC;
 	register int flags, fg = 0, bg = 0;
-	char c;
+	Char c;
 	Boolean	in_selection;
 
+	if (screen->cursor_state == OFF)	/* FIXME */
+		return;
 	if(screen->cursor_row - screen->topline > screen->max_row)
 		return;
 
@@ -4087,9 +4127,11 @@ HideCursor()
 	if (c == 0)
 		c = ' ';
 
+	TRACE(("%s @%d, calling drawXtermText\n", __FILE__, __LINE__))
 	drawXtermText(screen, flags, currentGC,
 		CursorX(screen, screen->cursor_col),
 		CursorY(screen, screen->cursor_row),
+		curXtermChrSet(screen->cur_row),
 		&c, 1);
 
 	screen->cursor_state = OFF;

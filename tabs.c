@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: tabs.c,v 1.4 91/05/06 17:12:18 gildea Exp $
- *	$XFree86: xc/programs/xterm/tabs.c,v 3.3 1997/05/23 09:19:55 dawes Exp $
+ *	$XFree86: xc/programs/xterm/tabs.c,v 3.4 1997/06/29 07:54:43 dawes Exp $
  */
 
 /*
@@ -138,8 +138,8 @@ TabToNextStop()
 	int saved_column = screen->cur_col;
 
 	screen->cur_col = TabNext(term->tabs, screen->cur_col);
-	if (screen->cur_col > screen->max_col)
-		screen->cur_col = screen->max_col;
+	if (screen->cur_col > CurMaxCol(screen, screen->cur_row))
+		screen->cur_col = CurMaxCol(screen, screen->cur_row);
 
 	return (screen->cur_col > saved_column);
 }

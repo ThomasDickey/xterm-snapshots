@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.3 1997/06/10 12:30:37 hohndel Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.4 1997/06/29 07:54:42 dawes Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
@@ -27,7 +27,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Revision: 1.3 $)
+AC_REVISION($Revision: 1.4 $)
 AC_PREREQ(2.12)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -123,6 +123,14 @@ CF_ARG_ENABLE(color-mode,
 	[default_colormode=FALSE])
 AC_MSG_RESULT($default_colormode)
 AC_DEFINE_UNQUOTED(DFT_COLORMODE,$default_colormode)
+
+AC_MSG_CHECKING(for doublesize characters)
+CF_ARG_DISABLE(doublechars,
+	[  --disable-doublechars   disable support for double-size characters],
+	[enable_doublechars=no],
+	[enable_doublechars=yes])
+AC_MSG_RESULT($enable_doublechars)
+test $enable_doublechars = no && AC_DEFINE(OPT_DEC_CHRSET,0)
 
 AC_MSG_CHECKING(if you want debugging traces)
 CF_ARG_ENABLE(trace,

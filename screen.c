@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: screen.c /main/35 1996/12/01 23:47:05 swick $
- *	$XFree86: xc/programs/xterm/screen.c,v 3.13 1997/05/23 09:19:54 dawes Exp $
+ *	$XFree86: xc/programs/xterm/screen.c,v 3.14 1997/06/29 07:54:43 dawes Exp $
  */
 
 /*
@@ -201,17 +201,20 @@ Reallocate(sbuf, sbufaddr, nrow, ncol, oldrow, oldcol)
 void
 ScreenWrite (screen, str, flags, cur_fg, cur_bg, length)
 /*
-   Writes str into buf at row row and column col.  Characters are set to match
-   flags.
+ * Writes str into buf at screen's current row and column.  Characters are set
+ * to match flags.
  */
 TScreen *screen;
-char *str;
+Char *str;
 register unsigned flags;
 register unsigned cur_fg, cur_bg;
 register int length;		/* length of string */
 {
 #if OPT_ISO_COLORS
 	register Char *fb = 0;
+#endif
+#if OPT_DEC_CHRSET  
+	register Char *cb = 0;
 #endif
 	register Char *attrs;
 	register int avail  = screen->max_col - screen->cur_col + 1;
@@ -229,14 +232,17 @@ register int length;		/* length of string */
 	if_OPT_ISO_COLORS(screen,{
 		fb = SCRN_BUF_COLOR(screen, screen->cur_row) + screen->cur_col;
 	})
+	if_OPT_DEC_CHRSET({
+		cb = SCRN_BUF_CSETS(screen, screen->cur_row) + screen->cur_col;
+	})
 
 	wrappedbit = *attrs & LINEWRAPPED;
 
 	/* write blanks if we're writing invisible text */
 	if (flags & INVISIBLE) {
-		bzero(col,   length);
+		memset(col, ' ', length);
 	} else {
-		memcpy( col,   str,    length);
+		memcpy(col, str, length);
 	}
 
 	flags &= ATTRIBUTES;
@@ -245,6 +251,9 @@ register int length;		/* length of string */
 
 	if_OPT_ISO_COLORS(screen,{
 		memset( fb,   makeColorPair(cur_fg, cur_bg), length);
+	})
+	if_OPT_DEC_CHRSET({
+		memset( cb,   curXtermChrSet(screen->cur_row), length);
 	})
 
 	if (wrappedbit)
@@ -377,6 +386,9 @@ ScrnInsertChar (screen, n, size)
 	if_OPT_ISO_COLORS(screen,{
 	    memset(BUF_COLOR(sb, row) + col, xtermColorPair(), n);
 	})
+	if_OPT_DEC_CHRSET({
+	    memset(BUF_CSETS(sb, row) + col, curXtermChrSet(row), n);
+	})
 
 	if (wrappedbit)
 	    attrs[0] |= LINEWRAPPED;
@@ -407,6 +419,9 @@ ScrnDeleteChar (screen, n, size)
 	if_OPT_ISO_COLORS(screen,{
 	    memset(BUF_COLOR(sb, row) + size - n, xtermColorPair(), n);
 	})
+	if_OPT_DEC_CHRSET({
+	    memset(BUF_CSETS(sb, row) + size - n, curXtermChrSet(row), n);
+	})
 	if (wrappedbit)
 	    attrs[0] |= LINEWRAPPED;
 }
@@ -418,6 +433,7 @@ ScrnRefresh (screen, toprow, leftcol, nrows, ncols, force)
    Requires: (toprow, leftcol), (toprow + nrows, leftcol + ncols) are
    	     coordinates of characters in screen;
 	     nrows and ncols positive.
+	     all dimensions are based on single-characters.
  */
 register TScreen *screen;
 int toprow, leftcol, nrows, ncols;
@@ -431,14 +447,25 @@ Boolean force;			/* ... leading/trailing spaces */
 	int max = screen->max_row;
 	int gc_changes = 0;
 
-	if(screen->cursor_col >= leftcol && screen->cursor_col <=
-	 (leftcol + ncols - 1) && screen->cursor_row >= toprow + topline &&
-	 screen->cursor_row <= maxrow + topline)
+	TRACE(("ScrnRefresh (%d,%d) - (%d,%d)%s\n",
+		toprow, leftcol,
+		nrows, ncols,
+		force ? " force" : ""))
+
+	if(screen->cursor_col >= leftcol
+	&& screen->cursor_col <= (leftcol + ncols - 1)
+	&& screen->cursor_row >= toprow + topline
+	&& screen->cursor_row <= maxrow + topline)
 		screen->cursor_state = OFF;
+
 	for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
 	   register Char *fb = 0;
 #endif
+#if OPT_DEC_CHRSET
+	   register Char *cb = 0;
+#endif
+	   Char cs = 0;
 	   register Char *chars;
 	   register Char *attrs;
 	   register int col = leftcol;
@@ -462,14 +489,24 @@ Boolean force;			/* ... leading/trailing spaces */
 	   chars = SCRN_BUF_CHARS(screen, lastind + topline);
 	   attrs = SCRN_BUF_ATTRS(screen, lastind + topline);
 
-	   if_OPT_ISO_COLORS(screen,{
-		   fb = SCRN_BUF_COLOR(screen, lastind + topline);
+	   if_OPT_DEC_CHRSET({
+		cb = SCRN_BUF_CSETS(screen, lastind + topline);
 	   })
 
 	   if (row < screen->startHRow || row > screen->endHRow ||
 	       (row == screen->startHRow && maxcol < screen->startHCol) ||
 	       (row == screen->endHRow && col >= screen->endHCol))
 	   {
+#if OPT_DEC_CHRSET
+	       /*
+	        * Temporarily change dimensions to double-sized characters so
+		* we can reuse the recursion on this function.
+	        */
+	       if (CSET_DOUBLE(*cb)) {
+		   col /= 2;
+		   maxcol /= 2;
+	       }
+#endif
 	       /* row does not intersect selection; don't hilite */
 	       if (!force) {
 		   while (col <= maxcol && (attrs[col] & ~BOLD) == 0 &&
@@ -480,6 +517,12 @@ Boolean force;			/* ... leading/trailing spaces */
 			  (chars[maxcol] & ~040) == 0)
 		       maxcol--;
 	       }
+#if OPT_DEC_CHRSET
+	       if (CSET_DOUBLE(*cb)) {
+		   col *= 2;
+		   maxcol *= 2;
+	       }
+#endif
 	       hilite = False;
 	   }
 	   else {
@@ -511,7 +554,6 @@ Boolean force;			/* ... leading/trailing spaces */
 		* apparent).
 	        */
 	       if (screen->highlight_selection
-/*	        && maxcol >= screen->max_col */
 		&& screen->send_mouse_pos != 3) {
 		   hi_col = screen->max_col;
 	           while (hi_col > 0 && !(attrs[hi_col] & CHARDRAWN))
@@ -524,15 +566,29 @@ Boolean force;			/* ... leading/trailing spaces */
 
 	   if (col > maxcol) continue;
 
+	   /*
+	    * Go back to double-sized character dimensions if the line has
+	    * double-width characters.  Note that 'hi_col' is already in the
+	    * right units.
+	    */
+	   if_OPT_DEC_CHRSET({
+		if (CSET_DOUBLE(*cb)) {
+			col /= 2;
+			maxcol /= 2;
+		}
+		cs = cb[col];
+	   })
+
 	   flags = attrs[col];
 	   if_OPT_ISO_COLORS(screen,{
+		fb = SCRN_BUF_COLOR(screen, lastind + topline);
 		fg = extract_fg(fb[col], flags);
 		bg = extract_bg(fb[col]);
 	   })
 	   gc = updatedXtermGC(screen, flags, fg, bg, hilite);
 	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
 
-	   x = CursorX(screen, col);
+	   x = CurCursorX(screen, row, col);
 	   lastind = col;
 
 	   for (; col <= maxcol; col++) {
@@ -542,11 +598,16 @@ Boolean force;			/* ... leading/trailing spaces */
 		 || ((flags & FG_COLOR) && (extract_fg(fb[col],attrs[col]) != fg))
 		 || ((flags & BG_COLOR) && (extract_bg(fb[col]) != bg))
 #endif
+#if OPT_DEC_CHRSET
+		 || (cb[col] != cs)
+#endif
 		 ) {
+		   TRACE(("%s @%d, calling drawXtermText\n", __FILE__, __LINE__))
 		   drawXtermText(screen, flags, gc, x, y,
-			(char *) &chars[lastind], col - lastind);
+		   	cs,
+			&chars[lastind], col - lastind);
 
-		   x += (col - lastind) * FontWidth(screen);
+		   x += (col - lastind) * CurFontWidth(screen,row);
 
 		   lastind = col;
 
@@ -558,6 +619,9 @@ Boolean force;			/* ... leading/trailing spaces */
 		        fg = extract_fg(fb[col], flags);
 		        bg = extract_bg(fb[col]);
 		   })
+		   if_OPT_DEC_CHRSET({
+		        cs = cb[col];
+		   })
 	   	   gc = updatedXtermGC(screen, flags, fg, bg, hilite);
 	   	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
 		}
@@ -566,8 +630,10 @@ Boolean force;			/* ... leading/trailing spaces */
 			chars[col] = ' ';
 	   }
 
+	   TRACE(("%s @%d, calling drawXtermText\n", __FILE__, __LINE__))
 	   drawXtermText(screen, flags, gc, x, y,
-		(char *) &chars[lastind], col - lastind);
+	   	cs,
+		&chars[lastind], col - lastind);
 	}
 
 	/*
@@ -597,11 +663,15 @@ register int first, last;
 	register int row;
 	register int flags = TERM_COLOR_FLAGS;
 
+	TRACE(("ClearBufRows %d..%d\n", first, last))
 	for (row = first; row <= last; row++) {
 	    bzero (BUF_CHARS(buf, row), len);
 	    memset(BUF_ATTRS(buf, row), flags, len);
 	    if_OPT_ISO_COLORS(screen,{
 		memset(BUF_COLOR(buf, row), xtermColorPair(), len);
+	    })
+	    if_OPT_DEC_CHRSET({
+		memset(BUF_CSETS(buf, row), 0, len);
 	    })
 	}
 }
