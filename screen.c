@@ -720,6 +720,8 @@ ScreenResize (screen, width, height, flags)
 #endif	/* sun */
 	Window tw = TextWindow (screen);
 
+	TRACE(("ScreenResize %dx%d\n", height, width))
+
 	/* clear the right and bottom internal border because of NorthWest
 	   gravity might have left junk on the right and bottom edges */
 	if (width >= FullWidth(screen)) {

@@ -9,6 +9,14 @@
 #define GCC_UNUSED /* nothing */
 #endif
 
+#ifndef HAVE_CONFIG_H
+
+#ifndef HAVE_X11_DECKEYSYM_H
+#define HAVE_X11_DECKEYSYM_H 1
+#endif
+
+#endif
+
 #include "proto.h"
 
 /* Tekproc.c */
@@ -134,7 +142,7 @@ extern void Setenv PROTO((char *var, char *value));
 extern void SysError PROTO((int i));
 extern void VisualBell PROTO((void));
 extern void creat_as PROTO((int uid, int gid, char *pathname, int mode));
-extern void do_dcs PROTO((Char *buf, int len));
+extern void do_dcs PROTO((Char *buf, Size_t len));
 extern void do_osc PROTO((Char *buf, int len));
 extern void do_xevents PROTO((void));
 extern void end_tek_mode PROTO((void));
@@ -220,8 +228,8 @@ extern void scrolling_copy_area PROTO((TScreen *screen, int firstline, int nline
 
 extern Pixel getXtermBackground PROTO((int flags, int color));
 extern Pixel getXtermForeground PROTO((int flags, int color));
-extern unsigned extract_bg PROTO((unsigned color));
-extern unsigned extract_fg PROTO((unsigned color, unsigned flags));
+extern int extract_bg PROTO((unsigned color));
+extern int extract_fg PROTO((unsigned color, unsigned flags));
 extern unsigned makeColorPair PROTO((int fg, int bg));
 extern unsigned xtermColorPair PROTO((void));
 extern void ClearCurBackground PROTO((TScreen *screen, int top, int left, unsigned height, unsigned width));

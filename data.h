@@ -32,6 +32,11 @@
 #define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
 #endif
 
+#if USE_SYS_SELECT_H
+#include <sys/types.h>
+#include <sys/select.h>
+#endif
+
 extern XtAppContext app_con;
 
 extern TekLink *TekRefresh;
@@ -52,6 +57,9 @@ extern char *ptydev;
 extern char *ttydev;
 extern char *xterm_name;
 extern Boolean sunFunctionKeys;
+#if OPT_SUNPC_KBD
+extern Boolean sunKeyboard;
+#endif
 extern Char buffer[];
 extern int T_lastx;
 extern int T_lasty;

@@ -74,6 +74,7 @@ extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetVisualBell    PROTO_XT_ACTIONS_ARGS;
 extern void HandleSoftReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSunFunctionKeys  PROTO_XT_ACTIONS_ARGS;
+extern void HandleSunKeyboard      PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekCopy          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
@@ -104,6 +105,9 @@ typedef enum {
     mainMenu_8bit_ctrl,
     mainMenu_backarrow,
     mainMenu_sun_fkeys,
+#if OPT_SUNPC_KBD
+    mainMenu_sun_kbd,
+#endif
     mainMenu_line2,
     mainMenu_suspend,
     mainMenu_continue,
@@ -241,6 +245,13 @@ typedef enum {
   update_menu_item (term->screen.mainMenu, \
 		    mainMenuEntries[mainMenu_sun_fkeys].widget, \
 		    sunFunctionKeys)
+
+#if OPT_SUNPC_KBD
+#define update_sun_kbd() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_sun_kbd].widget, \
+		    sunKeyboard)
+#endif
 
 #define update_scrollbar() \
   update_menu_item (term->screen.vtMenu, \

@@ -23,6 +23,7 @@ XTerm.JoinSession:False
 *mainMenu*8-bit control*Label: 8-Bit Controls
 *mainMenu*backarrow key*Label: Backarrow Key
 *mainMenu*sun function keys*Label: Sun Function-Keys
+*mainMenu*sun keyboard*Label: Sun/PC Keyboard
 *mainMenu*suspend*Label:  Send STOP Signal
 *mainMenu*continue*Label:  Send CONT Signal
 *mainMenu*interrupt*Label:  Send INT Signal

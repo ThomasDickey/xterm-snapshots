@@ -324,6 +324,10 @@ typedef struct {
 #define OPT_ISO_COLORS  1 /* true if xterm is configured with ISO colors */
 #endif
 
+#ifndef OPT_SUNPC_KBD
+#define OPT_SUNPC_KBD	1 /* true if xterm supports Sun/PC keyboard map */
+#endif
+
 #ifndef OPT_TRACE
 #define OPT_TRACE       0 /* true if we're using debugging traces */
 #endif
@@ -775,10 +779,10 @@ typedef struct _XtermWidgetRec {
     TKeyboard	keyboard;	/* terminal keyboard		*/
     TScreen	screen;		/* terminal screen		*/
     unsigned	flags;		/* mode flags			*/
-    unsigned    cur_foreground;	/* current foreground color	*/
-    unsigned    cur_background;	/* current background color	*/
+    int         cur_foreground;	/* current foreground color	*/
+    int         cur_background;	/* current background color	*/
 #if OPT_ISO_COLORS
-    unsigned    sgr_foreground;	/* current SGR foreground color	*/
+    int         sgr_foreground;	/* current SGR foreground color	*/
 #endif
 #if OPT_ISO_COLORS || OPT_DEC_CHRSET
     int         num_ptrs;	/* number of pointers per row in 'ScrnBuf' */

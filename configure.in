@@ -27,7 +27,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Revision: 1.9 $)
+AC_REVISION($Revision: 1.13 $)
 AC_PREREQ(2.12)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -60,20 +60,19 @@ CF_FUNC_MEMMOVE
 CF_FUNC_TGETENT
 
 ###	checks for structures
+CF_TYPE_FD_SET
 
 ###	checks for compiler characteristics
 AC_CONST
-CF_ANSI_CC
+CF_ANSI_CC_CHECK
 
 ###	checks for system services and user specified options
 
-AC_PATH_XTRA
-
-LDFLAGS="$LDFLAGS $X_LIBS"
-CFLAGS="$CFLAGS $X_CFLAGS"
+CF_X_TOOLKIT
 
 AC_CHECK_HEADERS( \
 	unistd.h \
+	X11/DECkeysym.h \
 	X11/Xpoll.h \
 	)
 
@@ -83,12 +82,12 @@ LIBS="$LIBS $X_EXTRA_LIBS"
 
 AC_MSG_CHECKING(if we should use imake to help)
 CF_ARG_DISABLE(imake,
-	[  --without-imake         disable use of imake for definitions],
+	[  --disable-imake         disable use of imake for definitions],
 	[enable_imake=no],
 	[enable_imake=yes])
 AC_MSG_RESULT($enable_imake)
 if test $enable_imake = yes ; then
-	CF_IMAKE_CFLAGS
+	CF_IMAKE_CFLAGS($(MAIN_DEFINES))
 fi
 AC_SUBST(IMAKE_CFLAGS)
 
@@ -222,11 +221,12 @@ CF_ARG_ENABLE(warnings,
 AC_MSG_RESULT($with_warnings)
 if test "$with_warnings" = yes
 then
+	CF_GCC_ATTRIBUTES
 	CF_GCC_WARNINGS
-	CFLAGS="$CFLAGS $cf_warn_CFLAGS"
 fi
 fi
 
+AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
 

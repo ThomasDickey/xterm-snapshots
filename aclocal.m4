@@ -25,13 +25,14 @@ dnl ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl 
 dnl ---------------------------------------------------------------------------
+dnl ---------------------------------------------------------------------------
 dnl This is adapted from the macros 'fp_PROG_CC_STDC' and 'fp_C_PROTOTYPES'
 dnl in the sharutils 4.2 distribution.
-dnl
-AC_DEFUN([CF_ANSI_CC],
-[AC_MSG_CHECKING(for ${CC-cc} option to accept ANSI C)
-AC_CACHE_VAL(cf_cv_ansi_cc,
-[cf_cv_ansi_cc=no
+AC_DEFUN([CF_ANSI_CC_CHECK],
+[
+AC_MSG_CHECKING(for ${CC-cc} option to accept ANSI C)
+AC_CACHE_VAL(cf_cv_ansi_cc,[
+cf_cv_ansi_cc=no
 cf_save_CFLAGS="$CFLAGS"
 # Don't try gcc -ansi; that turns off useful extensions and
 # breaks some systems' header files.
@@ -50,15 +51,23 @@ do
 choke me
 #endif
 #endif
-], [int test (int i, double x);
-struct s1 {int (*f) (int a);};
-struct s2 {int (*f) (double a);};],
-[cf_cv_ansi_cc="$cf_arg"; break])
+],[
+	int test (int i, double x);
+	struct s1 {int (*f) (int a);};
+	struct s2 {int (*f) (double a);};],
+	[cf_cv_ansi_cc="$cf_arg"; break])
 done
 CFLAGS="$cf_save_CFLAGS"
 ])
 AC_MSG_RESULT($cf_cv_ansi_cc)
-test ".$cf_cv_ansi_cc" != .no && AC_DEFINE(CC_HAS_PROTOS)
+
+if test "$cf_cv_ansi_cc" != "no"; then
+if test ".$cf_cv_ansi_cc" != ".-DCC_HAS_PROTOS"; then
+	CFLAGS="$CFLAGS $cf_cv_ansi_cc"
+else
+	AC_DEFINE(CC_HAS_PROTOS)
+fi
+fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Allow user to disable a normally-on option.
@@ -93,15 +102,22 @@ dnl ---------------------------------------------------------------------------
 dnl Check if we're accidentally using a cache from a different machine.
 dnl Derive the system name, as a check for reusing the autoconf cache.
 dnl
+dnl If we've packaged config.guess and config.sub, run that (since it does a
+dnl better job than uname). 
 AC_DEFUN([CF_CHECK_CACHE],
 [
-system_name="`(uname -s -r) 2>/dev/null`"
-if test -n "$system_name" ; then
-	AC_DEFINE_UNQUOTED(SYSTEM_NAME,"$system_name")
+if test -f $srcdir/config.guess ; then
+	AC_CANONICAL_HOST
+	system_name="$host_os"
 else
-	system_name="`(hostname) 2>/dev/null`"
+	system_name="`(uname -s -r) 2>/dev/null`"
+	if test -z "$system_name" ; then
+		system_name="`(hostname) 2>/dev/null`"
+	fi
 fi
+test -n "$system_name" && AC_DEFINE_UNQUOTED(SYSTEM_NAME,"$system_name")
 AC_CACHE_VAL(cf_cv_system_name,[cf_cv_system_name="$system_name"])
+
 test -z "$system_name" && system_name="$cf_cv_system_name"
 test -n "$cf_cv_system_name" && AC_MSG_RESULT("Configuring for $cf_cv_system_name")
 
@@ -113,15 +129,31 @@ fi
 dnl ---------------------------------------------------------------------------
 dnl You can always use "make -n" to see the actual options, but it's hard to
 dnl pick out/analyze warning messages when the compile-line is long.
+dnl
+dnl Sets:
+dnl	ECHO_LD - symbol to prefix "cc -o" lines
+dnl	RULE_CC - symbol to put before implicit "cc -c" lines (e.g., .c.o)
+dnl	SHOW_CC - symbol to put before explicit "cc -c" lines
+dnl	ECHO_CC - symbol to put before any "cc" line
+dnl
 AC_DEFUN([CF_DISABLE_ECHO],[
 AC_MSG_CHECKING(if you want to see long compiling messages)
 CF_ARG_DISABLE(echo,
 	[  --disable-echo          test: display \"compiling\" commands],
-	[SHOW_CC='	@echo compiling [$]@'
-    ECHO_CC='@'],
-	[SHOW_CC='# compiling'
-    ECHO_CC=''])
+	[
+    ECHO_LD='@echo linking [$]@;'
+    RULE_CC='	@echo compiling [$]<'
+    SHOW_CC='	@echo compiling [$]@'
+    ECHO_CC='@'
+],[
+    ECHO_LD=''
+    RULE_CC='# compiling'
+    SHOW_CC='# compiling'
+    ECHO_CC=''
+])
 AC_MSG_RESULT($enableval)
+AC_SUBST(ECHO_LD)
+AC_SUBST(RULE_CC)
 AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
 ])dnl
@@ -176,7 +208,8 @@ do
 	LIBS="$cf_save_LIBS -l$cf_termlib"
 	AC_TRY_RUN([
 /* terminfo implementations ignore the buffer argument, making it useless for
- * the xterm application, which uses this information to make a new $TERMCAP
+ * the xterm application, which uses this information to make a new TERMCAP
+ * environment variable.
  */
 int main()
 {
@@ -220,7 +253,10 @@ dnl Test for availability of useful gcc __attribute__ directives to quiet
 dnl compiler warnings.  Though useful, not all are supported -- and contrary
 dnl to documentation, unrecognized directives cause older compilers to barf.
 AC_DEFUN([CF_GCC_ATTRIBUTES],
-[cat > conftest.i <<EOF
+[
+if test -n "$GCC"
+then
+cat > conftest.i <<EOF
 #ifndef GCC_PRINTF
 #define GCC_PRINTF 0
 #endif
@@ -261,7 +297,7 @@ EOF
 	changequote([,])dnl
 	for cf_attribute in scanf printf unused noreturn
 	do
-		CF_UPPERCASE($cf_attribute,CF_ATTRIBUTE)
+		CF_UPPER(CF_ATTRIBUTE,$cf_attribute)
 		cf_directive="__attribute__(($cf_attribute))"
 		echo "checking for gcc $cf_directive" 1>&AC_FD_CC
 		case $cf_attribute in
@@ -287,7 +323,7 @@ else
 	fgrep define conftest.i >>confdefs.h
 fi
 rm -rf conftest*
-
+fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check if the compiler supports useful warning options.  There's a few that
@@ -297,12 +333,12 @@ dnl	-Wconversion (useful in older versions of gcc, but not in gcc 2.7.x)
 dnl	-Wredundant-decls (system headers make this too noisy)
 dnl	-Wtraditional (combines too many unrelated messages, only a few useful)
 dnl	-Wwrite-strings (too noisy, but should review occasionally)
+dnl	-pedantic
 dnl
 AC_DEFUN([CF_GCC_WARNINGS],
-[cf_warn_CFLAGS=""
+[EXTRA_CFLAGS=""
 if test -n "$GCC"
 then
-	CF_GCC_ATTRIBUTES
 	changequote(,)dnl
 	cat > conftest.$ac_ext <<EOF
 #line __oline__ "configure"
@@ -311,9 +347,9 @@ EOF
 	changequote([,])dnl
 	AC_CHECKING([for gcc warning options])
 	cf_save_CFLAGS="$CFLAGS"
-	cf_warn_CFLAGS="-W -Wall"
+	EXTRA_CFLAGS="-W -Wall"
 	for cf_opt in \
-		Wbad-fuvction-cast \
+		Wbad-function-cast \
 		Wcast-align \
 		Wcast-qual \
 		Winline \
@@ -324,16 +360,17 @@ EOF
 		Wshadow \
 		Wstrict-prototypes
 	do
-		CFLAGS="$cf_save_CFLAGS $cf_warn_CFLAGS -$cf_opt"
+		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
 		if AC_TRY_EVAL(ac_compile); then
 			test -n "$verbose" && AC_MSG_RESULT(... -$cf_opt)
-			cf_warn_CFLAGS="$cf_warn_CFLAGS -$cf_opt"
-			test "$cf_opt" = Wcast-qual && cf_warn_CFLAGS="$cf_warn_CFLAGS -DXTSTRINGDEFINES"
+			EXTRA_CFLAGS="$EXTRA_CFLAGS -$cf_opt"
+			test "$cf_opt" = Wcast-qual && EXTRA_CFLAGS="$EXTRA_CFLAGS -DXTSTRINGDEFINES"
 		fi
 	done
 	rm -f conftest*
 	CFLAGS="$cf_save_CFLAGS"
 fi
+AC_SUBST(EXTRA_CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Use imake to obtain compiler flags.  We could, in principal, write tests to
@@ -341,7 +378,6 @@ dnl get these, but if imake is properly configured there is no point in doing
 dnl this.
 AC_DEFUN([CF_IMAKE_CFLAGS],
 [
-rm -f Makefile Makefile.bak
 AC_PATH_PROGS(IMAKE,xmkmf imake)
 case $IMAKE in # (vi
 */imake)
@@ -354,86 +390,82 @@ esac
 
 # If it's installed properly, imake (or its wrapper, xmkmf) will point to the
 # config directory.
-if ( $IMAKE $cf_imake_opts 1>/dev/null 2>&AC_FD_CC)
-then
-	CF_VERBOSE(Using $IMAKE)
-else
-	# sometimes imake doesn't have the config path compiled in.  Find it.
-	cf_config=
-	for cf_libpath in $X_LIBS $LIBS ; do
-		case $cf_libpath in # (vi
-		-L*)
-			cf_libpath=`echo .$cf_libpath | sed -e 's/^...//'`
-			cf_libpath=$cf_libpath/X11/config
-			if test -d $cf_libpath ; then
-				cf_config=$cf_libpath
-				break
-			fi
-			;;
-		esac
-	done
-	if test -z $cf_config ; then
-		AC_ERROR(Could not find imake config-directory)
-	fi
-	cf_imake_opts="$cf_imake_opts -I$cf_config"
-	if ( $IMAKE -v $cf_imake_opts 2>&AC_FD_CC)
+if mkdir conftestdir; then
+	cd conftestdir
+	echo >./Imakefile
+	test ../Imakefile && cat ../Imakefile >>./Imakefile
+	cat >> ./Imakefile <<'CF_EOF'
+findstddefs:
+	@echo 'IMAKE_CFLAGS="${STD_DEFINES} ifelse($1,,,$1)"'
+CF_EOF
+	if ( $IMAKE $cf_imake_opts 1>/dev/null 2>&AC_FD_CC && test -f Makefile)
 	then
-		CF_VERBOSE(Using $IMAKE $cf_config)
+		CF_VERBOSE(Using $IMAKE)
 	else
-		AC_ERROR(Cannot run imake)
-	fi
-fi
-
-# If we've gotten this far, we have a Makefile for xterm.  Some X11R5 config
-# macros do not work well enough to actually use the Makefile for a build, but
-# the definitions are usable (probably).
-AC_MSG_CHECKING(for compiler options known to imake)
-AC_CACHE_VAL(cf_cv_imake_cflags,[
-	test -n "$verbose" && echo working...
-	cf_imake_cflags=`${MAKE-make} -n -f Makefile main.o RM=echo 2>/dev/null`
-	for cf_opt in $cf_imake_cflags
-	do
-		cf_found=no
-		case $cf_opt in # (vi
-changequote(,)dnl
-		-[focg]) cf_found=yes
-			;; # (vi
-		-[OID]*) #(vi
-changequote([,])dnl
-			for cf_opt2 in $CFLAGS
-			do
-				if test ".$cf_opt" = ".$cf_opt2" ; then
-					cf_found=yes
+		# sometimes imake doesn't have the config path compiled in.  Find it.
+		cf_config=
+		for cf_libpath in $X_LIBS $LIBS ; do
+			case $cf_libpath in # (vi
+			-L*)
+				cf_libpath=`echo .$cf_libpath | sed -e 's/^...//'`
+				cf_libpath=$cf_libpath/X11/config
+				if test -d $cf_libpath ; then
+					cf_config=$cf_libpath
 					break
 				fi
-			done
-			;;
-		"\\")	cf_found=yes #(vi
-			;;
-		"&&")	cf_found=yes #(vi
-			;;
-		-*)	;; #(vi
-		$CC|cc|gcc|main.*|echo)	cf_found=yes
-			;;
-		esac
-		if test $cf_found = no ; then
-			CF_VERBOSE(flag:$cf_opt)
-			cf_cv_imake_cflags="$cf_cv_imake_cflags $cf_opt"
-		else
-			CF_VERBOSE(skip:$cf_opt)
+				;;
+			esac
+		done
+		if test -z "$cf_config" ; then
+			AC_ERROR(Could not find imake config-directory)
 		fi
-	done
-])
-test -z "$verbose" && AC_MSG_RESULT(done)
-IMAKE_CFLAGS="$cf_cv_imake_cflags"
-rm -f Makefile Makefile.bak
+		cf_imake_opts="$cf_imake_opts -I$cf_config"
+		if ( $IMAKE -v $cf_imake_opts 2>&AC_FD_CC)
+		then
+			CF_VERBOSE(Using $IMAKE $cf_config)
+		else
+			AC_ERROR(Cannot run $IMAKE)
+		fi
+	fi
+
+	# GNU make sometimes prints "make[1]: Entering...", which
+	# would confuse us.
+	eval `make findstddefs 2>/dev/null | grep -v make`
+
+	cd ..
+	rm -rf conftestdir
+fi
+AC_SUBST(IMAKE_CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl Make an uppercase version of a given name
-AC_DEFUN([CF_UPPERCASE],
+dnl Check for the declaration of fd_set.  Some platforms declare it in
+dnl <sys/types.h>, and some in <sys/select.h>, which requires <sys/types.h>
+AC_DEFUN([CF_TYPE_FD_SET],
+[
+AC_MSG_CHECKING(for declaration of fd_set)
+AC_CACHE_VAL(cf_cv_type_fd_set,[
+AC_TRY_COMPILE([
+#include <sys/types.h>],
+	[fd_set x],
+	[cf_cv_type_fd_set=sys/types.h],
+	[AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/select.h>],
+	[fd_set x],
+	[cf_cv_type_fd_set=sys/select.h],
+	[cf_cv_type_fd_set=unknown])])])
+AC_MSG_RESULT($cf_cv_type_fd_set)
+if test $cf_cv_type_fd_set = sys/select.h ; then
+	AC_DEFINE(USE_SYS_SELECT_H)
+fi
+])
+dnl ---------------------------------------------------------------------------
+dnl Make an uppercase version of a variable
+dnl $1=uppercase($2)
+AC_DEFUN([CF_UPPER],
 [
 changequote(,)dnl
-$2=`echo $1 |tr '[a-z]' '[A-Z]'`
+$1=`echo $2 | tr '[a-z]' '[A-Z]'`
 changequote([,])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -447,27 +479,74 @@ dnl
 AC_DEFUN([CF_X_ATHENA],
 [AC_REQUIRE([CF_X_TOOLKIT])
 AC_CHECK_HEADERS(X11/Xaw/SimpleMenu.h)
-AC_CHECK_LIB(Xext,XextCreateExtension)
 AC_CHECK_LIB(Xmu, XmuClientWindow)
-AC_CHECK_LIB(Xaw, XawSimpleMenuAddGlobalActions,,
+AC_CHECK_LIB(Xext,XextCreateExtension,
+	[LIBS="-lXext $LIBS"])
+AC_CHECK_LIB(Xmu_s, XmuClientWindow)
+AC_CHECK_LIB(Xaw, XawSimpleMenuAddGlobalActions,
+	[LIBS="-lXaw $LIBS"],[
+AC_CHECK_LIB(Xaw_s, XawSimpleMenuAddGlobalActions,
+	[LIBS="-lXaw_s $LIBS"],
 	AC_ERROR(
-[Unable to successfully link Athena library (-lXaw)]),
-	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])
-
+[Unable to successfully link Athena library (-lXaw) with test program]),
+	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])])
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for X Toolkit libraries
 dnl
 AC_DEFUN([CF_X_TOOLKIT],
 [
-AC_CHECK_LIB(X11,XOpenDisplay,
-	[LIBS="-lX11 $LIBS"],,
-	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])
-AC_CHECK_LIB(Xt, XtAppInitialize,
-	[AC_DEFINE(HAVE_LIBXT) LIBS="-lXt $X_PRE_LIBS $LIBS"],
-	AC_WARN(
-[Unable to successfully link X Toolkit library (-lXt).
-You will have to check and add the proper libraries by hand to Makefile.]),
-	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])
+# We need to check for -lsocket and -lnsl here in order to work around an
+# autoconf bug.  autoconf-2.12 is not checking for these prior to checking for
+# the X11R6 -lSM and -lICE libraries.  The resultant failures cascade...
+# 	(tested on Solaris 2.5 w/ X11R6)
+SYSTEM_NAME=`echo "$system_name"|tr ' ' -`
+cf_have_X_LIBS=no
+case $SYSTEM_NAME in
+irix5*) ;;
+clix*)
+	# FIXME: modify the library lookup in autoconf to
+	# allow _s.a suffix ahead of .a
+	AC_CHECK_LIB(c_s,open,
+		[LIBS="-lc_s $LIBS"
+	AC_CHECK_LIB(bsd,gethostname,
+		[LIBS="-lbsd $LIBS"
+	AC_CHECK_LIB(nsl_s,gethostname,
+		[LIBS="-lnsl_s $LIBS"
+	AC_CHECK_LIB(X11_s,XOpenDisplay,
+		[LIBS="-lX11_s $LIBS"
+	AC_CHECK_LIB(Xt_s,XtAppInitialize,
+		[LIBS="-lXt_s $LIBS"
+		 cf_have_X_LIBS=Xt
+		]) ]) ]) ]) ])
+	;;
+*)
+	AC_CHECK_LIB(socket,socket)
+	AC_CHECK_LIB(nsl,gethostname)
+	;;
+esac
 
+if test $cf_have_X_LIBS = no ; then
+	AC_PATH_XTRA
+	LDFLAGS="$LDFLAGS $X_LIBS"
+	CFLAGS="$CFLAGS $X_CFLAGS"
+	AC_CHECK_LIB(X11,XOpenDisplay,
+		[LIBS="-lX11 $LIBS"],,
+		[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])
+	AC_CHECK_LIB(Xt, XtAppInitialize,
+		[AC_DEFINE(HAVE_LIBXT)
+		 cf_have_X_LIBS=Xt
+		 LIBS="-lXt $X_PRE_LIBS $LIBS"],,
+		[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])
+else
+	LDFLAGS="$LDFLAGS $X_LIBS"
+	CFLAGS="$CFLAGS $X_CFLAGS"
+fi
+
+if test $cf_have_X_LIBS = no ; then
+	AC_WARN(
+[Unable to successfully link X Toolkit library (-lXt) with
+test program.  You will have to check and add the proper libraries by hand
+to makefile.])
+fi
 ])dnl

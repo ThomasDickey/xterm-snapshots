@@ -178,6 +178,9 @@ static void ResizeScreen(xw, min_width, min_height )
 	     geomreqresult = XtMakeResizeRequest ((Widget)xw, repWidth,
 						  repHeight, NULL, NULL);
 	}
+	XSync(screen->display, FALSE);	/* synchronize */
+	if(XtAppPending(app_con))
+		xevents();
 
 #ifndef nothack
 	XSetWMNormalHints(screen->display, XtWindow(XtParent(xw)), &sizehints);
