@@ -67,15 +67,30 @@ CF_ANSI_CC_CHECK
 
 ###	checks for system services and user specified options
 
+AC_CHECK_HEADERS(unistd.h)
+
 CF_X_TOOLKIT
 
+# Change CPPFLAGS temporarily so that checks for X include files will
+# look in any directories specified with `--x-includes=DIR', obtained
+# via xmkmf, or located by AC_PATH_XTRA.  These flags are already in
+# CFLAGS (put there by CF_X_TOOLKIT), but that doesn't help here because
+# AC_CHECK_HEADERS uses cpp, not cc.
+
+if test "${x_includes}" != NONE && test -n "${x_includes}"; then
+	C_SWITCH_X_SITE=-I`echo ${x_includes} | sed -e "s/:/ -I/g"`
+fi
+cf_save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$C_SWITCH_X_SITE $CPPFLAGS"
+
 AC_CHECK_HEADERS( \
-	unistd.h \
 	X11/DECkeysym.h \
 	X11/Xpoll.h \
 	)
 
 CF_X_ATHENA
+
+CPPFLAGS="$cf_save_CPPFLAGS"
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 
