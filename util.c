@@ -1455,12 +1455,15 @@ updatedXtermGC(screen, flags, fg_bg, hilite)
 			gc = ReverseGC(screen);
 
 #if OPT_HIGHLIGHT_COLOR
-		XSetForeground(screen->display, gc, hi_pix ? fg_pix : bg_pix);
-		XSetBackground(screen->display, gc, hi_pix ? hi_pix : fg_pix);
-#else
+		if (hi_pix != screen->foreground
+		 && hi_pix != fg_pix
+		 && hi_pix != bg_pix) {
+			bg_pix = fg_pix;
+			fg_pix = hi_pix;
+		}
+#endif
 		XSetForeground(screen->display, gc, bg_pix);
 		XSetBackground(screen->display, gc, fg_pix);
-#endif
 	} else {
 		if (flags & (BOLD|BLINK))
 			gc = NormalBoldGC(screen);

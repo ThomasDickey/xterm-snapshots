@@ -39,11 +39,14 @@ The options (in alphabetic order):
   --disable-color-mode    disable default colorMode resource (default: on)
   --disable-doublechars   disable support for double-size chars (default: on)
   --disable-echo          test: display "compiling" commands (default: on)
+  --disable-highlighting  disable support for color highlighting (default: on)
   --disable-i18n          disable internationalization (default: on)
   --disable-imake         disable use of imake for definitions (default: on)
   --disable-input-method  disable input-method (default: on)
-  --disable-rightbar      enable logging (default: on)
+  --disable-rightbar      disable right-scrollbar support (default: on)
+  --disable-tek4014       disable tek4014 emulation (default: on)
   --disable-vt52          disable VT52 emulation (default: on)
+  --enable-logfile-exec   enable exec'd logfile filter (default: off)
   --enable-logging        enable logging (default: off)
   --enable-trace          test: set to enable debugging traces (default: off)
   --enable-warnings       test: turn on GCC compiler warnings (default: off)
@@ -51,3 +54,4 @@ The options (in alphabetic order):
   --with-Xaw3d            link with Xaw 3d library
   --with-neXtaw           link with neXT Athena library
   --with-terminal-id[=V]  set default decTerminalID (default: vt100)
+  --with-terminal-type=T  set default $TERM (default: xterm)

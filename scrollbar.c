@@ -278,11 +278,11 @@ ResizeScrollBar(screen)
 			? (screen->fullVwin.fullwidth -
 			   screen->scrollWidget->core.width -
 			   screen->scrollWidget->core.border_width)
-			: 0,
+			: -1,
 #else
-		0,
+		-1,
 #endif
-		0,
+		-1,
 		screen->scrollWidget->core.width,
 		screen->fullVwin.height + screen->border * 2,
 		screen->scrollWidget->core.border_width);

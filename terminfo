@@ -1,12 +1,22 @@
 # $XConsortium: terminfo,v 1.11 94/10/13 21:24:31 gildea Exp $
 # $XFree86: xc/programs/xterm/terminfo,v 3.20 1998/01/24 01:53:40 hohndel Exp $
 #
+# XFree86 updates/notes/new entries (including xterm-8bit, xterm-16color)
+# - Thomas E. Dickey <dickey@clark.net>
+#
 # meml locks memory above the cursor; memu unlocks (ala HP terminals)
 # rmcup clears memory before switching to the alternate screen.  The older
 #	(deprecated) \E[?47h did not do this, requiring applications to
 #	embed a \E[2J in the rmcup string.  However, that behavior cannot
 #	be disabled via titeInhibit, making that resource not function as
 #	intended on systems with terminfo.
+#
+# We could have used ich=\E[%p1%d@, ich1=\E[@, which work with ncurses, but
+# that is not standard behavior.  If they are set, then SVr4 vi (e.g., Solaris
+# 2.6) emits both smir/rmir and ich1.
+#
+# The xterm-r6 entry does not define acsc, which is probably an error (but
+# it matches the X11R5 to X11R6.3 distributions).
 #
 xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
 	am,
@@ -54,8 +64,6 @@ xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
 	hpa=\E[%i%p1%dG,
 	ht=^I,
 	hts=\EH,
-	ich=\E[%p1%d@,
-	ich1=\E[@,
 	il=\E[%p1%dL,
 	il1=\E[L,
 	ind=^J,
@@ -257,8 +265,6 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	hpa=\233%i%p1%dG,
 	ht=^I,
 	hts=\210,
-	ich=\233%p1%d@,
-	ich1=\233@,
 	il=\233%p1%dL,
 	il1=\233L,
 	ind=^J,
