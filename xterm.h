@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.12 1997/07/06 05:31:09 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.13 1997/08/12 12:02:19 hohndel Exp $ */
 /*
  * Common/useful definitions for XTERM application
  */
@@ -147,6 +147,11 @@ extern void StartLog PROTO((TScreen *screen));
 extern void CloseLog PROTO((TScreen *screen));
 extern void FlushLog PROTO((TScreen *screen));
 #endif
+
+/* print.c */
+extern int xtermPrinterControl PROTO((int chr));
+extern void xtermAutoPrint PROTO((int chr));
+extern void xtermMediaControl PROTO((int param, int private));
 
 /* screen.c */
 extern Bool non_blank_line PROTO((ScrnBuf sb, int row, int col, int len));

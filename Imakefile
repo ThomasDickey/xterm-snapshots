@@ -1,5 +1,5 @@
 XCOMM $XConsortium: Imakefile /main/65 1996/02/02 14:27:54 kaleb $
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.13 1997/06/29 07:54:39 dawes Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.14 1997/08/12 12:02:16 hohndel Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -74,10 +74,10 @@ XCOMM
           MAINOBJ = main.o
 #endif
           SRCS1 = button.c charproc.c cursor.c data.c doublechr.c input.c \
-		  $(MAINSRC) menu.c misc.c screen.c scrollbar.c tabs.c \
+		  $(MAINSRC) menu.c misc.c print.c screen.c scrollbar.c tabs.c \
 		  TekPrsTbl.c Tekproc.c util.c VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button.o charproc.o cursor.o data.o doublechr.o input.o \
-		  $(MAINOBJ) menu.o misc.o screen.o scrollbar.o tabs.o \
+		  $(MAINOBJ) menu.o misc.o print.o screen.o scrollbar.o tabs.o \
 		  TekPrsTbl.o Tekproc.o util.o VTPrsTbl.o $(EXTRAOBJ)
           SRCS2 = resize.c
           OBJS2 = resize.o

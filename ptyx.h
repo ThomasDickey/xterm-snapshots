@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.24 1997/07/29 13:26:05 hohndel Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.25 1997/08/12 12:02:19 hohndel Exp $
  */
 
 /*
@@ -517,6 +517,11 @@ typedef struct {
 #endif /* NO_ACTIVE_ICON */
 	Cursor pointer_cursor;		/* pointer cursor in window	*/
 
+	String printer_command;		/* pipe/shell command string	*/
+	Boolean printer_extent;		/* print complete page		*/
+	Boolean printer_formfeed;	/* print formfeed per function	*/
+	int printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
+
 	/* Terminal fonts must be of the same size and of fixed width */
 	XFontStruct	*fnt_norm;	/* normal font of terminal	*/
 	XFontStruct	*fnt_bold;	/* bold font of terminal	*/
@@ -547,7 +552,7 @@ typedef struct {
 	int		scrolllines;	/* number of lines to button scroll */
 	Boolean		scrollttyoutput; /* scroll to bottom on tty output */
 	Boolean		scrollkey;	/* scroll to bottom on key	*/
-	
+
 	ScrnBuf		buf;		/* ptr to visible screen buf (main) */
 	ScrnBuf		allbuf;		/* screen buffer (may include
 					   lines scrolled off top)	*/
