@@ -36,8 +36,8 @@
 
 #ifndef X_NOT_STDC_ENV
 #define HAVE_STDLIB_H 1
-#else
 #define DECL_ERRNO 1
+#else
 #define size_t int
 #define time_t long
 #endif
@@ -167,6 +167,9 @@ extern void RevIndex (TScreen *screen, int amount);
 extern void xterm_DECDHL (Bool top);
 extern void xterm_DECSWL (void);
 extern void xterm_DECDWL (void);
+#if OPT_DEC_CHRSET
+extern GC xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc);
+#endif
 
 /* input.c */
 extern void Input (TKeyboard *keyboard, TScreen *screen, XKeyEvent *event, Bool eightbit);

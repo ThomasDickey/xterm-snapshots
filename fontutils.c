@@ -121,6 +121,7 @@ static FontNameProperties *
 get_font_name_props(Display *dpy, XFontStruct *fs)
 {
 	static FontNameProperties props;
+	static char *last_name;
 
 	register XFontProp *fp;
 	register int i;
@@ -139,6 +140,13 @@ get_font_name_props(Display *dpy, XFontStruct *fs)
 
 	if (name == 0)
 		return 0;
+
+	/*
+	 * XGetAtomName allocates memory - don't leak
+	 */
+	if (last_name != 0)
+		XFree(last_name);
+	last_name = name;
 
 	/*
 	* Now split it up into parts and put them in
@@ -222,59 +230,86 @@ bold_font_name(FontNameProperties *props)
      return ret;
 }
 
-#if 0
 #ifdef OPT_DEC_CHRSET
 /*
  * Take the given font props and try to make a well formed font name specifying
- * the same base font but changed depending on the given attributes and lflags.
+ * the same base font but changed depending on the given attributes and chrset.
  *
  * For double width fonts, we just double the X-resolution, for double height
  * fonts we double the pixel-size and Y-resolution
  */
 char *
-special_font_name(FontNameProperties *props, unsigned char atts,
-		  LineFlagsElem lflags)
+xtermSpecialFont(unsigned atts, unsigned chrset)
 {
-     char tmp[MAX_FONTNAME];
-     char *ret;
+#if OPT_TRACE
+	static char old_spacing[80];
+	static FontNameProperties old_props;
+#endif
+	TScreen *screen = &term->screen;
+	FontNameProperties *props;
+	char tmp[MAX_FONTNAME];
+	char *ret;
+	char *width;
+	int pixel_size;
+	int res_x;
+	int res_y;
 
-     char *width;
-     int pixel_size = props->pixel_size;
-     int res_x = props->res_x;
-     int res_y = props->res_y;
+	props = get_font_name_props(screen->display, screen->fnt_norm);
+	if (props == 0)
+		return 0;
 
-     if (atts & ATT_BOLD)
-	  width = "bold";
-     else
-	  width = props->width;
+	pixel_size = props->pixel_size;
+	res_x = props->res_x;
+	res_y = props->res_y;
+	if (atts & BOLD)
+		width = "bold";
+	else
+		width = props->width;
 
-     if (lflags & LINE_D_WIDE)
-	  res_x *= 2;
+	if (CSET_DOUBLE(chrset))
+		res_x *= 2;
 
-     if (lflags & (LINE_D_UPPER | LINE_D_LOWER)) {
-	  res_x *= 2;
-	  res_y *= 2;
-	  pixel_size *= 2;
-     }
+	if (chrset == CSET_DHL_TOP 
+	 || chrset == CSET_DHL_BOT) {
+		res_y *= 2;
+		pixel_size *= 2;
+	}
 
-     sprintf(tmp, "%s-%s-%s-%d-%s-%d-%d-%s-*-%s",
-	     props->beginning,
-	     width,
-	     props->middle,
-	     pixel_size,
-	     props->point_size,
-	     res_x,
-	     res_y,
-	     props->spacing,
-	     props->end);
+#if OPT_TRACE
+	if (old_props.res_x      != res_x
+	 || old_props.res_x      != res_y
+	 || old_props.pixel_size != pixel_size
+	 || strcmp(old_props.spacing, props->spacing)) {
+		TRACE(("xtermSpecialFont(atts = %#x, chrset = %#x)\n", atts, chrset))
+		TRACE(("res_x      = %d\n", res_x))
+		TRACE(("res_y      = %d\n", res_y))
+		TRACE(("point_size = %s\n", props->point_size))
+		TRACE(("pixel_size = %d\n", pixel_size))
+		TRACE(("spacing    = %s\n", props->spacing))
+		old_props.res_x      = res_x;
+		old_props.res_x      = res_y;
+		old_props.pixel_size = pixel_size;
+		old_props.spacing    = strcpy(old_spacing, props->spacing);
+	}
+#endif
 
-     ret = XtMalloc(strlen(tmp) + 1);
-     strcpy(ret, tmp);
+	sprintf(tmp, "%s-%s-%s-%d-%s-%d-%d-%s-*-%s",
+		props->beginning,
+		width,
+		props->middle,
+		pixel_size,
+		props->point_size,
+		res_x,
+		res_y,
+		props->spacing,
+		props->end);
 
-     return ret;
+	ret = XtMalloc(strlen(tmp) + 1);
+	strcpy(ret, tmp);
+
+	return ret;
 }
 #endif /* OPT_DEC_CHRSET */
-#endif
 
 /*
  * Double-check the fontname that we asked for versus what the font server
@@ -330,6 +365,7 @@ xtermLoadFont (
 	Bool doresize,
 	int fontnum)
 {
+	/* FIXME: use XFreeFontInfo */
 	FontNameProperties *fp;
 	XFontStruct *nfs = NULL;
 	XFontStruct *bfs = NULL;

@@ -421,15 +421,16 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 
 #if OPT_DEC_CHRSET
 #define if_OPT_DEC_CHRSET(code) code
-	/* Use 3 bits for encoding the double high/wide sense of characters */
+	/* Use 2 bits for encoding the double high/wide sense of characters */
 #define CSET_SWL        0
 #define CSET_DHL_TOP    1
 #define CSET_DHL_BOT    2
-#define CSET_DWL        4
+#define CSET_DWL        3
+#define NUM_CHRSET      4
 	/* Use remaining bits for encoding the other character-sets */
 #define CSET_NORMAL(code)  ((code) == CSET_SWL)
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
-#define CSET_EXTEND(code)  ((code) >= 8)
+#define CSET_EXTEND(code)  ((code) > CSET_DWL)
 #define CurMaxCol(screen, row) \
 	(CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0]) \
 	? (screen->max_col / 2) \
@@ -627,6 +628,9 @@ typedef struct {
 #endif
 #if OPT_DEC_CHRSET
 	Char		chrset;		/* character-set index & code	*/
+	XFontStruct *	double_fs[NUM_CHRSET];
+	GC		double_gc[NUM_CHRSET];
+	char *		double_fn[NUM_CHRSET];
 #endif
 	int		border;		/* inner border			*/
 	Cursor		arrow;		/* arrow cursor			*/

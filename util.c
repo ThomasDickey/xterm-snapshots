@@ -1310,17 +1310,57 @@ drawXtermText(
 {
 #if OPT_DEC_CHRSET
 	if (CSET_DOUBLE(chrset)) {
-		Char *temp = (Char *) malloc(2 * len);
-		int n = 0;
+		GC gc2 = xterm_DoubleGC(chrset, flags, gc);
+
 		TRACE(("DRAWTEXT%c[%4d,%4d] (%d) %d:%.*s\n",
 			screen->cursor_state == OFF ? ' ' : '*',
 			y, x, chrset, len, len, text))
-		while (len--) {
-			temp[n++] = *text++;
-			temp[n++] = ' ';
+
+		if (gc2 != 0) {	/* draw actual double-sized characters */
+			XRectangle rect, *rp = &rect;
+			Cardinal nr = 1;
+
+			rect.x = 0;
+			rect.y = 0;
+			rect.width = 2 * len * FontWidth(screen);
+			rect.height = FontHeight(screen);
+
+			switch (chrset) {
+			case CSET_DHL_TOP:
+				rect.y = - (rect.height / 2);
+				y -= rect.y;
+				break;
+			case CSET_DHL_BOT:
+				rect.y = (rect.height / 2);
+				y -= rect.y;
+				break;
+			default:
+				nr = 0;
+				break;
+			}
+
+			if (nr)
+				XSetClipRectangles(screen->display, gc2,
+					x, y, rp, nr, YXBanded);
+			else
+				XSetClipMask(screen->display, gc2, None);
+
+			x = drawXtermText(screen, flags, gc2,
+				x, y, 0, text, len);
+			x += len * FontWidth(screen);
+
+			TRACE(("drewtext [%4d,%4d]\n", y, x))
+
+		} else {	/* simulate double-sized characters */
+			Char *temp = (Char *) malloc(2 * len);
+			int n = 0;
+			while (len--) {
+				temp[n++] = *text++;
+				temp[n++] = ' ';
+			}
+			x = drawXtermText(screen, flags, gc, x, y, 0, temp, n);
+			free(temp);
 		}
-		x = drawXtermText(screen, flags, gc, x, y, 0, temp, n);
-		free(temp);
 		return x;
 	}
 #endif
