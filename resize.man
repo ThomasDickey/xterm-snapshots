@@ -1,5 +1,5 @@
 .\" $XConsortium: resize.man /main/12 1996/12/09 17:10:48 kaleb $
-.\" $XFree86: xc/programs/xterm/resize.man,v 1.4 1998/04/05 02:29:20 dawes Exp $
+.\" $XFree86: xc/programs/xterm/resize.man,v 1.5 2000/06/13 02:28:40 dawes Exp $
 .\" updated by Thomas E. Dickey for XFree86, Februrary 1998.
 .TH RESIZE 1 "Release 6.3" "X Version 11"
 .SH NAME

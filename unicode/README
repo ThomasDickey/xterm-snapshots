@@ -1,4 +1,4 @@
--- $XFree86: xc/programs/xterm/unicode/README,v 1.1 1999/06/12 15:37:23 dawes Exp $
+-- $XFree86: xc/programs/xterm/unicode/README,v 1.2 2000/06/13 02:28:44 dawes Exp $
 -- Thomas E. Dickey
 
 These are some scripts and datafiles used for generating tables used in the
