@@ -1385,12 +1385,25 @@ reset_decudk(void)
 void
 do_dcs(Char *dcsbuf, size_t dcslen)
 {
-	register TScreen *screen = &term->screen;
+	TScreen *screen = &term->screen;
+	char reply[BUFSIZ];
 	char *cp = (char *)dcsbuf;
+	Bool okay;
+	Bool clear_all;
+	Bool lock_keys;
+#if OPT_TCAP_QUERY
+	char *tmp;
+#endif
 
-	if (*cp == '$') { /* DECRQSS */
-		char reply[BUFSIZ];
-		Bool okay = True;
+	TRACE(("do_dcs(%s:%d)\n", (char *)dcsbuf, dcslen));
+
+	if (dcslen != strlen(cp))
+		/* shouldn't have nulls in the string */
+		return;
+
+	switch (*cp) {		/* intermediate character, or parameter */
+	case '$':		/* DECRQSS */
+		okay = True;
 
 		cp++;
 		if (*cp++ == 'q') {
@@ -1481,68 +1494,103 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 		} else {
 			unparseputc(CAN, screen->respond);
 		}
-	} else { /* DECUDK */
-		Bool clear_all = True;
-		Bool lock_keys = True;
-
-		if (dcslen != strlen(cp))
-			/* shouldn't have nulls in the string */
-			return;
-
-		if (*cp == '0') {
-			cp++;
-		} else if (*cp == '1') {
-			cp++;
-			clear_all = False;
-		}
-
-		if (*cp == ';')
-			cp++;
-		else if (*cp != '|')
-			return;
-
-		if (*cp == '0') {
-			cp++;
-		} else if (*cp == '1') {
-			cp++;
-			lock_keys = False;
-		}
-
-		if (*cp++ != '|')
-			return;
-
-		if (clear_all)
-			reset_decudk();
-
-		while (*cp) {
-			char *str = (char *)malloc(strlen(cp) + 2);
-			unsigned key = 0;
-			int len = 0;
-
-			while (isdigit(*cp))
-				key = (key * 10) + (*cp++ - '0');
-			if (*cp == '/') {
-				cp++;
-				while (*cp != ';' && *cp != '\0') {
-					int hi = hexvalue(*cp++);
-					int lo = hexvalue(*cp++);
-					if (hi >= 0 && lo >= 0)
-						str[len++] = (hi << 4) | lo;
-					else
-						return;
+		break;
+#if OPT_TCAP_QUERY
+	case '+':
+		cp++;
+		if (*cp == 'q') {
+			okay = True;
+			for (tmp = ++cp; *tmp;) {
+				if (xtermcapKeycode(&tmp) < 0) {
+					okay = False;
+					break;
 				}
 			}
-			if (len > 0 && key < MAX_UDK) {
-				if (user_keys[key].str != 0)
-					free(user_keys[key].str);
-				user_keys[key].str = str;
-				user_keys[key].len = len;
-			} else {
-				free(str);
+			unparseputc1(DCS, screen->respond);
+			unparseputc(okay ? '1' : '0', screen->respond);
+			unparseputc('+', screen->respond);
+			unparseputc('r', screen->respond);
+			if (okay) {
+				int code;
+				int count = 0;
+				for (tmp = cp; *tmp;) {
+					screen->tc_query = -1;
+					if ((code = xtermcapKeycode(&tmp)) >= 0) {
+						XKeyEvent event;
+						event.state = 0;
+						if (count++)
+							unparseputc(';', screen->respond);
+						screen->tc_query = code;
+						Input (&(term->keyboard),
+							screen, &event, False);
+						screen->tc_query = -1;
+					}
+				}
 			}
+			unparseputc1(ST, screen->respond);
+		}
+		break;
+#endif
+	default:
+		if (isdigit(*cp)) { /* digits are DECUDK, otherwise ignore */
+			clear_all = True;
+			lock_keys = True;
+
+			if (*cp == '0') {
+				cp++;
+			} else if (*cp == '1') {
+				cp++;
+				clear_all = False;
+			}
+
 			if (*cp == ';')
 				cp++;
+			else if (*cp != '|')
+				return;
+
+			if (*cp == '0') {
+				cp++;
+			} else if (*cp == '1') {
+				cp++;
+				lock_keys = False;
+			}
+
+			if (*cp++ != '|')
+				return;
+
+			if (clear_all)
+				reset_decudk();
+
+			while (*cp) {
+				char *str = (char *)malloc(strlen(cp) + 2);
+				unsigned key = 0;
+				int len = 0;
+
+				while (isdigit(*cp))
+					key = (key * 10) + (*cp++ - '0');
+				if (*cp == '/') {
+					cp++;
+					while (*cp != ';' && *cp != '\0') {
+						int hi = hexvalue(*cp++);
+						int lo = hexvalue(*cp++);
+						if (hi < 0 || lo < 0)
+							return;
+						str[len++] = (hi << 4) | lo;
+					}
+				}
+				if (len > 0 && key < MAX_UDK) {
+					if (user_keys[key].str != 0)
+						free(user_keys[key].str);
+					user_keys[key].str = str;
+					user_keys[key].len = len;
+				} else {
+					free(str);
+				}
+				if (*cp == ';')
+					cp++;
+			}
 		}
+		break;
 	}
 }
 

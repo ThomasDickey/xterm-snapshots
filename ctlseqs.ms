@@ -556,6 +556,21 @@ string,
 or
 \*(Dc\*0\*$\*r\*(Pt\*s\*(ST
 for invalid requests.
+.
+.IP \\*(Dc\\*+\\*q\\*(Pt\\*s\\*(ST
+Request Termcap/Terminfo String (xterm, experimental).
+The string following the "q" is a list of names separated by \*;
+which correspond to termcap or terminfo key names.
+.br
+\fIxterm\fP responds with
+\*(Dc\*1\*+\*r\*(Pt\*s\*(ST
+for valid requests, replacing the \*(Pt with the corresponding
+strings that xterm would send,
+or
+\*(Dc\*0\*+\*r\*(Pt\*s\*(ST
+for invalid requests.
+The strings are encoded in hexadecimal (2 digits per character), and are 
+separated by \*; if more than one name was requested.
 .Ed
 .\"
 .St

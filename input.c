@@ -342,6 +342,13 @@ Input (
 	if (keyboard->flags & MODE_KAM)
 		return;
 
+#if OPT_TCAP_QUERY
+	if (screen->tc_query >= 0) {
+		keysym = screen->tc_query;
+		strbuf[0] = 0;
+	}
+	else
+#endif
 #if OPT_I18N_SUPPORT
 	if (screen->xic
 #if OPT_WIDE_CHARS
@@ -1085,3 +1092,95 @@ VTInitModifiers(void)
     }
 }
 #endif /* OPT_NUM_LOCK */
+
+#if OPT_TCAP_QUERY
+/*
+ * Parse the termcap/terminfo name from the string, returning a positive number
+ * (the keysym) if found, otherwise -1.  Update the string pointer.
+ */
+int
+xtermcapKeycode(char **params)
+{
+#define DATA(tc,ti,x) { tc, ti, x }
+	static struct {
+		char *tc;
+		char *ti;
+		int code;
+	} table[] = {
+		DATA(	"%1",	"khlp",		XK_Help),
+		DATA(	"*6",	"kslt",		XK_Select),
+		DATA(	"@0",	"kfnd",		XK_Find),
+		DATA(	"@7",	"kend",		XK_End),
+		DATA(	"F1",	"kf11",		XK_F11),
+		DATA(	"F2",	"kf12",		XK_F12),
+		DATA(	"F3",	"kf13",		XK_F13),
+		DATA(	"F4",	"kf14",		XK_F14),
+		DATA(	"F5",	"kf15",		XK_F15),
+		DATA(	"F6",	"kf16",		XK_F16),
+		DATA(	"F7",	"kf17",		XK_F17),
+		DATA(	"F8",	"kf18",		XK_F18),
+		DATA(	"F9",	"kf19",		XK_F19),
+		DATA(	"FA",	"kf20",		XK_F20),
+		DATA(	"FB",	"kf21",		XK_F21),
+		DATA(	"FC",	"kf22",		XK_F22),
+		DATA(	"FD",	"kf23",		XK_F23),
+		DATA(	"FE",	"kf24",		XK_F24),
+		DATA(	"FF",	"kf25",		XK_F25),
+		DATA(	"FG",	"kf26",		XK_F26),
+		DATA(	"FH",	"kf27",		XK_F27),
+		DATA(	"FI",	"kf28",		XK_F28),
+		DATA(	"FJ",	"kf29",		XK_F29),
+		DATA(	"FK",	"kf30",		XK_F30),
+		DATA(	"FL",	"kf31",		XK_F31),
+		DATA(	"FM",	"kf32",		XK_F32),
+		DATA(	"FN",	"kf33",		XK_F33),
+		DATA(	"FO",	"kf34",		XK_F34),
+		DATA(	"FP",	"kf35",		XK_F35),
+		DATA(	"FQ",	"kf36",		SunXK_F36),
+		DATA(	"FR",	"kf37",		SunXK_F37),
+		DATA(	"k1",	"kf1",		XK_F1),
+		DATA(	"k2",	"kf2",		XK_F2),
+		DATA(	"k3",	"kf3",		XK_F3),
+		DATA(	"k4",	"kf4",		XK_F4),
+		DATA(	"k5",	"kf5",		XK_F5),
+		DATA(	"k6",	"kf6",		XK_F6),
+		DATA(	"k7",	"kf7",		XK_F7),
+		DATA(	"k8",	"kf8",		XK_F8),
+		DATA(	"k9",	"kf9",		XK_F9),
+		DATA(	"k;",	"kf10",		XK_F10), /* cannot termcap */
+		DATA(	"kB",	"kcbt",		XK_ISO_Left_Tab),
+		DATA(	"kC",	"kclr",		XK_Clear),
+		DATA(	"kD",	"kdch1",	XK_Delete),
+		DATA(	"kI",	"kich1",	XK_Insert),
+		DATA(	"kN",	"knp",		XK_Next),
+		DATA(	"kP",	"kpp",		XK_Prior),
+		DATA(	"kb",	"kbs",		XK_BackSpace),
+		DATA(	"kd",	"kcud1",	XK_Down),
+		DATA(	"kh",	"khome",	XK_Home),
+		DATA(	"kl",	"kcub1",	XK_Left),
+		DATA(	"kr",	"kcuf1",	XK_Right),
+		DATA(	"ku",	"kcuu1",	XK_Up),
+	};
+	Cardinal n;
+	unsigned len = 0;
+	int save = 0;
+	int code = -1;
+
+	while ((*params)[len] != 0 && (*params)[len] != ';')
+		len++;
+	save = (*params)[len];
+	(*params)[len] = 0;
+
+	for (n = 0; n < XtNumber(table); n++) {
+		if (!strcmp(table[n].ti, *params)
+		 || !strcmp(table[n].tc, *params)) {
+			code = table[n].code;
+			break;
+		}
+	}
+	if (((*params)[len] = save) != 0)
+		len++;
+	*params = *params + len;
+	return code;
+}
+#endif

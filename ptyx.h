@@ -461,6 +461,10 @@ typedef struct {
 #define OPT_SUNPC_KBD	1 /* true if xterm supports Sun/PC keyboard map */
 #endif
 
+#ifndef OPT_TCAP_QUERY
+#define OPT_TCAP_QUERY	0 /* true for experimental termcap query */
+#endif
+
 #ifndef OPT_TEK4014
 #define OPT_TEK4014     1 /* true if we're using tek4014 emulation */
 #endif
@@ -891,6 +895,9 @@ typedef struct {
 	Display		*display;	/* X display for screen		*/
 	int		respond;	/* socket for responses
 					   (position report, etc.)	*/
+#if OPT_TCAP_QUERY
+	int		tc_query;
+#endif
 #ifdef AMOEBA
 	capability      proccap;        /* process capability           */
 	struct circbuf  *tty_inq;       /* tty server input queue       */
