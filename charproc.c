@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.143 2003/05/21 22:59:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.147 2003/10/13 00:58:21 dickey Exp $ */
 
 /*
 
@@ -395,7 +395,11 @@ static XtResource resources[] =
     Bres(XtNcutNewline, XtCCutNewline, screen.cutNewline, TRUE),
     Bres(XtNcutToBeginningOfLine, XtCCutToBeginningOfLine,
 	 screen.cutToBeginningOfLine, TRUE),
+#ifdef SCO
+    Bres(XtNdeleteIsDEL, XtCDeleteIsDEL, screen.delete_is_del, TRUE),
+#else
     Bres(XtNdeleteIsDEL, XtCDeleteIsDEL, screen.delete_is_del, 2),
+#endif
     Bres(XtNdynamicColors, XtCDynamicColors, misc.dynamicColors, TRUE),
     Bres(XtNeightBitControl, XtCEightBitControl, screen.control_eight_bits, FALSE),
     Bres(XtNeightBitInput, XtCEightBitInput, screen.input_eight_bits, TRUE),
@@ -437,6 +441,7 @@ static XtResource resources[] =
     Ires(XtNnMarginBell, XtCColumn, screen.nmarginbell, N_MARGINBELL),
     Ires(XtNprinterControlMode, XtCPrinterControlMode,
 	 screen.printer_controlmode, 0),
+    Ires(XtNvisualBellDelay, XtCVisualBellDelay, screen.visualBellDelay, 100),
     Ires(XtNsaveLines, XtCSaveLines, screen.savelines, SAVELINES),
     Ires(XtNscrollLines, XtCScrollLines, screen.scrolllines, SCROLLLINES),
     Sres("font1", "Font1", screen.menu_font_names[fontMenu_font1], NULL),
@@ -529,15 +534,15 @@ static XtResource resources[] =
     COLOR_RES("1", screen.Acolors[COLOR_1], DFT_COLOR("red3")),
     COLOR_RES("2", screen.Acolors[COLOR_2], DFT_COLOR("green3")),
     COLOR_RES("3", screen.Acolors[COLOR_3], DFT_COLOR("yellow3")),
-    COLOR_RES("4", screen.Acolors[COLOR_4], DFT_COLOR("blue3")),
+    COLOR_RES("4", screen.Acolors[COLOR_4], DFT_COLOR("DodgerBlue1")),
     COLOR_RES("5", screen.Acolors[COLOR_5], DFT_COLOR("magenta3")),
     COLOR_RES("6", screen.Acolors[COLOR_6], DFT_COLOR("cyan3")),
     COLOR_RES("7", screen.Acolors[COLOR_7], DFT_COLOR("gray90")),
-    COLOR_RES("8", screen.Acolors[COLOR_8], DFT_COLOR("gray30")),
+    COLOR_RES("8", screen.Acolors[COLOR_8], DFT_COLOR("gray50")),
     COLOR_RES("9", screen.Acolors[COLOR_9], DFT_COLOR("red")),
     COLOR_RES("10", screen.Acolors[COLOR_10], DFT_COLOR("green")),
     COLOR_RES("11", screen.Acolors[COLOR_11], DFT_COLOR("yellow")),
-    COLOR_RES("12", screen.Acolors[COLOR_12], DFT_COLOR("blue")),
+    COLOR_RES("12", screen.Acolors[COLOR_12], DFT_COLOR("SteelBlue1")),
     COLOR_RES("13", screen.Acolors[COLOR_13], DFT_COLOR("magenta")),
     COLOR_RES("14", screen.Acolors[COLOR_14], DFT_COLOR("cyan")),
     COLOR_RES("15", screen.Acolors[COLOR_15], DFT_COLOR("white")),
@@ -3093,7 +3098,7 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	    test = flags;
 	    checkVeryBoldColors(test, term->cur_foreground);
 
-	    drawXtermText(screen, test, currentGC,
+	    drawXtermText(screen, test & DRAWX_MASK, currentGC,
 			  CurCursorX(screen, screen->cur_row, screen->cur_col),
 			  CursorY(screen, screen->cur_row),
 			  curXtermChrSet(screen->cur_row),
@@ -4287,8 +4292,7 @@ static void
 VTResize(Widget w)
 {
     if (XtIsRealized(w))
-	ScreenResize(&term->screen, term->core.width, term->core.height,
-		     &term->flags);
+	ScreenResize(&term->screen, term->core.width, term->core.height, &term->flags);
 }
 
 #define okDimension(src,dst) ((src <= 32767) && ((dst = src) == src))
@@ -4667,6 +4671,7 @@ VTInitialize(Widget wrequest,
 
     wnew->screen.ansi_level = (wnew->screen.terminal_id / 100);
     init_Bres(screen.visualbell);
+    init_Ires(screen.visualBellDelay);
     init_Bres(screen.poponbell);
     init_Ires(misc.limit_resize);
 #if OPT_NUM_LOCK
@@ -5109,8 +5114,9 @@ VTRealize(Widget w,
 
     /* use ForgetGravity instead of SouthWestGravity because translating
        the Expose events for ConfigureNotifys is too hard */
-    values->bit_gravity = term->misc.resizeGravity == NorthWestGravity ?
-	NorthWestGravity : ForgetGravity;
+    values->bit_gravity = ((term->misc.resizeGravity == NorthWestGravity)
+			   ? NorthWestGravity
+			   : ForgetGravity);
     term->screen.fullVwin.window = XtWindow(term) =
 	XCreateWindow(XtDisplay(term), XtWindow(XtParent(term)),
 		      term->core.x, term->core.y,
@@ -5401,7 +5407,6 @@ xim_real_init(void)
 	XVaNestedList p_list;
 	XPoint spot =
 	{0, 0};
-	XFontSetExtents *extents;
 	XFontStruct **fonts;
 	char **font_name_list;
 
@@ -5425,7 +5430,7 @@ xim_real_init(void)
 	    XCloseIM(xim);
 	    return;
 	}
-	extents = XExtentsOfFontSet(term->screen.fs);
+	(void) XExtentsOfFontSet(term->screen.fs);
 	j = XFontsOfFontSet(term->screen.fs, &fonts, &font_name_list);
 	for (i = 0, term->screen.fs_ascent = 0; i < j; i++) {
 	    if (term->screen.fs_ascent < (*fonts)->ascent)
@@ -5709,7 +5714,7 @@ ShowCursor(void)
     TRACE(("ShowCursor calling drawXtermText cur(%d,%d)\n",
 	   screen->cur_row, screen->cur_col));
 
-    drawXtermText(screen, flags, currentGC,
+    drawXtermText(screen, flags & DRAWX_MASK, currentGC,
 		  x = CurCursorX(screen, screen->cur_row, cursor_col),
 		  y = CursorY(screen, screen->cur_row),
 		  curXtermChrSet(screen->cur_row),
@@ -5717,14 +5722,14 @@ ShowCursor(void)
 
 #if OPT_WIDE_CHARS
     if (c1l || c1h) {
-	drawXtermText(screen, flags, currentGC,
-		      x, y,
+	drawXtermText(screen, (flags & DRAWX_MASK) | NOBACKGROUND,
+		      currentGC, x, y,
 		      curXtermChrSet(screen->cur_row),
 		      PAIRED_CHARS(&c1l, &c1h), 1, iswide(base));
 
 	if (c2l || c2h)
-	    drawXtermText(screen, flags, currentGC,
-			  x, y,
+	    drawXtermText(screen, (flags & DRAWX_MASK) | NOBACKGROUND,
+			  currentGC, x, y,
 			  curXtermChrSet(screen->cur_row),
 			  PAIRED_CHARS(&c2l, &c2h), 1, iswide(base));
     }
@@ -5835,7 +5840,7 @@ HideCursor(void)
 
     TRACE(("HideCursor calling drawXtermText cur(%d,%d)\n",
 	   screen->cursor_row, screen->cursor_col));
-    drawXtermText(screen, flags, currentGC,
+    drawXtermText(screen, flags & DRAWX_MASK, currentGC,
 		  x = CurCursorX(screen, screen->cursor_row, cursor_col),
 		  y = CursorY(screen, screen->cursor_row),
 		  curXtermChrSet(screen->cursor_row),
@@ -5843,14 +5848,14 @@ HideCursor(void)
 
 #if OPT_WIDE_CHARS
     if (c1l || c1h) {
-	drawXtermText(screen, flags, currentGC,
-		      x, y,
+	drawXtermText(screen, (flags & DRAWX_MASK) | NOBACKGROUND,
+		      currentGC, x, y,
 		      curXtermChrSet(screen->cur_row),
 		      PAIRED_CHARS(&c1l, &c1h), 1, iswide(base));
 
 	if (c2l || c2h)
-	    drawXtermText(screen, flags, currentGC,
-			  x, y,
+	    drawXtermText(screen, (flags & DRAWX_MASK) | NOBACKGROUND,
+			  currentGC, x, y,
 			  curXtermChrSet(screen->cur_row),
 			  PAIRED_CHARS(&c2l, &c2h), 1, iswide(base));
     }

@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.73 2003/03/23 02:01:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.74 2003/09/21 17:12:45 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -2453,32 +2453,35 @@ ConvertSelection(Widget w,
     if (*target == XA_TARGETS(d)) {
 	Atom *targetP;
 	Atom *std_targets;
+	XPointer std_return = 0;
 	unsigned long std_length;
-	XmuConvertStandardSelection(w, screen->selection_time, selection,
-				    target, type, (XPointer *) & std_targets,
-				    &std_length, format);
-	*length = std_length + 6;
-	targetP = (Atom *) XtMalloc(sizeof(Atom) * (*length));
-	*value = (XtPointer) targetP;
-	*targetP++ = XA_STRING;
-	*targetP++ = XA_TEXT(d);
+	if (XmuConvertStandardSelection(w, screen->selection_time, selection,
+					target, type, &std_return,
+					&std_length, format)) {
+	    std_targets = (Atom *) (std_return);
+	    *length = std_length + 6;
+	    targetP = (Atom *) XtMalloc(sizeof(Atom) * (*length));
+	    *value = (XtPointer) targetP;
+	    *targetP++ = XA_STRING;
+	    *targetP++ = XA_TEXT(d);
 #ifdef X_HAVE_UTF8_STRING
-	*targetP++ = XA_COMPOUND_TEXT(d);
-	*targetP++ = XA_UTF8_STRING(d);
+	    *targetP++ = XA_COMPOUND_TEXT(d);
+	    *targetP++ = XA_UTF8_STRING(d);
 #else
-	*targetP = XA_COMPOUND_TEXT(d);
-	if_OPT_WIDE_CHARS(screen, {
-	    *targetP = XA_UTF8_STRING(d);
-	});
-	targetP++;
+	    *targetP = XA_COMPOUND_TEXT(d);
+	    if_OPT_WIDE_CHARS(screen, {
+		*targetP = XA_UTF8_STRING(d);
+	    });
+	    targetP++;
 #endif
-	*targetP++ = XA_LENGTH(d);
-	*targetP++ = XA_LIST_LENGTH(d);
-	memcpy((char *) targetP, (char *) std_targets, sizeof(Atom) * std_length);
-	XtFree((char *) std_targets);
-	*type = XA_ATOM;
-	*format = 32;
-	result = True;
+	    *targetP++ = XA_LENGTH(d);
+	    *targetP++ = XA_LIST_LENGTH(d);
+	    memcpy(targetP, std_targets, sizeof(Atom) * std_length);
+	    XtFree((char *) std_targets);
+	    *type = XA_ATOM;
+	    *format = 32;
+	    result = True;
+	}
     }
 #if OPT_WIDE_CHARS
     else if (screen->wide_chars && *target == XA_STRING) {

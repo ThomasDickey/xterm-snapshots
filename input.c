@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.63 2003/05/19 00:47:32 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.64 2003/09/21 17:12:47 dickey Exp $ */
 
 /*
  * Copyright 1999-2001,2002 by Thomas E. Dickey
@@ -300,10 +300,10 @@ convertFromUTF8(unsigned long c, Char * strbuf)
  * Determine if we use the \E[3~ sequence for Delete, or the legacy ^?.  We
  * maintain the delete_is_del value as 3 states:  unspecified(2), true and
  * false.  If unspecified, it is handled differently according to whether the
- * legacy keybord support is enabled, or if xterm emulates a VT220.
+ * legacy keyboard support is enabled, or if xterm emulates a VT220.
  *
  * Once the user (or application) has specified delete_is_del via resource
- * settting, popup menu or escape sequence, it overrides the keyboard type
+ * setting, popup menu or escape sequence, it overrides the keyboard type
  * rather than the reverse.
  */
 Boolean

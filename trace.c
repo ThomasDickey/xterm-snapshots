@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.17 2003/03/23 02:01:40 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.18 2003/09/21 17:12:48 dickey Exp $
  */
 
 /************************************************************
@@ -69,9 +69,9 @@ Trace(char *fmt,...)
 
     if (!fp) {
 	char name[BUFSIZ];
-#if 0	/* usually I do not want unique names */
+#if 0				/* usually I do not want unique names */
 	int unique;
-	for (unique = 0; ; ++unique) {
+	for (unique = 0;; ++unique) {
 	    if (unique)
 		sprintf(name, "Trace-%s.out-%d", trace_who, unique);
 	    else
@@ -176,6 +176,30 @@ visibleIChar(IChar * buf, unsigned len)
 	dst += strlen(dst);
     }
     return result;
+}
+
+void
+TraceSizeHints(XSizeHints * hints)
+{
+    TRACE(("size hints:\n"));
+    if (hints->flags & (USPosition | PPosition))
+	TRACE(("  position %d,%d\n", hints->y, hints->x));
+    if (hints->flags & (USSize | PSize))
+	TRACE(("  size %d,%d\n", hints->height, hints->width));
+    if (hints->flags & PMinSize)
+	TRACE(("  min %d,%d\n", hints->min_height, hints->min_width));
+    if (hints->flags & PMaxSize)
+	TRACE(("  max %d,%d\n", hints->max_height, hints->max_width));
+    if (hints->flags & PResizeInc)
+	TRACE(("  inc %d,%d\n", hints->height_inc, hints->width_inc));
+    if (hints->flags & PAspect)
+	TRACE(("  min aspect %d/%d\n", hints->min_aspect.y, hints->min_aspect.y));
+    if (hints->flags & PAspect)
+	TRACE(("  max aspect %d/%d\n", hints->max_aspect.y, hints->max_aspect.y));
+    if (hints->flags & PBaseSize)
+	TRACE(("  base %d,%d\n", hints->base_height, hints->base_width));
+    if (hints->flags & PWinGravity)
+	TRACE(("  gravity %d\n", hints->win_gravity));
 }
 
 /*

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.38 2003/05/19 00:47:32 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.40 2003/10/13 00:58:22 dickey Exp $
  */
 
 /************************************************************
@@ -374,18 +374,30 @@ xtermSpecialFont(unsigned atts, unsigned chrset)
     }
 #endif
 
-    sprintf(tmp, "%s-%s-%s-%s-%s-%d-%s-%d-%d-%s-*-%s",
-	    props->beginning,
-	    width,
-	    props->slant,
-	    props->wideness,
-	    props->add_style,
-	    pixel_size,
-	    props->point_size,
-	    res_x,
-	    res_y,
-	    props->spacing,
-	    props->end);
+    if (atts & NORESOLUTION)
+	sprintf(tmp, "%s-%s-%s-%s-%s-%d-%s-*-*-%s-*-%s",
+		props->beginning,
+		width,
+		props->slant,
+		props->wideness,
+		props->add_style,
+		pixel_size,
+		props->point_size,
+		props->spacing,
+		props->end);
+    else
+	sprintf(tmp, "%s-%s-%s-%s-%s-%d-%s-%d-%d-%s-*-%s",
+		props->beginning,
+		width,
+		props->slant,
+		props->wideness,
+		props->add_style,
+		pixel_size,
+		props->point_size,
+		res_x,
+		res_y,
+		props->spacing,
+		props->end);
 
     ret = XtMalloc(strlen(tmp) + 1);
     strcpy(ret, tmp);
@@ -487,8 +499,11 @@ is_double_width_font(XFontStruct * fs)
 {
     return (2 * fs->min_bounds.width == fs->max_bounds.width);
 }
+#else
+#define is_double_width_font(fs) 0
+#endif
 
-#ifdef XRENDERFONT
+#if OPT_WIDE_CHARS && defined(XRENDERFONT) && defined(HAVE_TYPE_FCCHAR32)
 #define HALF_WIDTH_TEST_STRING "1234567890"
 
 /* '1234567890' in Chinese characters in UTF-8 */
@@ -529,8 +544,8 @@ is_double_width_font_xft(Display * dpy, XftFont * font)
     if (gi1.xOff != gi2.xOff)	/* Not a fixed-width font */
 	return 0;
 
-    XftTextExtentsUtf8(dpy, font, (FcChar8 *)hwstr, strlen(hwstr), &gi1);
-    XftTextExtentsUtf8(dpy, font, (FcChar8 *)fwstr, strlen(fwstr), &gi2);
+    XftTextExtentsUtf8(dpy, font, (FcChar8 *) hwstr, strlen(hwstr), &gi1);
+    XftTextExtentsUtf8(dpy, font, (FcChar8 *) fwstr, strlen(fwstr), &gi2);
 
     /*
      * fontconfig and Xft prior to 2.2(?) set the width of half-width
@@ -543,12 +558,8 @@ is_double_width_font_xft(Display * dpy, XftFont * font)
      */
     return ((2 * gi1.xOff == gi2.xOff) || (gi1.xOff == gi2.xOff));
 }
-#endif
 #else
-#define is_double_width_font(fs) 0
-#ifdef XRENDERFONT
 #define is_double_width_font_xft(dpy, xftfont) 0
-#endif
 #endif
 
 #define EmptyFont(fs) (fs != 0 \
@@ -829,19 +840,29 @@ xtermLoadFont(TScreen * screen,
      * characters.  Check that they are all present.  The null character
      * (0) is special, and is not used.
      */
-    for (ch = 1; ch < 32; ch++) {
-	int n = ch;
-#if OPT_WIDE_CHARS
-	if (screen->utf8_mode) {
-	    n = dec2ucs[ch];
-	    if (n == UCS_REPL)
-		continue;
-	}
+#ifdef XRENDERFONT
+    if (screen->renderFont != 0) {
+	/*
+	 * FIXME: we shouldn't even be here if we're using Xft.
+	 */
+	screen->fnt_boxes = False;
+    } else
 #endif
-	if (xtermMissingChar(n, nfs)
-	    || xtermMissingChar(n, bfs)) {
-	    screen->fnt_boxes = False;
-	    break;
+    {
+	for (ch = 1; ch < 32; ch++) {
+	    int n = ch;
+#if OPT_WIDE_CHARS
+	    if (screen->utf8_mode) {
+		n = dec2ucs(ch);
+		if (n == UCS_REPL)
+		    continue;
+	    }
+#endif
+	    if (xtermMissingChar(n, nfs)
+		|| xtermMissingChar(n, bfs)) {
+		screen->fnt_boxes = False;
+		break;
+	    }
 	}
     }
     TRACE(("Will %suse internal line-drawing characters\n",
@@ -950,6 +971,16 @@ xtermComputeFontInfo(TScreen * screen,
 	    screen->renderFontBold = XftFontOpenPattern(dpy, match);
 	    if (!screen->renderFontBold && match)
 		XftPatternDestroy(match);
+
+	    /*
+	     * FIXME:  just assume that the corresponding font has no graphics
+	     * characters.
+	     */
+	    if (screen->fnt_boxes) {
+		screen->fnt_boxes = False;
+		TRACE(("Xft opened - will %suse internal line-drawing characters\n",
+		       screen->fnt_boxes ? "not " : ""));
+	    }
 	}
 	if (pat)
 	    XftPatternDestroy(pat);
@@ -959,6 +990,8 @@ xtermComputeFontInfo(TScreen * screen,
 	win->f_height = screen->renderFont->height;
 	win->f_ascent = screen->renderFont->ascent;
 	win->f_descent = screen->renderFont->descent;
+	if (win->f_height < win->f_ascent + win->f_descent)
+	    win->f_height = win->f_ascent + win->f_descent;
 	if (is_double_width_font_xft(screen->display, screen->renderFont))
 	    win->f_width >>= 1;
     } else
@@ -1076,10 +1109,11 @@ xtermMissingChar(unsigned ch, XFontStruct * font)
 /*
  * ...since we'll scale the values anyway.
  */
-#define SCALE_X(n) n = (n * (screen->fnt_wide-1)) / (BOX_WIDE-1)
-#define SCALE_Y(n) n = (n * (screen->fnt_high-1)) / (BOX_HIGH-1)
+#define SCALE_X(n) n = (n * (font_width-1)) / (BOX_WIDE-1)
+#define SCALE_Y(n) n = (n * (font_height-1)) / (BOX_HIGH-1)
 
 #define SEG(x0,y0,x1,y1) x0,y0, x1,y1
+
 /*
  * Draw the given graphic character, if it is simple enough (i.e., a
  * line-drawing character).
@@ -1231,6 +1265,8 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
     XGCValues values;
     GC gc2;
     const short *p;
+    int font_width = ((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
+    int font_height = ((flags & DOUBLEHFONT) ? 2 : 1) * screen->fnt_high;
 
 #if OPT_WIDE_CHARS
     /*
@@ -1238,11 +1274,14 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
      * mode, but have gotten an old-style font.
      */
     if (screen->utf8_mode
+#ifdef XRENDERFONT
+	&& screen->renderFont == 0
+#endif
 	&& (ch > 127)
 	&& (ch != UCS_REPL)) {
 	unsigned n;
 	for (n = 1; n < 32; n++) {
-	    if (dec2ucs[n] == ch
+	    if (dec2ucs(n) == ch
 		&& !xtermMissingChar(n, (flags & BOLD)
 				     ? screen->fnt_bold
 				     : screen->fnt_norm)) {
@@ -1255,10 +1294,10 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 #endif
 
     TRACE(("DRAW_BOX(%d) cell %dx%d at %d,%d%s\n",
-	   ch, screen->fnt_high, screen->fnt_wide, y, x,
-	   (ch < 0 || ch >= (int) (sizeof(lines) / sizeof(lines[0])))
-	   ? "-BAD"
-	   : ""));
+	   ch, font_height, font_width, y, x,
+	   ((ch < 0 || ch >= (int) (sizeof(lines) / sizeof(lines[0])))
+	    ? "-BAD"
+	    : "")));
 
     if (!XGetGCValues(screen->display, gc, GCBackground, &values))
 	return;
@@ -1266,19 +1305,20 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
     values.foreground = values.background;
     gc2 = XCreateGC(screen->display, VWindow(screen), GCForeground, &values);
 
-    XFillRectangle(
-		      screen->display, VWindow(screen), gc2, x, y,
-		      screen->fnt_wide,
-		      screen->fnt_high);
+    if (!(flags & NOBACKGROUND))
+	XFillRectangle(
+			  screen->display, VWindow(screen), gc2, x, y,
+			  font_width,
+			  font_height);
 
     XCopyGC(screen->display, gc, (1 << GCLastBit) - 1, gc2);
     XSetLineAttributes(screen->display, gc2,
 		       (flags & BOLD)
-		       ? ((screen->fnt_high > 6)
-			  ? screen->fnt_high / 6
+		       ? ((font_height > 6)
+			  ? font_height / 6
 			  : 1)
-		       : ((screen->fnt_high > 8)
-			  ? screen->fnt_high / 8
+		       : ((font_height > 8)
+			  ? font_height / 8
 			  : 1),
 		       LineSolid,
 		       CapProjecting,
@@ -1309,14 +1349,108 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
     else {
 	XDrawRectangle(
 			  screen->display, VWindow(screen), gc, x, y,
-			  screen->fnt_wide - 1,
-			  screen->fnt_high - 1);
+			  font_width - 1,
+			  font_height - 1);
     }
 #endif
 
     XFreeGC(screen->display, gc2);
 }
 #endif
+
+#if OPT_WIDE_CHARS
+#define MY_UCS(ucs,dec) case ucs: result = dec; break
+int
+ucs2dec(int ch)
+{
+    int result = ch;
+    if ((ch > 127)
+	&& (ch != UCS_REPL)) {
+	switch (ch) {
+	    MY_UCS(0x25ae, 0);	/* black vertical rectangle                   */
+	    MY_UCS(0x25c6, 1);	/* black diamond                              */
+	    MY_UCS(0x2592, 2);	/* medium shade                               */
+	    MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation           */
+	    MY_UCS(0x240c, 4);	/* symbol for form feed                       */
+	    MY_UCS(0x240d, 5);	/* symbol for carriage return                 */
+	    MY_UCS(0x240a, 6);	/* symbol for line feed                       */
+	    MY_UCS(0x00b0, 7);	/* degree sign                                */
+	    MY_UCS(0x00b1, 8);	/* plus-minus sign                            */
+	    MY_UCS(0x2424, 9);	/* symbol for newline                         */
+	    MY_UCS(0x240b, 10);	/* symbol for vertical tabulation             */
+	    MY_UCS(0x2518, 11);	/* box drawings light up and left             */
+	    MY_UCS(0x2510, 12);	/* box drawings light down and left           */
+	    MY_UCS(0x250c, 13);	/* box drawings light down and right          */
+	    MY_UCS(0x2514, 14);	/* box drawings light up and right            */
+	    MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
+	    MY_UCS(0x23ba, 16);	/* box drawings scan 1                        */
+	    MY_UCS(0x23bb, 17);	/* box drawings scan 3                        */
+	    MY_UCS(0x2500, 18);	/* box drawings light horizontal              */
+	    MY_UCS(0x23bc, 19);	/* box drawings scan 7                        */
+	    MY_UCS(0x23bd, 20);	/* box drawings scan 9                        */
+	    MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
+	    MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
+	    MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
+	    MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
+	    MY_UCS(0x2502, 25);	/* box drawings light vertical                */
+	    MY_UCS(0x2264, 26);	/* less-than or equal to                      */
+	    MY_UCS(0x2265, 27);	/* greater-than or equal to                   */
+	    MY_UCS(0x03c0, 28);	/* greek small letter pi                      */
+	    MY_UCS(0x2260, 29);	/* not equal to                               */
+	    MY_UCS(0x00a3, 30);	/* pound sign                                 */
+	    MY_UCS(0x00b7, 31);	/* middle dot                                 */
+	}
+    }
+    return result;
+}
+
+#undef  MY_UCS
+#define MY_UCS(ucs,dec) case dec: result = ucs; break
+
+int
+dec2ucs(int ch)
+{
+    int result = ch;
+    if (ch < 32) {
+	switch (ch) {
+	    MY_UCS(0x25ae, 0);	/* black vertical rectangle                   */
+	    MY_UCS(0x25c6, 1);	/* black diamond                              */
+	    MY_UCS(0x2592, 2);	/* medium shade                               */
+	    MY_UCS(0x2409, 3);	/* symbol for horizontal tabulation           */
+	    MY_UCS(0x240c, 4);	/* symbol for form feed                       */
+	    MY_UCS(0x240d, 5);	/* symbol for carriage return                 */
+	    MY_UCS(0x240a, 6);	/* symbol for line feed                       */
+	    MY_UCS(0x00b0, 7);	/* degree sign                                */
+	    MY_UCS(0x00b1, 8);	/* plus-minus sign                            */
+	    MY_UCS(0x2424, 9);	/* symbol for newline                         */
+	    MY_UCS(0x240b, 10);	/* symbol for vertical tabulation             */
+	    MY_UCS(0x2518, 11);	/* box drawings light up and left             */
+	    MY_UCS(0x2510, 12);	/* box drawings light down and left           */
+	    MY_UCS(0x250c, 13);	/* box drawings light down and right          */
+	    MY_UCS(0x2514, 14);	/* box drawings light up and right            */
+	    MY_UCS(0x253c, 15);	/* box drawings light vertical and horizontal */
+	    MY_UCS(0x23ba, 16);	/* box drawings scan 1                        */
+	    MY_UCS(0x23bb, 17);	/* box drawings scan 3                        */
+	    MY_UCS(0x2500, 18);	/* box drawings light horizontal              */
+	    MY_UCS(0x23bc, 19);	/* box drawings scan 7                        */
+	    MY_UCS(0x23bd, 20);	/* box drawings scan 9                        */
+	    MY_UCS(0x251c, 21);	/* box drawings light vertical and right      */
+	    MY_UCS(0x2524, 22);	/* box drawings light vertical and left       */
+	    MY_UCS(0x2534, 23);	/* box drawings light up and horizontal       */
+	    MY_UCS(0x252c, 24);	/* box drawings light down and horizontal     */
+	    MY_UCS(0x2502, 25);	/* box drawings light vertical                */
+	    MY_UCS(0x2264, 26);	/* less-than or equal to                      */
+	    MY_UCS(0x2265, 27);	/* greater-than or equal to                   */
+	    MY_UCS(0x03c0, 28);	/* greek small letter pi                      */
+	    MY_UCS(0x2260, 29);	/* not equal to                               */
+	    MY_UCS(0x00a3, 30);	/* pound sign                                 */
+	    MY_UCS(0x00b7, 31);	/* middle dot                                 */
+	}
+    }
+    return result;
+}
+
+#endif /* OPT_WIDE_CHARS */
 
 #if OPT_SHIFT_FONTS
 static XFontStruct *

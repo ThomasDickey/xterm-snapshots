@@ -7,7 +7,7 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.49 2002/11/22 22:56:06 tsi Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.50 2003/09/17 01:22:50 torrey Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -61,6 +61,11 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
     (defined(LinuxArchitecture) && \
      (LinuxCLibMajorVersion == 6) && (LinuxCLibMinorVersion < 1))
          PTYLIB = -lutil
+#endif
+
+#ifdef DarwinArchitecture
+/* dyld can deadlock if a signal comes in when it is looking up a symbol */
+  LOCAL_LDFLAGS = -Wl,-bind_at_load
 #endif
 
 #ifdef OS2Architecture

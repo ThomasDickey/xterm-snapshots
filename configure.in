@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.60 2003/05/21 22:59:13 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.61 2003/09/21 17:12:47 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -41,6 +41,8 @@ openedition)	: ${CFLAGS="-O2 -Wc,dll -Wl,EDIT=NO"}
 		: ${CPPFLAGS="-D_ALL_SOURCE"}
 		: ${LIBS="/usr/lib/Xaw.x /usr/lib/SM.x /usr/lib/ICE.x /usr/lib/X11.x"}
 		: ${CC=c89};;
+darwin*)
+		: ${LDFLAGS}="${LDFLAGS} -Wl,-bind_at_load";;
 esac
 
 AC_PROG_CC
@@ -260,10 +262,11 @@ linux*)
 	assume_broken_osc=no ;;
 esac
 
-AC_ARG_ENABLE(broken-osc,
+CF_ARG_OPTION(broken-osc,
 	[  --enable-broken-osc     allow broken Linux OSC-strings],
 	[enable_broken_osc=$enableval],
-	[enable_broken_osc=$assume_broken_osc])
+	[enable_broken_osc=$enableval],
+	[$assume_broken_osc])
 AC_MSG_RESULT($enable_broken_osc)
 if test "$enable_broken_osc" = yes ; then
 	AC_DEFINE(OPT_BROKEN_OSC,1)
@@ -440,8 +443,8 @@ test "$enable_numlock" = no && AC_DEFINE(OPT_NUM_LOCK,0)
 
 AC_MSG_CHECKING(if you want support for pty-handshaking)
 
-AC_ARG_ENABLE(pty-handshake,
-	[  --disable-pty-handshake enable pty-handshake support],
+CF_ARG_DISABLE(pty-handshake,
+	[  --disable-pty-handshake disable pty-handshake support],
 	[enable_pty_handshake=no],
 	[enable_pty_handshake=yes])
 AC_MSG_RESULT($enable_pty_handshake)

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.h,v 1.10 2000/12/30 19:15:46 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.h,v 1.11 2003/10/13 00:58:22 dickey Exp $
  */
 
 /************************************************************
@@ -68,6 +68,11 @@ extern void xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int
 #if OPT_SHIFT_FONTS
 extern void HandleSmallerFont PROTO_XT_ACTIONS_ARGS;
 extern void HandleLargerFont PROTO_XT_ACTIONS_ARGS;
+#endif
+
+#if OPT_WIDE_CHARS
+extern int ucs2dec(int);
+extern int dec2ucs(int);
 #endif
 
 #endif /* included_fontutils_h */

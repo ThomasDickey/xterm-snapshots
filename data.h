@@ -2,7 +2,7 @@
  *	$Xorg: data.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.h,v 3.30 2003/03/23 02:01:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.h,v 3.31 2003/10/13 00:58:22 dickey Exp $ */
 
 /*
  * Copyright 2002,2003 by Thomas E. Dickey
@@ -143,10 +143,6 @@ extern XtermWidget term;
 #define	XkbBI_MajorError		2
 #define	XkbBI_TerminalBell		9
 #define	XkbBI_MarginBell		10
-#endif
-
-#if OPT_WIDE_CHARS
-extern const unsigned short dec2ucs[32];
 #endif
 
 extern char *ProgramName;

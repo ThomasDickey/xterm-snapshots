@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.105 2003/05/21 22:59:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.108 2003/10/13 00:58:22 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey
@@ -108,6 +108,15 @@
 #endif
 #endif
 #endif /* SYSV */
+
+/*
+ * Newer versions of <X11/Xft/Xft.h> have a version number.  We use certain
+ * features from that.
+ */
+#if defined(XRENDERFONT) && defined(XFT_VERSION) && XFT_VERSION >= 20100
+#define HAVE_TYPE_FCCHAR32	1	/* compatible: XftChar16 */
+#define HAVE_TYPE_XFTCHARSPEC	1	/* new type XftCharSpec */
+#endif
 
 /*
 ** Definitions to simplify ifdef's for pty's.
@@ -329,7 +338,7 @@ typedef struct {
 	int	x;
 	int	y;
 	int	fontsize;
-	int	linetype;
+	unsigned linetype;
 } Tmodes;
 
 typedef struct {
@@ -549,7 +558,11 @@ typedef struct {
 #endif
 
 #ifndef OPT_SCO_FUNC_KEYS
+#ifdef SCO
+#define OPT_SCO_FUNC_KEYS 1 /* true if xterm supports SCO-style function keys */
+#else
 #define OPT_SCO_FUNC_KEYS 0 /* true if xterm supports SCO-style function keys */
+#endif
 #endif
 
 #ifndef OPT_SESSION_MGT
@@ -878,6 +891,9 @@ typedef struct {
 #endif
 #ifndef TRACE_CHILD
 #define TRACE_CHILD /*nothing*/
+#endif
+#ifndef TRACE_HINTS
+#define TRACE_HINTS(hints) /*nothing*/
 #endif
 #ifndef TRACE_OPTS
 #define TRACE_OPTS(opts,ress,lens) /*nothing*/
@@ -1321,6 +1337,7 @@ typedef struct {
 #endif /* OPT_TEK4014 */
 
 	int		multiClickTime;	 /* time between multiclick selects */
+	int		visualBellDelay; /* msecs to delay for visibleBell */
 	int		bellSuppressTime; /* msecs after Bell before another allowed */
 	Boolean		bellInProgress; /* still ringing/flashing prev bell? */
 	char		*charClass;	/* for overriding word selection */
@@ -1575,6 +1592,20 @@ typedef struct _TekWidgetRec {
 #define CHARDRAWN	0x80    /* a character has been drawn here on the
 				   screen.  Used to distinguish blanks from
 				   empty parts of the screen when selecting */
+
+/* The following attributes make sense in the argument of drawXtermText()  */
+#define NOBACKGROUND	0x100	/* Used for overstrike */
+#define NOTRANSLATION	0x200	/* No scan for chars missing in font */
+#define NATIVEENCODING	0x400	/* strings are in the font encoding */
+#define DOUBLEWFONT	0x800	/* The actual X-font is double-width */
+#define DOUBLEHFONT	0x1000	/* The actual X-font is double-height */
+#define CHARBYCHAR	0x2000	/* Draw chars one-by-one */
+
+/* The toplevel-call to drawXtermText() should have text-attributes guarded: */
+#define DRAWX_MASK	0xff	/* text flags should be bitand'ed */
+
+/* The following attribute makes sense in the argument of xtermSpecialFont etc */
+#define NORESOLUTION	0x800000	/* find the font without resolution */
 
 			/* mask: user-visible attributes */
 #define	ATTRIBUTES	(INVERSE|UNDERLINE|BOLD|BLINK|BG_COLOR|FG_COLOR|INVISIBLE|PROTECTED)

@@ -15,7 +15,7 @@
 #	I checked the limits using ncurses "captoinfo -CrTv", which prints
 #	the resolved length of each entry in a comment at the end - T.Dickey
 #
-# $XFree86: xc/programs/xterm/termcap,v 3.29 2003/03/09 23:39:14 dickey Exp $
+# $XFree86: xc/programs/xterm/termcap,v 3.30 2003/10/13 00:58:22 dickey Exp $
 #
 xf|xterm-xfree86|XFree86 xterm:\
 	:k1=\EOP:k2=\EOQ:k3=\EOR:k4=\EOS:\
@@ -71,17 +71,24 @@ xn|xterm-noapp|xterm with cursor keys in normal mode:\
 #
 # This should work for the commonly used "color xterm" variations (XFree86
 # xterm, color_xterm, nxterm, rxvt).  Note that it does not set 'bce', so for
-# XFree86 and and rxvt, some applications that use colors will be less
-# efficient, and in a few special cases (with "smart" optimization) the wrong
-# color will be painted in spots.
+# XFree86 and rxvt, some applications that use colors will be less efficient,
+# and in a few special cases (with "smart" optimization) the wrong color will
+# be painted in spots.
 vc|xterm-color|generic "ANSI" color xterm:\
 	:Co#8:NC@:pa#64:op=\E[m:AB=\E[4%dm:AF=\E[3%dm:ac@:tc=xterm-r6:
 #
 # These aliases are for compatibility with the terminfo; termcap cannot provide
-# the extra features, but termcap applications still want the names.
+# the extra features, but termcap applications still want the names.  Note that
+# AF/AB really should be Sf/Sb, but there are applications which expect the
+# former.  The terminfo contains both strings.
 x1|xterm-16color|xterm alias:tc=xterm-xfree86:
-x2|xterm-88color|xterm alias:tc=xterm-256color:
-x3|xterm-256color|xterm alias:tc=xterm-xfree86:
+
+x2|xterm-88color|xterm alias:\
+	:Co#88:pa#88:tc=xterm-256color:
+
+x3|xterm-256color|xterm alias:\
+	:Co#256:pa#256:AF=\E[38;5;%dm:AB=\E[48;5;%dm:tc=xterm-xfree86:
+
 xn|xterm-nrc|xterm alias:tc=xterm:
 xr|xterm-rep|xterm alias:tc=xterm:
 xx|xterm-xmc|xterm alias:sg#1:tc=xterm:

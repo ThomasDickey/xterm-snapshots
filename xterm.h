@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.89 2003/05/19 00:47:33 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.90 2003/09/21 17:12:48 dickey Exp $ */
 
 /************************************************************
 
@@ -373,6 +373,7 @@ extern int errno;
 #define XtNutf8			"utf8"
 #define XtNveryBoldColors	"veryBoldColors"
 #define XtNvisualBell		"visualBell"
+#define XtNvisualBellDelay	"visualBellDelay"
 #define XtNvt100Graphics	"vt100Graphics"
 #define XtNwideBoldFont		"wideBoldFont"
 #define XtNwideChars		"wideChars"
@@ -470,9 +471,10 @@ extern int errno;
 #define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
-#define XtCVeryBoldColors	"VeryBoldColors"
 #define XtCVT100Graphics	"VT100Graphics"
+#define XtCVeryBoldColors	"VeryBoldColors"
 #define XtCVisualBell		"VisualBell"
+#define XtCVisualBellDelay	"VisualBellDelay"
 #define XtCWideBoldFont		"WideBoldFont"
 #define XtCWideChars		"WideChars"
 #define XtCWideFont		"WideFont"
