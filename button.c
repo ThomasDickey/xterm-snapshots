@@ -199,20 +199,20 @@ DiredButton(
 	String *params GCC_UNUSED,	/* selections */
 	Cardinal *num_params GCC_UNUSED)
 {	/* ^XM-G<line+' '><col+' '> */
-	register TScreen *screen = &term->screen;
-	int pty = screen->respond;
-	char Line[ 6 ];
-	register unsigned line, col;
+    register TScreen *screen = &term->screen;
+    Char Line[ 6 ];
+    register unsigned line, col;
 
-    if (event->type != ButtonPress && event->type != ButtonRelease)
-	return;
-    strcpy( Line, "\030\033G  " );
-
+    if (event->type == ButtonPress || event->type == ButtonRelease) {
 	line = ( event->xbutton.y - screen->border ) / FontHeight( screen );
 	col  = ( event->xbutton.x - OriginX(screen)) / FontWidth( screen );
+	Line[0] = CTRL('X');
+	Line[1] = ESC;
+	Line[2] = 'G';
 	Line[3] = ' ' + col;
 	Line[4] = ' ' + line;
-	v_write(pty, Line, 5 );
+	v_write(screen->respond, Line, 5 );
+    }
 }
 
 void
@@ -222,28 +222,29 @@ ViButton(
 	String *params GCC_UNUSED,	/* selections */
 	Cardinal *num_params GCC_UNUSED)
 {	/* ^XM-G<line+' '><col+' '> */
-	register TScreen *screen = &term->screen;
-	int pty = screen->respond;
-	char Line[ 6 ];
-	register int line;
+    register TScreen *screen = &term->screen;
+    int pty = screen->respond;
+    Char Line[ 6 ];
+    register int line;
 
-    if (event->type != ButtonPress && event->type != ButtonRelease)
-	return;
+    if (event->type == ButtonPress || event->type == ButtonRelease) {
 
 	line = screen->cur_row -
 		(( event->xbutton.y - screen->border ) / FontHeight( screen ));
-	if ( ! line ) return;
-	Line[ 1 ] = 0;
-	Line[ 0 ] = 27;
-	v_write(pty, Line, 1 );
+	if (line != 0) {
+	    Line[0] = ESC;	/* force an exit from insert-mode */
+	    v_write(pty, Line, 1 );
 
-	Line[ 0 ] = CTRL('p');
-
-	if ( line < 0 ) {
+	    if ( line < 0 ) {
 		line = -line;
-		Line[ 0 ] = CTRL('n');
+		Line[0] = CTRL('n');
+	    } else {
+		Line[0] = CTRL('p');
+	    }
+	    while ( --line >= 0 )
+		v_write(pty, Line, 1 );
 	}
-	while ( --line >= 0 ) v_write(pty, Line, 1 );
+    }
 }
 
 
@@ -356,7 +357,7 @@ static void _GetSelection(
       case XA_CUT_BUFFER5: cutbuffer = 5; break;
       case XA_CUT_BUFFER6: cutbuffer = 6; break;
       case XA_CUT_BUFFER7: cutbuffer = 7; break;
-      default:	       cutbuffer = -1;
+      default:		   cutbuffer = -1;
     }
     if (cutbuffer >= 0) {
 	int inbytes;
@@ -396,8 +397,8 @@ static void SelectionReceived(
 	int *format GCC_UNUSED)
 {
     int pty;
-    register char *lag, *cp, *end;
-    char *line = (char*)value;
+    register Char *lag, *cp, *end;
+    Char *line = (Char*)value;
 
     if (!IsXtermWidget(w))
 	return;
@@ -420,12 +421,13 @@ static void SelectionReceived(
     end = &line[*length];
     lag = line;
     for (cp = line; cp != end; cp++)
-	{
-	    if (*cp != '\n') continue;
+    {
+	if (*cp == '\n') {
 	    *cp = '\r';
 	    v_write(pty, lag, cp - lag + 1);
 	    lag = cp + 1;
 	}
+    }
     if (lag != end)
 	v_write(pty, lag, end - lag);
 
@@ -637,7 +639,7 @@ EndExtend(
 				line[count++] = ' ' + col + 1;
 				line[count++] = ' ' + row + 1;
 			}
-			v_write(screen->respond, (char *)line, count);
+			v_write(screen->respond, line, count);
 			TrackText(0, 0, 0, 0);
 		}
 	}
@@ -800,17 +802,17 @@ ScrollSelection(register TScreen* screen, register int amount)
 	}
 
     scroll_update_one(startRRow, startRCol);
-    scroll_update_one(endRRow, endRCol);
+    scroll_update_one(endRRow,   endRCol);
     scroll_update_one(startSRow, startSCol);
-    scroll_update_one(endSRow, endSCol);
+    scroll_update_one(endSRow,   endSCol);
 
     scroll_update_one(rawRow, rawCol);
 
     scroll_update_one(screen->startHRow, screen->startHCol);
-    scroll_update_one(screen->endHRow, screen->endHCol);
+    scroll_update_one(screen->endHRow,   screen->endHCol);
 
     screen->startHCoord = Coordinate (screen->startHRow, screen->startHCol);
-    screen->endHCoord = Coordinate (screen->endHRow, screen->endHCol);
+    screen->endHCoord   = Coordinate (screen->endHRow,   screen->endHCol);
 }
 
 
@@ -875,6 +877,11 @@ LastTextCol(register int row)
 	      i >= 0 && !(*ch & CHARDRAWN) ;
 	      ch--, i--)
 	    ;
+#if OPT_DEC_CHRSET
+	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row + screen->topline)[0])) {
+		i *= 2;
+	}
+#endif
 	return(i);
 }
 
@@ -967,6 +974,25 @@ int SetCharacterClassRange (
     return (0);
 }
 
+#if OPT_WIDE_CHARS
+static int class_of(TScreen *screen, int row, int col)
+{
+    int value;
+#if OPT_DEC_CHRSET
+    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row + screen->topline)[0])) {
+	col /= 2;
+    }
+#endif
+    value = getXtermCell(screen, row, col);
+    if_OPT_WIDE_CHARS(screen,{
+	/*FIXME: extend the character-class table */
+    })
+    return charClass[value & ((sizeof(charClass)/sizeof(charClass[0]))-1)];
+}
+#else
+#define class_of(screen,row,col) charClass[getXtermCell(screen,row,col)]
+#endif
+
 /*
  * sets startSRow startSCol endSRow endSCol
  * ensuring that they have legal values
@@ -981,7 +1007,6 @@ ComputeSelect(
 	Bool extend)
 {
 	register TScreen *screen = &term->screen;
-	register Char *ptr;
 	register int length;
 	register int cclass;
 
@@ -1013,21 +1038,16 @@ ComputeSelect(
 				startSCol = 0;
 				startSRow++;
 			} else {
-				ptr = SCRN_BUF_CHARS(screen, startSRow+screen->topline)
-				 + startSCol;
-				cclass = charClass[*ptr];
+				cclass = class_of(screen,startSRow,startSCol);
 				do {
-					--startSCol;
-					--ptr;
-					if (startSCol <= 0
-					    && ScrnTstWrapped(screen, startSRow - 1)) {
-						--startSRow;
-						startSCol = LastTextCol(startSRow);
-						ptr = SCRN_BUF_CHARS(screen, startSRow+screen->topline)
-						 + startSCol;
-					}
+				    --startSCol;
+				    if (startSCol <= 0
+				     && ScrnTstWrapped(screen, startSRow - 1)) {
+					--startSRow;
+					startSCol = LastTextCol(startSRow);
+				    }
 				} while (startSCol >= 0
-				 && charClass[*ptr] == cclass);
+				 && class_of(screen,startSRow,startSCol) == cclass);
 				++startSCol;
 			}
 			if (endSCol > (LastTextCol(endSRow) + 1)) {
@@ -1035,22 +1055,17 @@ ComputeSelect(
 				endSRow++;
 			} else {
 				length = LastTextCol(endSRow);
-				ptr = SCRN_BUF_CHARS(screen, endSRow+screen->topline)
-				 + endSCol;
-				cclass = charClass[*ptr];
+				cclass = class_of(screen,endSRow,endSCol);
 				do {
-					++endSCol;
-					++ptr;
-					if (endSCol > length
-					    && ScrnTstWrapped(screen, endSRow)) {
-						endSCol = 0;
-						++endSRow;
-						length = LastTextCol(endSRow);
-						ptr = SCRN_BUF_CHARS(screen, endSRow+screen->topline)
-						 + endSCol;
-					}
+				    ++endSCol;
+				    if (endSCol > length
+				     && ScrnTstWrapped(screen, endSRow)) {
+					endSCol = 0;
+					++endSRow;
+					length = LastTextCol(endSRow);
+				    }
 				} while (endSCol <= length
-				 && charClass[*ptr] == cclass);
+				 && class_of(screen,endSRow,endSCol) == cclass);
 				/* Word select selects if pointing to any char
 				   in "word", especially in that it includes
 				   the last character in a word.  So no --endSCol
@@ -1195,60 +1210,70 @@ SaltTextAway(
     /* Guaranteed that (crow, ccol) <= (row, col), and that both points are valid
        (may have row = screen->max_row+1, col = 0) */
 {
-	register TScreen *screen = &term->screen;
-	register int i, j = 0;
-	int eol;
-	char *line, *lp;
+    register TScreen *screen = &term->screen;
+    register int i, j = 0;
+    int eol;
+    char *line, *lp;
 
-	if (crow == row && ccol > col) {
-	    int tmp = ccol;
-	    ccol = col;
-	    col = tmp;
+    if (crow == row && ccol > col) {
+	int tmp = ccol;
+	ccol = col;
+	col = tmp;
+    }
+
+    --col;
+    /* first we need to know how long the string is before we can save it*/
+
+    if ( row == crow ) {
+	j = Length(screen, crow, ccol, col);
+    } else { /* two cases, cut is on same line, cut spans multiple lines */
+	j += Length(screen, crow, ccol, screen->max_col) + 1;
+	for (i = crow + 1; i < row; i++)
+	    j += Length(screen, i, 0, screen->max_col) + 1;
+	if (col >= 0)
+	    j += Length(screen, row, 0, col);
+    }
+
+    /* UTF-8 may require more space */
+    if_OPT_WIDE_CHARS(screen,{j *= 4;})
+
+    /* now get some memory to save it in */
+
+    if (screen->selection_size <= j) {
+	if((line = (char *)malloc((unsigned) j + 1)) == 0)
+	    SysError(ERROR_BMALLOC2);
+	XtFree(screen->selection_data);
+	screen->selection_data = line;
+	screen->selection_size = j + 1;
+    } else {
+	line = screen->selection_data;
+    }
+
+    if ((line == 0)
+     || (j < 0))
+	return;
+
+    line[j] = '\0';		/* make sure it is null terminated */
+    lp = line;			/* lp points to where to save the text */
+    if ( row == crow ) {
+	lp = SaveText(screen, row, ccol, col, lp, &eol);
+    } else {
+	lp = SaveText(screen, crow, ccol, screen->max_col, lp, &eol);
+	if (eol)
+	    *lp ++ = '\n';	/* put in newline at end of line */
+	for(i = crow +1; i < row; i++) {
+	    lp = SaveText(screen, i, 0, screen->max_col, lp, &eol);
+	    if (eol)
+		*lp ++ = '\n';
 	}
+	if (col >= 0)
+	    lp = SaveText(screen, row, 0, col, lp, &eol);
+    }
+    *lp = '\0';			/* make sure we have end marked */
 
-	--col;
-	/* first we need to know how long the string is before we can save it*/
-
-	if ( row == crow ) j = Length(screen, crow, ccol, col);
-	else {	/* two cases, cut is on same line, cut spans multiple lines */
-		j += Length(screen, crow, ccol, screen->max_col) + 1;
-		for(i = crow + 1; i < row; i++)
-			j += Length(screen, i, 0, screen->max_col) + 1;
-		if (col >= 0)
-			j += Length(screen, row, 0, col);
-	}
-
-	/* now get some memory to save it in */
-
-	if (screen->selection_size <= j) {
-	    if((line = (char *)malloc((unsigned) j + 1)) == 0)
-		SysError(ERROR_BMALLOC2);
-	    XtFree(screen->selection);
-	    screen->selection = line;
-	    screen->selection_size = j + 1;
-	} else line = screen->selection;
-	if (!line || j < 0) return;
-
-	line[j] = '\0';		/* make sure it is null terminated */
-	lp = line;		/* lp points to where to save the text */
-	if ( row == crow ) lp = SaveText(screen, row, ccol, col, lp, &eol);
-	else {
-		lp = SaveText(screen, crow, ccol, screen->max_col, lp, &eol);
-		if (eol)
-			*lp ++ = '\n';	/* put in newline at end of line */
-		for(i = crow +1; i < row; i++) {
-			lp = SaveText(screen, i, 0, screen->max_col, lp, &eol);
-			if (eol)
-				*lp ++ = '\n';
-			}
-		if (col >= 0)
-			lp = SaveText(screen, row, 0, col, lp, &eol);
-	}
-	*lp = '\0';		/* make sure we have end marked */
-
-	TRACE(("Salted TEXT:%.*s\n", lp - line, line))
-	screen->selection_length = (lp - line);
-	_OwnSelection(term, params, num_params);
+    TRACE(("Salted TEXT:%.*s\n", lp - line, line))
+    screen->selection_length = (lp - line);
+    _OwnSelection(term, params, num_params);
 }
 
 static Boolean
@@ -1268,9 +1293,11 @@ ConvertSelection(
 	return False;
 
     screen = &((XtermWidget)w)->screen;
-    if (screen->selection == NULL) return False; /* can this happen? */
 
-    if (*target == XA_TARGETS(d)) {
+    if (screen->selection_data == NULL) {
+	return False; 		/* can this happen? */
+
+    } else if (*target == XA_TARGETS(d)) {
 	Atom* targetP;
 	Atom* std_targets;
 	unsigned long std_length;
@@ -1298,7 +1325,7 @@ ConvertSelection(
 	if (*target == XA_COMPOUND_TEXT(d)) {
 	    XTextProperty textprop;
 
-	    *value = (XtPointer) screen->selection;
+	    *value = (XtPointer) screen->selection_data;
 	    if (XmbTextListToTextProperty (d, (char**)value, 1,
 					   XCompoundTextStyle, &textprop)
 			< Success) return False;
@@ -1307,7 +1334,7 @@ ConvertSelection(
 	    *type = *target;
 	} else {
 	    *type = XA_STRING;
-	    *value = screen->selection;
+	    *value = screen->selection_data;
 	    *length = screen->selection_length;
 	}
 	*format = 8;
@@ -1444,7 +1471,8 @@ _OwnSelection(
 			"%s: selection too big (%d bytes), not storing in CUT_BUFFER%d\n",
 			xterm_name, termw->screen.selection_length, cutbuffer);
 	    else
-		XStoreBuffer( XtDisplay((Widget)termw), termw->screen.selection,
+		XStoreBuffer( XtDisplay((Widget)termw),
+			      termw->screen.selection_data,
 			      termw->screen.selection_length, cutbuffer );
 	else if (!replyToEmacs) {
 	    have_selection |=
@@ -1515,33 +1543,38 @@ SaveText(
     register char *lp,		/* pointer to where to put the text */
     int *eol)
 {
-	register int i = 0;
-	register Char *ch = SCRN_BUF_CHARS(screen, row + screen->topline);
-	register int c;
+    int i = 0;
+    int c;
 
-	i = Length(screen, row, scol, ecol);
-	ecol = scol + i;
+    i = Length(screen, row, scol, ecol);
+    ecol = scol + i;
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row + screen->topline)[0])) {
-		scol = (scol + 0) / 2;
-		ecol = (ecol + 1) / 2;
-	}
+    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row + screen->topline)[0])) {
+	scol = (scol + 0) / 2;
+	ecol = (ecol + 1) / 2;
+    }
 #endif
-	*eol = !ScrnTstWrapped(screen, row);
-	for (i = scol; i < ecol; i++) {
-		c = ch[i];
-		if (c == 0)
-			c = ' ';
-		else if(c < ' ') {
-			if(c == '\036')
-				c = '#'; /* char on screen is pound sterling */
-			else
-				c += 0x5f; /* char is from DEC drawing set */
-		} else if(c == 0x7f)
-			c = 0x5f;
-		*lp++ = c;
+    *eol = !ScrnTstWrapped(screen, row);
+    for (i = scol; i < ecol; i++) {
+	c = getXtermCell(screen,row,i);
+	if (c == 0) {
+	    c = ' ';
+	} else if (c < ' ') {
+	    if (c == '\036')
+		c = '#';	/* char on screen is pound sterling */
+	    else
+		c += 0x5f;	/* char is from DEC drawing set */
+	} else if (c == 0x7f) {
+	    c = 0x5f;
 	}
-	return(lp);
+#if OPT_WIDE_CHARS
+	if (screen->utf8_mode)
+	    lp = convertToUTF8(lp, c);
+	else
+#endif
+	*lp++ = c;
+    }
+    return(lp);
 }
 
 static int
@@ -1631,7 +1664,7 @@ EditorButton(register XButtonEvent *event)
 	line[count++] = ' ' + row + 1;
 
 	/* Transmit key sequence to process running under xterm */
-	v_write(pty, (char *)line, count);
+	v_write(pty, line, count);
 }
 
 

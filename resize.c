@@ -72,13 +72,17 @@
 
 #ifdef SCO
 #define USE_TERMCAP
-#define USE_TERMINFO
 #endif
 
 #ifdef linux
 #define USE_TERMIOS
-#define USE_TERMINFO
 #define USE_SYSV_UTMP
+#endif
+
+#ifndef USE_TERMINFO
+#if defined(SCO) || defined(linux)
+#define USE_TERMINFO
+#endif
 #endif
 
 #if defined(SYSV) || defined(Lynx) || defined(__CYGWIN32__)

@@ -78,7 +78,7 @@
 #include <fontutils.h>
 #include <xcharmouse.h>
 
-#if XtSpecificationRelease < 6
+#if (XtSpecificationRelease < 6)
 #ifndef X_GETTIMEOFDAY
 #define X_GETTIMEOFDAY(t) gettimeofday(t,(struct timezone *)0)
 #endif

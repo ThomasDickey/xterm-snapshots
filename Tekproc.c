@@ -1,6 +1,6 @@
 /*
  * $XConsortium: Tekproc.c /main/120 1996/11/29 10:33:20 swick $
- * $XFree86: xc/programs/xterm/Tekproc.c,v 3.24 1999/04/29 09:14:00 dawes Exp $
+ * $XFree86: xc/programs/xterm/Tekproc.c,v 3.25 1999/05/09 10:52:04 dawes Exp $
  *
  * Warning, there be crufty dragons here.
  */
@@ -1143,9 +1143,9 @@ static void TekEnq (
     register int y)
 {
     register TScreen *screen = &term->screen;
-    int pty = screen->respond;
-    char cplot [7];
+    Char cplot [7];
     int len = 5;
+    int adj = (status != 0) ? 0 : 1;
 
     cplot[0] = status;
     /* Translate x and y to Tektronix code */
@@ -1159,10 +1159,7 @@ static void TekEnq (
     if (screen->gin_terminator == GIN_TERM_EOT)
 	cplot[len++] = '\004';
 
-    if(cplot[0])
-	v_write(pty, cplot, len);
-    else
-	v_write(pty, cplot+1, len-1);
+    v_write(screen->respond, cplot+adj, len-adj);
 }
 
 void

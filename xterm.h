@@ -125,6 +125,20 @@ extern int errno;
 #include <proto.h>
 #include <ptyx.h>
 
+#if (XtSpecificationRelease >= 6) && !defined(NO_XPOLL_H)
+#include <X11/Xpoll.h>
+#else
+#define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
+#define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
+#endif
+
+#ifdef USE_SYS_SELECT_H
+#include <sys/types.h>
+#include <sys/select.h>
+#endif
+
+#include <setjmp.h>
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -168,7 +182,7 @@ extern void ViButton                  PROTO_XT_ACTIONS_ARGS;
 
 /* charproc.c */
 extern int VTInit (void);
-extern int v_write (int f, char *d, int len);
+extern int v_write (int f, Char *d, int len);
 extern void FindFontSelection (char *atom_name, Bool justprobe);
 extern void HideCursor (void);
 extern void ShowCursor (void);
@@ -313,6 +327,13 @@ extern int morePtyData (PtyData *data);
 extern int nextPtyData (PtyData *data);
 extern unsigned usedPtyData(PtyData *data);
 extern void initPtyData (PtyData *data);
+
+#if OPT_WIDE_CHARS
+extern Char * convertToUTF8(Char *lp, int c);
+extern void writePtyData(int f, IChar *d, unsigned len);
+#else
+#define writePtyData(f,d,len) v_write(f,d,len)
+#endif
 
 /* screen.c */
 extern Bool non_blank_line (ScrnBuf sb, int row, int col, int len);

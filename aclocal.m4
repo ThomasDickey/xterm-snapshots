@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.19 1999/04/11 13:11:28 dawes Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.20 1999/05/09 10:52:07 dawes Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
@@ -53,7 +53,7 @@ do
 	AC_TRY_COMPILE(
 [
 #ifndef CC_HAS_PROTOS
-#if !defined(__STDC__) || __STDC__ != 1
+#if !defined(__STDC__) || (__STDC__ != 1)
 choke me
 #endif
 #endif
@@ -409,7 +409,7 @@ then
 	changequote(,)dnl
 	cat > conftest.$ac_ext <<EOF
 #line __oline__ "configure"
-int main(int argc, char *argv[]) { return argv[argc-1] == 0; }
+int main(int argc, char *argv[]) { return (argv[argc-1] == 0) ; }
 EOF
 	changequote([,])dnl
 	AC_CHECKING([for gcc warning options])
