@@ -2453,7 +2453,7 @@ static int pty_read_bytes;
 
 #define	ptymask()	(v_bufptr > v_bufstr ? pty_mask : 0)
 
-static int
+static Char
 in_put(void)
 {
     int status;
@@ -4794,7 +4794,7 @@ static void VTRealize (
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 static void VTInitI18N(void)
 {
-    unsigned	i;
+    unsigned	i, j;
     char       *p,
 	       *s,
 	       *t,
@@ -4882,8 +4882,8 @@ static void VTInitI18N(void)
 		if ((int)strlen(known_style[i].name) == (end - s)
 		 && !strncmp(s, known_style[i].name, end - s)) {
 		    input_style = known_style[i].code;
-		    for (i = 0; i < xim_styles->count_styles; i++) {
-			if (input_style == xim_styles->supported_styles[i]) {
+		    for (j = 0; j < xim_styles->count_styles; j++) {
+			if (input_style == xim_styles->supported_styles[j]) {
 			    found = True;
 			    break;
 			}

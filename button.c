@@ -463,8 +463,8 @@ InitLocatorFilter( XtermWidget w )
     Window		root, child;
     int			rx, ry, x, y;
     unsigned int	mask;
-    int			row, col;
-    Boolean		oor;
+    int			row = 0, col = 0;
+    Boolean		oor = 0;
     Bool		ret;
     int			state;
 

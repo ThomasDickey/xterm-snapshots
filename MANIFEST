@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-151
+MANIFEST for xterm, version xterm-152
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -53,6 +53,7 @@ minstall.sh                     script for installing manpages
 misc.c                          miscellaneous utility functions for 'xterm'
 mkdirs.sh                       configure script: make directories for install process
 os2main.c                       main program for OS/2 EMX port of 'xterm'
+plink.sh                        script to prune unneeded libraries from link
 precompose.c                    table of precompose sequences
 precompose.h                    interface of precompose.c
 print.c                         VT100+ print support functions
