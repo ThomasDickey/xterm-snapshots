@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.27 1998/06/04 16:44:04 hohndel Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.29 1998/07/04 14:48:30 robin Exp $ */
 /*
  * Common/useful definitions for XTERM application.
  *
@@ -33,6 +33,7 @@
 #ifndef X_NOT_STDC_ENV
 #define HAVE_STDLIB_H 1
 #define DECL_ERRNO 1
+#else
 #define size_t int
 #define time_t long
 #endif

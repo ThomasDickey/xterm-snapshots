@@ -1,5 +1,5 @@
 # $XConsortium: terminfo,v 1.11 94/10/13 21:24:31 gildea Exp $
-# $XFree86: xc/programs/xterm/terminfo,v 3.24 1998/06/04 16:44:02 hohndel Exp $
+# $XFree86: xc/programs/xterm/terminfo,v 3.25 1998/07/04 14:48:29 robin Exp $
 #
 # XFree86 updates/notes/new entries (including xterm-8bit, xterm-16color)
 # - Thomas E. Dickey <dickey@clark.net>
