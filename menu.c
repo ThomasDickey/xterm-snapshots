@@ -101,6 +101,10 @@ static void do_font_loadable   PROTO_XT_CALLBACK_ARGS;
 static void do_hp_fkeys        PROTO_XT_CALLBACK_ARGS;
 #endif
 
+#if OPT_NUM_LOCK
+static void do_num_lock        PROTO_XT_CALLBACK_ARGS;
+#endif
+
 #if OPT_SUNPC_KBD
 static void do_sun_kbd         PROTO_XT_CALLBACK_ARGS;
 #endif
@@ -139,6 +143,9 @@ MenuEntry mainMenuEntries[] = {
     { "line1",		NULL,		NULL },
     { "8-bit control",	do_8bit_control, NULL },
     { "backarrow key",	do_backarrow,	NULL },
+#if OPT_NUM_LOCK
+    { "num-lock",	do_num_lock,	NULL },
+#endif
     { "sun function-keys",do_sun_fkeys,	NULL },
 #if OPT_SUNPC_KBD
     { "sun keyboard",	do_sun_kbd,	NULL },
@@ -196,6 +203,7 @@ MenuEntry fontMenuEntries[] = {
     { "font4",		do_vtfont,	NULL },
     { "font5",		do_vtfont,	NULL },
     { "font6",		do_vtfont,	NULL },
+    /* this is after the last builtin font; the other entries are special */
     { "fontescape",	do_vtfont,	NULL },
     { "fontsel",	do_vtfont,	NULL },
     /* down to here should match NMENUFONTS in ptyx.h */
@@ -234,15 +242,6 @@ static Widget create_menu (
 		int nentries);
 
 static void handle_send_signal (Widget gw, int sig);
-
-static void handle_toggle (
-		void (*proc)PROTO_XT_CALLBACK_ARGS,
-		int var,
-		String *params,
-		Cardinal nparams,
-		Widget w,
-		XtPointer closure,
-		XtPointer data);
 
 extern Widget toplevel;
 
@@ -284,11 +283,10 @@ static Bool domenu (
 					    XtNumber(mainMenuEntries));
 	    update_securekbd();
 	    update_allowsends();
-#ifdef ALLOWLOGGING
 	    update_logging();
-#endif
 	    update_8bit_control();
 	    update_decbkm();
+	    update_num_lock();
 	    update_sun_kbd();
 	    if (screen->terminal_id < 200) {
 		set_sensitivity (screen->mainMenu,
@@ -587,6 +585,18 @@ static void do_sun_fkeys (
     update_sun_fkeys();
 }
 
+#if OPT_NUM_LOCK
+static void do_num_lock (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    term->misc.real_NumLock = ! term->misc.real_NumLock;
+    update_num_lock();
+}
+#endif
+
+
 #if OPT_SUNPC_KBD
 static void do_sun_kbd (
 	Widget gw GCC_UNUSED,
@@ -723,7 +733,10 @@ static void do_reversevideo (
 {
     term->flags ^= REVERSE_VIDEO;
     ReverseVideo (term);
-    /* update_reversevideo done in ReverseVideo */
+
+    /* cancel out the internal state changes, so menus are decoupled */
+    term->flags ^= REVERSE_VIDEO;
+    term->misc.re_verse = !term->misc.re_verse;
 }
 
 
@@ -1309,6 +1322,18 @@ void HandleSunFunctionKeys(
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
+#if OPT_NUM_LOCK
+void HandleNumLock(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    handle_toggle (do_num_lock, (int) term->misc.real_NumLock,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+#endif
+
 #if OPT_SUNPC_KBD
 void HandleSunKeyboard(
 	Widget w,
@@ -1359,7 +1384,7 @@ void HandleReverseVideo(
 	String *params,
 	Cardinal *param_count)
 {
-    handle_toggle (do_reversevideo, (int) (term->flags & REVERSE_VIDEO),
+    handle_toggle (do_reversevideo, (int) (term->misc.re_verse0),
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 

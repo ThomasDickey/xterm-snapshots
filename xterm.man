@@ -687,7 +687,8 @@ This causes the keypad `+' to be mapped to `,'.
 and
 CTRL-F1 to F13, CTRL-F2 to F14, etc.,
 so \fIxterm\fP emulates a DEC VT220 more accurately.
-Otherwise (the default), \fIxterm\fP uses PC-style bindings for the function keys and keypad.
+Otherwise (the default, with \fBsunKeyboard\fP set to ``false''),
+\fIxterm\fP uses PC-style bindings for the function keys and keypad.
 .TP 8
 .B "termName (\fPclass\fB TermName)"
 Specifies the terminal type name to be set in the TERM environment variable.
@@ -698,14 +699,35 @@ this application.
 .TP 8
 .B "ttyModes (\fPclass\fB TtyModes)"
 Specifies a string containing terminal setting keywords and the characters
-to which they may be bound.  Allowable keywords include: intr, quit,
-erase, kill, eof, eol, swtch, start, stop, brk, susp, dsusp, rprnt, flush,
-weras, and lnext.  Control characters may be specified as ^char (e.g. ^c or ^u)
-and ^? may be used to indicate Delete.
-Use ^- to denote undef.
+to which they may be bound.  Allowable keywords include:
+intr,
+quit,
+erase,
+kill,
+eof,
+eol,
+swtch,
+start,
+stop,
+brk,
+susp,
+dsusp,
+rprnt,
+flush,
+weras,
+lnext and
+status.
+Control characters may be specified as ^char (e.g., ^c or ^u)
+and \fB^?\fP may be used to indicate Delete.
+Use \fB^-\fP to denote undef.
+Use \fB\\034\fP to represent \fB^\\\fP, since a literal backslash in
+an X resource escapes the next character.
+.sp
 This is very useful for overriding
 the default terminal settings without having to do an \fIstty\fP every time
 an \fIxterm\fP is started.
+Note, however, that the stty program on a given host may use different
+keywords; xterm's table is builtin.
 .TP 8
 .B "useInsertMode (\fPclass\fB UseInsertMode)
 Force use of insert mode by adding appropriate entries to the TERMCAP
@@ -1048,8 +1070,11 @@ bell should be rung, when enabled.
 .TP 8
 .B "numLock (\fPclass\fB NumLock)"
 If true, xterm checks if NumLock is used as a modifier (see \fIxmodmap\fP(1)).
-If so, this modifier is used to simplify the logic when implementing NumLock
-mode for the \fBsunKeyboard\fP resource.
+If so, this modifier is used to simplify the logic when implementing special
+NumLock for the \fBsunKeyboard\fP resource.
+Also (when \fBsunKeyboard\fP is false), similar logic is used to find the
+modifier associated with the left and right Alt keys.
+The default is ``true.''
 .TP 8
 .B "oldXtermFKeys (\fPclass\fB OldXtermFKeys)"
 If true, xterm will use old-style control sequences for function keys F1 to F4,
@@ -1269,6 +1294,9 @@ This entry invokes the \fBset-8-bit-control(toggle)\fP action.
 .TP 8
 .B "backarrow key (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-backarrow(toggle)\fP action.
+.TP 8
+.B "num-lock (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-num-lock(toggle)\fP action.
 .TP 8
 .B "sun\ function-keys (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsun\ function-keys(toggle)\fP action.
@@ -1954,6 +1982,9 @@ This action toggles the state of the logging option.
 .B "set-marginbell(\fIon/off/toggle\fP)"
 This action toggles the \fBmarginBell\fP resource and is also invoked from
 the \fBmarginbell\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-num-lock()"
+This action toggles the state of the \fBnumLock\fP resource.
 .TP 8
 .B "set-reverse-video(\fIon/off/toggle\fP)"
 This action toggles the \fIreverseVideo\fP resource and is also invoked by

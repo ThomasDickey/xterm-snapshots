@@ -218,7 +218,7 @@ ScrollBarReverseVideo(register Widget scrollWidget)
 	args[1].value = (XtArgVal) bg;
 	nargs--;				/* don't set border_pixmap */
 	if (bdpix == XtUnspecifiedPixmap) {	/* if not pixmap then pixel */
-	    args[2].value = (XtArgVal) bdr;	/* keep old border color */
+	    args[2].value = args[1].value;	/* keep border visible */
 	} else {				/* ignore since pixmap */
 	    nargs--;				/* don't set border pixel */
 	}

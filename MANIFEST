@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-3_9Pe
+MANIFEST for xterm, version xterm-94
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 INSTALL                         configure script: options and related install instructions
@@ -67,3 +67,9 @@ tektests/imtest.tek             tek4014 demo: draw a test pattern
 tektests/imtesth.tek            tek4014 demo: draw a test pattern
 tektests/ocpred.tek             tek4014 demo: an occultation prediction
 tektests/usmap.tek              tek4014 demo: a US map
+vttests                         subdirectory
+vttests/16colors.sh             test-script to show 16-colors
+vttests/8colors.sh              test-script to illustrate 8-colors
+vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
+vttests/resize.sh               script to demonstrate resizing
+vttests/title.sh                test-script to show title of xterm in action

@@ -148,7 +148,7 @@ SOFTWARE.
 static Bool IsPts = False;
 #endif
 
-#if defined(ATT) && !defined(__sgi)
+#if (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
 #define USE_USG_PTYS
 #else
 #define USE_HANDSHAKE
@@ -563,10 +563,10 @@ static struct ltchars d_ltc;
 #ifdef TIOCLSET
 static unsigned int d_lmode;
 #endif	/* TIOCLSET */
-#else /* not USE_SYSV_TERMIO */
-#ifdef USE_POSIX_TERMIOS
+
+#elif defined(USE_POSIX_TERMIOS)
 static struct termios d_tio;
-#else /* not USE_POSIX_TERMIOS */
+#else /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 static struct  sgttyb d_sg = {
         0, 0, 0177, CKILL, EVENP|ODDP|ECHO|XTABS|CRMOD
 };
@@ -586,7 +586,6 @@ static struct jtchars d_jtc = {
 	'J', 'B'
 };
 #endif /* sony */
-#endif /* USE_POSIX_TERMIOS */
 #endif /* USE_SYSV_TERMIO */
 
 /* allow use of system default characters if defined and reasonable */
@@ -601,6 +600,9 @@ static struct jtchars d_jtc = {
 #endif
 #ifndef CEOL
 #define CEOL 0
+#endif
+#ifndef CNUL
+#define CNUL 0
 #endif
 #ifndef CSWTCH
 #define CSWTCH 0
@@ -672,6 +674,8 @@ struct _xttymodes {
 #define XTTYMODE_status 16
 { NULL, 0, 0, '\0' },			/* end of data */
 };
+
+#define TMODE(ind,var) if (ttymodelist[ind].set) var = ttymodelist[ind].value
 
 static int parse_tty_modes (char *s, struct _xttymodes *modelist);
 
@@ -1463,7 +1467,7 @@ main (int argc, char *argv[])
 	d_lmode = 0;
 #endif	/* } TIOCLSET */
 #endif  /* } macII, ATT, CRAY */
-#endif	/* MINIX, etc */
+#endif	/* } MINIX, etc */
 #endif  /* AMOEBA */
 
 	/* Init the Toolkit. */
@@ -1885,7 +1889,7 @@ get_pty (int *pty)
 	  */
         if (pty_search(pty) == 0)
 	    return 0;
-#elif defined(ATT) && !defined(__sgi)
+#elif defined(USE_USG_PTYS)
 	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0) {
 	    return 1;
 	}
@@ -2286,7 +2290,7 @@ spawn (void)
 		no_dev_tty = FALSE;
 		if (tty < 0) {
 			if (tty_got_hung || errno == ENXIO || errno == EIO ||
-			    errno == EINVAL || errno == ENOTTY) {
+			    errno == EINVAL || errno == ENOTTY || errno == EACCES) {
 				no_dev_tty = TRUE;
 #ifdef HAS_LTCHARS
 				ltc = d_ltc;
@@ -2514,6 +2518,7 @@ spawn (void)
 		if ((ptyfd = open (ptsname(screen->respond), O_RDWR)) < 0) {
 		    SysError (1);
 		}
+#ifdef I_PUSH
 		if (ioctl (ptyfd, I_PUSH, "ptem") < 0) {
 		    SysError (2);
 		}
@@ -2530,6 +2535,7 @@ spawn (void)
 		    SysError (5);
 		}
 #endif /* SVR4 */
+#endif
 		tty = ptyfd;
 		close (screen->respond);
 #ifdef TIOCSWINSZ
@@ -2795,7 +2801,6 @@ spawn (void)
 #ifdef VDSUSP
 		    tio.c_cc[VDSUSP] = CDSUSP;
 #endif
-#define TMODE(ind,var) if (ttymodelist[ind].set) var = ttymodelist[ind].value;
 		    if (override_tty_modes) {
 			/* sysv-specific */
 			TMODE (XTTYMODE_intr, tio.c_cc[VINTR]);
@@ -2850,7 +2855,6 @@ spawn (void)
 			TMODE (XTTYMODE_lnext, ltc.t_lnextc);
 #endif
 		    }
-#undef TMODE
 
 #ifdef HAS_LTCHARS
 #ifdef __hpux
@@ -2891,7 +2895,8 @@ spawn (void)
 		    jmode &= ~KM_KANJI;
 #endif /* sony */
 
-#define TMODE(ind,var) if (ttymodelist[ind].set) var = ttymodelist[ind].value;
+		    ltc = d_ltc;
+
 		    if (override_tty_modes) {
 			TMODE (XTTYMODE_intr, tc.t_intrc);
 			TMODE (XTTYMODE_quit, tc.t_quitc);
@@ -2909,7 +2914,6 @@ spawn (void)
 			TMODE (XTTYMODE_weras, ltc.t_werasc);
 			TMODE (XTTYMODE_lnext, ltc.t_lnextc);
 		    }
-#undef TMODE
 
 		    if (ioctl (tty, TIOCSETP, (char *)&sg) == -1)
 			    HsSysError (cp_pipe[1], ERROR_TIOCSETP);
