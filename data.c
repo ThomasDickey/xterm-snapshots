@@ -101,7 +101,6 @@ Boolean sunKeyboard;
 #endif
 
 int am_slave = 0;	/* set to 1 if running as a slave process */
-int done_setuid = 0;	/* set to 1 after resetting setuid */
 int max_plus1;
 fd_set Select_mask;
 fd_set X_mask;

@@ -74,6 +74,9 @@ in this Software without prior written authorization from the X Consortium.
 #include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
+
+#include "xterm.h"
+
 #include "Tekparse.h"
 #include "data.h"
 #include "error.h"
@@ -117,11 +120,8 @@ extern jmp_buf Tekend;
 #include <stdlib.h>
 #else
 extern char *malloc();
-extern void exit();
 extern long time();		/* included in <time.h> by Xos.h */
 #endif
-
-#include "xterm.h"
 
 #define DefaultGCID XGContextFromGC(DefaultGC(screen->display, DefaultScreen(screen->display)))
 
@@ -1721,15 +1721,6 @@ void TekSimulatePageButton (reset)
     screen->cur_Y = TEKHOME;
 }
 
-
-#ifndef X_NOT_POSIX
-#define HAS_WAITPID
-#endif
-
-#ifdef HAS_WAITPID
-#include <sys/wait.h>
-#endif
-
 /* write copy of screen to a file */
 
 void
@@ -1740,9 +1731,9 @@ TekCopy()
 	Time_t l;
 	char buf[32];
 	int pid;
-#ifndef HAS_WAITPID
+#ifndef HAVE_WAITPID
 	int waited;
-	int (*chldfunc)();
+	SIGNAL_T (*chldfunc) PROTO((int));
 
 	chldfunc = signal(SIGCHLD, SIG_DFL);
 #endif
@@ -1794,7 +1785,7 @@ TekCopy()
 	    Bell(XkbBI_MinorError,0);
 	    return;
 	default:		/* parent */
-#ifdef HAS_WAITPID
+#ifdef HAVE_WAITPID
 	    waitpid(pid, NULL, 0);
 #else
 	    waited = wait(NULL);

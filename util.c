@@ -1457,7 +1457,8 @@ updatedXtermGC(screen, flags, fg_bg, hilite)
 #if OPT_HIGHLIGHT_COLOR
 		if (hi_pix != screen->foreground
 		 && hi_pix != fg_pix
-		 && hi_pix != bg_pix) {
+		 && hi_pix != bg_pix
+		 && hi_pix != 0) {	/* FIXME: need a reliable undef-Pixel */
 			bg_pix = fg_pix;
 			fg_pix = hi_pix;
 		}
