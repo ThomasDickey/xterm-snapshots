@@ -91,11 +91,11 @@ button.c	Handles button events in the terminal emulator.
 
 #define KeyModifiers (event->xbutton.state & OurModifiers)
 
-#define KeyState(x) (((x) & ControlMask) + (((x) & Mod1Mask) ? 2 : 0))
+#define KeyState(x) (((x) & (ShiftMask|ControlMask)) + (((x) & Mod1Mask) ? 2 : 0))
     /* adds together the bits:
-	(1 used to be for shift, is now used for buttons 4 and 5)
-	meta key  -> 2
-	control key -> 4 */
+        shift key -> 1
+        meta key  -> 2
+        control key -> 4 */
 
 #define	Coordinate(r,c)		((r) * (term->screen.max_col+1) + (c))
 
@@ -2308,9 +2308,18 @@ SaveText(
 static int
 BtnCode(XButtonEvent *event, int button)
 {
-	if (button < 0 || button > 5)
-		button = 3;
-	return ' ' + (KeyState(event->state) << 2) + button;
+	int result = 32 + (KeyState(event->state) << 2);
+
+	if (button < 0 || button > 5) {
+		result += 3;
+	} else {
+		if (button > 3)
+			result += (64 - 4);
+		if (event->type == MotionNotify)
+			result += 32;
+		result += button;
+	}
+	return result;
 }
 
 #define MOUSE_LIMIT (255 - 32)
@@ -2385,7 +2394,7 @@ EditorButton(register XButtonEvent *event)
 		if ((row == screen->mouse_row)
 		 && (col == screen->mouse_col))
 			return;
-		line[count++] = BtnCode(event, screen->mouse_button) + 32;
+		line[count++] = BtnCode(event, screen->mouse_button);
 		break;
 	    default:
 		return;

@@ -93,15 +93,17 @@ extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
 extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
+extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
 extern void HandleMetaEsc          PROTO_XT_ACTIONS_ARGS;
 extern void HandleNumLock          PROTO_XT_ACTIONS_ARGS;
-extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrint            PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
 extern void HandleReverseVideo     PROTO_XT_ACTIONS_ARGS;
 extern void HandleReverseWrap      PROTO_XT_ACTIONS_ARGS;
+extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
+extern void HandleScoFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollKey        PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollTtyOutput  PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollbar        PROTO_XT_ACTIONS_ARGS;
@@ -144,8 +146,12 @@ typedef enum {
     mainMenu_num_lock,
     mainMenu_meta_esc,
 #endif
+    mainMenu_old_fkeys,
 #if OPT_HP_FUNC_KEYS
     mainMenu_hp_fkeys,
+#endif
+#if OPT_SCO_FUNC_KEYS
+    mainMenu_sco_kbd,
 #endif
     mainMenu_sun_fkeys,
 #if OPT_SUNPC_KBD
@@ -317,6 +323,11 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
 		    mainMenuEntries[mainMenu_sun_fkeys].widget, \
 		    term->keyboard.type == keyboardIsSun)
 
+#define update_old_fkeys() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_old_fkeys].widget, \
+		    term->keyboard.type == keyboardIsLegacy)
+
 #if OPT_SUNPC_KBD
 #define update_sun_kbd() \
   update_menu_item (term->screen.mainMenu, \
@@ -331,6 +342,15 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
 		    term->keyboard.type == keyboardIsHP)
 #else
 #define update_hp_fkeys() /*nothing*/
+#endif
+
+#if OPT_SCO_FUNC_KEYS
+#define update_sco_fkeys() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_sco_fkeys].widget, \
+		    term->keyboard.type == keyboardIsSCO)
+#else
+#define update_sco_fkeys() /*nothing*/
 #endif
 
 #define update_scrollbar() \

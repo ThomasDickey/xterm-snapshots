@@ -94,6 +94,7 @@ static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
 static void do_kill            PROTO_XT_CALLBACK_ARGS;
 static void do_marginbell      PROTO_XT_CALLBACK_ARGS;
+static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_print           PROTO_XT_CALLBACK_ARGS;
 static void do_quit            PROTO_XT_CALLBACK_ARGS;
 static void do_redraw          PROTO_XT_CALLBACK_ARGS;
@@ -140,6 +141,10 @@ static void do_num_lock        PROTO_XT_CALLBACK_ARGS;
 static void do_meta_esc        PROTO_XT_CALLBACK_ARGS;
 #endif
 
+#if OPT_SCO_FUNC_KEYS
+static void do_sco_fkeys       PROTO_XT_CALLBACK_ARGS;
+#endif
+
 #if OPT_SUNPC_KBD
 static void do_sun_kbd         PROTO_XT_CALLBACK_ARGS;
 #endif
@@ -182,8 +187,12 @@ MenuEntry mainMenuEntries[] = {
     { "num-lock",	do_num_lock,	NULL },
     { "meta-esc",	do_meta_esc,	NULL },
 #endif
+    { "old function-keys",do_old_fkeys,	NULL },
 #if OPT_HP_FUNC_KEYS
     { "hp function-keys",do_hp_fkeys,	NULL },
+#endif
+#if OPT_SCO_FUNC_KEYS
+    { "sco function-keys",do_sco_fkeys,	NULL },
 #endif
     { "sun function-keys",do_sun_fkeys,	NULL },
 #if OPT_SUNPC_KBD
@@ -467,14 +476,12 @@ static Bool domenu (
 	    update_decbkm();
 	    update_num_lock();
 	    update_meta_esc();
-	    update_sun_kbd();
+	    update_keyboard_type();
 	    if (screen->terminal_id < 200) {
 		set_sensitivity (mw,
 				 mainMenuEntries[mainMenu_8bit_ctrl].widget,
 				 FALSE);
 	    }
-	    update_sun_fkeys();
-	    update_hp_fkeys();
 #if !defined(SIGTSTP) || defined(AMOEBA)
 	    set_sensitivity (mw,
 			     mainMenuEntries[mainMenu_suspend].widget, FALSE);
@@ -737,6 +744,14 @@ static void do_meta_esc (
 }
 #endif
 
+static void do_old_fkeys (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    toggle_keyboard_type(keyboardIsLegacy);
+}
+
 #if OPT_HP_FUNC_KEYS
 static void do_hp_fkeys (
 	Widget gw GCC_UNUSED,
@@ -744,6 +759,16 @@ static void do_hp_fkeys (
 	XtPointer data GCC_UNUSED)
 {
     toggle_keyboard_type(keyboardIsHP);
+}
+#endif
+
+#if OPT_SCO_FUNC_KEYS
+static void do_sco_fkeys (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    toggle_keyboard_type(keyboardIsSCO);
 }
 #endif
 
@@ -1499,6 +1524,15 @@ void HandleMetaEsc(
 }
 #endif
 
+void HandleOldFunctionKeys(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    handle_toggle (do_old_fkeys, term->keyboard.type == keyboardIsLegacy,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
 #if OPT_SUNPC_KBD
 void HandleSunKeyboard(
 	Widget w,
@@ -1519,6 +1553,18 @@ void HandleHpFunctionKeys(
 	Cardinal *param_count)
 {
     handle_toggle (do_hp_fkeys, term->keyboard.type == keyboardIsHP,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+#endif
+
+#if OPT_SCO_FUNC_KEYS
+void HandleScoFunctionKeys(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    handle_toggle (do_sco_fkeys, term->keyboard.type == keyboardIsSCO,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 #endif

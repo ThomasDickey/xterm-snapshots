@@ -2,7 +2,7 @@
 .\" $XFree86: xc/programs/xterm/xterm.man,v 3.55 2000/01/29 18:58:43 dawes Exp $
 .\"
 .\"
-.\" Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
+.\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey <dickey@clark.net>
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1228,7 +1228,6 @@ The default is ``true.''
 If ``true'', xterm will use old-style control sequences for function keys F1 to F4,
 for compatibility with X Consortium xterm.  Otherwise, it uses the VT100-style
 codes for PF1 to PF4.
-Also, if ``true'', the Delete key sends DEL (127).
 The default is ``false.''
 .TP 8
 .B "pointerColor (\fPclass\fB Foreground)"
@@ -1462,11 +1461,17 @@ This is a separator.
 .B "8-bit-control (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-8-bit-control(toggle)\fP action.
 .TP 8
-.B "backarrow key (\fPclass\fB SmeBSB)"
+.B "backarrow\ key (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-backarrow(toggle)\fP action.
 .TP 8
 .B "num-lock (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-num-lock(toggle)\fP action.
+.TP 8
+.B "old\ function-keys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBold\ function-keys(toggle)\fP action.
+.TP 8
+.B "hp\ function-keys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBhp\ function-keys(toggle)\fP action.
 .TP 8
 .B "sun\ function-keys (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsun\ function-keys(toggle)\fP action.
@@ -2180,7 +2185,7 @@ the \fBfont-doublesize\fP entry in \fIfontMenu\fP.
 .\" This action toggles the \fBfontLoadable\fP resource and is also invoked by
 .\" the \fBfont-loadable\fP entry in \fIfontMenu\fP.
 .TP 8
-.B "set-hp-functionkeys(\fIon/off/toggle\fP)"
+.B "set-hp-function-keys(\fIon/off/toggle\fP)"
 This action toggles the \fBhpFunctionKeys\fP resource and is also invoked by
 the \fBhp function-keys\fP entry in \fImainMenu\fP.
 .TP 8
@@ -2190,6 +2195,10 @@ This action toggles the \fBjumpscroll\fP resource and is also invoked by the
 .TP 8
 .B "set-logging()"
 This action toggles the state of the logging option.
+.TP 8
+.B "set-old-function-keys(\fIon/off/toggle\fP)"
+This action toggles the state of legacy function keys and is also invoked by
+the \fBold function-keys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-marginbell(\fIon/off/toggle\fP)"
 This action toggles the \fBmarginBell\fP resource and is also invoked from
@@ -2218,7 +2227,7 @@ from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 This action toggles the \fBscrollbar\fP resource and is also invoked by
 the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-sun-functionkeys(\fIon/off/toggle\fP)"
+.B "set-sun-function-keys(\fIon/off/toggle\fP)"
 This action toggles the \fBsunFunctionKeys\fP resource and is also invoked by
 the \fBsun function-keys\fP entry in \fImainMenu\fP.
 .TP 8

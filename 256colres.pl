@@ -16,9 +16,9 @@ print <<EOF;
 /* \$XFree86\$ */
 EOF
 
-$line1="{\"color%d\", XtCForeground, XtRPixel, sizeof(Pixel),\n";
-$line2="\tXtOffsetOf(XtermWidgetRec, screen.Acolors[%d]),\n";
-$line3="\tXtRString, DFT_COLOR(\"rgb:%2.2x/%2.2x/%2.2x\")},\n";
+$line1="COLOR_RES(\"color%d\",";
+$line2="\tscreen.Acolors[%d],";
+$line3="\tDFT_COLOR(\"rgb:%2.2x/%2.2x/%2.2x\")),\n";
 
 # colors 16-231 are a 6x6x6 color cube
 for ($red = 0; $red < 6; $red++) {

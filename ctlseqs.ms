@@ -4,7 +4,7 @@
 .\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.32 1999/12/30 03:46:12 robin Exp $
 .\"
 .\"
-.\" Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+.\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey <dickey@clark.net>
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -749,6 +749,7 @@ and use Alternate Screen Buffer, clearing it first (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*5\*1 \(-> Set Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Set HP function-key mode.
+  \*(Ps = \*1\*0\*6\*0 \(-> Set legacy keyboard emulation (X11R6).
   \*(Ps = \*1\*0\*6\*1 \(-> Set Sun/PC keyboard emulation of VT220 keyboard.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*i
@@ -819,6 +820,7 @@ as in DECRC (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*5\*1 \(-> Reset Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Reset HP function-key mode.
+  \*(Ps = \*1\*0\*6\*0 \(-> Reset legacy keyboard emulation (X11R6).
   \*(Ps = \*1\*0\*6\*1 \(-> Reset Sun/PC keyboard emulation of VT220 keyboard.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*m
@@ -1406,21 +1408,20 @@ release.  Modifier key (shift, ctrl, meta) information is also sent.
 It is enabled by specifying parameter 1000 to DECSET.
 On button press or release, \fIxterm\fP sends
 \*(Cs\*M\*(Cb\*(Cx\*(Cy.
-The low three bits of \*(Cb encode button information:
-0=MB1 pressed, 1=MB2 pressed, 2=MB3 pressed, 3=release,
-4=MB4 pressed, 5=MB5 pressed.
-The next two bits are reserved for future use, i.e., sending
-state information on the Meta and Control modifiers which are in effect
-when the button is pressed.
-.\" The upper bits encode the modifiers which were down when the button was
-.\" pressed and are added together:  4=Shift, 8=Meta, 16=Control.
-.\" Note however that the shift and control bits are normally unavailable
-.\" because \fIxterm\fP uses the control modifier with mouse for popup menus,
-.\" and the shift modifier is used in the default translations for button events.
-.\" The \fIMeta\fP modifier recognized by \fIxterm\fP is the \fImod1\fP mask,
-.\" and is not necessarily the "Meta" key (see \fIxmodmap\fP).
+The low two bits of \*(Cb encode button information:
+0=MB1 pressed, 1=MB2 pressed, 2=MB3 pressed, 3=release.
+The next three bits encode the modifiers which were down when the button was
+pressed and are added together:  4=Shift, 8=Meta, 16=Control.
+Note however that the shift and control bits are normally unavailable
+because \fIxterm\fP uses the control modifier with mouse for popup menus,
+and the shift modifier is used in the default translations for button events.
+The \fIMeta\fP modifier recognized by \fIxterm\fP is the \fImod1\fP mask,
+and is not necessarily the "Meta" key (see \fIxmodmap\fP).
 \*(Cx and \*(Cy are the x and y coordinates of the mouse event, encoded as
 in X10 mode.
+
+Wheel mice may return buttons 4 and 5.
+Those buttons are represented by adding 64 to the event code.
 
 Mouse hilite tracking notifies a program of a button press, receives a
 range of lines from the program, highlights the region covered by
@@ -1461,8 +1462,7 @@ cell.  It is enabled by specifying parameter 1002 to DECSET.
 On button press or release, \fIxterm\fP sends the same codes used by normal
 tracking mode.  On button-motion events, \fIxterm\fP adds 32 to the event code
 (the third character, \*(Cb).
-The low three bits of the event code encode the button information;
-additional bits specify modifier keys as in normal mode.
+The other bits of the event code specify button and modifier keys as in normal mode.
 For example, motion into cell x,y with button 1
 down is reported as \*(Cs\*M\*@\*(Cx\*(Cy.
 ( \*@ = 32 + 0 (button 1) + 32 (motion indicator) ).

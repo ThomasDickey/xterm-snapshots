@@ -684,6 +684,7 @@ extern void resetXtermGC (TScreen *screen, int flags, Bool hilite);
 extern void scrolling_copy_area (TScreen *screen, int firstline, int nlines, int amount);
 extern void set_keyboard_type (xtermKeyboardType type, Bool set);
 extern void toggle_keyboard_type (xtermKeyboardType type);
+extern void update_keyboard_type (void);
 extern void xtermScroll (TScreen *screen, int amount);
 
 #if OPT_ISO_COLORS

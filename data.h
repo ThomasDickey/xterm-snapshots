@@ -120,6 +120,7 @@ extern XtermWidget term;
 #endif
 
 #if OPT_WIDE_CHARS
+extern char defaultUTF8[];
 extern const unsigned short dec2ucs[32];
 #endif
 

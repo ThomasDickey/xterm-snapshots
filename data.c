@@ -94,6 +94,8 @@ int waitingForTrackInfo = 0;
 EventMode eventMode = NORMAL;
 
 #if OPT_WIDE_CHARS
+char defaultUTF8[2] = { '0', 0 };
+
 const unsigned short dec2ucs[32] = {
 	0x25ae		/* black vertical rectangle			*/,
 	0x25c6		/* black diamond				*/,
