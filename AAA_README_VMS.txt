@@ -45,4 +45,4 @@ mathog@seqaxp.bio.caltech.edu
 Manager, sequence analysis facility, biology division, Caltech 
 
 
-$XFree86: xc/programs/xterm/AAA_README_VMS.txt,v 1.1 2000/02/08 17:19:26 dawes Exp $
+$XFree86: xc/programs/xterm/AAA_README_VMS.txt,v 1.2 2000/06/13 02:28:37 dawes Exp $
