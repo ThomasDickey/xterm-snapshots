@@ -3995,6 +3995,7 @@ static void VTRealize (
 		(int) term->core.depth,
 		InputOutput, CopyFromParent,
 		*valuemask|CWBitGravity, values);
+	screen->event_mask = values->event_mask;
 
 #ifndef NO_ACTIVE_ICON
 	if (term->misc.active_icon && screen->fnt_icon) {
@@ -4021,7 +4022,6 @@ static void VTRealize (
 	    /* since only one client is permitted to select for Button
 	     * events, we have to let the window manager get 'em...
 	     */
-	    screen->event_mask = values->event_mask;
 	    values->event_mask &= ~(ButtonPressMask|ButtonReleaseMask);
 	    values->border_pixel = term->misc.icon_border_pixel;
 
