@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.7 1999/04/29 09:14:08 dawes Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.8 1999/07/04 06:40:14 dawes Exp $
  */
 
 /************************************************************
