@@ -1,16 +1,29 @@
-/* $XConsortium: menu.c,v 1.62 93/02/25 17:21:30 gildea Exp $ */
+/* $XConsortium: menu.c /main/64 1996/01/14 16:52:55 kaleb $ */
 /*
-Copyright 1989 Massachusetts Institute of Technology
 
-Permission to use, copy, modify, distribute, and sell this software and its
-documentation for any purpose is hereby granted without fee, provided that
-the above copyright notice appear in all copies and that both that
-copyright notice and this permission notice appear in supporting
-documentation, and that the name of M.I.T. not be used in advertising or
-publicity pertaining to distribution of the software without specific,
-written prior permission.  M.I.T. makes no representations about the
-suitability of this software for any purpose.  It is provided "as is"
-without express or implied warranty.
+Copyright (c) 1989  X Consortium
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X Consortium shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from the X Consortium.
+
 */
 
 #include "ptyx.h"
@@ -148,7 +161,7 @@ static Bool domenu (w, event, params, param_count)
     TScreen *screen = &term->screen;
 
     if (*param_count != 1) {
-	XBell (XtDisplay(w), 0);
+	Bell(XkbBI_MinorError,0);
 	return False;
     }
 
@@ -226,7 +239,7 @@ static Bool domenu (w, event, params, param_count)
 	break;
 
       default:
-	XBell (XtDisplay(w), 0);
+	Bell(XkbBI_MinorError,0);
 	return False;
     }
 
@@ -335,7 +348,7 @@ static void do_securekbd (gw, closure, data)
 	if (XGrabKeyboard (screen->display, term->core.window,
 			   True, GrabModeAsync, GrabModeAsync, time)
 	    != GrabSuccess) {
-	    XBell (screen->display, 100);
+	    Bell(XkbBI_MinorError, 100);
 	} else {
 	    ReverseVideo (term);
 	    screen->grabbedKbd = TRUE;
@@ -614,7 +627,7 @@ static void handle_tekshow (gw, allowswitch)
 	set_tek_visibility (FALSE);
 	end_tek_mode ();		/* WARNING: this does a longjmp */
     } else
-      Bell();
+      Bell(XkbBI_MinorError, 0);
 }
 
 /* ARGSUSED */
@@ -705,7 +718,7 @@ static void do_vtfont (gw, closure, data)
 	    return;
 	}
     }
-    Bell();
+    Bell(XkbBI_MinorError, 0);
 }
 
 
@@ -783,7 +796,7 @@ static void handle_vtshow (gw, allowswitch)
 	if (!screen->TekEmu && TekRefresh) dorefresh ();
 	end_vt_mode ();
     } else 
-      Bell();
+      Bell(XkbBI_MinorError, 0);
 }
 
 static void do_vtshow (gw, closure, data)
@@ -847,7 +860,7 @@ static void handle_toggle (proc, var, params, nparams, w, closure, data)
 
     switch (dir) {
       case -2:
-	Bell();
+	Bell(XkbBI_MinorError, 0);
 	break;
 
       case -1:
@@ -856,12 +869,12 @@ static void handle_toggle (proc, var, params, nparams, w, closure, data)
 
       case 0:
 	if (var) (*proc) (w, closure, data);
-	else Bell();
+	else Bell(XkbBI_MinorError, 0);
 	break;
 
       case 1:
 	if (!var) (*proc) (w, closure, data);
-	else Bell();
+	else Bell(XkbBI_MinorError, 0);
 	break;
     }
     return;
@@ -949,7 +962,7 @@ void HandleSendSignal(w, event, params, param_count)
 	/* one could allow numeric values, but that would be a security hole */
     }
 
-    Bell();
+    Bell(XkbBI_MinorError, 0);
 }
 
 /* ARGSUSED */
@@ -1148,10 +1161,10 @@ void HandleSetTerminalType(w, event, params, param_count)
 	    if (!term->screen.TekEmu) do_tekmode (w, NULL, NULL);
 	    break;
 	  default:
-	    Bell();
+	    Bell(XkbBI_MinorError, 0);
 	}
     } else {
-	Bell();
+	Bell(XkbBI_MinorError, 0);
     }
 }
 
@@ -1172,10 +1185,10 @@ void HandleVisibility(w, event, params, param_count)
 			   params+1, (*param_count) - 1, w, NULL, NULL);
 	    break;
 	  default:
-	    Bell();
+	    Bell(XkbBI_MinorError, 0);
 	}
     } else {
-	Bell();
+	Bell(XkbBI_MinorError, 0);
     }
 }
 
@@ -1202,7 +1215,7 @@ void HandleSetTekText(w, event, params, param_count)
 	break;
     }
     if (proc) (*proc) (w, NULL, NULL);
-    else Bell();
+    else Bell(XkbBI_MinorError, 0);
 }
 
 /* ARGSUSED */

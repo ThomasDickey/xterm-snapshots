@@ -1,26 +1,42 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XConsortium: ctlseqs.ms,v 1.8 91/07/21 15:30:31 gildea Exp $
-.\" 
-.\" Copyright 1991 by the Massachusetts Institute of Technology
+.\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
 .\"
-.\" Permission to use, copy, modify, and distribute this documentation
-.\" for any purpose and without fee is hereby granted, provided 
-.\" that the above copyright notice appears in all copies,
-.\" and that the name of M.I.T. not be used in advertising
-.\" or publicity pertaining to distribution of the software without specific, 
-.\" written prior permission.  M.I.T. makes no representations about the 
-.\" suitability of the software described here for any purpose, nor
-.\" about the accuracy of this documentation.  It is provided "as is"
-.\" without express or implied warranty.
+.\" Copyright 1991, 1994 X Consortium
 .\"
-.\" The X Window System is a Trademark of MIT.
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be
+.\" included in all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
+.\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+.\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+.\" OTHER DEALINGS IN THE SOFTWARE.
+.\"
+.\" Except as contained in this notice, the name of the X Consortium shall
+.\" not be used in advertising or otherwise to promote the sale, use or
+.\" other dealings in this Software without prior written authorization
+.\" from the X Consortium.
+.\"
+.\" X Window System is a trademark of X Consortium, Inc.
 .\"
 .\" Originally written by Edward Moy, University of California,
 .\" Berkeley, edmoy@violet.berkeley.edu, for the X.V10R4 xterm.
 .\" The X Consortium staff has since updated it for X11.
 .\"
 .\" Run this file through troff and use the -ms macro package.
+.\"
+.if n .pl 9999v		\" no page breaks in nroff
 .ND
 .de St
 .sp
@@ -32,7 +48,7 @@
 .nr PD .3v
 .nr VS 12
 ..
-.rm CH
+.ds CH \" as nothing
 .ds LH Xterm Control Sequences
 .nr s 6*\n(PS/10
 .ds L \s\nsBEL\s0
@@ -43,6 +59,9 @@
 .ds e \s\nsETB\s0
 .ds C \s\nsCAN\s0
 .ds S \s\nsSUB\s0
+.\" space between chars
+.ie t .ds s \|
+.el .ds s " \"
 .nr [W \w'\*L'u
 .nr w \w'\*E'u
 .if \nw>\n([W .nr [W \nw
@@ -63,7 +82,9 @@
 .nr w \w'\\$2'
 .nr H \\n([Wu-\\nwu
 .nr h \\nHu/2u
-.ds \\$1 \(br\v'-1p'\(br\v'1p'\h'\\nhu'\\$2\h'\\nHu-\\nhu'\(br\l'-\\n([Wu\(ul'\v'-1p'\(br\l'-\\n([Wu\(rn'\v'1p'\|
+.\" do fancy box in troff
+.ie t .ds \\$1 \(br\v'-1p'\(br\v'1p'\h'\\nhu'\\$2\h'\\nHu-\\nhu'\(br\l'-\\n([Wu\(ul'\v'-1p'\(br\l'-\\n([Wu\(rn'\v'1p'\*s
+.el .ds \\$1 \\$2\*s
 ..
 .[] Et \v'-1p'\*X\v'1p'
 .[] En \v'-1p'\*N\v'1p'
@@ -147,7 +168,7 @@
 .[] p p
 .[] q q
 .[] r r
-.[] s s
+.[] cs s
 .[] t t
 .[] x x
 .[] | |
@@ -167,7 +188,9 @@
 .ds Ih \fIh\fP
 .ds Ir \fIr\fP
 .ds Ic \fIc\fP
-.nr LL 6.5i
+.ie t .nr LL 6.5i
+.el .nr LL 72m
+.if n .na
 .TL
 Xterm Control Sequences
 .AU
@@ -179,9 +202,9 @@ Revised by
 .AU
 Stephen Gildea
 .AI
-MIT X Consortium
+X Consortium
 
-.am NP
+.am BT                  \" add page numbers after first page
 .ds CF %
 ..
 .SH
@@ -203,12 +226,12 @@ VT100 Mode
 .LP
 Most of these control sequences are standard VT102 control sequences,
 but there are some sequences here from later DEC VT terminals, too.
-Major VT102 features not supported are smooth scrolling, double size
+VT102 features not supported are smooth scrolling, double size
 characters, blinking characters, and VT52 mode.
 There are additional control sequences to provide
 \fIxterm-\fPdependent functions, like the scrollbar or window size.
 Where the function is specified by DEC or ISO 6429, the code assigned
-to it is given in parentheses.  The escape codes to designate
+to it is given in parentheses.  The escape codes to designate and invoke
 character sets are specified by ISO 2022; see that document for a
 discussion of character sets.
 .St
@@ -266,6 +289,9 @@ Normal Keypad (DECPNM)
 Index (IND)
 .IP \\*(Es\\*E
 Next Line (NEL)
+.IP \\*(Es\\*F
+Cursor to lower left corner of screen (if
+enabled by the \fBhpLowerleftBugCompat\fP resource).
 .IP \\*(Es\\*H
 Tab Set (HTS)
 .IP \\*(Es\\*M
@@ -274,80 +300,80 @@ Reverse Index (RI)
 Single Shift Select of G2 Character Set (SS2): affects next character only
 .IP \\*(Es\\*O
 Single Shift Select of G3 Character Set (SS3): affects next character only
-.IP \\*(Es\\*P\\*(Pt\|\\*(Es\\*(bS
+.IP \\*(Es\\*P\\*(Pt\\*s\\*(Es\\*(bS
 Device Control String (DCS)
   \fIxterm\fP implements no DCS functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
 .IP \\*(Es\\*Z
 Return Terminal ID (DECID).  Obsolete form of \*(Es\*([[\*c (DA).
-.IP \\*(Es\\*([[\\*(Ps\|\\*@
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*@
 Insert \*(Ps (Blank) Character(s) (default = 1) (ICH)
-.IP \\*(Es\\*([[\\*(Ps\|\\*A
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*A
 Cursor Up \*(Ps Times (default = 1) (CUU)
-.IP \\*(Es\\*([[\\*(Ps\|\\*(cB
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*(cB
 Cursor Down \*(Ps Times (default = 1) (CUD)
-.IP \\*(Es\\*([[\\*(Ps\|\\*C
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*C
 Cursor Forward \*(Ps Times (default = 1) (CUF)
-.IP \\*(Es\\*([[\\*(Ps\|\\*D
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*D
 Cursor Backward \*(Ps Times (default = 1) (CUB)
-.IP \\*(Es\\*([[\\*(Ps\|\\*;\\*(Ps\|\\*H
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*;\\*(Ps\\*s\\*H
 Cursor Position [row;column] (default = [1,1]) (CUP)
-.IP \\*(Es\\*([[\\*(Ps\|\\*J
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*J
 Erase in Display (ED)
   \*(Ps = \*0 \(-> Clear Below (default)
   \*(Ps = \*1 \(-> Clear Above
   \*(Ps = \*2 \(-> Clear All
-.IP \\*(Es\\*([[\\*(Ps\|\\*K
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*K
 Erase in Line (EL)
   \*(Ps = \*0 \(-> Clear to Right (default)
   \*(Ps = \*1 \(-> Clear to Left
   \*(Ps = \*2 \(-> Clear All
-.IP \\*(Es\\*([[\\*(Ps\|\\*L
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*L
 Insert \*(Ps Line(s) (default = 1) (IL)
-.IP \\*(Es\\*([[\\*(Ps\|\\*M
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*M
 Delete \*(Ps Line(s) (default = 1) (DL)
-.IP \\*(Es\\*([[\\*(Ps\|\\*P
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*P
 Delete \*(Ps Character(s) (default = 1) (DCH)
-.IP \\*(Es\\*([[\\*(Ps\|\\*;\\*(Ps\|\\*;\\*(Ps\|\\*;\\*(Ps\|\\*;\\*(Ps\|\\*T
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*T
 Initiate hilite mouse tracking.
 Parameters are [func;startx;starty;firstrow;lastrow].
 See the section \fBMouse Tracking\fP.
-.IP \\*(Es\\*([[\\*(Ps\|\\*c
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*c
 Send Device Attributes (DA)
   \*(Ps = \*0 or omitted \(-> request attributes from terminal
   \(-> \*(Es\*([[\*?\*1\*;\*2\*c (``I am a VT100 with Advanced
 Video Option.'')
-.IP \\*(Es\\*([[\\*(Ps\|\\*;\\*(Ps\|\\*f
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*;\\*(Ps\\*s\\*f
 Horizontal and Vertical Position [row;column] (default = [1,1]) (HVP)
-.IP \\*(Es\\*([[\\*(Ps\|\\*g
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*g
 Tab Clear (TBC)
   \*(Ps = \*0 \(-> Clear Current Column (default)
   \*(Ps = \*3 \(-> Clear All
-.IP \\*(Es\\*([[\\*(Pm\|\\*h
+.IP \\*(Es\\*([[\\*(Pm\\*s\\*h
 Set Mode (SM)
   \*(Ps = \*4 \(-> Insert Mode (IRM)
   \*(Ps = \*2\*0 \(-> Automatic Newline (LNM)
-.IP \\*(Es\\*([[\\*(Pm\|\\*l
+.IP \\*(Es\\*([[\\*(Pm\\*s\\*l
 Reset Mode (RM)
   \*(Ps = \*4 \(-> Replace Mode (IRM)
   \*(Ps = \*2\*0 \(-> Normal Linefeed (LNM)
-.IP \\*(Es\\*([[\\*(Pm\|\\*m
+.IP \\*(Es\\*([[\\*(Pm\\*s\\*m
 Character Attributes (SGR)
   \*(Ps = \*0 \(-> Normal (default)
   \*(Ps = \*1 \(-> Bold
   \*(Ps = \*4 \(-> Underscore
   \*(Ps = \*5 \(-> Blink (appears as Bold)
   \*(Ps = \*7 \(-> Inverse
-.IP \\*(Es\\*([[\\*(Ps\|\\*n
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*n
 Device Status Report (DSR)
   \*(Ps = \*5 \(-> Status Report \*(Es\*([[\*0\*n (``OK'')
   \*(Ps = \*6 \(-> Report Cursor Position (CPR) [row;column] as
-\*(Es\*([[\*(Ir\|\*;\*(Ic\|\*R
-.IP \\*(Es\\*([[\\*(Ps\|\\*;\\*(Ps\|\\*r
+\*(Es\*([[\*(Ir\*s\*;\*(Ic\*s\*R
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*;\\*(Ps\\*s\\*r
 Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM)
-.IP \\*(Es\\*([[\\*(Ps\|\\*x
+.IP \\*(Es\\*([[\\*(Ps\\*s\\*x
 Request Terminal Parameters (DECREQTPARM)
-.IP \\*(Es\\*([[\\*?\\*(Pm\|\\*h
+.IP \\*(Es\\*([[\\*?\\*(Pm\\*s\\*h
 DEC Private Mode Set (DECSET)
   \*(Ps = \*1 \(-> Application Cursor Keys (DECCKM)
   \*(Ps = \*2 \(-> Designate USASCII for character sets G0-G3.
@@ -363,17 +389,18 @@ doesn't support.)
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK)
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode
-  \*(Ps = \*4\*1 \(-> \fIcurses\fP(5) fix
+  \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fIcurses\fP resource)
   \*(Ps = \*4\*4 \(-> Turn On Margin Bell
   \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode
   \*(Ps = \*4\*6 \(-> Start Logging
+(normally disabled by a compile-time option)
   \*(Ps = \*4\*7 \(-> Use Alternate Screen Buffer (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
 See the section \fBMouse Tracking\fP.
-.IP \\*(Es\\*([[\\*?\\*(Pm\|\\*l
+.IP \\*(Es\\*([[\\*?\\*(Pm\\*s\\*l
 DEC Private Mode Reset (DECRST)
   \*(Ps = \*1 \(-> Normal Cursor Keys (DECCKM)
   \*(Ps = \*3 \(-> 80 Column Mode (DECCOLM)
@@ -384,20 +411,21 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM)
   \*(Ps = \*9 \(-> Don't Send Mouse X & Y on button press
   \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode
-  \*(Ps = \*4\*1 \(-> No \fIcurses\fP(5) fix
+  \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fIcurses\fP resource)
   \*(Ps = \*4\*4 \(-> Turn Off Margin Bell
   \*(Ps = \*4\*5 \(-> No Reverse-wraparound Mode
   \*(Ps = \*4\*6 \(-> Stop Logging
+(normally disabled by a compile-time option)
   \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer
   \*(Ps = \*1\*0\*0\*0 \(-> Don't Send Mouse X & Y on button press and
 release
   \*(Ps = \*1\*0\*0\*1 \(-> Don't Use Hilite Mouse Tracking
-.IP \\*(Es\\*([[\\*?\\*(Pm\|\\*r
+.IP \\*(Es\\*([[\\*?\\*(Pm\\*s\\*r
 Restore DEC Private Mode Values.  The value of \*(Ps previously saved is
 restored.  \*(Ps values are the same as for DECSET.
-.IP \\*(Es\\*([[\\*?\\*(Pm\|\\*s
+.IP \\*(Es\\*([[\\*?\\*(Pm\\*s\\*(cs
 Save DEC Private Mode Values.  \*(Ps values are the same as for DECSET.
-.IP \\*(Es\\*]\\*(Ps\|\\*;\\*(Pt\|\\*(Be
+.IP \\*(Es\\*]\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(Be
 Set Text Parameters
   \*(Ps = \*0 \(-> Change Icon Name and Window Title to \*(Pt
   \*(Ps = \*1 \(-> Change Icon Name to \*(Pt
@@ -405,20 +433,24 @@ Set Text Parameters
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt (normally disabled by a
 compile-time option)
   \*(Ps = \*5\*0 \(-> Set Font to \*(Pt
-.IP \\*(Es\\*^\\*(Pt\|\\*(Es\\*(bS
+.IP \\*(Es\\*^\\*(Pt\\*s\\*(Es\\*(bS
 Privacy Message (PM)
   \fIxterm\fP implements no PM functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
-.IP \\*(Es\\*_\\*(Pt\|\\*(Es\\*(bS
+.IP \\*(Es\\*_\\*(Pt\\*s\\*(Es\\*(bS
 Application Program Command (APC)
   \fIxterm\fP implements no APC functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
 .IP \\*(Es\\*c
 Full Reset (RIS)
+.IP \\*(Es\\*l
+Memory Lock (per HP terminals).  Locks memory above the cursor.
+.IP \\*(Es\\*m
+Memory Unlock (per HP terminals)
 .IP \\*(Es\\*n
-Select the G2 Character Set (LS2)
+Invoke the G2 Character Set (LS2)
 .IP \\*(Es\\*o
-Select the G3 Character Set (LS3)
+Invoke the G3 Character Set (LS3)
 .IP \\*(Es\\*|
 Invoke the G3 Character Set as GR (LS3R).  Has no visible effect in \fIxterm\fP.
 .IP \\*(Es\\*}
@@ -472,8 +504,8 @@ On button press, the same information as for normal tracking is
 generated; \fIxterm\fP then waits for the program to send mouse
 tracking information.
 \fIAll X events are ignored until the proper escape sequence is
-received from the pty:\fP 
-\*(Es\*([[\*(Ps\|\*;\*(Ps\|\*;\*(Ps\|\*;\*(Ps\|\*;\*(Ps\|\*T.
+received from the pty:\fP
+\*(Es\*([[\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*T.
 The parameters are \fIfunc, startx, starty, firstrow,\fP and \fIlastrow.\fP
 \fIfunc\fP is non-zero to initiate hilite tracking and zero to abort.
 \fIstartx\fP and \fIstarty\fP give the starting x and y location for
@@ -487,14 +519,16 @@ the end of the line:
 \*(Es\*([[\*T\*(Cx\*(Cy\*(Cx\*(Cy\*(Cx\*(Cy.
 The parameters are \fIstartx, starty, endx, endy, mousex,\fP and \fImousey.\fP
 \fIstartx, starty, endx, \fPand\fI endy\fP give the starting and
-ending character positions of the region. \fImousex\fP and \fImousey\fP
+ending character positions of the region.  \fImousex\fP and \fImousey\fP
 give the location of the mouse at button up, which may not be over a
 character.
+.br
+.ds RH Tektronix 4014 Mode
 .SH
 Tektronix 4014 Mode
-.ds RH Tektronix 4014 Mode
 .LP
 Most of these sequences are standard Tektronix 4014 control sequences.
+Graph mode supports the 12-bit addressing of the Tektronix 4014.
 The major features missing are
 the write-thru and defocused modes.
 This document does not describe the commands used in the various
@@ -518,8 +552,8 @@ Carriage Return (Ctrl-M)
 Switch to VT100 Mode (ESC Ctrl-C)
 .IP \\*(Es\\*(En
 Return Terminal Status (ESC Ctrl-E)
-.IP \\*(Es\\*(Lf
-PAGE (Clear Screen)
+.IP \\*(Es\\*(Ff
+PAGE (Clear Screen) (ESC Ctrl-L)
 .IP \\*(Es\\*(So
 Begin 4015 APL mode (ignored by \fIxterm\fP) (ESC Ctrl-N)
 .IP \\*(Es\\*(Si
@@ -540,12 +574,13 @@ Select #2 Character Set
 Select #3 Character Set
 .IP \\*(Es\\*;
 Select Small Character Set
-.IP \\*(Es\\*]\\*(Ps\|\\*;\\*(Pt\|\\*(Be
+.IP \\*(Es\\*]\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(Be
 Set Text Parameters of VT window
   \*(Ps = \*0 \(-> Change Icon Name and Window Title to \*(Pt
   \*(Ps = \*1 \(-> Change Icon Name to \*(Pt
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt
-  \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt
+  \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt (normally disabled by a
+compile-time option)
 .IP \\*(Es\\*`
 Normal Z Axis and Normal (solid) Vectors
 .IP \\*(Es\\*a
@@ -572,7 +607,7 @@ Write-Thru Mode and Normal (solid) Vectors
 Write-Thru Mode and Dotted Line Vectors
 .IP \\*(Es\\*r
 Write-Thru Mode and Dot-Dashed Vectors
-.IP \\*(Es\\*s
+.IP \\*(Es\\*(cs
 Write-Thru Mode and Short-Dashed Vectors
 .IP \\*(Es\\*t
 Write-Thru Mode and Long-Dashed Vectors
@@ -585,3 +620,4 @@ Incremental Plot Mode (Ctrl-^)
 .IP \\*(Us
 Alpha Mode (Ctrl-_)
 .Ed
+.if n .pl \n(nlu+1v

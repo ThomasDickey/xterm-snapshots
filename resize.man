@@ -1,9 +1,10 @@
-.TH RESIZE 1 "Release 5" "X Version 11"
+.\" $XConsortium: resize.man /main/11 1995/12/15 14:01:01 gildea $
+.TH RESIZE 1 "Release 6.1" "X Version 11"
 .SH NAME
-resize \- utility to set TERMCAP and terminal settings to current window size
+resize \- set TERMCAP and terminal settings to current xterm window size
 .SH SYNOPSIS
 .B resize
-[-u] [\-s [row col]]
+[ \fB\-u\fP | \fB\-c\fP ] [ \fB\-s\fP [ \fIrow col\fP ] ]
 .SH DESCRIPTION
 .I Resize
 prints a shell command for setting the TERM and TERMCAP environment variables
@@ -15,7 +16,7 @@ known as \fI/bin/csh\fP), the following alias could be defined in the
 user's \fI.cshrc\fP:
 .sp
 .nf
-        %  alias rs 'set noglob; `eval resize`'
+        %  alias rs 'set noglob; eval \fC`\fPresize\fC`\fP'
 .fi
 .sp
 After resizing the window, the user would type:
@@ -30,8 +31,8 @@ functions will need to send the output to a temporary file and the read it back
 in with the ``.'' command:
 .sp
 .nf
-        $  resize >/tmp/out
-        $  . /tmp/out
+        $  resize > /tmp/out
+        $  .\0/tmp/out
 .fi
 .SH OPTIONS
 The following options may be used with \fIresize\fP:
@@ -45,28 +46,27 @@ This option indicates that C shell commands should be generated even if the
 user's current shell isn't \fI/bin/csh\fP.
 .TP 8
 .B \-s \fR[\fIrows columns\fP]
-This option indicates that that Sun console escape sequences will be used 
+This option indicates that Sun console escape sequences will be used 
 instead of the special \fIxterm\fP escape code.  If \fIrows\fP and
 \fIcolumns\fP are given, \fIresize\fP will ask the \fIxterm\fP to resize
 itself.  However, the window manager may choose to disallow the change.
 .SH FILES
-/etc/termcap	for the base termcap entry to modify.
-.br
-~/.cshrc	user's alias for the command.
+.TP 15
+/etc/termcap
+for the base termcap entry to modify.
+.TP 15
+~/.cshrc
+user's alias for the command.
 .SH "SEE ALSO"
 csh(1), tset(1), xterm(1)
 .SH AUTHORS
 Mark Vandevoorde (MIT-Athena), Edward Moy (Berkeley)
 .br
-Copyright (c) 1984, 1985 by Massachusetts Institute of Technology.
+Copyright (c) 1984, 1985 by X Consortium
 .br
 See
 .IR X (1)
 for a complete copyright notice.
 .SH BUGS
-The \fI-u\fP or \fI-c\fP must appear to the left of \fI-s\fP if both are 
+The \fB\-u\fP or \fB\-c\fP must appear to the left of \fB\-s\fP if both are 
 specified.
-.PP
-There should be some global notion of display size; termcap and
-terminfo need to be rethought in the context of window systems.
-(Fixed in 4.3BSD, and Ultrix-32 1.2)

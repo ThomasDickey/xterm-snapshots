@@ -1,9 +1,34 @@
 /*
- * $XConsortium: charproc.c,v 1.176.1.1 93/11/03 17:24:20 gildea Exp $
+ * $XConsortium: charproc.c /main/191 1996/01/23 11:34:26 kaleb $
  */
 
 /*
- * Copyright 1988 Massachusetts Institute of Technology
+ 
+Copyright (c) 1988  X Consortium
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of the X Consortium shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from the X Consortium.
+
+*/
+/*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -29,11 +54,6 @@
 /* charproc.c */
 
 #include "ptyx.h"
-#include "VTparse.h"
-#include "data.h"
-#include "error.h"
-#include "menu.h"
-#include "main.h"
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
@@ -42,10 +62,17 @@
 #include <X11/Xmu/Atoms.h>
 #include <X11/Xmu/CharSet.h>
 #include <X11/Xmu/Converters.h>
+#include <X11/Xaw/XawImP.h>
+#include <X11/Xpoll.h>
 #include <stdio.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <ctype.h>
+#include "VTparse.h"
+#include "data.h"
+#include "error.h"
+#include "menu.h"
+#include "main.h"
 
 /*
  * Check for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
@@ -64,15 +91,22 @@
 
 extern jmp_buf VTend;
 
+extern XtAppContext app_con;
 extern Widget toplevel;
 extern void exit();
 extern char *malloc();
 extern char *realloc();
+extern fd_set Select_mask;
+extern fd_set X_mask;
+extern fd_set pty_mask;
 
 static void VTallocbuf();
 static int finput();
 static void dotext();
 static void WriteText();
+static void ToAlternate();
+static void FromAlternate();
+static void update_font_info();
 
 static void bitset(), bitclr();
     
@@ -90,6 +124,7 @@ static void bitset(), bitclr();
 #define XtNc132 "c132"
 #define XtNcharClass "charClass"
 #define XtNcurses "curses"
+#define XtNhpLowerleftBugCompat "hpLowerleftBugCompat"
 #define XtNcursorColor "cursorColor"
 #define XtNcutNewline "cutNewline"
 #define XtNcutToBeginningOfLine "cutToBeginningOfLine"
@@ -137,6 +172,7 @@ static void bitset(), bitclr();
 #define XtCC132 "C132"
 #define XtCCharClass "CharClass"
 #define XtCCurses "Curses"
+#define XtCHpLowerleftBugCompat "HpLowerleftBugCompat"
 #define XtCCutNewline "CutNewline"
 #define XtCCutToBeginningOfLine "CutToBeginningOfLine"
 #define XtCEightBitInput "EightBitInput"
@@ -242,26 +278,32 @@ static	char *	_Font_Selected_ = "yes";  /* string is arbitrary */
  */
 static char defaultTranslations[] =
 "\
- Shift <KeyPress> Prior:scroll-back(1,halfpage) \n\
-  Shift <KeyPress> Next:scroll-forw(1,halfpage) \n\
-Shift <KeyPress> Select:select-cursor-start() select-cursor-end(PRIMARY, CUT_BUFFER0) \n\
-Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \n\
-       ~Meta <KeyPress>:insert-seven-bit() \n\
-        Meta <KeyPress>:insert-eight-bit() \n\
-       !Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
-  !Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
-       ~Meta <Btn1Down>:select-start() \n\
-     ~Meta <Btn1Motion>:select-extend() \n\
-       !Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
-  !Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
- ~Ctrl ~Meta <Btn2Down>:ignore() \n\
-   ~Ctrl ~Meta <Btn2Up>:insert-selection(PRIMARY, CUT_BUFFER0) \n\
-       !Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
-  !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
- ~Ctrl ~Meta <Btn3Down>:start-extend() \n\
-     ~Meta <Btn3Motion>:select-extend()	\n\
-                <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \n\
-	      <BtnDown>:bell(0) \
+          Shift <KeyPress> Prior:scroll-back(1,halfpage) \n\
+           Shift <KeyPress> Next:scroll-forw(1,halfpage) \n\
+         Shift <KeyPress> Select:select-cursor-start() select-cursor-end(PRIMARY , CUT_BUFFER0) \n\
+         Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \n\
+                ~Meta <KeyPress>:insert-seven-bit() \n\
+                 Meta <KeyPress>:insert-eight-bit() \n\
+                !Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
+           !Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
+ !Lock Ctrl @Num_Lock <Btn1Down>:popup-menu(mainMenu) \n\
+     ! @Num_Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
+                ~Meta <Btn1Down>:select-start() \n\
+              ~Meta <Btn1Motion>:select-extend() \n\
+                !Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
+           !Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
+ !Lock Ctrl @Num_Lock <Btn2Down>:popup-menu(vtMenu) \n\
+     ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
+          ~Ctrl ~Meta <Btn2Down>:ignore() \n\
+            ~Ctrl ~Meta <Btn2Up>:insert-selection(PRIMARY, CUT_BUFFER0) \n\
+                !Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
+           !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
+ !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \n\
+     ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
+          ~Ctrl ~Meta <Btn3Down>:start-extend() \n\
+              ~Meta <Btn3Motion>:select-extend()      \n\
+                         <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \n\
+                       <BtnDown>:bell(0) \
 ";
 
 static XtActionsRec actionsList[] = { 
@@ -331,19 +373,22 @@ static XtResource resources[] = {
 	DEFBOLDFONT},
 {XtNc132, XtCC132, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.c132),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNcharClass, XtCCharClass, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, screen.charClass),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
 {XtNcurses, XtCCurses, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.curses),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNhpLowerleftBugCompat, XtCHpLowerleftBugCompat, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.hp_ll_bc),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNcutNewline, XtCCutNewline, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.cutNewline),
-	XtRBoolean, (caddr_t) &defaultTRUE},
+	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNcutToBeginningOfLine, XtCCutToBeginningOfLine, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.cutToBeginningOfLine),
-	XtRBoolean, (caddr_t) &defaultTRUE},
+	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, core.background_pixel),
 	XtRString, "XtDefaultBackground"},
@@ -355,16 +400,16 @@ static XtResource resources[] = {
 	XtRString, "XtDefaultForeground"},
 {XtNeightBitInput, XtCEightBitInput, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.input_eight_bits), 
-	XtRBoolean, (caddr_t) &defaultTRUE},
+	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNeightBitOutput, XtCEightBitOutput, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.output_eight_bits), 
-	XtRBoolean, (caddr_t) &defaultTRUE},
+	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNgeometry,XtCGeometry, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, misc.geo_metry),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
 {XtNalwaysHighlight,XtCAlwaysHighlight,XtRBoolean,
         sizeof(Boolean),XtOffsetOf(XtermWidgetRec, screen.always_highlight),
-        XtRBoolean, (caddr_t) &defaultFALSE},
+        XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNappcursorDefault,XtCAppcursorDefault,XtRBoolean,
         sizeof(Boolean),XtOffsetOf(XtermWidgetRec, misc.appcursorDefault),
         XtRBoolean, (XtPointer) &defaultFALSE},
@@ -376,30 +421,30 @@ static XtResource resources[] = {
         XtRInt, (XtPointer) &defaultBellSuppressTime},
 {XtNtekGeometry,XtCGeometry, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, misc.T_geometry),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
 {XtNinternalBorder,XtCBorderWidth,XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.border),
-	XtRInt, (caddr_t) &defaultIntBorder},
+	XtRInt, (XtPointer) &defaultIntBorder},
 {XtNjumpScroll, XtCJumpScroll, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.jumpscroll),
-	XtRBoolean, (caddr_t) &defaultTRUE},
+	XtRBoolean, (XtPointer) &defaultTRUE},
 #ifdef ALLOWLOGGING
 {XtNlogFile, XtCLogfile, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, screen.logfile),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
 {XtNlogging, XtCLogging, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.log_on),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNlogInhibit, XtCLogInhibit, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.logInhibit),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 #endif
 {XtNloginShell, XtCLoginShell, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.login_shell),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNmarginBell, XtCMarginBell, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.marginbell),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNpointerColor, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.mousecolor),
 	XtRString, "XtDefaultForeground"},
@@ -408,82 +453,91 @@ static XtResource resources[] = {
 	XtRString, "XtDefaultBackground"},
 {XtNpointerShape,XtCCursor, XtRCursor, sizeof(Cursor),
 	XtOffsetOf(XtermWidgetRec, screen.pointer_cursor),
-	XtRString, (caddr_t) "xterm"},
+	XtRString, (XtPointer) "xterm"},
 {XtNmultiClickTime,XtCMultiClickTime, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.multiClickTime),
-	XtRInt, (caddr_t) &defaultMultiClickTime},
+	XtRInt, (XtPointer) &defaultMultiClickTime},
 {XtNmultiScroll,XtCMultiScroll, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.multiscroll),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNnMarginBell,XtCColumn, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.nmarginbell),
-	XtRInt, (caddr_t) &defaultNMarginBell},
+	XtRInt, (XtPointer) &defaultNMarginBell},
 {XtNreverseVideo,XtCReverseVideo,XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.re_verse),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNresizeGravity, XtCResizeGravity, XtRGravity, sizeof(XtGravity),
 	XtOffsetOf(XtermWidgetRec, misc.resizeGravity),
 	XtRImmediate, (XtPointer) SouthWestGravity},
 {XtNreverseWrap,XtCReverseWrap, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.reverseWrap),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNautoWrap,XtCAutoWrap, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.autoWrap),
-	XtRBoolean, (caddr_t) &defaultTRUE},
+	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNsaveLines, XtCSaveLines, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.savelines),
-	XtRInt, (caddr_t) &defaultSaveLines},
+	XtRInt, (XtPointer) &defaultSaveLines},
 {XtNscrollBar, XtCScrollBar, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.scrollbar),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNscrollTtyOutput,XtCScrollCond, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.scrollttyoutput),
-	XtRBoolean, (caddr_t) &defaultTRUE},
+	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNscrollKey, XtCScrollCond, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.scrollkey),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNscrollLines, XtCScrollLines, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.scrolllines),
-	XtRInt, (caddr_t) &defaultScrollLines},
+	XtRInt, (XtPointer) &defaultScrollLines},
 {XtNsignalInhibit,XtCSignalInhibit,XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.signalInhibit),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNtekInhibit, XtCTekInhibit, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.tekInhibit),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNtekSmall, XtCTekSmall, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.tekSmall),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNtekStartup, XtCTekStartup, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.TekEmu),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNtiteInhibit, XtCTiteInhibit, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.titeInhibit),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNvisualBell, XtCVisualBell, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.visualbell),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNallowSendEvents, XtCAllowSendEvents, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.allowSendEvents),
-	XtRBoolean, (caddr_t) &defaultFALSE},
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {"font1", "Font1", XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.menu_font_names[fontMenu_font1]),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
 {"font2", "Font2", XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.menu_font_names[fontMenu_font2]),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
 {"font3", "Font3", XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.menu_font_names[fontMenu_font3]),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
 {"font4", "Font4", XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.menu_font_names[fontMenu_font4]),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
 {"font5", "Font5", XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.menu_font_names[fontMenu_font5]),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
 {"font6", "Font6", XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.menu_font_names[fontMenu_font6]),
-	XtRString, (caddr_t) NULL},
+	XtRString, (XtPointer) NULL},
+{XtNinputMethod, XtCInputMethod, XtRString, sizeof(char*),
+	XtOffsetOf(XtermWidgetRec, misc.input_method),
+	XtRString, (XtPointer)NULL},
+{XtNpreeditType, XtCPreeditType, XtRString, sizeof(char*),
+	XtOffsetOf(XtermWidgetRec, misc.preedit_type),
+	XtRString, (XtPointer)"Root"},
+{XtNopenIm, XtCOpenIm, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, misc.open_im),
+	XtRImmediate, (XtPointer)TRUE},
 };
 
 static void VTClassInit();
@@ -493,6 +547,7 @@ static void VTExpose();
 static void VTResize();
 static void VTDestroy();
 static Boolean VTSetValues();
+static void VTInitI18N();
 
 static WidgetClassRec xtermClassRec = {
   {
@@ -590,7 +645,7 @@ static void VTparse()
 
 		 case CASE_BELL:
 			/* bell */
-			Bell();
+			Bell(XkbBI_TerminalBell,0);
 			break;
 
 		 case CASE_BS:
@@ -680,7 +735,8 @@ static void VTparse()
 
 		 case CASE_ESC_SEMI:
 			/* semicolon in csi or dec mode */
-			param[nparam++] = DEFAULT;
+			if (nparam < NPARAM)
+			    param[nparam++] = DEFAULT;
 			break;
 
 		 case CASE_DEC_STATE:
@@ -735,6 +791,15 @@ static void VTparse()
 			if(nparam < 2 || (col = param[1]) < 1)
 				col = 1;
 			CursorSet(screen, row-1, col-1, term->flags);
+			parsestate = groundtable;
+			break;
+
+		 case CASE_HP_BUGGY_LL:
+			/* Some HP-UX applications have the bug that they
+			   assume ESC F goes to the lower left corner of
+			   the screen, regardless of what terminfo says. */
+			if (screen->hp_ll_bc)
+			    CursorSet(screen, screen->max_row, 0, term->flags);
 			parsestate = groundtable;
 			break;
 
@@ -886,6 +951,17 @@ static void VTparse()
 				reply.a_final  = 'R';
 				unparseseq(&reply, screen->respond);
 			}
+			parsestate = groundtable;
+			break;
+
+		 case CASE_HP_MEM_LOCK:
+		 case CASE_HP_MEM_UNLOCK:
+			if(screen->scroll_amt)
+			    FlushScroll(screen);
+			if (parsestate[c] == CASE_HP_MEM_LOCK)
+			    screen->top_marg = screen->cur_row;
+			else
+			    screen->top_marg = 0;
 			parsestate = groundtable;
 			break;
 
@@ -1125,13 +1201,15 @@ v_write(f, d, len)
 		v_bufend = v_buffer + len;
 	}
 #ifdef DEBUG
-	fprintf(stderr, "v_write called with %d bytes (%d left over)",
-		len, v_bufptr - v_bufstr);
-	if (len > 1  &&  len < 10) fprintf(stderr, " \"%.*s\"", len, d);
-	fprintf(stderr, "\n");
+	if (debug) {
+	    fprintf(stderr, "v_write called with %d bytes (%d left over)",
+		    len, v_bufptr - v_bufstr);
+	    if (len > 1  &&  len < 10) fprintf(stderr, " \"%.*s\"", len, d);
+	    fprintf(stderr, "\n");
+	}
 #endif
 
-	if ((1 << f) != pty_mask)
+	if (!FD_ISSET (f, &pty_mask))
 		return(write(f, d, len));
 
 	/*
@@ -1147,12 +1225,13 @@ v_write(f, d, len)
 	    if (v_bufend < v_bufptr + len) { /* we've run out of room */
 		if (v_bufstr != v_buffer) {
 		    /* there is unused space, move everything down */
-		    /* possibly overlapping bcopy here */
+		    /* possibly overlapping memmove here */
 #ifdef DEBUG
-		    fprintf(stderr, "moving data down %d\n",
-			    v_bufstr - v_buffer);
+		    if (debug)
+			fprintf(stderr, "moving data down %d\n",
+				v_bufstr - v_buffer);
 #endif
-		    bcopy(v_bufstr, v_buffer, v_bufptr - v_bufstr);
+		    memmove( v_buffer, v_bufstr, v_bufptr - v_bufstr);
 		    v_bufptr -= v_bufstr - v_buffer;
 		    v_bufstr = v_buffer;
 		}
@@ -1163,8 +1242,9 @@ v_write(f, d, len)
 		    v_buffer = realloc(v_buffer, size + len);
 		    if (v_buffer) {
 #ifdef DEBUG
-			fprintf(stderr, "expanded buffer to %d\n",
-				size + len);
+			if (debug)
+			    fprintf(stderr, "expanded buffer to %d\n",
+				    size + len);
 #endif
 			v_bufstr = v_buffer;
 			v_bufptr = v_buffer + size;
@@ -1180,7 +1260,7 @@ v_write(f, d, len)
 	    }
 	    if (v_bufend >= v_bufptr + len) {
 		/* new stuff will fit */
-		bcopy(d, v_bufptr, len);
+		memmove( v_bufptr, d, len);
 		v_bufptr += len;
 	    }
 	}
@@ -1207,15 +1287,16 @@ v_write(f, d, len)
 			  	       v_bufptr - v_bufstr : MAX_PTY_WRITE);
 	    if (riten < 0) {
 #ifdef DEBUG
-		perror("write");
+		if (debug) perror("write");
 #endif
 		riten = 0;
 	    }
 #ifdef DEBUG
-	    fprintf(stderr, "write called with %d, wrote %d\n",
-		    v_bufptr - v_bufstr <= MAX_PTY_WRITE ?
-		    v_bufptr - v_bufstr : MAX_PTY_WRITE,
-		    riten);
+	    if (debug)
+		fprintf(stderr, "write called with %d, wrote %d\n",
+			v_bufptr - v_bufstr <= MAX_PTY_WRITE ?
+			v_bufptr - v_bufstr : MAX_PTY_WRITE,
+			riten);
 #endif
 	    v_bufstr += riten;
 	    if (v_bufstr >= v_bufptr) /* we wrote it all */
@@ -1237,7 +1318,8 @@ v_write(f, d, len)
 		v_bufptr = v_buffer + size;
 		v_bufend = v_buffer + allocsize;
 #ifdef DEBUG
-		fprintf(stderr, "shrunk buffer to %d\n", allocsize);
+		if (debug)
+		    fprintf(stderr, "shrunk buffer to %d\n", allocsize);
 #endif
 	    } else {
 		/* should we print a warning if couldn't return memory? */
@@ -1247,8 +1329,8 @@ v_write(f, d, len)
 	return(c);
 }
 
-static int select_mask;
-static int write_mask;
+static fd_set select_mask;
+static fd_set write_mask;
 static int pty_read_bytes;
 
 in_put()
@@ -1258,7 +1340,7 @@ in_put()
     static struct timeval select_timeout;
 
     for( ; ; ) {
-	if (select_mask & pty_mask && eventMode == NORMAL) {
+	if (FD_ISSET (screen->respond, &select_mask) && eventMode == NORMAL) {
 #ifdef ALLOWLOGGING
 	    if (screen->logging)
 		FlushLog(screen);
@@ -1289,9 +1371,8 @@ in_put()
 		pty_read_bytes += bcnt;
 		/* stop speed reading at some point to look for X stuff */
 		/* (4096 is just a random large number.) */
-		if (pty_read_bytes > 4096) {
-		    select_mask &= ~pty_mask;
-		}
+		if (pty_read_bytes > 4096)
+		    FD_CLR (screen->respond, &select_mask);
 		break;
 	    }
 	}
@@ -1315,13 +1396,15 @@ in_put()
 
 	/* Update the masks and, unless X events are already in the queue,
 	   wait for I/O to be possible. */
-	select_mask = Select_mask;
-	write_mask = ptymask();
+	XFD_COPYSET (&Select_mask, &select_mask);
+	if (v_bufptr > v_bufstr) {
+	    XFD_COPYSET (&pty_mask, &write_mask);
+	} else
+	    FD_ZERO (&write_mask);
 	select_timeout.tv_sec = 0;
 	select_timeout.tv_usec = 0;
-	i = select(max_plus1, &select_mask, &write_mask, (int *)NULL,
-		   QLength(screen->display) ? &select_timeout
-		   : (struct timeval *) NULL);
+	i = Select(max_plus1, &select_mask, &write_mask, NULL,
+		   QLength(screen->display) ? &select_timeout : NULL);
 	if (i < 0) {
 	    if (errno != EINTR)
 		SysError(ERROR_SELECT);
@@ -1329,13 +1412,14 @@ in_put()
 	} 
 
 	/* if there is room to write more data to the pty, go write more */
-	if (write_mask & ptymask()) {
+	if (FD_ISSET (screen->respond, &write_mask)) {
 	    v_write(screen->respond, 0, 0); /* flush buffer */
 	}
 
 	/* if there are X events already in our queue, it
 	   counts as being readable */
-	if (QLength(screen->display) || (select_mask & X_mask)) {
+	if (QLength(screen->display) || 
+	    FD_ISSET (ConnectionNumber(screen->display), &select_mask)) {
 	    xevents();
 	}
 
@@ -1486,7 +1570,7 @@ WriteText(screen, str, len, flags)
  */
 ansi_modes(termw, func)
     XtermWidget	termw;
-    int		(*func)();
+    void (*func)();
 {
 	register int	i;
 
@@ -1638,8 +1722,8 @@ dpmodes(termw, func)
 			else
 				CloseLog(screen);
 #else
-			Bell();
-			Bell();
+			Bell(XkbBI_Info,0);
+			Bell(XkbBI_Info,0);
 #endif /* ALLOWLOGFILEONOFF */
 			break;
 #endif
@@ -1955,8 +2039,9 @@ unparsefputs (s, fd)
 
 static void SwitchBufs();
 
+static void
 ToAlternate(screen)
-register TScreen *screen;
+    register TScreen *screen;
 {
 	extern ScrnBuf Allocate();
 
@@ -1970,8 +2055,9 @@ register TScreen *screen;
 	update_altscreen();
 }
 
+static void
 FromAlternate(screen)
-register TScreen *screen;
+    register TScreen *screen;
 {
 	if(!screen->alternate)
 		return;
@@ -2018,10 +2104,10 @@ SwitchBufPtrs(screen)
     register int rows = screen->max_row + 1;
     char *save [2 * MAX_ROWS];
 
-    bcopy((char *)screen->buf, (char *)save, 2 * sizeof(char *) * rows);
-    bcopy((char *)screen->altbuf, (char *)screen->buf,
+    memmove( (char *)save, (char *)screen->buf, 2 * sizeof(char *) * rows);
+    memmove( (char *)screen->buf, (char *)screen->altbuf, 
 	  2 * sizeof(char *) * rows);
-    bcopy((char *)save, (char *)screen->altbuf, 2 * sizeof(char *) * rows);
+    memmove( (char *)screen->altbuf, (char *)save, 2 * sizeof(char *) * rows);
 }
 
 VTRun()
@@ -2185,6 +2271,7 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    bzero ((char *) &new->screen, sizeof(new->screen));
    new->screen.c132 = request->screen.c132;
    new->screen.curses = request->screen.curses;
+   new->screen.hp_ll_bc = request->screen.hp_ll_bc;
    new->screen.foreground = request->screen.foreground;
    new->screen.cursorcolor = request->screen.cursorcolor;
    new->screen.border = request->screen.border;
@@ -2409,6 +2496,8 @@ static void VTRealize (w, valuemask, values)
 		InputOutput, CopyFromParent,	
 		*valuemask|CWBitGravity, values);
 
+	VTInitI18N();
+
 	set_cursor_gcs (screen);
 
 	/* Reset variables used by ANSI emulation. */
@@ -2451,6 +2540,124 @@ static void VTRealize (w, valuemask, values)
 	CursorSave (term, &screen->sc);
 	return;
 }
+
+static void VTInitI18N()
+{
+    int		i;
+    char       *p,
+	       *s,
+	       *ns,
+	       *end,
+		tmp[1024],
+	  	buf[32];
+    XIM		xim = (XIM) NULL;
+    XIMStyles  *xim_styles;
+    XIMStyle	input_style = 0;
+    Boolean	found;
+
+    term->screen.xic = NULL;
+
+    if (!term->misc.open_im) return;
+
+    if (!term->misc.input_method || !*term->misc.input_method) {
+	if ((p = XSetLocaleModifiers("@im=none")) != NULL && *p)
+	    xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL);
+    } else {
+	strcpy(tmp, term->misc.input_method);
+	for(ns=s=tmp; ns && *s;) {
+	    while (*s && isspace(*s)) s++;
+	    if (!*s) break;
+	    if ((ns = end = index(s, ',')) == 0)
+		end = s + strlen(s);
+	    while (isspace(*end)) end--;
+	    *end = '\0';
+
+	    strcpy(buf, "@im=");
+	    strcat(buf, s);
+	    if ((p = XSetLocaleModifiers(buf)) != NULL && *p
+		&& (xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL)) != NULL)
+		break;
+
+	    s = ns + 1;
+	}
+    }
+
+    if (xim == NULL && (p = XSetLocaleModifiers("")) != NULL && *p)
+	xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL);
+    
+    if (!xim) {
+	fprintf(stderr, "Failed to open input method");
+	return;
+    }
+
+    if (XGetIMValues(xim, XNQueryInputStyle, &xim_styles, NULL)
+        || !xim_styles) {
+	fprintf(stderr, "input method doesn't support any style\n");
+        XCloseIM(xim);
+        return;
+    }
+
+    found = False;
+    strcpy(tmp, term->misc.preedit_type);
+    for(s = tmp; s && !found;) {
+	while (*s && isspace(*s)) s++;
+	if (!*s) break;
+	if (ns = end = index(s, ','))
+	    ns++;
+	else
+	    end = s + strlen(s);
+	while (isspace(*end)) end--;
+	*end = '\0';
+
+	if (!strcmp(s, "OverTheSpot")) {
+	    input_style = (XIMPreeditPosition | XIMStatusArea);
+	} else if (!strcmp(s, "OffTheSpot")) {
+	    input_style = (XIMPreeditArea | XIMStatusArea);
+	} else if (!strcmp(s, "Root")) {
+	    input_style = (XIMPreeditNothing | XIMStatusNothing);
+	}
+	for (i = 0; (unsigned short)i < xim_styles->count_styles; i++)
+	    if (input_style == xim_styles->supported_styles[i]) {
+		found = True;
+		break;
+	    }
+
+	s = ns;
+    }
+    XFree(xim_styles);
+
+    if (!found) {
+	fprintf(stderr, "input method doesn't support my preedit type\n");
+	XCloseIM(xim);
+	return;
+    }
+
+    /*
+     * This program only understands the Root preedit_style yet
+     * Then misc.preedit_type should default to:
+     *		"OverTheSpot,OffTheSpot,Root"
+     *
+     *	/MaF
+     */
+    if (input_style != (XIMPreeditNothing | XIMStatusNothing)) {
+	fprintf(stderr,"This program only supports the 'Root' preedit type\n");
+	XCloseIM(xim);
+	return;
+    }
+
+    term->screen.xic = XCreateIC(xim, XNInputStyle, input_style,
+				      XNClientWindow, term->core.window,
+				      XNFocusWindow, term->core.window,
+				      NULL);
+
+    if (!term->screen.xic) {
+	fprintf(stderr,"Failed to create input context\n");
+	XCloseIM(xim);
+    }
+
+    return;
+}
+
 
 static Boolean VTSetValues (cur, request, new, args, num_args)
     Widget cur, request, new;
@@ -2825,7 +3032,7 @@ static void HandleKeymapChange(w, event, params, param_count)
     static XtTranslations keymap, original;
     static XtResource key_resources[] = {
 	{ XtNtranslations, XtCTranslations, XtRTranslationTable,
-	      sizeof(XtTranslations), 0, XtRTranslationTable, (caddr_t)NULL}
+	      sizeof(XtTranslations), 0, XtRTranslationTable, (XtPointer)NULL}
     };
     char mapName[1000];
     char mapClass[1000];
@@ -2857,7 +3064,12 @@ static void HandleBell(w, event, params, param_count)
 {
     int percent = (*param_count) ? atoi(params[0]) : 0;
 
+#ifdef XKB
+    int which= XkbBI_TerminalBell;
+    XkbStdBell(XtDisplay(w),XtWindow(w),percent,which);
+#else
     XBell( XtDisplay(w), percent );
+#endif
 }
 
 
@@ -2897,7 +3109,7 @@ DoSetSelectedFont(w, client_data, selection, type, value, length, format)
     char *val = (char *)value;
     int len;
     if (*type != XA_STRING  ||  *format != 8) {
-	Bell();
+	Bell(XkbBI_MinorError,0);
 	return;
     }
     len = strlen(val);
@@ -2910,7 +3122,7 @@ DoSetSelectedFont(w, client_data, selection, type, value, length, format)
 	if (len > 1000  ||  strchr(val, '\n'))
 	    return;
 	if (!LoadNewFont (&term->screen, val, NULL, True, fontMenu_fontsel))
-	    Bell();
+	    Bell(XkbBI_MinorError,0);
     }
 }
 
@@ -2983,11 +3195,11 @@ void HandleSetFont(w, event, params, param_count)
 	  case 's': case 'S':
 	    fontnum = fontMenu_fontsel; maxparams = 2; break;
 	  default:
-	    Bell();
+	    Bell(XkbBI_MinorError,0);
 	    return;
 	}
 	if (*param_count > maxparams) {	 /* see if extra args given */
-	    Bell();
+	    Bell(XkbBI_MinorError,0);
 	    return;
 	}
 	switch (*param_count) {		/* assign 'em */
@@ -3012,7 +3224,7 @@ void SetVTFont (i, doresize, name1, name2)
     TScreen *screen = &term->screen;
 
     if (i < 0 || i >= NMENUFONTS) {
-	Bell();
+	Bell(XkbBI_MinorError,0);
 	return;
     }
     if (i == fontMenu_fontsel) {	/* go get the selection */
@@ -3021,7 +3233,7 @@ void SetVTFont (i, doresize, name1, name2)
     }
     if (!name1) name1 = screen->menu_font_names[i];
     if (!LoadNewFont(screen, name1, name2, doresize, i)) {
-	Bell();
+	Bell(XkbBI_MinorError,0);
     }
     return;
 }
@@ -3050,10 +3262,15 @@ int LoadNewFont (screen, nfontname, bfontname, doresize, fontnum)
     }
 
     if (!(nfs = XLoadQueryFont (screen->display, nfontname))) goto bad;
+    if (nfs->ascent + nfs->descent == 0  ||  nfs->max_bounds.width == 0)
+	goto bad;		/* can't use a 0-sized font */
 
     if (!(bfontname && 
 	  (bfs = XLoadQueryFont (screen->display, bfontname))))
       bfs = nfs;
+    else
+	if (bfs->ascent + bfs->descent == 0  ||  bfs->max_bounds.width == 0)
+	    goto bad;		/* can't use a 0-sized font */
 
     mask = (GCFont | GCForeground | GCBackground | GCGraphicsExposures |
 	    GCFunction);
@@ -3130,11 +3347,12 @@ int LoadNewFont (screen, nfontname, bfontname, doresize, fontnum)
     if (new_reverseGC && new_reverseGC != new_reverseboldGC)
       XtReleaseGC ((Widget) term, new_reverseboldGC);
     if (nfs) XFreeFont (screen->display, nfs);
-    if (nfs && nfs != bfs) XFreeFont (screen->display, bfs);
+    if (bfs && nfs != bfs) XFreeFont (screen->display, bfs);
     return 0;
 }
 
 
+static void
 update_font_info (screen, doresize)
     TScreen *screen;
     Bool doresize;

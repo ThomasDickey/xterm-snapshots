@@ -1,5 +1,5 @@
 /*
- *	$XConsortium: TekPrsTbl.c,v 1.7 91/05/29 18:06:16 gildea Exp $
+ *	$XConsortium: TekPrsTbl.c,v 1.8 95/06/08 23:20:39 gildea Exp $
  */
 
 
@@ -28,7 +28,7 @@
 
 #include "Tekparse.h"
 
-#if __STDC__
+#ifdef __STDC__
 #define Const const
 #else
 #define Const /**/

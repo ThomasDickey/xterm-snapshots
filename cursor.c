@@ -1,5 +1,5 @@
 /*
- *	$XConsortium: cursor.c,v 1.13 91/05/10 16:57:14 gildea Exp $
+ *	$XConsortium: cursor.c,v 1.14 93/09/20 17:42:23 hersh Exp $
  */
 
 /*
@@ -222,7 +222,7 @@ register SavedCursor *sc;
 	sc->flags = term->flags;
 	sc->curgl = screen->curgl;
 	sc->curgr = screen->curgr;
-	bcopy(screen->gsets, sc->gsets, sizeof(screen->gsets));
+	memmove( sc->gsets, screen->gsets, sizeof(screen->gsets));
 }
 
 /*
@@ -234,7 +234,7 @@ register SavedCursor *sc;
 {
 	register TScreen *screen = &term->screen;
 
-	bcopy(sc->gsets, screen->gsets, sizeof(screen->gsets));
+	memmove( screen->gsets, sc->gsets, sizeof(screen->gsets));
 	screen->curgl = sc->curgl;
 	screen->curgr = sc->curgr;
 	term->flags &= ~(BOLD|INVERSE|UNDERLINE|ORIGIN);

@@ -1,5 +1,30 @@
-.\" $XConsortium: xterm.man,v 1.72.1.1 93/11/03 18:03:48 gildea Exp $
-.TH XTERM 1 "Release 5" "X Version 11"
+.\" $XConsortium: xterm.man /main/83 1995/12/15 14:06:17 gildea $
+.\" Copyright (c) 1989  X Consortium
+.\" 
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\" 
+.\" The above copyright notice and this permission notice shall be included
+.\" in all copies or substantial portions of the Software.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+.\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
+.\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+.\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+.\" OTHER DEALINGS IN THE SOFTWARE.
+.\" 
+.\" Except as contained in this notice, the name of the X Consortium shall
+.\" not be used in advertising or otherwise to promote the sale, use or
+.\" other dealings in this Software without prior written authorization
+.\" from the X Consortium.
+.TH XTERM 1 "Release 6.1" "X Version 11"
 .SH NAME
 xterm \- terminal emulator for X
 .SH SYNOPSIS
@@ -27,7 +52,9 @@ The active window can be chosen through escape sequences,
 the ``VT Options'' menu in the VT102 window, and the ``Tek Options''
 menu in the 4014 window.
 .SH EMULATIONS
-The VT102 emulation is fairly complete, but does not support the blinking
+The VT102 emulation is fairly complete, but does not support
+smooth scrolling, VT52 mode,
+the blinking
 character attribute nor the double-wide and double-size character sets.
 .IR Termcap (5)
 entries that work with
@@ -47,7 +74,9 @@ sequences.
 document.)
 .PP
 The Tektronix 4014 emulation is also fairly good.
+It supports 12-bit graphics addressing, scaled to the window size.
 Four different font sizes and five different lines types are supported.
+There is no write-through or defocused mode support.
 The Tektronix text and graphics commands are recorded internally by
 .I xterm
 and may be written to a file by sending the COPY escape sequence (or through
@@ -155,19 +184,22 @@ use the same foreground color that is used for text.
 .TP 8
 .B \-cu
 This option indicates that \fIxterm\fP should work around a bug in the
-.IR curses (3x)
-cursor motion package that causes the
 .IR more (1)
-program to display lines that are exactly the width of the window and
-are followed by a line beginning with a tab to be displayed incorrectly
+program that causes it
+to incorrectly display lines that are exactly the width of the window and
+are followed by a line beginning with a tab
 (the leading tabs are not displayed).
+This option is so named because it was originally thought to be a bug
+in the
+.IR curses (3x)
+cursor motion package.
 .TP 8
 .B \+cu
-This option indicates that that \fIxterm\fP should not work around the
-.IR curses (3x)
+This option indicates that \fIxterm\fP should not work around the
+.IR more (1)
 bug mentioned above.
 .TP 8
-.BI \-e " program \[arguments \.\.\.\]"
+.BI \-e " program \fP[ \fIarguments \fP.\|.\|. ]\fI"
 This option specifies the program (and its command line arguments) to be
 run in the \fIxterm\fP window.  It also sets the window title and icon
 name to be the basename of the program being executed if neither \fI\-T\fP
@@ -202,7 +234,7 @@ This option indicates that \fIxterm\fP should not do jump scrolling.
 .TP 8
 .B \-ls
 This option indicates that the shell that is started in the \fIxterm\fP window
-be a login shell (i.e. the first character of argv[0] will be a dash,
+will be a login shell (i.e., the first character of argv[0] will be a dash,
 indicating to the shell that it should read the user's .login or .profile).
 .TP 8
 .B \+ls
@@ -547,14 +579,14 @@ The default is ``true.''
 .TP 8
 .B "charClass (\fPclass\fB CharClass)"
 Specifies comma-separated lists of character class bindings of the form
-\[\fIlow\fP-\]\fIhigh\fP:\fIvalue\fP.  These are used in determining which
+[\fIlow\fP\-]\fIhigh\fP:\fIvalue\fP.  These are used in determining which
 sets of characters should be treated the same when doing cut and paste.
 See the section on specifying character classes.
 .TP 8
 .B "curses (\fPclass\fB Curses)"
 Specifies whether or not the last column bug in
-.IR curses (3x)
-should be worked around.
+.IR more (1)
+should be worked around.  See the \fB\-cu\fP option for details.
 The default is ``false.''
 .TP 8
 .B "background (\fPclass\fB Background)"
@@ -604,6 +636,13 @@ Specifies the name of the sixth alternative font.
 .TP 8
 .B "geometry (\fPclass\fB Geometry)"
 Specifies the preferred size and position of the VT102 window.
+.TP 8
+.B "hpLowerleftBugCompat (\fPclass\fB HpLowerleftBugCompat)"
+Specifies whether to work around a bug in HP's \fIxdb\fP,
+which ignores termcap and always sends
+ESC F to move to the lower left corner.
+``true'' causes xterm to interpret ESC F as a request to move to the
+lower left corner of the screen.  The default is ``false.''
 .TP 8
 .B "internalBorder (\fPclass\fB BorderWidth)"
 Specifies the number of pixels between the characters and the window border.
@@ -693,7 +732,9 @@ signals to \fIxterm\fP should be disallowed.  The default is ``false.''
 Specifies the preferred size and position of the Tektronix window.
 .TP 8
 .B "tekInhibit (\fPclass\fB TekInhibit)"
-Specifies whether or not Tektronix mode should be disallowed.  The default is
+Specifies whether or not
+the escape sequence to enter
+Tektronix mode should be ignored.  The default is
 ``false.''
 .TP 8
 .B "tekSmall (\fPclass\fB TekSmall)"
@@ -1124,7 +1165,7 @@ The
 entry in the command section clears the Tektronix window.
 .SH SECURITY
 .PP
-X environments differ in their security consciousness.  MIT servers, run
+X environments differ in their security consciousness.  Most servers, run
 under \fIxdm\fP, are capable of using a ``magic cookie'' authorization
 scheme that can provide a reasonable level of security for many people.
 If your server is only using a host-based mechanism to control access to
@@ -1174,8 +1215,10 @@ be selected (for example, should filenames be selected as a whole or only
 the separate subnames), the default mapping can be overridden through the use 
 of the \fIcharClass\fP (class \fICharClass\fP) resource.
 .PP
-This resource is simply a list of \fIrange\fP:\fIvalue\fP pairs where the
-range is either a single number or \fIlow\fP-\fIhigh\fP in the range of 0
+This resource is a
+series of comma-separated
+of \fIrange\fP:\fIvalue\fP pairs.  The
+\fIrange\fP is either a single number or \fIlow\fP-\fIhigh\fP in the range of 0
 to 127, corresponding to the ASCII code for the character or characters to be
 set.  The \fIvalue\fP is arbitrary, although the default table uses the
 character number of the first character occurring in the set.
@@ -1224,7 +1267,7 @@ static int charClass[128] = {
 .sp
 For example, the string ``33:48,37:48,45-47:48,64:48'' indicates that the
 exclamation mark, percent sign, dash, period, slash, and ampersand characters
-should be treated the same way as characters and numbers.  This is very useful 
+should be treated the same way as characters and numbers.  This is useful 
 for cutting and pasting electronic mailing addresses and filenames.
 .SH ACTIONS
 It is possible to rebind keys (or sequences of keys) to arbitrary strings
@@ -1351,7 +1394,7 @@ the \fI\-e\fP command line option) and is also invoked by the
 .BR hangup ,
 .BR terminate ,
 and
-.I kill 
+.BR kill 
 entries in \fImainMenu\fP.  Allowable signal names are (case is
 not significant):
 \fItstp\fP (if supported by the operating system), \fIsuspend\fP (same
@@ -1390,7 +1433,7 @@ the \fBautolinefeed\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-appcursor(\fIon/off/toggle\fP)"
 This action toggles the handling Application Cursor Key mode 
-and is also invoked by the \Bappcursor\fP entry in \fIvtMenu\fP.
+and is also invoked by the \fBappcursor\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-appkeypad(\fIon/off/toggle\fP)"
 This action toggles the handling of Application Keypad mode and is also 
@@ -1483,27 +1526,33 @@ The default bindings in the VT102 window are:
 .TA 2.5i
 .ta 2.5i
 .nf
- Shift <KeyPress> Prior:	scroll-back(1,halfpage) \\n\\
-  Shift <KeyPress> Next:	scroll-forw(1,halfpage) \\n\\
-Shift <KeyPress> Select:	select-cursor-start() \\
-	select-cursor-end(PRIMARY, CUT_BUFFER0) \\n\\
-Shift <KeyPress> Insert:	insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
-        ~Meta<KeyPress>:	insert-seven-bit() \\n\\
-         Meta<KeyPress>:	insert-eight-bit() \\n\\
-       !Ctrl <Btn1Down>:	popup-menu(mainMenu) \\n\\
-  !Lock Ctrl <Btn1Down>:	popup-menu(mainMenu) \\n\\
-       ~Meta <Btn1Down>:	select-start() \\n\\
-     ~Meta <Btn1Motion>:	select-extend() \\n\\
-       !Ctrl <Btn2Down>:	popup-menu(vtMenu) \\n\\
-  !Lock Ctrl <Btn2Down>:	popup-menu(vtMenu) \\n\\
- ~Ctrl ~Meta <Btn2Down>:	ignore() \\n\\
-   ~Ctrl ~Meta <Btn2Up>:	insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
-       !Ctrl <Btn3Down>:	popup-menu(fontMenu) \\n\\
-  !Lock Ctrl <Btn3Down>:	popup-menu(fontMenu) \\n\\
- ~Ctrl ~Meta <Btn3Down>:	start-extend() \\n\\
-     ~Meta <Btn3Motion>:	select-extend() \\n\\
-    	        <BtnUp>:	select-end(PRIMARY, CUT_BUFFER0) \\n\\
-              <BtnDown>:	bell(0)
+          Shift <KeyPress> Prior:	scroll-back(1,halfpage) \\n\\
+           Shift <KeyPress> Next:	scroll-forw(1,halfpage) \\n\\
+         Shift <KeyPress> Select:	select-cursor-start() \\
+                                        select-cursor-end(PRIMARY, CUT_BUFFER0) \\n\\
+         Shift <KeyPress> Insert:	insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
+                 ~Meta<KeyPress>:	insert-seven-bit() \\n\\
+                  Meta<KeyPress>:	insert-eight-bit() \\n\\
+                !Ctrl <Btn1Down>:	popup-menu(mainMenu) \\n\\
+           !Lock Ctrl <Btn1Down>:	popup-menu(mainMenu) \\n\\
+ !Lock Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\
+     ! @Num_Lock Ctrl <Btn1Down>:	popup-menu(mainMenu) \\n\\
+                ~Meta <Btn1Down>:	select-start() \\n\\
+              ~Meta <Btn1Motion>:	select-extend() \\n\\
+                !Ctrl <Btn2Down>:	popup-menu(vtMenu) \\n\\
+           !Lock Ctrl <Btn2Down>:	popup-menu(vtMenu) \\n\\
+ !Lock Ctrl @Num_Lock <Btn2Down>:	popup-menu(vtMenu) \\n\\
+     ! @Num_Lock Ctrl <Btn2Down>:	popup-menu(vtMenu) \\n\\
+          ~Ctrl ~Meta <Btn2Down>:	ignore() \\n\\
+            ~Ctrl ~Meta <Btn2Up>:	insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
+                !Ctrl <Btn3Down>:	popup-menu(fontMenu) \\n\\
+           !Lock Ctrl <Btn3Down>:	popup-menu(fontMenu) \\n\\
+ !Lock Ctrl @Num_Lock <Btn3Down>:	popup-menu(fontMenu) \\n\\
+     ! @Num_Lock Ctrl <Btn3Down>:	popup-menu(fontMenu) \\n\\
+          ~Ctrl ~Meta <Btn3Down>:	start-extend() \\n\\
+              ~Meta <Btn3Motion>:	select-extend() \\n\\
+                         <BtnUp>:	select-end(PRIMARY, CUT_BUFFER0) \\n\\
+                       <BtnDown>:	bell(0)
 .fi
 .DE
 .sp
@@ -1516,18 +1565,22 @@ The default bindings in the Tektronix window are:
 .TA 2.5i
 .ta 2.5i
 .nf
-      ~Meta<KeyPress>: 	insert-seven-bit() \\n\\
-       Meta<KeyPress>: 	insert-eight-bit() \\n\\
-     !Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\
-!Lock Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\
-     !Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\
-!Lock Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\
-Shift ~Meta<Btn1Down>:	gin-press(L) \\n\\
-      ~Meta<Btn1Down>:	gin-press(l) \\n\\
-Shift ~Meta<Btn2Down>:	gin-press(M) \\n\\
-      ~Meta<Btn2Down>:	gin-press(m) \\n\\
-Shift ~Meta<Btn3Down>:	gin-press(R) \\n\\
-      ~Meta<Btn3Down>:	gin-press(r)
+                ~Meta<KeyPress>: 	insert-seven-bit() \\n\\
+                 Meta<KeyPress>: 	insert-eight-bit() \\n\\
+               !Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\
+          !Lock Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\
+!Lock Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\
+     !Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\
+               !Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\
+          !Lock Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\
+!Lock Ctrl @Num_Lock <Btn2Down>:	popup-menu(tekMenu) \\n\\
+     !Ctrl @Num_Lock <Btn2Down>:	popup-menu(tekMenu) \\n\\
+          Shift ~Meta<Btn1Down>:	gin-press(L) \\n\\
+                ~Meta<Btn1Down>:	gin-press(l) \\n\\
+          Shift ~Meta<Btn2Down>:	gin-press(M) \\n\\
+                ~Meta<Btn2Down>:	gin-press(m) \\n\\
+          Shift ~Meta<Btn3Down>:	gin-press(R) \\n\\
+                ~Meta<Btn3Down>:	gin-press(r)
 .fi
 .DE
 .sp
@@ -1566,7 +1619,7 @@ window.
 .SH "SEE ALSO"
 resize(1), X(1), pty(4), tty(4)
 .br
-\fIXterm Control Sequences\fP (in the \fIxterm\fP source directory)
+\fIXterm Control Sequences\fP
 .SH BUGS
 .PP
 Large pastes do not work on some systems.  This is not a bug in
@@ -1579,8 +1632,6 @@ Many of the options are not resettable after
 .I xterm
 starts.
 .PP
-The Tek widget does not support key/button re-binding.
-.PP
 Only fixed-width, character-cell fonts are supported.
 .PP
 This program still needs to be rewritten.  It should be split into very
@@ -1589,10 +1640,6 @@ widgets that don't know about each other.  Ideally, you'd like to be able to
 pick and choose emulator widgets and stick them into a single control widget.
 .PP
 There needs to be a dialog box to allow entry of the Tek COPY file name.
-.SH COPYRIGHT
-Copyright 1989, Massachusetts Institute of Technology.
-.br
-See \fIX(1)\fP for a full statement of rights and permissions.
 .SH AUTHORS
 Far too many people, including:
 .sp
@@ -1603,4 +1650,3 @@ Mark Vandevoorde (MIT-Athena), Bob McNamara (DEC-MAD),
 Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X 
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena)
-
