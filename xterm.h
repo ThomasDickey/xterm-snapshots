@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.277 2004/04/18 20:49:43 tom Exp $ */
+/* $XTermId: xterm.h,v 1.279 2004/04/28 00:41:00 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.98 2004/04/18 20:49:43 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.99 2004/04/28 00:41:00 dickey Exp $ */
 
 /************************************************************
 
@@ -703,6 +703,7 @@ extern Window WMFrameWindow(XtermWidget termw);
 extern XrmOptionDescRec * sortedOptDescs(XrmOptionDescRec *, Cardinal);
 extern char *SysErrorMsg (int n);
 extern char *udk_lookup (int keycode, int *len);
+extern char *xtermVersion(void);
 extern int XStrCmp (char *s1, char *s2);
 extern int creat_as (int uid, int gid, Boolean append, char *pathname, int mode);
 extern int open_userfile (int uid, int gid, char *path, Boolean append);

@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.159 2004/04/18 20:49:43 tom Exp $ */
+/* $XTermId: os2main.c,v 1.162 2004/04/28 00:41:00 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.65 2004/04/18 20:49:43 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.66 2004/04/28 00:41:00 dickey Exp $ */
 
 /***********************************************************
 
@@ -66,7 +66,6 @@ SOFTWARE.
 
 #define RES_OFFSET(field)	XtOffsetOf(XTERM_RESOURCE, field)
 
-#include <version.h>
 #include <xterm.h>
 
 #include <X11/cursorfont.h>
@@ -757,7 +756,7 @@ Syntax(char *badOption)
 static void
 Version(void)
 {
-    printf("%s(%d)\n", XFREE86_VERSION, XTERM_PATCH);
+    printf("%s\n", xtermVersion());
     fflush(stdout);
 }
 
@@ -768,8 +767,8 @@ Help(void)
     OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     char **cpp;
 
-    printf("%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
-	   XFREE86_VERSION, XTERM_PATCH, ProgramName);
+    printf("%s usage:\n    %s [-options ...] [-e command args]\n\n",
+	   xtermVersion(), ProgramName);
     printf("where options include:\n");
     for (opt = list; opt->opt; opt++) {
 	printf("    %-28s %s\n", opt->opt, opt->desc);

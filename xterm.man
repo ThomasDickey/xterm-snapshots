@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.259 2004/04/18 20:49:43 tom Exp $
+.\" $XTermId: xterm.man,v 1.262 2004/04/28 00:41:00 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.103 2004/04/18 20:49:43 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.104 2004/04/28 00:41:00 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - April 2004.
 .TH XTERM 1 __vendorversion__
@@ -1292,7 +1292,7 @@ the font server may not cooperate.
 Since X11R6, bitmap fonts have been scaled.
 The font server claims to provide the bold font that \fIxterm\fP requests,
 but the result is not always readable.
-XFree86 provides a feature which can be used to suppressed the scaling.
+XFree86 provides a feature which can be used to suppress the scaling.
 In the X server's configuration file (e.g., "/etc/X11/XFree86"), you
 can add ":unscaled" to the end of the directory specification for the
 "misc" fonts, which comprise the fixed-pitch fonts that are used by xterm.
@@ -2049,10 +2049,32 @@ The default is ``true.''
 .B "utf8 (\fPclass\fB Utf8)"
 This specifies whether \fIxterm\fP will run in UTF-8 mode.
 If you set this resource, \fIxterm\fP also sets the \fBwideChars\fP resource as a side-effect.
-When set via a resource, \fIxterm\fP cannot be switched via control sequences out of UTF-8 mode.
-The default is ``0'' (off).
-Any other value will turn on UTF-8 mode.
-See the \fBlocale\fR resource for non-UTF-8 locales.
+The resource is an integer, expected to range from 0 to 3:
+.RS
+.TP
+0
+UTF-8 mode is initially off.
+Escape sequences for turning UTF-8 mode on/off are allowed.
+.TP
+1
+UTF-8 mode is initially on.
+Escape sequences for turning UTF-8 mode on/off are allowed.
+.TP
+2
+The command-line option \fB\-u8\fP sets the resource to this value.
+Escape sequences for turning UTF-8 mode on/off are ignored.
+.TP
+3
+This is the default value of the resource.
+It is changed during initialization depending on
+whether the \fBlocale\fP resource was set, to 0 or 2.
+See the \fBlocale\fR resource for additional discussion of non-UTF-8 locales.
+.RE
+.IP
+If you want to set the value of \fButf8\fP, it should be in this range.
+Other nonzero values are treated the same a ``1'',
+i.e., UTF-8 mode is initially on, and
+escape sequences for turning UTF-8 mode on/off are allowed.
 .TP 8
 .B "utf8Fonts (\fPclass\fB Utf8Fonts)"
 See the discussion of the \fBlocale\fP resource.

@@ -1,4 +1,5 @@
--- $XFree86: xc/programs/xterm/INSTALL,v 3.33 2003/10/27 01:07:55 dickey Exp $
+-- $XTermId: INSTALL,v 1.73 2004/04/28 00:40:59 tom Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.34 2004/04/28 00:40:59 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -329,6 +330,14 @@ The options (in alphabetic order):
   --with-XawPlus          link with Athena-Plus library
 
   	Look for, compile and link with the Xaw Plus widget library.
+
+  --with-freetype-cflags  -D/-I options for compiling with FreeType library
+
+	Override options provided by xft-config or freetype-config.
+
+  --with-freetype-libs    -L/-l options for linking with FreeType library
+
+	Override options provided by xft-config or freetype-config.
 
   --with-neXtaw           link with neXT Athena library
 

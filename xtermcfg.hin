@@ -1,5 +1,7 @@
+/* $XTermId: xtermcfg.hin,v 1.121 2004/04/28 00:41:00 tom Exp $ */
+
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.48 2004/03/04 02:21:57 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.49 2004/04/28 00:41:00 dickey Exp $
  */
 
 /************************************************************
@@ -95,6 +97,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_PTY_HANDSHAKE	/* CF_ARG_ENABLE(pty-handshake) */
 #undef OPT_SAME_NAME
 #undef OPT_SCO_FUNC_KEYS	/* CF_ARG_ENABLE(sco-fkeys) */
+#undef OPT_SESSION_MGT		/* CF_ARG_DISABLE(session-mgt) */
 #undef OPT_TCAP_QUERY
 #undef OPT_TEK4014		/* CF_ARG_DISABLE(tek4014) */
 #undef OPT_TOOLBAR		/* CF_ARG_ENABLE(toolbar) */

@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.134 2004/04/18 20:49:43 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.120 2004/04/18 20:49:43 dickey Exp $
+  $XTermId: xterm.log.html,v 1.139 2004/04/28 00:41:00 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.121 2004/04/28 00:41:00 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_187">Patch #187 - 2004/4/27 - XFree86 4.4.99.4</A>
 <LI><A HREF="#xterm_186">Patch #186 - 2004/4/18 - XFree86 4.4.99.4</A>
 <LI><A HREF="#xterm_185">Patch #185 - 2004/3/3 - XFree86 4.4</A>
 <LI><A HREF="#xterm_184">Patch #184 - 2003/12/31 - XFree86 4.3.99.903</A>
@@ -234,6 +235,28 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_187">Patch #187 - 2004/4/27 - XFree86 4.4.99.4</A></H1>
+<ul>
+	<li>change xterm version string to use <code>__vendorversion__</code>
+	    where that is available, and "XTerm" otherwise.
+
+	<li>improve description of <code>utf8</code> resource in manpage
+	    (Debian #179407).
+
+	<li>modify configure macros CF_IMAKE_CFLAGS and CF_ADD_CFLAGS to
+	    handle <code>-D</code> options that define string values, e.g.,
+	    for <code>XVENDORNAME</code>.
+
+	<li>modify configure macro CF_IMAKE_CFLAGS to allow (if
+	    <code>$PATH</code> is set accordingly) to use the
+	    <code>xmkmf</code> script within an X build tree.
+
+	<li>add missing <code>#undef OPT_SESSION_MGT</code> to xtermcfg.hin
+	    to make the configure script's --disable-session-mgt option work.
+
+	<li>update config.guess, config.sub
+</ul>
 
 <H1><A NAME="xterm_186">Patch #186 - 2004/4/18 - XFree86 4.4.99.4</A></H1>
 <ul>

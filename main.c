@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.373 2004/04/18 20:49:43 tom Exp $ */
+/* $XTermId: main.c,v 1.376 2004/04/28 00:40:59 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,13 +91,12 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.178 2004/04/18 20:49:43 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.179 2004/04/28 00:40:59 dickey Exp $ */
 
 /* main.c */
 
 #define RES_OFFSET(field)	XtOffsetOf(XTERM_RESOURCE, field)
 
-#include <version.h>
 #include <xterm.h>
 
 #include <X11/cursorfont.h>
@@ -1199,7 +1198,7 @@ Syntax(char *badOption)
 static void
 Version(void)
 {
-    printf("%s(%d)\n", XFREE86_VERSION, XTERM_PATCH);
+    printf("%s\n", xtermVersion());
     fflush(stdout);
 }
 
@@ -1210,8 +1209,8 @@ Help(void)
     OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     char **cpp;
 
-    printf("%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
-	   XFREE86_VERSION, XTERM_PATCH, ProgramName);
+    printf("%s usage:\n    %s [-options ...] [-e command args]\n\n",
+	   xtermVersion(), ProgramName);
     printf("where options include:\n");
     for (opt = list; opt->opt; opt++) {
 	printf("    %-28s %s\n", opt->opt, opt->desc);
