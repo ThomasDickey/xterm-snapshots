@@ -408,22 +408,6 @@ Input (
 	}
 #endif
 
-#if OPT_NUM_LOCK
-	/*
-	 * Send ESC if we have a META modifier and metaSendsEcape is true.
-	 * This is similar to the effect of 'eightbit' when eightBitInput
-	 * is false, except that we do this for all keys, including function
-	 * keys.
-	 */
-	if (screen->meta_sends_esc
-	 && !term->misc.meta_trans
-	 && ((event->state & term->misc.meta_left) != 0
-	  || (event->state & term->misc.meta_right)) != 0) {
-		TRACE(("...input is modified by META\n"));
-		eightbit = False;
-		unparseputc (ESC, pty);  /* escape */
-	}
-#endif
 	/*
 	 * If we are in the normal (possibly Sun/PC) keyboard state, allow
 	 * modifiers to add a parameter to the function-key control sequences.
@@ -541,9 +525,11 @@ Input (
 		|| (keysym == XK_Delete
 		 && ((modify_parm > 1)
 #if OPT_SUNPC_KBD
-		  || term->keyboard.type == keyboardIsVT220)
+		  || ( !screen->delete_is_del
+		   && term->keyboard.type == keyboardIsDefault)
+		  || term->keyboard.type == keyboardIsVT220
 #endif
-		  )) {
+		  ))) {
 #if OPT_SUNPC_KBD
 		if (term->keyboard.type == keyboardIsVT220) {
 			if ((event->state & ControlMask)
@@ -565,7 +551,7 @@ Input (
 		/*
 		 * Interpret F1-F4 as PF1-PF4 for VT52, VT100
 		 */
-		else if (term->keyboard.type != keyboardIsSun 
+		else if (term->keyboard.type != keyboardIsSun
 		 && term->keyboard.type != keyboardIsLegacy
 		 && (dec_code >= 11 && dec_code <= 14))
 		{
@@ -621,9 +607,8 @@ Input (
 #if OPT_NUM_LOCK
 			/*
 			 * Send ESC if we have a META modifier and
-			 * metaSendsEcape is true.  This case applies only if
-			 * we decided to not modify function keys because META
-			 * is used in translations.
+			 * metaSendsEcape is true.  Like eightBitInput, except
+			 * that it is not associated with terminal settings.
 			 */
 			if (eightbit
 			 && screen->meta_sends_esc
@@ -677,7 +662,7 @@ StringInput ( register TScreen *screen, register char *string, size_t nbytes)
 {
 	int	pty	= screen->respond;
 
-	TRACE(("InputString %s\n", visibleChars(PAIRED_CHARS(string,0), nbytes)));
+	TRACE(("InputString (%s,%d)\n", visibleChars(PAIRED_CHARS(string,0), nbytes), nbytes));
 #if OPT_TEK4014
 	if(nbytes && screen->TekGIN) {
 		TekEnqMouse(*string++);

@@ -89,6 +89,7 @@ static void do_backarrow       PROTO_XT_CALLBACK_ARGS;
 static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS;
 static void do_continue        PROTO_XT_CALLBACK_ARGS;
 static void do_cursesemul      PROTO_XT_CALLBACK_ARGS;
+static void do_delete_del      PROTO_XT_CALLBACK_ARGS;
 static void do_hardreset       PROTO_XT_CALLBACK_ARGS;
 static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
@@ -187,6 +188,7 @@ MenuEntry mainMenuEntries[] = {
     { "num-lock",	do_num_lock,	NULL },
     { "meta-esc",	do_meta_esc,	NULL },
 #endif
+    { "delete-is-del",	do_delete_del,	NULL },
     { "old function-keys",do_old_fkeys,	NULL },
 #if OPT_HP_FUNC_KEYS
     { "hp function-keys",do_hp_fkeys,	NULL },
@@ -476,6 +478,7 @@ static Bool domenu (
 	    update_decbkm();
 	    update_num_lock();
 	    update_meta_esc();
+	    update_delete_del();
 	    update_keyboard_type();
 	    if (screen->terminal_id < 200) {
 		set_sensitivity (mw,
@@ -743,6 +746,15 @@ static void do_meta_esc (
     update_meta_esc();
 }
 #endif
+
+static void do_delete_del (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    term->screen.delete_is_del = ! term->screen.delete_is_del;
+    update_delete_del();
+}
 
 static void do_old_fkeys (
 	Widget gw GCC_UNUSED,
@@ -1524,6 +1536,16 @@ void HandleMetaEsc(
 }
 #endif
 
+void HandleDeleteIsDEL(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    handle_toggle (do_delete_del, term->screen.delete_is_del,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+
 void HandleOldFunctionKeys(
 	Widget w,
 	XEvent *event GCC_UNUSED,
@@ -1533,6 +1555,7 @@ void HandleOldFunctionKeys(
     handle_toggle (do_old_fkeys, term->keyboard.type == keyboardIsLegacy,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
+
 #if OPT_SUNPC_KBD
 void HandleSunKeyboard(
 	Widget w,

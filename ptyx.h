@@ -318,9 +318,25 @@ typedef struct {
 				 ((n)==TEK_FG?TEK_BG:\
 				 ((n)==TEXT_BG?TEK_FG:(n))))))))
 
+#ifndef RES_OFFSET
+#define RES_OFFSET(offset) XtOffsetOf(XtermWidgetRec, offset)
+#endif
+
+#define Bres(name,class,offset,value) \
+	{name, class, XtRBoolean, sizeof(Boolean), \
+	 RES_OFFSET(offset), XtRImmediate, (XtPointer) value}
+
+#define Ires(name,class,offset,value) \
+	{name, class, XtRInt, sizeof(int), \
+	 RES_OFFSET(offset), XtRInt, (XtPointer) value}
+
+#define Sres(name,class,offset,value) \
+	{name, class, XtRString, sizeof(String), \
+	 RES_OFFSET(offset), XtRString, (XtPointer) value}
+
 #define COLOR_RES(name,offset,value) \
 	{name, XtCForeground, XtRPixel, sizeof(Pixel), \
-	 XtOffsetOf(XtermWidgetRec, offset), XtRString, value}
+	 RES_OFFSET(offset), XtRString, value}
 
 typedef struct {
 	unsigned	which;	/* must have NCOLORS bits */
@@ -1014,6 +1030,7 @@ typedef struct {
 	int		refresh_amt;	/* amount to refresh		*/
 	int		protected_mode;	/* 0=off, 1=DEC, 2=ISO		*/
 	Boolean		old_fkeys;	/* true for compatible fkeys	*/
+	Boolean		delete_is_del;	/* true for compatible Delete key */
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
 	Boolean         always_highlight; /* whether to highlight cursor */
 	Boolean		underline;	/* whether to underline text	*/
