@@ -1,10 +1,10 @@
-/* $XTermId: misc.c,v 1.229 2004/07/20 01:14:41 tom Exp $ */
+/* $XTermId: misc.c,v 1.231 2004/07/28 00:53:26 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.91 2004/07/20 01:14:41 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.92 2004/07/28 00:53:26 dickey Exp $ */
 
 /*
  *
@@ -436,9 +436,7 @@ selectwindow(register TScreen * screen, register int flag)
 	if (screen->xic)
 	    XSetICFocus(screen->xic);
 
-	if (screen->cursor_state &&
-	    (screen->cursor_col != screen->cur_col ||
-	     screen->cursor_row != screen->cur_row))
+	if (screen->cursor_state && CursorMoved(screen))
 	    HideCursor();
 	screen->select |= flag;
 	if (screen->cursor_state)
@@ -466,9 +464,7 @@ unselectwindow(register TScreen * screen, register int flag)
 	if (screen->xic)
 	    XUnsetICFocus(screen->xic);
 	screen->select &= ~flag;
-	if (screen->cursor_state &&
-	    (screen->cursor_col != screen->cur_col ||
-	     screen->cursor_row != screen->cur_row))
+	if (screen->cursor_state && CursorMoved(screen))
 	    HideCursor();
 	if (screen->cursor_state)
 	    ShowCursor();

@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.326 2004/07/20 01:14:41 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.328 2004/07/28 00:53:26 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.118 2004/07/20 01:14:41 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.119 2004/07/28 00:53:26 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -675,7 +675,7 @@ typedef enum {
 
 #if OPT_ISO_COLORS
 #define if_OPT_ISO_COLORS(screen, code) if(screen->colorMode) code
-#define TERM_COLOR_FLAGS (term->flags & (FG_COLOR|BG_COLOR))
+#define TERM_COLOR_FLAGS (term->flags & (BG_COLOR))
 #define COLOR_0		0
 #define COLOR_1		1
 #define COLOR_2		2
@@ -1305,6 +1305,7 @@ typedef struct {
 	int		cursor_set;	/* requested state		*/
 	int		cursor_col;	/* previous cursor column	*/
 	int		cursor_row;	/* previous cursor row		*/
+	Boolean		cursor_moved;	/* scrolling makes cursor move	*/
 	int		cur_col;	/* current cursor column	*/
 	int		cur_row;	/* current cursor row		*/
 	int		max_col;	/* rightmost column		*/
@@ -1756,6 +1757,11 @@ typedef struct _TekWidgetRec {
 #else
 #define OriginX(screen) (ScrollbarWidth(screen) + screen->border)
 #endif
+
+#define CursorMoved(screen) \
+		((screen)->cursor_moved || \
+		    ((screen)->cursor_col != (screen)->cur_col || \
+		     (screen)->cursor_row != (screen)->cur_row))
 
 #define CursorX(screen,col) ((col) * FontWidth(screen) + OriginX(screen))
 #define CursorY(screen,row) ((((row) - screen->topline) * FontHeight(screen)) \

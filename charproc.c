@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.492 2004/07/20 01:14:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.494 2004/07/28 00:53:25 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.163 2004/07/20 01:14:41 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.164 2004/07/28 00:53:25 dickey Exp $ */
 
 /*
 
@@ -1759,6 +1759,7 @@ VTparse(void)
 		if_OPT_XMC_GLITCH(screen, {
 		    Mark_XMC(screen, param[row]);
 		});
+		TRACE(("CASE_SGR %d\n", param[row]));
 		switch (param[row]) {
 		case DEFAULT:
 		case 0:
@@ -2804,8 +2805,7 @@ in_put(void)
 	}
 	if (screen->scroll_amt)
 	    FlushScroll(screen);
-	if (screen->cursor_set && (screen->cursor_col != screen->cur_col
-				   || screen->cursor_row != screen->cur_row)) {
+	if (screen->cursor_set && CursorMoved(screen)) {
 	    if (screen->cursor_state)
 		HideCursor();
 	    ShowCursor();
@@ -2885,8 +2885,7 @@ in_put(void)
 	/* update the screen */
 	if (screen->scroll_amt)
 	    FlushScroll(screen);
-	if (screen->cursor_set && (screen->cursor_col != screen->cur_col
-				   || screen->cursor_row != screen->cur_row)) {
+	if (screen->cursor_set && CursorMoved(screen)) {
 	    if (screen->cursor_state)
 		HideCursor();
 	    ShowCursor();
@@ -5919,6 +5918,7 @@ ShowCursor(void)
 
     screen->cursor_row = screen->cur_row;
     cursor_col = screen->cursor_col = screen->cur_col;
+    screen->cursor_moved = FALSE;
 
 #ifndef NO_ACTIVE_ICON
     if (IsIcon(screen)) {
@@ -5935,7 +5935,7 @@ ShowCursor(void)
     if_OPT_WIDE_CHARS(screen, {
 	int my_col;
 	chi = SCRN_BUF_WIDEC(screen, screen->cursor_row)[cursor_col];
-	if (clo == HIDDEN_LO && chi == HIDDEN_HI) {
+	if (clo == HIDDEN_LO && chi == HIDDEN_HI && cursor_col > 0) {
 	    /* if cursor points to non-initial part of wide character,
 	     * back it up
 	     */

@@ -1,10 +1,10 @@
-/* $XTermId: util.c,v 1.190 2004/07/20 01:14:41 tom Exp $ */
+/* $XTermId: util.c,v 1.193 2004/07/28 00:53:26 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.83 2004/07/20 01:14:41 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.84 2004/07/28 00:53:26 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -170,6 +170,7 @@ FlushScroll(TScreen * screen)
 	ScrnRefresh(screen, refreshtop, 0, refreshheight,
 		    screen->max_col + 1, False);
     }
+    return;
 }
 
 int
@@ -218,10 +219,14 @@ xtermScroll(TScreen * screen, int amount)
     int scrollheight;
 
     screen->cursor_busy += 1;
+    screen->cursor_moved = TRUE;
+
     if (screen->cursor_state)
 	HideCursor();
+
     if (amount > i)
 	amount = i;
+
     if (screen->jumpscroll) {
 	if (screen->scroll_amt > 0) {
 	    if (screen->refresh_amt + amount > i)
@@ -239,6 +244,7 @@ xtermScroll(TScreen * screen, int amount)
 	ScrollSelection(screen, -(amount));
 	if (amount == i) {
 	    ClearScreen(screen);
+	    screen->cursor_busy -= 1;
 	    return;
 	}
 	shift = -screen->topline;
@@ -288,18 +294,21 @@ xtermScroll(TScreen * screen, int amount)
 		refreshheight = shift;
 	}
     }
-    if (screen->scrollWidget && !screen->alternate && screen->top_marg == 0)
+    if (screen->scrollWidget && !screen->alternate && screen->top_marg == 0) {
 	ScrnDeleteLine(screen, screen->allbuf,
 		       screen->bot_marg + screen->savelines, 0,
 		       amount, screen->max_col + 1);
-    else
+    } else {
 	ScrnDeleteLine(screen, screen->visbuf,
 		       screen->bot_marg, screen->top_marg,
 		       amount, screen->max_col + 1);
-    if (refreshheight > 0)
+    }
+    if (refreshheight > 0) {
 	ScrnRefresh(screen, refreshtop, 0, refreshheight,
 		    screen->max_col + 1, False);
+    }
     screen->cursor_busy -= 1;
+    return;
 }
 
 /*
@@ -320,10 +329,14 @@ RevScroll(TScreen * screen, int amount)
     int scrollheight;
 
     screen->cursor_busy += 1;
+    screen->cursor_moved = TRUE;
+
     if (screen->cursor_state)
 	HideCursor();
+
     if (amount > i)
 	amount = i;
+
     if (screen->jumpscroll) {
 	if (screen->scroll_amt < 0) {
 	    if (-screen->refresh_amt + amount > i)
@@ -368,6 +381,7 @@ RevScroll(TScreen * screen, int amount)
     ScrnInsertLine(screen, screen->visbuf, screen->bot_marg, screen->top_marg,
 		   amount, screen->max_col + 1);
     screen->cursor_busy -= 1;
+    return;
 }
 
 /*
@@ -1826,7 +1840,7 @@ drawXtermText(TScreen * screen,
 		x += len * FontWidth(screen);
 	    }
 
-	    TRACE(("drewtext [%4d,%4d]\n", y, x));
+	    TRACE(("drawtext [%4d,%4d]\n", y, x));
 	} else {		/* simulate double-sized characters */
 #if OPT_WIDE_CHARS
 	    Char *wide = 0;
@@ -1941,15 +1955,26 @@ drawXtermText(TScreen * screen,
 		first = last + 1;
 	    }
 	}
-	if (last <= first)
+	if (last <= first) {
 	    return x + real_length * FontWidth(screen);
+	}
 	text += first;
 #if OPT_WIDE_CHARS
 	text2 += first;
 #endif
 	len = last - first;
 	flags |= NOTRANSLATION;
-	x = DrawX(first);
+	if (DrawX(first) != (Cardinal) x) {
+	    return drawXtermText(screen,
+				 flags,
+				 gc,
+				 DrawX(first),
+				 y,
+				 chrset,
+				 PAIRED_CHARS(text, text2),
+				 len,
+				 on_wide);
+	}
     }
 #endif /* OPT_BOX_CHARS */
     /*
