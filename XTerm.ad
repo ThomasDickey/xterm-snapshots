@@ -22,9 +22,10 @@ XTerm.JoinSession:False
 *mainMenu*print*Label:  Print Window
 *mainMenu*redraw*Label:  Redraw Window
 *mainMenu*8-bit control*Label: 8-Bit Controls
-*mainMenu*backarrow key*Label: Backarrow Key
+*mainMenu*backarrow key*Label: Backarrow Key (BS/DEL)
 *mainMenu*num-lock*Label: Alt/NumLock Modifiers
 *mainMenu*meta-esc*Label: Meta Sends Escape
+*mainMenu*delete-is-del*Label: Delete is DEL
 *mainMenu*old function-keys*Label: Old Function-Keys
 *mainMenu*sun function-keys*Label: Sun Function-Keys
 *mainMenu*sun keyboard*Label: VT220 Keyboard

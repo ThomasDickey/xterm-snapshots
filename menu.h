@@ -87,6 +87,7 @@ extern void HandleClearSavedLines  PROTO_XT_ACTIONS_ARGS;
 extern void HandleCreateMenu       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursesEmul       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursorBlink      PROTO_XT_ACTIONS_ARGS;
+extern void HandleDeleteIsDEL      PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
@@ -146,6 +147,7 @@ typedef enum {
     mainMenu_num_lock,
     mainMenu_meta_esc,
 #endif
+    mainMenu_delete_del,
     mainMenu_old_fkeys,
 #if OPT_HP_FUNC_KEYS
     mainMenu_hp_fkeys,
@@ -327,6 +329,11 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
   update_menu_item (term->screen.mainMenu, \
 		    mainMenuEntries[mainMenu_old_fkeys].widget, \
 		    term->keyboard.type == keyboardIsLegacy)
+
+#define update_delete_del() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_delete_del].widget, \
+		    term->screen.delete_is_del)
 
 #if OPT_SUNPC_KBD
 #define update_sun_kbd() \

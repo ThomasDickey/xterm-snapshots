@@ -1073,6 +1073,11 @@ Specifies the emulation level (100=VT100, 220=VT220, etc.), used to determine
 the type of response to a DA control sequence.
 The default is 100.
 .TP 8
+.B "deleteIsDEL (\fPclass\fB DeleteIsDEL)"
+Specifies whether the Delete key on the editing keypad should send DEL (127)
+or the VT220-style Remove escape sequence.
+The default is ``false,'' for the latter.
+.TP 8
 .B "dynamicColors (\fPclass\fB DynamicColors)"
 Specifies whether or not escape sequences to change colors assigned to
 different attributes are recognized.
@@ -1466,6 +1471,12 @@ This entry invokes the \fBset-backarrow(toggle)\fP action.
 .TP 8
 .B "num-lock (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-num-lock(toggle)\fP action.
+.TP 8
+.B "meta-esc (\fPclass\fB SmeBSB)"
+This entry invokes the \fBmeta-sends-escape(toggle)\fP action.
+.TP 8
+.B "delete-is-del (\fPclass\fB SmeBSB)"
+This entry invokes the \fBdelete-is-del(toggle)\fP action.
 .TP 8
 .B "old\ function-keys (\fPclass\fB SmeBSB)"
 This entry invokes the \fBold\ function-keys(toggle)\fP action.
@@ -2008,6 +2019,9 @@ The parameter values are the menu names:
 .B "deiconify()"
 Changes the window state back to normal, if it was iconified.
 .TP 8
+.B "delete-is-del()"
+This action toggles the state of the \fBdeleteIsDEL\fP resource.
+.TP 8
 .B "dired-button()"
 Handles a button event (other than press and release)
 by echoing the event's position
@@ -2063,6 +2077,9 @@ The name \fINone\fP restores the original translation table.
 .TP 8
 .B "maximize()"
 Resizes the window to fill the screen.
+.TP 8
+.B "meta-sends-escape()"
+This action toggles the state of the \fBmetaSendsEscape\fP resource.
 .TP 8
 .B "popup-menu(\fImenuname\fP)"
 This action displays the specified popup menu.  Valid names (case is

@@ -283,6 +283,8 @@ static XtActionsRec actionsList[] = {
     { "print",			HandlePrint },
     { "quit",			HandleQuit },
     { "redraw",			HandleRedraw },
+    { "delete-is-del",		HandleDeleteIsDEL },
+    { "meta-sends-escape",	HandleMetaEsc },
     { "scroll-back",		HandleScrollBack },
     { "scroll-forw",		HandleScrollForward },
     { "secure",			HandleSecure },
@@ -468,6 +470,7 @@ COLOR_RES(XtNcursorColor,	screen.cursorcolor,	"XtDefaultForeground"),
 {XtNoldXtermFKeys, XtCOldXtermFKeys, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.old_fkeys),
 	XtRBoolean, (XtPointer) &defaultFALSE},
+Bres(XtNdeleteIsDEL,	XtCDeleteIsDEL,		screen.delete_is_del,	FALSE),
 #ifdef ALLOWLOGGING
 {XtNlogFile, XtCLogfile, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, screen.logfile),
@@ -3269,6 +3272,9 @@ dpmodes(
 			screen->meta_sends_esc = (func == bitset) ? ON : OFF;
 			break;
 #endif
+		case 1037:
+			screen->delete_is_del = (func == bitset) ? ON : OFF;
+			break;
 		case 1048:
 			if (!termw->misc.titeInhibit) {
 				if(func == bitset)
@@ -4182,6 +4188,7 @@ static void VTInitialize (
    wnew->screen.border = request->screen.border;
    wnew->screen.jumpscroll = request->screen.jumpscroll;
    wnew->screen.old_fkeys = request->screen.old_fkeys;
+   wnew->screen.delete_is_del = request->screen.delete_is_del;
    init_keyboard_type(keyboardIsLegacy, wnew->screen.old_fkeys);
 #ifdef ALLOWLOGGING
    wnew->screen.logfile = request->screen.logfile;
