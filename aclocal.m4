@@ -393,6 +393,10 @@ changequote([,])dnl
 				fi
 			done
 			;;
+		"\\")	cf_found=yes #(vi
+			;;
+		"&&")	cf_found=yes #(vi
+			;;
 		-*)	;; #(vi
 		$CC|cc|gcc|main.*|echo)	cf_found=yes
 			;;

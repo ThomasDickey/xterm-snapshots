@@ -840,6 +840,8 @@ typedef struct _TekWidgetRec {
 #define FontHeight(screen)	((screen)->whichVwin->f_height)
 #define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->ascent \
 						: (screen)->fnt_norm->ascent)
+#define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->descent \
+						: (screen)->fnt_norm->descent)
 #define Scrollbar(screen)	((screen)->whichVwin->scrollbar)
 #define NormalGC(screen)	((screen)->whichVwin->normalGC)
 #define ReverseGC(screen)	((screen)->whichVwin->reverseGC)

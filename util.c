@@ -1323,7 +1323,7 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 {
 #if OPT_DEC_CHRSET
 	if (CSET_DOUBLE(chrset)) {
-		Char *temp = malloc(2 * len);
+		Char *temp = (Char *) malloc(2 * len);
 		int n = 0;
 		TRACE(("DRAWTEXT%c[%4d,%4d] (%d) %d:%.*s\n",
 			screen->cursor_state == OFF ? ' ' : '*',
@@ -1347,9 +1347,12 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 	if ((flags & BOLD) && screen->enbolden)
 		XDrawString(screen->display, TextWindow(screen), gc,
 			x+1, y,  (char *)text, len);
-	if ((flags & UNDERLINE) && screen->underline) 
+	if ((flags & UNDERLINE) && screen->underline) {
+		if (FontDescent(screen) > 1)
+			y++;
 		XDrawLine(screen->display, TextWindow(screen), gc, 
-			x, y+1, x + len * FontWidth(screen), y+1);
+			x, y, x + len * FontWidth(screen), y);
+	}
 }
 
 /*
