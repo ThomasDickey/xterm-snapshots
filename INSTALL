@@ -201,6 +201,11 @@ The options (in alphabetic order):
 	Logging was disabled in X11R5 xterm because of security problems.
 	They were addressed in X11R6, but the feature was not reinstated.
 
+  --enable-toolbar        enable pulldown menus on toolbar
+
+  	Compile-in code that builds a toolbar with pulldown menus.  The
+	normal popup menus are still available.
+
   --enable-trace          test: set to enable debugging traces
 
   	Compile-in code to trace xterm's internal states.

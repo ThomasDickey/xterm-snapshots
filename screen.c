@@ -995,6 +995,8 @@ ScreenResize (
 		 screen->savelines : 0;
 		int delta_rows = rows - (screen->max_row + 1);
 
+		TRACE(("...ScreenResize chars %dx%d\n", rows, cols))
+
 		if(screen->cursor_state)
 			HideCursor();
 		if ( screen->alternate

@@ -566,6 +566,35 @@ AC_SUBST(IMAKE_CFLAGS)
 AC_SUBST(IMAKE_LOADFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl Check if the X libraries support input-method
+AC_DEFUN([CF_INPUT_METHOD],
+[
+AC_CACHE_CHECK([if X libraries support input-method],cf_cv_input_method,[
+AC_TRY_LINK([
+#include <X11/IntrinsicP.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
+#include <X11/Xmu/Atoms.h>
+#include <X11/Xmu/Converters.h>
+#include <X11/Xaw/XawImP.h>
+],[
+{
+	XIM xim;
+	XIMStyles *xim_styles;
+	XIMStyle input_style;
+	Widget w;
+
+	XSetLocaleModifiers("@im=none");
+	xim = XOpenIM(XtDisplay(w), NULL, NULL, NULL);
+	XGetIMValues(xim, XNQueryInputStyle, &xim_styles, NULL);
+	XCloseIM(xim);
+	input_style = (XIMPreeditNothing | XIMStatusNothing);
+}
+],
+[cf_cv_input_method=yes],
+[cf_cv_input_method=no])])
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl Special test to workaround gcc 2.6.2, which cannot parse C-preprocessor
 dnl conditionals.
 dnl

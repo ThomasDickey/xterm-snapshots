@@ -57,9 +57,17 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
 #include <X11/Xmu/CharSet.h>
+
 #include <X11/Xaw/SimpleMenu.h>
+#include <X11/Xaw/Box.h>
 #include <X11/Xaw/SmeBSB.h>
 #include <X11/Xaw/SmeLine.h>
+
+#if OPT_TOOLBAR
+#include <X11/Xaw/MenuButton.h>
+#include <X11/Xaw/Form.h>
+#endif
+
 #include <stdio.h>
 #include <signal.h>
 
@@ -263,28 +271,155 @@ MenuEntry tekMenuEntries[] = {
     { "tekhide",	do_tekhide,	NULL }};
 #endif
 
-static Widget create_menu (
-		XtermWidget xtw,
-		Widget toplevelw,
-		char *name,
-		struct _MenuEntry *entries,
-		int nentries);
+typedef struct {
+    char *internal_name;
+    MenuEntry *entry_list;
+    Cardinal entry_len;
+} MenuHeader;
 
-static void handle_send_signal (Widget gw, int sig);
-
-extern Widget toplevel;
-
-
-/*
- * we really want to do these dynamically
- */
-#define check_width 9
-#define check_height 8
-static unsigned char check_bits[] = {
-   0x00, 0x01, 0x80, 0x01, 0xc0, 0x00, 0x60, 0x00,
-   0x31, 0x00, 0x1b, 0x00, 0x0e, 0x00, 0x04, 0x00
+    /* This table is ordered to correspond with MenuIndex */
+static MenuHeader menu_names[] = {
+    { "mainMenu", mainMenuEntries, XtNumber(mainMenuEntries) },
+    { "vtMenu",   vtMenuEntries,   XtNumber(vtMenuEntries)   },
+    { "fontMenu", fontMenuEntries, XtNumber(fontMenuEntries) },
+#if OPT_TEK4014
+    { "tekMenu",  tekMenuEntries,  XtNumber(tekMenuEntries)  },
+#endif
+    { 0,          0,               0 },
 };
 
+/*
+ * FIXME:  These are global data rather than in the xterm widget because they
+ * are initialized before the widget is created.
+ */
+typedef struct {
+    Widget w;
+    Cardinal entries;
+} MenuList;
+
+static MenuList vt_shell[NUM_POPUP_MENUS];
+
+#if OPT_TEK4014 && OPT_TOOLBAR
+static MenuList tek_shell[NUM_POPUP_MENUS];
+#endif
+
+/*
+ * Returns a pointer to the MenuList entry that matches the popup menu.
+ */
+static MenuList *
+select_menu (Widget w GCC_UNUSED, MenuIndex num)
+{
+#if OPT_TEK4014 && OPT_TOOLBAR
+    while (w != 0) {
+	if (w == tekshellwidget) {
+	    return &tek_shell[num];
+	}
+	w = XtParent(w);
+    }
+#endif
+    return &vt_shell[num];
+}
+
+/*
+ * Returns a pointer to the given popup menu shell
+ */
+static Widget
+obtain_menu (Widget w, MenuIndex num)
+{
+    return select_menu(w, num)->w;
+}
+
+/*
+ * Returns the number of entries in the given popup menu shell
+ */
+static Cardinal
+sizeof_menu (Widget w, MenuIndex num)
+{
+    return select_menu(w, num)->entries;
+}
+
+/*
+ * create_menu - create a popup shell and stuff the menu into it.
+ */
+
+static Widget
+create_menu (Widget w, XtermWidget xtw, MenuIndex num)
+{
+    static XtCallbackRec cb[2] = { { NULL, NULL }, { NULL, NULL }};
+    static Arg arg = { XtNcallback, (XtArgVal) cb };
+
+    Widget m;
+    TScreen *screen = &xtw->screen;
+    MenuHeader *data = &menu_names[num]; 
+    MenuList *list = select_menu(w, num);
+    struct _MenuEntry *entries = data->entry_list;
+    int nentries = data->entry_len;
+
+    if (screen->menu_item_bitmap == None) {
+	/*
+	 * we really want to do these dynamically
+	 */
+#define check_width 9
+#define check_height 8
+	static unsigned char check_bits[] = {
+	   0x00, 0x01, 0x80, 0x01, 0xc0, 0x00, 0x60, 0x00,
+	   0x31, 0x00, 0x1b, 0x00, 0x0e, 0x00, 0x04, 0x00
+	};
+
+	screen->menu_item_bitmap =
+	XCreateBitmapFromData (XtDisplay(xtw),
+				RootWindowOfScreen(XtScreen(xtw)),
+				(char *)check_bits, check_width, check_height);
+    }
+
+#if OPT_TOOLBAR
+    m = list->w;
+    if (m == 0) {
+	return m;
+    }
+#else
+    m = XtCreatePopupShell (data->internal_name, simpleMenuWidgetClass, toplevel, NULL, 0);
+    list->w = m;
+#endif
+    list->entries = nentries;
+
+    for (; nentries > 0; nentries--, entries++) {
+	cb[0].callback = (XtCallbackProc) entries->function;
+	cb[0].closure = (caddr_t) entries->name;
+	entries->widget = XtCreateManagedWidget (entries->name,
+						 (entries->function ?
+						  smeBSBObjectClass :
+						  smeLineObjectClass), m,
+						 &arg, (Cardinal) 1);
+    }
+
+    /* do not realize at this point */
+    return m;
+}
+
+static int indexOfMenu(String menuName)
+{
+    int me;
+    switch (*menuName) {
+    case 'm':
+	me = mainMenu;
+	break;
+    case 'v':
+	me = vtMenu;
+	break;
+    case 'f':
+	me = fontMenu;
+	break;
+#if OPT_TEK4014
+    case 't':
+	me = tekMenu;
+	break;
+#endif
+    default:
+	me = -1;
+    }
+    return (me);
+}
 
 /*
  * public interfaces
@@ -298,18 +433,31 @@ static Bool domenu (
 	Cardinal *param_count)      /* 0 or 1 */
 {
     TScreen *screen = &term->screen;
+    int me;
+    Boolean created = False;
+    Widget mw;
 
     if (*param_count != 1) {
 	Bell(XkbBI_MinorError,0);
 	return False;
     }
 
-    switch (params[0][0]) {
-      case 'm':
-	if (!screen->mainMenu) {
-	    screen->mainMenu = create_menu (term, toplevel, "mainMenu",
-					    mainMenuEntries,
-					    XtNumber(mainMenuEntries));
+    if ((me = indexOfMenu(params[0])) < 0) {
+	Bell(XkbBI_MinorError,0);
+	return False;
+    }
+
+    if ((mw = obtain_menu(w, me)) == 0
+     || sizeof_menu(w, me) == 0) {
+	mw = create_menu (w, term, me);
+	created = (mw != 0);
+    }
+    if (mw == 0)
+	return False;
+
+    switch (me) {
+      case mainMenu:
+	if (created) {
 	    update_securekbd();
 	    update_allowsends();
 	    update_logging();
@@ -318,28 +466,25 @@ static Bool domenu (
 	    update_num_lock();
 	    update_sun_kbd();
 	    if (screen->terminal_id < 200) {
-		set_sensitivity (screen->mainMenu,
+		set_sensitivity (mw,
 				 mainMenuEntries[mainMenu_8bit_ctrl].widget,
 				 FALSE);
 	    }
 	    update_sun_fkeys();
 	    update_hp_fkeys();
 #if !defined(SIGTSTP) || defined(AMOEBA)
-	    set_sensitivity (screen->mainMenu,
+	    set_sensitivity (mw,
 			     mainMenuEntries[mainMenu_suspend].widget, FALSE);
 #endif
 #if !defined(SIGCONT) || defined(AMOEBA)
-	    set_sensitivity (screen->mainMenu,
+	    set_sensitivity (mw,
 			     mainMenuEntries[mainMenu_continue].widget, FALSE);
 #endif
 	}
 	break;
 
-      case 'v':
-	if (!screen->vtMenu) {
-	    screen->vtMenu = create_menu (term, toplevel, "vtMenu",
-					  vtMenuEntries,
-					  XtNumber(vtMenuEntries));
+      case vtMenu:
+	if (created) {
 	    update_scrollbar();
 	    update_jumpscroll();
 	    update_reversevideo();
@@ -359,7 +504,7 @@ static Bool domenu (
 	    update_titeInhibit();
 #ifndef NO_ACTIVE_ICON
 	    if (!screen->fnt_icon || !screen->iconVwin.window) {
-		set_sensitivity (screen->vtMenu,
+		set_sensitivity (mw,
 				 vtMenuEntries[vtMenu_activeicon].widget,
 				 FALSE);
 	    }
@@ -369,45 +514,36 @@ static Bool domenu (
 	}
 	break;
 
-      case 'f':
-	if (!screen->fontMenu) {
-	    screen->fontMenu = create_menu (term, toplevel, "fontMenu",
-					    fontMenuEntries,
-					    XtNumber(fontMenuEntries));
+      case fontMenu:
+	if (created) {
 	    set_menu_font (True);
-	    set_sensitivity (screen->fontMenu,
+	    set_sensitivity (mw,
 			     fontMenuEntries[fontMenu_fontescape].widget,
 			     (screen->menu_font_names[fontMenu_fontescape]
 			      ? TRUE : FALSE));
 	    update_font_doublesize();
 	    update_font_loadable();
 #if OPT_DEC_SOFTFONT	/* FIXME: not implemented */
-	    set_sensitivity (screen->fontMenu,
+	    set_sensitivity (mw,
 			     fontMenuEntries[fontMenu_font_loadable].widget,
 			     FALSE);
 #endif
 	}
 	FindFontSelection (NULL, True);
-	set_sensitivity (screen->fontMenu,
+	set_sensitivity (mw,
 			 fontMenuEntries[fontMenu_fontsel].widget,
 			 (screen->menu_font_names[fontMenu_fontsel]
 			  ? TRUE : FALSE));
 	break;
 
 #if OPT_TEK4014
-      case 't':
-	if (!screen->tekMenu) {
-	    screen->tekMenu = create_menu (term, toplevel, "tekMenu",
-					   tekMenuEntries,
-					   XtNumber(tekMenuEntries));
+      case tekMenu:
+	if (created) {
 	    set_tekfont_menu_item (screen->cur.fontsize, TRUE);
+	    update_vtshow();
 	}
 	break;
 #endif
-
-      default:
-	Bell(XkbBI_MinorError,0);
-	return False;
     }
 
     return True;
@@ -429,6 +565,9 @@ void HandlePopupMenu (
 	Cardinal *param_count)      /* 0 or 1 */
 {
     if (domenu (w, event, params, param_count)) {
+#if OPT_TOOLBAR
+	w = select_menu(w, mainMenu)->w;
+#endif
 	XtCallActionProc (w, "XawPositionSimpleMenu", event, params, 1);
 	XtCallActionProc (w, "MenuPopup", event, params, 1);
     }
@@ -438,46 +577,6 @@ void HandlePopupMenu (
 /*
  * private interfaces - keep out!
  */
-
-/*
- * create_menu - create a popup shell and stuff the menu into it.
- */
-
-static Widget
-create_menu (
-	XtermWidget xtw,
-	Widget toplevelw,
-	char *name,
-	struct _MenuEntry *entries,
-	int nentries)
-{
-    Widget m;
-    TScreen *screen = &xtw->screen;
-    static XtCallbackRec cb[2] = { { NULL, NULL }, { NULL, NULL }};
-    static Arg arg = { XtNcallback, (XtArgVal) cb };
-
-    if (screen->menu_item_bitmap == None) {
-	screen->menu_item_bitmap =
-	  XCreateBitmapFromData (XtDisplay(xtw),
-				 RootWindowOfScreen(XtScreen(xtw)),
-				 (char *)check_bits, check_width, check_height);
-    }
-
-    m = XtCreatePopupShell (name, simpleMenuWidgetClass, toplevelw, NULL, 0);
-
-    for (; nentries > 0; nentries--, entries++) {
-	cb[0].callback = (XtCallbackProc) entries->function;
-	cb[0].closure = (caddr_t) entries->name;
-	entries->widget = XtCreateManagedWidget (entries->name,
-						 (entries->function ?
-						  smeBSBObjectClass :
-						  smeLineObjectClass), m,
-						 &arg, (Cardinal) 1);
-    }
-
-    /* do not realize at this point */
-    return m;
-}
 
 /* ARGSUSED */
 static void handle_send_signal (Widget gw GCC_UNUSED, int sig)
@@ -495,7 +594,7 @@ static void handle_send_signal (Widget gw GCC_UNUSED, int sig)
 /* ARGSUSED */
 void DoSecureKeyboard (Time tp GCC_UNUSED)
 {
-    do_securekbd (term->screen.mainMenu, (XtPointer)0, (XtPointer)0);
+    do_securekbd (vt_shell[mainMenu].w, (XtPointer)0, (XtPointer)0);
 }
 
 static void do_securekbd (
@@ -511,7 +610,7 @@ static void do_securekbd (
 	ReverseVideo (term);
 	screen->grabbedKbd = FALSE;
     } else {
-	if (XGrabKeyboard (screen->display, term->core.window,
+	if (XGrabKeyboard (screen->display, XtWindow(term),
 			   True, GrabModeAsync, GrabModeAsync, now)
 	    != GrabSuccess) {
 	    Bell(XkbBI_MinorError, 100);
@@ -955,7 +1054,7 @@ static void do_activeicon (
     TScreen *screen = &term->screen;
 
     if (screen->iconVwin.window) {
-	Widget shell = term->core.parent;
+	Widget shell = XtParent(term);
 	term->misc.active_icon = !term->misc.active_icon;
 	XtVaSetValues(shell, XtNiconWindow,
 		      term->misc.active_icon ? screen->iconVwin.window : None,
@@ -1745,4 +1844,143 @@ SetItemSensitivity(Widget mi, XtArgVal val)
 		menuArgs.value = (XtArgVal) (val);
 		XtSetValues (mi, &menuArgs, (Cardinal) 1);
 	}
+}
+
+#if OPT_TOOLBAR
+/*
+ * In the normal (non-toolbar) configuration, the xterm widget covers almost
+ * all of the window.  With a toolbar, there's a relatively large area that
+ * the user would expect to enter keystrokes since the program can get the
+ * focus.
+ */
+static char menu_trans[] =
+"\
+                ~Meta <KeyPress>:insert-seven-bit() \n\
+                 Meta <KeyPress>:insert-eight-bit() \n\
+";
+
+XtActionsRec menu_actions[] = {
+    { "insert",			HandleKeyPressed }, /* alias */
+    { "insert-eight-bit",	HandleEightBitKeyPressed },
+    { "insert-seven-bit",	HandleKeyPressed },
+    { "secure", 		HandleSecure },
+    { "string",			HandleStringEvent },
+};
+
+/*
+ * The normal style of xterm popup menu delays initialization until the menu is
+ * first requested.  When using a toolbar, we can use the same initialization,
+ * though on the first popup there will be a little geometry layout jitter,
+ * since the menu is already managed when this callback is invoked.
+ */
+static void InitPopup (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+	String params[2];
+	Cardinal count = 1;
+
+	params[0] = closure;
+	params[1] = 0;
+	TRACE(("InitPopup(%s)\n", params[0]))
+
+	domenu(gw, (XEvent *)0, params, &count);
+
+	XtRemoveCallback(gw, XtNpopupCallback, InitPopup, closure);
+}
+
+static void SetupShell(Widget *menus, MenuList *shell, Widget *menu_tops, int n, int m)
+{
+	char temp[80];
+	char *external_name = 0;
+
+	shell[n].w = XtVaCreatePopupShell (menu_names[n].internal_name,
+			simpleMenuWidgetClass,
+			*menus,
+			XtNgeometry,		NULL,
+			NULL);
+
+	XtAddCallback(shell[n].w, XtNpopupCallback, InitPopup, menu_names[n].internal_name);
+	XtVaGetValues(shell[n].w,
+			XtNlabel,	&external_name,
+			NULL);
+
+	TRACE(("...SetupShell(%s) -> %s -> %#lx\n",
+		menu_names[n].internal_name,
+		external_name,
+		(long)shell[n].w))
+
+	sprintf(temp, "%sButton", menu_names[n].internal_name);
+	menu_tops[n] = XtVaCreateManagedWidget (temp,
+			menuButtonWidgetClass,
+			*menus,
+			XtNfromHoriz,	(m >= 0) ? menu_tops[m] : 0,
+			XtNmenuName,	menu_names[n].internal_name,
+			XtNlabel,	external_name,
+			NULL);
+}
+
+#endif
+
+void
+SetupMenus(Widget shell, Widget *forms, Widget *menus)
+{
+#if OPT_TOOLBAR
+	int n;
+	Widget menu_tops[NUM_POPUP_MENUS];
+#endif
+
+	TRACE(("SetupMenus(%s)\n", shell == toplevel ? "vt100" : "tek4014"))
+
+	if (shell == toplevel) {
+	    XawSimpleMenuAddGlobalActions (app_con);
+	    XtRegisterGrabAction (HandlePopupMenu, True,
+				  (ButtonPressMask|ButtonReleaseMask),
+				  GrabModeAsync, GrabModeAsync);
+	}
+#if OPT_TOOLBAR
+	*forms = XtVaCreateManagedWidget(
+				"form",
+				formWidgetClass,	shell,
+				NULL);
+
+	XtAppAddActions(app_con, menu_actions, XtNumber(menu_actions));
+	XtAugmentTranslations(*forms, XtParseTranslationTable(menu_trans));
+
+	/*
+	 * Set a nominal value for the preferred pane size, which lets the
+	 * buttons determine the actual height of the menu bar.  We don't show
+	 * the grip, because it's too easy to make the toolbar look bad that
+	 * way.
+	 */
+	*menus = XtVaCreateManagedWidget(
+				"menubar",
+				boxWidgetClass,		*forms,
+				XtNorientation,		XtorientHorizontal,
+				XtNtop,			XawChainTop,
+				XtNleft,		XawChainLeft,
+				XtNright,		XawChainRight,
+				NULL);
+
+	if (shell == toplevel) {	/* vt100 */
+	    for (n = mainMenu; n <= fontMenu; n++) {
+		SetupShell(menus, vt_shell, menu_tops, n, n-1);
+	    }
+	}
+#if OPT_TEK4014
+	else {			/* tek4014 */
+	    SetupShell(menus, tek_shell, menu_tops, mainMenu, -1);
+	    SetupShell(menus, tek_shell, menu_tops, tekMenu, mainMenu);
+	}
+#endif
+
+#else
+	*forms = shell;
+	*menus = shell;
+#endif
+
+	TRACE(("...shell=%#lx\n", (long) shell))
+	TRACE(("...forms=%#lx\n", (long) *forms))
+	TRACE(("...menus=%#lx\n", (long) *menus))
 }

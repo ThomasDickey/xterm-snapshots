@@ -85,12 +85,6 @@ button.c	Handles button events in the terminal emulator.
 	meta key  -> 2
 	control key -> 4 */
 
-#define TEXTMODES 4
-#define NBUTS 3
-#define DIRS 2
-#define UP 1
-#define DOWN 0
-#define SHIFTS 8		/* three keys, so eight combinations */
 #define	Coordinate(r,c)		((r) * (term->screen.max_col+1) + (c))
 
 

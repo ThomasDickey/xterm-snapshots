@@ -74,9 +74,12 @@ SOFTWARE.
 
 #include <X11/Xos.h>
 #include <X11/cursorfont.h>
-#include <X11/Xaw/SimpleMenu.h>
 #ifdef I18N
 #include <X11/Xlocale.h>
+#endif
+
+#if OPT_TOOLBAR
+#include <X11/Xaw/Form.h>
 #endif
 
 #include <pwd.h>
@@ -102,11 +105,8 @@ char *ttyname(int fd) { return "/dev/tty"; }
 
 #include <signal.h>
 
-extern char *strindex ();
-
 static SIGNAL_T reapchild (int n);
 static char *base_name (char *name);
-static int pty_search (int *pty);
 static int remove_termcap_entry (char *buf, char *str);
 static int spawn (void);
 static void get_terminal (void);
@@ -652,7 +652,6 @@ Arg ourTopLevelShellArgs[] = {
 };
 int number_ourTopLevelShellArgs = 2;
 
-Widget toplevel;
 Bool waiting_for_initial_map;
 
 /*
@@ -701,9 +700,6 @@ XtActionsRec actionProcs[] = {
 };
 
 Atom wm_delete_window;
-extern fd_set Select_mask;
-extern fd_set X_mask;
-extern fd_set pty_mask;
 
 #ifdef __EMX__
 
@@ -825,6 +821,7 @@ char **gblenvp;
 int
 main (int argc, char **argv, char **envp)
 {
+	Widget form_top, menu_top;
 	register TScreen *screen;
 	int mode;
 	extern char **environ;
@@ -997,36 +994,22 @@ main (int argc, char **argv, char **envp)
 	    break;
 	}
 
-	XawSimpleMenuAddGlobalActions (app_con);
-	XtRegisterGrabAction (HandlePopupMenu, True,
-			      (ButtonPressMask|ButtonReleaseMask),
-			      GrabModeAsync, GrabModeAsync);
+	SetupMenus(toplevel, &form_top, &menu_top);
 
-        term = (XtermWidget) XtCreateManagedWidget(
-	    "vt100", xtermWidgetClass, toplevel, NULL, 0);
+        term = (XtermWidget) XtVaCreateManagedWidget(
+		"vt100", xtermWidgetClass, form_top,
+#if OPT_TOOLBAR
+		XtNmenuBar,	menu_top,
+		XtNresizable,	True,
+		XtNfromVert,	menu_top,
+		XtNleft,	XawChainLeft,
+		XtNright,	XawChainRight,
+		XtNbottom,	XawChainBottom,
+#endif
+		0);
 	    /* this causes the initialize method to be called */
 
         screen = &term->screen;
-
-	if (screen->savelines < 0) screen->savelines = 0;
-
-	term->flags = 0;
-	if (!screen->jumpscroll) {
-	    term->flags |= SMOOTHSCROLL;
-	    update_jumpscroll();
-	}
-	if (term->misc.reverseWrap) {
-	    term->flags |= REVERSEWRAP;
-	    update_reversewrap();
-	}
-	if (term->misc.autoWrap) {
-	    term->flags |= WRAPAROUND;
-	    update_autowrap();
-	}
-	if (term->misc.re_verse != term->misc.re_verse0) {
-	    term->flags |= REVERSE_VIDEO;
-	    update_reversevideo();
-	}
 
 	inhibit = 0;
 #ifdef ALLOWLOGGING
@@ -1036,18 +1019,6 @@ main (int argc, char **argv, char **envp)
 #if OPT_TEK4014
 	if (term->misc.tekInhibit)		inhibit |= I_TEK;
 #endif
-
-	term->initflags = term->flags;
-
-	if (term->misc.appcursorDefault) {
-	    term->keyboard.flags |= MODE_DECCKM;
-	    update_appcursor();
-	}
-
-	if (term->misc.appkeypadDefault) {
-	    term->keyboard.flags |= MODE_DECKPAM;
-	    update_appkeypad();
-	}
 
 /*
  * Set title and icon name if not specified
@@ -1166,19 +1137,6 @@ base_name(char *name)
 	return(cp ? cp + 1 : name);
 }
 
-/* This function opens up a pty master and stuffs its value into pty.
- * If it finds one, it returns a value of 0.  If it does not find one,
- * it returns a value of !0.  This routine is designed to be re-entrant,
- * so that if a pty master is found and later, we find that the slave
- * has problems, we can re-enter this function and get another one.
- */
-
-static int
-get_pty (int *pty)
-{
-	return pty_search(pty);
-}
-
 /*
  * Called from get_pty to iterate over likely pseudo terminals
  * we might allocate.  Used on those systems that do not have
@@ -1205,6 +1163,19 @@ pty_search(int *pty)
 		}
 	}
 	return 1;
+}
+
+/* This function opens up a pty master and stuffs its value into pty.
+ * If it finds one, it returns a value of 0.  If it does not find one,
+ * it returns a value of !0.  This routine is designed to be re-entrant,
+ * so that if a pty master is found and later, we find that the slave
+ * has problems, we can re-enter this function and get another one.
+ */
+
+static int
+get_pty (int *pty)
+{
+	return pty_search(pty);
 }
 
 static void

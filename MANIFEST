@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-3_9_15
+MANIFEST for xterm, version xterm-113
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.pl                    script to generate 256colres.h

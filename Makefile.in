@@ -97,7 +97,7 @@ resize : $(OBJS2)
 	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
 256colres.h : $(srcdir)/256colres.pl
-	$(srcdir)/256colres.pl > 256colres.h
+	perl $(srcdir)/256colres.pl > 256colres.h
 
 charproc.o : @CHARPROC_DEPS@
 

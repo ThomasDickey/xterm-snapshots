@@ -77,8 +77,11 @@ SOFTWARE.
 
 #include <X11/Xos.h>
 #include <X11/cursorfont.h>
-#include <X11/Xaw/SimpleMenu.h>
 #include <X11/Xlocale.h>
+
+#if OPT_TOOLBAR
+#include <X11/Xaw/Form.h>
+#endif
 
 #include <pwd.h>
 #include <ctype.h>
@@ -203,6 +206,11 @@ static Bool IsPts = False;
 #define LASTLOG
 #define WTMP
 #define ATT
+#endif
+
+#ifdef __QNX__
+#define USE_POSIX_TERMIOS
+#include <ioctl.h>
 #endif
 
 #ifdef Lynx
@@ -356,6 +364,13 @@ static Bool IsPts = False;
 
 #else /* } !MINIX { */
 
+#ifdef __QNX__
+#undef TIOCSLTC  /* <sgtty.h> conflicts with <termios.h> */
+#undef TIOCLSET
+#define USE_POSIX_WAIT
+#define ttyslot() 1
+#else
+
 #ifndef linux
 #ifndef USE_POSIX_TERMIOS
 #ifndef USE_SYSV_TERMIO
@@ -374,6 +389,8 @@ static Bool IsPts = False;
 #define setpgrp setpgid
 #endif
 #endif /* !linux */
+
+#endif /* __QNX__ */
 
 #endif /* } MINIX */
 
@@ -532,7 +549,7 @@ extern char *ttyname();
 #endif
 
 #ifdef SYSV
-extern char *ptsname();
+extern char *ptsname(int);
 #endif
 
 #ifdef	__cplusplus
@@ -569,21 +586,75 @@ static Bool xterm_exiting = False;
 static char **command_to_exec = NULL;
 
 #ifdef USE_SYSV_TERMIO
+#ifndef ICRNL
+#include <sys/termio.h>
+#endif
+#if defined (__sgi) || (defined(__linux__) && defined(__sparc__))
+#undef TIOCLSET /* XXX why is this undef-ed again? */
+#endif
+#endif /* USE_SYSV_TERMIO */
+
+#define VAL_INITIAL_ERASE A2E(127)
+
+/* allow use of system default characters if defined and reasonable */
+#ifndef CBRK
+#define CBRK 0
+#endif
+#ifndef CDSUSP
+#define CDSUSP CONTROL('Y')
+#endif
+#ifndef CEOF
+#define CEOF CONTROL('D')
+#endif
+#ifndef CEOL
+#define CEOL 0
+#endif
+#ifndef CFLUSH
+#define CFLUSH CONTROL('O')
+#endif
+#ifndef CINTR
+#define CINTR 0177
+#endif
+#ifndef CKILL
+#define CKILL '@'
+#endif
+#ifndef CLNEXT
+#define CLNEXT CONTROL('V')
+#endif
+#ifndef CNUL
+#define CNUL 0
+#endif
+#ifndef CQUIT
+#define CQUIT CONTROL('\\')
+#endif
+#ifndef CRPRNT
+#define CRPRNT CONTROL('R')
+#endif
+#ifndef CSTART
+#define CSTART CONTROL('Q')
+#endif
+#ifndef CSTOP
+#define CSTOP CONTROL('S')
+#endif
+#ifndef CSUSP
+#define CSUSP CONTROL('Z')
+#endif
+#ifndef CSWTCH
+#define CSWTCH 0
+#endif
+#ifndef CWERASE
+#define CWERASE CONTROL('W')
+#endif
+
+#ifdef USE_SYSV_TERMIO
 /* The following structures are initialized in main() in order
 ** to eliminate any assumptions about the internal order of their
 ** contents.
 */
-#ifndef ICRNL
-#include <sys/termio.h>
-#endif
 static struct termio d_tio;
 #ifdef HAS_LTCHARS
 static struct ltchars d_ltc;
 #endif	/* HAS_LTCHARS */
-
-#if defined (__sgi) || (defined(__linux__) && defined(__sparc__))
-#undef TIOCLSET /* XXX why is this undef-ed again? */
-#endif
 
 #ifdef TIOCLSET
 static unsigned int d_lmode;
@@ -597,7 +668,7 @@ static struct  sgttyb d_sg = {
 };
 static struct  tchars d_tc = {
         CINTR, CQUIT, CSTART,
-        CSTOP, CEOF, CBRK,
+        CSTOP, CEOF, CBRK
 };
 static struct  ltchars d_ltc = {
         CSUSP, CDSUSP, CRPRNT,
@@ -612,46 +683,6 @@ static struct jtchars d_jtc = {
 };
 #endif /* sony */
 #endif /* USE_SYSV_TERMIO */
-
-#define VAL_INITIAL_ERASE 127
-
-/* allow use of system default characters if defined and reasonable */
-#ifndef CEOF
-#define CEOF     CONTROL('D')
-#endif
-#ifndef CSUSP
-#define CSUSP    CONTROL('Z')
-#endif
-#ifndef CQUIT
-#define CQUIT    CONTROL('\\')
-#endif
-#ifndef CEOL
-#define CEOL 0
-#endif
-#ifndef CNUL
-#define CNUL 0
-#endif
-#ifndef CSWTCH
-#define CSWTCH 0
-#endif
-#ifndef CLNEXT
-#define CLNEXT   CONTROL('V')
-#endif
-#ifndef CWERASE
-#define CWERASE  CONTROL('W')
-#endif
-#ifndef CRPRNT
-#define CRPRNT   CONTROL('R')
-#endif
-#ifndef CFLUSH
-#define CFLUSH   CONTROL('O')
-#endif
-#ifndef CSTOP
-#define CSTOP    CONTROL('S')
-#endif
-#ifndef CSTART
-#define CSTART   CONTROL('Q')
-#endif
 
 /*
  * SYSV has the termio.c_cc[V] and ltchars; BSD has tchars and ltchars;
@@ -1200,7 +1231,6 @@ Arg ourTopLevelShellArgs[] = {
 };
 int number_ourTopLevelShellArgs = 2;
 
-Widget toplevel;
 Bool waiting_for_initial_map;
 
 /*
@@ -1253,6 +1283,7 @@ Atom wm_delete_window;
 int
 main (int argc, char *argv[])
 {
+	Widget form_top, menu_top;
 	register TScreen *screen;
 	int mode;
 
@@ -1321,7 +1352,11 @@ main (int argc, char *argv[])
 #ifdef TAB3
 	d_tio.c_oflag = OPOST|ONLCR|TAB3;
 #else
+#ifdef ONLCR
 	d_tio.c_oflag = OPOST|ONLCR;
+#else
+        d_tio.c_oflag = OPOST;
+#endif
 #endif
 #if defined(macII) || defined(ATT) || defined(CRAY) /* { */
     	d_tio.c_cflag = B9600|CS8|CREAD|PARENB|HUPCL;
@@ -1705,36 +1740,22 @@ main (int argc, char *argv[])
 	    break;
 	}
 
-	XawSimpleMenuAddGlobalActions (app_con);
-	XtRegisterGrabAction (HandlePopupMenu, True,
-			      (ButtonPressMask|ButtonReleaseMask),
-			      GrabModeAsync, GrabModeAsync);
+	SetupMenus(toplevel, &form_top, &menu_top);
 
-        term = (XtermWidget) XtCreateManagedWidget(
-	    "vt100", xtermWidgetClass, toplevel, NULL, 0);
+        term = (XtermWidget) XtVaCreateManagedWidget(
+		"vt100", xtermWidgetClass, form_top,
+#if OPT_TOOLBAR
+		XtNmenuBar,	menu_top,
+		XtNresizable,	True,
+		XtNfromVert,	menu_top,
+		XtNleft,	XawChainLeft,
+		XtNright,	XawChainRight,
+		XtNbottom,	XawChainBottom,
+#endif
+		0);
 	    /* this causes the initialize method to be called */
 
         screen = &term->screen;
-
-	if (screen->savelines < 0) screen->savelines = 0;
-
-	term->flags = 0;
-	if (!screen->jumpscroll) {
-	    term->flags |= SMOOTHSCROLL;
-	    update_jumpscroll();
-	}
-	if (term->misc.reverseWrap) {
-	    term->flags |= REVERSEWRAP;
-	    update_reversewrap();
-	}
-	if (term->misc.autoWrap) {
-	    term->flags |= WRAPAROUND;
-	    update_autowrap();
-	}
-	if (term->misc.re_verse != term->misc.re_verse0) {
-	    term->flags |= REVERSE_VIDEO;
-	    update_reversevideo();
-	}
 
 	inhibit = 0;
 #ifdef ALLOWLOGGING
@@ -1744,18 +1765,6 @@ main (int argc, char *argv[])
 #if OPT_TEK4014
 	if (term->misc.tekInhibit)		inhibit |= I_TEK;
 #endif
-
-	term->initflags = term->flags;
-
-	if (term->misc.appcursorDefault) {
-	    term->keyboard.flags |= MODE_DECCKM;
-	    update_appcursor();
-	}
-
-	if (term->misc.appkeypadDefault) {
-	    term->keyboard.flags |= MODE_DECKPAM;
-	    update_appkeypad();
-	}
 
 /*
  * Set title and icon name if not specified
@@ -1946,8 +1955,8 @@ static int
 get_pty (int *pty)
 {
 #if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS))
-    int tty;
-    return (openpty(pty, &tty, ttydev, NULL, NULL));
+	int tty;
+	return (openpty(pty, &tty, ttydev, NULL, NULL));
 #elif defined(SYSV) && defined(i386) && !defined(SVR4)
         /*
 	  The order of this code is *important*.  On SYSV/386 we want to open
@@ -1974,6 +1983,7 @@ get_pty (int *pty)
 	  */
 	if (pty_search(pty) == 0)
 	    return 0;
+	return 1;
 #elif defined(USE_USG_PTYS) || defined(__CYGWIN32__)
 #ifdef __GLIBC__ /* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
 	/* GNU libc 2 allows us to abstract away from having to know the
@@ -2003,29 +2013,25 @@ get_pty (int *pty)
 	strcpy(ttydev, ttyname(*pty));
 	return 0;
 #elif defined(__sgi) && (OSMAJORVERSION >= 4)
-	{
-	    char    *tty_name;
+	char    *tty_name;
 
-	    tty_name = _getpty (pty, O_RDWR, 0622, 0);
-	    if (tty_name == 0)
-		return 1;
-	    strcpy (ttydev, tty_name);
-	    return 0;
-	}
-#elif defined(__convex__)
-	{
-	    char *pty_name, *getpty();
-
-	    while ((pty_name = getpty()) != NULL) {
-		if ((*pty = open (pty_name, O_RDWR)) >= 0) {
-		    strcpy(ptydev, pty_name);
-		    strcpy(ttydev, pty_name);
-		    ttydev[5] = 't';
-		    return 0;
-		}
-	    }
+	tty_name = _getpty (pty, O_RDWR, 0622, 0);
+	if (tty_name == 0)
 	    return 1;
+	strcpy (ttydev, tty_name);
+	return 0;
+#elif defined(__convex__)
+	char *pty_name, *getpty();
+
+	while ((pty_name = getpty()) != NULL) {
+	    if ((*pty = open (pty_name, O_RDWR)) >= 0) {
+		strcpy(ptydev, pty_name);
+		strcpy(ttydev, pty_name);
+		ttydev[5] = 't';
+		return 0;
+	    }
 	}
+	return 1;
 #elif defined(USE_GET_PSEUDOTTY)
 	return ((*pty = getpseudotty (&ttydev, &ptydev)) >= 0 ? 0 : 1);
 #elif (defined(__sgi) && (OSMAJORVERSION < 4)) || (defined(umips) && defined (SYSTYPE_SYSV))
@@ -2592,7 +2598,7 @@ spawn (void)
 			} else {
 				initial_erase = *s;
 			}
-			initial_erase &= 0xff;
+			initial_erase = CharOf(initial_erase);
 		}
 	}
 #endif
@@ -2637,7 +2643,7 @@ spawn (void)
 		 * now in child process
 		 */
 		TRACE_CHILD
-#if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__) || defined(SCO325)
+#if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__) || defined(SCO325) || defined(__QNX__)
 		int pgrp = setsid();
 #else
 		int pgrp = getpid();
@@ -2737,6 +2743,10 @@ spawn (void)
 		(void) setpgrp();
 #endif
 #endif /* USE_SYSV_PGRP */
+
+#if defined(__QNX__)
+		qsetlogin( getlogin(), ttydev );
+#endif
 		while (1) {
 #if defined(TIOCNOTTY) && !((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 			if (!no_dev_tty && (tty = open ("/dev/tty", O_RDWR)) >= 0) {
@@ -2868,7 +2878,9 @@ spawn (void)
 		    tio.c_oflag &=
 		     ~(OCRNL|ONLRET|NLDLY|CRDLY|TABDLY|BSDLY|VTDLY|FFDLY);
 #endif /* USE_POSIX_TERMIOS */
+#ifdef ONLCR
 		    tio.c_oflag |= ONLCR;
+#endif /* ONLCR */
 #ifdef OPOST
 		    tio.c_oflag |= OPOST;
 #endif /* OPOST */
@@ -3223,18 +3235,22 @@ spawn (void)
 #endif
 #endif /* !USE_SYSV_PGRP */
 
+#if defined(__QNX__)
+		tcsetpgrp( 0, pgrp /*setsid()*/ );
+#endif
+
 #endif /* AMOEBA */
 
 #ifdef Lynx
-	{
-	struct termio	t;
-	if (ioctl(0, TCGETA, &t) >= 0)
-	{
-		/* this gets lost somewhere on our way... */
-		t.c_oflag |= OPOST;
-		ioctl(0, TCSETA, &t);
-	}
-	}
+		{
+		struct termio	t;
+		if (ioctl(0, TCGETA, &t) >= 0)
+		{
+			/* this gets lost somewhere on our way... */
+			t.c_oflag |= OPOST;
+			ioctl(0, TCSETA, &t);
+		}
+		}
 #endif
 
 #ifdef UTMP
@@ -4502,6 +4518,43 @@ char CONTROL(char c)
                 0x19, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* e8 - ef */
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* f0 - f7 */
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};  /* f8 - ff */
-    return ebcdic_control_chars[c & 0xff];
+    return ebcdic_control_chars[CharOf(c)];
+}
+#endif
+
+#if defined(__QNX__)
+#include <sys/types.h>
+#include <sys/proc_msg.h>
+#include <sys/kernel.h>
+#include <string.h>
+#include <errno.h>
+
+struct _proc_session ps;
+struct _proc_session_reply rps;
+
+int qsetlogin( char *login, char *ttyname )
+{
+	int v = getsid( getpid() );
+
+	memset( &ps, 0, sizeof(ps) );
+	memset( &rps, 0, sizeof(rps) );
+
+	ps.type = _PROC_SESSION;
+	ps.subtype = _PROC_SUB_ACTION1;
+	ps.sid = v;
+	strcpy( ps.name, login );
+
+	Send( 1, &ps, &rps, sizeof(ps), sizeof(rps) );
+
+	if ( rps.status < 0 )
+		return( rps.status );
+
+	ps.type = _PROC_SESSION;
+	ps.subtype = _PROC_SUB_ACTION2;
+	ps.sid = v;
+	sprintf( ps.name, "//%d%s", getnid(), ttyname );
+	Send( 1, &ps, &rps, sizeof(ps), sizeof(rps) );
+
+	return( rps.status );
 }
 #endif

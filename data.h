@@ -30,6 +30,8 @@
 
 #include <xterm.h>
 
+extern Widget toplevel;
+
 extern XtAppContext app_con;
 
 #if OPT_TEK4014
@@ -38,6 +40,7 @@ extern Char *Tpushback;
 extern PtyData *Tbuffer;
 extern TekLink *TekRefresh;
 extern TekWidget tekWidget;
+extern Widget tekshellwidget;
 extern int TEKgcFontMask;
 extern int T_lastx;
 extern int T_lasty;
@@ -101,7 +104,6 @@ extern XtermWidget term;
 #define	XkbBI_MajorError		2
 #define	XkbBI_TerminalBell		9
 #define	XkbBI_MarginBell		10
-#define	XkbBI_CursorStuck		11
 #endif
 
 #endif /* included_data_h */

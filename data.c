@@ -33,12 +33,15 @@
 #include <ptyx.h>		/* gets Xt stuff, too */
 #include <data.h>
 
+Widget toplevel;		/* top-most widget in xterm */
+
 #if OPT_TEK4014
 PtyData *Tbuffer;
 Char *Tpushb;
 Char *Tpushback;
 TekLink *TekRefresh;
 TekWidget tekWidget;
+Widget tekshellwidget;
 int TEKgcFontMask = GCFont;
 int T_lastx = -1;
 int T_lasty = -1;
