@@ -69,15 +69,14 @@ va_dcl
 		sprintf(name, "Trace-%s.out", trace_who);
 		fp = fopen(name, "w");
 		if (fp != 0) {
+			time_t now = time((time_t*)0);
 #if HAVE_UNISTD_H
-			time_t now;
 			fprintf(fp, "process %d real (%d/%d) effective (%d/%d) -- %s",
 				getpid(),
 				getuid(), getgid(),
 				geteuid(), getegid(),
 				ctime(&now));
 #else
-			time_t now;
 			fprintf(fp, "process %d -- %s",
 				getpid(),
 				ctime(&now));

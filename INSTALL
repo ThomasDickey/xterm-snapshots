@@ -55,5 +55,6 @@ The options (in alphabetic order):
   --enable-xmc-glitch     test: enable xmc magic-cookie emulation (default: off)
   --with-Xaw3d            link with Xaw 3d library
   --with-neXtaw           link with neXT Athena library
+  --with-own-terminfo=P   set default $TERMINFO (default: from environment)
   --with-terminal-id[=V]  set default decTerminalID (default: vt100)
   --with-terminal-type=T  set default $TERM (default: xterm)

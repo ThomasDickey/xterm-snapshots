@@ -45,6 +45,12 @@ authorization.
 #include "error.h"
 #include "xterm.h"
 
+#define SHIFT_IN  '\017'
+#define SHIFT_OUT '\016'
+
+#define CSET_IN   'A'
+#define CSET_OUT  '0'
+
 #define isForm(c) ((c) == '\r' || (c) == '\n' || (c) == '\f')
 #define Strlen(a) strlen((char *)a)
 #define Strcmp(a,b) strcmp((char *)a,(char *)b)
@@ -60,6 +66,7 @@ static void send_SGR PROTO((unsigned attr, int fg, int bg));
 static void stringToPrinter PROTO((char * str));
 
 static FILE *Printer;
+static int initialized;
 
 static void printCursorLine()
 {
@@ -88,6 +95,7 @@ static void printLine(row, chr)
 #endif
 	int fg = -1, last_fg = -1;
 	int bg = -1, last_bg = -1;
+	int cs = CSET_IN,last_cs = CSET_IN;
 
 	TRACE(("printLine(row=%d, chr=%d)\n", row, chr))
 
@@ -106,6 +114,7 @@ static void printLine(row, chr)
 			send_SGR(0,-1,-1);
 		}
 		for (col = 0; col < last; col++) {
+			Char ch = c[col];
 #if OPT_PRINT_COLORS
 			if_OPT_ISO_COLORS(screen,{
 				if (screen->print_attributes > 1) {
@@ -123,19 +132,44 @@ static void printLine(row, chr)
 			    || (last_fg != fg) || (last_bg != bg)
 #endif
 			    )
-			 && c[col]) {
+			 && ch) {
 				attr = (a[col] & SGR_MASK);
 				last_fg = fg;
 				last_bg = bg;
 				if (screen->print_attributes)
 					send_SGR(attr, fg, bg);
 			}
-			charToPrinter(c[col] ? c[col] : ' ');
+
+			if (ch == 0)
+				ch = ' ';
+
+			cs = (ch >= ' ' && ch != 0x7f) ? CSET_IN : CSET_OUT;
+			if (last_cs != cs) {
+				if (screen->print_attributes) {
+					charToPrinter((cs == CSET_OUT)
+						? SHIFT_OUT
+						: SHIFT_IN);
+				}
+				last_cs = cs; 	
+			}
+
+			/* FIXME:  we shouldn't have to map back from the
+			 * alternate character set, except that the
+			 * corresponding charset information is not encoded
+			 * into the CSETS array.
+			 */
+			charToPrinter((cs == CSET_OUT)
+					? (ch == 0x7f ? 0x5f : (ch + 0x5f))
+					: ch);
 		}
-		if (screen->print_attributes)
+		if (screen->print_attributes) {
 			send_SGR(0,-1,-1);
+			if (cs != CSET_IN)
+				charToPrinter(SHIFT_IN);
+		}
 	}
-	charToPrinter('\r');
+	if (screen->print_attributes)
+		charToPrinter('\r');
 	charToPrinter(chr);
 }
 
@@ -144,6 +178,7 @@ void xtermPrintScreen()
 	register TScreen *screen = &term->screen;
 	int top = screen->printer_extent ? 0 : screen->top_marg;
 	int bot = screen->printer_extent ? screen->max_row : screen->bot_marg;
+	int was_open = initialized;
 
 	TRACE(("xtermPrintScreen, rows %d..%d\n", top, bot))
 
@@ -151,6 +186,12 @@ void xtermPrintScreen()
 		printLine(top++, '\n');
 	if (screen->printer_formfeed)
 		charToPrinter('\f');
+
+	if (Printer != 0 && !was_open) {
+		pclose(Printer);
+		Printer = 0;
+		initialized = 0;
+	}
 }
 
 static void send_CharSet(row)
@@ -199,6 +240,12 @@ static void send_SGR(attr, fg, bg)
 		sprintf(msg + strlen(msg), ";%d", (bg < 8) ? (40 + bg) : (92 + bg));
 	}
 	if (fg >= 0) {
+#if OPT_PC_COLORS
+		if (term->screen.boldColors
+		 && fg > 8
+		 && attr & BOLD)
+			fg -= 8;
+#endif
 		sprintf(msg + strlen(msg), ";%d", (fg < 8) ? (30 + fg) : (82 + fg));
 	}
 #endif
@@ -212,7 +259,6 @@ static void send_SGR(attr, fg, bg)
 static void charToPrinter(chr)
 	int chr;
 {
-	static int initialized;
 	if (!initialized) {
 		FILE	*input;
 		int	my_pipe[2];

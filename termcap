@@ -38,7 +38,7 @@ vs|xterm|xterm-24|xterms|vs100|xterm (X Window System):\
 	:ti=\E7\E[?47h:te=\E[2J\E[?47l\E8:\
 	:vi=\E[?25l:ve=\E[?25h:\
 	:up=\E[A:us=\E[4m:ue=\E[24m:xn:\
-	:ut:Co#8:op=\E[39m;49m:AB=\E[4%dm:AF=\E[3%dm:\
+	:ut:Co#8:op=\E[39m\E49m:AB=\E[4%dm:AF=\E[3%dm:\
 	:pa#64:Sf=\E[3%dm:Sb=\E[4%dm:
 v2|xterm-65|xterm with tall window 65x80 (X Window System):\
 	:li#65:tc=xterm:

@@ -983,7 +983,7 @@ A ``0'' disables the attributes.
 A ``1'' prints the normal set of attributes (bold, underline, inverse and blink)
 as VT100-style control sequences.
 A ``2'' prints ANSI color attributes as well.
-The default is ``0.''
+The default is ``1.''
 .TP 8
 .B "printerControlMode (\fPclass\fB PrinterControlMode)"
 Specifies the printer control mode.

@@ -134,6 +134,21 @@ AC_ARG_WITH(terminal-type,
 AC_MSG_RESULT($default_TERM)
 AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM")
 
+AC_MSG_CHECKING(for private terminfo-directory)
+AC_ARG_WITH(own-terminfo,
+	[  --with-own-terminfo=P   set default \$TERMINFO (default: from environment)],
+	[private_TERMINFO=$withval],
+	[private_TERMINFO=${TERMINFO-none}])
+AC_MSG_RESULT($private_TERMINFO)
+if test $private_TERMINFO != none ; then
+	AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$private_TERMINFO")
+elif test -d /usr/lib/terminfo ; then
+	private_TERMINFO=/usr/lib/terminfo
+else
+	private_TERMINFO=
+fi
+AC_SUBST(private_TERMINFO)
+
 ###	checks for optional features
 AC_MSG_CHECKING(if you want active-icons)
 CF_ARG_DISABLE(active-icon,

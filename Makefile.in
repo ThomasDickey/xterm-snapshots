@@ -17,6 +17,7 @@ X_LIBS		= @X_LIBS@
 
 IMAKE_CFLAGS	= @IMAKE_CFLAGS@
 EXTRA_CFLAGS	= @EXTRA_CFLAGS@
+EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
 
 CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H $(X_CFLAGS) $(IMAKE_CFLAGS)
 CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS) 
@@ -76,7 +77,7 @@ all:	$(PROGRAMS)
 main.o: version.h
 
 xterm : $(OBJS1)
-	$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(LIBS)
+	$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize : $(OBJS2)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(LIBS)
@@ -86,7 +87,11 @@ install: $(INSTALL_DIRS) xterm resize
 	$(INSTALL_PROGRAM) -s -m  755 resize $(bindir)/resize
 	$(INSTALL_DATA) xterm.man  $(mandir)/xterm.$(manext)
 	$(INSTALL_DATA) resize.man $(mandir)/resize.$(manext)
-	@echo 'Completed installation.'
+	@echo 'Completed installation of executables and documentation.'
+	@echo 'Use "make install-ti" to install terminfo description.'
+
+install-ti:
+	TERMINFO=@private_TERMINFO@ tic terminfo
 
 installdirs: $(INSTALL_DIRS)
 
@@ -97,7 +102,7 @@ uninstall:
 		$(mandir)/resize.$(manext)
 
 mostlyclean:
-	-$(RM) *.[oi] XtermLog.* .pure core *~ *.BAK *.out
+	-$(RM) *.[ois] XtermLog.* .pure core *~ *.BAK *.out
 
 clean: mostlyclean
 	-$(RM) $(PROGRAMS)
