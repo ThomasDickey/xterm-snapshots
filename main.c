@@ -75,6 +75,7 @@ SOFTWARE.
 
 #include "version.h"
 #include "ptyx.h"
+
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
 
@@ -85,9 +86,11 @@ SOFTWARE.
 
 #include <pwd.h>
 #include <ctype.h>
+
 #include "data.h"
 #include "error.h"
 #include "menu.h"
+#include "xterm.h"
 
 #ifdef AMOEBA
 #include <amoeba.h>
@@ -344,16 +347,12 @@ static Bool IsPts = False;
 #endif
 
 #include <stdio.h>
-#include <errno.h>
 #include <setjmp.h>
 
 #ifdef X_NOT_STDC_ENV
-extern int errno;
-#define Time_t long
-extern Time_t time ();
+extern time_t time ();
 #else
 #include <time.h>
-#define Time_t time_t
 #endif
 
 #ifdef hpux
@@ -457,35 +456,19 @@ int	Ptyfd;
 #endif
 #endif
 
-#ifndef X_NOT_POSIX
-#include <unistd.h>
-#else
+#ifdef X_NOT_POSIX
 extern long lseek();
 #if defined(USG)
 extern unsigned sleep();
 #else
 extern void sleep();
 #endif
-#endif
-
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-extern char *malloc();
-extern char *calloc();
-extern char *realloc();
-extern char *getenv();
-extern void exit();
-#endif
-#ifdef X_NOT_POSIX
 extern char *ttyname();
 #endif
 
 #ifdef SYSV
 extern char *ptsname();
 #endif
-
-#include "xterm.h"
 
 int switchfb[] = {0, 2, 1, 3};
 
@@ -604,7 +587,7 @@ static struct jtchars d_jtc = {
 static int override_tty_modes = 0;
 struct _xttymodes {
     char *name;
-    Size_t len;
+    size_t len;
     int set;
     char value;
 } ttymodelist[] = {
@@ -2468,6 +2451,7 @@ spawn ()
 		char* ptyname;
 		char* ptynameptr = 0;
 #endif
+		TRACE_CHILD;
 
 #ifdef USE_USG_PTYS
 #if defined(SYSV) && defined(i386) && !defined(SVR4)
@@ -2999,7 +2983,7 @@ spawn ()
 #endif /* AMOEBA */
 
 #ifdef Lynx
-{
+	{
 	struct termio	t;
 	if (ioctl(0, TCGETA, &t) >= 0)
 	{
@@ -3007,7 +2991,7 @@ spawn ()
 		t.c_oflag |= OPOST;
 		ioctl(0, TCSETA, &t);
 	}
-}
+	}
 #endif
 
 #ifdef UTMP
@@ -3087,10 +3071,10 @@ spawn ()
 		utmp.ut_pid = getpid();
 #if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2)
 		utmp.ut_session = getsid(0);
-		utmp.ut_xtime = time ((Time_t *) 0);
+		utmp.ut_xtime = time ((time_t *) 0);
 		utmp.ut_tv.tv_usec = 0;
 #else
-		utmp.ut_time = time ((Time_t *) 0);
+		utmp.ut_time = time ((time_t *) 0);
 #endif
 
 		/* write out the entry */
@@ -3141,7 +3125,7 @@ spawn ()
 					       sizeof(utmp.ut_host));
 #endif
 				/* cast needed on Ultrix 4.4 */
-				time((Time_t*)&utmp.ut_time);
+				time((time_t*)&utmp.ut_time);
 				lseek(i, (long)(tslot * sizeof(struct utmp)), 0);
 				write(i, (char *)&utmp, sizeof(struct utmp));
 				close(i);
@@ -3298,10 +3282,14 @@ spawn ()
 
 		/* need to reset after all the ioctl bashing we did above */
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
-		ioctl  (0, TIOCSSIZE, &ts);
+		i = ioctl (0, TIOCSSIZE, &ts);
+		TRACE(("spawn TIOCSSIZE %dx%d return %d\n", ts.ts_lines, ts.ts_cols, i))
 #else	/* not old SunOS */
 #ifdef TIOCSWINSZ
-		ioctl (0, TIOCSWINSZ, (char *)&ws);
+		i = ioctl (0, TIOCSWINSZ, (char *)&ws);
+		TRACE(("spawn TIOCSWINSZ %dx%d return %d\n", ws.ws_row, ws.ws_col, i))
+#else
+		TRACE(("spawn cannot tell pty its size\n"))
 #endif	/* TIOCSWINSZ */
 #endif	/* sun */
 
@@ -3895,11 +3883,11 @@ Exit(n)
 		    utptr->ut_type = DEAD_PROCESS;
 #if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2)
 		    utmp.ut_session = getsid(0);
-		    utmp.ut_xtime = time ((Time_t *) 0);
+		    utmp.ut_xtime = time ((time_t *) 0);
 		    utmp.ut_tv.tv_usec = 0;
 #else
 		    *utptr->ut_user=0;
-		    utptr->ut_time = time((Time_t *) 0);
+		    utptr->ut_time = time((time_t *) 0);
 #endif
 		    (void) pututline(utptr);
 #ifdef WTMP
@@ -3983,7 +3971,7 @@ register char *oldtc, *newtc;
 {
 #ifndef USE_SYSV_ENVVARS
 	register char *ptr1, *ptr2;
-	register Size_t i;
+	register size_t i;
 	register int li_first = 0;
 	register char *temp;
 
@@ -4225,6 +4213,7 @@ kill_process_group(pid, sig)
     int pid;
     int sig;
 {
+    TRACE(("kill_process_group(pid=%d, sig=%d)\n", pid, sig))
 #ifndef AMOEBA
 #ifndef X_NOT_POSIX
     return kill (-pid, sig);

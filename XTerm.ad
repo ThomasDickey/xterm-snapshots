@@ -19,6 +19,7 @@ XTerm.JoinSession:False
 *mainMenu*securekbd*Label:  Secure Keyboard
 *mainMenu*allowsends*Label:  Allow SendEvents
 *mainMenu*logging*Label:  Log to File
+*mainMenu*print*Label:  Print Window
 *mainMenu*redraw*Label:  Redraw Window
 *mainMenu*8-bit control*Label: 8-Bit Controls
 *mainMenu*backarrow key*Label: Backarrow Key

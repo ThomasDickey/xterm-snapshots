@@ -41,7 +41,13 @@ cf_save_CFLAGS="$CFLAGS"
 # HP-UX			-Aa -D_HPUX_SOURCE
 # SVR4			-Xc
 # UnixWare 1.2		(cannot use -Xc, since ANSI/POSIX clashes)
-for cf_arg in "-DCC_HAS_PROTOS" "" -qlanglvl=ansi -std1 "-Aa -D_HPUX_SOURCE" -Xc
+for cf_arg in "-DCC_HAS_PROTOS" \
+	"" \
+	-qlanglvl=ansi \
+	-std1 \
+	"-Aa -D_HPUX_SOURCE +e" \
+	"-Aa -D_HPUX_SOURCE" \
+	-Xc
 do
 	CFLAGS="$cf_save_CFLAGS $cf_arg"
 	AC_TRY_COMPILE(
@@ -127,6 +133,50 @@ if test ".$system_name" != ".$cf_cv_system_name" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl Check for data that is usually declared in <stdio.h> or <errno.h>
+dnl $1 = the name to check
+AC_DEFUN([CF_CHECK_ERRNO],
+[
+AC_MSG_CHECKING([declaration of $1])
+AC_CACHE_VAL(cf_cv_dcl_$1,[
+    AC_TRY_COMPILE([
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#include <stdio.h>
+#include <sys/types.h>
+#include <errno.h> ],
+    [long x = (long) $1],
+    [eval 'cf_cv_dcl_'$1'=yes'],
+    [eval 'cf_cv_dcl_'$1'=no]')])
+eval 'cf_result=$cf_cv_dcl_'$1
+AC_MSG_RESULT($cf_result)
+
+# It's possible (for near-UNIX clones) that the data doesn't exist
+AC_CACHE_VAL(cf_cv_have_$1,[
+if test $cf_result = no ; then
+    eval 'cf_result=DECL_'$1
+    CF_UPPER(cf_result,$cf_result)
+    AC_DEFINE_UNQUOTED($cf_result)
+    AC_MSG_CHECKING([existence of $1])
+        AC_TRY_LINK([
+#undef $1
+extern long $1;
+],
+            [$1 = 2],
+            [eval 'cf_cv_have_'$1'=yes'],
+            [eval 'cf_cv_have_'$1'=no'])
+        eval 'cf_result=$cf_cv_have_'$1
+        AC_MSG_RESULT($cf_result)
+else
+    eval 'cf_cv_have_'$1'=yes'
+fi
+])
+eval 'cf_result=HAVE_'$1
+CF_UPPER(cf_result,$cf_result)
+eval 'test $cf_cv_have_'$1' = yes && AC_DEFINE_UNQUOTED($cf_result)'
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl You can always use "make -n" to see the actual options, but it's hard to
 dnl pick out/analyze warning messages when the compile-line is long.
 dnl
@@ -156,6 +206,12 @@ AC_SUBST(ECHO_LD)
 AC_SUBST(RULE_CC)
 AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Check if 'errno' is declared in <errno.h>
+AC_DEFUN([CF_ERRNO],
+[
+CF_CHECK_ERRNO(errno)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for memmove, or a bcopy that can handle overlapping copy.  If neither
@@ -485,6 +541,26 @@ CF_EOF
 	fi
 fi
 AC_SUBST(IMAKE_CFLAGS)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl	On both Ultrix and CLIX, I find size_t defined in <stdio.h>
+AC_DEFUN([CF_SIZE_T],
+[
+AC_MSG_CHECKING(for size_t in <sys/types.h> or <stdio.h>)
+AC_CACHE_VAL(cf_cv_type_size_t,[
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#if STDC_HEADERS
+#include <stdlib.h>
+#include <stddef.h>
+#endif
+#include <stdio.h>],
+		[size_t x],
+		[cf_cv_type_size_t=yes],
+		[cf_cv_type_size_t=no])
+	])
+AC_MSG_RESULT($cf_cv_type_size_t)
+test $cf_cv_type_size_t = no && AC_DEFINE(size_t, unsigned)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for the declaration of fd_set.  Some platforms declare it in

@@ -34,12 +34,6 @@
 
 #include <stdio.h>
 
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-extern char *malloc();
-#endif
-
 #include "ptyx.h"
 #include "data.h"
 #include "error.h"

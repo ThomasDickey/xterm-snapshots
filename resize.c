@@ -570,7 +570,7 @@ strindex (s1, s2)
 register char *s1, *s2;
 {
 	register char *s3;
-	Size_t s2len = strlen (s2);
+	size_t s2len = strlen (s2);
 
 	while ((s3 = strchr(s1, *s2)) != NULL)
 	{

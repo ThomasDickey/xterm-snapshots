@@ -63,8 +63,10 @@ extern void HandleCreateMenu       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursesEmul       PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
+extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
 extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrint            PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
 extern void HandleReverseVideo     PROTO_XT_ACTIONS_ARGS;
@@ -84,10 +86,6 @@ extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
 extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
 
-#ifdef ALLOWLOGGING
-extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
-#endif
-
 extern void DoSecureKeyboard PROTO((Time tp));
 
 /*
@@ -104,6 +102,7 @@ typedef enum {
 #ifdef ALLOWLOGGING
     mainMenu_logging,
 #endif
+    mainMenu_print,
     mainMenu_redraw,
     mainMenu_line1,
     mainMenu_8bit_ctrl,

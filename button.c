@@ -38,12 +38,6 @@ button.c	Handles button events in the terminal emulator.
 
 #include <X11/Xatom.h>
 
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-extern char *malloc();
-#endif
-
 #include <stdio.h>
 
 #ifdef MINIX

@@ -38,7 +38,6 @@
 #include <signal.h>
 #include <ctype.h>
 #include <pwd.h>
-#include <errno.h>
 
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
@@ -74,13 +73,6 @@ extern char **environ;		/* used in 'Setenv()' */
 
 extern jmp_buf Tekend;
 extern jmp_buf VTend;
-
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-extern char *malloc();
-extern char *getenv();
-#endif
 
 extern Widget toplevel;		/* used in 'ChangeGroup()' */
 
@@ -880,7 +872,7 @@ reset_decudk()
 void
 do_dcs(dcsbuf, dcslen)
 Char *dcsbuf;
-Size_t dcslen;
+size_t dcslen;
 {
 	register TScreen *screen = &term->screen;
 	char *cp = (char *)dcsbuf;
@@ -1328,7 +1320,9 @@ Setenv (var, value)
 register char *var, *value;
 {
 	register int envindex = 0;
-	register Size_t len = strlen(var);
+	register size_t len = strlen(var);
+
+	TRACE(("Setenv(var=%s, value=%s)\n", var, value))
 
 	while (environ [envindex] != NULL) {
 	    if (strncmp (environ [envindex], var, len) == 0) {
@@ -1341,9 +1335,7 @@ register char *var, *value;
 	    envindex ++;
 	}
 
-#ifdef DEBUG
-	if (debug) fputs ("expanding env\n", stderr);
-#endif	/* DEBUG */
+	TRACE(("...expanding env to %d\n", envindex+1))
 
 	environ [envindex] = (char *) malloc ((unsigned)len + strlen (value) + 1);
 	(void) strcpy (environ [envindex], var);
@@ -1359,7 +1351,7 @@ char *strindex (s1, s2)
 register char	*s1, *s2;
 {
 	register char	*s3;
-	Size_t s2len = strlen (s2);
+	size_t s2len = strlen (s2);
 
 	while ((s3=strchr(s1, *s2)) != NULL) {
 		if (strncmp(s3, s2, s2len) == 0)

@@ -90,12 +90,6 @@ authorization.
 
 #include <X11/Xos.h>
 
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-extern char *malloc();
-#endif
-
 #include "ptyx.h"
 #include "data.h"
 #include "xterm.h"

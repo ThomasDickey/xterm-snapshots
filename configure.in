@@ -3,7 +3,7 @@ dnl $XFree86: xc/programs/xterm/configure.in,v 3.14 1998/03/20 21:08:35 hohndel 
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
-dnl Copyright 1997 by Thomas E. Dickey <dickey@clark.net>
+dnl Copyright 1997,1998 by Thomas E. Dickey <dickey@clark.net>
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -44,9 +44,10 @@ AC_ISC_POSIX
 AC_MINIX
 
 ###	checks for header files
+AC_CHECK_HEADERS(stdlib.h unistd.h)
 
 ###	checks for typedefs
-AC_TYPE_SIZE_T
+CF_SIZE_T
 AC_CHECK_TYPE(time_t, long)
 
 ###	checks for library functions
@@ -62,13 +63,15 @@ CF_FUNC_TGETENT
 ###	checks for structures
 CF_TYPE_FD_SET
 
+###	checks for external data
+CF_ERRNO
+
 ###	checks for compiler characteristics
 AC_CONST
 CF_ANSI_CC_CHECK
 
 ###	checks for system services and user specified options
 
-AC_CHECK_HEADERS(unistd.h)
 AC_HEADER_SYS_WAIT
 
 CF_X_TOOLKIT

@@ -52,9 +52,6 @@ in this Software without prior written authorization from the X Consortium.
 Arg menuArgs[2] = {{ XtNleftBitmap, (XtArgVal) 0 },
 		   { XtNsensitive, (XtArgVal) 0 }};
 
-#ifdef ALLOWLOGGING
-static void do_logging PROTO_XT_CALLBACK_ARGS;
-#endif
 static void do_8bit_control    PROTO_XT_CALLBACK_ARGS;
 static void do_allow132        PROTO_XT_CALLBACK_ARGS;
 static void do_allowsends      PROTO_XT_CALLBACK_ARGS;
@@ -72,6 +69,7 @@ static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
 static void do_kill            PROTO_XT_CALLBACK_ARGS;
 static void do_marginbell      PROTO_XT_CALLBACK_ARGS;
+static void do_print           PROTO_XT_CALLBACK_ARGS;
 static void do_quit            PROTO_XT_CALLBACK_ARGS;
 static void do_redraw          PROTO_XT_CALLBACK_ARGS;
 static void do_reversevideo    PROTO_XT_CALLBACK_ARGS;
@@ -87,9 +85,15 @@ static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_terminate       PROTO_XT_CALLBACK_ARGS;
 static void do_visualbell      PROTO_XT_CALLBACK_ARGS;
 static void do_vtfont          PROTO_XT_CALLBACK_ARGS;
+
+#ifdef ALLOWLOGGING
+static void do_logging         PROTO_XT_CALLBACK_ARGS;
+#endif
+
 #ifndef NO_ACTIVE_ICON
 static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
 #endif /* NO_ACTIVE_ICON */
+
 #if OPT_TEK4014
 static void do_tekcopy         PROTO_XT_CALLBACK_ARGS;
 static void do_tekhide         PROTO_XT_CALLBACK_ARGS;
@@ -119,6 +123,7 @@ MenuEntry mainMenuEntries[] = {
 #ifdef ALLOWLOGGING
     { "logging",	do_logging,	NULL },
 #endif
+    { "print",		do_print,	NULL },
     { "redraw",		do_redraw,	NULL },
     { "line1",		NULL,		NULL },
     { "8-bit control",	do_8bit_control, NULL },
@@ -495,6 +500,14 @@ static void do_logging (gw, closure, data)
     /* update_logging done by CloseLog and StartLog */
 }
 #endif
+
+static void do_print (gw, closure, data)
+    Widget gw GCC_UNUSED;
+    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+{
+    xtermPrintScreen ();
+}
+
 
 static void do_redraw (gw, closure, data)
     Widget gw GCC_UNUSED;
@@ -1078,6 +1091,16 @@ void HandleLogging(w, event, params, param_count)
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 #endif
+
+/* ARGSUSED */
+void HandlePrint(w, event, params, param_count)
+    Widget w;
+    XEvent *event GCC_UNUSED;
+    String *params GCC_UNUSED;
+    Cardinal *param_count GCC_UNUSED;
+{
+    do_print(w, (XtPointer)0, (XtPointer)0);
+}
 
 /* ARGSUSED */
 void HandleRedraw(w, event, params, param_count)

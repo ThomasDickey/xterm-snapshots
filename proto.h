@@ -36,11 +36,4 @@
 #define SIGNAL_RETURN return
 #endif
 
-#undef  Size_t
-#ifndef X_NOT_STDC_ENV
-#define Size_t size_t
-#else
-#define Size_t int
-#endif
-
 #endif/*included_proto_h*/
