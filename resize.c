@@ -1,6 +1,5 @@
 /*
  *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.17 1996/10/16 14:45:16 dawes Exp $
  */
 
 /*
@@ -55,57 +54,25 @@
 #define CANT_OPEN_DEV_TTY
 #endif
 
-#ifdef __EMX__
-#define USE_SYSV_TERMIO
-#define USE_TERMCAP
-#endif
-
 #ifdef macII
 #define USE_SYSV_TERMIO
 #undef SYSV				/* pretend to be bsd */
 #endif /* macII */
 
-#ifdef SCO
-#define USE_TERMCAP
-#define USE_TERMINFO
-#endif
-
-#ifdef linux
-#define USE_TERMIOS
-#define USE_TERMINFO
-#define USE_SYSV_UTMP
-#endif
-
-#if defined(SYSV) || defined(Lynx)
+#if defined(SYSV) || defined(linux)
 #define USE_SYSV_TERMIO
-#ifndef Lynx
 #define USE_SYSV_UTMP
-#endif
 #else /* else not SYSV */
 #define USE_TERMCAP
 #endif /* SYSV */
 
-/*
- * some OS's may want to use both, like SCO for example we catch
- * here anyone who hasn't decided what they want.
- */
-#if !defined(USE_TERMCAP) && !defined(USE_TERMINFO)
-#define USE_TERMINFO
-#endif
-
-#if defined(CSRG_BASED)
-#define USE_TERMIOS
-#endif
-
 #include <sys/ioctl.h>
 #ifdef USE_SYSV_TERMIO
-# include <sys/termio.h>
+#include <sys/termio.h>
 #else /* else not USE_SYSV_TERMIO */
-# ifdef USE_TERMIOS
-#  include <termios.h>
-# else /* not USE_TERMIOS */
-#  include <sgtty.h>
-# endif /* USE_TERMIOS */
+#ifndef linux
+#include <sgtty.h>
+#endif
 #endif	/* USE_SYSV_TERMIO */
 
 #ifdef USE_USG_PTYS
@@ -118,6 +85,12 @@
 #include <signal.h>
 #include <pwd.h>
 
+#ifdef SIGNALRETURNSINT
+#define SIGNAL_T int
+#else
+#define SIGNAL_T void
+#endif
+
 #ifndef X_NOT_STDC_ENV
 #include <stdlib.h>
 #else
@@ -126,23 +99,12 @@ char *getenv();
 
 #ifdef USE_SYSV_TERMIO
 #ifdef X_NOT_POSIX
-#if !defined(SYSV) && !defined(i386)
+#ifndef i386
 extern struct passwd *getpwuid(); 	/* does ANYBODY need this? */
-#endif /* SYSV && i386 */
+#endif /* i386 */
 #endif /* X_NOT_POSIX */
 #define	bzero(s, n)	memset(s, 0, n)
 #endif	/* USE_SYSV_TERMIO */
-
-#ifdef MINIX
-#define USE_SYSV_TERMIO
-#include <sys/termios.h>
-#define termio termios
-#define TCGETA TCGETS
-#define TCSETAW TCSETSW
-#ifndef IUCLC
-#define IUCLC	0
-#endif
-#endif
 
 #define	EMULATIONS	2
 #define	SUN		1
@@ -156,15 +118,15 @@ struct {
 	char *name;
 	int type;
 } shell_list[] = {
-	{ "csh",	SHELL_C },	/* vanilla cshell */
-	{ "tcsh",	SHELL_C },
-	{ "jcsh",	SHELL_C },
-	{ "sh",		SHELL_BOURNE },	/* vanilla Bourne shell */
-	{ "ksh",	SHELL_BOURNE },	/* Korn shell (from AT&T toolchest) */
-	{ "ksh-i",	SHELL_BOURNE },	/* other name for latest Korn shell */
-	{ "bash",	SHELL_BOURNE },	/* GNU Bourne again shell */
-	{ "jsh",	SHELL_BOURNE },
-	{ NULL,		SHELL_BOURNE }	/* default (same as xterm's) */
+	"csh",		SHELL_C,	/* vanilla cshell */
+	"tcsh",		SHELL_C,
+	"jcsh",		SHELL_C,
+	"sh",		SHELL_BOURNE,	/* vanilla Bourne shell */
+	"ksh",		SHELL_BOURNE,	/* Korn shell (from AT&T toolchest) */
+	"ksh-i",	SHELL_BOURNE,	/* other name for latest Korn shell */
+	"bash",		SHELL_BOURNE,	/* GNU Bourne again shell */
+	"jsh",		SHELL_BOURNE,
+	NULL,		SHELL_BOURNE	/* default (same as xterm's) */
 };
 
 char *emuname[EMULATIONS] = {
@@ -197,11 +159,7 @@ char *setsize[EMULATIONS] = {
 #ifdef USE_SYSV_TERMIO
 struct termio tioorig;
 #else /* not USE_SYSV_TERMIO */
-# ifdef USE_TERMIOS
-struct termios tioorig;
-# else /* not USE_TERMIOS */
 struct sgttyb sgorig;
-# endif /* USE_TERMIOS */
 #endif /* USE_SYSV_TERMIO */
 char *size[EMULATIONS] = {
 	"\033[%d;%dR",
@@ -219,37 +177,13 @@ char *wsize[EMULATIONS] = {
 #endif	/* TIOCSWINSZ */
 #endif	/* sun */
 
-#include "proto.h"
+char *strindex ();
 
-extern int main PROTO((int argc, char **argv));
-
-static SIGNAL_T onintr PROTO((int sig));
-static SIGNAL_T resize_timeout PROTO((int sig));
-static int checkdigits PROTO((char *str));
-static void Usage PROTO((void));
-static void readstring PROTO((FILE *fp, char *buf, char *str));
-
-#ifdef USE_TERMCAP
-static char *strindex PROTO((char *s1, char *s2));
-#if !defined(NO_TERMCAP_H)
-#include <termcap.h>
-#if defined(linux) && defined(NCURSES_VERSION)
-				/* The tgetent emulation function in
-                                   ncurses (1.9.9e) ignores the buffer, so
-                                   TERMCAP can't be set from it.  Instead,
-                                   just use terminfo. */
-#undef USE_TERMCAP
-#include <curses.h>
-#endif
-#else
-#include <curses.h>
-#endif /* ! NO_TERMCAP_H  */
-#endif
+SIGNAL_T onintr();
 
 /*
    resets termcap string to reflect current screen size
  */
-int
 main (argc, argv)
     int argc;
     char **argv;
@@ -263,11 +197,7 @@ main (argc, argv)
 #ifdef USE_SYSV_TERMIO
 	struct termio tio;
 #else /* not USE_SYSV_TERMIO */
-#ifdef USE_TERMIOS
-	struct termios tio;
-#else /* not USE_TERMIOS */
 	struct sgttyb sg;
-#endif /* USE_TERMIOS */
 #endif /* USE_SYSV_TERMIO */
 #ifdef USE_TERMCAP
 	char termcap [1024];
@@ -370,15 +300,14 @@ main (argc, argv)
 		    myname, env);
 	    exit(1);
 	}
-#endif /* USE_TERMCAP */
-#ifdef USE_TERMINFO
+#else /* else not USE_TERMCAP */
 	if(!(env = getenv("TERM")) || !*env) {
 		env = "xterm";
 		if(SHELL_BOURNE == shell_type)
 			setname = "TERM=xterm;\nexport TERM;\n";
 		else	setname = "setenv TERM xterm;\n";
 	}
-#endif	/* USE_TERMINFO */
+#endif	/* USE_TERMCAP */
 
 #ifdef USE_SYSV_TERMIO
 	ioctl (tty, TCGETA, &tioorig);
@@ -389,20 +318,10 @@ main (argc, argv)
 	tio.c_cc[VMIN] = 6;
 	tio.c_cc[VTIME] = 1;
 #else	/* else not USE_SYSV_TERMIO */
-#if defined(USE_TERMIOS)
-	tcgetattr(tty, &tioorig);
-	tio = tioorig;
-	tio.c_iflag &= ~ICRNL;
-	tio.c_lflag &= ~(ICANON | ECHO);
-	tio.c_cflag |= CS8;
-	tio.c_cc[VMIN] = 6;
-	tio.c_cc[VTIME] = 1;
-#else	/* not USE_TERMIOS */
  	ioctl (tty, TIOCGETP, &sgorig);
 	sg = sgorig;
 	sg.sg_flags |= RAW;
 	sg.sg_flags &= ~ECHO;
-#endif  /* USE_TERMIOS */
 #endif	/* USE_SYSV_TERMIO */
 	signal(SIGINT, onintr);
 	signal(SIGQUIT, onintr);
@@ -410,11 +329,7 @@ main (argc, argv)
 #ifdef USE_SYSV_TERMIO
 	ioctl (tty, TCSETAW, &tio);
 #else	/* not USE_SYSV_TERMIO */
-#ifdef USE_TERMIOS
-	tcsetattr(tty, TCSADRAIN, &tio);
-#else   /* not USE_TERMIOS */
 	ioctl (tty, TIOCSETP, &sg);
-#endif  /* USE_TERMIOS */
 #endif	/* USE_SYSV_TERMIO */
 
 	if (argc == 2) {
@@ -471,11 +386,7 @@ main (argc, argv)
 #ifdef USE_SYSV_TERMIO
 	ioctl (tty, TCSETAW, &tioorig);
 #else	/* not USE_SYSV_TERMIO */
-#ifdef USE_TERMIOS
-	tcsetattr(tty, TCSADRAIN, &tioorig);
-#else   /* not USE_TERMIOS */
 	ioctl (tty, TIOCSETP, &sgorig);
-#endif  /* USE_TERMIOS */
 #endif	/* USE_SYSV_TERMIO */
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
@@ -511,35 +422,31 @@ main (argc, argv)
 	if(SHELL_BOURNE == shell_type) {
 
 #ifdef USE_TERMCAP
-		printf ("%sTERMCAP='%s';\n",
+		printf ("%sTERMCAP='%s'\n",
 		 setname, termcap);
-#endif /* USE_TERMCAP */
-#ifdef USE_TERMINFO
+#else /* else not USE_TERMCAP */
 #ifndef SVR4
 		printf ("%sCOLUMNS=%d;\nLINES=%d;\nexport COLUMNS LINES;\n",
 			setname, cols, rows);
 #endif /* !SVR4 */
-#endif	/* USE_TERMINFO */
+#endif	/* USE_SYSV_TERMCAP */
 
 	} else {		/* not Bourne shell */
 
 #ifdef USE_TERMCAP
 		printf ("set noglob;\n%ssetenv TERMCAP '%s';\nunset noglob;\n",
 		 setname, termcap);
-#endif /* USE_TERMCAP */
-#ifdef USE_TERMINFO
+#else /* else not USE_TERMCAP */
 #ifndef SVR4
 		printf ("set noglob;\n%ssetenv COLUMNS '%d';\nsetenv LINES '%d';\nunset noglob;\n",
 			setname, cols, rows);
 #endif /* !SVR4 */
-#endif	/* USE_TERMINFO */
+#endif	/* USE_TERMCAP */
 	}
 	exit(0);
 }
 
-#ifdef USE_TERMCAP
-static char *
-strindex (s1, s2)
+char *strindex (s1, s2)
 /*
    returns a pointer to the first occurrence of s2 in s1, or NULL if there are
    none.
@@ -547,7 +454,7 @@ strindex (s1, s2)
 register char *s1, *s2;
 {
 	register char *s3;
-	Size_t s2len = strlen (s2);
+	int s2len = strlen (s2);
 
 	while ((s3 = strchr(s1, *s2)) != NULL)
 	{
@@ -556,9 +463,7 @@ register char *s1, *s2;
 	}
 	return (NULL);
 }
-#endif
 
-static int
 checkdigits(str)
 register char *str;
 {
@@ -570,20 +475,19 @@ register char *str;
 	return(1);
 }
 
-static void
 readstring(fp, buf, str)
     register FILE *fp;
     register char *buf;
     char *str;
 {
 	register int last, c;
-#if !defined(USG) && !defined(AMOEBA) && !defined(MINIX) && !(__EMX__)
-	/* What is the advantage of setitimer() over alarm()? */
+	SIGNAL_T resize_timeout();
+#ifndef USG
 	struct itimerval it;
 #endif
 
 	signal(SIGALRM, resize_timeout);
-#if defined(USG) || defined(AMOEBA) || defined(MINIX) || defined(__EMX__)
+#ifdef USG
 	alarm (TIMEOUT);
 #else
 	bzero((char *)&it, sizeof(struct itimerval));
@@ -602,7 +506,7 @@ readstring(fp, buf, str)
 	last = str[strlen(str) - 1];
 	while((*buf++ = getc(fp)) != last)
 	    ;
-#if defined(USG) || defined(AMOEBA) || defined(MINIX) || defined(__EMX__)
+#ifdef USG
 	alarm (0);
 #else
 	bzero((char *)&it, sizeof(struct itimerval));
@@ -611,7 +515,6 @@ readstring(fp, buf, str)
 	*buf = 0;
 }
 
-static void
 Usage()
 {
 	fprintf(stderr, strcmp(myname, sunname) == 0 ?
@@ -620,7 +523,7 @@ Usage()
 	exit(1);
 }
 
-static SIGNAL_T
+SIGNAL_T
 resize_timeout(sig)
     int sig;
 {
@@ -629,18 +532,14 @@ resize_timeout(sig)
 }
 
 /* ARGSUSED */
-static SIGNAL_T
+SIGNAL_T
 onintr(sig)
     int sig;
 {
 #ifdef USE_SYSV_TERMIO
 	ioctl (tty, TCSETAW, &tioorig);
 #else	/* not USE_SYSV_TERMIO */
-#ifdef USE_TERMIOS
-	tcsetattr (tty, TCSADRAIN, &tioorig);
-#else   /* not USE_TERMIOS */
 	ioctl (tty, TIOCSETP, &sgorig);
-#endif  /* use TERMIOS */
 #endif	/* USE_SYSV_TERMIO */
 	exit(1);
 }

@@ -1,5 +1,6 @@
-! $XConsortium: XTerm.ad,v 1.32 94/02/09 18:19:21 converse Exp $
+! $XConsortium: XTerm.ad /main/35 1996/12/03 16:44:38 swick $
 XTerm.JoinSession:False
+
 *SimpleMenu*BackingStore: NotUseful
 *SimpleMenu*menuLabel.font: -adobe-helvetica-bold-r-normal--*-120-*-*-*-*-iso8859-*
 *SimpleMenu*menuLabel.vertSpace: 	100
@@ -19,7 +20,6 @@ XTerm.JoinSession:False
 *mainMenu*terminate*Label:  Send TERM Signal
 *mainMenu*kill*Label:  Send KILL Signal
 *mainMenu*quit*Label:  Quit
-*mainMenu*eightBit*Label: 8-Bit Controls
 
 *vtMenu.Label:  VT Options
 *vtMenu*scrollbar*Label:  Enable Scrollbar
@@ -37,6 +37,7 @@ XTerm.JoinSession:False
 *vtMenu*visualbell*Label:  Enable Visual Bell
 *vtMenu*marginbell*Label:  Enable Margin Bell
 *vtMenu*altscreen*Label:  Show Alternate Screen
+*vtMenu*activeicon*Label: Enable Active Icon
 *vtMenu*softreset*Label:  Do Soft Reset
 *vtMenu*hardreset*Label:  Do Full Reset
 *vtMenu*clearsavedlines*Label:  Reset and Clear Saved Lines
@@ -48,6 +49,7 @@ XTerm.JoinSession:False
 *fontMenu*fontdefault*Label:	Default
 *fontMenu*font1*Label:	Unreadable
 *VT100*font1:		nil2
+*IconFont:		nil2
 *fontMenu*font2*Label:	Tiny
 *VT100*font2:		5x7
 *fontMenu*font3*Label:	Small

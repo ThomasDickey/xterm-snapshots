@@ -1,5 +1,4 @@
-/* $XConsortium: menu.h,v 1.25 94/04/17 20:23:31 gildea Exp $ */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.2 1996/08/13 11:37:03 dawes Exp $ */
+/* $XConsortium: menu.h /main/27 1996/12/01 23:47:03 swick $ */
 /*
 
 Copyright (c) 1989  X Consortium
@@ -30,14 +29,9 @@ from the X Consortium.
 
 */
 
-#ifndef included_menu_h
-#define included_menu_h
-
-#include "proto.h"
-
 typedef struct _MenuEntry {
     char *name;
-    void (*function) PROTO_XT_CALLBACK_ARGS;
+    void (*function)();
     Widget widget;
 } MenuEntry;
 
@@ -45,44 +39,38 @@ extern MenuEntry mainMenuEntries[], vtMenuEntries[], tekMenuEntries[];
 extern MenuEntry fontMenuEntries[];
 extern Arg menuArgs[];
 
-extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
-extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
-extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
-extern void HandleAltScreen        PROTO_XT_ACTIONS_ARGS;
-extern void HandleAppCursor        PROTO_XT_ACTIONS_ARGS;
-extern void HandleAppKeypad        PROTO_XT_ACTIONS_ARGS;
-extern void HandleAutoLineFeed     PROTO_XT_ACTIONS_ARGS;
-extern void HandleAutoWrap         PROTO_XT_ACTIONS_ARGS;
-extern void HandleClearSavedLines  PROTO_XT_ACTIONS_ARGS;
-extern void HandleCreateMenu       PROTO_XT_ACTIONS_ARGS;
-extern void HandleCursesEmul       PROTO_XT_ACTIONS_ARGS;
-extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
-extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
-extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
-extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
-extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
-extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
-extern void HandleReverseVideo     PROTO_XT_ACTIONS_ARGS;
-extern void HandleReverseWrap      PROTO_XT_ACTIONS_ARGS;
-extern void HandleScrollKey        PROTO_XT_ACTIONS_ARGS;
-extern void HandleScrollTtyOutput  PROTO_XT_ACTIONS_ARGS;
-extern void HandleScrollbar        PROTO_XT_ACTIONS_ARGS;
-extern void HandleSendSignal       PROTO_XT_ACTIONS_ARGS;
-extern void HandleSetTekText       PROTO_XT_ACTIONS_ARGS;
-extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
-extern void HandleSetVisualBell    PROTO_XT_ACTIONS_ARGS;
-extern void HandleSoftReset        PROTO_XT_ACTIONS_ARGS;
-extern void HandleSunFunctionKeys  PROTO_XT_ACTIONS_ARGS;
-extern void HandleTekCopy          PROTO_XT_ACTIONS_ARGS;
-extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
-extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
-extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
-
+extern void HandleAllowSends();
+extern void HandleSetVisualBell();
 #ifdef ALLOWLOGGING
-extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
+extern void HandleLogging();
 #endif
-
-extern void DoSecureKeyboard PROTO((Time tp));
+extern void HandleRedraw();
+extern void HandleSendSignal();
+extern void HandleQuit();
+extern void HandleScrollbar();
+extern void HandleJumpscroll();
+extern void HandleReverseVideo();
+extern void HandleAutoWrap();
+extern void HandleReverseWrap();
+extern void HandleAutoLineFeed();
+extern void HandleAppCursor();
+extern void HandleAppKeypad();
+extern void HandleScrollKey();
+extern void HandleScrollTtyOutput();
+extern void HandleAllow132();
+extern void HandleCursesEmul();
+extern void HandleMarginBell();
+extern void HandleAltScreen();
+extern void HandleSoftReset();
+extern void HandleHardReset();
+extern void HandleClearSavedLines();
+extern void HandleSetTerminalType();
+extern void HandleVisibility();
+extern void HandleSetTekText();
+extern void HandleTekPage();
+extern void HandleTekReset();
+extern void HandleTekCopy();
+extern void DoSecureKeyboard();
 
 /*
  * The following definitions MUST match the order of entries given in 
@@ -92,27 +80,21 @@ extern void DoSecureKeyboard PROTO((Time tp));
 /*
  * items in primary menu
  */
-#define mainMenu_securekbd  ( 0)
-#define mainMenu_allowsends ( 1)
+#define mainMenu_securekbd 0
+#define mainMenu_allowsends 1
 #ifdef ALLOWLOGGING
-#define mainMenu_logging    ( 2)
-#define mainMenu_fix1       ( 0)
-#else
-#define mainMenu_fix1       (-1)
+#define mainMenu_logging 2
 #endif
-#define mainMenu_redraw     ( 3 + mainMenu_fix1)
-#define mainMenu_line1      ( 4 + mainMenu_fix1)
-#define mainMenu_8bit_ctrl  ( 5 + mainMenu_fix1)
-#define mainMenu_sun_fkeys  ( 6 + mainMenu_fix1)
-#define mainMenu_line2      ( 7 + mainMenu_fix1)
-#define mainMenu_suspend    ( 8 + mainMenu_fix1)
-#define mainMenu_continue   ( 9 + mainMenu_fix1)
-#define mainMenu_interrupt  (10 + mainMenu_fix1)
-#define mainMenu_hangup     (11 + mainMenu_fix1)
-#define mainMenu_terminate  (12 + mainMenu_fix1)
-#define mainMenu_kill       (13 + mainMenu_fix1)
-#define mainMenu_line3      (14 + mainMenu_fix1)
-#define mainMenu_quit       (15 + mainMenu_fix1)
+#define mainMenu_redraw 3
+#define mainMenu_line1 4
+#define mainMenu_suspend 5
+#define mainMenu_continue 6
+#define mainMenu_interrupt 7
+#define mainMenu_hangup 8
+#define mainMenu_terminate 9
+#define mainMenu_kill 10
+#define mainMenu_line2 11
+#define mainMenu_quit 12
 
 
 /*
@@ -133,14 +115,17 @@ extern void DoSecureKeyboard PROTO((Time tp));
 #define vtMenu_visualbell 12
 #define vtMenu_marginbell 13
 #define vtMenu_altscreen 14
-#define vtMenu_line1 15
-#define vtMenu_softreset 16
-#define vtMenu_hardreset 17
-#define vtMenu_clearsavedlines 18
-#define vtMenu_line2 19
-#define vtMenu_tekshow 20
-#define vtMenu_tekmode 21
-#define vtMenu_vthide 22
+#ifndef NO_ACTIVE_ICON
+#define vtMenu_activeicon 15
+#endif /* NO_ACTIVE_ICON */
+#define vtMenu_line1 16
+#define vtMenu_softreset 17
+#define vtMenu_hardreset 18
+#define vtMenu_clearsavedlines 19
+#define vtMenu_line2 20
+#define vtMenu_tekshow 21
+#define vtMenu_tekmode 22
+#define vtMenu_vthide 23
 
 /*
  * items in vt100 font menu
@@ -213,20 +198,10 @@ extern void DoSecureKeyboard PROTO((Time tp));
 		    term->screen.logging)
 #endif
 
-#define update_8bit_control() \
-  update_menu_item (term->screen.mainMenu, \
-		    mainMenuEntries[mainMenu_8bit_ctrl].widget, \
-		    term->screen.control_eight_bits)
-
-#define update_sun_fkeys() \
-  update_menu_item (term->screen.mainMenu, \
-		    mainMenuEntries[mainMenu_sun_fkeys].widget, \
-		    sunFunctionKeys)
-
 #define update_scrollbar() \
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_scrollbar].widget, \
-		    term->screen.scrollbar)
+		    Scrollbar(&term->screen))
 
 #define update_jumpscroll() \
   update_menu_item (term->screen.vtMenu, \
@@ -298,6 +273,13 @@ extern void DoSecureKeyboard PROTO((Time tp));
 		    vtMenuEntries[vtMenu_altscreen].widget, \
 		    term->screen.alternate)
 
+#ifndef NO_ACTIVE_ICON
+#define update_activeicon() \
+  update_menu_item (term->screen.vtMenu, \
+		    vtMenuEntries[vtMenu_activeicon].widget, \
+		    term->misc.active_icon)
+#endif /* NO_ACTIVE_ICON */
+
 #define update_tekshow() \
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_tekshow].widget, \
@@ -347,4 +329,3 @@ extern void DoSecureKeyboard PROTO((Time tp));
   update_menu_item (term->screen.fontMenu, \
 		    fontMenuEntries[term->screen.menu_font_number].widget, \
 		    (val))
-#endif/*included_menu_h*/

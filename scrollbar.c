@@ -1,6 +1,5 @@
 /*
- *	$XConsortium: scrollbar.c /main/45 1996/01/14 16:53:05 kaleb $
- *	$XFree86: xc/programs/xterm/scrollbar.c,v 3.5 1996/03/10 12:15:25 dawes Exp $
+ *	$XConsortium: scrollbar.c /main/47 1996/12/01 23:47:08 swick $
  */
 
 /*
@@ -28,13 +27,6 @@
 
 #include "ptyx.h"		/* gets Xt headers, too */
 
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-extern Char *realloc();
-extern Char *calloc();
-#endif
-
 #include <stdio.h>
 #include <ctype.h>
 #include <X11/Xatom.h>
@@ -48,18 +40,10 @@ extern Char *calloc();
 #include "error.h"
 #include "menu.h"
 
-#include "xterm.h"
-
-static Widget CreateScrollBar PROTO((XtermWidget xw, int x, int y, int height));
-static int params_to_pixels PROTO((TScreen *screen, String *params, Cardinal n));
-static int specialcmplowerwiths PROTO((char *a, char *b));
-static void RealizeScrollBar PROTO((Widget sbw, TScreen *screen));
-static void ResizeScreen PROTO((XtermWidget xw, int min_width, int min_height));
-
 /* Event handlers */
 
-static void ScrollTextTo PROTO_XT_CALLBACK_ARGS;
-static void ScrollTextUpDownBy PROTO_XT_CALLBACK_ARGS;
+static void ScrollTextTo();
+static void ScrollTextUpDownBy();
 
 
 /* resize the text window for a terminal screen, modifying the
@@ -77,6 +61,12 @@ static void ResizeScreen(xw, min_width, min_height )
 #endif
 	XtGeometryResult geomreqresult;
 	Dimension reqWidth, reqHeight, repWidth, repHeight;
+#ifndef NO_ACTIVE_ICON
+	struct _vtwin *saveWin = screen->whichVwin;
+
+	/* all units here want to be in the normal font units */
+	screen->whichVwin = &screen->fullVwin;
+#endif /* NO_ACTIVE_ICON */
 
 	/*
 	 * I'm going to try to explain, as I understand it, why we
@@ -159,8 +149,8 @@ static void ResizeScreen(xw, min_width, min_height )
 		      XtNminHeight, min_height + FontHeight(screen),
 		      NULL);
 
-	reqWidth = (screen->max_col + 1) * FontWidth(screen) + min_width;
-	reqHeight = FontHeight(screen) * (screen->max_row + 1) + min_height;
+	reqWidth = (screen->max_col + 1) * screen->fullVwin.f_width + min_width;
+	reqHeight = screen->fullVwin.f_height * (screen->max_row + 1) + min_height;
 	geomreqresult = XtMakeResizeRequest ((Widget)xw, reqWidth, reqHeight,
 					     &repWidth, &repHeight);
 
@@ -172,13 +162,16 @@ static void ResizeScreen(xw, min_width, min_height )
 #ifndef nothack
 	XSetWMNormalHints(screen->display, XtWindow(XtParent(xw)), &sizehints);
 #endif
+#ifndef NO_ACTIVE_ICON
+ 	screen->whichVwin = saveWin;
+#endif /* NO_ACTIVE_ICON */
 }
 
 void DoResizeScreen (xw)
     register XtermWidget xw;
 {
     int border = 2 * xw->screen.border;
-    ResizeScreen (xw, border + xw->screen.scrollbar, border);
+    ResizeScreen (xw, border + xw->screen.fullVwin.scrollbar, border);
 }
 
 
@@ -216,12 +209,12 @@ static void RealizeScrollBar (sbw, screen)
     XtRealizeWidget (sbw);
 }
 
-void
+
 ScrollBarReverseVideo(scrollWidget)
 	register Widget scrollWidget;
 {
 	Arg args[4];
-	Cardinal nargs = XtNumber(args);
+	int nargs = XtNumber(args);
 	unsigned long bg, fg, bdr;
 	Pixmap bdpix;
 
@@ -242,7 +235,7 @@ ScrollBarReverseVideo(scrollWidget)
 }
 
 
-void
+
 ScrollBarDrawThumb(scrollWidget)
 	register Widget scrollWidget;
 {
@@ -256,9 +249,9 @@ ScrollBarDrawThumb(scrollWidget)
 	XawScrollbarSetThumb(scrollWidget,
 	 ((float)thumbTop) / totalHeight,
 	 ((float)thumbHeight) / totalHeight);
+	
 }
 
-void
 ResizeScrollBar(scrollWidget, x, y, height)
 	register Widget scrollWidget;
 	int x, y;
@@ -269,7 +262,6 @@ ResizeScrollBar(scrollWidget, x, y, height)
 	ScrollBarDrawThumb(scrollWidget);
 }
 
-void
 WindowScroll(screen, top)
 	register TScreen *screen;
 	int top;
@@ -299,7 +291,7 @@ WindowScroll(screen, top)
 		scrolltop = lines;
 		refreshtop = scrollheight;
 	}
-	x = screen->scrollbar +	screen->border;
+	x = Scrollbar(screen) +	screen->border;
 	scrolling_copy_area(screen, scrolltop, scrollheight, -i);
 	screen->topline = top;
 
@@ -318,7 +310,7 @@ WindowScroll(screen, top)
 	ScrollBarDrawThumb(screen->scrollWidget);
 }
 
-void
+
 ScrollBarOn (xw, init, doalloc)
     XtermWidget xw;
     int init, doalloc;
@@ -326,8 +318,9 @@ ScrollBarOn (xw, init, doalloc)
 	register TScreen *screen = &xw->screen;
 	register int border = 2 * screen->border;
 	register int i;
+	Char *realloc(), *calloc();
 
-	if(screen->scrollbar)
+	if(screen->fullVwin.scrollbar)
 		return;
 
 	if (init) {			/* then create it only */
@@ -353,25 +346,25 @@ ScrollBarOn (xw, init, doalloc)
 	if (doalloc && screen->allbuf) {
 	    if((screen->allbuf =
 		(ScrnBuf) realloc((char *) screen->buf,
-				  (unsigned) MAX_PTRS*(screen->max_row + 2 +
+				  (unsigned) 2*(screen->max_row + 2 +
 						screen->savelines) *
 				  sizeof(char *)))
 	       == NULL)
 	      Error (ERROR_SBRALLOC);
-	    screen->buf = &screen->allbuf[MAX_PTRS * screen->savelines];
+	    screen->buf = &screen->allbuf[2 * screen->savelines];
 	    memmove( (char *)screen->buf, (char *)screen->allbuf, 
-		   MAX_PTRS * (screen->max_row + 2) * sizeof (char *));
-	    for(i = MAX_PTRS * screen->savelines - 1 ; i >= 0 ; i--)
+		   2 * (screen->max_row + 2) * sizeof (char *));
+	    for(i = 2 * screen->savelines - 1 ; i >= 0 ; i--)
 	      if((screen->allbuf[i] =
-		  (Char *)calloc((unsigned) screen->max_col + 1, sizeof(Char))) ==
+		  calloc((unsigned) screen->max_col + 1, sizeof(char))) ==
 		 NULL)
 		Error (ERROR_SBRALLOC2);
 	}
 
 	ResizeScrollBar (screen->scrollWidget, -1, -1, 
-			 Height (screen) + border);
+			 screen->fullVwin.height + border);
 	RealizeScrollBar (screen->scrollWidget, screen);
-	screen->scrollbar = screen->scrollWidget->core.width +
+	screen->fullVwin.scrollbar = screen->scrollWidget->core.width +
 	     screen->scrollWidget->core.border_width;
 
 	ScrollBarDrawThumb(screen->scrollWidget);
@@ -384,14 +377,13 @@ ScrollBarOn (xw, init, doalloc)
 	}
 }
 
-void
 ScrollBarOff(screen)
 	register TScreen *screen;
 {
-	if(!screen->scrollbar)
+	if(!screen->fullVwin.scrollbar)
 		return;
 	XtUnmapWidget(screen->scrollWidget);
-	screen->scrollbar = 0;
+	screen->fullVwin.scrollbar = 0;
 	DoResizeScreen (term);
 	update_scrollbar ();
 	if (screen->buf) {
@@ -477,9 +469,9 @@ static int specialcmplowerwiths (a, b)
 static int params_to_pixels (screen, params, n)
     TScreen *screen;
     String *params;
-    Cardinal n;
+    int n;
 {
-    register int mult = 1;
+    register mult = 1;
     register char *s;
 
     switch (n > 2 ? 2 : n) {
@@ -517,7 +509,7 @@ void HandleScrollForward (gw, event, params, nparams)
     register TScreen *screen = &w->screen;
 
     ScrollTextUpDownBy (gw, (XtPointer) NULL,
-			(XtPointer)(params_to_pixels (screen, params, *nparams)));
+			(XtPointer)params_to_pixels (screen, params, (int) *nparams));
     return;
 }
 
@@ -533,6 +525,6 @@ void HandleScrollBack (gw, event, params, nparams)
     register TScreen *screen = &w->screen;
 
     ScrollTextUpDownBy (gw, (XtPointer) NULL,
-			(XtPointer)(-params_to_pixels (screen, params, *nparams)));
+			(XtPointer)-params_to_pixels (screen, params, (int) *nparams));
     return;
 }

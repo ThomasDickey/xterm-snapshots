@@ -1,6 +1,5 @@
 /*
- *	$XConsortium: input.c /main/20 1996/01/14 16:52:52 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.8 1996/08/13 11:36:58 dawes Exp $
+ *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
  */
 
 /*
@@ -33,17 +32,14 @@
 #include <X11/DECkeysym.h>
 #include <X11/Xutil.h>
 #include <stdio.h>
-
-#include "xterm.h"
 #include "data.h"
 
 static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
 static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
-static char *cur = "HDACB  FE";
+static char *cur = "DACB";
 
-static int funcvalue PROTO((KeySym keycode));
-static int sunfuncvalue PROTO((KeySym keycode));
-static void AdjustAfterInput PROTO((TScreen *screen));
+static int funcvalue(), sunfuncvalue();
+extern Boolean sunFunctionKeys;
 
 static void
 AdjustAfterInput (screen)
@@ -67,7 +63,6 @@ register TScreen *screen;
 	}
 }
 
-void
 Input (keyboard, screen, event, eightbit)
     register TKeyboard	*keyboard;
     register TScreen	*screen;
@@ -75,7 +70,7 @@ Input (keyboard, screen, event, eightbit)
     Bool eightbit;
 {
 
-#define STRBUFSIZE 500
+#define STRBUFSIZE 100
 
 	char strbuf[STRBUFSIZE];
 	register char *string;
@@ -85,18 +80,15 @@ Input (keyboard, screen, event, eightbit)
 	KeySym  keysym = 0;
 	ANSI	reply;
 
-#if XtSpecificationRelease >= 6
+
 	if (screen->xic) {
 	    Status status_return;
 	    nbytes = XmbLookupString (screen->xic, event, strbuf, STRBUFSIZE,
 				      &keysym, &status_return);
-	}
-	else
-#endif
-	{
-	    static XComposeStatus compose_status = {NULL, 0};
+	} else {
+	    XComposeStatus status_return;
 	    nbytes = XLookupString (event, strbuf, STRBUFSIZE,
-				    &keysym, &compose_status);
+				    &keysym, &status_return);
 	}
 
 	string = &strbuf[0];
@@ -119,10 +111,10 @@ Input (keyboard, screen, event, eightbit)
        		if (keyboard->flags & CURSOR_APL) {
 			reply.a_type = SS3;
 			unparseseq(&reply, pty);
-			unparseputc(cur[keysym-XK_Home], pty);
+			unparseputc(cur[keysym-XK_Left], pty);
 		} else {
 			reply.a_type = CSI;
-			reply.a_final = cur[keysym-XK_Home];
+			reply.a_final = cur[keysym-XK_Left];
 			unparseseq(&reply, pty);
 		}
 		key = TRUE;
@@ -130,22 +122,17 @@ Input (keyboard, screen, event, eightbit)
 	 	keysym == XK_Prior || keysym == XK_Next ||
 	 	keysym == DXK_Remove || keysym == XK_KP_Delete ||
 		keysym == XK_KP_Insert) {
-		if ((string = udk_lookup(funcvalue(keysym), &nbytes)) != 0) {
-			while (nbytes-- > 0)
-				unparseputc(*string++, pty);
+		reply.a_type = CSI;
+		reply.a_nparam = 1;
+		if (sunFunctionKeys) {
+		    reply.a_param[0] = sunfuncvalue (keysym);
+		    reply.a_final = 'z';
 		} else {
-			reply.a_type = CSI;
-			reply.a_nparam = 1;
-			if (sunFunctionKeys) {
-				reply.a_param[0] = sunfuncvalue (keysym);
-				reply.a_final = 'z';
-			} else {
-				reply.a_param[0] = funcvalue (keysym);
-				reply.a_final = '~';
-			}
-			if (reply.a_param[0] > 0)
-				unparseseq(&reply, pty);
+		    reply.a_param[0] = funcvalue (keysym);
+		    reply.a_final = '~';
 		}
+		if (reply.a_param[0] > 0)
+			unparseseq(&reply, pty);
 		key = TRUE;
 	} else if (IsKeypadKey(keysym)) {
 	  	if (keyboard->flags & KYPD_APL)	{
@@ -165,7 +152,7 @@ Input (keyboard, screen, event, eightbit)
 		    if (screen->input_eight_bits)
 		      *string |= 0x80;	/* turn on eighth bit */
 		    else
-		      unparseputc (ESC, pty);  /* escape */
+		      unparseputc (033, pty);  /* escape */
 		}
 		while (nbytes-- > 0)
 			unparseputc(*string++, pty);
@@ -179,11 +166,10 @@ Input (keyboard, screen, event, eightbit)
 	return;
 }
 
-void
 StringInput (screen, string, nbytes)
     register TScreen	*screen;
     register char *string;
-    Size_t nbytes;
+    int nbytes;
 {
 	int	pty	= screen->respond;
 
@@ -192,15 +178,14 @@ StringInput (screen, string, nbytes)
 		TekGINoff();
 		nbytes--;
 	}
-	while (nbytes-- != 0)
+	while (nbytes-- > 0)
 		unparseputc(*string++, pty);
 	if(!screen->TekEmu)
 	        AdjustAfterInput(screen);
 }
 
-/* These definitions are DEC-style (e.g., vt320) */
 static int funcvalue (keycode)
-	KeySym  keycode;
+	int keycode;
 {
 	switch (keycode) {
 		case XK_F1:	return(11);
@@ -241,8 +226,8 @@ static int funcvalue (keycode)
 
 
 static int sunfuncvalue (keycode)
-	KeySym  keycode;
-{
+	int keycode;
+  {
   	switch (keycode) {
 		case XK_F1:	return(224);
 		case XK_F2:	return(225);
@@ -295,3 +280,4 @@ static int sunfuncvalue (keycode)
 		default:	return(-1);
 	}
 }
+

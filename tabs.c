@@ -1,6 +1,5 @@
 /*
  *	$XConsortium: tabs.c,v 1.4 91/05/06 17:12:18 gildea Exp $
- *	$XFree86: xc/programs/xterm/tabs.c,v 3.2 1996/08/13 11:37:09 dawes Exp $
  */
 
 /*
@@ -30,25 +29,14 @@
 
 #include "ptyx.h"
 
-#include "xterm.h"
-
-extern XtermWidget term;
-
 /*
  * This file presumes 32bits/word.  This is somewhat of a crock, and should
  * be fixed sometime.
  */
-#define TAB_INDEX(n) ((n) >> 5)
-#define TAB_MASK(n)  (1 << ((n) & 31))
-
-#define SET_TAB(tabs,n) tabs[TAB_INDEX(n)] |=  TAB_MASK(n)
-#define CLR_TAB(tabs,n) tabs[TAB_INDEX(n)] &= ~TAB_MASK(n)
-#define TST_TAB(tabs,n) tabs[TAB_INDEX(n)] &   TAB_MASK(n)
 
 /*
  * places tabstops at only every 8 columns
  */
-void
 TabReset(tabs)
 Tabs	tabs;
 {
@@ -65,23 +53,21 @@ Tabs	tabs;
 /*
  * places a tabstop at col
  */
-void
 TabSet(tabs, col)
     Tabs	tabs;
     int		col;
 {
-	SET_TAB(tabs,col);
+	tabs[col >> 5] |= (1 << (col & 31));
 }
 
 /*
  * clears a tabstop at col
  */
-void
 TabClear(tabs, col)
     Tabs	tabs;
     int		col;
 {
-	CLR_TAB(tabs,col);
+	tabs[col >> 5] &= ~(1 << (col & 31));
 }
 
 /*
@@ -89,11 +75,11 @@ TabClear(tabs, col)
  * (or MAX_TABS - 1 if there are no more).
  * A tabstop at col is ignored.
  */
-int
 TabNext (tabs, col)
     Tabs	tabs;
     int		col;
 {
+	extern XtermWidget term;
 	register TScreen *screen = &term->screen;
 
 	if(screen->curses && screen->do_wrap && (term->flags & WRAPAROUND)) {
@@ -101,63 +87,15 @@ TabNext (tabs, col)
 		col = screen->cur_col = screen->do_wrap = 0;
 	}
 	for (++col; col<MAX_TABS; ++col)
-		if (TST_TAB(tabs,col))
+		if (tabs[col >> 5] & (1 << (col & 31)))
 			return (col);
 
 	return (MAX_TABS - 1);
 }
 
 /*
- * returns the column of the previous tabstop
- * (or 0 if there are no more).
- * A tabstop at col is ignored.
- */
-int
-TabPrev (tabs, col)
-    Tabs	tabs;
-    int		col;
-{
-	for (--col; col >= 0; --col)
-		if (TST_TAB(tabs,col))
-			return (col);
-
-	return (0);
-}
-
-/*
- * Tab to the next stop, returning true if the cursor moved
- */
-Boolean
-TabToNextStop()
-{
-	register TScreen *screen = &term->screen;
-	int saved_column = screen->cur_col;
-
-	screen->cur_col = TabNext(term->tabs, screen->cur_col);
-	if (screen->cur_col > screen->max_col)
-		screen->cur_col = screen->max_col;
-
-	return (screen->cur_col > saved_column);
-}
-
-/*
- * Tab to the previous stop, returning true if the cursor moved
- */
-Boolean
-TabToPrevStop()
-{
-	register TScreen *screen = &term->screen;
-	int saved_column = screen->cur_col;
-
-	screen->cur_col = TabPrev(term->tabs, screen->cur_col);
-
-	return (screen->cur_col < saved_column);
-}
-
-/*
  * clears all tabs
  */
-void
 TabZonk (tabs)
 Tabs	tabs;
 {
