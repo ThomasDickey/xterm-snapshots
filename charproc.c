@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.77 1999/04/11 13:11:29 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.79 1999/05/03 12:16:10 dawes Exp $
  */
 
 /*
@@ -2622,8 +2622,8 @@ dotext(
 
 			if (n >= limit) {
 				limit = (n + 1) * 2;
-				lobyte = (Char *)XtRealloc(lobyte, limit);
-				hibyte = (Char *)XtRealloc(hibyte, limit);
+				lobyte = (Char *)XtRealloc((char *)lobyte, limit);
+				hibyte = (Char *)XtRealloc((char *)hibyte, limit);
 			}
 			for (j = offset; j < offset+n; j++) {
 				k = j-offset;

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c /main/33 1996/12/01 23:47:10 swick $
- *	$XFree86: xc/programs/xterm/util.c,v 3.37 1999/04/25 10:03:02 dawes Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.39 1999/05/03 12:16:13 dawes Exp $
  */
 
 /*
@@ -1362,7 +1362,7 @@ drawXtermText(
 		static unsigned dlen;
 		if (dlen <= len) {
 			dlen = (len + 1) * 2;
-			dbuf = (Char *)XtRealloc(dbuf, dlen);
+			dbuf = (Char *)XtRealloc((char *)dbuf, dlen);
 			memset(dbuf, 0, dlen);
 		}
 		text2 = dbuf;

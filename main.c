@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.87 1999/04/25 10:03:00 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.89 1999/05/03 12:16:11 dawes Exp $ */
 
 
 /* main.c */
@@ -808,7 +808,7 @@ static XtResource application_resources[] = {
     {"ptyInitialErase", "PtyInitialErase", XtRBoolean, sizeof (Boolean),
 	offset(ptyInitialErase), XtRString, "false"},
     {"backarrowKeyIsErase", "BackarrowKeyIsErase", XtRBoolean, sizeof(Boolean),
-        offset(backarrow_is_erase), XtRBoolean, "false"},
+        offset(backarrow_is_erase), XtRString, "false"},
 #endif
     {"waitForMap", "WaitForMap", XtRBoolean, sizeof (Boolean),
 	offset(wait_for_map), XtRString, "false"},

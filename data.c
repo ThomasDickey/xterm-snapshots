@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: data.c,v 1.12 95/04/05 19:58:47 kaleb Exp $
- *	$XFree86: xc/programs/xterm/data.c,v 3.13 1999/04/11 13:11:31 dawes Exp $
+ *	$XFree86: xc/programs/xterm/data.c,v 3.14 1999/04/29 09:14:03 dawes Exp $
  */
 
 /*

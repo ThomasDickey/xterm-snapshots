@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/charsets.c,v 1.3 1999/01/23 09:56:18 dawes Exp $
+ * $XFree86: xc/programs/xterm/charsets.c,v 1.4 1999/04/29 09:14:02 dawes Exp $
  */
 
 /************************************************************
