@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: data.h /main/13 1996/11/24 17:35:40 rws $
- *	$XFree86: xc/programs/xterm/data.h,v 3.9 1998/03/20 21:08:36 hohndel Exp $
+ *	$XFree86: xc/programs/xterm/data.h,v 3.11 1998/04/27 03:14:58 robin Exp $
  */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.

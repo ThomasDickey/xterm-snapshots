@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c /main/33 1996/12/01 23:47:10 swick $
- *	$XFree86: xc/programs/xterm/util.c,v 3.26 1998/03/27 23:24:03 hohndel Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.27 1998/04/27 03:15:06 robin Exp $
  */
 
 /*
