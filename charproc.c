@@ -224,17 +224,11 @@ static  int	defaultONE = 1;
 static	int	default_NUM_CHRSET = NUM_CHRSET;
 #endif
 
-/*
- * Warning, the following must be kept under 1024 bytes or else some
- * compilers (particularly AT&T 6386 SVR3.2) will barf).  Workaround is to
- * declare a static buffer and copy in at run time (the Athena text widget
- * does).  Yuck.
- */
 static char defaultTranslations[] =
 "\
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \n\
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \n\
-         Shift <KeyPress> Select:select-cursor-start() select-cursor-end(PRIMARY , CUT_BUFFER0) \n\
+         Shift <KeyPress> Select:select-cursor-start() select-cursor-end(PRIMARY, CUT_BUFFER0) \n\
          Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \n\
                 ~Meta <KeyPress>:insert-seven-bit() \n\
                  Meta <KeyPress>:insert-eight-bit() \n\
@@ -249,14 +243,24 @@ static char defaultTranslations[] =
  !Lock Ctrl @Num_Lock <Btn2Down>:popup-menu(vtMenu) \n\
      ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
           ~Ctrl ~Meta <Btn2Down>:ignore() \n\
+                 Meta <Btn2Down>:clear-saved-lines() \n\
             ~Ctrl ~Meta <Btn2Up>:insert-selection(PRIMARY, CUT_BUFFER0) \n\
                 !Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
            !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
  !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \n\
      ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
           ~Ctrl ~Meta <Btn3Down>:start-extend() \n\
-                 Meta <Btn2Down>:clear-saved-lines() \n\
               ~Meta <Btn3Motion>:select-extend()      \n\
+                 Ctrl <Btn4Down>:scroll-back(1,halfpage) \n\
+            Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \n\
+  Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \n\
+       @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \n\
+                      <Btn4Down>:scroll-back(5,line)     \n\
+                 Ctrl <Btn5Down>:scroll-forw(1,halfpage) \n\
+            Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \n\
+  Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \n\
+       @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \n\
+                      <Btn5Down>:scroll-forw(5,line)     \n\
                          <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \n\
                        <BtnDown>:bell(0) \
 "; /* PROCURA added "Meta <Btn2Down>:clear-saved-lines()" */
@@ -430,6 +434,9 @@ static XtResource resources[] = {
 	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNeightBitControl, XtCEightBitControl, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.control_eight_bits),
+	XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNmetaSendsEscape, XtCMetaSendsEscape, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.meta_sends_esc),
 	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNgeometry,XtCGeometry, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, misc.geo_metry),
@@ -2266,7 +2273,8 @@ static void VTparse(void)
 
 		 case CASE_REP:
 			/* REP */
-			if (lastchar >= 0 && isprint(lastchar)) {
+			if (lastchar >= 0 &&
+				groundtable[E2A(lastchar)] == CASE_PRINT) {
 			    IChar repeated[2];
 			    count = (param[0] < 1) ? 1 : param[0];
 			    repeated[0] = lastchar;
@@ -3149,6 +3157,9 @@ dpmodes(
 #if OPT_NUM_LOCK
 		case 1035:
 			term->misc.real_NumLock = (func == bitset) ? ON : OFF;
+			break;
+		case 1036:
+			screen->meta_sends_esc = (func == bitset) ? ON : OFF;
 			break;
 #endif
 		case 1048:
@@ -4089,6 +4100,9 @@ static void VTInitialize (
    wnew->misc.num_lock = 0;
    wnew->misc.alt_left = 0;
    wnew->misc.alt_right = 0;
+   wnew->misc.meta_trans = False;
+   wnew->misc.meta_left = 0;
+   wnew->misc.meta_right = 0;
 #endif
 #if OPT_SHIFT_KEYS
    wnew->misc.shift_keys = request->misc.shift_keys;
@@ -4128,6 +4142,7 @@ static void VTInitialize (
    wnew->screen.output_eight_bits = request->screen.output_eight_bits;
    wnew->screen.control_eight_bits = request->screen.control_eight_bits;
    wnew->screen.backarrow_key = request->screen.backarrow_key;
+   wnew->screen.meta_sends_esc = request->screen.meta_sends_esc;
    wnew->screen.allowSendEvents = request->screen.allowSendEvents;
 #ifndef NO_ACTIVE_ICON
    wnew->screen.fnt_icon = request->screen.fnt_icon;
@@ -5265,6 +5280,8 @@ static void HandleBell(
 	Cardinal *param_count)	/* 0 or 1 */
 {
     int percent = (*param_count) ? atoi(params[0]) : 0;
+
+    TRACE(("BELL %d action\n", percent))
 
 #ifdef XKB
     int which= XkbBI_TerminalBell;

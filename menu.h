@@ -93,6 +93,7 @@ extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
 extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
+extern void HandleMetaEsc          PROTO_XT_ACTIONS_ARGS;
 extern void HandleNumLock          PROTO_XT_ACTIONS_ARGS;
 extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
@@ -141,6 +142,7 @@ typedef enum {
     mainMenu_backarrow,
 #if OPT_NUM_LOCK
     mainMenu_num_lock,
+    mainMenu_meta_esc,
 #endif
     mainMenu_sun_fkeys,
 #if OPT_SUNPC_KBD
@@ -301,8 +303,13 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
   update_menu_item (term->screen.mainMenu, \
 		    mainMenuEntries[mainMenu_num_lock].widget, \
 		    term->misc.real_NumLock)
+#define update_meta_esc() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_meta_esc].widget, \
+		    term->screen.meta_sends_esc)
 #else
 #define update_num_lock() /*nothing*/
+#define update_meta_esc() /*nothing*/
 #endif
 
 #define update_sun_fkeys() \

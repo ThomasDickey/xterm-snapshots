@@ -344,6 +344,10 @@ typedef struct {
 #define OPT_BOX_CHARS	1 /* true if xterm can simulate box-characters */
 #endif
 
+#ifndef OPT_CLIP_BOLD
+#define OPT_CLIP_BOLD	1 /* true if xterm uses clipping to avoid bold-trash */
+#endif
+
 #ifndef OPT_DEC_CHRSET
 #define OPT_DEC_CHRSET  1 /* true if xterm is configured for DEC charset */
 #endif
@@ -569,16 +573,18 @@ typedef struct {
 #define CSET_NORMAL(code)  ((code) == CSET_SWL)
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
 #define CSET_EXTEND(code)  ((code) > CSET_DWL)
+	/* for doublesize characters, the first cell in a row holds the info */
+#define SCRN_ROW_CSET(screen,row) (SCRN_BUF_CSETS((screen), row)[0])
 #define CurMaxCol(screen, row) \
-	(CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0]) \
+	(CSET_DOUBLE(SCRN_ROW_CSET(screen, row)) \
 	? (screen->max_col / 2) \
 	: (screen->max_col))
 #define CurCursorX(screen, row, col) \
-	(CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0]) \
+	(CSET_DOUBLE(SCRN_ROW_CSET(screen, row)) \
 	? CursorX(screen, 2*(col)) \
 	: CursorX(screen, (col)))
 #define CurFontWidth(screen, row) \
-	(CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0]) \
+	(CSET_DOUBLE(SCRN_ROW_CSET(screen, row)) \
 	? 2*FontWidth(screen) \
 	: FontWidth(screen))
 #else
@@ -1071,6 +1077,7 @@ typedef struct {
 	Boolean		output_eight_bits; /* honor all bits or strip */
 	Boolean		control_eight_bits; /* send CSI as 8-bits */
 	Boolean		backarrow_key;		/* backspace/delete */
+	Boolean		meta_sends_esc;		/* Meta-key sends ESC prefix */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
 	String		menu_font_names[NMENUFONTS];
 	unsigned long	menu_font_sizes[NMENUFONTS];
@@ -1152,6 +1159,9 @@ typedef struct _Misc {
     unsigned long num_lock;	/* modifier for Num_Lock */
     unsigned long alt_left;	/* modifier for Alt_L */
     unsigned long alt_right;	/* modifier for Alt_R */
+    Boolean meta_trans;		/* true if Meta is used in translations */
+    unsigned long meta_left;	/* modifier for Meta_L */
+    unsigned long meta_right;	/* modifier for Meta_R */
 #endif
 } Misc;
 

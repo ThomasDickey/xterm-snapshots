@@ -266,6 +266,7 @@ extern int errno;
 #define XtNmarginBell		"marginBell"
 #define XtNmenuBar		"menuBar"
 #define XtNmenuHeight		"menuHeight"
+#define XtNmetaSendsEscape	"metaSendsEscape"
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
@@ -345,6 +346,7 @@ extern int errno;
 #define XtCMarginBell		"MarginBell"
 #define XtCMenuBar		"MenuBar"
 #define XtCMenuHeight		"MenuHeight"
+#define XtCMetaSendsEscape	"MetaSendsEscape"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
 #define XtCNumLock		"NumLock"
@@ -588,10 +590,11 @@ extern void xtermPrintScreen (Boolean use_DECPEX);
 
 /* ptydata.c */
 extern int getPtyData (TScreen *screen, fd_set *select_mask, PtyData *data);
-extern int morePtyData (PtyData *data);
-extern int nextPtyData (PtyData *data);
 extern unsigned usedPtyData(PtyData *data);
 extern void initPtyData (PtyData *data);
+
+#define nextPtyData(data) ((data)->cnt)--, (*((data)->ptr)++)
+#define morePtyData(data) ((data)->cnt > 0)
 
 #if OPT_WIDE_CHARS
 extern Char * convertToUTF8(Char *lp, unsigned c);
@@ -604,17 +607,25 @@ extern void writePtyData(int f, IChar *d, unsigned len);
 extern Bool non_blank_line (ScrnBuf sb, int row, int col, int len);
 extern ScrnBuf Allocate (int nrow, int ncol, Char **addr);
 extern int ScreenResize (TScreen *screen, int width, int height, unsigned *flags);
-extern int ScrnTstWrapped (TScreen *screen, int row);
 extern size_t ScrnPointers (TScreen *screen, size_t len);
 extern void ClearBufRows (TScreen *screen, int first, int last);
 extern void ScreenWrite (TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), unsigned flags, unsigned cur_fg_bg, int length);
-extern void ScrnClrWrapped (TScreen *screen, int row);
 extern void ScrnDeleteChar (TScreen *screen, int n, int size);
 extern void ScrnDeleteLine (TScreen *screen, ScrnBuf sb, int n, int last, int size, int where);
 extern void ScrnInsertChar (TScreen *screen, int n, int size);
 extern void ScrnInsertLine (TScreen *screen, ScrnBuf sb, int last, int where, int n, int size);
 extern void ScrnRefresh (TScreen *screen, int toprow, int leftcol, int nrows, int ncols, int force);
-extern void ScrnSetWrapped (TScreen *screen, int row);
+
+#define ScrnClrWrapped(screen, row) \
+	SCRN_BUF_FLAGS(screen, row + screen->topline) = \
+		(Char *)((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & ~ LINEWRAPPED)
+
+#define ScrnSetWrapped(screen, row) \
+	SCRN_BUF_FLAGS(screen, row + screen->topline) = \
+		(Char *)(((long)SCRN_BUF_FLAGS(screen, row + screen->topline) | LINEWRAPPED))
+
+#define ScrnTstWrapped(screen, row) \
+	(((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & LINEWRAPPED) != 0)
 
 /* scrollbar.c */
 extern void DoResizeScreen (XtermWidget xw);
@@ -667,12 +678,27 @@ extern void scrolling_copy_area (TScreen *screen, int firstline, int nlines, int
 
 extern Pixel getXtermBackground (int flags, int color);
 extern Pixel getXtermForeground (int flags, int color);
-extern int extract_bg (unsigned color);
 extern int extract_fg (unsigned color, unsigned flags);
 extern unsigned makeColorPair (int fg, int bg);
-extern unsigned xtermColorPair (void);
 extern void ClearCurBackground (TScreen *screen, int top, int left, unsigned height, unsigned width);
-extern void useCurBackground (Bool flag);
+
+#define xtermColorPair() makeColorPair(term->sgr_foreground, term->cur_background)
+
+#define getXtermForeground(flags, color) \
+	(((flags) & FG_COLOR) && ((color) >= 0) \
+			? term->screen.Acolors[color] \
+			: term->screen.foreground)
+
+#define getXtermBackground(flags, color) \
+	(((flags) & BG_COLOR) && ((color) >= 0) \
+			? term->screen.Acolors[color] \
+			: term->core.background_pixel)
+
+#if OPT_EXT_COLORS
+#define extract_bg(color) ((int)((color) & 0xff))
+#else
+#define extract_bg(color) ((int)((color) & 0xf))
+#endif
 
 #else /* !OPT_ISO_COLORS */
 
@@ -689,15 +715,14 @@ extern void useCurBackground (Bool flag);
 #define makeColorPair(fg, bg) 0
 #define xtermColorPair() 0
 
-#define useCurBackground(flag) /*nothing*/
-
 #endif	/* OPT_ISO_COLORS */
 
 #if OPT_DEC_CHRSET
-extern int getXtermChrSet (int row, int col);
-extern int curXtermChrSet (int row);
+#define curXtermChrSet(row) \
+	((CSET_DOUBLE(SCRN_ROW_CSET((&term->screen), row))) \
+		? SCRN_ROW_CSET((&term->screen), row) \
+		: (term->screen).cur_chrset)
 #else
-#define getXtermChrSet(row, col) 0
 #define curXtermChrSet(row) 0
 #endif
 

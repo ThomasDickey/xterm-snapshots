@@ -302,14 +302,15 @@ Input (
 #endif
 	 ) {
 	    Status status_return;
-	    nbytes = XmbLookupString (screen->xic, event, strbuf, STRBUFSIZE,
+	    nbytes = XmbLookupString (screen->xic, event,
+				      strbuf, sizeof(strbuf),
 				      &keysym, &status_return);
 	}
 	else
 #endif
 	{
 	    static XComposeStatus compose_status = {NULL, 0};
-	    nbytes = XLookupString (event, strbuf, STRBUFSIZE,
+	    nbytes = XLookupString (event, strbuf, sizeof(strbuf),
 				    &keysym, &compose_status);
 	}
 
@@ -399,6 +400,22 @@ Input (
 	}
 #endif
 
+#if OPT_NUM_LOCK
+	/*
+	 * Send ESC if we have a META modifier and metaSendsEcape is true.
+	 * This is similar to the effect of 'eightbit' when eightBitInput
+	 * is false, except that we do this for all keys, including function
+	 * keys.
+	 */
+	if (screen->meta_sends_esc
+	 && !term->misc.meta_trans
+	 && (event->state & term->misc.meta_left
+	  || event->state & term->misc.meta_right)) {
+		TRACE(("...input is modified by META\n"))
+		eightbit = False;
+		unparseputc (ESC, pty);  /* escape */
+	}
+#endif
 	/*
 	 * If we are in the normal (possibly Sun/PC) keyboard state, allow
 	 * modifiers to add a parameter to the function-key control sequences.
@@ -587,6 +604,22 @@ Input (
 		}
 #endif
 		if (nbytes == 1) {
+#if OPT_NUM_LOCK
+			/*
+			 * Send ESC if we have a META modifier and
+			 * metaSendsEcape is true.  This case applies only if
+			 * we decided to not modify function keys because META
+			 * is used in translations.
+			 */
+			if (eightbit
+			 && screen->meta_sends_esc
+			 && (event->state & term->misc.meta_left
+			  || event->state & term->misc.meta_right)) {
+				TRACE(("...input-char is modified by META\n"))
+				eightbit = False;
+				unparseputc (ESC, pty);  /* escape */
+			}
+#endif
 			if (eightbit && screen->input_eight_bits) {
 				if (CharOf(*string) < 128) {
 					TRACE(("...input shift from %d to %d\n",
@@ -785,8 +818,17 @@ sunfuncvalue (KeySym  keycode)
 }
 
 #if OPT_NUM_LOCK
+/*
+ * Note that this can only retrieve translations that are given as resource
+ * values; the default translations in charproc.c for example are not
+ * retrievable by any interface to X.
+ *
+ * Also:  We can retrieve only the most-specified translation resource.  For
+ * example, if the resource file specifies both "*translations" and
+ * "XTerm*translations", we see only the latter.
+ */
 static Bool
-TranslationsUseAlt(Widget w)
+TranslationsUseKeyword(Widget w, const char *keyword)
 {
     static String data;
     static XtResource key_resources[] = {
@@ -796,10 +838,9 @@ TranslationsUseAlt(Widget w)
     Bool result = False;
 
     XtGetSubresources( w, (XtPointer)&data, "vt100", "VT100",
-		   key_resources, (Cardinal)1, NULL, (Cardinal)0 );
+		   key_resources, XtNumber(key_resources), NULL, (Cardinal)0 );
 
     if (data != 0) {
-	static const char keyword[] = "alt";
 	char *p = data;
 	int state = 0;
 	int now = ' ', prv;
@@ -830,6 +871,11 @@ TranslationsUseAlt(Widget w)
     return result;
 }
 
+#define SaveMask(name)	term->misc.name = mask;\
+			TRACE(("%s mask %#lx is%s modifier\n", \
+				#name, \
+				term->misc.name, \
+				ModifierName(term->misc.name)))
 /*
  * Determine which modifier mask (if any) applies to the Num_Lock keysym.
  *
@@ -844,30 +890,26 @@ VTInitModifiers(void)
     int i, j, k;
     Display *dpy = XtDisplay(term);
     XModifierKeymap *keymap = XGetModifierMapping(dpy);
+    unsigned long mask;
 
     if (keymap != 0) {
 
 	TRACE(("VTInitModifiers\n"))
-	for (i = k = 0; i < 8; i++) {
+	for (i = k = 0, mask = 1; i < 8; i++, mask <<= 1) {
 	    for (j = 0; j < keymap->max_keypermod; j++) {
 		KeyCode code = keymap->modifiermap[k];
 		if (code != 0) {
 		    KeySym keysym = XKeycodeToKeysym(dpy,code,0);
 		    if (keysym == XK_Num_Lock) {
-			term->misc.num_lock = (1<<i);
-			TRACE(("numlock mask %#lx is%s modifier\n",
-				term->misc.num_lock,
-				ModifierName(term->misc.num_lock)))
+			SaveMask(num_lock);
 		    } else if (keysym == XK_Alt_L) {
-			term->misc.alt_left = (1<<i);
-			TRACE(("alt_left mask %#lx is%s modifier\n",
-				term->misc.alt_left,
-				ModifierName(term->misc.alt_left)))
+			SaveMask(alt_left);
 		    } else if (keysym == XK_Alt_R) {
-			term->misc.alt_right = (1<<i);
-			TRACE(("alt_right mask %#lx is%s modifier\n",
-				term->misc.alt_right,
-				ModifierName(term->misc.alt_right)))
+			SaveMask(alt_right);
+		    } else if (keysym == XK_Meta_L) {
+			SaveMask(meta_left);
+		    } else if (keysym == XK_Meta_R) {
+			SaveMask(meta_right);
 		    }
 		}
 		k++;
@@ -880,11 +922,23 @@ VTInitModifiers(void)
 	 */
 	if ((term->misc.alt_left != 0
 	  || term->misc.alt_right != 0)
-	 && (TranslationsUseAlt(toplevel)
-	  || TranslationsUseAlt((Widget)term))) {
+	 && (TranslationsUseKeyword(toplevel, "alt")
+	  || TranslationsUseKeyword((Widget)term, "alt"))) {
 	    TRACE(("ALT is used as a modifier in translations (ignore mask)\n"))
 	    term->misc.alt_left = 0;
 	    term->misc.alt_right = 0;
+	}
+
+	/*
+	 * If the Meta modifier is used in translations, we would rather not
+	 * use it to modify function-keys.
+	 */
+	if ((term->misc.meta_left != 0
+	  || term->misc.meta_right != 0)
+	 && (TranslationsUseKeyword(toplevel, "meta")
+	  || TranslationsUseKeyword((Widget)term, "meta"))) {
+	    TRACE(("META is used as a modifier in translations\n"))
+	    term->misc.meta_trans = True;
 	}
 
 	XFreeModifiermap(keymap);

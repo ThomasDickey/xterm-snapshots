@@ -194,17 +194,6 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
     return 0;
 }
 
-int morePtyData(PtyData *data)
-{
-    return (data->cnt > 0);
-}
-
-int nextPtyData(PtyData *data)
-{
-    (data->cnt)--;
-    return(*(data->ptr)++);
-}
-
 void initPtyData(PtyData *data)
 {
     data->cnt = 0;

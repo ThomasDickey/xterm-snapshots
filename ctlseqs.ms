@@ -738,6 +738,8 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*5 \(-> Enable special modifiers for Alt and NumLock keys.
+  \*(Ps = \*1\*0\*3\*6 \(-> Send ESC when Meta modifies a key
+(enables the \fBmetaSendsEscape\fP resource).
   \*(Ps = \*1\*0\*4\*7 \(-> Use Alternate Screen Buffer (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*4\*8 \(-> Save cursor as in DECSC (unless
@@ -805,6 +807,8 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for Alt and NumLock keys.
+  \*(Ps = \*1\*0\*3\*6 \(-> Don't send ESC when Meta modifies a key
+(disables the \fBmetaSendsEscape\fP resource).
   \*(Ps = \*1\*0\*4\*7 \(-> Use Normal Screen Buffer, clearing screen
 first if in the Alternate Screen (unless
 disabled by the \fBtiteInhibit\fP resource)
@@ -1369,7 +1373,7 @@ control sequence.
 Manifest constants for the parameter values
 are defined in \fBxcharmouse.h\fP as follows:
 .
-.DS
+.DS B
 #define SET_X10_MOUSE               9
 #define SET_VT200_MOUSE             1000
 #define SET_VT200_HIGHLIGHT_MOUSE   1001
@@ -1457,9 +1461,8 @@ cell.  It is enabled by specifying parameter 1002 to DECSET.
 On button press or release, \fIxterm\fP sends the same codes used by normal
 tracking mode.  On button-motion events, \fIxterm\fP adds 32 to the event code
 (the third character, \*(Cb).
-The low two bits of the event code encode the button information.
-The third bit is set to indicate motion.
-Additional bits specify modifier keys as in normal mode.
+The low three bits of the event code encode the button information;
+additional bits specify modifier keys as in normal mode.
 For example, motion into cell x,y with button 1
 down is reported as \*(Cs\*M\*@\*(Cx\*(Cy.
 ( \*@ = 32 + 0 (button 1) + 32 (motion indicator) ).
