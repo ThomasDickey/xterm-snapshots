@@ -1423,7 +1423,7 @@ updatedXtermGC(
 		if (hi_pix != screen->foreground
 		 && hi_pix != fg_pix
 		 && hi_pix != bg_pix
-		 && hi_pix != 0) {	/* FIXME: need a reliable undef-Pixel */
+		 && hi_pix != term->dft_foreground) {
 			bg_pix = fg_pix;
 			fg_pix = hi_pix;
 		}

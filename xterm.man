@@ -957,12 +957,18 @@ Specifies the maximum time in milliseconds between multi-click select
 events.  The default is 250 milliseconds.
 .TP 8
 .B "multiScroll (\fPclass\fB MultiScroll)"
-Specifies whether or not scrolling should be done asynchronously.  The default
-is ``false.''
+Specifies whether or not scrolling should be done asynchronously.
+The default is ``false.''
 .TP 8
 .B "nMarginBell (\fPclass\fB Column)"
 Specifies the number of characters from the right margin at which the margin
 bell should be rung, when enabled.
+.TP 8
+.B "oldXtermFKeys (\fPclass\fB OldXtermFKeys)"
+If true, xterm will use old-style control sequences for function keys F1 to F4,
+for compatibility with X Consortium xterm.  Otherwise, it uses the VT100-style
+codes for PF1 to PF4.
+The default is ``false.''
 .TP 8
 .B "pointerColor (\fPclass\fB Foreground)"
 Specifies the foreground color of the pointer.  The default is 
