@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XFree86: xc/programs/xterm/vttests/resize.sh,v 1.3 2000/10/27 18:31:17 dawes Exp $
+# $XFree86: xc/programs/xterm/vttests/resize.sh,v 1.4 2002/09/30 00:39:08 dickey Exp $
 #
 # -- Thomas Dickey (1999/3/27)
 # Obtain the current screen size, then resize the terminal to the nominal
@@ -10,6 +10,8 @@ CMD='echo'
 OPT='-n'
 SUF=''
 TMP=/tmp/xterm$$
+eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
+( test ! -f $TMP || test -s $TMP ) &&
 for verb in printf print ; do
     rm -f $TMP
     eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null

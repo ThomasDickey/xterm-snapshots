@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.69 2002/08/24 18:54:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.70 2002/09/30 00:39:05 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -314,9 +314,9 @@ SendLocatorPosition(Widget w, XEvent * event)
     LocatorCoords(row, col, event->xbutton.x, event->xbutton.y, oor);
 
     /*
-       * DECterm mouse:
-       *
-       * ESCAPE '[' event ; mask ; row ; column '&' 'w'
+     * DECterm mouse:
+     *
+     * ESCAPE '[' event ; mask ; row ; column '&' 'w'
      */
     reply.a_type = CSI;
 
@@ -592,12 +592,62 @@ InitLocatorFilter(XtermWidget w)
     MotionOn(screen, term);
 }
 
+void
+CheckLocatorPosition(Widget w, XEvent * event)
+{
+    TScreen *screen = &((XtermWidget) w)->screen;
+    int row, col;
+    Boolean oor;
+    int state;
+
+    LocatorCoords(row, col, event->xbutton.x, event->xbutton.y, oor);
+
+    /*
+     * Send report if the pointer left the filter rectangle, if
+     * the pointer left the window, or if the filter rectangle
+     * had no coordinates and the pointer re-entered the window.
+     */
+    if (oor || (screen->loc_filter_top == LOC_FILTER_POS) ||
+	(col < screen->loc_filter_left) ||
+	(col > screen->loc_filter_right) ||
+	(row < screen->loc_filter_top) ||
+	(row > screen->loc_filter_bottom)) {
+	/* Filter triggered - disable it */
+	screen->loc_filter = FALSE;
+	MotionOff(screen, term);
+
+	reply.a_type = CSI;
+	if (oor) {
+	    reply.a_nparam = 1;
+	    reply.a_param[0] = 0;	/* Event - 0 = locator unavailable */
+	} else {
+	    ButtonState(state, event->xbutton.state);
+
+	    reply.a_nparam = 4;
+	    reply.a_param[0] = 10;	/* Event - 10 = locator outside filter */
+	    reply.a_param[1] = state;
+	    reply.a_param[2] = row;
+	    reply.a_param[3] = col;
+	}
+
+	reply.a_inters = '&';
+	reply.a_final = 'w';
+	unparseseq(&reply, screen->respond);
+
+	if (screen->locator_reset) {
+	    MotionOff(screen, term);
+	    screen->send_mouse_pos = MOUSE_OFF;
+	}
+    }
+}
+#endif /* OPT_DEC_LOCATOR */
+
 #if OPT_READLINE
 static int
 isClick1_clean(XEvent * event)
 {
-    register TScreen *screen = &term->screen;
-    register int delta;
+    TScreen *screen = &term->screen;
+    int delta;
 
     if (!(event->type == ButtonPress || event->type == ButtonRelease)
     /* Disable on Shift-Click-1, including the application-mouse modes */
@@ -691,8 +741,8 @@ CheckSecondPress3(XEvent * event)
 static int
 rowOnCurrentLine(int line, int *deltap)		/* must be XButtonEvent */
 {
-    register TScreen *screen = &term->screen;
-    register int l1, l2;
+    TScreen *screen = &term->screen;
+    int l1, l2;
 
     *deltap = 0;
     if (line == screen->cur_row)
@@ -714,7 +764,7 @@ rowOnCurrentLine(int line, int *deltap)		/* must be XButtonEvent */
 static int
 eventRow(XEvent * event)	/* must be XButtonEvent */
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
 
     return (event->xbutton.y - screen->border) / FontHeight(screen);
 }
@@ -722,7 +772,7 @@ eventRow(XEvent * event)	/* must be XButtonEvent */
 static int
 eventColBetween(XEvent * event)	/* must be XButtonEvent */
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
 
     /* Correct by half a width - we are acting on a boundary, not on a cell. */
     return ((event->xbutton.x - OriginX(screen) + (FontWidth(screen) - 1) / 2)
@@ -732,9 +782,9 @@ eventColBetween(XEvent * event)	/* must be XButtonEvent */
 static int
 ReadLineMovePoint(int col, int ldelta)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     Char line[6];
-    register int count = 0;
+    int count = 0;
 
     col += ldelta * (screen->max_col + 1) - screen->cur_col;
     if (col == 0)
@@ -756,7 +806,7 @@ ReadLineMovePoint(int col, int ldelta)
 static int
 ReadLineDelete(int r1, int c1, int r2, int c2)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     int del;
 
     del = c2 - c1 + (r2 - r1) * (screen->max_col + 1);
@@ -768,56 +818,6 @@ ReadLineDelete(int r1, int c1, int r2, int c2)
 }
 #endif /* OPT_READLINE */
 
-void
-CheckLocatorPosition(Widget w, XEvent * event)
-{
-    TScreen *screen = &((XtermWidget) w)->screen;
-    int row, col;
-    Boolean oor;
-    int state;
-
-    LocatorCoords(row, col, event->xbutton.x, event->xbutton.y, oor);
-
-    /*
-     * Send report if the pointer left the filter rectangle, if
-     * the pointer left the window, or if the filter rectangle
-     * had no coordinates and the pointer re-entered the window.
-     */
-    if (oor || (screen->loc_filter_top == LOC_FILTER_POS) ||
-	(col < screen->loc_filter_left) ||
-	(col > screen->loc_filter_right) ||
-	(row < screen->loc_filter_top) ||
-	(row > screen->loc_filter_bottom)) {
-	/* Filter triggered - disable it */
-	screen->loc_filter = FALSE;
-	MotionOff(screen, term);
-
-	reply.a_type = CSI;
-	if (oor) {
-	    reply.a_nparam = 1;
-	    reply.a_param[0] = 0;	/* Event - 0 = locator unavailable */
-	} else {
-	    ButtonState(state, event->xbutton.state);
-
-	    reply.a_nparam = 4;
-	    reply.a_param[0] = 10;	/* Event - 10 = locator outside filter */
-	    reply.a_param[1] = state;
-	    reply.a_param[2] = row;
-	    reply.a_param[3] = col;
-	}
-
-	reply.a_inters = '&';
-	reply.a_final = 'w';
-	unparseseq(&reply, screen->respond);
-
-	if (screen->locator_reset) {
-	    MotionOff(screen, term);
-	    screen->send_mouse_pos = MOUSE_OFF;
-	}
-    }
-}
-#endif /* OPT_DEC_LOCATOR */
-
 /* ^XM-G<line+' '><col+' '> */
 void
 DiredButton(Widget w GCC_UNUSED,
@@ -825,9 +825,9 @@ DiredButton(Widget w GCC_UNUSED,
 	    String * params GCC_UNUSED,		/* selections */
 	    Cardinal * num_params GCC_UNUSED)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     Char Line[6];
-    register unsigned line, col;
+    unsigned line, col;
 
     if (event->type == ButtonPress || event->type == ButtonRelease) {
 	line = (event->xbutton.y - screen->border) / FontHeight(screen);
@@ -848,9 +848,9 @@ ReadLineButton(Widget w GCC_UNUSED,
 	       String * params GCC_UNUSED,	/* selections */
 	       Cardinal * num_params GCC_UNUSED)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     Char Line[6];
-    register int line, col, ldelta = 0;
+    int line, col, ldelta = 0;
 
     if (!(event->type == ButtonPress || event->type == ButtonRelease)
 	|| (screen->send_mouse_pos != MOUSE_OFF) || ExtendingSelection)
@@ -908,10 +908,10 @@ ViButton(Widget w GCC_UNUSED,
 	 String * params GCC_UNUSED,	/* selections */
 	 Cardinal * num_params GCC_UNUSED)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     int pty = screen->respond;
     Char Line[6];
-    register int line;
+    int line;
 
     if (event->type == ButtonPress || event->type == ButtonRelease) {
 
@@ -943,7 +943,7 @@ HandleSelectExtend(Widget w,
 		   String * params GCC_UNUSED,
 		   Cardinal * num_params GCC_UNUSED)
 {
-    register TScreen *screen;
+    TScreen *screen;
     int row, col;
 
     if (!IsXtermWidget(w))
@@ -1349,7 +1349,7 @@ _WriteSelectionData(TScreen * screen, Char * line, int length)
     /* Doing this one line at a time may no longer be necessary
        because v_write has been re-written. */
 
-    register Char *lag, *cp, *end;
+    Char *lag, *cp, *end;
 
     /* in the VMS version, if tt_pasting isn't set to TRUE then qio
        reads aren't blocked and an infinite loop is entered, where the
@@ -1520,7 +1520,7 @@ HandleInsertSelection(Widget w,
 {
 #if OPT_READLINE
     int ldelta;
-    register TScreen *screen = &((XtermWidget) w)->screen;
+    TScreen *screen = &((XtermWidget) w)->screen;
 #endif
 
     if (SendMousePosition(w, event))
@@ -1585,7 +1585,7 @@ HandleSelectStart(Widget w,
 		  String * params GCC_UNUSED,
 		  Cardinal * num_params GCC_UNUSED)
 {
-    register TScreen *screen;
+    TScreen *screen;
     int startrow, startcol;
 
     if (!IsXtermWidget(w))
@@ -1610,7 +1610,7 @@ HandleKeyboardSelectStart(Widget w,
 			  String * params GCC_UNUSED,
 			  Cardinal * num_params GCC_UNUSED)
 {
-    register TScreen *screen;
+    TScreen *screen;
 
     if (!IsXtermWidget(w))
 	return;
@@ -1620,7 +1620,7 @@ HandleKeyboardSelectStart(Widget w,
 }
 
 static void
-TrackDown(register XButtonEvent * event)
+TrackDown(XButtonEvent * event)
 {
     int startrow, startcol;
 
@@ -1882,11 +1882,10 @@ ExtendExtend(int row, int col)
 }
 
 void
-HandleStartExtend(
-		     Widget w,
-		     XEvent * event,	/* must be XButtonEvent* */
-		     String * params,	/* unused */
-		     Cardinal * num_params)	/* unused */
+HandleStartExtend(Widget w,
+		  XEvent * event,	/* must be XButtonEvent* */
+		  String * params,	/* unused */
+		  Cardinal * num_params)	/* unused */
 {
     do_start_extend(w, event, params, num_params, False);
 }
@@ -1901,11 +1900,11 @@ HandleKeyboardStartExtend(Widget w,
 }
 
 void
-ScrollSelection(register TScreen * screen, register int amount)
+ScrollSelection(TScreen * screen, int amount)
 {
-    register int minrow = -screen->savedlines - screen->topline;
-    register int maxrow = screen->max_row - screen->topline;
-    register int maxcol = screen->max_col;
+    int minrow = -screen->savedlines - screen->topline;
+    int maxrow = screen->max_row - screen->topline;
+    int maxcol = screen->max_col;
 
 #define scroll_update_one(row, col) \
 	row += amount; \
@@ -1971,8 +1970,8 @@ iswide(int i)
 #endif
 
 static void
-PointToRowCol(register int y,
-	      register int x,
+PointToRowCol(int y,
+	      int x,
 	      int *r,
 	      int *c)
 /* Convert pixel coordinates to character coordinates.
@@ -1980,8 +1979,8 @@ PointToRowCol(register int y,
    Columns are clipped between to be 0 or greater, but are not clipped to some
        maximum value. */
 {
-    register TScreen *screen = &term->screen;
-    register int row, col;
+    TScreen *screen = &term->screen;
+    int row, col;
 
     row = (y - screen->border) / FontHeight(screen);
     if (row < firstValidRow)
@@ -2010,11 +2009,11 @@ PointToRowCol(register int y,
 }
 
 static int
-LastTextCol(register int row)
+LastTextCol(int row)
 {
-    register TScreen *screen = &term->screen;
-    register int i;
-    register Char *ch;
+    TScreen *screen = &term->screen;
+    int i;
+    Char *ch;
 
     if ((row += screen->topline) + screen->savedlines >= 0) {
 	for (i = screen->max_col,
@@ -2113,10 +2112,9 @@ static int charClass[256] =
 /* *INDENT-ON* */
 
 int
-SetCharacterClassRange(
-			  register int low,	/* in range of [0..255] */
-			  register int high,
-			  register int value)	/* arbitrary */
+SetCharacterClassRange(int low,	/* in range of [0..255] */
+		       int high,
+		       int value)	/* arbitrary */
 {
 
     if (low < 0 || high > 255 || high < low)
@@ -2158,7 +2156,6 @@ class_of(TScreen * screen, int row, int col)
  * sets startSRow startSCol endSRow endSCol
  * ensuring that they have legal values
  */
-
 static void
 ComputeSelect(int startRow,
 	      int startCol,
@@ -2166,9 +2163,9 @@ ComputeSelect(int startRow,
 	      int endCol,
 	      Bool extend)
 {
-    register TScreen *screen = &term->screen;
-    register int length;
-    register int cclass;
+    TScreen *screen = &term->screen;
+    int length;
+    int cclass;
 
     TRACE(("ComputeSelect(startRow=%d, startCol=%d, endRow=%d, endCol=%d, %sextend)\n",
 	   startRow, startCol, endRow, endCol, extend ? "" : "no"));
@@ -2309,14 +2306,14 @@ ComputeSelect(int startRow,
 }
 
 void
-TrackText(register int frow,
-	  register int fcol,
-	  register int trow,
-	  register int tcol)
+TrackText(int frow,
+	  int fcol,
+	  int trow,
+	  int tcol)
     /* Guaranteed (frow, fcol) <= (trow, tcol) */
 {
-    register int from, to;
-    register TScreen *screen = &term->screen;
+    int from, to;
+    TScreen *screen = &term->screen;
     int old_startrow, old_startcol, old_endrow, old_endcol;
 
     TRACE(("TrackText(frow=%d, fcol=%d, trow=%d, tcol=%d)\n",
@@ -2360,14 +2357,14 @@ TrackText(register int frow,
 }
 
 static void
-ReHiliteText(register int frow,
-	     register int fcol,
-	     register int trow,
-	     register int tcol)
+ReHiliteText(int frow,
+	     int fcol,
+	     int trow,
+	     int tcol)
     /* Guaranteed that (frow, fcol) <= (trow, tcol) */
 {
-    register TScreen *screen = &term->screen;
-    register int i;
+    TScreen *screen = &term->screen;
+    int i;
 
     if (frow < 0)
 	frow = fcol = 0;
@@ -2405,8 +2402,8 @@ SaltTextAway(int crow, int ccol, int row, int col,
     /* Guaranteed that (crow, ccol) <= (row, col), and that both points are valid
        (may have row = screen->max_row+1, col = 0) */
 {
-    register TScreen *screen = &term->screen;
-    register int i, j = 0;
+    TScreen *screen = &term->screen;
+    int i, j = 0;
     int eol;
     char *line;
     Char *lp;
@@ -2665,8 +2662,8 @@ ConvertSelection(Widget w,
 static void
 LoseSelection(Widget w, Atom * selection)
 {
-    register TScreen *screen;
-    register Atom *atomP;
+    TScreen *screen;
+    Atom *atomP;
     Cardinal i;
 
     if (!IsXtermWidget(w))
@@ -2717,7 +2714,7 @@ SelectionDone(Widget w GCC_UNUSED,
 }
 
 static void
-_OwnSelection(register XtermWidget termw,
+_OwnSelection(XtermWidget termw,
 	      String * selections,
 	      Cardinal count)
 {
@@ -2799,7 +2796,7 @@ _OwnSelection(register XtermWidget termw,
 }
 
 void
-DisownSelection(register XtermWidget termw)
+DisownSelection(XtermWidget termw)
 {
     Atom *atoms = termw->screen.selection_atoms;
     Cardinal count = termw->screen.selection_count;
@@ -2847,12 +2844,12 @@ DisownSelection(register XtermWidget termw)
 /* returns number of chars in line from scol to ecol out */
 /* ARGSUSED */
 static int
-Length(register TScreen * screen GCC_UNUSED,
-       register int row,
-       register int scol,
-       register int ecol)
+Length(TScreen * screen GCC_UNUSED,
+       int row,
+       int scol,
+       int ecol)
 {
-    register int lastcol = LastTextCol(row);
+    int lastcol = LastTextCol(row);
 
     if (ecol > lastcol)
 	ecol = lastcol;
@@ -2865,7 +2862,7 @@ SaveText(TScreen * screen,
 	 int row,
 	 int scol,
 	 int ecol,
-	 register Char * lp,	/* pointer to where to put the text */
+	 Char * lp,		/* pointer to where to put the text */
 	 int *eol)
 {
     int i = 0;
@@ -2964,7 +2961,7 @@ BtnCode(XButtonEvent * event, int button)
 #define MOUSE_LIMIT (255 - 32)
 
 static void
-EditorButton(register XButtonEvent * event)
+EditorButton(XButtonEvent * event)
 {
     TScreen *screen = &term->screen;
     int pty = screen->respond;

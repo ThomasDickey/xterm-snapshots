@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.133 2002/08/24 18:54:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.134 2002/09/30 00:39:05 dickey Exp $ */
 
 /*
 
@@ -590,6 +590,7 @@ static XtResource resources[] =
 #if OPT_WIDE_CHARS
     Ires(XtNutf8, XtCUtf8, screen.utf8_mode, 3),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, FALSE),
+    Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, FALSE),
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, TRUE),
     Sres(XtNwideBoldFont, XtCWideBoldFont, misc.f_wb, DEFWIDEBOLDFONT),
     Sres(XtNwideFont, XtCWideFont, misc.f_w, DEFWIDEFONT),
@@ -3145,7 +3146,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	    if (Vwin->menu_bar) {
 		XtVaGetValues(Vwin->menu_bar,
 			      XtNheight, &Vwin->menu_height,
-			      NULL);
+			      (XtPointer) 0);
 		TRACE(("...menu_height %d\n", Vwin->menu_height));
 	    }
 	}
@@ -3764,7 +3765,6 @@ window_ops(XtermWidget termw)
     XWindowAttributes win_attrs;
     XTextProperty text;
     unsigned int value_mask;
-    Position x, y;
     unsigned root_width, root_height;
 
     switch (param[0]) {
@@ -3831,13 +3831,15 @@ window_ops(XtermWidget termw)
 	break;
 
     case 13:			/* Report the window's position */
-	XtTranslateCoords(toplevel, 0, 0, &x, &y);
+	XGetWindowAttributes(screen->display,
+			     WMFrameWindow(termw),
+			     &win_attrs);
 	reply.a_type = CSI;
 	reply.a_pintro = 0;
 	reply.a_nparam = 3;
 	reply.a_param[0] = 3;
-	reply.a_param[1] = x;
-	reply.a_param[2] = y;
+	reply.a_param[1] = win_attrs.x;
+	reply.a_param[2] = win_attrs.y;
 	reply.a_inters = 0;
 	reply.a_final = 't';
 	unparseseq(&reply, screen->respond);
@@ -4795,6 +4797,7 @@ VTInitialize(Widget wrequest,
 
     init_Bres(screen.vt100_graphics);
     init_Bres(screen.wide_chars);
+    init_Bres(misc.cjk_width);
     if (request->screen.utf8_mode) {
 	wnew->screen.wide_chars = True;
 	wnew->screen.utf8_mode = 2;	/* disable further change */
@@ -5065,7 +5068,7 @@ VTRealize(Widget w,
 	unsigned long mask;
 	XGCValues xgcv;
 
-	XtVaGetValues(shell, XtNiconX, &iconX, XtNiconY, &iconY, NULL);
+	XtVaGetValues(shell, XtNiconX, &iconX, XtNiconY, &iconY, (XtPointer) 0);
 	xtermComputeFontInfo(screen, &(screen->iconVwin), screen->fnt_icon, 0);
 
 	/* since only one client is permitted to select for Button
@@ -5085,7 +5088,9 @@ VTRealize(Widget w,
 			  InputOutput, CopyFromParent,
 			  *valuemask | CWBitGravity | CWBorderPixel,
 			  values);
-	XtVaSetValues(shell, XtNiconWindow, screen->iconVwin.window, NULL);
+	XtVaSetValues(shell,
+		      XtNiconWindow, screen->iconVwin.window,
+		      (XtPointer) 0);
 	XtRegisterDrawable(XtDisplay(term), screen->iconVwin.window, w);
 
 	mask = (GCFont | GCForeground | GCBackground |

@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.58 2002/08/24 18:54:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.59 2002/09/30 00:39:06 dickey Exp $ */
 
 /*
  * Copyright 1999-2001,2002 by Thomas E. Dickey
@@ -707,8 +707,7 @@ Input(TKeyboard * keyboard,
 	     * metaSendsEcape is true.  Like eightBitInput, except
 	     * that it is not associated with terminal settings.
 	     */
-	    if (eightbit
-		&& screen->meta_sends_esc
+	    if (screen->meta_sends_esc
 		&& ((event->state & term->misc.meta_left) != 0
 		    || (event->state & term->misc.meta_right)) != 0) {
 		TRACE(("...input-char is modified by META\n"));

@@ -1,9 +1,8 @@
 #!/bin/sh
-# $XFree86: xc/programs/xterm/vttests/dynamic.sh,v 1.4 2002/09/30 00:39:08 dickey Exp $
+# $XFree86: xc/programs/xterm/vttests/acolors.sh,v 1.1 2002/09/30 00:39:08 dickey Exp $
 #
 # -- Thomas Dickey (1999/3/27)
-# Demonstrate the use of dynamic colors by setting the background successively
-# to different values.
+# Demonstrate the use of the control sequence for changing ANSI colors.
 
 ESC=""
 CMD='echo'
@@ -32,12 +31,15 @@ exec </dev/tty
 old=`stty -g`
 stty raw -echo min 0  time 5
 
-$CMD $OPT "${ESC}]11;?${SUF}" > /dev/tty
+$CMD $OPT "${ESC}]4;4;?${SUF}" > /dev/tty
 read original
 stty $old
 original=${original}${SUF}
 
 trap '$CMD $OPT "$original" >/dev/tty; exit' 0 1 2 5 15
+$CMD "${ESC}[0;1;34mThis message is BLUE"
+$CMD "${ESC}[0;1;31mThis message is RED ${ESC}[0;31m(sometimes)"
+$CMD "${ESC}[0;1;32mThis message is GREEN${ESC}[0m"
 while true
 do
     for R in $LIST
@@ -46,7 +48,9 @@ do
 	do
 	    for B in $LIST
 	    do
-		$CMD $OPT "${ESC}]11;rgb:$R/$G/$B${SUF}" >/dev/tty
+		# color "9" is bold-red
+		test $R != 00 && test $G = 00 && test $B = 00 && $CMD $OPT "" >/dev/tty
+		$CMD $OPT "${ESC}]4;9;rgb:$R/$G/$B${SUF}" >/dev/tty
 		sleep 1
 	    done
 	done

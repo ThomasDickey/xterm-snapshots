@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.83 2002/08/24 18:54:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.84 2002/09/30 00:39:07 dickey Exp $ */
 
 /************************************************************
 
@@ -282,6 +282,7 @@ extern int errno;
 #define XtNc132			"c132"
 #define XtNcacheDoublesize	"cacheDoublesize"
 #define XtNcharClass		"charClass"
+#define XtNcjkWidth		"cjkWidth"
 #define XtNcolorAttrMode	"colorAttrMode"
 #define XtNcolorBDMode		"colorBDMode"
 #define XtNcolorBLMode		"colorBLMode"
@@ -390,6 +391,7 @@ extern int errno;
 #define XtCC132			"C132"
 #define XtCCacheDoublesize	"CacheDoublesize"
 #define XtCCharClass		"CharClass"
+#define XtCCjkWidth 		"CjkWidth"
 #define XtCColorMode		"ColorMode"
 #define XtCColumn		"Column"
 #define XtCCtrlFKeys		"CtrlFKeys"
@@ -483,7 +485,7 @@ extern int errno;
 
 /***====================================================================***/
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -624,12 +626,17 @@ extern void first_map_occurred (void);
 extern SIGNAL_T Exit (int n);
 #endif
 
+#if OPT_WIDE_CHARS
+extern int (*my_wcwidth)(wchar_t);
+#endif
+
 /* menu.c */
 extern void do_hangup          PROTO_XT_CALLBACK_ARGS;
 extern void show_8bit_control  (Bool value);
 
 /* misc.c */
 extern Cursor make_colored_cursor (unsigned cursorindex, unsigned long fg, unsigned long bg);
+extern Window WMFrameWindow(XtermWidget termw);
 extern char *SysErrorMsg (int n);
 extern char *udk_lookup (int keycode, int *len);
 extern int XStrCmp (char *s1, char *s2);
@@ -889,7 +896,7 @@ int visual_width(PAIRED_CHARS(Char *str, Char *str2), Cardinal len);
 #define visual_width(a, b) (b)
 #endif
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 	}
 #endif
 

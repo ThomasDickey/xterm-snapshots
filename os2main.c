@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.53 2002/08/17 19:52:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.54 2002/09/30 00:39:06 dickey Exp $ */
 
 /***********************************************************
 
@@ -70,6 +70,10 @@ SOFTWARE.
 #include <X11/cursorfont.h>
 #ifdef I18N
 #include <X11/Xlocale.h>
+#endif
+
+#if OPT_WIDE_CHARS
+#include <wcwidth.h>
 #endif
 
 #if OPT_TOOLBAR
@@ -450,6 +454,8 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_WIDE_CHARS
 {"-wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-cjk_width", "*cjkWidth", XrmoptionNoArg,     (caddr_t) "on"},
+{"+cjk_width", "*cjkWidth", XrmoptionNoArg,     (caddr_t) "off"},
 #endif
 {"-wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -578,6 +584,7 @@ static OptionHelp options[] = {
 { "-/+pob",                "turn on/off pop on bell" },
 #if OPT_WIDE_CHARS
 { "-/+wc",                 "turn on/off wide-character mode" },
+{ "-/+cjk_width",          "turn on/off legacy CJK width convention" },
 #endif
 { "-/+wf",                 "turn on/off wait for map before command exec" },
 { "-e command args ...",   "command to execute" },
@@ -733,6 +740,10 @@ Arg ourTopLevelShellArgs[] =
 int number_ourTopLevelShellArgs = 2;
 
 Bool waiting_for_initial_map;
+
+#if OPT_WIDE_CHARS
+int (*my_wcwidth) (wchar_t);
+#endif
 
 /*
  * DeleteWindow(): Action proc to implement ICCCM delete_window.
@@ -1000,7 +1011,7 @@ main(int argc, char **argv ENVP_ARG)
 						 XtNright, XawChainRight,
 						 XtNbottom, XawChainBottom,
 #endif
-						 0);
+						 (XtPointer) 0);
     /* this causes the initialize method to be called */
 
 #if OPT_HP_FUNC_KEYS
@@ -1023,6 +1034,11 @@ main(int argc, char **argv ENVP_ARG)
 #if OPT_TEK4014
     if (term->misc.tekInhibit)
 	inhibit |= I_TEK;
+#endif
+#if OPT_WIDE_CHARS
+    my_wcwidth = &mk_wcwidth;
+    if (term->misc.cjk_width)
+	my_wcwidth = &mk_wcwidth_cjk;
 #endif
 
 /*

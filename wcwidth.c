@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/wcwidth.c,v 1.4 2002/08/12 00:36:33 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/wcwidth.c,v 1.5 2002/09/30 00:39:06 dickey Exp $ */
 /*
  * This is an implementation of wcwidth() and wcswidth() (defined in
  * IEEE Std 1002.1-2001) for Unicode.
@@ -214,7 +214,7 @@ int mk_wcswidth(const wchar_t *pwcs, size_t n)
  * the traditional terminal character-width behaviour. It is not
  * otherwise recommended for general use.
  */
-static int mk_wcwidth_cjk(wchar_t ucs)
+int mk_wcwidth_cjk(wchar_t ucs)
 {
   /* sorted list of non-overlapping intervals of East Asian Ambiguous
    * characters, generated with "uniset +WIDTH-A -cat=Me -cat=Mn -cat=Cf c" */

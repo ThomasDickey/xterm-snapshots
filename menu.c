@@ -45,7 +45,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.47 2002/08/12 00:36:33 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.48 2002/09/30 00:39:06 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -1165,7 +1165,7 @@ do_activeicon(Widget gw GCC_UNUSED,
 	term->misc.active_icon = !term->misc.active_icon;
 	XtVaSetValues(shell, XtNiconWindow,
 		      term->misc.active_icon ? screen->iconVwin.window : None,
-		      NULL);
+		      (XtPointer) 0);
 	update_activeicon();
     }
 }
@@ -1497,9 +1497,9 @@ HandlePrintScreen(Widget w,
 /* ARGSUSED */
 void
 HandlePrintControlMode(Widget w,
-		  XEvent * event GCC_UNUSED,
-		  String * params GCC_UNUSED,
-		  Cardinal * param_count GCC_UNUSED)
+		       XEvent * event GCC_UNUSED,
+		       String * params GCC_UNUSED,
+		       Cardinal * param_count GCC_UNUSED)
 {
     do_print_redir(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -2067,7 +2067,7 @@ SetItemSensitivity(Widget mi, XtArgVal val)
  */
 static void
 InitPopup(Widget gw,
-	  XtPointer closure GCC_UNUSED,
+	  XtPointer closure,
 	  XtPointer data GCC_UNUSED)
 {
     String params[2];
@@ -2092,12 +2092,12 @@ SetupShell(Widget * menus, MenuList * shell, Widget * menu_tops, int n, int m)
 				      simpleMenuWidgetClass,
 				      *menus,
 				      XtNgeometry, NULL,
-				      NULL);
+				      (XtPointer) 0);
 
     XtAddCallback(shell[n].w, XtNpopupCallback, InitPopup, menu_names[n].internal_name);
     XtVaGetValues(shell[n].w,
 		  XtNlabel, &external_name,
-		  NULL);
+		  (XtPointer) 0);
 
     TRACE(("...SetupShell(%s) -> %s -> %#lx\n",
 	   menu_names[n].internal_name,
@@ -2113,7 +2113,7 @@ SetupShell(Widget * menus, MenuList * shell, Widget * menu_tops, int n, int m)
 							  : 0),
 					   XtNmenuName, menu_names[n].internal_name,
 					   XtNlabel, external_name,
-					   NULL);
+					   (XtPointer) 0);
 }
 
 #endif
@@ -2137,7 +2137,7 @@ SetupMenus(Widget shell, Widget * forms, Widget * menus)
 #if OPT_TOOLBAR
     *forms = XtVaCreateManagedWidget("form",
 				     formWidgetClass, shell,
-				     NULL);
+				     (XtPointer) 0);
     xtermAddInput(*forms);
 
     /*
@@ -2153,7 +2153,7 @@ SetupMenus(Widget shell, Widget * forms, Widget * menus)
 				     XtNbottom, XawChainTop,
 				     XtNleft, XawChainLeft,
 				     XtNright, XawChainLeft,
-				     NULL);
+				     (XtPointer) 0);
 
     if (shell == toplevel) {	/* vt100 */
 	for (n = mainMenu; n <= fontMenu; n++) {
