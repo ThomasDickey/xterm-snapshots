@@ -1,6 +1,6 @@
 /*
  * $XConsortium: Tekproc.c /main/120 1996/11/29 10:33:20 swick $
- * $XFree86: xc/programs/xterm/Tekproc.c,v 3.23 1999/03/28 15:33:16 dawes Exp $
+ * $XFree86: xc/programs/xterm/Tekproc.c,v 3.24 1999/04/29 09:14:00 dawes Exp $
  *
  * Warning, there be crufty dragons here.
  */
@@ -675,7 +675,7 @@ static void Tekparse(void)
 			    screen->TnormalGC,
 			    x,
 			    y,
-			    &ch,
+			    (char *)&ch,
 			    1);
 			TCursorForward();
 			break;

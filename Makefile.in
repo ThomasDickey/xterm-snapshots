@@ -1,4 +1,4 @@
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.20 1999/04/25 10:02:59 dawes Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.21 1999/04/29 09:14:00 dawes Exp $ ##
 
 #### Start of system configuration section. ####
 
@@ -102,7 +102,7 @@ install : $(INSTALL_DIRS) xterm resize
 	@echo 'Use "make install-ti" to install terminfo description.'
 
 install-ti:
-	TERMINFO=@private_TERMINFO@ tic $(srcdir)/terminfo
+	@private_TERMINFO@ tic $(srcdir)/terminfo
 
 installdirs: $(INSTALL_DIRS)
 

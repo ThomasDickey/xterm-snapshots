@@ -651,7 +651,7 @@ AC_PATH_PROG(XTERM_PATH,xterm)
 XTERM_MODE=755
 AC_MSG_CHECKING(for presumed installation-mode)
 if test -f "$XTERM_PATH" ; then
-	ls -l $XTERM_PATH >conftest.out
+	ls -Ll $XTERM_PATH >conftest.out
 	read cf_mode cf_rest <conftest.out
 	case ".$cf_mode" in #(vi
 	.???s*)

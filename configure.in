@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.22 1999/04/11 13:11:31 dawes Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.23 1999/04/29 09:14:03 dawes Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -160,7 +160,8 @@ elif test -d /usr/lib/terminfo ; then
 else
 	private_TERMINFO=
 fi
-AC_SUBST(private_TERMINFO)
+test -n "$private_TERMINFO" && private_TERMINFO="TERMINFO=$private_TERMINFO"
+AC_SUBST(private_TERMINFO)dnl
 
 ###	checks for optional features
 AC_MSG_CHECKING(if you want active-icons)
