@@ -1,3 +1,5 @@
+! $XFree86: xc/programs/xterm/xterm.dat,v 1.1 2000/02/08 17:19:45 dawes Exp $
+!
 *title: Xterm
 *iconName: Xterm
 *c132: TRUE

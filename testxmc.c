@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/testxmc.c,v 3.6 1999/04/29 09:14:08 dawes Exp $
+ * $XFree86: xc/programs/xterm/testxmc.c,v 3.7 2000/02/08 17:19:43 dawes Exp $
  */
 
 /************************************************************

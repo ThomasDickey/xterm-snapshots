@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/doublechr.c,v 3.8 1999/09/25 14:38:29 dawes Exp $
+ * $XFree86: xc/programs/xterm/doublechr.c,v 3.9 2000/02/08 17:19:34 dawes Exp $
  */
 
 /************************************************************
