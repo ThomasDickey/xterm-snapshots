@@ -43,12 +43,14 @@
 #include <X11/Xos.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <xstrings.h>
 
 #if defined(att)
 #define ATT
 #endif
 
 #if defined(sgi) && defined(SVR4)
+#undef SYSV
 #undef SVR4
 #define SYSV
 #endif
@@ -293,10 +295,6 @@ static void readstring (FILE *fp, char *buf, char *str);
 #endif /* HAVE_TERMCAP_H  */
 #endif
 
-#ifdef USE_TERMCAP
-static char *strindex (char *s1, char *s2);
-#endif
-
 #define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */
 
 /*
@@ -340,9 +338,7 @@ main (int argc, char **argv)
 	extern char *ttyname();
 #endif
 
-	ptr = strrchr(myname = argv[0], '/');
-	if(ptr)
-		myname = ptr + 1;
+	myname = x_basename(argv[0]);
 	if(strcmp(myname, sunname) == 0)
 		emu = SUN;
 	for(argv++, argc-- ; argc > 0 && **argv == '-' ; argv++, argc--) {
@@ -373,11 +369,7 @@ main (int argc, char **argv)
 			/* this is the same default that xterm uses */
 			ptr = "/bin/sh";
 
-		shell = strrchr(ptr, '/');
-		if(shell)
-			shell++;
-		else
-			shell = ptr;
+		shell = x_basename(ptr);
 
 		/* now that we know, what kind is it? */
 		for (i = 0; shell_list[i].name; i++)
@@ -535,7 +527,7 @@ main (int argc, char **argv)
 	if (ok_tcap) {
 		/* update termcap string */
 		/* first do columns */
-		if ((ptr = strindex (termcap, "co#")) == NULL) {
+		if ((ptr = x_strindex (termcap, "co#")) == NULL) {
 			fprintf(stderr, "%s: No `co#'\n", myname);
 			exit (1);
 		}
@@ -547,7 +539,7 @@ main (int argc, char **argv)
 		strcat (newtc, ptr);
 
 		/* now do lines */
-		if ((ptr = strindex (newtc, "li#")) == NULL) {
+		if ((ptr = x_strindex (newtc, "li#")) == NULL) {
 			fprintf(stderr, "%s: No `li#'\n", myname);
 			exit (1);
 		}
@@ -586,26 +578,6 @@ main (int argc, char **argv)
 	}
 	exit(0);
 }
-
-#ifdef USE_TERMCAP
-static char *
-strindex (register char *s1, register char *s2)
-/*
-   returns a pointer to the first occurrence of s2 in s1, or NULL if there are
-   none.
- */
-{
-	register char *s3;
-	size_t s2len = strlen (s2);
-
-	while ((s3 = strchr(s1, *s2)) != NULL)
-	{
-		if (strncmp (s3, s2, s2len) == 0) return (s3);
-		s1 = ++s3;
-	}
-	return (NULL);
-}
-#endif
 
 static int
 checkdigits(register char *str)

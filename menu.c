@@ -469,7 +469,7 @@ static Bool domenu (
 
     if ((mw = obtain_menu(w, me)) == 0
      || sizeof_menu(w, me) == 0) {
-	mw = create_menu (w, term, me);
+	mw = create_menu (w, term, (MenuIndex) me);
 	created = (mw != 0);
     }
     if (mw == 0)

@@ -918,14 +918,11 @@ static void _GetSelection(
 	Cardinal num_params,
 	Bool utf8_failed GCC_UNUSED)	/* already tried UTF-8 */
 {
-    TScreen *screen;
     Atom selection;
     int cutbuffer;
 
     if (!IsXtermWidget(w))
 	return;
-
-    screen = &((XtermWidget)w)->screen;
 
     XmuInternStrings(XtDisplay(w), params, (Cardinal)1, &selection);
     switch (selection) {
@@ -956,6 +953,7 @@ static void _GetSelection(
     } else {
 	struct _SelectionList* list;
 #if OPT_WIDE_CHARS
+	TScreen *screen = &((XtermWidget)w)->screen;
 	if (!screen->wide_chars || utf8_failed) {
 	    params++;
 	    num_params--;
@@ -1500,7 +1498,7 @@ ResizeSelection (TScreen *screen GCC_UNUSED, int rows, int cols)
 #if OPT_WIDE_CHARS
 int iswide(int i)
 {
-    return my_wcwidth(i) == 2;
+    return (i == HIDDEN_CHAR) || (my_wcwidth(i) == 2);
 }
 #endif
 
@@ -2244,12 +2242,18 @@ _OwnSelection(
 			"%s: selection too big (%d bytes), not storing in CUT_BUFFER%d\n",
 			xterm_name, termw->screen.selection_length, cutbuffer);
 	    } else {
-	      /* Cutbuffers are untyped, so in the wide chars case, we
-		 just store the raw UTF-8 data.	 It is unlikely it
-		 will be useful to anyone. */
+		/* This used to just use the UTF-8 data, which was totally
+		 * broken as not even the corresponding paste code in Xterm
+		 * understood this!  So now it converts to Latin1 first.
+		 *   Robert Brady, 2000-09-05
+		 */
+		long length = termw->screen.selection_length;
+		Char *data = termw->screen.selection_data;
+		if_OPT_WIDE_CHARS((&(termw->screen)), {
+		    data = UTF8toLatin1(data, length, &length);
+		})
 		XStoreBuffer( XtDisplay((Widget)termw),
-			      termw->screen.selection_data,
-			      termw->screen.selection_length, cutbuffer );
+			      data, length, cutbuffer );
 	    }
 	} else if (!replyToEmacs) {
 	    have_selection |=

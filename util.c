@@ -1164,7 +1164,6 @@ void
 ChangeColors(XtermWidget tw, ScrnColors *pNew)
 {
 	TScreen *screen = &tw->screen;
-	Bool	newCursor=	TRUE;
 #if OPT_TEK4014
 	Window tek = TWindow(screen);
 #endif
@@ -1180,7 +1179,6 @@ ChangeColors(XtermWidget tw, ScrnColors *pNew)
 		 (COLOR_DEFINED(pNew,TEXT_FG))) {
 	    screen->cursorcolor=	COLOR_VALUE(pNew,TEXT_FG);
 	}
-	else newCursor=	FALSE;
 
 	if (COLOR_DEFINED(pNew,TEXT_FG)) {
 	    Pixel	fg=	COLOR_VALUE(pNew,TEXT_FG);
@@ -1383,7 +1381,8 @@ drawXtermText(
 	int y,
 	int chrset,
 	PAIRED_CHARS(Char *text, Char *text2),
-	Cardinal len)
+	Cardinal len,
+	int on_wide)
 {
 	int real_length = len;
 #if OPT_WIDE_CHARS
@@ -1479,14 +1478,14 @@ drawXtermText(
 					x = drawXtermText(screen, flags, gc2,
 						x, y, 0,
 						PAIRED_CHARS(text++, text2++),
-						1);
+						1, on_wide);
 					x += FontWidth(screen);
 				}
 			} else {
 				x = drawXtermText(screen, flags, gc2,
 					x, y, 0,
 					PAIRED_CHARS(text, text2),
-					len);
+					len, on_wide);
 				x += len * FontWidth(screen);
 			}
 
@@ -1511,7 +1510,7 @@ drawXtermText(
 				temp[n++] = *text++;
 				temp[n++] = ' ';
 			}
-			x = drawXtermText(screen, flags, gc, x, y, 0, PAIRED_CHARS(temp, wide), n);
+			x = drawXtermText(screen, flags, gc, x, y, 0, PAIRED_CHARS(temp, wide), n, on_wide);
 			free(temp);
 			if_OPT_WIDE_CHARS(screen,{
 				free(wide);
@@ -1558,7 +1557,7 @@ drawXtermText(
 			adj = (FontWidth(screen) - width) / 2;
 			(void)drawXtermText(screen, flags, gc, x + adj, y,
 					    chrset,
-					    PAIRED_CHARS(text++, text2++), 1);
+					    PAIRED_CHARS(text++, text2++), 1, on_wide);
 			x += FontWidth(screen);
 		}
 		screen->fnt_prop = True;
@@ -1580,7 +1579,7 @@ drawXtermText(
 			static Cardinal slen;
 			Cardinal n;
 			int ch = text[0] | (text2[0] << 8);
-			int wideness = (iswide(ch)!=0) && (screen->fnt_dwd!=NULL);
+			int wideness = (on_wide || iswide(ch)!=0) && (screen->fnt_dwd!=NULL);
 			unsigned char *endtext = text + len;
 			if (slen < len) {
 				slen = (len + 1) * 2;
@@ -1628,7 +1627,7 @@ drawXtermText(
 		{
 		XDrawImageString(screen->display, VWindow(screen), gc,
 			x, y,  (char *)text, len);
-#ifndef OPT_WIDE_CHARS
+#if !OPT_WIDE_CHARS
 		/* FIXME: This is rather broken with wide chars. It should
 		 * use XDrawString16 where appropriate.
 		 */
@@ -1669,7 +1668,7 @@ drawXtermText(
 		}
 #if OPT_BOX_CHARS
 #define DrawX(col) x + (col * (screen->fnt_wide))
-#define DrawSegment(first,last) (void)drawXtermText(screen, flags, gc, DrawX(first), y, chrset, PAIRED_CHARS(text+first, text2+first), last-first)
+#define DrawSegment(first,last) (void)drawXtermText(screen, flags, gc, DrawX(first), y, chrset, PAIRED_CHARS(text+first, text2+first), last-first, on_wide)
 	} else {	/* fill in missing box-characters */
 		XFontStruct *font = (flags & BOLD)
 				  ? screen->fnt_bold
@@ -1684,7 +1683,7 @@ drawXtermText(
 			if (text2 != 0)
 				ch |= (text2[last] << 8);
 			isMissing = xtermMissingChar(ch,
-					(iswide(ch) && screen->fnt_dwd)
+					((on_wide || iswide(ch)) && screen->fnt_dwd)
 					? screen->fnt_dwd
 					: font);
 #else
@@ -1933,7 +1932,8 @@ void putXtermCell (TScreen *screen, int row, int col, int ch)
  */
 void addXtermCombining (TScreen *screen, int row, int col, int ch)
 {
-    if (!SCRN_BUF_COM1L(screen, row)[col]) {
+    if (!SCRN_BUF_COM1L(screen, row)[col]
+     && !SCRN_BUF_COM1H(screen, row)[col]) {
 	    SCRN_BUF_COM1L(screen, row)[col] = ch & 0xff;
 	    SCRN_BUF_COM1H(screen, row)[col] = ch >> 8;
     } else if (!SCRN_BUF_COM2H(screen, row)[col]) {

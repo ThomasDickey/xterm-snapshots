@@ -397,12 +397,17 @@ xtermSpecialFont(unsigned atts, unsigned chrset)
 
 /*
  * Case-independent comparison for font-names, including wildcards.
+ * XLFD allows '?' as a wildcard, but we do not handle that (no one seems
+ * to use it).
  */
 static Boolean
 same_font_name(char *pattern, char *match)
 {
 	while (*pattern && *match) {
-		if (*pattern == '*') {
+		if (*pattern == *match) {
+			pattern++;
+			match++;
+		} else if (*pattern == '*' || *match == '*') {
 			if (same_font_name(pattern+1, match)) {
 				return True;
 			} else if (same_font_name(pattern, match+1)) {
@@ -431,11 +436,10 @@ same_font_name(char *pattern, char *match)
 static int
 got_bold_font(Display *dpy, XFontStruct *fs, char *requested)
 {
-	FontNameProperties *fp;
 	char actual[MAX_FONTNAME];
 	int got;
 
-	if ((fp = get_font_name_props(dpy, fs, actual)) == 0)
+	if (get_font_name_props(dpy, fs, actual) == 0)
 		got = 0;
 	else
 		got = same_font_name(requested, actual);
@@ -527,8 +531,10 @@ xtermLoadFont (
 		 || (bfs = XLoadQueryFont (screen->display, bfontname)) == 0) {
 			bfs = nfs;
 			TRACE(("...cannot load a matching bold font\n"));
-		} else if (!same_font_size(nfs, bfs)
-		 || !got_bold_font(screen->display, bfs, bfontname)) {
+		} else if (same_font_size(nfs, bfs)
+		 && got_bold_font(screen->display, bfs, bfontname)) {
+			TRACE(("...got a matching bold font\n"));
+		} else {
 			XFreeFont(screen->display, bfs);
 			bfs = nfs;
 			TRACE(("...did not get a matching bold font\n"));

@@ -89,6 +89,7 @@ SOFTWARE.
 #include <error.h>
 #include <menu.h>
 #include <main.h>
+#include <xstrings.h>
 
 #include <sys/termio.h>
 
@@ -107,7 +108,6 @@ char *ttyname(int fd) { return "/dev/tty"; }
 #include <signal.h>
 
 static SIGNAL_T reapchild (int n);
-static char *base_name (char *name);
 static int spawn (void);
 static void get_terminal (void);
 static void resize (TScreen *s, char *oldtc, char *newtc);
@@ -869,7 +869,7 @@ main (int argc, char **argv, char **envp)
 	ptydev = (char *) malloc (PTMS_BUFSZ);
 	if (!ttydev || !ptydev) {
 	    fprintf (stderr,
-	    	     "%s:  unable to allocate memory for ttydev or ptydev\n",
+		     "%s:  unable to allocate memory for ttydev or ptydev\n",
 		     ProgramName);
 	    exit (1);
 	}
@@ -884,14 +884,14 @@ main (int argc, char **argv, char **envp)
 	*/
 	d_tio.c_iflag = ICRNL|IXON;
 	d_tio.c_oflag = OPOST|ONLCR|TAB3;
-    	d_tio.c_cflag = B38400|CS8|CREAD|PARENB|HUPCL;
-    	d_tio.c_lflag = ISIG|ICANON|ECHO|ECHOE|ECHOK;
+	d_tio.c_cflag = B38400|CS8|CREAD|PARENB|HUPCL;
+	d_tio.c_lflag = ISIG|ICANON|ECHO|ECHOE|ECHOK;
 	d_tio.c_line = 0;
 	d_tio.c_cc[VINTR] = CONTROL('C');	/* '^C'	*/
 	d_tio.c_cc[VERASE] = 0x7f;		/* DEL	*/
 	d_tio.c_cc[VKILL] = CONTROL('U');	/* '^U'	*/
 	d_tio.c_cc[VQUIT] = CQUIT;		/* '^\'	*/
-    	d_tio.c_cc[VEOF] = CEOF;		/* '^D'	*/
+	d_tio.c_cc[VEOF] = CEOF;		/* '^D' */
 	d_tio.c_cc[VEOL] = CEOL;		/* '^@'	*/
 
 	/* Init the Toolkit. */
@@ -1051,7 +1051,7 @@ main (int argc, char **argv, char **envp)
 
 	    if (!resource.title) {
 		if (command_to_exec) {
-		    resource.title = base_name (command_to_exec[0]);
+		    resource.title = x_basename (command_to_exec[0]);
 		} /* else not reached */
 	    }
 
@@ -1078,7 +1078,7 @@ main (int argc, char **argv, char **envp)
 	 so the debug feature is disabled by default. */
 	int i = -1;
 	if(debug) {
-	        creat_as (getuid(), getgid(), True, "xterm.debug.log", 0666);
+		creat_as (getuid(), getgid(), True, "xterm.debug.log", 0666);
 		i = open ("xterm.debug.log", O_WRONLY | O_TRUNC, 0666);
 	}
 	if(i >= 0) {
@@ -1100,7 +1100,7 @@ main (int argc, char **argv, char **envp)
 
 	/* Realize procs have now been executed */
 
-	if (am_slave) { /* Write window id so master end can read and use */
+	if (am_slave >= 0) { /* Write window id so master end can read and use */
 	    char buf[80];
 
 	    buf[0] = '\0';
@@ -1150,15 +1150,6 @@ main (int argc, char **argv, char **envp)
 	return 0;
 }
 
-static char *
-base_name(char *name)
-{
-	register char *cp;
-
-	cp = strrchr(name, '/');
-	return(cp ? cp + 1 : name);
-}
-
 /*
  * Called from get_pty to iterate over likely pseudo terminals
  * we might allocate.  Used on those systems that do not have
@@ -1175,7 +1166,7 @@ pty_search(int *pty)
 	if (fd && ptioctl(fd,PTMS_GETPTY,namebuf)==0) {
 		strcpy(ttydev,namebuf);
 		strcpy(ptydev,namebuf);
-		ttydev[5] = 't';
+		*x_basename(ttydev) = 't';
 		close (fd);
 		if ((*pty = open(ptydev, O_RDWR)) >= 0) {
 #ifdef PTYDEBUG
@@ -1187,24 +1178,25 @@ pty_search(int *pty)
 	return 1;
 }
 
-/* This function opens up a pty master and stuffs its value into pty.
+/*
+ * This function opens up a pty master and stuffs its value into pty.
+ *
  * If it finds one, it returns a value of 0.  If it does not find one,
  * it returns a value of !0.  This routine is designed to be re-entrant,
  * so that if a pty master is found and later, we find that the slave
  * has problems, we can re-enter this function and get another one.
  */
-
 static int
 get_pty (int *pty)
 {
 	return pty_search(pty);
 }
 
-static void
-get_terminal (void)
 /*
  * sets up X and initializes the terminal structure except for term.buf.fildes.
  */
+static void
+get_terminal (void)
 {
 	register TScreen *screen = &term->screen;
 
@@ -1332,12 +1324,12 @@ spawn (void)
 	screen->uid = getuid();
 	screen->gid = getgid();
 
-	if (am_slave) {
+	if (am_slave >= 0) {
 		screen->respond = am_slave;
-		ptydev[strlen(ptydev) - 2] = ttydev[strlen(ttydev) - 2] =
-			passedPty[0];
-		ptydev[strlen(ptydev) - 1] = ttydev[strlen(ttydev) - 1] =
-			passedPty[1];
+		ptydev[strlen(ptydev) - 2] =
+		ttydev[strlen(ttydev) - 2] = passedPty[0];
+		ptydev[strlen(ptydev) - 1] =
+		ttydev[strlen(ttydev) - 1] = passedPty[1];
 
 		setgid (screen->gid);
 		setuid (screen->uid);
@@ -1384,8 +1376,8 @@ spawn (void)
 			 * if started directly from xdm or xinit,
 			 * in which case we just use the defaults as above.
 			 */
-/**/		        if(ioctl(tty, TCGETA, &tio) == -1)
-			        tio = d_tio;
+/**/			if(ioctl(tty, TCGETA, &tio) == -1)
+				tio = d_tio;
 
 			close (tty);
 			/* tty is no longer an open fd! */
@@ -1482,7 +1474,7 @@ spawn (void)
 		ws.ws_ypixel = FullHeight(screen);
 	}
 
-	if (!am_slave) {
+	if (am_slave < 0) {
 
 		char sema[40];
 		HEV sev;
@@ -1516,7 +1508,7 @@ opencons();*/
 			if ((tty = open(ttydev, O_RDWR, 0)) < 0) {
 				/* dumm gelaufen */
 				fprintf(stderr, "Cannot open slave side of PTY\n");
-		        	exit(1);
+				exit(1);
 			}
 
 			/* use the same tty name that everyone else will use
@@ -1662,13 +1654,7 @@ opencons();*/
 			if (!ptr) ptr = getenv("OS2_SHELL");
 			if (!ptr) ptr = "SORRY_NO_SHELL_FOUND";
 
-			if (shname = strrchr(ptr, '/'))
-				shname++;
-			else if (shname = strrchr(ptr,'\\'))
-				shname++;
-			else
-				shname = ptr;
-
+			shname = x_basename(ptr);
 			if (command_to_exec) {
 				char *exargv[10]; /*XXX*/
 
@@ -1734,7 +1720,7 @@ Exit(int n)
 	if(screen->logging)
 		CloseLog(screen);
 #endif
-	if (!am_slave) {
+	if (am_slave < 0) {
 		/* restore ownership of tty and pty */
 		chown (ttydev, 0, 0);
 		chown (ptydev, 0, 0);

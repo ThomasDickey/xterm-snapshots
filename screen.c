@@ -66,18 +66,10 @@
 
 #include <signal.h>
 
-#ifdef att
-#define ATT
-#endif
-
 #ifdef SVR4
-#undef SYSV
-#define SYSV
 #include <termios.h>
-#else
-#ifndef __CYGWIN__
+#elif !defined(__CYGWIN__)
 #include <sys/ioctl.h>
-#endif
 #endif
 
 #if defined(__CYGWIN__) && !defined(TIOCSPGRP)
@@ -87,10 +79,6 @@
 
 #ifdef __hpux
 #include <sys/termio.h>
-#endif
-
-#if (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
-#define USE_USG_PTYS
 #endif
 
 #ifdef SYSV
@@ -821,24 +809,23 @@ ScrnRefresh (
 	   })
 
 	   if_OPT_WIDE_CHARS(screen,{
-	   /* This fixes an infinite recursion bug, that leads
-              to display anomalies. It seems to be related to 
-              problems with the selection. */
-           if (recurse < 3) {
-                   /* adjust to redraw all of a widechar if we just wanted 
-                      to draw the right hand half */
-		   if (iswide(chars[leftcol - 1] | (widec[leftcol -1]<<8)) &&
-                       (chars[leftcol] | (widec[leftcol]<<8))==HIDDEN_CHAR)
-        	   {
+		/* This fixes an infinite recursion bug, that leads
+		   to display anomalies. It seems to be related to 
+		   problems with the selection. */
+		if (recurse < 3) {
+		    /* adjust to redraw all of a widechar if we just wanted 
+		      to draw the right hand half */
+		    if (iswide(chars[leftcol - 1] | (widec[leftcol -1]<<8)) &&
+			(chars[leftcol] | (widec[leftcol]<<8))==HIDDEN_CHAR)
+		    {
 			leftcol--;
 			ncols++;
 			col = leftcol;
-	   	   }
-           } else {
-		fprintf(stderr, "This should not happen. Why is it so?\n");
-	   }
-	   }
-           )
+		    }
+	       } else {
+		    fprintf(stderr, "This should not happen. Why is it so?\n");
+	       }
+	   })
 
 	   if (row < screen->startHRow || row > screen->endHRow ||
 	       (row == screen->startHRow && maxcol < screen->startHCol) ||
@@ -986,9 +973,9 @@ ScrnRefresh (
 		   x = drawXtermText(screen, flags, gc, x, y,
 			cs,
 			PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
-			col - lastind);
+			col - lastind, 0);
  
- if_OPT_WIDE_CHARS(screen, 
+		   if_OPT_WIDE_CHARS(screen, 
  		   {
  			int i;
   	       	 	Char *comb1l = BUF_COM1L(screen->visbuf, row + topline);
@@ -996,19 +983,22 @@ ScrnRefresh (
   	       	 	Char *comb1h = BUF_COM1H(screen->visbuf, row + topline);
  			Char *comb2h = BUF_COM2H(screen->visbuf, row + topline);
  			for (i = lastind ; i < col; i++) {
- 	               	 	int my_x = CurCursorX(screen, row + topline, i);
- 				int comb1 = comb1l[i] | (comb1h[i] << 8);
- 				int comb2 = comb2l[i] | (comb2h[i] << 8);
- 
- 				if (comb1 != 0) {
- 					drawXtermText(screen, flags, gc, my_x, y, cs,
- 						      PAIRED_CHARS(comb1l+i, comb1h+i), 1);
- 				}
- 
- 				if (comb2 != 0) {
- 					drawXtermText(screen, flags, gc, my_x, y, cs,
- 						      PAIRED_CHARS(comb2l+i, comb2h+i), 1);
- 				}
+			    int my_x = CurCursorX(screen, row + topline, i);
+			    int base = chars[i] | (widec[i] << 8);
+			    int comb1 = comb1l[i] | (comb1h[i] << 8);
+			    int comb2 = comb2l[i] | (comb2h[i] << 8);
+
+			    if (iswide(base)) my_x = CurCursorX(screen, row + topline, i-1);
+
+			    if (comb1 != 0) {
+				    drawXtermText(screen, flags, gc, my_x, y, cs,
+						  PAIRED_CHARS(comb1l+i, comb1h+i), 1, iswide(base));
+			    }
+
+			    if (comb2 != 0) {
+				    drawXtermText(screen, flags, gc, my_x, y, cs,
+						  PAIRED_CHARS(comb2l+i, comb2h+i), 1, iswide(base));
+			    }
  			}
  	   	   })
  
@@ -1056,29 +1046,32 @@ ScrnRefresh (
 	   drawXtermText(screen, flags, gc, x, y,
 	   	cs,
 		PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
-		col - lastind);
+		col - lastind, 0);
 
-if_OPT_WIDE_CHARS(screen, 	   {
-			int i;
- 	       	 	Char *comb1l = BUF_COM1L(screen->visbuf, row + topline);
-			Char *comb2l = BUF_COM2L(screen->visbuf, row + topline);
- 	       	 	Char *comb1h = BUF_COM1H(screen->visbuf, row + topline);
-			Char *comb2h = BUF_COM2H(screen->visbuf, row + topline);
-			for (i = lastind ; i < col; i++) {
-	               	 	int my_x = CurCursorX(screen, row + topline, i);
-				int comb1 = comb1l[i] | (comb1h[i] << 8);
-				int comb2 = comb2l[i] | (comb2h[i] << 8);
+	   if_OPT_WIDE_CHARS(screen, {
+		int i;
+		Char *comb1l = BUF_COM1L(screen->visbuf, row + topline);
+		Char *comb2l = BUF_COM2L(screen->visbuf, row + topline);
+		Char *comb1h = BUF_COM1H(screen->visbuf, row + topline);
+		Char *comb2h = BUF_COM2H(screen->visbuf, row + topline);
+		for (i = lastind ; i < col; i++) {
+		    int my_x = CurCursorX(screen, row + topline, i);
+		    int base = chars[i] | (widec[i] << 8);
+		    int comb1 = comb1l[i] | (comb1h[i] << 8);
+		    int comb2 = comb2l[i] | (comb2h[i] << 8);
 
-				if (comb1 != 0) {
-					drawXtermText(screen, flags, gc, my_x, y, cs,
-						      PAIRED_CHARS(comb1l+i, comb1h+i), 1);
-				}
+		    if (iswide(base)) my_x = CurCursorX(screen, row + topline, i-1);
 
-				if (comb2 != 0) {
-					drawXtermText(screen, flags, gc, my_x, y, cs,
-						      PAIRED_CHARS(comb2l+i, comb2h+i), 1);
-				}
-			}
+		    if (comb1 != 0) {
+			    drawXtermText(screen, flags, gc, my_x, y, cs,
+					  PAIRED_CHARS(comb1l+i, comb1h+i), 1, iswide(base));
+		    }
+
+		    if (comb2 != 0) {
+			    drawXtermText(screen, flags, gc, my_x, y, cs,
+					  PAIRED_CHARS(comb2l+i, comb2h+i), 1, iswide(base));
+		    }
+		}
 	   })
 
 	   resetXtermGC(screen, flags, hilite);

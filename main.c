@@ -90,6 +90,7 @@ SOFTWARE.
 #include <error.h>
 #include <menu.h>
 #include <main.h>
+#include <xstrings.h>
 
 #if OPT_WIDE_CHARS
 #include <charclass.h>
@@ -131,34 +132,17 @@ SOFTWARE.
 #endif
 #endif /* MINIX */
 
-#ifdef att
-#define ATT
-#endif
-
 #ifdef __osf__
 #define USE_SYSV_SIGNALS
 #define WTMP
 #endif
 
-#ifdef SVR4
-#undef  SYSV			/* predefined on Solaris 2.4 */
-#define SYSV			/* SVR4 is (approx) superset of SVR3 */
-#define ATT
-#ifndef __sgi
+#if defined(SVR4) && !defined(__sgi)
 #define USE_TERMIOS
 #endif
-#endif
 
-#if defined(SYSV) && defined(i386) && !defined(SVR4)
-#define ATT
-#define USE_HANDSHAKE
+#ifdef USE_ISPTS_FLAG
 static Bool IsPts = False;
-#endif
-
-#if (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
-#define USE_USG_PTYS
-#else
-#define USE_HANDSHAKE
 #endif
 
 #if defined(SYSV) && !defined(SVR4) && !defined(ISC22) && !defined(ISC30)
@@ -192,7 +176,6 @@ static Bool IsPts = False;
 #ifdef __MVS__
 #define SVR4
 #define USE_POSIX_TERMIOS
-#define USE_USG_PTYS
 #define USE_SYSV_PGRP
 #define USE_SYSV_SIGNALS
 #undef  HAS_LTCHARS
@@ -454,12 +437,7 @@ extern struct utmp *getutid __((struct utmp *_Id));
 
 #ifdef  PUCC_PTYD
 #include <local/openpty.h>
-int	Ptyfd;
 #endif /* PUCC_PTYD */
-
-#ifdef sequent
-#define USE_GET_PSEUDOTTY
-#endif
 
 #ifndef UTMP_FILENAME
 #ifdef UTMP_FILE
@@ -538,10 +516,12 @@ extern char *tgetstr (char *name, char **ptr);
 #ifndef VMS
 static SIGNAL_T reapchild (int n);
 static int spawn (void);
-static int pty_search (int *pty);
 static void remove_termcap_entry (char *buf, char *str);
+#ifdef USE_PTY_SEARCH
+static int pty_search (int *pty);
+#endif
 #endif /* ! VMS */
-static char *base_name (char *name);
+
 static void get_terminal (void);
 static void resize (TScreen *s, char *oldtc, char *newtc);
 
@@ -764,7 +744,7 @@ static char bin_login[] = LOGIN_FILENAME;
 #endif
 
 static int inhibit;
-static char passedPty[2];	/* name if pty if slave */
+static char passedPty[PTYCHARLEN + 1];	/* name if pty if slave */
 
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 static int Console;
@@ -1310,6 +1290,111 @@ XtActionsRec actionProcs[] = {
 
 Atom wm_delete_window;
 
+/*
+ * Some platforms use names such as /dev/tty01, others /dev/pts/1.  Parse off
+ * the "tty01" or "pts/1" portion, and return that for use as an identifier for
+ * utmp.
+ */
+static char *
+my_pty_name(char *device)
+{
+	size_t len = strlen(device);
+	Boolean name = False;
+
+	while (len != 0) {
+		int ch = device[len-1];
+		if (isdigit(ch)) {
+			len--;
+		} else if (ch == '/') {
+			if (name)
+				break;
+			len--;
+		} else if (isalpha(ch)) {
+			name = True;
+			len--;
+		} else {
+			break;
+		}
+	}
+	TRACE(("my_pty_name(%s) -> '%s'\n", device, device + len));
+	return device + len;
+}
+
+/*
+ * If the name contains a '/', it is a "pts/1" case.  Otherwise, return the
+ * last few characters for a utmp identifier.
+ */
+static char *
+my_pty_id(char *device)
+{
+	char *name = my_pty_name(device);
+	char *leaf = x_basename(name);
+
+	if (name == leaf) {	/* no '/' in the name */
+		int len = strlen(leaf);
+		if (PTYCHARLEN < len)
+			leaf = leaf + (len - PTYCHARLEN);
+	}
+	TRACE(("my_pty_id  (%s) -> '%s'\n", device, leaf));
+	return leaf;
+}
+
+/*
+ * Set the tty/pty identifier
+ */
+static void
+set_pty_id(char *device, char *id)
+{
+	char *name = my_pty_name(device);
+	char *leaf = x_basename(name);
+
+	if (name == leaf) {
+		strcpy(my_pty_id(device), id);
+	} else {
+		strcpy(leaf, id);
+	}
+	TRACE(("set_pty_id(%s) -> '%s'\n", id, device));
+}
+
+/*
+ * The original -S option accepts two characters to identify the pty, and a
+ * file-descriptor (assumed to be nonzero).  That is not general enough, so we
+ * check first if the option contains a '/' to delimit the two fields, and if
+ * not, fall-thru to the original logic.
+ */
+static Boolean
+ParseSccn(char *option)
+{
+	char *leaf = x_basename(option);
+	Boolean code = False;
+
+	if (leaf != option) {
+		if (leaf - option > 1
+		 && leaf - option <= PTYCHARLEN
+		 && sscanf(leaf, "%d", &am_slave) == 1) {
+			size_t len = leaf - option - 1;
+			/*
+			 * If the given length is less than PTYCHARLEN, that is
+			 * all right because the calling application may be
+			 * giving us a path for /dev/pts, which would be
+			 * followed by one or more decimal digits.
+			 *
+			 * For fixed-width fields, it is up to the calling
+			 * application to provide leading 0's, if needed.
+			 */
+			strncpy(passedPty, option, len);
+			passedPty[len] = 0;
+			code = True;
+		}
+	} else {
+		code = (sscanf(option, "%c%c%d",
+			passedPty, passedPty+1, &am_slave) == 3);
+	}
+	TRACE(("ParseSccn(%s) = '%s' %d (%s)\n", option,
+		passedPty, am_slave, code ? "OK" : "ERR"));
+	return code;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1340,10 +1425,10 @@ main (int argc, char *argv[])
 #endif
 
 #ifndef AMOEBA
-	/* +2 in case longer tty name like /dev/ttyq255 */
-	ttydev = (char *) malloc (sizeof(TTYDEV) + 2);
-#ifndef __osf__
-	ptydev = (char *) malloc (sizeof(PTYDEV) + 2);
+	/* extra length in case longer tty name like /dev/ttyq255 */
+	ttydev = (char *) malloc (sizeof(TTYDEV) + 80);
+#ifdef USE_PTY_DEVICE
+	ptydev = (char *) malloc (sizeof(PTYDEV) + 80);
 	if (!ttydev || !ptydev)
 #else
 	if (!ttydev)
@@ -1355,7 +1440,7 @@ main (int argc, char *argv[])
 	    exit (1);
 	}
 	strcpy (ttydev, TTYDEV);
-#ifndef __osf__
+#ifdef USE_PTY_DEVICE
 	strcpy (ptydev, PTYDEV);
 #endif
 
@@ -1758,8 +1843,7 @@ main (int argc, char *argv[])
 #endif	/* TIOCCONS */
 		continue;
 	     case 'S':
-		if (sscanf(*argv + 2, "%c%c%d", passedPty, passedPty+1,
-			   &am_slave) != 3)
+		if (!ParseSccn(*argv + 2))
 		    Syntax(*argv);
 		continue;
 #ifdef DEBUG
@@ -1836,7 +1920,7 @@ main (int argc, char *argv[])
 
 	    if (!resource.title) {
 		if (command_to_exec) {
-		    resource.title = base_name (command_to_exec[0]);
+		    resource.title = x_basename (command_to_exec[0]);
 		} /* else not reached */
 	    }
 
@@ -1908,7 +1992,7 @@ main (int argc, char *argv[])
 	/* Realize procs have now been executed */
 
 #ifndef AMOEBA
-	if (am_slave) { /* Write window id so master end can read and use */
+	if (am_slave >= 0) { /* Write window id so master end can read and use */
 	    char buf[80];
 
 	    buf[0] = '\0';
@@ -1996,30 +2080,37 @@ main (int argc, char *argv[])
 	}
 }
 
-static char *
-base_name(char *name)
-{
-	register char *cp;
-
-	cp = strrchr(name, '/');
-	return(cp ? cp + 1 : name);
-}
-
 #ifndef AMOEBA
-/* This function opens up a pty master and stuffs its value into pty.
+/*
+ * This function opens up a pty master and stuffs its value into pty.
+ *
  * If it finds one, it returns a value of 0.  If it does not find one,
  * it returns a value of !0.  This routine is designed to be re-entrant,
  * so that if a pty master is found and later, we find that the slave
  * has problems, we can re-enter this function and get another one.
  */
-
 static int
-get_pty (int *pty)
+get_pty (int *pty, char *from GCC_UNUSED)
 {
-#if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS))
+	int result = 1;
+#ifdef PUCC_PTYD
+
+	result = ((*pty = openrpty(ttydev, ptydev,
+				(resource.utmpInhibit ? OPTY_NOP : OPTY_LOGIN),
+				getuid(), from)) < 0);
+
+#elif defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS))
+
 	int tty;
-	return (openpty(pty, &tty, ttydev, NULL, NULL));
-#elif (defined(SYSV) && defined(i386) && !defined(SVR4)) || defined(__QNXNTO__)
+	result = openpty(pty, &tty, ttydev, NULL, NULL);
+
+#elif defined(__QNXNTO__)
+
+	result = pty_search(pty);
+
+#else
+#if defined(USE_ISPTS_FLAG)
+
 	/*
 	  The order of this code is *important*.  On SYSV/386 we want to open
 	  a /dev/ttyp? first if at all possible.  If none are available, then
@@ -2043,91 +2134,101 @@ get_pty (int *pty)
 	  for the "if (IsPts)" statement in spawn(); we have two different
 	  device types which need to be handled differently.
 	  */
-	if (pty_search(pty) == 0)
-	    return 0;
-	return 1;
-#elif defined(USE_USG_PTYS) || defined(__CYGWIN__)
+	result = pty_search(pty);
+
+#endif
+#if defined(USE_USG_PTYS) || defined(__CYGWIN__)
+
 #ifdef __GLIBC__ /* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
 	/* GNU libc 2 allows us to abstract away from having to know the
 	   master pty device name. */
-	if ((*pty = getpt()) < 0) {
-	    return 1;
+	if ((*pty = getpt()) >= 0) {
+	    strcpy(ttydev, ptsname(*pty));
+	    result = 0;
 	}
-	strcpy(ttydev, ptsname(*pty));
 #elif defined(__MVS__)
-	return pty_search(pty);
+	result = pty_search(pty);
 #else
-	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0) {
-	    return 1;
-	}
+	result = ((*pty = open ("/dev/ptmx", O_RDWR)) < 0);
 #endif
-#if defined(SVR4) || defined(SCO325) || (defined(i386) && defined(SYSV))
-	strcpy(ttydev, ptsname(*pty));
-#if defined (SYSV) && defined(i386) && !defined(SVR4)
-	IsPts = True;
+#if defined(SVR4) || defined(SCO325) || defined(USE_ISPTS_FLAG)
+	if (!result)
+	    strcpy(ttydev, ptsname(*pty));
+#ifdef USE_ISPTS_FLAG
+	IsPts = !result;	/* true if we're successful */
 #endif
 #endif
-	return 0;
-#elif defined(AIXV3)
-	if ((*pty = open ("/dev/ptc", O_RDWR)) < 0) {
-	    return 1;
-	}
-	strcpy(ttydev, ttyname(*pty));
-	return 0;
-#elif defined(__sgi) && (OSMAJORVERSION >= 4)
-	char    *tty_name;
 
-	tty_name = _getpty (pty, O_RDWR, 0622, 0);
-	if (tty_name == 0)
-	    return 1;
-	strcpy (ttydev, tty_name);
-	return 0;
+#elif defined(AIXV3)
+
+	if ((*pty = open ("/dev/ptc", O_RDWR)) >= 0) {
+	    strcpy(ttydev, ttyname(*pty));
+	    result = 0;
+	}
+
 #elif defined(__convex__)
-	char *pty_name, *getpty();
+
+	char *pty_name;
+	extern char *getpty(void);
 
 	while ((pty_name = getpty()) != NULL) {
 	    if ((*pty = open (pty_name, O_RDWR)) >= 0) {
 		strcpy(ptydev, pty_name);
 		strcpy(ttydev, pty_name);
-		ttydev[5] = 't';
-		return 0;
+		*x_basename(ttydev) = 't';
+		result = 0;
+		break;
 	    }
 	}
-	return 1;
-#elif defined(USE_GET_PSEUDOTTY)
-	return ((*pty = getpseudotty (&ttydev, &ptydev)) >= 0 ? 0 : 1);
+
+#elif defined(sequent)
+
+	result = ((*pty = getpseudotty (&ttydev, &ptydev)) < 0);
+
+#elif defined(__sgi) && (OSMAJORVERSION >= 4)
+
+	char    *tty_name;
+
+	tty_name = _getpty (pty, O_RDWR, 0622, 0);
+	if (tty_name != 0) {
+	    strcpy (ttydev, tty_name);
+	    result = 0;
+	}
+
 #elif (defined(__sgi) && (OSMAJORVERSION < 4)) || (defined(umips) && defined (SYSTYPE_SYSV))
+
 	struct stat fstat_buf;
 
 	*pty = open ("/dev/ptc", O_RDWR);
-	if (*pty < 0 || (fstat (*pty, &fstat_buf)) < 0) {
-	  return(1);
+	if (*pty >= 0 && (fstat (*pty, &fstat_buf)) >= 0) {
+	    result = 0;
+	    sprintf (ttydev, "/dev/ttyq%d", minor(fstat_buf.st_rdev));
 	}
-	sprintf (ttydev, "/dev/ttyq%d", minor(fstat_buf.st_rdev));
-#ifndef __sgi
-	sprintf (ptydev, "/dev/ptyq%d", minor(fstat_buf.st_rdev));
-	if ((*tty = open (ttydev, O_RDWR)) < 0) {
-	  close (*pty);
-	  return(1);
-	}
-#endif /* !__sgi */
-	/* got one! */
-	return(0);
-#else /* __sgi or umips */
 
-#ifdef __hpux
+#elif defined(__hpux)
+
 	/*
 	 * Use the clone device if it works, otherwise use pty_search logic.
 	 */
 	if ((*pty = open("/dev/ptym/clone", O_RDWR)) >= 0) {
-		strcpy(ttydev, ptsname(*pty));
-		return(0);
+	    strcpy(ttydev, ptsname(*pty));
+	    result = 0;
+	} else {
+	    result = pty_search(pty);
 	}
+
+#else
+
+	result = pty_search(pty);
+
+#endif
 #endif
 
-	return pty_search(pty);
-
-#endif
+	TRACE(("get_pty(ttydev=%s, ptydev=%s) %s fd=%d\n",
+		ttydev != 0 ? ttydev : "?",
+		ptydev != 0 ? ptydev : "?",
+		result ? "FAIL" : "OK", *pty));
+	return result;
 }
 
 /*
@@ -2136,34 +2237,34 @@ get_pty (int *pty)
  * a functional interface for allocating a pty.
  * Returns 0 if found a pty, 1 if fails.
  */
+#ifdef USE_PTY_SEARCH
 static int
 pty_search(int *pty)
 {
     static int devindex = 0, letter = 0;
 
 #if defined(CRAY) || defined(__MVS__)
-    for (; devindex < MAXPTTYS; devindex++) {
+    while (devindex < MAXPTTYS) {
 	sprintf (ttydev, TTYFORMAT, devindex);
 	sprintf (ptydev, PTYFORMAT, devindex);
+	devindex++;
 
+	TRACE(("pty_search(ttydev=%s, ptydev=%s)\n", ttydev, ptydev));
 	if ((*pty = open (ptydev, O_RDWR)) >= 0) {
-	    /* We need to set things up for our next entry
-	     * into this function!
-	     */
-	    (void) devindex++;
 	    return 0;
 	}
     }
 #else /* CRAY || __MVS__ */
     while (PTYCHAR1[letter]) {
-	ttydev [strlen(ttydev) - 2]  = ptydev [strlen(ptydev) - 2] =
-	    PTYCHAR1 [letter];
+	ttydev [strlen(ttydev) - 2] =
+	ptydev [strlen(ptydev) - 2] = PTYCHAR1 [letter];
 
 	while (PTYCHAR2[devindex]) {
-	    ttydev [strlen(ttydev) - 1] = ptydev [strlen(ptydev) - 1] =
-		PTYCHAR2 [devindex];
-	    /* for next time around loop or next entry to this function */
+	    ttydev [strlen(ttydev) - 1] =
+	    ptydev [strlen(ptydev) - 1] = PTYCHAR2 [devindex];
 	    devindex++;
+
+	    TRACE(("pty_search(ttydev=%s, ptydev=%s)\n", ttydev, ptydev));
 	    if ((*pty = open (ptydev, O_RDWR)) >= 0) {
 #ifdef sun
 		/* Need to check the process group of the pty.
@@ -2180,7 +2281,7 @@ pty_search(int *pty)
 	    }
 	}
 	devindex = 0;
-	(void) letter++;
+	letter++;
     }
 #endif /* CRAY else */
     /*
@@ -2189,6 +2290,7 @@ pty_search(int *pty)
      */
     return 1;
 }
+#endif /* USE_PTY_SEARCH */
 #endif /* AMOEBA */
 
 static void
@@ -2430,14 +2532,12 @@ spawn (void)
 	signal(SIGTTOU,SIG_IGN);
 #endif
 
-	if (am_slave) {
+	if (am_slave >= 0) {
 		screen->respond = am_slave;
-#ifndef __osf__
-		ptydev[strlen(ptydev) - 2] = ttydev[strlen(ttydev) - 2] =
-			passedPty[0];
-		ptydev[strlen(ptydev) - 1] = ttydev[strlen(ttydev) - 1] =
-			passedPty[1];
-#endif /* __osf__ */
+		set_pty_id(ttydev, passedPty);
+#ifdef USE_PTY_DEVICE
+		set_pty_id(ptydev, passedPty);
+#endif
 		setgid (screen->gid);
 		setuid (screen->uid);
 	} else {
@@ -2568,29 +2668,13 @@ spawn (void)
 			tty = -1;
 		}
 
-#ifdef	PUCC_PTYD
-		if(-1 == (screen->respond = openrpty(ttydev, ptydev,
-				(resource.utmpInhibit ?  OPTY_NOP : OPTY_LOGIN),
-				getuid(), XDisplayString(screen->display))))
-#else /* not PUCC_PTYD */
-		if (get_pty (&screen->respond))
-#endif /* PUCC_PTYD */
+		if (get_pty (&screen->respond, XDisplayString(screen->display)))
 		{
 			/*  no ptys! */
 			(void) fprintf(stderr, "%s: no available ptys: %s\n",
 				       xterm_name, strerror(errno));
 			exit (ERROR_PTYS);
 		}
-#ifdef PUCC_PTYD
-		  else {
-			/*
-			 *  set the fd of the master in a global var so
-			 *  we can undo all this on exit
-			 *
-			 */
-			Ptyfd = screen->respond;
-		  }
-#endif /* PUCC_PTYD */
 	}
 
 	/* avoid double MapWindow requests */
@@ -2719,7 +2803,7 @@ spawn (void)
 	}
 #endif
 
-	if (!am_slave) {
+	if (am_slave < 0) {
 #ifdef USE_HANDSHAKE
 	    if (pipe(pc_pipe) || pipe(cp_pipe))
 		SysError (ERROR_FORK);
@@ -2737,15 +2821,11 @@ spawn (void)
 #else
 		int pgrp = getpid();
 #endif
-#if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP)
-		char* ptyname;
-		char* ptynameptr = 0;
-#endif
 
 #ifdef USE_USG_PTYS
-#if defined(SYSV) && defined(i386) && !defined(SVR4)
+#ifdef USE_ISPTS_FLAG
 		if (IsPts) {	/* SYSV386 supports both, which did we open? */
-#endif /* SYSV && i386 && !SVR4 */
+#endif
 		int ptyfd;
 
 		setpgrp();
@@ -2791,9 +2871,9 @@ spawn (void)
 			ws.ws_ypixel = FullHeight(screen);
 		}
 #endif
-#if defined(SYSV) && defined(i386) && !defined(SVR4)
+#ifdef USE_ISPTS_FLAG
 		} else {	/* else pty, not pts */
-#endif /* SYSV && i386 && !SVR4 */
+#endif
 #endif /* USE_USG_PTYS */
 
 #ifdef USE_HANDSHAKE		/* warning, goes for a long ways */
@@ -2913,9 +2993,9 @@ spawn (void)
 			}
 			(void) strcpy(ttydev, ptr);
 		}
-#if defined(SYSV) && defined(i386) && !defined(SVR4)
+#ifdef USE_ISPTS_FLAG
 		} /* end of IsPts else clause */
-#endif /* SYSV && i386 && !SVR4 */
+#endif
 
 #endif /* USE_HANDSHAKE -- from near fork */
 
@@ -3349,31 +3429,10 @@ spawn (void)
 		**   - We need to do it before we go and change our
 		**     user and group id's.
 		*/
-#ifdef CRAY
-#define PTYCHARLEN 4
-#endif
-
-#ifdef __osf__
-#define PTYCHARLEN 5
-#endif
-
-#ifndef PTYCHARLEN
-#define PTYCHARLEN 2
-#endif
-
 		(void) setutent ();
 		/* set up entry to search for */
-		ptyname = ttydev;
 		bzero((char *)&utmp, sizeof(utmp));
-#ifndef __sgi
-		if (PTYCHARLEN >= (int)strlen(ptyname))
-		    ptynameptr = ptyname;
-		else
-		    ptynameptr = ptyname + strlen(ptyname) - PTYCHARLEN;
-#else
-		ptynameptr = ptyname + sizeof("/dev/tty")-1;
-#endif
-		(void) strncpy(utmp.ut_id, ptynameptr, sizeof (utmp.ut_id));
+		(void) strncpy(utmp.ut_id, my_pty_id(ttydev), sizeof (utmp.ut_id));
 
 		utmp.ut_type = DEAD_PROCESS;
 
@@ -3395,10 +3454,10 @@ spawn (void)
 			       (pw && pw->pw_name) ? pw->pw_name : "????",
 			       sizeof(utmp.ut_user));
 
-		/* why are we copying this string again? look up 16 lines. */
-		(void)strncpy(utmp.ut_id, ptynameptr, sizeof(utmp.ut_id));
+		/* why are we copying this string again?  (see above) */
+		(void) strncpy(utmp.ut_id, my_pty_id(ttydev), sizeof(utmp.ut_id));
 		(void) strncpy (utmp.ut_line,
-			ptyname + strlen("/dev/"), sizeof (utmp.ut_line));
+			my_pty_name(ttydev), sizeof (utmp.ut_line));
 
 #ifdef HAVE_UTMP_UT_HOST
 		(void) strncpy(buf, DisplayString(screen->display),
@@ -3458,7 +3517,7 @@ spawn (void)
 			    (i = open(etc_utmp, O_WRONLY)) >= 0) {
 				bzero((char *)&utmp, sizeof(utmp));
 				(void) strncpy(utmp.ut_line,
-					       ttydev + strlen("/dev/"),
+					       my_pty_name(ttydev),
 					       sizeof(utmp.ut_line));
 				(void) strncpy(utmp.ut_name, pw->pw_name,
 					       sizeof(utmp.ut_name));
@@ -3510,8 +3569,8 @@ spawn (void)
 		if (term->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		    bzero((char *)&lastlog, sizeof (struct lastlog));
-		    (void) strncpy(lastlog.ll_line, ttydev +
-			sizeof("/dev"),
+		    (void) strncpy(lastlog.ll_line,
+		        my_pty_name(ttydev),
 			sizeof (lastlog.ll_line));
 		    (void) strncpy(lastlog.ll_host,
 			  XDisplayString (screen->display),
@@ -3676,10 +3735,7 @@ spawn (void)
 		 *(ptr = pw->pw_shell) == 0))
 #endif	/* HAVE_UTMP */
 			ptr = "/bin/sh";
-		if ((shname = strrchr(ptr, '/')) != 0)
-			shname++;
-		else
-			shname = ptr;
+		shname = x_basename(ptr);
 		shname_minus = (char *)malloc(strlen(shname) + 2);
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
@@ -3734,7 +3790,7 @@ spawn (void)
 			 * another one.
 			 */
 			(void) close(screen->respond);
-			if (get_pty(&screen->respond)) {
+			if (get_pty(&screen->respond, XDisplayString(screen->display))) {
 			    /* no more ptys! */
 			    fprintf(stderr,
 				    "%s: child process can find no available ptys: %s\n",
@@ -3875,10 +3931,7 @@ find_program(char *program, capability *programcap)
 
 	if ((path = getenv("PATH")) == NULL)
 	    path = DEF_PATH;
-	if ((name = strrchr(program, '/')) != NULL)
-	    name++;
-	else
-	    name = program;
+	name = x_basename(program);
 
 	do {
 	    register char *p = programpath;
@@ -4103,11 +4156,7 @@ static int spawn(void)
 
 	if ((shell = getenv("SHELL")) == NULL)
 	    shell = DEF_SHELL; /* "cannot happen" */
-	if ((shname = strrchr(shell, '/')) != NULL)
-	    shname++;
-	else
-	    shname = shell;
-
+	shname = x_basename(shell);
 	shname_minus = malloc(strlen(shname) + 2);
 	(void) strcpy(shname_minus, "-");
 	(void) strcat(shname_minus, shname);
@@ -4192,11 +4241,8 @@ Exit(int n)
 	struct utmp utmp;
 	struct utmp *utptr;
 #endif
-	char* ptyname;
-	char* ptynameptr = 0;
 #if defined(WTMP) && !defined(SVR4) && !(defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
 	int fd;			/* for /etc/wtmp */
-	int i;
 #endif
 
 	/* don't do this more than once */
@@ -4205,7 +4251,7 @@ Exit(int n)
 	xterm_exiting = True;
 
 #ifdef PUCC_PTYD
-	closepty(ttydev, ptydev, (resource.utmpInhibit ?  OPTY_NOP : OPTY_LOGIN), Ptyfd);
+	closepty(ttydev, ptydev, (resource.utmpInhibit ?  OPTY_NOP : OPTY_LOGIN), screen->respond);
 #endif /* PUCC_PTYD */
 
 	/* cleanup the utmp entry we forged earlier */
@@ -4214,13 +4260,8 @@ Exit(int n)
 	    && added_utmp_entry
 #endif /* USE_HANDSHAKE */
 	    ) {
-	    ptyname = ttydev;
 	    utmp.ut_type = USER_PROCESS;
-	    if (PTYCHARLEN >= (int)strlen(ptyname))
-		ptynameptr = ptyname;
-	    else
-		ptynameptr = ptyname + strlen(ptyname) - PTYCHARLEN;
-	    (void) strncpy(utmp.ut_id, ptynameptr, sizeof(utmp.ut_id));
+	    (void) strncpy(utmp.ut_id, my_pty_id(ttydev), sizeof(utmp.ut_id));
 	    (void) setutent();
 	    utptr = getutid(&utmp);
 	    /* write it out only if it exists, and the pid's match */
@@ -4249,8 +4290,8 @@ Exit(int n)
 		    /* set wtmp entry if wtmp file exists */
 		    if (term->misc.login_shell &&
 			(fd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
-		      i = write(fd, utptr, sizeof(*utptr));
-		      i = close(fd);
+			write(fd, utptr, sizeof(*utptr));
+			close(fd);
 		    }
 #endif
 #endif
@@ -4263,7 +4304,7 @@ Exit(int n)
 	struct utmp utmp;
 
 	if (!resource.utmpInhibit && added_utmp_entry &&
-	    (!am_slave && tslot > 0 && (wfd = open(etc_utmp, O_WRONLY)) >= 0)){
+	    (am_slave < 0 && tslot > 0 && (wfd = open(etc_utmp, O_WRONLY)) >= 0)){
 		bzero((char *)&utmp, sizeof(utmp));
 		lseek(wfd, (long)(tslot * sizeof(utmp)), 0);
 		write(wfd, (char *)&utmp, sizeof(utmp));
@@ -4271,12 +4312,12 @@ Exit(int n)
 #ifdef WTMP
 		if (term->misc.login_shell &&
 		    (wfd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
-			register int i;
-			(void) strncpy(utmp.ut_line, ttydev +
-			    sizeof("/dev"), sizeof (utmp.ut_line));
+			(void) strncpy(utmp.ut_line,
+		 	    my_pty_name(ttydev),
+			    sizeof (utmp.ut_line));
 			time(&utmp.ut_time);
-			i = write(wfd, (char *)&utmp, sizeof(utmp));
-			i = close(wfd);
+			write(wfd, (char *)&utmp, sizeof(utmp));
+			close(wfd);
 		}
 #endif /* WTMP */
 	}
@@ -4291,10 +4332,10 @@ Exit(int n)
 #endif
 
 #ifndef AMOEBA
-	if (!am_slave) {
+	if (am_slave < 0) {
 		/* restore ownership of tty and pty */
 		set_owner (ttydev, 0, 0, 0666);
-#if (!defined(__sgi) && !defined(__osf__) && !defined(__hpux))
+#if (defined(USE_PTY_DEVICE) && !defined(__sgi) && !defined(__hpux))
 		set_owner (ptydev, 0, 0, 0666);
 #endif
 	}
@@ -4314,13 +4355,13 @@ resize(TScreen *screen, register char *oldtc, char *newtc)
 	register char *temp;
 
 	TRACE(("resize %s\n", oldtc));
-	if ((ptr1 = strindex (oldtc, "co#")) == NULL){
+	if ((ptr1 = x_strindex (oldtc, "co#")) == NULL){
 		strcat (oldtc, "co#80:");
-		ptr1 = strindex (oldtc, "co#");
+		ptr1 = x_strindex (oldtc, "co#");
 	}
-	if ((ptr2 = strindex (oldtc, "li#")) == NULL){
+	if ((ptr2 = x_strindex (oldtc, "li#")) == NULL){
 		strcat (oldtc, "li#24:");
-		ptr2 = strindex (oldtc, "li#");
+		ptr2 = x_strindex (oldtc, "li#");
 	}
 	if(ptr1 > ptr2) {
 		li_first++;

@@ -134,6 +134,10 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 			      screen->utf_char <<= 6;
 			      screen->utf_char |= (c & 0x3f);
 			    }
+			    if ((screen->utf_char >= 0xd800 && screen->utf_char <= 0xdfff) ||
+				(screen->utf_char == 0xfffe) || (screen->utf_char == 0xffff)) {
+			      screen->utf_char = UCS_REPL;
+			    }
 			    screen->utf_count--;
 			    if (screen->utf_count == 0)
 				data->buf2[j++] = screen->utf_char;

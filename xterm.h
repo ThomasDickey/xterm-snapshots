@@ -576,7 +576,6 @@ extern void show_8bit_control  (Bool value);
 /* misc.c */
 extern Cursor make_colored_cursor (unsigned cursorindex, unsigned long fg, unsigned long bg);
 extern char *SysErrorMsg (int n);
-extern char *strindex (char *s1, char *s2);
 extern char *udk_lookup (int keycode, int *len);
 extern int XStrCmp (char *s1, char *s2);
 extern int creat_as (int uid, int gid, Boolean append, char *pathname, int mode);
@@ -707,7 +706,7 @@ extern GC updatedXtermGC (TScreen *screen, int flags, int fg_bg, Bool hilite);
 extern int AddToRefresh (TScreen *screen);
 extern int HandleExposure (TScreen *screen, XEvent *event);
 extern int char2lower(int ch);
-extern int drawXtermText (TScreen *screen, unsigned flags, GC gc, int x, int y, int chrset, PAIRED_CHARS(Char *text, Char *text2), Cardinal len);
+extern int drawXtermText (TScreen *screen, unsigned flags, GC gc, int x, int y, int chrset, PAIRED_CHARS(Char *text, Char *text2), Cardinal len, int on_wide);
 extern void ChangeAnsiColors (XtermWidget tw);
 extern void ChangeColors (XtermWidget tw, ScrnColors *pNew);
 extern void ClearRight (TScreen *screen, int n);
