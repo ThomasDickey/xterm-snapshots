@@ -28,6 +28,8 @@
 #ifndef included_data_h
 #define included_data_h 1
 
+#include <ptyx.h>
+
 #if XtSpecificationRelease >= 6 && !defined(NO_XPOLL_H)
 #include <X11/Xpoll.h>
 #else
@@ -60,7 +62,6 @@ extern int Tbcnt;
 extern int Ttoggled;
 #endif
 
-extern XPoint VTbox[];
 extern Char *bptr;
 #ifdef ALLOWLOGGING
 extern char log_def_name[];

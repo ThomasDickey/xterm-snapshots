@@ -9,13 +9,9 @@
  *	Leendert van Doorn, 1992
  */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
-#include "ptyx.h"
-#include "data.h"
-#include "error.h"
+#include <ptyx.h>
+#include <data.h>
+#include <error.h>
 #include <stdio.h>
 
 extern char *ProgramName;

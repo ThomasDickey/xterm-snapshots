@@ -69,12 +69,8 @@ SOFTWARE.
 
 /* main.c */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
-#include "version.h"
-#include "ptyx.h"
+#include <version.h>
+#include <xterm.h>
 
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
@@ -87,10 +83,9 @@ SOFTWARE.
 #include <pwd.h>
 #include <ctype.h>
 
-#include "data.h"
-#include "error.h"
-#include "menu.h"
-#include "xterm.h"
+#include <data.h>
+#include <error.h>
+#include <menu.h>
 
 #ifdef AMOEBA
 #include <amoeba.h>
@@ -212,6 +207,10 @@ static Bool IsPts = False;
 #define WTMP
 #define HAS_BSD_GROUPS
 #define USE_TTY_GROUP
+#endif
+
+#ifdef USE_TTY_GROUP
+#include <grp.h>
 #endif
 
 #ifndef __CYGWIN32__
@@ -501,7 +500,15 @@ extern char *ptsname();
 
 int switchfb[] = {0, 2, 1, 3};
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 extern int tgetent (char *ptr, char *name);
+
+#ifdef	__cplusplus
+	}
+#endif
 
 static SIGNAL_T reapchild (int n);
 static char *base_name (char *name);
@@ -2626,7 +2633,7 @@ spawn (void)
 
 			/* We have a new pty to try */
 			free(ttydev);
-			ttydev = malloc((unsigned)
+			ttydev = (char *)malloc((unsigned)
 			    (strlen(handshake.buffer) + 1));
 			if (ttydev == NULL) {
 			    SysError(ERROR_SPREALLOC);
@@ -2640,7 +2647,7 @@ spawn (void)
 		if ((ptr = ttyname(tty)) != 0)
 		{
 			/* it may be bigger */
-			ttydev = realloc (ttydev,
+			ttydev = (char *)realloc (ttydev,
 				(unsigned) (strlen(ptr) + 1));
 			if (ttydev == NULL) {
 			    SysError(ERROR_SPREALLOC);
@@ -2655,7 +2662,6 @@ spawn (void)
 
 #ifdef USE_TTY_GROUP
 	{
-#include <grp.h>
 		struct group *ttygrp;
 		if ((ttygrp = getgrnam("tty")) != 0) {
 			/* change ownership of tty to real uid, "tty" gid */
@@ -3370,7 +3376,7 @@ spawn (void)
 			shname++;
 		else
 			shname = ptr;
-		shname_minus = malloc(strlen(shname) + 2);
+		shname_minus = (char *)malloc(strlen(shname) + 2);
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
 #if !defined(USE_SYSV_TERMIO) && !defined(USE_POSIX_TERMIOS)
@@ -3452,7 +3458,7 @@ spawn (void)
 			tslot = handshake.tty_slot;
 #endif	/* USE_SYSV_UTMP */
 			free(ttydev);
-			ttydev = malloc((unsigned) strlen(handshake.buffer) + 1);
+			ttydev = (char *)malloc((unsigned) strlen(handshake.buffer) + 1);
 			strcpy(ttydev, handshake.buffer);
 			break;
 		default:

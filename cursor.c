@@ -28,14 +28,8 @@
 
 /* cursor.c */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
-#include "ptyx.h"		/* also gets Xlib.h */
-
-#include "data.h"
-#include "xterm.h"
+#include <xterm.h>
+#include <data.h>
 
 static void _CheckSelection (register TScreen *screen)
 {

@@ -28,15 +28,8 @@
 
 /* tabs.c */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
-#include "ptyx.h"
-
-#include "xterm.h"
-
-extern XtermWidget term;
+#include <xterm.h>
+#include <data.h>
 
 /*
  * This file presumes 32bits/word.  This is somewhat of a crock, and should

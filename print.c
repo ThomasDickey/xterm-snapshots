@@ -34,16 +34,11 @@ authorization.
 
 ********************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
 #include <stdio.h>
 
-#include "ptyx.h"
-#include "data.h"
-#include "error.h"
-#include "xterm.h"
+#include <xterm.h>
+#include <data.h>
+#include <error.h>
 
 #define SHIFT_IN  '\017'
 #define SHIFT_OUT '\016'
@@ -326,13 +321,13 @@ static void stringToPrinter(char *str)
  * VT330/VT340 Programmer Reference Manual EK-VT3XX-TP-001 (Digital Equipment
  * Corp., March 1987).
  */
-void xtermMediaControl (int param, int private)
+void xtermMediaControl (int param, int private_seq)
 {
 	register TScreen *screen = &term->screen;
 
-	TRACE(("MediaCopy param=%d, private=%d\n", param, private))
+	TRACE(("MediaCopy param=%d, private=%d\n", param, private_seq))
 
-	if (private) {
+	if (private_seq) {
 		switch (param) {
 		case  1:
 			printCursorLine();

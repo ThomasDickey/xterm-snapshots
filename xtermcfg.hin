@@ -70,6 +70,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef size_t		/* AC_TYPE_SIZE_T */
 #undef time_t		/* AC_CHECK_TYPE(time_t, long) */
 
+#undef GCC_PRINTF
 #undef GCC_UNUSED
 
 #if USE_OK_BCOPY

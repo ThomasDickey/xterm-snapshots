@@ -38,9 +38,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include "trace.h"
-
 #include <stdarg.h>
+
+#include <trace.h>
 
 char *trace_who = "parent";
 

@@ -8,6 +8,10 @@
 #ifndef	included_xterm_h
 #define	included_xterm_h
 
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
+
 #ifndef GCC_UNUSED
 #define GCC_UNUSED /* nothing */
 #endif
@@ -76,7 +80,12 @@ extern int errno;
 
 /***====================================================================***/
 
-#include "proto.h"
+#include <proto.h>
+#include <ptyx.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 /* Tekproc.c */
 extern int TekInit (void);
@@ -233,7 +242,7 @@ extern void FlushLog (TScreen *screen);
 /* print.c */
 extern int xtermPrinterControl (int chr);
 extern void xtermAutoPrint (int chr);
-extern void xtermMediaControl (int param, int private);
+extern void xtermMediaControl (int param, int private_seq);
 extern void xtermPrintScreen (void);
 
 /* screen.c */
@@ -277,6 +286,7 @@ extern void TabZonk (Tabs	tabs);
 extern GC updatedXtermGC (TScreen *screen, int flags, int fg_bg, Bool hilite);
 extern int AddToRefresh (TScreen *screen);
 extern int HandleExposure (TScreen *screen, XEvent *event);
+extern int char2lower(int ch);
 extern int drawXtermText (TScreen *screen, unsigned flags, GC gc, int x, int y, int chrset, Char *text, int len);
 extern void ChangeColors (XtermWidget tw, ScrnColors *pNew);
 extern void ClearRight (TScreen *screen, int n);
@@ -337,6 +347,10 @@ extern int curXtermChrSet (int row);
 extern void Mark_XMC (TScreen *screen, int param);
 extern void Jump_XMC (TScreen *screen);
 extern void Resolve_XMC (TScreen *screen);
+#endif
+
+#ifdef	__cplusplus
+	}
 #endif
 
 #endif	/* included_xterm_h */

@@ -34,15 +34,8 @@ authorization.
 
 ********************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
-#include <X11/Xos.h>
-
-#include "ptyx.h"
-#include "data.h"
-#include "xterm.h"
+#include <xterm.h>
+#include <data.h>
 
 /*
  * This module performs translation as needed to support the DEC VT220 national

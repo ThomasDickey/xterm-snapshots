@@ -28,6 +28,26 @@
 
 /* @(#)Tekparse.h	X10/6.6	11/7/86 */
 
+#ifndef included_Tekparse_h
+#define included_Tekparse_h 1
+
+#ifndef Const
+# if defined(__STDC__) && !defined(__cplusplus)
+#  define Const const
+# else
+#  define Const /**/
+# endif
+#endif
+
+extern Const int Talptable[];
+extern Const int Tbestable[];
+extern Const int Tbyptable[];
+extern Const int Tesctable[];
+extern Const int Tipltable[];
+extern Const int Tplttable[];
+extern Const int Tpttable[];
+extern Const int Tspttable[];
+
 /*
  * The following list of definitions is generated from Tekparse.def using the
  * following command line:
@@ -74,3 +94,5 @@
 #define CASE_SP 31
 #define CASE_PRINT 32
 #define CASE_OSC 33
+
+#endif /* included_Tekparse_h */

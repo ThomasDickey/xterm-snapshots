@@ -33,7 +33,12 @@ from the X Consortium.
 #ifndef included_menu_h
 #define included_menu_h
 
-#include "proto.h"
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
+
+#include <X11/Intrinsic.h>
+#include <proto.h>
 
 typedef struct _MenuEntry {
     char *name;

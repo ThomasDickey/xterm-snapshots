@@ -3,7 +3,9 @@
 #ifndef included_proto_h
 #define included_proto_h
 
-#include <X11/Xfuncproto.h>
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
 
 #define PROTO_XT_ACTIONS_ARGS \
 	(Widget w, XEvent *event, String *params, Cardinal *num_params)

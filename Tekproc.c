@@ -56,11 +56,8 @@ in this Software without prior written authorization from the X Consortium.
 
 /* Tekproc.c */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
+#include <xterm.h>
 
-#include "ptyx.h"
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
@@ -74,12 +71,10 @@ in this Software without prior written authorization from the X Consortium.
 #include <setjmp.h>
 #include <signal.h>
 
-#include "xterm.h"
-
-#include "Tekparse.h"
-#include "data.h"
-#include "error.h"
-#include "menu.h"
+#include <Tekparse.h>
+#include <data.h>
+#include <error.h>
+#include <menu.h>
 
 #ifdef X_NOT_STDC_ENV
 extern time_t time ();
@@ -173,17 +168,8 @@ static jmp_buf Tekjump;
 static TekLink *TekRecord;
 static XSegment *Tline;
 
-extern int Talptable[];
-extern int Tbestable[];
-extern int Tbyptable[];
-extern int Tesctable[];
-extern int Tipltable[];
-extern int Tplttable[];
-extern int Tpttable[];
-extern int Tspttable[];
-
-static int *curstate = Talptable;
-static int *Tparsestate = Talptable;
+static Const int *curstate = Talptable;
+static Const int *Tparsestate = Talptable;
 
 static char defaultTranslations[] = "\
                 ~Meta<KeyPress>: insert-seven-bit() \n\
@@ -292,7 +278,7 @@ static void TekConfigure (Widget w);
 static void TekDraw (int x, int y);
 static void TekEnq (int status, int x, int y);
 static void TekFlush (void);
-static void TekInitialize (Widget request, Widget new, ArgList args, Cardinal *num_args);
+static void TekInitialize (Widget request, Widget wnew, ArgList args, Cardinal *num_args);
 static void TekPage (void);
 static void TekRealize (Widget gw, XtValueMask *valuemaskp, XSetWindowAttributes *values);
 
@@ -1075,12 +1061,12 @@ AddToDraw(int x1, int y1, int x2, int y2)
 		TekFlush();
 	}
 	lp = line_pt++;
-	lp->x1 = x1 = x1 * TekScale(screen) + screen->border;
-	lp->y1 = y1 = (TEKHEIGHT + TEKTOPPAD - y1) * TekScale(screen) +
-	 screen->border;
-	lp->x2 = x2 = x2 * TekScale(screen) + screen->border;
-	lp->y2 = y2 = (TEKHEIGHT + TEKTOPPAD - y2) * TekScale(screen) +
-	 screen->border;
+	lp->x1 = x1 = (int) (x1 * TekScale(screen) + screen->border);
+	lp->y1 = y1 = (int) ((TEKHEIGHT + TEKTOPPAD - y1) * TekScale(screen) +
+				screen->border);
+	lp->x2 = x2 = (int) (x2 * TekScale(screen) + screen->border);
+	lp->y2 = y2 = (int) ((TEKHEIGHT + TEKTOPPAD - y2) * TekScale(screen) +
+				screen->border);
 	nplot++;
 }
 
@@ -1144,12 +1130,12 @@ TekEnqMouse(int c)		/* character pressed */
 	    &rootx, &rooty,
 	    &mousex, &mousey,
 	    &mask);
-	if((mousex = (mousex - screen->border) / TekScale(screen)) < 0)
+	if((mousex = (int)((mousex - screen->border) / TekScale(screen))) < 0)
 		mousex = 0;
 	else if(mousex >= TEKWIDTH)
 		mousex = TEKWIDTH - 1;
-	if((mousey = TEKHEIGHT + TEKTOPPAD - (mousey - screen->border) /
-	     TekScale(screen)) < 0)
+	if((mousey = (int)(TEKHEIGHT + TEKTOPPAD - (mousey - screen->border) /
+	     TekScale(screen))) < 0)
 		mousey = 0;
 	else if(mousey >= TEKHEIGHT)
 		mousey = TEKHEIGHT - 1;
@@ -1252,20 +1238,20 @@ static unsigned char *dashes[TEKNUMLINES] = {
 
 static void TekInitialize(
     Widget request GCC_UNUSED,
-    Widget new GCC_UNUSED,
+    Widget wnew GCC_UNUSED,
     ArgList args GCC_UNUSED,
     Cardinal *num_args GCC_UNUSED)
 {
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
      */
-    XtAddEventHandler(XtParent(new), EnterWindowMask, FALSE,
+    XtAddEventHandler(XtParent(wnew), EnterWindowMask, FALSE,
 		      HandleEnterWindow, (caddr_t)NULL);
-    XtAddEventHandler(XtParent(new), LeaveWindowMask, FALSE,
+    XtAddEventHandler(XtParent(wnew), LeaveWindowMask, FALSE,
 		      HandleLeaveWindow, (caddr_t)NULL);
-    XtAddEventHandler(XtParent(new), FocusChangeMask, FALSE,
+    XtAddEventHandler(XtParent(wnew), FocusChangeMask, FALSE,
 		      HandleFocusChange, (caddr_t)NULL);
-    XtAddEventHandler((Widget)new, PropertyChangeMask, FALSE,
+    XtAddEventHandler((Widget)wnew, PropertyChangeMask, FALSE,
 		      HandleBellPropertyChange, (Opaque)NULL);
 }
 
@@ -1655,9 +1641,9 @@ TCursorToggle(int toggle)	/* TOGGLE or CLEAR */
 	cellheight = (unsigned) (tekWidget->tek.Tfont[c]->ascent + 
 				 tekWidget->tek.Tfont[c]->descent);
 
-	x = (screen->cur_X * TekScale(screen)) + screen->border;
-	y = ((TEKHEIGHT + TEKTOPPAD - screen->cur_Y) * TekScale(screen)) +
-	    screen->border - tekWidget->tek.tobaseline[c];
+	x = (int)((screen->cur_X * TekScale(screen)) + screen->border);
+	y = (int)(((TEKHEIGHT + TEKTOPPAD - screen->cur_Y) * TekScale(screen))
+	    + screen->border - tekWidget->tek.tobaseline[c]);
 
 	if (toggle == TOGGLE) {
 	   if (screen->select || screen->always_highlight) 

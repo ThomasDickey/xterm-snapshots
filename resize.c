@@ -242,7 +242,7 @@ char *wsize[EMULATIONS] = {
 #endif	/* TIOCSWINSZ */
 #endif	/* sun */
 
-#include "proto.h"
+#include <proto.h>
 
 static SIGNAL_T onintr (int sig);
 static SIGNAL_T resize_timeout (int sig);

@@ -29,17 +29,11 @@
 
 /* screen.c */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
+#include <xterm.h>
+#include <error.h>
+#include <data.h>
+#include <xcharmouse.h>
 
-#include "ptyx.h"
-#include "error.h"
-#include "data.h"
-#include "xterm.h"
-#include "xcharmouse.h"
-
-#include <stdio.h>
 #include <signal.h>
 #ifdef SVR4
 #define SYSV
@@ -350,9 +344,9 @@ ScrnPointers (TScreen *screen, size_t len)
 
 	if (len > screen->save_len) {
 		if (screen->save_len)
-			screen->save_ptr = realloc(screen->save_ptr, len);
+			screen->save_ptr = (Char **)realloc(screen->save_ptr, len);
 		else
-			screen->save_ptr = malloc(len);
+			screen->save_ptr = (Char **)malloc(len);
 		screen->save_len = len;
 		if (screen->save_ptr == 0)
 			SysError (ERROR_SAVE_PTR);

@@ -66,8 +66,8 @@ SOFTWARE.
 #include <os2.h>
 #endif
 
-#include "version.h"
-#include "ptyx.h"
+#include <version.h>
+#include <xterm.h>
 
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
@@ -82,10 +82,9 @@ SOFTWARE.
 #include <pwd.h>
 #include <ctype.h>
 
-#include "data.h"
-#include "error.h"
-#include "menu.h"
-#include "xterm.h"
+#include <data.h>
+#include <error.h>
+#include <menu.h>
 
 #include <sys/termio.h>
 

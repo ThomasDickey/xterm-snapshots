@@ -28,18 +28,13 @@
 
 /* util.c */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
+#include <xterm.h>
 
-#include <stdio.h>
+#include <data.h>
+#include <error.h>
+#include <menu.h>
 
-#include "ptyx.h"
-#include "data.h"
-#include "error.h"
-#include "menu.h"
-
-#include "xterm.h"
+#include <ctype.h>
 
 extern Bool waiting_for_initial_map;
 
@@ -1643,3 +1638,15 @@ char *my_strerror(int n)
 }
 #endif
 #endif
+
+int char2lower(int ch)
+{
+	if (isascii(ch) && isupper(ch)) {		/* lowercasify */
+#ifdef _tolower
+		ch = _tolower (ch);
+#else
+		ch = tolower (ch);
+#endif
+	}
+	return ch;
+}

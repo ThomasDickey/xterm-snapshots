@@ -26,13 +26,7 @@
  * SOFTWARE.
  */
 
-#include "Tekparse.h"
-
-#ifdef __STDC__
-#define Const const
-#else
-#define Const /**/
-#endif
+#include <Tekparse.h>
 
 Const int Talptable[] =		/* US (^_) normal alpha mode */
 {
