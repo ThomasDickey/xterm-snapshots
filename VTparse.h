@@ -45,6 +45,9 @@ typedef char PARSE_T;
 extern Const PARSE_T ansi_table[];
 extern Const PARSE_T csi_ex_table[];
 extern Const PARSE_T csi_quo_table[];
+#if OPT_DEC_LOCATOR
+extern Const PARSE_T csi_tick_table[];
+#endif	/* OPT_DEC_LOCATOR */
 extern Const PARSE_T csi_table[];
 extern Const PARSE_T dec2_table[];
 extern Const PARSE_T dec3_table[];
@@ -190,5 +193,10 @@ extern Const PARSE_T vt52_esc_table[];
 #define CASE_DEC_MC 113
 #define CASE_ESC_PERCENT 114
 #define CASE_UTF8 115
+#define CASE_CSI_TICK_STATE 116
+#define CASE_DECELR 117
+#define CASE_DECRQLP 118
+#define CASE_DECEFR 119
+#define CASE_DECSLE 120
 
 #endif /* included_VTparse_h */

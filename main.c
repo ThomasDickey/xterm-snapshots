@@ -110,7 +110,6 @@ SOFTWARE.
 
 #define setpgrp(pid, pgid) setpgid(pid, pgid)
 #define USE_TERMIOS
-#define HAS_UTMP_UT_HOST
 #define MNX_LASTLOG
 #define WTMP
 /* Remap or define non-existing termios flags */
@@ -129,7 +128,6 @@ SOFTWARE.
 #endif
 
 #ifdef __osf__
-#define USE_SYSV_UTMP
 #define USE_SYSV_SIGNALS
 #endif
 
@@ -137,15 +135,12 @@ SOFTWARE.
 #undef  SYSV			/* predefined on Solaris 2.4 */
 #define SYSV			/* SVR4 is (approx) superset of SVR3 */
 #define ATT
-#define USE_SYSV_UTMP
 #ifndef __sgi
 #define USE_TERMIOS
 #endif
-#define HAS_UTMP_UT_HOST
 #endif
 
 #if defined(SYSV) && defined(i386) && !defined(SVR4)
-#define USE_SYSV_UTMP
 #define ATT
 #define USE_HANDSHAKE
 static Bool IsPts = False;
@@ -174,9 +169,7 @@ static Bool IsPts = False;
 #ifdef linux
 #define USE_TERMIOS
 #define USE_SYSV_PGRP
-#define USE_SYSV_UTMP
 #define USE_SYSV_SIGNALS
-#define HAS_UTMP_UT_HOST
 #define LASTLOG
 #define WTMP
 #undef  HAS_LTCHARS
@@ -190,11 +183,8 @@ static Bool IsPts = False;
 #define USE_POSIX_TERMIOS
 #define USE_USG_PTYS
 #define USE_SYSV_PGRP
-#define USE_SYSV_UTMP
 #define USE_SYSV_SIGNALS
-#define USE_TTY_GROUP
-#define UTMP
-#define HAS_UTMP_UT_HOST
+#define HAVE_UTMP
 #define ut_name ut_user
 #define ut_xtime ut_tv.tv_sec
 #undef  HAS_LTCHARS
@@ -227,7 +217,6 @@ static Bool IsPts = False;
 #define USE_SYSV_PGRP
 #define WTMP
 #define HAS_BSD_GROUPS
-#define USE_TTY_GROUP
 #endif
 
 #ifdef USE_TTY_GROUP
@@ -252,10 +241,9 @@ static Bool IsPts = False;
 #endif
 #endif
 
-#ifdef USE_POSIX_TERMIOS
+#if defined(USE_POSIX_TERMIOS)
 #include <termios.h>
-#else
-#ifdef USE_TERMIOS
+#elif defined(USE_TERMIOS)
 #include <termios.h>
 /* this hacked termios support only works on SYSV */
 #define USE_SYSV_TERMIO
@@ -264,18 +252,13 @@ static Bool IsPts = False;
 #define TCGETA TCGETS
 #undef TCSETA
 #define TCSETA TCSETS
-#else /* USE_TERMIOS */
-#ifdef SYSV
+#elif defined(SYSV)
 #include <sys/termio.h>
-#else /* SYSV */
-#if defined(sun) && !defined(SVR4)
+#elif defined(sun) && !defined(SVR4)
 #include <sys/ttycom.h>
 #ifdef TIOCSWINSZ
 #undef TIOCSSIZE
 #endif
-#endif
-#endif /* SYSV */
-#endif /* USE_TERMIOS else */
 #endif /* USE_POSIX_TERMIOS */
 
 #ifdef SVR4
@@ -312,14 +295,10 @@ static Bool IsPts = False;
  * now get system-specific includes
  */
 #ifdef CRAY
-#define USE_SYSV_UTMP
-#define HAS_UTMP_UT_HOST
 #define HAS_BSD_GROUPS
 #endif
 
 #ifdef macII
-#define USE_SYSV_UTMP
-#define HAS_UTMP_UT_HOST
 #define HAS_BSD_GROUPS
 #include <sys/ttychars.h>
 #undef USE_SYSV_ENVVARS
@@ -331,15 +310,11 @@ static Bool IsPts = False;
 #endif
 
 #ifdef SCO
-#define USE_SYSV_UTMP
 #define USE_POSIX_WAIT
-#define HAS_UTMP_UT_HOST
 #endif /* SCO */
 
 #ifdef __hpux
 #define HAS_BSD_GROUPS
-#define USE_SYSV_UTMP
-#define HAS_UTMP_UT_HOST
 #define USE_POSIX_WAIT
 #include <sys/ptyio.h>
 #endif /* __hpux */
@@ -351,11 +326,6 @@ static Bool IsPts = False;
 
 #ifdef sun
 #include <sys/strredir.h>
-#endif
-
-#ifdef AIXV3
-#define USE_SYSV_UTMP
-#define HAS_UTMP_UT_HOST
 #endif
 
 #else /* } !SYSV { */			/* BSD systems */
@@ -382,10 +352,8 @@ static Bool IsPts = False;
 #else
 #include <resource.h>
 #endif
-#define HAS_UTMP_UT_HOST
 #define HAS_BSD_GROUPS
 #ifdef __osf__
-#define USE_SYSV_UTMP
 #define setpgrp setpgid
 #endif
 #endif /* !linux */
@@ -445,7 +413,9 @@ extern time_t time ();
 #include <sys/filio.h>
 #endif
 
-#if (defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN32__)
+#include <sys/types.h>
+
+#if defined(UTMPX_FOR_UTMP)
 
 #include <utmpx.h>
 #define setutent setutxent
@@ -454,16 +424,8 @@ extern time_t time ();
 #define endutent endutxent
 #define pututline pututxline
 
-#else
+#elif defined(HAVE_UTMP)
 
-#ifdef ISC
-#include <sys/types.h>
-#endif
-#ifdef Lynx
-#ifdef UTMP
-#undef UTMP
-#endif
-#endif
 #include <utmp.h>
 #if defined(_CRAY) && (OSMAJORVERSION < 8)
 extern struct utmp *getutid __((struct utmp *_Id));
@@ -471,13 +433,8 @@ extern struct utmp *getutid __((struct utmp *_Id));
 
 #endif
 
-#ifndef ISC
-#if defined(UTMP) && !defined(__MVS__)
-#include <utmp.h>
-#endif
 #if defined(LASTLOG) && (!defined(BSD) || (BSD < 199103))
 #include <lastlog.h>
-#endif
 #endif
 
 #ifdef  PUCC_PTYD
@@ -803,6 +760,7 @@ static struct _resource {
     char *icon_name;
     char *term_name;
     char *tty_modes;
+    Boolean hold_screen;	/* true if we keep window open	*/
     Boolean utmpInhibit;
     Boolean sunFunctionKeys;	/* %%% should be widget resource? */
 #if OPT_SUNPC_KBD
@@ -846,6 +804,8 @@ static XtResource application_resources[] = {
 	offset(term_name), XtRString, (caddr_t) NULL},
     {"ttyModes", "TtyModes", XtRString, sizeof(char *),
 	offset(tty_modes), XtRString, (caddr_t) NULL},
+    {"hold", "Hold", XtRBoolean, sizeof (Boolean),
+	offset(hold_screen), XtRString, "false"},
     {"utmpInhibit", "UtmpInhibit", XtRBoolean, sizeof (Boolean),
 	offset(utmpInhibit), XtRString, "false"},
     {"sunFunctionKeys", "SunFunctionKeys", XtRBoolean, sizeof (Boolean),
@@ -939,6 +899,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "on"},
 {"+hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "off"},
 #endif
+{"-hold",	"*hold", 	XrmoptionNoArg,		(caddr_t) "on"},
+{"+hold",	"*hold", 	XrmoptionNoArg,		(caddr_t) "off"},
 #if OPT_INITIAL_ERASE
 {"-ie",		"*ptyInitialErase", XrmoptionNoArg,	(caddr_t) "on"},
 {"+ie",		"*ptyInitialErase", XrmoptionNoArg,	(caddr_t) "off"},
@@ -1067,6 +1029,7 @@ static struct _options {
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
 #endif
+{ "-/+hold",		   "turn on/off logic that retains window after exit" },
 #if OPT_INITIAL_ERASE
 { "-/+ie",		   "turn on/off initialization of 'erase' from pty" },
 #endif
@@ -1111,7 +1074,7 @@ static struct _options {
 #if OPT_WIDE_CHARS
 { "-/+u8",                 "turn on/off UTF-8 mode (implies wide-characters)" },
 #endif
-#ifdef UTMP
+#ifdef HAVE_UTMP
 { "-/+ut",                 "turn on/off utmp inhibit" },
 #else
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
@@ -1662,6 +1625,7 @@ main (int argc, char *argv[])
 #if OPT_SAME_NAME
 	sameName = resource.sameName;
 #endif
+	hold_screen = resource.hold_screen ? 1 : 0;
 	xterm_name = resource.xterm_name;
 	sunFunctionKeys = resource.sunFunctionKeys;
 #if OPT_SUNPC_KBD
@@ -1810,7 +1774,7 @@ main (int argc, char *argv[])
 	if(i >= 0) {
 #if defined(USE_SYSV_TERMIO) && !defined(SVR4) && !defined(linux)
 		/* SYSV has another pointer which should be part of the
-		** FILE structure but is actually a seperate array.
+		** FILE structure but is actually a separate array.
 		*/
 		unsigned char *old_bufend;
 
@@ -2283,7 +2247,8 @@ static void
 set_owner(char *device, int uid, int gid, int mode)
 {
 	if (chown (device, uid, gid) < 0) {
-		if (getuid() == 0) {
+		if (errno != ENOENT
+		 && getuid() == 0) {
 			fprintf(stderr, "Cannot chown %s to %d,%d: %s\n",
 				device, uid, gid, strerror(errno));
 		}
@@ -2345,7 +2310,7 @@ spawn (void)
 	struct winsize ws;
 #endif
 	struct passwd *pw = NULL;
-#ifdef UTMP
+#ifdef HAVE_UTMP
 #if (defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN32__)
 	struct utmpx utmp;
 #else
@@ -2354,7 +2319,7 @@ spawn (void)
 #ifdef LASTLOG
 	struct lastlog lastlog;
 #endif	/* LASTLOG */
-#endif	/* UTMP */
+#endif	/* HAVE_UTMP */
 
 	screen->uid = getuid();
 	screen->gid = getgid();
@@ -2671,7 +2636,7 @@ spawn (void)
 #else
 		int pgrp = getpid();
 #endif
-#if defined(UTMP) && defined(USE_SYSV_UTMP)
+#if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP)
 		char* ptyname;
 		char* ptynameptr = 0;
 #endif
@@ -3177,14 +3142,14 @@ spawn (void)
 		/* compute number of Setenv() calls below */
 		envsize = 1;	/* (NULL terminating entry) */
 		envsize += 3;	/* TERM, WINDOWID, DISPLAY */
-#ifdef UTMP
+#ifdef HAVE_UTMP
 		envsize += 1;   /* LOGNAME */
-#endif /* UTMP */
+#endif /* HAVE_UTMP */
 #ifdef USE_SYSV_ENVVARS
 		envsize += 2;	/* COLUMNS, LINES */
-#ifdef UTMP
+#ifdef HAVE_UTMP
 		envsize += 2;   /* HOME, SHELL */
-#endif /* UTMP */
+#endif /* HAVE_UTMP */
 #ifdef OWN_TERMINFO_DIR
 		envsize += 1;	/* TERMINFO */
 #endif
@@ -3276,7 +3241,7 @@ spawn (void)
 		}
 #endif
 
-#ifdef UTMP
+#ifdef HAVE_UTMP
 		pw = getpwuid(screen->uid);
 		if (pw && pw->pw_name)
 		    Setenv ("LOGNAME=", pw->pw_name); /* for POSIX */
@@ -3335,7 +3300,7 @@ spawn (void)
 		(void) strncpy (utmp.ut_line,
 			ptyname + strlen("/dev/"), sizeof (utmp.ut_line));
 
-#ifdef HAS_UTMP_UT_HOST
+#ifdef HAVE_UTMP_UT_HOST
 		(void) strncpy(buf, DisplayString(screen->display),
 			       sizeof(buf));
 #ifndef linux
@@ -3384,7 +3349,7 @@ spawn (void)
 
 #else	/* USE_SYSV_UTMP */
 		/* We can now get our ttyslot!  We can also set the initial
-		 * UTMP entry.
+		 * utmp entry.
 		 */
 		tslot = ttyslot();
 		added_utmp_entry = False;
@@ -3401,7 +3366,7 @@ spawn (void)
 				utmp.ut_pid = getpid();
 				utmp.ut_type = USER_PROCESS;
 #endif /* MINIX */
-#ifdef HAS_UTMP_UT_HOST
+#ifdef HAVE_UTMP_UT_HOST
 				(void) strncpy(utmp.ut_host,
 					       XDisplayString (screen->display),
 					       sizeof(utmp.ut_host));
@@ -3471,7 +3436,7 @@ spawn (void)
 		strcpy(handshake.buffer, ttydev);
 		(void)write(cp_pipe[1], (char *)&handshake, sizeof(handshake));
 #endif /* USE_HANDSHAKE */
-#endif/* UTMP */
+#endif/* HAVE_UTMP */
 
 		(void) setgid (screen->gid);
 #ifdef HAS_BSD_GROUPS
@@ -3526,14 +3491,14 @@ spawn (void)
 		sprintf (numbuf, "%d", screen->max_row + 1);
 		Setenv("LINES=", numbuf);
 		}
-#ifdef UTMP
+#ifdef HAVE_UTMP
 		if (pw) {	/* SVR4 doesn't provide these */
 		    if (!getenv("HOME"))
 			Setenv("HOME=", pw->pw_dir);
 		    if (!getenv("SHELL"))
 			Setenv("SHELL=", pw->pw_shell);
 		}
-#endif /* UTMP */
+#endif /* HAVE_UTMP */
 #ifdef OWN_TERMINFO_DIR
 		Setenv("TERMINFO=", OWN_TERMINFO_DIR);
 #endif
@@ -3592,15 +3557,15 @@ spawn (void)
 		signal (SIGHUP, SIG_DFL);
 #endif
 
-#ifdef UTMP
+#ifdef HAVE_UTMP
 		if(((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
 		 ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
 		 *(ptr = pw->pw_shell) == 0))
-#else	/* UTMP */
+#else	/* HAVE_UTMP */
 		if(((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
 		 ((pw = getpwuid(screen->uid)) == NULL ||
 		 *(ptr = pw->pw_shell) == 0))
-#endif	/* UTMP */
+#endif	/* HAVE_UTMP */
 			ptr = "/bin/sh";
 		if ((shname = strrchr(ptr, '/')) != 0)
 			shname++;
@@ -4116,9 +4081,9 @@ SIGNAL_T
 Exit(int n)
 {
 	register TScreen *screen = &term->screen;
-#ifdef UTMP
+#ifdef HAVE_UTMP
 #ifdef USE_SYSV_UTMP
-#if defined(SVR4) || defined(SCO325)
+#if defined(UTMPX_FOR_UTMP)
 	struct utmpx utmp;
 	struct utmpx *utptr;
 #else
@@ -4214,7 +4179,7 @@ Exit(int n)
 #endif /* WTMP */
 	}
 #endif	/* USE_SYSV_UTMP */
-#endif	/* UTMP */
+#endif	/* HAVE_UTMP */
 #ifndef AMOEBA
 	close(screen->respond); /* close explicitly to avoid race with slave side */
 #endif

@@ -61,6 +61,7 @@ XtAppContext app_con;
 XtermWidget term;	/* master data structure for client */
 char *xterm_name;	/* argv[0] */
 Boolean sunFunctionKeys;
+int hold_screen;
 
 #if OPT_HP_FUNC_KEYS
 Boolean hpFunctionKeys;

@@ -44,7 +44,11 @@ AC_ISC_POSIX
 AC_MINIX
 
 ###	checks for header files
-AC_CHECK_HEADERS(stdlib.h termios.h unistd.h)
+AC_CHECK_HEADERS( \
+stdlib.h \
+termios.h \
+unistd.h \
+)
 
 ###	checks for typedefs
 CF_SIZE_T
@@ -60,6 +64,7 @@ AC_CHECK_FUNCS( \
 	)
 CF_FUNC_MEMMOVE
 CF_FUNC_TGETENT
+CF_UTMP
 
 ###	checks for structures
 CF_TYPE_FD_SET
@@ -67,6 +72,7 @@ CF_POSIX_VDISABLE
 
 ###	checks for external data
 CF_ERRNO
+CF_TTY_GROUP
 
 ###	checks for compiler characteristics
 AC_CONST
@@ -412,6 +418,16 @@ if test $enable_wchar = yes ; then
 	EXTRAHDRS="$EXTRAHDRS keysym2ucs.h"
 	EXTRASRCS="$EXTRASRCS keysym2ucs.c"
 	EXTRAOBJS="$EXTRAOBJS keysym2ucs.o"
+fi
+
+AC_MSG_CHECKING(if you want DECterm Locator support)
+CF_ARG_ENABLE(dec-locator,
+	[  --enable-dec-locator    enable DECterm Locator support],
+	[enable_dec_locator=yes],
+	[enable_dec_locator=no])
+AC_MSG_RESULT($enable_dec_locator)
+if test $enable_dec_locator = yes ; then
+	AC_DEFINE(OPT_DEC_LOCATOR,1)
 fi
 
 AC_MSG_CHECKING(if you want -ziconbeep option)

@@ -43,14 +43,26 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define SET_BTN_EVENT_MOUSE         1002
 #define SET_ANY_EVENT_MOUSE         1003
 
+#if OPT_DEC_LOCATOR
+
+/* Bit fields for screen->locator_events */
+#define	LOC_BTNS_DN		0x1
+#define	LOC_BTNS_UP		0x2
+
+/* Special values for screen->loc_filter_* */
+#define	LOC_FILTER_POS		-1
+
+#endif	/* OPT_DEC_LOCATOR */
+
 /* Values for screen->send_mouse_pos */
 enum {
-	MOUSE_OFF,
-	X10_MOUSE,
-	VT200_MOUSE,
-	VT200_HIGHLIGHT_MOUSE,
-	BTN_EVENT_MOUSE,
-	ANY_EVENT_MOUSE
+	MOUSE_OFF
+	, X10_MOUSE
+	, VT200_MOUSE
+	, VT200_HIGHLIGHT_MOUSE
+	, BTN_EVENT_MOUSE
+	, ANY_EVENT_MOUSE
+	, DEC_LOCATOR
 };
 
 #endif /* included_xcharmouse_h */

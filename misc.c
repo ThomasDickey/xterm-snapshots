@@ -160,7 +160,11 @@ xevents(void)
 		else
 		if(OUR_EVENT(event, LeaveNotify))
 		  DoSpecialLeaveNotify (&event.xcrossing);
-		else if (screen->send_mouse_pos == ANY_EVENT_MOUSE
+		else if ((screen->send_mouse_pos == ANY_EVENT_MOUSE
+#if OPT_DEC_LOCATOR
+			|| screen->send_mouse_pos == DEC_LOCATOR
+#endif	/* OPT_DEC_LOCATOR */
+								)
 		 && event.xany.type == MotionNotify
 		 && event.xcrossing.window == XtWindow(term)) {
 		    SendMousePosition((Widget)term, &event);
@@ -1718,7 +1722,6 @@ Error (int i)
 	Cleanup(i);
 }
 
-
 /*
  * cleanup by sending SIGHUP to client processes
  */
@@ -1727,7 +1730,17 @@ Cleanup (int code)
 {
 	register TScreen *screen;
 
+	TRACE(("Cleanup %d\n", code))
+
 	screen = &term->screen;
+
+	if (hold_screen) {
+		hold_screen = 2;
+		while (hold_screen) {
+			xevents();
+		}
+	}
+
 	if (screen->pid > 1) {
 	    (void) kill_process_group (screen->pid, SIGHUP);
 	}

@@ -209,7 +209,7 @@ dnl
 AC_DEFUN([CF_DISABLE_ECHO],[
 AC_MSG_CHECKING(if you want to see long compiling messages)
 CF_ARG_DISABLE(echo,
-	[  --disable-echo          test: display "compiling" commands],
+	[  --disable-echo          display "compiling" commands],
 	[
     ECHO_LD='@echo linking [$]@;'
     RULE_CC='	@echo compiling [$]<'
@@ -657,6 +657,48 @@ AC_MSG_RESULT($cf_cv_type_size_t)
 test $cf_cv_type_size_t = no && AC_DEFINE(size_t, unsigned)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl Check if this is a SYSV flavor of UTMP
+AC_DEFUN([CF_SYSV_UTMP],
+[
+AC_REQUIRE([CF_UTMP])
+AC_CACHE_CHECK(if $cf_cv_have_utmp is SYSV flavor,cf_cv_sysv_utmp,[
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <${cf_cv_have_utmp}.h>],[
+struct $cf_cv_have_utmp x;
+	setutent ();
+	getutid(&x);
+	pututline(&x);
+	endutent();],
+	[cf_cv_sysv_utmp=yes],
+	[cf_cv_sysv_utmp=no])
+])
+test $cf_cv_sysv_utmp = yes && AC_DEFINE(USE_SYSV_UTMP)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Check if the system has a tty-group defined.  This is used in xterm when
+dnl setting pty ownership.
+AC_DEFUN([CF_TTY_GROUP],
+[
+AC_CACHE_CHECK(for tty group,cf_cv_tty_group,[
+AC_TRY_RUN([
+#include <sys/types.h>
+#include <grp.h>
+int main()
+{
+	struct group *ttygrp;
+	int code = (ttygrp = getgrnam("tty")) == 0;
+	endgrent();
+	exit(code);
+}
+	],
+	[cf_cv_tty_group=yes],
+	[cf_cv_tty_group=no],
+	[cf_cv_tty_group=unknown])
+])
+test $cf_cv_tty_group = yes && AC_DEFINE(USE_TTY_GROUP)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl Check for the declaration of fd_set.  Some platforms declare it in
 dnl <sys/types.h>, and some in <sys/select.h>, which requires <sys/types.h>
 AC_DEFUN([CF_TYPE_FD_SET],
@@ -688,6 +730,54 @@ $1=`echo $2 | tr '[a-z]' '[A-Z]'`
 changequote([,])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl Check for UTMP/UTMPX headers
+AC_DEFUN([CF_UTMP],
+[
+AC_CACHE_CHECK(for utmp implementation,cf_cv_have_utmp,[
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <utmp.h>],
+	[struct utmp x],
+	[cf_cv_have_utmp=utmp],
+	[AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <utmpx.h>],
+		[struct utmpx x],
+		[cf_cv_have_utmp=utmpx],
+		[cf_cv_have_utmp=no])
+		])
+	])
+
+if test $cf_cv_have_utmp != no ; then
+	AC_DEFINE(HAVE_UTMP)
+	test $cf_cv_have_utmp = utmpx && AC_DEFINE(UTMPX_FOR_UTMP)
+	CF_UTMP_UT_HOST
+	CF_SYSV_UTMP
+fi
+])
+dnl ---------------------------------------------------------------------------
+dnl Check if UTMP/UTMPX struct defines ut_host member
+AC_DEFUN([CF_UTMP_UT_HOST],
+[
+AC_REQUIRE([CF_UTMP])
+AC_MSG_CHECKING(if utmp.ut_host is declared)
+AC_CACHE_VAL(cf_cv_have_utmp_ut_host,[
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#ifdef UTMPX_FOR_UTMP
+#include <utmpx.h>
+#define utmp utmpx
+#else
+#include <utmp.h>
+#endif],
+	[struct utmp x; char *y = &x.ut_host[0]],
+	[cf_cv_have_utmp_ut_host=yes],
+	[cf_cv_have_utmp_ut_host=no])
+	])
+AC_MSG_RESULT($cf_cv_have_utmp_ut_host)
+test $cf_cv_have_utmp_ut_host != no && AC_DEFINE(HAVE_UTMP_UT_HOST)
+])
+dnl ---------------------------------------------------------------------------
 dnl Use AC_VERBOSE w/o the warnings
 AC_DEFUN([CF_VERBOSE],
 [test -n "$verbose" && echo "	$1" 1>&AC_FD_MSG
@@ -702,22 +792,65 @@ XTERM_USR=
 XTERM_GRP=
 AC_MSG_CHECKING(for presumed installation-mode)
 if test -f "$XTERM_PATH" ; then
-	ls -Llg $XTERM_PATH >conftest.out
-	read cf_mode cf_links XTERM_USR XTERM_GRP cf_rest <conftest.out
+	cf_option="-l -L"
+
+	# Expect listing to have fields like this:
+	#-r--r--r--   1 user      group       34293 Jul 18 16:29 pathname
+	ls $cf_option $XTERM_PATH >conftest.out
+	read cf_mode cf_links cf_usr cf_grp cf_size cf_date1 cf_date2 cf_date3 cf_rest <conftest.out
+	echo "if \"$cf_rest\" is null, try the -g option" 1>&AC_FD_CC
+	if test -z "$cf_rest" ; then
+		cf_option="$cf_option -g"
+		ls $cf_option $XTERM_PATH >conftest.out
+		read cf_mode cf_links cf_usr cf_grp cf_size cf_date1 cf_date2 cf_date3 cf_rest <conftest.out
+	fi
+
+	# If we have a pathname, and the date fields look right, assume we've
+	# captured the group as well.
+	echo "if \"$cf_rest\" is null, we do not look for group" 1>&AC_FD_CC
+	if test -n "$cf_rest" ; then
+changequote(,)dnl
+		cf_test=`echo "${cf_date2}${cf_date3}" | sed -e 's/[0-9:]//g'`
+changequote([,])dnl
+		echo "if we have date in proper columns ($cf_date1 $cf_date2 $cf_date3), \"$cf_test\" is null" 1>&AC_FD_CC
+		if test -z "$cf_test" ; then
+			XTERM_USR=$cf_usr;
+			XTERM_GRP=$cf_grp;
+		fi
+	fi
+	echo "derived user \"$XTERM_USR\", group \"$XTERM_GRP\" of previously-installed xterm" 1>&AC_FD_CC
+
+	echo "see if mode \"$cf_mode\" has s-bit set" 1>&AC_FD_CC
 	case ".$cf_mode" in #(vi
 	.???s*) #(vi
 		XTERM_MODE=4711
+		XTERM_GRP=
 		;;
 	.??????s*)
 		XTERM_MODE=2711
+		XTERM_USR=
 		;;
 	esac
 fi
-test "$XTERM_USR" = "root" && XTERM_USR=""
-test "$XTERM_GRP" = "root" && XTERM_GRP=""
+
+if test -n "${XTERM_USR}${XTERM_GRP}" ; then
+changequote(,)dnl
+	cf_usr=`id | sed -e 's/^[^(]*(//' -e 's/).*$//'`
+	cf_grp=`id | sed -e 's/^.* gid=[^(]*(//' -e 's/).*$//'`
+changequote([,])dnl
+	echo "configuring as user \"$cf_usr\", group \"$cf_grp\" of previously-installed xterm" 1>&AC_FD_CC
+	test "$XTERM_USR" = "$cf_usr" && XTERM_USR=""
+	test "$XTERM_USR" = "root"    && XTERM_USR=""
+	test "$XTERM_GRP" = "$cf_grp" && XTERM_GRP=""
+	test "$XTERM_GRP" = "root"    && XTERM_GRP=""
+	test "$XTERM_GRP" = "wheel"   && XTERM_GRP=""
+fi
+
 AC_MSG_RESULT($XTERM_MODE $XTERM_USR $XTERM_GRP)
+
 test -n "$XTERM_USR" && XTERM_USR="-o $XTERM_USR"
 test -n "$XTERM_GRP" && XTERM_GRP="-g $XTERM_GRP"
+
 AC_SUBST(XTERM_MODE)
 AC_SUBST(XTERM_USR)
 AC_SUBST(XTERM_GRP)

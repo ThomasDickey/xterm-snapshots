@@ -200,6 +200,7 @@
 .[] [[ [
 .[] ]] ]
 .[] bS \\e
+.[] { {
 .[] ] ]
 .[] ^ ^
 .[] _ _
@@ -228,6 +229,7 @@
 .[] w w
 .[] x x
 .[] y y
+.[] z z
 .[] | |
 .[] } }
 .[] ! !
@@ -238,11 +240,15 @@
 .ds Cb \fIC\v'.3m'\h'-.2m'\s-2b\s0\v'-.3m'\fP
 .ds Cx \fIC\v'.3m'\h'-.2m'\s-2x\s0\v'-.3m'\fP
 .ds Cy \fIC\v'.3m'\h'-.2m'\s-2y\s0\v'-.3m'\fP
+.ds Pb \fIP\v'.3m'\h'-.2m'\s-2b\s0\v'-.3m'\fP
 .ds Pc \fIP\v'.3m'\h'-.2m'\s-2c\s0\v'-.3m'\fP
+.ds Pl \fIP\v'.3m'\h'-.2m'\s-2l\s0\v'-.3m'\fP
 .ds Pm \fIP\v'.3m'\h'-.2m'\s-2m\s0\v'-.3m'\fP
 .ds Pp \fIP\v'.3m'\h'-.2m'\s-2p\s0\v'-.3m'\fP
+.ds Pr \fIP\v'.3m'\h'-.2m'\s-2r\s0\v'-.3m'\fP
 .ds Ps \fIP\v'.3m'\h'-.2m'\s-2s\s0\v'-.3m'\fP
 .ds Pt \fIP\v'.3m'\h'-.2m'\s-2t\s0\v'-.3m'\fP
+.ds Pu \fIP\v'.3m'\h'-.2m'\s-2u\s0\v'-.3m'\fP
 .ds Pv \fIP\v'.3m'\h'-.2m'\s-2v\s0\v'-.3m'\fP
 .ds Ix \fIx\fP
 .ds Iy \fIy\fP
@@ -351,7 +357,9 @@ discussion of character sets.
 .
 .St
 .\"
-.\" Single-character functions
+.LP
+.B
+Single-character functions
 .\"
 .IP \\*(Be
 Bell (Ctrl-G)
@@ -389,10 +397,14 @@ Vertical Tab (Ctrl-K) same as LF
 .IP \\*(Si
 Shift In (Ctrl-O) \(-> Switch to Standard Character Set: invokes the
 G0 character set (the default).
-.sp
+.Ed
 .\"
-.\" Controls beginning with ESC (other than those where ESC is part of a 7-bit
-.\" equivalent to 8-bit C1 controls), ordered by the final character(s).
+.\"
+.\"
+.St
+.LP
+.B
+Controls beginning with ESC (other than those where ESC is part of a 7-bit equivalent to 8-bit C1 controls), ordered by the final character(s).
 .\"
 .IP \\*(Es\\*(Sp\\*F
 7-bit controls (S7C1T).
@@ -496,16 +508,21 @@ Invoke the G2 Character Set as GR (LS2R).  Has no visible effect in \fIxterm\fP.
 .
 .IP \\*(Es\\*(c~
 Invoke the G1 Character Set as GR (LS1R).  Has no visible effect in \fIxterm\fP.
+.Ed
 .
-.sp
+.St
+.LP
+.B
+Application Program-Control functions
 .IP \\*(AP\\*(Pt\\*s\\*(ST
 \fIxterm\fP implements no APC functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
+.Ed
 .
-.sp
-.\"
-.\" Device-Control functions
-.\"
+.St
+.LP
+.B
+Device-Control functions
 .IP \\*(Dc\\*(Ps\\*;\\*(Ps\\*|\\*(Pt\\*s\\*(ST
 User-Defined Keys (DECUDK).
 The first parameter:
@@ -535,13 +552,55 @@ string,
 or
 \*(Dc\*0\*$\*r\*(Pt\*s\*(ST
 for invalid requests.
-.
-.sp
+.Ed
 .\"
-.\" Functions using CSI, ordered by the final character(s)
-.\"
+.St
+.LP
+.B
+Functions using CSI, ordered by the final character(s)
 .IP \\*(Cs\\*(Ps\\*s\\*@
 Insert \*(Ps (Blank) Character(s) (default = 1) (ICH)
+.
+.IP \\*(Cs\\*(Ps\\*s\\*'\\*s\\*|
+Request Locator Position (DECRQLP)
+.br
+Valid values for the parameter are:
+  \*(Ps = \*0, 1 or omitted \(-> transmit a single DECLRP locator report
+.sp
+If Locator Reporting has been enabled by a DECELR, xterm will respond
+with a DECLRP Locator Report.  This report is also generated on button
+up and down events if they have been enabled with a DECSLE, or when
+the locator is detected outside of a filter rectangle, if filter rectangles
+have been enabled with a DECEFR.
+.sp
+  \(-> \*(Cs\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\\&\*s\*w
+.sp
+Parameters are [event;button;row;column;page].
+.br
+Valid values for the event:
+  \*(Ps = \*0 \(-> locator unavailable - no other parameters sent
+  \*(Ps = \*1 \(-> request - xterm received a DECRQLP
+  \*(Ps = \*2 \(-> left button down
+  \*(Ps = \*3 \(-> left button up
+  \*(Ps = \*4 \(-> middle button down
+  \*(Ps = \*5 \(-> middle button up
+  \*(Ps = \*6 \(-> right button down
+  \*(Ps = \*7 \(-> right button up
+  \*(Ps = \*8 \(-> M4 button down
+  \*(Ps = \*9 \(-> M4 button up
+  \*(Ps = \*1\*0 \(-> locator outside filter rectangle
+.br
+``button'' parameter is a bitmask indicating which buttons are pressed:
+  \*(Ps = \*0 \(-> no buttons down
+  \*(Ps & \*1 \(-> right button down
+  \*(Ps & \*2 \(-> middle button down
+  \*(Ps & \*4 \(-> left button down
+  \*(Ps & \*8 \(-> M4 button down
+.br
+``row'' and ``column'' parameters are the coordinates of the locator
+position in the xterm window, encoded as ASCII decimal.
+.br
+The ``page'' parameter is not used by xterm, and will be omitted.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*A
 Cursor Up \*(Ps Times (default = 1) (CUU)
@@ -679,6 +738,55 @@ Set Mode (SM)
   \*(Ps = \*1\*2 \(-> Send/receive (SRM)
   \*(Ps = \*2\*0 \(-> Automatic Newline (LNM)
 .
+.IP \\*(Cs\\*?\\*(Pm\\*s\\*h
+DEC Private Mode Set (DECSET)
+  \*(Ps = \*1 \(-> Application Cursor Keys (DECCKM)
+  \*(Ps = \*2 \(-> Designate USASCII for character sets G0-G3 (DECANM),
+and set VT100 mode.
+  \*(Ps = \*3 \(-> 132 Column Mode (DECCOLM)
+  \*(Ps = \*4 \(-> Smooth (Slow) Scroll (DECSCLM)
+  \*(Ps = \*5 \(-> Reverse Video (DECSCNM)
+  \*(Ps = \*6 \(-> Origin Mode (DECOM)
+  \*(Ps = \*7 \(-> Wraparound Mode (DECAWM)
+  \*(Ps = \*8 \(-> Auto-repeat Keys (DECARM)
+  \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
+See the section \fBMouse Tracking\fP.
+  \*(Ps = \*1\*8 \(-> Print form feed (DECPFF)
+  \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX)
+  \*(Ps = \*2\*5 \(-> Show Cursor (DECTCEM)
+  \*(Ps = \*3\*0 \(-> Show scrollbar (rxvt).
+  \*(Ps = \*3\*5 \(-> Enable shifted key-functions (rxvt).
+  \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK)
+  \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode
+  \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fIcurses\fP resource)
+  \*(Ps = \*4\*2 \(-> Enable Nation Replacement Character sets (DECNRCM)
+  \*(Ps = \*4\*4 \(-> Turn On Margin Bell
+  \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode
+  \*(Ps = \*4\*6 \(-> Start Logging
+(normally disabled by a compile-time option)
+  \*(Ps = \*4\*7 \(-> Use Alternate Screen Buffer (unless
+disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*6\*6 \(-> Application keypad (DECNKM)
+  \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM)
+  \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
+See the section \fBMouse Tracking\fP.
+  \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
+  \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking.
+  \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking.
+  \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
+  \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
+  \*(Ps = \*1\*0\*3\*5 \(-> Enable special modifiers for Alt and NumLock keys.
+  \*(Ps = \*1\*0\*4\*7 \(-> Use Alternate Screen Buffer (unless
+disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*4\*8 \(-> Save cursor as in DECSC (unless
+disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*4\*9 \(-> Save cursor as in DECSC
+and use Alternate Screen Buffer, clearing it first (unless
+disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*5\*1 \(-> Set Sun function-key mode.
+  \*(Ps = \*1\*0\*5\*2 \(-> Set HP function-key mode.
+  \*(Ps = \*1\*0\*6\*1 \(-> Set Sun/PC keyboard mode.
+.
 .IP \\*(Cs\\*(Pm\\*s\\*i
 Media Copy (MC)
   \*(Ps = \*0 \(-> Print screen (default)
@@ -697,6 +805,53 @@ Reset Mode (RM)
   \*(Ps = \*4 \(-> Replace Mode (IRM)
   \*(Ps = \*1\*2 \(-> Send/receive (SRM)
   \*(Ps = \*2\*0 \(-> Normal Linefeed (LNM)
+.
+.IP \\*(Cs\\*?\\*(Pm\\*s\\*l
+DEC Private Mode Reset (DECRST)
+  \*(Ps = \*1 \(-> Normal Cursor Keys (DECCKM)
+  \*(Ps = \*2 \(-> Designate VT52 mode (DECANM).
+  \*(Ps = \*3 \(-> 80 Column Mode (DECCOLM)
+  \*(Ps = \*4 \(-> Jump (Fast) Scroll (DECSCLM)
+  \*(Ps = \*5 \(-> Normal Video (DECSCNM)
+  \*(Ps = \*6 \(-> Normal Cursor Mode (DECOM)
+  \*(Ps = \*7 \(-> No Wraparound Mode (DECAWM)
+  \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM)
+  \*(Ps = \*9 \(-> Don't Send Mouse X & Y on button press
+  \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF)
+  \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX)
+  \*(Ps = \*2\*5 \(-> Hide Cursor (DECTCEM)
+  \*(Ps = \*3\*0 \(-> Don't show scrollbar (rxvt).
+  \*(Ps = \*3\*5 \(-> Disable shifted key-functions (rxvt).
+  \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode
+  \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fIcurses\fP resource)
+  \*(Ps = \*4\*2 \(-> Disable Nation Replacement Character sets (DECNRCM)
+  \*(Ps = \*4\*4 \(-> Turn Off Margin Bell
+  \*(Ps = \*4\*5 \(-> No Reverse-wraparound Mode
+  \*(Ps = \*4\*6 \(-> Stop Logging
+(normally disabled by a compile-time option)
+  \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer
+  \*(Ps = \*6\*6 \(-> Numeric keypad (DECNKM)
+  \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM)
+  \*(Ps = \*1\*0\*0\*0 \(-> Don't Send Mouse X & Y on button press and
+release.
+See the section \fBMouse Tracking\fP.
+  \*(Ps = \*1\*0\*0\*1 \(-> Don't Use Hilite Mouse Tracking
+  \*(Ps = \*1\*0\*0\*2 \(-> Don't Use Cell Motion Mouse Tracking
+  \*(Ps = \*1\*0\*0\*3 \(-> Don't Use All Motion Mouse Tracking
+  \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
+  \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
+  \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for Alt and NumLock keys.
+  \*(Ps = \*1\*0\*4\*7 \(-> Use Normal Screen Buffer, clearing screen
+first if in the Alternate Screen (unless
+disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*4\*8 \(-> Restore cursor as in DECRC (unless
+disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*4\*9 \(-> Use Normal Screen Buffer and restore cursor
+as in DECRC (unless
+disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*5\*1 \(-> Reset Sun function-key mode.
+  \*(Ps = \*1\*0\*5\*2 \(-> Reset HP function-key mode.
+  \*(Ps = \*1\*0\*6\*1 \(-> Reset Sun/PC keyboard mode.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*m
 Character Attributes (SGR)
@@ -764,6 +919,7 @@ If 88- or 256-color support is compiled, the following apply.
 Device Status Report (DSR)
   \*(Ps = \*5 \(-> Status Report \*(Cs\*0\*n (``OK'')
   \*(Ps = \*6 \(-> Report Cursor Position (CPR) [row;column] as
+.br
 \*(Cs\*(Ir\*s\*;\*(Ic\*s\*R
 .
 .IP \\*(Cs\\*?\\*(Ps\\*s\\*n
@@ -780,6 +936,7 @@ or
 or
 \*(Cs\*?\*2\*1\*s\*n (locked)
   \*(Ps = \*2\*6 \(-> Report Keyboard status as
+.br
 \*(Cs\*?\*2\*7\*s\*;\*s\*1\*s\*;\*s\*0\*s\*;\*s\*0\*s\*n (North American)
 .
 .IP \\*(Cs\\*s\\*!\\*p
@@ -806,7 +963,14 @@ Valid values for the parameter:
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*r
 Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM)
 .
-.IP \\*(Cs\\*(Ps\\*s\\*;\\*s\\*(Ps\\*s\\*;\\*(Ps\\*s\\*t
+.IP \\*(Cs\\*?\\*(Pm\\*s\\*r
+Restore DEC Private Mode Values.  The value of \*(Ps previously saved is
+restored.  \*(Ps values are the same as for DECSET.
+.
+.IP \\*(Cs\\*?\\*(Pm\\*s\\*(cs
+Save DEC Private Mode Values.  \*(Ps values are the same as for DECSET.
+.
+.IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*t
 Window manipulation (from \fIdtterm\fP, as well as extensions).
 Valid values for the first (and any additional parameters) are:
   \*(Ps = \*1 \(-> De-iconify window.
@@ -836,113 +1000,54 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
 \*(Os\*s\*l\*s\fItitle\fP\*s\*(ST
   \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP)
 .
+.IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*s\\*(Pb\\*s\\*;\\*s\\*(Pr\\*s\\*s\\*'\\*s\\*w
+Enable Filter Rectangle (DECEFR)
+.br
+Parameters are [top;left;bottom;right].
+.br
+Defines the coordinates of a filter rectangle and activates it.
+Anytime the locator is detected outside of the filter rectangle,
+an outside rectangle event is generated and the rectangle is disabled.
+Filter rectangles are always treated as "one-shot" events.
+Any parameters that are omitted default to the current locator position.
+If all parameters are omitted, any locator motion will be reported.
+DECELR always cancels any prevous rectangle definition.
+.
 .IP \\*(Cs\\*(Ps\\*s\\*x
 Request Terminal Parameters (DECREQTPARM)
 .
-.IP \\*(Cs\\*?\\*(Pm\\*s\\*h
-DEC Private Mode Set (DECSET)
-  \*(Ps = \*1 \(-> Application Cursor Keys (DECCKM)
-  \*(Ps = \*2 \(-> Designate USASCII for character sets G0-G3 (DECANM),
-and set VT100 mode.
-  \*(Ps = \*3 \(-> 132 Column Mode (DECCOLM)
-  \*(Ps = \*4 \(-> Smooth (Slow) Scroll (DECSCLM)
-  \*(Ps = \*5 \(-> Reverse Video (DECSCNM)
-  \*(Ps = \*6 \(-> Origin Mode (DECOM)
-  \*(Ps = \*7 \(-> Wraparound Mode (DECAWM)
-  \*(Ps = \*8 \(-> Auto-repeat Keys (DECARM)
-  \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
-See the section \fBMouse Tracking\fP.
-  \*(Ps = \*1\*8 \(-> Print form feed (DECPFF)
-  \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX)
-  \*(Ps = \*2\*5 \(-> Show Cursor (DECTCEM)
-  \*(Ps = \*3\*0 \(-> Show scrollbar (rxvt).
-  \*(Ps = \*3\*5 \(-> Enable shifted key-functions (rxvt).
-  \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK)
-  \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode
-  \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fIcurses\fP resource)
-  \*(Ps = \*4\*2 \(-> Enable Nation Replacement Character sets (DECNRCM)
-  \*(Ps = \*4\*4 \(-> Turn On Margin Bell
-  \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode
-  \*(Ps = \*4\*6 \(-> Start Logging
-(normally disabled by a compile-time option)
-  \*(Ps = \*4\*7 \(-> Use Alternate Screen Buffer (unless
-disabled by the \fBtiteInhibit\fP resource)
-  \*(Ps = \*6\*6 \(-> Application keypad (DECNKM)
-  \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM)
-  \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
-See the section \fBMouse Tracking\fP.
-  \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
-  \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking.
-  \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking.
-  \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
-  \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
-  \*(Ps = \*1\*0\*3\*5 \(-> Enable special modifiers for Alt and NumLock keys.
-  \*(Ps = \*1\*0\*4\*7 \(-> Use Alternate Screen Buffer (unless
-disabled by the \fBtiteInhibit\fP resource)
-  \*(Ps = \*1\*0\*4\*8 \(-> Save cursor as in DECSC (unless
-disabled by the \fBtiteInhibit\fP resource)
-  \*(Ps = \*1\*0\*4\*9 \(-> Save cursor as in DECSC
-and use Alternate Screen Buffer, clearing it first (unless
-disabled by the \fBtiteInhibit\fP resource)
-  \*(Ps = \*1\*0\*5\*1 \(-> Set Sun function-key mode.
-  \*(Ps = \*1\*0\*5\*2 \(-> Set HP function-key mode.
-  \*(Ps = \*1\*0\*6\*1 \(-> Set Sun/PC keyboard mode.
+.IP \\*(Cs\\*(Ps\\*s\\*;\\*(Pu\\*s\\*s\\*'\\*s\\*z
+Enable Locator Reporting (DECELR)
+.br
+Valid values for the first parameter:
+  \*(Ps = \*0 \(-> Locator disabled (default)
+  \*(Ps = \*1 \(-> Locator enabled
+  \*(Ps = \*2 \(-> Locator enabled for one report, then disabled
+.br
+The second parameter specifies the coordinate unit for locator reports.
+.br
+Valid values for the second parameter:
+  \*(Pu = \*0 or omitted \(-> default to character cells
+  \*(Pu = \*1 \(-> device physical pixels
+  \*(Pu = \*2 \(-> character cells
 .
-.IP \\*(Cs\\*?\\*(Pm\\*s\\*l
-DEC Private Mode Reset (DECRST)
-  \*(Ps = \*1 \(-> Normal Cursor Keys (DECCKM)
-  \*(Ps = \*2 \(-> Designate VT52 mode (DECANM).
-  \*(Ps = \*3 \(-> 80 Column Mode (DECCOLM)
-  \*(Ps = \*4 \(-> Jump (Fast) Scroll (DECSCLM)
-  \*(Ps = \*5 \(-> Normal Video (DECSCNM)
-  \*(Ps = \*6 \(-> Normal Cursor Mode (DECOM)
-  \*(Ps = \*7 \(-> No Wraparound Mode (DECAWM)
-  \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM)
-  \*(Ps = \*9 \(-> Don't Send Mouse X & Y on button press
-  \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF)
-  \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX)
-  \*(Ps = \*2\*5 \(-> Hide Cursor (DECTCEM)
-  \*(Ps = \*3\*0 \(-> Don't show scrollbar (rxvt).
-  \*(Ps = \*3\*5 \(-> Disable shifted key-functions (rxvt).
-  \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode
-  \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fIcurses\fP resource)
-  \*(Ps = \*4\*2 \(-> Disable Nation Replacement Character sets (DECNRCM)
-  \*(Ps = \*4\*4 \(-> Turn Off Margin Bell
-  \*(Ps = \*4\*5 \(-> No Reverse-wraparound Mode
-  \*(Ps = \*4\*6 \(-> Stop Logging
-(normally disabled by a compile-time option)
-  \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer
-  \*(Ps = \*6\*6 \(-> Numeric keypad (DECNKM)
-  \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM)
-  \*(Ps = \*1\*0\*0\*0 \(-> Don't Send Mouse X & Y on button press and
-release.
-See the section \fBMouse Tracking\fP.
-  \*(Ps = \*1\*0\*0\*1 \(-> Don't Use Hilite Mouse Tracking
-  \*(Ps = \*1\*0\*0\*2 \(-> Don't Use Cell Motion Mouse Tracking
-  \*(Ps = \*1\*0\*0\*3 \(-> Don't Use All Motion Mouse Tracking
-  \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
-  \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
-  \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for Alt and NumLock keys.
-  \*(Ps = \*1\*0\*4\*7 \(-> Use Normal Screen Buffer, clearing screen
-first if in the Alternate Screen (unless
-disabled by the \fBtiteInhibit\fP resource)
-  \*(Ps = \*1\*0\*4\*8 \(-> Restore cursor as in DECRC (unless
-disabled by the \fBtiteInhibit\fP resource)
-  \*(Ps = \*1\*0\*4\*9 \(-> Use Normal Screen Buffer and restore cursor
-as in DECRC (unless
-disabled by the \fBtiteInhibit\fP resource)
-  \*(Ps = \*1\*0\*5\*1 \(-> Reset Sun function-key mode.
-  \*(Ps = \*1\*0\*5\*2 \(-> Reset HP function-key mode.
-  \*(Ps = \*1\*0\*6\*1 \(-> Reset Sun/PC keyboard mode.
+.IP \\*(Cs\\*(Pm\\*s\\*s\\*'\\*s\\*{
+Select Locator Events (DECSLE)
+.br
+Valid values for the first (and any additional parameters) are:
+  \*(Ps = \*0 \(-> only respond to explicit host requests (DECRQLP)
+             (default) also cancels any filter rectangle
+  \*(Ps = \*1 \(-> report button down transitions
+  \*(Ps = \*2 \(-> do not report button down transitions
+  \*(Ps = \*3 \(-> report button up transitions
+  \*(Ps = \*4 \(-> do not report button up transitions
+.Ed
 .
-.IP \\*(Cs\\*?\\*(Pm\\*s\\*r
-Restore DEC Private Mode Values.  The value of \*(Ps previously saved is
-restored.  \*(Ps values are the same as for DECSET.
+.St
+.LP
+.B
+Operating System Controls
 .
-.IP \\*(Cs\\*?\\*(Pm\\*s\\*(cs
-Save DEC Private Mode Values.  \*(Ps values are the same as for DECSET.
-.
-.sp
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(Be
 Set Text Parameters.
@@ -975,14 +1080,16 @@ If \*(Pt begins with a "#", index in the font menu, relative (if the
 next character is a plus or minus sign) or absolute.  A number is
 expected but not required after the sign (the default is the current
 entry for relative, zero for absolute indexing).
+.Ed
 .
-.sp
+.St
+.LP
+.B
+Privacy Message
 .IP \\*(PM\\*(Pt\\*s\\*(ST
 \fIxterm\fP implements no PM functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
-.
 .Ed
-.
 .
 .SH
 PC-Style Function Keys
@@ -1241,8 +1348,10 @@ editors and other full-screen applications that want to make use of
 the mouse.
 .
 .LP
-There are five mutually exclusive modes, each enabled (or disabled)
-by a different parameter in the
+There are six mutually exclusive modes.  One is DEC Locator mode, enabled by the
+DECELR \*(Cs\*(Ps\*s\*;\*(Ps\*s\*s\*'\*s\*z
+control sequence, and is not described here.  The remaining five
+modes are each enabled (or disabled) by a different parameter in 
 DECSET \*(Cs\*?\*(Pm\*s\*h
 or
 DECRST \*(Cs\*?\*(Pm\*s\*l

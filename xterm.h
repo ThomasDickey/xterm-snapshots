@@ -84,6 +84,24 @@ authorization.
 #define HAVE_TCGETATTR 1
 #endif
 
+#if defined(UTMP)
+#define HAVE_UTMP 1
+#endif
+
+#if (defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN32__)
+#define UTMPX_FOR_UTMP 1
+#endif
+
+#define HAVE_UTMP_UT_HOST 1
+
+#if defined(AIXV3) || defined(CRAY) || defined(SCO) || defined(SVR4) || (defined(SYSV) && defined(i386)) || defined(__MVS__) || defined(__hpux) || defined(__osf__) || defined(linux) || defined(macII)
+#define USE_SYSV_UTMP
+#endif
+
+#if defined(__GNU__) || defined(__MVS__)
+#define USE_TTY_GROUP
+#endif
+
 #endif /* HAVE_CONFIG_H */
 
 /***====================================================================***/
@@ -371,6 +389,13 @@ extern void ScrollSelection (TScreen* screen, int amount);
 extern void TrackMouse (int func, int startrow, int startcol, int firstrow, int lastrow);
 extern void TrackText (int frow, int fcol, int trow, int tcol);
 extern void ViButton                  PROTO_XT_ACTIONS_ARGS;
+
+#if OPT_DEC_LOCATOR
+extern Boolean SendLocatorPosition (Widget w, XEvent* event);
+extern void CheckLocatorPosition (Widget w, XEvent *event);
+extern void GetLocatorPosition (XtermWidget w);
+extern void InitLocatorFilter (XtermWidget w);
+#endif	/* OPT_DEC_LOCATOR */
 
 /* charproc.c */
 extern int VTInit (void);
