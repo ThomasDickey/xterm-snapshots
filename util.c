@@ -1362,7 +1362,7 @@ drawXtermText(
 		static unsigned dlen;
 		if (dlen <= len) {
 			dlen = (len + 1) * 2;
-			dbuf = XtRealloc(dbuf, dlen);
+			dbuf = (Char *)XtRealloc(dbuf, dlen);
 			memset(dbuf, 0, dlen);
 		}
 		text2 = dbuf;

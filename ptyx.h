@@ -249,9 +249,6 @@ typedef Char **ScrnBuf;
 #define	NBOX	5			/* Number of Points in box	*/
 #define	NPARAM	10			/* Max. parameters		*/
 
-#define MAYBE		2		/* not exactly True		*/
-#define MAYBENOT	3		/* not exactly False		*/
-
 typedef struct {
 	unsigned char	a_type;
 	unsigned char	a_pintro;
@@ -528,7 +525,7 @@ typedef struct {
 #if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS
 #define MAX_PTRS term->num_ptrs
 #else
-#define MAX_PTRS 3
+#define MAX_PTRS (OFF_ATTRS+1)
 #endif
 
 #define BUF_HEAD 1
@@ -605,10 +602,11 @@ typedef struct {
 
 /***====================================================================***/
 
+/* The order of ifdef's matches the logic for num_ptrs in VTInitialize */
 typedef enum {
 	OFF_FLAGS = 0		/* BUF_HEAD */
-	, OFF_CHARS
-	, OFF_ATTRS
+	, OFF_CHARS = 1
+	, OFF_ATTRS = 2
 #if OPT_ISO_COLORS
 	, OFF_COLOR
 #endif
@@ -1061,7 +1059,7 @@ typedef struct _XtermWidgetRec {
 #if OPT_ISO_COLORS
     int         sgr_foreground;	/* current SGR foreground color	*/
 #endif
-#if OPT_ISO_COLORS || OPT_DEC_CHRSET
+#if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS
     int         num_ptrs;	/* number of pointers per row in 'ScrnBuf' */
 #endif
     unsigned	initflags;	/* initial mode flags		*/

@@ -6,5 +6,5 @@
  * XFree86 to which this version of xterm has been built.  The number in
  * parentheses is my patch number (T.Dickey).
  */
-#define XTERM_PATCH   98
+#define XTERM_PATCH   99
 #define XFREE86_VERSION "XFree86 3.9Pk"
