@@ -71,6 +71,7 @@ extern void ToggleAlternate PROTO((TScreen *screen));
 extern void VTReset PROTO((int full, int saved));
 extern void VTRun PROTO((void));
 extern void dotext PROTO((TScreen *screen, int charset, Char *buf, Char *ptr));
+extern void resetCharsets PROTO((TScreen *screen));
 extern void set_cursor_gcs PROTO((TScreen *screen));
 extern void unparseputc PROTO((int c, int fd));
 extern void unparseputc1 PROTO((int c, int fd));
