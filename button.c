@@ -1274,7 +1274,7 @@ SaltTextAway(
     }
     *lp = '\0';			/* make sure we have end marked */
 
-    TRACE(("Salted TEXT:%.*s\n", lp - line, line))
+    TRACE(("Salted TEXT:%.*s\n", (char *)lp - line, line))
     screen->selection_length = ((char *)lp - line);
     _OwnSelection(term, params, num_params);
 }
@@ -1548,6 +1548,7 @@ SaveText(
 {
     int i = 0;
     unsigned c;
+    Char *result = lp;
 
     i = Length(screen, row, scol, ecol);
     ecol = scol + i;
@@ -1576,8 +1577,18 @@ SaveText(
 	else
 #endif
 	*lp++ = c;
+	if (c != ' ')
+	    result = lp;
     }
-    return(lp);
+
+    /*
+     * If requested, trim trailing blanks from selected lines.  Do not do this
+     * if the line is wrapped.
+     */
+    if (!*eol || !screen->trim_selection)
+	result = lp;
+
+    return(result);
 }
 
 static int

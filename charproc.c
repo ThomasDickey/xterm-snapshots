@@ -247,6 +247,7 @@ static void StopBlinking (TScreen *screen);
 #define XtNtekSmall		"tekSmall"
 #define XtNtekStartup		"tekStartup"
 #define XtNtiteInhibit		"titeInhibit"
+#define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
 #define XtNutf8			"utf8"
 #define XtNvisualBell		"visualBell"
@@ -313,6 +314,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCTekSmall		"TekSmall"
 #define XtCTekStartup		"TekStartup"
 #define XtCTiteInhibit		"TiteInhibit"
+#define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
 #define XtCVisualBell		"VisualBell"
@@ -546,6 +548,9 @@ static XtResource resources[] = {
 	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNhighlightSelection,XtCHighlightSelection,XtRBoolean,
         sizeof(Boolean),XtOffsetOf(XtermWidgetRec, screen.highlight_selection),
+        XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNtrimSelection,XtCTrimSelection,XtRBoolean,
+        sizeof(Boolean),XtOffsetOf(XtermWidgetRec, screen.trim_selection),
         XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, core.background_pixel),
@@ -1220,7 +1225,7 @@ static void VTparse(void)
 		string_used = 0;
 	    }
 
-	    TRACE(("parse %d -> %d\n", c, nextstate))
+	    TRACE(("parse %04X -> %d\n", c, nextstate))
 
 	    switch (nextstate) {
 		 case CASE_PRINT:
@@ -3974,6 +3979,7 @@ static void VTInitialize (
    wnew->screen.cutNewline = request->screen.cutNewline;
    wnew->screen.cutToBeginningOfLine = request->screen.cutToBeginningOfLine;
    wnew->screen.highlight_selection = request->screen.highlight_selection;
+   wnew->screen.trim_selection = request->screen.trim_selection;
    wnew->screen.always_highlight = request->screen.always_highlight;
    wnew->screen.pointer_cursor = request->screen.pointer_cursor;
 
@@ -4592,9 +4598,12 @@ ShowCursor(void)
 	    chi = SCRN_BUF_WIDEC(screen, screen->cursor_row)[screen->cursor_col];
 	})
 
-	if (clo == 0) {
+	if (clo == 0
+#if OPT_WIDE_CHARS
+	 && chi == 0
+#endif
+	) {
 		clo = ' ';
-		if_OPT_WIDE_CHARS(screen,{chi = 0;})
 	}
 
 	/*
@@ -4675,7 +4684,8 @@ ShowCursor(void)
 		}
 	}
 
-	TRACE(("%s @%d, ShowCursor calling drawXtermText\n", __FILE__, __LINE__))
+	TRACE(("%s @%d, ShowCursor calling drawXtermText cur(%d,%d)\n", __FILE__, __LINE__,
+		screen->cur_row, screen->cur_col))
 
 	drawXtermText(screen, flags, currentGC,
 		x = CurCursorX(screen, screen->cur_row, screen->cur_col),
@@ -4745,12 +4755,16 @@ HideCursor(void)
 
 	currentGC = updatedXtermGC(screen, flags, fg_bg, in_selection);
 
-	if (clo == 0) {
+	if (clo == 0
+#if OPT_WIDE_CHARS
+	 && chi == 0
+#endif
+	) {
 		clo = ' ';
-		if_OPT_WIDE_CHARS(screen,{chi = 0;})
 	}
 
-	TRACE(("%s @%d, HideCursor calling drawXtermText\n", __FILE__, __LINE__))
+	TRACE(("%s @%d, HideCursor calling drawXtermText cur(%d,%d)\n", __FILE__, __LINE__,
+		screen->cursor_row, screen->cursor_col))
 	drawXtermText(screen, flags, currentGC,
 		CurCursorX(screen, screen->cursor_row, screen->cursor_col),
 		CursorY(screen, screen->cursor_row),

@@ -79,6 +79,11 @@
 #define USE_SYSV_UTMP
 #endif
 
+#ifdef __OpenBSD__
+#define USE_TERMINFO
+#include <term.h>
+#endif
+
 #ifndef USE_TERMINFO
 #if defined(SCO) || defined(linux)
 #define USE_TERMINFO
