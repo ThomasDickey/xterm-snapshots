@@ -66,6 +66,7 @@ static void send_SGR PROTO((unsigned attr, int fg, int bg));
 static void stringToPrinter PROTO((char * str));
 
 static FILE *Printer;
+static int Printer_pid;
 static int initialized;
 
 static void printCursorLine()
@@ -188,9 +189,13 @@ void xtermPrintScreen()
 		charToPrinter('\f');
 
 	if (Printer != 0 && !was_open) {
-		pclose(Printer);
+		fclose(Printer);
+		TRACE(("closed printer, waiting...\n"));
+		while (nonblocking_wait() > 0)
+			;
 		Printer = 0;
 		initialized = 0;
+		TRACE(("closed printer\n"));
 	}
 }
 
@@ -262,16 +267,15 @@ static void charToPrinter(chr)
 	if (!initialized) {
 		FILE	*input;
 		int	my_pipe[2];
-		int	my_pid;
 		int	c;
 		register TScreen *screen = &term->screen;
 
 	    	if (pipe(my_pipe))
 			SysError (ERROR_FORK);
-		if ((my_pid = fork()) < 0)
+		if ((Printer_pid = fork()) < 0)
 			SysError (ERROR_FORK);
 
-		if (my_pid == 0) {
+		if (Printer_pid == 0) {
 			close(my_pipe[1]);	/* printer is silent */
 			setgid (screen->gid);
 			setuid (screen->uid);
@@ -282,10 +286,13 @@ static void charToPrinter(chr)
 				if (isForm(c))
 					fflush(Printer);
 			}
+			pclose(Printer);
 			exit(0);
 		} else {
 			close(my_pipe[0]);	/* won't read from printer */
 			Printer = fdopen(my_pipe[1], "w");
+			TRACE(("opened printer from pid %d/%d\n",
+				(int)getpid(), Printer_pid))
 		}
 		initialized++;
 	}

@@ -742,7 +742,7 @@ register TScreen *screen;
 	cp = CURRENT_EMU_VAL(screen, Tbptr, bptr);
 	if((i = cp - screen->logstart) > 0)
 		write(screen->logfd, (char *)screen->logstart, i);
-	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer, buffer);
+	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer, VTbuffer);
 }
 
 #endif /* ALLOWLOGGING */
@@ -1013,6 +1013,7 @@ ChangeGroup(attribute, value)
      String attribute;
      XtArgVal value;
 {
+    if (value != 0) {
 	Arg args[1];
 #if OPT_SAME_NAME
 	char *buf;
@@ -1029,6 +1030,7 @@ ChangeGroup(attribute, value)
 
 	XtSetArg( args[0], attribute, value );
 	XtSetValues( toplevel, args, 1 );
+    }
 }
 
 void
@@ -1491,7 +1493,7 @@ void end_tek_mode ()
 #ifdef ALLOWLOGGING
 	if (screen->logging) {
 	    FlushLog (screen);
-	    screen->logstart = buffer;
+	    screen->logstart = VTbuffer;
 	}
 #endif
 	longjmp(Tekend, 1);

@@ -466,7 +466,7 @@ if mkdir conftestdir; then
 	cat >> ./Imakefile <<'CF_EOF'
 findstddefs:
 	@echo 'IMAKE_CFLAGS="${ALLDEFINES} ifelse($1,,,$1)"'
-	@echo 'IMAKE_LOADFLAGS="${EXTRA_LOADFLAGS} ifelse($2,,,$2)"'
+	@echo 'IMAKE_LOADFLAGS="${EXTRA_LOAD_FLAGS} ifelse($2,,,$2)"'
 CF_EOF
 	if ( $IMAKE $cf_imake_opts 1>/dev/null 2>&AC_FD_CC && test -f Makefile)
 	then

@@ -398,7 +398,7 @@ static void Tekparse()
 #ifdef ALLOWLOGGING
 			if(screen->logging) {
 				FlushLog(screen);
-				screen->logstart = buffer;
+				screen->logstart = VTbuffer;
 			}
 #endif
 			return;
