@@ -235,11 +235,13 @@ Input (keyboard, screen, event, eightbit)
 			unparseputc(kypd_num[keysym-XK_KP_Space], pty);
 		key = TRUE;
 	} else if (nbytes > 0) {
+#if OPT_TEK4014
 		if(screen->TekGIN) {
 			TekEnqMouse(*string++);
 			TekGINoff();
 			nbytes--;
 		}
+#endif
 		if ((nbytes == 1) && eightbit) {
 		    if (screen->input_eight_bits)
 		      *string |= 0x80;	/* turn on eighth bit */
@@ -250,7 +252,7 @@ Input (keyboard, screen, event, eightbit)
 			unparseputc(*string++, pty);
 		key = TRUE;
 	}
-	if(key && !screen->TekEmu)
+	if(key && !TEK4014_ACTIVE(screen))
 	        AdjustAfterInput(screen);
 #ifdef ENABLE_PRINT
 	if (keysym == XK_F2) TekPrint();
@@ -266,14 +268,16 @@ StringInput (screen, string, nbytes)
 {
 	int	pty	= screen->respond;
 
+#if OPT_TEK4014
 	if(nbytes && screen->TekGIN) {
 		TekEnqMouse(*string++);
 		TekGINoff();
 		nbytes--;
 	}
+#endif
 	while (nbytes-- != 0)
 		unparseputc(*string++, pty);
-	if(!screen->TekEmu)
+	if (!TEK4014_ACTIVE(screen))
 	        AdjustAfterInput(screen);
 }
 

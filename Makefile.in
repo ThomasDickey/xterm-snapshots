@@ -39,21 +39,22 @@ LDFLAGS		=
 
 INSTALL_DIRS    = $(bindir) $(libdir) $(mandir)
 
+EXTRAHDR	= @EXTRAHDRS@
 EXTRASRC	= @EXTRASRCS@
 EXTRAOBJ	= @EXTRAOBJS@
 
           SRCS1 = button.c charproc.c cursor.c data.c doublechr.c input.c \
 		  main.c menu.c misc.c print.c screen.c scrollbar.c tabs.c \
-		  TekPrsTbl.c Tekproc.c util.c VTPrsTbl.c $(EXTRASRC)
+		  util.c VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button.o charproc.o cursor.o data.o doublechr.o input.o \
 		  main.o menu.o misc.o print.o screen.o scrollbar.o tabs.o \
-		  TekPrsTbl.o Tekproc.o util.o VTPrsTbl.o $(EXTRAOBJ)
+		  util.o VTPrsTbl.o $(EXTRAOBJ)
           SRCS2 = resize.c
           OBJS2 = resize.o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
-           HDRS = Tekparse.h VTparse.h data.h error.h main.h menu.h proto.h \
-                  ptyx.h xterm.h
+           HDRS = VTparse.h data.h error.h main.h menu.h proto.h \
+                  ptyx.h xterm.h $(EXTRAHDR)
        PROGRAMS = xterm resize
 
 all:	$(PROGRAMS)

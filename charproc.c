@@ -455,12 +455,14 @@ static XtActionsRec actionsList[] = {
     { "soft-reset",		HandleSoftReset },
     { "hard-reset",		HandleHardReset },
     { "clear-saved-lines",	HandleClearSavedLines },
+#if OPT_TEK4014
     { "set-terminal-type",	HandleSetTerminalType },
     { "set-visibility",		HandleVisibility },
     { "set-tek-text",		HandleSetTekText },
     { "tek-page",		HandleTekPage },
     { "tek-reset",		HandleTekReset },
     { "tek-copy",		HandleTekCopy },
+#endif
     { "visual-bell",		HandleVisualBell },
     { "dired-button",		DiredButton },
     { "vi-button",		ViButton },
@@ -640,6 +642,7 @@ static XtResource resources[] = {
 {XtNsignalInhibit,XtCSignalInhibit,XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.signalInhibit),
 	XtRBoolean, (XtPointer) &defaultFALSE},
+#if OPT_TEK4014
 {XtNtekInhibit, XtCTekInhibit, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.tekInhibit),
 	XtRBoolean, (XtPointer) &defaultFALSE},
@@ -649,6 +652,7 @@ static XtResource resources[] = {
 {XtNtekStartup, XtCTekStartup, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.TekEmu),
 	XtRBoolean, (XtPointer) &defaultFALSE},
+#endif
 {XtNtiteInhibit, XtCTiteInhibit, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.titeInhibit),
 	XtRBoolean, (XtPointer) &defaultFALSE},
@@ -1729,8 +1733,10 @@ static void VTparse()
 			/* DECSET */
 			dpmodes(term, bitset);
 			parsestate = groundtable;
+#if OPT_TEK4014
 			if(screen->TekEmu)
 				return;
+#endif
 			break;
 
 		 case CASE_DECRST:
@@ -2696,6 +2702,7 @@ dpmodes(termw, func)
 			        screen->cursor_set = OFF;
 			break;
 		case 38:		/* DECTEK			*/
+#if OPT_TEK4014
 			if(func == bitset && !(screen->inhibit & I_TEK)) {
 #ifdef ALLOWLOGGING
 				if(screen->logging) {
@@ -2705,6 +2712,7 @@ dpmodes(termw, func)
 #endif
 				screen->TekEmu = TRUE;
 			}
+#endif
 			break;
 		case 40:		/* 132 column mode		*/
 			screen->c132 = (func == bitset);
@@ -3335,7 +3343,9 @@ void
 VTRun()
 {
 	register TScreen *screen = &term->screen;
+#if OPT_TEK4014
 	register int i;
+#endif
 	
 	if (!screen->Vshow) {
 	    set_vt_visibility (TRUE);
@@ -3353,6 +3363,7 @@ VTRun()
 
 	bcnt = 0;
 	bptr = buffer;
+#if OPT_TEK4014
 	while(Tpushb > Tpushback) {
 		*bptr++ = *--Tpushb;
 		bcnt++;
@@ -3361,6 +3372,7 @@ VTRun()
 	for( ; i > 0 ; i--)
 		*bptr++ = *Tbptr++;
 	bptr = buffer;
+#endif
 	if(!setjmp(VTend))
 		VTparse();
 	StopBlinking(screen);
@@ -3597,7 +3609,9 @@ static void VTInitialize (wrequest, wnew, args, num_args)
        new->screen.terminal_id = MAX_DECID;
    new->screen.ansi_level = (new->screen.terminal_id / 100);
    new->screen.visualbell = request->screen.visualbell;
+#if OPT_TEK4014
    new->screen.TekEmu = request->screen.TekEmu;
+#endif
    new->misc.re_verse = request->misc.re_verse;
    new->screen.multiClickTime = request->screen.multiClickTime;
    new->screen.bellSuppressTime = request->screen.bellSuppressTime;
@@ -3717,7 +3731,9 @@ static void VTInitialize (wrequest, wnew, args, num_args)
 
 #ifndef NO_ACTIVE_ICON
    new->screen.whichVwin = &new->screen.fullVwin;
+#if OPT_TEK4014
    new->screen.whichTwin = &new->screen.fullTwin;
+#endif
 #endif /* NO_ACTIVE_ICON */
 
    return;
@@ -3952,7 +3968,9 @@ static void VTRealize (w, valuemask, values)
 	   that the child process does not fork and exec with all the dynamic
 	   memory it will never use.  If we were to do it here, the
 	   swap space for new process would be huge for huge savelines. */
+#if OPT_TEK4014
 	if (!tekWidget)			/* if not called after fork */
+#endif
 	  screen->buf = screen->allbuf = NULL;
 
 	screen->do_wrap = 0;

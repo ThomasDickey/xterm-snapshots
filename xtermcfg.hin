@@ -33,6 +33,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef CC_HAS_PROTOS	/* CF_ANSI_CC */
 #undef DFT_COLORMODE	/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID	/* AC_ARG_WITH(default-terminal-id) */
+#undef DFT_TERMTYPE	/* AC_ARG_WITH(default-term-type) */
 #undef HAVE_STRERROR	/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_TERMCAP_H	/* AC_CHECK_HEADERS(termcap.h) */
 #undef HAVE_UNISTD_H	/* AC_CHECK_HEADERS(unistd.h) */
@@ -45,6 +46,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_INPUT_METHOD	/* CF_ARG_DISABLE(input-method) */
 #undef OPT_ISO_COLORS	/* CF_ARG_DISABLE(ansi-color) */
 #undef OPT_PC_COLORS	/* CF_ARG_DISABLE(pc-color) */
+#undef OPT_TEK4014	/* CF_ARG_DISABLE(tek4014) */
 #undef OPT_TRACE	/* CF_ARG_ENABLE(trace) */
 #undef OPT_VT52_MODE	/* CF_ARG_DISABLE(vt52) */
 #undef OPT_XMC_GLITCH	/* CF_ARG_ENABLE(xmc-glitch) */

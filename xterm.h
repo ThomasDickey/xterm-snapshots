@@ -15,6 +15,10 @@
 #define HAVE_X11_DECKEYSYM_H 1
 #endif
 
+#ifndef DFT_TERMTYPE
+#define DFT_TERMTYPE "xterm"
+#endif
+
 #endif
 
 #include "proto.h"

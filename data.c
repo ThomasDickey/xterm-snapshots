@@ -35,6 +35,10 @@
 
 #include <setjmp.h>
 
+#if OPT_TEK4014
+TekWidget tekWidget;
+TekLink *TekRefresh;
+
 XPoint T_boxlarge[NBOX] = {
 	{0, 0},
 	{8, 0},
@@ -67,10 +71,11 @@ jmp_buf Tekend;
 int Tbcnt = 0;
 Char *Tbuffer;
 Char *Tbptr;
-TekLink *TekRefresh;
 Char *Tpushb;
 Char *Tpushback;
 int Ttoggled = 0;
+#endif
+
 int bcnt = 0;
 Char buffer[BUF_SIZE];
 Char *bptr = buffer;
@@ -116,5 +121,3 @@ GC visualBellGC;
 
 int VTgcFontMask = GCFont;
 int TEKgcFontMask = GCFont;
-
-TekWidget tekWidget;

@@ -41,8 +41,12 @@ typedef struct _MenuEntry {
     Widget widget;
 } MenuEntry;
 
-extern MenuEntry mainMenuEntries[], vtMenuEntries[], tekMenuEntries[];
+extern MenuEntry mainMenuEntries[], vtMenuEntries[];
 extern MenuEntry fontMenuEntries[];
+#if OPT_TEK4014
+extern MenuEntry tekMenuEntries[];
+#endif
+
 extern Arg menuArgs[];
 
 extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
@@ -335,6 +339,7 @@ typedef enum {
 		    term->misc.active_icon)
 #endif /* NO_ACTIVE_ICON */
 
+#if OPT_TEK4014
 #define update_tekshow() \
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_tekshow].widget, \
@@ -353,7 +358,6 @@ typedef enum {
 		    tekMenuEntries[tekMenu_vtshow].widget, \
 		    term->screen.Vshow)
 
-
 #define set_vthide_sensitivity() \
   set_sensitivity (term->screen.vtMenu, \
 		   vtMenuEntries[vtMenu_vthide].widget, \
@@ -363,6 +367,14 @@ typedef enum {
   set_sensitivity (term->screen.tekMenu, \
 		   tekMenuEntries[tekMenu_tekhide].widget, \
 		   term->screen.Vshow)
+#else
+#define update_tekshow() /*nothing*/
+#define update_vttekmode() /*nothing*/
+#define update_vtshow() /*nothing*/
+#define set_vthide_sensitivity() /*nothing*/
+#define set_tekhide_sensitivity() /*nothing*/
+#endif
+
 
 /*
  * macros for mapping font size to tekMenu placement
@@ -370,10 +382,14 @@ typedef enum {
 #define FS2MI(n) (n)			/* font_size_to_menu_item */
 #define MI2FS(n) (n)			/* menu_item_to_font_size */
 
+#if OPT_TEK4014
 #define set_tekfont_menu_item(n,val) \
   update_menu_item (term->screen.tekMenu, \
 		    tekMenuEntries[FS2MI(n)].widget, \
 		    (val))
+#else
+#define set_tekfont_menu_item(n,val) /*nothing*/
+#endif
 
 #define set_menu_font(val) \
   update_menu_item (term->screen.fontMenu, \
