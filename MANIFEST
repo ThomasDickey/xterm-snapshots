@@ -1,0 +1,45 @@
+MANIFEST for xterm, version X11R5
+--------------------------------------------------------------------------------
+MANIFEST                        this file
+Imakefile                       imake template for Makefile
+README                          overview & caveats for 'xterm'
+TekPrsTbl.c                     Tek4014 parser state tables
+Tekparse.def                    template for generating Tekparse.h
+Tekparse.h                      Tek4014 parser-state definitions
+Tekproc.c                       Tek4014 parser-state functions
+Tests                           Useful tests for xterm-developers
+VTPrsTbl.c                      VT100 parser state tables
+VTparse.def                     template for generating VTparse.h
+VTparse.h                       VT100 parser-state definitions
+XTerm.ad                        resource definitions for XTerm class
+button.c                        mouse button and selection processing
+charproc.c                      VT100 parser functions
+ctlseqs.ms                      documentation: Xterm Control Sequences
+cursor.c                        VT100 low-level cursor movement
+data.c                          global data declarations
+data.h                          global data external-definitions
+error.h                         error-code definitions for 'xterm'
+input.c                         VT100 key-symbol and function-key translation
+main.c                          main program of 'xterm'
+main.h                          default definitions for 'xterm'
+menu.c                          popup/pulldown menus for 'xterm'
+menu.h                          interface of menu.c
+misc.c                          miscellaneous utility functions for 'xterm'
+ptyx.h                          structure-definitions for 'xterm'
+resize.c                        program to compute/modify xterm's window size
+resize.man                      manual page for 'resize'
+screen.c                        VT100 screen update functions
+scrollbar.c                     VT100 scrollbar support functions
+tabs.c                          VT100 tabstop support-functions
+termcap                         termcap entries for 'xterm'
+terminfo                        terminfo entries for 'xterm'
+util.c                          miscellaneous utility functions for 'xterm'
+xterm.man                       manual page for 'xterm'
+tektests                        subdirectory
+tektests/aitest.tek             tek4014 demo: draw a globe
+tektests/dmerc.tek              tek4014 demo: draws a Mercator projection with orbit
+tektests/fotest.tek             tek4014 demo: draw a scatterplot on log scale
+tektests/imtest.tek             tek4014 demo: draw a test pattern
+tektests/imtesth.tek            tek4014 demo: draw a test pattern
+tektests/ocpred.tek             tek4014 demo: an occultation prediction
+tektests/usmap.tek              tek4014 demo: a US map
