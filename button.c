@@ -48,11 +48,14 @@ button.c	Handles button events in the terminal emulator.
 #include <menu.h>
 #include <xcharmouse.h>
 
+#undef  CTRL
+#define	CTRL(c)	((c) & 0x1f)
+
 #define KeyState(x) (((x) & (ShiftMask|ControlMask)) + (((x) & Mod1Mask) ? 2 : 0))
     /* adds together the bits:
-        shift key -> 1
-        meta key  -> 2
-        control key -> 4 */
+	shift key -> 1
+	meta key  -> 2
+	control key -> 4 */
 
 #define TEXTMODES 4
 #define NBUTS 3
@@ -119,13 +122,13 @@ Boolean SendMousePosition(Widget w, XEvent* event)
     TScreen *screen;
 
     if (!IsXtermWidget(w))
-    	return False;
+	return False;
 
     screen = &((XtermWidget)w)->screen;
 
     /* If send_mouse_pos mode isn't on, we shouldn't be here */
     if (screen->send_mouse_pos == MOUSE_OFF)
-        return False;
+	return False;
 
     /* Make sure the event is an appropriate type */
     if ((screen->send_mouse_pos != BTN_EVENT_MOUSE)
@@ -202,7 +205,7 @@ DiredButton(
 	register unsigned line, col;
 
     if (event->type != ButtonPress && event->type != ButtonRelease)
-    	return;
+	return;
     strcpy( Line, "\030\033G  " );
 
 	line = ( event->xbutton.y - screen->border ) / FontHeight( screen );
@@ -225,21 +228,20 @@ ViButton(
 	register int line;
 
     if (event->type != ButtonPress && event->type != ButtonRelease)
-    	return;
+	return;
 
 	line = screen->cur_row -
 		(( event->xbutton.y - screen->border ) / FontHeight( screen ));
-/* fprintf( stderr, "xtdb line=%d\n", line ); */
 	if ( ! line ) return;
 	Line[ 1 ] = 0;
 	Line[ 0 ] = 27;
 	v_write(pty, Line, 1 );
 
-	Line[ 0 ] = 'p' & 0x1f;
+	Line[ 0 ] = CTRL('p');
 
-	if ( line < 0 )
-	{	line = -line;
-		Line[ 0 ] = 'n' & 0x1f;
+	if ( line < 0 ) {
+		line = -line;
+		Line[ 0 ] = CTRL('n');
 	}
 	while ( --line >= 0 ) v_write(pty, Line, 1 );
 }
@@ -279,7 +281,7 @@ void HandleSelectExtend(
 			if ( screen->send_mouse_pos == BTN_EVENT_MOUSE
 			 ||  screen->send_mouse_pos == ANY_EVENT_MOUSE )
 			    SendMousePosition(w,event);
-		        break;
+			break;
 	}
 }
 
@@ -621,7 +623,7 @@ EndExtend(
 			}
 			if (rawRow == startSRow && rawCol == startSCol
 			    && row == endSRow && col == endSCol) {
-			 	/* Use short-form emacs select */
+				/* Use short-form emacs select */
 				line[count++] = 't';
 				line[count++] = ' ' + endSCol + 1;
 				line[count++] = ' ' + endSRow + 1;
@@ -718,12 +720,12 @@ static void do_start_extend (
 	if (Abs(coord - Coordinate(startSRow, startSCol))
 	     < Abs(coord - Coordinate(endSRow, endSCol))
 	    || coord < Coordinate(startSRow, startSCol)) {
-	 	/* point is close to left side of selection */
+		/* point is close to left side of selection */
 		eventMode = LEFTEXTENSION;
 		startERow = row;
 		startECol = col;
 	} else {
-	 	/* point is close to left side of selection */
+		/* point is close to left side of selection */
 		eventMode = RIGHTEXTENSION;
 		endERow = row;
 		endECol = col;
@@ -745,7 +747,7 @@ ExtendExtend (int row, int col)
 		startECol = saveStartRCol;
 	} else if (eventMode == RIGHTEXTENSION
 	 && coord < Coordinate(startSRow, startSCol)) {
-	 	/* Whoops, he's changed his mind.  Do LEFTEXTENSION */
+		/* Whoops, he's changed his mind.  Do LEFTEXTENSION */
 		eventMode = LEFTEXTENSION;
 		endERow   = saveEndRRow;
 		endECol   = saveEndRCol;
@@ -787,7 +789,7 @@ ScrollSelection(register TScreen* screen, register int amount)
     register int maxcol = screen->max_col;
 
 #define scroll_update_one(row, col) \
-    	row += amount; \
+	row += amount; \
 	if (row < minrow) { \
 	    row = minrow; \
 	    col = 0; \
@@ -869,7 +871,7 @@ LastTextCol(register int row)
 	register Char *ch;
 
 	for ( i = screen->max_col,
-	        ch = SCRN_BUF_ATTRS(screen, (row + screen->topline)) + i ;
+		ch = SCRN_BUF_ATTRS(screen, (row + screen->topline)) + i ;
 	      i >= 0 && !(*ch & CHARDRAWN) ;
 	      ch--, i--)
 	    ;
@@ -884,7 +886,7 @@ LastTextCol(register int row)
 **	- control characters	[0,0x1f] U [0x80,0x9f]
 **	- separators		[0x20,0x3f] U [0xa0,0xb9]
 **	- binding characters	[0x40,0x7f] U [0xc0,0xff]
-**  	- execeptions
+**	- exceptions
 */
 static int charClass[256] = {
 /* NUL  SOH  STX  ETX  EOT  ENQ  ACK  BEL */
@@ -953,7 +955,7 @@ static int charClass[256] = {
     48,  48,  48,  48,  48,  48,  48,  48};
 
 int SetCharacterClassRange (
-    register int low,		 	/* in range of [0..255] */
+    register int low,			/* in range of [0..255] */
     register int high,
     register int value)			/* arbitrary */
 {
@@ -1496,7 +1498,7 @@ Length(
     register int scol,
     register int ecol)
 {
-        register int lastcol = LastTextCol(row);
+	register int lastcol = LastTextCol(row);
 
 	if (ecol > lastcol)
 	    ecol = lastcol;
@@ -1527,7 +1529,7 @@ SaveText(
 #endif
 	*eol = !ScrnTstWrapped(screen, row);
 	for (i = scol; i < ecol; i++) {
-	        c = ch[i];
+		c = ch[i];
 		if (c == 0)
 			c = ' ';
 		else if(c < ' ') {
@@ -1674,6 +1676,6 @@ void HandleSecure(
 	ev_time = event->xkey.time;
     else if ((event->xany.type == ButtonPress) ||
 	     (event->xany.type == ButtonRelease))
-        ev_time = event->xbutton.time;
+	ev_time = event->xbutton.time;
     DoSecureKeyboard (ev_time);
 }

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-3_9Pg
+MANIFEST for xterm, version xterm-95
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 INSTALL                         configure script: options and related install instructions
@@ -71,5 +71,6 @@ vttests                         subdirectory
 vttests/16colors.sh             test-script to show 16-colors
 vttests/8colors.sh              test-script to illustrate 8-colors
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
+vttests/fonts.sh                script to demonstrate font-switching sequences
 vttests/resize.sh               script to demonstrate resizing
 vttests/title.sh                test-script to show title of xterm in action

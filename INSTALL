@@ -32,29 +32,29 @@ the sense of the default behavior.
 
 The options (in alphabetic order):
 
-  --disable-16-color      disable 16-color support (default: on)
+  --disable-16-color      disable 16-color support
 
 	Do not compile-in code to recognize aixterm-style control sequences
 	that support color values 8-15.
-	
+
 	Most color applications know only about 8 ANSI colors, but some
 	(e.g., ones built with ncurses) do.
 
-  --disable-active-icon   disable X11R6.3 active-icon feature (default: on)
+  --disable-active-icon   disable X11R6.3 active-icon feature
 
 	Do not compile-in code to support the active-icon feature.  This is
 	not configured on systems (e.g., X11R5) which lack the library
 	support needed.
-	
+
 	Xterms with an active icon continue to respond to input and update
 	their display when iconified.  Not all window managers support
 	active icons.  Those that do include fvwm, olvwm and mwm.
 
-  --disable-ansi-color    disable ANSI color (default: on)
+  --disable-ansi-color    disable ANSI color
 
   	Do not compile-in code for ANSI colors.
 
-  --disable-bold-color    disable PC-style mapping of bold colors (default: on)
+  --disable-bold-color    disable PC-style mapping of bold colors
 
 	Do not compile-in code that maps colors 8-15 to bold versions of
 	colors 0-7.
@@ -62,7 +62,7 @@ The options (in alphabetic order):
 	Some applications have hardcoded logic that assumes this.  It does
 	not interfere with the 16-color support.
 
-  --disable-boxchars      disable fallback-support for box chars (default: on)
+  --disable-boxchars      disable fallback-support for box chars
 
   	Do not compile-in code to generate approximations for box/graphic
 	characters.
@@ -72,35 +72,35 @@ The options (in alphabetic order):
 	e.g., to make boxes.  When xterm loads a font, it checks if those
 	characters are present, and draws its own if they are missing.
 
-  --disable-color-mode    disable default colorMode resource (default: on)
+  --disable-color-mode    disable default colorMode resource
 
   	Do not compile-in code that sets the default value of the colorMode
 	resource to ``true''.
 
-  --disable-doublechars   disable support for double-size chars (default: on)
+  --disable-doublechars   disable support for double-size chars
 
   	Do not compile-in code that supports font-manipulation needed to
 	implement vt100-style double-sized characters.
 
-  --disable-echo          test: display "compiling" commands (default: on)
+  --disable-echo          test: display "compiling" commands
 
   	Modify the generated Makefile so that most compiler options are
 	not shown.  This makes it simpler to read a build log and see the
 	actual warning messages.
 
-  --disable-highlighting  disable support for color highlighting (default: on)
+  --disable-highlighting  disable support for color highlighting
 
   	Do not compile-in code that allows the selected region to be a
 	different color than the reverse of foreground/background colors.
 
 	See the discussion of highlightColor in the manual.
 
-  --disable-i18n          disable internationalization (default: on)
+  --disable-i18n          disable internationalization
 
   	Do not compile-in code to handle multi-byte characters.  This is
 	related to, but not identical with the input method logic.
 
-  --disable-imake         disable use of imake for definitions (default: on)
+  --disable-imake         disable use of imake for definitions
 
   	Do not attempt to use imake to determine compiler options.
 
@@ -108,7 +108,14 @@ The options (in alphabetic order):
 	known only to imake.  The configure script implements only a
 	portion of the tests needed to supplant imake.
 
-  --disable-input-method  disable input-method (default: on)
+  --disable-initial-erase disable initial-erase setup
+
+	Do not compile-in code which aligns the stty erase and the backarrow
+	key.  When compiled-in, xterm will optionally use the pty's sense
+	of stty erase and apply that to the backarrow mode (sending 8 or 127),
+	or go the other way, setting stty erase to match xterm's configuration.
+
+  --disable-input-method  disable input-method
 
 	Do not compile-in code for "input method".  This is an X11R6
 	feature which deals with translation of composite characters.
@@ -135,7 +142,7 @@ The options (in alphabetic order):
 	quirks of the keyboard tables.  Use the ``numLock'' resource to
 	disable this feature if you must customize xterm in some other way.
 
-  --disable-rightbar      disable right-scrollbar support (default: on)
+  --disable-rightbar      disable right-scrollbar support
 
   	Do not compile-in code that supports a scrollbar on the right.
 
@@ -144,12 +151,12 @@ The options (in alphabetic order):
 	leaving the right scrollbar incorrectly positioned after changing
 	the font size.
 
-  --disable-samename      disable check for redundant name-change (default: on)
+  --disable-samename      disable check for redundant name-change
 
 	Do not compile-in code that suppresses redundant updates to the
 	titlebar when the text has not changed.
 
-  --disable-tek4014       disable tek4014 emulation (default: on)
+  --disable-tek4014       disable tek4014 emulation
 
   	Do not compile-in code to support Tektronix 4014 emulation.
 
@@ -159,47 +166,51 @@ The options (in alphabetic order):
 	for many years) as an example of code bloat, though this is not an
 	accurate impression.
 
-  --disable-vt52          disable VT52 emulation (default: on)
+  --disable-vt52          disable VT52 emulation
 
   	Do not compile-in code to support vt52 emulation.
 
 	A genuine vt100 emulates a vt52.
 
-  --disable-ziconbeep     disable -ziconbeep option (default: on)
+  --disable-ziconbeep     disable -ziconbeep option
 
 	Do not compile-in code that modifies the icon's title and sounds a
 	beep when they receive output.
 
-  --enable-hp-fkeys       enable support for HP-style function keys (default: off)
+  --enable-hp-fkeys       enable support for HP-style function keys
 
   	Compile-in code to support HP-style function keys.
 
-  --enable-logfile-exec   enable exec'd logfile filter (default: off)
+  --enable-logfile-exec   enable exec'd logfile filter
 
   	Compile-in code that allows logging piped via an external filter.
 
-  --enable-logging        enable logging (default: off)
+  --enable-logging        enable logging
 
   	Compile-in code that allows logging.
 
 	Logging was disabled in X11R5 xterm because of security problems.
 	They were addressed in X11R6, but the feature was not reinstated.
 
-  --enable-trace          test: set to enable debugging traces (default: off)
+  --enable-trace          test: set to enable debugging traces
 
   	Compile-in code to trace xterm's internal states.
 
 	This is a debugging feature.  It causes xterm to produce two files
 	(Trace-parent.out and Trace-child.out).
 
-  --enable-warnings       test: turn on GCC compiler warnings (default: off)
+  --enable-warnings       test: turn on GCC compiler warnings
 
 	Modify the generate Makefile to turn on gcc compiler warnings.
 
 	I use this option regularly, and correct all but a few (difficult)
 	problems.
 
-  --enable-xmc-glitch     test: enable xmc magic-cookie emulation (default: off)
+  --enable-wide-chars     enable wide-character support
+
+  	Compile-in code that supports 16-bit characters.
+
+  --enable-xmc-glitch     test: enable xmc magic-cookie emulation
 
   	Compile-in code that simulates the terminfo "magic cookie" glitch.
 
@@ -250,6 +261,6 @@ The options (in alphabetic order):
 
 	The default value "xterm", can be overridden to avoid conflict
 	with older versions of xterm, e.g., those that do not implement
-	vt220 emulation. 
+	vt220 emulation.
 
 	You can always override this with the command-line option "-tn".

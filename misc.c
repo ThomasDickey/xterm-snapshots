@@ -241,7 +241,7 @@ void HandleStringEvent(
 
 #ifdef ACTIVEWINDOWINPUTONLY
     if (w != CURRENT_EMU(screen))
-    	return;
+	return;
 #endif
 
     if (*nparams != 1) return;
@@ -356,14 +356,14 @@ void HandleFocusChange(
 	Boolean *cont GCC_UNUSED)
 {
 	register XFocusChangeEvent *event = (XFocusChangeEvent  *)ev;
-        register TScreen *screen = &term->screen;
+	register TScreen *screen = &term->screen;
 
-        if(event->type == FocusIn)
-                selectwindow(screen,
+	if(event->type == FocusIn)
+		selectwindow(screen,
 			     (event->detail == NotifyPointer) ? INWINDOW :
 								FOCUS);
-        else {
-                unselectwindow(screen,
+	else {
+		unselectwindow(screen,
 			       (event->detail == NotifyPointer) ? INWINDOW :
 								  FOCUS);
 		if (screen->grabbedKbd && (event->mode == NotifyUngrab)) {
@@ -550,7 +550,7 @@ void HandleDeIconify (
     Cardinal *nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
-    	register TScreen *screen = &((XtermWidget)gw)->screen;
+	register TScreen *screen = &((XtermWidget)gw)->screen;
 	XMapWindow(screen->display, VShellWindow);
     }
 }
@@ -563,7 +563,7 @@ void HandleIconify (
     Cardinal *nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
-    	register TScreen *screen = &((XtermWidget)gw)->screen;
+	register TScreen *screen = &((XtermWidget)gw)->screen;
 	XIconifyWindow(screen->display,
 		       VShellWindow,
 		       DefaultScreen(screen->display));
@@ -598,10 +598,12 @@ int QueryMaximize(TScreen *screen, unsigned *width, unsigned *height)
 	*width -= (screen->border * 2),
 	*height -= (screen->border * 2);
 
+	hints.flags = PMaxSize;
 	if (XGetWMNormalHints(screen->display,
 			    VShellWindow,
 			    &hints,
-			    &supp)) {
+			    &supp)
+	 && (hints.flags & PMaxSize) != 0) {
 
 	    TRACE(("QueryMaximize: WM hints max_w %#x max_h %#x\n",
 		    hints.max_width,
@@ -712,7 +714,7 @@ Redraw(void)
 	event.count = 0;
 
 	if(VWindow(screen)) {
-	        event.window = VWindow(screen);
+		event.window = VWindow(screen);
 		event.width = term->core.width;
 		event.height = term->core.height;
 		(*term->core.widget_class->core_class.expose)((Widget)term, (XEvent *)&event, NULL);
@@ -722,7 +724,7 @@ Redraw(void)
 
 #if OPT_TEK4014
 	if(TWindow(screen) && screen->Tshow) {
-	        event.window = TWindow(screen);
+		event.window = TWindow(screen);
 		event.width = tekWidget->core.width;
 		event.height = tekWidget->core.height;
 		TekExpose ((Widget)tekWidget, (XEvent *)&event, NULL);
@@ -1003,7 +1005,7 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 	case 16:	case 17:
 		if (term->misc.dynamicColors)
 		       ChangeColorsRequest(term, mode-10, buf, final);
-	        break;
+		break;
 
 #ifdef ALLOWLOGGING
 	 case 46:	/* new log file */
@@ -1061,7 +1063,7 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 			    int val = atoi(buf);
 			    if (rel > 0)
 				num += val;
-			    else if (rel < 1)
+			    else if (rel < 0)
 				num -= val;
 			    else
 				num = val;
@@ -1072,7 +1074,7 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 			}
 
 			if (num < 0
-			 || num > fontMenu_lastBuiltin 
+			 || num > fontMenu_lastBuiltin
 			 || (buf = screen->menu_font_names[num]) == 0) {
 			    Bell(XkbBI_MinorError,0);
 			    break;
@@ -1476,7 +1478,7 @@ int		i, ndx;
 		names++;
 	    }
 	    if (thisName != 0 && !strcmp(thisName, "?"))
-	        ReportColorRequest(pTerm, ndx, final);
+		ReportColorRequest(pTerm, ndx, final);
 	    else if (!pOldColors->names[ndx]
 	     || (thisName
 	      && strcmp(thisName, pOldColors->names[ndx]))) {

@@ -453,6 +453,9 @@ Input (
 
 		dec_code = decfuncvalue(keysym);
 		if ((event->state & ShiftMask)
+#if OPT_SUNPC_KBD
+		 && sunKeyboard
+#endif
 		 && ((string = udk_lookup(dec_code, &nbytes)) != 0)) {
 			while (nbytes-- > 0)
 				unparseputc(*string++, pty);

@@ -83,6 +83,7 @@ in this Software without prior written authorization from the X Consortium.
 
 /* charproc.c */
 
+#include <version.h>
 #include <xterm.h>
 
 #include <X11/Xos.h>
@@ -148,7 +149,7 @@ static void RequestResize (XtermWidget termw, int rows, int cols, int text);
 static void SwitchBufs (TScreen *screen);
 static void ToAlternate (TScreen *screen);
 static void VTallocbuf (void);
-static void WriteText (TScreen *screen, Char *str, int len);
+static void WriteText (TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len);
 static void ansi_modes (XtermWidget termw, void (*func)(unsigned *p, unsigned mask));
 static void bitclr (unsigned *p, unsigned mask);
 static void bitcpy (unsigned *p, unsigned q, unsigned mask);
@@ -265,6 +266,7 @@ static void StopBlinking (TScreen *screen);
 #define XtNtiteInhibit		"titeInhibit"
 #define XtNunderLine		"underLine"
 #define XtNvisualBell		"visualBell"
+#define XtNwideChars		"wideChars"
 #define XtNxmcAttributes	"xmcAttributes"
 #define XtNxmcGlitch		"xmcGlitch"
 #define XtNxmcInline		"xmcInline"
@@ -329,6 +331,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCTiteInhibit		"TiteInhibit"
 #define XtCUnderLine		"UnderLine"
 #define XtCVisualBell		"VisualBell"
+#define XtCWideChars		"WideChars"
 #define XtCXmcAttributes	"XmcAttributes"
 #define XtCXmcGlitch		"XmcGlitch"
 #define XtCXmcInline		"XmcInline"
@@ -879,6 +882,11 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, misc.icon_border_pixel),
 	XtRString, XtExtdefaultbackground},
 #endif /* NO_ACTIVE_ICON */
+#if OPT_WIDE_CHARS
+{XtNwideChars, XtCWideChars, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.wide_chars),
+	XtRBoolean, (XtPointer) &defaultFALSE},
+#endif
 };
 
 static Boolean VTSetValues (Widget cur, Widget request, Widget new_arg, ArgList args, Cardinal *num_args);
@@ -1156,16 +1164,16 @@ static void VTparse(void)
 			if(screen->curss) {
 				thischar = *bptr;
 				dotext(screen,
-				 screen->gsets[(int)(screen->curss)],
-				 	bptr, bptr + 1);
+					screen->gsets[(int)(screen->curss)],
+				 	PAIRED_CHARS(bptr, 0), 1);
 				bptr += 1;
 				screen->curss = 0;
 			}
 			if(bptr < cp) {
 				thischar = cp[-1];
 				dotext(screen,
-				 screen->gsets[(int)(screen->curgl)],
-				 	bptr, cp);
+					screen->gsets[(int)(screen->curgl)],
+				 	PAIRED_CHARS(bptr, 0), cp - bptr);
 			}
 			bptr = cp;
 			break;
@@ -1504,7 +1512,7 @@ static void VTparse(void)
 			/* FALLTHRU */
 		 case CASE_DA1:
 			/* DA1 */
-			if (param[0] <= 0) {	/* less than means DEFAULT */
+			if (param[0] <= 1) {	/* less than means DEFAULT */
 			    count = 0;
 			    reply.a_type   = CSI;
 			    reply.a_pintro = '?';
@@ -1533,9 +1541,13 @@ static void VTparse(void)
 			    } else {
 				reply.a_param[count++] = 60 + screen->terminal_id/100;
 				reply.a_param[count++] = 1; /* 132-columns */
-				/* reply.a_param[count++] = 2; NO printer */
+				reply.a_param[count++] = 2; /* printer */
 				reply.a_param[count++] = 6; /* selective-erase */
+#if OPT_SUNPC_KBD
+				if (sunKeyboard)
+#endif
 				reply.a_param[count++] = 8; /* user-defined-keys */
+				reply.a_param[count++] = 9; /* national replacement charsets */
 				reply.a_param[count++] = 15; /* technical characters */
 			    }
 			    reply.a_nparam = count;
@@ -1548,14 +1560,16 @@ static void VTparse(void)
 
 		 case CASE_DA2:
 			/* DA2 */
-			if ((screen->terminal_id >= 200)
-			 && (param[0] <= 0)) {	/* less than means DEFAULT */
+			if (param[0] <= 0) {	/* less than means DEFAULT */
 				count = 0;
 				reply.a_type   = CSI;
 				reply.a_pintro = '>';
 
-				reply.a_param[count++] = 1; /* VT220 */
-				reply.a_param[count++] = 0; /* Version */
+				if (screen->terminal_id >= 200)
+					reply.a_param[count++] = 1; /* VT220 */
+				else
+					reply.a_param[count++] = 0; /* VT100 (nonstandard) */
+				reply.a_param[count++] = XTERM_PATCH; /* Version */
 				reply.a_param[count++] = 0; /* options (none) */
 				reply.a_nparam = count;
 				reply.a_inters = 0;
@@ -1864,6 +1878,10 @@ static void VTparse(void)
 				 col = screen->max_col + 1);
 				for(cp = SCRN_BUF_CHARS(screen, row) ; col > 0 ; col--)
 					*cp++ = (unsigned char) 'E';
+				if_OPT_WIDE_CHARS(screen,{
+					bzero(SCRN_BUF_WIDEC(screen, row),
+					      screen->max_col+1);
+				})
 			}
 			ScrnRefresh(screen, 0, 0, screen->max_row + 1,
 			 screen->max_col + 1, False);
@@ -2149,7 +2167,7 @@ static void VTparse(void)
 			    while (count-- > 0) {
 				dotext(screen,
 					screen->gsets[(int)(screen->curgl)],
-					repeated, repeated+1);
+					PAIRED_CHARS(repeated, 0), 1);
 			    }
 			}
 			parsestate = groundtable;
@@ -2199,6 +2217,12 @@ static void VTparse(void)
 			window_ops(term);
 			parsestate = groundtable;
 			break;
+#if OPT_WIDE_CHARS
+		 case CASE_UTF8:
+			screen->utf8_mode = (c == 'G');
+			parsestate = groundtable;
+			break;
+#endif
 	    }
 	    if (parsestate == groundtable)
 		    lastchar = thischar;
@@ -2540,27 +2564,24 @@ void
 dotext(
 	register TScreen *screen,
 	int	charset,
-	Char	*buf,		/* start of characters to process */
-	Char	*ptr)		/* end */
+	PAIRED_CHARS(Char *buf,Char *buf2), /* start of characters to process */
+	Cardinal len)		/* end */
 {
-	register int	len;
-	register int	n;
-	register int	next_col;
+	Cardinal n, next_col, offset;
 
-	if (!xtermCharSetOut(buf, ptr, charset))
+	if (!xtermCharSetOut(buf, buf+len, charset))
 		return;
 
 	if_OPT_XMC_GLITCH(screen,{
-		register Char	*s;
-		if (charset != '?')
-			for (s=buf; s<ptr; ++s)
-				if (*s == XMC_GLITCH)
-					*s = XMC_GLITCH+1;
+		if (charset != '?') {
+			for (n = 0; n < len; n++) {
+				if (buf[n] == XMC_GLITCH)
+					buf[n] = XMC_GLITCH+1;
+			}
+		}
 	})
 
-	len = ptr - buf;
-	ptr = buf;
-	while (len > 0) {
+	for (offset = 0; offset < len; offset += n) {
 		n = screen->max_col - screen->cur_col +1;
 		if (n <= 1) {
 			if (screen->do_wrap && (term->flags & WRAPAROUND)) {
@@ -2574,20 +2595,20 @@ dotext(
 			} else
 			    n = 1;
 		}
-		if (len < n)
-			n = len;
+		if (offset + n > len)
+			n = len - offset;
 		next_col = screen->cur_col + n;
 
-		WriteText(screen, ptr, n);
+		WriteText(screen, PAIRED_CHARS(
+			buf+offset,
+			buf2 ? buf2+offset : 0), n);
 
 		/*
 		 * the call to WriteText updates screen->cur_col.
 		 * If screen->cur_col != next_col, we must have
 		 * hit the right margin, so set the do_wrap flag.
 		 */
-		screen->do_wrap = (screen->cur_col < next_col);
-		len -= n;
-		ptr += n;
+		screen->do_wrap = (screen->cur_col < (int)next_col);
 	}
 }
 
@@ -2610,10 +2631,7 @@ static int mapstate = -1;
  * the current cursor position.  update cursor position.
  */
 static void
-WriteText(
-	register TScreen *screen,
-	register Char	*str,
-	register int	len)
+WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 {
 	unsigned flags	= term->flags;
 	int	fg_bg = makeColorPair(term->cur_foreground, term->cur_background);
@@ -2623,7 +2641,7 @@ WriteText(
 		screen->cur_row,
 		screen->cur_col,
 		curXtermChrSet(screen->cur_row),
-		len, len, str))
+		len, (int)len, str))
 
 	if(screen->cur_row - screen->topline <= screen->max_row) {
 		if(screen->cursor_state)
@@ -2649,7 +2667,7 @@ WriteText(
 				CurCursorX(screen, screen->cur_row, screen->cur_col),
 				CursorY(screen, screen->cur_row),
 				curXtermChrSet(screen->cur_row),
-				str, len);
+				PAIRED_CHARS(str, str2), len);
 
 			resetXtermGC(screen, flags, False);
 
@@ -3488,12 +3506,13 @@ unparseputc(int c, int fd)
 	/* If send/receive mode is reset, we echo characters locally */
 	if ((term->keyboard.flags & MODE_SRM) == 0) {
 		register TScreen *screen = &term->screen;
-		dotext(screen, screen->gsets[(int)(screen->curgl)], buf, buf+i);
+		dotext(screen, screen->gsets[(int)(screen->curgl)],
+			PAIRED_CHARS(buf, 0), i);
 	}
 }
 
 void
-unparseputs(Char *s, int fd)
+unparseputs(char *s, int fd)
 {
 	while (*s)
 		unparseputc(*s++, fd);
@@ -3947,6 +3966,7 @@ static void VTInitialize (
    wnew->screen.font_doublesize = request->screen.font_doublesize;
 #endif
 
+   wnew->num_ptrs = 3;	/* OFF_FLAGS, OFF_CHARS, OFF_ATTRS */
 #if OPT_ISO_COLORS
    wnew->screen.boldColors    = request->screen.boldColors;
    wnew->screen.colorAttrMode = request->screen.colorAttrMode;
@@ -3971,7 +3991,7 @@ static void VTInitialize (
    if (!color_ok)
 	wnew->screen.colorMode = False;
 
-   wnew->num_ptrs = wnew->screen.colorMode ? 3 : 2;
+   wnew->num_ptrs += 1;
    wnew->sgr_foreground = -1;
 #endif /* OPT_ISO_COLORS */
 
@@ -3980,7 +4000,13 @@ static void VTInitialize (
 #endif
 
 #if OPT_DEC_CHRSET
-   wnew->num_ptrs = 5;
+   wnew->num_ptrs += 1;
+#endif
+
+#if OPT_WIDE_CHARS
+   wnew->screen.utf8_mode = False; /* will activate with control-sequence */
+   if ((wnew->screen.wide_chars = request->screen.wide_chars) != False)
+      wnew->num_ptrs += 1;
 #endif
 
    wnew->screen.underline = request->screen.underline;
@@ -4474,7 +4500,7 @@ ShowCursor(void)
 {
 	register TScreen *screen = &term->screen;
 	register int x, y, flags;
-	Char	c;
+	Char	clo;
 	Char	fg_bg = 0;
 	GC	currentGC;
 	Boolean	in_selection;
@@ -4483,6 +4509,9 @@ ShowCursor(void)
 	Pixel tmp;
 #if OPT_HIGHLIGHT_COLOR
 	Pixel hi_pix = screen->highlightcolor;
+#endif
+#if OPT_WIDE_CHARS
+	Char	chi = 0;
 #endif
 
 	if (screen->cursor_state == BLINKED_OFF)
@@ -4496,9 +4525,6 @@ ShowCursor(void)
 	screen->cursor_row = screen->cur_row;
 	screen->cursor_col = screen->cur_col;
 
-	c     = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col];
-	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
-
 #ifndef NO_ACTIVE_ICON
 	if (IsIcon(screen)) {
 	    screen->cursor_state = ON;
@@ -4506,8 +4532,15 @@ ShowCursor(void)
 	}
 #endif /* NO_ACTIVE_ICON */
 
-	if (c == 0)
-		c = ' ';
+	clo   = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col];
+	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
+
+	if_OPT_WIDE_CHARS(screen,{
+	    chi = SCRN_BUF_WIDEC(screen, screen->cursor_row)[screen->cursor_col];
+	})
+
+	if (clo == 0)
+		clo = ' ';
 
 	/*
 	 * Compare the current cell to the last set of colors used for the
@@ -4593,7 +4626,7 @@ ShowCursor(void)
 		x = CurCursorX(screen, screen->cur_row, screen->cur_col),
 		y = CursorY(screen, screen->cur_row),
 		curXtermChrSet(screen->cur_row),
-		&c, 1);
+		PAIRED_CHARS(&clo, &chi), 1);
 
 	if (!screen->select && !screen->always_highlight) {
 		screen->box->x = x;
@@ -4614,21 +4647,18 @@ HideCursor(void)
 {
 	register TScreen *screen = &term->screen;
 	GC	currentGC;
-	register int flags, fg_bg = 0;
-	Char c;
+	register int flags;
+	register int fg_bg = 0;
+	Char	clo;
 	Boolean	in_selection;
+#if OPT_WIDE_CHARS
+	Char	chi = 0;
+#endif
 
 	if (screen->cursor_state == OFF)	/* FIXME */
 		return;
 	if(screen->cursor_row - screen->topline > screen->max_row)
 		return;
-
-	c     = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col];
-	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
-
-	if_OPT_ISO_COLORS(screen,{
-	    fg_bg = SCRN_BUF_COLOR(screen, screen->cursor_row)[screen->cursor_col];
-	})
 
 #ifndef NO_ACTIVE_ICON
 	if (IsIcon(screen)) {
@@ -4637,6 +4667,16 @@ HideCursor(void)
 	}
 #endif /* NO_ACTIVE_ICON */
 
+	clo   = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col];
+	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
+
+	if_OPT_ISO_COLORS(screen,{
+	    fg_bg = SCRN_BUF_COLOR(screen, screen->cursor_row)[screen->cursor_col];
+	})
+
+	if_OPT_WIDE_CHARS(screen,{
+	    chi = SCRN_BUF_WIDEC(screen, screen->cursor_row)[screen->cursor_col];
+	})
 
 	if (screen->cursor_row > screen->endHRow ||
 	    (screen->cursor_row == screen->endHRow &&
@@ -4650,15 +4690,15 @@ HideCursor(void)
 
 	currentGC = updatedXtermGC(screen, flags, fg_bg, in_selection);
 
-	if (c == 0)
-		c = ' ';
+	if (clo == 0)
+		clo = ' ';
 
 	TRACE(("%s @%d, HideCursor calling drawXtermText\n", __FILE__, __LINE__))
 	drawXtermText(screen, flags, currentGC,
 		CurCursorX(screen, screen->cursor_row, screen->cursor_col),
 		CursorY(screen, screen->cursor_row),
 		curXtermChrSet(screen->cursor_row),
-		&c, 1);
+		PAIRED_CHARS(&clo, &chi), 1);
 
 	screen->cursor_state = OFF;
 	resetXtermGC(screen, flags, in_selection);

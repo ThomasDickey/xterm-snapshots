@@ -175,12 +175,12 @@ extern void SwitchBufPtrs (TScreen *screen);
 extern void ToggleAlternate (TScreen *screen);
 extern void VTReset (int full, int saved);
 extern void VTRun (void);
-extern void dotext (TScreen *screen, int charset, Char *buf, Char *ptr);
+extern void dotext (TScreen *screen, int charset, PAIRED_CHARS(Char *buf, Char *buf2), Cardinal len);
 extern void resetCharsets (TScreen *screen);
 extern void set_cursor_gcs (TScreen *screen);
 extern void unparseputc (int c, int fd);
 extern void unparseputc1 (int c, int fd);
-extern void unparseputs (Char *s, int fd);
+extern void unparseputs (char *s, int fd);
 extern void unparseseq (ANSI *ap, int fd);
 
 #if OPT_ISO_COLORS
@@ -347,7 +347,7 @@ extern GC updatedXtermGC (TScreen *screen, int flags, int fg_bg, Bool hilite);
 extern int AddToRefresh (TScreen *screen);
 extern int HandleExposure (TScreen *screen, XEvent *event);
 extern int char2lower(int ch);
-extern int drawXtermText (TScreen *screen, unsigned flags, GC gc, int x, int y, int chrset, Char *text, int len);
+extern int drawXtermText (TScreen *screen, unsigned flags, GC gc, int x, int y, int chrset, PAIRED_CHARS(Char *text, Char *text2), Cardinal len);
 extern void ChangeColors (XtermWidget tw, ScrnColors *pNew);
 extern void ClearRight (TScreen *screen, int n);
 extern void ClearScreen (TScreen *screen);
@@ -402,6 +402,14 @@ extern int curXtermChrSet (int row);
 #else
 #define getXtermChrSet(row, col) 0
 #define curXtermChrSet(row) 0
+#endif
+
+#if OPT_WIDE_CHARS
+extern int getXtermCell (TScreen *screen, int row, int col);
+extern void putXtermCell (TScreen *screen, int row, int col, int ch);
+#else
+#define getXtermCell(screen,row,col) SCRN_BUF_CHARS(screen, row)[col]
+#define putXtermCell(screen,row,col,ch) SCRN_BUF_CHARS(screen, row)[col] = ch
 #endif
 
 #if OPT_XMC_GLITCH

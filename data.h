@@ -45,17 +45,13 @@
 extern XtAppContext app_con;
 
 #if OPT_TEK4014
-extern TekLink *TekRefresh;
-extern TekWidget tekWidget;
-
-extern XPoint T_box2[];
-extern XPoint T_box3[];
-extern XPoint T_boxlarge[];
-extern XPoint T_boxsmall[];
 extern Char *Tbptr;
 extern Char *Tbuffer;
 extern Char *Tpushb;
 extern Char *Tpushback;
+extern TekLink *TekRefresh;
+extern TekWidget tekWidget;
+extern int TEKgcFontMask;
 extern int T_lastx;
 extern int T_lasty;
 extern int Tbcnt;
@@ -70,27 +66,32 @@ extern char *ptydev;
 extern char *ttydev;
 extern char *xterm_name;
 extern Boolean sunFunctionKeys;
+
 #if OPT_HP_FUNC_KEYS
 extern Boolean hpFunctionKeys;
 #endif
+
 #if OPT_ZICONBEEP 
 extern int zIconBeep; 
 extern Boolean zIconBeep_flagged; 
 #endif 
+
 #if OPT_SAME_NAME 
 extern Boolean sameName; 
 #endif 
+
 #if OPT_SUNPC_KBD
 extern Boolean sunKeyboard;
 #endif
+
 extern Char VTbuffer[];
 extern int am_slave;
 extern int bcnt;
+extern int max_plus1;
+
 #ifdef DEBUG
 extern int debug;
 #endif	/* DEBUG */
-extern int max_plus1;
-extern int switchfb[];
 
 extern fd_set Select_mask;
 extern fd_set X_mask;
@@ -99,11 +100,6 @@ extern fd_set pty_mask;
 extern int waitingForTrackInfo;
 
 extern EventMode eventMode;
-
-extern GC visualBellGC;
-
-extern int VTgcFontMask;
-extern int TEKgcFontMask;
 
 extern XtermWidget term;
 

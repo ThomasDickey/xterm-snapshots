@@ -78,11 +78,11 @@ fi
 dnl ---------------------------------------------------------------------------
 dnl Allow user to disable a normally-on option.
 AC_DEFUN([CF_ARG_DISABLE],
-[CF_ARG_OPTION($1,[$2 (default: on)],[$3],[$4],yes)])dnl
+[CF_ARG_OPTION($1,[$2],[$3],[$4],yes)])dnl
 dnl ---------------------------------------------------------------------------
 dnl Allow user to enable a normally-off option.
 AC_DEFUN([CF_ARG_ENABLE],
-[CF_ARG_OPTION($1,[$2 (default: off)],[$3],[$4],no)])dnl
+[CF_ARG_OPTION($1,[$2],[$3],[$4],no)])dnl
 dnl ---------------------------------------------------------------------------
 dnl Restricted form of AC_ARG_ENABLE that ensures user doesn't give bogus
 dnl values.

@@ -335,6 +335,12 @@ for function keys.
 This option indicates that HP Function Key escape codes should not be generated
 for function keys.
 .TP 8
+.B \-ie
+Turn on the \fBptyInitialErase\fP resource.
+.TP 8
+.B +ie
+Turn off the \fBptyInitialErase\fP resource.
+.TP 8
 .B \-im
 Turn on the \fBuseInsertMode\fP resource.
 .TP 8
@@ -536,6 +542,9 @@ window will be flashed.
 .B \+vb
 This option indicates that a visual bell should not be used.
 .TP 8
+.B \-wc
+This option sets the \fBwideChars\fP resource.
+.TP 8
 .B \-wf
 This option indicates that \fIxterm\fP should wait for the window to be mapped
 the first time before starting the subprocess so that the initial terminal
@@ -668,13 +677,23 @@ It is not necessarily obeyed by all window managers.
 .B "iconName (\fPclass\fB IconName)"
 Specifies the icon name.  The default is the application name.
 .TP 8
+.B "ptyInitialErase (\fPclass\fB PtyInitialErase)"
+If ``true'', \fIxterm\fP will use the pseudo-terminal's sense of the stty erase
+value to set the \fBbackarrowKey\fP resource toggle.
+If ``false'', \fIxterm\fP will set the stty erase value to match its own
+configuration, using the \fBkD\fP string from the termcap entry as
+a reference, if available.
+In either case, the result is applied to the TERMCAP variable
+which \fIxterm\fP sets.
+The default is ``false''.
+.TP 8
 .B "sameName (\fPclass\fB SameName)"
-If the value of this resource is "true", xterm doesn't send
+If the value of this resource is ``true'', xterm doesn't send
 title and icon name change requests when the request
 would have no effect: the name isn't changed.  This has the advantage
 of preventing flicker and the disadvantage of requiring an extra
 round trip to the server to find out the previous value.  In practice
-this should never be a problem.  The default is "true".
+this should never be a problem.  The default is ``true''.
 .TP 8
 .B "sunFunctionKeys (\fPclass\fB SunFunctionKeys)"
 Specifies whether or not Sun Function Key escape codes should be generated for
@@ -831,15 +850,15 @@ Specifies whether or not the VT102 DECCOLM escape sequence should be honored.
 The default is ``false.''
 .TP 8
 .B "cutNewline (\fPclass\fB CutNewline)"
-If false, triple clicking to select a line does not include the Newline
+If ``false'', triple clicking to select a line does not include the Newline
 at the end of the line.
-If true, the Newline is selected.
+If ``true'', the Newline is selected.
 The default is ``true.''
 .TP 8
 .B "cutToBeginningOfLine (\fPclass\fB CutToBeginningOfLine)"
-If false, triple clicking to select a line selects only from the
+If ``false'', triple clicking to select a line selects only from the
 current word forward.
-If true, the entire line is selected.
+If ``true'', the entire line is selected.
 The default is ``true.''
 .TP 8
 .B "charClass (\fPclass\fB CharClass)"
@@ -957,9 +976,9 @@ terminal should be eight-bit characters or escape sequences.
 The default is ``false.''
 .TP 8
 .B "eightBitInput (\fPclass\fB EightBitInput\fP)"
-If true, Meta characters input from the keyboard are presented as a
+If ``true'', Meta characters input from the keyboard are presented as a
 single character with the eighth bit turned on.
-If false, Meta characters are converted into a two-character
+If ``false'', Meta characters are converted into a two-character
 sequence with the character itself preceded by ESC.
 The default is ``true.''
 .TP 8
@@ -1007,9 +1026,9 @@ is ``black.''
 Specifies the preferred size and position of the VT102 window.
 .TP 8
 .B "highlightSelection (\fPclass\fB HighlightSelection)"
-If false, selecting with the mouse highlights all positions on the screen
+If ``false'', selecting with the mouse highlights all positions on the screen
 between the beginning of the selection and the current position.
-If true, \fIxterm\fP highlights only the positions that contain text that
+If ``true'', \fIxterm\fP highlights only the positions that contain text that
 can be selected.
 The default is ``false.''
 .TP 8
@@ -1069,7 +1088,7 @@ Specifies the number of characters from the right margin at which the margin
 bell should be rung, when enabled.
 .TP 8
 .B "numLock (\fPclass\fB NumLock)"
-If true, xterm checks if NumLock is used as a modifier (see \fIxmodmap\fP(1)).
+If ``true'', xterm checks if NumLock is used as a modifier (see \fIxmodmap\fP(1)).
 If so, this modifier is used to simplify the logic when implementing special
 NumLock for the \fBsunKeyboard\fP resource.
 Also (when \fBsunKeyboard\fP is false), similar logic is used to find the
@@ -1077,7 +1096,7 @@ modifier associated with the left and right Alt keys.
 The default is ``true.''
 .TP 8
 .B "oldXtermFKeys (\fPclass\fB OldXtermFKeys)"
-If true, xterm will use old-style control sequences for function keys F1 to F4,
+If ``true'', xterm will use old-style control sequences for function keys F1 to F4,
 for compatibility with X Consortium xterm.  Otherwise, it uses the VT100-style
 codes for PF1 to PF4.
 The default is ``false.''
@@ -1104,7 +1123,7 @@ A ``2'' prints ANSI color attributes as well.
 The default is ``1.''
 .TP 8
 .B "printerAutoClose (\fPclass\fB PrinterAutoClose)"
-If true, xterm will close the printer (a pipe) when the application switches
+If ``true'', xterm will close the printer (a pipe) when the application switches
 the printer offline with a Media Copy command.
 The default is ``false.''
 .TP 8
@@ -1227,6 +1246,10 @@ used for the underline attribute.
 .B "visualBell (\fPclass\fB VisualBell)"
 Specifies whether or not a visible bell (i.e. flashing) should be used instead
 of an audible bell when Control-G is received.  The default is ``false.''
+.TP 8
+.B "wideChars (\fPclass\fB WideChars)"
+Specifies if \fIxterm\fP should respond to control sequences that
+process 16-bit characters.
 .sp
 .PP
 The following resources are specified as part of the \fItek4014\fP widget

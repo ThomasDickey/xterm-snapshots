@@ -149,6 +149,7 @@
 .[] $ $
 .[] ! !
 .[] # #
+.[] % %
 .[] (( (
 .[] ) )
 .[] * *
@@ -237,9 +238,12 @@
 .ds Cb \fIC\v'.3m'\h'-.2m'\s-2b\s0\v'-.3m'\fP
 .ds Cx \fIC\v'.3m'\h'-.2m'\s-2x\s0\v'-.3m'\fP
 .ds Cy \fIC\v'.3m'\h'-.2m'\s-2y\s0\v'-.3m'\fP
-.ds Ps \fIP\v'.3m'\h'-.2m'\s-2s\s0\v'-.3m'\fP
+.ds Pc \fIP\v'.3m'\h'-.2m'\s-2c\s0\v'-.3m'\fP
 .ds Pm \fIP\v'.3m'\h'-.2m'\s-2m\s0\v'-.3m'\fP
+.ds Pp \fIP\v'.3m'\h'-.2m'\s-2p\s0\v'-.3m'\fP
+.ds Ps \fIP\v'.3m'\h'-.2m'\s-2s\s0\v'-.3m'\fP
 .ds Pt \fIP\v'.3m'\h'-.2m'\s-2t\s0\v'-.3m'\fP
+.ds Pv \fIP\v'.3m'\h'-.2m'\s-2v\s0\v'-.3m'\fP
 .ds Ix \fIx\fP
 .ds Iy \fIy\fP
 .ds Iw \fIw\fP
@@ -264,7 +268,7 @@ X Consortium (1994)
 .AU
 Thomas Dickey
 .AI
-XFree86 Project (1996)
+XFree86 Project (1996-1999)
 .AU
 .
 .am BT                  \" add page numbers after first page
@@ -419,6 +423,12 @@ DEC double-width line (DECDWL)
 .
 .IP \\*(Es\\*#\\*8
 DEC Screen Alignment Test (DECALN)
+.
+.IP \\*(Es\\*%\\*@
+Select default character set, ISO 8859-1 (ISO 2022)
+.
+.IP \\*(Es\\*%\\*G
+Select UTF-8 character set (ISO 2022)
 .
 .IP \\*(Es\\*(((\\*(Cc
 Designate G0 Character Set (ISO 2022)
@@ -620,9 +630,37 @@ Character Position Absolute  [column] (default = [row,1]) (HPA)
 Repeat the preceding graphic character \*(Ps times (REP)
 .
 .IP \\*(Cs\\*(Ps\\*s\\*c
-Send Device Attributes (DA)
-  \*(Ps = \*0 or omitted \(-> request attributes from terminal
-  \(-> \*(Cs\*?\*1\*;\*2\*c (``I am a VT100 with Advanced Video Option.'')
+Send Device Attributes (Primary DA)
+  \*(Ps = \*0, 1 or omitted \(-> request attributes from terminal.
+The response depends on the \fBdecTerminalId\fP resource setting.
+  \(-> \*(Cs\*?\*1\*;\*2\*c (``VT100 with Advanced Video Option'')
+  \(-> \*(Cs\*?\*1\*;\*0\*c (``VT101 with No Options'')
+  \(-> \*(Cs\*?\*6\*c (``VT102'')
+  \(-> \*(Cs\*?\*6\*0\*;\*1\*;\*2\*;\*6\*;\*8\*;\*9\*;\*1\*5\*;\*c (``VT220'')
+.br
+The VT100-style response parameters do not mean anything by themselves.
+VT220 parameters do, telling the host what features the terminal supports:
+  \(-> \*1 132-columns
+  \(-> \*2 Printer
+  \(-> \*6 Selective erase
+  \(-> \*8 User-defined keys
+  \(-> \*9 National replacement character sets
+  \(-> \*1\*5 Technical characters
+.
+.IP \\*(Cs\\*>\\*(Ps\\*s\\*c
+Send Device Attributes (Secondary DA)
+  \*(Ps = \*0, 1 or omitted \(-> request the terminal's identification code.
+The response depends on the \fBdecTerminalId\fP resource setting.
+It should apply only to VT220 and up, but \fIxterm\fP extends this to VT100.
+  \(-> \*(Cs\*(Pp\*s\*;\*(Pv\*s\*;\*(Pc\*s\*c
+.br
+where \*(Pc denotes the terminal type
+  \(-> \*0 (``VT100'')
+  \(-> \*1 (``VT220'')
+.br
+and \*(Pv is the firmware version (for \fIxterm\fP, this is the XFree86
+patch number, starting with 95), and \*(Pc indicates the ROM cartridge
+registration number (always zero).
 .
 .IP \\*(Cs\\*(Pm\\*s\\*d
 Line Position Absolute  [row] (default = [1,column]) (VPA)
