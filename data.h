@@ -28,21 +28,7 @@
 #ifndef included_data_h
 #define included_data_h 1
 
-#include <ptyx.h>
-
-#if XtSpecificationRelease >= 6 && !defined(NO_XPOLL_H)
-#include <X11/Xpoll.h>
-#else
-#define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
-#define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
-#endif
-
-#ifdef USE_SYS_SELECT_H
-#include <sys/types.h>
-#include <sys/select.h>
-#endif
-
-#include <setjmp.h>
+#include <xterm.h>
 
 extern XtAppContext app_con;
 

@@ -34,7 +34,6 @@ authorization.
 
 ********************************************************/
 
-#include <xterm.h>
 #include <data.h>
 
 /*
@@ -193,3 +192,43 @@ unsigned usedPtyData(PtyData *data)
 {
     return (data->ptr - DecodedData(data));
 }
+
+#if OPT_WIDE_CHARS
+Char * convertToUTF8(Char *lp, int c)
+{
+    if (c < 0x80) {		/*  0*******  */
+	*lp++ = (c);
+    } else if (c < 0x800) {	/*  110***** 10******  */
+	*lp++ = (0xc0 | (c >> 6));
+	*lp++ = (0x80 | (c & 0x3f));
+    } else {			/*  1110**** 10****** 10******  */
+	*lp++ = (0xe0 | (c >> 12));
+	*lp++ = (0x80 | ((c >> 6) & 0x3f));
+	*lp++ = (0x80 | (c & 0x3f));
+    }
+    /*
+     * UTF-8 is defined for words of up to 31 bits, but we need only 16
+     * bits here, since that's all that X11R6 supports.
+     */
+    return lp;
+}
+
+/*
+ * Write data back to the PTY
+ */
+void writePtyData(int f, IChar *d, unsigned len)
+{
+    static Char *dbuf;
+    static unsigned dlen;
+    unsigned n = (len << 1);
+
+    if (dlen <= len) {
+	dlen = n;
+	dbuf = (Char *)XtRealloc((char *)dbuf, dlen);
+    }
+
+    for (n = 0; n < len; n++)
+	dbuf[n] = d[n];
+    v_write(f, dbuf, n);
+}
+#endif

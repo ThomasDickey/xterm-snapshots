@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.89 1999/05/03 12:16:11 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.90 1999/05/09 10:52:10 dawes Exp $ */
 
 
 /* main.c */
@@ -260,7 +260,7 @@ static Bool IsPts = False;
 #endif
 #define USE_TERMCAP_ENVVARS	/* every one uses this except SYSV maybe */
 
-#if defined(__sgi) && OSMAJORVERSION >= 5
+#if defined(__sgi) && (OSMAJORVERSION >= 5)
 #undef TIOCLSET				/* defined, but not useable */
 #endif
 
@@ -343,7 +343,9 @@ static Bool IsPts = False;
 
 #ifndef linux
 #ifndef USE_POSIX_TERMIOS
+#ifndef USE_SYSV_TERMIO
 #include <sgtty.h>
+#endif
 #endif /* USE_POSIX_TERMIOS */
 #ifndef Lynx
 #include <sys/resource.h>
@@ -398,7 +400,7 @@ extern time_t time ();
 #include <sys/utsname.h>
 #endif /* __hpux */
 
-#if defined(apollo) && OSMAJORVERSION == 10 && OSMINORVERSION < 4
+#if defined(apollo) && (OSMAJORVERSION == 10) && (OSMINORVERSION < 4)
 #define ttyslot() 1
 #endif /* apollo */
 
@@ -426,7 +428,7 @@ extern time_t time ();
 #endif
 #endif
 #include <utmp.h>
-#if defined(_CRAY) && OSMAJORVERSION < 8
+#if defined(_CRAY) && (OSMAJORVERSION < 8)
 extern struct utmp *getutid __((struct utmp *_Id));
 #endif
 
@@ -554,6 +556,9 @@ static char **command_to_exec = NULL;
 ** to eliminate any assumptions about the internal order of their
 ** contents.
 */
+#ifndef ICRNL
+#include <sys/termio.h>
+#endif
 static struct termio d_tio;
 #ifdef HAS_LTCHARS
 static struct ltchars d_ltc;
@@ -685,7 +690,7 @@ struct _xttymodes {
 static int parse_tty_modes (char *s, struct _xttymodes *modelist);
 
 #ifdef USE_SYSV_UTMP
-#if defined(X_NOT_STDC_ENV) || (defined(AIXV3) && OSMAJORVERSION < 4)
+#if defined(X_NOT_STDC_ENV) || (defined(AIXV3) && (OSMAJORVERSION < 4))
 extern struct utmp *getutent();
 extern struct utmp *getutid();
 extern struct utmp *getutline();
@@ -1801,7 +1806,7 @@ main (int argc, char *argv[])
 	screen->inhibit = inhibit;
 
 #ifdef AIXV3
-#if OSMAJORVERSION < 4
+#if (OSMAJORVERSION < 4)
 	/* In AIXV3, xterms started from /dev/console have CLOCAL set.
 	 * This means we need to clear CLOCAL so that SIGHUP gets sent
 	 * to the slave-pty process when xterm exits.
@@ -1898,7 +1903,7 @@ get_pty (int *pty)
 {
 #if defined(__osf__) || (defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
     int tty;
-    return (openpty(pty, &tty, ttydev, NULL, NULL));
+    return (openpty(pty, &tty, NULL, NULL, NULL));
 #elif defined(SYSV) && defined(i386) && !defined(SVR4)
         /*
 	  The order of this code is *important*.  On SYSV/386 we want to open
@@ -1942,7 +1947,7 @@ get_pty (int *pty)
 	}
 	strcpy(ttydev, ttyname(*pty));
 	return 0;
-#elif defined(__sgi) && OSMAJORVERSION >= 4
+#elif defined(__sgi) && (OSMAJORVERSION >= 4)
 	{
 	    char    *tty_name;
 
@@ -1968,7 +1973,7 @@ get_pty (int *pty)
 	}
 #elif defined(USE_GET_PSEUDOTTY)
 	return ((*pty = getpseudotty (&ttydev, &ptydev)) >= 0 ? 0 : 1);
-#elif (defined(__sgi) && OSMAJORVERSION < 4) || (defined(umips) && defined (SYSTYPE_SYSV))
+#elif (defined(__sgi) && (OSMAJORVERSION < 4)) || (defined(umips) && defined (SYSTYPE_SYSV))
 	struct stat fstat_buf;
 
 	*pty = open ("/dev/ptc", O_RDWR);
@@ -4017,7 +4022,7 @@ Exit(int n)
 #endif
 	char* ptyname;
 	char* ptynameptr = 0;
-#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && __GLIBC__ == 2 && (__GLIBC_MINOR__ == 0)))
+#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
 	int fd;			/* for /etc/wtmp */
 	int i;
 #endif

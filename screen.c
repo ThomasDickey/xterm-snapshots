@@ -560,7 +560,7 @@ ScrnDeleteChar (
 	    memset(ptr + size - n, curXtermChrSet(row), n);
 	})
 	if_OPT_WIDE_CHARS(screen,{
-	    ptr = BUF_CSETS(sb, row);
+	    ptr = BUF_WIDEC(sb, row);
 	    memmove(ptr + col, ptr + col + n, nbytes);
 	    memset(ptr + size - n, 0, n);
 	})

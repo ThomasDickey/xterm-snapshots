@@ -52,7 +52,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
          PTYLIB = -lpucc
 #endif
 
-#if (LinuxCLibMajorVersion >= 6 && LinuxCLibMinorVersion >= 1)
+#if ((LinuxCLibMajorVersion >= 6) && (LinuxCLibMinorVersion >= 1))
          PTYLIB = -lutil
 #endif
 
@@ -109,7 +109,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 
 #ifndef TermcapLibrary
 #if SystemV && !defined(MacIIArchitecture)
-#if defined(CrayArchitecture) || (defined(HPArchitecture) && OSMajorVersion < 10) || defined(RsArchitecture)
+#if defined(CrayArchitecture) || (defined(HPArchitecture) && (OSMajorVersion < 10)) || defined(RsArchitecture)
 #define TermcapLibrary -lcurses		/* special cases of System V */
 #else
 #define TermcapLibrary -ltermlib	/* usually in here */
@@ -135,9 +135,9 @@ SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XkbClientLibs XawClientLibs,$(TER
 NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
 #endif
 
-#if InstallXtermSetUID && defined(SunArchitecture) && HasSharedLibraries && OSMajorVersion < 5
+#if InstallXtermSetUID && defined(SunArchitecture) && HasSharedLibraries && (OSMajorVersion < 5)
 #if AlternateUsrLibDir
-#if OSMajorVersion == 4 && OSMinorVersion >= 1
+#if ((OSMajorVersion == 4) && (OSMinorVersion >= 1))
 LDOVERRIDE = -L$(DESTDIR)$(USRLIBDIR)
 #else
 #if HasGcc
