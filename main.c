@@ -490,12 +490,6 @@ static char *base_name (char *name);
 static int pty_search (int *pty);
 static int remove_termcap_entry (char *buf, char *str);
 static int spawn (void);
-static void DeleteWindow PROTO_XT_ACTIONS_ARGS;
-static void Help (void);
-static void HsSysError (int pf, int error);
-static void KeyboardMapping PROTO_XT_ACTIONS_ARGS;
-static void Syntax (char *badOption);
-static void Version (void);
 static void get_terminal (void);
 static void resize (TScreen *s, char *oldtc, char *newtc);
 
@@ -683,11 +677,6 @@ static char bin_login[] = LOGIN_FILENAME;
 static int inhibit;
 static char passedPty[2];	/* name if pty if slave */
 
-#ifndef AMOEBA
-static int get_pty (int *pty);
-static SIGNAL_T hungtty (int i);
-#endif
-
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 static int Console;
 #include <X11/Xmu/SysUtil.h>	/* XmuGetHostname */
@@ -695,7 +684,6 @@ static int Console;
 #define MIT_CONSOLE "MIT_CONSOLE_"
 static char mit_console_name[255 + MIT_CONSOLE_LEN + 1] = MIT_CONSOLE;
 static Atom mit_console;
-static Boolean ConvertConsoleSelection PROTO_XT_CVT_SELECT_ARGS;
 #endif	/* TIOCCONS */
 
 #ifndef USE_SYSV_UTMP
@@ -1009,8 +997,7 @@ static int abbrev (char *tst, char *cmp)
 	return ((len >= 2) && (!strncmp(tst, cmp, len)));
 }
 
-static void Syntax (badOption)
-    char *badOption;
+static void Syntax (char *badOption)
 {
     struct _options *opt;
     int col;
@@ -1035,13 +1022,13 @@ static void Syntax (badOption)
     exit (1);
 }
 
-static void Version ()
+static void Version (void)
 {
     puts (XTERM_VERSION);
     exit (0);
 }
 
-static void Help ()
+static void Help (void)
 {
     struct _options *opt;
     char **cpp;
@@ -1066,12 +1053,14 @@ static void Help ()
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 /* ARGSUSED */
 static Boolean
-ConvertConsoleSelection(w, selection, target, type, value, length, format)
-    Widget w GCC_UNUSED;
-    Atom *selection GCC_UNUSED, *target GCC_UNUSED, *type GCC_UNUSED;
-    XtPointer *value GCC_UNUSED;
-    unsigned long *length GCC_UNUSED;
-    int *format GCC_UNUSED;
+ConvertConsoleSelection(
+	Widget w GCC_UNUSED,
+	Atom *selection GCC_UNUSED,
+	Atom *target GCC_UNUSED,
+	Atom *type GCC_UNUSED,
+	XtPointer *value GCC_UNUSED,
+	unsigned long *length GCC_UNUSED,
+	int *format GCC_UNUSED)
 {
     /* we don't save console output, so can't offer it */
     return False;
@@ -1092,11 +1081,11 @@ Bool waiting_for_initial_map;
  */
 /* ARGSUSED */
 static void
-DeleteWindow(w, event, params, num_params)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *num_params GCC_UNUSED;
+DeleteWindow(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *num_params GCC_UNUSED)
 {
 #if OPT_TEK4014
   if (w == toplevel)
@@ -1114,11 +1103,11 @@ DeleteWindow(w, event, params, num_params)
 
 /* ARGSUSED */
 static void
-KeyboardMapping(w, event, params, num_params)
-    Widget w GCC_UNUSED;
-    XEvent *event;
-    String *params GCC_UNUSED;
-    Cardinal *num_params GCC_UNUSED;
+KeyboardMapping(
+	Widget w GCC_UNUSED,
+	XEvent *event,
+	String *params GCC_UNUSED,
+	Cardinal *num_params GCC_UNUSED)
 {
     switch (event->type) {
        case MappingNotify:
@@ -1138,9 +1127,7 @@ extern fd_set X_mask;
 extern fd_set pty_mask;
 
 int
-main (argc, argv)
-int argc;
-char **argv;
+main (int argc, char *argv[])
 {
 	register TScreen *screen;
 	int mode;
@@ -1787,8 +1774,7 @@ char **argv;
 }
 
 static char *
-base_name(name)
-char *name;
+base_name(char *name)
 {
 	register char *cp;
 
@@ -1805,8 +1791,7 @@ char *name;
  */
 
 static int
-get_pty (pty)
-    int *pty;
+get_pty (int *pty)
 {
 #ifdef __osf__
     int tty;
@@ -1930,8 +1915,7 @@ get_pty (pty)
  * Returns 0 if found a pty, 1 if fails.
  */
 static int
-pty_search(pty)
-    int *pty;
+pty_search(int *pty)
 {
     static int devindex, letter = 0;
 
@@ -1986,7 +1970,7 @@ pty_search(pty)
 #endif /* AMOEBA */
 
 static void
-get_terminal ()
+get_terminal (void)
 /*
  * sets up X and initializes the terminal structure except for term.buf.fildes.
  */
@@ -2044,8 +2028,7 @@ static char *vtterm[] = {
 };
 
 /* ARGSUSED */
-static SIGNAL_T hungtty(i)
-	int i GCC_UNUSED;
+static SIGNAL_T hungtty(int i GCC_UNUSED)
 {
 	longjmp(env, 1);
 	SIGNAL_RETURN;
@@ -2088,9 +2071,7 @@ typedef struct {
  */
 
 static void
-HsSysError(pf, error)
-int pf;
-int error;
+HsSysError(int pf, int error)
 {
 	handshake_t handshake;
 
@@ -2102,7 +2083,7 @@ int error;
 	exit(error);
 }
 
-void first_map_occurred ()
+void first_map_occurred (void)
 {
     handshake_t handshake;
     register TScreen *screen = &term->screen;
@@ -2120,15 +2101,14 @@ void first_map_occurred ()
  * temporary hack to get xterm working on att ptys
  */
 void
-HsSysError(pf, error)
-    int pf;
-    int error;
+HsSysError(int pf, int error)
 {
     fprintf(stderr, "%s: fatal pty error %d (errno=%d) on tty %s\n",
 	    xterm_name, error, errno, ttydev);
     exit(error);
 }
-void first_map_occurred ()
+
+void first_map_occurred (void)
 {
     return;
 }
@@ -2139,7 +2119,7 @@ void first_map_occurred ()
 extern char **environ;
 
 static int
-spawn ()
+spawn (void)
 /*
  *  Inits pty and tty and forks a login process.
  *  Does not close fd Xsocket.
@@ -3602,7 +3582,7 @@ WakeupMainThread()
 /*
  * Spawn off tty threads and fork the login process.
  */
-static int spawn()
+static int spawn(void)
 {
     register TScreen *screen = &term->screen;
     char *TermName = NULL;
@@ -3871,8 +3851,7 @@ SleepMainThread()
 #endif /* AMOEBA */
 
 SIGNAL_T
-Exit(n)
-	int n;
+Exit(int n)
 {
 	register TScreen *screen = &term->screen;
 #ifdef UTMP
@@ -4003,9 +3982,7 @@ Exit(n)
 
 /* ARGSUSED */
 static void
-resize(screen, oldtc, newtc)
-TScreen *screen;
-register char *oldtc, *newtc;
+resize(TScreen *screen, register char *oldtc, register char *newtc)
 {
 #ifndef USE_SYSV_ENVVARS
 	register char *ptr1, *ptr2;
@@ -4050,7 +4027,7 @@ register char *oldtc, *newtc;
  * Returns the pid of the child, or 0 or -1 if none or error.
  */
 int
-nonblocking_wait()
+nonblocking_wait(void)
 {
 #ifdef USE_POSIX_WAIT
         pid_t pid;
@@ -4076,8 +4053,7 @@ nonblocking_wait()
 }
 
 /* ARGSUSED */
-static SIGNAL_T reapchild (n)
-    int n GCC_UNUSED;
+static SIGNAL_T reapchild (int n GCC_UNUSED)
 {
     int pid;
 
@@ -4135,9 +4111,7 @@ char *fmt;
 #endif
 
 static int
-remove_termcap_entry (buf, str)
-    char *buf;
-    char *str;
+remove_termcap_entry (char *buf, char *str)
 {
     register char *strinbuf;
 
@@ -4164,9 +4138,7 @@ remove_termcap_entry (buf, str)
  * where setting consists of the words in the modelist followed by a character
  * or ^char.
  */
-static int parse_tty_modes (s, modelist)
-    char *s;
-    struct _xttymodes *modelist;
+static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 {
     struct _xttymodes *mp;
     int c;
@@ -4198,8 +4170,7 @@ static int parse_tty_modes (s, modelist)
     }
 }
 
-int GetBytesAvailable (fd)
-    int fd;
+int GetBytesAvailable (int fd)
 {
 #ifndef AMOEBA
 #ifdef FIONREAD
@@ -4257,9 +4228,7 @@ int GetBytesAvailable (fd)
    everybody who used to call killpg() */
 
 int
-kill_process_group(pid, sig)
-    int pid;
-    int sig;
+kill_process_group(int pid, int sig)
 {
     TRACE(("kill_process_group(pid=%d, sig=%d)\n", pid, sig))
 #ifndef AMOEBA

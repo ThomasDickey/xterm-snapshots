@@ -98,7 +98,6 @@ struct winsize {
 };
 #endif
 
-ScrnBuf Allocate (nrow, ncol, addr)
 /*
  * Allocates memory for a 2-dimensional array of chars and returns a pointer
  * thereto.  Each line is formed from a set of char arrays, with an index
@@ -114,8 +113,7 @@ ScrnBuf Allocate (nrow, ncol, addr)
  * with the intention of being able to change the total number of pointers per
  * row according to whether the user wants color or not.
  */
-register int nrow, ncol;
-Char **addr;
+ScrnBuf Allocate (register int nrow, register int ncol, Char **addr)
 {
 	register ScrnBuf base;
 	register Char *tmp;
@@ -149,9 +147,12 @@ Char **addr;
  */
 static int
 Reallocate(
-    ScrnBuf *sbuf,
-    Char **sbufaddr,
-    int nrow, int ncol, int oldrow, int oldcol)
+	ScrnBuf *sbuf,
+	Char **sbufaddr,
+	int nrow,
+	int ncol,
+	int oldrow,
+	int oldcol)
 {
 	register ScrnBuf base;
 	register Char *tmp;
@@ -239,17 +240,17 @@ Reallocate(
 	return move_down ? move_down : -move_up; /* convert to rows */
 }
 
-void
-ScreenWrite (screen, str, flags, cur_fg_bg, length)
 /*
  * Writes str into buf at screen's current row and column.  Characters are set
  * to match flags.
  */
-TScreen *screen;
-Char *str;
-register unsigned flags;
-register unsigned cur_fg_bg;
-register int length;		/* length of string */
+void
+ScreenWrite (
+	TScreen *screen,
+	Char *str,
+	register unsigned flags,
+	register unsigned cur_fg_bg,
+	register int length)		/* length of string */
 {
 #if OPT_ISO_COLORS
 	register Char *fb = 0;
@@ -342,9 +343,7 @@ ScrnClearLines (TScreen *screen, ScrnBuf sb, int where, int n, int size)
 }
 
 size_t
-ScrnPointers (screen, len)
-TScreen *screen;
-size_t len;
+ScrnPointers (TScreen *screen, size_t len)
 {
 	len *= (MAX_PTRS * sizeof(Char *));
 
@@ -360,17 +359,19 @@ size_t len;
 	return len;
 }
 
-void
-ScrnInsertLine (screen, sb, last, where, n, size)
 /*
-   Inserts n blank lines at sb + where, treating last as a bottom margin.
-   Size is the size of each entry in sb.
-   Requires: 0 <= where < where + n <= last
+ * Inserts n blank lines at sb + where, treating last as a bottom margin.
+ * Size is the size of each entry in sb.
+ * Requires: 0 <= where < where + n <= last
  */
-TScreen *screen;
-register ScrnBuf sb;
-int last;
-register int where, n, size;
+void
+ScrnInsertLine (
+	TScreen *screen,
+	register ScrnBuf sb,
+	int last,
+	register int where,
+	register int n,
+	register int size)
 {
 	size_t len = ScrnPointers(screen, n);
 
@@ -396,17 +397,19 @@ register int where, n, size;
 		 len);
 }
 
-void
-ScrnDeleteLine (screen, sb, last, where, n, size)
 /*
-   Deletes n lines at sb + where, treating last as a bottom margin.
-   Size is the size of each entry in sb.
-   Requires 0 <= where < where + n < = last
+ * Deletes n lines at sb + where, treating last as a bottom margin.
+ * Size is the size of each entry in sb.
+ * Requires 0 <= where < where + n < = last
  */
-TScreen *screen;
-register ScrnBuf sb;
-register int n, last, size;
-int where;
+void
+ScrnDeleteLine (
+	TScreen *screen,
+	register ScrnBuf sb,
+	register int last,
+	int where,
+	register int n,
+	register int size)
 {
 	ScrnClearLines(screen, sb, where, n, size);
 
@@ -421,15 +424,15 @@ int where;
 		MAX_PTRS * sizeof(char *) * n);
 }
 
+/*
+ * Inserts n blanks in screen at current row, col.  Size is the size of each
+ * row.
+ */
 void
-ScrnInsertChar (screen, n, size)
-    /*
-     * Inserts n blanks in screen at current row, col.  Size is the size of each
-     * row.
-     */
-    register TScreen *screen;
-    register int n;
-    int size;
+ScrnInsertChar (
+	register TScreen *screen,
+	register int n,
+	int size)
 {
 	ScrnBuf sb = screen->visbuf;
 	int row = screen->cur_row;
@@ -468,14 +471,14 @@ ScrnInsertChar (screen, n, size)
 	    ScrnClrWrapped(screen, row);
 }
 
+/*
+ * Deletes n characters at current row, col. Size is the size of each row.
+ */
 void
-ScrnDeleteChar (screen, n, size)
-    /*
-      Deletes n characters at current row, col. Size is the size of each row.
-      */
-    register TScreen *screen;
-    register int size;
-    register int n;
+ScrnDeleteChar (
+	register TScreen *screen,
+	register int n,
+	register int size)
 {
 	ScrnBuf sb = screen->visbuf;
 	int row = screen->cur_row;
@@ -506,18 +509,21 @@ ScrnDeleteChar (screen, n, size)
 	    ScrnClrWrapped(screen, row);
 }
 
-void
-ScrnRefresh (screen, toprow, leftcol, nrows, ncols, force)
 /*
-   Repaints the area enclosed by the parameters.
-   Requires: (toprow, leftcol), (toprow + nrows, leftcol + ncols) are
-   	     coordinates of characters in screen;
-	     nrows and ncols positive.
-	     all dimensions are based on single-characters.
+ * Repaints the area enclosed by the parameters.
+ * Requires: (toprow, leftcol), (toprow + nrows, leftcol + ncols) are
+ * 	     coordinates of characters in screen;
+ *	     nrows and ncols positive.
+ *	     all dimensions are based on single-characters.
  */
-register TScreen *screen;
-int toprow, leftcol, nrows, ncols;
-Boolean force;			/* ... leading/trailing spaces */
+void
+ScrnRefresh (
+	register TScreen *screen,
+	int toprow,
+	int leftcol,
+	int nrows,
+	int ncols,
+	Bool force)			/* ... leading/trailing spaces */
 {
 	int y = toprow * FontHeight(screen) + screen->border;
 	register int row;
@@ -747,14 +753,15 @@ Boolean force;			/* ... leading/trailing spaces */
 #endif
 }
 
-void
-ClearBufRows (screen, first, last)
 /*
-   Sets the rows first though last of the buffer of screen to spaces.
-   Requires first <= last; first, last are rows of screen->buf.
+ * Sets the rows first though last of the buffer of screen to spaces.
+ * Requires first <= last; first, last are rows of screen->buf.
  */
-register TScreen *screen;
-register int first, last;
+void
+ClearBufRows (
+	register TScreen *screen,
+	register int first,
+	register int last)
 {
 	ScrnBuf	buf = screen->visbuf;
 	int	len = screen->max_col + 1;
@@ -791,10 +798,11 @@ register int first, last;
   8. Returns 0
   */
 int
-ScreenResize (screen, width, height, flags)
-    register TScreen *screen;
-    int width, height;
-    unsigned *flags;
+ScreenResize (
+	register TScreen *screen,
+	int width,
+	int height,
+	unsigned *flags)
 {
 	int code;
 	int rows, cols;
@@ -959,35 +967,31 @@ ScreenResize (screen, width, height, flags)
 }
 
 void
-ScrnClrWrapped(screen, row)
-	TScreen *screen;
-	int row;
+ScrnClrWrapped(TScreen *screen, int row)
 {
 	long value = (long)SCRN_BUF_FLAGS(screen, row + screen->topline) & ~ LINEWRAPPED;
 	SCRN_BUF_FLAGS(screen, row + screen->topline) = (Char *)value;
 }
 
 void
-ScrnSetWrapped(screen, row)
-	TScreen *screen;
-	int row;
+ScrnSetWrapped(TScreen *screen, int row)
 {
 	long value = (long)SCRN_BUF_FLAGS(screen, row + screen->topline) | LINEWRAPPED;
 	SCRN_BUF_FLAGS(screen, row + screen->topline) = (Char *)value;
 }
 
 Bool
-ScrnTstWrapped(screen, row)
-	TScreen *screen;
-	int row;
+ScrnTstWrapped(TScreen *screen, int row)
 {
 	return (long)SCRN_BUF_FLAGS(screen, row + screen->topline) & LINEWRAPPED;
 }
 
 Bool
-non_blank_line(sb, row, col, len)
-ScrnBuf sb;
-register int row, col, len;
+non_blank_line(
+	ScrnBuf sb,
+	register int row,
+	register int col,
+	register int len)
 {
 	register int	i;
 	register Char *ptr = BUF_CHARS(sb, row);
