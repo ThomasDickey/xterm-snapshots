@@ -361,6 +361,7 @@ static  Boolean	defaultCOLORMODE   = DFT_COLORMODE;
 #endif
 static  Boolean	defaultFALSE	   = FALSE;
 static  Boolean	defaultTRUE	   = TRUE;
+static  Boolean	defaultMAYBE	   = MAYBE;
 static  int	defaultZERO        = 0;
 static  int	defaultIntBorder   = DEFBORDER;
 static  int	defaultSaveLines   = SAVELINES;
@@ -586,7 +587,7 @@ static XtResource resources[] = {
         XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNbackarrowKey, XtCBackarrowKey, XtRBoolean, sizeof(Boolean),
         XtOffsetOf(XtermWidgetRec, screen.backarrow_key),
-        XtRBoolean, (XtPointer) &defaultTRUE},
+        XtRBoolean, (XtPointer) &defaultMAYBE},
 {XtNbellSuppressTime, XtCBellSuppressTime, XtRInt, sizeof(int),
         XtOffsetOf(XtermWidgetRec, screen.bellSuppressTime),
         XtRInt, (XtPointer) &defaultBellSuppressTime},
@@ -3549,7 +3550,16 @@ unparseputc(int c, int fd)
 		buf[1] = '\n';
 		i++;
 	}
+#if OPT_WIDE_CHARS
+	{
+	char buffer[2];
+	buffer[0] = buf[0];
+	buffer[1] = buf[1];
+	v_write(fd, buffer, i);
+	}
+#else
 	v_write(fd, (char *)buf, i);
+#endif
 
 	/* If send/receive mode is reset, we echo characters locally */
 	if ((term->keyboard.flags & MODE_SRM) == 0) {
@@ -3955,6 +3965,7 @@ static void VTInitialize (
    wnew->screen.visualbell = request->screen.visualbell;
 #if OPT_NUM_LOCK
    wnew->misc.real_NumLock = request->misc.real_NumLock;
+   wnew->misc.num_lock = request->misc.num_lock;
 #endif
 #if OPT_SHIFT_KEYS
    wnew->misc.shift_keys = request->misc.shift_keys;

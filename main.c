@@ -2398,6 +2398,7 @@ spawn (void)
 				initial_erase = sg.sg_erase;
 #endif	/* USE_SYSV_TERMIO */
 			}
+			if (term->screen.backarrow_key == MAYBE)
 			if (initial_erase == 0177) {	/* see input.c */
 				term->keyboard.flags &= ~MODE_DECBKM;
 			}
