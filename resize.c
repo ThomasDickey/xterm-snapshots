@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.14 1996/09/01 12:31:02 dawes Exp $
+ *	$XFree86: xc/programs/xterm/resize.c,v 3.17 1996/10/16 14:45:16 dawes Exp $
  */
 
 /*
@@ -231,7 +231,7 @@ static void readstring PROTO((FILE *fp, char *buf, char *str));
 
 #ifdef USE_TERMCAP
 static char *strindex PROTO((char *s1, char *s2));
-#if !defined(__NetBSD__) && !(defined(sun) && !defined(SVR4)) && !defined(SCO325)
+#if !defined(NO_TERMCAP_H)
 #include <termcap.h>
 #if defined(linux) && defined(NCURSES_VERSION)
 				/* The tgetent emulation function in
@@ -243,7 +243,7 @@ static char *strindex PROTO((char *s1, char *s2));
 #endif
 #else
 #include <curses.h>
-#endif /* __NetBSD__  */
+#endif /* ! NO_TERMCAP_H  */
 #endif
 
 /*
@@ -577,13 +577,13 @@ readstring(fp, buf, str)
     char *str;
 {
 	register int last, c;
-#if !defined(USG) && !defined(AMOEBA) && !defined(MINIX) && !defined(SCO) && !(__EMX__)
+#if !defined(USG) && !defined(AMOEBA) && !defined(MINIX) && !(__EMX__)
 	/* What is the advantage of setitimer() over alarm()? */
 	struct itimerval it;
 #endif
 
 	signal(SIGALRM, resize_timeout);
-#if defined(USG) || defined(AMOEBA) || defined(MINIX) || defined(SCO) || defined(__EMX__)
+#if defined(USG) || defined(AMOEBA) || defined(MINIX) || defined(__EMX__)
 	alarm (TIMEOUT);
 #else
 	bzero((char *)&it, sizeof(struct itimerval));
@@ -602,7 +602,7 @@ readstring(fp, buf, str)
 	last = str[strlen(str) - 1];
 	while((*buf++ = getc(fp)) != last)
 	    ;
-#if defined(USG) || defined(AMOEBA) || defined(MINIX) || defined(SCO) || defined(__EMX__)
+#if defined(USG) || defined(AMOEBA) || defined(MINIX) || defined(__EMX__)
 	alarm (0);
 #else
 	bzero((char *)&it, sizeof(struct itimerval));

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/66 1995/12/09 08:58:41 kaleb $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.15 1996/08/23 11:06:20 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.16 1996/09/22 05:16:11 dawes Exp $
  */
 
 /*
@@ -187,6 +187,9 @@ typedef Char **ScrnBuf;
 #define	PM	0x9E
 #define	APC	0x9F
 #define	RDEL	0xFF
+
+#define MIN_DECID 100			/* emulate VT100 */
+#define MAX_DECID 420			/* ...through VT420 */
 
 #define NMENUFONTS 9			/* entries in fontMenu */
 
@@ -462,6 +465,7 @@ typedef struct {
 	char		curgl;		/* Current GL setting.		*/
 	char		curgr;		/* Current GR setting.		*/
 	char		curss;		/* Current single shift.	*/
+	int		terminal_id;	/* 100=vt100, 220=vt220, etc.	*/
 	int		ansi_level;	/* 0=vt100, 1,2,3 = vt100 ... vt320 */
 	int		scroll_amt;	/* amount to scroll		*/
 	int		refresh_amt;	/* amount to refresh		*/

@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/83 1995/12/15 14:06:17 gildea $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.10 1996/08/23 11:06:23 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.11 1996/09/22 05:16:14 dawes Exp $
 .\" Copyright (c) 1989  X Consortium
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining
@@ -702,10 +702,10 @@ the ``colorBDMode'' resource is enabled.
 This specifies the color to use to display underlined characters if
 the ``colorULMode'' resource is enabled.
 .TP 8
-.B "underLine (\fPclass\fB UnderLine)"
-This specifies whether or not text with the underline attribute should be
-underlined.  It may be desirable to disable underlining when color is being
-used for the underline attribute.
+.B "decTerminalID (\fPclass\fB DecTerminalID)"
+Specifies the emulation level (100=VT100, 220=VT220, etc.), used to determine
+the type of response to a DA control sequence.
+The default is 100.
 .TP 8
 .B "dynamicColors (\fPclass\fB DynamicColors)"
 Specifies whether or not escape sequences to change colors assigned to
@@ -899,6 +899,11 @@ alternate screen.
 .B "translations (\fPclass\fB Translations)"
 Specifies the key and button bindings for menus, selections, ``programmed
 strings,'' etc.  See \fBACTIONS\fP below.
+.TP 8
+.B "underLine (\fPclass\fB UnderLine)"
+This specifies whether or not text with the underline attribute should be
+underlined.  It may be desirable to disable underlining when color is being
+used for the underline attribute.
 .TP 8
 .B "visualBell (\fPclass\fB VisualBell)"
 Specifies whether or not a visible bell (i.e. flashing) should be used instead
@@ -1224,7 +1229,6 @@ pointer position.
 .PP
 Clicking button two moves the display to a position in the saved text
 that corresponds to the pointer's position in the scrollbar.
-.PP
 .PP
 Unlike the VT102 window, the Tektronix window does not allow the copying of
 text.
