@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-51
+MANIFEST for xterm, version XFree86-3_9q
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 Imakefile                       imake template for Makefile
@@ -17,6 +17,8 @@ XTerm.ad                        resource definitions for XTerm class
 aclocal.m4                      configure script: custom macros
 button.c                        mouse button and selection processing
 charproc.c                      VT100 parser functions
+config.guess                    configure script: guess the system type
+config.sub                      configure script: validate system type
 configure.in                    template for generating configure script
 ctlseqs.ms                      documentation: Xterm Control Sequences
 cursor.c                        VT100 low-level cursor movement

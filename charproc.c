@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.50 1997/08/26 10:01:53 hohndel Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.51 1997/09/19 08:30:12 hohndel Exp $
  */
 
 /*
