@@ -927,13 +927,6 @@ main (int argc, char **argv, char **envp)
         sameName = resource.sameName;
 #endif
 	xterm_name = resource.xterm_name;
-	sunFunctionKeys = resource.sunFunctionKeys;
-#if OPT_SUNPC_KBD
-	sunKeyboard = resource.sunKeyboard;
-#endif
-#if OPT_HP_FUNC_KEYS
-	hpFunctionKeys = resource.hpFunctionKeys;
-#endif
 	if (strcmp(xterm_name, "-") == 0) xterm_name = DFT_TERMTYPE;
 	if (resource.icon_geometry != NULL) {
 	    int scr, junk;
@@ -1013,6 +1006,14 @@ main (int argc, char **argv, char **envp)
 #endif
 		0);
 	    /* this causes the initialize method to be called */
+
+#if OPT_HP_FUNC_KEYS
+	init_keyboard_type(keyboardIsHP, resource.hpFunctionKeys);
+#endif
+	init_keyboard_type(keyboardIsSun, resource.sunFunctionKeys);
+#if OPT_SUNPC_KBD
+	init_keyboard_type(keyboardIsVT220, resource.sunKeyboard);
+#endif
 
         screen = &term->screen;
 
@@ -1560,7 +1561,7 @@ opencons();*/
 			for (i = 0 ; gblenvp [i] != NULL ; i++)
 				;
 
-			/* compute number of Setenv() calls below */
+			/* compute number of xtermSetenv() calls below */
 			envsize = 1;	/* (NULL terminating entry) */
 			envsize += 3;	/* TERM, WINDOWID, DISPLAY */
 			envsize += 2;	/* COLUMNS, LINES */
@@ -1568,16 +1569,16 @@ opencons();*/
 			envnew = (char **) calloc ((unsigned) i + envsize, sizeof(char *));
 			memmove( (char *)envnew, (char *)gblenvp, i * sizeof(char *));
 			gblenvp = envnew;
-			Setenv ("TERM=", TermName);
+			xtermSetenv ("TERM=", TermName);
 			if(!TermName)
 				*newtc = 0;
 
 			sprintf (buf, "%lu",
 				((unsigned long) XtWindow (XtParent(CURRENT_EMU(screen)))));
-			Setenv ("WINDOWID=", buf);
+			xtermSetenv ("WINDOWID=", buf);
 
 			/* put the display into the environment of the shell*/
-			Setenv ("DISPLAY=", XDisplayString (screen->display));
+			xtermSetenv ("DISPLAY=", XDisplayString (screen->display));
 
 			signal(SIGTERM, SIG_DFL);
 
@@ -1608,9 +1609,9 @@ opencons();*/
 			}
 
 			sprintf (numbuf, "%d", screen->max_col + 1);
-			Setenv("COLUMNS=", numbuf);
+			xtermSetenv("COLUMNS=", numbuf);
 			sprintf (numbuf, "%d", screen->max_row + 1);
-			Setenv("LINES=", numbuf);
+			xtermSetenv("LINES=", numbuf);
 
 			/* reconstruct dead environ variable */
 			environ = gblenvp;

@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.105 2000/01/24 22:21:56 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.106 2000/01/29 18:58:39 dawes Exp $ */
 
 
 /* main.c */
@@ -344,6 +344,7 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 #else
 
 #ifndef linux
+#ifndef VMS
 #ifndef USE_POSIX_TERMIOS
 #ifndef USE_SYSV_TERMIO
 #include <sgtty.h>
@@ -358,6 +359,7 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 #ifdef __osf__
 #define setpgrp setpgid
 #endif
+#endif /* !VMS */
 #endif /* !linux */
 
 #endif /* __QNX__ */
@@ -385,7 +387,9 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 #define NOFILE OPEN_MAX
 #endif
 #elif !defined(MINIX) && !defined(WIN32) && !defined(Lynx) && !defined(__GNU__) && !defined(__MVS__)
+#ifndef VMS
 #include <sys/param.h>	/* for NOFILE */
+#endif /* !VMS */
 #endif
 
 #if defined(BSD) && (BSD >= 199103)
@@ -525,12 +529,14 @@ extern char *tgetstr (char *name, char **ptr);
 	}
 #endif
 
+#ifndef VMS
 static SIGNAL_T reapchild (int n);
-static char *base_name (char *name);
-static int pty_search (int *pty);
 static int spawn (void);
-static void get_terminal (void);
+static int pty_search (int *pty);
 static void remove_termcap_entry (char *buf, char *str);
+#endif /* ! VMS */
+static char *base_name (char *name);
+static void get_terminal (void);
 static void resize (TScreen *s, char *oldtc, char *newtc);
 
 static Bool added_utmp_entry = False;
@@ -610,6 +616,7 @@ static char **command_to_exec = NULL;
 #define CWERASE CONTROL('W')
 #endif
 
+#ifndef VMS
 #ifdef USE_SYSV_TERMIO
 /* The following structures are initialized in main() in order
 ** to eliminate any assumptions about the internal order of their
@@ -647,6 +654,7 @@ static struct jtchars d_jtc = {
 };
 #endif /* sony */
 #endif /* USE_SYSV_TERMIO */
+#endif /* ! VMS */
 
 /*
  * SYSV has the termio.c_cc[V] and ltchars; BSD has tchars and ltchars;
@@ -1639,13 +1647,6 @@ main (int argc, char *argv[])
 #endif
 	hold_screen = resource.hold_screen ? 1 : 0;
 	xterm_name = resource.xterm_name;
-	sunFunctionKeys = resource.sunFunctionKeys;
-#if OPT_SUNPC_KBD
-	sunKeyboard = resource.sunKeyboard;
-#endif
-#if OPT_HP_FUNC_KEYS
-	hpFunctionKeys = resource.hpFunctionKeys;
-#endif
 	if (strcmp(xterm_name, "-") == 0) xterm_name = DFT_TERMTYPE;
 	if (resource.icon_geometry != NULL) {
 	    int scr, junk;
@@ -1732,6 +1733,14 @@ main (int argc, char *argv[])
 		0);
 	    /* this causes the initialize method to be called */
 
+#if OPT_HP_FUNC_KEYS
+	init_keyboard_type(keyboardIsHP, resource.hpFunctionKeys);
+#endif
+	init_keyboard_type(keyboardIsSun, resource.sunFunctionKeys);
+#if OPT_SUNPC_KBD
+	init_keyboard_type(keyboardIsVT220, resource.sunKeyboard);
+#endif
+
 	screen = &term->screen;
 
 	inhibit = 0;
@@ -1780,7 +1789,7 @@ main (int argc, char *argv[])
 	 so the debug feature is disabled by default. */
 	int i = -1;
 	if(debug) {
-	        creat_as (getuid(), getgid(), "xterm.debug.log", 0666);
+		creat_as (getuid(), getgid(), "xterm.debug.log", 0666);
 		i = open ("xterm.debug.log", O_WRONLY | O_TRUNC, 0666);
 	}
 	if(i >= 0) {
@@ -1818,6 +1827,7 @@ main (int argc, char *argv[])
 
 	spawn ();
 
+#ifndef VMS
 	/* Child process is out there, let's catch its termination */
 	(void) signal (SIGCHLD, reapchild);
 
@@ -1890,6 +1900,7 @@ main (int argc, char *argv[])
 		(1 + ConnectionNumber(screen->display)) :
 		(1 + screen->respond);
 
+#endif /* !VMS */
 #ifdef DEBUG
 	if (debug) printf ("debugging on\n");
 #endif	/* DEBUG */
@@ -2252,6 +2263,7 @@ void first_map_occurred (void)
 #endif /* USE_HANDSHAKE else !USE_HANDSHAKE */
 
 
+#ifndef VMS
 #ifndef AMOEBA
 extern char **environ;
 
@@ -2427,21 +2439,21 @@ spawn (void)
 				lmode = d_lmode;
 #endif	/* TIOCLSET */
 #ifdef USE_SYSV_TERMIO
-		        if(ioctl(tty, TCGETA, &tio) == -1)
-			        tio = d_tio;
+			if(ioctl(tty, TCGETA, &tio) == -1)
+				tio = d_tio;
 #elif defined(USE_POSIX_TERMIOS)
 			if (tcgetattr(tty, &tio) == -1)
-			        tio = d_tio;
+				tio = d_tio;
 #else   /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 			if(ioctl(tty, TIOCGETP, (char *)&sg) == -1)
-			        sg = d_sg;
+				sg = d_sg;
 			if(ioctl(tty, TIOCGETC, (char *)&tc) == -1)
-			        tc = d_tc;
+				tc = d_tc;
 			if(ioctl(tty, TIOCGETD, (char *)&discipline) == -1)
-			        discipline = d_disipline;
+				discipline = d_disipline;
 #ifdef sony
 			if(ioctl(tty, TIOCKGET, (char *)&jmode) == -1)
-			        jmode = d_jmode;
+				jmode = d_jmode;
 			if(ioctl(tty, TIOCKGETC, (char *)&jtc) == -1)
 				jtc = d_jtc;
 #endif /* sony */
@@ -2465,7 +2477,7 @@ spawn (void)
 				__FILE__, __LINE__,
 				resource.ptyInitialErase,
 				resource.backarrow_is_erase,
-				initial_erase))
+				initial_erase));
 #endif
 
 #ifdef MINIX
@@ -2577,11 +2589,11 @@ spawn (void)
 	TRACE(("%s @%d, resource ptyInitialErase:%d, backspace_is_erase:%d\n",
 		__FILE__, __LINE__,
 		resource.ptyInitialErase,
-		resource.backarrow_is_erase))
+		resource.backarrow_is_erase));
 	if (!resource.ptyInitialErase) {
 		char temp[1024], *p = temp;
 		char *s = tgetstr(TERMCAP_ERASE, &p);
-		TRACE(("extracting initial_erase value from termcap\n"))
+		TRACE(("extracting initial_erase value from termcap\n"));
 		if (s != 0) {
 			if (*s == '^') {
 				if (*++s == '?') {
@@ -2598,7 +2610,7 @@ spawn (void)
 				initial_erase = *s;
 			}
 			initial_erase = CharOf(initial_erase);
-			TRACE(("... initial_erase:%d\n", initial_erase))
+			TRACE(("... initial_erase:%d\n", initial_erase));
 		}
 	}
 	if (resource.backarrow_is_erase && initial_erase == 127) {
@@ -3140,7 +3152,7 @@ spawn (void)
 			__FILE__, __LINE__,
 			resource.ptyInitialErase,
 			override_tty_modes,
-			ttymodelist[XTTYMODE_erase].set))
+			ttymodelist[XTTYMODE_erase].set));
 		if (! resource.ptyInitialErase
 		 && !override_tty_modes
 		 && !ttymodelist[XTTYMODE_erase].set) {
@@ -3166,7 +3178,7 @@ spawn (void)
 		/* copy the environment before Setenving */
 		for (i = 0 ; environ [i] != NULL ; i++)
 		    ;
-		/* compute number of Setenv() calls below */
+		/* compute number of xtermSetenv() calls below */
 		envsize = 1;	/* (NULL terminating entry) */
 		envsize += 3;	/* TERM, WINDOWID, DISPLAY */
 #ifdef HAVE_UTMP
@@ -3186,16 +3198,16 @@ spawn (void)
 		envnew = (char **) calloc ((unsigned) i + envsize, sizeof(char *));
 		memmove( (char *)envnew, (char *)environ, i * sizeof(char *));
 		environ = envnew;
-		Setenv ("TERM=", TermName);
+		xtermSetenv ("TERM=", TermName);
 		if(!TermName)
 			*newtc = 0;
 
 		sprintf (buf, "%lu",
 			 ((unsigned long) XtWindow (XtParent(CURRENT_EMU(screen)))));
-		Setenv ("WINDOWID=", buf);
+		xtermSetenv ("WINDOWID=", buf);
 
 		/* put the display into the environment of the shell*/
-		Setenv ("DISPLAY=", XDisplayString (screen->display));
+		xtermSetenv ("DISPLAY=", XDisplayString (screen->display));
 
 		signal(SIGTERM, SIG_DFL);
 
@@ -3271,7 +3283,7 @@ spawn (void)
 #ifdef HAVE_UTMP
 		pw = getpwuid(screen->uid);
 		if (pw && pw->pw_name)
-		    Setenv ("LOGNAME=", pw->pw_name); /* for POSIX */
+		    xtermSetenv ("LOGNAME=", pw->pw_name); /* for POSIX */
 #ifdef USE_SYSV_UTMP
 		/* Set up our utmp entry now.  We need to do it here
 		** for the following reasons:
@@ -3331,7 +3343,7 @@ spawn (void)
 		(void) strncpy(buf, DisplayString(screen->display),
 			       sizeof(buf));
 #ifndef linux
-	        {
+		{
 		    char *disfin = strrchr(buf, ':');
 		    if (disfin)
 			*disfin = '\0';
@@ -3514,20 +3526,20 @@ spawn (void)
 		{
 		char numbuf[12];
 		sprintf (numbuf, "%d", screen->max_col + 1);
-		Setenv("COLUMNS=", numbuf);
+		xtermSetenv("COLUMNS=", numbuf);
 		sprintf (numbuf, "%d", screen->max_row + 1);
-		Setenv("LINES=", numbuf);
+		xtermSetenv("LINES=", numbuf);
 		}
 #ifdef HAVE_UTMP
 		if (pw) {	/* SVR4 doesn't provide these */
 		    if (!getenv("HOME"))
-			Setenv("HOME=", pw->pw_dir);
+			xtermSetenv("HOME=", pw->pw_dir);
 		    if (!getenv("SHELL"))
-			Setenv("SHELL=", pw->pw_shell);
+			xtermSetenv("SHELL=", pw->pw_shell);
 		}
 #endif /* HAVE_UTMP */
 #ifdef OWN_TERMINFO_DIR
-		Setenv("TERMINFO=", OWN_TERMINFO_DIR);
+		xtermSetenv("TERMINFO=", OWN_TERMINFO_DIR);
 #endif
 #else /* USE_SYSV_ENVVARS */
 		if(!TEK4014_ACTIVE(screen) && *newtc) {
@@ -3556,19 +3568,19 @@ spawn (void)
 		}
 #endif
 		if(*newtc)
-		    Setenv ("TERMCAP=", newtc);
+		    xtermSetenv ("TERMCAP=", newtc);
 #endif /* USE_SYSV_ENVVARS */
 
 
 		/* need to reset after all the ioctl bashing we did above */
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 		i = ioctl (0, TIOCSSIZE, &ts);
-		TRACE(("spawn TIOCSSIZE %dx%d return %d\n", ts.ts_lines, ts.ts_cols, i))
+		TRACE(("spawn TIOCSSIZE %dx%d return %d\n", ts.ts_lines, ts.ts_cols, i));
 #elif defined(TIOCSWINSZ)
 		i = ioctl (0, TIOCSWINSZ, (char *)&ws);
-		TRACE(("spawn TIOCSWINSZ %dx%d return %d\n", ws.ws_row, ws.ws_col, i))
+		TRACE(("spawn TIOCSWINSZ %dx%d return %d\n", ws.ws_row, ws.ws_col, i));
 #else
-		TRACE(("spawn cannot tell pty its size\n"))
+		TRACE(("spawn cannot tell pty its size\n"));
 #endif	/* sun vs TIOCSWINSZ */
 
 		signal(SIGHUP, SIG_DFL);
@@ -3686,7 +3698,7 @@ spawn (void)
 			break;
 		default:
 			fprintf(stderr, "%s: unexpected handshake status %d\n",
-			        xterm_name, handshake.status);
+				xterm_name, handshake.status);
 		}
 	    }
 	    /* close our sides of the pipes */
@@ -3963,7 +3975,7 @@ static int spawn(void)
     for (i = 0 ; environ[i] != NULL ; i++)
 	;
 
-    /* compute number of Setenv() calls below */
+    /* compute number of xtermSetenv() calls below */
     envsize = 1;	/* (NULL terminating entry) */
     envsize += 3;	/* TERM, WINDOWID, DISPLAY */
     envsize += 2;	/* HOME, SHELL */
@@ -3971,19 +3983,19 @@ static int spawn(void)
     envnew = (char **) calloc ((unsigned) i + envsize, sizeof(char *));
     bcopy((char *)environ, (char *)envnew, i * sizeof(char *));
     environ = envnew;
-    Setenv ("TERM=", TermName);
+    xtermSetenv ("TERM=", TermName);
     if(!TermName) *newtc = 0;
 
     sprintf (buf, "%lu",
 	((unsigned long) XtWindow (XtParent(CURRENT_EMU(screen)))));
-    Setenv ("WINDOWID=", buf);
+    xtermSetenv ("WINDOWID=", buf);
 
     /* put the display into the environment of the shell*/
-    Setenv ("DISPLAY=", XDisplayString (screen->display));
+    xtermSetenv ("DISPLAY=", XDisplayString (screen->display));
 
     /* always provide a HOME and SHELL definition */
-    if (!getenv("HOME")) Setenv("HOME=", DEF_HOME);
-    if (!getenv("SHELL")) Setenv("SHELL=", DEF_SHELL);
+    if (!getenv("HOME")) xtermSetenv("HOME=", DEF_HOME);
+    if (!getenv("SHELL")) xtermSetenv("SHELL=", DEF_SHELL);
 
     if(!TEK4014_ACTIVE(screen) && *newtc) {
 	strcpy (termcap, newtc);
@@ -4004,7 +4016,7 @@ static int spawn(void)
 	    strcat (newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
     }
     if (*newtc)
-	Setenv ("TERMCAP=", newtc);
+	xtermSetenv ("TERMCAP=", newtc);
 
     /*
      * Execute specified program or shell. Use find_program to
@@ -4243,7 +4255,7 @@ resize(TScreen *screen, register char *oldtc, register char *newtc)
 	register int li_first = 0;
 	register char *temp;
 
-	TRACE(("resize %s\n", oldtc))
+	TRACE(("resize %s\n", oldtc));
 	if ((ptr1 = strindex (oldtc, "co#")) == NULL){
 		strcat (oldtc, "co#80:");
 		ptr1 = strindex (oldtc, "co#");
@@ -4274,10 +4286,11 @@ resize(TScreen *screen, register char *oldtc, register char *newtc)
 			: screen->max_row + 1);
 	ptr2 = strchr(ptr2, ':');
 	strcat (temp, ptr2);
-	TRACE(("   ==> %s\n", newtc))
+	TRACE(("   ==> %s\n", newtc));
 #endif /* USE_SYSV_ENVVARS */
 }
 
+#endif /* ! VMS */
 /*
  * Does a non-blocking wait for a child process.  If the system
  * doesn't support non-blocking wait, do nothing.
@@ -4306,6 +4319,8 @@ nonblocking_wait(void)
 	return pid;
 }
 
+#ifndef VMS
+
 /* ARGSUSED */
 static SIGNAL_T reapchild (int n GCC_UNUSED)
 {
@@ -4332,6 +4347,7 @@ static SIGNAL_T reapchild (int n GCC_UNUSED)
 
     SIGNAL_RETURN;
 }
+#endif /* !VMS */
 
 static void
 remove_termcap_entry (char *buf, char *str)
@@ -4341,7 +4357,7 @@ remove_termcap_entry (char *buf, char *str)
     int count = 0;
     size_t len = strlen(str);
 
-    TRACE(("*** remove_termcap_entry('%s', '%s')\n", str, buf))
+    TRACE(("*** remove_termcap_entry('%s', '%s')\n", str, buf));
 
     while (*buf != 0) {
 	if (!count && !strncmp(buf, str, len)) {
@@ -4355,7 +4371,7 @@ remove_termcap_entry (char *buf, char *str)
 	    }
 	    while ((*first++ = *buf++) != 0)
 		;
-	    TRACE(("...removed_termcap_entry('%s', '%s')\n", str, base))
+	    TRACE(("...removed_termcap_entry('%s', '%s')\n", str, base));
 	    return;
 	} else if (*buf == '\\') {
 	    buf++;
@@ -4368,7 +4384,7 @@ remove_termcap_entry (char *buf, char *str)
 	if (*buf != 0)
 	    buf++;
     }
-    TRACE(("...cannot remove\n"))
+    TRACE(("...cannot remove\n"));
 }
 
 /*
@@ -4402,21 +4418,26 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 	    s++;
 	    c = ((*s == '?') ? 0177 : CONTROL(*s));
 	    if (*s == '-') {
-#if defined(HAVE_POSIX_VDISABLE)
-		c = _POSIX_VDISABLE;
-#elif defined(_PC_VDISABLE)
+		c = -1;
 		errno = 0;
-		c = fpathconf(0, _PC_VDISABLE);
+#if defined(_POSIX_VDISABLE) && defined(HAVE_UNISTD_H)
+		c = _POSIX_VDISABLE;
+#endif
+#if defined(_PC_VDISABLE)
 		if (c == -1) {
-		    if (errno != 0)
-			continue;	/* skip this (error) */
-		    c = 0377;
+		    c = fpathconf(0, _PC_VDISABLE);
+		    if (c == -1) {
+			if (errno != 0)
+			    continue;	/* skip this (error) */
+			c = 0377;
+		    }
 		}
 #elif defined(VDISABLE)
-		c = VDISABLE;
-#else
-		continue;		/* ignore */
+		if (c == -1)
+		    c = VDISABLE;
 #endif
+		if (c == -1)
+		    continue;		/* ignore */
 	    }
 	} else {
 	    c = *s;
@@ -4428,6 +4449,7 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
     }
 }
 
+#ifndef VMS /* don't use pipes on OpenVMS */
 int GetBytesAvailable (int fd)
 {
 #ifdef AMOEBA
@@ -4475,6 +4497,7 @@ int GetBytesAvailable (int fd)
     return poll (pollfds, 1, 0);
 #endif
 }
+#endif /* !VMS */
 
 /* Utility function to try to hide system differences from
    everybody who used to call killpg() */
@@ -4482,7 +4505,7 @@ int GetBytesAvailable (int fd)
 int
 kill_process_group(int pid, int sig)
 {
-    TRACE(("kill_process_group(pid=%d, sig=%d)\n", pid, sig))
+    TRACE(("kill_process_group(pid=%d, sig=%d)\n", pid, sig));
 #ifdef AMOEBA
     if (pid != 2) {
 	fprintf(stderr, "%s:  unexpected process id %d.\n", ProgramName, pid);

@@ -158,7 +158,7 @@ CursorUp(register TScreen *screen, int n)
  * Won't leave scrolling region. No carriage return.
  */
 void
-Index(register TScreen *screen, register int amount)
+xtermIndex(register TScreen *screen, register int amount)
 {
 	register int j;
 
@@ -173,7 +173,7 @@ Index(register TScreen *screen, register int amount)
 	}
 
 	CursorDown(screen, j = screen->bot_marg - screen->cur_row);
-	Scroll(screen, amount - j);
+	xtermScroll(screen, amount - j);
 }
 
 /*

@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1998, 1999 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1998-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -251,7 +251,7 @@ int xtermCharSetOut(IChar *buf, IChar *ptr, char leftset)
 	TRACE(("CHARSET GL=%c(G%d) GR=%c(G%d) %s\n",
 		leftset,  screen->curss ? screen->curss : screen->curgl,
 		rightset, screen->curgr,
-		visibleIChar(buf, ptr-buf)))
+		visibleIChar(buf, ptr-buf)));
 
 	for (s = buf; s < ptr; ++s) {
 		int eight = CharOf(E2A(*s));

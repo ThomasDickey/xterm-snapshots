@@ -1,5 +1,5 @@
 # $XConsortium: terminfo,v 1.11 94/10/13 21:24:31 gildea Exp $
-# $XFree86: xc/programs/xterm/terminfo,v 3.36 1999/12/30 02:05:58 robin Exp $
+# $XFree86: xc/programs/xterm/terminfo,v 3.37 2000/01/29 18:58:40 dawes Exp $
 #
 # XFree86 updates/notes/new entries (including xterm-8bit, xterm-16color)
 # - Thomas E. Dickey <dickey@clark.net>
@@ -343,6 +343,7 @@ xterm-sun|XFree86 xterm with sun function keys,
 	kcud1=\EOB,
 	kcuf1=\EOC,
 	kcuu1=\EOA,
+	kdch1=\177,
 	kend=\E[220z,
 	kent=\EOM,
 	kf1=\E[224z,

@@ -180,7 +180,7 @@ static XtActionsRec actionsList[] = {
     { "insert-seven-bit",	HandleKeyPressed },
     { "insert-eight-bit",	HandleEightBitKeyPressed },
     { "gin-press",		HandleGINInput },
-    { "secure", 		HandleSecure },
+    { "secure",			HandleSecure },
     { "create-menu",		HandleCreateMenu },
     { "popup-menu",		HandlePopupMenu },
     /* menu actions */
@@ -226,7 +226,21 @@ static Dimension defOne = 1;
 #define GIN_TERM_CR	1
 #define GIN_TERM_EOT	2
 
+#ifdef VMS
+#define DFT_FONT_SMALL "FIXED"
+#else
+#define DFT_FONT_SMALL "6x10"
+#endif
+
 static XtResource resources[] = {
+#ifdef VMS
+    {XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
+	XtOffset(TekWidget, core.background_pixel),
+	XtRString, "White"},
+    {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
+	XtOffset(TekWidget, Tforeground),
+	XtRString, "Black"},
+#endif
     {XtNwidth, XtCWidth, XtRDimension, sizeof(Dimension),
 	 XtOffsetOf(CoreRec, core.width), XtRDimension, (caddr_t)&defOne},
     {XtNheight, XtCHeight, XtRDimension, sizeof(Dimension),
@@ -242,7 +256,7 @@ static XtResource resources[] = {
        XtRString, "8x13"},
     {"fontSmall", XtCFont, XtRFontStruct, sizeof(XFontStruct *),
        XtOffsetOf(TekWidgetRec, tek.Tfont[TEK_FONT_SMALL]),
-       XtRString, "6x10"},
+       XtRString, DFT_FONT_SMALL},
     {"initialFont", "InitialFont", XtRString, sizeof(char *),
        XtOffsetOf(TekWidgetRec, tek.initial_font),
        XtRString, "large"},
@@ -387,7 +401,7 @@ static void Tekparse(void)
 	    } else
 #endif
 	      nextstate = Tparsestate[c];
-	    TRACE(("parse %d -> %d\n", c, nextstate))
+	    TRACE(("parse %d -> %d\n", c, nextstate));
 
 	    switch(nextstate) {
 		 case CASE_REPORT:
@@ -716,7 +730,11 @@ static void Tekparse(void)
 
 static int rcnt;
 static char *rptr;
+#ifdef VMS
+static int Tselect_mask;
+#else  /* VMS */
 static fd_set Tselect_mask;
+#endif /* VMS */
 
 static int Tinput(void)
 {
@@ -743,7 +761,11 @@ again:
 	if(Tbuffer->cnt-- <= 0) {
 		if(nplot > 0)	/* flush line Tbuffer */
 			TekFlush();
+#ifdef VMS
+		Tselect_mask = pty_mask;	/* force a read */
+#else /* VMS */
 		XFD_COPYSET (&pty_mask, &Tselect_mask);
+#endif /* VMS */
 		for( ; ; ) {
 #ifdef CRAY
 			struct timeval crocktimeout;
@@ -753,18 +775,43 @@ again:
 				       &Tselect_mask, NULL, NULL,
 				       &crocktimeout);
 #endif
+#ifdef VMS
+			if(Tselect_mask & pty_mask) {
+#ifdef ALLOWLOGGING
+			   if(screen->logging)
+				   FlushLog(screen);
+#endif
+			   if (read_queue.flink != 0) {
+				   Tbuffer->cnt = tt_read(Tbuffer->ptr = Tbuffer->buf);
+				   if(Tbuffer->cnt == 0) {
+					   Panic("input: read returned zero\n", 0);
+				   }
+				   else { break; }
+			   }
+			   else { sys$hiber(); }
+			}
+#else  /* VMS */
 			if (getPtyData(screen, &Tselect_mask, Tbuffer)) {
 			    break;
 			}
+#endif /* VMS */
 			if (Ttoggled && curstate == Talptable) {
 				TCursorToggle(TOGGLE);
 				Ttoggled = FALSE;
 			}
 #ifndef AMOEBA
 			if(XtAppPending(app_con) & XtIMXEvent) {
+#ifdef VMS
+				Tselect_mask = X_mask;
+#else /* VMS */
 				XFD_COPYSET (&X_mask, &Tselect_mask);
+#endif /* VMS */
 			} else {
 				XFlush(screen->display);
+#ifdef VMS
+				Tselect_mask = Select_mask;
+
+#else /* VMS */
 				XFD_COPYSET (&Select_mask, &Tselect_mask);
 				if((i = Select(max_plus1,
 					       &Tselect_mask, NULL, NULL,
@@ -773,8 +820,9 @@ again:
 						SysError(ERROR_TSELECT);
 					continue;
 				}
+#endif /* VMS */
 			}
-#else
+#else /* AMOEBA */
 			XFlush(screen->display);
 			i = _X11TransAmSelect(ConnectionNumber(screen->display),
 					      1);
@@ -793,11 +841,19 @@ again:
 			if (cb_full(screen->tty_outq) <= 0)
 				SleepMainThread();
 #endif /* AMOEBA */
+#ifdef VMS
+			if(Tselect_mask & X_mask) {
+				xevents();
+				if(Tbuffer->cnt > 0)
+					goto again;
+			}
+#else /* VMS */
 			if(FD_ISSET (ConnectionNumber (screen->display), &Tselect_mask)) {
 				xevents();
 				if(Tbuffer->cnt > 0)
 					goto again;
 			}
+#endif /* VMS */
 		}
 		Tbuffer->cnt--;
 		if (!Ttoggled && curstate == Talptable) {
@@ -1170,8 +1226,11 @@ static void TekEnq (
 	cplot[len++] = '\r';
     if (screen->gin_terminator == GIN_TERM_EOT)
 	cplot[len++] = '\004';
-
+#ifdef VMS
+    tt_write(cplot+adj, len-adj);
+#else /* VMS */
     v_write(screen->respond, cplot+adj, len-adj);
+#endif /* VMS */
 }
 
 void
@@ -1699,9 +1758,15 @@ TekCopy(void)
 
 	chldfunc = signal(SIGCHLD, SIG_DFL);
 #endif
+#ifdef VMS
+	register int tekcopyfd;
+	register TekLink *Tp;
+	char initbuf[5];
+#endif /* VMS */
 
 	time(&l);
 	tp = localtime(&l);
+	/* VMS needs alternate format??? DRM */
 	sprintf(buf, "COPY%d-%02d-%02d.%02d:%02d:%02d", tp->tm_year + 1900,
 	 tp->tm_mon + 1, tp->tm_mday, tp->tm_hour, tp->tm_min, tp->tm_sec);
 	if(access(buf, F_OK) >= 0) {	/* file exists */
@@ -1709,6 +1774,24 @@ TekCopy(void)
 			Bell(XkbBI_MinorError,0);
 			return;
 		}
+#ifdef VMS
+
+	if((tekcopyfd = open(buf, O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0) {
+		Bell(XkbBI_MinorError,0);
+		return;
+	}
+	chown(buf, screen->uid, screen->gid);
+	sprintf(initbuf, "%c%c%c%c",
+	    ESC, screen->page.fontsize + '8',
+	    ESC, screen->page.linetype + '`');
+	write(tekcopyfd, initbuf, 4);
+	Tp = &Tek0;
+	do {
+	    write(tekcopyfd, (char *)Tp->data, Tp->count);
+	    Tp = Tp->next;
+	} while(Tp);
+	close(tekcopyfd);
+#else /* VMS */
 	} else if(access(".", W_OK) < 0) {	/* can't write in directory */
 		Bell(XkbBI_MinorError,0);
 		return;
@@ -1730,7 +1813,7 @@ TekCopy(void)
 	    if (tekcopyfd < 0)
 		_exit(1);
 	    sprintf(initbuf, "%c%c%c%c",
-	    	ESC, screen->page.fontsize + '8',
+		ESC, screen->page.fontsize + '8',
 		ESC, screen->page.linetype + '`');
 	    write(tekcopyfd, initbuf, 4);
 	    Tp = &Tek0;
@@ -1759,5 +1842,6 @@ TekCopy(void)
 		    Cleanup(0);
 	    while ( (waited=nonblocking_wait()) > 0);
 #endif
+#endif /* VMS */
 	}
 }

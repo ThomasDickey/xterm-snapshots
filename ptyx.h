@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
  *
  *                         All Rights Reserved
  *
@@ -794,6 +794,7 @@ typedef struct {
 	int		cur_foreground; /* current foreground color	*/
 	int		cur_background; /* current background color	*/
 	int		sgr_foreground; /* current SGR foreground color */
+	Boolean		sgr_extended;	/* SGR set with extended codes? */
 #endif
 } SavedCursor;
 
@@ -1104,9 +1105,17 @@ typedef struct _TekPart {
 
 #define MULTICLICKTIME 250	/* milliseconds */
 
+typedef enum {
+    keyboardIsDefault,
+    keyboardIsHP,
+    keyboardIsSun,
+    keyboardIsVT220,
+} xtermKeyboardType;
+
 typedef struct
 {
-	unsigned	flags;
+    xtermKeyboardType type;
+    unsigned	flags;
 } TKeyboard;
 
 typedef struct _Misc {
@@ -1208,6 +1217,7 @@ typedef struct _XtermWidgetRec {
     Pixel       dft_background;	/* default background color	*/
 #if OPT_ISO_COLORS
     int         sgr_foreground;	/* current SGR foreground color	*/
+    Boolean     sgr_extended;	/* SGR set with extended codes? */
 #endif
 #if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS
     int         num_ptrs;	/* number of pointers per row in 'ScrnBuf' */

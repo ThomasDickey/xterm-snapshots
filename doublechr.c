@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1997 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1997-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -62,7 +62,7 @@ repaint_line(unsigned newChrSet)
 	if (oldChrSet == newChrSet)
 		return;
 
-	TRACE(("repaint_line(%2d,%2d) (%d)\n", currow, screen->cur_col, newChrSet))
+	TRACE(("repaint_line(%2d,%2d) (%d)\n", currow, screen->cur_col, newChrSet));
 	HideCursor();
 
 	/* If switching from single-width, keep the cursor in the visible part
@@ -136,7 +136,7 @@ static void
 discard_font(TScreen *screen, XTermFonts *data)
 {
 	TRACE(("discard_font chrset=%d %s\n", data->chrset,
-		(data->fn != 0) ? data->fn : "<no-name>"))
+		(data->fn != 0) ? data->fn : "<no-name>"));
 
 	data->chrset = 0;
 	data->flags = 0;
@@ -162,14 +162,14 @@ xterm_Double_index(unsigned chrset, unsigned flags)
 	XTermFonts *data = screen->double_fonts;
 
 	flags &= BOLD;
-	TRACE(("xterm_Double_index chrset=%#x, flags=%#x\n", chrset, flags))
+	TRACE(("xterm_Double_index chrset=%#x, flags=%#x\n", chrset, flags));
 
 	for (n = 0; n < screen->fonts_used; n++) {
 		if (data[n].chrset == chrset
 		 && data[n].flags == flags) {
 			if (n != 0) {
 				XTermFonts save;
-				TRACE(("...xterm_Double_index -> %d (OLD:%d)\n", n, screen->fonts_used))
+				TRACE(("...xterm_Double_index -> %d (OLD:%d)\n", n, screen->fonts_used));
 				save = data[n];
 				while (n > 0) {
 					data[n] = data[n-1];
@@ -183,7 +183,7 @@ xterm_Double_index(unsigned chrset, unsigned flags)
 
 	/* Not, found, push back existing fonts and create a new entry */
 	if (screen->fonts_used >= screen->cache_doublesize) {
-		TRACE(("...xterm_Double_index: discard oldest\n"))
+		TRACE(("...xterm_Double_index: discard oldest\n"));
 		discard_font(screen, &(data[screen->fonts_used - 1]));
 	} else {
 		screen->fonts_used += 1;
@@ -191,7 +191,7 @@ xterm_Double_index(unsigned chrset, unsigned flags)
 	for (n = screen->fonts_used; n > 0; n--)
 		data[n] = data[n-1];
 
-	TRACE(("...xterm_Double_index -> (NEW:%d)\n", screen->fonts_used))
+	TRACE(("...xterm_Double_index -> (NEW:%d)\n", screen->fonts_used));
 
 	data[0].chrset = chrset;
 	data[0].flags = flags;
@@ -233,11 +233,11 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
 	}
 	data->fn = name;
 
-	TRACE(("xterm_DoubleGC %s %d: %s\n", flags&BOLD ? "BOLD" : "NORM", n, name))
+	TRACE(("xterm_DoubleGC %s %d: %s\n", flags&BOLD ? "BOLD" : "NORM", n, name));
 
 	if ((data->fs = XLoadQueryFont (screen->display, name)) == 0)
 		return 0;
-	TRACE(("-> OK\n"))
+	TRACE(("-> OK\n"));
 
 	gcv.graphics_exposures = TRUE;	/* default */
 	gcv.font       = data->fs->fid;

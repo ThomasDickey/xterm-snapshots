@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1997 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1997-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -136,7 +136,7 @@ void Mark_XMC(register TScreen *screen, int param)
 	if (found) {
 		unsigned save = term->flags;
 		term->flags ^= whichone;
-		TRACE(("XMC Writing glitch (%d/%d) after SGR %d\n", my_attrs, whichone, param))
+		TRACE(("XMC Writing glitch (%d/%d) after SGR %d\n", my_attrs, whichone, param));
 		dotext(screen, '?', glitch, screen->xmc_glitch);
 		term->flags = save;
 	}
@@ -202,7 +202,7 @@ void Resolve_XMC(register TScreen *screen)
 		changed ? "Ripple" : "Nochange",
 		term->flags & my_attrs ? "on" : "off",
 		my_attrs, start,
-		screen->cur_row, screen->cur_col, row, col))
+		screen->cur_row, screen->cur_col, row, col));
 
 	if (changed) {
 		ScrnRefresh (screen, screen->cur_row, 0, row + 1 - screen->cur_row, screen->max_col + 1, True);

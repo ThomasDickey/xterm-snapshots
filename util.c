@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
  *
  *                         All Rights Reserved
  *
@@ -64,6 +64,7 @@
 #include <menu.h>
 #include <fontutils.h>
 
+#include <stdio.h>
 #include <ctype.h>
 
 extern Bool waiting_for_initial_map;
@@ -191,7 +192,7 @@ AddToRefresh(register TScreen *screen)
  * requires: amount > 0
  */
 void
-Scroll(register TScreen *screen, register int amount)
+xtermScroll(register TScreen *screen, register int amount)
 {
 	register int i = screen->bot_marg - screen->top_marg + 1;
 	register int shift;
@@ -1088,7 +1089,7 @@ handle_translated_exposure (
 	register int toprow, leftcol, nrows, ncols;
 
 	TRACE(("handle_translated_exposure (%d,%d) - (%d,%d)\n",
-		rect_y, rect_x, rect_height, rect_width))
+		rect_y, rect_x, rect_height, rect_width));
 
 	toprow = (rect_y - screen->border) / FontHeight(screen);
 	if(toprow < 0)
@@ -1401,7 +1402,7 @@ drawXtermText(
 
 		TRACE(("DRAWTEXT%c[%4d,%4d] (%d) %d:%.*s\n",
 			screen->cursor_state == OFF ? ' ' : '*',
-			y, x, chrset, len, (int)len, text))
+			y, x, chrset, len, (int)len, text));
 
 		if (gc2 != 0) {	/* draw actual double-sized characters */
 			XFontStruct *fs = screen->double_fonts[xterm_Double_index(chrset, flags)].fs;
@@ -1476,7 +1477,7 @@ drawXtermText(
 				x += len * FontWidth(screen);
 			}
 
-			TRACE(("drewtext [%4d,%4d]\n", y, x))
+			TRACE(("drewtext [%4d,%4d]\n", y, x));
 			SAVE_FONT_INFO (screen);
 
 		} else {	/* simulate double-sized characters */
@@ -1556,7 +1557,7 @@ drawXtermText(
 		TRACE(("drawtext%c[%4d,%4d] (%d) %d:%s\n",
 			screen->cursor_state == OFF ? ' ' : '*',
 			y, x, chrset, len,
-			visibleChars(PAIRED_CHARS(text, text2), len)))
+			visibleChars(PAIRED_CHARS(text, text2), len)));
 		y += FontAscent(screen);
 
 #if OPT_WIDE_CHARS
@@ -1890,4 +1891,51 @@ int char2lower(int ch)
 #endif
 	}
 	return ch;
+}
+
+void set_keyboard_type(xtermKeyboardType type, Bool set)
+{
+    xtermKeyboardType save = term->keyboard.type;
+
+    if (set) {
+	term->keyboard.type = type;
+    } else {
+	term->keyboard.type = keyboardIsDefault;
+    }
+
+    if (save != term->keyboard.type) {
+	update_hp_fkeys();
+	update_sun_fkeys();
+	update_sun_kbd();
+    }
+}
+
+void toggle_keyboard_type(xtermKeyboardType type)
+{
+    xtermKeyboardType save = term->keyboard.type;
+
+    if (term->keyboard.type == type) {
+	term->keyboard.type = keyboardIsDefault;
+    } else {
+	term->keyboard.type = type;
+    }
+
+    if (save != term->keyboard.type) {
+	update_hp_fkeys();
+	update_sun_fkeys();
+	update_sun_kbd();
+    }
+}
+
+void init_keyboard_type(xtermKeyboardType type, Bool set)
+{
+    static Bool wasSet = False;
+
+    if (set) {
+	if (wasSet) {
+	    fprintf(stderr, "Conflicting keyboard type option\n");
+	}
+	term->keyboard.type = type;
+	wasSet = True;
+    }
 }

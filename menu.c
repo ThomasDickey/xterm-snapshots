@@ -2,7 +2,7 @@
 /* $XFree86: xc/programs/xterm/menu.c,v 3.28 1999/12/30 02:05:54 robin Exp $ */
 /*
 
-Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -182,12 +182,12 @@ MenuEntry mainMenuEntries[] = {
     { "num-lock",	do_num_lock,	NULL },
     { "meta-esc",	do_meta_esc,	NULL },
 #endif
+#if OPT_HP_FUNC_KEYS
+    { "hp function-keys",do_hp_fkeys,	NULL },
+#endif
     { "sun function-keys",do_sun_fkeys,	NULL },
 #if OPT_SUNPC_KBD
     { "sun keyboard",	do_sun_kbd,	NULL },
-#endif
-#if OPT_HP_FUNC_KEYS
-    { "hp function-keys",do_hp_fkeys,	NULL },
 #endif
     { "line2",		NULL,		NULL },
     { "suspend",	do_suspend,	NULL },
@@ -352,7 +352,7 @@ create_menu (Widget w, XtermWidget xtw, MenuIndex num)
 
     Widget m;
     TScreen *screen = &xtw->screen;
-    MenuHeader *data = &menu_names[num]; 
+    MenuHeader *data = &menu_names[num];
     MenuList *list = select_menu(w, num);
     struct _MenuEntry *entries = data->entry_list;
     int nentries = data->entry_len;
@@ -590,10 +590,12 @@ void HandlePopupMenu (
 /* ARGSUSED */
 static void handle_send_signal (Widget gw GCC_UNUSED, int sig)
 {
+#ifndef VMS
     register TScreen *screen = &term->screen;
 
     if (hold_screen > 1) hold_screen = 0;
     if (screen->pid > 1) kill_process_group (screen->pid, sig);
+#endif
 }
 
 
@@ -715,15 +717,6 @@ static void do_backarrow (
     update_decbkm();
 }
 
-static void do_sun_fkeys (
-	Widget gw GCC_UNUSED,
-	XtPointer closure GCC_UNUSED,
-	XtPointer data GCC_UNUSED)
-{
-    sunFunctionKeys = ! sunFunctionKeys;
-    update_sun_fkeys();
-}
-
 #if OPT_NUM_LOCK
 static void do_num_lock (
 	Widget gw GCC_UNUSED,
@@ -744,30 +737,36 @@ static void do_meta_esc (
 }
 #endif
 
-
-#if OPT_SUNPC_KBD
-static void do_sun_kbd (
-	Widget gw GCC_UNUSED,
-	XtPointer closure GCC_UNUSED,
-	XtPointer data GCC_UNUSED)
-{
-    sunKeyboard = ! sunKeyboard;
-    update_sun_kbd();
-}
-#endif
-
-
 #if OPT_HP_FUNC_KEYS
 static void do_hp_fkeys (
 	Widget gw GCC_UNUSED,
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    hpFunctionKeys = ! hpFunctionKeys;
-    update_hp_fkeys();
+    toggle_keyboard_type(keyboardIsHP);
 }
 #endif
 
+static void do_sun_fkeys (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    toggle_keyboard_type(keyboardIsSun);
+}
+
+#if OPT_SUNPC_KBD
+/*
+ * This really means "Sun/PC keyboard emulating VT220".
+ */
+static void do_sun_kbd (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    toggle_keyboard_type(keyboardIsVT220);
+}
+#endif
 
 /*
  * The following cases use the pid instead of the process group so that we
@@ -879,12 +878,7 @@ static void do_reversevideo (
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    term->flags ^= REVERSE_VIDEO;
     ReverseVideo (term);
-
-    /* cancel out the internal state changes, so menus are decoupled */
-    term->flags ^= REVERSE_VIDEO;
-    term->misc.re_verse = !term->misc.re_verse;
 }
 
 
@@ -1479,7 +1473,7 @@ void HandleSunFunctionKeys(
 	String *params,
 	Cardinal *param_count)
 {
-    handle_toggle (do_sun_fkeys, (int) sunFunctionKeys,
+    handle_toggle (do_sun_fkeys, term->keyboard.type == keyboardIsSun,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
@@ -1512,7 +1506,7 @@ void HandleSunKeyboard(
 	String *params,
 	Cardinal *param_count)
 {
-    handle_toggle (do_sun_kbd, (int) sunKeyboard,
+    handle_toggle (do_sun_kbd, term->keyboard.type == keyboardIsVT220,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 #endif
@@ -1524,7 +1518,7 @@ void HandleHpFunctionKeys(
 	String *params,
 	Cardinal *param_count)
 {
-    handle_toggle (do_hp_fkeys, (int) hpFunctionKeys,
+    handle_toggle (do_hp_fkeys, term->keyboard.type == keyboardIsHP,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 #endif
@@ -1893,7 +1887,7 @@ XtActionsRec menu_actions[] = {
     { "insert",			HandleKeyPressed }, /* alias */
     { "insert-eight-bit",	HandleEightBitKeyPressed },
     { "insert-seven-bit",	HandleKeyPressed },
-    { "secure", 		HandleSecure },
+    { "secure",			HandleSecure },
     { "string",			HandleStringEvent },
 };
 
@@ -1913,7 +1907,7 @@ static void InitPopup (
 
 	params[0] = closure;
 	params[1] = 0;
-	TRACE(("InitPopup(%s)\n", params[0]))
+	TRACE(("InitPopup(%s)\n", params[0]));
 
 	domenu(gw, (XEvent *)0, params, &count);
 
@@ -1939,7 +1933,7 @@ static void SetupShell(Widget *menus, MenuList *shell, Widget *menu_tops, int n,
 	TRACE(("...SetupShell(%s) -> %s -> %#lx\n",
 		menu_names[n].internal_name,
 		external_name,
-		(long)shell[n].w))
+		(long)shell[n].w));
 
 	sprintf(temp, "%sButton", menu_names[n].internal_name);
 	menu_tops[n] = XtVaCreateManagedWidget (temp,
@@ -1961,7 +1955,7 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus)
 	Widget menu_tops[NUM_POPUP_MENUS];
 #endif
 
-	TRACE(("SetupMenus(%s)\n", shell == toplevel ? "vt100" : "tek4014"))
+	TRACE(("SetupMenus(%s)\n", shell == toplevel ? "vt100" : "tek4014"));
 
 	if (shell == toplevel) {
 	    XawSimpleMenuAddGlobalActions (app_con);
@@ -2011,7 +2005,7 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus)
 	*menus = shell;
 #endif
 
-	TRACE(("...shell=%#lx\n", (long) shell))
-	TRACE(("...forms=%#lx\n", (long) *forms))
-	TRACE(("...menus=%#lx\n", (long) *menus))
+	TRACE(("...shell=%#lx\n", (long) shell));
+	TRACE(("...forms=%#lx\n", (long) *forms));
+	TRACE(("...menus=%#lx\n", (long) *menus));
 }

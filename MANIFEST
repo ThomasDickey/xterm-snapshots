@@ -1,10 +1,11 @@
-MANIFEST for xterm, version xterm-124
+MANIFEST for xterm, version xterm-125
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
 256colres.pl                    script to generate 256colres.h
 88colres.h                      resource definitions for 88-color mode
 88colres.pl                     script to generate 88colres.h
+AAA_README_VMS.txt              note for VMS port of 'xterm'
 INSTALL                         configure script: options and related install instructions
 Imakefile                       imake template for Makefile
 Makefile.in                     configure script template for Makefile
@@ -39,8 +40,10 @@ input.c                         VT100 key-symbol and function-key translation
 install.sh                      configure script: fallback install script
 keysym2ucs.c                    lookup-table for UTF-8 to keysyms
 keysym2ucs.h                    interface of keysym2ucs.c
+link_axp.com                    build-script for VMS port of xterm
 main.c                          main program of 'xterm'
 main.h                          default definitions for 'xterm'
+make.com                        build-script for VMS port of 'xterm'
 menu.c                          popup/pulldown menus for 'xterm'
 menu.h                          interface of menu.c
 misc.c                          miscellaneous utility functions for 'xterm'
@@ -64,9 +67,13 @@ trace.h                         interface of trace.c
 ttysvr.c                        simple tty server for AMOEBA port of 'xterm'
 util.c                          miscellaneous utility functions for 'xterm'
 version.h                       version of xterm
+vms.c                           VMS version of xterm's spawn(), etc.
+vms.h                           system headers and definitions for vms.c
 xcharmouse.h                    Jason Bacon's mouse-defs, cleaned up a little
+xterm.dat                       application defaults for VMS port of 'xterm'
 xterm.h                         common includes, definitions and prototypes for 'xterm'
 xterm.man                       manual page for 'xterm'
+xterm_axp.opt                   linker options file for VMS port of 'xterm'
 xtermcfg.hin                    configure script: template for xtermcfg.h
 tektests                        subdirectory
 tektests/aitest.tek             tek4014 demo: draw a globe

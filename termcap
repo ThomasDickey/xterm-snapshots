@@ -1,5 +1,5 @@
 # $XConsortium: termcap,v 1.13 94/10/13 21:24:32 gildea Exp $
-# $XFree86: xc/programs/xterm/termcap,v 3.22 2000/01/24 22:21:58 dawes Exp $
+# $XFree86: xc/programs/xterm/termcap,v 3.23 2000/01/29 18:58:39 dawes Exp $
 #
 # Note:
 #	termcap format is limited to 1023 characters.  This set of descriptions
@@ -132,7 +132,7 @@ xs|xterm-sun|xterm with Sun functionkeys:\
 	:k5=\E[228z:k6=\E[229z:k7=\E[230z:k8=\E[231z:\
 	:k9=\E[232z:k;=\E[233z:F1=\E[192z:F2=\E[193z:\
 	:%1=\E[196z:&8=\E[195z:@0=\E[200z:kI=\E[2z:\
-	:kN=\E[222z:kP=\E[216z:kh=\E[214z:as@:ae@:ac@:tc=xterm:
+	:kN=\E[222z:kP=\E[216z:kh=\E[214z:kD=^?:as@:ae@:ac@:tc=xterm:
 #
 # vi may work better with this entry, because vi doesn't use insert mode much.
 # |xterm-ic|xterm-vi|xterm with insert character instead of insert mode:\

@@ -169,3 +169,8 @@ $(TERMINFO_DIR) $(INSTALL_DIRS):
 	$(SHELL) ${srcdir}/mkdirs.sh $@
 
 ALWAYS:
+
+depend : $(TABLES)
+	makedepend -- $(CPPFLAGS) -- $(SRCS)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

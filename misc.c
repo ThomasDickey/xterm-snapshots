@@ -93,7 +93,14 @@
 #define environ gblenvp		/* circumvent a bug */
 #endif
 
-extern char **environ;		/* used in 'Setenv()' */
+#ifdef VMS
+#define XTERM_VMS_LOGFILE "SYS$SCRATCH:XTERM_LOG.TXT"
+#ifdef ALLOWLOGFILEEXEC
+#undef ALLOWLOGFILEEXEC
+#endif
+#endif /* VMS */
+
+extern char **environ;		/* used in 'xtermSetenv()' */
 
 #if OPT_TEK4014
 #define OUR_EVENT(event,Type) \
@@ -119,8 +126,14 @@ do_xevents(void)
 	register TScreen *screen = &term->screen;
 
 	if (XtAppPending(app_con)
-	|| GetBytesAvailable (ConnectionNumber(screen->display)) > 0)
-		xevents();
+	||
+#if defined(VMS) || defined(__VMS)
+	screen->display->qlen > 0
+#else
+	GetBytesAvailable (ConnectionNumber(screen->display)) > 0
+#endif
+	)
+	xevents();
 }
 
 void
@@ -451,7 +464,7 @@ Bell(int which GCC_UNUSED, int percent)
     struct timeval curtime;
     long now_msecs;
 
-    TRACE(("BELL %d\n", percent))
+    TRACE(("BELL %d\n", percent));
 
     /* has enough time gone by that we are allowed to ring
        the bell again? */
@@ -609,7 +622,7 @@ int QueryMaximize(TScreen *screen, unsigned *width, unsigned *height)
 		root_y,
 		*width,
 		*height,
-		root_border))
+		root_border));
 	*width -= (screen->border * 2),
 	*height -= (screen->border * 2);
 
@@ -622,7 +635,7 @@ int QueryMaximize(TScreen *screen, unsigned *width, unsigned *height)
 
 	    TRACE(("QueryMaximize: WM hints max_w %#x max_h %#x\n",
 		    hints.max_width,
-		    hints.max_height))
+		    hints.max_height));
 
 	    if ((unsigned) hints.max_width < *width)
 		*width = hints.max_width;
@@ -662,7 +675,7 @@ void RequestMaximize (XtermWidget termw, int maximize)
 			    screen->restore_x,
 			    screen->restore_y,
 			    screen->restore_width,
-			    screen->restore_height))
+			    screen->restore_height));
 		}
 
 		XMoveResizeWindow(screen->display,
@@ -679,7 +692,7 @@ void RequestMaximize (XtermWidget termw, int maximize)
 		    screen->restore_x,
 		    screen->restore_y,
 		    screen->restore_width,
-		    screen->restore_height))
+		    screen->restore_height));
 	    screen->restore_data = False;
 	    XMoveResizeWindow(screen->display,
 			      VShellWindow,
@@ -747,7 +760,7 @@ Redraw(void)
 #endif
 }
 
-#if defined(ALLOWLOGGING) || defined(DEBUG)
+#if (defined(ALLOWLOGGING) || defined(DEBUG)) && !defined(VMS)
 
 /*
  * create a file only if we could with the permissions of the real user id.
@@ -770,7 +783,7 @@ creat_as(int uid, int gid, char *pathname, int mode)
     SIGNAL_T (*chldfunc) (int);
 
     chldfunc = signal(SIGCHLD, SIG_DFL);
-#endif
+#endif /* HAVE_WAITPID */
 
     pid = fork();
     switch (pid)
@@ -784,12 +797,13 @@ creat_as(int uid, int gid, char *pathname, int mode)
 	    _exit(0);
 	} else
 	    _exit(1);
+	/* NOTREACHED */
     case -1:			/* error */
 	return;
     default:			/* parent */
 #ifdef HAVE_WAITPID
 	waitpid(pid, NULL, 0);
-#else
+#else  /* HAVE_WAITPID */
 	waited = wait(NULL);
 	signal(SIGCHLD, chldfunc);
 	/*
@@ -801,10 +815,10 @@ creat_as(int uid, int gid, char *pathname, int mode)
 	    if (waited == term->screen.pid)
 		Cleanup(0);
 	while ( (waited=nonblocking_wait()) > 0);
-#endif
+#endif /* HAVE_WAITPID */
     }
 }
-#endif
+#endif /* defined(ALLOWLOGGING) || defined(DEBUG) */
 
 #ifdef ALLOWLOGGING
 
@@ -843,6 +857,10 @@ StartLog(register TScreen *screen)
 
 	if(screen->logging || (screen->inhibit & I_LOG))
 		return;
+#ifdef VMS  /* file name is fixed in VMS variant */
+	screen->logfd = open(XTERM_VMS_LOGFILE, O_CREAT|O_TRUNC|O_APPEND|O_RDWR, 0640);
+	if(screen->logfd < 0)return; /* open failed */
+#else /*VMS*/
 	if(screen->logfile == NULL || *screen->logfile == 0) {
 		if(screen->logfile)
 			free(screen->logfile);
@@ -931,6 +949,7 @@ StartLog(register TScreen *screen)
 					 0644)) < 0)
 			return;
 	}
+#endif /*VMS*/
 	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);
 	screen->logging = TRUE;
 	update_logging();
@@ -953,6 +972,11 @@ FlushLog(register TScreen *screen)
 	register IChar *cp;
 	register int i;
 
+#ifdef VMS /* avoid logging output loops which otherwise occur sometimes
+	      when there is no output and cp/screen->logstart are 1 apart */
+	if(!tt_new_output)return;
+	tt_new_output = FALSE;
+#endif /* VMS */
 	cp = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);
 	if (screen->logstart != 0
 	 && (i = cp - screen->logstart) > 0) {
@@ -992,11 +1016,11 @@ static void ReportAnsiColorRequest(XtermWidget pTerm, int colornum, int final)
 	Colormap cmap =	pTerm->core.colormap;
 	char buffer[80];
 
-	TRACE(("ReportAnsiColorRequest %d\n", colornum))
+	TRACE(("ReportAnsiColorRequest %d\n", colornum));
 	color.pixel = pTerm->screen.Acolors[colornum];
 	XQueryColor(term->screen.display, cmap, &color);
 	sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
-                colornum,
+		colornum,
 		color.red,
 		color.green,
 		color.blue);
@@ -1018,10 +1042,10 @@ Colormap		 cmap =		pTerm->core.colormap;
     if (XParseColor(screen->display, cmap, name, &def)
      && XAllocColor(screen->display, cmap, &def)) {
 	screen->Acolors[color] = def.pixel;
-	TRACE(("AllocateAnsiColor #%d: %s (pixel %#lx)\n", color, name, def.pixel))
+	TRACE(("AllocateAnsiColor #%d: %s (pixel %#lx)\n", color, name, def.pixel));
 	return(TRUE);
     }
-    TRACE(("AllocateAnsiColor #%d: %s (failed)\n", color, name))
+    TRACE(("AllocateAnsiColor #%d: %s (failed)\n", color, name));
     return(FALSE);
 }
 
@@ -1035,7 +1059,7 @@ ChangeAnsiColorRequest(
     int color;
     int r = False;
 
-    TRACE(("ChangeAnsiColorRequest string='%s'\n", buf))
+    TRACE(("ChangeAnsiColorRequest string='%s'\n", buf));
 
     while (buf && *buf) {
 	name = strchr(buf, ';');
@@ -1146,7 +1170,7 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 		 */
 		if (buf != 0
 		 && strcmp(buf, "?")
-		 && ((cp = malloc((unsigned)strlen(buf) + 1)) != NULL) {
+		 && ((cp = malloc((unsigned)strlen(buf) + 1)) != NULL)) {
 			strcpy(cp, buf);
 			if(screen->logfile)
 				free(screen->logfile);
@@ -1529,7 +1553,7 @@ static void ReportColorRequest(XtermWidget pTerm, int ndx, int final)
 
 	GetOldColors(pTerm);
 	color.pixel = pOldColors->colors[ndx];
-	TRACE(("ReportColors %d: %#lx\n", ndx, pOldColors->colors[ndx]))
+	TRACE(("ReportColors %d: %#lx\n", ndx, pOldColors->colors[ndx]));
 	XQueryColor(term->screen.display, cmap, &color);
 	sprintf(buffer, "%d;rgb:%04x/%04x/%04x", ndx + 10,
 		color.red,
@@ -1623,10 +1647,10 @@ char			*newName;
 	SET_COLOR_VALUE(pNew, ndx, def.pixel);
 	strcpy(newName, name);
 	SET_COLOR_NAME(pNew, ndx, newName);
-	TRACE(("AllocateColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel))
+	TRACE(("AllocateColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel));
 	return(TRUE);
     }
-    TRACE(("AllocateColor #%d: %s (failed)\n", ndx, name))
+    TRACE(("AllocateColor #%d: %s (failed)\n", ndx, name));
     return(FALSE);
 }
 
@@ -1641,7 +1665,7 @@ char		*thisName;
 ScrnColors	newColors;
 int		i, ndx;
 
-    TRACE(("ChangeColorsRequest start=%d, names='%s'\n", start, names))
+    TRACE(("ChangeColorsRequest start=%d, names='%s'\n", start, names));
 
     if ((pOldColors == NULL)
      && (!GetOldColors(pTerm))) {
@@ -1742,7 +1766,7 @@ Cleanup (int code)
 	}
 	cleaning = TRUE;
 
-	TRACE(("Cleanup %d\n", code))
+	TRACE(("Cleanup %d\n", code));
 
 	screen = &term->screen;
 
@@ -1773,12 +1797,12 @@ Cleanup (int code)
  * to have to do a realloc().
  */
 void
-Setenv (register char *var, register char *value)
+xtermSetenv (register char *var, register char *value)
 {
 	register int envindex = 0;
 	register size_t len = strlen(var);
 
-	TRACE(("Setenv(var=%s, value=%s)\n", var, value))
+	TRACE(("xtermSetenv(var=%s, value=%s)\n", var, value));
 
 	while (environ [envindex] != NULL) {
 	    if (strncmp (environ [envindex], var, len) == 0) {
@@ -1791,7 +1815,7 @@ Setenv (register char *var, register char *value)
 	    envindex ++;
 	}
 
-	TRACE(("...expanding env to %d\n", envindex+1))
+	TRACE(("...expanding env to %d\n", envindex+1));
 
 	environ [envindex] = (char *) malloc ((unsigned)len + strlen (value) + 1);
 	(void) strcpy (environ [envindex], var);
@@ -1859,7 +1883,7 @@ XStrCmp(char *s1, char *s2)
 #if OPT_TEK4014
 static void withdraw_window (Display *dpy, Window w, int scr)
 {
-    TRACE(("withdraw_window %#lx\n", (long)w))
+    TRACE(("withdraw_window %#lx\n", (long)w));
     (void) XmuUpdateMapHints (dpy, w, NULL);
     XWithdrawWindow (dpy, w, scr);
     return;
@@ -1871,7 +1895,7 @@ void set_vt_visibility (Boolean on)
 {
     register TScreen *screen = &term->screen;
 
-    TRACE(("set_vt_visibility(%d)\n", on))
+    TRACE(("set_vt_visibility(%d)\n", on));
     if (on) {
 	if (!screen->Vshow && term) {
 	    VTInit ();
@@ -1908,7 +1932,7 @@ void set_tek_visibility (Boolean on)
 {
     register TScreen *screen = &term->screen;
 
-    TRACE(("set_tek_visibility(%d)\n", on))
+    TRACE(("set_tek_visibility(%d)\n", on));
     if (on) {
 	if (!screen->Tshow && (tekWidget || TekInit())) {
 	    Widget tekParent = SHELL_OF(tekWidget);

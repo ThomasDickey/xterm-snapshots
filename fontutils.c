@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1998 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1998-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -317,12 +317,12 @@ xtermSpecialFont(unsigned atts, unsigned chrset)
 	 || old_props.res_x      != res_y
 	 || old_props.pixel_size != pixel_size
 	 || strcmp(old_props.spacing, props->spacing)) {
-		TRACE(("xtermSpecialFont(atts = %#x, chrset = %#x)\n", atts, chrset))
-		TRACE(("res_x      = %d\n", res_x))
-		TRACE(("res_y      = %d\n", res_y))
-		TRACE(("point_size = %s\n", props->point_size))
-		TRACE(("pixel_size = %d\n", pixel_size))
-		TRACE(("spacing    = %s\n", props->spacing))
+		TRACE(("xtermSpecialFont(atts = %#x, chrset = %#x)\n", atts, chrset));
+		TRACE(("res_x      = %d\n", res_x));
+		TRACE(("res_y      = %d\n", res_y));
+		TRACE(("point_size = %s\n", props->point_size));
+		TRACE(("pixel_size = %d\n", pixel_size));
+		TRACE(("spacing    = %s\n", props->spacing));
 		old_props.res_x      = res_x;
 		old_props.res_x      = res_y;
 		old_props.pixel_size = pixel_size;
@@ -462,7 +462,7 @@ xtermLoadFont (
 		strcpy (tmpname, nfontname);
 	}
 
-	TRACE(("xtermLoadFont normal %s\n", nfontname))
+	TRACE(("xtermLoadFont normal %s\n", nfontname));
 
 	if (!(nfs = XLoadQueryFont (screen->display, nfontname))) goto bad;
 	if (EmptyFont(nfs))
@@ -473,21 +473,21 @@ xtermLoadFont (
 		fp = get_font_name_props(screen->display, nfs, normal);
 		if (fp != 0) {
 			bfontname = bold_font_name(fp);
-			TRACE(("...derived bold %s\n", bfontname))
+			TRACE(("...derived bold %s\n", bfontname));
 		}
 		if (bfontname == 0
 		 || (bfs = XLoadQueryFont (screen->display, bfontname)) == 0) {
 			bfs = nfs;
-			TRACE(("...cannot load a matching bold font\n"))
+			TRACE(("...cannot load a matching bold font\n"));
 		} else if (!same_font_size(nfs, bfs)
 		 || !got_bold_font(screen->display, bfs, bfontname)) {
 			XFreeFont(screen->display, bfs);
 			bfs = nfs;
-			TRACE(("...did not get a matching bold font\n"))
+			TRACE(("...did not get a matching bold font\n"));
 		}
 	} else if ((bfs = XLoadQueryFont (screen->display, bfontname)) == 0) {
 		bfs = nfs;
-		TRACE(("...cannot load bold font %s\n", bfontname))
+		TRACE(("...cannot load bold font %s\n", bfontname));
 	}
 
 	if (EmptyFont(bfs))
@@ -497,7 +497,7 @@ xtermLoadFont (
 	 && (is_fixed_font(nfs) && is_fixed_font(bfs))) {
 		XFreeFont(screen->display, bfs);
 		bfs = nfs;
-		TRACE(("...fixing mismatched normal/bold fonts\n"))
+		TRACE(("...fixing mismatched normal/bold fonts\n"));
 		/*
 		 * If we're given a nonnull bfontname here, it came from a
 		 * resource setting.  Perhaps the user did something like set
@@ -525,7 +525,7 @@ xtermLoadFont (
 			nfs->min_bounds.width,
 			nfs->max_bounds.width,
 			bfs->min_bounds.width,
-			bfs->max_bounds.width))
+			bfs->max_bounds.width));
 		proportional = True;
 	}
 
@@ -620,7 +620,7 @@ xtermLoadFont (
 
 	screen->enbolden = screen->bold_mode
 		&& ((nfs == bfs) || same_font_name(normal, bfontname));
-	TRACE(("Will %suse 1-pixel offset/overstrike to simulate bold\n", screen->enbolden ? "" : "not "))
+	TRACE(("Will %suse 1-pixel offset/overstrike to simulate bold\n", screen->enbolden ? "" : "not "));
 
 	set_menu_font (False);
 	screen->menu_font_number = fontnum;
@@ -750,7 +750,7 @@ xtermMissingChar(unsigned ch, XFontStruct *font)
 		if (font->max_byte1 == 0) {
 #if OPT_WIDE_CHARS
 			if (ch > 255) {
-				TRACE(("xtermMissingChar %#04x (row)\n", ch))
+				TRACE(("xtermMissingChar %#04x (row)\n", ch));
 				return True;
 			}
 #endif
@@ -763,7 +763,7 @@ xtermMissingChar(unsigned ch, XFontStruct *font)
 #endif
 
 		if (CI_NONEXISTCHAR(pc)) {
-			TRACE(("xtermMissingChar %#04x (!exists)\n", ch))
+			TRACE(("xtermMissingChar %#04x (!exists)\n", ch));
 			return True;
 		}
 	}
@@ -948,7 +948,7 @@ xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y)
 			 && !xtermMissingChar(n, (flags & BOLD)
 				  ? screen->fnt_bold
 				  : screen->fnt_norm)) {
-				TRACE(("...use xterm-style linedrawing\n"))
+				TRACE(("...use xterm-style linedrawing\n"));
 				ch = n;
 				break;
 			}
@@ -958,7 +958,7 @@ xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y)
 
 	TRACE(("DRAW_BOX(%d) cell %dx%d at %d,%d%s\n",
 		ch, screen->fnt_high, screen->fnt_wide, y, x,
-		(ch < 0 || ch >= (int)(sizeof(lines)/sizeof(lines[0]))) ? "-BAD": ""))
+		(ch < 0 || ch >= (int)(sizeof(lines)/sizeof(lines[0]))) ? "-BAD": ""));
 
 	if (!XGetGCValues(screen->display, gc, GCBackground, &values))
 		return;
@@ -1049,7 +1049,7 @@ lookupFontSizes(TScreen *screen)
 			if (fs != 0) {
 				screen->menu_font_sizes[n] = FontSize(fs);
 				TRACE(("menu_font_sizes[%d] = %ld\n", n,
-					screen->menu_font_sizes[n]))
+					screen->menu_font_sizes[n]));
 				XFreeFont (screen->display, fs);
 			}
 		}
@@ -1174,7 +1174,7 @@ void SetVTFont (
 
     TRACE(("SetVTFont(i=%d, name1=%s, name2=%s)\n", i,
 	name1 ? name1 : "<null>",
-	name2 ? name2 : "<null>"))
+	name2 ? name2 : "<null>"));
 
     if (i >= 0 && i < NMENUFONTS) {
 	if (i == fontMenu_fontsel) {	/* go get the selection */

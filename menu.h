@@ -2,7 +2,7 @@
 /* $XFree86: xc/programs/xterm/menu.h,v 3.17 1999/12/30 02:05:55 robin Exp $ */
 /*
 
-Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -144,12 +144,12 @@ typedef enum {
     mainMenu_num_lock,
     mainMenu_meta_esc,
 #endif
+#if OPT_HP_FUNC_KEYS
+    mainMenu_hp_fkeys,
+#endif
     mainMenu_sun_fkeys,
 #if OPT_SUNPC_KBD
     mainMenu_sun_kbd,
-#endif
-#if OPT_HP_FUNC_KEYS
-    mainMenu_hp_fkeys,
 #endif
     mainMenu_line2,
     mainMenu_suspend,
@@ -315,20 +315,20 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
 #define update_sun_fkeys() \
   update_menu_item (term->screen.mainMenu, \
 		    mainMenuEntries[mainMenu_sun_fkeys].widget, \
-		    sunFunctionKeys)
+		    term->keyboard.type == keyboardIsSun)
 
 #if OPT_SUNPC_KBD
 #define update_sun_kbd() \
   update_menu_item (term->screen.mainMenu, \
 		    mainMenuEntries[mainMenu_sun_kbd].widget, \
-		    sunKeyboard)
+		    term->keyboard.type == keyboardIsVT220)
 #endif
 
 #if OPT_HP_FUNC_KEYS
 #define update_hp_fkeys() \
   update_menu_item (term->screen.mainMenu, \
 		    mainMenuEntries[mainMenu_hp_fkeys].widget, \
-		    hpFunctionKeys)
+		    term->keyboard.type == keyboardIsHP)
 #else
 #define update_hp_fkeys() /*nothing*/
 #endif
@@ -346,7 +346,7 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
 #define update_reversevideo() \
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_reversevideo].widget, \
-		    (term->flags & REVERSE_VIDEO))
+		    (term->misc.re_verse))
 
 #define update_autowrap() \
   update_menu_item (term->screen.vtMenu, \

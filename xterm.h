@@ -1,8 +1,8 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.51 2000/01/21 02:30:12 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.52 2000/01/29 18:58:41 dawes Exp $ */
 
 /************************************************************
 
-Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -201,16 +201,6 @@ extern int errno;
 
 /***====================================================================***/
 
-#ifndef HAVE_CONFIG_H
-
-#if defined(_POSIX_VDISABLE) && (_POSIX_VDISABLE != -1) && defined(HAVE_UNISTD_H)
-#define HAVE_POSIX_VDISABLE 1
-#endif
-
-#endif /* HAVE_CONFIG_H */
-
-/***====================================================================***/
-
 #define XtNallowSendEvents	"allowSendEvents"
 #define XtNalwaysHighlight	"alwaysHighlight"
 #define XtNanswerbackString	"answerbackString"
@@ -396,6 +386,15 @@ extern int errno;
 #define XtCGeometry		"Geometry"
 #endif
 
+#ifdef VMS
+#define	XtCbackground		"background"
+#define	XtCbordercolor		"borderColor"
+#define	XtCborderwidth		"borderWidth"
+#define	XtCforeground		"foreground"
+#define	XtCfont			"font"
+#define	XtCiconic		"iconic"
+#endif
+
 /***====================================================================***/
 
 #ifdef	__cplusplus
@@ -488,8 +487,8 @@ extern void CursorRestore (XtermWidget tw);
 extern void CursorSave (XtermWidget tw);
 extern void CursorSet (TScreen *screen, int row, int col, unsigned flags);
 extern void CursorUp (TScreen *screen, int  n);
-extern void Index (TScreen *screen, int amount);
 extern void RevIndex (TScreen *screen, int amount);
+extern void xtermIndex (TScreen *screen, int amount);
 
 /* doublechr.c */
 extern void xterm_DECDHL (Bool top);
@@ -557,9 +556,6 @@ extern void HandleStringEvent        PROTO_XT_ACTIONS_ARGS;
 extern void Panic (char *s, int a);
 extern void Redraw (void);
 extern void ReverseOldColors (void);
-extern void Setenv (char *var, char *value);
-extern void SysError (int i);
-extern void VisualBell (void);
 extern void creat_as (int uid, int gid, char *pathname, int mode);
 extern void do_dcs (Char *buf, size_t len);
 extern void do_osc (Char *buf, int len, int final);
@@ -572,7 +568,10 @@ extern void reset_decudk (void);
 extern void set_tek_visibility (Boolean on);
 extern void set_vt_visibility (Boolean on);
 extern void switch_modes (Bool tovt);
+extern void SysError (int i);
+extern void VisualBell (void);
 extern void xevents (void);
+extern void xtermSetenv (char *var, char *value);
 extern void xt_error (String message);
 
 #if OPT_MAXIMIZE
@@ -677,12 +676,15 @@ extern void InsertChar (TScreen *screen, int n);
 extern void InsertLine (TScreen *screen, int n);
 extern void RevScroll (TScreen *screen, int amount);
 extern void ReverseVideo (XtermWidget termw);
-extern void Scroll (TScreen *screen, int amount);
 extern void do_erase_display (TScreen *screen, int param, int mode);
 extern void do_erase_line (TScreen *screen, int param, int mode);
+extern void init_keyboard_type (xtermKeyboardType, Bool set);
 extern void recolor_cursor (Cursor cursor, unsigned long fg, unsigned long bg);
 extern void resetXtermGC (TScreen *screen, int flags, Bool hilite);
 extern void scrolling_copy_area (TScreen *screen, int firstline, int nlines, int amount);
+extern void set_keyboard_type (xtermKeyboardType type, Bool set);
+extern void toggle_keyboard_type (xtermKeyboardType type);
+extern void xtermScroll (TScreen *screen, int amount);
 
 #if OPT_ISO_COLORS
 

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.39 2000/01/18 16:35:58 tsi Exp $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.40 2000/01/29 18:58:38 dawes Exp $
  */
 
 /*
@@ -60,6 +60,11 @@
 #include <xterm.h>
 
 #include <X11/keysym.h>
+
+#ifdef VMS
+#include <X11/keysymdef.h>
+#endif
+
 #ifdef HAVE_X11_DECKEYSYM_H
 #include <X11/DECkeysym.h>
 #endif
@@ -195,7 +200,7 @@ TranslateFromSUNPC(KeySym keysym)
 	for (n = 0; n < sizeof(table)/sizeof(table[0]); n++) {
 		if (table[n].before == keysym) {
 			keysym = table[n].after;
-			TRACE(("...Input keypad changed to %#04lx\n", keysym))
+			TRACE(("...Input keypad changed to %#04lx\n", keysym));
 			break;
 		}
 	}
@@ -210,7 +215,7 @@ TranslateFromSUNPC(KeySym keysym)
  */
 #define isModified(event) \
     (event->state & \
-    	(Mod1Mask | Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
+	(Mod1Mask | Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
 
 #define VT52_KEYPAD \
 	if_OPT_VT52_MODE(screen,{ \
@@ -363,7 +368,7 @@ Input (
 		eightbit ? " 8bit" : " 7bit",
 		IsFunctionKey(keysym)     ? " FKey"     : "",
 		IsMiscFunctionKey(keysym) ? " MiscFKey" : "",
-		IsEditFunctionKey(keysym) ? " EditFkey" : ""))
+		IsEditFunctionKey(keysym) ? " EditFkey" : ""));
 
 #if OPT_SUNPC_KBD
 	/*
@@ -371,12 +376,12 @@ Input (
 	 * Other (Sun, PC) keyboards commonly have keypad(+), but no keypad(,)
 	 * - it's a pain for users to work around.
 	 */
-	if (!sunFunctionKeys
+	if (term->keyboard.type != keyboardIsSun
 	 && (event->state & ShiftMask) == 0
-	 && sunKeyboard
+	 && term->keyboard.type == keyboardIsVT220
 	 && keysym == XK_KP_Add) {
 		keysym = XK_KP_Separator;
-		TRACE(("...Input keypad(+), change keysym to %#04lx\n", keysym))
+		TRACE(("...Input keypad(+), change keysym to %#04lx\n", keysym));
 	}
 #endif
 
@@ -399,7 +404,7 @@ Input (
 	 && ((term->misc.num_lock == 0)
 	  || (term->misc.num_lock & event->state) != 0)) {
 		keypad_mode = 0;
-		TRACE(("...Input num_lock, force keypad_mode off\n"))
+		TRACE(("...Input num_lock, force keypad_mode off\n"));
 	}
 #endif
 
@@ -412,9 +417,9 @@ Input (
 	 */
 	if (screen->meta_sends_esc
 	 && !term->misc.meta_trans
-	 && (event->state & term->misc.meta_left
-	  || event->state & term->misc.meta_right)) {
-		TRACE(("...input is modified by META\n"))
+	 && ((event->state & term->misc.meta_left) != 0
+	  || (event->state & term->misc.meta_right)) != 0) {
+		TRACE(("...input is modified by META\n"));
 		eightbit = False;
 		unparseputc (ESC, pty);  /* escape */
 	}
@@ -426,7 +431,7 @@ Input (
 	if (event->state != 0
 	 && !(IsKeypadKey(keysym) && keypad_mode)
 #if OPT_SUNPC_KBD
-	 && !sunKeyboard
+	 && term->keyboard.type != keyboardIsVT220
 #endif
 #if OPT_VT52_MODE
 	 && screen->ansi_level != 0
@@ -436,8 +441,8 @@ Input (
 	    modify_parm = (event->state & ControlMask) ? ctl : normal
 #if OPT_NUM_LOCK
 	    if (term->misc.real_NumLock
-	     && (event->state & term->misc.alt_left
-	      || event->state & term->misc.alt_right)) {
+	     && ((event->state & term->misc.alt_left) != 0
+	      || (event->state & term->misc.alt_right)) != 0) {
 		if (event->state & ShiftMask) {
 		    ModifierParm(8, 4);
 		} else {
@@ -475,12 +480,12 @@ Input (
 	   ^ ((event->state & ControlMask) != 0))
 	 && (keysym == XK_BackSpace)) {
 		strbuf[0] = '\177';
-		TRACE(("...Input backarrow changed to %d\n", *strbuf))
+		TRACE(("...Input backarrow changed to %d\n", *strbuf));
 	}
 
 #if OPT_SUNPC_KBD
 	/* make an DEC editing-keypad from a Sun or PC editing-keypad */
-	if (sunKeyboard)
+	if (term->keyboard.type == keyboardIsVT220)
 		keysym = TranslateFromSUNPC(keysym);
 	else
 #endif
@@ -488,16 +493,16 @@ Input (
 #ifdef XK_KP_Home
 	if (keysym >= XK_KP_Home && keysym <= XK_KP_Begin) {
 		keysym += XK_Home - XK_KP_Home;
-		TRACE(("...Input keypad changed to %#04lx\n", keysym))
+		TRACE(("...Input keypad changed to %#04lx\n", keysym));
 	}
 #endif
 	}
 
 #if OPT_HP_FUNC_KEYS
-	if (hpFunctionKeys
+	if (term->keyboard.type == keyboardIsHP
 	 && (reply.a_final = hpfuncvalue (keysym)) != 0) {
 		reply.a_type = ESC;
-		MODIFIER_PARM
+		MODIFIER_PARM;
 		unparseseq(&reply, pty);
 	} else
 #endif
@@ -505,13 +510,13 @@ Input (
 		reply.a_type = SS3;
 		reply.a_final = keysym-XK_KP_F1+'P';
 		VT52_CURSOR_KEYS
-		MODIFIER_PARM
+		MODIFIER_PARM;
 		unparseseq(&reply, pty);
 		key = TRUE;
 #if 0	/* OPT_SUNPC_KBD should suppress - but only for vt220 compatibility */
-	} else if (sunKeyboard
-	 	&& screen->old_fkeys == False
-	 	&& screen->ansi_level <= 1
+	} else if (term->keyboard.type == keyboardIsVT220
+		&& screen->old_fkeys == False
+		&& screen->ansi_level <= 1
 		&& IsEditFunctionKey(keysym)) {
 		key = FALSE;	/* ignore editing-keypad in vt100 mode */
 #endif
@@ -521,22 +526,24 @@ Input (
 			reply.a_type = SS3;
 			reply.a_final = curfinal[keysym-XK_Home];
 			VT52_CURSOR_KEYS
-			MODIFIER_PARM
+			MODIFIER_PARM;
 			unparseseq(&reply, pty);
 		} else {
 			reply.a_type = CSI;
 			if_OPT_VT52_MODE(screen,{ reply.a_type = ESC; })
 			reply.a_final = curfinal[keysym-XK_Home];
-			MODIFIER_PARM
+			MODIFIER_PARM;
 			unparseseq(&reply, pty);
 		}
 		key = TRUE;
 	 } else if (IsFunctionKey(keysym)
 		|| IsMiscFunctionKey(keysym)
 		|| IsEditFunctionKey(keysym)
-		|| (keysym == XK_Delete)) {
+		|| (keysym == XK_Delete
+		 && term->keyboard.type != keyboardIsSun 
+		 && !screen->old_fkeys)) {
 #if OPT_SUNPC_KBD
-		if (sunKeyboard) {
+		if (term->keyboard.type == keyboardIsVT220) {
 			if ((event->state & ControlMask)
 			 && (keysym >= XK_F1 && keysym <= XK_F12))
 				keysym += 12;
@@ -546,7 +553,7 @@ Input (
 		dec_code = decfuncvalue(keysym);
 		if ((event->state & ShiftMask)
 #if OPT_SUNPC_KBD
-		 && sunKeyboard
+		 && term->keyboard.type == keyboardIsVT220
 #endif
 		 && ((string = (Char *)udk_lookup(dec_code, &nbytes)) != 0)) {
 			while (nbytes-- > 0)
@@ -556,14 +563,14 @@ Input (
 		/*
 		 * Interpret F1-F4 as PF1-PF4 for VT52, VT100
 		 */
-		else if (!sunFunctionKeys
+		else if (term->keyboard.type != keyboardIsSun 
 		 && screen->old_fkeys == False
 		 && (dec_code >= 11 && dec_code <= 14))
 		{
 			reply.a_type = SS3;
 			VT52_CURSOR_KEYS
 			reply.a_final = A2E(dec_code - 11 + E2A('P')) ;
-			MODIFIER_PARM
+			MODIFIER_PARM;
 			unparseseq(&reply, pty);
 		}
 #endif
@@ -571,8 +578,8 @@ Input (
 			reply.a_type = CSI;
 			reply.a_nparam = 1;
 			reply.a_final = 0;
-			MODIFIER_PARM
-			if (sunFunctionKeys) {
+			MODIFIER_PARM;
+			if (term->keyboard.type == keyboardIsSun ) {
 				reply.a_param[0] = sunfuncvalue (keysym);
 				reply.a_final = 'z';
 #ifdef XK_ISO_Left_Tab
@@ -594,7 +601,7 @@ Input (
 			reply.a_type  = SS3;
 			reply.a_final = kypd_apl[keysym-XK_KP_Space];
 			VT52_KEYPAD
-			MODIFIER_PARM
+			MODIFIER_PARM;
 			unparseseq(&reply, pty);
 		} else {
 			unparseputc(kypd_num[keysym-XK_KP_Space], pty);
@@ -618,9 +625,9 @@ Input (
 			 */
 			if (eightbit
 			 && screen->meta_sends_esc
-			 && (event->state & term->misc.meta_left
-			  || event->state & term->misc.meta_right)) {
-				TRACE(("...input-char is modified by META\n"))
+			 && ((event->state & term->misc.meta_left) != 0
+			  || (event->state & term->misc.meta_right)) != 0) {
+				TRACE(("...input-char is modified by META\n"));
 				eightbit = False;
 				unparseputc (ESC, pty);  /* escape */
 			}
@@ -629,7 +636,7 @@ Input (
 				if (CharOf(*string) < 128) {
 					TRACE(("...input shift from %d to %d\n",
 						CharOf(*string),
-						CharOf(*string) | 0x80))
+						CharOf(*string) | 0x80));
 					*string |= 0x80;
 				}
 				eightbit = False;
@@ -642,7 +649,7 @@ Input (
 					(CharOf(*string) == cmp)
 						? "unchanged"
 						: "changed to",
-					CharOf(cmp)))
+					CharOf(cmp)));
 				*string = cmp;
 			} else if (eightbit) {
 				unparseputc (ESC, pty);  /* escape */
@@ -656,7 +663,7 @@ Input (
 		key = TRUE;
 	}
 	if(key && !TEK4014_ACTIVE(screen))
-	        AdjustAfterInput(screen);
+		AdjustAfterInput(screen);
 #ifdef ENABLE_PRINT
 	if (keysym == XK_F2) TekPrint();
 #endif
@@ -668,7 +675,7 @@ StringInput ( register TScreen *screen, register char *string, size_t nbytes)
 {
 	int	pty	= screen->respond;
 
-	TRACE(("InputString %s\n", visibleChars(PAIRED_CHARS(string,0), nbytes)))
+	TRACE(("InputString %s\n", visibleChars(PAIRED_CHARS(string,0), nbytes)));
 #if OPT_TEK4014
 	if(nbytes && screen->TekGIN) {
 		TekEnqMouse(*string++);
@@ -679,7 +686,7 @@ StringInput ( register TScreen *screen, register char *string, size_t nbytes)
 	while (nbytes-- != 0)
 		unparseputc(*string++, pty);
 	if (!TEK4014_ACTIVE(screen))
-	        AdjustAfterInput(screen);
+		AdjustAfterInput(screen);
 }
 
 /* These definitions are DEC-style (e.g., vt320) */
@@ -734,7 +741,7 @@ decfuncvalue (KeySym keycode)
 static int
 hpfuncvalue (KeySym  keycode)
 {
-  	switch (keycode) {
+	switch (keycode) {
 		case XK_Up:		return('A');
 		case XK_Down:		return('B');
 		case XK_Right:		return('C');
@@ -771,7 +778,7 @@ hpfuncvalue (KeySym  keycode)
 static int
 sunfuncvalue (KeySym  keycode)
 {
-  	switch (keycode) {
+	switch (keycode) {
 		case XK_F1:	return(224);
 		case XK_F2:	return(225);
 		case XK_F3:	return(226);
@@ -886,7 +893,7 @@ TranslationsUseKeyword(Widget w, const char *keyword)
 			TRACE(("%s mask %#lx is%s modifier\n", \
 				#name, \
 				term->misc.name, \
-				ModifierName(term->misc.name)))
+				ModifierName(term->misc.name)));
 /*
  * Determine which modifier mask (if any) applies to the Num_Lock keysym.
  *
@@ -905,7 +912,7 @@ VTInitModifiers(void)
 
     if (keymap != 0) {
 
-	TRACE(("VTInitModifiers\n"))
+	TRACE(("VTInitModifiers\n"));
 	for (i = k = 0, mask = 1; i < 8; i++, mask <<= 1) {
 	    for (j = 0; j < keymap->max_keypermod; j++) {
 		KeyCode code = keymap->modifiermap[k];
@@ -935,7 +942,7 @@ VTInitModifiers(void)
 	  || term->misc.alt_right != 0)
 	 && (TranslationsUseKeyword(toplevel, "alt")
 	  || TranslationsUseKeyword((Widget)term, "alt"))) {
-	    TRACE(("ALT is used as a modifier in translations (ignore mask)\n"))
+	    TRACE(("ALT is used as a modifier in translations (ignore mask)\n"));
 	    term->misc.alt_left = 0;
 	    term->misc.alt_right = 0;
 	}
@@ -948,7 +955,7 @@ VTInitModifiers(void)
 	  || term->misc.meta_right != 0)
 	 && (TranslationsUseKeyword(toplevel, "meta")
 	  || TranslationsUseKeyword((Widget)term, "meta"))) {
-	    TRACE(("META is used as a modifier in translations\n"))
+	    TRACE(("META is used as a modifier in translations\n"));
 	    term->misc.meta_trans = True;
 	}
 
