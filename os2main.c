@@ -765,7 +765,7 @@ char **envp;
 
 	/* Do these first, since we may not be able to open the display */
 	ProgramName = argv[0];
-	if (argc >= 1) {
+	if (argc > 1) {
 		if (!strncmp(argv[1], "-v", 2))
 			Version();
 		if (!strncmp(argv[1], "-h", 2))
