@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.119 2001/04/12 01:02:49 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.120 2001/04/20 09:30:38 dickey Exp $ */
 
 /*
 
@@ -130,7 +130,7 @@ in this Software without prior written authorization from the X Consortium.
 
 extern char *ProgramName;
 
-static Char in_put (void);
+static IChar in_put (void);
 static int set_character_class (char *s);
 static void FromAlternate (TScreen *screen);
 static void RequestResize (XtermWidget termw, int rows, int cols, int text);
@@ -2454,7 +2454,7 @@ static int pty_read_bytes;
 
 #define	ptymask()	(v_bufptr > v_bufstr ? pty_mask : 0)
 
-static Char
+static IChar
 in_put(void)
 {
     int status;
@@ -2569,7 +2569,7 @@ static fd_set select_mask;
 static fd_set write_mask;
 static int pty_read_bytes;
 
-static Char
+static IChar
 in_put(void)
 {
     register TScreen *screen = &term->screen;
