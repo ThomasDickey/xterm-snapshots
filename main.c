@@ -1302,7 +1302,6 @@ main (int argc, char *argv[])
 	Widget form_top, menu_top;
 	register TScreen *screen;
 	int mode;
-	char *app_name = "XTerm";
 
 	/* Do these first, since we may not be able to open the display */
 	ProgramName = argv[0];
@@ -1312,11 +1311,6 @@ main (int argc, char *argv[])
 			Version();
 		if (abbrev(argv[1], "-help"))
 			Help();
-		for (n = 1; n < argc - 1; n++) {
-			if (abbrev(argv[n], "-name")) {
-				app_name = argv[n+1];
-			}
-		}
 	}
 
 	/* This dumps core on HP-UX 9.05 with X11R5 */
@@ -1625,7 +1619,7 @@ main (int argc, char *argv[])
 #endif
 
 	    XtSetErrorHandler(xt_error);
-	    toplevel = XtAppInitialize (&app_con, app_name,
+	    toplevel = XtAppInitialize (&app_con, "XTerm",
 					optionDescList,
 					XtNumber(optionDescList),
 					&argc, argv, fallback_resources,
