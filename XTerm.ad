@@ -3,7 +3,7 @@
 !
 !
 !
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.21 2001/10/08 01:08:10 dickey Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.22 2002/01/05 22:05:02 dickey Exp $
 
 XTerm.JoinSession:False
 
@@ -111,7 +111,7 @@ XTerm.JoinSession:False
 *VT100*boldColors: on
 *VT100*dynamicColors: on
 
-! Uncomment this use color for underline attribute
+! Uncomment this to use color for underline attribute
 !*VT100*colorULMode: on
 !*VT100*underLine: off
 

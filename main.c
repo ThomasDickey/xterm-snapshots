@@ -1,5 +1,5 @@
 #ifndef lint
-static char *rid="$Xorg: main.c,v 1.6 2000/08/18 11:04:49 xorgcvs Exp $";
+static char *rid="$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
 #endif /* lint */
 
 /*
@@ -17,15 +17,42 @@ static char *rid="$Xorg: main.c,v 1.6 2000/08/18 11:04:49 xorgcvs Exp $";
 
 /***********************************************************
 
+Copyright 2002 by Thomas E. Dickey
 
-Copyright (c) 1987, 1988  X Consortium
+                        All Rights Reserved
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name(s) of the above copyright
+holders shall not be used in advertising or otherwise to promote the
+sale, use or other dealings in this Software without prior written
+authorization.
+
+
+Copyright 1987, 1988  The Open Group
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
 
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
@@ -33,13 +60,13 @@ all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
 AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Except as contained in this notice, the name of the X Consortium shall not be
+Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from the X Consortium.
+in this Software without prior written authorization from The Open Group.
 
 
 Copyright 1987, 1988 by Digital Equipment Corporation, Maynard.
@@ -64,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.141 2001/11/14 01:52:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.144 2002/01/05 22:05:03 dickey Exp $ */
 
 
 /* main.c */
@@ -1912,9 +1939,9 @@ main (int argc, char *argv[])
 	{
 	    char *s;
 
-	    if ((s = getenv("LC_ALL")) ||
-		(s = getenv("LC_CTYPE")) ||
-		(s = getenv("LANG"))) {
+	    if (((s = getenv("LC_ALL")) != 0 && *s != '\0') ||
+		((s = getenv("LC_CTYPE")) != 0 && *s != '\0') ||
+		((s = getenv("LANG")) != 0 && *s != '\0')) {
 		if (strstr(s, "UTF-8"))
 		    defaultUTF8[0] = '2';
 	    }
@@ -2840,10 +2867,12 @@ spawn (void)
 		    term->keyboard.flags &= ~MODE_DECBKM;
 		} else {
 		    term->keyboard.flags |= MODE_DECBKM;
-		    term->keyboard.reset_DECBKM = TRUE;
+		    term->keyboard.reset_DECBKM = 1;
 		}
 		TRACE(("...sets DECBKM %s\n", 
 		    (term->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
+	} else {
+		term->keyboard.reset_DECBKM = 2;
 	}
 #endif	/* OPT_INITIAL_ERASE */
 
@@ -4569,6 +4598,7 @@ nonblocking_wait(void)
 /* ARGSUSED */
 static SIGNAL_T reapchild (int n GCC_UNUSED)
 {
+    int olderrno = errno;
     int pid;
 
     pid = wait(NULL);
@@ -4590,6 +4620,7 @@ static SIGNAL_T reapchild (int n GCC_UNUSED)
 	}
     } while ( (pid=nonblocking_wait()) > 0);
 
+    errno = olderrno;
     SIGNAL_RETURN;
 }
 #endif /* !VMS */

@@ -1,8 +1,8 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.75 2001/10/08 01:08:10 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.77 2002/01/06 01:34:24 dickey Exp $ */
 
 /************************************************************
 
-Copyright 1999-2000 by Thomas E. Dickey
+Copyright 1999,2000,2001,2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -772,12 +772,12 @@ extern void ClearCurBackground (TScreen *screen, int top, int left, unsigned hei
 #define xtermColorPair() makeColorPair(term->sgr_foreground, term->sgr_background)
 
 #define getXtermForeground(flags, color) \
-	(((flags) & FG_COLOR) && ((color) >= 0) \
+	(((flags) & FG_COLOR) && ((color) >= 0 && (color) < MAXCOLORS) \
 			? GET_COLOR_RES(term->screen.Acolors[color]) \
 			: term->screen.foreground)
 
 #define getXtermBackground(flags, color) \
-	(((flags) & BG_COLOR) && ((color) >= 0) \
+	(((flags) & BG_COLOR) && ((color) >= 0 && (color) < MAXCOLORS) \
 			? GET_COLOR_RES(term->screen.Acolors[color]) \
 			: term->core.background_pixel)
 

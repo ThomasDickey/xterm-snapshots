@@ -2,10 +2,10 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.68 2001/06/18 19:09:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.69 2002/01/05 22:05:03 dickey Exp $ */
 
 /*
- * Copyright 1999,2000,2001 by Thomas E. Dickey
+ * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1996,7 +1996,7 @@ void ClearCurBackground(
 	XSetWindowBackground(
 		screen->display,
 		VWindow(screen),
-		getXtermBackground(term->flags, -1));
+		getXtermBackground(term->flags, MAXCOLORS));
 }
 #endif /* OPT_ISO_COLORS */
 
