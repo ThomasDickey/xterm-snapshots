@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: input.c /main/20 1996/01/14 16:52:52 kaleb $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.7 1996/05/13 06:50:46 dawes Exp $
  */
 
 /*
@@ -32,13 +33,18 @@
 #include <X11/DECkeysym.h>
 #include <X11/Xutil.h>
 #include <stdio.h>
+
+#include "xterm.h"
 #include "data.h"
 
 static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
 static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
-static char *cur = "DACB";
+static char *cur = "HDACB  FE";
 
-static int funcvalue(), sunfuncvalue();
+static int funcvalue PROTO((KeySym keycode));
+static int sunfuncvalue PROTO((KeySym keycode));
+static void AdjustAfterInput PROTO((TScreen *screen));
+
 extern Boolean sunFunctionKeys;
 
 static void
@@ -63,6 +69,7 @@ register TScreen *screen;
 	}
 }
 
+void
 Input (keyboard, screen, event, eightbit)
     register TKeyboard	*keyboard;
     register TScreen	*screen;
@@ -70,7 +77,7 @@ Input (keyboard, screen, event, eightbit)
     Bool eightbit;
 {
 
-#define STRBUFSIZE 100
+#define STRBUFSIZE 500
 
 	char strbuf[STRBUFSIZE];
 	register char *string;
@@ -79,10 +86,20 @@ Input (keyboard, screen, event, eightbit)
 	int	nbytes;
 	KeySym  keysym = 0;
 	ANSI	reply;
-	Status	status_return;
 
-	nbytes = XmbLookupString (screen->xic, event, strbuf, STRBUFSIZE,
-				&keysym, &status_return);
+#if XtSpecificationRelease >= 6
+	if (screen->xic) {
+	    Status status_return;
+	    nbytes = XmbLookupString (screen->xic, event, strbuf, STRBUFSIZE,
+				      &keysym, &status_return);
+	}
+	else
+#endif
+	{
+	    static XComposeStatus compose_status = {NULL, 0};
+	    nbytes = XLookupString (event, strbuf, STRBUFSIZE,
+				    &keysym, &compose_status);
+	}
 
 	string = &strbuf[0];
 	reply.a_pintro = 0;
@@ -104,10 +121,10 @@ Input (keyboard, screen, event, eightbit)
        		if (keyboard->flags & CURSOR_APL) {
 			reply.a_type = SS3;
 			unparseseq(&reply, pty);
-			unparseputc(cur[keysym-XK_Left], pty);
+			unparseputc(cur[keysym-XK_Home], pty);
 		} else {
 			reply.a_type = CSI;
-			reply.a_final = cur[keysym-XK_Left];
+			reply.a_final = cur[keysym-XK_Home];
 			unparseseq(&reply, pty);
 		}
 		key = TRUE;
@@ -159,10 +176,11 @@ Input (keyboard, screen, event, eightbit)
 	return;
 }
 
+void
 StringInput (screen, string, nbytes)
     register TScreen	*screen;
     register char *string;
-    int nbytes;
+    Size_t nbytes;
 {
 	int	pty	= screen->respond;
 
@@ -171,14 +189,14 @@ StringInput (screen, string, nbytes)
 		TekGINoff();
 		nbytes--;
 	}
-	while (nbytes-- > 0)
+	while (nbytes-- != 0)
 		unparseputc(*string++, pty);
 	if(!screen->TekEmu)
 	        AdjustAfterInput(screen);
 }
 
 static int funcvalue (keycode)
-	int keycode;
+	KeySym  keycode;
 {
 	switch (keycode) {
 		case XK_F1:	return(11);
@@ -219,7 +237,7 @@ static int funcvalue (keycode)
 
 
 static int sunfuncvalue (keycode)
-	int keycode;
+	KeySym  keycode;
   {
   	switch (keycode) {
 		case XK_F1:	return(224);

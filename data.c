@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: data.c,v 1.12 95/04/05 19:58:47 kaleb Exp $
+ *	$XFree86: xc/programs/xterm/data.c,v 3.1 1996/01/30 15:29:09 dawes Exp $
  */
 
 /*
@@ -26,7 +27,11 @@
  */
 
 #include "ptyx.h"		/* gets Xt stuff, too */
+
+#if XtSpecificationRelease >= 6
 #include <X11/Xpoll.h>
+#endif
+
 #include "data.h"
 #include <setjmp.h>
 

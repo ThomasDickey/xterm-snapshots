@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: tabs.c,v 1.4 91/05/06 17:12:18 gildea Exp $
+ *	$XFree86: xc/programs/xterm/tabs.c,v 3.1 1996/01/10 05:51:44 dawes Exp $
  */
 
 /*
@@ -29,6 +30,10 @@
 
 #include "ptyx.h"
 
+#include "xterm.h"
+
+extern XtermWidget term;
+
 /*
  * This file presumes 32bits/word.  This is somewhat of a crock, and should
  * be fixed sometime.
@@ -37,6 +42,7 @@
 /*
  * places tabstops at only every 8 columns
  */
+void
 TabReset(tabs)
 Tabs	tabs;
 {
@@ -53,6 +59,7 @@ Tabs	tabs;
 /*
  * places a tabstop at col
  */
+void
 TabSet(tabs, col)
     Tabs	tabs;
     int		col;
@@ -63,6 +70,7 @@ TabSet(tabs, col)
 /*
  * clears a tabstop at col
  */
+void
 TabClear(tabs, col)
     Tabs	tabs;
     int		col;
@@ -75,11 +83,11 @@ TabClear(tabs, col)
  * (or MAX_TABS - 1 if there are no more).
  * A tabstop at col is ignored.
  */
+int
 TabNext (tabs, col)
     Tabs	tabs;
     int		col;
 {
-	extern XtermWidget term;
 	register TScreen *screen = &term->screen;
 
 	if(screen->curses && screen->do_wrap && (term->flags & WRAPAROUND)) {
@@ -96,6 +104,7 @@ TabNext (tabs, col)
 /*
  * clears all tabs
  */
+void
 TabZonk (tabs)
 Tabs	tabs;
 {
