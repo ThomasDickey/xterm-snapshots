@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.49 2003/10/13 00:58:20 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.50 2003/12/31 17:12:26 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -885,7 +885,7 @@ static struct termio d_tio;
 test "$cf_cv_svr4" = yes && AC_DEFINE(SVR4)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SYSV version: 7 updated: 2003/12/19 16:15:23
+dnl CF_SYSV version: 9 updated: 2003/12/30 13:52:30
 dnl -------
 dnl Check if this is a SYSV platform, e.g., as used in <X11/Xos.h>, and whether
 dnl defining it will be helpful.  The following features are used to check:
@@ -896,20 +896,22 @@ dnl declare strerror().  Xos.h declares the legacy form of str_errlist[], and
 dnl a compile-time error will result from trying to assign to a const array.
 dnl
 dnl b) compile with headers that exist on SYSV hosts.
+dnl
+dnl c) compile with type definitions that differ on SYSV hosts from standard C.
 AC_DEFUN([CF_SYSV],
 [
 AC_CACHE_CHECK(if we should define SYSV,cf_cv_sysv,[
+AC_REQUIRE([CF_SYS_ERRLIST])
 AC_TRY_COMPILE([
-/* FIXME: need a test that excludes linux */
-#ifdef linux
-make an error
-#endif
 #undef  SYSV
 #define SYSV 1			/* get Xos.h to declare sys_errlist[] */
-#include <X11/Xos.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>		/* look for wchar_t */
+#endif
+#include <X11/Intrinsic.h>	/* Intrinsic.h has other traps... */
 #include <curses.h>
 #include <term.h>		/* eliminate most BSD hacks */
-#include <errno.h>
+#include <errno.h>		/* declare sys_errlist on older systems */
 #include <sys/termio.h>		/* eliminate most of the remaining ones */
 ],[
 static struct termio d_tio;
@@ -921,7 +923,9 @@ static struct termio d_tio;
 	d_tio.c_cc[VEOL] = 0;
 	d_tio.c_cc[VMIN] = 0;
 	d_tio.c_cc[VTIME] = 0;
-sys_errlist[0] = "";
+#if defined(HAVE_SYS_ERRLIST) && !defined(DECL_SYS_ERRLIST)
+sys_errlist[0] = "";		/* Cygwin mis-declares this */
+#endif
 ],
 [cf_cv_sysv=yes],
 [cf_cv_sysv=no])
@@ -948,6 +952,17 @@ struct $cf_cv_have_utmp x;
 	[cf_cv_sysv_utmp=no])
 ])
 test $cf_cv_sysv_utmp = yes && AC_DEFINE(USE_SYSV_UTMP)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_SYS_ERRLIST version: 6 updated: 2001/12/30 13:03:23
+dnl --------------
+dnl Check for declaration of sys_nerr and sys_errlist in one of stdio.h and
+dnl errno.h.  Declaration of sys_errlist on BSD4.4 interferes with our
+dnl declaration.  Reported by Keith Bostic.
+AC_DEFUN([CF_SYS_ERRLIST],
+[
+    CF_CHECK_ERRNO(sys_nerr)
+    CF_CHECK_ERRNO(sys_errlist)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_TERMIO_C_ISPEED version: 2 updated: 2000/05/29 16:16:04
@@ -1397,6 +1412,72 @@ int x = XkbBI_Info
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
+dnl CF_XOPEN_SOURCE version: 7 updated: 2003/12/29 21:33:30
+dnl ---------------
+dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions.
+AC_DEFUN([CF_XOPEN_SOURCE],[
+case $host_os in #(vi
+freebsd*) #(vi
+	CPPFLAGS="$CPPFLAGS -D_BSD_TYPES -D__BSD_VISIBLE -D_POSIX_C_SOURCE=200112 -D_XOPEN_SOURCE=600"
+	;;
+hpux*) #(vi
+	CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE"
+	;;
+linux*) #(vi
+	CF_GNU_SOURCE
+	;;
+openbsd*) #(vi
+	# setting _XOPEN_SOURCE breaks xterm on OpenBSD 2.8, is not needed for ncurses
+	;;
+osf[[45]]*) #(vi
+	CPPFLAGS="$CPPFLAGS -D_OSF_SOURCE"
+	;;
+solaris*) #(vi
+	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
+	;;
+*)
+	AC_CACHE_CHECK(if we should define _XOPEN_SOURCE,cf_cv_xopen_source,[
+	AC_TRY_COMPILE([#include <sys/types.h>],[
+#ifndef _XOPEN_SOURCE
+make an error
+#endif],
+	[cf_cv_xopen_source=no],
+	[cf_save="$CPPFLAGS"
+	 CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
+	 AC_TRY_COMPILE([#include <sys/types.h>],[
+#ifdef _XOPEN_SOURCE
+make an error
+#endif],
+	[cf_cv_xopen_source=no],
+	[cf_cv_xopen_source=yes])
+	CPPFLAGS="$cf_save"
+	])
+])
+test "$cf_cv_xopen_source" = yes && CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=500"
+
+	# FreeBSD 5.x headers demand this...
+	AC_CACHE_CHECK(if we should define _POSIX_C_SOURCE,cf_cv_xopen_source,[
+	AC_TRY_COMPILE([#include <sys/types.h>],[
+#ifndef _POSIX_C_SOURCE
+make an error
+#endif],
+	[cf_cv_xopen_source=no],
+	[cf_save="$CPPFLAGS"
+	 CPPFLAGS="$CPPFLAGS -D_POSIX_C_SOURCE"
+	 AC_TRY_COMPILE([#include <sys/types.h>],[
+#ifdef _POSIX_C_SOURCE
+make an error
+#endif],
+	[cf_cv_xopen_source=no],
+	[cf_cv_xopen_source=yes])
+	CPPFLAGS="$cf_save"
+	])
+])
+test "$cf_cv_xopen_source" = yes && CPPFLAGS="$CPPFLAGS -D_POSIX_C_SOURCE"
+	;;
+esac
+])
+dnl ---------------------------------------------------------------------------
 dnl CF_X_ATHENA version: 11 updated: 2002/12/26 20:56:10
 dnl -----------
 dnl Check for Xaw (Athena) libraries
@@ -1529,28 +1610,51 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 6 updated: 2003/12/13 07:47:09
+dnl CF_X_FREETYPE version: 10 updated: 2003/12/31 08:21:44
 dnl -------------
-dnl Check for X freetype libraries (XFree86 4.x)
+dnl Check for X FreeType headers and libraries (XFree86 4.x).
 AC_DEFUN([CF_X_FREETYPE],
 [
-cf_freetype_libs="-lXft -lfontconfig -lfreetype -lXrender -lXrender"
-AC_CACHE_CHECK(for X FreeType libraries,cf_cv_x_freetype,[
+cf_extra_freetype_libs=
+AC_PATH_PROG(FREETYPE_CONFIG, xft-config, none)
+if test "$FREETYPE_CONFIG" = none; then
+	cf_extra_freetype_libs="-lXft"
+	AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, none)
+fi
+
+if test "$FREETYPE_CONFIG" != none ; then
+
+AC_CACHE_CHECK(for X FreeType headers,cf_cv_x_freetype_incs,[
+	cf_cv_x_freetype_incs="`$FREETYPE_CONFIG --cflags 2>/dev/null`"
+])
+
+AC_CACHE_CHECK(for X FreeType libraries,cf_cv_x_freetype_libs,[
 
 cf_save_LIBS="$LIBS"
-LIBS="$cf_freetype_libs $LIBS"
+cf_save_INCS="$CPPFLAGS"
+
+cf_cv_x_freetype_libs="$cf_extra_freetype_libs `$FREETYPE_CONFIG --libs 2>/dev/null`"
+
+LIBS="$cf_cv_x_freetype_libs $LIBS"
+CPPFLAGS="$cf_cv_x_freetype_incs $CPPFLAGS"
 
 AC_TRY_LINK([
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/Xft/Xft.h>],[
 	XftPattern  *pat = XftNameParse ("name");
-	],[cf_cv_x_freetype=yes],[cf_cv_x_freetype=no])
+	],[],[cf_cv_x_freetype_libs=])
 	LIBS="$cf_save_LIBS"
+	CPPFLAGS="$cf_save_INCS"
 ])
-if test "$cf_cv_x_freetype" = yes ; then
-	LIBS="$cf_freetype_libs $LIBS"
+
+if test -n "$cf_cv_x_freetype_libs" ; then
+	LIBS="$cf_cv_x_freetype_libs $LIBS"
+	CPPFLAGS="$cf_cv_x_freetype_incs $CPPFLAGS"
 	AC_DEFINE(XRENDERFONT)
+else
+	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
+fi
 else
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
 fi

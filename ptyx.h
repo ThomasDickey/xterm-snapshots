@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.110 2003/10/27 01:07:57 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.111 2003/12/31 17:12:28 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey

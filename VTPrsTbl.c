@@ -2,7 +2,7 @@
  *	$Xorg: VTPrsTbl.c,v 1.3 2000/08/17 19:55:07 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.24 2002/12/08 22:31:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.25 2003/12/31 17:12:26 dickey Exp $ */
 /*
  *
  * Copyright 1999-2000 by Thomas E. Dickey

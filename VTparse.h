@@ -2,7 +2,7 @@
  *	$Xorg: VTparse.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/VTparse.h,v 3.18 2003/10/27 01:07:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/VTparse.h,v 3.19 2003/12/31 17:12:26 dickey Exp $ */
 /*
  * Copyright 2002 by Thomas E. Dickey
  *

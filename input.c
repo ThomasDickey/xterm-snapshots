@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.67 2003/12/03 00:22:57 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.69 2003/12/31 17:12:28 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey

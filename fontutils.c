@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.42 2003/10/28 23:11:58 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.43 2003/12/31 17:12:28 dickey Exp $
  */
 
 /************************************************************
@@ -1053,7 +1053,7 @@ HandleLoadVTFonts(Widget w GCC_UNUSED,
     strcpy(myClass, convert);
     if (*param_count == 1
 	&& islower(CharOf(myClass[0])))
-	myClass[0] = toupper(myClass[0]);
+	myClass[0] = toupper(CharOf(myClass[0]));
 
     if (xtermLoadVTFonts(term, myName, myClass)) {
 	/*

@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.81 2003/10/27 01:07:57 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.82 2003/12/31 17:12:28 dickey Exp $ */
 
 /*
  *
