@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.38 1999/09/27 06:30:23 dawes Exp $
+ *	$XFree86: xc/programs/xterm/resize.c,v 3.39 1999/10/13 04:21:46 dawes Exp $
  */
 
 /*

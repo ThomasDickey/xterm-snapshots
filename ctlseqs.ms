@@ -1,7 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
 .\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.29 1999/09/27 06:29:05 dawes Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.30 1999/10/13 04:20:46 dawes Exp $
 .\"
 .\"
 .\" Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
@@ -760,6 +760,8 @@ Media Copy (MC, DEC-specific)
   \*(Ps = \*1 \(-> Print line containing cursor
   \*(Ps = \*4 \(-> Turn off autoprint mode
   \*(Ps = \*5 \(-> Turn on autoprint mode
+  \*(Ps = \*1 \*0 \(-> Print composed display, ignores DECPEX
+  \*(Ps = \*1 \*1 \(-> Print all pages
 .
 .IP \\*(Cs\\*(Pm\\*s\\*l
 Reset Mode (RM)
@@ -900,6 +902,10 @@ or
   \*(Ps = \*2\*6 \(-> Report Keyboard status as
 .br
 \*(Cs\*?\*2\*7\*s\*;\*s\*1\*s\*;\*s\*0\*s\*;\*s\*0\*s\*n (North American)
+.br
+\*(Cs\*?\*5\*3\*s\*n Locator available, if compiled-in, or
+.br
+\*(Cs\*?\*5\*0\*s\*n No Locator, if not.
 .
 .IP \\*(Cs\\*s\\*!\\*p
 Soft terminal reset (DECSTR)

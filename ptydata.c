@@ -51,8 +51,6 @@ authorization.
 #endif
 #endif
 
-#define UTF8_CODE(code) ((code) | (screen->utf8_controls ? 0 : UCS_LIMIT))
-
 int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 {
     int i;
@@ -105,14 +103,30 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 		    unsigned c = data->buf[i];
 		    /* Combine UTF-8 into Unicode */
 		    if (c < 0x80) {
+			/* We received an ASCII character */
 			if (screen->utf_count > 0)
-			    data->buf2[j++] = UCS_REPL;
+			    data->buf2[j++] = UCS_REPL; /* prev. sequence incomplete */
 			data->buf2[j++] = c;
 			screen->utf_count = 0;
 		    } else if (c < 0xc0) {
+			/* We received a continuation byte */
 			if (screen->utf_count < 1) {
-			    data->buf2[j++] = UCS_REPL;
+			    data->buf2[j++] = UCS_REPL; /* ... unexpectedly */
 			} else {
+			    /* Check for overlong UTF-8 sequences for which a shorter
+			     * encoding would exist and replace them with UCS_REPL.
+			     * An overlong UTF-8 sequence can have any of the following
+			     * forms:
+			     *   1100000x 10xxxxxx
+			     *   11100000 100xxxxx 10xxxxxx
+			     *   11110000 1000xxxx 10xxxxxx 10xxxxxx
+			     *   11111000 10000xxx 10xxxxxx 10xxxxxx 10xxxxxx
+			     *   11111100 100000xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+			     */
+			    if (!screen->utf_char && !((c & 0x7f) >> (7 - screen->utf_count))) {
+				screen->utf_char = UCS_REPL;
+			    }
+			    /* characters outside UCS-2 become UCS_REPL */
 			    if (screen->utf_char > 0x03ff) {
 				/* value would be >0xffff */
 				screen->utf_char = UCS_REPL;
@@ -122,14 +136,17 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 			    }
 			    screen->utf_count--;
 			    if (screen->utf_count == 0)
-				data->buf2[j++] = UTF8_CODE(c = screen->utf_char);
+				data->buf2[j++] = screen->utf_char;
 			}
 		    } else {
+			/* We received a sequence start byte */
 			if (screen->utf_count > 0)
-			    data->buf2[j++] = UCS_REPL;
+			    data->buf2[j++] = UCS_REPL; /* prev. sequence incomplete */
 			if (c < 0xe0) {
 			    screen->utf_count = 1;
 			    screen->utf_char = (c & 0x1f);
+			    if (!(c & 0x1e))
+			      screen->utf_char = UCS_REPL; /* overlong sequence */
 			} else if (c < 0xf0) {
 			    screen->utf_count = 2;
 			    screen->utf_char = (c & 0x0f);
@@ -147,7 +164,7 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 			    screen->utf_count = 0;
 			}
 		    }
-		}
+		} /* for (i = 0; i < data->cnt; i++) */
 		TRACE(("UTF-8 count %d, char %04X input %d/%d bytes\n",
 			screen->utf_count,
 			screen->utf_char,
@@ -156,7 +173,7 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 	    } else {
 		for (i = 0; i < data->cnt; i++)
 		    data->ptr[i] = data->buf[i];
-	    }
+	    } /* if (screen->utf8_mode) else */
 #endif
 	    /* read from pty was successful */
 	    if (!screen->output_eight_bits) {
@@ -167,9 +184,7 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 #if OPT_TRACE
 	    for (i = 0; i < data->cnt; i++) {
 		if (!(i%8)) TRACE(("%s", i ? "\n    " : "READ"))
-		TRACE((" %c%04X",
-			(UCS_LIMIT & data->ptr[i]) ? '*' : ' ',
-			data->ptr[i] & ~UCS_LIMIT))
+		TRACE((" %04X", data->ptr[i]))
 	    }
 	    TRACE(("\n"))
 #endif

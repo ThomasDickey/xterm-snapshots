@@ -674,7 +674,7 @@ static void do_print (
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    xtermPrintScreen ();
+    xtermPrintScreen (TRUE);
 }
 
 

@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.100 1999/09/27 06:30:20 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.101 1999/10/13 04:21:44 dawes Exp $ */
 
 
 /* main.c */
@@ -2473,8 +2473,8 @@ spawn (void)
 #endif /* PUCC_PTYD */
 		{
 			/*  no ptys! */
-			(void) fprintf(stderr, "%s: no available ptys\n",
-				       xterm_name);
+			(void) fprintf(stderr, "%s: no available ptys: %s\n",
+				       xterm_name, strerror(errno));
 			exit (ERROR_PTYS);
 		}
 #ifdef PUCC_PTYD
@@ -3079,14 +3079,14 @@ spawn (void)
 #ifdef TIOCCONS
 			int on = 1;
 			if (ioctl (tty, TIOCCONS, (char *)&on) == -1)
-			    fprintf(stderr, "%s: cannot open console\n",
-				    xterm_name);
+			    fprintf(stderr, "%s: cannot open console: %s\n",
+				    xterm_name, strerror(errno));
 #endif
 #ifdef SRIOCSREDIR
 			int fd = open("/dev/console",O_RDWR);
 			if (fd == -1 || ioctl (fd, SRIOCSREDIR, tty) == -1)
-			    fprintf(stderr, "%s: cannot open console\n",
-				    xterm_name);
+			    fprintf(stderr, "%s: cannot open console: %s\n",
+				    xterm_name, strerror(errno));
 			(void) close (fd);
 #endif
 		    }
@@ -3178,7 +3178,7 @@ spawn (void)
 		    (void) close(0);
 
 		    if (open ("/dev/tty", O_RDWR)) {
-			fprintf(stderr, "cannot open /dev/tty\n");
+			fprintf(stderr, "cannot open /dev/tty: %s\n", strerror(errno));
 			exit(1);
 		    }
 		    (void) close(1);
@@ -3545,8 +3545,8 @@ spawn (void)
 		if (command_to_exec) {
 			execvp(*command_to_exec, command_to_exec);
 			/* print error message on screen */
-			fprintf(stderr, "%s: Can't execvp %s\n", xterm_name,
-			 *command_to_exec);
+			fprintf(stderr, "%s: Can't execvp %s: %s\n",
+				xterm_name, *command_to_exec, strerror(errno));
 		}
 
 #ifdef USE_SYSV_SIGHUP
@@ -3585,7 +3585,8 @@ spawn (void)
 			0);
 
 		/* Exec failed. */
-		fprintf (stderr, "%s: Could not exec %s!\n", xterm_name, ptr);
+		fprintf (stderr, "%s: Could not exec %s: %s\n", xterm_name,
+			ptr, strerror(errno));
 		(void) sleep(5);
 		exit(ERROR_EXEC);
 	    }				/* end if in child after fork */
@@ -3623,9 +3624,9 @@ spawn (void)
 			(void) close(screen->respond);
 			if (get_pty(&screen->respond)) {
 			    /* no more ptys! */
-			    (void) fprintf(stderr,
-			      "%s: child process can find no available ptys\n",
-			      xterm_name);
+			    fprintf(stderr,
+				    "%s: child process can find no available ptys: %s\n",
+				    xterm_name, strerror(errno));
 			    handshake.status = PTY_NOMORE;
 			    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
 			    exit (ERROR_PTYS);

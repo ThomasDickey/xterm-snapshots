@@ -97,6 +97,7 @@ static void printLine(int row, int chr)
 	Char *c = SCRN_BUF_CHARS(screen, row);
 	Char *a = SCRN_BUF_ATTRS(screen, row);
 	Char attr = 0;
+	unsigned ch;
 	int last = screen->max_col + 1;
 	int col;
 #if OPT_ISO_COLORS && OPT_PRINT_COLORS
@@ -109,9 +110,15 @@ static void printLine(int row, int chr)
 #endif
 	int fg = -1, last_fg = -1;
 	int bg = -1, last_bg = -1;
-	int cs = CSET_IN,last_cs = CSET_IN;
+	int cs = CSET_IN;
+	int last_cs = CSET_IN;
 
-	TRACE(("printLine(row=%d, chr=%d)\n", row, chr));
+	TRACE(("printLine(row=%d, top=%d:%d, chr=%d):%s\n",
+		row, screen->topline, screen->max_row, chr,
+		visibleChars(PAIRED_CHARS(c,
+				screen->utf8_mode
+					? SCRN_BUF_WIDEC(screen,row)
+					: 0), last)));
 
 	if_OPT_EXT_COLORS(screen,{
 		fbf = SCRN_BUF_FGRND(screen, row);
@@ -132,7 +139,10 @@ static void printLine(int row, int chr)
 			send_SGR(0,-1,-1);
 		}
 		for (col = 0; col < last; col++) {
-			Char ch = c[col];
+			ch = c[col];
+			if_OPT_WIDE_CHARS(screen,{
+				ch = getXtermCell (screen, row, col);
+			})
 #if OPT_PRINT_COLORS
 			if_OPT_EXT_COLORS(screen,{
 				if (screen->print_attributes > 1) {
@@ -171,6 +181,11 @@ static void printLine(int row, int chr)
 			if (ch == 0)
 				ch = ' ';
 
+#if OPT_WIDE_CHARS
+			if (screen->utf8_mode)
+			    cs = CSET_IN;
+			else
+#endif
 			cs = (ch >= ' ' && ch != 0x7f) ? CSET_IN : CSET_OUT;
 			if (last_cs != cs) {
 				if (screen->print_attributes) {
@@ -201,15 +216,43 @@ static void printLine(int row, int chr)
 	charToPrinter(chr);
 }
 
-void xtermPrintScreen(void)
+void xtermPrintScreen(Boolean use_DECPEX)
 {
 	register TScreen *screen = &term->screen;
-	int top = screen->printer_extent ? 0 : screen->top_marg;
-	int bot = screen->printer_extent ? screen->max_row : screen->bot_marg;
+	Boolean extent = (use_DECPEX && screen->printer_extent);
+	int top = extent ? 0 : screen->top_marg;
+	int bot = extent ? screen->max_row : screen->bot_marg;
 	int was_open = initialized;
 
 	TRACE(("xtermPrintScreen, rows %d..%d\n", top, bot))
 
+	while (top <= bot)
+		printLine(top++, '\n');
+	if (screen->printer_formfeed)
+		charToPrinter('\f');
+
+	if (!was_open || screen->printer_autoclose) {
+		closePrinter();
+	}
+}
+
+/*
+ * If the alternate screen is active, we'll print only that.  Otherwise, print
+ * the normal screen plus all scrolled-back lines.  The distinction is made
+ * because the normal screen's buffer is part of the overall scrollback buffer.
+ */
+static void
+xtermPrintEverything(void)
+{
+	register TScreen *screen = &term->screen;
+	int top = 0;
+	int bot = screen->max_row;
+	int was_open = initialized;
+
+	if (! screen->altbuf)
+		top = - screen->savedlines;
+
+	TRACE(("xtermPrintEverything, rows %d..%d\n", top, bot))
 	while (top <= bot)
 		printLine(top++, '\n');
 	if (screen->printer_formfeed)
@@ -325,6 +368,13 @@ static void charToPrinter(int chr)
 		initialized++;
 	}
 	if (Printer != 0) {
+#if OPT_WIDE_CHARS
+		if (chr > 127) {
+			Char temp[10];
+			*convertToUTF8(temp, chr) = 0;
+			fputs(temp, Printer);
+		} else
+#endif
 		fputc(chr, Printer);
 		if (isForm(chr))
 			fflush(Printer);
@@ -362,12 +412,18 @@ void xtermMediaControl (int param, int private_seq)
 			screen->printer_controlmode = 1;
 			TRACE(("Set autoprint mode\n"))
 			break;
+		case  10:	/* VT320 */
+			xtermPrintScreen(FALSE);
+			break;
+		case  11:	/* VT320 */
+			xtermPrintEverything();
+			break;
 		}
 	} else {
 		switch (param) {
 		case -1:
 		case  0:
-			xtermPrintScreen();
+			xtermPrintScreen(TRUE);
 			break;
 		case  4:
 			screen->printer_controlmode = 0;

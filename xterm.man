@@ -1367,15 +1367,6 @@ When set via a resource, \fIxterm\fP cannot be switched via control sequences ou
 The default is ``0'' (off).
 Any other value will turn on UTF-8 mode.
 .TP 8
-.B "utf8controls (\fPclass\fB Utf8controls)"
-If \fIxterm\fP is running in UTF-8 mode, this specifies whether to
-interpret UTF-8 forms as control characters,
-e.g., 0xC0 0x8A (which is interpreted as U+000A) as a C0 control.
-The Unicode standard does not cover this area, leaving it unspecified for
-higher level protocols.
-Your application may require this interpretation.
-The default is ``false.''
-.TP 8
 .B "visualBell (\fPclass\fB VisualBell)"
 Specifies whether or not a visible bell (i.e. flashing) should be used instead
 of an audible bell when Control-G is received.  The default is ``false.''

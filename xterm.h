@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.47 1999/09/27 06:30:24 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.48 1999/10/13 04:21:48 dawes Exp $ */
 
 /************************************************************
 
@@ -165,8 +165,15 @@ extern int errno;
 #endif
 
 #ifdef USE_SYS_SELECT_H
+
 #include <sys/types.h>
+
+#if defined(AIXV3) && defined(NFDBITS)
+#undef NFDBITS	/* conflict between X11/Xpoll.h and sys/select.h */
+#endif
+
 #include <sys/select.h>
+
 #endif
 
 #include <setjmp.h>
@@ -271,7 +278,6 @@ extern int errno;
 #define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
 #define XtNutf8			"utf8"
-#define XtNutf8controls		"utf8controls"
 #define XtNvisualBell		"visualBell"
 #define XtNwideChars		"wideChars"
 #define XtNxmcAttributes	"xmcAttributes"
@@ -345,7 +351,6 @@ extern int errno;
 #define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
-#define XtCUtf8controls		"Utf8controls"
 #define XtCVisualBell		"VisualBell"
 #define XtCWideChars		"WideChars"
 #define XtCXmcAttributes	"XmcAttributes"
@@ -558,7 +563,7 @@ extern void FlushLog (TScreen *screen);
 extern int xtermPrinterControl (int chr);
 extern void xtermAutoPrint (int chr);
 extern void xtermMediaControl (int param, int private_seq);
-extern void xtermPrintScreen (void);
+extern void xtermPrintScreen (Boolean use_DECPEX);
 
 /* ptydata.c */
 extern int getPtyData (TScreen *screen, fd_set *select_mask, PtyData *data);

@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.34 1999/09/27 06:30:18 dawes Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.35 1999/10/13 04:21:43 dawes Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -67,7 +67,6 @@ CF_FUNC_TGETENT
 CF_UTMP
 
 ###	checks for structures
-CF_TYPE_FD_SET
 CF_POSIX_VDISABLE
 
 ###	checks for external data
@@ -103,6 +102,7 @@ AC_CHECK_HEADERS( \
 	)
 
 CF_X_ATHENA
+CF_TYPE_FD_SET
 
 CPPFLAGS="$cf_save_CPPFLAGS"
 
