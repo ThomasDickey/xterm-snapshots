@@ -3122,7 +3122,7 @@ spawn (void)
 			       sizeof(utmp.ut_name));
 
 		utmp.ut_pid = getpid();
-#if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2)
+#if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 		utmp.ut_session = getsid(0);
 		utmp.ut_xtime = time ((time_t *) 0);
 		utmp.ut_tv.tv_usec = 0;
@@ -3138,7 +3138,7 @@ spawn (void)
 		if (term->misc.login_shell)
 		    updwtmpx(WTMPX_FILE, &utmp);
 #else
-#if defined(linux) && __GLIBC__ >= 2
+#if defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
 		if (term->misc.login_shell)
 		    updwtmp(etc_wtmp, &utmp);
 #else
@@ -3899,7 +3899,7 @@ Exit(int n)
 #endif
 	char* ptyname;
 	char* ptynameptr = 0;
-#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && __GLIBC__ >= 2)
+#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 	int fd;			/* for /etc/wtmp */
 	int i;
 #endif
@@ -3931,7 +3931,7 @@ Exit(int n)
 	    /* write it out only if it exists, and the pid's match */
 	    if (utptr && (utptr->ut_pid == screen->pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
-#if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2)
+#if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 		    utptr->ut_session = getsid(0);
 		    utptr->ut_xtime = time ((time_t *) 0);
 		    utptr->ut_tv.tv_usec = 0;
@@ -3945,7 +3945,7 @@ Exit(int n)
 		    if (term->misc.login_shell)
 			updwtmpx(WTMPX_FILE, utptr);
 #else
-#if defined(linux) && __GLIBC__ >= 2
+#if defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
 		    strncpy (utmp.ut_line, utptr->ut_line, sizeof (utmp.ut_line));
 		    if (term->misc.login_shell)
 			updwtmp(etc_wtmp, utptr);

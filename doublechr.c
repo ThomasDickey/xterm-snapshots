@@ -36,6 +36,7 @@ authorization.
 
 #include <xterm.h>
 #include <data.h>
+#include <fontutils.h>
 
 /*
  * The first column is all that matters for double-size characters (since the
@@ -50,10 +51,19 @@ repaint_line(unsigned newChrSet)
 {
 	register TScreen *screen = &term->screen;
 	int curcol = screen->cur_col;
+	int currow = screen->cur_row;
 	int len = screen->max_col + 1;
 	int width = len;
+	unsigned oldChrSet = SCRN_BUF_CSETS(screen, currow)[0];
 
-	TRACE(("repaint_line(%2d,%2d) (%d)\n", screen->cur_row, screen->cur_col, newChrSet))
+	/*
+	 * Ignore repetition.
+	 */
+	if (oldChrSet == newChrSet)
+		return;
+
+	TRACE(("repaint_line(%2d,%2d) (%d)\n", currow, screen->cur_col, newChrSet))
+	HideCursor();
 
 	/* If switching from single-width, keep the cursor in the visible part
 	 * of the line.
@@ -64,11 +74,24 @@ repaint_line(unsigned newChrSet)
 			curcol = width;
 	}
 
+	/*
+	 * ScrnRefresh won't paint blanks for us if we're switching between a
+	 * single-size and double-size font.
+	 */
+	if (CSET_DOUBLE(oldChrSet) != CSET_DOUBLE(newChrSet)) {
+		ClearCurBackground(
+			screen,
+			CursorY (screen, currow),
+			CurCursorX (screen, currow, 0),
+			FontHeight(screen),
+			len * CurFontWidth(screen,currow));
+	}
+
 	/* FIXME: do VT220 softchars allow double-sizes? */
-	memset(SCRN_BUF_CSETS(screen, screen->cur_row), newChrSet, len);
+	memset(SCRN_BUF_CSETS(screen, currow), newChrSet, len);
 
 	screen->cur_col = 0;
-	ScrnRefresh (screen, screen->cur_row, 0, 1, len, True);
+	ScrnRefresh (screen, currow, 0, 1, len, True);
 	screen->cur_col = curcol;
 }
 #endif
@@ -106,3 +129,53 @@ xterm_DECDWL(void)
 	repaint_line(CSET_DWL);
 #endif
 }
+
+
+#if OPT_DEC_CHRSET
+/*
+ * Lookup/cache a GC for the double-size character display.  We save up to
+ * NUM_CHRSET values.
+ */
+GC
+xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
+{
+	XGCValues gcv;
+	register TScreen *screen = &term->screen;
+	unsigned long mask = (GCForeground | GCBackground | GCFont);
+	int n = (chrset % NUM_CHRSET);
+	char *name = xtermSpecialFont(flags, chrset);
+
+	if (name == 0)
+		return 0;
+
+	if (screen->double_fn[n] != 0) {
+		if (!strcmp(screen->double_fn[n], name)) {
+			if (screen->double_fs[n] != 0) {
+				XCopyGC(screen->display, old_gc, ~GCFont, screen->double_gc[n]);
+				return screen->double_gc[n];
+			}
+		}
+	}
+	screen->double_fn[n] = name;
+
+	if (screen->double_fs[n] != 0) {
+		XFreeFont(screen->display, screen->double_fs[n]);
+		screen->double_fs[n] = 0;
+	}
+
+	TRACE(("xterm_DoubleGC %s %d: %s\n", flags&BOLD ? "BOLD" : "NORM", chrset, name))
+
+	if ((screen->double_fs[n] = XLoadQueryFont (screen->display, name)) == 0)
+		return 0;
+	TRACE(("-> OK\n"))
+
+	gcv.graphics_exposures = TRUE;	/* default */
+	gcv.font       = screen->double_fs[n]->fid;
+	gcv.foreground = screen->foreground;
+	gcv.background = term->core.background_pixel;
+
+	screen->double_gc[n] = XCreateGC (screen->display, TextWindow(screen), mask, &gcv);
+	XCopyGC(screen->display, old_gc, ~GCFont, screen->double_gc[n]);
+	return screen->double_gc[n];
+}
+#endif

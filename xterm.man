@@ -58,7 +58,9 @@ menu in the 4014 window.
 .SH EMULATIONS
 The VT102 emulation is fairly complete, but does not support
 autorepeat.
-Double-size and blinking characters are partially implemented;
+Double-size characters are displayed properly if your font server supports
+scalable fonts.
+Blinking characters are partially implemented;
 the emulation is functional but does not have the appearance of a real VT102.
 The VT220 emulation does not support soft fonts, it is otherwise complete.
 .IR Termcap (5)

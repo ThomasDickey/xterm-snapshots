@@ -536,10 +536,8 @@ main (int argc, char **argv)
 			 setname, termcap);
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
-#ifndef SVR4
 		printf ("%sCOLUMNS=%d;\nLINES=%d;\nexport COLUMNS LINES;\n",
 			setname, cols, rows);
-#endif /* !SVR4 */
 #endif	/* USE_TERMINFO */
 
 	} else {		/* not Bourne shell */
@@ -550,10 +548,8 @@ main (int argc, char **argv)
 			 setname, termcap);
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
-#ifndef SVR4
 		printf ("set noglob;\n%ssetenv COLUMNS '%d';\nsetenv LINES '%d';\nunset noglob;\n",
 			setname, cols, rows);
-#endif /* !SVR4 */
 #endif	/* USE_TERMINFO */
 	}
 	exit(0);

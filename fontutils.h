@@ -43,4 +43,8 @@ extern int xtermLoadFont (TScreen *screen, char *nfontname, char *bfontname, Boo
 extern void xtermUpdateFontInfo (TScreen *screen, Bool doresize);
 extern void xtermSetCursorBox (TScreen *screen);
 
+#if OPT_DEC_CHRSET
+extern char *xtermSpecialFont(unsigned atts, unsigned chrset);
+#endif
+
 #endif /* included_fontutils_h */
