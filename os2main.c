@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.41 2000/11/01 01:12:41 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.43 2000/12/30 19:15:46 dickey Exp $ */
 
 /***********************************************************
 
@@ -417,6 +417,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"+im",		"*useInsertMode", XrmoptionNoArg,	(caddr_t) "off"},
 {"-vb",		"*visualBell",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+vb",		"*visualBell",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-pob",	"*popOnBell",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+pob",	"*popOnBell",	XrmoptionNoArg,		(caddr_t) "off"},
 #if OPT_WIDE_CHARS
 {"-wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -532,6 +534,7 @@ static struct _options {
 { "-/+ulc",                "turn off/on display of underline as color" },
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 { "-/+vb",                 "turn on/off visual bell" },
+{ "-/+pob",                "turn on/off pop on bell" },
 #if OPT_WIDE_CHARS
 { "-/+wc",                 "turn on/off wide-character mode" },
 #endif

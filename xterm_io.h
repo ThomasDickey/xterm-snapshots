@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.1 2000/12/06 10:19:43 dickey Exp $
+ * $XFree86: xc/programs/xterm/xterm_io.h,v 1.2 2000/12/30 19:15:48 dickey Exp $
  */
 
 /*
@@ -63,7 +63,7 @@
 #define USE_SYSV_TERMIO
 #endif
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #define USE_POSIX_TERMIOS
 #endif
 
@@ -219,6 +219,10 @@ extern int ptioctl(int fd, int func, void* data);
 #define ioctl ptioctl
 
 #endif /* __EMX__ */
+
+#ifdef __hpux
+#include <sys/bsdtty.h>		/* defines TIOCSLTC */
+#endif
 
 #ifdef ISC
 #define TIOCGPGRP TCGETPGRP

@@ -1,4 +1,4 @@
-! $XFree86: xc/programs/xterm/xterm.dat,v 1.2 2000/06/14 00:16:21 dawes Exp $
+! $XFree86: xc/programs/xterm/xterm.dat,v 1.3 2000/12/30 19:15:47 dickey Exp $
 !
 *title: Xterm
 *iconName: Xterm
@@ -58,6 +58,7 @@ XTerm.JoinSession:False
 *vtMenu*allow132*Label: Allow 80/132 Column Switching
 *vtMenu*cursesemul*Label:  Enable Curses Emulation
 *vtMenu*visualbell*Label:  Enable Visual Bell
+*vtMenu*poponbell*Label:  Enable Pop on Bell
 *vtMenu*marginbell*Label:  Enable Margin Bell
 *vtMenu*cursorblink*Label: Enable Blinking Cursor
 *vtMenu*titeInhibit*Label:  Enable Alternate Screen Switching

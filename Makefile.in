@@ -1,4 +1,4 @@
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.34 2000/12/06 10:19:43 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.35 2000/12/30 19:15:44 dickey Exp $ ##
 
 SHELL		= /bin/sh
 
@@ -6,24 +6,25 @@ SHELL		= /bin/sh
 
 srcdir		= @srcdir@
 VPATH  		= @srcdir@
+x		= #@PROG_EXT@
 
 CC		= @CC@
 CPP		= @CPP@
 AWK		= @AWK@
 LINK		= $(CC) $(CFLAGS)
+
 INSTALL		= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 INSTALL_DATA	= @INSTALL_DATA@
+transform	= @program_transform_name@
 
-X_CFLAGS	= @X_CFLAGS@
 X_LIBS		= @X_LIBS@
 X_EXTRA_LIBS	= @X_EXTRA_LIBS@
 
-IMAKE_CFLAGS	= @IMAKE_CFLAGS@
 EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
 
-CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H $(X_CFLAGS) $(IMAKE_CFLAGS) @CPPFLAGS@
+CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@
 CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS)
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
@@ -71,7 +72,7 @@ EXTRAOBJ	= @EXTRAOBJS@
            OBJS = $(OBJS1) $(OBJS2)
            HDRS = VTparse.h data.h error.h main.h menu.h proto.h \
                   ptyx.h version.h xstrings.h xterm.h $(EXTRAHDR)
-       PROGRAMS = xterm resize
+       PROGRAMS = xterm$x resize$x
 
 all:	$(PROGRAMS)
 
@@ -93,10 +94,10 @@ main.o : main.h version.h
 $(OBJS1) : ptyx.h xtermcfg.h
 main.o resize.o screen.o : xterm_io.h
 
-xterm : $(OBJS1)
+xterm$x : $(OBJS1)
 	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
 
-resize : $(OBJS2)
+resize$x : $(OBJS2)
 	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
 256colres.h : $(srcdir)/256colres.pl
@@ -109,6 +110,12 @@ resize : $(OBJS2)
 
 charproc.o : main.h @CHARPROC_DEPS@
 
+TRANSFORM = sed 's/$x$$//'|sed '$(transform)'|sed 's/$$/$x/'
+actual_xterm  = `echo xterm|    sed '$(transform)'`
+actual_resize = `echo resize|   sed '$(transform)'`
+binary_xterm  = `echo xterm$x|  $(TRANSFORM)`
+binary_resize = `echo resize$x| $(TRANSFORM)`
+
 install \
 install-bin \
 install-man \
@@ -118,15 +125,15 @@ install-dirs :: $(INSTALL_DIRS)
 
 install \
 install-bin \
-install-full :: xterm resize
-	$(srcdir)/sinstall.sh "$(INSTALL_PROGRAM)" xterm  @XTERM_PATH@ $(BINDIR)/xterm
-	$(INSTALL_PROGRAM) -s -m  755 resize $(BINDIR)/resize
+install-full :: xterm$x resize$x
+	$(srcdir)/sinstall.sh "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
+	$(INSTALL_PROGRAM) -s -m  755 resize$x $(BINDIR)/$(binary_resize)
 
 install \
 install-man \
 install-full ::
-	$(INSTALL_DATA) $(srcdir)/xterm.man    $(MANDIR)/xterm.$(manext)
-	$(INSTALL_DATA) $(srcdir)/resize.man   $(MANDIR)/resize.$(manext)
+	$(INSTALL_DATA) $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)
+	$(INSTALL_DATA) $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext)
 
 install \
 install-app \
@@ -158,10 +165,10 @@ install-tc ::
 installdirs: $(INSTALL_DIRS)
 
 uninstall:
-	-$(RM) $(BINDIR)/xterm
-	-$(RM) $(BINDIR)/resize
-	-$(RM) $(MANDIR)/xterm.$(manext)
-	-$(RM) $(MANDIR)/resize.$(manext)
+	-$(RM) $(BINDIR)/$(binary_xterm)
+	-$(RM) $(BINDIR)/$(binary_resize)
+	-$(RM) $(MANDIR)/$(actual_xterm).$(manext)
+	-$(RM) $(MANDIR)/$(actual_resize).$(manext)
 	-$(RM) $(APPSDIR)/$(CLASS)
 	-$(RM) $(APPSDIR)/$(CLASS)-color
 

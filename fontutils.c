@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.27 2000/12/03 19:09:26 keithp Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.30 2000/12/30 19:15:45 dickey Exp $
  */
 
 /************************************************************
@@ -454,13 +454,17 @@ got_bold_font(Display *dpy, XFontStruct *fs, char *requested)
 static int
 same_font_size(XFontStruct *nfs, XFontStruct *bfs)
 {
+	TRACE(("same_font_size height %d/%d, min %d/%d max %d/%d\n",
+		nfs->ascent + nfs->descent,           
+		bfs->ascent + bfs->descent,
+		nfs->min_bounds.width, bfs->min_bounds.width,
+		nfs->max_bounds.width, bfs->max_bounds.width));
 	return (
-		nfs->ascent           == bfs->ascent
-	 &&	nfs->descent          == bfs->descent
-	 &&	nfs->min_bounds.width == bfs->min_bounds.width
-	 &&	nfs->min_bounds.width == bfs->min_bounds.width
-	 &&	nfs->max_bounds.width == bfs->max_bounds.width
-	 &&	nfs->max_bounds.width == bfs->max_bounds.width);
+	 (nfs->ascent + nfs->descent) == (bfs->ascent + bfs->descent)
+	 &&  (	nfs->min_bounds.width == bfs->min_bounds.width
+	   ||	nfs->min_bounds.width == bfs->min_bounds.width + 1)
+	 &&  (	nfs->max_bounds.width == bfs->max_bounds.width
+	   ||	nfs->max_bounds.width == bfs->max_bounds.width + 1));
 }
 
 /*
@@ -469,7 +473,9 @@ same_font_size(XFontStruct *nfs, XFontStruct *bfs)
 static int
 is_fixed_font(XFontStruct *fs)
 {
-	return (fs->min_bounds.width == fs->max_bounds.width);
+	if (fs)
+		return (fs->min_bounds.width == fs->max_bounds.width);
+	return 1;
 }
 
 /*
@@ -620,30 +626,32 @@ xtermLoadFont (
 		if (bfontname != 0) {
 			return xtermLoadFont (screen,
 					      VT_FONTSET(nfontname,
-					      NULL,	/* throw it away! */
-					      wfontname,
-					      wbfontname),
-					      doresize,
+						         NULL,	/* throw it away! */
+						         wfontname,
+						         wbfontname),
+						         doresize,
 					      fontnum);
 		}
 	}
 
 	if_OPT_WIDE_CHARS(screen, {
-	  if (!same_font_size(wfs, wbfs)
-	      && (is_fixed_font(wfs) && is_fixed_font(wbfs))) {
-	    XFreeFont(screen->display, wbfs);
-	    wbfs = wfs;
-	    TRACE(("...fixing mismatched normal/bold wide fonts\n"));
-	    if (bfontname != 0) {
-	      return xtermLoadFont (screen,
-				    VT_FONTSET(nfontname,
-					       bfontname,
-					       wfontname,
-					       NULL),
-				    doresize,
-				    fontnum);
-	    }
-	  }
+		if (wfs != 0
+		 && wbfs != 0
+		 && !same_font_size(wfs, wbfs)
+		 && (is_fixed_font(wfs) && is_fixed_font(wbfs))) {
+			XFreeFont(screen->display, wbfs);
+			wbfs = wfs;
+			TRACE(("...fixing mismatched normal/bold wide fonts\n"));
+			if (bfontname != 0) {
+				return xtermLoadFont (screen,
+						      VT_FONTSET(nfontname,
+								 bfontname,
+								 wfontname,
+								 NULL),
+						      doresize,
+						      fontnum);
+			}
+		}
 	})
 
 	/*
@@ -662,9 +670,11 @@ xtermLoadFont (
 	}
 
 	if_OPT_WIDE_CHARS(screen, {
-	  if (!is_fixed_font(wfs)
+	  if (wfs != 0
+	   && wbfs != 0
+	   && (!is_fixed_font(wfs)
 	      || !is_fixed_font(wbfs)
-	      || wfs->max_bounds.width != wbfs->max_bounds.width) {
+	      || wfs->max_bounds.width != wbfs->max_bounds.width)) {
 	    TRACE(("Proportional font! wide %d/%d, wide bold %d/%d\n",
 		   wfs->min_bounds.width,
 		   wfs->max_bounds.width,
@@ -788,7 +798,7 @@ xtermLoadFont (
 				fontMenuEntries[fontMenu_fontescape].widget,
 				TRUE);
 		}
-#if OPT_SHIFT_KEYS
+#if OPT_SHIFT_FONTS
 		screen->menu_font_sizes[fontnum] = FontSize(nfs);
 #endif
 	}
@@ -1225,7 +1235,7 @@ xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y)
 }
 #endif
 
-#if OPT_SHIFT_KEYS
+#if OPT_SHIFT_FONTS
 static XFontStruct *
 xtermFindFont (
 	TScreen *screen,
@@ -1251,6 +1261,7 @@ static void
 lookupFontSizes(TScreen *screen)
 {
 	int n;
+
 	for (n = 0; n < NMENUFONTS; n++) {
 		if (screen->menu_font_sizes[n] == 0) {
 			XFontStruct *fs = xtermFindFont(screen, n);
@@ -1276,6 +1287,8 @@ HandleLargerFont(
 	TScreen *screen = &term->screen;
 	int n, m;
 
+	if (!term->misc.shift_fonts)
+		return;
 	lookupFontSizes(screen);
 	for (n = 0, m = -1; n < NMENUFONTS; n++) {
 		if ((screen->menu_font_sizes[n] > screen->menu_font_sizes[screen->menu_font_number])
@@ -1301,6 +1314,8 @@ HandleSmallerFont(
 	TScreen *screen = &term->screen;
 	int n, m;
 
+	if (!term->misc.shift_fonts)
+		return;
 	lookupFontSizes(screen);
 	for (n = 0, m = -1; n < NMENUFONTS; n++) {
 		if ((screen->menu_font_sizes[n] < screen->menu_font_sizes[screen->menu_font_number])

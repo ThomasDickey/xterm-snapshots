@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.52 2000/11/28 23:07:33 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.54 2000/12/30 19:15:44 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1741,7 +1741,7 @@ ComputeSelect(
 				cclass = class_of(screen,startSRow,startSCol);
 				do {
 				    --startSCol;
-				    if (startSCol <= 0
+				    if (startSCol < 0
 				     && ScrnTstWrapped(screen, startSRow - 1)) {
 					--startSRow;
 					startSCol = LastTextCol(startSRow);
@@ -2351,6 +2351,13 @@ SaveText(
 	 */
 	if (c == HIDDEN_CHAR && iswide(previous)) {
 	    previous = c;
+	    /* Combining characters attached to double-width characters
+	       are in memory attached to the HIDDEN_CHAR */
+	    if (c_1) {
+		lp = convertToUTF8(lp, c_1);
+		if (c_2)
+		    lp = convertToUTF8(lp, c_2);
+	    }
 	    continue;
 	}
 	previous = c;
