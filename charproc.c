@@ -818,7 +818,8 @@ static void VTparse(void)
 	    c = doinput();
 
 #if OPT_WIDE_CHARS
-	    if (my_wcwidth(c) == 0) {
+	    if (screen->wide_chars
+	     && my_wcwidth(c) == 0) {
 		unsigned single = 0;
 		int prev, precomposed;
 
