@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/print.c,v 1.13 1999/11/19 13:55:21 hohndel Exp $
+ * $XFree86: xc/programs/xterm/print.c,v 1.14 2000/01/18 16:36:00 tsi Exp $
  */
 
 /************************************************************
@@ -372,7 +372,7 @@ static void charToPrinter(int chr)
 		if (chr > 127) {
 			Char temp[10];
 			*convertToUTF8(temp, chr) = 0;
-			fputs(temp, Printer);
+			fputs((char *)temp, Printer);
 		} else
 #endif
 		fputc(chr, Printer);

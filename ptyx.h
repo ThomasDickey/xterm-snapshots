@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.67 1999/12/30 02:05:56 robin Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.68 2000/01/18 16:36:00 tsi Exp $
  */
 
 /*
@@ -122,7 +122,7 @@
 #define TTYDEV		"/dev/pty/ttyxx"
 #elif defined(__MVS__)
 #define TTYDEV		"/dev/ptypxxxx"
-#elif defined(__osf__) || (defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
+#elif defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
 #define TTYDEV		"/dev/ttydirs/xxx/xxxxxxxxxxxxxx"
 #else
 #define	TTYDEV		"/dev/ttyxx"

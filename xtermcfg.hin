@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.27 1999/11/19 13:55:26 hohndel Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.28 2000/01/18 16:36:05 tsi Exp $
  */
 
 /************************************************************
@@ -103,25 +103,25 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef GCC_PRINTF
 #undef GCC_UNUSED
 
-#if USE_OK_BCOPY
+#ifdef USE_OK_BCOPY
 #define memmove(d,s,n) bcopy(s,d,n)
 #endif
 
-#if USE_MY_MEMMOVE
+#ifdef USE_MY_MEMMOVE
 #define memmove(d,s,n) my_memmove(d,s,n)
 extern char * my_memmove(char * s1, char * s2, size_t n);
 #endif
 
-#if !HAVE_STRERROR
+#ifndef HAVE_STRERROR
 #define strerror(n) my_strerror(n)
 extern char *my_strerror(int n);
 #endif
 
-#if !HAVE_X11_XPOLL_H
+#ifndef HAVE_X11_XPOLL_H
 #define NO_XPOLL_H	/* X11R6.1 & up use Xpoll.h for select() definitions */
 #endif
 
-#if !HAVE_XKBSTDBELL
+#ifndef HAVE_XKBSTDBELL
 #define NO_XKBSTDBELL	/* IRIX 6.2 incorrectly defines XKB in imake */
 #endif
 

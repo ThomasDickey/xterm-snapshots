@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.103 1999/12/14 02:10:37 robin Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.104 2000/01/18 16:35:59 tsi Exp $ */
 
 
 /* main.c */
@@ -172,8 +172,10 @@ static Bool IsPts = False;
 #define USE_SYSV_SIGNALS
 #define WTMP
 #undef  HAS_LTCHARS
+#ifdef __GLIBC__
 #if (__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
 #include <pty.h>
+#endif
 #endif
 #endif
 
@@ -2746,7 +2748,7 @@ spawn (void)
 		qsetlogin( getlogin(), ttydev );
 #endif
 		while (1) {
-#if defined(TIOCNOTTY) && !((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
+#if defined(TIOCNOTTY) && (!defined(__GLIBC__) || (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ < 1)))
 			if (!no_dev_tty && (tty = open ("/dev/tty", O_RDWR)) >= 0) {
 				ioctl (tty, TIOCNOTTY, (char *) NULL);
 				close (tty);
@@ -4384,8 +4386,8 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 	    s++;
 	    c = ((*s == '?') ? 0177 : CONTROL(*s));
 	    if (*s == '-') {
-#if HAVE_TERMIOS_H && HAVE_TCGETATTR
-#  if HAVE_POSIX_VDISABLE
+#if defined(HAVE_TERMIOS_H) && defined(HAVE_TCGETATTR)
+#  ifdef HAVE_POSIX_VDISABLE
 		c = _POSIX_VDISABLE;
 #  else
 		errno = 0;

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c /main/33 1996/12/01 23:47:10 swick $
- *	$XFree86: xc/programs/xterm/util.c,v 3.47 1999/12/30 02:05:58 robin Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.48 2000/01/18 16:36:02 tsi Exp $
  */
 
 /*
@@ -1841,7 +1841,7 @@ void putXtermCell (TScreen *screen, int row, int col, int ch)
 #endif
 
 #ifdef HAVE_CONFIG_H
-#if USE_MY_MEMMOVE
+#ifdef USE_MY_MEMMOVE
 char * my_memmove(char * s1, char * s2, size_t n)
 {
 	if (n != 0) {
@@ -1868,7 +1868,7 @@ char * my_memmove(char * s1, char * s2, size_t n)
 }
 #endif /* USE_MY_MEMMOVE */
 
-#if !HAVE_STRERROR
+#ifndef HAVE_STRERROR
 char *my_strerror(int n)
 {
 	extern char *sys_errlist[];

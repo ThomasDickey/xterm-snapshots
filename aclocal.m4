@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.27 1999/11/19 13:55:14 hohndel Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.28 2000/01/18 16:35:56 tsi Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
@@ -146,7 +146,7 @@ AC_DEFUN([CF_CHECK_ERRNO],
 AC_MSG_CHECKING(if external $1 is declared)
 AC_CACHE_VAL(cf_cv_dcl_$1,[
     AC_TRY_COMPILE([
-#if HAVE_STDLIB_H
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #include <stdio.h>
@@ -666,10 +666,10 @@ AC_DEFUN([CF_POSIX_VDISABLE],
 AC_MSG_CHECKING(if POSIX VDISABLE symbol should be used)
 AC_CACHE_VAL(cf_cv_posix_vdisable,[
 	AC_TRY_RUN([
-#if HAVE_TERMIOS_H && HAVE_TCGETATTR
+#if defined(HAVE_TERMIOS_H) && defined(HAVE_TCGETATTR)
 #include <termios.h>
 #endif
-#if HAVE_UNISTD_H
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #if defined(_POSIX_VDISABLE)
@@ -678,10 +678,10 @@ int main() { exit(_POSIX_VDISABLE == -1); }
 	[cf_cv_posix_vdisable=yes],
 	[cf_cv_posix_vdisable=no],
 	[AC_TRY_COMPILE([
-#if HAVE_TERMIOS_H && HAVE_TCGETATTR
+#if defined(HAVE_TERMIOS_H) && defined(HAVE_TCGETATTR)
 #include <termios.h>
 #endif
-#if HAVE_UNISTD_H
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif],[
 #if defined(_POSIX_VDISABLE) && (_POSIX_VDISABLE != -1)
@@ -704,7 +704,7 @@ AC_MSG_CHECKING(for size_t in <sys/types.h> or <stdio.h>)
 AC_CACHE_VAL(cf_cv_type_size_t,[
 	AC_TRY_COMPILE([
 #include <sys/types.h>
-#if STDC_HEADERS
+#ifdef STDC_HEADERS
 #include <stdlib.h>
 #include <stddef.h>
 #endif

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.38 1999/12/30 02:05:54 robin Exp $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.39 2000/01/18 16:35:58 tsi Exp $
  */
 
 /*
@@ -60,7 +60,7 @@
 #include <xterm.h>
 
 #include <X11/keysym.h>
-#if HAVE_X11_DECKEYSYM_H
+#ifdef HAVE_X11_DECKEYSYM_H
 #include <X11/DECkeysym.h>
 #endif
 

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: VTparse.h,v 1.6 92/09/15 15:28:31 gildea Exp $
- *	$XFree86: xc/programs/xterm/VTparse.h,v 3.12 1999/09/27 06:30:11 dawes Exp $
+ *	$XFree86: xc/programs/xterm/VTparse.h,v 3.13 2000/01/18 16:35:55 tsi Exp $
  */
 
 /*
@@ -28,6 +28,8 @@
 
 #ifndef included_VTparse_h
 #define included_VTparse_h 1
+
+#include "ptyx.h"
 
 #ifndef Const
 # if defined(__STDC__) && !defined(__cplusplus)

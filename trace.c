@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.8 1999/07/04 06:40:14 dawes Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.9 2000/01/18 16:36:01 tsi Exp $
  */
 
 /************************************************************
@@ -60,7 +60,7 @@ Trace(char *fmt, ...)
 		fp = fopen(name, "w");
 		if (fp != 0) {
 			time_t now = time((time_t*)0);
-#if HAVE_UNISTD_H
+#ifdef HAVE_UNISTD_H
 			fprintf(fp, "process %d real (%d/%d) effective (%d/%d) -- %s",
 				getpid(),
 				getuid(), getgid(),
