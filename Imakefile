@@ -7,7 +7,7 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.29 2000/03/03 20:02:27 dawes Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.30 2000/08/26 16:19:23 dawes Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -110,16 +110,16 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
           MAINSRC = main.c
           MAINOBJ = main.o
 #endif
-          SRCS1 = button.c charproc.c charsets.c cursor.c \
+          SRCS1 = button.c charclass.c charproc.c charsets.c cursor.c \
 		  data.c doublechr.c fontutils.c input.c \
-		  menu.c misc.c print.c ptydata.c \
-		  screen.c scrollbar.c tabs.c util.c \
+		  menu.c misc.c precompose.c print.c ptydata.c \
+		  screen.c scrollbar.c tabs.c util.c wcwidth.c \
 		  TekPrsTbl.c Tekproc.c VTPrsTbl.c \
 		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC)
-          OBJS1 = button.o charproc.o charsets.o cursor.o \
+          OBJS1 = button.o charclass.o charproc.o charsets.o cursor.o \
 		  data.o doublechr.o fontutils.o input.o \
-		  menu.o misc.o print.o ptydata.o \
-		  screen.o scrollbar.o tabs.o util.o \
+		  menu.o misc.o precompose.o print.o ptydata.o \
+		  screen.o scrollbar.o tabs.o util.o wcwidth.o \
 		  TekPrsTbl.o Tekproc.o VTPrsTbl.o \
 		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ)
           SRCS2 = resize.c

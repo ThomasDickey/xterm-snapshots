@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: main.h,v 1.5 91/02/06 16:00:15 gildea Exp $
- *	$XFree86: xc/programs/xterm/main.h,v 3.1 1996/01/10 05:51:41 dawes Exp $
+ *	$XFree86: xc/programs/xterm/main.h,v 3.2 2000/08/25 21:51:12 dawes Exp $
  */
 
 /*
