@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.173 2004/08/15 21:07:59 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.130 2004/08/15 21:07:59 dickey Exp $
+  $XTermId: xterm.log.html,v 1.191 2004/12/01 01:27:47 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.131 2004/12/01 01:27:47 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_197">Patch #197 - 2004/11/30 - XFree86 4.4.99.19</A>
 <LI><A HREF="#xterm_196">Patch #196 - 2004/8/15 - XFree86 4.4.99.12</A>
 <LI><A HREF="#xterm_195">Patch #195 - 2004/8/8 - XFree86 4.4.99.11</A>
 <LI><A HREF="#xterm_194">Patch #194 - 2004/7/27 - XFree86 4.4.99.11</A>
@@ -244,6 +245,97 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_197">Patch #197 - 2004/11/30 - XFree86 4.4.99.19</A></H1>
+<ul>
+	<li>modify configure script to remove empty "-DPROJECTROOT=" definition
+	    which resulted unusable values for luit's default path.
+
+	<li>update precompose.c based on Unicode 4.0.1
+
+	<li>several minor fixes based on Intel compiler warnings.
+
+	<li>change default translations so a <code>BtnDown</code> which is
+	    not recognized is simply ignored rather than emitting a bell.
+	    That makes it less obtrusive when the user tries to use a mouse
+	    which provides more capabilities than the X mouse driver supports,
+	    e.g., one with a horizontal scroll wheel (Debian #265133).
+
+	<li>note in xterm's manpage that <code>translations</code> is not
+	    specific to xterm (Debian #278897).
+
+	<li>modify uxterm script to use locale program to verify if the
+	    derived locale is installed (Debian #246398).
+
+	<li>correct font handling for active icon when in UTF-8 mode (report
+	    by Paolo Liberatore).
+
+	<li>make active-icon and toolbar configurations work together.
+
+	<li>modify the criteria for disowning primary selection.  Previously,
+	    this happened anytime the cursor was moved before the end of the
+	    selection.  That would ensure that any insert/delete of char or
+	    line, as well as scrolling, would disown the selection.  The
+	    new criteria change this to checking if the operations would
+	    modify the data which is highlighted (Debian #277832).
+
+	<li>reimplement <code>DECALN</code> with functions for vt420 rectangles,
+	    fixes selection for this case.
+
+	<li>implement vt420 rectangle operations.
+
+	<li>add parsing, for debug/test of vt220 soft-fonts.
+
+	<li>add menu entry, actions and escape sequence to allow
+	    enabling/disabling toolbars at runtime.
+
+	<li>improve rendering for Xft, allow it to draw non-linedrawing
+	    characters such as "pi", which were drawn from internal tables
+	    with <a href="#xterm_180">patch #180</a>
+	    (Freedesktop.org Bugzilla #1260).
+
+	<li>add configure option <code>--enable-mini-luit</code>, ifdef'd the
+	    mini-luit feature with <code>OPT_MINI_LUIT</code>.
+
+	<li>add mini-luit feature, which supports Latin9 directly rather than
+	    via luit, provided that Unicode fonts are used (Freedesktop.org
+	    Bugzilla #1571, request by Stefan Dirsch, patch by Michael
+	    Schroeder).
+
+	<li>for Linux, if IUTF8 is defined, e.g., on recent 2.6.x kernels,
+	    set the corresponding flag for the slave pty, to enable UTF-8
+	    interpretation of backspace in cooked mode (Freedesktop.org
+	    Bugzilla #1578, request by Stefan Dirsch).
+
+	<li>modify <code>faceSize</code> resource to use a floating-point
+	    internal value (adapted from patch by Sam Stephenson).
+
+	<li>correct handling selection of tabs over cleared space in UTF-8
+	    mode.  In this special case, xterm represents the whitespace with
+	    a null rather than a space character (Debian #276477).
+
+	<li>amend fix for infinite loop from <a href="#xterm_192">patch
+	    #192</a> to check if there is wrapped text to output in a following
+	    iteration (Debian #273202).
+
+	<li>fixes ifdef'd with <code>__INTERIX</code> to allow building with
+	    Interix (Windows Services for UNIX) 3.5 using the xlibs libraries
+	    from freedesktop.org (patch by Min Sik Kim).
+
+	<li>amend solution for Debian #252873, #260471 from <a
+	    href="#xterm_194">patch #192</a> by making the cursor not
+	    explicitly colored if only the foreground color is set, and the
+	    cursor is on a blank space (Debian #275473).
+
+	<li>correct logic for send/receive mode (SRM) with regard to control
+	    characters.
+
+	<li>fix masking of invisible text in wide-character mode, which did
+	    not work for line-drawing characters.
+
+	<li>incorporate CF_XOPEN_SOURCE into configure script, replacing
+	    CF_GNU_SOURCE.
+</ul>
 
 <H1><A NAME="xterm_196">Patch #196 - 2004/8/15 - XFree86 4.4.99.12</A></H1>
 <ul>
@@ -637,7 +729,7 @@ is the latest version of this file.
 	    ways the window can be resized if fixed fonts are used.  The
 	    relative font sizes are derived from the fixed font sizes.
 
-	<li>add menu items and corresponding actions for switching on/off 
+	<li>add menu items and corresponding actions for switching on/off
 	    the UTF-8 mode and Xft (TrueType) support.
 
 	<li>add logic to handle switching UTF-8 mode on/off.  It worked if
@@ -823,7 +915,7 @@ is the latest version of this file.
 	  </ul>
 
 	<li>make height of TrueType fonts match ascent+descent (patch by
-	    Keith Packard). 
+	    Keith Packard).
 
 	<li>correct configure-script check for imake $CFLAGS, which did not
 	    check properly if imake was not available.
@@ -930,10 +1022,10 @@ is the latest version of this file.
 	<li>correct/extend some of the keypad description in ctlseqs.ms
 	    (report by Henning Makholm).
 
-	<li>correct keypad-mapping table in input.c so <code>XK_KP_Equal</code> 
+	<li>correct keypad-mapping table in input.c so <code>XK_KP_Equal</code>
 	    works (report by Henning Makholm).
 
-	<li>modified to work with CJK double-width (bi-width/monospace) fonts. 
+	<li>modified to work with CJK double-width (bi-width/monospace) fonts.
 	    They're similar to Roman Czbora and David Starner's gnuunifonts in
 	    that Latin letters and numbers have all the same width which is
 	    exactly the half of the width of East Asian characters.  (patch by
@@ -1040,10 +1132,10 @@ is the latest version of this file.
 	    resources that override colors when a video attribute is
 	    set to <code>ColorAttrMode</code>, to make them distinct
 	    from <code>ColorMode</code>.  This avoids an unexpected
-	    rendering of reverse video, for example (report by Paul Fox). 
+	    rendering of reverse video, for example (report by Paul Fox).
 
 	<li>changed class of <code>veryBoldColors</code> to
-	    <code>VeryBoldColors</code>, since 
+	    <code>VeryBoldColors</code>, since
 	    <code>ColorMode</code> is associated with boolean resources.
 
 	<li>add option <code>-k8</code> and resource
@@ -1074,7 +1166,7 @@ is the latest version of this file.
 	<li>modify <code>uxterm</code> script to strip modifiers such as "@euro"
 	    from the locale setting before adding ".UTF-8" (Debian #179929).
 
-	<li>modify the remaining places where tek4014 emulation uses 
+	<li>modify the remaining places where tek4014 emulation uses
 	    <code>XDefineCursor()</code>, to make it work as originally
 	    implemented, e.g., when switching back to alpha mode.
 	    Added test-screen in vttest to test this feature properly.
@@ -1083,7 +1175,7 @@ is the latest version of this file.
 <H1><A NAME="xterm_174">Patch #174 - 2003/2/25 - XFree86 4.2.99.903</A></H1>
 <ul>
 	<li>work-around for XFree86 bug which made <code>XDefineCursor()</code>
-	    on a shell-window no longer work.  The tek4014 emulation used this. 
+	    on a shell-window no longer work.  The tek4014 emulation used this.
 	    Use the next lower window (report by Karl Rudolf Bauchspiess).
 
 	<li>add a resource setting to control whether the extended window
@@ -1117,7 +1209,7 @@ is the latest version of this file.
 
 	<li>merge <code>Error()</code> calls and some <code>exit()</code> calls
 	  into <code>SysError()</code>, and change that to add the brief
-	  explanation for each error code which is provided in the manpage. 
+	  explanation for each error code which is provided in the manpage.
 	  Change a few <code>SysError()</code>, calls to avoid using code 1, to
 	  avoid confusion with exit status from places that do not use
 	  <code>SysError()</code>.
@@ -1253,7 +1345,7 @@ is the latest version of this file.
 	<li>add <code>-into</code> option, for embedding xterm in a Tcl/Tk
 	  application (patch by George Peter Staplin &lt;georgeps@xmission.com&gt;).
 
-	<li>add simple session management (XSM) client capabilities to xterm. 
+	<li>add simple session management (XSM) client capabilities to xterm.
 	  So a session manager such as, e.g., xsm, should be able to respawn or
 	  kill xterms without the help of an SM proxy (like smproxy), which is
 	  a hack and almost always buggy (patch by David Madore).
@@ -1520,7 +1612,7 @@ is the latest version of this file.
 	  Nelson Beebe).
 
 	<li>modify xterm manual page and minstall.sh to allow imake rules
-	  to define location of app-defaults directory (Debian #87611). 
+	  to define location of app-defaults directory (Debian #87611).
 
 	<li>review/update list of conflicting preprocesor symbols to remove
 	  from $CPPFLAGS at the end of the configure script.  In particular,

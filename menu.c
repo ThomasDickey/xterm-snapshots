@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.146 2004/06/06 22:15:25 tom Exp $ */
+/* $XTermId: menu.c,v 1.150 2004/12/01 01:27:47 tom Exp $ */
 
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -47,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.56 2004/06/06 22:15:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.57 2004/12/01 01:27:47 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -216,6 +216,10 @@ static void handle_tekshow     (Widget gw, Bool allowswitch);
 static void handle_vtshow      (Widget gw, Bool allowswitch);
 #endif
 
+#if OPT_TOOLBAR
+static void do_toolbar         PROTO_XT_CALLBACK_ARGS;
+#endif
+
 #if OPT_WIDE_CHARS
 static void do_font_utf8_mode  PROTO_XT_CALLBACK_ARGS;
 #endif
@@ -224,6 +228,9 @@ static void do_font_utf8_mode  PROTO_XT_CALLBACK_ARGS;
  * The order of entries MUST match the values given in menu.h
  */
 MenuEntry mainMenuEntries[] = {
+#if OPT_TOOLBAR
+    { "toolbar",	do_toolbar,	NULL },
+#endif
     { "securekbd",	do_securekbd,	NULL },
     { "allowsends",	do_allowsends,	NULL },
     { "redraw",		do_redraw,	NULL },
@@ -520,7 +527,7 @@ static Bool
 domenu(Widget w GCC_UNUSED,
        XEvent * event GCC_UNUSED,
        String * params,		/* mainMenu, vtMenu, or tekMenu */
-       Cardinal * param_count)	/* 0 or 1 */
+       Cardinal *param_count)	/* 0 or 1 */
 {
     TScreen *screen = &term->screen;
     MenuIndex me;
@@ -548,6 +555,7 @@ domenu(Widget w GCC_UNUSED,
     switch (me) {
     case mainMenu:
 	if (created) {
+	    update_toolbar();
 	    update_securekbd();
 	    update_allowsends();
 	    update_logging();
@@ -693,7 +701,7 @@ void
 HandleCreateMenu(Widget w,
 		 XEvent * event,
 		 String * params,	/* mainMenu, vtMenu, or tekMenu */
-		 Cardinal * param_count)	/* 0 or 1 */
+		 Cardinal *param_count)		/* 0 or 1 */
 {
     (void) domenu(w, event, params, param_count);
 }
@@ -702,7 +710,7 @@ void
 HandlePopupMenu(Widget w,
 		XEvent * event,
 		String * params,	/* mainMenu, vtMenu, or tekMenu */
-		Cardinal * param_count)		/* 0 or 1 */
+		Cardinal *param_count)	/* 0 or 1 */
 {
     if (domenu(w, event, params, param_count)) {
 #if OPT_TOOLBAR
@@ -1556,7 +1564,7 @@ void
 HandleAllowSends(Widget w,
 		 XEvent * event GCC_UNUSED,
 		 String * params,
-		 Cardinal * param_count)
+		 Cardinal *param_count)
 {
     handle_toggle(do_allowsends, (int) term->screen.allowSendEvents,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1566,7 +1574,7 @@ void
 HandleSetVisualBell(Widget w,
 		    XEvent * event GCC_UNUSED,
 		    String * params,
-		    Cardinal * param_count)
+		    Cardinal *param_count)
 {
     handle_toggle(do_visualbell, (int) term->screen.visualbell,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1576,7 +1584,7 @@ void
 HandleSetPopOnBell(Widget w,
 		   XEvent * event GCC_UNUSED,
 		   String * params,
-		   Cardinal * param_count)
+		   Cardinal *param_count)
 {
     handle_toggle(do_poponbell, (int) term->screen.poponbell,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1587,7 +1595,7 @@ void
 HandleLogging(Widget w,
 	      XEvent * event GCC_UNUSED,
 	      String * params,
-	      Cardinal * param_count)
+	      Cardinal *param_count)
 {
     handle_toggle(do_logging, (int) term->screen.logging,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1599,7 +1607,7 @@ void
 HandlePrintScreen(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params GCC_UNUSED,
-		  Cardinal * param_count GCC_UNUSED)
+		  Cardinal *param_count GCC_UNUSED)
 {
     do_print(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -1609,7 +1617,7 @@ void
 HandlePrintControlMode(Widget w,
 		       XEvent * event GCC_UNUSED,
 		       String * params GCC_UNUSED,
-		       Cardinal * param_count GCC_UNUSED)
+		       Cardinal *param_count GCC_UNUSED)
 {
     do_print_redir(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -1619,7 +1627,7 @@ void
 HandleRedraw(Widget w,
 	     XEvent * event GCC_UNUSED,
 	     String * params GCC_UNUSED,
-	     Cardinal * param_count GCC_UNUSED)
+	     Cardinal *param_count GCC_UNUSED)
 {
     do_redraw(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -1629,7 +1637,7 @@ void
 HandleSendSignal(Widget w,
 		 XEvent * event GCC_UNUSED,
 		 String * params,
-		 Cardinal * param_count)
+		 Cardinal *param_count)
 {
     /* *INDENT-OFF* */
     static struct sigtab {
@@ -1674,7 +1682,7 @@ void
 HandleQuit(Widget w,
 	   XEvent * event GCC_UNUSED,
 	   String * params GCC_UNUSED,
-	   Cardinal * param_count GCC_UNUSED)
+	   Cardinal *param_count GCC_UNUSED)
 {
     do_quit(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -1683,7 +1691,7 @@ void
 Handle8BitControl(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params,
-		  Cardinal * param_count)
+		  Cardinal *param_count)
 {
     handle_toggle(do_8bit_control, (int) term->screen.control_eight_bits,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1693,7 +1701,7 @@ void
 HandleBackarrow(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params,
-		Cardinal * param_count)
+		Cardinal *param_count)
 {
     handle_toggle(do_backarrow, (int) term->keyboard.flags & MODE_DECBKM,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1703,7 +1711,7 @@ void
 HandleSunFunctionKeys(Widget w,
 		      XEvent * event GCC_UNUSED,
 		      String * params,
-		      Cardinal * param_count)
+		      Cardinal *param_count)
 {
     handle_toggle(do_sun_fkeys, term->keyboard.type == keyboardIsSun,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1714,7 +1722,7 @@ void
 HandleNumLock(Widget w,
 	      XEvent * event GCC_UNUSED,
 	      String * params,
-	      Cardinal * param_count)
+	      Cardinal *param_count)
 {
     handle_toggle(do_num_lock, (int) term->misc.real_NumLock,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1724,7 +1732,7 @@ void
 HandleMetaEsc(Widget w,
 	      XEvent * event GCC_UNUSED,
 	      String * params,
-	      Cardinal * param_count)
+	      Cardinal *param_count)
 {
     handle_toggle(do_meta_esc, (int) term->screen.meta_sends_esc,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1735,7 +1743,7 @@ void
 HandleDeleteIsDEL(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params,
-		  Cardinal * param_count)
+		  Cardinal *param_count)
 {
     handle_toggle(do_delete_del, term->screen.delete_is_del,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1745,7 +1753,7 @@ void
 HandleOldFunctionKeys(Widget w,
 		      XEvent * event GCC_UNUSED,
 		      String * params,
-		      Cardinal * param_count)
+		      Cardinal *param_count)
 {
     handle_toggle(do_old_fkeys, term->keyboard.type == keyboardIsLegacy,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1756,7 +1764,7 @@ void
 HandleSunKeyboard(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params,
-		  Cardinal * param_count)
+		  Cardinal *param_count)
 {
     handle_toggle(do_sun_kbd, term->keyboard.type == keyboardIsVT220,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1768,7 +1776,7 @@ void
 HandleHpFunctionKeys(Widget w,
 		     XEvent * event GCC_UNUSED,
 		     String * params,
-		     Cardinal * param_count)
+		     Cardinal *param_count)
 {
     handle_toggle(do_hp_fkeys, term->keyboard.type == keyboardIsHP,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1780,7 +1788,7 @@ void
 HandleScoFunctionKeys(Widget w,
 		      XEvent * event GCC_UNUSED,
 		      String * params,
-		      Cardinal * param_count)
+		      Cardinal *param_count)
 {
     handle_toggle(do_sco_fkeys, term->keyboard.type == keyboardIsSCO,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1791,7 +1799,7 @@ void
 HandleScrollbar(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params,
-		Cardinal * param_count)
+		Cardinal *param_count)
 {
     handle_toggle(do_scrollbar, (int) term->screen.fullVwin.sb_info.width,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1801,7 +1809,7 @@ void
 HandleJumpscroll(Widget w,
 		 XEvent * event GCC_UNUSED,
 		 String * params,
-		 Cardinal * param_count)
+		 Cardinal *param_count)
 {
     handle_toggle(do_jumpscroll, (int) term->screen.jumpscroll,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1811,7 +1819,7 @@ void
 HandleReverseVideo(Widget w,
 		   XEvent * event GCC_UNUSED,
 		   String * params,
-		   Cardinal * param_count)
+		   Cardinal *param_count)
 {
     handle_toggle(do_reversevideo, (int) (term->misc.re_verse0),
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1821,7 +1829,7 @@ void
 HandleAutoWrap(Widget w,
 	       XEvent * event GCC_UNUSED,
 	       String * params,
-	       Cardinal * param_count)
+	       Cardinal *param_count)
 {
     handle_toggle(do_autowrap, (int) (term->flags & WRAPAROUND),
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1831,7 +1839,7 @@ void
 HandleReverseWrap(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params,
-		  Cardinal * param_count)
+		  Cardinal *param_count)
 {
     handle_toggle(do_reversewrap, (int) (term->flags & REVERSEWRAP),
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1841,7 +1849,7 @@ void
 HandleAutoLineFeed(Widget w,
 		   XEvent * event GCC_UNUSED,
 		   String * params,
-		   Cardinal * param_count)
+		   Cardinal *param_count)
 {
     handle_toggle(do_autolinefeed, (int) (term->flags & LINEFEED),
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1851,7 +1859,7 @@ void
 HandleAppCursor(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params,
-		Cardinal * param_count)
+		Cardinal *param_count)
 {
     handle_toggle(do_appcursor, (int) (term->keyboard.flags & MODE_DECCKM),
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1861,7 +1869,7 @@ void
 HandleAppKeypad(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params,
-		Cardinal * param_count)
+		Cardinal *param_count)
 {
     handle_toggle(do_appkeypad, (int) (term->keyboard.flags & MODE_DECKPAM),
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1871,7 +1879,7 @@ void
 HandleScrollKey(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params,
-		Cardinal * param_count)
+		Cardinal *param_count)
 {
     handle_toggle(do_scrollkey, (int) term->screen.scrollkey,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1881,7 +1889,7 @@ void
 HandleScrollTtyOutput(Widget w,
 		      XEvent * event GCC_UNUSED,
 		      String * params,
-		      Cardinal * param_count)
+		      Cardinal *param_count)
 {
     handle_toggle(do_scrollttyoutput, (int) term->screen.scrollttyoutput,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1891,7 +1899,7 @@ void
 HandleAllow132(Widget w,
 	       XEvent * event GCC_UNUSED,
 	       String * params,
-	       Cardinal * param_count)
+	       Cardinal *param_count)
 {
     handle_toggle(do_allow132, (int) term->screen.c132,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1901,7 +1909,7 @@ void
 HandleCursesEmul(Widget w,
 		 XEvent * event GCC_UNUSED,
 		 String * params,
-		 Cardinal * param_count)
+		 Cardinal *param_count)
 {
     handle_toggle(do_cursesemul, (int) term->screen.curses,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1911,7 +1919,7 @@ void
 HandleMarginBell(Widget w,
 		 XEvent * event GCC_UNUSED,
 		 String * params,
-		 Cardinal * param_count)
+		 Cardinal *param_count)
 {
     handle_toggle(do_marginbell, (int) term->screen.marginbell,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1922,7 +1930,7 @@ void
 HandleCursorBlink(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params,
-		  Cardinal * param_count)
+		  Cardinal *param_count)
 {
     /* eventually want to see if sensitive or not */
     handle_toggle(do_cursorblink, (int) term->screen.cursor_blink,
@@ -1934,7 +1942,7 @@ void
 HandleAltScreen(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params,
-		Cardinal * param_count)
+		Cardinal *param_count)
 {
     /* eventually want to see if sensitive or not */
     handle_toggle(do_altscreen, (int) term->screen.alternate,
@@ -1945,7 +1953,7 @@ void
 HandleTiteInhibit(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params,
-		  Cardinal * param_count)
+		  Cardinal *param_count)
 {
     /* eventually want to see if sensitive or not */
     handle_toggle(do_titeInhibit, !((int) term->misc.titeInhibit),
@@ -1957,7 +1965,7 @@ void
 HandleSoftReset(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params GCC_UNUSED,
-		Cardinal * param_count GCC_UNUSED)
+		Cardinal *param_count GCC_UNUSED)
 {
     do_softreset(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -1967,7 +1975,7 @@ void
 HandleHardReset(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params GCC_UNUSED,
-		Cardinal * param_count GCC_UNUSED)
+		Cardinal *param_count GCC_UNUSED)
 {
     do_hardreset(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -1977,7 +1985,7 @@ void
 HandleClearSavedLines(Widget w,
 		      XEvent * event GCC_UNUSED,
 		      String * params GCC_UNUSED,
-		      Cardinal * param_count GCC_UNUSED)
+		      Cardinal *param_count GCC_UNUSED)
 {
     do_clearsavedlines(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -1987,7 +1995,7 @@ void
 HandleFontDoublesize(Widget w,
 		     XEvent * event GCC_UNUSED,
 		     String * params,
-		     Cardinal * param_count)
+		     Cardinal *param_count)
 {
     handle_toggle(do_font_doublesize, (int) term->screen.font_doublesize,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -1999,7 +2007,7 @@ void
 HandleFontBoxChars(Widget w,
 		   XEvent * event GCC_UNUSED,
 		   String * params,
-		   Cardinal * param_count)
+		   Cardinal *param_count)
 {
     handle_toggle(do_font_boxchars, (int) term->screen.force_box_chars,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -2011,7 +2019,7 @@ void
 HandleFontLoading(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params,
-		  Cardinal * param_count)
+		  Cardinal *param_count)
 {
     handle_toggle(do_font_loadable, (int) term->misc.font_loadable,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -2023,7 +2031,7 @@ void
 HandleRenderFont(Widget w,
 		 XEvent * event GCC_UNUSED,
 		 String * params,
-		 Cardinal * param_count)
+		 Cardinal *param_count)
 {
     handle_toggle(do_font_renderfont, term->misc.render_font,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -2035,7 +2043,7 @@ void
 HandleUTF8Mode(Widget w,
 	       XEvent * event GCC_UNUSED,
 	       String * params,
-	       Cardinal * param_count)
+	       Cardinal *param_count)
 {
     handle_toggle(do_font_utf8_mode, term->screen.utf8_mode,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
@@ -2047,7 +2055,7 @@ void
 HandleSetTerminalType(Widget w,
 		      XEvent * event GCC_UNUSED,
 		      String * params,
-		      Cardinal * param_count)
+		      Cardinal *param_count)
 {
     if (*param_count == 1) {
 	switch (params[0][0]) {
@@ -2073,7 +2081,7 @@ void
 HandleVisibility(Widget w,
 		 XEvent * event GCC_UNUSED,
 		 String * params,
-		 Cardinal * param_count)
+		 Cardinal *param_count)
 {
     if (*param_count == 2) {
 	switch (params[0][0]) {
@@ -2102,7 +2110,7 @@ void
 HandleSetTekText(Widget w,
 		 XEvent * event GCC_UNUSED,
 		 String * params,
-		 Cardinal * param_count)
+		 Cardinal *param_count)
 {
     void (*proc) PROTO_XT_CALLBACK_ARGS = 0;
 
@@ -2140,7 +2148,7 @@ void
 HandleTekPage(Widget w,
 	      XEvent * event GCC_UNUSED,
 	      String * params GCC_UNUSED,
-	      Cardinal * param_count GCC_UNUSED)
+	      Cardinal *param_count GCC_UNUSED)
 {
     do_tekpage(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -2150,7 +2158,7 @@ void
 HandleTekReset(Widget w,
 	       XEvent * event GCC_UNUSED,
 	       String * params GCC_UNUSED,
-	       Cardinal * param_count GCC_UNUSED)
+	       Cardinal *param_count GCC_UNUSED)
 {
     do_tekreset(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -2160,7 +2168,7 @@ void
 HandleTekCopy(Widget w,
 	      XEvent * event GCC_UNUSED,
 	      String * params GCC_UNUSED,
-	      Cardinal * param_count GCC_UNUSED)
+	      Cardinal *param_count GCC_UNUSED)
 {
     do_tekcopy(w, (XtPointer) 0, (XtPointer) 0);
 }
@@ -2217,7 +2225,7 @@ InitPopup(Widget gw,
 }
 
 static void
-SetupShell(Widget * menus, MenuList * shell, Widget * menu_tops, int n, int m)
+SetupShell(Widget *menus, MenuList * shell, Widget *menu_tops, int n, int m)
 {
     char temp[80];
     char *external_name = 0;
@@ -2253,7 +2261,7 @@ SetupShell(Widget * menus, MenuList * shell, Widget * menu_tops, int n, int m)
 #endif
 
 void
-SetupMenus(Widget shell, Widget * forms, Widget * menus)
+SetupMenus(Widget shell, Widget *forms, Widget *menus)
 {
 #if OPT_TOOLBAR
     int n;
@@ -2327,8 +2335,100 @@ SetupToolbar(Widget shell)
 	InitPopup(tek_shell[tekMenu].w, menu_names[tekMenu].internal_name, 0);
     }
 #endif
+    term->screen.toolbars = True;
+    update_toolbar();
 }
-#endif
+
+static TbInfo *
+toolbar_info(Widget w)
+{
+    return ((w == (Widget) term)
+	    ? &(WhichVWin(&(term->screen))->tb_info)
+	    : &(tekWidget->tek.tb_info));
+}
+
+static void
+hide_toolbar(Widget w)
+{
+    if (w != 0) {
+	TbInfo *info = toolbar_info(w);
+
+	if (info->menu_bar != 0) {
+	    if (XtIsRealized(info->menu_bar))
+		XtUnmapWidget(info->menu_bar);
+	}
+	XtVaSetValues(w,
+		      XtNfromVert, (Widget) 0,
+		      (XtPointer) 0);
+    }
+}
+
+static void
+show_toolbar(Widget w)
+{
+    if (w != 0) {
+	TbInfo *info = toolbar_info(w);
+
+	if (info->menu_bar != 0) {
+	    if (XtIsRealized(info->menu_bar))
+		XtMapWidget(info->menu_bar);
+	}
+	XtVaSetValues(w,
+		      XtNfromVert, info->menu_bar,
+		      (XtPointer) 0);
+	/*
+	 * This is needed to make the terminal widget move down below the
+	 * toolbar.
+	 */
+	XawFormDoLayout(XtParent(w), True);
+    }
+}
+
+void
+ShowToolbar(Boolean enable)
+{
+    if (enable) {
+	show_toolbar((Widget) term);
+	show_toolbar((Widget) tekWidget);
+    } else {
+	hide_toolbar((Widget) term);
+	hide_toolbar((Widget) tekWidget);
+    }
+}
+
+void
+HandleToolbar(Widget w,
+	      XEvent * event GCC_UNUSED,
+	      String * params GCC_UNUSED,
+	      Cardinal *param_count GCC_UNUSED)
+{
+    handle_toggle(do_toolbar, (int) term->screen.toolbars,
+		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
+}
+
+/* ARGSUSED */
+static void
+do_toolbar(Widget gw GCC_UNUSED,
+	   XtPointer closure GCC_UNUSED,
+	   XtPointer data GCC_UNUSED)
+{
+    /*
+     * Toggle toolbars for both vt100 and tek windows, since they share the
+     * menu which contains the checkbox indicating whether the toolbar is
+     * active.
+     */
+    ShowToolbar(term->screen.toolbars = !term->screen.toolbars);
+    update_toolbar();
+}
+
+void
+update_toolbar(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_toolbar].widget,
+		     term->screen.toolbars);
+}
+#endif /* OPT_TOOLBAR */
 
 void
 update_securekbd(void)

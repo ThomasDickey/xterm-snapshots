@@ -1,8 +1,10 @@
-/* $XFree86: xc/programs/xterm/xstrings.c,v 1.7 2003/11/13 01:16:38 dickey Exp $ */
+/* $XTermId: xstrings.c,v 1.20 2004/12/01 01:27:47 tom Exp $ */
+
+/* $XFree86: xc/programs/xterm/xstrings.c,v 1.8 2004/12/01 01:27:47 dickey Exp $ */
 
 /************************************************************
 
-Copyright 2000-2002,2003 by Thomas E. Dickey
+Copyright 2000-2003,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -62,7 +64,9 @@ x_strcasecmp(const char *s1, const char *s2)
 	return 1;
 
     while (len-- != 0) {
-	if (toupper(CharOf(*s1)) != toupper(CharOf(*s2)))
+	int c1 = toupper(CharOf(*s1));
+	int c2 = toupper(CharOf(*s2));
+	if (c1 != c2)
 	    return 1;
 	s1++, s2++;
     }

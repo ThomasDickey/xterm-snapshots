@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.291 2004/07/13 00:41:30 tom Exp $ */
+/* $XTermId: xterm.h,v 1.306 2004/12/01 01:27:47 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.102 2004/07/13 00:41:30 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.103 2004/12/01 01:27:47 dickey Exp $ */
 
 /************************************************************
 
@@ -260,7 +260,7 @@ extern int errno;
 #include <proto.h>
 #include <ptyx.h>
 
-#if (XtSpecificationRelease >= 6) && !defined(NO_XPOLL_H)
+#if (XtSpecificationRelease >= 6) && !defined(NO_XPOLL_H) && !defined(sun)
 #include <X11/Xpoll.h>
 #define USE_XPOLL_H 1
 #else
@@ -405,6 +405,7 @@ extern int errno;
 #define XtNtekInhibit		"tekInhibit"
 #define XtNtekSmall		"tekSmall"
 #define XtNtekStartup		"tekStartup"
+#define XtNtoolBar		"toolBar"
 #define XtNtiXtraScroll		"tiXtraScroll"
 #define XtNtiteInhibit		"titeInhibit"
 #define XtNtrimSelection	"trimSelection"
@@ -520,6 +521,7 @@ extern int errno;
 #define XtCTiXtraScroll		"TiXtraScroll"
 #define XtCTiteInhibit		"TiteInhibit"
 #define XtCTrimSelection	"TrimSelection"
+#define XtCToolBar		"ToolBar"
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
 #define XtCVT100Graphics	"VT100Graphics"
@@ -588,7 +590,7 @@ extern void HandleSelectStart         PROTO_XT_ACTIONS_ARGS;
 extern void HandleStartExtend         PROTO_XT_ACTIONS_ARGS;
 extern void ReadLineButton            PROTO_XT_ACTIONS_ARGS;
 extern void ResizeSelection (TScreen *screen, int rows, int cols);
-extern void ScrollSelection (TScreen* screen, int amount);
+extern void ScrollSelection (TScreen* screen, int amount, Bool);
 extern void TrackMouse (int func, int startrow, int startcol, int firstrow, int lastrow);
 extern void TrackText (int frow, int fcol, int trow, int tcol);
 extern void ViButton                  PROTO_XT_ACTIONS_ARGS;
@@ -670,10 +672,6 @@ extern void VTInitModifiers(void);
 
 #if OPT_TCAP_QUERY
 extern int xtermcapKeycode(char *params, unsigned *state);
-#endif
-
-#if OPT_WIDE_CHARS
-extern int convertFromUTF8(unsigned long c, Char *strbuf);
 #endif
 
 /* main.c */
@@ -814,9 +812,13 @@ extern void ClearBufRows (TScreen *screen, int first, int last);
 extern void ScreenWrite (TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), unsigned flags, unsigned cur_fg_bg, int length);
 extern void ScrnDeleteChar (TScreen *screen, int n);
 extern void ScrnDeleteLine (TScreen *screen, ScrnBuf sb, int n, int last, int size, int where);
+extern void ScrnFillRectangle (TScreen *, XTermRect *, Char, unsigned);
 extern void ScrnInsertChar (TScreen *screen, int n);
 extern void ScrnInsertLine (TScreen *screen, ScrnBuf sb, int last, int where, int n, int size);
 extern void ScrnRefresh (TScreen *screen, int toprow, int leftcol, int nrows, int ncols, Bool force);
+extern void ScrnUpdate (TScreen *screen, int toprow, int leftcol, int nrows, int ncols, Bool force);
+extern void ScrnDisownSelection (TScreen *screen);
+extern void xtermParseRect (TScreen *, int, int *, XTermRect *);
 
 #define ScrnClrFlag(screen, row, flag) \
 	SCRN_BUF_FLAGS(screen, row + screen->topline) = \
@@ -836,6 +838,29 @@ extern void ScrnRefresh (TScreen *screen, int toprow, int leftcol, int nrows, in
 #define ScrnClrWrapped(screen, row) ScrnClrFlag(screen, row, LINEWRAPPED)
 #define ScrnSetWrapped(screen, row) ScrnSetFlag(screen, row, LINEWRAPPED)
 #define ScrnTstWrapped(screen, row) ScrnTstFlag(screen, row, LINEWRAPPED)
+
+#define ScrnHaveSelection(screen) \
+			((screen)->startHRow != (screen)->endHRow \
+			|| (screen)->startHCol != (screen)->endHCol)
+
+#define ScrnAreLinesInSelection(screen, first, last) \
+	((last) >= (screen)->startHRow && (first) <= (screen)->endHRow)
+
+#define ScrnIsLineInSelection(screen, line) \
+	((line) >= (screen)->startHRow && (line) <= (screen)->endHRow)
+
+#define ScrnHaveLineMargins(screen) \
+			((screen)->top_marg != 0 \
+			|| ((screen)->bot_marg != screen->max_row))
+
+#define ScrnIsLineInMargins(screen, line) \
+	((line) >= (screen)->top_marg && (line) <= (screen)->bot_marg)
+
+#if OPT_DEC_RECTOPS
+extern void ScrnCopyRectangle (TScreen *, XTermRect *, int, int *);
+extern void ScrnMarkRectangle (TScreen *, XTermRect *, Bool, int, int *);
+extern void ScrnWipeRectangle (TScreen *, XTermRect *);
+#endif
 
 #if OPT_WIDE_CHARS
 extern void ChangeToWide(TScreen * screen);
@@ -974,15 +999,13 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #define curXtermChrSet(row) 0
 #endif
 
-#if OPT_WIDE_CHARS
 extern unsigned getXtermCell (TScreen *screen, int row, int col);
+extern void putXtermCell (TScreen *screen, int row, int col, int ch);
+
+#if OPT_WIDE_CHARS
 extern unsigned getXtermCellComb1 (TScreen *screen, int row, int col);
 extern unsigned getXtermCellComb2 (TScreen *screen, int row, int col);
 extern void addXtermCombining (TScreen *screen, int row, int col, unsigned ch);
-extern void putXtermCell (TScreen *screen, int row, int col, int ch);
-#else
-#define getXtermCell(screen,row,col) SCRN_BUF_CHARS(screen, row)[col]
-#define putXtermCell(screen,row,col,ch) SCRN_BUF_CHARS(screen, row)[col] = ch
 #endif
 
 #if OPT_XMC_GLITCH

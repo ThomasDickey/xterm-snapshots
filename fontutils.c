@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.124 2004/07/13 00:41:28 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.131 2004/12/01 01:27:46 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.47 2004/07/13 00:41:28 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.48 2004/12/01 01:27:46 dickey Exp $
  */
 
 /************************************************************
@@ -444,7 +444,9 @@ same_font_name(char *pattern, char *match)
 		return False;
 	    }
 	} else {
-	    if (char2lower(*pattern++) != char2lower(*match++))
+	    int p = char2lower(*pattern++);
+	    int m = char2lower(*match++);
+	    if (p != m)
 		return False;
 	}
     }
@@ -883,7 +885,7 @@ xtermLoadFont(TScreen * screen,
 	for (ch = 1; ch < 32; ch++) {
 	    int n = ch;
 #if OPT_WIDE_CHARS
-	    if (screen->utf8_mode) {
+	    if (screen->utf8_mode || screen->unicode_font) {
 		n = dec2ucs(ch);
 		if (n == UCS_REPL)
 		    continue;
@@ -1019,7 +1021,7 @@ xtermLoadVTFonts(XtermWidget w, char *myName, char *myClass)
 	TRACE(("xtermLoadVTFonts(%s, %s)\n", myName, myClass));
 
 	memset(&subresourceRec, 0, sizeof(subresourceRec));
-	XtGetSubresources((Widget) w, (XtPointer) & subresourceRec,
+	XtGetSubresources((Widget) w, (XtPointer) &subresourceRec,
 			  myName, myClass,
 			  font_resources,
 			  (Cardinal) XtNumber(font_resources),
@@ -1058,7 +1060,7 @@ void
 HandleLoadVTFonts(Widget w GCC_UNUSED,
 		  XEvent * event GCC_UNUSED,
 		  String * params GCC_UNUSED,
-		  Cardinal * param_count GCC_UNUSED)
+		  Cardinal *param_count GCC_UNUSED)
 {
     char buf[80];
     char *myName = (*param_count > 0) ? params[0] : "";
@@ -1153,9 +1155,9 @@ xtermComputeFontInfo(TScreen * screen,
 	if (norm == 0 && term->misc.face_name) {
 	    XftPattern *pat, *match;
 	    XftResult result;
-	    int face_size = term->misc.face_size;
+	    double face_size = term->misc.face_size;
 
-	    TRACE(("xtermComputeFontInfo norm(face %s, size %d)\n",
+	    TRACE(("xtermComputeFontInfo norm(face %s, size %f)\n",
 		   term->misc.face_name,
 		   term->misc.face_size));
 
@@ -1173,14 +1175,14 @@ xtermComputeFontInfo(TScreen * screen,
 		int num = screen->menu_font_sizes[fontnum];
 		int den = screen->menu_font_sizes[0];
 		face_size = (1.0 * face_size * num) / den;
-		TRACE(("scaled using %d/%d -> %d\n", num, den, face_size));
+		TRACE(("scaled using %d/%d -> %f\n", num, den, face_size));
 	    }
 #endif
 
 	    pat = XftNameParse(term->misc.face_name);
 	    XftPatternBuild(pat,
 			    XFT_FAMILY, XftTypeString, "mono",
-			    XFT_SIZE, XftTypeInteger, face_size,
+			    XFT_SIZE, XftTypeDouble, face_size,
 			    XFT_SPACING, XftTypeInteger, XFT_MONO,
 			    (void *) 0);
 	    match = XftFontMatch(dpy, DefaultScreen(dpy), pat, &result);
@@ -1230,14 +1232,14 @@ xtermComputeFontInfo(TScreen * screen,
 
 		wnorm = XftFontOpen(dpy, DefaultScreen(dpy),
 				    XFT_FAMILY, XftTypeString, face_name,
-				    XFT_SIZE, XftTypeInteger, face_size,
+				    XFT_SIZE, XftTypeDouble, face_size,
 				    XFT_SPACING, XftTypeInteger, XFT_MONO,
 				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
 				    (void *) 0);
 
 		wbold = XftFontOpen(dpy, DefaultScreen(dpy),
 				    XFT_FAMILY, XftTypeString, face_name,
-				    XFT_SIZE, XftTypeInteger, face_size,
+				    XFT_SIZE, XftTypeDouble, face_size,
 				    XFT_SPACING, XftTypeInteger, XFT_MONO,
 				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
 				    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
@@ -1283,11 +1285,15 @@ xtermComputeFontInfo(TScreen * screen,
     win->width = width - i;
     win->height = height - j;
 
-    TRACE(("xtermComputeFontInfo fontsize %dx%d, screensize %dx%d\n",
-	   FontHeight(screen),
-	   FontWidth(screen),
-	   Height(screen),
-	   Width(screen)));
+    TRACE(("xtermComputeFontInfo window %dx%d (full %dx%d), fontsize %dx%d (asc %d, dsc %d)\n",
+	   win->height,
+	   win->width,
+	   win->fullheight,
+	   win->fullwidth,
+	   win->f_height,
+	   win->f_width,
+	   win->f_ascent,
+	   win->f_descent));
 }
 
 /* save this information as a side-effect for double-sized characters */
@@ -1675,6 +1681,65 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 
     XFreeGC(screen->display, gc2);
 }
+
+#if OPT_RENDERFONT && OPT_WIDE_CHARS
+
+/*
+ * Check if the given character has a glyph known to Xft.
+ *
+ * see xc/lib/Xft/xftglyphs.c
+ */
+Bool
+xtermXftMissing(XftFont * font, int wc)
+{
+    unsigned check = XftCharIndex(term->screen.display, font, wc);
+    Bool result = False;
+
+    if (check == 0) {
+	TRACE(("missingXft %d (%d)\n", wc, ucs2dec(wc)));
+	result = True;
+    }
+    return result;
+}
+
+/*
+ * Check if the character corresponds to one of xterm's internal codes for
+ * line-drawing characters.  That is only a subset of the 1-31 codes used for
+ * graphic characters.  We want to know specifically about the line-drawing
+ * characters because the fonts used by Xft do not always give useful glyphs
+ * for line-drawing, and there is no reliable way to detect this.
+ */
+Bool
+xtermIsLineDrawing(int wc)
+{
+    Bool result;
+    switch (wc) {
+    case 0x0B:			/* lower_right_corner   */
+    case 0x0C:			/* upper_right_corner   */
+    case 0x0D:			/* upper_left_corner    */
+    case 0x0E:			/* lower_left_corner    */
+    case 0x0F:			/* cross                */
+    case 0x10:			/* scan_line_1          */
+    case 0x11:			/* scan_line_3          */
+    case 0x12:			/* scan_line_7          */
+    case 0x13:			/* scan_line_9          */
+    case 0x14:			/* horizontal_line      */
+    case 0x15:			/* left_tee             */
+    case 0x16:			/* right_tee            */
+    case 0x17:			/* bottom_tee           */
+    case 0x18:			/* top_tee              */
+    case 0x19:			/* vertical_line        */
+	result = True;
+	TRACE(("xtermIsLineDrawing %d\n", wc));
+	break;
+    default:
+	result = False;
+	break;
+    }
+    return result;
+}
+#endif /* OPT_RENDERFONT && OPT_WIDE_CHARS */
+
 #endif /* OPT_BOX_CHARS */
 
 #if OPT_WIDE_CHARS
@@ -1860,7 +1925,7 @@ void
 HandleLargerFont(Widget w GCC_UNUSED,
 		 XEvent * event GCC_UNUSED,
 		 String * params GCC_UNUSED,
-		 Cardinal * param_count GCC_UNUSED)
+		 Cardinal *param_count GCC_UNUSED)
 {
     if (term->misc.shift_fonts) {
 	TScreen *screen = &term->screen;
@@ -1880,7 +1945,7 @@ void
 HandleSmallerFont(Widget w GCC_UNUSED,
 		  XEvent * event GCC_UNUSED,
 		  String * params GCC_UNUSED,
-		  Cardinal * param_count GCC_UNUSED)
+		  Cardinal *param_count GCC_UNUSED)
 {
     if (term->misc.shift_fonts) {
 	TScreen *screen = &term->screen;
@@ -1901,7 +1966,7 @@ void
 HandleSetFont(Widget w GCC_UNUSED,
 	      XEvent * event GCC_UNUSED,
 	      String * params,
-	      Cardinal * param_count)
+	      Cardinal *param_count)
 {
     int fontnum;
     VTFontNames fonts;

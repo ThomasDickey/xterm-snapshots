@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.170 2004/08/15 21:07:59 tom Exp $
+dnl $XTermId: configure.in,v 1.175 2004/12/01 01:27:46 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.66 2004/08/15 21:07:59 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.67 2004/12/01 01:27:46 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -52,10 +52,17 @@ AC_GCC_TRADITIONAL
 AC_PROG_AWK
 AC_PROG_INSTALL
 AC_ARG_PROGRAM
+AC_CHECK_PROGS(LINT, tdlint lint alint)
 
 ###	checks for UNIX variants that set C preprocessor variables
 AC_AIX
 AC_ISC_POSIX
+
+###	checks for compiler characteristics
+CF_ANSI_CC_CHECK
+AC_CONST
+CF_PROG_EXT
+CF_XOPEN_SOURCE
 
 ###	checks for header files
 AC_CHECK_HEADERS( \
@@ -101,17 +108,11 @@ fi
 CF_ERRNO
 CF_TTY_GROUP
 
-###	checks for compiler characteristics
-CF_ANSI_CC_CHECK
-AC_CONST
-CF_PROG_EXT
-
 ###	checks for system services and user specified options
 
 CF_POSIX_WAIT
 CF_SYSV
 CF_SVR4
-CF_GNU_SOURCE
 CF_X_TOOLKIT
 
 AC_CHECK_HEADERS( \
@@ -539,11 +540,21 @@ CF_ARG_DISABLE(vt52,
 AC_MSG_RESULT($enable_vt52)
 test "$enable_vt52" = no && AC_DEFINE(OPT_VT52_MODE,0)
 
+AC_MSG_CHECKING(if you want to use mini-luit/Latin9 built-in support)
+CF_ARG_ENABLE(mini-luit,
+	[  --enable-mini-luit      enable mini-luit (built-in Latin9 support)],
+	[enable_mini_luit=yes],
+	[enable_mini_luit=no])
+AC_MSG_RESULT($enable_mini_luit)
+if test "$enable_mini_luit" = yes ; then
+	AC_DEFINE(OPT_MINI_LUIT,1)
+fi
+
 AC_MSG_CHECKING(if you want to use luit)
 CF_ARG_ENABLE(luit,
 	[  --enable-luit           enable luit filter (Unicode translation)],
 	[enable_luit=yes],
-	[enable_luit=no])
+	[enable_luit=$enable_mini_luit])
 AC_MSG_RESULT($enable_luit)
 if test "$enable_luit" = yes ; then
 	AC_DEFINE(OPT_LUIT_PROG,1)

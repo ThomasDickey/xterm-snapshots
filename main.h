@@ -1,10 +1,10 @@
-/* $XTermId: main.h,v 1.25 2004/07/13 00:41:29 tom Exp $ */
+/* $XTermId: main.h,v 1.27 2004/12/01 01:27:47 tom Exp $ */
 
 /*
  *	$Xorg: main.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/main.h,v 3.11 2004/07/13 00:41:29 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.h,v 3.12 2004/12/01 01:27:47 dickey Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -41,7 +41,7 @@
 #define DEFBOLDFONT		NULL	/* no bold font uses overstriking */
 #define DEFBORDER		2
 #define DEFFACENAME		NULL
-#define DEFFACESIZE		14
+#define DEFFACESIZE		"14.0"
 
 #if OPT_BLINK_TEXT
 #define DEFBLINKASBOLD		FALSE

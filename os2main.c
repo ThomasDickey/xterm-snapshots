@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.170 2004/07/20 01:14:41 tom Exp $ */
+/* $XTermId: os2main.c,v 1.173 2004/12/01 01:27:47 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.70 2004/07/20 01:14:41 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.71 2004/12/01 01:27:47 dickey Exp $ */
 
 /***********************************************************
 
@@ -196,7 +196,7 @@ static struct termio d_tio;
  */
 static int override_tty_modes = 0;
 /* *INDENT-OFF* */
-struct _xttymodes {
+static struct _xttymodes {
     char *name;
     size_t len;
     int set;
@@ -410,8 +410,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"-sp",		"*sunKeyboard", XrmoptionNoArg,		(caddr_t) "on"},
 {"+sp",		"*sunKeyboard", XrmoptionNoArg,		(caddr_t) "off"},
 #endif
+#if OPT_TEK4014
 {"-t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
 {"-ti",		"*decTerminalID",XrmoptionSepArg,	(caddr_t) NULL},
 {"-tm",		"*ttyModes",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-tn",		"*termName",	XrmoptionSepArg,	(caddr_t) NULL},
@@ -787,7 +789,7 @@ ConvertConsoleSelection(Widget w GCC_UNUSED,
 			Atom * selection GCC_UNUSED,
 			Atom * target GCC_UNUSED,
 			Atom * type GCC_UNUSED,
-			XtPointer * value GCC_UNUSED,
+			XtPointer *value GCC_UNUSED,
 			unsigned long *length GCC_UNUSED,
 			int *format GCC_UNUSED)
 {
@@ -827,7 +829,7 @@ static void
 DeleteWindow(Widget w,
 	     XEvent * event GCC_UNUSED,
 	     String * params GCC_UNUSED,
-	     Cardinal * num_params GCC_UNUSED)
+	     Cardinal *num_params GCC_UNUSED)
 {
 #if OPT_TEK4014
     if (w == toplevel) {
@@ -847,7 +849,7 @@ static void
 KeyboardMapping(Widget w GCC_UNUSED,
 		XEvent * event,
 		String * params GCC_UNUSED,
-		Cardinal * num_params GCC_UNUSED)
+		Cardinal *num_params GCC_UNUSED)
 {
     switch (event->type) {
     case MappingNotify:
@@ -856,7 +858,7 @@ KeyboardMapping(Widget w GCC_UNUSED,
     }
 }
 
-XtActionsRec actionProcs[] =
+static XtActionsRec actionProcs[] =
 {
     {"DeleteWindow", DeleteWindow},
     {"KeyboardMapping", KeyboardMapping},
@@ -962,7 +964,7 @@ main(int argc, char **argv ENVP_ARG)
 #endif /* OPT_SESSION_MGT */
     XtSetErrorHandler((XtErrorHandler) 0);
 
-    XtGetApplicationResources(toplevel, (XtPointer) & resource,
+    XtGetApplicationResources(toplevel, (XtPointer) &resource,
 			      application_resources,
 			      XtNumber(application_resources), NULL, 0);
     TRACE_XRES();

@@ -1,13 +1,13 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.143 2004/07/20 01:16:47 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.147 2004/12/01 01:27:44 tom Exp $
 .\"
 .\"
 .\" $Xorg: ctlseqs.ms,v 1.3 2000/08/17 19:42:51 cpqbld Exp $
 .\"
 .\"
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.53 2004/07/20 01:16:47 dickey Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.54 2004/12/01 01:27:44 dickey Exp $
 .\"
 .\"
 .\" Copyright 1996-2003,2004 by Thomas E. Dickey
@@ -161,7 +161,6 @@
 .[] Us \v'-1p'\s\nsUS\s0\v'1p'
 .[] XX \v'-1p'\s\nsXX\s0\v'1p'
 .[] $ $
-.[] ! !
 .[] # #
 .[] % %
 .[] (( (
@@ -365,7 +364,7 @@ VT100 Mode
 .ds RH VT100 Mode
 .LP
 Most of these control sequences are standard VT102 control sequences,
-but there is support for later DEC VT terminals (i.e., VT220 and VT320),
+but there is support for later DEC VT terminals (i.e., VT220, VT320, VT420),
 as well as ISO 6429 and \fIaixterm\fP color controls.
 The only VT102 features not supported is auto-repeat,
 since the only way X provides for this will affect all windows.
@@ -749,6 +748,7 @@ and set VT100 mode.
   \*(Ps = \*8 \(-> Auto-repeat Keys (DECARM)
   \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
 See the section \fBMouse Tracking\fP.
+  \*(Ps = \*1\*0 \(-> Show toolbar (rxvt)
   \*(Ps = \*1\*2 \(-> Start Blinking Cursor (att610)
   \*(Ps = \*1\*8 \(-> Print form feed (DECPFF)
   \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX)
@@ -825,6 +825,7 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*7 \(-> No Wraparound Mode (DECAWM)
   \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM)
   \*(Ps = \*9 \(-> Don't Send Mouse X & Y on button press
+  \*(Ps = \*1\*0 \(-> Hide toolbar (rxvt)
   \*(Ps = \*1\*2 \(-> Stop Blinking Cursor (att610)
   \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF)
   \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX)
@@ -962,7 +963,7 @@ The last two parameters apply to VT400 & up, and denote keyboard ready and LK01 
 .br
 \*(Cs\*?\*5\*0\*s\*n No Locator, if not.
 .
-.IP \\*(Cs\\*s\\*!\\*p
+.IP \\*(Cs\\*!\\*p
 Soft terminal reset (DECSTR)
 .
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*(c"\\*p
@@ -990,6 +991,11 @@ Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM)
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*r
 Restore DEC Private Mode Values.  The value of \*(Ps previously saved is
 restored.  \*(Ps values are the same as for DECSET.
+.
+.IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Ps\\*$\\*r
+Change Attributes in Rectangular Area (DECCARA).
+  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
+  \*(Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7
 .
 .IP \\*(Cs\\*(cs
 Save cursor (ANSI.SYS)
@@ -1027,8 +1033,20 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
 \*(Os\*s\*l\*s\fItitle\fP\*s\*(ST
   \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP)
 .
+.IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Ps\\*$\\*t
+Reverse Attributes in Rectangular Area (DECRARA).
+  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
+  \*(Ps denotes the attributes to reverse. 1, 4, 5, 7
+.
 .IP \\*(Cs\\*u
 Save cursor (ANSI.SYS)
+.
+.IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Pp\\*;\\*(Pt\\*;\\*(Pl\\*;\\*(Pp\\*$\\*v
+Copy Rectangular Area (DECCRA)
+  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
+  \*(Pp denotes the source page.
+  \*(Pt\*;\*(Pl denotes the target location.
+  \*(Pp denotes the target page.
 .
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*(qu\\*w
 Enable Filter Rectangle (DECEFR)
@@ -1057,6 +1075,17 @@ whose parameters describe the terminal:
   \*1 \(-> clock multiplier
   \*0 \(-> STP flags
 .
+.IP \\*(Cs\\*(Ps\\*s\\*x
+Select Attribute Change Extent (DECSACE).
+  \*(Ps = \*0 \(-> from start to end position, wrapped
+  \*(Ps = \*1 \(-> from start to end position, wrapped
+  \*(Ps = \*2 \(-> rectangle (exact).
+.
+.IP \\*(Cs\\*(Pc\\*;\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*$\\*x
+Fill Rectangular Area (DECFRA).
+  \*(Pc is the character to use.
+  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
+.
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Pu\\*s\\*(qu\\*z
 Enable Locator Reporting (DECELR)
 .br
@@ -1072,6 +1101,10 @@ Valid values for the second parameter:
   \*(Pu = \*1 \(-> device physical pixels
   \*(Pu = \*2 \(-> character cells
 .
+.IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*$\\*z
+Erase Rectangular Area (DECERA).
+  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
+.
 .IP \\*(Cs\\*(Pm\\*s\\*(qu\\*{
 Select Locator Events (DECSLE)
 .br
@@ -1082,6 +1115,10 @@ Valid values for the first (and any additional parameters) are:
   \*(Ps = \*2 \(-> do not report button down transitions
   \*(Ps = \*3 \(-> report button up transitions
   \*(Ps = \*4 \(-> do not report button up transitions
+.
+.IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*$\\*{
+Selective Erase Rectangular Area (DECSERA).
+  \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*(qu\\*|
 Request Locator Position (DECRQLP)

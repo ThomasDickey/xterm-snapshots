@@ -1,12 +1,12 @@
-/* $XTermId: doublechr.c,v 1.33 2004/04/18 20:49:43 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.35 2004/12/01 01:27:46 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/doublechr.c,v 3.13 2004/04/18 20:49:43 dickey Exp $
+ * $XFree86: xc/programs/xterm/doublechr.c,v 3.14 2004/12/01 01:27:46 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2002,2003 by Thomas E. Dickey
+Copyright 1997-2003,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -78,22 +78,21 @@ repaint_line(unsigned newChrSet)
 
     /*
      * ScrnRefresh won't paint blanks for us if we're switching between a
-     * single-size and double-size font.
+     * single-size and double-size font.  So we paint our own.
      */
     if (CSET_DOUBLE(oldChrSet) != CSET_DOUBLE(newChrSet)) {
-	ClearCurBackground(
-			      screen,
-			      CursorY(screen, currow),
-			      CurCursorX(screen, currow, 0),
-			      FontHeight(screen),
-			      len * CurFontWidth(screen, currow));
+	ClearCurBackground(screen,
+			   CursorY(screen, currow),
+			   CurCursorX(screen, currow, 0),
+			   FontHeight(screen),
+			   len * CurFontWidth(screen, currow));
     }
 
     /* FIXME: do VT220 softchars allow double-sizes? */
     memset(SCRN_BUF_CSETS(screen, currow), newChrSet, len);
 
     screen->cur_col = 0;
-    ScrnRefresh(screen, currow, 0, 1, len, True);
+    ScrnUpdate(screen, currow, 0, 1, len, True);
     screen->cur_col = curcol;
 }
 #endif

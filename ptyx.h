@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.328 2004/07/28 00:53:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.346 2004/12/01 01:27:47 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.119 2004/07/28 00:53:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.120 2004/12/01 01:27:47 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -319,11 +319,11 @@ typedef struct {
 } OptionHelp;
 
 typedef struct {
-	unsigned char	a_type;
-	unsigned char	a_pintro;
-	unsigned char	a_final;
-	unsigned char	a_inters;
-	char	a_nparam;		/* # of parameters		*/
+	unsigned char	a_type;		/* CSI, etc., see unparseq()	*/
+	unsigned char	a_pintro;	/* private-mode char, if any	*/
+	unsigned char	a_inters;	/* special (before final-char)	*/
+	unsigned char	a_final;	/* final-char			*/
+	short	a_nparam;		/* # of parameters		*/
 	short	a_param[NPARAM];	/* Parameters			*/
 } ANSI;
 
@@ -430,6 +430,10 @@ typedef struct {
 #define	OPT_DEC_LOCATOR 0 /* true if xterm supports VT220-style mouse events */
 #endif
 
+#ifndef OPT_DEC_RECTOPS
+#define OPT_DEC_RECTOPS 0 /* true if xterm is configured for VT420 rectangles */
+#endif
+
 #ifndef OPT_DEC_SOFTFONT
 #define OPT_DEC_SOFTFONT 0 /* true if xterm is configured for VT220 softfonts */
 #endif
@@ -492,6 +496,10 @@ typedef struct {
 
 #ifndef OPT_MAXIMIZE
 #define OPT_MAXIMIZE	1 /* add actions for iconify ... maximize */
+#endif
+
+#ifndef OPT_MINI_LUIT
+#define OPT_MINI_LUIT   0 /* true if xterm supports built-in mini-luit */
 #endif
 
 #ifndef OPT_MOD_FKEYS
@@ -675,7 +683,7 @@ typedef enum {
 
 #if OPT_ISO_COLORS
 #define if_OPT_ISO_COLORS(screen, code) if(screen->colorMode) code
-#define TERM_COLOR_FLAGS (term->flags & (BG_COLOR))
+#define TERM_COLOR_FLAGS (term->flags & (FG_COLOR|BG_COLOR))
 #define COLOR_0		0
 #define COLOR_1		1
 #define COLOR_2		2
@@ -913,9 +921,17 @@ typedef unsigned char IChar;	/* for 8-bit characters */
 	{RES_NAME(name), RES_CLASS(class), XtRInt, sizeof(int), \
 	 RES_OFFSET(offset), XtRImmediate, (XtPointer) dftvalue}
 
+#define Dres(name, class, offset, dftvalue) \
+	{RES_NAME(name), RES_CLASS(class), XtRFloat, sizeof(float), \
+	 RES_OFFSET(offset), XtRString, (XtPointer) dftvalue}
+
 #define Sres(name, class, offset, dftvalue) \
 	{RES_NAME(name), RES_CLASS(class), XtRString, sizeof(char *), \
 	 RES_OFFSET(offset), XtRString, (XtPointer) dftvalue}
+
+#define Wres(name, class, offset, dftvalue) \
+	{RES_NAME(name), RES_CLASS(class), XtRWidget, sizeof(Widget), \
+	 RES_OFFSET(offset), XtRWidget, (XtPointer) dftvalue}
 
 /***====================================================================***/
 
@@ -1034,6 +1050,13 @@ typedef struct {
 	char *		fn;
 } XTermFonts;
 
+typedef struct {
+	int		top;
+	int		left;
+	int		bottom;
+	int		right;
+} XTermRect;
+
 	/* indices into save_modes[] */
 typedef enum {
 	DP_CRS_VISIBLE,
@@ -1062,6 +1085,9 @@ typedef enum {
 	DP_X_X10MSE,
 #if OPT_BLINK_CURS
 	DP_CRS_BLINK,
+#endif
+#if OPT_TOOLBAR
+	DP_TOOLBAR,
 #endif
 	DP_LAST
 } SaveModes;
@@ -1124,6 +1150,14 @@ typedef struct {
 	Pixmap		bdpix;		/* ...cached border pixmap	*/
 } SbInfo;
 
+#if OPT_TOOLBAR
+typedef struct {
+	Widget		menu_bar;	/* toolbar, if initialized	*/
+	Dimension	menu_height;	/* ...and its height		*/
+} TbInfo;
+#define VT100_TB_INFO(name) screen.fullVwin.tb_info.name
+#endif
+
 struct _vtwin {
 	Window		window;		/* X window id			*/
 	int		width;		/* width of columns		*/
@@ -1140,8 +1174,8 @@ struct _vtwin {
 	GC		normalboldGC;	/* normal painting, bold font	*/
 	GC		reverseboldGC;	/* reverse painting, bold font	*/
 #if OPT_TOOLBAR
-	Widget		menu_bar;	/* toolbar, if initialized	*/
-	Dimension	menu_height;	/* ...and its height		*/
+	Boolean		active;		/* true if toolbars are used	*/
+	TbInfo		tb_info;	/* toolbar information		*/
 #endif
 };
 
@@ -1188,12 +1222,19 @@ typedef struct {
 	int		fonts_used;	/* count items in double_fonts	*/
 	XTermFonts	double_fonts[NUM_CHRSET];
 #endif
+#if OPT_DEC_RECTOPS
+	int		cur_decsace;	/* parameter for DECSACE	*/
+#endif
 #if OPT_WIDE_CHARS
 	Boolean		wide_chars;	/* true when 16-bit chars	*/
 	Boolean		vt100_graphics;	/* true to allow vt100-graphics	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
-	int		utf_count;	/* state of utf_char */
-	IChar		utf_char;	/* in-progress character */
+	int		latin9_mode;	/* poor man's luit, latin9	*/
+	int		unicode_font;	/* font uses unicode encoding	*/
+	int		utf_count;	/* state of utf_char		*/
+	IChar		utf_char;	/* in-progress character	*/
+	int		last_written_col;
+	int		last_written_row;
 #endif
 #if OPT_BROKEN_OSC
 	Boolean		brokenLinuxOSC; /* true to ignore Linux palette ctls */
@@ -1253,6 +1294,9 @@ typedef struct {
 	struct _vtwin	iconVwin;
 	struct _vtwin *	whichVwin;
 #endif /* NO_ACTIVE_ICON */
+#if OPT_TOOLBAR
+	Boolean		toolbars;	/* true if toolbars are used	*/
+#endif
 
 	Cursor	pointer_cursor;		/* pointer cursor in window	*/
 
@@ -1451,7 +1495,6 @@ typedef struct {
 	String		menu_font_names[NMENUFONTS];
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
-	XIC		xic;
 #if OPT_RENDERFONT
 	XftFont *	renderFontNorm[NMENUFONTS];
 	XftFont *	renderFontBold[NMENUFONTS];
@@ -1460,9 +1503,11 @@ typedef struct {
 	XftDraw *	renderDraw;
 #endif
 #if OPT_INPUT_METHOD
+	XIM		xim;
 	XFontSet	fs;		/* fontset for XIM preedit */
 	int		fs_ascent;	/* ascent of fs */
 #endif
+	XIC		xic;		/* this is used even without XIM */
 #if OPT_DABBREV
 	int		dabbrev_working;	/* nonzero during dabbrev process */
 	unsigned char	dabbrev_erase_char;	/* used for deleting inserted completion */
@@ -1475,8 +1520,7 @@ typedef struct _TekPart {
 	char *		initial_font;		/* large, 2, 3, small */
 	char *		gin_terminator_str;	/* ginTerminator resource */
 #if OPT_TOOLBAR
-	Widget		menu_bar;	/* toolbar, if initialized	*/
-	Dimension	menu_height;	/* ...and its height		*/
+	TbInfo		tb_info;	/* toolbar information		*/
 #endif
 } TekPart;
 
@@ -1604,7 +1648,7 @@ typedef struct _Misc {
 #if OPT_RENDERFONT
     char *face_name;
     char *face_wide_name;
-    int face_size;
+    float face_size;
     Boolean render_font;
 #endif
 } Misc;
@@ -1697,7 +1741,7 @@ typedef struct _TekWidgetRec {
 				   screen.  Used to distinguish blanks from
 				   empty parts of the screen when selecting */
 
-#if OPT_BLINK_CURS
+#if OPT_BLINK_TEXT
 #define BOLDATTR(screen) (BOLD | ((screen)->blink_as_bold ? BLINK : 0))
 #else
 #define BOLDATTR(screen) (BOLD | BLINK)
@@ -1719,6 +1763,9 @@ typedef struct _TekWidgetRec {
 
 			/* mask: user-visible attributes */
 #define	ATTRIBUTES	(INVERSE|UNDERLINE|BOLD|BLINK|BG_COLOR|FG_COLOR|INVISIBLE|PROTECTED)
+
+			/* mask for video-attributes only */
+#define SGR_MASK	(BOLD|BLINK|UNDERLINE|INVERSE)
 
 #define WRAPAROUND	0x400	/* true if auto wraparound mode */
 #define	REVERSEWRAP	0x800	/* true if reverse wraparound mode */
@@ -1767,60 +1814,61 @@ typedef struct _TekWidgetRec {
 #define CursorY(screen,row) ((((row) - screen->topline) * FontHeight(screen)) \
 			+ screen->border)
 
+/*
+ * These definitions depend on whether xterm supports active-icon.
+ */
 #ifndef NO_ACTIVE_ICON
 #define IsIcon(screen)		((screen)->whichVwin == &(screen)->iconVwin)
-#define VWindow(screen)		((screen)->whichVwin->window)
-#define VShellWindow		XtWindow(SHELL_OF(term))
-#define TWindow(screen)		((screen)->whichTwin->window)
-#define TShellWindow		XtWindow(SHELL_OF(tekWidget))
-#define Width(screen)		((screen)->whichVwin->width)
-#define Height(screen)		((screen)->whichVwin->height)
-#define FullWidth(screen)	((screen)->whichVwin->fullwidth)
-#define FullHeight(screen)	((screen)->whichVwin->fullheight)
-#define FontWidth(screen)	((screen)->whichVwin->f_width)
-#define FontHeight(screen)	((screen)->whichVwin->f_height)
-#define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->ascent \
-						: (screen)->whichVwin->f_ascent)
-#define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->descent \
-						: (screen)->whichVwin->f_descent)
-#define ScrollbarWidth(screen)	((screen)->whichVwin->sb_info.width)
-#define NormalGC(screen)	((screen)->whichVwin->normalGC)
-#define ReverseGC(screen)	((screen)->whichVwin->reverseGC)
-#define NormalBoldGC(screen)	((screen)->whichVwin->normalboldGC)
-#define ReverseBoldGC(screen)	((screen)->whichVwin->reverseboldGC)
-#define TWidth(screen)		((screen)->whichTwin->width)
-#define THeight(screen)		((screen)->whichTwin->height)
-#define TFullWidth(screen)	((screen)->whichTwin->fullwidth)
-#define TFullHeight(screen)	((screen)->whichTwin->fullheight)
-#define TekScale(screen)	((screen)->whichTwin->tekscale)
+#define WhichVWin(screen)	((screen)->whichVwin)
+#define WhichTWin(screen)	((screen)->whichTwin)
 
+#define WhichVFont(screen,name)	(IsIcon(screen) ? (screen)->fnt_icon \
+ 						: (screen)->name)
+#define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->ascent \
+						: WhichVWin(screen)->f_ascent)
+#define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->descent \
+						: WhichVWin(screen)->f_descent)
 #else /* NO_ACTIVE_ICON */
 
 #define IsIcon(screen)		(False)
-#define VWindow(screen)		((screen)->fullVwin.window)
-#define VShellWindow		XtWindow(SHELL_OF(term))
-#define TWindow(screen)		((screen)->fullTwin.window)
-#define TShellWindow		XtWindow(SHELL_OF(tekWidget))
-#define Width(screen)		((screen)->fullVwin.width)
-#define Height(screen)		((screen)->fullVwin.height)
-#define FullWidth(screen)	((screen)->fullVwin.fullwidth)
-#define FullHeight(screen)	((screen)->fullVwin.fullheight)
-#define FontWidth(screen)	((screen)->fullVwin.f_width)
-#define FontHeight(screen)	((screen)->fullVwin.f_height)
-#define FontAscent(screen)	((screen)->fullVwin.f_ascent)
-#define FontDescent(screen)	((screen)->fullVwin.f_descent)
-#define ScrollbarWidth(screen)	((screen)->fullVwin.sb_info.width)
-#define NormalGC(screen)	((screen)->fullVwin.normalGC)
-#define ReverseGC(screen)	((screen)->fullVwin.reverseGC)
-#define NormalBoldGC(screen)	((screen)->fullVwin.normalboldGC)
-#define ReverseBoldGC(screen)	((screen)->fullVwin.reverseboldGC)
-#define TWidth(screen)		((screen)->fullTwin.width)
-#define THeight(screen)		((screen)->fullTwin.height)
-#define TFullWidth(screen)	((screen)->fullTwin.fullwidth)
-#define TFullHeight(screen)	((screen)->fullTwin.fullheight)
-#define TekScale(screen)	((screen)->fullTwin.tekscale)
+#define WhichVWin(screen)	(&((screen)->fullVwin))
+#define WhichTWin(screen)	(&((screen)->fullTwin))
+
+#define WhichVFont(screen,name)	(&(screen)->name)
+#define FontAscent(screen)	WhichVWin(screen)->f_ascent
+#define FontDescent(screen)	WhichVWin(screen)->f_descent
 
 #endif /* NO_ACTIVE_ICON */
+
+/*
+ * These definitions do not depend on whether xterm supports active-icon.
+ */
+#define VWindow(screen)		WhichVWin(screen)->window
+#define VShellWindow		XtWindow(SHELL_OF(term))
+#define TWindow(screen)		WhichTWin(screen)->window
+#define TShellWindow		XtWindow(SHELL_OF(tekWidget))
+
+#define Width(screen)		WhichVWin(screen)->width
+#define Height(screen)		WhichVWin(screen)->height
+#define FullWidth(screen)	WhichVWin(screen)->fullwidth
+#define FullHeight(screen)	WhichVWin(screen)->fullheight
+#define FontWidth(screen)	WhichVWin(screen)->f_width
+#define FontHeight(screen)	WhichVWin(screen)->f_height
+
+#define NormalFont(screen)	WhichVFont(screen, fnt_norm)
+#define BoldFont(screen)	WhichVFont(screen, fnt_bold)
+
+#define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width
+#define NormalGC(screen)	WhichVWin(screen)->normalGC
+#define ReverseGC(screen)	WhichVWin(screen)->reverseGC
+#define NormalBoldGC(screen)	WhichVWin(screen)->normalboldGC
+#define ReverseBoldGC(screen)	WhichVWin(screen)->reverseboldGC
+
+#define TWidth(screen)		WhichTWin(screen)->width
+#define THeight(screen)		WhichTWin(screen)->height
+#define TFullWidth(screen)	WhichTWin(screen)->fullwidth
+#define TFullHeight(screen)	WhichTWin(screen)->fullheight
+#define TekScale(screen)	WhichTWin(screen)->tekscale
 
 #if OPT_TEK4014
 #define TEK_LINK_BLOCK_SIZE 1024

@@ -1,11 +1,13 @@
+/* $XTermId: cursor.c,v 1.32 2004/12/01 01:27:46 tom Exp $ */
+
 /*
  *	$Xorg: cursor.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/cursor.c,v 3.15 2002/04/28 19:04:20 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/cursor.c,v 3.16 2004/12/01 01:27:46 dickey Exp $ */
 
 /*
- * Copyright 2002 by Thomas E. Dickey
+ * Copyright 2002,2004 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -61,55 +63,43 @@
 #include <data.h>
 
 /*
- * Clear the selection if the cursor moves "before" the current position. 
- * Moving "after" is ok.
- *
- * That sounds fine - if the cursor really had anything direct relationship to
- * the selection.  For instance, if the cursor moved due to command line
- * editing, it would be nice to deselect.  However, what that means in practice
- * is that a fullscreen program which scrolls back a line will (because it must
- * temporarily reposition the cursor) clear the selection.
- *
- * However, it has an indirect relationship to the selection - we want to
- * prevent the application from changing the screen contents under the
- * highlighted region.
- */
-#define _CheckSelection(screen) \
-    if ((screen->cur_row < screen->endHRow) || \
-	(screen->cur_row == screen->endHRow && \
-	 screen->cur_col < screen->endHCol)) \
-	DisownSelection(term);
-
-/*
  * Moves the cursor to the specified position, checking for bounds.
  * (this includes scrolling regions)
  * The origin is considered to be 0, 0 for this procedure.
  */
 void
-CursorSet(register TScreen * screen, register int row, register int col, unsigned flags)
+CursorSet(TScreen * screen, int row, int col, unsigned flags)
 {
-    register int maxr;
+    int use_row = row;
+    int max_row;
 
     col = (col < 0 ? 0 : col);
     screen->cur_col = (col <= screen->max_col ? col : screen->max_col);
-    maxr = screen->max_row;
+    max_row = screen->max_row;
     if (flags & ORIGIN) {
-	row += screen->top_marg;
-	maxr = screen->bot_marg;
+	use_row += screen->top_marg;
+	max_row = screen->bot_marg;
     }
-    row = (row < 0 ? 0 : row);
-    screen->cur_row = (row <= maxr ? row : maxr);
+    use_row = (use_row < 0 ? 0 : use_row);
+    screen->cur_row = (use_row <= max_row ? use_row : max_row);
     screen->do_wrap = 0;
-    _CheckSelection(screen);
+
+    TRACE(("CursorSet(%d,%d) margins [%d..%d] -> %d,%d %s\n",
+	   row, col,
+	   screen->top_marg,
+	   screen->bot_marg,
+	   screen->cur_row,
+	   screen->cur_col,
+	   (flags & ORIGIN ? "origin" : "normal")));
 }
 
 /*
  * moves the cursor left n, no wrap around
  */
 void
-CursorBack(register TScreen * screen, int n)
+CursorBack(TScreen * screen, int n)
 {
-    register int i, j, k, rev;
+    int i, j, k, rev;
 
     if ((rev = (term->flags & (REVERSEWRAP | WRAPAROUND)) ==
 	 (REVERSEWRAP | WRAPAROUND)) != 0
@@ -128,20 +118,18 @@ CursorBack(register TScreen * screen, int n)
 	    screen->cur_col = 0;
     }
     screen->do_wrap = 0;
-    _CheckSelection(screen);
 }
 
 /*
  * moves the cursor forward n, no wraparound
  */
 void
-CursorForward(register TScreen * screen, int n)
+CursorForward(TScreen * screen, int n)
 {
     screen->cur_col += n;
     if (screen->cur_col > CurMaxCol(screen, screen->cur_row))
 	screen->cur_col = CurMaxCol(screen, screen->cur_row);
     screen->do_wrap = 0;
-    _CheckSelection(screen);
 }
 
 /*
@@ -149,9 +137,9 @@ CursorForward(register TScreen * screen, int n)
  * Won't pass bottom margin or bottom of screen.
  */
 void
-CursorDown(register TScreen * screen, int n)
+CursorDown(TScreen * screen, int n)
 {
-    register int max;
+    int max;
 
     max = (screen->cur_row > screen->bot_marg ?
 	   screen->max_row : screen->bot_marg);
@@ -160,7 +148,6 @@ CursorDown(register TScreen * screen, int n)
     if (screen->cur_row > max)
 	screen->cur_row = max;
     screen->do_wrap = 0;
-    _CheckSelection(screen);
 }
 
 /*
@@ -168,18 +155,18 @@ CursorDown(register TScreen * screen, int n)
  * Won't pass top margin or top of screen.
  */
 void
-CursorUp(register TScreen * screen, int n)
+CursorUp(TScreen * screen, int n)
 {
-    register int min;
+    int min;
 
-    min = (screen->cur_row < screen->top_marg ?
-	   0 : screen->top_marg);
+    min = ((screen->cur_row < screen->top_marg)
+	   ? 0
+	   : screen->top_marg);
 
     screen->cur_row -= n;
     if (screen->cur_row < min)
 	screen->cur_row = min;
     screen->do_wrap = 0;
-    _CheckSelection(screen);
 }
 
 /*
@@ -187,9 +174,9 @@ CursorUp(register TScreen * screen, int n)
  * Won't leave scrolling region. No carriage return.
  */
 void
-xtermIndex(register TScreen * screen, register int amount)
+xtermIndex(TScreen * screen, int amount)
 {
-    register int j;
+    int j;
 
     /*
      * indexing when below scrolling region is cursor down.
@@ -210,7 +197,7 @@ xtermIndex(register TScreen * screen, register int amount)
  * Won't leave scrolling region. No carriage return.
  */
 void
-RevIndex(register TScreen * screen, register int amount)
+RevIndex(TScreen * screen, int amount)
 {
     /*
      * reverse indexing when above scrolling region is cursor up.
@@ -231,21 +218,20 @@ RevIndex(register TScreen * screen, register int amount)
  * (Note: xterm doesn't implement SLH, SLL which would affect use of this)
  */
 void
-CarriageReturn(register TScreen * screen)
+CarriageReturn(TScreen * screen)
 {
     screen->cur_col = 0;
     screen->do_wrap = 0;
-    _CheckSelection(screen);
 }
 
 /*
  * Save Cursor and Attributes
  */
 void
-CursorSave(register XtermWidget tw)
+CursorSave(XtermWidget tw)
 {
-    register TScreen *screen = &tw->screen;
-    register SavedCursor *sc = &screen->sc[screen->alternate != False];
+    TScreen *screen = &tw->screen;
+    SavedCursor *sc = &screen->sc[screen->alternate != False];
 
     sc->saved = True;
     sc->row = screen->cur_row;
@@ -271,10 +257,10 @@ CursorSave(register XtermWidget tw)
  * Restore Cursor and Attributes
  */
 void
-CursorRestore(register XtermWidget tw)
+CursorRestore(XtermWidget tw)
 {
-    register TScreen *screen = &tw->screen;
-    register SavedCursor *sc = &screen->sc[screen->alternate != False];
+    TScreen *screen = &tw->screen;
+    SavedCursor *sc = &screen->sc[screen->alternate != False];
 
     /* Restore the character sets, unless we never did a save-cursor op.
      * In that case, we'll reset the character sets.

@@ -1,9 +1,10 @@
 #!/bin/sh
-# $XTermId: uxterm,v 1.15 2004/07/13 00:41:30 tom Exp $
-# $XFree86: xc/programs/xterm/uxterm,v 1.9 2004/07/13 00:41:30 dickey Exp $
+# $XTermId: uxterm,v 1.18 2004/12/01 01:27:47 tom Exp $
+# $XFree86: xc/programs/xterm/uxterm,v 1.10 2004/12/01 01:27:47 dickey Exp $
 # wrapper script to setup xterm with UTF-8 locale
 
 program=xterm
+locale=`(LC_ALL=C LC_CTYPE=C LANG=C locale >/dev/null) 2>&1`
 found=no
 
 # Check for -version and -help options, to provide a simple return without
@@ -46,11 +47,21 @@ done
 # user's shell does not reset unknown locale specifiers, but not all shells do.
 if test $found != yes ; then
 	if test -n "$value" ; then
-		eval ${name}=`echo ${value} |sed -e 's/[.@].*//'`.UTF-8
-		eval export ${name}
+		value=`echo ${value} |sed -e 's/[.@].*//'`.UTF-8
 	else
-		LC_CTYPE=en_US.UTF-8
-		export LC_CTYPE
+		name="LC_CTYPE"
+		value="en_US.UTF-8"
+	fi
+	eval ${name}=${value}
+	eval export ${name}
+	if test -z "$locale" ; then
+		# The 'locale' program tries to do a sanity check.
+		check=`(locale >/dev/null) 2>&1`
+		if test -n "$check" ; then
+			echo "uxterm tried to use locale $value" >&2
+			echo "$check" >&2
+			exit 1
+		fi
 	fi
 fi
 

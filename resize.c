@@ -1,11 +1,13 @@
+/* $XTermId: resize.c,v 1.92 2004/12/01 01:27:47 tom Exp $ */
+
 /*
  *	$Xorg: resize.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/resize.c,v 3.57 2004/04/03 22:26:26 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/resize.c,v 3.58 2004/12/01 01:27:47 dickey Exp $ */
 
 /*
- * Copyright 2003 by Thomas E. Dickey
+ * Copyright 2003,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -115,7 +117,7 @@ extern struct passwd *getpwuid();	/* does ANYBODY need this? */
 #define	SHELL_C		1
 #define	SHELL_BOURNE	2
 /* *INDENT-OFF* */
-struct {
+static struct {
     char *name;
     int type;
 } shell_list[] = {
@@ -131,58 +133,58 @@ struct {
 };
 /* *INDENT-ON* */
 
-char *emuname[EMULATIONS] =
+static char *emuname[EMULATIONS] =
 {
     "VT100",
     "Sun",
 };
-char *myname;
-int shell_type = SHELL_UNKNOWN;
-char *getsize[EMULATIONS] =
+static char *myname;
+static int shell_type = SHELL_UNKNOWN;
+static char *getsize[EMULATIONS] =
 {
     ESCAPE("7") ESCAPE("[r") ESCAPE("[999;999H") ESCAPE("[6n"),
     ESCAPE("[18t"),
 };
 #if defined(USE_STRUCT_TTYSIZE)
 #elif defined(USE_STRUCT_WINSIZE)
-char *getwsize[EMULATIONS] =
+static char *getwsize[EMULATIONS] =
 {				/* size in pixels */
     0,
     ESCAPE("[14t"),
 };
 #endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
-char *restore[EMULATIONS] =
+static char *restore[EMULATIONS] =
 {
     ESCAPE("8"),
     0,
 };
-char *setname = "";
-char *setsize[EMULATIONS] =
+static char *setname = "";
+static char *setsize[EMULATIONS] =
 {
     0,
     ESCAPE("[8;%s;%st"),
 };
 
 #ifdef USE_ANY_SYSV_TERMIO
-struct termio tioorig;
+static struct termio tioorig;
 #elif defined(USE_TERMIOS)
-struct termios tioorig;
+static struct termios tioorig;
 #else
-struct sgttyb sgorig;
+static struct sgttyb sgorig;
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 
-char *size[EMULATIONS] =
+static char *size[EMULATIONS] =
 {
     ESCAPE("[%d;%dR"),
     ESCAPE("[8;%d;%dt"),
 };
-char sunname[] = "sunsize";
-int tty;
-FILE *ttyfp;
+static char sunname[] = "sunsize";
+static int tty;
+static FILE *ttyfp;
 
 #if defined(USE_STRUCT_TTYSIZE)
 #elif defined(USE_STRUCT_WINSIZE)
-char *wsize[EMULATIONS] =
+static char *wsize[EMULATIONS] =
 {
     0,
     ESCAPE("[4;%hd;%hdt"),
@@ -193,7 +195,7 @@ static SIGNAL_T onintr(int sig);
 static SIGNAL_T resize_timeout(int sig);
 static int checkdigits(char *str);
 static void Usage(void);
-static void readstring(FILE * fp, char *buf, char *str);
+static void readstring(FILE *fp, char *buf, char *str);
 
 #undef US			/* may conflict with curses.h */
 
@@ -530,7 +532,7 @@ checkdigits(register char *str)
 }
 
 static void
-readstring(register FILE * fp, register char *buf, char *str)
+readstring(register FILE *fp, register char *buf, char *str)
 {
     register int last, c;
 #if !defined(USG) && !defined(__UNIXOS2__)

@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.h,v 1.12 2003/10/27 01:07:57 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.h,v 1.13 2004/12/01 01:27:46 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1998-2000,2003 by Thomas E. Dickey
+Copyright 1998-2003,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -66,6 +66,13 @@ extern void HandleLoadVTFonts PROTO_XT_ACTIONS_ARGS;
 
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
 extern Bool xtermLoadVTFonts(XtermWidget w, char *aName, char *cName);
+#endif
+
+#define xtermIsDecGraphic(ch) ((ch) > 0 && (ch) < 32)
+
+#if OPT_RENDERFONT && OPT_WIDE_CHARS
+extern Bool xtermIsLineDrawing(int /* wc */);
+extern Bool xtermXftMissing(XftFont * /* font */, int /* wc */);
 #endif
 
 #if OPT_SHIFT_FONTS

@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.111 2004/07/13 00:41:24 tom Exp $
+## $XTermId: Makefile.in,v 1.113 2004/12/01 01:27:46 tom Exp $
 ##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.48 2004/07/13 00:41:24 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.49 2004/12/01 01:27:46 dickey Exp $ ##
 ##
 ## Copyright 2002-2003,2004 by Thomas E. Dickey
 ##
@@ -68,7 +68,7 @@ appsdir		= $(libdir)/X11/app-defaults
 #### End of system configuration section. ####
 
 RM              = rm -f
-LINT		= lint
+LINT		= @LINT@
 
 DESTDIR		=
 BINDIR		= $(DESTDIR)$(bindir)

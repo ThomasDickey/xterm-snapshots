@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.160 2004/07/20 01:14:41 tom Exp $ */
+/* $XTermId: button.c,v 1.171 2004/12/01 01:27:46 tom Exp $ */
 
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
@@ -52,7 +52,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.75 2004/07/20 01:14:41 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.76 2004/12/01 01:27:46 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -177,7 +177,7 @@ static void StartSelect(int startrow, int startcol);
 static void TrackDown(XButtonEvent * event);
 static void _OwnSelection(XtermWidget termw, String * selections, Cardinal count);
 static void do_select_end(Widget w, XEvent * event, String * params,
-			  Cardinal * num_params, Bool use_cursor_loc);
+			  Cardinal *num_params, Bool use_cursor_loc);
 
 Boolean
 SendMousePosition(Widget w, XEvent * event)
@@ -825,7 +825,7 @@ void
 DiredButton(Widget w GCC_UNUSED,
 	    XEvent * event,	/* must be XButtonEvent */
 	    String * params GCC_UNUSED,		/* selections */
-	    Cardinal * num_params GCC_UNUSED)
+	    Cardinal *num_params GCC_UNUSED)
 {
     TScreen *screen = &term->screen;
     Char Line[6];
@@ -848,7 +848,7 @@ void
 ReadLineButton(Widget w GCC_UNUSED,
 	       XEvent * event,	/* must be XButtonEvent */
 	       String * params GCC_UNUSED,	/* selections */
-	       Cardinal * num_params GCC_UNUSED)
+	       Cardinal *num_params GCC_UNUSED)
 {
     TScreen *screen = &term->screen;
     Char Line[6];
@@ -908,7 +908,7 @@ void
 ViButton(Widget w GCC_UNUSED,
 	 XEvent * event,	/* must be XButtonEvent */
 	 String * params GCC_UNUSED,	/* selections */
-	 Cardinal * num_params GCC_UNUSED)
+	 Cardinal *num_params GCC_UNUSED)
 {
     TScreen *screen = &term->screen;
     int pty = screen->respond;
@@ -943,7 +943,7 @@ void
 HandleSelectExtend(Widget w,
 		   XEvent * event,	/* must be XMotionEvent */
 		   String * params GCC_UNUSED,
-		   Cardinal * num_params GCC_UNUSED)
+		   Cardinal *num_params GCC_UNUSED)
 {
     TScreen *screen;
     int row, col;
@@ -967,8 +967,9 @@ HandleSelectExtend(Widget w,
     case NORMAL:
 	/* will get here if send_mouse_pos != MOUSE_OFF */
 	if (screen->send_mouse_pos == BTN_EVENT_MOUSE
-	    || screen->send_mouse_pos == ANY_EVENT_MOUSE)
-	    SendMousePosition(w, event);
+	    || screen->send_mouse_pos == ANY_EVENT_MOUSE) {
+	    (void) SendMousePosition(w, event);
+	}
 	break;
     }
 }
@@ -977,7 +978,7 @@ static void
 do_select_end(Widget w,
 	      XEvent * event,	/* must be XButtonEvent */
 	      String * params,	/* selections */
-	      Cardinal * num_params,
+	      Cardinal *num_params,
 	      Bool use_cursor_loc)
 {
 #if OPT_READLINE
@@ -985,8 +986,9 @@ do_select_end(Widget w,
     TScreen *screen = &term->screen;
 #endif
 
-    if (!IsXtermWidget(w))
+    if (!IsXtermWidget(w)) {
 	return;
+    }
 
     ((XtermWidget) w)->screen.selection_time = event->xbutton.time;
     switch (eventMode) {
@@ -1018,7 +1020,7 @@ void
 HandleSelectEnd(Widget w,
 		XEvent * event,	/* must be XButtonEvent */
 		String * params,	/* selections */
-		Cardinal * num_params)
+		Cardinal *num_params)
 {
     do_select_end(w, event, params, num_params, False);
 }
@@ -1027,7 +1029,7 @@ void
 HandleKeyboardSelectEnd(Widget w,
 			XEvent * event,		/* must be XButtonEvent */
 			String * params,	/* selections */
-			Cardinal * num_params)
+			Cardinal *num_params)
 {
     do_select_end(w, event, params, num_params, True);
 }
@@ -1142,22 +1144,15 @@ _SelectionTargets(Widget w)
     return eightBitSelectionTargets;
 }
 
-static void
-_GetSelection(Widget w,
-	      Time ev_time,
-	      String * params,	/* selections in precedence order */
-	      Cardinal num_params,
-	      Atom * targets)
+/*
+ * Lookup the cut-buffer number, which will be in the range 0-7.
+ * If it is not a cut-buffer, it is the primary selection (-1).
+ */
+static int
+CutBuffer(int code)
 {
-    Atom selection;
     int cutbuffer;
-    Atom target;
-
-    if (!IsXtermWidget(w))
-	return;
-
-    XmuInternStrings(XtDisplay(w), params, (Cardinal) 1, &selection);
-    switch (selection) {
+    switch (code) {
     case XA_CUT_BUFFER0:
 	cutbuffer = 0;
 	break;
@@ -1184,7 +1179,37 @@ _GetSelection(Widget w,
 	break;
     default:
 	cutbuffer = -1;
+	break;
     }
+    return cutbuffer;
+}
+
+static void
+_GetSelection(Widget w,
+	      Time ev_time,
+	      String * params,	/* selections in precedence order */
+	      Cardinal num_params,
+	      Atom * targets)
+{
+    Atom selection;
+    int cutbuffer;
+    Atom target;
+
+    if (!IsXtermWidget(w))
+	return;
+
+#if OPT_TRACE
+    TRACE(("_GetSelection\n"));
+    if (num_params > 0) {
+	Cardinal n;
+	for (n = 0; n < num_params; ++n) {
+	    TRACE(("param[%d]:%s\n", n, params[n]));
+	}
+    }
+#endif
+
+    XmuInternStrings(XtDisplay(w), params, (Cardinal) 1, &selection);
+    cutbuffer = CutBuffer(selection);
     TRACE(("Cutbuffer: %d, target: %lu\n", cutbuffer,
 	   targets ? (unsigned long) targets[0] : 0));
     if (cutbuffer >= 0) {
@@ -1192,7 +1217,10 @@ _GetSelection(Widget w,
 	unsigned long nbytes;
 	int fmt8 = 8;
 	Atom type = XA_STRING;
-	char *line = XFetchBuffer(XtDisplay(w), &inbytes, cutbuffer);
+	char *line;
+
+	/* 'line' is freed in SelectionReceived */
+	line = XFetchBuffer(XtDisplay(w), &inbytes, cutbuffer);
 	nbytes = (unsigned long) inbytes;
 	if (nbytes > 0)
 	    SelectionReceived(w, NULL, &selection, &type, (XtPointer) line,
@@ -1219,13 +1247,17 @@ _GetSelection(Widget w,
 	    }
 
 	    if (num_params) {
+		/* 'list' is freed in SelectionReceived */
 		list = XtNew(struct _SelectionList);
-		list->params = params;
-		list->count = num_params;
-		list->targets = targets;
-		list->time = ev_time;
-	    } else
+		if (list != 0) {
+		    list->params = params;
+		    list->count = num_params;
+		    list->targets = targets;
+		    list->time = ev_time;
+		}
+	    } else {
 		list = NULL;
+	    }
 
 	    XtGetSelectionValue(w, selection,
 				target,
@@ -1244,7 +1276,7 @@ GettingSelection(Display * dpy, Atom type, Char * line, int len)
 
     name = XGetAtomName(dpy, type);
 
-    Trace("Getting %s (%ld)\n", XGetAtomName(dpy, type), (long int) type);
+    Trace("Getting %s (%ld)\n", name, (long int) type);
     for (cp = line; cp < line + len; cp++)
 	Trace("%c\n", *cp);
 }
@@ -1446,7 +1478,7 @@ void
 HandleInsertSelection(Widget w,
 		      XEvent * event,	/* assumed to be XButtonEvent* */
 		      String * params,	/* selections in precedence order */
-		      Cardinal * num_params)
+		      Cardinal *num_params)
 {
 #if OPT_READLINE
     int ldelta;
@@ -1513,7 +1545,7 @@ void
 HandleSelectStart(Widget w,
 		  XEvent * event,	/* must be XButtonEvent* */
 		  String * params GCC_UNUSED,
-		  Cardinal * num_params GCC_UNUSED)
+		  Cardinal *num_params GCC_UNUSED)
 {
     TScreen *screen;
     int startrow, startcol;
@@ -1538,7 +1570,7 @@ void
 HandleKeyboardSelectStart(Widget w,
 			  XEvent * event,	/* must be XButtonEvent* */
 			  String * params GCC_UNUSED,
-			  Cardinal * num_params GCC_UNUSED)
+			  Cardinal *num_params GCC_UNUSED)
 {
     TScreen *screen;
 
@@ -1619,7 +1651,6 @@ StartSelect(int startrow, int startcol)
 	endECol = startcol;
     }
     ComputeSelect(startERow, startECol, endERow, endECol, False);
-
 }
 
 static void
@@ -1678,7 +1709,7 @@ void
 HandleSelectSet(Widget w,
 		XEvent * event,
 		String * params,
-		Cardinal * num_params)
+		Cardinal *num_params)
 {
     SelectSet(w, event, params, *num_params);
 }
@@ -1690,12 +1721,14 @@ SelectSet(Widget w GCC_UNUSED,
 	  String * params,
 	  Cardinal num_params)
 {
+    TRACE(("SelectSet\n"));
     /* Only do select stuff if non-null select */
     if (startSRow != endSRow || startSCol != endSCol) {
 	SaltTextAway(startSRow, startSCol, endSRow, endSCol,
 		     params, num_params);
-    } else
+    } else {
 	DisownSelection(term);
+    }
 }
 
 #define Abs(x)		((x) < 0 ? -(x) : (x))
@@ -1705,7 +1738,7 @@ static void
 do_start_extend(Widget w,
 		XEvent * event,	/* must be XButtonEvent* */
 		String * params GCC_UNUSED,
-		Cardinal * num_params GCC_UNUSED,
+		Cardinal *num_params GCC_UNUSED,
 		Bool use_cursor_loc)
 {
     TScreen *screen;
@@ -1815,7 +1848,7 @@ void
 HandleStartExtend(Widget w,
 		  XEvent * event,	/* must be XButtonEvent* */
 		  String * params,	/* unused */
-		  Cardinal * num_params)	/* unused */
+		  Cardinal *num_params)		/* unused */
 {
     do_start_extend(w, event, params, num_params, False);
 }
@@ -1824,13 +1857,13 @@ void
 HandleKeyboardStartExtend(Widget w,
 			  XEvent * event,	/* must be XButtonEvent* */
 			  String * params,	/* unused */
-			  Cardinal * num_params)	/* unused */
+			  Cardinal *num_params)		/* unused */
 {
     do_start_extend(w, event, params, num_params, True);
 }
 
 void
-ScrollSelection(TScreen * screen, int amount)
+ScrollSelection(TScreen * screen, int amount, Bool always)
 {
     int minrow = -screen->savedlines - screen->topline;
     int maxrow = screen->max_row - screen->topline;
@@ -1854,8 +1887,29 @@ ScrollSelection(TScreen * screen, int amount)
 
     scroll_update_one(rawRow, rawCol);
 
-    scroll_update_one(screen->startHRow, screen->startHCol);
-    scroll_update_one(screen->endHRow, screen->endHCol);
+    /*
+     * If we are told to scroll the selection but it lies outside the scrolling
+     * margins, then that could cause the selection to move (bad).  It is not
+     * simple to fix, because this function is called both for the scrollbar
+     * actions as well as application scrolling.  The 'always' flag is set in
+     * the former case.  The rest of the logic handles the latter.
+     */
+    if (ScrnHaveSelection(screen)) {
+	int adjust;
+
+	adjust = screen->startHRow + screen->topline;
+	if (always
+	    || !ScrnHaveLineMargins(screen)
+	    || ScrnIsLineInMargins(screen, adjust)) {
+	    scroll_update_one(screen->startHRow, screen->startHCol);
+	}
+	adjust = screen->endHRow + screen->topline;
+	if (always
+	    || !ScrnHaveLineMargins(screen)
+	    || ScrnIsLineInMargins(screen, adjust)) {
+	    scroll_update_one(screen->endHRow, screen->endHCol);
+	}
+    }
 
     screen->startHCoord = Coordinate(screen->startHRow, screen->startHCol);
     screen->endHCoord = Coordinate(screen->endHRow, screen->endHCol);
@@ -2230,7 +2284,7 @@ ComputeSelect(int startRow,
     }
 
     /* check boundaries */
-    ScrollSelection(screen, 0);
+    ScrollSelection(screen, 0, False);
 
     TrackText(startSRow, startSCol, endSRow, endSCol);
     return;
@@ -2296,6 +2350,8 @@ ReHiliteText(int frow,
 {
     TScreen *screen = &term->screen;
     int i;
+
+    TRACE(("ReHiliteText from %d.%d to %d.%d\n", frow, fcol, trow, tcol));
 
     if (frow < 0)
 	frow = fcol = 0;
@@ -2397,14 +2453,14 @@ SaltTextAway(int crow, int ccol, int row, int col,
     }
     *lp = '\0';			/* make sure we have end marked */
 
-    TRACE(("Salted TEXT:%.*s\n", lp - line, line));
+    TRACE(("Salted TEXT:%d:%.*s\n", lp - line, lp - line, line));
     screen->selection_length = (lp - line);
     _OwnSelection(term, params, num_params);
 }
 
 static Boolean
 _ConvertSelectionHelper(Widget w,
-			Atom * type, XtPointer * value,
+			Atom * type, XtPointer *value,
 			unsigned long *length, int *format,
 			int (*conversion_function) (Display *,
 						    char **, int,
@@ -2437,7 +2493,7 @@ ConvertSelection(Widget w,
 		 Atom * selection,
 		 Atom * target,
 		 Atom * type,
-		 XtPointer * value,
+		 XtPointer *value,
 		 unsigned long *length,
 		 int *format)
 {
@@ -2563,9 +2619,9 @@ ConvertSelection(Widget w,
     } else if (*target == XA_LENGTH(d)) {
 	/* This value is wrong if we have UTF-8 text */
 	*value = XtMalloc(4);
-	if (sizeof(long) == 4)
-	     *(long *) *value = screen->selection_length;
-	else {
+	if (sizeof(long) == 4) {
+	    *(long *) *value = screen->selection_length;
+	} else {
 	    long temp = screen->selection_length;
 	    memcpy((char *) *value, ((char *) &temp) + sizeof(long) - 4, 4);
 	}
@@ -2599,15 +2655,7 @@ LoseSelection(Widget w, Atom * selection)
 	 i < screen->selection_count; i++, atomP++) {
 	if (*selection == *atomP)
 	    *atomP = (Atom) 0;
-	switch (*atomP) {
-	case XA_CUT_BUFFER0:
-	case XA_CUT_BUFFER1:
-	case XA_CUT_BUFFER2:
-	case XA_CUT_BUFFER3:
-	case XA_CUT_BUFFER4:
-	case XA_CUT_BUFFER5:
-	case XA_CUT_BUFFER6:
-	case XA_CUT_BUFFER7:
+	if (CutBuffer(*atomP) >= 0) {
 	    *atomP = (Atom) 0;
 	}
     }
@@ -2658,35 +2706,7 @@ _OwnSelection(XtermWidget termw,
     }
     XmuInternStrings(XtDisplay((Widget) termw), selections, count, atoms);
     for (i = 0; i < count; i++) {
-	int cutbuffer;
-	switch (atoms[i]) {
-	case XA_CUT_BUFFER0:
-	    cutbuffer = 0;
-	    break;
-	case XA_CUT_BUFFER1:
-	    cutbuffer = 1;
-	    break;
-	case XA_CUT_BUFFER2:
-	    cutbuffer = 2;
-	    break;
-	case XA_CUT_BUFFER3:
-	    cutbuffer = 3;
-	    break;
-	case XA_CUT_BUFFER4:
-	    cutbuffer = 4;
-	    break;
-	case XA_CUT_BUFFER5:
-	    cutbuffer = 5;
-	    break;
-	case XA_CUT_BUFFER6:
-	    cutbuffer = 6;
-	    break;
-	case XA_CUT_BUFFER7:
-	    cutbuffer = 7;
-	    break;
-	default:
-	    cutbuffer = -1;
-	}
+	int cutbuffer = CutBuffer(atoms[i]);
 	if (cutbuffer >= 0) {
 	    if (termw->screen.selection_length >
 		4 * XMaxRequestSize(XtDisplay((Widget) termw)) - 32) {
@@ -2721,50 +2741,52 @@ _OwnSelection(XtermWidget termw,
 	TrackText(0, 0, 0, 0);
 }
 
+static void
+ResetSelectionState(TScreen * screen)
+{
+    screen->selection_count = 0;
+    screen->startHRow = screen->startHCol = 0;
+    screen->endHRow = screen->endHCol = 0;
+}
+
 void
 DisownSelection(XtermWidget termw)
 {
-    Atom *atoms = termw->screen.selection_atoms;
-    Cardinal count = termw->screen.selection_count;
+    TScreen *screen = &(termw->screen);
+    Atom *atoms = screen->selection_atoms;
+    Cardinal count = screen->selection_count;
     Cardinal i;
 
+    TRACE(("DisownSelection count %d, start %d.%d, end %d.%d\n",
+	   count,
+	   screen->startHRow,
+	   screen->startHCol,
+	   screen->endHRow,
+	   screen->endHCol));
+
     for (i = 0; i < count; i++) {
-	int cutbuffer;
-	switch (atoms[i]) {
-	case XA_CUT_BUFFER0:
-	    cutbuffer = 0;
-	    break;
-	case XA_CUT_BUFFER1:
-	    cutbuffer = 1;
-	    break;
-	case XA_CUT_BUFFER2:
-	    cutbuffer = 2;
-	    break;
-	case XA_CUT_BUFFER3:
-	    cutbuffer = 3;
-	    break;
-	case XA_CUT_BUFFER4:
-	    cutbuffer = 4;
-	    break;
-	case XA_CUT_BUFFER5:
-	    cutbuffer = 5;
-	    break;
-	case XA_CUT_BUFFER6:
-	    cutbuffer = 6;
-	    break;
-	case XA_CUT_BUFFER7:
-	    cutbuffer = 7;
-	    break;
-	default:
-	    cutbuffer = -1;
-	}
-	if (cutbuffer < 0)
+	int cutbuffer = CutBuffer(atoms[i]);
+	if (cutbuffer < 0) {
 	    XtDisownSelection((Widget) termw, atoms[i],
-			      termw->screen.selection_time);
+			      screen->selection_time);
+	}
     }
-    termw->screen.selection_count = 0;
-    termw->screen.startHRow = termw->screen.startHCol = 0;
-    termw->screen.endHRow = termw->screen.endHCol = 0;
+    /*
+     * If none of the callbacks via XtDisownSelection() reset highlighting
+     * do it now.
+     */
+    if (ScrnHaveSelection(screen)) {
+	/* save data which will be reset */
+	int start_row = screen->startHRow;
+	int start_col = screen->startHCol;
+	int end_row = screen->endHRow;
+	int end_col = screen->endHCol;
+
+	ResetSelectionState(screen);
+	ReHiliteText(start_row, start_col, end_row, end_col);
+    } else {
+	ResetSelectionState(screen);
+    }
 }
 
 /* returns number of chars in line from scol to ecol out */
@@ -2832,7 +2854,7 @@ SaveText(TScreen * screen,
 	}
 	previous = c;
 	if (screen->utf8_mode) {
-	    lp = convertToUTF8(lp, c);
+	    lp = convertToUTF8(lp, (c != 0) ? c : ' ');
 	    if (c_1) {
 		lp = convertToUTF8(lp, c_1);
 		if (c_2)
@@ -2981,7 +3003,7 @@ void
 HandleGINInput(Widget w GCC_UNUSED,
 	       XEvent * event GCC_UNUSED,
 	       String * param_list,
-	       Cardinal * nparamsp)
+	       Cardinal *nparamsp)
 {
     if (term->screen.TekGIN && *nparamsp == 1) {
 	int c = param_list[0][0];
@@ -3010,7 +3032,7 @@ void
 HandleSecure(Widget w GCC_UNUSED,
 	     XEvent * event,	/* unused */
 	     String * params GCC_UNUSED,	/* [0] = volume */
-	     Cardinal * param_count GCC_UNUSED)		/* 0 or 1 */
+	     Cardinal *param_count GCC_UNUSED)	/* 0 or 1 */
 {
     Time ev_time = CurrentTime;
 

@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.82 2004/05/13 00:41:21 tom Exp $ */
+/* $XTermId: menu.h,v 1.86 2004/12/01 01:27:47 tom Exp $ */
 
 /* $Xorg: menu.h,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -50,7 +50,7 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.33 2004/05/13 00:41:21 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.34 2004/12/01 01:27:47 dickey Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h
@@ -120,6 +120,7 @@ extern void HandleTekCopy          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
 extern void HandleTiteInhibit      PROTO_XT_ACTIONS_ARGS;
+extern void HandleToolbar          PROTO_XT_ACTIONS_ARGS;
 extern void HandleUTF8Mode         PROTO_XT_ACTIONS_ARGS;
 extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
 
@@ -127,7 +128,8 @@ extern void DoSecureKeyboard (Time tp);
 extern void SetupMenus (Widget shell, Widget *forms, Widget *menus);
 
 #if OPT_TOOLBAR
-extern void SetupToolbar(Widget shell);
+extern void SetupToolbar(Widget);
+extern void ShowToolbar(Boolean);
 #endif
 
 /*
@@ -139,6 +141,9 @@ extern void SetupToolbar(Widget shell);
  * items in primary menu
  */
 typedef enum {
+#if OPT_TOOLBAR
+    mainMenu_toolbar,
+#endif
     mainMenu_securekbd,
     mainMenu_allowsends,
     mainMenu_redraw,
@@ -298,6 +303,12 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
 /*
  * there should be one of each of the following for each checkable item
  */
+#if OPT_TOOLBAR
+extern void update_toolbar(void);
+#else
+#define update_toolbar() /* nothing */
+#endif
+
 extern void update_securekbd(void);
 extern void update_allowsends(void);
 

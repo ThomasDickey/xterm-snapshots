@@ -1,10 +1,12 @@
+/* $XTermId: print.c,v 1.54 2004/12/01 01:27:47 tom Exp $ */
+
 /*
- * $XFree86: xc/programs/xterm/print.c,v 1.19 2002/08/12 00:36:33 dickey Exp $
+ * $XFree86: xc/programs/xterm/print.c,v 1.20 2004/12/01 01:27:47 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2000,2002 by Thomas E. Dickey
+Copyright 1997-2002,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -55,7 +57,6 @@ authorization.
 #define Strcmp(a,b) strcmp((char *)a,(char *)b)
 #define Strncmp(a,b,c) strncmp((char *)a,(char *)b,c)
 
-#define SGR_MASK (BOLD|BLINK|UNDERLINE|INVERSE)
 #ifdef VMS
 #define VMS_TEMP_PRINT_FILE "sys$scratch:xterm_print.txt"
 #endif
