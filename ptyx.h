@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.72 2000/02/29 03:09:28 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.73 2000/03/03 22:50:36 dawes Exp $
  */
 
 /*
@@ -1213,6 +1213,9 @@ typedef struct _Misc {
 #endif
 #if OPT_SHIFT_KEYS
     Boolean shift_keys;		/* true if we interpret shifted special-keys */
+#endif
+#if OPT_SUNPC_KBD
+    int ctrl_fkeys;		/* amount to add to XK_F1 for ctrl modifier */
 #endif
 #if OPT_NUM_LOCK
     Boolean real_NumLock;	/* true if we treat NumLock key specially */

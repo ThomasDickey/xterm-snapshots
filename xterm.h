@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.56 2000/02/29 03:09:31 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.57 2000/03/31 20:13:49 dawes Exp $ */
 
 /************************************************************
 
@@ -119,8 +119,12 @@ authorization.
 #define USE_SYSV_UTMP
 #endif
 
-#if defined(__GNU__) || defined(__MVS__)
+#if defined(__GNU__) || defined(__MVS__) || defined(__osf__)
 #define USE_TTY_GROUP
+#endif
+
+#ifdef __osf__
+#define TTY_GROUP_NAME "terminal"
 #endif
 
 #if defined(__MVS__)
@@ -177,6 +181,7 @@ extern int errno;
 
 #if (XtSpecificationRelease >= 6) && !defined(NO_XPOLL_H)
 #include <X11/Xpoll.h>
+#define USE_XPOLL_H 1
 #else
 #define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
 #define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
@@ -189,7 +194,7 @@ extern int errno;
 
 #include <sys/types.h>
 
-#if defined(AIXV3) && defined(NFDBITS)
+#if defined(USE_XPOLL_H) && defined(AIXV3) && defined(NFDBITS)
 #undef NFDBITS	/* conflict between X11/Xpoll.h and sys/select.h */
 #endif
 
@@ -240,6 +245,7 @@ extern int errno;
 #define XtNcolorMode		"colorMode"
 #define XtNcolorUL		"colorUL"
 #define XtNcolorULMode		"colorULMode"
+#define XtNctrlFKeys		"ctrlFKeys"
 #define XtNcurses		"curses"
 #define XtNcursorBlink		"cursorBlink"
 #define XtNcursorColor		"cursorColor"
@@ -324,6 +330,7 @@ extern int errno;
 #define XtCCharClass		"CharClass"
 #define XtCColorMode		"ColorMode"
 #define XtCColumn		"Column"
+#define XtCCtrlFKeys		"CtrlFKeys"
 #define XtCCurses		"Curses"
 #define XtCCursorBlink		"CursorBlink"
 #define XtCCursorOffTime	"CursorOffTime"

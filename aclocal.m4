@@ -1,12 +1,12 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.29 2000/01/24 22:21:52 dawes Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.30 2000/03/03 20:02:28 dawes Exp $
 dnl
 dnl ---------------------------------------------------------------------------
-dnl 
+dnl
 dnl Copyright 1997-2000 by Thomas E. Dickey <dickey@clark.net>
-dnl 
+dnl
 dnl                         All Rights Reserved
-dnl 
+dnl
 dnl Permission to use, copy, modify, and distribute this software and its
 dnl documentation for any purpose and without fee is hereby granted,
 dnl provided that the above copyright notice appear in all copies and that
@@ -15,7 +15,7 @@ dnl supporting documentation, and that the name of the above listed
 dnl copyright holder(s) not be used in advertising or publicity pertaining
 dnl to distribution of the software without specific, written prior
 dnl permission.
-dnl 
+dnl
 dnl THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
 dnl TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
 dnl AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
@@ -23,7 +23,7 @@ dnl LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
 dnl WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 dnl ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-dnl 
+dnl
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
 dnl This is adapted from the macros 'fp_PROG_CC_STDC' and 'fp_C_PROTOTYPES'
@@ -740,16 +740,73 @@ dnl Check if the system has a tty-group defined.  This is used in xterm when
 dnl setting pty ownership.
 AC_DEFUN([CF_TTY_GROUP],
 [
-AC_CACHE_CHECK(for tty group,cf_cv_tty_group,[
+AC_CACHE_CHECK(for tty group name,cf_cv_tty_group_name,[
+
+# If we are configuring as root, it is hard to get a clue about the tty group.
+# But we'll guess based on how our connection is set up - assuming it is done
+# properly.
+
+cf_uid=`id | sed -e 's/^[^=]*=//' -e 's/(.*$//'`
+if test "$cf_uid" != 0 ; then
+cf_cv_tty_group_name=
+cf_tty_name=`tty`
+test -z "$cf_tty_name" && cf_tty_name=/dev/tty
+if test -c $cf_tty_name
+then
+	cf_option="-l -L"
+
+	# Expect listing to have fields like this:
+	#-rwxrwxrwx   1 user      group       34293 Jul 18 16:29 pathname
+	ls $cf_option $cf_tty_name >conftest.out
+	read cf_mode cf_links cf_usr cf_grp cf_size cf_date1 cf_date2 cf_date3 cf_rest <conftest.out
+	if test -z "$cf_rest" ; then
+		cf_option="$cf_option -g"
+		ls $cf_option $cf_tty_name >conftest.out
+		read cf_mode cf_links cf_usr cf_grp cf_size cf_date1 cf_date2 cf_date3 cf_rest <conftest.out
+	fi
+	rm -f conftest.out
+	cf_cv_tty_group_name=$cf_grp
+fi
+fi
+
+# If we cannot deduce the tty group, fall back on hardcoded cases
+
+if test -z "$cf_cv_tty_group_name"
+then
+case $host_os in #(vi
+osf*) #(vi
+	cf_cv_tty_group_name="terminal"
+	;;
+*)
+	cf_cv_tty_group_name="tty"
+	;;
+esac
+fi
+])
+
+AC_DEFINE_UNQUOTED(TTY_GROUP_NAME,"$cf_cv_tty_group_name")
+
+AC_CACHE_CHECK(if we may use tty group,cf_cv_tty_group,[
 AC_TRY_RUN([
+#include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <grp.h>
 int main()
 {
-	struct group *ttygrp;
-	int code = (ttygrp = getgrnam("tty")) == 0;
+	struct stat sb;
+	struct group *ttygrp = getgrnam(TTY_GROUP_NAME);
+	char *name = ttyname(0);
+
 	endgrent();
-	exit(code);
+	if (ttygrp != 0
+	 && name != 0
+	 && stat(name, &sb) == 0
+	 && sb.st_gid != getgid()
+	 && sb.st_gid == ttygrp->gr_gid) {
+		exit(0);
+	}
+	exit(1);
 }
 	],
 	[cf_cv_tty_group=yes],

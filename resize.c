@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.39 1999/10/13 04:21:46 dawes Exp $
+ *	$XFree86: xc/programs/xterm/resize.c,v 3.40 2000/03/31 20:13:47 dawes Exp $
  */
 
 /*
@@ -77,6 +77,10 @@
 #endif /* macII */
 
 #ifdef linux
+#define USE_TERMIOS
+#endif
+
+#ifdef __MVS__
 #define USE_TERMIOS
 #endif
 
@@ -180,6 +184,12 @@ extern struct passwd *getpwuid(); 	/* does ANYBODY need this? */
 #define GCC_UNUSED /* nothing */
 #endif
 
+#ifdef __MVS__
+#define ESC(string) "\047" string
+#else
+#define ESC(string) "\033" string
+#endif
+
 #define	EMULATIONS	2
 #define	SUN		1
 #define	VT100		0
@@ -211,25 +221,25 @@ char *emuname[EMULATIONS] = {
 char *myname;
 int shell_type = SHELL_UNKNOWN;
 char *getsize[EMULATIONS] = {
-	"\0337\033[r\033[999;999H\033[6n",
-	"\033[18t",
+	ESC("7") ESC("[r") ESC("[999;999H") ESC("[6n"),
+	ESC("[18t"),
 };
 #if !defined(sun) || defined(SVR4)
 #ifdef TIOCSWINSZ
 char *getwsize[EMULATIONS] = {	/* size in pixels */
 	0,
-	"\033[14t",
+	ESC("[14t"),
 };
 #endif	/* TIOCSWINSZ */
 #endif	/* sun */
 char *restore[EMULATIONS] = {
-	"\0338",
+	ESC("8"),
 	0,
 };
 char *setname = "";
 char *setsize[EMULATIONS] = {
 	0,
-	"\033[8;%s;%st",
+	ESC("[8;%s;%st"),
 };
 #ifdef USE_SYSV_TERMIO
 struct termio tioorig;
@@ -241,8 +251,8 @@ struct sgttyb sgorig;
 # endif /* USE_TERMIOS */
 #endif /* USE_SYSV_TERMIO */
 char *size[EMULATIONS] = {
-	"\033[%d;%dR",
-	"\033[8;%d;%dt",
+	ESC("[%d;%dR"),
+	ESC("[8;%d;%dt"),
 };
 char sunname[] = "sunsize";
 int tty;
@@ -251,7 +261,7 @@ FILE *ttyfp;
 #ifdef TIOCSWINSZ
 char *wsize[EMULATIONS] = {
 	0,
-	"\033[4;%hd;%hdt",
+	ESC("[4;%hd;%hdt"),
 };
 #endif	/* TIOCSWINSZ */
 #endif	/* sun */
@@ -626,10 +636,11 @@ readstring(register FILE *fp, register char *buf, char *str)
 	setitimer(ITIMER_REAL, &it, (struct itimerval *)NULL);
 #endif
 	if ((c = getc(fp)) == 0233) {	/* meta-escape, CSI */
-		*buf++ = c = '\033';
+		*buf++ = c = ESC("")[0];
 		*buf++ = '[';
-	} else
+	} else {
 		*buf++ = c;
+	}
 	if(c != *str) {
 		fprintf(stderr, "%s: unknown character, exiting.\r\n", myname);
 		onintr(0);
