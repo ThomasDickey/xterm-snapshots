@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.90 1999/05/09 10:52:10 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.93 1999/05/16 06:55:55 dawes Exp $ */
 
 
 /* main.c */
@@ -148,7 +148,7 @@ SOFTWARE.
 static Bool IsPts = False;
 #endif
 
-#if (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
+#if (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 #define USE_USG_PTYS
 #else
 #define USE_HANDSHAKE
@@ -177,11 +177,9 @@ static Bool IsPts = False;
 #define LASTLOG
 #define WTMP
 #undef  HAS_LTCHARS
-#endif
-
-#if (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)
-/* USE_USG_PTYS is defined above */
+#if (__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
 #include <pty.h>
+#endif
 #endif
 
 #ifdef __CYGWIN32__
@@ -379,7 +377,12 @@ static Bool IsPts = False;
 #define HAS_SAVED_IDS_AND_SETEUID
 #endif
 
-#if !defined(MINIX) && !defined(WIN32) && !defined(Lynx) && !defined(__GNU__)
+/* Xpoll.h and <sys/param.h> on glibc 2.1 systems have colliding NBBY's */
+#if defined(__GLIBC__) && ((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
+#ifndef NOFILE
+#define NOFILE OPEN_MAX
+#endif
+#elif !defined(MINIX) && !defined(WIN32) && !defined(Lynx) && !defined(__GNU__)
 #include <sys/param.h>	/* for NOFILE */
 #endif
 
@@ -1903,7 +1906,7 @@ base_name(char *name)
 static int
 get_pty (int *pty)
 {
-#if defined(__osf__) || ((__GLIBC__ >= 2) && !(defined(USE_USG_PTYS)))
+#if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS))
     int tty;
     return (openpty(pty, &tty, ttydev, NULL, NULL));
 #elif defined(SYSV) && defined(i386) && !defined(SVR4)
@@ -1933,12 +1936,13 @@ get_pty (int *pty)
 	if (pty_search(pty) == 0)
 	    return 0;
 #elif defined(USE_USG_PTYS)
-#if __GLIBC__ >= 2
-	/* GNU libc 2 allows us to abstract away from having to know the master
-	   pty device name. */
+#ifdef __GLIBC__ /* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
+	/* GNU libc 2 allows us to abstract away from having to know the
+	   master pty device name. */
 	if ((*pty = getpt()) < 0) {
 	    return 1;
 	}
+	strcpy(ttydev, ptsname(*pty));
 #else
 	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0) {
 	    return 1;
@@ -2693,12 +2697,12 @@ spawn (void)
 #endif
 #endif /* USE_SYSV_PGRP */
 		while (1) {
-#if defined(TIOCNOTTY) && !((__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
+#if defined(TIOCNOTTY) && !((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 			if (!no_dev_tty && (tty = open ("/dev/tty", O_RDWR)) >= 0) {
 				ioctl (tty, TIOCNOTTY, (char *) NULL);
 				close (tty);
 			}
-#endif /* TIOCNOTTY && !glibc >= 2.1*/
+#endif /* TIOCNOTTY && !glibc >= 2.1 */
 #ifdef CSRG_BASED
 			(void)revoke(ttydev);
 #endif
