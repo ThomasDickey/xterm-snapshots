@@ -1,5 +1,5 @@
 # $XConsortium: termcap,v 1.13 94/10/13 21:24:32 gildea Exp $
-# $XFree86: xc/programs/xterm/termcap,v 3.20 1999/10/13 04:21:47 dawes Exp $
+# $XFree86: xc/programs/xterm/termcap,v 3.21 1999/12/30 02:05:57 robin Exp $
 #
 # Note:
 #	termcap format is limited to 1023 characters.  This set of descriptions
