@@ -953,6 +953,8 @@ and window title.
   \*(Ps = \*0 \(-> Change Icon Name and Window Title to \*(Pt
   \*(Ps = \*1 \(-> Change Icon Name to \*(Pt
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt
+  \*(Ps = \*3 \(-> Set X property on top-level window. \*(Pt should be in the form
+"\fIprop=value\fP", or just "\fIprop\fP" to delete the property
   \*(Ps = \*1\*0 \(-> Change color names starting with text foreground to \*(Pt
 (a list of one or more color names or RGB specifications, separated by
 semicolon, up to eight, as per \fIXParseColor\fP).

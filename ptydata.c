@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.5 1999/06/12 15:37:18 dawes Exp $
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.6 1999/06/27 14:08:41 dawes Exp $
  */
 
 /************************************************************
@@ -51,7 +51,7 @@ authorization.
 #endif
 #endif
 
-#define UTF8_FLAG       0x10000000
+#define UTF8_FLAG       0x80000000U
 #define UTF8_CODE(code) ((code) | (screen->utf8_controls ? 0 : UTF8_FLAG))
 
 int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)

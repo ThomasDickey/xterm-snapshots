@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.85 1999/06/20 08:41:43 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.86 1999/06/27 14:08:37 dawes Exp $
  */
 
 /*
@@ -368,7 +368,17 @@ static void HandleMapUnmap PROTO_XT_EV_HANDLER_ARGS;
 /* Defaults */
 #if OPT_ISO_COLORS
 static  Boolean	defaultCOLORMODE   = DFT_COLORMODE;
+
+/*
+ * If we default to colorMode enabled, compile-in defaults for the ANSI colors.
+ */
+#if DFT_COLORMODE
+#define DFT_COLOR(name) name
+#else
+#define DFT_COLOR(name) "XtDefaultForeground"
 #endif
+#endif
+
 static  Boolean	defaultFALSE	   = FALSE;
 static  Boolean	defaultTRUE	   = TRUE;
 static  int	defaultZERO        = 0;
@@ -789,61 +799,61 @@ static XtResource resources[] = {
 #if OPT_ISO_COLORS
 {XtNcolor0, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_0]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("black")},
 {XtNcolor1, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_1]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("red3")},
 {XtNcolor2, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_2]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("green3")},
 {XtNcolor3, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_3]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("yellow3")},
 {XtNcolor4, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_4]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("blue3")},
 {XtNcolor5, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_5]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("magenta3")},
 {XtNcolor6, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_6]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("cyan3")},
 {XtNcolor7, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_7]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("gray90")},
 {XtNcolor8, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_8]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("gray30")},
 {XtNcolor9, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_9]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("red")},
 {XtNcolor10, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_10]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("green")},
 {XtNcolor11, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_11]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("yellow")},
 {XtNcolor12, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_12]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("blue")},
 {XtNcolor13, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_13]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("magenta")},
 {XtNcolor14, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_14]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("cyan")},
 {XtNcolor15, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_15]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("white")},
 {XtNcolorBD, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_BD]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("XtDefaultForeground")},
 {XtNcolorBL, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_BL]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("XtDefaultForeground")},
 {XtNcolorUL, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_UL]),
-	XtRString, "XtDefaultForeground"},
+	XtRString, DFT_COLOR("XtDefaultForeground")},
 {XtNcolorMode, XtCColorMode, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.colorMode),
 	XtRBoolean, (XtPointer) &defaultCOLORMODE},
@@ -1170,9 +1180,17 @@ static void VTparse(void)
 	    laststate = nextstate;
 #if OPT_WIDE_CHARS
 	    if (c > 255) {
-		nextstate = (parsestate == groundtable)
-			? CASE_PRINT
-			: CASE_GROUND_STATE;
+		if (parsestate == groundtable) {
+		    nextstate = CASE_PRINT;
+		} else if (parsestate == sos_table) {
+		    c &= 0xffff;
+		    if (c > 255) {
+			TRACE(("Found code > 255 while in SOS state: %04X\n", c))
+			c = '?';
+		    }
+		} else {
+		    nextstate = CASE_GROUND_STATE;
+		}
 	    } else
 #endif
 	      nextstate = parsestate[c];
@@ -3973,6 +3991,11 @@ static void VTInitialize (
 	wnew->dft_foreground = MyBlackPixel(wnew->screen.display);
 	wnew->dft_background = MyWhitePixel(wnew->screen.display);
    }
+   TRACE(("Color resource initialization:\n"))
+   TRACE(("   Default foreground %#lx\n", wnew->dft_foreground))
+   TRACE(("   Default background %#lx\n", wnew->dft_background))
+   TRACE(("   Screen foreground  %#lx\n", request->screen.foreground))
+   TRACE(("   Screen background  %#lx\n", request->core.background_pixel))
 
    wnew->screen.mouse_button = -1;
    wnew->screen.mouse_row = -1;
@@ -4097,6 +4120,7 @@ static void VTInitialize (
    wnew->screen.colorULMode   = request->screen.colorULMode;
 
    for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
+       TRACE(("Acolors[%d] = %#lx\n", i, request->screen.Acolors[i]))
        wnew->screen.Acolors[i] = request->screen.Acolors[i];
        if (wnew->screen.Acolors[i] != wnew->dft_foreground
         && wnew->screen.Acolors[i] != request->screen.foreground
@@ -4109,8 +4133,10 @@ static void VTInitialize (
     * resource says.  (There doesn't seem to be any good way to determine if
     * the resource lookup failed versus the user having misconfigured this).
     */
-   if (!color_ok)
+   if (!color_ok) {
 	wnew->screen.colorMode = False;
+	TRACE(("All colors are foreground or background: disable colorMode\n"))
+   }
 
    wnew->num_ptrs = (OFF_COLOR+1);
    wnew->sgr_foreground = -1;

@@ -108,7 +108,7 @@ visibleChars(PAIRED_CHARS(Char *buf, Char *buf2), unsigned len)
 			value |= (*buf2 << 8);
 			buf2++;
 		}
-		if (value > 127)
+		if (value > 255)
 			sprintf(dst, "\\u+%04X", value);
 		else
 #endif
@@ -137,7 +137,7 @@ visibleIChar(IChar *buf, unsigned len)
 	while (len--) {
 		unsigned value = *buf++;
 #if OPT_WIDE_CHARS
-		if (value > 127)
+		if (value > 255)
 			sprintf(dst, "\\u+%04X", value);
 		else
 #endif
