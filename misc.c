@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.71 2002/10/05 17:57:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.72 2002/10/11 23:52:07 dickey Exp $ */
 
 /*
  *
@@ -2420,7 +2420,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 	for (opt_count = 0; options[opt_count].opt != 0; ++opt_count) {
 	    ;
 	}
-	opt_array = (OptionHelp *) calloc(opt_count, sizeof(OptionHelp));
+	opt_array = (OptionHelp *) calloc(opt_count + 1, sizeof(OptionHelp));
 	for (j = 0; j < opt_count; j++)
 	    opt_array[j] = options[j];
 	qsort(opt_array, opt_count, sizeof(OptionHelp), cmp_options);

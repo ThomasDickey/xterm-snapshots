@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.41 2002/03/26 01:46:39 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.42 2002/10/13 23:09:42 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -494,7 +494,8 @@ EOF
 		Wnested-externs \
 		Wpointer-arith \
 		Wshadow \
-		Wstrict-prototypes $cf_warn_CONST
+		Wstrict-prototypes \
+		Wundef $cf_warn_CONST
 	do
 		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
 		if AC_TRY_EVAL(ac_compile); then
@@ -1040,7 +1041,6 @@ AC_MSG_RESULT($cf_cv_have_utmp_ut_host)
 test $cf_cv_have_utmp_ut_host != no && AC_DEFINE(HAVE_UTMP_UT_HOST)
 fi
 ])
-
 dnl ---------------------------------------------------------------------------
 dnl Check if UTMP/UTMPX struct defines ut_name member
 AC_DEFUN([CF_UTMP_UT_NAME],
@@ -1181,8 +1181,18 @@ AC_ARG_WITH(neXtaw,
 AC_CHECK_LIB(Xext,XextCreateExtension,
 	[LIBS="-lXext $LIBS"])
 
-cf_x_athena_include=""
 cf_x_athena_lib=""
+
+CF_X_ATHENA_CPPFLAGS($cf_x_athena)
+CF_X_ATHENA_LIBS($cf_x_athena)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
+dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
+AC_DEFUN([CF_X_ATHENA_CPPFLAGS],
+[
+cf_x_athena_root=ifelse($1,,Xaw,$1)
+cf_x_athena_include=""
 
 for cf_path in default \
 	/usr/contrib/X11R6 \
@@ -1190,10 +1200,9 @@ for cf_path in default \
 	/usr/lib/X11R5 \
 	/usr/local
 do
-
 	if test -z "$cf_x_athena_include" ; then
 		cf_save="$CPPFLAGS"
-		cf_test=X11/$cf_x_athena/SimpleMenu.h
+		cf_test=X11/$cf_x_athena_root/SimpleMenu.h
 		if test $cf_path != default ; then
 			CPPFLAGS="-I$cf_path/include $cf_save"
 			AC_MSG_CHECKING(for $cf_test in $cf_path)
@@ -1208,12 +1217,38 @@ do
 		AC_MSG_RESULT($cf_result)
 		if test "$cf_result" = yes ; then
 			cf_x_athena_include=$cf_path
+			break
 		else
 			CPPFLAGS="$cf_save"
 		fi
 	fi
+done
 
-	for cf_lib in "-l$cf_x_athena -lXmu" "-l${cf_x_athena}_s -lXmu_s"
+if test -z "$cf_x_athena_include" ; then
+	AC_MSG_WARN(
+[Unable to successfully find Athena header files with test program])
+elif test "$cf_x_athena_include" != default ; then
+	CPPFLAGS="$CPPFLAGS -I$cf_x_athena_include"
+fi
+])
+dnl ---------------------------------------------------------------------------
+dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
+dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
+AC_DEFUN([CF_X_ATHENA_LIBS],
+[AC_REQUIRE([CF_X_TOOLKIT])
+cf_x_athena_root=ifelse($1,,Xaw,$1)
+cf_x_athena_lib=""
+
+for cf_path in default \
+	/usr/contrib/X11R6 \
+	/usr/contrib/X11R5 \
+	/usr/lib/X11R5 \
+	/usr/local
+do
+	for cf_lib in \
+		"-l$cf_x_athena_root -lXmu" \
+		"-l$cf_x_athena_root -lXpm -lXmu" \
+		"-l${cf_x_athena_root}_s -lXmu_s"
 	do
 		if test -z "$cf_x_athena_lib" ; then
 			cf_save="$LIBS"
@@ -1232,6 +1267,7 @@ do
 			AC_MSG_RESULT($cf_result)
 			if test "$cf_result" = yes ; then
 				cf_x_athena_lib="$cf_lib"
+				break
 			else
 				LIBS="$cf_save"
 			fi
@@ -1239,19 +1275,14 @@ do
 	done
 done
 
-if test -z "$cf_x_athena_include" ; then
-	AC_MSG_WARN(
-[Unable to successfully find Athena header files with test program])
-fi
-
 if test -z "$cf_x_athena_lib" ; then
 	AC_ERROR(
-[Unable to successfully link Athena library (-l$cf_x_athena) with test program])
+[Unable to successfully link Athena library (-l$cf_x_athena_root) with test program])
 fi
 
-CF_UPPER(CF_X_ATHENA_LIBS,HAVE_LIB_$cf_x_athena)
-AC_DEFINE_UNQUOTED($CF_X_ATHENA_LIBS)
-])dnl
+CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
+AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
+])
 dnl ---------------------------------------------------------------------------
 dnl Check for X freetype libraries (XFree86 4.x)
 AC_DEFUN([CF_X_FREETYPE],
