@@ -63,12 +63,13 @@ extern void HideCursor PROTO((void));
 extern void SetVTFont PROTO((int i, Bool doresize, char *name1, char *name2));
 extern void ShowCursor PROTO((void));
 extern void SwitchBufPtrs PROTO((TScreen *screen));
+extern void ToggleAlternate PROTO((TScreen *screen));
 extern void VTReset PROTO((int full));
 extern void VTRun PROTO((void));
 extern void dotext PROTO((TScreen *screen, int charset, Char *buf, Char *ptr));
 extern void set_cursor_gcs PROTO((TScreen *screen));
-extern void unparseputc1 PROTO((int c, int fd));
 extern void unparseputc PROTO((int c, int fd));
+extern void unparseputc1 PROTO((int c, int fd));
 extern void unparseseq PROTO((ANSI *ap, int fd));
 
 #if OPT_ISO_COLORS

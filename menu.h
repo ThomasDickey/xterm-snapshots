@@ -364,11 +364,6 @@ typedef enum {
 		   tekMenuEntries[tekMenu_tekhide].widget, \
 		   term->screen.Vshow)
 
-#define set_altscreen_sensitivity(val) \
-  set_sensitivity (term->screen.vtMenu,\
-		   vtMenuEntries[vtMenu_altscreen].widget, (val))
-
-
 /*
  * macros for mapping font size to tekMenu placement
  */

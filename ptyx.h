@@ -479,6 +479,35 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 #define SCRN_BUF_CSETS(screen, row) BUF_CSETS(screen->buf, row)
 #endif
 
+	/* indices into save_modes[] */
+typedef enum {
+	DP_DECCKM,
+	DP_DECANM,
+	DP_DECCOLM,	/* IN132COLUMNS */
+	DP_DECSCLM,
+	DP_DECSCNM,
+	DP_DECOM,
+	DP_DECAWM,
+	DP_DECARM,
+	DP_X_X10MSE,
+	DP_DECPFF,
+	DP_DECPEX,
+	DP_DECTCEM,
+	DP_DECTEK,
+	DP_X_DECCOLM,
+	DP_X_MORE,
+	DP_X_MARGIN,
+	DP_X_REVWRAP,
+	DP_X_LOGGING,
+	DP_X_ALTSCRN,
+	DP_DECBKM,
+	DP_X_MOUSE,
+	DP_LAST
+	} SaveModes;
+
+#define DoSM(code,value) screen->save_modes[code] = value
+#define DoRM(code,value) value = screen->save_modes[code]
+
 typedef struct {
 /* These parameters apply to both windows */
 	Display		*display;	/* X display for screen		*/
@@ -613,7 +642,7 @@ typedef struct {
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/
 	SavedCursor	sc;		/* data for restore cursor	*/
-	int		save_modes[19];	/* save dec private modes	*/
+	int		save_modes[24];	/* save dec/xterm private modes	*/
 
 	/* Improved VT100 emulation stuff.				*/
 	char		gsets[4];	/* G0 through G3.		*/

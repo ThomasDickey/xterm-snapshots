@@ -277,8 +277,6 @@ static Bool domenu (w, event, params, param_count)
 	    screen->vtMenu = create_menu (term, toplevel, "vtMenu",
 					  vtMenuEntries,
 					  XtNumber(vtMenuEntries));
-	    /* and turn off the alternate screen entry */
-	    set_altscreen_sensitivity (FALSE);
 	    update_scrollbar();
 	    update_jumpscroll();
 	    update_reversevideo();
@@ -790,7 +788,8 @@ static void do_altscreen (gw, closure, data)
     Widget gw GCC_UNUSED;
     XtPointer closure GCC_UNUSED, data GCC_UNUSED;
 {
-    /* do nothing for now; eventually, will want to flip screen */
+    TScreen *screen = &term->screen;
+    ToggleAlternate(screen);
 }
 
 #ifndef NO_ACTIVE_ICON
