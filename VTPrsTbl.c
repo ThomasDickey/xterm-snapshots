@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: VTPrsTbl.c,v 1.10 95/06/09 22:17:06 gildea Exp $
- *	$XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.15 1998/10/25 07:12:38 dawes Exp $
+ *	$XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.16 1999/03/14 03:22:32 dawes Exp $
  */
 
 /*
@@ -30,11 +30,11 @@
 #include <xtermcfg.h>
 #endif
 
-#include <VTparse.h>
-
 #ifndef OPT_VT52_MODE
 #define OPT_VT52_MODE   1 /* true if xterm supports VT52 emulation */
 #endif
+
+#include <VTparse.h>
 
 /*
  * Stupid Apollo C preprocessor can't handle long lines.  So... To keep

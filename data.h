@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: data.h /main/13 1996/11/24 17:35:40 rws $
- *	$XFree86: xc/programs/xterm/data.h,v 3.14 1998/12/20 11:58:33 dawes Exp $
+ *	$XFree86: xc/programs/xterm/data.h,v 3.15 1999/03/14 03:22:35 dawes Exp $
  */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -37,7 +37,7 @@
 #define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
 #endif
 
-#if USE_SYS_SELECT_H
+#ifdef USE_SYS_SELECT_H
 #include <sys/types.h>
 #include <sys/select.h>
 #endif
