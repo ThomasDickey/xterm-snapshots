@@ -1187,6 +1187,7 @@ typedef struct _Misc {
     char *T_geometry;
     char *f_n;
     char *f_b;
+    int limit_resize;
 #ifdef ALLOWLOGGING
     Boolean log_on;
 #endif

@@ -1225,6 +1225,11 @@ The value given is the same as the final character in the control sequences
 which change character sets.
 The default is ``B'', which corresponds to US ASCII.
 .TP 8
+.B "limitResize (\fPclass\fB LimitResize)"
+Limits resizing of the screen via control sequence to a given multiple of
+the display dimensions.
+The default is ``1''.
+.TP 8
 .B "loginShell (\fPclass\fB LoginShell)"
 Specifies whether or not the shell to be run in the window should be started
 as a login shell.  The default is ``false.''
