@@ -39,6 +39,9 @@ The '-lXaw -lXext -lXmu -lXt  -lSM -lICE -lX11' should be manually removed;
 this isn't strictly necessary, but will reduce the size of the executable
 by about 4M.
 
+The '-Wl,EDIT=NO' causes the Binder to produce a non-editable executable,
+dramatically reducing the size of the executable file.
+
 Good Luck!!
 Greg Smith
 rys@trex.rtpnc.epa.gov
@@ -51,7 +54,7 @@ Install instructions for os/390 2.5 and *below*:
    pax -o from=ISO8859-1,to=IBM-1047 -rf xterm.tar
    cd xterm
    export LIBS='-lXt  -lX11 -lSM -lICE'
-   export CFLAGS='-D_ALL_SOURCE'
+   export CFLAGS='-D_ALL_SOURCE -Wl,EDIT=NO'
    ./configure
    make
    export DISPLAY=my.xserver.name:0
@@ -63,9 +66,7 @@ Install instructions for os/390 2.6 and *above*:
    gunzip xterm.tar.gz
    pax -o from=ISO8859-1,to=IBM-1047 -rf xterm.tar
    cd xterm
-   export LIBS='/usr/lib/Xaw.x /usr/lib/SM.x /usr/lib/ICE.x /usr/lib/X11.x'
-   export CFLAGS='-O2 -W c,dll -D_ALL_SOURCE'
-   ./configure
+   ./configure   # LIBS, CFLAGS, and CC are defined by configure for os/390 2.6.
    [optional: edit the Makefile and remove '-lXaw -lXext -lXmu -lXt  -lSM -lICE -lX11'
               from the LIBS assignment]
    make

@@ -2677,7 +2677,7 @@ dotext(
 #else
 	int next_col, last_col, this_col;	/* must be signed */
 #endif
-	Cardinal n, offset;
+	Cardinal offset;
 
 #if OPT_WIDE_CHARS
 	if (!screen->utf8_mode || charset == '0') /* don't translate if we use UTF-8 */
@@ -2687,6 +2687,7 @@ dotext(
 		return;
 
 	if_OPT_XMC_GLITCH(screen,{
+		Cardinal n;
 		if (charset != '?') {
 			for (n = 0; n < len; n++) {
 				if (buf[n] == XMC_GLITCH)
@@ -2720,6 +2721,10 @@ dotext(
 		if (width_here > width_available) {
 			chars_chomped --;
 			width_here -= my_wcwidth(buf[chars_chomped + offset]);
+			need_wrap = 1;
+		}
+
+		if (width_here == width_available) {
 			need_wrap = 1;
 		}
 
@@ -2878,7 +2883,7 @@ WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 				CurCursorX(screen, screen->cur_row, screen->cur_col),
 				CursorY(screen, screen->cur_row),
 				curXtermChrSet(screen->cur_row),
-				PAIRED_CHARS(str, str2), len);
+				PAIRED_CHARS(str, str2), len, 0);
 
 			resetXtermGC(screen, flags, False);
 
@@ -3093,7 +3098,7 @@ dpmodes(
 		case 8:			/* DECARM			*/
 			/* ignore autorepeat */
 			break;
-		case SET_X10_MOUSE:     /* MIT bogus sequence           */
+		case SET_X10_MOUSE:	/* MIT bogus sequence		*/
 			MotionOff( screen, termw );
 			set_mousemode(X10_MOUSE);
 			break;
@@ -3334,7 +3339,7 @@ savemodes(XtermWidget termw)
 		case 47:		/* alternate buffer		*/
 			DoSM(DP_X_ALTSCRN, screen->alternate);
 			break;
-		case SET_VT200_MOUSE:   /* mouse bogus sequence         */
+		case SET_VT200_MOUSE:	/* mouse bogus sequence		*/
 		case SET_VT200_HIGHLIGHT_MOUSE:
 		case SET_BTN_EVENT_MOUSE:
 		case SET_ANY_EVENT_MOUSE:
@@ -3407,7 +3412,7 @@ restoremodes(XtermWidget termw)
 		case 8:			/* DECARM			*/
 			/* ignore autorepeat */
 			break;
-		case SET_X10_MOUSE:     /* MIT bogus sequence           */
+		case SET_X10_MOUSE:	/* MIT bogus sequence		*/
 			DoRM(DP_X_X10MSE, screen->send_mouse_pos);
 			break;
 		case 40:		/* 132 column mode		*/
@@ -3449,7 +3454,7 @@ restoremodes(XtermWidget termw)
 			    /* update_altscreen done by ToAlt and FromAlt */
 			}
 			break;
-		case SET_VT200_MOUSE:   /* mouse bogus sequence         */
+		case SET_VT200_MOUSE:	/* mouse bogus sequence		*/
 		case SET_VT200_HIGHLIGHT_MOUSE:
 		case SET_BTN_EVENT_MOUSE:
 		case SET_ANY_EVENT_MOUSE:
@@ -4920,6 +4925,7 @@ ShowCursor(void)
 	Char    c1l = 0;
 	Char    c2h = 0;
 	Char    c2l = 0;
+	int	base;
 #endif
 
 	if (screen->cursor_state == BLINKED_OFF)
@@ -4940,15 +4946,22 @@ ShowCursor(void)
 	}
 #endif /* NO_ACTIVE_ICON */
 
+#if OPT_WIDE_CHARS
+	base  =
+#endif
 	clo   = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col];
 	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
 
 	if_OPT_WIDE_CHARS(screen,{
+	    int my_col = screen->cursor_col;
 	    chi = SCRN_BUF_WIDEC(screen, screen->cursor_row)[screen->cursor_col];
-	    c1l = SCRN_BUF_COM1L(screen, screen->cursor_row)[screen->cursor_col];
-	    c1h = SCRN_BUF_COM1H(screen, screen->cursor_row)[screen->cursor_col];
-	    c2l = SCRN_BUF_COM2L(screen, screen->cursor_row)[screen->cursor_col];
-	    c2h = SCRN_BUF_COM2H(screen, screen->cursor_row)[screen->cursor_col];
+	    base = (chi << 8) | clo;
+	    if (iswide(base))
+		my_col += 1;
+	    c1l = SCRN_BUF_COM1L(screen, screen->cursor_row)[my_col];
+	    c1h = SCRN_BUF_COM1H(screen, screen->cursor_row)[my_col];
+	    c2l = SCRN_BUF_COM2L(screen, screen->cursor_row)[my_col];
+	    c2h = SCRN_BUF_COM2H(screen, screen->cursor_row)[my_col];
 	})
 
 	if (clo == 0
@@ -5053,20 +5066,20 @@ ShowCursor(void)
 		x = CurCursorX(screen, screen->cur_row, screen->cur_col),
 		y = CursorY(screen, screen->cur_row),
 		curXtermChrSet(screen->cur_row),
-		PAIRED_CHARS(&clo, &chi), 1);
+		PAIRED_CHARS(&clo, &chi), 1, 0);
 
 #if OPT_WIDE_CHARS
 	if (c1l || c1h) {
 		drawXtermText(screen, flags, currentGC,
 			      x, y,
 			      curXtermChrSet(screen->cur_row),
-			      PAIRED_CHARS(&c1l, &c1h), 1);
+			      PAIRED_CHARS(&c1l, &c1h), 1, iswide(base));
 
 		if (c2l || c2h)
 			drawXtermText(screen, flags, currentGC,
 				      x, y,
 				      curXtermChrSet(screen->cur_row),
-				      PAIRED_CHARS(&c2l, &c2h), 1);
+				      PAIRED_CHARS(&c2l, &c2h), 1, iswide(base));
 	}
 #endif
 
@@ -5100,6 +5113,7 @@ HideCursor(void)
 	Char    c1l = 0;
 	Char    c2h = 0;
 	Char    c2l = 0;
+	int	base;
 #endif
 
 	if (screen->cursor_state == OFF)	/* FIXME */
@@ -5114,6 +5128,9 @@ HideCursor(void)
 	}
 #endif /* NO_ACTIVE_ICON */
 
+#if OPT_WIDE_CHARS
+	base  =
+#endif
 	clo   = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col];
 	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
 
@@ -5126,11 +5143,15 @@ HideCursor(void)
 	})
 
 	if_OPT_WIDE_CHARS(screen,{
+	    int my_col = screen->cursor_col;
 	    chi = SCRN_BUF_WIDEC(screen, screen->cursor_row)[screen->cursor_col];
-	    c1l = SCRN_BUF_COM1L(screen, screen->cursor_row)[screen->cursor_col];
-	    c1h = SCRN_BUF_COM1H(screen, screen->cursor_row)[screen->cursor_col];
-	    c2l = SCRN_BUF_COM2L(screen, screen->cursor_row)[screen->cursor_col];
-	    c2h = SCRN_BUF_COM2H(screen, screen->cursor_row)[screen->cursor_col];
+	    base = (chi << 8) | clo;
+	    if (iswide(base))
+		my_col += 1;
+	    c1l = SCRN_BUF_COM1L(screen, screen->cursor_row)[my_col];
+	    c1h = SCRN_BUF_COM1H(screen, screen->cursor_row)[my_col];
+	    c2l = SCRN_BUF_COM2L(screen, screen->cursor_row)[my_col];
+	    c2h = SCRN_BUF_COM2H(screen, screen->cursor_row)[my_col];
 	})
 
 	if (screen->cursor_row > screen->endHRow ||
@@ -5159,20 +5180,20 @@ HideCursor(void)
 		x = CurCursorX(screen, screen->cursor_row, screen->cursor_col),
 		y = CursorY(screen, screen->cursor_row),
 		curXtermChrSet(screen->cursor_row),
-		PAIRED_CHARS(&clo, &chi), 1);
+		PAIRED_CHARS(&clo, &chi), 1, 0);
 
 #if OPT_WIDE_CHARS
 	if (c1l || c1h) {
 		drawXtermText (screen, flags, currentGC,
 				x, y,
 				curXtermChrSet(screen->cur_row),
-				PAIRED_CHARS(&c1l, &c1h), 1);
+				PAIRED_CHARS(&c1l, &c1h), 1, iswide(base));
 
 		if (c2l || c2h)
 			drawXtermText (screen, flags, currentGC,
 					x, y,
 					curXtermChrSet(screen->cur_row),
-					PAIRED_CHARS(&c2l, &c2h), 1);
+					PAIRED_CHARS(&c2l, &c2h), 1, iswide(base));
 	}
 #endif
 	screen->cursor_state = OFF;
@@ -5339,7 +5360,7 @@ VTReset(Bool full, Bool saved)
 /*
  * set_character_class - takes a string of the form
  *
- *                 low[-high]:val[,low[-high]:val[...]]
+ *   low[-high]:val[,low[-high]:val[...]]
  *
  * and sets the indicated ranges to the indicated values.
  */

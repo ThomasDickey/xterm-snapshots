@@ -649,12 +649,22 @@ need to have the session startup and reset programs explicitly change the
 ownership of the console device in order to get this option to work.
 .TP 8
 .B \-S\fIccn\fP
-This option specifies the last two letters of the name of a pseudo-terminal
-to use in slave mode, plus the number of the inherited file descriptor.
-The option is parsed ``%c%c%d''.
-This allows \fIxterm\fP to be used as an input and
+This option allows \fIxterm\fP to be used as an input and
 output channel for an existing program and is sometimes used in specialized
 applications.
+The option value specifies the last few letters of the name of a pseudo-terminal
+to use in slave mode, plus the number of the inherited file descriptor.
+If the option contains a ``/'' character, that delimits the characters
+used for the pseudo-terminal name from the file descriptor.
+Otherwise, exactly two characters are used from the option for
+the pseudo-terminal name, the remainder is the file descriptor.
+Examples:
+.nf
+.RS 15
+-S123/45
+-Sab34
+.RE
+.fi
 .PP
 The following command line arguments are provided for compatibility with
 older versions.  They may not be supported in the next release as the X

@@ -92,8 +92,8 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 
 #ifdef UTF8support
     UTF8_OPTION = -DOPT_WIDE_CHARS
-        UTF8SRC = keysym2ucs.c
-        UTF8OBJ = keysym2ucs.o
+        UTF8SRC = charclass.c keysym2ucs.c precompose.c wcwidth.c
+        UTF8OBJ = charclass.o keysym2ucs.o precompose.o wcwidth.o
 #endif
 
    MAIN_DEFINES = $(UTMPDEF) $(TTYGROUPDEF) $(PUCCPTYDDEF) $(NOPOSIXTERMIOS) \
@@ -110,20 +110,20 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
           MAINSRC = main.c
           MAINOBJ = main.o
 #endif
-          SRCS1 = button.c charclass.c charproc.c charsets.c cursor.c \
+          SRCS1 = button.c charproc.c charsets.c cursor.c \
 		  data.c doublechr.c fontutils.c input.c \
-		  menu.c misc.c precompose.c print.c ptydata.c \
-		  screen.c scrollbar.c tabs.c util.c wcwidth.c \
+		  menu.c misc.c print.c ptydata.c \
+		  screen.c scrollbar.c tabs.c util.c xstrings.c \
 		  TekPrsTbl.c Tekproc.c VTPrsTbl.c \
 		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC)
-          OBJS1 = button.o charclass.o charproc.o charsets.o cursor.o \
+          OBJS1 = button.o charproc.o charsets.o cursor.o \
 		  data.o doublechr.o fontutils.o input.o \
-		  menu.o misc.o precompose.o print.o ptydata.o \
-		  screen.o scrollbar.o tabs.o util.o wcwidth.o \
+		  menu.o misc.o print.o ptydata.o \
+		  screen.o scrollbar.o tabs.o util.o xstrings.o \
 		  TekPrsTbl.o Tekproc.o VTPrsTbl.o \
 		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ)
-          SRCS2 = resize.c
-          OBJS2 = resize.o
+          SRCS2 = resize.c xstrings.c
+          OBJS2 = resize.o xstrings.o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
        PROGRAMS = ProgramTargetName(resize) ProgramTargetName(xterm)

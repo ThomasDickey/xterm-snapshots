@@ -27,12 +27,21 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.13.19990117)
+AC_PREREQ(2.13.20000819)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
 CF_CHECK_CACHE
 
 ###	checks for alternative programs
+
+dnl Only add to this case statement when a system has a compiler that is not
+dnl detected by AC_PROG_CC.
+case "$host_os" in
+openedition)	: ${CFLAGS="-O2 -Wc,dll -D_ALL_SOURCE -Wl,EDIT=NO"}
+		: ${LIBS="/usr/lib/Xaw.x /usr/lib/SM.x /usr/lib/ICE.x /usr/lib/X11.x"}
+		: ${CC=c89};;
+esac
+
 AC_PROG_CC
 AC_PROG_CPP
 AC_GCC_TRADITIONAL

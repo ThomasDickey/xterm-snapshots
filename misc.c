@@ -1976,23 +1976,6 @@ xtermSetenv (register char *var, register char *value)
 	environ [++envindex] = NULL;
 }
 
-/*
- * returns a pointer to the first occurrence of s2 in s1,
- * or NULL if there are none.
- */
-char *strindex ( register char *s1, register char *s2)
-{
-	register char	*s3;
-	size_t s2len = strlen (s2);
-
-	while ((s3=strchr(s1, *s2)) != NULL) {
-		if (strncmp(s3, s2, s2len) == 0)
-			return (s3);
-		s1 = ++s3;
-	}
-	return (NULL);
-}
-
 /*ARGSUSED*/
 int
 xerror(Display *d, register XErrorEvent *ev)

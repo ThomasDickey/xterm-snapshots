@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-4_0_1c
+MANIFEST for xterm, version xterm-145
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -77,6 +77,8 @@ vms.h                           system headers and definitions for vms.c
 wcwidth.c                       wide-character utility functions
 wcwidth.h                       interface of wcwidth.c
 xcharmouse.h                    Jason Bacon's mouse-defs, cleaned up a little
+xstrings.c                      a few common string functions
+xstrings.h                      interface of xstrings.c
 xterm.dat                       application defaults for VMS port of 'xterm'
 xterm.h                         common includes, definitions and prototypes for 'xterm'
 xterm.man                       manual page for 'xterm'

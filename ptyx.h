@@ -95,6 +95,16 @@
 ** System V definitions
 */
 
+#ifdef att
+#define ATT
+#endif
+
+#ifdef SVR4
+#undef  SYSV			/* predefined on Solaris 2.4 */
+#define SYSV			/* SVR4 is (approx) superset of SVR3 */
+#define ATT
+#endif
+
 #ifdef SYSV
 #ifdef X_NOT_POSIX
 #ifndef CRAY
@@ -105,6 +115,35 @@
 #endif /* SYSV */
 
 /*
+** Definitions to simplify ifdef's for pty's.
+*/
+#define USE_PTY_DEVICE 1
+#define USE_PTY_SEARCH 1
+
+#if defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
+#undef USE_PTY_DEVICE
+#undef USE_PTY_SEARCH
+#define USE_PTS_DEVICE 1
+#elif defined(VMS)
+#undef USE_PTY_DEVICE
+#undef USE_PTY_SEARCH
+#elif defined(PUCC_PTYD)
+#undef USE_PTY_SEARCH
+#endif
+
+#if defined(SYSV) && defined(i386) && !defined(SVR4)
+#define ATT
+#define USE_HANDSHAKE
+#define USE_ISPTS_FLAG 1
+#endif
+
+#if (defined(ATT) && !defined(__sgi)) || defined(__MVS__) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
+#define USE_USG_PTYS
+#else
+#define USE_HANDSHAKE
+#endif
+
+/*
 ** allow for mobility of the pty master/slave directories
 */
 #ifndef PTYDEV
@@ -112,7 +151,7 @@
 #define	PTYDEV		"/dev/ptym/ptyxx"
 #elif defined(__MVS__)
 #define	PTYDEV		"/dev/ptypxxxx"
-#elif !defined(__osf__)
+#else
 #define	PTYDEV		"/dev/ptyxx"
 #endif
 #endif	/* !PTYDEV */
@@ -122,8 +161,8 @@
 #define TTYDEV		"/dev/pty/ttyxx"
 #elif defined(__MVS__)
 #define TTYDEV		"/dev/ptypxxxx"
-#elif defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
-#define TTYDEV		"/dev/ttydirs/xxx/xxxxxxxxxxxxxx"
+#elif defined(USE_PTS_DEVICE)
+#define TTYDEV		"/dev/pts/0"
 #else
 #define	TTYDEV		"/dev/ttyxx"
 #endif
@@ -172,6 +211,16 @@
 #define PTYFORMAT "/dev/ptyp%d"
 #endif
 #endif /* PTYFORMAT */
+
+#ifndef PTYCHARLEN
+#ifdef CRAY
+#define PTYCHARLEN 3
+#elif defined(__MVS__)
+#define PTYCHARLEN 4
+#else
+#define PTYCHARLEN 2
+#endif
+#endif
 
 #ifndef MAXPTTYS
 #ifdef CRAY

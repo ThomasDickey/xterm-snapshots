@@ -33,10 +33,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef	included_trace_h
 #define	included_trace_h
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
 #include <ptyx.h>
 
 #if OPT_TRACE
