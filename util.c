@@ -1807,9 +1807,9 @@ curXtermChrSet(int row)
 /*
  * Returns a single 8/16-bit number for the given cell
  */
-int getXtermCell (TScreen *screen, int row, int col)
+unsigned getXtermCell (TScreen *screen, int row, int col)
 {
-    int ch = SCRN_BUF_CHARS(screen, row)[col];
+    unsigned ch = SCRN_BUF_CHARS(screen, row)[col];
     if_OPT_WIDE_CHARS(screen,{
 	ch |= (SCRN_BUF_WIDEC(screen, row)[col] << 8);
     })

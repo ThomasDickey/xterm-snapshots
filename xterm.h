@@ -329,7 +329,7 @@ extern unsigned usedPtyData(PtyData *data);
 extern void initPtyData (PtyData *data);
 
 #if OPT_WIDE_CHARS
-extern Char * convertToUTF8(Char *lp, int c);
+extern Char * convertToUTF8(Char *lp, unsigned c);
 extern void writePtyData(int f, IChar *d, unsigned len);
 #else
 #define writePtyData(f,d,len) v_write(f,d,len)
@@ -436,7 +436,7 @@ extern int curXtermChrSet (int row);
 #endif
 
 #if OPT_WIDE_CHARS
-extern int getXtermCell (TScreen *screen, int row, int col);
+extern unsigned getXtermCell (TScreen *screen, int row, int col);
 extern void putXtermCell (TScreen *screen, int row, int col, int ch);
 #else
 #define getXtermCell(screen,row,col) SCRN_BUF_CHARS(screen, row)[col]

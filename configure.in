@@ -408,5 +408,13 @@ AC_SUBST(EXTRAHDRS)
 AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
 
+###	remove from IMAKE_CFLAGS the optional features we define in xtermcfg.h
+for cf_def in \
+	SCROLLBAR_RIGHT \
+	OPT_WIDE_CHARS
+do
+	IMAKE_CFLAGS=`echo "$IMAKE_CFLAGS" | sed -e s/-D$cf_def//`
+done
+
 ###	output Makefile and xtermcfg.h
 AC_OUTPUT(Makefile)
