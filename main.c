@@ -177,9 +177,11 @@ static Bool IsPts = False;
 #define LASTLOG
 #define WTMP
 #undef  HAS_LTCHARS
-#if (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)
-#include <pty.h>
 #endif
+
+#if (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)
+/* USE_USG_PTYS is defined above */
+#include <pty.h>
 #endif
 
 #ifdef __CYGWIN32__
@@ -1901,7 +1903,7 @@ base_name(char *name)
 static int
 get_pty (int *pty)
 {
-#if defined(__osf__) || (defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
+#if defined(__osf__) || ((__GLIBC__ >= 2) && !(defined(USE_USG_PTYS)))
     int tty;
     return (openpty(pty, &tty, ttydev, NULL, NULL));
 #elif defined(SYSV) && defined(i386) && !defined(SVR4)
@@ -1928,12 +1930,20 @@ get_pty (int *pty)
 	  for the "if (IsPts)" statement in spawn(); we have two different
 	  device types which need to be handled differently.
 	  */
-        if (pty_search(pty) == 0)
+	if (pty_search(pty) == 0)
 	    return 0;
 #elif defined(USE_USG_PTYS)
+#if __GLIBC__ >= 2
+	/* GNU libc 2 allows us to abstract away from having to know the master
+	   pty device name. */
+	if ((*pty = getpt()) < 0) {
+	    return 1;
+	}
+#else
 	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0) {
 	    return 1;
 	}
+#endif
 #if defined(SVR4) || defined(SCO325) || (defined(i386) && defined(SYSV))
 	strcpy(ttydev, ptsname(*pty));
 #if defined (SYSV) && defined(i386) && !defined(SVR4)
@@ -1958,7 +1968,7 @@ get_pty (int *pty)
 	    return 0;
 	}
 #elif defined(__convex__)
-        {
+	{
 	    char *pty_name, *getpty();
 
 	    while ((pty_name = getpty()) != NULL) {
@@ -2683,12 +2693,12 @@ spawn (void)
 #endif
 #endif /* USE_SYSV_PGRP */
 		while (1) {
-#if defined(TIOCNOTTY) && !(defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
+#if defined(TIOCNOTTY) && !((__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
 			if (!no_dev_tty && (tty = open ("/dev/tty", O_RDWR)) >= 0) {
 				ioctl (tty, TIOCNOTTY, (char *) NULL);
 				close (tty);
 			}
-#endif /* TIOCNOTTY && !linux*/
+#endif /* TIOCNOTTY && !glibc >= 2.1*/
 #ifdef CSRG_BASED
 			(void)revoke(ttydev);
 #endif

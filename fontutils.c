@@ -373,6 +373,16 @@ same_font_size(XFontStruct *nfs, XFontStruct *bfs)
 	 &&	nfs->max_bounds.width == bfs->max_bounds.width);
 }
 
+/*
+ * Check if the font looks like it has fixed width
+ */
+static int
+is_fixed_font(XFontStruct *fs)
+{
+	return (fs->min_bounds.width == fs->max_bounds.width
+	   &&   fs->min_bounds.width == fs->min_bounds.width);
+}
+
 #define EmptyFont(fs) ((fs)->ascent + (fs)->descent == 0 \
 		   ||  (fs)->max_bounds.width == 0)
 #define FontSize(fs) (((fs)->ascent + (fs)->descent) \
@@ -444,13 +454,33 @@ xtermLoadFont (
 	if (EmptyFont(bfs))
 		goto bad;		/* can't use a 0-sized font */
 
+	if (!same_font_size(nfs, bfs)
+	 && (is_fixed_font(nfs) && is_fixed_font(bfs))) {
+		XFreeFont(screen->display, bfs);
+		bfs = nfs;
+		TRACE(("...fixing mismatched normal/bold fonts\n"))
+		/*
+		 * If we're given a nonnull bfontname here, it came from a
+		 * resource setting.  Perhaps the user did something like set
+		 * the "*font" in a resource file.  But they would be startled
+		 * to see a mismatched bold font.  Try again, asking the font
+		 * server for the appropriate font.
+		 */
+		if (bfontname != 0) {
+			return xtermLoadFont (screen,
+					      nfontname,
+					      NULL,	/* throw it away! */
+					      doresize,
+					      fontnum);
+		}
+	}
+
 	/*
 	 * Normal/bold fonts should be the same width.  Also, the min/max
 	 * values should be the same.
 	 */
-	if (nfs->min_bounds.width != nfs->max_bounds.width
-	 || bfs->min_bounds.width != bfs->max_bounds.width
-	 || nfs->min_bounds.width != bfs->min_bounds.width
+	if (!is_fixed_font(nfs)
+	 || !is_fixed_font(bfs)
 	 || nfs->max_bounds.width != bfs->max_bounds.width) {
 		TRACE(("Proportional font! normal %d/%d, bold %d/%d\n",
 			nfs->min_bounds.width,
