@@ -79,11 +79,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #if USE_MY_MEMMOVE
 #define memmove(d,s,n) my_memmove(d,s,n)
+extern char * my_memmove(char * s1, char * s2, size_t n);
 #endif
 
 #if !HAVE_STRERROR
 #define strerror(n) my_strerror(n)
-extern char *my_strerror();
+extern char *my_strerror(int n);
 #endif
 
 #if !HAVE_X11_XPOLL_H
