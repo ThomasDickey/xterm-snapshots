@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-78
+MANIFEST for xterm, version XFree86-3_9Ai
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 INSTALL                         configure script: options and related install instructions
@@ -38,6 +38,7 @@ misc.c                          miscellaneous utility functions for 'xterm'
 mkdirs.sh                       configure script: make directories for install process
 os2main.c                       main program for OS/2 EMX port of 'xterm'
 print.c                         VT100+ print support functions
+proto.h                         macros to simplify function prototypes
 ptyx.h                          structure-definitions for 'xterm'
 resize.c                        program to compute/modify xterm's window size
 resize.man                      manual page for 'resize'

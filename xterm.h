@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.26 1998/04/27 03:15:07 robin Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.27 1998/06/04 16:44:04 hohndel Exp $ */
 /*
  * Common/useful definitions for XTERM application.
  *
@@ -7,6 +7,13 @@
  */
 #ifndef	included_xterm_h
 #define	included_xterm_h
+
+#ifdef __EMX__
+/* must be cleaned up through ANSIFICATION: X_NOT_STDC_ENV is wrong below,
+ * because size_t mustn't be set to int. Xos.h sets it right
+ */
+#include <X11/Xos.h>
+#endif
 
 #ifndef GCC_UNUSED
 #define GCC_UNUSED /* nothing */
@@ -52,7 +59,7 @@ extern void exit();
 extern void free();
 #endif
 
-#ifdef HAVE_UNISTD_H
+#if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
 
