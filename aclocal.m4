@@ -466,6 +466,7 @@ if mkdir conftestdir; then
 	cat >> ./Imakefile <<'CF_EOF'
 findstddefs:
 	@echo 'IMAKE_CFLAGS="${ALLDEFINES} ifelse($1,,,$1)"'
+	@echo 'IMAKE_LOADFLAGS="${EXTRA_LOADFLAGS} ifelse($2,,,$2)"'
 CF_EOF
 	if ( $IMAKE $cf_imake_opts 1>/dev/null 2>&AC_FD_CC && test -f Makefile)
 	then
@@ -541,6 +542,7 @@ CF_EOF
 	fi
 fi
 AC_SUBST(IMAKE_CFLAGS)
+AC_SUBST(IMAKE_LOADFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl	On both Ultrix and CLIX, I find size_t defined in <stdio.h>

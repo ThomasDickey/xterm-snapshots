@@ -255,7 +255,7 @@ static Bool IsPts = False;
 #define USE_SYSV_TERMIO
 #define USE_SYSV_SIGNALS
 #define	USE_SYSV_PGRP
-#ifndef TIOCSWINSZ
+#if defined(__hpux) || !defined(TIOCSWINSZ) 
 #define USE_SYSV_ENVVARS		/* COLUMNS/LINES vs. TERMCAP */
 #endif
 /*
@@ -283,13 +283,13 @@ static Bool IsPts = False;
 #define USE_POSIX_WAIT
 #define HAS_UTMP_UT_HOST
 #endif /* SCO */
-#ifdef hpux
+#ifdef __hpux 
 #define HAS_BSD_GROUPS
 #define USE_SYSV_UTMP
 #define HAS_UTMP_UT_HOST
 #define USE_POSIX_WAIT
 #include <sys/ptyio.h>
-#endif /* hpux */
+#endif /* __hpux */ 
 #ifdef __sgi
 #define HAS_BSD_GROUPS
 #include <sys/sysmacros.h>
@@ -355,9 +355,9 @@ extern time_t time ();
 #include <time.h>
 #endif
 
-#ifdef hpux
+#ifdef __hpux 
 #include <sys/utsname.h>
-#endif /* hpux */
+#endif /* __hpux */ 
 
 #if defined(apollo) && OSMAJORVERSION == 10 && OSMINORVERSION < 4
 #define ttyslot() 1
@@ -451,7 +451,7 @@ int	Ptyfd;
 
 #ifdef SIGTSTP
 #include <sys/wait.h>
-#ifdef hpux
+#ifdef __hpux 
 #include <sys/bsdtty.h>
 #endif
 #endif
@@ -1649,7 +1649,7 @@ char **argv;
 		unsigned char *old_bufend;
 
 		old_bufend = (unsigned char *) _bufend(stderr);
-#ifdef hpux
+#ifdef __hpux 
 		stderr->__fileH = (i >> 8);
 		stderr->__fileL = i;
 #else
@@ -1891,6 +1891,16 @@ get_pty (pty)
 	return(0);
 #else /* __sgi or umips */
 
+#ifdef __hpux
+	/*
+	 * Use the clone device if it works, otherwise use pty_search logic.
+	 */
+	if ((*pty = open("/dev/ptym/clone", O_RDWR)) >= 0) { 
+		strcpy(ttydev, ptsname(*pty)); 
+		return(0); 
+	} 
+#endif 
+ 
 	return pty_search(pty);
 
 #endif /* __sgi or umips else */
@@ -2910,6 +2920,9 @@ spawn ()
 #ifdef UTMP
 		envsize += 2;   /* HOME, SHELL */
 #endif /* UTMP */
+#ifdef OWN_TERMINFO_DIR 
+		envsize += 1;	/* TERMINFO */ 
+#endif 
 #else /* USE_SYSV_ENVVARS */
 		envsize += 1;	/* TERMCAP */
 #endif /* USE_SYSV_ENVVARS */
@@ -3255,7 +3268,10 @@ spawn ()
 			Setenv("SHELL=", pw->pw_shell);
 		}
 #endif /* UTMP */
-#else /* USE_SYSV_ENVVAR */
+#ifdef OWN_TERMINFO_DIR 
+		Setenv("TERMINFO=", OWN_TERMINFO_DIR); 
+#endif 
+#else /* USE_SYSV_ENVVARS */
 		if(!TEK4014_ACTIVE(screen) && *newtc) {
 		    strcpy (termcap, newtc);
 		    resize (screen, termcap, newtc);
@@ -3277,7 +3293,7 @@ spawn ()
 		}
 		if(*newtc)
 		    Setenv ("TERMCAP=", newtc);
-#endif /* USE_SYSV_ENVVAR */
+#endif /* USE_SYSV_ENVVARS */
 
 
 		/* need to reset after all the ioctl bashing we did above */
@@ -3896,6 +3912,7 @@ Exit(n)
 			updwtmpx(WTMPX_FILE, &utmp);
 #else
 #if defined(linux) && __GLIBC__ >= 2
+	            strncpy (utmp.ut_line, utptr->ut_line, sizeof (utmp.ut_line)); 
 		    if (term->misc.login_shell)
 			updwtmp(etc_wtmp, &utmp);
 #else
@@ -3948,13 +3965,13 @@ Exit(n)
 	if (!am_slave) {
 		/* restore ownership of tty and pty */
 		chown (ttydev, 0, 0);
-#if (!defined(__sgi) && !defined(__osf__))
+#if (!defined(__sgi) && !defined(__osf__) && !defined(__hpux)) 
 		chown (ptydev, 0, 0);
 #endif
 
 		/* restore modes of tty and pty */
 		chmod (ttydev, 0666);
-#if (!defined(__sgi) && !defined(__osf__))
+#if (!defined(__sgi) && !defined(__osf__) && !defined(__hpux)) 
 		chmod (ptydev, 0666);
 #endif
 	}

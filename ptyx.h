@@ -76,49 +76,49 @@
 ** allow for mobility of the pty master/slave directories
 */
 #ifndef PTYDEV
-#ifdef hpux
+#ifdef __hpux 
 #define	PTYDEV		"/dev/ptym/ptyxx"
-#else	/* !hpux */
+#else	/* !__hpux */ 
 #ifndef __osf__
 #define	PTYDEV		"/dev/ptyxx"
 #endif
-#endif	/* !hpux */
+#endif	/* !__hpux */ 
 #endif	/* !PTYDEV */
 
 #ifndef TTYDEV
-#ifdef hpux
+#ifdef __hpux 
 #define TTYDEV		"/dev/pty/ttyxx"
-#else	/* !hpux */
+#else	/* !__hpux */ 
 #ifdef __osf__
 #define TTYDEV		"/dev/ttydirs/xxx/xxxxxxxxxxxxxx"
 #else
 #define	TTYDEV		"/dev/ttyxx"
 #endif
-#endif	/* !hpux */
+#endif	/* !__hpux */ 
 #endif	/* !TTYDEV */
 
 #ifndef PTYCHAR1
-#ifdef hpux
+#ifdef __hpux 
 #define PTYCHAR1	"zyxwvutsrqp"
-#else	/* !hpux */
+#else	/* !__hpux */ 
 #ifdef __EMX__
 #define PTYCHAR1	"pq"
 #else
 #define	PTYCHAR1	"pqrstuvwxyzPQRSTUVWXYZ"
 #endif  /* !__EMX__ */
-#endif	/* !hpux */
+#endif	/* !__hpux */ 
 #endif	/* !PTYCHAR1 */
 
 #ifndef PTYCHAR2
-#ifdef hpux
+#ifdef __hpux 
 #define	PTYCHAR2	"fedcba9876543210"
-#else	/* !hpux */
+#else	/* !__hpux */ 
 #ifdef __FreeBSD__
 #define	PTYCHAR2	"0123456789abcdefghijklmnopqrstuv"
 #else /* !__FreeBSD__ */
 #define	PTYCHAR2	"0123456789abcdef"
 #endif /* !__FreeBSD__ */
-#endif	/* !hpux */
+#endif	/* !__hpux */ 
 #endif	/* !PTYCHAR2 */
 
 #ifndef TTYFORMAT
