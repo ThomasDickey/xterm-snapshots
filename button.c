@@ -1,6 +1,6 @@
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
- * Copyright 1999-2001,2002 by Thomas E. Dickey
+ * Copyright 1999-2002,2003 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.72 2003/03/09 23:39:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.73 2003/03/23 02:01:38 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -2363,9 +2363,9 @@ SaltTextAway(int crow, int ccol, int row, int col,
     /* now get some memory to save it in */
 
     if (screen->selection_size <= j) {
-	if ((line = (char *) malloc((unsigned) j + 1)) == 0)
+	if ((line = (Char *) malloc((unsigned) j + 1)) == 0)
 	    SysError(ERROR_BMALLOC2);
-	XtFree(screen->selection_data);
+	XtFree((char *) screen->selection_data);
 	screen->selection_data = line;
 	screen->selection_size = j + 1;
     } else {

@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.101 2003/03/09 23:39:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.102 2003/03/23 02:01:40 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey
@@ -380,7 +380,11 @@ typedef struct {
 
 #define Cres(name,class,offset,value) \
 	{RES_NAME(name), RES_CLASS(class), XtRPixel, sizeof(Pixel), \
-	 RES_OFFSET(offset), XtRString, value}
+	 RES_OFFSET(offset), XtRString, (XtPointer) value}
+
+#define Fres(name,class,offset,value) \
+	{RES_NAME(name), RES_CLASS(class), XtRFontStruct, sizeof(XFontStruct *), \
+	 RES_OFFSET(offset), XtRString, (XtPointer) value}
 
 #define Ires(name,class,offset,value) \
 	{RES_NAME(name), RES_CLASS(class), XtRInt, sizeof(int), \
@@ -504,6 +508,13 @@ typedef struct {
 
 #ifndef OPT_PC_COLORS
 #define OPT_PC_COLORS   1 /* true if xterm supports PC-style (bold) colors */
+#endif
+
+#ifndef OPT_PTY_HANDSHAKE
+#ifndef USE_HANDSHAKE
+#define USE_HANDSHAKE	0
+#endif
+#define OPT_PTY_HANDSHAKE USE_HANDSHAKE	/* avoid pty races on older systems */
 #endif
 
 #ifndef OPT_PRINT_COLORS
@@ -951,6 +962,7 @@ typedef enum {
 
 	/* index into vt_shell[] or tek_shell[] */
 typedef enum {
+	noMenu = -1,
 	mainMenu,
 	vtMenu,
 	fontMenu,
@@ -1308,7 +1320,7 @@ typedef struct {
 	Boolean		meta_sends_esc;		/* Meta-key sends ESC prefix */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
 	String		menu_font_names[NMENUFONTS];
-	unsigned long	menu_font_sizes[NMENUFONTS];
+	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
 	XIC		xic;
 #ifdef XRENDERFONT

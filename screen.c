@@ -3,7 +3,7 @@
  */
 
 /*
- * Copyright 1999-2000,2002 by Thomas E. Dickey
+ * Copyright 1999-2002,2003 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.60 2002/12/27 21:05:23 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.61 2003/03/23 02:01:40 dickey Exp $ */
 
 /* screen.c */
 
@@ -1054,14 +1054,14 @@ ScrnRefresh(TScreen * screen,
 
 #if defined(__CYGWIN__) && defined(TIOCSWINSZ)
     if (first_time == 1) {
-	struct winsize ws;
+	TTYSIZE_STRUCT ts;
 
 	first_time = 0;
-	ws.ws_row = nrows;
-	ws.ws_col = ncols;
-	ws.ws_xpixel = term->core.width;
-	ws.ws_ypixel = term->core.height;
-	ioctl(screen->respond, TIOCSWINSZ, (char *) &ws);
+	TTYSIZE_ROWS(ts) = nrows;
+	TTYSIZE_COLS(ts) = ncols;
+	ts.ws_xpixel = term->core.width;
+	ts.ws_ypixel = term->core.height;
+	SET_TTYSIZE(screen->respond, ts);
     }
 #endif
     recurse--;
@@ -1132,11 +1132,9 @@ ScreenResize(TScreen * screen,
     int rows, cols;
     int border = 2 * screen->border;
     int move_down_by;
-#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
-    struct ttysize ts;
-#elif defined(TIOCSWINSZ)
-    struct winsize ws;
-#endif /* sun vs TIOCSWINSZ */
+#ifdef TTYSIZE_STRUCT
+    TTYSIZE_STRUCT ts;
+#endif
     Window tw = VWindow(screen);
 
     TRACE(("ScreenResize %dx%d\n", height, width));
@@ -1258,13 +1256,18 @@ ScreenResize(TScreen * screen,
     }
 #endif /* NO_ACTIVE_ICON */
 
-#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
+#ifdef TTYSIZE_STRUCT
     /* Set tty's idea of window size */
-    ts.ts_lines = rows;
-    ts.ts_cols = cols;
-    code = ioctl(screen->respond, TIOCSSIZE, &ts);
-    TRACE(("return %d from TIOCSSIZE %dx%d\n", code, rows, cols));
-#ifdef SIGWINCH
+    TTYSIZE_ROWS(ts) = rows;
+    TTYSIZE_COLS(ts) = cols;
+#ifdef USE_STRUCT_WINSIZE
+    ts.ws_xpixel = width;
+    ts.ws_ypixel = height;
+#endif
+    code = SET_TTYSIZE(screen->respond, ts);
+    TRACE(("return %d from SET_TTYSIZE %dx%d\n", code, rows, cols));
+
+#if defined(SIGWINCH) && defined(USE_STRUCT_TTYSIZE)
     if (screen->pid > 1) {
 	int pgrp;
 
@@ -1272,25 +1275,10 @@ ScreenResize(TScreen * screen,
 	    kill_process_group(pgrp, SIGWINCH);
     }
 #endif /* SIGWINCH */
-#elif defined(TIOCSWINSZ)
-    /* Set tty's idea of window size */
-    ws.ws_row = rows;
-    ws.ws_col = cols;
-    ws.ws_xpixel = width;
-    ws.ws_ypixel = height;
-    code = ioctl(screen->respond, TIOCSWINSZ, (char *) &ws);
-    TRACE(("return %d from TIOCSWINSZ %dx%d\n", code, rows, cols));
-#ifdef notdef			/* change to SIGWINCH if this doesn't work for you */
-    if (screen->pid > 1) {
-	int pgrp;
 
-	if (ioctl(screen->respond, TIOCGPGRP, &pgrp) != -1)
-	    kill_process_group(pgrp, SIGWINCH);
-    }
-#endif /* SIGWINCH */
 #else
     TRACE(("ScreenResize cannot do anything to pty\n"));
-#endif /* sun vs TIOCSWINSZ */
+#endif /* TTYSIZE_STRUCT */
     return (0);
 }
 

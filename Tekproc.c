@@ -3,7 +3,7 @@
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.41 2003/03/09 23:39:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.42 2003/03/23 02:01:38 dickey Exp $ */
 
 /*
 
@@ -80,6 +80,8 @@ in this Software without prior written authorization from The Open Group.
  */
 
 /* Tekproc.c */
+
+#define RES_OFFSET(field)	XtOffsetOf(TekWidgetRec, field)
 
 #include <xterm.h>
 
@@ -249,9 +251,7 @@ static Dimension defOne = 1;
 static XtResource resources[] =
 {
 #ifdef VMS
-    {XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
-     XtOffset(TekWidget, core.background_pixel),
-     XtRString, "White"},
+    Cres(XtNbackground, XtCBackground, core.background_pixel, "White"),
     {XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
      XtOffset(TekWidget, Tforeground),
      XtRString, "Black"},
@@ -260,31 +260,17 @@ static XtResource resources[] =
      XtOffsetOf(CoreRec, core.width), XtRDimension, (caddr_t) & defOne},
     {XtNheight, XtCHeight, XtRDimension, sizeof(Dimension),
      XtOffsetOf(CoreRec, core.height), XtRDimension, (caddr_t) & defOne},
-    {"fontLarge", XtCFont, XtRFontStruct, sizeof(XFontStruct *),
-     XtOffsetOf(TekWidgetRec, tek.Tfont[TEK_FONT_LARGE]),
-     XtRString, "9x15"},
-    {"font2", XtCFont, XtRFontStruct, sizeof(XFontStruct *),
-     XtOffsetOf(TekWidgetRec, tek.Tfont[TEK_FONT_2]),
-     XtRString, "6x13"},
-    {"font3", XtCFont, XtRFontStruct, sizeof(XFontStruct *),
-     XtOffsetOf(TekWidgetRec, tek.Tfont[TEK_FONT_3]),
-     XtRString, "8x13"},
-    {"fontSmall", XtCFont, XtRFontStruct, sizeof(XFontStruct *),
-     XtOffsetOf(TekWidgetRec, tek.Tfont[TEK_FONT_SMALL]),
-     XtRString, DFT_FONT_SMALL},
-    {"initialFont", "InitialFont", XtRString, sizeof(char *),
-     XtOffsetOf(TekWidgetRec, tek.initial_font),
-     XtRString, "large"},
-    {"ginTerminator", "GinTerminator", XtRString, sizeof(char *),
-     XtOffsetOf(TekWidgetRec, tek.gin_terminator_str),
-     XtRString, GIN_TERM_NONE_STR},
+    Fres("fontLarge", XtCFont, tek.Tfont[TEK_FONT_LARGE], "9x15"),
+    Fres("font2", XtCFont, tek.Tfont[TEK_FONT_2], "6x13"),
+    Fres("font3", XtCFont, tek.Tfont[TEK_FONT_3], "8x13"),
+    Fres("fontSmall", XtCFont, tek.Tfont[TEK_FONT_SMALL], DFT_FONT_SMALL),
+    Sres("initialFont", "InitialFont", tek.initial_font, "large"),
+    Sres("ginTerminator", "GinTerminator", tek.gin_terminator_str, GIN_TERM_NONE_STR),
 #if OPT_TOOLBAR
     {XtNmenuBar, XtCMenuBar, XtRWidget, sizeof(Widget),
      XtOffsetOf(TekWidgetRec, tek.menu_bar),
      XtRWidget, (XtPointer) 0},
-    {XtNmenuHeight, XtCMenuHeight, XtRInt, sizeof(int),
-     XtOffsetOf(TekWidgetRec, tek.menu_height),
-     XtRString, "25"},
+    Ires(XtNmenuHeight, XtCMenuHeight, tek.menu_height, 25),
 #endif
 };
 
@@ -1329,6 +1315,8 @@ TekInitialize(Widget request GCC_UNUSED,
 {
     Widget tekparent = SHELL_OF(wnew);
 
+    TRACE(("TekInitialize\n"));
+
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
      */
@@ -1359,6 +1347,8 @@ TekRealize(Widget gw,
     XSizeHints sizehints;
     char Tdefault[32];
 
+    TRACE(("TekRealize\n"));
+
 #ifndef NO_ACTIVE_ICON
     term->screen.whichTwin = &term->screen.fullTwin;
 #endif /* NO_ACTIVE_ICON */
@@ -1366,8 +1356,9 @@ TekRealize(Widget gw,
     tw->core.border_pixel = term->core.border_pixel;
 
     for (i = 0; i < TEKNUMFONTS; i++) {
-	if (!tw->tek.Tfont[i])
+	if (!tw->tek.Tfont[i]) {
 	    tw->tek.Tfont[i] = XQueryFont(screen->display, DefaultGCID);
+	}
 	tw->tek.tobaseline[i] = tw->tek.Tfont[i]->ascent;
     }
 

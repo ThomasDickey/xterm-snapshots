@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.91 2003/03/09 23:39:14 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.92 2003/03/23 02:01:41 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - August 2002.
 .TH XTERM 1 __vendorversion__
@@ -98,12 +98,17 @@ The VT220 emulation does not support soft fonts, it is otherwise complete.
 .IR Termcap (5)
 entries that work with
 .I xterm
-include ``xterm,'' ``vt102,'' ``vt100'' and ``ansi,'' and
+include
+an optional platform-specific entry,
+``xterm,'' ``vt102,'' ``vt100'' and ``ansi,'' and ``dumb.''
 .I xterm
 automatically searches the termcap file in this order for these entries and then
 sets the ``TERM'' and the ``TERMCAP'' environment variables.
 You may also use ``vt220,''  but must set the terminal emulation level
 with the \fBdecTerminalID\fP resource.
+(The ``TERMCAP'' environment variable is not set if \fIxterm\fP is linked
+against a terminfo library, since the requisite information is not provided
+by the termcap emulation of terminfo libraries).
 .PP
 Many of the special
 .I xterm
@@ -722,6 +727,13 @@ This option indicates that \fIxterm\fP should start in Tektronix mode, rather
 than in VT102 mode.
 Switching between the two windows is done using the
 ``Options'' menus.
+.IR Termcap (5)
+entries that work with
+.I xterm
+``tek4014,'' ``tek4015,'' ``tek4012'', ``tek4013'' and ``tek4010,'' and ``dumb.''
+.I xterm
+automatically searches the termcap file in this order for these entries and then
+sets the ``TERM'' and the ``TERMCAP'' environment variables.
 .TP 8
 .B +t
 This option indicates that \fIxterm\fP should start in VT102 mode.
@@ -978,6 +990,14 @@ The default is the application name.
 Specifies whether write access to the terminal is allowed initially.
 See
 .BR mesg (1).
+The default is ``true''.
+.TP 8
+.B "ptyHandshake (\fPclass\fBPtyHandshake)
+If ``true'', \fIxterm\fP will perform handshaking during initialization
+to ensure that the parent and child processes update the \fButmp\fP
+and \fBstty\fP state.
+Platforms with newer pseudo-terminal interfaces do not require this feature;
+normally it is not configured.
 The default is ``true''.
 .TP 8
 .B "ptyInitialErase (\fPclass\fB PtyInitialErase)"

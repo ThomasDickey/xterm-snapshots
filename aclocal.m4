@@ -1,9 +1,9 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.44 2002/12/27 21:05:20 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.45 2003/03/23 02:01:38 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2001,2002 by Thomas E. Dickey
+dnl Copyright 1997-2002,2003 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -459,8 +459,6 @@ EOF
 		if AC_TRY_EVAL(ac_compile); then
 			test -n "$verbose" && AC_MSG_RESULT(... $cf_attribute)
 			cat conftest.h >>confdefs.h
-#		else
-#			sed -e 's/__attr.*/\/*nothing*\//' conftest.h >>confdefs.h
 		fi
 	done
 else
@@ -888,7 +886,10 @@ osf*) #(vi
 	cf_cv_tty_group_name="terminal"
 	;;
 *)
-	cf_cv_tty_group_name="tty"
+	cf_cv_tty_group_name="unknown"
+	if ( egrep '^tty:' /etc/group 2>/dev/null 1>/dev/null ) then
+		cf_cv_tty_group_name="tty"
+	fi
 	;;
 esac
 fi
@@ -896,7 +897,14 @@ fi
 
 AC_DEFINE_UNQUOTED(TTY_GROUP_NAME,"$cf_cv_tty_group_name")
 
-AC_CACHE_CHECK(if we may use tty group,cf_cv_tty_group,[
+# This is only a double-check that the group-name we obtained above really
+# does apply to the device.  We cannot perform this test if we are in batch
+# mode, or if we are cross-compiling.
+
+AC_CACHE_CHECK(if we may use $cf_cv_tty_group_name group,cf_cv_tty_group,[
+cf_tty_name=`tty`
+if test "$cf_tty_name" != "not a tty"
+then
 AC_TRY_RUN([
 #include <unistd.h>
 #include <sys/types.h>
@@ -922,6 +930,11 @@ int main()
 	[cf_cv_tty_group=yes],
 	[cf_cv_tty_group=no],
 	[cf_cv_tty_group=unknown])
+elif test "$cross_compiling" = yes; then
+	cf_cv_tty_group=unknown
+else
+	cf_cv_tty_group=yes
+fi
 ])
 test $cf_cv_tty_group = yes && AC_DEFINE(USE_TTY_GROUP)
 ])dnl
@@ -1184,6 +1197,9 @@ AC_ARG_WITH(neXtaw,
 	[  --with-neXtaw           link with neXT Athena library],
 	[cf_x_athena=neXtaw])
 
+AC_ARG_WITH(XawPlus,
+	[  --with-XawPlus          link with Athena-Plus library],
+	[cf_x_athena=XawPlus])
 
 AC_CHECK_LIB(Xext,XextCreateExtension,
 	[LIBS="-lXext $LIBS"])
@@ -1267,13 +1283,15 @@ do
 				LIBS="$cf_lib $LIBS"
 				AC_MSG_CHECKING(for $cf_test in $cf_lib)
 			fi
+			cf_SAVE="$LIBS"
+			LIBS="$X_PRE_LIBS $LIBS $X_EXTRA_LIBS"
 			AC_TRY_LINK([],[$cf_test()],
 				[cf_result=yes],
-				[cf_result=no],
-				[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])
+				[cf_result=no])
 			AC_MSG_RESULT($cf_result)
 			if test "$cf_result" = yes ; then
 				cf_x_athena_lib="$cf_lib"
+				LIBS="$cf_SAVE"
 				break
 			else
 				LIBS="$cf_save"
@@ -1375,3 +1393,21 @@ test program.  You will have to check and add the proper libraries by hand
 to makefile.])
 fi
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl Check for XKB bell extension
+AC_DEFUN([CF_XKB_BELL_EXT],[
+AC_CACHE_CHECK(for XKB Bell extension, cf_cv_xkb_bell_ext,[
+AC_TRY_LINK([
+#include <X11/XKBlib.h>		/* has the prototype */
+#include <X11/extensions/XKBbells.h>	/* has the XkbBI_xxx definitions */
+],[
+int x = XkbBI_Info
+	|XkbBI_MinorError
+	|XkbBI_MajorError
+	|XkbBI_TerminalBell
+	|XkbBI_MarginBell;
+],[cf_cv_xkb_bell_ext=yes],[cf_cv_xkb_bell_ext=no])
+
+test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
+])
+])
