@@ -37,6 +37,7 @@
 #include "error.h"
 #include "data.h"
 #include "xterm.h"
+#include "xcharmouse.h"
 
 #include <stdio.h>
 #include <signal.h>
@@ -643,7 +644,7 @@ ScrnRefresh (
 		* apparent).
 	        */
 	       if (screen->highlight_selection
-		&& screen->send_mouse_pos != 3) {
+		&& screen->send_mouse_pos != VT200_HIGHLIGHT_MOUSE) {
 		   hi_col = screen->max_col;
 	           while (hi_col > 0 && !(attrs[hi_col] & CHARDRAWN))
                        hi_col--;

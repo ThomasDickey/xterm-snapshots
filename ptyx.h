@@ -609,8 +609,12 @@ typedef struct {
 #endif
 	int		border;		/* inner border			*/
 	Cursor		arrow;		/* arrow cursor			*/
+	unsigned long	event_mask;
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
+	int		mouse_button;	/* current button pressed	*/
+	int		mouse_row;	/* ...and its row		*/
+	int		mouse_col;	/* ...and its column		*/
 	int		select;		/* xterm selected		*/
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/

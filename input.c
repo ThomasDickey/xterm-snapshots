@@ -141,7 +141,8 @@ Input (
 
 	/* VT300 & up: backarrow toggle */
 	if ((nbytes == 1)
-	 && !(term->keyboard.flags & MODE_DECBKM)
+	 && (((term->keyboard.flags & MODE_DECBKM) == 0)
+	   ^ ((event->state & ControlMask) != 0))
 	 && (keysym == XK_BackSpace)) {
 		strbuf[0] = '\177';
 	}
@@ -229,7 +230,8 @@ Input (
 		/*
 		 * Interpret F1-F4 as PF1-PF4 for VT52, VT100
 		 */
-		else if (screen->old_fkeys == False
+		else if (!sunFunctionKeys
+		 && screen->old_fkeys == False
 		 && (dec_code >= 11 && dec_code <= 14))
 		{
 			reply.a_type = SS3;

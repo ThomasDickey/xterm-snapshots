@@ -52,13 +52,14 @@ button.c	Handles button events in the terminal emulator.
 #include "menu.h"
 
 #include "xterm.h"
+#include "xcharmouse.h"
 
 #define KeyState(x) (((x) & (ShiftMask|ControlMask)) + (((x) & Mod1Mask) ? 2 : 0))
     /* adds together the bits:
         shift key -> 1
         meta key  -> 2
         control key -> 4 */
-  
+
 #define TEXTMODES 4
 #define NBUTS 3
 #define DIRS 2
@@ -67,9 +68,6 @@ button.c	Handles button events in the terminal emulator.
 #define SHIFTS 8		/* three keys, so eight combinations */
 #define	Coordinate(r,c)		((r) * (term->screen.max_col+1) + (c))
 
-
-extern char *xterm_name;
-extern XtermWidget term;
 
 /* Selection/extension variables */
 
@@ -121,16 +119,22 @@ static void _OwnSelection (XtermWidget termw, String *selections, Cardinal count
 
 Boolean SendMousePosition(Widget w, XEvent* event)
 {
-    register TScreen *screen;
+    TScreen *screen;
 
     if (!IsXtermWidget(w))
     	return False;
 
     screen = &((XtermWidget)w)->screen;
-    
-    if (screen->send_mouse_pos == 0) return False;
 
-    if (event->type != ButtonPress && event->type != ButtonRelease)
+    /* If send_mouse_pos mode isn't on, we shouldn't be here */
+    if (screen->send_mouse_pos == MOUSE_OFF)
+        return False;
+
+    /* Make sure the event is an appropriate type */
+    if ((screen->send_mouse_pos != BTN_EVENT_MOUSE)
+     && (screen->send_mouse_pos != ANY_EVENT_MOUSE)
+     && event->type != ButtonPress
+     && event->type != ButtonRelease)
 	return False;
 
 #define KeyModifiers \
@@ -142,7 +146,7 @@ Boolean SendMousePosition(Widget w, XEvent* event)
 			     Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
 
     switch (screen->send_mouse_pos) {
-      case 1: /* X10 compatibility sequences */
+      case X10_MOUSE: /* X10 compatibility sequences */
 
 	if (KeyModifiers == 0) {
 	    if (event->type == ButtonPress)
@@ -151,7 +155,7 @@ Boolean SendMousePosition(Widget w, XEvent* event)
 	}
 	return False;
 
-      case 2: /* DEC vt200 compatible */
+      case VT200_MOUSE: /* DEC vt200 compatible */
 
 	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
 	    EditorButton((XButtonEvent *)event);
@@ -159,7 +163,7 @@ Boolean SendMousePosition(Widget w, XEvent* event)
 	}
 	return False;
 
-      case 3: /* DEC vt200 hilite tracking */
+      case VT200_HIGHLIGHT_MOUSE: /* DEC vt200 hilite tracking */
 	if (  event->type == ButtonPress &&
 	      KeyModifiers == 0 &&
 	      event->xbutton.button == Button1 ) {
@@ -170,7 +174,17 @@ Boolean SendMousePosition(Widget w, XEvent* event)
 	    EditorButton((XButtonEvent *)event);
 	    return True;
 	}
-	/* FALLTHRU */
+	return False;
+
+      /* xterm extension for motion reporting. June 1998 */
+      /* EditorButton() will distinguish between the modes */
+      case BTN_EVENT_MOUSE:
+      case ANY_EVENT_MOUSE:
+	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
+	    EditorButton((XButtonEvent *)event);
+	    return True;
+	}
+	return False;
 
       default:
 	return False;
@@ -234,6 +248,9 @@ ViButton(
 }
 
 
+/*
+ * This function handles button-motion events
+ */
 /*ARGSUSED*/
 void HandleSelectExtend(
 	Widget w,
@@ -250,14 +267,21 @@ void HandleSelectExtend(
 	screen = &((XtermWidget)w)->screen;
 	screen->selection_time = event->xmotion.time;
 	switch (eventMode) {
+		/* If not in one of the DEC mouse-reporting modes */
 		case LEFTEXTENSION :
 		case RIGHTEXTENSION :
-			PointToRowCol (event->xmotion.y, event->xmotion.x, 
+			PointToRowCol (event->xmotion.y, event->xmotion.x,
 				       &row, &col);
 			ExtendExtend (row, col);
 			break;
+
+		/* If in motion reporting mode, send mouse position to
+		   character process as a key sequence \E[M... */
 		case NORMAL :
-			/* will get here if send_mouse_pos != 0 */
+			/* will get here if send_mouse_pos != MOUSE_OFF */
+			if ( screen->send_mouse_pos == BTN_EVENT_MOUSE
+			 ||  screen->send_mouse_pos == ANY_EVENT_MOUSE )
+			    SendMousePosition(w,event);
 		        break;
 	}
 }
@@ -549,7 +573,7 @@ StartSelect(int startrow, int startcol)
 		/* set start of selection */
 		rawRow = startrow;
 		rawCol = startcol;
-		
+
 	} /* else use old values in rawRow, Col */
 
 	saveStartRRow = startERow = rawRow;
@@ -579,7 +603,7 @@ EndExtend(
 {
 	int	row, col, count;
 	TScreen *screen = &term->screen;
-	unsigned char line[9];
+	Char line[9];
 
 	if (use_cursor_loc) {
 	    row = screen->cursor_row;
@@ -598,7 +622,7 @@ EndExtend(
 				line[count++] = ESC;
 				line[count++] = '[';
 			}
-			if (rawRow == startSRow && rawCol == startSCol 
+			if (rawRow == startSRow && rawCol == startSCol
 			    && row == endSRow && col == endSCol) {
 			 	/* Use short-form emacs select */
 				line[count++] = 't';
@@ -714,9 +738,9 @@ static void
 ExtendExtend (int row, int col)
 {
 	int coord = Coordinate(row, col);
-	
+
 	TRACE(("ExtendExtend row=%d, col=%d\n", row, col))
-	if (eventMode == LEFTEXTENSION 
+	if (eventMode == LEFTEXTENSION
 	 && (coord + (selectUnit!=SELECTCHAR)) > Coordinate(endSRow, endSCol)) {
 		/* Whoops, he's changed his mind.  Do RIGHTEXTENSION */
 		eventMode = RIGHTEXTENSION;
@@ -853,7 +877,7 @@ LastTextCol(register int row)
 	      ch--, i--)
 	    ;
 	return(i);
-}	
+}
 
 /*
 ** double click table for cut and paste in 8 bits
@@ -886,7 +910,7 @@ static int charClass[256] = {
     64,  48,  48,  48,  48,  48,  48,  48,
 /*   H    I    J    K    L    M    N    O */
     48,  48,  48,  48,  48,  48,  48,  48,
-/*   P    Q    R    S    T    U    V    W */ 
+/*   P    Q    R    S    T    U    V    W */
     48,  48,  48,  48,  48,  48,  48,  48,
 /*   X    Y    Z    [    \    ]    ^    _ */
     48,  48,  48,  91,  92,  93,  94,  48,
@@ -918,7 +942,7 @@ static int charClass[256] = {
     48,  48,  48,  48,  48,  48,  48,  48,
 /*  E`   E'   E^   E:   I`   I'   I^   I: */
     48,  48,  48,  48,  48,  48,  48,  48,
-/*  D-   N~   O`   O'   O^   O~   O:    X */ 
+/*  D-   N~   O`   O'   O^   O~   O:    X */
     48,  48,  48,  48,  48,  48,  48, 216,
 /*  O/   U`   U'   U^   U:   Y'    P    B */
     48,  48,  48,  48,  48,  48,  48,  48,
@@ -973,7 +997,7 @@ ComputeSelect(
 		startSCol = startRCol = endCol;
 		endSRow   = endRRow   = startRow;
 		endSCol   = endRCol   = startCol;
-	}	
+	}
 
 	switch (selectUnit) {
 		case SELECTCHAR :
@@ -1156,12 +1180,12 @@ SaltTextAway(
 	if ( row == crow ) j = Length(screen, crow, ccol, col);
 	else {	/* two cases, cut is on same line, cut spans multiple lines */
 		j += Length(screen, crow, ccol, screen->max_col) + 1;
-		for(i = crow + 1; i < row; i++) 
+		for(i = crow + 1; i < row; i++)
 			j += Length(screen, i, 0, screen->max_col) + 1;
 		if (col >= 0)
 			j += Length(screen, row, 0, col);
 	}
-	
+
 	/* now get some memory to save it in */
 
 	if (screen->selection_size <= j) {
@@ -1189,7 +1213,7 @@ SaltTextAway(
 			lp = SaveText(screen, row, 0, col, lp, &eol);
 	}
 	*lp = '\0';		/* make sure we have end marked */
-	
+
 	TRACE(("Salted TEXT:%.*s\n", lp - line, line))
 	screen->selection_length = (lp - line);
 	_OwnSelection(term, params, num_params);
@@ -1489,19 +1513,48 @@ SaveText(
 	return(lp);
 }
 
+static int
+BtnCode(XButtonEvent *event, int button)
+{
+	if (button < 0 || button > 3)
+		button = 3;
+	return ' ' + (KeyState(event->state) << 2) + button;
+}
+
+#define MOUSE_LIMIT (255 - 32)
+
 static void
 EditorButton(register XButtonEvent *event)
 {
-	register TScreen *screen = &term->screen;
+	TScreen *screen = &term->screen;
 	int pty = screen->respond;
-	char unsigned line[6];
-	register unsigned row, col;
+	Char line[6];
+	int row, col;
 	int button, count = 0;
 
-	button = event->button - 1; 
+	/* If button event, get button # adjusted for DEC compatibility */
+	button = event->button - 1;
 
+	/* Compute character position of mouse pointer */
 	row = (event->y - screen->border) / FontHeight(screen);
 	col = (event->x - OriginX(screen)) / FontWidth(screen);
+
+	/* Limit to screen dimensions */
+	if (row < 0)
+		row = 0;
+	else if (row > screen->max_row)
+		row = screen->max_row;
+	else if (row > MOUSE_LIMIT)
+		row = MOUSE_LIMIT;
+
+	if (col < 0)
+		col = 0;
+	else if (col > screen->max_col)
+		col = screen->max_col;
+	else if (col > MOUSE_LIMIT)
+		col = MOUSE_LIMIT;
+
+	/* Build key sequence starting with \E[M */
 	if (screen->control_eight_bits) {
 		line[count++] = CSI;
 	} else {
@@ -1509,14 +1562,44 @@ EditorButton(register XButtonEvent *event)
 		line[count++] = '[';
 	}
 	line[count++] = 'M';
-	if (screen->send_mouse_pos == 1) {
+
+	/* Add event code to key sequence */
+	if (screen->send_mouse_pos == X10_MOUSE) {
 		line[count++] = ' ' + button;
-	} else {
-		line[count++] = ' ' + (KeyState(event->state) << 2) + 
-			((event->type == ButtonPress)? button:3);
 	}
+	else
+	{
+	    /* Button-Motion events */
+	    switch(event->type)
+	    {
+	    case ButtonPress:
+		line[count++] = BtnCode(event, screen->mouse_button = button);
+		break;
+	    case ButtonRelease:
+		line[count++] = BtnCode(event, screen->mouse_button = -1);
+		break;
+	    case MotionNotify:
+		/* BTN_EVENT_MOUSE and ANY_EVENT_MOUSE modes send motion
+		 * events only if character cell has changed.
+		 */
+		if ((row == screen->mouse_row)
+		 && (col == screen->mouse_col))
+			return;
+		line[count++] = BtnCode(event, screen->mouse_button) + 32;
+		break;
+	    default:
+		return;
+	    }
+	}
+
+	screen->mouse_row = row;
+	screen->mouse_col = col;
+
+	/* Add pointer position to key sequence */
 	line[count++] = ' ' + col + 1;
 	line[count++] = ' ' + row + 1;
+
+	/* Transmit key sequence to process running under xterm */
 	v_write(pty, (char *)line, count);
 }
 

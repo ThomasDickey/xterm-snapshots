@@ -78,13 +78,13 @@ all:	$(PROGRAMS)
 main.o: version.h
 
 xterm : $(OBJS1)
-	$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
+	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize : $(OBJS2)
-	$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
+	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
 install: $(INSTALL_DIRS) xterm resize
-	$(INSTALL_PROGRAM) -s -m 4711 xterm  $(bindir)/xterm
+	$(INSTALL_PROGRAM) -s -m @XTERM_MODE@ xterm  $(bindir)/xterm
 	$(INSTALL_PROGRAM) -s -m  755 resize $(bindir)/resize
 	$(INSTALL_DATA) xterm.man  $(mandir)/xterm.$(manext)
 	$(INSTALL_DATA) resize.man $(mandir)/resize.$(manext)

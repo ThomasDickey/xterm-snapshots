@@ -90,6 +90,7 @@ in this Software without prior written authorization from the X Consortium.
 #include "menu.h"
 #include "main.h"
 #include "xterm.h"
+#include "xcharmouse.h"
 
 #ifndef NO_ACTIVE_ICON
 #include <X11/Shell.h>
@@ -111,7 +112,6 @@ in this Software without prior written authorization from the X Consortium.
 #endif
 
 extern jmp_buf VTend;
-extern XtermWidget term;
 extern Widget toplevel;
 extern char *ProgramName;
 
@@ -1406,7 +1406,7 @@ static void VTparse(void)
 			break;
 
 		 case CASE_TRACK_MOUSE:
-			if (screen->send_mouse_pos == 3
+			if (screen->send_mouse_pos == VT200_HIGHLIGHT_MOUSE
 			 || nparam > 1) {
 				/* Track mouse as long as in window and between
 				 * specified rows
@@ -2691,6 +2691,9 @@ ansi_modes(
 	}
 }
 
+#define set_mousemode(mode) \
+	screen->send_mouse_pos = (func == bitset) ? mode : MOUSE_OFF
+
 /*
  * process DEC private modes set, reset
  */
@@ -2764,11 +2767,8 @@ dpmodes(
 		case 8:			/* DECARM			*/
 			/* ignore autorepeat */
 			break;
-		case 9:			/* MIT bogus sequence		*/
-			if(func == bitset)
-				screen->send_mouse_pos = 1;
-			else
-				screen->send_mouse_pos = 0;
+		case SET_X10_MOUSE:     /* MIT bogus sequence           */
+			set_mousemode(X10_MOUSE);
 			break;
 		case 18:		/* DECPFF: print form feed */
 		        if(func == bitset)
@@ -2860,18 +2860,27 @@ dpmodes(
 			(*func)(&termw->keyboard.flags, MODE_DECBKM);
 			update_decbkm();
 			break;
-		case 1000:		/* xterm bogus sequence		*/
-			if(func == bitset)
-				screen->send_mouse_pos = 2;
-			else
-				screen->send_mouse_pos = 0;
+		case SET_VT200_MOUSE:   /* xterm bogus sequence         */
+			set_mousemode(VT200_MOUSE);
 			break;
-		case 1001:		/* xterm sequence w/hilite tracking */
-			if(func == bitset)
-				screen->send_mouse_pos = 3;
-			else
-				screen->send_mouse_pos = 0;
+		case SET_VT200_HIGHLIGHT_MOUSE: /* xterm sequence w/hilite tracking */
+			set_mousemode(VT200_HIGHLIGHT_MOUSE);
 			break;
+		case SET_BTN_EVENT_MOUSE:
+			set_mousemode(BTN_EVENT_MOUSE);
+			break;
+		case SET_ANY_EVENT_MOUSE:
+			set_mousemode(ANY_EVENT_MOUSE);
+			if (screen->send_mouse_pos == MOUSE_OFF) {
+				screen->event_mask |=   ButtonMotionMask;
+				screen->event_mask &= ~PointerMotionMask;
+			} else {
+				screen->event_mask &= ~ButtonMotionMask;
+				screen->event_mask |= PointerMotionMask;
+			}
+			XSelectInput(XtDisplay(termw), term->core.window, screen->event_mask);
+			break;
+
 		case 1048:
 			if (!termw->misc.titeInhibit) {
 		        	if(func == bitset)
@@ -2918,7 +2927,7 @@ savemodes(XtermWidget termw)
 		case 8:			/* DECARM			*/
 			/* ignore autorepeat */
 			break;
-		case 9:			/* mouse bogus sequence */
+		case SET_X10_MOUSE:     /* mouse bogus sequence */
 			DoSM(DP_X_X10MSE, screen->send_mouse_pos);
 			break;
 		case 40:		/* 132 column mode		*/
@@ -2939,11 +2948,14 @@ savemodes(XtermWidget termw)
 			break;
 #endif
 		case 1047:		/* alternate buffer		*/
+			/* FALLTHRU */
 		case 47:		/* alternate buffer		*/
 			DoSM(DP_X_ALTSCRN, screen->alternate);
 			break;
-		case 1000:		/* mouse bogus sequence		*/
-		case 1001:
+		case SET_VT200_MOUSE:   /* mouse bogus sequence         */
+		case SET_VT200_HIGHLIGHT_MOUSE:
+		case SET_BTN_EVENT_MOUSE:
+		case SET_ANY_EVENT_MOUSE:
 			DoSM(DP_X_MOUSE, screen->send_mouse_pos);
 			break;
 		case 1048:
@@ -3013,7 +3025,7 @@ restoremodes(XtermWidget termw)
 		case 8:			/* DECARM			*/
 			/* ignore autorepeat */
 			break;
-		case 9:			/* MIT bogus sequence		*/
+		case SET_X10_MOUSE:     /* MIT bogus sequence           */
 			DoRM(DP_X_X10MSE, screen->send_mouse_pos);
 			break;
 		case 40:		/* 132 column mode		*/
@@ -3045,6 +3057,7 @@ restoremodes(XtermWidget termw)
 			break;
 #endif
 		case 1047:		/* alternate buffer */
+			/* FALLTHRU */
 		case 47:		/* alternate buffer */
 			if (!termw->misc.titeInhibit) {
 			    if(screen->save_modes[DP_X_ALTSCRN])
@@ -3054,8 +3067,10 @@ restoremodes(XtermWidget termw)
 			    /* update_altscreen done by ToAlt and FromAlt */
 			}
 			break;
-		case 1000:		/* mouse bogus sequence		*/
-		case 1001:
+		case SET_VT200_MOUSE:   /* mouse bogus sequence         */
+		case SET_VT200_HIGHLIGHT_MOUSE:
+		case SET_BTN_EVENT_MOUSE:
+		case SET_ANY_EVENT_MOUSE:
 			DoRM(DP_X_MOUSE, screen->send_mouse_pos);
 			break;
 		case 1048:
@@ -3673,6 +3688,10 @@ static void VTInitialize (
 	new->dft_background = MyWhitePixel(new->screen.display);
    }
 
+   new->screen.mouse_button = -1;
+   new->screen.mouse_row = -1;
+   new->screen.mouse_col = -1;
+
    new->screen.c132 = request->screen.c132;
    new->screen.curses = request->screen.curses;
    new->screen.hp_ll_bc = request->screen.hp_ll_bc;
@@ -4006,6 +4025,7 @@ static void VTRealize (
 	    /* since only one client is permitted to select for Button
 	     * events, we have to let the window manager get 'em...
 	     */
+	    screen->event_mask = values->event_mask;
 	    values->event_mask &= ~(ButtonPressMask|ButtonReleaseMask);
 	    values->border_pixel = term->misc.icon_border_pixel;
 

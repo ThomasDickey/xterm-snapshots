@@ -48,7 +48,15 @@ void
 Trace(char *fmt, ...)
 {
 	static	FILE	*fp;
+	static	char	*trace_out;
 	va_list ap;
+
+	if (fp != 0
+	 && trace_who != trace_out) {
+		fclose(fp);
+		fp = 0;
+	}
+	trace_out = trace_who;
 
 	if (!fp) {
 		char name[BUFSIZ];

@@ -99,6 +99,8 @@ CPPFLAGS="$cf_save_CPPFLAGS"
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 
+CF_XTERM_MODE
+
 AC_CHECK_FUNCS( \
 	XkbStdBell \
 	)

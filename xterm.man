@@ -134,11 +134,14 @@ Additionally, in VT102 mode,
 \fIxterm\fP implements the window-manipulation control
 sequences from \fIdtterm\fP, such as resizing the window, setting its location
 on the screen.
+
 .PP
 .I Xterm
 allows character-based applications to receive mouse events (currently
-button-press and release events only) as keyboard control sequences.
+button-press and release events, and button-motion events)
+as keyboard control sequences.
 See \fIXterm Control Sequences\fP for details.
+
 .SH OPTIONS
 The \fIxterm\fP terminal emulator 
 accepts all of the standard X Toolkit command line options as well as
@@ -2074,5 +2077,6 @@ Mark Vandevoorde (MIT-Athena), Bob McNamara (DEC-MAD),
 Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X 
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
-David Wexelblat and
+Jason Bacon <acadix@execpc.com>,
+David Wexelblat, and
 Thomas Dickey (XFree86 Project).
