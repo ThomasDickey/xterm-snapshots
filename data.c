@@ -2,7 +2,7 @@
  *	$Xorg: data.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.c,v 3.24 2002/10/05 17:57:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.c,v 3.25 2002/12/08 22:31:48 dickey Exp $ */
 
 /*
  * Copyright 2002 by Thomas E. Dickey
@@ -127,9 +127,6 @@ fd_set pty_mask;
 #endif /* VMS */
 char *ptydev;
 char *ttydev;
-#ifdef ALLOWLOGGING
-char log_def_name[] = "XtermLog.XXXXXX";
-#endif
 
 int waitingForTrackInfo = 0;
 EventMode eventMode = NORMAL;

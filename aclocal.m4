@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.42 2002/10/13 23:09:42 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.43 2002/12/08 22:31:47 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -57,7 +57,7 @@ fi
 
 if test -n "$cf_new_cppflags" ; then
 	ifelse($2,,,[CF_VERBOSE(add to \$CPPFLAGS $cf_new_cppflags)])
-	CPPFLAGS="$CPPFLAGS $cf_new_cppflags"
+	CPPFLAGS="$cf_new_cppflags $CPPFLAGS"
 fi
 
 ])dnl
@@ -473,7 +473,7 @@ dnl	-pedantic
 dnl
 AC_DEFUN([CF_GCC_WARNINGS],
 [
-if test "$GCC" = yes
+if ( test "$GCC" = yes || test "$GXX" = yes )
 then
 	cat > conftest.$ac_ext <<EOF
 #line __oline__ "configure"
@@ -700,8 +700,7 @@ AC_TRY_COMPILE([
 	fi])
 ])
 test $cf_cv_path_lastlog != no && AC_DEFINE(USE_LASTLOG)
-]
-)dnl
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for POSIX wait support
 AC_DEFUN([CF_POSIX_WAIT],
@@ -1022,7 +1021,7 @@ if test $cf_cv_have_utmp != no ; then
 	CF_UTMP_UT_SESSION
 	CF_SYSV_UTMP
 fi
-])
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check if UTMP/UTMPX struct defines ut_host member
 AC_DEFUN([CF_UTMP_UT_HOST],
@@ -1040,7 +1039,7 @@ AC_CACHE_VAL(cf_cv_have_utmp_ut_host,[
 AC_MSG_RESULT($cf_cv_have_utmp_ut_host)
 test $cf_cv_have_utmp_ut_host != no && AC_DEFINE(HAVE_UTMP_UT_HOST)
 fi
-])
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check if UTMP/UTMPX struct defines ut_name member
 AC_DEFUN([CF_UTMP_UT_NAME],
@@ -1075,7 +1074,7 @@ ut_user)
 	;;
 esac
 fi
-])
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check if UTMP/UTMPX struct defines ut_session member
 AC_DEFUN([CF_UTMP_UT_SESSION],
@@ -1093,7 +1092,7 @@ if test $cf_cv_have_utmp_ut_session != no ; then
 	AC_DEFINE(HAVE_UTMP_UT_SESSION)
 fi
 fi
-])
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for known variants on the UTMP/UTMPX struct's exit-status as reported
 dnl by various people:
@@ -1156,7 +1155,7 @@ if test $cf_cv_have_utmp_ut_xtime != no ; then
 	fi
 fi
 fi
-])
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl Use AC_VERBOSE w/o the warnings
 AC_DEFUN([CF_VERBOSE],

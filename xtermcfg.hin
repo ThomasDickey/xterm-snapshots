@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.41 2002/08/17 19:52:27 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.42 2002/12/08 22:31:50 dickey Exp $
  */
 
 /************************************************************
@@ -39,6 +39,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef DFT_COLORMODE		/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID		/* AC_ARG_WITH(default-terminal-id) */
 #undef DFT_TERMTYPE		/* AC_ARG_WITH(default-term-type) */
+#undef HAVE_GETHOSTNAME		/* AC_CHECK_FUNCS(gethostname) */
 #undef HAVE_GETLOGIN		/* AC_CHECK_FUNCS(getlogin) */
 #undef HAVE_LASTLOG_H		/* CF_LASTLOG */
 #undef HAVE_LIB_NEXTAW		/* CF_X_ATHENA(--with-neXtaw) */
@@ -48,6 +49,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
 #undef HAVE_STRERROR		/* AC_CHECK_FUNCS(strerror) */
+#undef HAVE_STRFTIME		/* AC_CHECK_FUNCS(strftime) */
 #undef HAVE_SYS_TIME_H		/* AC_HEADER_TIME */
 #undef HAVE_SYS_WAIT_H		/* AC_HEADER_SYS_WAIT */
 #undef HAVE_TCGETATTR		/* AC_CHECK_FUNCS(tcgetattr) */

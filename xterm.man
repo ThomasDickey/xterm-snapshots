@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.87 2002/10/05 17:57:13 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.88 2002/12/08 22:31:50 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - August 2002.
 .TH XTERM 1 __vendorversion__
@@ -495,6 +495,17 @@ This option indicates that \fIxterm\fP should not do jump scrolling.
 Turn logging on.
 Normally logging is not supported, due to security concerns.
 Some versions of \fIxterm\fP may have logging enabled.
+The logfile is written to the directory from which xterm is
+invoked.
+The filename is generated, of the form
+.sp
+	XtermLog.\fIXXXXXX\fR
+.sp
+or
+.sp
+	Xterm.log.\fIhostname.yyyy.mm.dd.hh.mm.ss.XXXXXX\fR
+.sp
+depending on how xterm was built.
 .TP 8
 .B +l
 Turn logging off.

@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.135 2002/10/05 17:57:11 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.136 2002/12/08 22:31:47 dickey Exp $ */
 
 /*
 
@@ -1117,16 +1117,6 @@ VTparse(void)
 	    parsestate = groundtable;
 	    break;
 
-	case CASE_IGNORE_STATE:
-	    /* Ies: ignore anything else */
-	    parsestate = igntable;
-	    break;
-
-	case CASE_IGNORE_ESC:
-	    /* Ign: escape */
-	    parsestate = iestable;
-	    break;
-
 	case CASE_IGNORE:
 	    /* Ignore character */
 	    break;
@@ -1156,7 +1146,6 @@ VTparse(void)
 	case CASE_CR:
 	    /* carriage return */
 	    CarriageReturn(screen);
-	    parsestate = groundtable;
 	    break;
 
 	case CASE_ESC:
@@ -1173,6 +1162,10 @@ VTparse(void)
 	    vt52_cup = TRUE;
 	    nparam = 0;
 	    break;
+
+	case CASE_VT52_IGNORE:
+	    parsestate = vt52_ignore_table;
+	    break;
 #endif
 
 	case CASE_VMOT:
@@ -1184,7 +1177,6 @@ VTparse(void)
 	    if (term->flags & LINEFEED)
 		CarriageReturn(screen);
 	    do_xevents();
-	    parsestate = groundtable;
 	    break;
 
 	case CASE_CBT:
@@ -1212,12 +1204,10 @@ VTparse(void)
 
 	case CASE_SI:
 	    screen->curgl = 0;
-	    parsestate = groundtable;
 	    break;
 
 	case CASE_SO:
 	    screen->curgl = 1;
-	    parsestate = groundtable;
 	    break;
 
 	case CASE_DECDHL:
@@ -1276,12 +1266,16 @@ VTparse(void)
 	    param[nparam - 1] = 10 * row + (c - '0');
 	    if (param[nparam - 1] > 65535)
 		param[nparam - 1] = 65535;
+	    if (parsestate == csi_table)
+		parsestate = csi2_table;
 	    break;
 
 	case CASE_ESC_SEMI:
 	    /* semicolon in csi or dec mode */
 	    if (nparam < NPARAM)
 		param[nparam++] = DEFAULT;
+	    if (parsestate == csi_table)
+		parsestate = csi2_table;
 	    break;
 
 	case CASE_DEC_STATE:
@@ -1960,14 +1954,19 @@ VTparse(void)
 		    parsestate = ansi_table;
 #endif
 	    }
+	    parsestate = groundtable;
 	    break;
+
 	case CASE_ANSI_LEVEL_2:
 	    if (screen->terminal_id >= 200)
 		screen->ansi_level = 2;
+	    parsestate = groundtable;
 	    break;
+
 	case CASE_ANSI_LEVEL_3:
 	    if (screen->terminal_id >= 300)
 		screen->ansi_level = 3;
+	    parsestate = groundtable;
 	    break;
 
 	case CASE_DECSCL:
@@ -2344,6 +2343,10 @@ VTparse(void)
 	    parsestate = groundtable;
 	    break;
 #endif
+
+	case CASE_CSI_IGNORE:
+	    parsestate = cigtable;
+	    break;
 	}
 	if (parsestate == groundtable)
 	    lastchar = thischar;
@@ -5751,7 +5754,6 @@ BlinkCursor(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	    screen->cursor_state = BLINKED_OFF;
     }
     StartBlinking(screen);
-    xevents();
 }
 #endif /* OPT_BLINK_CURS */
 

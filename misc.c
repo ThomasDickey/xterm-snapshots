@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.72 2002/10/11 23:52:07 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.73 2002/12/08 22:31:49 dickey Exp $ */
 
 /*
  *
@@ -851,7 +851,7 @@ open_userfile(int uid, int gid, char *path, Boolean append)
 #else
     if ((access(path, F_OK) != 0 && (errno != ENOENT))
 	|| (!(creat_as(uid, gid, append, path, 0644)))
-	|| ((fd = open(path, O_WRONLY | O_APPEND, 0644)) < 0)) {
+	|| ((fd = open(path, O_WRONLY | O_APPEND)) < 0)) {
 	fprintf(stderr, "%s: cannot open %s: %d:%s\n",
 		xterm_name,
 		path,
@@ -999,8 +999,33 @@ StartLog(register TScreen * screen)
 	if (screen->logfile)
 	    free(screen->logfile);
 	if (log_default == NULL) {
+#if defined(HAVE_GETHOSTNAME) && defined(HAVE_STRFTIME)
+	    char log_def_name[512];	/* see sprintf below */
+	    char hostname[255 + 1];	/* Internet standard limit (RFC 1035):
+					   ``To simplify implementations, the
+					   total length of a domain name (i.e.,
+					   label octets and label length
+					   octets) is restricted to 255 octets
+					   or less.'' */
+	    char yyyy_mm_dd_hh_mm_ss[4 + 5 * (1 + 2) + 1];
+	    time_t now;
+	    struct tm *ltm;
+
+	    (void) time(&now);
+	    ltm = (struct tm *) localtime(&now);
+	    if ((gethostname(hostname, sizeof(hostname)) == 0) &&
+		(strftime(yyyy_mm_dd_hh_mm_ss,
+			  sizeof(yyyy_mm_dd_hh_mm_ss),
+			  "%Y.%m.%d.%H.%M.%S", ltm) > 0)) {
+		(void) sprintf(log_def_name, "Xterm.log.%.255s.%.20s.XXXXXX",
+			       hostname, yyyy_mm_dd_hh_mm_ss);
+	    }
+#else
+	    const char *log_def_name = "XtermLog.XXXXXX";
+#endif
 	    if ((log_default = x_strdup(log_def_name)) == NULL)
 		return;
+
 	    mktemp(log_default);
 	}
 	if ((screen->logfile = x_strdup(log_default)) == 0)
