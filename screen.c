@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.56 2001/04/12 01:02:50 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.57 2001/09/09 01:07:26 dickey Exp $ */
 
 /* screen.c */
 
@@ -1141,7 +1141,7 @@ ScreenResize (
 	/* small mouse movements.					*/
 	rows = (height + FontHeight(screen) / 2 - border) /
 	 FontHeight(screen);
-	cols = (width + FontWidth(screen) / 2 - border - Scrollbar(screen)) /
+	cols = (width + FontWidth(screen) / 2 - border - ScrollbarWidth(screen)) /
 	 FontWidth(screen);
 	if (rows < 1) rows = 1;
 	if (cols < 1) cols = 1;
@@ -1200,7 +1200,7 @@ ScreenResize (
 			screen->cur_col = screen->max_col;
 
 		screen->fullVwin.height = height - border;
-		screen->fullVwin.width = width - border - screen->fullVwin.scrollbar;
+		screen->fullVwin.width = width - border - screen->fullVwin.sb_info.width;
 
 	} else if(FullHeight(screen) == height && FullWidth(screen) == width)
 	 	return(0);	/* nothing has changed at all */

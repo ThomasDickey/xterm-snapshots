@@ -50,7 +50,7 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.25 2001/01/17 23:46:37 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.26 2001/09/09 01:07:26 dickey Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h
@@ -369,7 +369,7 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
 #define update_scrollbar() \
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_scrollbar].widget, \
-		    Scrollbar(&term->screen))
+		    ScrollbarWidth(&term->screen))
 
 #define update_jumpscroll() \
   update_menu_item (term->screen.vtMenu, \

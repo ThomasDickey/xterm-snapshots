@@ -56,7 +56,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.74 2001/06/18 19:09:28 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.75 2001/09/09 01:07:26 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996.
 .TH XTERM 1 __vendorversion__
@@ -385,14 +385,21 @@ it will attempt to use a font twice as wide as the font that will be used to
 draw normal text.
 If no doublewidth font is found, it will improvise, by stretching 
 the normal font.
+This corresponds to the \fBwideFont\fP resource.
 .TP 8
 .B \-fwb \fIfont\fP
 This option specifies the font to be used for displaying bold wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
-draw normal text.
+draw bold text.
 If no doublewidth font is found, it will improvise, by stretching 
-the normal font.
+the bold font.
+This corresponds to the \fBwideBoldFont\fP resource.
+.TP 8
+.B \-fx \fIfont\fP
+This option specifies the font to be used for displaying the preedit string
+in the "OverTheSpot" input method.
+See also the discussion of the \fBximFont\fP resource.
 .TP 8
 .BI \-hc " color"
 This option specifies the color to use for the background of
@@ -1417,6 +1424,10 @@ Specifies the background color of the pointer.  The default is
 .B "pointerShape (\fPclass\fB Cursor)"
 Specifies the name of the shape of the pointer.  The default is ``xterm.''
 .TP 8
+.B "popOnBell (\fPclass\fB PopOnBell)"
+Specifies whether the window whould be raised when Control-G is
+received. The default is ``false.''
+.TP 8
 .B "printAttributes (\fPclass\fB PrintAttributes)"
 Specifies whether to print graphic attributes along with the text.
 A real DEC VTxxx terminal will print the underline, highlighting codes
@@ -1588,13 +1599,40 @@ Any other value will turn on UTF-8 mode.
 Specifies whether or not a visible bell (i.e. flashing) should be used instead
 of an audible bell when Control-G is received.  The default is ``false.''
 .TP 8
-.B "popOnBell (\fPclass\fB PopOnBell)"
-Specifies whether the window whould be raised when Control-G is
-received. The default is ``false.''
+.B "wideBoldFont (\fPclass\fB WideBoldFont)"
+This option specifies the font to be used for displaying bold wide text.
+By default,
+it will attempt to use a font twice as wide as the font that will be used to
+draw bold text.
+If no doublewidth font is found, it will improvise, by stretching 
+the bold font.
 .TP 8
 .B "wideChars (\fPclass\fB WideChars)"
 Specifies if \fIxterm\fP should respond to control sequences that
 process 16-bit characters.
+.TP 8
+.B "wideFont (\fPclass\fB WideFont)"
+This option specifies the font to be used for displaying wide text.
+By default,
+it will attempt to use a font twice as wide as the font that will be used to
+draw normal text.
+If no doublewidth font is found, it will improvise, by stretching 
+the normal font.
+.TP 8
+.B "ximFont (\fPclass\fB XimFont)"
+This option specifies the font to be used for displaying the preedit string
+in the "OverTheSpot" input method.
+.IP
+In "OverTheSpot" preedit type, the preedit (preconversion)
+string is displayed at the position of the cursor.
+It is the XIM server's responsibility to display the preedit string.
+The XIM client must inform the XIM server of the cursor position.
+For best results, the preedit string must be displayed with a proper font.
+Therefore, \fIxterm\fP informs the XIM server of the proper font.
+The font is be supplied by a "fontset", whose default value is "*".
+This matches every font, the X library automatically chooses fonts with
+proper charsets.
+The \fBximFont\fP resource is provided to override this default font setting.
 .sp
 .PP
 The following resources are specified as part of the \fItek4014\fP widget

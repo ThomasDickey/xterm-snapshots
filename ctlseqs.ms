@@ -5,7 +5,7 @@
 .\"
 .\"
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.42 2001/01/17 16:57:45 dawes Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.43 2001/03/29 22:48:02 dickey Exp $
 .\"
 .\"
 .\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey

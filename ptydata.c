@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.13 2000/09/22 10:42:08 alanh Exp $
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.14 2001/08/15 09:59:26 alanh Exp $
  */
 
 /************************************************************
@@ -80,8 +80,9 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 	     * Yes, I know this is a majorly f*ugly hack, however it seems to
 	     * be necessary for Solaris x86.  DWH 11/15/94
 	     * Dunno why though..
+	     * (and now CYGWIN, alanh@xfree86.org 08/15/01
 	     */
-#if defined(i386) && defined(SVR4) && defined(sun)
+#if (defined(i386) && defined(SVR4) && defined(sun)) || defined(__CYGWIN__)
 	    if (errno == EIO || errno == 0 )
 #else
 	    if (errno == EIO)

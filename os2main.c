@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.46 2001/06/18 19:09:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.47 2001/09/09 01:07:26 dickey Exp $ */
 
 /***********************************************************
 
@@ -613,14 +613,19 @@ static Boolean get_termcap(char *name, char *buffer, char *resized)
     *buffer = 0;	/* initialize, in case we're using terminfo's tgetent */
 
     if (name != 0) {
-	if (tgetent (buffer, name) == 1
-	 && *buffer) {
-	    if (!TEK4014_ACTIVE(screen)) {
-		resize (screen, buffer, resized);
+	if (tgetent (buffer, name) == 1) {
+	    TRACE(("get_termcap(%s) succeeded (%s)\n", name,
+	    	*buffer
+		? "ok:termcap, we can update $TERMCAP"
+		: "assuming this is terminfo"));
+	    if (*buffer) {
+		if (!TEK4014_ACTIVE(screen)) {
+		    resize (screen, buffer, resized);
+		}
 	    }
 	    return True;
 	} else {
-	    *buffer = 0;
+	    *buffer = 0;	/* just in case */
 	}
     }
     return False;

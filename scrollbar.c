@@ -2,7 +2,7 @@
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.29 2001/01/17 23:46:38 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.31 2001/09/09 01:07:26 dickey Exp $ */
 
 /*
  * Copyright 2000,2001 by Thomas E. Dickey
@@ -80,9 +80,9 @@ static void ScrollTextUpDownBy PROTO_XT_CALLBACK_ARGS;
  */
 
 static void
-ResizeScreen(register XtermWidget xw, int min_width, int min_height)
+ResizeScreen(XtermWidget xw, int min_width, int min_height)
 {
-	register TScreen *screen = &xw->screen;
+	TScreen *screen = &xw->screen;
 #ifndef nothack
 	XSizeHints sizehints;
 	long supp;
@@ -208,10 +208,10 @@ ResizeScreen(register XtermWidget xw, int min_width, int min_height)
 #endif /* NO_ACTIVE_ICON */
 }
 
-void DoResizeScreen (register XtermWidget xw)
+void DoResizeScreen (XtermWidget xw)
 {
     int border = 2 * xw->screen.border;
-    ResizeScreen (xw, border + xw->screen.fullVwin.scrollbar, border);
+    ResizeScreen (xw, border + xw->screen.fullVwin.sb_info.width, border);
 }
 
 
@@ -219,23 +219,17 @@ static Widget
 CreateScrollBar(XtermWidget xw, int x, int y, int height)
 {
 	Widget scrollWidget;
+	Arg args[6];
 
-	static Arg argList[] = {
-	   {XtNx,		(XtArgVal) 0},
-	   {XtNy,		(XtArgVal) 0},
-	   {XtNheight,		(XtArgVal) 0},
-	   {XtNreverseVideo,	(XtArgVal) 0},
-	   {XtNorientation,	(XtArgVal) XtorientVertical},
-	   {XtNborderWidth,	(XtArgVal) 1},
-	};
-
-	argList[0].value = (XtArgVal) x;
-	argList[1].value = (XtArgVal) y;
-	argList[2].value = (XtArgVal) height;
-	argList[3].value = (XtArgVal) xw->misc.re_verse;
+	XtSetArg(args[0], XtNx, x);
+	XtSetArg(args[1], XtNy, y);
+	XtSetArg(args[2], XtNheight, height);
+	XtSetArg(args[3], XtNreverseVideo, xw->misc.re_verse);
+	XtSetArg(args[4], XtNorientation, XtorientVertical);
+	XtSetArg(args[5], XtNborderWidth, 1);
 
 	scrollWidget = XtCreateWidget("scrollbar", scrollbarWidgetClass,
-	  (Widget)xw, argList, XtNumber(argList));
+	  (Widget)xw, args, XtNumber(args));
         XtAddCallback (scrollWidget, XtNscrollProc, ScrollTextUpDownBy, 0);
         XtAddCallback (scrollWidget, XtNjumpProc, ScrollTextTo, 0);
 	return (scrollWidget);
@@ -243,35 +237,46 @@ CreateScrollBar(XtermWidget xw, int x, int y, int height)
 
 
 void
-ScrollBarReverseVideo(register Widget scrollWidget)
+ScrollBarReverseVideo(Widget scrollWidget)
 {
+	SbInfo *sb = &(term->screen.fullVwin.sb_info);
 	Arg args[4];
 	Cardinal nargs = XtNumber(args);
-	unsigned long bg, fg, bdr;
-	Pixmap bdpix;
 
-	XtSetArg(args[0], XtNbackground, &bg);
-	XtSetArg(args[1], XtNforeground, &fg);
-	XtSetArg(args[2], XtNborderColor, &bdr);
-	XtSetArg(args[3], XtNborderPixmap, &bdpix);
-	XtGetValues (scrollWidget, args, nargs);
-	args[0].value = (XtArgVal) fg;
-	args[1].value = (XtArgVal) bg;
-	nargs--;				/* don't set border_pixmap */
-	if (bdpix == XtUnspecifiedPixmap) {	/* if not pixmap then pixel */
-	    args[2].value = args[1].value;	/* keep border visible */
-	} else {				/* ignore since pixmap */
-	    nargs--;				/* don't set border pixel */
+	/*
+	 * Remember the scrollbar's original colors.
+	 */
+	if (sb->rv_cached == False) {
+		XtSetArg(args[0], XtNbackground, &(sb->bg));
+		XtSetArg(args[1], XtNforeground, &(sb->fg));
+		XtSetArg(args[2], XtNborderColor, &(sb->bdr));
+		XtSetArg(args[3], XtNborderPixmap, &(sb->bdpix));
+		XtGetValues (scrollWidget, args, nargs);
+		sb->rv_cached = True;
+		sb->rv_active = 0;
+	}
+
+	sb->rv_active = !(sb->rv_active);
+	XtSetArg(args[!(sb->rv_active)], XtNbackground, sb->bg);
+	XtSetArg(args[ (sb->rv_active)], XtNforeground, sb->fg);
+	nargs = 2;				/* don't set border_pixmap */
+	if (sb->bdpix == XtUnspecifiedPixmap) {	/* if not pixmap then pixel */
+	    if (sb->rv_active) { /* keep border visible */
+		XtSetArg(args[2], XtNborderColor, args[1].value);
+	    } else {
+		XtSetArg(args[2], XtNborderColor, sb->bdr);
+	    }
+	    nargs = 3;
 	}
 	XtSetValues (scrollWidget, args, nargs);
 }
 
 
 void
-ScrollBarDrawThumb(register Widget scrollWidget)
+ScrollBarDrawThumb(Widget scrollWidget)
 {
-	register TScreen *screen = &term->screen;
-	register int thumbTop, thumbHeight, totalHeight;
+	TScreen *screen = &term->screen;
+	int thumbTop, thumbHeight, totalHeight;
 
 	thumbTop    = screen->topline + screen->savedlines;
 	thumbHeight = screen->max_row + 1;
@@ -304,11 +309,11 @@ ResizeScrollBar(TScreen *screen)
 }
 
 void
-WindowScroll(register TScreen *screen, int top)
+WindowScroll(TScreen *screen, int top)
 {
-	register int i, lines;
-	register int scrolltop, scrollheight, refreshtop;
-	register int x = 0;
+	int i, lines;
+	int scrolltop, scrollheight, refreshtop;
+	int x = 0;
 
 	if (top < -screen->savedlines)
 		top = -screen->savedlines;
@@ -353,10 +358,10 @@ WindowScroll(register TScreen *screen, int top)
 void
 ScrollBarOn (XtermWidget xw, int init, int doalloc)
 {
-	register TScreen *screen = &xw->screen;
-	register int i, j, k;
+	TScreen *screen = &xw->screen;
+	int i, j, k;
 
-	if(screen->fullVwin.scrollbar)
+	if(screen->fullVwin.sb_info.width)
 		return;
 
 	if (init) {			/* then create it only */
@@ -403,8 +408,12 @@ ScrollBarOn (XtermWidget xw, int init, int doalloc)
 	}
 
 	ResizeScrollBar (screen);
+	xtermAddInput(screen->scrollWidget);
 	XtRealizeWidget (screen->scrollWidget);
-	screen->fullVwin.scrollbar = screen->scrollWidget->core.width +
+	TRACE_TRANS("scrollbar", screen->scrollWidget);
+
+	screen->fullVwin.sb_info.rv_cached = False;
+	screen->fullVwin.sb_info.width = screen->scrollWidget->core.width +
 	     screen->scrollWidget->core.border_width;
 
 	ScrollBarDrawThumb(screen->scrollWidget);
@@ -433,12 +442,12 @@ ScrollBarOn (XtermWidget xw, int init, int doalloc)
 }
 
 void
-ScrollBarOff(register TScreen *screen)
+ScrollBarOff(TScreen *screen)
 {
-	if(!screen->fullVwin.scrollbar)
+	if(!screen->fullVwin.sb_info.width)
 		return;
 	XtUnmapWidget(screen->scrollWidget);
-	screen->fullVwin.scrollbar = 0;
+	screen->fullVwin.sb_info.width = 0;
 	DoResizeScreen (term);
 	update_scrollbar ();
 	if (screen->visbuf) {
@@ -453,9 +462,9 @@ ScrollBarOff(register TScreen *screen)
 void
 ToggleScrollBar(XtermWidget w)
 {
-    register TScreen *screen = &w->screen;
+    TScreen *screen = &w->screen;
 
-    if (screen->fullVwin.scrollbar) {
+    if (screen->fullVwin.sb_info.width) {
 	ScrollBarOff (screen);
     } else {
 	ScrollBarOn (w, FALSE, FALSE);
@@ -471,7 +480,7 @@ ScrollTextTo(
 	XtPointer call_data)
 {
 	float *topPercent = (float *) call_data;
-	register TScreen *screen = &term->screen;
+	TScreen *screen = &term->screen;
 	int thumbTop;	/* relative to first saved line */
 	int newTopLine;
 
@@ -495,8 +504,8 @@ ScrollTextUpDownBy(
 {
 	long pixels = (long) call_data;
 
-	register TScreen *screen = &term->screen;
-	register int rowOnScreen, newTopLine;
+	TScreen *screen = &term->screen;
+	int rowOnScreen, newTopLine;
 
 	rowOnScreen = pixels / FontHeight(screen);
 	if (rowOnScreen == 0) {
@@ -516,7 +525,7 @@ ScrollTextUpDownBy(
 static int
 specialcmplowerwiths (char *a, char *b)
 {
-    register char ca, cb;
+    char ca, cb;
 
     if (!a || !b) return 0;
 
@@ -535,8 +544,8 @@ specialcmplowerwiths (char *a, char *b)
 static long
 params_to_pixels (TScreen *screen, String *params, Cardinal n)
 {
-    register int mult = 1;
-    register char *s;
+    int mult = 1;
+    char *s;
 
     switch (n > 2 ? 2 : n) {
       case 2:
@@ -567,7 +576,7 @@ static long
 AmountToScroll(Widget gw, String *params, Cardinal nparams)
 {
     if (IsXtermWidget(gw)) {
-    	register TScreen *screen = &((XtermWidget)gw)->screen;
+    	TScreen *screen = &((XtermWidget)gw)->screen;
 	if (nparams > 2
 	 && screen->send_mouse_pos != MOUSE_OFF)
 	    return 0;

@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.121 2001/06/18 19:09:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.122 2001/09/09 01:07:25 dickey Exp $ */
 
 /*
 
@@ -105,6 +105,10 @@ in this Software without prior written authorization from the X Consortium.
 #include <precompose.h>
 #endif
 
+#if OPT_INPUT_METHOD
+#include <X11/Xlocale.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 
@@ -155,6 +159,10 @@ static void StopBlinking (TScreen *screen);
 #else
 #define StartBlinking(screen) /* nothing */
 #define StopBlinking(screen) /* nothing */
+#endif
+
+#if OPT_INPUT_METHOD
+static void PreeditPosition(TScreen *screen);
 #endif
 
 #define	DEFAULT		-1
@@ -481,7 +489,7 @@ Cres(XtNhighlightColor,	XtCHighlightColor, screen.highlightcolor, XtDefaultForeg
 #if OPT_INPUT_METHOD
 Bres(XtNopenIm,		XtCOpenIm,	misc.open_im,		TRUE),
 Sres(XtNinputMethod,	XtCInputMethod,	misc.input_method,	NULL),
-Sres(XtNpreeditType,	XtCPreeditType,	misc.preedit_type,	"Root"),
+Sres(XtNpreeditType,	XtCPreeditType,	misc.preedit_type,	"OverTheSpot,Root"),
 #endif
 
 #if OPT_ISO_COLORS
@@ -559,6 +567,10 @@ Ires(XtNmenuHeight, XtCMenuHeight, screen.fullVwin.menu_height, 25),
 Bres(XtNwideChars,	XtCWideChars,		screen.wide_chars,	FALSE),
 Sres(XtNwideBoldFont,	XtCWideBoldFont,	misc.f_wb,		DEFWIDEBOLDFONT),
 Sres(XtNwideFont,	XtCWideFont,		misc.f_w,		DEFWIDEFONT),
+#endif
+
+#if OPT_INPUT_METHOD
+Sres(XtNximFont,	XtCXimFont,		misc.f_x,		DEFXIMFONT),
 #endif
 
 #if OPT_XMC_GLITCH
@@ -2482,7 +2494,7 @@ in_put(void)
 					(Dimension) FontWidth(screen)
 					* (tt_width)
 					+ 2*screen->border
-					+ screen->fullVwin.scrollbar,
+					+ screen->fullVwin.sb_info.width,
 					(Dimension) FontHeight(screen)
 					* (tt_length)
 					+ 2 * screen->border,
@@ -2539,6 +2551,9 @@ in_put(void)
 	    else
 		HideCursor();
 	}
+#if OPT_INPUT_METHOD
+	PreeditPosition(screen);
+#endif
 
 	if (QLength(screen->display)){
 	    select_mask = X_mask;
@@ -2614,6 +2629,9 @@ in_put(void)
 	    else
 		HideCursor();
 	}
+#if OPT_INPUT_METHOD
+	PreeditPosition(screen);
+#endif
 
 	XFlush(screen->display); /* always flush writes before waiting */
 
@@ -2701,6 +2719,27 @@ in_put(void)
     return nextPtyData(&VTbuffer);
 }
 #endif /* VMS */
+
+#if OPT_INPUT_METHOD
+/*
+ *  For OverTheSpot, client has to inform the position for XIM preedit.
+ */
+static void PreeditPosition(TScreen *screen)
+{
+    XPoint spot;
+    XVaNestedList list;
+
+    spot.x = CurCursorX(screen, screen->cur_row, screen->cur_col);
+    spot.y = CursorY(screen, screen->cur_row) + screen->fs_ascent;
+    list = XVaCreateNestedList(0,
+			       XNSpotLocation, &spot,
+			       XNForeground, screen->foreground,
+			       XNBackground, term->core.background_pixel,
+			       NULL);
+    XSetICValues(screen->xic, XNPreeditAttributes, list, NULL);
+    XFree(list);
+}
+#endif
 
 /*
  * process a string of characters according to the character set indicated
@@ -3153,7 +3192,7 @@ dpmodes(
 			screen->cursor_set = (func == bitset) ? ON : OFF;
 			break;
 		case 30:		/* rxvt */
-			if (screen->fullVwin.scrollbar != ((func == bitset) ? ON : OFF))
+			if (screen->fullVwin.sb_info.width != ((func == bitset) ? ON : OFF))
 				ToggleScrollBar(termw);
 			break;
 #if OPT_SHIFT_FONTS
@@ -4087,7 +4126,7 @@ static void RequestResize(
 			if (cols < 0)
 				value = screen->max_col + 1;
 			value *= FontWidth(screen);
-			value += (2 * screen->border) + Scrollbar(screen);
+			value += (2 * screen->border) + ScrollbarWidth(screen);
 			if (!okDimension(value, askedWidth))
 				return;
 		}
@@ -4175,6 +4214,8 @@ int VTInit (void)
     XtOverrideTranslations(vtparent, XtParseTranslationTable(xterm_trans));
     (void) XSetWMProtocols (XtDisplay(vtparent), XtWindow(vtparent),
 			    &wm_delete_window, 1);
+    TRACE_TRANS("shell", vtparent);
+    TRACE_TRANS("vt100", (Widget)(term));
 
     if (screen->allbuf == NULL) VTallocbuf ();
     return (1);
@@ -4377,6 +4418,8 @@ static void VTInitialize (
    wnew->screen.output_eight_bits = request->screen.output_eight_bits;
    wnew->screen.control_eight_bits = request->screen.control_eight_bits;
    wnew->screen.backarrow_key = request->screen.backarrow_key;
+   TRACE(("resource backarrowKey: %s\n", 
+	   wnew->screen.backarrow_key ? "true" : "false"));
    wnew->screen.meta_sends_esc = request->screen.meta_sends_esc;
    wnew->screen.allowSendEvents = request->screen.allowSendEvents;
 #ifndef NO_ACTIVE_ICON
@@ -4485,6 +4528,8 @@ static void VTInitialize (
    wnew->keyboard.flags = MODE_SRM;
    if (wnew->screen.backarrow_key)
 	   wnew->keyboard.flags |= MODE_DECBKM;
+   TRACE(("initialized DECBKM %s\n",
+	 (wnew->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
 
    /* look for focus related events on the shell, because we need
     * to care about the shell's border being part of our focus.
@@ -4808,7 +4853,7 @@ static void VTRealize (
 	screen->savedlines = 0;
 
 	if (term->misc.scrollbar) {
-		screen->fullVwin.scrollbar = 0;
+		screen->fullVwin.sb_info.width = 0;
 		ScrollBarOn (term, FALSE, TRUE);
 	}
 	CursorSave (term);
@@ -4833,7 +4878,7 @@ static void VTInitI18N(void)
 	char *name;
 	unsigned long code;
     } known_style[] = {
-	{ "OverTheSpot",	(XIMPreeditPosition | XIMStatusArea) },
+	{ "OverTheSpot",	(XIMPreeditPosition | XIMStatusNothing) },
 	{ "OffTheSpot",		(XIMPreeditArea     | XIMStatusArea) },
 	{ "Root",		(XIMPreeditNothing  | XIMStatusNothing) },
     };
@@ -4843,7 +4888,7 @@ static void VTInitI18N(void)
     if (!term->misc.open_im) return;
 
     if (!term->misc.input_method || !*term->misc.input_method) {
-	if ((p = XSetLocaleModifiers("@im=none")) != NULL && *p)
+	if ((p = XSetLocaleModifiers("")) != NULL && *p)
 	    xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL);
     } else {
 	s = term->misc.input_method;
@@ -4930,22 +4975,58 @@ static void VTInitI18N(void)
     }
 
     /*
-     * This program only understands the Root preedit_style yet
-     * Then misc.preedit_type should default to:
-     *		"OverTheSpot,OffTheSpot,Root"
-     *
-     *	/MaF
+     * Check for styles we do not yet support.
      */
-    if (input_style != (XIMPreeditNothing | XIMStatusNothing)) {
-	fprintf(stderr,"This program only supports the 'Root' preedit type\n");
+    if (input_style == (XIMPreeditArea | XIMStatusArea)) {
+	fprintf(stderr,"This program doesn't support the 'OffTheSpot' preedit type\n");
 	XCloseIM(xim);
 	return;
     }
 
-    term->screen.xic = XCreateIC(xim, XNInputStyle, input_style,
-				      XNClientWindow, XtWindow(term),
-				      XNFocusWindow, XtWindow(term),
-				      NULL);
+    /*
+     * For XIMPreeditPosition (or OverTheSpot), XIM client has to
+     * prepare a font.
+     * The font has to be locale-dependent XFontSet, whereas
+     * XTerm use Unicode font.  This leads a problem that the
+     * same font cannot be used for XIM preedit.
+     */
+    if (input_style != (XIMPreeditNothing | XIMStatusNothing)) {
+	char **missing_charset_list;
+	int missing_charset_count;
+	char *def_string;
+	XVaNestedList p_list;
+	XPoint spot = {0, 0};
+	XFontSetExtents *extents;
+	XFontStruct **fonts;
+	char **font_name_list;
+
+	term->screen.fs = XCreateFontSet(XtDisplay(term),
+					 term->misc.f_x,
+					 &missing_charset_list,
+					 &missing_charset_count,
+					 &def_string);
+	extents = XExtentsOfFontSet(term->screen.fs);
+	j = XFontsOfFontSet(term->screen.fs, &fonts, &font_name_list);
+	for (i = 0, term->screen.fs_ascent = 0; i < j; i++) {
+	    if (term->screen.fs_ascent < (*fonts)->ascent)
+		term->screen.fs_ascent = (*fonts)->ascent;
+	}
+	p_list = XVaCreateNestedList(0,
+				     XNSpotLocation, &spot,
+				     XNFontSet, term->screen.fs,
+				     NULL);
+	term->screen.xic = XCreateIC(xim,
+				     XNInputStyle, input_style,
+				     XNClientWindow, XtWindow(term),
+				     XNFocusWindow, XtWindow(term),
+				     XNPreeditAttributes, p_list,
+				     NULL);
+    } else {
+	term->screen.xic = XCreateIC(xim, XNInputStyle, input_style,
+				     XNClientWindow, XtWindow(term),
+				     XNFocusWindow, XtWindow(term),
+				     NULL);
+    }
 
     if (!term->screen.xic) {
 	fprintf(stderr,"Failed to create input context\n");
@@ -5460,7 +5541,7 @@ VTReset(Bool full, Bool saved)
 			XtMakeResizeRequest(
 			    (Widget) term,
 			    (Dimension) 80*FontWidth(screen)
-				+ 2 * screen->border + Scrollbar(screen),
+				+ 2 * screen->border + ScrollbarWidth(screen),
 			    (Dimension) FontHeight(screen)
 				* (screen->max_row + 1) + 2 * screen->border,
 			    &junk, &junk);

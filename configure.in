@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.48 2001/06/18 19:09:26 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.49 2001/09/09 01:07:25 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -474,9 +474,9 @@ CF_ARG_ENABLE(wide-chars,
 AC_MSG_RESULT($enable_wchar)
 if test $enable_wchar = yes ; then
 	AC_DEFINE(OPT_WIDE_CHARS,1)
-	EXTRAHDRS="$EXTRAHDRS charclass.h keysym2ucs.h precompose.h wcwidth.h"
-	EXTRASRCS="$EXTRASRCS charclass.c keysym2ucs.c precompose.c wcwidth.c"
-	EXTRAOBJS="$EXTRAOBJS charclass.o keysym2ucs.o precompose.o wcwidth.o"
+	EXTRAHDRS="$EXTRAHDRS charclass.h precompose.h wcwidth.h"
+	EXTRASRCS="$EXTRASRCS charclass.c precompose.c wcwidth.c"
+	EXTRAOBJS="$EXTRAOBJS charclass.o precompose.o wcwidth.o"
 fi
 
 AC_MSG_CHECKING(if you want DECterm Locator support)

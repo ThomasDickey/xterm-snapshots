@@ -1,7 +1,7 @@
 /* $Xorg: menu.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $ */
 /*
 
-Copyright 1999-2000 by Thomas E. Dickey
+Copyright 1999-2001 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -47,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.41 2001/01/17 23:46:37 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.42 2001/09/09 01:07:26 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -1644,7 +1644,7 @@ void HandleScrollbar(
 	String *params,
 	Cardinal *param_count)
 {
-    handle_toggle (do_scrollbar, (int) term->screen.fullVwin.scrollbar,
+    handle_toggle (do_scrollbar, (int) term->screen.fullVwin.sb_info.width,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
@@ -1999,26 +1999,6 @@ SetItemSensitivity(Widget mi, XtArgVal val)
 
 #if OPT_TOOLBAR
 /*
- * In the normal (non-toolbar) configuration, the xterm widget covers almost
- * all of the window.  With a toolbar, there's a relatively large area that
- * the user would expect to enter keystrokes since the program can get the
- * focus.
- */
-static char menu_trans[] =
-"\
-                ~Meta <KeyPress>:insert-seven-bit() \n\
-                 Meta <KeyPress>:insert-eight-bit() \n\
-";
-
-XtActionsRec menu_actions[] = {
-    { "insert",			HandleKeyPressed }, /* alias */
-    { "insert-eight-bit",	HandleEightBitKeyPressed },
-    { "insert-seven-bit",	HandleKeyPressed },
-    { "secure",			HandleSecure },
-    { "string",			HandleStringEvent },
-};
-
-/*
  * The normal style of xterm popup menu delays initialization until the menu is
  * first requested.  When using a toolbar, we can use the same initialization,
  * though on the first popup there will be a little geometry layout jitter,
@@ -2095,9 +2075,7 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus)
 				"form",
 				formWidgetClass,	shell,
 				NULL);
-
-	XtAppAddActions(app_con, menu_actions, XtNumber(menu_actions));
-	XtAugmentTranslations(*forms, XtParseTranslationTable(menu_trans));
+	xtermAddInput(*forms);
 
 	/*
 	 * Set a nominal value for the preferred pane size, which lets the

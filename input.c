@@ -2,10 +2,10 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.53 2001/06/18 19:09:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.54 2001/09/09 01:07:25 dickey Exp $ */
 
 /*
- * Copyright 1999-2000 by Thomas E. Dickey
+ * Copyright 1999-2001 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -316,6 +316,37 @@ xtermDeleteIsDEL(void)
 	return result;
 }
 
+/*
+ * Add input-actions for widgets that are overlooked (scrollbar and toolbar):
+ *
+ * 	a) Sometimes the scrollbar passes through translations, sometimes it
+ *	   doesn't.  We add the KeyPress translations here, just to be sure.
+ *	b) In the normal (non-toolbar) configuration, the xterm widget covers
+ *	   almost all of the window.  With a toolbar, there's a relatively
+ *	   large area that the user would expect to enter keystrokes since the
+ *	   program can get the focus.
+ */
+void
+xtermAddInput(Widget w)
+{
+    static char input_trans[] = "\
+                ~Meta <KeyPress>:insert-seven-bit() \n\
+                 Meta <KeyPress>:insert-eight-bit() \n";
+
+    /* *INDENT-OFF* */
+    XtActionsRec input_actions[] = {
+	{ "insert",		HandleKeyPressed }, /* alias */
+	{ "insert-eight-bit",	HandleEightBitKeyPressed },
+	{ "insert-seven-bit",	HandleKeyPressed },
+	{ "secure",		HandleSecure },
+	{ "string",		HandleStringEvent },
+    };
+    /* *INDENT-ON* */
+
+    XtAppAddActions(app_con, input_actions, XtNumber(input_actions));
+    XtAugmentTranslations(w, XtParseTranslationTable(input_trans));
+}
+
 void
 Input (
 	register TKeyboard *keyboard,
@@ -377,7 +408,7 @@ Input (
 	reply.a_nparam = 0;
 	reply.a_inters = 0;
 
-	TRACE(("Input keysym %#04lx, %d:'%.*s'%s%s%s%s%s%s%s%s%s%s%s%s\n",
+	TRACE(("Input keysym %#04lx, %d:'%.*s'%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 		keysym,
 		nbytes,
 		nbytes > 0 ? nbytes : 1,
@@ -391,9 +422,12 @@ Input (
 		ModifierName(event->state & Mod4Mask),
 		ModifierName(event->state & Mod5Mask),
 		eightbit ? " 8bit" : " 7bit",
-		IsFunctionKey(keysym)     ? " FKey"     : "",
-		IsMiscFunctionKey(keysym) ? " MiscFKey" : "",
-		IsEditFunctionKey(keysym) ? " EditFkey" : ""));
+		IsKeypadKey(keysym)       ? " KeypadKey" : "",
+		IsCursorKey(keysym)       ? " CursorKey" : "",
+		IsPFKey(keysym)           ? " PFKey"     : "",
+		IsFunctionKey(keysym)     ? " FKey"      : "",
+		IsMiscFunctionKey(keysym) ? " MiscFKey"  : "",
+		IsEditFunctionKey(keysym) ? " EditFkey"  : ""));
 
 #if OPT_SUNPC_KBD
 	/*
