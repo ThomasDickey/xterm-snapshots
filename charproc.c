@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.99 2000/02/13 00:56:11 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.101 2000/02/18 12:20:22 tsi Exp $
  */
 
 /*
@@ -2358,7 +2358,7 @@ v_write(int f, Char *data, int len)
 #endif
 
 #ifndef AMOEBA
-#if VMS
+#ifdef VMS
 	if ((1 << f) != pty_mask)
 		return(tt_write((char *)data, len));
 #else /* VMS */
