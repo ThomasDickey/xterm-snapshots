@@ -1196,8 +1196,6 @@ ChangeColors(XtermWidget tw, ScrnColors *pNew)
 
 /***====================================================================***/
 
-#define EXCHANGE(a,b,tmp) tmp = a; a = b; b = tmp;
-
 void
 ReverseVideo (XtermWidget termw)
 {

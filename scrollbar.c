@@ -445,7 +445,7 @@ ScrollTextUpDownBy(
 	XtPointer client_data GCC_UNUSED,
 	XtPointer call_data)
 {
-	int pixels = (int) call_data;
+	long pixels = (long) call_data;
 
 	register TScreen *screen = &term->screen;
 	register int rowOnScreen, newTopLine;
@@ -491,7 +491,7 @@ specialcmplowerwiths (char *a, char *b)
     return 0;
 }
 
-static int
+static long
 params_to_pixels (TScreen *screen, String *params, Cardinal n)
 {
     register int mult = 1;
@@ -532,8 +532,8 @@ void HandleScrollForward (
 {
     if (IsXtermWidget(gw)) {
     	register TScreen *screen = &((XtermWidget)gw)->screen;
-	ScrollTextUpDownBy (gw, (XtPointer) 0,
-			(XtPointer)(params_to_pixels (screen, params, *nparams)));
+	long amount = params_to_pixels (screen, params, *nparams);
+	ScrollTextUpDownBy (gw, (XtPointer) 0, (XtPointer)amount);
     }
     return;
 }
@@ -548,8 +548,8 @@ void HandleScrollBack (
 {
     if (IsXtermWidget(gw)) {
     	register TScreen *screen = &((XtermWidget)gw)->screen;
-	ScrollTextUpDownBy (gw, (XtPointer) 0,
-			(XtPointer)(-params_to_pixels (screen, params, *nparams)));
+	long amount = -params_to_pixels (screen, params, *nparams);
+	ScrollTextUpDownBy (gw, (XtPointer) 0, (XtPointer)amount);
     }
     return;
 }

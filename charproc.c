@@ -3319,7 +3319,7 @@ void
 unparseputc(int c, int fd)
 {
 	Char	buf[2];
-	register i = 1;
+	register int i = 1;
 
 #ifdef AMOEBA
 	if (ttypreprocess(c)) return;
@@ -4290,9 +4290,16 @@ ShowCursor(void)
 {
 	register TScreen *screen = &term->screen;
 	register int x, y, flags;
-	Char c;
+	Char	c;
+	Char	fg_bg = 0;
 	GC	currentGC;
 	Boolean	in_selection;
+	Pixel fg_pix;
+	Pixel bg_pix;
+	Pixel tmp;
+#if OPT_HIGHLIGHT_COLOR
+	Pixel hi_pix = screen->highlightcolor;
+#endif
 
 	if (screen->cursor_state == BLINKED_OFF)
 		return;
@@ -4318,6 +4325,18 @@ ShowCursor(void)
 	if (c == 0)
 		c = ' ';
 
+	/*
+	 * Compare the current cell to the last set of colors used for the
+	 * cursor and update the GC's if needed.
+	 */
+#if OPT_ISO_COLORS
+	if_OPT_ISO_COLORS(screen,{
+	    fg_bg = SCRN_BUF_COLOR(screen, screen->cursor_row)[screen->cursor_col];
+	})
+#endif
+	fg_pix = getXtermForeground(flags,extract_fg(fg_bg,flags));
+	bg_pix = getXtermBackground(flags,extract_bg(fg_bg));
+
 	if (screen->cur_row > screen->endHRow ||
 	    (screen->cur_row == screen->endHRow &&
 	     screen->cur_col >= screen->endHCol) ||
@@ -4328,6 +4347,10 @@ ShowCursor(void)
 	else
 	    in_selection = True;
 
+	/* This is like updatedXtermGC(), except that we have to worry about
+	 * whether the window has focus, since in that case we want just an
+	 * outline for the cursor.
+	 */
 	if(screen->select || screen->always_highlight) {
 		if (( (flags & INVERSE) && !in_selection) ||
 		    (!(flags & INVERSE) &&  in_selection)){
@@ -4341,6 +4364,16 @@ ShowCursor(void)
 				currentGC = NormalGC(screen);
 			}
 		    }
+#if OPT_HIGHLIGHT_COLOR
+		    if (hi_pix != screen->foreground
+		     && hi_pix != fg_pix
+		     && hi_pix != bg_pix
+		     && hi_pix != term->dft_foreground) {
+			bg_pix = fg_pix;
+			fg_pix = hi_pix;
+		    }
+#endif
+		    EXCHANGE(fg_pix, bg_pix, tmp)
 		} else { /* normal video */
 		    if (screen->reversecursorGC) {
 			currentGC = screen->reversecursorGC;
@@ -4352,6 +4385,10 @@ ShowCursor(void)
 			}
 		    }
 		}
+		if (screen->cursorcolor == term->dft_foreground) {
+			XSetForeground(screen->display, currentGC, bg_pix);
+			XSetBackground(screen->display, currentGC, fg_pix);
+		}
 	} else { /* not selected */
 		if (( (flags & INVERSE) && !in_selection) ||
 		    (!(flags & INVERSE) &&  in_selection)) {
@@ -4359,6 +4396,10 @@ ShowCursor(void)
 			currentGC = ReverseGC(screen);
 		} else { /* normal video */
 			currentGC = NormalGC(screen);
+		}
+		if (screen->cursorcolor == term->dft_foreground) {
+			XSetForeground(screen->display, currentGC, fg_pix);
+			XSetBackground(screen->display, currentGC, bg_pix);
 		}
 	}
 
