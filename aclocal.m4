@@ -1,6 +1,6 @@
-dnl $XTermId: aclocal.m4,v 1.169 2004/04/28 00:40:59 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.171 2004/05/26 01:19:54 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.51 2004/04/28 00:40:59 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.52 2004/05/26 01:19:54 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -26,6 +26,29 @@ dnl ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl ---------------------------------------------------------------------------
+dnl ---------------------------------------------------------------------------
+dnl AM_LANGINFO_CODESET version: 3 updated: 2002/10/27 23:21:42
+dnl -------------------
+dnl Inserted as requested by gettext 0.10.40
+dnl File from /usr/share/aclocal
+dnl codeset.m4
+dnl ====================
+dnl serial AM1
+dnl
+dnl From Bruno Haible.
+AC_DEFUN([AM_LANGINFO_CODESET],
+[
+  AC_CACHE_CHECK([for nl_langinfo and CODESET], am_cv_langinfo_codeset,
+    [AC_TRY_LINK([#include <langinfo.h>],
+      [char* cs = nl_langinfo(CODESET);],
+      am_cv_langinfo_codeset=yes,
+      am_cv_langinfo_codeset=no)
+    ])
+  if test $am_cv_langinfo_codeset = yes; then
+    AC_DEFINE(HAVE_LANGINFO_CODESET, 1,
+      [Define if you have <langinfo.h> and nl_langinfo(CODESET).])
+  fi
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ADD_CFLAGS version: 7 updated: 2004/04/25 17:48:30
 dnl -------------
@@ -196,7 +219,7 @@ ifelse($3,,[    :]dnl
 ])dnl
   ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_CACHE version: 9 updated: 2004/01/30 15:59:13
+dnl CF_CHECK_CACHE version: 10 updated: 2004/05/23 13:03:31
 dnl --------------
 dnl Check if we're accidentally using a cache from a different machine.
 dnl Derive the system name, as a check for reusing the autoconf cache.
@@ -210,7 +233,7 @@ dnl Note: we would use $ac_config_sub, but that is one of the places where
 dnl autoconf 2.5x broke compatibility with autoconf 2.13
 AC_DEFUN([CF_CHECK_CACHE],
 [
-if test -f $srcdir/config.guess ; then
+if test -f $srcdir/config.guess || test -f $ac_aux_dir/config.guess ; then
 	ifelse([$1],,[AC_CANONICAL_HOST],[$1])
 	system_name="$host_os"
 else

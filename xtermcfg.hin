@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.124 2004/05/13 00:41:21 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.126 2004/05/26 01:19:55 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.50 2004/05/13 00:41:21 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.51 2004/05/26 01:19:55 dickey Exp $
  */
 
 /************************************************************
@@ -43,6 +43,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef DFT_TERMTYPE		/* AC_ARG_WITH(default-term-type) */
 #undef HAVE_GETHOSTNAME		/* AC_CHECK_FUNCS(gethostname) */
 #undef HAVE_GETLOGIN		/* AC_CHECK_FUNCS(getlogin) */
+#undef HAVE_LANGINFO_CODESET	/* AM_LANGINFO_CODESET */
 #undef HAVE_LASTLOG_H		/* CF_LASTLOG */
 #undef HAVE_LIB_NEXTAW		/* CF_X_ATHENA(--with-neXtaw) */
 #undef HAVE_LIB_XAW		/* CF_X_ATHENA */
