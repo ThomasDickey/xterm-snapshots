@@ -744,7 +744,7 @@ ScrnRefresh (
 	   gc = updatedXtermGC(screen, flags, fg_bg, hilite);
 	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
 
-	   x = CurCursorX(screen, row, col);
+	   x = CurCursorX(screen, row + topline, col);
 	   lastind = col;
 
 	   for (; col <= maxcol; col++) {

@@ -101,8 +101,9 @@ CPPFLAGS="$cf_save_CPPFLAGS"
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 
-# Unix98 pty's on Linux with glibc2 use openpty, which lives in libutil.a
-AC_CHECK_LIB(util,openpty)
+# Check for openpty() in -lutil if the UNIX98-style pty functions are not
+# available. E.g. for GNU libc 2.0.
+AC_CHECK_FUNCS(grantpt, [], AC_CHECK_LIB(util,openpty))
 
 CF_XTERM_MODE
 

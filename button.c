@@ -51,6 +51,8 @@ button.c	Handles button events in the terminal emulator.
 #undef  CTRL
 #define	CTRL(c)	((c) & 0x1f)
 
+#define XTERM_CELL(row,col) getXtermCell(screen, row + screen->topline, col)
+
 #define KeyState(x) (((x) & (ShiftMask|ControlMask)) + (((x) & Mod1Mask) ? 2 : 0))
     /* adds together the bits:
 	shift key -> 1
@@ -983,14 +985,14 @@ static int class_of(TScreen *screen, int row, int col)
 	col /= 2;
     }
 #endif
-    value = getXtermCell(screen, row, col);
+    value = XTERM_CELL(row, col);
     if_OPT_WIDE_CHARS(screen,{
 	/*FIXME: extend the character-class table */
     })
     return charClass[value & ((sizeof(charClass)/sizeof(charClass[0]))-1)];
 }
 #else
-#define class_of(screen,row,col) charClass[getXtermCell(screen,row,col)]
+#define class_of(screen,row,col) charClass[XTERM_CELL(row, col)]
 #endif
 
 /*
@@ -1556,7 +1558,7 @@ SaveText(
 #endif
     *eol = !ScrnTstWrapped(screen, row);
     for (i = scol; i < ecol; i++) {
-	c = getXtermCell(screen,row,i);
+	c = XTERM_CELL(row, i);
 	if (c == 0) {
 	    c = ' ';
 	} else if (c < ' ') {
