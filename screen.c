@@ -322,9 +322,9 @@ ScreenWrite (
 	}
 	if_OPT_WIDE_CHARS(screen,{
 		Char *wc;
-		if (str2 != 0
-		 && (wc = SCRN_BUF_WIDEC(screen, screen->cur_row) + screen->cur_col) != 0) {
-			if (flags & INVISIBLE)
+		if ((wc = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
+			wc += screen->cur_col;
+			if ((flags & INVISIBLE) || (str2 == 0))
 				memset(wc, 0, length);
 			else
 				memcpy(wc, str2, length);
@@ -1084,13 +1084,15 @@ non_blank_line(
 		if (ptr[i])
 			return True;
 	}
-#if OPT_WIDE_CHARS
-	if ((ptr = BUF_WIDEC(sb, row)) != 0) {
-	    for (i = col; i < len; i++) {
-		if (ptr[i])
-		    return True;
-	    }
-	}
-#endif
+
+	if_OPT_WIDE_CHARS((&(term->screen)),{
+		if ((ptr = BUF_WIDEC(sb, row)) != 0) {
+			for (i = col; i < len; i++) {
+				if (ptr[i])
+					return True;
+			}
+		}
+	})
+
 	return False;
 }

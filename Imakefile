@@ -13,8 +13,8 @@ XCOMM
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
 SCROLLBAR_RIGHT = -DSCROLLBAR_RIGHT
 
-/* Uncomment UTF8_OPTION to compile-in support for UTF-8 */
-UTF8_OPTION	= -DOPT_WIDE_CHARS
+/* Define UTF8support to compile-in support for UTF-8 */
+#define UTF8support
 
 /*
  * Fixes to allow compile with X11R5
@@ -72,9 +72,16 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 #endif
 
 #ifdef AmoebaArchitecture
-        EXTRASRC = ttysvr.c
-        EXTRAOBJ = ttysvr.o
+       EXTRASRC = ttysvr.c
+       EXTRAOBJ = ttysvr.o
 #endif
+
+#ifdef UTF8support
+    UTF8_OPTION = -DOPT_WIDE_CHARS
+        UTF8SRC = keysym2ucs.c
+        UTF8OBJ = keysym2ucs.o
+#endif
+
    MAIN_DEFINES = $(UTMPDEF) $(TTYGROUPDEF) $(PUCCPTYDDEF) $(NOPOSIXTERMIOS) \
 		  -DOSMAJORVERSION=$(OSMAJORVERSION) \
 		  -DOSMINORVERSION=$(OSMINORVERSION)
@@ -91,14 +98,16 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 #endif
           SRCS1 = button.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
-		  $(MAINSRC) menu.c misc.c print.c ptydata.c \
+		  menu.c misc.c print.c ptydata.c \
 		  screen.c scrollbar.c tabs.c util.c \
-		  TekPrsTbl.c Tekproc.c VTPrsTbl.c $(EXTRASRC)
+		  TekPrsTbl.c Tekproc.c VTPrsTbl.c \
+		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC)
           OBJS1 = button.o charproc.o charsets.o cursor.o \
 		  data.o doublechr.o fontutils.o input.o \
-		  $(MAINOBJ) menu.o misc.o print.o ptydata.o \
+		  menu.o misc.o print.o ptydata.o \
 		  screen.o scrollbar.o tabs.o util.o \
-		  TekPrsTbl.o Tekproc.o VTPrsTbl.o $(EXTRAOBJ)
+		  TekPrsTbl.o Tekproc.o VTPrsTbl.o \
+		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ)
           SRCS2 = resize.c
           OBJS2 = resize.o
            SRCS = $(SRCS1) $(SRCS2)

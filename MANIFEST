@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-3_9Pq
+MANIFEST for xterm, version xterm-106
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 INSTALL                         configure script: options and related install instructions
@@ -32,6 +32,8 @@ fontutils.c                     xterm functions for (re)loading fonts
 fontutils.h                     interface of fontutils.c
 input.c                         VT100 key-symbol and function-key translation
 install.sh                      configure script: fallback install script
+keysym2ucs.c                    lookup-table for UTF-8 to keysyms
+keysym2ucs.h                    interface of keysym2ucs.c
 main.c                          main program of 'xterm'
 main.h                          default definitions for 'xterm'
 menu.c                          popup/pulldown menus for 'xterm'
@@ -68,6 +70,10 @@ tektests/imtest.tek             tek4014 demo: draw a test pattern
 tektests/imtesth.tek            tek4014 demo: draw a test pattern
 tektests/ocpred.tek             tek4014 demo: an occultation prediction
 tektests/usmap.tek              tek4014 demo: a US map
+unicode                         subdirectory
+unicode/README                  description of files in ./unicode
+unicode/convmap.pl              perl script for generating the lookup table for UTF-8 to keysym
+unicode/keysym.map              keysym mapping from UTF-8
 vttests                         subdirectory
 vttests/16colors.sh             test-script to show 16-colors
 vttests/8colors.sh              test-script to illustrate 8-colors

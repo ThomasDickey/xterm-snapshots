@@ -352,7 +352,12 @@ CF_ARG_ENABLE(wide-chars,
 	[enable_wchar=yes],
 	[enable_wchar=no])
 AC_MSG_RESULT($enable_wchar)
-test $enable_wchar = yes && AC_DEFINE(OPT_WIDE_CHARS,1)
+if test $enable_wchar = yes ; then
+	AC_DEFINE(OPT_WIDE_CHARS,1)
+	EXTRAHDRS="$EXTRAHDRS keysym2ucs.h"
+	EXTRASRCS="$EXTRASRCS keysym2ucs.c"
+	EXTRAOBJS="$EXTRAOBJS keysym2ucs.o"
+fi
 
 AC_MSG_CHECKING(if you want -ziconbeep option)
 CF_ARG_DISABLE(ziconbeep,

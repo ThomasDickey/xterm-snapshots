@@ -208,7 +208,8 @@ The options (in alphabetic order):
 
   --enable-wide-chars     enable wide-character support
 
-  	Compile-in code that supports 16-bit characters.
+  	Compile-in code that supports 16-bit characters.  Includes support
+	for UTF-8.
 
   --enable-xmc-glitch     test: enable xmc magic-cookie emulation
 
