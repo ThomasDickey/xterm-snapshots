@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.212 2005/01/18 00:02:26 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.134 2005/01/18 00:02:26 dickey Exp $
+  $XTermId: xterm.log.html,v 1.225 2005/02/06 21:42:38 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.136 2005/02/06 21:42:38 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_200">Patch #200 - 2005/2/6 - XFree86 4.4.99.23</A>
 <LI><A HREF="#xterm_199">Patch #199 - 2005/1/17 - XFree86 4.4.99.22</A>
 <LI><A HREF="#xterm_198">Patch #198 - 2005/1/13 - XFree86 4.4.99.21</A>
 <LI><A HREF="#xterm_197">Patch #197 - 2004/11/30 - XFree86 4.4.99.19</A>
@@ -248,6 +249,52 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_200">Patch #200 - 2005/2/6 - XFree86 4.4.99.23</A></H1>
+<ul>
+	<li>increase color pairs value for xterm-256color and xterm-88color to
+	    match ncurses, which has an experimental option to support this.
+
+	<li>modify ifdef's to make AIX use termios rather than termio; the
+            struct sizes for the two were not the same.
+
+	<li>improve CF_WITH_IMAKE_CFLAGS configure macro script for
+	    OSMAJORVERSION and OSMINORVERSION values, e.g., for Tru64 and AIX.
+
+	<li>modify ifdef to define USE_POSIX_TERMIOS for Darwin (patch by Min
+	    Sik Kim).
+
+	<li>modify find_utmp() to initialize the whole utmpx struct (except
+	    ut_id), since that is needed for OSF1 4.0D to prevent an infinite
+	    loop on exit.
+
+	<li>add configure check before adding -D_POSIX_SOURCE since some
+	    platforms predefine it, e.g., cygwin.
+
+	<li>add simplified sed expressions in CF_IMAKE_CFLAGS configure script
+	    macro to ensure value for PROJECTROOT is quoted on Solaris, i.e.,
+	    when nested <code>\(</code> and <code>\)</code> are not interpreted
+	    correctly.
+
+	<li>correct DEC rectangle operations to reset state after completing
+	    the operations.
+
+	<li>modify CASE_ST handling in charproc.c to ensure that the parse
+	    state is reset even if xterm is not currently processing an OSC or
+	    other string (patch by Johnny Billquist forwarded by Matthias
+	    Scheler, NetBSD xsrc/29003).
+
+	<li>fix OS/2 build for innotek_libc (patch by David Yeo).
+
+	<li>fix a regression from <a href="#xterm_197">patch #197</a> fix for
+	    Debian #277832 which disowned the selection if it was scrolled,
+	    e.g., by the user pressing return at the bottom of the screen
+	    (Debian #291787).
+
+	<li>move the warning/exit for missing $DISPLAY into the error handler
+	    in case <code>-display</code> is given, and the connect fails for
+	    some other reason.
+</ul>
+
 <H1><A NAME="xterm_199">Patch #199 - 2005/1/17 - XFree86 4.4.99.22</A></H1>
 <ul>
 	<li>instead of setting <code>$DISPLAY</code>, check for the unset
@@ -286,7 +333,7 @@ is the latest version of this file.
 	<li>improve some limit checks (Gentoo Bugzilla #75604).
 
 	<li>add --disable-setuid option to configure script (Gentoo Bugzilla
-	    #76453).
+	    #76543).
 
 	<li>add --disable-full-tgetent option to configure script, allowing one
 	    to ignore a termcap library in favor of ncurses/curses (Gentoo
@@ -823,8 +870,8 @@ is the latest version of this file.
 	    the same write, some were not handled properly (report by
 	    Nicolas George).
 
-	<li>modify to allow turning UTF-8 mode via escape sequence even if
-	    <code>-wc</code> option was not given at startup (patch by Peter
+	<li>modify to allow turning UTF-8 mode on/off via escape sequence even
+	    if <code>-wc</code> option was not given at startup (patch by Peter
 	    Berg Larsen).
 
 	<li>amend fix for XFree86 Bugzilla #981, adjusting for savedlines value

@@ -1,10 +1,10 @@
-/* $XTermId: util.c,v 1.220 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: util.c,v 1.223 2005/02/06 21:42:38 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.87 2005/01/14 01:50:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.88 2005/02/06 21:42:38 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey
@@ -203,6 +203,122 @@ AddToRefresh(TScreen * screen)
 }
 
 /*
+ * If we're scrolling, leave the selection intact if possible.
+ * If it will bump into one of the extremes of the saved-lines, truncate that.
+ * If the selection is not contained within the scrolled region, clear it.
+ */
+static void
+adjustHiliteOnFwdScroll(TScreen * screen, int amount, Boolean all_lines)
+{
+    int lo_row = (all_lines
+		  ? (screen->bot_marg - screen->savelines)
+		  : screen->top_marg);
+    int hi_row = screen->bot_marg;
+
+    TRACE2(("adjustSelection FWD %s by %d (%s)\n",
+	    screen->alternate ? "alternate" : "normal",
+	    amount,
+	    all_lines ? "all" : "visible"));
+    TRACE2(("  before highlite %d.%d .. %d.%d\n",
+	    screen->startHRow,
+	    screen->startHCol,
+	    screen->endHRow,
+	    screen->endHCol));
+    TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
+    TRACE2(("  limits  %d..%d\n", lo_row, hi_row));
+
+    if (screen->startHRow >= lo_row
+	&& screen->startHRow - amount < lo_row) {
+	/* truncate the selection because its start would move out of region */
+	if (lo_row + amount <= screen->endHRow) {
+	    TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
+		    screen->startHRow,
+		    screen->startHCol,
+		    lo_row + amount,
+		    0));
+	    screen->startHRow = lo_row + amount;
+	    screen->startHCol = 0;
+	} else {
+	    TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
+		    screen->startHRow,
+		    screen->startHCol,
+		    screen->endHRow,
+		    screen->endHCol,
+		    -amount,
+		    lo_row,
+		    hi_row));
+	    ScrnDisownSelection(screen);
+	}
+    } else if (screen->startHRow <= hi_row && screen->endHRow > hi_row) {
+	ScrnDisownSelection(screen);
+    } else if (screen->startHRow < lo_row && screen->endHRow > lo_row) {
+	ScrnDisownSelection(screen);
+    }
+
+    TRACE2(("  after highlite %d.%d .. %d.%d\n",
+	    screen->startHRow,
+	    screen->startHCol,
+	    screen->endHRow,
+	    screen->endHCol));
+}
+
+/*
+ * This is the same as adjustHiliteOnFwdScroll(), but reversed.  In this case,
+ * only the visible lines are affected.
+ */
+static void
+adjustHiliteOnBakScroll(TScreen * screen, int amount)
+{
+    int lo_row = screen->top_marg;
+    int hi_row = screen->bot_marg;
+
+    TRACE2(("adjustSelection BAK %s by %d (%s)\n",
+	    screen->alternate ? "alternate" : "normal",
+	    amount,
+	    "visible"));
+    TRACE2(("  before highlite %d.%d .. %d.%d\n",
+	    screen->startHRow,
+	    screen->startHCol,
+	    screen->endHRow,
+	    screen->endHCol));
+    TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
+
+    if (screen->endHRow >= hi_row
+	&& screen->endHRow + amount > hi_row) {
+	/* truncate the selection because its start would move out of region */
+	if (hi_row - amount >= screen->startHRow) {
+	    TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
+		    screen->startHRow,
+		    screen->startHCol,
+		    hi_row - amount,
+		    0));
+	    screen->endHRow = hi_row - amount;
+	    screen->endHCol = 0;
+	} else {
+	    TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
+		    screen->startHRow,
+		    screen->startHCol,
+		    screen->endHRow,
+		    screen->endHCol,
+		    amount,
+		    lo_row,
+		    hi_row));
+	    ScrnDisownSelection(screen);
+	}
+    } else if (screen->endHRow >= lo_row && screen->startHRow < lo_row) {
+	ScrnDisownSelection(screen);
+    } else if (screen->endHRow > hi_row && screen->startHRow > hi_row) {
+	ScrnDisownSelection(screen);
+    }
+
+    TRACE2(("  after highlite %d.%d .. %d.%d\n",
+	    screen->startHRow,
+	    screen->startHCol,
+	    screen->endHRow,
+	    screen->endHCol));
+}
+
+/*
  * scrolls the screen by amount lines, erases bottom, doesn't alter
  * cursor position (i.e. cursor moves down amount relative to text).
  * All done within the scrolling region, of course.
@@ -218,6 +334,9 @@ xtermScroll(TScreen * screen, int amount)
     int refreshheight;
     int scrolltop;
     int scrollheight;
+    Boolean scroll_all_lines = (screen->scrollWidget
+				&& !screen->alternate
+				&& screen->top_marg == 0);
 
     TRACE(("xtermScroll count=%d\n", amount));
 
@@ -227,11 +346,11 @@ xtermScroll(TScreen * screen, int amount)
     if (screen->cursor_state)
 	HideCursor();
 
-    if (ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg))
-	ScrnDisownSelection(screen);
-
     if (amount > i)
 	amount = i;
+
+    if (ScrnHaveSelection(screen))
+	adjustHiliteOnFwdScroll(screen, amount, scroll_all_lines);
 
     if (screen->jumpscroll) {
 	if (screen->scroll_amt > 0) {
@@ -253,15 +372,17 @@ xtermScroll(TScreen * screen, int amount)
 	    screen->cursor_busy -= 1;
 	    return;
 	}
+
 	shift = -screen->topline;
 	bot = screen->max_row - shift;
 	scrollheight = i - amount;
 	refreshheight = amount;
+
 	if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
 	    (i = screen->max_row - refreshheight + 1))
 	    refreshtop = i;
-	if (screen->scrollWidget && !screen->alternate
-	    && screen->top_marg == 0) {
+
+	if (scroll_all_lines) {
 	    scrolltop = 0;
 	    if ((scrollheight += shift) > i)
 		scrollheight = i;
@@ -289,7 +410,9 @@ xtermScroll(TScreen * screen, int amount)
 		CopyWait(screen);
 	    screen->scrolls++;
 	}
+
 	scrolling_copy_area(screen, scrolltop + amount, scrollheight, amount);
+
 	if (refreshheight > 0) {
 	    ClearCurBackground(screen,
 			       (int) refreshtop * FontHeight(screen) + screen->border,
@@ -300,10 +423,9 @@ xtermScroll(TScreen * screen, int amount)
 		refreshheight = shift;
 	}
     }
+
     if (amount > 0) {
-	if (screen->scrollWidget
-	    && !screen->alternate
-	    && screen->top_marg == 0) {
+	if (scroll_all_lines) {
 	    ScrnDeleteLine(screen,
 			   screen->allbuf,
 			   screen->bot_marg + screen->savelines,
@@ -319,10 +441,12 @@ xtermScroll(TScreen * screen, int amount)
 			   (unsigned) (screen->max_col + 1));
 	}
     }
+
     if (refreshheight > 0) {
 	ScrnRefresh(screen, refreshtop, 0, refreshheight,
 		    screen->max_col + 1, False);
     }
+
     screen->cursor_busy -= 1;
     return;
 }
@@ -352,11 +476,11 @@ RevScroll(TScreen * screen, int amount)
     if (screen->cursor_state)
 	HideCursor();
 
-    if (ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg))
-	ScrnDisownSelection(screen);
-
     if (amount > i)
 	amount = i;
+
+    if (ScrnHaveSelection(screen))
+	adjustHiliteOnBakScroll(screen, amount);
 
     if (screen->jumpscroll) {
 	if (screen->scroll_amt < 0) {
@@ -390,7 +514,9 @@ RevScroll(TScreen * screen, int amount)
 		CopyWait(screen);
 	    screen->scrolls++;
 	}
+
 	scrolling_copy_area(screen, scrolltop - amount, scrollheight, -amount);
+
 	if (refreshheight > 0) {
 	    ClearCurBackground(screen,
 			       (int) refreshtop * FontHeight(screen) + screen->border,
@@ -435,8 +561,10 @@ InsertLine(TScreen * screen, int n)
     if (screen->cursor_state)
 	HideCursor();
 
-    if (ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg))
+    if (ScrnHaveSelection(screen)
+	&& ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg)) {
 	ScrnDisownSelection(screen);
+    }
 
     screen->do_wrap = 0;
     if (n > (i = screen->bot_marg - screen->cur_row + 1))
@@ -504,8 +632,10 @@ DeleteLine(TScreen * screen, int n)
     if (screen->cursor_state)
 	HideCursor();
 
-    if (ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg))
+    if (ScrnHaveSelection(screen)
+	&& ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg)) {
 	ScrnDisownSelection(screen);
+    }
 
     screen->do_wrap = 0;
     if (n > (i = screen->bot_marg - screen->cur_row + 1))

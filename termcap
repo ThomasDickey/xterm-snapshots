@@ -1,4 +1,4 @@
-# $XTermId: termcap,v 1.64 2004/07/13 00:41:30 tom Exp $
+# $XTermId: termcap,v 1.66 2005/02/06 21:42:38 tom Exp $
 #
 # $Xorg: termcap,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
 #
@@ -19,7 +19,7 @@
 #	I checked the limits using ncurses "captoinfo -CrTUvx", which prints
 #	the resolved length of each entry in a comment at the end - T.Dickey
 #
-# $XFree86: xc/programs/xterm/termcap,v 3.34 2004/07/13 00:41:30 dickey Exp $
+# $XFree86: xc/programs/xterm/termcap,v 3.35 2005/02/06 21:42:38 dickey Exp $
 #
 xf|xterm-new|modern xterm:\
 	:*6=\EOF:@7=\EOF:F1=\E[23~:F2=\E[24~:Km=\E[M:k1=\EOP:\
@@ -85,17 +85,17 @@ vc|xterm-color|generic "ANSI" color xterm:\
 	:AB=\E[4%dm:AF=\E[3%dm:ac=:op=\E[m:tc=xterm-r6:
 #
 # These aliases are for compatibility with the terminfo; termcap cannot provide
-# the extra features, but termcap applications still want the names.  Note that
-# AF/AB really should be Sf/Sb, but there are applications which expect the
-# former.  The terminfo contains both strings.
+# the extra features such as color initialization, but termcap applications
+# still want the names.  Note that AF/AB really should be Sf/Sb, but there are
+# applications which expect the former.  The terminfo contains both strings.
 x1|xterm-16color|xterm alias:\
 	:tc=xterm-new:
 
 x2|xterm-88color|xterm alias:\
-	:Co#88:pa#88:tc=xterm-256color:
+	:Co#88:pa#7744:tc=xterm-256color:
 
 x3|xterm-256color|xterm alias:\
-	:Co#256:pa#256:\
+	:Co#256:pa#32767:\
 	:AB=\E[48;5;%dm:AF=\E[38;5;%dm:tc=xterm-new:
 
 xi|xterm-nrc|xterm alias:\
