@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.51 2000/09/26 15:57:26 tsi Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.52 2000/11/28 23:07:33 dawes Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -61,14 +61,9 @@ button.c	Handles button events in the terminal emulator.
 
 #include <xterm.h>
 
-#include <X11/Xatom.h>
-
 #include <stdio.h>
 
-#ifdef MINIX
-#include <X11/Xos.h>
-#endif
-
+#include <X11/Xatom.h>
 #include <X11/Xmu/Atoms.h>
 #include <X11/Xmu/StdSel.h>
 
@@ -770,6 +765,7 @@ void HandleKeyboardSelectEnd(
 }
 
 #if OPT_WIDE_CHARS
+#ifndef X_HAVE_UTF8_STRING
 static Atom XA_UTF8_STRING(Display *dpy)
 {
     static AtomPtr p = NULL;
@@ -778,6 +774,7 @@ static Atom XA_UTF8_STRING(Display *dpy)
 	p = XmuMakeAtom("UTF8_STRING");
     return XmuInternAtom(dpy, p);
 }
+#endif
 #endif
 
 struct _SelectionList {
@@ -987,9 +984,9 @@ static void _GetSelection(
 }
 
 #if OPT_TRACE && OPT_WIDE_CHARS
-static void GettingSelection(char *tag, char *line, int len)
+static void GettingSelection(char *tag, Char *line, int len)
 {
-    char *cp;
+    Char *cp;
 
     Trace("Getting %s\n", tag);
     for (cp = line; cp < line + len; cp++)

@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.111 2000/11/01 01:12:37 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.112 2000/11/29 08:39:24 keithp Exp $
  */
 
 /*
@@ -86,11 +86,11 @@ in this Software without prior written authorization from the X Consortium.
 #include <version.h>
 #include <xterm.h>
 
-#include <X11/Xos.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
 #include <X11/StringDefs.h>
+#include <X11/Shell.h>
 #include <X11/Xmu/Atoms.h>
 #include <X11/Xmu/CharSet.h>
 #include <X11/Xmu/Converters.h>
@@ -126,10 +126,6 @@ in this Software without prior written authorization from the X Consortium.
 #if OPT_ZICONBEEP || OPT_TOOLBAR
 #define HANDLE_STRUCT_NOTIFY 1
 #endif
-
-#if !defined(NO_ACTIVE_ICON) || defined(HANDLE_STRUCT_NOTIFY)
-#include <X11/Shell.h>
-#endif /* NO_ACTIVE_ICON */
 
 extern char *ProgramName;
 
@@ -4416,8 +4412,7 @@ static void VTInitialize (
 #ifdef XRENDERFONT
    wnew->screen.renderFont = 0;
    wnew->screen.renderFontBold = 0;
-   wnew->screen.renderColor = 0;
-   wnew->screen.renderPicture = 0;
+   wnew->screen.renderDraw = 0;
 #endif
 
    wnew->cur_foreground = 0;

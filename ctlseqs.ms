@@ -1,7 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
 .\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.39 2000/08/25 21:50:58 dawes Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.40 2000/12/07 02:40:46 dickey Exp $
 .\"
 .\"
 .\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey
@@ -559,18 +559,19 @@ for invalid requests.
 .
 .IP \\*(Dc\\*+\\*q\\*(Pt\\*s\\*(ST
 Request Termcap/Terminfo String (xterm, experimental).
-The string following the "q" is a list of names separated by \*;
+The string following the "q" is a list of names
+encoded in hexadecimal (2 digits per character)
+separated by \*;
 which correspond to termcap or terminfo key names.
 .br
 \fIxterm\fP responds with
 \*(Dc\*1\*+\*r\*(Pt\*s\*(ST
-for valid requests, replacing the \*(Pt with the corresponding
-strings that xterm would send,
+for valid requests, adding to \*(Pt an \*=,
+and the value of the corresponding string that xterm would send,
 or
 \*(Dc\*0\*+\*r\*(Pt\*s\*(ST
 for invalid requests.
-The strings are encoded in hexadecimal (2 digits per character), and are 
-separated by \*; if more than one name was requested.
+The strings are encoded in hexadecimal (2 digits per character).
 .Ed
 .\"
 .St

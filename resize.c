@@ -29,65 +29,14 @@
 
 /* resize.c */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-
-#else
-
-#if defined(__EMX__) || defined(__CYGWIN__) || defined(SCO) || defined(sco)
-#define USE_TERMCAP 1
-#endif
-
-#endif
-
-#include <X11/Xos.h>
+#include <xterm.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <xstrings.h>
-
-#if defined(att)
-#define ATT
-#endif
-
-#if defined(sgi) && defined(SVR4)
-#undef SYSV
-#undef SVR4
-#define SYSV
-#endif
-
-#ifdef SVR4
-#undef  SYSV			/* predefined on Solaris 2.4 */
-#define SYSV
-#define ATT
-#endif
-
-#if (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
-#define USE_USG_PTYS
-#endif
+#include <xterm_io.h>
 
 #ifdef APOLLO_SR9
 #define CANT_OPEN_DEV_TTY
-#endif
-
-#if defined(__EMX__) || defined(__CYGWIN__)
-#define USE_SYSV_TERMIO
-#endif
-
-#ifdef macII
-#define USE_SYSV_TERMIO
-#undef SYSV				/* pretend to be bsd */
-#endif /* macII */
-
-#ifdef linux
-#define USE_TERMIOS
-#endif
-
-#ifdef __MVS__
-#define USE_TERMIOS
-#endif
-
-#ifdef Lynx
-#define USE_SYSV_TERMIO
 #endif
 
 #ifdef __OpenBSD__
@@ -96,19 +45,14 @@
 #endif
 
 #ifndef USE_TERMINFO	/* avoid conflict with configure script */
-#if defined(SCO) || defined(sco) || defined(linux)
+#if defined(__QNX__) || defined(SCO) || defined(sco) || defined(linux)
 #define USE_TERMINFO
 #endif
 #endif
 
-#if defined(SYSV) || defined(__CYGWIN__)
-#define USE_SYSV_TERMIO
-#elif defined(__QNX__)
-#define USE_TERMINFO
+#if defined(__QNX__)
 #include <unix.h>
-#elif !defined(USE_TERMCAP)
-#define USE_TERMCAP
-#endif /* SYSV */
+#endif
 
 /*
  * Some OS's may want to use both, like SCO for example.  We catch here anyone
@@ -118,81 +62,30 @@
 #define USE_TERMINFO
 #endif
 
-#if defined(CSRG_BASED)
-#define USE_TERMIOS
-#endif
-
-#ifndef __CYGWIN__
-#include <sys/ioctl.h>
-#endif
-
-#ifdef USE_SYSV_TERMIO
-# ifndef Lynx
-#  include <sys/termio.h>
-# else
-#  include <termio.h>
-# endif
-#else /* else not USE_SYSV_TERMIO */
-# ifdef USE_TERMIOS
-#  include <termios.h>
-# else /* not USE_TERMIOS */
-#  include <sgtty.h>
-# endif /* USE_TERMIOS */
-#endif	/* USE_SYSV_TERMIO */
-
-#ifdef SYSV
-#ifdef USE_USG_PTYS
-#include <sys/stream.h>
-#ifndef SVR4
-#include <sys/ptem.h>
-#endif
-#endif
-#endif
-
 #include <signal.h>
 #include <pwd.h>
 
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-char *getenv();
-#endif
-
-#ifdef USE_SYSV_TERMIO
 #ifdef X_NOT_POSIX
 #if !defined(SYSV) && !defined(i386)
 extern struct passwd *getpwuid();	/* does ANYBODY need this? */
 #endif /* SYSV && i386 */
 #endif /* X_NOT_POSIX */
+
+#ifndef bzero
 #define	bzero(s, n)	memset(s, 0, n)
-#endif	/* USE_SYSV_TERMIO */
+#endif
 
 #ifdef MINIX
-#define USE_SYSV_TERMIO
-#include <sys/termios.h>
-#define termio termios
-#define TCGETA TCGETS
-#define TCSETAW TCSETSW
 #ifndef IUCLC
 #define IUCLC	0
 #endif
 #endif
 
-#ifndef DFT_TERMTYPE
-#define DFT_TERMTYPE "xterm"
-#endif
-
-#ifndef GCC_UNUSED
-#define GCC_UNUSED /* nothing */
-#endif
-
 #ifdef __MVS__
-#define ESC(string) "\047" string
+#define ESCAPE(string) "\047" string
 #else
-#define ESC(string) "\033" string
+#define ESCAPE(string) "\033" string
 #endif
-
-#define CharOf(ch) ((unsigned char)(ch))
 
 #define	EMULATIONS	2
 #define	SUN		1
@@ -225,58 +118,57 @@ char *emuname[EMULATIONS] = {
 char *myname;
 int shell_type = SHELL_UNKNOWN;
 char *getsize[EMULATIONS] = {
-	ESC("7") ESC("[r") ESC("[999;999H") ESC("[6n"),
-	ESC("[18t"),
+	ESCAPE("7") ESCAPE("[r") ESCAPE("[999;999H") ESCAPE("[6n"),
+	ESCAPE("[18t"),
 };
-#if !defined(sun) || defined(SVR4)
-#ifdef TIOCSWINSZ
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
+#elif defined(TIOCSWINSZ)
 char *getwsize[EMULATIONS] = {	/* size in pixels */
 	0,
-	ESC("[14t"),
+	ESCAPE("[14t"),
 };
-#endif	/* TIOCSWINSZ */
-#endif	/* sun */
+#endif	/* sun vs TIOCSWINSZ */
 char *restore[EMULATIONS] = {
-	ESC("8"),
+	ESCAPE("8"),
 	0,
 };
 char *setname = "";
 char *setsize[EMULATIONS] = {
 	0,
-	ESC("[8;%s;%st"),
+	ESCAPE("[8;%s;%st"),
 };
-#ifdef USE_SYSV_TERMIO
+
+#ifdef USE_ANY_SYSV_TERMIO
 struct termio tioorig;
-#else /* not USE_SYSV_TERMIO */
-# ifdef USE_TERMIOS
+#elif defined(USE_TERMIOS)
 struct termios tioorig;
-# else /* not USE_TERMIOS */
+#else
 struct sgttyb sgorig;
-# endif /* USE_TERMIOS */
-#endif /* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
+
 char *size[EMULATIONS] = {
-	ESC("[%d;%dR"),
-	ESC("[8;%d;%dt"),
+	ESCAPE("[%d;%dR"),
+	ESCAPE("[8;%d;%dt"),
 };
 char sunname[] = "sunsize";
 int tty;
 FILE *ttyfp;
-#if !defined(sun) || defined(SVR4)
-#ifdef TIOCSWINSZ
+
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
+#elif defined(TIOCSWINSZ)
 char *wsize[EMULATIONS] = {
 	0,
-	ESC("[4;%hd;%hdt"),
+	ESCAPE("[4;%hd;%hdt"),
 };
-#endif	/* TIOCSWINSZ */
-#endif	/* sun */
-
-#include <proto.h>
+#endif	/* sun vs TIOCSWINSZ */
 
 static SIGNAL_T onintr (int sig);
 static SIGNAL_T resize_timeout (int sig);
 static int checkdigits (char *str);
 static void Usage (void);
 static void readstring (FILE *fp, char *buf, char *str);
+
+#undef US	/* may conflict with curses.h */
 
 #ifdef USE_TERMCAP
 #ifdef HAVE_TERMCAP_H
@@ -311,30 +203,24 @@ main (int argc, char **argv)
 	struct passwd *pw;
 	int i;
 	int rows, cols;
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 	struct termio tio;
-#else /* not USE_SYSV_TERMIO */
-#ifdef USE_TERMIOS
+#elif defined(USE_TERMIOS)
 	struct termios tio;
-#else /* not USE_TERMIOS */
+#else
 	struct sgttyb sg;
-#endif /* USE_TERMIOS */
-#endif /* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 #ifdef USE_TERMCAP
 	int ok_tcap = 1;
 	char termcap [TERMCAP_SIZE];
 	char newtc [TERMCAP_SIZE];
 #endif /* USE_TERMCAP */
 	char buf[BUFSIZ];
-#if defined(sun) && !defined(SVR4)
-#ifdef TIOCSSIZE
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 	struct ttysize ts;
-#endif	/* TIOCSSIZE */
-#else	/* sun */
-#ifdef TIOCSWINSZ
+#elif defined(TIOCSWINSZ)
 	struct winsize ws;
-#endif	/* TIOCSWINSZ */
-#endif	/* sun */
+#endif	/* sun vs TIOCSWINSZ */
 	char *name_of_tty;
 #ifdef CANT_OPEN_DEV_TTY
 	extern char *ttyname();
@@ -424,7 +310,7 @@ main (int argc, char **argv)
 	}
 #endif	/* USE_TERMINFO */
 
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 	ioctl (tty, TCGETA, &tioorig);
 	tio = tioorig;
 	tio.c_iflag &= ~(ICRNL | IUCLC);
@@ -432,8 +318,7 @@ main (int argc, char **argv)
 	tio.c_cflag |= CS8;
 	tio.c_cc[VMIN] = 6;
 	tio.c_cc[VTIME] = 1;
-#else	/* else not USE_SYSV_TERMIO */
-#if defined(USE_TERMIOS)
+#elif defined(USE_TERMIOS)
 	tcgetattr(tty, &tioorig);
 	tio = tioorig;
 	tio.c_iflag &= ~ICRNL;
@@ -446,20 +331,17 @@ main (int argc, char **argv)
 	sg = sgorig;
 	sg.sg_flags |= RAW;
 	sg.sg_flags &= ~ECHO;
-#endif  /* USE_TERMIOS */
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 	signal(SIGINT, onintr);
 	signal(SIGQUIT, onintr);
 	signal(SIGTERM, onintr);
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 	ioctl (tty, TCSETAW, &tio);
-#else	/* not USE_SYSV_TERMIO */
-#ifdef USE_TERMIOS
+#elif defined(USE_TERMIOS)
 	tcsetattr(tty, TCSADRAIN, &tio);
 #else   /* not USE_TERMIOS */
 	ioctl (tty, TIOCSETP, &sg);
-#endif  /* USE_TERMIOS */
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 
 	if (argc == 2) {
 		sprintf (buf, setsize[emu], argv[0], argv[1]);
@@ -473,17 +355,14 @@ main (int argc, char **argv)
 	}
 	if(restore[emu])
 		write(tty, restore[emu], strlen(restore[emu]));
-#if defined(sun) && !defined(SVR4)
-#ifdef TIOCGSIZE
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 	/* finally, set the tty's window size */
 	if (ioctl (tty, TIOCGSIZE, &ts) != -1) {
 		ts.ts_lines = rows;
 		ts.ts_cols = cols;
 		ioctl (tty, TIOCSSIZE, &ts);
 	}
-#endif	/* TIOCGSIZE */
-#else	/* sun */
-#ifdef TIOCGWINSZ
+#elif defined(TIOCSWINSZ)
 	/* finally, set the tty's window size */
 	if(getwsize[emu]) {
 	    /* get the window size in pixels */
@@ -509,18 +388,15 @@ main (int argc, char **argv)
 	    ws.ws_col = cols;
 	    ioctl (tty, TIOCSWINSZ, &ws);
 	}
-#endif	/* TIOCGWINSZ */
-#endif	/* sun */
+#endif	/* sun vs TIOCSWINSZ */
 
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 	ioctl (tty, TCSETAW, &tioorig);
-#else	/* not USE_SYSV_TERMIO */
-#ifdef USE_TERMIOS
+#elif defined(USE_TERMIOS)
 	tcsetattr(tty, TCSADRAIN, &tioorig);
 #else   /* not USE_TERMIOS */
 	ioctl (tty, TIOCSETP, &sgorig);
-#endif  /* USE_TERMIOS */
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
 	signal(SIGTERM, SIG_DFL);
@@ -610,7 +486,7 @@ readstring(register FILE *fp, register char *buf, char *str)
 	setitimer(ITIMER_REAL, &it, (struct itimerval *)NULL);
 #endif
 	if ((c = getc(fp)) == 0233) {	/* meta-escape, CSI */
-		*buf++ = c = ESC("")[0];
+		*buf++ = c = ESCAPE("")[0];
 		*buf++ = '[';
 	} else {
 		*buf++ = c;
@@ -651,14 +527,12 @@ resize_timeout(int sig)
 static SIGNAL_T
 onintr(int sig GCC_UNUSED)
 {
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 	ioctl (tty, TCSETAW, &tioorig);
-#else	/* not USE_SYSV_TERMIO */
-#ifdef USE_TERMIOS
+#elif defined(USE_TERMIOS)
 	tcsetattr (tty, TCSADRAIN, &tioorig);
 #else   /* not USE_TERMIOS */
 	ioctl (tty, TIOCSETP, &sgorig);
-#endif  /* use TERMIOS */
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 	exit(1);
 }

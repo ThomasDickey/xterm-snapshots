@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.49 2000/11/01 01:12:39 dawes Exp $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.50 2000/12/07 02:40:00 dickey Exp $
  */
 
 /*
@@ -732,7 +732,7 @@ Input (
 }
 
 void
-StringInput ( register TScreen *screen, register char *string, size_t nbytes)
+StringInput ( register TScreen *screen, Char *string, size_t nbytes)
 {
 	int	pty	= screen->respond;
 
@@ -1095,13 +1095,25 @@ VTInitModifiers(void)
 #endif /* OPT_NUM_LOCK */
 
 #if OPT_TCAP_QUERY
+	static int
+hex2int(int c)
+{
+	if (c >= '0' && c <= '9')
+		return c - '0';
+	if (c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
+	if (c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
+	return -1;
+}
+
 /*
  * Parse the termcap/terminfo name from the string, returning a positive number
  * (the keysym) if found, otherwise -1.  Update the string pointer.
  * Returns the (shift, control) state in *state.
  */
 int
-xtermcapKeycode(char **params, unsigned *state)
+xtermcapKeycode(char *params, unsigned *state)
 {
 #define DATA(tc,ti,x,y) { tc, ti, x, y }
 	static struct {
@@ -1156,7 +1168,7 @@ xtermcapKeycode(char **params, unsigned *state)
 		DATA(	"k7",	"kf7",		XK_F7,		0),
 		DATA(	"k8",	"kf8",		XK_F8,		0),
 		DATA(	"k9",	"kf9",		XK_F9,		0),
-		DATA(	"k;",	"kf10",		XK_F10,		0), /* cannot termcap */
+		DATA(	"k;",	"kf10",		XK_F10,		0),
 #ifdef XK_ISO_Left_Tab
 		DATA(	"kB",	"kcbt",		XK_ISO_Left_Tab,0),
 #endif
@@ -1178,25 +1190,27 @@ xtermcapKeycode(char **params, unsigned *state)
 	};
 	Cardinal n;
 	unsigned len = 0;
-	int save = 0;
 	int code = -1;
+#define MAX_TNAME_LEN 6
+	char name[MAX_TNAME_LEN];
+	char *p;
 
-	while ((*params)[len] != 0 && (*params)[len] != ';')
-		len++;
-	save = (*params)[len];
-	(*params)[len] = 0;
-
+	/* Convert hex encoded name to ascii */
+	for (p = params; hex2int(p[0]) >= 0 && hex2int(p[1]) >= 0; p += 2) {
+		if (len == MAX_TNAME_LEN - 1)
+			return -1;
+		name[len++] = (hex2int(p[0]) << 4) + hex2int(p[1]);
+	}
+	if (*p)
+		return -1;
+	name[len] = 0;
 	for (n = 0; n < XtNumber(table); n++) {
-		if (!strcmp(table[n].ti, *params)
-		 || !strcmp(table[n].tc, *params)) {
+		if (!strcmp(table[n].ti, name) || !strcmp(table[n].tc, name)) {
 			code = table[n].code;
 			*state = table[n].state;
 			break;
 		}
 	}
-	if (((*params)[len] = save) != 0)
-		len++;
-	*params = *params + len;
 	return code;
 }
 #endif

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: misc.c /main/112 1996/11/29 10:34:07 swick $
- *	$XFree86: xc/programs/xterm/misc.c,v 3.58 2000/11/02 16:33:29 tsi Exp $
+ *	$XFree86: xc/programs/xterm/misc.c,v 3.59 2000/12/07 10:12:33 dickey Exp $
  */
 
 /*
@@ -58,15 +58,11 @@
 
 #include <xterm.h>
 
-#include <X11/Xos.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <signal.h>
 #include <ctype.h>
 #include <pwd.h>
-
-#include <sys/types.h>
 #include <sys/wait.h>
 
 #include <X11/Xatom.h>
@@ -274,7 +270,7 @@ void HandleStringEvent(
 
     if ((*params)[0] == '0' && (*params)[1] == 'x' && (*params)[2] != '\0') {
 	Char c, *p;
-	char hexval[2];
+	Char hexval[2];
 	hexval[0] = hexval[1] = 0;
 	for (p = (Char *)(*params+2); (c = *p); p++) {
 	    hexval[0] *= 16;
@@ -289,7 +285,7 @@ void HandleStringEvent(
 	    StringInput (screen, hexval, 1);
     }
     else {
-	StringInput (screen, *params, strlen(*params));
+	StringInput (screen, (Char *)*params, strlen(*params));
     }
 }
 
@@ -1387,9 +1383,6 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 	Bool okay;
 	Bool clear_all;
 	Bool lock_keys;
-#if OPT_TCAP_QUERY
-	char *tmp;
-#endif
 
 	TRACE(("do_dcs(%s:%d)\n", (char *)dcsbuf, dcslen));
 
@@ -1496,51 +1489,41 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 		cp++;
 		if (*cp == 'q') {
 			unsigned state;
-			okay = True;
-			for (tmp = ++cp; *tmp;) {
-				if (xtermcapKeycode(&tmp, &state) < 0) {
-					okay = False;
-					break;
-				}
-			}
+			int code;
+			char *tmp;
+
+			++cp;
+			code = xtermcapKeycode(cp, &state);
 			unparseputc1(DCS, screen->respond);
-			unparseputc(okay ? '1' : '0', screen->respond);
+			unparseputc(code >= 0 ? '1' : '0', screen->respond);
 			unparseputc('+', screen->respond);
 			unparseputc('r', screen->respond);
-			if (okay) {
-				int code;
-				int count = 0;
-				for (tmp = cp; *tmp;) {
-					screen->tc_query = -1;
-					if ((code = xtermcapKeycode(&tmp, &state)) >= 0) {
-						if (count++)
-							unparseputc(';', screen->respond);
-						screen->tc_query = code;
-						/* XK_COLORS is a fake code for the "Co" entry (maximum
-						 * number of colors) */
-						if (code == XK_COLORS) {
+			for (tmp = cp; *tmp; ++tmp)
+				unparseputc(*tmp, screen->respond);
+			if (code >= 0) {
+				unparseputc('=', screen->respond);
+				screen->tc_query = code;
+				/* XK_COLORS is a fake code for the "Co" entry (maximum
+				 * number of colors) */
+				if (code == XK_COLORS) {
 # if OPT_256_COLORS
-							unparseputc('2', screen->respond);
-							unparseputc('5', screen->respond);
-							unparseputc('6', screen->respond);
+					unparseputc('2', screen->respond);
+					unparseputc('5', screen->respond);
+					unparseputc('6', screen->respond);
 # elif OPT_88_COLORS
-							unparseputc('8', screen->respond);
-							unparseputc('8', screen->respond);
+					unparseputc('8', screen->respond);
+					unparseputc('8', screen->respond);
 # else
-							unparseputc('1', screen->respond);
-							unparseputc('6', screen->respond);
+					unparseputc('1', screen->respond);
+					unparseputc('6', screen->respond);
 # endif
-
-						}
-						else {
-							XKeyEvent event;
-							event.state = state;
-							Input (&(term->keyboard),
-									screen, &event, False);
-						}
-						screen->tc_query = -1;
-					}
 				}
+				else {
+					XKeyEvent event;
+					event.state = state;
+					Input(&(term->keyboard), screen, &event, False);
+				}
+				screen->tc_query = -1;
 			}
 			unparseputc1(ST, screen->respond);
 		}

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-4_0_1e
+MANIFEST for xterm, version xterm-149
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -83,6 +83,7 @@ xterm.dat                       application defaults for VMS port of 'xterm'
 xterm.h                         common includes, definitions and prototypes for 'xterm'
 xterm.man                       manual page for 'xterm'
 xterm_axp.opt                   linker options file for VMS port of 'xterm'
+xterm_io.h                      split-out definitions of termio/termios/sgtty and winsize from main.c, os2main.c, screen.c and resize.c
 xtermcfg.hin                    configure script: template for xtermcfg.h
 tektests                        subdirectory
 tektests/aitest.tek             tek4014 demo: draw a globe

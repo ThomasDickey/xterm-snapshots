@@ -49,7 +49,7 @@ in this Software without prior written authorization from the X Consortium.
 
 */
 
-#include <ptyx.h>
+#include <xterm.h>
 #include <data.h>
 #include <menu.h>
 #include <fontutils.h>
@@ -70,12 +70,6 @@ in this Software without prior written authorization from the X Consortium.
 
 #include <stdio.h>
 #include <signal.h>
-
-#ifdef MINIX
-#include <X11/Xos.h>
-#endif
-
-#include <xterm.h>
 
 static void do_8bit_control    PROTO_XT_CALLBACK_ARGS;
 static void do_allow132        PROTO_XT_CALLBACK_ARGS;

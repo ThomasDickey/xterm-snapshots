@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.65 2000/11/01 01:12:45 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.66 2000/12/07 02:43:00 dickey Exp $
 .\"
 .\"
 .\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey
@@ -2560,14 +2560,40 @@ Most of these operations are standardized, from either the DEC or Tektronix
 terminals, or from more widely used standards such as ISO 6429.
 .SH ENVIRONMENT
 .I Xterm
-sets the environment variables ``TERM'' and ``TERMCAP'' properly for the
-size window you have created.
+sets the environment variables ``TERM'' for the window you have created.
 It also uses and sets the environment
 variable ``DISPLAY'' to specify which bit map display terminal to use.
 The environment variable ``WINDOWID'' is set to the X window id number
 of the
 .I xterm
 window.
+.PP
+Depending on your system configuration, \fIxterm\fP may also set the
+following:
+.TP 5
+COLUMNS
+the width of the \fIxterm\fP in characters (cf: "stty columns").
+.TP 5
+HOME
+when \fIxterm\fP is configured to update utmp.
+.TP 5
+LINES
+the height of the \fIxterm\fP in characters (cf: "stty rows").
+.TP 5
+LOGNAME
+when \fIxterm\fP is configured to update utmp.
+.TP 5
+SHELL
+when \fIxterm\fP is configured to update utmp.
+.TP 5
+TERMCAP
+the contents of the termcap entry corresponding to $TERM,
+with lines and columns values substituted
+for the actual size window you have created.
+.TP 5
+TERMINFO
+may be defined to a nonstandard location in the configure script.
+.\"
 .SH FILES
 The actual pathnames given may differ on your system.
 .TP 5
