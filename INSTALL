@@ -36,7 +36,7 @@ The options (in alphabetic order):
   --disable-active-icon   disable X11R6.3 active-icon feature (default: on)
   --disable-ansi-color    disable ANSI color (default: on)
   --disable-bold-color    disable PC-style mapping of bold colors (default: on)
-  --disable-boxchars      disable fallback-support for box chars
+  --disable-boxchars      disable fallback-support for box chars (default: on)
   --disable-color-mode    disable default colorMode resource (default: on)
   --disable-doublechars   disable support for double-size chars (default: on)
   --disable-echo          test: display "compiling" commands (default: on)

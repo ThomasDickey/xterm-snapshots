@@ -52,8 +52,6 @@ extern MenuEntry fontMenuEntries[];
 extern MenuEntry tekMenuEntries[];
 #endif
 
-extern Arg menuArgs[];
-
 extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
@@ -218,16 +216,11 @@ typedef enum {
  * macros for updating menus
  */
 
-#define update_menu_item(w,mi,val) { if (mi) { \
-    menuArgs[0].value = (XtArgVal) ((val) ? term->screen.menu_item_bitmap \
-				          : None); \
-    XtSetValues (mi, menuArgs, (Cardinal) 1); }}
+#define update_menu_item(w,mi,val) UpdateMenuItem(mi,val)
+extern void UpdateMenuItem(Widget mi, XtArgVal val);
 
-
-#define set_sensitivity(w,mi,val) { if (mi) { \
-    menuArgs[1].value = (XtArgVal) (val); \
-    XtSetValues (mi, menuArgs+1, (Cardinal) 1);  }}
-
+#define set_sensitivity(w,mi,val) SetItemSensitivity(mi,val)
+extern void SetItemSensitivity(Widget mi, XtArgVal val);
 
 
 /*
@@ -397,10 +390,10 @@ typedef enum {
 #define update_vttekmode() { \
     update_menu_item (term->screen.vtMenu, \
 		      vtMenuEntries[vtMenu_tekmode].widget, \
-		      term->screen.TekEmu) \
+		      term->screen.TekEmu); \
     update_menu_item (term->screen.tekMenu, \
 		      tekMenuEntries[tekMenu_vtmode].widget, \
-		      !term->screen.TekEmu) }
+		      !term->screen.TekEmu); }
 
 #define update_vtshow() \
   update_menu_item (term->screen.tekMenu, \

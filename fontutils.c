@@ -356,6 +356,8 @@ same_font_size(XFontStruct *nfs, XFontStruct *bfs)
 
 #define EmptyFont(fs) ((fs)->ascent + (fs)->descent == 0 \
 		   ||  (fs)->max_bounds.width == 0)
+#define FontSize(fs) (((fs)->ascent + (fs)->descent) \
+		    *  (fs)->max_bounds.width)
 
 int
 xtermLoadFont (
@@ -522,6 +524,9 @@ xtermLoadFont (
 				fontMenuEntries[fontMenu_fontescape].widget,
 				TRUE);
 		}
+#if OPT_SHIFT_KEYS
+		screen->menu_font_sizes[fontnum] = FontSize(nfs);
+#endif
 	}
 	set_cursor_gcs (screen);
 	xtermUpdateFontInfo (screen, doresize);
@@ -874,3 +879,176 @@ xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y)
 	XFreeGC(screen->display, gc2);
 }
 #endif
+
+#if OPT_SHIFT_KEYS
+static XFontStruct *
+xtermFindFont (
+	TScreen *screen,
+	int fontnum)
+{
+	XFontStruct *nfs = 0;
+	char *name;
+
+	if ((name = screen->menu_font_names[fontnum]) != 0
+	 && (nfs = XLoadQueryFont (screen->display, name)) != 0) {
+		if (EmptyFont(nfs)) {
+			XFreeFont (screen->display, nfs);
+			nfs = 0;
+		}
+	}
+	return nfs;
+}
+
+/*
+ * Cache the font-sizes so subsequent larger/smaller font actions will go fast.
+ */
+static void
+lookupFontSizes(TScreen *screen)
+{
+	int n;
+	for (n = 0; n < NMENUFONTS; n++) {
+		if (screen->menu_font_sizes[n] == 0) {
+			XFontStruct *fs = xtermFindFont(screen, n);
+			screen->menu_font_sizes[n] = -1;
+			if (fs != 0) {
+				screen->menu_font_sizes[n] = FontSize(fs);
+				TRACE(("menu_font_sizes[%d] = %ld\n", n, 
+					screen->menu_font_sizes[n]))
+				XFreeFont (screen->display, fs);
+			}
+		}
+	}
+}
+
+/* ARGSUSED */
+void
+HandleLargerFont(
+	Widget w GCC_UNUSED,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
+{
+	TScreen *screen = &term->screen;
+	int n, m;
+
+	lookupFontSizes(screen);
+	for (n = 0, m = -1; n < NMENUFONTS; n++) {
+		if ((screen->menu_font_sizes[n] > screen->menu_font_sizes[screen->menu_font_number])
+		 && ((m < 0)
+		  || (screen->menu_font_sizes[n] < screen->menu_font_sizes[m])))
+			m = n;
+	}
+	if (m >= 0) {
+		SetVTFont (m, TRUE, NULL, NULL);
+	} else {
+		Bell(XkbBI_MinorError,0);
+	}
+}
+
+/* ARGSUSED */
+void
+HandleSmallerFont(
+	Widget w GCC_UNUSED,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
+{
+	TScreen *screen = &term->screen;
+	int n, m;
+
+	lookupFontSizes(screen);
+	for (n = 0, m = -1; n < NMENUFONTS; n++) {
+		if ((screen->menu_font_sizes[n] < screen->menu_font_sizes[screen->menu_font_number])
+		 && (screen->menu_font_sizes[n] > 0)
+		 && ((m < 0)
+		  || (screen->menu_font_sizes[n] > screen->menu_font_sizes[m])))
+			m = n;
+	}
+	if (m >= 0) {
+		SetVTFont (m, TRUE, NULL, NULL);
+	} else {
+		Bell(XkbBI_MinorError,0);
+	}
+}
+#endif
+
+/* ARGSUSED */
+void
+HandleSetFont(
+	Widget w GCC_UNUSED,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    int fontnum;
+    char *name1 = NULL, *name2 = NULL;
+
+    if (*param_count == 0) {
+	fontnum = fontMenu_fontdefault;
+    } else {
+	Cardinal maxparams = 1;		/* total number of params allowed */
+
+	switch (params[0][0]) {
+	  case 'd': case 'D': case '0':
+	    fontnum = fontMenu_fontdefault; break;
+	  case '1':
+	    fontnum = fontMenu_font1; break;
+	  case '2':
+	    fontnum = fontMenu_font2; break;
+	  case '3':
+	    fontnum = fontMenu_font3; break;
+	  case '4':
+	    fontnum = fontMenu_font4; break;
+	  case '5':
+	    fontnum = fontMenu_font5; break;
+	  case '6':
+	    fontnum = fontMenu_font6; break;
+	  case 'e': case 'E':
+	    fontnum = fontMenu_fontescape; maxparams = 3; break;
+	  case 's': case 'S':
+	    fontnum = fontMenu_fontsel; maxparams = 2; break;
+	  default:
+	    Bell(XkbBI_MinorError,0);
+	    return;
+	}
+	if (*param_count > maxparams) {	 /* see if extra args given */
+	    Bell(XkbBI_MinorError,0);
+	    return;
+	}
+	switch (*param_count) {		/* assign 'em */
+	  case 3:
+	    name2 = params[2];
+	    /* FALLTHRU */
+	  case 2:
+	    name1 = params[1];
+	    break;
+	}
+    }
+
+    SetVTFont (fontnum, True, name1, name2);
+}
+
+void SetVTFont (
+	int i,
+	Bool doresize,
+	char *name1,
+	char *name2)
+{
+    TScreen *screen = &term->screen;
+
+    if (i >= 0 && i < NMENUFONTS) {
+	if (i == fontMenu_fontsel) {	/* go get the selection */
+	    FindFontSelection (name1, False);  /* name1 = atom, name2 is ignored */
+	    return;
+	} else {
+	    if (name1 == 0)
+		name1 = screen->menu_font_names[i];
+	    if (xtermLoadFont(screen, name1, name2, doresize, i)) {
+		return;
+	    }
+	}
+    }
+
+    Bell(XkbBI_MinorError,0);
+    return;
+}

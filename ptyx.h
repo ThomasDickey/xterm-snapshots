@@ -213,6 +213,8 @@ typedef Char **ScrnBuf;
 #define DFT_KBD_DIALECT "B"		/* default USASCII */
 #endif
 
+#define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */
+
 #define NMENUFONTS 9			/* font entries in fontMenu */
 
 #define	NBOX	5			/* Number of Points in box	*/
@@ -362,6 +364,10 @@ typedef struct {
 
 #ifndef OPT_PRINT_COLORS
 #define OPT_PRINT_COLORS 1 /* true if we print color information */
+#endif
+
+#ifndef OPT_SHIFT_KEYS
+#define OPT_SHIFT_KEYS  1 /* true if xterm interprets shifted special-keys */
 #endif
 
 #ifndef OPT_SUNPC_KBD
@@ -845,6 +851,7 @@ typedef struct {
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
 	Widget		mainMenu, vtMenu, tekMenu, fontMenu;
 	String		menu_font_names[NMENUFONTS];
+	unsigned long	menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
 	XIC		xic;
 } TScreen;
@@ -909,6 +916,9 @@ typedef struct _Misc {
 #endif /* NO_ACTIVE_ICON */
 #if OPT_DEC_SOFTFONT
     Boolean font_loadable;
+#endif
+#if OPT_SHIFT_KEYS
+    Boolean shift_keys;		/* true if we interpret shifted special-keys */
 #endif
 } Misc;
 

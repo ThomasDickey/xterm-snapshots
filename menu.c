@@ -30,6 +30,7 @@ in this Software without prior written authorization from the X Consortium.
 #include <ptyx.h>
 #include <data.h>
 #include <menu.h>
+#include <fontutils.h>
 
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
@@ -45,9 +46,6 @@ in this Software without prior written authorization from the X Consortium.
 #endif
 
 #include <xterm.h>
-
-Arg menuArgs[2] = {{ XtNleftBitmap, (XtArgVal) 0 },
-		   { XtNsensitive, (XtArgVal) 0 }};
 
 static void do_8bit_control    PROTO_XT_CALLBACK_ARGS;
 static void do_allow132        PROTO_XT_CALLBACK_ARGS;
@@ -696,14 +694,7 @@ static void do_scrollbar (
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    register TScreen *screen = &term->screen;
-
-    if (screen->fullVwin.scrollbar) {
-	ScrollBarOff (screen);
-    } else {
-	ScrollBarOn (term, FALSE, FALSE);
-    }
-    update_scrollbar();
+    ToggleScrollBar(term);
 }
 
 
@@ -1651,3 +1642,27 @@ void HandleTekCopy(
     do_tekcopy(w, (XtPointer)0, (XtPointer)0);
 }
 #endif /* OPT_TEK4014 */
+
+void
+UpdateMenuItem(Widget mi, XtArgVal val)
+{
+	static Arg menuArgs = { XtNleftBitmap, (XtArgVal) 0 };
+
+	if (mi) {
+		menuArgs.value = (XtArgVal) ((val)
+				? term->screen.menu_item_bitmap
+				: None);
+		XtSetValues (mi, &menuArgs, (Cardinal) 1);
+	}
+}
+
+void
+SetItemSensitivity(Widget mi, XtArgVal val)
+{
+	static Arg menuArgs = { XtNsensitive, (XtArgVal) 0 };
+
+	if (mi) {
+		menuArgs.value = (XtArgVal) (val);
+		XtSetValues (mi, &menuArgs, (Cardinal) 1);
+	}
+}

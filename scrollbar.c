@@ -406,6 +406,22 @@ ScrollBarOff(register TScreen *screen)
 	}
 }
 
+/*
+ * Toggle the visibility of the scrollbars.
+ */
+void
+ToggleScrollBar(XtermWidget w)
+{
+    register TScreen *screen = &w->screen;
+
+    if (screen->fullVwin.scrollbar) {
+	ScrollBarOff (screen);
+    } else {
+	ScrollBarOn (w, FALSE, FALSE);
+    }
+    update_scrollbar();
+}
+
 /*ARGSUSED*/
 static void
 ScrollTextTo(
