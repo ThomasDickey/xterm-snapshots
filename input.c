@@ -65,6 +65,8 @@
 #endif
 
 #include <X11/Xutil.h>
+#include <X11/StringDefs.h>
+#include <ctype.h>
 
 #include <data.h>
 #include <fontutils.h>
@@ -428,6 +430,7 @@ Input (
 	    } else {
 		ModifierParm(5, 1);
 	    }
+	    TRACE(("...ModifierParm %d\n", modify_parm));
 	}
 
 #if OPT_SHIFT_KEYS
@@ -510,7 +513,13 @@ Input (
 		key = TRUE;
 	 } else if (IsFunctionKey(keysym)
 		|| IsMiscFunctionKey(keysym)
-		|| IsEditFunctionKey(keysym)) {
+		|| IsEditFunctionKey(keysym)
+		|| ((keysym == XK_Delete)
+		 && ((modify_parm > 1)
+#if OPT_SUNPC_KBD
+		  || sunKeyboard
+#endif
+		  ))) {
 #if OPT_SUNPC_KBD
 		if (sunKeyboard) {
 			if ((event->state & ControlMask)
@@ -732,34 +741,34 @@ sunfuncvalue (KeySym  keycode)
 		case XK_F11:	return(192);
 		case XK_F12:	return(193);
 		case XK_F13:	return(194);
-		case XK_F14:	return(195);
+		case XK_F14:	return(195);	/* kund */
 		case XK_F15:	return(196);
-		case XK_Help:	return(196);
-		case XK_F16:	return(197);
+		case XK_Help:	return(196);	/* khlp */
+		case XK_F16:	return(197);	/* kcpy */
 		case XK_Menu:	return(197);
 		case XK_F17:	return(198);
 		case XK_F18:	return(199);
-		case XK_F19:	return(200);
+		case XK_F19:	return(200);	/* kfnd */
 		case XK_F20:	return(201);
 
-		case XK_R1:	return(208);
-		case XK_R2:	return(209);
-		case XK_R3:	return(210);
-		case XK_R4:	return(211);
-		case XK_R5:	return(212);
-		case XK_R6:	return(213);
-		case XK_R7:	return(214);
-		case XK_R8:	return(215);
-		case XK_R9:	return(216);
-		case XK_R10:	return(217);
-		case XK_R11:	return(218);
-		case XK_R12:	return(219);
-		case XK_R13:	return(220);
-		case XK_R14:	return(221);
-		case XK_R15:	return(222);
+		case XK_R1:	return(208);	/* kf31 */
+		case XK_R2:	return(209);	/* kf32 */
+		case XK_R3:	return(210);	/* kf33 */
+		case XK_R4:	return(211);	/* kf34 */
+		case XK_R5:	return(212);	/* kf35 */
+		case XK_R6:	return(213);	/* kf36 */
+		case XK_R7:	return(214);	/* kf37 */
+		case XK_R8:	return(215);	/* kf38 */
+		case XK_R9:	return(216);	/* kf39=kpp */
+		case XK_R10:	return(217);	/* kf40 */
+		case XK_R11:	return(218);	/* kf41=kb2 */
+		case XK_R12:	return(219);	/* kf42 */
+		case XK_R13:	return(220);	/* kf43=kend */
+		case XK_R14:	return(221);	/* kf44 */
+		case XK_R15:	return(222);	/* kf45 */
 
 		case XK_Find :	return(1);
-		case XK_Insert:	return(2);
+		case XK_Insert:	return(2);	/* kich1 */
 		case XK_Delete:	return(3);
 #ifdef XK_KP_Insert
 		case XK_KP_Insert: return(2);
@@ -776,8 +785,58 @@ sunfuncvalue (KeySym  keycode)
 }
 
 #if OPT_NUM_LOCK
+static Bool
+TranslationsUseAlt(Widget w)
+{
+    static String data;
+    static XtResource key_resources[] = {
+	{ XtNtranslations, XtCTranslations, XtRString,
+	      sizeof(data), 0, XtRString, (XtPointer)NULL}
+    };
+    Bool result = False;
+
+    XtGetSubresources( w, (XtPointer)&data, "vt100", "VT100",
+		   key_resources, (Cardinal)1, NULL, (Cardinal)0 );
+
+    if (data != 0) {
+	static const char keyword[] = "alt";
+	char *p = data;
+	int state = 0;
+	int now = ' ', prv;
+	while (*p != 0) {
+	    prv = now;
+	    now = char2lower(*p++);
+	    if (now == ':'
+	     || now == '!') {
+		state = -1;
+	    } else if (now == '\n') {
+		state = 0;
+	    } else if (state >= 0) {
+		if (isgraph(now)
+		 && now == keyword[state]) {
+		    if ((state != 0
+		      || !isalnum(prv))
+		     && ((keyword[++state] == 0)
+		      && !isalnum(*p))) {
+			result = True;
+			break;
+		    }
+		} else {
+		    state = 0;
+		}
+	    }
+	}
+    }
+    return result;
+}
+
 /*
  * Determine which modifier mask (if any) applies to the Num_Lock keysym.
+ *
+ * Also, determine which modifiers are associated with the ALT keys, so we can
+ * send that information as a parameter for special keys in Sun/PC keyboard
+ * mode.  However, if the ALT modifier is used in translations, we do not want
+ * to confuse things by sending the parameter.
  */
 void
 VTInitModifiers(void)
@@ -813,6 +872,19 @@ VTInitModifiers(void)
 		}
 		k++;
 	    }
+	}
+
+	/*
+	 * If the Alt modifier is used in translations, we would rather not
+	 * use it to modify function-keys when NumLock is active.
+	 */
+	if ((term->misc.alt_left != 0
+	  || term->misc.alt_right != 0)
+	 && (TranslationsUseAlt(toplevel)
+	  || TranslationsUseAlt((Widget)term))) {
+	    TRACE(("ALT is used as a modifier in translations (ignore mask)\n"))
+	    term->misc.alt_left = 0;
+	    term->misc.alt_right = 0;
 	}
 
 	XFreeModifiermap(keymap);

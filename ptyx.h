@@ -369,7 +369,7 @@ typedef struct {
 #endif
 
 #ifndef OPT_I18N_SUPPORT
-#if (XtSpecificationRelease >= 6)
+#if (XtSpecificationRelease >= 5)
 #define OPT_I18N_SUPPORT 1 /* true if xterm uses internationalization support */
 #else
 #define OPT_I18N_SUPPORT 0

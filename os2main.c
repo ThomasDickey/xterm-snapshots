@@ -360,8 +360,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
 #if OPT_HP_FUNC_KEYS
-{"-hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "on"},
-{"+hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "off"},
+{"-hf",		"*hpFunctionKeys",XrmoptionNoArg,	(caddr_t) "on"},
+{"+hf",		"*hpFunctionKeys",XrmoptionNoArg,	(caddr_t) "off"},
 #endif
 {"-j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "off"},

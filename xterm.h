@@ -100,6 +100,10 @@ authorization.
 #define HAVE_UTMP_UT_SESSION 1
 #endif
 
+#if !(defined(linux) && (!defined(__GLIBC__) || (__GLIBC__ < 2))) && !defined(SVR4)
+#define ut_xstatus ut_exit.e_exit
+#endif
+
 #if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
 #define HAVE_UTMP_UT_XTIME 1
 #endif
@@ -120,8 +124,14 @@ authorization.
 #endif
 
 #if defined(__MVS__)
+#undef ut_xstatus
 #define ut_name ut_user
+#define ut_xstatus ut_exit.ut_e_exit
 #define ut_xtime ut_tv.tv_sec
+#endif
+
+#if defined(ut_xstatus)
+#define HAVE_UTMP_UT_XSTATUS 1
 #endif
 
 #endif /* HAVE_CONFIG_H */

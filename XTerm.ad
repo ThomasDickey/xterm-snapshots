@@ -25,7 +25,7 @@ XTerm.JoinSession:False
 *mainMenu*backarrow key*Label: Backarrow Key
 *mainMenu*num-lock*Label: Alt/NumLock Modifiers
 *mainMenu*sun function-keys*Label: Sun Function-Keys
-*mainMenu*sun keyboard*Label: Sun/PC Keyboard
+*mainMenu*sun keyboard*Label: VT220 Keyboard
 *mainMenu*hp function-keys*Label: HP Function-Keys
 *mainMenu*suspend*Label:  Send STOP Signal
 *mainMenu*continue*Label:  Send CONT Signal
