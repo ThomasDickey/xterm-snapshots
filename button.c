@@ -1675,12 +1675,12 @@ static int class_of(TScreen *screen, int row, int col)
     return CharacterClass(value);
 }
 #define ClassSelects(screen, row, col, cclass) \
-	 (class_of(screen,startSRow,startSCol) == cclass \
-	 || getXtermCell(screen, startSRow, startSCol) == HIDDEN_CHAR)
+	 (class_of(screen, row, col) == cclass \
+	 || getXtermCell(screen, row, col) == HIDDEN_CHAR)
 #else
 #define class_of(screen,row,col) charClass[XTERM_CELL(row, col)]
 #define ClassSelects(screen, row, col, cclass) \
-	 (class_of(screen,startSRow,startSCol) == cclass)
+	 (class_of(screen,row, col) == cclass)
 #endif
 
 /*

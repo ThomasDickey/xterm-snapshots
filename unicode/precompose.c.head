@@ -8,7 +8,7 @@
 #include <precompose.h>
 
 struct {
+  int replacement;
   int base;
   int comb; 
-  int replacement;
 } precompositions[] = {
