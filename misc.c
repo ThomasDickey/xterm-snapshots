@@ -94,7 +94,6 @@
 #endif
 
 extern char **environ;		/* used in 'Setenv()' */
-extern Widget toplevel;		/* used in 'ChangeGroup()' */
 
 #if OPT_TEK4014
 #define OUR_EVENT(event,Type) \
@@ -304,7 +303,7 @@ void HandleInterpret(
 	    VTbuffer.cnt += (need - used);
 	    VTbuffer.ptr -= used;
 	    for (n = 0; n < need; n++)
-		VTbuffer.ptr[n] = (value[n] & 0xff);
+		VTbuffer.ptr[n] = CharOf(value[n]);
 	}
     }
 }
@@ -1283,7 +1282,7 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 				if (term->flags & INVISIBLE)
 					strcat(reply, ";8");
 				if_OPT_256_COLORS(screen,{
-				if (term->flags & FG_COLOR)
+				if (term->flags & FG_COLOR) {
 					if (term->cur_foreground >= 16)
 						sprintf(reply+strlen(reply),
 							";38;5;%d", term->cur_foreground);
@@ -1294,7 +1293,8 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 							term->cur_foreground >= 8 ?
 							term->cur_foreground - 8 :
 							term->cur_foreground);
-				if (term->flags & BG_COLOR)
+				}
+				if (term->flags & BG_COLOR) {
 					if (term->cur_background >= 16)
 						sprintf(reply+strlen(reply),
 							";48;5;%d", term->cur_foreground);
@@ -1305,6 +1305,7 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 							term->cur_background >= 8 ?
 							term->cur_background - 8 :
 							term->cur_background);
+				}
 				})
 				if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 				if (term->flags & FG_COLOR)
@@ -1461,7 +1462,7 @@ Changetitle(register char *name)
     ChangeGroup( XtNtitle, (XtArgVal)name );
 }
 
-#define ustrlen(s) strlen((char *)(s))
+#define Strlen(s) strlen((char *)(s))
 
 void
 ChangeXprop(register char *buf)
@@ -1482,7 +1483,7 @@ ChangeXprop(register char *buf)
 	text_prop.value = pchEndPropName+1;
 	text_prop.encoding = XA_STRING;
 	text_prop.format = 8;
-	text_prop.nitems = ustrlen(text_prop.value);
+	text_prop.nitems = Strlen(text_prop.value);
 	XSetTextProperty(dpy,w,&text_prop,aprop);
     }
 }
@@ -1833,6 +1834,7 @@ XStrCmp(char *s1, char *s2)
 #if OPT_TEK4014
 static void withdraw_window (Display *dpy, Window w, int scr)
 {
+    TRACE(("withdraw_window %#lx\n", (long)w))
     (void) XmuUpdateMapHints (dpy, w, NULL);
     XWithdrawWindow (dpy, w, scr);
     return;
@@ -1844,10 +1846,15 @@ void set_vt_visibility (Boolean on)
 {
     register TScreen *screen = &term->screen;
 
+    TRACE(("set_vt_visibility(%d)\n", on))
     if (on) {
 	if (!screen->Vshow && term) {
 	    VTInit ();
-	    XtMapWidget (term->core.parent);
+	    XtMapWidget (XtParent(term));
+#if OPT_TOOLBAR
+	    /* we need both of these during initialization */
+	    XtMapWidget (SHELL_OF(term));
+#endif
 	    screen->Vshow = TRUE;
 	}
     }
@@ -1855,7 +1862,7 @@ void set_vt_visibility (Boolean on)
     else {
 	if (screen->Vshow && term) {
 	    withdraw_window (XtDisplay (term),
-			     XtWindow(XtParent(term)),
+			     XtWindow(SHELL_OF(term)),
 			     XScreenNumberOfScreen(XtScreen(term)));
 	    screen->Vshow = FALSE;
 	}
@@ -1875,9 +1882,11 @@ extern Atom wm_delete_window;	/* for ICCCM delete window */
 void set_tek_visibility (Boolean on)
 {
     register TScreen *screen = &term->screen;
+
+    TRACE(("set_tek_visibility(%d)\n", on))
     if (on) {
 	if (!screen->Tshow && (tekWidget || TekInit())) {
-	    Widget tekParent = tekWidget->core.parent;
+	    Widget tekParent = SHELL_OF(tekWidget);
 	    XtRealizeWidget (tekParent);
 	    XtMapWidget (tekParent);
 	    XtOverrideTranslations(tekParent,
@@ -1891,7 +1900,7 @@ void set_tek_visibility (Boolean on)
     } else {
 	if (screen->Tshow && tekWidget) {
 	    withdraw_window (XtDisplay (tekWidget),
-			     XtWindow(XtParent(tekWidget)),
+			     XtWindow(SHELL_OF(tekWidget)),
 			     XScreenNumberOfScreen(XtScreen(tekWidget)));
 	    screen->Tshow = FALSE;
 	}

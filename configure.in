@@ -300,6 +300,8 @@ CF_ARG_DISABLE(input-method,
 	[enable_ximp=no],
 	[enable_ximp=yes])
 AC_MSG_RESULT($enable_ximp)
+CF_INPUT_METHOD
+test "$cf_cv_input_method" = no && enable_ximp=no
 if test $enable_ximp = no ; then
 	AC_DEFINE(OPT_INPUT_METHOD,0)
 fi
@@ -370,6 +372,14 @@ else
 	EXTRASRCS="$EXTRASRCS TekPrsTbl.c Tekproc.c"
 	EXTRAOBJS="$EXTRAOBJS TekPrsTbl.o Tekproc.o"
 fi
+
+AC_MSG_CHECKING(if you want pulldown menus with a toolbar)
+CF_ARG_ENABLE(toolbar,
+	[  --enable-toolbar        compile-in toolbar for pulldown menus],
+	[enable_toolbar=yes],
+	[enable_toolbar=no])
+AC_MSG_RESULT($enable_toolbar)
+test $enable_toolbar = yes && AC_DEFINE(OPT_TOOLBAR,1)
 
 AC_MSG_CHECKING(if you want VT52 emulation)
 CF_ARG_DISABLE(vt52,

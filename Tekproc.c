@@ -66,6 +66,10 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/Shell.h>
 #include <X11/Xmu/CharSet.h>
 
+#if OPT_TOOLBAR
+#include <X11/Xaw/Form.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <signal.h>
@@ -88,8 +92,6 @@ extern time_t time ();
 #define read(f,b,s) nbio_read(f,b,s)
 #define write(f,b,s) nbio_write(f,b,s)
 #endif
-
-extern jmp_buf Tekend;
 
 #define DefaultGCID XGContextFromGC(DefaultGC(screen->display, DefaultScreen(screen->display)))
 
@@ -126,7 +128,6 @@ extern jmp_buf Tekend;
 #define	input()		Tinput()
 #define	unput(c)	*Tpushback++ = c
 
-extern Widget toplevel;
 extern Bool waiting_for_initial_map;
 extern Arg ourTopLevelShellArgs[];
 extern int number_ourTopLevelShellArgs;
@@ -248,6 +249,14 @@ static XtResource resources[] = {
     {"ginTerminator", "GinTerminator", XtRString, sizeof(char *),
        XtOffsetOf(TekWidgetRec, tek.gin_terminator_str),
        XtRString, GIN_TERM_NONE_STR},
+#if OPT_TOOLBAR
+    {XtNmenuBar, XtCMenuBar, XtRWidget, sizeof(Widget),
+       XtOffsetOf(TekWidgetRec, tek.menu_bar),
+       XtRWidget, (XtPointer) 0},
+    {XtNmenuHeight, XtCMenuHeight, XtRInt, sizeof(int),
+       XtOffsetOf(TekWidgetRec, tek.menu_height),
+       XtRString, "25"},
+#endif
 };
 
 static int Tinput (void);
@@ -306,31 +315,34 @@ static WidgetClassRec tekClassRec = {
 
 static Boolean Tfailed = FALSE;
 
-static Widget tekshellwidget;
-
-static TekWidget CreateTekWidget (void)
-{
-    /* this causes the Initialize method to be called */
-    tekshellwidget = XtCreatePopupShell ("tektronix", topLevelShellWidgetClass,
-					 toplevel, ourTopLevelShellArgs,
-					 number_ourTopLevelShellArgs);
-
-    /* this causes the Realize method to be called */
-    tekWidget = (TekWidget) XtCreateManagedWidget ("tek4014", tekWidgetClass,
-						   tekshellwidget, NULL, 0);
-
-    return (tekWidget);
-}
-
-
 int TekInit (void)
 {
-    if (Tfailed) return (0);
-    if (tekWidget) return (1);
-    if (CreateTekWidget()) {
-	return (1);
+    Widget form_top, menu_top;
+
+    if (!Tfailed
+     && tekWidget == 0) {
+	/* this causes the Initialize method to be called */
+	tekshellwidget = XtCreatePopupShell (
+			"tektronix", topLevelShellWidgetClass,
+			toplevel, ourTopLevelShellArgs,
+			number_ourTopLevelShellArgs);
+
+	SetupMenus(tekshellwidget, &form_top, &menu_top);
+
+	/* this causes the Realize method to be called */
+	tekWidget = (TekWidget) XtVaCreateManagedWidget (
+			"tek4014", tekWidgetClass, form_top,
+#if OPT_TOOLBAR
+			XtNmenuBar,	menu_top,
+			XtNresizable,	True,
+			XtNfromVert,	menu_top,
+			XtNleft,	XawChainLeft,
+			XtNright,	XawChainRight,
+			XtNbottom,	XawChainBottom,
+#endif
+			0);
     }
-    return (0);
+    return (!Tfailed);
 }
 
 /*
@@ -657,8 +669,8 @@ static void Tekparse(void)
 			if (screen->wide_chars
 			 && (ch > 255)) {
 				XChar2b sbuf;
-				sbuf.byte2 = (ch & 0xff);
-				sbuf.byte1 = ((ch >>8) & 0xff);
+				sbuf.byte2 = CharOf(ch);
+				sbuf.byte1 = CharOf(ch >>8);
 				XDrawImageString16(
 				    screen->display,
 				    TWindow(screen),
@@ -1225,7 +1237,7 @@ static unsigned char *dashes[TEKNUMLINES] = {
 
 
 /*
- * The following is called the create the tekWidget
+ * The following is called to create the tekWidget
  */
 
 static void TekInitialize(
@@ -1234,14 +1246,16 @@ static void TekInitialize(
     ArgList args GCC_UNUSED,
     Cardinal *num_args GCC_UNUSED)
 {
+    Widget tekparent = SHELL_OF(wnew);
+
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
      */
-    XtAddEventHandler(XtParent(wnew), EnterWindowMask, FALSE,
+    XtAddEventHandler(tekparent, EnterWindowMask, FALSE,
 		      HandleEnterWindow, (caddr_t)NULL);
-    XtAddEventHandler(XtParent(wnew), LeaveWindowMask, FALSE,
+    XtAddEventHandler(tekparent, LeaveWindowMask, FALSE,
 		      HandleLeaveWindow, (caddr_t)NULL);
-    XtAddEventHandler(XtParent(wnew), FocusChangeMask, FALSE,
+    XtAddEventHandler(tekparent, FocusChangeMask, FALSE,
 		      HandleFocusChange, (caddr_t)NULL);
     XtAddEventHandler((Widget)wnew, PropertyChangeMask, FALSE,
 		      HandleBellPropertyChange, (Opaque)NULL);
@@ -1308,10 +1322,10 @@ static void TekRealize (
     pr = XParseGeometry(term->misc.T_geometry, &winX, &winY, (unsigned int *)&width, (unsigned int *)&height);
     if ((pr & XValue) && (pr & XNegative))
       winX += DisplayWidth(screen->display, DefaultScreen(screen->display))
-			- width - (term->core.parent->core.border_width * 2);
+			- width - (SHELL_OF(term)->core.border_width * 2);
     if ((pr & YValue) && (pr & YNegative))
       winY += DisplayHeight(screen->display, DefaultScreen(screen->display))
-	- height - (term->core.parent->core.border_width * 2);
+	- height - (SHELL_OF(term)->core.border_width * 2);
 
     /* set up size hints */
     sizehints.min_width = TEKMINWIDTH + border;
@@ -1355,19 +1369,19 @@ static void TekRealize (
      * realized, so that it can do the right thing.
      */
     if (sizehints.flags & USPosition)
-      XMoveWindow (XtDisplay(tw), tw->core.parent->core.window,
+      XMoveWindow (XtDisplay(tw), XtWindow(SHELL_OF(tw)),
 		   sizehints.x, sizehints.y);
 
-    XSetWMNormalHints (XtDisplay(tw), tw->core.parent->core.window,
+    XSetWMNormalHints (XtDisplay(tw), XtWindow(SHELL_OF(tw)),
 		       &sizehints);
     XFlush (XtDisplay(tw));	/* get it out to window manager */
 
     values->win_gravity = NorthWestGravity;
     values->background_pixel = screen->Tbackground;
 
-    tw->core.window = TWindow(screen) =
+    XtWindow(tw) = TWindow(screen) =
 	XCreateWindow (screen->display,
-		       tw->core.parent->core.window,
+		       XtWindow(SHELL_OF(tw)),
 		       tw->core.x, tw->core.y,
 		       tw->core.width, tw->core.height, tw->core.border_width,
 		       (int) tw->core.depth,
@@ -1459,7 +1473,7 @@ static void TekRealize (
 
 	args[0].value = (XtArgVal)&icon_name;
 	args[1].value = (XtArgVal)&title;
-	XtGetValues (tw->core.parent, args, 2);
+	XtGetValues (SHELL_OF(tw), args, 2);
 	tek_icon_name = XtMalloc(strlen(icon_name)+7);
 	strcpy(tek_icon_name, icon_name);
 	strcat(tek_icon_name, "(Tek)");
@@ -1468,7 +1482,7 @@ static void TekRealize (
 	strcat(tek_title, "(Tek)");
 	args[0].value = (XtArgVal)tek_icon_name;
 	args[1].value = (XtArgVal)tek_title;
-	XtSetValues (tw->core.parent, args, 2);
+	XtSetValues (SHELL_OF(tw), args, 2);
 	XtFree( tek_icon_name );
 	XtFree( tek_title );
     }
@@ -1537,11 +1551,11 @@ ChangeTekColors(register TScreen *screen, ScrnColors *pNew)
 	if (tekWidget) {
 	    if (tekWidget->core.border_pixel == screen->Tbackground) {
 		tekWidget->core.border_pixel = screen->Tforeground;
-		tekWidget->core.parent->core.border_pixel =
+		XtParent(tekWidget)->core.border_pixel =
 		  screen->Tforeground;
-		if (tekWidget->core.parent->core.window)
+		if (XtWindow(XtParent(tekWidget)))
 		  XSetWindowBorder (screen->display,
-				    tekWidget->core.parent->core.window,
+				    XtWindow(XtParent(tekWidget)),
 				    tekWidget->core.border_pixel);
 	    }
 	}
@@ -1579,11 +1593,11 @@ TekReverseVideo(register TScreen *screen)
 	if (tekWidget) {
 	    if (tekWidget->core.border_pixel == screen->Tbackground) {
 		tekWidget->core.border_pixel = screen->Tforeground;
-		tekWidget->core.parent->core.border_pixel =
+		XtParent(tekWidget)->core.border_pixel =
 		  screen->Tforeground;
-		if (tekWidget->core.parent->core.window)
+		if (XtWindow(XtParent(tekWidget)))
 		  XSetWindowBorder (screen->display,
-				    tekWidget->core.parent->core.window,
+				    XtWindow(XtParent(tekWidget)),
 				    tekWidget->core.border_pixel);
 	    }
 	}

@@ -205,6 +205,8 @@ typedef enum {NORMAL, LEFTEXTENSION, RIGHTEXTENSION} EventMode;
 typedef unsigned char Char;		/* to support 8 bit chars */
 typedef Char **ScrnBuf;
 
+#define CharOf(n) ((n) & 0xff)
+
 /*
  * ANSI emulation.
  */
@@ -220,7 +222,6 @@ typedef Char **ScrnBuf;
 #define XPOUND	0x1E			/* internal mapping for '#'	*/
 #define US	0x1F
 #define	DEL	0x7F
-#define HTS     ('H'+0x40)
 #define	RI	0x8D
 #define	SS2	0x8E
 #define	SS3	0x8F
@@ -436,6 +437,10 @@ typedef struct {
 #define OPT_TEK4014     1 /* true if we're using tek4014 emulation */
 #endif
 
+#ifndef OPT_TOOLBAR
+#define OPT_TOOLBAR	0 /* true if xterm supports toolbar menus */
+#endif
+
 #ifndef OPT_TRACE
 #define OPT_TRACE       0 /* true if we're using debugging traces */
 #endif
@@ -597,6 +602,14 @@ extern char CONTROL(char);
 
 /***====================================================================***/
 
+#if OPT_TOOLBAR
+#define SHELL_OF(widget) XtParent(XtParent(widget))
+#else
+#define SHELL_OF(widget) XtParent(widget)
+#endif
+
+/***====================================================================***/
+
 #if OPT_VT52_MODE
 #define if_OPT_VT52_MODE(screen, code) if(screen->ansi_level == 0) code
 #else
@@ -722,6 +735,16 @@ typedef enum {
 #define DoSM(code,value) screen->save_modes[code] = value
 #define DoRM(code,value) value = screen->save_modes[code]
 
+	/* index into vt_shell[] or tek_shell[] */
+typedef enum {
+	mainMenu,
+	vtMenu,
+	fontMenu,
+	tekMenu
+} MenuIndex;
+
+#define NUM_POPUP_MENUS 4
+
 typedef struct {
 	Boolean		saved;
 	int		row;
@@ -738,19 +761,32 @@ typedef struct {
 } SavedCursor;
 
 struct _vtwin {
-	Window	window;			/* X window id			*/
-	int	width;			/* width of columns		*/
-	int	height;			/* height of rows		*/
-	int	fullwidth;		/* full width of window		*/
-	int	fullheight;		/* full height of window	*/
-	int	f_width;		/* width of fonts in pixels	*/
-	int	f_height;		/* height of fonts in pixels	*/
-	int	scrollbar;		/* if > 0, width of scrollbar, and
-						scrollbar is showing	*/
-	GC	normalGC;		/* normal painting		*/
-	GC	reverseGC;		/* reverse painting		*/
-	GC	normalboldGC;		/* normal painting, bold font	*/
-	GC	reverseboldGC;		/* reverse painting, bold font	*/
+	Window		window;		/* X window id			*/
+	int		width;		/* width of columns		*/
+	int		height;		/* height of rows		*/
+	int		fullwidth;	/* full width of window		*/
+	int		fullheight;	/* full height of window	*/
+	int		f_width;	/* width of fonts in pixels	*/
+	int		f_height;	/* height of fonts in pixels	*/
+	int		scrollbar;	/* if > 0, width of scrollbar,	*/
+					/* and scrollbar is showing	*/
+	GC		normalGC;	/* normal painting		*/
+	GC		reverseGC;	/* reverse painting		*/
+	GC		normalboldGC;	/* normal painting, bold font	*/
+	GC		reverseboldGC;	/* reverse painting, bold font	*/
+#if OPT_TOOLBAR
+	Widget		menu_bar;	/* toolbar, if initialized	*/
+	Dimension	menu_height;	/* ...and its height		*/
+#endif
+};
+
+struct _tekwin {
+	Window		window;		/* X window id			*/
+	int		width;		/* width of columns		*/
+	int		height;		/* height of rows		*/
+	int		fullwidth;	/* full width of window		*/
+	int		fullheight;	/* full height of window	*/
+	double		tekscale;	/* scale factor Tek -> vs100	*/
 };
 
 typedef struct {
@@ -823,12 +859,13 @@ typedef struct {
 
 /* VT window parameters */
 	Boolean		Vshow;		/* VT window showing		*/
-	struct _vtwin fullVwin;
+	struct _vtwin	fullVwin;
 #ifndef NO_ACTIVE_ICON
-	struct _vtwin iconVwin;
-	struct _vtwin *whichVwin;
+	struct _vtwin	iconVwin;
+	struct _vtwin *	whichVwin;
 #endif /* NO_ACTIVE_ICON */
-	Cursor pointer_cursor;		/* pointer cursor in window	*/
+
+	Cursor	pointer_cursor;		/* pointer cursor in window	*/
 
 	String	answer_back;		/* response to ENQ		*/
 	String	printer_command;	/* pipe/shell command string	*/
@@ -836,7 +873,7 @@ typedef struct {
 	Boolean printer_extent;		/* print complete page		*/
 	Boolean printer_formfeed;	/* print formfeed per function	*/
 	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
-#ifdef OPT_PRINT_COLORS
+#if OPT_PRINT_COLORS
 	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
 #endif
 
@@ -948,21 +985,16 @@ typedef struct {
 	Pixel		Tforeground;	/* foreground color		*/
 	Pixel		Tbackground;	/* Background color		*/
 	Pixel		Tcursorcolor;	/* Cursor color			*/
+
 	int		Tcolor;		/* colors used			*/
 	Boolean		Tshow;		/* Tek window showing		*/
 	Boolean		waitrefresh;	/* postpone refresh		*/
-	struct _tekwin {
-		Window	window;		/* X window id			*/
-		int	width;		/* width of columns		*/
-		int	height;		/* height of rows		*/
-		int	fullwidth;	/* full width of window		*/
-		int	fullheight;	/* full height of window	*/
-		double	tekscale;	/* scale factor Tek -> vs100	*/
-	} fullTwin;
+	struct _tekwin	fullTwin;
 #ifndef NO_ACTIVE_ICON
-	struct _tekwin iconTwin;
+	struct _tekwin	iconTwin;
 	struct _tekwin *whichTwin;
 #endif /* NO_ACTIVE_ICON */
+
 	int		xorplane;	/* z plane for inverts		*/
 	GC		linepat[TEKNUMLINES]; /* line patterns		*/
 	Boolean		TekEmu;		/* true if Tektronix emulation	*/
@@ -999,7 +1031,6 @@ typedef struct {
 	Boolean		control_eight_bits; /* send CSI as 8-bits */
 	Boolean		backarrow_key;		/* backspace/delete */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
-	Widget		mainMenu, vtMenu, tekMenu, fontMenu;
 	String		menu_font_names[NMENUFONTS];
 	unsigned long	menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
@@ -1007,10 +1038,14 @@ typedef struct {
 } TScreen;
 
 typedef struct _TekPart {
-    XFontStruct *Tfont[TEKNUMFONTS];
-    int		tobaseline[TEKNUMFONTS]; /* top to baseline for each font */
-    char	*initial_font;		/* large, 2, 3, small */
-    char	*gin_terminator_str;	/* ginTerminator resource */
+	XFontStruct *	Tfont[TEKNUMFONTS];
+	int		tobaseline[TEKNUMFONTS]; /* top-baseline, each font */
+	char *		initial_font;		/* large, 2, 3, small */
+	char *		gin_terminator_str;	/* ginTerminator resource */
+#if OPT_TOOLBAR
+	Widget		menu_bar;	/* toolbar, if initialized	*/
+	Dimension	menu_height;	/* ...and its height		*/
+#endif
 } TekPart;
 
 
@@ -1210,9 +1245,9 @@ typedef struct _TekWidgetRec {
 #ifndef NO_ACTIVE_ICON
 #define IsIcon(screen)		((screen)->whichVwin == &(screen)->iconVwin)
 #define VWindow(screen)		((screen)->whichVwin->window)
-#define VShellWindow		term->core.parent->core.window
+#define VShellWindow		XtWindow(SHELL_OF(term))
 #define TWindow(screen)		((screen)->whichTwin->window)
-#define TShellWindow		tekWidget->core.parent->core.window
+#define TShellWindow		XtWindow(SHELL_OF(tekWidget))
 #define Width(screen)		((screen)->whichVwin->width)
 #define Height(screen)		((screen)->whichVwin->height)
 #define FullWidth(screen)	((screen)->whichVwin->fullwidth)
@@ -1238,9 +1273,9 @@ typedef struct _TekWidgetRec {
 
 #define IsIcon(screen)		(False)
 #define VWindow(screen)		((screen)->fullVwin.window)
-#define VShellWindow		term->core.parent->core.window
+#define VShellWindow		XtWindow(SHELL_OF(term))
 #define TWindow(screen)		((screen)->fullTwin.window)
-#define TShellWindow		tekWidget->core.parent->core.window
+#define TShellWindow		XtWindow(SHELL_OF(tekWidget))
 #define Width(screen)		((screen)->fullVwin.width)
 #define Height(screen)		((screen)->fullVwin.height)
 #define FullWidth(screen)	((screen)->fullVwin.fullwidth)
@@ -1261,12 +1296,6 @@ typedef struct _TekWidgetRec {
 #define TekScale(screen)	((screen)->fullTwin.tekscale)
 
 #endif /* NO_ACTIVE_ICON */
-
-#define	TWINDOWEVENTS	(KeyPressMask | ExposureMask | ButtonPressMask |\
-			 ButtonReleaseMask | StructureNotifyMask |\
-			 EnterWindowMask | LeaveWindowMask | FocusChangeMask)
-
-#define	WINDOWEVENTS	(TWINDOWEVENTS | PointerMotionMask)
 
 #if OPT_TEK4014
 #define TEK_LINK_BLOCK_SIZE 1024

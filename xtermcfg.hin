@@ -67,10 +67,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_NUM_LOCK		/* CF_ARG_DISABLE(num-lock) */
 #undef OPT_PC_COLORS		/* CF_ARG_DISABLE(pc-color) */
 #undef OPT_TEK4014		/* CF_ARG_DISABLE(tek4014) */
+#undef OPT_TOOLBAR		/* CF_ARG_ENABLE(toolbar) */
 #undef OPT_TRACE		/* CF_ARG_ENABLE(trace) */
 #undef OPT_VT52_MODE		/* CF_ARG_DISABLE(vt52) */
 #undef OPT_WIDE_CHARS		/* CF_ARG_ENABLE(wide-chars) */
 #undef OPT_XMC_GLITCH		/* CF_ARG_ENABLE(xmc-glitch) */
+#undef OPT_ZICONBEEP		/* CF_ARG_DISABLE(ziconbeep) */
 #undef OWN_TERMINFO_DIR		/* AC_ARG_WITH(own-terminfo) */
 #undef SCROLLBAR_RIGHT		/* CF_ARG_ENABLE(rightbar) */
 #undef USE_MY_MEMMOVE		/* CF_FUNC_MEMMOVE */

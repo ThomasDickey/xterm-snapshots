@@ -118,6 +118,7 @@ extern void HandleTiteInhibit      PROTO_XT_ACTIONS_ARGS;
 extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
 
 extern void DoSecureKeyboard (Time tp);
+extern void SetupMenus (Widget shell, Widget *forms, Widget *menus);
 
 /*
  * The following definitions MUST match the order of entries given in

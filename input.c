@@ -5,9 +5,9 @@
 
 /*
  * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
- * 
+ *
  *                         All Rights Reserved
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -15,10 +15,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -26,13 +26,13 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  * Except as contained in this notice, the name(s) of the above copyright
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- * 
- * 
+ *
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -276,7 +276,7 @@ Input (
 #define STRBUFSIZE 500
 
 	char strbuf[STRBUFSIZE];
-	register char *string;
+	register Char *string;
 	register int key = FALSE;
 	int	pty	= screen->respond;
 	int	nbytes;
@@ -322,7 +322,7 @@ Input (
 		if (nbytes == 1) {
 		/* Take ISO 8859-1 character delivered by XLookupString() */
 			ucs = (unsigned char) strbuf[0];
-		} else if (!nbytes && 
+		} else if (!nbytes &&
 			   ((keysym >= 0x100 && keysym <= 0xf000) ||
 			    (keysym & 0xff000000U) == 0x01000000))
 			ucs = keysym2ucs(keysym);
@@ -335,13 +335,13 @@ Input (
 	}
 #endif
 
-	string = &strbuf[0];
+	string = (Char *)&strbuf[0];
 	reply.a_pintro = 0;
 	reply.a_final = 0;
 	reply.a_nparam = 0;
 	reply.a_inters = 0;
 
-	TRACE(("Input keysym %#04lx, %d:'%.*s'%s%s%s%s%s%s%s%s %s\n",
+	TRACE(("Input keysym %#04lx, %d:'%.*s'%s%s%s%s%s%s%s%s%s%s%s%s\n",
 		keysym,
 		nbytes,
 		nbytes > 0 ? nbytes : 1,
@@ -354,11 +354,14 @@ Input (
 		ModifierName(event->state & Mod3Mask),
 		ModifierName(event->state & Mod4Mask),
 		ModifierName(event->state & Mod5Mask),
-		eightbit ? "8bit" : "7bit"))
+		eightbit ? " 8bit" : " 7bit",
+		IsFunctionKey(keysym)     ? " FKey"     : "",
+		IsMiscFunctionKey(keysym) ? " MiscFKey" : "",
+		IsEditFunctionKey(keysym) ? " EditFkey" : ""))
 
 #if OPT_SUNPC_KBD
 	/*
-	 * DEC keyboards don't have keypad(+), but do have keypad(,) instead. 
+	 * DEC keyboards don't have keypad(+), but do have keypad(,) instead.
 	 * Other (Sun, PC) keyboards commonly have keypad(+), but no keypad(,)
 	 * - it's a pain for users to work around.
 	 */
@@ -387,7 +390,8 @@ Input (
 	if (nbytes == 1
 	 && IsKeypadKey(keysym)
 	 && term->misc.real_NumLock
-	 && (term->misc.num_lock & event->state) != 0) {
+	 && ((term->misc.num_lock == 0)
+	  || (term->misc.num_lock & event->state) != 0)) {
 		keypad_mode = 0;
 		TRACE(("...Input num_lock, force keypad_mode off\n"))
 	}
@@ -441,16 +445,6 @@ Input (
 		}
 	}
 #endif
-
-	/* VT220 & up: National Replacement Characters */
-	if ((nbytes == 1)
-	 && (term->flags & NATIONAL)) {
-		keysym = xtermCharSetIn(keysym, screen->keyboard_dialect[0]);
-		if (keysym < 128) {
-			strbuf[0] = keysym;
-			TRACE(("...input NRC changed to %d\n", *strbuf))
-		}
-	}
 
 	/* VT300 & up: backarrow toggle */
 	if ((nbytes == 1)
@@ -530,7 +524,7 @@ Input (
 #if OPT_SUNPC_KBD
 		 && sunKeyboard
 #endif
-		 && ((string = udk_lookup(dec_code, &nbytes)) != 0)) {
+		 && ((string = (Char *)udk_lookup(dec_code, &nbytes)) != 0)) {
 			while (nbytes-- > 0)
 				unparseputc(*string++, pty);
 		}
@@ -583,11 +577,29 @@ Input (
 			nbytes--;
 		}
 #endif
-		if ((nbytes == 1) && eightbit) {
-		    if (screen->input_eight_bits)
-		      *string |= 0x80;	/* turn on eighth bit */
-		    else
-		      unparseputc (ESC, pty);  /* escape */
+		if (nbytes == 1) {
+			if (eightbit && screen->input_eight_bits) {
+				if (CharOf(*string) < 128) {
+					TRACE(("...input shift from %d to %d\n",
+						CharOf(*string),
+						CharOf(*string) | 0x80))
+					*string |= 0x80;
+				}
+				eightbit = False;
+			}
+			/* VT220 & up: National Replacement Characters */
+			if ((term->flags & NATIONAL) != 0) {
+				int cmp = xtermCharSetIn(CharOf(*string), screen->keyboard_dialect[0]);
+				TRACE(("...input NRC %d, %s %d\n",
+					CharOf(*string),
+					(CharOf(*string) == cmp)
+						? "unchanged"
+						: "changed to",
+					CharOf(cmp)))
+				*string = cmp;
+			} else if (eightbit) {
+				unparseputc (ESC, pty);  /* escape */
+			}
 		}
 		while (nbytes-- > 0)
 			unparseputc(*string++, pty);
@@ -606,6 +618,7 @@ StringInput ( register TScreen *screen, register char *string, size_t nbytes)
 {
 	int	pty	= screen->respond;
 
+	TRACE(("InputString %s\n", visibleChars(PAIRED_CHARS(string,0), nbytes)))
 #if OPT_TEK4014
 	if(nbytes && screen->TekGIN) {
 		TekEnqMouse(*string++);

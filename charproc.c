@@ -118,11 +118,14 @@ in this Software without prior written authorization from the X Consortium.
 #include <fontutils.h>
 #include <xcharmouse.h>
 
-#ifndef NO_ACTIVE_ICON
+#if OPT_ZICONBEEP || OPT_TOOLBAR
+#define HANDLE_STRUCT_NOTIFY 1
+#endif
+
+#if !defined(NO_ACTIVE_ICON) || defined(HANDLE_STRUCT_NOTIFY)
 #include <X11/Shell.h>
 #endif /* NO_ACTIVE_ICON */
 
-extern Widget toplevel;
 extern char *ProgramName;
 
 static int in_put (void);
@@ -153,189 +156,7 @@ static void StopBlinking (TScreen *screen);
 #endif
 
 #define	DEFAULT		-1
-#define	TEXT_BUF_SIZE	256
-#define TRACKTIMESEC	4L
-#define TRACKTIMEUSEC	0L
 #define BELLSUPPRESSMSEC 200
-
-#define XtNallowSendEvents	"allowSendEvents"
-#define XtNalwaysHighlight	"alwaysHighlight"
-#define XtNanswerbackString	"answerbackString"
-#define XtNappcursorDefault	"appcursorDefault"
-#define XtNappkeypadDefault	"appkeypadDefault"
-#define XtNautoWrap		"autoWrap"
-#define XtNawaitInput		"awaitInput"
-#define XtNbackarrowKey		"backarrowKey"
-#define XtNbellSuppressTime	"bellSuppressTime"
-#define XtNboldColors		"boldColors"
-#define XtNboldFont		"boldFont"
-#define XtNboldMode		"boldMode"
-#define XtNc132			"c132"
-#define XtNcharClass		"charClass"
-#define XtNcolor0		"color0"
-#define XtNcolor1		"color1"
-#define XtNcolor10		"color10"
-#define XtNcolor11		"color11"
-#define XtNcolor12		"color12"
-#define XtNcolor13		"color13"
-#define XtNcolor14		"color14"
-#define XtNcolor15		"color15"
-#define XtNcolor2		"color2"
-#define XtNcolor3		"color3"
-#define XtNcolor4		"color4"
-#define XtNcolor5		"color5"
-#define XtNcolor6		"color6"
-#define XtNcolor7		"color7"
-#define XtNcolor8		"color8"
-#define XtNcolor9		"color9"
-#define XtNcolorAttrMode	"colorAttrMode"
-#define XtNcolorBD		"colorBD"
-#define XtNcolorBDMode		"colorBDMode"
-#define XtNcolorBL		"colorBL"
-#define XtNcolorBLMode		"colorBLMode"
-#define XtNcolorMode		"colorMode"
-#define XtNcolorUL		"colorUL"
-#define XtNcolorULMode		"colorULMode"
-#define XtNcurses		"curses"
-#define XtNcursorBlink		"cursorBlink"
-#define XtNcursorColor		"cursorColor"
-#define XtNcursorOffTime	"cursorOffTime"
-#define XtNcursorOnTime		"cursorOnTime"
-#define XtNcutNewline		"cutNewline"
-#define XtNcutToBeginningOfLine	"cutToBeginningOfLine"
-#define XtNdecTerminalID	"decTerminalID"
-#define XtNdynamicColors	"dynamicColors"
-#define XtNeightBitControl	"eightBitControl"
-#define XtNeightBitInput	"eightBitInput"
-#define XtNeightBitOutput	"eightBitOutput"
-#define XtNfontDoublesize	"fontDoublesize"
-#define XtNhighlightColor	"highlightColor"
-#define XtNhighlightSelection	"highlightSelection"
-#define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
-#define XtNinternalBorder	"internalBorder"
-#define XtNjumpScroll		"jumpScroll"
-#define XtNkeyboardDialect	"keyboardDialect"
-#define XtNlogFile		"logFile"
-#define XtNlogInhibit		"logInhibit"
-#define XtNlogging		"logging"
-#define XtNloginShell		"loginShell"
-#define XtNmarginBell		"marginBell"
-#define XtNmultiClickTime	"multiClickTime"
-#define XtNmultiScroll		"multiScroll"
-#define XtNnMarginBell		"nMarginBell"
-#define XtNnumLock		"numLock"
-#define XtNoldXtermFKeys	"oldXtermFKeys"
-#define XtNpointerColor		"pointerColor"
-#define XtNpointerColorBackground	"pointerColorBackground"
-#define XtNpointerShape		"pointerShape"
-#define XtNprintAttributes	"printAttributes"
-#define XtNprinterAutoClose	"printerAutoClose"
-#define XtNprinterCommand	"printerCommand"
-#define XtNprinterControlMode	"printerControlMode"
-#define XtNprinterExtent	"printerExtent"
-#define XtNprinterFormFeed	"printerFormFeed"
-#define XtNresizeGravity	"resizeGravity"
-#define XtNreverseWrap		"reverseWrap"
-#define XtNrightScrollBar	"rightScrollBar"
-#define XtNsaveLines		"saveLines"
-#define XtNscrollBar		"scrollBar"
-#define XtNscrollKey		"scrollKey"
-#define XtNscrollLines		"scrollLines"
-#define XtNscrollPos		"scrollPos"
-#define XtNscrollTtyOutput	"scrollTtyOutput"
-#define XtNshiftKeys		"shiftKeys"
-#define XtNsignalInhibit	"signalInhibit"
-#define XtNtekGeometry		"tekGeometry"
-#define XtNtekInhibit		"tekInhibit"
-#define XtNtekSmall		"tekSmall"
-#define XtNtekStartup		"tekStartup"
-#define XtNtiteInhibit		"titeInhibit"
-#define XtNtrimSelection	"trimSelection"
-#define XtNunderLine		"underLine"
-#define XtNutf8			"utf8"
-#define XtNutf8controls		"utf8controls"
-#define XtNvisualBell		"visualBell"
-#define XtNwideChars		"wideChars"
-#define XtNxmcAttributes	"xmcAttributes"
-#define XtNxmcGlitch		"xmcGlitch"
-#define XtNxmcInline		"xmcInline"
-#define XtNxmcMoveSGR		"xmcMoveSGR"
-
-#define XtCAllowSendEvents	"AllowSendEvents"
-#define XtCAlwaysHighlight	"AlwaysHighlight"
-#define XtCAnswerbackString	"AnswerbackString"
-#define XtCAppcursorDefault	"AppcursorDefault"
-#define XtCAppkeypadDefault	"AppkeypadDefault"
-#define XtCAutoWrap		"AutoWrap"
-#define XtCAwaitInput		"AwaitInput"
-#define XtCBackarrowKey		"BackarrowKey"
-#define XtCBellSuppressTime	"BellSuppressTime"
-#define XtCBoldFont		"BoldFont"
-#define XtCBoldMode		"BoldMode"
-#define XtCC132			"C132"
-#define XtCCharClass		"CharClass"
-#define XtCColorMode		"ColorMode"
-#define XtCColumn		"Column"
-#define XtCCurses		"Curses"
-#define XtCCursorBlink		"CursorBlink"
-#define XtCCursorOnTime		"CursorOnTime"
-#define XtCCursorOffTime	"CursorOffTime"
-#define XtCCutNewline		"CutNewline"
-#define XtCCutToBeginningOfLine	"CutToBeginningOfLine"
-#define XtCDecTerminalID	"DecTerminalID"
-#define XtCDynamicColors	"DynamicColors"
-#define XtCEightBitControl	"EightBitControl"
-#define XtCEightBitInput	"EightBitInput"
-#define XtCEightBitOutput	"EightBitOutput"
-#define XtCFontDoublesize	"FontDoublesize"
-#define XtCHighlightSelection	"HighlightSelection"
-#define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
-#define XtCJumpScroll		"JumpScroll"
-#define XtCKeyboardDialect	"KeyboardDialect"
-#define XtCLogInhibit		"LogInhibit"
-#define XtCLogfile		"Logfile"
-#define XtCLogging		"Logging"
-#define XtCLoginShell		"LoginShell"
-#define XtCMarginBell		"MarginBell"
-#define XtCMultiClickTime	"MultiClickTime"
-#define XtCMultiScroll		"MultiScroll"
-#define XtCNumLock		"NumLock"
-#define XtCOldXtermFKeys	"OldXtermFKeys"
-#define XtCPrintAttributes	"PrintAttributes"
-#define XtCPrinterAutoClose	"PrinterAutoClose"
-#define XtCPrinterCommand	"PrinterCommand"
-#define XtCPrinterControlMode	"PrinterControlMode"
-#define XtCPrinterExtent	"PrinterExtent"
-#define XtCPrinterFormFeed	"PrinterFormFeed"
-#define XtCResizeGravity	"ResizeGravity"
-#define XtCReverseWrap		"ReverseWrap"
-#define XtCRightScrollBar	"RightScrollBar"
-#define XtCSaveLines		"SaveLines"
-#define XtCScrollBar		"ScrollBar"
-#define XtCScrollCond		"ScrollCond"
-#define XtCScrollLines		"ScrollLines"
-#define XtCScrollPos		"ScrollPos"
-#define XtCShiftKeys		"ShiftKeys"
-#define XtCSignalInhibit	"SignalInhibit"
-#define XtCTekInhibit		"TekInhibit"
-#define XtCTekSmall		"TekSmall"
-#define XtCTekStartup		"TekStartup"
-#define XtCTiteInhibit		"TiteInhibit"
-#define XtCTrimSelection	"TrimSelection"
-#define XtCUnderLine		"UnderLine"
-#define XtCUtf8			"Utf8"
-#define XtCUtf8controls		"Utf8controls"
-#define XtCVisualBell		"VisualBell"
-#define XtCWideChars		"WideChars"
-#define XtCXmcAttributes	"XmcAttributes"
-#define XtCXmcGlitch		"XmcGlitch"
-#define XtCXmcInline		"XmcInline"
-#define XtCXmcMoveSGR		"XmcMoveSGR"
-
-#ifdef NO_ACTIVE_ICON
-#define XtNgeometry		"geometry"
-#define XtCGeometry		"Geometry"
-#endif
 
 #define	doinput()		(morePtyData(&VTbuffer) ? nextPtyData(&VTbuffer) : in_put())
 
@@ -351,12 +172,12 @@ static unsigned long ntotal;
 static jmp_buf vtjmpbuf;
 
 /* event handlers */
-static void HandleBell PROTO_XT_ACTIONS_ARGS;
-static void HandleIgnore PROTO_XT_ACTIONS_ARGS;
-static void HandleKeymapChange PROTO_XT_ACTIONS_ARGS;
-static void HandleVisualBell PROTO_XT_ACTIONS_ARGS;
-#if OPT_ZICONBEEP
-static void HandleMapUnmap PROTO_XT_EV_HANDLER_ARGS;
+static void HandleBell          PROTO_XT_ACTIONS_ARGS;
+static void HandleIgnore        PROTO_XT_ACTIONS_ARGS;
+static void HandleKeymapChange  PROTO_XT_ACTIONS_ARGS;
+static void HandleVisualBell    PROTO_XT_ACTIONS_ARGS;
+#if HANDLE_STRUCT_NOTIFY
+static void HandleStructNotify  PROTO_XT_EV_HANDLER_ARGS;
 #endif
 
 /*
@@ -402,7 +223,7 @@ static  int	defaultONE = 1;
 /*
  * Warning, the following must be kept under 1024 bytes or else some
  * compilers (particularly AT&T 6386 SVR3.2) will barf).  Workaround is to
- * declare a static buffer and copy in at run time (the the Athena text widget
+ * declare a static buffer and copy in at run time (the Athena text widget
  * does).  Yuck.
  */
 static char defaultTranslations[] =
@@ -665,7 +486,7 @@ static XtResource resources[] = {
 {XtNanswerbackString,XtCAnswerbackString, XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.answer_back),
 	XtRString, (XtPointer) ""},
-#ifdef OPT_PRINT_COLORS
+#if OPT_PRINT_COLORS
 {XtNprintAttributes,XtCPrintAttributes, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.print_attributes),
 	XtRInt, (XtPointer) &defaultONE},
@@ -907,6 +728,14 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, misc.icon_border_pixel),
 	XtRString, XtExtdefaultbackground},
 #endif /* NO_ACTIVE_ICON */
+#if OPT_TOOLBAR
+{XtNmenuBar, XtCMenuBar, XtRWidget, sizeof(Widget),
+	XtOffsetOf(XtermWidgetRec, screen.fullVwin.menu_bar),
+	XtRWidget, (XtPointer) 0},
+{XtNmenuHeight, XtCMenuHeight, XtRInt, sizeof(int),
+	XtOffsetOf(XtermWidgetRec, screen.fullVwin.menu_height),
+	XtRString, "25"},
+#endif
 #if OPT_WIDE_CHARS
 {XtNutf8, XtCUtf8, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.utf8_mode),
@@ -2768,7 +2597,7 @@ dotext(
 	}
 }
 
-#if OPT_ZICONBEEP
+#if HANDLE_STRUCT_NOTIFY
 /* Flag icon name with "*** "  on window output when iconified.
  * I'd like to do something like reverse video, but I don't
  * know how to tell this to window managers in general.
@@ -2779,8 +2608,7 @@ dotext(
  * we worry about IsUnmapped when output occurs.  -IAN!
  */
 static int mapstate = -1;
-#include <X11/Shell.h>
-#endif /* OPT_ZICONBEEP */
+#endif /* HANDLE_STRUCT_NOTIFY */
 
 /*
  * write a string str of length len onto the screen at
@@ -2869,10 +2697,10 @@ WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 #endif /* OPT_ZICONBEEP */
 }
 
-#if OPT_ZICONBEEP
+#if HANDLE_STRUCT_NOTIFY
 /* Flag icon name with "***"  on window output when iconified.
  */
-static void HandleMapUnmap(
+static void HandleStructNotify(
 	Widget w GCC_UNUSED,
 	XtPointer closure GCC_UNUSED,
 	XEvent *event,
@@ -2883,14 +2711,14 @@ static void HandleMapUnmap(
 	    { XtNiconName, (XtArgVal) &icon_name }
     };
 
-    TRACE(("event %d\n", event->type))
-
     switch( event->type ){
     case MapNotify:
+	TRACE(("HandleStructNotify(MapNotify)\n"))
+#if OPT_ZICONBEEP
 	if( zIconBeep_flagged ) {
 	    zIconBeep_flagged = False;
 	    icon_name = NULL;
-	    XtGetValues(toplevel,args,XtNumber(args));
+	    XtGetValues(toplevel, args, XtNumber(args));
 	    if( icon_name != NULL ) {
 		char	*buf = (char *)malloc(strlen(icon_name) + 1);
 		if (buf == NULL) {
@@ -2902,14 +2730,37 @@ static void HandleMapUnmap(
 		free(buf);
 	    }
 	}
+#endif /* OPT_ZICONBEEP */
 	mapstate = !IsUnmapped;
 	break;
     case UnmapNotify:
+	TRACE(("HandleStructNotify(UnmapNotify)\n"))
 	mapstate = IsUnmapped;
+	break;
+    case ConfigureNotify:
+	TRACE(("HandleStructNotify(ConfigureNotify)\n"))
+#if OPT_TOOLBAR
+	if (term->screen.Vshow) {
+#ifndef NO_ACTIVE_ICON
+	    struct _vtwin *Vwin = term->screen.whichVwin;
+#else
+	    struct _vtwin *Vwin = &(term->screen.fullVwin);
+#endif
+	    if (Vwin->menu_bar) {
+		XtVaGetValues(Vwin->menu_bar,
+		    XtNheight,      &Vwin->menu_height,
+		    NULL);
+		TRACE(("...menu_height %d\n", Vwin->menu_height))
+	    }
+	}
+#endif
+	break;
+    default:
+	TRACE(("HandleStructNotify(event %d)\n", event->type))
 	break;
     }
 }
-#endif /* OPT_ZICONBEEP */
+#endif /* HANDLE_STRUCT_NOTIFY */
 
 /*
  * process ANSI modes set, reset
@@ -3144,7 +2995,7 @@ dpmodes(
 				screen->event_mask &= ~ButtonMotionMask;
 				screen->event_mask |= PointerMotionMask;
 			}
-			XSelectInput(XtDisplay(termw), term->core.window, screen->event_mask);
+			XSelectInput(XtDisplay(termw), XtWindow(term), screen->event_mask);
 			break;
 		case 1010:	/* rxvt */
 			screen->scrollttyoutput = (func == bitset) ? ON : OFF;
@@ -3630,7 +3481,7 @@ unparseseq(register ANSI *ap, int fd)
 		}
 		inters = ap->a_inters;
 		for (i=3; i>=0; --i) {
-			c = (inters >> (8*i)) & 0xff;
+			c = CharOf(inters >> (8*i));
 			if (c != 0)
 				unparseputc(c, fd);
 		}
@@ -3885,6 +3736,8 @@ static void RequestResize(
 	XtGeometryResult status;
 	XWindowAttributes attrs;
 
+	TRACE(("RequestResize(rows=%d, cols=%d, text=%d)\n", rows, cols, text))
+
 	askedWidth  = cols;
 	askedHeight = rows;
 
@@ -3947,7 +3800,7 @@ static String xterm_trans =
 int VTInit (void)
 {
     register TScreen *screen = &term->screen;
-    Widget vtparent = term->core.parent;
+    Widget vtparent = SHELL_OF(term);
 
     XtRealizeWidget (vtparent);
     XtOverrideTranslations(vtparent, XtParseTranslationTable(xterm_trans));
@@ -3991,6 +3844,7 @@ static void VTInitialize (
 {
    XtermWidget request = (XtermWidget) wrequest;
    XtermWidget wnew    = (XtermWidget) new_arg;
+   Widget my_parent = SHELL_OF(wnew);
    int i;
 #if OPT_ISO_COLORS
    Boolean color_ok;
@@ -4091,7 +3945,9 @@ static void VTInitialize (
    wnew->screen.visualbell = request->screen.visualbell;
 #if OPT_NUM_LOCK
    wnew->misc.real_NumLock = request->misc.real_NumLock;
-   wnew->misc.num_lock = request->misc.num_lock;
+   wnew->misc.num_lock = 0;
+   wnew->misc.alt_left = 0;
+   wnew->misc.alt_right = 0;
 #endif
 #if OPT_SHIFT_KEYS
    wnew->misc.shift_keys = request->misc.shift_keys;
@@ -4120,7 +3976,7 @@ static void VTInitialize (
    wnew->screen.printer_extent = request->screen.printer_extent;
    wnew->screen.printer_formfeed = request->screen.printer_formfeed;
    wnew->screen.printer_controlmode = request->screen.printer_controlmode;
-#ifdef OPT_PRINT_COLORS
+#if OPT_PRINT_COLORS
    wnew->screen.print_attributes = request->screen.print_attributes;
 #endif
 
@@ -4219,25 +4075,30 @@ static void VTInitialize (
    /* look for focus related events on the shell, because we need
     * to care about the shell's border being part of our focus.
     */
-   XtAddEventHandler(XtParent(wnew), EnterWindowMask, FALSE,
+   XtAddEventHandler(my_parent, EnterWindowMask, FALSE,
 		HandleEnterWindow, (Opaque)NULL);
-   XtAddEventHandler(XtParent(wnew), LeaveWindowMask, FALSE,
+   XtAddEventHandler(my_parent, LeaveWindowMask, FALSE,
 		HandleLeaveWindow, (Opaque)NULL);
-   XtAddEventHandler(XtParent(wnew), FocusChangeMask, FALSE,
+   XtAddEventHandler(my_parent, FocusChangeMask, FALSE,
 		HandleFocusChange, (Opaque)NULL);
    XtAddEventHandler((Widget)wnew, 0L, TRUE,
 		VTNonMaskableEvent, (Opaque)NULL);
    XtAddEventHandler((Widget)wnew, PropertyChangeMask, FALSE,
 		     HandleBellPropertyChange, (Opaque)NULL);
 
-#if OPT_ZICONBEEP
+#if HANDLE_STRUCT_NOTIFY
+#if OPT_TOOLBAR
+   wnew->screen.fullVwin.menu_bar = request->screen.fullVwin.menu_bar;
+   wnew->screen.fullVwin.menu_height = request->screen.fullVwin.menu_height;
+#else
    /* Flag icon name with "***"  on window output when iconified.
     * Put in a handler that will tell us when we get Map/Unmap events.
     */
    if ( zIconBeep )
-       XtAddEventHandler(XtParent(wnew), StructureNotifyMask, FALSE,
-			 HandleMapUnmap, (Opaque)NULL);
-#endif /* OPT_ZICONBEEP */
+#endif
+       XtAddEventHandler(my_parent, StructureNotifyMask, FALSE,
+			 HandleStructNotify, (XtPointer)0);
+#endif /* HANDLE_STRUCT_NOTIFY */
 
    wnew->screen.bellInProgress = FALSE;
 
@@ -4263,6 +4124,27 @@ static void VTInitialize (
    wnew->screen.whichTwin = &wnew->screen.fullTwin;
 #endif
 #endif /* NO_ACTIVE_ICON */
+
+    if (wnew->screen.savelines < 0)
+	wnew->screen.savelines = 0;
+
+    wnew->flags = 0;
+    if (!wnew->screen.jumpscroll)
+	wnew->flags |= SMOOTHSCROLL;
+    if (wnew->misc.reverseWrap)
+	wnew->flags |= REVERSEWRAP;
+    if (wnew->misc.autoWrap)
+	wnew->flags |= WRAPAROUND;
+    if (wnew->misc.re_verse != wnew->misc.re_verse0)
+	wnew->flags |= REVERSE_VIDEO;
+
+    wnew->initflags = wnew->flags;
+
+    if (wnew->misc.appcursorDefault)
+	wnew->keyboard.flags |= MODE_DECCKM;
+
+    if (wnew->misc.appkeypadDefault)
+	wnew->keyboard.flags |= MODE_DECKPAM;
 
    return;
 }
@@ -4332,10 +4214,10 @@ static void VTRealize (
 
 	if ((pr & XValue) && (XNegative&pr))
 	  xpos += DisplayWidth(screen->display, DefaultScreen(screen->display))
-			- width - (term->core.parent->core.border_width * 2);
+			- width - (XtParent(term)->core.border_width * 2);
 	if ((pr & YValue) && (YNegative&pr))
 	  ypos += DisplayHeight(screen->display,DefaultScreen(screen->display))
-			- height - (term->core.parent->core.border_width * 2);
+			- height - (XtParent(term)->core.border_width * 2);
 
 	/* set up size hints for window manager; min 1 char by 1 char */
 	sizehints.base_width = 2 * screen->border + scrollbar_width;
@@ -4383,10 +4265,10 @@ static void VTRealize (
 	 * realized, so that it can do the right thing.
 	 */
 	if (sizehints.flags & USPosition)
-	    XMoveWindow (XtDisplay(term), term->core.parent->core.window,
+	    XMoveWindow (XtDisplay(term), XtWindow(XtParent(term)),
 			 sizehints.x, sizehints.y);
 
-	XSetWMNormalHints (XtDisplay(term), term->core.parent->core.window,
+	XSetWMNormalHints (XtDisplay(term), XtWindow(XtParent(term)),
 			   &sizehints);
 	XFlush (XtDisplay(term));	/* get it out to window manager */
 
@@ -4394,8 +4276,8 @@ static void VTRealize (
 	   the Expose events for ConfigureNotifys is too hard */
 	values->bit_gravity = term->misc.resizeGravity == NorthWestGravity ?
 	    NorthWestGravity : ForgetGravity;
-	term->screen.fullVwin.window = term->core.window =
-	  XCreateWindow(XtDisplay(term), XtWindow(term->core.parent),
+	term->screen.fullVwin.window = XtWindow(term) =
+	  XCreateWindow(XtDisplay(term), XtWindow(XtParent(term)),
 		term->core.x, term->core.y,
 		term->core.width, term->core.height, term->core.border_width,
 		(int) term->core.depth,
@@ -4406,7 +4288,7 @@ static void VTRealize (
 #ifndef NO_ACTIVE_ICON
 	if (term->misc.active_icon && screen->fnt_icon) {
 	    int iconX=0, iconY=0;
-	    Widget shell = term->core.parent;
+	    Widget shell = XtParent(term);
 	    unsigned long mask;
 	    XGCValues xgcv;
 
@@ -4621,8 +4503,8 @@ static void VTInitI18N(void)
     }
 
     term->screen.xic = XCreateIC(xim, XNInputStyle, input_style,
-				      XNClientWindow, term->core.window,
-				      XNFocusWindow, term->core.window,
+				      XNClientWindow, XtWindow(term),
+				      XNFocusWindow, XtWindow(term),
 				      NULL);
 
     if (!term->screen.xic) {
@@ -4808,18 +4690,18 @@ ShowCursor(void)
 		    }
 		}
 		if (screen->cursorcolor == term->dft_foreground) {
-			XSetForeground(screen->display, currentGC, bg_pix);
 			XSetBackground(screen->display, currentGC, fg_pix);
 		}
+		XSetForeground(screen->display, currentGC, bg_pix);
 	} else { /* not selected */
 		if (( (flags & INVERSE) && !in_selection) ||
 		    (!(flags & INVERSE) &&  in_selection)) {
 		    /* text is reverse video */
 			currentGC = ReverseGC(screen);
+			XSetForeground(screen->display, currentGC, bg_pix);
+			XSetBackground(screen->display, currentGC, fg_pix);
 		} else { /* normal video */
 			currentGC = NormalGC(screen);
-		}
-		if (screen->cursorcolor == term->dft_foreground) {
 			XSetForeground(screen->display, currentGC, fg_pix);
 			XSetBackground(screen->display, currentGC, bg_pix);
 		}

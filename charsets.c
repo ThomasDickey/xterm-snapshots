@@ -254,7 +254,7 @@ int xtermCharSetOut(IChar *buf, IChar *ptr, char leftset)
 		visibleIChar(buf, ptr-buf)))
 
 	for (s = buf; s < ptr; ++s) {
-		int eight = E2A(*s) & 0xff;
+		int eight = CharOf(E2A(*s));
 		int seven = eight & 0x7f;
 		int cs = (eight >= 128) ? rightset : leftset;
 		int chr = eight;
