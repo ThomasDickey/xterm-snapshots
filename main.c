@@ -1,7 +1,6 @@
 #ifndef lint
-static char *rid="$XConsortium: main.c /main/247 1996/11/29 10:33:51 swick $";
+static char *rid="$TOG: main.c /main/249 1997/08/26 14:13:43 kaleb $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/main.c,v 3.59 1997/10/13 17:16:57 hohndel Exp $ */
 
 /*
  * 				 W A R N I N G
@@ -64,6 +63,8 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
+
+/* $XFree86: xc/programs/xterm/main.c,v 3.60 1997/10/26 13:25:48 dawes Exp $ */
 
 
 /* main.c */
@@ -218,6 +219,13 @@ static Bool IsPts = False;
 #else /* USE_TERMIOS */
 #ifdef SYSV
 #include <sys/termio.h>
+#else /* SYSV */
+#if defined(sun) && !defined(SVR4)
+#include <sys/ttycom.h>
+#ifdef TIOCSWINSZ
+#undef TIOCSSIZE
+#endif
+#endif
 #endif /* SYSV */
 #endif /* USE_TERMIOS else */
 #endif /* USE_POSIX_TERMIOS */
@@ -243,9 +251,8 @@ static Bool IsPts = False;
 #define USE_SYSV_TERMIO
 #define USE_SYSV_SIGNALS
 #define	USE_SYSV_PGRP
+#ifndef TIOCSWINSZ
 #define USE_SYSV_ENVVARS		/* COLUMNS/LINES vs. TERMCAP */
-#ifndef SCO
-#undef USE_TERMCAP_ENVVARS	/* SCO wants both TERMCAP and TERMINFO env */
 #endif
 /*
  * now get system-specific includes
@@ -2091,11 +2098,9 @@ spawn ()
 	int envsize;		/* elements in new environment */
 	char buf[64];
 	char *TermName = NULL;
-#if defined(sun) && !defined(SVR4)
-#ifdef TIOCSSIZE
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 	struct ttysize ts;
-#endif	/* TIOCSSIZE */
-#else	/* not sun */
+#else	/* not old SunOS */
 #ifdef TIOCSWINSZ
 	struct winsize ws;
 #endif	/* TIOCSWINSZ */
@@ -2328,8 +2333,7 @@ spawn ()
 	    }
 	}
 
-#if defined(sun) && !defined(SVR4)
-#ifdef TIOCSSIZE
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 	/* tell tty how big window is */
 	if(screen->TekEmu) {
 		ts.ts_lines = 38;
@@ -2338,8 +2342,7 @@ spawn ()
 		ts.ts_lines = screen->max_row + 1;
 		ts.ts_cols = screen->max_col + 1;
 	}
-#endif	/* TIOCSSIZE */
-#else	/* not sun */
+#else	/* not old SunOS */
 #ifdef TIOCSWINSZ
 	/* tell tty how big window is */
 	if(screen->TekEmu) {
@@ -2827,9 +2830,7 @@ spawn ()
 		envsize += 1;   /* LOGNAME */
 #endif /* UTMP */
 #ifdef USE_SYSV_ENVVARS
-#ifndef TIOCSWINSZ		/* window size not stored in driver? */
 		envsize += 2;	/* COLUMNS, LINES */
-#endif /* TIOCSWINSZ */
 #ifdef UTMP
 		envsize += 2;   /* HOME, SHELL */
 #endif /* UTMP */
@@ -3147,12 +3148,10 @@ spawn ()
 		    if(handshake.rows > 0 && handshake.cols > 0) {
 			screen->max_row = handshake.rows;
 			screen->max_col = handshake.cols;
-#if defined(sun) && !defined(SVR4)
-#ifdef TIOCSSIZE
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 			ts.ts_lines = screen->max_row + 1;
 			ts.ts_cols = screen->max_col + 1;
-#endif /* TIOCSSIZE */
-#else /* !sun */
+#else /* not old SunOS */
 #ifdef TIOCSWINSZ
 			ws.ws_row = screen->max_row + 1;
 			ws.ws_col = screen->max_col + 1;
@@ -3165,7 +3164,6 @@ spawn ()
 #endif /* USE_HANDSHAKE */
 
 #ifdef USE_SYSV_ENVVARS
-#ifndef TIOCSWINSZ
 		{
 		char numbuf[12];
 		sprintf (numbuf, "%d", screen->max_col + 1);
@@ -3173,7 +3171,6 @@ spawn ()
 		sprintf (numbuf, "%d", screen->max_row + 1);
 		Setenv("LINES=", numbuf);
 		}
-#endif
 #ifdef UTMP
 		if (pw) {	/* SVR4 doesn't provide these */
 		    if (!getenv("HOME"))
@@ -3208,11 +3205,9 @@ spawn ()
 
 
 		/* need to reset after all the ioctl bashing we did above */
-#if defined(sun) && !defined(SVR4)
-#ifdef TIOCSSIZE
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 		ioctl  (0, TIOCSSIZE, &ts);
-#endif	/* TIOCSSIZE */
-#else	/* not sun */
+#else	/* not old SunOS */
 #ifdef TIOCSWINSZ
 		ioctl (0, TIOCSWINSZ, (char *)&ws);
 #endif	/* TIOCSWINSZ */

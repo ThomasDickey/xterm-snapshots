@@ -1,6 +1,5 @@
 /*
- *	$XConsortium: screen.c /main/35 1996/12/01 23:47:05 swick $
- *	$XFree86: xc/programs/xterm/screen.c,v 3.20 1997/10/13 17:16:59 hohndel Exp $
+ *	$TOG: screen.c /main/37 1997/08/26 14:13:55 kaleb $
  */
 
 /*
@@ -26,6 +25,8 @@
  * SOFTWARE.
  */
 
+/* $XFree86: xc/programs/xterm/screen.c,v 3.21 1997/10/26 13:25:49 dawes Exp $ */
+
 /* screen.c */
 
 #ifdef HAVE_CONFIG_H
@@ -48,6 +49,7 @@ extern void free();
 #include <stdio.h>
 #include <signal.h>
 #ifdef SVR4
+#define SYSV
 #include <termios.h>
 #else
 #include <sys/ioctl.h>
@@ -57,10 +59,19 @@ extern void free();
 #include <sys/termio.h>
 #endif
 
-#ifdef att
+#ifdef SYSV
 #include <sys/termio.h>
+#ifdef USE_USG_PTYS
 #include <sys/stream.h>			/* get typedef used in ptem.h */
 #include <sys/ptem.h>
+#endif
+#else
+#if defined(sun) && !defined(SVR4)
+#include <sys/ttycom.h>
+#ifdef TIOCSWINSZ
+#undef TIOCSSIZE
+#endif
+#endif
 #endif
 
 #ifdef MINIX
@@ -711,11 +722,9 @@ ScreenResize (screen, width, height, flags)
 	int rows, cols;
 	int border = 2 * screen->border;
 	int move_down_by;
-#if defined(sun) && !defined(SVR4)
-#ifdef TIOCSSIZE
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 	struct ttysize ts;
-#endif	/* TIOCSSIZE */
-#else	/* sun */
+#else	/* not old SunOS */
 #ifdef TIOCSWINSZ
 	struct winsize ws;
 #endif	/* TIOCSWINSZ */
@@ -833,8 +842,7 @@ ScreenResize (screen, width, height, flags)
 	}
 #endif /* NO_ACTIVE_ICON */
 
-#if defined(sun) && !defined(SVR4)
-#ifdef TIOCSSIZE
+#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 	/* Set tty's idea of window size */
 	ts.ts_lines = rows;
 	ts.ts_cols = cols;
@@ -847,8 +855,7 @@ ScreenResize (screen, width, height, flags)
 			kill_process_group(pgrp, SIGWINCH);
 	}
 #endif	/* SIGWINCH */
-#endif	/* TIOCSSIZE */
-#else	/* sun */
+#else	/* not old SunOS */
 #ifdef TIOCSWINSZ
 	/* Set tty's idea of window size */
 	ws.ws_row = rows;
