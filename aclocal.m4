@@ -1,6 +1,6 @@
-dnl $XTermId: aclocal.m4,v 1.181 2005/01/14 01:50:02 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.190 2005/02/06 21:42:37 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.55 2005/01/14 01:50:02 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.56 2005/02/06 21:42:37 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -738,7 +738,7 @@ AC_DEFUN([CF_HELP_MESSAGE],
 [AC_DIVERT_HELP([$1])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_IMAKE_CFLAGS version: 23 updated: 2004/11/30 19:04:33
+dnl CF_IMAKE_CFLAGS version: 26 updated: 2005/02/05 10:39:02
 dnl ---------------
 dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
 dnl get these, but if imake is properly configured there is no point in doing
@@ -774,7 +774,9 @@ if mkdir conftestdir; then
 	cat >fix_cflags.sed <<'CF_EOF'
 s/\\//g
 s/"//g
-s/\(-D[[a-zA-Z0-9_]][[a-zA-Z0-9_]]*\)=\([[^\\"0-9 	]][[^ 	]]*\([[ 	]][[ 	]]*[[^- 	]][[^ 	]]*\)*\)/\1='\\"\2\\"'/g
+s/\(-D[[a-zA-Z0-9_]][[a-zA-Z0-9_]]*\)=\([[^\\'"0-9 	]][[^ 	]]*\([[ 	]][[ 	]]*[[^- 	]][[^ 	]]*\)*\)/\1='\\"\2\\"'/g
+s/\(-D[[a-zA-Z0-9_]][[a-zA-Z0-9_]]*\)=\([[^\\'"0-9 	]][[^ 	]]*\)[[ 	]]/\1='\\"\2\\"' /g
+s/\(-D[[a-zA-Z0-9_]][[a-zA-Z0-9_]]*\)=\([[^\\'"0-9 	]][[^ 	]]*\)$/\1='\\"\2\\"'/g
 s/^IMAKE[[ 	]]*/IMAKE_CFLAGS="/
 s/$/"/
 CF_EOF
@@ -985,7 +987,7 @@ AC_DEFUN([CF_MSG_LOG],[
 echo "(line __oline__) testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_POSIX_C_SOURCE version: 1 updated: 2004/10/17 10:43:13
+dnl CF_POSIX_C_SOURCE version: 3 updated: 2005/02/04 06:56:22
 dnl -----------------
 dnl Define _POSIX_C_SOURCE to the given level, and _POSIX_SOURCE if needed.
 dnl
@@ -1009,17 +1011,26 @@ AC_CACHE_CHECK(if we should define _POSIX_C_SOURCE,cf_cv_posix_c_source,[
 make an error
 #endif],
 	[cf_cv_posix_c_source=no],
-	[case .$cf_POSIX_C_SOURCE in
+	[cf_want_posix_source=no
+	 case .$cf_POSIX_C_SOURCE in
 	 .[[12]]??*)
-		cf_cv_posix_c_source="-D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE"
+		cf_cv_posix_c_source="-U_POSIX_C_SOURCE -D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE"
 		;;
 	 .2)
-		cf_cv_posix_c_source="-D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE -D_POSIX_SOURCE"
+		cf_cv_posix_c_source="-U_POSIX_C_SOURCE -D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE"
+		cf_want_posix_source=yes
 		;;
 	 .*)
-		cf_cv_posix_c_source="-D_POSIX_SOURCE"
+		cf_want_posix_source=yes
 		;;
 	 esac
+	 if test "$cf_want_posix_source" = yes ; then
+		AC_TRY_COMPILE([#include <sys/types.h>],[
+#ifdef _POSIX_SOURCE
+make an error
+#endif],[],
+		cf_cv_posix_c_source="$cf_cv_posix_c_source -U_POSIX_SOURCE -D_POSIX_SOURCE")
+	 fi
 	 CF_MSG_LOG(ifdef from value $cf_POSIX_C_SOURCE)
 	 cf_save="$CPPFLAGS"
 	 CPPFLAGS="$CPPFLAGS $cf_cv_posix_c_source"
@@ -1597,7 +1608,7 @@ AC_DEFUN([CF_VERBOSE],
 [test -n "$verbose" && echo "	$1" 1>&AC_FD_MSG
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_IMAKE_CFLAGS version: 2 updated: 2003/04/13 20:09:42
+dnl CF_WITH_IMAKE_CFLAGS version: 6 updated: 2005/02/06 13:47:10
 dnl --------------------
 dnl xterm and similar programs build more readily when propped up with imake's
 dnl hand-tuned definitions.  If we do not use imake, provide fallbacks for the
@@ -1617,11 +1628,24 @@ else
 	IMAKE_LOADFLAGS=
 	CF_VERBOSE(make fallback definitions)
 
-	UNAME_RELEASE=`(uname -r) 2>/dev/null` || UNAME_RELEASE=unknown
-	case $UNAME_RELEASE in
-	[[0-9]]*.[[0-9]]**)
-		OSMAJORVERSION=`echo "$UNAME_RELEASE" |sed -e 's/\..*//'`
-		OSMINORVERSION=`echo "$UNAME_RELEASE" |sed -e 's/^[[^.]]*\.//' -e 's/\..*//'`
+	# We prefer config.guess' values when we can get them, to avoid
+	# inconsistent results with uname (AIX for instance).  However,
+	# config.guess is not always consistent either.
+	case $host_os in
+	*[[0-9]].[[0-9]]*)
+		UNAME_RELEASE="$host_os"
+		;;
+	*)
+		UNAME_RELEASE=`(uname -r) 2>/dev/null` || UNAME_RELEASE=unknown
+		;;
+	esac
+
+	case .$UNAME_RELEASE in
+	*[[0-9]].[[0-9]]*)
+		OSMAJORVERSION=`echo "$UNAME_RELEASE" |sed -e 's/^[[^0-9]]*//' -e 's/\..*//'`
+		OSMINORVERSION=`echo "$UNAME_RELEASE" |sed -e 's/^[[^0-9]]*//' -e 's/^[[^.]]*\.//' -e 's/\..*//' -e 's/[[^0-9]].*//' `
+		test -z "$OSMAJORVERSION" && OSMAJORVERSION=1
+		test -z "$OSMINORVERSION" && OSMINORVERSION=0
 		IMAKE_CFLAGS="-DOSMAJORVERSION=$OSMAJORVERSION -DOSMINORVERSION=$OSMINORVERSION $IMAKE_CFLAGS"
 		;;
 	esac
@@ -1634,6 +1658,18 @@ else
 	case `$ac_config_guess` in
 	*freebsd*|*gnu*|*irix5*|*irix6*|*linux-gnu*|*netbsd*|*openbsd*)
 		IMAKE_CFLAGS="-DNARROWPROTO=1 $IMAKE_CFLAGS"
+	esac
+
+	# Other special definitions:
+	case $host_os in
+	aix*)
+		# imake on AIX 5.1 defines AIXV3.  really.
+		IMAKE_CFLAGS="-DAIXV3 -DAIXV4 $IMAKE_CFLAGS"
+		;;
+	irix[[56]].*) #(vi
+		# these are needed to make SIGWINCH work in xterm
+		IMAKE_CFLAGS="-DSYSV -DSVR4 $IMAKE_CFLAGS"
+		;;
 	esac
 
 	CF_ADD_CFLAGS($IMAKE_CFLAGS)
@@ -1663,7 +1699,7 @@ int x = XkbBI_Info
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 15 updated: 2004/11/23 15:41:32
+dnl CF_XOPEN_SOURCE version: 17 updated: 2005/02/06 12:07:45
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality.
@@ -1677,6 +1713,9 @@ cf_XOPEN_SOURCE=ifelse($1,,500,$1)
 cf_POSIX_C_SOURCE=ifelse($2,,199506L,$2)
 
 case $host_os in #(vi
+aix[[45]]*) #(vi
+	CPPFLAGS="$CPPFLAGS -D_ALL_SOURCE"
+	;;
 freebsd*) #(vi
 	# 5.x headers associate
 	#	_XOPEN_SOURCE=600 with _POSIX_C_SOURCE=200112L
@@ -1730,7 +1769,7 @@ make an error
 	CPPFLAGS="$cf_save"
 	])
 ])
-test "$cf_cv_xopen_source" != no && CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=$cf_cv_xopen_source"
+test "$cf_cv_xopen_source" != no && CPPFLAGS="$CPPFLAGS -U_XOPEN_SOURCE -D_XOPEN_SOURCE=$cf_cv_xopen_source"
 	CF_POSIX_C_SOURCE($cf_POSIX_C_SOURCE)
 	;;
 esac

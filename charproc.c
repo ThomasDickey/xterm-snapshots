@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.547 2005/01/14 01:50:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.551 2005/02/06 21:42:38 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.167 2005/01/14 01:50:02 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.168 2005/02/06 21:42:38 dickey Exp $ */
 
 /*
 
@@ -1002,6 +1002,49 @@ set_max_row(TScreen * screen, int rows)
     screen->max_row = rows;
 }
 
+#if OPT_TRACE
+#define WHICH_TABLE(name) if (table == name) result = #name
+static char *
+which_table(Const PARSE_T * table)
+{
+    char *result = "?";
+    /* *INDENT-OFF* */
+    WHICH_TABLE (ansi_table);
+    else WHICH_TABLE (csi_table);
+    else WHICH_TABLE (csi2_table);
+    else WHICH_TABLE (csi_ex_table);
+    else WHICH_TABLE (csi_quo_table);
+#if OPT_DEC_LOCATOR
+    else WHICH_TABLE (csi_tick_table);
+#endif
+#if OPT_DEC_RECTOPS
+    else WHICH_TABLE (csi_dollar_table);
+    else WHICH_TABLE (csi_star_table);
+#endif
+    else WHICH_TABLE (dec_table);
+    else WHICH_TABLE (dec2_table);
+    else WHICH_TABLE (dec3_table);
+    else WHICH_TABLE (cigtable);
+    else WHICH_TABLE (eigtable);
+    else WHICH_TABLE (esc_table);
+    else WHICH_TABLE (esc_sp_table);
+    else WHICH_TABLE (scrtable);
+    else WHICH_TABLE (scstable);
+    else WHICH_TABLE (sos_table);
+#if OPT_WIDE_CHARS
+    else WHICH_TABLE (esc_pct_table);
+#endif
+#if OPT_VT52_MODE
+    else WHICH_TABLE (vt52_table);
+    else WHICH_TABLE (vt52_esc_table);
+    else WHICH_TABLE (vt52_ignore_table);
+#endif
+    /* *INDENT-ON* */
+
+    return result;
+}
+#endif
+
 	/* allocate larger buffer if needed/possible */
 #define SafeAlloc(type, area, used, size) \
 		type *new_string = area; \
@@ -1323,7 +1366,7 @@ doparsing(unsigned c, struct ParseState *sp)
 	    string_used = 0;
 	}
 
-	TRACE(("parse %04X -> %d\n", c, sp->nextstate));
+	TRACE(("parse %04X -> %d %s\n", c, sp->nextstate, which_table(sp->parsestate)));
 
 	switch (sp->nextstate) {
 	case CASE_PRINT:
@@ -2256,6 +2299,7 @@ doparsing(unsigned c, struct ParseState *sp)
 
 	case CASE_ST:
 	    TRACE(("CASE_ST: End of String (%d bytes)\n", string_used));
+	    sp->parsestate = sp->groundtable;
 	    if (!string_used)
 		break;
 	    string_area[--string_used] = '\0';
@@ -2276,7 +2320,6 @@ doparsing(unsigned c, struct ParseState *sp)
 		/* ignored */
 		break;
 	    }
-	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_SOS:
@@ -2496,12 +2539,14 @@ doparsing(unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECCRA - Copy rectangular area\n"));
 	    xtermParseRect(screen, nparam, param, &myRect);
 	    ScrnCopyRectangle(screen, &myRect, nparam - 5, param + 5);
+	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_DECERA:
 	    TRACE(("CASE_DECERA - Erase rectangular area\n"));
 	    xtermParseRect(screen, nparam, param, &myRect);
 	    ScrnFillRectangle(screen, &myRect, ' ', 0);
+	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_DECFRA:
@@ -2512,29 +2557,34 @@ doparsing(unsigned c, struct ParseState *sp)
 		xtermParseRect(screen, nparam - 1, param + 1, &myRect);
 		ScrnFillRectangle(screen, &myRect, param[0], term->flags);
 	    }
+	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_DECSERA:
 	    TRACE(("CASE_DECSERA - Selective erase rectangular area\n"));
 	    xtermParseRect(screen, nparam > 4 ? 4 : nparam, param, &myRect);
 	    ScrnWipeRectangle(screen, &myRect);
+	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_DECSACE:
 	    TRACE(("CASE_DECSACE - Select attribute change extent\n"));
 	    screen->cur_decsace = param[0];
+	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_DECCARA:
 	    TRACE(("CASE_DECCARA - Change attributes in rectangular area\n"));
 	    xtermParseRect(screen, nparam > 4 ? 4 : nparam, param, &myRect);
 	    ScrnMarkRectangle(screen, &myRect, False, nparam - 4, param + 4);
+	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_DECRARA:
 	    TRACE(("CASE_DECRARA - Reverse attributes in rectangular area\n"));
 	    xtermParseRect(screen, nparam > 4 ? 4 : nparam, param, &myRect);
 	    ScrnMarkRectangle(screen, &myRect, True, nparam - 4, param + 4);
+	    sp->parsestate = sp->groundtable;
 	    break;
 #else
 	case CASE_CSI_DOLLAR_STATE:

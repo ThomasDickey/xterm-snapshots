@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.422 2005/01/18 00:02:26 tom Exp $ */
+/* $XTermId: main.c,v 1.431 2005/02/06 21:42:38 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.188 2005/01/18 00:02:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.191 2005/02/06 21:42:38 dickey Exp $ */
 
 /* main.c */
 
@@ -553,6 +553,7 @@ static char **command_to_exec_with_luit = NULL;
 ** contents.
 */
 static struct termio d_tio;
+
 #ifdef HAS_LTCHARS
 static struct ltchars d_ltc;
 #endif /* HAS_LTCHARS */
@@ -563,6 +564,15 @@ static unsigned int d_lmode;
 
 #elif defined(USE_POSIX_TERMIOS)
 static struct termios d_tio;
+
+#ifdef HAS_LTCHARS
+static struct ltchars d_ltc;
+#endif /* HAS_LTCHARS */
+
+#ifdef TIOCLSET
+static unsigned int d_lmode;
+#endif /* TIOCLSET */
+
 #else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 static struct sgttyb d_sg =
 {
@@ -1507,7 +1517,6 @@ main(int argc, char *argv[]ENVP_ARG)
     Widget form_top, menu_top;
     TScreen *screen;
     int mode;
-    char *ptr;
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
 
@@ -1837,14 +1846,6 @@ main(int argc, char *argv[]ENVP_ARG)
 			       (int) ruid, strerror(errno));
 	}
 #endif
-
-	/*
-	 * Check for the obvious - Xt does a poor job of reporting this.
-	 */
-	if ((ptr = getenv("DISPLAY")) == 0 || *x_strtrim(ptr) == '\0') {
-	    fprintf(stderr, "%s:  DISPLAY is not set\n", ProgramName);
-	    exit(1);
-	}
 
 	XtSetErrorHandler(xt_error);
 #if OPT_SESSION_MGT
@@ -2688,8 +2689,8 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
     if (chown(device, uid, gid) < 0) {
 	if (errno != ENOENT
 	    && getuid() == 0) {
-	    fprintf(stderr, "Cannot chown %s to %d,%d: %s\n",
-		    device, uid, gid, strerror(errno));
+	    fprintf(stderr, "Cannot chown %s to %ld,%ld: %s\n",
+		    device, (long) uid, (long) gid, strerror(errno));
 	}
     }
     chmod(device, mode);
@@ -2716,11 +2717,19 @@ static struct UTMP_STR *
 find_utmp(struct UTMP_STR *tofind)
 {
     struct UTMP_STR *result;
+    struct UTMP_STR working;
 
-    while ((result = getutid(tofind)) != 0) {
-	if (!strcmp(result->ut_line, tofind->ut_line)) {
+    for (;;) {
+	memset(&working, 0, sizeof(working));
+	working.ut_type = tofind->ut_type;
+	memcpy(working.ut_id, tofind->ut_id, sizeof(tofind->ut_id));
+#if defined(__digital__) && defined(__unix__) && (defined(OSMAJORVERSION) && OSMAJORVERSION < 5)
+	working.ut_type = 0;
+#endif
+	if ((result = getutid(&working)) == 0)
 	    break;
-	}
+	if (!strcmp(result->ut_line, tofind->ut_line))
+	    break;
     }
     return result;
 }
@@ -2746,6 +2755,7 @@ spawn(void)
 #endif
     int rc = 0;
     int ttyfd = -1;
+
 #ifdef USE_ANY_SYSV_TERMIO
     struct termio tio;
 #ifdef TIOCLSET
@@ -2756,6 +2766,12 @@ spawn(void)
 #endif /* HAS_LTCHARS */
 #elif defined(USE_POSIX_TERMIOS)
     struct termios tio;
+#ifdef TIOCLSET
+    unsigned lmode;
+#endif /* TIOCLSET */
+#ifdef HAS_LTCHARS
+    struct ltchars ltc;
+#endif /* HAS_LTCHARS */
 #else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
     int ldisc = 0;
     int discipline;
@@ -3784,7 +3800,7 @@ spawn(void)
 		    if (pw2 != 0) {
 			uid_t uid2 = pw2->pw_uid;
 			pw = getpwuid(screen->uid);
-			if (pw->pw_uid != uid2)
+			if ((uid_t) pw->pw_uid != uid2)
 			    login_name = NULL;
 		    } else {
 			pw = getpwuid(screen->uid);
