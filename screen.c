@@ -296,7 +296,7 @@ ScreenWrite (
 	int wrappedbit;
  	Char starcol, starcol2; 
 #if OPT_WIDE_CHARS
- 	Char *comb1l, *comb1h, *comb2l, *comb2h;
+ 	Char *comb1l = 0, *comb1h = 0, *comb2l = 0, *comb2h = 0;
 #endif
  
 #if OPT_WIDE_CHARS
@@ -313,13 +313,12 @@ ScreenWrite (
 	col   = SCRN_BUF_CHARS(screen, screen->cur_row) + screen->cur_col;
 	attrs = SCRN_BUF_ATTRS(screen, screen->cur_row) + screen->cur_col;
 
-#if OPT_WIDE_CHARS
-	comb1l   = SCRN_BUF_COM1L(screen, screen->cur_row) + screen->cur_col;
-	comb1h   = SCRN_BUF_COM1H(screen, screen->cur_row) + screen->cur_col;
-
-	comb2l   = SCRN_BUF_COM2L(screen, screen->cur_row) + screen->cur_col;
-	comb2h   = SCRN_BUF_COM2H(screen, screen->cur_row) + screen->cur_col;
-#endif
+	if_OPT_WIDE_CHARS(screen,{
+		comb1l   = SCRN_BUF_COM1L(screen, screen->cur_row) + screen->cur_col;
+		comb1h   = SCRN_BUF_COM1H(screen, screen->cur_row) + screen->cur_col;
+		comb2l   = SCRN_BUF_COM2L(screen, screen->cur_row) + screen->cur_col;
+		comb2h   = SCRN_BUF_COM2H(screen, screen->cur_row) + screen->cur_col;
+	})
 
 	if_OPT_EXT_COLORS(screen,{
 		fbf = SCRN_BUF_FGRND(screen, screen->cur_row) + screen->cur_col;
@@ -420,13 +419,12 @@ ScreenWrite (
 	flags |= CHARDRAWN;
 	memset( attrs, flags,  real_width);
 
-if_OPT_WIDE_CHARS(screen, {
-	memset( comb1l,   0, real_width);
-	memset( comb2l,   0, real_width);
-	memset( comb1h,   0, real_width);
-	memset( comb2h,   0, real_width);
+	if_OPT_WIDE_CHARS(screen,{
+		memset( comb1l,   0, real_width);
+		memset( comb2l,   0, real_width);
+		memset( comb1h,   0, real_width);
+		memset( comb2h,   0, real_width);
 	})
-
 	if_OPT_EXT_COLORS(screen,{
 		memset( fbf,  cur_fg_bg >> 8, real_width);
 		memset( fbb,  cur_fg_bg & 0xff, real_width);

@@ -1533,8 +1533,8 @@ PointToRowCol(
 	 * pretend it happened on the left half.
 	 */
 	if (col > 0
-	 && iswide(getXtermCell(screen, row, col-1))
-	 && (getXtermCell(screen, row, col) == HIDDEN_CHAR)) {
+	 && iswide(XTERM_CELL(row, col-1))
+	 && (XTERM_CELL(row, col) == HIDDEN_CHAR)) {
 		col -= 1;
 	}
 #endif
@@ -1674,7 +1674,7 @@ static int class_of(TScreen *screen, int row, int col)
 }
 #define ClassSelects(screen, row, col, cclass) \
 	 (class_of(screen, row, col) == cclass \
-	 || getXtermCell(screen, row, col) == HIDDEN_CHAR)
+	 || XTERM_CELL(row, col) == HIDDEN_CHAR)
 #else
 #define class_of(screen,row,col) charClass[XTERM_CELL(row, col)]
 #define ClassSelects(screen, row, col, cclass) \
@@ -1700,15 +1700,15 @@ ComputeSelect(
 
 #if OPT_WIDE_CHARS
 	if (startCol > 1
-	 && iswide(getXtermCell(screen, startRow, startCol-1))
-	 && getXtermCell(screen, startRow, startCol-0) == HIDDEN_CHAR) {
+	 && iswide(XTERM_CELL(startRow, startCol-1))
+	 && XTERM_CELL(startRow, startCol-0) == HIDDEN_CHAR) {
 		fprintf(stderr, "Adjusting start. Changing downwards from %i.\n", startCol);
 		startCol -= 1;
 		if (endCol == (startCol+1)) endCol--;
 	}
 
-	if (iswide(getXtermCell(screen, endRow, endCol-1))
-	 && getXtermCell(screen, endRow, endCol) == HIDDEN_CHAR) {
+	if (iswide(XTERM_CELL(endRow, endCol-1))
+	 && XTERM_CELL(endRow, endCol) == HIDDEN_CHAR) {
 		endCol += 1;
 	}
 #endif
@@ -1755,7 +1755,7 @@ ComputeSelect(
 			}
 
 #if OPT_WIDE_CHARS
-			if (startSCol && getXtermCell(screen, startSRow, startSCol) == HIDDEN_CHAR)
+			if (startSCol && XTERM_CELL(startSRow, startSCol) == HIDDEN_CHAR)
 				startSCol++;
 #endif
 
@@ -1786,7 +1786,7 @@ ComputeSelect(
 			}
 
 #if OPT_WIDE_CHARS
-			if (endSCol && getXtermCell(screen, endSRow, endSCol) == HIDDEN_CHAR)
+			if (endSCol && XTERM_CELL(endSRow, endSCol) == HIDDEN_CHAR)
 				endSCol++;
 #endif
 
