@@ -226,5 +226,6 @@ extern Const PARSE_T esc_pct_table[];
 #define CASE_DECSLE 118
 #define CASE_CSI_IGNORE 119
 #define CASE_VT52_IGNORE 120
+#define CASE_VT52_FINISH 121
 
 #endif /* included_VTparse_h */

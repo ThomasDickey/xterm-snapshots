@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.173 2003/11/25 01:54:43 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.174 2003/12/25 22:04:04 dickey Exp $ */
 
 /* main.c */
 
@@ -180,7 +180,9 @@ static Bool IsPts = False;
 #endif
 
 #ifdef SCO325
+#ifndef _SVID3
 #define _SVID3
+#endif
 #endif
 
 #if defined(__GLIBC__) && !defined(linux)
@@ -1434,7 +1436,7 @@ my_utmp_id(char *device)
     } else {
 	sprintf(result, "p%s", leaf);
     }
-    TRACE(("my_utmp_id  (%s) -> '%s'\n", device, result));
+    TRACE(("my_utmp_id (%s) -> '%s'\n", device, result));
     return result;
 }
 #endif
@@ -2296,10 +2298,11 @@ get_pty(int *pty, char *from GCC_UNUSED)
        device types which need to be handled differently.
      */
     result = pty_search(pty);
+    if (!result)
+	IsPts = 0;
 
 #endif
 #if defined(USE_USG_PTYS) || defined(__CYGWIN__)
-
 #ifdef __GLIBC__		/* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
     /* GNU libc 2 allows us to abstract away from having to know the
        master pty device name. */
@@ -2313,13 +2316,17 @@ get_pty(int *pty, char *from GCC_UNUSED)
 #elif defined(__MVS__)
     result = pty_search(pty);
 #else
-    result = ((*pty = open("/dev/ptmx", O_RDWR)) < 0);
+#if defined(USE_ISPTS_FLAG)
+    if (result) {
+#endif
+	result = ((*pty = open("/dev/ptmx", O_RDWR)) < 0);
 #endif
 #if defined(SVR4) || defined(SCO325) || defined(USE_ISPTS_FLAG)
-    if (!result)
-	strcpy(ttydev, ptsname(*pty));
+	if (!result)
+	    strcpy(ttydev, ptsname(*pty));
 #ifdef USE_ISPTS_FLAG
-    IsPts = !result;		/* true if we're successful */
+	IsPts = !result;	/* true if we're successful */
+    }
 #endif
 #endif
 
@@ -4197,12 +4204,6 @@ Exit(int n)
     struct UTMP_STR utmp;
     struct UTMP_STR *utptr;
 
-#if defined(WTMPX_FILE) && (defined(SVR4) || defined(SCO325))
-#elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
-#else
-    int fd;			/* for /etc/wtmp */
-#endif
-
     /* don't do this more than once */
     if (xterm_exiting)
 	SIGNAL_RETURN;
@@ -4252,10 +4253,12 @@ Exit(int n)
 		updwtmp(etc_wtmp, utptr);
 #else
 	    /* set wtmp entry if wtmp file exists */
-	    if (term->misc.login_shell &&
-		(fd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
-		write(fd, utptr, sizeof(*utptr));
-		close(fd);
+	    if (term->misc.login_shell) {
+		int fd;
+		if ((fd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
+		    write(fd, utptr, sizeof(*utptr));
+		    close(fd);
+		}
 	    }
 #endif
 #endif

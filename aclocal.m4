@@ -810,13 +810,12 @@ AC_TRY_LINK([
 test "$cf_cv_posix_wait" = yes && AC_DEFINE(USE_POSIX_WAIT)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PROG_EXT version: 8 updated: 2002/12/21 19:25:52
+dnl CF_PROG_EXT version: 9 updated: 2003/10/18 16:36:22
 dnl -----------
 dnl Compute $PROG_EXT, used for non-Unix ports, such as OS/2 EMX.
 AC_DEFUN([CF_PROG_EXT],
 [
 AC_REQUIRE([CF_CHECK_CACHE])
-PROG_EXT=
 case $cf_cv_system_name in
 os2*)
     # We make sure -Zexe is not used -- it would interfere with @PROG_EXT@
@@ -824,12 +823,13 @@ os2*)
     CPPFLAGS="$CPPFLAGS -D__ST_MT_ERRNO__"
     CXXFLAGS="$CXXFLAGS -Zmt"
     LDFLAGS=`echo "$LDFLAGS -Zmt -Zcrtdll" | sed -e "s%-Zexe%%g"`
-    PROG_EXT=".exe"
-    ;;
-cygwin*)
-    PROG_EXT=".exe"
     ;;
 esac
+
+AC_EXEEXT
+AC_OBJEXT
+
+PROG_EXT="$EXEEXT"
 AC_SUBST(PROG_EXT)
 test -n "$PROG_EXT" && AC_DEFINE_UNQUOTED(PROG_EXT,"$PROG_EXT")
 ])dnl
@@ -885,21 +885,33 @@ static struct termio d_tio;
 test "$cf_cv_svr4" = yes && AC_DEFINE(SVR4)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SYSV version: 2 updated: 2000/05/29 16:16:04
+dnl CF_SYSV version: 7 updated: 2003/12/19 16:15:23
 dnl -------
-dnl Check if this is a SYSV platform
+dnl Check if this is a SYSV platform, e.g., as used in <X11/Xos.h>, and whether
+dnl defining it will be helpful.  The following features are used to check:
+dnl
+dnl a) bona-fide SVSY doesn't use const for sys_errlist[].  Since this is a
+dnl legacy (pre-ANSI) feature, const should not apply.  Modern systems only
+dnl declare strerror().  Xos.h declares the legacy form of str_errlist[], and
+dnl a compile-time error will result from trying to assign to a const array.
+dnl
+dnl b) compile with headers that exist on SYSV hosts.
 AC_DEFUN([CF_SYSV],
 [
-AC_CACHE_CHECK(if this platform has SYSV flavor,cf_cv_sysv,[
+AC_CACHE_CHECK(if we should define SYSV,cf_cv_sysv,[
 AC_TRY_COMPILE([
-#include <curses.h>
-#include <term.h>
-#include <sys/termio.h>
-],[
 /* FIXME: need a test that excludes linux */
 #ifdef linux
 make an error
 #endif
+#undef  SYSV
+#define SYSV 1			/* get Xos.h to declare sys_errlist[] */
+#include <X11/Xos.h>
+#include <curses.h>
+#include <term.h>		/* eliminate most BSD hacks */
+#include <errno.h>
+#include <sys/termio.h>		/* eliminate most of the remaining ones */
+],[
 static struct termio d_tio;
 	d_tio.c_cc[VINTR] = 0;
 	d_tio.c_cc[VQUIT] = 0;
@@ -909,12 +921,13 @@ static struct termio d_tio;
 	d_tio.c_cc[VEOL] = 0;
 	d_tio.c_cc[VMIN] = 0;
 	d_tio.c_cc[VTIME] = 0;
+sys_errlist[0] = "";
 ],
 [cf_cv_sysv=yes],
 [cf_cv_sysv=no])
 ])
 test "$cf_cv_sysv" = yes && AC_DEFINE(SYSV)
-])dn
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_SYSV_UTMP version: 5 updated: 2001/12/27 12:55:07
 dnl ------------
@@ -1516,12 +1529,12 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 5 updated: 2003/09/21 13:12:44
+dnl CF_X_FREETYPE version: 6 updated: 2003/12/13 07:47:09
 dnl -------------
 dnl Check for X freetype libraries (XFree86 4.x)
 AC_DEFUN([CF_X_FREETYPE],
 [
-cf_freetype_libs="-lXft -lfreetype -lXrender -lXrender"
+cf_freetype_libs="-lXft -lfontconfig -lfreetype -lXrender -lXrender"
 AC_CACHE_CHECK(for X FreeType libraries,cf_cv_x_freetype,[
 
 cf_save_LIBS="$LIBS"

@@ -858,13 +858,51 @@ reset_SGR_Colors(void)
 void
 resetCharsets(TScreen * screen)
 {
+    TRACE(("resetCharsets\n"));
+
     screen->gsets[0] = 'B';	/* ASCII_G              */
     screen->gsets[1] = 'B';	/* ASCII_G              */
     screen->gsets[2] = 'B';	/* ASCII_G              */
     screen->gsets[3] = 'B';	/* ASCII_G              */
+
     screen->curgl = 0;		/* G0 => GL.            */
     screen->curgr = 2;		/* G2 => GR.            */
     screen->curss = 0;		/* No single shift.     */
+
+#if OPT_VT52_MODE
+    if (screen->vtXX_level == 0)
+	screen->gsets[1] = '0';	/* Graphics             */
+#endif
+}
+
+/*
+ * VT300 and up support three ANSI conformance levels, defined according to
+ * the dpANSI X3.134.1 standard.  DEC's manuals equate levels 1 and 2, and
+ * are unclear.  This code is written based on the manuals.
+ */
+static void
+set_ansi_conformance(TScreen * screen, int level)
+{
+    TRACE(("set_ansi_conformance(%d) terminal_id %d, ansi_level %d\n",
+	   level,
+	   screen->terminal_id,
+	   screen->ansi_level));
+    if (screen->vtXX_level >= 3) {
+	switch (screen->ansi_level = level) {
+	case 1:
+	    /* FALLTHRU */
+	case 2:
+	    screen->gsets[0] = 'B';	/* G0 is ASCII */
+	    screen->gsets[1] = 'B';	/* G1 is ISO Latin-1 (FIXME) */
+	    screen->curgl = 0;
+	    screen->curgr = 1;
+	    break;
+	case 3:
+	    screen->gsets[0] = 'B';	/* G0 is ASCII */
+	    screen->curgl = 0;
+	    break;
+	}
+    }
 }
 
 	/* allocate larger buffer if needed/possible */
@@ -925,7 +963,7 @@ VTparse(void)
     /* We longjmp back to this point in VTReset() */
     (void) setjmp(vtjmpbuf);
 #if OPT_VT52_MODE
-    groundtable = screen->ansi_level ? ansi_table : vt52_table;
+    groundtable = screen->vtXX_level ? ansi_table : vt52_table;
 #else
     groundtable = ansi_table;
 #endif
@@ -1145,7 +1183,7 @@ VTparse(void)
 	     * VT100 also (which is a 7-bit device), but xterm has been
 	     * doing this for so long we shouldn't change this behavior.
 	     */
-	    if (screen->ansi_level < 1)
+	    if (screen->vtXX_level < 1)
 		c &= 0x7f;
 #endif
 	    print_area = new_string;
@@ -1310,10 +1348,16 @@ VTparse(void)
 
 	case CASE_SI:
 	    screen->curgl = 0;
+	    if_OPT_VT52_MODE(screen, {
+		parsestate = groundtable;
+	    });
 	    break;
 
 	case CASE_SO:
 	    screen->curgl = 1;
+	    if_OPT_VT52_MODE(screen, {
+		parsestate = groundtable;
+	    });
 	    break;
 
 	case CASE_DECDHL:
@@ -1969,7 +2013,10 @@ VTparse(void)
 
 	case CASE_DECSET:
 	    /* DECSET */
-	    dpmodes(term, bitset);
+#if OPT_VT52_MODE
+	    if (screen->vtXX_level != 0)
+#endif
+		dpmodes(term, bitset);
 	    parsestate = groundtable;
 #if OPT_TEK4014
 	    if (screen->TekEmu)
@@ -1981,7 +2028,7 @@ VTparse(void)
 	    /* DECRST */
 	    dpmodes(term, bitclr);
 #if OPT_VT52_MODE
-	    if (screen->ansi_level == 0)
+	    if (screen->vtXX_level == 0)
 		groundtable = vt52_table;
 	    else if (screen->terminal_id >= 100)
 		groundtable = ansi_table;
@@ -2010,7 +2057,8 @@ VTparse(void)
 
 	case CASE_GSETS:
 	    TRACE(("CASE_GSETS(%d) = '%c'\n", scstype, c));
-	    screen->gsets[scstype] = c;
+	    if (screen->vtXX_level != 0)
+		screen->gsets[scstype] = c;
 	    parsestate = groundtable;
 	    break;
 
@@ -2047,37 +2095,43 @@ VTparse(void)
 	    parsestate = csi_quo_table;
 	    break;
 
-	    /* the ANSI conformance levels are noted in the
-	     * vt400 user's manual (I assume they're the non-DEC
-	     * equivalents of DECSCL - T.Dickey)
-	     */
-	case CASE_ANSI_LEVEL_1:
-	    if (screen->terminal_id >= 100) {
-		screen->ansi_level = 1;
-		show_8bit_control(False);
 #if OPT_VT52_MODE
+	case CASE_VT52_FINISH:
+	    TRACE(("CASE_VT52_FINISH terminal_id %d, vtXX_level %d\n",
+		   screen->terminal_id,
+		   screen->vtXX_level));
+	    if (screen->terminal_id >= 100
+		&& screen->vtXX_level == 0) {
 		groundtable =
 		    parsestate = ansi_table;
-#endif
+		screen->vtXX_level = screen->vt52_save_level;
+		screen->curgl = screen->vt52_save_curgl;
+		screen->curgr = screen->vt52_save_curgr;
+		screen->curss = screen->vt52_save_curss;
+		memmove(screen->gsets, screen->vt52_save_gsets, sizeof(screen->gsets));
 	    }
+	    break;
+#endif
+
+	case CASE_ANSI_LEVEL_1:
+	    set_ansi_conformance(screen, 1);
 	    parsestate = groundtable;
 	    break;
 
 	case CASE_ANSI_LEVEL_2:
-	    if (screen->terminal_id >= 200)
-		screen->ansi_level = 2;
+	    set_ansi_conformance(screen, 2);
 	    parsestate = groundtable;
 	    break;
 
 	case CASE_ANSI_LEVEL_3:
-	    if (screen->terminal_id >= 300)
-		screen->ansi_level = 3;
+	    set_ansi_conformance(screen, 3);
 	    parsestate = groundtable;
 	    break;
 
 	case CASE_DECSCL:
-	    if (param[0] >= 61 && param[0] <= 63) {
-		screen->ansi_level = param[0] - 60;
+	    if (param[0] >= 61 && param[0] <= 65) {
+		VTReset(TRUE, TRUE);
+		screen->vtXX_level = param[0] - 60;
 		if (param[0] > 61) {
 		    if (param[1] == 1)
 			show_8bit_control(False);
@@ -2334,7 +2388,7 @@ VTparse(void)
 
 	case CASE_S8C1T:
 #if OPT_VT52_MODE
-	    if (screen->ansi_level <= 1)
+	    if (screen->vtXX_level <= 1)
 		break;
 #endif
 	    show_8bit_control(True);
@@ -3318,19 +3372,27 @@ dpmodes(XtermWidget termw,
 	    (*func) (&termw->keyboard.flags, MODE_DECCKM);
 	    update_appcursor();
 	    break;
-	case 2:		/* ANSI/VT52 mode               */
+	case 2:		/* DECANM - ANSI/VT52 mode      */
 	    if (func == bitset) {	/* ANSI (VT100) */
-		resetCharsets(screen);
-		if_OPT_VT52_MODE(screen, {
-		    screen->ansi_level = 1;
-		});
+		/*
+		 * Setting DECANM should have no effect, since this function
+		 * cannot be reached from vt52 mode.
+		 */
+		;
 	    }
 #if OPT_VT52_MODE
 	    else if (screen->terminal_id >= 100) {	/* VT52 */
-		screen->ansi_level = 0;
-		param[0] = 0;
-		param[1] = 0;
+		TRACE(("DECANM terminal_id %d, vtXX_level %d\n",
+		       screen->terminal_id,
+		       screen->vtXX_level));
+		screen->vt52_save_level = screen->vtXX_level;
+		screen->vtXX_level = 0;
+		screen->vt52_save_curgl = screen->curgl;
+		screen->vt52_save_curgr = screen->curgr;
+		screen->vt52_save_curss = screen->curss;
+		memmove(screen->vt52_save_gsets, screen->gsets, sizeof(screen->gsets));
 		resetCharsets(screen);
+		nparam = 0;	/* ignore the remaining params, if any */
 	    }
 #endif
 	    break;
@@ -4737,7 +4799,7 @@ VTInitialize(Widget wrequest,
 	   wnew->screen.term_id,
 	   wnew->screen.terminal_id));
 
-    wnew->screen.ansi_level = (wnew->screen.terminal_id / 100);
+    wnew->screen.vtXX_level = (wnew->screen.terminal_id / 100);
     init_Bres(screen.visualbell);
     init_Ires(screen.visualBellDelay);
     init_Bres(screen.poponbell);
@@ -6022,6 +6084,8 @@ VTReset(Bool full, Bool saved)
     screen->protected_mode = OFF_PROTECT;
 
     if (full) {			/* RIS */
+	Bell(XkbBI_TerminalBell, 0);
+
 	/* reset the mouse mode */
 	screen->send_mouse_pos = MOUSE_OFF;
 	waitingForTrackInfo = FALSE;
