@@ -157,6 +157,14 @@ CF_ARG_DISABLE(color-mode,
 AC_MSG_RESULT($default_colormode)
 test $default_colormode = no && AC_DEFINE(DFT_COLORMODE,FALSE)
 
+AC_MSG_CHECKING(if you want support for color highlighting)
+CF_ARG_DISABLE(highlighting,
+	[  --disable-highlighting  disable support for color highlighting],
+	[default_highlight=no],
+	[default_highlight=yes])
+AC_MSG_RESULT($default_highlight)
+test $default_highlight = no && AC_DEFINE(OPT_HIGHLIGHT_COLOR,0)
+
 AC_MSG_CHECKING(for doublesize characters)
 CF_ARG_DISABLE(doublechars,
 	[  --disable-doublechars   disable support for double-size chars],
