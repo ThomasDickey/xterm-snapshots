@@ -2,8 +2,29 @@
  *	$Xorg: VTparse.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/VTparse.h,v 3.15 2001/01/17 23:46:34 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/VTparse.h,v 3.16 2002/03/26 01:46:39 dickey Exp $ */
 /*
+ * Copyright 2002 by Thomas E. Dickey
+ *
+ *                         All Rights Reserved
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies and that
+ * both that copyright notice and this permission notice appear in
+ * supporting documentation, and that the name of the above listed
+ * copyright holder(s) not be used in advertising or publicity pertaining
+ * to distribution of the software without specific, written prior
+ * permission.
+ *
+ * THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
+ * TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
+ * LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -66,6 +87,10 @@ extern Const PARSE_T sos_table[];
 #if OPT_VT52_MODE
 extern Const PARSE_T vt52_table[];
 extern Const PARSE_T vt52_esc_table[];
+#endif
+
+#if OPT_WIDE_CHARS
+extern Const PARSE_T esc_pct_table[];
 #endif
 
 /*

@@ -1,11 +1,11 @@
 /*
- *	$XFree86: xc/programs/xterm/tabs.c,v 3.9 2001/01/17 23:46:39 dawes Exp $
+ *	$XFree86: xc/programs/xterm/tabs.c,v 3.10 2002/03/26 01:46:40 dickey Exp $
  */
 
 /* $Xorg: tabs.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $ */
 
 /*
- * Copyright 2000 by Thomas E. Dickey
+ * Copyright 2000,2002 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -65,7 +65,7 @@
  * be fixed sometime.
  */
 #define TAB_INDEX(n) ((n) >> 5)
-#define TAB_MASK(n)  (1 << ((n) & 31))
+#define TAB_MASK(n)  (1 << ((n) & (TAB_BITS_WIDTH-1)))
 
 #define SET_TAB(tabs,n) tabs[TAB_INDEX(n)] |=  TAB_MASK(n)
 #define CLR_TAB(tabs,n) tabs[TAB_INDEX(n)] &= ~TAB_MASK(n)
@@ -77,15 +77,14 @@
 void
 TabReset(Tabs tabs)
 {
-	register int i;
+    register int i;
 
-	for (i=0; i<TAB_ARRAY_SIZE; ++i)
-		tabs[i] = 0;
+    for (i = 0; i < TAB_ARRAY_SIZE; ++i)
+	tabs[i] = 0;
 
-	for (i=0; i<MAX_TABS; i+=8)
-		TabSet(tabs, i);
-}	
-
+    for (i = 0; i < MAX_TABS; i += 8)
+	TabSet(tabs, i);
+}
 
 /*
  * places a tabstop at col
@@ -93,7 +92,7 @@ TabReset(Tabs tabs)
 void
 TabSet(Tabs tabs, int col)
 {
-	SET_TAB(tabs,col);
+    SET_TAB(tabs, col);
 }
 
 /*
@@ -102,7 +101,7 @@ TabSet(Tabs tabs, int col)
 void
 TabClear(Tabs tabs, int col)
 {
-	CLR_TAB(tabs,col);
+    CLR_TAB(tabs, col);
 }
 
 /*
@@ -111,19 +110,19 @@ TabClear(Tabs tabs, int col)
  * A tabstop at col is ignored.
  */
 int
-TabNext (Tabs tabs, int col)
+TabNext(Tabs tabs, int col)
 {
-	register TScreen *screen = &term->screen;
+    register TScreen *screen = &term->screen;
 
-	if(screen->curses && screen->do_wrap && (term->flags & WRAPAROUND)) {
-		xtermIndex(screen, 1);
-		col = screen->cur_col = screen->do_wrap = 0;
-	}
-	for (++col; col<MAX_TABS; ++col)
-		if (TST_TAB(tabs,col))
-			return (col);
+    if (screen->curses && screen->do_wrap && (term->flags & WRAPAROUND)) {
+	xtermIndex(screen, 1);
+	col = screen->cur_col = screen->do_wrap = 0;
+    }
+    for (++col; col < MAX_TABS; ++col)
+	if (TST_TAB(tabs, col))
+	    return (col);
 
-	return (MAX_TABS - 1);
+    return (MAX_TABS - 1);
 }
 
 /*
@@ -132,13 +131,13 @@ TabNext (Tabs tabs, int col)
  * A tabstop at col is ignored.
  */
 int
-TabPrev (Tabs tabs, int col)
+TabPrev(Tabs tabs, int col)
 {
-	for (--col; col >= 0; --col)
-		if (TST_TAB(tabs,col))
-			return (col);
+    for (--col; col >= 0; --col)
+	if (TST_TAB(tabs, col))
+	    return (col);
 
-	return (0);
+    return (0);
 }
 
 /*
@@ -147,14 +146,14 @@ TabPrev (Tabs tabs, int col)
 Boolean
 TabToNextStop(void)
 {
-	register TScreen *screen = &term->screen;
-	int saved_column = screen->cur_col;
+    register TScreen *screen = &term->screen;
+    int saved_column = screen->cur_col;
 
-	screen->cur_col = TabNext(term->tabs, screen->cur_col);
-	if (screen->cur_col > CurMaxCol(screen, screen->cur_row))
-		screen->cur_col = CurMaxCol(screen, screen->cur_row);
+    screen->cur_col = TabNext(term->tabs, screen->cur_col);
+    if (screen->cur_col > CurMaxCol(screen, screen->cur_row))
+	screen->cur_col = CurMaxCol(screen, screen->cur_row);
 
-	return (screen->cur_col > saved_column);
+    return (screen->cur_col > saved_column);
 }
 
 /*
@@ -163,22 +162,22 @@ TabToNextStop(void)
 Boolean
 TabToPrevStop(void)
 {
-	register TScreen *screen = &term->screen;
-	int saved_column = screen->cur_col;
+    register TScreen *screen = &term->screen;
+    int saved_column = screen->cur_col;
 
-	screen->cur_col = TabPrev(term->tabs, screen->cur_col);
+    screen->cur_col = TabPrev(term->tabs, screen->cur_col);
 
-	return (screen->cur_col < saved_column);
+    return (screen->cur_col < saved_column);
 }
 
 /*
  * clears all tabs
  */
 void
-TabZonk (Tabs tabs)
+TabZonk(Tabs tabs)
 {
-	register int i;
+    register int i;
 
-	for (i=0; i<TAB_ARRAY_SIZE; ++i)
-		tabs[i] = 0;
+    for (i = 0; i < TAB_ARRAY_SIZE; ++i)
+	tabs[i] = 0;
 }

@@ -2,11 +2,11 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.66 2001/10/24 01:21:24 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.67 2002/03/26 01:46:40 dickey Exp $ */
 
 /*
  *
- * Copyright 1999,2000,2001 by Thomas E. Dickey
+ * Copyright 1999-2001,2002 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -1342,6 +1342,11 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 	case 16:	case 17:
 		if (term->misc.dynamicColors)
 		       ChangeColorsRequest(term, mode-10, buf, final);
+		break;
+
+	case 30:
+	case 31:
+		/* reserved for Konsole (Stephan Binner <Stephan.Binner@gmx.de>) */
 		break;
 
 #ifdef ALLOWLOGGING

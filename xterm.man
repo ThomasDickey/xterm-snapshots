@@ -1,7 +1,7 @@
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
-.\" Copyright 1996,1997,1998,1999,2000,2001,2002 by Thomas E. Dickey
+.\" Copyright 1996-2001,2002 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.81 2002/01/05 22:05:03 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.82 2002/03/26 01:46:41 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996.
 .TH XTERM 1 __vendorversion__
@@ -216,7 +216,7 @@ should always highlight the text cursor.  By default,
 will display a hollow text cursor whenever the focus is lost or the
 pointer leaves the window.
 .TP 8
-.B \+ah
+.B +ah
 This option indicates that
 .I xterm
 should do text cursor highlighting based on focus.
@@ -226,7 +226,7 @@ This option disables active icon support if that feature was compiled
 into xterm.  This is equivalent to setting the \fIvt100\fP resource
 \fBactiveIcon\fP to FALSE.
 .TP 8
-.B \+ai
+.B +ai
 This option enables active icon support if that feature was compiled
 into xterm.  This is equivalent to setting the \fIvt100\fP resource
 \fBactiveIcon\fP to TRUE.
@@ -237,7 +237,7 @@ allows the cursor to automatically wrap to the beginning of the next
 line when when it is at the rightmost position of a line and text is
 output.
 .TP 8
-.B \+aw
+.B +aw
 This option indicates that auto-wraparound should not be allowed.
 .TP 8
 .BI \-b " number"
@@ -263,7 +263,7 @@ time text cursor is on when blinking
 Set the \fIvt100\fP resource \fBcolorBDMode\fR to FALSE,
 disabling the display of characters with bold attribute as color
 .TP 8
-.B "\+bdc"
+.B "+bdc"
 Set the \fIvt100\fP resource \fBcolorBDMode\fR to TRUE,
 enabling the display of characters with bold attribute as color
 rather than bold
@@ -271,7 +271,7 @@ rather than bold
 .B "\-cb"
 Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to FALSE.
 .TP 8
-.B "\+cb"
+.B "+cb"
 Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to TRUE.
 .TP 8
 .B "\-cc \fIcharacterclassrange\fP:\fIvalue\fP[,...]"
@@ -286,7 +286,7 @@ can be set to another class such as ``UXTerm'' to override selected resources.
 .B "\-cm"
 This option disables recognition of ANSI color-change escape sequences.
 .TP 8
-.B "\+cm"
+.B "+cm"
 This option enables recognition of ANSI color-change escape sequences.
 This is the same as the \fIvt100\fP resource \fBcolorMode\fP.
 .TP 8
@@ -294,7 +294,7 @@ This is the same as the \fIvt100\fP resource \fBcolorMode\fP.
 This option indicates that newlines should not be cut in line-mode
 selections.
 .TP 8
-.B \+cn
+.B +cn
 This option indicates that newlines should be cut in line-mode selections.
 .TP 8
 .BI \-cr " color"
@@ -313,7 +313,7 @@ in the
 .IR curses (3x)
 cursor motion package.
 .TP 8
-.B \+cu
+.B +cu
 This option indicates that \fIxterm\fP should not work around the
 .IR more (1)
 bug mentioned above.
@@ -326,7 +326,7 @@ the mouse cursor foreground and background colors,
 the Tektronix emulator foreground and background colors,
 and highlight color.
 .TP 8
-.B "\+dc"
+.B "+dc"
 This option enables the escape sequence to change dynamic colors.
 .TP 8
 .BI \-e " program \fP[ \fIarguments \fP.\|.\|. ]\fI"
@@ -353,7 +353,7 @@ This corresponds to the \fBfaceName\fP resource.
 This option indicates that \fIxterm\fP should compare normal and bold fonts bounding
 boxes to ensure they are compatible.
 .TP 8
-.BI \+fbb
+.BI +fbb
 This option indicates that \fIxterm\fP should not compare normal and bold fonts bounding
 boxes to ensure they are compatible.
 .TP 8
@@ -362,7 +362,7 @@ This option indicates that \fIxterm\fP should not assume that the
 normal and bold fonts have VT100 line-drawing characters.
 If any are missing, xterm will draw the characters directly.
 .TP 8
-.BI \+fbx
+.BI +fbx
 This option indicates that \fIxterm\fP should assume that the
 normal and bold fonts have VT100 line-drawing characters.
 .TP 8
@@ -408,7 +408,7 @@ reverse video is used.
 This option indicates that HP Function Key escape codes should be generated
 for function keys.
 .TP 8
-.BI \+hf
+.BI +hf
 This option indicates that HP Function Key escape codes should not be generated
 for function keys.
 .TP 8
@@ -418,7 +418,7 @@ xterm will not immediately destroy its window when the shell command completes.
 It will wait until you use the window manager to destroy/kill the window, or
 if you use the menu entries that send a signal, e.g., HUP or KILL.
 .TP 8
-.BI \+hold
+.BI +hold
 Turn off the \fBhold\fP resource, i.e.,
 xterm will immediately destroy its window when the shell command completes.
 .TP 8
@@ -426,7 +426,7 @@ xterm will immediately destroy its window when the shell command completes.
 Turn on the \fBptyInitialErase\fP resource, i.e.,
 use the pseudo-terminal's sense of the stty erase value.
 .TP 8
-.B \+ie
+.B +ie
 Turn off the \fBptyInitialErase\fP resource, i.e.,
 set the stty erase value using the \fBkb\fP string from the termcap entry as
 a reference, if available.
@@ -434,7 +434,7 @@ a reference, if available.
 .B \-im
 Turn on the \fBuseInsertMode\fP resource.
 .TP 8
-.B \+im
+.B +im
 Turn off the \fBuseInsertMode\fP resource.
 .TP 8
 .B \-j
@@ -447,7 +447,7 @@ disabling smooth scroll as well as the ``VT Options''
 menu can be used to turn this
 feature on or off.
 .TP 8
-.B \+j
+.B +j
 This option indicates that \fIxterm\fP should not do jump scrolling.
 .TP 8
 .B \-l
@@ -455,7 +455,7 @@ Turn logging on.
 Normally logging is not supported, due to security concerns.
 Some versions of \fIxterm\fP may have logging enabled.
 .TP 8
-.B \+l
+.B +l
 Turn logging off.
 .TP 8
 .B \-leftbar
@@ -475,7 +475,7 @@ Note that this is incompatible with \fB\-e\fP, since the \fIlogin\fP program
 does not provide a way to specify the command to run in the new shell.
 If you specify both, \fIxterm\fP uses \fB\-ls\fP.
 .TP 8
-.B \+ls
+.B +ls
 This option indicates that the shell that is started should not be a login
 shell (i.e. it will be a normal ``subshell'').
 .TP 8
@@ -484,7 +484,7 @@ This option indicates that \fIxterm\fP should ring a margin bell when
 the user types near the right end of a line.  This option can be turned on
 and off from the ``VT Options'' menu.
 .TP 8
-.B \+mb
+.B +mb
 This option indicates that margin bell should not be rung.
 .TP 8
 .B "\-mc milliseconds"
@@ -494,7 +494,7 @@ This option specifies the maximum time between multi-click selections.
 Turn off the \fBmessages\fP resource, i.e.,
 disallow write access to the terminal.
 .TP 8
-.B \+mesg
+.B +mesg
 Turn on the \fBmessages\fP resource, i.e.,
 allow write access to the terminal.
 .TP 8
@@ -509,21 +509,21 @@ at which the margin bell, if enabled, will ring.  The default is 10.
 .B "\-nul"
 This option disables the display of underlining.
 .TP 8
-.B "\+nul"
+.B "+nul"
 This option enables the display of underlining.
 .TP 8
 .B \-pc
 This option enables the PC-style use of bold colors (see boldColors
 resource).
 .TP 8
-.B \+pc
+.B +pc
 This option disables the PC-style use of bold colors.
 .TP 8
 .B \-pob
 This option indicates that the window should be raised whenever a
 Control-G is received.
 .TP 8
-.B \+pob
+.B +pob
 This option indicates that the window should not be raised whenever a
 Control-G is received.
 .TP 8
@@ -533,7 +533,7 @@ Force scrollbar to the right side of VT100 screen.
 .B "\-rvc"
 This option disables the display of characters with reverse attribute as color.
 .TP 8
-.B "\+rvc"
+.B "+rvc"
 This option enables the display of characters with reverse attribute as color.
 .TP 8
 .B \-rw
@@ -543,7 +543,7 @@ column of the previous line.  This is very useful for editing long shell
 command lines and is encouraged.  This option can be turned on and off from
 the ``VT Options'' menu.
 .TP 8
-.B \+rw
+.B +rw
 This option indicates that reverse-wraparound should not be allowed.
 .TP 8
 .B \-s
@@ -553,7 +553,7 @@ This allows \fIxterm\fP to run faster when network latencies are very high
 and is typically useful when running across a very large internet or many
 gateways.
 .TP 8
-.B \+s
+.B +s
 This option indicates that \fIxterm\fP should scroll synchronously.
 .TP 8
 .B \-samename
@@ -563,7 +563,7 @@ of preventing flicker and the disadvantage of requiring an extra
 round trip to the server to find out the previous value.  In practice
 this should never be a problem.
 .TP 8
-.B \+samename
+.B +samename
 Always send title and icon name change requests.
 .TP 8
 .B \-sb
@@ -572,14 +572,14 @@ of the window should be saved and that a scrollbar should be displayed so that
 those lines can be viewed.  This option may be turned on and off from the
 ``VT Options'' menu.
 .TP 8
-.B \+sb
+.B +sb
 This option indicates that a scrollbar should not be displayed.
 .TP 8
 .B \-sf
 This option indicates that Sun Function Key escape codes should be generated
 for function keys.
 .TP 8
-.B \+sf
+.B +sf
 This option indicates that the standard escape codes should be generated for
 function keys.
 .TP 8
@@ -588,7 +588,7 @@ This option indicates that output to a window should not automatically
 reposition the screen to the bottom of the scrolling region.
 This option can be turned on and off from the ``VT Options'' menu.
 .TP 8
-.B \+si
+.B +si
 This option indicates that output to a window should cause it to
 scroll to the bottom.
 .TP 8
@@ -598,7 +598,7 @@ using the scrollbar to review previous lines of text should
 cause the window to be repositioned automatically in the normal position at the
 bottom of the scroll region.
 .TP 8
-.B \+sk
+.B +sk
 This option indicates that pressing a key while using the scrollbar
 should not cause the window to be repositioned.
 .TP 8
@@ -611,7 +611,7 @@ This option indicates that Sun/PC keyboard should be assumed,
 providing mapping for keypad `+' to `,', and
 CTRL-F1 to F13, CTRL-F2 to F14, etc.
 .TP 8
-.B \+sp
+.B +sp
 This option indicates that the standard escape codes should be generated for
 keypad and function keys.
 .TP 8
@@ -620,7 +620,7 @@ This option indicates that \fIxterm\fP should start in Tektronix mode, rather
 than in VT102 mode.  Switching between the two windows is done using the
 ``Options'' menus.
 .TP 8
-.B \+t
+.B +t
 This option indicates that \fIxterm\fP should start in VT102 mode.
 .TP 8
 .BI \-ti " term_id"
@@ -649,16 +649,18 @@ database and should have \fIli#\fP and \fIco#\fP entries.
 .B \-u8
 This option sets the \fButf8\fP resource.
 When \fButf8\fP is set, xterm interprets incoming data as UTF-8.
-This sets \fBwideChars\fP as a side-effect.
+This sets \fBwideChars\fP as a side-effect,
+but UTF-8 mode set by this option prevents it from being turned off.
+If you must turn it on and off, use the \fBwideChars\fP resource.
 .TP 8
-.B \+u8
+.B +u8
 This option resets the \fButf8\fP resource.
 .TP 8
 .B "\-ulc"
 This option disables the display of characters with underline attribute as
 color rather than with underlining.
 .TP 8
-.B "\+ulc"
+.B "+ulc"
 This option enables the display of characters with underline attribute as
 color rather than with underlining.
 .TP 8
@@ -666,7 +668,7 @@ color rather than with underlining.
 This option indicates that \fIxterm\fP shouldn't write a record into the
 the system \fIutmp\fP log file.
 .TP 8
-.B \+ut
+.B +ut
 This option indicates that \fIxterm\fP should write a record into
 the system \fIutmp\fP log file.
 .TP 8
@@ -675,15 +677,18 @@ This option indicates that a visual bell is preferred over an audible one.
 Instead of ringing the terminal bell whenever a Control-G is received, the
 window will be flashed.
 .TP 8
-.B \+vb
+.B +vb
 This option indicates that a visual bell should not be used.
 .TP 8
 .B \-wc
 This option sets the \fBwideChars\fP resource.
 When \fBwideChars\fP is set, xterm maintains internal structures for 16-bit
 characters.
+If you do not set this resource to ``true'',
+xterm will ignore the escape sequence which turns UTF-8 mode on and off.
+The default is ``false''.
 .TP 8
-.B \+wc
+.B +wc
 This option resets the \fBwideChars\fP resource.
 .TP 8
 .B \-wf
@@ -692,7 +697,7 @@ the first time before starting the subprocess so that the initial terminal
 size settings and environment variables are correct.  It is the application's
 responsibility to catch subsequent terminal size changes.
 .TP 8
-.B \+wf
+.B +wf
 This option indicates that \fIxterm\fP show not wait before starting the
 subprocess.
 .TP 8
@@ -804,7 +809,7 @@ obtained, rather than the default executable file name.
 This option indicates that reverse video should be simulated by swapping
 the foreground and background colors.
 .TP 8
-.B \+rv
+.B +rv
 Disable the simulation of reverse video by swapping foreground and background
 colors.
 .TP 8
@@ -1097,22 +1102,22 @@ The default is ``true.''
 .TP 8
 .B "colorBDMode (\fPclass\fB ColorMode)"
 Specifies whether characters with the bold attribute should be displayed in
-color or as bold characters.  Note that setting ``colorMode'' off disables
+color or as bold characters.  Note that setting \fBcolorMode\fR off disables
 all colors, including bold.
 .TP 8
 .B "colorBLMode (\fPclass\fB ColorMode)"
 Specifies whether characters with the blink attribute should be displayed in
 color.
-Note that setting ``colorMode'' off disables all colors, including this.
+Note that setting \fBcolorMode\fR off disables all colors, including this.
 .TP 8
 .B "colorRVMode (\fPclass\fB ColorMode)"
 Specifies whether characters with the reverse attribute should be displayed in
 color.
-Note that setting ``colorMode'' off disables all colors, including this.
+Note that setting \fBcolorMode\fR off disables all colors, including this.
 .TP 8
 .B "colorULMode (\fPclass\fB ColorMode)"
 Specifies whether characters with the underline attribute should be displayed
-in color or as underlined characters.  Note that setting ``colorMode'' off
+in color or as underlined characters.  Note that setting \fBcolorMode\fR off
 disables all colors, including underlining.
 .TP 8
 .B "color0 (\fPclass\fB Color0)"
@@ -1594,9 +1599,23 @@ When set via a resource, \fIxterm\fP cannot be switched via control sequences ou
 The default is ``0'' (off).
 Any other value will turn on UTF-8 mode.
 .TP 8
+.B "veryBoldColors (\fPclass\fB ColorMode)"
+Specifies whether to combine video attributes with colors specified by
+\fBcolorBD\fR, \fBcolorBL\fR and \fBcolorUL\fR.
+The resource value is the sum of values for each attribute:
+2 for underline,
+4 for bold and
+8 for blink.
+The default is ``0.''
+.TP 8
 .B "visualBell (\fPclass\fB VisualBell)"
 Specifies whether or not a visible bell (i.e. flashing) should be used instead
 of an audible bell when Control-G is received.  The default is ``false.''
+.TP 8
+.B "vt100Graphics (\fPclass\fB VT100Graphics)"
+This specifies whether \fIxterm\fP will interpret VT100 graphic character
+escape sequences while in UTF-8 mode.
+The default is ``true'', to provide support for various legacy applications.
 .TP 8
 .B "wideBoldFont (\fPclass\fB WideBoldFont)"
 This option specifies the font to be used for displaying bold wide text.
@@ -2616,8 +2635,6 @@ This action sends the indicated graphics input code.
 The default bindings in the VT102 window are:
 .sp
 .in +4
-.DS
-.TA 2.5i
 .ta 2.5i
 .nf
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\
@@ -2662,15 +2679,12 @@ The default bindings in the VT102 window are:
                          <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \\n\\
                        <BtnDown>:bell(0)
 .fi
-.DE
 .sp
 .in -4
 .PP
 The default bindings in the Tektronix window are:
 .sp
 .in +4
-.DS
-.TA 2.5i
 .ta 2.5i
 .nf
                 ~Meta<KeyPress>: 	insert-seven-bit() \\n\\
@@ -2690,7 +2704,6 @@ The default bindings in the Tektronix window are:
           Shift ~Meta<Btn3Down>:	gin-press(R) \\n\\
                 ~Meta<Btn3Down>:	gin-press(r)
 .fi
-.DE
 .sp
 .in -4
 .PP
@@ -2699,8 +2712,6 @@ keys for entering commonly-typed works:
 .sp
 .in +4
 .nf
-.DS
-.TA .5i 1.5i
 .ta .5i 1.5i
 .nf
 *VT100.Translations: #override <Key>F13: keymap(dbx)
@@ -2711,7 +2722,6 @@ keys for entering commonly-typed works:
 	<Key>F19:	string("continue") string(0x0d) \\n\\
 	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
 .fi
-.DE
 .sp
 .in -4
 .SH "CONTROL SEQUENCES AND KEYBOARD"
@@ -2811,6 +2821,6 @@ Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
 Jason Bacon <acadix@execpc.com>,
-Stephen P. Wall <steve_wall@redcom.com>,
+Stephen P. Wall,
 David Wexelblat, and
 Thomas Dickey (XFree86 Project).

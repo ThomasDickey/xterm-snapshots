@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.144 2002/01/05 22:05:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.146 2002/03/26 01:46:40 dickey Exp $ */
 
 
 /* main.c */
@@ -105,8 +105,16 @@ SOFTWARE.
 #include <X11/Xlocale.h>
 
 #if OPT_TOOLBAR
+
+#if defined(HAVE_LIB_XAW)
 #include <X11/Xaw/Form.h>
+#elif defined(HAVE_LIB_XAW3D)
+#include <X11/Xaw3d/Form.h>
+#elif defined(HAVE_LIB_NEXTAW)
+#include <X11/neXtaw/Form.h>
 #endif
+
+#endif /* OPT_TOOLBAR */
 
 #include <pwd.h>
 #include <ctype.h>
@@ -1437,7 +1445,11 @@ posix_signal(int signo, sigfunc func)
 
 	act.sa_handler = func;
 	sigemptyset(&act.sa_mask);
+#ifdef SA_RESTART
 	act.sa_flags = SA_NOCLDSTOP|SA_RESTART;
+#else
+	act.sa_flags = SA_NOCLDSTOP;
+#endif
 	if (sigaction(signo, &act, &oact) < 0)
 		return(SIG_ERR);
 	return (oact.sa_handler);
@@ -2939,12 +2951,14 @@ spawn (void)
 #ifdef USE_ISPTS_FLAG
 		if (IsPts) {	/* SYSV386 supports both, which did we open? */
 #endif
-		int ptyfd;
+		int ptyfd = 0;
+		char *pty_name = 0;
 
 		setpgrp();
 		grantpt (screen->respond);
 		unlockpt (screen->respond);
-		if ((ptyfd = open (ptsname(screen->respond), O_RDWR)) < 0) {
+		if ((pty_name = ptsname(screen->respond)) == 0
+		 || (ptyfd = open (pty_name, O_RDWR)) < 0) {
 		    SysError (1);
 		}
 #ifdef I_PUSH

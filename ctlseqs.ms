@@ -8,7 +8,7 @@
 .\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.44 2002/01/05 21:55:11 dickey Exp $
 .\"
 .\"
-.\" Copyright 1996,1997,1998,1999,2000,2001,2002 by Thomas E. Dickey
+.\" Copyright 1996-2001,2002 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1190,7 +1190,7 @@ PF4	\*(S3\*S	\*(S3\*S	kf4	k4
 + \f1(add)\fP	+	\*(S3\*k	-	-
 , \f1(comma)\fP	,	\*(S3\*l	-	-
 - \f1(minus)\fP	-	\*(S3\*m	-	-
-\. \f1(Delete)\fP	\.	\*(S3\*3\*(c~	-	-
+\&. \f1(Delete)\fP	\.	\*(S3\*3\*(c~	-	-
 / \f1(divide)\fP	/	\*(S3\*o	-	-
 0 \f1(Insert)\fP	0	\*(Cs\*2\*(c~	-	-
 1 \f1(End)\fP	1	\*(Cs\*4\*(c~	kc1	K4
@@ -1290,7 +1290,7 @@ PF4	\*(S3\*S	\*(S3\*S
 + \f1(add)\fP	+	\*(S3\*k
 , \f1(comma)\fP	,	\*(S3\*l
 - \f1(minus)\fP	-	\*(S3\*m
-\. \f1(period)\fP	\.	\*(S3\*n
+\&. \f1(period)\fP	\.	\*(S3\*n
 / \f1(divide)\fP	/	\*(S3\*o
 0	0	\*(S3\*p
 1	1	\*(S3\*q
@@ -1357,7 +1357,7 @@ PF4	\*(Es\*S	\*(Es\*S
 + \f1(add)\fP	+	\*(Es\*?\*k
 , \f1(comma)\fP	,	\*(Es\*?\*l
 - \f1(minus)\fP	-	\*(Es\*?\*m
-\. \f1(period)\fP	\.	\*(Es\*?\*n
+\&. \f1(period)\fP	\.	\*(Es\*?\*n
 / \f1(divide)\fP	/	\*(Es\*?\*o
 0	0	\*(Es\*?\*p
 1	1	\*(Es\*?\*q

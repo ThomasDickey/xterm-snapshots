@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.77 2002/01/06 01:34:24 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.79 2002/03/26 01:46:40 dickey Exp $ */
 
 /************************************************************
 
@@ -52,6 +52,13 @@ authorization.
 #include <X11/Xos.h>
 
 #ifndef HAVE_CONFIG_H
+
+#define HAVE_LIB_XAW 1
+
+#ifdef CSRG_BASED
+/* Get definition of BSD */
+#include <sys/param.h>
+#endif
 
 #ifndef HAVE_X11_DECKEYSYM_H
 #define HAVE_X11_DECKEYSYM_H 1
@@ -201,6 +208,10 @@ extern int errno;
 #undef HAVE_WAITPID
 #endif
 
+#ifndef OPT_WIDE_CHARS
+#define OPT_WIDE_CHARS 0
+#endif
+
 #if OPT_WIDE_CHARS
 #define HIDDEN_HI 0xff
 #define HIDDEN_LO 0xff
@@ -344,7 +355,9 @@ extern int errno;
 #define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
 #define XtNutf8			"utf8"
+#define XtNveryBoldColors	"veryBoldColors"
 #define XtNvisualBell		"visualBell"
+#define XtNvt100Graphics	"vt100Graphics"
 #define XtNwideBoldFont		"wideBoldFont"
 #define XtNwideChars		"wideChars"
 #define XtNwideFont		"wideFont"
@@ -433,6 +446,7 @@ extern int errno;
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
 #define XtCVisualBell		"VisualBell"
+#define XtCVT100Graphics	"VT100Graphics"
 #define XtCWideBoldFont		"WideBoldFont"
 #define XtCWideChars		"WideChars"
 #define XtCWideFont		"WideFont"
@@ -480,7 +494,6 @@ extern void dorefresh (void);
 
 /* button.c */
 extern Boolean SendMousePosition (Widget w, XEvent* event);
-extern int SetCharacterClassRange (int low, int high, int value);
 extern void DiredButton               PROTO_XT_ACTIONS_ARGS;
 extern void DisownSelection (XtermWidget termw);
 extern void HandleGINInput            PROTO_XT_ACTIONS_ARGS;
@@ -729,7 +742,7 @@ extern int TabPrev (Tabs tabs, int col);
 extern void TabClear (Tabs tabs, int col);
 extern void TabReset (Tabs tabs);
 extern void TabSet (Tabs tabs, int col);
-extern void TabZonk (Tabs	tabs);
+extern void TabZonk (Tabs tabs);
 
 /* util.c */
 extern GC updatedXtermGC (TScreen *screen, int flags, int fg_bg, Bool hilite);
@@ -798,6 +811,19 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #define ExtractBackground(color) (color & 0xf)
 #endif
 
+#define checkVeryBoldAttr(flags, fg, code, attr) \
+	if ((flags & FG_COLOR) != 0 \
+	 && (screen->veryBoldColors & attr) == 0 \
+	 && (flags & attr) != 0 \
+	 && (fg == code)) \
+		 flags &= ~(attr)
+
+#define checkVeryBoldColors(flags, fg) \
+	checkVeryBoldAttr(flags, fg, COLOR_RV, INVERSE); \
+	checkVeryBoldAttr(flags, fg, COLOR_UL, UNDERLINE); \
+	checkVeryBoldAttr(flags, fg, COLOR_BD, BOLD); \
+	checkVeryBoldAttr(flags, fg, COLOR_BL, BLINK)
+
 #else /* !OPT_ISO_COLORS */
 
 #define ClearCurBackground(screen, top, left, height, width) \
@@ -812,6 +838,8 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #define getXtermForeground(flags, color) term->screen.foreground
 #define makeColorPair(fg, bg) 0
 #define xtermColorPair() 0
+
+#define checkVeryBoldColors(flags, fg) /* nothing */
 
 #endif	/* OPT_ISO_COLORS */
 

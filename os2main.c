@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.49 2002/01/05 22:05:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.50 2002/03/26 01:46:40 dickey Exp $ */
 
 /***********************************************************
 
@@ -77,8 +77,16 @@ SOFTWARE.
 #endif
 
 #if OPT_TOOLBAR
+
+#if defined(HAVE_LIB_XAW)
 #include <X11/Xaw/Form.h>
+#elif defined(HAVE_LIB_XAW3D)
+#include <X11/Xaw3d/Form.h>
+#elif defined(HAVE_LIB_NEXTAW)
+#include <X11/neXtaw/Form.h>
 #endif
+
+#endif /* OPT_TOOLBAR */
 
 #include <pwd.h>
 #include <ctype.h>

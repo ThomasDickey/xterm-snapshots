@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.55 2001/10/10 19:46:23 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.56 2002/03/26 01:46:40 dickey Exp $ */
 
 /*
  * Copyright 1999-2001 by Thomas E. Dickey
@@ -779,11 +779,27 @@ decfuncvalue (KeySym keycode)
 		case XK_F18:	return(32);
 		case XK_F19:	return(33);
 		case XK_F20:	return(34);
+#if defined(XK_F21)
+		case XK_F21:	return(42);
+		case XK_F22:	return(43);
+		case XK_F23:	return(44);
+		case XK_F24:	return(45);
+		case XK_F25:	return(46);
+		case XK_F26:	return(47);
+		case XK_F27:	return(48);
+		case XK_F28:	return(49);
+		case XK_F29:	return(50);
+		case XK_F30:	return(51);
+		case XK_F31:	return(52);
+		case XK_F32:	return(53);
+		case XK_F33:	return(54);
+		case XK_F34:	return(55);
+		case XK_F35:	return(56);
+#endif
 #ifdef SunXK_F36
 		case SunXK_F36:	return(57);
 		case SunXK_F37:	return(58);
 #endif
-
 		case XK_Find :	return(1);
 		case XK_Insert:	return(2);
 		case XK_Delete:	return(3);

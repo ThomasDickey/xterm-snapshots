@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.57 2001/09/09 01:07:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.58 2002/03/26 01:46:40 dickey Exp $ */
 
 /* screen.c */
 
@@ -706,8 +706,10 @@ ScrnRefresh (
 #if OPT_EXT_COLORS
 	   Char *fbf = 0;
 	   Char *fbb = 0;
+#define ColorOf(col) ((fbf[col] << 8) | fbb[col])
 #else
 	   Char *fb = 0;
+#define ColorOf(col) (fb[col])
 #endif
 #endif
 #if OPT_DEC_CHRSET
@@ -726,6 +728,7 @@ ScrnRefresh (
 	   int hi_col = maxcol;
 	   int lastind;
 	   int flags;
+	   int test;
 	   int fg_bg = 0, fg = 0, bg = 0;
 	   int x;
 	   GC gc;
@@ -867,7 +870,7 @@ ScrnRefresh (
 	   if_OPT_EXT_COLORS(screen,{
 		fbf = SCRN_BUF_FGRND(screen, lastind + topline);
 		fbb = SCRN_BUF_BGRND(screen, lastind + topline);
-		fg_bg = (fbf[col] << 8) | (fbb[col]);
+		fg_bg = ColorOf(col);
 		/* this combines them, then splits them again.	but
 		   extract_fg does more, so seems reasonable */
 		fg = extract_fg(fg_bg, flags);
@@ -875,10 +878,11 @@ ScrnRefresh (
 	   })
 	   if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 		fb = SCRN_BUF_COLOR(screen, lastind + topline);
-		fg_bg = fb[col];
+		fg_bg = ColorOf(col);
 		fg = extract_fg(fg_bg, flags);
 		bg = extract_bg(fg_bg, flags);
 	   })
+
 	   gc = updatedXtermGC(screen, flags, fg_bg, hilite);
 	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
 
@@ -889,13 +893,9 @@ ScrnRefresh (
 		if ((attrs[col] != flags)
 		 || (hilite && (col > hi_col))
 #if OPT_ISO_COLORS
-#if OPT_EXT_COLORS
-		 || ((flags & FG_COLOR) && (extract_fg((fbf[col]<<8)|fbb[col],attrs[col]) != fg))
-		 || ((flags & BG_COLOR) && (extract_bg((fbf[col]<<8)|fbb[col],attrs[col]) != bg))
-#else
-		 || ((flags & FG_COLOR) && (extract_fg(fb[col],attrs[col]) != fg))
-		 || ((flags & BG_COLOR) && (extract_bg(fb[col],attrs[col]) != bg))
-#endif
+		 || ((flags & FG_COLOR)
+		   && ((extract_fg(ColorOf(col), attrs[col]) != fg)
+		    || (extract_bg(ColorOf(col), attrs[col]) != bg)))
 #endif
 #if OPT_WIDE_CHARS
                  || (widec 
@@ -912,7 +912,11 @@ ScrnRefresh (
 			visibleChars(
 				PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
 				col - lastind)));
-		   x = drawXtermText(screen, flags, gc, x, y,
+
+		   test = flags;
+		   checkVeryBoldColors(test, fg);
+
+		   x = drawXtermText(screen, test, gc, x, y,
 			cs,
 			PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
 			col - lastind, 0);
@@ -933,12 +937,12 @@ ScrnRefresh (
 			    if (iswide(base)) my_x = CurCursorX(screen, row + topline, i-1);
 
 			    if (comb1 != 0) {
-				    drawXtermText(screen, flags, gc, my_x, y, cs,
+				    drawXtermText(screen, test, gc, my_x, y, cs,
 						  PAIRED_CHARS(comb1l+i, comb1h+i), 1, iswide(base));
 			    }
 
 			    if (comb2 != 0) {
-				    drawXtermText(screen, flags, gc, my_x, y, cs,
+				    drawXtermText(screen, test, gc, my_x, y, cs,
 						  PAIRED_CHARS(comb2l+i, comb2h+i), 1, iswide(base));
 			    }
  			}
@@ -953,12 +957,12 @@ ScrnRefresh (
 
 		   flags = attrs[col];
 		   if_OPT_EXT_COLORS(screen,{
-			fg_bg = (fbf[col]<<8) | fbb[col];
+			fg_bg = ColorOf(col);
 		        fg = extract_fg(fg_bg, flags);
 		        bg = extract_bg(fg_bg, flags);
 		   })
 		   if_OPT_ISO_TRADITIONAL_COLORS(screen,{
-			fg_bg = fb[col];
+			fg_bg = ColorOf(col);
 		        fg = extract_fg(fg_bg, flags);
 		        bg = extract_bg(fg_bg, flags);
 		   })
@@ -969,6 +973,7 @@ ScrnRefresh (
 		   if (widec)
                      wideness = iswide(chars[col] | (widec[col]<<8));
 #endif
+
 	   	   gc = updatedXtermGC(screen, flags, fg_bg, hilite);
 	   	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
 		}
@@ -985,7 +990,11 @@ ScrnRefresh (
 	   	__FILE__, __LINE__,
 		lastind, col,
 		visibleChars(PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)), col - lastind)));
-	   drawXtermText(screen, flags, gc, x, y,
+
+	   test = flags;
+	   checkVeryBoldColors(test, fg);
+
+	   drawXtermText(screen, test, gc, x, y,
 	   	cs,
 		PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
 		col - lastind, 0);
@@ -1005,12 +1014,12 @@ ScrnRefresh (
 		    if (iswide(base)) my_x = CurCursorX(screen, row + topline, i-1);
 
 		    if (comb1 != 0) {
-			    drawXtermText(screen, flags, gc, my_x, y, cs,
+			    drawXtermText(screen, test, gc, my_x, y, cs,
 					  PAIRED_CHARS(comb1l+i, comb1h+i), 1, iswide(base));
 		    }
 
 		    if (comb2 != 0) {
-			    drawXtermText(screen, flags, gc, my_x, y, cs,
+			    drawXtermText(screen, test, gc, my_x, y, cs,
 					  PAIRED_CHARS(comb2l+i, comb2h+i), 1, iswide(base));
 		    }
 		}

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
-# Author: Steve Wall <steve_wall@redcom.com>
-# $XFree86: xc/programs/xterm/88colres.pl,v 1.4 2001/06/18 19:09:25 dickey Exp $
+# Author: Steve Wall
+# $XFree86: xc/programs/xterm/88colres.pl,v 1.5 2002/03/26 01:46:39 dickey Exp $
 # Made from 256colres.pl
 
 # Construct a header file defining default resources for the

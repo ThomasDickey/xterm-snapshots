@@ -2,7 +2,7 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.69 2002/01/05 22:05:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.70 2002/03/26 01:46:40 dickey Exp $ */
 
 /*
  * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
@@ -1388,14 +1388,14 @@ getColor(Pixel pixel)
     int		    i;
     int		    oldest, oldestuse;
     XColor	    color;
-    
+
     oldestuse = 0x7fffffff;
     oldest = 0;
     for (i = 0; i < CACHE_SIZE; i++)
     {
 	if (cache[i].use)
 	{
-	    if (cache[i].color.pixel == pixel) 
+	    if (cache[i].color.pixel == pixel)
 	    {
 		cache[i].use = ++use;
 		return &cache[i].color;
@@ -1444,7 +1444,7 @@ drawXtermText(
 	Display		*dpy = screen->display;
 	XftFont		*font;
 	XGCValues	values;
-	
+
 	if (!screen->renderDraw)
 	{
 	    int			    scr;
@@ -1453,7 +1453,7 @@ drawXtermText(
 
 	    scr = DefaultScreen (dpy);
 	    visual = DefaultVisual (dpy, scr);
-	    screen->renderDraw = XftDrawCreate (dpy, draw, visual, 
+	    screen->renderDraw = XftDrawCreate (dpy, draw, visual,
 						DefaultColormap (dpy, scr));
 	}
 	if ((flags & (BOLD|BLINK)) && screen->renderFontBold)
@@ -1461,11 +1461,11 @@ drawXtermText(
 	else
 	    font = screen->renderFont;
 	XGetGCValues (dpy, gc, GCForeground|GCBackground, &values);
-	XftDrawRect (screen->renderDraw, 
+	XftDrawRect (screen->renderDraw,
 		     getColor (values.background),
-		     x, y, 
+		     x, y,
 		     len * FontWidth(screen), FontHeight(screen));
-			
+
 	y += font->ascent;
 #if OPT_WIDE_CHARS
 	if (text2)
@@ -1714,9 +1714,11 @@ drawXtermText(
 			}
 			/* This is probably wrong. But it works. */
 			draw_len = len;
-			if (wideness && (screen->fnt_dwd->fid || screen->fnt_dwdb->fid)) {
+			if (wideness
+			 && (screen->fnt_dwd->fid || screen->fnt_dwdb->fid)) {
 				draw_len = real_length = len * 2;
-				if (flags & (BOLD|BLINK) && screen->fnt_dwdb->fid) {
+				if ((flags & (BOLD|BLINK)) != 0
+				 && screen->fnt_dwdb->fid) {
 				  XSetFont(screen->display, gc, screen->fnt_dwdb->fid);
 				  ascent_adjust = screen->fnt_dwdb->ascent - screen->fnt_norm->ascent;
 				}
@@ -1726,7 +1728,8 @@ drawXtermText(
 				}
 				/* fix ascent */
 			}
-			else if (flags & (BOLD|BLINK) && screen->fnt_bold->fid)
+			else if ((flags & (BOLD|BLINK)) != 0
+			      && screen->fnt_bold->fid)
 				XSetFont(screen->display, gc, screen->fnt_bold->fid);
 			else
 				XSetFont(screen->display, gc, screen->fnt_norm->fid);
@@ -1840,12 +1843,16 @@ updatedXtermGC(
 	int fg_bg,
 	Bool hilite)
 {
-	Pixel fg_pix = getXtermForeground(flags,extract_fg(fg_bg,flags));
-	Pixel bg_pix = getXtermBackground(flags,extract_bg(fg_bg,flags));
+	int my_fg = extract_fg(fg_bg,flags);
+	int my_bg = extract_bg(fg_bg,flags);
+	Pixel fg_pix = getXtermForeground(flags,my_fg);
+	Pixel bg_pix = getXtermBackground(flags,my_bg);
 #if OPT_HIGHLIGHT_COLOR
 	Pixel hi_pix = screen->highlightcolor;
 #endif
 	GC gc;
+
+	checkVeryBoldColors(flags, my_fg);
 
 	if (ReverseOrHilite(screen, flags, hilite)) {
 		if (flags & (BOLD|BLINK))
@@ -1890,6 +1897,8 @@ resetXtermGC(
 	Pixel fg_pix = getXtermForeground(flags,term->cur_foreground);
 	Pixel bg_pix = getXtermBackground(flags,term->cur_background);
 	GC gc;
+
+	checkVeryBoldColors(flags, term->cur_foreground);
 
 	if (ReverseOrHilite(screen, flags, hilite)) {
 		if (flags & (BOLD|BLINK))
