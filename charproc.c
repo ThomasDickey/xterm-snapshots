@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/191 1996/01/23 11:34:26 kaleb $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.34 1996/08/23 11:06:19 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.35 1996/09/01 04:50:55 dawes Exp $
  */
 
 /*
@@ -149,6 +149,13 @@ static void StopBlinking PROTO((TScreen *screen));
 #else
 #define StartBlinking(screen) /* nothing */
 #define StopBlinking(screen) /* nothing */
+#endif
+
+#if OPT_ISO_COLORS
+static void clrColorBD PROTO((void));
+static void clrColorUL PROTO((void));
+static void setColorBD PROTO((void));
+static void setColorUL PROTO((void));
 #endif
 
 #define	DEFAULT		-1
@@ -777,6 +784,55 @@ void SGR_Background(color)
 	XSetBackground(screen->display, screen->normalboldGC, bg);
 	XSetForeground(screen->display, screen->reverseboldGC, bg);
 }
+
+static void
+setColorBD()
+{
+	if (term->screen.colorBDMode) {
+		if (!(term->flags & FG_COLOR)
+		 || (term->cur_foreground == COLOR_UL)) {
+			SGR_Foreground(COLOR_BD);
+		} else if (term->cur_foreground < 8) { /* Set highlight bit */
+			SGR_Foreground(term->cur_foreground | 8);
+		}
+	}
+}
+
+static void
+clrColorBD()
+{
+	if (term->screen.colorBDMode
+	 && term->flags & BOLD
+	 && !(term->flags & FG_COLOR)) {
+		if (term->cur_foreground == COLOR_BD)
+			SGR_Foreground(-1);
+		else if ((term->cur_foreground >= 8)
+		   &&    (term->cur_foreground <= 15))
+			SGR_Foreground(term->cur_foreground & 7);
+	}
+}
+
+static void
+setColorUL()
+{
+	if (term->screen.colorULMode
+	 && !(term->flags & FG_COLOR))
+		SGR_Foreground(COLOR_UL);
+}
+
+static void
+clrColorUL()
+{
+	if (term->screen.colorULMode
+	 && term->cur_foreground == COLOR_UL) {
+		if (term->screen.colorBDMode
+		 && (term->flags & BOLD))
+			SGR_Foreground(COLOR_BD);
+		else
+			SGR_Foreground(-1);
+	}
+}
+
 #endif /* OPT_ISO_COLORS */
 
 static void VTparse()
@@ -1186,39 +1242,26 @@ static void VTparse()
 				switch (param[row]) {
 				 case DEFAULT:
 				 case 0:
-					if_OPT_ISO_COLORS(screen,{
-					    if (term->flags & FG_COLOR)
-						SGR_Foreground(-1);
-					    if (term->flags & BG_COLOR)
-						SGR_Background(-1);
-					})
 					term->flags &=
 						~(INVERSE|BOLD|UNDERLINE|INVISIBLE);
+					if_OPT_ISO_COLORS(screen,{
+						clrColorBD(); /* first */
+						clrColorUL(); /* second */
+						if (term->flags & FG_COLOR)
+							SGR_Foreground(-1);
+						if (term->flags & BG_COLOR)
+							SGR_Background(-1);
+					})
 					break;
-				 case 1:
+				 case 1:	/* Bold				*/
+					/* FALLTHRU */
 				 case 5:	/* Blink, really.	*/
 					term->flags |= BOLD;
-					if_OPT_ISO_COLORS(screen,{
-					  if (screen->colorBDMode) {
-					    if (!(term->flags & FG_COLOR) ||
-						(term->cur_foreground==COLOR_UL)){
-					      SGR_Foreground(COLOR_BD);
-					    }
-					    else   /* Set highlight bit */
-					      if (term->cur_foreground < 8)
-						term->cur_foreground |= 8;
-					  }
-					})
+					if_OPT_ISO_COLORS(screen,{setColorBD();})
 					break;
 				 case 4:	/* Underscore		*/
 					term->flags |= UNDERLINE;
-					if_OPT_ISO_COLORS(screen,{
-					  if (screen->colorULMode) {
-					    if (!(term->flags & FG_COLOR)) {
-					      SGR_Foreground(COLOR_UL);
-					    }
-					  }
-					})
+					if_OPT_ISO_COLORS(screen,{setColorUL();})
 					break;
 				 case 7:
 					term->flags |= INVERSE;
@@ -1226,14 +1269,14 @@ static void VTparse()
 				 case 8:
 					term->flags |= INVISIBLE;
 					break;
-				 case 22:
-					term->flags &= ~BOLD;
-					break;
 				 case 24:
+					if_OPT_ISO_COLORS(screen,{clrColorUL();})
 					term->flags &= ~UNDERLINE;
 					break;
-				 case 25:
-					/* Blink, really */
+				 case 22: /* reset 'bold' */
+				 	/* FALLTHRU */
+				 case 25: /* reset 'blink' */
+					if_OPT_ISO_COLORS(screen,{clrColorBD();})
 					term->flags &= ~BOLD;
 					break;
 				 case 27:
