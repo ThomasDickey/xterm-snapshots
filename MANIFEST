@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-116
+MANIFEST for xterm, version XFree86-3_9_16b
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -65,6 +65,7 @@ util.c                          miscellaneous utility functions for 'xterm'
 version.h                       version of xterm
 xcharmouse.h                    Jason Bacon's mouse-defs, cleaned up a little
 xterm.h                         common includes, definitions and prototypes for 'xterm'
+xterm.log.html                  changelog for xterm
 xterm.man                       manual page for 'xterm'
 xtermcfg.hin                    configure script: template for xtermcfg.h
 tektests                        subdirectory

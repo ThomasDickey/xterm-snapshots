@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $XFree86: xterm/vttests/88colors.pl,v 1.1 1999/09/14 13:03:03 swall Exp $
+# $XFree86: xc/programs/xterm/vttests/88colors.pl,v 1.1 1999/09/25 14:38:51 dawes Exp $
 # Made from 256colors.pl
 
 for ($bg = 0; $bg < 88; $bg++) {

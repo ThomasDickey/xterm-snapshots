@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.7 1999/07/04 06:40:14 dawes Exp $
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.8 1999/09/25 14:38:35 dawes Exp $
  */
 
 /************************************************************

@@ -5,6 +5,7 @@
 # Last modified: 1994-03-25
 # Public domain
 #
+# $XFree86: xc/programs/xterm/mkdirs.sh,v 3.5 1999/09/27 14:59:29 dawes Exp $
 
 errstatus=0
 umask 022

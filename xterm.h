@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.45 1999/08/21 13:49:08 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.47 1999/09/27 06:30:24 dawes Exp $ */
 
 /************************************************************
 

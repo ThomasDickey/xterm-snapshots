@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: misc.c /main/112 1996/11/29 10:34:07 swick $
- *	$XFree86: xc/programs/xterm/misc.c,v 3.42 1999/08/21 13:49:04 dawes Exp $
+ *	$XFree86: xc/programs/xterm/misc.c,v 3.44 1999/09/27 06:30:21 dawes Exp $
  */
 
 /*
