@@ -130,7 +130,7 @@ in this Software without prior written authorization from the X Consortium.
 
 extern char *ProgramName;
 
-static int in_put (void);
+static Char in_put (void);
 static int set_character_class (char *s);
 static void FromAlternate (TScreen *screen);
 static void RequestResize (XtermWidget termw, int rows, int cols, int text);
@@ -2568,7 +2568,7 @@ static fd_set select_mask;
 static fd_set write_mask;
 static int pty_read_bytes;
 
-static int
+static Char
 in_put(void)
 {
     register TScreen *screen = &term->screen;

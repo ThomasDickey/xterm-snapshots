@@ -2421,9 +2421,11 @@ spawn (void)
 	struct passwd *pw = NULL;
 #ifdef HAVE_UTMP
 #if defined(UTMPX_FOR_UTMP)
-	struct utmpx utmp;
+	struct utmpx utmp,
+		    *utret;
 #else
-	struct utmp utmp;
+	struct utmp utmp,
+		   *utret;
 #endif
 #ifdef USE_LASTLOG
 	struct lastlog lastlog;
@@ -3371,12 +3373,20 @@ spawn (void)
 
 		/* position to entry in utmp file */
 		/* Test return value: beware of entries left behind: PSz 9 Mar 00 */
-		if (! getutid(&utmp)) {
+		if (! ( utret = getutid(&utmp) ) ) {
 		    utmp.ut_type = USER_PROCESS;
-		    if (! getutid(&utmp)) {
+		    if (! ( utret = getutid(&utmp) ) ) {
 			(void) setutent();
 		    }
 		}
+#if OPT_TRACE
+		if ( ! utret )
+		    TRACE(("getutid: NULL\n."));
+		else
+		    TRACE(("getutid: pid=%d type=%d user=%s line=%s id=%s\n",
+			utret->ut_pid, utret->ut_type, utret->ut_user,
+			utret->ut_line, utret->ut_id ));
+#endif
 
 		/* set up the new entry */
 		utmp.ut_type = USER_PROCESS;
@@ -3419,8 +3429,13 @@ spawn (void)
 #endif
 
 		/* write out the entry */
-		if (!resource.utmpInhibit)
-		    (void) pututline(&utmp);
+		if (!resource.utmpInhibit) {
+		    errno = 0;
+		    utret = pututline(&utmp);
+		    TRACE(("pututline: %d %p %d %s\n",
+			resource.utmpInhibit, (void *)utret,
+			errno, strerror(errno)));
+		}
 #ifdef WTMP
 #if defined(SVR4) || defined(SCO325)
 		if (term->misc.login_shell)
@@ -4246,7 +4261,7 @@ Exit(int n)
 		if (term->misc.login_shell &&
 		    (wfd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
 			(void) strncpy(utmp.ut_line,
-		 	    my_pty_name(ttydev),
+			    my_pty_name(ttydev),
 			    sizeof (utmp.ut_line));
 			time(&utmp.ut_time);
 			write(wfd, (char *)&utmp, sizeof(utmp));

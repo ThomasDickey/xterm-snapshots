@@ -221,7 +221,7 @@
 #ifdef CRAY
 #define PTYCHARLEN 3
 #elif defined(__MVS__)
-#define PTYCHARLEN 4
+#define PTYCHARLEN 8     /* OS/390 stores, e.g. ut_id="ttyp1234"  */
 #else
 #define PTYCHARLEN 2
 #endif

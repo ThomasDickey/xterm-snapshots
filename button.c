@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.55 2001/01/17 23:46:34 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.57 2001/03/13 09:48:43 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -835,7 +835,7 @@ Latin1toUTF8(Char *s, int len, int *len_return)
     Char *t;
     Char *q;
 
-    t = XtMalloc(2 * len);
+    t = (Char *)XtMalloc(2 * len);
     if (t == 0) {
 	TRACE(("Couldn't allocate target string\n"));
 	return 0;
@@ -868,7 +868,7 @@ filterUTF8(Char *s, int len, int *len_return)
     unsigned codepoint;
     int size;
 
-    t = XtMalloc(len);
+    t = (Char *)XtMalloc(len);
     if (t == 0) {
 	TRACE(("Couldn't allocate target string\n"));
 	return 0;
@@ -1206,6 +1206,7 @@ static void SelectionReceived(
 {
     char **text_list = NULL;
     Char *(*conversion_function)(Char*, int, int*) = NULL;
+    Char *line = (Char*)value;
     int text_list_count;
     XTextProperty text_prop;
     TScreen *screen;
@@ -1267,7 +1268,6 @@ static void SelectionReceived(
 		text_list = NULL;
 	    }
 	}
-    }
 #if OPT_USE_UTF8_API
 	if(*type == XA_UTF8_STRING(XtDisplay(w))) {
 	    GettingSelection("UTF8_STRING", line, *length);
@@ -1293,6 +1293,7 @@ static void SelectionReceived(
 	    if(rc < 0) {
 		TRACE(("Conversion failed\n"));
 		text_list = NULL;
+	    }
 	}
     }
 
