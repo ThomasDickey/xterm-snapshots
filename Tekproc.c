@@ -1,11 +1,11 @@
-/* $XTermId: Tekproc.c,v 1.97 2004/04/18 20:49:42 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.100 2004/05/26 01:19:54 tom Exp $ */
 
 /*
  * $Xorg: Tekproc.c,v 1.5 2001/02/09 02:06:02 xorgcvs Exp $
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.47 2004/04/18 20:49:42 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.48 2004/05/26 01:19:54 dickey Exp $ */
 
 /*
 
@@ -356,11 +356,15 @@ TekInit(void)
 				    XtNmenuBar, menu_top,
 				    XtNresizable, True,
 				    XtNfromVert, menu_top,
+				    XtNtop, XawChainTop,
 				    XtNleft, XawChainLeft,
 				    XtNright, XawChainRight,
 				    XtNbottom, XawChainBottom,
 #endif
 				    (XtPointer) 0);
+#if OPT_TOOLBAR
+	SetupToolbar((Widget) tekWidget);
+#endif
     }
     return (!Tfailed);
 }

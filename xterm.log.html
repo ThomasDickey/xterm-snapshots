@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.145 2004/05/16 23:59:13 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.123 2004/05/16 23:59:13 dickey Exp $
+  $XTermId: xterm.log.html,v 1.147 2004/05/26 01:19:55 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.124 2004/05/26 01:19:55 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_190">Patch #190 - 2004/5/25 - XFree86 4.4.99.6</A>
 <LI><A HREF="#xterm_189">Patch #189 - 2004/5/16 - XFree86 4.4.99.6</A>
 <LI><A HREF="#xterm_188">Patch #188 - 2004/5/12 - XFree86 4.4.99.6</A>
 <LI><A HREF="#xterm_187">Patch #187 - 2004/4/27 - XFree86 4.4.99.4</A>
@@ -237,6 +238,27 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_190">Patch #190 - 2004/5/25 - XFree86 4.4.99.6</A></H1>
+<ul>
+	<li>correct state for values in the range 128-159 after translating
+	    from UTF-8: this should be ignored unless the user overrides it
+	    with the <code>allowC1Printable</code> resource (reported by
+	    Simon Strandgaard).
+
+	<li>add configure-script check for nl_langinfo(CODESET), use this to
+	    replace check of environment variables for UTF-8.
+
+	<li>change Makefile.in rules for 256colres.h and 88colres.h so they
+	    are only made if they do not exist.  The maintainer-clean rule
+	    will remove these files; they require perl to be made.
+
+	<li>remove check in configure script --enable-toolbar that suppressed
+	    this option when building with Xaw7.
+
+	<li>apply fixes to Tektronix widget used for VT100 widget to make
+	    toolbar work with Xaw7 (XFree86 4.x).
+</ul>
 
 <H1><A NAME="xterm_189">Patch #189 - 2004/5/16 - XFree86 4.4.99.6</A></H1>
 <ul>

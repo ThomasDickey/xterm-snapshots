@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.473 2004/05/16 23:59:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.476 2004/05/26 01:19:54 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.159 2004/05/16 23:59:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.160 2004/05/26 01:19:54 dickey Exp $ */
 
 /*
 
@@ -111,6 +111,9 @@ in this Software without prior written authorization from The Open Group.
 #if OPT_WIDE_CHARS
 #include <wcwidth.h>
 #include <precompose.h>
+#ifdef HAVE_LANGINFO_CODESET
+#include <langinfo.h>
+#endif
 #endif
 
 #if OPT_INPUT_METHOD
@@ -1201,17 +1204,33 @@ VTparse(void)
 	 */
 	if (screen->c1_printable
 	    && (c >= 128 && c < 160)) {
-	    nextstate = parsestate[E2A(160)];
-	    if (nextstate == CASE_ESC_SP_STATE)
-		nextstate = CASE_ESC_IGNORE;
+	    nextstate = (parsestate == esc_table
+			 ? CASE_ESC_IGNORE
+			 : parsestate[E2A(160)]);
 	}
 #endif
 
 #if OPT_WIDE_CHARS
-	/* if this character is a different width than
-	   the last one, put the previous text into
-	   the buffer and draw it now */
+	/*
+	 * If we have a C1 code and the c1_printable flag is not set, simply
+	 * ignore it when it was translated from UTF-8.  That is because the
+	 * value could not have been present as-is in the UTF-8.
+	 *
+	 * To see that CASE_IGNORE is a consistent value, note that it is
+	 * always used for NUL and other uninteresting C0 controls.
+	 */
+#if OPT_C1_PRINT
+	if (!screen->c1_printable)
+#endif
+	    if (screen->wide_chars
+		&& (c >= 128 && c < 160)) {
+		nextstate = CASE_IGNORE;
+	    }
 
+	/*
+	 * If this character is a different width than the last one, put the
+	 * previous text into the buffer and draw it now.
+	 */
 	if (iswide(c) != last_was_wide) {
 	    WriteNow();
 	}
@@ -4728,7 +4747,7 @@ VTInitialize_locale(XtermWidget request)
 	if ((locale = getenv("LC_CTYPE")) == 0 || *locale == '\0')
 	    if ((locale = getenv("LANG")) == 0 || *locale == '\0')
 		locale = "";
-#ifdef HAVE_LANGINFO_CODESET	/* FIXME: not available yet */
+#ifdef HAVE_LANGINFO_CODESET
     is_utf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0);
 #else
     is_utf8 = (strstr(locale, "UTF-8") != NULL);

@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.107 2004/04/28 00:40:59 tom Exp $
+## $XTermId: Makefile.in,v 1.108 2004/05/25 00:08:41 tom Exp $
 ##
 ## $XFree86: xc/programs/xterm/Makefile.in,v 3.46 2004/04/28 00:40:59 dickey Exp $ ##
 ##
@@ -101,19 +101,19 @@ EXTRAOBJ	= @EXTRAOBJS@
                   ptyx.h version.h xstrings.h xterm.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
 
-all:	$(PROGRAMS)
+all :	$(PROGRAMS)
 
 .SUFFIXES : .i .def .hin
 
-.c$o:
+.c$o :
 @RULE_CC@
 	@ECHO_CC@$(CC) $(CPPFLAGS) $(CFLAGS) -c $(srcdir)/$*.c
 
-.c.i:
+.c.i :
 @RULE_CC@
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
 
-.def.hin:
+.def.hin :
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
 main$o : main.h
@@ -128,11 +128,11 @@ xterm$x : $(OBJS1)
 resize$x : $(OBJS2)
 	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
-256colres.h : $(srcdir)/256colres.pl
+256colres.h :
 	-rm -f $@
 	perl $(srcdir)/256colres.pl > $@
 
-88colres.h : $(srcdir)/88colres.pl
+88colres.h :
 	-rm -f $@
 	perl $(srcdir)/88colres.pl > $@
 
@@ -188,9 +188,9 @@ install-full \
 install-tc ::
 	@test -f /etc/termcap && echo 'You must install the termcap entry manually by editing /etc/termcap'
 
-installdirs: $(INSTALL_DIRS)
+installdirs : $(INSTALL_DIRS)
 
-uninstall:
+uninstall :
 	-$(RM) $(BINDIR)/$(binary_xterm)
 	-$(RM) $(BINDIR)/$(binary_resize)
 	-$(RM) $(BINDIR)/$(binary_uxterm)
@@ -200,17 +200,20 @@ uninstall:
 	-$(RM) $(APPSDIR)/$(CLASS)-color
 	-$(RM) $(APPSDIR)/UXTerm
 
-mostlyclean:
+mostlyclean :
 	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
-clean: mostlyclean
+clean : mostlyclean
 	-$(RM) $(PROGRAMS)
 
-distclean: clean
+distclean : clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
 
-realclean: distclean
+realclean : distclean
 	-$(RM) tags TAGS ctlseqs.ps ctlseqs.txt
+
+maintainer-clean : realclean
+	-$(RM) 256colres.h 88colres.h
 
 ctlseqs.txt : ctlseqs.ms
 	tbl ctlseqs.ms | nroff -ms >$@
@@ -218,20 +221,20 @@ ctlseqs.txt : ctlseqs.ms
 ctlseqs.ps : ctlseqs.ms
 	tbl ctlseqs.ms | groff -ms >$@
 
-lint:
+lint :
 	$(LINT) $(CPPFLAGS) $(SRCS1)
 	$(LINT) $(CPPFLAGS) $(SRCS2)
 
-tags:
+tags :
 	ctags $(SRCS) $(HDRS)
 
-TAGS:
+TAGS :
 	etags $(SRCS) $(HDRS)
 
-$(TERMINFO_DIR) $(INSTALL_DIRS):
+$(TERMINFO_DIR) $(INSTALL_DIRS) :
 	$(SHELL) ${srcdir}/mkdirs.sh $@
 
-ALWAYS:
+ALWAYS :
 
 depend : $(TABLES)
 	makedepend -- $(CPPFLAGS) -- $(SRCS)

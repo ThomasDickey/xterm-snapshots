@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.48 2004/04/18 20:49:43 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.50 2004/05/26 01:19:55 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.19 2004/04/18 20:49:43 dickey Exp $
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.20 2004/05/26 01:19:55 dickey Exp $
  */
 
 /************************************************************
@@ -86,6 +86,11 @@ convertPtyData(TScreen * screen, PtyData * data)
 	} else if (c < 0xc0) {
 	    /* We received a continuation byte */
 	    if (screen->utf_count < 1) {
+		/*
+		 * We received a continuation byte before receiving a sequence
+		 * state.  Or an attempt to use a C1 control string.  Either
+		 * way, it is mapped to the replacement character.
+		 */
 		data->inx2[j] = i;
 		data->buf2[j++] = UCS_REPL;	/* ... unexpectedly */
 	    } else {
