@@ -118,7 +118,7 @@ n_fields(char **source, int start, int stop)
  * or NULL on error.
  */
 static FontNameProperties *
-get_font_name_props(Display *dpy, XFontStruct *fs)
+get_font_name_props(Display *dpy, XFontStruct *fs, char *result)
 {
 	static FontNameProperties props;
 	static char *last_name;
@@ -147,6 +147,8 @@ get_font_name_props(Display *dpy, XFontStruct *fs)
 	if (last_name != 0)
 		XFree(last_name);
 	last_name = name;
+	if (result != 0)
+		strcpy(result, name);
 
 	/*
 	* Now split it up into parts and put them in
@@ -254,7 +256,7 @@ xtermSpecialFont(unsigned atts, unsigned chrset)
 	int res_x;
 	int res_y;
 
-	props = get_font_name_props(screen->display, screen->fnt_norm);
+	props = get_font_name_props(screen->display, screen->fnt_norm, (char *)0);
 	if (props == 0)
 		return 0;
 
@@ -312,6 +314,25 @@ xtermSpecialFont(unsigned atts, unsigned chrset)
 #endif /* OPT_DEC_CHRSET */
 
 /*
+ * Case-independent comparison for font-names, including wildcards.
+ */
+static int
+same_font_name(char *name1, char *name2)
+{
+	while (*name1 && *name2) {
+		if (*name1 == '*') {
+			return same_font_name(name1+1, name2+1)
+			   ||  same_font_name(name1, name2+1);
+		} else if (*name2 == '*') {
+			return same_font_name(name2, name1);
+		} else if (char2lower(*name1++) != char2lower(*name2++)) {
+			return 0;
+		}
+	}
+	return (*name1 == *name2);	/* both should be NUL */
+}
+
+/*
  * Double-check the fontname that we asked for versus what the font server
  * actually gave us.  The larger fixed fonts do not always have a matching bold
  * font, and the font server may try to scale another font or otherwise
@@ -322,19 +343,17 @@ xtermSpecialFont(unsigned atts, unsigned chrset)
  * offset.
  */
 static int
-got_bold_font(Display *dpy, XFontStruct *fs, char *fontname)
+got_bold_font(Display *dpy, XFontStruct *fs, char *requested)
 {
 	FontNameProperties *fp;
-	char oldname[MAX_FONTNAME], *p = oldname;
-	strcpy(p, fontname);
-	if ((fp = get_font_name_props(dpy, fs)) == 0)
-		return 0;
-	fontname = bold_font_name(fp);
-	while (*p && *fontname) {
-		if (char2lower(*p++) != char2lower(*fontname++))
-			return 0;
-	}
-	return (*p == *fontname);	/* both should be NUL */
+	char actual[MAX_FONTNAME];
+	int got;
+
+	if ((fp = get_font_name_props(dpy, fs, actual)) == 0)
+		got = 0;
+	else
+		got = same_font_name(requested, actual);
+	return got;
 }
 
 /*
@@ -380,6 +399,7 @@ xtermLoadFont (
 	Pixel new_normal;
 	Pixel new_revers;
 	char *tmpname = NULL;
+	char normal[MAX_FONTNAME];
 	Boolean proportional = False;
 	int ch;
 
@@ -399,8 +419,9 @@ xtermLoadFont (
 	if (EmptyFont(nfs))
 		goto bad;		/* can't use a 0-sized font */
 
+	strcpy(normal, nfontname);
 	if (bfontname == 0) {
-		fp = get_font_name_props(screen->display, nfs);
+		fp = get_font_name_props(screen->display, nfs, normal);
 		if (fp != 0) {
 			bfontname = bold_font_name(fp);
 			TRACE(("...derived bold %s\n", bfontname))
@@ -511,7 +532,9 @@ xtermLoadFont (
 	}
 #endif
 
-	screen->enbolden = (nfs == bfs);
+	screen->enbolden = (nfs == bfs) || same_font_name(normal, bfontname);
+	TRACE(("Will %suse 1-pixel offset/overstrike to simulate bold\n", screen->enbolden ? "" : "not "))
+
 	set_menu_font (False);
 	screen->menu_font_number = fontnum;
 	set_menu_font (True);

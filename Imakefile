@@ -49,6 +49,10 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
          PTYLIB = -lpucc
 #endif
 
+#if (LinuxCLibMajorVersion >= 6 && LinuxCLibMinorVersion >= 1)
+         PTYLIB = -lutil
+#endif
+
 #if XtermWithI18N
         I18NDEF = -DI18N
 #endif

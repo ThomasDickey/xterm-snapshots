@@ -69,8 +69,6 @@ SOFTWARE.
 
 /* main.c */
 
-#define _GNU_SOURCE 1	/* needed to prototype getpt() with glibc 2.1 */
-
 #include <version.h>
 #include <xterm.h>
 
@@ -156,11 +154,6 @@ static Bool IsPts = False;
 #define USE_HANDSHAKE
 #endif
 
-#if defined USE_USG_PTYS && (defined (__GLIBC__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
-#define USE_GETPT
-#include <stdlib.h>
-#endif
-
 #if defined(SYSV) && !defined(SVR4) && !defined(ISC22) && !defined(ISC30)
 /* older SYSV systems cannot ignore SIGHUP.
    Shell hangs, or you get extra shells, or something like that */
@@ -184,6 +177,10 @@ static Bool IsPts = False;
 #define LASTLOG
 #define WTMP
 #undef  HAS_LTCHARS
+#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1
+#define USE_USG_PTYS 1
+#include <pty.h>
+#endif
 #endif
 
 #ifdef __CYGWIN32__
@@ -564,7 +561,7 @@ static struct termio d_tio;
 static struct ltchars d_ltc;
 #endif	/* HAS_LTCHARS */
 
-#ifdef __sgi
+#if defined (__sgi) || (defined(__linux__) && defined(__sparc__))
 #undef TIOCLSET /* XXX why is this undef-ed again? */
 #endif
 
@@ -1888,7 +1885,7 @@ base_name(char *name)
 static int
 get_pty (int *pty)
 {
-#ifdef __osf__
+#if defined(__osf__) || (defined(linux) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1)
     int tty;
     return (openpty(pty, &tty, ttydev, NULL, NULL));
 #elif defined(SYSV) && defined(i386) && !defined(SVR4)
@@ -1918,15 +1915,9 @@ get_pty (int *pty)
         if (pty_search(pty) == 0)
 	    return 0;
 #elif defined(USE_USG_PTYS)
-#if defined USE_GETPT
-	if ((*pty = getpt ()) < 0) {
-	    return 1;
-	}
-#else
 	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0) {
 	    return 1;
 	}
-#endif
 #if defined(SVR4) || defined(SCO325) || (defined(i386) && defined(SYSV))
 	strcpy(ttydev, ptsname(*pty));
 #if defined (SYSV) && defined(i386) && !defined(SVR4)
@@ -2122,7 +2113,7 @@ static char *vtterm[] = {
 /* ARGSUSED */
 static SIGNAL_T hungtty(int i GCC_UNUSED)
 {
-	longjmp(env, 1);
+       siglongjmp(env, 1);
 	SIGNAL_RETURN;
 }
 
@@ -2307,7 +2298,7 @@ spawn (void)
 
 		signal(SIGALRM, hungtty);
 		alarm(2);		/* alarm(1) might return too soon */
-		if (! setjmp(env)) {
+               if (! sigsetjmp(env, 1)) {
 			tty = open ("/dev/tty", O_RDWR, 0);
 			alarm(0);
 			tty_got_hung = False;
@@ -2675,12 +2666,12 @@ spawn (void)
 #endif
 #endif /* USE_SYSV_PGRP */
 		while (1) {
-#ifdef TIOCNOTTY
+#if defined(TIOCNOTTY) && !(defined(linux) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1)
 			if (!no_dev_tty && (tty = open ("/dev/tty", O_RDWR)) >= 0) {
 				ioctl (tty, TIOCNOTTY, (char *) NULL);
 				close (tty);
 			}
-#endif /* TIOCNOTTY */
+#endif /* TIOCNOTTY && !linux*/
 #ifdef CSRG_BASED
 			(void)revoke(ttydev);
 #endif
@@ -3042,7 +3033,9 @@ spawn (void)
 		signal (SIGTERM, SIG_DFL);
 
 #if OPT_INITIAL_ERASE
-		if (! resource.ptyInitialErase) {
+		if (! resource.ptyInitialErase
+		 && !override_tty_modes
+		 && !ttymodelist[XTTYMODE_erase].set) {
 #ifdef USE_SYSV_TERMIO
 			if(ioctl(tty, TCGETA, &tio) == -1)
 				tio = d_tio;
