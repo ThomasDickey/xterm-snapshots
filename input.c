@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
  *
  *                         All Rights Reserved
  *
@@ -148,6 +148,9 @@ IsEditFunctionKey(KeySym keysym)
 #ifdef XK_KP_Delete
 	case XK_KP_Delete:
 	case XK_KP_Insert:
+#endif
+#ifdef XK_ISO_Left_Tab
+	case XK_ISO_Left_Tab:
 #endif
 		return True;
 	default:
@@ -531,12 +534,7 @@ Input (
 	 } else if (IsFunctionKey(keysym)
 		|| IsMiscFunctionKey(keysym)
 		|| IsEditFunctionKey(keysym)
-		|| ((keysym == XK_Delete)
-		 && ((modify_parm > 1)
-#if OPT_SUNPC_KBD
-		  || sunKeyboard
-#endif
-		  ))) {
+		|| (keysym == XK_Delete)) {
 #if OPT_SUNPC_KBD
 		if (sunKeyboard) {
 			if ((event->state & ControlMask)
@@ -572,15 +570,22 @@ Input (
 		else {
 			reply.a_type = CSI;
 			reply.a_nparam = 1;
+			reply.a_final = 0;
+			MODIFIER_PARM
 			if (sunFunctionKeys) {
 				reply.a_param[0] = sunfuncvalue (keysym);
 				reply.a_final = 'z';
+#ifdef XK_ISO_Left_Tab
+			} else if (keysym == XK_ISO_Left_Tab) {
+				reply.a_nparam = 0;
+				reply.a_final = 'Z';
+#endif
 			} else {
 				reply.a_param[0] = dec_code;
 				reply.a_final = '~';
 			}
-			MODIFIER_PARM
-			if (reply.a_param[0] > 0)
+			if (reply.a_final != 0
+			 && (reply.a_nparam == 0 || reply.a_param[0] >= 0))
 				unparseseq(&reply, pty);
 		}
 		key = TRUE;
@@ -641,6 +646,9 @@ Input (
 				*string = cmp;
 			} else if (eightbit) {
 				unparseputc (ESC, pty);  /* escape */
+			} else if (*string == '?'
+			    && (event->state & ControlMask) != 0) {
+				*string = 127;
 			}
 		}
 		while (nbytes-- > 0)
@@ -715,6 +723,9 @@ decfuncvalue (KeySym keycode)
 		case XK_Select:	return(4);
 		case XK_Prior:	return(5);
 		case XK_Next:	return(6);
+#ifdef XK_ISO_Left_Tab
+		case XK_ISO_Left_Tab: return('Z');
+#endif
 		default:	return(-1);
 	}
 }

@@ -551,8 +551,8 @@ This option specifies a series of terminal setting keywords followed by the
 characters that should be bound to those functions, similar to the \fIstty\fP
 program.  Allowable keywords include: intr, quit, erase, kill, eof,
 eol, swtch, start, stop, brk, susp, dsusp, rprnt, flush, weras, and lnext.
-Control characters may be specified as ^char (e.g. ^c or ^u) and ^? may be
-used to indicate delete.
+Control characters may be specified as ^char (e.g., ^c or ^u) and ^? may be
+used to indicate delete (127).
 .TP 8
 .BI \-tn " name"
 This option specifies the name of the terminal type to be set in the TERM
@@ -723,7 +723,7 @@ classes as well as:
 .B "backarrowKeyIsErase (\fPclass\fB BackarrowKeyIsErase)"
 Tie the VTxxx \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
 together by setting the DECBKM state according to whether the initial value of
-stty erase is a backspace or delete character.
+stty erase is a backspace (8) or delete (127) character.
 The default is ``false'', which disables this feature.
 .TP 8
 .B "hold (\fPclass\fB Hold)"
@@ -811,7 +811,7 @@ weras,
 lnext and
 status.
 Control characters may be specified as ^char (e.g., ^c or ^u)
-and \fB^?\fP may be used to indicate Delete.
+and \fB^?\fP may be used to indicate delete (127).
 Use \fB^-\fP to denote undef.
 Use \fB\\034\fP to represent \fB^\\\fP, since a literal backslash in
 an X resource escapes the next character.
@@ -894,8 +894,8 @@ The default is ``false.''
 .TP 8
 .B "backarrowKey (\fPclass\fB BackarrowKey)"
 Specifies whether the backarrow key transmits
-a backspace
-or delete character.
+a backspace (8)
+or delete (127) character.
 This corresponds to the DECBKM control sequence.
 The default (backspace) is ``true.''
 Pressing the control key toggles this behavior.

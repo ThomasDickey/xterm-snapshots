@@ -201,6 +201,16 @@ extern int errno;
 
 /***====================================================================***/
 
+#ifndef HAVE_CONFIG_H
+
+#if defined(_POSIX_VDISABLE) && (_POSIX_VDISABLE != -1) && defined(HAVE_UNISTD_H)
+#define HAVE_POSIX_VDISABLE 1
+#endif
+
+#endif /* HAVE_CONFIG_H */
+
+/***====================================================================***/
+
 #define XtNallowSendEvents	"allowSendEvents"
 #define XtNalwaysHighlight	"alwaysHighlight"
 #define XtNanswerbackString	"answerbackString"
