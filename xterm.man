@@ -1,7 +1,7 @@
 .\" $Xorg: xterm.man,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
 .\"
 .\"
-.\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey
+.\" Copyright 1996,1997,1998,1999,2000,2001 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -56,7 +56,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.72 2001/04/12 01:02:51 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.73 2001/04/28 13:51:56 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996.
 .TH XTERM 1 __vendorversion__
@@ -346,6 +346,21 @@ normal font and the bold font will be produced by overstriking this font.
 The default is to do overstriking of the normal font.
 See also the discussion of \fBboldFont\fP and \fBboldMode\fP resources.
 .TP 8
+.BI \-fa " pattern"
+This option sets the pattern for fonts selected from the FreeType
+library if support for that library was compiled into xterm.
+This corresponds to the \fBfaceName\fP resource.
+.TP 8
+.BI \-fi " font"
+This option sets the font for active icons if that feature was compiled
+into xterm.
+See also the discussion of the \fBiconFont\fP resource.
+.TP 8
+.BI \-fs " size"
+This option sets the pointsize for fonts selected from the FreeType
+library if support for that library was compiled into xterm.
+This corresponds to the \fBfaceSize\fP resource.
+.TP 8
 .B \-fw \fIfont\fP
 This option specifies the font to be used for displaying wide text.
 By default,
@@ -361,10 +376,6 @@ it will attempt to use a font twice as wide as the font that will be used to
 draw normal text.
 If no doublewidth font is found, it will improvise, by stretching 
 the normal font.
-.TP 8
-.B \-fi
-This option sets the font for active icons if that feature was compiled
-into xterm.
 .TP 8
 .BI \-hc " color"
 This option specifies the color to use for the background of
@@ -1204,6 +1215,19 @@ The default is ``true.''
 Specifies whether or not eight-bit characters sent from the host should be
 accepted as is or stripped when printed.  The default is ``true,''
 which means that they are accepted as is.
+.TP 8
+.B "faceName" (\fPclass\fB FaceName)"
+Specify the pattern for fonts selected from the FreeType
+library if support for that library was compiled into xterm.
+There is no default.
+If not specified,
+or if there is no match for both normal and bold fonts,
+xterm uses the \fBfont\fP and related resources.
+.TP 8
+.B "faceSize" (\fPclass\fB FaceSize)"
+Specify the pointsize for fonts selected from the FreeType
+library if support for that library was compiled into xterm.
+The default is ``14.''
 .TP 8
 .B "font (\fPclass\fB Font)"
 Specifies the name of the normal font.  The default is ``fixed.''

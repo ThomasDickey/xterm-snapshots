@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.36 2001/04/12 01:02:51 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.37 2001/04/28 13:51:56 dickey Exp $
  */
 
 /************************************************************
@@ -105,6 +105,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef USE_TTY_GROUP		/* CF_TTY_GROUP */
 #undef USE_UTEMPTER		/* CF_UTEMPTER */
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
+#undef XRENDERFONT		/* CF_X_FREETYPE */
 #undef const			/* AC_CONST */
 #undef size_t			/* AC_TYPE_SIZE_T */
 #undef time_t			/* AC_CHECK_TYPE(time_t, long) */

@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.38 2000/12/30 19:15:44 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.40 2001/04/28 13:51:55 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1217,6 +1217,7 @@ cf_save_LIBS="$LIBS"
 LIBS="$cf_freetype_libs $LIBS"
 
 AC_TRY_LINK([
+#include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/Xft/Xft.h>],[
 	XftPattern  *pat = XftNameParse ("name");
@@ -1225,6 +1226,7 @@ AC_TRY_LINK([
 ])
 if test "$cf_cv_x_freetype" = yes ; then
 	LIBS="$cf_freetype_libs $LIBS"
+	AC_DEFINE(XRENDERFONT)
 else
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
 fi
