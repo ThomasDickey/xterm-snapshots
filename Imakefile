@@ -7,7 +7,7 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.46 2002/08/17 19:52:25 dickey Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.47 2002/10/05 17:57:11 dickey Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -77,17 +77,12 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
  OSMAJORVERSION = OSMajorVersion
  OSMINORVERSION = OSMinorVersion
 
-#if !defined(AmoebaArchitecture) && !defined(OS2Architecture) && !defined(__GNU__)
+#if !defined(OS2Architecture) && !defined(__GNU__)
 #if defined(UseUtempter)
         UTMPDEF = -DUSE_UTEMPTER
 #else
         UTMPDEF = -DUTMP
 #endif
-#endif
-
-#ifdef AmoebaArchitecture
-       EXTRASRC = ttysvr.c
-       EXTRAOBJ = ttysvr.o
 #endif
 
 #ifdef UTF8support

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.15 2002/09/30 00:39:06 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.16 2002/10/05 17:57:13 dickey Exp $
  */
 
 /************************************************************
@@ -33,8 +33,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <xterm.h>		/* for definition of GCC_UNUSED */
 #include <trace.h>
-
-#include <X11/StringDefs.h>
 
 #include <time.h>
 #include <stdlib.h>
@@ -209,20 +207,6 @@ TraceArgv(const char *tag, char **argv)
     }
 }
 
-static int
-cmp_options(const void *a, const void *b)
-{
-    return strcmp(((const OptionHelp *) a)->opt,
-		  ((const OptionHelp *) b)->opt);
-}
-
-static int
-cmp_resources(const void *a, const void *b)
-{
-    return strcmp(((const XrmOptionDescRec *) a)->option,
-		  ((const XrmOptionDescRec *) b)->option);
-}
-
 static char *
 parse_option(char *dst, char *src, char first)
 {
@@ -299,29 +283,16 @@ standard_option(char *opt)
 void
 TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_count)
 {
-    OptionHelp *opt_array;
-    size_t opt_count, j, k;
-    XrmOptionDescRec *res_array;
+    OptionHelp *opt_array = sortedOpts(options, resources, res_count);
+    size_t j, k;
+    XrmOptionDescRec *res_array = sortedOptDescs(resources, res_count);
     Boolean first, found;
 
     TRACE(("Checking options-tables for inconsistencies:\n"));
 
-    /* count 'options' and make a sorted index to it */
-    for (opt_count = 0; options[opt_count].opt != 0; ++opt_count) ;
-    opt_array = (OptionHelp *) calloc(opt_count, sizeof(OptionHelp));
-    for (j = 0; j < opt_count; j++)
-	opt_array[j] = options[j];
-    qsort(opt_array, opt_count, sizeof(OptionHelp), cmp_options);
-
-    /* make a sorted index to 'resources' */
-    res_array = (XrmOptionDescRec *) calloc(res_count, sizeof(*res_array));
-    for (j = 0; j < res_count; j++)
-	res_array[j] = resources[j];
-    qsort(res_array, res_count, sizeof(*res_array), cmp_resources);
-
 #if 0
     TRACE(("Options listed in help-message:\n"));
-    for (j = 0; j < opt_count; j++)
+    for (j = 0; options[j].opt != 0; j++)
 	TRACE(("%5d %-28s %s\n", j, opt_array[j].opt, opt_array[j].desc));
     TRACE(("Options listed in resource-table:\n"));
     for (j = 0; j < res_count; j++)
@@ -329,7 +300,7 @@ TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_co
 #endif
 
     /* list all options[] not found in resources[] */
-    for (j = 0, first = True; j < opt_count; j++) {
+    for (j = 0, first = True; options[j].opt != 0; j++) {
 	found = False;
 	for (k = 0; k < res_count; k++) {
 	    if (same_option(&opt_array[j], &res_array[k])) {
@@ -350,7 +321,7 @@ TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_co
     /* list all resources[] not found in options[] */
     for (j = 0, first = True; j < res_count; j++) {
 	found = False;
-	for (k = 0; k < opt_count; k++) {
+	for (k = 0; options[k].opt != 0; k++) {
 	    if (same_option(&opt_array[k], &res_array[j])) {
 		found = True;
 		break;

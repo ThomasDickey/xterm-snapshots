@@ -2,7 +2,7 @@
  *	$Xorg: data.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.c,v 3.23 2002/08/17 19:52:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.c,v 3.24 2002/10/05 17:57:12 dickey Exp $ */
 
 /*
  * Copyright 2002 by Thomas E. Dickey
@@ -73,6 +73,21 @@ int T_lasty = -1;
 int Ttoggled = 0;
 jmp_buf Tekend;
 #endif
+
+char *ProgramName;
+
+Arg ourTopLevelShellArgs[] =
+{
+    {XtNallowShellResize, (XtArgVal) TRUE},
+    {XtNinput, (XtArgVal) TRUE},
+};
+int number_ourTopLevelShellArgs = 2;
+
+Bool waiting_for_initial_map;
+
+Atom wm_delete_window;		/* for ICCCM delete window */
+
+XTERM_RESOURCE resource;
 
 PtyData VTbuffer;
 

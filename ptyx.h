@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.98 2002/09/30 00:39:06 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.99 2002/10/05 17:57:13 dickey Exp $ */
 
 /*
  * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
@@ -67,6 +67,8 @@
 /* @(#)ptyx.h	X10/6.6	11/10/86 */
 
 #include <X11/IntrinsicP.h>
+#include <X11/Shell.h>		/* for XtNdieCallback, etc. */
+#include <X11/StringDefs.h>	/* for standard resource names */
 #include <X11/Xmu/Misc.h>	/* For Max() and Min(). */
 #include <X11/Xfuncs.h>
 #include <X11/Xosdefs.h>
@@ -83,17 +85,6 @@
 
 #define MyStackFree(pointer, stack_cache_array) \
     if ((pointer) != ((char *)(stack_cache_array))) free(pointer)
-
-#ifdef AMOEBA
-/* Avoid name clashes with standard Amoeba types: */
-#define event    am_event_t
-#define interval am_interval_t
-#include <amoeba.h>
-#include <semaphore.h>
-#include <circbuf.h>
-#undef event
-#undef interval
-#endif
 
 /*
 ** System V definitions
@@ -525,6 +516,14 @@ typedef struct {
 
 #ifndef OPT_SCO_FUNC_KEYS
 #define OPT_SCO_FUNC_KEYS 0 /* true if xterm supports SCO-style function keys */
+#endif
+
+#ifndef OPT_SESSION_MGT
+#if defined(XtNdieCallback) && defined(XtNsaveCallback)
+#define OPT_SESSION_MGT 1
+#else
+#define OPT_SESSION_MGT 0
+#endif
 #endif
 
 #ifndef OPT_SHIFT_FONTS
@@ -1037,11 +1036,6 @@ typedef struct {
 					   (position report, etc.)	*/
 #if OPT_TCAP_QUERY
 	int		tc_query;
-#endif
-#ifdef AMOEBA
-	capability      proccap;        /* process capability           */
-	struct circbuf  *tty_inq;       /* tty server input queue       */
-	struct circbuf  *tty_outq;      /* tty server output queue      */
 #endif
 	long		pid;		/* pid of process on far side   */
 	int		uid;		/* user id of actual person	*/

@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.54 2002/09/30 00:39:06 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.55 2002/10/05 17:57:12 dickey Exp $ */
 
 /***********************************************************
 
@@ -65,15 +65,9 @@ SOFTWARE.
 #include <version.h>
 #include <xterm.h>
 
-#include <X11/StringDefs.h>
-#include <X11/Shell.h>
 #include <X11/cursorfont.h>
 #ifdef I18N
 #include <X11/Xlocale.h>
-#endif
-
-#if OPT_WIDE_CHARS
-#include <wcwidth.h>
 #endif
 
 #if OPT_TOOLBAR
@@ -98,15 +92,23 @@ SOFTWARE.
 #include <xstrings.h>
 #include <xterm_io.h>
 
+#if OPT_WIDE_CHARS
+#include <charclass.h>
+#include <wcwidth.h>
+#endif
+
 int
 setpgrp(pid_t pid, gid_t pgid)
 {
+    return 0;
 }
 
 int
 chown(const char *fn, pid_t pid, gid_t gid)
 {
+    return 0;
 }
+
 char *
 ttyname(int fd)
 {
@@ -122,10 +124,22 @@ static SIGNAL_T reapchild(int n);
 static int spawn(void);
 static void get_terminal(void);
 static void resize(TScreen * s, char *oldtc, char *newtc);
+static void set_owner(char *device, int uid, int gid, int mode);
 
 static Bool added_utmp_entry = False;
 
-static char **command_to_exec;
+/*
+** Ordinarily it should be okay to omit the assignment in the following
+** statement. Apparently the c89 compiler on AIX 4.1.3 has a bug, or does
+** it? Without the assignment though the compiler will init command_to_exec
+** to 0xffffffff instead of NULL; and subsequent usage, e.g. in spawn() to
+** SEGV.
+*/
+static char **command_to_exec = NULL;
+
+#if OPT_LUIT_PROG
+static char **command_to_exec_with_luit = NULL;
+#endif
 
 /* The following structures are initialized in main() in order
 ** to eliminate any assumptions about the internal order of their
@@ -234,42 +248,9 @@ static Atom mit_console;
 static int tslot;
 static jmp_buf env;
 
-char *ProgramName;
-
-static struct _resource {
-    char *xterm_name;
-    char *icon_geometry;
-    char *title;
-    char *icon_name;
-    char *term_name;
-    char *tty_modes;
-    Boolean hold_screen;	/* true if we keep window open  */
-    Boolean utmpInhibit;
-    Boolean messages;
-    Boolean sunFunctionKeys;	/* %%% should be widget resource? */
-#if OPT_SUNPC_KBD
-    Boolean sunKeyboard;
-#endif
-#if OPT_HP_FUNC_KEYS
-    Boolean hpFunctionKeys;
-#endif
-    Boolean wait_for_map;
-    Boolean useInsertMode;
-#if OPT_ZICONBEEP
-    int zIconBeep;		/* beep level when output while iconified */
-#endif
-#if OPT_SAME_NAME
-    Boolean sameName;		/* Don't change the title or icon name if it is
-				 * the same.  This prevents flicker on the
-				 * screen at the cost of an extra request to
-				 * the server.
-				 */
-#endif
-} resource;
-
 /* used by VT (charproc.c) */
 
-#define offset(field)	XtOffsetOf(struct _resource, field)
+#define offset(field)	XtOffsetOf(XTERM_RESOURCE, field)
 
 static XtResource application_resources[] =
 {
@@ -312,6 +293,10 @@ static XtResource application_resources[] =
 #if OPT_SAME_NAME
     {"sameName", "SameName", XtRBoolean, sizeof(Boolean),
      offset(sameName), XtRString, "true"},
+#endif
+#if OPT_SESSION_MGT
+    {"sessionMgt", "SessionMgt", XtRBoolean, sizeof(Boolean),
+     offset(sessionMgt), XtRString, "true"},
 #endif
 };
 #undef offset
@@ -441,6 +426,12 @@ static XrmOptionDescRec optionDescList[] = {
 {"-u8",		"*utf8",	XrmoptionNoArg,		(caddr_t) "2"},
 {"+u8",		"*utf8",	XrmoptionNoArg,		(caddr_t) "0"},
 #endif
+#if OPT_LUIT_PROG
+{"-lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "True"},
+{"+lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "False"},
+{"-lcc",	"*localeFilter",XrmoptionSepArg,	(caddr_t) NULL},
+{"-en",		"*locale",	XrmoptionSepArg,	(caddr_t) NULL},
+#endif
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ut",		"*utmpInhibit",	XrmoptionNoArg,		(caddr_t) "on"},
@@ -454,25 +445,30 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_WIDE_CHARS
 {"-wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "off"},
-{"-cjk_width", "*cjkWidth", XrmoptionNoArg,     (caddr_t) "on"},
-{"+cjk_width", "*cjkWidth", XrmoptionNoArg,     (caddr_t) "off"},
+{"-cjk_width", "*cjkWidth",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+cjk_width", "*cjkWidth",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 {"-wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "off"},
 #if OPT_ZICONBEEP
-{"-ziconbeep",  "*zIconBeep",   XrmoptionSepArg,        (caddr_t) NULL},
+{"-ziconbeep",	"*zIconBeep",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
 #if OPT_SAME_NAME
 {"-samename",	"*sameName",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+samename",	"*sameName",	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
+#if OPT_SESSION_MGT
+{"-sm",		"*sessionMgt",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+sm",		"*sessionMgt",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
 {"-version",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
 {"-class",	NULL,		XrmoptionSkipArg,	(caddr_t) NULL},
 {"-e",		NULL,		XrmoptionSkipLine,	(caddr_t) NULL},
+{"-into",	NULL,		XrmoptionSkipArg,	(caddr_t) NULL},
 /* bogus old compatibility stuff for which there are
-   standard XtAppInitialize options now */
+   standard XtOpenApplication options now */
 {"%",		"*tekGeometry",	XrmoptionStickyArg,	(caddr_t) NULL},
 {"#",		".iconGeometry",XrmoptionStickyArg,	(caddr_t) NULL},
 {"-T",		".title",	XrmoptionSepArg,	(caddr_t) NULL},
@@ -484,7 +480,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"-w",		".borderWidth", XrmoptionSepArg,	(caddr_t) NULL},
 };
 
-static OptionHelp options[] = {
+static OptionHelp xtermOptions[] = {
 { "-version",              "print the version number" },
 { "-help",                 "print out this message" },
 { "-display displayname",  "X server to contact" },
@@ -496,7 +492,7 @@ static OptionHelp options[] = {
 { "-bw number",            "border width in pixels" },
 { "-fn fontname",          "normal text font" },
 { "-fb fontname",          "bold text font" },
-{ "-/+fbb",                "turn on/off bold font's box checking"},
+{ "-/+fbb",                "turn on/off normal/bold font comparison inhibit"},
 { "-/+fbx",                "turn off/on linedrawing characters"},
 #ifdef XRENDERFONT
 { "-fa pattern",           "FreeType font-selection pattern" },
@@ -511,10 +507,10 @@ static OptionHelp options[] = {
 { "-class string",         "class string (XTerm)" },
 { "-title string",         "title string" },
 { "-xrm resourcestring",   "additional resource specifications" },
-{ "-/+132",                "turn on/off column switch inhibiting" },
+{ "-/+132",                "turn on/off 80/132 column switching" },
 { "-/+ah",                 "turn on/off always highlight" },
 #ifndef NO_ACTIVE_ICON
-{ "-/+ai",		   "turn on/off active icon" },
+{ "-/+ai",                 "turn off/on active icon" },
 { "-fi fontname",	   "icon font for active icon" },
 #endif /* NO_ACTIVE_ICON */
 { "-b number",             "internal border in pixels" },
@@ -530,7 +526,7 @@ static OptionHelp options[] = {
 { "-/+cu",                 "turn on/off curses emulation" },
 { "-/+dc",		   "turn off/on dynamic color selection" },
 #if OPT_HIGHLIGHT_COLOR
-{ "-hc",		   "selection background color" },
+{ "-hc color",             "selection background color" },
 #endif
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
@@ -551,7 +547,7 @@ static OptionHelp options[] = {
 { "-/+mesg",		   "forbid/allow messages" },
 { "-ms color",             "pointer color" },
 { "-nb number",            "margin bell in characters from right end" },
-{ "-/+nul",                "turn on/off display of underlining" },
+{ "-/+nul",                "turn off/on display of underlining" },
 { "-/+aw",                 "turn on/off auto wraparound" },
 { "-/+pc",                 "turn on/off PC-style bold colors" },
 { "-/+rw",                 "turn on/off reverse wraparound" },
@@ -578,6 +574,10 @@ static OptionHelp options[] = {
 #if OPT_WIDE_CHARS
 { "-/+u8",                 "turn on/off UTF-8 mode (implies wide-characters)" },
 #endif
+#if OPT_LUIT_PROG
+{ "-/+lc",                 "turn on/off locale mode using luit" },
+{ "-lcc path",             "filename of locale converter (" DEFLOCALEFILTER ")" },
+#endif
 { "-/+ulc",                "turn off/on display of underline as color" },
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 { "-/+vb",                 "turn on/off visual bell" },
@@ -596,11 +596,15 @@ static OptionHelp options[] = {
 { "-n string",             "icon name for window" },
 { "-C",                    "intercept console messages" },
 { "-Sccn",                 "slave mode on \"ttycc\", file descriptor \"n\"" },
+{ "-into windowId",        "use the window id given to -into as the parent window rather than the default root window" },
 #if OPT_ZICONBEEP
 { "-ziconbeep percent",    "beep and flag icon of window having hidden output" },
 #endif
 #if OPT_SAME_NAME
 { "-/+samename",           "turn on/off the no-flicker option for title and icon name" },
+#endif
+#if OPT_SESSION_MGT
+{ "-/+sm",                 "turn on/off the session-management support" },
 #endif
 { NULL, NULL }};
 /* *INDENT-ON* */
@@ -629,6 +633,69 @@ static char *message[] =
     "will be started.  Options that start with a plus sign (+) restore the default.",
     NULL};
 
+/*
+ * Decode a key-definition.  This combines the termcap and ttyModes, for
+ * comparison.  Note that octal escapes in ttyModes are done by the normal
+ * resource translation.  Also, ttyModes allows '^-' as a synonym for disabled.
+ */
+static int
+decode_keyvalue(char **ptr, int termcap)
+{
+    char *string = *ptr;
+    int value = -1;
+
+    TRACE(("...decode '%s'\n", string));
+    if (*string == '^') {
+	switch (*++string) {
+	case '?':
+	    value = A2E(127);
+	    break;
+	case '-':
+	    if (!termcap) {
+		errno = 0;
+#if defined(_POSIX_VDISABLE) && defined(HAVE_UNISTD_H)
+		value = _POSIX_VDISABLE;
+#endif
+#if defined(_PC_VDISABLE)
+		if (value == -1) {
+		    value = fpathconf(0, _PC_VDISABLE);
+		    if (value == -1) {
+			if (errno != 0)
+			    break;	/* skip this (error) */
+			value = 0377;
+		    }
+		}
+#elif defined(VDISABLE)
+		if (value == -1)
+		    value = VDISABLE;
+#endif
+		break;
+	    }
+	    /* FALLTHRU */
+	default:
+	    value = CONTROL(*string);
+	    break;
+	}
+	++string;
+    } else if (termcap && (*string == '\\')) {
+	char *d;
+	int temp = strtol(string + 1, &d, 8);
+	if (temp > 0 && d != string) {
+	    value = temp;
+	    string = d;
+	}
+    } else {
+	value = CharOf(*string);
+	++string;
+    }
+    *ptr = string;
+    return value;
+}
+
+/*
+ * If we're linked to terminfo, tgetent() will return an empty buffer.  We
+ * cannot use that to adjust the $TERMCAP variable.
+ */
 static Boolean
 get_termcap(char *name, char *buffer, char *resized)
 {
@@ -666,6 +733,7 @@ static void
 Syntax(char *badOption)
 {
     OptionHelp *opt;
+    OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     int col;
 
     fprintf(stderr, "%s:  bad command line option \"%s\"\r\n\n",
@@ -673,7 +741,7 @@ Syntax(char *badOption)
 
     fprintf(stderr, "usage:  %s", ProgramName);
     col = 8 + strlen(ProgramName);
-    for (opt = options; opt->opt; opt++) {
+    for (opt = list; opt->opt; opt++) {
 	int len = 3 + strlen(opt->opt);		/* space [ string ] */
 	if (col + len > 79) {
 	    fprintf(stderr, "\r\n   ");		/* 3 spaces */
@@ -699,13 +767,14 @@ static void
 Help(void)
 {
     OptionHelp *opt;
+    OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     char **cpp;
 
     fprintf(stderr,
 	    "%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
 	    XFREE86_VERSION, XTERM_PATCH, ProgramName);
     fprintf(stderr, "where options include:\n");
-    for (opt = options; opt->opt; opt++) {
+    for (opt = list; opt->opt; opt++) {
 	fprintf(stderr, "    %-28s %s\n", opt->opt, opt->desc);
     }
 
@@ -732,14 +801,25 @@ ConvertConsoleSelection(Widget w GCC_UNUSED,
     return False;
 }
 
-Arg ourTopLevelShellArgs[] =
+#if OPT_SESSION_MGT
+static void
+die_callback(Widget w GCC_UNUSED,
+	     XtPointer client_data GCC_UNUSED,
+	     XtPointer call_data GCC_UNUSED)
 {
-    {XtNallowShellResize, (XtArgVal) TRUE},
-    {XtNinput, (XtArgVal) TRUE},
-};
-int number_ourTopLevelShellArgs = 2;
+    Cleanup(0);
+}
 
-Bool waiting_for_initial_map;
+static void
+save_callback(Widget w GCC_UNUSED,
+	      XtPointer client_data GCC_UNUSED,
+	      XtPointer call_data)
+{
+    XtCheckpointToken token = (XtCheckpointToken) call_data;
+    /* we have nothing to save */
+    token->save_success = True;
+}
+#endif /* OPT_SESSION_MGT */
 
 #if OPT_WIDE_CHARS
 int (*my_wcwidth) (wchar_t);
@@ -788,8 +868,6 @@ XtActionsRec actionProcs[] =
     {"KeyboardMapping", KeyboardMapping},
 };
 
-Atom wm_delete_window;
-
 char **gblenvp;
 extern char **environ;
 
@@ -800,11 +878,12 @@ main(int argc, char **argv ENVP_ARG)
     register TScreen *screen;
     int mode;
     char *my_class = DEFCLASS;
+    Window winToEmbedInto = None;
 
     /* Do these first, since we may not be able to open the display */
     ProgramName = argv[0];
-    TRACE_OPTS(options, optionDescList, XtNumber(optionDescList));
-    TRACE_ARGV("Before XtAppInitialize", argv);
+    TRACE_OPTS(xtermOptions, optionDescList, XtNumber(optionDescList));
+    TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
 	int n;
 	int unique = 2;
@@ -872,19 +951,26 @@ main(int argc, char **argv ENVP_ARG)
     d_tio.c_cc[VEOL] = CEOL;	/* '^@' */
 
     /* Init the Toolkit. */
-    {
-	XtSetErrorHandler(xt_error);
-	toplevel = XtAppInitialize(&app_con, my_class,
-				   optionDescList,
-				   XtNumber(optionDescList),
-				   &argc, argv, fallback_resources,
-				   NULL, 0);
-	XtSetErrorHandler((XtErrorHandler) 0);
+    XtSetErrorHandler(xt_error);
+#if OPT_SESSION_MGT
+    toplevel = XtOpenApplication(&app_con, my_class,
+				 optionDescList,
+				 XtNumber(optionDescList),
+				 &argc, argv, fallback_resources,
+				 sessionShellWidgetClass,
+				 NULL, 0);
+#else
+    toplevel = XtAppInitialize(&app_con, my_class,
+			       optionDescList,
+			       XtNumber(optionDescList),
+			       &argc, argv, fallback_resources,
+			       NULL, 0);
+#endif /* OPT_SESSION_MGT */
+    XtSetErrorHandler((XtErrorHandler) 0);
 
-	XtGetApplicationResources(toplevel, (XtPointer) & resource,
-				  application_resources,
-				  XtNumber(application_resources), NULL, 0);
-    }
+    XtGetApplicationResources(toplevel, (XtPointer) & resource,
+			      application_resources,
+			      XtNumber(application_resources), NULL, 0);
 
     waiting_for_initial_map = resource.wait_for_map;
 
@@ -948,7 +1034,7 @@ main(int argc, char **argv ENVP_ARG)
 #endif
 
     /* Parse the rest of the command line */
-    TRACE_ARGV("After XtAppInitialize", argv);
+    TRACE_ARGV("After XtOpenApplication", argv);
     for (argc--, argv++; argc > 0; argc--, argv++) {
 	if (**argv != '-')
 	    Syntax(*argv);
@@ -986,13 +1072,27 @@ main(int argc, char **argv ENVP_ARG)
 	    continue;
 #endif /* DEBUG */
 	case 'c':		/* -class param */
-	    argc--, argv++;
+	    if (strcmp(argv[0] + 1, "class") == 0)
+		argc--, argv++;
+	    else
+		Syntax(*argv);
 	    continue;
 	case 'e':
 	    if (argc <= 1)
 		Syntax(*argv);
 	    command_to_exec = ++argv;
 	    break;
+	case 'i':
+	    if (argc <= 1) {
+		Syntax(*argv);
+	    } else {
+		char *endPtr;
+		--argc;
+		++argv;
+		winToEmbedInto = (Window) strtol(argv[0], &endPtr, 10);
+	    }
+	    break;
+
 	default:
 	    Syntax(*argv);
 	}
@@ -1035,16 +1135,24 @@ main(int argc, char **argv ENVP_ARG)
     if (term->misc.tekInhibit)
 	inhibit |= I_TEK;
 #endif
+
 #if OPT_WIDE_CHARS
     my_wcwidth = &mk_wcwidth;
     if (term->misc.cjk_width)
 	my_wcwidth = &mk_wcwidth_cjk;
 #endif
 
-/*
- * Set title and icon name if not specified
- */
+#if OPT_SESSION_MGT
+    if (resource.sessionMgt) {
+	TRACE(("Enabling session-management callbacks\n"));
+	XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
+	XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
+    }
+#endif
 
+    /*
+     * Set title and icon name if not specified
+     */
     if (command_to_exec) {
 	Arg args[2];
 
@@ -1066,6 +1174,37 @@ main(int argc, char **argv ENVP_ARG)
 
 	XtSetValues(toplevel, args, 2);
     }
+#if OPT_LUIT_PROG
+    if (term->misc.callfilter) {
+	int u = (term->misc.use_encoding ? 2 : 0);
+	if (command_to_exec) {
+	    int n;
+	    char **c;
+	    for (n = 0, c = command_to_exec; *c; n++, c++) ;
+	    c = malloc((n + 3 + u) * sizeof(char *));
+	    if (c == NULL)
+		SysError(ERROR_LUMALLOC);
+	    memcpy(c + 2 + u, command_to_exec, (n + 1) * sizeof(char *));
+	    c[0] = term->misc.localefilter;
+	    if (u) {
+		c[1] = "-encoding";
+		c[2] = term->misc.locale_str;
+	    }
+	    c[1 + u] = "--";
+	    command_to_exec_with_luit = c;
+	} else {
+	    static char *luit[4];
+	    luit[0] = term->misc.localefilter;
+	    if (u) {
+		luit[1] = "-encoding";
+		luit[2] = term->misc.locale_str;
+		luit[3] = NULL;
+	    } else
+		luit[1] = NULL;
+	    command_to_exec_with_luit = luit;
+	}
+    }
+#endif
 #if OPT_TEK4014
     if (inhibit & I_TEK)
 	screen->TekEmu = FALSE;
@@ -1143,6 +1282,19 @@ main(int argc, char **argv ENVP_ARG)
 	StartLog(screen);
     }
 #endif
+
+    if (winToEmbedInto != None) {
+	XtRealizeWidget(toplevel);
+	/*
+	 * This should probably query the tree or check the attributes of
+	 * winToEmbedInto in order to verify that it exists, but I'm still not
+	 * certain what is the best way to do it -GPS
+	 */
+	XReparentWindow(XtDisplay(toplevel),
+			XtWindow(toplevel),
+			winToEmbedInto, 0, 0);
+    }
+
     for (;;) {
 #if OPT_TEK4014
 	if (screen->TekEmu)
@@ -1281,6 +1433,19 @@ first_map_occurred(void)
     waiting_for_initial_map = False;
 }
 
+static void
+set_owner(char *device, int uid, int gid, int mode)
+{
+    if (chown(device, uid, gid) < 0) {
+	if (errno != ENOENT
+	    && getuid() == 0) {
+	    fprintf(stderr, "Cannot chown %s to %d,%d: %s\n",
+		    device, uid, gid, strerror(errno));
+	}
+    }
+    chmod(device, mode);
+}
+
 #define THE_PARENT 1
 #define THE_CHILD  2
 int whoami = -1;
@@ -1382,6 +1547,7 @@ spawn(void)
 		SysError(ERROR_OPDEVTTY);
 	    }
 	} else {
+
 	    /* Get a copy of the current terminal's state,
 	     * if we can.  Some systems (e.g., SVR4 and MacII)
 	     * may not have a controlling terminal at this point
@@ -1516,7 +1682,11 @@ opencons();*/
 #ifdef EMXNOTBOGUS
 	    if ((ptr = ttyname(tty)) != 0) {
 		/* it may be bigger */
-		ttydev = realloc(ttydev, (unsigned) (strlen(ptr) + 1));
+		ttydev = realloc(ttydev,
+				 (unsigned) (strlen(ptr) + 1));
+		if (ttydev == NULL) {
+		    SysError(ERROR_SPREALLOC);
+		}
 		(void) strcpy(ttydev, ptr);
 	    }
 #else
@@ -1526,10 +1696,8 @@ opencons();*/
 	    ptioctl(tty, XTY_ENADUP, 0);
 
 	    /* change ownership of tty to real group and user id */
-	    chown(ttydev, screen->uid, screen->gid);
-
-	    /* change protection of tty */
-	    chmod(ttydev, (resource.messages ? 0622 : 0600));
+	    set_owner(ttydev, screen->uid, screen->gid,
+		      (resource.messages ? 0622 : 0600));
 
 	    /* for the xf86sup-pty, we set the pty to bypass: OS/2 does
 	     * not have a line discipline structure
@@ -1635,6 +1803,22 @@ opencons();*/
 		DosCloseEventSem(sev);
 	    }
 
+#if OPT_LUIT_PROG
+	    /*
+	     * Use two copies of command_to_exec, in case luit is not actually
+	     * there, or refuses to run.  In that case we will fall-through to
+	     * to command that the user gave anyway.
+	     */
+	    if (command_to_exec_with_luit) {
+		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
+		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
+		/* print error message on screen */
+		fprintf(stderr, "%s: Can't execvp %s: %s\n",
+			xterm_name, *command_to_exec_with_luit, strerror(errno));
+		fprintf(stderr, "%s: cannot support your locale.\n",
+			xterm_name);
+	    }
+#endif
 	    if (command_to_exec) {
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvpe(*command_to_exec, command_to_exec, gblenvp);
@@ -1720,12 +1904,8 @@ Exit(int n)
 #endif
     if (am_slave < 0) {
 	/* restore ownership of tty and pty */
-	chown(ttydev, 0, 0);
-	chown(ptydev, 0, 0);
-
-	/* restore modes of tty and pty */
-	chmod(ttydev, 0666);
-	chmod(ptydev, 0666);
+	set_owner(ttydev, 0, 0, 0666);
+	set_owner(ptydev, 0, 0, 0666);
     }
     exit(n);
     SIGNAL_RETURN;
@@ -1733,7 +1913,7 @@ Exit(int n)
 
 /* ARGSUSED */
 static void
-resize(TScreen * screen, register char *oldtc, register char *newtc)
+resize(TScreen * screen, register char *oldtc, char *newtc)
 {
 }
 
@@ -1755,6 +1935,7 @@ nonblocking_wait(void)
 static SIGNAL_T
 reapchild(int n GCC_UNUSED)
 {
+    int olderrno = errno;
     int pid;
 
     pid = wait(NULL);
@@ -1775,6 +1956,7 @@ reapchild(int n GCC_UNUSED)
 	}
     } while ((pid = nonblocking_wait()) > 0);
 
+    errno = olderrno;
     SIGNAL_RETURN;
 }
 
@@ -1793,6 +1975,7 @@ parse_tty_modes(char *s, struct _xttymodes *modelist)
     int c;
     int count = 0;
 
+    TRACE(("parse_tty_modes\n"));
     while (1) {
 	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s)))
 	    s++;
@@ -1812,25 +1995,12 @@ parse_tty_modes(char *s, struct _xttymodes *modelist)
 	if (!*s)
 	    return -1;
 
-	if (*s == '^') {
-	    s++;
-	    c = ((*s == '?') ? 0177 : CONTROL(*s));
-	    if (*s == '-') {
-		errno = 0;
-		c = fpathconf(0, _PC_VDISABLE);
-		if (c == -1) {
-		    if (errno != 0)
-			continue;	/* skip this (error) */
-		    c = 0377;
-		}
-	    }
-	} else {
-	    c = *s;
+	if ((c = decode_keyvalue(&s, False)) != -1) {
+	    mp->value = c;
+	    mp->set = 1;
+	    count++;
+	    TRACE(("...parsed #%d: %s=%#x\n", count, mp->name, c));
 	}
-	mp->value = c;
-	mp->set = 1;
-	count++;
-	s++;
     }
 }
 

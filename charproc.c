@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.134 2002/09/30 00:39:05 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.135 2002/10/05 17:57:11 dickey Exp $ */
 
 /*
 
@@ -88,8 +88,6 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
-#include <X11/StringDefs.h>
-#include <X11/Shell.h>
 #include <X11/Xmu/Atoms.h>
 #include <X11/Xmu/CharSet.h>
 #include <X11/Xmu/Converters.h>
@@ -118,14 +116,6 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <ctype.h>
 
-#ifdef MINIX
-#include <sys/nbio.h>
-
-#define select(n,r,w,x,t) nbio_select(n,r,w,x,t)
-#define read(f,b,s) nbio_read(f,b,s)
-#define write(f,b,s) nbio_write(f,b,s)
-#endif
-
 #include <VTparse.h>
 #include <data.h>
 #include <error.h>
@@ -139,8 +129,6 @@ in this Software without prior written authorization from The Open Group.
 #if OPT_ZICONBEEP || OPT_TOOLBAR
 #define HANDLE_STRUCT_NOTIFY 1
 #endif
-
-extern char *ProgramName;
 
 static IChar in_put(void);
 static int set_character_class(char *s);
@@ -2392,7 +2380,6 @@ v_write(int f, Char * data, int len)
     }
 #endif
 
-#ifndef AMOEBA
 #ifdef VMS
     if ((1 << f) != pty_mask)
 	return (tt_write((char *) data, len));
@@ -2400,10 +2387,6 @@ v_write(int f, Char * data, int len)
     if (!FD_ISSET(f, &pty_mask))
 	return (write(f, (char *) data, len));
 #endif /* VMS */
-#else
-    if (term->screen.respond != f)
-	return (write(f, (char *) data, len));
-#endif
 
     /*
      * Append to the block we already have.
@@ -2476,7 +2459,6 @@ v_write(int f, Char * data, int len)
 #define MAX_PTY_WRITE 128	/* 1/2 POSIX minimum MAX_INPUT */
 
     if (v_bufptr > v_bufstr) {
-#ifndef AMOEBA
 #ifdef VMS
 	riten = tt_write(v_bufstr,
 			 ((v_bufptr - v_bufstr <= VMS_TERM_BUFFER_SIZE)
@@ -2491,11 +2473,6 @@ v_write(int f, Char * data, int len)
 		       : MAX_PTY_WRITE));
 	if (riten < 0)
 #endif /* VMS */
-#else
-	riten = v_bufptr - v_bufstr <= MAX_PTY_WRITE ?
-	    v_bufptr - v_bufstr : MAX_PTY_WRITE;
-	if (cb_puts(term->screen.tty_inq, v_bufstr, riten) != 0)
-#endif /* AMOEBA */
 	{
 #ifdef DEBUG
 	    if (debug)
@@ -2707,7 +2684,6 @@ in_put(void)
 
 	XFlush(screen->display);	/* always flush writes before waiting */
 
-#ifndef AMOEBA
 	/* Update the masks and, unless X events are already in the queue,
 	   wait for I/O to be possible. */
 	XFD_COPYSET(&Select_mask, &select_mask);
@@ -2769,23 +2745,6 @@ in_put(void)
 	    if (VTbuffer.cnt > 0)	/* HandleInterpret */
 		break;
 	}
-#else /* AMOEBA */
-	i = _X11TransAmSelect(ConnectionNumber(screen->display), 1);
-	/* if there are X events already in our queue,
-	   it counts as being readable */
-	if (XtAppPending(app_con) || i > 0) {
-	    xevents();
-	    if (VTbuffer.cnt > 0)	/* HandleInterpret */
-		break;
-	    continue;
-	} else if (i < 0) {
-	    extern int exiting;
-	    if (errno != EINTR && !exiting)
-		SysError(ERROR_SELECT);
-	}
-	if (cb_full(screen->tty_outq) <= 0)
-	    SleepMainThread();
-#endif /* AMOENA */
 
     }
     return nextPtyData(&VTbuffer);
@@ -4007,10 +3966,6 @@ unparseputc(int c, int fd)
     IChar buf[2];
     register int i = 1;
 
-#ifdef AMOEBA
-    if (ttypreprocess(c))
-	return;
-#endif
 #if OPT_TCAP_QUERY
     /*
      * If we're returning a termcap string, it has to be translated since
@@ -4358,8 +4313,6 @@ RequestResize(XtermWidget termw, int rows, int cols, int text)
     if (XtAppPending(app_con))
 	xevents();
 }
-
-extern Atom wm_delete_window;	/* for ICCCM delete window */
 
 static String xterm_trans =
 "<ClientMessage>WM_PROTOCOLS: DeleteWindow()\n\

@@ -89,15 +89,13 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.158 2002/09/30 00:39:06 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.159 2002/10/05 17:57:12 dickey Exp $ */
 
 /* main.c */
 
 #include <version.h>
 #include <xterm.h>
 
-#include <X11/StringDefs.h>
-#include <X11/Shell.h>
 #include <X11/cursorfont.h>
 #include <X11/Xlocale.h>
 
@@ -127,35 +125,6 @@ SOFTWARE.
 #include <charclass.h>
 #include <wcwidth.h>
 #endif
-
-#ifdef AMOEBA
-#include <amoeba.h>
-#include <cmdreg.h>
-#include <stderr.h>
-#include <thread.h>
-#include <limits.h>
-#include <module/proc.h>
-#include <module/name.h>
-
-#define NILCAP ((capability *)NULL)
-#endif
-
-#ifdef MINIX
-#include <sys/nbio.h>
-
-#define setpgrp(pid, pgid) setpgid(pid, pgid)
-#define MNX_LASTLOG
-#define WTMP
-/* Remap or define non-existing termios flags */
-#define OCRNL	0
-#define ONLRET	0
-#define NLDLY	0
-#define CRDLY	0
-#define TABDLY	0
-#define BSDLY	0
-#define VTDLY	0
-#define FFDLY	0
-#endif /* MINIX */
 
 #ifdef __osf__
 #define USE_SYSV_SIGNALS
@@ -287,8 +256,6 @@ static Bool IsPts = False;
 
 #else	/* } !SYSV { */	/* BSD systems */
 
-#ifndef MINIX			/* { */
-
 #ifdef __QNX__
 
 #ifndef __QNXNTO__
@@ -322,8 +289,6 @@ ttyslot()
 
 #endif /* __QNX__ */
 
-#endif /* } MINIX */
-
 #endif /* } !SYSV */
 
 #if defined(SVR4) && !defined(__CYGWIN__)
@@ -339,7 +304,7 @@ ttyslot()
 #ifndef NOFILE
 #define NOFILE OPEN_MAX
 #endif
-#elif !(defined(VMS) || defined(MINIX) || defined(WIN32) || defined(Lynx) || defined(__GNU__) || defined(__MVS__))
+#elif !(defined(VMS) || defined(WIN32) || defined(Lynx) || defined(__GNU__) || defined(__MVS__))
 #include <sys/param.h>		/* for NOFILE */
 #endif
 
@@ -705,46 +670,9 @@ static int tslot;
 #endif /* USE_SYSV_UTMP */
 static sigjmp_buf env;
 
-char *ProgramName;
-
-static struct _resource {
-    char *xterm_name;
-    char *icon_geometry;
-    char *title;
-    char *icon_name;
-    char *term_name;
-    char *tty_modes;
-    Boolean hold_screen;	/* true if we keep window open  */
-    Boolean utmpInhibit;
-    Boolean messages;
-    Boolean sunFunctionKeys;	/* %%% should be widget resource? */
-#if OPT_SUNPC_KBD
-    Boolean sunKeyboard;
-#endif
-#if OPT_HP_FUNC_KEYS
-    Boolean hpFunctionKeys;
-#endif
-#if OPT_INITIAL_ERASE
-    Boolean ptyInitialErase;	/* if true, use pty's sense of erase char */
-    Boolean backarrow_is_erase;	/* override backspace/delete */
-#endif
-    Boolean wait_for_map;
-    Boolean useInsertMode;
-#if OPT_ZICONBEEP
-    int zIconBeep;		/* beep level when output while iconified */
-#endif
-#if OPT_SAME_NAME
-    Boolean sameName;		/* Don't change the title or icon name if it is
-				 * the same.  This prevents flicker on the
-				 * screen at the cost of an extra request to
-				 * the server.
-				 */
-#endif
-} resource;
-
 /* used by VT (charproc.c) */
 
-#define offset(field)	XtOffsetOf(struct _resource, field)
+#define offset(field)	XtOffsetOf(XTERM_RESOURCE, field)
 
 static XtResource application_resources[] =
 {
@@ -793,6 +721,10 @@ static XtResource application_resources[] =
 #if OPT_SAME_NAME
     {"sameName", "SameName", XtRBoolean, sizeof(Boolean),
      offset(sameName), XtRString, "true"},
+#endif
+#if OPT_SESSION_MGT
+    {"sessionMgt", "SessionMgt", XtRBoolean, sizeof(Boolean),
+     offset(sessionMgt), XtRString, "true"},
 #endif
 };
 #undef offset
@@ -948,8 +880,8 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_WIDE_CHARS
 {"-wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "off"},
-{"-cjk_width",	"*cjkWidth",		XrmoptionNoArg,	(caddr_t) "on"},
-{"+cjk_width",	"*cjkWidth",		XrmoptionNoArg,	(caddr_t) "off"},
+{"-cjk_width",	"*cjkWidth",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+cjk_width",	"*cjkWidth",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 {"-wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -959,6 +891,10 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_SAME_NAME
 {"-samename",	"*sameName",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+samename",	"*sameName",	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
+#if OPT_SESSION_MGT
+{"-sm",		"*sessionMgt",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+sm",		"*sessionMgt",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
@@ -979,7 +915,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"-w",		".borderWidth", XrmoptionSepArg,	(caddr_t) NULL},
 };
 
-static OptionHelp options[] = {
+static OptionHelp xtermOptions[] = {
 { "-version",              "print the version number" },
 { "-help",                 "print out this message" },
 { "-display displayname",  "X server to contact" },
@@ -991,7 +927,7 @@ static OptionHelp options[] = {
 { "-bw number",            "border width in pixels" },
 { "-fn fontname",          "normal text font" },
 { "-fb fontname",          "bold text font" },
-{ "-/+fbb",                "turn on/off bold font's box checking"},
+{ "-/+fbb",                "turn on/off normal/bold font comparison inhibit"},
 { "-/+fbx",                "turn off/on linedrawing characters"},
 #ifdef XRENDERFONT
 { "-fa pattern",           "FreeType font-selection pattern" },
@@ -1009,10 +945,10 @@ static OptionHelp options[] = {
 { "-class string",         "class string (XTerm)" },
 { "-title string",         "title string" },
 { "-xrm resourcestring",   "additional resource specifications" },
-{ "-/+132",                "turn on/off column switch inhibiting" },
+{ "-/+132",                "turn on/off 80/132 column switching" },
 { "-/+ah",                 "turn on/off always highlight" },
 #ifndef NO_ACTIVE_ICON
-{ "-/+ai",                 "turn on/off active icon" },
+{ "-/+ai",                 "turn off/on active icon" },
 { "-fi fontname",          "icon font for active icon" },
 #endif /* NO_ACTIVE_ICON */
 { "-b number",             "internal border in pixels" },
@@ -1028,7 +964,7 @@ static OptionHelp options[] = {
 { "-/+cu",                 "turn on/off curses emulation" },
 { "-/+dc",		   "turn off/on dynamic color selection" },
 #if OPT_HIGHLIGHT_COLOR
-{ "-hc",                   "selection background color" },
+{ "-hc color",             "selection background color" },
 #endif
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
@@ -1052,7 +988,7 @@ static OptionHelp options[] = {
 { "-/+mesg",		   "forbid/allow messages" },
 { "-ms color",             "pointer color" },
 { "-nb number",            "margin bell in characters from right end" },
-{ "-/+nul",                "turn on/off display of underlining" },
+{ "-/+nul",                "turn off/on display of underlining" },
 { "-/+aw",                 "turn on/off auto wraparound" },
 { "-/+pc",                 "turn on/off PC-style bold colors" },
 { "-/+rw",                 "turn on/off reverse wraparound" },
@@ -1085,9 +1021,9 @@ static OptionHelp options[] = {
 #endif
 { "-/+ulc",                "turn off/on display of underline as color" },
 #ifdef HAVE_UTMP
-{ "-/+ut",                 "turn on/off utmp inhibit" },
+{ "-/+ut",                 "turn on/off utmp support" },
 #else
-{ "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
+{ "-/+ut",                 "turn on/off utmp support (not available)" },
 #endif
 { "-/+vb",                 "turn on/off visual bell" },
 { "-/+pob",                "turn on/off pop on bell" },
@@ -1116,6 +1052,9 @@ static OptionHelp options[] = {
 #if OPT_SAME_NAME
 { "-/+samename",           "turn on/off the no-flicker option for title and icon name" },
 #endif
+#if OPT_SESSION_MGT
+{ "-/+sm",                 "turn on/off the session-management support" },
+#endif
 { NULL, NULL }};
 /* *INDENT-ON* */
 
@@ -1134,8 +1073,9 @@ static char *message[] =
  * resource translation.  Also, ttyModes allows '^-' as a synonym for disabled.
  */
 static int
-decode_keyvalue(char *string, int termcap)
+decode_keyvalue(char **ptr, int termcap)
 {
+    char *string = *ptr;
     int value = -1;
 
     TRACE(("...decode '%s'\n", string));
@@ -1170,14 +1110,19 @@ decode_keyvalue(char *string, int termcap)
 	    value = CONTROL(*string);
 	    break;
 	}
+	++string;
     } else if (termcap && (*string == '\\')) {
 	char *d;
-	int temp = strtol(string, &d, 8);
-	if (temp > 0 && d != string)
+	int temp = strtol(string + 1, &d, 8);
+	if (temp > 0 && d != string) {
 	    value = temp;
+	    string = d;
+	}
     } else {
 	value = CharOf(*string);
+	++string;
     }
+    *ptr = string;
     return value;
 }
 
@@ -1222,6 +1167,7 @@ static void
 Syntax(char *badOption)
 {
     OptionHelp *opt;
+    OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     int col;
 
     fprintf(stderr, "%s:  bad command line option \"%s\"\r\n\n",
@@ -1229,7 +1175,7 @@ Syntax(char *badOption)
 
     fprintf(stderr, "usage:  %s", ProgramName);
     col = 8 + strlen(ProgramName);
-    for (opt = options; opt->opt; opt++) {
+    for (opt = list; opt->opt; opt++) {
 	int len = 3 + strlen(opt->opt);		/* space [ string ] */
 	if (col + len > 79) {
 	    fprintf(stderr, "\r\n   ");		/* 3 spaces */
@@ -1255,13 +1201,14 @@ static void
 Help(void)
 {
     OptionHelp *opt;
+    OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     char **cpp;
 
     fprintf(stderr,
 	    "%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
 	    XFREE86_VERSION, XTERM_PATCH, ProgramName);
     fprintf(stderr, "where options include:\n");
-    for (opt = options; opt->opt; opt++) {
+    for (opt = list; opt->opt; opt++) {
 	fprintf(stderr, "    %-28s %s\n", opt->opt, opt->desc);
     }
 
@@ -1290,15 +1237,7 @@ ConvertConsoleSelection(Widget w GCC_UNUSED,
 }
 #endif /* TIOCCONS */
 
-Arg ourTopLevelShellArgs[] =
-{
-    {XtNallowShellResize, (XtArgVal) TRUE},
-    {XtNinput, (XtArgVal) TRUE},
-};
-int number_ourTopLevelShellArgs = 2;
-
-Bool waiting_for_initial_map;
-
+#if OPT_SESSION_MGT
 static void
 die_callback(Widget w GCC_UNUSED,
 	     XtPointer client_data GCC_UNUSED,
@@ -1316,6 +1255,7 @@ save_callback(Widget w GCC_UNUSED,
     /* we have nothing to save */
     token->save_success = True;
 }
+#endif /* OPT_SESSION_MGT */
 
 #if OPT_WIDE_CHARS
 int (*my_wcwidth) (wchar_t);
@@ -1363,8 +1303,6 @@ XtActionsRec actionProcs[] =
     {"DeleteWindow", DeleteWindow},
     {"KeyboardMapping", KeyboardMapping},
 };
-
-Atom wm_delete_window;
 
 /*
  * Some platforms use names such as /dev/tty01, others /dev/pts/1.  Parse off
@@ -1539,7 +1477,6 @@ main(int argc, char *argv[]ENVP_ARG)
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
 
-#ifndef AMOEBA
     /* extra length in case longer tty name like /dev/ttyq255 */
     ttydev = (char *) malloc(sizeof(TTYDEV) + 80);
 #ifdef USE_PTY_DEVICE
@@ -1564,11 +1501,10 @@ main(int argc, char *argv[]ENVP_ARG)
     seteuid(getuid());
     setuid(getuid());
 #endif /* __OpenBSD__ */
-#endif /* AMOEBA */
 
     /* Do these first, since we may not be able to open the display */
     ProgramName = argv[0];
-    TRACE_OPTS(options, optionDescList, XtNumber(optionDescList));
+    TRACE_OPTS(xtermOptions, optionDescList, XtNumber(optionDescList));
     TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
 	int n;
@@ -1602,29 +1538,7 @@ main(int argc, char *argv[]ENVP_ARG)
     XtSetLanguageProc(NULL, NULL, NULL);
 #endif
 
-#ifndef AMOEBA
-#ifdef MINIX
-    d_tio.c_iflag = TINPUT_DEF;
-    d_tio.c_oflag = TOUTPUT_DEF;
-    d_tio.c_cflag = TCTRL_DEF;
-    d_tio.c_lflag = TLOCAL_DEF;
-    cfsetispeed(&d_tio, TSPEED_DEF);
-    cfsetispeed(&d_tio, TSPEED_DEF);
-    d_tio.c_cc[VEOF] = TEOF_DEF;
-    d_tio.c_cc[VEOL] = TEOL_DEF;
-    d_tio.c_cc[VERASE] = TERASE_DEF;
-    d_tio.c_cc[VINTR] = TINTR_DEF;
-    d_tio.c_cc[VKILL] = TKILL_DEF;
-    d_tio.c_cc[VMIN] = TMIN_DEF;
-    d_tio.c_cc[VQUIT] = TQUIT_DEF;
-    d_tio.c_cc[VTIME] = TTIME_DEF;
-    d_tio.c_cc[VSUSP] = TSUSP_DEF;
-    d_tio.c_cc[VSTART] = TSTART_DEF;
-    d_tio.c_cc[VSTOP] = TSTOP_DEF;
-    d_tio.c_cc[VREPRINT] = TREPRINT_DEF;
-    d_tio.c_cc[VLNEXT] = TLNEXT_DEF;
-    d_tio.c_cc[VDISCARD] = TDISCARD_DEF;
-#elif defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)	/* { */
+#if defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)	/* { */
     /* Initialization is done here rather than above in order
      * to prevent any assumptions about the order of the contents
      * of the various terminal structures (which may change from
@@ -1857,8 +1771,7 @@ main(int argc, char *argv[]ENVP_ARG)
     d_lmode = 0;
 #endif /* } TIOCLSET */
 #endif /* } macII, ATT, CRAY */
-#endif /* } MINIX, etc */
-#endif /* AMOEBA */
+#endif /* } USE_ANY_SYSV_TERMIO || USE_POSIX_TERMIOS */
 
     /* Init the Toolkit. */
     {
@@ -1886,12 +1799,20 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 
 	XtSetErrorHandler(xt_error);
+#if OPT_SESSION_MGT
 	toplevel = XtOpenApplication(&app_con, my_class,
 				     optionDescList,
 				     XtNumber(optionDescList),
 				     &argc, argv, fallback_resources,
 				     sessionShellWidgetClass,
 				     NULL, 0);
+#else
+	toplevel = XtAppInitialize(&app_con, my_class,
+				   optionDescList,
+				   XtNumber(optionDescList),
+				   &argc, argv, fallback_resources,
+				   NULL, 0);
+#endif /* OPT_SESSION_MGT */
 	XtSetErrorHandler((XtErrorHandler) 0);
 
 	XtGetApplicationResources(toplevel, (XtPointer) & resource,
@@ -2030,7 +1951,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	    continue;
 #endif /* DEBUG */
 	case 'c':		/* -class param */
-	    argc--, argv++;
+	    if (strcmp(argv[0] + 1, "class") == 0)
+		argc--, argv++;
+	    else
+		Syntax(*argv);
 	    continue;
 	case 'e':
 	    if (argc <= 1)
@@ -2097,13 +2021,17 @@ main(int argc, char *argv[]ENVP_ARG)
 	my_wcwidth = &mk_wcwidth_cjk;
 #endif
 
-    XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
-    XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
+#if OPT_SESSION_MGT
+    if (resource.sessionMgt) {
+	TRACE(("Enabling session-management callbacks\n"));
+	XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
+	XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
+    }
+#endif
 
-/*
- * Set title and icon name if not specified
- */
-
+    /*
+     * Set title and icon name if not specified
+     */
     if (command_to_exec) {
 	Arg args[2];
 
@@ -2164,7 +2092,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	exit(ERROR_INIT);
 #endif
 
-#ifndef MINIX
 #ifdef DEBUG
     {
 	/* Set up stderr properly.  Opening this log file cannot be
@@ -2202,7 +2129,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
     }
 #endif /* DEBUG */
-#endif /* MINIX */
 
     /* open a terminal for client */
     get_terminal();
@@ -2219,7 +2145,6 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
     /* Realize procs have now been executed */
 
-#ifndef AMOEBA
     if (am_slave >= 0) {	/* Write window id so master end can read and use */
 	char buf[80];
 
@@ -2227,7 +2152,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	sprintf(buf, "%lx\n", XtWindow(XtParent(CURRENT_EMU(screen))));
 	write(screen->respond, buf, strlen(buf));
     }
-#endif /* !AMOEBA */
 
     screen->inhibit = inhibit;
 
@@ -2251,15 +2175,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif
 #endif
-#ifndef AMOEBA
-#ifdef MINIX
-    if ((mode = fcntl(screen->respond, F_GETFD, 0)) == -1)
-	Error(1);
-    mode |= FD_ASYNCHIO;
-    if (fcntl(screen->respond, F_SETFD, mode) == -1)
-	Error(1);
-    nbio_register(screen->respond);
-#elif defined(USE_ANY_SYSV_TERMIO) || defined(__MVS__)
+#if defined(USE_ANY_SYSV_TERMIO) || defined(__MVS__)
     if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
 	Error(1);
 #ifdef O_NDELAY
@@ -2269,12 +2185,11 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif /* O_NDELAY */
     if (fcntl(screen->respond, F_SETFL, mode))
 	Error(1);
-#else /* !MINIX && !USE_ANY_SYSV_TERMIO */
+#else /* !USE_ANY_SYSV_TERMIO */
     mode = 1;
     if (ioctl(screen->respond, FIONBIO, (char *) &mode) == -1)
 	SysError(ERROR_FIONBIO);
-#endif /* MINIX, etc */
-#endif /* AMOEBA */
+#endif /* USE_ANY_SYSV_TERMIO, etc */
 
     FD_ZERO(&pty_mask);
     FD_ZERO(&X_mask);
@@ -2323,7 +2238,6 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 }
 
-#ifndef AMOEBA
 /*
  * This function opens up a pty master and stuffs its value into pty.
  *
@@ -2347,11 +2261,9 @@ get_pty(int *pty, char *from GCC_UNUSED)
 
 	seteuid(0);
 	if ((ttygrp = getgrnam(TTY_GROUP_NAME)) != 0) {
-	    set_owner(ttydev, getuid(), ttygrp->gr_gid,
-		      0600);
+	    set_owner(ttydev, getuid(), ttygrp->gr_gid, 0600);
 	} else {
-	    set_owner(ttydev, getuid(), getgid(),
-		      0600);
+	    set_owner(ttydev, getuid(), getgid(), 0600);
 	}
 	seteuid(getuid());
     } else if (m_pty != -1) {
@@ -2559,7 +2471,6 @@ pty_search(int *pty)
     return 1;
 }
 #endif /* USE_PTY_SEARCH */
-#endif /* AMOEBA */
 
 static void
 get_terminal(void)
@@ -2712,7 +2623,6 @@ first_map_occurred(void)
 #endif /* USE_HANDSHAKE else !USE_HANDSHAKE */
 
 #ifndef VMS
-#ifndef AMOEBA
 extern char **environ;
 
 static void
@@ -2934,12 +2844,6 @@ spawn(void)
 	    }
 #endif
 
-#ifdef MINIX
-	    /* Editing shells interfere with xterms started in
-	     * the background.
-	     */
-	    tio = d_tio;
-#endif
 	    close(tty);
 	    /* tty is no longer an open fd! */
 	    tty = -1;
@@ -3041,7 +2945,7 @@ spawn(void)
 	char *s = tgetstr(TERMCAP_ERASE, &p);
 	TRACE(("...extracting initial_erase value from termcap\n"));
 	if (s != 0) {
-	    initial_erase = decode_keyvalue(s, True);
+	    initial_erase = decode_keyvalue(&s, True);
 	}
     }
     TRACE(("...initial_erase:%d\n", initial_erase));
@@ -3357,10 +3261,6 @@ spawn(void)
 #ifdef OPOST
 		tio.c_oflag |= OPOST;
 #endif /* OPOST */
-#ifdef MINIX			/* should be ifdef _POSIX_SOURCE */
-		cfsetispeed(&tio, VAL_LINE_SPEED);
-		cfsetospeed(&tio, VAL_LINE_SPEED);
-#else /* !MINIX */
 #ifndef USE_POSIX_TERMIOS
 # if defined(Lynx) && !defined(CBAUD)
 #  define CBAUD V_CBAUD
@@ -3384,7 +3284,6 @@ spawn(void)
 		   when the xterm ends */
 		tio.c_cflag &= ~CLOCAL;
 #endif /* USE_POSIX_TERMIOS */
-#endif /* MINIX */
 		tio.c_cflag &= ~CSIZE;
 		if (screen->input_eight_bits)
 		    tio.c_cflag |= CS8;
@@ -3680,7 +3579,6 @@ spawn(void)
 
 	    signal(SIGTERM, SIG_DFL);
 
-#ifndef AMOEBA
 	    /* this is the time to go and set up stdin, out, and err
 	     */
 	    {
@@ -3724,8 +3622,6 @@ spawn(void)
 	    tcsetpgrp(0, pgrp /*setsid() */ );
 #endif
 #endif /* !USE_SYSV_PGRP */
-
-#endif /* AMOEBA */
 
 #ifdef Lynx
 	    {
@@ -3888,10 +3784,6 @@ spawn(void)
 				   sizeof(utmp.ut_line));
 		    (void) strncpy(utmp.ut_name, login_name,
 				   sizeof(utmp.ut_name));
-#ifdef MINIX
-		    utmp.ut_pid = getpid();
-		    utmp.ut_type = USER_PROCESS;
-#endif /* MINIX */
 #ifdef HAVE_UTMP_UT_HOST
 		    (void) strncpy(utmp.ut_host,
 				   XDisplayString(screen->display),
@@ -4277,372 +4169,6 @@ spawn(void)
 
     return 0;
 }				/* end spawn */
-#else /* AMOEBA */
-/* manifest constants */
-#define	TTY_NTHREADS		2
-#define	TTY_INQSIZE		2000
-#define	TTY_OUTQSIZE		1000
-#define	TTY_THREAD_STACKSIZE	4096
-
-#define	XWATCHDOG_THREAD_SIZE	4096
-
-/* acceptable defaults */
-#define	DEF_HOME		"/home"
-#define	DEF_SHELL		"/bin/sh"
-#define	DEF_PATH		"/bin:/usr/bin:/profile/util"
-
-extern capability ttycap;
-extern char **environ;
-extern struct caplist *capv;
-
-/*
- * Set capability.
- * I made this a function since it cannot be a macro.
- */
-void
-setcap(struct caplist *capvec, int n, char *name, capability * cap)
-{
-    capvec[n].cl_name = name;
-    capvec[n].cl_cap = cap;
-}
-
-/*
- * Find process descriptor for specified program,
- * necessarily running down the user's PATH.
- */
-errstat
-find_program(char *program, capability * programcap)
-{
-    errstat err;
-
-    if ((err = name_lookup(program, programcap)) != STD_OK) {
-	char *path, *name;
-	char programpath[1024];
-
-	if ((path = getenv("PATH")) == NULL)
-	    path = DEF_PATH;
-	name = x_basename(program);
-
-	do {
-	    register char *p = programpath;
-	    register char *n = name;
-	    char *c1 = path;
-
-	    while (*path && *path != ':')
-		*p++ = *path++;
-	    if (path != c1)
-		*p++ = '/';
-	    if (*path)
-		path++;
-	    while (*n)
-		*p++ = *n++;
-	    *p = '\0';
-	    if ((err = name_lookup(programpath, programcap)) == STD_OK)
-		break;
-	} while (*path);
-    }
-    return err;
-}
-
-/* Semaphore on which the main thread blocks until it can do something
- * useful (which is made known by a call to WakeupMainThread()).
- */
-static semaphore main_sema;
-
-void
-InitMainThread(void)
-{
-    sema_init(&main_sema, 0);
-}
-
-void
-WakeupMainThread(void)
-{
-    sema_up(&main_sema);
-}
-
-/*
- * Spawn off tty threads and fork the login process.
- */
-static int
-spawn(void)
-{
-    register TScreen *screen = &term->screen;
-    char *TermName = NULL;
-    char termcap[TERMCAP_SIZE];
-    char newtc[TERMCAP_SIZE];
-    char **envnew;		/* new environment */
-    int envsize;		/* elements in new environment */
-    char *ptr;
-    int i, n, ncap;
-    errstat err;
-    struct caplist *cl;
-    char buf[64];
-    struct caplist *capvnew;
-    int ttythread();
-    int xwatchdogthread();
-
-    screen->pid = 2;		/* at least > 1 */
-    screen->uid = getuid();
-    screen->gid = getgid();
-    screen->respond = OPEN_MAX + 1;
-    screen->tty_inq = cb_alloc(TTY_INQSIZE);
-    screen->tty_outq = cb_alloc(TTY_OUTQSIZE);
-
-    InitMainThread();
-    if (!thread_newthread(xwatchdogthread, XWATCHDOG_THREAD_SIZE, 0, 0)) {
-	fprintf(stderr, "%s:  unable to start tty thread.\n", ProgramName);
-	Exit(1);
-    }
-
-    /*
-     * Start tty threads. Ordinarily two should suffice, one for standard
-     * input and one for standard (error) output.
-     */
-    ttyinit((char *) NULL);
-    for (i = 0; i < TTY_NTHREADS; i++) {
-	if (!thread_newthread(ttythread, TTY_THREAD_STACKSIZE, 0, 0)) {
-	    fprintf(stderr, "%s:  unable to start tty thread.\n", ProgramName);
-	    Exit(1);
-	}
-    }
-
-    /* avoid double MapWindow requests */
-    XtSetMappedWhenManaged(XtParent(CURRENT_EMU(screen)), False);
-    wm_delete_window = XInternAtom(XtDisplay(toplevel), "WM_DELETE_WINDOW",
-				   False);
-
-    /* realize now so know window size for tty driver */
-    if (!TEK4014_ACTIVE(screen))
-	VTInit();
-
-#if OPT_TEK4014
-    if (screen->TekEmu) {
-	envnew = tekterm;
-	ptr = newtc;
-    } else
-#endif
-    {
-	envnew = vtterm;
-	ptr = termcap;
-    }
-
-    get_termcap(TermName = resource.term_name, ptr, newtc);
-
-    if (!TermName) {
-	TermName = *envnew;
-	while (*envnew != NULL) {
-	    if (get_termcap(*envnew, ptr, newtc)) {
-		TermName = *envnew;
-		break;
-	    }
-	    envnew++;
-	}
-    }
-
-    /*
-     * Setup new capability environment. The whole point of the game is
-     * to redirect the shell's stdin/stdout/stderr and tty to our own
-     * tty server instead of the initial one.
-     */
-    for (ncap = 4, cl = capv; cl->cl_name != (char *) NULL; cl++)
-	if (strcmp("STDIN", cl->cl_name) && strcmp("STDOUT", cl->cl_name)
-	    && strcmp("STDERR", cl->cl_name) && strcmp("TTY", cl->cl_name))
-	    ncap++;
-
-    capvnew = (struct caplist *)
-	calloc((unsigned) ncap + 1, sizeof(struct caplist));
-    setcap(capvnew, 0, "STDIN", &ttycap);
-    setcap(capvnew, 1, "STDOUT", &ttycap);
-    setcap(capvnew, 2, "STDERR", &ttycap);
-    setcap(capvnew, 3, "TTY", &ttycap);
-    for (n = 4, cl = capv; cl->cl_name != (char *) NULL; cl++) {
-	if (strcmp("STDIN", cl->cl_name)
-	    && strcmp("STDOUT", cl->cl_name)
-	    && strcmp("STDERR", cl->cl_name)
-	    && strcmp("TTY", cl->cl_name))
-	    setcap(capvnew, n++, cl->cl_name, cl->cl_cap);
-    }
-    setcap(capvnew, ncap, (char *) NULL, (capability *) NULL);
-    if (n != ncap) {
-	fprintf(stderr, "%s: bad capability set.\n", ProgramName);
-	Exit(1);
-    }
-
-    /*
-     * Setup environment variables. We add some extra ones to denote
-     * window id, terminal type, display name, termcap entry, and some
-     * standard one (which are required by every shell) HOME and SHELL.
-     * Note that the two shell variables COLUMNS and LINES are not needed
-     * under Amoeba since the tty server provides an RPC to query the
-     * window sizes.
-     */
-    /* copy the environment before Setenving */
-    for (i = 0; environ[i] != NULL; i++) ;
-
-    /* compute number of xtermSetenv() calls below */
-    envsize = 1;		/* (NULL terminating entry) */
-    envsize += 3;		/* TERM, WINDOWID, DISPLAY */
-    envsize += 2;		/* HOME, SHELL */
-    envsize += 1;		/* TERMCAP */
-    envnew = (char **) calloc((unsigned) i + envsize, sizeof(char *));
-    bcopy((char *) environ, (char *) envnew, i * sizeof(char *));
-    environ = envnew;
-    xtermSetenv("TERM=", TermName);
-    if (!TermName)
-	*newtc = 0;
-
-    sprintf(buf, "%lu",
-	    ((unsigned long) XtWindow(XtParent(CURRENT_EMU(screen)))));
-    xtermSetenv("WINDOWID=", buf);
-
-    /* put the display into the environment of the shell */
-    xtermSetenv("DISPLAY=", XDisplayString(screen->display));
-
-    /* always provide a HOME and SHELL definition */
-    if (!getenv("HOME"))
-	xtermSetenv("HOME=", DEF_HOME);
-    if (!getenv("SHELL"))
-	xtermSetenv("SHELL=", DEF_SHELL);
-
-    if (!TEK4014_ACTIVE(screen) && *newtc) {
-	strcpy(termcap, newtc);
-	resize(screen, termcap, newtc);
-    }
-    if (term->misc.titeInhibit && !term->misc.tiXtraScroll) {
-	remove_termcap_entry(newtc, "ti=");
-	remove_termcap_entry(newtc, "te=");
-    }
-    /* work around broken termcap entries */
-    if (resource.useInsertMode) {
-	remove_termcap_entry(newtc, "ic=");
-	/* don't get duplicates */
-	remove_termcap_entry(newtc, "im=");
-	remove_termcap_entry(newtc, "ei=");
-	remove_termcap_entry(newtc, "mi");
-	if (*newtc)
-	    strcat(newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
-    }
-    if (*newtc)
-	xtermSetenv("TERMCAP=", newtc);
-
-    /*
-     * Execute specified program or shell. Use find_program to
-     * simulate the same behaviour as the original execvp.
-     */
-#if OPT_LUIT_PROG
-    if (command_to_exec_with_luit) {
-	capability programcap;
-
-	if (find_program(*command_to_exec_with_luit, &programcap) != STD_OK) {
-	    fprintf(stderr, "%s: Could not find %s!\n",
-		    xterm_name, *command_to_exec_with_luit);
-	    exit(ERROR_EXEC);
-	}
-
-	err = exec_file(&programcap, NILCAP, &ttycap, 0,
-			command_to_exec_with_luit, envnew, capvnew,
-			&screen->proccap);
-	if (err != STD_OK) {
-	    fprintf(stderr, "%s: Could not exec %s!\n",
-		    xterm_name, *command_to_exec_with_luit);
-	    fprintf(stderr, "%s: cannot support your locale.\n", xterm_name);
-	} else {
-	    goto luit_succeeded;
-	}
-    }
-#endif
-    if (command_to_exec) {
-	capability programcap;
-
-	if (find_program(*command_to_exec, &programcap) != STD_OK) {
-	    fprintf(stderr, "%s: Could not find %s!\n",
-		    xterm_name, *command_to_exec);
-	    exit(ERROR_EXEC);
-	}
-
-	err = exec_file(&programcap, NILCAP, &ttycap, 0,
-			command_to_exec, envnew, capvnew, &screen->proccap);
-	if (err != STD_OK) {
-	    fprintf(stderr, "%s: Could not exec %s!\n",
-		    xterm_name, *command_to_exec);
-	    exit(ERROR_EXEC);
-	}
-    } else {
-	char *shell, *shname, *shname_minus;
-	capability shellcap;
-	char *argvec[2];
-
-	if ((shell = getenv("SHELL")) == NULL)
-	    shell = DEF_SHELL;	/* "cannot happen" */
-	shname = x_basename(shell);
-	shname_minus = malloc(strlen(shname) + 2);
-	(void) strcpy(shname_minus, "-");
-	(void) strcat(shname_minus, shname);
-
-	argvec[0] = term->misc.login_shell ? shname_minus : shname;
-	argvec[1] = NULL;
-
-	if (find_program(shell, &shellcap) != STD_OK) {
-	    fprintf(stderr, "%s: Could not find %s!\n", xterm_name, shell);
-	    exit(ERROR_EXEC);
-	}
-
-	err = exec_file(&shellcap, NILCAP, &ttycap, 0, argvec,
-			envnew, capvnew, &screen->proccap);
-	if (err != STD_OK) {
-	    fprintf(stderr, "%s: Could not exec %s!\n", xterm_name, shell);
-	    exit(ERROR_EXEC);
-	}
-
-	free(shname_minus);
-    }
-  luit_succeeded:
-    free(capvnew);
-
-    signal(SIGINT, SIG_IGN);
-    signal(SIGQUIT, SIG_IGN);
-    signal(SIGTERM, SIG_IGN);
-    signal(SIGPIPE, Exit);
-    return 0;
-}
-
-/*
- * X watch-dog thread. This thread unblocks the main
- * thread when there's an X event.
- */
-xwatchdogthread(void)
-{
-    register TScreen *screen = &term->screen;
-
-    for (;;) {
-	int n = _X11TransAmSelect(ConnectionNumber(screen->display), 10);
-	if (n < 0 && errno != EINTR) {
-	    fprintf(stderr, "%s: X watch dog: Xselect failed: %s\n",
-		    ProgramName, SysErrorMsg(errno));
-	    Cleanup(1);
-	} else if (n > 0)
-	    WakeupMainThread();
-	threadswitch();
-    }
-}
-
-void
-SleepMainThread(void)
-{
-    int remaining;
-
-    /* Wait for at least one event */
-    sema_down(&main_sema);
-
-    /* Since the main thread will continue handling all outstanding events
-     * shortly, we can ignore the remaining wakeups that were done.
-     */
-    if ((remaining = sema_level(&main_sema)) > 1) {
-	sema_mdown(&main_sema, remaining);
-    }
-}
-#endif /* AMOEBA */
 
 SIGNAL_T
 Exit(int n)
@@ -4744,15 +4270,12 @@ Exit(int n)
     }
 #endif /* USE_SYSV_UTMP */
 #endif /* HAVE_UTMP */
-#ifndef AMOEBA
     close(screen->respond);	/* close explicitly to avoid race with slave side */
-#endif
 #ifdef ALLOWLOGGING
     if (screen->logging)
 	CloseLog(screen);
 #endif
 
-#ifndef AMOEBA
     if (am_slave < 0) {
 	/* restore ownership of tty and pty */
 	set_owner(ttydev, 0, 0, 0666);
@@ -4760,7 +4283,6 @@ Exit(int n)
 	set_owner(ptydev, 0, 0, 0666);
 #endif
     }
-#endif /* AMOEBA */
     exit(n);
     SIGNAL_RETURN;
 }
@@ -4946,14 +4468,12 @@ parse_tty_modes(char *s, struct _xttymodes *modelist)
 	if (!*s)
 	    return -1;
 
-	if ((c = decode_keyvalue(s++, False)) != -1) {
+	if ((c = decode_keyvalue(&s, False)) != -1) {
 	    mp->value = c;
 	    mp->set = 1;
 	    count++;
 	    TRACE(("...parsed #%d: %s=%#x\n", count, mp->name, c));
 	}
-	while (*s && isascii(CharOf(*s)) && isgraph(CharOf(*s)))
-	    s++;
     }
 }
 
@@ -4961,20 +4481,7 @@ parse_tty_modes(char *s, struct _xttymodes *modelist)
 int
 GetBytesAvailable(int fd)
 {
-#ifdef AMOEBA
-    /*
-     * Since this routine is only used to poll X connections
-     * we can use an internal Xlib routine (oh what ugly).
-     */
-    register TScreen *screen = &term->screen;
-    int count;
-
-    if (ConnectionNumber(screen->display) != fd) {
-	Panic("Cannot get bytes available");
-	return -1;
-    }
-    return _X11TransAmFdBytesReadable(fd, &count) < 0 ? -1 : count;
-#elif defined(FIONREAD)
+#if defined(FIONREAD)
     long arg;
     ioctl(fd, FIONREAD, (char *) &arg);
     return (int) arg;
@@ -4989,14 +4496,6 @@ GetBytesAvailable(int fd)
 	return 1;
     else
 	return 0;
-#elif defined(MINIX)
-    /* The answer doesn't have to be correct.  Calling nbio_isinprogress() is
-     * much cheaper than nbio_select().
-     */
-    if (nbio_isinprogress(fd, ASIO_READ))
-	return 0;
-    else
-	return 1;
 #elif defined(FIORDCK)
     return (ioctl(fd, FIORDCHK, NULL));
 #else /* !FIORDCK */
@@ -5016,17 +4515,11 @@ int
 kill_process_group(int pid, int sig)
 {
     TRACE(("kill_process_group(pid=%d, sig=%d)\n", pid, sig));
-#ifdef AMOEBA
-    if (pid != 2) {
-	fprintf(stderr, "%s:  unexpected process id %d.\n", ProgramName, pid);
-	abort();
-    }
-    ttysendsig(sig);
-#elif defined(SVR4) || defined(SYSV) || !defined(X_NOT_POSIX)
+#if defined(SVR4) || defined(SYSV) || !defined(X_NOT_POSIX)
     return kill(-pid, sig);
 #else
     return killpg(pid, sig);
-#endif /* AMOEBA */
+#endif
 }
 
 #if OPT_EBCDIC

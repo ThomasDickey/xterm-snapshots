@@ -2,7 +2,7 @@
  *	$Xorg: resize.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/resize.c,v 3.53 2002/06/01 00:54:50 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/resize.c,v 3.54 2002/10/05 17:57:13 dickey Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -68,12 +68,6 @@ extern struct passwd *getpwuid();	/* does ANYBODY need this? */
 
 #ifndef bzero
 #define	bzero(s, n)	memset(s, 0, n)
-#endif
-
-#ifdef MINIX
-#ifndef IUCLC
-#define IUCLC	0
-#endif
 #endif
 
 #ifdef __MVS__
@@ -482,13 +476,13 @@ static void
 readstring(register FILE * fp, register char *buf, char *str)
 {
     register int last, c;
-#if !defined(USG) && !defined(AMOEBA) && !defined(MINIX) && !defined(__UNIXOS2__)
+#if !defined(USG) && !defined(__UNIXOS2__)
     /* What is the advantage of setitimer() over alarm()? */
     struct itimerval it;
 #endif
 
     signal(SIGALRM, resize_timeout);
-#if defined(USG) || defined(AMOEBA) || defined(MINIX) || defined(__UNIXOS2__)
+#if defined(USG) || defined(__UNIXOS2__)
     alarm(TIMEOUT);
 #else
     bzero((char *) &it, sizeof(struct itimerval));
@@ -507,7 +501,7 @@ readstring(register FILE * fp, register char *buf, char *str)
     }
     last = str[strlen(str) - 1];
     while ((*buf++ = getc(fp)) != last) ;
-#if defined(USG) || defined(AMOEBA) || defined(MINIX) || defined(__UNIXOS2__)
+#if defined(USG) || defined(__UNIXOS2__)
     alarm(0);
 #else
     bzero((char *) &it, sizeof(struct itimerval));

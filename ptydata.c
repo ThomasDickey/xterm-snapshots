@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.16 2002/06/01 00:54:49 dickey Exp $
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.17 2002/10/05 17:57:12 dickey Exp $
  */
 
 /************************************************************
@@ -56,27 +56,14 @@ getPtyData(TScreen * screen, fd_set * select_mask, PtyData * data)
 {
     int i;
 
-#ifndef AMOEBA
-    if (FD_ISSET(screen->respond, select_mask))
-#else
-    if ((data->cnt = cb_full(screen->tty_outq)) > 0)
-#endif
-    {
+    if (FD_ISSET(screen->respond, select_mask)) {
 #ifdef ALLOWLOGGING
 	if (screen->logging)
 	    FlushLog(screen);
 #endif
 	/* set data->ptr here, in case we need it outside this chunk */
 	data->ptr = DecodedData(data);
-#ifndef AMOEBA
 	data->cnt = read(screen->respond, (char *) data->buf, BUF_SIZE);
-#else
-	if ((data->cnt = cb_gets(screen->tty_outq, data->buf, data->cnt,
-				 BUF_SIZE)) == 0) {
-	    errno = EIO;
-	    data->cnt = -1;
-	}
-#endif
 	if (data->cnt <= 0) {
 	    /*
 	     * Yes, I know this is a majorly f*ugly hack, however it seems to
@@ -93,7 +80,7 @@ getPtyData(TScreen * screen, fd_set * select_mask, PtyData * data)
 	    else if (!E_TEST(errno))
 		Panic("input: read returned unexpected error (%d)\n", errno);
 	} else if (data->cnt == 0) {
-#if defined(MINIX) || defined(__UNIXOS2__)
+#if defined(__UNIXOS2__)
 	    Cleanup(0);
 #else
 	    Panic("input: read returned zero\n", 0);

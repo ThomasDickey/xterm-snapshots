@@ -2,7 +2,7 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.71 2002/04/28 19:04:21 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.72 2002/10/05 17:57:13 dickey Exp $ */
 
 /*
  * Copyright 1999-2001,2002 by Thomas E. Dickey
@@ -71,8 +71,6 @@
 
 #include <stdio.h>
 #include <ctype.h>
-
-extern Bool waiting_for_initial_map;
 
 static int ClearInLine(TScreen * screen, int row, int col, int len);
 static int handle_translated_exposure(TScreen * screen,
@@ -2037,10 +2035,10 @@ putXtermCell(TScreen * screen, int row, int col, int ch)
 }
 
 /*
- * Add a the combining character for the given cell
+ * Add a combining character for the given cell
  */
 void
-addXtermCombining(TScreen * screen, int row, int col, int ch)
+addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 {
     if (!SCRN_BUF_COM1L(screen, row)[col]
 	&& !SCRN_BUF_COM1H(screen, row)[col]) {

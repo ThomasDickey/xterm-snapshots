@@ -2,9 +2,37 @@
  *	$Xorg: data.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.h,v 3.26 2002/08/17 19:52:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.h,v 3.27 2002/10/05 17:57:12 dickey Exp $ */
 
 /*
+ * Copyright 2002 by Thomas E. Dickey
+ *
+ *                         All Rights Reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -124,5 +152,51 @@ extern XtermWidget term;
 #if OPT_WIDE_CHARS
 extern const unsigned short dec2ucs[32];
 #endif
+
+extern char *ProgramName;
+extern Arg ourTopLevelShellArgs[];
+extern int number_ourTopLevelShellArgs;
+extern Bool waiting_for_initial_map;
+extern Atom wm_delete_window;
+
+typedef struct {
+    char *xterm_name;
+    char *icon_geometry;
+    char *title;
+    char *icon_name;
+    char *term_name;
+    char *tty_modes;
+    Boolean hold_screen;	/* true if we keep window open  */
+    Boolean utmpInhibit;
+    Boolean messages;
+    Boolean sunFunctionKeys;	/* %%% should be widget resource? */
+#if OPT_SUNPC_KBD
+    Boolean sunKeyboard;
+#endif
+#if OPT_HP_FUNC_KEYS
+    Boolean hpFunctionKeys;
+#endif
+#if OPT_INITIAL_ERASE
+    Boolean ptyInitialErase;	/* if true, use pty's sense of erase char */
+    Boolean backarrow_is_erase;	/* override backspace/delete */
+#endif
+    Boolean wait_for_map;
+    Boolean useInsertMode;
+#if OPT_ZICONBEEP
+    int zIconBeep;		/* beep level when output while iconified */
+#endif
+#if OPT_SAME_NAME
+    Boolean sameName;		/* Don't change the title or icon name if it is
+				 * the same.  This prevents flicker on the
+				 * screen at the cost of an extra request to
+				 * the server.
+				 */
+#endif
+#if OPT_SESSION_MGT
+    Boolean sessionMgt;
+#endif
+} XTERM_RESOURCE;
+
+extern XTERM_RESOURCE resource;
 
 #endif /* included_data_h */
