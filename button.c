@@ -1,4 +1,5 @@
 /* $XConsortium: button.c /main/70 1996/01/14 16:52:34 kaleb $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.5 1996/05/13 06:50:44 dawes Exp $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
@@ -30,8 +31,20 @@ button.c	Handles button events in the terminal emulator.
 */
 
 #include "ptyx.h"		/* Xlib headers included here. */
+
 #include <X11/Xatom.h>
+
+#ifndef X_NOT_STDC_ENV
+#include <stdlib.h>
+#else
+extern char *malloc();
+#endif
+
 #include <stdio.h>
+
+#ifdef MINIX
+#include <X11/Xos.h>
+#endif
 
 #include <X11/Xmu/Atoms.h>
 #include <X11/Xmu/StdSel.h>
@@ -40,9 +53,7 @@ button.c	Handles button events in the terminal emulator.
 #include "error.h"
 #include "menu.h"
 
-extern char *malloc();
-
-extern void DoSecureKeyboard();
+#include "xterm.h"
 
 #define KeyState(x) (((x) & (ShiftMask|ControlMask)) + (((x) & Mod1Mask) ? 2 : 0))
     /* adds together the bits:
@@ -60,17 +71,6 @@ extern void DoSecureKeyboard();
 
 extern char *xterm_name;
 
-static void PointToRowCol();
-static void SelectionReceived();
-static void TrackDown();
-static void ComputeSelect();
-static void EditorButton();
-static void ExtendExtend();
-static void ReHiliteText();
-static void SelectSet();
-static void StartSelect();
-static int Length();
-static char *SaveText();
 
 extern XtermWidget term;
 
@@ -96,7 +96,7 @@ static int saveStartRRow, saveStartRCol, saveEndRRow, saveEndRCol;
 
 /* Multi-click handling */
 static int numberOfClicks = 0;
-static long int lastButtonUpTime = 0;
+static Time lastButtonUpTime = 0;
 typedef int SelectUnit;
 #define SELECTCHAR 0
 #define SELECTWORD 1
@@ -107,6 +107,29 @@ static SelectUnit selectUnit;
 /* Send emacs escape code when done selecting or extending? */
 static int replyToEmacs;
 
+static Boolean ConvertSelection PROTO_XT_CVT_SELECT_ARGS;
+static char *SaveText PROTO((TScreen *screen, int row, int scol, int ecol, char *lp, int *eol));
+static int LastTextCol PROTO((int row));
+static int Length PROTO((TScreen *screen, int row, int scol, int ecol));
+static void ComputeSelect PROTO((int startRow, int startCol, int endRow, int endCol, Bool extend));
+static void EditorButton PROTO((XButtonEvent *event));
+static void EndExtend PROTO((Widget w, XEvent *event, String *params, Cardinal num_params, Bool use_cursor_loc));
+static void ExtendExtend PROTO((int row, int col));
+static void LoseSelection PROTO((Widget w, Atom *selection));
+static void PointToRowCol PROTO((int y, int x, int *r, int *c));
+static void ReHiliteText PROTO((int frow, int fcol, int trow, int tcol));
+static void SaltTextAway PROTO((int crow, int ccol, int row, int col, String *params, Cardinal num_params));
+static void SelectSet PROTO((Widget w, XEvent *event, String *params, Cardinal num_params));
+static void SelectionDone PROTO((Widget w, Atom *selection, Atom *target));
+static void SelectionReceived PROTO_XT_SEL_CB_ARGS;
+static void SetSelectUnit PROTO((Time buttonDownTime, SelectUnit defaultUnit));
+static void StartSelect PROTO((int startrow, int startcol));
+static void TrackDown PROTO((XButtonEvent *event));
+static void _GetSelection PROTO((Widget w, Time ev_time, String *params, Cardinal num_params));
+static void _OwnSelection PROTO((XtermWidget termw, String *selections, Cardinal count));
+static void do_select_end PROTO((Widget w, XEvent *event, String *params, Cardinal *num_params, Bool use_cursor_loc));
+static void do_select_start PROTO((Widget w, XEvent *event, int startrow, int startcol));
+static void do_start_extend PROTO((Widget w, XEvent *event, String *params, Cardinal *num_params, Bool use_cursor_loc));
 
 Boolean SendMousePosition(w, event)
 Widget w;
@@ -132,7 +155,7 @@ XEvent* event;
 
 	if (KeyModifiers == 0) {
 	    if (event->type == ButtonPress)
-		EditorButton(event);
+		EditorButton((XButtonEvent *)event);
 	    return True;
 	}
 	return False;
@@ -140,7 +163,7 @@ XEvent* event;
       case 2: /* DEC vt200 compatible */
 
 	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
-	    EditorButton(event);
+	    EditorButton((XButtonEvent *)event);
 	    return True;
 	}
 	return False;
@@ -149,11 +172,11 @@ XEvent* event;
 	if (  event->type == ButtonPress &&
 	      KeyModifiers == 0 &&
 	      event->xbutton.button == Button1 ) {
-	    TrackDown(event);
+	    TrackDown((XButtonEvent *)event);
 	    return True;
 	}
 	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
-	    EditorButton(event);
+	    EditorButton((XButtonEvent *)event);
 	    return True;
 	}
 	/* fall through */
@@ -162,6 +185,62 @@ XEvent* event;
 	return False;
     }
 #undef KeyModifiers
+}
+
+void
+DiredButton(w, event, params, num_params)
+Widget w;
+XEvent *event;			/* must be XButtonEvent */
+String *params;			/* selections */
+Cardinal *num_params;
+{	/* ^XM-G<line+' '><col+' '> */
+	register TScreen *screen = &term->screen;
+	int pty = screen->respond;
+	char Line[ 6 ];
+	register unsigned line, col;
+
+    if (event->type != ButtonPress && event->type != ButtonRelease)
+    	return;
+    strcpy( Line, "\030\033G  " );
+
+	line = ( event->xbutton.y - screen->border ) / FontHeight( screen );
+	col = (event->xbutton.x - screen->border - screen->scrollbar)
+	 / FontWidth(screen);
+	Line[3] = ' ' + col;
+	Line[4] = ' ' + line;
+	v_write(pty, Line, 5 );
+}
+
+void
+ViButton(w, event, params, num_params)
+Widget w;
+XEvent *event;			/* must be XButtonEvent */
+String *params;			/* selections */
+Cardinal *num_params;
+{	/* ^XM-G<line+' '><col+' '> */
+	register TScreen *screen = &term->screen;
+	int pty = screen->respond;
+	char Line[ 6 ];
+	register int line;
+
+    if (event->type != ButtonPress && event->type != ButtonRelease)
+    	return;
+
+	line = screen->cur_row -
+		(( event->xbutton.y - screen->border ) / FontHeight( screen ));
+/* fprintf( stderr, "xtdb line=%d\n", line ); */
+	if ( ! line ) return;
+	Line[ 1 ] = 0;
+	Line[ 0 ] = 27;
+	v_write(pty, Line, 1 );
+
+	Line[ 0 ] = 'p' & 0x1f;
+
+	if ( line < 0 )
+	{	line = -line;
+		Line[ 0 ] = 'n' & 0x1f;
+	}
+	while ( --line >= 0 ) v_write(pty, Line, 1 );
 }
 
 
@@ -188,8 +267,6 @@ Cardinal *num_params;		/* unused */
 		        break;
 	}
 }
-
-static void EndExtend();
 
 static void do_select_end (w, event, params, num_params, use_cursor_loc)
 Widget w;
@@ -240,9 +317,9 @@ struct _SelectionList {
 };
 
 
-static void _GetSelection(w, time, params, num_params)
+static void _GetSelection(w, ev_time, params, num_params)
 Widget w;
-Time time;
+Time ev_time;
 String *params;			/* selections in precedence order */
 Cardinal num_params;
 {
@@ -273,17 +350,17 @@ Cardinal num_params;
 	    SelectionReceived(w, NULL, &selection, &type, (XtPointer)line,
 			      &nbytes, &fmt8);
 	else if (num_params > 1)
-	    _GetSelection(w, time, params+1, num_params-1);
+	    _GetSelection(w, ev_time, params+1, num_params-1);
     } else {
 	struct _SelectionList* list;
 	if (--num_params) {
 	    list = XtNew(struct _SelectionList);
 	    list->params = params + 1;
 	    list->count = num_params; /* decremented above */
-	    list->time = time;
+	    list->time = ev_time;
 	} else list = NULL;
 	XtGetSelectionValue(w, selection, XA_STRING, SelectionReceived,
-			    (XtPointer)list, time);
+			    (XtPointer)list, ev_time);
     }
 }
 
@@ -351,15 +428,19 @@ SetSelectUnit(buttonDownTime, defaultUnit)
     Time buttonDownTime;
     SelectUnit defaultUnit;
 {
-/* Do arithmetic as integers, but compare as unsigned solves clock wraparound */
-	if ((long unsigned)((long int)buttonDownTime - lastButtonUpTime)
-	 > term->screen.multiClickTime) {
-		numberOfClicks = 1;
-		selectUnit = defaultUnit;
-	} else {
-		++numberOfClicks;
-		selectUnit = ((selectUnit + 1) % NSELECTUNITS);
-	}
+    int delta;
+    if (buttonDownTime > lastButtonUpTime) /* most of the time */
+	delta = buttonDownTime - lastButtonUpTime;
+    else /* time has rolled over since lastButtonUpTime */
+	delta = (((Time) ~0) - lastButtonUpTime) + buttonDownTime;
+
+    if (delta > term->screen.multiClickTime) {
+	numberOfClicks = 1;
+	selectUnit = defaultUnit;
+    } else {
+	++numberOfClicks;
+	selectUnit = ((selectUnit + 1) % NSELECTUNITS);
+    }
 }
 
 static void do_select_start (w, event, startrow, startcol)
@@ -418,7 +499,7 @@ TrackDown(event)
 		StartSelect(startrow, startcol);
 	} else {
 		waitingForTrackInfo = 1;
-		EditorButton(event);
+		EditorButton((XButtonEvent *)event);
 	}
 }
 
@@ -536,8 +617,6 @@ HandleSelectSet(w, event, params, num_params)
 {
 	SelectSet (w, event, params, *num_params);
 }
-
-static void SaltTextAway();
 
 /* ARGSUSED */
 static void
@@ -661,7 +740,7 @@ Cardinal *num_params;		/* unused */
     do_start_extend (w, event, params, num_params, True);
 }
 
-
+void
 ScrollSelection(screen, amount)
 register TScreen* screen;
 register int amount;
@@ -697,6 +776,7 @@ register int amount;
 
 
 /*ARGSUSED*/
+void
 ResizeSelection (screen, rows, cols)
     TScreen *screen;
     int rows, cols;
@@ -753,7 +833,7 @@ LastTextCol(row)
 	register Char *ch;
 
 	for ( i = screen->max_col,
-	        ch = screen->buf[2 * (row + screen->topline) + 1] + i ;
+	        ch = SCRN_BUF_ATTRS(screen, (row + screen->topline)) + i ;
 	      i >= 0 && !(*ch & CHARDRAWN) ;
 	      ch--, i--)
 	    ;
@@ -892,7 +972,7 @@ ComputeSelect(startRow, startCol, endRow, endCol, extend)
 				startSCol = 0;
 				startSRow++;
 			} else {
-				ptr = screen->buf[2*(startSRow+screen->topline)]
+				ptr = SCRN_BUF_CHARS(screen, startSRow+screen->topline)
 				 + startSCol;
 				class = charClass[*ptr];
 				do {
@@ -907,7 +987,7 @@ ComputeSelect(startRow, startCol, endRow, endCol, extend)
 				endSRow++;
 			} else {
 				length = LastTextCol(endSRow);
-				ptr = screen->buf[2*(endSRow+screen->topline)]
+				ptr = SCRN_BUF_CHARS(screen, endSRow+screen->topline)
 				 + endSCol;
 				class = charClass[*ptr];
 				do {
@@ -944,7 +1024,7 @@ ComputeSelect(startRow, startCol, endRow, endCol, extend)
 	return;
 }
 
-
+void
 TrackText(frow, fcol, trow, tcol)
     register int frow, fcol, trow, tcol;
     /* Guaranteed (frow, fcol) <= (trow, tcol) */
@@ -1025,8 +1105,6 @@ ReHiliteText(frow, fcol, trow, tcol)
 		ScrnRefresh(screen, frow, fcol, 1, tcol - fcol, True);
 	}
 }
-
-static void _OwnSelection();
 
 static void
 SaltTextAway(crow, ccol, row, col, params, num_params)
@@ -1279,7 +1357,7 @@ static void _OwnSelection(termw, selections, count)
 	TrackText(0, 0, 0, 0);
 }
 
-/* void */
+void
 DisownSelection(termw)
     register XtermWidget termw;
 {
@@ -1334,7 +1412,7 @@ SaveText(screen, row, scol, ecol, lp, eol)
     int *eol;
 {
 	register int i = 0;
-	register Char *ch = screen->buf[2 * (row + screen->topline)];
+	register Char *ch = SCRN_BUF_CHARS(screen, row + screen->topline);
 	Char attr;
 	register int c;
 
@@ -1429,13 +1507,13 @@ void HandleSecure(w, event, params, param_count)
     String *params;		/* [0] = volume */
     Cardinal *param_count;	/* 0 or 1 */
 {
-    Time time = CurrentTime;
+    Time ev_time = CurrentTime;
 
     if ((event->xany.type == KeyPress) ||
 	(event->xany.type == KeyRelease))
-	time = event->xkey.time;
+	ev_time = event->xkey.time;
     else if ((event->xany.type == ButtonPress) ||
 	     (event->xany.type == ButtonRelease))
-      time = event->xbutton.time;
-    DoSecureKeyboard (time);
+        ev_time = event->xbutton.time;
+    DoSecureKeyboard (ev_time);
 }

@@ -1,4 +1,5 @@
 /* $XConsortium: menu.h,v 1.25 94/04/17 20:23:31 gildea Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.1 1996/01/10 05:51:42 dawes Exp $ */
 /*
 
 Copyright (c) 1989  X Consortium
@@ -29,9 +30,14 @@ from the X Consortium.
 
 */
 
+#ifndef included_menu_h
+#define included_menu_h
+
+#include "proto.h"
+
 typedef struct _MenuEntry {
     char *name;
-    void (*function)();
+    void (*function) PROTO_XT_CALLBACK_ARGS;
     Widget widget;
 } MenuEntry;
 
@@ -39,38 +45,42 @@ extern MenuEntry mainMenuEntries[], vtMenuEntries[], tekMenuEntries[];
 extern MenuEntry fontMenuEntries[];
 extern Arg menuArgs[];
 
-extern void HandleAllowSends();
-extern void HandleSetVisualBell();
+extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
+extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
+extern void HandleAltScreen        PROTO_XT_ACTIONS_ARGS;
+extern void HandleAppCursor        PROTO_XT_ACTIONS_ARGS;
+extern void HandleAppKeypad        PROTO_XT_ACTIONS_ARGS;
+extern void HandleAutoLineFeed     PROTO_XT_ACTIONS_ARGS;
+extern void HandleAutoWrap         PROTO_XT_ACTIONS_ARGS;
+extern void HandleClearSavedLines  PROTO_XT_ACTIONS_ARGS;
+extern void HandleCreateMenu       PROTO_XT_ACTIONS_ARGS;
+extern void HandleCursesEmul       PROTO_XT_ACTIONS_ARGS;
+extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
+extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
+extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
+extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
+extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
+extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
+extern void HandleReverseVideo     PROTO_XT_ACTIONS_ARGS;
+extern void HandleReverseWrap      PROTO_XT_ACTIONS_ARGS;
+extern void HandleScrollKey        PROTO_XT_ACTIONS_ARGS;
+extern void HandleScrollTtyOutput  PROTO_XT_ACTIONS_ARGS;
+extern void HandleScrollbar        PROTO_XT_ACTIONS_ARGS;
+extern void HandleSendSignal       PROTO_XT_ACTIONS_ARGS;
+extern void HandleSetTekText       PROTO_XT_ACTIONS_ARGS;
+extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
+extern void HandleSetVisualBell    PROTO_XT_ACTIONS_ARGS;
+extern void HandleSoftReset        PROTO_XT_ACTIONS_ARGS;
+extern void HandleTekCopy          PROTO_XT_ACTIONS_ARGS;
+extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
+extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
+extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
+
 #ifdef ALLOWLOGGING
-extern void HandleLogging();
+extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
 #endif
-extern void HandleRedraw();
-extern void HandleSendSignal();
-extern void HandleQuit();
-extern void HandleScrollbar();
-extern void HandleJumpscroll();
-extern void HandleReverseVideo();
-extern void HandleAutoWrap();
-extern void HandleReverseWrap();
-extern void HandleAutoLineFeed();
-extern void HandleAppCursor();
-extern void HandleAppKeypad();
-extern void HandleScrollKey();
-extern void HandleScrollTtyOutput();
-extern void HandleAllow132();
-extern void HandleCursesEmul();
-extern void HandleMarginBell();
-extern void HandleAltScreen();
-extern void HandleSoftReset();
-extern void HandleHardReset();
-extern void HandleClearSavedLines();
-extern void HandleSetTerminalType();
-extern void HandleVisibility();
-extern void HandleSetTekText();
-extern void HandleTekPage();
-extern void HandleTekReset();
-extern void HandleTekCopy();
-extern void DoSecureKeyboard();
+
+extern void DoSecureKeyboard PROTO((Time tp));
 
 /*
  * The following definitions MUST match the order of entries given in 
@@ -319,3 +329,4 @@ extern void DoSecureKeyboard();
   update_menu_item (term->screen.fontMenu, \
 		    fontMenuEntries[term->screen.menu_font_number].widget, \
 		    (val))
+#endif/*included_menu_h*/

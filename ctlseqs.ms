@@ -1,6 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
 .\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.1 1996/03/10 11:51:11 dawes Exp $
 .\"
 .\" Copyright 1991, 1994 X Consortium
 .\"
@@ -364,6 +365,25 @@ Character Attributes (SGR)
   \*(Ps = \*4 \(-> Underscore
   \*(Ps = \*5 \(-> Blink (appears as Bold)
   \*(Ps = \*7 \(-> Inverse
+  \*(Ps = \*3\*0 \(-> Set foreground color to Black
+  \*(Ps = \*3\*1 \(-> Set foreground color to Red
+  \*(Ps = \*3\*2 \(-> Set foreground color to Green
+  \*(Ps = \*3\*3 \(-> Set foreground color to Yellow
+  \*(Ps = \*3\*4 \(-> Set foreground color to Blue
+  \*(Ps = \*3\*5 \(-> Set foreground color to Magenta
+  \*(Ps = \*3\*7 \(-> Set foreground color to Cyan
+  \*(Ps = \*3\*7 \(-> Set foreground color to White
+  \*(Ps = \*3\*9 \(-> Set foreground color to default (original)
+  \*(Ps = \*4\*0 \(-> Set background color to Black
+  \*(Ps = \*4\*1 \(-> Set background color to Red
+  \*(Ps = \*4\*2 \(-> Set background color to Green
+  \*(Ps = \*4\*3 \(-> Set background color to Yellow
+  \*(Ps = \*4\*4 \(-> Set background color to Blue
+  \*(Ps = \*4\*5 \(-> Set background color to Magenta
+  \*(Ps = \*4\*6 \(-> Set background color to Cyan
+  \*(Ps = \*4\*7 \(-> Set background color to White
+  \*(Ps = \*4\*9 \(-> Set background color to default (original).
+  \*(Ps = \*1\*0\*0 \(-> Set foreground and background color to default
 .IP \\*(Es\\*([[\\*(Ps\\*s\\*n
 Device Status Report (DSR)
   \*(Ps = \*5 \(-> Status Report \*(Es\*([[\*0\*n (``OK'')
@@ -387,6 +407,7 @@ doesn't support.)
   \*(Ps = \*8 \(-> Auto-repeat Keys (DECARM)
   \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
 See the section \fBMouse Tracking\fP.
+  \*(Ps = \*2\*5 \(-> Show Cursor like VT200.
   \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK)
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode
   \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fIcurses\fP resource)
@@ -410,6 +431,7 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*7 \(-> No Wraparound Mode (DECAWM)
   \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM)
   \*(Ps = \*9 \(-> Don't Send Mouse X & Y on button press
+  \*(Ps = \*2\*5 \(-> Hide Cursor like VT200.
   \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode
   \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fIcurses\fP resource)
   \*(Ps = \*4\*4 \(-> Turn Off Margin Bell
@@ -430,6 +452,14 @@ Set Text Parameters
   \*(Ps = \*0 \(-> Change Icon Name and Window Title to \*(Pt
   \*(Ps = \*1 \(-> Change Icon Name to \*(Pt
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt
+  \*(Ps = \*1\*0 \(-> Change color names starting with text foreground to \*(Pt (a
+list of one or more color names, separated by semicolon, up to color6).
+  \*(Ps = \*1\*1 \(-> Change colors starting with text background to \*(Pt
+  \*(Ps = \*1\*2 \(-> Change colors starting with text cursor to \*(Pt
+  \*(Ps = \*1\*3 \(-> Change colors starting with mouse foreground to \*(Pt
+  \*(Ps = \*1\*4 \(-> Change colors starting with mouse background to \*(Pt
+  \*(Ps = \*1\*5 \(-> Change colors starting with Tek foreground to \*(Pt
+  \*(Ps = \*1\*6 \(-> Change colors starting with Tek background to \*(Pt
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt (normally disabled by a
 compile-time option)
   \*(Ps = \*5\*0 \(-> Set Font to \*(Pt

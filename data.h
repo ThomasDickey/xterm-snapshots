@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: data.h /main/12 1996/01/14 16:52:48 kaleb $
+ *	$XFree86: xc/programs/xterm/data.h,v 3.1 1996/02/12 12:18:26 dawes Exp $
  */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -23,6 +24,13 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
+
+#if XtSpecificationRelease >= 6
+#include <X11/Xpoll.h>
+#else
+#define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
+#define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
+#endif
 
 extern TekLink *TekRefresh;
 extern XPoint T_box2[];
@@ -54,6 +62,10 @@ extern int debug;
 extern int errno;
 extern int max_plus1;
 extern int switchfb[];
+
+extern fd_set Select_mask;
+extern fd_set X_mask;
+extern fd_set pty_mask;
 
 extern int waitingForTrackInfo;
 

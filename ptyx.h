@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/66 1995/12/09 08:58:41 kaleb $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.10 1996/03/10 12:15:24 dawes Exp $
  */
 
 /*
@@ -32,6 +33,17 @@
 #include <X11/Xmu/Misc.h>	/* For Max() and Min(). */
 #include <X11/Xfuncs.h>
 #include <X11/Xosdefs.h>
+
+#ifdef AMOEBA
+/* Avoid name clashes with standard Amoeba types: */
+#define event    am_event_t
+#define interval am_interval_t
+#include <amoeba.h>
+#include <semaphore.h>
+#include <circbuf.h>
+#undef event
+#undef interval
+#endif
 
 /* Extra Xlib definitions */
 #define AllButtonsUp(detail, ignore)  (\
@@ -89,7 +101,11 @@
 #ifdef hpux
 #define PTYCHAR1	"zyxwvutsrqp"
 #else	/* !hpux */
+#ifdef __EMX__
+#define PTYCHAR1	"pq"
+#else
 #define	PTYCHAR1	"pqrstuvwxyzPQRSTUVWXYZ"
+#endif  /* !__EMX__ */
 #endif	/* !hpux */
 #endif	/* !PTYCHAR1 */
 
@@ -99,9 +115,9 @@
 #else	/* !hpux */
 #ifdef __FreeBSD__
 #define	PTYCHAR2	"0123456789abcdefghijklmnopqrstuv"
-#else
+#else /* !__FreeBSD__ */
 #define	PTYCHAR2	"0123456789abcdef"
-#endif
+#endif /* !__FreeBSD__ */
 #endif	/* !hpux */
 #endif	/* !PTYCHAR2 */
 
@@ -225,11 +241,84 @@ typedef struct {
 #define	SAVELINES		64      /* default # lines to save      */
 #define SCROLLLINES 1			/* default # lines to scroll    */
 
+/***====================================================================***/
+
+#define	TEXT_FG		0
+#define	TEXT_BG		1
+#define	TEXT_CURSOR	2
+#define	MOUSE_FG	3
+#define	MOUSE_BG	4
+#define	TEK_FG		5
+#define	TEK_BG		6
+#define	NCOLORS		7
+
+#define	COLOR_DEFINED(s,w)	((s)->which&(1<<(w)))
+#define	COLOR_VALUE(s,w)	((s)->colors[w])
+#define	SET_COLOR_VALUE(s,w,v)	(((s)->colors[w]=(v)),((s)->which|=(1<<(w))))
+
+#define	COLOR_NAME(s,w)		((s)->names[w])
+#define	SET_COLOR_NAME(s,w,v)	(((s)->names[w]=(v)),((s)->which|=(1<<(w))))
+
+#define	UNDEFINE_COLOR(s,w)	((s)->which&=(~((w)<<1)))
+#define	OPPOSITE_COLOR(n)	(((n)==TEXT_FG?TEXT_BG:\
+				 ((n)==TEXT_BG?TEXT_FG:\
+				 ((n)==MOUSE_FG?MOUSE_BG:\
+				 ((n)==MOUSE_BG?MOUSE_FG:\
+				 ((n)==TEK_FG?TEK_BG:\
+				 ((n)==TEXT_BG?TEK_FG:(n))))))))
+
+typedef struct {
+	unsigned	which;	/* must have NCOLORS bits */
+	Pixel		colors[NCOLORS];
+	char		*names[NCOLORS];
+} ScrnColors;
+
+/***====================================================================***/
+
+#define MAXCOLORS 18
+#define COLOR_0		0
+#define COLOR_1		1
+#define COLOR_2		2
+#define COLOR_3		3
+#define COLOR_4		4
+#define COLOR_5		5
+#define COLOR_6		6
+#define COLOR_7		7
+#define COLOR_8		8
+#define COLOR_9		9
+#define COLOR_10	10
+#define COLOR_11	11
+#define COLOR_12	12
+#define COLOR_13	13
+#define COLOR_14	14
+#define COLOR_15	15
+#define COLOR_BD	16
+#define COLOR_UL	17
+
+#define MAX_PTRS 4	/* the number of pointers per row in 'ScrnBuf' */
+
+	/* ScrnBuf-level macros */
+#define BUF_CHARS(buf, row) (buf[MAX_PTRS * (row) + 0])
+#define BUF_ATTRS(buf, row) (buf[MAX_PTRS * (row) + 1])
+#define BUF_FORES(buf, row) (buf[MAX_PTRS * (row) + 2])
+#define BUF_BACKS(buf, row) (buf[MAX_PTRS * (row) + 3])
+
+	/* TScreen-level macros */
+#define SCRN_BUF_CHARS(screen, row) BUF_CHARS(screen->buf, row)
+#define SCRN_BUF_ATTRS(screen, row) BUF_ATTRS(screen->buf, row)
+#define SCRN_BUF_FORES(screen, row) BUF_FORES(screen->buf, row)
+#define SCRN_BUF_BACKS(screen, row) BUF_BACKS(screen->buf, row)
+
 typedef struct {
 /* These parameters apply to both windows */
 	Display		*display;	/* X display for screen		*/
 	int		respond;	/* socket for responses
 					   (position report, etc.)	*/
+#ifdef AMOEBA
+	capability      proccap;        /* process capability           */
+	struct circbuf  *tty_inq;       /* tty server input queue       */
+	struct circbuf  *tty_outq;      /* tty server output queue      */
+#endif
 	long		pid;		/* pid of process on far side   */
 	int		uid;		/* user id of actual person	*/
 	int		gid;		/* group id of actual person	*/
@@ -244,6 +333,12 @@ typedef struct {
 	Pixel		cursorcolor;	/* Cursor color			*/
 	Pixel		mousecolor;	/* Mouse color			*/
 	Pixel		mousecolorback;	/* Mouse color background	*/
+	Pixel		Acolors[MAXCOLORS]; /* ANSI color emulation	*/
+	Pixel		original_fg;	/* reference for SGR reset fg	*/
+	Pixel		original_bg;	/* reference for SGR reset bg	*/
+	Boolean		colorMode;	/* are we using color mode?	*/
+	Boolean		colorULMode;	/* use color for underline?	*/
+	Boolean		colorBDMode;	/* use color for bold?		*/
 	int		border;		/* inner border			*/
 	Cursor		arrow;		/* arrow cursor			*/
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
@@ -301,9 +396,9 @@ typedef struct {
 	ScrnBuf		buf;		/* ptr to visible screen buf (main) */
 	ScrnBuf		allbuf;		/* screen buffer (may include
 					   lines scrolled off top)	*/
-	char		*sbuf_address;	/* main screen memory address   */
+	Char		*sbuf_address;	/* main screen memory address   */
 	ScrnBuf		altbuf;		/* alternate screen buffer	*/
-	char		*abuf_address;	/* alternate screen memory address */
+	Char		*abuf_address;	/* alternate screen memory address */
 	Boolean		alternate;	/* true if using alternate buf	*/
 	unsigned short	do_wrap;	/* true if cursor in last column
 					    and character just output    */
@@ -337,6 +432,7 @@ typedef struct {
 	int		refresh_amt;	/* amount to refresh		*/
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
 	Boolean         always_highlight; /* whether to highlight cursor */
+	Boolean		underline;	/* whether to underline text	*/
 
 /* Tektronix window parameters */
 	GC		TnormalGC;	/* normal painting		*/
@@ -434,10 +530,12 @@ typedef struct _Misc {
     Boolean tekSmall;	/* start tek window in small size */
     Boolean appcursorDefault;
     Boolean appkeypadDefault;
+#if XtSpecificationRelease >= 6
     char* input_method;
     char* preedit_type;
     Boolean open_im;
-    Boolean shared_ic;
+#endif
+    Boolean dynamicColors;
 } Misc;
 
 typedef struct {int foo;} XtermClassPart, TekClassPart;
@@ -469,6 +567,8 @@ typedef struct _XtermWidgetRec {
     TKeyboard	keyboard;	/* terminal keyboard		*/
     TScreen	screen;		/* terminal screen		*/
     unsigned	flags;		/* mode flags			*/
+    unsigned    cur_foreground;	/* current foreground color	*/
+    unsigned    cur_background;	/* current background color	*/
     unsigned	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
     Misc	misc;		/* miscellaneous parameters	*/
@@ -490,7 +590,7 @@ typedef struct _TekWidgetRec {
  * term->flags and screen->save_modes.  This need only fit in an unsigned.
  */
 
-#define	ATTRIBUTES	0x07	/* mask: user-visible attributes */
+#define	ATTRIBUTES	0x67	/* mask: user-visible attributes */
 /* global flags and character flags (visible character attributes) */
 #define INVERSE		0x01	/* invert the characters to be output */
 #define UNDERLINE	0x02	/* true if underlining */
@@ -508,6 +608,9 @@ typedef struct _TekWidgetRec {
 				   screen.  Used to distinguish blanks from
 				   empty parts of the screen when selecting */
 /* global flags */
+#define BG_COLOR	0x20  /* true if background set */
+#define FG_COLOR	0x40  /* true if foreground set */
+
 #define WRAPAROUND	0x400	/* true if auto wraparound mode */
 #define	REVERSEWRAP	0x800	/* true if reverse wraparound mode */
 #define REVERSE_VIDEO	0x1000	/* true if screen white on black */
@@ -571,8 +674,3 @@ typedef struct Tek_Link
 #endif
 #define	I_SIGNAL	0x02
 #define	I_TEK		0x04
-
-extern Cursor make_colored_cursor();
-extern int GetBytesAvailable();
-extern void first_map_occurred();
-extern int kill_process_group();

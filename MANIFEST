@@ -1,4 +1,4 @@
-MANIFEST for xterm, version X11R6_1rel
+MANIFEST for xterm, version XFree86-3_1_2E
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 Imakefile                       imake template for Makefile
@@ -11,6 +11,7 @@ Tests                           Useful tests for xterm-developers
 VTPrsTbl.c                      VT100 parser state tables
 VTparse.def                     template for generating VTparse.h
 VTparse.h                       VT100 parser-state definitions
+XTerm-col.ad                    color resource definitions for XTerm class
 XTerm.ad                        resource definitions for XTerm class
 button.c                        mouse button and selection processing
 charproc.c                      VT100 parser functions
@@ -25,6 +26,8 @@ main.h                          default definitions for 'xterm'
 menu.c                          popup/pulldown menus for 'xterm'
 menu.h                          interface of menu.c
 misc.c                          miscellaneous utility functions for 'xterm'
+os2main.c                       main program for OS/2 EMX port of 'xterm'
+proto.h                         macros to simplify function prototypes
 ptyx.h                          structure-definitions for 'xterm'
 resize.c                        program to compute/modify xterm's window size
 resize.man                      manual page for 'resize'
@@ -33,7 +36,9 @@ scrollbar.c                     VT100 scrollbar support functions
 tabs.c                          VT100 tabstop support-functions
 termcap                         termcap entries for 'xterm'
 terminfo                        terminfo entries for 'xterm'
+ttysvr.c                        simple tty server for AMOEBA port of 'xterm'
 util.c                          miscellaneous utility functions for 'xterm'
+xterm.h                         common includes, definitions and prototypes for 'xterm'
 xterm.man                       manual page for 'xterm'
 tektests                        subdirectory
 tektests/aitest.tek             tek4014 demo: draw a globe
