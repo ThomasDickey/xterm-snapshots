@@ -1,4 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.13 1996/12/23 07:14:42 dawes Exp $
 .\" Copyright (c) 1989  X Consortium
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining
@@ -24,6 +25,8 @@
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
+.\"
+.\" updated by Thomas Dickey <dickey@clark.net> for XFree86, July 1996.
 .TH XTERM 1 "Release 6.3" "X Version 11"
 .SH NAME
 xterm \- terminal emulator for X
@@ -53,9 +56,9 @@ the ``VT Options'' menu in the VT102 window, and the ``Tek Options''
 menu in the 4014 window.
 .SH EMULATIONS
 The VT102 emulation is fairly complete, but does not support
-smooth scrolling, VT52 mode,
-the blinking
-character attribute nor the double-wide and double-size character sets.
+autorepeat,
+the blinking character attribute
+nor the double-wide and double-size character sets.
 .IR Termcap (5)
 entries that work with
 .I xterm
@@ -166,10 +169,27 @@ This option enables active icon support if that feature was compiled
 into xterm.  This is equivalent to setting the \fIvt100\fP resource
 \fBactiveIcon\fP to TRUE.
 .TP 8
+.B \-aw
+This option indicates that auto-wraparound should be allowed.  This
+allows the cursor to automatically wrap to the beginning of the next
+line when when it is at the rightmost position of a line and text is
+output.
+.TP 8
+.B \+aw
+This option indicates that auto-wraparound should not be allowed.
+.TP 8
 .BI \-b " number"
 This option specifies the size of the inner border (the distance between
 the outer edge of the characters and the window border) in pixels.  The
 default is 2.
+.TP 8
+.B "\-bdc"
+This option disables the display of characters with bold attribute as color
+rather than bold.
+.TP 8
+.B "\+bdc"
+This option enables the display of characters with bold attribute as color
+rather than bold.
 .TP 8
 .B "\-cb"
 Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to FALSE.
@@ -180,6 +200,12 @@ Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to TRUE.
 .B "\-cc \fIcharacterclassrange\fP:\fIvalue\fP[,...]"
 This sets classes indicated by the given ranges for using in selecting by
 words.  See the section specifying character classes.
+.TP 8
+.B "\-cm"
+This option disables recognition of ANSI color-change escape sequences.
+.TP 8
+.B "\+cm"
+This option enables recognition of ANSI color-change escape sequences.
 .TP 8
 .B "\-cn"
 This option indicates that newlines should not be cut in line-mode 
@@ -208,6 +234,12 @@ cursor motion package.
 This option indicates that \fIxterm\fP should not work around the
 .IR more (1)
 bug mentioned above.
+.TP 8
+.B "\-dc"
+This option disables recognition of color-change escape sequences.
+.TP 8
+.B "\+dc"
+This option enables recognition of color-change escape sequences.
 .TP 8
 .BI \-e " program \fP[ \fIarguments \fP.\|.\|. ]\fI"
 This option specifies the program (and its command line arguments) to be
@@ -274,6 +306,12 @@ is to use the foreground color.
 This option specifies the number of characters from the right end of a line
 at which the margin bell, if enabled, will ring.  The default is 10.
 .TP 8
+.B "\-nul"
+This option enables the display of underlining.
+.TP 8
+.B "\+nul"
+This option disables the display of underlining.
+.TP 8
 .B \-rw
 This option indicates that reverse-wraparound should be allowed.  This allows
 the cursor to back up from the leftmost column of one line to the rightmost
@@ -283,15 +321,6 @@ the ``VT Options'' menu.
 .TP 8
 .B \+rw
 This option indicates that reverse-wraparound should not be allowed.
-.TP 8
-.B \-aw
-This option indicates that auto-wraparound should be allowed.  This
-allows the cursor to automatically wrap to the beginning of the next
-line when when it is at the rightmost position of a line and text is
-output.
-.TP 8
-.B \+aw
-This option indicates that auto-wraparound should not be allowed.
 .TP 8
 .B \-s
 This option indicates that \fIxterm\fP may scroll asynchronously, meaning that
@@ -364,6 +393,14 @@ This option specifies the name of the terminal type to be set in the TERM
 environment variable.  This terminal type must exist in the \fItermcap(5)\fP
 database and should have \fIli#\fP and \fIco#\fP entries.
 .TP 8
+.B "\-ulc"
+This option disables the display of characters with underline attribute as
+color rather than with underlining.
+.TP 8
+.B "\+ulc"
+This option enables the display of characters with underline attribute as
+color rather than with underlining.
+.TP 8
 .B \-ut
 This option indicates that \fIxterm\fP shouldn't write a record into the 
 the system log file \fI/etc/utmp\fP.
@@ -399,7 +436,7 @@ need to have the session startup and reset programs explicitly change the
 ownership of the console device in order to get this option to work.
 .TP 8
 .B \-S\fIccn\fP
-This option specifies the last two letters of the name of a pseudoterminal
+This option specifies the last two letters of the name of a pseudo-terminal
 to use in slave mode, plus the number of the inherited file descriptor.
 The option is parsed ``%c%c%d''.
 This allows \fIxterm\fP to be used as an input and
@@ -488,6 +525,17 @@ useful for setting resources that do not have separate command line options.
 .B \-iconic
 This option indicates that \fIxterm\fP should ask the window manager to 
 start it as an icon rather than as the normal window.
+.TP 8
+.B \-dc
+This option disables the escape sequence to change the vt100 foreground
+and background colors, the text cursor color, the mouse cursor foreground
+and background colors and the Tektronix emulator foreground and background
+colors.
+.TP 8
+.B \+dc
+This option enables the escape sequence to change the vt100 foreground
+and background colors, the text cursor color, the mouse cursor foreground
+and background colors and the Tektronix emulator foreground and background
 .SH RESOURCES
 The program understands all of the core X Toolkit resource names and
 classes as well as:
@@ -573,6 +621,11 @@ The default is ``false.''
 Specifies whether or not auto-wraparound should be enabled.  The
 default is ``true.''
 .TP 8
+.B "awaitInput (\fPclass\fB AwaitInput)"
+Specifies whether or not the xterm uses a 50 millisecond timeout to
+await input (i.e., to support the Xaw3d arrow scrollbar).
+The default is ``false.''
+.TP 8
 .B "bellSuppressTime (\fPclass\fB BellSuppressTime)"
 Number of milliseconds after a bell command is sent during which additional
 bells will be suppressed.  Default is 200.  If set non-zero,
@@ -612,6 +665,74 @@ Specifies whether or not the last column bug in
 should be worked around.  See the \fB\-cu\fP option for details.
 The default is ``false.''
 .TP 8
+.B "colorMode (\fPclass\fB ColorMode)"
+Specifies whether or not recognition of ANSI (ISO 6429)
+color change escape sequences should be enabled.
+.TP 8
+.B "colorBDMode (\fPclass\fB ColorMode)"
+Specifies whether characters with the bold attribute should be displayed in
+color or as bold characters.  Note that setting ``colorMode'' off disables
+all colors, including bold.
+.TP 8
+.B "colorULMode (\fPclass\fB ColorMode)"
+Specifies whether characters with the underline attribute should be displayed
+in color or as underlined characters.  Note that setting ``colorMode'' off
+disables all colors, including underlining.
+.TP 8
+.B "color0 (\fPclass\fB Foreground)"
+.TP 8
+.B "color1 (\fPclass\fB Foreground)"
+.TP 8
+.B "color2 (\fPclass\fB Foreground)"
+.TP 8
+.B "color3 (\fPclass\fB Foreground)"
+.TP 8
+.B "color4 (\fPclass\fB Foreground)"
+.TP 8
+.B "color5 (\fPclass\fB Foreground)"
+.TP 8
+.B "color6 (\fPclass\fB Foreground)"
+.TP 8
+.B "color7 (\fPclass\fB Foreground)"
+These specify the colors for the ISO 6429 extension.  The defaults are,
+respectively, black, red, green, yellow, blue, magenta, cyan, and white.
+.TP 8
+.B "color8 (\fPclass\fB Foreground)"
+.TP 8
+.B "color9 (\fPclass\fB Foreground)"
+.TP 8
+.B "color10 (\fPclass\fB Foreground)"
+.TP 8
+.B "color11 (\fPclass\fB Foreground)"
+.TP 8
+.B "color12 (\fPclass\fB Foreground)"
+.TP 8
+.B "color13 (\fPclass\fB Foreground)"
+.TP 8
+.B "color14 (\fPclass\fB Foreground)"
+.TP 8
+.B "color15 (\fPclass\fB Foreground)"
+These specify the colors for the ISO 6429 extension if the bold attribute
+is also enabled.  The defaults are, respectively, black, red, green, 
+yellow, blue, magenta, cyan, and white.
+.TP 8
+.B "colorBD (\fPclass\fB Foreground)"
+This specifies the color to use to display bold characters if
+the ``colorBDMode'' resource is enabled.
+.TP 8
+.B "colorUL (\fPclass\fB Foreground)"
+This specifies the color to use to display underlined characters if
+the ``colorULMode'' resource is enabled.
+.TP 8
+.B "decTerminalID (\fPclass\fB DecTerminalID)"
+Specifies the emulation level (100=VT100, 220=VT220, etc.), used to determine
+the type of response to a DA control sequence.
+The default is 100.
+.TP 8
+.B "dynamicColors (\fPclass\fB DynamicColors)"
+Specifies whether or not escape sequences to change colors assigned to
+different attributes are recognized.
+.TP 8
 .B "background (\fPclass\fB Background)"
 Specifies the color to use for the background of the window.  The default is 
 ``white.''
@@ -621,6 +742,11 @@ Specifies the color to use for displaying text in the window.  Setting the
 class name instead of the instance name is an easy way to have everything
 that would normally appear in the text color change color.  The default
 is ``black.''
+.\" .TP 8
+.\" .B "cursorBlinkTime (\fPclass\fB CursorBlinkTime)"
+.\" Specifies the cursor blink cycle-time
+.\" (i.e., the time to turn the cursor on and off).
+.\" The default is 0, which disables blinking.
 .TP 8
 .B "cursorColor (\fPclass\fB Foreground)"
 Specifies the color to use for the text cursor.  The default is ``black.''
@@ -635,6 +761,11 @@ The default is ``true.''
 .B "eightBitOutput (\fPclass\fB EightBitOutput\fP)"
 Specifies whether or not eight-bit characters sent from the host should be
 accepted as is or stripped when printed.  The default is ``true.''
+.TP 8
+.B "eightBitControl (\fPclass\fB EightBitControl\fP)"
+Specifies whether or not control sequences sent by the
+terminal should be eight-bit characters or escape sequences.
+The default is ``false.''
 .TP 8
 .B "font (\fPclass\fB Font)"
 Specifies the name of the normal font.  The default is ``fixed.''
@@ -660,11 +791,18 @@ Specifies the name of the sixth alternative font.
 .B "geometry (\fPclass\fB Geometry)"
 Specifies the preferred size and position of the VT102 window.
 .TP 8
+.B "highlightSelection (\fPclass\fB HighlightSelection)"
+If false, selecting with the mouse highlights all positions on the screen
+between the beginning of the selection and the current position.
+If true, \fIxterm\fP highlights only the positions that contain text that
+can be selected.
+The default is ``false.''
+.TP 8
 .B "hpLowerleftBugCompat (\fPclass\fB HpLowerleftBugCompat)"
 Specifies whether to work around a bug in HP's \fIxdb\fP,
 which ignores termcap and always sends
 ESC F to move to the lower left corner.
-``true'' causes xterm to interpret ESC F as a request to move to the
+``true'' causes \fIxterm\fP to interpret ESC F as a request to move to the
 lower left corner of the screen.  The default is ``false.''
 .TP 8
 .B "iconBorderWidth (\fPclass\fB BorderWidth)"
@@ -718,6 +856,10 @@ Specifies the background color of the pointer.  The default is
 .TP 8
 .B "pointerShape (\fPclass\fB Cursor)"
 Specifies the name of the shape of the pointer.  The default is ``xterm.''
+.TP 8
+.B "dynamicColors (\fPclass\fB DynamicColors)"
+Specifies whether or not dynamic modification of colors using the escape
+sequence is allowed.
 .TP 8
 .B "resizeGravity (\fPclass\fB ResizeGravity)"
 Affects the behavior when the window is resized to be taller or
@@ -794,6 +936,11 @@ alternate screen.
 Specifies the key and button bindings for menus, selections, ``programmed
 strings,'' etc.  See \fBACTIONS\fP below.
 .TP 8
+.B "underLine (\fPclass\fB UnderLine)"
+This specifies whether or not text with the underline attribute should be
+underlined.  It may be desirable to disable underlining when color is being
+used for the underline attribute.
+.TP 8
 .B "visualBell (\fPclass\fB VisualBell)"
 Specifies whether or not a visible bell (i.e. flashing) should be used instead
 of an audible bell when Control-G is received.  The default is ``false.''
@@ -853,6 +1000,15 @@ This entry invokes the \fBredraw()\fP action.
 .B "line1 (\fPclass\fB SmeLine)"
 This is a separator.
 .TP 8
+.B "8-bit-control (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-8-bit-control(toggle)\fP action.
+.TP 8
+.B "sun-function-keys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBsun-function-keys(toggle)\fP action.
+.TP 8
+.B "line2 (\fPclass\fB SmeLine)"
+This is a separator.
+.TP 8
 .B "suspend (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsend-signal(tstp)\fP action on systems that
 support job control.
@@ -873,7 +1029,7 @@ This entry invokes the \fBsend-signal(term)\fP action.
 .B "kill (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsend-signal(kill)\fP action.
 .TP 8
-.B "line2 (\fPclass\fB SmeLine)"
+.B "line3 (\fPclass\fB SmeLine)"
 This is a separator.
 .TP 8
 .B "quit (\fPclass\fB SmeBSB)"
@@ -944,7 +1100,7 @@ This entry invokes the \fBsoft-reset()\fP action.
 .B "hardreset (\fPclass\fB SmeBSB)"
 This entry invokes the \fBhard-reset()\fP action.
 .TP 8
-.B "clearsavedlines" (\fPclass\fB SmeBSB)"
+.B "clearsavedlines (\fPclass\fB SmeBSB)"
 This entry invokes the \fBclear-saved-lines()\fP action.
 .TP 8
 .B "line2 (\fPclass\fB SmeLine)"
@@ -1116,8 +1272,7 @@ pointer position.
 Clicking button two moves the display to a position in the saved text
 that corresponds to the pointer's position in the scrollbar.
 .PP
-.PP
-Unlike the VT102 window, the Tektronix window dows not allow the copying of
+Unlike the VT102 window, the Tektronix window does not allow the copying of
 text.
 It does allow Tektronix GIN mode, and in this mode
 the cursor will change from an arrow to a cross.
@@ -1324,6 +1479,12 @@ actions are provided for using within the \fIvt100\fP or \fItek4014\fP
 This action rings the keyboard bell at the specified percentage
 above or below the base volume.
 .TP 8
+.B "create-menu(\fIm/v/f/t\fP)"
+This action creates one of the menus used by \fIxterm\fP,
+if it has not been previously created.
+The parameter values are the menu names:
+\fImainMenu\fP, \fIvtMenu\fP, \fIfontMenu\fP, \fItekMenu\fP, respectively.
+.TP 8
 .B "ignore()"
 This action ignores the event but checks for special pointer position
 escape sequences.
@@ -1374,6 +1535,10 @@ should only be bound to Motion events.
 This action puts the currently selected text into all of the selections or 
 cutbuffers specified by \fIdestname\fP.
 .TP 8
+.B "select-set()"
+This action stores text that corresponds to the current selection,
+without affecting the selection mode.
+.TP 8
 .B "select-cursor-start()"
 This action is similar to \fBselect-start\fP except that it begins the
 selection at the current text cursor position.
@@ -1422,6 +1587,9 @@ the other direction.
 .B "allow-send-events(\fIon/off/toggle\fP)"
 This action set or toggles the \fBallowSendEvents\fP resource and is also
 invoked by the \fBallowsends\fP entry in \fImainMenu\fP.
+.TP
+.B "set-logging()"
+This action toggles the state of the logging option.
 .TP 8
 .B "redraw()"
 This action redraws the window and is also invoked by the
@@ -1556,6 +1724,35 @@ It is also invoked from the \fItekcopy\fP entry in \fItekMenu\fP.
 .TP 8
 .B "visual-bell()"
 This action flashes the window quickly.
+.TP 8
+.B "dired-button()"
+Handles a button event (other than press and release)
+by echoing the event's position
+(i.e., character line and column) in the following format:
+.sp
+.in +8
+^X ESC G <line+' '> <col+' '>
+.in -8
+.TP 8
+.B "vi-button()"
+Handles a button event (other than press and release)
+by echoing a control sequence computed from the event's line number
+in the screen relative to the current line:
+.sp
+.in +8
+ESC ^P
+.in -8
+or
+.in +8
+ESC ^N
+.in -8
+.sp
+according to whether the event is before, or after the current line,
+respectively.
+The ^N (or ^P) is repeated once for each line that the event differs
+from the current line.
+The control sequence is omitted altogether if the button event is on the
+current line.
 .PP
 The Tektronix window also has the following action:
 .TP 8
@@ -1692,4 +1889,6 @@ Edward Moy (Berkeley), Ralph R. Swick (MIT-Athena),
 Mark Vandevoorde (MIT-Athena), Bob McNamara (DEC-MAD),
 Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X 
-Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena)
+Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
+David Wexelblat and
+Thomas Dickey (XFree86 Project).

@@ -1,4 +1,5 @@
 XCOMM $XConsortium: Imakefile /main/65 1996/02/02 14:27:54 kaleb $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.11 1996/10/16 14:45:15 dawes Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -7,6 +8,21 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
+
+/*
+ * Fixes to allow compile with X11R5
+ */
+#ifndef XkbClientDefines
+#define XkbClientDefines /**/
+#endif
+
+#ifndef XkbClientDepLibs
+#define XkbClientDepLibs /**/
+#endif
+
+#ifndef XkbClientLibs
+#define XkbClientLibs /**/
+#endif
 
 /*
  * add -DWTMP and -DLASTLOG if you want them; make sure that bcopy can
@@ -20,29 +36,56 @@ XCOMM
          PTYLIB = -lpucc
 #endif
 
+#if XtermWithI18N
+        I18NDEF = -DI18N
+#endif
+
+#ifdef OS2Architecture
+        EXTRA_DEFINES = -DDEBUG -DALLOWLOGGING
+#endif
+
+#if defined(NetBSDArchitecture) || defined(OpenBSDArchitecture) || (defined(FreeBSDArchitecture) && (OSMajorVersion < 2)) || (defined(SunArchitecture) && !defined(SVR4Architecture)) || defined(i386Sco325Architecture)
+ TERMCAPDEFINES = -DNO_TERMCAP_H
+#endif
+
  OSMAJORVERSION = OSMajorVersion
  OSMINORVERSION = OSMinorVersion
 
-   MAIN_DEFINES = -DUTMP $(TTYGROUPDEF) $(PUCCPTYDDEF) \
+#if !defined(AmoebaArchitecture) && !defined(OS2Architecture)
+        UTMPDEF = -DUTMP
+#endif
+
+#ifdef AmoebaArchitecture
+        EXTRASRC = ttysvr.c
+        EXTRAOBJ = ttysvr.o
+#endif
+   MAIN_DEFINES = $(UTMPDEF) $(TTYGROUPDEF) $(PUCCPTYDDEF) $(NOPOSIXTERMIOS) \
 		  -DOSMAJORVERSION=$(OSMAJORVERSION) \
 		  -DOSMINORVERSION=$(OSMINORVERSION)
    MISC_DEFINES = /* -DALLOWLOGFILEEXEC */ 
     XKB_DEFINES = XkbClientDefines
-        DEFINES = $(XKB_DEFINES)
+        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES)
+
+#ifdef OS2Architecture
+          MAINSRC = os2main.c
+          MAINOBJ = os2main.o 
+#else
+          MAINSRC = main.c
+          MAINOBJ = main.o
+#endif
           SRCS1 = button.c charproc.c cursor.c data.c input.c \
-		  main.c menu.c misc.c screen.c scrollbar.c tabs.c \
-		  TekPrsTbl.c Tekproc.c util.c VTPrsTbl.c
-          OBJS1 = main.o input.o charproc.o cursor.o util.o tabs.o \
-		  screen.o scrollbar.o button.o Tekproc.o misc.o \
-		  VTPrsTbl.o TekPrsTbl.o data.o menu.o
+		  $(MAINSRC) menu.c misc.c screen.c scrollbar.c tabs.c \
+		  TekPrsTbl.c Tekproc.c util.c VTPrsTbl.c $(EXTRASRC)
+          OBJS1 = button.o charproc.o cursor.o data.o input.o \
+		  $(MAINOBJ) menu.o misc.o screen.o scrollbar.o tabs.o \
+		  TekPrsTbl.o Tekproc.o util.o VTPrsTbl.o $(EXTRAOBJ)
           SRCS2 = resize.c
           OBJS2 = resize.o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
-       PROGRAMS = resize xterm
+       PROGRAMS = ProgramTargetName(resize) ProgramTargetName(xterm)
        DEPLIBS1 = XkbClientDepLibs XawClientDepLibs
        DEPLIBS2 = 
-       PROGRAMS = xterm resize
 
 #ifndef TermcapLibrary
 #if SystemV && !defined(MacIIArchitecture)
@@ -83,12 +126,12 @@ LDRESUME = -Bdynamic
 #endif
 #endif
 #endif
-install:: xterm
+install:: ProgramTargetName(xterm)
 	MakeDir($(DESTDIR)$(BINDIR))
-	RemoveFile(xterm.inst)
-	LinkRule(xterm.inst,$(CDEBUGFLAGS) $(CCOPTIONS) $(EXTRA_LDOPTIONS) $(LOCAL_LDFLAGS),$(OBJS1),$(LDOVERRIDE) XawClientLibs $(LDRESUME) $(LDLIBS) $(TERMCAPLIB) $(PTYLIB))
-	$(INSTALL) -c $(INSTPGMFLAGS) $(INSTUIDFLAGS) xterm.inst $(DESTDIR)$(BINDIR)/xterm
-	RemoveFile(xterm.inst)
+	RemoveFile(ProgramTargetName(xterm.inst))
+	LinkRule(ProgramTargetName(xterm.inst),$(CDEBUGFLAGS) $(CCOPTIONS) $(EXTRA_LDOPTIONS) $(LOCAL_LDFLAGS),$(OBJS1),$(LDOVERRIDE) XawClientLibs $(LDRESUME) $(LDLIBS) $(TERMCAPLIB) $(PTYLIB))
+	$(INSTALL) -c $(INSTPGMFLAGS) $(INSTUIDFLAGS) ProgramTargetName(xterm.inst) $(DESTDIR)$(BINDIR)/ProgramTargetName(xterm)
+	RemoveFile(ProgramTargetName(xterm.inst))
 #else
 #if InstallXtermSetUID
 InstallProgramWithFlags(xterm,$(BINDIR),$(INSTUIDFLAGS))
@@ -101,6 +144,7 @@ NormalProgramTarget(resize,$(OBJS2),$(DEPLIBS2),NullParameter,$(TERMCAPLIB))
 InstallProgramWithFlags(resize,$(BINDIR),NullParameter)
 
 InstallAppDefaults(XTerm)
+InstallAppDefaultsLong(XTerm-col,XTerm-color)
 InstallManPage(xterm,$(MANDIR))
 InstallManPage(resize,$(MANDIR))
 DependTarget()

@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: cursor.c,v 1.14 93/09/20 17:42:23 hersh Exp $
+ *	$XFree86: xc/programs/xterm/cursor.c,v 3.3 1996/08/20 12:33:48 dawes Exp $
  */
 
 /*
@@ -29,14 +30,18 @@
 
 #include "ptyx.h"		/* also gets Xlib.h */
 
+#include "data.h"
+#include "xterm.h"
+
+static void _CheckSelection PROTO((TScreen *screen));
+
 static void _CheckSelection(screen)
 register TScreen *screen;
 {
-    extern XtermWidget term;	/* %%% gross */
-
     if (screen->cur_row > screen->endHRow ||
 	(screen->cur_row == screen->endHRow &&
-	 screen->cur_col >= screen->endHCol)) {}
+	 screen->cur_col >= screen->endHCol))
+	 ;
     else
 	DisownSelection(term);
 }
@@ -48,6 +53,7 @@ register TScreen *screen;
  * (this includes scrolling regions)
  * The origin is considered to be 0, 0 for this procedure.
  */
+void
 CursorSet(screen, row, col, flags)
 register TScreen	*screen;
 register int	row, col;
@@ -71,15 +77,16 @@ unsigned	flags;
 /*
  * moves the cursor left n, no wrap around
  */
+void
 CursorBack(screen, n)
 register TScreen	*screen;
 int		n;
 {
 	register int i, j, k, rev;
-	extern XtermWidget term;
 
 	if((rev = (term->flags & (REVERSEWRAP | WRAPAROUND)) ==
-	 (REVERSEWRAP | WRAPAROUND)) && screen->do_wrap)
+	                         (REVERSEWRAP | WRAPAROUND)) != 0
+	 && screen->do_wrap)
 		n--;
 	if ((screen->cur_col -= n) < 0) {
 		if(rev) {
@@ -100,6 +107,7 @@ int		n;
 /*
  * moves the cursor forward n, no wraparound
  */
+void
 CursorForward(screen, n)
 register TScreen	*screen;
 int		n;
@@ -115,6 +123,7 @@ int		n;
  * moves the cursor down n, no scrolling.
  * Won't pass bottom margin or bottom of screen.
  */
+void
 CursorDown(screen, n)
 register TScreen	*screen;
 int		n;
@@ -135,6 +144,7 @@ int		n;
  * moves the cursor up n, no linestarving.
  * Won't pass top margin or top of screen.
  */
+void
 CursorUp(screen, n)
 register TScreen	*screen;
 int		n;
@@ -155,6 +165,7 @@ int		n;
  * Moves cursor down amount lines, scrolls if necessary.
  * Won't leave scrolling region. No carriage return.
  */
+void
 Index(screen, amount)
 register TScreen	*screen;
 register int	amount;
@@ -179,6 +190,7 @@ register int	amount;
  * Moves cursor up amount lines, reverse scrolls if necessary.
  * Won't leave scrolling region. No carriage return.
  */
+void
 RevIndex(screen, amount)
 register TScreen	*screen;
 register int	amount;
@@ -199,7 +211,9 @@ register int	amount;
 
 /*
  * Moves Cursor To First Column In Line
+ * (Note: xterm doesn't implement SLH, SLL which would affect use of this)
  */
+void
 CarriageReturn(screen)
 register TScreen *screen;
 {
@@ -211,15 +225,16 @@ register TScreen *screen;
 /*
  * Save Cursor and Attributes
  */
-CursorSave(term, sc)
-register XtermWidget term;
+void
+CursorSave(tw, sc)
+register XtermWidget tw;
 register SavedCursor *sc;
 {
-	register TScreen *screen = &term->screen;
+	register TScreen *screen = &tw->screen;
 
 	sc->row = screen->cur_row;
 	sc->col = screen->cur_col;
-	sc->flags = term->flags;
+	sc->flags = tw->flags;
 	sc->curgl = screen->curgl;
 	sc->curgr = screen->curgr;
 	memmove( sc->gsets, screen->gsets, sizeof(screen->gsets));
@@ -228,17 +243,44 @@ register SavedCursor *sc;
 /*
  * Restore Cursor and Attributes
  */
-CursorRestore(term, sc)
-register XtermWidget term;
+void
+CursorRestore(tw, sc)
+register XtermWidget tw;
 register SavedCursor *sc;
 {
-	register TScreen *screen = &term->screen;
+	register TScreen *screen = &tw->screen;
 
 	memmove( screen->gsets, sc->gsets, sizeof(screen->gsets));
 	screen->curgl = sc->curgl;
 	screen->curgr = sc->curgr;
-	term->flags &= ~(BOLD|INVERSE|UNDERLINE|ORIGIN);
-	term->flags |= sc->flags & (BOLD|INVERSE|UNDERLINE|ORIGIN);
-	CursorSet (screen, (term->flags & ORIGIN) ? sc->row - screen->top_marg
-			   : sc->row, sc->col, term->flags);
+	tw->flags &= ~(BOLD|INVERSE|UNDERLINE|ORIGIN);
+	tw->flags |= sc->flags & (BOLD|INVERSE|UNDERLINE|ORIGIN);
+	CursorSet (screen, (tw->flags & ORIGIN) ? sc->row - screen->top_marg
+			   : sc->row, sc->col, tw->flags);
+}
+
+/*
+ * Move the cursor to the first column of the n-th next line.
+ */
+void
+CursorNextLine(screen, count)
+	TScreen *screen;
+	int count;
+{
+	CursorDown(screen, count < 1 ? 1 : count);
+	CarriageReturn(screen); 	
+	do_xevents();
+}
+
+/*
+ * Move the cursor to the first column of the n-th previous line.
+ */
+void
+CursorPrevLine(screen, count)
+	TScreen *screen;
+	int count;
+{
+	CursorUp(screen, count < 1 ? 1 : count);
+	CarriageReturn(screen);
+	do_xevents();
 }

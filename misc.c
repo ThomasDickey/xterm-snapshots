@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: misc.c /main/112 1996/11/29 10:34:07 swick $
+ *	$XFree86: xc/programs/xterm/misc.c,v 3.17 1997/01/08 20:52:31 dawes Exp $
  */
 
 /*
@@ -43,9 +44,29 @@
 #include <X11/Xmu/SysUtil.h>
 #include <X11/Xmu/WinUtil.h>
 
+#include "VTparse.h"
 #include "data.h"
 #include "error.h"
 #include "menu.h"
+
+#include "xterm.h"
+
+#if XtSpecificationRelease < 6
+#ifndef X_GETTIMEOFDAY
+#define X_GETTIMEOFDAY(t) gettimeofday(t,(struct timezone *)0)
+#endif
+#endif
+
+#ifdef AMOEBA
+#include "amoeba.h"
+#include "module/proc.h"
+#endif
+
+#ifdef __EMX__
+#define environ gblenvp		/* circumvent a bug */
+#endif
+
+extern char **environ;		/* used in 'Setenv()' */
 
 extern jmp_buf Tekend;
 extern jmp_buf VTend;
@@ -57,24 +78,56 @@ extern char *malloc();
 extern char *getenv();
 #endif
 
-static void DoSpecialEnterNotify();
-static void DoSpecialLeaveNotify();
+extern Widget toplevel;		/* used in 'ChangeGroup()' */
 
+static Boolean AllocateColor PROTO((XtermWidget pTerm, ScrnColors *pNew, int ndx, char *name));
+static Boolean ChangeColorsRequest PROTO((XtermWidget pTerm, int start, char *names));
+static Boolean GetOldColors PROTO(( XtermWidget pTerm));
+static Boolean UpdateOldColors PROTO((XtermWidget pTerm, ScrnColors *pNew));
+static int hexvalue PROTO((int c));
+static void ChangeGroup PROTO((String attribute, XtArgVal value));
+static void DoSpecialEnterNotify PROTO((XEnterWindowEvent *ev));
+static void DoSpecialLeaveNotify PROTO((XEnterWindowEvent *ev));
+static void selectwindow PROTO((TScreen *screen, int flag));
+static void unselectwindow PROTO((TScreen *screen, int flag));
+static void withdraw_window PROTO((Display *dpy, Window w, int scr));
+
+void
+do_xevents()
+{
+	register TScreen *screen = &term->screen;
+
+	if (XtAppPending(app_con)
+	|| GetBytesAvailable (ConnectionNumber(screen->display)) > 0)
+		xevents();
+}
+
+void
 xevents()
 {
 	XEvent event;
+	XtInputMask input_mask;
 	register TScreen *screen = &term->screen;
-	extern XtAppContext app_con;
 
 	if(screen->scroll_amt)
 		FlushScroll(screen);
-	if (!XPending (screen->display))
-	    /* protect against events/errors being swallowed by us or Xlib */
+	/*
+	 * process timeouts, relying on the fact that XtAppProcessEvent
+	 * will process the timeout and return without blockng on the 
+	 * XEvent queue.  Other sources i.e. the pty are handled elsewhere 
+	 * with select().
+	 */
+	while ((input_mask = XtAppPending(app_con)) & XtIMTimer)
+		XtAppProcessEvent(app_con, XtIMTimer);
+	/*
+	 * If there's no XEvents, don't wait around...
+	 */
+	if ((input_mask & XtIMXEvent) != XtIMXEvent)
 	    return;
 	do {
 		if (waitingForTrackInfo)
 			return;
-		XNextEvent (screen->display, &event);
+		XtAppNextEvent (app_con, &event);
 		/*
 		 * Hack to get around problems with the toolkit throwing away
 		 * eventing during the exclusive grab of the menu popup.  By
@@ -100,12 +153,12 @@ xevents()
 		     (event.xany.type != ButtonPress) &&
 		     (event.xany.type != ButtonRelease)))
 		    XtDispatchEvent(&event);
-	} while (QLength(screen->display) > 0);
+	} while ((input_mask = XtAppPending(app_con)) & XtIMXEvent);
 }
 
 
 Cursor make_colored_cursor (cursorindex, fg, bg)
-	int cursorindex;			/* index into font */
+	unsigned cursorindex;			/* index into font */
 	unsigned long fg, bg;			/* pixel value */
 {
 	register TScreen *screen = &term->screen;
@@ -133,6 +186,7 @@ void HandleKeyPressed(w, event, params, nparams)
 #endif
 	Input (&term->keyboard, screen, &event->xkey, False);
 }
+
 /* ARGSUSED */
 void HandleEightBitKeyPressed(w, event, params, nparams)
     Widget w;
@@ -199,10 +253,11 @@ static void DoSpecialEnterNotify (ev)
 }
 
 /*ARGSUSED*/
-void HandleEnterWindow(w, eventdata, event)
+void HandleEnterWindow(w, eventdata, event, cont)
 Widget w;
-register XEnterWindowEvent *event;
-caddr_t eventdata;
+XtPointer eventdata;
+XEvent *event;
+Boolean *cont;
 {
     /* NOP since we handled it above */
 }
@@ -225,21 +280,24 @@ static void DoSpecialLeaveNotify (ev)
 
 
 /*ARGSUSED*/
-void HandleLeaveWindow(w, eventdata, event)
+void HandleLeaveWindow(w, eventdata, event, cont)
 Widget w;
-register XEnterWindowEvent *event;
-caddr_t eventdata;
+XtPointer eventdata;
+XEvent *event;
+Boolean *cont;
 {
     /* NOP since we handled it above */
 }
 
 
 /*ARGSUSED*/
-void HandleFocusChange(w, eventdata, event)
+void HandleFocusChange(w, eventdata, ev, cont)
 Widget w;
-register XFocusChangeEvent *event;
-caddr_t eventdata;
+XEvent *ev;
+XtPointer eventdata;
+Boolean *cont;
 {
+	register XFocusChangeEvent *event = (XFocusChangeEvent  *)ev;
         register TScreen *screen = &term->screen;
 
         if(event->type == FocusIn)
@@ -260,7 +318,7 @@ caddr_t eventdata;
 }
 
 
-
+static void
 selectwindow(screen, flag)
 register TScreen *screen;
 register int flag;
@@ -287,6 +345,7 @@ register int flag;
 	}
 }
 
+static void
 unselectwindow(screen, flag)
 register TScreen *screen;
 register int flag;
@@ -312,11 +371,11 @@ register int flag;
 
 static long lastBellTime;	/* in milliseconds */
 
+void
 Bell(which,percent)
      int which;
      int percent;
 {
-    extern XtermWidget term;
     register TScreen *screen = &term->screen;
     struct timeval curtime;
     long now_msecs;
@@ -325,9 +384,7 @@ Bell(which,percent)
        the bell again? */
     if(screen->bellSuppressTime) {
 	if(screen->bellInProgress) {
-	    if (QLength(screen->display) > 0 ||
-		GetBytesAvailable (ConnectionNumber(screen->display)) > 0)
-		xevents();
+	    do_xevents();
 	    if(screen->bellInProgress) { /* even after new events? */
 		return;
 	    }
@@ -362,10 +419,9 @@ Bell(which,percent)
     }
 }
 
-
+void
 VisualBell()
 {
-    extern XtermWidget term;
     register TScreen *screen = &term->screen;
     register Pixel xorPixel = screen->foreground ^ term->core.background_pixel;
     XGCValues gcval;
@@ -423,9 +479,9 @@ void HandleBellPropertyChange(w, data, ev, more)
     }
 }
 
+void
 Redraw()
 {
-	extern XtermWidget term;
 	register TScreen *screen = &term->screen;
 	XExposeEvent event;
 
@@ -448,7 +504,7 @@ Redraw()
 	        event.window = TWindow(screen);
 		event.width = tekWidget->core.width;
 		event.height = tekWidget->core.height;
-		TekExpose (tekWidget, &event, NULL);
+		TekExpose ((Widget)tekWidget, (XEvent *)&event, NULL);
 	}
 }
 
@@ -521,6 +577,7 @@ creat_as(uid, gid, pathname, mode)
  * by default.
  */ 
 
+void
 StartLog(screen)
 register TScreen *screen;
 {
@@ -627,6 +684,7 @@ register TScreen *screen;
 	update_logging();
 }
 
+void
 CloseLog(screen)
 register TScreen *screen;
 {
@@ -638,6 +696,7 @@ register TScreen *screen;
 	update_logging();
 }
 
+void
 FlushLog(screen)
 register TScreen *screen;
 {
@@ -664,43 +723,65 @@ void logpipe()
 #endif /* ALLOWLOGFILEEXEC */
 #endif /* ALLOWLOGGING */
 
-
-do_osc(func)
-int (*func)();
+void
+do_osc(oscbuf, len)
+Char *oscbuf;
+int len;
 {
-	register int mode, c;
-	register char *cp;
-	char buf[512];
-	char *bufend = &buf[(sizeof buf) - 1];	/* leave room for null */
-	Bool okay = True;
+	register int mode;
+	register Char *cp;
+	int state = 0;
+	char *buf = 0;
 
 	/* 
-	 * lines should be of the form <ESC> ] number ; string <BEL>
-	 *
-	 * where number is one of 0, 1, 2, or 46
+	 * lines should be of the form <OSC> number ; string <ST>
 	 */
 	mode = 0;
-	while(isdigit(c = (*func)()))
-		mode = 10 * mode + (c - '0');
-	if (c != ';') okay = False;
-	cp = buf;
-	while(isprint((c = (*func)()) & 0x7f) && cp < bufend)
-		*cp++ = c;
-	if (c != 7) okay = False;
-	*cp = 0;
-	if (okay) switch(mode) {
-	 case 0:	/* new icon name and title*/
+	for (cp = oscbuf; *cp != '\0'; cp++) {
+		switch (state) {
+		case 0:
+			if (isdigit(*cp)) {
+				mode = 10 * mode + (*cp - '0');
+				break;
+			}
+			/* FALLTHRU */
+		case 1:
+			if (*cp != ';')
+				return;
+			state = 2;
+			break;
+		case 2:
+			buf = (char *)cp;
+			state = 3;
+			/* FALLTHRU */
+		default:
+			if (!isprint(*cp & 0x7f))
+				return;
+		}
+	}
+
+	switch(mode) {
+	case 0:	/* new icon name and title*/
 		Changename(buf);
 		Changetitle(buf);
 		break;
 
-	 case 1:	/* new icon name only */
+	case 1:	/* new icon name only */
 		Changename(buf);
 		break;
 
-	 case 2:	/* new title only */
+	case 2:	/* new title only */
 		Changetitle(buf);
 		break;
+
+        case 10:       case 11:        case 12:
+        case 13:       case 14:        case 15:
+        case 16:
+               {
+                   if (term->misc.dynamicColors)
+                       ChangeColorsRequest(term,mode-10,buf);
+               }
+               break;
 
 #ifdef ALLOWLOGGING
 	 case 46:	/* new log file */
@@ -733,32 +814,377 @@ int (*func)();
 	}
 }
 
-static ChangeGroup(attribute, value)
+#define MAX_UDK 35
+static struct {
+	char *str;
+	int   len;
+	} user_keys[MAX_UDK];
+
+static int
+hexvalue(c)
+	int c;
+{
+	if (c >= '0' && c <= '9') return c - '0';
+	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+	return -1;
+}
+
+void
+do_dcs(dcsbuf, dcslen)
+Char *dcsbuf;
+int dcslen;
+{
+	register TScreen *screen = &term->screen;
+	char *cp = (char *)dcsbuf;
+
+	if (*cp == '$') { /* DECRQSS */
+		char reply[BUFSIZ];
+		Bool okay = True;
+
+		cp++;
+		if (*cp++ == 'q') {
+			if (!strcmp(cp, "\"q")) {		/* DECSCA */
+				sprintf(reply, "%d%s",
+					(screen->protected_mode == DEC_PROTECT)
+					 && (term->flags & PROTECTED) ? 1 : 0,
+					cp);
+			} else if (!strcmp(cp, "\"p")) {	/* DECSCL */
+				sprintf(reply, "%d%s",
+					(screen->ansi_level ?
+					 screen->ansi_level : 1) + 60,
+					cp);
+			} else if (!strcmp(cp, "r")) {		/* DECSTBM */
+				sprintf(reply, "%d;%dr",
+					screen->top_marg + 1,
+					screen->bot_marg + 1);
+			} else if (!strcmp(cp, "m")) {		/* SGR */
+				strcpy(reply, "0");
+				if (term->flags & BOLD)
+					strcat(reply, ";1");
+				if (term->flags & UNDERLINE)
+					strcat(reply, ";4");
+				if (term->flags & INVERSE)
+					strcat(reply, ";7");
+				if (term->flags & INVISIBLE)
+					strcat(reply, ";8");
+				if_OPT_ISO_COLORS(screen,{
+				if (term->flags & BG_COLOR)
+					sprintf(reply+strlen(reply),
+						";3%d", term->cur_foreground);
+				if (term->flags & FG_COLOR)
+					sprintf(reply+strlen(reply),
+						";4%d", term->cur_background);
+				})
+				strcat(reply, "m");
+			} else
+				okay = False;
+
+			unparseputc1(DCS, screen->respond);
+			unparseputc(okay ? '1' : '0', screen->respond);
+			unparseputc('$', screen->respond);
+			unparseputc('r', screen->respond);
+			if (okay)
+				cp = reply;
+			while (*cp != '\0')
+				unparseputc(*cp++, screen->respond);
+			unparseputc1(ST, screen->respond);
+		} else {
+			unparseputc(CAN, screen->respond);
+		}
+	} else { /* DECUDK */
+		Bool clear_all = True;
+		Bool lock_keys = True;
+
+		if (dcslen != strlen(cp))
+			/* shouldn't have nulls in the string */
+			return;
+
+		if (*cp == '0') {
+			cp++;
+		} else if (*cp == '1') {
+			cp++;
+			clear_all = False;
+		}
+
+		if (*cp == ';')
+			cp++;
+		else if (*cp != '|')
+			return;
+
+		if (*cp == '0') {
+			cp++;
+		} else if (*cp == '1') {
+			cp++;
+			lock_keys = False;
+		}
+
+		if (*cp++ != '|')
+			return;
+
+		if (clear_all) {
+			int n;
+			for (n = 0; n < MAX_UDK; n++) {
+				if (user_keys[n].str != 0) {
+					free(user_keys[n].str);
+					user_keys[n].str = 0;
+					user_keys[n].len = 0;
+				}
+			}
+		}
+
+		while (*cp) {
+			char *str = malloc(strlen(cp) + 2);
+			int key = 0;
+			int len = 0;
+
+			while (isdigit(*cp))
+				key = (key * 10) + (*cp++ - '0');
+			if (*cp == '/') {
+				cp++;
+				while (*cp != ';' && *cp != '\0') {
+					int hi = hexvalue(*cp++);
+					int lo = hexvalue(*cp++);
+					if (hi >= 0 && lo >= 0)
+						str[len++] = (hi << 4) | lo;
+					else
+						return;
+				}
+			}
+			if (len > 0 && key < MAX_UDK) {
+				if (user_keys[key].str != 0)
+					free(user_keys[key].str);
+				user_keys[key].str = str;
+				user_keys[key].len = len;
+			} else {
+				free(str);
+			}
+			if (*cp == ';')
+				cp++;
+		}
+	}
+}
+
+char *
+udk_lookup(keycode, len)
+	int keycode;
+	int *len;
+{
+	if (keycode < MAX_UDK) {
+		*len = user_keys[keycode].len;
+		return user_keys[keycode].str;
+	}
+	return 0;
+}
+
+static void
+ChangeGroup(attribute, value)
      String attribute;
      XtArgVal value;
 {
-	extern Widget toplevel;
 	Arg args[1];
 
 	XtSetArg( args[0], attribute, value );
 	XtSetValues( toplevel, args, 1 );
 }
 
+void
 Changename(name)
 register char *name;
 {
     ChangeGroup( XtNiconName, (XtArgVal)name );
 }
 
+void
 Changetitle(name)
 register char *name;
 {
     ChangeGroup( XtNtitle, (XtArgVal)name );
 }
 
+/***====================================================================***/
+
+ScrnColors	*pOldColors= NULL;
+
+static Boolean
+GetOldColors(pTerm)
+XtermWidget	pTerm;
+{
+int	i;
+    if (pOldColors==NULL) {
+	pOldColors=	(ScrnColors *)XtMalloc(sizeof(ScrnColors));
+	if (pOldColors==NULL) {
+	    fprintf(stderr,"allocation failure in GetOldColors\n");
+	    return(FALSE);
+	}
+	pOldColors->which=	0;
+	for (i=0;i<NCOLORS;i++) {
+	    pOldColors->colors[i]=	0;
+	    pOldColors->names[i]=	NULL;
+	}
+	GetColors(pTerm,pOldColors);
+    }
+    return(TRUE);
+}
+
+static Boolean
+UpdateOldColors(pTerm,pNew)
+XtermWidget	pTerm;
+ScrnColors	*pNew;
+{
+int	i;
+
+    /* if we were going to free old colors, this would be the place to
+     * do it.   I've decided not to (for now), because it seems likely
+     * that we'd have a small set of colors we use over and over, and that
+     * we could save some overhead this way.   The only case in which this
+     * (clearly) fails is if someone is trying a boatload of colors, in
+     * which case they can restart xterm
+     */
+    for (i=0;i<NCOLORS;i++) {
+	if (COLOR_DEFINED(pNew,i)) {
+	    if (pOldColors->names[i]!=NULL) {
+		XtFree(pOldColors->names[i]);
+		pOldColors->names[i]= NULL;
+	    }
+	    if (pNew->names[i]) {
+		pOldColors->names[i]= pNew->names[i];
+	    }
+	    pOldColors->colors[i]=	pNew->colors[i];
+	}
+    }
+    return(TRUE);
+}
+
+void
+ReverseOldColors()
+{
+register ScrnColors	*pOld= pOldColors;
+Pixel	 tmpPix;
+char	*tmpName;
+
+    if (pOld) {
+	/* change text cursor, if necesary */
+	if (pOld->colors[TEXT_CURSOR]==pOld->colors[TEXT_FG]) {
+	    pOld->colors[TEXT_CURSOR]=	pOld->colors[TEXT_BG];
+	    if (pOld->names[TEXT_CURSOR]) {
+		XtFree(pOldColors->names[TEXT_CURSOR]);
+		pOld->names[TEXT_CURSOR]= NULL;
+	    }
+	    if (pOld->names[TEXT_BG]) {
+		tmpName= XtMalloc(strlen(pOld->names[TEXT_BG])+1);
+		if (tmpName) {
+		    strcpy(tmpName,pOld->names[TEXT_BG]);
+		    pOld->names[TEXT_CURSOR]= tmpName;
+		}
+	    }
+	}
+
+	/* swap text FG and BG */
+	tmpPix=		pOld->colors[TEXT_FG];
+	tmpName=	pOld->names[TEXT_FG];
+	pOld->colors[TEXT_FG]=	pOld->colors[TEXT_BG];
+	pOld->names[TEXT_FG]=	pOld->names[TEXT_BG];
+	pOld->colors[TEXT_BG]=	tmpPix;
+	pOld->names[TEXT_BG]=	tmpName;
+
+	/* swap mouse FG and BG */
+	tmpPix=		pOld->colors[MOUSE_FG];
+	tmpName=	pOld->names[MOUSE_FG];
+	pOld->colors[MOUSE_FG]=	pOld->colors[MOUSE_BG];
+	pOld->names[MOUSE_FG]=	pOld->names[MOUSE_BG];
+	pOld->colors[MOUSE_BG]=	tmpPix;
+	pOld->names[MOUSE_BG]=	tmpName;
+
+	/* swap Tek FG and BG */
+	tmpPix=		pOld->colors[TEK_FG];
+	tmpName=	pOld->names[TEK_FG];
+	pOld->colors[TEK_FG]=	pOld->colors[TEK_BG];
+	pOld->names[TEK_FG]=	pOld->names[TEK_BG];
+	pOld->colors[TEK_BG]=	tmpPix;
+	pOld->names[TEK_BG]=	tmpName;
+    }
+    return;
+}
+
+static Boolean
+AllocateColor(pTerm,pNew,ndx,name)
+XtermWidget	 pTerm;
+ScrnColors	*pNew;
+int		 ndx;
+char		*name;
+{
+XColor			 def;
+register TScreen	*screen=	&pTerm->screen;
+Colormap		 cmap=		pTerm->core.colormap;
+char			*newName;
+
+    if ((XParseColor(screen->display,cmap,name,&def))&&
+	(XAllocColor(screen->display,cmap,&def))) {
+	SET_COLOR_VALUE(pNew,ndx,def.pixel);
+	newName= XtMalloc(strlen(name)+1);
+	if (newName) {
+	    strcpy(newName,name);
+	    SET_COLOR_NAME(pNew,ndx,newName);
+	}
+	return(TRUE);
+    }
+    return(FALSE);
+}
+
+static Boolean
+ChangeColorsRequest(pTerm,start,names)
+XtermWidget	pTerm;
+int		start;
+register char	*names;
+{
+char		*thisName;
+ScrnColors	newColors;
+int		i,ndx;
+
+    if ((pOldColors==NULL)&&(!GetOldColors(pTerm))) {
+	return(FALSE);
+    }
+    newColors.which=	0;
+    for (i=0;i<NCOLORS;i++) {
+	newColors.names[i]=	NULL;
+    }
+    for (i=start;i<NCOLORS;i++) {
+	if (term->misc.re_verse)	ndx=	OPPOSITE_COLOR(i);
+	else				ndx=	i;
+	if ((names==NULL)||(names[0]=='\0')) {
+	    newColors.names[ndx]=	NULL;
+	}
+	else {
+	    if (names[0]==';')
+		 thisName=	NULL;
+	    else thisName=	names;
+	    names = strchr(names,';');
+	    if (names!=NULL) {
+		*names=	'\0';
+		names++;
+	    }
+	    if ((!pOldColors->names[ndx])||
+		(thisName&&(strcmp(thisName,pOldColors->names[ndx])))) {
+		AllocateColor(pTerm,&newColors,ndx,thisName);
+	    }
+	}
+    }
+
+    if (newColors.which==0)
+	return(TRUE);
+
+    ChangeColors(pTerm,&newColors);
+    UpdateOldColors(pTerm,&newColors);
+    return(TRUE);
+}
+
+/***====================================================================***/
+
 #ifndef DEBUG
 /* ARGSUSED */
 #endif
+void
 Panic(s, a)
 char	*s;
 int a;
@@ -780,7 +1206,7 @@ char *SysErrorMsg (n)
     return s ? s : "unknown error";
 }
 
-
+void
 SysError (i)
 int i;
 {
@@ -793,6 +1219,7 @@ int i;
 	Cleanup(i);
 }
 
+void
 Error (i)
 int i;
 {
@@ -804,16 +1231,22 @@ int i;
 /*
  * cleanup by sending SIGHUP to client processes
  */
+void
 Cleanup (code)
 int code;
 {
-	extern XtermWidget term;
 	register TScreen *screen;
 
 	screen = &term->screen;
 	if (screen->pid > 1) {
 	    (void) kill_process_group (screen->pid, SIGHUP);
 	}
+#ifdef AMOEBA
+	if (!NULLPORT(&screen->proccap.cap_port))
+	    (void) pro_stun(&screen->proccap, -1L);
+	cb_close(screen->tty_outq);
+	cb_close(screen->tty_inq);
+#endif
 	Exit (code);
 }
 
@@ -824,12 +1257,12 @@ int code;
  * was allocated using calloc, with enough extra room at the end so not
  * to have to do a realloc().
  */
+void
 Setenv (var, value)
 register char *var, *value;
 {
-	extern char **environ;
 	register int envindex = 0;
-	register int len = strlen(var);
+	register Size_t len = strlen(var);
 
 	while (environ [envindex] != NULL) {
 	    if (strncmp (environ [envindex], var, len) == 0) {
@@ -860,7 +1293,7 @@ char *strindex (s1, s2)
 register char	*s1, *s2;
 {
 	register char	*s3;
-	int s2len = strlen (s2);
+	Size_t s2len = strlen (s2);
 
 	while ((s3=strchr(s1, *s2)) != NULL) {
 		if (strncmp(s3, s2, s2len) == 0)
@@ -871,6 +1304,7 @@ register char	*s1, *s2;
 }
 
 /*ARGSUSED*/
+int
 xerror(d, ev)
 Display *d;
 register XErrorEvent *ev;
@@ -878,9 +1312,11 @@ register XErrorEvent *ev;
     fprintf (stderr, "%s:  warning, error event received:\n", xterm_name);
     (void) XmuPrintDefaultErrorMessage (d, ev, stderr);
     Exit (ERROR_XERROR);
+    return 0;	/* appease the compiler */
 }
 
 /*ARGSUSED*/
+int
 xioerror(dpy)
 Display *dpy;
 {
@@ -890,8 +1326,19 @@ Display *dpy;
 		    DisplayString (dpy));
 
     Exit(ERROR_XIOERROR);
+    return 0;	/* appease the compiler */
 }
 
+extern char *ProgramName;
+
+void xt_error(message)
+    String message;
+{
+    (void) fprintf (stderr, "%s Xt error: %s\n", ProgramName, message);
+    exit(1);
+}
+
+int
 XStrCmp(s1, s2)
 char *s1, *s2;
 {

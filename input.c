@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.11 1997/01/08 20:52:26 dawes Exp $
  */
 
 /*
@@ -32,14 +33,17 @@
 #include <X11/DECkeysym.h>
 #include <X11/Xutil.h>
 #include <stdio.h>
+
+#include "xterm.h"
 #include "data.h"
 
 static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
 static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
-static char *cur = "DACB";
+static char *cur = "HDACB  FE";
 
-static int funcvalue(), sunfuncvalue();
-extern Boolean sunFunctionKeys;
+static int funcvalue PROTO((KeySym keycode));
+static int sunfuncvalue PROTO((KeySym keycode));
+static void AdjustAfterInput PROTO((TScreen *screen));
 
 static void
 AdjustAfterInput (screen)
@@ -63,6 +67,7 @@ register TScreen *screen;
 	}
 }
 
+void
 Input (keyboard, screen, event, eightbit)
     register TKeyboard	*keyboard;
     register TScreen	*screen;
@@ -70,7 +75,7 @@ Input (keyboard, screen, event, eightbit)
     Bool eightbit;
 {
 
-#define STRBUFSIZE 100
+#define STRBUFSIZE 500
 
 	char strbuf[STRBUFSIZE];
 	register char *string;
@@ -80,15 +85,18 @@ Input (keyboard, screen, event, eightbit)
 	KeySym  keysym = 0;
 	ANSI	reply;
 
-
+#if XtSpecificationRelease >= 6
 	if (screen->xic) {
 	    Status status_return;
 	    nbytes = XmbLookupString (screen->xic, event, strbuf, STRBUFSIZE,
 				      &keysym, &status_return);
-	} else {
-	    XComposeStatus status_return;
+	}
+	else
+#endif
+	{
+	    static XComposeStatus compose_status = {NULL, 0};
 	    nbytes = XLookupString (event, strbuf, STRBUFSIZE,
-				    &keysym, &status_return);
+				    &keysym, &compose_status);
 	}
 
 	string = &strbuf[0];
@@ -101,20 +109,34 @@ Input (keyboard, screen, event, eightbit)
 	    keysym += XK_Home - XK_KP_Home;
 	}
 
+#define VT52_KEYPAD \
+	if_OPT_VT52_MODE(screen,{ \
+		reply.a_type = ESC; \
+		reply.a_pintro = '?'; \
+		})
+
+#define VT52_CURSOR_KEYS \
+	if_OPT_VT52_MODE(screen,{ \
+		reply.a_type = ESC; \
+		})
+
 	if (IsPFKey(keysym)) {
 		reply.a_type = SS3;
+		reply.a_final = keysym-XK_KP_F1+'P';
+		VT52_CURSOR_KEYS
 		unparseseq(&reply, pty);
-		unparseputc((char)(keysym-XK_KP_F1+'P'), pty);
 		key = TRUE;
         } else if (IsCursorKey(keysym) &&
         	keysym != XK_Prior && keysym != XK_Next) {
-       		if (keyboard->flags & CURSOR_APL) {
+       		if (keyboard->flags & MODE_DECCKM) {
 			reply.a_type = SS3;
+			reply.a_final = cur[keysym-XK_Home];
+			VT52_CURSOR_KEYS
 			unparseseq(&reply, pty);
-			unparseputc(cur[keysym-XK_Left], pty);
 		} else {
 			reply.a_type = CSI;
-			reply.a_final = cur[keysym-XK_Left];
+			if_OPT_VT52_MODE(screen,{ reply.a_type = ESC; })
+			reply.a_final = cur[keysym-XK_Home];
 			unparseseq(&reply, pty);
 		}
 		key = TRUE;
@@ -122,23 +144,54 @@ Input (keyboard, screen, event, eightbit)
 	 	keysym == XK_Prior || keysym == XK_Next ||
 	 	keysym == DXK_Remove || keysym == XK_KP_Delete ||
 		keysym == XK_KP_Insert) {
-		reply.a_type = CSI;
-		reply.a_nparam = 1;
-		if (sunFunctionKeys) {
-		    reply.a_param[0] = sunfuncvalue (keysym);
-		    reply.a_final = 'z';
-		} else {
-		    reply.a_param[0] = funcvalue (keysym);
-		    reply.a_final = '~';
+		int dec_code = funcvalue(keysym);
+		if ((string = udk_lookup(dec_code, &nbytes)) != 0) {
+			while (nbytes-- > 0)
+				unparseputc(*string++, pty);
 		}
-		if (reply.a_param[0] > 0)
+#if OPT_VT52_MODE
+		/*
+		 * Interpret F1-F4 as PF1-PF4 for VT52, VT100
+		 */
+		else if (screen->ansi_level <= 1
+		  && (dec_code >= 11 && dec_code <= 14))
+		{
+			reply.a_type = SS3;
+			VT52_CURSOR_KEYS
+			reply.a_final = dec_code - 11 + 'P';
 			unparseseq(&reply, pty);
+		}
+#endif
+		else {
+			reply.a_type = CSI;
+			reply.a_nparam = 1;
+			if (sunFunctionKeys) {
+				reply.a_param[0] = sunfuncvalue (keysym);
+				reply.a_final = 'z';
+			} else {
+				reply.a_param[0] = dec_code;
+				reply.a_final = '~';
+			}
+			if (reply.a_param[0] > 0)
+				unparseseq(&reply, pty);
+		}
 		key = TRUE;
 	} else if (IsKeypadKey(keysym)) {
-	  	if (keyboard->flags & KYPD_APL)	{
+#if OPT_VT52_MODE
+		/*
+		 * DEC keyboards don't have keypad(+), but do have keypad(,)
+		 * instead.  Other (Sun, PC) keyboards commonly have keypad(+),
+		 * but no keypad(,) - it's a pain for users to work around.
+		 */
+		if (!sunFunctionKeys
+		 && keysym == XK_KP_Add)
+			keysym = XK_KP_Separator;
+#endif
+	  	if (keyboard->flags & MODE_DECKPAM)	{
 			reply.a_type   = SS3;
+			reply.a_final = kypd_apl[keysym-XK_KP_Space];
+			VT52_KEYPAD
 			unparseseq(&reply, pty);
-			unparseputc(kypd_apl[keysym-XK_KP_Space], pty);
 		} else
 			unparseputc(kypd_num[keysym-XK_KP_Space], pty);
 		key = TRUE;
@@ -152,7 +205,7 @@ Input (keyboard, screen, event, eightbit)
 		    if (screen->input_eight_bits)
 		      *string |= 0x80;	/* turn on eighth bit */
 		    else
-		      unparseputc (033, pty);  /* escape */
+		      unparseputc (ESC, pty);  /* escape */
 		}
 		while (nbytes-- > 0)
 			unparseputc(*string++, pty);
@@ -166,10 +219,11 @@ Input (keyboard, screen, event, eightbit)
 	return;
 }
 
+void
 StringInput (screen, string, nbytes)
     register TScreen	*screen;
     register char *string;
-    int nbytes;
+    Size_t nbytes;
 {
 	int	pty	= screen->respond;
 
@@ -178,14 +232,15 @@ StringInput (screen, string, nbytes)
 		TekGINoff();
 		nbytes--;
 	}
-	while (nbytes-- > 0)
+	while (nbytes-- != 0)
 		unparseputc(*string++, pty);
 	if(!screen->TekEmu)
 	        AdjustAfterInput(screen);
 }
 
+/* These definitions are DEC-style (e.g., vt320) */
 static int funcvalue (keycode)
-	int keycode;
+	KeySym  keycode;
 {
 	switch (keycode) {
 		case XK_F1:	return(11);
@@ -226,8 +281,8 @@ static int funcvalue (keycode)
 
 
 static int sunfuncvalue (keycode)
-	int keycode;
-  {
+	KeySym  keycode;
+{
   	switch (keycode) {
 		case XK_F1:	return(224);
 		case XK_F2:	return(225);
@@ -280,4 +335,3 @@ static int sunfuncvalue (keycode)
 		default:	return(-1);
 	}
 }
-
