@@ -695,3 +695,22 @@ test program.  You will have to check and add the proper libraries by hand
 to makefile.])
 fi
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl Check if xterm is installed setuid, assume we want to do the same on a
+dnl new install
+AC_DEFUN([CF_XTERM_MODE],[
+AC_PATH_PROG(XTERM_PATH,xterm)
+XTERM_MODE=755
+AC_MSG_CHECKING(for presumed installation-mode)
+if test -f "$XTERM_PATH" ; then
+	ls -l $XTERM_PATH >conftest.out
+	read cf_mode cf_rest <conftest.out
+	case ".$cf_mode" in #(vi
+	.???s*)
+		XTERM_MODE=4711
+		;;
+	esac
+fi
+AC_MSG_RESULT($XTERM_MODE)
+AC_SUBST(XTERM_MODE)
+])dnl

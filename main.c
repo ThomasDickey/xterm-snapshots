@@ -1142,9 +1142,6 @@ XtActionsRec actionProcs[] = {
 };
 
 Atom wm_delete_window;
-extern fd_set Select_mask;
-extern fd_set X_mask;
-extern fd_set pty_mask;
 
 int
 main (int argc, char *argv[])
