@@ -27,7 +27,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Revision: 1.1 $)
+AC_REVISION($Revision: 1.2 $)
 AC_PREREQ(2.12)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -119,7 +119,7 @@ test $enable_16_color = no && AC_DEFINE(OPT_AIX_COLORS,0)
 AC_MSG_CHECKING(for default color-mode)
 CF_ARG_ENABLE(color-mode,
 	[  --enable-color-mode     set default colorMode resource ],
-	[default_colormode=$withval],
+	[default_colormode=TRUE],
 	[default_colormode=FALSE])
 AC_MSG_RESULT($default_colormode)
 AC_DEFINE_UNQUOTED(DFT_COLORMODE,$default_colormode)
