@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.115 2001/01/17 23:46:35 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.119 2001/04/12 01:02:49 dickey Exp $ */
 
 /*
 
@@ -370,6 +370,7 @@ Bres(XtNautoWrap,	XtCAutoWrap,	misc.autoWrap,		TRUE),
 Bres(XtNawaitInput,	XtCAwaitInput,	screen.awaitInput,	FALSE),
 Bres(XtNbackarrowKey,	XtCBackarrowKey, screen.backarrow_key, TRUE),
 Bres(XtNboldMode,	XtCBoldMode, screen.bold_mode,		TRUE),
+Bres(XtNbrokenSelections, XtCBrokenSelections, screen.brokenSelections, FALSE),
 Bres(XtNc132,		XtCC132,	screen.c132,		FALSE),
 Bres(XtNcurses,		XtCCurses,	screen.curses,		FALSE),
 Bres(XtNcutNewline,	XtCCutNewline,	screen.cutNewline,	TRUE),
@@ -4333,6 +4334,8 @@ static void VTInitialize (
    wnew->screen.cutToBeginningOfLine = request->screen.cutToBeginningOfLine;
    wnew->screen.highlight_selection = request->screen.highlight_selection;
    wnew->screen.trim_selection = request->screen.trim_selection;
+   wnew->screen.i18nSelections = request->screen.i18nSelections;
+   wnew->screen.brokenSelections = request->screen.brokenSelections;
    wnew->screen.always_highlight = request->screen.always_highlight;
    wnew->screen.pointer_cursor = request->screen.pointer_cursor;
 

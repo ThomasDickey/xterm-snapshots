@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.45 2000/12/30 19:15:45 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.47 2001/04/12 01:02:50 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -61,6 +61,7 @@ stdlib.h \
 termios.h \
 unistd.h \
 )
+AC_HEADER_TIME
 
 ###	checks for typedefs
 CF_SIZE_T
@@ -69,6 +70,7 @@ AC_CHECK_TYPE(time_t, long)
 ###	checks for library functions
 AC_CHECK_FUNCS( \
 	bcopy \
+	getlogin \
 	memmove \
 	strerror \
 	tcgetattr \

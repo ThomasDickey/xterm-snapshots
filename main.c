@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.125 2001/01/17 23:46:36 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.128 2001/04/12 01:02:50 dickey Exp $ */
 
 
 /* main.c */
@@ -122,10 +122,6 @@ SOFTWARE.
 #define BSDLY	0
 #define VTDLY	0
 #define FFDLY	0
-#else /* MINIX */
-#ifdef DEBUG
-#include <time.h>
-#endif
 #endif /* MINIX */
 
 #ifdef __osf__
@@ -313,12 +309,6 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 
 #include <stdio.h>
 
-#ifdef X_NOT_STDC_ENV
-extern time_t time ();
-#else
-#include <time.h>
-#endif
-
 #ifdef __hpux
 #include <sys/utsname.h>
 #endif /* __hpux */
@@ -399,7 +389,7 @@ extern struct utmp *getutid __((struct utmp *_Id));
 
 #ifdef X_NOT_POSIX
 extern long lseek();
-#if defined(USG)
+#if defined(USG) || defined(SVR4)
 extern unsigned sleep();
 #else
 extern void sleep();
@@ -450,7 +440,7 @@ static Bool xterm_exiting = False;
 static char **command_to_exec = NULL;
 
 #define TERMCAP_ERASE "kb"
-#define VAL_INITIAL_ERASE A2E(127)
+#define VAL_INITIAL_ERASE A2E(8)
 
 /* choose a nice default value for speed - if we make it too low, users who
  * mistakenly use $TERM set to vt100 will get padding delays
@@ -605,7 +595,7 @@ struct _xttymodes {
 static int parse_tty_modes (char *s, struct _xttymodes *modelist);
 
 #ifdef USE_SYSV_UTMP
-#if defined(X_NOT_STDC_ENV) || (defined(AIXV3) && (OSMAJORVERSION < 4))
+#if (defined(X_NOT_STDC_ENV) || (defined(AIXV3) && (OSMAJORVERSION < 4))) && !(defined(getutent) || defined(getutid) || defined(getutline))
 extern struct utmp *getutent();
 extern struct utmp *getutid();
 extern struct utmp *getutline();
@@ -3431,9 +3421,9 @@ spawn (void)
 		/* write out the entry */
 		if (!resource.utmpInhibit) {
 		    errno = 0;
-		    utret = pututline(&utmp);
-		    TRACE(("pututline: %d %p %d %s\n",
-			resource.utmpInhibit, (void *)utret,
+		    pututline(&utmp);
+		    TRACE(("pututline: %d %d %s\n",
+			resource.utmpInhibit,
 			errno, strerror(errno)));
 		}
 #ifdef WTMP

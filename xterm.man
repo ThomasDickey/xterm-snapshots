@@ -56,7 +56,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.70 2001/01/27 18:21:24 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.72 2001/04/12 01:02:51 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996.
 .TH XTERM 1 __vendorversion__
@@ -1006,6 +1006,15 @@ It attempts to match a bold font for the other font selections
 (\fBfont1\fP through \fBfont6\fP).
 If the normal and bold fonts are distinct, this resource has no effect.
 .TP 8
+.B "brokenSelections (\fPclass\fB BrokenSelections)"
+If true, \fIxterm\fP in 8-bit mode will interpret
+.B STRING
+selections as carrying text in the current locale's encoding. Normally
+.B STRING
+selections carry ISO-8859-1 encoded text. Setting this resource to
+``true'' violates the ICCCM; it may, however, be useful for interacting
+with some broken X clients.
+.TP 8
 .B "c132 (\fPclass\fB C132)"
 Specifies whether or not the VT102 DECCOLM escape sequence should be honored.
 The default is ``false.''
@@ -1263,13 +1272,8 @@ If false, \fIxterm\fP will never request the targets
 .B COMPOUND_TEXT
 or
 .BR TEXT .
-In addition, when in 8-bit mode,
-.B STRING
-will be interpreted as carrying text in the current locale's encoding.
-Setting this resource to ``false'' breaks the ICCCM, and is strongly
-discouraged; it may, however, be useful for interacting with some
-broken clients (such as some versions of \fIxterm\fP).
-The default is ``true.''
+The default is ``true.'' It may be set to false in order to work around
+ICCCM violations by other X clients.
 .TP 8
 .B "iconBorderColor (\fPclass\fB BorderColor)"
 Specifies the border color for the active icon window if this feature

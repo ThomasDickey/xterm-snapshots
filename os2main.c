@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.43 2000/12/30 19:15:46 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.45 2001/04/12 01:02:50 dickey Exp $ */
 
 /***********************************************************
 
@@ -97,7 +97,6 @@ char *ttyname(int fd) { return "/dev/tty"; }
 #include <sys/stat.h>
 #include <sys/param.h>	/* for NOFILE */
 #include <stdio.h>
-#include <time.h>
 #include <signal.h>
 
 static SIGNAL_T reapchild (int n);

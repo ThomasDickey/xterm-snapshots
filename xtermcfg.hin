@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.35 2000/12/07 02:22:12 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.36 2001/04/12 01:02:51 dickey Exp $
  */
 
 /************************************************************
@@ -39,10 +39,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef DFT_COLORMODE		/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID		/* AC_ARG_WITH(default-terminal-id) */
 #undef DFT_TERMTYPE		/* AC_ARG_WITH(default-term-type) */
+#undef HAVE_GETLOGIN		/* AC_CHECK_FUNCS(getlogin) */
 #undef HAVE_LASTLOG_H		/* CF_LASTLOG */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
 #undef HAVE_STRERROR		/* AC_CHECK_FUNCS(strerror) */
+#undef HAVE_SYS_TIME_H		/* AC_HEADER_TIME */
 #undef HAVE_SYS_WAIT_H		/* AC_HEADER_SYS_WAIT */
 #undef HAVE_TCGETATTR		/* AC_CHECK_FUNCS(tcgetattr) */
 #undef HAVE_TERMCAP_H		/* AC_CHECK_HEADERS(termcap.h) */
@@ -76,7 +78,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_MAXIMIZE		/* CF_ARG_DISABLE(maximize) */
 #undef OPT_NUM_LOCK		/* CF_ARG_DISABLE(num-lock) */
 #undef OPT_PC_COLORS		/* CF_ARG_DISABLE(pc-color) */
+#undef OPT_SAME_NAME
 #undef OPT_SCO_FUNC_KEYS	/* CF_ARG_ENABLE(sco-fkeys) */
+#undef OPT_TCAP_QUERY
 #undef OPT_TEK4014		/* CF_ARG_DISABLE(tek4014) */
 #undef OPT_TOOLBAR		/* CF_ARG_ENABLE(toolbar) */
 #undef OPT_TRACE		/* CF_ARG_ENABLE(trace) */
@@ -84,12 +88,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_WIDE_CHARS		/* CF_ARG_ENABLE(wide-chars) */
 #undef OPT_XMC_GLITCH		/* CF_ARG_ENABLE(xmc-glitch) */
 #undef OPT_ZICONBEEP		/* CF_ARG_DISABLE(ziconbeep) */
-#undef OPT_SAME_NAME
-#undef OPT_TCAP_QUERY
 #undef OWN_TERMINFO_DIR		/* AC_ARG_WITH(own-terminfo) */
 #undef SCROLLBAR_RIGHT		/* CF_ARG_ENABLE(rightbar) */
 #undef SVR4			/* CF_SVR4, imake */
 #undef SYSV			/* CF_SYSV, imake */
+#undef TIME_WITH_SYS_TIME	/* AC_HEADER_TIME */
 #undef TTY_GROUP_NAME		/* CF_TTY_GROUP */
 #undef USE_LASTLOG		/* CF_LASTLOG */
 #undef USE_MY_MEMMOVE		/* CF_FUNC_MEMMOVE */

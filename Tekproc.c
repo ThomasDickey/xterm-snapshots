@@ -3,7 +3,7 @@
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.32 2001/01/17 23:46:34 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.33 2001/04/12 01:02:49 dickey Exp $ */
 
 
 /*
@@ -77,10 +77,6 @@ in this Software without prior written authorization from the X Consortium.
 #include <data.h>
 #include <error.h>
 #include <menu.h>
-
-#ifndef X_NOT_STDC_ENV
-#include <time.h>
-#endif
 
 #ifdef MINIX
 #include <sys/nbio.h>

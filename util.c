@@ -2,7 +2,7 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.64 2001/02/17 11:06:53 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.66 2001/04/12 01:02:51 dickey Exp $ */
 
 /*
  * Copyright 1999,2000,2001 by Thomas E. Dickey
@@ -664,7 +664,7 @@ ClearInLine(TScreen *screen, int row, int col, int len)
 	 * so this has the effect of suppressing trailing blanks from a
 	 * selection.
 	 */
-	if (col + len + 1 < screen->max_col) {
+	if (col + len < screen->max_col + 1) {
 		flags |= CHARDRAWN;
 	} else {
 		len = screen->max_col + 1 - col;
