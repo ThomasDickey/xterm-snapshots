@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: cursor.c,v 1.14 93/09/20 17:42:23 hersh Exp $
- *	$XFree86: xc/programs/xterm/cursor.c,v 3.9 1998/12/20 11:58:32 dawes Exp $
+ *	$XFree86: xc/programs/xterm/cursor.c,v 3.10 1999/07/04 06:40:13 dawes Exp $
  */
 
 /*
