@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.13 2001/10/24 01:21:25 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.14 2001/11/05 02:07:16 dickey Exp $
  */
 
 /************************************************************
@@ -31,6 +31,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * debugging support via TRACE macro.
  */
 
+#include <xterm.h>		/* for definition of GCC_UNUSED */
 #include <trace.h>
 
 #include <X11/StringDefs.h>
@@ -371,7 +372,7 @@ TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_co
 	    TRACE(("  %-28s {param}\n", res_array[j].option));
 	    break;
 	case XrmoptionSkipNArgs:
-	    TRACE(("  %-28s {%d params}\n", res_array[j].option, (int)
+	    TRACE(("  %-28s {%ld params}\n", res_array[j].option, (long)
 		   res_array[j].value));
 	    break;
 	case XrmoptionSkipLine:

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XFree86$
+# $XFree86: xc/programs/xterm/minstall.sh,v 1.2 2001/11/05 02:07:16 dickey Exp $
 #
 # Install manpages, substituting a reasonable section value since XFree86 4.x
 # doesn't use constants...
@@ -18,6 +18,7 @@ suffix=`echo "$END_FILE" | sed -e 's/^[^.]*.//'`
 NEW_FILE=temp$$
 
 sed	-e 's/__vendorversion__/"X Window System"/' \
+	-e s@__apploaddir__@/usr/lib/X11/app-defaults@ \
 	-e s/__miscmansuffix__/$suffix/ \
 	$OLD_FILE >$NEW_FILE
 

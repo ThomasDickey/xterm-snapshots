@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.139 2001/10/24 01:21:24 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.140 2001/11/05 02:07:15 dickey Exp $ */
 
 
 /* main.c */
@@ -3488,9 +3488,7 @@ spawn (void)
 #endif /* CRAY */
 		}
 
-#if defined(__QNX__)
-		tcsetpgrp( 0, pgrp /*setsid()*/ );
-#elif !defined(USE_SYSV_PGRP)
+#if !defined(USE_SYSV_PGRP)
 #ifdef TIOCSCTTY
 		setsid();
 		ioctl(0, TIOCSCTTY, 0);
@@ -3499,6 +3497,9 @@ spawn (void)
 		setpgrp(0,0);
 		close(open(ttydev, O_WRONLY, 0));
 		setpgrp (0, pgrp);
+#if defined(__QNX__)
+		tcsetpgrp( 0, pgrp /*setsid()*/ );
+#endif
 #endif /* !USE_SYSV_PGRP */
 
 #endif /* AMOEBA */
