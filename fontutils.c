@@ -619,7 +619,6 @@ xtermLoadFont (
 	}
 	TRACE(("Will %suse internal line-drawing characters\n", screen->fnt_boxes ? "not " : ""));
 #endif
-	screen->force_box_chars = !screen->fnt_boxes;
 
 	screen->enbolden = screen->bold_mode
 		&& ((nfs == bfs) || same_font_name(normal, bfontname));
