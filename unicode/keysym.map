@@ -21,6 +21,8 @@
 # You are free to use and modify this table.  If you introduce errors 
 # in the table, please remove the copyright line. If you remove errors, 
 # please let me know, so I can update my version. 
+#
+# $XFree86: xc/programs/xterm/unicode/keysym.map,v 1.1 1999/06/12 15:37:24 dawes Exp $
 # 
 0x0020   U0020   # space 
 0x0021   U0021   # exclam 

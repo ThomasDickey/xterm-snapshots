@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 # Generate keysym2ucs.c file
+#
+# $XFree86: xc/programs/xterm/unicode/convmap.pl,v 1.1 1999/06/12 15:37:23 dawes Exp $
 
 sub utf8 ($) {
     my $c = shift(@_);
@@ -84,6 +86,7 @@ while (<LIST>) {
 close(LIST);
 
 print <<EOT;
+/* \$XFree86\$
 /*
  * This module converts keysym values into the corresponding ISO 10646-1
  * (UCS, Unicode) values.
