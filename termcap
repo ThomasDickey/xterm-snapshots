@@ -44,6 +44,21 @@ xf|xterm-xfree86|XFree86 xterm:\
 	:up=\E[A:us=\E[4m:ue=\E[24m:xn:\
 	:ut:Co#8:op=\E[39;49m:AB=\E[4%dm:AF=\E[3%dm:\
 	:pa#64:Sf=\E[3%dm:Sb=\E[4%dm:
+#
+# The xterm-xfree86 description has all of the features, but is not completely
+# compatible with vt220.  If you are using a Sun or PC keyboard, set the
+# sunKeyboard resource to true:
+#	+ maps the editing keypad
+#	+ interprets control-function-key as a second array of keys, so a
+#	  12-fkey keyboard can support vt220's 20-fkeys.
+#	+ maps numeric keypad "+" to ",".
+#	+ uses DEC-style control sequences for the application keypad.
+#	  
+vt|xterm-vt220|xterm emulating vt220:\
+	:kH=\E[4~::@7=\E[4~:*6=\E[4~:
+	:kh=\E[1~:\
+	:tc=xterm-xfree86:
+
 v1|xterm-24|xterms|vs100|24x80 xterm:\
 	:li#24:\
 	:tc=xterm:
@@ -59,6 +74,11 @@ vm|xtermm|monochrome xterm:\
 	:kn#20:\
 	:st@:ut@:Co@:NC@:op@:AB@:AF@:pa@:Sf@:Sb@:tc=xterm:
 #
+# Alternate terminal description that "works" for interactive shells such as
+# tcsh and bash.
+xterm-noapp|xterm with cursor keys in normal mode:\
+	kl=\E[D:kd=\E[B:kr=\E[C:ku=\E[A:ks=\E=:ke=\E>:ti@:te@:tc=xterm:
+#
 # This should work for the commonly used "color xterm" variations (XFree86
 # xterm, color_xterm, nxterm, rxvt).  You may have trouble with this using
 # conventional termcap because ncurses reports it is longer than 1023
@@ -66,10 +86,6 @@ vm|xtermm|monochrome xterm:\
 # (you can suppress it with "ac@").
 vc|xterm-color|generic "ANSI" color xterm:\
 	:Co#8:NC@:pa#64:op=\E[m:AB=\E[4%dm:AF=\E[3%dm:tc=xterm-r6:
-vt|xterm-vt220|xterm emulating vt220:\
-	:kH=\E[4~::@7=\E[4~:*6=\E[4~:
-	:kh=\E[1~:\
-	:tc=xterm-xfree86:
 #
 # vi may work better with this entry, because vi doesn't use insert mode much.
 # |xterm-ic|xterm-vi|xterm with insert character instead of insert mode:\

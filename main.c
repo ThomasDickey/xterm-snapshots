@@ -3,7 +3,7 @@ static char *rid="$TOG: main.c /main/249 1997/08/26 14:13:43 kaleb $";
 #endif /* lint */
 
 /*
- * 				 W A R N I N G
+ *				 W A R N I N G
  *
  * If you think you know what all of this code is doing, you are
  * probably very mistaken.  There be serious and nasty dragons here.
@@ -565,9 +565,9 @@ extern int tgetent (char *ptr, char *name);
 static SIGNAL_T reapchild (int n);
 static char *base_name (char *name);
 static int pty_search (int *pty);
-static int remove_termcap_entry (char *buf, char *str);
 static int spawn (void);
 static void get_terminal (void);
+static void remove_termcap_entry (char *buf, char *str);
 static void resize (TScreen *s, char *oldtc, char *newtc);
 
 static Bool added_utmp_entry = False;
@@ -594,6 +594,7 @@ static char **command_to_exec = NULL;
 #endif
 #endif /* USE_SYSV_TERMIO */
 
+#define TERMCAP_ERASE "kb="
 #define VAL_INITIAL_ERASE A2E(127)
 
 /* allow use of system default characters if defined and reasonable */
@@ -664,15 +665,15 @@ static unsigned int d_lmode;
 static struct termios d_tio;
 #else /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 static struct  sgttyb d_sg = {
-        0, 0, 0177, CKILL, EVENP|ODDP|ECHO|XTABS|CRMOD
+	0, 0, 0177, CKILL, EVENP|ODDP|ECHO|XTABS|CRMOD
 };
 static struct  tchars d_tc = {
-        CINTR, CQUIT, CSTART,
-        CSTOP, CEOF, CBRK
+	CINTR, CQUIT, CSTART,
+	CSTOP, CEOF, CBRK
 };
 static struct  ltchars d_ltc = {
-        CSUSP, CDSUSP, CRPRNT,
-        CFLUSH, CWERASE, CLNEXT
+	CSUSP, CDSUSP, CRPRNT,
+	CFLUSH, CWERASE, CLNEXT
 };
 static int d_disipline = NTTYDISC;
 static long int d_lmode = LCRTBS|LCRTERA|LCRTKIL|LCTLECH;
@@ -861,7 +862,7 @@ static XtResource application_resources[] = {
     {"ptyInitialErase", "PtyInitialErase", XtRBoolean, sizeof (Boolean),
 	offset(ptyInitialErase), XtRString, "false"},
     {"backarrowKeyIsErase", "BackarrowKeyIsErase", XtRBoolean, sizeof(Boolean),
-        offset(backarrow_is_erase), XtRString, "false"},
+	offset(backarrow_is_erase), XtRString, "false"},
 #endif
     {"waitForMap", "WaitForMap", XtRBoolean, sizeof (Boolean),
 	offset(wait_for_map), XtRString, "false"},
@@ -1245,12 +1246,12 @@ DeleteWindow(
 	Cardinal *num_params GCC_UNUSED)
 {
 #if OPT_TEK4014
-  if (w == toplevel)
+  if (w == toplevel) {
     if (term->screen.Tshow)
       hide_vt_window();
     else
       do_hangup(w, (XtPointer)0, (XtPointer)0);
-  else
+  } else
     if (term->screen.Vshow)
       hide_tek_window();
     else
@@ -1312,7 +1313,7 @@ main (int argc, char *argv[])
 #endif
 	{
 	    fprintf (stderr,
-	    	     "%s:  unable to allocate memory for ttydev or ptydev\n",
+		     "%s:  unable to allocate memory for ttydev or ptydev\n",
 		     ProgramName);
 	    exit (1);
 	}
@@ -1355,12 +1356,12 @@ main (int argc, char *argv[])
 #ifdef ONLCR
 	d_tio.c_oflag = OPOST|ONLCR;
 #else
-        d_tio.c_oflag = OPOST;
+	d_tio.c_oflag = OPOST;
 #endif
 #endif
 #if defined(macII) || defined(ATT) || defined(CRAY) /* { */
-    	d_tio.c_cflag = B9600|CS8|CREAD|PARENB|HUPCL;
-    	d_tio.c_lflag = ISIG|ICANON|ECHO|ECHOE|ECHOK;
+	d_tio.c_cflag = B9600|CS8|CREAD|PARENB|HUPCL;
+	d_tio.c_lflag = ISIG|ICANON|ECHO|ECHOE|ECHOK;
 #ifdef ECHOKE
 	d_tio.c_lflag |= ECHOKE|IEXTEN;
 #endif
@@ -1376,7 +1377,7 @@ main (int argc, char *argv[])
 	d_tio.c_cc[VQUIT] = CQUIT;
 	d_tio.c_cc[VERASE] = CERASE;
 	d_tio.c_cc[VKILL] = CKILL;
-    	d_tio.c_cc[VEOF] = CEOF;
+	d_tio.c_cc[VEOF] = CEOF;
 	d_tio.c_cc[VEOL] = CNUL;
 	d_tio.c_cc[VEOL2] = CNUL;
 #ifdef VSWTCH
@@ -1396,12 +1397,12 @@ main (int argc, char *argv[])
 	d_tio.c_cc[VTIME] = 0;
 #endif /* } */
 #ifdef HAS_LTCHARS /* { */
-        d_ltc.t_suspc = CSUSP;		/* t_suspc */
-        d_ltc.t_dsuspc = CDSUSP;	/* t_dsuspc */
-        d_ltc.t_rprntc = CRPRNT;
-        d_ltc.t_flushc = CFLUSH;
-        d_ltc.t_werasc = CWERASE;
-        d_ltc.t_lnextc = CLNEXT;
+	d_ltc.t_suspc = CSUSP;		/* t_suspc */
+	d_ltc.t_dsuspc = CDSUSP;	/* t_dsuspc */
+	d_ltc.t_rprntc = CRPRNT;
+	d_ltc.t_flushc = CFLUSH;
+	d_ltc.t_werasc = CWERASE;
+	d_ltc.t_lnextc = CLNEXT;
 #endif /* } HAS_LTCHARS */
 #ifdef TIOCLSET /* { */
 	d_lmode = 0;
@@ -1409,16 +1410,16 @@ main (int argc, char *argv[])
 #else  /* }{ else !macII, ATT, CRAY */
 #ifndef USE_POSIX_TERMIOS
 #ifdef BAUD_0 /* { */
-    	d_tio.c_cflag = CS8|CREAD|PARENB|HUPCL;
+	d_tio.c_cflag = CS8|CREAD|PARENB|HUPCL;
 #else	/* }{ !BAUD_0 */
-    	d_tio.c_cflag = B9600|CS8|CREAD|PARENB|HUPCL;
+	d_tio.c_cflag = B9600|CS8|CREAD|PARENB|HUPCL;
 #endif	/* } !BAUD_0 */
 #else /* USE_POSIX_TERMIOS */
 	d_tio.c_cflag = CS8|CREAD|PARENB|HUPCL;
 	cfsetispeed(&d_tio, B9600);
 	cfsetospeed(&d_tio, B9600);
 #endif
-    	d_tio.c_lflag = ISIG|ICANON|ECHO|ECHOE|ECHOK;
+	d_tio.c_lflag = ISIG|ICANON|ECHO|ECHOE|ECHOK;
 #ifdef ECHOKE
 	d_tio.c_lflag |= ECHOKE|IEXTEN;
 #endif
@@ -1427,20 +1428,20 @@ main (int argc, char *argv[])
 #endif
 #ifndef USE_POSIX_TERMIOS
 #ifdef NTTYDISC
-        d_tio.c_line = NTTYDISC;
+	d_tio.c_line = NTTYDISC;
 #else
 	d_tio.c_line = 0;
 #endif
 #endif /* USE_POSIX_TERMIOS */
 #ifdef __sgi
-        d_tio.c_cflag &= ~(HUPCL|PARENB);
-        d_tio.c_iflag |= BRKINT|ISTRIP|IGNPAR;
+	d_tio.c_cflag &= ~(HUPCL|PARENB);
+	d_tio.c_iflag |= BRKINT|ISTRIP|IGNPAR;
 #endif
 	d_tio.c_cc[VINTR] = CONTROL('C');	/* '^C'	*/
 	d_tio.c_cc[VERASE] = 0x7f;		/* DEL	*/
 	d_tio.c_cc[VKILL] = CONTROL('U');	/* '^U'	*/
 	d_tio.c_cc[VQUIT] = CQUIT;		/* '^\'	*/
-    	d_tio.c_cc[VEOF] = CEOF;		/* '^D'	*/
+	d_tio.c_cc[VEOF] = CEOF;		/* '^D' */
 	d_tio.c_cc[VEOL] = CEOL;		/* '^@'	*/
 	d_tio.c_cc[VMIN] = 1;
 	d_tio.c_cc[VTIME] = 0;
@@ -1543,12 +1544,12 @@ main (int argc, char *argv[])
 	    }
 	}
 #ifdef HAS_LTCHARS /* { */
-        d_ltc.t_suspc = '\000';		/* t_suspc */
-        d_ltc.t_dsuspc = '\000';	/* t_dsuspc */
-        d_ltc.t_rprntc = '\377';	/* reserved...*/
-        d_ltc.t_flushc = '\377';
-        d_ltc.t_werasc = '\377';
-        d_ltc.t_lnextc = '\377';
+	d_ltc.t_suspc = '\000';		/* t_suspc */
+	d_ltc.t_dsuspc = '\000';	/* t_dsuspc */
+	d_ltc.t_rprntc = '\377';	/* reserved...*/
+	d_ltc.t_flushc = '\377';
+	d_ltc.t_werasc = '\377';
+	d_ltc.t_lnextc = '\377';
 #endif	/* } HAS_LTCHARS */
 #if defined(USE_TERMIOS) || defined(USE_POSIX_TERMIOS) /* { */
 	d_tio.c_cc[VSUSP] = CSUSP;
@@ -1659,7 +1660,7 @@ main (int argc, char *argv[])
 	}
 #endif /* OPT_ZICONBEEP */
 #if OPT_SAME_NAME
-        sameName = resource.sameName;
+	sameName = resource.sameName;
 #endif
 	xterm_name = resource.xterm_name;
 	sunFunctionKeys = resource.sunFunctionKeys;
@@ -1742,7 +1743,7 @@ main (int argc, char *argv[])
 
 	SetupMenus(toplevel, &form_top, &menu_top);
 
-        term = (XtermWidget) XtVaCreateManagedWidget(
+	term = (XtermWidget) XtVaCreateManagedWidget(
 		"vt100", xtermWidgetClass, form_top,
 #if OPT_TOOLBAR
 		XtNmenuBar,	menu_top,
@@ -1755,7 +1756,7 @@ main (int argc, char *argv[])
 		0);
 	    /* this causes the initialize method to be called */
 
-        screen = &term->screen;
+	screen = &term->screen;
 
 	inhibit = 0;
 #ifdef ALLOWLOGGING
@@ -1958,7 +1959,7 @@ get_pty (int *pty)
 	int tty;
 	return (openpty(pty, &tty, ttydev, NULL, NULL));
 #elif defined(SYSV) && defined(i386) && !defined(SVR4)
-        /*
+	/*
 	  The order of this code is *important*.  On SYSV/386 we want to open
 	  a /dev/ttyp? first if at all possible.  If none are available, then
 	  we'll try to open a /dev/pts??? device.
@@ -2278,6 +2279,18 @@ void first_map_occurred (void)
 #ifndef AMOEBA
 extern char **environ;
 
+static void
+set_owner(char *device, int uid, int gid, int mode)
+{
+	if (chown (device, uid, gid) < 0) {
+		if (getuid() == 0) {
+			fprintf(stderr, "Cannot chown %s to %d,%d: %s\n",
+				device, uid, gid, strerror(errno));
+		}
+	}
+	chmod (device, mode);
+}
+
 static int
 spawn (void)
 /*
@@ -2375,7 +2388,7 @@ spawn (void)
 
 		signal(SIGALRM, hungtty);
 		alarm(2);		/* alarm(1) might return too soon */
-               if (! sigsetjmp(env, 1)) {
+	       if (! sigsetjmp(env, 1)) {
 			tty = open ("/dev/tty", O_RDWR, 0);
 			alarm(0);
 			tty_got_hung = False;
@@ -2471,6 +2484,11 @@ spawn (void)
 			if (initial_erase == 0177) {	/* see input.c */
 				term->keyboard.flags &= ~MODE_DECBKM;
 			}
+			TRACE(("%s @%d, ptyInitialErase:%d, backspace_is_erase:%d, initial_erase:%d\n",
+				__FILE__, __LINE__,
+				resource.ptyInitialErase,
+				resource.backarrow_is_erase,
+				initial_erase))
 #endif
 
 #ifdef MINIX
@@ -2484,7 +2502,7 @@ spawn (void)
 			tty = -1;
 		}
 
-#ifdef 	PUCC_PTYD
+#ifdef	PUCC_PTYD
 		if(-1 == (screen->respond = openrpty(ttydev, ptydev,
 				(resource.utmpInhibit ?  OPTY_NOP : OPTY_LOGIN),
 				getuid(), XDisplayString(screen->display))))
@@ -2579,8 +2597,12 @@ spawn (void)
 	}
 
 #if OPT_INITIAL_ERASE
+	TRACE(("%s @%d, resource ptyInitialErase:%d, backspace_is_erase:%d\n",
+		__FILE__, __LINE__,
+		resource.ptyInitialErase,
+		resource.backarrow_is_erase))
 	if (!resource.ptyInitialErase && *newtc) {
-		char *s = strstr(newtc, "kD=");
+		char *s = strstr(newtc, TERMCAP_ERASE);
 		TRACE(("extracting initial_erase value from termcap\n"))
 		if (s != 0) {
 			s += 3;
@@ -2600,6 +2622,7 @@ spawn (void)
 			}
 			initial_erase = CharOf(initial_erase);
 		}
+		TRACE(("... initial_erase:%d\n", initial_erase))
 	}
 #endif
 
@@ -2655,7 +2678,7 @@ spawn (void)
 
 #ifdef USE_USG_PTYS
 #if defined(SYSV) && defined(i386) && !defined(SVR4)
-                if (IsPts) {	/* SYSV386 supports both, which did we open? */
+		if (IsPts) {	/* SYSV386 supports both, which did we open? */
 #endif /* SYSV && i386 && !SVR4 */
 		int ptyfd;
 
@@ -2686,24 +2709,24 @@ spawn (void)
 		tty = ptyfd;
 		close (screen->respond);
 #ifdef TIOCSWINSZ
-                /* tell tty how big window is */
+		/* tell tty how big window is */
 #if OPT_TEK4014
-                if(TEK4014_ACTIVE(screen)) {
-                        ws.ws_row = 24;
-                        ws.ws_col = 80;
-                        ws.ws_xpixel = TFullWidth(screen);
-                        ws.ws_ypixel = TFullHeight(screen);
-                } else
+		if(TEK4014_ACTIVE(screen)) {
+			ws.ws_row = 24;
+			ws.ws_col = 80;
+			ws.ws_xpixel = TFullWidth(screen);
+			ws.ws_ypixel = TFullHeight(screen);
+		} else
 #endif
 		{
-                        ws.ws_row = screen->max_row + 1;
-                        ws.ws_col = screen->max_col + 1;
-                        ws.ws_xpixel = FullWidth(screen);
-                        ws.ws_ypixel = FullHeight(screen);
-                }
+			ws.ws_row = screen->max_row + 1;
+			ws.ws_col = screen->max_col + 1;
+			ws.ws_xpixel = FullWidth(screen);
+			ws.ws_ypixel = FullHeight(screen);
+		}
 #endif
 #if defined(SYSV) && defined(i386) && !defined(SVR4)
-                } else {	/* else pty, not pts */
+		} else {	/* else pty, not pts */
 #endif /* SYSV && i386 && !SVR4 */
 #endif /* USE_USG_PTYS */
 
@@ -2825,7 +2848,7 @@ spawn (void)
 			(void) strcpy(ttydev, ptr);
 		}
 #if defined(SYSV) && defined(i386) && !defined(SVR4)
-                } /* end of IsPts else clause */
+		} /* end of IsPts else clause */
 #endif /* SYSV && i386 && !SVR4 */
 
 #endif /* USE_HANDSHAKE -- from near fork */
@@ -2835,22 +2858,17 @@ spawn (void)
 		struct group *ttygrp;
 		if ((ttygrp = getgrnam("tty")) != 0) {
 			/* change ownership of tty to real uid, "tty" gid */
-			chown (ttydev, screen->uid, ttygrp->gr_gid);
-			chmod (ttydev, 0620);
+			set_owner (ttydev, screen->uid, ttygrp->gr_gid, 0620);
 		}
 		else {
 			/* change ownership of tty to real group and user id */
-			chown (ttydev, screen->uid, screen->gid);
-			chmod (ttydev, 0622);
+			set_owner (ttydev, screen->uid, screen->gid, 0622);
 		}
 		endgrent();
 	}
 #else /* else !USE_TTY_GROUP */
 		/* change ownership of tty to real group and user id */
-		chown (ttydev, screen->uid, screen->gid);
-
-		/* change protection of tty */
-		chmod (ttydev, 0622);
+		set_owner (ttydev, screen->uid, screen->gid, 0622);
 #endif /* USE_TTY_GROUP */
 
 		/*
@@ -3126,6 +3144,11 @@ spawn (void)
 		signal (SIGTERM, SIG_DFL);
 
 #if OPT_INITIAL_ERASE
+		TRACE(("%s @%d, ptyInitialErase:%d, overide_tty_modes:%d, XTTYMODE_erase:%d\n",
+			__FILE__, __LINE__,
+			resource.ptyInitialErase,
+			override_tty_modes,
+			ttymodelist[XTTYMODE_erase].set))
 		if (! resource.ptyInitialErase
 		 && !override_tty_modes
 		 && !ttymodelist[XTTYMODE_erase].set) {
@@ -3520,24 +3543,24 @@ spawn (void)
 		    resize (screen, termcap, newtc);
 		}
 		if (term->misc.titeInhibit) {
-		    remove_termcap_entry (newtc, ":ti=");
-		    remove_termcap_entry (newtc, ":te=");
+		    remove_termcap_entry (newtc, "ti=");
+		    remove_termcap_entry (newtc, "te=");
 		}
 		/*
 		 * work around broken termcap entries */
 		if (resource.useInsertMode)	{
-		    remove_termcap_entry (newtc, ":ic=");
+		    remove_termcap_entry (newtc, "ic=");
 		    /* don't get duplicates */
-		    remove_termcap_entry (newtc, ":im=");
-		    remove_termcap_entry (newtc, ":ei=");
-		    remove_termcap_entry (newtc, ":mi");
+		    remove_termcap_entry (newtc, "im=");
+		    remove_termcap_entry (newtc, "ei=");
+		    remove_termcap_entry (newtc, "mi");
 		    if(*newtc)
 			strcat (newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
 		}
 #if OPT_INITIAL_ERASE
-		remove_termcap_entry (newtc, ":kD=");
 		if (*newtc) {
-		    sprintf(newtc + strlen(newtc), ":kD=\\%03o", initial_erase & 0377);
+		    remove_termcap_entry (newtc, TERMCAP_ERASE);
+		    sprintf(newtc + strlen(newtc), ":%s\\%03o", TERMCAP_ERASE, initial_erase & 0377);
 		}
 #endif
 		if(*newtc)
@@ -3728,7 +3751,7 @@ spawn (void)
 	signal (SIGINT, Exit);
 	signal (SIGQUIT, Exit);
 	signal (SIGTERM, Exit);
-        signal (SIGPIPE, Exit);
+	signal (SIGPIPE, Exit);
 #endif /* USE_SYSV_SIGNALS and not SIGTSTP */
 
 	return 0;
@@ -3776,11 +3799,11 @@ find_program(char *program, capability *programcap)
 	char programpath[1024];
 
 	if ((path = getenv("PATH")) == NULL)
-     	    path = DEF_PATH;
+	    path = DEF_PATH;
 	if ((name = strrchr(program, '/')) != NULL)
-    	    name++;
+	    name++;
 	else
-    	    name = program;
+	    name = program;
 
 	do {
 	    register char *p = programpath;
@@ -3974,16 +3997,16 @@ static int spawn(void)
 	resize (screen, termcap, newtc);
     }
     if (term->misc.titeInhibit) {
-	remove_termcap_entry (newtc, ":ti=");
-	remove_termcap_entry (newtc, ":te=");
+	remove_termcap_entry (newtc, "ti=");
+	remove_termcap_entry (newtc, "te=");
     }
     /* work around broken termcap entries */
     if (resource.useInsertMode) {
-	remove_termcap_entry (newtc, ":ic=");
+	remove_termcap_entry (newtc, "ic=");
 	/* don't get duplicates */
-	remove_termcap_entry (newtc, ":im=");
-	remove_termcap_entry (newtc, ":ei=");
-	remove_termcap_entry (newtc, ":mi");
+	remove_termcap_entry (newtc, "im=");
+	remove_termcap_entry (newtc, "ei=");
+	remove_termcap_entry (newtc, "mi");
 	if (*newtc)
 	    strcat (newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
     }
@@ -4016,11 +4039,11 @@ static int spawn(void)
 	char *argvec[2];
 
 	if ((shell = getenv("SHELL")) == NULL)
-    	    shell = DEF_SHELL; /* "cannot happen" */
+	    shell = DEF_SHELL; /* "cannot happen" */
 	if ((shname = strrchr(shell, '/')) != NULL)
-    	    shname++;
+	    shname++;
 	else
-    	    shname = shell;
+	    shname = shell;
 
 	shname_minus = malloc(strlen(shname) + 2);
 	(void) strcpy(shname_minus, "-");
@@ -4193,7 +4216,7 @@ Exit(int n)
 #endif	/* USE_SYSV_UTMP */
 #endif	/* UTMP */
 #ifndef AMOEBA
-        close(screen->respond); /* close explicitly to avoid race with slave side */
+	close(screen->respond); /* close explicitly to avoid race with slave side */
 #endif
 #ifdef ALLOWLOGGING
 	if(screen->logging)
@@ -4203,15 +4226,9 @@ Exit(int n)
 #ifndef AMOEBA
 	if (!am_slave) {
 		/* restore ownership of tty and pty */
-		chown (ttydev, 0, 0);
+		set_owner (ttydev, 0, 0, 0666);
 #if (!defined(__sgi) && !defined(__osf__) && !defined(__hpux))
-		chown (ptydev, 0, 0);
-#endif
-
-		/* restore modes of tty and pty */
-		chmod (ttydev, 0666);
-#if (!defined(__sgi) && !defined(__osf__) && !defined(__hpux))
-		chmod (ptydev, 0666);
+		set_owner (ptydev, 0, 0, 0666);
 #endif
 	}
 #endif /* AMOEBA */
@@ -4273,7 +4290,7 @@ int
 nonblocking_wait(void)
 {
 #ifdef USE_POSIX_WAIT
-        pid_t pid;
+	pid_t pid;
 
 	pid = waitpid(-1, NULL, WNOHANG);
 #elif defined(USE_SYSV_SIGNALS) && (defined(CRAY) || !defined(SIGTSTP))
@@ -4318,24 +4335,42 @@ static SIGNAL_T reapchild (int n GCC_UNUSED)
     SIGNAL_RETURN;
 }
 
-static int
+static void
 remove_termcap_entry (char *buf, char *str)
 {
-    register char *strinbuf;
+    char *base = buf;
+    char *first = base;
+    int count = 0;
+    size_t len = strlen(str);
 
-    strinbuf = strindex (buf, str);
-    if (strinbuf) {
-        register char *colonPtr = strchr(strinbuf+1, ':');
-        if (colonPtr) {
-            while (*colonPtr) {
-                *strinbuf++ = *colonPtr++;      /* copy down */
-            }
-            *strinbuf = '\0';
-        } else {
-            strinbuf[1] = '\0';
-        }
+    TRACE(("*** remove_termcap_entry('%s', '%s')\n", str, buf))
+
+    while (*buf != 0) {
+	if (!count && !strncmp(buf, str, len)) {
+	    while (*buf != 0) {
+		if (*buf == '\\')
+		    buf++;
+		else if (*buf == ':')
+		    break;
+		if (*buf != 0)
+		    buf++;
+	    }
+	    while ((*first++ = *buf++) != 0)
+		;
+	    TRACE(("...removed_termcap_entry('%s', '%s')\n", str, base))
+	    return;
+	} else if (*buf == '\\') {
+	    buf++;
+	} else if (*buf == ':') {
+	    first = buf;
+	    count = 0;
+	} else if (!isspace(*buf)) {
+	    count++;
+	}
+	if (*buf != 0)
+	    buf++;
     }
-    return 0;
+    TRACE(("...cannot remove\n"))
 }
 
 /*
@@ -4431,9 +4466,9 @@ int GetBytesAvailable (int fd)
      * much cheaper than called nbio_select.
      */
     if (nbio_isinprogress(fd, ASIO_READ))
-    	return 0;
+	return 0;
     else
-        return 1;
+	return 1;
 #elif defined(FIORDCK)
     return (ioctl (fd, FIORDCHK, NULL));
 #else /* !FIORDCK */
@@ -4469,7 +4504,7 @@ kill_process_group(int pid, int sig)
 int A2E(int x)
 {
     char c;
-    c=x;
+    c = x;
     __atoe_l(&c,1);
     return c;
 }
@@ -4477,7 +4512,7 @@ int A2E(int x)
 int E2A(int x)
 {
     char c;
-    c=x;
+    c = x;
     __etoa_l(&c,1);
     return c;
 }

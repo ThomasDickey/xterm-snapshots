@@ -562,10 +562,11 @@ xtermLoadFont (
 
 #if OPT_BOX_CHARS
 	/*
-	 * Xterm uses the first 32 character positions of a font for the
-	 * line-drawing characters.  Check that they are all present.
+	 * Xterm uses character positions 1-31 of a font for the line-drawing
+	 * characters.  Check that they are all present.  The null character
+	 * (0) is special, and is not used.
 	 */
-	for (ch = 0; ch < 32; ch++) {
+	for (ch = 1; ch < 32; ch++) {
 		if (xtermMissingChar(ch, nfs)
 		 || xtermMissingChar(ch, bfs)) {
 			screen->fnt_boxes = False;

@@ -333,6 +333,10 @@ xterm-bold|xterm with bold instead of underline (X Window System),
 	smso=\E[7m,
 	smul=\E[1m,
 	use=xterm,
+xterm-boldso|xterm with bold for standout (X Window System),
+	rmso=\E[m,
+	smso=\E[1m,
+	use=xterm,
 xterm-mono|monochrome xterm (X Window System),
 	colors@,
 	ncv@,
@@ -345,8 +349,52 @@ xterm-mono|monochrome xterm (X Window System),
 	sgr@,
 	use=xterm,
 #
+# VTxxx terminals are usually set up so that full-screen applications will use
+# the cursor application mode strings.  This is good for full-screen
+# applications, including legacy applications which may have hard-coded
+# behavior, but bad for interactive shells (e.g., tcsh, bash) which use arrow
+# keys to scroll through a history of command strings.
+#
+# To see the difference between normal/application modes, consider this example:
+#	+ In normal (non-application) mode, the terminal transmits a down-arrow
+#	  as \E[C, which happens to echo as a down-arrow.
+#	+ In application mode the terminal transmits \EOC, which echoes as C.
+#	  That is because the \EO is the SS3 control, which says to use the
+#	  character from the G3 character set for the next cell.
+# 
+# One example of hard-coded behavior would be for applications written to work
+# with VT52 and VT100 terminals.  If the application's parser ignores 'O' and
+# '?' characters after the escape, then the cursor and keypad strings for the
+# two terminals are the same.  (Indeed, one of the first curses applications
+# which I used did something like this to cover "ANSI" terminals -TD).
+#
+# To make this work (leaving the cursor keys in normal mode), we have to adjust
+# the terminal initialization sequences:
+#
+#	smkx/rmkx set/reset the cursor and keypad application modes.  We retain
+#		the latter (otherwise many applications fail).
+#
+#	smcup/rmcup set/restore cursor-addressing mode for full-screen
+#		applications.  For xterm, this normally means the alternate
+#		screen, which is not compatible with interactive shells.  Some
+#		programs are "smart" and disable these.
+#
+xterm-noapp|xterm with cursor keys in normal mode,
+	kcub1=\E[D,
+	kcud1=\E[B,
+	kcuf1=\E[C,
+	kcuu1=\E[A,
+	rmcup@,
+	rmkx=\E>,
+	smcup@,
+	smkx=\E=,
+	use=xterm,
+#
 # This should work for the commonly used "color xterm" variations (XFree86
-# xterm, color_xterm, nxterm, rxvt):
+# xterm, color_xterm, nxterm, rxvt).  Note that it does not set 'bce', so for
+# XFree86 and and rxvt, some applications that use colors will be less
+# efficient, and in a few special cases (with "smart" optimization) the wrong
+# color will be painted in spots.
 xterm-color|generic "ANSI" color xterm (X Window System),
 	colors#8,
 	ncv@,
@@ -355,11 +403,6 @@ xterm-color|generic "ANSI" color xterm (X Window System),
 	setab=\E[4%p1%dm,
 	setaf=\E[3%p1%dm,
 	use=xterm-r6,
-#
-xterm-boldso|xterm with bold for standout (X Window System),
-	rmso=\E[m,
-	smso=\E[1m,
-	use=xterm,
 #
 # vi may work better with this entry, because vi
 # doesn't use insert mode much
@@ -413,6 +456,7 @@ xterm-16color|xterm with 16 colors,
 	setb=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
 	setf=%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
 	use=xterm-xfree86,
+#
 # OPT_PC_MODE should be settable with OSC, and the init for this
 # should turn it off; then ncv could be 0
 # this uses RGB values 0..255; terminfo(5) says they're terminal-dependant

@@ -357,7 +357,7 @@ use the pseudo-terminal's sense of the stty erase value.
 .TP 8
 .B \+ie
 Turn off the \fBptyInitialErase\fP resource, i.e.,
-set the stty erase value using the \fBkD\fP string from the termcap entry as
+set the stty erase value using the \fBkb\fP string from the termcap entry as
 a reference, if available.
 .TP 8
 .B \-im
@@ -723,7 +723,7 @@ Specifies the icon name.  The default is the application name.
 If ``true'', \fIxterm\fP will use the pseudo-terminal's sense of the stty erase
 value.
 If ``false'', \fIxterm\fP will set the stty erase value to match its own
-configuration, using the \fBkD\fP string from the termcap entry as
+configuration, using the \fBkb\fP string from the termcap entry as
 a reference, if available.
 In either case, the result is applied to the TERMCAP variable
 which \fIxterm\fP sets.
