@@ -106,4 +106,8 @@ extern XtermWidget term;
 #define	XkbBI_MarginBell		10
 #endif
 
+#if OPT_WIDE_CHARS
+const unsigned short dec2ucs[32];
+#endif
+
 #endif /* included_data_h */

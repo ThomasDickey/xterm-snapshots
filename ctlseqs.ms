@@ -755,7 +755,7 @@ If \fIxterm\fP is compiled with the 16-color support disabled, it supports
 the following, from \fIrxvt\fP:
   \*(Ps = \*1\*0\*0 \(-> Set foreground and background color to default
 .sp
-If 256-color support is compiled, the following apply.
+If 88- or 256-color support is compiled, the following apply.
   \*(Ps = \*3\*8 ; \*5 ; \*(Ps \(-> Set background color to \*(Ps
   \*(Ps = \*4\*8 ; \*5 ; \*(Ps \(-> Set foreground color to \*(Ps
 .sp

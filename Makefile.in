@@ -97,7 +97,12 @@ resize : $(OBJS2)
 	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
 256colres.h : $(srcdir)/256colres.pl
-	perl $(srcdir)/256colres.pl > 256colres.h
+	-rm -f $@
+	perl $(srcdir)/256colres.pl > $@
+
+88colres.h : $(srcdir)/88colres.pl
+	-rm -f $@
+	perl $(srcdir)/88colres.pl > $@
 
 charproc.o : @CHARPROC_DEPS@
 
@@ -142,7 +147,7 @@ clean: mostlyclean
 	-$(RM) $(PROGRAMS)
 
 distclean: clean
-	-$(RM) Makefile config.status config.cache config.log xtermcfg.h 256colres.h
+	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
 
 realclean: distclean
 	-$(RM) tags TAGS

@@ -208,6 +208,18 @@ if test $enable_ansi_color = yes ; then
 		CHARPROC_DEPS="$CHARPROC_DEPS 256colres.h"
 		EXTRAHDRS="$EXTRAHDRS 256colres.h"
 		AC_DEFINE(OPT_256_COLORS,1)
+	else
+	AC_MSG_CHECKING(if you want 88 colors)
+	CF_ARG_ENABLE(88-color,
+		[  --enable-88-color       enable 88-color support],
+		[enable_88_color=yes],
+		[enable_88_color=no])
+	AC_MSG_RESULT($enable_88_color)
+	if test $enable_88_color = yes ; then
+		CHARPROC_DEPS="$CHARPROC_DEPS 88colres.h"
+		EXTRAHDRS="$EXTRAHDRS 88colres.h"
+		AC_DEFINE(OPT_88_COLORS,1)
+	fi
 	fi
 
 fi

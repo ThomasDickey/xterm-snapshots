@@ -208,7 +208,7 @@ typedef Char **ScrnBuf;
 #define CharOf(n) ((n) & 0xff)
 
 /*
- * ANSI emulation.
+ * ANSI emulation, special character codes
  */
 #define INQ	0x05
 #define BEL	0x07
@@ -247,6 +247,10 @@ typedef Char **ScrnBuf;
 #ifndef DFT_KBD_DIALECT
 #define DFT_KBD_DIALECT "B"		/* default USASCII */
 #endif
+
+/* constants used for utf8 mode */
+#define UCS_REPL	0xfffd		
+#define UCS_LIMIT	0x80000000U	/* both limit and flag for non-UCS */
 
 #define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */
 
@@ -401,6 +405,10 @@ typedef struct {
 #define OPT_256_COLORS  0 /* true if xterm is configured with 256 colors */
 #endif
 
+#ifndef OPT_88_COLORS
+#define OPT_88_COLORS	0 /* true if xterm is configured with 88 colors */
+#endif
+
 #ifndef OPT_HIGHLIGHT_COLOR
 #define OPT_HIGHLIGHT_COLOR 1 /* true if xterm supports color highlighting */
 #endif
@@ -477,6 +485,17 @@ typedef struct {
 /* You must have ANSI/ISO colors to support 256 colors */
 #undef OPT_256_COLORS
 #endif
+
+#if OPT_88_COLORS && !OPT_ISO_COLORS
+/* You must have ANSI/ISO colors to support 88 colors */
+#undef OPT_88_COLORS
+#endif
+
+#if OPT_88_COLORS && OPT_256_COLORS
+/* 256 colors supersedes 88 colors */
+#undef OPT_88_COLORS
+#endif
+
 /***====================================================================***/
 
 #if OPT_ISO_COLORS
@@ -498,11 +517,21 @@ typedef struct {
 #define COLOR_13	13
 #define COLOR_14	14
 #define COLOR_15	15
+
 #if OPT_256_COLORS
-#define NUM_ANSI_COLORS 256
-#else /* ! OPT_256_COLORS */
-#define NUM_ANSI_COLORS 16
-#endif /* OPT_256_COLORS */
+# define NUM_ANSI_COLORS 256
+#elif OPT_88_COLORS
+# define NUM_ANSI_COLORS 88
+#else
+# define NUM_ANSI_COLORS 16
+#endif
+
+#if NUM_ANSI_COLORS > 16
+# define OPT_EXT_COLORS  1
+#else
+# define OPT_EXT_COLORS  0
+#endif
+
 #define COLOR_BD	(NUM_ANSI_COLORS)	/* BOLD */
 #define COLOR_UL	(NUM_ANSI_COLORS+1)	/* UNDERLINE */
 #define COLOR_BL	(NUM_ANSI_COLORS+2)	/* BLINK */
@@ -510,9 +539,12 @@ typedef struct {
 #ifndef DFT_COLORMODE
 #define DFT_COLORMODE TRUE	/* default colorMode resource */
 #endif
-#else
+
+#else	/* !OPT_ISO_COLORS */
+
 #define if_OPT_ISO_COLORS(screen, code) /* nothing */
 #define TERM_COLOR_FLAGS 0
+
 #endif	/* OPT_ISO_COLORS */
 
 #if OPT_AIX_COLORS
@@ -521,15 +553,15 @@ typedef struct {
 #define if_OPT_AIX_COLORS(screen, code) /* nothing */
 #endif
 
-#if OPT_256_COLORS
-#define if_OPT_256_COLORS(screen, code) if(screen->colorMode) code
-#define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /* nothing */
+#if OPT_256_COLORS || OPT_88_COLORS
+# define if_OPT_EXT_COLORS(screen, code) if(screen->colorMode) code
+# define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /* nothing */
 #elif OPT_ISO_COLORS
-#define if_OPT_256_COLORS(screen, code) /* nothing */
-#define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) if(screen->colorMode) code
+# define if_OPT_EXT_COLORS(screen, code) /* nothing */
+# define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) if(screen->colorMode) code
 #else
-#define if_OPT_256_COLORS(screen, code) /* nothing */
-#define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /*nothing*/
+# define if_OPT_EXT_COLORS(screen, code) /* nothing */
+# define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /*nothing*/
 #endif
 
 /***====================================================================***/
@@ -671,7 +703,7 @@ typedef enum {
 	, OFF_CHARS = 1
 	, OFF_ATTRS = 2
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
 	, OFF_FGRND
 	, OFF_BGRND
 #else
@@ -705,6 +737,14 @@ typedef enum {
 #define SCRN_BUF_BGRND(screen, row) BUF_BGRND(screen->visbuf, row)
 #define SCRN_BUF_CSETS(screen, row) BUF_CSETS(screen->visbuf, row)
 #define SCRN_BUF_WIDEC(screen, row) BUF_WIDEC(screen->visbuf, row)
+
+typedef struct {
+	unsigned	chrset;
+	unsigned	flags;
+	XFontStruct *	fs;
+	GC		gc;
+	char *		fn;
+} XTermFonts;
 
 	/* indices into save_modes[] */
 typedef enum {
@@ -824,10 +864,10 @@ typedef struct {
 #endif
 #if OPT_DEC_CHRSET
 	Boolean		font_doublesize;/* enable font-scaling		*/
-	Char		chrset;		/* character-set index & code	*/
-	XFontStruct *	double_fs[NUM_CHRSET];
-	GC		double_gc[NUM_CHRSET];
-	char *		double_fn[NUM_CHRSET];
+	int		cache_doublesize;/* limit of our cache		*/
+	Char		cur_chrset;	/* character-set index & code	*/
+	int		fonts_used;	/* count items in double_fonts	*/
+	XTermFonts	double_fonts[NUM_CHRSET];
 #endif
 #if OPT_WIDE_CHARS
 	Boolean		wide_chars;	/* true when 16-bit chars	*/

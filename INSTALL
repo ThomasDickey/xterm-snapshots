@@ -186,6 +186,10 @@ The options (in alphabetic order):
 
   	Compile-in code that interprets SGR 38 and 48 for 256-colors. 
 
+  --enable-88-color       enable 88-color support
+
+	Compile-in code that interprets SGR 38 and 48 for 88-colors.
+
   --enable-hp-fkeys       enable support for HP-style function keys
 
   	Compile-in code to support HP-style function keys.

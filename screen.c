@@ -287,7 +287,7 @@ ScreenWrite (
 	register int length)		/* length of string */
 {
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS
+#if OPT_EXT_COLORS
 	register Char *fbf = 0;
 	register Char *fbb = 0;
 #else
@@ -310,7 +310,7 @@ ScreenWrite (
 	col   = SCRN_BUF_CHARS(screen, screen->cur_row) + screen->cur_col;
 	attrs = SCRN_BUF_ATTRS(screen, screen->cur_row) + screen->cur_col;
 
-	if_OPT_256_COLORS(screen,{
+	if_OPT_EXT_COLORS(screen,{
 		fbf = SCRN_BUF_FGRND(screen, screen->cur_row) + screen->cur_col;
 		fbb = SCRN_BUF_BGRND(screen, screen->cur_row) + screen->cur_col;
 	})
@@ -344,7 +344,7 @@ ScreenWrite (
 	flags |= CHARDRAWN;
 	memset( attrs, flags,  length);
 
-	if_OPT_256_COLORS(screen,{
+	if_OPT_EXT_COLORS(screen,{
 		memset( fbf,  cur_fg_bg >> 8, length);
 		memset( fbb,  cur_fg_bg & 0xff, length);
 	})
@@ -390,7 +390,7 @@ ScrnClearLines (TScreen *screen, ScrnBuf sb, int where, int n, int size)
 				else if (j == OFF_ATTRS)
 					memset(screen->save_ptr[i+j], flags, size);
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS
+#if OPT_EXT_COLORS
 				else if (j == OFF_FGRND)
 					memset(screen->save_ptr[i+j], term->sgr_foreground, size);
 				else if (j == OFF_BGRND)
@@ -526,7 +526,7 @@ ScrnInsertChar (
 	    ptr[i] = ' ';
 	for (i=col; i<col+n; i++)
 	    attrs[i] = flags;
-	if_OPT_256_COLORS(screen,{
+	if_OPT_EXT_COLORS(screen,{
 	    ptr = BUF_FGRND(sb, row);
 	    memmove(ptr + col + n, ptr + col, nbytes);
 	    memset(ptr + col, term->sgr_foreground, n);
@@ -577,7 +577,7 @@ ScrnDeleteChar (
 	bzero  (ptr + size - n, n);
 	memset (attrs + size - n, TERM_COLOR_FLAGS, n);
 
-	if_OPT_256_COLORS(screen,{
+	if_OPT_EXT_COLORS(screen,{
 	    ptr = BUF_FGRND(sb, row);
 	    memmove(ptr + col, ptr + col + n, nbytes);
 	    memset(ptr + size - n, term->sgr_foreground, n);
@@ -643,7 +643,7 @@ ScrnRefresh (
 
 	for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS
+#if OPT_EXT_COLORS
 	   register Char *fbf = 0;
 	   register Char *fbb = 0;
 #else
@@ -776,7 +776,7 @@ ScrnRefresh (
 	   })
 
 	   flags = attrs[col];
-	   if_OPT_256_COLORS(screen,{
+	   if_OPT_EXT_COLORS(screen,{
 		fbf = SCRN_BUF_FGRND(screen, lastind + topline);
 		fbb = SCRN_BUF_BGRND(screen, lastind + topline);
 		fg_bg = (fbf[col] << 8) | (fbb[col]);
@@ -801,7 +801,7 @@ ScrnRefresh (
 		if ((attrs[col] != flags)
 		 || (hilite && (col > hi_col))
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS
+#if OPT_EXT_COLORS
 		 || ((flags & FG_COLOR) && (extract_fg((fbf[col]<<8)|fbb[col],attrs[col]) != fg))
 		 || ((flags & BG_COLOR) && (extract_bg((fbf[col]<<8)|fbb[col]) != bg))
 #else
@@ -831,7 +831,7 @@ ScrnRefresh (
 			hilite = False;
 
 		   flags = attrs[col];
-		   if_OPT_256_COLORS(screen,{
+		   if_OPT_EXT_COLORS(screen,{
 			fg_bg = (fbf[col]<<8) | fbb[col];
 		        fg = extract_fg(fg_bg, flags);
 		        bg = extract_bg(fg_bg);
@@ -913,7 +913,7 @@ ClearBufRows (
 	    ScrnClrWrapped(screen, row);
 	    bzero (BUF_CHARS(buf, row), len);
 	    memset(BUF_ATTRS(buf, row), flags, len);
-	    if_OPT_256_COLORS(screen,{
+	    if_OPT_EXT_COLORS(screen,{
 		memset(BUF_FGRND(buf, row), term->sgr_foreground, len);
 		memset(BUF_BGRND(buf, row), term->cur_background, len);
 	    })

@@ -220,6 +220,10 @@ static  int	defaultBlinkOffTime = 300;
 static  int	defaultONE = 1;
 #endif
 
+#if OPT_DEC_CHRSET
+static	int	default_NUM_CHRSET = NUM_CHRSET;
+#endif
+
 /*
  * Warning, the following must be kept under 1024 bytes or else some
  * compilers (particularly AT&T 6386 SVR3.2) will barf).  Workaround is to
@@ -605,6 +609,9 @@ static XtResource resources[] = {
 {XtNfontDoublesize, XtCFontDoublesize, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.font_doublesize),
 	XtRBoolean, (XtPointer) &defaultTRUE},
+{XtNcacheDoublesize, XtCCacheDoublesize, XtRInt, sizeof(int),
+	XtOffsetOf(XtermWidgetRec, screen.cache_doublesize),
+	XtRInt, (XtPointer) &default_NUM_CHRSET},
 #endif
 #if OPT_INPUT_METHOD
 {XtNinputMethod, XtCInputMethod, XtRString, sizeof(char*),
@@ -667,7 +674,9 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_15]),
 	XtRString, DFT_COLOR("white")},
 #if OPT_256_COLORS
-#include "256colres.h"
+# include "256colres.h"
+#elif OPT_88_COLORS
+# include "88colres.h"
 #endif
 {XtNcolorBD, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_BD]),
@@ -861,17 +870,17 @@ setExtendedFG(void)
 {
 	int fg = term->sgr_foreground;
 
+#if NUM_ANSI_COLORS < 256
 	if (term->screen.colorAttrMode
 	 || (fg < 0)) {
 		if (term->screen.colorULMode && (term->flags & UNDERLINE))
 			fg = COLOR_UL;
-
 		if (term->screen.colorBDMode && (term->flags & BOLD))
 			fg = COLOR_BD;
-
 		if (term->screen.colorBLMode && (term->flags & BLINK))
 			fg = COLOR_BL;
 	}
+#endif
 
 	/* This implements the IBM PC-style convention of 8-colors, with one
 	 * bit for bold, thus mapping the 0-7 codes to 8-15.  It won't make
@@ -4004,6 +4013,14 @@ static void VTInitialize (
 
 #if OPT_DEC_CHRSET
    wnew->screen.font_doublesize = request->screen.font_doublesize;
+   wnew->screen.cache_doublesize = request->screen.cache_doublesize;
+   if (wnew->screen.cache_doublesize > NUM_CHRSET)
+       wnew->screen.cache_doublesize = NUM_CHRSET;
+   if (wnew->screen.cache_doublesize == 0)
+       wnew->screen.font_doublesize = False;
+   TRACE(("Doublesize%s enabled, up to %d fonts\n",
+       wnew->screen.font_doublesize ? "" : " not",
+       wnew->screen.cache_doublesize))
 #endif
 
    wnew->num_ptrs = (OFF_ATTRS+1); /* OFF_FLAGS, OFF_CHARS, OFF_ATTRS */
@@ -4034,7 +4051,7 @@ static void VTInitialize (
 	TRACE(("All colors are foreground or background: disable colorMode\n"))
    }
 
-#if OPT_256_COLORS
+#if OPT_EXT_COLORS
    wnew->num_ptrs = (OFF_BGRND+1);
 #else
    wnew->num_ptrs = (OFF_COLOR+1);
@@ -4631,7 +4648,7 @@ ShowCursor(void)
 	 * Compare the current cell to the last set of colors used for the
 	 * cursor and update the GC's if needed.
 	 */
-	if_OPT_256_COLORS(screen,{
+	if_OPT_EXT_COLORS(screen,{
 	    fg_bg = (SCRN_BUF_FGRND(screen, screen->cursor_row)[screen->cursor_col] << 8) |
 		    (SCRN_BUF_BGRND(screen, screen->cursor_row)[screen->cursor_col]);
 	})
@@ -4758,7 +4775,7 @@ HideCursor(void)
 	clo   = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col];
 	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
 
-	if_OPT_256_COLORS(screen,{
+	if_OPT_EXT_COLORS(screen,{
 	    fg_bg = (SCRN_BUF_FGRND(screen, screen->cursor_row)[screen->cursor_col] << 8) |
 		    (SCRN_BUF_BGRND(screen, screen->cursor_row)[screen->cursor_col]);
 	})

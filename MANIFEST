@@ -1,7 +1,10 @@
-MANIFEST for xterm, version xterm-114
+MANIFEST for xterm, version xterm-115
 --------------------------------------------------------------------------------
 MANIFEST                        this file
+256colres.h                     resource-definitions for 256-color mode
 256colres.pl                    script to generate 256colres.h
+88colres.h                      resource definitions for 88-color mode
+88colres.pl                     script to generate 88colres.h
 INSTALL                         configure script: options and related install instructions
 Imakefile                       imake template for Makefile
 Makefile.in                     configure script template for Makefile
@@ -80,6 +83,8 @@ vttests                         subdirectory
 vttests/16colors.sh             test-script to show 16-colors
 vttests/256colors.pl            script to illustrate 256-colors
 vttests/256colors2.pl           fancy test-script for 256-colors
+vttests/88colors.pl             sample script showing 88-colors
+vttests/88colors2.pl            sample script showing 88-colors
 vttests/8colors.sh              test-script to illustrate 8-colors
 vttests/doublechars.sh          test script to demonstrate doublesize chars
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence

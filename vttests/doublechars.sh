@@ -65,7 +65,7 @@ else
 	$CMD $OPT "${ESC}[?3h" >/dev/tty
 fi
 
-for SGR in 0 1 4 7
+for SGR in 0 1 4 5 7
 do
 	$CMD $OPT "${ESC}[0;${SGR}m" >/dev/tty
 	for DBL in 5 3 4 6 5

@@ -280,8 +280,14 @@ int xtermCharSetOut(IChar *buf, IChar *ptr, char leftset)
 			break;
 
 		case '0':	/* special graphics (line drawing)	*/
-			if (chr >= 0x5f && chr <= 0x7e)
-				chr = (chr == 0x5f) ? 0x7f : (chr - 0x5f);
+			if (chr >= 0x5f && chr <= 0x7e) {
+#if OPT_WIDE_CHARS
+				if (screen->utf8_mode)
+				    chr = dec2ucs[chr - 0x5f];
+				else
+#endif
+				    chr = (chr == 0x5f) ? 0x7f : (chr - 0x5f);
+			}
 			break;
 
 		case '4':	/* Dutch */

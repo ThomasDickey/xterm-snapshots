@@ -912,6 +912,12 @@ current word forward.
 If ``true'', the entire line is selected.
 The default is ``true.''
 .TP 8
+.B "cacheDoublesize (\fPclass\fB CacheDoublesize)"
+Specifies the maximum number of double-sized fonts which are cached by
+xterm.
+The default (8) may be too large for some X terminals with limited memory.
+Set this to zero to disable doublesize fonts altogether.
+.TP 8
 .B "charClass (\fPclass\fB CharClass)"
 Specifies comma-separated lists of character class bindings of the form
 [\fIlow\fP\-]\fIhigh\fP:\fIvalue\fP.  These are used in determining which

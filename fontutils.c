@@ -48,6 +48,41 @@ authorization.
 
 #include <stdio.h>
 
+/* from X11/Xlibint.h - not all vendors install this file */
+#define CI_NONEXISTCHAR(cs) (((cs)->width == 0) && \
+			     (((cs)->rbearing|(cs)->lbearing| \
+			       (cs)->ascent|(cs)->descent) == 0))
+
+#define CI_GET_CHAR_INFO_1D(fs,col,def,cs) \
+{ \
+    cs = def; \
+    if (col >= fs->min_char_or_byte2 && col <= fs->max_char_or_byte2) { \
+	if (fs->per_char == NULL) { \
+	    cs = &fs->min_bounds; \
+	} else { \
+	    cs = &fs->per_char[(col - fs->min_char_or_byte2)]; \
+	    if (CI_NONEXISTCHAR(cs)) cs = def; \
+	} \
+    } \
+}
+
+#define CI_GET_CHAR_INFO_2D(fs,row,col,def,cs) \
+{ \
+    cs = def; \
+    if (row >= fs->min_byte1 && row <= fs->max_byte1 && \
+	col >= fs->min_char_or_byte2 && col <= fs->max_char_or_byte2) { \
+	if (fs->per_char == NULL) { \
+	    cs = &fs->min_bounds; \
+	} else { \
+	    cs = &fs->per_char[((row - fs->min_byte1) * \
+				(fs->max_char_or_byte2 - \
+				 fs->min_char_or_byte2 + 1)) + \
+			       (col - fs->min_char_or_byte2)]; \
+	    if (CI_NONEXISTCHAR(cs)) cs = def; \
+	} \
+    } \
+}
+
 #define MAX_FONTNAME 200
 
 /*
@@ -567,8 +602,16 @@ xtermLoadFont (
 	 * (0) is special, and is not used.
 	 */
 	for (ch = 1; ch < 32; ch++) {
-		if (xtermMissingChar(ch, nfs)
-		 || xtermMissingChar(ch, bfs)) {
+		int n = ch;
+#if OPT_WIDE_CHARS
+		if (screen->utf8_mode) {
+			n = dec2ucs[ch];
+			if (n == UCS_REPL)
+				continue;
+		}
+#endif
+		if (xtermMissingChar(n, nfs)
+		 || xtermMissingChar(n, bfs)) {
 			screen->fnt_boxes = False;
 			break;
 		}
@@ -692,31 +735,35 @@ xtermUpdateFontInfo (TScreen *screen, Bool doresize)
 }
 
 #if OPT_BOX_CHARS
+
 /*
  * Returns true if the given character is missing from the specified font.
  */
 Bool
-xtermMissingChar(int ch, XFontStruct *font)
+xtermMissingChar(unsigned ch, XFontStruct *font)
 {
-	XCharStruct	*pc = 0;
-
 	if (font != 0
 	&& font->per_char != 0
 	&& !font->all_chars_exist) {
-		if (ch < (int) font->min_char_or_byte2
-		 || ch > (int) font->max_char_or_byte2) {
-			TRACE(("MissingChar %c\n", ch))
-			return True;
+		static	XCharStruct dft, *tmp = &dft, *pc = 0;
+
+		if (font->max_byte1 == 0) {
+#if OPT_WIDE_CHARS
+			if (ch > 255) {
+				TRACE(("xtermMissingChar %#04x (row)\n", ch))
+				return True;
+			}
+#endif
+			CI_GET_CHAR_INFO_1D (font, ch, tmp, pc);
 		}
-		if (font->min_byte1 == 0
-		 && font->max_byte1 == 0) {
-			pc = font->per_char + (ch - font->min_char_or_byte2);
-		} /* FIXME: this does not handle doublebyte characters */
-		if (pc != 0
-		 && (pc->lbearing + pc->rbearing) == 0
-		 && (pc->ascent   + pc->descent) == 0
-		 && (pc->width == 0)) {
-			TRACE(("MissingChar %c\n", ch))
+#if OPT_WIDE_CHARS
+		else {
+			CI_GET_CHAR_INFO_2D (font, (ch >> 8), (ch & 0xff), tmp, pc);
+		}
+#endif
+
+		if (CI_NONEXISTCHAR(pc)) {
+			TRACE(("xtermMissingChar %#04x (!exists)\n", ch))
 			return True;
 		}
 	}
@@ -887,6 +934,28 @@ xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y)
 	GC gc2;
 	const short *p;
 
+#if OPT_WIDE_CHARS
+	/*
+	 * Try to show line-drawing characters if we happen to be in UTF-8
+	 * mode, but have gotten an old-style font.
+	 */
+	if (screen->utf8_mode
+	 && (ch > 127)
+	 && (ch != UCS_REPL)) {
+		unsigned n;
+		for (n = 1; n < 32; n++) {
+			if (dec2ucs[n] == ch
+			 && !xtermMissingChar(n, (flags & BOLD)
+				  ? screen->fnt_bold
+				  : screen->fnt_norm)) {
+				TRACE(("...use xterm-style linedrawing\n"))
+				ch = n;
+				break;
+			}
+		}
+	}
+#endif
+
 	TRACE(("DRAW_BOX(%d) cell %dx%d at %d,%d%s\n",
 		ch, screen->fnt_high, screen->fnt_wide, y, x,
 		(ch < 0 || ch >= (int)(sizeof(lines)/sizeof(lines[0]))) ? "-BAD": ""))
@@ -979,7 +1048,7 @@ lookupFontSizes(TScreen *screen)
 			screen->menu_font_sizes[n] = -1;
 			if (fs != 0) {
 				screen->menu_font_sizes[n] = FontSize(fs);
-				TRACE(("menu_font_sizes[%d] = %ld\n", n, 
+				TRACE(("menu_font_sizes[%d] = %ld\n", n,
 					screen->menu_font_sizes[n]))
 				XFreeFont (screen->display, fs);
 			}
@@ -1104,8 +1173,8 @@ void SetVTFont (
     TScreen *screen = &term->screen;
 
     TRACE(("SetVTFont(i=%d, name1=%s, name2=%s)\n", i,
-    	name1 ? name1 : "<null>",
-    	name2 ? name2 : "<null>"))
+	name1 ? name1 : "<null>",
+	name2 ? name2 : "<null>"))
 
     if (i >= 0 && i < NMENUFONTS) {
 	if (i == fontMenu_fontsel) {	/* go get the selection */
