@@ -459,6 +459,16 @@ than in VT102 mode.  Switching between the two windows is done using the
 .B \+t
 This option indicates that \fIxterm\fP should start in VT102 mode.
 .TP 8
+.BI \-ti " term_id"
+Specify the name used by \fIxterm\fP to select the
+correct response to terminal ID queries.
+It also specifies the emulation level,
+used to determine the type of response to a DA control sequence.
+Valid values include vt52, vt100, vt101, vt102, and vt220 (the "vt" is optional).
+The default is vt100.
+The term_id argument specifies the terminal ID to use.
+(This is the same as the \fIdecTerminalID\fP resource).
+.TP 8
 .BI \-tm " string"
 This option specifies a series of terminal setting keywords followed by the
 characters that should be bound to those functions, similar to the \fIstty\fP

@@ -113,13 +113,7 @@ static char *base_name (char *name);
 static int pty_search (int *pty);
 static int remove_termcap_entry (char *buf, char *str);
 static int spawn (void);
-static void DeleteWindow PROTO_XT_ACTIONS_ARGS;
-static void Help (void);
-static void KeyboardMapping PROTO_XT_ACTIONS_ARGS;
-static void Syntax (char *badOption);
-static void Version (void);
 static void get_terminal (void);
-static void my_error_handler (String message);
 static void resize (TScreen *s, char *oldtc, char *newtc);
 
 static Bool added_utmp_entry = False;
@@ -174,7 +168,7 @@ static struct termio d_tio;
 static int override_tty_modes = 0;
 struct _xttymodes {
     char *name;
-    int len;
+    size_t len;
     int set;
     char value;
 } ttymodelist[] = {
@@ -404,6 +398,7 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 {"-t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-ti",		"*decTerminalID",XrmoptionSepArg,	(caddr_t) NULL},
 {"-tm",		"*ttyModes",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-tn",		"*termName",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -510,6 +505,7 @@ static struct _options {
 #if OPT_TEK4014
 { "-/+t",                  "turn on/off Tek emulation window" },
 #endif
+{ "-ti termid",            "terminal identifier" },
 { "-tm string",            "terminal mode keywords and characters" },
 { "-tn name",              "TERM environment variable name" },
 { "-/+ulc",                "turn off/on display of underline as color" },

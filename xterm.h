@@ -147,7 +147,8 @@ extern void SGR_Foreground (int color);
 #endif
 
 /* charsets.c */
-extern int xtermCharSets (Char *buf, Char *ptr, char charset);
+extern unsigned xtermCharSetIn (unsigned code, int charset);
+extern int xtermCharSetOut (Char *buf, Char *ptr, char charset);
 
 /* cursor.c */
 extern void CarriageReturn (TScreen *screen);

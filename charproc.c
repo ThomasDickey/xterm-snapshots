@@ -333,7 +333,6 @@ static void HandleMapUnmap PROTO_XT_EV_HANDLER_ARGS;
  */
 
 /* Defaults */
-#define DFT_KBD_DIALECT "B"
 #if OPT_ISO_COLORS
 static  Boolean	defaultCOLORMODE   = DFT_COLORMODE;
 #endif
@@ -346,7 +345,6 @@ static	int	defaultScrollLines = SCROLLLINES;
 static  int	defaultNMarginBell = N_MARGINBELL;
 static  int	defaultMultiClickTime = MULTICLICKTIME;
 static  int	defaultBellSuppressTime = BELLSUPPRESSMSEC;
-static	int	default_DECID      = DFT_DECID;
 static	char *	_Font_Selected_ = "yes";  /* string is arbitrary */
 
 #if OPT_BLINK_CURS
@@ -805,9 +803,9 @@ static XtResource resources[] = {
 {XtNunderLine, XtCUnderLine, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.underline),
 	XtRBoolean, (XtPointer) &defaultTRUE},
-{XtNdecTerminalID, XtCDecTerminalID, XtRInt, sizeof(int),
-	XtOffsetOf(XtermWidgetRec, screen.terminal_id),
-	XtRInt, (XtPointer) &default_DECID},
+{XtNdecTerminalID, XtCDecTerminalID, XtRString, sizeof(String),
+	XtOffsetOf(XtermWidgetRec, screen.term_id),
+	XtRString, (XtPointer) DFT_DECID},
 #ifndef NO_ACTIVE_ICON
 {"activeIcon", "ActiveIcon", XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.active_icon),
@@ -982,7 +980,6 @@ reset_SGR_Colors(void)
 void resetCharsets(TScreen *screen)
 {
 	screen->gsets[0] = 'B';			/* ASCII_G		*/
-	screen->gsets[0] = screen->keyboard_dialect[0]; /* e.g., ASCII_G */
 	screen->gsets[1] = '0';			/* line drawing		*/
 	screen->gsets[2] = 'B';			/* DEC supplemental.	*/
 	screen->gsets[3] = 'B';
@@ -1815,6 +1812,7 @@ static void VTparse(void)
 			break;
 
 		 case CASE_GSETS:
+			TRACE(("CASE_GSETS(%d) = '%c'\n", scstype, c))
 			screen->gsets[scstype] = c;
 			parsestate = groundtable;
 			break;
@@ -2486,7 +2484,7 @@ dotext(
 	register int	n;
 	register int	next_col;
 
-	if (!xtermCharSets(buf, ptr, charset))
+	if (!xtermCharSetOut(buf, ptr, charset))
 		return;
 
 	if_OPT_XMC_GLITCH(screen,{
@@ -3678,6 +3676,7 @@ static void VTInitialize (
 #if OPT_ISO_COLORS
    Boolean color_ok;
 #endif
+   char *s;
 
    /* Zero out the entire "screen" component of "wnew" widget, then do
     * field-by-field assigment of "screen" fields that are named in the
@@ -3747,11 +3746,21 @@ static void VTInitialize (
    wnew->screen.scrolllines = request->screen.scrolllines;
    wnew->screen.scrollttyoutput = request->screen.scrollttyoutput;
    wnew->screen.scrollkey = request->screen.scrollkey;
-   wnew->screen.terminal_id = request->screen.terminal_id;
+
+   wnew->screen.term_id = request->screen.term_id;
+   for (s = request->screen.term_id; *s; s++) {
+	if (!isalpha(*s))
+	    break;
+   }
+   wnew->screen.terminal_id = atoi(s);
    if (wnew->screen.terminal_id < MIN_DECID)
        wnew->screen.terminal_id = MIN_DECID;
    if (wnew->screen.terminal_id > MAX_DECID)
        wnew->screen.terminal_id = MAX_DECID;
+   TRACE(("term_id '%s' -> terminal_id %d\n", 
+	wnet->screen.term_id,
+	wnet->screen.terminal_id))
+
    wnew->screen.ansi_level = (wnew->screen.terminal_id / 100);
    wnew->screen.visualbell = request->screen.visualbell;
 #if OPT_TEK4014
@@ -3778,7 +3787,9 @@ static void VTInitialize (
    wnew->screen.print_attributes = request->screen.print_attributes;
 #endif
 
+   TRACE(("keyboard_dialect:%s\n", request->screen.keyboard_dialect))
    wnew->screen.keyboard_dialect = request->screen.keyboard_dialect;
+
    wnew->screen.input_eight_bits = request->screen.input_eight_bits;
    wnew->screen.output_eight_bits = request->screen.output_eight_bits;
    wnew->screen.control_eight_bits = request->screen.control_eight_bits;
