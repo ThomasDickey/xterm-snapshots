@@ -77,9 +77,9 @@ static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
 static void do_softreset       PROTO_XT_CALLBACK_ARGS;
 static void do_sun_fkeys       PROTO_XT_CALLBACK_ARGS;
-static void do_sun_kbd         PROTO_XT_CALLBACK_ARGS;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_terminate       PROTO_XT_CALLBACK_ARGS;
+static void do_titeInhibit     PROTO_XT_CALLBACK_ARGS;
 static void do_visualbell      PROTO_XT_CALLBACK_ARGS;
 static void do_vtfont          PROTO_XT_CALLBACK_ARGS;
 
@@ -90,6 +90,22 @@ static void do_logging         PROTO_XT_CALLBACK_ARGS;
 #ifndef NO_ACTIVE_ICON
 static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
 #endif /* NO_ACTIVE_ICON */
+
+#if OPT_DEC_CHRSET
+static void do_font_doublesize PROTO_XT_CALLBACK_ARGS;
+#endif
+
+#if OPT_DEC_SOFTFONT
+static void do_font_loadable   PROTO_XT_CALLBACK_ARGS;
+#endif
+
+#if OPT_HP_FUNC_KEYS
+static void do_hp_fkeys        PROTO_XT_CALLBACK_ARGS;
+#endif
+
+#if OPT_SUNPC_KBD
+static void do_sun_kbd         PROTO_XT_CALLBACK_ARGS;
+#endif
 
 #if OPT_TEK4014
 static void do_tekcopy         PROTO_XT_CALLBACK_ARGS;
@@ -126,7 +142,12 @@ MenuEntry mainMenuEntries[] = {
     { "8-bit control",	do_8bit_control, NULL },
     { "backarrow key",	do_backarrow,	NULL },
     { "sun function-keys",do_sun_fkeys,	NULL },
+#if OPT_SUNPC_KBD
     { "sun keyboard",	do_sun_kbd,	NULL },
+#endif
+#if OPT_HP_FUNC_KEYS
+    { "hp function-keys",do_hp_fkeys,	NULL },
+#endif
     { "line2",		NULL,		NULL },
     { "suspend",	do_suspend,	NULL },
     { "continue",	do_continue,	NULL },
@@ -138,62 +159,73 @@ MenuEntry mainMenuEntries[] = {
     { "quit",		do_quit,	NULL }};
 
 MenuEntry vtMenuEntries[] = {
-    { "scrollbar",	do_scrollbar, NULL },		/*  0 */
-    { "jumpscroll",	do_jumpscroll, NULL },		/*  1 */
-    { "reversevideo",	do_reversevideo, NULL },	/*  2 */
-    { "autowrap",	do_autowrap, NULL },		/*  3 */
-    { "reversewrap",	do_reversewrap, NULL },		/*  4 */
-    { "autolinefeed",	do_autolinefeed, NULL },	/*  5 */
-    { "appcursor",	do_appcursor, NULL },		/*  6 */
-    { "appkeypad",	do_appkeypad, NULL },		/*  7 */
-    { "scrollkey",	do_scrollkey, NULL },		/*  8 */
-    { "scrollttyoutput",do_scrollttyoutput, NULL },	/*  9 */
-    { "allow132",	do_allow132, NULL },		/* 10 */
-    { "cursesemul",	do_cursesemul, NULL },		/* 11 */
-    { "visualbell",	do_visualbell, NULL },		/* 12 */
-    { "marginbell",	do_marginbell, NULL },		/* 13 */
-    { "altscreen",	do_altscreen, NULL },		/* 14 */
+    { "scrollbar",	do_scrollbar,	NULL },
+    { "jumpscroll",	do_jumpscroll,	NULL },
+    { "reversevideo",	do_reversevideo, NULL },
+    { "autowrap",	do_autowrap,	NULL },
+    { "reversewrap",	do_reversewrap, NULL },
+    { "autolinefeed",	do_autolinefeed, NULL },
+    { "appcursor",	do_appcursor,	NULL },
+    { "appkeypad",	do_appkeypad,	NULL },
+    { "scrollkey",	do_scrollkey,	NULL },
+    { "scrollttyoutput",do_scrollttyoutput, NULL },
+    { "allow132",	do_allow132,	NULL },
+    { "cursesemul",	do_cursesemul,	NULL },
+    { "visualbell",	do_visualbell,	NULL },
+    { "marginbell",	do_marginbell,	NULL },
+    { "titeInhibit",	do_titeInhibit,	NULL },
 #ifndef NO_ACTIVE_ICON
-    { "activeicon",	do_activeicon, NULL },		/* 15 */
+    { "activeicon",	do_activeicon,	NULL },
 #endif /* NO_ACTIVE_ICON */
-    { "line1",		NULL, NULL },			/* 16 */
-    { "softreset",	do_softreset, NULL },		/* 17 */
-    { "hardreset",	do_hardreset, NULL },		/* 18 */
-    { "clearsavedlines",do_clearsavedlines, NULL },	/* 19 */
+    { "line1",		NULL,		NULL },
+    { "softreset",	do_softreset,	NULL },
+    { "hardreset",	do_hardreset,	NULL },
+    { "clearsavedlines",do_clearsavedlines, NULL },
+    { "line2",		NULL,		NULL },
 #if OPT_TEK4014
-    { "line2",		NULL, NULL },			/* 20 */
-    { "tekshow",	do_tekshow, NULL },		/* 21 */
-    { "tekmode",	do_tekmode, NULL },		/* 22 */
-    { "vthide",		do_vthide, NULL },		/* 23 */
+    { "tekshow",	do_tekshow,	NULL },
+    { "tekmode",	do_tekmode,	NULL },
+    { "vthide",		do_vthide,	NULL },
 #endif
+    { "altscreen",	do_altscreen,	NULL },
     };
 
 MenuEntry fontMenuEntries[] = {
-    { "fontdefault",	do_vtfont, NULL },		/*  0 */
-    { "font1",		do_vtfont, NULL },		/*  1 */
-    { "font2",		do_vtfont, NULL },		/*  2 */
-    { "font3",		do_vtfont, NULL },		/*  3 */
-    { "font4",		do_vtfont, NULL },		/*  4 */
-    { "font5",		do_vtfont, NULL },		/*  5 */
-    { "font6",		do_vtfont, NULL },		/*  6 */
-    { "fontescape",	do_vtfont, NULL },		/*  7 */
-    { "fontsel",	do_vtfont, NULL }};		/*  8 */
-    /* this should match NMENUFONTS in ptyx.h */
+    { "fontdefault",	do_vtfont,	NULL },
+    { "font1",		do_vtfont,	NULL },
+    { "font2",		do_vtfont,	NULL },
+    { "font3",		do_vtfont,	NULL },
+    { "font4",		do_vtfont,	NULL },
+    { "font5",		do_vtfont,	NULL },
+    { "font6",		do_vtfont,	NULL },
+    { "fontescape",	do_vtfont,	NULL },
+    { "fontsel",	do_vtfont,	NULL },
+    /* down to here should match NMENUFONTS in ptyx.h */
+#if OPT_DEC_CHRSET || OPT_DEC_SOFTFONT
+    { "line1",		NULL,		NULL },
+#if OPT_DEC_CHRSET
+    { "font-doublesize",do_font_doublesize,NULL },
+#endif
+#if OPT_DEC_SOFTFONT
+    { "font-loadable",	do_font_loadable,NULL },
+#endif
+#endif /* toggles for font extensions */
+    };
 
 #if OPT_TEK4014
 MenuEntry tekMenuEntries[] = {
-    { "tektextlarge",	do_tektextlarge, NULL },	/*  0 */
-    { "tektext2",	do_tektext2, NULL },		/*  1 */
-    { "tektext3",	do_tektext3, NULL },		/*  2 */
-    { "tektextsmall",	do_tektextsmall, NULL },	/*  3 */
-    { "line1",		NULL, NULL },			/*  4 */
-    { "tekpage",	do_tekpage, NULL },		/*  5 */
-    { "tekreset",	do_tekreset, NULL },		/*  6 */
-    { "tekcopy",	do_tekcopy, NULL },		/*  7 */
-    { "line2",		NULL, NULL },			/*  8 */
-    { "vtshow",		do_vtshow, NULL },		/*  9 */
-    { "vtmode",		do_vtmode, NULL },		/* 10 */
-    { "tekhide",	do_tekhide, NULL }};		/* 11 */
+    { "tektextlarge",	do_tektextlarge, NULL },
+    { "tektext2",	do_tektext2,	NULL },
+    { "tektext3",	do_tektext3,	NULL },
+    { "tektextsmall",	do_tektextsmall, NULL },
+    { "line1",		NULL,		NULL },
+    { "tekpage",	do_tekpage,	NULL },
+    { "tekreset",	do_tekreset,	NULL },
+    { "tekcopy",	do_tekcopy,	NULL },
+    { "line2",		NULL,		NULL },
+    { "vtshow",		do_vtshow,	NULL },
+    { "vtmode",		do_vtmode,	NULL },
+    { "tekhide",	do_tekhide,	NULL }};
 #endif
 
 static Widget create_menu (
@@ -266,12 +298,13 @@ static Bool domenu (
 				 FALSE);
 	    }
 	    update_sun_fkeys();
+	    update_hp_fkeys();
 #if !defined(SIGTSTP) || defined(AMOEBA)
 	    set_sensitivity (screen->mainMenu,
 			     mainMenuEntries[mainMenu_suspend].widget, FALSE);
 #endif
 #if !defined(SIGCONT) || defined(AMOEBA)
-	    set_sensitivity (screen->mainMenu, 
+	    set_sensitivity (screen->mainMenu,
 			     mainMenuEntries[mainMenu_continue].widget, FALSE);
 #endif
 	}
@@ -296,6 +329,8 @@ static Bool domenu (
 	    update_cursesemul();
 	    update_visualbell();
 	    update_marginbell();
+	    update_altscreen();
+	    update_titeInhibit();
 #ifndef NO_ACTIVE_ICON
 	    if (!screen->fnt_icon || !screen->iconVwin.window) {
 		set_sensitivity (screen->vtMenu,
@@ -312,12 +347,19 @@ static Bool domenu (
 	if (!screen->fontMenu) {
 	    screen->fontMenu = create_menu (term, toplevel, "fontMenu",
 					    fontMenuEntries,
-					    NMENUFONTS);  
+					    XtNumber(fontMenuEntries));
 	    set_menu_font (True);
 	    set_sensitivity (screen->fontMenu,
 			     fontMenuEntries[fontMenu_fontescape].widget,
 			     (screen->menu_font_names[fontMenu_fontescape]
 			      ? TRUE : FALSE));
+	    update_font_doublesize();
+	    update_font_loadable();
+#if OPT_DEC_SOFTFONT	/* FIXME: not implemented */
+	    set_sensitivity (screen->fontMenu,
+			     fontMenuEntries[fontMenu_font_loadable].widget,
+			     FALSE);
+#endif
 	}
 	FindFontSelection (NULL, True);
 	set_sensitivity (screen->fontMenu,
@@ -400,7 +442,7 @@ create_menu (
     for (; nentries > 0; nentries--, entries++) {
 	cb[0].callback = (XtCallbackProc) entries->function;
 	cb[0].closure = (caddr_t) entries->name;
-	entries->widget = XtCreateManagedWidget (entries->name, 
+	entries->widget = XtCreateManagedWidget (entries->name,
 						 (entries->function ?
 						  smeBSBObjectClass :
 						  smeLineObjectClass), m,
@@ -547,7 +589,6 @@ static void do_sun_fkeys (
     update_sun_fkeys();
 }
 
-
 #if OPT_SUNPC_KBD
 static void do_sun_kbd (
 	Widget gw GCC_UNUSED,
@@ -556,6 +597,18 @@ static void do_sun_kbd (
 {
     sunKeyboard = ! sunKeyboard;
     update_sun_kbd();
+}
+#endif
+
+
+#if OPT_HP_FUNC_KEYS
+static void do_hp_fkeys (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    hpFunctionKeys = ! hpFunctionKeys;
+    update_hp_fkeys();
 }
 #endif
 
@@ -836,6 +889,16 @@ static void do_altscreen (
     ToggleAlternate(screen);
 }
 
+/* ARGSUSED */
+static void do_titeInhibit (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    term->misc.titeInhibit = !term->misc.titeInhibit;
+    update_titeInhibit();
+}
+
 #ifndef NO_ACTIVE_ICON
 /* ARGSUSED */
 static void do_activeicon (
@@ -879,7 +942,7 @@ static void do_clearsavedlines (
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    VTReset (TRUE, TRUE); 
+    VTReset (TRUE, TRUE);
 }
 
 
@@ -925,6 +988,29 @@ static void do_vtfont (
     }
     Bell(XkbBI_MinorError, 0);
 }
+
+#if OPT_DEC_CHRSET
+static void do_font_doublesize (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    term->screen.font_doublesize = ! term->screen.font_doublesize;
+    update_font_doublesize();
+    Redraw ();
+}
+#endif
+
+#if OPT_DEC_SOFTFONT
+static void do_font_loadable (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    term->misc.font_loadable = ! term->misc.font_loadable;
+    update_font_loadable();
+}
+#endif
 
 
 /*
@@ -1006,7 +1092,7 @@ static void handle_vtshow (Widget gw GCC_UNUSED, Bool allowswitch)
 	set_vt_visibility (FALSE);
 	if (!screen->TekEmu && TekRefresh) dorefresh ();
 	end_vt_mode ();			/* WARNING: this does a longjmp... */
-    } else 
+    } else
       Bell(XkbBI_MinorError, 0);
 }
 
@@ -1244,6 +1330,18 @@ void HandleSunKeyboard(
 }
 #endif
 
+#if OPT_HP_FUNC_KEYS
+void HandleHpFunctionKeys(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    handle_toggle (do_hp_fkeys, (int) hpFunctionKeys,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+#endif
+
 void HandleScrollbar(
 	Widget w,
 	XEvent *event GCC_UNUSED,
@@ -1385,6 +1483,17 @@ void HandleAltScreen(
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
+void HandleTiteInhibit(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    /* eventually want to see if sensitive or not */
+    handle_toggle (do_titeInhibit, ! ((int) term->misc.titeInhibit),
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+
 /* ARGSUSED */
 void HandleSoftReset(
 	Widget w,
@@ -1414,6 +1523,30 @@ void HandleClearSavedLines(
 {
     do_clearsavedlines(w, (XtPointer)0, (XtPointer)0);
 }
+
+#if OPT_DEC_CHRSET
+void HandleFontDoublesize(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    handle_toggle (do_font_doublesize, (int) term->screen.font_doublesize,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+#endif
+
+#if OPT_DEC_SOFTFONT
+void HandleFontLoading(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    handle_toggle (do_font_loadable, (int) term->misc.font_loadable,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+#endif
 
 #if OPT_TEK4014
 void HandleSetTerminalType(

@@ -66,7 +66,10 @@ extern void HandleBackarrow        PROTO_XT_ACTIONS_ARGS;
 extern void HandleClearSavedLines  PROTO_XT_ACTIONS_ARGS;
 extern void HandleCreateMenu       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursesEmul       PROTO_XT_ACTIONS_ARGS;
+extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
+extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
+extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
 extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
 extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
@@ -89,12 +92,13 @@ extern void HandleSunKeyboard      PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekCopy          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
+extern void HandleTiteInhibit      PROTO_XT_ACTIONS_ARGS;
 extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
 
 extern void DoSecureKeyboard (Time tp);
 
 /*
- * The following definitions MUST match the order of entries given in 
+ * The following definitions MUST match the order of entries given in
  * the mainMenuEntries, vtMenuEntries, and tekMenuEntries arrays in menu.c.
  */
 
@@ -115,6 +119,9 @@ typedef enum {
     mainMenu_sun_fkeys,
 #if OPT_SUNPC_KBD
     mainMenu_sun_kbd,
+#endif
+#if OPT_HP_FUNC_KEYS
+    mainMenu_hp_fkeys,
 #endif
     mainMenu_line2,
     mainMenu_suspend,
@@ -147,7 +154,7 @@ typedef enum {
     vtMenu_cursesemul,
     vtMenu_visualbell,
     vtMenu_marginbell,
-    vtMenu_altscreen,
+    vtMenu_titeInhibit,
 #ifndef NO_ACTIVE_ICON
     vtMenu_activeicon,
 #endif /* NO_ACTIVE_ICON */
@@ -159,6 +166,7 @@ typedef enum {
     vtMenu_tekshow,
     vtMenu_tekmode,
     vtMenu_vthide,
+    vtMenu_altscreen,
     vtMenu_LAST
 } vtMenuIndices;
 
@@ -176,9 +184,14 @@ typedef enum {
 #define fontMenu_lastBuiltin fontMenu_font6
     fontMenu_fontescape,
     fontMenu_fontsel,
+/* number of non-line items down to here should match NMENUFONTS in ptyx.h */
+#if OPT_DEC_CHRSET
+    fontMenu_line1,
+    fontMenu_font_doublesize,
+    fontMenu_font_loadable,
+#endif
     fontMenu_LAST
 } fontMenuIndices;
-/* number of non-line items should match NMENUFONTS in ptyx.h */
 
 
 /*
@@ -261,6 +274,15 @@ typedef enum {
 		    sunKeyboard)
 #endif
 
+#if OPT_HP_FUNC_KEYS
+#define update_hp_fkeys() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_hp_fkeys].widget, \
+		    hpFunctionKeys)
+#else
+#define update_hp_fkeys() /*nothing*/
+#endif
+
 #define update_scrollbar() \
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_scrollbar].widget, \
@@ -315,7 +337,7 @@ typedef enum {
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_allow132].widget, \
 		    term->screen.c132)
-  
+
 #define update_cursesemul() \
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_cursesemul].widget, \
@@ -336,12 +358,35 @@ typedef enum {
 		    vtMenuEntries[vtMenu_altscreen].widget, \
 		    term->screen.alternate)
 
+#define update_titeInhibit() \
+  update_menu_item (term->screen.vtMenu, \
+		    vtMenuEntries[vtMenu_titeInhibit].widget, \
+		    !(term->misc.titeInhibit))
+
 #ifndef NO_ACTIVE_ICON
 #define update_activeicon() \
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_activeicon].widget, \
 		    term->misc.active_icon)
 #endif /* NO_ACTIVE_ICON */
+
+#if OPT_DEC_CHRSET
+#define update_font_doublesize() \
+  update_menu_item (term->screen.fontMenu, \
+		    fontMenuEntries[fontMenu_font_doublesize].widget, \
+		    term->screen.font_doublesize)
+#else
+#define update_font_doublesize() /* nothing */
+#endif
+
+#if OPT_DEC_SOFTFONT
+#define update_font_loadable() \
+  update_menu_item (term->screen.fontMenu, \
+		    fontMenuEntries[fontMenu_font_loadable].widget, \
+		    term->misc.font_loadable)
+#else
+#define update_font_loadable() /* nothing */
+#endif
 
 #if OPT_TEK4014
 #define update_tekshow() \

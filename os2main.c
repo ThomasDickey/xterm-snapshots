@@ -247,6 +247,9 @@ static struct _resource {
 #if OPT_SUNPC_KBD
     Boolean sunKeyboard;
 #endif
+#if OPT_HP_FUNC_KEYS
+    Boolean hpFunctionKeys;
+#endif
     Boolean wait_for_map;
     Boolean useInsertMode;
 #if OPT_ZICONBEEP
@@ -285,6 +288,10 @@ static XtResource application_resources[] = {
 #if OPT_SUNPC_KBD
     {"sunKeyboard", "SunKeyboard", XtRBoolean, sizeof (Boolean),
 	offset(sunKeyboard), XtRString, "false"},
+#endif
+#if OPT_HP_FUNC_KEYS
+    {"hpFunctionKeys", "HpFunctionKeys", XtRBoolean, sizeof (Boolean),
+	offset(hpFunctionKeys), XtRString, "false"},
 #endif
     {"waitForMap", "WaitForMap", XtRBoolean, sizeof (Boolean),
         offset(wait_for_map), XtRString, "false"},
@@ -352,6 +359,10 @@ static XrmOptionDescRec optionDescList[] = {
 #endif /* NO_ACTIVE_ICON */
 #if OPT_HIGHLIGHT_COLOR
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
+#endif
+#if OPT_HP_FUNC_KEYS
+{"-hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "on"},
+{"+hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 {"-j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -462,6 +473,9 @@ static struct _options {
 #if OPT_HIGHLIGHT_COLOR
 { "-hc",		   "selection background color" },
 #endif
+#if OPT_HP_FUNC_KEYS
+{ "-/+hf",                 "turn on/off HP Function Key escape codes" },
+#endif
 { "-/+im",		   "use insert mode for TERMCAP" },
 { "-/+j",                  "turn on/off jump scroll" },
 #ifdef ALLOWLOGGING
@@ -490,7 +504,9 @@ static struct _options {
 { "-/+si",                 "turn on/off scroll-on-tty-output inhibit" },
 { "-/+sk",                 "turn on/off scroll-on-keypress" },
 { "-sl number",            "number of scrolled lines to save" },
+#if OPT_SUNPC_KBD
 { "-/+sp",                 "turn on/off Sun/PC Function/Keypad mapping" },
+#endif
 #if OPT_TEK4014
 { "-/+t",                  "turn on/off Tek emulation window" },
 #endif
@@ -896,6 +912,9 @@ main (int argc, char **argv, char **envp)
 	sunFunctionKeys = resource.sunFunctionKeys;
 #if OPT_SUNPC_KBD
 	sunKeyboard = resource.sunKeyboard;
+#endif
+#if OPT_HP_FUNC_KEYS
+	hpFunctionKeys = resource.hpFunctionKeys;
 #endif
 	if (strcmp(xterm_name, "-") == 0) xterm_name = DFT_TERMTYPE;
 	if (resource.icon_geometry != NULL) {

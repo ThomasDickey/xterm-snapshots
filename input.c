@@ -45,6 +45,9 @@ static char *cur = "HDACB  FE";
 
 static int decfuncvalue (KeySym keycode);
 static int sunfuncvalue (KeySym keycode);
+#if OPT_HP_FUNC_KEYS
+static int hpfuncvalue (KeySym keycode);
+#endif
 
 static void
 AdjustAfterInput (register TScreen *screen)
@@ -187,6 +190,13 @@ Input (
 	}
 #endif
 
+#if OPT_HP_FUNC_KEYS
+	if (hpFunctionKeys
+	 && (reply.a_final = hpfuncvalue (keysym)) != 0) {
+		reply.a_type = ESC;
+		unparseseq(&reply, pty);
+	} else
+#endif
 	if (IsPFKey(keysym)) {
 		reply.a_type = SS3;
 		reply.a_final = keysym-XK_KP_F1+'P';
@@ -368,6 +378,43 @@ decfuncvalue (KeySym keycode)
 	}
 }
 
+#if OPT_HP_FUNC_KEYS
+static int
+hpfuncvalue (KeySym  keycode)
+{
+  	switch (keycode) {
+		case XK_Up:		return('A');
+		case XK_Down:		return('B');
+		case XK_Right:		return('C');
+		case XK_Left:		return('D');
+		case XK_End:		return('F');
+		case XK_Clear:		return('J');
+		case XK_Delete:		return('P');
+		case XK_Insert:		return('Q');
+		case XK_Next:		return('S');
+		case XK_Prior:		return('T');
+		case XK_Home:		return('h');
+		case XK_F1:		return('p');
+		case XK_F2:		return('q');
+		case XK_F3:		return('r');
+		case XK_F4:		return('s');
+		case XK_F5:		return('t');
+		case XK_F6:		return('u');
+		case XK_F7:		return('v');
+		case XK_F8:		return('w');
+#ifdef XK_KP_Insert
+		case XK_KP_Delete:	return('P');
+		case XK_KP_Insert:	return('Q');
+#endif
+#ifdef DXK_Remove
+		case DXK_Remove:	return('P');
+#endif
+		case XK_Select:		return('F');
+		case XK_Find:		return('h');
+		default:		return 0;
+	}
+}
+#endif
 
 static int
 sunfuncvalue (KeySym  keycode)

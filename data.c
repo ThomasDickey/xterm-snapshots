@@ -86,9 +86,13 @@ int debug = 0; 		/* true causes error messages to be displayed */
 #endif	/* DEBUG */
 
 XtAppContext app_con;
-XtermWidget term;		/* master data structure for client */
+XtermWidget term;	/* master data structure for client */
 char *xterm_name;	/* argv[0] */
 Boolean sunFunctionKeys;
+
+#if OPT_HP_FUNC_KEYS
+Boolean hpFunctionKeys;
+#endif
 
 #if OPT_ZICONBEEP
 int zIconBeep;  /* non-zero means beep; see charproc.c for details -IAN! */

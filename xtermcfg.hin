@@ -51,8 +51,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef NO_ACTIVE_ICON	/* CF_ARG_DISABLE(active-icon) */
 #undef OWN_TERMINFO_DIR	/* AC_ARG_WITH(own-terminfo) */
 #undef OPT_AIX_COLORS	/* CF_ARG_DISABLE(16-color) */
+#undef OPT_BOX_CHARS	/* CF_ARG_DISABLE(boxchars) */
 #undef OPT_DEC_CHRSET	/* CF_ARG_DISABLE(doublechars) */
 #undef OPT_HIGHLIGHT_COLOR /* CF_ARG_DISABLE(highlighting) */
+#undef OPT_HP_FUNC_KEYS	/* CF_ARG_ENABLE(hp-fkeys) */
 #undef OPT_I18N_SUPPORT	/* CF_ARG_DISABLE(i18n) */
 #undef OPT_INPUT_METHOD	/* CF_ARG_DISABLE(input-method) */
 #undef OPT_ISO_COLORS	/* CF_ARG_DISABLE(ansi-color) */

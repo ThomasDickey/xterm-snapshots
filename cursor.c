@@ -107,7 +107,7 @@ CursorForward(register TScreen *screen, int n)
 	_CheckSelection(screen);
 }
 
-/* 
+/*
  * moves the cursor down n, no scrolling.
  * Won't pass bottom margin or bottom of screen.
  */
@@ -126,7 +126,7 @@ CursorDown(register TScreen *screen, int n)
 	_CheckSelection(screen);
 }
 
-/* 
+/*
  * moves the cursor up n, no linestarving.
  * Won't pass top margin or top of screen.
  */
@@ -145,7 +145,7 @@ CursorUp(register TScreen *screen, int n)
 	_CheckSelection(screen);
 }
 
-/* 
+/*
  * Moves cursor down amount lines, scrolls if necessary.
  * Won't leave scrolling region. No carriage return.
  */
@@ -154,7 +154,7 @@ Index(register TScreen *screen, register int amount)
 {
 	register int j;
 
-	/* 
+	/*
 	 * indexing when below scrolling region is cursor down.
 	 * if cursor high enough, no scrolling necessary.
 	 */
@@ -205,9 +205,10 @@ CarriageReturn(register TScreen *screen)
  * Save Cursor and Attributes
  */
 void
-CursorSave(register XtermWidget tw, register SavedCursor *sc)
+CursorSave(register XtermWidget tw)
 {
 	register TScreen *screen = &tw->screen;
+	register SavedCursor *sc = &screen->sc[screen->alternate != False];
 
 	sc->saved = True;
 	sc->row = screen->cur_row;
@@ -233,9 +234,10 @@ CursorSave(register XtermWidget tw, register SavedCursor *sc)
  * Restore Cursor and Attributes
  */
 void
-CursorRestore(register XtermWidget tw, register SavedCursor *sc)
+CursorRestore(register XtermWidget tw)
 {
 	register TScreen *screen = &tw->screen;
+	register SavedCursor *sc = &screen->sc[screen->alternate != False];
 
 	/* Restore the character sets, unless we never did a save-cursor op.
 	 * In that case, we'll reset the character sets.
@@ -270,7 +272,7 @@ void
 CursorNextLine(TScreen *screen, int count)
 {
 	CursorDown(screen, count < 1 ? 1 : count);
-	CarriageReturn(screen); 	
+	CarriageReturn(screen);
 	do_xevents();
 }
 

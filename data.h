@@ -70,6 +70,9 @@ extern char *ptydev;
 extern char *ttydev;
 extern char *xterm_name;
 extern Boolean sunFunctionKeys;
+#if OPT_HP_FUNC_KEYS
+extern Boolean hpFunctionKeys;
+#endif
 #if OPT_ZICONBEEP 
 extern int zIconBeep; 
 extern Boolean zIconBeep_flagged; 
