@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.2 1996/03/10 12:15:23 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.4 1996/08/20 12:33:54 dawes Exp $ */
 
 /***********************************************************
 
@@ -229,7 +229,6 @@ static int tslot;
 static jmp_buf env;
 
 char *ProgramName;
-Boolean sunFunctionKeys;
 
 static struct _resource {
     char *xterm_name;
@@ -1129,6 +1128,7 @@ SIGNAL_T killit(int sig)
 	switch (whoami) {
 	case -1:
 		signal(sig,killit);
+		kill(-getpid(),sig);
 		break;
 	case THE_PARENT:
 		wait(NULL);
@@ -1145,9 +1145,6 @@ SIGNAL_T killit(int sig)
 
 	SIGNAL_RETURN;
 }
-
-
-
 
 spawn ()
 /* 
@@ -1501,12 +1498,34 @@ opencons();*/
 			else
 				shname = ptr;
 
-			execlpe (ptr, shname, 0, gblenvp);
+			if (command_to_exec) {
+				char *exargv[10]; /*XXX*/
 
+				exargv[0] = ptr;
+				exargv[1] = "/C";
+				exargv[2] = command_to_exec[0];
+				exargv[3] = command_to_exec[1];
+				exargv[4] = command_to_exec[2];
+				exargv[5] = command_to_exec[3];
+				exargv[6] = command_to_exec[4];
+				exargv[7] = command_to_exec[5];
+				exargv[8] = command_to_exec[6];
+				exargv[9] = 0;
+				execvpe(exargv[0],exargv,gblenvp);
+/*
+				execvpe(*command_to_exec, command_to_exec,
+					gblenvp);
+*/
+				/* print error message on screen */
+				fprintf(stderr, "%s: Can't execvp %s\n", 
+					xterm_name, *command_to_exec);
+			} else {
+				execlpe (ptr, shname, 0, gblenvp);
 
-			/* Exec failed. */
-			fprintf (stderr, "%s: Could not exec %s!\n", 
-				xterm_name, ptr);
+				/* Exec failed. */
+				fprintf (stderr, "%s: Could not exec %s!\n", 
+					xterm_name, ptr);
+			}
 			sleep(5);
 
 			/* preventively shoot the parent */

@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/83 1995/12/15 14:06:17 gildea $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.6 1996/03/10 12:15:29 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.10 1996/08/23 11:06:23 dawes Exp $
 .\" Copyright (c) 1989  X Consortium
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining
@@ -25,6 +25,8 @@
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
+.\"
+.\" updated by Thomas Dickey <dickey@clark.net> for XFree86, July 1996.
 .TH XTERM 1 "Release 6.1" "X Version 11"
 .SH NAME
 xterm \- terminal emulator for X
@@ -54,9 +56,10 @@ the ``VT Options'' menu in the VT102 window, and the ``Tek Options''
 menu in the 4014 window.
 .SH EMULATIONS
 The VT102 emulation is fairly complete, but does not support
-smooth scrolling, VT52 mode,
-the blinking
-character attribute nor the double-wide and double-size character sets.
+VT52 mode,
+autorepeat,
+the blinking character attribute
+nor the double-wide and double-size character sets.
 .IR Termcap (5)
 entries that work with
 .I xterm
@@ -420,7 +423,7 @@ need to have the session startup and reset programs explicitly change the
 ownership of the console device in order to get this option to work.
 .TP 8
 .B \-S\fIccn\fP
-This option specifies the last two letters of the name of a pseudoterminal
+This option specifies the last two letters of the name of a pseudo-terminal
 to use in slave mode, plus the number of the inherited file descriptor.
 The option is parsed ``%c%c%d''.
 This allows \fIxterm\fP to be used as an input and
@@ -596,6 +599,11 @@ The default is ``false.''
 Specifies whether or not auto-wraparound should be enabled.  The
 default is ``true.''
 .TP 8
+.B "awaitInput (\fPclass\fB AwaitInput)"
+Specifies whether or not the xterm uses a 50 millisecond timeout to
+await input (i.e., to support the Xaw3d arrow scrollbar).
+The default is ``false.''
+.TP 8
 .B "bellSuppressTime (\fPclass\fB BellSuppressTime)"
 Number of milliseconds after a bell command is sent during which additional
 bells will be suppressed.  Default is 200.  If set non-zero,
@@ -712,6 +720,11 @@ Specifies the color to use for displaying text in the window.  Setting the
 class name instead of the instance name is an easy way to have everything
 that would normally appear in the text color change color.  The default
 is ``black.''
+.\" .TP 8
+.\" .B "cursorBlinkTime (\fPclass\fB CursorBlinkTime)"
+.\" Specifies the cursor blink cycle-time
+.\" (i.e., the time to turn the cursor on and off).
+.\" The default is 0, which disables blinking.
 .TP 8
 .B "cursorColor (\fPclass\fB Foreground)"
 Specifies the color to use for the text cursor.  The default is ``black.''
@@ -726,6 +739,11 @@ The default is ``true.''
 .B "eightBitOutput (\fPclass\fB EightBitOutput\fP)"
 Specifies whether or not eight-bit characters sent from the host should be
 accepted as is or stripped when printed.  The default is ``true.''
+.TP 8
+.B "eightBitControl (\fPclass\fB EightBitControl\fP)"
+Specifies whether or not control sequences sent by the
+terminal should be eight-bit characters or escape sequences.
+The default is ``false.''
 .TP 8
 .B "font (\fPclass\fB Font)"
 Specifies the name of the normal font.  The default is ``fixed.''
@@ -751,11 +769,18 @@ Specifies the name of the sixth alternative font.
 .B "geometry (\fPclass\fB Geometry)"
 Specifies the preferred size and position of the VT102 window.
 .TP 8
+.B "highlightSelection (\fPclass\fB HighlightSelection)"
+If false, selecting with the mouse highlights all positions on the screen
+between the beginning of the selection and the current position.
+If true, \fIxterm\fP highlights only the positions that contain text that
+can be selected.
+The default is ``false.''
+.TP 8
 .B "hpLowerleftBugCompat (\fPclass\fB HpLowerleftBugCompat)"
 Specifies whether to work around a bug in HP's \fIxdb\fP,
 which ignores termcap and always sends
 ESC F to move to the lower left corner.
-``true'' causes xterm to interpret ESC F as a request to move to the
+``true'' causes \fIxterm\fP to interpret ESC F as a request to move to the
 lower left corner of the screen.  The default is ``false.''
 .TP 8
 .B "internalBorder (\fPclass\fB BorderWidth)"
@@ -934,6 +959,15 @@ This entry invokes the \fBredraw()\fP action.
 .B "line1 (\fPclass\fB SmeLine)"
 This is a separator.
 .TP 8
+.B "8-bit-control (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-8-bit-control(toggle)\fP action.
+.TP 8
+.B "sun-function-keys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBsun-function-keys(toggle)\fP action.
+.TP 8
+.B "line2 (\fPclass\fB SmeLine)"
+This is a separator.
+.TP 8
 .B "suspend (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsend-signal(tstp)\fP action on systems that
 support job control.
@@ -954,7 +988,7 @@ This entry invokes the \fBsend-signal(term)\fP action.
 .B "kill (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsend-signal(kill)\fP action.
 .TP 8
-.B "line2 (\fPclass\fB SmeLine)"
+.B "line3 (\fPclass\fB SmeLine)"
 This is a separator.
 .TP 8
 .B "quit (\fPclass\fB SmeBSB)"
@@ -1809,4 +1843,6 @@ Edward Moy (Berkeley), Ralph R. Swick (MIT-Athena),
 Mark Vandevoorde (MIT-Athena), Bob McNamara (DEC-MAD),
 Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X 
-Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena)
+Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
+David Wexelblat and
+Thomas Dickey (XFree86 Project).

@@ -1,6 +1,6 @@
 /*
  * $XConsortium: Tekproc.c /main/118 1996/01/14 16:52:29 kaleb $
- * $XFree86: xc/programs/xterm/Tekproc.c,v 3.11 1996/03/17 11:44:01 dawes Exp $
+ * $XFree86: xc/programs/xterm/Tekproc.c,v 3.12 1996/08/13 11:36:43 dawes Exp $
  *
  * Warning, there be crufty dragons here.
  */
@@ -66,6 +66,7 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/Xmu/CharSet.h>
 
 #include <stdio.h>
+#include <ctype.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -124,19 +125,15 @@ extern long time();		/* included in <time.h> by Xos.h */
 
 /* Tek defines */
 
-#define	BEL		07
-#define	CANCEL		030
 #define	DOTDASHEDLINE	2
 #define	DOTTEDLINE	1
 #define	EAST		01
-#define	ETX		03
 #define	LINEMASK	07
 #define	LONGDASHEDLINE	4
 #define	MARGIN1		0
 #define	MARGIN2		1
 #define MAX_PTS		150
 #define MAX_VTX		300
-#define	NAK		025
 #define	NORTH		04
 #define	PENDOWN		1
 #define	PENUP		0
@@ -193,8 +190,6 @@ extern int Tipltable[];
 extern int Tplttable[];
 extern int Tpttable[];
 extern int Tspttable[];
-
-extern XtAppContext app_con;
 
 static int *curstate = Talptable;
 static int *Tparsestate = Talptable;
@@ -649,10 +644,8 @@ static void Tekparse()
 			if(screen->TekGIN)
 				TekGINoff();
 			TCursorDown();
-			if (!TekRefresh &&
-			    (XtAppPending(app_con) ||
-			     GetBytesAvailable (ConnectionNumber(screen->display)) > 0))
-			  xevents();
+			if (!TekRefresh)
+				do_xevents();
 			break;
 
 		 case CASE_SP:
@@ -676,8 +669,22 @@ static void Tekparse()
 			TCursorForward();
 			break;
 		 case CASE_OSC:
+			/* FIXME:  someone should disentangle the input queues
+			 * of this code so that it can be state-driven.
+			 */
 			/* do osc escape */
-			do_osc(Tinput);
+			{
+				Char buf2[512];
+				int c2, len = 0;
+				while ((c2 = Tinput()) != BEL) {
+					if (!isprint(c2 & 0x7f)
+					 || len+2 >= sizeof(buf2))
+						break;
+					buf2[len++] = c2;
+				}
+				if (c2 == BEL)
+					do_osc(buf2, len);
+			}
 			Tparsestate = curstate;
 			break;
 		}
@@ -1132,7 +1139,7 @@ TekGINoff()
 	if(GINcursor)
 		XFreeCursor(screen->display, GINcursor);
 	if(screen->TekGIN) {
-		*screen->TekGIN = CANCEL;	/* modify recording */
+		*screen->TekGIN = CAN;	/* modify recording */
 		screen->TekGIN = NULL;
 	}
 }
@@ -1764,8 +1771,9 @@ TekCopy()
 	    tekcopyfd = open(buf, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	    if (tekcopyfd < 0)
 		_exit(1);
-	    sprintf(initbuf, "\033%c\033%c", screen->page.fontsize + '8',
-		    screen->page.linetype + '`');
+	    sprintf(initbuf, "%c%c%c%c",
+	    	ESC, screen->page.fontsize + '8',
+		ESC, screen->page.linetype + '`');
 	    write(tekcopyfd, initbuf, 4);
 	    Tp = &Tek0; 
 	    do {

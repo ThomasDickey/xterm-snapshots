@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/66 1995/12/09 08:58:41 kaleb $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.10 1996/03/10 12:15:24 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.15 1996/08/23 11:06:20 dawes Exp $
  */
 
 /*
@@ -162,18 +162,24 @@ typedef Char **ScrnBuf;
  * ANSI emulation.
  */
 #define INQ	0x05
+#define BEL	0x07
 #define	FF	0x0C			/* C0, C1 control names		*/
 #define	LS1	0x0E
 #define	LS0	0x0F
+#define	NAK	0x15
 #define	CAN	0x18
 #define	SUB	0x1A
 #define	ESC	0x1B
 #define US	0x1F
 #define	DEL	0x7F
 #define HTS     ('H'+0x40)
+#define	RI	0x8D
 #define	SS2	0x8E
 #define	SS3	0x8F
 #define	DCS	0x90
+#define	SPA	0x96
+#define	EPA	0x97
+#define	SOS	0x98
 #define	OLDID	0x9A			/* ESC Z			*/
 #define	CSI	0x9B
 #define	ST	0x9C
@@ -275,6 +281,14 @@ typedef struct {
 
 /***====================================================================***/
 
+#define OPT_ISO_COLORS  1 /* true if xterm is configured with ISO colors */
+#define OPT_BLINK_CURS  0 /* FIXME: do this later (96/7/31) */
+
+/***====================================================================***/
+
+#if OPT_ISO_COLORS
+#define if_OPT_ISO_COLORS(screen, code) if(screen->colorMode) code
+#define TERM_COLOR_FLAGS (term->flags & (FG_COLOR|BG_COLOR))
 #define MAXCOLORS 18
 #define COLOR_0		0
 #define COLOR_1		1
@@ -294,20 +308,35 @@ typedef struct {
 #define COLOR_15	15
 #define COLOR_BD	16
 #define COLOR_UL	17
+#else
+#define if_OPT_ISO_COLORS(screen, code) /* nothing */
+#define TERM_COLOR_FLAGS 0
+#endif	/* OPT_ISO_COLORS */
 
-#define MAX_PTRS 4	/* the number of pointers per row in 'ScrnBuf' */
+	/* the number of pointers per row in 'ScrnBuf' */
+#if OPT_ISO_COLORS
+#define MAX_PTRS term->num_ptrs
+#else
+#define MAX_PTRS 2
+#endif
 
 	/* ScrnBuf-level macros */
 #define BUF_CHARS(buf, row) (buf[MAX_PTRS * (row) + 0])
 #define BUF_ATTRS(buf, row) (buf[MAX_PTRS * (row) + 1])
+
+#if OPT_ISO_COLORS
 #define BUF_FORES(buf, row) (buf[MAX_PTRS * (row) + 2])
 #define BUF_BACKS(buf, row) (buf[MAX_PTRS * (row) + 3])
+#endif
 
 	/* TScreen-level macros */
 #define SCRN_BUF_CHARS(screen, row) BUF_CHARS(screen->buf, row)
 #define SCRN_BUF_ATTRS(screen, row) BUF_ATTRS(screen->buf, row)
+
+#if OPT_ISO_COLORS
 #define SCRN_BUF_FORES(screen, row) BUF_FORES(screen->buf, row)
 #define SCRN_BUF_BACKS(screen, row) BUF_BACKS(screen->buf, row)
+#endif
 
 typedef struct {
 /* These parameters apply to both windows */
@@ -333,12 +362,12 @@ typedef struct {
 	Pixel		cursorcolor;	/* Cursor color			*/
 	Pixel		mousecolor;	/* Mouse color			*/
 	Pixel		mousecolorback;	/* Mouse color background	*/
+#if OPT_ISO_COLORS
 	Pixel		Acolors[MAXCOLORS]; /* ANSI color emulation	*/
-	Pixel		original_fg;	/* reference for SGR reset fg	*/
-	Pixel		original_bg;	/* reference for SGR reset bg	*/
 	Boolean		colorMode;	/* are we using color mode?	*/
 	Boolean		colorULMode;	/* use color for underline?	*/
 	Boolean		colorBDMode;	/* use color for bold?		*/
+#endif
 	int		border;		/* inner border			*/
 	Cursor		arrow;		/* arrow cursor			*/
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
@@ -346,6 +375,7 @@ typedef struct {
 	int		select;		/* xterm selected		*/
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
+	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
 #ifdef ALLOWLOGGING
 	int		logging;	/* logging mode			*/
@@ -373,7 +403,11 @@ typedef struct {
 	int		enbolden;	/* overstrike for bold font	*/
 	XPoint		*box;		/* draw unselected cursor	*/
 
-	int		cursor_state;	/* ON or OFF			*/
+	int		cursor_state;	/* ON, OFF, or BLINKED_OFF	*/
+#if OPT_BLINK_CURS
+	int		cursor_blink;	/* blink-rate (0=off) msecs	*/
+	XtIntervalId	cursor_timer;	/* timer-id for cursor-proc	*/
+#endif
 	int		cursor_set;	/* requested state		*/
 	int		cursor_col;	/* previous cursor column	*/
 	int		cursor_row;	/* previous cursor row		*/
@@ -428,8 +462,10 @@ typedef struct {
 	char		curgl;		/* Current GL setting.		*/
 	char		curgr;		/* Current GR setting.		*/
 	char		curss;		/* Current single shift.	*/
+	int		ansi_level;	/* 0=vt100, 1,2,3 = vt100 ... vt320 */
 	int		scroll_amt;	/* amount to scroll		*/
 	int		refresh_amt;	/* amount to refresh		*/
+	int		protected_mode;	/* 0=off, 1=DEC, 2=ISO		*/
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
 	Boolean         always_highlight; /* whether to highlight cursor */
 	Boolean		underline;	/* whether to underline text	*/
@@ -470,6 +506,7 @@ typedef struct {
 	char		*charClass;	/* for overriding word selection */
 	Boolean		cutNewline;	/* whether or not line cut has \n */
 	Boolean		cutToBeginningOfLine;  /* line cuts to BOL? */
+	Boolean		highlight_selection; /* controls appearance of selection */
 	char		*selection;	/* the current selection */
 	int		selection_size; /* size of allocated buffer */
 	int		selection_length; /* number of significant bytes */
@@ -482,6 +519,7 @@ typedef struct {
 	Cardinal	selection_count; /* how many atoms in use */
 	Boolean		input_eight_bits;/* use 8th bit instead of ESC prefix */
 	Boolean		output_eight_bits; /* honor all bits or strip */
+	Boolean		control_eight_bits; /* send CSI as 8-bits */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
 	Widget		mainMenu, vtMenu, tekMenu, fontMenu;
 	char*		menu_font_names[NMENUFONTS];
@@ -569,6 +607,9 @@ typedef struct _XtermWidgetRec {
     unsigned	flags;		/* mode flags			*/
     unsigned    cur_foreground;	/* current foreground color	*/
     unsigned    cur_background;	/* current background color	*/
+#if OPT_ISO_COLORS
+    int         num_ptrs;	/* number of pointers per row in 'ScrnBuf' */
+#endif
     unsigned	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
     Misc	misc;		/* miscellaneous parameters	*/
@@ -590,13 +631,17 @@ typedef struct _TekWidgetRec {
  * term->flags and screen->save_modes.  This need only fit in an unsigned.
  */
 
-#define	ATTRIBUTES	0x67	/* mask: user-visible attributes */
 /* global flags and character flags (visible character attributes) */
 #define INVERSE		0x01	/* invert the characters to be output */
 #define UNDERLINE	0x02	/* true if underlining */
 #define BOLD		0x04
+/* global flags (also character attributes) */
+#define BG_COLOR	0x08  /* true if background set */
+#define FG_COLOR	0x10  /* true if foreground set */
+
 /* character flags (internal attributes) */
-#define LINEWRAPPED	0x08	/* used on the first character in a
+#define PROTECTED	0x20	/* a character is drawn that cannot be erased */
+#define LINEWRAPPED	0x40	/* used on the first character in a
 				 * line to indicate that it wraps onto
 				 * the next line so we can tell the
 				 * difference between lines that have
@@ -604,12 +649,12 @@ typedef struct _TekWidgetRec {
 				 * ended naturally with a CR at column
 				 * max_col.
 				 */
-#define CHARDRAWN	0x10    /* a character has been drawn here on the
+#define CHARDRAWN	0x80    /* a character has been drawn here on the
 				   screen.  Used to distinguish blanks from
 				   empty parts of the screen when selecting */
-/* global flags */
-#define BG_COLOR	0x20  /* true if background set */
-#define FG_COLOR	0x40  /* true if foreground set */
+
+			/* mask: user-visible attributes */
+#define	ATTRIBUTES	(INVERSE|UNDERLINE|BOLD|BG_COLOR|FG_COLOR|INVISIBLE|PROTECTED)
 
 #define WRAPAROUND	0x400	/* true if auto wraparound mode */
 #define	REVERSEWRAP	0x800	/* true if reverse wraparound mode */
@@ -619,7 +664,19 @@ typedef struct _TekWidgetRec {
 #define INSERT		0x8000	/* true if in insert mode */
 #define SMOOTHSCROLL	0x10000	/* true if in smooth scroll mode */
 #define IN132COLUMNS	0x20000	/* true if in 132 column mode */
+#define INVISIBLE	0x40000	/* true if writing invisible text */
 
+/*
+ * If we've set protected attributes with the DEC-style DECSCA, then we'll have
+ * to use DECSED or DECSEL to erase preserving protected text.  (The normal ED,
+ * EL won't preserve protected-text).  If we've used SPA, then normal ED and EL
+ * will preserve protected-text.  To keep things simple, just remember the last
+ * control that was used to begin protected-text, and use that to determine how
+ * erases are performed (otherwise we'd need 2 bits per protected character).
+ */
+#define OFF_PROTECT 0
+#define DEC_PROTECT 1
+#define ISO_PROTECT 2
 
 #define VWindow(screen)		(screen->fullVwin.window)
 #define VShellWindow		term->core.parent->core.window
@@ -665,6 +722,7 @@ typedef struct Tek_Link
 /* flags for cursors */
 #define	OFF		0
 #define	ON		1
+#define	BLINKED_OFF	2
 #define	CLEAR		0
 #define	TOGGLE		1
 

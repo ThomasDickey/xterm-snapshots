@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: cursor.c,v 1.14 93/09/20 17:42:23 hersh Exp $
- *	$XFree86: xc/programs/xterm/cursor.c,v 3.1 1996/01/10 05:51:39 dawes Exp $
+ *	$XFree86: xc/programs/xterm/cursor.c,v 3.3 1996/08/20 12:33:48 dawes Exp $
  */
 
 /*
@@ -30,9 +30,8 @@
 
 #include "ptyx.h"		/* also gets Xlib.h */
 
+#include "data.h"
 #include "xterm.h"
-
-extern XtermWidget term;	/* %%% gross */
 
 static void _CheckSelection PROTO((TScreen *screen));
 
@@ -41,7 +40,8 @@ register TScreen *screen;
 {
     if (screen->cur_row > screen->endHRow ||
 	(screen->cur_row == screen->endHRow &&
-	 screen->cur_col >= screen->endHCol)) {}
+	 screen->cur_col >= screen->endHCol))
+	 ;
     else
 	DisownSelection(term);
 }
@@ -85,7 +85,8 @@ int		n;
 	register int i, j, k, rev;
 
 	if((rev = (term->flags & (REVERSEWRAP | WRAPAROUND)) ==
-	 (REVERSEWRAP | WRAPAROUND)) && screen->do_wrap)
+	                         (REVERSEWRAP | WRAPAROUND)) != 0
+	 && screen->do_wrap)
 		n--;
 	if ((screen->cur_col -= n) < 0) {
 		if(rev) {
@@ -210,6 +211,7 @@ register int	amount;
 
 /*
  * Moves Cursor To First Column In Line
+ * (Note: xterm doesn't implement SLH, SLL which would affect use of this)
  */
 void
 CarriageReturn(screen)
@@ -255,4 +257,30 @@ register SavedCursor *sc;
 	tw->flags |= sc->flags & (BOLD|INVERSE|UNDERLINE|ORIGIN);
 	CursorSet (screen, (tw->flags & ORIGIN) ? sc->row - screen->top_marg
 			   : sc->row, sc->col, tw->flags);
+}
+
+/*
+ * Move the cursor to the first column of the n-th next line.
+ */
+void
+CursorNextLine(screen, count)
+	TScreen *screen;
+	int count;
+{
+	CursorDown(screen, count < 1 ? 1 : count);
+	CarriageReturn(screen); 	
+	do_xevents();
+}
+
+/*
+ * Move the cursor to the first column of the n-th previous line.
+ */
+void
+CursorPrevLine(screen, count)
+	TScreen *screen;
+	int count;
+{
+	CursorUp(screen, count < 1 ? 1 : count);
+	CarriageReturn(screen);
+	do_xevents();
 }

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: data.h /main/12 1996/01/14 16:52:48 kaleb $
- *	$XFree86: xc/programs/xterm/data.h,v 3.1 1996/02/12 12:18:26 dawes Exp $
+ *	$XFree86: xc/programs/xterm/data.h,v 3.2 1996/08/13 11:36:57 dawes Exp $
  */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -32,6 +32,8 @@
 #define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
 #endif
 
+extern XtAppContext app_con;
+
 extern TekLink *TekRefresh;
 extern XPoint T_box2[];
 extern XPoint T_box3[];
@@ -49,6 +51,7 @@ extern char log_def_name[];
 extern char *ptydev;
 extern char *ttydev;
 extern char *xterm_name;
+extern Boolean sunFunctionKeys;
 extern Char buffer[];
 extern int T_lastx;
 extern int T_lasty;
