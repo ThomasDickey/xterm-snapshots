@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.21 1997/05/25 14:41:27 dawes Exp $
+ *	$XFree86: xc/programs/xterm/resize.c,v 3.22 1997/06/11 12:24:57 dawes Exp $
  */
 
 /*
@@ -282,6 +282,7 @@ main (argc, argv)
 #endif /* USE_TERMIOS */
 #endif /* USE_SYSV_TERMIO */
 #ifdef USE_TERMCAP
+	int ok_tcap = 1;
 	char termcap [1024];
 	char newtc [1024];
 #endif /* USE_TERMCAP */
@@ -378,11 +379,8 @@ main (argc, argv)
 		setname = "setenv TERM xterm;\n";
 	}
 	termcap[0] = 0;	/* ...just in case we've accidentally gotten terminfo */
-	if(tgetent (termcap, env) <= 0) {
-	    fprintf(stderr, "%s: Can't get entry \"%s\"\n",
-		    myname, env);
-	    exit(1);
-	}
+	if(tgetent (termcap, env) <= 0 || termcap[0] == 0)
+	    ok_tcap = 0;
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
 	if(!(env = getenv("TERM")) || !*env) {
@@ -495,37 +493,40 @@ main (argc, argv)
 	signal(SIGTERM, SIG_DFL);
 
 #ifdef USE_TERMCAP
-	/* update termcap string */
-	/* first do columns */
-	if ((ptr = strindex (termcap, "co#")) == NULL) {
-		fprintf(stderr, "%s: No `co#'\n", myname);
-		exit (1);
+	if (ok_tcap) {
+		/* update termcap string */
+		/* first do columns */
+		if ((ptr = strindex (termcap, "co#")) == NULL) {
+			fprintf(stderr, "%s: No `co#'\n", myname);
+			exit (1);
+		}
+
+		i = ptr - termcap + 3;
+		strncpy (newtc, termcap, i);
+		sprintf (newtc + i, "%d", cols);
+		ptr = strchr(ptr, ':');
+		strcat (newtc, ptr);
+
+		/* now do lines */
+		if ((ptr = strindex (newtc, "li#")) == NULL) {
+			fprintf(stderr, "%s: No `li#'\n", myname);
+			exit (1);
+		}
+
+		i = ptr - newtc + 3;
+		strncpy (termcap, newtc, i);
+		sprintf (termcap + i, "%d", rows);
+		ptr = strchr(ptr, ':');
+		strcat (termcap, ptr);
 	}
-
-	i = ptr - termcap + 3;
-	strncpy (newtc, termcap, i);
-	sprintf (newtc + i, "%d", cols);
-	ptr = strchr(ptr, ':');
-	strcat (newtc, ptr);
-
-	/* now do lines */
-	if ((ptr = strindex (newtc, "li#")) == NULL) {
-		fprintf(stderr, "%s: No `li#'\n", myname);
-		exit (1);
-	}
-
-	i = ptr - newtc + 3;
-	strncpy (termcap, newtc, i);
-	sprintf (termcap + i, "%d", rows);
-	ptr = strchr(ptr, ':');
-	strcat (termcap, ptr);
 #endif /* USE_TERMCAP */
 
 	if(SHELL_BOURNE == shell_type) {
 
 #ifdef USE_TERMCAP
-		printf ("%sTERMCAP='%s';\n",
-		 setname, termcap);
+		if (ok_tcap)
+			printf ("%sTERMCAP='%s';\n",
+			 setname, termcap);
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
 #ifndef SVR4
@@ -537,8 +538,9 @@ main (argc, argv)
 	} else {		/* not Bourne shell */
 
 #ifdef USE_TERMCAP
-		printf ("set noglob;\n%ssetenv TERMCAP '%s';\nunset noglob;\n",
-		 setname, termcap);
+		if (ok_tcap)
+			printf ("set noglob;\n%ssetenv TERMCAP '%s';\nunset noglob;\n",
+			 setname, termcap);
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
 #ifndef SVR4

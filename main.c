@@ -1,7 +1,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c /main/247 1996/11/29 10:33:51 swick $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/main.c,v 3.50 1997/05/25 14:41:26 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.52 1997/06/20 09:24:51 hohndel Exp $ */
 
 /*
  * 				 W A R N I N G
@@ -498,7 +498,7 @@ static void HsSysError PROTO((int pf, int error));
 static void KeyboardMapping PROTO_XT_ACTIONS_ARGS;
 static void Syntax PROTO((char *badOption));
 static void get_terminal PROTO((void));
-static void resize PROTO((TScreen *s, char *n, char *oldtc, char *newtc));
+static void resize PROTO((TScreen *s, char *oldtc, char *newtc));
 
 static SIGNAL_T reapchild PROTO((int n));
 
@@ -2262,34 +2262,39 @@ spawn ()
 		envnew = vtterm;
 		ptr = termcap;
 	}
-	*ptr = 0;
+
+	/*
+	 * This used to exit if no termcap entry was found for the specified
+	 * terminal name.  That's a little unfriendly, so instead we'll allow
+	 * the program to proceed (but not to set $TERMCAP) if the termcap
+	 * entry is not found.
+	 */
+	*ptr = 0;	/* initialize, in case we're using terminfo's tgetent */
 	TermName = NULL;
 	if (resource.term_name) {
+	    TermName = resource.term_name;
 	    if (tgetent (ptr, resource.term_name) == 1) {
-		TermName = resource.term_name;
 		if (*ptr) 
 		    if (!screen->TekEmu)
-			resize (screen, TermName, termcap, newtc);
-	    } else {
-		fprintf (stderr, "%s:  invalid termcap entry \"%s\".\n",
-			 ProgramName, resource.term_name);
+			resize (screen, termcap, newtc);
 	    }
 	}
+
+	/*
+	 * This block is invoked only if there was no terminal name specified
+	 * by the command-line option "-tn".
+	 */
 	if (!TermName) {
+	    TermName = *envnew;
 	    while (*envnew != NULL) {
 		if(tgetent(ptr, *envnew) == 1) {
 			TermName = *envnew;
 			if (*ptr) 
 			    if(!screen->TekEmu)
-				resize(screen, TermName, termcap, newtc);
+				resize(screen, termcap, newtc);
 			break;
 		}
 		envnew++;
-	    }
-	    if (TermName == NULL) {
-		fprintf (stderr, "%s:  unable to find usable termcap entry.\n",
-			 ProgramName);
-		Exit (1);
 	    }
 	}
 
@@ -3145,7 +3150,7 @@ spawn ()
 #else /* USE_SYSV_ENVVAR */
 		if(!screen->TekEmu && *newtc) {
 		    strcpy (termcap, newtc);
-		    resize (screen, TermName, termcap, newtc);
+		    resize (screen, termcap, newtc);
 		}
 		if (term->misc.titeInhibit) {
 		    remove_termcap_entry (newtc, ":ti=");
@@ -3512,32 +3517,24 @@ static int spawn()
     *ptr = 0;
     TermName = NULL;
     if (resource.term_name) {
+	TermName = resource.term_name;
 	if (tgetent (ptr, resource.term_name) == 1) {
-	    TermName = resource.term_name;
 	    if (*ptr)
 		if (!screen->TekEmu)
-		    resize (screen, TermName, termcap, newtc);
-	} else {
-	    fprintf (stderr, "%s:  invalid termcap entry \"%s\".\n",
-		ProgramName, resource.term_name);
-	}
+		    resize (screen, termcap, newtc);
     }
 
     if (!TermName) {
+	TermName = *envnew;
 	while (*envnew != NULL) {
 	    if(tgetent(ptr, *envnew) == 1) {
 		TermName = *envnew;
 		if (*ptr)
 		    if(!screen->TekEmu)
-			resize(screen, TermName, termcap, newtc);
+			resize(screen, termcap, newtc);
 		break;
 	    }
 	    envnew++;
-	}
-	if (TermName == NULL) {
-	    fprintf (stderr, "%s:  unable to find usable termcap entry.\n",
-		ProgramName);
-	    Exit (1);
 	}
     }
 
@@ -3607,7 +3604,7 @@ static int spawn()
 
     if(!screen->TekEmu && *newtc) {
 	strcpy (termcap, newtc);
-	resize (screen, TermName, termcap, newtc);
+	resize (screen, termcap, newtc);
     }
     if (term->misc.titeInhibit) {
 	remove_termcap_entry (newtc, ":ti=");
@@ -3777,6 +3774,7 @@ Exit(n)
 		    utmp.ut_xtime = time ((Time_t *) 0);
 		    utmp.ut_tv.tv_usec = 0;
 #else
+		    *utptr->ut_user=0;
 		    utptr->ut_time = time((Time_t *) 0);
 #endif
 		    (void) pututline(utptr);
@@ -3850,9 +3848,8 @@ Exit(n)
 
 /* ARGSUSED */
 static void
-resize(screen, TermName, oldtc, newtc)
+resize(screen, oldtc, newtc)
 TScreen *screen;
-char *TermName;
 register char *oldtc, *newtc;
 {
 #ifndef USE_SYSV_ENVVARS

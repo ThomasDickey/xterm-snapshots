@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.3 1997/05/26 15:35:05 dawes Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.4 1997/06/11 12:24:56 dawes Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
@@ -169,17 +169,21 @@ int main()
 	buffer[0] = 0;
 	tgetent(buffer, "vt100");
 	exit(buffer[0] == 0); }],
-	[cf_cv_func_tgetent=yes
+	[echo "yes, there is a termcap/tgetent present" 1>&AC_FD_CC
+	 cf_cv_func_tgetent=yes
 	 break],
-	[cf_cv_func_tgetent=no],
-	[cf_cv_func_tgetent=no])
+	[echo "no, there is no termcap/tgetent present" 1>&AC_FD_CC
+	 cf_cv_func_tgetent=no],
+	[echo "cross-compiling, cannot verify if a termcap/tgetent is present" 1>&AC_FD_CC
+	 cf_cv_func_tgetent=no])
 done
 # If there was no workable (termcap) version, maybe there is a terminfo version
 if test $cf_cv_func_tgetent = no ; then
 	for cf_termlib in $cf_TERMLIB
 	do
 		AC_TRY_LINK([],[tgetent(0, 0)],
-			[cf_cv_func_tgetent=$cf_termlib
+			[echo "there is a terminfo/tgetent present" 1>&AC_FD_CC
+			 cf_cv_func_tgetent=$cf_termlib
 			 break],
 			[LIBS="$cf_save_LIBS"])
 	done
@@ -188,7 +192,7 @@ fi
 AC_MSG_RESULT($cf_cv_func_tgetent)
 # If we found any sort of tgetent, check for the termcap.h file.  If this is
 # linking against ncurses, we'll trigger the ifdef in resize.c that turns the
-# termcap stuff back off.
+# termcap stuff back off.  Including termcap.h should otherwise be harmless.
 if test $cf_cv_func_tgetent != no ; then
 	AC_CHECK_HEADERS(termcap.h)
 	if test $cf_cv_func_tgetent != yes ; then
