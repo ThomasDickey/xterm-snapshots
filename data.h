@@ -2,7 +2,7 @@
  *	$Xorg: data.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.h,v 3.27 2002/10/05 17:57:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.h,v 3.28 2002/12/08 22:31:48 dickey Exp $ */
 
 /*
  * Copyright 2002 by Thomas E. Dickey
@@ -93,9 +93,6 @@ extern int Ttoggled;
 extern jmp_buf Tekend;
 #endif
 
-#ifdef ALLOWLOGGING
-extern char log_def_name[];
-#endif
 extern char *ptydev;
 extern char *ttydev;
 extern char *xterm_name;

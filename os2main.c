@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.55 2002/10/05 17:57:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.56 2002/12/08 22:31:49 dickey Exp $ */
 
 /***********************************************************
 
@@ -1221,7 +1221,7 @@ main(int argc, char **argv ENVP_ARG)
 	int i = -1;
 	if (debug) {
 	    creat_as(getuid(), getgid(), True, "xterm.debug.log", 0666);
-	    i = open("xterm.debug.log", O_WRONLY | O_TRUNC, 0666);
+	    i = open("xterm.debug.log", O_WRONLY | O_TRUNC);
 	}
 	if (i >= 0) {
 	    dup2(i, 2);
@@ -1522,7 +1522,7 @@ spawn(void)
 	signal(SIGALRM, hungtty);
 	alarm(2);		/* alarm(1) might return too soon */
 	if (!setjmp(env)) {
-	    tty = open("/dev/tty", O_RDWR, 0);
+	    tty = open("/dev/tty", O_RDWR);
 	    alarm(0);
 	    tty_got_hung = False;
 	} else {
@@ -1670,7 +1670,7 @@ opencons();*/
 	    /* Now is the time to set up our process group and
 	     * open up the pty slave.
 	     */
-	    if ((tty = open(ttydev, O_RDWR, 0)) < 0) {
+	    if ((tty = open(ttydev, O_RDWR)) < 0) {
 		/* dumm gelaufen */
 		fprintf(stderr, "Cannot open slave side of PTY\n");
 		exit(1);

@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.159 2002/10/05 17:57:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.161 2002/12/08 22:31:49 dickey Exp $ */
 
 /* main.c */
 
@@ -1477,6 +1477,8 @@ main(int argc, char *argv[]ENVP_ARG)
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
 
+    ProgramName = argv[0];
+
     /* extra length in case longer tty name like /dev/ttyq255 */
     ttydev = (char *) malloc(sizeof(TTYDEV) + 80);
 #ifdef USE_PTY_DEVICE
@@ -1487,7 +1489,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
     {
 	fprintf(stderr,
-		"%s:  unable to allocate memory for ttydev or ptydev\n",
+		"%s: unable to allocate memory for ttydev or ptydev\n",
 		ProgramName);
 	exit(1);
     }
@@ -1503,7 +1505,6 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif /* __OpenBSD__ */
 
     /* Do these first, since we may not be able to open the display */
-    ProgramName = argv[0];
     TRACE_OPTS(xtermOptions, optionDescList, XtNumber(optionDescList));
     TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
@@ -2102,7 +2103,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	if (debug) {
 	    timestamp_filename(dbglogfile, "xterm.debug.log.");
 	    if (creat_as(getuid(), getgid(), False, dbglogfile, 0666)) {
-		i = open(dbglogfile, O_WRONLY | O_TRUNC, 0666);
+		i = open(dbglogfile, O_WRONLY | O_TRUNC);
 	    }
 	}
 	if (i >= 0) {
@@ -2735,7 +2736,7 @@ spawn(void)
 	signal(SIGALRM, hungtty);
 	alarm(2);		/* alarm(1) might return too soon */
 	if (!sigsetjmp(env, 1)) {
-	    tty = open("/dev/tty", O_RDWR, 0);
+	    tty = open("/dev/tty", O_RDWR);
 	    alarm(0);
 	    tty_got_hung = False;
 	} else {
@@ -3131,7 +3132,7 @@ spawn(void)
 #ifdef CSRG_BASED
 		    (void) revoke(ttydev);
 #endif
-		    if ((tty = open(ttydev, O_RDWR, 0)) >= 0) {
+		    if ((tty = open(ttydev, O_RDWR)) >= 0) {
 #if defined(CRAY) && defined(TCSETCTTY)
 			/* make /dev/tty work */
 			ioctl(tty, TCSETCTTY, 0);
@@ -3142,7 +3143,7 @@ spawn(void)
 			 * we are, then we should now be able to open
 			 * /dev/tty.
 			 */
-			if ((i = open("/dev/tty", O_RDWR, 0)) >= 0) {
+			if ((i = open("/dev/tty", O_RDWR)) >= 0) {
 			    /* success! */
 			    close(i);
 			    break;
@@ -3616,7 +3617,7 @@ spawn(void)
 #endif
 	    ioctl(0, TIOCSPGRP, (char *) &pgrp);
 	    setpgrp(0, 0);
-	    close(open(ttydev, O_WRONLY, 0));
+	    close(open(ttydev, O_WRONLY));
 	    setpgrp(0, pgrp);
 #if defined(__QNX__)
 	    tcsetpgrp(0, pgrp /*setsid() */ );

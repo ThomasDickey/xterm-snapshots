@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.60 2002/10/05 17:57:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.61 2002/12/08 22:31:49 dickey Exp $ */
 
 /*
  * Copyright 1999-2001,2002 by Thomas E. Dickey
@@ -503,14 +503,22 @@ Input(TKeyboard * keyboard,
 	) {
 /*
 * Modifier codes:
-*	None		1
-*	Shift		2 = 1(None)+1(Shift)
-*	Alt		3 = 1(None)+2(Alt)
-*	Alt+Shift	4 = 1(None)+1(Shift)+2(Alt)
-*	Ctrl		5 = 1(None)+4(Ctrl)
-*	Ctrl+Shift	6 = 1(None)+1(Shift)+4(Ctrl)
-*	Ctrl+Alt	7 = 1(None)+2(Alt)+4(Ctrl)
-*	Ctrl+Alt+Shift	8 = 1(None)+1(Shift)+2(Alt)+4(Ctrl)
+*       None                  1
+*       Shift                 2 = 1(None)+1(Shift)
+*       Alt                   3 = 1(None)+2(Alt)
+*       Alt+Shift             4 = 1(None)+1(Shift)+2(Alt)
+*       Ctrl                  5 = 1(None)+4(Ctrl)
+*       Ctrl+Shift            6 = 1(None)+1(Shift)+4(Ctrl)
+*       Ctrl+Alt              7 = 1(None)+2(Alt)+4(Ctrl)
+*       Ctrl+Alt+Shift        8 = 1(None)+1(Shift)+2(Alt)+4(Ctrl)
+*       Meta                  9 = 1(None)+8(Meta)
+*       Meta+Shift           10 = 1(None)+8(Meta)+1(Shift)
+*       Meta+Alt             11 = 1(None)+8(Meta)+2(Alt)
+*       Meta+Alt+Shift       12 = 1(None)+8(Meta)+1(Shift)+2(Alt)
+*       Meta+Ctrl            13 = 1(None)+8(Meta)+4(Ctrl)
+*       Meta+Ctrl+Shift      14 = 1(None)+8(Meta)+1(Shift)+4(Ctrl)
+*       Meta+Ctrl+Alt        15 = 1(None)+8(Meta)+2(Alt)+4(Ctrl)
+*       Meta+Ctrl+Alt+Shift  16 = 1(None)+8(Meta)+1(Shift)+2(Alt)+4(Ctrl)
 */
 #define	UNMOD	1
 #define	SHIFT	1
