@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-140
+MANIFEST for xterm, version xterm-141
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -16,6 +16,7 @@ Tekparse.def                    template for generating Tekparse.h
 Tekparse.h                      Tek4014 parser-state definitions
 Tekproc.c                       Tek4014 parser-state functions
 Tests                           Useful tests for xterm-developers
+UXTerm.ad                       alternate resources for UTF-8
 VTPrsTbl.c                      VT100 parser state tables
 VTparse.def                     template for generating VTparse.h
 VTparse.h                       VT100 parser-state definitions
@@ -23,6 +24,8 @@ XTerm-col.ad                    color resource definitions for XTerm class
 XTerm.ad                        resource definitions for XTerm class
 aclocal.m4                      configure script: custom macros
 button.c                        mouse button and selection processing
+charclass.c                     compact character-class module
+charclass.h                     interface of charclass.c
 charproc.c                      VT100 parser functions
 charsets.c                      module to translate character-sets
 config.guess                    configure script: guess the system type
@@ -49,6 +52,8 @@ menu.h                          interface of menu.c
 misc.c                          miscellaneous utility functions for 'xterm'
 mkdirs.sh                       configure script: make directories for install process
 os2main.c                       main program for OS/2 EMX port of 'xterm'
+precompose.c                    table of precompose sequences
+precompose.h                    interface of precompose.c
 print.c                         VT100+ print support functions
 proto.h                         macros to simplify function prototypes
 ptydata.c                       functions to manipulate data read from pty
@@ -69,6 +74,8 @@ util.c                          miscellaneous utility functions for 'xterm'
 version.h                       version of xterm
 vms.c                           VMS version of xterm's spawn(), etc.
 vms.h                           system headers and definitions for vms.c
+wcwidth.c                       wide-character utility functions
+wcwidth.h                       interface of wcwidth.c
 xcharmouse.h                    Jason Bacon's mouse-defs, cleaned up a little
 xterm.dat                       application defaults for VMS port of 'xterm'
 xterm.h                         common includes, definitions and prototypes for 'xterm'
@@ -87,6 +94,9 @@ unicode                         subdirectory
 unicode/README                  description of files in ./unicode
 unicode/convmap.pl              perl script for generating the lookup table for UTF-8 to keysym
 unicode/keysym.map              keysym mapping from UTF-8
+unicode/make-precompose.sh      make precompose.c
+unicode/precompose.c.head       header of precompose.c
+unicode/precompose.c.tail       tail of precompose.c
 vttests                         subdirectory
 vttests/16colors.sh             test-script to show 16-colors
 vttests/256colors.pl            script to illustrate 256-colors

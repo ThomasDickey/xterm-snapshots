@@ -758,6 +758,10 @@ typedef enum {
 #endif
 #if OPT_WIDE_CHARS
 	, OFF_WIDEC
+	, OFF_COM1L
+	, OFF_COM1H
+	, OFF_COM2L
+	, OFF_COM2H
 #endif
 } BufOffsets;
 
@@ -770,6 +774,10 @@ typedef enum {
 #define BUF_BGRND(buf, row) (buf[MAX_PTRS * (row) + OFF_BGRND])
 #define BUF_CSETS(buf, row) (buf[MAX_PTRS * (row) + OFF_CSETS])
 #define BUF_WIDEC(buf, row) (buf[MAX_PTRS * (row) + OFF_WIDEC])
+#define BUF_COM1L(buf, row) (buf[MAX_PTRS * (row) + OFF_COM1L])
+#define BUF_COM1H(buf, row) (buf[MAX_PTRS * (row) + OFF_COM1H])
+#define BUF_COM2L(buf, row) (buf[MAX_PTRS * (row) + OFF_COM2L])
+#define BUF_COM2H(buf, row) (buf[MAX_PTRS * (row) + OFF_COM2H])
 
 	/* TScreen-level macros */
 #define SCRN_BUF_FLAGS(screen, row) BUF_FLAGS(screen->visbuf, row)
@@ -780,6 +788,10 @@ typedef enum {
 #define SCRN_BUF_BGRND(screen, row) BUF_BGRND(screen->visbuf, row)
 #define SCRN_BUF_CSETS(screen, row) BUF_CSETS(screen->visbuf, row)
 #define SCRN_BUF_WIDEC(screen, row) BUF_WIDEC(screen->visbuf, row)
+#define SCRN_BUF_COM1L(screen, row) BUF_COM1L(screen->visbuf, row)
+#define SCRN_BUF_COM2L(screen, row) BUF_COM2L(screen->visbuf, row)
+#define SCRN_BUF_COM1H(screen, row) BUF_COM1H(screen->visbuf, row)
+#define SCRN_BUF_COM2H(screen, row) BUF_COM2H(screen->visbuf, row)
 
 typedef struct {
 	unsigned	chrset;
@@ -999,6 +1011,7 @@ typedef struct {
 	Dimension	fnt_high;
 	XFontStruct	*fnt_norm;	/* normal font of terminal	*/
 	XFontStruct	*fnt_bold;	/* bold font of terminal	*/
+	XFontStruct	*fnt_dwd;	/* wide font of terminal	*/
 #ifndef NO_ACTIVE_ICON
 	XFontStruct	*fnt_icon;	/* icon font */
 #endif /* NO_ACTIVE_ICON */
@@ -1194,6 +1207,7 @@ typedef struct _Misc {
     char *T_geometry;
     char *f_n;
     char *f_b;
+    char *f_w;
     int limit_resize;
 #ifdef ALLOWLOGGING
     Boolean log_on;

@@ -182,6 +182,12 @@ extern int errno;
 #undef HAVE_WAITPID
 #endif
 
+#if OPT_WIDE_CHARS
+#define HIDDEN_HI 0xff
+#define HIDDEN_LO 0xff
+#define HIDDEN_CHAR 0xffff
+#endif
+
 /***====================================================================***/
 
 #include <proto.h>
@@ -271,6 +277,7 @@ extern int errno;
 #define XtNeightBitInput	"eightBitInput"
 #define XtNeightBitOutput	"eightBitOutput"
 #define XtNfontDoublesize	"fontDoublesize"
+#define XtNfontStyle		"fontStyle"
 #define XtNhighlightColor	"highlightColor"
 #define XtNhighlightSelection	"highlightSelection"
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
@@ -321,6 +328,7 @@ extern int errno;
 #define XtNutf8			"utf8"
 #define XtNvisualBell		"visualBell"
 #define XtNwideChars		"wideChars"
+#define XtNwideFont		"wideFont"
 #define XtNxmcAttributes	"xmcAttributes"
 #define XtNxmcGlitch		"xmcGlitch"
 #define XtNxmcInline		"xmcInline"
@@ -357,6 +365,7 @@ extern int errno;
 #define XtCEightBitInput	"EightBitInput"
 #define XtCEightBitOutput	"EightBitOutput"
 #define XtCFontDoublesize	"FontDoublesize"
+#define XtCFontStyle		"FontStyle"
 #define XtCHighlightSelection	"HighlightSelection"
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
 #define XtCJumpScroll		"JumpScroll"
@@ -399,6 +408,7 @@ extern int errno;
 #define XtCUtf8			"Utf8"
 #define XtCVisualBell		"VisualBell"
 #define XtCWideChars		"WideChars"
+#define XtCWideFont		"WideFont"
 #define XtCXmcAttributes	"XmcAttributes"
 #define XtCXmcGlitch		"XmcGlitch"
 #define XtCXmcInline		"XmcInline"
@@ -468,6 +478,10 @@ extern void GetLocatorPosition (XtermWidget w);
 extern void InitLocatorFilter (XtermWidget w);
 #endif	/* OPT_DEC_LOCATOR */
 
+#if OPT_WIDE_CHARS
+extern int iswide(int i);
+#endif
+
 /* charproc.c */
 extern int VTInit (void);
 extern int v_write (int f, Char *d, int len);
@@ -532,7 +546,7 @@ extern void VTInitModifiers(void);
 #endif
 
 #if OPT_TCAP_QUERY
-extern int xtermcapKeycode(char **params);
+extern int xtermcapKeycode(char **params, unsigned *state);
 #endif
 
 #if OPT_WIDE_CHARS
@@ -653,7 +667,7 @@ extern void ScrnDeleteChar (TScreen *screen, int n);
 extern void ScrnDeleteLine (TScreen *screen, ScrnBuf sb, int n, int last, int size, int where);
 extern void ScrnInsertChar (TScreen *screen, int n);
 extern void ScrnInsertLine (TScreen *screen, ScrnBuf sb, int last, int where, int n, int size);
-extern void ScrnRefresh (TScreen *screen, int toprow, int leftcol, int nrows, int ncols, int force);
+extern void ScrnRefresh (TScreen *screen, int toprow, int leftcol, int nrows, int ncols, Bool force);
 
 #define ScrnClrWrapped(screen, row) \
 	SCRN_BUF_FLAGS(screen, row + screen->topline) = \
@@ -783,6 +797,9 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 
 #if OPT_WIDE_CHARS
 extern unsigned getXtermCell (TScreen *screen, int row, int col);
+extern unsigned getXtermCellComb1 (TScreen *screen, int row, int col);
+extern unsigned getXtermCellComb2 (TScreen *screen, int row, int col);
+extern void addXtermCombining (TScreen *screen, int row, int col, int ch);
 extern void putXtermCell (TScreen *screen, int row, int col, int ch);
 #else
 #define getXtermCell(screen,row,col) SCRN_BUF_CHARS(screen, row)[col]
@@ -793,6 +810,12 @@ extern void putXtermCell (TScreen *screen, int row, int col, int ch);
 extern void Mark_XMC (TScreen *screen, int param);
 extern void Jump_XMC (TScreen *screen);
 extern void Resolve_XMC (TScreen *screen);
+#endif
+
+#if OPT_WIDE_CHARS
+int visual_width(PAIRED_CHARS(Char *str, Char *str2), Cardinal len);
+#else
+#define visual_width(a, b) (b)
 #endif
 
 #ifdef	__cplusplus

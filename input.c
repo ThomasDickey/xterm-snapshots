@@ -345,6 +345,7 @@ Input (
 #if OPT_TCAP_QUERY
 	if (screen->tc_query >= 0) {
 		keysym = screen->tc_query;
+		nbytes = 0;
 		strbuf[0] = 0;
 	}
 	else
@@ -1097,69 +1098,79 @@ VTInitModifiers(void)
 /*
  * Parse the termcap/terminfo name from the string, returning a positive number
  * (the keysym) if found, otherwise -1.  Update the string pointer.
+ * Returns the (shift, control) state in *state.
  */
 int
-xtermcapKeycode(char **params)
+xtermcapKeycode(char **params, unsigned *state)
 {
-#define DATA(tc,ti,x) { tc, ti, x }
+#define DATA(tc,ti,x,y) { tc, ti, x, y }
 	static struct {
 		char *tc;
 		char *ti;
 		int code;
+		unsigned state;
 	} table[] = {
-		DATA(	"%1",	"khlp",		XK_Help),
-		DATA(	"*6",	"kslt",		XK_Select),
-		DATA(	"@0",	"kfnd",		XK_Find),
-		DATA(	"@7",	"kend",		XK_End),
-		DATA(	"F1",	"kf11",		XK_F11),
-		DATA(	"F2",	"kf12",		XK_F12),
-		DATA(	"F3",	"kf13",		XK_F13),
-		DATA(	"F4",	"kf14",		XK_F14),
-		DATA(	"F5",	"kf15",		XK_F15),
-		DATA(	"F6",	"kf16",		XK_F16),
-		DATA(	"F7",	"kf17",		XK_F17),
-		DATA(	"F8",	"kf18",		XK_F18),
-		DATA(	"F9",	"kf19",		XK_F19),
-		DATA(	"FA",	"kf20",		XK_F20),
-		DATA(	"FB",	"kf21",		XK_F21),
-		DATA(	"FC",	"kf22",		XK_F22),
-		DATA(	"FD",	"kf23",		XK_F23),
-		DATA(	"FE",	"kf24",		XK_F24),
-		DATA(	"FF",	"kf25",		XK_F25),
-		DATA(	"FG",	"kf26",		XK_F26),
-		DATA(	"FH",	"kf27",		XK_F27),
-		DATA(	"FI",	"kf28",		XK_F28),
-		DATA(	"FJ",	"kf29",		XK_F29),
-		DATA(	"FK",	"kf30",		XK_F30),
-		DATA(	"FL",	"kf31",		XK_F31),
-		DATA(	"FM",	"kf32",		XK_F32),
-		DATA(	"FN",	"kf33",		XK_F33),
-		DATA(	"FO",	"kf34",		XK_F34),
-		DATA(	"FP",	"kf35",		XK_F35),
-		DATA(	"FQ",	"kf36",		SunXK_F36),
-		DATA(	"FR",	"kf37",		SunXK_F37),
-		DATA(	"k1",	"kf1",		XK_F1),
-		DATA(	"k2",	"kf2",		XK_F2),
-		DATA(	"k3",	"kf3",		XK_F3),
-		DATA(	"k4",	"kf4",		XK_F4),
-		DATA(	"k5",	"kf5",		XK_F5),
-		DATA(	"k6",	"kf6",		XK_F6),
-		DATA(	"k7",	"kf7",		XK_F7),
-		DATA(	"k8",	"kf8",		XK_F8),
-		DATA(	"k9",	"kf9",		XK_F9),
-		DATA(	"k;",	"kf10",		XK_F10), /* cannot termcap */
-		DATA(	"kB",	"kcbt",		XK_ISO_Left_Tab),
-		DATA(	"kC",	"kclr",		XK_Clear),
-		DATA(	"kD",	"kdch1",	XK_Delete),
-		DATA(	"kI",	"kich1",	XK_Insert),
-		DATA(	"kN",	"knp",		XK_Next),
-		DATA(	"kP",	"kpp",		XK_Prior),
-		DATA(	"kb",	"kbs",		XK_BackSpace),
-		DATA(	"kd",	"kcud1",	XK_Down),
-		DATA(	"kh",	"khome",	XK_Home),
-		DATA(	"kl",	"kcub1",	XK_Left),
-		DATA(	"kr",	"kcuf1",	XK_Right),
-		DATA(	"ku",	"kcuu1",	XK_Up),
+		DATA(	"#2",	"kHOM",		XK_Home,	ShiftMask),
+		DATA(	"#4",	"kLFT",		XK_Left,	ShiftMask),
+		DATA(	"%1",	"khlp",		XK_Help,	0),
+		DATA(	"%i",	"kRIT",		XK_Right,	ShiftMask),
+		DATA(	"*6",	"kslt",		XK_Select,	0),
+		DATA(	"*7",	"kEND",		XK_End,		ShiftMask),
+		DATA(	"@0",	"kfnd",		XK_Find,	0),
+		DATA(	"@7",	"kend",		XK_End,		0),
+		DATA(	"F1",	"kf11",		XK_F11,		0),
+		DATA(	"F2",	"kf12",		XK_F12,		0),
+		DATA(	"F3",	"kf13",		XK_F13,		0),
+		DATA(	"F4",	"kf14",		XK_F14,		0),
+		DATA(	"F5",	"kf15",		XK_F15,		0),
+		DATA(	"F6",	"kf16",		XK_F16,		0),
+		DATA(	"F7",	"kf17",		XK_F17,		0),
+		DATA(	"F8",	"kf18",		XK_F18,		0),
+		DATA(	"F9",	"kf19",		XK_F19,		0),
+		DATA(	"FA",	"kf20",		XK_F20,		0),
+		DATA(	"FB",	"kf21",		XK_F21,		0),
+		DATA(	"FC",	"kf22",		XK_F22,		0),
+		DATA(	"FD",	"kf23",		XK_F23,		0),
+		DATA(	"FE",	"kf24",		XK_F24,		0),
+		DATA(	"FF",	"kf25",		XK_F25,		0),
+		DATA(	"FG",	"kf26",		XK_F26,		0),
+		DATA(	"FH",	"kf27",		XK_F27,		0),
+		DATA(	"FI",	"kf28",		XK_F28,		0),
+		DATA(	"FJ",	"kf29",		XK_F29,		0),
+		DATA(	"FK",	"kf30",		XK_F30,		0),
+		DATA(	"FL",	"kf31",		XK_F31,		0),
+		DATA(	"FM",	"kf32",		XK_F32,		0),
+		DATA(	"FN",	"kf33",		XK_F33,		0),
+		DATA(	"FO",	"kf34",		XK_F34,		0),
+		DATA(	"FP",	"kf35",		XK_F35,		0),
+		DATA(	"FQ",	"kf36",		SunXK_F36,	0),
+		DATA(	"FR",	"kf37",		SunXK_F37,	0),
+		DATA(	"K1",	"ka1",		XK_KP_Home,	0),
+		DATA(	"K4",	"kc1",		XK_KP_End,	0),
+		DATA(	"k1",	"kf1",		XK_F1,		0),
+		DATA(	"k2",	"kf2",		XK_F2,		0),
+		DATA(	"k3",	"kf3",		XK_F3,		0),
+		DATA(	"k4",	"kf4",		XK_F4,		0),
+		DATA(	"k5",	"kf5",		XK_F5,		0),
+		DATA(	"k6",	"kf6",		XK_F6,		0),
+		DATA(	"k7",	"kf7",		XK_F7,		0),
+		DATA(	"k8",	"kf8",		XK_F8,		0),
+		DATA(	"k9",	"kf9",		XK_F9,		0),
+		DATA(	"k;",	"kf10",		XK_F10,		0), /* cannot termcap */
+#ifdef XK_ISO_Left_Tab
+		DATA(	"kB",	"kcbt",		XK_ISO_Left_Tab,0),
+#endif
+		DATA(	"kC",	"kclr",		XK_Clear,	0),
+		DATA(	"kD",	"kdch1",	XK_Delete,	0),
+		DATA(	"kI",	"kich1",	XK_Insert,	0),
+		DATA(	"kN",	"knp",		XK_Next,	0),
+		DATA(	"kP",	"kpp",		XK_Prior,	0),
+		DATA(	"kb",	"kbs",		XK_BackSpace,	0),
+		DATA(	"kd",	"kcud1",	XK_Down,	0),
+		DATA(	"kh",	"khome",	XK_Home,	0),
+		DATA(	"kl",	"kcub1",	XK_Left,	0),
+		DATA(	"kr",	"kcuf1",	XK_Right,	0),
+		DATA(	"ku",	"kcuu1",	XK_Up,		0),
 	};
 	Cardinal n;
 	unsigned len = 0;
@@ -1175,6 +1186,7 @@ xtermcapKeycode(char **params)
 		if (!strcmp(table[n].ti, *params)
 		 || !strcmp(table[n].tc, *params)) {
 			code = table[n].code;
+			*state = table[n].state;
 			break;
 		}
 	}

@@ -1193,7 +1193,7 @@ static void do_vtfont (
 
     for (i = 0; i < NMENUFONTS; i++) {
 	if (strcmp (entryname, fontMenuEntries[i].name) == 0) {
-	    SetVTFont (i, True, (char *)0, (char *)0);
+	    SetVTFont (i, True, VT_FONTSET(NULL, NULL, NULL));
 	    return;
 	}
     }

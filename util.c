@@ -64,6 +64,10 @@
 #include <menu.h>
 #include <fontutils.h>
 
+#if OPT_WIDE_CHARS
+#include <wcwidth.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 
@@ -544,7 +548,7 @@ DeleteChar (TScreen *screen, int n)
 		HideCursor();
 	screen->do_wrap = 0;
 	if (n > (width = screen->max_col + 1 - screen->cur_col))
-	  	n = width;
+		n = width;
 
 	if(screen->cur_row - screen->topline <= screen->max_row) {
 	    if(!AddToRefresh(screen)) {
@@ -732,6 +736,10 @@ ClearInLine(TScreen *screen, int row, int col, int len)
 	})
 	if_OPT_WIDE_CHARS(screen,{
 		memset(SCRN_BUF_WIDEC(screen, row) + col, 0, len);
+		memset(SCRN_BUF_COM1L(screen, row) + col, 0, len);
+		memset(SCRN_BUF_COM1H(screen, row) + col, 0, len);
+		memset(SCRN_BUF_COM2L(screen, row) + col, 0, len);
+		memset(SCRN_BUF_COM2H(screen, row) + col, 0, len);
 	})
 
 	return rc;
@@ -813,7 +821,7 @@ do_erase_line(
 
 	if (saved_mode == DEC_PROTECT
 	 && saved_mode != mode)
-	 	screen->protected_mode = OFF_PROTECT;
+		screen->protected_mode = OFF_PROTECT;
 
 	switch (param) {
 	case -1:	/* DEFAULT */
@@ -846,7 +854,7 @@ do_erase_display(
 
 	if (saved_mode == DEC_PROTECT
 	 && saved_mode != mode)
-	 	screen->protected_mode = OFF_PROTECT;
+		screen->protected_mode = OFF_PROTECT;
 
 	switch (param) {
 	case -1:	/* DEFAULT */
@@ -1377,6 +1385,7 @@ drawXtermText(
 	PAIRED_CHARS(Char *text, Char *text2),
 	Cardinal len)
 {
+	int real_length = len;
 #if OPT_WIDE_CHARS
 	/*
 	 * It's simpler to pass in a null pointer for text2 in places where
@@ -1566,25 +1575,63 @@ drawXtermText(
 
 #if OPT_WIDE_CHARS
 		if (screen->wide_chars) {
+			int ascent_adjust = 0;
 			static XChar2b *sbuf;
 			static Cardinal slen;
 			Cardinal n;
+			int ch = text[0] | (text2[0] << 8);
+			int wideness = (iswide(ch)!=0) && (screen->fnt_dwd!=NULL);
+			unsigned char *endtext = text + len;
 			if (slen < len) {
 				slen = (len + 1) * 2;
 				sbuf = (XChar2b *)XtRealloc((char *)sbuf, slen * sizeof(*sbuf));
 			}
 			for (n = 0; n < len; n++) {
-				sbuf[n].byte2 = text[n];
-				sbuf[n].byte1 = text2[n];
+				sbuf[n].byte2 = *text;
+				sbuf[n].byte1 = *text2;
+				text++; text2++;
+				if (wideness) {
+					/* filter out those pesky fake characters. */
+					while (text < endtext
+					 && *text == HIDDEN_HI
+					 && *text2 == HIDDEN_LO) {
+						text++; text2++;
+						len--;
+					}
+				}
 			}
-			XDrawImageString16(screen->display, VWindow(screen), gc,
-				x, y, sbuf, len);
+			/* This is probably wrong. But it works. */
+			if (wideness && screen->fnt_dwd->fid) {
+				real_length = len * 2;
+				XSetFont(screen->display, gc, screen->fnt_dwd->fid);
+				ascent_adjust = screen->fnt_dwd->ascent - screen->fnt_norm->ascent;
+				/* fix ascent */
+			}
+			else if (flags & (BOLD|BLINK) && screen->fnt_bold->fid)
+				XSetFont(screen->display, gc, screen->fnt_bold->fid);
+			else
+				XSetFont(screen->display, gc, screen->fnt_norm->fid);
+
+			if (my_wcwidth(ch) == 0)
+				XDrawString16(screen->display,
+					      VWindow(screen), gc,
+					      x, y + ascent_adjust,
+					      sbuf, n);
+			else
+				XDrawImageString16(screen->display,
+						   VWindow(screen), gc,
+						   x, y + ascent_adjust,
+						   sbuf, n);
+
 		} else
 #endif
 		{
 		XDrawImageString(screen->display, VWindow(screen), gc,
 			x, y,  (char *)text, len);
-
+#ifndef OPT_WIDE_CHARS
+		/* FIXME: This is rather broken with wide chars. It should
+		 * use XDrawString16 where appropriate.
+		 */
 		if ((flags & (BOLD|BLINK)) && screen->enbolden) {
 #if OPT_CLIP_BOLD
 			/*
@@ -1611,6 +1658,7 @@ drawXtermText(
 			XSetClipMask(screen->display, gc, None);
 #endif
 		}
+#endif /* !OPT_WIDE_CHARS */
 		}
 
 		if ((flags & UNDERLINE) && screen->underline) {
@@ -1628,15 +1676,21 @@ drawXtermText(
 				  : screen->fnt_norm;
 		Cardinal last, first = 0;
 		Boolean save_force = screen->force_box_chars;
-
 		screen->fnt_boxes = True;
 		for (last = 0; last < len; last++) {
 			unsigned ch = text[last];
+			Boolean isMissing;
 #if OPT_WIDE_CHARS
 			if (text2 != 0)
 				ch |= (text2[last] << 8);
+			isMissing = xtermMissingChar(ch,
+					(iswide(ch) && screen->fnt_dwd)
+					? screen->fnt_dwd
+					: font);
+#else
+			isMissing = xtermMissingChar(ch, font);
 #endif
-			if (xtermMissingChar(ch, font)) {
+			if (isMissing) {
 				if (last > first) {
 					screen->force_box_chars = False;
 					DrawSegment(first,last);
@@ -1655,7 +1709,7 @@ drawXtermText(
 #endif
 	}
 
-	return x + len * FontWidth(screen);
+	return x + real_length * FontWidth(screen);
 }
 
 /*
@@ -1843,6 +1897,22 @@ unsigned getXtermCell (TScreen *screen, int row, int col)
     return ch;
 }
 
+unsigned getXtermCellComb1 (TScreen *screen, int row, int col)
+{
+    unsigned ch = SCRN_BUF_COM1L(screen, row)[col];
+    ch |= (SCRN_BUF_COM1H(screen, row)[col] << 8);
+    return ch;
+}
+
+
+unsigned getXtermCellComb2 (TScreen *screen, int row, int col)
+{
+    unsigned ch = SCRN_BUF_COM2L(screen, row)[col];
+    ch |= (SCRN_BUF_COM2H(screen, row)[col] << 8);
+    return ch;
+}
+
+
 /*
  * Sets a single 8/16-bit number for the given cell
  */
@@ -1851,7 +1921,25 @@ void putXtermCell (TScreen *screen, int row, int col, int ch)
     SCRN_BUF_CHARS(screen, row)[col] = ch;
     if_OPT_WIDE_CHARS(screen,{
 	SCRN_BUF_WIDEC(screen, row)[col] = (ch >> 8);
+	SCRN_BUF_COM1L(screen, row)[col] = 0;
+	SCRN_BUF_COM1H(screen, row)[col] = 0;
+	SCRN_BUF_COM2L(screen, row)[col] = 0;
+	SCRN_BUF_COM2H(screen, row)[col] = 0;
     })
+}
+
+/*
+ * Add a the combining character for the given cell
+ */
+void addXtermCombining (TScreen *screen, int row, int col, int ch)
+{
+    if (!SCRN_BUF_COM1L(screen, row)[col]) {
+	    SCRN_BUF_COM1L(screen, row)[col] = ch & 0xff;
+	    SCRN_BUF_COM1H(screen, row)[col] = ch >> 8;
+    } else if (!SCRN_BUF_COM2H(screen, row)[col]) {
+	    SCRN_BUF_COM2L(screen, row)[col] = ch & 0xff;
+	    SCRN_BUF_COM2H(screen, row)[col] = ch >> 8;
+    }
 }
 #endif
 

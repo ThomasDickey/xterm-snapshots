@@ -1336,7 +1336,7 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 			    break;
 			}
 		    }
-		    SetVTFont (fontMenu_fontescape, True, buf, NULL);
+		    SetVTFont (fontMenu_fontescape, True, VT_FONTSET(buf, NULL, NULL));
 		}
 		break;
 	case 51:
@@ -1499,9 +1499,10 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 	case '+':
 		cp++;
 		if (*cp == 'q') {
+			unsigned state;
 			okay = True;
 			for (tmp = ++cp; *tmp;) {
-				if (xtermcapKeycode(&tmp) < 0) {
+				if (xtermcapKeycode(&tmp, &state) < 0) {
 					okay = False;
 					break;
 				}
@@ -1515,9 +1516,9 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 				int count = 0;
 				for (tmp = cp; *tmp;) {
 					screen->tc_query = -1;
-					if ((code = xtermcapKeycode(&tmp)) >= 0) {
+					if ((code = xtermcapKeycode(&tmp, &state)) >= 0) {
 						XKeyEvent event;
-						event.state = 0;
+						event.state = state;
 						if (count++)
 							unparseputc(';', screen->respond);
 						screen->tc_query = code;

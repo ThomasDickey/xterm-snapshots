@@ -77,7 +77,17 @@ button.c	Handles button events in the terminal emulator.
 #include <menu.h>
 #include <xcharmouse.h>
 
+#if OPT_WIDE_CHARS
+#include <charclass.h>
+#include <wcwidth.h>
+#else
+#define CharacterClass(value) \
+	charClass[value & ((sizeof(charClass)/sizeof(charClass[0]))-1)]
+#endif
+
 #define XTERM_CELL(row,col) getXtermCell(screen, row + screen->topline, col)
+#define XTERM_CELL_C1(row,col) getXtermCellComb1(screen, row + screen->topline, col)
+#define XTERM_CELL_C2(row,col) getXtermCellComb2(screen, row + screen->topline, col)
 
       /*
        * We reserve shift modifier for cut/paste operations.  In principle we
@@ -1487,6 +1497,13 @@ ResizeSelection (TScreen *screen GCC_UNUSED, int rows, int cols)
     if (rawCol > cols) rawCol = cols;
 }
 
+#if OPT_WIDE_CHARS
+int iswide(int i)
+{
+    return my_wcwidth(i) == 2;
+}
+#endif
+
 static void
 PointToRowCol(
     register int y,
@@ -1512,6 +1529,17 @@ PointToRowCol(
 	else if(col > screen->max_col+1) {
 		col = screen->max_col+1;
 	}
+#if OPT_WIDE_CHARS
+	/*
+	 * If we got a click on the right half of a doublewidth character,
+	 * pretend it happened on the left half.
+	 */
+	if (col > 0
+	 && iswide(getXtermCell(screen, row, col-1))
+	 && (getXtermCell(screen, row, col) == HIDDEN_CHAR)) {
+		col -= 1;
+	}
+#endif
 	*r = row;
 	*c = col;
 }
@@ -1540,6 +1568,7 @@ LastTextCol(register int row)
 	return(i);
 }
 
+#if !OPT_WIDE_CHARS
 /*
 ** double click table for cut and paste in 8 bits
 **
@@ -1628,6 +1657,7 @@ int SetCharacterClassRange (
 
     return (0);
 }
+#endif
 
 #if OPT_WIDE_CHARS
 static int class_of(TScreen *screen, int row, int col)
@@ -1639,13 +1669,18 @@ static int class_of(TScreen *screen, int row, int col)
     }
 #endif
     value = XTERM_CELL(row, col);
-    if_OPT_WIDE_CHARS(screen,{
-	/*FIXME: extend the character-class table */
+    if_OPT_WIDE_CHARS(screen, {
+	return CharacterClass(value);
     })
-    return charClass[value & ((sizeof(charClass)/sizeof(charClass[0]))-1)];
+    return CharacterClass(value);
 }
+#define ClassSelects(screen, row, col, cclass) \
+	 (class_of(screen,startSRow,startSCol) == cclass \
+	 || getXtermCell(screen, startSRow, startSCol) == HIDDEN_CHAR)
 #else
 #define class_of(screen,row,col) charClass[XTERM_CELL(row, col)]
+#define ClassSelects(screen, row, col, cclass) \
+	 (class_of(screen,startSRow,startSCol) == cclass)
 #endif
 
 /*
@@ -1664,6 +1699,21 @@ ComputeSelect(
 	register TScreen *screen = &term->screen;
 	register int length;
 	register int cclass;
+
+#if OPT_WIDE_CHARS
+	if (startCol > 1
+	 && iswide(getXtermCell(screen, startRow, startCol-1))
+	 && getXtermCell(screen, startRow, startCol-0) == HIDDEN_CHAR) {
+		fprintf(stderr, "Adjusting start. Changing downwards from %i.\n", startCol);
+		startCol -= 1;
+		if (endCol == (startCol+1)) endCol--;
+	}
+
+	if (iswide(getXtermCell(screen, endRow, endCol-1))
+	 && getXtermCell(screen, endRow, endCol) == HIDDEN_CHAR) {
+		endCol += 1;
+	}
+#endif
 
 	if (Coordinate(startRow, startCol) <= Coordinate(endRow, endCol)) {
 		startSRow = startRRow = startRow;
@@ -1702,9 +1752,15 @@ ComputeSelect(
 					startSCol = LastTextCol(startSRow);
 				    }
 				} while (startSCol >= 0
-				 && class_of(screen,startSRow,startSCol) == cclass);
+				 && ClassSelects(screen, startSRow, startSCol, cclass));
 				++startSCol;
 			}
+
+#if OPT_WIDE_CHARS
+			if (startSCol && getXtermCell(screen, startSRow, startSCol) == HIDDEN_CHAR)
+				startSCol++;
+#endif
+
 			if (endSCol > (LastTextCol(endSRow) + 1)) {
 				endSCol = 0;
 				endSRow++;
@@ -1720,7 +1776,7 @@ ComputeSelect(
 					length = LastTextCol(endSRow);
 				    }
 				} while (endSCol <= length
-				 && class_of(screen,endSRow,endSCol) == cclass);
+				 && ClassSelects(screen,endSRow,endSCol, cclass));
 				/* Word select selects if pointing to any char
 				   in "word", especially in that it includes
 				   the last character in a word.  So no --endSCol
@@ -1730,6 +1786,12 @@ ComputeSelect(
 					++endSRow;
 				}
 			}
+
+#if OPT_WIDE_CHARS
+			if (endSCol && getXtermCell(screen, endSRow, endSCol) == HIDDEN_CHAR)
+				endSCol++;
+#endif
+
 			saveStartWRow = startSRow;
 			saveStartWCol = startSCol;
 			break;
@@ -2261,6 +2323,10 @@ SaveText(
     int i = 0;
     unsigned c;
     Char *result = lp;
+#if OPT_WIDE_CHARS
+    int previous = 0;
+    unsigned c_1 = 0, c_2 = 0;
+#endif
 
     i = Length(screen, row, scol, ecol);
     ecol = scol + i;
@@ -2274,8 +2340,27 @@ SaveText(
     for (i = scol; i < ecol; i++) {
 	c = E2A(XTERM_CELL(row, i));
 #if OPT_WIDE_CHARS
-	if (screen->utf8_mode)
+	if (screen->utf8_mode) {
+	    c_1 = E2A(XTERM_CELL_C1(row, i));
+	    c_2 = E2A(XTERM_CELL_C2(row, i));
+	}
+
+	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
+	 * wide character.
+	 */
+	if (c == HIDDEN_CHAR && iswide(previous)) {
+	    previous = c;
+	    continue;
+	}
+	previous = c;
+	if (screen->utf8_mode) {
 	    lp = convertToUTF8(lp, c);
+	    if (c_1) {
+		lp = convertToUTF8(lp, c_1);
+		if (c_2)
+		    lp = convertToUTF8(lp, c_2);
+	    }
+	}
 	else
 #endif
 	{
