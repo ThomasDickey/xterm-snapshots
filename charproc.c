@@ -54,11 +54,8 @@ in this Software without prior written authorization from the X Consortium.
 
 /* charproc.c */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
+#include <xterm.h>
 
-#include "ptyx.h"
 #include <X11/Xos.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
@@ -84,13 +81,13 @@ in this Software without prior written authorization from the X Consortium.
 #define write(f,b,s) nbio_write(f,b,s)
 #endif
 
-#include "VTparse.h"
-#include "data.h"
-#include "error.h"
-#include "menu.h"
-#include "main.h"
-#include "xterm.h"
-#include "xcharmouse.h"
+#include <VTparse.h>
+#include <data.h>
+#include <error.h>
+#include <menu.h>
+#include <main.h>
+#include <fontutils.h>
+#include <xcharmouse.h>
 
 #ifndef NO_ACTIVE_ICON
 #include <X11/Shell.h>
@@ -115,7 +112,6 @@ extern jmp_buf VTend;
 extern Widget toplevel;
 extern char *ProgramName;
 
-static int LoadNewFont (TScreen *screen, char *nfontname, char *bfontname, Bool doresize, int fontnum);
 static int in_put (void);
 static int set_character_class (char *s);
 static void FromAlternate (TScreen *screen);
@@ -131,9 +127,7 @@ static void bitset (unsigned *p, unsigned mask);
 static void dpmodes (XtermWidget termw, void (*func)(unsigned *p, unsigned mask));
 static void restoremodes (XtermWidget termw);
 static void savemodes (XtermWidget termw);
-static void set_vt_box (TScreen *screen);
 static void unparseputn (unsigned int n, int fd);
-static void update_font_info (TScreen *screen, Bool doresize);
 static void window_ops (XtermWidget termw);
 
 #if OPT_BLINK_CURS
@@ -815,13 +809,13 @@ static XtResource resources[] = {
 #endif /* NO_ACTIVE_ICON */
 };
 
+static Boolean VTSetValues (Widget cur, Widget request, Widget new_arg, ArgList args, Cardinal *num_args);
 static void VTClassInit (void);
-static void VTInitialize (Widget wrequest, Widget wnew, ArgList args, Cardinal *num_args);
-static void VTRealize (Widget w, XtValueMask *valuemask, XSetWindowAttributes *values);
-static void VTExpose (Widget w, XEvent *event, Region region);
-static void VTResize (Widget w);
 static void VTDestroy (Widget w);
-static Boolean VTSetValues (Widget cur, Widget request, Widget new, ArgList args, Cardinal *num_args);
+static void VTExpose (Widget w, XEvent *event, Region region);
+static void VTInitialize (Widget wrequest, Widget new_arg, ArgList args, Cardinal *num_args);
+static void VTRealize (Widget w, XtValueMask *valuemask, XSetWindowAttributes *values);
+static void VTResize (Widget w);
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 static void VTInitI18N (void);
@@ -2203,7 +2197,7 @@ v_write(int f, char *d, int len)
 		    /* still won't fit: get more space */
 		    /* Don't use XtRealloc because an error is not fatal. */
 		    int size = v_bufptr - v_buffer; /* save across realloc */
-		    v_buffer = realloc(v_buffer, size + len);
+		    v_buffer = (char *)realloc(v_buffer, size + len);
 		    if (v_buffer) {
 #ifdef DEBUG
 			if (debug)
@@ -2283,7 +2277,7 @@ v_write(int f, char *d, int len)
 	    int size = v_bufptr - v_buffer;
 	    int allocsize = size ? size : 1;
 
-	    v_buffer = realloc(v_buffer, allocsize);
+	    v_buffer = (char *)realloc(v_buffer, allocsize);
 	    if (v_buffer) {
 		v_bufstr = v_buffer + start;
 		v_bufptr = v_buffer + size;
@@ -2419,10 +2413,10 @@ in_put(void)
 		select_timeout.tv_usec = 0;
 	else
 		select_timeout.tv_usec = 50000;
-	i = select(max_plus1, &select_mask, &write_mask, NULL,
+	i = select(max_plus1, &select_mask, &write_mask, 0,
 			(select_timeout.tv_usec == 0) || screen->awaitInput
 			? &select_timeout
-			: NULL);
+			: 0);
 	if (i < 0) {
 	    if (errno != EINTR)
 		SysError(ERROR_SELECT);
@@ -2642,7 +2636,7 @@ static void HandleMapUnmap(
 	    icon_name = NULL;
 	    XtGetValues(toplevel,args,XtNumber(args));
 	    if( icon_name != NULL ) {
-		char	*buf = malloc(strlen(icon_name) + 1);
+		char	*buf = (char *)malloc(strlen(icon_name) + 1);
 		if (buf == NULL) {
 			zIconBeep_flagged = True;
 			return;
@@ -3644,36 +3638,36 @@ static void VTClassInit (void)
 /* ARGSUSED */
 static void VTInitialize (
 	Widget wrequest,
-	Widget wnew,
+	Widget new_arg,
 	ArgList args GCC_UNUSED,
 	Cardinal *num_args GCC_UNUSED)
 {
    XtermWidget request = (XtermWidget) wrequest;
-   XtermWidget new     = (XtermWidget) wnew;
+   XtermWidget wnew    = (XtermWidget) new_arg;
    int i;
 #if OPT_ISO_COLORS
    Boolean color_ok;
 #endif
 
-   /* Zero out the entire "screen" component of "new" widget, then do
+   /* Zero out the entire "screen" component of "wnew" widget, then do
     * field-by-field assigment of "screen" fields that are named in the
     * resource list.
     */
-   bzero ((char *) &new->screen, sizeof(new->screen));
+   bzero ((char *) &wnew->screen, sizeof(wnew->screen));
 
    /* dummy values so that we don't try to Realize the parent shell with height
     * or width of 0, which is illegal in X.  The real size is computed in the
     * xtermWidget's Realize proc, but the shell's Realize proc is called first,
     * and must see a valid size.
     */
-   new->core.height = new->core.width = 1;
+   wnew->core.height = wnew->core.width = 1;
 
    /*
     * The definition of -rv now is that it changes the definition of
     * XtDefaultForeground and XtDefaultBackground.  So, we no longer
     * need to do anything special.
     */
-   new->screen.display = new->core.screen->display;
+   wnew->screen.display = wnew->core.screen->display;
 
    /*
     * We use the default foreground/background colors to compare/check if a
@@ -3683,107 +3677,107 @@ static void VTInitialize (
 #define MyWhitePixel(dpy) WhitePixel(dpy,DefaultScreen(dpy))
 
    if (request->misc.re_verse) {
-	new->dft_foreground = MyWhitePixel(new->screen.display);
-	new->dft_background = MyBlackPixel(new->screen.display);
+	wnew->dft_foreground = MyWhitePixel(wnew->screen.display);
+	wnew->dft_background = MyBlackPixel(wnew->screen.display);
    } else {
-	new->dft_foreground = MyBlackPixel(new->screen.display);
-	new->dft_background = MyWhitePixel(new->screen.display);
+	wnew->dft_foreground = MyBlackPixel(wnew->screen.display);
+	wnew->dft_background = MyWhitePixel(wnew->screen.display);
    }
 
-   new->screen.mouse_button = -1;
-   new->screen.mouse_row = -1;
-   new->screen.mouse_col = -1;
+   wnew->screen.mouse_button = -1;
+   wnew->screen.mouse_row = -1;
+   wnew->screen.mouse_col = -1;
 
-   new->screen.c132 = request->screen.c132;
-   new->screen.curses = request->screen.curses;
-   new->screen.hp_ll_bc = request->screen.hp_ll_bc;
+   wnew->screen.c132 = request->screen.c132;
+   wnew->screen.curses = request->screen.curses;
+   wnew->screen.hp_ll_bc = request->screen.hp_ll_bc;
 #if OPT_XMC_GLITCH
-   new->screen.xmc_glitch = request->screen.xmc_glitch;
-   new->screen.xmc_attributes = request->screen.xmc_attributes;
-   new->screen.xmc_inline = request->screen.xmc_inline;
-   new->screen.move_sgr_ok = request->screen.move_sgr_ok;
+   wnew->screen.xmc_glitch = request->screen.xmc_glitch;
+   wnew->screen.xmc_attributes = request->screen.xmc_attributes;
+   wnew->screen.xmc_inline = request->screen.xmc_inline;
+   wnew->screen.move_sgr_ok = request->screen.move_sgr_ok;
 #endif
-   new->screen.foreground = request->screen.foreground;
-   new->screen.cursorcolor = request->screen.cursorcolor;
+   wnew->screen.foreground = request->screen.foreground;
+   wnew->screen.cursorcolor = request->screen.cursorcolor;
 #if OPT_BLINK_CURS
-   new->screen.cursor_blink = request->screen.cursor_blink;
+   wnew->screen.cursor_blink = request->screen.cursor_blink;
 #endif
-   new->screen.border = request->screen.border;
-   new->screen.jumpscroll = request->screen.jumpscroll;
-   new->screen.old_fkeys = request->screen.old_fkeys;
+   wnew->screen.border = request->screen.border;
+   wnew->screen.jumpscroll = request->screen.jumpscroll;
+   wnew->screen.old_fkeys = request->screen.old_fkeys;
 #ifdef ALLOWLOGGING
-   new->screen.logfile = request->screen.logfile;
+   wnew->screen.logfile = request->screen.logfile;
 #endif
-   new->screen.marginbell = request->screen.marginbell;
-   new->screen.mousecolor = request->screen.mousecolor;
-   new->screen.mousecolorback = request->screen.mousecolorback;
-   new->screen.multiscroll = request->screen.multiscroll;
-   new->screen.nmarginbell = request->screen.nmarginbell;
-   new->screen.savelines = request->screen.savelines;
-   new->screen.scrolllines = request->screen.scrolllines;
-   new->screen.scrollttyoutput = request->screen.scrollttyoutput;
-   new->screen.scrollkey = request->screen.scrollkey;
-   new->screen.terminal_id = request->screen.terminal_id;
-   if (new->screen.terminal_id < MIN_DECID)
-       new->screen.terminal_id = MIN_DECID;
-   if (new->screen.terminal_id > MAX_DECID)
-       new->screen.terminal_id = MAX_DECID;
-   new->screen.ansi_level = (new->screen.terminal_id / 100);
-   new->screen.visualbell = request->screen.visualbell;
+   wnew->screen.marginbell = request->screen.marginbell;
+   wnew->screen.mousecolor = request->screen.mousecolor;
+   wnew->screen.mousecolorback = request->screen.mousecolorback;
+   wnew->screen.multiscroll = request->screen.multiscroll;
+   wnew->screen.nmarginbell = request->screen.nmarginbell;
+   wnew->screen.savelines = request->screen.savelines;
+   wnew->screen.scrolllines = request->screen.scrolllines;
+   wnew->screen.scrollttyoutput = request->screen.scrollttyoutput;
+   wnew->screen.scrollkey = request->screen.scrollkey;
+   wnew->screen.terminal_id = request->screen.terminal_id;
+   if (wnew->screen.terminal_id < MIN_DECID)
+       wnew->screen.terminal_id = MIN_DECID;
+   if (wnew->screen.terminal_id > MAX_DECID)
+       wnew->screen.terminal_id = MAX_DECID;
+   wnew->screen.ansi_level = (wnew->screen.terminal_id / 100);
+   wnew->screen.visualbell = request->screen.visualbell;
 #if OPT_TEK4014
-   new->screen.TekEmu = request->screen.TekEmu;
+   wnew->screen.TekEmu = request->screen.TekEmu;
 #endif
-   new->misc.re_verse = request->misc.re_verse;
-   new->screen.multiClickTime = request->screen.multiClickTime;
-   new->screen.bellSuppressTime = request->screen.bellSuppressTime;
-   new->screen.charClass = request->screen.charClass;
-   new->screen.cutNewline = request->screen.cutNewline;
-   new->screen.cutToBeginningOfLine = request->screen.cutToBeginningOfLine;
-   new->screen.highlight_selection = request->screen.highlight_selection;
-   new->screen.always_highlight = request->screen.always_highlight;
-   new->screen.pointer_cursor = request->screen.pointer_cursor;
+   wnew->misc.re_verse = request->misc.re_verse;
+   wnew->screen.multiClickTime = request->screen.multiClickTime;
+   wnew->screen.bellSuppressTime = request->screen.bellSuppressTime;
+   wnew->screen.charClass = request->screen.charClass;
+   wnew->screen.cutNewline = request->screen.cutNewline;
+   wnew->screen.cutToBeginningOfLine = request->screen.cutToBeginningOfLine;
+   wnew->screen.highlight_selection = request->screen.highlight_selection;
+   wnew->screen.always_highlight = request->screen.always_highlight;
+   wnew->screen.pointer_cursor = request->screen.pointer_cursor;
 
-   new->screen.printer_command = request->screen.printer_command;
-   new->screen.printer_autoclose = request->screen.printer_autoclose;
-   new->screen.printer_extent = request->screen.printer_extent;
-   new->screen.printer_formfeed = request->screen.printer_formfeed;
-   new->screen.printer_controlmode = request->screen.printer_controlmode;
+   wnew->screen.printer_command = request->screen.printer_command;
+   wnew->screen.printer_autoclose = request->screen.printer_autoclose;
+   wnew->screen.printer_extent = request->screen.printer_extent;
+   wnew->screen.printer_formfeed = request->screen.printer_formfeed;
+   wnew->screen.printer_controlmode = request->screen.printer_controlmode;
 #ifdef OPT_PRINT_COLORS
-   new->screen.print_attributes = request->screen.print_attributes;
+   wnew->screen.print_attributes = request->screen.print_attributes;
 #endif
 
-   new->screen.input_eight_bits = request->screen.input_eight_bits;
-   new->screen.output_eight_bits = request->screen.output_eight_bits;
-   new->screen.control_eight_bits = request->screen.control_eight_bits;
-   new->screen.backarrow_key = request->screen.backarrow_key;
-   new->screen.allowSendEvents = request->screen.allowSendEvents;
+   wnew->screen.input_eight_bits = request->screen.input_eight_bits;
+   wnew->screen.output_eight_bits = request->screen.output_eight_bits;
+   wnew->screen.control_eight_bits = request->screen.control_eight_bits;
+   wnew->screen.backarrow_key = request->screen.backarrow_key;
+   wnew->screen.allowSendEvents = request->screen.allowSendEvents;
 #ifndef NO_ACTIVE_ICON
-   new->screen.fnt_icon = request->screen.fnt_icon;
+   wnew->screen.fnt_icon = request->screen.fnt_icon;
 #endif /* NO_ACTIVE_ICON */
-   new->misc.titeInhibit = request->misc.titeInhibit;
-   new->misc.dynamicColors = request->misc.dynamicColors;
+   wnew->misc.titeInhibit = request->misc.titeInhibit;
+   wnew->misc.dynamicColors = request->misc.dynamicColors;
    for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
-       new->screen.menu_font_names[i] = request->screen.menu_font_names[i];
+       wnew->screen.menu_font_names[i] = request->screen.menu_font_names[i];
    }
    /* set default in realize proc */
-   new->screen.menu_font_names[fontMenu_fontdefault] = NULL;
-   new->screen.menu_font_names[fontMenu_fontescape] = NULL;
-   new->screen.menu_font_names[fontMenu_fontsel] = NULL;
-   new->screen.menu_font_number = fontMenu_fontdefault;
+   wnew->screen.menu_font_names[fontMenu_fontdefault] = NULL;
+   wnew->screen.menu_font_names[fontMenu_fontescape] = NULL;
+   wnew->screen.menu_font_names[fontMenu_fontsel] = NULL;
+   wnew->screen.menu_font_number = fontMenu_fontdefault;
 
 #if OPT_ISO_COLORS
-   new->screen.boldColors    = request->screen.boldColors;
-   new->screen.colorAttrMode = request->screen.colorAttrMode;
-   new->screen.colorBDMode   = request->screen.colorBDMode;
-   new->screen.colorBLMode   = request->screen.colorBLMode;
-   new->screen.colorMode     = request->screen.colorMode;
-   new->screen.colorULMode   = request->screen.colorULMode;
+   wnew->screen.boldColors    = request->screen.boldColors;
+   wnew->screen.colorAttrMode = request->screen.colorAttrMode;
+   wnew->screen.colorBDMode   = request->screen.colorBDMode;
+   wnew->screen.colorBLMode   = request->screen.colorBLMode;
+   wnew->screen.colorMode     = request->screen.colorMode;
+   wnew->screen.colorULMode   = request->screen.colorULMode;
 
    for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
-       new->screen.Acolors[i] = request->screen.Acolors[i];
-       if (new->screen.Acolors[i] != new->dft_foreground
-        && new->screen.Acolors[i] != request->screen.foreground
-        && new->screen.Acolors[i] != request->core.background_pixel)
+       wnew->screen.Acolors[i] = request->screen.Acolors[i];
+       if (wnew->screen.Acolors[i] != wnew->dft_foreground
+        && wnew->screen.Acolors[i] != request->screen.foreground
+        && wnew->screen.Acolors[i] != request->core.background_pixel)
 	   color_ok = True;
    }
 
@@ -3793,41 +3787,41 @@ static void VTInitialize (
     * the resource lookup failed versus the user having misconfigured this).
     */
    if (!color_ok)
-	new->screen.colorMode = False;
+	wnew->screen.colorMode = False;
 
-   new->num_ptrs = new->screen.colorMode ? 3 : 2;
-   new->sgr_foreground = -1;
+   wnew->num_ptrs = wnew->screen.colorMode ? 3 : 2;
+   wnew->sgr_foreground = -1;
 #endif /* OPT_ISO_COLORS */
 
 #if OPT_HIGHLIGHT_COLOR
-   new->screen.highlightcolor = request->screen.highlightcolor;
+   wnew->screen.highlightcolor = request->screen.highlightcolor;
 #endif
 
 #if OPT_DEC_CHRSET
-   new->num_ptrs = 5;
+   wnew->num_ptrs = 5;
 #endif
 
-   new->screen.underline = request->screen.underline;
+   wnew->screen.underline = request->screen.underline;
 
-   new->cur_foreground = 0;
-   new->cur_background = 0;
+   wnew->cur_foreground = 0;
+   wnew->cur_background = 0;
 
-   new->keyboard.flags = MODE_SRM;
-   if (new->screen.backarrow_key)
-	   new->keyboard.flags |= MODE_DECBKM;
+   wnew->keyboard.flags = MODE_SRM;
+   if (wnew->screen.backarrow_key)
+	   wnew->keyboard.flags |= MODE_DECBKM;
 
    /* look for focus related events on the shell, because we need
     * to care about the shell's border being part of our focus.
     */
-   XtAddEventHandler(XtParent(new), EnterWindowMask, FALSE,
+   XtAddEventHandler(XtParent(wnew), EnterWindowMask, FALSE,
 		HandleEnterWindow, (Opaque)NULL);
-   XtAddEventHandler(XtParent(new), LeaveWindowMask, FALSE,
+   XtAddEventHandler(XtParent(wnew), LeaveWindowMask, FALSE,
 		HandleLeaveWindow, (Opaque)NULL);
-   XtAddEventHandler(XtParent(new), FocusChangeMask, FALSE,
+   XtAddEventHandler(XtParent(wnew), FocusChangeMask, FALSE,
 		HandleFocusChange, (Opaque)NULL);
-   XtAddEventHandler((Widget)new, 0L, TRUE,
+   XtAddEventHandler((Widget)wnew, 0L, TRUE,
 		VTNonMaskableEvent, (Opaque)NULL);
-   XtAddEventHandler((Widget)new, PropertyChangeMask, FALSE,
+   XtAddEventHandler((Widget)wnew, PropertyChangeMask, FALSE,
 		     HandleBellPropertyChange, (Opaque)NULL);
 
 #if OPT_ZICONBEEP
@@ -3835,32 +3829,32 @@ static void VTInitialize (
     * Put in a handler that will tell us when we get Map/Unmap events.
     */
    if ( zIconBeep )
-       XtAddEventHandler(XtParent(new), StructureNotifyMask, FALSE,
+       XtAddEventHandler(XtParent(wnew), StructureNotifyMask, FALSE,
 			 HandleMapUnmap, (Opaque)NULL);
 #endif /* OPT_ZICONBEEP */
 
-   new->screen.bellInProgress = FALSE;
+   wnew->screen.bellInProgress = FALSE;
 
-   set_character_class (new->screen.charClass);
+   set_character_class (wnew->screen.charClass);
 
    /* create it, but don't realize it */
-   ScrollBarOn (new, TRUE, FALSE);
+   ScrollBarOn (wnew, TRUE, FALSE);
 
    /* make sure that the resize gravity acceptable */
-   if ( new->misc.resizeGravity != NorthWestGravity &&
-        new->misc.resizeGravity != SouthWestGravity) {
+   if ( wnew->misc.resizeGravity != NorthWestGravity &&
+        wnew->misc.resizeGravity != SouthWestGravity) {
        Cardinal nparams = 1;
 
        XtAppWarningMsg(app_con, "rangeError", "resizeGravity", "XTermError",
 		       "unsupported resizeGravity resource value (%d)",
-		       (String *) &(new->misc.resizeGravity), &nparams);
-       new->misc.resizeGravity = SouthWestGravity;
+		       (String *) &(wnew->misc.resizeGravity), &nparams);
+       wnew->misc.resizeGravity = SouthWestGravity;
    }
 
 #ifndef NO_ACTIVE_ICON
-   new->screen.whichVwin = &new->screen.fullVwin;
+   wnew->screen.whichVwin = &wnew->screen.fullVwin;
 #if OPT_TEK4014
-   new->screen.whichTwin = &new->screen.fullTwin;
+   wnew->screen.whichTwin = &wnew->screen.fullTwin;
 #endif
 #endif /* NO_ACTIVE_ICON */
 
@@ -3889,12 +3883,12 @@ static void VTRealize (
 
 	screen->menu_font_names[fontMenu_fontdefault] = term->misc.f_n;
 	screen->fnt_norm = screen->fnt_bold = NULL;
-	if (!LoadNewFont(screen, term->misc.f_n, term->misc.f_b, False, 0)) {
+	if (!xtermLoadFont(screen, term->misc.f_n, term->misc.f_b, False, 0)) {
 	    if (XmuCompareISOLatin1(term->misc.f_n, "fixed") != 0) {
 		fprintf (stderr,
 		     "%s:  unable to open font \"%s\", trying \"fixed\"....\n",
 		     xterm_name, term->misc.f_n);
-		(void) LoadNewFont (screen, "fixed", NULL, False, 0);
+		(void) xtermLoadFont (screen, "fixed", NULL, False, 0);
 		screen->menu_font_names[fontMenu_fontdefault] = "fixed";
 	    }
 	}
@@ -3925,7 +3919,7 @@ static void VTRealize (
 			     &width, &height);
 	screen->max_col = (width - 1);	/* units in character cells */
 	screen->max_row = (height - 1);	/* units in character cells */
-	update_font_info (&term->screen, False);
+	xtermUpdateFontInfo (&term->screen, False);
 
 	width = screen->fullVwin.fullwidth;
 	height = screen->fullVwin.fullheight;
@@ -4103,7 +4097,7 @@ static void VTRealize (
 
 	screen->do_wrap = 0;
 	screen->scrolls = screen->incopy = 0;
-	set_vt_box (screen);
+	xtermSetCursorBox (screen);
 
 	screen->savedlines = 0;
 
@@ -4140,7 +4134,7 @@ static void VTInitI18N(void)
     } else {
 	s = term->misc.input_method;
 	i = 5 + strlen(s);
-	t = MyStackAlloc(i, buf);
+	t = (char *)MyStackAlloc(i, buf);
 	if (t == NULL)
 	    SysError(ERROR_VINIT);
 
@@ -4247,12 +4241,12 @@ static void VTInitI18N(void)
 static Boolean VTSetValues (
 	Widget cur,
 	Widget request GCC_UNUSED,
-	Widget new,
+	Widget wnew,
 	ArgList args GCC_UNUSED,
 	Cardinal *num_args GCC_UNUSED)
 {
     XtermWidget curvt = (XtermWidget) cur;
-    XtermWidget newvt = (XtermWidget) new;
+    XtermWidget newvt = (XtermWidget) wnew;
     Boolean refresh_needed = FALSE;
     Boolean fonts_redone = FALSE;
 
@@ -4263,7 +4257,7 @@ static Boolean VTSetValues (
        || curvt->misc.f_n != newvt->misc.f_n) {
 	if(curvt->misc.f_n != newvt->misc.f_n)
 	    newvt->screen.menu_font_names[fontMenu_fontdefault] = newvt->misc.f_n;
-	if (LoadNewFont(&newvt->screen,
+	if (xtermLoadFont(&newvt->screen,
 			newvt->screen.menu_font_names[curvt->screen.menu_font_number],
 			newvt->screen.menu_font_names[curvt->screen.menu_font_number],
 			TRUE, newvt->screen.menu_font_number)) {
@@ -4790,8 +4784,8 @@ static void HandleKeymapChange(
 
     len = strlen (params[0]) + 7;
 
-    pmapName  = MyStackAlloc(len, mapName);
-    pmapClass = MyStackAlloc(len, mapClass);
+    pmapName  = (char *)MyStackAlloc(len, mapName);
+    pmapClass = (char *)MyStackAlloc(len, mapClass);
     if (pmapName == NULL
      || pmapClass == NULL)
 	SysError(ERROR_KMMALLOC1);
@@ -4876,7 +4870,7 @@ DoSetSelectedFont(
 	   we are a little more liberal here. */
 	if (len > 1000  ||  strchr(val, '\n'))
 	    return;
-	if (!LoadNewFont (&term->screen, val, NULL, True, fontMenu_fontsel))
+	if (!xtermLoadFont (&term->screen, val, NULL, True, fontMenu_fontsel))
 	    Bell(XkbBI_MinorError,0);
     }
 }
@@ -4903,7 +4897,7 @@ void FindFontSelection (char *atom_name, Bool justprobe)
     target = XmuInternAtom(XtDisplay(term), *pAtom);
     if (justprobe) {
 	term->screen.menu_font_names[fontMenu_fontsel] =
-	  XGetSelectionOwner(XtDisplay(term), target) ? _Font_Selected_ : NULL;
+	  XGetSelectionOwner(XtDisplay(term), target) ? _Font_Selected_ : 0;
     } else {
 	XtGetSelectionValue((Widget)term, target, XA_STRING,
 			    DoSetSelectedFont, NULL,
@@ -4987,196 +4981,10 @@ void SetVTFont (
 	return;
     }
     if (!name1) name1 = screen->menu_font_names[i];
-    if (!LoadNewFont(screen, name1, name2, doresize, i)) {
+    if (!xtermLoadFont(screen, name1, name2, doresize, i)) {
 	Bell(XkbBI_MinorError,0);
     }
     return;
-}
-
-static int
-LoadNewFont (
-	TScreen *screen,
-	char *nfontname,
-	char *bfontname,
-	Bool doresize,
-	int fontnum)
-{
-    XFontStruct *nfs = NULL, *bfs = NULL;
-    XGCValues xgcv;
-    unsigned long mask;
-    GC new_normalGC = NULL, new_normalboldGC = NULL;
-    GC new_reverseGC = NULL, new_reverseboldGC = NULL;
-    Pixel new_normal, new_revers;
-    char *tmpname = NULL;
-    Boolean proportional = False;
-
-    if (!nfontname) return 0;
-
-    if (fontnum == fontMenu_fontescape &&
-	nfontname != screen->menu_font_names[fontnum]) {
-	tmpname = (char *) malloc (strlen(nfontname) + 1);
-	if (!tmpname) return 0;
-	strcpy (tmpname, nfontname);
-    }
-
-    if (!(nfs = XLoadQueryFont (screen->display, nfontname))) goto bad;
-    if (nfs->ascent + nfs->descent == 0  ||  nfs->max_bounds.width == 0)
-	goto bad;		/* can't use a 0-sized font */
-
-    if (!(bfontname &&
-	  (bfs = XLoadQueryFont (screen->display, bfontname))))
-      bfs = nfs;
-    else
-	if (bfs->ascent + bfs->descent == 0  ||  bfs->max_bounds.width == 0)
-	    goto bad;		/* can't use a 0-sized font */
-
-    if (nfs->min_bounds.width != nfs->max_bounds.width
-     || bfs->min_bounds.width != bfs->max_bounds.width
-     || nfs->min_bounds.width != bfs->min_bounds.width
-     || nfs->max_bounds.width != bfs->max_bounds.width) {
-	TRACE(("Proportional font!\n"))
-	proportional = True;
-    }
-
-    mask = (GCFont | GCForeground | GCBackground | GCGraphicsExposures |
-	    GCFunction);
-
-    new_normal = getXtermForeground(term->flags, term->cur_foreground);
-    new_revers = getXtermBackground(term->flags, term->cur_background);
-
-    xgcv.font = nfs->fid;
-    xgcv.foreground = new_normal;
-    xgcv.background = new_revers;
-    xgcv.graphics_exposures = TRUE;	/* default */
-    xgcv.function = GXcopy;
-
-    new_normalGC = XtGetGC((Widget)term, mask, &xgcv);
-    if (!new_normalGC) goto bad;
-
-    if (nfs == bfs) {			/* there is no bold font */
-	new_normalboldGC = new_normalGC;
-    } else {
-	xgcv.font = bfs->fid;
-	new_normalboldGC = XtGetGC((Widget)term, mask, &xgcv);
-	if (!new_normalboldGC) goto bad;
-    }
-
-    xgcv.font = nfs->fid;
-    xgcv.foreground = new_revers;
-    xgcv.background = new_normal;
-    new_reverseGC = XtGetGC((Widget)term, mask, &xgcv);
-    if (!new_reverseGC) goto bad;
-
-    if (nfs == bfs) {			/* there is no bold font */
-	new_reverseboldGC = new_reverseGC;
-    } else {
-	xgcv.font = bfs->fid;
-	new_reverseboldGC = XtGetGC((Widget)term, mask, &xgcv);
-	if (!new_reverseboldGC) goto bad;
-    }
-
-    if (NormalGC(screen) != NormalBoldGC(screen))
-	XtReleaseGC ((Widget) term, NormalBoldGC(screen));
-    XtReleaseGC ((Widget) term, NormalGC(screen));
-    if (ReverseGC(screen) != ReverseBoldGC(screen))
-	XtReleaseGC ((Widget) term, ReverseBoldGC(screen));
-    XtReleaseGC ((Widget) term, ReverseGC(screen));
-    NormalGC(screen) = new_normalGC;
-    NormalBoldGC(screen) = new_normalboldGC;
-    ReverseGC(screen) = new_reverseGC;
-    ReverseBoldGC(screen) = new_reverseboldGC;
-
-    /* If we're switching fonts, free the old ones.  Otherwise we'll leak the
-     * memory that is associated with the old fonts. The XLoadQueryFont call
-     * allocates a new XFontStruct.
-     */
-    if (screen->fnt_bold != 0
-     && screen->fnt_bold != screen->fnt_norm)
-    	XFreeFont(screen->display, screen->fnt_bold);
-    if (screen->fnt_norm != 0)
-    	XFreeFont(screen->display, screen->fnt_norm);
-
-    screen->fnt_norm = nfs;
-    screen->fnt_bold = bfs;
-    screen->fnt_prop = proportional;
-
-    screen->enbolden = (nfs == bfs);
-    set_menu_font (False);
-    screen->menu_font_number = fontnum;
-    set_menu_font (True);
-    if (tmpname) {			/* if setting escape or sel */
-	if (screen->menu_font_names[fontnum])
-	  free (screen->menu_font_names[fontnum]);
-	screen->menu_font_names[fontnum] = tmpname;
-	if (fontnum == fontMenu_fontescape) {
-	    set_sensitivity (term->screen.fontMenu,
-			     fontMenuEntries[fontMenu_fontescape].widget,
-			     TRUE);
-	}
-    }
-    set_cursor_gcs (screen);
-    update_font_info (screen, doresize);
-    return 1;
-
-  bad:
-    if (tmpname) free (tmpname);
-    if (new_normalGC)
-      XtReleaseGC ((Widget) term, screen->fullVwin.normalGC);
-    if (new_normalGC && new_normalGC != new_normalboldGC)
-      XtReleaseGC ((Widget) term, new_normalboldGC);
-    if (new_reverseGC)
-      XtReleaseGC ((Widget) term, new_reverseGC);
-    if (new_reverseGC && new_reverseGC != new_reverseboldGC)
-      XtReleaseGC ((Widget) term, new_reverseboldGC);
-    if (nfs) XFreeFont (screen->display, nfs);
-    if (bfs && nfs != bfs) XFreeFont (screen->display, bfs);
-    return 0;
-}
-
-
-static void
-update_font_info (TScreen *screen, Bool doresize)
-{
-    int i, j, width, height, scrollbar_width;
-
-    screen->fullVwin.f_width = screen->fnt_norm->max_bounds.width;
-    screen->fullVwin.f_height = (screen->fnt_norm->ascent +
-				 screen->fnt_norm->descent);
-    scrollbar_width = (term->misc.scrollbar ?
-		       screen->scrollWidget->core.width +
-		       screen->scrollWidget->core.border_width : 0);
-    i = 2 * screen->border + scrollbar_width;
-    j = 2 * screen->border;
-    width = (screen->max_col + 1) * screen->fullVwin.f_width + i;
-    height = (screen->max_row + 1) * screen->fullVwin.f_height + j;
-    screen->fullVwin.fullwidth = width;
-    screen->fullVwin.fullheight = height;
-    screen->fullVwin.width = width - i;
-    screen->fullVwin.height = height - j;
-
-    if (doresize) {
-	if (VWindow(screen)) {
-	    XClearWindow (screen->display, VWindow(screen));
-	}
-	DoResizeScreen (term);		/* set to the new natural size */
-	if (screen->scrollWidget)
-	    ResizeScrollBar (screen);
-	Redraw ();
-    }
-    set_vt_box (screen);
-}
-
-static void
-set_vt_box (TScreen *screen)
-{
-	XPoint	*vp;
-
-	vp = &VTbox[1];
-	(vp++)->x = FontWidth(screen) - 1;
-	(vp++)->y = FontHeight(screen) - 1;
-	(vp++)->x = -(FontWidth(screen) - 1);
-	vp->y = -(FontHeight(screen) - 1);
-	screen->box = VTbox;
 }
 
 void

@@ -33,8 +33,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef	included_trace_h
 #define	included_trace_h
 
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
+
 extern	void	Trace ( char *, ... )
-#if __GNUC__
+#ifdef GCC_PRINTF
 	__attribute__ ((format(printf,1,2)))
 #endif
 	;

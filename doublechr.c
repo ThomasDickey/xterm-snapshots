@@ -34,13 +34,8 @@ authorization.
 
 ********************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
-#include "ptyx.h"
-#include "data.h"
-#include "xterm.h"
+#include <xterm.h>
+#include <data.h>
 
 /*
  * The first column is all that matters for double-size characters (since the

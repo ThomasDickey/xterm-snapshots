@@ -26,26 +26,17 @@
  * SOFTWARE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
+#include <xterm.h>
 
-#include "ptyx.h"		/* gets Xt headers, too */
-
-#include <stdio.h>
-#include <ctype.h>
 #include <X11/Xatom.h>
-
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
 
 #include <X11/Xaw/Scrollbar.h>
 
-#include "data.h"
-#include "error.h"
-#include "menu.h"
-
-#include "xterm.h"
+#include <data.h>
+#include <error.h>
+#include <menu.h>
 
 /* Event handlers */
 
@@ -433,7 +424,7 @@ ScrollTextTo(
    screen->topline    : -Number of lines above the last screen->max_row+1 lines
 */
 
-	thumbTop = *topPercent * (screen->savedlines + screen->max_row+1);
+	thumbTop = (int) (*topPercent * (screen->savedlines + screen->max_row+1));
 	newTopLine = thumbTop - screen->savedlines;
 	WindowScroll(screen, newTopLine);
 }
@@ -473,15 +464,8 @@ specialcmplowerwiths (char *a, char *b)
     if (!a || !b) return 0;
 
     while (1) {
-	ca = *a;
+	ca = char2lower(*a);
 	cb = *b;
-	if (isascii(ca) && isupper(ca)) {		/* lowercasify */
-#ifdef _tolower
-	    ca = _tolower (ca);
-#else
-	    ca = tolower (ca);
-#endif
-	}
 	if (ca != cb || ca == '\0') break;  /* if not eq else both nul */
 	a++, b++;
     }

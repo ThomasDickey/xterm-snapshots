@@ -30,8 +30,8 @@
 #include <xtermcfg.h>
 #endif
 
-#include "ptyx.h"		/* gets Xt stuff, too */
-#include "data.h"
+#include <ptyx.h>		/* gets Xt stuff, too */
+#include <data.h>
 
 #include <setjmp.h>
 
@@ -80,13 +80,6 @@ int bcnt = 0;
 Char VTbuffer[BUF_SIZE];
 Char *bptr = VTbuffer;
 jmp_buf VTend;
-XPoint VTbox[NBOX] = {
-	{0, 0},
-	{0, 0},
-	{0, 0},
-	{0, 0},
-	{0, 0},
-};
 
 #ifdef DEBUG
 int debug = 0; 		/* true causes error messages to be displayed */

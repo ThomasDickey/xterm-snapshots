@@ -218,11 +218,10 @@ dnl Check for memmove, or a bcopy that can handle overlapping copy.  If neither
 dnl is found, add our own version of memmove to the list of objects.
 AC_DEFUN([CF_FUNC_MEMMOVE],
 [
-if test ".$ac_cv_func_memmove" != .yes ; then
-	if test ".$ac_cv_func_bcopy" = ".yes" ; then
-		AC_MSG_CHECKING(if bcopy does overlapping moves)
-		AC_CACHE_VAL(cf_cv_good_bcopy,[
-			AC_TRY_RUN([
+AC_CHECK_FUNC(memmove,,[
+AC_CHECK_FUNC(bcopy,[
+	AC_CACHE_CHECK(if bcopy does overlapping moves,cf_cv_good_bcopy,[
+		AC_TRY_RUN([
 int main() {
 	static char data[] = "abcdefghijklmnopqrstuwwxyz";
 	char temp[40];
@@ -236,17 +235,13 @@ int main() {
 		[cf_cv_good_bcopy=no],
 		[cf_cv_good_bcopy=unknown])
 		])
-		AC_MSG_RESULT($cf_cv_good_bcopy)
-	else
-		cf_cv_good_bcopy=no
-	fi
+	],[cf_cv_good_bcopy=no])
 	if test $cf_cv_good_bcopy = yes ; then
 		AC_DEFINE(USE_OK_BCOPY)
 	else
 		AC_DEFINE(USE_MY_MEMMOVE)
 	fi
-fi
-])dnl
+])])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -258,8 +253,9 @@ AC_CACHE_CHECK(for full tgetent function,cf_cv_lib_tgetent,[
 cf_save_LIBS="$LIBS"
 cf_cv_lib_tgetent=no
 cf_TERMLIB="termcap termlib ncurses curses"
-for cf_termlib in $cf_TERMLIB ; do
-	LIBS="$cf_save_LIBS -l$cf_termlib"
+for cf_termlib in '' $cf_TERMLIB ; do
+	LIBS="$cf_save_LIBS"
+	test -n "$cf_termlib" && LIBS="$LIBS -l$cf_termlib"
 	AC_TRY_RUN([
 /* terminfo implementations ignore the buffer argument, making it useless for
  * the xterm application, which uses this information to make a new TERMCAP
@@ -272,7 +268,11 @@ int main()
 	tgetent(buffer, "vt100");
 	exit(buffer[0] == 0); }],
 	[echo "yes, there is a termcap/tgetent in $cf_termlib" 1>&AC_FD_CC
-	 cf_cv_lib_tgetent="-l$cf_termlib"
+	 if test -n "$cf_termlib" ; then
+	 	cf_cv_lib_tgetent="-l$cf_termlib"
+	 else
+	 	cf_cv_lib_tgetent=yes
+	 fi
 	 break],
 	[echo "no, there is no termcap/tgetent in $cf_termlib" 1>&AC_FD_CC],
 	[echo "cross-compiling, cannot verify if a termcap/tgetent is present in $cf_termlib" 1>&AC_FD_CC])
@@ -284,8 +284,8 @@ LIBS="$cf_save_LIBS"
 # (LIBS cannot be set inside AC_CACHE_CHECK; the commands there should
 # not have side effects other than setting the cache variable, because
 # they are not executed when a cached value exists.)
-if test $cf_cv_lib_tgetent != no ; then
-	LIBS="$LIBS $cf_cv_lib_tgetent"
+if test "$cf_cv_lib_tgetent" != no ; then
+	test "$cf_cv_lib_tgetent" != yes && LIBS="$LIBS $cf_cv_lib_tgetent"
 	AC_CHECK_HEADERS(termcap.h)
 else
         # If we didn't find a tgetent() that supports the buffer
@@ -305,7 +305,7 @@ else
 	LIBS="$cf_save_LIBS"
 	])
 
-	if test $cf_cv_lib_part_tgetent != no ; then
+	if test "$cf_cv_lib_part_tgetent" != no ; then
 		LIBS="$LIBS $cf_cv_lib_part_tgetent"
 		AC_CHECK_HEADERS(termcap.h)
 
@@ -460,9 +460,10 @@ esac
 # If it's installed properly, imake (or its wrapper, xmkmf) will point to the
 # config directory.
 if mkdir conftestdir; then
+	cf_makefile=`cd $srcdir;pwd`/Imakefile
 	cd conftestdir
 	echo >./Imakefile
-	test -f ../Imakefile && cat ../Imakefile >>./Imakefile
+	test -f $cf_makefile && cat $cf_makefile >>./Imakefile
 	cat >> ./Imakefile <<'CF_EOF'
 findstddefs:
 	@echo 'IMAKE_CFLAGS="${ALLDEFINES} ifelse($1,,,$1)"'

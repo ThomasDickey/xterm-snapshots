@@ -28,11 +28,7 @@
 
 /* input.c */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
-#include "ptyx.h"		/* gets Xt headers, too */
+#include <xterm.h>
 
 #include <X11/keysym.h>
 #if HAVE_X11_DECKEYSYM_H
@@ -40,10 +36,8 @@
 #endif
 
 #include <X11/Xutil.h>
-#include <stdio.h>
 
-#include "xterm.h"
-#include "data.h"
+#include <data.h>
 
 static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
 static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";

@@ -30,7 +30,7 @@
 #include <xtermcfg.h>
 #endif
 
-#include "VTparse.h"
+#include <VTparse.h>
 
 #ifndef OPT_VT52_MODE
 #define OPT_VT52_MODE   1 /* true if xterm supports VT52 emulation */

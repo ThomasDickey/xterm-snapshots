@@ -27,13 +27,10 @@ in this Software without prior written authorization from the X Consortium.
 
 */
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
+#include <ptyx.h>
+#include <data.h>
+#include <menu.h>
 
-#include "ptyx.h"
-#include "data.h"
-#include "menu.h"
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
 #include <X11/Xmu/CharSet.h>
@@ -47,7 +44,7 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/Xos.h>
 #endif
 
-#include "xterm.h"
+#include <xterm.h>
 
 Arg menuArgs[2] = {{ XtNleftBitmap, (XtArgVal) 0 },
 		   { XtNsensitive, (XtArgVal) 0 }};

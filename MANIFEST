@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-84
+MANIFEST for xterm, version xterm-85
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 INSTALL                         configure script: options and related install instructions
@@ -28,6 +28,8 @@ data.c                          global data declarations
 data.h                          global data external-definitions
 doublechr.c                     VT100 double-size character support
 error.h                         error-code definitions for 'xterm'
+fontutils.c                     xterm functions for (re)loading fonts
+fontutils.h                     interface of fontutils.c
 input.c                         VT100 key-symbol and function-key translation
 install.sh                      configure script: fallback install script
 main.c                          main program of 'xterm'
