@@ -531,6 +531,10 @@ extern void StringInput (TScreen *screen, char *string, size_t nbytes);
 extern void VTInitModifiers(void);
 #endif
 
+#if OPT_TCAP_QUERY
+extern int xtermcapKeycode(char **params);
+#endif
+
 #if OPT_WIDE_CHARS
 extern int convertFromUTF8(unsigned long c, Char *strbuf);
 #endif

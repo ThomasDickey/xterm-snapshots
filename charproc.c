@@ -3614,6 +3614,22 @@ unparseputc(int c, int fd)
 #ifdef AMOEBA
 	if (ttypreprocess(c)) return;
 #endif
+#if OPT_TCAP_QUERY
+	/*
+	 * If we're returning a termcap string, it has to be translated since
+	 * a DCS must not contain any characters except for the normal 7-bit
+	 * printable ASCII (counting tab, carriage return, etc).  For now,
+	 * just use hexadecimal for the whole thing.
+	 */
+	if (screen->tc_query >= 0) {
+		char tmp[3];
+		sprintf(tmp, "%02X", c & 0xFF);
+		buf[0] = tmp[0];
+		buf[1] = tmp[1];
+		i = 2;
+	}
+	else
+#endif
 	if((buf[0] = c) == '\r' && (term->flags & LINEFEED)) {
 		buf[1] = '\n';
 		i++;
@@ -4102,6 +4118,9 @@ static void VTInitialize (
    wnew->misc.tekInhibit = request->misc.tekInhibit;
    wnew->misc.tekSmall = request->misc.tekSmall;
    wnew->screen.TekEmu = request->screen.TekEmu;
+#endif
+#if OPT_TCAP_QUERY
+   wnew->screen.tc_query = -1;
 #endif
    wnew->misc.re_verse0 =
    wnew->misc.re_verse = request->misc.re_verse;

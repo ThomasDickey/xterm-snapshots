@@ -112,6 +112,7 @@ install-bin \
 install-man \
 install-full \
 install-dirs :: $(INSTALL_DIRS)
+	@echo $@ built
 
 install \
 install-bin \

@@ -1306,7 +1306,6 @@ main (int argc, char *argv[])
 	/* Do these first, since we may not be able to open the display */
 	ProgramName = argv[0];
 	if (argc > 1) {
-		int n;
 		if (abbrev(argv[1], "-version"))
 			Version();
 		if (abbrev(argv[1], "-help"))
@@ -2705,7 +2704,7 @@ spawn (void)
 		 */
 		TRACE_CHILD
 #if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__) || defined(SCO325) || defined(__QNX__)
-		int pgrp = setsid();
+		int pgrp = setsid();	/* variable may not be used... */
 #else
 		int pgrp = getpid();
 #endif
@@ -3280,7 +3279,9 @@ spawn (void)
 #endif /* CRAY */
 		}
 
-#ifndef	USE_SYSV_PGRP
+#if defined(__QNX__)
+		tcsetpgrp( 0, pgrp /*setsid()*/ );
+#elif !defined(USE_SYSV_PGRP)
 #ifdef TIOCSCTTY
 		setsid();
 		ioctl(0, TIOCSCTTY, 0);
@@ -3290,10 +3291,6 @@ spawn (void)
 		close(open(ttydev, O_WRONLY, 0));
 		setpgrp (0, pgrp);
 #endif /* !USE_SYSV_PGRP */
-
-#if defined(__QNX__)
-		tcsetpgrp( 0, pgrp /*setsid()*/ );
-#endif
 
 #endif /* AMOEBA */
 

@@ -123,7 +123,7 @@ the
 .B Tektronix
 menu; see below).
 The name of the file will be
-``\fBCOPY\fIyyyy\fB\-\fIMM\fB\-\fIdd\fB.\fIhh\fB:\fImm\fB:\fIss\fP'', where
+``\fBCOPY\fIyyyy\fB\-\fIMM\fB\-\fIdd\fB.\fIhh\fB:\fImm\fB:\fIss\fR'', where
 .IR yyyy ,
 .IR MM ,
 .IR dd ,
@@ -439,10 +439,10 @@ This option specifies the number of characters from the right end of a line
 at which the margin bell, if enabled, will ring.  The default is 10.
 .TP 8
 .B "\-nul"
-This option enables the display of underlining.
+This option disables the display of underlining.
 .TP 8
 .B "\+nul"
-This option disables the display of underlining.
+This option enables the display of underlining.
 .TP 8
 .B \-pc
 This option enables the PC-style use of bold colors (see boldColors
@@ -2050,9 +2050,10 @@ This action rings the keyboard bell at the specified percentage
 above or below the base volume.
 .TP 8
 .B "clear-saved-lines()"
-This action does \fBhard-reset()\fP (see above) and also clears the history
+This action does \fBhard-reset()\fP (see below) and also clears the history
 of lines saved off the top of the screen.
 It is also invoked from the \fBclearsavedlines\fP entry in \fIvtMenu\fP.
+The effect is identical to a hardware reset (RIS) control sequence.
 .TP 8
 .B "create-menu(\fIm/v/f/t\fP)"
 This action creates one of the menus used by \fIxterm\fP,
@@ -2348,6 +2349,7 @@ indicate the normal and bold fonts that have been set through escape codes
 .B "soft-reset()"
 This action resets the scrolling region and is also invoked from the
 \fBsoftreset\fP entry in \fIvtMenu\fP.
+The effect is identical to a soft reset (DECSTR) control sequence.
 .TP 8
 .B "start-extend()"
 This action is similar to \fBselect-start\fP except that the
