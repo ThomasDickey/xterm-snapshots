@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.161 2004/07/20 01:14:41 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.127 2004/07/20 01:14:41 dickey Exp $
+  $XTermId: xterm.log.html,v 1.166 2004/07/28 00:53:26 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.128 2004/07/28 00:53:26 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_194">Patch #194 - 2004/7/27 - XFree86 4.4.99.11</A>
 <LI><A HREF="#xterm_193">Patch #193 - 2004/7/19 - XFree86 4.4.99.10</A>
 <LI><A HREF="#xterm_192">Patch #192 - 2004/7/12 - XFree86 4.4.99.9</A>
 <LI><A HREF="#xterm_191">Patch #191 - 2004/6/6 - XFree86 4.4.99.7</A>
@@ -242,6 +243,31 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_194">Patch #194 - 2004/7/27 - XFree86 4.4.99.11</A></H1>
+<ul>
+	<li>change clearing operations so foreground color attribute is not
+	    set.  Usually this is benign, but in some cases when the cursor
+	    color is not set explicitly, the cursor would show this color
+	    (Debian #252873, #260471).
+
+	<li>add extra state (cursor-moved) to guard against deciding that the
+	    cursor did not require repainting after an indexing operation
+	    that leaves the cursor in the same location on the screen.
+
+	<li>fix a case where a full-screen indexing operation would
+	    not restore the cursor-busy state.
+
+	<li>fix a repainting bug introduced in
+	    <a href="#xterm_180">patch #180</a>:  when using a font
+	    lacking line-drawing characters, a repaint of the screen could
+	    skip horizontally an extra amount after filling in the missing
+	    character (reports by Nicolas George, Hans de Goede, Redhat
+	    Bugzilla #128341).
+
+	<li>rename terminfo fragment "xterm-pc-fkeys" to "xterm+pcfkeys" for
+	    consistency with ncurses.
+</ul>
+
 <H1><A NAME="xterm_193">Patch #193 - 2004/7/19 - XFree86 4.4.99.10</A></H1>
 <ul>
 	<li>fix for wide-character selection from OpenBSD CVS
@@ -255,7 +281,7 @@ is the latest version of this file.
 	    the text cursor would act as if focus were lost when selecting the
 	    "Secure Keyboard" menu option.
 
-	<li>add <code>xterm-pc-fkeys.sh</code> script, use that to generate
+	<li>add <code>gen-pc-fkeys.pl</code> script, use that to generate
 	    terminfo fragment corresponding to the pc-style function keys.
 
 	<li>fix a case where the checkmark by the "VT220 Keyboard" menu entry

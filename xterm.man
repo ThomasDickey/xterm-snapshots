@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.277 2004/07/20 01:14:41 tom Exp $
+.\" $XTermId: xterm.man,v 1.279 2004/07/28 00:53:26 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.108 2004/07/20 01:14:41 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.109 2004/07/28 00:53:26 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .TH XTERM 1 __vendorversion__
@@ -1774,7 +1774,7 @@ The value given is the same as the final character in the control sequences
 which change character sets.
 The default is ``B'', which corresponds to US ASCII.
 .TP 8
-.B "keymap\fINAME\fP (class\fB Keymap\fINAME\fP)"
+.B "\fIname\fP\fBKeymap\fP (class\fB \fIName\fP\fBKeymap\fP)"
 See the discussion of the \fBkeymap()\fP action.
 .TP 8
 .B "limitResize (\fPclass\fB LimitResize)"

@@ -1,6 +1,6 @@
 #! /usr/bin/perl -w
 # Author: Thomas E. Dickey
-# $XTermId: gen-pc-fkeys.pl,v 1.3 2004/07/17 21:33:37 tom Exp $
+# $XTermId: gen-pc-fkeys.pl,v 1.4 2004/07/28 00:19:42 tom Exp $
 #
 # Construct a list of function-key definitions corresponding to xterm's
 # Sun/PC keyboard.  This uses infocmp to obtain the strings to modify (and
@@ -80,7 +80,7 @@ readterm();
 # Cycling through the modifiers is not just like counting.  Users prefer
 # pressing one modifier (even if using Emacs).  So first we cycle through
 # the individual modifiers, then for completeness two, three, etc.
-printf "xterm-pc-fkeys|fragment, \n";
+printf "xterm+pcfkeys|fragment for PC-style keys, \n";
 for ($cur_fkey = 1, $cur_modifier = 1; $cur_fkey < $max_fkeys; ++$cur_fkey) {
 	my $index = (($cur_fkey - 1) % $min_fkeys);
 	if ($index == 0 && $cur_fkey != 1) {
