@@ -29,7 +29,7 @@
 #ifndef included_VTparse_h
 #define included_VTparse_h 1
 
-#include "ptyx.h"
+#include <ptyx.h>
 
 #ifndef Const
 # if defined(__STDC__) && !defined(__cplusplus)

@@ -3,7 +3,7 @@ dnl $XFree86: xc/programs/xterm/configure.in,v 3.37 1999/12/30 02:05:53 robin Ex
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997,1998,1999 by Thomas E. Dickey <dickey@clark.net>
+dnl Copyright 1997-2000 by Thomas E. Dickey <dickey@clark.net>
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -65,6 +65,17 @@ AC_CHECK_FUNCS( \
 CF_FUNC_MEMMOVE
 CF_FUNC_TGETENT
 CF_UTMP
+
+AC_MSG_CHECKING(if you want to link with utempter)
+AC_ARG_WITH(utempter,
+	[  --with-utempter         use utempter library for access to utmp],
+	[use_utempter=$withval],
+	[use_utempter=no])
+AC_MSG_RESULT($use_utempter)
+
+if test $use_utempter = yes ; then
+	CF_UTEMPTER
+fi
 
 ###	checks for structures
 CF_POSIX_VDISABLE

@@ -23,6 +23,11 @@ SCROLLBAR_RIGHT = -DSCROLLBAR_RIGHT
 #define XkbClientDefines /**/
 #endif
 
+#if defined(UseUtempter)
+#undef InstallXtermSetUID
+        UTMPLIB = -lutempter
+#endif
+
 #ifndef XkbClientDepLibs
 #define XkbClientDepLibs /**/
 #endif
@@ -68,7 +73,11 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
  OSMINORVERSION = OSMinorVersion
 
 #if !defined(AmoebaArchitecture) && !defined(OS2Architecture) && !defined(__GNU__)
+#if defined(UseUtempter)
+        UTMPDEF = -DUSE_UTEMPTER
+#else
         UTMPDEF = -DUTMP
+#endif
 #endif
 
 #ifdef AmoebaArchitecture
@@ -85,19 +94,19 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
    MAIN_DEFINES = $(UTMPDEF) $(TTYGROUPDEF) $(PUCCPTYDDEF) $(NOPOSIXTERMIOS) \
 		  -DOSMAJORVERSION=$(OSMAJORVERSION) \
 		  -DOSMINORVERSION=$(OSMINORVERSION)
-   MISC_DEFINES = /* -DALLOWLOGGING -DALLOWLOGFILEEXEC */ 
+   MISC_DEFINES = /* -DALLOWLOGGING -DALLOWLOGFILEEXEC */
     XKB_DEFINES = XkbClientDefines
         DEFINES = -I. $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION)
 
 #ifdef OS2Architecture
           MAINSRC = os2main.c
-          MAINOBJ = os2main.o 
+          MAINOBJ = os2main.o
 #else
           MAINSRC = main.c
           MAINOBJ = main.o
 #endif
           SRCS1 = button.c charproc.c charsets.c cursor.c \
-	  	  data.c doublechr.c fontutils.c input.c \
+		  data.c doublechr.c fontutils.c input.c \
 		  menu.c misc.c print.c ptydata.c \
 		  screen.c scrollbar.c tabs.c util.c \
 		  TekPrsTbl.c Tekproc.c VTPrsTbl.c \
@@ -114,7 +123,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
            OBJS = $(OBJS1) $(OBJS2)
        PROGRAMS = ProgramTargetName(resize) ProgramTargetName(xterm)
        DEPLIBS1 = XkbClientDepLibs XawClientDepLibs
-       DEPLIBS2 = 
+       DEPLIBS2 =
 
 #ifndef TermcapLibrary
 #if SystemV && !defined(MacIIArchitecture)
@@ -133,15 +142,15 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 AllTarget($(PROGRAMS))
 
 SpecialCObjectRule(main,$(_NOOP_),$(MAIN_DEFINES))
-SpecialCObjectRule(menu,$(_NOOP_),$(MISC_DEFINES)) 
+SpecialCObjectRule(menu,$(_NOOP_),$(MISC_DEFINES))
 SpecialCObjectRule(misc,$(_NOOP_),$(MISC_DEFINES))
 SpecialCObjectRule(charproc,$(_NOOP_),$(MISC_DEFINES))
-SpecialCObjectRule(data,$(_NOOP_),$(MISC_DEFINES)) 
+SpecialCObjectRule(data,$(_NOOP_),$(MISC_DEFINES))
 
 #if InstallXtermSetUID
 SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
 #else
-NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
+NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(UTMPLIB) $(PTYLIB))
 #endif
 
 #if InstallXtermSetUID && defined(SunArchitecture) && HasSharedLibraries && (OSMajorVersion < 5)

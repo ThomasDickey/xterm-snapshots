@@ -186,7 +186,7 @@ The options (in alphabetic order):
 
   --enable-256-color      enable 256-color support
 
-  	Compile-in code that interprets SGR 38 and 48 for 256-colors. 
+  	Compile-in code that interprets SGR 38 and 48 for 256-colors.
 
   --enable-88-color       enable 88-color support
 
@@ -296,3 +296,9 @@ The options (in alphabetic order):
 	vt220 emulation.
 
 	You can always override this with the command-line option "-tn".
+
+  --with-utempter         use utempter library for access to utmp
+
+	The utempter library is a set-uid wrapper for the utmp facility.
+	On systems with Unix98 pty's, xterm can use this library when
+	available so it need not be installed set-uid.

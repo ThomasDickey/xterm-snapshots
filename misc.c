@@ -5,7 +5,7 @@
 
 /*
  *
- * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
  *
  *                        All Rights Reserved
  *
@@ -1212,6 +1212,9 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 		    }
 		    SetVTFont (fontMenu_fontescape, True, buf, NULL);
 		}
+		break;
+	case 51:
+		/* reserved for Emacs shell (Rob Myoff <mayoff@dqd.com>) */
 		break;
 
 	/*

@@ -416,7 +416,11 @@ extern time_t time ();
 
 #include <sys/types.h>
 
-#if defined(UTMPX_FOR_UTMP)
+#if defined(USE_UTEMPTER)
+
+#include <utempter.h>
+
+#elif defined(UTMPX_FOR_UTMP)
 
 #include <utmpx.h>
 #define setutent setutxent
@@ -2630,6 +2634,14 @@ spawn (void)
 	}
 #endif	/* sun vs TIOCSWINSZ */
 
+#if defined(USE_UTEMPTER)
+#undef UTMP
+	if (!resource.utmpInhibit) {
+	    addToUtmp(ttydev, NULL, screen->respond);
+	    added_utmp_entry = True;
+	}
+#endif
+
 	if (!am_slave) {
 #ifdef USE_HANDSHAKE
 	    if (pipe(pc_pipe) || pipe(cp_pipe))
@@ -4097,7 +4109,11 @@ SIGNAL_T
 Exit(int n)
 {
 	register TScreen *screen = &term->screen;
-#ifdef HAVE_UTMP
+
+#ifdef USE_UTEMPTER
+	if (!resource.utmpInhibit && added_utmp_entry)
+	    removeFromUtmp();
+#elif defined(HAVE_UTMP)
 #ifdef USE_SYSV_UTMP
 #if defined(UTMPX_FOR_UTMP)
 	struct utmpx utmp;
