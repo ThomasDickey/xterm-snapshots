@@ -183,9 +183,6 @@ static Bool IsPts = False;
 #define USE_USG_PTYS
 #define USE_SYSV_PGRP
 #define USE_SYSV_SIGNALS
-#define HAVE_UTMP
-#define ut_name ut_user
-#define ut_xtime ut_tv.tv_sec
 #undef  HAS_LTCHARS
 #endif
 
@@ -511,6 +508,7 @@ extern "C" {
 #endif
 
 extern int tgetent (char *ptr, char *name);
+extern char *tgetstr (char *name, char **ptr);
 
 #ifdef	__cplusplus
 	}
@@ -548,7 +546,7 @@ static char **command_to_exec = NULL;
 #endif
 #endif /* USE_SYSV_TERMIO */
 
-#define TERMCAP_ERASE "kb="
+#define TERMCAP_ERASE "kb"
 #define VAL_INITIAL_ERASE A2E(127)
 
 /* allow use of system default characters if defined and reasonable */
@@ -759,6 +757,7 @@ static struct _resource {
     char *tty_modes;
     Boolean hold_screen;	/* true if we keep window open	*/
     Boolean utmpInhibit;
+    Boolean messages;
     Boolean sunFunctionKeys;	/* %%% should be widget resource? */
 #if OPT_SUNPC_KBD
     Boolean sunKeyboard;
@@ -805,6 +804,8 @@ static XtResource application_resources[] = {
 	offset(hold_screen), XtRString, "false"},
     {"utmpInhibit", "UtmpInhibit", XtRBoolean, sizeof (Boolean),
 	offset(utmpInhibit), XtRString, "false"},
+    {"messages", "Messages", XtRBoolean, sizeof (Boolean),
+	offset(messages), XtRString, "true"},
     {"sunFunctionKeys", "SunFunctionKeys", XtRBoolean, sizeof (Boolean),
 	offset(sunFunctionKeys), XtRString, "false"},
 #if OPT_SUNPC_KBD
@@ -896,8 +897,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "on"},
 {"+hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "off"},
 #endif
-{"-hold",	"*hold", 	XrmoptionNoArg,		(caddr_t) "on"},
-{"+hold",	"*hold", 	XrmoptionNoArg,		(caddr_t) "off"},
+{"-hold",	"*hold",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+hold",	"*hold",	XrmoptionNoArg,		(caddr_t) "off"},
 #if OPT_INITIAL_ERASE
 {"-ie",		"*ptyInitialErase", XrmoptionNoArg,	(caddr_t) "on"},
 {"+ie",		"*ptyInitialErase", XrmoptionNoArg,	(caddr_t) "off"},
@@ -913,6 +914,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-mb",		"*marginBell",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+mb",		"*marginBell",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-mc",		"*multiClickTime", XrmoptionSepArg,	(caddr_t) NULL},
+{"-mesg",	"*messages",	XrmoptionNoArg,		(caddr_t) "off"},
+{"+mesg",	"*messages",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ms",		"*pointerColor",XrmoptionSepArg,	(caddr_t) NULL},
 {"-nb",		"*nMarginBell",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-nul",	"*underLine",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -1042,6 +1045,7 @@ static struct _options {
 { "-/+ls",                 "turn on/off login shell" },
 { "-/+mb",                 "turn on/off margin bell" },
 { "-mc milliseconds",      "multiclick time in milliseconds" },
+{ "-/+mesg",		   "forbid/allow messages" },
 { "-ms color",             "pointer color" },
 { "-nb number",            "margin bell in characters from right end" },
 { "-/+nul",                "turn on/off display of underlining" },
@@ -2443,7 +2447,7 @@ spawn (void)
 #endif	/* USE_SYSV_TERMIO */
 			}
 			if (resource.backarrow_is_erase)
-			if (initial_erase == 0177) {	/* see input.c */
+			if (initial_erase == 127) {	/* see input.c */
 				term->keyboard.flags &= ~MODE_DECBKM;
 			}
 			TRACE(("%s @%d, ptyInitialErase:%d, backspace_is_erase:%d, initial_erase:%d\n",
@@ -2563,16 +2567,16 @@ spawn (void)
 		__FILE__, __LINE__,
 		resource.ptyInitialErase,
 		resource.backarrow_is_erase))
-	if (!resource.ptyInitialErase && *newtc) {
-		char *s = strstr(newtc, TERMCAP_ERASE);
+	if (!resource.ptyInitialErase) {
+		char temp[1024], *p = temp;
+		char *s = tgetstr(TERMCAP_ERASE, &p);
 		TRACE(("extracting initial_erase value from termcap\n"))
 		if (s != 0) {
-			s += 3;
 			if (*s == '^') {
 				if (*++s == '?') {
 					initial_erase = 127;
 				} else {
-					initial_erase = *s & 31;
+					initial_erase = CONTROL(*s);
 				}
 			} else if (*s == '\\') {
 				char *d;
@@ -2583,8 +2587,12 @@ spawn (void)
 				initial_erase = *s;
 			}
 			initial_erase = CharOf(initial_erase);
+			TRACE(("... initial_erase:%d\n", initial_erase))
 		}
-		TRACE(("... initial_erase:%d\n", initial_erase))
+	}
+	if (resource.backarrow_is_erase && initial_erase == 127) {
+		/* see input.c */
+		term->keyboard.flags &= ~MODE_DECBKM;
 	}
 #endif
 
@@ -2820,17 +2828,20 @@ spawn (void)
 		struct group *ttygrp;
 		if ((ttygrp = getgrnam("tty")) != 0) {
 			/* change ownership of tty to real uid, "tty" gid */
-			set_owner (ttydev, screen->uid, ttygrp->gr_gid, 0620);
+			set_owner (ttydev, screen->uid, ttygrp->gr_gid,
+				   (resource.messages? 0620 : 0600));
 		}
 		else {
 			/* change ownership of tty to real group and user id */
-			set_owner (ttydev, screen->uid, screen->gid, 0622);
+			set_owner (ttydev, screen->uid, screen->gid,
+				   (resource.messages? 0622 : 0600));
 		}
 		endgrent();
 	}
 #else /* else !USE_TTY_GROUP */
 		/* change ownership of tty to real group and user id */
-		set_owner (ttydev, screen->uid, screen->gid, 0622);
+		set_owner (ttydev, screen->uid, screen->gid,
+			   (resource.messages? 0622 : 0600));
 #endif /* USE_TTY_GROUP */
 
 		/*
@@ -3314,7 +3325,7 @@ spawn (void)
 
 		utmp.ut_pid = getpid();
 #if defined(HAVE_UTMP_UT_XTIME)
-#ifndef __MVS__
+#if defined(HAVE_UTMP_UT_SESSION)
 		utmp.ut_session = getsid(0);
 #endif
 		utmp.ut_xtime = time ((time_t *) 0);
@@ -3521,8 +3532,8 @@ spawn (void)
 		}
 #if OPT_INITIAL_ERASE
 		if (*newtc) {
-		    remove_termcap_entry (newtc, TERMCAP_ERASE);
-		    sprintf(newtc + strlen(newtc), ":%s\\%03o", TERMCAP_ERASE, initial_erase & 0377);
+		    remove_termcap_entry (newtc, TERMCAP_ERASE "=");
+		    sprintf(newtc + strlen(newtc), ":%s=\\%03o", TERMCAP_ERASE, initial_erase & 0377);
 		}
 #endif
 		if(*newtc)
@@ -4123,7 +4134,7 @@ Exit(int n)
 	    if (utptr && (utptr->ut_pid == screen->pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
 #if defined(HAVE_UTMP_UT_XTIME)
-#ifndef __MVS__
+#if defined(HAVE_UTMP_UT_SESSION)
 		    utptr->ut_session = getsid(0);
 #endif
 		    utptr->ut_xtime = time ((time_t *) 0);

@@ -88,11 +88,17 @@ authorization.
 #define HAVE_UTMP 1
 #endif
 
-#if (defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN__)
+#if (defined(__MVS__) || defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN__)
 #define UTMPX_FOR_UTMP 1
 #endif
 
+#ifndef ISC
 #define HAVE_UTMP_UT_HOST 1
+#endif
+
+#if defined(UTMPX_FOR_UTMP) && !(defined(__MVS__) || defined(__hpux))
+#define HAVE_UTMP_UT_SESSION 1
+#endif
 
 #if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
 #define HAVE_UTMP_UT_XTIME 1
@@ -111,6 +117,11 @@ authorization.
 
 #if defined(__GNU__) || defined(__MVS__)
 #define USE_TTY_GROUP
+#endif
+
+#if defined(__MVS__)
+#define ut_name ut_user
+#define ut_xtime ut_tv.tv_sec
 #endif
 
 #endif /* HAVE_CONFIG_H */

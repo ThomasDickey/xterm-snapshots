@@ -842,7 +842,13 @@ void SGR_Background(int color)
 	register TScreen *screen = &term->screen;
 	Pixel	bg;
 
-	if (screen->scroll_amt)
+	/*
+	 * An indexing operation may have set screen->scroll_amt, which would
+	 * normally result in calling FlushScroll() in WriteText().  However,
+	 * if we're changing the background color now, then the new value
+	 * should not apply to the pending blank lines.
+	 */
+	if (screen->scroll_amt && (color != term->cur_background))
 		FlushScroll(screen);
 
 	if (color >= 0) {
