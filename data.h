@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: data.h /main/13 1996/11/24 17:35:40 rws $
+ *	$XFree86: xc/programs/xterm/data.h,v 3.3 1996/12/23 07:14:27 dawes Exp $
  */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -24,6 +25,15 @@
  * SOFTWARE.
  */
 
+#if XtSpecificationRelease >= 6
+#include <X11/Xpoll.h>
+#else
+#define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
+#define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
+#endif
+
+extern XtAppContext app_con;
+
 extern TekLink *TekRefresh;
 extern XPoint T_box2[];
 extern XPoint T_box3[];
@@ -41,6 +51,7 @@ extern char log_def_name[];
 extern char *ptydev;
 extern char *ttydev;
 extern char *xterm_name;
+extern Boolean sunFunctionKeys;
 extern Char buffer[];
 extern int T_lastx;
 extern int T_lasty;
@@ -53,6 +64,10 @@ extern int debug;
 #endif	/* DEBUG */
 extern int max_plus1;
 extern int switchfb[];
+
+extern fd_set Select_mask;
+extern fd_set X_mask;
+extern fd_set pty_mask;
 
 extern int waitingForTrackInfo;
 

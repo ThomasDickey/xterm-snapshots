@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: data.c,v 1.12 95/04/05 19:58:47 kaleb Exp $
+ *	$XFree86: xc/programs/xterm/data.c,v 3.2 1996/08/13 11:36:56 dawes Exp $
  */
 
 /*
@@ -26,7 +27,11 @@
  */
 
 #include "ptyx.h"		/* gets Xt stuff, too */
+
+#if XtSpecificationRelease >= 6
 #include <X11/Xpoll.h>
+#endif
+
 #include "data.h"
 #include <setjmp.h>
 
@@ -81,8 +86,12 @@ XPoint VTbox[NBOX] = {
 #ifdef DEBUG
 int debug = 0; 		/* true causes error messages to be displayed */
 #endif	/* DEBUG */
+
+XtAppContext app_con;
 XtermWidget term;		/* master data structure for client */
 char *xterm_name;	/* argv[0] */
+Boolean sunFunctionKeys;
+
 int am_slave = 0;	/* set to 1 if running as a slave process */
 int max_plus1;
 fd_set Select_mask;
