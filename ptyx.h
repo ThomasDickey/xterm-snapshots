@@ -91,17 +91,6 @@
 #undef interval
 #endif
 
-/* Extra Xlib definitions */
-#define AllButtonsUp(detail, ignore)  (\
-		((ignore) == Button1) ? \
-				(((detail)&(Button2Mask|Button3Mask)) == 0) \
-				: \
-		 (((ignore) == Button2) ? \
-		  		(((detail)&(Button1Mask|Button3Mask)) == 0) \
-				: \
-		  		(((detail)&(Button1Mask|Button2Mask)) == 0)) \
-		)
-
 /*
 ** System V definitions
 */

@@ -51,6 +51,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_UNISTD_H		/* AC_CHECK_HEADERS(unistd.h) */
 #undef HAVE_UTMP		/* CF_UTMP */
 #undef HAVE_UTMP_UT_HOST	/* CF_UTMP_UT_HOST */
+#undef HAVE_UTMP_UT_SESSION	/* CF_UTMP_UT_SESSION */
 #undef HAVE_UTMP_UT_XTIME	/* CF_UTMP_UT_XTIME */
 #undef HAVE_WAITPID		/* AC_CHECK_FUNCS(waitpid) */
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
@@ -93,6 +94,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef const			/* AC_CONST */
 #undef size_t			/* AC_TYPE_SIZE_T */
+#undef ut_name			/* CF_UTMP */
+#undef ut_xtime			/* CF_UT_XTIME */
 #undef time_t			/* AC_CHECK_TYPE(time_t, long) */
 
 #undef GCC_PRINTF

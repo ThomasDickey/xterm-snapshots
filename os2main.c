@@ -235,6 +235,7 @@ static struct _resource {
     char *term_name;
     char *tty_modes;
     Boolean utmpInhibit;
+    Boolean messages;
     Boolean sunFunctionKeys;	/* %%% should be widget resource? */
 #if OPT_SUNPC_KBD
     Boolean sunKeyboard;
@@ -275,6 +276,8 @@ static XtResource application_resources[] = {
 	offset(tty_modes), XtRString, (caddr_t) NULL},
     {"utmpInhibit", "UtmpInhibit", XtRBoolean, sizeof (Boolean),
 	offset(utmpInhibit), XtRString, "false"},
+    {"messages", "Messages", XtRBoolean, sizeof (Boolean),
+	offset(messages), XtRString, "true"},
     {"sunFunctionKeys", "SunFunctionKeys", XtRBoolean, sizeof (Boolean),
 	offset(sunFunctionKeys), XtRString, "false"},
 #if OPT_SUNPC_KBD
@@ -371,6 +374,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-mb",		"*marginBell",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+mb",		"*marginBell",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-mc",		"*multiClickTime", XrmoptionSepArg,	(caddr_t) NULL},
+{"-mesg",	"*messages",	XrmoptionNoArg,		(caddr_t) "off"},
+{"+mesg",	"*messages",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ms",		"*pointerColor",XrmoptionSepArg,	(caddr_t) NULL},
 {"-nb",		"*nMarginBell",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-nul",	"*underLine",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -496,6 +501,7 @@ static struct _options {
 { "-/+ls",                 "turn on/off login shell" },
 { "-/+mb",                 "turn on/off margin bell" },
 { "-mc milliseconds",      "multiclick time in milliseconds" },
+{ "-/+mesg",		   "forbid/allow messages" },
 { "-ms color",             "pointer color" },
 { "-nb number",            "margin bell in characters from right end" },
 { "-/+nul",                "turn on/off display of underlining" },
@@ -1517,7 +1523,7 @@ opencons();*/
 			chown (ttydev, screen->uid, screen->gid);
 
 			/* change protection of tty */
-			chmod (ttydev, 0622);
+			chmod (ttydev, (resource.messages? 0622 : 0600));
 
 			/* for the xf86sup-pty, we set the pty to bypass: OS/2 does
 			 * not have a line discipline structure

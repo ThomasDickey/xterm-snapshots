@@ -417,6 +417,14 @@ This option indicates that margin bell should not be rung.
 .B "\-mc milliseconds"
 This option specifies the maximum time between multi-click selections.
 .TP 8
+.B \-mesg
+Turn off the \fBmessages\fP resource, i.e.,
+disallow write access to the terminal.
+.TP 8
+.B \+mesg
+Turn on the \fBmessages\fP resource, i.e.,
+allow write access to the terminal.
+.TP 8
 .BI \-ms " color"
 This option specifies the color to be used for the pointer cursor.  The default
 is to use the foreground color.
@@ -737,6 +745,11 @@ It is not necessarily obeyed by all window managers.
 .TP 8
 .B "iconName (\fPclass\fB IconName)"
 Specifies the icon name.  The default is the application name.
+.TP 8
+.B "messages (\fPclass\fB Messages)"
+Specifies whether write access to the terminal is allowed initially.  See
+.BR mesg (1).
+The default is ``true''.
 .TP 8
 .B "ptyInitialErase (\fPclass\fB PtyInitialErase)"
 If ``true'', \fIxterm\fP will use the pseudo-terminal's sense of the stty erase

@@ -629,6 +629,8 @@ AC_TRY_LINK([
 [cf_cv_input_method=no])])
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl Check for header defining _PATH_LASTLOG, or failing that, see if the lastlog
+dnl file exists.
 AC_DEFUN([CF_LASTLOG],
 [
 AC_CHECK_HEADERS(lastlog.h paths.h)
@@ -650,7 +652,8 @@ AC_TRY_COMPILE([
 	fi])
 ])
 test $cf_cv_path_lastlog != no && AC_DEFINE(USE_LASTLOG)
-])dnl
+]
+)dnl
 dnl ---------------------------------------------------------------------------
 dnl Special test to workaround gcc 2.6.2, which cannot parse C-preprocessor
 dnl conditionals.
@@ -812,10 +815,26 @@ for cf_header in utmpx utmp ; do
 #endif
 ],
 	[struct $cf_header x;
-	 char *name = x.ut_name; /* HP-UX 10.x omits this in utmpx.h */
+	 char *name = x.ut_name; /* utmp.h and compatible definitions */
 	],
 	[cf_cv_have_utmp=$cf_header
-	 break])
+	 break],
+	[
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <${cf_header}.h>
+#define getutent getutxent
+#ifdef USE_LASTLOG
+#include <lastlog.h>	/* may conflict with utmpx.h on Linux */
+#endif
+],
+	[struct $cf_header x;
+	 char *name = x.ut_user; /* utmpx.h must declare this */
+	],
+	[cf_cv_have_utmp=$cf_header
+	 AC_DEFINE(ut_name,ut_user)
+	 break
+	])])
 done
 ])
 
@@ -824,6 +843,7 @@ if test $cf_cv_have_utmp != no ; then
 	test $cf_cv_have_utmp = utmpx && AC_DEFINE(UTMPX_FOR_UTMP)
 	CF_UTMP_UT_HOST
 	CF_UTMP_UT_XTIME
+	CF_UTMP_UT_SESSION
 	CF_SYSV_UTMP
 fi
 ])
@@ -847,22 +867,50 @@ test $cf_cv_have_utmp_ut_host != no && AC_DEFINE(HAVE_UTMP_UT_HOST)
 fi
 ])
 dnl ---------------------------------------------------------------------------
+dnl Check if UTMP/UTMPX struct defines ut_session member
+AC_DEFUN([CF_UTMP_UT_SESSION],
+[
+AC_REQUIRE([CF_UTMP])
+if test $cf_cv_have_utmp != no ; then
+AC_CACHE_CHECK(if utmp.ut_session is declared, cf_cv_have_utmp_ut_session,[
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <${cf_cv_have_utmp}.h>],
+	[struct $cf_cv_have_utmp x; long y = x.ut_session],
+	[cf_cv_have_utmp_ut_session=yes],
+	[cf_cv_have_utmp_ut_session=no])
+])
+if test $cf_cv_have_utmp_ut_session != no ; then
+	AC_DEFINE(HAVE_UTMP_UT_SESSION)
+fi
+fi
+])
+dnl ---------------------------------------------------------------------------
 dnl Check if UTMP/UTMPX struct defines ut_xtime member
 AC_DEFUN([CF_UTMP_UT_XTIME],
 [
 AC_REQUIRE([CF_UTMP])
 if test $cf_cv_have_utmp != no ; then
-AC_MSG_CHECKING(if utmp.ut_xtime is declared)
-AC_CACHE_VAL(cf_cv_have_utmp_ut_xtime,[
+AC_CACHE_CHECK(if utmp.ut_xtime is declared, cf_cv_have_utmp_ut_xtime,[
 	AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <${cf_cv_have_utmp}.h>],
 	[struct $cf_cv_have_utmp x; long y = x.ut_xtime],
 	[cf_cv_have_utmp_ut_xtime=yes],
+	[AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <${cf_cv_have_utmp}.h>],
+	[struct $cf_cv_have_utmp x; long y = x.ut_tv.tv_sec],
+	[cf_cv_have_utmp_ut_xtime=define],
 	[cf_cv_have_utmp_ut_xtime=no])
 	])
-AC_MSG_RESULT($cf_cv_have_utmp_ut_xtime)
-test $cf_cv_have_utmp_ut_xtime != no && AC_DEFINE(HAVE_UTMP_UT_XTIME)
+])
+if test $cf_cv_have_utmp_ut_xtime != no ; then
+	AC_DEFINE(HAVE_UTMP_UT_XTIME)
+	if test $cf_cv_have_utmp_ut_xtime = define ; then
+		AC_DEFINE(ut_xtime,ut_tv.tv_sec)
+	fi
+fi
 fi
 ])
 dnl ---------------------------------------------------------------------------

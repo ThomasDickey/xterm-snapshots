@@ -74,10 +74,11 @@ if test -f "$REF_PROG" ; then
 fi
 
 if test -n "${PROG_USR}${PROG_GRP}" ; then
+	cf_uid=`id | sed -e 's/^[^=]*=//' -e 's/(.*$//'`
 	cf_usr=`id | sed -e 's/^[^(]*(//' -e 's/).*$//'`
 	cf_grp=`id | sed -e 's/^.* gid=[^(]*(//' -e 's/).*$//'`
 	$trace "... installing $NEW_PROG as user \"$cf_usr\", group \"$cf_grp\""
-	if test "$cf_usr" != "root" ; then
+	if test "$cf_uid" != 0 ; then
 		PROG_MODE=755
 		PROG_USR=""
 		PROG_GRP=""

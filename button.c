@@ -79,9 +79,21 @@ button.c	Handles button events in the terminal emulator.
 
 #define XTERM_CELL(row,col) getXtermCell(screen, row + screen->topline, col)
 
-#define KeyState(x) (((x) & (ShiftMask|ControlMask)) + (((x) & Mod1Mask) ? 2 : 0))
+      /*
+       * We reserve shift modifier for cut/paste operations.  In principal we
+       * can pass through control and meta modifiers, but in practice, the
+       * popup menu uses control, and the window manager is likely to use meta,
+       * so those events are not delivered to SendMousePosition.
+       */
+#define OurModifiers (ShiftMask | ControlMask | Mod1Mask)
+#define AllModifiers (ShiftMask | LockMask | ControlMask | Mod1Mask | \
+		      Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask)
+
+#define KeyModifiers (event->xbutton.state & OurModifiers)
+
+#define KeyState(x) (((x) & ControlMask) + (((x) & Mod1Mask) ? 2 : 0))
     /* adds together the bits:
-	shift key -> 1
+	(1 used to be for shift, is now used for buttons 4 and 5)
 	meta key  -> 2
 	control key -> 4 */
 
@@ -166,14 +178,6 @@ Boolean SendMousePosition(Widget w, XEvent* event)
      && event->type != ButtonRelease)
 	return False;
 
-#define KeyModifiers \
-    (event->xbutton.state & (ShiftMask | LockMask | ControlMask | Mod1Mask | \
-			     Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
-
-#define ButtonModifiers \
-    (event->xbutton.state & (ShiftMask | LockMask | ControlMask | Mod1Mask | \
-			     Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
-
     switch (screen->send_mouse_pos) {
       case X10_MOUSE: /* X10 compatibility sequences */
 
@@ -212,14 +216,9 @@ Boolean SendMousePosition(Widget w, XEvent* event)
       default:
 	return False;
     }
-#undef KeyModifiers
 }
 
 #if OPT_DEC_LOCATOR
-
-#define KeyModifiers \
-    (event->xbutton.state & (ShiftMask | LockMask | ControlMask | Mod1Mask | \
-			     Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
 
 #define	LocatorCoords( row, col, x, y, oor )			\
     if( screen->locator_pixels ) {				\
@@ -372,11 +371,7 @@ SendLocatorPosition(Widget w, XEvent* event)
 
     return( True );
 }
-#undef KeyModifiers
 
-#define KeyModifiers \
-    (mask & (ShiftMask | LockMask | ControlMask | Mod1Mask | \
-			     Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
 /*
 * mask:
 * bit 7   bit 6   bit 5   bit 4   bit 3   bit 2       bit 1         bit 0
@@ -422,7 +417,7 @@ GetLocatorPosition(XtermWidget w)
 	    LocatorCoords( row, col, x, y, oor );
 	}
     }
-    if( ret == FALSE || oor /* || (KeyModifiers != 0 && KeyModifiers != ControlMask) */ )
+    if( ret == FALSE || oor )
     {
 	reply.a_nparam = 1;
 	reply.a_param[0] = 0; /* Event - 0 = locator unavailable */
@@ -624,7 +619,6 @@ CheckLocatorPosition( Widget w, XEvent *event )
 	}
     }
 }
-#undef KeyModifiers
 #endif	/* OPT_DEC_LOCATOR */
 
 void
@@ -2291,7 +2285,7 @@ SaveText(
 static int
 BtnCode(XButtonEvent *event, int button)
 {
-	if (button < 0 || button > 3)
+	if (button < 0 || button > 5)
 		button = 3;
 	return ' ' + (KeyState(event->state) << 2) + button;
 }
