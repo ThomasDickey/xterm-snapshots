@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.288 2004/12/01 01:27:47 tom Exp $
+.\" $XTermId: xterm.man,v 1.293 2005/01/14 01:50:03 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.110 2004/12/01 01:27:47 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.112 2005/01/14 01:50:03 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .TH XTERM 1 __vendorversion__
@@ -1163,10 +1163,18 @@ environment variable.
 This is useful if the system termcap is broken.
 The default is ``false.''
 .TP 8
+.B "utmpDisplayId (\fPclass\fB UtmpDisplayId)"
+Specifies whether or not \fIxterm\fP should try to record the display
+identifier (display number and screen number) as well as the hostname in 
+the system \fIutmp\fP log file.
+The default is ``true.''
+.TP 8
 .B "utmpInhibit (\fPclass\fB UtmpInhibit)"
 Specifies whether or not \fIxterm\fP should try to record the user's terminal
 in
 the system \fIutmp\fP log file.
+If true, \fIxterm\fP will not try.
+The default is ``false.''
 .TP 8
 .B "waitForMap (\fPclass\fB WaitForMap)"
 Specifies whether or not \fIxterm\fP should wait for the initial window map
@@ -1272,6 +1280,10 @@ Pressing the control key toggles this behavior.
 Specifies the color to use for the background of the window.
 The default is
 ``white.''
+.TP 8
+.B "bellOnReset (\fPclass\fB BellOnReset)"
+Specifies whether to sound a bell when doing a hard reset.
+The default is ``true.''
 .TP 8
 .B "bellSuppressTime (\fPclass\fB BellSuppressTime)"
 Number of milliseconds after a bell command is sent during which additional
@@ -3792,46 +3804,46 @@ The default bindings in the VT102 window are:
 .ta 2.5i
 .ft C			\" Courier
 .nf
-          Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\
-           Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\
-         Shift <KeyPress> Select:select-cursor-start() \\
-                                 select-cursor-end(PRIMARY, CUT_BUFFER0) \\n\\
-         Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
-    Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\
-    Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\
-    Shift <KeyPress> KP_Subtract:smaller-vt-font() \\n\\
-                ~Meta <KeyPress>:insert-seven-bit() \\n\\
-                 Meta <KeyPress>:insert-eight-bit() \\n\\
-                !Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\
-           !Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\
- !Lock Ctrl @Num_Lock <Btn1Down>:popup-menu(mainMenu) \\n\\
-     ! @Num_Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\
-                ~Meta <Btn1Down>:select-start() \\n\\
-              ~Meta <Btn1Motion>:select-extend() \\n\\
-                !Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\
-           !Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\
- !Lock Ctrl @Num_Lock <Btn2Down>:popup-menu(vtMenu) \\n\\
-     ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\
-          ~Ctrl ~Meta <Btn2Down>:ignore() \\n\\
-                 Meta <Btn2Down>:clear-saved-lines() \\n\\
-            ~Ctrl ~Meta <Btn2Up>:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
-                !Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\
-           !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\
- !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \\n\\
-     ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\
-          ~Ctrl ~Meta <Btn3Down>:start-extend() \\n\\
-              ~Meta <Btn3Motion>:select-extend() \\n\\
-                 Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\
-            Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\
-  Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\
-       @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\
-                      <Btn4Down>:scroll-back(5,line,m)     \\n\\
-                 Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\
-            Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\
-  Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\
-       @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\
-                      <Btn5Down>:scroll-forw(5,line,m)     \\n\\
-                         <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \\n\\
+          Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\\&
+           Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\\&
+         Shift <KeyPress> Select:select-cursor-start() \\\&
+                                 select-cursor-end(PRIMARY, CUT_BUFFER0) \\n\\\&
+         Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
+    Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\\&
+    Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\\&
+    Shift <KeyPress> KP_Subtract:smaller-vt-font() \\n\\\&
+                ~Meta <KeyPress>:insert-seven-bit() \\n\\\&
+                 Meta <KeyPress>:insert-eight-bit() \\n\\\&
+                !Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\\&
+           !Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn1Down>:popup-menu(mainMenu) \\n\\\&
+     ! @Num_Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\\&
+                ~Meta <Btn1Down>:select-start() \\n\\\&
+              ~Meta <Btn1Motion>:select-extend() \\n\\\&
+                !Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\\&
+           !Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn2Down>:popup-menu(vtMenu) \\n\\\&
+     ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\\&
+          ~Ctrl ~Meta <Btn2Down>:ignore() \\n\\\&
+                 Meta <Btn2Down>:clear-saved-lines() \\n\\\&
+            ~Ctrl ~Meta <Btn2Up>:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
+                !Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\\&
+           !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \\n\\\&
+     ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\\&
+          ~Ctrl ~Meta <Btn3Down>:start-extend() \\n\\\&
+              ~Meta <Btn3Motion>:select-extend() \\n\\\&
+                 Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\\&
+            Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\\&
+  Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\\&
+       @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\\&
+                      <Btn4Down>:scroll-back(5,line,m)     \\n\\\&
+                 Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
+            Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
+  Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
+       @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
+                      <Btn5Down>:scroll-forw(5,line,m)     \\n\\\&
+                         <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
                        <BtnDown>:ignore()
 .fi
 .ft P
@@ -3844,21 +3856,21 @@ The default bindings in the Tektronix window are:
 .ta 2.5i
 .nf
 .ft C			\" Courier
-                ~Meta<KeyPress>: 	insert-seven-bit() \\n\\
-                 Meta<KeyPress>: 	insert-eight-bit() \\n\\
-               !Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\
-          !Lock Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\
-!Lock Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\
-     !Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\
-               !Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\
-          !Lock Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\
-!Lock Ctrl @Num_Lock <Btn2Down>:	popup-menu(tekMenu) \\n\\
-     !Ctrl @Num_Lock <Btn2Down>:	popup-menu(tekMenu) \\n\\
-          Shift ~Meta<Btn1Down>:	gin-press(L) \\n\\
-                ~Meta<Btn1Down>:	gin-press(l) \\n\\
-          Shift ~Meta<Btn2Down>:	gin-press(M) \\n\\
-                ~Meta<Btn2Down>:	gin-press(m) \\n\\
-          Shift ~Meta<Btn3Down>:	gin-press(R) \\n\\
+                ~Meta<KeyPress>: 	insert-seven-bit() \\n\\\&
+                 Meta<KeyPress>: 	insert-eight-bit() \\n\\\&
+               !Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\\&
+          !Lock Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\\&
+!Lock Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\\&
+     !Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\\&
+               !Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\\&
+          !Lock Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\\&
+!Lock Ctrl @Num_Lock <Btn2Down>:	popup-menu(tekMenu) \\n\\\&
+     !Ctrl @Num_Lock <Btn2Down>:	popup-menu(tekMenu) \\n\\\&
+          Shift ~Meta<Btn1Down>:	gin-press(L) \\n\\\&
+                ~Meta<Btn1Down>:	gin-press(l) \\n\\\&
+          Shift ~Meta<Btn2Down>:	gin-press(M) \\n\\\&
+                ~Meta<Btn2Down>:	gin-press(m) \\n\\\&
+          Shift ~Meta<Btn3Down>:	gin-press(R) \\n\\\&
                 ~Meta<Btn3Down>:	gin-press(r)
 .fi
 .ft P
@@ -3881,10 +3893,10 @@ But you can still paste from the corresponding cut buffer.
 .ta .5i 1.5i
 .nf
 .ft C			\" Courier
-*VT100*translations:    #override \\n\\
-    ~Shift~Ctrl<Btn2Up>: insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
-    Shift~Ctrl<Btn2Up>:  insert-selection(CLIPBOARD, CUT_BUFFER1) \\n\\
-    ~Shift<BtnUp>:       select-end(PRIMARY, CUT_BUFFER0) \\n\\
+*VT100*translations:    #override \\n\\\&
+    ~Shift~Ctrl<Btn2Up>: insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
+    Shift~Ctrl<Btn2Up>:  insert-selection(CLIPBOARD, CUT_BUFFER1) \\n\\\&
+    ~Shift<BtnUp>:       select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift<BtnUp>:        select-end(CLIPBOARD, CUT_BUFFER1)
 .fi
 .ft P
@@ -3900,11 +3912,11 @@ keys for entering commonly-typed works:
 .nf
 .ft C			\" Courier
 *VT100.Translations: #override <Key>F13: keymap(dbx)
-*VT100.dbxKeymap.translations: \\
-	<Key>F14:	keymap(None) \\n\\
-	<Key>F17:	string("next") string(0x0d) \\n\\
-	<Key>F18:	string("step") string(0x0d) \\n\\
-	<Key>F19:	string("continue") string(0x0d) \\n\\
+*VT100.dbxKeymap.translations: \\\&
+	<Key>F14:	keymap(None) \\n\\\&
+	<Key>F17:	string("next") string(0x0d) \\n\\\&
+	<Key>F18:	string("step") string(0x0d) \\n\\\&
+	<Key>F19:	string("continue") string(0x0d) \\n\\\&
 	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
 .fi
 .ft P

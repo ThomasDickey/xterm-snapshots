@@ -1,12 +1,12 @@
-/* $XTermId: print.c,v 1.54 2004/12/01 01:27:47 tom Exp $ */
+/* $XTermId: print.c,v 1.60 2005/01/14 01:50:03 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/print.c,v 1.20 2004/12/01 01:27:47 dickey Exp $
+ * $XFree86: xc/programs/xterm/print.c,v 1.21 2005/01/14 01:50:03 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2002,2004 by Thomas E. Dickey
+Copyright 1997-2004,2005 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -52,9 +52,9 @@ authorization.
 #define CSET_IN   'A'
 #define CSET_OUT  '0'
 
-#define isForm(c) ((c) == '\r' || (c) == '\n' || (c) == '\f')
-#define Strlen(a) strlen((char *)a)
-#define Strcmp(a,b) strcmp((char *)a,(char *)b)
+#define isForm(c)      ((c) == '\r' || (c) == '\n' || (c) == '\f')
+#define Strlen(a)      strlen((char *)a)
+#define Strcmp(a,b)    strcmp((char *)a,(char *)b)
 #define Strncmp(a,b,c) strncmp((char *)a,(char *)b,c)
 
 #ifdef VMS
@@ -64,11 +64,11 @@ authorization.
 static void charToPrinter(int chr);
 static void printLine(int row, int chr);
 static void send_CharSet(int row);
-static void send_SGR(unsigned attr, int fg, int bg);
+static void send_SGR(unsigned attr, unsigned fg, unsigned bg);
 static void stringToPrinter(char *str);
 
 static FILE *Printer;
-static int Printer_pid;
+static pid_t Printer_pid;
 static int initialized;
 
 static void
@@ -111,6 +111,8 @@ printCursorLine(void)
     printLine(screen->cur_row, '\n');
 }
 
+#define NO_COLOR	((unsigned)-1)
+
 /*
  * DEC's manual doesn't document whether trailing blanks are removed, or what
  * happens with a line that is entirely blank.  This function prints the
@@ -130,14 +132,14 @@ printLine(int row, int chr)
 #if OPT_EXT_COLORS
     Char *fbf = 0;
     Char *fbb = 0;
-#define ColorOf(col) ((fbf[col] << 8) | fbb[col])
+#define ColorOf(col) (unsigned)((fbf[col] << 8) | fbb[col])
 #else
     Char *fb = 0;
 #define ColorOf(col) (fb[col])
 #endif
 #endif
-    int fg = -1, last_fg = -1;
-    int bg = -1, last_bg = -1;
+    unsigned fg = NO_COLOR, last_fg = NO_COLOR;
+    unsigned bg = NO_COLOR, last_bg = NO_COLOR;
     int cs = CSET_IN;
     int last_cs = CSET_IN;
 
@@ -146,7 +148,7 @@ printLine(int row, int chr)
 	   visibleChars(PAIRED_CHARS(c,
 				     screen->utf8_mode
 				     ? SCRN_BUF_WIDEC(screen, row)
-				     : 0), last)));
+				     : 0), (unsigned) last)));
 
     if_OPT_EXT_COLORS(screen, {
 	fbf = SCRN_BUF_FGRND(screen, row);
@@ -164,7 +166,7 @@ printLine(int row, int chr)
     if (last) {
 	if (screen->print_attributes) {
 	    send_CharSet(row);
-	    send_SGR(0, -1, -1);
+	    send_SGR(0, NO_COLOR, NO_COLOR);
 	}
 	for (col = 0; col < last; col++) {
 	    ch = c[col];
@@ -176,10 +178,10 @@ printLine(int row, int chr)
 		if (screen->print_attributes > 1) {
 		    fg = (a[col] & FG_COLOR)
 			? extract_fg(ColorOf(col), a[col])
-			: -1;
+			: NO_COLOR;
 		    bg = (a[col] & BG_COLOR)
 			? extract_bg(ColorOf(col), a[col])
-			: -1;
+			: NO_COLOR;
 		}
 	    }
 #endif
@@ -219,12 +221,12 @@ printLine(int row, int chr)
 	     * corresponding charset information is not encoded
 	     * into the CSETS array.
 	     */
-	    charToPrinter((cs == CSET_OUT)
-			  ? (ch == 0x7f ? 0x5f : (ch + 0x5f))
-			  : ch);
+	    charToPrinter((int) ((cs == CSET_OUT)
+				 ? (ch == 0x7f ? 0x5f : (ch + 0x5f))
+				 : ch));
 	}
 	if (screen->print_attributes) {
-	    send_SGR(0, -1, -1);
+	    send_SGR(0, NO_COLOR, NO_COLOR);
 	    if (cs != CSET_IN)
 		charToPrinter(SHIFT_IN);
 	}
@@ -235,10 +237,10 @@ printLine(int row, int chr)
 }
 
 void
-xtermPrintScreen(Boolean use_DECPEX)
+xtermPrintScreen(Bool use_DECPEX)
 {
     TScreen *screen = &term->screen;
-    Boolean extent = (use_DECPEX && screen->printer_extent);
+    Bool extent = (use_DECPEX && screen->printer_extent);
     int top = extent ? 0 : screen->top_marg;
     int bot = extent ? screen->max_row : screen->bot_marg;
     int was_open = initialized;
@@ -309,7 +311,7 @@ send_CharSet(int row)
 }
 
 static void
-send_SGR(unsigned attr, int fg, int bg)
+send_SGR(unsigned attr, unsigned fg, unsigned bg)
 {
     char msg[80];
     strcpy(msg, "\033[0");
@@ -322,17 +324,17 @@ send_SGR(unsigned attr, int fg, int bg)
     if (attr & INVERSE)		/* typo? DEC documents this as invisible */
 	strcat(msg, ";7");
 #if OPT_PRINT_COLORS
-    if (bg >= 0) {
-	sprintf(msg + strlen(msg), ";%d", (bg < 8) ? (40 + bg) : (92 + bg));
+    if (bg != NO_COLOR) {
+	sprintf(msg + strlen(msg), ";%u", (bg < 8) ? (40 + bg) : (92 + bg));
     }
-    if (fg >= 0) {
+    if (fg != NO_COLOR) {
 #if OPT_PC_COLORS
 	if (term->screen.boldColors
 	    && fg > 8
 	    && (attr & BOLD) != 0)
 	    fg -= 8;
 #endif
-	sprintf(msg + strlen(msg), ";%d", (fg < 8) ? (30 + fg) : (82 + fg));
+	sprintf(msg + strlen(msg), ";%u", (fg < 8) ? (30 + fg) : (82 + fg));
     }
 #endif
     strcat(msg, "m");
@@ -407,7 +409,7 @@ charToPrinter(int chr)
 #if OPT_WIDE_CHARS
 	if (chr > 127) {
 	    Char temp[10];
-	    *convertToUTF8(temp, chr) = 0;
+	    *convertToUTF8(temp, (unsigned) chr) = 0;
 	    fputs((char *) temp, Printer);
 	} else
 #endif
@@ -447,7 +449,7 @@ xtermMediaControl(int param, int private_seq)
 	    setPrinterControlMode(1);
 	    break;
 	case 10:		/* VT320 */
-	    xtermPrintScreen(FALSE);
+	    xtermPrintScreen(False);
 	    break;
 	case 11:		/* VT320 */
 	    xtermPrintEverything();
@@ -457,7 +459,7 @@ xtermMediaControl(int param, int private_seq)
 	switch (param) {
 	case -1:
 	case 0:
-	    xtermPrintScreen(TRUE);
+	    xtermPrintScreen(True);
 	    break;
 	case 4:
 	    setPrinterControlMode(0);
@@ -567,7 +569,7 @@ xtermPrinterControl(int chr)
 /*
  * If there is no printer command, we will ignore printer controls.
  */
-Boolean
+Bool
 xtermHasPrinter(void)
 {
     TScreen *screen = &term->screen;

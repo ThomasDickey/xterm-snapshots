@@ -1,10 +1,12 @@
+/* $XTermId: charsets.c,v 1.32 2005/01/14 01:50:02 tom Exp $ */
+
 /*
- * $XFree86: xc/programs/xterm/charsets.c,v 1.11 2003/12/31 17:12:26 dickey Exp $
+ * $XFree86: xc/programs/xterm/charsets.c,v 1.12 2005/01/14 01:50:02 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1998-2000,2003 by Thomas E. Dickey
+Copyright 1998-2003,2005 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -242,17 +244,18 @@ unsigned xtermCharSetIn(unsigned code, int charset)
  * Translate a string to the display form.  This assumes the font has the
  * DEC graphic characters in cells 0-31, and otherwise is ISO-8859-1.
  */
-int xtermCharSetOut(IChar *buf, IChar *ptr, char leftset)
+int xtermCharSetOut(IChar *buf, IChar *ptr, int leftset)
 {
 	IChar *s;
 	register TScreen *screen = &term->screen;
 	int count = 0;
 	int rightset = screen->gsets[(int)(screen->curgr)];
 
-	TRACE(("CHARSET GL=%c(G%d) GR=%c(G%d) %s\n",
-		leftset,  screen->curss ? screen->curss : screen->curgl,
+	TRACE(("CHARSET GL=%c(G%d) GR=%c(G%d) SS%d:%s\n",
+		leftset,  screen->curgl,
 		rightset, screen->curgr,
-		visibleIChar(buf, ptr-buf)));
+		screen->curss,
+		visibleIChar(buf, (unsigned)(ptr - buf))));
 
 	for (s = buf; s < ptr; ++s) {
 		int eight = CharOf(E2A(*s));
@@ -281,13 +284,15 @@ int xtermCharSetOut(IChar *buf, IChar *ptr, char leftset)
 			break;
 
 		case '0':	/* special graphics (line drawing)	*/
-			if (chr >= 0x5f && chr <= 0x7e) {
+			if (seven > 0x5f && seven <= 0x7e) {
 #if OPT_WIDE_CHARS
-				if (screen->utf8_mode)
-				    chr = dec2ucs(chr - 0x5f);
-				else
+			    if (screen->utf8_mode)
+				chr = dec2ucs((unsigned)(seven - 0x5f));
+			    else
 #endif
-				    chr = (chr == 0x5f) ? 0x7f : (chr - 0x5f);
+				chr = seven - 0x5f;
+			} else {
+			    chr = seven;
 			}
 			break;
 
@@ -443,6 +448,13 @@ int xtermCharSetOut(IChar *buf, IChar *ptr, char leftset)
 			count --;
 			break;
 		}
+		/*
+		 * The state machine already treated DEL as a nonprinting and
+		 * nonspacing character.  If we have DEL now, simply render
+		 * it as a blank.
+		 */
+		if (chr == 0x7f)
+		    chr = ' ';
 		*s = A2E(chr);
 	}
 	return count;
