@@ -749,7 +749,7 @@ and use Alternate Screen Buffer, clearing it first (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*5\*1 \(-> Set Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Set HP function-key mode.
-  \*(Ps = \*1\*0\*6\*1 \(-> Set Sun/PC keyboard mode.
+  \*(Ps = \*1\*0\*6\*1 \(-> Set Sun/PC keyboard emulation of VT220 keyboard.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*i
 Media Copy (MC)
@@ -819,7 +819,7 @@ as in DECRC (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*5\*1 \(-> Reset Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Reset HP function-key mode.
-  \*(Ps = \*1\*0\*6\*1 \(-> Reset Sun/PC keyboard mode.
+  \*(Ps = \*1\*0\*6\*1 \(-> Reset Sun/PC keyboard emulation of VT220 keyboard.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*m
 Character Attributes (SGR)

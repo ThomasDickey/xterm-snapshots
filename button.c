@@ -1,6 +1,6 @@
 /* $TOG: button.c /main/76 1997/07/30 16:56:19 kaleb $ */
 /*
- * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
  *
  *                         All Rights Reserved
  *
@@ -99,7 +99,9 @@ button.c	Handles button events in the terminal emulator.
 
 #define	Coordinate(r,c)		((r) * (term->screen.max_col+1) + (c))
 
+#if OPT_DEC_LOCATOR
 static ANSI reply;
+#endif
 
 /* Selection/extension variables */
 
@@ -802,7 +804,7 @@ UTF8toLatin1(Char *s, int len, unsigned long *result)
 	if ((*p & 0x80) == 0) {
 	    *q++ = *p++;
 	} else if ((*p & 0x7C) == 0x40 && p < s + len - 1) {
-	    *q++ = (*p & 0x03) << 6 | (p[1] & 0x3F);
+	    *q++ = ((*p & 0x03) << 6) | (p[1] & 0x3F);
 	    p += 2;
 	} else if ((*p & 0x60) == 0x40) {
 	    *q++ = '#';
@@ -854,11 +856,11 @@ filterUTF8(Char *t, Char *s, int len)
 	    codepoint = *p & 0x7F;
 	    size = 1;
 	} else if ((*p & 0x60) == 0x40 && p < s + len - 1) {
-	    codepoint = (p[0] & 0x1F) << 6 | (p[1] & 0x3F);
+	    codepoint = ((p[0] & 0x1F) << 6) | (p[1] & 0x3F);
 	    size = 2;
 	} else if ((*p & 0x70) == 0x60 && p < s + len - 2) {
-	    codepoint = (p[0] & 0x0F) << 12
-		      | (p[1] & 0x3F) << 6
+	    codepoint = ((p[0] & 0x0F) << 12)
+		      | ((p[1] & 0x3F) << 6)
 		      | (p[2] & 0x3F);
 	    size = 3;
 	} else if ((*p & 0x78) == 0x70 && p < s + len - 3) {
@@ -928,7 +930,7 @@ static void _GetSelection(
       case XA_CUT_BUFFER7: cutbuffer = 7; break;
       default:		   cutbuffer = -1;
     }
-    TRACE(("Cutbuffer: %d, utf8_failed: %d\n", cutbuffer, utf8_failed))
+    TRACE(("Cutbuffer: %d, utf8_failed: %d\n", cutbuffer, utf8_failed));
     if (cutbuffer >= 0) {
 	int inbytes;
 	unsigned long nbytes;
@@ -1043,18 +1045,39 @@ static void SelectionReceived(
     /* Doing this one line at a time may no longer be necessary
        because v_write has been re-written. */
 
+  /* on VMS version if tt_pasting isn't set to TRUE then qio
+     reads aren't blocked and an infinite loop is entered, where
+     the pasted text shows up as new input, goes in again, shows
+     up again, ad nauseum. */
+
+#ifdef VMS
+    tt_pasting = TRUE;
+#endif
     end = &buf[len];
     lag = buf;
     for (cp = buf; cp != end; cp++)
     {
 	if (*cp == '\n') {
 	    *cp = '\r';
+#ifdef VMS
+	    tt_write(lag, cp - lag + 1);
+#else /* VMS */
 	    v_write(pty, lag, cp - lag + 1);
+#endif /* VMS */
 	    lag = cp + 1;
 	}
     }
     if (lag != end)
+#ifdef VMS
+	tt_write(lag, end - lag);
+#else /* VMS */
 	v_write(pty, lag, end - lag);
+#endif /* VMS */
+
+#ifdef VMS
+    tt_pasting = FALSE;
+    tt_start_read();  /* reenable reads or a character may be lost */
+#endif
 
     if_OPT_WIDE_CHARS(screen,{
 	XtFree((char*)buf);
@@ -1195,7 +1218,7 @@ StartSelect(int startrow, int startcol)
 {
 	TScreen *screen = &term->screen;
 
-	TRACE(("StartSelect row=%d, col=%d\n", startrow, startcol))
+	TRACE(("StartSelect row=%d, col=%d\n", startrow, startcol));
 	if (screen->cursor_state)
 	    HideCursor ();
 	if (numberOfClicks == 1) {
@@ -1368,7 +1391,7 @@ ExtendExtend (int row, int col)
 {
 	int coord = Coordinate(row, col);
 
-	TRACE(("ExtendExtend row=%d, col=%d\n", row, col))
+	TRACE(("ExtendExtend row=%d, col=%d\n", row, col));
 	if (eventMode == LEFTEXTENSION
 	 && (coord + (selectUnit!=SELECTCHAR)) > Coordinate(endSRow, endSCol)) {
 		/* Whoops, he's changed his mind.  Do RIGHTEXTENSION */
@@ -1904,7 +1927,7 @@ SaltTextAway(
     }
     *lp = '\0';			/* make sure we have end marked */
 
-    TRACE(("Salted TEXT:%.*s\n", (char *)lp - line, line))
+    TRACE(("Salted TEXT:%.*s\n", (char *)lp - line, line));
     screen->selection_length = ((char *)lp - line);
     _OwnSelection(term, params, num_params);
 }
@@ -2377,7 +2400,7 @@ EditorButton(register XButtonEvent *event)
 	line[count++] = ' ' + row + 1;
 
 	TRACE(("mouse at %d,%d button+mask = %#x\n", row, col,
-		(screen->control_eight_bits) ? line[2] : line[3]))
+		(screen->control_eight_bits) ? line[2] : line[3]));
 
 	/* Transmit key sequence to process running under xterm */
 	v_write(pty, line, count);

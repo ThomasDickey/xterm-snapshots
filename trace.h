@@ -46,7 +46,7 @@ extern	void	Trace ( char *, ... )
 	__attribute__ ((format(printf,1,2)))
 #endif
 	;
-#define TRACE(p) Trace p;
+#define TRACE(p) Trace p
 
 extern	char *	visibleChars (PAIRED_CHARS(Char *buf, Char *buf2), unsigned len);
 extern	char *	visibleIChar (IChar *, unsigned);

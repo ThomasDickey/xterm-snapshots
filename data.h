@@ -34,6 +34,21 @@ extern Widget toplevel;
 
 extern XtAppContext app_con;
 
+#ifdef VMS
+/* actually in vms.c */
+extern int tt_width;
+extern int tt_length;
+extern int tt_changed;
+extern int tt_pasting;
+extern int tt_new_output;
+#define VMS_TERM_BUFFER_SIZE	500
+struct q_head {
+	int flink;
+	int blink;
+};
+extern struct q_head read_queue;
+#endif
+
 #if OPT_TEK4014
 extern Char *Tpushb;
 extern Char *Tpushback;
@@ -54,24 +69,15 @@ extern char log_def_name[];
 extern char *ptydev;
 extern char *ttydev;
 extern char *xterm_name;
-extern Boolean sunFunctionKeys;
 extern int hold_screen;
 
-#if OPT_HP_FUNC_KEYS
-extern Boolean hpFunctionKeys;
+#if OPT_ZICONBEEP
+extern int zIconBeep;
+extern Boolean zIconBeep_flagged;
 #endif
 
-#if OPT_ZICONBEEP 
-extern int zIconBeep; 
-extern Boolean zIconBeep_flagged; 
-#endif 
-
-#if OPT_SAME_NAME 
-extern Boolean sameName; 
-#endif 
-
-#if OPT_SUNPC_KBD
-extern Boolean sunKeyboard;
+#if OPT_SAME_NAME
+extern Boolean sameName;
 #endif
 
 extern PtyData VTbuffer;
@@ -83,9 +89,15 @@ extern jmp_buf VTend;
 extern int debug;
 #endif	/* DEBUG */
 
+#ifdef VMS
+extern int Select_mask;
+extern int X_mask;
+extern int pty_mask;
+#else /* VMS */
 extern fd_set Select_mask;
 extern fd_set X_mask;
 extern fd_set pty_mask;
+#endif /* VMS */
 
 extern int waitingForTrackInfo;
 

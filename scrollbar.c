@@ -4,6 +4,35 @@
  */
 
 /*
+ * Copyright 2000 by Thomas E. Dickey <dickey@clark.net>
+ *
+ *                         All Rights Reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ *
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -110,7 +139,7 @@ ResizeScreen(register XtermWidget xw, int min_width, int min_height)
 	 */
 
 	TRACE(("ResizeScreen(min_width=%d, min_height=%d) xw=%#lx\n",
-		min_width, min_height, (long) xw))
+		min_width, min_height, (long) xw));
 
 #ifndef nothack
 	/*
@@ -155,13 +184,13 @@ ResizeScreen(register XtermWidget xw, int min_width, int min_height)
 	TRACE(("...requesting screensize chars %dx%d, pixels %dx%d\n",
 		(screen->max_row + 1),
 		(screen->max_col + 1),
-		reqHeight, reqWidth))
+		reqHeight, reqWidth));
 
 	geomreqresult = XtMakeResizeRequest ((Widget)xw, reqWidth, reqHeight,
 					     &repWidth, &repHeight);
 
 	if (geomreqresult == XtGeometryAlmost) {
-	    TRACE(("...almost, retry screensize %dx%d\n", repHeight, repWidth))
+	    TRACE(("...almost, retry screensize %dx%d\n", repHeight, repWidth));
 	    geomreqresult = XtMakeResizeRequest ((Widget)xw, repWidth,
 						  repHeight, NULL, NULL);
 	}

@@ -1,8 +1,8 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.54 1999/12/30 02:06:01 robin Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.55 2000/01/29 18:58:43 dawes Exp $
 .\"
 .\"
-.\" Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+.\" Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1228,6 +1228,7 @@ The default is ``true.''
 If ``true'', xterm will use old-style control sequences for function keys F1 to F4,
 for compatibility with X Consortium xterm.  Otherwise, it uses the VT100-style
 codes for PF1 to PF4.
+Also, if ``true'', the Delete key sends DEL (127).
 The default is ``false.''
 .TP 8
 .B "pointerColor (\fPclass\fB Foreground)"

@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -168,7 +168,7 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 		TRACE(("UTF-8 count %d, char %04X input %d/%d bytes\n",
 			screen->utf_count,
 			screen->utf_char,
-			data->cnt, j))
+			data->cnt, j));
 		data->cnt = j;
 	    } else {
 		for (i = 0; i < data->cnt; i++)
@@ -183,10 +183,10 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 	    }
 #if OPT_TRACE
 	    for (i = 0; i < data->cnt; i++) {
-		if (!(i%8)) TRACE(("%s", i ? "\n    " : "READ"))
-		TRACE((" %04X", data->ptr[i]))
+		if (!(i%8)) TRACE(("%s", i ? "\n    " : "READ"));
+		TRACE((" %04X", data->ptr[i]));
 	    }
-	    TRACE(("\n"))
+	    TRACE(("\n"));
 #endif
 	    return (data->cnt);
 	}

@@ -3,7 +3,7 @@
  */
 
 /*
- * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
  *
  *                         All Rights Reserved
  *
@@ -633,7 +633,7 @@ ScrnRefresh (
 	TRACE(("ScrnRefresh (%d,%d) - (%d,%d)%s\n",
 		toprow, leftcol,
 		nrows, ncols,
-		force ? " force" : ""))
+		force ? " force" : ""));
 
 	if(screen->cursor_col >= leftcol
 	&& screen->cursor_col <= (leftcol + ncols - 1)
@@ -818,7 +818,7 @@ ScrnRefresh (
 		   	lastind, col,
 			visibleChars(
 				PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
-				col - lastind)))
+				col - lastind)));
 		   x = drawXtermText(screen, flags, gc, x, y,
 		   	cs,
 			PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
@@ -859,7 +859,7 @@ ScrnRefresh (
 	   TRACE(("%s @%d, calling drawXtermText %d..%d:%s\n",
 	   	__FILE__, __LINE__,
 		lastind, col,
-		visibleChars(PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)), col - lastind)))
+		visibleChars(PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)), col - lastind)));
 	   drawXtermText(screen, flags, gc, x, y,
 	   	cs,
 		PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
@@ -908,7 +908,7 @@ ClearBufRows (
 	register int row;
 	register int flags = TERM_COLOR_FLAGS;
 
-	TRACE(("ClearBufRows %d..%d\n", first, last))
+	TRACE(("ClearBufRows %d..%d\n", first, last));
 	for (row = first; row <= last; row++) {
 	    ScrnClrWrapped(screen, row);
 	    bzero (BUF_CHARS(buf, row), len);
@@ -963,7 +963,7 @@ ScreenResize (
 #endif	/* sun vs TIOCSWINSZ */
 	Window tw = VWindow (screen);
 
-	TRACE(("ScreenResize %dx%d\n", height, width))
+	TRACE(("ScreenResize %dx%d\n", height, width));
 
 	/* clear the right and bottom internal border because of NorthWest
 	   gravity might have left junk on the right and bottom edges */
@@ -995,7 +995,7 @@ ScreenResize (
 		 screen->savelines : 0;
 		int delta_rows = rows - (screen->max_row + 1);
 
-		TRACE(("...ScreenResize chars %dx%d\n", rows, cols))
+		TRACE(("...ScreenResize chars %dx%d\n", rows, cols));
 
 		if(screen->cursor_state)
 			HideCursor();
@@ -1081,7 +1081,7 @@ ScreenResize (
 	ts.ts_lines = rows;
 	ts.ts_cols = cols;
 	code = ioctl (screen->respond, TIOCSSIZE, &ts);
-	TRACE(("return %d from TIOCSSIZE %dx%d\n", code, rows, cols))
+	TRACE(("return %d from TIOCSSIZE %dx%d\n", code, rows, cols));
 #ifdef SIGWINCH
 	if(screen->pid > 1) {
 		int	pgrp;
@@ -1097,7 +1097,7 @@ ScreenResize (
 	ws.ws_xpixel = width;
 	ws.ws_ypixel = height;
 	code = ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
-	TRACE(("return %d from TIOCSWINSZ %dx%d\n", code, rows, cols))
+	TRACE(("return %d from TIOCSWINSZ %dx%d\n", code, rows, cols));
 #ifdef notdef	/* change to SIGWINCH if this doesn't work for you */
 	if(screen->pid > 1) {
 		int	pgrp;
@@ -1107,7 +1107,7 @@ ScreenResize (
 	}
 #endif	/* SIGWINCH */
 #else
-	TRACE(("ScreenResize cannot do anything to pty\n"))
+	TRACE(("ScreenResize cannot do anything to pty\n"));
 #endif	/* sun vs TIOCSWINSZ */
 	return (0);
 }
