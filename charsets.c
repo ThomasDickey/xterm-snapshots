@@ -264,7 +264,7 @@ int xtermCharSetOut(IChar *buf, IChar *ptr, char leftset)
 		switch (cs) {
 		case 'A':	/* United Kingdom set (or Latin 1)	*/
 			if ((term->flags & NATIONAL)
-			 || (screen->ansi_level <= 1)) {
+			 || (screen->vtXX_level <= 1)) {
 				if (chr == 0x23)
 					chr = XPOUND;	/* UK pound sign*/
 			} else {

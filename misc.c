@@ -1613,9 +1613,9 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 			cp);
 	    } else if (!strcmp(cp, "\"p")) {	/* DECSCL */
 		sprintf(reply, "%d%s%s",
-			(screen->ansi_level ?
-			 screen->ansi_level : 1) + 60,
-			(screen->ansi_level >= 2)
+			(screen->vtXX_level ?
+			 screen->vtXX_level : 1) + 60,
+			(screen->vtXX_level >= 2)
 			? (screen->control_eight_bits
 			   ? ";0" : ";1")
 			: "",

@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.92 2003/10/27 01:07:58 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.93 2003/12/18 21:12:16 dickey Exp $ */
 
 /************************************************************
 
@@ -775,7 +775,7 @@ extern void ScrnRefresh (TScreen *screen, int toprow, int leftcol, int nrows, in
 		(Char *)(((long)SCRN_BUF_FLAGS(screen, row + screen->topline) | LINEWRAPPED))
 
 #define ScrnTstWrapped(screen, row) \
-	(((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & LINEWRAPPED) != 0)
+	((row + screen->topline) >= 0 && ((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & LINEWRAPPED) != 0)
 
 /* scrollbar.c */
 extern void DoResizeScreen (XtermWidget xw);
