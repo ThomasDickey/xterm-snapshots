@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.57 2001/03/13 09:48:43 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.60 2001/04/12 01:02:49 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1227,6 +1227,7 @@ static void SelectionReceived(
 
 #if OPT_WIDE_CHARS
     if(screen->wide_chars) {
+	/* Convert the selection to UTF-8. */
 	if (*type == XA_UTF8_STRING(XtDisplay(w))) {
 	    GettingSelection("UTF8_STRING", line, *length);
 	    if(XTextPropertyToStringListUnchecked(&text_prop, &text_list,
@@ -1259,6 +1260,7 @@ static void SelectionReceived(
     } else
 #endif /* OPT_WIDE_CHARS */
     {
+	/* Convert the selection to locale's multibyte encoding. */
 	if(*type == XA_COMPOUND_TEXT(XtDisplay(w))) {
 	    GettingSelection("COMPOUND_TEXT", line, *length);
 	    if(XmbTextPropertyToTextList(dpy, &text_prop,
@@ -1271,9 +1273,9 @@ static void SelectionReceived(
 #if OPT_USE_UTF8_API
 	if(*type == XA_UTF8_STRING(XtDisplay(w))) {
 	    GettingSelection("UTF8_STRING", line, *length);
-	    if(Xutf8TextPropertyToTextList(dpy, &text_prop,
-					   &text_list,
-					   &text_list_count) < 0) {
+	    if(XmbTextPropertyToTextList(dpy, &text_prop,
+					 &text_list,
+					 &text_list_count) < 0) {
 		TRACE(("Conversion failed\n"));
 		text_list = NULL;
 	    }
@@ -1282,7 +1284,7 @@ static void SelectionReceived(
 	if(*type == XA_STRING) {
 	    Status rc;
 	    GettingSelection("STRING", line, *length);
-	    if(screen->i18nSelections) {
+	    if(!screen->brokenSelections) {
 		rc = XmbTextPropertyToTextList(dpy,
 					       &text_prop,
 					       &text_list, &text_list_count);

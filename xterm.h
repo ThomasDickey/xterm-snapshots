@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.68 2001/03/05 23:01:21 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.70 2001/04/12 01:02:51 dickey Exp $ */
 
 /************************************************************
 
@@ -38,8 +38,8 @@ authorization.
  * This is also where we put the fallback definitions if we do not build using
  * the configure script.
  */
-#ifndef	included_xterm_h
-#define	included_xterm_h
+#ifndef included_xterm_h
+#define included_xterm_h
 
 #ifdef HAVE_CONFIG_H
 #include <xtermcfg.h>
@@ -81,6 +81,10 @@ authorization.
 
 #if defined(CSRG_BASED) || defined(__GNU__)
 #define USE_POSIX_TERMIOS 1
+#endif
+
+#if defined(hpux) && !defined(__hpux)
+#define __hpux 1	/* HPUX 11.0 does not define this */
 #endif
 
 #ifdef USE_POSIX_TERMIOS
@@ -215,9 +219,20 @@ extern int errno;
 #else
 #define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
 #define XFD_COPYSET(src,dst) memcpy((dst)->fds_bits, (src)->fds_bits, sizeof(fd_set))
-#ifdef __MVS__
-#include <sys/time.h>
+#if defined(__MVS__) && !defined(TIME_WITH_SYS_TIME)
+#define TIME_WITH_SYS_TIME
 #endif
+#endif
+
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
 #endif
 
 #ifdef USE_SYS_SELECT_H
@@ -236,7 +251,6 @@ extern int errno;
 
 /***====================================================================***/
 
-#define	XtNi18nSelections	"i18nSelections"
 #define XtNallowSendEvents	"allowSendEvents"
 #define XtNalwaysHighlight	"alwaysHighlight"
 #define XtNalwaysUseMods	"alwaysUseMods"
@@ -250,6 +264,7 @@ extern int errno;
 #define XtNboldColors		"boldColors"
 #define XtNboldFont		"boldFont"
 #define XtNboldMode		"boldMode"
+#define XtNbrokenSelections	"brokenSelections"
 #define XtNc132			"c132"
 #define XtNcacheDoublesize	"cacheDoublesize"
 #define XtNcharClass		"charClass"
@@ -300,6 +315,7 @@ extern int errno;
 #define XtNhighlightColor	"highlightColor"
 #define XtNhighlightSelection	"highlightSelection"
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
+#define XtNi18nSelections	"i18nSelections"
 #define XtNinternalBorder	"internalBorder"
 #define XtNjumpScroll		"jumpScroll"
 #define XtNkeyboardDialect	"keyboardDialect"
@@ -355,7 +371,6 @@ extern int errno;
 #define XtNxmcInline		"xmcInline"
 #define XtNxmcMoveSGR		"xmcMoveSGR"
 
-#define	XtCI18nSelections	"I18nSelections"
 #define XtCAllowSendEvents	"AllowSendEvents"
 #define XtCAlwaysHighlight	"AlwaysHighlight"
 #define XtCAlwaysUseMods	"AlwaysUseMods"
@@ -368,6 +383,7 @@ extern int errno;
 #define XtCBellSuppressTime	"BellSuppressTime"
 #define XtCBoldFont		"BoldFont"
 #define XtCBoldMode		"BoldMode"
+#define XtCBrokenSelections	"BrokenSelections"
 #define XtCC132			"C132"
 #define XtCCacheDoublesize	"CacheDoublesize"
 #define XtCCharClass		"CharClass"
@@ -392,6 +408,7 @@ extern int errno;
 #define XtCFontStyle		"FontStyle"
 #define XtCHighlightSelection	"HighlightSelection"
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
+#define XtCI18nSelections	"I18nSelections"
 #define XtCJumpScroll		"JumpScroll"
 #define XtCKeyboardDialect	"KeyboardDialect"
 #define XtCLimitResize		"LimitResize"
@@ -446,12 +463,12 @@ extern int errno;
 #endif
 
 #ifdef VMS
-#define	XtCbackground		"background"
-#define	XtCbordercolor		"borderColor"
-#define	XtCborderwidth		"borderWidth"
-#define	XtCforeground		"foreground"
-#define	XtCfont			"font"
-#define	XtCiconic		"iconic"
+#define XtCbackground		"background"
+#define XtCbordercolor		"borderColor"
+#define XtCborderwidth		"borderWidth"
+#define XtCforeground		"foreground"
+#define XtCfont			"font"
+#define XtCiconic		"iconic"
 #endif
 
 /***====================================================================***/

@@ -2,7 +2,7 @@
  *	$Xorg: resize.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/resize.c,v 3.46 2001/02/13 19:19:18 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/resize.c,v 3.48 2001/04/05 19:29:44 dawes Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -180,7 +180,11 @@ static void readstring (FILE *fp, char *buf, char *str);
 #else
 #include <curses.h>
 #ifdef NCURSES_VERSION
+#ifdef __CYGWIN__
+#include <ncurses/term.h>
+#else
 #include <term.h> /* tgetent() */
+#endif /*CYGWIN*/
 #endif
 #endif /* HAVE_TERMCAP_H  */
 #endif

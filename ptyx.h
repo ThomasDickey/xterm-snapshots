@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.83 2001/01/17 23:46:38 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.86 2001/04/12 01:02:50 dickey Exp $ */
 
 /*
  * Copyright 1999-2000 by Thomas E. Dickey
@@ -112,7 +112,7 @@
 
 #ifdef SYSV
 #ifdef X_NOT_POSIX
-#ifndef CRAY
+#if !defined(CRAY) && !defined(SVR4)
 #define	dup2(fd1,fd2)	((fd1 == fd2) ? fd1 : \
 				(close(fd2), fcntl(fd1, F_DUPFD, fd2)))
 #endif
@@ -1229,6 +1229,7 @@ typedef struct {
 	Boolean		highlight_selection; /* controls appearance of selection */
 	Boolean		trim_selection; /* controls trimming of selection */
 	Boolean		i18nSelections;
+	Boolean		brokenSelections;
 	char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
 	int		selection_length; /* number of significant bytes */
