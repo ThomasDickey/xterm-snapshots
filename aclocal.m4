@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.47 2003/05/21 22:59:11 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.49 2003/10/13 00:58:20 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -500,7 +500,21 @@ rm -rf conftest*
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 13 updated: 2003/05/19 23:35:40
+dnl CF_GCC_VERSION version: 3 updated: 2003/09/06 19:16:57
+dnl --------------
+dnl Find version of gcc
+AC_DEFUN([CF_GCC_VERSION],[
+AC_REQUIRE([AC_PROG_CC])
+GCC_VERSION=none
+if test "$GCC" = yes ; then
+	AC_MSG_CHECKING(version of $CC)
+	GCC_VERSION="`${CC} --version|sed -e '2,$d' -e 's/^[[^0-9.]]*//' -e 's/[[^0-9.]].*//'`"
+	test -z "$GCC_VERSION" && GCC_VERSION=unknown
+	AC_MSG_RESULT($GCC_VERSION)
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_GCC_WARNINGS version: 15 updated: 2003/07/05 18:42:30
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -508,12 +522,14 @@ dnl
 dnl	-Wconversion (useful in older versions of gcc, but not in gcc 2.7.x)
 dnl	-Wredundant-decls (system headers make this too noisy)
 dnl	-Wtraditional (combines too many unrelated messages, only a few useful)
-dnl	-Wwrite-strings (too noisy, but should review occasionally)
+dnl	-Wwrite-strings (too noisy, but should review occasionally).  This
+dnl		is enabled for ncurses using "--enable-const".
 dnl	-pedantic
 dnl
 AC_DEFUN([CF_GCC_WARNINGS],
 [
-if ( test "$GCC" = yes || test "$GXX" = yes )
+AC_REQUIRE([CF_GCC_VERSION])
+if test "$GCC" = yes
 then
 	cat > conftest.$ac_ext <<EOF
 #line __oline__ "configure"
@@ -540,8 +556,19 @@ EOF
 		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
 		if AC_TRY_EVAL(ac_compile); then
 			test -n "$verbose" && AC_MSG_RESULT(... -$cf_opt)
+			case $cf_opt in #(vi
+			Wcast-qual) #(vi
+				CPPFLAGS="$CPPFLAGS -DXTSTRINGDEFINES"
+				;;
+			Winline) #(vi
+				case $GCC_VERSION in
+				3.3*)
+					CF_VERBOSE(feature is broken in gcc $GCC_VERSION)
+					continue;;
+				esac
+				;;
+			esac
 			EXTRA_CFLAGS="$EXTRA_CFLAGS -$cf_opt"
-			test "$cf_opt" = Wcast-qual && CPPFLAGS="$CPPFLAGS -DXTSTRINGDEFINES"
 		fi
 	done
 	rm -f conftest*
@@ -587,7 +614,7 @@ AC_DEFUN([CF_HELP_MESSAGE],
 [AC_DIVERT_HELP([$1])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_IMAKE_CFLAGS version: 14 updated: 2003/04/12 15:42:00
+dnl CF_IMAKE_CFLAGS version: 15 updated: 2003/10/11 12:01:23
 dnl ---------------
 dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
 dnl get these, but if imake is properly configured there is no point in doing
@@ -610,6 +637,7 @@ esac
 
 # If it's installed properly, imake (or its wrapper, xmkmf) will point to the
 # config directory.
+if test -n "$IMAKE" ; then
 if mkdir conftestdir; then
 	cf_makefile=`cd $srcdir;pwd`/Imakefile
 	CDPATH=; export CDPATH
@@ -693,6 +721,7 @@ CF_EOF
 		fi
 	    fi
 	fi
+fi
 fi
 AC_SUBST(IMAKE_CFLAGS)
 AC_SUBST(IMAKE_LOADFLAGS)
@@ -1487,7 +1516,7 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 3 updated: 2001/04/28 13:51:55
+dnl CF_X_FREETYPE version: 5 updated: 2003/09/21 13:12:44
 dnl -------------
 dnl Check for X freetype libraries (XFree86 4.x)
 AC_DEFUN([CF_X_FREETYPE],
@@ -1512,6 +1541,11 @@ if test "$cf_cv_x_freetype" = yes ; then
 else
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
 fi
+
+# FIXME: revisit this if needed
+AC_SUBST(XRENDERFONT)
+AC_SUBST(HAVE_TYPE_FCCHAR32)
+AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 ])
 dnl ---------------------------------------------------------------------------
 dnl CF_X_TOOLKIT version: 9 updated: 2001/12/30 19:09:58

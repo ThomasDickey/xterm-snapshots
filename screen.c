@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.61 2003/03/23 02:01:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.64 2003/10/13 00:58:22 dickey Exp $ */
 
 /* screen.c */
 
@@ -923,7 +923,7 @@ ScrnRefresh(TScreen * screen,
 		test = flags;
 		checkVeryBoldColors(test, fg);
 
-		x = drawXtermText(screen, test, gc, x, y,
+		x = drawXtermText(screen, test & DRAWX_MASK, gc, x, y,
 				  cs,
 				  PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
 				  col - lastind, 0);
@@ -944,13 +944,15 @@ ScrnRefresh(TScreen * screen,
 			    my_x = CurCursorX(screen, row + topline, i - 1);
 
 			if (comb1 != 0) {
-			    drawXtermText(screen, test, gc, my_x, y, cs,
+			    drawXtermText(screen, (test & DRAWX_MASK)
+					  | NOBACKGROUND, gc, my_x, y, cs,
 					  PAIRED_CHARS(comb1l + i, comb1h + i),
 					  1, iswide(base));
 			}
 
 			if (comb2 != 0) {
-			    drawXtermText(screen, test, gc, my_x, y, cs,
+			    drawXtermText(screen, (test & DRAWX_MASK)
+					  | NOBACKGROUND, gc, my_x, y, cs,
 					  PAIRED_CHARS(comb2l + i, comb2h + i),
 					  1, iswide(base));
 			}
@@ -1003,7 +1005,7 @@ ScrnRefresh(TScreen * screen,
 	test = flags;
 	checkVeryBoldColors(test, fg);
 
-	drawXtermText(screen, test, gc, x, y,
+	drawXtermText(screen, test & DRAWX_MASK, gc, x, y,
 		      cs,
 		      PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
 		      col - lastind, 0);
@@ -1024,13 +1026,15 @@ ScrnRefresh(TScreen * screen,
 		    my_x = CurCursorX(screen, row + topline, i - 1);
 
 		if (comb1 != 0) {
-		    drawXtermText(screen, test, gc, my_x, y, cs,
+		    drawXtermText(screen, (test & DRAWX_MASK) |
+				  NOBACKGROUND, gc, my_x, y, cs,
 				  PAIRED_CHARS(comb1l + i, comb1h + i),
 				  1, iswide(base));
 		}
 
 		if (comb2 != 0) {
-		    drawXtermText(screen, test, gc, my_x, y, cs,
+		    drawXtermText(screen, (test & DRAWX_MASK) |
+				  NOBACKGROUND, gc, my_x, y, cs,
 				  PAIRED_CHARS(comb2l + i, comb2h + i),
 				  1, iswide(base));
 		}
@@ -1128,8 +1132,7 @@ ScreenResize(TScreen * screen,
 	     int height,
 	     unsigned *flags)
 {
-    int code;
-    int rows, cols;
+    int code, rows, cols;
     int border = 2 * screen->border;
     int move_down_by;
 #ifdef TTYSIZE_STRUCT
@@ -1266,6 +1269,7 @@ ScreenResize(TScreen * screen,
 #endif
     code = SET_TTYSIZE(screen->respond, ts);
     TRACE(("return %d from SET_TTYSIZE %dx%d\n", code, rows, cols));
+    (void) code;
 
 #if defined(SIGWINCH) && defined(USE_STRUCT_TTYSIZE)
     if (screen->pid > 1) {

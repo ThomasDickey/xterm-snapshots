@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/trace.h,v 3.12 2001/10/24 01:21:25 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.h,v 3.13 2003/09/21 17:12:48 dickey Exp $
  */
 
 /************************************************************
@@ -49,6 +49,9 @@ extern	char *	visibleIChar (IChar *, unsigned);
 
 extern	char	*trace_who;
 #define TRACE_CHILD int tracing_child = (trace_who = "child") != 0;
+
+extern	void	TraceSizeHints(XSizeHints *);
+#define	TRACE_HINTS(hints) TraceSizeHints(hints)
 
 extern	void	TraceTranslations(const char *, Widget);
 #define	TRACE_TRANS(name,w) TraceTranslations(name,w)

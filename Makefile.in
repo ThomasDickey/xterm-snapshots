@@ -1,4 +1,4 @@
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.43 2003/05/21 22:59:11 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.44 2003/10/13 00:58:20 dickey Exp $ ##
 ##
 ## Copyright 2002,2003 by Thomas E. Dickey
 ##
@@ -36,6 +36,7 @@ LINK		= $(CC) $(CFLAGS)
 
 INSTALL		= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
+INSTALL_SCRIPT	= @INSTALL_SCRIPT@
 INSTALL_DATA	= @INSTALL_DATA@
 transform	= @program_transform_name@
 
@@ -143,7 +144,7 @@ install-bin \
 install-full :: xterm$x resize$x $(BINDIR)
 	$(SHELL) $(srcdir)/sinstall.sh "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
 	$(INSTALL_PROGRAM) -s -m  755 resize$x $(BINDIR)/$(binary_resize)
-	$(INSTALL_PROGRAM) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm)
+	$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm)
 
 install \
 install-man \

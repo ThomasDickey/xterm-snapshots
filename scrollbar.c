@@ -2,7 +2,7 @@
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.37 2003/05/21 22:59:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.38 2003/09/21 17:12:48 dickey Exp $ */
 
 /*
  * Copyright 2000-2002,2003 by Thomas E. Dickey
@@ -527,10 +527,11 @@ ScrollTextUpDownBy(
  * assume that b is lower case and allow plural
  */
 static int
-specialcmplowerwiths(char *a, char *b)
+specialcmplowerwiths(char *a, char *b, int *modifier)
 {
     char ca, cb;
 
+    *modifier = 0;
     if (!a || !b)
 	return 0;
 
@@ -541,10 +542,24 @@ specialcmplowerwiths(char *a, char *b)
 	    break;		/* if not eq else both nul */
 	a++, b++;
     }
-    if (cb == '\0' && (ca == '\0' || (ca == 's' && a[1] == '\0')))
+    if (cb != '\0')
+	return 0;
+
+    if (ca == 's')
+	ca = *++a;
+
+    switch (ca) {
+    case '+':
+    case '-':
+	*modifier = (ca == '-' ? -1 : 1) * atoi(a + 1);
 	return 1;
 
-    return 0;
+    case '\0':
+	return 1;
+
+    default:
+	return 0;
+    }
 }
 
 static long
@@ -552,15 +567,16 @@ params_to_pixels(TScreen * screen, String * params, Cardinal n)
 {
     int mult = 1;
     char *s;
+    int modifier;
 
     switch (n > 2 ? 2 : n) {
     case 2:
 	s = params[1];
-	if (specialcmplowerwiths(s, "page")) {
-	    mult = (screen->max_row + 1) * FontHeight(screen);
-	} else if (specialcmplowerwiths(s, "halfpage")) {
-	    mult = ((screen->max_row + 1) * FontHeight(screen)) >> 1;
-	} else if (specialcmplowerwiths(s, "pixel")) {
+	if (specialcmplowerwiths(s, "page", &modifier)) {
+	    mult = (screen->max_row + 1 + modifier) * FontHeight(screen);
+	} else if (specialcmplowerwiths(s, "halfpage", &modifier)) {
+	    mult = ((screen->max_row + 1 + modifier) * FontHeight(screen)) / 2;
+	} else if (specialcmplowerwiths(s, "pixel", &modifier)) {
 	    mult = 1;
 	} else {
 	    /* else assume that it is Line */

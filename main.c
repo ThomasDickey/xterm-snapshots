@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.167 2003/05/21 22:59:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.169 2003/09/21 17:12:47 dickey Exp $ */
 
 /* main.c */
 

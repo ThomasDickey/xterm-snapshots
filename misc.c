@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.77 2003/03/23 02:01:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.79 2003/09/21 17:12:47 dickey Exp $ */
 
 /*
  *
@@ -530,52 +530,43 @@ Bell(int which GCC_UNUSED, int percent)
     }
 }
 
+#define VB_DELAY screen->visualBellDelay
+
+static void
+flashWindow(TScreen * screen, Window window, GC visualGC, unsigned width, unsigned height)
+{
+    XFillRectangle(screen->display, window, visualGC, 0, 0, width, height);
+    XFlush(screen->display);
+    Sleep(VB_DELAY);
+    XFillRectangle(screen->display, window, visualGC, 0, 0, width, height);
+}
+
 void
 VisualBell(void)
 {
-    register TScreen *screen = &term->screen;
-    register Pixel xorPixel = screen->foreground ^ term->core.background_pixel;
-    XGCValues gcval;
-    GC visualGC;
+    TScreen *screen = &term->screen;
 
-    gcval.function = GXxor;
-    gcval.foreground = xorPixel;
-    visualGC = XtGetGC((Widget) term, GCFunction + GCForeground, &gcval);
+    if (VB_DELAY > 0) {
+	Pixel xorPixel = screen->foreground ^ term->core.background_pixel;
+	XGCValues gcval;
+	GC visualGC;
+
+	gcval.function = GXxor;
+	gcval.foreground = xorPixel;
+	visualGC = XtGetGC((Widget) term, GCFunction + GCForeground, &gcval);
 #if OPT_TEK4014
-    if (screen->TekEmu) {
-	XFillRectangle(
-			  screen->display,
-			  TWindow(screen),
-			  visualGC,
-			  0, 0,
-			  (unsigned) TFullWidth(screen),
-			  (unsigned) TFullHeight(screen));
-	XFlush(screen->display);
-	XFillRectangle(
-			  screen->display,
-			  TWindow(screen),
-			  visualGC,
-			  0, 0,
-			  (unsigned) TFullWidth(screen),
-			  (unsigned) TFullHeight(screen));
-    } else
+	if (screen->TekEmu) {
+	    flashWindow(screen, TWindow(screen), visualGC,
+			TFullWidth(screen),
+			TFullHeight(screen));
+	} else
 #endif
-    {
-	XFillRectangle(
-			  screen->display,
-			  VWindow(screen),
-			  visualGC,
-			  0, 0,
-			  (unsigned) FullWidth(screen),
-			  (unsigned) FullHeight(screen));
-	XFlush(screen->display);
-	XFillRectangle(
-			  screen->display,
-			  VWindow(screen),
-			  visualGC,
-			  0, 0,
-			  (unsigned) FullWidth(screen),
-			  (unsigned) FullHeight(screen));
+	{
+	    flashWindow(screen, VWindow(screen), visualGC,
+			FullWidth(screen),
+			FullHeight(screen));
+	}
+	XtReleaseGC((Widget) term, visualGC);
     }
 }
 
@@ -1026,16 +1017,18 @@ StartLog(register TScreen * screen)
 		(strftime(yyyy_mm_dd_hh_mm_ss,
 			  sizeof(yyyy_mm_dd_hh_mm_ss),
 			  "%Y.%m.%d.%H.%M.%S", ltm) > 0)) {
-		(void) sprintf(log_def_name, "Xterm.log.%.255s.%.20s.XXXXXX",
-			       hostname, yyyy_mm_dd_hh_mm_ss);
+		(void) sprintf(log_def_name, "Xterm.log.%.255s.%.20s.%d",
+			       hostname, yyyy_mm_dd_hh_mm_ss, getpid());
 	    }
+	    if ((log_default = x_strdup(log_def_name)) == NULL)
+		return;
 #else
 	    const char *log_def_name = "XtermLog.XXXXXX";
-#endif
 	    if ((log_default = x_strdup(log_def_name)) == NULL)
 		return;
 
 	    mktemp(log_default);
+#endif
 	}
 	if ((screen->logfile = x_strdup(log_default)) == 0)
 	    return;
@@ -1290,7 +1283,9 @@ AllocateAnsiColor(XtermWidget pTerm,
 	SET_COLOR_RES(res, def.pixel);
 	TRACE(("AllocateAnsiColor[%d] %s (pixel %#lx)\n",
 	       (res - screen->Acolors), spec, def.pixel));
+#if OPT_COLOR_RES
 	res->mode = True;
+#endif
 	return (TRUE);
     }
     TRACE(("AllocateAnsiColor %s (failed)\n", spec));
