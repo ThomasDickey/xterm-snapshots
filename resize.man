@@ -1,7 +1,7 @@
-.\" $TOG: resize.man /main/13 1997/11/04 20:58:24 kaleb $
-.\" $XFree86: xc/programs/xterm/resize.man,v 1.3 1998/03/20 21:08:38 hohndel Exp $
+.\" $XConsortium: resize.man /main/12 1996/12/09 17:10:48 kaleb $
+.\" $XFree86: xc/programs/xterm/resize.man,v 1.4 1998/04/05 02:29:20 dawes Exp $
 .\" updated by Thomas Dickey <dickey@clark.net> for XFree86, Februrary 1998.
-.TH RESIZE 1 "Release 6.4" "X Version 11"
+.TH RESIZE 1 "Release 6.3" "X Version 11"
 .SH NAME
 resize \- set TERMCAP and terminal settings to current xterm window size
 .SH SYNOPSIS
