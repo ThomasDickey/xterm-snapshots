@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.494 2004/07/28 00:53:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.498 2004/08/08 22:36:13 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.164 2004/07/28 00:53:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.165 2004/08/08 22:36:13 dickey Exp $ */
 
 /*
 
@@ -4654,9 +4654,6 @@ VTClassInit(void)
 #define init_Bres(name) \
 	TRACE(("init " #name " = %s\n", \
 		BtoS(wnew->name = request->name)))
-#define init_Cres(name) \
-	TRACE(("init " #name " = %#lx\n", \
-		wnew->name = request->name))
 #define init_Ires(name) \
 	TRACE(("init " #name " = %d\n", \
 		wnew->name = request->name))
@@ -4669,7 +4666,6 @@ VTClassInit(void)
 		fill_Tres(wnew, request, offset)))
 #else
 #define init_Bres(name) wnew->name = request->name
-#define init_Cres(name) wnew->name = request->name
 #define init_Ires(name) wnew->name = request->name
 #define init_Sres(name) wnew->name = x_strtrim(request->name)
 #define init_Tres(offset) fill_Tres(wnew, request, offset)
@@ -4690,7 +4686,9 @@ fill_Tres(XtermWidget target, XtermWidget source, int offset)
     target->screen.Tcolors[offset] = source->screen.Tcolors[offset];
     target->screen.Tcolors[offset].mode = False;
 
-    name = target->screen.Tcolors[offset].resource;
+    if ((name = x_strtrim(target->screen.Tcolors[offset].resource)) != 0)
+	target->screen.Tcolors[offset].resource = name;
+
     if (name == 0) {
 	target->screen.Tcolors[offset].value = target->dft_foreground;
     } else if (!x_strcasecmp(name, XtDefaultForeground)) {
@@ -6240,7 +6238,7 @@ ScrnHasBlinking(TScreen * screen, int row)
     int col;
     Bool result = False;
 
-    for (col = 0; col < screen->max_col; ++col) {
+    for (col = 0; col < screen->max_col + 1; ++col) {
 	if (attrs[col] & BLINK) {
 	    result = True;
 	    break;
@@ -6288,7 +6286,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
      * associated with them.  Prune off any that have had the corresponding
      * cells reset.  If any are left, repaint those lines with ScrnRefresh().
      */
-    {
+    if (!(screen->blink_as_bold)) {
 	int row;
 	int first_row = screen->max_row;
 	int last_row = -1;
@@ -6315,7 +6313,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 			first_row,
 			0,
 			last_row + 1 - first_row,
-			screen->max_col,
+			screen->max_col + 1,
 			True);
 	}
     }
