@@ -1,5 +1,5 @@
--- $XTermId: INSTALL,v 1.77 2004/12/01 01:27:46 tom Exp $
--- $XFree86: xc/programs/xterm/INSTALL,v 3.36 2004/12/01 01:27:46 dickey Exp $
+-- $XTermId: INSTALL,v 1.80 2005/01/14 01:50:02 tom Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.37 2005/01/14 01:50:02 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -115,6 +115,14 @@ The options (in alphabetic order):
  	Do not use freetype libraries if they are found.  Normally they will
 	be used automatically.
 
+  --disable-full-tgetent  disable check for termcap library
+
+  	Do not look for the tgetent() function specifically in the termcap
+	library, accept the first library (from termlib, ncurses and curses)
+	which contains this function rather than continuing to search for
+	a termcap implementation rather than terminfo.  The former would
+	supply the complete $TERMCAP data needed for some legacy programs.
+
   --disable-highlighting  disable support for color highlighting
 
   	Do not compile-in code that allows the selected region to be a
@@ -196,6 +204,14 @@ The options (in alphabetic order):
 	Do not compile-in code which adds simple session management hooks which
 	are used when closing an xterm.  Normally the code is compiled-in,
 	except for systems which do not support it.
+
+  --disable-setuid        disable setuid/setgid
+
+	Do not install xterm using setuid or setgid permissions.  Drop setuid
+	and setgid permissions on startup.  This is done if you have linked
+	xterm with the utempter library, but may also be useful for systems
+	where the pseudoterminal and utmp interfaces are wrapped so that xterm
+	does not require these permissions.
 
   --disable-tek4014       disable tek4014 emulation
 

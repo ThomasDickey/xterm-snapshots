@@ -1,12 +1,12 @@
-/* $XTermId: fontutils.c,v 1.131 2004/12/01 01:27:46 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.136 2005/01/14 01:50:02 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.48 2004/12/01 01:27:46 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.49 2005/01/14 01:50:02 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1998-2003,2004 by Thomas E. Dickey
+Copyright 1998-2004,2005 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -175,8 +175,8 @@ get_font_name_props(Display * dpy, XFontStruct * fs, char *result)
     static FontNameProperties props;
     static char *last_name;
 
-    register XFontProp *fp;
-    register int i;
+    XFontProp *fp;
+    int i;
     Atom fontatom = XInternAtom(dpy, "FONT", False);
     char *name;
     char *str;
@@ -428,7 +428,7 @@ xtermSpecialFont(unsigned atts, unsigned chrset)
  * XLFD allows '?' as a wildcard, but we do not handle that (no one seems
  * to use it).
  */
-static Boolean
+static Bool
 same_font_name(char *pattern, char *match)
 {
     while (*pattern && *match) {
@@ -563,8 +563,8 @@ is_double_width_font_xft(Display * dpy, XftFont * font)
     if (gi1.xOff != gi2.xOff)	/* Not a fixed-width font */
 	return 0;
 
-    XftTextExtentsUtf8(dpy, font, (FcChar8 *) hwstr, strlen(hwstr), &gi1);
-    XftTextExtentsUtf8(dpy, font, (FcChar8 *) fwstr, strlen(fwstr), &gi2);
+    XftTextExtentsUtf8(dpy, font, (FcChar8 *) hwstr, (int) strlen(hwstr), &gi1);
+    XftTextExtentsUtf8(dpy, font, (FcChar8 *) fwstr, (int) strlen(fwstr), &gi2);
 
     /*
      * fontconfig and Xft prior to 2.2(?) set the width of half-width
@@ -622,8 +622,7 @@ xtermLoadFont(TScreen * screen,
     Pixel new_revers;
     char *tmpname = NULL;
     char normal[MAX_FONTNAME];
-    Boolean proportional = False;
-    int ch;
+    Bool proportional = False;
 
     memset(&myfonts, 0, sizeof(myfonts));
     if (fonts != 0)
@@ -799,7 +798,7 @@ xtermLoadFont(TScreen * screen,
     xgcv.font = nfs->fid;
     xgcv.foreground = new_normal;
     xgcv.background = new_revers;
-    xgcv.graphics_exposures = TRUE;	/* default */
+    xgcv.graphics_exposures = True;	/* default */
     xgcv.function = GXcopy;
 
     new_normalGC = XtGetGC((Widget) term, mask, &xgcv);
@@ -873,7 +872,7 @@ xtermLoadFont(TScreen * screen,
      * (0) is special, and is not used.
      */
 #if OPT_RENDERFONT
-    if (term->misc.render_font) {
+    if (UsingRenderFont()) {
 	/*
 	 * FIXME: we shouldn't even be here if we're using Xft.
 	 */
@@ -882,8 +881,10 @@ xtermLoadFont(TScreen * screen,
     } else
 #endif
     {
+	unsigned ch;
+
 	for (ch = 1; ch < 32; ch++) {
-	    int n = ch;
+	    unsigned n = ch;
 #if OPT_WIDE_CHARS
 	    if (screen->utf8_mode || screen->unicode_font) {
 		n = dec2ucs(ch);
@@ -922,7 +923,7 @@ xtermLoadFont(TScreen * screen,
 	if (fontnum == fontMenu_fontescape) {
 	    set_sensitivity(term->screen.fontMenu,
 			    fontMenuEntries[fontMenu_fontescape].widget,
-			    TRUE);
+			    True);
 	}
 #if OPT_SHIFT_FONTS
 	screen->menu_font_sizes[fontnum] = FontSize(nfs);
@@ -978,7 +979,7 @@ typedef struct {
 Bool
 xtermLoadVTFonts(XtermWidget w, char *myName, char *myClass)
 {
-    static Boolean initialized = False;
+    static Bool initialized = False;
     static SubResourceRec original, referenceRec, subresourceRec;
 
     /*
@@ -1001,7 +1002,7 @@ xtermLoadVTFonts(XtermWidget w, char *myName, char *myClass)
 	Sres(XtNfont6, XtCFont6, menu_font_names[fontMenu_font6], NULL),
     };
     Cardinal n;
-    Boolean status = True;
+    Bool status = True;
 
     if (!initialized) {
 
@@ -1062,8 +1063,10 @@ HandleLoadVTFonts(Widget w GCC_UNUSED,
 		  String * params GCC_UNUSED,
 		  Cardinal *param_count GCC_UNUSED)
 {
+    static char empty[] = "";	/* appease strict compilers */
+
     char buf[80];
-    char *myName = (*param_count > 0) ? params[0] : "";
+    char *myName = (*param_count > 0) ? params[0] : empty;
     char *convert = (*param_count > 1) ? params[1] : myName;
     char *myClass = (char *) MyStackAlloc(strlen(convert), buf);
     int n;
@@ -1085,7 +1088,7 @@ HandleLoadVTFonts(Widget w GCC_UNUSED,
 	    font_number = fontMenu_lastBuiltin;
 	for (n = 0; n < NMENUFONTS; ++n)
 	    term->screen.menu_font_sizes[n] = 0;
-	SetVTFont(font_number, TRUE,
+	SetVTFont(font_number, True,
 		  ((font_number == fontMenu_fontdefault)
 		   ? &(term->misc.default_font)
 		   : NULL));
@@ -1142,7 +1145,7 @@ xtermComputeFontInfo(TScreen * screen,
      * font-loading for fixed-fonts still goes on whether or not this chunk
      * overrides it.
      */
-    if (term->misc.render_font) {
+    if (term->misc.render_font && !IsIconWin(screen, win)) {
 	Display *dpy = screen->display;
 	int fontnum = screen->menu_font_number;
 	XftFont *norm = screen->renderFontNorm[fontnum];
@@ -1264,7 +1267,7 @@ xtermComputeFontInfo(TScreen * screen,
 		win->f_width >>= 1;
 	}
     }
-    if (!term->misc.render_font)
+    if (!term->misc.render_font || IsIconWin(screen, win))
 #endif
     {
 	if (is_double_width_font(font)) {
@@ -1403,7 +1406,12 @@ xtermMissingChar(unsigned ch, XFontStruct * font)
  * line-drawing character).
  */
 void
-xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
+xtermDrawBoxChar(TScreen * screen,
+		 unsigned ch,
+		 unsigned flags,
+		 GC gc,
+		 int x,
+		 int y)
 {
     /* *INDENT-OFF* */
     static const short diamond[] =
@@ -1575,8 +1583,8 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
     unsigned long mask;
     GC gc2;
     const short *p;
-    int font_width = ((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
-    int font_height = ((flags & DOUBLEHFONT) ? 2 : 1) * screen->fnt_high;
+    unsigned font_width = ((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
+    unsigned font_height = ((flags & DOUBLEHFONT) ? 2 : 1) * screen->fnt_high;
 
 #if OPT_WIDE_CHARS
     /*
@@ -1585,7 +1593,7 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
      */
     if (screen->utf8_mode
 #if OPT_RENDERFONT
-	&& !term->misc.render_font
+	&& !UsingRenderFont()
 #endif
 	&& (ch > 127)
 	&& (ch != UCS_REPL)) {
@@ -1605,7 +1613,7 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 
     TRACE(("DRAW_BOX(%d) cell %dx%d at %d,%d%s\n",
 	   ch, font_height, font_width, y, x,
-	   ((ch < 0 || ch >= (int) (sizeof(lines) / sizeof(lines[0])))
+	   (ch >= (sizeof(lines) / sizeof(lines[0]))
 	    ? "-BAD"
 	    : "")));
 
@@ -1622,7 +1630,7 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 	    mask |= GCBackground | GCTile | GCFillStyle;
 	    values.fill_style = FillTiled;
 	} else {
-	    ch = -1;
+	    ch = (unsigned) (~0);	/* make this not match anything */
 	}
     } else {
 	values.foreground = values.background;
@@ -1653,8 +1661,7 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 
     if (ch == 2) {
 	XmuReleaseStippledPixmap(XtScreen((Widget) term), values.tile);
-    } else if (ch >= 0
-	       && ch < (int) (sizeof(lines) / sizeof(lines[0]))
+    } else if (ch < (sizeof(lines) / sizeof(lines[0]))
 	       && (p = lines[ch]) != 0) {
 	int coord[4];
 	int n = 0;
@@ -1690,7 +1697,7 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
  * see xc/lib/Xft/xftglyphs.c
  */
 Bool
-xtermXftMissing(XftFont * font, int wc)
+xtermXftMissing(XftFont * font, unsigned wc)
 {
     unsigned check = XftCharIndex(term->screen.display, font, wc);
     Bool result = False;
@@ -1710,7 +1717,7 @@ xtermXftMissing(XftFont * font, int wc)
  * for line-drawing, and there is no reliable way to detect this.
  */
 Bool
-xtermIsLineDrawing(int wc)
+xtermIsLineDrawing(unsigned wc)
 {
     Bool result;
     switch (wc) {
@@ -1744,10 +1751,10 @@ xtermIsLineDrawing(int wc)
 
 #if OPT_WIDE_CHARS
 #define MY_UCS(ucs,dec) case ucs: result = dec; break
-int
-ucs2dec(int ch)
+unsigned
+ucs2dec(unsigned ch)
 {
-    int result = ch;
+    unsigned result = ch;
     if ((ch > 127)
 	&& (ch != UCS_REPL)) {
 	switch (ch) {
@@ -1791,10 +1798,10 @@ ucs2dec(int ch)
 #undef  MY_UCS
 #define MY_UCS(ucs,dec) case dec: result = ucs; break
 
-int
-dec2ucs(int ch)
+unsigned
+dec2ucs(unsigned ch)
 {
-    int result = ch;
+    unsigned result = ch;
     if (ch < 32) {
 	switch (ch) {
 	    MY_UCS(0x25ae, 0);	/* black vertical rectangle                   */
@@ -1933,7 +1940,7 @@ HandleLargerFont(Widget w GCC_UNUSED,
 
 	m = lookupRelativeFontSize(screen, screen->menu_font_number, 1);
 	if (m >= 0) {
-	    SetVTFont(m, TRUE, NULL);
+	    SetVTFont(m, True, NULL);
 	} else {
 	    Bell(XkbBI_MinorError, 0);
 	}
@@ -1953,7 +1960,7 @@ HandleSmallerFont(Widget w GCC_UNUSED,
 
 	m = lookupRelativeFontSize(screen, screen->menu_font_number, -1);
 	if (m >= 0) {
-	    SetVTFont(m, TRUE, NULL);
+	    SetVTFont(m, True, NULL);
 	} else {
 	    Bell(XkbBI_MinorError, 0);
 	}

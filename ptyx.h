@@ -1,13 +1,13 @@
-/* $XTermId: ptyx.h,v 1.346 2004/12/01 01:27:47 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.358 2005/01/14 01:50:03 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.120 2004/12/01 01:27:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.121 2005/01/14 01:50:03 dickey Exp $ */
 
 /*
- * Copyright 1999-2003,2004 by Thomas E. Dickey
+ * Copyright 1999-2004,2005 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -87,6 +87,19 @@
 
 #define MyStackFree(pointer, stack_cache_array) \
     if ((pointer) != ((char *)(stack_cache_array))) free(pointer)
+
+/* adapted from vile (vi-like-emacs) */
+#define TypeCallocN(type,n)	(type *)calloc((n), sizeof(type))
+#define TypeCalloc(type)	TypeCalloc(type,1)
+
+#define TypeMallocN(type,n)	(type *)malloc(sizeof(type) * (n))
+#define TypeMalloc(type)	TypeMallocN(type,0)
+
+#define TypeRealloc(type,n,p)	(type *)realloc(p, (n) * sizeof(type))
+
+/* use these to allocate partly-structured data */
+#define CastMallocN(type,n)	(type *)malloc(sizeof(type) + (n))
+#define CastMalloc(type)	CastMallocN(type,0)
 
 /*
 ** System V definitions
@@ -257,7 +270,8 @@ typedef enum {NORMAL, LEFTEXTENSION, RIGHTEXTENSION} EventMode;
  */
 
 typedef unsigned char Char;		/* to support 8 bit chars */
-typedef Char **ScrnBuf;
+typedef Char *ScrnPtr;
+typedef ScrnPtr *ScrnBuf;
 
 #define CharOf(n) ((unsigned char)(n))
 
@@ -953,6 +967,11 @@ typedef struct {
 
 #if OPT_TRACE
 #include <trace.h>
+#undef NDEBUG			/* turn on assert's */
+#else
+#ifndef NDEBUG
+#define NDEBUG			/* not debugging, don't do assert's */
+#endif
 #endif
 
 #ifndef TRACE
@@ -1162,8 +1181,8 @@ struct _vtwin {
 	Window		window;		/* X window id			*/
 	int		width;		/* width of columns		*/
 	int		height;		/* height of rows		*/
-	int		fullwidth;	/* full width of window		*/
-	int		fullheight;	/* full height of window	*/
+	Dimension	fullwidth;	/* full width of window		*/
+	Dimension	fullheight;	/* full height of window	*/
 	int		f_width;	/* width of fonts in pixels	*/
 	int		f_height;	/* height of fonts in pixels	*/
 	int		f_ascent;	/* ascent of font in pixels	*/
@@ -1183,8 +1202,8 @@ struct _tekwin {
 	Window		window;		/* X window id			*/
 	int		width;		/* width of columns		*/
 	int		height;		/* height of rows		*/
-	int		fullwidth;	/* full width of window		*/
-	int		fullheight;	/* full height of window	*/
+	Dimension	fullwidth;	/* full width of window		*/
+	Dimension	fullheight;	/* full height of window	*/
 	double		tekscale;	/* scale factor Tek -> vs100	*/
 };
 
@@ -1196,9 +1215,9 @@ typedef struct {
 #if OPT_TCAP_QUERY
 	int		tc_query;
 #endif
-	long		pid;		/* pid of process on far side   */
-	int		uid;		/* user id of actual person	*/
-	int		gid;		/* group id of actual person	*/
+	pid_t		pid;		/* pid of process on far side   */
+	uid_t		uid;		/* user id of actual person	*/
+	gid_t		gid;		/* group id of actual person	*/
 	GC		cursorGC;	/* normal cursor painting	*/
 	GC		fillCursorGC;	/* special cursor painting	*/
 	GC		reversecursorGC;/* reverse cursor painting	*/
@@ -1273,6 +1292,7 @@ typedef struct {
 	int		mouse_row;	/* ...and its row		*/
 	int		mouse_col;	/* ...and its column		*/
 	int		select;		/* xterm selected		*/
+	Boolean		bellOnReset;	/* bellOnReset			*/
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		poponbell;	/* pop on bell mode		*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
@@ -1394,14 +1414,14 @@ typedef struct {
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/
 	SavedCursor	sc[2];		/* data for restore cursor	*/
-	int		save_modes[DP_LAST]; /* save dec/xterm private modes */
+	unsigned char	save_modes[DP_LAST]; /* save dec/xterm private modes */
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
 	char		gsets[4];	/* G0 through G3.		*/
-	char		curgl;		/* Current GL setting.		*/
-	char		curgr;		/* Current GR setting.		*/
-	char		curss;		/* Current single shift.	*/
+	Char		curgl;		/* Current GL setting.		*/
+	Char		curgr;		/* Current GR setting.		*/
+	Char		curss;		/* Current single shift.	*/
 	String		term_id;	/* resource for terminal_id	*/
 	int		terminal_id;	/* 100=vt100, 220=vt220, etc.	*/
 	int		vtXX_level;	/* 0=vt52, 1,2,3 = vt100 ... vt320 */
@@ -1433,7 +1453,7 @@ typedef struct {
 #endif
 	/* Testing */
 #if OPT_XMC_GLITCH
-	int		xmc_glitch;	/* # of spaces to pad on SGR's	*/
+	unsigned	xmc_glitch;	/* # of spaces to pad on SGR's	*/
 	int		xmc_attributes;	/* attrs that make a glitch	*/
 	Boolean		xmc_inline;	/* SGR's propagate only to eol	*/
 	Boolean		move_sgr_ok;	/* SGR is reset on move		*/
@@ -1623,7 +1643,7 @@ typedef struct _Misc {
     Boolean shared_ic;
 #ifndef NO_ACTIVE_ICON
     Boolean active_icon;	/* use application icon window  */
-    int icon_border_width;
+    unsigned icon_border_width;
     Pixel icon_border_pixel;
 #endif /* NO_ACTIVE_ICON */
 #if OPT_DEC_SOFTFONT
@@ -1818,7 +1838,8 @@ typedef struct _TekWidgetRec {
  * These definitions depend on whether xterm supports active-icon.
  */
 #ifndef NO_ACTIVE_ICON
-#define IsIcon(screen)		((screen)->whichVwin == &(screen)->iconVwin)
+#define IsIconWin(screen,win)	((win) == &(screen)->iconVwin)
+#define IsIcon(screen)		(WhichVWin(screen) == &(screen)->iconVwin)
 #define WhichVWin(screen)	((screen)->whichVwin)
 #define WhichTWin(screen)	((screen)->whichTwin)
 
@@ -1830,15 +1851,21 @@ typedef struct _TekWidgetRec {
 						: WhichVWin(screen)->f_descent)
 #else /* NO_ACTIVE_ICON */
 
+#define IsIconWin(screen,win)	(False)
 #define IsIcon(screen)		(False)
 #define WhichVWin(screen)	(&((screen)->fullVwin))
 #define WhichTWin(screen)	(&((screen)->fullTwin))
 
-#define WhichVFont(screen,name)	(&(screen)->name)
+#define WhichVFont(screen,name)	((screen)->name)
 #define FontAscent(screen)	WhichVWin(screen)->f_ascent
 #define FontDescent(screen)	WhichVWin(screen)->f_descent
 
 #endif /* NO_ACTIVE_ICON */
+
+/*
+ * Macro to check if we are iconified; do not use render for that case.
+ */
+#define UsingRenderFont()	(term->misc.render_font && !IsIcon(&(term->screen)))
 
 /*
  * These definitions do not depend on whether xterm supports active-icon.
@@ -1877,8 +1904,8 @@ typedef struct Tek_Link
 {
 	struct Tek_Link	*next;	/* pointer to next TekLink in list
 				   NULL <=> this is last TekLink */
-	short fontsize;		/* character size, 0-3 */
-	short count;		/* number of chars in data */
+	unsigned short fontsize;/* character size, 0-3 */
+	unsigned short count;	/* number of chars in data */
 	char *ptr;		/* current pointer into data */
 	char data [TEK_LINK_BLOCK_SIZE];
 } TekLink;

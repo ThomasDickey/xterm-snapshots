@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.113 2004/12/01 01:27:46 tom Exp $
+## $XTermId: Makefile.in,v 1.115 2005/01/14 01:50:02 tom Exp $
 ##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.49 2004/12/01 01:27:46 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.50 2005/01/14 01:50:02 dickey Exp $ ##
 ##
 ## Copyright 2002-2003,2004 by Thomas E. Dickey
 ##
@@ -148,8 +148,9 @@ binary_uxterm = `echo uxterm|   $(TRANSFORM)`
 install \
 install-bin \
 install-full :: xterm$x resize$x $(BINDIR)
-	$(SHELL) $(srcdir)/sinstall.sh "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
-	$(INSTALL_PROGRAM) -s -m  755 resize$x $(BINDIR)/$(binary_resize)
+@MAY_SETUID@	$(SHELL) $(srcdir)/sinstall.sh "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
+@NOT_SETUID@	$(INSTALL_PROGRAM) xterm$x $(BINDIR)/$(binary_xterm)
+	$(INSTALL_PROGRAM) -m  755 resize$x $(BINDIR)/$(binary_resize)
 	$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm)
 
 install \

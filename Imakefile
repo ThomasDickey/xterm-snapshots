@@ -1,3 +1,5 @@
+XCOMM $XTermId: Imakefile,v 1.74 2005/01/14 01:50:02 tom Exp $
+XCOMM
 XCOMM $Xorg: Imakefile,v 1.3 2000/08/17 19:55:07 cpqbld Exp $
 XCOMM
 XCOMM                         Attention xterm porters
@@ -7,7 +9,7 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.54 2004/03/25 03:36:23 dawes Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.56 2005/01/14 01:50:02 dickey Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -106,8 +108,11 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
      XRFDEPLIBS = XftClientDepLibs
     XRFINCLUDES = $(XFTINCLUDES) -I$(XBUILDINCDIR)
 #endif
+#if !HasPutenv
+      PUTENVDEF = -DNOPUTENV
+#endif
 #ifdef TraceXTerm
-   TRACEDEF = -DOPT_TRACE=1
+       TRACEDEF = -DOPT_TRACE=1
 #endif
    MAIN_DEFINES = $(UTMPDEF) $(TTYGROUPDEF) $(PUCCPTYDDEF) $(NOPOSIXTERMIOS) \
 		  -DOSMAJORVERSION=$(OSMAJORVERSION) \
@@ -115,7 +120,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
    MISC_DEFINES = /* -DALLOWLOGGING -DALLOWLOGFILEEXEC */
     XKB_DEFINES = XkbClientDefines
    PATH_DEFINES = -DPROJECTROOT=$(PROJECTROOT)
-        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF) $(PATH_DEFINES) $(TRACEDEF)
+        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF) $(PATH_DEFINES) $(PUTENVDEF) $(TRACEDEF)
        INCLUDES = -I. $(XRFINCLUDES)
 
 #ifdef OS2Architecture
@@ -214,7 +219,20 @@ InstallProgramWithFlags(xterm,$(BINDIR),NullParameter)
 
 InstallNamedProg(uxterm,uxterm,$(BINDIR))
 
+/*
+ * Link with the termcap library if USE_TERMCAP is defined in resize.c
+ */
+#if	defined(NTOArchitecture) || \
+	defined(SCOArchitecture) || \
+	defined(LinuxArchitecture) || \
+	defined(OpenBSDArchitecture)
+	defined(SGIArchitecture) || \
+	defined(SunArchitecture)
+NormalProgramTarget(resize,$(OBJS2),$(DEPLIBS2),NullParameter,NullParameter)
+#else
 NormalProgramTarget(resize,$(OBJS2),$(DEPLIBS2),NullParameter,$(TERMCAPLIB))
+#endif
+
 InstallProgramWithFlags(resize,$(BINDIR),NullParameter)
 
 /*

@@ -1,11 +1,13 @@
+/* $XTermId: input.c,v 1.170 2005/01/14 01:50:03 tom Exp $ */
+
 /*
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.71 2004/12/01 01:27:46 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.72 2005/01/14 01:50:03 dickey Exp $ */
 
 /*
- * Copyright 1999-2003,2004 by Thomas E. Dickey
+ * Copyright 1999-2004,2005 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -66,11 +68,11 @@
 #include <X11/keysymdef.h>
 #endif
 
-#ifdef HAVE_X11_DECKEYSYM_H
+#if HAVE_X11_DECKEYSYM_H
 #include <X11/DECkeysym.h>
 #endif
 
-#ifdef HAVE_X11_SUNKEYSYM_H
+#if HAVE_X11_SUNKEYSYM_H
 #include <X11/Sunkeysym.h>
 #endif
 
@@ -150,7 +152,7 @@ AdjustAfterInput(TScreen * screen)
 }
 
 /* returns true if the key is on the editing keypad */
-static Boolean
+static Bool
 IsEditFunctionKey(KeySym keysym)
 {
     switch (keysym) {
@@ -265,11 +267,11 @@ TranslateFromSUNPC(KeySym keysym)
  * setting, popup menu or escape sequence, it overrides the keyboard type
  * rather than the reverse.
  */
-Boolean
+Bool
 xtermDeleteIsDEL(void)
 {
     TScreen *screen = &term->screen;
-    Boolean result = True;
+    Bool result = True;
 
     if (term->keyboard.type == keyboardIsDefault
 	|| term->keyboard.type == keyboardIsVT220)
@@ -297,7 +299,7 @@ Input(TKeyboard * keyboard,
 
     char strbuf[STRBUFSIZE];
     Char *string;
-    int key = FALSE;
+    int key = False;
     int pty = screen->respond;
     int nbytes;
     KeySym keysym = 0;
@@ -530,12 +532,12 @@ Input(TKeyboard * keyboard,
 	VT52_CURSOR_KEYS;
 	MODIFIER_PARM;
 	unparseseq(&reply, pty);
-	key = TRUE;
+	key = True;
 #if 0				/* OPT_SUNPC_KBD should suppress - but only for vt220 compatibility */
     } else if (keyboard->type == keyboardIsVT220
 	       && screen->vtXX_level <= 1
 	       && IsEditFunctionKey(keysym)) {
-	key = FALSE;		/* ignore editing-keypad in vt100 mode */
+	key = False;		/* ignore editing-keypad in vt100 mode */
 #endif
     } else if (IsCursorKey(keysym) &&
 	       keysym != XK_Prior && keysym != XK_Next) {
@@ -558,7 +560,7 @@ Input(TKeyboard * keyboard,
 	VT52_CURSOR_KEYS;
 	MODIFIER_PARM;
 	unparseseq(&reply, pty);
-	key = TRUE;
+	key = True;
     } else if (IsFunctionKey(keysym)
 	       || IsMiscFunctionKey(keysym)
 	       || IsEditFunctionKey(keysym)
@@ -621,7 +623,7 @@ Input(TKeyboard * keyboard,
 		&& (reply.a_nparam == 0 || reply.a_param[0] >= 0))
 		unparseseq(&reply, pty);
 	}
-	key = TRUE;
+	key = True;
     } else if (IsKeypadKey(keysym)) {
 	if (keypad_mode) {
 	    reply.a_type = SS3;
@@ -632,7 +634,7 @@ Input(TKeyboard * keyboard,
 	} else {
 	    unparseputc(kypd_num[keysym - XK_KP_Space], pty);
 	}
-	key = TRUE;
+	key = True;
     } else if (nbytes > 0) {
 #if OPT_TEK4014
 	if (screen->TekGIN) {
@@ -701,7 +703,7 @@ Input(TKeyboard * keyboard,
 	}
 	while (nbytes-- > 0)
 	    unparseputc(*string++, pty);
-	key = TRUE;
+	key = True;
     }
     if (key && !TEK4014_ACTIVE(screen))
 	AdjustAfterInput(screen);
@@ -1056,8 +1058,9 @@ VTInitModifiers(void)
 	TRACE(("VTInitModifiers\n"));
 
 	XDisplayKeycodes(dpy, &min_keycode, &max_keycode);
-	theMap = XGetKeyboardMapping(dpy, min_keycode, (max_keycode -
-							min_keycode + 1),
+	theMap = XGetKeyboardMapping(dpy,
+				     min_keycode,
+				     (max_keycode - min_keycode + 1),
 				     &keysyms_per_keycode);
 
 	if (theMap != 0) {

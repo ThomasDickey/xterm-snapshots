@@ -1,4 +1,6 @@
-/* $XFree86: xc/programs/xterm/xutf8.c,v 1.3 2002/10/09 16:38:20 tsi Exp $ */
+/* $XTermId: xutf8.c,v 1.8 2005/01/14 01:50:03 tom Exp $ */
+
+/* $XFree86: xc/programs/xterm/xutf8.c,v 1.4 2005/01/14 01:50:03 dickey Exp $ */
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
 
@@ -185,7 +187,7 @@ Xutf8TextPropertyToTextList(Display * dpy,
     int utf8;
     char **list;
     int nelements;
-    register char *cp;
+    char *cp;
     char *start;
     int i, j;
     int datalen = (int) tp->nitems;
@@ -213,7 +215,7 @@ Xutf8TextPropertyToTextList(Display * dpy,
 	    nelements++;
     }
 
-    list = (char **) malloc(nelements * sizeof(char *));
+    list = TypeMallocN(char *, nelements);
     if (!list)
 	return XNoMemory;
 
@@ -222,9 +224,9 @@ Xutf8TextPropertyToTextList(Display * dpy,
     else
 	len = l1countUtf8Bytes((char *) tp->value, datalen);
 
-    start = (char *) malloc((len + 1) * sizeof(char));
+    start = CastMallocN(char, len);
     if (!start) {
-	free((char *) list);
+	free(list);
 	return XNoMemory;
     }
 
@@ -289,7 +291,7 @@ Xutf8TextListToTextProperty(Display * dpy,
     proto.value = NULL;
 
     if (nbytes > 0) {
-	register char *buf = malloc(nbytes);
+	char *buf = TypeMallocN(char, nbytes);
 	if (!buf)
 	    return XNoMemory;
 
@@ -309,7 +311,7 @@ Xutf8TextListToTextProperty(Display * dpy,
 	    }
 	}
     } else {
-	proto.value = (unsigned char *) malloc(1);	/* easier for client */
+	proto.value = CastMalloc(unsigned char);	/* easier for client */
 	if (!proto.value)
 	    return XNoMemory;
 
@@ -322,7 +324,7 @@ Xutf8TextListToTextProperty(Display * dpy,
 
 int
 Xutf8LookupString(XIC ic GCC_UNUSED,
-		  register XKeyEvent * ev,
+		  XKeyEvent * ev,
 		  char *buffer,
 		  int nbytes,
 		  KeySym * keysym_return,

@@ -1,11 +1,11 @@
 /*
- *	$XFree86: xc/programs/xterm/tabs.c,v 3.10 2002/03/26 01:46:40 dickey Exp $
+ *	$XFree86: xc/programs/xterm/tabs.c,v 3.11 2005/01/14 01:50:03 dickey Exp $
  */
 
 /* $Xorg: tabs.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $ */
 
 /*
- * Copyright 2000,2002 by Thomas E. Dickey
+ * Copyright 2000-2002,2005 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -77,7 +77,7 @@
 void
 TabReset(Tabs tabs)
 {
-    register int i;
+    int i;
 
     for (i = 0; i < TAB_ARRAY_SIZE; ++i)
 	tabs[i] = 0;
@@ -112,7 +112,7 @@ TabClear(Tabs tabs, int col)
 int
 TabNext(Tabs tabs, int col)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
 
     if (screen->curses && screen->do_wrap && (term->flags & WRAPAROUND)) {
 	xtermIndex(screen, 1);
@@ -143,10 +143,10 @@ TabPrev(Tabs tabs, int col)
 /*
  * Tab to the next stop, returning true if the cursor moved
  */
-Boolean
+Bool
 TabToNextStop(void)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     int saved_column = screen->cur_col;
 
     screen->cur_col = TabNext(term->tabs, screen->cur_col);
@@ -159,10 +159,10 @@ TabToNextStop(void)
 /*
  * Tab to the previous stop, returning true if the cursor moved
  */
-Boolean
+Bool
 TabToPrevStop(void)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     int saved_column = screen->cur_col;
 
     screen->cur_col = TabPrev(term->tabs, screen->cur_col);
@@ -176,7 +176,7 @@ TabToPrevStop(void)
 void
 TabZonk(Tabs tabs)
 {
-    register int i;
+    int i;
 
     for (i = 0; i < TAB_ARRAY_SIZE; ++i)
 	tabs[i] = 0;

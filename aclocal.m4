@@ -1,10 +1,10 @@
-dnl $XTermId: aclocal.m4,v 1.177 2004/12/01 01:27:46 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.181 2005/01/14 01:50:02 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.54 2004/12/01 01:27:46 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.55 2005/01/14 01:50:02 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2003,2004 by Thomas E. Dickey
+dnl Copyright 1997-2004,2005 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -408,12 +408,16 @@ int main() {
 	fi
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 7 updated: 2002/12/27 21:05:20
+dnl CF_FUNC_TGETENT version: 9 updated: 2005/01/09 11:23:34
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
 dnl size information to subprocesses.  (We cannot use terminfo's compatibility
 dnl function, since it cannot provide the termcap-format data).
+dnl
+dnl If the --disable-full-tgetent option is given, we'll settle for the first
+dnl tgetent function we find.  Since the search list in that case does not
+dnl include the termcap library, that allows us to default to terminfo.
 AC_DEFUN([CF_FUNC_TGETENT],
 [
 # compute a reasonable value for $TERM to give tgetent(), since we may be
@@ -424,10 +428,29 @@ cf_TERMVAR=vt100
 test -n "$TERMCAP" && cf_TERMVAR="$TERM"
 test -z "$cf_TERMVAR" && cf_TERMVAR=vt100
 
-AC_CACHE_CHECK(for full tgetent function,cf_cv_lib_tgetent,[
+AC_MSG_CHECKING(if we want full tgetent function)
+CF_ARG_DISABLE(full-tgetent,
+	[  --disable-full-tgetent  disable check for full tgetent function],
+	cf_full_tgetent=no,
+	cf_full_tgetent=yes,yes)
+AC_MSG_RESULT($cf_full_tgetent)
+
+if test "$cf_full_tgetent" = yes ; then
+	cf_test_message="full tgetent"
+else
+	cf_test_message="tgetent"
+fi
+
+AC_CACHE_CHECK(for $cf_test_message function,cf_cv_lib_tgetent,[
 cf_save_LIBS="$LIBS"
 cf_cv_lib_tgetent=no
-cf_TERMLIB="termcap termlib ncurses curses"
+if test "$cf_full_tgetent" = yes ; then
+	cf_TERMLIB="termcap termlib ncurses curses"
+	cf_TERMTST="buffer[0] == 0"
+else
+	cf_TERMLIB="termlib ncurses curses"
+	cf_TERMTST="0"
+fi
 for cf_termlib in '' $cf_TERMLIB ; do
 	LIBS="$cf_save_LIBS"
 	test -n "$cf_termlib" && LIBS="$LIBS -l$cf_termlib"
@@ -441,7 +464,7 @@ int main()
 	char buffer[1024];
 	buffer[0] = 0;
 	tgetent(buffer, "$cf_TERMVAR");
-	exit(buffer[0] == 0); }],
+	exit($cf_TERMTST); }],
 	[echo "yes, there is a termcap/tgetent in $cf_termlib" 1>&AC_FD_CC
 	 if test -n "$cf_termlib" ; then
 	 	cf_cv_lib_tgetent="-l$cf_termlib"
@@ -585,7 +608,7 @@ if test "$GCC" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 16 updated: 2004/07/23 14:40:34
+dnl CF_GCC_WARNINGS version: 18 updated: 2004/12/03 20:51:07
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -606,8 +629,27 @@ dnl	If $with_ext_const is "yes", add a check for -Wwrite-strings
 dnl
 AC_DEFUN([CF_GCC_WARNINGS],
 [
+AC_REQUIRE([CF_INTEL_COMPILER])
 AC_REQUIRE([CF_GCC_VERSION])
-if test "$GCC" = yes
+if test "$INTEL_COMPILER" = yes
+then
+# The "-wdXXX" options suppress warnings:
+# remark #1419: external declaration in primary source file
+# remark #193: zero used for undefined preprocessing identifier
+# remark #593: variable "curs_sb_left_arrow" was set but never used
+# remark #810: conversion from "int" to "Dimension={unsigned short}" may lose significant bits
+# remark #869: parameter "tw" was never referenced
+# remark #981: operands are evaluated in unspecified order
+# warning #269: invalid format string conversion
+	EXTRA_CFLAGS="$EXTRA_CFLAGS -Wall \
+ -wd1419 \
+ -wd193 \
+ -wd279 \
+ -wd593 \
+ -wd810 \
+ -wd869 \
+ -wd981"
+elif test "$GCC" = yes
 then
 	cat > conftest.$ac_ext <<EOF
 #line __oline__ "configure"
@@ -655,7 +697,7 @@ fi
 AC_SUBST(EXTRA_CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GNU_SOURCE version: 3 updated: 2000/10/29 23:30:53
+dnl CF_GNU_SOURCE version: 4 updated: 2004/12/03 20:43:00
 dnl -------------
 dnl Check if we must define _GNU_SOURCE to get a reasonable value for
 dnl _XOPEN_SOURCE, upon which many POSIX definitions depend.  This is a defect
@@ -665,6 +707,9 @@ dnl
 dnl Well, yes we could work around it...
 AC_DEFUN([CF_GNU_SOURCE],
 [
+AC_REQUIRE([CF_INTEL_COMPILER])
+
+if test "$INTEL_COMPILER" = no ; then
 AC_CACHE_CHECK(if we must define _GNU_SOURCE,cf_cv_gnu_source,[
 AC_TRY_COMPILE([#include <sys/types.h>],[
 #ifndef _XOPEN_SOURCE
@@ -683,6 +728,7 @@ make an error
 	])
 ])
 test "$cf_cv_gnu_source" = yes && CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
+fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_HELP_MESSAGE version: 3 updated: 1998/01/14 10:56:23
@@ -868,6 +914,40 @@ AC_TRY_LINK([
 ],
 [cf_cv_input_method=yes],
 [cf_cv_input_method=no])])
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_INTEL_COMPILER version: 1 updated: 2004/12/03 20:27:48
+dnl -----------------
+dnl Check if the given compiler is really the Intel compiler for Linux.
+dnl It tries to imitate gcc, but does not return an error when it finds a
+dnl mismatch between prototypes, e.g., as exercised by CF_MISSING_CHECK.
+dnl
+dnl This macro should be run "soon" after AC_PROG_CC, to ensure that it is
+dnl not mistaken for gcc.
+AC_DEFUN([CF_INTEL_COMPILER],[
+AC_REQUIRE([AC_PROG_CC])
+
+INTEL_COMPILER=no
+
+if test "$GCC" = yes ; then
+	case $host_os in
+	linux*|gnu*)
+		AC_MSG_CHECKING(if this is really Intel compiler)
+		cf_save_CFLAGS="$CFLAGS"
+		CFLAGS="$CFLAGS -no-gcc"
+		AC_TRY_COMPILE([],[
+#ifdef __INTEL_COMPILER
+#else
+make an error
+#endif
+],[INTEL_COMPILER=yes
+cf_save_CFLAGS="$cf_save_CFLAGS -we147 -no-gcc"
+],[])
+		CFLAGS="$cf_save_CFLAGS"
+		AC_MSG_RESULT($INTEL_COMPILER)
+		;;
+	esac
+fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_LASTLOG version: 4 updated: 2002/10/27 23:21:42

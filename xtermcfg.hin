@@ -1,12 +1,12 @@
-/* $XTermId: xtermcfg.hin,v 1.128 2004/12/01 01:27:47 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.133 2005/01/14 01:50:03 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.52 2004/12/01 01:27:47 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.53 2005/01/14 01:50:03 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2003,2004 by Thomas E. Dickey
+Copyright 1997-2004,2005 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -41,6 +41,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef DFT_COLORMODE		/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID		/* AC_ARG_WITH(default-terminal-id) */
 #undef DFT_TERMTYPE		/* AC_ARG_WITH(default-term-type) */
+#undef DISABLE_SETUID		/* CF_ARG_DISABLE(setuid) */
 #undef HAVE_GETHOSTNAME		/* AC_CHECK_FUNCS(gethostname) */
 #undef HAVE_GETLOGIN		/* AC_CHECK_FUNCS(getlogin) */
 #undef HAVE_LANGINFO_CODESET	/* AM_LANGINFO_CODESET */
@@ -51,6 +52,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_LIB_XAWPLUS		/* CF_X_ATHENA(--with-XawPlus) */
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
+#undef HAVE_PUTENV		/* AC_CHECK_FUNCS(putenv) */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
 #undef HAVE_STRERROR		/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_STRFTIME		/* AC_CHECK_FUNCS(strftime) */
@@ -128,8 +130,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef XRENDERFONT		/* CF_X_FREETYPE */
 #undef const			/* AC_CONST */
+#undef gid_t			/* AC_TYPE_UID_T */
+#undef mode_t			/* AC_TYPE_MODE_T */
+#undef pid_t			/* AC_TYPE_PID_T */
 #undef size_t			/* AC_TYPE_SIZE_T */
 #undef time_t			/* AC_CHECK_TYPE(time_t, long) */
+#undef uid_t			/* AC_TYPE_UID_T */
 #undef ut_name			/* CF_UTMP */
 #undef ut_xstatus		/* CF_UTMP_UT_XSTATUS */
 #undef ut_xtime			/* CF_UTMP_UT_XTIME */

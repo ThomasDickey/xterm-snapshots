@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
- * Copyright 1996-2003,2004 by Thomas E. Dickey                              *
+ * Copyright 1996-2004,2005 by Thomas E. Dickey                              *
  * All Rights Reserved.                                                      *
  *                                                                           *
  * Permission to use, copy, modify, and distribute this software and its     *
@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.191 2004/12/01 01:27:47 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.131 2004/12/01 01:27:47 dickey Exp $
+  $XTermId: xterm.log.html,v 1.211 2005/01/14 01:50:03 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.132 2005/01/14 01:50:03 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -31,7 +31,7 @@
 </HEAD>
 <BODY>
 <HR>
-Copyright 1997-2003,2004 by <A
+Copyright 1997-2004,2005 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_198">Patch #198 - 2005/1/13 - XFree86 4.4.99.21</A>
 <LI><A HREF="#xterm_197">Patch #197 - 2004/11/30 - XFree86 4.4.99.19</A>
 <LI><A HREF="#xterm_196">Patch #196 - 2004/8/15 - XFree86 4.4.99.12</A>
 <LI><A HREF="#xterm_195">Patch #195 - 2004/8/8 - XFree86 4.4.99.11</A>
@@ -246,6 +247,80 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_198">Patch #198 - 2005/1/13 - XFree86 4.4.99.21</A></H1>
+<ul>
+	<li>set <code>$DISPLAY</code> to ":0" if it is not set.
+
+	<li>add <code>utmpDisplayId</code> resource to allow users to control
+	    whether the display identifier (display number and screen number)
+	    are retained in the connection information recorded in utmp
+	    (discussion with Edoardo Tirtarahardja).
+
+	<li>add <code>bellOnReset</code> resource to allow users to disable
+	    bell which sounds on hard reset since <a href="#xterm_183">patch
+	    #183</a> changes to DECSCL (discussion with Danek Duvall).
+
+	<li>improve <code>$WINDOWID</code> for configuration with toolbar by
+	    making it refer to the top-level shell rather than the parent of
+	    the current window.  For that case, the parent is a form widget,
+	    which does not have a name, which made the <code>$WINDOWID</code> 
+	    not very useful as a parameter for <code>xwininfo</code>
+	    (suggested by Dave Bodenstab).
+
+	<li>fix a typo in WhichVFont() macro
+	    from <a href="#xterm_197">patch #197</a> changes
+	    which broke the --disable-active-icon configuration
+	    (report by Ralf S. Engelschall).
+
+	<li>improve some limit checks (Gentoo Bugzilla #75604).
+
+	<li>add --disable-setuid option to configure script (Gentoo Bugzilla
+	    #76453).
+
+	<li>add --disable-full-tgetent option to configure script, allowing one
+	    to ignore a termcap library in favor of ncurses/curses (Gentoo
+	    Bugzilla #69926).
+
+	<li>modify configure script to choose useful warning options for Intel
+	    version 8.0 compiler.
+
+	<li>update config.guess, config.sub
+
+	<li>make active-icon work properly when TrueType fonts are used
+	    (Debian #286068).
+
+	<li>correct change from <a href="#xterm_157">patch #157</a> which uses
+	    getlogin() to check for an alias; the storage used for the related
+	    getpwuid() call was overwritten by the data used for comparison
+	    (patch by Per Hedeland).
+
+	<li>correct case of SCS for character set 0 (line-drawing) to allow it
+	    to be selected into GR.
+
+	<li>fix a file-descriptor leak (Redhat Bugzilla #139597).
+
+	<li>modify <code>creat_as()</code> to only fork if xterm is actually
+	    running as setuid and/or setgid.  This works around a Cygwin bug
+	    which hangs when logging is enabled and makes xterm a little
+	    faster for systems using interfaces such as utempter (report by
+	    Al Goodman).
+
+	<li>modify <code>Cleanup()</code> to avoid operations such as X calls
+	    that might use unsafe functions when it is called by a signal
+	    handler (report by Michiel Boland).
+
+	<li>fix bugs in <a href="#xterm_191">patch #191</a> and in SRM changes
+	    from <a href="#xterm_197">patch #197</a> that
+	    broke DECSET 38:  switch to Tek4014 emulation (report by Dave
+	    Bodenstab).
+
+	<li>fix for manpage escapes (Marc La France).
+
+	<li>improve on IRIX-specific change for Imakefile in XFree86 CVS versus
+	    resize linking against termcap library to reflect definitions for
+	    USE_TERMCAP in resize.c
+</ul>
+
 <H1><A NAME="xterm_197">Patch #197 - 2004/11/30 - XFree86 4.4.99.19</A></H1>
 <ul>
 	<li>modify configure script to remove empty "-DPROJECTROOT=" definition
@@ -312,7 +387,7 @@ is the latest version of this file.
 
 	<li>correct handling selection of tabs over cleared space in UTF-8
 	    mode.  In this special case, xterm represents the whitespace with
-	    a null rather than a space character (Debian #276477).
+	    a null rather than a space character (Debian #276447).
 
 	<li>amend fix for infinite loop from <a href="#xterm_192">patch
 	    #192</a> to check if there is wrapped text to output in a following
@@ -323,7 +398,7 @@ is the latest version of this file.
 	    from freedesktop.org (patch by Min Sik Kim).
 
 	<li>amend solution for Debian #252873, #260471 from <a
-	    href="#xterm_194">patch #192</a> by making the cursor not
+	    href="#xterm_194">patch #194</a> by making the cursor not
 	    explicitly colored if only the foreground color is set, and the
 	    cursor is on a blank space (Debian #275473).
 

@@ -1,16 +1,16 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.147 2004/12/01 01:27:44 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.149 2005/01/14 01:50:00 tom Exp $
 .\"
 .\"
 .\" $Xorg: ctlseqs.ms,v 1.3 2000/08/17 19:42:51 cpqbld Exp $
 .\"
 .\"
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.54 2004/12/01 01:27:44 dickey Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.55 2005/01/14 01:50:00 dickey Exp $
 .\"
 .\"
-.\" Copyright 1996-2003,2004 by Thomas E. Dickey
+.\" Copyright 1996-2004,2005 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -515,19 +515,19 @@ Memory Lock (per HP terminals).  Locks memory above the cursor.
 Memory Unlock (per HP terminals)
 .
 .IP \\*(Es\\*n
-Invoke the G2 Character Set (LS2)
+Invoke the G2 Character Set as GL (LS2).
 .
 .IP \\*(Es\\*o
-Invoke the G3 Character Set (LS3)
+Invoke the G3 Character Set as GL (LS3).
 .
 .IP \\*(Es\\*|
-Invoke the G3 Character Set as GR (LS3R).  Has no visible effect in \fIxterm\fP.
+Invoke the G3 Character Set as GR (LS3R).
 .
 .IP \\*(Es\\*}
-Invoke the G2 Character Set as GR (LS2R).  Has no visible effect in \fIxterm\fP.
+Invoke the G2 Character Set as GR (LS2R).
 .
 .IP \\*(Es\\*(c~
-Invoke the G1 Character Set as GR (LS1R).  Has no visible effect in \fIxterm\fP.
+Invoke the G1 Character Set as GR (LS1R).
 .Ed
 .
 .St

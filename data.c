@@ -1,13 +1,13 @@
-/* $XTermId: data.c,v 1.68 2004/06/06 22:15:25 tom Exp $ */
+/* $XTermId: data.c,v 1.71 2005/01/14 01:50:02 tom Exp $ */
 
 /*
  *	$Xorg: data.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.c,v 3.29 2004/06/06 22:15:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.c,v 3.30 2005/01/14 01:50:02 dickey Exp $ */
 
 /*
- * Copyright 2002,2003 by Thomas E. Dickey
+ * Copyright 2002-2004,2005 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -67,7 +67,6 @@ Char *Tpushback;
 TekLink *TekRefresh;
 TekWidget tekWidget;
 Widget tekshellwidget;
-int TEKgcFontMask = GCFont;
 int T_lastx = -1;
 int T_lasty = -1;
 int Ttoggled = 0;
@@ -81,7 +80,7 @@ Arg ourTopLevelShellArgs[] =
     {XtNallowShellResize, (XtArgVal) TRUE},
     {XtNinput, (XtArgVal) TRUE},
 };
-int number_ourTopLevelShellArgs = 2;
+Cardinal number_ourTopLevelShellArgs = 2;
 
 Bool waiting_for_initial_map;
 

@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.173 2004/12/01 01:27:47 tom Exp $ */
+/* $XTermId: os2main.c,v 1.186 2005/01/14 01:50:03 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.71 2004/12/01 01:27:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.72 2005/01/14 01:50:03 dickey Exp $ */
 
 /***********************************************************
 
@@ -129,7 +129,7 @@ static SIGNAL_T reapchild(int n);
 static int spawn(void);
 static void get_terminal(void);
 static void resize(TScreen * s, char *oldtc, char *newtc);
-static void set_owner(char *device, int uid, int gid, int mode);
+static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
 static Bool added_utmp_entry = False;
 
@@ -193,50 +193,54 @@ static struct termio d_tio;
 /*
  * SYSV has the termio.c_cc[V] and ltchars; BSD has tchars and ltchars;
  * SVR4 has only termio.c_cc, but it includes everything from ltchars.
+ * POSIX termios has termios.c_cc, which is similar to SVR4.
  */
+#define TTYMODE(name) { name, sizeof(name)-1, 0, 0 }
 static int override_tty_modes = 0;
 /* *INDENT-OFF* */
 static struct _xttymodes {
     char *name;
     size_t len;
     int set;
-    char value;
+    Char value;
 } ttymodelist[] = {
-    { "intr",	4, 0, '\0' },	/* tchars.t_intrc ; VINTR */
-#define XTTYMODE_intr 0
-    { "quit",	4, 0, '\0' },	/* tchars.t_quitc ; VQUIT */
-#define XTTYMODE_quit 1
-    { "erase",	5, 0, '\0' },	/* sgttyb.sg_erase ; VERASE */
-#define XTTYMODE_erase 2
-    { "kill",	4, 0, '\0' },	/* sgttyb.sg_kill ; VKILL */
-#define XTTYMODE_kill 3
-    { "eof",	3, 0, '\0' },	/* tchars.t_eofc ; VEOF */
-#define XTTYMODE_eof 4
-    { "eol",	3, 0, '\0' },	/* VEOL */
-#define XTTYMODE_eol 5
-    { "swtch",	5, 0, '\0' },	/* VSWTCH */
-#define XTTYMODE_swtch 6
-    { "start",	5, 0, '\0' },	/* tchars.t_startc */
-#define XTTYMODE_start 7
-    { "stop",	4, 0, '\0' },	/* tchars.t_stopc */
-#define XTTYMODE_stop 8
-    { "brk",	3, 0, '\0' },	/* tchars.t_brkc */
-#define XTTYMODE_brk 9
-    { "susp",	4, 0, '\0' },	/* ltchars.t_suspc ; VSUSP */
-#define XTTYMODE_susp 10
-    { "dsusp",	5, 0, '\0' },	/* ltchars.t_dsuspc ; VDSUSP */
-#define XTTYMODE_dsusp 11
-    { "rprnt",	5, 0, '\0' },	/* ltchars.t_rprntc ; VREPRINT */
-#define XTTYMODE_rprnt 12
-    { "flush",	5, 0, '\0' },	/* ltchars.t_flushc ; VDISCARD */
-#define XTTYMODE_flush 13
-    { "weras",	5, 0, '\0' },	/* ltchars.t_werasc ; VWERASE */
-#define XTTYMODE_weras 14
-    { "lnext",	5, 0, '\0' },	/* ltchars.t_lnextc ; VLNEXT */
-#define XTTYMODE_lnext 15
+    TTYMODE("intr"),		/* tchars.t_intrc ; VINTR */
+#define XTTYMODE_intr	0
+    TTYMODE("quit"),		/* tchars.t_quitc ; VQUIT */
+#define XTTYMODE_quit	1
+    TTYMODE("erase"),		/* sgttyb.sg_erase ; VERASE */
+#define XTTYMODE_erase	2
+    TTYMODE("kill"),		/* sgttyb.sg_kill ; VKILL */
+#define XTTYMODE_kill	3
+    TTYMODE("eof"),		/* tchars.t_eofc ; VEOF */
+#define XTTYMODE_eof	4
+    TTYMODE("eol"),		/* VEOL */
+#define XTTYMODE_eol	5
+    TTYMODE("swtch"),		/* VSWTCH */
+#define XTTYMODE_swtch	6
+    TTYMODE("start"),		/* tchars.t_startc ; VSTART */
+#define XTTYMODE_start	7
+    TTYMODE("stop"),		/* tchars.t_stopc ; VSTOP */
+#define XTTYMODE_stop	8
+    TTYMODE("brk"),		/* tchars.t_brkc */
+#define XTTYMODE_brk	9
+    TTYMODE("susp"),		/* ltchars.t_suspc ; VSUSP */
+#define XTTYMODE_susp	10
+    TTYMODE("dsusp"),		/* ltchars.t_dsuspc ; VDSUSP */
+#define XTTYMODE_dsusp	11
+    TTYMODE("rprnt"),		/* ltchars.t_rprntc ; VREPRINT */
+#define XTTYMODE_rprnt	12
+    TTYMODE("flush"),		/* ltchars.t_flushc ; VDISCARD */
+#define XTTYMODE_flush	13
+    TTYMODE("weras"),		/* ltchars.t_werasc ; VWERASE */
+#define XTTYMODE_weras	14
+    TTYMODE("lnext"),		/* ltchars.t_lnextc ; VLNEXT */
+#define XTTYMODE_lnext	15
     { NULL,	0, 0, '\0' },	/* end of data */
 };
 /* *INDENT-ON* */
+
+#define TMODE(ind,var) if (ttymodelist[ind].set) var = ttymodelist[ind].value
 
 static int parse_tty_modes(char *s, struct _xttymodes *modelist);
 
@@ -263,29 +267,29 @@ static XtResource application_resources[] =
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
     Sres("termName", "TermName", term_name, NULL),
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
-    Bres("hold", "Hold", hold_screen, FALSE),
-    Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, FALSE),
-    Bres("messages", "Messages", messages, TRUE),
-    Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, FALSE),
+    Bres("hold", "Hold", hold_screen, False),
+    Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, False),
+    Bres("messages", "Messages", messages, True),
+    Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #if OPT_SUNPC_KBD
-    Bres("sunKeyboard", "SunKeyboard", sunKeyboard, FALSE),
+    Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
 #endif
 #if OPT_HP_FUNC_KEYS
-    Bres("hpFunctionKeys", "HpFunctionKeys", hpFunctionKeys, FALSE),
+    Bres("hpFunctionKeys", "HpFunctionKeys", hpFunctionKeys, False),
 #endif
 #if OPT_SCO_FUNC_KEYS
-    Bres("scoFunctionKeys", "ScoFunctionKeys", scoFunctionKeys, FALSE),
+    Bres("scoFunctionKeys", "ScoFunctionKeys", scoFunctionKeys, False),
 #endif
-    Bres("waitForMap", "WaitForMap", wait_for_map, FALSE),
-    Bres("useInsertMode", "UseInsertMode", useInsertMode, FALSE),
+    Bres("waitForMap", "WaitForMap", wait_for_map, False),
+    Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
 #if OPT_ZICONBEEP
     Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
 #endif
 #if OPT_SAME_NAME
-    Bres("sameName", "SameName", sameName, TRUE),
+    Bres("sameName", "SameName", sameName, True),
 #endif
 #if OPT_SESSION_MGT
-    Bres("sessionMgt", "SessionMgt", sessionMgt, TRUE),
+    Bres("sessionMgt", "SessionMgt", sessionMgt, True),
 #endif
 };
 
@@ -695,10 +699,10 @@ decode_keyvalue(char **ptr, int termcap)
  * If we're linked to terminfo, tgetent() will return an empty buffer.  We
  * cannot use that to adjust the $TERMCAP variable.
  */
-static Boolean
+static Bool
 get_termcap(char *name, char *buffer, char *resized)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
 
     *buffer = 0;		/* initialize, in case we're using terminfo's tgetent */
 
@@ -865,13 +869,12 @@ static XtActionsRec actionProcs[] =
 };
 
 char **gblenvp;
-extern char **environ;
 
 int
 main(int argc, char **argv ENVP_ARG)
 {
     Widget form_top, menu_top;
-    register TScreen *screen;
+    TScreen *screen;
     int mode;
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
@@ -882,8 +885,8 @@ main(int argc, char **argv ENVP_ARG)
     TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
 	int n;
-	int unique = 2;
-	Boolean quit = True;
+	unsigned unique = 2;
+	Bool quit = True;
 
 	for (n = 1; n < argc; n++) {
 	    TRACE(("parsing %s\n", argv[n]));
@@ -918,8 +921,8 @@ main(int argc, char **argv ENVP_ARG)
 
 /*debug	opencons();*/
 
-    ttydev = (char *) malloc(PTMS_BUFSZ);
-    ptydev = (char *) malloc(PTMS_BUFSZ);
+    ttydev = TypeMallocN(char, PTMS_BUFSZ);
+    ptydev = TypeMallocN(char, PTMS_BUFSZ);
     if (!ttydev || !ptydev) {
 	fprintf(stderr,
 		"%s:  unable to allocate memory for ttydev or ptydev\n",
@@ -946,7 +949,11 @@ main(int argc, char **argv ENVP_ARG)
     d_tio.c_cc[VEOF] = CEOF;	/* '^D' */
     d_tio.c_cc[VEOL] = CEOL;	/* '^@' */
 
-    /* Init the Toolkit. */
+#ifdef HAVE_PUTENV
+    if (getenv("DISPLAY") == 0)
+	putenv("DISPLAY=:0");
+#endif
+
     XtSetErrorHandler(xt_error);
 #if OPT_SESSION_MGT
     toplevel = XtOpenApplication(&app_con, my_class,
@@ -1053,9 +1060,9 @@ main(int argc, char **argv ENVP_ARG)
 		if (!stat("/dev/console", &sbuf) &&
 		    (sbuf.st_uid == getuid()) &&
 		    !access("/dev/console", R_OK | W_OK)) {
-		    Console = TRUE;
+		    Console = True;
 		} else
-		    Console = FALSE;
+		    Console = False;
 	    }
 	    continue;
 	case 'S':
@@ -1065,7 +1072,7 @@ main(int argc, char **argv ENVP_ARG)
 	    continue;
 #ifdef DEBUG
 	case 'D':
-	    debug = TRUE;
+	    debug = True;
 	    continue;
 #endif /* DEBUG */
 	case 'c':		/* -class param */
@@ -1179,7 +1186,7 @@ main(int argc, char **argv ENVP_ARG)
 	    int n;
 	    char **c;
 	    for (n = 0, c = command_to_exec; *c; n++, c++) ;
-	    c = malloc((n + 3 + u) * sizeof(char *));
+	    c = TypeMallocN(char *, n + 3 + u);
 	    if (c == NULL)
 		SysError(ERROR_LUMALLOC);
 	    memcpy(c + 2 + u, command_to_exec, (n + 1) * sizeof(char *));
@@ -1205,7 +1212,7 @@ main(int argc, char **argv ENVP_ARG)
 #endif
 #if OPT_TEK4014
     if (inhibit & I_TEK)
-	screen->TekEmu = FALSE;
+	screen->TekEmu = False;
 
     if (screen->TekEmu && !TekInit())
 	exit(ERROR_INIT);
@@ -1244,7 +1251,7 @@ main(int argc, char **argv ENVP_ARG)
 	char buf[80];
 
 	buf[0] = '\0';
-	sprintf(buf, "%lx\n", XtWindow(XtParent(CURRENT_EMU(screen))));
+	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU(screen))));
 	write(screen->respond, buf, strlen(buf));
     }
 
@@ -1293,6 +1300,7 @@ main(int argc, char **argv ENVP_ARG)
 			winToEmbedInto, 0, 0);
     }
 
+    initPtyData(&VTbuffer);
     for (;;) {
 #if OPT_TEK4014
 	if (screen->TekEmu)
@@ -1354,7 +1362,7 @@ get_pty(int *pty)
 static void
 get_terminal(void)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
 
     screen->arrow = make_colored_cursor(XC_left_ptr,
 					T_COLOR(screen, MOUSE_FG),
@@ -1427,14 +1435,14 @@ struct {
 void
 first_map_occurred(void)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     handshake.rows = screen->max_row;
     handshake.cols = screen->max_col;
     waiting_for_initial_map = False;
 }
 
 static void
-set_owner(char *device, int uid, int gid, int mode)
+set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 {
     if (chown(device, uid, gid) < 0) {
 	if (errno != ENOENT
@@ -1474,6 +1482,8 @@ killit(int sig)
     SIGNAL_RETURN;
 }
 
+#define close_fd(fd) close(fd), fd = -1
+
 static int
 spawn(void)
 /*
@@ -1482,17 +1492,17 @@ spawn(void)
  *  If slave, the pty named in passedPty is already open for use
  */
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     int Xsocket = ConnectionNumber(screen->display);
 
-    int tty = -1;
+    int ttyfd = -1;
     struct termio tio;
     int status;
 
     char termcap[TERMCAP_SIZE], newtc[TERMCAP_SIZE];
     char *TermName = NULL;
     char *ptr, *shname, buf[64];
-    int i, no_dev_tty = FALSE, envsize;
+    int i, no_dev_tty = False, envsize;
     char *dev_tty_name = (char *) 0;
     TTYSIZE_STRUCT ts;
     int pgrp = getpid();
@@ -1522,12 +1532,12 @@ spawn(void)
 	signal(SIGALRM, hungtty);
 	alarm(2);		/* alarm(1) might return too soon */
 	if (!setjmp(env)) {
-	    tty = open("/dev/tty", O_RDWR);
+	    ttyfd = open("/dev/tty", O_RDWR);
 	    alarm(0);
 	    tty_got_hung = False;
 	} else {
 	    tty_got_hung = True;
-	    tty = -1;
+	    ttyfd = -1;
 	    errno = ENXIO;
 	}
 	signal(SIGALRM, SIG_DFL);
@@ -1538,10 +1548,10 @@ spawn(void)
 	 * no controlling terminal, but some systems (e.g. SunOS 4.0)
 	 * seem to return EIO.  Solaris 2.3 is said to return EINVAL.
 	 */
-	if (tty < 0) {
+	if (ttyfd < 0) {
 	    if (tty_got_hung || errno == ENXIO || errno == EIO ||
 		errno == EINVAL || errno == ENOTTY) {
-		no_dev_tty = TRUE;
+		no_dev_tty = True;
 		tio = d_tio;
 	    } else {
 		SysError(ERROR_OPDEVTTY);
@@ -1554,12 +1564,10 @@ spawn(void)
 	     * if started directly from xdm or xinit,
 	     * in which case we just use the defaults as above.
 	     */
-	    if (ioctl(tty, TCGETA, &tio) == -1)
+	    if (ioctl(ttyfd, TCGETA, &tio) == -1)
 		tio = d_tio;
 
-	    close(tty);
-	    /* tty is no longer an open fd! */
-	    tty = -1;
+	    close_fd(ttyfd);
 	}
 
 	if (get_pty(&screen->respond)) {
@@ -1644,7 +1652,7 @@ spawn(void)
 	 * use an event sema for sync
 	 */
 	sprintf(sema, "\\SEM32\\xterm%s", &ptydev[8]);
-	if (DosCreateEventSem(sema, &sev, DC_SEM_SHARED, FALSE))
+	if (DosCreateEventSem(sema, &sev, DC_SEM_SHARED, False))
 	    SysError(ERROR_FORK);
 
 	switch ((screen->pid = fork())) {
@@ -1667,7 +1675,7 @@ opencons();*/
 	    /* Now is the time to set up our process group and
 	     * open up the pty slave.
 	     */
-	    if ((tty = open(ttydev, O_RDWR)) < 0) {
+	    if ((ttyfd = open(ttydev, O_RDWR)) < 0) {
 		/* dumm gelaufen */
 		fprintf(stderr, "Cannot open slave side of PTY\n");
 		exit(1);
@@ -1677,10 +1685,9 @@ opencons();*/
 	     * (from ttyname)
 	     */
 #ifdef EMXNOTBOGUS
-	    if ((ptr = ttyname(tty)) != 0) {
+	    if ((ptr = ttyname(ttyfd)) != 0) {
 		/* it may be bigger */
-		ttydev = realloc(ttydev,
-				 (unsigned) (strlen(ptr) + 1));
+		ttydev = TypeRealloc(char, strlen(ptr) + 1, ttydev);
 		if (ttydev == NULL) {
 		    SysError(ERROR_SPREALLOC);
 		}
@@ -1690,18 +1697,18 @@ opencons();*/
 	    ptr = ttydev;
 #endif
 	    /* for safety: enable DUPs */
-	    ptioctl(tty, XTY_ENADUP, 0);
+	    ptioctl(ttyfd, XTY_ENADUP, 0);
 
 	    /* change ownership of tty to real group and user id */
 	    set_owner(ttydev, screen->uid, screen->gid,
-		      (resource.messages ? 0622 : 0600));
+		      (resource.messages ? 0622U : 0600U));
 
 	    /* for the xf86sup-pty, we set the pty to bypass: OS/2 does
 	     * not have a line discipline structure
 	     */
 	    {
 		struct termio t, t1;
-		if (ptioctl(tty, TCGETA, (char *) &t) < 0)
+		if (ptioctl(ttyfd, TCGETA, (char *) &t) < 0)
 		    t = d_tio;
 
 		t.c_iflag = ICRNL;
@@ -1709,12 +1716,12 @@ opencons();*/
 		t.c_lflag = ISIG | ICANON | ECHO | ECHOE | ECHOK;
 
 		/* ignore error code, user will see it :-) */
-		ptioctl(tty, TCSETA, (char *) &t);
+		ptioctl(ttyfd, TCSETA, (char *) &t);
 
 		/* set the console mode */
 		if (Console) {
 		    int on = 1;
-		    if (ioctl(tty, TIOCCONS, (char *) &on) == -1)
+		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
 			fprintf(stderr, "%s: cannot open console\n", xterm_name);
 		}
 	    }
@@ -1735,7 +1742,7 @@ opencons();*/
 	    envsize += 3;	/* TERM, WINDOWID, DISPLAY */
 	    envsize += 2;	/* COLUMNS, LINES */
 
-	    envnew = (char **) calloc((unsigned) i + envsize, sizeof(char *));
+	    envnew = TypeCallocN(char *, (unsigned) i + envsize);
 	    memmove((char *) envnew, (char *) gblenvp, i * sizeof(char *));
 	    gblenvp = envnew;
 	    xtermSetenv("TERM=", TermName);
@@ -1743,7 +1750,7 @@ opencons();*/
 		*newtc = 0;
 
 	    sprintf(buf, "%lu",
-		    ((unsigned long) XtWindow(XtParent(CURRENT_EMU(screen)))));
+		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU(screen)))));
 	    xtermSetenv("WINDOWID=", buf);
 
 	    /* put the display into the environment of the shell */
@@ -1755,22 +1762,22 @@ opencons();*/
 	     */
 	    /* dup the tty */
 	    for (i = 0; i <= 2; i++)
-		if (i != tty) {
+		if (i != ttyfd) {
 		    (void) close(i);
-		    (void) dup(tty);
+		    (void) dup(ttyfd);
 		}
 
 	    /* and close the tty */
-	    if (tty > 2)
-		(void) close(tty);
+	    if (ttyfd > 2)
+		close_fd(ttyfd);
 
 	    setpgrp(0, pgrp);
 	    setgid(screen->gid);
 	    setuid(screen->uid);
 
 	    if (handshake.rows > 0 && handshake.cols > 0) {
-		screen->max_row = handshake.rows;
-		screen->max_col = handshake.cols;
+		set_max_row(screen, handshake.rows);
+		set_max_col(screen, handshake.cols);
 		TTYSIZE_ROWS(ts) = screen->max_row + 1;
 		TTYSIZE_COLS(ts) = screen->max_col + 1;
 		ts.ws_xpixel = FullWidth(screen);
@@ -1892,7 +1899,7 @@ opencons();*/
 SIGNAL_T
 Exit(int n)
 {
-    register TScreen *screen = &term->screen;
+    TScreen *screen = &term->screen;
     int pty = term->screen.respond;	/* file descriptor of pty */
     close(pty);			/* close explicitly to avoid race with slave side */
 #ifdef ALLOWLOGGING
@@ -1901,8 +1908,8 @@ Exit(int n)
 #endif
     if (am_slave < 0) {
 	/* restore ownership of tty and pty */
-	set_owner(ttydev, 0, 0, 0666);
-	set_owner(ptydev, 0, 0, 0666);
+	set_owner(ttydev, 0, 0, 0666U);
+	set_owner(ptydev, 0, 0, 0666U);
     }
     exit(n);
     SIGNAL_RETURN;
@@ -1910,7 +1917,7 @@ Exit(int n)
 
 /* ARGSUSED */
 static void
-resize(TScreen * screen, register char *oldtc, char *newtc)
+resize(TScreen * screen, char *oldtc, char *newtc)
 {
 }
 
