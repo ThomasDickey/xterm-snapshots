@@ -95,6 +95,7 @@ XTerm.JoinSession:False
 ! Enable Colour by default.
 
 *VT100*colorMode: on
+*VT100*boldColors: on
 *VT100*dynamicColors: on
 
 ! Uncomment this use color for underline attribute
@@ -103,6 +104,9 @@ XTerm.JoinSession:False
 
 ! Uncomment this to use color for the bold attribute
 !*VT100*colorBDMode: on
+
+! Uncomment this to use the bold/underline colors in preference to other colors
+!*VT100*colorAttrMode: on
 
 *VT100*color0: black
 *VT100*color1: red3

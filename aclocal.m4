@@ -336,7 +336,7 @@ dnl	-Wwrite-strings (too noisy, but should review occasionally)
 dnl	-pedantic
 dnl
 AC_DEFUN([CF_GCC_WARNINGS],
-[EXTRA_CFLAGS=""
+[
 if test -n "$GCC"
 then
 	changequote(,)dnl
@@ -348,6 +348,8 @@ EOF
 	AC_CHECKING([for gcc warning options])
 	cf_save_CFLAGS="$CFLAGS"
 	EXTRA_CFLAGS="-W -Wall"
+	cf_warn_CONST=""
+	test "$with_ext_const" = yes && cf_warn_CONST="Wwrite-strings"
 	for cf_opt in \
 		Wbad-function-cast \
 		Wcast-align \
@@ -358,7 +360,7 @@ EOF
 		Wnested-externs \
 		Wpointer-arith \
 		Wshadow \
-		Wstrict-prototypes
+		Wstrict-prototypes $cf_warn_CONST
 	do
 		CFLAGS="$cf_save_CFLAGS $EXTRA_CFLAGS -$cf_opt"
 		if AC_TRY_EVAL(ac_compile); then
@@ -393,10 +395,10 @@ esac
 if mkdir conftestdir; then
 	cd conftestdir
 	echo >./Imakefile
-	test ../Imakefile && cat ../Imakefile >>./Imakefile
+	test -f ../Imakefile && cat ../Imakefile >>./Imakefile
 	cat >> ./Imakefile <<'CF_EOF'
 findstddefs:
-	@echo 'IMAKE_CFLAGS="${STD_DEFINES} ifelse($1,,,$1)"'
+	@echo 'IMAKE_CFLAGS="${ALLDEFINES} ifelse($1,,,$1)"'
 CF_EOF
 	if ( $IMAKE $cf_imake_opts 1>/dev/null 2>&AC_FD_CC && test -f Makefile)
 	then
@@ -478,17 +480,30 @@ dnl Check for Xaw (Athena) libraries
 dnl
 AC_DEFUN([CF_X_ATHENA],
 [AC_REQUIRE([CF_X_TOOLKIT])
-AC_CHECK_HEADERS(X11/Xaw/SimpleMenu.h)
-AC_CHECK_LIB(Xmu, XmuClientWindow)
+cf_x_athena=Xaw
+
+AC_ARG_WITH(Xaw3d,
+	[  --with-Xaw3d            link with Xaw 3d library],
+	[cf_x_athena=Xaw3d])
+
+AC_ARG_WITH(neXtaw,
+	[  --with-neXtaw           link with neXT Athena library],
+	[cf_x_athena=neXtaw])
+
+AC_CHECK_HEADERS(X11/$cf_x_athena/SimpleMenu.h)
+
+AC_CHECK_LIB(Xmu, XmuClientWindow,,[
+AC_CHECK_LIB(Xmu_s, XmuClientWindow)])
+
 AC_CHECK_LIB(Xext,XextCreateExtension,
 	[LIBS="-lXext $LIBS"])
-AC_CHECK_LIB(Xmu_s, XmuClientWindow)
-AC_CHECK_LIB(Xaw, XawSimpleMenuAddGlobalActions,
-	[LIBS="-lXaw $LIBS"],[
-AC_CHECK_LIB(Xaw_s, XawSimpleMenuAddGlobalActions,
-	[LIBS="-lXaw_s $LIBS"],
+
+AC_CHECK_LIB($cf_x_athena, XawSimpleMenuAddGlobalActions,
+	[LIBS="-l$cf_x_athena $LIBS"],[
+AC_CHECK_LIB(${cf_x_athena}_s, XawSimpleMenuAddGlobalActions,
+	[LIBS="-l${cf_x_athena}_s $LIBS"],
 	AC_ERROR(
-[Unable to successfully link Athena library (-lXaw) with test program]),
+[Unable to successfully link Athena library (-l$cf_x_athena) with test program]),
 	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])])
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -496,11 +511,12 @@ dnl Check for X Toolkit libraries
 dnl
 AC_DEFUN([CF_X_TOOLKIT],
 [
+AC_REQUIRE([CF_CHECK_CACHE])
 # We need to check for -lsocket and -lnsl here in order to work around an
 # autoconf bug.  autoconf-2.12 is not checking for these prior to checking for
 # the X11R6 -lSM and -lICE libraries.  The resultant failures cascade...
 # 	(tested on Solaris 2.5 w/ X11R6)
-SYSTEM_NAME=`echo "$system_name"|tr ' ' -`
+SYSTEM_NAME=`echo "$cf_cv_system_name"|tr ' ' -`
 cf_have_X_LIBS=no
 case $SYSTEM_NAME in
 irix5*) ;;

@@ -255,6 +255,8 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtNcolorMode "colorMode"
 #define XtNcolorULMode "colorULMode"
 #define XtNcolorBDMode "colorBDMode"
+#define XtNcolorAttrMode "colorAttrMode"
+#define XtNboldColors "boldColors"
 #define XtNdynamicColors "dynamicColors"
 #define XtNunderLine "underLine"
 #define XtNdecTerminalID "decTerminalID"
@@ -745,6 +747,12 @@ static XtResource resources[] = {
 {XtNcolorBDMode, XtCColorMode, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.colorBDMode),
 	XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNcolorAttrMode, XtCColorMode, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.colorAttrMode),
+	XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNboldColors, XtCColorMode, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.boldColors),
+	XtRBoolean, (XtPointer) &defaultTRUE},
 #endif /* OPT_ISO_COLORS */
 {XtNdynamicColors, XtCDynamicColors, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.dynamicColors),
@@ -872,14 +880,15 @@ void SGR_Background(color)
 }
 
 /* Invoked after updating bold/underline flags, computes the extended color
- * index to use for foreground.
+ * index to use for foreground.  (See also 'extract_fg()').
  */
 static void
 setExtendedFG()
 {
 	int fg = term->sgr_foreground;
 
-	if (fg < 0) {
+	if (term->screen.colorAttrMode
+	 || (fg < 0)) {
 		if (term->screen.colorULMode && (term->flags & UNDERLINE))
 			fg = COLOR_UL;
 
@@ -892,8 +901,13 @@ setExtendedFG()
 	 * much sense for 16-color applications, but we keep it to retain
 	 * compatiblity with ANSI-color applications.
 	 */
-	if ((fg >= 0) && (fg < 8) && (term->flags & BOLD))
+#if OPT_PC_COLORS
+	if (term->screen.boldColors
+	 && (fg >= 0)
+	 && (fg < 8)
+	 && (term->flags & BOLD))
 		fg |= 8;
+#endif
 
 	SGR_Foreground(fg);
 }
@@ -1320,7 +1334,7 @@ static void VTparse()
 
 		 case CASE_ECH:
 			/* ECH */
-			ClearRight(screen, param[0]);
+			ClearRight(screen, param[0] < 1 ? 1 : param[0]);
 			parsestate = groundtable;
 			break;
 
@@ -2492,8 +2506,7 @@ WriteText(screen, str, len)
     register int	len;
 {
 	unsigned flags	= term->flags;
-	int	fg     = term->cur_foreground;
-	int	bg     = term->cur_background;
+	int	fg_bg = makeColorPair(term->cur_foreground, term->cur_background);
 	GC	currentGC;
  
 	TRACE(("WriteText (%2d,%2d) (%d) %3d:%.*s\n",
@@ -2510,7 +2523,7 @@ WriteText(screen, str, len)
 			InsertChar(screen, len);
 		if (!AddToRefresh(screen)) {
 			/* make sure that the correct GC is current */
-			currentGC = updatedXtermGC(screen, flags, fg, bg, False);
+			currentGC = updatedXtermGC(screen, flags, fg_bg, False);
 
 			if(screen->scroll_amt)
 				FlushScroll(screen);
@@ -2542,7 +2555,7 @@ WriteText(screen, str, len)
 #endif
 		}
 	}
-	ScreenWrite(screen, str, flags,  fg, bg, len);
+	ScreenWrite(screen, str, flags, fg_bg, len);
 	CursorForward(screen, len);
 }
  
@@ -3584,15 +3597,19 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->screen.menu_font_number = fontMenu_fontdefault;
 
 #if OPT_ISO_COLORS
-   new->screen.colorMode = request->screen.colorMode;
-   new->screen.colorULMode = request->screen.colorULMode;
-   new->screen.colorBDMode = request->screen.colorBDMode;
+   new->screen.boldColors    = request->screen.boldColors;
+   new->screen.colorAttrMode = request->screen.colorAttrMode;
+   new->screen.colorBDMode   = request->screen.colorBDMode;
+   new->screen.colorMode     = request->screen.colorMode;
+   new->screen.colorULMode   = request->screen.colorULMode;
+
    for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
        new->screen.Acolors[i] = request->screen.Acolors[i];
        if (new->screen.Acolors[i] != request->screen.foreground
         && new->screen.Acolors[i] != request->core.background_pixel)
 	   color_ok = True;
    }
+
    /* If none of the colors are anything other than the foreground or
     * background, we'll assume this isn't color, no matter what the colorMode
     * resource says.  (There doesn't seem to be any good way to determine if
@@ -4200,7 +4217,7 @@ HideCursor()
 {
 	register TScreen *screen = &term->screen;
 	GC	currentGC;
-	register int flags, fg = 0, bg = 0;
+	register int flags, fg_bg = 0;
 	Char c;
 	Boolean	in_selection;
 
@@ -4213,9 +4230,7 @@ HideCursor()
 	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
 
 	if_OPT_ISO_COLORS(screen,{
-	    unsigned fb = SCRN_BUF_COLOR(screen, screen->cursor_row)[screen->cursor_col];
-	    fg = extract_fg(fb, flags);
-	    bg = extract_bg(fb);
+	    fg_bg = SCRN_BUF_COLOR(screen, screen->cursor_row)[screen->cursor_col];
 	})
 
 #ifndef NO_ACTIVE_ICON
@@ -4236,7 +4251,7 @@ HideCursor()
 	else
 	    in_selection = True;
 
-	currentGC = updatedXtermGC(screen, flags, fg, bg, in_selection);
+	currentGC = updatedXtermGC(screen, flags, fg_bg, in_selection);
 
 	if (c == 0)
 		c = ' ';

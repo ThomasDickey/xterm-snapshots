@@ -90,7 +90,7 @@ uninstall:
 		$(mandir)/resize.$(manext)
 
 mostlyclean:
-	-$(RM) *.[oi] .pure core *~ *.BAK
+	-$(RM) *.[oi] XtermLog.* .pure core *~ *.BAK *.out
 
 clean: mostlyclean
 	-$(RM) $(PROGRAMS)

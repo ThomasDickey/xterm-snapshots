@@ -96,6 +96,7 @@ Boolean sunKeyboard;
 #endif
 
 int am_slave = 0;	/* set to 1 if running as a slave process */
+int done_setuid = 0;	/* set to 1 after resetting setuid */
 int max_plus1;
 fd_set Select_mask;
 fd_set X_mask;
@@ -103,7 +104,7 @@ fd_set pty_mask;
 char *ptydev;
 char *ttydev;
 #ifdef ALLOWLOGGING
-char log_def_name[] = "XtermLog.XXXXX";
+char log_def_name[] = "XtermLog.XXXXXX";
 #endif
 int T_lastx = -1;
 int T_lasty = -1;

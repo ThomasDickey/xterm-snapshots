@@ -474,8 +474,9 @@ static void do_visualbell (gw, closure, data)
 
 #ifdef ALLOWLOGGING
 static void do_logging (gw, closure, data)
-    Widget gw;
-    XtPointer closure, data;
+    Widget gw GCC_UNUSED;
+    XtPointer closure GCC_UNUSED;
+    XtPointer data GCC_UNUSED;
 {
     register TScreen *screen = &term->screen;
 
@@ -1059,7 +1060,7 @@ void HandleSetVisualBell(w, event, params, param_count)
 #ifdef ALLOWLOGGING
 void HandleLogging(w, event, params, param_count)
     Widget w;
-    XEvent *event;
+    XEvent *event GCC_UNUSED;
     String *params;
     Cardinal *param_count;
 {

@@ -811,6 +811,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-nb",		"*nMarginBell",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-nul",	"*underLine",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+nul",	"*underLine",	XrmoptionNoArg,		(caddr_t) "on"},
+{"-pc",		"*boldColors",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+pc",		"*boldColors",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-rw",		"*reverseWrap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+rw",		"*reverseWrap",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-s",		"*multiScroll",	XrmoptionNoArg,		(caddr_t) "on"},
@@ -904,6 +906,7 @@ static struct _options {
 { "-nb number",            "margin bell in characters from right end" },
 { "-/+nul",                "turn on/off display of underlining" },
 { "-/+aw",                 "turn on/off auto wraparound" },
+{ "-/+pc",                 "turn on/off PC-style bold colors" },
 { "-/+rw",                 "turn on/off reverse wraparound" },
 { "-/+s",                  "turn on/off multiscroll" },
 { "-/+sb",                 "turn on/off scrollbar" },
@@ -1682,6 +1685,9 @@ char **argv;
 	XSetIOErrorHandler(xioerror);
 
 	(void) setuid (screen->uid); /* we're done with privileges... */
+	(void) setgid (screen->gid);
+	done_setuid = 1;
+
 	for( ; ; ) {
 		if(screen->TekEmu) {
 			TekRun();

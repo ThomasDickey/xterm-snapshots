@@ -1361,15 +1361,14 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
  * current screen foreground and background colors.
  */
 GC
-updatedXtermGC(screen, flags, fg, bg, hilite)
+updatedXtermGC(screen, flags, fg_bg, hilite)
 	register TScreen *screen;
 	int flags;
-	int fg;
-	int bg;
+	int fg_bg;
 	Bool hilite;
 {
-	Pixel fg_pix = getXtermForeground(flags,fg);
-	Pixel bg_pix = getXtermBackground(flags,bg);
+	Pixel fg_pix = getXtermForeground(flags,extract_fg(fg_bg,flags));
+	Pixel bg_pix = getXtermBackground(flags,extract_bg(fg_bg));
 	GC gc;
 
 	if ( (!hilite && (flags & INVERSE) != 0)
@@ -1433,8 +1432,7 @@ resetXtermGC(screen, flags, hilite)
 #if OPT_ISO_COLORS
 /*
  * Extract the foreground-color index from a one-byte color pair.  If we've got
- * BOLD or UNDERLINE color-mode active, those will be used unless we've got
- * an SGR foreground color active.
+ * BOLD or UNDERLINE color-mode active, those will be used.
  */
 int
 extract_fg (color, flags)
@@ -1442,8 +1440,9 @@ extract_fg (color, flags)
 	unsigned flags;
 {
 	int fg = (int) ((color >> 4) & 0xf);
-	if (fg == extract_bg(color))
-	{
+
+	if (term->screen.colorAttrMode 
+	 || (fg == extract_bg(color))) {
 		if (term->screen.colorULMode && (flags & UNDERLINE))
 			fg = COLOR_UL;
 		if (term->screen.colorBDMode && (flags & BOLD))
@@ -1480,6 +1479,7 @@ makeColorPair (fg, bg)
 unsigned
 xtermColorPair ()
 {
+	/* FIXME? */
 	return makeColorPair(term->sgr_foreground, term->cur_background);
 }
 

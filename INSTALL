@@ -1,0 +1,52 @@
+-- $Id: INSTALL,v 1.2 1997/09/29 23:09:28 tom Exp $
+-- Thomas E. Dickey <dickey@clark.net>
+
+Xterm is normally built as part of the X Windows source tree, using
+imake to generate a Makefile from Imakefile.  You can also use the
+configure script to generate a Makefile from Makefile.in:
+
+	+ If you have imake (or xmkmf), then you can use those directly,
+	  or use the configure script, which normally uses those tools
+	  to obtain the special definitions needed to build xterm.
+
+	  Ultimately, imake will not be necessary, since it is possible
+	  to add configure tests that derive the information that imake
+	  would supply.
+
+	+ You need the Athena widgets (or a clone, such as Xaw3d or
+	  neXtaw), to provide the popup menus.
+
+Even if you have imake, the configure script is still convenient because
+it allows you to build different configurations more easily than with
+imake, simply by specifying options to the configure script.
+
+Options:
+-------
+
+Autoconf configure scripts recognize two types of application-defined
+options, enable/disable and with/without.  The latter, by convention, are
+used for denoting inclusion of external packages, while the former denote
+enabling/disabling of internal features.  The configure --help option
+lists the available options.  This script uses "enable" and "disable"
+to indicate the sense of the default behavior.
+
+The options (in alphabetic order):
+
+  --disable-16-color      disable 16-color support (default: on)
+  --disable-active-icon   disable X11R6.3 active-icon feature (default: on)
+  --disable-ansi-color    disable ANSI color (default: on)
+  --disable-bold-color    disable PC-style mapping of bold colors (default: on)
+  --disable-color-mode    disable default colorMode resource (default: on)
+  --disable-doublechars   disable support for double-size chars (default: on)
+  --disable-echo          test: display "compiling" commands (default: on)
+  --disable-i18n          disable internationalization (default: on)
+  --disable-imake         disable use of imake for definitions (default: on)
+  --disable-input-method  disable input-method (default: on)
+  --disable-vt52          disable VT52 emulation (default: on)
+  --enable-logging        enable logging (default: off)
+  --enable-trace          test: set to enable debugging traces (default: off)
+  --enable-warnings       test: turn on GCC compiler warnings (default: off)
+  --enable-xmc-glitch     test: enable xmc magic-cookie emulation (default: off)
+  --with-Xaw3d            link with Xaw 3d library
+  --with-neXtaw           link with neXT Athena library
+  --with-terminal-id[=V]  set default decTerminalID (default: vt100)
