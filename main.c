@@ -2214,8 +2214,8 @@ spawn (void)
 #endif /* sony */
 #endif	/* USE_SYSV_TERMIO */
 
-	char termcap [1024];
-	char newtc [1024];
+	char termcap [TERMCAP_SIZE];
+	char newtc [TERMCAP_SIZE];
 	char *ptr, *shname, *shname_minus;
 	int i, no_dev_tty = FALSE;
 	char **envnew;		/* new environment */
@@ -3628,8 +3628,8 @@ static int spawn(void)
 {
     register TScreen *screen = &term->screen;
     char *TermName = NULL;
-    char termcap[1024];
-    char newtc[1024];
+    char termcap[TERMCAP_SIZE];
+    char newtc[TERMCAP_SIZE];
     char **envnew;		/* new environment */
     int envsize;		/* elements in new environment */
     char *ptr;

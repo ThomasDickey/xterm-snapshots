@@ -192,14 +192,13 @@ static void StopBlinking (TScreen *screen);
 #define XtNeightBitControl	"eightBitControl"
 #define XtNeightBitInput	"eightBitInput"
 #define XtNeightBitOutput	"eightBitOutput"
-#define XtNfontDoublesize       "fontDoublesize"
-/* #define XtNgeometry		"geometry" */	/* See Xt/Shell.h */
+#define XtNfontDoublesize	"fontDoublesize"
 #define XtNhighlightColor	"highlightColor"
 #define XtNhighlightSelection	"highlightSelection"
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
 #define XtNinternalBorder	"internalBorder"
 #define XtNjumpScroll		"jumpScroll"
-#define XtNkeyboardDialect      "keyboardDialect"
+#define XtNkeyboardDialect	"keyboardDialect"
 #define XtNlogFile		"logFile"
 #define XtNlogInhibit		"logInhibit"
 #define XtNlogging		"logging"
@@ -227,6 +226,7 @@ static void StopBlinking (TScreen *screen);
 #define XtNscrollLines		"scrollLines"
 #define XtNscrollPos		"scrollPos"
 #define XtNscrollTtyOutput	"scrollTtyOutput"
+#define XtNshiftKeys		"shiftKeys"
 #define XtNsignalInhibit	"signalInhibit"
 #define XtNtekGeometry		"tekGeometry"
 #define XtNtekInhibit		"tekInhibit"
@@ -263,11 +263,11 @@ static void StopBlinking (TScreen *screen);
 #define XtCEightBitControl	"EightBitControl"
 #define XtCEightBitInput	"EightBitInput"
 #define XtCEightBitOutput	"EightBitOutput"
-#define XtCFontDoublesize       "FontDoublesize"
-/* #define XtCGeometry		"Geometry" */	/* See Xt/Shell.h */
+#define XtCFontDoublesize	"FontDoublesize"
 #define XtCHighlightSelection	"HighlightSelection"
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
 #define XtCJumpScroll		"JumpScroll"
+#define XtCKeyboardDialect	"KeyboardDialect"
 #define XtCLogInhibit		"LogInhibit"
 #define XtCLogfile		"Logfile"
 #define XtCLogging		"Logging"
@@ -290,6 +290,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCScrollCond		"ScrollCond"
 #define XtCScrollLines		"ScrollLines"
 #define XtCScrollPos		"ScrollPos"
+#define XtCShiftKeys		"ShiftKeys"
 #define XtCSignalInhibit	"SignalInhibit"
 #define XtCTekInhibit		"TekInhibit"
 #define XtCTekSmall		"TekSmall"
@@ -301,7 +302,11 @@ static void StopBlinking (TScreen *screen);
 #define XtCXmcGlitch		"XmcGlitch"
 #define XtCXmcInline		"XmcInline"
 #define XtCXmcMoveSGR		"XmcMoveSGR"
-#define XtCkeyboardDialect      "KeyboardDialect"
+
+#ifdef NO_ACTIVE_ICON
+#define XtNgeometry		"geometry"
+#define XtCGeometry		"Geometry"
+#endif
 
 #define	doinput()		(bcnt-- > 0 ? *bptr++ : in_put())
 
@@ -320,7 +325,6 @@ static jmp_buf vtjmpbuf;
 static void HandleBell PROTO_XT_ACTIONS_ARGS;
 static void HandleIgnore PROTO_XT_ACTIONS_ARGS;
 static void HandleKeymapChange PROTO_XT_ACTIONS_ARGS;
-static void HandleSetFont PROTO_XT_ACTIONS_ARGS;
 static void HandleVisualBell PROTO_XT_ACTIONS_ARGS;
 #if OPT_ZICONBEEP
 static void HandleMapUnmap PROTO_XT_EV_HANDLER_ARGS;
@@ -457,6 +461,10 @@ static XtActionsRec actionsList[] = {
 #if OPT_HP_FUNC_KEYS
     { "set-hp-function-keys",	HandleHpFunctionKeys },
 #endif
+#if OPT_SHIFT_KEYS
+    { "larger-vt-font",		HandleLargerFont },
+    { "smaller-vt-font",	HandleSmallerFont },
+#endif
 #if OPT_TEK4014
     { "set-terminal-type",	HandleSetTerminalType },
     { "set-visibility", 	HandleVisibility },
@@ -523,7 +531,7 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, screen.cursor_blink),
         XtRInt, (XtPointer) &defaultBlinkTime},
 #endif
-{XtNkeyboardDialect, XtCkeyboardDialect, XtRString, sizeof(String),
+{XtNkeyboardDialect, XtCKeyboardDialect, XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.keyboard_dialect),
 	XtRString, (XtPointer) DFT_KBD_DIALECT},
 {XtNeightBitInput, XtCEightBitInput, XtRBoolean, sizeof(Boolean),
@@ -658,6 +666,11 @@ static XtResource resources[] = {
 {XtNsignalInhibit,XtCSignalInhibit,XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.signalInhibit),
 	XtRBoolean, (XtPointer) &defaultFALSE},
+#if OPT_SHIFT_KEYS
+{XtNshiftKeys, XtCShiftKeys, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, misc.shift_keys),
+	XtRBoolean, (XtPointer) &defaultTRUE},
+#endif
 #if OPT_TEK4014
 {XtNtekInhibit, XtCTekInhibit, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.tekInhibit),
@@ -2716,6 +2729,7 @@ dpmodes(
 	register int	i, j;
 
 	for (i=0; i<nparam; ++i) {
+		TRACE(("%s %d\n", (func == bitset) ? "DECSET" : "DECRST", param[i]))
 		switch (param[i]) {
 		case 1:			/* DECCKM			*/
 			(*func)(&termw->keyboard.flags, MODE_DECCKM);
@@ -2781,23 +2795,22 @@ dpmodes(
 			set_mousemode(X10_MOUSE);
 			break;
 		case 18:		/* DECPFF: print form feed */
-		        if(func == bitset)
-			        screen->printer_formfeed = ON;
-			else
-			        screen->printer_formfeed = OFF;
+			screen->printer_formfeed = (func == bitset) ? ON : OFF;
 			break;
 		case 19:		/* DECPEX: print extent */
-		        if(func == bitset)
-			        screen->printer_extent = ON;
-			else
-			        screen->printer_extent = OFF;
+			screen->printer_extent = (func == bitset) ? ON : OFF;
 			break;
 		case 25:		/* DECTCEM: Show/hide cursor (VT200) */
-		        if(func == bitset)
-			        screen->cursor_set = ON;
-			else
-			        screen->cursor_set = OFF;
+			screen->cursor_set = (func == bitset) ? ON : OFF;
 			break;
+		case 30:		/* rxvt */
+			if (screen->fullVwin.scrollbar != ((func == bitset) ? ON : OFF))
+				ToggleScrollBar(termw);
+			break;
+#if OPT_SHIFT_KEYS
+			term->misc.shift_keys = (func == bitset) ? ON : OFF;
+			break;
+#endif
 		case 38:		/* DECTEK			*/
 #if OPT_TEK4014
 			if(func == bitset && !(screen->inhibit & I_TEK)) {
@@ -2902,7 +2915,14 @@ dpmodes(
 			}
 			XSelectInput(XtDisplay(termw), term->core.window, screen->event_mask);
 			break;
-
+		case 1010:	/* rxvt */
+			screen->scrollttyoutput = (func == bitset) ? ON : OFF;
+			update_scrollttyoutput();
+			break;
+		case 1011:	/* rxvt */
+			screen->scrollkey = (func == bitset) ? ON : OFF;
+			update_scrollkey();
+			break;
 		case 1048:
 			if (!termw->misc.titeInhibit) {
 		        	if(func == bitset)
@@ -3679,7 +3699,7 @@ static void VTInitialize (
    char *s;
 
    /* Zero out the entire "screen" component of "wnew" widget, then do
-    * field-by-field assigment of "screen" fields that are named in the
+    * field-by-field assignment of "screen" fields that are named in the
     * resource list.
     */
    bzero ((char *) &wnew->screen, sizeof(wnew->screen));
@@ -3758,12 +3778,17 @@ static void VTInitialize (
    if (wnew->screen.terminal_id > MAX_DECID)
        wnew->screen.terminal_id = MAX_DECID;
    TRACE(("term_id '%s' -> terminal_id %d\n", 
-	wnet->screen.term_id,
-	wnet->screen.terminal_id))
+	wnew->screen.term_id,
+	wnew->screen.terminal_id))
 
    wnew->screen.ansi_level = (wnew->screen.terminal_id / 100);
    wnew->screen.visualbell = request->screen.visualbell;
+#if OPT_SHIFT_KEYS
+   wnew->misc.shift_keys = request->misc.shift_keys;
+#endif
 #if OPT_TEK4014
+   wnew->misc.tekInhibit = request->misc.tekInhibit;
+   wnew->misc.tekSmall = request->misc.tekSmall;
    wnew->screen.TekEmu = request->screen.TekEmu;
 #endif
    wnew->misc.re_verse = request->misc.re_verse;
@@ -4323,12 +4348,7 @@ static Boolean VTSetValues (
 	refresh_needed = TRUE;
     }
     if (curvt->misc.scrollbar != newvt->misc.scrollbar) {
-	if (newvt->misc.scrollbar) {
-	    ScrollBarOn (newvt, FALSE, FALSE);
-	} else {
-	    ScrollBarOff (&newvt->screen);
-	}
-	update_scrollbar();
+	ToggleScrollBar(newvt);
     }
 
     return refresh_needed;
@@ -4941,86 +4961,6 @@ void FindFontSelection (char *atom_name, Bool justprobe)
     return;
 }
 
-
-/* ARGSUSED */
-static void
-HandleSetFont(
-	Widget w GCC_UNUSED,
-	XEvent *event GCC_UNUSED,
-	String *params,
-	Cardinal *param_count)
-{
-    int fontnum;
-    char *name1 = NULL, *name2 = NULL;
-
-    if (*param_count == 0) {
-	fontnum = fontMenu_fontdefault;
-    } else {
-	Cardinal maxparams = 1;		/* total number of params allowed */
-
-	switch (params[0][0]) {
-	  case 'd': case 'D': case '0':
-	    fontnum = fontMenu_fontdefault; break;
-	  case '1':
-	    fontnum = fontMenu_font1; break;
-	  case '2':
-	    fontnum = fontMenu_font2; break;
-	  case '3':
-	    fontnum = fontMenu_font3; break;
-	  case '4':
-	    fontnum = fontMenu_font4; break;
-	  case '5':
-	    fontnum = fontMenu_font5; break;
-	  case '6':
-	    fontnum = fontMenu_font6; break;
-	  case 'e': case 'E':
-	    fontnum = fontMenu_fontescape; maxparams = 3; break;
-	  case 's': case 'S':
-	    fontnum = fontMenu_fontsel; maxparams = 2; break;
-	  default:
-	    Bell(XkbBI_MinorError,0);
-	    return;
-	}
-	if (*param_count > maxparams) {	 /* see if extra args given */
-	    Bell(XkbBI_MinorError,0);
-	    return;
-	}
-	switch (*param_count) {		/* assign 'em */
-	  case 3:
-	    name2 = params[2];
-	    /* FALLTHRU */
-	  case 2:
-	    name1 = params[1];
-	    break;
-	}
-    }
-
-    SetVTFont (fontnum, True, name1, name2);
-}
-
-
-void SetVTFont (
-	int i,
-	Bool doresize,
-	char *name1,
-	char *name2)
-{
-    TScreen *screen = &term->screen;
-
-    if (i < 0 || i >= NMENUFONTS) {
-	Bell(XkbBI_MinorError,0);
-	return;
-    }
-    if (i == fontMenu_fontsel) {	/* go get the selection */
-	FindFontSelection (name1, False);  /* name1 = atom, name2 is ignored */
-	return;
-    }
-    if (!name1) name1 = screen->menu_font_names[i];
-    if (!xtermLoadFont(screen, name1, name2, doresize, i)) {
-	Bell(XkbBI_MinorError,0);
-    }
-    return;
-}
 
 void
 set_cursor_gcs (TScreen *screen)

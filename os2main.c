@@ -1307,7 +1307,7 @@ spawn (void)
 	struct termio tio;
 	int status;
 
-	char termcap[1024], newtc[1024];
+	char termcap[TERMCAP_SIZE], newtc[TERMCAP_SIZE];
 	char *TermName = NULL;
 	char *ptr, *shname, buf[64];
 	int i, no_dev_tty = FALSE, envsize;

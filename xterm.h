@@ -42,6 +42,8 @@
 #define time_t long
 #endif
 
+#define XMU_POINTER XtPointer
+
 #endif /* HAVE_CONFIG_H */
 
 /***====================================================================***/
@@ -76,6 +78,13 @@ extern int errno;
  */
 #ifdef linux
 #undef HAVE_WAITPID
+#endif
+
+/*
+ * FIXME:  Xmu interface in XFree86 3.9N* introduces an incompatibility.
+ */
+#ifndef XMU_POINTER
+#define XMU_POINTER XPointer
 #endif
 
 /***====================================================================***/
@@ -128,7 +137,6 @@ extern int VTInit (void);
 extern int v_write (int f, char *d, int len);
 extern void FindFontSelection (char *atom_name, Bool justprobe);
 extern void HideCursor (void);
-extern void SetVTFont (int i, Bool doresize, char *name1, char *name2);
 extern void ShowCursor (void);
 extern void SwitchBufPtrs (TScreen *screen);
 extern void ToggleAlternate (TScreen *screen);
@@ -274,6 +282,7 @@ extern void ScrollBarDrawThumb (Widget scrollWidget);
 extern void ScrollBarOff (TScreen *screen);
 extern void ScrollBarOn (XtermWidget xw, int init, int doalloc);
 extern void ScrollBarReverseVideo (Widget scrollWidget);
+extern void ToggleScrollBar (XtermWidget w);
 extern void WindowScroll (TScreen *screen, int top);
 
 /* tabs.c */

@@ -267,6 +267,8 @@ static char *strindex (char *s1, char *s2);
 #endif /* HAVE_TERMCAP_H  */
 #endif
 
+#define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */
+
 /*
    resets termcap string to reflect current screen size
  */
@@ -290,8 +292,8 @@ main (int argc, char **argv)
 #endif /* USE_SYSV_TERMIO */
 #ifdef USE_TERMCAP
 	int ok_tcap = 1;
-	char termcap [1024];
-	char newtc [1024];
+	char termcap [TERMCAP_SIZE];
+	char newtc [TERMCAP_SIZE];
 #endif /* USE_TERMCAP */
 	char buf[BUFSIZ];
 #if defined(sun) && !defined(SVR4)

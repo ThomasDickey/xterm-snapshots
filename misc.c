@@ -46,6 +46,7 @@
 #include <data.h>
 #include <error.h>
 #include <menu.h>
+#include <fontutils.h>
 #include <xcharmouse.h>
 
 #if XtSpecificationRelease < 6

@@ -775,6 +775,8 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*8 \(-> Print form feed (DECPFF)
   \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX)
   \*(Ps = \*2\*5 \(-> Show Cursor (DECTCEM)
+  \*(Ps = \*3\*0 \(-> Show scrollbar (rxvt).
+  \*(Ps = \*3\*5 \(-> Enable shifted key-functions (rxvt).
   \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK)
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode
   \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fIcurses\fP resource)
@@ -791,6 +793,8 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
   \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking.
+  \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
+  \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*4\*7 \(-> Use Alternate Screen Buffer (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*4\*8 \(-> Save cursor as in DECSC (unless
@@ -813,6 +817,8 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF)
   \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX)
   \*(Ps = \*2\*5 \(-> Hide Cursor (DECTCEM)
+  \*(Ps = \*3\*0 \(-> Don't show scrollbar (rxvt).
+  \*(Ps = \*3\*5 \(-> Disable shifted key-functions (rxvt).
   \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode
   \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fIcurses\fP resource)
   \*(Ps = \*4\*2 \(-> Disable Nation Replacement Character sets (DECNRCM)
@@ -828,6 +834,8 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Don't Use Hilite Mouse Tracking
   \*(Ps = \*1\*0\*0\*2 \(-> Don't Use Cell Motion Mouse Tracking
   \*(Ps = \*1\*0\*0\*3 \(-> Don't Use All Motion Mouse Tracking
+  \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
+  \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*4\*7 \(-> Use Normal Screen Buffer, clearing screen
 first if in the Alternate Screen (unless
 disabled by the \fBtiteInhibit\fP resource)
