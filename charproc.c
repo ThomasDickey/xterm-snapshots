@@ -1583,12 +1583,12 @@ static void VTparse(void)
 				 case 8:
 					term->flags |= INVISIBLE;
 					break;
-				 case 24:
-					term->flags &= ~UNDERLINE;
-					if_OPT_ISO_COLORS(screen,{setExtendedFG();})
-					break;
 				 case 22: /* reset 'bold' */
 					term->flags &= ~BOLD;
+					if_OPT_ISO_COLORS(screen,{setExtendedFG();})
+					break;
+				 case 24:
+					term->flags &= ~UNDERLINE;
 					if_OPT_ISO_COLORS(screen,{setExtendedFG();})
 					break;
 				 case 25: /* reset 'blink' */

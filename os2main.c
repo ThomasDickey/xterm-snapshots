@@ -107,7 +107,6 @@ char *ttyname(int fd) { return "/dev/tty"; }
 
 static SIGNAL_T reapchild (int n);
 static char *base_name (char *name);
-static int remove_termcap_entry (char *buf, char *str);
 static int spawn (void);
 static void get_terminal (void);
 static void resize (TScreen *s, char *oldtc, char *newtc);
@@ -1767,26 +1766,6 @@ static SIGNAL_T reapchild (int n GCC_UNUSED)
     } while ( (pid=nonblocking_wait()) > 0);
 
     SIGNAL_RETURN;
-}
-
-static int
-remove_termcap_entry (char *buf, char *str)
-{
-    register char *strinbuf;
-
-    strinbuf = strindex (buf, str);
-    if (strinbuf) {
-        register char *colonPtr = strchr(strinbuf+1, ':');
-        if (colonPtr) {
-            while (*colonPtr) {
-                *strinbuf++ = *colonPtr++;      /* copy down */
-            }
-            *strinbuf = '\0';
-        } else {
-            strinbuf[1] = '\0';
-        }
-    }
-    return 0;
 }
 
 /*

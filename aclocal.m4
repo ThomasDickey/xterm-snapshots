@@ -693,23 +693,34 @@ AC_DEFUN([CF_VERBOSE],
 [test -n "$verbose" && echo "	$1" 1>&AC_FD_MSG
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl Check if xterm is installed setuid, assume we want to do the same on a
+dnl Check if xterm is installed setuid/setgid, assume we want to do the same on a
 dnl new install
 AC_DEFUN([CF_XTERM_MODE],[
 AC_PATH_PROG(XTERM_PATH,xterm)
 XTERM_MODE=755
+XTERM_USR=
+XTERM_GRP=
 AC_MSG_CHECKING(for presumed installation-mode)
 if test -f "$XTERM_PATH" ; then
-	ls -Ll $XTERM_PATH >conftest.out
-	read cf_mode cf_rest <conftest.out
+	ls -Llg $XTERM_PATH >conftest.out
+	read cf_mode cf_links XTERM_USR XTERM_GRP cf_rest <conftest.out
 	case ".$cf_mode" in #(vi
-	.???s*)
+	.???s*) #(vi
 		XTERM_MODE=4711
+		;;
+	.??????s*)
+		XTERM_MODE=2711
 		;;
 	esac
 fi
-AC_MSG_RESULT($XTERM_MODE)
+test "$XTERM_USR" = "root" && XTERM_USR=""
+test "$XTERM_GRP" = "root" && XTERM_GRP=""
+AC_MSG_RESULT($XTERM_MODE $XTERM_USR $XTERM_GRP)
+test -n "$XTERM_USR" && XTERM_USR="-o $XTERM_USR"
+test -n "$XTERM_GRP" && XTERM_GRP="-g $XTERM_GRP"
 AC_SUBST(XTERM_MODE)
+AC_SUBST(XTERM_USR)
+AC_SUBST(XTERM_GRP)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for Xaw (Athena) libraries
@@ -726,21 +737,77 @@ AC_ARG_WITH(neXtaw,
 	[  --with-neXtaw           link with neXT Athena library],
 	[cf_x_athena=neXtaw])
 
-AC_CHECK_HEADERS(X11/$cf_x_athena/SimpleMenu.h)
 
 AC_CHECK_LIB(Xext,XextCreateExtension,
 	[LIBS="-lXext $LIBS"])
 
-AC_CHECK_LIB(Xmu, XmuClientWindow,,[
-AC_CHECK_LIB(Xmu_s, XmuClientWindow)])
+cf_x_athena_include=""
+cf_x_athena_lib=""
 
-AC_CHECK_LIB($cf_x_athena, XawSimpleMenuAddGlobalActions,
-	[LIBS="-l$cf_x_athena $LIBS"],[
-AC_CHECK_LIB(${cf_x_athena}_s, XawSimpleMenuAddGlobalActions,
-	[LIBS="-l${cf_x_athena}_s $LIBS"],
+for cf_path in default \
+	/usr/contrib/X11R6 \
+	/usr/contrib/X11R5 \
+	/usr/lib/X11R5
+do
+
+	if test -z "$cf_x_athena_include" ; then
+		cf_save="$CFLAGS"
+		cf_test=X11/$cf_x_athena/SimpleMenu.h
+		if test $cf_path != default ; then
+			CFLAGS="-I$cf_path/include $cf_save"
+			AC_MSG_CHECKING(for $cf_test in $cf_path)
+		else
+			AC_MSG_CHECKING(for $cf_test)
+		fi
+		AC_TRY_COMPILE([
+#include <X11/Intrinsic.h>
+#include <$cf_test>],[],
+			[cf_result=yes],
+			[cf_result=no])
+		AC_MSG_RESULT($cf_result)
+		if test "$cf_result" = yes ; then
+			cf_x_athena_include=$cf_path
+		else
+			CFLAGS="$cf_save"
+		fi
+	fi
+
+	for cf_lib in "-l$cf_x_athena -lXmu" "-l${cf_x_athena}_s -lXmu_s"
+	do
+		if test -z "$cf_x_athena_lib" ; then
+			cf_save="$LIBS"
+			cf_test=XawSimpleMenuAddGlobalActions
+			if test $cf_path != default ; then
+				LIBS="-L$cf_path/lib $cf_lib $LIBS"
+				AC_MSG_CHECKING(for $cf_lib in $cf_path)
+			else
+				LIBS="$cf_lib $LIBS"
+				AC_MSG_CHECKING(for $cf_test in $cf_lib)
+			fi
+			AC_TRY_LINK([],[$cf_test()],
+				[cf_result=yes],
+				[cf_result=no],
+				[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])
+			AC_MSG_RESULT($cf_result)
+			if test "$cf_result" = yes ; then
+				cf_x_athena_lib="$cf_lib"
+			else
+				LIBS="$cf_save"
+			fi
+		fi
+	done
+done
+
+if test -z "$cf_x_athena_include" ; then
+	AC_MSG_WARN(
+[Unable to successfully find Athena header files with test program])
+fi
+
+if test -z "$cf_x_athena_lib" ; then
 	AC_ERROR(
-[Unable to successfully link Athena library (-l$cf_x_athena) with test program]),
-	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])])
+[Unable to successfully link Athena library (-l$cf_x_athena) with test program])
+fi
+
 CF_UPPER(CF_X_ATHENA_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($CF_X_ATHENA_LIBS)
 ])dnl

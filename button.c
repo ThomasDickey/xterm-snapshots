@@ -1745,20 +1745,21 @@ _OwnSelection(
 	  case XA_CUT_BUFFER7: cutbuffer = 7; break;
 	  default:	       cutbuffer = -1;
 	}
-	if (cutbuffer >= 0)
+	if (cutbuffer >= 0) {
 	    if ( termw->screen.selection_length >
-		 4*XMaxRequestSize(XtDisplay((Widget)termw))-32)
+		 4*XMaxRequestSize(XtDisplay((Widget)termw))-32) {
 		fprintf(stderr,
 			"%s: selection too big (%d bytes), not storing in CUT_BUFFER%d\n",
 			xterm_name, termw->screen.selection_length, cutbuffer);
-	    else
+	    } else {
 	      /* Cutbuffers are untyped, so in the wide chars case, we
 		 just store the raw UTF-8 data.	 It is unlikely it
 		 will be useful to anyone. */
 		XStoreBuffer( XtDisplay((Widget)termw),
 			      termw->screen.selection_data,
 			      termw->screen.selection_length, cutbuffer );
-	else if (!replyToEmacs) {
+	    }
+	} else if (!replyToEmacs) {
 	    have_selection |=
 		XtOwnSelection( (Widget)termw, atoms[i],
 			    termw->screen.selection_time,

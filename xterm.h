@@ -108,7 +108,7 @@ extern void free();
 #endif
 
 #include <errno.h>
-#ifdef DECL_ERRNO
+#if defined(DECL_ERRNO) && !defined(errno)
 extern int errno;
 #endif
 
