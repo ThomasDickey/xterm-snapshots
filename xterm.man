@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.85 2002/08/24 18:54:39 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.86 2002/09/30 00:39:07 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - August 2002.
 .TH XTERM 1 __vendorversion__
@@ -278,6 +278,19 @@ Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to TRUE.
 This sets classes indicated by the given ranges for using in selecting by
 words.  See the section specifying character classes.
 .TP 8
+.B "\-cjk_width"
+Set the \fBcjkWidth\fP resource to ``true''.
+When turned on, characters with East Asian Ambiguous (A) category in UTR 11
+have a column width of 2.
+Othrwise, they have a column width of 1.
+This may be useful for some legacy CJK text
+terminal-based programs assuming box drawings and others to have a column
+width of 2.
+The default is ``false''
+.TP 8
+.B "+cjk_width"
+Reset the \fBcjkWidth\fP resource.
+.TP 8
 .BI \-class " string"
 This option allows you to override \fIxterm\fP's resource class.
 Normally it is ``XTerm'', but
@@ -443,6 +456,11 @@ Turn on the \fBuseInsertMode\fP resource.
 .TP 8
 .B +im
 Turn off the \fBuseInsertMode\fP resource.
+.TP 8
+.BI \-into windowId
+Given an X window identifier (a decimal integer), 
+xterm will reparent its top-level shell widget to that window.
+This is used to embed xterm within other applications.
 .TP 8
 .B \-j
 This option indicates that \fIxterm\fP should do jump scrolling.  Normally,
@@ -1117,6 +1135,15 @@ Specifies comma-separated lists of character class bindings of the form
 sets of characters should be treated the same when doing cut and paste.
 See the section on specifying character classes.
 .TP 8
+.B "cjkWidth (\fPclass\fB CjkWidth)"
+Specifies whether \fIxterm\fP should follow
+the traditional East Asian width convention.
+When turned on, characters with East Asian Ambiguous (A) category in UTR 
+11 have a column width of 2.
+You may have to set this option to ``true''
+if you have some old East Asian terminal based programs that assume that 
+line-drawing characters have a column width of 2. 
+.TP 8
 .B "curses (\fPclass\fB Curses)"
 Specifies whether or not the last column bug in
 .IR more (1)
@@ -1196,8 +1223,8 @@ yellow, blue, magenta, cyan, and white.
 .TP 8
 through
 .TP 8
-.B "color255 \fPclass\fB Color255)"
-These specify the colors for the 256-color extension.  The defaults for
+.B "color255 (\fPclass\fB Color255)"
+These specify the colors for the 256-color extension.  The defaults
 are for colors 16 through 231 to make a 6x6x6 color cube, and colors
 232 through 255 to make a grayscale ramp.
 .TP 8

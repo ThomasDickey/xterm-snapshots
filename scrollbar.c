@@ -2,7 +2,7 @@
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.33 2002/04/28 19:04:21 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.34 2002/09/30 00:39:06 dickey Exp $ */
 
 /*
  * Copyright 2000-2001,2002 by Thomas E. Dickey
@@ -183,7 +183,7 @@ ResizeScreen(XtermWidget xw, int min_width, int min_height)
 		  XtNheightInc, FontHeight(screen),
 		  XtNminWidth, min_width + FontWidth(screen),
 		  XtNminHeight, min_height + FontHeight(screen),
-		  NULL);
+		  (XtPointer) 0);
 
     reqWidth = screen->fullVwin.f_width * (screen->max_col + 1) + min_width;
     reqHeight = screen->fullVwin.f_height * (screen->max_row + 1) + min_height;
@@ -435,7 +435,7 @@ ScrollBarOn(XtermWidget xw, int init, int doalloc)
 	&& screen->fullVwin.fullwidth < term->core.width)
 	XtVaSetValues(screen->scrollWidget,
 		      XtNx, screen->fullVwin.fullwidth - screen->scrollWidget->core.border_width,
-		      NULL);
+		      (XtPointer) 0);
 #endif
 
     XtMapWidget(screen->scrollWidget);

@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.97 2002/08/24 18:54:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.98 2002/09/30 00:39:06 dickey Exp $ */
 
 /*
  * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
@@ -658,7 +658,7 @@ typedef struct {
 
 /* Define a fake XK code, we need it for the fake color response in
  * xtermcapKeycode(). */
-#ifdef OPT_TCAP_QUERY
+#if OPT_TCAP_QUERY
 # define XK_COLORS 0x0003
 #endif
 
@@ -1314,7 +1314,7 @@ typedef struct {
 	XftFont		*renderFontBold;
 	XftDraw		*renderDraw;
 #endif
-#ifdef OPT_INPUT_METHOD
+#if OPT_INPUT_METHOD
 	XFontSet	fs;		/* fontset for XIM preedit */
 	int		fs_ascent;	/* ascent of fs */
 #endif
@@ -1375,6 +1375,7 @@ typedef struct _Misc {
 #if OPT_WIDE_CHARS
     char *f_w;
     char *f_wb;
+    Boolean	cjk_width;	/* true when CJK width convention is turned on */
 #endif
 #if OPT_LUIT_PROG
     Boolean callfilter;		/* true to invoke luit */

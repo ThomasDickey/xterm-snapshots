@@ -5,7 +5,7 @@
 .\"
 .\"
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.46 2002/08/24 18:26:36 dickey Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.47 2002/09/29 22:58:38 dickey Exp $
 .\"
 .\"
 .\" Copyright 1996-2001,2002 by Thomas E. Dickey
@@ -220,7 +220,7 @@
 .[] & &
 .[] ^ ^
 .[] _ _
-.[] qu \'
+.[] qu \&'
 .[] ` \`
 .[] a a
 .[] b b
@@ -432,13 +432,13 @@ Controls beginning with ESC (other than those where ESC is part of a 7-bit equiv
 8-bit controls (S8C1T).
 .
 .IP \\*(Es\\*(Sp\\*L
-Set ANSI conformance level 1 (vt100, 7-bit controls).
+Set ANSI conformance level 1 (VT100, 7-bit controls).
 .
 .IP \\*(Es\\*(Sp\\*M
-Set ANSI conformance level 2 (vt200).
+Set ANSI conformance level 2 (VT200).
 .
 .IP \\*(Es\\*(Sp\\*N
-Set ANSI conformance level 3 (vt300).
+Set ANSI conformance level 3 (VT300).
 .
 .IP \\*(Es\\*#\\*3
 DEC double-height line, top half (DECDHL)
@@ -683,7 +683,7 @@ Repeat the preceding graphic character \*(Ps times (REP)
 .IP \\*(Cs\\*(Ps\\*s\\*c
 Send Device Attributes (Primary DA)
   \*(Ps = \*0, 1 or omitted \(-> request attributes from terminal.
-The response depends on the \fBdecTerminalId\fP resource setting.
+The response depends on the \fBdecTerminalID\fP resource setting.
   \(-> \*(Cs\*?\*1\*;\*2\*c (``VT100 with Advanced Video Option'')
   \(-> \*(Cs\*?\*1\*;\*0\*c (``VT101 with No Options'')
   \(-> \*(Cs\*?\*6\*c (``VT102'')
@@ -697,13 +697,15 @@ VT220 parameters do, telling the host what features the terminal supports:
   \(-> \*8 User-defined keys
   \(-> \*9 National replacement character sets
   \(-> \*1\*5 Technical characters
+  \(-> \*2\*2 ANSI color, e.g., VT525
+  \(-> \*2\*9 ANSI text locator (i.e., DEC Locator mode)
 .
 .IP \\*(Cs\\*>\\*(Ps\\*s\\*c
 Send Device Attributes (Secondary DA)
   \*(Ps = \*0, 1 or omitted \(-> request the terminal's identification code.
-The response depends on the \fBdecTerminalId\fP resource setting.
+The response depends on the \fBdecTerminalID\fP resource setting.
 It should apply only to VT220 and up, but \fIxterm\fP extends this to VT100.
-  \(-> \*(Cs\*(Pp\*s\*;\*(Pv\*s\*;\*(Pc\*s\*c
+  \(-> \*(Cs\*s\*>\*(Pp\*s\*;\*(Pv\*s\*;\*(Pc\*s\*c
 .br
 where \*(Pp denotes the terminal type
   \(-> \*0 (``VT100'')
@@ -943,6 +945,9 @@ or
 .br
 \*(Cs\*?\*2\*7\*s\*;\*s\*1\*s\*;\*s\*0\*s\*;\*s\*0\*s\*n (North American)
 .br
+The last two parameters apply to VT400 & up, and denote keyboard ready and LK01 respectively.
+  \*(Ps = \*5\*3 \(-> Report Locator status as
+.br
 \*(Cs\*?\*5\*3\*s\*n Locator available, if compiled-in, or
 .br
 \*(Cs\*?\*5\*0\*s\*n No Locator, if not.
@@ -1030,6 +1035,17 @@ DECELR always cancels any prevous rectangle definition.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*x
 Request Terminal Parameters (DECREQTPARM)
+.br
+if \*(Ps is a "0" (default) or "1", and \fBxterm\fR is emulating VT100,
+the control sequence elicits a response of the same form
+whose parameters describe the terminal:
+  \*(Ps \(-> the given \*(Ps incremented by 2.
+  \*1 \(-> no parity
+  \*1 \(-> eight bits
+  \*1 \*2 \*8 \(-> transmit 38.4k baud
+  \*1 \*2 \*8 \(-> receive 38.4k baud
+  \*1 \(-> clock multiplier
+  \*0 \(-> STP flags
 .
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Pu\\*s\\*(qu\\*z
 Enable Locator Reporting (DECELR)
@@ -1118,18 +1134,45 @@ and window title.
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt
   \*(Ps = \*3 \(-> Set X property on top-level window. \*(Pt should be in the form
 "\fIprop=value\fP", or just "\fIprop\fP" to delete the property
-  \*(Ps = \*4 ; \fIc ; name\fP \(-> Change Color #\fIc\fP to \fIcname\fP.  Any
-number of \fIc name\fP pairs may be given.
-  \*(Ps = \*1\*0 \(-> Change color names starting with text foreground to \*(Pt
-(a list of one or more color names or RGB specifications, separated by
-semicolon, up to eight, as per \fIXParseColor\fP).
-  \*(Ps = \*1\*1 \(-> Change colors starting with text background to \*(Pt
-  \*(Ps = \*1\*2 \(-> Change colors starting with text cursor to \*(Pt
-  \*(Ps = \*1\*3 \(-> Change colors starting with mouse foreground to \*(Pt
-  \*(Ps = \*1\*4 \(-> Change colors starting with mouse background to \*(Pt
-  \*(Ps = \*1\*5 \(-> Change colors starting with Tek foreground to \*(Pt
-  \*(Ps = \*1\*6 \(-> Change colors starting with Tek background to \*(Pt
-  \*(Ps = \*1\*7 \(-> Change colors starting with highlight to \*(Pt
+  \*(Ps = \*4 ; \fIc ; spec\fP \(-> Change Color Number \fIc\fP to
+the color specified by \fIspec\fP,
+i.e., a name or RGB specification as per \fIXParseColor\fP.
+Any number of \fIc name\fP pairs may be given.
+The color numbers correspond to the ANSI colors 0-7,
+their bright versions 8-15,
+and if supported, the remainder of the 88-color or 256-color table.
+.sp
+If a "?" is given rather than a name or RGB specification,
+xterm replies with a control sequence of the same form which can be used
+to set the corresponding color.
+Because more than one pair of color number and specification can
+be given in one control sequence, \fBxterm\fR can make more than one reply.
+.sp
+The 8 colors which may be set using \*1\*0 through \*1\*7 are
+denoted \fIdynamic colors\fR, since the corresponding control sequences
+were the first means for setting \fBxterm\fR's colors dynamically,
+i.e., after it was started.
+They are not the same as the ANSI colors.
+One or more parameters is expected for \*(Pt.
+Each succesive parameter changes the next color in the list.
+The value of \*(Ps tells the starting point in the list.
+The colors are specified by name or RGB specification as per \fIXParseColor\fP.
+.sp
+If a "?" is given rather than a name or RGB specification,
+xterm replies with a control sequence of the same form which can be used
+to set the corresponding dynamic color.
+Because more than one pair of color number and specification can
+be given in one control sequence, \fBxterm\fR can make more than one reply.
+.sp
+  \*(Ps = \*1\*0 \(-> Change vt100 text foreground color to \*(Pt
+  \*(Ps = \*1\*1 \(-> Change vt100 text background color to \*(Pt
+  \*(Ps = \*1\*2 \(-> Change text cursor color to \*(Pt
+  \*(Ps = \*1\*3 \(-> Change mouse foreground color to \*(Pt
+  \*(Ps = \*1\*4 \(-> Change mouse background color to \*(Pt
+  \*(Ps = \*1\*5 \(-> Change Tektronix foreground color to \*(Pt
+  \*(Ps = \*1\*6 \(-> Change Tektronix background color to \*(Pt
+  \*(Ps = \*1\*7 \(-> Change highlight color to \*(Pt
+.sp
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt (normally disabled by a
 compile-time option)
   \*(Ps = \*5\*0 \(-> Set Font to \*(Pt
@@ -1387,7 +1430,7 @@ Sun-Style Function Keys
 .LP
 The \fIxterm\fP program provides support for Sun keyboards more directly, by
 a menu toggle that causes it to send Sun-style function key codes rather than VT220.
-Note, however, that the \fIsun\fP and \fIvt100\fP emulations are not really
+Note, however, that the \fIsun\fP and \fIVt100\fP emulations are not really
 compatible.  For example, their wrap-margin behavior differs.
 .LP
 Only function keys are altered; keypad and cursor keys are the same.
@@ -1468,7 +1511,10 @@ and is not necessarily the "Meta" key (see \fIxmodmap\fP).
 in X10 mode.
 
 Wheel mice may return buttons 4 and 5.
-Those buttons are represented by adding 64 to the event code.
+Those buttons are represented by the same event codes
+as buttons 1 and 2 respectively,
+except that 64 is added to the event code.
+Release events for the wheel buttons are not reported.
 
 Mouse hilite tracking notifies a program of a button press, receives a
 range of lines from the program, highlights the region covered by

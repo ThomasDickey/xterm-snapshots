@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.69 2002/06/01 00:54:49 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.70 2002/09/30 00:39:06 dickey Exp $ */
 
 /*
  *
@@ -591,6 +591,31 @@ HandleBellPropertyChange(
     }
 }
 
+Window
+WMFrameWindow(XtermWidget termw)
+{
+    Window win_root, win_current, *children;
+    Window win_parent = 0;
+    unsigned int nchildren;
+
+    win_current = XtWindow(termw);
+
+    /* find the parent which is child of root */
+    do {
+	if (win_parent)
+	    win_current = win_parent;
+	XQueryTree((&termw->screen)->display,
+		   win_current,
+		   &win_root,
+		   &win_parent,
+		   &children,
+		   &nchildren);
+	XFree(children);
+    } while (win_root != win_parent);
+
+    return win_current;
+}
+
 #if OPT_MAXIMIZE
 /*ARGSUSED*/
 void
@@ -677,7 +702,6 @@ RequestMaximize(XtermWidget termw, int maximize)
 {
     register TScreen *screen = &termw->screen;
     XWindowAttributes win_attrs;
-    Position root_x, root_y;
     unsigned root_width, root_height;
 
     if (maximize) {
@@ -685,16 +709,15 @@ RequestMaximize(XtermWidget termw, int maximize)
 	if (QueryMaximize(screen, &root_width, &root_height)) {
 
 	    if (XGetWindowAttributes(screen->display,
-				     VShellWindow,
+				     WMFrameWindow(termw),
 				     &win_attrs)) {
-		XtTranslateCoords(toplevel, 0, 0, &root_x, &root_y);
 
 		if (screen->restore_data != True
 		    || screen->restore_width != root_width
 		    || screen->restore_height != root_height) {
 		    screen->restore_data = True;
-		    screen->restore_x = root_x - win_attrs.x;
-		    screen->restore_y = root_y - win_attrs.y;
+		    screen->restore_x = win_attrs.x;
+		    screen->restore_y = win_attrs.y;
 		    screen->restore_width = win_attrs.width;
 		    screen->restore_height = win_attrs.height;
 		    TRACE(("HandleMaximize: save window position %d,%d size %d,%d\n",
@@ -1033,7 +1056,7 @@ StartLog(register TScreen * screen)
 	    setgid(screen->gid);
 	    setuid(screen->uid);
 
-	    execl(shell, shell, "-c", &screen->logfile[1], 0);
+	    execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
 
 	    fprintf(stderr, "%s: Can't exec `%s'\n", xterm_name,
 		    &screen->logfile[1]);
@@ -1225,10 +1248,9 @@ find_closest_color(Display * display, Colormap cmap, XColor * def)
 }
 
 static Boolean
-AllocateAnsiColor(
-		     XtermWidget pTerm,
-		     ColorRes * res,
-		     char *spec)
+AllocateAnsiColor(XtermWidget pTerm,
+		  ColorRes * res,
+		  char *spec)
 {
     XColor def;
     register TScreen *screen = &pTerm->screen;
@@ -1238,7 +1260,8 @@ AllocateAnsiColor(
 	&& (XAllocColor(screen->display, cmap, &def)
 	    || find_closest_color(screen->display, cmap, &def))) {
 	SET_COLOR_RES(res, def.pixel);
-	TRACE(("AllocateAnsiColor %s (pixel %#lx)\n", spec, def.pixel));
+	TRACE(("AllocateAnsiColor[%d] %s (pixel %#lx)\n",
+	       (res - screen->Acolors), spec, def.pixel));
 	return (TRUE);
     }
     TRACE(("AllocateAnsiColor %s (failed)\n", spec));
@@ -1250,6 +1273,8 @@ Pixel
 xtermGetColorRes(ColorRes * res)
 {
     if (!res->mode) {
+	TRACE(("xtermGetColorRes for Acolors[%d]\n",
+	       res - term->screen.Acolors));
 	if (AllocateAnsiColor(term, res, res->resource)) {
 	    res->mode = True;
 	} else {
@@ -1293,12 +1318,15 @@ ChangeAnsiColorRequest(
 	}
 	if (!strcmp(name, "?"))
 	    ReportAnsiColorRequest(pTerm, color, final);
-	else if (!AllocateAnsiColor(pTerm, &(pTerm->screen.Acolors[color]), name))
-	    break;
-	/* FIXME:  free old color somehow?  We aren't for the other color
-	 * change style (dynamic colors).
-	 */
-	r = True;
+	else {
+	    TRACE(("ChangeAnsiColor for Acolors[%d]\n", color));
+	    if (!AllocateAnsiColor(pTerm, &(pTerm->screen.Acolors[color]), name))
+		break;
+	    /* FIXME:  free old color somehow?  We aren't for the other color
+	     * change style (dynamic colors).
+	     */
+	    r = True;
+	}
     }
     if (r)
 	ChangeAnsiColors(pTerm);
@@ -2089,6 +2117,8 @@ Cleanup(int code)
 	    Sleep(10);
 	}
     }
+
+    XtVaSetValues(toplevel, XtNjoinSession, False);
 
     if (screen->pid > 1) {
 	(void) kill_process_group(screen->pid, SIGHUP);

@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.156 2002/08/24 18:54:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.158 2002/09/30 00:39:06 dickey Exp $ */
 
 /* main.c */
 
@@ -125,6 +125,7 @@ SOFTWARE.
 
 #if OPT_WIDE_CHARS
 #include <charclass.h>
+#include <wcwidth.h>
 #endif
 
 #ifdef AMOEBA
@@ -357,6 +358,12 @@ ttyslot()
 #define ttyslot() 1
 #endif /* apollo */
 
+#if defined(UTMPX_FOR_UTMP)
+#define UTMP_STR utmpx
+#else
+#define UTMP_STR utmp
+#endif
+
 #if defined(USE_UTEMPTER)
 
 #include <utempter.h>
@@ -444,14 +451,14 @@ extern char *ttyname();
 extern char *ptsname(int);
 #endif
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
     extern int tgetent(char *ptr, char *name);
     extern char *tgetstr(char *name, char **ptr);
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 #ifndef VMS
@@ -941,6 +948,8 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_WIDE_CHARS
 {"-wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-cjk_width",	"*cjkWidth",		XrmoptionNoArg,	(caddr_t) "on"},
+{"+cjk_width",	"*cjkWidth",		XrmoptionNoArg,	(caddr_t) "off"},
 #endif
 {"-wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -956,8 +965,9 @@ static XrmOptionDescRec optionDescList[] = {
 {"-version",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
 {"-class",	NULL,		XrmoptionSkipArg,	(caddr_t) NULL},
 {"-e",		NULL,		XrmoptionSkipLine,	(caddr_t) NULL},
+{"-into",	NULL,		XrmoptionSkipArg,	(caddr_t) NULL},
 /* bogus old compatibility stuff for which there are
-   standard XtAppInitialize options now */
+   standard XtOpenApplication options now */
 {"%",		"*tekGeometry",	XrmoptionStickyArg,	(caddr_t) NULL},
 {"#",		".iconGeometry",XrmoptionStickyArg,	(caddr_t) NULL},
 {"-T",		".title",	XrmoptionSepArg,	(caddr_t) NULL},
@@ -1083,6 +1093,7 @@ static OptionHelp options[] = {
 { "-/+pob",                "turn on/off pop on bell" },
 #if OPT_WIDE_CHARS
 { "-/+wc",                 "turn on/off wide-character mode" },
+{ "-/+cjk_width",          "turn on/off legacy CJK width convention" },
 #endif
 { "-/+wf",                 "turn on/off wait for map before command exec" },
 { "-e command args ...",   "command to execute" },
@@ -1098,6 +1109,7 @@ static OptionHelp options[] = {
 { "-C",                    "intercept console messages (not supported)" },
 #endif
 { "-Sccn",                 "slave mode on \"ttycc\", file descriptor \"n\"" },
+{ "-into windowId",        "use the window id given to -into as the parent window rather than the default root window" },
 #if OPT_ZICONBEEP
 { "-ziconbeep percent",    "beep and flag icon of window having hidden output" },
 #endif
@@ -1286,6 +1298,28 @@ Arg ourTopLevelShellArgs[] =
 int number_ourTopLevelShellArgs = 2;
 
 Bool waiting_for_initial_map;
+
+static void
+die_callback(Widget w GCC_UNUSED,
+	     XtPointer client_data GCC_UNUSED,
+	     XtPointer call_data GCC_UNUSED)
+{
+    Cleanup(0);
+}
+
+static void
+save_callback(Widget w GCC_UNUSED,
+	      XtPointer client_data GCC_UNUSED,
+	      XtPointer call_data)
+{
+    XtCheckpointToken token = (XtCheckpointToken) call_data;
+    /* we have nothing to save */
+    token->save_success = True;
+}
+
+#if OPT_WIDE_CHARS
+int (*my_wcwidth) (wchar_t);
+#endif
 
 /*
  * DeleteWindow(): Action proc to implement ICCCM delete_window.
@@ -1503,6 +1537,7 @@ main(int argc, char *argv[]ENVP_ARG)
     register TScreen *screen;
     int mode;
     char *my_class = DEFCLASS;
+    Window winToEmbedInto = None;
 
 #ifndef AMOEBA
     /* extra length in case longer tty name like /dev/ttyq255 */
@@ -1534,7 +1569,7 @@ main(int argc, char *argv[]ENVP_ARG)
     /* Do these first, since we may not be able to open the display */
     ProgramName = argv[0];
     TRACE_OPTS(options, optionDescList, XtNumber(optionDescList));
-    TRACE_ARGV("Before XtAppInitialize", argv);
+    TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
 	int n;
 	int unique = 2;
@@ -1851,11 +1886,12 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 
 	XtSetErrorHandler(xt_error);
-	toplevel = XtAppInitialize(&app_con, my_class,
-				   optionDescList,
-				   XtNumber(optionDescList),
-				   &argc, argv, fallback_resources,
-				   NULL, 0);
+	toplevel = XtOpenApplication(&app_con, my_class,
+				     optionDescList,
+				     XtNumber(optionDescList),
+				     &argc, argv, fallback_resources,
+				     sessionShellWidgetClass,
+				     NULL, 0);
 	XtSetErrorHandler((XtErrorHandler) 0);
 
 	XtGetApplicationResources(toplevel, (XtPointer) & resource,
@@ -1951,7 +1987,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 
     /* Parse the rest of the command line */
-    TRACE_ARGV("After XtAppInitialize", argv);
+    TRACE_ARGV("After XtOpenApplication", argv);
     for (argc--, argv++; argc > 0; argc--, argv++) {
 	if (**argv != '-')
 	    Syntax(*argv);
@@ -2001,6 +2037,17 @@ main(int argc, char *argv[]ENVP_ARG)
 		Syntax(*argv);
 	    command_to_exec = ++argv;
 	    break;
+	case 'i':
+	    if (argc <= 1) {
+		Syntax(*argv);
+	    } else {
+		char *endPtr;
+		--argc;
+		++argv;
+		winToEmbedInto = (Window) strtol(argv[0], &endPtr, 10);
+	    }
+	    break;
+
 	default:
 	    Syntax(*argv);
 	}
@@ -2019,7 +2066,7 @@ main(int argc, char *argv[]ENVP_ARG)
 						 XtNright, XawChainRight,
 						 XtNbottom, XawChainBottom,
 #endif
-						 0);
+						 (XtPointer) 0);
     /* this causes the initialize method to be called */
 
 #if OPT_HP_FUNC_KEYS
@@ -2043,6 +2090,15 @@ main(int argc, char *argv[]ENVP_ARG)
     if (term->misc.tekInhibit)
 	inhibit |= I_TEK;
 #endif
+
+#if OPT_WIDE_CHARS
+    my_wcwidth = &mk_wcwidth;
+    if (term->misc.cjk_width)
+	my_wcwidth = &mk_wcwidth_cjk;
+#endif
+
+    XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
+    XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
 
 /*
  * Set title and icon name if not specified
@@ -2244,6 +2300,19 @@ main(int argc, char *argv[]ENVP_ARG)
 	StartLog(screen);
     }
 #endif
+
+    if (winToEmbedInto != None) {
+	XtRealizeWidget(toplevel);
+	/*
+	 * This should probably query the tree or check the attributes of
+	 * winToEmbedInto in order to verify that it exists, but I'm still not
+	 * certain what is the best way to do it -GPS
+	 */
+	XReparentWindow(XtDisplay(toplevel),
+			XtWindow(toplevel),
+			winToEmbedInto, 0, 0);
+    }
+
     for (;;) {
 #if OPT_TEK4014
 	if (screen->TekEmu)
@@ -2716,13 +2785,9 @@ spawn(void)
     struct passwd *pw = NULL;
     char *login_name = NULL;
 #ifdef HAVE_UTMP
-#if defined(UTMPX_FOR_UTMP)
-    struct utmpx utmp;
-#else
-    struct utmp utmp;
-#endif
+    struct UTMP_STR utmp;
 #ifdef USE_SYSV_UTMP
-    struct utmp *utret;
+    struct UTMP_STR *utret;
 #endif
 #ifdef USE_LASTLOG
     struct lastlog lastlog;
@@ -3141,7 +3206,7 @@ spawn(void)
 		/* Now is the time to set up our process group and
 		 * open up the pty slave.
 		 */
-#ifdef	USE_SYSV_PGRP
+#ifdef USE_SYSV_PGRP
 #if defined(CRAY) && (OSMAJORVERSION > 5)
 		(void) setsid();
 #else
@@ -3167,7 +3232,7 @@ spawn(void)
 			/* make /dev/tty work */
 			ioctl(tty, TCSETCTTY, 0);
 #endif
-#ifdef	USE_SYSV_PGRP
+#ifdef USE_SYSV_PGRP
 			/* We need to make sure that we are actually
 			 * the process group leader for the pty.  If
 			 * we are, then we should now be able to open
@@ -4071,9 +4136,11 @@ spawn(void)
 
 #ifdef USE_LOGIN_DASH_P
 	    if (term->misc.login_shell && pw && added_utmp_entry)
-		execl(bin_login, "login", "-p", "-f", login_name, 0);
+		execl(bin_login, "login", "-p", "-f", login_name, (void *) 0);
 #endif
-	    execlp(ptr, (term->misc.login_shell ? shname_minus : shname), 0);
+	    execlp(ptr,
+		   (term->misc.login_shell ? shname_minus : shname),
+		   (void *) 0);
 
 	    /* Exec failed. */
 	    fprintf(stderr, "%s: Could not exec %s: %s\n", xterm_name,
@@ -4587,13 +4654,8 @@ Exit(int n)
 	removeFromUtmp();
 #elif defined(HAVE_UTMP)
 #ifdef USE_SYSV_UTMP
-#if defined(UTMPX_FOR_UTMP)
-    struct utmpx utmp;
-    struct utmpx *utptr;
-#else
-    struct utmp utmp;
-    struct utmp *utptr;
-#endif
+    struct UTMP_STR utmp;
+    struct UTMP_STR *utptr;
 #if defined(WTMP) && !defined(SVR4) && !(defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
     int fd;			/* for /etc/wtmp */
 #endif

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XFree86: xc/programs/xterm/vttests/doublechars.sh,v 1.3 2000/10/27 18:31:17 dawes Exp $
+# $XFree86: xc/programs/xterm/vttests/doublechars.sh,v 1.4 2002/09/30 00:39:08 dickey Exp $
 #
 # -- Thomas Dickey (1999/7/7)
 # Illustrate the use of double-size characters by drawing successive lines in
@@ -13,6 +13,8 @@ CMD='echo'
 OPT='-n'
 SUF=''
 TMP=/tmp/xterm$$
+eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
+( test ! -f $TMP || test -s $TMP ) &&
 for verb in printf print ; do
     rm -f $TMP
     eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.14 2001/11/05 02:07:16 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.15 2002/09/30 00:39:06 dickey Exp $
  */
 
 /************************************************************
@@ -187,7 +187,7 @@ TraceTranslations(const char *name, Widget w)
 	XtVaGetValues(w,
 		      XtNtranslations, &xlations,
 		      XtNaccelerators, &xcelerat,
-		      NULL);
+		      (XtPointer) 0);
 	TRACE(("... xlations %#08lx\n", (long) xlations));
 	TRACE(("... xcelerat %#08lx\n", (long) xcelerat));
 	result = _XtPrintXlations(w, xlations, xcelerat, True);
@@ -365,7 +365,7 @@ TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_co
 	}
     }
 
-    TRACE(("Resource list items that will be ignored by XtAppInitialize:\n"));
+    TRACE(("Resource list items that will be ignored by XtOpenApplication:\n"));
     for (j = 0; j < res_count; j++) {
 	switch (res_array[j].argKind) {
 	case XrmoptionSkipArg:

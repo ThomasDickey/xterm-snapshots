@@ -3,9 +3,11 @@
 !
 !
 !
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.23 2002/08/12 00:36:32 dickey Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.24 2002/09/30 00:39:05 dickey Exp $
 
-XTerm.JoinSession:False
+! This is nonsense: if the xterm has no session management capabilities,
+! it is useless, and if it does, it is harmful.
+!XTerm.JoinSession:False
 
 *SimpleMenu*BackingStore: NotUseful
 *SimpleMenu*menuLabel.font: -adobe-helvetica-bold-r-normal--*-120-*-*-*-*-iso8859-*
