@@ -1,5 +1,5 @@
 /* $XConsortium: button.c /main/75 1996/11/29 10:33:33 swick $ */
-/* $XFree86: xc/programs/xterm/button.c,v 3.12 1997/05/23 09:19:46 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.13 1997/06/29 07:54:40 dawes Exp $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
@@ -542,6 +542,7 @@ StartSelect(startrow, startcol)
 {
 	TScreen *screen = &term->screen;
 
+	TRACE(("StartSelect row=%d, col=%d\n", startrow, startcol))
 	if (screen->cursor_state)
 	    HideCursor ();
 	if (numberOfClicks == 1) {
@@ -711,6 +712,7 @@ ExtendExtend (row, col)
 {
 	int coord = Coordinate(row, col);
 	
+	TRACE(("ExtendExtend row=%d, col=%d\n", row, col))
 	if (eventMode == LEFTEXTENSION 
 	 && (coord + (selectUnit!=SELECTCHAR)) > Coordinate(endSRow, endSCol)) {
 		/* Whoops, he's changed his mind.  Do RIGHTEXTENSION */
@@ -1178,6 +1180,7 @@ SaltTextAway(crow, ccol, row, col, params, num_params)
 	}
 	*lp = '\0';		/* make sure we have end marked */
 	
+	TRACE(("Salted TEXT:%.*s\n", lp - line, line))
 	screen->selection_length = (lp - line);
 	_OwnSelection(term, params, num_params);
 }
@@ -1432,6 +1435,12 @@ SaveText(screen, row, scol, ecol, lp, eol)
 	*eol = 0;
 	i = Length(screen, row, scol, ecol);
 	ecol = scol + i;
+#if OPT_DEC_CHRSET
+	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0])) {
+		scol = (scol + 0) / 2;
+		ecol = (ecol + 1) / 2;
+	}
+#endif
 	if (*eol == 0) {
 		if(ScrnGetAttributes(screen, row + screen->topline, 0, &attr, 1) == 1) {
 			*eol = (attr & LINEWRAPPED) ? 0 : 1;

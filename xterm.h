@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.10 1997/05/23 09:19:57 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.11 1997/06/29 07:54:44 dawes Exp $ */
 /*
  * Common/useful definitions for XTERM application
  */
@@ -53,6 +53,7 @@ extern void ShowCursor PROTO((void));
 extern void SwitchBufPtrs PROTO((TScreen *screen));
 extern void VTReset PROTO((int full));
 extern void VTRun PROTO((void));
+extern void WriteText PROTO(( TScreen *screen, Char *str, int len));
 extern void set_cursor_gcs PROTO((TScreen *screen));
 extern void unparseputc1 PROTO((int c, int fd));
 extern void unparseputc PROTO((int c, int fd));
@@ -76,6 +77,11 @@ extern void CursorSet PROTO((TScreen *screen, int row, int col, unsigned flags))
 extern void CursorUp PROTO((TScreen *screen, int  n));
 extern void Index PROTO((TScreen *screen, int amount));
 extern void RevIndex PROTO((TScreen *screen, int amount));
+
+/* doublechr.c */
+extern void xterm_DECDHL PROTO((Bool top));
+extern void xterm_DECSWL PROTO((void));
+extern void xterm_DECDWL PROTO((void));
 
 /* input.c */
 extern void Input PROTO((TKeyboard *keyboard, TScreen *screen, XKeyEvent *event, Bool eightbit));
@@ -148,7 +154,7 @@ extern ScrnBuf Allocate PROTO((int nrow, int ncol, Char **addr));
 extern int ScreenResize PROTO((TScreen *screen, int width, int height, unsigned *flags));
 extern int ScrnGetAttributes PROTO((TScreen *screen, int row, int col, Char *str, int length));
 extern void ClearBufRows PROTO((TScreen *screen, int first, int last));
-extern void ScreenWrite PROTO((TScreen *screen, char *str, unsigned flags, unsigned cur_fg, unsigned cur_bg, int length));
+extern void ScreenWrite PROTO((TScreen *screen, Char *str, unsigned flags, unsigned cur_fg, unsigned cur_bg, int length));
 extern void ScrnDeleteChar PROTO((TScreen *screen, int n, int size));
 extern void ScrnDeleteLine PROTO((ScrnBuf sb, int n, int last, int size, int where));
 extern void ScrnInsertChar PROTO((TScreen *screen, int n, int size));
@@ -195,7 +201,7 @@ extern void ReverseVideo PROTO((XtermWidget termw));
 extern void Scroll PROTO((TScreen *screen, int amount));
 extern void do_erase_display PROTO((TScreen *screen, int param, int mode));
 extern void do_erase_line PROTO((TScreen *screen, int param, int mode));
-extern void drawXtermText PROTO((TScreen *screen, unsigned flags, GC gc, int x, int y, char *text, int len));
+extern void drawXtermText PROTO((TScreen *screen, unsigned flags, GC gc, int x, int y, int chrset, Char *text, int len));
 extern void recolor_cursor PROTO((Cursor cursor, unsigned long fg, unsigned long bg));
 extern void resetXtermGC PROTO((TScreen *screen, int flags, Bool hilite));
 extern void scrolling_copy_area PROTO((TScreen *screen, int firstline, int nlines, int amount));
@@ -234,5 +240,13 @@ extern void useCurBackground PROTO((Bool flag));
 	XFillRectangle (screen->display, TextWindow(screen), \
 		ReverseGC(screen), left, top, width, height); \
 	useCurBackground(FALSE)
+
+#if OPT_DEC_CHRSET
+extern int getXtermChrSet PROTO((int row, int col));
+extern int curXtermChrSet PROTO((int row));
+#else
+#define getXtermChrSet(row, col) 0
+#define curXtermChrSet(row) 0
+#endif
 
 #endif	/* included_xterm_h */

@@ -1,7 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
 .\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.9 1997/05/25 14:41:15 dawes Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.10 1997/06/29 07:54:21 dawes Exp $
 .\"
 .\" Copyright 1991, 1994 X Consortium
 .\"
@@ -301,7 +301,7 @@ Most of these control sequences are standard VT102 control sequences,
 but there is support for later DEC VT terminals (i.e., VT220 and VT320),
 as well as ISO 6429 and \fIaixterm\fP color controls.
 VT102 features not supported are
-double size characters and blinking characters.
+auto-repeat and blinking characters.
 There are additional control sequences to provide
 \fIxterm-\fPdependent functions, such as the scrollbar or window size.
 Where the function is specified by DEC or ISO 6429, the code assigned
@@ -367,6 +367,18 @@ Set ANSI conformance level 2 (vt200).
 .
 .IP \\*(Es\\*(Sp\\*N
 Set ANSI conformance level 3 (vt300).
+.
+.IP \\*(Es\\*#\\*3
+DEC double-height line, top half (DECDHL)
+.
+.IP \\*(Es\\*#\\*4
+DEC double-height line, bottom half (DECDHL)
+.
+.IP \\*(Es\\*#\\*5
+DEC single-width line (DECSWL)
+.
+.IP \\*(Es\\*#\\*6
+DEC double-width line (DECDWL)
 .
 .IP \\*(Es\\*#\\*8
 DEC Screen Alignment Test (DECALN)

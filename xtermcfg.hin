@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.2 1997/05/25 14:41:28 dawes Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.3 1997/06/29 07:54:45 dawes Exp $
  */
 
 /************************************************************
@@ -35,6 +35,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_STRERROR	/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_TERMCAP_H	/* AC_CHECK_HEADERS(termcap.h) */
 #undef OPT_AIX_COLORS	/* CF_ARG_DISABLE(16-color) */
+#undef OPT_DEC_CHRSET	/* CF_ARG_DISABLE(doublechars) */
 #undef OPT_ISO_COLORS	/* CF_ARG_DISABLE(ansi-color) */
 #undef OPT_TRACE	/* CF_ARG_ENABLE(trace) */
 #undef OPT_VT52_MODE	/* CF_ARG_DISABLE(vt52) */
@@ -47,6 +48,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #if USE_OK_BCOPY
 #define memmove(d,s,n) bcopy(s,d,n)
+#endif
+
+#if USE_MY_MEMMOVE
+#define memmove(d,s,n) my_memmove(d,s,n)
 #endif
 
 #if !HAVE_STRERROR

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c /main/33 1996/12/01 23:47:10 swick $
- *	$XFree86: xc/programs/xterm/util.c,v 3.15 1997/05/23 12:28:05 dawes Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.16 1997/06/29 07:54:43 dawes Exp $
  */
 
 /*
@@ -32,12 +32,18 @@
 #include <xtermcfg.h>
 #endif
 
+#include <stdio.h>
+
+#ifndef X_NOT_STDC_ENV
+#include <stdlib.h>
+#else
+extern char *malloc();
+#endif
+
 #include "ptyx.h"
 #include "data.h"
 #include "error.h"
 #include "menu.h"
-
-#include <stdio.h>
 
 #include "xterm.h"
 
@@ -488,9 +494,15 @@ InsertChar (screen, n)
 	screen->do_wrap = 0;
 	if(screen->cur_row - screen->topline <= screen->max_row) {
 	    if(!AddToRefresh(screen)) {
+		int col = screen->max_col + 1 - n;
 		if(screen->scroll_amt)
 			FlushScroll(screen);
 
+#if OPT_DEC_CHRSET
+		if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
+			col = (screen->max_col + 1) / 2 - n;
+		}
+#endif
 		/*
 		 * prevent InsertChar from shifting the end of a line over
 		 * if it is being appended to
@@ -498,15 +510,15 @@ InsertChar (screen, n)
 		if (non_blank_line (screen->buf, screen->cur_row, 
 				    screen->cur_col, screen->max_col + 1))
 		    horizontal_copy_area(screen, screen->cur_col,
-					 screen->max_col+1 - (screen->cur_col+n),
+					 col - screen->cur_col,
 					 n);
 
 		FillCurBackground(
 			screen,
-			CursorX (screen, screen->cur_col),
+			CurCursorX (screen, screen->cur_row, screen->cur_col),
 			CursorY (screen, screen->cur_row),
-			(unsigned) n * FontWidth(screen),
-			(unsigned) FontHeight(screen));
+			n * CurFontWidth(screen,screen->cur_row),
+			FontHeight(screen));
 	    }
 	}
 	/* adjust screen->buf */
@@ -531,18 +543,24 @@ DeleteChar (screen, n)
 		
 	if(screen->cur_row - screen->topline <= screen->max_row) {
 	    if(!AddToRefresh(screen)) {
+		int col = screen->max_col + 1 - n;
 		if(screen->scroll_amt)
 			FlushScroll(screen);
 	
+#if OPT_DEC_CHRSET
+		if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
+			col = (screen->max_col + 1) / 2 - n;
+		}
+#endif
 		horizontal_copy_area(screen, screen->cur_col+n,
-				     screen->max_col+1 - (screen->cur_col+n),
+				     col - screen->cur_col,
 				     -n);
-	
+
 		FillCurBackground (
 			screen,
-			Width(screen) + CursorX(screen, -n),
+			CurCursorX(screen, screen->cur_row, col),
 			CursorY (screen, screen->cur_row),
-			n * FontWidth(screen),
+			n * CurFontWidth(screen,screen->cur_row),
 			FontHeight(screen));
 	    }
 	}
@@ -690,9 +708,9 @@ ClearInLine(screen, row, col, len)
 				FlushScroll(screen);
 			FillCurBackground (
 				screen,
-				CursorX (screen, col),
+				CurCursorX (screen, row, col),
 				CursorY (screen, row),
-				len * FontWidth(screen),
+				len * CurFontWidth(screen,row),
 				FontHeight(screen));
 		}
 	}
@@ -702,6 +720,9 @@ ClearInLine(screen, row, col, len)
 
 	if_OPT_ISO_COLORS(screen,{
 		memset(SCRN_BUF_COLOR(screen, row) + col, xtermColorPair(), len);
+	})
+	if_OPT_DEC_CHRSET({
+		memset(SCRN_BUF_CSETS(screen, row) + col, curXtermChrSet(screen->cur_row), len);
 	})
 
 	return rc;
@@ -946,12 +967,13 @@ horizontal_copy_area(screen, firstchar, nchars, amount)
     int nchars;
     int amount;			/* number of characters to move right */
 {
-    int src_x = CursorX(screen, firstchar);
+    int src_x = CurCursorX(screen, screen->cur_row, firstchar);
     int src_y = CursorY(screen, screen->cur_row);
 
     copy_area(screen, src_x, src_y,
-	      (unsigned)nchars*FontWidth(screen), FontHeight(screen),
-	      src_x + amount*FontWidth(screen), src_y);
+	      (unsigned)nchars * CurFontWidth(screen,screen->cur_row),
+	      FontHeight(screen),
+	      src_x + amount*CurFontWidth(screen,screen->cur_row), src_y);
 }
 
 /*
@@ -1055,11 +1077,14 @@ handle_translated_exposure (screen, rect_x, rect_y, rect_width, rect_height)
 {
 	register int toprow, leftcol, nrows, ncols;
 
+	TRACE(("handle_translated_exposure (%d,%d) - (%d,%d)\n",
+		rect_y, rect_x, rect_height, rect_width))
+
 	toprow = (rect_y - screen->border) / FontHeight(screen);
 	if(toprow < 0)
 		toprow = 0;
 	leftcol = (rect_x - screen->border - Scrollbar(screen))
-	    / FontWidth(screen);
+	    / CurFontWidth(screen,screen->cur_row);
 	if(leftcol < 0)
 		leftcol = 0;
 	nrows = (rect_y + rect_height - 1 - screen->border) / 
@@ -1286,21 +1311,42 @@ recolor_cursor (cursor, fg, bg)
  * Draws text with the specified combination of bold/underline
  */
 void
-drawXtermText(screen, flags, gc, x, y, text, len)
+drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 	register TScreen *screen;
 	unsigned flags;
 	GC gc;
 	int x;
 	int y;
-	char *text;
+	int chrset;
+	Char *text;
 	int len;
 {
+#if OPT_DEC_CHRSET
+	if (CSET_DOUBLE(chrset)) {
+		Char *temp = malloc(2 * len);
+		int n = 0;
+		TRACE(("DRAWTEXT%c[%4d,%4d] (%d) %d:%.*s\n",
+			screen->cursor_state == OFF ? ' ' : '*',
+			y, x, chrset, len, len, text))
+		while (len--) {
+			temp[n++] = *text++;
+			temp[n++] = ' ';
+		}
+		drawXtermText(screen, flags, gc, x, y, 0, temp, n);
+		x += FontWidth(screen) * n;
+		free(temp);
+		return;
+	}
+#endif
+	TRACE(("drawtext%c[%4d,%4d] (%d) %d:%.*s\n",
+		screen->cursor_state == OFF ? ' ' : '*',
+		y, x, chrset, len, len, text))
 	y += FontAscent(screen);
 	XDrawImageString(screen->display, TextWindow(screen), gc, 
-		x, y,  text, len);
+		x, y,  (char *)text, len);
 	if ((flags & BOLD) && screen->enbolden)
 		XDrawString(screen->display, TextWindow(screen), gc,
-			x+1, y,  text, len);
+			x+1, y,  (char *)text, len);
 	if ((flags & UNDERLINE) && screen->underline) 
 		XDrawLine(screen->display, TextWindow(screen), gc, 
 			x, y+1, x + len * FontWidth(screen), y+1);
@@ -1491,6 +1537,31 @@ void ClearCurBackground(screen, top,left, height,width)
 }
 #endif /* OPT_ISO_COLORS */
 
+#if OPT_DEC_CHRSET
+int
+getXtermChrSet(row, col)
+	int row;
+	int col;
+{
+	TScreen *screen = &term->screen;
+	Char set = SCRN_BUF_CSETS(screen, row)[0];
+	if (!CSET_DOUBLE(set))
+		set = SCRN_BUF_CSETS(screen, row)[col];
+	return set;
+}
+
+int
+curXtermChrSet(row)
+	int row;
+{
+	TScreen *screen = &term->screen;
+	Char set = SCRN_BUF_CSETS(screen, row)[0];
+	if (!CSET_DOUBLE(set))
+		set = screen->chrset;
+	return set;
+}
+#endif /* OPT_DEC_CHRSET */
+
 #ifdef HAVE_CONFIG_H
 #if USE_MY_MEMMOVE
 char *	my_memmove(s1, s2, n)
@@ -1500,16 +1571,18 @@ char *	my_memmove(s1, s2, n)
 {
 	if (n != 0) {
 		if ((s1+n > s2) && (s2+n > s1)) {
-			static	char	*buffer;
+			static	char	*bfr;
 			static	size_t	length;
-			register int	j;
+			register size_t	j;
 			if (length < n) {
 				length = (n * 3) / 2;
-				buffer = doalloc(buffer, length = n);
+				bfr = (bfr != 0)
+					? realloc(bfr, length)
+					: malloc(length);
 			}
 			for (j = 0; j < n; j++)
-				buffer[j] = s2[j];
-			s2 = buffer;
+				bfr[j] = s2[j];
+			s2 = bfr;
 		}
 		while (n-- != 0)
 			s1[n] = s2[n];

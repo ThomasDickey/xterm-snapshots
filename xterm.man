@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.13 1996/12/23 07:14:42 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.14 1997/06/29 07:54:44 dawes Exp $
 .\" Copyright (c) 1989  X Consortium
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining
@@ -56,9 +56,8 @@ the ``VT Options'' menu in the VT102 window, and the ``Tek Options''
 menu in the 4014 window.
 .SH EMULATIONS
 The VT102 emulation is fairly complete, but does not support
-autorepeat,
-the blinking character attribute
-nor the double-wide and double-size character sets.
+autorepeat or
+the blinking character attribute.
 .IR Termcap (5)
 entries that work with
 .I xterm
