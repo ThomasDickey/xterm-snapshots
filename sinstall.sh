@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XFree86: xc/programs/xterm/sinstall.sh,v 1.1 1999/10/13 04:24:46 dawes Exp $
+# $XFree86: xc/programs/xterm/sinstall.sh,v 1.2 1999/11/19 13:55:23 hohndel Exp $
 #
 # Install program setuid if the installer is running as root, and if xterm is
 # already installed on the system with setuid privilege.  This is a safeguard
