@@ -2,10 +2,10 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.111 2003/12/31 17:12:28 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.112 2004/03/04 02:21:56 dickey Exp $ */
 
 /*
- * Copyright 1999-2002,2003 by Thomas E. Dickey
+ * Copyright 1999-2003,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -429,6 +429,10 @@ typedef struct {
 #define OPT_BLINK_CURS  1 /* true if xterm has blinking cursor capability */
 #endif
 
+#ifndef OPT_BLINK_TEXT
+#define OPT_BLINK_TEXT  OPT_BLINK_CURS /* true if xterm has blinking text capability */
+#endif
+
 #ifndef OPT_BOX_CHARS
 #define OPT_BOX_CHARS	1 /* true if xterm can simulate box-characters */
 #endif
@@ -555,6 +559,22 @@ typedef struct {
 
 #ifndef OPT_READLINE
 #define OPT_READLINE	0 /* mouse-click/paste support for readline */
+#endif
+
+#ifndef OPT_RENDERFONT
+#ifdef XRENDERFONT
+#define OPT_RENDERFONT 1
+#else
+#define OPT_RENDERFONT 0
+#endif
+#endif
+
+#ifndef OPT_RENDERWIDE
+#if OPT_RENDERFONT && OPT_WIDE_CHARS && defined(HAVE_TYPE_XFTCHARSPEC)
+#define OPT_RENDERWIDE 1
+#else
+#define OPT_RENDERWIDE 0
+#endif
 #endif
 
 #ifndef OPT_SAME_NAME
@@ -867,11 +887,14 @@ typedef unsigned char IChar;	/* for 8-bit characters */
 #define BUF_SIZE 4096
 
 typedef struct {
-	int	cnt;		/* number of chars left to process */
+	int	cnt;		/* number of IChar's left to process */
 	IChar *	ptr;		/* pointer into decoded data */
 	Char	buf[BUF_SIZE];	/* we read directly into this */
 #if OPT_WIDE_CHARS
 	IChar	buf2[BUF_SIZE];	/* ...and may decode into this */
+	int	inx2[BUF_SIZE];	/* ...saving indices here */
+	int	cnt2;		/* ...and original number of IChar's */
+	int	len2;		/* ...and actual number of bytes in buf[] */
 #define DecodedData(data) (data)->buf2
 #else
 #define DecodedData(data) (data)->buf
@@ -1206,6 +1229,7 @@ typedef struct {
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
 #if OPT_BOX_CHARS
 	Boolean		force_box_chars;/* true if we assume that	*/
+	Boolean		force_all_chars;/* true to outline missing chars*/
 #endif
 	Dimension	fnt_wide;
 	Dimension	fnt_high;
@@ -1223,12 +1247,20 @@ typedef struct {
 	XPoint		*box;		/* draw unselected cursor	*/
 
 	int		cursor_state;	/* ON, OFF, or BLINKED_OFF	*/
+	int		cursor_busy;	/* do not redraw...		*/
 #if OPT_BLINK_CURS
 	Boolean		cursor_blink;	/* cursor blink enable		*/
-	int		cursor_on;	/* cursor on time (msecs)	*/
-	int		cursor_off;	/* cursor off time (msecs)	*/
-	XtIntervalId	cursor_timer;	/* timer-id for cursor-proc	*/
 #endif
+#if OPT_BLINK_TEXT
+	Boolean		blink_as_bold;	/* text blink disable		*/
+#endif
+#if OPT_BLINK_CURS || OPT_BLINK_TEXT
+	int		blink_state;	/* ON, OFF, or BLINKED_OFF	*/
+	int		blink_on;	/* cursor on time (msecs)	*/
+	int		blink_off;	/* cursor off time (msecs)	*/
+	XtIntervalId	blink_timer;	/* timer-id for cursor-proc	*/
+#endif
+	int		cursor_GC;	/* see ShowCursor()		*/
 	int		cursor_set;	/* requested state		*/
 	int		cursor_col;	/* previous cursor column	*/
 	int		cursor_row;	/* previous cursor row		*/
@@ -1300,8 +1332,8 @@ typedef struct {
 
 #if OPT_MAXIMIZE
 	Boolean		restore_data;
-	unsigned	restore_x;
-	unsigned	restore_y;
+	int		restore_x;
+	int		restore_y;
 	unsigned	restore_width;
 	unsigned	restore_height;
 #endif
@@ -1382,10 +1414,12 @@ typedef struct {
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
 	XIC		xic;
-#ifdef XRENDERFONT
-	XftFont		*renderFont;
-	XftFont		*renderFontBold;
-	XftDraw		*renderDraw;
+#if OPT_RENDERFONT
+	XftFont *	renderFontNorm[NMENUFONTS];
+	XftFont *	renderFontBold[NMENUFONTS];
+	XftFont *	renderWideNorm[NMENUFONTS];
+	XftFont *	renderWideBold[NMENUFONTS];
+	XftDraw *	renderDraw;
 #endif
 #if OPT_INPUT_METHOD
 	XFontSet	fs;		/* fontset for XIM preedit */
@@ -1520,9 +1554,11 @@ typedef struct _Misc {
     unsigned long meta_left;	/* modifier for Meta_L */
     unsigned long meta_right;	/* modifier for Meta_R */
 #endif
-#ifdef XRENDERFONT
+#if OPT_RENDERFONT
     char *face_name;
+    char *face_wide_name;
     int face_size;
+    Boolean render_font;
 #endif
 } Misc;
 
@@ -1613,6 +1649,12 @@ typedef struct _TekWidgetRec {
 #define CHARDRAWN	0x80    /* a character has been drawn here on the
 				   screen.  Used to distinguish blanks from
 				   empty parts of the screen when selecting */
+
+#if OPT_BLINK_CURS
+#define BOLDATTR(screen) (BOLD | ((screen)->blink_as_bold ? BLINK : 0))
+#else
+#define BOLDATTR(screen) (BOLD | BLINK)
+#endif
 
 /* The following attributes make sense in the argument of drawXtermText()  */
 #define NOBACKGROUND	0x100	/* Used for overstrike */

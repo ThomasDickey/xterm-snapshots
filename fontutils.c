@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.43 2003/12/31 17:12:28 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.45 2004/03/04 02:21:55 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1998-2002,2003 by Thomas E. Dickey
+Copyright 1998-2003,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -513,7 +513,7 @@ is_double_width_font(XFontStruct * fs)
 #define is_double_width_font(fs) 0
 #endif
 
-#if OPT_WIDE_CHARS && defined(XRENDERFONT) && defined(HAVE_TYPE_FCCHAR32)
+#if OPT_WIDE_CHARS && OPT_RENDERFONT && defined(HAVE_TYPE_FCCHAR32)
 #define HALF_WIDTH_TEST_STRING "1234567890"
 
 /* '1234567890' in Chinese characters in UTF-8 */
@@ -859,8 +859,8 @@ xtermLoadFont(TScreen * screen,
      * characters.  Check that they are all present.  The null character
      * (0) is special, and is not used.
      */
-#ifdef XRENDERFONT
-    if (screen->renderFont != 0) {
+#if OPT_RENDERFONT
+    if (term->misc.render_font) {
 	/*
 	 * FIXME: we shouldn't even be here if we're using Xft.
 	 */
@@ -1093,6 +1093,17 @@ xtermSetCursorBox(TScreen * screen)
     screen->box = VTbox;
 }
 
+#define CACHE_XFT(dst,src) if (src != 0) {\
+	    dst[fontnum] = src;\
+	    TRACE(("%s[%d] = %d (%d,%d) by %d\n",\
+		#dst,\
+	    	fontnum,\
+		src->height,\
+		src->ascent,\
+		src->descent,\
+		src->max_advance_width));\
+	}
+
 /*
  * Compute useful values for the font/window sizes
  */
@@ -1104,55 +1115,135 @@ xtermComputeFontInfo(TScreen * screen,
 {
     int i, j, width, height;
 
-#ifdef XRENDERFONT
-    Display *dpy = screen->display;
-    if (!screen->renderFont && term->misc.face_name) {
-	XftPattern *pat, *match;
-	XftResult result;
+#if OPT_RENDERFONT
+    /*
+     * xterm contains a lot of references to fonts, assuming they are fixed
+     * size.  This chunk of code overrides the actual font-selection (see
+     * drawXtermText()), if the user has selected render-font.  All of the
+     * font-loading for fixed-fonts still goes on whether or not this chunk
+     * overrides it.
+     */
+    if (term->misc.render_font) {
+	Display *dpy = screen->display;
+	int fontnum = screen->menu_font_number;
+	XftFont *norm = screen->renderFontNorm[fontnum];
+	XftFont *bold = screen->renderFontBold[fontnum];
+#if OPT_RENDERWIDE
+	XftFont *wnorm = screen->renderWideNorm[fontnum];
+	XftFont *wbold = screen->renderWideBold[fontnum];
+#endif
 
-	pat = XftNameParse(term->misc.face_name);
-	XftPatternBuild(pat,
-			XFT_FAMILY, XftTypeString, "mono",
-			XFT_SIZE, XftTypeInteger, term->misc.face_size,
-			XFT_SPACING, XftTypeInteger, XFT_MONO,
-			(void *) 0);
-	match = XftFontMatch(dpy, DefaultScreen(dpy), pat, &result);
-	screen->renderFont = XftFontOpenPattern(dpy, match);
-	if (!screen->renderFont && match)
-	    XftPatternDestroy(match);
-	if (screen->renderFont) {
+	if (norm == 0 && term->misc.face_name) {
+	    XftPattern *pat, *match;
+	    XftResult result;
+	    int face_size = term->misc.face_size;
+
+	    TRACE(("xtermComputeFontInfo norm(face %s, size %d)\n",
+		   term->misc.face_name,
+		   term->misc.face_size));
+
+#if OPT_SHIFT_FONTS
+	    /*
+	     * If the user is switching font-sizes, make it follow the same
+	     * ratios to the default as the fixed fonts would, for easy
+	     * comparison.  There will be some differences since the fixed
+	     * fonts have a variety of height/width ratios, but this is simpler
+	     * than adding another resource value - and as noted above, the
+	     * data for the fixed fonts are available.
+	     */
+	    if (fontnum != fontMenu_fontdefault) {
+		int num = screen->menu_font_sizes[fontnum];
+		int den = screen->menu_font_sizes[0];
+		face_size = (1.0 * face_size * num) / den;
+	    }
+#endif
+
+	    pat = XftNameParse(term->misc.face_name);
 	    XftPatternBuild(pat,
-			    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
-			    XFT_CHAR_WIDTH, XftTypeInteger, screen->renderFont->max_advance_width,
+			    XFT_FAMILY, XftTypeString, "mono",
+			    XFT_SIZE, XftTypeInteger, face_size,
+			    XFT_SPACING, XftTypeInteger, XFT_MONO,
 			    (void *) 0);
 	    match = XftFontMatch(dpy, DefaultScreen(dpy), pat, &result);
-	    screen->renderFontBold = XftFontOpenPattern(dpy, match);
-	    if (!screen->renderFontBold && match)
+	    norm = XftFontOpenPattern(dpy, match);
+	    if ((norm == 0) && match)
 		XftPatternDestroy(match);
+	    if (norm != 0) {
+		XftPatternBuild(pat,
+				XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
+				XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width,
+				(void *) 0);
+		match = XftFontMatch(dpy, DefaultScreen(dpy), pat, &result);
+		bold = XftFontOpenPattern(dpy, match);
+		if ((bold == 0) && match)
+		    XftPatternDestroy(match);
+
+		/*
+		 * FIXME:  just assume that the corresponding font has no
+		 * graphics characters.
+		 */
+		if (screen->fnt_boxes) {
+		    screen->fnt_boxes = False;
+		    TRACE(("Xft opened - will %suse internal line-drawing characters\n",
+			   screen->fnt_boxes ? "not " : ""));
+		}
+	    }
+
+	    if (pat)
+		XftPatternDestroy(pat);
+
+	    CACHE_XFT(screen->renderFontNorm, norm);
+	    CACHE_XFT(screen->renderFontBold, bold);
 
 	    /*
-	     * FIXME:  just assume that the corresponding font has no graphics
-	     * characters.
+	     * See xtermXftDrawString().
 	     */
-	    if (screen->fnt_boxes) {
-		screen->fnt_boxes = False;
-		TRACE(("Xft opened - will %suse internal line-drawing characters\n",
-		       screen->fnt_boxes ? "not " : ""));
+#if OPT_RENDERWIDE
+	    if (norm != 0 && wnorm == 0) {
+		char *face_name = (term->misc.face_wide_name
+				   ? term->misc.face_wide_name
+				   : term->misc.face_name);
+		int char_width = norm->max_advance_width * 2;
+
+		TRACE(("xtermComputeFontInfo wide(face %s, char_width %d)\n",
+		       face_name,
+		       char_width));
+
+		wnorm = XftFontOpen(dpy, DefaultScreen(dpy),
+				    XFT_FAMILY, XftTypeString, face_name,
+				    XFT_SIZE, XftTypeInteger, face_size,
+				    XFT_SPACING, XftTypeInteger, XFT_MONO,
+				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
+				    (void *) 0);
+
+		wbold = XftFontOpen(dpy, DefaultScreen(dpy),
+				    XFT_FAMILY, XftTypeString, face_name,
+				    XFT_SIZE, XftTypeInteger, face_size,
+				    XFT_SPACING, XftTypeInteger, XFT_MONO,
+				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
+				    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
+				    (void *) 0);
+
+		CACHE_XFT(screen->renderWideNorm, wnorm);
+		CACHE_XFT(screen->renderWideBold, wbold);
 	    }
+#endif
 	}
-	if (pat)
-	    XftPatternDestroy(pat);
+	if (norm == 0) {
+	    term->misc.render_font = False;
+	    update_font_renderfont();
+	} else {
+	    win->f_width = norm->max_advance_width;
+	    win->f_height = norm->height;
+	    win->f_ascent = norm->ascent;
+	    win->f_descent = norm->descent;
+	    if (win->f_height < win->f_ascent + win->f_descent)
+		win->f_height = win->f_ascent + win->f_descent;
+	    if (is_double_width_font_xft(screen->display, norm))
+		win->f_width >>= 1;
+	}
     }
-    if (screen->renderFont) {
-	win->f_width = screen->renderFont->max_advance_width;
-	win->f_height = screen->renderFont->height;
-	win->f_ascent = screen->renderFont->ascent;
-	win->f_descent = screen->renderFont->descent;
-	if (win->f_height < win->f_ascent + win->f_descent)
-	    win->f_height = win->f_ascent + win->f_descent;
-	if (is_double_width_font_xft(screen->display, screen->renderFont))
-	    win->f_width >>= 1;
-    } else
+    if (!term->misc.render_font)
 #endif
     {
 	if (is_double_width_font(font)) {
@@ -1172,6 +1263,12 @@ xtermComputeFontInfo(TScreen * screen,
     win->fullheight = height;
     win->width = width - i;
     win->height = height - j;
+
+    TRACE(("xtermComputeFontInfo fontsize %dx%d, screensize %dx%d\n",
+	   FontHeight(screen),
+	   FontWidth(screen),
+	   Height(screen),
+	   Width(screen)));
 }
 
 /* save this information as a side-effect for double-sized characters */
@@ -1256,7 +1353,8 @@ xtermMissingChar(unsigned ch, XFontStruct * font)
 }
 
 /*
- * The grid is abitrary, enough resolution that nothing's lost in initialization.
+ * The grid is arbitrary, enough resolution that nothing's lost in
+ * initialization.
  */
 #define BOX_HIGH 60
 #define BOX_WIDE 60
@@ -1432,8 +1530,8 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
      * mode, but have gotten an old-style font.
      */
     if (screen->utf8_mode
-#ifdef XRENDERFONT
-	&& screen->renderFont == 0
+#if OPT_RENDERFONT
+	&& !term->misc.render_font
 #endif
 	&& (ch > 127)
 	&& (ch != UCS_REPL)) {
@@ -1502,19 +1600,17 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 		n = 0;
 	    }
 	}
-    }
-#if 0				/* bounding rectangle, for debugging */
-    else {
+    } else if (screen->force_all_chars) {
+	/* bounding rectangle, for debugging */
 	XDrawRectangle(
 			  screen->display, VWindow(screen), gc, x, y,
 			  font_width - 1,
 			  font_height - 1);
     }
-#endif
 
     XFreeGC(screen->display, gc2);
 }
-#endif
+#endif /* OPT_BOX_CHARS */
 
 #if OPT_WIDE_CHARS
 #define MY_UCS(ucs,dec) case ucs: result = dec; break
@@ -1682,7 +1778,7 @@ lookupRelativeFontSize(TScreen * screen, int old, int relative)
 	    if (relative > 1)
 		m = lookupRelativeFontSize(screen, m, relative - 1);
 	    else if (relative < -1)
-		m = lookupRelativeFontSize(screen, m, relative = 1);
+		m = lookupRelativeFontSize(screen, m, relative + 1);
 	}
     }
     return m;

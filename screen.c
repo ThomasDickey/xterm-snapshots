@@ -3,7 +3,7 @@
  */
 
 /*
- * Copyright 1999-2002,2003 by Thomas E. Dickey
+ * Copyright 1999-2003,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.65 2003/10/20 00:58:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.66 2004/03/04 02:21:56 dickey Exp $ */
 
 /* screen.c */
 
@@ -64,6 +64,10 @@
 #include <data.h>
 #include <xcharmouse.h>
 #include <xterm_io.h>
+
+#if OPT_WIDE_CHARS
+#include <fontutils.h>
+#endif
 
 #include <signal.h>
 
@@ -209,6 +213,97 @@ Reallocate(ScrnBuf * sbuf,
     return move_down ? move_down : -move_up;	/* convert to rows */
 }
 
+#if OPT_WIDE_CHARS
+/*
+ * This function reallocates memory if changing the number of Buf offsets.
+ * The code is based on Reallocate().
+ */
+static void
+ReallocateBufOffsets(ScrnBuf * sbuf,
+		     Char ** sbufaddr,
+		     int nrow,
+		     int ncol,
+		     size_t new_max_offsets)
+{
+    int i, j, k;
+    ScrnBuf base;
+    Char *oldbuf, *tmp;
+    size_t entries, length;
+    /*
+     * As there are 2 buffers (allbuf, altbuf), we cannot change num_ptrs in
+     * this function.  However MAX_PTRS and BUF_PTRS depend on num_ptrs so
+     * change it now and restore the value when done.
+     */
+    int old_max_ptrs = MAX_PTRS;
+
+    term->num_ptrs = new_max_offsets;
+
+    entries = MAX_PTRS * nrow;
+    length = BUF_PTRS * nrow * ncol;
+    oldbuf = *sbufaddr;
+
+    *sbuf = (ScrnBuf) realloc((char *) (*sbuf), entries * sizeof(char *));
+    if (*sbuf == 0)
+	SysError(ERROR_RESIZE);
+    base = *sbuf;
+
+    if ((tmp = (Char *) calloc(length, sizeof(Char))) == 0)
+	SysError(ERROR_SREALLOC);
+    *sbufaddr = tmp;
+
+    for (i = k = 0; i < nrow; i++) {
+	k += BUF_HEAD;
+	for (j = BUF_HEAD; j < old_max_ptrs; j++) {
+	    memcpy(tmp, base[k++], ncol);
+	    tmp += ncol;
+	}
+    }
+
+    /*
+     * update the pointers in sbuf
+     */
+    for (i = k = 0, tmp = *sbufaddr; i < nrow; i++) {
+	for (j = 0; j < BUF_HEAD; j++)
+	    base[k++] = 0;
+	for (j = BUF_HEAD; j < MAX_PTRS; j++) {
+	    base[k++] = tmp;
+	    tmp += ncol;
+	}
+    }
+
+    /* Now free the old buffer and restore num_ptrs */
+    free(oldbuf);
+    term->num_ptrs = old_max_ptrs;
+}
+
+/*
+ * This function dynamically adds support for wide-characters.
+ */
+void
+ChangeToWide(TScreen * screen)
+{
+    int new_bufoffset = (OFF_COM2H + 1);
+    int savelines = screen->scrollWidget ? screen->savelines : 0;
+
+    if (screen->wide_chars)
+	return;
+
+    if (xtermLoadVTFonts(term, "utf8Fonts", "Utf8Fonts")) {
+	ReallocateBufOffsets(&screen->allbuf, &screen->sbuf_address,
+			     screen->max_row + 1 + savelines,
+			     screen->max_col + 1,
+			     new_bufoffset);
+	if (screen->altbuf)
+	    ReallocateBufOffsets(&screen->altbuf, &screen->abuf_address,
+				 screen->max_row + 1, screen->max_col + 1,
+				 new_bufoffset);
+	screen->wide_chars = True;
+	term->num_ptrs = new_bufoffset;
+	screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
+    }
+}
+#endif
+
 int last_written_row = -1;
 int last_written_col = -1;
 
@@ -290,6 +385,13 @@ ScreenWrite(TScreen * screen,
 	memcpy(col, str, length);	/* This can stand for the present. If it
 					   is wrong, we will scribble over it */
     }
+
+#if OPT_BLINK_TEXT
+    if ((flags & BLINK) && !(screen->blink_as_bold)) {
+	ScrnSetBlinked(screen, screen->cur_row);
+    }
+#endif
+
 #define ERROR_1 0x20
 #define ERROR_2 0x00
     if_OPT_WIDE_CHARS(screen, {
@@ -764,10 +866,10 @@ ScrnRefresh(TScreen * screen,
 
 	if_OPT_WIDE_CHARS(screen, {
 	    /* This fixes an infinite recursion bug, that leads
-	       to display anomalies. It seems to be related to 
+	       to display anomalies. It seems to be related to
 	       problems with the selection. */
 	    if (recurse < 3) {
-		/* adjust to redraw all of a widechar if we just wanted 
+		/* adjust to redraw all of a widechar if we just wanted
 		   to draw the right hand half */
 		if (leftcol > 0 &&
 		    (chars[leftcol] | (widec[leftcol] << 8)) == HIDDEN_CHAR &&

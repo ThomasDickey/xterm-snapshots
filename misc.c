@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.82 2003/12/31 17:12:28 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.83 2004/03/04 02:21:56 dickey Exp $ */
 
 /*
  *
@@ -667,8 +667,9 @@ QueryMaximize(TScreen * screen, unsigned *width, unsigned *height)
 	       *width,
 	       *height,
 	       root_border));
-	*width -= (screen->border * 2),
-	    *height -= (screen->border * 2);
+
+	*width -= (root_border * 2);
+	*height -= (root_border * 2);
 
 	hints.flags = PMaxSize;
 	if (XGetWMNormalHints(screen->display,
@@ -695,7 +696,7 @@ void
 RequestMaximize(XtermWidget termw, int maximize)
 {
     register TScreen *screen = &termw->screen;
-    XWindowAttributes win_attrs;
+    XWindowAttributes wm_attrs, vshell_attrs;
     unsigned root_width, root_height;
 
     if (maximize) {
@@ -704,29 +705,39 @@ RequestMaximize(XtermWidget termw, int maximize)
 
 	    if (XGetWindowAttributes(screen->display,
 				     WMFrameWindow(termw),
-				     &win_attrs)) {
+				     &wm_attrs)) {
 
-		if (screen->restore_data != True
-		    || screen->restore_width != root_width
-		    || screen->restore_height != root_height) {
-		    screen->restore_data = True;
-		    screen->restore_x = win_attrs.x;
-		    screen->restore_y = win_attrs.y;
-		    screen->restore_width = win_attrs.width;
-		    screen->restore_height = win_attrs.height;
-		    TRACE(("HandleMaximize: save window position %d,%d size %d,%d\n",
-			   screen->restore_x,
-			   screen->restore_y,
-			   screen->restore_width,
-			   screen->restore_height));
+		if (XGetWindowAttributes(screen->display,
+					 VShellWindow,
+					 &vshell_attrs)) {
+
+		    if (screen->restore_data != True
+			|| screen->restore_width != root_width
+			|| screen->restore_height != root_height) {
+			screen->restore_data = True;
+			screen->restore_x = wm_attrs.x + wm_attrs.border_width;
+			screen->restore_y = wm_attrs.y + wm_attrs.border_width;
+			screen->restore_width = vshell_attrs.width;
+			screen->restore_height = vshell_attrs.height;
+			TRACE(("HandleMaximize: save window position %d,%d size %d,%d\n",
+			       screen->restore_x,
+			       screen->restore_y,
+			       screen->restore_width,
+			       screen->restore_height));
+		    }
+
+		    /* subtract wm decoration dimensions */
+		    root_width -= ((wm_attrs.width - vshell_attrs.width)
+				   + (wm_attrs.border_width * 2));
+		    root_height -= ((wm_attrs.height - vshell_attrs.height)
+				    + (wm_attrs.border_width * 2));
+
+		    XMoveResizeWindow(screen->display, VShellWindow,
+				      0 + wm_attrs.border_width,	/* x */
+				      0 + wm_attrs.border_width,	/* y */
+				      root_width,
+				      root_height);
 		}
-
-		XMoveResizeWindow(screen->display,
-				  VShellWindow,
-				  0,	/* x */
-				  0,	/* y */
-				  root_width,
-				  root_height);
 	    }
 	}
     } else {
@@ -737,6 +748,7 @@ RequestMaximize(XtermWidget termw, int maximize)
 		   screen->restore_width,
 		   screen->restore_height));
 	    screen->restore_data = False;
+
 	    XMoveResizeWindow(screen->display,
 			      VShellWindow,
 			      screen->restore_x,

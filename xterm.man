@@ -1,7 +1,7 @@
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
-.\" Copyright 1996-2002,2003 by Thomas E. Dickey
+.\" Copyright 1996-2003,2004 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.99 2003/11/23 23:53:14 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.100 2004/03/04 02:21:57 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - November 2003.
 .TH XTERM 1 __vendorversion__
@@ -95,8 +95,6 @@ The VT102 emulation is fairly complete, but does not support
 autorepeat.
 Double-size characters are displayed properly if your font server supports
 scalable fonts.
-Blinking characters are partially implemented;
-the emulation is functional but does not have the appearance of a real VT102.
 The VT220 emulation does not support soft fonts, it is otherwise complete.
 .IR Termcap (5)
 entries that work with
@@ -419,6 +417,11 @@ If any are missing, xterm will draw the characters directly.
 .BI +fbx
 This option indicates that \fIxterm\fP should assume that the
 normal and bold fonts have VT100 line-drawing characters.
+.TP 8
+.BI \-fd " pattern"
+This option sets the pattern for double-width fonts selected from the FreeType
+library if support for that library was compiled into xterm.
+This corresponds to the \fBfaceNameDoublesize\fP resource.
 .TP 8
 .BI \-fi " font"
 This option sets the font for active icons if that feature was compiled
@@ -1490,11 +1493,13 @@ The default is ``black.''
 .B "cursorOffTime (\fPclass\fB CursorOffTime)"
 Specifies the duration of the "off" part of the cursor blink cycle-time
 in milliseconds.
+The same timer is used for text blinking.
 The default is 300.
 .TP 8
 .B "cursorOnTime (\fPclass\fB CursorOnTime)"
 Specifies the duration of the "on" part of the cursor blink cycle-time,
 in milliseconds.
+The same timer is used for text blinking.
 The default is 600.
 .TP 8
 .B "highlightColor (\fPclass\fB HighlightColor)"
@@ -1546,6 +1551,13 @@ If not specified,
 or if there is no match for both normal and bold fonts,
 \fIxterm\fR uses the \fBfont\fP and related resources.
 .TP 8
+.B "faceNameDoublesize (\fPclass\fB FaceNameDoublesize)"
+Specify an double-width font for cases where an application requires
+this, e.g., in CJK applications.
+There is no default.
+If the application uses double-wide characters and this resource is not given,
+\fIxterm\fP  will use a scaled version of the font given by \fBfaceName\fP.
+.TP 8
 .B "faceSize (\fPclass\fB FaceSize)"
 Specify the pointsize for fonts selected from the FreeType
 library if support for that library was compiled into \fIxterm\fR.
@@ -1585,7 +1597,7 @@ The default is ``true''.
 If disabled, \fIxterm\fP will simulate doublesize characters by drawing
 normal characters with spaces between them.
 .TP 8
-.B "forceBoxChars (\fPclass\fB Boolean)"
+.B "forceBoxChars (\fPclass\fB ForceBoxChars)"
 Specifies whether \fIxterm\fP should assume the normal and bold fonts
 have VT100 line-drawing characters.
 If ``false'', \fIxterm\fP will check for missing characters in the 1-31
@@ -1600,7 +1612,7 @@ that would normally appear in the text color change color.
 The default
 is ``black.''
 .TP 8
-.B "freeBoldBox (\fPclass\fB Boolean)"
+.B "freeBoldBox (\fPclass\fB freeBoldBox)"
 Specifies whether \fIxterm\fP should assume the bounding boxes for
 normal and bold fonts are compatible.
 If ``false'', \fIxterm\fP compares them and will reject choices of
@@ -1857,6 +1869,11 @@ Controls whether a form feed is sent to the printer at the end of a print
 page function.
 The default is ``false.''
 .TP 8
+.B "renderFont (\fPclass\fB RenderFont)"
+If \fIxterm\fR is built with the Xft library,
+this controls whether the \fBfaceName\fR resource is used.
+The default is ``true.''
+.TP 8
 .B "resizeGravity (\fPclass\fB ResizeGravity)"
 Affects the behavior when the window is resized to be taller or
 shorter.
@@ -1921,6 +1938,18 @@ Specifies whether to enable the actions
 \fBsmaller-vt-font()\fP, which are normally bound to
 the shifted KP_Add and KP_Subtract.
 The default is ``true.''
+.TP 8
+.B "showBlinkAsBold (\fPclass\fB ShowBlinkAsBold)"
+Tells \fIxterm\fP whether to display text with blink-attribute the same
+as bold.
+If \fIxterm\fP has not been configured to support blinking text,
+the default is ``true.'', which corresponds to older versions of xterm,
+otherwise the default is ``false.''
+.TP 8
+.B "showMissingGlyphs (\fPclass\fB ShowMissingGlyphs)"
+Tells \fIxterm\fP whether to display a box outlining places where
+a character has been used that the font does not represent.
+The default is ``false.''
 .TP 8
 .B "signalInhibit (\fPclass\fB SignalInhibit)"
 Specifies whether or not the entries in the ``Main Options'' menu for sending
@@ -2300,6 +2329,12 @@ This entry invokes the \fBset-font-linedrawing(s)\fP action.
 .TP 8
 .B "font-doublesize (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-font-doublesize(s)\fP action.
+.TP 8
+.B "render-font (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-render-font(s)\fP action.
+.TP 8
+.B "utf8-mode (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-utf8-mode(s)\fP action.
 .
 .PP
 The \fItekMenu\fP has the following entries:
@@ -2980,6 +3015,10 @@ This action toggles the state of the \fBnumLock\fP resource.
 This action toggles the \fBpopOnBell\fP resource and is also invoked
 by the \fBpoponbell\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set-render-font(\fIon/off/toggle\fP)"
+This action toggles the \fBrenderFont\fP resource and is also invoked by
+the \fBrender-font\fP entry in \fIfontMenu\fP.
+.TP 8
 .B "set-reverse-video(\fIon/off/toggle\fP)"
 This action toggles the \fIreverseVideo\fP resource and is also invoked by
 the \fBreversevideo\fP entry in \fIvtMenu\fP.
@@ -3029,6 +3068,10 @@ It is also invoked by the
 .B "set-titeInhibit(\fIon/off/toggle\fP)"
 This action toggles the \fBtiteInhibit\fP resource,
 which controls switching between the alternate and current screens.
+.TP 8
+.B "set-utf8-mode(\fIon/off/toggle\fP)"
+This action toggles the \fButf8\fP resource and is also invoked by
+the \fButf8-mode\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-visibility(\fIvt/tek\fP,\fIon/off/toggle\fP)"
 This action controls whether or not the \fIvt\fP or \fItek\fP windows are

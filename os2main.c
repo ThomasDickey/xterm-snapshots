@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.62 2003/05/21 22:59:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.63 2004/03/04 02:21:56 dickey Exp $ */
 
 /***********************************************************
 
@@ -342,8 +342,9 @@ static XrmOptionDescRec optionDescList[] = {
 #ifndef NO_ACTIVE_ICON
 {"-fi",		"*iconFont",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif /* NO_ACTIVE_ICON */
-#ifdef XRENDERFONT
+#if OPT_RENDERFONT
 {"-fa",		"*faceName",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-fd",		"*faceNameDoublesize", XrmoptionSepArg,	(caddr_t) NULL},
 {"-fs",		"*faceSize",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
 #if OPT_WIDE_CHARS
@@ -482,8 +483,9 @@ static OptionHelp xtermOptions[] = {
 { "-fb fontname",          "bold text font" },
 { "-/+fbb",                "turn on/off normal/bold font comparison inhibit"},
 { "-/+fbx",                "turn off/on linedrawing characters"},
-#ifdef XRENDERFONT
+#if OPT_RENDERFONT
 { "-fa pattern",           "FreeType font-selection pattern" },
+{ "-fd pattern",           "FreeType Doublesize font-selection pattern" },
 { "-fs size",              "FreeType font-size" },
 #endif
 #if OPT_WIDE_CHARS

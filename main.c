@@ -17,7 +17,7 @@ static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
 
 /***********************************************************
 
-Copyright 2002,2003 by Thomas E. Dickey
+Copyright 2002-2003,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.174 2003/12/25 22:04:04 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.175 2004/03/04 02:21:55 dickey Exp $ */
 
 /* main.c */
 
@@ -778,8 +778,9 @@ static XrmOptionDescRec optionDescList[] = {
 #ifndef NO_ACTIVE_ICON
 {"-fi",		"*iconFont",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif /* NO_ACTIVE_ICON */
-#ifdef XRENDERFONT
+#if OPT_RENDERFONT
 {"-fa",		"*faceName",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-fd",		"*faceNameDoublesize", XrmoptionSepArg,	(caddr_t) NULL},
 {"-fs",		"*faceSize",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
 #if OPT_WIDE_CHARS
@@ -858,8 +859,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"+u8",		"*utf8",	XrmoptionNoArg,		(caddr_t) "0"},
 #endif
 #if OPT_LUIT_PROG
-{"-lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "True"},
-{"+lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "False"},
+{"-lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-lcc",	"*localeFilter",XrmoptionSepArg,	(caddr_t) NULL},
 {"-en",		"*locale",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
@@ -925,8 +926,9 @@ static OptionHelp xtermOptions[] = {
 { "-fb fontname",          "bold text font" },
 { "-/+fbb",                "turn on/off normal/bold font comparison inhibit"},
 { "-/+fbx",                "turn off/on linedrawing characters"},
-#ifdef XRENDERFONT
+#if OPT_RENDERFONT
 { "-fa pattern",           "FreeType font-selection pattern" },
+{ "-fd pattern",           "FreeType Doublesize font-selection pattern" },
 { "-fs size",              "FreeType font-size" },
 #endif
 #if OPT_WIDE_CHARS

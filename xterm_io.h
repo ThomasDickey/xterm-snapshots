@@ -1,9 +1,9 @@
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.12 2003/12/25 22:04:05 dickey Exp $
+ * $XFree86: xc/programs/xterm/xterm_io.h,v 1.14 2004/03/04 02:21:57 dickey Exp $
  */
 
 /*
- * Copyright 2000-2002,2003 by Thomas E. Dickey
+ * Copyright 2000-2003,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -70,6 +70,7 @@
 
 #ifdef SCO325
 #define USE_TERMIOS
+#define _SVID3
 #endif
 
 #ifdef Lynx

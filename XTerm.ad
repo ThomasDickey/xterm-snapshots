@@ -3,7 +3,7 @@
 !
 !
 !
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.26 2003/10/27 01:07:56 dickey Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.27 2004/03/04 02:21:54 dickey Exp $
 
 *SimpleMenu*BackingStore: NotUseful
 *SimpleMenu*menuLabel.font: -adobe-helvetica-bold-r-normal--*-120-*-*-*-*-iso8859-*
@@ -81,11 +81,13 @@
 *fontMenu*font6*Label:	Huge
 *VT100*font6:		10x20
 *fontMenu*fontescape*Label:	Escape Sequence
-*fontMenu*fontsel*Label:		Selection
+*fontMenu*fontsel*Label:	Selection
 !fontescape and fontsel overridden by application
 *fontMenu*font-linedrawing*Label: Line-Drawing Characters
 *fontMenu*font-doublesize*Label: Doublesized Characters
 *fontMenu*font-loadable*Label:	VT220 Soft Fonts
+*fontMenu*render-font*Label:	TrueType Fonts
+*fontMenu*utf8-mode*Label:	UTF-8
 
 *VT100.utf8Fonts.font2:	-misc-fixed-medium-r-normal--8-80-75-75-c-50-iso10646-1
 *VT100.utf8Fonts.font:	-misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1
