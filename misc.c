@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: misc.c /main/112 1996/11/29 10:34:07 swick $
- *	$XFree86: xc/programs/xterm/misc.c,v 3.17 1997/01/08 20:52:31 dawes Exp $
+ *	$XFree86: xc/programs/xterm/misc.c,v 3.17.2.1 1997/05/23 09:24:40 dawes Exp $
  */
 
 /*
@@ -25,6 +25,10 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
 
 #include "ptyx.h"		/* X headers included here. */
 

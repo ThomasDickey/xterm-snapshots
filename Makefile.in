@@ -1,0 +1,95 @@
+#### Start of system configuration section. ####
+
+srcdir		= @srcdir@
+VPATH  		= @srcdir@
+
+CC		= @CC@
+LINK		= $(CC) $(CFLAGS)
+INSTALL		= @INSTALL@
+INSTALL_PROGRAM	= @INSTALL_PROGRAM@
+INSTALL_DATA	= @INSTALL_DATA@
+
+IMAKE_CFLAGS	= @IMAKE_CFLAGS@
+CFLAGS		= @CFLAGS@ $(IMAKE_CFLAGS)
+LIBS		= @LIBS@
+
+X_CFLAGS	= @X_CFLAGS@
+X_LIBS		= @X_LIBS@
+
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+
+manext		= 1
+bindir		= $(exec_prefix)/bin
+libdir		= $(exec_prefix)/lib
+mandir		= $(prefix)/man/man$(manext)
+
+#### End of system configuration section. ####
+
+SHELL		= /bin/sh
+RM              = rm -f
+
+CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H $(X_CFLAGS) 
+
+LDFLAGS		= 
+
+INSTALL_DIRS    = $(bindir) $(libdir) $(mandir)
+
+EXTRASRC	= @EXTRASRCS@
+EXTRAOBJ	= @EXTRAOBJS@
+
+          SRCS1 = button.c charproc.c cursor.c data.c input.c \
+		  main.c menu.c misc.c screen.c scrollbar.c tabs.c \
+		  TekPrsTbl.c Tekproc.c util.c VTPrsTbl.c $(EXTRASRC)
+          OBJS1 = button.o charproc.o cursor.o data.o input.o \
+		  main.o menu.o misc.o screen.o scrollbar.o tabs.o \
+		  TekPrsTbl.o Tekproc.o util.o VTPrsTbl.o $(EXTRAOBJ)
+          SRCS2 = resize.c
+          OBJS2 = resize.o
+           SRCS = $(SRCS1) $(SRCS2)
+           OBJS = $(OBJS1) $(OBJS2)
+           HDRS = Tekparse.h VTparse.h data.h error.h main.h menu.h proto.h \
+                  ptyx.h xterm.h
+       PROGRAMS = xterm resize
+
+all:	$(PROGRAMS)
+
+xterm : $(OBJS1)
+	$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(LIBS)
+
+resize : $(OBJS2)
+	$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(LIBS)
+
+install: $(INSTALL_DIRS) \
+	$(bindir)/xterm \
+	$(mandir)/xterm.$(manext) \
+	@echo 'Completed installation.'
+
+installdirs: $(INSTALL_DIRS)
+
+uninstall:
+	-$(RM) $(bindir)/xterm \
+		$(mandir)/xterm.$(manext)
+
+mostlyclean:
+	-$(RM) *.o core *~ *.BAK
+
+clean: mostlyclean
+	-$(RM) $(PROGRAMS)
+
+distclean: clean
+	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
+
+realclean: distclean
+	-$(RM) tags TAGS
+
+tags:
+	ctags $(SRCS) $(HDRS)
+
+TAGS:
+	etags $(SRCS) $(HDRS)
+
+$(INSTALL_DIRS):
+	$(SHELL) ${srcdir}/mkdirs.sh $@
+
+ALWAYS:

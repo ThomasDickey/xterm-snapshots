@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.18 1997/01/18 07:03:22 dawes Exp $
+ *	$XFree86: xc/programs/xterm/resize.c,v 3.18.2.3 1997/05/25 05:07:01 dawes Exp $
  */
 
 /*
@@ -29,6 +29,10 @@
 
 /* resize.c */
 
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
+
 #include <X11/Xos.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -43,6 +47,7 @@
 #endif
 
 #ifdef SVR4
+#undef  SYSV			/* predefined on Solaris 2.4 */
 #define SYSV
 #define ATT
 #endif
@@ -80,6 +85,9 @@
 #define USE_SYSV_TERMIO
 #ifndef Lynx
 #define USE_SYSV_UTMP
+#else
+#define USE_TERMCAP
+#define NO_TERMCAP_H
 #endif
 #else /* else not SYSV */
 #define USE_TERMCAP
@@ -237,11 +245,11 @@ static void readstring PROTO((FILE *fp, char *buf, char *str));
 static char *strindex PROTO((char *s1, char *s2));
 #if !defined(NO_TERMCAP_H)
 #include <termcap.h>
-#if defined(linux) && defined(NCURSES_VERSION)
-				/* The tgetent emulation function in
-                                   ncurses (1.9.9e) ignores the buffer, so
-                                   TERMCAP can't be set from it.  Instead,
-                                   just use terminfo. */
+#if defined(NCURSES_VERSION)
+	/* The tgetent emulation function in SVr4-style curses implementations
+	 * (e.g., ncurses) ignores the buffer, so TERMCAP can't be set from it. 
+	 * Instead, just use terminfo.
+	 */
 #undef USE_TERMCAP
 #include <curses.h>
 #endif
@@ -369,6 +377,7 @@ main (argc, argv)
 	    else
 		setname = "setenv TERM xterm;\n";
 	}
+	termcap[0] = 0;	/* ...just in case we've accidentally gotten terminfo */
 	if(tgetent (termcap, env) <= 0) {
 	    fprintf(stderr, "%s: Can't get entry \"%s\"\n",
 		    myname, env);

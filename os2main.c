@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.5 1997/01/08 20:52:34 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.5.2.1 1997/05/12 12:52:44 hohndel Exp $ */
 
 /***********************************************************
 
@@ -292,17 +292,32 @@ static XrmOptionDescRec optionDescList[] = {
 {"+132",	"*c132",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-ah",		"*alwaysHighlight", XrmoptionNoArg,	(caddr_t) "on"},
 {"+ah",		"*alwaysHighlight", XrmoptionNoArg,	(caddr_t) "off"},
+{"-aw",		"*autoWrap",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+aw",		"*autoWrap",	XrmoptionNoArg,		(caddr_t) "off"},
+#ifndef NO_ACTIVE_ICON
+{"-ai",		"*activeIcon",	XrmoptionNoArg,		(caddr_t) "off"},
+{"+ai",		"*activeIcon",	XrmoptionNoArg,		(caddr_t) "on"},
+#endif /* NO_ACTIVE_ICON */
 {"-b",		"*internalBorder",XrmoptionSepArg,	(caddr_t) NULL},
+{"-bdc",	"*colorBDMode",	XrmoptionNoArg,		(caddr_t) "off"},
+{"+bdc",	"*colorBDMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-cb",		"*cutToBeginningOfLine", XrmoptionNoArg, (caddr_t) "off"},
 {"+cb",		"*cutToBeginningOfLine", XrmoptionNoArg, (caddr_t) "on"},
 {"-cc",		"*charClass",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-cm",		"*colorMode",	XrmoptionNoArg,		(caddr_t) "off"},
+{"+cm",		"*colorMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-cn",		"*cutNewline",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+cn",		"*cutNewline",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-cr",		"*cursorColor",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-cu",		"*curses",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+cu",		"*curses",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-dc",		"*dynamicColors",XrmoptionNoArg,	(caddr_t) "off"},
+{"+dc",		"*dynamicColors",XrmoptionNoArg,	(caddr_t) "on"},
 {"-e",		NULL,		XrmoptionSkipLine,	(caddr_t) NULL},
 {"-fb",		"*boldFont",	XrmoptionSepArg,	(caddr_t) NULL},
+#ifndef NO_ACTIVE_ICON
+{"-fi",		"*iconFont",	XrmoptionSepArg,	(caddr_t) NULL},
+#endif /* NO_ACTIVE_ICON */
 {"-j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "off"},
 /* parse logging options anyway for compatibility */
@@ -316,6 +331,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-mc",		"*multiClickTime", XrmoptionSepArg,	(caddr_t) NULL},
 {"-ms",		"*pointerColor",XrmoptionSepArg,	(caddr_t) NULL},
 {"-nb",		"*nMarginBell",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-nul",	"*underLine",	XrmoptionNoArg,		(caddr_t) "off"},
+{"+nul",	"*underLine",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-rw",		"*reverseWrap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+rw",		"*reverseWrap",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-aw",		"*autoWrap",	XrmoptionNoArg,		(caddr_t) "on"},
@@ -335,6 +352,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"+t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-tm",		"*ttyModes",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-tn",		"*termName",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
+{"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ut",		"*utmpInhibit",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+ut",		"*utmpInhibit",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-im",		"*useInsertMode", XrmoptionNoArg,	(caddr_t) "on"},
@@ -375,12 +394,19 @@ static struct _options {
 { "-xrm resourcestring",   "additional resource specifications" },
 { "-/+132",                "turn on/off column switch inhibiting" },
 { "-/+ah",                 "turn on/off always highlight" },
+#ifndef NO_ACTIVE_ICON
+{ "-/+ai",		   "turn on/off active icon" },
+{ "-fi fontname",	   "icon font for active icon" },
+#endif /* NO_ACTIVE_ICON */
 { "-b number",             "internal border in pixels" },
+{ "-/+bdc",                "turn off/on display of bold as color"},
 { "-/+cb",                 "turn on/off cut-to-beginning-of-line inhibit" },
 { "-cc classrange",        "specify additional character classes" },
+{ "-/+cm",                 "turn off/on ANSI color mode" },
 { "-/+cn",                 "turn on/off cut newline inhibit" },
 { "-cr color",             "text cursor color" },
 { "-/+cu",                 "turn on/off curses emulation" },
+{ "-/+dc",		   "turn off/on dynamic color selection" },
 { "-fb fontname",          "bold text font" },
 { "-/+im",		   "use insert mode for TERMCAP" },
 { "-/+j",                  "turn on/off jump scroll" },
@@ -396,6 +422,7 @@ static struct _options {
 { "-mc milliseconds",      "multiclick time in milliseconds" },
 { "-ms color",             "pointer color" },
 { "-nb number",            "margin bell in characters from right end" },
+{ "-/+nul",                "turn on/off display of underlining" },
 { "-/+aw",                 "turn on/off auto wraparound" },
 { "-/+rw",                 "turn on/off reverse wraparound" },
 { "-/+s",                  "turn on/off multiscroll" },
@@ -407,6 +434,7 @@ static struct _options {
 { "-/+t",                  "turn on/off Tek emulation window" },
 { "-tm string",            "terminal mode keywords and characters" },
 { "-tn name",              "TERM environment variable name" },
+{ "-/+ulc",                "turn off/on display of underline as color" },
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 { "-/+vb",                 "turn on/off visual bell" },
 { "-/+wf",                 "turn on/off wait for map before command exec" },

@@ -1,5 +1,5 @@
 # $XConsortium: terminfo,v 1.11 94/10/13 21:24:31 gildea Exp $
-# $XFree86: xc/programs/xterm/terminfo,v 3.13 1997/01/08 20:52:39 dawes Exp $
+# $XFree86: xc/programs/xterm/terminfo,v 3.13.2.1 1997/05/25 05:07:01 dawes Exp $
 # meml locks memory above the cursor; memu unlocks (ala HP terminals)
 #
 xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
@@ -166,6 +166,22 @@ xterm-vt220|xterm emulating vt220,
 #
 xterm-rep|xterm with repeat-character control,
 	rep=%p1%c\E[%p2%{1}%-%db,
+	use=xterm,
+#
+# Foreground 0-15 maps (with toggles) into 30-37 & 90-97
+# Background 0-15 maps (with toggles) into 40-47 & 100-107
+# We should not have to suppress setaf/setab, however ncurses selects these
+# if they're set, ignoring setf/setb (will be fixed in 4.2).  SVr4 curses
+# does not use more than 8 colors anyway, so using 16 colors is either for
+# terminfo-level applications or via ncurses.
+xterm-16color|xterm with 16 colors,
+	colors#16,
+	ncv#32,
+	pairs#256,
+	setab@,
+	setaf@,
+	setb=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
+	setf=%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
 	use=xterm,
 #
 # Compatible with the R6 xterm

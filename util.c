@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c /main/33 1996/12/01 23:47:10 swick $
- *	$XFree86: xc/programs/xterm/util.c,v 3.13 1997/01/08 20:52:40 dawes Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.13.2.2 1997/05/23 12:19:50 dawes Exp $
  */
 
 /*
@@ -27,6 +27,10 @@
  */
 
 /* util.c */
+
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
 
 #include "ptyx.h"
 #include "data.h"
@@ -1486,3 +1490,42 @@ void ClearCurBackground(screen, top,left, height,width)
 	useCurBackground(FALSE);
 }
 #endif /* OPT_ISO_COLORS */
+
+#ifdef HAVE_CONFIG_H
+#if USE_MY_MEMMOVE
+char *	my_memmove(s1, s2, n)
+	char *	s1;
+	char *	s2;
+	size_t	n;
+{
+	if (n != 0) {
+		if ((s1+n > s2) && (s2+n > s1)) {
+			static	char	*buffer;
+			static	size_t	length;
+			register int	j;
+			if (length < n) {
+				length = (n * 3) / 2;
+				buffer = doalloc(buffer, length = n);
+			}
+			for (j = 0; j < n; j++)
+				buffer[j] = s2[j];
+			s2 = buffer;
+		}
+		while (n-- != 0)
+			s1[n] = s2[n];
+	}
+	return s1;
+}
+#endif /* USE_MY_MEMMOVE */
+
+#if !HAVE_STRERROR
+char *my_strerror(n)
+{
+	extern char *sys_errlist[];
+	extern int sys_nerr;
+	if (n > 0 && n < sys_nerr)
+		return sys_errlist[n];
+	return "?";
+}
+#endif
+#endif

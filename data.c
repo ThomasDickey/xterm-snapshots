@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: data.c,v 1.12 95/04/05 19:58:47 kaleb Exp $
- *	$XFree86: xc/programs/xterm/data.c,v 3.2 1996/08/13 11:36:56 dawes Exp $
+ *	$XFree86: xc/programs/xterm/data.c,v 3.2.4.1 1997/05/23 09:24:37 dawes Exp $
  */
 
 /*
@@ -25,6 +25,10 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
 
 #include "ptyx.h"		/* gets Xt stuff, too */
 

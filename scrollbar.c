@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: scrollbar.c /main/47 1996/12/01 23:47:08 swick $
- *	$XFree86: xc/programs/xterm/scrollbar.c,v 3.6 1996/12/23 07:14:39 dawes Exp $
+ *	$XFree86: xc/programs/xterm/scrollbar.c,v 3.6.2.2 1997/05/23 09:24:43 dawes Exp $
  */
 
 /*
@@ -25,6 +25,10 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
+
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
 
 #include "ptyx.h"		/* gets Xt headers, too */
 
@@ -500,7 +504,10 @@ static int params_to_pixels (screen, params, n)
 	    mult = ((screen->max_row + 1) * FontHeight(screen)) >> 1;
 	} else if (specialcmplowerwiths (s, "pixel")) {
 	    mult = 1;
-	} /* else assume that it is Line */
+	} else {
+	    /* else assume that it is Line */
+	    mult = FontHeight(screen);
+	}
 	mult *= atoi (params[0]);
 	break;
       case 1:
@@ -510,7 +517,6 @@ static int params_to_pixels (screen, params, n)
 	mult = screen->scrolllines * FontHeight(screen);
 	break;
     }
-
     return mult;
 }
 

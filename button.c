@@ -1,5 +1,5 @@
 /* $XConsortium: button.c /main/75 1996/11/29 10:33:33 swick $ */
-/* $XFree86: xc/programs/xterm/button.c,v 3.11 1996/12/24 02:28:02 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.11.2.1 1997/05/23 09:24:33 dawes Exp $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
@@ -29,6 +29,10 @@ button.c	Handles button events in the terminal emulator.
 		passes button events through to some applications.
 				J. Gettys.
 */
+
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
 
 #include "ptyx.h"		/* Xlib headers included here. */
 
@@ -1269,7 +1273,7 @@ static void LoseSelection(w, selection)
 {
     register TScreen* screen = &((XtermWidget)w)->screen;
     register Atom* atomP;
-    int i;
+    Cardinal i;
     for (i = 0, atomP = screen->selection_atoms;
 	 i < screen->selection_count; i++, atomP++)
     {
@@ -1319,7 +1323,7 @@ static void _OwnSelection(termw, selections, count)
     Cardinal count;
 {
     Atom* atoms = termw->screen.selection_atoms;
-    int i;
+    Cardinal i;
     Boolean have_selection = False;
 
     if (termw->screen.selection_length < 0) return;
@@ -1372,7 +1376,7 @@ DisownSelection(termw)
 {
     Atom* atoms = termw->screen.selection_atoms;
     Cardinal count = termw->screen.selection_count;
-    int i;
+    Cardinal i;
 
     for (i = 0; i < count; i++) {
 	int cutbuffer;
