@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-156
+MANIFEST for xterm, version xterm-157
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -87,6 +87,8 @@ xterm.man                       manual page for 'xterm'
 xterm_axp.opt                   linker options file for VMS port of 'xterm'
 xterm_io.h                      split-out definitions of termio/termios/sgtty and winsize from main.c, os2main.c, screen.c and resize.c
 xtermcfg.hin                    configure script: template for xtermcfg.h
+xutf8.c                         JC's cleanup of UTF8
+xutf8.h                         JC's cleanup of UTF8
 tektests                        subdirectory
 tektests/aitest.tek             tek4014 demo: draw a globe
 tektests/dmerc.tek              tek4014 demo: draws a Mercator projection with orbit

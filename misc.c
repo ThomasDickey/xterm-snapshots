@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.62 2001/04/12 01:02:50 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.63 2001/06/18 19:09:26 dickey Exp $ */
 
 /*
  *
@@ -82,6 +82,7 @@
 #include <menu.h>
 #include <fontutils.h>
 #include <xcharmouse.h>
+#include <xstrings.h>
 #include <VTparse.h>
 
 #if (XtSpecificationRelease < 6)
@@ -947,15 +948,12 @@ StartLog(register TScreen *screen)
 		if(screen->logfile)
 			free(screen->logfile);
 		if(log_default == NULL) {
-			log_default = (char *)malloc(strlen(log_def_name) + 1);
-			if (log_default == 0)
+			if ((log_default = x_strdup(log_def_name)) == NULL)
 				return;
-			strcpy(log_default, log_def_name);
 			mktemp(log_default);
 		}
-		if((screen->logfile = (char *)malloc(strlen(log_default) + 1)) == 0)
+		if((screen->logfile = x_strdup(log_default)) == 0)
 			return;
-		strcpy(screen->logfile, log_default);
 	}
 	if(*screen->logfile == '|') {	/* exec command */
 #ifdef ALLOWLOGFILEEXEC

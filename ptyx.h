@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.86 2001/04/12 01:02:50 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.87 2001/06/18 19:09:27 dickey Exp $ */
 
 /*
  * Copyright 1999-2000 by Thomas E. Dickey
@@ -383,12 +383,8 @@ typedef struct {
 	{RES_NAME(name), RES_CLASS(class), XtRBoolean, sizeof(Boolean), \
 	 RES_OFFSET(offset), XtRImmediate, (XtPointer) value}
 
-#define Cres(name,offset,value) \
-	{RES_NAME(name), XtCForeground, XtRPixel, sizeof(Pixel), \
-	 RES_OFFSET(offset), XtRString, value}
-
-#define Dres(name,offset,value) \
-	{RES_NAME(name), XtCBackground, XtRPixel, sizeof(Pixel), \
+#define Cres(name,class,offset,value) \
+	{RES_NAME(name), RES_CLASS(class), XtRPixel, sizeof(Pixel), \
 	 RES_OFFSET(offset), XtRString, value}
 
 #define Ires(name,class,offset,value) \
@@ -421,6 +417,10 @@ typedef struct {
 
 #ifndef OPT_CLIP_BOLD
 #define OPT_CLIP_BOLD	1 /* true if xterm uses clipping to avoid bold-trash */
+#endif
+
+#ifndef OPT_COLOR_CLASS
+#define OPT_COLOR_CLASS 1 /* true if xterm uses separate color-resource classes */
 #endif
 
 #ifndef OPT_COLOR_RES
@@ -551,14 +551,6 @@ typedef struct {
 #define OPT_ZICONBEEP   1 /* true if xterm supports "-ziconbeep" option */
 #endif
 
-#ifndef OPT_USE_UTF8_API
-#define OPT_USE_UTF8_API 1
-#endif
-#ifndef X_HAVE_UTF8_STRING
-#undef OPT_USE_UTF8_API
-#define OPT_USE_UTF8_API 0
-#endif
-
 /***====================================================================***/
 
 #if OPT_AIX_COLORS && !OPT_ISO_COLORS
@@ -671,10 +663,18 @@ typedef struct {
 # define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /*nothing*/
 #endif
 
-#if OPT_COLOR_RES
-#define COLOR_RES(name,offset,value) Sres(name, XtCForeground, offset.resource, value)
+#define COLOR_RES_NAME(root) "color" root
+
+#if OPT_COLOR_CLASS
+#define COLOR_RES_CLASS(root) "Color" root
 #else
-#define COLOR_RES(name,offset,value) Cres(name, offset, value)
+#define COLOR_RES_CLASS(root) XtCForeground
+#endif
+
+#if OPT_COLOR_RES
+#define COLOR_RES(root,offset,value) Sres(COLOR_RES_NAME(root), COLOR_RES_CLASS(root), offset.resource, value)
+#else
+#define COLOR_RES(root,offset,value) Cres(COLOR_RES_NAME(root), COLOR_RES_CLASS(root), offset, value)
 #endif
 
 /***====================================================================***/
@@ -1085,11 +1085,12 @@ typedef struct {
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
-	Boolean		force_box_chars; /* true if we assume that	*/
+	Boolean		force_box_chars;/* true if we assume that	*/
 	Dimension	fnt_wide;
 	Dimension	fnt_high;
 	XFontStruct	*fnt_norm;	/* normal font of terminal	*/
 	XFontStruct	*fnt_bold;	/* bold font of terminal	*/
+	Boolean		free_bold_box;	/* same_font_size's austerity	*/
 #if OPT_WIDE_CHARS
 	XFontStruct	*fnt_dwd;	/* wide font of terminal	*/
 	XFontStruct	*fnt_dwdb;	/* wide bold font of terminal	*/
@@ -1321,6 +1322,7 @@ typedef struct _Misc {
     Boolean useRight;
 #endif
     Boolean titeInhibit;
+    Boolean tiXtraScroll;
     Boolean appcursorDefault;
     Boolean appkeypadDefault;
 #if OPT_INPUT_METHOD

@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.45 2001/04/12 01:02:50 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.46 2001/06/18 19:09:27 dickey Exp $ */
 
 /***********************************************************
 
@@ -227,6 +227,7 @@ static struct _resource {
     char *icon_name;
     char *term_name;
     char *tty_modes;
+    Boolean hold_screen;	/* true if we keep window open	*/
     Boolean utmpInhibit;
     Boolean messages;
     Boolean sunFunctionKeys;	/* %%% should be widget resource? */
@@ -267,6 +268,8 @@ static XtResource application_resources[] = {
 	offset(term_name), XtRString, (caddr_t) NULL},
     {"ttyModes", "TtyModes", XtRString, sizeof(char *),
 	offset(tty_modes), XtRString, (caddr_t) NULL},
+    {"hold", "Hold", XtRBoolean, sizeof (Boolean),
+	offset(hold_screen), XtRString, "false"},
     {"utmpInhibit", "UtmpInhibit", XtRBoolean, sizeof (Boolean),
 	offset(utmpInhibit), XtRString, "false"},
     {"messages", "Messages", XtRBoolean, sizeof (Boolean),
@@ -347,9 +350,21 @@ static XrmOptionDescRec optionDescList[] = {
 {"+dc",		"*dynamicColors",XrmoptionNoArg,	(caddr_t) "on"},
 {"-e",		NULL,		XrmoptionSkipLine,	(caddr_t) NULL},
 {"-fb",		"*boldFont",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-fbb",	"*freeBoldBox", XrmoptionNoArg,		(caddr_t)"off"},
+{"+fbb",	"*freeBoldBox", XrmoptionNoArg,		(caddr_t)"on"},
+{"-fbx",	"*forceBoxChars", XrmoptionNoArg,	(caddr_t)"off"},
+{"+fbx",	"*forceBoxChars", XrmoptionNoArg,	(caddr_t)"on"},
 #ifndef NO_ACTIVE_ICON
 {"-fi",		"*iconFont",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif /* NO_ACTIVE_ICON */
+#ifdef XRENDERFONT
+{"-fa",		"*faceName",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-fs",		"*faceSize",	XrmoptionSepArg,	(caddr_t) NULL},
+#endif
+#if OPT_WIDE_CHARS
+{"-fw",		"*wideFont",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-fwb",	"*wideBoldFont", XrmoptionSepArg,	(caddr_t) NULL},
+#endif
 #if OPT_HIGHLIGHT_COLOR
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
@@ -357,6 +372,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-hf",		"*hpFunctionKeys",XrmoptionNoArg,	(caddr_t) "on"},
 {"+hf",		"*hpFunctionKeys",XrmoptionNoArg,	(caddr_t) "off"},
 #endif
+{"-hold",	"*hold",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+hold",	"*hold",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "off"},
 /* parse logging options anyway for compatibility */
@@ -458,6 +475,17 @@ static struct _options {
 { "-bd color",             "border color" },
 { "-bw number",            "border width in pixels" },
 { "-fn fontname",          "normal text font" },
+{ "-fb fontname",          "bold text font" },
+{"-/+fbb",                 "turn on/off bold font's box checking"},
+{"-/+fbx",                 "turn off/on linedrawing characters"},
+#ifdef XRENDERFONT
+{ "-fa pattern",           "FreeType font-selection pattern" },
+{ "-fs size",              "FreeType font-size" },
+#endif
+#if OPT_WIDE_CHARS
+{ "-fw fontname",          "doublewidth text font" },
+{ "-fwb fontname",         "doublewidth bold text font" },
+#endif
 { "-iconic",               "start iconic" },
 { "-name string",          "client instance, icon, and title strings" },
 { "-class string",         "class string (XTerm)" },
@@ -481,13 +509,13 @@ static struct _options {
 { "-cr color",             "text cursor color" },
 { "-/+cu",                 "turn on/off curses emulation" },
 { "-/+dc",		   "turn off/on dynamic color selection" },
-{ "-fb fontname",          "bold text font" },
 #if OPT_HIGHLIGHT_COLOR
 { "-hc",		   "selection background color" },
 #endif
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
 #endif
+{ "-/+hold",		   "turn on/off logic that retains window after exit" },
 { "-/+im",		   "use insert mode for TERMCAP" },
 { "-/+j",                  "turn on/off jump scroll" },
 #ifdef ALLOWLOGGING
@@ -551,7 +579,7 @@ static struct _options {
 { "-ziconbeep percent",    "beep and flag icon of window having hidden output" },
 #endif
 #if OPT_SAME_NAME
-{"-/+samename",	           "turn on/off the no flicker option for title and icon name" },
+{"-/+samename",            "turn on/off the no-flicker option for title and icon name" },
 #endif
 { NULL, NULL }};
 
@@ -577,6 +605,26 @@ static char *message[] = {
 "must appear at the end of the command line, otherwise the user's default shell",
 "will be started.  Options that start with a plus sign (+) restore the default.",
 NULL};
+
+static Boolean get_termcap(char *name, char *buffer, char *resized)
+{
+    register TScreen *screen = &term->screen;
+
+    *buffer = 0;	/* initialize, in case we're using terminfo's tgetent */
+
+    if (name != 0) {
+	if (tgetent (buffer, name) == 1
+	 && *buffer) {
+	    if (!TEK4014_ACTIVE(screen)) {
+		resize (screen, buffer, resized);
+	    }
+	    return True;
+	} else {
+	    *buffer = 0;
+	}
+    }
+    return False;
+}
 
 static int abbrev (char *tst, char *cmp)
 {
@@ -672,12 +720,12 @@ DeleteWindow(
     Cardinal *num_params GCC_UNUSED)
 {
 #if OPT_TEK4014
-  if (w == toplevel)
+  if (w == toplevel) {
     if (term->screen.Tshow)
       hide_vt_window();
     else
       do_hangup(w, (XtPointer)0, (XtPointer)0);
-  else
+  } else
     if (term->screen.Vshow)
       hide_tek_window();
     else
@@ -898,6 +946,7 @@ main (int argc, char **argv, char **envp)
 #if OPT_SAME_NAME
         sameName = resource.sameName;
 #endif
+	hold_screen = resource.hold_screen ? 1 : 0;
 	xterm_name = resource.xterm_name;
 	if (strcmp(xterm_name, "-") == 0) xterm_name = DFT_TERMTYPE;
 	if (resource.icon_geometry != NULL) {
@@ -920,6 +969,11 @@ main (int argc, char **argv, char **envp)
 
 	XtSetValues (toplevel, ourTopLevelShellArgs,
 		     number_ourTopLevelShellArgs);
+
+#if OPT_WIDE_CHARS
+	/* seems as good a place as any */
+	init_classtab();
+#endif
 
 	/* Parse the rest of the command line */
 	for (argc--, argv++ ; argc > 0 ; argc--, argv++) {
@@ -965,6 +1019,20 @@ main (int argc, char **argv, char **envp)
 	    }
 	    break;
 	}
+
+#if OPT_WIDE_CHARS
+	/* Test whether UTF-8 mode should be active by default */
+	{
+	    char *s;
+
+	    if ((s = getenv("LC_ALL")) ||
+		(s = getenv("LC_CTYPE")) ||
+		(s = getenv("LANG"))) {
+		if (strstr(s, "UTF-8"))
+		    defaultUTF8[0] = '2';
+	    }
+	}
+#endif
 
 	SetupMenus(toplevel, &form_top, &menu_top);
 
@@ -1387,16 +1455,7 @@ spawn (void)
 	 * the program to proceed (but not to set $TERMCAP) if the termcap
 	 * entry is not found.
 	 */
-	*ptr = 0;	/* initialize, in case we're using terminfo's tgetent */
-	TermName = NULL;
-	if (resource.term_name) {
-	    TermName = resource.term_name;
-	    if (tgetent (ptr, resource.term_name) == 1) {
-		if (*ptr)
-		    if (!TEK4014_ACTIVE(screen))
-			resize (screen, termcap, newtc);
-	    }
-	}
+	get_termcap(TermName = resource.term_name, ptr, newtc);
 
 	/*
 	 * This block is invoked only if there was no terminal name specified
@@ -1405,12 +1464,9 @@ spawn (void)
 	if (!TermName) {
 	    TermName = *envnew;
 	    while (*envnew != NULL) {
-		if(tgetent(ptr, *envnew) == 1) {
-			TermName = *envnew;
-			if (*ptr)
-			    if(!TEK4014_ACTIVE(screen))
-				resize(screen, termcap, newtc);
-			break;
+		if (get_termcap(*envnew, ptr, newtc)) {
+		    TermName = *envnew;
+		    break;
 		}
 		envnew++;
 	    }
@@ -1728,7 +1784,8 @@ static SIGNAL_T reapchild (int n GCC_UNUSED)
 #ifdef DEBUG
 	    if (debug) fputs ("Exiting\n", stderr);
 #endif
-	    Cleanup (0);
+	    if (!hold_screen)
+		Cleanup (0);
 	}
     } while ( (pid=nonblocking_wait()) > 0);
 

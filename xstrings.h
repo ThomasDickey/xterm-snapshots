@@ -1,8 +1,8 @@
-/* $XFree86: xc/programs/xterm/xstrings.h,v 1.1 2000/09/22 10:44:29 alanh Exp $ */
+/* $XFree86: xc/programs/xterm/xstrings.h,v 1.2 2001/06/18 19:09:27 dickey Exp $ */
 
 /************************************************************
 
-Copyright 2000 by Thomas E. Dickey
+Copyright 2000,2001 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -36,6 +36,7 @@ authorization.
 #define included_xstrings_h 1
 
 extern char *x_basename(char *name);
+extern char * x_strdup(char *s);
 extern char *x_strindex(char *s1, char *s2);
 
 #endif /* included_xstrings_h */

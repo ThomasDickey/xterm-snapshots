@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.129 2001/04/28 13:51:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.132 2001/06/18 19:09:26 dickey Exp $ */
 
 
 /* main.c */
@@ -131,6 +131,10 @@ SOFTWARE.
 
 #ifdef USE_ISPTS_FLAG
 static Bool IsPts = False;
+#endif
+
+#if defined(SCO) || defined(SVR4) || defined(_POSIX_SOURCE)
+#define USE_POSIX_SIGNALS
 #endif
 
 #if defined(SYSV) && !defined(SVR4) && !defined(ISC22) && !defined(ISC30)
@@ -285,7 +289,7 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 
 #endif	/* } !SYSV */
 
-#ifdef SVR4
+#if defined(SVR4) && !defined(__CYGWIN__)
 #define HAS_SAVED_IDS_AND_SETEUID
 #endif
 
@@ -792,6 +796,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"+dc",		"*dynamicColors",XrmoptionNoArg,	(caddr_t) "on"},
 {"-e",		NULL,		XrmoptionSkipLine,	(caddr_t) NULL},
 {"-fb",		"*boldFont",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-fbb",	"*freeBoldBox", XrmoptionNoArg,		(caddr_t)"off"},
+{"+fbb",	"*freeBoldBox", XrmoptionNoArg,		(caddr_t)"on"},
+{"-fbx",	"*forceBoxChars", XrmoptionNoArg,	(caddr_t)"off"},
+{"+fbx",	"*forceBoxChars", XrmoptionNoArg,	(caddr_t)"on"},
 #ifndef NO_ACTIVE_ICON
 {"-fi",		"*iconFont",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif /* NO_ACTIVE_ICON */
@@ -918,6 +926,8 @@ static struct _options {
 { "-bw number",            "border width in pixels" },
 { "-fn fontname",          "normal text font" },
 { "-fb fontname",          "bold text font" },
+{"-/+fbb",                 "turn on/off bold font's box checking"},
+{"-/+fbx",                 "turn off/on linedrawing characters"},
 #ifdef XRENDERFONT
 { "-fa pattern",           "FreeType font-selection pattern" },
 { "-fs size",              "FreeType font-size" },
@@ -998,10 +1008,10 @@ static struct _options {
 { "-ti termid",            "terminal identifier" },
 { "-tm string",            "terminal mode keywords and characters" },
 { "-tn name",              "TERM environment variable name" },
-{ "-/+ulc",                "turn off/on display of underline as color" },
 #if OPT_WIDE_CHARS
 { "-/+u8",                 "turn on/off UTF-8 mode (implies wide-characters)" },
 #endif
+{ "-/+ulc",                "turn off/on display of underline as color" },
 #ifdef HAVE_UTMP
 { "-/+ut",                 "turn on/off utmp inhibit" },
 #else
@@ -1297,6 +1307,28 @@ ParseSccn(char *option)
 		passedPty, am_slave, code ? "OK" : "ERR"));
 	return code;
 }
+
+#ifdef USE_POSIX_SIGNALS
+
+typedef void (*sigfunc)(int);
+
+/* make sure we sure we ignore SIGCHLD for the cases parent 
+   has just been stopped and not actually killed */
+
+static sigfunc
+posix_signal(int signo, sigfunc func)
+{
+	struct sigaction act, oact;
+
+	act.sa_handler = func;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags = SA_NOCLDSTOP|SA_RESTART;
+	if (sigaction(signo, &act, &oact) < 0)
+		return(SIG_ERR);
+	return (oact.sa_handler);
+}
+
+#endif /* linux && _POSIX_SOURCE */
 
 int
 main (int argc, char *argv[])
@@ -1890,8 +1922,12 @@ main (int argc, char *argv[])
 
 #ifndef VMS
 	/* Child process is out there, let's catch its termination */
-	(void) signal (SIGCHLD, reapchild);
 
+#ifdef USE_POSIX_SIGNALS
+	(void) posix_signal(SIGCHLD, reapchild);
+#else
+	(void) signal (SIGCHLD, reapchild);
+#endif
 	/* Realize procs have now been executed */
 
 #ifndef AMOEBA
@@ -2413,6 +2449,7 @@ spawn (void)
 	struct winsize ws;
 #endif	/* sun vs TIOCSWINSZ */
 	struct passwd *pw = NULL;
+	char *login_name = NULL;
 #ifdef HAVE_UTMP
 #if defined(UTMPX_FOR_UTMP)
 	struct utmpx utmp,
@@ -2456,7 +2493,7 @@ spawn (void)
 
 		signal(SIGALRM, hungtty);
 		alarm(2);		/* alarm(1) might return too soon */
-	       if (! sigsetjmp(env, 1)) {
+		if (! sigsetjmp(env, 1)) {
 			tty = open ("/dev/tty", O_RDWR, 0);
 			alarm(0);
 			tty_got_hung = False;
@@ -2985,6 +3022,9 @@ spawn (void)
 		    cfsetospeed(&tio, VAL_LINE_SPEED);
 #else /* !MINIX */
 #ifndef USE_POSIX_TERMIOS
+# if defined(Lynx) && !defined(CBAUD)
+#  define CBAUD V_CBAUD
+# endif
 		    tio.c_cflag &= ~(CBAUD);
 #ifdef BAUD_0
 		    /* baud rate is 0 (don't care) */
@@ -3346,8 +3386,39 @@ spawn (void)
 
 #ifdef HAVE_UTMP
 		pw = getpwuid(screen->uid);
-		if (pw && pw->pw_name)
-		    xtermSetenv ("LOGNAME=", pw->pw_name); /* for POSIX */
+		login_name = NULL;
+		if (pw && pw->pw_name) {
+#ifdef HAVE_GETLOGIN
+		    /*
+		     * If the value from getlogin() differs from the value we
+		     * get by looking in the password file, check if it does
+		     * correspond to the same uid.  If so, allow that as an
+		     * alias for the uid.
+		     *
+		     * Of course getlogin() will fail if we're started from
+		     * a window-manager, since there's no controlling terminal
+		     * to fuss with.  In that case, try to get something useful
+		     * from the user's $LOGNAME or $USER environment variables.
+		     */
+		    if (((login_name = getlogin()) != NULL
+		      || (login_name = getenv("LOGNAME")) != NULL
+		      || (login_name = getenv("USER")) != NULL)
+		     && strcmp(login_name, pw->pw_name)) {
+			struct passwd *pw2 = getpwnam(login_name);
+			if (pw2 != 0
+			 && pw->pw_uid != pw2->pw_uid) {
+			    login_name = NULL;
+			}
+		    }
+#endif
+		    if (login_name == NULL)
+			login_name = pw->pw_name;
+		    if (login_name != NULL)
+			login_name = x_strdup(login_name);
+		}
+		if (login_name != NULL) {
+		    xtermSetenv ("LOGNAME=", login_name); /* for POSIX */
+		}
 #ifdef USE_SYSV_UTMP
 		/* Set up our utmp entry now.  We need to do it here
 		** for the following reasons:
@@ -3388,7 +3459,7 @@ spawn (void)
 		utmp.ut_xstatus = 2;
 #endif
 		(void) strncpy(utmp.ut_user,
-			       (pw && pw->pw_name) ? pw->pw_name : "????",
+			       (login_name != NULL) ? login_name : "????",
 			       sizeof(utmp.ut_user));
 
 		/* why are we copying this string again?  (see above) */
@@ -3408,8 +3479,7 @@ spawn (void)
 #endif
 		(void) strncpy(utmp.ut_host, buf, sizeof(utmp.ut_host));
 #endif
-		(void) strncpy(utmp.ut_name, pw->pw_name,
-			       sizeof(utmp.ut_name));
+		(void) strncpy(utmp.ut_name, login_name, sizeof(utmp.ut_name));
 
 		utmp.ut_pid = getpid();
 #if defined(HAVE_UTMP_UT_XTIME)
@@ -3461,7 +3531,7 @@ spawn (void)
 				(void) strncpy(utmp.ut_line,
 					       my_pty_name(ttydev),
 					       sizeof(utmp.ut_line));
-				(void) strncpy(utmp.ut_name, pw->pw_name,
+				(void) strncpy(utmp.ut_name, login_name,
 					       sizeof(utmp.ut_name));
 #ifdef MINIX
 				utmp.ut_pid = getpid();
@@ -3540,7 +3610,7 @@ spawn (void)
 		(void) setgid (screen->gid);
 #ifdef HAS_BSD_GROUPS
 		if (geteuid() == 0 && pw) {
-		    if (initgroups (pw->pw_name, pw->pw_gid)) {
+		    if (initgroups (login_name, pw->pw_gid)) {
 			perror( "initgroups failed" );
 			exit (errno);
 		    }
@@ -3613,7 +3683,7 @@ spawn (void)
 		    strcpy (termcap, newtc);
 		    resize (screen, termcap, newtc);
 		}
-		if (term->misc.titeInhibit) {
+		if (term->misc.titeInhibit && !term->misc.tiXtraScroll) {
 		    remove_termcap_entry (newtc, "ti=");
 		    remove_termcap_entry (newtc, "te=");
 		}
@@ -3689,7 +3759,7 @@ spawn (void)
 
 #ifdef USE_LOGIN_DASH_P
 		if (term->misc.login_shell && pw && added_utmp_entry)
-		  execl (bin_login, "login", "-p", "-f", pw->pw_name, 0);
+		  execl (bin_login, "login", "-p", "-f", login_name, 0);
 #endif
 		execlp (ptr, (term->misc.login_shell ? shname_minus : shname),
 			0);
@@ -3761,8 +3831,7 @@ spawn (void)
 			tslot = handshake.tty_slot;
 #endif	/* USE_SYSV_UTMP */
 			free(ttydev);
-			ttydev = (char *)malloc((unsigned) strlen(handshake.buffer) + 1);
-			strcpy(ttydev, handshake.buffer);
+			ttydev = x_strdup(handshake.buffer);
 			break;
 		default:
 			fprintf(stderr, "%s: unexpected handshake status %d\n",
@@ -4054,7 +4123,7 @@ static int spawn(void)
 	strcpy (termcap, newtc);
 	resize (screen, termcap, newtc);
     }
-    if (term->misc.titeInhibit) {
+    if (term->misc.titeInhibit && !term->misc.tiXtraScroll) {
 	remove_termcap_entry (newtc, "ti=");
 	remove_termcap_entry (newtc, "te=");
     }

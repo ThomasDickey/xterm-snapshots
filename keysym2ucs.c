@@ -1,6 +1,5 @@
-/* $XFree86: xc/programs/xterm/keysym2ucs.c,v 1.4 2000/01/24 22:21:55 dawes Exp $ */
-/*
- * This module converts keysym values into the corresponding ISO 10646-1
+/* $XFree86: xc/programs/xterm/keysym2ucs.c,v 1.5 2001/06/18 19:09:26 dickey Exp $
+ * This module converts keysym values into the corresponding ISO 10646
  * (UCS, Unicode) values.
  *
  * The array keysymtab[] contains pairs of X11 keysym values for graphical
@@ -12,29 +11,40 @@
  * by Xlib via XmbLookupString() and should ideally not have to be
  * done in X applications. But we are not there yet.
  *
- * We allow to represent any UCS character in the range U+00000000 to
- * U+00FFFFFF by a keysym value in the range 0x01000000 to 0x01ffffff.
+ * We allow to represent any UCS character in the range U-00000000 to
+ * U-00FFFFFF by a keysym value in the range 0x01000000 to 0x01ffffff.
  * This admittedly does not cover the entire 31-bit space of UCS, but
- * it does cover all of the characters up to U+10FFFF, which can be
+ * it does cover all of the characters up to U-10FFFF, which can be
  * represented by UTF-16, and more, and it is very unlikely that higher
  * UCS codes will ever be assigned by ISO. So to get Unicode character
- * U+ABCD you can directly use keysym 0x1000abcd.
+ * U+ABCD you can directly use keysym 0x0100abcd.
  *
  * NOTE: The comments in the table below contain the actual character
  * encoded in UTF-8, so for viewing and editing best use an editor in
  * UTF-8 mode.
  *
- * Author: Markus G. Kuhn <mkuhn@acm.org>, University of Cambridge, June 1999
+ * Author: Markus G. Kuhn <mkuhn@acm.org>, University of Cambridge, April 2001
  *
  * Special thanks to Richard Verhoeven <river@win.tue.nl> for preparing
  * an initial draft of the mapping table.
  *
  * This software is in the public domain. Share and enjoy!
+ *
+ * AUTOMATICALLY GENERATED FILE, DO NOT EDIT !!! (unicode/convmap.pl)
  */
 
-#include <keysym2ucs.h>
+#ifndef KEYSYM2UCS_INCLUDED
+  
+#include "keysym2ucs.h"
+#define VISIBLE /* */
 
-struct codepair {
+#else
+
+#define VISIBLE static
+
+#endif
+
+static struct codepair {
   unsigned short keysym;
   unsigned short ucs;
 } keysymtab[] = {
@@ -428,22 +438,22 @@ struct codepair {
   { 0x07f7, 0x03c7 }, /*                   Greek_chi χ GREEK SMALL LETTER CHI */
   { 0x07f8, 0x03c8 }, /*                   Greek_psi ψ GREEK SMALL LETTER PSI */
   { 0x07f9, 0x03c9 }, /*                 Greek_omega ω GREEK SMALL LETTER OMEGA */
-/*  0x08a1                               leftradical ? ??? */
-/*  0x08a2                            topleftradical ? ??? */
-/*  0x08a3                            horizconnector ? ??? */
+  { 0x08a1, 0x23b7 }, /*                 leftradical ⎷ ??? */
+  { 0x08a2, 0x250c }, /*              topleftradical ┌ BOX DRAWINGS LIGHT DOWN AND RIGHT */
+  { 0x08a3, 0x2500 }, /*              horizconnector ─ BOX DRAWINGS LIGHT HORIZONTAL */
   { 0x08a4, 0x2320 }, /*                 topintegral ⌠ TOP HALF INTEGRAL */
   { 0x08a5, 0x2321 }, /*                 botintegral ⌡ BOTTOM HALF INTEGRAL */
   { 0x08a6, 0x2502 }, /*               vertconnector │ BOX DRAWINGS LIGHT VERTICAL */
-/*  0x08a7                          topleftsqbracket ? ??? */
-/*  0x08a8                          botleftsqbracket ? ??? */
-/*  0x08a9                         toprightsqbracket ? ??? */
-/*  0x08aa                         botrightsqbracket ? ??? */
-/*  0x08ab                             topleftparens ? ??? */
-/*  0x08ac                             botleftparens ? ??? */
-/*  0x08ad                            toprightparens ? ??? */
-/*  0x08ae                            botrightparens ? ??? */
-/*  0x08af                      leftmiddlecurlybrace ? ??? */
-/*  0x08b0                     rightmiddlecurlybrace ? ??? */
+  { 0x08a7, 0x23a1 }, /*            topleftsqbracket ⎡ ??? */
+  { 0x08a8, 0x23a3 }, /*            botleftsqbracket ⎣ ??? */
+  { 0x08a9, 0x23a4 }, /*           toprightsqbracket ⎤ ??? */
+  { 0x08aa, 0x23a6 }, /*           botrightsqbracket ⎦ ??? */
+  { 0x08ab, 0x239b }, /*               topleftparens ⎛ ??? */
+  { 0x08ac, 0x239d }, /*               botleftparens ⎝ ??? */
+  { 0x08ad, 0x239e }, /*              toprightparens ⎞ ??? */
+  { 0x08ae, 0x23a0 }, /*              botrightparens ⎠ ??? */
+  { 0x08af, 0x23a8 }, /*        leftmiddlecurlybrace ⎨ ??? */
+  { 0x08b0, 0x23ac }, /*       rightmiddlecurlybrace ⎬ ??? */
 /*  0x08b1                          topleftsummation ? ??? */
 /*  0x08b2                          botleftsummation ? ??? */
 /*  0x08b3                 topvertsummationconnector ? ??? */
@@ -459,8 +469,8 @@ struct codepair {
   { 0x08c1, 0x221d }, /*                   variation ∝ PROPORTIONAL TO */
   { 0x08c2, 0x221e }, /*                    infinity ∞ INFINITY */
   { 0x08c5, 0x2207 }, /*                       nabla ∇ NABLA */
-  { 0x08c8, 0x2245 }, /*                 approximate ≅ APPROXIMATELY EQUAL TO */
-/*  0x08c9                              similarequal ? ??? */
+  { 0x08c8, 0x223c }, /*                 approximate ∼ TILDE OPERATOR */
+  { 0x08c9, 0x2243 }, /*                similarequal ≃ ASYMPTOTICALLY EQUAL TO */
   { 0x08cd, 0x21d4 }, /*                    ifonlyif ⇔ LEFT RIGHT DOUBLE ARROW */
   { 0x08ce, 0x21d2 }, /*                     implies ⇒ RIGHTWARDS DOUBLE ARROW */
   { 0x08cf, 0x2261 }, /*                   identical ≡ IDENTICAL TO */
@@ -477,7 +487,7 @@ struct codepair {
   { 0x08fc, 0x2191 }, /*                     uparrow ↑ UPWARDS ARROW */
   { 0x08fd, 0x2192 }, /*                  rightarrow → RIGHTWARDS ARROW */
   { 0x08fe, 0x2193 }, /*                   downarrow ↓ DOWNWARDS ARROW */
-  { 0x09df, 0x2422 }, /*                       blank ␢ BLANK SYMBOL */
+/*  0x09df                                     blank ? ??? */
   { 0x09e0, 0x25c6 }, /*                soliddiamond ◆ BLACK DIAMOND */
   { 0x09e1, 0x2592 }, /*                checkerboard ▒ MEDIUM SHADE */
   { 0x09e2, 0x2409 }, /*                          ht ␉ SYMBOL FOR HORIZONTAL TABULATION */
@@ -491,11 +501,11 @@ struct codepair {
   { 0x09ec, 0x250c }, /*                upleftcorner ┌ BOX DRAWINGS LIGHT DOWN AND RIGHT */
   { 0x09ed, 0x2514 }, /*               lowleftcorner └ BOX DRAWINGS LIGHT UP AND RIGHT */
   { 0x09ee, 0x253c }, /*               crossinglines ┼ BOX DRAWINGS LIGHT VERTICAL AND HORIZONTAL */
-/*  0x09ef                            horizlinescan1 ? ??? */
-/*  0x09f0                            horizlinescan3 ? ??? */
+  { 0x09ef, 0x23ba }, /*              horizlinescan1 ⎺ HORIZONTAL SCAN LINE-1 (Unicode 3.2 draft) */
+  { 0x09f0, 0x23bb }, /*              horizlinescan3 ⎻ HORIZONTAL SCAN LINE-3 (Unicode 3.2 draft) */
   { 0x09f1, 0x2500 }, /*              horizlinescan5 ─ BOX DRAWINGS LIGHT HORIZONTAL */
-/*  0x09f2                            horizlinescan7 ? ??? */
-/*  0x09f3                            horizlinescan9 ? ??? */
+  { 0x09f2, 0x23bc }, /*              horizlinescan7 ⎼ HORIZONTAL SCAN LINE-7 (Unicode 3.2 draft) */
+  { 0x09f3, 0x23bd }, /*              horizlinescan9 ⎽ HORIZONTAL SCAN LINE-9 (Unicode 3.2 draft) */
   { 0x09f4, 0x251c }, /*                       leftt ├ BOX DRAWINGS LIGHT VERTICAL AND RIGHT */
   { 0x09f5, 0x2524 }, /*                      rightt ┤ BOX DRAWINGS LIGHT VERTICAL AND LEFT */
   { 0x09f6, 0x2534 }, /*                        bott ┴ BOX DRAWINGS LIGHT UP AND HORIZONTAL */
@@ -513,7 +523,7 @@ struct codepair {
   { 0x0aaa, 0x2013 }, /*                      endash – EN DASH */
 /*  0x0aac                               signifblank ? ??? */
   { 0x0aae, 0x2026 }, /*                    ellipsis … HORIZONTAL ELLIPSIS */
-/*  0x0aaf                           doubbaselinedot ? ??? */
+  { 0x0aaf, 0x2025 }, /*             doubbaselinedot ‥ TWO DOT LEADER */
   { 0x0ab0, 0x2153 }, /*                    onethird ⅓ VULGAR FRACTION ONE THIRD */
   { 0x0ab1, 0x2154 }, /*                   twothirds ⅔ VULGAR FRACTION TWO THIRDS */
   { 0x0ab2, 0x2155 }, /*                    onefifth ⅕ VULGAR FRACTION ONE FIFTH */
@@ -525,7 +535,7 @@ struct codepair {
   { 0x0ab8, 0x2105 }, /*                      careof ℅ CARE OF */
   { 0x0abb, 0x2012 }, /*                     figdash ‒ FIGURE DASH */
   { 0x0abc, 0x2329 }, /*            leftanglebracket 〈 LEFT-POINTING ANGLE BRACKET */
-  { 0x0abd, 0x002e }, /*                decimalpoint . FULL STOP */
+/*  0x0abd                              decimalpoint ? ??? */
   { 0x0abe, 0x232a }, /*           rightanglebracket 〉 RIGHT-POINTING ANGLE BRACKET */
 /*  0x0abf                                    marker ? ??? */
   { 0x0ac3, 0x215b }, /*                   oneeighth ⅛ VULGAR FRACTION ONE EIGHTH */
@@ -538,7 +548,7 @@ struct codepair {
   { 0x0acc, 0x25c1 }, /*            leftopentriangle ◁ WHITE LEFT-POINTING TRIANGLE */
   { 0x0acd, 0x25b7 }, /*           rightopentriangle ▷ WHITE RIGHT-POINTING TRIANGLE */
   { 0x0ace, 0x25cb }, /*                emopencircle ○ WHITE CIRCLE */
-  { 0x0acf, 0x25a1 }, /*             emopenrectangle □ WHITE SQUARE */
+  { 0x0acf, 0x25af }, /*             emopenrectangle ▯ WHITE VERTICAL RECTANGLE */
   { 0x0ad0, 0x2018 }, /*         leftsinglequotemark ‘ LEFT SINGLE QUOTATION MARK */
   { 0x0ad1, 0x2019 }, /*        rightsinglequotemark ’ RIGHT SINGLE QUOTATION MARK */
   { 0x0ad2, 0x201c }, /*         leftdoublequotemark “ LEFT DOUBLE QUOTATION MARK */
@@ -552,7 +562,7 @@ struct codepair {
   { 0x0adc, 0x25c0 }, /*         filledlefttribullet ◀ BLACK LEFT-POINTING TRIANGLE */
   { 0x0add, 0x25b6 }, /*        filledrighttribullet ▶ BLACK RIGHT-POINTING TRIANGLE */
   { 0x0ade, 0x25cf }, /*              emfilledcircle ● BLACK CIRCLE */
-  { 0x0adf, 0x25a0 }, /*                emfilledrect ■ BLACK SQUARE */
+  { 0x0adf, 0x25ae }, /*                emfilledrect ▮ BLACK VERTICAL RECTANGLE */
   { 0x0ae0, 0x25e6 }, /*            enopencircbullet ◦ WHITE BULLET */
   { 0x0ae1, 0x25ab }, /*          enopensquarebullet ▫ WHITE SMALL SQUARE */
   { 0x0ae2, 0x25ad }, /*              openrectbullet ▭ WHITE RECTANGLE */
@@ -589,20 +599,20 @@ struct codepair {
   { 0x0ba8, 0x2228 }, /*                   downcaret ∨ LOGICAL OR */
   { 0x0ba9, 0x2227 }, /*                     upcaret ∧ LOGICAL AND */
   { 0x0bc0, 0x00af }, /*                     overbar ¯ MACRON */
-  { 0x0bc2, 0x22a4 }, /*                    downtack ⊤ DOWN TACK */
+  { 0x0bc2, 0x22a5 }, /*                    downtack ⊥ UP TACK */
   { 0x0bc3, 0x2229 }, /*                      upshoe ∩ INTERSECTION */
   { 0x0bc4, 0x230a }, /*                   downstile ⌊ LEFT FLOOR */
   { 0x0bc6, 0x005f }, /*                    underbar _ LOW LINE */
   { 0x0bca, 0x2218 }, /*                         jot ∘ RING OPERATOR */
-  { 0x0bcc, 0x2395 }, /*                        quad ⎕ APL FUNCTIONAL SYMBOL QUAD (Unicode 3.0) */
-  { 0x0bce, 0x22a5 }, /*                      uptack ⊥ UP TACK */
+  { 0x0bcc, 0x2395 }, /*                        quad ⎕ APL FUNCTIONAL SYMBOL QUAD */
+  { 0x0bce, 0x22a4 }, /*                      uptack ⊤ DOWN TACK */
   { 0x0bcf, 0x25cb }, /*                      circle ○ WHITE CIRCLE */
   { 0x0bd3, 0x2308 }, /*                     upstile ⌈ LEFT CEILING */
   { 0x0bd6, 0x222a }, /*                    downshoe ∪ UNION */
   { 0x0bd8, 0x2283 }, /*                   rightshoe ⊃ SUPERSET OF */
   { 0x0bda, 0x2282 }, /*                    leftshoe ⊂ SUBSET OF */
-  { 0x0bdc, 0x22a3 }, /*                    lefttack ⊣ LEFT TACK */
-  { 0x0bfc, 0x22a2 }, /*                   righttack ⊢ RIGHT TACK */
+  { 0x0bdc, 0x22a2 }, /*                    lefttack ⊢ RIGHT TACK */
+  { 0x0bfc, 0x22a3 }, /*                   righttack ⊣ LEFT TACK */
   { 0x0cdf, 0x2017 }, /*        hebrew_doublelowline ‗ DOUBLE LOW LINE */
   { 0x0ce0, 0x05d0 }, /*                hebrew_aleph א HEBREW LETTER ALEF */
   { 0x0ce1, 0x05d1 }, /*                  hebrew_bet ב HEBREW LETTER BET */
@@ -689,7 +699,7 @@ struct codepair {
   { 0x0dd8, 0x0e38 }, /*                  Thai_sarau ุ THAI CHARACTER SARA U */
   { 0x0dd9, 0x0e39 }, /*                 Thai_sarauu ู THAI CHARACTER SARA UU */
   { 0x0dda, 0x0e3a }, /*                Thai_phinthu ฺ THAI CHARACTER PHINTHU */
-  { 0x0dde, 0x0e3e }, /*      Thai_maihanakat_maitho ฾ ??? */
+/*  0x0dde                    Thai_maihanakat_maitho ? ??? */
   { 0x0ddf, 0x0e3f }, /*                   Thai_baht ฿ THAI CURRENCY SYMBOL BAHT */
   { 0x0de0, 0x0e40 }, /*                  Thai_sarae เ THAI CHARACTER SARA E */
   { 0x0de1, 0x0e41 }, /*                 Thai_saraae แ THAI CHARACTER SARA AE */
@@ -797,33 +807,23 @@ struct codepair {
   { 0x0ef0, 0x3171 }, /*    Hangul_SunkyeongeumMieum ㅱ HANGUL LETTER KAPYEOUNMIEUM */
   { 0x0ef1, 0x3178 }, /*    Hangul_SunkyeongeumPieub ㅸ HANGUL LETTER KAPYEOUNPIEUP */
   { 0x0ef2, 0x317f }, /*              Hangul_PanSios ㅿ HANGUL LETTER PANSIOS */
-/*  0x0ef3                  Hangul_KkogjiDalrinIeung ? ??? */
+  { 0x0ef3, 0x3181 }, /*    Hangul_KkogjiDalrinIeung ㆁ HANGUL LETTER YESIEUNG */
   { 0x0ef4, 0x3184 }, /*   Hangul_SunkyeongeumPhieuf ㆄ HANGUL LETTER KAPYEOUNPHIEUPH */
   { 0x0ef5, 0x3186 }, /*          Hangul_YeorinHieuh ㆆ HANGUL LETTER YEORINHIEUH */
   { 0x0ef6, 0x318d }, /*                Hangul_AraeA ㆍ HANGUL LETTER ARAEA */
   { 0x0ef7, 0x318e }, /*               Hangul_AraeAE ㆎ HANGUL LETTER ARAEAE */
   { 0x0ef8, 0x11eb }, /*            Hangul_J_PanSios ᇫ HANGUL JONGSEONG PANSIOS */
-/*  0x0ef9                Hangul_J_KkogjiDalrinIeung ? ??? */
+  { 0x0ef9, 0x11f0 }, /*  Hangul_J_KkogjiDalrinIeung ᇰ HANGUL JONGSEONG YESIEUNG */
   { 0x0efa, 0x11f9 }, /*        Hangul_J_YeorinHieuh ᇹ HANGUL JONGSEONG YEORINHIEUH */
   { 0x0eff, 0x20a9 }, /*                  Korean_Won ₩ WON SIGN */
+  { 0x13a4, 0x20ac }, /*                        Euro € EURO SIGN */
   { 0x13bc, 0x0152 }, /*                          OE Œ LATIN CAPITAL LIGATURE OE */
   { 0x13bd, 0x0153 }, /*                          oe œ LATIN SMALL LIGATURE OE */
   { 0x13be, 0x0178 }, /*                  Ydiaeresis Ÿ LATIN CAPITAL LETTER Y WITH DIAERESIS */
-  { 0x20a0, 0x20a0 }, /*                     EcuSign ₠ EURO-CURRENCY SIGN */
-  { 0x20a1, 0x20a1 }, /*                   ColonSign ₡ COLON SIGN */
-  { 0x20a2, 0x20a2 }, /*                CruzeiroSign ₢ CRUZEIRO SIGN */
-  { 0x20a3, 0x20a3 }, /*                  FFrancSign ₣ FRENCH FRANC SIGN */
-  { 0x20a4, 0x20a4 }, /*                    LiraSign ₤ LIRA SIGN */
-  { 0x20a5, 0x20a5 }, /*                    MillSign ₥ MILL SIGN */
-  { 0x20a6, 0x20a6 }, /*                   NairaSign ₦ NAIRA SIGN */
-  { 0x20a7, 0x20a7 }, /*                  PesetaSign ₧ PESETA SIGN */
-  { 0x20a8, 0x20a8 }, /*                   RupeeSign ₨ RUPEE SIGN */
-  { 0x20a9, 0x20a9 }, /*                     WonSign ₩ WON SIGN */
-  { 0x20aa, 0x20aa }, /*               NewSheqelSign ₪ NEW SHEQEL SIGN */
-  { 0x20ab, 0x20ab }, /*                    DongSign ₫ DONG SIGN */
   { 0x20ac, 0x20ac }, /*                    EuroSign € EURO SIGN */
 };
 
+VISIBLE
 long keysym2ucs(KeySym keysym)
 {
     int min = 0;

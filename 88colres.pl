@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # Author: Steve Wall <steve_wall@redcom.com>
-# $XFree86: xc/programs/xterm/88colres.pl,v 1.3 2000/06/14 00:16:17 dawes Exp $
+# $XFree86: xc/programs/xterm/88colres.pl,v 1.4 2001/06/18 19:09:25 dickey Exp $
 # Made from 256colres.pl
 
 # Construct a header file defining default resources for the
@@ -17,7 +17,7 @@ print <<EOF;
 /* \$XFree86\$ */
 EOF
 
-$line1="COLOR_RES(\"color%d\",";
+$line1="COLOR_RES(\"%d\",";
 $line2="\tscreen.Acolors[%d],";
 $line3="\tDFT_COLOR(\"rgb:%2.2x/%2.2x/%2.2x\")),\n";
 @steps=(0,139,205,255);
