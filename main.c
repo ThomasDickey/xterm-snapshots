@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.421 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: main.c,v 1.422 2005/01/18 00:02:26 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.187 2005/01/14 01:50:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.188 2005/01/18 00:02:26 dickey Exp $ */
 
 /* main.c */
 
@@ -1507,6 +1507,7 @@ main(int argc, char *argv[]ENVP_ARG)
     Widget form_top, menu_top;
     TScreen *screen;
     int mode;
+    char *ptr;
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
 
@@ -1837,10 +1838,13 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
 #endif
 
-#ifdef HAVE_PUTENV
-	if (getenv("DISPLAY") == 0)
-	    putenv("DISPLAY=:0");
-#endif
+	/*
+	 * Check for the obvious - Xt does a poor job of reporting this.
+	 */
+	if ((ptr = getenv("DISPLAY")) == 0 || *x_strtrim(ptr) == '\0') {
+	    fprintf(stderr, "%s:  DISPLAY is not set\n", ProgramName);
+	    exit(1);
+	}
 
 	XtSetErrorHandler(xt_error);
 #if OPT_SESSION_MGT

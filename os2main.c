@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.186 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: os2main.c,v 1.187 2005/01/18 00:02:26 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.72 2005/01/14 01:50:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.73 2005/01/18 00:02:26 dickey Exp $ */
 
 /***********************************************************
 
@@ -876,6 +876,7 @@ main(int argc, char **argv ENVP_ARG)
     Widget form_top, menu_top;
     TScreen *screen;
     int mode;
+    char *ptr;
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
 
@@ -949,10 +950,13 @@ main(int argc, char **argv ENVP_ARG)
     d_tio.c_cc[VEOF] = CEOF;	/* '^D' */
     d_tio.c_cc[VEOL] = CEOL;	/* '^@' */
 
-#ifdef HAVE_PUTENV
-    if (getenv("DISPLAY") == 0)
-	putenv("DISPLAY=:0");
-#endif
+    /*
+     * Check for the obvious - Xt does a poor job of reporting this.
+     */
+    if ((ptr = getenv("DISPLAY")) == 0 || *x_strtrim(ptr) == '\0') {
+	fprintf(stderr, "%s:  DISPLAY is not set\n", ProgramName);
+	exit(1);
+    }
 
     XtSetErrorHandler(xt_error);
 #if OPT_SESSION_MGT
