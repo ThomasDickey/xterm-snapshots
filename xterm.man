@@ -56,7 +56,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.75 2001/09/09 01:07:26 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.76 2001/10/10 19:46:23 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996.
 .TH XTERM 1 __vendorversion__
@@ -2626,7 +2626,8 @@ The default bindings in the VT102 window are:
          Shift <KeyPress> Select:select-cursor-start() \\
                                  select-cursor-end(PRIMARY, CUT_BUFFER0) \\n\\
          Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
-         Shift <KeyPress> KP_Add:larger-vt-font() \\n\\
+    Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\
+    Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\
     Shift <KeyPress> KP_Subtract:smaller-vt-font() \\n\\
                 ~Meta <KeyPress>:insert-seven-bit() \\n\\
                  Meta <KeyPress>:insert-eight-bit() \\n\\

@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.54 2001/09/09 01:07:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.55 2001/10/10 19:46:23 dickey Exp $ */
 
 /*
  * Copyright 1999-2001 by Thomas E. Dickey
@@ -82,6 +82,8 @@
 
 #include <data.h>
 #include <fontutils.h>
+
+#define KEYSYM_FMT "0x%04lX"	/* simplify matching <X11/keysymdef.h> */
 
 /*                       0123456789 abc def0123456789abdef0123456789abcdef0123456789abcd */
 static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XX=";
@@ -208,9 +210,9 @@ TranslateFromSUNPC(KeySym keysym)
 
 	for (n = 0; n < sizeof(table)/sizeof(table[0]); n++) {
 		if (table[n].before == keysym) {
-			TRACE(("...Input keypad before was %#04lx\n", keysym));
+			TRACE(("...Input keypad before was "KEYSYM_FMT"\n", keysym));
 			keysym = table[n].after;
-			TRACE(("...Input keypad changed to %#04lx\n", keysym));
+			TRACE(("...Input keypad changed to "KEYSYM_FMT"\n", keysym));
 			break;
 		}
 	}
@@ -319,7 +321,7 @@ xtermDeleteIsDEL(void)
 /*
  * Add input-actions for widgets that are overlooked (scrollbar and toolbar):
  *
- * 	a) Sometimes the scrollbar passes through translations, sometimes it
+ *	a) Sometimes the scrollbar passes through translations, sometimes it
  *	   doesn't.  We add the KeyPress translations here, just to be sure.
  *	b) In the normal (non-toolbar) configuration, the xterm widget covers
  *	   almost all of the window.  With a toolbar, there's a relatively
@@ -408,7 +410,7 @@ Input (
 	reply.a_nparam = 0;
 	reply.a_inters = 0;
 
-	TRACE(("Input keysym %#04lx, %d:'%.*s'%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+	TRACE(("Input keysym "KEYSYM_FMT", %d:'%.*s'%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 		keysym,
 		nbytes,
 		nbytes > 0 ? nbytes : 1,
@@ -435,12 +437,17 @@ Input (
 	 * Other (Sun, PC) keyboards commonly have keypad(+), but no keypad(,)
 	 * - it's a pain for users to work around.
 	 */
-	if (term->keyboard.type != keyboardIsSun
-	 && (event->state & ShiftMask) == 0
-	 && term->keyboard.type == keyboardIsVT220
-	 && keysym == XK_KP_Add) {
-		keysym = XK_KP_Separator;
-		TRACE(("...Input keypad(+), change keysym to %#04lx\n", keysym));
+	if (term->keyboard.type == keyboardIsVT220
+	 && (event->state & ShiftMask) == 0) {
+		if (keysym == XK_KP_Add) {
+			keysym = XK_KP_Separator;
+			TRACE(("...Input keypad(+), change keysym to "KEYSYM_FMT"\n", keysym));
+		}
+		if (event->state & ControlMask
+		 && keysym == XK_KP_Separator) {
+			keysym = XK_KP_Subtract;
+			TRACE(("...Input control/keypad(,), change keysym to "KEYSYM_FMT"\n", keysym));
+		}
 	}
 #endif
 
@@ -460,8 +467,7 @@ Input (
 	if (nbytes == 1
 	 && IsKeypadKey(keysym)
 	 && term->misc.real_NumLock
-	 && ((term->misc.num_lock == 0)
-	  || (term->misc.num_lock & event->state) != 0)) {
+	 && (term->misc.num_lock & event->state) != 0) {
 		keypad_mode = 0;
 		TRACE(("...Input num_lock, force keypad_mode off\n"));
 	}
@@ -538,9 +544,9 @@ Input (
 	{
 #ifdef XK_KP_Home
 	if (keysym >= XK_KP_Home && keysym <= XK_KP_Begin) {
-		TRACE(("...Input keypad before was %#04lx\n", keysym));
+		TRACE(("...Input keypad before was "KEYSYM_FMT"\n", keysym));
 		keysym += XK_Home - XK_KP_Home;
-		TRACE(("...Input keypad changed to %#04lx\n", keysym));
+		TRACE(("...Input keypad changed to "KEYSYM_FMT"\n", keysym));
 	}
 #endif
 	}
