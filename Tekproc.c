@@ -3,7 +3,7 @@
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.38 2002/09/30 00:39:05 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.39 2002/10/05 17:57:11 dickey Exp $ */
 
 /*
 
@@ -86,8 +86,6 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
-#include <X11/StringDefs.h>
-#include <X11/Shell.h>
 #include <X11/Xmu/CharSet.h>
 
 #if OPT_TOOLBAR
@@ -110,14 +108,6 @@ in this Software without prior written authorization from The Open Group.
 #include <data.h>
 #include <error.h>
 #include <menu.h>
-
-#ifdef MINIX
-#include <sys/nbio.h>
-
-#define select(n,r,w,x,t) nbio_select(n,r,w,x,t)
-#define read(f,b,s) nbio_read(f,b,s)
-#define write(f,b,s) nbio_write(f,b,s)
-#endif
 
 #define DefaultGCID XGContextFromGC(DefaultGC(screen->display, DefaultScreen(screen->display)))
 
@@ -154,9 +144,6 @@ in this Software without prior written authorization from The Open Group.
 #define	input()		Tinput()
 #define	unput(c)	*Tpushback++ = c
 
-extern Bool waiting_for_initial_map;
-extern Arg ourTopLevelShellArgs[];
-extern int number_ourTopLevelShellArgs;
 /* *INDENT-OFF* */
 static struct Tek_Char {
     int hsize;			/* in Tek units */
@@ -841,7 +828,6 @@ Tinput(void)
 		TCursorToggle(TOGGLE);
 		Ttoggled = FALSE;
 	    }
-#ifndef AMOEBA
 	    if (XtAppPending(app_con) & XtIMXEvent) {
 #ifdef VMS
 		Tselect_mask = X_mask;
@@ -864,25 +850,6 @@ Tinput(void)
 		}
 #endif /* VMS */
 	    }
-#else /* AMOEBA */
-	    XFlush(screen->display);
-	    i = _X11TransAmSelect(ConnectionNumber(screen->display),
-				  1);
-	    /* if there are X events already in our queue,
-	       it counts as being readable */
-	    if (XtAppPending(app_con) || i > 0) {
-		xevents();
-		continue;
-	    } else if (i < 0) {
-		extern int exiting;
-		if (errno != EINTR && !exiting)
-		    SysError(ERROR_SELECT);
-	    }
-	    if (Tbuffer->cnt > 0)
-		goto again;
-	    if (cb_full(screen->tty_outq) <= 0)
-		SleepMainThread();
-#endif /* AMOEBA */
 #ifdef VMS
 	    if (Tselect_mask & X_mask) {
 		xevents();

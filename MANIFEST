@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-168
+MANIFEST for xterm, version xterm-169
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -71,7 +71,6 @@ terminfo                        terminfo entries for 'xterm'
 testxmc.c                       testing: xmc/magic-cookies
 trace.c                         debugging trace functions for 'xterm'
 trace.h                         interface of trace.c
-ttysvr.c                        simple tty server for AMOEBA port of 'xterm'
 util.c                          miscellaneous utility functions for 'xterm'
 uxterm                          wrapper script to make unicode-xterm
 version.h                       version of xterm

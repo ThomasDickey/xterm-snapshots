@@ -1,4 +1,4 @@
--- $XFree86: xc/programs/xterm/INSTALL,v 3.26 2002/08/17 19:52:25 dickey Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.27 2002/10/05 17:57:11 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -138,7 +138,7 @@ The options (in alphabetic order):
 	Do not compile-in code for "input method".  This is an X11R6
 	feature which deals with translation of composite characters.
 
-	Some user report problems with their configuration, e.g., messages
+	Some users report problems with their configuration, e.g., messages
 	stating that there is no input method defined for the given preedit
 	type.  If you do not need input method (and are troubled by the
 	warning messages), it is safe to disable this option.
@@ -175,6 +175,12 @@ The options (in alphabetic order):
 
 	Do not compile-in code that suppresses redundant updates to the
 	titlebar when the text has not changed.
+
+  --disable-session-mgt   enable support for session management
+
+	Do not compile-in code which adds simple session management hooks which
+	are used when closing an xterm.  Normally the code is compiled-in,
+	except for systems which do not support it.
 
   --disable-tek4014       disable tek4014 emulation
 

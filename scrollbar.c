@@ -2,7 +2,7 @@
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.34 2002/09/30 00:39:06 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.35 2002/10/05 17:57:13 dickey Exp $ */
 
 /*
  * Copyright 2000-2001,2002 by Thomas E. Dickey
@@ -59,8 +59,6 @@
 #include <xterm.h>
 
 #include <X11/Xatom.h>
-#include <X11/StringDefs.h>
-#include <X11/Shell.h>
 
 #if defined(HAVE_LIB_XAW)
 #include <X11/Xaw/Scrollbar.h>

@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.84 2002/09/30 00:39:07 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.85 2002/10/05 17:57:13 dickey Exp $ */
 
 /************************************************************
 
@@ -133,7 +133,7 @@ authorization.
 #define USE_LASTLOG
 #endif
 
-#if defined(AMOEBA) || defined(SCO) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103)) || defined(__CYGWIN__)
+#if defined(SCO) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103)) || defined(__CYGWIN__)
 #define USE_POSIX_WAIT
 #endif
 
@@ -636,7 +636,9 @@ extern void show_8bit_control  (Bool value);
 
 /* misc.c */
 extern Cursor make_colored_cursor (unsigned cursorindex, unsigned long fg, unsigned long bg);
+extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
 extern Window WMFrameWindow(XtermWidget termw);
+extern XrmOptionDescRec * sortedOptDescs(XrmOptionDescRec *, Cardinal);
 extern char *SysErrorMsg (int n);
 extern char *udk_lookup (int keycode, int *len);
 extern int XStrCmp (char *s1, char *s2);
@@ -877,7 +879,7 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 extern unsigned getXtermCell (TScreen *screen, int row, int col);
 extern unsigned getXtermCellComb1 (TScreen *screen, int row, int col);
 extern unsigned getXtermCellComb2 (TScreen *screen, int row, int col);
-extern void addXtermCombining (TScreen *screen, int row, int col, int ch);
+extern void addXtermCombining (TScreen *screen, int row, int col, unsigned ch);
 extern void putXtermCell (TScreen *screen, int row, int col, int ch);
 #else
 #define getXtermCell(screen,row,col) SCRN_BUF_CHARS(screen, row)[col]

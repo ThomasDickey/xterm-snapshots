@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.70 2002/09/30 00:39:05 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.71 2002/10/05 17:57:11 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1080,78 +1080,6 @@ UTF8toLatin1(Char * s, int len, unsigned long *result)
     *result = q - buffer;
     return buffer;
 }
-
-#if 0
-/* Eliminate all control characters from a UTF-8 string, doing
-   something reasonable with PS and LS */
-
-static Char *
-filterUTF8(Char * s, int len, int *len_return)
-{
-    Char *p = s;
-    Char *t;
-    Char *q;
-    unsigned codepoint;
-    int size;
-
-    t = (Char *) XtMalloc(len);
-    if (t == 0) {
-	TRACE(("Couldn't allocate target string\n"));
-	return 0;
-    }
-    q = t;
-
-    while (p < (s + len) && q < (t + len)) {
-	if ((*p & 0x80) == 0) {
-	    codepoint = *p & 0x7F;
-	    size = 1;
-	} else if ((*p & 0x60) == 0x40 && p < s + len - 1) {
-	    codepoint = ((p[0] & 0x1F) << 6) | (p[1] & 0x3F);
-	    size = 2;
-	} else if ((*p & 0x70) == 0x60 && p < s + len - 2) {
-	    codepoint = ((p[0] & 0x0F) << 12)
-		| ((p[1] & 0x3F) << 6)
-		| (p[2] & 0x3F);
-	    size = 3;
-	} else if ((*p & 0x78) == 0x70 && p < s + len - 3) {
-	    p += 4;		/* eliminate surrogates */
-	    continue;
-	} else if ((*p & 0x7C) == 0x78 && p < s + len - 4) {
-	    p += 5;
-	    continue;
-	} else if ((*p & 0x7E) == 0x7C && p < s + len - 5) {
-	    p += 6;
-	    continue;
-	} else {		/* wrong UTF-8?  Silently discard. */
-	    p++;
-	    continue;
-	}
-
-	if (codepoint == 0x2028) {
-	    /* line separator -- replace by NL */
-	    p += size;
-	    *q++ = 0x0A;
-	} else if (codepoint == 0x2029) {
-	    /* paragraph separator -- replace by NL NL */
-	    p += size;
-	    *q++ = 0x0A;
-	    if (q < t + len)
-		*q++ = 0x0A;
-	} else if (codepoint >= 0x202A && codepoint <= 0x202E) {
-	    /* ignore Unicode control characters; surrogates have already
-	       been eliminated */
-	    p += size;
-	} else {
-	    /* just copy the UTF-8 */
-	    while (size--)
-		*q++ = *p++;
-	}
-    }
-    *len_return = q - t;
-    return t;
-}
-#endif
-
 #endif /* OPT_WIDE_CHARS */
 
 static Atom *

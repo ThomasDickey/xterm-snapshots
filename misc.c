@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.70 2002/09/30 00:39:06 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.71 2002/10/05 17:57:12 dickey Exp $ */
 
 /*
  *
@@ -69,7 +69,6 @@
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 
-#include <X11/Shell.h>
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>
 #include <X11/Xmu/WinUtil.h>
@@ -89,11 +88,6 @@
 #ifndef X_GETTIMEOFDAY
 #define X_GETTIMEOFDAY(t) gettimeofday(t,(struct timezone *)0)
 #endif
-#endif
-
-#ifdef AMOEBA
-#include <amoeba.h>
-#include <module/proc.h>
 #endif
 
 #ifdef __UNIXOS2__
@@ -2117,18 +2111,17 @@ Cleanup(int code)
 	    Sleep(10);
 	}
     }
-
-    XtVaSetValues(toplevel, XtNjoinSession, False);
+#if OPT_SESSION_MGT
+    if (resource.sessionMgt) {
+	XtVaSetValues(toplevel,
+		      XtNjoinSession, False,
+		      (XtPointer *) 0);
+    }
+#endif
 
     if (screen->pid > 1) {
 	(void) kill_process_group(screen->pid, SIGHUP);
     }
-#ifdef AMOEBA
-    if (!NULLPORT(&screen->proccap.cap_port))
-	(void) pro_stun(&screen->proccap, -1L);
-    cb_close(screen->tty_outq);
-    cb_close(screen->tty_inq);
-#endif
     Exit(code);
 }
 
@@ -2189,8 +2182,6 @@ xioerror(Display * dpy)
     Exit(ERROR_XIOERROR);
     return 0;			/* appease the compiler */
 }
-
-extern char *ProgramName;
 
 void
 xt_error(String message)
@@ -2258,8 +2249,6 @@ set_vt_visibility(Boolean on)
 }
 
 #if OPT_TEK4014
-extern Atom wm_delete_window;	/* for ICCCM delete window */
-
 void
 set_tek_visibility(Boolean on)
 {
@@ -2363,3 +2352,130 @@ hide_tek_window(void)
 	switch_modes(True);	/* does longjmp to vt mode */
 }
 #endif /* OPT_TEK4014 */
+
+static const char *
+skip_punct(const char *s)
+{
+    while (*s == '-' || *s == '/' || *s == '+' || *s == '#' || *s == '%') {
+	++s;
+    }
+    return s;
+}
+
+static int
+cmp_options(const void *a, const void *b)
+{
+    return strcmp(skip_punct(((const OptionHelp *) a)->opt),
+		  skip_punct(((const OptionHelp *) b)->opt));
+}
+
+static int
+cmp_resources(const void *a, const void *b)
+{
+    return strcmp(((const XrmOptionDescRec *) a)->option,
+		  ((const XrmOptionDescRec *) b)->option);
+}
+
+XrmOptionDescRec *
+sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
+{
+    static XrmOptionDescRec *res_array = 0;
+
+    if (res_array == 0) {
+	Cardinal j;
+
+	/* make a sorted index to 'resources' */
+	res_array = (XrmOptionDescRec *) calloc(res_count, sizeof(*res_array));
+	for (j = 0; j < res_count; j++)
+	    res_array[j] = descs[j];
+	qsort(res_array, res_count, sizeof(*res_array), cmp_resources);
+    }
+    return res_array;
+}
+
+/*
+ * The first time this is called, construct sorted index to the main program's
+ * list of options, taking into account the on/off options which will be
+ * compressed into one token.  It's a lot simpler to do it this way than
+ * maintain the list in sorted form with lots of ifdef's.
+ */
+OptionHelp *
+sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
+{
+    static OptionHelp *opt_array = 0;
+
+    if (opt_array == 0) {
+	Cardinal opt_count, j, k;
+#if OPT_TRACE
+	XrmOptionDescRec *res_array = sortedOptDescs(descs, numDescs);
+	int code;
+	char *mesg;
+#else
+	(void) k;
+	(void) descs;
+	(void) numDescs;
+#endif
+
+	/* count 'options' and make a sorted index to it */
+	for (opt_count = 0; options[opt_count].opt != 0; ++opt_count) {
+	    ;
+	}
+	opt_array = (OptionHelp *) calloc(opt_count, sizeof(OptionHelp));
+	for (j = 0; j < opt_count; j++)
+	    opt_array[j] = options[j];
+	qsort(opt_array, opt_count, sizeof(OptionHelp), cmp_options);
+
+	/* supply the "turn on/off" strings if needed */
+#if OPT_TRACE
+	for (j = 0; j < opt_count; j++) {
+	    if (!strncmp(opt_array[j].opt, "-/+", 3)) {
+		char *name = opt_array[j].opt + 3;
+		for (k = 0; k < numDescs; ++k) {
+		    char *value = res_array[k].value;
+		    if (res_array[k].option[0] == '-') {
+			code = -1;
+		    } else if (res_array[k].option[0] == '+') {
+			code = 1;
+		    } else {
+			code = 0;
+		    }
+		    if (x_strindex(opt_array[j].desc, "inhibit") != 0)
+			code = -code;
+		    if (code != 0
+			&& res_array[k].value != 0
+			&& !strcmp(name, res_array[k].option + 1)) {
+			if (((code < 0) && !strcmp(value, "on"))
+			    || ((code > 0) && !strcmp(value, "off"))
+			    || ((code > 0) && !strcmp(value, "0"))) {
+			    mesg = "turn on/off";
+			} else {
+			    mesg = "turn off/on";
+			}
+			if (strncmp(mesg, opt_array[j].desc, strlen(mesg))) {
+			    if (strncmp(opt_array[j].desc, "turn ", 5)) {
+				char *s = malloc(strlen(mesg)
+						 + 2
+						 + strlen(opt_array[j].desc));
+				if (s != 0) {
+				    sprintf(s, "%s %s", mesg, opt_array[j].desc);
+				    opt_array[j].desc = s;
+				}
+			    } else {
+				TRACE(("OOPS "));
+			    }
+			}
+			TRACE(("%s: %s %s: %s (%s)\n",
+			       mesg,
+			       res_array[k].option,
+			       res_array[k].value,
+			       opt_array[j].opt,
+			       opt_array[j].desc));
+			break;
+		    }
+		}
+	    }
+	}
+#endif
+    }
+    return opt_array;
+}

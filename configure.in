@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.53 2002/08/17 19:52:26 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.54 2002/10/05 17:57:12 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -27,7 +27,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.13.20000819)
+AC_PREREQ(2.13.20020210)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
 CF_CHECK_CACHE
@@ -53,7 +53,6 @@ AC_ARG_PROGRAM
 ###	checks for UNIX variants that set C preprocessor variables
 AC_AIX
 AC_ISC_POSIX
-AC_MINIX
 
 ###	checks for header files
 AC_CHECK_HEADERS( \
@@ -428,6 +427,14 @@ CF_ARG_DISABLE(samename,
 	[enable_samename=yes])
 AC_MSG_RESULT($enable_samename)
 test "$enable_samename" = no && AC_DEFINE(OPT_SAME_NAME,0)
+
+AC_MSG_CHECKING(if you want support for session management)
+CF_ARG_DISABLE(session-mgt,
+	[  --disable-session-mgt   compile-in support for session management],
+	[enable_session_mgt=no],
+	[enable_session_mgt=yes])
+AC_MSG_RESULT($enable_session_mgt)
+test "$enable_session_mgt" = no && AC_DEFINE(OPT_SESSION_MGT,0)
 
 AC_MSG_CHECKING(if you want to use termcap-query/report)
 CF_ARG_ENABLE(tcap-query,

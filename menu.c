@@ -45,15 +45,13 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.48 2002/09/30 00:39:06 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.49 2002/10/05 17:57:12 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
 #include <menu.h>
 #include <fontutils.h>
 
-#include <X11/StringDefs.h>
-#include <X11/Shell.h>
 #include <X11/Xmu/CharSet.h>
 
 #if defined(HAVE_LIB_XAW)
@@ -527,11 +525,11 @@ domenu(Widget w GCC_UNUSED,
 				mainMenuEntries[mainMenu_8bit_ctrl].widget,
 				FALSE);
 	    }
-#if !defined(SIGTSTP) || defined(AMOEBA)
+#if !defined(SIGTSTP)
 	    set_sensitivity(mw,
 			    mainMenuEntries[mainMenu_suspend].widget, FALSE);
 #endif
-#if !defined(SIGCONT) || defined(AMOEBA)
+#if !defined(SIGCONT)
 	    set_sensitivity(mw,
 			    mainMenuEntries[mainMenu_continue].widget, FALSE);
 #endif
@@ -886,7 +884,7 @@ do_suspend(Widget gw,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-#if defined(SIGTSTP) && !defined(AMOEBA)
+#if defined(SIGTSTP)
     handle_send_signal(gw, SIGTSTP);
 #endif
 }
@@ -897,7 +895,7 @@ do_continue(Widget gw,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-#if defined(SIGCONT) && !defined(AMOEBA)
+#if defined(SIGCONT)
     handle_send_signal(gw, SIGCONT);
 #endif
 }

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.8 2002/06/01 00:54:50 dickey Exp $
+ * $XFree86: xc/programs/xterm/xterm_io.h,v 1.9 2002/10/05 17:57:14 dickey Exp $
  */
 
 /*
@@ -43,11 +43,6 @@
  * FIXME:  some, such as those defining USE_TERMIOS should be moved to xterm.h
  * as they are integrated with the configure script.
  */
-#ifdef AMOEBA
-#define USE_TERMIOS
-#define _POSIX_SOURCE
-#endif
-
 #ifdef CSRG_BASED
 #define USE_TERMIOS
 #endif
@@ -80,11 +75,6 @@
 #ifdef macII
 #undef SYSV				/* pretend to be bsd (sgtty.h) */
 #endif /* macII */
-
-#ifdef MINIX
-#define USE_SYSV_TERMIO
-#define USE_TERMIOS
-#endif
 
 #ifdef __MVS__
 #define SVR4
@@ -247,12 +237,6 @@ extern int ptioctl(int fd, int func, void* data);
 #undef FIOCLEX
 #undef FIONCLEX
 #endif /* macII */
-
-#ifdef MINIX
-#define termio termios
-#define TCGETA TCGETS
-#define TCSETAW TCSETSW
-#endif
 
 #ifdef __QNX__
 #undef TIOCSLTC			/* <sgtty.h> conflicts with <termios.h> */
