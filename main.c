@@ -3546,7 +3546,7 @@ static int spawn()
     int i, n, ncap;
     errstat err;
     struct caplist *cl;
-    char buf[64], numbuf[12];
+    char buf[64];
     struct caplist *capvnew;
     int ttythread();
     int xwatchdogthread();
