@@ -985,6 +985,18 @@ as VT100-style control sequences.
 A ``2'' prints ANSI color attributes as well.
 The default is ``1.''
 .TP 8
+.B "printerAutoClose (\fPclass\fB PrinterAutoClose)"
+If true, xterm will close the printer (a pipe) when the application switches
+the printer offline with a Media Copy command.
+The default is ``false.''
+.TP 8
+.B "printerCommand (\fPclass\fB PrinterCommand)"
+Specifies a shell command to which
+.I xterm
+will open a pipe when the first
+MC (Media Copy) command is initiated.
+The default is ``lpr.''
+.TP 8
 .B "printerControlMode (\fPclass\fB PrinterControlMode)"
 Specifies the printer control mode.
 A ``1'' selects autoprint mode, which causes
@@ -995,13 +1007,6 @@ autowrap occurs.
 Autoprint mode is overridden by printer controller mode (a ``2''),
 which causes all of the output to be directed to the printer.
 The default is ``0.''
-.TP 8
-.B "printerCommand (\fPclass\fB PrinterCommand)"
-Specifies a shell command to which
-.I xterm
-will open a pipe when the first
-MC (Media Copy) command is initiated.
-The default is ``lpr.''
 .TP 8
 .B "printerExtent (\fPclass\fB PrinterExtent)"
 Controls whether a print page function will print the entire page (true), or

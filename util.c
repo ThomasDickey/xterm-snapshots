@@ -43,16 +43,16 @@
 
 extern Bool waiting_for_initial_map;
 
-static int ClearInLine PROTO((TScreen *screen, int row, int col, int len));
-static int handle_translated_exposure PROTO((TScreen *screen, int rect_x, int rect_y, unsigned int rect_width, unsigned int rect_height));
-static void ClearAbove PROTO((TScreen *screen));
-static void ClearBelow PROTO((TScreen *screen));
-static void ClearLeft PROTO((TScreen *screen));
-static void ClearLine PROTO((TScreen *screen));
-static void CopyWait PROTO((TScreen *screen));
-static void copy_area PROTO((TScreen *screen, int src_x, int src_y, unsigned int width, unsigned int height, int dest_x, int dest_y));
-static void horizontal_copy_area PROTO((TScreen *screen, int firstchar, int nchars, int amount));
-static void vertical_copy_area PROTO((TScreen *screen, int firstline, int nlines, int amount));
+static int ClearInLine (TScreen *screen, int row, int col, int len);
+static int handle_translated_exposure (TScreen *screen, int rect_x, int rect_y, unsigned int rect_width, unsigned int rect_height);
+static void ClearAbove (TScreen *screen);
+static void ClearBelow (TScreen *screen);
+static void ClearLeft (TScreen *screen);
+static void ClearLine (TScreen *screen);
+static void CopyWait (TScreen *screen);
+static void copy_area (TScreen *screen, int src_x, int src_y, unsigned int width, unsigned int height, int dest_x, int dest_y);
+static void horizontal_copy_area (TScreen *screen, int firstchar, int nchars, int amount);
+static void vertical_copy_area (TScreen *screen, int firstline, int nlines, int amount);
 
 /*
  * These routines are used for the jump scroll feature
@@ -165,10 +165,10 @@ register TScreen *screen;
 	}
 }
 
-/* 
- * scrolls the screen by amount lines, erases bottom, doesn't alter 
+/*
+ * scrolls the screen by amount lines, erases bottom, doesn't alter
  * cursor position (i.e. cursor moves down amount relative to text).
- * All done within the scrolling region, of course. 
+ * All done within the scrolling region, of course.
  * requires: amount > 0
  */
 void
@@ -504,18 +504,18 @@ InsertChar (screen, n)
 		 * prevent InsertChar from shifting the end of a line over
 		 * if it is being appended to
 		 */
-		if (non_blank_line (screen->visbuf, screen->cur_row, 
+		if (non_blank_line (screen->visbuf, screen->cur_row,
 				    screen->cur_col, screen->max_col + 1))
 		    horizontal_copy_area(screen, screen->cur_col,
 					 col - screen->cur_col,
 					 n);
 
-		FillCurBackground(
+		ClearCurBackground(
 			screen,
-			CurCursorX (screen, screen->cur_row, screen->cur_col),
 			CursorY (screen, screen->cur_row),
-			n * CurFontWidth(screen,screen->cur_row),
-			FontHeight(screen));
+			CurCursorX (screen, screen->cur_row, screen->cur_col),
+			FontHeight(screen),
+			n * CurFontWidth(screen,screen->cur_row));
 	    }
 	}
 	/* adjust screen->buf */
@@ -537,13 +537,13 @@ DeleteChar (screen, n)
 	screen->do_wrap = 0;
 	if (n > (width = screen->max_col + 1 - screen->cur_col))
 	  	n = width;
-		
+
 	if(screen->cur_row - screen->topline <= screen->max_row) {
 	    if(!AddToRefresh(screen)) {
 		int col = screen->max_col + 1 - n;
 		if(screen->scroll_amt)
 			FlushScroll(screen);
-	
+
 #if OPT_DEC_CHRSET
 		if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
 			col = (screen->max_col + 1) / 2 - n;
@@ -553,12 +553,12 @@ DeleteChar (screen, n)
 				     col - screen->cur_col,
 				     -n);
 
-		FillCurBackground (
+		ClearCurBackground (
 			screen,
-			CurCursorX(screen, screen->cur_row, col),
 			CursorY (screen, screen->cur_row),
-			n * CurFontWidth(screen,screen->cur_row),
-			FontHeight(screen));
+			CurCursorX(screen, screen->cur_row, col),
+			FontHeight(screen),
+			n * CurFontWidth(screen,screen->cur_row));
 	    }
 	}
 	/* adjust screen->buf */
@@ -703,12 +703,12 @@ ClearInLine(screen, row, col, len)
 		if(!AddToRefresh(screen)) {
 			if(screen->scroll_amt)
 				FlushScroll(screen);
-			FillCurBackground (
+			ClearCurBackground (
 				screen,
-				CurCursorX (screen, row, col),
 				CursorY (screen, row),
-				len * CurFontWidth(screen,row),
-				FontHeight(screen));
+				CurCursorX (screen, row, col),
+				FontHeight(screen),
+				len * CurFontWidth(screen,row));
 		}
 	}
 
@@ -725,7 +725,7 @@ ClearInLine(screen, row, col, len)
 	return rc;
 }
 
-/* 
+/*
  * Clear the next n characters on the cursor's line, including the cursor's
  * position.
  */
@@ -760,7 +760,7 @@ register TScreen *screen;
 	(void) ClearInLine(screen, screen->cur_row, 0, screen->cur_col + 1);
 }
 
-/* 
+/*
  * Erase the cursor's line.
  */
 static void
@@ -783,8 +783,8 @@ register TScreen *screen;
 		if(screen->scroll_amt)
 			FlushScroll(screen);
 		ClearCurBackground(screen,
-		    top * FontHeight(screen) + screen->border,	
-		    OriginX(screen), 
+		    top * FontHeight(screen) + screen->border,
+		    OriginX(screen),
 		    (screen->max_row - top + 1) * FontHeight(screen),
 		    Width(screen));
 	}
@@ -893,7 +893,7 @@ register TScreen *screen;
 	XEvent *rep = &reply;
 
 	while (1) {
-		XWindowEvent (screen->display, VWindow(screen), 
+		XWindowEvent (screen->display, VWindow(screen),
 		  ExposureMask, &reply);
 		switch (reply.type) {
 		case Expose:
@@ -948,7 +948,7 @@ copy_area(screen, src_x, src_y, width, height, dest_x, dest_y)
     screen->copy_dest_x = dest_x;
     screen->copy_dest_y = dest_y;
 
-    XCopyArea(screen->display, 
+    XCopyArea(screen->display,
 	      TextWindow(screen), TextWindow(screen),
 	      NormalGC(screen),
 	      src_x, src_y, width, height, dest_x, dest_y);
@@ -1084,7 +1084,7 @@ handle_translated_exposure (screen, rect_x, rect_y, rect_width, rect_height)
 	    / CurFontWidth(screen,screen->cur_row);
 	if(leftcol < 0)
 		leftcol = 0;
-	nrows = (rect_y + rect_height - 1 - screen->border) / 
+	nrows = (rect_y + rect_height - 1 - screen->border) /
 		FontHeight(screen) - toprow + 1;
 	ncols = (rect_x + rect_width - 1 - OriginX(screen)) /
 		FontWidth(screen) - leftcol + 1;
@@ -1272,7 +1272,7 @@ ReverseVideo (termw)
 	screen->iconVwin.reverseboldGC = tmpGC;
 #endif /* NO_ACTIVE_ICON */
 
-	recolor_cursor (screen->pointer_cursor, 
+	recolor_cursor (screen->pointer_cursor,
 			screen->mousecolor, screen->mousecolorback);
 	recolor_cursor (screen->arrow,
 			screen->mousecolor, screen->mousecolorback);
@@ -1407,7 +1407,7 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 		screen->cursor_state == OFF ? ' ' : '*',
 		y, x, chrset, len, len, text))
 	y += FontAscent(screen);
-	XDrawImageString(screen->display, TextWindow(screen), gc, 
+	XDrawImageString(screen->display, TextWindow(screen), gc,
 		x, y,  (char *)text, len);
 	if ((flags & (BOLD|BLINK)) && screen->enbolden)
 		XDrawString(screen->display, TextWindow(screen), gc,
@@ -1415,8 +1415,8 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 	if ((flags & UNDERLINE) && screen->underline) {
 		if (FontDescent(screen) > 1)
 			y++;
-		XDrawLine(screen->display, TextWindow(screen), gc, 
-			x, y, x + len * FontWidth(screen), y);
+		XDrawLine(screen->display, TextWindow(screen), gc,
+			x, y, x + len * FontWidth(screen) - 1, y);
 	}
 
 	return x + len * FontWidth(screen);
@@ -1519,7 +1519,7 @@ extract_fg (color, flags)
 {
 	int fg = (int) ((color >> 4) & 0xf);
 
-	if (term->screen.colorAttrMode 
+	if (term->screen.colorAttrMode
 	 || (fg == extract_bg(color))) {
 		if (term->screen.colorULMode && (flags & UNDERLINE))
 			fg = COLOR_UL;

@@ -58,18 +58,30 @@ authorization.
 
 #define SGR_MASK (BOLD|BLINK|UNDERLINE|INVERSE)
 
-static void charToPrinter PROTO((int chr));
-static void printCursorLine PROTO((void));
-static void printLine PROTO((int row, int chr));
-static void send_CharSet PROTO((int row));
-static void send_SGR PROTO((unsigned attr, int fg, int bg));
-static void stringToPrinter PROTO((char * str));
+static void charToPrinter (int chr);
+static void printLine (int row, int chr);
+static void send_CharSet (int row);
+static void send_SGR (unsigned attr, int fg, int bg);
+static void stringToPrinter (char * str);
 
 static FILE *Printer;
 static int Printer_pid;
 static int initialized;
 
-static void printCursorLine()
+static void closePrinter(void)
+{
+	if (Printer != 0) {
+		fclose(Printer);
+		TRACE(("closed printer, waiting...\n"));
+		while (nonblocking_wait() > 0)
+			;
+		Printer = 0;
+		initialized = 0;
+		TRACE(("closed printer\n"));
+	}
+}
+
+static void printCursorLine(void)
 {
 	register TScreen *screen = &term->screen;
 	TRACE(("printCursorLine\n"))
@@ -81,9 +93,7 @@ static void printCursorLine()
  * happens with a line that is entirely blank.  This function prints the
  * characters that xterm would allow as a selection (which may include blanks).
  */
-static void printLine(row, chr)
-	int row;
-	int chr;
+static void printLine(int row, int chr)
 {
 	register TScreen *screen = &term->screen;
 	Char *c = SCRN_BUF_CHARS(screen, row);
@@ -174,7 +184,7 @@ static void printLine(row, chr)
 	charToPrinter(chr);
 }
 
-void xtermPrintScreen()
+void xtermPrintScreen(void)
 {
 	register TScreen *screen = &term->screen;
 	int top = screen->printer_extent ? 0 : screen->top_marg;
@@ -188,19 +198,12 @@ void xtermPrintScreen()
 	if (screen->printer_formfeed)
 		charToPrinter('\f');
 
-	if (Printer != 0 && !was_open) {
-		fclose(Printer);
-		TRACE(("closed printer, waiting...\n"));
-		while (nonblocking_wait() > 0)
-			;
-		Printer = 0;
-		initialized = 0;
-		TRACE(("closed printer\n"));
+	if (!was_open || screen->printer_autoclose) {
+		closePrinter();
 	}
 }
 
-static void send_CharSet(row)
-	int row;
+static void send_CharSet(int row)
 {
 #if OPT_DEC_CHRSET
 	register TScreen *screen = &term->screen;
@@ -225,10 +228,7 @@ static void send_CharSet(row)
 #endif /* OPT_DEC_CHRSET */
 }
 
-static void send_SGR(attr, fg, bg)
-	unsigned attr;
-	int fg;
-	int bg;
+static void send_SGR(unsigned attr, int fg, int bg)
 {
 	char msg[80];
 	strcpy(msg, "\033[0");
@@ -261,8 +261,7 @@ static void send_SGR(attr, fg, bg)
 /*
  * This implementation only knows how to write to a pipe.
  */
-static void charToPrinter(chr)
-	int chr;
+static void charToPrinter(int chr)
 {
 	if (!initialized) {
 		FILE	*input;
@@ -303,8 +302,7 @@ static void charToPrinter(chr)
 	}
 }
 
-static void stringToPrinter(str)
-	char *str;
+static void stringToPrinter(char *str)
 {
 	while (*str)
 		charToPrinter(*str++);
@@ -316,9 +314,7 @@ static void stringToPrinter(str)
  * VT330/VT340 Programmer Reference Manual EK-VT3XX-TP-001 (Digital Equipment
  * Corp., March 1987).
  */
-void xtermMediaControl (param, private)
-	int param;
-	int private;
+void xtermMediaControl (int param, int private)
 {
 	register TScreen *screen = &term->screen;
 
@@ -362,8 +358,7 @@ void xtermMediaControl (param, private)
  * autowrap occurs.  The printed line ends with a CR and the character (LF, FF
  * or VT) that moved the cursor off the previous line.
  */
-void xtermAutoPrint(chr)
-	int chr;
+void xtermAutoPrint(int chr)
 {
 	register TScreen *screen = &term->screen;
 
@@ -387,8 +382,7 @@ void xtermAutoPrint(chr)
  */
 #define LB '['
 
-int xtermPrinterControl(chr)
-	int chr;
+int xtermPrinterControl(int chr)
 {
 	register TScreen *screen = &term->screen;
 
@@ -427,6 +421,11 @@ int xtermPrinterControl(chr)
 			if (length == len
 			 && Strcmp(bfr, tbl[n].seq) == 0) {
 				screen->printer_controlmode = tbl[n].active;
+				TRACE(("Set printer controller mode %sactive\n",
+					tbl[n].active ? "" : "in"))
+				if (screen->printer_autoclose
+				 && screen->printer_controlmode == 0)
+					closePrinter();
 				length = 0;
 				return 0;
 			} else if (len > length

@@ -33,6 +33,7 @@ xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
 	pairs#64,
 	acsc=``aaffggjjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~,
 	bel=^G,
+	blink=\E[5m,
 	bold=\E[1m,
 	cbt=\E[Z,
 	civis=\E[?25l,
@@ -68,6 +69,7 @@ xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
 	il=\E[%p1%dL,
 	il1=\E[L,
 	ind=^J,
+	invis=\E[8m,
 	is2=\E7\E[r\E[m\E[?7h\E[?1;3;4;6l\E[4l\E8\E>,
 	ka1=\EOw,
 	ka3=\EOu,
@@ -131,45 +133,9 @@ xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
 	sc=\E7,
 	setab=\E[4%p1%dm,
 	setaf=\E[3%p1%dm,
-	setb=\E[4
-		%?%p1%{1}%=
-			%t4
-			%e%p1%{3}%=
-			%t6
-			%e%p1%{4}%=
-			%t1
-			%e%p1%{6}%=
-			%t3
-			%e%p1%d
-		%;m,
-	setf=\E[3
-		%?%p1%{1}%=
-			%t4
-			%e%p1%{3}%=
-			%t6
-			%e%p1%{4}%=
-			%t1
-			%e%p1%{6}%=
-			%t3
-			%e%p1%d
-		%;m,
-	sgr=\E[0
-		%?%p1%p6%|
-			%t;1
-		%;
-		%?%p2
-			%t;4
-		%;
-		%?%p1%p3%|
-			%t;7
-		%;
-		%?%p4
-			%t;5
-		%;m
-		%?%p9
-			%t\016
-			%e\017
-		%;,
+	setb=\E[4%?%p1%{1}%=%t4%e%p1%{3}%=%t6%e%p1%{4}%=%t1%e%p1%{6}%=%t3%e%p1%d%;m,
+	setf=\E[3%?%p1%{1}%=%t4%e%p1%{3}%=%t6%e%p1%{4}%=%t1%e%p1%{6}%=%t3%e%p1%d%;m,
+	sgr=\E[0%?%p1%p6%|%t;1%;%?%p2%t;4%;%?%p1%p3%|%t;7%;%?%p4%t;5%;%?%p7%t;8%;m%?%p9%t\016%e\017%;,
 	sgr0=\E[m\017,
 	smacs=^N,
 	smam=\E[?7h,
@@ -239,70 +205,8 @@ xterm-rep|xterm with repeat-character control,
 # normally used only for printers).  The parameter to csnm and scs is the same
 # in both cases:  the keyboard language parameter returned by CSI ? 2 6 n.
 xterm-nrc|xterm with VT220 national replacement character sets,
-	csnm=
-		%?%p1%{1}%=
-			%tNorth American
-			%e%p1%{2}%=
-			%tBritish
-			%e%p1%{3}%=
-			%tFlemish
-			%e%p1%{4}%=
-			%tFrench Canadian
-			%e%p1%{5}%=
-			%tDanish
-			%e%p1%{6}%=
-			%tFinnish
-			%e%p1%{7}%=
-			%tGerman
-			%e%p1%{8}%=
-			%tDutch
-			%e%p1%{9}%=
-			%tItalian
-			%e%p1%{10}%=
-			%tSwiss (French)
-			%e%p1%{11}%=
-			%tSwiss (German)
-			%e%p1%{12}%=
-			%tSwedish
-			%e%p1%{13}%=
-			%tNorwegian
-			%e%p1%{14}%=
-			%tFrench/Belgian
-			%e%p1%{15}%=
-			%tSpanish
-		%;,
-	scs=
-		%?%p1%{1}%=
-			%t\E(B
-			%e%p1%{2}%=
-			%t\E(A
-			%e%p1%{3}%=
-			%t\E(R
-			%e%p1%{4}%=
-			%t\E(9
-			%e%p1%{5}%=
-			%t\E(E
-			%e%p1%{6}%=
-			%t\E(5
-			%e%p1%{7}%=
-			%t\E(K
-			%e%p1%{8}%=
-			%t\E(4
-			%e%p1%{9}%=
-			%t\E(Y
-			%e%p1%{10}%=
-			%t\E(=
-			%e%p1%{11}%=
-			%t\E(=
-			%e%p1%{12}%=
-			%t\E(7
-			%e%p1%{13}%=
-			%t\E(E
-			%e%p1%{14}%=
-			%t\E(R
-			%e%p1%{15}%=
-			%t\E(Z
-		%;,
+	csnm=%?%p1%{1}%=%tNorth American%e%p1%{2}%=%tBritish%e%p1%{3}%=%tFlemish%e%p1%{4}%=%tFrench Canadian%e%p1%{5}%=%tDanish%e%p1%{6}%=%tFinnish%e%p1%{7}%=%tGerman%e%p1%{8}%=%tDutch%e%p1%{9}%=%tItalian%e%p1%{10}%=%tSwiss (French)%e%p1%{11}%=%tSwiss (German)%e%p1%{12}%=%tSwedish%e%p1%{13}%=%tNorwegian%e%p1%{14}%=%tFrench/Belgian%e%p1%{15}%=%tSpanish%;,
+	scs=%?%p1%{1}%=%t\E(B%e%p1%{2}%=%t\E(A%e%p1%{3}%=%t\E(R%e%p1%{4}%=%t\E(9%e%p1%{5}%=%t\E(E%e%p1%{6}%=%t\E(5%e%p1%{7}%=%t\E(K%e%p1%{8}%=%t\E(4%e%p1%{9}%=%t\E(Y%e%p1%{10}%=%t\E(=%e%p1%{11}%=%t\E(=%e%p1%{12}%=%t\E(7%e%p1%{13}%=%t\E(E%e%p1%{14}%=%t\E(R%e%p1%{15}%=%t\E(Z%;,
 	use=xterm,
 #
 # Foreground 0-15 maps (with toggles) into 30-37 & 90-97
@@ -319,38 +223,10 @@ xterm-16color|xterm with 16 colors,
 	colors#16,
 	ncv#32,
 	pairs#256,
-	setab=\E[
-		%?%p1%{8}%<
-			%t%p1%{40}%+
-			%e%p1%{92}%+
-		%;%dm,
-	setaf=\E[
-		%?%p1%{8}%<
-			%t%p1%{30}%+
-			%e%p1%{82}%+
-		%;%dm,
-	setb=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa
-		%?%ga%{1}%=
-			%t4
-			%e%ga%{3}%=
-			%t6
-			%e%ga%{4}%=
-			%t1
-			%e%ga%{6}%=
-			%t3
-			%e%ga%d
-		%;m,
-	setf=%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%Pa
-		%?%ga%{1}%=
-			%t4
-			%e%ga%{3}%=
-			%t6
-			%e%ga%{4}%=
-			%t1
-			%e%ga%{6}%=
-			%t3
-			%e%ga%d
-		%;m,
+	setab=\E[%?%p1%{8}%<%t%p1%{40}%+%e%p1%{92}%+%;%dm,
+	setaf=\E[%?%p1%{8}%<%t%p1%{30}%+%e%p1%{82}%+%;%dm,
+	setb=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
+	setf=%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
 	use=xterm,
 # This is an 8-bit version of xterm, which emulates DEC vt220 with ANSI color.
 # To use it, your decTerminalID resource must be set to 200 or above.
@@ -375,6 +251,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	pairs#64,
 	acsc=``aaffggjjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~,
 	bel=^G,
+	blink=\23325m,
 	bold=\2331m,
 	cbt=\233Z,
 	civis=\233?25l,
@@ -410,6 +287,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	il=\233%p1%dL,
 	il1=\233L,
 	ind=^J,
+	invis=\2338m,
 	is2=\E7\E G\233r\233m\233?7h\233?1;3;4;6l\2334l\E8\E>,
 	ka1=\217w,
 	ka3=\217u,
@@ -473,45 +351,9 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	sc=\E7,
 	setab=\2334%p1%dm,
 	setaf=\2333%p1%dm,
-	setb=\2334
-		%?%p1%{1}%=
-			%t4
-			%e%p1%{3}%=
-			%t6
-			%e%p1%{4}%=
-			%t1
-			%e%p1%{6}%=
-			%t3
-			%e%p1%d
-		%;m,
-	setf=\2333
-		%?%p1%{1}%=
-			%t4
-			%e%p1%{3}%=
-			%t6
-			%e%p1%{4}%=
-			%t1
-			%e%p1%{6}%=
-			%t3
-			%e%p1%d
-		%;m,
-	sgr=\2330
-		%?%p1%p6%|
-			%t;1
-		%;
-		%?%p2
-			%t;4
-		%;
-		%?%p1%p3%|
-			%t;7
-		%;
-		%?%p4
-			%t;5
-		%;m
-		%?%p9
-			%t\016
-			%e\017
-		%;,
+	setb=\2334%?%p1%{1}%=%t4%e%p1%{3}%=%t6%e%p1%{4}%=%t1%e%p1%{6}%=%t3%e%p1%d%;m,
+	setf=\2333%?%p1%{1}%=%t4%e%p1%{3}%=%t6%e%p1%{4}%=%t1%e%p1%{6}%=%t3%e%p1%d%;m,
+	sgr=\2330%?%p1%p6%|%t;1%;%?%p2%t;4%;%?%p1%p3%|%t;7%;%?%p4%t;5%;%?%p7%t;8%;m%?%p9%t\016%e\017%;,
 	sgr0=\233m^O,
 	smacs=^N,
 	smam=\233?7h,
@@ -684,22 +526,7 @@ xterm-r5|xterm R5 version,
 	rmso=\E[m,
 	rs1=\E>\E[1;3;4;5;6l\E[?7h\E[m\E[r\E[2J\E[H,
 	sc=\E7,
-	sgr=\E[
-		%?%p1
-			%t;7
-		%;
-		%?%p2
-			%t;4
-		%;
-		%?%p3
-			%t;7
-		%;
-		%?%p4
-			%t;5
-		%;
-		%?%p6
-			%t;1
-		%;m,
+	sgr=\E[%?%p1%t;7%;%?%p2%t;4%;%?%p3%t;7%;%?%p4%t;5%;%?%p6%t;1%;m,
 	sgr0=\E[m,
 	smkx=\E[?1h\E=,
 	smso=\E[7m,

@@ -37,6 +37,15 @@
 #include <X11/Xfuncs.h>
 #include <X11/Xosdefs.h>
 
+/* adapted from IntrinsicI.h */
+#define MyStackAlloc(size, stack_cache_array)     \
+    ((size) <= sizeof(stack_cache_array)	  \
+    ?  (XtPointer)(stack_cache_array)		  \
+    :  malloc((unsigned)(size)))
+
+#define MyStackFree(pointer, stack_cache_array) \
+    if ((pointer) != ((XtPointer)(stack_cache_array))) free(pointer)
+
 #ifdef AMOEBA
 /* Avoid name clashes with standard Amoeba types: */
 #define event    am_event_t
@@ -637,6 +646,7 @@ typedef struct {
 	Cursor pointer_cursor;		/* pointer cursor in window	*/
 
 	String	printer_command;	/* pipe/shell command string	*/
+	Boolean printer_autoclose;	/* close printer when offline	*/
 	Boolean printer_extent;		/* print complete page		*/
 	Boolean printer_formfeed;	/* print formfeed per function	*/
 	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/

@@ -37,10 +37,7 @@
 #include "data.h"
 #include "xterm.h"
 
-static void _CheckSelection PROTO((TScreen *screen));
-
-static void _CheckSelection(screen)
-register TScreen *screen;
+static void _CheckSelection (register TScreen *screen)
 {
     if (screen->cur_row > screen->endHRow ||
 	(screen->cur_row == screen->endHRow &&
@@ -58,10 +55,7 @@ register TScreen *screen;
  * The origin is considered to be 0, 0 for this procedure.
  */
 void
-CursorSet(screen, row, col, flags)
-register TScreen	*screen;
-register int	row, col;
-unsigned	flags;
+CursorSet(register TScreen *screen, register int row, register int col, unsigned flags)
 {
 	register int maxr;
 
@@ -82,9 +76,7 @@ unsigned	flags;
  * moves the cursor left n, no wrap around
  */
 void
-CursorBack(screen, n)
-register TScreen	*screen;
-int		n;
+CursorBack(register TScreen *screen, int n)
 {
 	register int i, j, k, rev;
 
@@ -112,9 +104,7 @@ int		n;
  * moves the cursor forward n, no wraparound
  */
 void
-CursorForward(screen, n)
-register TScreen	*screen;
-int		n;
+CursorForward(register TScreen *screen, int n)
 {
 	screen->cur_col += n;
 	if (screen->cur_col > screen->max_col)
@@ -128,9 +118,7 @@ int		n;
  * Won't pass bottom margin or bottom of screen.
  */
 void
-CursorDown(screen, n)
-register TScreen	*screen;
-int		n;
+CursorDown(register TScreen *screen, int n)
 {
 	register int max;
 
@@ -149,9 +137,7 @@ int		n;
  * Won't pass top margin or top of screen.
  */
 void
-CursorUp(screen, n)
-register TScreen	*screen;
-int		n;
+CursorUp(register TScreen *screen, int n)
 {
 	register int min;
 
@@ -170,9 +156,7 @@ int		n;
  * Won't leave scrolling region. No carriage return.
  */
 void
-Index(screen, amount)
-register TScreen	*screen;
-register int	amount;
+Index(register TScreen *screen, register int amount)
 {
 	register int j;
 
@@ -195,9 +179,7 @@ register int	amount;
  * Won't leave scrolling region. No carriage return.
  */
 void
-RevIndex(screen, amount)
-register TScreen	*screen;
-register int	amount;
+RevIndex(register TScreen *screen, register int amount)
 {
 	/*
 	 * reverse indexing when above scrolling region is cursor up.
@@ -218,8 +200,7 @@ register int	amount;
  * (Note: xterm doesn't implement SLH, SLL which would affect use of this)
  */
 void
-CarriageReturn(screen)
-register TScreen *screen;
+CarriageReturn(register TScreen *screen)
 {
 	screen->cur_col = 0;
 	screen->do_wrap = 0;
@@ -230,9 +211,7 @@ register TScreen *screen;
  * Save Cursor and Attributes
  */
 void
-CursorSave(tw, sc)
-register XtermWidget tw;
-register SavedCursor *sc;
+CursorSave(register XtermWidget tw, register SavedCursor *sc)
 {
 	register TScreen *screen = &tw->screen;
 
@@ -260,9 +239,7 @@ register SavedCursor *sc;
  * Restore Cursor and Attributes
  */
 void
-CursorRestore(tw, sc)
-register XtermWidget tw;
-register SavedCursor *sc;
+CursorRestore(register XtermWidget tw, register SavedCursor *sc)
 {
 	register TScreen *screen = &tw->screen;
 
@@ -296,9 +273,7 @@ register SavedCursor *sc;
  * Move the cursor to the first column of the n-th next line.
  */
 void
-CursorNextLine(screen, count)
-	TScreen *screen;
-	int count;
+CursorNextLine(TScreen *screen, int count)
 {
 	CursorDown(screen, count < 1 ? 1 : count);
 	CarriageReturn(screen); 	
@@ -309,9 +284,7 @@ CursorNextLine(screen, count)
  * Move the cursor to the first column of the n-th previous line.
  */
 void
-CursorPrevLine(screen, count)
-	TScreen *screen;
-	int count;
+CursorPrevLine(TScreen *screen, int count)
 {
 	CursorUp(screen, count < 1 ? 1 : count);
 	CarriageReturn(screen);

@@ -33,9 +33,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef	included_trace_h
 #define	included_trace_h
 
-#include "proto.h"
-
-extern	void	Trace PROTO(( char *, ... ))
+extern	void	Trace ( char *, ... )
 #if __GNUC__
 	__attribute__ ((format(printf,1,2)))
 #endif
