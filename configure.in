@@ -3,7 +3,7 @@ dnl $XFree86: xc/programs/xterm/configure.in,v 3.40 2000/05/18 16:30:04 dawes Ex
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2000 by Thomas E. Dickey <dickey@clark.net>
+dnl Copyright 1997-2000 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -88,8 +88,9 @@ AC_CONST
 
 ###	checks for system services and user specified options
 
-AC_HEADER_SYS_WAIT
-
+CF_POSIX_WAIT
+CF_SYSV
+CF_SVR4
 CF_GNU_SOURCE
 CF_X_TOOLKIT
 
@@ -107,6 +108,7 @@ CPPFLAGS="$C_SWITCH_X_SITE $CPPFLAGS"
 
 AC_CHECK_HEADERS( \
 	X11/DECkeysym.h \
+	X11/Sunkeysym.h \
 	X11/Xpoll.h \
 	)
 

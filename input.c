@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -67,6 +67,10 @@
 
 #ifdef HAVE_X11_DECKEYSYM_H
 #include <X11/DECkeysym.h>
+#endif
+
+#ifdef HAVE_X11_SUNKEYSYM_H
+#include <X11/Sunkeysym.h>
 #endif
 
 #include <X11/Xutil.h>
@@ -302,7 +306,7 @@ xtermDeleteIsDEL(void)
 	if (term->keyboard.type == keyboardIsLegacy)
 		result = (screen->delete_is_del != False);
 
-	TRACE(("xtermDeleteIsDEL(%d/%d) = %d\n", 
+	TRACE(("xtermDeleteIsDEL(%d/%d) = %d\n",
 		term->keyboard.type,
 		screen->delete_is_del,
 		result));
@@ -456,24 +460,42 @@ Input (
 	 && screen->ansi_level != 0
 #endif
 	) {
-#define ModifierParm(ctl,normal) \
-	    modify_parm = (event->state & ControlMask) ? ctl : normal
+/*
+* Modifier codes:
+*	None		1
+*	Shift		2 = 1(None)+1(Shift)
+*	Alt		3 = 1(None)+2(Alt)
+*	Alt+Shift	4 = 1(None)+1(Shift)+2(Alt)
+*	Ctrl		5 = 1(None)+4(Ctrl)
+*	Ctrl+Shift	6 = 1(None)+1(Shift)+4(Ctrl)
+*	Ctrl+Alt	7 = 1(None)+2(Alt)+4(Ctrl)
+*	Ctrl+Alt+Shift	8 = 1(None)+1(Shift)+2(Alt)+4(Ctrl)
+*/
+#define	UNMOD	1
+#define	SHIFT	1
+#define	ALT	2
+#define	CTRL	4
+#define	META	8
+	    modify_parm = UNMOD;
+	    if (event->state & ShiftMask) {
+		modify_parm += SHIFT;
+	    }
+	    if (event->state & ControlMask) {
+		modify_parm += CTRL;
+	    }
 #if OPT_NUM_LOCK
-	    if (term->misc.real_NumLock
+	    if ((term->misc.alwaysUseMods
+	      || term->misc.real_NumLock)
 	     && ((event->state & term->misc.alt_left) != 0
 	      || (event->state & term->misc.alt_right)) != 0) {
-		if (event->state & ShiftMask) {
-		    ModifierParm(8, 4);
-		} else {
-		    ModifierParm(7, 3);
-		}
-	    } else
-#endif
-	    if (event->state & ShiftMask) {
-		ModifierParm(6, 2);
-	    } else {
-		ModifierParm(5, 1);
+		modify_parm += ALT;
 	    }
+	    if (term->misc.alwaysUseMods
+	     && ((event->state & term->misc.meta_left) != 0
+	      || (event->state & term->misc.meta_right)) != 0) {
+		modify_parm += META;
+	    }
+#endif
 	    TRACE(("...ModifierParm %d\n", modify_parm));
 	}
 
@@ -567,6 +589,10 @@ Input (
 	 } else if (IsFunctionKey(keysym)
 		|| IsMiscFunctionKey(keysym)
 		|| IsEditFunctionKey(keysym)
+#ifdef SunXK_F36
+		|| keysym == SunXK_F36
+		|| keysym == SunXK_F37
+#endif
 		|| (keysym == XK_Delete
 		 && ((modify_parm > 1)
 		  || !xtermDeleteIsDEL()))) {
@@ -743,6 +769,10 @@ decfuncvalue (KeySym keycode)
 		case XK_F18:	return(32);
 		case XK_F19:	return(33);
 		case XK_F20:	return(34);
+#ifdef SunXK_F36
+		case SunXK_F36:	return(57);
+		case SunXK_F37:	return(58);
+#endif
 
 		case XK_Find :	return(1);
 		case XK_Insert:	return(2);
@@ -902,6 +932,10 @@ sunfuncvalue (KeySym  keycode)
 		case XK_R13:	return(220);	/* kf43=kend */
 		case XK_R14:	return(221);	/* kf44 */
 		case XK_R15:	return(222);	/* kf45 */
+#ifdef SunXK_F36
+		case SunXK_F36:	return(234);
+		case SunXK_F37:	return(235);
+#endif
 
 		case XK_Find :	return(1);
 		case XK_Insert:	return(2);	/* kich1 */
@@ -1019,29 +1053,32 @@ VTInitModifiers(void)
 	    }
 	}
 
-	/*
-	 * If the Alt modifier is used in translations, we would rather not
-	 * use it to modify function-keys when NumLock is active.
-	 */
-	if ((term->misc.alt_left != 0
-	  || term->misc.alt_right != 0)
-	 && (TranslationsUseKeyword(toplevel, "alt")
-	  || TranslationsUseKeyword((Widget)term, "alt"))) {
-	    TRACE(("ALT is used as a modifier in translations (ignore mask)\n"));
-	    term->misc.alt_left = 0;
-	    term->misc.alt_right = 0;
-	}
+	/* Don't disable any mods if "alwaysUseMods" is true. */
+	if (!term->misc.alwaysUseMods) {
+	    /*
+	     * If the Alt modifier is used in translations, we would rather not
+	     * use it to modify function-keys when NumLock is active.
+	     */
+	    if ((term->misc.alt_left != 0
+	      || term->misc.alt_right != 0)
+	     && (TranslationsUseKeyword(toplevel, "alt")
+	      || TranslationsUseKeyword((Widget)term, "alt"))) {
+		TRACE(("ALT is used as a modifier in translations (ignore mask)\n"));
+		term->misc.alt_left = 0;
+		term->misc.alt_right = 0;
+	    }
 
-	/*
-	 * If the Meta modifier is used in translations, we would rather not
-	 * use it to modify function-keys.
-	 */
-	if ((term->misc.meta_left != 0
-	  || term->misc.meta_right != 0)
-	 && (TranslationsUseKeyword(toplevel, "meta")
-	  || TranslationsUseKeyword((Widget)term, "meta"))) {
-	    TRACE(("META is used as a modifier in translations\n"));
-	    term->misc.meta_trans = True;
+	    /*
+	     * If the Meta modifier is used in translations, we would rather not
+	     * use it to modify function-keys.
+	     */
+	    if ((term->misc.meta_left != 0
+	      || term->misc.meta_right != 0)
+	     && (TranslationsUseKeyword(toplevel, "meta")
+	      || TranslationsUseKeyword((Widget)term, "meta"))) {
+		TRACE(("META is used as a modifier in translations\n"));
+		term->misc.meta_trans = True;
+	    }
 	}
 
 	XFreeModifiermap(keymap);

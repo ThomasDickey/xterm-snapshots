@@ -5,7 +5,7 @@
 
 /*
  *
- * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -76,6 +76,9 @@
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>
 #include <X11/Xmu/WinUtil.h>
+#if HAVE_X11_SUNKEYSYM_H
+#include <X11/Sunkeysym.h>
+#endif
 
 #ifdef X_NOT_STDC_ENV
 extern time_t time ();
@@ -818,11 +821,10 @@ open_userfile(int uid, int gid, char *path, Boolean append)
 
     /*
      * Doublecheck that the user really owns the file that we've opened before
-     * we do any damage.
+     * we do any damage, and that it is not world-writable.
      */
     if (fstat(fd, &sb) < 0
      || (int) sb.st_uid != uid
-     || (int) sb.st_gid != gid
      || (sb.st_mode & 022) != 0) {
 	fprintf(stderr, "%s: you do not own %s\n", xterm_name, path);
 	close(fd);
@@ -1346,7 +1348,11 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 	}
 }
 
+#ifdef SunXK_F36
+#define MAX_UDK 37
+#else
 #define MAX_UDK 35
+#endif
 static struct {
 	char *str;
 	int   len;

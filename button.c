@@ -1,6 +1,6 @@
 /* $TOG: button.c /main/76 1997/07/30 16:56:19 kaleb $ */
 /*
- * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

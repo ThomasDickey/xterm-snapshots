@@ -101,7 +101,6 @@ SOFTWARE.
 #include <module/name.h>
 
 #define USE_TERMIOS
-#define USE_POSIX_WAIT
 #define NILCAP ((capability *)NULL)
 #endif
 
@@ -316,13 +315,8 @@ static Bool IsPts = False;
 #include <sys/resource.h>
 #endif
 
-#ifdef SCO
-#define USE_POSIX_WAIT
-#endif /* SCO */
-
 #ifdef __hpux
 #define HAS_BSD_GROUPS
-#define USE_POSIX_WAIT
 #include <sys/ptyio.h>
 #endif /* __hpux */
 
@@ -344,7 +338,6 @@ static Bool IsPts = False;
 #ifdef __QNX__
 #undef TIOCSLTC  /* <sgtty.h> conflicts with <termios.h> */
 #undef TIOCLSET
-#define USE_POSIX_WAIT
 #ifndef __QNXNTO__
 #define ttyslot() 1
 #else
@@ -378,12 +371,7 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 
 #endif	/* } !SYSV */
 
-#ifdef _POSIX_SOURCE
-#define USE_POSIX_WAIT
-#endif
-
 #ifdef SVR4
-#define USE_POSIX_WAIT
 #define HAS_SAVED_IDS_AND_SETEUID
 #endif
 
@@ -403,7 +391,6 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 #endif
 
 #if defined(BSD) && (BSD >= 199103)
-#define USE_POSIX_WAIT
 #define WTMP
 #define HAS_SAVED_IDS_AND_SETEUID
 #endif
@@ -579,7 +566,11 @@ static char **command_to_exec = NULL;
 /* choose a nice default value for speed - if we make it too low, users who
  * mistakenly use $TERM set to vt100 will get padding delays
  */
+#ifdef B38400	/* everyone should define this */
 #define VAL_LINE_SPEED B38400
+#else		/* ...but xterm's used this for a long time */
+#define VAL_LINE_SPEED B9600
+#endif
 
 /* allow use of system default characters if defined and reasonable */
 #ifndef CBRK
@@ -966,6 +957,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-leftbar",	"*rightScrollBar", XrmoptionNoArg,	(caddr_t) "off"},
 {"-rightbar",	"*rightScrollBar", XrmoptionNoArg,	(caddr_t) "on"},
 #endif
+{"-rvc",	"*colorRVMode",	XrmoptionNoArg,		(caddr_t) "off"},
+{"+rvc",	"*colorRVMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-sf",		"*sunFunctionKeys", XrmoptionNoArg,	(caddr_t) "on"},
 {"+sf",		"*sunFunctionKeys", XrmoptionNoArg,	(caddr_t) "off"},
 {"-si",		"*scrollTtyOutput", XrmoptionNoArg,	(caddr_t) "off"},
@@ -1092,6 +1085,7 @@ static struct _options {
 { "-rightbar",             "force scrollbar right (default left)" },
 { "-leftbar",              "force scrollbar left" },
 #endif
+{ "-/+rvc",		   "turn off/on display of reverse as color" },
 { "-/+sf",                 "turn on/off Sun Function Key escape codes" },
 { "-/+si",                 "turn on/off scroll-on-tty-output inhibit" },
 { "-/+sk",                 "turn on/off scroll-on-keypress" },
@@ -1147,6 +1141,26 @@ static char *message[] = {
 "must appear at the end of the command line, otherwise the user's default shell",
 "will be started.  Options that start with a plus sign (+) restore the default.",
 NULL};
+
+static Boolean get_termcap(char *name, char *buffer, char *resized)
+{
+    register TScreen *screen = &term->screen;
+
+    *buffer = 0;	/* initialize, in case we're using terminfo's tgetent */
+
+    if (name != 0) {
+	if (tgetent (buffer, name) == 1
+	 && *buffer) {
+	    if (!TEK4014_ACTIVE(screen)) {
+		resize (screen, buffer, resized);
+	    }
+	    return True;
+	} else {
+	    *buffer = 0;
+	}
+    }
+    return False;
+}
 
 static int abbrev (char *tst, char *cmp)
 {
@@ -2584,16 +2598,7 @@ spawn (void)
 	 * the program to proceed (but not to set $TERMCAP) if the termcap
 	 * entry is not found.
 	 */
-	*ptr = 0;	/* initialize, in case we're using terminfo's tgetent */
-	TermName = NULL;
-	if (resource.term_name) {
-	    TermName = resource.term_name;
-	    if (tgetent (ptr, resource.term_name) == 1) {
-		if (*ptr)
-		    if (!TEK4014_ACTIVE(screen))
-			resize (screen, termcap, newtc);
-	    }
-	}
+	get_termcap(TermName = resource.term_name, ptr, newtc);
 
 	/*
 	 * This block is invoked only if there was no terminal name specified
@@ -2602,12 +2607,9 @@ spawn (void)
 	if (!TermName) {
 	    TermName = *envnew;
 	    while (*envnew != NULL) {
-		if(tgetent(ptr, *envnew) == 1) {
-			TermName = *envnew;
-			if (*ptr)
-			    if(!TEK4014_ACTIVE(screen))
-				resize(screen, termcap, newtc);
-			break;
+		if (get_termcap(*envnew, ptr, newtc)) {
+		    TermName = *envnew;
+		    break;
 		}
 		envnew++;
 	    }
@@ -3948,25 +3950,13 @@ static int spawn(void)
 	ptr = termcap;
     }
 
-    *ptr = 0;
-    TermName = NULL;
-    if (resource.term_name) {
-	TermName = resource.term_name;
-	if (tgetent (ptr, resource.term_name) == 1) {
-	    if (*ptr)
-		if (!TEK4014_ACTIVE(screen))
-		    resize (screen, termcap, newtc);
-	}
-    }
+    get_termcap(TermName = resource.term_name, ptr, newtc);
 
     if (!TermName) {
 	TermName = *envnew;
 	while (*envnew != NULL) {
-	    if(tgetent(ptr, *envnew) == 1) {
+	    if (get_termcap(*envnew, ptr, newtc)) {
 		TermName = *envnew;
-		if (*ptr)
-		    if(!TEK4014_ACTIVE(screen))
-			resize(screen, termcap, newtc);
 		break;
 	    }
 	    envnew++;
@@ -4455,7 +4445,7 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 
 	if (*s == '^') {
 	    s++;
-	    c = ((*s == '?') ? 0177 : CONTROL(*s));
+	    c = ((*s == '?') ? A2E(0177) : CONTROL(*s));
 	    if (*s == '-') {
 		c = -1;
 		errno = 0;
@@ -4573,45 +4563,6 @@ int E2A(int x)
     c = x;
     __etoa_l(&c,1);
     return c;
-}
-
-char CONTROL(char c)
-{
-    /* this table was built through trial & error */
-    static char ebcdic_control_chars[256]={
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 00 - 07 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 08 - 0f */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 10 - 17 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 18 - 1f */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 20 - 27 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 28 - 2f */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 30 - 37 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 38 - 3f */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 40 - 47 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 48 - 4f */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 50 - 57 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 58 - 5f */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00,   /* 60 - 67 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07,   /* 68 - 6f */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 70 - 77 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 78 - 7f */
-                0x00, 0x01, 0x02, 0x03, 0x37, 0x2d, 0x2e, 0x2f,   /* 80 - 87 */
-                0x16, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 88 - 8f */
-                0x00, 0x15, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,   /* 90 - 97 */
-                0x11, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 98 - 9f */
-                0x00, 0x00, 0x13, 0x3c, 0x3d, 0x32, 0x26, 0x18,   /* a0 - a7 */
-                0x19, 0x3f, 0x00, 0x00, 0x00, 0x27, 0x00, 0x00,   /* a8 - af */
-                0x1e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* b0 - b7 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x1d, 0x00, 0x00,   /* b8 - bf */
-                0x00, 0x01, 0x02, 0x03, 0x37, 0x2d, 0x2e, 0x2f,   /* c0 - c7 */
-                0x16, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* c8 - cf */
-                0x00, 0x15, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,   /* d0 - d7 */
-                0x11, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* d8 - df */
-                0x1c, 0x00, 0x13, 0x3c, 0x3d, 0x32, 0x26, 0x18,   /* e0 - e7 */
-                0x19, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* e8 - ef */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* f0 - f7 */
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};  /* f8 - ff */
-    return ebcdic_control_chars[CharOf(c)];
 }
 #endif
 

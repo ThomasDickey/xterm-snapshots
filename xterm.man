@@ -2,7 +2,7 @@
 .\" $XFree86: xc/programs/xterm/xterm.man,v 3.60 2000/05/18 00:33:22 dawes Exp $
 .\"
 .\"
-.\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey <dickey@clark.net>
+.\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -57,7 +57,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
-.\" updated by Thomas Dickey <dickey@clark.net> for XFree86, July 1996.
+.\" updated by Thomas E. Dickey for XFree86, July 1996.
 .TH XTERM 1 "Release 6.3" "X Version 11"
 .SH NAME
 xterm \- terminal emulator for X
@@ -453,6 +453,12 @@ This option disables the PC-style use of bold colors.
 .TP 8
 .B \-rightbar
 Force scrollbar to the right side of VT100 screen.
+.TP 8
+.B "\-rvc"
+This option disables the display of characters with reverse attribute as color.
+.TP 8
+.B "\+rvc"
+This option enables the display of characters with reverse attribute as color.
 .TP 8
 .B \-rw
 This option indicates that reverse-wraparound should be allowed.  This allows
@@ -881,6 +887,11 @@ Specifies whether or not \fIxterm\fP should always display a highlighted
 text cursor.  By default, a hollow text cursor is displayed whenever the
 pointer moves out of the window or the window loses the input focus.
 .TP 8
+.B "alwaysUseMods (\fPclass\fB AlwaysUseMods)"
+Override the \fBnumLock\fP resource, telling xterm to use the Alt and Meta
+modifiers as to construct parameters for function key sequences even if
+those modifiers appear in the translations resource.
+.TP 8
 .B "appcursorDefault (\fPclass\fB AppcursorDefault)"
 If ``true,'' the cursor keys are initially in application mode.
 The default is ``false.''
@@ -969,8 +980,8 @@ should be worked around.  See the \fB\-cu\fP option for details.
 The default is ``false.''
 .TP 8
 .B "colorAttrMode (\fPclass\fB ColorMode)"
-Specifies whether ``colorBD'', ``colorBL'' and ``colorUL''
-should override ANSI colors.
+Specifies whether ``colorBD'', ``colorBL'', ``colorUL'', and
+``colorRV'' should override ANSI colors.
 If not, these are displayed only when no ANSI colors
 have been set for the corresponding position.
 The default is ``false.''
@@ -987,6 +998,11 @@ all colors, including bold.
 .TP 8
 .B "colorBLMode (\fPclass\fB ColorMode)"
 Specifies whether characters with the blink attribute should be displayed in
+color.
+Note that setting ``colorMode'' off disables all colors, including this.
+.TP 8
+.B "colorRVMode (\fPclass\fB ColorMode)"
+Specifies whether characters with the reverse attribute should be displayed in
 color.
 Note that setting ``colorMode'' off disables all colors, including this.
 .TP 8
@@ -1048,6 +1064,10 @@ the ``colorBDMode'' resource is enabled.
 .B "colorBL (\fPclass\fB Foreground)"
 This specifies the color to use to display blink characters if
 the ``colorBLMode'' resource is enabled.
+.TP 8
+.B "colorRV (\fPclass\fB Foreground)"
+This specifies the color to use to display reverse characters if
+the ``colorRVMode'' resource is enabled.
 .TP 8
 .B "colorUL (\fPclass\fB Foreground)"
 This specifies the color to use to display underlined characters if
@@ -2519,7 +2539,7 @@ resize(1), X(1), pty(4), tty(4)
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).
 .sp
-http://www.clark.net/pub/dickey/xterm/xterm.html
+http://dickey.his.com/xterm/xterm.html
 .SH BUGS
 .PP
 Large pastes do not work on some systems.  This is not a bug in
