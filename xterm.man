@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.45 1999/06/13 13:48:01 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.46 1999/06/20 08:41:47 dawes Exp $
 .\"
 .\"
 .\" Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
@@ -256,12 +256,13 @@ time text cursor is off when blinking
 time text cursor is on when blinking
 .TP 8
 .B "\-bdc"
-This option disables the display of characters with bold attribute as color
-rather than bold.
+Set the \fIvt100\fP resource \fBcolorBDMode\fR to FALSE,
+disabling the display of characters with bold attribute as color
 .TP 8
 .B "\+bdc"
-This option enables the display of characters with bold attribute as color
-rather than bold.
+Set the \fIvt100\fP resource \fBcolorBDMode\fR to TRUE,
+enabling the display of characters with bold attribute as color
+rather than bold 
 .TP 8
 .B "\-cb"
 Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to FALSE.
@@ -278,6 +279,7 @@ This option disables recognition of ANSI color-change escape sequences.
 .TP 8
 .B "\+cm"
 This option enables recognition of ANSI color-change escape sequences.
+This is the same as the \fIvt100\fP resource \fBcolorMode\fP.
 .TP 8
 .B "\-cn"
 This option indicates that newlines should not be cut in line-mode
@@ -1311,11 +1313,20 @@ underlined.  It may be desirable to disable underlining when color is being
 used for the underline attribute.
 .TP 8
 .B "utf8 (\fPclass\fB Utf8)"
-This specifies whether \fIxterm\fP xterm will run in UTF-8 mode.
+This specifies whether \fIxterm\fP will run in UTF-8 mode.
 If you set this resource, \fIxterm\fP also sets the \fBwideChars\fP resource as a side-effect.
 When set via a resource, \fIxterm\fP cannot be switched via control sequences out of UTF-8 mode.
 The default is ``0'' (off).
 Any other value will turn on UTF-8 mode.
+.TP 8
+.B "utf8controls (\fPclass\fB Utf8controls)"
+If \fIxterm\fP is running in UTF-8 mode, this specifies whether to
+interpret Unicode values as control characters, e.g., U+0000 to U+001F as
+C0 controls.
+The Unicode standard does not cover this area, leaving it unspecified for
+higher level protocols.
+Your application may require this interpretation.
+The default is ``false.''
 .TP 8
 .B "visualBell (\fPclass\fB VisualBell)"
 Specifies whether or not a visible bell (i.e. flashing) should be used instead
@@ -1703,7 +1714,7 @@ The bottom portion of the menu are command entries; selecting one of these
 performs the indicated function.
 .PP
 The
-.B xterm
+.I xterm
 menu pops up when the ``control'' key and pointer button one are
 pressed in a window.
 The \fImainMenu\fP contains items that apply to both the VT102 and Tektronix
@@ -1775,7 +1786,7 @@ sensitive data.  The best solution to this problem is to use a better
 authorization mechanism that host-based control, but a simple
 mechanism exists for protecting keyboard input in \fIxterm\fP.
 .PP
-The \fBxterm\fP menu (see \fBMENUS\fP above) contains a \fBSecure Keyboard\fP
+The \fIxterm\fP menu (see \fBMENUS\fP above) contains a \fBSecure Keyboard\fP
 entry which, when enabled, ensures that all keyboard input is directed
 \fIonly\fP to \fIxterm\fP (using the GrabKeyboard protocol request).
 When an application prompts you for a password

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.57 1999/06/13 13:47:59 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.58 1999/06/20 08:41:45 dawes Exp $
  */
 
 /*
@@ -569,7 +569,7 @@ typedef struct {
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define PAIRED_CHARS(a,b) a,b
-typedef unsigned short IChar;	/* for 8 or 16-bit characters */
+typedef unsigned IChar;		/* for 8 or 16-bit characters, plus flag */
 #undef  ALLOWLOGGING		/* FIXME: not yet */
 #else
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
@@ -738,6 +738,7 @@ typedef struct {
 #endif
 #if OPT_WIDE_CHARS
 	Boolean		wide_chars;	/* true when 16-bit chars	*/
+	Boolean		utf8_controls;	/* UTF-8 contains control chars	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
 	int		utf_count;	/* state of utf_char */
 	IChar		utf_char;	/* in-progress character */

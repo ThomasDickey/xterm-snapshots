@@ -145,24 +145,29 @@ AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM")
 AC_MSG_CHECKING(for private terminfo-directory)
 AC_ARG_WITH(own-terminfo,
 	[  --with-own-terminfo=P   set default \$TERMINFO (default: from environment)],
-	[private_TERMINFO=$withval],
-	[private_TERMINFO=${TERMINFO-none}])
-AC_MSG_RESULT($private_TERMINFO)
-if test $private_TERMINFO = yes ; then
+	[TERMINFO_DIR=$withval],
+	[TERMINFO_DIR=${TERMINFO-none}])
+AC_MSG_RESULT($TERMINFO_DIR)
+if test $TERMINFO_DIR = yes ; then
 	AC_MSG_WARN(no value given)
-elif test $private_TERMINFO != none ; then
-	if test -d $private_TERMINFO ; then
-		AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$private_TERMINFO")
+elif test $TERMINFO_DIR != none ; then
+	if test -d $TERMINFO_DIR ; then
+		AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$TERMINFO_DIR")
 	else
 		AC_MSG_WARN(not a directory)
 	fi
 elif test -d /usr/lib/terminfo ; then
-	private_TERMINFO=/usr/lib/terminfo
+	TERMINFO_DIR=/usr/lib/terminfo
 else
-	private_TERMINFO=
+	TERMINFO_DIR=
 fi
-test -n "$private_TERMINFO" && private_TERMINFO="TERMINFO=$private_TERMINFO"
-AC_SUBST(private_TERMINFO)dnl
+SET_TERMINFO=
+if test -n "$TERMINFO_DIR" ; then
+	TERMINFO_DIR='$(DESTDIR)'$TERMINFO_DIR
+	SET_TERMINFO='TERMINFO=$(TERMINFO_DIR)'
+fi
+AC_SUBST(TERMINFO_DIR)
+AC_SUBST(SET_TERMINFO)
 
 ###	checks for optional features
 AC_MSG_CHECKING(if you want active-icons)

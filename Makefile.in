@@ -31,7 +31,6 @@ manext		= 1
 bindir		= $(exec_prefix)/bin
 libdir		= $(exec_prefix)/lib
 mandir		= $(prefix)/man/man$(manext)
-
 appsdir		= $(libdir)/X11/app-defaults
 
 #### End of system configuration section. ####
@@ -42,7 +41,13 @@ AWK		= awk
 
 LDFLAGS		=
 
-INSTALL_DIRS    = $(bindir) $(appsdir) $(mandir)
+DESTDIR		=
+BINDIR		= $(DESTDIR)$(bindir)
+LIBDIR		= $(DESTDIR)$(libdir)
+MANDIR		= $(DESTDIR)$(mandir)
+APPSDIR		= $(DESTDIR)$(appsdir)
+
+INSTALL_DIRS    = $(BINDIR) $(APPSDIR) $(MANDIR)
 
 EXTRAHDR	= @EXTRAHDRS@
 EXTRASRC	= @EXTRASRCS@
@@ -91,28 +96,39 @@ xterm : $(OBJS1)
 resize : $(OBJS2)
 	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
-install : $(INSTALL_DIRS) xterm resize
-	$(INSTALL_PROGRAM) -s -m @XTERM_MODE@ xterm  $(bindir)/xterm
-	$(INSTALL_PROGRAM) -s -m  755 resize $(bindir)/resize
-	$(INSTALL_DATA) $(srcdir)/xterm.man    $(mandir)/xterm.$(manext)
-	$(INSTALL_DATA) $(srcdir)/resize.man   $(mandir)/resize.$(manext)
-	$(INSTALL_DATA) $(srcdir)/XTerm.ad     $(appsdir)/XTerm
-	$(INSTALL_DATA) $(srcdir)/XTerm-col.ad $(appsdir)/XTerm-color
+install-full \
+install :: $(INSTALL_DIRS) xterm resize
+	$(INSTALL_PROGRAM) -s -m @XTERM_MODE@ xterm  $(BINDIR)/xterm
+	$(INSTALL_PROGRAM) -s -m  755 resize $(BINDIR)/resize
+	$(INSTALL_DATA) $(srcdir)/xterm.man    $(MANDIR)/xterm.$(manext)
+	$(INSTALL_DATA) $(srcdir)/resize.man   $(MANDIR)/resize.$(manext)
+	$(INSTALL_DATA) $(srcdir)/XTerm.ad     $(APPSDIR)/XTerm
+	$(INSTALL_DATA) $(srcdir)/XTerm-col.ad $(APPSDIR)/XTerm-color
 	@echo 'Completed installation of executables and documentation.'
+install ::
 	@echo 'Use "make install-ti" to install terminfo description.'
 
-install-ti:
-	@private_TERMINFO@ tic $(srcdir)/terminfo
+TERMINFO_DIR = @TERMINFO_DIR@
+SET_TERMINFO = @SET_TERMINFO@
+
+install-full \
+install-ti :: $(TERMINFO_DIR)
+	$(SET_TERMINFO) tic $(srcdir)/terminfo
+	@echo 'Completed installation of terminfo description.'
+
+install-full \
+install-tc ::
+	@test -f /etc/termcap && echo 'You must install the termcap entry manually by editing /etc/termcap'
 
 installdirs: $(INSTALL_DIRS)
 
 uninstall:
-	-$(RM) $(bindir)/xterm
-	-$(RM) $(bindir)/resize
-	-$(RM) $(mandir)/xterm.$(manext)
-	-$(RM) $(mandir)/resize.$(manext)
-	-$(RM) $(appsdir)/XTerm
-	-$(RM) $(appsdir)/XTerm-color
+	-$(RM) $(BINDIR)/xterm
+	-$(RM) $(BINDIR)/resize
+	-$(RM) $(MANDIR)/xterm.$(manext)
+	-$(RM) $(MANDIR)/resize.$(manext)
+	-$(RM) $(APPSDIR)/XTerm
+	-$(RM) $(APPSDIR)/XTerm-color
 
 mostlyclean:
 	-$(RM) *.[ois] XtermLog.* .pure core *~ *.bak *.BAK *.out
@@ -136,7 +152,7 @@ tags:
 TAGS:
 	etags $(SRCS) $(HDRS)
 
-$(INSTALL_DIRS):
+$(TERMINFO_DIR) $(INSTALL_DIRS):
 	$(SHELL) ${srcdir}/mkdirs.sh $@
 
 ALWAYS:
