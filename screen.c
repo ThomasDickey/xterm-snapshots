@@ -307,16 +307,15 @@ ScreenWrite (
 	Char *col;
 	int wrappedbit;
  	Char starcol, starcol2; 
- #if OPT_WIDE_CHARS
+#if OPT_WIDE_CHARS
  	Char *comb1l, *comb1h, *comb2l, *comb2h;
- #endif
+#endif
  
- #if OPT_WIDE_CHARS
+#if OPT_WIDE_CHARS
  	int real_width = visual_width(PAIRED_CHARS(str, str2), length);
- #else
+#else
  	int real_width = length;
- #endif
- 	str[len] = 0;
+#endif
 
 	if (length > avail)
 	    length = avail;

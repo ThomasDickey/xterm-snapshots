@@ -2473,11 +2473,11 @@ in_put(void)
 		    /* strip parity bit */
 		    for(i = VTbuffer.cnt, cp = VTbuffer.ptr ; i > 0 ; i--)
 			*cp++ &= 0177; /* originally CHAR */
-			if(screen->scrollWidget && screen->scrollttyoutput &&
-			    screen->topline < 0)
-			    /* Scroll to bottom */
-			 WindowScroll(screen, 0);
-			break;
+		    if(screen->scrollWidget && screen->scrollttyoutput &&
+			screen->topline < 0)
+			/* Scroll to bottom */
+		    WindowScroll(screen, 0);
+		    break;
 		}
 	    }
 	    else {
@@ -2721,11 +2721,6 @@ dotext(
 			chars_chomped --;
 			width_here -= my_wcwidth(buf[chars_chomped + offset]);
 			need_wrap = 1;
-		}
-
-		if (width_here = 0) {
-			screen->do_wrap = 0;
-			continue;
 		}
 
 		if (chars_chomped != (len - offset)) {
