@@ -1,6 +1,8 @@
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.45 2003/12/31 17:12:25 dickey Exp $ ##
+## $XTermId: Makefile.in,v 1.107 2004/04/28 00:40:59 tom Exp $
 ##
-## Copyright 2002,2003 by Thomas E. Dickey
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.46 2004/04/28 00:40:59 dickey Exp $ ##
+##
+## Copyright 2002-2003,2004 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -46,9 +48,10 @@ X_LIBS		= @X_LIBS@
 X_EXTRA_LIBS	= @X_EXTRA_LIBS@
 
 EXTRA_CFLAGS	= @EXTRA_CFLAGS@
+EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
 EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
 
-CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@
+CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ $(EXTRA_CPPFLAGS)
 CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS)
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
@@ -113,7 +116,8 @@ all:	$(PROGRAMS)
 .def.hin:
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
-main$o : main.h version.h
+main$o : main.h
+misc$o : version.h
 
 $(OBJS1) : xterm.h ptyx.h xtermcfg.h
 main$o resize$o screen$o : xterm_io.h

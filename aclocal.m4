@@ -1,9 +1,10 @@
+dnl $XTermId: aclocal.m4,v 1.169 2004/04/28 00:40:59 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.50 2003/12/31 17:12:26 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.51 2004/04/28 00:40:59 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2002,2003 by Thomas E. Dickey
+dnl Copyright 1997-2003,2004 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -26,18 +27,44 @@ dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_CFLAGS version: 5 updated: 2002/12/01 00:12:15
+dnl CF_ADD_CFLAGS version: 7 updated: 2004/04/25 17:48:30
 dnl -------------
 dnl Copy non-preprocessor flags to $CFLAGS, preprocessor flags to $CPPFLAGS
 dnl The second parameter if given makes this macro verbose.
+dnl
+dnl Put any preprocessor definitions that use quoted strings in $EXTRA_CPPFLAGS,
+dnl to simplify use of $CPPFLAGS in compiler checks, etc., that are easily
+dnl confused by the quotes (which require backslashes to keep them usable).
 AC_DEFUN([CF_ADD_CFLAGS],
 [
+cf_fix_cppflags=no
 cf_new_cflags=
 cf_new_cppflags=
+cf_new_extra_cppflags=
+
 for cf_add_cflags in $1
 do
+case $cf_fix_cppflags in
+no)
 	case $cf_add_cflags in #(vi
 	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+		case $cf_add_cflags in
+		-D*)
+			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[[^=]]*='\''\"[[^"]]*//'`
+
+			test "${cf_add_cflags}" != "${cf_tst_cflags}" \
+			&& test -z "${cf_tst_cflags}" \
+			&& cf_fix_cppflags=yes
+
+			if test $cf_fix_cppflags = yes ; then
+				cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
+				continue
+			elif test "${cf_tst_cflags}" = "\"'" ; then
+				cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
+				continue
+			fi
+			;;
+		esac
 		case "$CPPFLAGS" in
 		*$cf_add_cflags) #(vi
 			;;
@@ -50,6 +77,17 @@ do
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
+	;;
+yes)
+	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
+
+	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[[^"]]*"'\''//'`
+
+	test "${cf_add_cflags}" != "${cf_tst_cflags}" \
+	&& test -z "${cf_tst_cflags}" \
+	&& cf_fix_cppflags=no
+	;;
+esac
 done
 
 if test -n "$cf_new_cflags" ; then
@@ -61,6 +99,13 @@ if test -n "$cf_new_cppflags" ; then
 	ifelse($2,,,[CF_VERBOSE(add to \$CPPFLAGS $cf_new_cppflags)])
 	CPPFLAGS="$cf_new_cppflags $CPPFLAGS"
 fi
+
+if test -n "$cf_new_extra_cppflags" ; then
+	ifelse($2,,,[CF_VERBOSE(add to \$EXTRA_CPPFLAGS $cf_new_extra_cppflags)])
+	EXTRA_CPPFLAGS="$cf_new_extra_cppflags $EXTRA_CPPFLAGS"
+fi
+
+AC_SUBST(EXTRA_CPPFLAGS)
 
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -151,7 +196,7 @@ ifelse($3,,[    :]dnl
 ])dnl
   ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_CACHE version: 7 updated: 2001/12/19 00:50:10
+dnl CF_CHECK_CACHE version: 9 updated: 2004/01/30 15:59:13
 dnl --------------
 dnl Check if we're accidentally using a cache from a different machine.
 dnl Derive the system name, as a check for reusing the autoconf cache.
@@ -160,6 +205,9 @@ dnl If we've packaged config.guess and config.sub, run that (since it does a
 dnl better job than uname).  Normally we'll use AC_CANONICAL_HOST, but allow
 dnl an extra parameter that we may override, e.g., for AC_CANONICAL_SYSTEM
 dnl which is useful in cross-compiles.
+dnl
+dnl Note: we would use $ac_config_sub, but that is one of the places where
+dnl autoconf 2.5x broke compatibility with autoconf 2.13
 AC_DEFUN([CF_CHECK_CACHE],
 [
 if test -f $srcdir/config.guess ; then
@@ -614,7 +662,7 @@ AC_DEFUN([CF_HELP_MESSAGE],
 [AC_DIVERT_HELP([$1])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_IMAKE_CFLAGS version: 15 updated: 2003/10/11 12:01:23
+dnl CF_IMAKE_CFLAGS version: 22 updated: 2004/04/25 20:55:33
 dnl ---------------
 dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
 dnl get these, but if imake is properly configured there is no point in doing
@@ -630,6 +678,10 @@ case $IMAKE in # (vi
 */imake)
 	cf_imake_opts="-DUseInstalled=YES" # (vi
 	;;
+*/util/xmkmf)
+	# A single parameter tells xmkmf where the config-files are:
+	cf_imake_opts="`echo $IMAKE|sed -e s,/config/util/xmkmf,,`" # (vi
+	;;
 *)
 	cf_imake_opts=
 	;;
@@ -639,19 +691,35 @@ esac
 # config directory.
 if test -n "$IMAKE" ; then
 if mkdir conftestdir; then
-	cf_makefile=`cd $srcdir;pwd`/Imakefile
 	CDPATH=; export CDPATH
+	cf_makefile=`cd $srcdir;pwd`/Imakefile
 	cd conftestdir
+
+	cat >fix_cflags.sed <<'CF_EOF'
+s/\\//g
+s/"//g
+s/\(-D[[a-zA-Z0-9_]][[a-zA-Z0-9_]]*\)=\([[^\\"0-9 	]][[^ 	]]*\([[ 	]][[ 	]]*[[^- 	]][[^ 	]]*\)*\)/\1='\\"\2\\"'/g
+s/^IMAKE[[ 	]]*/IMAKE_CFLAGS="/
+s/$/"/
+CF_EOF
+
+	cat >fix_lflags.sed <<'CF_EOF'
+s/^IMAKE[[ 	]]*/IMAKE_LOADFLAGS="/
+s/$/"/
+CF_EOF
+
 	echo >./Imakefile
 	test -f $cf_makefile && cat $cf_makefile >>./Imakefile
+
 	cat >> ./Imakefile <<'CF_EOF'
 findstddefs:
-	@echo 'IMAKE_CFLAGS="${ALLDEFINES} ifelse($1,,,$1)"'
-	@echo 'IMAKE_LOADFLAGS="${EXTRA_LOAD_FLAGS} ifelse($2,,,$2)"'
+	@echo IMAKE $(ALLDEFINES)ifelse($1,,,[ $1])       | sed -f fix_cflags.sed
+	@echo IMAKE $(EXTRA_LOAD_FLAGS)ifelse($2,,,[ $2]) | sed -f fix_lflags.sed
 CF_EOF
+
 	if ( $IMAKE $cf_imake_opts 1>/dev/null 2>&AC_FD_CC && test -f Makefile)
 	then
-		CF_VERBOSE(Using $IMAKE)
+		CF_VERBOSE(Using $IMAKE $cf_imake_opts)
 	else
 		# sometimes imake doesn't have the config path compiled in.  Find it.
 		cf_config=
@@ -723,6 +791,10 @@ CF_EOF
 	fi
 fi
 fi
+
+CF_VERBOSE(IMAKE_CFLAGS $IMAKE_CFLAGS)
+CF_VERBOSE(IMAKE_LOADFLAGS $IMAKE_LOADFLAGS)
+
 AC_SUBST(IMAKE_CFLAGS)
 AC_SUBST(IMAKE_LOADFLAGS)
 ])dnl
@@ -810,7 +882,7 @@ AC_TRY_LINK([
 test "$cf_cv_posix_wait" = yes && AC_DEFINE(USE_POSIX_WAIT)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PROG_EXT version: 9 updated: 2003/10/18 16:36:22
+dnl CF_PROG_EXT version: 10 updated: 2004/01/03 19:28:18
 dnl -----------
 dnl Compute $PROG_EXT, used for non-Unix ports, such as OS/2 EMX.
 AC_DEFUN([CF_PROG_EXT],
@@ -818,11 +890,12 @@ AC_DEFUN([CF_PROG_EXT],
 AC_REQUIRE([CF_CHECK_CACHE])
 case $cf_cv_system_name in
 os2*)
-    # We make sure -Zexe is not used -- it would interfere with @PROG_EXT@
     CFLAGS="$CFLAGS -Zmt"
     CPPFLAGS="$CPPFLAGS -D__ST_MT_ERRNO__"
     CXXFLAGS="$CXXFLAGS -Zmt"
-    LDFLAGS=`echo "$LDFLAGS -Zmt -Zcrtdll" | sed -e "s%-Zexe%%g"`
+    # autoconf's macro sets -Zexe and suffix both, which conflict:w
+    LDFLAGS="$LDFLAGS -Zmt -Zcrtdll"
+    ac_cv_exeext=.exe
     ;;
 esac
 
@@ -1412,9 +1485,10 @@ int x = XkbBI_Info
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 7 updated: 2003/12/29 21:33:30
+dnl CF_XOPEN_SOURCE version: 11 updated: 2004/01/26 20:58:41
 dnl ---------------
-dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions.
+dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
+dnl or adapt to the vendor's definitions to get equivalent functionality.
 AC_DEFUN([CF_XOPEN_SOURCE],[
 case $host_os in #(vi
 freebsd*) #(vi
@@ -1423,14 +1497,26 @@ freebsd*) #(vi
 hpux*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE"
 	;;
+irix6.*) #(vi
+	CPPFLAGS="$CPPFLAGS -D_SGI_SOURCE"
+	;;
 linux*) #(vi
 	CF_GNU_SOURCE
 	;;
+mirbsd*) #(vi
+	# setting _XOPEN_SOURCE or _POSIX_SOURCE breaks <arpa/inet.h>
+	;;
+netbsd*) #(vi
+	# setting _XOPEN_SOURCE breaks IPv6 for lynx on NetBSD 1.6, breaks xterm, is not needed for ncursesw
+	;;
 openbsd*) #(vi
-	# setting _XOPEN_SOURCE breaks xterm on OpenBSD 2.8, is not needed for ncurses
+	# setting _XOPEN_SOURCE breaks xterm on OpenBSD 2.8, is not needed for ncursesw
 	;;
 osf[[45]]*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_OSF_SOURCE"
+	;;
+sco*) #(vi
+	# setting _XOPEN_SOURCE breaks Lynx on SCO Unix / OpenServer
 	;;
 solaris*) #(vi
 	CPPFLAGS="$CPPFLAGS -D__EXTENSIONS__"
@@ -1610,9 +1696,15 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 10 updated: 2003/12/31 08:21:44
+dnl CF_X_FREETYPE version: 11 updated: 2004/04/25 16:43:59
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x).
+dnl
+dnl If either or both of these configure-script options are not given, rely on
+dnl the output of xft-config or the older freetype-config to provide the
+dnl cflags/libs options.
+dnl	--with-freetype-cflags
+dnl	--with-freetype-libs
 AC_DEFUN([CF_X_FREETYPE],
 [
 cf_extra_freetype_libs=
@@ -1624,10 +1716,20 @@ fi
 
 if test "$FREETYPE_CONFIG" != none ; then
 
+AC_ARG_WITH(freetype-cflags,
+	[  --with-freetype-cflags  -D/-I options for compiling with FreeType],
+[cf_cv_x_freetype_incs="$withval"
+ CF_VERBOSE(freetype-cflags $cf_cv_x_freetype_incs)
+],[
 AC_CACHE_CHECK(for X FreeType headers,cf_cv_x_freetype_incs,[
 	cf_cv_x_freetype_incs="`$FREETYPE_CONFIG --cflags 2>/dev/null`"
-])
+])])
 
+AC_ARG_WITH(freetype-libs,
+	[  --with-freetype-libs    -L/-l options to link FreeType],
+[cf_cv_x_freetype_libs="$withval"
+ CF_VERBOSE(freetype-libs $cf_cv_x_freetype_libs)
+],[
 AC_CACHE_CHECK(for X FreeType libraries,cf_cv_x_freetype_libs,[
 
 cf_save_LIBS="$LIBS"
@@ -1646,11 +1748,11 @@ AC_TRY_LINK([
 	],[],[cf_cv_x_freetype_libs=])
 	LIBS="$cf_save_LIBS"
 	CPPFLAGS="$cf_save_INCS"
-])
+])])
 
 if test -n "$cf_cv_x_freetype_libs" ; then
 	LIBS="$cf_cv_x_freetype_libs $LIBS"
-	CPPFLAGS="$cf_cv_x_freetype_incs $CPPFLAGS"
+	CF_ADD_CFLAGS($cf_cv_x_freetype_incs)
 	AC_DEFINE(XRENDERFONT)
 else
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
@@ -1665,59 +1767,33 @@ AC_SUBST(HAVE_TYPE_FCCHAR32)
 AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_TOOLKIT version: 9 updated: 2001/12/30 19:09:58
+dnl CF_X_TOOLKIT version: 10 updated: 2004/04/25 15:37:17
 dnl ------------
 dnl Check for X Toolkit libraries
 dnl
 AC_DEFUN([CF_X_TOOLKIT],
 [
+AC_REQUIRE([AC_PATH_XTRA])
 AC_REQUIRE([CF_CHECK_CACHE])
-# We need to check for -lsocket and -lnsl here in order to work around an
-# autoconf bug.  autoconf-2.12 is not checking for these prior to checking for
-# the X11R6 -lSM and -lICE libraries.  The resultant failures cascade...
-# 	(tested on Solaris 2.5 w/ X11R6)
-SYSTEM_NAME=`echo "$cf_cv_system_name"|tr ' ' -`
-cf_have_X_LIBS=no
-case $SYSTEM_NAME in
-irix[[56]]*) ;;
-clix*)
-	# FIXME: modify the library lookup in autoconf to
-	# allow _s.a suffix ahead of .a
-	AC_CHECK_LIB(c_s,open,
-		[LIBS="-lc_s $LIBS"
-	AC_CHECK_LIB(bsd,gethostname,
-		[LIBS="-lbsd $LIBS"
-	AC_CHECK_LIB(nsl_s,gethostname,
-		[LIBS="-lnsl_s $LIBS"
-	AC_CHECK_LIB(X11_s,XOpenDisplay,
-		[LIBS="-lX11_s $LIBS"
-	AC_CHECK_LIB(Xt_s,XtAppInitialize,
-		[LIBS="-lXt_s $LIBS"
-		 cf_have_X_LIBS=Xt
-		]) ]) ]) ]) ])
-	;;
-*)
-	AC_CHECK_LIB(socket,socket)
-	AC_CHECK_LIB(nsl,gethostname)
-	;;
-esac
 
-if test $cf_have_X_LIBS = no ; then
-	AC_PATH_XTRA
-	LDFLAGS="$LDFLAGS $X_LIBS"
-	CF_CHECK_CFLAGS($X_CFLAGS)
-	AC_CHECK_LIB(X11,XOpenDisplay,
-		[LIBS="-lX11 $LIBS"],,
-		[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])
-	AC_CHECK_LIB(Xt, XtAppInitialize,
-		[AC_DEFINE(HAVE_LIBXT)
-		 cf_have_X_LIBS=Xt
-		 LIBS="-lXt $X_PRE_LIBS $LIBS"],,
-		[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])
-else
-	LDFLAGS="$LDFLAGS $X_LIBS"
-	CF_CHECK_CFLAGS($X_CFLAGS)
-fi
+# SYSTEM_NAME=`echo "$cf_cv_system_name"|tr ' ' -`
+
+cf_have_X_LIBS=no
+
+LDFLAGS="$X_LIBS $LDFLAGS"
+CF_CHECK_CFLAGS($X_CFLAGS)
+
+AC_CHECK_FUNC(XOpenDisplay,,[
+AC_CHECK_LIB(X11,XOpenDisplay,
+	[LIBS="-lX11 $LIBS"],,
+	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])])
+
+AC_CHECK_FUNC(XtAppInitialize,,[
+AC_CHECK_LIB(Xt, XtAppInitialize,
+	[AC_DEFINE(HAVE_LIBXT)
+	 cf_have_X_LIBS=Xt
+	 LIBS="-lXt $X_PRE_LIBS $LIBS"],,
+	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])])
 
 if test $cf_have_X_LIBS = no ; then
 	AC_WARN(

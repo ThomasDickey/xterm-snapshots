@@ -1,10 +1,12 @@
+/* $XTermId: trace.c,v 1.51 2004/04/28 00:41:00 tom Exp $ */
+
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.18 2003/09/21 17:12:48 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.19 2004/04/28 00:41:00 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2002,2003 by Thomas E. Dickey
+Copyright 1997-2003,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -31,7 +33,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * debugging support via TRACE macro.
  */
 
-#include <version.h>
 #include <xterm.h>		/* for definition of GCC_UNUSED */
 #include <trace.h>
 
@@ -87,7 +88,7 @@ Trace(char *fmt,...)
 	fp = fopen(name, "w");
 	if (fp != 0) {
 	    time_t now = time((time_t *) 0);
-	    fprintf(fp, "%s xterm patch #%d\n", XFREE86_VERSION, XTERM_PATCH);
+	    fprintf(fp, "%s\n", xtermVersion());
 #ifdef HAVE_UNISTD_H
 	    fprintf(fp, "process %d real (%d/%d) effective (%d/%d) -- %s",
 		    getpid(),

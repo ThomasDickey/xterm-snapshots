@@ -1,9 +1,10 @@
+dnl $XTermId: configure.in,v 1.163 2004/04/28 00:40:59 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.62 2003/10/27 01:07:57 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.63 2004/04/28 00:40:59 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2002,2003 by Thomas E. Dickey
+dnl Copyright 1997-2003,2004 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -137,7 +138,7 @@ AC_CHECK_FUNCS(Xutf8LookupString, [],[
 	EXTRAOBJS="$EXTRAOBJS xutf8.o"
 ])
 
-CF_WITH_IMAKE_CFLAGS('$(MAIN_DEFINES)')
+CF_WITH_IMAKE_CFLAGS($(MAIN_DEFINES) $(VENDORMANDEFS))
 
 AC_MSG_CHECKING(for default terminal-id)
 AC_ARG_WITH(terminal-id,
