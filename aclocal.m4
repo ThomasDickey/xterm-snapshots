@@ -3,7 +3,7 @@ dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.16 1998/10/25 07:12:39 dawes Exp 
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
-dnl Copyright 1997,1998 by Thomas E. Dickey <dickey@clark.net>
+dnl Copyright 1997,1998,1999 by Thomas E. Dickey <dickey@clark.net>
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -618,11 +618,11 @@ AC_ARG_WITH(neXtaw,
 
 AC_CHECK_HEADERS(X11/$cf_x_athena/SimpleMenu.h)
 
-AC_CHECK_LIB(Xmu, XmuClientWindow,,[
-AC_CHECK_LIB(Xmu_s, XmuClientWindow)])
-
 AC_CHECK_LIB(Xext,XextCreateExtension,
 	[LIBS="-lXext $LIBS"])
+
+AC_CHECK_LIB(Xmu, XmuClientWindow,,[
+AC_CHECK_LIB(Xmu_s, XmuClientWindow)])
 
 AC_CHECK_LIB($cf_x_athena, XawSimpleMenuAddGlobalActions,
 	[LIBS="-l$cf_x_athena $LIBS"],[

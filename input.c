@@ -145,6 +145,14 @@ Input (
 	reply.a_nparam = 0;
 	reply.a_inters = 0;
 
+	/* VT220 & up: National Replacement Characters */
+	if ((nbytes == 1)
+	 && (term->flags & NATIONAL)) {
+		keysym = xtermCharSetIn(keysym, screen->keyboard_dialect[0]);
+		if (keysym < 128)
+			strbuf[0] = keysym;
+	}
+
 	/* VT300 & up: backarrow toggle */
 	if ((nbytes == 1)
 	 && !isModified(event)

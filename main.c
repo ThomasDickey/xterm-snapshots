@@ -272,6 +272,7 @@ static Bool IsPts = False;
 #endif
 
 #ifdef SYSV /* { */
+
 #ifdef USE_USG_PTYS			/* AT&T SYSV has no ptyio.h */
 #include <sys/stream.h>			/* get typedef used in ptem.h */
 #include <sys/stropts.h>		/* for I_PUSH */
@@ -294,6 +295,7 @@ static Bool IsPts = False;
 #define HAS_UTMP_UT_HOST
 #define HAS_BSD_GROUPS
 #endif
+
 #ifdef macII
 #define USE_SYSV_UTMP
 #define HAS_UTMP_UT_HOST
@@ -306,11 +308,13 @@ static Bool IsPts = False;
 #include <sgtty.h>
 #include <sys/resource.h>
 #endif
+
 #ifdef SCO
 #define USE_SYSV_UTMP
 #define USE_POSIX_WAIT
 #define HAS_UTMP_UT_HOST
 #endif /* SCO */
+
 #ifdef __hpux
 #define HAS_BSD_GROUPS
 #define USE_SYSV_UTMP
@@ -318,20 +322,27 @@ static Bool IsPts = False;
 #define USE_POSIX_WAIT
 #include <sys/ptyio.h>
 #endif /* __hpux */
+
 #ifdef __sgi
 #define HAS_BSD_GROUPS
 #include <sys/sysmacros.h>
 #endif /* __sgi */
+
 #ifdef sun
 #include <sys/strredir.h>
 #endif
+
 #ifdef AIXV3
 #define USE_SYSV_UTMP
 #define HAS_UTMP_UT_HOST
 #endif
+
 #else /* } !SYSV { */			/* BSD systems */
+
 #ifdef MINIX /* { */
+
 #else /* } !MINIX { */
+
 #ifndef linux
 #ifndef USE_POSIX_TERMIOS
 #include <sgtty.h>
@@ -348,12 +359,15 @@ static Bool IsPts = False;
 #define setpgrp setpgid
 #endif
 #endif /* !linux */
+
 #endif /* } MINIX */
+
 #endif	/* } !SYSV */
 
 #ifdef _POSIX_SOURCE
 #define USE_POSIX_WAIT
 #endif
+
 #ifdef SVR4
 #define USE_POSIX_WAIT
 #define HAS_SAVED_IDS_AND_SETEUID
@@ -396,13 +410,16 @@ extern time_t time ();
 #endif
 
 #if (defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN32__)
+
 #include <utmpx.h>
 #define setutent setutxent
 #define getutent getutxent
 #define getutid getutxid
 #define endutent endutxent
 #define pututline pututxline
+
 #else
+
 #ifdef ISC
 #include <sys/types.h>
 #endif
@@ -415,6 +432,7 @@ extern time_t time ();
 #if defined(_CRAY) && OSMAJORVERSION < 8
 extern struct utmp *getutid __((struct utmp *_Id));
 #endif
+
 #endif
 
 #ifndef ISC
@@ -889,6 +907,7 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 {"-t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-ti",		"*decTerminalID",XrmoptionSepArg,	(caddr_t) NULL},
 {"-tm",		"*ttyModes",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-tn",		"*termName",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -995,6 +1014,7 @@ static struct _options {
 #if OPT_TEK4014
 { "-/+t",                  "turn on/off Tek emulation window" },
 #endif
+{ "-ti termid",            "terminal identifier" },
 { "-tm string",            "terminal mode keywords and characters" },
 { "-tn name",              "TERM environment variable name" },
 { "-/+ulc",                "turn off/on display of underline as color" },
@@ -1227,8 +1247,7 @@ main (int argc, char *argv[])
 	d_tio.c_cc[VREPRINT]= TREPRINT_DEF;
 	d_tio.c_cc[VLNEXT]= TLNEXT_DEF;
 	d_tio.c_cc[VDISCARD]= TDISCARD_DEF;
-#else /* !MINIX */
-#if defined(USE_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS) /* { */
+#elif defined(USE_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS) /* { */
 	/* Initialization is done here rather than above in order
 	** to prevent any assumptions about the order of the contents
 	** of the various terminal structures (which may change from
@@ -1449,8 +1468,7 @@ main (int argc, char *argv[])
 	d_lmode = 0;
 #endif	/* } TIOCLSET */
 #endif  /* } macII, ATT, CRAY */
-#endif	/* } USE_SYSV_TERMIO */
-#endif /* MINIX */
+#endif	/* MINIX, etc */
 #endif  /* AMOEBA */
 
 	/* Init the Toolkit. */
@@ -1775,8 +1793,7 @@ main (int argc, char *argv[])
 	if (fcntl(screen->respond, F_SETFD, mode) == -1)
 		Error(1);
 	nbio_register(screen->respond);
-#else /* !MINIX */
-#ifdef USE_SYSV_TERMIO
+#elif defined(USE_SYSV_TERMIO)
 	if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
 		Error(1);
 #ifdef O_NDELAY
@@ -1786,11 +1803,10 @@ main (int argc, char *argv[])
 #endif /* O_NDELAY */
 	if (fcntl(screen->respond, F_SETFL, mode))
 		Error(1);
-#else	/* USE_SYSV_TERMIO */
+#else	/* !MINIX && !USE_SYSV_TERMIO */
 	mode = 1;
 	if (ioctl (screen->respond, FIONBIO, (char *)&mode) == -1) SysError (ERROR_FIONBIO);
-#endif	/* USE_SYSV_TERMIO */
-#endif /* MINIX */
+#endif	/* MINIX, etc */
 #endif  /* AMOEBA */
 
 	FD_ZERO (&pty_mask);
@@ -1848,8 +1864,7 @@ get_pty (int *pty)
 #ifdef __osf__
     int tty;
     return (openpty(pty, &tty, ttydev, NULL, NULL));
-#endif
-#if defined(SYSV) && defined(i386) && !defined(SVR4)
+#elif defined(SYSV) && defined(i386) && !defined(SVR4)
         /*
 	  The order of this code is *important*.  On SYSV/386 we want to open
 	  a /dev/ttyp? first if at all possible.  If none are available, then
@@ -1875,8 +1890,7 @@ get_pty (int *pty)
 	  */
         if (pty_search(pty) == 0)
 	    return 0;
-#endif /* SYSV && i386 && !SVR4 */
-#if defined(ATT) && !defined(__sgi)
+#elif defined(ATT) && !defined(__sgi)
 	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0) {
 	    return 1;
 	}
@@ -1887,15 +1901,13 @@ get_pty (int *pty)
 #endif
 #endif
 	return 0;
-#else /* ATT else */
-#ifdef AIXV3
+#elif defined(AIXV3)
 	if ((*pty = open ("/dev/ptc", O_RDWR)) < 0) {
 	    return 1;
 	}
 	strcpy(ttydev, ttyname(*pty));
 	return 0;
-#endif
-#if defined(__sgi) && OSMAJORVERSION >= 4
+#elif defined(__sgi) && OSMAJORVERSION >= 4
 	{
 	    char    *tty_name;
 
@@ -1905,8 +1917,7 @@ get_pty (int *pty)
 	    strcpy (ttydev, tty_name);
 	    return 0;
 	}
-#endif
-#ifdef __convex__
+#elif defined(__convex__)
         {
 	    char *pty_name, *getpty();
 
@@ -1920,11 +1931,9 @@ get_pty (int *pty)
 	    }
 	    return 1;
 	}
-#endif /* __convex__ */
-#ifdef USE_GET_PSEUDOTTY
+#elif defined(USE_GET_PSEUDOTTY)
 	return ((*pty = getpseudotty (&ttydev, &ptydev)) >= 0 ? 0 : 1);
-#else
-#if (defined(__sgi) && OSMAJORVERSION < 4) || (defined(umips) && defined (SYSTYPE_SYSV))
+#elif (defined(__sgi) && OSMAJORVERSION < 4) || (defined(umips) && defined (SYSTYPE_SYSV))
 	struct stat fstat_buf;
 
 	*pty = open ("/dev/ptc", O_RDWR);
@@ -1955,9 +1964,7 @@ get_pty (int *pty)
 
 	return pty_search(pty);
 
-#endif /* __sgi or umips else */
-#endif /* USE_GET_PSEUDOTTY else */
-#endif /* ATT else */
+#endif
 }
 
 /*
@@ -2152,7 +2159,7 @@ void first_map_occurred (void)
 /*
  * temporary hack to get xterm working on att ptys
  */
-void
+static void
 HsSysError(int pf, int error)
 {
     fprintf(stderr, "%s: fatal pty error %d (errno=%d) on tty %s\n",
@@ -2192,10 +2199,9 @@ spawn (void)
 #ifdef HAS_LTCHARS
 	struct ltchars ltc;
 #endif	/* HAS_LTCHARS */
-#else	/* else not USE_SYSV_TERMIO */
-#ifdef USE_POSIX_TERMIOS
+#elif defined(USE_POSIX_TERMIOS)
 	struct termios tio;
-#else /* else not USE_POSIX_TERMIOS */
+#else /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 	int ldisc = 0;
 	int discipline;
 	unsigned lmode;
@@ -2206,7 +2212,6 @@ spawn (void)
 	int jmode;
 	struct jtchars jtc;
 #endif /* sony */
-#endif  /* USE_POSIX_TERMIOS */
 #endif	/* USE_SYSV_TERMIO */
 
 	char termcap [1024];
@@ -2219,11 +2224,9 @@ spawn (void)
 	char *TermName = NULL;
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 	struct ttysize ts;
-#else	/* not old SunOS */
-#ifdef TIOCSWINSZ
+#elif defined(TIOCSWINSZ)
 	struct winsize ws;
-#endif	/* TIOCSWINSZ */
-#endif	/* sun */
+#endif
 	struct passwd *pw = NULL;
 #ifdef UTMP
 #if (defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN32__)
@@ -2329,11 +2332,10 @@ spawn (void)
 		        if(ioctl(tty, TCGETA, &tio) == -1)
 			        tio = d_tio;
 
-#else	/* not USE_SYSV_TERMIO */
-#ifdef USE_POSIX_TERMIOS
+#elif defined(USE_POSIX_TERMIOS)
 			if (tcgetattr(tty, &tio) == -1)
 			        tio = d_tio;
-#else   /* not USE_POSIX_TERMIOS */
+#else   /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 			if(ioctl(tty, TIOCGETP, (char *)&sg) == -1)
 			        sg = d_sg;
 			if(ioctl(tty, TIOCGETC, (char *)&tc) == -1)
@@ -2346,7 +2348,6 @@ spawn (void)
 			if(ioctl(tty, TIOCKGETC, (char *)&jtc) == -1)
 				jtc = d_jtc;
 #endif /* sony */
-#endif  /* USE_POSIX_TERMIOS */
 #endif	/* USE_SYSV_TERMIO */
 #ifdef MINIX
 			/* Editing shells interfere with xterms started in
@@ -2465,8 +2466,7 @@ spawn (void)
 		ts.ts_lines = screen->max_row + 1;
 		ts.ts_cols = screen->max_col + 1;
 	}
-#else	/* not old SunOS */
-#ifdef TIOCSWINSZ
+#elif defined(TIOCSWINSZ)
 	/* tell tty how big window is */
 #if OPT_TEK4014
 	if(TEK4014_ACTIVE(screen)) {
@@ -2482,8 +2482,7 @@ spawn (void)
 		ws.ws_xpixel = FullWidth(screen);
 		ws.ws_ypixel = FullHeight(screen);
 	}
-#endif	/* TIOCSWINSZ */
-#endif	/* sun */
+#endif	/* sun vs TIOCSWINSZ */
 
 	if (!am_slave) {
 #ifdef USE_HANDSHAKE
@@ -3156,8 +3155,7 @@ spawn (void)
 #if defined(SVR4) || defined(SCO325)
 		if (term->misc.login_shell)
 		    updwtmpx(WTMPX_FILE, &utmp);
-#else
-#if defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
+#elif defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
 		if (term->misc.login_shell)
 		    updwtmp(etc_wtmp, &utmp);
 #else
@@ -3166,7 +3164,6 @@ spawn (void)
 		    write(i, (char *)&utmp, sizeof(struct utmp));
 		    close(i);
 		}
-#endif
 #endif
 #endif
 		/* close the file */
@@ -3202,7 +3199,7 @@ spawn (void)
 				write(i, (char *)&utmp, sizeof(struct utmp));
 				close(i);
 				added_utmp_entry = True;
-#ifdef WTMP
+#if defined(WTMP)
 				if (term->misc.login_shell &&
 				(i = open(etc_wtmp, O_WRONLY|O_APPEND)) >= 0) {
 				    int status;
@@ -3210,8 +3207,7 @@ spawn (void)
 						   sizeof(struct utmp));
 				    status = close(i);
 				}
-#endif /* WTMP */
-#ifdef MNX_LASTLOG
+#elif defined(MNX_LASTLOG)
 				if (term->misc.login_shell &&
 				(i = open(_U_LASTLOG, O_WRONLY)) >= 0) {
 				    lseek(i, (long)(screen->uid *
@@ -3220,7 +3216,7 @@ spawn (void)
 					sizeof (struct utmp));
 				    close(i);
 				}
-#endif /* MNX_LASTLOG */
+#endif /* WTMP or MNX_LASTLOG */
 			} else
 				tslot = -tslot;
 		}
@@ -3299,14 +3295,12 @@ spawn (void)
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 			ts.ts_lines = screen->max_row + 1;
 			ts.ts_cols = screen->max_col + 1;
-#else /* not old SunOS */
-#ifdef TIOCSWINSZ
+#elif defined(TIOCSWINSZ)
 			ws.ws_row = screen->max_row + 1;
 			ws.ws_col = screen->max_col + 1;
 			ws.ws_xpixel = FullWidth(screen);
 			ws.ws_ypixel = FullHeight(screen);
-#endif /* TIOCSWINSZ */
-#endif /* sun else !sun */
+#endif /* sun vs TIOCSWINSZ */
 		    }
 		}
 #endif /* USE_HANDSHAKE */
@@ -3359,14 +3353,12 @@ spawn (void)
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 		i = ioctl (0, TIOCSSIZE, &ts);
 		TRACE(("spawn TIOCSSIZE %dx%d return %d\n", ts.ts_lines, ts.ts_cols, i))
-#else	/* not old SunOS */
-#ifdef TIOCSWINSZ
+#elif defined(TIOCSWINSZ)
 		i = ioctl (0, TIOCSWINSZ, (char *)&ws);
 		TRACE(("spawn TIOCSWINSZ %dx%d return %d\n", ws.ws_row, ws.ws_col, i))
 #else
 		TRACE(("spawn cannot tell pty its size\n"))
-#endif	/* TIOCSWINSZ */
-#endif	/* sun */
+#endif	/* sun vs TIOCSWINSZ */
 
 		signal(SIGHUP, SIG_DFL);
 		if (command_to_exec) {
@@ -3519,8 +3511,7 @@ spawn (void)
 	signal (SIGQUIT, SIG_IGN);
 #endif
 	signal (SIGTERM, SIG_IGN);
-#else /* else is bsd or has job control */
-#if defined(SYSV) || defined(__osf__)
+#elif defined(SYSV) || defined(__osf__)
 	/* if we were spawned by a jobcontrol smart shell (like ksh or csh),
 	 * then our pgrp and pid will be the same.  If we were spawned by
 	 * a jobcontrol dumb shell (like /bin/sh), then we will be in our
@@ -3542,7 +3533,6 @@ spawn (void)
 	signal (SIGQUIT, Exit);
 	signal (SIGTERM, Exit);
         signal (SIGPIPE, Exit);
-#endif	/* SYSV */
 #endif /* USE_SYSV_SIGNALS and not SIGTSTP */
 
 	return 0;
@@ -3963,8 +3953,7 @@ Exit(int n)
 #if defined(SVR4) || defined(SCO325)
 		    if (term->misc.login_shell)
 			updwtmpx(WTMPX_FILE, utptr);
-#else
-#if defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
+#elif defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
 		    strncpy (utmp.ut_line, utptr->ut_line, sizeof (utmp.ut_line));
 		    if (term->misc.login_shell)
 			updwtmp(etc_wtmp, utptr);
@@ -3975,7 +3964,6 @@ Exit(int n)
 		      i = write(fd, utptr, sizeof(*utptr));
 		      i = close(fd);
 		    }
-#endif
 #endif
 #endif
 
@@ -4086,22 +4074,19 @@ nonblocking_wait(void)
         pid_t pid;
 
 	pid = waitpid(-1, NULL, WNOHANG);
-#else /* USE_POSIX_WAIT */
-#if defined(USE_SYSV_SIGNALS) && (defined(CRAY) || !defined(SIGTSTP))
+#elif defined(USE_SYSV_SIGNALS) && (defined(CRAY) || !defined(SIGTSTP))
 	/* cannot do non-blocking wait */
 	int pid = 0;
 #else	/* defined(USE_SYSV_SIGNALS) && (defined(CRAY) || !defined(SIGTSTP)) */
-#ifndef Lynx
-	union wait status;
-#else
+#if defined(Lynx)
 	int status;
+#else
+	union wait status;
 #endif
 	register int pid;
 
 	pid = wait3 (&status, WNOHANG, (struct rusage *)NULL);
-#endif /* defined(USE_SYSV_SIGNALS) && !defined(SIGTSTP) */
 #endif /* USE_POSIX_WAIT else */
-
 	return pid;
 }
 
@@ -4193,8 +4178,20 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 
 int GetBytesAvailable (int fd)
 {
-#ifndef AMOEBA
-#ifdef FIONREAD
+#ifdef AMOEBA
+    /*
+     * Since this routine is only used to poll X connections
+     * we can use an internal Xlib routine (oh what ugly).
+     */
+    register TScreen *screen = &term->screen;
+    int count;
+
+    if (ConnectionNumber(screen->display) != fd) {
+	Panic("Cannot get bytes available");
+	return -1;
+    }
+    return _X11TransAmFdBytesReadable(fd, &count) < 0 ? -1 : count;
+#elif defined(FIONREAD)
     long arg;
     ioctl (fd, FIONREAD, (char *) &arg);
     return (int) arg;
@@ -4208,8 +4205,7 @@ int GetBytesAvailable (int fd)
       return 1;
     else
       return 0;
-#else
-#ifdef MINIX
+#elif defined(MINIX)
     /* The answer doesn't have to correct. Calling nbio_isinprogress is
      * much cheaper than called nbio_select.
      */
@@ -4217,8 +4213,7 @@ int GetBytesAvailable (int fd)
     	return 0;
     else
         return 1;
-#else /* !MINIX */
-#ifdef FIORDCK
+#elif defined(FIORDCK)
     return (ioctl (fd, FIORDCHK, NULL));
 #else /* !FIORDCK */
     struct pollfd pollfds[1];
@@ -4226,23 +4221,7 @@ int GetBytesAvailable (int fd)
     pollfds[0].fd = fd;
     pollfds[0].events = POLLIN;
     return poll (pollfds, 1, 0);
-#endif /* FIORDCK */
-#endif /* MINIX */
 #endif
-#else
-    /*
-     * Since this routine is only used to poll X connections
-     * we can use an internal Xlib routine (oh what ugly).
-     */
-    register TScreen *screen = &term->screen;
-    int count;
-
-    if (ConnectionNumber(screen->display) != fd) {
-	Panic("Cannot get bytes available");
-	return -1;
-    }
-    return _X11TransAmFdBytesReadable(fd, &count) < 0 ? -1 : count;
-#endif /* AMOEBA */
 }
 
 /* Utility function to try to hide system differences from
@@ -4252,21 +4231,15 @@ int
 kill_process_group(int pid, int sig)
 {
     TRACE(("kill_process_group(pid=%d, sig=%d)\n", pid, sig))
-#ifndef AMOEBA
-#ifndef X_NOT_POSIX
-    return kill (-pid, sig);
-#else
-#if defined(SVR4) || defined(SYSV)
-    return kill (-pid, sig);
-#else
-    return killpg (pid, sig);
-#endif
-#endif
-#else /* AMOEBA */
+#ifdef AMOEBA
     if (pid != 2) {
 	fprintf(stderr, "%s:  unexpected process id %d.\n", ProgramName, pid);
 	abort();
     }
     ttysendsig(sig);
+#elif defined(SVR4) || defined(SYSV) || !defined(X_NOT_POSIX)
+    return kill (-pid, sig);
+#else
+    return killpg (pid, sig);
 #endif /* AMOEBA */
 }

@@ -126,7 +126,7 @@ case $default_termid in
 vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
 	;;
 esac
-AC_DEFINE_UNQUOTED(DFT_DECID,$default_termid)
+AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid")
 
 AC_MSG_CHECKING(for default terminal-type)
 AC_ARG_WITH(terminal-type,
