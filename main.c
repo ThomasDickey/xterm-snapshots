@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.388 2004/06/06 22:15:25 tom Exp $ */
+/* $XTermId: main.c,v 1.390 2004/07/13 00:41:28 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.182 2004/06/06 22:15:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.183 2004/07/13 00:41:28 dickey Exp $ */
 
 /* main.c */
 
@@ -713,8 +713,8 @@ static XtResource application_resources[] =
     Bres("scoFunctionKeys", "ScoFunctionKeys", scoFunctionKeys, FALSE),
 #endif
 #if OPT_INITIAL_ERASE
-    Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, FALSE),
-    Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, FALSE),
+    Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, DEF_INITIAL_ERASE),
+    Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, DEF_BACKARO_ERASE),
 #endif
     Bres("waitForMap", "WaitForMap", wait_for_map, FALSE),
     Bres("useInsertMode", "UseInsertMode", useInsertMode, FALSE),
@@ -4562,7 +4562,7 @@ int
 GetBytesAvailable(int fd)
 {
 #if defined(FIONREAD)
-    long arg;
+    int arg;
     ioctl(fd, FIONREAD, (char *) &arg);
     return (int) arg;
 #elif defined(__CYGWIN__)

@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.321 2004/06/06 22:15:25 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.323 2004/07/13 00:41:30 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.116 2004/06/06 22:15:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.117 2004/07/13 00:41:30 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -1440,6 +1440,7 @@ typedef struct {
 	Boolean		backarrow_key;		/* backspace/delete */
 	Boolean		meta_sends_esc;		/* Meta-key sends ESC prefix */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
+	String		bold_font_names[NMENUFONTS];
 	String		menu_font_names[NMENUFONTS];
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
