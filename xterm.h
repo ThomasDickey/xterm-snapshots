@@ -1,4 +1,37 @@
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.34 1999/02/07 06:19:02 dawes Exp $ */
+
+/************************************************************
+
+Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+
+                        All Rights Reserved
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name(s) of the above copyright
+holders shall not be used in advertising or otherwise to promote the
+sale, use or other dealings in this Software without prior written
+authorization.
+
+********************************************************/
+
 /*
  * Common/useful definitions for XTERM application.
  *
@@ -40,6 +73,15 @@
 #else
 #define size_t int
 #define time_t long
+#endif
+
+#if defined(CSRG_BASED) || defined(__GNU__)
+#define USE_POSIX_TERMIOS 1
+#endif
+
+#ifdef USE_POSIX_TERMIOS
+#define HAVE_TERMIOS_H 1
+#define HAVE_TCGETATTR 1
 #endif
 
 #define XMU_POINTER XtPointer
@@ -183,6 +225,7 @@ extern GC xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc);
 /* input.c */
 extern void Input (TKeyboard *keyboard, TScreen *screen, XKeyEvent *event, Bool eightbit);
 extern void StringInput (TScreen *screen, char *string, size_t nbytes);
+extern void VTInitModifiers(void);
 
 /* main.c */
 #ifndef __EMX__
@@ -219,11 +262,12 @@ extern void Cleanup (int code);
 extern void Error (int i);
 extern void HandleBellPropertyChange PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleEightBitKeyPressed PROTO_XT_ACTIONS_ARGS;
-extern void HandleEnterWindow PROTO_XT_EV_HANDLER_ARGS;
-extern void HandleFocusChange PROTO_XT_EV_HANDLER_ARGS;
-extern void HandleKeyPressed PROTO_XT_ACTIONS_ARGS;
-extern void HandleLeaveWindow PROTO_XT_EV_HANDLER_ARGS;
-extern void HandleStringEvent PROTO_XT_ACTIONS_ARGS;
+extern void HandleEnterWindow        PROTO_XT_EV_HANDLER_ARGS;
+extern void HandleFocusChange        PROTO_XT_EV_HANDLER_ARGS;
+extern void HandleInterpret          PROTO_XT_ACTIONS_ARGS;
+extern void HandleKeyPressed         PROTO_XT_ACTIONS_ARGS;
+extern void HandleLeaveWindow        PROTO_XT_EV_HANDLER_ARGS;
+extern void HandleStringEvent        PROTO_XT_ACTIONS_ARGS;
 extern void Panic (char *s, int a);
 extern void Redraw (void);
 extern void ReverseOldColors (void);
@@ -244,6 +288,15 @@ extern void set_vt_visibility (Boolean on);
 extern void switch_modes (Bool tovt);
 extern void xevents (void);
 extern void xt_error (String message);
+
+#if OPT_MAXIMIZE
+extern int QueryMaximize (TScreen *screen, unsigned *width, unsigned *height);
+extern void HandleDeIconify          PROTO_XT_ACTIONS_ARGS;
+extern void HandleIconify            PROTO_XT_ACTIONS_ARGS;
+extern void HandleMaximize           PROTO_XT_ACTIONS_ARGS;
+extern void HandleRestoreSize        PROTO_XT_ACTIONS_ARGS;
+extern void RequestMaximize (XtermWidget termw, int maximize);
+#endif
 
 #ifdef ALLOWLOGGING
 extern void StartLog (TScreen *screen);
@@ -333,7 +386,7 @@ extern void useCurBackground (Bool flag);
 #else /* !OPT_ISO_COLORS */
 
 #define ClearCurBackground(screen, top, left, height, width) \
-	XClearArea (screen->display, TextWindow(screen), \
+	XClearArea (screen->display, VWindow(screen), \
 		left, top, width, height, FALSE)
 
 #define extract_fg(color, flags) term->cur_foreground

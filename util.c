@@ -918,7 +918,7 @@ copy_area(
     screen->copy_dest_y = dest_y;
 
     XCopyArea(screen->display,
-	      TextWindow(screen), TextWindow(screen),
+	      VWindow(screen), VWindow(screen),
 	      NormalGC(screen),
 	      src_x, src_y, width, height, dest_x, dest_y);
 }
@@ -1144,7 +1144,7 @@ ChangeColors(XtermWidget tw, ScrnColors *pNew)
 	    XSetForeground(screen->display,ReverseGC(screen),bg);
 	    XSetBackground(screen->display,NormalBoldGC(screen),bg);
 	    XSetForeground(screen->display,ReverseBoldGC(screen),bg);
-	    XSetWindowBackground(screen->display, TextWindow(screen),
+	    XSetWindowBackground(screen->display, VWindow(screen),
 						  tw->core.background_pixel);
 	}
 
@@ -1158,7 +1158,7 @@ ChangeColors(XtermWidget tw, ScrnColors *pNew)
 		screen->mousecolor, screen->mousecolorback);
 	    recolor_cursor (screen->arrow,
 		screen->mousecolor, screen->mousecolorback);
-	    XDefineCursor(screen->display, TextWindow(screen),
+	    XDefineCursor(screen->display, VWindow(screen),
 					   screen->pointer_cursor);
 
 #if OPT_HIGHLIGHT_COLOR
@@ -1179,7 +1179,7 @@ ChangeColors(XtermWidget tw, ScrnColors *pNew)
 	}
 #endif
 	set_cursor_gcs(screen);
-	XClearWindow(screen->display, TextWindow(screen));
+	XClearWindow(screen->display, VWindow(screen));
 	ScrnRefresh (screen, 0, 0, screen->max_row + 1,
 	 screen->max_col + 1, False);
 #if OPT_TEK4014
@@ -1243,7 +1243,7 @@ ReverseVideo (XtermWidget termw)
 
 	termw->misc.re_verse = !termw->misc.re_verse;
 
-	XDefineCursor(screen->display, TextWindow(screen), screen->pointer_cursor);
+	XDefineCursor(screen->display, VWindow(screen), screen->pointer_cursor);
 #if OPT_TEK4014
 	if(tek)
 		XDefineCursor(screen->display, tek, screen->arrow);
@@ -1252,7 +1252,7 @@ ReverseVideo (XtermWidget termw)
 	if(screen->scrollWidget)
 		ScrollBarReverseVideo(screen->scrollWidget);
 
-	XSetWindowBackground(screen->display, TextWindow(screen), termw->core.background_pixel);
+	XSetWindowBackground(screen->display, VWindow(screen), termw->core.background_pixel);
 
 	/* the shell-window's background will be used in the first repainting
 	 * on resizing
@@ -1264,7 +1264,7 @@ ReverseVideo (XtermWidget termw)
 	    TekReverseVideo(screen);
 	}
 #endif
-	XClearWindow(screen->display, TextWindow(screen));
+	XClearWindow(screen->display, VWindow(screen));
 	ScrnRefresh (screen, 0, 0, screen->max_row + 1,
 	 screen->max_col + 1, False);
 #if OPT_TEK4014
@@ -1444,7 +1444,7 @@ drawXtermText(
 		GC_PAIRS(NormalGC(screen),      ReverseGC(screen));
 		GC_PAIRS(NormalBoldGC(screen),  ReverseBoldGC(screen));
 
-		XFillRectangle (screen->display, TextWindow(screen), fillGC,
+		XFillRectangle (screen->display, VWindow(screen), fillGC,
 			x, y, len * FontWidth(screen), FontHeight(screen));
 
 		while (len-- > 0) {
@@ -1463,15 +1463,15 @@ drawXtermText(
 			screen->cursor_state == OFF ? ' ' : '*',
 			y, x, chrset, len, len, text))
 		y += FontAscent(screen);
-		XDrawImageString(screen->display, TextWindow(screen), gc,
+		XDrawImageString(screen->display, VWindow(screen), gc,
 			x, y,  (char *)text, len);
 		if ((flags & (BOLD|BLINK)) && screen->enbolden)
-			XDrawString(screen->display, TextWindow(screen), gc,
+			XDrawString(screen->display, VWindow(screen), gc,
 				x+1, y,  (char *)text, len);
 		if ((flags & UNDERLINE) && screen->underline) {
 			if (FontDescent(screen) > 1)
 				y++;
-			XDrawLine(screen->display, TextWindow(screen), gc,
+			XDrawLine(screen->display, VWindow(screen), gc,
 				x, y, x + len * FontWidth(screen) - 1, y);
 		}
 #if OPT_BOX_CHARS
@@ -1674,7 +1674,7 @@ void useCurBackground(Bool flag)
 	int color = flag ? term->cur_background : -1;
 	Pixel	bg = getXtermBackground(term->flags, color);
 
-	XSetWindowBackground(screen->display, TextWindow(screen), bg);
+	XSetWindowBackground(screen->display, VWindow(screen), bg);
 }
 
 /*
@@ -1688,7 +1688,7 @@ void ClearCurBackground(
 	unsigned width)
 {
 	useCurBackground(TRUE);
-	XClearArea (screen->display, TextWindow(screen),
+	XClearArea (screen->display, VWindow(screen),
 		left, top, width, height, FALSE);
 	useCurBackground(FALSE);
 }

@@ -3,6 +3,36 @@
 .\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
 .\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.17 1998/08/29 05:42:53 dawes Exp $
 .\"
+.\"
+.\" Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+.\" 
+.\"                         All Rights Reserved
+.\" 
+.\" Permission is hereby granted, free of charge, to any person obtaining a
+.\" copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\" 
+.\" The above copyright notice and this permission notice shall be included
+.\" in all copies or substantial portions of the Software.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+.\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\" 
+.\" Except as contained in this notice, the name(s) of the above copyright
+.\" holders shall not be used in advertising or otherwise to promote the
+.\" sale, use or other dealings in this Software without prior written
+.\" authorization.
+.\" 
+.\"
 .\" Copyright 1991, 1994 X Consortium
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining
@@ -94,6 +124,7 @@
 .[] AP \v'-1p'\s\nsAPC\s0\v'1p'
 .[] Bs \v'-1p'\s\nsBS\s0\v'1p'
 .[] Cs \v'-1p'\s\nsCSI\s0\v'1p'
+.[] S3 \v'-1p'\s\nsSS3\s0\v'1p'
 .[] Dc \v'-1p'\s\nsDCS\s0\v'1p'
 .[] Os \v'-1p'\s\nsOSC\s0\v'1p'
 .[] PM \v'-1p'\s\nsPM\s0\v'1p'
@@ -191,7 +222,11 @@
 .[] r r
 .[] cs s
 .[] t t
+.[] u u
+.[] v v
+.[] w w
 .[] x x
+.[] y y
 .[] | |
 .[] } }
 .[] ! !
@@ -731,16 +766,18 @@ Valid values for the parameter:
 Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM)
 .
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*s\\*(Ps\\*s\\*;\\*(Ps\\*s\\*t
-Window manipulation (from \fIdtterm\fP).
+Window manipulation (from \fIdtterm\fP, as well as extensions).
 Valid values for the first (and any additional parameters) are:
-  \*(Ps = \*1 \(-> Restore (de-iconify) window.
-  \*(Ps = \*2 \(-> Minimize (iconify) window.
+  \*(Ps = \*1 \(-> De-iconify window.
+  \*(Ps = \*2 \(-> Iconify window.
   \*(Ps = \*3 ; \fIx ; y\fP \(-> Move window to [x, y].
   \*(Ps = \*4 ; \fIheight ; width\fP \(-> Resize the \fIxterm\fP window to height and width in pixels.
   \*(Ps = \*5 \(-> Raise the \fIxterm\fP window to the front of the stacking order.
   \*(Ps = \*6 \(-> Lower the \fIxterm\fP window to the bottom of the stacking order.
   \*(Ps = \*7 \(-> Refresh the \fIxterm\fP window.
   \*(Ps = \*8 ; \fIheight ; width\fP \(-> Resize the text area to [height;width] in characters.
+  \*(Ps = \*9 ; \*0 \(-> Restore maximized window.
+  \*(Ps = \*9 ; \*1 \(-> Maximize window (i.e., resize to screen size).
   \*(Ps = \*1\*1 \(-> Report \fIxterm\fP window state.
 If the \fIxterm\fP window is open (non-iconified), it returns \*(Cs\*1\*t.
 If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
@@ -749,7 +786,9 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps = \*1\*4 \(-> Report \fIxterm\fP window in pixels as
 \*(Cs\*s\*4\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
   \*(Ps = \*1\*8 \(-> Report the size of the text area in characters as
-\*(Cs\*s\*8\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*t
+\*(Cs\*s\*8\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
+  \*(Ps = \*1\*9 \(-> Report the size of the screen in characters as
+\*(Cs\*s\*9\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
   \*(Ps = \*2\*0 \(-> Report \fIxterm\fP window's icon label as
 \*(Os\*s\*L\*s\fIlabel\fP\*s\*(ST
   \*(Ps = \*2\*1 \(-> Report \fIxterm\fP window's title as
@@ -802,6 +841,9 @@ disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*4\*9 \(-> Save cursor as in DECSC
 and use Alternate Screen Buffer, clearing it first (unless
 disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*5\*1 \(-> Set Sun function-key mode.
+  \*(Ps = \*1\*0\*5\*2 \(-> Set HP function-key mode.
+  \*(Ps = \*1\*0\*6\*1 \(-> Set Sun/PC keyboard mode.
 .
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*l
 DEC Private Mode Reset (DECRST)
@@ -844,6 +886,9 @@ disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*4\*9 \(-> Use Normal Screen Buffer and restore cursor
 as in DECRC (unless
 disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*5\*1 \(-> Reset Sun function-key mode.
+  \*(Ps = \*1\*0\*5\*2 \(-> Reset HP function-key mode.
+  \*(Ps = \*1\*0\*6\*1 \(-> Reset Sun/PC keyboard mode.
 .
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*r
 Restore DEC Private Mode Values.  The value of \*(Ps previously saved is
@@ -880,6 +925,224 @@ compile-time option)
 .Ed
 .
 .
+.SH
+PC-Style Function Keys
+.ds RH Function Keys
+.LP
+If \fIxterm\fP does minimal translation of the function keys, it usually does this
+with a PC-style keyboard, so PC-style function keys result.
+Sun keyboards are similar to PC keyboards.
+Both have cursor and scrolling operations printed on the keypad,
+which duplicate the smaller cursor and scrolling keypads.
+.LP
+The cursor keys transmit the following escape sequences depending on the
+mode specified via the \fBDECCKM\fP escape sequence.
+.TS
+center;
+cf3	cf3	cf3
+lf3w(2c)	lf3w(2c)	lf3w(2c) .
+Key	Normal	Application
+_
+Cursor Up	\*(Cs\*A	\*(S3\*A
+Cursor Down	\*(Cs\*(cB	\*(S3\*(cB
+Cursor Right	\*(Cs\*C	\*(S3\*C
+Cursor Left	\*(Cs\*D	\*(S3\*D
+.TE
+.LP
+The application keypad transmits the following escape sequences depending on the
+mode specified via the \fBDECPNM\fP and \fBDECPAM\fP escape sequences.
+Use the NumLock key to override the application mode.
+.LP
+Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are supported by
+the program.
+.TS
+center;
+cf3	cf3	cf3
+lf3w(2c)	lf3w(2c)	lf3w(2c) .
+Key	Numeric	Application
+_
+Space	\*(Sp	\*(S3\*(Sp
+Tab	\*(Ta	\*(S3\*I
+Enter	\*(Cr	\*(S3\*M
+PF1	\*(S3\*P	\*(S3\*P
+PF2	\*(S3\*Q	\*(S3\*Q
+PF3	\*(S3\*R	\*(S3\*R
+PF4	\*(S3\*S	\*(S3\*S
+* \f1(multiply)\fP	*	\*(S3\*j
++ \f1(add)\fP	+	\*(S3\*k
+, \f1(comma)\fP	,	\*(S3\*l
+- \f1(minus)\fP	-	\*(S3\*m
+\. \f1(Delete)\fP	\.	\*(S3\*3\*(c~
+/ \f1(divide)\fP	/	\*(S3\*o
+0 \f1(Insert)\fP	0	\*(Cs\*2\*(c~
+1 \f1(End)\fP	1	\*(Cs\*4\*(c~
+2 \f1(DownArrow)\fP	2	\*(Cs\*(cB
+3 \f1(PageDown)\fP	3	\*(Cs\*5\*(c~
+4 \f1(LeftArrow)\fP	4	\*(Cs\*D
+5 \f1(Begin)\fP	5	\*(Cs\*E
+6 \f1(RightArrow)\fP	6	\*(Cs\*C
+7 \f1(Home)\fP	7	\*(Cs\*1\*(c~
+8 \f1(UpArrow)\fP	8	\*(Cs\*A
+9 \f1(PageUp)\fP	9	\*(Cs\*5\*(c~
+= (equal)	\&=	\*(S3\*(XX
+.TE
+They also provide 12 function keys, as well as a few other special-purpose keys.
+.TS
+center;
+cf3	cf3
+lf3w(2c)	lf3w(2c) .
+Key	Escape Sequence
+_
+F1	\*(S3\*P
+F2	\*(S3\*Q
+F3	\*(S3\*R
+F4	\*(S3\*S
+F5	\*(Cs\*1\*5\*(c~
+F6	\*(Cs\*1\*7\*(c~
+F7	\*(Cs\*1\*8\*(c~
+F8	\*(Cs\*1\*9\*(c~
+F9	\*(Cs\*2\*0\*(c~
+F10	\*(Cs\*2\*1\*(c~
+F11	\*(Cs\*2\*3\*(c~
+F12	\*(Cs\*2\*4\*(c~
+.TE
+.LP
+Older versions of \fIxterm\fP implement different escape sequences for F1 through F4.
+These can be activated by setting the \fIoldXtermFKeys\fP resource.
+However, since they do not correspond to any hardware terminal, they have been deprecated.
+(The DEC VT220 reserves F1 through F5 for local functions such as \fBSetup\fP).
+.TS
+center;
+cf3	cf3
+lf3w(2c)	lf3w(2c) .
+Key	Escape Sequence
+_
+F1	\*(Cs\*1\*1\*(c~
+F2	\*(Cs\*1\*2\*(c~
+F3	\*(Cs\*1\*3\*(c~
+F4	\*(Cs\*1\*4\*(c~
+.TE
+.SH
+VT220-Style Function Keys
+.LP
+However, \fIxterm\fP is most useful as a DEC VT102 or VT220 emulator.
+.LP
+The VT102/VT220 application keypad transmits unique escape sequences in
+application mode, which are distinct from the cursor and scrolling keypad:
+.TS
+center;
+cf3	cf3	cf3
+lf3w(2c)	lf3w(2c)	lf3w(2c) .
+Key	Numeric	Application
+_
+Space	Space	\*(S3\*(Sp
+Tab	Tab	\*(S3\*I
+Enter	CR	\*(S3\*M
+PF1	\*(S3\*P	\*(S3\*P
+PF2	\*(S3\*Q	\*(S3\*Q
+PF3	\*(S3\*R	\*(S3\*R
+PF4	\*(S3\*S	\*(S3\*S
+* \f1(multiply)\fP	*	\*(S3\*j
++ \f1(add)\fP	+	\*(S3\*k
+, \f1(comma)\fP	,	\*(S3\*l
+- \f1(minus)\fP	-	\*(S3\*m
+\. \f1(period)\fP	\.	\*(S3\*n
+/ \f1(divide)\fP	/	\*(S3\*o
+0	0	\*(S3\*p
+1	1	\*(S3\*q
+2	2	\*(S3\*r
+3	3	\*(S3\*s
+4	4	\*(S3\*t
+5	5	\*(S3\*u
+6	6	\*(S3\*v
+7	7	\*(S3\*w
+8	8	\*(S3\*x
+9	9	\*(S3\*y
+= (equal)	\&=	\*(S3\*(XX
+.TE
+.LP
+The VT220 provides 8 additional function keys.
+With a Sun/PC keyboard, access these keys by Control/F1 for F13, etc.
+.TS
+center;
+cf3	cf3
+lf3w(2c)	lf3w(2c) .
+Key	Escape Sequence
+_
+F13	\*(Cs\*2\*5\*(c~
+F14	\*(Cs\*2\*6\*(c~
+F15	\*(Cs\*2\*8\*(c~
+F16	\*(Cs\*2\*9\*(c~
+F17	\*(Cs\*3\*1\*(c~
+F18	\*(Cs\*3\*2\*(c~
+F19	\*(Cs\*3\*3\*(c~
+F20	\*(Cs\*3\*4\*(c~
+.TE
+.SH
+VT52-Style Function Keys
+.LP
+A VT52 does not have function keys, but it does have a numeric keypad and cursor keys.
+They differ from the other emulations by the prefix.
+Also, the cursor keys do not change:
+.TS
+center;
+cf3	cf3
+lf3w(2c)	lf3w(2c) .
+Key	Normal/Application
+_
+Cursor Up	\*(Es\*A
+Cursor Down	\*(Es\*(cB
+Cursor Right	\*(Es\*C
+Cursor Left	\*(Es\*D
+.TE
+The keypad is similar:
+.TS
+center;
+cf3	cf3	cf3
+lf3w(2c)	lf3w(2c)	lf3w(2c) .
+Key	Numeric	Application
+_
+Space	Space	\*(Es\*?\*(Sp
+Tab	Tab	\*(Es\*?\*I
+Enter	CR	\*(Es\*?\*M
+PF1	\*(Es\*P	\*(Es\*P
+PF2	\*(Es\*Q	\*(Es\*Q
+PF3	\*(Es\*R	\*(Es\*R
+PF4	\*(Es\*S	\*(Es\*S
+* \f1(multiply)\fP	*	\*(Es\*?\*j
++ \f1(add)\fP	+	\*(Es\*?\*k
+, \f1(comma)\fP	,	\*(Es\*?\*l
+- \f1(minus)\fP	-	\*(Es\*?\*m
+\. \f1(period)\fP	\.	\*(Es\*?\*n
+/ \f1(divide)\fP	/	\*(Es\*?\*o
+0	0	\*(Es\*?\*p
+1	1	\*(Es\*?\*q
+2	2	\*(Es\*?\*r
+3	3	\*(Es\*?\*s
+4	4	\*(Es\*?\*t
+5	5	\*(Es\*?\*u
+6	6	\*(Es\*?\*v
+7	7	\*(Es\*?\*w
+8	8	\*(Es\*?\*x
+9	9	\*(Es\*?\*y
+= (equal)	\&=	\*(Es\*?\*(XX
+.TE
+.SH
+Sun-Style Function Keys
+.LP
+The \fIxterm\fP program provides support for Sun keyboards more directly, by
+a menu toggle that causes it to send Sun-style function key codes rather than VT220.
+Note, however, that the \fIsun\fP and \fIvt100\fP emulations are not really
+compatible.  For example, their wrap-margin behavior differs.
+.LP
+Only function keys are altered; keypad and cursor keys are the same.
+The emulation responds identically.
+See the xterm-sun terminfo entry for details.
+.SH
+HP-Style Function Keys
+.LP
+Similarly, \fIxterm\fP can be compiled to support HP keyboards.
+See the xterm-hp terminfo entry for details.
 .SH
 Mouse Tracking
 .ds RH Mouse Tracking

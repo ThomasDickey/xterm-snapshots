@@ -5,6 +5,35 @@
 
 /*
 
+Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+
+                        All Rights Reserved
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name(s) of the above copyright
+holders shall not be used in advertising or otherwise to promote the
+sale, use or other dealings in this Software without prior written
+authorization.
+
+
 Copyright (c) 1988  X Consortium
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -207,6 +236,7 @@ static void StopBlinking (TScreen *screen);
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
+#define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
 #define XtNpointerColor		"pointerColor"
 #define XtNpointerColorBackground	"pointerColorBackground"
@@ -275,6 +305,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCMarginBell		"MarginBell"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
+#define XtCNumLock		"NumLock"
 #define XtCOldXtermFKeys	"OldXtermFKeys"
 #define XtCPrintAttributes	"PrintAttributes"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
@@ -407,6 +438,7 @@ static XtActionsRec actionsList[] = {
     { "insert-eight-bit",	HandleEightBitKeyPressed },
     { "insert-selection",	HandleInsertSelection },
     { "insert-seven-bit",	HandleKeyPressed },
+    { "interpret",		HandleInterpret },
     { "keymap", 		HandleKeymapChange },
     { "popup-menu",		HandlePopupMenu },
     { "print", 			HandlePrint },
@@ -460,6 +492,12 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_HP_FUNC_KEYS
     { "set-hp-function-keys",	HandleHpFunctionKeys },
+#endif
+#if OPT_MAXIMIZE
+    { "deiconify",		HandleDeIconify },
+    { "iconify",		HandleIconify },
+    { "maximize",		HandleMaximize },
+    { "restore",		HandleRestoreSize },
 #endif
 #if OPT_SHIFT_KEYS
     { "larger-vt-font",		HandleLargerFont },
@@ -666,6 +704,11 @@ static XtResource resources[] = {
 {XtNsignalInhibit,XtCSignalInhibit,XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.signalInhibit),
 	XtRBoolean, (XtPointer) &defaultFALSE},
+#if OPT_NUM_LOCK
+{XtNnumLock, XtCNumLock, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, misc.real_NumLock),
+	XtRBoolean, (XtPointer) &defaultTRUE},
+#endif
 #if OPT_SHIFT_KEYS
 {XtNshiftKeys, XtCShiftKeys, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.shift_keys),
@@ -2368,13 +2411,13 @@ in_put(void)
 		    Panic(
 			  "input: read returned unexpected error (%d)\n",
 			  errno);
-	    } else if (bcnt == 0)
+	    } else if (bcnt == 0) {
 #if defined(MINIX) || defined(__EMX__)
 		Cleanup(0);
 #else
 		Panic("input: read returned zero\n", 0);
 #endif
-	    else {
+	    } else {
 		/* read from pty was successful */
 		if (!screen->output_eight_bits) {
 		    register int bc = bcnt;
@@ -2460,6 +2503,8 @@ in_put(void)
 	if (XtAppPending(app_con) ||
 	    FD_ISSET (ConnectionNumber(screen->display), &select_mask)) {
 	    xevents();
+	    if (bcnt > 0)	/* HandleInterpret */
+		break;
 	}
 #else  /* AMOEBA */
 	i = _X11TransAmSelect(ConnectionNumber(screen->display), 1);
@@ -2467,6 +2512,8 @@ in_put(void)
 	   it counts as being readable */
 	if (XtAppPending(app_con) || i > 0) {
 	    xevents();
+	    if (bcnt > 0)	/* HandleInterpret */
+		break;
 	    continue;
 	} else if (i < 0) {
 	    extern int exiting;
@@ -2808,6 +2855,7 @@ dpmodes(
 				ToggleScrollBar(termw);
 			break;
 #if OPT_SHIFT_KEYS
+		case 35:
 			term->misc.shift_keys = (func == bitset) ? ON : OFF;
 			break;
 #endif
@@ -2931,6 +2979,22 @@ dpmodes(
 					CursorRestore(termw);
 			}
 			break;
+		case 1051:
+			sunFunctionKeys = (func == bitset);
+			update_sun_fkeys();
+			break;
+#if OPT_HP_FUNC_KEYS
+		case 1052:
+			hpFunctionKeys = (func == bitset);
+			update_hp_fkeys();
+			break;
+#endif
+#if OPT_SUNPC_KBD
+		case 1061:
+			sunKeyboard = (func == bitset);
+			update_sun_kbd();
+			break;
+#endif
 		}
 	}
 }
@@ -3162,7 +3226,7 @@ report_win_label(
 }
 
 /*
- * Window operations (from CDE dtterm description)
+ * Window operations (from CDE dtterm description, as well as extensions)
  */
 static void
 window_ops(XtermWidget termw)
@@ -3173,6 +3237,7 @@ window_ops(XtermWidget termw)
 	XTextProperty text;
 	unsigned int value_mask;
 	Position x, y;
+	unsigned root_width, root_height;
 
 	switch (param[0]) {
 	case 1:		/* Restore (de-iconify) window */
@@ -3217,6 +3282,12 @@ window_ops(XtermWidget termw)
 	case 8:		/* Resize the text-area, in characters */
 		RequestResize(termw, param[1], param[2], TRUE);
 		break;
+
+#if OPT_MAXIMIZE
+	case 9:		/* Maximize or restore */
+		RequestMaximize(termw, param[1]);
+		break;
+#endif
 
 	case 11:	/* Report the window's state */
 		XGetWindowAttributes(screen->display,
@@ -3274,6 +3345,24 @@ window_ops(XtermWidget termw)
 		reply.a_final  = 't';
 		unparseseq(&reply, screen->respond);
 		break;
+
+#if OPT_MAXIMIZE
+	case 19:	/* Report the screen's size, in characters */
+		if (!QueryMaximize(screen, &root_height, &root_width)) {
+		    root_height = 0;
+		    root_width  = 0;
+		}
+		reply.a_type = CSI;
+		reply.a_pintro = 0;
+		reply.a_nparam = 3;
+		reply.a_param[0] = 9;
+		reply.a_param[1] = root_height;
+		reply.a_param[2] = root_width;
+		reply.a_inters = 0;
+		reply.a_final  = 't';
+		unparseseq(&reply, screen->respond);
+		break;
+#endif
 
 	case 20:	/* Report the icon's label */
 		report_win_label(screen, 'L', &text,
@@ -3444,11 +3533,11 @@ SwitchBufs(register TScreen *screen)
 		if(screen->scroll_amt)
 			FlushScroll(screen);
 		if(top == 0)
-			XClearWindow(screen->display, TextWindow(screen));
+			XClearWindow(screen->display, VWindow(screen));
 		else
 			XClearArea(
 			    screen->display,
-			    TextWindow(screen),
+			    VWindow(screen),
 			    (int) OriginX(screen),
 			    (int) top * FontHeight(screen) + screen->border,
 			    (unsigned) Width(screen),
@@ -3777,7 +3866,7 @@ static void VTInitialize (
        wnew->screen.terminal_id = MIN_DECID;
    if (wnew->screen.terminal_id > MAX_DECID)
        wnew->screen.terminal_id = MAX_DECID;
-   TRACE(("term_id '%s' -> terminal_id %d\n", 
+   TRACE(("term_id '%s' -> terminal_id %d\n",
 	wnew->screen.term_id,
 	wnew->screen.terminal_id))
 
@@ -3791,6 +3880,7 @@ static void VTInitialize (
    wnew->misc.tekSmall = request->misc.tekSmall;
    wnew->screen.TekEmu = request->screen.TekEmu;
 #endif
+   wnew->misc.re_verse0 =
    wnew->misc.re_verse = request->misc.re_verse;
    wnew->screen.multiClickTime = request->screen.multiClickTime;
    wnew->screen.bellSuppressTime = request->screen.bellSuppressTime;
@@ -4129,6 +4219,9 @@ static void VTRealize (
 	VTInitI18N();
 #else
 	term->screen.xic = NULL;
+#endif
+#if OPT_NUM_LOCK
+	VTInitModifiers();
 #endif
 
 	set_cursor_gcs (screen);
@@ -4486,7 +4579,7 @@ ShowCursor(void)
 	if (!screen->select && !screen->always_highlight) {
 		screen->box->x = x;
 		screen->box->y = y;
-		XDrawLines (screen->display, TextWindow(screen),
+		XDrawLines (screen->display, VWindow(screen),
 			    screen->cursoroutlineGC ? screen->cursoroutlineGC
 			    			    : currentGC,
 			    screen->box, NBOX, CoordModePrevious);
@@ -5003,21 +5096,21 @@ set_cursor_gcs (TScreen *screen)
      * use the same GC's.  To avoid having the cursor change color, we use the
      * Xlib calls rather than the Xt calls.
      *
-     * Use the colorMode value to determine which we'll do (the TextWindow may
+     * Use the colorMode value to determine which we'll do (the VWindow may
      * not be set before the widget's realized, so it's tested separately).
      */
     if(screen->colorMode) {
-	if (TextWindow(screen) != 0 && (cc != bg) && (cc != fg)) {
+	if (VWindow(screen) != 0 && (cc != bg) && (cc != fg)) {
 	    /* we might have a colored foreground/background later */
 	    xgcv.font = screen->fnt_norm->fid;
 	    mask = (GCForeground | GCBackground | GCFont);
 	    xgcv.foreground = fg;
 	    xgcv.background = cc;
-	    new_cursorGC = XCreateGC (screen->display, TextWindow(screen), mask, &xgcv);
+	    new_cursorGC = XCreateGC (screen->display, VWindow(screen), mask, &xgcv);
 
 	    xgcv.foreground = cc;
 	    xgcv.background = fg;
-	    new_cursorFillGC = XCreateGC (screen->display, TextWindow(screen), mask, &xgcv);
+	    new_cursorFillGC = XCreateGC (screen->display, VWindow(screen), mask, &xgcv);
 
 	    if (screen->always_highlight) {
 		new_reversecursorGC = (GC) 0;
@@ -5025,10 +5118,10 @@ set_cursor_gcs (TScreen *screen)
 	    } else {
 		xgcv.foreground = bg;
 		xgcv.background = cc;
-		new_reversecursorGC = XCreateGC (screen->display, TextWindow(screen), mask, &xgcv);
+		new_reversecursorGC = XCreateGC (screen->display, VWindow(screen), mask, &xgcv);
 		xgcv.foreground = cc;
 		xgcv.background = bg;
-		new_cursoroutlineGC = XCreateGC (screen->display, TextWindow(screen), mask, &xgcv);
+		new_cursoroutlineGC = XCreateGC (screen->display, VWindow(screen), mask, &xgcv);
 	    }
 	}
     } else
