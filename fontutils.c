@@ -1,5 +1,7 @@
+/* $XTermId: fontutils.c,v 1.120 2004/05/16 23:59:13 tom Exp $ */
+
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.45 2004/03/04 02:21:55 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.46 2004/05/16 23:59:13 dickey Exp $
  */
 
 /************************************************************
@@ -1362,6 +1364,9 @@ xtermMissingChar(unsigned ch, XFontStruct * font)
 #define MID_HIGH (BOX_HIGH/2)
 #define MID_WIDE (BOX_WIDE/2)
 
+#define CHR_WIDE (9*BOX_WIDE)/10
+#define CHR_HIGH (9*BOX_HIGH)/10
+
 /*
  * ...since we'll scale the values anyway.
  */
@@ -1380,16 +1385,22 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
     /* *INDENT-OFF* */
     static const short diamond[] =
     {
-	SEG(  MID_WIDE,	    BOX_HIGH/4, 3*BOX_WIDE/4,   MID_WIDE),
+	SEG(  MID_WIDE,	    BOX_HIGH/4, 3*BOX_WIDE/4,	MID_WIDE),
 	SEG(3*BOX_WIDE/4,   MID_WIDE,	  MID_WIDE,   3*BOX_HIGH/4),
-	SEG(  MID_WIDE,   3*BOX_HIGH/4,	  BOX_WIDE/4,   MID_HIGH),
+	SEG(  MID_WIDE,	  3*BOX_HIGH/4,	  BOX_WIDE/4,	MID_HIGH),
 	SEG(  BOX_WIDE/4,   MID_HIGH,	  MID_WIDE,	BOX_HIGH/4),
-	SEG(  MID_WIDE,	    BOX_HIGH/3, 2*BOX_WIDE/3,   MID_WIDE),
+	SEG(  MID_WIDE,	    BOX_HIGH/3, 2*BOX_WIDE/3,	MID_WIDE),
 	SEG(2*BOX_WIDE/3,   MID_WIDE,	  MID_WIDE,   2*BOX_HIGH/3),
-	SEG(  MID_WIDE,   2*BOX_HIGH/3,	  BOX_WIDE/3,   MID_HIGH),
+	SEG(  MID_WIDE,	  2*BOX_HIGH/3,	  BOX_WIDE/3,	MID_HIGH),
 	SEG(  BOX_WIDE/3,   MID_HIGH,	  MID_WIDE,	BOX_HIGH/3),
-	SEG(  BOX_WIDE/4,   MID_HIGH,	3*BOX_WIDE/4,   MID_HIGH),
-	SEG(  MID_WIDE,     BOX_HIGH/4,	  MID_WIDE,   3*BOX_HIGH/4),
+	SEG(  BOX_WIDE/4,   MID_HIGH,	3*BOX_WIDE/4,	MID_HIGH),
+	SEG(  MID_WIDE,	    BOX_HIGH/4,	  MID_WIDE,   3*BOX_HIGH/4),
+	-1
+    }, plus_or_minus[] =
+    {
+	SEG(  0,	  5*BOX_HIGH/6,	  CHR_WIDE,   5*BOX_HIGH/6),
+	SEG(  MID_WIDE,	  2*BOX_HIGH/6,	  MID_WIDE,   4*BOX_HIGH/6),
+	SEG(  0,	  3*BOX_HIGH/6,	  CHR_WIDE,   3*BOX_HIGH/6),
 	-1
     }, degrees[] =
     {
@@ -1437,7 +1448,7 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 	-1
     }, scan_line_9[] =
     {
-	SEG(  0,	    3*BOX_HIGH/4, BOX_WIDE, 3 * BOX_HIGH / 4),
+	SEG(  0,	  3*BOX_HIGH/4,	  BOX_WIDE,   3*BOX_HIGH/4),
 	-1
     }, horizontal_line[] =
     {
@@ -1450,7 +1461,7 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 	-1
     }, right_tee[] =
     {
-	SEG(  MID_WIDE,	    0, MID_WIDE,		BOX_HIGH),
+	SEG(  MID_WIDE,	    0,		  MID_WIDE,	BOX_HIGH),
 	SEG(  MID_WIDE,	    MID_HIGH,	  0,		MID_HIGH),
 	-1
     }, bottom_tee[] =
@@ -1469,32 +1480,51 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 	-1
     }, less_than_or_equal[] =
     {
-	SEG(5*BOX_WIDE/6,   BOX_HIGH/6,	  BOX_WIDE/5,	MID_HIGH),
-	SEG(5*BOX_WIDE/6, 5*BOX_HIGH/6,	  BOX_WIDE/5,	MID_HIGH),
-	SEG(  BOX_WIDE/6, 5*BOX_HIGH/6, 5*BOX_WIDE/6, 5*BOX_HIGH/6),
+	SEG(  CHR_WIDE,	    BOX_HIGH/3,	  0,		MID_HIGH),
+	SEG(  CHR_WIDE,	  2*BOX_HIGH/3,	  0,		MID_HIGH),
+	SEG(  0,	  3*BOX_HIGH/4,	  CHR_WIDE,   3*BOX_HIGH/4),
 	-1
     }, greater_than_or_equal[] =
     {
-	SEG(  BOX_WIDE/6,  BOX_HIGH /6, 5*BOX_WIDE/6,   MID_HIGH),
-	SEG(  BOX_WIDE/6, 5*BOX_HIGH/6, 5*BOX_WIDE/6,   MID_HIGH),
-	SEG(  BOX_WIDE/6, 5*BOX_HIGH/6, 5*BOX_WIDE/6, 5*BOX_HIGH/6),
+	SEG(  0,	    BOX_HIGH/3,	  CHR_WIDE,	MID_HIGH),
+	SEG(  0,	  2*BOX_HIGH/3,	  CHR_WIDE,	MID_HIGH),
+	SEG(  0,	  3*BOX_HIGH/4,	  CHR_WIDE,   3*BOX_HIGH/4),
+	-1
+    }, greek_pi[] =
+    {
+	SEG(  0,	    MID_HIGH,	  CHR_WIDE,	MID_HIGH),
+	SEG(5*CHR_WIDE/6,   MID_HIGH,	5*CHR_WIDE/6,	CHR_HIGH),
+	SEG(2*CHR_WIDE/6,   MID_HIGH,	2*CHR_WIDE/6,	CHR_HIGH),
+	-1
+    }, not_equal_to[] =
+    {
+	SEG(2*BOX_WIDE/3, 1*BOX_HIGH/3, 1*BOX_WIDE/3,	CHR_HIGH),
+	SEG(  0,	  2*BOX_HIGH/3,	  CHR_WIDE,   2*BOX_HIGH/3),
+	SEG(  0,	    MID_HIGH,	  CHR_WIDE,	MID_HIGH),
+	-1
+    }, bullet[] =
+    {
+	SEG(  MID_WIDE,	    BOX_HIGH/4, 5*BOX_WIDE/8,	BOX_HIGH/4),
+	SEG(5*BOX_WIDE/8,   BOX_HIGH/4, 5*BOX_WIDE/8,	BOX_HIGH/3),
+	SEG(5*BOX_WIDE/8,   BOX_HIGH/3,	  MID_WIDE,	BOX_HIGH/3),
+	SEG(  MID_WIDE,	    BOX_HIGH/3,	  MID_WIDE,	BOX_HIGH/4),
 	-1
     };
     /* *INDENT-ON* */
 
     static const short *lines[] =
     {
-	0,			/* 00 */
+	0,			/* 00 (unused) */
 	diamond,		/* 01 */
-	0,			/* 02 */
-	0,			/* 03 */
-	0,			/* 04 */
-	0,			/* 05 */
-	0,			/* 06 */
+	0,			/* 02 box */
+	0,			/* 03 HT */
+	0,			/* 04 FF */
+	0,			/* 05 CR */
+	0,			/* 06 LF */
 	degrees,		/* 07 */
-	0,			/* 08 */
-	0,			/* 09 */
-	0,			/* 0A */
+	plus_or_minus,		/* 08 */
+	0,			/* 09 NL */
+	0,			/* 0A VT */
 	lower_right_corner,	/* 0B */
 	upper_right_corner,	/* 0C */
 	upper_left_corner,	/* 0D */
@@ -1512,10 +1542,10 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 	vertical_line,		/* 19 */
 	less_than_or_equal,	/* 1A */
 	greater_than_or_equal,	/* 1B */
-	0,			/* 1C */
-	0,			/* 1D */
-	0,			/* 1E */
-	0,			/* 1F */
+	greek_pi,		/* 1C */
+	not_equal_to,		/* 1D */
+	0,			/* 1E LB */
+	bullet,			/* 1F */
     };
 
     XGCValues values;
@@ -1562,19 +1592,18 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
     gc2 = XCreateGC(screen->display, VWindow(screen), GCForeground, &values);
 
     if (!(flags & NOBACKGROUND))
-	XFillRectangle(
-			  screen->display, VWindow(screen), gc2, x, y,
-			  font_width,
-			  font_height);
+	XFillRectangle(screen->display, VWindow(screen), gc2, x, y,
+		       font_width,
+		       font_height);
 
     XCopyGC(screen->display, gc, (1 << GCLastBit) - 1, gc2);
     XSetLineAttributes(screen->display, gc2,
 		       (flags & BOLD)
-		       ? ((font_height > 6)
-			  ? font_height / 6
+		       ? ((font_height > 12)
+			  ? font_height / 12
 			  : 1)
-		       : ((font_height > 8)
-			  ? font_height / 8
+		       : ((font_height > 16)
+			  ? font_height / 16
 			  : 1),
 		       LineSolid,
 		       CapProjecting,
@@ -1592,20 +1621,18 @@ xtermDrawBoxChar(TScreen * screen, int ch, unsigned flags, GC gc, int x, int y)
 		SCALE_Y(coord[1]);
 		SCALE_X(coord[2]);
 		SCALE_Y(coord[3]);
-		XDrawLine(
-			     screen->display,
-			     VWindow(screen), gc2,
-			     x + coord[0], y + coord[1],
-			     x + coord[2], y + coord[3]);
+		XDrawLine(screen->display,
+			  VWindow(screen), gc2,
+			  x + coord[0], y + coord[1],
+			  x + coord[2], y + coord[3]);
 		n = 0;
 	    }
 	}
     } else if (screen->force_all_chars) {
 	/* bounding rectangle, for debugging */
-	XDrawRectangle(
-			  screen->display, VWindow(screen), gc, x, y,
-			  font_width - 1,
-			  font_height - 1);
+	XDrawRectangle(screen->display, VWindow(screen), gc, x, y,
+		       font_width - 1,
+		       font_height - 1);
     }
 
     XFreeGC(screen->display, gc2);

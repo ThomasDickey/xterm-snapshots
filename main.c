@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.381 2004/05/13 00:41:20 tom Exp $ */
+/* $XTermId: main.c,v 1.384 2004/05/16 23:59:13 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.180 2004/05/13 00:41:20 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.181 2004/05/16 23:59:13 dickey Exp $ */
 
 /* main.c */
 
@@ -1995,6 +1995,7 @@ main(int argc, char *argv[]ENVP_ARG)
 						 XtNfromVert, menu_top,
 						 XtNleft, XawChainLeft,
 						 XtNright, XawChainRight,
+						 XtNtop, XawChainTop,
 						 XtNbottom, XawChainBottom,
 #endif
 						 (XtPointer) 0);
@@ -2187,7 +2188,7 @@ main(int argc, char *argv[]ENVP_ARG)
 
     /* The erase character is used to delete the current completion */
 #if OPT_DABBREV
-#ifdef USE_ANY_SYSV_TERMIO
+#if defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)
     screen->dabbrev_erase_char = d_tio.c_cc[VERASE];
 #else
     screen->dabbrev_erase_char = d_sg.sg_erase;
