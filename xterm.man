@@ -1261,6 +1261,19 @@ effect as the original 47 control sequence.
 Specifies the key and button bindings for menus, selections, ``programmed
 strings,'' etc.  See \fBACTIONS\fP below.
 .TP 8
+.B "trimSelection (\fPclass\fB TrimSelection)"
+If you set \fBhighlightSelection\fP,
+you can see the text which is selected, including any trailing spaces.
+Clearing the screen (or a line) resets it to a state containing no spaces.
+Some lines may contain trailing spaces when an application writes them to
+the screen.
+However, you may not wish to paste lines with trailing spaces.
+If this resource is true, \fIxterm\fP will trim trailing spaces from
+text which is selected.
+It does not affect spaces which result in a wrapped line, nor will it
+trim the trailing newline from your selection.
+The default is ``false.''
+.TP 8
 .B "underLine (\fPclass\fB UnderLine)"
 This specifies whether or not text with the underline attribute should be
 underlined.  It may be desirable to disable underlining when color is being

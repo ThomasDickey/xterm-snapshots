@@ -920,6 +920,7 @@ typedef struct {
 	Boolean		cutNewline;	/* whether or not line cut has \n */
 	Boolean		cutToBeginningOfLine;  /* line cuts to BOL? */
 	Boolean		highlight_selection; /* controls appearance of selection */
+	Boolean		trim_selection; /* controls trimming of selection */
 	char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
 	int		selection_length; /* number of significant bytes */
