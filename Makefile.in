@@ -1,5 +1,7 @@
 ## $XFree86: xc/programs/xterm/Makefile.in,v 3.28 2000/02/08 17:19:27 dawes Exp $ ##
 
+SHELL		= /bin/sh
+
 #### Start of system configuration section. ####
 
 srcdir		= @srcdir@
@@ -7,6 +9,7 @@ VPATH  		= @srcdir@
 
 CC		= @CC@
 CPP		= @CPP@
+AWK		= @AWK@
 LINK		= $(CC) $(CFLAGS)
 INSTALL		= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
@@ -20,8 +23,9 @@ IMAKE_CFLAGS	= @IMAKE_CFLAGS@
 EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
 
-CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H $(X_CFLAGS) $(IMAKE_CFLAGS)
+CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H $(X_CFLAGS) $(IMAKE_CFLAGS) @CPPFLAGS@
 CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS)
+LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
 
 prefix		= @prefix@
@@ -35,11 +39,7 @@ appsdir		= $(libdir)/X11/app-defaults
 
 #### End of system configuration section. ####
 
-SHELL		= /bin/sh
 RM              = rm -f
-AWK		= awk
-
-LDFLAGS		=
 
 DESTDIR		=
 BINDIR		= $(DESTDIR)$(bindir)

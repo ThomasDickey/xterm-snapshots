@@ -654,48 +654,6 @@ test $cf_cv_path_lastlog != no && AC_DEFINE(USE_LASTLOG)
 ]
 )dnl
 dnl ---------------------------------------------------------------------------
-dnl Special test to workaround gcc 2.6.2, which cannot parse C-preprocessor
-dnl conditionals.
-dnl
-dnl AC_CHECK_HEADERS(termios.h unistd.h)
-dnl AC_CHECK_FUNCS(tcgetattr)
-dnl
-AC_DEFUN([CF_POSIX_VDISABLE],
-[
-AC_MSG_CHECKING(if POSIX VDISABLE symbol should be used)
-AC_CACHE_VAL(cf_cv_posix_vdisable,[
-	AC_TRY_RUN([
-#if defined(HAVE_TERMIOS_H) && defined(HAVE_TCGETATTR)
-#include <termios.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#if defined(_POSIX_VDISABLE)
-int main() { exit(_POSIX_VDISABLE == -1); }
-#endif],
-	[cf_cv_posix_vdisable=yes],
-	[cf_cv_posix_vdisable=no],
-	[AC_TRY_COMPILE([
-#if defined(HAVE_TERMIOS_H) && defined(HAVE_TCGETATTR)
-#include <termios.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif],[
-#if defined(_POSIX_VDISABLE) && (_POSIX_VDISABLE != -1)
-int temp = _POSIX_VDISABLE;
-#else
-this did not work
-#endif],
-	[cf_cv_posix_vdisable=yes],
-	[cf_cv_posix_vdisable=no],
-	)])
-])
-AC_MSG_RESULT($cf_cv_posix_vdisable)
-test $cf_cv_posix_vdisable = yes && AC_DEFINE(HAVE_POSIX_VDISABLE)
-])dnl
-dnl ---------------------------------------------------------------------------
 dnl	On both Ultrix and CLIX, I find size_t defined in <stdio.h>
 AC_DEFUN([CF_SIZE_T],
 [
@@ -814,6 +772,23 @@ int main()
 	[cf_cv_tty_group=unknown])
 ])
 test $cf_cv_tty_group = yes && AC_DEFINE(USE_TTY_GROUP)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Check for SGI's broken redefinition of baud rates introduced in IRIX 6.5
+dnl (there doesn't appear to be a useful predefined symbol).
+AC_DEFUN([CF_TERMIO_C_ISPEED],
+[
+AC_CACHE_CHECK(for IRIX 6.5 baud-rate redefinitions,cf_cv_termio_c_ispeed,[
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/termio.h>],[
+struct termio foo;
+foo.c_ispeed = B38400;
+foo.c_ospeed = B9600;
+],[cf_cv_termio_c_ispeed=yes
+],[cf_cv_termio_c_ispeed=no])
+])
+test "$cf_cv_termio_c_ispeed" = yes && AC_DEFINE(HAVE_TERMIO_C_ISPEED)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for the declaration of fd_set.  Some platforms declare it in

@@ -576,6 +576,11 @@ static char **command_to_exec = NULL;
 #define TERMCAP_ERASE "kb"
 #define VAL_INITIAL_ERASE A2E(127)
 
+/* choose a nice default value for speed - if we make it too low, users who
+ * mistakenly use $TERM set to vt100 will get padding delays
+ */
+#define VAL_LINE_SPEED B38400
+
 /* allow use of system default characters if defined and reasonable */
 #ifndef CBRK
 #define CBRK 0
@@ -1353,7 +1358,7 @@ main (int argc, char *argv[])
 #endif
 #endif
 #if defined(macII) || defined(ATT) || defined(CRAY) /* { */
-	d_tio.c_cflag = B9600|CS8|CREAD|PARENB|HUPCL;
+	d_tio.c_cflag = VAL_LINE_SPEED|CS8|CREAD|PARENB|HUPCL;
 	d_tio.c_lflag = ISIG|ICANON|ECHO|ECHOE|ECHOK;
 #ifdef ECHOKE
 	d_tio.c_lflag |= ECHOKE|IEXTEN;
@@ -1405,12 +1410,12 @@ main (int argc, char *argv[])
 #ifdef BAUD_0 /* { */
 	d_tio.c_cflag = CS8|CREAD|PARENB|HUPCL;
 #else	/* }{ !BAUD_0 */
-	d_tio.c_cflag = B9600|CS8|CREAD|PARENB|HUPCL;
+	d_tio.c_cflag = VAL_LINE_SPEED|CS8|CREAD|PARENB|HUPCL;
 #endif	/* } !BAUD_0 */
 #else /* USE_POSIX_TERMIOS */
 	d_tio.c_cflag = CS8|CREAD|PARENB|HUPCL;
-	cfsetispeed(&d_tio, B9600);
-	cfsetospeed(&d_tio, B9600);
+	cfsetispeed(&d_tio, VAL_LINE_SPEED);
+	cfsetospeed(&d_tio, VAL_LINE_SPEED);
 #endif
 	d_tio.c_lflag = ISIG|ICANON|ECHO|ECHOE|ECHOK;
 #ifdef ECHOKE
@@ -2930,21 +2935,21 @@ spawn (void)
 		    tio.c_oflag |= OPOST;
 #endif /* OPOST */
 #ifdef MINIX	/* should be ifdef _POSIX_SOURCE */
-		    cfsetispeed(&tio, B9600);
-		    cfsetospeed(&tio, B9600);
+		    cfsetispeed(&tio, VAL_LINE_SPEED);
+		    cfsetospeed(&tio, VAL_LINE_SPEED);
 #else /* !MINIX */
 #ifndef USE_POSIX_TERMIOS
+		    tio.c_cflag &= ~(CBAUD);
 #ifdef BAUD_0
 		    /* baud rate is 0 (don't care) */
-		    tio.c_cflag &= ~(CBAUD);
+#elif defined(HAVE_TERMIO_C_ISPEED)
+		    tio.c_ispeed = tio.c_ospeed = VAL_LINE_SPEED;
 #else	/* !BAUD_0 */
-		    /* baud rate is 9600 (nice default) */
-		    tio.c_cflag &= ~(CBAUD);
-		    tio.c_cflag |= B9600;
+		    tio.c_cflag |= VAL_LINE_SPEED;
 #endif	/* !BAUD_0 */
 #else /* USE_POSIX_TERMIOS */
-		    cfsetispeed(&tio, B9600);
-		    cfsetospeed(&tio, B9600);
+		    cfsetispeed(&tio, VAL_LINE_SPEED);
+		    cfsetospeed(&tio, VAL_LINE_SPEED);
 #ifdef __MVS__
 		    /* turn off bits that can't be set from the slave side */
 		    tio.c_cflag &= ~(PACKET|PKT3270|PTU3270|PKTXTND);
@@ -3088,8 +3093,8 @@ spawn (void)
 		    sg.sg_flags &= ~(ALLDELAY | XTABS | CBREAK | RAW);
 		    sg.sg_flags |= ECHO | CRMOD;
 		    /* make sure speed is set on pty so that editors work right*/
-		    sg.sg_ispeed = B9600;
-		    sg.sg_ospeed = B9600;
+		    sg.sg_ispeed = VAL_LINE_SPEED;
+		    sg.sg_ospeed = VAL_LINE_SPEED;
 		    /* reset t_brkc to default value */
 		    tc.t_brkc = -1;
 #ifdef LPASS8
@@ -3516,11 +3521,6 @@ spawn (void)
 		if (setuid (screen->uid)) {
 			perror( "setuid failed" );
 			exit (errno);
-		}
-		/* A bit of paranoia: PSz 9 Mar 00 */
-		if (screen->uid && ! setuid(0)) {
-			fprintf (stderr, "can still get back to root\n");
-			exit (EACCES);
 		}
 
 #ifdef USE_HANDSHAKE
