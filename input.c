@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.11 1997/01/08 20:52:26 dawes Exp $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.11.2.2 1997/05/23 09:24:37 dawes Exp $
  */
 
 /*
@@ -27,6 +27,10 @@
  */
 
 /* input.c */
+
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
 
 #include "ptyx.h"		/* gets Xt headers, too */
 #include <X11/keysym.h>
@@ -105,9 +109,11 @@ Input (keyboard, screen, event, eightbit)
 	reply.a_nparam = 0;
 	reply.a_inters = 0;
 
+#ifdef XK_KP_Home
 	if (keysym >= XK_KP_Home && keysym <= XK_KP_Begin) {
 	    keysym += XK_Home - XK_KP_Home;
 	}
+#endif
 
 #define VT52_KEYPAD \
 	if_OPT_VT52_MODE(screen,{ \
@@ -140,12 +146,18 @@ Input (keyboard, screen, event, eightbit)
 			unparseseq(&reply, pty);
 		}
 		key = TRUE;
-	 } else if (IsFunctionKey(keysym) || IsMiscFunctionKey(keysym) ||
-	 	keysym == XK_Prior || keysym == XK_Next ||
-	 	keysym == DXK_Remove || keysym == XK_KP_Delete ||
-		keysym == XK_KP_Insert) {
+	 } else if (IsFunctionKey(keysym) || IsMiscFunctionKey(keysym)
+	 	|| keysym == XK_Prior
+		|| keysym == XK_Next
+		|| keysym == DXK_Remove
+#ifdef XK_KP_Delete
+		|| keysym == XK_KP_Delete
+		|| keysym == XK_KP_Insert
+#endif
+		) {
 		int dec_code = funcvalue(keysym);
-		if ((string = udk_lookup(dec_code, &nbytes)) != 0) {
+		if ((event->state & ShiftMask)
+		 && ((string = udk_lookup(dec_code, &nbytes)) != 0)) {
 			while (nbytes-- > 0)
 				unparseputc(*string++, pty);
 		}
@@ -268,9 +280,11 @@ static int funcvalue (keycode)
 
 		case XK_Find :	return(1);
 		case XK_Insert:	return(2);
-		case XK_KP_Insert: return(2);
 		case XK_Delete:	return(3);
+#ifdef XK_KP_Insert
+		case XK_KP_Insert: return(2);
 		case XK_KP_Delete: return(3);
+#endif
 		case DXK_Remove: return(3);
 		case XK_Select:	return(4);
 		case XK_Prior:	return(5);
@@ -325,9 +339,11 @@ static int sunfuncvalue (keycode)
   
 		case XK_Find :	return(1);
 		case XK_Insert:	return(2);
-		case XK_KP_Insert: return(2);
 		case XK_Delete:	return(3);
+#ifdef XK_KP_Insert
+		case XK_KP_Insert: return(2);
 		case XK_KP_Delete: return(3);
+#endif
 		case DXK_Remove: return(3);
 		case XK_Select:	return(4);
 		case XK_Prior:	return(5);

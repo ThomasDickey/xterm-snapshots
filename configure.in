@@ -1,0 +1,165 @@
+dnl
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.1.2.2 1997/05/25 05:06:59 dawes Exp $
+dnl
+dnl ---------------------------------------------------------------------------
+dnl 
+dnl Copyright 1997 by Thomas E. Dickey <dickey@clark.net>
+dnl 
+dnl                         All Rights Reserved
+dnl 
+dnl Permission to use, copy, modify, and distribute this software and its
+dnl documentation for any purpose and without fee is hereby granted,
+dnl provided that the above copyright notice appear in all copies and that
+dnl both that copyright notice and this permission notice appear in
+dnl supporting documentation, and that the name of the above listed
+dnl copyright holder(s) not be used in advertising or publicity pertaining
+dnl to distribution of the software without specific, written prior
+dnl permission.
+dnl 
+dnl THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
+dnl TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+dnl AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
+dnl LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+dnl WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+dnl ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+dnl 
+dnl ---------------------------------------------------------------------------
+dnl Process this file with autoconf to produce a configure script.
+dnl
+AC_REVISION($Revision: 1.1 $)
+AC_PREREQ(2.12)
+AC_INIT(charproc.c)
+AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
+CF_CHECK_CACHE
+
+###	checks for alternative programs
+AC_PROG_CC
+AC_PROG_CPP
+AC_GCC_TRADITIONAL
+AC_PROG_INSTALL
+
+###	checks for UNIX variants that set C preprocessor variables
+AC_AIX
+AC_ISC_POSIX
+AC_MINIX
+
+###	checks for header files
+
+###	checks for typedefs
+AC_TYPE_SIZE_T
+AC_CHECK_TYPE(time_t, long)
+
+###	checks for library functions
+AC_CHECK_FUNCS( \
+	bcopy \
+	memmove \
+	strerror \
+	)
+CF_FUNC_MEMMOVE
+CF_FUNC_TGETENT
+
+###	checks for structures
+
+###	checks for compiler characteristics
+AC_CONST
+CF_ANSI_CC
+
+###	checks for system services and user specified options
+
+AC_PATH_XTRA
+
+LDFLAGS="$LDFLAGS $X_LIBS"
+CFLAGS="$CFLAGS $X_CFLAGS"
+
+CF_X_ATHENA
+
+LIBS="$LIBS $X_EXTRA_LIBS"
+
+AC_MSG_CHECKING(if we should use imake to help)
+CF_ARG_DISABLE(imake,
+	[  --without-imake         disable use of imake for definitions],
+	[enable_imake=no],
+	[enable_imake=yes])
+AC_MSG_RESULT($enable_imake)
+if test $enable_imake = yes ; then
+	CF_IMAKE_CFLAGS
+fi
+AC_SUBST(IMAKE_CFLAGS)
+
+AC_MSG_CHECKING(for default terminal-id)
+AC_ARG_WITH(terminal-id,
+	[  --with-terminal-id[=V]  set default decTerminalId (default: vt100)],
+	[default_termid=$withval],
+	[default_termid=vt100])
+AC_MSG_RESULT($default_termid)
+case $default_termid in
+vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
+	;;
+esac
+AC_DEFINE_UNQUOTED(DFT_DECID,$default_termid)
+
+###	checks for optional features
+AC_MSG_CHECKING(if you want ANSI color)
+CF_ARG_DISABLE(ansi-color,
+	[  --disable-ansi-color    disable ANSI color],
+	[enable_ansi_color=no],
+	[enable_ansi_color=yes])
+AC_MSG_RESULT($enable_ansi_color)
+test $enable_ansi_color = no && AC_DEFINE(OPT_ISO_COLORS,0)
+
+AC_MSG_CHECKING(if you want 16 colors like aixterm)
+CF_ARG_DISABLE(16-color,
+	[  --disable-16-color      disable 16-color support],
+	[enable_16_color=no],
+	[enable_16_color=yes])
+AC_MSG_RESULT($enable_ansi_color)
+test $enable_16_color = no && AC_DEFINE(OPT_AIX_COLORS,0)
+
+AC_MSG_CHECKING(for default color-mode)
+CF_ARG_ENABLE(color-mode,
+	[  --enable-color-mode     set default colorMode resource ],
+	[default_colormode=$withval],
+	[default_colormode=FALSE])
+AC_MSG_RESULT($default_colormode)
+AC_DEFINE_UNQUOTED(DFT_COLORMODE,$default_colormode)
+
+AC_MSG_CHECKING(if you want debugging traces)
+CF_ARG_ENABLE(trace,
+	[  --enable-trace          set to enable debugging traces],
+	[enable_trace=yes],
+	[enable_trace=no])
+AC_MSG_RESULT($enable_trace)
+if test $enable_trace = yes ; then
+	AC_DEFINE(OPT_TRACE)
+	EXTRASRCS="$EXTRASRCS trace.c"
+	EXTRAOBJS="$EXTRAOBJS trace.o"
+fi
+
+AC_MSG_CHECKING(if you want VT52 emulation)
+CF_ARG_DISABLE(vt52,
+	[  --disable-vt52          disable VT52 emulation],
+	[enable_vt52=no],
+	[enable_vt52=yes])
+AC_MSG_RESULT($enable_vt52)
+test $enable_vt52 = no && AC_DEFINE(OPT_VT52_MODE,0)
+
+if test -n "$GCC" ; then
+AC_MSG_CHECKING(if you want to turn on gcc warnings)
+CF_ARG_ENABLE(warnings,
+	[  --enable-warnings       turn on GCC compiler warnings],
+	[with_warnings=yes],
+	[with_warnings=no])
+AC_MSG_RESULT($with_warnings)
+if test "$with_warnings" = yes
+then
+	CF_GCC_WARNINGS
+	CFLAGS="$CFLAGS $cf_warn_CFLAGS"
+fi
+fi
+
+AC_SUBST(EXTRASRCS)
+AC_SUBST(EXTRAOBJS)
+
+###	output Makefile and xtermcfg.h
+AC_OUTPUT(Makefile)

@@ -1,5 +1,5 @@
 XCOMM $XConsortium: Imakefile /main/65 1996/02/02 14:27:54 kaleb $
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.11 1996/10/16 14:45:15 dawes Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.11.4.2 1997/05/16 13:55:39 dawes Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -41,7 +41,7 @@ XCOMM
 #endif
 
 #ifdef OS2Architecture
-        EXTRA_DEFINES = -DDEBUG -DALLOWLOGGING
+      FEATURE_DEFINES = -DDEBUG -DALLOWLOGGING
 #endif
 
 #if defined(NetBSDArchitecture) || defined(OpenBSDArchitecture) || (defined(FreeBSDArchitecture) && (OSMajorVersion < 2)) || (defined(SunArchitecture) && !defined(SVR4Architecture)) || defined(i386Sco325Architecture)
@@ -50,6 +50,15 @@ XCOMM
 
  OSMAJORVERSION = OSMajorVersion
  OSMINORVERSION = OSMinorVersion
+
+/*
+ * This is for linking statically against libX11 and libXt for some debugging
+ * purposes
+ */
+#ifdef StaticXterm
+XTOOLONLYLIB=StaticLibrary($(TOOLKITSRC),Xt)
+XONLYLIB=StaticLibrary($(XLIBSRC),X11)
+#endif
 
 #if !defined(AmoebaArchitecture) && !defined(OS2Architecture)
         UTMPDEF = -DUTMP
@@ -64,7 +73,7 @@ XCOMM
 		  -DOSMINORVERSION=$(OSMINORVERSION)
    MISC_DEFINES = /* -DALLOWLOGFILEEXEC */ 
     XKB_DEFINES = XkbClientDefines
-        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES)
+        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES)
 
 #ifdef OS2Architecture
           MAINSRC = os2main.c

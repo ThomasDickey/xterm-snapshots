@@ -1,7 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
 .\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.8 1997/01/08 20:31:43 dawes Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.8.2.1 1997/05/25 05:06:27 dawes Exp $
 .\"
 .\" Copyright 1991, 1994 X Consortium
 .\"
@@ -298,7 +298,8 @@ VT100 Mode
 .ds RH VT100 Mode
 .LP
 Most of these control sequences are standard VT102 control sequences,
-but there is support for later DEC VT terminals (i.e., VT220 and VT320), too.
+but there is support for later DEC VT terminals (i.e., VT220 and VT320),
+as well as ISO 6429 and \fIaixterm\fP color controls.
 VT102 features not supported are
 double size characters and blinking characters.
 There are additional control sequences to provide
@@ -621,7 +622,32 @@ Character Attributes (SGR)
   \*(Ps = \*4\*6 \(-> Set background color to Cyan
   \*(Ps = \*4\*7 \(-> Set background color to White
   \*(Ps = \*4\*9 \(-> Set background color to default (original).
+.sp
+If 16-color support is compiled, the following apply.
+Assume that \fIxterm\fP's resources
+are set so that the ISO color codes are the first 8 of a set of 16.
+Then the \fIaixterm\fP colors are the bright versions of the ISO colors:
+  \*(Ps = \*9\*0 \(-> Set foreground color to Black
+  \*(Ps = \*9\*1 \(-> Set foreground color to Red
+  \*(Ps = \*9\*2 \(-> Set foreground color to Green
+  \*(Ps = \*9\*3 \(-> Set foreground color to Yellow
+  \*(Ps = \*9\*4 \(-> Set foreground color to Blue
+  \*(Ps = \*9\*5 \(-> Set foreground color to Magenta
+  \*(Ps = \*9\*7 \(-> Set foreground color to Cyan
+  \*(Ps = \*9\*7 \(-> Set foreground color to White
+  \*(Ps = \*1\*0\*0 \(-> Set background color to Black
+  \*(Ps = \*1\*0\*1 \(-> Set background color to Red
+  \*(Ps = \*1\*0\*2 \(-> Set background color to Green
+  \*(Ps = \*1\*0\*3 \(-> Set background color to Yellow
+  \*(Ps = \*1\*0\*4 \(-> Set background color to Blue
+  \*(Ps = \*1\*0\*5 \(-> Set background color to Magenta
+  \*(Ps = \*1\*0\*6 \(-> Set background color to Cyan
+  \*(Ps = \*1\*0\*7 \(-> Set background color to White
+.sp
+If \fIxterm\fP is compiled with the 16-color support disabled, it supports
+the following, from \fIrxvt\fP:
   \*(Ps = \*1\*0\*0 \(-> Set foreground and background color to default
+.sp
 .
 .IP \\*(Cs\\*(Ps\\*s\\*n
 Device Status Report (DSR)

@@ -1,7 +1,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c /main/247 1996/11/29 10:33:51 swick $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/main.c,v 3.47 1997/01/18 07:03:21 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.47.2.3 1997/05/25 05:07:00 dawes Exp $ */
 
 /*
  * 				 W A R N I N G
@@ -67,6 +67,10 @@ SOFTWARE.
 
 
 /* main.c */
+
+#ifdef HAVE_CONFIG_H
+#include <xtermcfg.h>
+#endif
 
 #include "ptyx.h"
 #include <X11/StringDefs.h>
@@ -315,11 +319,14 @@ static Bool IsPts = False;
 
 #ifdef _POSIX_SOURCE
 #define USE_POSIX_WAIT
-#define HAS_POSIX_SAVED_IDS
 #endif
 #ifdef SVR4
 #define USE_POSIX_WAIT
-#define HAS_POSIX_SAVED_IDS
+#define HAS_SAVED_IDS_AND_SETEUID
+#endif
+
+#ifdef linux
+#define HAS_SAVED_IDS_AND_SETEUID
 #endif
 
 #if !defined(MINIX) && !defined(WIN32) && !defined(Lynx)
@@ -330,7 +337,7 @@ static Bool IsPts = False;
 #define USE_POSIX_WAIT
 #define LASTLOG
 #define WTMP
-#define HAS_POSIX_SAVED_IDS
+#define HAS_SAVED_IDS_AND_SETEUID
 #endif
 
 #include <stdio.h>
@@ -1324,7 +1331,7 @@ char **argv;
 
 	/* Init the Toolkit. */
 	{
-#ifdef HAS_POSIX_SAVED_IDS
+#ifdef HAS_SAVED_IDS_AND_SETEUID
 	    uid_t euid = geteuid();
 	    gid_t egid = getegid();
 	    uid_t ruid = getuid();
@@ -1347,7 +1354,7 @@ char **argv;
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 
-#ifdef HAS_POSIX_SAVED_IDS
+#ifdef HAS_SAVED_IDS_AND_SETEUID
 	    if (seteuid(euid) == -1)
 		(void) fprintf(stderr, "seteuid(%d): %s\n",
 			       (int) euid, strerror(errno));
@@ -2255,12 +2262,14 @@ spawn ()
 		envnew = vtterm;
 		ptr = termcap;
 	}
+	*ptr = 0;
 	TermName = NULL;
 	if (resource.term_name) {
 	    if (tgetent (ptr, resource.term_name) == 1) {
 		TermName = resource.term_name;
-		if (!screen->TekEmu)
-		    resize (screen, TermName, termcap, newtc);
+		if (*ptr) 
+		    if (!screen->TekEmu)
+			resize (screen, TermName, termcap, newtc);
 	    } else {
 		fprintf (stderr, "%s:  invalid termcap entry \"%s\".\n",
 			 ProgramName, resource.term_name);
@@ -2270,8 +2279,9 @@ spawn ()
 	    while (*envnew != NULL) {
 		if(tgetent(ptr, *envnew) == 1) {
 			TermName = *envnew;
-			if(!screen->TekEmu)
-			    resize(screen, TermName, termcap, newtc);
+			if (*ptr) 
+			    if(!screen->TekEmu)
+				resize(screen, TermName, termcap, newtc);
 			break;
 		}
 		envnew++;
@@ -3133,7 +3143,7 @@ spawn ()
 		}
 #endif /* UTMP */
 #else /* USE_SYSV_ENVVAR */
-		if(!screen->TekEmu) {
+		if(!screen->TekEmu && *newtc) {
 		    strcpy (termcap, newtc);
 		    resize (screen, TermName, termcap, newtc);
 		}
@@ -3149,9 +3159,11 @@ spawn ()
 		    remove_termcap_entry (newtc, ":im=");
 		    remove_termcap_entry (newtc, ":ei=");
 		    remove_termcap_entry (newtc, ":mi");
-		    strcat (newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
+		    if(*newtc)
+			strcat (newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
 		}
-		Setenv ("TERMCAP=", newtc);
+		if(*newtc)
+		    Setenv ("TERMCAP=", newtc);
 #endif /* USE_SYSV_ENVVAR */
 
 
@@ -3497,12 +3509,14 @@ static int spawn()
 	ptr = termcap;
     }
 
+    *ptr = 0;
     TermName = NULL;
     if (resource.term_name) {
 	if (tgetent (ptr, resource.term_name) == 1) {
 	    TermName = resource.term_name;
-	    if (!screen->TekEmu)
-		resize (screen, TermName, termcap, newtc);
+	    if (*ptr)
+		if (!screen->TekEmu)
+		    resize (screen, TermName, termcap, newtc);
 	} else {
 	    fprintf (stderr, "%s:  invalid termcap entry \"%s\".\n",
 		ProgramName, resource.term_name);
@@ -3513,9 +3527,10 @@ static int spawn()
 	while (*envnew != NULL) {
 	    if(tgetent(ptr, *envnew) == 1) {
 		TermName = *envnew;
-		if(!screen->TekEmu)
-		    resize(screen, TermName, termcap, newtc);
-		    break;
+		if (*ptr)
+		    if(!screen->TekEmu)
+			resize(screen, TermName, termcap, newtc);
+		break;
 	    }
 	    envnew++;
 	}
@@ -3590,7 +3605,7 @@ static int spawn()
     if (!getenv("HOME")) Setenv("HOME=", DEF_HOME);
     if (!getenv("SHELL")) Setenv("SHELL=", DEF_SHELL);
 
-    if(!screen->TekEmu) {
+    if(!screen->TekEmu && *newtc) {
 	strcpy (termcap, newtc);
 	resize (screen, TermName, termcap, newtc);
     }
@@ -3605,9 +3620,11 @@ static int spawn()
 	remove_termcap_entry (newtc, ":im=");
 	remove_termcap_entry (newtc, ":ei=");
 	remove_termcap_entry (newtc, ":mi");
-	strcat (newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
+	if (*newtc)
+	    strcat (newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
     }
-    Setenv ("TERMCAP=", newtc);
+    if (*newtc)
+	Setenv ("TERMCAP=", newtc);
 
     /*
      * Execute specified program or shell. Use find_program to
