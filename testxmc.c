@@ -135,7 +135,7 @@ void Mark_XMC(register TScreen *screen, int param)
 		unsigned save = term->flags;
 		term->flags ^= whichone;
 		TRACE(("XMC Writing glitch (%d/%d) after SGR %d\n", my_attrs, whichone, param))
-		dotext(screen, '?', glitch, glitch + screen->xmc_glitch);
+		dotext(screen, '?', PAIRED_CHARS(glitch, 0), screen->xmc_glitch);
 		term->flags = save;
 	}
 }
@@ -166,7 +166,7 @@ void Resolve_XMC(register TScreen *screen)
 
 	/* Find the preceding cell.
 	 */
-	if (SCRN_BUF_CHARS(screen, row)[col] != XMC_GLITCH) {
+	if (getXtermCell(screen, row, col) != XMC_GLITCH) {
 		if (col != 0) {
 			col--;
 		} else if (!screen->xmc_inline && row != 0) {
@@ -187,7 +187,7 @@ void Resolve_XMC(register TScreen *screen)
 			col = 0;
 		} else
 			break;
-		if (SCRN_BUF_CHARS(screen, row)[col] == XMC_GLITCH)
+		if (getXtermCell(screen, row, col) == XMC_GLITCH)
 			break;
 		if ((SCRN_BUF_ATTRS(screen, row)[col] & my_attrs) != start) {
 			SCRN_BUF_ATTRS(screen, row)[col] = start |

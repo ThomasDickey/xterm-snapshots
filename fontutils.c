@@ -1036,6 +1036,10 @@ void SetVTFont (
 {
     TScreen *screen = &term->screen;
 
+    TRACE(("SetVTFont(i=%d, name1=%s, name2=%s)\n", i,
+    	name1 ? name1 : "<null>",
+    	name2 ? name2 : "<null>"))
+
     if (i >= 0 && i < NMENUFONTS) {
 	if (i == fontMenu_fontsel) {	/* go get the selection */
 	    FindFontSelection (name1, False);  /* name1 = atom, name2 is ignored */

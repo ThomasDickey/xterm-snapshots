@@ -24,29 +24,28 @@ for verb in print printf ; do
 done
 rm -f $TMP
 
-LIST="00 30 80 d0 ff"
-
 exec </dev/tty
 old=`stty -g`
 stty raw -echo min 0  time 5
 
-$CMD $OPT "${ESC}]11;?${SUF}" > /dev/tty
+$CMD $OPT "${ESC}]50;?${SUF}" > /dev/tty
 read original
+
 stty $old
-original=${original}${SUF}
+original="${original}${SUF}"
 
 trap '$CMD $OPT "$original" >/dev/tty; exit' 0 1 2 5 15
+F=1
+D=1
+T=6
 while true
 do
-    for R in $LIST
-    do
-	for G in $LIST
-	do
-	    for B in $LIST
-	    do
-		$CMD $OPT "${ESC}]11;rgb:$R/$G/$B${SUF}" >/dev/tty
-		sleep 1
-	    done
-	done
-    done
+    $CMD $OPT "${ESC}]50;#$F${SUF}" >/dev/tty
+    #sleep 1
+    if test .$D = .1 ; then
+	test $F = $T && D=-1
+    else
+	test $F = 1 && D=1
+    fi
+    F=`expr $F + $D`
 done

@@ -69,6 +69,8 @@ SOFTWARE.
 
 /* main.c */
 
+#define _GNU_SOURCE 1	/* needed to prototype getpt() with glibc 2.1 */
+
 #include <version.h>
 #include <xterm.h>
 
@@ -152,6 +154,11 @@ static Bool IsPts = False;
 #define USE_USG_PTYS
 #else
 #define USE_HANDSHAKE
+#endif
+
+#if defined USE_USG_PTYS && (defined (__GLIBC__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
+#define USE_GETPT
+#include <stdlib.h>
 #endif
 
 #if defined(SYSV) && !defined(SVR4) && !defined(ISC22) && !defined(ISC30)
@@ -511,8 +518,6 @@ extern char *ttyname();
 extern char *ptsname();
 #endif
 
-int switchfb[] = {0, 2, 1, 3};
-
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -522,6 +527,9 @@ extern int tgetent (char *ptr, char *name);
 #ifdef	__cplusplus
 	}
 #endif
+
+#undef  CTRL
+#define	CTRL(c)	((c) & 0x1f)
 
 static SIGNAL_T reapchild (int n);
 static char *base_name (char *name);
@@ -588,15 +596,17 @@ static struct jtchars d_jtc = {
 #endif /* sony */
 #endif /* USE_SYSV_TERMIO */
 
+#define VAL_INITIAL_ERASE 127
+
 /* allow use of system default characters if defined and reasonable */
 #ifndef CEOF
-#define CEOF ('D'&037)
+#define CEOF     CTRL('D')
 #endif
 #ifndef CSUSP
-#define CSUSP ('Z'&037)
+#define CSUSP    CTRL('Z')
 #endif
 #ifndef CQUIT
-#define CQUIT ('\\'&037)
+#define CQUIT    CTRL('\\')
 #endif
 #ifndef CEOL
 #define CEOL 0
@@ -608,22 +618,22 @@ static struct jtchars d_jtc = {
 #define CSWTCH 0
 #endif
 #ifndef CLNEXT
-#define CLNEXT ('V'&037)
+#define CLNEXT   CTRL('V')
 #endif
 #ifndef CWERASE
-#define CWERASE ('W'&037)
+#define CWERASE  CTRL('W')
 #endif
 #ifndef CRPRNT
-#define CRPRNT ('R'&037)
+#define CRPRNT   CTRL('R')
 #endif
 #ifndef CFLUSH
-#define CFLUSH ('O'&037)
+#define CFLUSH   CTRL('O')
 #endif
 #ifndef CSTOP
-#define CSTOP ('S'&037)
+#define CSTOP    CTRL('S')
 #endif
 #ifndef CSTART
-#define CSTART ('Q'&037)
+#define CSTART   CTRL('Q')
 #endif
 
 /*
@@ -752,6 +762,9 @@ static struct _resource {
 #if OPT_HP_FUNC_KEYS
     Boolean hpFunctionKeys;
 #endif
+#if OPT_INITIAL_ERASE
+    Boolean ptyInitialErase;	/* if true, use pty's sense of erase char */
+#endif
     Boolean wait_for_map;
     Boolean useInsertMode;
 #if OPT_ZICONBEEP
@@ -794,6 +807,10 @@ static XtResource application_resources[] = {
 #if OPT_HP_FUNC_KEYS
     {"hpFunctionKeys", "HpFunctionKeys", XtRBoolean, sizeof (Boolean),
 	offset(hpFunctionKeys), XtRString, "false"},
+#endif
+#if OPT_INITIAL_ERASE
+    {"ptyInitialErase", "PtyInitialErase", XtRBoolean, sizeof (Boolean),
+	offset(ptyInitialErase), XtRString, "false"},
 #endif
     {"waitForMap", "WaitForMap", XtRBoolean, sizeof (Boolean),
 	offset(wait_for_map), XtRString, "false"},
@@ -866,6 +883,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"-hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "on"},
 {"+hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "off"},
 #endif
+#if OPT_INITIAL_ERASE
+{"-ie",		"*ptyInitialErase", XrmoptionNoArg,	(caddr_t) "on"},
+{"+ie",		"*ptyInitialErase", XrmoptionNoArg,	(caddr_t) "off"},
+#endif
 {"-j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "off"},
 /* parse logging options anyway for compatibility */
@@ -917,6 +938,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"+im",		"*useInsertMode", XrmoptionNoArg,	(caddr_t) "off"},
 {"-vb",		"*visualBell",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+vb",		"*visualBell",	XrmoptionNoArg,		(caddr_t) "off"},
+#if OPT_WIDE_CHARS
+{"-wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
 {"-wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "off"},
 #if OPT_ZICONBEEP
@@ -1023,6 +1048,9 @@ static struct _options {
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 #endif
 { "-/+vb",                 "turn on/off visual bell" },
+#if OPT_WIDE_CHARS
+{ "-/+wc",                 "turn on/off wide-character mode" },
+#endif
 { "-/+wf",                 "turn on/off wait for map before command exec" },
 { "-e command args ...",   "command to execute" },
 #if OPT_TEK4014
@@ -1086,7 +1114,7 @@ static void Syntax (char *badOption)
 
 static void Version (void)
 {
-    puts (XTERM_VERSION);
+    printf("%s(%d)\n", XFREE86_VERSION, XTERM_PATCH);
     exit (0);
 }
 
@@ -1095,8 +1123,8 @@ static void Help (void)
     struct _options *opt;
     char **cpp;
 
-    fprintf (stderr, "%s usage:\n    %s [-options ...] [-e command args]\n\n",
-	     XTERM_VERSION, ProgramName);
+    fprintf (stderr, "%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
+	     XFREE86_VERSION, XTERM_PATCH, ProgramName);
     fprintf (stderr, "where options include:\n");
     for (opt = options; opt->opt; opt++) {
 	fprintf (stderr, "    %-28s %s\n", opt->opt, opt->desc);
@@ -1336,9 +1364,9 @@ main (int argc, char *argv[])
         d_tio.c_cflag &= ~(HUPCL|PARENB);
         d_tio.c_iflag |= BRKINT|ISTRIP|IGNPAR;
 #endif
-	d_tio.c_cc[VINTR] = 'C' & 0x3f;		/* '^C'	*/
+	d_tio.c_cc[VINTR] = CTRL('C');		/* '^C'	*/
 	d_tio.c_cc[VERASE] = 0x7f;		/* DEL	*/
-	d_tio.c_cc[VKILL] = 'U' & 0x3f;		/* '^U'	*/
+	d_tio.c_cc[VKILL] = CTRL('U');		/* '^U'	*/
 	d_tio.c_cc[VQUIT] = CQUIT;		/* '^\'	*/
     	d_tio.c_cc[VEOF] = CEOF;		/* '^D'	*/
 	d_tio.c_cc[VEOL] = CEOL;		/* '^@'	*/
@@ -1890,9 +1918,15 @@ get_pty (int *pty)
         if (pty_search(pty) == 0)
 	    return 0;
 #elif defined(USE_USG_PTYS)
+#if defined USE_GETPT
+	if ((*pty = getpt ()) < 0) {
+	    return 1;
+	}
+#else
 	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0) {
 	    return 1;
 	}
+#endif
 #if defined(SVR4) || defined(SCO325) || (defined(i386) && defined(SYSV))
 	strcpy(ttydev, ptsname(*pty));
 #if defined (SYSV) && defined(i386) && !defined(SVR4)
@@ -2188,6 +2222,9 @@ spawn (void)
 #ifdef USE_HANDSHAKE
 	handshake_t handshake;
 #endif
+#if OPT_INITIAL_ERASE
+	int initial_erase = VAL_INITIAL_ERASE;
+#endif
 	int tty = -1;
 	int done;
 #ifdef USE_SYSV_TERMIO
@@ -2279,6 +2316,9 @@ spawn (void)
 			tty = -1;
 			errno = ENXIO;
 		}
+#if OPT_INITIAL_ERASE
+		initial_erase = VAL_INITIAL_ERASE;
+#endif
 		signal(SIGALRM, SIG_DFL);
 
 		/*
@@ -2313,6 +2353,7 @@ spawn (void)
 			    SysError(ERROR_OPDEVTTY);
 			}
 		} else {
+
 			/* Get a copy of the current terminal's state,
 			 * if we can.  Some systems (e.g., SVR4 and MacII)
 			 * may not have a controlling terminal at this point
@@ -2330,7 +2371,6 @@ spawn (void)
 #ifdef USE_SYSV_TERMIO
 		        if(ioctl(tty, TCGETA, &tio) == -1)
 			        tio = d_tio;
-
 #elif defined(USE_POSIX_TERMIOS)
 			if (tcgetattr(tty, &tio) == -1)
 			        tio = d_tio;
@@ -2348,6 +2388,22 @@ spawn (void)
 				jtc = d_jtc;
 #endif /* sony */
 #endif	/* USE_SYSV_TERMIO */
+
+#if OPT_INITIAL_ERASE
+			if (resource.ptyInitialErase) {
+#ifdef USE_SYSV_TERMIO
+				initial_erase = tio.c_cc[VERASE];
+#elif defined(USE_POSIX_TERMIOS)
+				initial_erase = tio.c_cc[VERASE];
+#else   /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+				initial_erase = sg.sg_erase;
+#endif	/* USE_SYSV_TERMIO */
+			}
+			if (initial_erase == 0177) {	/* see input.c */
+				term->keyboard.flags &= ~MODE_DECBKM;
+			}
+#endif
+
 #ifdef MINIX
 			/* Editing shells interfere with xterms started in
 			 * the background.
@@ -2362,19 +2418,16 @@ spawn (void)
 #ifdef 	PUCC_PTYD
 		if(-1 == (screen->respond = openrpty(ttydev, ptydev,
 				(resource.utmpInhibit ?  OPTY_NOP : OPTY_LOGIN),
-				getuid(), XDisplayString(screen->display)))) {
+				getuid(), XDisplayString(screen->display))))
 #else /* not PUCC_PTYD */
-		if (get_pty (&screen->respond)) {
+		if (get_pty (&screen->respond))
 #endif /* PUCC_PTYD */
+		{
 			/*  no ptys! */
 			(void) fprintf(stderr, "%s: no available ptys\n",
 				       xterm_name);
 			exit (ERROR_PTYS);
-#ifdef PUCC_PTYD
 		}
-#else
-		}			/* keep braces balanced for emacs */
-#endif
 #ifdef PUCC_PTYD
 		  else {
 			/*
@@ -2455,6 +2508,31 @@ spawn (void)
 		envnew++;
 	    }
 	}
+
+#if OPT_INITIAL_ERASE
+	if (!resource.ptyInitialErase && *newtc) {
+		char *s = strstr(newtc, "kD=");
+		TRACE(("extracting initial_erase value from termcap\n"))
+		if (s != 0) {
+			s += 3;
+			if (*s == '^') {
+				if (*++s == '?') {
+					initial_erase = 127;
+				} else {
+					initial_erase = *s & 31;
+				}
+			} else if (*s == '\\') {
+				char *d;
+				int value = strtol(s, &d, 8);
+				if (value > 0 && d != s)
+					initial_erase = value;
+			} else {
+				initial_erase = *s;
+			}
+			initial_erase &= 0xff;
+		}
+	}
+#endif
 
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 	/* tell tty how big window is */
@@ -2963,6 +3041,27 @@ spawn (void)
 		signal (SIGQUIT, SIG_DFL);
 		signal (SIGTERM, SIG_DFL);
 
+#if OPT_INITIAL_ERASE
+		if (! resource.ptyInitialErase) {
+#ifdef USE_SYSV_TERMIO
+			if(ioctl(tty, TCGETA, &tio) == -1)
+				tio = d_tio;
+			tio.c_cc[VERASE] = initial_erase;
+			ioctl(tty, TCSETA, &tio);
+#elif defined(USE_POSIX_TERMIOS)
+			if (tcgetattr(tty, &tio) == -1)
+				tio = d_tio;
+			tio.c_cc[VERASE] = initial_erase;
+			tcsetattr(tty, TCSANOW, &tio);
+#else   /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+			if(ioctl(tty, TIOCGETP, (char *)&sg) == -1)
+				sg = d_sg;
+			sg.sg_erase = initial_erase;
+			ioctl(tty, TIOCSETP, (char *)&sg);
+#endif	/* USE_SYSV_TERMIO */
+		}
+#endif
+
 		/* copy the environment before Setenving */
 		for (i = 0 ; environ [i] != NULL ; i++)
 		    ;
@@ -3343,6 +3442,12 @@ spawn (void)
 		    if(*newtc)
 			strcat (newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
 		}
+#if OPT_INITIAL_ERASE
+		remove_termcap_entry (newtc, ":kD=");
+		if (*newtc) {
+		    sprintf(newtc + strlen(newtc), ":kD=\\%03o", initial_erase & 0377);
+		}
+#endif
 		if(*newtc)
 		    Setenv ("TERMCAP=", newtc);
 #endif /* USE_SYSV_ENVVARS */
@@ -4030,6 +4135,7 @@ resize(TScreen *screen, register char *oldtc, register char *newtc)
 	register int li_first = 0;
 	register char *temp;
 
+	TRACE(("resize %s\n", oldtc))
 	if ((ptr1 = strindex (oldtc, "co#")) == NULL){
 		strcat (oldtc, "co#80:");
 		ptr1 = strindex (oldtc, "co#");
@@ -4047,17 +4153,20 @@ resize(TScreen *screen, register char *oldtc, register char *newtc)
 	ptr1 += 3;
 	ptr2 += 3;
 	strncpy (newtc, oldtc, i = ptr1 - oldtc);
-	newtc += i;
-	sprintf (newtc, "%d", li_first ? screen->max_row + 1 :
-	 screen->max_col + 1);
-	newtc += strlen(newtc);
+	temp = newtc + i;
+	sprintf (temp, "%d", li_first
+			? screen->max_row + 1
+			: screen->max_col + 1);
+	temp += strlen(temp);
 	ptr1 = strchr(ptr1, ':');
-	strncpy (newtc, ptr1, i = ptr2 - ptr1);
-	newtc += i;
-	sprintf (newtc, "%d", li_first ? screen->max_col + 1 :
-	 screen->max_row + 1);
+	strncpy (temp, ptr1, i = ptr2 - ptr1);
+	temp += i;
+	sprintf (temp, "%d", li_first
+			? screen->max_col + 1
+			: screen->max_row + 1);
 	ptr2 = strchr(ptr2, ':');
-	strcat (newtc, ptr2);
+	strcat (temp, ptr2);
+	TRACE(("   ==> %s\n", newtc))
 #endif /* USE_SYSV_ENVVARS */
 }
 
@@ -4164,7 +4273,7 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 
 	if (*s == '^') {
 	    s++;
-	    c = ((*s == '?') ? 0177 : *s & 31);	 /* keep control bits */
+	    c = ((*s == '?') ? 0177 : CTRL(*s));
 	    if (*s == '-') {
 #if HAVE_TERMIOS_H && HAVE_TCGETATTR
 #  if HAVE_POSIX_VDISABLE

@@ -38,6 +38,7 @@ appsdir		= $(libdir)/X11/app-defaults
 
 SHELL		= /bin/sh
 RM              = rm -f
+AWK		= awk
 
 LDFLAGS		=
 
@@ -67,7 +68,7 @@ EXTRAOBJ	= @EXTRAOBJS@
 
 all:	$(PROGRAMS)
 
-.SUFFIXES : .i
+.SUFFIXES : .i .def .hin
 
 .c.o:
 @RULE_CC@
@@ -76,6 +77,9 @@ all:	$(PROGRAMS)
 .c.i:
 @RULE_CC@
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
+
+.def.hin:
+	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
 main.o: version.h
 

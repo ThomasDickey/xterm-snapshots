@@ -5,43 +5,66 @@
 # Obtain the current screen size, then resize the terminal to the nominal
 # screen width/height, and restore the size.
 
+ESC=""
+CMD='echo'
+OPT='-n'
+SUF=''
+TMP=/tmp/xterm$$
+for verb in print printf ; do
+    rm -f $TMP
+    eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
+    if test -f $TMP ; then
+	if test ! -s $TMP ; then
+	    CMD="$verb"
+	    OPT=
+	    SUF='\c'
+	    break
+	fi
+    fi
+done
+rm -f $TMP
+
 exec </dev/tty
 old=`stty -g`
-stty raw -echo min 0  time 0
+stty raw -echo min 0  time 5
 
-echo -n "[18t" > /dev/tty
-IFS=';' read junk height width
+$CMD $OPT "${ESC}[18t${SUF}" > /dev/tty
+IFS=';' read junk high wide
 
-echo -n "[19t" > /dev/tty
-IFS=';' read junk maxheight maxwidth
+$CMD $OPT "${ESC}[19t${SUF}" > /dev/tty
+IFS=';' read junk maxhigh maxwide
 
 stty $old
 
-width=`echo $width|sed -e 's/t.*//'`
-maxwidth=`echo $maxwidth|sed -e 's/t.*//'`
+wide=`echo $wide|sed -e 's/t.*//'`
+maxwide=`echo $maxwide|sed -e 's/t.*//'`
+original=${ESC}[8\;${high}\;${wide}t${SUF}
 
-trap 'echo -n "[8;${height};${width}t"; exit' 0 1 2 5 15
-w=$width
-h=$height
+test $maxwide = 0 && maxwide=`expr $wide \* 2`
+test $maxhigh = 0 && maxhigh=`expr $high \* 2`
+
+trap '$CMD $OPT "$original" >/dev/tty; exit' 0 1 2 5 15
+w=$wide
+h=$high
 a=1
 while true
 do
 #	sleep 1
 	echo resizing to $h by $w
-	echo -n "[8;${h};${w}t"
+	$CMD $OPT "${ESC}[8;${h};${w}t" >/dev/tty
 	if test $a = 1 ; then
-		if test $w = $maxwidth ; then
+		if test $w = $maxwide ; then
 			h=`expr $h + $a`
-			if test $h = $maxheight ; then
+			if test $h = $maxhigh ; then
 				a=-1
 			fi
 		else
 			w=`expr $w + $a`
 		fi
 	else
-		if test $w = $width ; then
+		if test $w = $wide ; then
 			h=`expr $h + $a`
-			if test $h = $height ; then
+			if test $h = $high ; then
 				a=1
 			fi
 		else

@@ -4,6 +4,35 @@
  */
 
 /*
+ * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * 
+ *                         All Rights Reserved
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ *
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -693,6 +722,9 @@ ClearInLine(register TScreen *screen, int row, int col, int len)
 	if_OPT_DEC_CHRSET({
 		memset(SCRN_BUF_CSETS(screen, row) + col, curXtermChrSet(screen->cur_row), len);
 	})
+	if_OPT_WIDE_CHARS(screen,{
+		memset(SCRN_BUF_WIDEC(screen, row) + col, 0, len);
+	})
 
 	return rc;
 }
@@ -1316,9 +1348,26 @@ drawXtermText(
 	int x,
 	int y,
 	int chrset,
-	Char *text,
-	int len)
+	PAIRED_CHARS(Char *text, Char *text2),
+	Cardinal len)
 {
+#if OPT_WIDE_CHARS
+	/*
+	 * It's simpler to pass in a null pointer for text2 in places where
+	 * we only use codes through 255.  Fix text2 here so we can increment
+	 * it, etc.
+	 */
+	if (text2 == 0) {
+		static Char *dbuf;
+		static unsigned dlen;
+		if (dlen < len) {
+			dlen = (len + 1) * 2;
+			dbuf = XtRealloc(dbuf, dlen);
+			memset(dbuf, 0, dlen);
+		}
+		text2 = dbuf;
+	}
+#endif
 #if OPT_DEC_CHRSET
 	if (CSET_DOUBLE(chrset)) {
 		GC gc2 = screen->font_doublesize
@@ -1327,7 +1376,7 @@ drawXtermText(
 
 		TRACE(("DRAWTEXT%c[%4d,%4d] (%d) %d:%.*s\n",
 			screen->cursor_state == OFF ? ' ' : '*',
-			y, x, chrset, len, len, text))
+			y, x, chrset, len, (int)len, text))
 
 		if (gc2 != 0) {	/* draw actual double-sized characters */
 			XFontStruct *fs = screen->double_fs[chrset % NUM_CHRSET];
@@ -1389,12 +1438,16 @@ drawXtermText(
 			{
 				while (len--) {
 					x = drawXtermText(screen, flags, gc2,
-						x, y, 0, text++, 1);
+						x, y, 0,
+						PAIRED_CHARS(text++, text2++),
+						1);
 					x += FontWidth(screen);
 				}
 			} else {
 				x = drawXtermText(screen, flags, gc2,
-					x, y, 0, text, len);
+					x, y, 0,
+					PAIRED_CHARS(text, text2),
+					len);
 				x += len * FontWidth(screen);
 			}
 
@@ -1403,13 +1456,24 @@ drawXtermText(
 
 		} else {	/* simulate double-sized characters */
 			Char *temp = (Char *) malloc(2 * len);
+			Char *wide = 0;
 			int n = 0;
+			if_OPT_WIDE_CHARS(screen,{
+				wide = (Char *)malloc(2 * len);
+			})
 			while (len--) {
+				if_OPT_WIDE_CHARS(screen,{
+					wide[n] = *text2++;
+					wide[n+1] = 0;
+				})
 				temp[n++] = *text++;
 				temp[n++] = ' ';
 			}
-			x = drawXtermText(screen, flags, gc, x, y, 0, temp, n);
+			x = drawXtermText(screen, flags, gc, x, y, 0, PAIRED_CHARS(temp, wide), n);
 			free(temp);
+			if_OPT_WIDE_CHARS(screen,{
+				free(wide);
+			})
 		}
 		return x;
 	}
@@ -1447,10 +1511,12 @@ drawXtermText(
 		XFillRectangle (screen->display, VWindow(screen), fillGC,
 			x, y, len * FontWidth(screen), FontHeight(screen));
 
-		while (len-- > 0) {
+		while (len--) {
 			width = XTextWidth(fs, (char *)text, 1);
 			adj = (FontWidth(screen) - width) / 2;
-			(void)drawXtermText(screen, flags, gc, x + adj, y, chrset, text++, 1);
+			(void)drawXtermText(screen, flags, gc, x + adj, y,
+					    chrset,
+					    PAIRED_CHARS(text++, text2++), 1);
 			x += FontWidth(screen);
 		}
 		screen->fnt_prop = True;
@@ -1461,10 +1527,29 @@ drawXtermText(
 	if (screen->fnt_boxes) {
 		TRACE(("drawtext%c[%4d,%4d] (%d) %d:%.*s\n",
 			screen->cursor_state == OFF ? ' ' : '*',
-			y, x, chrset, len, len, text))
+			y, x, chrset, len, (int)len, text))
 		y += FontAscent(screen);
+
+#if OPT_WIDE_CHARS
+		if (screen->wide_chars) {
+			static XChar2b *sbuf;
+			static Cardinal slen;
+			Cardinal n;
+			if (slen < len) {
+				slen = (len + 1) * 2;
+				sbuf = (XChar2b *)XtRealloc((char *)sbuf, slen * sizeof(*sbuf));
+			}
+			for (n = 0; n < len; n++) {
+				sbuf[n].byte2 = text[n];
+				sbuf[n].byte1 = text2[n];
+			}
+			XDrawImageString16(screen->display, VWindow(screen), gc,
+				x, y, sbuf, len);
+		} else
+#endif
 		XDrawImageString(screen->display, VWindow(screen), gc,
 			x, y,  (char *)text, len);
+
 		if ((flags & (BOLD|BLINK)) && screen->enbolden)
 			XDrawString(screen->display, VWindow(screen), gc,
 				x+1, y,  (char *)text, len);
@@ -1476,12 +1561,12 @@ drawXtermText(
 		}
 #if OPT_BOX_CHARS
 #define DrawX(col) x + (col * FontWidth(screen))
-#define DrawSegment(first,last) (void)drawXtermText(screen, flags, gc, DrawX(first), y, chrset, text+first, last-first)
+#define DrawSegment(first,last) (void)drawXtermText(screen, flags, gc, DrawX(first), y, chrset, PAIRED_CHARS(text+first, text2+first), last-first)
 	} else {	/* fill in missing box-characters */
 		XFontStruct *font = (flags & BOLD)
 				  ? screen->fnt_bold
 				  : screen->fnt_norm;
-		int last, first = 0;
+		Cardinal last, first = 0;
 
 		screen->fnt_boxes = True;
 		for (last = 0; last < len; last++) {
@@ -1715,6 +1800,31 @@ curXtermChrSet(int row)
 	return set;
 }
 #endif /* OPT_DEC_CHRSET */
+
+#if OPT_WIDE_CHARS
+/*
+ * Returns a single 8/16-bit number for the given cell
+ */
+int getXtermCell (TScreen *screen, int row, int col)
+{
+    int ch = SCRN_BUF_CHARS(screen, row)[col];
+    if_OPT_WIDE_CHARS(screen,{
+	ch |= (SCRN_BUF_WIDEC(screen, row)[col] << 8);
+    })
+    return ch;
+}
+
+/*
+ * Sets a single 8/16-bit number for the given cell
+ */
+void putXtermCell (TScreen *screen, int row, int col, int ch)
+{
+    SCRN_BUF_CHARS(screen, row)[col] = ch;
+    if_OPT_WIDE_CHARS(screen,{
+	SCRN_BUF_WIDEC(screen, row)[col] = (ch >> 8);
+    })
+}
+#endif
 
 #ifdef HAVE_CONFIG_H
 #if USE_MY_MEMMOVE

@@ -367,6 +367,10 @@ typedef struct {
 #endif
 #endif
 
+#ifndef OPT_INITIAL_ERASE
+#define OPT_INITIAL_ERASE 1 /* use pty's erase character if it's not 128 */
+#endif
+
 #ifndef OPT_INPUT_METHOD
 #if XtSpecificationRelease >= 6
 #define OPT_INPUT_METHOD 1 /* true if xterm uses input-method support */
@@ -421,6 +425,10 @@ typedef struct {
 
 #ifndef OPT_VT52_MODE
 #define OPT_VT52_MODE   1 /* true if xterm supports VT52 emulation */
+#endif
+
+#ifndef OPT_WIDE_CHARS
+#define OPT_WIDE_CHARS  0 /* true if xterm supports 16-bit characters */
 #endif
 
 #ifndef OPT_XMC_GLITCH
@@ -516,7 +524,7 @@ typedef struct {
 #endif
 
 	/* the number of pointers per row in 'ScrnBuf' */
-#if OPT_ISO_COLORS || OPT_DEC_CHRSET
+#if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS
 #define MAX_PTRS term->num_ptrs
 #else
 #define MAX_PTRS 3
@@ -567,36 +575,46 @@ typedef struct {
 
 /***====================================================================***/
 
-#define OFF_CHARS (BUF_HEAD + 0)
-#define OFF_ATTRS (BUF_HEAD + 1)
-#define OFF_COLOR (BUF_HEAD + 2)
-#define OFF_CSETS (BUF_HEAD + 3)
+#if OPT_WIDE_CHARS
+#define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
+#define PAIRED_CHARS(a,b) a,b
+#else
+#define if_OPT_WIDE_CHARS(screen, code) /* nothing */
+#define PAIRED_CHARS(a,b) a
+#endif
+
+/***====================================================================***/
+
+typedef enum {
+	OFF_FLAGS = 0		/* BUF_HEAD */
+	, OFF_CHARS
+	, OFF_ATTRS
+#if OPT_ISO_COLORS
+	, OFF_COLOR
+#endif
+#if OPT_DEC_CHRSET
+	, OFF_CSETS
+#endif
+#if OPT_WIDE_CHARS
+	, OFF_WIDEC
+#endif
+} BufOffsets;
 
 	/* ScrnBuf-level macros */
-#define BUF_FLAGS(buf, row) (buf[MAX_PTRS * (row) + 0])
+#define BUF_FLAGS(buf, row) (buf[MAX_PTRS * (row) + OFF_FLAGS])
 #define BUF_CHARS(buf, row) (buf[MAX_PTRS * (row) + OFF_CHARS])
 #define BUF_ATTRS(buf, row) (buf[MAX_PTRS * (row) + OFF_ATTRS])
-
-#if OPT_ISO_COLORS
 #define BUF_COLOR(buf, row) (buf[MAX_PTRS * (row) + OFF_COLOR])
-#endif
-
-#if OPT_DEC_CHRSET
 #define BUF_CSETS(buf, row) (buf[MAX_PTRS * (row) + OFF_CSETS])
-#endif
+#define BUF_WIDEC(buf, row) (buf[MAX_PTRS * (row) + OFF_WIDEC])
 
 	/* TScreen-level macros */
 #define SCRN_BUF_FLAGS(screen, row) BUF_FLAGS(screen->visbuf, row)
 #define SCRN_BUF_CHARS(screen, row) BUF_CHARS(screen->visbuf, row)
 #define SCRN_BUF_ATTRS(screen, row) BUF_ATTRS(screen->visbuf, row)
-
-#if OPT_ISO_COLORS
 #define SCRN_BUF_COLOR(screen, row) BUF_COLOR(screen->visbuf, row)
-#endif
-
-#if OPT_DEC_CHRSET
 #define SCRN_BUF_CSETS(screen, row) BUF_CSETS(screen->visbuf, row)
-#endif
+#define SCRN_BUF_WIDEC(screen, row) BUF_WIDEC(screen->visbuf, row)
 
 	/* indices into save_modes[] */
 typedef enum {
@@ -697,6 +715,10 @@ typedef struct {
 	XFontStruct *	double_fs[NUM_CHRSET];
 	GC		double_gc[NUM_CHRSET];
 	char *		double_fn[NUM_CHRSET];
+#endif
+#if OPT_WIDE_CHARS
+	Boolean		wide_chars;	/* true when 16-bit chars	*/
+	Boolean		utf8_mode;	/* use UTF-8 decode/encode	*/
 #endif
 	int		border;		/* inner border			*/
 	Cursor		arrow;		/* arrow cursor			*/

@@ -3,6 +3,35 @@
  */
 
 /*
+ * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * 
+ *                         All Rights Reserved
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ *
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -332,10 +361,16 @@ ScrnClearLines (TScreen *screen, ScrnBuf sb, int where, int n, int size)
 	if (TERM_COLOR_FLAGS) {
 		int flags = TERM_COLOR_FLAGS;
 		for (i = 0; i < last; i += MAX_PTRS) {
-			screen->save_ptr[i] = 0;
-			bzero( screen->save_ptr[i+ OFF_CHARS], size);
-			memset(screen->save_ptr[i+ OFF_ATTRS], flags, size);
-			memset(screen->save_ptr[i+ OFF_COLOR], xtermColorPair(), size);
+			for (j = 0; j < MAX_PTRS; j++) {
+				if (j < BUF_HEAD)
+					screen->save_ptr[i+j] = 0;
+				else if (j == OFF_ATTRS)
+					memset(screen->save_ptr[i+j], flags, size);
+				else if (j == OFF_COLOR)
+					memset(screen->save_ptr[i+j], xtermColorPair(), size);
+				else
+					bzero( screen->save_ptr[i+j], size);
+			}
 		}
 	} else {
 		for (i = 0; i < last; i += MAX_PTRS) {
@@ -460,14 +495,19 @@ ScrnInsertChar (
 	for (i=col; i<col+n; i++)
 	    attrs[i] = flags;
 	if_OPT_ISO_COLORS(screen,{
-	    Char *colors = BUF_COLOR(sb, row);
-	    memmove(colors + col + n, colors + col, nbytes);
-	    memset(colors + col, xtermColorPair(), n);
+	    ptr = BUF_COLOR(sb, row);
+	    memmove(ptr + col + n, ptr + col, nbytes);
+	    memset(ptr + col, xtermColorPair(), n);
 	})
 	if_OPT_DEC_CHRSET({
-	    Char *csets = BUF_CSETS(sb, row);
-	    memmove(csets + col + n, csets + col, nbytes);
-	    memset(csets + col, curXtermChrSet(row), n);
+	    ptr = BUF_CSETS(sb, row);
+	    memmove(ptr + col + n, ptr + col, nbytes);
+	    memset(ptr + col, curXtermChrSet(row), n);
+	})
+	if_OPT_WIDE_CHARS(screen,{
+	    ptr = BUF_WIDEC(sb, row);
+	    memmove(ptr + col + n, ptr + col, nbytes);
+	    memset(ptr + col, 0, n);
 	})
 
 	if (wrappedbit)
@@ -498,14 +538,19 @@ ScrnDeleteChar (
 	memset (attrs + size - n, TERM_COLOR_FLAGS, n);
 
 	if_OPT_ISO_COLORS(screen,{
-	    Char *colors = BUF_COLOR(sb, row);
-	    memmove(colors + col, colors + col + n, nbytes);
-	    memset(colors + size - n, xtermColorPair(), n);
+	    ptr = BUF_COLOR(sb, row);
+	    memmove(ptr + col, ptr + col + n, nbytes);
+	    memset(ptr + size - n, xtermColorPair(), n);
 	})
 	if_OPT_DEC_CHRSET({
-	    Char *csets = BUF_CSETS(sb, row);
-	    memmove(csets + col, csets + col + n, nbytes);
-	    memset(csets + size - n, curXtermChrSet(row), n);
+	    ptr = BUF_CSETS(sb, row);
+	    memmove(ptr + col, ptr + col + n, nbytes);
+	    memset(ptr + size - n, curXtermChrSet(row), n);
+	})
+	if_OPT_WIDE_CHARS(screen,{
+	    ptr = BUF_CSETS(sb, row);
+	    memmove(ptr + col, ptr + col + n, nbytes);
+	    memset(ptr + size - n, 0, n);
 	})
 	ScrnClrWrapped(screen, row);
 }
@@ -555,6 +600,9 @@ ScrnRefresh (
 #if OPT_DEC_CHRSET
 	   register Char *cb = 0;
 #endif
+#if OPT_WIDE_CHARS
+	   Char *widec = 0;
+#endif
 	   Char cs = 0;
 	   register Char *chars;
 	   register Char *attrs;
@@ -581,6 +629,10 @@ ScrnRefresh (
 
 	   if_OPT_DEC_CHRSET({
 		cb = SCRN_BUF_CSETS(screen, lastind + topline);
+	   })
+
+	   if_OPT_WIDE_CHARS(screen,{
+		widec = SCRN_BUF_WIDEC(screen, lastind + topline);
 	   })
 
 	   if (row < screen->startHRow || row > screen->endHRow ||
@@ -699,7 +751,8 @@ ScrnRefresh (
 			col - lastind, &chars[lastind]))
 		   x = drawXtermText(screen, flags, gc, x, y,
 		   	cs,
-			&chars[lastind], col - lastind);
+			PAIRED_CHARS(&chars[lastind], &widec[lastind]),
+			col - lastind);
 		   resetXtermGC(screen, flags, hilite);
 
 		   lastind = col;
@@ -730,7 +783,8 @@ ScrnRefresh (
 		col - lastind, &chars[lastind]))
 	   drawXtermText(screen, flags, gc, x, y,
 	   	cs,
-		&chars[lastind], col - lastind);
+		PAIRED_CHARS(&chars[lastind], &widec[lastind]),
+		col - lastind);
 	   resetXtermGC(screen, flags, hilite);
 	}
 
@@ -785,6 +839,9 @@ ClearBufRows (
 	    })
 	    if_OPT_DEC_CHRSET({
 		memset(BUF_CSETS(buf, row), 0, len);
+	    })
+	    if_OPT_WIDE_CHARS(screen,{
+		memset(BUF_WIDEC(buf, row), 0, len);
 	    })
 	}
 }
@@ -990,6 +1047,10 @@ ScrnTstWrapped(TScreen *screen, int row)
 	return (long)SCRN_BUF_FLAGS(screen, row + screen->topline) & LINEWRAPPED;
 }
 
+/*
+ * Return true if any character cell starting at [row,col], for len-cells is
+ * nonnull.
+ */
 Bool
 non_blank_line(
 	ScrnBuf sb,
@@ -1004,5 +1065,13 @@ non_blank_line(
 		if (ptr[i])
 			return True;
 	}
+#if OPT_WIDE_CHARS
+	if ((ptr = BUF_WIDEC(sb, row)) != 0) {
+	    for (i = col; i < len; i++) {
+		if (ptr[i])
+		    return True;
+	    }
+	}
+#endif
 	return False;
 }

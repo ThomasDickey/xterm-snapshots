@@ -58,6 +58,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_HIGHLIGHT_COLOR /* CF_ARG_DISABLE(highlighting) */
 #undef OPT_HP_FUNC_KEYS	/* CF_ARG_ENABLE(hp-fkeys) */
 #undef OPT_I18N_SUPPORT	/* CF_ARG_DISABLE(i18n) */
+#undef OPT_INITIAL_ERASE /* CF_ARG_DISABLE(initial-erase) */
 #undef OPT_INPUT_METHOD	/* CF_ARG_DISABLE(input-method) */
 #undef OPT_ISO_COLORS	/* CF_ARG_DISABLE(ansi-color) */
 #undef OPT_MAXIMIZE	/* CF_ARG_DISABLE(maximize) */
@@ -66,6 +67,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_TEK4014	/* CF_ARG_DISABLE(tek4014) */
 #undef OPT_TRACE	/* CF_ARG_ENABLE(trace) */
 #undef OPT_VT52_MODE	/* CF_ARG_DISABLE(vt52) */
+#undef OPT_WIDE_CHARS	/* CF_ARG_ENSABLE(wide-chars) */
 #undef OPT_XMC_GLITCH	/* CF_ARG_ENABLE(xmc-glitch) */
 #undef OWN_TERMINFO_DIR	/* AC_ARG_WITH(own-terminfo) */
 #undef SCROLLBAR_RIGHT	/* CF_ARG_ENABLE(rightbar) */
