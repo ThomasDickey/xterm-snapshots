@@ -700,18 +700,26 @@ dnl ---------------------------------------------------------------------------
 dnl Check if this is an SVR4 system.  We need the definition for xterm
 AC_DEFUN([CF_SVR4],
 [
-AC_REQUIRE([AC_FUNC_GETLOADAVG])
+AC_CHECK_LIB(elf, elf_begin,[
 AC_CACHE_CHECK(if this is an SVR4 system, cf_cv_svr4,[
 AC_TRY_COMPILE([
 #include <elf.h>
 #include <sys/termio.h>
 ],[
-#ifndef SVR4
-make an error
-#endif
+static struct termio d_tio;
+	d_tio.c_cc[VINTR] = 0;
+	d_tio.c_cc[VQUIT] = 0;
+	d_tio.c_cc[VERASE] = 0;
+	d_tio.c_cc[VKILL] = 0;
+	d_tio.c_cc[VEOF] = 0;
+	d_tio.c_cc[VEOL] = 0;
+	d_tio.c_cc[VMIN] = 0;
+	d_tio.c_cc[VTIME] = 0;
+	d_tio.c_cc[VLNEXT] = 0;
 ],
 [cf_cv_svr4=yes],
 [cf_cv_svr4=no])
+])
 ])
 test "$cf_cv_svr4" = yes && AC_DEFINE(SVR4)
 ])dnl
@@ -763,6 +771,23 @@ struct $cf_cv_have_utmp x;
 	[cf_cv_sysv_utmp=no])
 ])
 test $cf_cv_sysv_utmp = yes && AC_DEFINE(USE_SYSV_UTMP)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Check for SGI's broken redefinition of baud rates introduced in IRIX 6.5
+dnl (there doesn't appear to be a useful predefined symbol).
+AC_DEFUN([CF_TERMIO_C_ISPEED],
+[
+AC_CACHE_CHECK(for IRIX 6.5 baud-rate redefinitions,cf_cv_termio_c_ispeed,[
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/termio.h>],[
+struct termio foo;
+foo.c_ispeed = B38400;
+foo.c_ospeed = B9600;
+],[cf_cv_termio_c_ispeed=yes
+],[cf_cv_termio_c_ispeed=no])
+])
+test "$cf_cv_termio_c_ispeed" = yes && AC_DEFINE(HAVE_TERMIO_C_ISPEED)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check if the system has a tty-group defined.  This is used in xterm when
@@ -844,23 +869,6 @@ int main()
 	[cf_cv_tty_group=unknown])
 ])
 test $cf_cv_tty_group = yes && AC_DEFINE(USE_TTY_GROUP)
-])dnl
-dnl ---------------------------------------------------------------------------
-dnl Check for SGI's broken redefinition of baud rates introduced in IRIX 6.5
-dnl (there doesn't appear to be a useful predefined symbol).
-AC_DEFUN([CF_TERMIO_C_ISPEED],
-[
-AC_CACHE_CHECK(for IRIX 6.5 baud-rate redefinitions,cf_cv_termio_c_ispeed,[
-AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/termio.h>],[
-struct termio foo;
-foo.c_ispeed = B38400;
-foo.c_ospeed = B9600;
-],[cf_cv_termio_c_ispeed=yes
-],[cf_cv_termio_c_ispeed=no])
-])
-test "$cf_cv_termio_c_ispeed" = yes && AC_DEFINE(HAVE_TERMIO_C_ISPEED)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for the declaration of fd_set.  Some platforms declare it in

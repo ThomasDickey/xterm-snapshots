@@ -702,19 +702,6 @@ setExtendedBG(void)
 			bg = COLOR_RV;
 	}
 
-	/* This implements the IBM PC-style convention of 8-colors, with one
-	 * bit for bold, thus mapping the 0-7 codes to 8-15.  It won't make
-	 * much sense for 16-color applications, but we keep it to retain
-	 * compatiblity with ANSI-color applications.
-	 */
-#if OPT_PC_COLORS /* XXXJTL should be settable at runtime (resource or OSC?) */
-	if (term->screen.boldColors
-	 && (bg >= 0)
-	 && (bg < 8)
-	 && (term->flags & BOLD))
-		bg |= 8;
-#endif
-
 	SGR_Background(bg);
 }
 
