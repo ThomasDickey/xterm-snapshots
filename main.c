@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.394 2004/07/20 01:14:41 tom Exp $ */
+/* $XTermId: main.c,v 1.396 2004/08/15 21:07:59 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.184 2004/07/20 01:14:41 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.185 2004/08/15 21:07:59 dickey Exp $ */
 
 /* main.c */
 
@@ -4352,7 +4352,7 @@ Exit(int n)
 #endif
 		break;
 	    }
-
+	    memset(utptr, 0, sizeof(*utptr));	/* keep searching */
 	}
 	(void) endutent();
     }

@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.170 2004/08/08 22:36:14 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.129 2004/08/08 22:36:14 dickey Exp $
+  $XTermId: xterm.log.html,v 1.173 2004/08/15 21:07:59 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.130 2004/08/15 21:07:59 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_196">Patch #196 - 2004/8/15 - XFree86 4.4.99.12</A>
 <LI><A HREF="#xterm_195">Patch #195 - 2004/8/8 - XFree86 4.4.99.11</A>
 <LI><A HREF="#xterm_194">Patch #194 - 2004/7/27 - XFree86 4.4.99.11</A>
 <LI><A HREF="#xterm_193">Patch #193 - 2004/7/19 - XFree86 4.4.99.10</A>
@@ -243,6 +244,18 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_196">Patch #196 - 2004/8/15 - XFree86 4.4.99.12</A></H1>
+<ul>
+	<li>add a special case to configure script to ignore NetBSD's
+	    <code>grantpt()</code> which was recently added (but not part of a
+	    release), until someone is able to ensure that xterm can use it
+	    (report by Min Sik Kim).
+
+	<li>clear the buffer returned by getutid().  This fixes an infinite
+	    loop on some platforms introduced in <a href="#xterm_193">patch
+	    #193</a> by Debian #256468 fix (report by David Ellement).
+</ul>
 
 <H1><A NAME="xterm_195">Patch #195 - 2004/8/8 - XFree86 4.4.99.11</A></H1>
 <ul>
