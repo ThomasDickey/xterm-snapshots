@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.166 2004/07/28 00:53:26 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.128 2004/07/28 00:53:26 dickey Exp $
+  $XTermId: xterm.log.html,v 1.170 2004/08/08 22:36:14 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.129 2004/08/08 22:36:14 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_195">Patch #195 - 2004/8/8 - XFree86 4.4.99.11</A>
 <LI><A HREF="#xterm_194">Patch #194 - 2004/7/27 - XFree86 4.4.99.11</A>
 <LI><A HREF="#xterm_193">Patch #193 - 2004/7/19 - XFree86 4.4.99.10</A>
 <LI><A HREF="#xterm_192">Patch #192 - 2004/7/12 - XFree86 4.4.99.9</A>
@@ -242,6 +243,21 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_195">Patch #195 - 2004/8/8 - XFree86 4.4.99.11</A></H1>
+<ul>
+	<li>correct length used for blinking text, make the last column blink
+	    (patch by Alexander V Lukyanov).
+
+	<li>start changes to make doublesize characters work with TrueType
+	    fonts (see <a href="#xterm_44">patch #44</a>).
+
+	<li>trim leading/trailing blanks from color resources as done for
+	    other strings in <a href="#xterm_167">patch #167</a>.
+
+	<li>fixes for <code>showBlinkAsBold</code> resource (report by
+	    Christoph Berg).
+</ul>
 
 <H1><A NAME="xterm_194">Patch #194 - 2004/7/27 - XFree86 4.4.99.11</A></H1>
 <ul>

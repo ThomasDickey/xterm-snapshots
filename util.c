@@ -1,10 +1,10 @@
-/* $XTermId: util.c,v 1.193 2004/07/28 00:53:26 tom Exp $ */
+/* $XTermId: util.c,v 1.196 2004/08/08 22:36:13 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.84 2004/07/28 00:53:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.85 2004/08/08 22:36:13 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -1646,106 +1646,6 @@ drawXtermText(TScreen * screen,
 	text2 = dbuf;
     }
 #endif
-#if OPT_RENDERFONT
-    if (term->misc.render_font) {
-	Display *dpy = screen->display;
-	XftFont *font;
-	XGCValues values;
-	int fontnum = screen->menu_font_number;
-
-	if (!screen->renderDraw) {
-	    int scr;
-	    Drawable draw = VWindow(screen);
-	    Visual *visual;
-
-	    scr = DefaultScreen(dpy);
-	    visual = DefaultVisual(dpy, scr);
-	    screen->renderDraw = XftDrawCreate(dpy, draw, visual,
-					       DefaultColormap(dpy, scr));
-	}
-	if ((flags & BOLDATTR(screen))
-	    && screen->renderFontBold[fontnum])
-	    font = screen->renderFontBold[fontnum];
-	else
-	    font = screen->renderFontNorm[fontnum];
-	XGetGCValues(dpy, gc, GCForeground | GCBackground, &values);
-	if (!(flags & NOBACKGROUND))
-	    XftDrawRect(screen->renderDraw,
-			getColor(values.background),
-			x, y,
-			len * FontWidth(screen), FontHeight(screen));
-
-	y += font->ascent;
-#if OPT_BOX_CHARS
-	if (!screen->force_box_chars) {
-	    /* adding code to substitute simulated line-drawing characters */
-	    Cardinal last, first = 0;
-	    Dimension old_wide, old_high = 0;
-	    int curX = x;
-
-	    for (last = 0; last < len; last++) {
-		unsigned ch = text[last];
-		int deltax = 0;
-
-		/*
-		 * If we're reading UTF-8 from the client, we may have a
-		 * line-drawing character.  Translate it back to our box-code.
-		 */
-		if_OPT_WIDE_CHARS(screen, {
-		    ch = ucs2dec(ch | (text2[last] << 8));
-		});
-		/*
-		 * A value less than 32 has to be one of our box-codes.
-		 */
-		if (ch > 0 && ch < 32) {
-		    /* line drawing character time */
-		    if (last > first) {
-			xtermXftDrawString(screen, flags,
-					   getColor(values.foreground),
-					   font, curX, y,
-					   PAIRED_CHARS(text + first,
-							text2 + first),
-					   last - first, FontWidth(screen),
-					   &deltax);
-			curX += deltax;
-		    }
-		    old_wide = screen->fnt_wide;
-		    old_high = screen->fnt_high;
-		    screen->fnt_wide = FontWidth(screen);
-		    screen->fnt_high = FontHeight(screen);
-		    xtermDrawBoxChar(screen, ch, flags, gc,
-				     curX, y - FontAscent(screen));
-		    curX += FontWidth(screen);
-		    screen->fnt_wide = old_wide;
-		    screen->fnt_high = old_high;
-		    first = last + 1;
-		}
-	    }
-	    if (last > first) {
-		xtermXftDrawString(screen, flags,
-				   getColor(values.foreground),
-				   font, curX, y,
-				   PAIRED_CHARS(text + first, text2 + first),
-				   last - first, FontWidth(screen), NULL);
-	    }
-	} else
-#endif /* OPT_BOX_CHARS */
-	{
-	    xtermXftDrawString(screen, flags,
-			       getColor(values.foreground),
-			       font, x, y, PAIRED_CHARS(text, text2),
-			       len, FontWidth(screen), NULL);
-	}
-
-	if ((flags & UNDERLINE) && screen->underline) {
-	    if (FontDescent(screen) > 1)
-		y++;
-	    XDrawLine(screen->display, VWindow(screen), gc,
-		      x, y, x + len * FontWidth(screen) - 1, y);
-	}
-	return x + len * FontWidth(screen);
-    }
-#endif /* OPT_RENDERFONT */
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(chrset)) {
 	/* We could try drawing double-size characters in the icon, but
@@ -1875,6 +1775,106 @@ drawXtermText(TScreen * screen,
 	return x;
     }
 #endif
+#if OPT_RENDERFONT
+    if (term->misc.render_font) {
+	Display *dpy = screen->display;
+	XftFont *font;
+	XGCValues values;
+	int fontnum = screen->menu_font_number;
+
+	if (!screen->renderDraw) {
+	    int scr;
+	    Drawable draw = VWindow(screen);
+	    Visual *visual;
+
+	    scr = DefaultScreen(dpy);
+	    visual = DefaultVisual(dpy, scr);
+	    screen->renderDraw = XftDrawCreate(dpy, draw, visual,
+					       DefaultColormap(dpy, scr));
+	}
+	if ((flags & BOLDATTR(screen))
+	    && screen->renderFontBold[fontnum])
+	    font = screen->renderFontBold[fontnum];
+	else
+	    font = screen->renderFontNorm[fontnum];
+	XGetGCValues(dpy, gc, GCForeground | GCBackground, &values);
+	if (!(flags & NOBACKGROUND))
+	    XftDrawRect(screen->renderDraw,
+			getColor(values.background),
+			x, y,
+			len * FontWidth(screen), FontHeight(screen));
+
+	y += font->ascent;
+#if OPT_BOX_CHARS
+	if (!screen->force_box_chars) {
+	    /* adding code to substitute simulated line-drawing characters */
+	    Cardinal last, first = 0;
+	    Dimension old_wide, old_high = 0;
+	    int curX = x;
+
+	    for (last = 0; last < len; last++) {
+		unsigned ch = text[last];
+		int deltax = 0;
+
+		/*
+		 * If we're reading UTF-8 from the client, we may have a
+		 * line-drawing character.  Translate it back to our box-code.
+		 */
+		if_OPT_WIDE_CHARS(screen, {
+		    ch = ucs2dec(ch | (text2[last] << 8));
+		});
+		/*
+		 * A value less than 32 has to be one of our box-codes.
+		 */
+		if (ch > 0 && ch < 32) {
+		    /* line drawing character time */
+		    if (last > first) {
+			xtermXftDrawString(screen, flags,
+					   getColor(values.foreground),
+					   font, curX, y,
+					   PAIRED_CHARS(text + first,
+							text2 + first),
+					   last - first, FontWidth(screen),
+					   &deltax);
+			curX += deltax;
+		    }
+		    old_wide = screen->fnt_wide;
+		    old_high = screen->fnt_high;
+		    screen->fnt_wide = FontWidth(screen);
+		    screen->fnt_high = FontHeight(screen);
+		    xtermDrawBoxChar(screen, ch, flags, gc,
+				     curX, y - FontAscent(screen));
+		    curX += FontWidth(screen);
+		    screen->fnt_wide = old_wide;
+		    screen->fnt_high = old_high;
+		    first = last + 1;
+		}
+	    }
+	    if (last > first) {
+		xtermXftDrawString(screen, flags,
+				   getColor(values.foreground),
+				   font, curX, y,
+				   PAIRED_CHARS(text + first, text2 + first),
+				   last - first, FontWidth(screen), NULL);
+	    }
+	} else
+#endif /* OPT_BOX_CHARS */
+	{
+	    xtermXftDrawString(screen, flags,
+			       getColor(values.foreground),
+			       font, x, y, PAIRED_CHARS(text, text2),
+			       len, FontWidth(screen), NULL);
+	}
+
+	if ((flags & UNDERLINE) && screen->underline) {
+	    if (FontDescent(screen) > 1)
+		y++;
+	    XDrawLine(screen->display, VWindow(screen), gc,
+		      x, y, x + len * FontWidth(screen) - 1, y);
+	}
+	return x + len * FontWidth(screen);
+    }
+#endif /* OPT_RENDERFONT */
     /*
      * If we're asked to display a proportional font, do this with a fixed
      * pitch.  Yes, it's ugly.  But we cannot distinguish the use of xterm
@@ -2137,7 +2137,7 @@ updatedXtermGC(TScreen * screen, int flags, int fg_bg, Bool hilite)
     }
 
 #if OPT_BLINK_TEXT
-    if ((screen->blink_state == ON) && (flags & BLINK)) {
+    if ((screen->blink_state == ON) && (!screen->blink_as_bold) && (flags & BLINK)) {
 	fg_pix = bg_pix;
     }
 #endif
