@@ -96,6 +96,11 @@ xterm : $(OBJS1)
 resize : $(OBJS2)
 	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
+256colres.h : $(srcdir)/256colres.pl
+	$(srcdir)/256colres.pl > 256colres.h
+
+charproc.o : @CHARPROC_DEPS@
+
 install-full \
 install :: $(INSTALL_DIRS) xterm resize
 	$(INSTALL_PROGRAM) -s -m @XTERM_MODE@ xterm  $(BINDIR)/xterm
@@ -137,7 +142,7 @@ clean: mostlyclean
 	-$(RM) $(PROGRAMS)
 
 distclean: clean
-	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
+	-$(RM) Makefile config.status config.cache config.log xtermcfg.h 256colres.h
 
 realclean: distclean
 	-$(RM) tags TAGS

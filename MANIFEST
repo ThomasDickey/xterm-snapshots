@@ -1,10 +1,12 @@
-MANIFEST for xterm, version XFree86-3_9Px
+MANIFEST for xterm, version xterm-112
 --------------------------------------------------------------------------------
 MANIFEST                        this file
+256colres.pl                    script to generate 256colres.h
 INSTALL                         configure script: options and related install instructions
 Imakefile                       imake template for Makefile
 Makefile.in                     configure script template for Makefile
 README                          overview & caveats for 'xterm'
+README.os390                    overview for os390 (EBCDIC) port of 'xterm'
 TekPrsTbl.c                     Tek4014 parser state tables
 Tekparse.def                    template for generating Tekparse.h
 Tekparse.h                      Tek4014 parser-state definitions
