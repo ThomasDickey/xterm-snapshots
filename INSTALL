@@ -222,6 +222,13 @@ The options (in alphabetic order):
 
   	Compile-in code to support SCO-style function keys.
 
+  --enable-tcap-query     enable termcap query/report
+
+	Compile-in code to support experimental DCS '+' control sequence, which
+	allows an application to ask xterm what control sequences it would
+	transmit for specified function keys, given the termcap or terminfo
+	names.
+
   --enable-toolbar        enable pulldown menus on toolbar
 
   	Compile-in code that builds a toolbar with pulldown menus.  The

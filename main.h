@@ -26,10 +26,11 @@
  * SOFTWARE.
  */
 
-#define	DEFCLASS		"XTerm"
-#define	DEFFONT			"fixed"
-#define DEFWIDEFONT		NULL    /* grab one which is 2x as wide */
-#define	DEFBOLDFONT		NULL 	/* no bold font uses overstriking */
-#define	DEFBORDER		2
+#define DEFCLASS		"XTerm"
+#define DEFFONT			"fixed"
+#define DEFWIDEFONT		NULL	/* grab one which is 2x as wide */
+#define DEFWIDEBOLDFONT		NULL
+#define DEFBOLDFONT		NULL	/* no bold font uses overstriking */
+#define DEFBORDER		2
 #define DEFFACENAME		NULL
 #define DEFFACESIZE		14

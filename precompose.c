@@ -6,7 +6,7 @@
  */
 /* $XFree86: xc/programs/xterm/precompose.c,v 1.1 2000/08/26 04:33:54 dawes Exp $ */
 
-#include "precompose.h"
+#include <precompose.h>
 
 struct {
   int replacement;
@@ -1007,12 +1007,12 @@ int do_precomposition(int base, int comb) {
   int min = 0;
   int max = sizeof(precompositions) / sizeof(precompositions[0]) - 1;
   int mid;
-  int sought = (base << 16) | comb, that;
+  unsigned int sought = ((unsigned)base << 16) | (unsigned)comb, that;
 
   /* binary search */
   while (max >= min) {
     mid = (min + max) / 2;
-    that = (precompositions[mid].base << 16) | (precompositions[mid].comb);
+    that = ((unsigned)precompositions[mid].base << 16) | ((unsigned)precompositions[mid].comb);
     if (that < sought) {
       min = mid + 1;
     } else if (that > sought) {

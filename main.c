@@ -911,6 +911,7 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 #if OPT_WIDE_CHARS
 {"-fw",		"*wideFont",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-fwb",	"*wideBoldFont", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
 #if OPT_HIGHLIGHT_COLOR
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
@@ -1027,6 +1028,7 @@ static struct _options {
 { "-fb fontname",          "bold text font" },
 #if OPT_WIDE_CHARS
 { "-fw fontname",          "doublewidth text font" },
+{ "-fwb fontname",         "doublewidth bold text font" },
 #endif
 { "-iconic",               "start iconic" },
 { "-name string",          "client instance, icon, and title strings" },
@@ -1126,12 +1128,12 @@ static struct _options {
 #else
 { "-C",                    "intercept console messages (not supported)" },
 #endif
-{ "-Sxxd",                 "slave mode on \"ttyxx\", file descriptor \"d\"" },
+{ "-Sccn",                 "slave mode on \"ttycc\", file descriptor \"n\"" },
 #if OPT_ZICONBEEP
 { "-ziconbeep percent",    "beep and flag icon of window having hidden output" },
 #endif
 #if OPT_SAME_NAME
-{"-/+sameName",	   "turn on/off the no-flicker option for title and icon name" },
+{"-/+samename",            "turn on/off the no-flicker option for title and icon name" },
 #endif
 { NULL, NULL }};
 
@@ -2429,7 +2431,7 @@ void first_map_occurred (void)
  * temporary hack to get xterm working on att ptys
  */
 static void
-HsSysError(int pf, int error)
+HsSysError(int pf GCC_UNUSED, int error)
 {
     fprintf(stderr, "%s: fatal pty error %d (errno=%d) on tty %s\n",
 	    xterm_name, error, errno, ttydev);
@@ -2471,12 +2473,12 @@ spawn (void)
 	register TScreen *screen = &term->screen;
 #ifdef USE_HANDSHAKE
 	handshake_t handshake;
+	int done;
 #endif
 #if OPT_INITIAL_ERASE
 	int initial_erase = VAL_INITIAL_ERASE;
 #endif
 	int tty = -1;
-	int done;
 #ifdef USE_SYSV_TERMIO
 	struct termio tio;
 #ifdef TIOCLSET
@@ -4505,7 +4507,7 @@ remove_termcap_entry (char *buf, char *str)
 	} else if (*buf == ':') {
 	    first = buf;
 	    count = 0;
-	} else if (!isspace(*buf)) {
+	} else if (!isspace(CharOf(*buf))) {
 	    count++;
 	}
 	if (*buf != 0)
@@ -4529,7 +4531,7 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
     int count = 0;
 
     while (1) {
-	while (*s && isascii(*s) && isspace(*s)) s++;
+	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s))) s++;
 	if (!*s) return count;
 
 	for (mp = modelist; mp->name; mp++) {
@@ -4538,7 +4540,7 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 	if (!mp->name) return -1;
 
 	s += mp->len;
-	while (*s && isascii(*s) && isspace(*s)) s++;
+	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s))) s++;
 	if (!*s) return -1;
 
 	if (*s == '^') {

@@ -40,6 +40,7 @@ appsdir		= $(libdir)/X11/app-defaults
 #### End of system configuration section. ####
 
 RM              = rm -f
+LINT		= lint
 
 DESTDIR		=
 BINDIR		= $(DESTDIR)$(bindir)
@@ -179,8 +180,8 @@ ctlseqs.ps : ctlseqs.ms
 	tbl ctlseqs.ms | groff -ms >$@
 
 lint:
-	lint $(CPPFLAGS) $(SRCS1)
-	lint $(CPPFLAGS) $(SRCS2)
+	$(LINT) $(CPPFLAGS) $(SRCS1)
+	$(LINT) $(CPPFLAGS) $(SRCS2)
 
 tags:
 	ctags $(SRCS) $(HDRS)

@@ -41,16 +41,16 @@ authorization.
 #include <proto.h>
 
 #if OPT_WIDE_CHARS
-#define VT_FONTSET(n,b,w) n, b, w
+#define VT_FONTSET(n,b,w,wb) n, b, w, wb
 #else
-#define VT_FONTSET(n,b,w) n, b
+#define VT_FONTSET(n,b,w,wb) n, b
 #endif
 
 extern int xtermLoadFont (TScreen *screen,
-			  VT_FONTSET(char *nfontname, char *bfontname, char *wfontname),
+			  VT_FONTSET(char *nfontname, char *bfontname, char *wfontname, char *wbfontname),
 			  Bool doresize, int fontnum);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
-extern void SetVTFont (int i, Bool doresize, VT_FONTSET(char *name1, char *name2, char *name3));
+extern void SetVTFont (int i, Bool doresize, VT_FONTSET(char *name1, char *name2, char *name3, char *name4));
 extern void xtermComputeFontInfo (TScreen *screen, struct _vtwin *win, XFontStruct *font, int sbwidth);
 extern void xtermSaveFontInfo (TScreen *screen, XFontStruct *font);
 extern void xtermSetCursorBox (TScreen *screen);

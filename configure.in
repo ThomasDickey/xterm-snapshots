@@ -199,7 +199,9 @@ fi
 AC_SUBST(TERMINFO_DIR)
 AC_SUBST(SET_TERMINFO)
 
-###	checks for optional features
+###############################################################################
+CF_HELP_MESSAGE(Optional Features:)
+
 AC_MSG_CHECKING(if you want active-icons)
 CF_ARG_DISABLE(active-icon,
 	[  --disable-active-icon   disable X11R6.3 active-icon feature],
@@ -411,6 +413,14 @@ CF_ARG_DISABLE(samename,
 AC_MSG_RESULT($enable_samename)
 test $enable_samename = no && AC_DEFINE(OPT_SAME_NAME,0)
 
+AC_MSG_CHECKING(if you want to use termcap-query/report)
+CF_ARG_ENABLE(tcap-query,
+	[  --enable-tcap-query     compile-in termcap-query support],
+	[enable_tcap_query=yes],
+	[enable_tcap_query=no])
+AC_MSG_RESULT($enable_tcap_query)
+test $enable_tcap_query = yes && AC_DEFINE(OPT_TCAP_QUERY,1)
+
 AC_MSG_CHECKING(if you want support for tek4014)
 CF_ARG_DISABLE(tek4014,
 	[  --disable-tek4014       disable tek4014 emulation],
@@ -472,7 +482,9 @@ CF_ARG_DISABLE(ziconbeep,
 AC_MSG_RESULT($enable_ziconbeep)
 test $enable_ziconbeep = no && AC_DEFINE(OPT_ZICONBEEP,0)
 
-# development/testing aids
+###############################################################################
+CF_HELP_MESSAGE(Testing/development Options:)
+
 AC_MSG_CHECKING(if you want debugging traces)
 CF_ARG_ENABLE(trace,
 	[  --enable-trace          test: set to enable debugging traces],

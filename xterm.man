@@ -345,9 +345,19 @@ normal font and the bold font will be produced by overstriking this font.
 The default is to do overstriking of the normal font.
 .TP 8
 .B \-fw \fIfont\fP
-This option specifies the font to be used for displaying wide text.  By default,
+This option specifies the font to be used for displaying wide text.
+By default,
 it will attempt to use a font twice as wide as the font that will be used to
-draw normal text.  If no doublewidth font is found, it will improvise, by stretching 
+draw normal text.
+If no doublewidth font is found, it will improvise, by stretching 
+the normal font.
+.TP 8
+.B \-fwb \fIfont\fP
+This option specifies the font to be used for displaying bold wide text.
+By default,
+it will attempt to use a font twice as wide as the font that will be used to
+draw normal text.
+If no doublewidth font is found, it will improvise, by stretching 
 the normal font.
 .TP 8
 .B \-fi
@@ -405,9 +415,21 @@ feature on or off.
 .B \+j
 This option indicates that \fIxterm\fP should not do jump scrolling.
 .TP 8
+.B \-l
+Turn logging on.
+Normally logging is not supported, due to security concerns.
+Some versions of \fIxterm\fP may have logging enabled.
+.TP 8
+.B \+l
+Turn logging off.
+.TP 8
 .B \-leftbar
 Force scrollbar to the left side of VT100 screen.
 This is the default, unless you have set the rightScrollBar resource.
+.TP 8
+.BI \-lf " filename
+Specify the log-filename.
+See the \fB\-l\fP option.
 .TP 8
 .B \-ls
 This option indicates that the shell that is started in the \fIxterm\fP window
@@ -738,6 +760,10 @@ obtained, rather than the default executable file name.
 .B \-rv
 This option indicates that reverse video should be simulated by swapping
 the foreground and background colors.
+.TP 8
+.B \+rv
+Disable the simulation of reverse video by swapping foreground and background
+colors.
 .TP 8
 .B \-title \fIstring\fP
 This option specifies the window title string, which may be displayed by
