@@ -129,6 +129,8 @@ allows the visual editor
 .IR vi (1)
 to switch to the alternate screen for editing and to restore the screen
 on exit.
+A popup menu entry makes it simple to switch between the normal and
+alternate screens for cut and paste.
 .PP
 In either VT102 or Tektronix mode, there are escape sequences to change the
 name of the windows.
@@ -162,7 +164,8 @@ This causes \fIxterm\fP to print a version number to the standard output.
 This causes \fIxterm\fP to print out a verbose message describing its options.
 The message is written to the standard error.
 .PP
-The other options are used to control the appearance and behavior:
+The other options are used to control the appearance and behavior.
+Not all options are necessarily configured into your copy of \fIxterm\fP.
 .TP 8
 .B \-132
 Normally, the VT102 DECCOLM escape sequence that switches between 80 and
@@ -293,6 +296,14 @@ into xterm.
 This option specifies the color to use for the background of
 selected or otherwise highlighted text.  If not specified,
 reverse video is used.
+.TP 8
+.BI \-hf
+This option indicates that HP Function Key escape codes should be generated
+for function keys.
+.TP 8
+.BI \+hf
+This option indicates that HP Function Key escape codes should not be generated
+for function keys.
 .TP 8
 .B \-im
 Turn on the \fBuseInsertMode\fP resource.
@@ -607,6 +618,10 @@ The program understands all of the core X Toolkit resource names and
 classes as well as:
 .\".in +1in
 .TP 8
+.B "hpFunctionKeys (\fPclass\fB HpFunctionKeys)"
+Specifies whether or not HP Function Key escape codes should be generated for
+function keys instead of standard escape sequences.
+.TP 8
 .B "iconGeometry (\fPclass\fB IconGeometry)"
 Specifies the preferred size and position of the application when iconified.
 It is not necessarily obeyed by all window managers.
@@ -692,7 +707,12 @@ Specifies whether or not synthetic key and button events (generated using
 the X protocol SendEvent request) should be interpreted or discarded.
 The default is ``false'' meaning they are discarded.  Note that allowing
 such events creates a very large security hole.
-.sp
+.TP 8
+.B "answerbackString (\fPclass\fB AnswerbackString)"
+Specifies the string that xterm sends in response to an ENQ (control/E)
+character from the host.
+The default is the terminal name, e.g., ``xterm''.
+A hardware VT100 implements this feature as a setup option.
 .TP 8
 .B "alwaysHighlight (\fPclass\fB AlwaysHighlight)"
 Specifies whether or not \fIxterm\fP should always display a highlighted
@@ -905,6 +925,15 @@ Specifies the name of the fifth alternative font.
 .B "font6 (\fPclass\fB Font6)"
 Specifies the name of the sixth alternative font.
 .TP 8
+.B "fontDoublesize (\fPclass\fB FontDoublesize)"
+Specifies whether \fIxterm\fP should attempt to use font scaling to draw
+doublesize characters.
+Some older font servers cannot do this properly, will return misleading
+font metrics.
+The default is ``true''.
+If disabled, \fIxterm\fP will simulate doublesize characters by drawing
+normal characters with spaces between them.
+.TP 8
 .B "foreground (\fPclass\fB Foreground)"
 Specifies the color to use for displaying text in the window.  Setting the
 class name instead of the instance name is an easy way to have everything
@@ -948,6 +977,13 @@ The default is 2.
 .TP 8
 .B "jumpScroll (\fPclass\fB JumpScroll)"
 Specifies whether or not jump scroll should be used.  The default is ``true.''
+.TP 8
+.B "keyboardDialect (\fPclass\fB KeyboardDialect)"
+Specifies the initial keyboard dialect, as well as the default value when
+the terminal is reset.
+The value given is the same as the final character in the control sequences
+which change character sets.
+The default is ``B'', which corresponds to US ASCII.
 .TP 8
 .B "loginShell (\fPclass\fB LoginShell)"
 Specifies whether or not the shell to be run in the window should be started
@@ -1104,6 +1140,9 @@ termcap entries (used to switch between alternate screens on startup of many
 screen-oriented programs) from the TERMCAP string.  If set,
 \fIxterm\fP also ignores the escape sequence to switch to the
 alternate screen.
+\fIXterm\fP supports terminfo in a different way, supporting composite control
+sequences (also known as private modes) 1047, 1048 and 1049 which have the same
+effect as the original 47 control sequence.
 .TP 8
 .B "translations (\fPclass\fB Translations)"
 Specifies the key and button bindings for menus, selections, ``programmed
@@ -1267,8 +1306,8 @@ This entry invokes the \fBset-visualbell(toggle)\fP action.
 .B "marginbell (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-marginbell(toggle)\fP action.
 .TP 8
-.B "altscreen (\fPclass\fB SmeBSB)"
-This entry invokes the \fBset-altscreen(toggle)\fP action.
+.B "titeInhibit (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-titeInhibit(toggle)\fP action.
 .TP 8
 .B "activeicon (\fPclass\fB SMeBSB)"
 This entry toggles active icons on and off if this feature was
@@ -1299,6 +1338,9 @@ This entry invokes the \fBset-terminal-type(tek)\fP action.
 .TP 8
 .B "vthide (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-visibility(vt,off)\fP action.
+.TP 8
+.B "altscreen (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-altscreen(toggle)\fP action.
 .\".in -1in
 .sp
 .PP
@@ -1827,6 +1869,18 @@ the \fBautowrap\fP entry in \fIvtMenu\fP.
 This action toggles the \fBcurses\fP resource and is also invoked from the
 \fBcursesemul\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set-font-doublesize(\fIon/off/toggle\fP)"
+This action toggles the \fBfontDoublesize\fP resource and is also invoked by
+the \fBfont-doublesize\fP entry in \fIfontMenu\fP.
+.\" .TP 8
+.\" .B "set-font-loadable(\fIon/off/toggle\fP)"
+.\" This action toggles the \fBfontLoadable\fP resource and is also invoked by
+.\" the \fBfont-loadable\fP entry in \fIfontMenu\fP.
+.TP 8
+.B "set-hp-functionkeys(\fIon/off/toggle\fP)"
+This action toggles the \fBhpFunctionKeys\fP resource and is also invoked by
+the \fBhp function-keys\fP entry in \fImainMenu\fP.
+.TP 8
 .B "set-jumpscroll(\fIon/off/toggle\fP)"
 This action toggles the \fBjumpscroll\fP resource and is also invoked by the
 \fBjumpscroll\fP entry in \fIvtMenu\fP.
@@ -1858,6 +1912,14 @@ from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 This action toggles the \fBscrollbar\fP resource and is also invoked by
 the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set-sun-functionkeys(\fIon/off/toggle\fP)"
+This action toggles the \fBsunFunctionKeys\fP resource and is also invoked by
+the \fBsun function-keys\fP entry in \fImainMenu\fP.
+.TP 8
+.B "set-sun-keyboard(\fIon/off/toggle\fP)"
+This action toggles the \fBsunKeyboard\fP resource and is also invoked by
+the \fBsun keyboard\fP entry in \fImainMenu\fP.
+.TP 8
 .B "set-tek-text(\fIlarge/2/3/small\fP)"
 This action sets font used in the Tektronix window to the value of the
 resources \fBtektextlarge\fP, \fBtektext2\fP, \fBtektext3\fP, and
@@ -1869,6 +1931,10 @@ This action directs output to either the \fIvt\fP or \fItek\fP windows,
 according to the \fItype\fP string.  It is also invoked by the
 \fBtekmode\fP entry in \fIvtMenu\fP and the \fBvtmode\fP entry in
 \fItekMenu\fP.
+.TP 8
+.B "set-titeInhibit(\fIon/off/toggle\fP)"
+This action toggles the \fBtiteInhibit\fP resource,
+which controls switching between the alternate and current screens.
 .TP 8
 .B "set-visibility(\fIvt/tek\fP,\fIon/off/toggle\fP)"
 This action controls whether or not the \fIvt\fP or \fItek\fP windows are

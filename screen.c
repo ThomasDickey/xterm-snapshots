@@ -25,7 +25,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.30 1998/10/25 07:12:48 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.31 1998/12/13 07:37:52 dawes Exp $ */
 
 /* screen.c */
 
@@ -54,7 +54,9 @@
 #endif
 
 #ifdef SYSV
+#if !defined(DGUX)	/* Intel DG/ux uses termios.h */
 #include <sys/termio.h>
+#endif /* DGUX */
 #ifdef USE_USG_PTYS
 #include <sys/stream.h>			/* get typedef used in ptem.h */
 #include <sys/ptem.h>
@@ -683,7 +685,10 @@ ScrnRefresh (
 		 || (cb[col] != cs)
 #endif
 		 ) {
-		   TRACE(("%s @%d, calling drawXtermText %d..%d\n", __FILE__, __LINE__, lastind, col))
+		   TRACE(("%s @%d, calling drawXtermText %d..%d:%.*s\n",
+		   	__FILE__, __LINE__,
+		   	lastind, col,
+			col - lastind, &chars[lastind]))
 		   x = drawXtermText(screen, flags, gc, x, y,
 		   	cs,
 			&chars[lastind], col - lastind);
@@ -711,7 +716,10 @@ ScrnRefresh (
 			chars[col] = ' ';
 	   }
 
-	   TRACE(("%s @%d, calling drawXtermText %d..%d\n", __FILE__, __LINE__, lastind, col))
+	   TRACE(("%s @%d, calling drawXtermText %d..%d:%.*s\n",
+	   	__FILE__, __LINE__,
+		lastind, col,
+		col - lastind, &chars[lastind]))
 	   drawXtermText(screen, flags, gc, x, y,
 	   	cs,
 		&chars[lastind], col - lastind);

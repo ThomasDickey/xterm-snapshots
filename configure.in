@@ -210,6 +210,24 @@ CF_ARG_DISABLE(doublechars,
 AC_MSG_RESULT($enable_doublechars)
 test $enable_doublechars = no && AC_DEFINE(OPT_DEC_CHRSET,0)
 
+AC_MSG_CHECKING(if you want fallback-support for box characters)
+CF_ARG_DISABLE(boxchars,
+	[  --disable-boxchars      disable fallback-support for box chars],
+	[enable_boxchars=no],
+	[enable_boxchars=yes])
+AC_MSG_RESULT($enable_boxchars)
+test $enable_boxchars = no && AC_DEFINE(OPT_BOX_CHARS,0)
+
+AC_MSG_CHECKING(if you want support for HP-style function keys)
+CF_ARG_ENABLE(hp-fkeys,
+	[  --enable-hp-fkeys       enable support for HP-style function keys],
+	[enable_hp_fkeys=yes],
+	[enable_hp_fkeys=no])
+AC_MSG_RESULT($enable_hp_fkeys)
+if test $enable_hp_fkeys = yes ; then
+	AC_DEFINE(OPT_HP_FUNC_KEYS,1)
+fi
+
 AC_MSG_CHECKING(if you want support for input-method)
 CF_ARG_DISABLE(input-method,
 	[  --disable-input-method  disable input-method],

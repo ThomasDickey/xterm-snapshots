@@ -40,11 +40,18 @@ authorization.
 #include <ptyx.h>
 
 extern int xtermLoadFont (TScreen *screen, char *nfontname, char *bfontname, Bool doresize, int fontnum);
+extern void xtermComputeFontInfo (TScreen *screen, struct _vtwin *win, XFontStruct *font, int sbwidth);
+extern void xtermSaveFontInfo (TScreen *screen, XFontStruct *font);
 extern void xtermUpdateFontInfo (TScreen *screen, Bool doresize);
 extern void xtermSetCursorBox (TScreen *screen);
 
 #if OPT_DEC_CHRSET
 extern char *xtermSpecialFont(unsigned atts, unsigned chrset);
+#endif
+
+#if OPT_BOX_CHARS
+extern Bool xtermMissingChar(int ch, XFontStruct *font);
+extern void xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y);
 #endif
 
 #endif /* included_fontutils_h */

@@ -230,7 +230,7 @@ bold_font_name(FontNameProperties *props)
      return ret;
 }
 
-#ifdef OPT_DEC_CHRSET
+#if OPT_DEC_CHRSET
 /*
  * Take the given font props and try to make a well formed font name specifying
  * the same base font but changed depending on the given attributes and chrset.
@@ -269,7 +269,7 @@ xtermSpecialFont(unsigned atts, unsigned chrset)
 	if (CSET_DOUBLE(chrset))
 		res_x *= 2;
 
-	if (chrset == CSET_DHL_TOP 
+	if (chrset == CSET_DHL_TOP
 	 || chrset == CSET_DHL_BOT) {
 		res_y *= 2;
 		pixel_size *= 2;
@@ -379,6 +379,7 @@ xtermLoadFont (
 	Pixel new_revers;
 	char *tmpname = NULL;
 	Boolean proportional = False;
+	int ch;
 
 	if (!nfontname) return 0;
 
@@ -492,6 +493,21 @@ xtermLoadFont (
 	screen->fnt_norm = nfs;
 	screen->fnt_bold = bfs;
 	screen->fnt_prop = proportional;
+	screen->fnt_boxes = True;
+
+#if OPT_BOX_CHARS
+	/*
+	 * Xterm uses the first 32 character positions of a font for the
+	 * line-drawing characters.  Check that they are all present.
+	 */
+	for (ch = 0; ch < 32; ch++) {
+		if (xtermMissingChar(ch, nfs)
+		 || xtermMissingChar(ch, bfs)) {
+			screen->fnt_boxes = False;
+			break;
+		}
+	}
+#endif
 
 	screen->enbolden = (nfs == bfs);
 	set_menu_font (False);
@@ -547,28 +563,49 @@ xtermSetCursorBox (TScreen *screen)
 }
 
 /*
+ * Compute useful values for the font/window sizes
+ */
+void
+xtermComputeFontInfo (TScreen *screen, struct _vtwin *win, XFontStruct *font, int sbwidth)
+{
+	int i, j, width, height;
+
+	win->f_width  = (font->max_bounds.width);
+	win->f_height = (font->ascent + font->descent);
+	i = 2 * screen->border + sbwidth;
+	j = 2 * screen->border;
+	width  = (screen->max_col + 1) * win->f_width + i;
+	height = (screen->max_row + 1) * win->f_height + j;
+	win->fullwidth  = width;
+	win->fullheight = height;
+	win->width  = width - i;
+	win->height = height - j;
+}
+
+
+/* save this information as a side-effect for double-sized characters */
+void
+xtermSaveFontInfo (TScreen *screen, XFontStruct *font)
+{
+	screen->fnt_wide = (font->max_bounds.width);
+	screen->fnt_high = (font->ascent + font->descent);
+}
+
+/*
  * After loading a new font, update the structures that use its size.
  */
 void
 xtermUpdateFontInfo (TScreen *screen, Bool doresize)
 {
-	int i, j, width, height, scrollbar_width;
+	int scrollbar_width;
+	struct _vtwin *win = &(screen->fullVwin);
 
-	screen->fullVwin.f_width  = (screen->fnt_norm->max_bounds.width);
-	screen->fullVwin.f_height = (screen->fnt_norm->ascent +
-	screen->fnt_norm->descent);
 	scrollbar_width = (term->misc.scrollbar
 			? screen->scrollWidget->core.width +
 			  screen->scrollWidget->core.border_width
 			: 0);
-	i = 2 * screen->border + scrollbar_width;
-	j = 2 * screen->border;
-	width  = (screen->max_col + 1) * screen->fullVwin.f_width + i;
-	height = (screen->max_row + 1) * screen->fullVwin.f_height + j;
-	screen->fullVwin.fullwidth  = width;
-	screen->fullVwin.fullheight = height;
-	screen->fullVwin.width  = width - i;
-	screen->fullVwin.height = height - j;
+	xtermComputeFontInfo (screen, win, screen->fnt_norm, scrollbar_width);
+	xtermSaveFontInfo(screen, screen->fnt_norm);
 
 	if (doresize) {
 		if (VWindow(screen)) {
@@ -581,3 +618,259 @@ xtermUpdateFontInfo (TScreen *screen, Bool doresize)
 	}
 	xtermSetCursorBox (screen);
 }
+
+#if OPT_BOX_CHARS
+/*
+ * Returns true if the given character is missing from the specified font.
+ */
+Bool
+xtermMissingChar(int ch, XFontStruct *font)
+{
+	XCharStruct	*pc = 0;
+
+	if (font != 0
+	&& font->per_char != 0
+	&& !font->all_chars_exist) {
+		if (ch < (int) font->min_char_or_byte2
+		 || ch > (int) font->max_char_or_byte2) {
+			TRACE(("MissingChar %c\n", ch))
+			return True;
+		}
+		if (font->min_byte1 == 0
+		 && font->max_byte1 == 0) {
+			pc = font->per_char + (ch - font->min_char_or_byte2);
+		} /* FIXME: this does not handle doublebyte characters */
+		if (pc != 0
+		 && (pc->lbearing + pc->rbearing) == 0
+		 && (pc->ascent   + pc->descent) == 0
+		 && (pc->width == 0)) {
+			TRACE(("MissingChar %c\n", ch))
+			return True;
+		}
+	}
+	return False;
+}
+
+/*
+ * The grid is abitrary, enough resolution that nothing's lost in initialization.
+ */
+#define BOX_HIGH 60
+#define BOX_WIDE 60
+
+#define MID_HIGH (BOX_HIGH/2)
+#define MID_WIDE (BOX_WIDE/2)
+
+/*
+ * ...since we'll scale the values anyway.
+ */
+#define SCALE_X(n) n = (n * (screen->fnt_wide-1)) / (BOX_WIDE-1)
+#define SCALE_Y(n) n = (n * (screen->fnt_high-1)) / (BOX_HIGH-1)
+
+/*
+ * Draw the given graphic character, if it is simple enough (i.e., a
+ * line-drawing character).
+ */
+void
+xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y)
+{
+	static const short
+		diamond[] = {
+			MID_WIDE,     BOX_HIGH/4,   3*BOX_WIDE/4, MID_WIDE,
+			3*BOX_WIDE/4, MID_WIDE,     MID_WIDE,     3*BOX_HIGH/4,
+			MID_WIDE,     3*BOX_HIGH/4, BOX_WIDE/4,   MID_HIGH,
+			BOX_WIDE/4,   MID_HIGH,     MID_WIDE,     BOX_HIGH/4,
+			MID_WIDE,     BOX_HIGH/3,   2*BOX_WIDE/3, MID_WIDE,
+			2*BOX_WIDE/3, MID_WIDE,     MID_WIDE,     2*BOX_HIGH/3,
+			MID_WIDE,     2*BOX_HIGH/3, BOX_WIDE/3,   MID_HIGH,
+			BOX_WIDE/3,   MID_HIGH,     MID_WIDE,     BOX_HIGH/3,
+			BOX_WIDE/4,   MID_HIGH,     3*BOX_WIDE/4, MID_HIGH,
+			MID_WIDE,     BOX_HIGH/4,   MID_WIDE,     3*BOX_HIGH/4,
+			-1
+		},
+		degrees[] = {
+			MID_WIDE,     BOX_HIGH/4,   2*BOX_WIDE/3, 3*BOX_HIGH/8,
+			2*BOX_WIDE/3, 3*BOX_HIGH/8, MID_WIDE,     MID_HIGH,
+			MID_WIDE,     MID_HIGH,     BOX_WIDE/3,   3*BOX_HIGH/8,
+			BOX_WIDE/3,   3*BOX_HIGH/8, MID_WIDE,     BOX_HIGH/4,
+			-1
+		},
+		lower_right_corner[] = {
+			0,            MID_HIGH,     MID_WIDE,     MID_HIGH,
+			MID_WIDE,     MID_HIGH,     MID_WIDE,     0,
+			-1
+		},
+		upper_right_corner[] = {
+			0,            MID_HIGH,     MID_WIDE,     MID_HIGH,
+			MID_WIDE,     MID_HIGH,     MID_WIDE,     BOX_HIGH,
+			-1
+		},
+		upper_left_corner[] = {
+			MID_WIDE,     MID_HIGH,     BOX_WIDE,     MID_HIGH,
+			MID_WIDE,     MID_HIGH,     MID_WIDE,     BOX_HIGH,
+			-1
+		},
+		lower_left_corner[] = {
+			MID_WIDE,     0,            MID_WIDE,     MID_HIGH,
+			MID_WIDE,     MID_WIDE,     BOX_WIDE,     MID_HIGH,
+			-1
+		},
+		cross[] = {
+			0,            MID_HIGH,     BOX_WIDE,     MID_HIGH,
+			MID_WIDE,     0,            MID_WIDE,     BOX_HIGH,
+			-1
+		},
+		scan_line_1[] = {
+			0,            0,            BOX_WIDE,     0,
+			-1
+		},
+		scan_line_3[] = {
+			0,            BOX_HIGH/4,   BOX_WIDE,     BOX_HIGH/4,
+			-1
+		},
+		scan_line_7[] = {
+			0,            MID_HIGH,     BOX_WIDE,     MID_HIGH,
+			-1
+		},
+		scan_line_9[] = {
+			0,            3*BOX_HIGH/4, BOX_WIDE,     3*BOX_HIGH/4,
+			-1
+		},
+		horizontal_line[] = {
+			0,            BOX_HIGH,     BOX_WIDE,     BOX_HIGH,
+			-1
+		},
+		left_tee[] = {
+			MID_WIDE,     0,            MID_WIDE,     BOX_HIGH,
+			MID_WIDE,     MID_HIGH,     BOX_WIDE,     MID_HIGH,
+			-1
+		},
+		right_tee[] = {
+			MID_WIDE,     0,            MID_WIDE,     BOX_HIGH,
+			MID_WIDE,     MID_HIGH,     0,            MID_HIGH,
+			-1
+		},
+		bottom_tee[] = {
+			0,            MID_HIGH,     BOX_WIDE,     MID_HIGH,
+			MID_WIDE,     0,            MID_WIDE,     MID_HIGH,
+			-1
+		},
+		top_tee[] = {
+			0,            MID_HIGH,     BOX_WIDE,     MID_HIGH,
+			MID_WIDE,     MID_HIGH,     MID_WIDE,     BOX_HIGH,
+			-1
+		},
+		vertical_line[] = {
+			MID_WIDE,     0,            MID_WIDE,     BOX_HIGH,
+			-1
+		},
+		less_than_or_equal[] = {
+			5*BOX_WIDE/6, BOX_HIGH/6,   BOX_WIDE/5,   MID_HIGH,
+			5*BOX_WIDE/6, 5*BOX_HIGH/6, BOX_WIDE/5,   MID_HIGH,
+			BOX_WIDE/6,   5*BOX_HIGH/6, 5*BOX_WIDE/6, 5*BOX_HIGH/6,
+			-1
+		},
+		greater_than_or_equal[] = {
+			BOX_WIDE/6,   BOX_HIGH/6,   5*BOX_WIDE/6, MID_HIGH,
+			BOX_WIDE/6,   5*BOX_HIGH/6, 5*BOX_WIDE/6, MID_HIGH,
+			BOX_WIDE/6,   5*BOX_HIGH/6, 5*BOX_WIDE/6, 5*BOX_HIGH/6,
+			-1
+		};
+
+	static const short *lines[] = {
+		0,			/* 00 */
+		diamond,		/* 01 */
+		0,			/* 02 */
+		0,			/* 03 */
+		0,			/* 04 */
+		0,			/* 05 */
+		0,			/* 06 */
+		degrees,		/* 07 */
+		0,			/* 08 */
+		0,			/* 09 */
+		0,			/* 0A */
+		lower_right_corner,	/* 0B */
+		upper_right_corner,	/* 0C */
+		upper_left_corner,	/* 0D */
+		lower_left_corner,	/* 0E */
+		cross,			/* 0F */
+		scan_line_1,		/* 10 */
+		scan_line_3,		/* 11 */
+		scan_line_7,		/* 12 */
+		scan_line_9,		/* 13 */
+		horizontal_line,	/* 14 */
+		left_tee,		/* 15 */
+		right_tee,		/* 16 */
+		bottom_tee,		/* 17 */
+		top_tee,		/* 18 */
+		vertical_line,		/* 19 */
+		less_than_or_equal,	/* 1A */
+		greater_than_or_equal,	/* 1B */
+		0,			/* 1C */
+		0,			/* 1D */
+		0,			/* 1E */
+		0,			/* 1F */
+	};
+
+	XGCValues values;
+	GC gc2;
+	const short *p;
+
+	TRACE(("DRAW_BOX(%d) cell %dx%d at %d,%d%s\n",
+		ch, screen->fnt_high, screen->fnt_wide, y, x,
+		(ch < 0 || ch >= (int)(sizeof(lines)/sizeof(lines[0]))) ? "-BAD": ""))
+
+	if (!XGetGCValues(screen->display, gc, GCBackground, &values))
+		return;
+
+	values.foreground = values.background;
+	gc2 = XCreateGC(screen->display, TextWindow(screen), GCForeground, &values);
+
+	XFillRectangle(
+		screen->display, TextWindow(screen), gc2, x, y,
+		screen->fnt_wide,
+		screen->fnt_high);
+
+	XCopyGC(screen->display, gc, (1<<GCLastBit)-1, gc2);
+	XSetLineAttributes(screen->display, gc2,
+		(flags&BOLD)
+			? ((screen->fnt_high > 6)
+			  ? screen->fnt_high/6
+			  : 1)
+			: ((screen->fnt_high > 8)
+			  ? screen->fnt_high/8
+			  : 1),
+		LineSolid,
+		CapProjecting,
+		JoinMiter);
+
+	if (ch >= 0
+	 && ch < (int)(sizeof(lines)/sizeof(lines[0]))
+	 && (p = lines[ch]) != 0) {
+		int	coord[4];
+		int	n = 0;
+		while (*p >= 0) {
+			coord[n++] = *p++;
+			if (n == 4) {
+				SCALE_X(coord[0]); SCALE_Y(coord[1]);
+				SCALE_X(coord[2]); SCALE_Y(coord[3]);
+				XDrawLine(
+					screen->display,
+					TextWindow(screen), gc2,
+					x + coord[0], y + coord[1],
+					x + coord[2], y + coord[3]);
+				n = 0;
+			}
+		}
+	}
+#if 0	/* bounding rectangle, for debugging */
+	else {
+		XDrawRectangle(
+			screen->display, TextWindow(screen), gc, x, y,
+			screen->fnt_wide-1,
+			screen->fnt_high-1);
+	}
+#endif
+
+	XFreeGC(screen->display, gc2);
+}
+#endif

@@ -156,8 +156,8 @@ extern void CursorDown (TScreen *screen, int  n);
 extern void CursorForward (TScreen *screen, int  n);
 extern void CursorNextLine (TScreen *screen, int count);
 extern void CursorPrevLine (TScreen *screen, int count);
-extern void CursorRestore (XtermWidget tw, SavedCursor *sc);
-extern void CursorSave (XtermWidget tw, SavedCursor *sc);
+extern void CursorRestore (XtermWidget tw);
+extern void CursorSave (XtermWidget tw);
 extern void CursorSet (TScreen *screen, int row, int col, unsigned flags);
 extern void CursorUp (TScreen *screen, int  n);
 extern void Index (TScreen *screen, int amount);
@@ -332,6 +332,7 @@ extern void useCurBackground (Bool flag);
 		/* FIXME: Reverse-Video? */
 #define getXtermBackground(flags, color) term->core.background_pixel
 #define getXtermForeground(flags, color) term->screen.foreground
+#define makeColorPair(fg, bg) 0
 #define xtermColorPair() 0
 
 #define useCurBackground(flag) /*nothing*/

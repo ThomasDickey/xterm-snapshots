@@ -33,6 +33,7 @@
 #include <data.h>
 #include <error.h>
 #include <menu.h>
+#include <fontutils.h>
 
 #include <ctype.h>
 
@@ -1295,6 +1296,16 @@ recolor_cursor (
 }
 
 /*
+ * Set the fnt_wide/fnt_high values to a known state, based on the currently
+ * active font.
+ */
+#ifndef NO_ACTIVE_ICON
+#define SAVE_FONT_INFO(screen) xtermSaveFontInfo (screen, IsIcon(screen) ? screen->fnt_icon : screen->fnt_norm)
+#else
+#define SAVE_FONT_INFO(screen) xtermSaveFontInfo (screen, screen->fnt_norm)
+#endif
+
+/*
  * Draws text with the specified combination of bold/underline
  */
 int
@@ -1310,33 +1321,55 @@ drawXtermText(
 {
 #if OPT_DEC_CHRSET
 	if (CSET_DOUBLE(chrset)) {
-		GC gc2 = xterm_DoubleGC(chrset, flags, gc);
+		GC gc2 = screen->font_doublesize
+			? xterm_DoubleGC(chrset, flags, gc)
+			: 0;
 
 		TRACE(("DRAWTEXT%c[%4d,%4d] (%d) %d:%.*s\n",
 			screen->cursor_state == OFF ? ' ' : '*',
 			y, x, chrset, len, len, text))
 
 		if (gc2 != 0) {	/* draw actual double-sized characters */
+			XFontStruct *fs = screen->double_fs[chrset % NUM_CHRSET];
 			XRectangle rect, *rp = &rect;
 			Cardinal nr = 1;
+			int adjust;
+
+			SAVE_FONT_INFO (screen);
+			screen->fnt_wide *= 2;
 
 			rect.x = 0;
 			rect.y = 0;
-			rect.width = 2 * len * FontWidth(screen);
+			rect.width = len * screen->fnt_wide;
 			rect.height = FontHeight(screen);
 
 			switch (chrset) {
 			case CSET_DHL_TOP:
 				rect.y = - (rect.height / 2);
 				y -= rect.y;
+				screen->fnt_high *= 2;
 				break;
 			case CSET_DHL_BOT:
 				rect.y = (rect.height / 2);
 				y -= rect.y;
+				screen->fnt_high *= 2;
 				break;
 			default:
 				nr = 0;
 				break;
+			}
+
+			/*
+			 * Though it is the right "size", a given bold font may
+			 * be shifted up by a pixel or two.  Shift it back into
+			 * the clipping rectangle.
+			 */
+			if (nr != 0) {
+				adjust = fs->ascent
+					+ fs->descent
+					- (2 * FontHeight(screen));
+				rect.y -= adjust;
+				y += adjust;
 			}
 
 			if (nr)
@@ -1345,11 +1378,28 @@ drawXtermText(
 			else
 				XSetClipMask(screen->display, gc2, None);
 
-			x = drawXtermText(screen, flags, gc2,
-				x, y, 0, text, len);
-			x += len * FontWidth(screen);
+			/*
+			 * If we're trying to use proportional font, or if the
+			 * font server didn't give us what we asked for wrt
+			 * width, position each character independently.
+			 */
+			if (screen->fnt_prop
+			 || (fs->min_bounds.width != fs->max_bounds.width)
+			 || (fs->min_bounds.width != 2 * FontWidth(screen)))
+			{
+				while (len--) {
+					x = drawXtermText(screen, flags, gc2,
+						x, y, 0, text++, 1);
+					x += FontWidth(screen);
+				}
+			} else {
+				x = drawXtermText(screen, flags, gc2,
+					x, y, 0, text, len);
+				x += len * FontWidth(screen);
+			}
 
 			TRACE(("drewtext [%4d,%4d]\n", y, x))
+			SAVE_FONT_INFO (screen);
 
 		} else {	/* simulate double-sized characters */
 			Char *temp = (Char *) malloc(2 * len);
@@ -1407,20 +1457,47 @@ drawXtermText(
 		return x;
 	}
 
-	TRACE(("drawtext%c[%4d,%4d] (%d) %d:%.*s\n",
-		screen->cursor_state == OFF ? ' ' : '*',
-		y, x, chrset, len, len, text))
-	y += FontAscent(screen);
-	XDrawImageString(screen->display, TextWindow(screen), gc,
-		x, y,  (char *)text, len);
-	if ((flags & (BOLD|BLINK)) && screen->enbolden)
-		XDrawString(screen->display, TextWindow(screen), gc,
-			x+1, y,  (char *)text, len);
-	if ((flags & UNDERLINE) && screen->underline) {
-		if (FontDescent(screen) > 1)
-			y++;
-		XDrawLine(screen->display, TextWindow(screen), gc,
-			x, y, x + len * FontWidth(screen) - 1, y);
+	/* If the font is complete, draw it as-is */
+	if (screen->fnt_boxes) {
+		TRACE(("drawtext%c[%4d,%4d] (%d) %d:%.*s\n",
+			screen->cursor_state == OFF ? ' ' : '*',
+			y, x, chrset, len, len, text))
+		y += FontAscent(screen);
+		XDrawImageString(screen->display, TextWindow(screen), gc,
+			x, y,  (char *)text, len);
+		if ((flags & (BOLD|BLINK)) && screen->enbolden)
+			XDrawString(screen->display, TextWindow(screen), gc,
+				x+1, y,  (char *)text, len);
+		if ((flags & UNDERLINE) && screen->underline) {
+			if (FontDescent(screen) > 1)
+				y++;
+			XDrawLine(screen->display, TextWindow(screen), gc,
+				x, y, x + len * FontWidth(screen) - 1, y);
+		}
+#if OPT_BOX_CHARS
+#define DrawX(col) x + (col * FontWidth(screen))
+#define DrawSegment(first,last) (void)drawXtermText(screen, flags, gc, DrawX(first), y, chrset, text+first, last-first)
+	} else {	/* fill in missing box-characters */
+		XFontStruct *font = (flags & BOLD)
+				  ? screen->fnt_bold
+				  : screen->fnt_norm;
+		int last, first = 0;
+
+		screen->fnt_boxes = True;
+		for (last = 0; last < len; last++) {
+			if (xtermMissingChar(text[last], font)) {
+				if (last > first) {
+					DrawSegment(first,last);
+				}
+				xtermDrawBoxChar(screen, text[last], flags, gc, DrawX(last), y);
+				first = last + 1;
+			}
+		}
+		if (last > first) {
+			DrawSegment(first,last);
+		}
+		screen->fnt_boxes = False;
+#endif
 	}
 
 	return x + len * FontWidth(screen);
@@ -1653,7 +1730,7 @@ char * my_memmove(char * s1, char * s2, size_t n)
 				bfr = (bfr != 0)
 					? realloc(bfr, length)
 					: malloc(length);
-				if (bfr == NULL) 
+				if (bfr == NULL)
 				    SysError(ERROR_MMALLOC);
 			}
 			for (j = 0; j < n; j++)

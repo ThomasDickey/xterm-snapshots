@@ -13,7 +13,7 @@
 # meml locks memory above the cursor; memu unlocks (ala HP terminals).  This
 #	is not recognized by some older (e.g., SVr3) tic programs, but none
 #	do more than warn about it.  Ignore the warning.
-# rmcup clears memory before switching to the alternate screen.  The older
+# smcup clears memory before switching to the alternate screen.  The older
 #	(deprecated) \E[?47h did not do this, requiring applications to
 #	embed a \E[2J in the rmcup string.  However, that behavior cannot
 #	be disabled via titeInhibit, making that resource not function as
@@ -172,7 +172,7 @@ xterm-xfree86|xterm-new|xterm terminal emulator (XFree86),
 	ri=\EM,
 	rmacs=^O,
 	rmam=\E[?7l,
-	rmcup=\E[?1047l\E[?1048l,
+	rmcup=\E[?1049l,
 	rmir=\E[4l,
 	rmkx=\E[?1l\E>,
 	rmso=\E[27m,
@@ -188,7 +188,7 @@ xterm-xfree86|xterm-new|xterm terminal emulator (XFree86),
 	sgr0=\E[m\017,
 	smacs=^N,
 	smam=\E[?7h,
-	smcup=\E[?1048h\E[?1047h,
+	smcup=\E[?1049h,
 	smir=\E[4h,
 	smkx=\E[?1h\E=,
 	smso=\E[7m,
@@ -420,7 +420,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	ri=\215,
 	rmacs=^O,
 	rmam=\233?7l,
-	rmcup=\233?1047l\233?1048l,
+	rmcup=\233?1049l,
 	rmir=\2334l,
 	rmkx=\233?1l\E>,
 	rmso=\23327m,
@@ -436,7 +436,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	sgr0=\233m^O,
 	smacs=^N,
 	smam=\233?7h,
-	smcup=\233?1048h\233?1047h,
+	smcup=\233?1049h,
 	smir=\2334h,
 	smkx=\233?1h\E=,
 	smso=\2337m,

@@ -25,6 +25,7 @@ XTerm.JoinSession:False
 *mainMenu*backarrow key*Label: Backarrow Key
 *mainMenu*sun function-keys*Label: Sun Function-Keys
 *mainMenu*sun keyboard*Label: Sun/PC Keyboard
+*mainMenu*hp function-keys*Label: HP Function-Keys
 *mainMenu*suspend*Label:  Send STOP Signal
 *mainMenu*continue*Label:  Send CONT Signal
 *mainMenu*interrupt*Label:  Send INT Signal
@@ -48,7 +49,7 @@ XTerm.JoinSession:False
 *vtMenu*cursesemul*Label:  Enable Curses Emulation
 *vtMenu*visualbell*Label:  Enable Visual Bell
 *vtMenu*marginbell*Label:  Enable Margin Bell
-*vtMenu*altscreen*Label:  Show Alternate Screen
+*vtMenu*titeInhibit*Label:  Enable Alternate Screen Switching
 *vtMenu*activeicon*Label: Enable Active Icon
 *vtMenu*softreset*Label:  Do Soft Reset
 *vtMenu*hardreset*Label:  Do Full Reset
@@ -56,6 +57,7 @@ XTerm.JoinSession:False
 *vtMenu*tekshow*Label:  Show Tek Window
 *vtMenu*tekmode*Label:  Switch to Tek Mode
 *vtMenu*vthide*Label:  Hide VT Window
+*vtMenu*altscreen*Label:  Show Alternate Screen
 
 *fontMenu.Label:  VT Fonts
 *fontMenu*fontdefault*Label:	Default
@@ -75,6 +77,8 @@ XTerm.JoinSession:False
 *fontMenu*fontescape*Label:	Escape Sequence
 *fontMenu*fontsel*Label:		Selection
 !fontescape and fontsel overridden by application
+*fontMenu*font-doublesize*Label: Doublesized Characters
+*fontMenu*font-loadable*Label:	VT220 Soft Fonts
 
 *tekMenu.Label:  Tek Options
 *tekMenu*tektextlarge*Label:  Large Characters
