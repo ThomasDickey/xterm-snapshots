@@ -57,10 +57,6 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
       FEATURE_DEFINES = -DDEBUG -DALLOWLOGGING
 #endif
 
-#if defined(NetBSDArchitecture) || defined(OpenBSDArchitecture) || (defined(FreeBSDArchitecture) && (OSMajorVersion < 2)) || (defined(SunArchitecture) && !defined(SVR4Architecture)) || defined(i386Sco325Architecture)
- TERMCAPDEFINES = -DNO_TERMCAP_H
-#endif
-
  OSMAJORVERSION = OSMajorVersion
  OSMINORVERSION = OSMinorVersion
 

@@ -87,7 +87,6 @@
 #define USE_SYSV_UTMP
 #else
 #define USE_TERMCAP
-#define NO_TERMCAP_H
 #endif
 #else /* else not SYSV */
 #define USE_TERMCAP
@@ -166,8 +165,9 @@ extern struct passwd *getpwuid(); 	/* does ANYBODY need this? */
 
 #define	EMULATIONS	2
 #define	SUN		1
-#define	TIMEOUT		10
 #define	VT100		0
+
+#define	TIMEOUT		10
 
 #define	SHELL_UNKNOWN	0
 #define	SHELL_C		1
@@ -251,7 +251,7 @@ static void readstring PROTO((FILE *fp, char *buf, char *str));
 
 #ifdef USE_TERMCAP
 static char *strindex PROTO((char *s1, char *s2));
-#if !defined(NO_TERMCAP_H)
+#if HAVE_TERMCAP_H
 #include <termcap.h>
 #if defined(NCURSES_VERSION)
 	/* The tgetent emulation function in SVr4-style curses implementations
@@ -263,7 +263,7 @@ static char *strindex PROTO((char *s1, char *s2));
 #endif
 #else
 #include <curses.h>
-#endif /* ! NO_TERMCAP_H  */
+#endif /* HAVE_TERMCAP_H  */
 #endif
 
 /*

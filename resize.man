@@ -1,4 +1,6 @@
 .\" $TOG: resize.man /main/13 1997/11/04 20:58:24 kaleb $
+.\" $XFree86$
+.\" updated by Thomas Dickey <dickey@clark.net> for XFree86, Februrary 1998.
 .TH RESIZE 1 "Release 6.4" "X Version 11"
 .SH NAME
 resize \- set TERMCAP and terminal settings to current xterm window size
@@ -47,9 +49,20 @@ user's current shell isn't \fI/bin/csh\fP.
 .TP 8
 .B \-s \fR[\fIrows columns\fP]
 This option indicates that Sun console escape sequences will be used 
-instead of the special \fIxterm\fP escape code.  If \fIrows\fP and
+instead of the VT100-style \fIxterm\fP escape codes.
+If \fIrows\fP and
 \fIcolumns\fP are given, \fIresize\fP will ask the \fIxterm\fP to resize
 itself.  However, the window manager may choose to disallow the change.
+.sp
+Note that the Sun console escape sequences are recognized
+by XFree86 \fIxterm\fP and
+by \fIdtterm\fP.
+The \fIresize\fP program may be installed as \fIsunsize\fP,
+which causes makes it assume the \fB\-s\fP option.
+.sp
+The \fIrows\fP and
+\fIcolumns\fP arguments must appear last; though they are normally
+associated with the \fB\-s\fP option, they are parsed separately.
 .SH FILES
 .TP 15
 /etc/termcap
@@ -67,6 +80,3 @@ Copyright (c) 1984, 1985 by X Consortium
 See
 .IR X (1)
 for a complete copyright notice.
-.SH BUGS
-The \fB\-u\fP or \fB\-c\fP must appear to the left of \fB\-s\fP if both are 
-specified.

@@ -76,10 +76,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 extern char *my_strerror();
 #endif
 
-#if !HAVE_TERMCAP_H && !defined(NO_TERMCAP_H)
-#define NO_TERMCAP_H
-#endif
-
 #if !HAVE_X11_XPOLL_H
 #define NO_XPOLL_H	/* X11R6.1 & up use Xpoll.h for select() definitions */
 #endif
