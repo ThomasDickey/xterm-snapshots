@@ -1,8 +1,10 @@
+/* $XTermId: data.c,v 1.68 2004/06/06 22:15:25 tom Exp $ */
+
 /*
  *	$Xorg: data.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.c,v 3.28 2003/10/27 01:07:57 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.c,v 3.29 2004/06/06 22:15:25 dickey Exp $ */
 
 /*
  * Copyright 2002,2003 by Thomas E. Dickey
@@ -60,7 +62,6 @@
 Widget toplevel;		/* top-most widget in xterm */
 
 #if OPT_TEK4014
-PtyData *Tbuffer;
 Char *Tpushb;
 Char *Tpushback;
 TekLink *TekRefresh;
@@ -115,15 +116,9 @@ Boolean sameName;		/* Don't change the title or icon name if it
 
 int am_slave = -1;		/* set to file-descriptor if we're a slave process */
 int max_plus1;
-#ifdef VMS
-int Select_mask;
-int X_mask;
-int pty_mask;
-#else /* VMS */
-fd_set Select_mask;
-fd_set X_mask;
-fd_set pty_mask;
-#endif /* VMS */
+PtySelect Select_mask;
+PtySelect X_mask;
+PtySelect pty_mask;
 char *ptydev;
 char *ttydev;
 

@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.108 2004/05/25 00:08:41 tom Exp $
+## $XTermId: Makefile.in,v 1.109 2004/06/06 22:15:25 tom Exp $
 ##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.46 2004/04/28 00:40:59 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.47 2004/06/06 22:15:25 dickey Exp $ ##
 ##
 ## Copyright 2002-2003,2004 by Thomas E. Dickey
 ##

@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.144 2004/05/13 00:41:21 tom Exp $ */
+/* $XTermId: menu.c,v 1.146 2004/06/06 22:15:25 tom Exp $ */
 
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -47,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.55 2004/05/13 00:41:21 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.56 2004/06/06 22:15:25 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -1373,7 +1373,7 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
 {
     TScreen *screen = &term->screen;
 
-    switchPtyData(screen, &VTbuffer, !screen->utf8_mode);
+    switchPtyData(screen, !screen->utf8_mode);
     update_font_utf8_mode();
     /*
      * We don't repaint the screen when switching UTF-8 on/off.  When switching
