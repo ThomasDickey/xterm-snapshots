@@ -40,6 +40,7 @@
 #include <X11/Xmu/Misc.h>	/* For Max() and Min(). */
 #include <X11/Xfuncs.h>
 #include <X11/Xosdefs.h>
+#include <X11/Xmu/Converters.h>
 
 /* adapted from IntrinsicI.h */
 #define MyStackAlloc(size, stack_cache_array)     \
@@ -810,7 +811,7 @@ typedef struct {
 	Boolean		backarrow_key;		/* backspace/delete */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
 	Widget		mainMenu, vtMenu, tekMenu, fontMenu;
-	char*		menu_font_names[NMENUFONTS];
+	String		menu_font_names[NMENUFONTS];
 	int		menu_font_number;
 	XIC		xic;
 } TScreen;
@@ -845,7 +846,7 @@ typedef struct _Misc {
 #endif
     Boolean login_shell;
     Boolean re_verse;
-    int resizeGravity;
+    XtGravity resizeGravity;
     Boolean reverseWrap;
     Boolean autoWrap;
     Boolean logInhibit;
