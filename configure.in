@@ -36,6 +36,7 @@ CF_CHECK_CACHE
 AC_PROG_CC
 AC_PROG_CPP
 AC_GCC_TRADITIONAL
+AC_PROG_AWK
 AC_PROG_INSTALL
 
 ###	checks for UNIX variants that set C preprocessor variables
@@ -77,9 +78,6 @@ if test $use_utempter = yes ; then
 	CF_UTEMPTER
 fi
 
-###	checks for structures
-CF_POSIX_VDISABLE
-
 ###	checks for external data
 CF_ERRNO
 CF_TTY_GROUP
@@ -114,6 +112,7 @@ AC_CHECK_HEADERS( \
 
 CF_X_ATHENA
 CF_TYPE_FD_SET
+CF_TERMIO_C_ISPEED
 
 CPPFLAGS="$cf_save_CPPFLAGS"
 
@@ -308,7 +307,7 @@ fi
 
 AC_MSG_CHECKING(if you want support for SCO-style function keys)
 CF_ARG_ENABLE(sco-fkeys,
-	[  --enable-sco-fkeys       enable support for SCO-style function keys],
+	[  --enable-sco-fkeys      enable support for SCO-style function keys],
 	[enable_sco_fkeys=yes],
 	[enable_sco_fkeys=no])
 AC_MSG_RESULT($enable_sco_fkeys)

@@ -1652,8 +1652,8 @@ static void VTparse(void)
 				reply.a_param[0] = row + 2;
 				reply.a_param[1] = 1;	/* no parity */
 				reply.a_param[2] = 1;	/* eight bits */
-				reply.a_param[3] = 112;	/* transmit 9600 baud */
-				reply.a_param[4] = 112;	/* receive 9600 baud */
+				reply.a_param[3] = 128;	/* transmit 38.4k baud */
+				reply.a_param[4] = 128;	/* receive 38.4k baud */
 				reply.a_param[5] = 1;	/* clock multiplier ? */
 				reply.a_param[6] = 0;	/* STP flags ? */
 				reply.a_inters = 0;

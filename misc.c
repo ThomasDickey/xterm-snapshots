@@ -803,7 +803,7 @@ open_userfile(int uid, int gid, char *path, Boolean append)
 
 #ifdef VMS
     if((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0) {
-	fprintf(stderr, "%s: cannot open %s\n", xterm_name, path);
+	fprintf(stderr, "%s: cannot open %s: %d:%s\n", xterm_name, path, errno, SysErrorMsg(errno));
 	return -1;
     }
     chown(path, uid, gid);
@@ -811,7 +811,7 @@ open_userfile(int uid, int gid, char *path, Boolean append)
     if ((access(path, F_OK) != 0 && (errno != ENOENT))
      || (!(creat_as(uid, gid, append, path, 0644)))
      || ((fd = open(path, O_WRONLY | O_APPEND, 0644)) < 0)) {
-	fprintf(stderr, "%s: cannot open %s\n", xterm_name, path);
+	fprintf(stderr, "%s: cannot open %s: %d:%s\n", xterm_name, path, errno, SysErrorMsg(errno));
 	return -1;
     }
 #endif
@@ -852,7 +852,7 @@ creat_as(int uid, int gid, Boolean append, char *pathname, int mode)
     int fd;
     int pid;
     int retval = 0;
-    int childstat;
+    int childstat = 0;
 #ifndef HAVE_WAITPID
     int waited;
     SIGNAL_T (*chldfunc) (int);
@@ -877,7 +877,17 @@ creat_as(int uid, int gid, Boolean append, char *pathname, int mode)
 	return retval;
     default:			/* parent */
 #ifdef HAVE_WAITPID
-	waitpid(pid, &childstat, 0);
+	while (waitpid(pid, &childstat, 0) < 0) {
+#ifdef EINTR
+	    if (errno == EINTR)
+		continue;
+#endif /* EINTR */
+#ifdef ERESTARTSYS
+	    if (errno == ERESTARTSYS)
+		continue;
+#endif /* ERESTARTSYS */
+	    break;
+	}
 #else  /* HAVE_WAITPID */
 	waited = wait(&childstat);
 	signal(SIGCHLD, chldfunc);
