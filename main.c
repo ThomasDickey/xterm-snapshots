@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.128 2001/04/12 01:02:50 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.129 2001/04/28 13:51:55 dickey Exp $ */
 
 
 /* main.c */
@@ -918,6 +918,10 @@ static struct _options {
 { "-bw number",            "border width in pixels" },
 { "-fn fontname",          "normal text font" },
 { "-fb fontname",          "bold text font" },
+#ifdef XRENDERFONT
+{ "-fa pattern",           "FreeType font-selection pattern" },
+{ "-fs size",              "FreeType font-size" },
+#endif
 #if OPT_WIDE_CHARS
 { "-fw fontname",          "doublewidth text font" },
 { "-fwb fontname",         "doublewidth bold text font" },
@@ -930,13 +934,13 @@ static struct _options {
 { "-/+132",                "turn on/off column switch inhibiting" },
 { "-/+ah",                 "turn on/off always highlight" },
 #ifndef NO_ACTIVE_ICON
-{ "-/+ai",		   "turn on/off active icon" },
-{ "-fi fontname",	   "icon font for active icon" },
+{ "-/+ai",                 "turn on/off active icon" },
+{ "-fi fontname",          "icon font for active icon" },
 #endif /* NO_ACTIVE_ICON */
 { "-b number",             "internal border in pixels" },
 { "-/+bc",		   "turn on/off text cursor blinking" },
-{ "-bcf milliseconds",	   "time text cursor is off when blinking"},
-{ "-bcn milliseconds",	   "time text cursor is on when blinking"},
+{ "-bcf milliseconds",     "time text cursor is off when blinking"},
+{ "-bcn milliseconds",     "time text cursor is on when blinking"},
 { "-/+bdc",                "turn off/on display of bold as color"},
 { "-/+cb",                 "turn on/off cut-to-beginning-of-line inhibit" },
 { "-cc classrange",        "specify additional character classes" },
@@ -946,7 +950,7 @@ static struct _options {
 { "-/+cu",                 "turn on/off curses emulation" },
 { "-/+dc",		   "turn off/on dynamic color selection" },
 #if OPT_HIGHLIGHT_COLOR
-{ "-hc",		   "selection background color" },
+{ "-hc",                   "selection background color" },
 #endif
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },

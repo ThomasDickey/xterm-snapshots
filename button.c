@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.60 2001/04/12 01:02:49 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.61 2001/04/28 13:51:55 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1036,13 +1036,13 @@ _SelectionTargets(Widget w)
 	    return NULL;
 	}
 	n = 0;
+#if OPT_USE_UTF8_API
+	eightBitSelectionTargets[n] = XA_UTF8_STRING(XtDisplay(w)); n++;
+#endif
 	if (screen->i18nSelections) {
 	    eightBitSelectionTargets[n] = XA_TEXT(XtDisplay(w)); n++;
 	    eightBitSelectionTargets[n] = XA_COMPOUND_TEXT(XtDisplay(w)); n++;
 	}
-#if OPT_USE_UTF8_API
-	eightBitSelectionTargets[n] = XA_UTF8_STRING(XtDisplay(w)); n++;
-#endif
 	eightBitSelectionTargets[n] = XA_STRING; n++;
 	eightBitSelectionTargets[n] = None;
     }
