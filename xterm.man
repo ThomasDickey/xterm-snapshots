@@ -1,7 +1,7 @@
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
-.\" Copyright 1996-2001,2002 by Thomas E. Dickey
+.\" Copyright 1996-2002,2003 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.89 2002/12/27 21:05:24 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.90 2003/02/25 23:36:56 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - August 2002.
 .TH XTERM 1 __vendorversion__
@@ -1101,6 +1101,10 @@ the X protocol SendEvent request) should be interpreted or discarded.
 The default is ``false'' meaning they are discarded.
 Note that allowing
 such events creates a very large security hole.
+.TP
+.B "allowWindowOps (\fPclass\fB AllowWindowOps)"
+Specifies whether extended window control sequences (as used in dtterm)
+for should be allowed.
 .TP 8
 .B "answerbackString (\fPclass\fB AnswerbackString)"
 Specifies the string that \fIxterm\fR sends in response to an ENQ (control/E)
