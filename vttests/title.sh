@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XFree86$
+# $XFree86: xc/programs/xterm/vttests/title.sh,v 1.1 1999/03/28 15:33:30 dawes Exp $
 #
 # -- Thomas Dickey (1999/3/27)
 # Obtain the current title of the window, set up a simple clock which runs

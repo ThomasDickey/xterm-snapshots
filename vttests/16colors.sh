@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XFree86$
+# $XFree86: xc/programs/xterm/vttests/16colors.sh,v 1.1 1999/03/28 15:33:29 dawes Exp $
 #
 # -- Thomas Dickey (1999/3/27)
 # Show a simple 16-color test pattern.  It is a little more confusing than
