@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.123 2001/09/26 12:53:14 alanh Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.124 2001/10/10 19:46:22 dickey Exp $ */
 
 /*
 
@@ -220,7 +220,8 @@ static char defaultTranslations[] =
 "
 #if OPT_SHIFT_FONTS
 "\
-         Shift <KeyPress> KP_Add:larger-vt-font() \n\
+    Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \n\
+    Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \n\
     Shift <KeyPress> KP_Subtract:smaller-vt-font() \n\
 "
 #endif
@@ -245,7 +246,7 @@ static char defaultTranslations[] =
  !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \n\
      ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
           ~Ctrl ~Meta <Btn3Down>:start-extend() \n\
-              ~Meta <Btn3Motion>:select-extend()      \n\
+              ~Meta <Btn3Motion>:select-extend() \n\
                  Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
             Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
   Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
