@@ -275,9 +275,21 @@ static void charToPrinter(int chr)
 			SysError (ERROR_FORK);
 
 		if (Printer_pid == 0) {
+			TRACE(((char *)0))
 			close(my_pipe[1]);	/* printer is silent */
-			setgid (screen->gid);
+			close (screen->respond);
+
+			close(fileno(stdout));
+			dup2(fileno(stderr), 1);
+
+			if (fileno(stderr) != 2) {
+				dup2(fileno(stderr), 2);
+				close(fileno(stderr));
+			}
+
+			setgid (screen->gid);	/* don't want privileges! */
 			setuid (screen->uid);
+
 			Printer = popen(screen->printer_command, "w");
 			input = fdopen(my_pipe[0], "r");
 			while ((c = fgetc(input)) != EOF) {
