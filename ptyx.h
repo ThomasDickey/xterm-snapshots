@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.103 2003/03/23 17:18:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.104 2003/05/19 00:47:33 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey
@@ -134,8 +134,15 @@
 
 #if (defined(ATT) && !defined(__sgi)) || defined(__MVS__) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 #define USE_USG_PTYS
+#if defined(sun)	/* Solaris */
+#define USE_HANDSHAKE 1
+#endif
 #else
 #define USE_HANDSHAKE 1
+#endif
+
+#ifndef USE_HANDSHAKE
+#define USE_HANDSHAKE	0
 #endif
 
 /*
@@ -414,6 +421,18 @@ typedef struct {
 #define OPT_BOX_CHARS	1 /* true if xterm can simulate box-characters */
 #endif
 
+#ifndef OPT_BROKEN_OSC
+#ifdef linux
+#define OPT_BROKEN_OSC	1 /* man console_codes, 1st paragraph - cf: ECMA-48 */
+#else
+#define OPT_BROKEN_OSC	0 /* true if xterm allows Linux's broken OSC parsing */
+#endif
+#endif
+
+#ifndef OPT_BROKEN_ST
+#define OPT_BROKEN_ST	1 /* true if xterm allows old/broken OSC parsing */
+#endif
+
 #ifndef OPT_C1_PRINT
 #define OPT_C1_PRINT	1 /* true if xterm allows C1 controls to be printable */
 #endif
@@ -511,9 +530,6 @@ typedef struct {
 #endif
 
 #ifndef OPT_PTY_HANDSHAKE
-#ifndef USE_HANDSHAKE
-#define USE_HANDSHAKE	0
-#endif
 #define OPT_PTY_HANDSHAKE USE_HANDSHAKE	/* avoid pty races on older systems */
 #endif
 
@@ -1092,6 +1108,12 @@ typedef struct {
 	int		utf_count;	/* state of utf_char */
 	IChar		utf_char;	/* in-progress character */
 #endif
+#if OPT_BROKEN_OSC
+	Boolean		brokenLinuxOSC; /* true to ignore Linux palette ctls */
+#endif
+#if OPT_BROKEN_ST
+	Boolean		brokenStringTerm; /* true to match old OSC parse */
+#endif
 #if OPT_C1_PRINT
 	Boolean		c1_printable;	/* true if we treat C1 as print	*/
 #endif
@@ -1157,7 +1179,9 @@ typedef struct {
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
+#if OPT_BOX_CHARS
 	Boolean		force_box_chars;/* true if we assume that	*/
+#endif
 	Dimension	fnt_wide;
 	Dimension	fnt_high;
 	XFontStruct	*fnt_norm;	/* normal font of terminal	*/

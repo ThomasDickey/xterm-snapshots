@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.44 2003/03/23 02:01:41 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.45 2003/05/19 00:47:34 dickey Exp $
  */
 
 /************************************************************
@@ -73,6 +73,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_AIX_COLORS		/* CF_ARG_DISABLE(16-color) */
 #undef OPT_BLINK_CURS		/* CF_ARG_DISABLE(blink-cursor) */
 #undef OPT_BOX_CHARS		/* CF_ARG_DISABLE(boxchars) */
+#undef OPT_BROKEN_OSC		/* CF_ARG_ENABLE(broken-osc) */
+#undef OPT_BROKEN_ST		/* CF_ARG_DISABLE(broken-st) */
 #undef OPT_C1_PRINT		/* CF_ARG_DISABLE(c1-print) */
 #undef OPT_COLOR_CLASS		/* CF_ARG_DISABLE(color-class) */
 #undef OPT_DEC_CHRSET		/* CF_ARG_DISABLE(doublechars) */

@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.141 2003/03/23 02:01:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.142 2003/05/19 00:47:31 dickey Exp $ */
 
 /*
 
@@ -385,7 +385,6 @@ static XtResource resources[] =
     Bres(XtNautoWrap, XtCAutoWrap, misc.autoWrap, TRUE),
     Bres(XtNawaitInput, XtCAwaitInput, screen.awaitInput, FALSE),
     Bres(XtNfreeBoldBox, XtCBoolean, screen.free_bold_box, FALSE),
-    Bres(XtNforceBoxChars, XtCBoolean, screen.force_box_chars, FALSE),
     Bres(XtNbackarrowKey, XtCBackarrowKey, screen.backarrow_key, TRUE),
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, TRUE),
     Bres(XtNbrokenSelections, XtCBrokenSelections, screen.brokenSelections, FALSE),
@@ -479,6 +478,18 @@ static XtResource resources[] =
     Bres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink, FALSE),
     Ires(XtNcursorOnTime, XtCCursorOnTime, screen.cursor_on, 600),
     Ires(XtNcursorOffTime, XtCCursorOffTime, screen.cursor_off, 300),
+#endif
+
+#if OPT_BOX_CHARS
+    Bres(XtNforceBoxChars, XtCBoolean, screen.force_box_chars, FALSE),
+#endif
+
+#if OPT_BROKEN_OSC
+    Bres(XtNbrokenLinuxOSC, XtCBrokenLinuxOSC, screen.brokenLinuxOSC, TRUE),
+#endif
+
+#if OPT_BROKEN_ST
+    Bres(XtNbrokenStringTerm, XtCBrokenStringTerm, screen.brokenStringTerm, TRUE),
 #endif
 
 #if OPT_C1_PRINT
@@ -996,6 +1007,61 @@ VTparse(void)
 	} else
 #endif
 	    nextstate = parsestate[E2A(c)];
+
+#if OPT_BROKEN_OSC
+	/*
+	 * Linux console palette escape sequences start with an OSC, but do
+	 * not terminate correctly.  Some scripts do not check before writing
+	 * them, making xterm appear to hang (it's awaiting a valid string
+	 * terminator).  Just ignore these if we see them - there's no point
+	 * in emulating bad code.
+	 */
+	if (screen->brokenLinuxOSC
+	    && parsestate == sos_table) {
+	    if (string_used) {
+		switch (string_area[0]) {
+		case 'P':
+		    if (string_used <= 7)
+			break;
+		    /* FALLTHRU */
+		case 'R':
+		    parsestate = groundtable;
+		    nextstate = parsestate[E2A(c)];
+		    TRACE(("Reset to ground state (brokenLinuxOSC)\n"));
+		    break;
+		}
+	    }
+	}
+#endif
+
+#if OPT_BROKEN_ST
+	/*
+	 * Before patch #171, carriage control embedded within an OSC string
+	 * would terminate it.  Some (buggy, of course) applications rely on
+	 * this behavior.  Accommodate them by allowing one to compile xterm
+	 * and emulate the old behavior.
+	 */
+	if (screen->brokenStringTerm
+	    && parsestate == sos_table
+	    && c < 32) {
+	    switch (c) {
+	    case 5:		/* FALLTHRU */
+	    case 8:		/* FALLTHRU */
+	    case 9:		/* FALLTHRU */
+	    case 10:		/* FALLTHRU */
+	    case 11:		/* FALLTHRU */
+	    case 12:		/* FALLTHRU */
+	    case 13:		/* FALLTHRU */
+	    case 14:		/* FALLTHRU */
+	    case 15:		/* FALLTHRU */
+	    case 24:
+		parsestate = groundtable;
+		nextstate = parsestate[E2A(c)];
+		TRACE(("Reset to ground state (brokenStringTerm)\n"));
+		break;
+	    }
+	}
+#endif
 
 #if OPT_C1_PRINT
 	/*
@@ -2043,25 +2109,25 @@ VTparse(void)
 	    break;
 
 	case CASE_SOS:
-	    /* Start of String */
+	    TRACE(("begin SOS: Start of String\n"));
 	    string_mode = SOS;
 	    parsestate = sos_table;
 	    break;
 
 	case CASE_PM:
-	    /* Privacy Message */
+	    TRACE(("begin PM: Privacy Message\n"));
 	    string_mode = PM;
 	    parsestate = sos_table;
 	    break;
 
 	case CASE_DCS:
-	    /* Device Control String */
+	    TRACE(("begin DCS: Device Control String\n"));
 	    string_mode = DCS;
 	    parsestate = sos_table;
 	    break;
 
 	case CASE_APC:
-	    /* Application Program Command */
+	    TRACE(("begin APC: Application Program Command\n"));
 	    string_mode = APC;
 	    parsestate = sos_table;
 	    break;
@@ -2251,7 +2317,7 @@ VTparse(void)
 	    break;
 
 	case CASE_OSC:
-	    /* Operating System Command */
+	    TRACE(("begin OSC: Operating System Command\n"));
 	    parsestate = sos_table;
 	    string_mode = OSC;
 	    break;
@@ -2614,15 +2680,15 @@ in_put(void)
 	    if (screen->cursor_state)
 		HideCursor();
 	    ShowCursor();
+#if OPT_INPUT_METHOD
+	    PreeditPosition(screen);
+#endif
 	} else if (screen->cursor_set != screen->cursor_state) {
 	    if (screen->cursor_set)
 		ShowCursor();
 	    else
 		HideCursor();
 	}
-#if OPT_INPUT_METHOD
-	PreeditPosition(screen);
-#endif
 
 	if (QLength(screen->display)) {
 	    select_mask = X_mask;
@@ -2691,15 +2757,15 @@ in_put(void)
 	    if (screen->cursor_state)
 		HideCursor();
 	    ShowCursor();
+#if OPT_INPUT_METHOD
+	    PreeditPosition(screen);
+#endif
 	} else if (screen->cursor_set != screen->cursor_state) {
 	    if (screen->cursor_set)
 		ShowCursor();
 	    else
 		HideCursor();
 	}
-#if OPT_INPUT_METHOD
-	PreeditPosition(screen);
-#endif
 
 	XFlush(screen->display);	/* always flush writes before waiting */
 
@@ -4542,7 +4608,9 @@ VTInitialize(Widget wrequest,
     wnew->screen.mouse_row = -1;
     wnew->screen.mouse_col = -1;
 
+#if OPT_BOX_CHARS
     init_Bres(screen.force_box_chars);
+#endif
     init_Bres(screen.free_bold_box);
 
     init_Bres(screen.c132);
@@ -4672,6 +4740,14 @@ VTInitialize(Widget wrequest,
     wnew->screen.menu_font_names[fontMenu_fontsel] = NULL;
     wnew->screen.menu_font_number = fontMenu_fontdefault;
 
+#if OPT_BROKEN_OSC
+    init_Bres(screen.brokenLinuxOSC);
+#endif
+
+#if OPT_BROKEN_ST
+    init_Bres(screen.brokenStringTerm);
+#endif
+
 #if OPT_C1_PRINT
     init_Bres(screen.c1_printable);
 #endif
@@ -4717,9 +4793,9 @@ VTInitialize(Widget wrequest,
 #endif
     }
     /*
-     * Check if we're trying to use color in a monochrome screen.  Disable color
-     * in that case, since that would make ANSI colors unusable.  A 4-bit or
-     * 8-bit display is usable, so we do not have to check for anything more
+     * Check if we're trying to use color in a monochrome screen.  Disable
+     * color in that case, since that would make ANSI colors unusable.  A 4-bit
+     * or 8-bit display is usable, so we do not have to check for anything more
      * specific.
      */
     if (color_ok) {

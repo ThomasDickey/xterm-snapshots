@@ -1,4 +1,4 @@
--- $XFree86: xc/programs/xterm/INSTALL,v 3.29 2003/03/23 02:01:38 dickey Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.30 2003/05/19 00:47:31 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -81,7 +81,9 @@ The options (in alphabetic order):
 
 	Use this option to suppress support for nonstandard use of codes
 	128-159, which normally are considered control characters.  Some users
-	have fonts which use those positions.
+	have fonts which use those positions.  The default value for the
+	allowC1Printable resource is false, so this feature does not impact
+	normal users.
 
   --disable-color-class   disable color class resources
 
@@ -216,6 +218,22 @@ The options (in alphabetic order):
   --enable-88-color       enable 88-color support
 
 	Compile-in code that interprets SGR 38 and 48 for 88-colors.
+
+  --enable-broken-osc     allow broken Linux OSC-strings],
+
+	Compile-in code to accommodate scripts that write Linux's malformed
+	palette control strings without checking.  The result makes xterm
+	appear to freeze.  This workaround makes xterm ignore the strings,
+	and is compiled-in by default for Linux.
+
+  --enable-broken-st      allow broken string-terminators],
+
+	Compile-in code that works around a bug in some ISDN routers (and
+	possibly other applications written by the same people):  they send an
+	unterminated control string in their banner text, making xterm freeze.
+	The workaround tells xterm to stop processing the control string when
+	it receives one of the whitespace control characters such as newline.
+	That was the behavior before patch #171.
 
   --enable-dec-locator    enable DECterm Locator support
 	Add support for for DEC Locator control sequences for xterm:

@@ -54,9 +54,9 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.92 2003/03/23 02:01:41 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.93 2003/05/19 00:47:34 dickey Exp $
 .\"
-.\" updated by Thomas E. Dickey for XFree86, July 1996 - August 2002.
+.\" updated by Thomas E. Dickey for XFree86, July 1996 - May 2003.
 .TH XTERM 1 __vendorversion__
 .SH NAME
 xterm \- terminal emulator for X
@@ -301,6 +301,9 @@ Othrwise, they have a column width of 1.
 This may be useful for some legacy CJK text
 terminal-based programs assuming box drawings and others to have a column
 width of 2.
+It also has to be turned on when you specify a truetype
+CJK double-width (bi-width/monospace) font either with \fB\-fa\fP at
+the command line or \fBfaceName\fP resource.
 The default is ``false''
 .TP 8
 .B "+cjk_width"
@@ -385,6 +388,9 @@ See also the discussion of \fBboldFont\fP and \fBboldMode\fP resources.
 This option sets the pattern for fonts selected from the FreeType
 library if support for that library was compiled into xterm.
 This corresponds to the \fBfaceName\fP resource.
+When a CJK
+double-width font is specified, you also need to turn
+on the \fBcjkWidth\fP resource.
 .TP 8
 .BI \-fbb
 This option indicates that \fIxterm\fP should compare normal and bold fonts bounding
@@ -501,7 +507,7 @@ This option sets the \fBallowC1Printable\fP resource.
 When \fBallowC1Printable\fP is set, \fIxterm\fP overrides the mapping
 of C1 control characters (code 128-159) to treat them as printable.
 .TP 8
-.B \+k8
+.B +k8
 This option resets the \fBallowC1Printable\fP resource.
 .TP 8
 .B \-l
@@ -559,13 +565,30 @@ This option indicates that the shell that is started in the \fIxterm\fP window
 will be a login shell (i.e., the first character of argv[0] will be a dash,
 indicating to the shell that it should read the user's .login or .profile).
 .sp
-Note that this is incompatible with \fB\-e\fP, since the \fIlogin\fP program
-does not provide a way to specify the command to run in the new shell.
-If you specify both, \fIxterm\fP uses \fB\-ls\fP.
+The \fB\-ls\fP flag and the \fBloginShell\fP resource
+are ignored if \fB\-e\fP is also given,
+because \fIxterm\fP does not know how to make the shell
+start the given command after whatever it does when it is a login
+shell \- the user's shell of choice need not be a Bourne shell after all.
+Also, \fIxterm\ \-e\fP is supposed to provide a consistent
+functionality for other applications that need to start text-mode
+programs in a window, and if \fBloginShell\fP were not ignored, the
+result of ~/.profile might interfere with that.
+.IP
+If you do want the effect of \fB\-ls\fP and \fB\-a\fP simultaneously, you
+may get away with something like
+.RS 15
+xterm -e /bin/bash -l -c "my command here"
+.RE
+.IP
+Finally, \fB\-ls\fP is not completely ignored,
+because \fIxterm\ \-ls\ \-e\fP does write a \fI/etc/wtmp\fP entry
+(if configured to do so),
+whereas \fIxterm\ \-e\fP does not.
 .TP 8
 .B +ls
 This option indicates that the shell that is started should not be a login
-shell (i.e. it will be a normal ``subshell'').
+shell (i.e., it will be a normal ``subshell'').
 .TP 8
 .B \-mb
 This option indicates that \fIxterm\fP should ring a margin bell when
@@ -1219,6 +1242,12 @@ It attempts to match a bold font for the other font selections
 (\fBfont1\fP through \fBfont6\fP).
 If the normal and bold fonts are distinct, this resource has no effect.
 .TP 8
+.B "brokenLinuxOSC (\fPclass\fB BrokenLinuxOSC)"
+If true, \fIxterm\fP applies a workaround to ignore malformed control
+sequences that a Linux script might send.
+Compare the palette control sequences documented in \fIconsole_codes\fR
+with ECMA-48.
+.TP 8
 .B "brokenSelections (\fPclass\fB BrokenSelections)"
 If true, \fIxterm\fP in 8-bit mode will interpret
 .B STRING
@@ -1229,6 +1258,12 @@ selections carry ISO-8859-1 encoded text.
 Setting this resource to
 ``true'' violates the ICCCM; it may, however, be useful for interacting
 with some broken X clients.
+The default is ``false.''
+.TP 8
+.B "brokenStringTerm (\fPclass\fB BrokenStringTerm)"
+provides a work-around for some ISDN routers which start an application
+control string without completing it.
+Set this to ``true'' if \fIxterm\fP appears to freeze when connecting.
 The default is ``false.''
 .TP 8
 .B "c132 (\fPclass\fB C132)"
@@ -3095,7 +3130,7 @@ is used for miscellaneous errors, usually accompanied by a specific message,
 11
 ERROR_FIONBIO
 .br
-main: ioctl() failed on FIONBIO 
+main: ioctl() failed on FIONBIO
 .TP
 12
 ERROR_F_GETFL
@@ -3118,7 +3153,7 @@ ERROR_TIOCGETP
 spawn: ioctl() failed on TIOCGETP
 .TP
 17
-ERROR_PTSNAME  
+ERROR_PTSNAME
 .br
 spawn: ptsname() failed
 .TP
@@ -3128,22 +3163,22 @@ ERROR_OPPTSNAME
 spawn: open() failed on ptsname
 .TP
 19
-ERROR_PTEM     
+ERROR_PTEM
 .br
 spawn: ioctl() failed on I_PUSH/"ptem"
 .TP
 20
-ERROR_CONSEM   
+ERROR_CONSEM
 .br
 spawn: ioctl() failed on I_PUSH/"consem"
 .TP
 21
-ERROR_LDTERM   
+ERROR_LDTERM
 .br
 spawn: ioctl() failed on I_PUSH/"ldterm"
 .TP
 22
-ERROR_TTCOMPAT 
+ERROR_TTCOMPAT
 .br
 spawn: ioctl() failed on I_PUSH/"ttcompat"
 .TP

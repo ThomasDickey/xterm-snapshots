@@ -5,7 +5,7 @@
 # XFree86 updates/notes/new entries (including xterm-8bit, xterm-16color)
 # - Thomas E. Dickey
 #
-# $XFree86: xc/programs/xterm/terminfo,v 3.46 2002/08/24 18:54:39 dickey Exp $
+# $XFree86: xc/programs/xterm/terminfo,v 3.47 2003/05/19 00:47:33 dickey Exp $
 #
 # Special Capabilities:
 # --------------------
@@ -92,9 +92,11 @@
 #	Shift-Control-Fx  - kf{36+x}
 #
 # The terminfo defines some special keys which are documented as "shifted",
-# e.g., kDC is shifted-delete-character.  In this description, the modifier is
-# actually the control key, to avoid conflict with the common usage of shifted
-# pageup and pagedown for window manager functions. 
+# e.g., kDC is shifted-delete-character.
+#
+# Note however, that even though the terminfo says a key might be sent, there
+# may be conflicts which prevent this.  For example, it is common to use
+# shifted pageup and pagedown for window manager functions. 
 #
 xterm-xfree86|xterm-new|xterm terminal emulator (XFree86),
 	npc,
@@ -271,6 +273,10 @@ xterm-basic|xterm terminal emulator - common (XFree86),
 #	  12-fkey keyboard can support vt220's 20-fkeys.
 #	+ maps numeric keypad "+" to ",".
 #	+ uses DEC-style control sequences for the application keypad.
+#
+# Some packagers modify xterm's resource definitions to provide extra function
+# keys by using the shift-modifier in the translations resource.  However, that
+# interferes with the DECUDK functionality.
 #	  
 xterm-vt220|XFree86 xterm emulating vt220,
 	ka1=\EOw,
