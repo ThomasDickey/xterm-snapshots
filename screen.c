@@ -100,7 +100,7 @@ struct winsize {
 #endif
 
 static int Reallocate PROTO((ScrnBuf *sbuf, Char **sbufaddr, int nrow, int ncol, int oldrow, int oldcol));
-static void ScrnClearLines PROTO((char **save, ScrnBuf sb, int where, int n, int size));
+static void ScrnClearLines PROTO((TScreen *screen, ScrnBuf sb, int where, int n, int size));
 
 
 ScrnBuf Allocate (nrow, ncol, addr)
@@ -282,52 +282,72 @@ register int length;		/* length of string */
 }
 
 static void
-ScrnClearLines (save, sb, where, n, size)
+ScrnClearLines (screen, sb, where, n, size)
 /*
  * Saves pointers to the n lines beginning at sb + where, and clears the lines
  */
-char **save;
+TScreen *screen;
 ScrnBuf sb;
 int where, n, size;
 {
 	register int i;
+	size_t len = ScrnPointers(screen, n);
 
 	/* save n lines at where */
-	memcpy ( (char *)save,
+	memcpy ( (char *) screen->save_ptr,
 		 (char *) &sb[MAX_PTRS * where],
-		 MAX_PTRS * sizeof(char *) * n);
+		 len);
 
 	/* clear contents of old rows */
 	if (TERM_COLOR_FLAGS) {
 		int last = (n * MAX_PTRS);
 		int flags = TERM_COLOR_FLAGS;
 		for (i = 0; i < last; i += MAX_PTRS) {
-			bzero(save[i+0], size);
-			memset(save[i+1], flags, size);
-			memset(save[i+2], xtermColorPair(), size);
+			bzero(screen->save_ptr[i+0], size);
+			memset(screen->save_ptr[i+1], flags, size);
+			memset(screen->save_ptr[i+2], xtermColorPair(), size);
 		}
 	} else {
 		for (i = MAX_PTRS * n - 1 ; i >= 0 ; i--)
-			bzero (save[i], size);
+			bzero (screen->save_ptr[i], size);
 	}
 }
 
+size_t
+ScrnPointers (screen, len)
+TScreen *screen;
+size_t len;
+{
+	len *= (MAX_PTRS * sizeof(Char *));
+
+	if (len > screen->save_len) {
+		if (screen->save_len)
+			screen->save_ptr = realloc(screen->save_ptr, len);
+		else
+			screen->save_ptr = malloc(len);
+		screen->save_len = len;
+		if (screen->save_ptr == 0)
+			SysError (ERROR_SAVE_PTR);
+	}
+	return len;
+}
+
 void
-ScrnInsertLine (sb, last, where, n, size)
+ScrnInsertLine (screen, sb, last, where, n, size)
 /*
    Inserts n blank lines at sb + where, treating last as a bottom margin.
    Size is the size of each entry in sb.
    Requires: 0 <= where < where + n <= last
-   	     n <= MAX_ROWS
  */
+TScreen *screen;
 register ScrnBuf sb;
 int last;
 register int where, n, size;
 {
-	char *save [4 /* MAX_PTRS */ * MAX_ROWS];
+	size_t len = ScrnPointers(screen, n);
 
 	/* save n lines at bottom */
-	ScrnClearLines(save, sb, (last -= n - 1), n, size);
+	ScrnClearLines(screen, sb, (last -= n - 1), n, size);
 
 	/*
 	 * WARNING, overlapping copy operation.  Move down lines (pointers).
@@ -340,29 +360,27 @@ register int where, n, size;
 	 */
 	memmove( (char *) &sb [MAX_PTRS * (where + n)],
 		 (char *) &sb [MAX_PTRS * where], 
-		MAX_PTRS * sizeof (char *) * (last - where));
+		 MAX_PTRS * sizeof (char *) * (last - where));
 
 	/* reuse storage for new lines at where */
 	memcpy ( (char *) &sb[MAX_PTRS * where],
-		 (char *)save,
-		 MAX_PTRS * sizeof(char *) * n);
+		 (char *) screen->save_ptr,
+		 len);
 }
 
 void
-ScrnDeleteLine (sb, last, where, n, size)
+ScrnDeleteLine (screen, sb, last, where, n, size)
 /*
    Deletes n lines at sb + where, treating last as a bottom margin.
    Size is the size of each entry in sb.
    Requires 0 <= where < where + n < = last
-   	    n <= MAX_ROWS
  */
+TScreen *screen;
 register ScrnBuf sb;
 register int n, last, size;
 int where;
 {
-	char *save [4 /* MAX_PTRS */ * MAX_ROWS];
-
-	ScrnClearLines(save, sb, where, n, size);
+	ScrnClearLines(screen, sb, where, n, size);
 
 	/* move up lines */
 	memmove( (char *) &sb[MAX_PTRS * where],
@@ -371,7 +389,7 @@ int where;
 
 	/* reuse storage for new bottom lines */
 	memcpy ( (char *) &sb[MAX_PTRS * last],
-		 (char *)save, 
+		 (char *)screen->save_ptr, 
 		MAX_PTRS * sizeof(char *) * n);
 }
 

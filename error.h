@@ -98,6 +98,7 @@
 #define	ERROR_RESIZROW2	99	/* ScreenResize: realloc() failed on alt attr */
 #define	ERROR_RESIZROW3	100	/* ScreenResize: realloc() failed on attr */
 #define	ERROR_RESIZROW4	101	/* ScreenResize: realloc() failed on attr */
+#define	ERROR_SAVE_PTR	102	/* ScrnPointers: malloc/realloc() failed */
 /* scrollbar.c */
 #define	ERROR_SBRALLOC	110	/* ScrollBarOn: realloc() failed on base */
 #define	ERROR_SBRALLOC2	111	/* ScrollBarOn: realloc() failed on rows */

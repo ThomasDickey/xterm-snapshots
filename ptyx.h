@@ -56,9 +56,6 @@
 		  		(((detail)&(Button1Mask|Button2Mask)) == 0)) \
 		)
 
-#define MAX_COLS	200
-#define MAX_ROWS	128
-
 /*
 ** System V definitions
 */
@@ -620,6 +617,8 @@ typedef struct {
 	Char		*sbuf_address;	/* main screen memory address   */
 	ScrnBuf		altbuf;		/* alternate screen buffer	*/
 	Char		*abuf_address;	/* alternate screen memory address */
+	Char		**save_ptr;	/* workspace for save-pointers  */
+	size_t		save_len;	/* ...and its length		*/
 	Boolean		alternate;	/* true if using alternate buf	*/
 	unsigned short	do_wrap;	/* true if cursor in last column
 					    and character just output    */

@@ -261,11 +261,13 @@ register int amount;
 	}
     }
 	if(screen->scrollWidget && !screen->alternate && screen->top_marg == 0)
-		ScrnDeleteLine(screen->allbuf, screen->bot_marg +
-		 screen->savelines, 0, amount, screen->max_col + 1);
+		ScrnDeleteLine(screen, screen->allbuf,
+			screen->bot_marg + screen->savelines, 0,
+			amount, screen->max_col + 1);
 	else
-		ScrnDeleteLine(screen->buf, screen->bot_marg, screen->top_marg,
-		 amount, screen->max_col + 1);
+		ScrnDeleteLine(screen, screen->buf,
+			screen->bot_marg, screen->top_marg,
+			amount, screen->max_col + 1);
 	if(refreshheight > 0)
 		ScrnRefresh(screen, refreshtop, 0, refreshheight,
 		 screen->max_col + 1, False);
@@ -336,8 +338,8 @@ register int amount;
 		    (unsigned) Width(screen));
 	}
     }
-	ScrnInsertLine (screen->buf, screen->bot_marg, screen->top_marg,
-			amount, screen->max_col + 1);
+    ScrnInsertLine(screen, screen->buf, screen->bot_marg, screen->top_marg,
+		   amount, screen->max_col + 1);
 }
 
 /*
@@ -396,9 +398,8 @@ register int n;
 		    (unsigned) Width(screen));
 	}
     }
-	/* adjust screen->buf */
-	ScrnInsertLine(screen->buf, screen->bot_marg, screen->cur_row, n,
-			screen->max_col + 1);
+    ScrnInsertLine(screen, screen->buf, screen->bot_marg, screen->cur_row, n,
+		   screen->max_col + 1);
 }
 
 /*
@@ -474,11 +475,13 @@ register int n;
     }
 	/* adjust screen->buf */
 	if(screen->scrollWidget && !screen->alternate && screen->cur_row == 0)
-		ScrnDeleteLine(screen->allbuf, screen->bot_marg +
-		 screen->savelines, 0, n, screen->max_col + 1);
+		ScrnDeleteLine(screen, screen->allbuf,
+			screen->bot_marg + screen->savelines, 0,
+			n, screen->max_col + 1);
 	else
-		ScrnDeleteLine(screen->buf, screen->bot_marg, screen->cur_row,
-		 n, screen->max_col + 1);
+		ScrnDeleteLine(screen, screen->buf,
+			screen->bot_marg, screen->cur_row,
+			n, screen->max_col + 1);
 }
 
 /*
