@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.122 2001/09/09 01:07:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.123 2001/09/26 12:53:14 alanh Exp $ */
 
 /*
 
@@ -2729,6 +2729,7 @@ static void PreeditPosition(TScreen *screen)
     XPoint spot;
     XVaNestedList list;
 
+    if (!screen->xic) return;
     spot.x = CurCursorX(screen, screen->cur_row, screen->cur_col);
     spot.y = CursorY(screen, screen->cur_row) + screen->fs_ascent;
     list = XVaCreateNestedList(0,
@@ -5005,6 +5006,21 @@ static void VTInitI18N(void)
 					 &missing_charset_list,
 					 &missing_charset_count,
 					 &def_string);
+	if (term->screen.fs == NULL) {
+	    fprintf(stderr,"Preparation of font set "
+		    "\"%s\" for XIM failed.\n", term->misc.f_x);
+	    term->screen.fs = XCreateFontSet(XtDisplay(term),
+					     DEFXIMFONT,
+					     &missing_charset_list,
+					     &missing_charset_count,
+					     &def_string);
+	}
+	if (term->screen.fs == NULL) {
+	    fprintf(stderr,"Preparation of default font set "
+		    "\"%s\" for XIM failed.\n", DEFXIMFONT);
+	    XCloseIM(xim);
+	    return;
+	}
 	extents = XExtentsOfFontSet(term->screen.fs);
 	j = XFontsOfFontSet(term->screen.fs, &fonts, &font_name_list);
 	for (i = 0, term->screen.fs_ascent = 0; i < j; i++) {

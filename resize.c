@@ -2,7 +2,7 @@
  *	$Xorg: resize.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/resize.c,v 3.49 2001/06/18 19:09:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/resize.c,v 3.50 2001/10/08 01:08:10 dickey Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -181,7 +181,7 @@ static void readstring (FILE *fp, char *buf, char *str);
 #undef ERR			/* workaround for glibc 2.1.3 */
 #include <curses.h>
 #ifdef NCURSES_VERSION
-#ifdef __CYGWIN__
+#ifdef NCURSES_TERM_H
 #include <ncurses/term.h>
 #else
 #include <term.h> /* tgetent() */

@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.49 2001/09/09 01:07:25 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.50 2001/10/08 01:08:10 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -57,6 +57,7 @@ AC_MINIX
 
 ###	checks for header files
 AC_CHECK_HEADERS( \
+ncurses/term.h \
 stdlib.h \
 termios.h \
 unistd.h \
