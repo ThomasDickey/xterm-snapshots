@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: input.c /main/20 1996/01/14 16:52:52 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.7 1996/05/13 06:50:46 dawes Exp $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.8 1996/08/13 11:36:58 dawes Exp $
  */
 
 /*
@@ -44,8 +44,6 @@ static char *cur = "HDACB  FE";
 static int funcvalue PROTO((KeySym keycode));
 static int sunfuncvalue PROTO((KeySym keycode));
 static void AdjustAfterInput PROTO((TScreen *screen));
-
-extern Boolean sunFunctionKeys;
 
 static void
 AdjustAfterInput (screen)
@@ -132,17 +130,22 @@ Input (keyboard, screen, event, eightbit)
 	 	keysym == XK_Prior || keysym == XK_Next ||
 	 	keysym == DXK_Remove || keysym == XK_KP_Delete ||
 		keysym == XK_KP_Insert) {
-		reply.a_type = CSI;
-		reply.a_nparam = 1;
-		if (sunFunctionKeys) {
-		    reply.a_param[0] = sunfuncvalue (keysym);
-		    reply.a_final = 'z';
+		if ((string = udk_lookup(funcvalue(keysym), &nbytes)) != 0) {
+			while (nbytes-- > 0)
+				unparseputc(*string++, pty);
 		} else {
-		    reply.a_param[0] = funcvalue (keysym);
-		    reply.a_final = '~';
+			reply.a_type = CSI;
+			reply.a_nparam = 1;
+			if (sunFunctionKeys) {
+				reply.a_param[0] = sunfuncvalue (keysym);
+				reply.a_final = 'z';
+			} else {
+				reply.a_param[0] = funcvalue (keysym);
+				reply.a_final = '~';
+			}
+			if (reply.a_param[0] > 0)
+				unparseseq(&reply, pty);
 		}
-		if (reply.a_param[0] > 0)
-			unparseseq(&reply, pty);
 		key = TRUE;
 	} else if (IsKeypadKey(keysym)) {
 	  	if (keyboard->flags & KYPD_APL)	{
@@ -162,7 +165,7 @@ Input (keyboard, screen, event, eightbit)
 		    if (screen->input_eight_bits)
 		      *string |= 0x80;	/* turn on eighth bit */
 		    else
-		      unparseputc (033, pty);  /* escape */
+		      unparseputc (ESC, pty);  /* escape */
 		}
 		while (nbytes-- > 0)
 			unparseputc(*string++, pty);
@@ -195,6 +198,7 @@ StringInput (screen, string, nbytes)
 	        AdjustAfterInput(screen);
 }
 
+/* These definitions are DEC-style (e.g., vt320) */
 static int funcvalue (keycode)
 	KeySym  keycode;
 {
@@ -238,7 +242,7 @@ static int funcvalue (keycode)
 
 static int sunfuncvalue (keycode)
 	KeySym  keycode;
-  {
+{
   	switch (keycode) {
 		case XK_F1:	return(224);
 		case XK_F2:	return(225);
@@ -291,4 +295,3 @@ static int sunfuncvalue (keycode)
 		default:	return(-1);
 	}
 }
-

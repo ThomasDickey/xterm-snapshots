@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.11 1996/03/29 22:20:47 dawes Exp $
+ *	$XFree86: xc/programs/xterm/resize.c,v 3.13 1996/08/20 12:33:56 dawes Exp $
  */
 
 /*
@@ -70,7 +70,13 @@
 #define USE_TERMINFO
 #endif
 
-#if defined(SYSV) || defined(linux) || defined(Lynx)
+#ifdef linux
+#define USE_TERMIOS
+#define USE_TERMINFO
+#define USE_SYSV_UTMP
+#endif
+
+#if defined(SYSV) || defined(Lynx)
 #define USE_SYSV_TERMIO
 #ifndef Lynx
 #define USE_SYSV_UTMP
@@ -225,7 +231,7 @@ static void readstring PROTO((FILE *fp, char *buf, char *str));
 
 #ifdef USE_TERMCAP
 static char *strindex PROTO((char *s1, char *s2));
-#if !defined(__NetBSD__) && !(defined(sun) && !defined(SVR4))
+#if !defined(__NetBSD__) && !(defined(sun) && !defined(SVR4)) && !defined(SCO325)
 #include <termcap.h>
 #else
 #include <curses.h>

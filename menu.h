@@ -1,5 +1,5 @@
 /* $XConsortium: menu.h,v 1.25 94/04/17 20:23:31 gildea Exp $ */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.1 1996/01/10 05:51:42 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.2 1996/08/13 11:37:03 dawes Exp $ */
 /*
 
 Copyright (c) 1989  X Consortium
@@ -45,6 +45,7 @@ extern MenuEntry mainMenuEntries[], vtMenuEntries[], tekMenuEntries[];
 extern MenuEntry fontMenuEntries[];
 extern Arg menuArgs[];
 
+extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
 extern void HandleAltScreen        PROTO_XT_ACTIONS_ARGS;
@@ -71,6 +72,7 @@ extern void HandleSetTekText       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetVisualBell    PROTO_XT_ACTIONS_ARGS;
 extern void HandleSoftReset        PROTO_XT_ACTIONS_ARGS;
+extern void HandleSunFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekCopy          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
@@ -90,21 +92,27 @@ extern void DoSecureKeyboard PROTO((Time tp));
 /*
  * items in primary menu
  */
-#define mainMenu_securekbd 0
-#define mainMenu_allowsends 1
+#define mainMenu_securekbd  ( 0)
+#define mainMenu_allowsends ( 1)
 #ifdef ALLOWLOGGING
-#define mainMenu_logging 2
+#define mainMenu_logging    ( 2)
+#define mainMenu_fix1       ( 0)
+#else
+#define mainMenu_fix1       (-1)
 #endif
-#define mainMenu_redraw 3
-#define mainMenu_line1 4
-#define mainMenu_suspend 5
-#define mainMenu_continue 6
-#define mainMenu_interrupt 7
-#define mainMenu_hangup 8
-#define mainMenu_terminate 9
-#define mainMenu_kill 10
-#define mainMenu_line2 11
-#define mainMenu_quit 12
+#define mainMenu_redraw     ( 3 + mainMenu_fix1)
+#define mainMenu_line1      ( 4 + mainMenu_fix1)
+#define mainMenu_8bit_ctrl  ( 5 + mainMenu_fix1)
+#define mainMenu_sun_fkeys  ( 6 + mainMenu_fix1)
+#define mainMenu_line2      ( 7 + mainMenu_fix1)
+#define mainMenu_suspend    ( 8 + mainMenu_fix1)
+#define mainMenu_continue   ( 9 + mainMenu_fix1)
+#define mainMenu_interrupt  (10 + mainMenu_fix1)
+#define mainMenu_hangup     (11 + mainMenu_fix1)
+#define mainMenu_terminate  (12 + mainMenu_fix1)
+#define mainMenu_kill       (13 + mainMenu_fix1)
+#define mainMenu_line3      (14 + mainMenu_fix1)
+#define mainMenu_quit       (15 + mainMenu_fix1)
 
 
 /*
@@ -204,6 +212,16 @@ extern void DoSecureKeyboard PROTO((Time tp));
 		    mainMenuEntries[mainMenu_logging].widget, \
 		    term->screen.logging)
 #endif
+
+#define update_8bit_control() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_8bit_ctrl].widget, \
+		    term->screen.control_eight_bits)
+
+#define update_sun_fkeys() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_sun_fkeys].widget, \
+		    sunFunctionKeys)
 
 #define update_scrollbar() \
   update_menu_item (term->screen.vtMenu, \

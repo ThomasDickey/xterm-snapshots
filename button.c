@@ -1,5 +1,5 @@
-/* $XConsortium: button.c /main/70 1996/01/14 16:52:34 kaleb $ */
-/* $XFree86: xc/programs/xterm/button.c,v 3.5 1996/05/13 06:50:44 dawes Exp $ */
+/* $XConsortium: button.c /main/72 1996/05/25 08:23:02 kaleb $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.9 1996/08/13 11:36:51 dawes Exp $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
@@ -108,6 +108,7 @@ static SelectUnit selectUnit;
 static int replyToEmacs;
 
 static Boolean ConvertSelection PROTO_XT_CVT_SELECT_ARGS;
+static SelectUnit EvalSelectUnit PROTO((Time buttonDownTime, SelectUnit defaultUnit));
 static char *SaveText PROTO((TScreen *screen, int row, int scol, int ecol, char *lp, int *eol));
 static int LastTextCol PROTO((int row));
 static int Length PROTO((TScreen *screen, int row, int scol, int ecol));
@@ -122,7 +123,6 @@ static void SaltTextAway PROTO((int crow, int ccol, int row, int col, String *pa
 static void SelectSet PROTO((Widget w, XEvent *event, String *params, Cardinal num_params));
 static void SelectionDone PROTO((Widget w, Atom *selection, Atom *target));
 static void SelectionReceived PROTO_XT_SEL_CB_ARGS;
-static void SetSelectUnit PROTO((Time buttonDownTime, SelectUnit defaultUnit));
 static void StartSelect PROTO((int startrow, int startcol));
 static void TrackDown PROTO((XButtonEvent *event));
 static void _GetSelection PROTO((Widget w, Time ev_time, String *params, Cardinal num_params));
@@ -423,23 +423,30 @@ Cardinal *num_params;
 }
 
 
-static void
-SetSelectUnit(buttonDownTime, defaultUnit)
+static SelectUnit
+EvalSelectUnit(buttonDownTime, defaultUnit)
     Time buttonDownTime;
     SelectUnit defaultUnit;
 {
     int delta;
-    if (buttonDownTime > lastButtonUpTime) /* most of the time */
-	delta = buttonDownTime - lastButtonUpTime;
-    else /* time has rolled over since lastButtonUpTime */
-	delta = (((Time) ~0) - lastButtonUpTime) + buttonDownTime;
+    static int firstTime = 1;
+
+    if (!firstTime) {
+	if (buttonDownTime > lastButtonUpTime) /* most of the time */
+	    delta = buttonDownTime - lastButtonUpTime;
+	else /* time has rolled over since lastButtonUpTime */
+	    delta = (((Time) ~0) - lastButtonUpTime) + buttonDownTime;
+    } else {
+	firstTime--;
+	delta = term->screen.multiClickTime + 1;
+    }
 
     if (delta > term->screen.multiClickTime) {
 	numberOfClicks = 1;
-	selectUnit = defaultUnit;
+	return defaultUnit;
     } else {
 	++numberOfClicks;
-	selectUnit = ((selectUnit + 1) % NSELECTUNITS);
+	return ((selectUnit + 1) % NSELECTUNITS);
     }
 }
 
@@ -449,7 +456,7 @@ XEvent *event;			/* must be XButtonEvent* */
 int startrow, startcol;
 {
 	if (SendMousePosition(w, event)) return;
-	SetSelectUnit(event->xbutton.time, SELECTCHAR);
+	selectUnit = EvalSelectUnit(event->xbutton.time, SELECTCHAR);
 	replyToEmacs = FALSE;
 	StartSelect(startrow, startcol);
 }
@@ -492,7 +499,7 @@ TrackDown(event)
 {
 	int startrow, startcol;
 
-	SetSelectUnit(event->time, SELECTCHAR);
+	selectUnit = EvalSelectUnit(event->time, SELECTCHAR);
 	if (numberOfClicks > 1 ) {
 		PointToRowCol(event->y, event->x, &startrow, &startcol);
 		replyToEmacs = TRUE;
@@ -569,9 +576,9 @@ EndExtend(w, event, params, num_params, use_cursor_loc)
     Cardinal num_params;
     Bool use_cursor_loc;
 {
-	int	row, col;
+	int	row, col, count;
 	TScreen *screen = &term->screen;
-	char line[9];
+	unsigned char line[9];
 
 	if (use_cursor_loc) {
 	    row = screen->cursor_row;
@@ -583,24 +590,30 @@ EndExtend(w, event, params, num_params, use_cursor_loc)
 	lastButtonUpTime = event->xbutton.time;
 	if (startSRow != endSRow || startSCol != endSCol) {
 		if (replyToEmacs) {
+			count = 0;
+			if (screen->control_eight_bits) {
+				line[count++] = CSI;
+			} else {
+				line[count++] = ESC;
+				line[count++] = '[';
+			}
 			if (rawRow == startSRow && rawCol == startSCol 
 			    && row == endSRow && col == endSCol) {
 			 	/* Use short-form emacs select */
-				strcpy(line, "\033[t");
-				line[3] = ' ' + endSCol + 1;
-				line[4] = ' ' + endSRow + 1;
-				v_write(screen->respond, line, 5);
+				line[count++] = 't';
+				line[count++] = ' ' + endSCol + 1;
+				line[count++] = ' ' + endSRow + 1;
 			} else {
 				/* long-form, specify everything */
-				strcpy(line, "\033[T");
-				line[3] = ' ' + startSCol + 1;
-				line[4] = ' ' + startSRow + 1;
-				line[5] = ' ' + endSCol + 1;
-				line[6] = ' ' + endSRow + 1;
-				line[7] = ' ' + col + 1;
-				line[8] = ' ' + row + 1;
-				v_write(screen->respond, line, 9);
+				line[count++] = 'T';
+				line[count++] = ' ' + startSCol + 1;
+				line[count++] = ' ' + startSRow + 1;
+				line[count++] = ' ' + endSCol + 1;
+				line[count++] = ' ' + endSRow + 1;
+				line[count++] = ' ' + col + 1;
+				line[count++] = ' ' + row + 1;
 			}
+			v_write(screen->respond, (char *)line, count);
 			TrackText(0, 0, 0, 0);
 		}
 	}
@@ -650,7 +663,7 @@ Bool use_cursor_loc;
 	if (SendMousePosition(w, event)) return;
 	firstValidRow = 0;
 	lastValidRow  = screen->max_row;
-	SetSelectUnit(event->xbutton.time, selectUnit);
+	selectUnit = EvalSelectUnit(event->xbutton.time, selectUnit);
 	replyToEmacs = FALSE;
 
 	if (numberOfClicks == 1) {
@@ -1198,7 +1211,7 @@ int *format;
 	*targetP++ = XA_COMPOUND_TEXT(d);
 	*targetP++ = XA_LENGTH(d);
 	*targetP++ = XA_LIST_LENGTH(d);
-	memmove( (char*)targetP, (char*)std_targets, sizeof(Atom)*std_length);
+	memcpy ( (char*)targetP, (char*)std_targets, sizeof(Atom)*std_length);
 	XtFree((char*)std_targets);
 	*type = XA_ATOM;
 	*format = 32;
@@ -1223,7 +1236,7 @@ int *format;
 	    *(long*)*value = 1;
 	else {
 	    long temp = 1;
-	    memmove( (char*)*value, ((char*)&temp)+sizeof(long)-4, 4);
+	    memcpy ( (char*)*value, ((char*)&temp)+sizeof(long)-4, 4);
 	}
 	*type = XA_INTEGER;
 	*length = 1;
@@ -1236,7 +1249,7 @@ int *format;
 	    *(long*)*value = xterm->screen.selection_length;
 	else {
 	    long temp = xterm->screen.selection_length;
-	    memmove( (char*)*value, ((char*)&temp)+sizeof(long)-4, 4);
+	    memcpy ( (char*)*value, ((char*)&temp)+sizeof(long)-4, 4);
 	}
 	*type = XA_INTEGER;
 	*length = 1;
@@ -1452,9 +1465,9 @@ EditorButton(event)
 {
 	register TScreen *screen = &term->screen;
 	int pty = screen->respond;
-	char line[6];
+	char unsigned line[6];
 	register unsigned row, col;
-	int button; 
+	int button, count = 0;
 
 	button = event->button - 1; 
 
@@ -1462,16 +1475,22 @@ EditorButton(event)
 	 / FontHeight(screen);
 	col = (event->x - screen->border - screen->scrollbar)
 	 / FontWidth(screen);
-	(void) strcpy(line, "\033[M");
-	if (screen->send_mouse_pos == 1) {
-		line[3] = ' ' + button;
+	if (screen->control_eight_bits) {
+		line[count++] = CSI;
 	} else {
-		line[3] = ' ' + (KeyState(event->state) << 2) + 
+		line[count++] = ESC;
+		line[count++] = '[';
+	}
+	line[count++] = 'M';
+	if (screen->send_mouse_pos == 1) {
+		line[count++] = ' ' + button;
+	} else {
+		line[count++] = ' ' + (KeyState(event->state) << 2) + 
 			((event->type == ButtonPress)? button:3);
 	}
-	line[4] = ' ' + col + 1;
-	line[5] = ' ' + row + 1;
-	v_write(pty, line, 6);
+	line[count++] = ' ' + col + 1;
+	line[count++] = ' ' + row + 1;
+	v_write(pty, (char *)line, count);
 }
 
 

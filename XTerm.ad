@@ -19,6 +19,7 @@ XTerm.JoinSession:False
 *mainMenu*terminate*Label:  Send TERM Signal
 *mainMenu*kill*Label:  Send KILL Signal
 *mainMenu*quit*Label:  Quit
+*mainMenu*eightBit*Label: 8-Bit Controls
 
 *vtMenu.Label:  VT Options
 *vtMenu*scrollbar*Label:  Enable Scrollbar

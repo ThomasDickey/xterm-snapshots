@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c,v 1.31 91/06/20 18:34:47 gildea Exp $
- *	$XFree86: xc/programs/xterm/util.c,v 3.5 1996/05/06 06:01:27 dawes Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.10 1996/08/21 08:43:35 dawes Exp $
  */
 
 /*
@@ -39,7 +39,12 @@
 
 extern Bool waiting_for_initial_map;
 
+static int ClearInLine PROTO((TScreen *screen, int row, int col, int len));
 static int handle_translated_exposure PROTO((TScreen *screen, int rect_x, int rect_y, unsigned int rect_width, unsigned int rect_height));
+static void ClearAbove PROTO((TScreen *screen));
+static void ClearBelow PROTO((TScreen *screen));
+static void ClearLeft PROTO((TScreen *screen));
+static void ClearLine PROTO((TScreen *screen));
 static void CopyWait PROTO((TScreen *screen));
 static void copy_area PROTO((TScreen *screen, int src_x, int src_y, unsigned int width, unsigned int height, int dest_x, int dest_y));
 static void horizontal_copy_area PROTO((TScreen *screen, int firstchar, int nchars, int amount));
@@ -117,16 +122,13 @@ register TScreen *screen;
 	screen->scroll_amt = 0;
 	screen->refresh_amt = 0;
 	if(refreshheight > 0) {
-		XClearArea (
-		    screen->display,
-		    TextWindow(screen),
-		    (int) screen->border + screen->scrollbar,
+		ClearCurBackground(screen,
 		    (int) refreshtop * FontHeight(screen) + screen->border,
-		    (unsigned) Width(screen),
+		    (int) screen->border + screen->scrollbar,
 		    (unsigned) refreshheight * FontHeight(screen),
-		    FALSE);
+		    (unsigned) Width(screen));
 		ScrnRefresh(screen, refreshtop, 0, refreshheight,
-		 screen->max_col + 1, False);
+		    screen->max_col + 1, False);
 	}
 }
 
@@ -239,14 +241,11 @@ register int amount;
 	}
 	scrolling_copy_area(screen, scrolltop+amount, scrollheight, amount);
 	if(refreshheight > 0) {
-		XClearArea (
-		   screen->display,
-		   TextWindow(screen),
-		   (int) screen->border + screen->scrollbar,
-		   (int) refreshtop * FontHeight(screen) + screen->border,
-		   (unsigned) Width(screen),
-		   (unsigned) refreshheight * FontHeight(screen),
-		   FALSE);
+		ClearCurBackground(screen,
+		    (int) refreshtop * FontHeight(screen) + screen->border,
+		    (int) screen->border + screen->scrollbar,
+		    (unsigned) refreshheight * FontHeight(screen),
+		    (unsigned) Width(screen));
 		if(refreshheight > shift)
 			refreshheight = shift;
 	}
@@ -319,15 +318,13 @@ register int amount;
 	    screen->scrolls++;
 	}
 	scrolling_copy_area(screen, scrolltop-amount, scrollheight, -amount);
-	if(refreshheight > 0)
-		XClearArea (
-		    screen->display,
-		    TextWindow(screen),
-		    (int) screen->border + screen->scrollbar,
+	if(refreshheight > 0) {
+		ClearCurBackground(screen,
 		    (int) refreshtop * FontHeight(screen) + screen->border,
-		    (unsigned) Width(screen),
+		    (int) screen->border + screen->scrollbar,
 		    (unsigned) refreshheight * FontHeight(screen),
-		    FALSE);
+		    (unsigned) Width(screen));
+	}
     }
 	ScrnInsertLine (screen->buf, screen->bot_marg, screen->top_marg,
 			amount, screen->max_col + 1);
@@ -381,15 +378,13 @@ register int n;
 	if((i = screen->cur_row + refreshheight - 1 - bot) > 0)
 		refreshheight -= i;
 	vertical_copy_area(screen, scrolltop-n, scrollheight, -n);
-	if(refreshheight > 0)
-		XClearArea (
-		    screen->display,
-		    TextWindow(screen),
-		    (int) screen->border + screen->scrollbar,
+	if(refreshheight > 0) {
+		ClearCurBackground(screen,
 		    (int) refreshtop * FontHeight(screen) + screen->border,
-		    (unsigned) Width(screen),
+		    (int) screen->border + screen->scrollbar,
 		    (unsigned) refreshheight * FontHeight(screen),
-		    FALSE);
+		    (unsigned) Width(screen));
+	}
     }
 	/* adjust screen->buf */
 	ScrnInsertLine(screen->buf, screen->bot_marg, screen->cur_row, n,
@@ -459,15 +454,13 @@ register int n;
 		}
 	}
 	vertical_copy_area(screen, scrolltop+n, scrollheight, n);
-	if(refreshheight > 0)
-		XClearArea (
-		    screen->display,
-		    TextWindow(screen),
-		    (int) screen->border + screen->scrollbar,
+	if(refreshheight > 0) {
+		ClearCurBackground(screen,
 		    (int) refreshtop * FontHeight(screen) + screen->border,
-		    (unsigned) Width(screen),
+		    (int) screen->border + screen->scrollbar,
 		    (unsigned) refreshheight * FontHeight(screen),
-		    FALSE);
+		    (unsigned) Width(screen));
+	}
     }
 	/* adjust screen->buf */
 	if(screen->scrollWidget && !screen->alternate && screen->cur_row == 0)
@@ -486,8 +479,6 @@ InsertChar (screen, n)
     register TScreen *screen;
     register int n;
 {
-        register int cx, cy;
-
 	if(screen->cursor_state)
 		HideCursor();
 	screen->do_wrap = 0;
@@ -505,23 +496,17 @@ InsertChar (screen, n)
 		    horizontal_copy_area(screen, screen->cur_col,
 					 screen->max_col+1 - (screen->cur_col+n),
 					 n);
-	
-		cx = CursorX (screen, screen->cur_col);
-		cy = CursorY (screen, screen->cur_row);
 
-		useCurBackground(TRUE);
-		XFillRectangle(
-		    screen->display,
-		    TextWindow(screen), 
-		    screen->reverseGC,
-		    cx, cy,
-		    (unsigned) n * FontWidth(screen), (unsigned) FontHeight(screen));
-		useCurBackground(FALSE);
+		FillCurBackground(
+			screen,
+			CursorX (screen, screen->cur_col),
+			CursorY (screen, screen->cur_row),
+			(unsigned) n * FontWidth(screen),
+			(unsigned) FontHeight(screen));
 	    }
 	}
 	/* adjust screen->buf */
-	ScrnInsertChar(screen->buf, screen->cur_row, screen->cur_col, n,
-			screen->max_col + 1);
+	ScrnInsertChar(screen, n, screen->max_col + 1);
 }
 
 /*
@@ -549,185 +534,221 @@ DeleteChar (screen, n)
 				     screen->max_col+1 - (screen->cur_col+n),
 				     -n);
 	
-		useCurBackground(TRUE);
-		XFillRectangle
-		    (screen->display, TextWindow(screen),
-		     screen->reverseGC,
-		     screen->border + screen->scrollbar
-		       + Width(screen) - n*FontWidth(screen),
-		     CursorY (screen, screen->cur_row), n * FontWidth(screen),
-		     FontHeight(screen));
-		useCurBackground(FALSE);
+		FillCurBackground (
+			screen,
+			Width(screen) + CursorX(screen, -n),
+			CursorY (screen, screen->cur_row),
+			n * FontWidth(screen),
+			FontHeight(screen));
 	    }
 	}
 	/* adjust screen->buf */
-	ScrnDeleteChar (screen->buf, screen->cur_row, screen->cur_col, n,
-			screen->max_col + 1);
-
+	ScrnDeleteChar (screen, n, screen->max_col + 1);
 }
 
 /*
  * Clear from cursor position to beginning of display, inclusive.
  */
-void
+static void
 ClearAbove (screen)
 register TScreen *screen;
 {
-	register top, height;
+	if (screen->protected_mode != OFF_PROTECT) {
+		register int row;
+		for (row = 0; row <= screen->max_row; row++)
+			ClearInLine(screen, row, 0, screen->max_col + 1);
+	} else {
+		register int top, height;
 
-	if(screen->cursor_state)
-		HideCursor();
-	if((top = -screen->topline) <= screen->max_row) {
-		if(screen->scroll_amt)
-			FlushScroll(screen);
-		if((height = screen->cur_row + top) > screen->max_row)
-			height = screen->max_row;
-		if((height -= top) > 0) {
-			useCurBackground(TRUE);
-			XClearArea(screen->display, TextWindow(screen),
-			 screen->border + screen->scrollbar, top *
-			 FontHeight(screen) + screen->border,
-			 Width(screen), height * FontHeight(screen), FALSE);
-			useCurBackground(FALSE);
+		if(screen->cursor_state)
+			HideCursor();
+		if((top = -screen->topline) <= screen->max_row) {
+			if(screen->scroll_amt)
+				FlushScroll(screen);
+			if((height = screen->cur_row + top) > screen->max_row)
+				height = screen->max_row;
+			if((height -= top) > 0) {
+				ClearCurBackground(screen,
+				    top * FontHeight(screen) + screen->border,
+				    screen->border + screen->scrollbar,
+				    height * FontHeight(screen),
+				    Width(screen));
+			}
 		}
-
-		if(screen->cur_row - screen->topline <= screen->max_row)
-			ClearLeft(screen);
+		ClearBufRows(screen, 0, screen->cur_row - 1);
 	}
-	ClearBufRows(screen, 0, screen->cur_row - 1);
+
+	if(screen->cur_row - screen->topline <= screen->max_row)
+		ClearLeft(screen);
 }
 
 /*
  * Clear from cursor position to end of display, inclusive.
  */
-void
+static void
 ClearBelow (screen)
 register TScreen *screen;
 {
-	register top;
+	ClearRight(screen, -1);
 
-	ClearRight(screen);
-	if((top = screen->cur_row - screen->topline) <= screen->max_row) {
-		if(screen->scroll_amt)
-			FlushScroll(screen);
-		if(++top <= screen->max_row) {
-			useCurBackground(TRUE);
-			XClearArea(screen->display, TextWindow(screen),
-			 screen->border + screen->scrollbar, top *
-			 FontHeight(screen) + screen->border,
-			 Width(screen), (screen->max_row - top + 1) *
-			 FontHeight(screen), FALSE);
-			useCurBackground(FALSE);
+	if (screen->protected_mode != OFF_PROTECT) {
+		register int row;
+		for (row = screen->cur_row + 1; row <= screen->max_row; row++)
+			ClearInLine(screen, row, 0, screen->max_col + 1);
+	} else {
+		register int top;
+
+		if((top = screen->cur_row - screen->topline) <= screen->max_row) {
+			if(screen->scroll_amt)
+				FlushScroll(screen);
+			if(++top <= screen->max_row) {
+				ClearCurBackground(screen,
+				    top * FontHeight(screen) + screen->border,
+				    screen->border + screen->scrollbar,
+				    (screen->max_row - top + 1) * FontHeight(screen),
+				    Width(screen));
+			}
 		}
+		ClearBufRows(screen, screen->cur_row + 1, screen->max_row);
 	}
-	ClearBufRows(screen, screen->cur_row + 1, screen->max_row);
 }
 
-/* 
- * Clear last part of cursor's line, inclusive.
+/*
+ * Clear the given row, for the given range of columns, returning 1 if no
+ * protected characters were found, 0 otherwise.
  */
-void
-ClearRight (screen)
-register TScreen *screen;
+static int
+ClearInLine(screen, row, col, len)
+	register TScreen *screen;
+	int row;
+	int col;
+	int len;
 {
-	int	len = (screen->max_col - screen->cur_col + 1);
-	ScrnBuf	buf = screen->buf;
-	Char *attrs = BUF_ATTRS(buf, screen->cur_row) + screen->cur_col;
+	int rc = 1;
+	int flags = TERM_COLOR_FLAGS;
+
+	/*
+	 * If we're clearing to the end of the line, we won't count this as
+	 * "drawn" characters.  We'll only do cut/paste on "drawn" characters,
+	 * so this has the effect of suppressing trailing blanks from a
+	 * selection.
+	 */
+	if (col + len + 1 < screen->max_col)
+		flags |= CHARDRAWN;
+
+	/* If we've marked protected text on the screen, we'll have to
+	 * check each time we do an erase.
+	 */
+	if (screen->protected_mode != OFF_PROTECT) {
+		register int n;
+		Char *attrs = SCRN_BUF_ATTRS(screen, row) + col;
+		int saved_mode = screen->protected_mode;
+		Bool done;
+
+		/* disable this branch during recursion */
+		screen->protected_mode = OFF_PROTECT;
+
+		do {
+			done = True;
+			for (n = 0; n < len; n++) {
+				if (attrs[n] & PROTECTED) {
+					rc = 0; /* found a protected segment */
+					if (n != 0)
+						ClearInLine(screen, row, col, n);
+					while ((n < len)
+					   &&  (attrs[n] & PROTECTED))
+						n++;
+					done = False;
+					break;
+				}
+			}
+			/* setup for another segment, past the protected text */
+			if (!done) {
+				attrs += n;
+				col += n;
+				len -= n;
+			}
+		} while (!done);
+
+		screen->protected_mode = saved_mode;
+		if (len <= 0)
+			return 0;
+	}
+	/* fall through to the final non-protected segment */
 
 	if(screen->cursor_state)
 		HideCursor();
 	screen->do_wrap = 0;
-	if(screen->cur_row - screen->topline <= screen->max_row) {
-	    if(!AddToRefresh(screen)) {
-	if(screen->scroll_amt)
-		FlushScroll(screen);
-		useCurBackground(TRUE);
-		XFillRectangle(screen->display, TextWindow(screen),
-		  screen->reverseGC,
-		 CursorX(screen, screen->cur_col),
-		 CursorY(screen, screen->cur_row),
-		 Width(screen) - screen->cur_col * FontWidth(screen),
-		 FontHeight(screen));
-		useCurBackground(FALSE);
-	    }
+
+	if (row - screen->topline <= screen->max_row) {
+		if(!AddToRefresh(screen)) {
+			if(screen->scroll_amt)
+				FlushScroll(screen);
+			FillCurBackground (
+				screen,
+				CursorX (screen, col),
+				CursorY (screen, row),
+				len * FontWidth(screen),
+				FontHeight(screen));
+		}
 	}
-	bzero(BUF_CHARS(buf, screen->cur_row) + screen->cur_col, len);
-	memset(attrs, term->flags & (FG_COLOR|BG_COLOR), len);
-	memset(BUF_FORES(buf, screen->cur_row) + screen->cur_col,
-		(term->flags & FG_COLOR)
-		? term->cur_foreground : 0, len);
-	memset(BUF_BACKS(buf, screen->cur_row) + screen->cur_col,
-		(term->flags & BG_COLOR)
-		? term->cur_background : 0, len);
+
+	memset(SCRN_BUF_CHARS(screen, row) + col, ' ',   len);
+	memset(SCRN_BUF_ATTRS(screen, row) + col, flags, len);
+
+	if_OPT_ISO_COLORS(screen,{
+		memset(SCRN_BUF_FORES(screen, row) + col,
+			flags & FG_COLOR ? term->cur_foreground : 0, len);
+		memset(SCRN_BUF_BACKS(screen, row) + col,
+			flags & BG_COLOR ? term->cur_background : 0, len);
+	})
+
+	return rc;
+}
+
+/* 
+ * Clear the next n characters on the cursor's line, including the cursor's
+ * position.
+ */
+void
+ClearRight (screen, n)
+register TScreen *screen;
+int n;
+{
+	int	len = (screen->max_col - screen->cur_col + 1);
+
+	if (n < 0)	/* the remainder of the line */
+		n = screen->max_col + 1;
+	if (n == 0)	/* default for 'ECH' */
+		n = 1;
+
+	if (len > n)
+		len = n;
+
+	(void) ClearInLine(screen, screen->cur_row, screen->cur_col, len);
 
 	/* with the right part cleared, we can't be wrapping */
-	attrs[0] &= ~LINEWRAPPED;
+	BUF_ATTRS(screen->buf, screen->cur_row)[0] &= ~LINEWRAPPED;
 }
 
 /*
  * Clear first part of cursor's line, inclusive.
  */
-void
+static void
 ClearLeft (screen)
-    register TScreen *screen;
+register TScreen *screen;
 {
-	int len = screen->cur_col + 1;
-	int flags = CHARDRAWN | (term->flags & (FG_COLOR|BG_COLOR));
-
-	if(screen->cursor_state)
-		HideCursor();
-	screen->do_wrap = 0;
-	if(screen->cur_row - screen->topline <= screen->max_row) {
-	    if(!AddToRefresh(screen)) {
-		if(screen->scroll_amt)
-			FlushScroll(screen);
-		useCurBackground(TRUE);
-		XFillRectangle (screen->display, TextWindow(screen),
-		     screen->reverseGC,
-		     screen->border + screen->scrollbar,
-		      CursorY (screen, screen->cur_row),
-		     len * FontWidth(screen),
-		     FontHeight(screen));
-		useCurBackground(FALSE);
-	    }
-	}
-	
-	memset(SCRN_BUF_CHARS(screen, screen->cur_row), ' ',   len);
-	memset(SCRN_BUF_ATTRS(screen, screen->cur_row), flags, len);
-	memset(SCRN_BUF_FORES(screen, screen->cur_row),
-		flags & FG_COLOR ? term->cur_foreground : 0, len);
-	memset(SCRN_BUF_BACKS(screen, screen->cur_row),
-		flags & BG_COLOR ? term->cur_background : 0, len);
-
+	(void) ClearInLine(screen, screen->cur_row, 0, screen->cur_col + 1);
 }
 
 /* 
  * Erase the cursor's line.
  */
-void
+static void
 ClearLine(screen)
 register TScreen *screen;
 {
-	if(screen->cursor_state)
-		HideCursor();
-	screen->do_wrap = 0;
-	if(screen->cur_row - screen->topline <= screen->max_row) {
-	    if(!AddToRefresh(screen)) {
-		if(screen->scroll_amt)
-			FlushScroll(screen);
-		useCurBackground(TRUE);
-		XFillRectangle (screen->display, TextWindow(screen), 
-		     screen->reverseGC,
-		     screen->border + screen->scrollbar,
-		      CursorY (screen, screen->cur_row),
-		     Width(screen), FontHeight(screen));
-		useCurBackground(FALSE);
-	    }
-	}
-	bzero (SCRN_BUF_CHARS(screen, screen->cur_row), (screen->max_col + 1));
-	bzero (SCRN_BUF_ATTRS(screen, screen->cur_row), (screen->max_col + 1));
-	bzero (SCRN_BUF_FORES(screen, screen->cur_row), (screen->max_col + 1));
-	bzero (SCRN_BUF_BACKS(screen, screen->cur_row), (screen->max_col + 1));
+	(void) ClearInLine(screen, screen->cur_row, 0, screen->max_col + 1);
 }
 
 void
@@ -742,15 +763,107 @@ register TScreen *screen;
 	if((top = -screen->topline) <= screen->max_row) {
 		if(screen->scroll_amt)
 			FlushScroll(screen);
-		useCurBackground(TRUE);
-		XClearArea(screen->display, TextWindow(screen),
-			 screen->border + screen->scrollbar, 
-			 top * FontHeight(screen) + screen->border,	
-		 	 Width(screen), (screen->max_row - top + 1) *
-			 FontHeight(screen), FALSE);
-		useCurBackground(FALSE);
+		ClearCurBackground(screen,
+		    top * FontHeight(screen) + screen->border,	
+		    screen->border + screen->scrollbar, 
+		    (screen->max_row - top + 1) * FontHeight(screen),
+		    Width(screen));
 	}
 	ClearBufRows (screen, 0, screen->max_row);
+}
+
+/*
+ * If we've written protected text DEC-style, and are issuing a non-DEC
+ * erase, temporarily reset the protected_mode flag so that the erase will
+ * ignore the protected flags.
+ */
+void
+do_erase_line(screen, param, mode)
+	register TScreen *screen;
+	int param;
+	int mode;
+{
+	int saved_mode = screen->protected_mode;
+
+	if (saved_mode == DEC_PROTECT
+	 && saved_mode != mode)
+	 	screen->protected_mode = OFF_PROTECT;
+
+	switch (param) {
+	case -1:	/* DEFAULT */
+	case 0:
+		ClearRight(screen, -1);
+		break;
+	case 1:
+		ClearLeft(screen);
+		break;
+	case 2:
+		ClearLine(screen);
+		break;
+	}
+	screen->protected_mode = saved_mode;
+}
+
+/*
+ * Just like 'do_erase_line()', except that this intercepts ED controls.  If we
+ * clear the whole screen, we'll get the return-value from ClearInLine, and
+ * find if there were any protected characters left.  If not, reset the
+ * protected mode flag in the screen data (it's slower).
+ */
+void
+do_erase_display(screen, param, mode)
+	register TScreen *screen;
+	int param;
+	int mode;
+{
+	int saved_mode = screen->protected_mode;
+
+	if (saved_mode == DEC_PROTECT
+	 && saved_mode != mode)
+	 	screen->protected_mode = OFF_PROTECT;
+
+	switch (param) {
+	case -1:	/* DEFAULT */
+	case 0:
+		if (screen->cur_row == 0
+		 && screen->cur_col == 0) {
+			screen->protected_mode = saved_mode;
+			do_erase_display(screen, 2, mode);
+			saved_mode = screen->protected_mode;
+		} else
+			ClearBelow(screen);
+		break;
+
+	case 1:
+		if (screen->cur_row == screen->max_row
+		 && screen->cur_col == screen->max_col) {
+			screen->protected_mode = saved_mode;
+			do_erase_display(screen, 2, mode);
+			saved_mode = screen->protected_mode;
+		} else
+			ClearAbove(screen);
+		break;
+
+	case 2:
+		/*
+		 * We use 'ClearScreen()' throughout the remainder of the
+		 * program for places where we don't care if the characters are
+		 * protected or not.  So we modify the logic around this call
+		 * on 'ClearScreen()' to handle protected characters.
+		 */
+		if (screen->protected_mode != OFF_PROTECT) {
+			register int row;
+			int rc = 1;
+			for (row = 0; row <= screen->max_row; row++)
+				rc &= ClearInLine(screen, row, 0, screen->max_col + 1);
+			if (rc != 0)
+				saved_mode = OFF_PROTECT;
+		} else {
+			ClearScreen(screen);
+		}
+		break;
+	}
+	screen->protected_mode = saved_mode;
 }
 
 static void
@@ -1084,8 +1197,10 @@ ReverseVideo (termw)
 	 * We don't swap colors that happen to match the screen's foreground
 	 * and background because that tends to produce bizarre effects.
 	 */
-	EXCHANGE( screen->Acolors[0], screen->Acolors[7],  tmp )
-	EXCHANGE( screen->Acolors[8], screen->Acolors[15], tmp )
+	if_OPT_ISO_COLORS(screen,{
+		EXCHANGE( screen->Acolors[0], screen->Acolors[7],  tmp )
+		EXCHANGE( screen->Acolors[8], screen->Acolors[15], tmp )
+	})
 
 	tmp = termw->core.background_pixel;
 	if(screen->cursorcolor == screen->foreground)
@@ -1112,6 +1227,12 @@ ReverseVideo (termw)
 		ScrollBarReverseVideo(screen->scrollWidget);
 
 	XSetWindowBackground(screen->display, TextWindow(screen), termw->core.background_pixel);
+
+	/* the shell-window's background will be used in the first repainting
+	 * on resizing
+	 */
+	XSetWindowBackground(screen->display, VShellWindow, termw->core.background_pixel);
+
 	if(tek) {
 	    TekReverseVideo(screen);
 	}
@@ -1141,6 +1262,29 @@ recolor_cursor (cursor, fg, bg)
 		  colordefs, 2);
     XRecolorCursor (dpy, cursor, colordefs, colordefs+1);
     return;
+}
+
+/*
+ * Draws text with the specified combination of bold/underline
+ */
+void
+drawXtermText(screen, flags, gc, x, y, text, len)
+	register TScreen *screen;
+	unsigned flags;
+	GC gc;
+	int x;
+	int y;
+	char *text;
+	int len;
+{
+	XDrawImageString(screen->display, TextWindow(screen), gc, 
+		x, y,  text, len);
+	if ((flags & BOLD) && screen->enbolden)
+		XDrawString(screen->display, TextWindow(screen), gc,
+			x+1, y,  text, len);
+	if ((flags & UNDERLINE) && screen->underline) 
+		XDrawLine(screen->display, TextWindow(screen), gc, 
+			x, y+1, x + len * FontWidth(screen), y+1);
 }
 
 /*
@@ -1218,35 +1362,27 @@ resetXtermGC(screen, flags, hilite)
 	}
 }
 
-/* GET_FG */
+#if OPT_ISO_COLORS
 Pixel
 getXtermForeground(flags, color)
 	int flags;
 	int color;
 {
-	Pixel fg = (flags & FG_COLOR)
+	Pixel fg = (flags & FG_COLOR) && (color >= 0)
 			? term->screen.Acolors[color]
 			: term->screen.foreground;
-
-	if (term->misc.re_verse && (fg == term->screen.original_fg))
-		fg = term->screen.original_bg;
 
 	return fg;
 }
 
-/* GET_BG */
 Pixel
 getXtermBackground(flags, color)
 	int flags;
 	int color;
 {
-	Pixel bg = (flags & BG_COLOR)
+	Pixel bg = (flags & BG_COLOR) && (color >= 0)
 			? term->screen.Acolors[color]
 			: term->core.background_pixel;
-
-	if (term->misc.re_verse && (bg == term->screen.original_bg))
-		bg = term->screen.original_fg;
-
 	return bg;
 }
 
@@ -1257,7 +1393,8 @@ getXtermBackground(flags, color)
  * in the current SGR background. Otherwise, reset to the window's default
  * background.
  */
-void useCurBackground(Bool flag)
+void useCurBackground(flag)
+	Bool flag;
 {
 	TScreen *screen = &term->screen;
 	int color = flag ? term->cur_background : -1;
@@ -1265,3 +1402,20 @@ void useCurBackground(Bool flag)
 
 	XSetWindowBackground(screen->display, TextWindow(screen), bg);
 }
+
+/*
+ * Using the "current" SGR background, clear a rectangle.
+ */
+void ClearCurBackground(screen, top,left, height,width)
+	register TScreen *screen;
+	int top;
+	int left;
+	unsigned height;
+	unsigned width;
+{
+	useCurBackground(TRUE);
+	XClearArea (screen->display, TextWindow(screen),
+		left, top, width, height, FALSE);
+	useCurBackground(FALSE);
+}
+#endif /* OPT_ISO_COLORS */

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: misc.c /main/106 1996/02/02 14:27:57 kaleb $
- *	$XFree86: xc/programs/xterm/misc.c,v 3.11 1996/03/17 11:44:07 dawes Exp $
+ *	$XFree86: xc/programs/xterm/misc.c,v 3.14 1996/08/20 12:33:53 dawes Exp $
  */
 
 /*
@@ -44,6 +44,7 @@
 #include <X11/Xmu/SysUtil.h>
 #include <X11/Xmu/WinUtil.h>
 
+#include "VTparse.h"
 #include "data.h"
 #include "error.h"
 #include "menu.h"
@@ -77,13 +78,13 @@ extern char *malloc();
 extern char *getenv();
 #endif
 
-extern XtermWidget term;
 extern Widget toplevel;		/* used in 'ChangeGroup()' */
 
 static Boolean AllocateColor PROTO((XtermWidget pTerm, ScrnColors *pNew, int ndx, char *name));
 static Boolean ChangeColorsRequest PROTO((XtermWidget pTerm, int start, char *names));
 static Boolean GetOldColors PROTO(( XtermWidget pTerm));
 static Boolean UpdateOldColors PROTO((XtermWidget pTerm, ScrnColors *pNew));
+static int hexvalue PROTO((int c));
 static void ChangeGroup PROTO((String attribute, XtArgVal value));
 static void DoSpecialEnterNotify PROTO((XEnterWindowEvent *ev));
 static void DoSpecialLeaveNotify PROTO((XEnterWindowEvent *ev));
@@ -91,7 +92,15 @@ static void selectwindow PROTO((TScreen *screen, int flag));
 static void unselectwindow PROTO((TScreen *screen, int flag));
 static void withdraw_window PROTO((Display *dpy, Window w, int scr));
 
-extern XtAppContext app_con;
+void
+do_xevents()
+{
+	register TScreen *screen = &term->screen;
+
+	if (XtAppPending(app_con)
+	|| GetBytesAvailable (ConnectionNumber(screen->display)) > 0)
+		xevents();
+}
 
 void
 xevents()
@@ -177,6 +186,7 @@ void HandleKeyPressed(w, event, params, nparams)
 #endif
 	Input (&term->keyboard, screen, &event->xkey, False);
 }
+
 /* ARGSUSED */
 void HandleEightBitKeyPressed(w, event, params, nparams)
     Widget w;
@@ -374,9 +384,7 @@ Bell(which,percent)
        the bell again? */
     if(screen->bellSuppressTime) {
 	if(screen->bellInProgress) {
-	    if (XtAppPending(app_con) ||
-		GetBytesAvailable (ConnectionNumber(screen->display)) > 0)
-		xevents();
+	    do_xevents();
 	    if(screen->bellInProgress) { /* even after new events? */
 		return;
 	    }
@@ -716,42 +724,56 @@ void logpipe()
 #endif /* ALLOWLOGGING */
 
 void
-do_osc(func)
-int (*func) PROTO((void));
+do_osc(oscbuf, len)
+Char *oscbuf;
+int len;
 {
-	register int mode, c;
-	register char *cp;
-	char buf[512];
-	char *bufend = &buf[(sizeof buf) - 1];	/* leave room for null */
-	Bool okay = True;
+	register int mode;
+	register Char *cp;
+	int state = 0;
+	char *buf = 0;
 
 	/* 
-	 * lines should be of the form <ESC> ] number ; string <BEL>
-	 *
-	 * where number is one of 0, 1, 2, or 46
+	 * lines should be of the form <OSC> number ; string <ST>
 	 */
 	mode = 0;
-	while(isdigit(c = (*func)()))
-		mode = 10 * mode + (c - '0');
-	if (c != ';') okay = False;
-	cp = buf;
-	while(isprint((c = (*func)()) & 0x7f) && cp < bufend)
-		*cp++ = c;
-	if (c != 7) okay = False;
-	*cp = 0;
-	if (okay) switch(mode) {
-	 case 0:	/* new icon name and title*/
+	for (cp = oscbuf; *cp != '\0'; cp++) {
+		switch (state) {
+		case 0:
+			if (isdigit(*cp)) {
+				mode = 10 * mode + (*cp - '0');
+				break;
+			}
+			/* FALLTHRU */
+		case 1:
+			if (*cp != ';')
+				return;
+			state = 2;
+			break;
+		case 2:
+			buf = (char *)cp;
+			state = 3;
+			/* FALLTHRU */
+		default:
+			if (!isprint(*cp & 0x7f))
+				return;
+		}
+	}
+
+	switch(mode) {
+	case 0:	/* new icon name and title*/
 		Changename(buf);
 		Changetitle(buf);
 		break;
 
-	 case 1:	/* new icon name only */
+	case 1:	/* new icon name only */
 		Changename(buf);
 		break;
 
-	 case 2:	/* new title only */
+	case 2:	/* new title only */
 		Changetitle(buf);
 		break;
+
         case 10:       case 11:        case 12:
         case 13:       case 14:        case 15:
         case 16:
@@ -790,6 +812,169 @@ int (*func) PROTO((void));
 	 * but that could potentially open a fairly nasty security hole.
 	 */
 	}
+}
+
+#define MAX_UDK 35
+static struct {
+	char *str;
+	int   len;
+	} user_keys[MAX_UDK];
+
+static int
+hexvalue(c)
+	int c;
+{
+	if (c >= '0' && c <= '9') return c - '0';
+	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+	return -1;
+}
+
+void
+do_dcs(dcsbuf, dcslen)
+Char *dcsbuf;
+int dcslen;
+{
+	register TScreen *screen = &term->screen;
+	char *cp = (char *)dcsbuf;
+
+	if (*cp == '$') { /* DECRQSS */
+		char reply[BUFSIZ];
+		Bool okay = True;
+
+		cp++;
+		if (*cp++ == 'q') {
+			if (!strcmp(cp, "\"q")) {		/* DECSCA */
+				sprintf(reply, "%d%s",
+					(screen->protected_mode == DEC_PROTECT)
+					 && (term->flags & PROTECTED) ? 1 : 0,
+					cp);
+			} else if (!strcmp(cp, "\"p")) {	/* DECSCL */
+				sprintf(reply, "%d%s",
+					(screen->ansi_level ?
+					 screen->ansi_level : 1) + 60,
+					cp);
+			} else if (!strcmp(cp, "r")) {		/* DECSTBM */
+				sprintf(reply, "%d;%dr",
+					screen->top_marg + 1,
+					screen->bot_marg + 1);
+			} else if (!strcmp(cp, "m")) {		/* SGR */
+				strcpy(reply, "0");
+				if (term->flags & BOLD)
+					strcat(reply, ";1");
+				if (term->flags & UNDERLINE)
+					strcat(reply, ";4");
+				if (term->flags & INVERSE)
+					strcat(reply, ";7");
+				if (term->flags & INVISIBLE)
+					strcat(reply, ";8");
+				if_OPT_ISO_COLORS(screen,{
+				if (term->flags & BG_COLOR)
+					sprintf(reply+strlen(reply),
+						";3%d", term->cur_foreground);
+				if (term->flags & FG_COLOR)
+					sprintf(reply+strlen(reply),
+						";4%d", term->cur_background);
+				})
+				strcat(reply, "m");
+			} else
+				okay = False;
+
+			unparseputc1(DCS, screen->respond);
+			unparseputc(okay ? '0' : '1', screen->respond);
+			unparseputc('$', screen->respond);
+			unparseputc('r', screen->respond);
+			if (okay)
+				cp = reply;
+			while (*cp != '\0')
+				unparseputc(*cp++, screen->respond);
+			unparseputc1(ST, screen->respond);
+		} else {
+			unparseputc(CAN, screen->respond);
+		}
+	} else { /* DECUDK */
+		Bool clear_all = True;
+		Bool lock_keys = True;
+
+		if (dcslen != strlen(cp))
+			/* shouldn't have nulls in the string */
+			return;
+
+		if (*cp == '0') {
+			cp++;
+		} else if (*cp == '1') {
+			cp++;
+			clear_all = False;
+		}
+
+		if (*cp == ';')
+			cp++;
+		else if (*cp != '|')
+			return;
+
+		if (*cp == '0') {
+			cp++;
+		} else if (*cp == '1') {
+			cp++;
+			lock_keys = False;
+		}
+
+		if (*cp++ != '|')
+			return;
+
+		if (clear_all) {
+			int n;
+			for (n = 0; n < MAX_UDK; n++) {
+				if (user_keys[n].str != 0) {
+					free(user_keys[n].str);
+					user_keys[n].str = 0;
+					user_keys[n].len = 0;
+				}
+			}
+		}
+
+		while (*cp) {
+			char *str = malloc(strlen(cp) + 2);
+			int key = 0;
+			int len = 0;
+
+			while (isdigit(*cp))
+				key = (key * 10) + (*cp++ - '0');
+			if (*cp == '/') {
+				cp++;
+				while (*cp != ';' && *cp != '\0') {
+					int hi = hexvalue(*cp++);
+					int lo = hexvalue(*cp++);
+					if (hi >= 0 && lo >= 0)
+						str[len++] = (hi << 4) | lo;
+					else
+						return;
+				}
+			}
+			if (len > 0 && key < MAX_UDK) {
+				if (user_keys[key].str != 0)
+					free(user_keys[key].str);
+				user_keys[key].str = str;
+				user_keys[key].len = len;
+			} else {
+				free(str);
+			}
+			if (*cp == ';')
+				cp++;
+		}
+	}
+}
+
+char *
+udk_lookup(keycode, len)
+	int keycode;
+	int *len;
+{
+	if (keycode < MAX_UDK) {
+		*len = user_keys[keycode].len;
+		return user_keys[keycode].str;
+	}
+	return 0;
 }
 
 static void
@@ -974,7 +1159,7 @@ int		i,ndx;
 	    if (names[0]==';')
 		 thisName=	NULL;
 	    else thisName=	names;
-	    names=	index(names,';');
+	    names = strchr(names,';');
 	    if (names!=NULL) {
 		*names=	'\0';
 		names++;

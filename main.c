@@ -1,7 +1,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c /main/239 1995/12/10 17:21:49 gildea $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/main.c,v 3.37 1996/05/12 13:03:03 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.42 1996/08/20 12:33:50 dawes Exp $ */
 
 /*
  * 				 W A R N I N G
@@ -166,10 +166,7 @@ static Bool IsPts = False;
 #endif
 
 #ifdef linux
-#ifdef __alpha__
 #define USE_TERMIOS
-#endif
-#define USE_SYSV_TERMIO
 #define USE_SYSV_PGRP
 #define USE_SYSV_UTMP
 #define USE_SYSV_SIGNALS
@@ -185,10 +182,8 @@ static Bool IsPts = False;
 #undef CAPS_LOCK
 #endif
 
-#ifndef NO_POSIX_TERMIOS
 #ifdef CSRG_BASED
 #define USE_POSIX_TERMIOS
-#endif
 #endif
 
 #include <sys/ioctl.h>
@@ -710,7 +705,6 @@ static int tslot;
 static jmp_buf env;
 
 char *ProgramName;
-Boolean sunFunctionKeys;
 
 static struct _resource {
     char *xterm_name;
@@ -1019,7 +1013,6 @@ Arg ourTopLevelShellArgs[] = {
 };
 int number_ourTopLevelShellArgs = 2;
 	
-XtAppContext app_con;
 Widget toplevel;
 Bool waiting_for_initial_map;
 
@@ -1162,13 +1155,15 @@ char **argv;
 
 #if defined(USE_TERMIOS) || defined(USE_POSIX_TERMIOS) /* { */
 	d_tio.c_cc[VSUSP] = CSUSP;
-#if !defined(linux)||!defined(__alpha__)
+#ifdef VDSUSP
 	d_tio.c_cc[VDSUSP] = CDSUSP;
 #endif
 	d_tio.c_cc[VREPRINT] = CRPRNT;
 	d_tio.c_cc[VDISCARD] = CFLUSH;
 	d_tio.c_cc[VWERASE] = CWERASE;
 	d_tio.c_cc[VLNEXT] = CLNEXT;
+	d_tio.c_cc[VMIN] = 1;
+	d_tio.c_cc[VTIME] = 0;
 #endif /* } */
 #ifdef TIOCSLTC /* { */
         d_ltc.t_suspc = CSUSP;		/* t_suspc */
@@ -1217,6 +1212,8 @@ char **argv;
 	d_tio.c_cc[VQUIT] = CQUIT;		/* '^\'	*/
     	d_tio.c_cc[VEOF] = CEOF;		/* '^D'	*/
 	d_tio.c_cc[VEOL] = CEOL;		/* '^@'	*/
+	d_tio.c_cc[VMIN] = 1;
+	d_tio.c_cc[VTIME] = 0;
 #ifdef VSWTCH
 	d_tio.c_cc[VSWTCH] = CSWTCH;            /* usually '^Z' */
 #endif
@@ -1319,7 +1316,7 @@ char **argv;
 #endif	/* } TIOCSLTC */
 #if defined(USE_TERMIOS) || defined(USE_POSIX_TERMIOS) /* { */
 	d_tio.c_cc[VSUSP] = CSUSP;
-#if !defined(linux)||!defined(__alpha__)
+#ifdef VDSUSP
 	d_tio.c_cc[VDSUSP] = '\000';
 #endif
 	d_tio.c_cc[VREPRINT] = '\377';
@@ -2352,7 +2349,7 @@ spawn ()
 #endif	/* USE_SYSV_TERMIO */
 #if defined(UTMP) && defined(USE_SYSV_UTMP)
 		char* ptyname;
-		char* ptynameptr;
+		char* ptynameptr = 0;
 #endif
 
 #ifdef USE_USG_PTYS
@@ -2910,28 +2907,29 @@ spawn ()
 		*/
 #ifdef CRAY
 #define PTYCHARLEN 4
-#else
+#endif
+
 #ifdef __osf__
 #define PTYCHARLEN 5
-#else
-#define PTYCHARLEN 2
 #endif
+
+#ifndef PTYCHARLEN
+#define PTYCHARLEN 2
 #endif
 
 		(void) setutent ();
 		/* set up entry to search for */
 		ptyname = ttydev;
+		bzero(&utmp, sizeof(utmp));
 #ifndef __sgi
 		if (PTYCHARLEN >= (int)strlen(ptyname))
 		    ptynameptr = ptyname;
 		else
 		    ptynameptr = ptyname + strlen(ptyname) - PTYCHARLEN;
-		(void) strncpy(utmp.ut_id, ptynameptr, sizeof (utmp.ut_id));
 #else
-		(void) strncpy(utmp.ut_id,ptyname + sizeof("/dev/tty")-1,
-			       sizeof (utmp.ut_id));
-
+		ptynameptr = ptyname + sizeof("/dev/tty")-1;
 #endif
+		(void) strncpy(utmp.ut_id, ptynameptr, sizeof (utmp.ut_id));
 		utmp.ut_type = DEAD_PROCESS;
 
 		/* position to entry in utmp file */
@@ -2939,7 +2937,7 @@ spawn ()
 
 		/* set up the new entry */
 		utmp.ut_type = USER_PROCESS;
-#ifndef linux
+#if !defined(linux) && !defined(SVR4)
 		utmp.ut_exit.e_exit = 2;
 #endif
 		(void) strncpy(utmp.ut_user,
@@ -3738,7 +3736,7 @@ Exit(n)
 	struct utmp *utptr;
 #endif
 	char* ptyname;
-	char* ptynameptr;
+	char* ptynameptr = 0;
 #if defined(WTMP) && !defined(SVR4)
 	int fd;			/* for /etc/wtmp */
 	int i;

@@ -1,5 +1,5 @@
 # $XConsortium: termcap,v 1.13 94/10/13 21:24:32 gildea Exp $
-# $XFree86: xc/programs/xterm/termcap,v 3.1 1996/05/13 06:50:47 dawes Exp $
+# $XFree86: xc/programs/xterm/termcap,v 3.3 1996/08/10 13:09:54 dawes Exp $
 #
 # Note:
 #	termcap format is limited to 1023 characters.  This set of descriptions
@@ -21,7 +21,7 @@ vs|xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System):\
 	:ho=\E[H:\
 	:im=\E[4h:ei=\E[4l:mi:\
 	:ks=\E[?1h\E=:ke=\E[?1l\E>:\
-	:k1=\EOP:k2=\EOQ:k3=\EOR:k4=\EOS:\
+	:k1=\E[11~:k2=\E[12~:k3=\E[13~:k4=\E[14~:\
 	:k5=\E[15~:k6=\E[17~:k7=\E[18~:k8=\E[19~:k9=\E[20~:\
 	:k;=\E[21~:F1=\E[23~:F2=\E[24~:\
 	:kn#12:\
@@ -33,12 +33,12 @@ vs|xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System):\
 	:li#24:md=\E[1m:me=\E[m:mr=\E[7m:ms:nd=\E[C:\
 	:eA=\E)0:as=^N:ae=^O:\
 	:ml=\El:mu=\Em:\
-	:sc=\E7:rc=\E8:sf=\n:so=\E[7m:se=\E[m:sr=\EM:\
+	:sc=\E7:rc=\E8:sf=\n:so=\E[7m:se=\E[27m:sr=\EM:\
 	:st=\EH:\
 	:ti=\E7\E[?47h:te=\E[2J\E[?47l\E8:\
 	:vi=\E[?25l:ve=\E[?25h:\
-	:up=\E[A:us=\E[4m:ue=\E[m:xn:\
-	:ut:Co#8:NC#7:op=\E100m:AB=\E[4%dm:AF=\E[3%dm:
+	:up=\E[A:us=\E[4m:ue=\E[24m:xn:\
+	:ut:Co#8:op=\E100m:AB=\E[4%dm:AF=\E[3%dm:
 v2|xterm-65|xterm with tall window 65x80 (X Window System):\
 	:li#65:tc=xterm:
 vb|xterm-bold|xterm with bold instead of underline (X Window System):\
