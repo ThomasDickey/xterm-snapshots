@@ -871,6 +871,19 @@ hexvalue(c)
 }
 
 void
+reset_decudk()
+{
+	int n;
+	for (n = 0; n < MAX_UDK; n++) {
+		if (user_keys[n].str != 0) {
+			free(user_keys[n].str);
+			user_keys[n].str = 0;
+			user_keys[n].len = 0;
+		}
+	}
+}
+
+void
 do_dcs(dcsbuf, dcslen)
 Char *dcsbuf;
 Size_t dcslen;
@@ -964,16 +977,8 @@ Size_t dcslen;
 		if (*cp++ != '|')
 			return;
 
-		if (clear_all) {
-			int n;
-			for (n = 0; n < MAX_UDK; n++) {
-				if (user_keys[n].str != 0) {
-					free(user_keys[n].str);
-					user_keys[n].str = 0;
-					user_keys[n].len = 0;
-				}
-			}
-		}
+		if (clear_all)
+			reset_decudk();
 
 		while (*cp) {
 			char *str = malloc(strlen(cp) + 2);

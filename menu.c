@@ -826,7 +826,7 @@ static void do_softreset (gw, closure, data)
     Widget gw GCC_UNUSED;
     XtPointer closure GCC_UNUSED, data GCC_UNUSED;
 {
-    VTReset (FALSE);
+    VTReset (FALSE, FALSE);
 }
 
 
@@ -834,7 +834,7 @@ static void do_hardreset (gw, closure, data)
     Widget gw GCC_UNUSED;
     XtPointer closure GCC_UNUSED, data GCC_UNUSED;
 {
-    VTReset (TRUE);
+    VTReset (TRUE, FALSE);
 }
 
 
@@ -842,11 +842,7 @@ static void do_clearsavedlines (gw, closure, data)
     Widget gw GCC_UNUSED;
     XtPointer closure GCC_UNUSED, data GCC_UNUSED;
 {
-    register TScreen *screen = &term->screen;
-
-    screen->savedlines = 0;
-    ScrollBarDrawThumb(screen->scrollWidget);
-    VTReset (TRUE); 
+    VTReset (TRUE, TRUE); 
 }
 
 
