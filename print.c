@@ -48,7 +48,7 @@ authorization.
 #define Strcmp(a,b) strcmp((char *)a,(char *)b)
 #define Strncmp(a,b,c) strncmp((char *)a,(char *)b,c)
 
-#define SGR_MASK (BOLD|UNDERLINE|INVERSE)
+#define SGR_MASK (BOLD|BLINK|UNDERLINE|INVERSE)
 
 static void charToPrinter PROTO((int chr));
 static void printCursorLine PROTO((void));
@@ -156,6 +156,8 @@ static void send_SGR(attr)
 		strcat(msg, ";1");
 	if (attr & UNDERLINE)
 		strcat(msg, ";2");
+	if (attr & BLINK)
+		strcat(msg, ";5");
 	if (attr & INVERSE)	/* typo? DEC documents this as invisible */
 		strcat(msg, ";7");
 	strcat(msg, "m");
@@ -174,8 +176,11 @@ static void charToPrinter(chr)
 		Printer = popen(screen->printer_command, "w");
 		initialized++;
 	}
-	if (Printer != 0)
+	if (Printer != 0) {
 		fputc(chr, Printer);
+		if (chr == '\r' || chr == '\n' || chr == '\f')
+			fflush(Printer);
+	}
 }
 
 static void stringToPrinter(str)

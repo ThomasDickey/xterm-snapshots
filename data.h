@@ -94,6 +94,10 @@ extern int TEKgcFontMask;
 
 extern XtermWidget term;
 
+#ifdef NO_XKBSTDBELL
+#undef XKB
+#endif
+
 #ifdef XKB
 #include <X11/extensions/XKBbells.h>
 #else

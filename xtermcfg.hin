@@ -37,6 +37,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_STRERROR	/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_TERMCAP_H	/* AC_CHECK_HEADERS(termcap.h) */
 #undef HAVE_UNISTD_H	/* AC_CHECK_HEADERS(unistd.h) */
+#undef HAVE_XKBSTDBELL	/* AC_CHECK_FUNCS(XkbStdBell) */
 #undef HAVE_X11_DECKEYSYM_H /* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #undef HAVE_X11_XPOLL_H	/* AC_CHECK_HEADERS(X11/Xpoll.h) */
 #undef NO_ACTIVE_ICON	/* CF_ARG_DISABLE(active-icon) */
@@ -80,4 +81,8 @@ extern char *my_strerror();
 
 #if !HAVE_X11_XPOLL_H
 #define NO_XPOLL_H	/* X11R6.1 & up use Xpoll.h for select() definitions */
+#endif
+
+#if !HAVE_XKBSTDBELL
+#define NO_XKBSTDBELL	/* IRIX 6.2 incorrectly defines XKB in imake */
 #endif

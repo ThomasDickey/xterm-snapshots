@@ -356,7 +356,7 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 #if OPT_ISO_COLORS
 #define if_OPT_ISO_COLORS(screen, code) if(screen->colorMode) code
 #define TERM_COLOR_FLAGS (term->flags & (FG_COLOR|BG_COLOR))
-#define MAXCOLORS 18
+#define MAXCOLORS 19
 #define COLOR_0		0
 #define COLOR_1		1
 #define COLOR_2		2
@@ -373,8 +373,9 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 #define COLOR_13	13
 #define COLOR_14	14
 #define COLOR_15	15
-#define COLOR_BD	16
-#define COLOR_UL	17
+#define COLOR_BD	16	/* BOLD */
+#define COLOR_UL	17	/* UNDERLINE */
+#define COLOR_BL	18	/* BLINK */
 #ifndef DFT_COLORMODE
 #define DFT_COLORMODE TRUE	/* default colorMode resource */
 #endif
@@ -425,8 +426,12 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 #if OPT_ISO_COLORS || OPT_DEC_CHRSET
 #define MAX_PTRS term->num_ptrs
 #else
-#define MAX_PTRS 2
+#define MAX_PTRS 3
 #endif
+
+#define BUF_HEAD 1
+	/* the number that point to Char data */
+#define BUF_PTRS (MAX_PTRS - BUF_HEAD)
 
 /***====================================================================***/
 
@@ -468,28 +473,35 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 
 /***====================================================================***/
 
+#define OFF_CHARS (BUF_HEAD + 0)
+#define OFF_ATTRS (BUF_HEAD + 1)
+#define OFF_COLOR (BUF_HEAD + 2)
+#define OFF_CSETS (BUF_HEAD + 3)
+
 	/* ScrnBuf-level macros */
-#define BUF_CHARS(buf, row) (buf[MAX_PTRS * (row) + 0])
-#define BUF_ATTRS(buf, row) (buf[MAX_PTRS * (row) + 1])
+#define BUF_FLAGS(buf, row) (buf[MAX_PTRS * (row) + 0])
+#define BUF_CHARS(buf, row) (buf[MAX_PTRS * (row) + OFF_CHARS])
+#define BUF_ATTRS(buf, row) (buf[MAX_PTRS * (row) + OFF_ATTRS])
 
 #if OPT_ISO_COLORS
-#define BUF_COLOR(buf, row) (buf[MAX_PTRS * (row) + 2])
+#define BUF_COLOR(buf, row) (buf[MAX_PTRS * (row) + OFF_COLOR])
 #endif
 
 #if OPT_DEC_CHRSET
-#define BUF_CSETS(buf, row) (buf[MAX_PTRS * (row) + 3])
+#define BUF_CSETS(buf, row) (buf[MAX_PTRS * (row) + OFF_CSETS])
 #endif
 
 	/* TScreen-level macros */
-#define SCRN_BUF_CHARS(screen, row) BUF_CHARS(screen->buf, row)
-#define SCRN_BUF_ATTRS(screen, row) BUF_ATTRS(screen->buf, row)
+#define SCRN_BUF_FLAGS(screen, row) BUF_FLAGS(screen->visbuf, row)
+#define SCRN_BUF_CHARS(screen, row) BUF_CHARS(screen->visbuf, row)
+#define SCRN_BUF_ATTRS(screen, row) BUF_ATTRS(screen->visbuf, row)
 
 #if OPT_ISO_COLORS
-#define SCRN_BUF_COLOR(screen, row) BUF_COLOR(screen->buf, row)
+#define SCRN_BUF_COLOR(screen, row) BUF_COLOR(screen->visbuf, row)
 #endif
 
 #if OPT_DEC_CHRSET
-#define SCRN_BUF_CSETS(screen, row) BUF_CSETS(screen->buf, row)
+#define SCRN_BUF_CSETS(screen, row) BUF_CSETS(screen->visbuf, row)
 #endif
 
 	/* indices into save_modes[] */
@@ -548,6 +560,7 @@ typedef struct {
 	Boolean		colorMode;	/* are we using color mode?	*/
 	Boolean		colorULMode;	/* use color for underline?	*/
 	Boolean		colorBDMode;	/* use color for bold?		*/
+	Boolean		colorBLMode;	/* use color for blink?		*/
 	Boolean		colorAttrMode;	/* prefer colorUL/BD to SGR	*/
 #endif
 #if OPT_DEC_CHRSET
@@ -629,7 +642,7 @@ typedef struct {
 	Boolean		scrollttyoutput; /* scroll to bottom on tty output */
 	Boolean		scrollkey;	/* scroll to bottom on key	*/
 
-	ScrnBuf		buf;		/* ptr to visible screen buf (main) */
+	ScrnBuf		visbuf;		/* ptr to visible screen buf (main) */
 	ScrnBuf		allbuf;		/* screen buffer (may include
 					   lines scrolled off top)	*/
 	Char		*sbuf_address;	/* main screen memory address   */
@@ -868,7 +881,7 @@ typedef struct _TekWidgetRec {
 /*
  * terminal flags
  * There are actually two namespaces mixed together here.
- * One is the set of flags that can go in screen->buf attributes
+ * One is the set of flags that can go in screen->visbuf attributes
  * and which must fit in a char.
  * The other is the global setting stored in
  * term->flags and screen->save_modes.  This need only fit in an unsigned.
@@ -878,26 +891,19 @@ typedef struct _TekWidgetRec {
 #define INVERSE		0x01	/* invert the characters to be output */
 #define UNDERLINE	0x02	/* true if underlining */
 #define BOLD		0x04
+#define BLINK		0x08
 /* global flags (also character attributes) */
-#define BG_COLOR	0x08  /* true if background set */
-#define FG_COLOR	0x10  /* true if foreground set */
+#define BG_COLOR	0x10  /* true if background set */
+#define FG_COLOR	0x20  /* true if foreground set */
 
 /* character flags (internal attributes) */
-#define PROTECTED	0x20	/* a character is drawn that cannot be erased */
-#define LINEWRAPPED	0x40	/* used on the first character in a
-				 * line to indicate that it wraps onto
-				 * the next line so we can tell the
-				 * difference between lines that have
-				 * wrapped around and lines that have
-				 * ended naturally with a CR at column
-				 * max_col.
-				 */
+#define PROTECTED	0x40	/* a character is drawn that cannot be erased */
 #define CHARDRAWN	0x80    /* a character has been drawn here on the
 				   screen.  Used to distinguish blanks from
 				   empty parts of the screen when selecting */
 
 			/* mask: user-visible attributes */
-#define	ATTRIBUTES	(INVERSE|UNDERLINE|BOLD|BG_COLOR|FG_COLOR|INVISIBLE|PROTECTED)
+#define	ATTRIBUTES	(INVERSE|UNDERLINE|BOLD|BLINK|BG_COLOR|FG_COLOR|INVISIBLE|PROTECTED)
 
 #define WRAPAROUND	0x400	/* true if auto wraparound mode */
 #define	REVERSEWRAP	0x800	/* true if reverse wraparound mode */
@@ -909,6 +915,15 @@ typedef struct _TekWidgetRec {
 #define IN132COLUMNS	0x20000	/* true if in 132 column mode */
 #define INVISIBLE	0x40000	/* true if writing invisible text */
 
+/*
+ * Per-line flags
+ */
+#define LINEWRAPPED	0x01	/* used once per line to indicate that it wraps
+				 * onto the next line so we can tell the
+				 * difference between lines that have wrapped
+				 * around and lines that have ended naturally
+				 * with a CR at column max_col.
+				 */
 /*
  * If we've set protected attributes with the DEC-style DECSCA, then we'll have
  * to use DECSED or DECSEL to erase preserving protected text.  (The normal ED,

@@ -904,6 +904,8 @@ Size_t dcslen;
 					strcat(reply, ";1");
 				if (term->flags & UNDERLINE)
 					strcat(reply, ";4");
+				if (term->flags & BLINK)
+					strcat(reply, ";5");
 				if (term->flags & INVERSE)
 					strcat(reply, ";7");
 				if (term->flags & INVISIBLE)
