@@ -25,7 +25,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.31 1998/08/29 05:44:19 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.32 1998/10/10 15:25:52 dawes Exp $
 .\"
 .\" updated by Thomas Dickey <dickey@clark.net> for XFree86, July 1996.
 .TH XTERM 1 "Release 6.3" "X Version 11"

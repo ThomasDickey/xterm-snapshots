@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/proto.h,v 3.2 1998/07/04 14:48:28 robin Exp $ */
+/* $XFree86: xc/programs/xterm/proto.h,v 3.3 1998/10/25 07:12:47 dawes Exp $ */
 
 #ifndef included_proto_h
 #define included_proto_h
