@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.140 2001/11/05 02:07:15 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.141 2001/11/14 01:52:47 dickey Exp $ */
 
 
 /* main.c */
@@ -2836,10 +2836,12 @@ spawn (void)
 	TRACE(("resource backarrowKeyIsErase is %sset\n",
 		resource.backarrow_is_erase ? "" : "not "));
 	if (resource.backarrow_is_erase) { /* see input.c */
-		if (initial_erase == 127)
+		if (initial_erase == 127) {
 		    term->keyboard.flags &= ~MODE_DECBKM;
-		else
+		} else {
 		    term->keyboard.flags |= MODE_DECBKM;
+		    term->keyboard.reset_DECBKM = TRUE;
+		}
 		TRACE(("...sets DECBKM %s\n", 
 		    (term->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
 	}

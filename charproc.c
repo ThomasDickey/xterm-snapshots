@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.124 2001/10/10 19:46:22 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.125 2001/11/14 01:52:46 dickey Exp $ */
 
 /*
 
@@ -5530,6 +5530,10 @@ VTReset(Bool full, Bool saved)
 	if (full) {	/* RIS */
 		TabReset (term->tabs);
 		term->keyboard.flags = MODE_SRM;
+#if OPT_INITIAL_ERASE
+		if (term->keyboard.reset_DECBKM)
+			term->keyboard.flags |= MODE_DECBKM;
+#endif
 		if (term->screen.backarrow_key)
 			term->keyboard.flags |= MODE_DECBKM;
 		update_appcursor();
