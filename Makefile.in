@@ -1,4 +1,4 @@
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.32 2000/09/22 10:42:05 alanh Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.33 2000/11/01 01:12:36 dawes Exp $ ##
 
 SHELL		= /bin/sh
 

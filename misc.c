@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: misc.c /main/112 1996/11/29 10:34:07 swick $
- *	$XFree86: xc/programs/xterm/misc.c,v 3.56 2000/10/27 18:31:15 dawes Exp $
+ *	$XFree86: xc/programs/xterm/misc.c,v 3.58 2000/11/02 16:33:29 tsi Exp $
  */
 
 /*
@@ -276,7 +276,7 @@ void HandleStringEvent(
 	Char c, *p;
 	char hexval[2];
 	hexval[0] = hexval[1] = 0;
-	for (p = *params+2; (c = *p); p++) {
+	for (p = (Char *)(*params+2); (c = *p); p++) {
 	    hexval[0] *= 16;
 	    if (isupper(c)) c = tolower(c);
 	    if (c >= '0' && c <= '9')
