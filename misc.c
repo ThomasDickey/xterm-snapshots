@@ -178,10 +178,10 @@ Cursor make_colored_cursor (cursorindex, fg, bg)
 
 /* ARGSUSED */
 void HandleKeyPressed(w, event, params, nparams)
-    Widget w;
+    Widget w GCC_UNUSED;
     XEvent *event;
-    String *params;
-    Cardinal *nparams;
+    String *params GCC_UNUSED;
+    Cardinal *nparams GCC_UNUSED;
 {
     register TScreen *screen = &term->screen;
 
@@ -193,10 +193,10 @@ void HandleKeyPressed(w, event, params, nparams)
 
 /* ARGSUSED */
 void HandleEightBitKeyPressed(w, event, params, nparams)
-    Widget w;
+    Widget w GCC_UNUSED;
     XEvent *event;
-    String *params;
-    Cardinal *nparams;
+    String *params GCC_UNUSED;
+    Cardinal *nparams GCC_UNUSED;
 {
     register TScreen *screen = &term->screen;
 
@@ -208,8 +208,8 @@ void HandleEightBitKeyPressed(w, event, params, nparams)
 
 /* ARGSUSED */
 void HandleStringEvent(w, event, params, nparams)
-    Widget w;
-    XEvent *event;
+    Widget w GCC_UNUSED;
+    XEvent *event GCC_UNUSED;
     String *params;
     Cardinal *nparams;
 {
@@ -258,10 +258,10 @@ static void DoSpecialEnterNotify (ev)
 
 /*ARGSUSED*/
 void HandleEnterWindow(w, eventdata, event, cont)
-Widget w;
-XtPointer eventdata;
-XEvent *event;
-Boolean *cont;
+Widget w GCC_UNUSED;
+XtPointer eventdata GCC_UNUSED;
+XEvent *event GCC_UNUSED;
+Boolean *cont GCC_UNUSED;
 {
     /* NOP since we handled it above */
 }
@@ -285,10 +285,10 @@ static void DoSpecialLeaveNotify (ev)
 
 /*ARGSUSED*/
 void HandleLeaveWindow(w, eventdata, event, cont)
-Widget w;
-XtPointer eventdata;
-XEvent *event;
-Boolean *cont;
+Widget w GCC_UNUSED;
+XtPointer eventdata GCC_UNUSED;
+XEvent *event GCC_UNUSED;
+Boolean *cont GCC_UNUSED;
 {
     /* NOP since we handled it above */
 }
@@ -296,10 +296,10 @@ Boolean *cont;
 
 /*ARGSUSED*/
 void HandleFocusChange(w, eventdata, ev, cont)
-Widget w;
+Widget w GCC_UNUSED;
 XEvent *ev;
-XtPointer eventdata;
-Boolean *cont;
+XtPointer eventdata GCC_UNUSED;
+Boolean *cont GCC_UNUSED;
 {
 	register XFocusChangeEvent *event = (XFocusChangeEvent  *)ev;
         register TScreen *screen = &term->screen;
@@ -377,7 +377,7 @@ static long lastBellTime;	/* in milliseconds */
 
 void
 Bell(which,percent)
-     int which;
+     int which GCC_UNUSED;
      int percent;
 {
     register TScreen *screen = &term->screen;
@@ -471,10 +471,10 @@ VisualBell()
 
 /* ARGSUSED */
 void HandleBellPropertyChange(w, data, ev, more)
-    Widget w;
-    XtPointer data;
+    Widget w GCC_UNUSED;
+    XtPointer data GCC_UNUSED;
     XEvent *ev;
-    Boolean *more;
+    Boolean *more GCC_UNUSED;
 {
     register TScreen *screen = &term->screen;
 
@@ -730,7 +730,7 @@ void logpipe()
 void
 do_osc(oscbuf, len)
 Char *oscbuf;
-int len;
+int len GCC_UNUSED;
 {
 	register int mode;
 	register Char *cp;
@@ -1033,7 +1033,7 @@ int	i;
 
 static Boolean
 UpdateOldColors(pTerm,pNew)
-XtermWidget	pTerm;
+XtermWidget	pTerm GCC_UNUSED;
 ScrnColors	*pNew;
 {
 int	i;
@@ -1190,12 +1190,12 @@ int		i,ndx;
 #endif
 void
 Panic(s, a)
-char	*s;
-int a;
+char	*s GCC_UNUSED;
+int a GCC_UNUSED;
 {
 #ifdef DEBUG
 	if(debug) {
-		fprintf(stderr, "%s: PANIC!	", xterm_name);
+		fprintf(stderr, "%s: PANIC!\t", xterm_name);
 		fprintf(stderr, s, a);
 		fputs("\r\n", stderr);
 		fflush(stderr);

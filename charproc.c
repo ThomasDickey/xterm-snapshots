@@ -68,7 +68,7 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/Xmu/CharSet.h>
 #include <X11/Xmu/Converters.h>
 
-#if XtSpecificationRelease >= 6
+#if OPT_INPUT_METHOD
 #include <X11/Xaw/XawImP.h>
 #endif
 
@@ -175,6 +175,7 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtNalwaysHighlight "alwaysHighlight"
 #define XtNappcursorDefault "appcursorDefault"
 #define XtNappkeypadDefault "appkeypadDefault"
+#define XtNbackarrowKey "backarrowKey"
 #define XtNbellSuppressTime "bellSuppressTime"
 #define XtNboldFont "boldFont"
 #define XtNc132 "c132"
@@ -261,6 +262,7 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtCAlwaysHighlight "AlwaysHighlight"
 #define XtCAppcursorDefault "AppcursorDefault"
 #define XtCAppkeypadDefault "AppkeypadDefault"
+#define XtCBackarrowKey "BackarrowKey"
 #define XtCBellSuppressTime "BellSuppressTime"
 #define XtCBoldFont "BoldFont"
 #define XtCC132 "C132"
@@ -430,6 +432,7 @@ static XtActionsRec actionsList[] = {
     { "send-signal",		HandleSendSignal },
     { "quit",			HandleQuit },
     { "set-8-bit-control",	Handle8BitControl },
+    { "set-backarrow",		HandleBackarrow },
     { "set-sun-function-keys",	HandleSunFunctionKeys },
     { "set-scrollbar",		HandleScrollbar },
     { "set-jumpscroll",		HandleJumpscroll },
@@ -536,6 +539,9 @@ static XtResource resources[] = {
 {XtNappkeypadDefault,XtCAppkeypadDefault,XtRBoolean,
         sizeof(Boolean),XtOffsetOf(XtermWidgetRec, misc.appkeypadDefault),
         XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNbackarrowKey, XtCBackarrowKey, XtRBoolean, sizeof(Boolean),
+        XtOffsetOf(XtermWidgetRec, screen.backarrow_key),
+        XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNbellSuppressTime, XtCBellSuppressTime, XtRInt, sizeof(int),
         XtOffsetOf(XtermWidgetRec, screen.bellSuppressTime),
         XtRInt, (XtPointer) &defaultBellSuppressTime},
@@ -664,7 +670,7 @@ static XtResource resources[] = {
 {"font6", "Font6", XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.menu_font_names[fontMenu_font6]),
 	XtRString, (XtPointer) NULL},
-#if XtSpecificationRelease >= 6
+#if OPT_INPUT_METHOD
 {XtNinputMethod, XtCInputMethod, XtRString, sizeof(char*),
 	XtOffsetOf(XtermWidgetRec, misc.input_method),
 	XtRString, (XtPointer)NULL},
@@ -773,7 +779,7 @@ static void VTResize PROTO((Widget w));
 static void VTDestroy PROTO((Widget w));
 static Boolean VTSetValues PROTO((Widget cur, Widget request, Widget new, ArgList args, Cardinal *num_args));
 
-#if XtSpecificationRelease >= 6
+#if OPT_I18N_SUPPORT
 static void VTInitI18N PROTO((void));
 #endif
 
@@ -1776,7 +1782,7 @@ static void VTparse()
 		 case CASE_ANSI_LEVEL_1:
 			if (screen->terminal_id >= 100) {
 				screen->ansi_level = 1;
-				screen->control_eight_bits = False;
+				show_8bit_control(False);
 #if OPT_VT52_MODE
 				groundtable =
 				parsestate = ansi_table;
@@ -1797,9 +1803,9 @@ static void VTparse()
 				screen->ansi_level = param[0] - 60;
 				if (param[0] > 61) {
 					if (param[1] == 1)
-						screen->control_eight_bits = False;
+						show_8bit_control(False);
 					else if (param[1] == 0 || param[1] == 2)
-						screen->control_eight_bits = True;
+						show_8bit_control(True);
 				}
 			}
 			parsestate = groundtable;
@@ -1971,7 +1977,7 @@ static void VTparse()
 			break;
 
 		 case CASE_S7C1T:
-			screen->control_eight_bits = False;
+			show_8bit_control(False);
 			parsestate = groundtable;
 		 	break;
 
@@ -1980,7 +1986,7 @@ static void VTparse()
 			if (screen->ansi_level <= 1)
 				break;
 #endif
-			screen->control_eight_bits = True;
+			show_8bit_control(True);
 			parsestate = groundtable;
 		 	break;
 
@@ -2553,7 +2559,7 @@ ansi_modes(termw, func)
 	for (i=0; i<nparam; ++i) {
 		switch (param[i]) {
 		case 2:			/* KAM (if set, keyboard locked	*/
-			/* FIXME */
+			(*func)(&termw->keyboard.flags, MODE_KAM);
 			break;
 
 		case 4:			/* IRM				*/
@@ -2561,7 +2567,7 @@ ansi_modes(termw, func)
 			break;
 
 		case 12:		/* SRM (if set, local echo	*/
-			/* FIXME */
+			(*func)(&termw->keyboard.flags, MODE_SRM);
 			break;
 
 		case 20:		/* LNM				*/
@@ -2724,10 +2730,12 @@ dpmodes(termw, func)
 			}
 			break;
 		case 66:	/* DECNKM */
-			/* FIXME: numeric keypad */
+			/* FIXME: VT300 numeric keypad */
 			break;
 		case 67:	/* DECBKM */
-			/* FIXME: back-arrow mapped to backspace or delete(D)*/
+			/* back-arrow mapped to backspace or delete(D)*/
+			(*func)(&termw->keyboard.flags, MODE_DECBKM);
+			update_decbkm();
 			break;
 		case 1000:		/* xterm bogus sequence		*/
 			if(func == bitset)
@@ -3197,6 +3205,12 @@ int fd;
 		i++;
 	}
 	v_write(fd, buf, i);
+
+	/* If send/receive mode is reset, we echo characters locally */
+	if ((term->keyboard.flags & MODE_SRM) == 0) {
+		register TScreen *screen = &term->screen;
+		dotext(screen, screen->gsets[(int)(screen->curgl)], buf, buf+i);
+	}
 }
 
 static void
@@ -3307,9 +3321,9 @@ VTRun()
 
 /*ARGSUSED*/
 static void VTExpose(w, event, region)
-    Widget w;
+    Widget w GCC_UNUSED;
     XEvent *event;
-    Region region;
+    Region region GCC_UNUSED;
 {
 	register TScreen *screen = &term->screen;
 
@@ -3346,10 +3360,10 @@ static void VTGraphicsOrNoExpose (event)
 
 /*ARGSUSED*/
 static void VTNonMaskableEvent (w, closure, event, cont)
-Widget w;			/* unused */
-XtPointer closure;		/* unused */
+Widget w GCC_UNUSED;
+XtPointer closure GCC_UNUSED;
 XEvent *event;
-Boolean *cont;			/* unused */
+Boolean *cont GCC_UNUSED;
 {
     switch (event->type) {
        case GraphicsExpose:
@@ -3480,8 +3494,8 @@ static void VTClassInit ()
 /* ARGSUSED */
 static void VTInitialize (wrequest, wnew, args, num_args)
    Widget wrequest, wnew;
-   ArgList args;
-   Cardinal *num_args;
+   ArgList args GCC_UNUSED;
+   Cardinal *num_args GCC_UNUSED;
 {
    XtermWidget request = (XtermWidget) wrequest;
    XtermWidget new     = (XtermWidget) wnew;
@@ -3549,6 +3563,7 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->screen.input_eight_bits = request->screen.input_eight_bits;
    new->screen.output_eight_bits = request->screen.output_eight_bits;
    new->screen.control_eight_bits = request->screen.control_eight_bits;
+   new->screen.backarrow_key = request->screen.backarrow_key;
    new->screen.allowSendEvents = request->screen.allowSendEvents;
 #ifndef NO_ACTIVE_ICON
    new->screen.fnt_icon = request->screen.fnt_icon;
@@ -3595,12 +3610,15 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->cur_foreground = 0;
    new->cur_background = 0;
 
+   new->keyboard.flags = MODE_SRM;
+   if (new->screen.backarrow_key)
+	   new->keyboard.flags |= MODE_DECBKM;
+
     /*
      * The definition of -rv now is that it changes the definition of 
      * XtDefaultForeground and XtDefaultBackground.  So, we no longer
      * need to do anything special.
      */
-   new->keyboard.flags = 0;
    new->screen.display = new->core.screen->display;
    new->core.height = new->core.width = 1;
       /* dummy values so that we don't try to Realize the parent shell 
@@ -3784,7 +3802,6 @@ static void VTRealize (w, valuemask, values)
 		InputOutput, CopyFromParent,	
 		*valuemask|CWBitGravity, values);
 
-#if XtSpecificationRelease >= 6
 #ifndef NO_ACTIVE_ICON
 	if (term->misc.active_icon && screen->fnt_icon) {
 	    int iconX=0, iconY=0;
@@ -3852,6 +3869,7 @@ static void VTRealize (w, valuemask, values)
 	}
 #endif /* NO_ACTIVE_ICON */
 
+#if OPT_I18N_SUPPORT
 	VTInitI18N();
 #else
 	term->screen.xic = NULL;
@@ -3894,7 +3912,7 @@ static void VTRealize (w, valuemask, values)
 	return;
 }
 
-#if XtSpecificationRelease >= 6
+#if OPT_I18N_SUPPORT
 static void VTInitI18N()
 {
     int		i;
@@ -4015,9 +4033,9 @@ static void VTInitI18N()
 
 
 static Boolean VTSetValues (cur, request, new, args, num_args)
-    Widget cur, request, new;
-    ArgList args;
-    Cardinal *num_args;
+    Widget cur, request GCC_UNUSED, new;
+    ArgList args GCC_UNUSED;
+    Cardinal *num_args GCC_UNUSED;
 {
     XtermWidget curvt = (XtermWidget) cur;
     XtermWidget newvt = (XtermWidget) new; 
@@ -4321,9 +4339,13 @@ VTReset(full)
 
 	if (full) {	/* RIS */
 		TabReset (term->tabs);
-		term->keyboard.flags = 0;
+		term->keyboard.flags = MODE_SRM;
+		if (term->screen.backarrow_key)
+			term->keyboard.flags |= MODE_DECBKM;
 		update_appcursor();
 		update_appkeypad();
+		update_decbkm();
+		show_8bit_control(False);
 
 		FromAlternate(screen);
 		ClearScreen(screen);
@@ -4361,9 +4383,9 @@ VTReset(full)
 		 * We reset autowrap to the resource values rather than turning
 		 * it off.
 		 *
-		 * FIXME: also reset AM, DECNKM when they're implemented.
+		 * FIXME: also reset DECNKM when it's implemented.
 		 */
-		term->keyboard.flags &= ~(MODE_DECCKM);
+		term->keyboard.flags &= ~(MODE_DECCKM|MODE_KAM);
 		bitcpy(&term->flags, term->initflags, WRAPAROUND|REVERSEWRAP);
 		bitclr(&term->flags, INSERT|INVERSE|BOLD|UNDERLINE|INVISIBLE);
 		if_OPT_ISO_COLORS(screen,{reset_SGR_Colors();})
@@ -4486,7 +4508,7 @@ set_character_class (s)
 /* ARGSUSED */
 static void HandleKeymapChange(w, event, params, param_count)
     Widget w;
-    XEvent *event;
+    XEvent *event GCC_UNUSED;
     String *params;
     Cardinal *param_count;
 {
@@ -4519,7 +4541,7 @@ static void HandleKeymapChange(w, event, params, param_count)
 /* ARGSUSED */
 static void HandleBell(w, event, params, param_count)
     Widget w;
-    XEvent *event;		/* unused */
+    XEvent *event GCC_UNUSED;
     String *params;		/* [0] = volume */
     Cardinal *param_count;	/* 0 or 1 */
 {
@@ -4536,10 +4558,10 @@ static void HandleBell(w, event, params, param_count)
 
 /* ARGSUSED */
 static void HandleVisualBell(w, event, params, param_count)
-    Widget w;
-    XEvent *event;		/* unused */
-    String *params;		/* unused */
-    Cardinal *param_count;	/* unused */
+    Widget w GCC_UNUSED;
+    XEvent *event GCC_UNUSED;
+    String *params GCC_UNUSED;
+    Cardinal *param_count GCC_UNUSED;
 {
     VisualBell();
 }
@@ -4548,9 +4570,9 @@ static void HandleVisualBell(w, event, params, param_count)
 /* ARGSUSED */
 static void HandleIgnore(w, event, params, param_count)
     Widget w;
-    XEvent *event;		/* unused */
-    String *params;		/* unused */
-    Cardinal *param_count;	/* unused */
+    XEvent *event;
+    String *params GCC_UNUSED;
+    Cardinal *param_count GCC_UNUSED;
 {
     /* do nothing, but check for funny escape sequences */
     (void) SendMousePosition(w, event);
@@ -4560,11 +4582,12 @@ static void HandleIgnore(w, event, params, param_count)
 /* ARGSUSED */
 static void
 DoSetSelectedFont(w, client_data, selection, type, value, length, format)
-    Widget w;
-    XtPointer client_data;
-    Atom *selection, *type;
+    Widget w GCC_UNUSED;
+    XtPointer client_data GCC_UNUSED;
+    Atom *selection GCC_UNUSED;
+    Atom *type;
     XtPointer value;
-    unsigned long *length;
+    unsigned long *length GCC_UNUSED;
     int *format;
 {
     char *val = (char *)value;
@@ -4624,10 +4647,10 @@ void FindFontSelection (atom_name, justprobe)
 /* ARGSUSED */
 static void
 HandleSetFont(w, event, params, param_count)
-    Widget w;
-    XEvent *event;		/* unused */
-    String *params;		/* unused */
-    Cardinal *param_count;	/* unused */
+    Widget w GCC_UNUSED;
+    XEvent *event GCC_UNUSED;
+    String *params;
+    Cardinal *param_count;
 {
     int fontnum;
     char *name1 = NULL, *name2 = NULL;

@@ -625,6 +625,12 @@ Specifies whether or not the xterm uses a 50 millisecond timeout to
 await input (i.e., to support the Xaw3d arrow scrollbar).
 The default is ``false.''
 .TP 8
+.B "backarrowKey (\fPclass\fB BackarrowKey)"
+Specifies whether the backarrow key transmits
+a backspace
+or delete character.
+The default (backspace) is ``true.''
+.TP 8
 .B "bellSuppressTime (\fPclass\fB BellSuppressTime)"
 Number of milliseconds after a bell command is sent during which additional
 bells will be suppressed.  Default is 200.  If set non-zero,
@@ -1029,6 +1035,9 @@ This is a separator.
 .TP 8
 .B "8-bit-control (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-8-bit-control(toggle)\fP action.
+.TP 8
+.B "backarrow key (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-backarrow(toggle)\fP action.
 .TP 8
 .B "sun-function-keys (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsun-function-keys(toggle)\fP action.

@@ -288,6 +288,12 @@ typedef struct {
 
 /***====================================================================***/
 
+#if XtSpecificationRelease < 6
+#ifndef NO_ACTIVE_ICON
+#define NO_ACTIVE_ICON 1 /* Note: code relies on an X11R6 function */
+#endif
+#endif
+
 #ifndef OPT_AIX_COLORS
 #define OPT_AIX_COLORS  1 /* true if xterm is configured with AIX (16) colors */
 #endif
@@ -296,6 +302,22 @@ typedef struct {
 
 #ifndef OPT_DEC_CHRSET
 #define OPT_DEC_CHRSET  1 /* true if xterm is configured for DEC charset */
+#endif
+
+#ifndef OPT_I18N_SUPPORT
+#if XtSpecificationRelease >= 6
+#define OPT_I18N_SUPPORT 1 /* true if xterm uses internationalization support */
+#else
+#define OPT_I18N_SUPPORT 0
+#endif
+#endif
+
+#ifndef OPT_INPUT_METHOD
+#if XtSpecificationRelease >= 6
+#define OPT_INPUT_METHOD 1 /* true if xterm uses input-method support */
+#else
+#define OPT_INPUT_METHOD 0
+#endif
 #endif
 
 #ifndef OPT_ISO_COLORS
@@ -659,6 +681,7 @@ typedef struct {
 	Boolean		input_eight_bits;/* use 8th bit instead of ESC prefix */
 	Boolean		output_eight_bits; /* honor all bits or strip */
 	Boolean		control_eight_bits; /* send CSI as 8-bits */
+	Boolean		backarrow_key;		/* backspace/delete */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
 	Widget		mainMenu, vtMenu, tekMenu, fontMenu;
 	char*		menu_font_names[NMENUFONTS];
@@ -707,7 +730,7 @@ typedef struct _Misc {
     Boolean tekSmall;	/* start tek window in small size */
     Boolean appcursorDefault;
     Boolean appkeypadDefault;
-#if XtSpecificationRelease >= 6
+#if OPT_INPUT_METHOD
     char* input_method;
     char* preedit_type;
     Boolean open_im;
@@ -734,8 +757,11 @@ typedef struct _TekClassRec {
 } TekClassRec;
 
 /* define masks for keyboard.flags */
+#define MODE_KAM	0x01	/* keyboard action mode */
 #define MODE_DECKPAM	0x02	/* keypad application mode */
 #define MODE_DECCKM	0x04	/* cursor keys */
+#define MODE_SRM	0x08	/* send-receive mode */
+#define MODE_DECBKM	0x10	/* backarrow */
 
 
 #define N_MARGINBELL	10
@@ -873,6 +899,7 @@ typedef struct _TekWidgetRec {
 #define FontWidth(screen)	((screen)->fullVwin.f_width)
 #define FontHeight(screen)	((screen)->fullVwin.f_height)
 #define FontAscent(screen)	((screen)->fnt_norm->ascent)
+#define FontDescent(screen)	((screen)->fnt_norm->descent)
 #define Scrollbar(screen)	((screen)->fullVwin.scrollbar)
 #define NormalGC(screen)	((screen)->fullVwin.normalGC)
 #define ReverseGC(screen)	((screen)->fullVwin.reverseGC)

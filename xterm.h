@@ -5,6 +5,10 @@
 #ifndef	included_xterm_h
 #define	included_xterm_h
 
+#ifndef GCC_UNUSED
+#define GCC_UNUSED /* nothing */
+#endif
+
 #include "proto.h"
 
 /* Tekproc.c */
@@ -101,6 +105,7 @@ extern SIGNAL_T Exit PROTO((int n));
 
 /* menu.c */
 extern void do_hangup          PROTO_XT_CALLBACK_ARGS;
+extern void show_8bit_control  PROTO((Bool value));
 
 /* misc.c */
 extern Cursor make_colored_cursor PROTO((unsigned cursorindex, unsigned long fg, unsigned long bg));
