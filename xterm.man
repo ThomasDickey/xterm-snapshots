@@ -1,5 +1,5 @@
-.\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.20 1997/10/25 13:51:25 hohndel Exp $
+.\" $TOG: xterm.man /main/86 1997/11/04 20:58:28 kaleb $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.21 1997/11/16 06:43:10 dawes Exp $
 .\" Copyright (c) 1989  X Consortium
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining
@@ -27,7 +27,7 @@
 .\" from the X Consortium.
 .\"
 .\" updated by Thomas Dickey <dickey@clark.net> for XFree86, July 1996.
-.TH XTERM 1 "Release 6.3" "X Version 11"
+.TH XTERM 1 "Release 6.4" "X Version 11"
 .SH NAME
 xterm \- terminal emulator for X
 .SH SYNOPSIS
