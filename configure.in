@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.168 2004/05/26 01:19:55 tom Exp $
+dnl $XTermId: configure.in,v 1.170 2004/08/15 21:07:59 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.65 2004/05/26 01:19:55 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.66 2004/08/15 21:07:59 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -128,7 +128,14 @@ LIBS="$LIBS $X_EXTRA_LIBS"
 
 # Check for openpty() in -lutil if the UNIX98-style pty functions are not
 # available. E.g. for GNU libc 2.0.
-AC_CHECK_FUNCS(grantpt, [], AC_CHECK_LIB(util,openpty))
+case $host_os in #(vi
+netbsd*)	# 2004/8/15 - revisit this if/when grantpt is known to work.
+	AC_CHECK_LIB(util,openpty)
+	;;
+*)
+	AC_CHECK_FUNCS(grantpt, [], AC_CHECK_LIB(util,openpty))
+	;;
+esac
 
 AC_PATH_PROG(XTERM_PATH,xterm)
 
