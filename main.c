@@ -1903,7 +1903,7 @@ get_pty (int *pty)
 {
 #if defined(__osf__) || (defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
     int tty;
-    return (openpty(pty, &tty, NULL, NULL, NULL));
+    return (openpty(pty, &tty, ttydev, NULL, NULL));
 #elif defined(SYSV) && defined(i386) && !defined(SVR4)
         /*
 	  The order of this code is *important*.  On SYSV/386 we want to open

@@ -34,11 +34,11 @@ authorization.
 
 ********************************************************/
 
-#include <stdio.h>
-
 #include <xterm.h>
 #include <data.h>
 #include <error.h>
+
+#include <stdio.h>
 
 #undef  CTRL
 #define	CTRL(c)	((c) & 0x1f)
