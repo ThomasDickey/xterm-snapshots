@@ -69,6 +69,8 @@ all:	$(PROGRAMS)
 @RULE_CC@
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
 
+main.o: version.h
+
 xterm : $(OBJS1)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(LIBS)
 

@@ -4,4 +4,4 @@
  * version of xterm has been built.  The number in parentheses is my patch
  * number (T.Dickey).
  */
-#define XTERM_VERSION "XFree86 3.9Ab(58)"
+#define XTERM_VERSION "XFree86 3.9Ab(59)"
