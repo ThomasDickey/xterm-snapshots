@@ -117,7 +117,7 @@ void Mark_XMC(register TScreen *screen, int param)
 	switch (param) {
 	case -1:/* DEFAULT */
 	case 0: /* FALLTHRU */
-		found = MARK_OFF(XMC_FLAGS);
+		found = MARK_OFF((term->flags & XMC_FLAGS));
 		break;
 	case 1:
 		found = MARK_ON(BOLD);
@@ -146,7 +146,7 @@ void Mark_XMC(register TScreen *screen, int param)
 	if (found) {
 		unsigned save = term->flags;
 		term->flags ^= whichone;
-		TRACE(("XMC Writing glitch (%d/%d)\n", my_attrs, whichone))
+		TRACE(("XMC Writing glitch (%d/%d) after SGR %d\n", my_attrs, whichone, param))
 		dotext(screen, '?', glitch, glitch + screen->xmc_glitch);
 		term->flags = save;
 	}
