@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/version.h,v 3.1 1998/01/11 03:48:43 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/version.h,v 3.2 1998/01/24 01:53:42 hohndel Exp $ */
 
 /*
  * This is the string that's printed in response to "xterm -version", or

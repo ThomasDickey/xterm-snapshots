@@ -1,5 +1,5 @@
 .\" $TOG: xterm.man /main/86 1997/11/04 20:58:28 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.22 1998/01/11 03:48:43 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.23 1998/01/24 01:53:44 hohndel Exp $
 .\" Copyright (c) 1989  X Consortium
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining
