@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.83 1999/02/07 06:18:58 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.84 1999/03/14 03:22:37 dawes Exp $ */
 
 
 /* main.c */
@@ -376,7 +376,7 @@ static Bool IsPts = False;
 #include <sys/param.h>	/* for NOFILE */
 #endif
 
-#if (BSD >= 199103)
+#if defined(BSD) && (BSD >= 199103)
 #define USE_POSIX_WAIT
 #define LASTLOG
 #define WTMP
@@ -434,7 +434,7 @@ extern struct utmp *getutid __((struct utmp *_Id));
 #ifdef UTMP
 #include <utmp.h>
 #endif
-#if defined(LASTLOG) && (BSD < 199103)
+#if defined(LASTLOG) && (!defined(BSD) || (BSD < 199103))
 #include <lastlog.h>
 #endif
 #endif
@@ -3107,7 +3107,7 @@ spawn (void)
 
 		/* set up the new entry */
 		utmp.ut_type = USER_PROCESS;
-#if !(defined(linux) && __GLIBC__ < 2) && !defined(SVR4)
+#if !(defined(linux) && (!defined(__GLIBC__) || (__GLIBC__ < 2))) && !defined(SVR4)
 		utmp.ut_exit.e_exit = 2;
 #endif
 		(void) strncpy(utmp.ut_user,
@@ -3135,7 +3135,7 @@ spawn (void)
 			       sizeof(utmp.ut_name));
 
 		utmp.ut_pid = getpid();
-#if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
+#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 		utmp.ut_session = getsid(0);
 		utmp.ut_xtime = time ((time_t *) 0);
 		utmp.ut_tv.tv_usec = 0;
@@ -3150,7 +3150,7 @@ spawn (void)
 #if defined(SVR4) || defined(SCO325)
 		if (term->misc.login_shell)
 		    updwtmpx(WTMPX_FILE, &utmp);
-#elif defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
+#elif defined(linux) && defined(__GLIBC__) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
 		if (term->misc.login_shell)
 		    updwtmp(etc_wtmp, &utmp);
 #else
@@ -3903,7 +3903,7 @@ Exit(int n)
 #endif
 	char* ptyname;
 	char* ptynameptr = 0;
-#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
+#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && defined(__GLIBC__) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 	int fd;			/* for /etc/wtmp */
 	int i;
 #endif
@@ -3935,7 +3935,7 @@ Exit(int n)
 	    /* write it out only if it exists, and the pid's match */
 	    if (utptr && (utptr->ut_pid == screen->pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
-#if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
+#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) &&__GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
 		    utptr->ut_session = getsid(0);
 		    utptr->ut_xtime = time ((time_t *) 0);
 		    utptr->ut_tv.tv_usec = 0;
@@ -3948,7 +3948,7 @@ Exit(int n)
 #if defined(SVR4) || defined(SCO325)
 		    if (term->misc.login_shell)
 			updwtmpx(WTMPX_FILE, utptr);
-#elif defined(linux) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
+#elif defined(linux) && defined(__GLIBC__) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
 		    strncpy (utmp.ut_line, utptr->ut_line, sizeof (utmp.ut_line));
 		    if (term->misc.login_shell)
 			updwtmp(etc_wtmp, utptr);

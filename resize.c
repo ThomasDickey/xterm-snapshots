@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.30 1999/02/07 06:19:01 dawes Exp $
+ *	$XFree86: xc/programs/xterm/resize.c,v 3.31 1999/03/14 03:22:42 dawes Exp $
  */
 
 /*
@@ -252,7 +252,7 @@ static void readstring (FILE *fp, char *buf, char *str);
 
 #ifdef USE_TERMCAP
 static char *strindex (char *s1, char *s2);
-#if HAVE_TERMCAP_H
+#ifdef HAVE_TERMCAP_H
 #include <termcap.h>
 #if defined(NCURSES_VERSION)
 	/* The tgetent emulation function in SVr4-style curses implementations
@@ -592,7 +592,7 @@ static void
 readstring(register FILE *fp, register char *buf, char *str)
 {
 	register int last, c;
-#if !defined(USG) && !defined(AMOEBA) && !defined(MINIX) && !(__EMX__)
+#if !defined(USG) && !defined(AMOEBA) && !defined(MINIX) && !defined(__EMX__)
 	/* What is the advantage of setitimer() over alarm()? */
 	struct itimerval it;
 #endif
