@@ -3,7 +3,7 @@
  */
 
 
-/* $XFree86: xc/programs/xterm/error.h,v 1.6 2001/01/17 23:46:36 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/error.h,v 1.7 2002/08/17 19:52:26 dickey Exp $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
@@ -66,6 +66,8 @@
 #define	ERROR_TIOCKSET	46	/* spawn: ioctl() failed on TIOCKSET */
 #define	ERROR_TIOCKSETC	47	/* spawn: ioctl() failed on TIOCKSETC */
 #define	ERROR_SPREALLOC 48	/* spawn: realloc of ttydev failed */
+#define	ERROR_LUMALLOC  49	/* luit: command-line malloc failed */
+
 /* charproc.c */
 #define	ERROR_SELECT	50	/* in_put: select() failed */
 #define	ERROR_VINIT	54	/* VTInit: can't initialize window */

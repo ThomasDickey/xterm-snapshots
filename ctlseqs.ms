@@ -5,7 +5,7 @@
 .\"
 .\"
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.44 2002/01/05 21:55:11 dickey Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.46 2002/08/24 18:26:36 dickey Exp $
 .\"
 .\"
 .\" Copyright 1996-2001,2002 by Thomas E. Dickey
@@ -128,9 +128,17 @@
 .[] AP \v'-1p'\s\nsAPC\s0\v'1p'
 .[] Bs \v'-1p'\s\nsBS\s0\v'1p'
 .[] Cs \v'-1p'\s\nsCSI\s0\v'1p'
+.[] S2 \v'-1p'\s\nsSS2\s0\v'1p'
 .[] S3 \v'-1p'\s\nsSS3\s0\v'1p'
+.[] SS \v'-1p'\s\nsSOS\s0\v'1p'
+.[] Eg \v'-1p'\s\nsEPA\s0\v'1p'
+.[] Sg \v'-1p'\s\nsSPA\s0\v'1p'
 .[] Dc \v'-1p'\s\nsDCS\s0\v'1p'
+.[] Ht \v'-1p'\s\nsHTS\s0\v'1p'
+.[] ID \v'-1p'\s\nsIND\s0\v'1p'
+.[] Nl \v'-1p'\s\nsNEL\s0\v'1p'
 .[] Os \v'-1p'\s\nsOSC\s0\v'1p'
+.[] RI \v'-1p'\s\nsRI\s0\v'1p'
 .[] PM \v'-1p'\s\nsPM\s0\v'1p'
 .[] ST \v'-1p'\s\nsST\s0\v'1p'
 .[] Ta \v'-1p'\*T\v'1p'
@@ -158,6 +166,9 @@
 .[] ) )
 .[] * *
 .[] + +
+.[] , ,
+.[] - -
+.[] . .
 .[] 0 0
 .[] 1 1
 .[] 2 2
@@ -311,37 +322,37 @@ It generates 7-bit controls (by default) or 8-bit if S8C1T is enabled.
 The following pairs of 7-bit and 8-bit control characters are equivalent:
 .St
 .IP \\*(Es\\*D
-Index (IND: 0x84)
+Index (\*(ID is 0x84)
 .IP \\*(Es\\*E
-Next Line (NEL: 0x85)
+Next Line (\*(Nl is 0x85)
 .IP \\*(Es\\*H
-Tab Set (HTS: 0x88)
+Tab Set (\*(Ht is 0x88)
 .IP \\*(Es\\*M
-Reverse Index (RI: 0x8d)
+Reverse Index (\*(RI is 0x8d)
 .IP \\*(Es\\*N
-Single Shift Select of G2 Character Set (SS2: 0x8e): affects next character only
+Single Shift Select of G2 Character Set (\*(S2 is 0x8e): affects next character only
 .IP \\*(Es\\*O
-Single Shift Select of G3 Character Set (SS3: 0x8f): affects next character only
+Single Shift Select of G3 Character Set (\*(S3 is 0x8f): affects next character only
 .IP \\*(Es\\*P
-Device Control String (DCS: 0x90)
+Device Control String (\*(Dc is 0x90)
 .IP \\*(Es\\*V
-Start of Guarded Area (SPA: 0x96)
+Start of Guarded Area (\*(Sg is 0x96)
 .IP \\*(Es\\*W
-End of Guarded Area (EPA: 0x97)
-.IP \\*(Es\\(*X
-Start of String (SOS: 0x98)
+End of Guarded Area (\*(Eg is 0x97)
+.IP \\*(Es\\*(XX
+Start of String (\*(SS is 0x98)
 .IP \\*(Es\\*Z
-Return Terminal ID (DECID: 0x9a).  Obsolete form of \*(Cs\*c (DA).
+Return Terminal ID (DECID is 0x9a).  Obsolete form of \*(Cs\*c (DA).
 .IP \\*(Es\\*([[
-Control Sequence Introducer (CSI: 0x9b)
+Control Sequence Introducer (\*(Cs is 0x9b)
 .IP \\*(Es\\*(bS
-String Terminator (ST: 0x9c)
+String Terminator (\*(ST is 0x9c)
 .IP \\*(Es\\*(]]
-Operating System Command (OSC: 0x9d)
+Operating System Command (\*(Os is 0x9d)
 .IP \\*(Es\\*^
-Privacy Message (PM: 0x9e)
+Privacy Message (\*(PM is 0x9e)
 .IP \\*(Es\\*_
-Application Program Command (APC: 0x9f)
+Application Program Command (\*(AP is 0x9f)
 .Ed
 .sp
 .LP
@@ -523,7 +534,7 @@ Invoke the G1 Character Set as GR (LS1R).  Has no visible effect in \fIxterm\fP.
 .B
 Application Program-Control functions
 .IP \\*(AP\\*(Pt\\*s\\*(ST
-\fIxterm\fP implements no APC functions; \*(Pt is ignored.
+\fIxterm\fP implements no \*(AP functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
 .Ed
 .
@@ -581,7 +592,7 @@ The strings are encoded in hexadecimal (2 digits per character).
 .St
 .LP
 .B
-Functions using CSI, ordered by the final character(s)
+Functions using \*(Cs, ordered by the final character(s)
 .IP \\*(Cs\\*(Ps\\*s\\*@
 Insert \*(Ps (Blank) Character(s) (default = 1) (ICH)
 .
@@ -1133,7 +1144,7 @@ entry for relative, zero for absolute indexing).
 .B
 Privacy Message
 .IP \\*(PM\\*(Pt\\*s\\*(ST
-\fIxterm\fP implements no PM functions; \*(Pt is ignored.
+\fIxterm\fP implements no \*(PM functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
 .Ed
 .
@@ -1186,23 +1197,23 @@ PF1	\*(S3\*P	\*(S3\*P	kf1	k1
 PF2	\*(S3\*Q	\*(S3\*Q	kf2	k2
 PF3	\*(S3\*R	\*(S3\*R	kf3	k3
 PF4	\*(S3\*S	\*(S3\*S	kf4	k4
-* \f1(multiply)\fP	*	\*(S3\*j	-	-
-+ \f1(add)\fP	+	\*(S3\*k	-	-
-, \f1(comma)\fP	,	\*(S3\*l	-	-
-- \f1(minus)\fP	-	\*(S3\*m	-	-
-\&. \f1(Delete)\fP	\.	\*(S3\*3\*(c~	-	-
-/ \f1(divide)\fP	/	\*(S3\*o	-	-
-0 \f1(Insert)\fP	0	\*(Cs\*2\*(c~	-	-
-1 \f1(End)\fP	1	\*(Cs\*4\*(c~	kc1	K4
-2 \f1(DownArrow)\fP	2	\*(Cs\*(cB	-	-
-3 \f1(PageDown)\fP	3	\*(Cs\*5\*(c~	kc3	K5
-4 \f1(LeftArrow)\fP	4	\*(Cs\*D	-	-
-5 \f1(Begin)\fP	5	\*(Cs\*E	kb2	K2
-6 \f1(RightArrow)\fP	6	\*(Cs\*C	-	-
-7 \f1(Home)\fP	7	\*(Cs\*1\*(c~	ka1	K1
-8 \f1(UpArrow)\fP	8	\*(Cs\*A	-	-
-9 \f1(PageUp)\fP	9	\*(Cs\*5\*(c~	ka3	K3
-= (equal)	\&=	\*(S3\*(XX	-	-
+* \f1(multiply)\fP	\**	\*(S3\*j	-	-
++ \f1(add)\fP	\*+	\*(S3\*k	-	-
+, \f1(comma)\fP	\*,	\*(S3\*l	-	-
+- \f1(minus)\fP	\*-	\*(S3\*m	-	-
+\&. \f1(Delete)\fP	\*.	\*(S3\*3\*(c~	-	-
+/ \f1(divide)\fP	\*/	\*(S3\*o	-	-
+0 \f1(Insert)\fP	\*0	\*(Cs\*2\*(c~	-	-
+1 \f1(End)\fP	\*1	\*(Cs\*4\*(c~	kc1	K4
+2 \f1(DownArrow)\fP	\*2	\*(Cs\*(cB	-	-
+3 \f1(PageDown)\fP	\*3	\*(Cs\*5\*(c~	kc3	K5
+4 \f1(LeftArrow)\fP	\*4	\*(Cs\*D	-	-
+5 \f1(Begin)\fP	\*5	\*(Cs\*E	kb2	K2
+6 \f1(RightArrow)\fP	\*6	\*(Cs\*C	-	-
+7 \f1(Home)\fP	\*7	\*(Cs\*1\*(c~	ka1	K1
+8 \f1(UpArrow)\fP	\*8	\*(Cs\*A	-	-
+9 \f1(PageUp)\fP	\*9	\*(Cs\*5\*(c~	ka3	K3
+= (equal)	\*=	\*(S3\*(XX	-	-
 .TE
 They also provide 12 function keys, as well as a few other special-purpose keys.
 .TS
@@ -1279,30 +1290,30 @@ cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Numeric	Application
 _
-Space	Space	\*(S3\*(Sp
-Tab	Tab	\*(S3\*I
-Enter	CR	\*(S3\*M
+Space	\*(Sp	\*(S3\*(Sp
+Tab	\*(Ta	\*(S3\*I
+Enter	\*(Cr	\*(S3\*M
 PF1	\*(S3\*P	\*(S3\*P
 PF2	\*(S3\*Q	\*(S3\*Q
 PF3	\*(S3\*R	\*(S3\*R
 PF4	\*(S3\*S	\*(S3\*S
-* \f1(multiply)\fP	*	\*(S3\*j
-+ \f1(add)\fP	+	\*(S3\*k
-, \f1(comma)\fP	,	\*(S3\*l
-- \f1(minus)\fP	-	\*(S3\*m
-\&. \f1(period)\fP	\.	\*(S3\*n
-/ \f1(divide)\fP	/	\*(S3\*o
-0	0	\*(S3\*p
-1	1	\*(S3\*q
-2	2	\*(S3\*r
-3	3	\*(S3\*(cs
-4	4	\*(S3\*t
-5	5	\*(S3\*u
-6	6	\*(S3\*v
-7	7	\*(S3\*w
-8	8	\*(S3\*x
-9	9	\*(S3\*y
-= (equal)	\&=	\*(S3\*(XX
+* \f1(multiply)\fP	\**	\*(S3\*j
++ \f1(add)\fP	\*+	\*(S3\*k
+, \f1(comma)\fP	\*,	\*(S3\*l
+- \f1(minus)\fP	\*-	\*(S3\*m
+\&. \f1(period)\fP	\*.	\*(S3\*n
+/ \f1(divide)\fP	\*/	\*(S3\*o
+0	\*0	\*(S3\*p
+1	\*1	\*(S3\*q
+2	\*2	\*(S3\*r
+3	\*3	\*(S3\*(cs
+4	\*4	\*(S3\*t
+5	\*5	\*(S3\*u
+6	\*6	\*(S3\*v
+7	\*7	\*(S3\*w
+8	\*8	\*(S3\*x
+9	\*9	\*(S3\*y
+= (equal)	\*=	\*(S3\*(XX
 .TE
 .LP
 The VT220 provides 8 additional function keys.
@@ -1346,30 +1357,30 @@ cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Numeric	Application
 _
-Space	Space	\*(Es\*?\*(Sp
-Tab	Tab	\*(Es\*?\*I
-Enter	CR	\*(Es\*?\*M
+Space	\*(Sp	\*(Es\*?\*(Sp
+Tab	\*(Ta	\*(Es\*?\*I
+Enter	\*(Cr	\*(Es\*?\*M
 PF1	\*(Es\*P	\*(Es\*P
 PF2	\*(Es\*Q	\*(Es\*Q
 PF3	\*(Es\*R	\*(Es\*R
 PF4	\*(Es\*S	\*(Es\*S
-* \f1(multiply)\fP	*	\*(Es\*?\*j
-+ \f1(add)\fP	+	\*(Es\*?\*k
-, \f1(comma)\fP	,	\*(Es\*?\*l
-- \f1(minus)\fP	-	\*(Es\*?\*m
-\&. \f1(period)\fP	\.	\*(Es\*?\*n
-/ \f1(divide)\fP	/	\*(Es\*?\*o
-0	0	\*(Es\*?\*p
-1	1	\*(Es\*?\*q
-2	2	\*(Es\*?\*r
-3	3	\*(Es\*?\*(cs
-4	4	\*(Es\*?\*t
-5	5	\*(Es\*?\*u
-6	6	\*(Es\*?\*v
-7	7	\*(Es\*?\*w
-8	8	\*(Es\*?\*x
-9	9	\*(Es\*?\*y
-= (equal)	\&=	\*(Es\*?\*(XX
+* \f1(multiply)\fP	\**	\*(Es\*?\*j
++ \f1(add)\fP	\*+	\*(Es\*?\*k
+, \f1(comma)\fP	\*,	\*(Es\*?\*l
+- \f1(minus)\fP	\*-	\*(Es\*?\*m
+\&. \f1(period)\fP	\*.	\*(Es\*?\*n
+/ \f1(divide)\fP	\*/	\*(Es\*?\*o
+0	\*0	\*(Es\*?\*p
+1	\*1	\*(Es\*?\*q
+2	\*2	\*(Es\*?\*r
+3	\*3	\*(Es\*?\*(cs
+4	\*4	\*(Es\*?\*t
+5	\*5	\*(Es\*?\*u
+6	\*6	\*(Es\*?\*v
+7	\*7	\*(Es\*?\*w
+8	\*8	\*(Es\*?\*x
+9	\*9	\*(Es\*?\*y
+= (equal)	\*=	\*(Es\*?\*(XX
 .TE
 .SH
 Sun-Style Function Keys
@@ -1396,9 +1407,12 @@ information on button presses.  These modes are typically used by
 editors and other full-screen applications that want to make use of
 the mouse.
 
-There are six mutually exclusive modes.  One is DEC Locator mode, enabled by the
+There are six mutually exclusive modes.
+One is DEC Locator mode, enabled by the
 DECELR \*(Cs\*(Ps\*s\*;\*(Ps\*s\*s\*'\*s\*z
-control sequence, and is not described here.  The remaining five
+control sequence, and is not described here
+(control sequences are summarized above).
+The remaining five
 modes are each enabled (or disabled) by a different parameter in
 DECSET \*(Cs\*?\*(Pm\*s\*h
 or

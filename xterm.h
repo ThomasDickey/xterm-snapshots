@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.79 2002/03/26 01:46:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.83 2002/08/24 18:54:39 dickey Exp $ */
 
 /************************************************************
 
@@ -46,7 +46,11 @@ authorization.
 #endif
 
 #ifndef GCC_UNUSED
-#define GCC_UNUSED /* nothing */
+#define GCC_UNUSED		/* nothing */
+#endif
+
+#ifndef GCC_NORETURN
+#define GCC_NORETURN		/* nothing */
 #endif
 
 #include <X11/Xos.h>
@@ -86,7 +90,7 @@ authorization.
 #endif
 
 #if defined(hpux) && !defined(__hpux)
-#define __hpux 1	/* HPUX 11.0 does not define this */
+#define __hpux 1		/* HPUX 11.0 does not define this */
 #endif
 
 #ifdef USE_POSIX_TERMIOS
@@ -94,7 +98,7 @@ authorization.
 #define HAVE_TCGETATTR 1
 #endif
 
-#if defined(__EMX__) || defined(__CYGWIN__) || defined(SCO) || defined(sco)
+#if defined(__UNIXOS2__) || defined(SCO) || defined(sco)
 #define USE_TERMCAP 1
 #endif
 
@@ -250,7 +254,7 @@ extern int errno;
 #include <sys/types.h>
 
 #if defined(USE_XPOLL_H) && defined(AIXV3) && defined(NFDBITS)
-#undef NFDBITS	/* conflict between X11/Xpoll.h and sys/select.h */
+#undef NFDBITS			/* conflict between X11/Xpoll.h and sys/select.h */
 #endif
 
 #include <sys/select.h>
@@ -312,6 +316,8 @@ extern int errno;
 #define XtNjumpScroll		"jumpScroll"
 #define XtNkeyboardDialect	"keyboardDialect"
 #define XtNlimitResize		"limitResize"
+#define XtNlocale		"locale"
+#define XtNlocaleFilter		"localeFilter"
 #define XtNlogFile		"logFile"
 #define XtNlogInhibit		"logInhibit"
 #define XtNlogging		"logging"
@@ -320,6 +326,7 @@ extern int errno;
 #define XtNmenuBar		"menuBar"
 #define XtNmenuHeight		"menuHeight"
 #define XtNmetaSendsEscape	"metaSendsEscape"
+#define XtNmodifyCursorKeys	"modifyCursorKeys"
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
@@ -408,6 +415,8 @@ extern int errno;
 #define XtCJumpScroll		"JumpScroll"
 #define XtCKeyboardDialect	"KeyboardDialect"
 #define XtCLimitResize		"LimitResize"
+#define XtCLocale		"Locale"
+#define XtCLocaleFilter		"LocaleFilter"
 #define XtCLogInhibit		"LogInhibit"
 #define XtCLogfile		"Logfile"
 #define XtCLogging		"Logging"
@@ -416,6 +425,7 @@ extern int errno;
 #define XtCMenuBar		"MenuBar"
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
+#define XtCModifyCursorKeys	"ModifyCursorKeys"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
 #define XtCNumLock		"NumLock"
@@ -445,8 +455,8 @@ extern int errno;
 #define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
-#define XtCVisualBell		"VisualBell"
 #define XtCVT100Graphics	"VT100Graphics"
+#define XtCVisualBell		"VisualBell"
 #define XtCWideBoldFont		"WideBoldFont"
 #define XtCWideChars		"WideChars"
 #define XtCWideFont		"WideFont"
@@ -507,6 +517,7 @@ extern void HandleSelectExtend        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSelectSet           PROTO_XT_ACTIONS_ARGS;
 extern void HandleSelectStart         PROTO_XT_ACTIONS_ARGS;
 extern void HandleStartExtend         PROTO_XT_ACTIONS_ARGS;
+extern void ReadLineButton            PROTO_XT_ACTIONS_ARGS;
 extern void ResizeSelection (TScreen *screen, int rows, int cols);
 extern void ScrollSelection (TScreen* screen, int amount);
 extern void TrackMouse (int func, int startrow, int startcol, int firstrow, int lastrow);
@@ -597,12 +608,13 @@ extern int convertFromUTF8(unsigned long c, Char *strbuf);
 #endif
 
 /* main.c */
-#ifndef __EMX__
-extern int main (int argc, char **argv);
+#ifndef __UNIXOS2__
+#define ENVP_ARG /**/
 #else
-extern int main (int argc, char **argv,char **envp);
+#define ENVP_ARG , char **envp
 #endif
 
+extern int main (int argc, char **argv ENVP_ARG);
 extern int GetBytesAvailable (int fd);
 extern int kill_process_group (int pid, int sig);
 extern int nonblocking_wait (void);
@@ -642,7 +654,7 @@ extern void HandleStringEvent        PROTO_XT_ACTIONS_ARGS;
 extern void Panic (char *s, int a);
 extern void Redraw (void);
 extern void ReverseOldColors (void);
-extern void SysError (int i);
+extern void SysError (int i) GCC_NORETURN;
 extern void VisualBell (void);
 extern void do_dcs (Char *buf, size_t len);
 extern void do_osc (Char *buf, int len, int final);
@@ -678,7 +690,9 @@ extern void FlushLog (TScreen *screen);
 #endif
 
 /* print.c */
+extern Boolean xtermHasPrinter (void);
 extern int xtermPrinterControl (int chr);
+extern void setPrinterControlMode (int mode);
 extern void xtermAutoPrint (int chr);
 extern void xtermMediaControl (int param, int private_seq);
 extern void xtermPrintScreen (Boolean use_DECPEX);

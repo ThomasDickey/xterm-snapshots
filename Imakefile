@@ -7,7 +7,7 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.41 2002/02/15 07:36:21 keithp Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.46 2002/08/17 19:52:25 dickey Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -57,7 +57,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
          PTYLIB = -lpucc
 #endif
 
-#if ((LinuxCLibMajorVersion == 6) && (LinuxCLibMinorVersion < 1))
+#if ((LinuxCLibMajorVersion == 6) && (LinuxCLibMinorVersion < 1)) || defined(NetBSDArchitecture) || defined(OpenBSDArchitecture)
          PTYLIB = -lutil
 #endif
 
@@ -91,7 +91,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 #endif
 
 #ifdef UTF8support
-    UTF8_OPTION = -DOPT_WIDE_CHARS
+    UTF8_OPTION = -DOPT_WIDE_CHARS -DOPT_LUIT_PROG
         UTF8SRC = charclass.c precompose.c wcwidth.c xutf8.c
         UTF8OBJ = charclass.o precompose.o wcwidth.o xutf8.o
 #endif
@@ -104,34 +104,41 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
      XRFDEPLIBS = XftClientDepLibs $(DEPXRENDERLIB)
     XRFINCLUDES = $(XFTINCLUDES)
 #endif
-
+#ifdef TraceXTerm
+   TRACEDEF = -DOPT_TRACE=1
+#endif
    MAIN_DEFINES = $(UTMPDEF) $(TTYGROUPDEF) $(PUCCPTYDDEF) $(NOPOSIXTERMIOS) \
 		  -DOSMAJORVERSION=$(OSMAJORVERSION) \
 		  -DOSMINORVERSION=$(OSMINORVERSION)
    MISC_DEFINES = /* -DALLOWLOGGING -DALLOWLOGFILEEXEC */
     XKB_DEFINES = XkbClientDefines
-        DEFINES = -I. $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF)
+   PATH_DEFINES = -DPROJECTROOT=$(PROJECTROOT)
+        DEFINES = -I. $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF) $(PATH_DEFINES) $(TRACEDEF)
        INCLUDES = $(XRFINCLUDES)
 
 #ifdef OS2Architecture
-          MAINSRC = os2main.c
-          MAINOBJ = os2main.o
+        MAINSRC = os2main.c
+        MAINOBJ = os2main.o
 #else
-          MAINSRC = main.c
-          MAINOBJ = main.o
+        MAINSRC = main.c
+        MAINOBJ = main.o
+#endif
+#ifdef TraceXTerm
+       TRACESRC = trace.c
+       TRACEOBJ = trace.o
 #endif
           SRCS1 = button.c charproc.c charsets.c cursor.c \
 		  data.c doublechr.c fontutils.c input.c \
 		  menu.c misc.c print.c ptydata.c \
 		  screen.c scrollbar.c tabs.c util.c xstrings.c \
 		  TekPrsTbl.c Tekproc.c VTPrsTbl.c \
-		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC)
+		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC) $(TRACESRC)
           OBJS1 = button.o charproc.o charsets.o cursor.o \
 		  data.o doublechr.o fontutils.o input.o \
 		  menu.o misc.o print.o ptydata.o \
 		  screen.o scrollbar.o tabs.o util.o xstrings.o \
 		  TekPrsTbl.o Tekproc.o VTPrsTbl.o \
-		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ)
+		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ) $(TRACEOBJ)
           SRCS2 = resize.c xstrings.c
           OBJS2 = resize.o xstrings.o
            SRCS = $(SRCS1) $(SRCS2)
@@ -166,6 +173,11 @@ SpecialCObjectRule(data,$(_NOOP_),$(MISC_DEFINES))
 SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
 #else
 NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(UTMPLIB) $(PTYLIB))
+#endif
+
+#if defined(OpenBSDArchitecture)
+/* On OpenBSD xterm is now setgid utmp */
+INSTUIDFLAGS= -m 6755 -g utmp
 #endif
 
 #if InstallXtermSetUID && defined(SunArchitecture) && HasSharedLibraries && (OSMajorVersion < 5)

@@ -1,8 +1,8 @@
-/* $XFree86: xc/programs/xterm/xstrings.c,v 1.2 2001/06/18 19:09:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xstrings.c,v 1.5 2002/08/17 19:52:27 dickey Exp $ */
 
 /************************************************************
 
-Copyright 2000,2001 by Thomas E. Dickey
+Copyright 2000-2001,2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -36,6 +36,7 @@ authorization.
 
 #include <sys/types.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <xstrings.h>
 
@@ -45,27 +46,46 @@ x_basename(char *name)
     char *cp;
 
     cp = strrchr(name, '/');
-#ifdef __EMX__
+#ifdef __UNIXOS2__
     if (cp == 0)
 	cp = strrchr(name, '\\');
 #endif
     return (cp ? cp + 1 : name);
 }
 
+int
+x_strcasecmp(const char *s1, const char *s2)
+{
+    unsigned len = strlen(s1);
+
+    if (len != strlen(s2))
+	return 1;
+
+    while (len-- != 0) {
+	if (toupper(*s1) != toupper(*s2))
+	    return 1;
+	s1++, s2++;
+    }
+
+    return 0;
+}
+
 /*
  * Allocates a copy of a string
  */
 char *
-x_strdup(char *s)
+x_strdup(const char *s)
 {
+    char *result = 0;
+
     if (s != 0) {
 	char *t = malloc(strlen(s) + 1);
 	if (t != 0) {
 	    strcpy(t, s);
 	}
-	s = t;
+	result = t;
     }
-    return s;
+    return result;
 }
 
 /*
@@ -84,4 +104,39 @@ x_strindex(char *s1, char *s2)
 	s1 = ++s3;
     }
     return (NULL);
+}
+
+/*
+ * Trims leading/trailing spaces from the string, returns a copy of it if it
+ * is modified.
+ */
+char *
+x_strtrim(char *s)
+{
+    char *base = s;
+    char *d;
+
+    if (s != 0 && *s != '\0') {
+	char *t = x_strdup(base);
+	s = t;
+	d = s;
+	while (isspace(*s)) {
+	    ++s;
+	}
+	while ((*d++ = *s++) != '\0') {
+	    ;
+	}
+	if (*t != '\0') {
+	    s = t + strlen(t);
+	    while (s != t && isspace(s[-1])) {
+		*--s = '\0';
+	    }
+	}
+	if (!strcmp(t, base)) {
+	    free(t);
+	} else {
+	    base = t;
+	}
+    }
+    return base;
 }

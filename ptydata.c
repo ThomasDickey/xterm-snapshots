@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.14 2001/08/15 09:59:26 alanh Exp $
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.16 2002/06/01 00:54:49 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1999-2000 by Thomas E. Dickey
+Copyright 1999-2001,2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -51,12 +51,13 @@ authorization.
 #endif
 #endif
 
-int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
+int
+getPtyData(TScreen * screen, fd_set * select_mask, PtyData * data)
 {
     int i;
 
 #ifndef AMOEBA
-    if (FD_ISSET (screen->respond, select_mask))
+    if (FD_ISSET(screen->respond, select_mask))
 #else
     if ((data->cnt = cb_full(screen->tty_outq)) > 0)
 #endif
@@ -70,7 +71,8 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 #ifndef AMOEBA
 	data->cnt = read(screen->respond, (char *) data->buf, BUF_SIZE);
 #else
-	if ((data->cnt = cb_gets(screen->tty_outq, data->buf, data->cnt, BUF_SIZE)) == 0) {
+	if ((data->cnt = cb_gets(screen->tty_outq, data->buf, data->cnt,
+				 BUF_SIZE)) == 0) {
 	    errno = EIO;
 	    data->cnt = -1;
 	}
@@ -83,15 +85,15 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 	     * (and now CYGWIN, alanh@xfree86.org 08/15/01
 	     */
 #if (defined(i386) && defined(SVR4) && defined(sun)) || defined(__CYGWIN__)
-	    if (errno == EIO || errno == 0 )
+	    if (errno == EIO || errno == 0)
 #else
 	    if (errno == EIO)
 #endif
-		Cleanup (0);
+		Cleanup(0);
 	    else if (!E_TEST(errno))
 		Panic("input: read returned unexpected error (%d)\n", errno);
 	} else if (data->cnt == 0) {
-#if defined(MINIX) || defined(__EMX__)
+#if defined(MINIX) || defined(__UNIXOS2__)
 	    Cleanup(0);
 #else
 	    Panic("input: read returned zero\n", 0);
@@ -106,13 +108,13 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 		    if (c < 0x80) {
 			/* We received an ASCII character */
 			if (screen->utf_count > 0)
-			    data->buf2[j++] = UCS_REPL; /* prev. sequence incomplete */
+			    data->buf2[j++] = UCS_REPL;		/* prev. sequence incomplete */
 			data->buf2[j++] = c;
 			screen->utf_count = 0;
 		    } else if (c < 0xc0) {
 			/* We received a continuation byte */
 			if (screen->utf_count < 1) {
-			    data->buf2[j++] = UCS_REPL; /* ... unexpectedly */
+			    data->buf2[j++] = UCS_REPL;		/* ... unexpectedly */
 			} else {
 			    /* Check for overlong UTF-8 sequences for which a shorter
 			     * encoding would exist and replace them with UCS_REPL.
@@ -132,12 +134,14 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 				/* value would be >0xffff */
 				screen->utf_char = UCS_REPL;
 			    } else {
-			      screen->utf_char <<= 6;
-			      screen->utf_char |= (c & 0x3f);
+				screen->utf_char <<= 6;
+				screen->utf_char |= (c & 0x3f);
 			    }
-			    if ((screen->utf_char >= 0xd800 && screen->utf_char <= 0xdfff) ||
-				(screen->utf_char == 0xfffe) || (screen->utf_char == 0xffff)) {
-			      screen->utf_char = UCS_REPL;
+			    if ((screen->utf_char >= 0xd800 &&
+				 screen->utf_char <= 0xdfff) ||
+				(screen->utf_char == 0xfffe) ||
+				(screen->utf_char == 0xffff)) {
+				screen->utf_char = UCS_REPL;
 			    }
 			    screen->utf_count--;
 			    if (screen->utf_count == 0)
@@ -146,12 +150,12 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 		    } else {
 			/* We received a sequence start byte */
 			if (screen->utf_count > 0)
-			    data->buf2[j++] = UCS_REPL; /* prev. sequence incomplete */
+			    data->buf2[j++] = UCS_REPL;		/* prev. sequence incomplete */
 			if (c < 0xe0) {
 			    screen->utf_count = 1;
 			    screen->utf_char = (c & 0x1f);
 			    if (!(c & 0x1e))
-			      screen->utf_char = UCS_REPL; /* overlong sequence */
+				screen->utf_char = UCS_REPL;	/* overlong sequence */
 			} else if (c < 0xf0) {
 			    screen->utf_count = 2;
 			    screen->utf_char = (c & 0x0f);
@@ -169,16 +173,16 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 			    screen->utf_count = 0;
 			}
 		    }
-		} /* for (i = 0; i < data->cnt; i++) */
+		}		/* for (i = 0; i < data->cnt; i++) */
 		TRACE(("UTF-8 count %d, char %04X input %d/%d bytes\n",
-			screen->utf_count,
-			screen->utf_char,
-			data->cnt, j));
+		       screen->utf_count,
+		       screen->utf_char,
+		       data->cnt, j));
 		data->cnt = j;
 	    } else {
 		for (i = 0; i < data->cnt; i++)
 		    data->ptr[i] = data->buf[i];
-	    } /* if (screen->utf8_mode) else */
+	    }			/* if (screen->utf8_mode) else */
 #endif
 	    /* read from pty was successful */
 	    if (!screen->output_eight_bits) {
@@ -188,7 +192,8 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 	    }
 #if OPT_TRACE
 	    for (i = 0; i < data->cnt; i++) {
-		if (!(i%8)) TRACE(("%s", i ? "\n    " : "READ"));
+		if (!(i % 8))
+		    TRACE(("%s", i ? "\n    " : "READ"));
 		TRACE((" %04X", data->ptr[i]));
 	    }
 	    TRACE(("\n"));
@@ -199,7 +204,8 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
     return 0;
 }
 
-void initPtyData(PtyData *data)
+void
+initPtyData(PtyData * data)
 {
     data->cnt = 0;
     data->ptr = DecodedData(data);
@@ -208,13 +214,15 @@ void initPtyData(PtyData *data)
 /*
  * Tells how much we have used out of the current buffer
  */
-unsigned usedPtyData(PtyData *data)
+unsigned
+usedPtyData(PtyData * data)
 {
     return (data->ptr - DecodedData(data));
 }
 
 #if OPT_WIDE_CHARS
-Char * convertToUTF8(Char *lp, unsigned c)
+Char *
+convertToUTF8(Char * lp, unsigned c)
 {
     if (c < 0x80) {		/*  0*******  */
 	*lp++ = (c);
@@ -236,7 +244,8 @@ Char * convertToUTF8(Char *lp, unsigned c)
 /*
  * Write data back to the PTY
  */
-void writePtyData(int f, IChar *d, unsigned len)
+void
+writePtyData(int f, IChar * d, unsigned len)
 {
     static Char *dbuf;
     static unsigned dlen;
@@ -244,7 +253,7 @@ void writePtyData(int f, IChar *d, unsigned len)
 
     if (dlen <= len) {
 	dlen = n;
-	dbuf = (Char *)XtRealloc((char *)dbuf, dlen);
+	dbuf = (Char *) XtRealloc((char *) dbuf, dlen);
     }
 
     for (n = 0; n < len; n++)

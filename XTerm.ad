@@ -3,7 +3,7 @@
 !
 !
 !
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.22 2002/01/05 22:05:02 dickey Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.23 2002/08/12 00:36:32 dickey Exp $
 
 XTerm.JoinSession:False
 
@@ -18,9 +18,10 @@ XTerm.JoinSession:False
 *mainMenu.Label:  Main Options
 *mainMenu*securekbd*Label:  Secure Keyboard
 *mainMenu*allowsends*Label:  Allow SendEvents
+*mainMenu*redraw*Label:  Redraw Window
 *mainMenu*logging*Label:  Log to File
 *mainMenu*print*Label:  Print Window
-*mainMenu*redraw*Label:  Redraw Window
+*mainMenu*print-redir*Label:  Redirect to Printer
 *mainMenu*8-bit control*Label: 8-Bit Controls
 *mainMenu*backarrow key*Label: Backarrow Key (BS/DEL)
 *mainMenu*num-lock*Label: Alt/NumLock Modifiers

@@ -1,7 +1,7 @@
 /* $Xorg: menu.h,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
 
-Copyright 1999, 2000, 2001 by Thomas E. Dickey
+Copyright 1999-2001, 2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -48,7 +48,7 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.28 2002/01/05 22:05:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.29 2002/08/12 00:36:33 dickey Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h
@@ -98,7 +98,8 @@ extern void HandleMetaEsc          PROTO_XT_ACTIONS_ARGS;
 extern void HandleNumLock          PROTO_XT_ACTIONS_ARGS;
 extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
-extern void HandlePrint            PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintControlMode PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
 extern void HandleReverseVideo     PROTO_XT_ACTIONS_ARGS;
@@ -135,12 +136,14 @@ extern void SetupMenus (Widget shell, Widget *forms, Widget *menus);
 typedef enum {
     mainMenu_securekbd,
     mainMenu_allowsends,
+    mainMenu_redraw,
+    mainMenu_line1,
 #ifdef ALLOWLOGGING
     mainMenu_logging,
 #endif
     mainMenu_print,
-    mainMenu_redraw,
-    mainMenu_line1,
+    mainMenu_print_redir,
+    mainMenu_line2,
     mainMenu_8bit_ctrl,
     mainMenu_backarrow,
 #if OPT_NUM_LOCK
@@ -159,14 +162,14 @@ typedef enum {
 #if OPT_SUNPC_KBD
     mainMenu_sun_kbd,
 #endif
-    mainMenu_line2,
+    mainMenu_line3,
     mainMenu_suspend,
     mainMenu_continue,
     mainMenu_interrupt,
     mainMenu_hangup,
     mainMenu_terminate,
     mainMenu_kill,
-    mainMenu_line3,
+    mainMenu_line4,
     mainMenu_quit,
     mainMenu_LAST
 } mainMenuIndices;
@@ -299,6 +302,11 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
 #else
 #define update_logging() /*nothing*/
 #endif
+
+#define update_print_redir() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_print_redir].widget, \
+		    term->screen.printer_controlmode)
 
 #define update_8bit_control() \
   update_menu_item (term->screen.mainMenu, \

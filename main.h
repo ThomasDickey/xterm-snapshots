@@ -2,7 +2,7 @@
  *	$Xorg: main.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/main.h,v 3.6 2001/09/09 01:07:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.h,v 3.7 2002/08/17 19:52:26 dickey Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -36,3 +36,11 @@
 #define DEFBORDER		2
 #define DEFFACENAME		NULL
 #define DEFFACESIZE		14
+
+#ifndef PROJECTROOT
+#define PROJECTROOT		"/usr/X11R6"
+#endif
+
+#define DEFLOCALEFILTER2(x)	#x
+#define DEFLOCALEFILTER1(x)	DEFLOCALEFILTER2(x)
+#define DEFLOCALEFILTER		DEFLOCALEFILTER1(PROJECTROOT) "/bin/luit"

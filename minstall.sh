@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XFree86: xc/programs/xterm/minstall.sh,v 1.2 2001/11/05 02:07:16 dickey Exp $
+# $XFree86: xc/programs/xterm/minstall.sh,v 1.3 2002/08/17 19:52:26 dickey Exp $
 #
 # Install manpages, substituting a reasonable section value since XFree86 4.x
 # doesn't use constants...
@@ -19,7 +19,8 @@ NEW_FILE=temp$$
 
 sed	-e 's/__vendorversion__/"X Window System"/' \
 	-e s@__apploaddir__@/usr/lib/X11/app-defaults@ \
-	-e s/__miscmansuffix__/$suffix/ \
+	-e s/__mansuffix__/$suffix/g \
+	-e s/__miscmansuffix__/$suffix/g \
 	$OLD_FILE >$NEW_FILE
 
 echo "$MINSTALL $OLD_FILE $END_FILE"

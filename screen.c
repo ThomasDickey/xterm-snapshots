@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.58 2002/03/26 01:46:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.59 2002/04/28 19:04:21 dickey Exp $ */
 
 /* screen.c */
 
@@ -82,31 +82,32 @@
  * with the intention of being able to change the total number of pointers per
  * row according to whether the user wants color or not.
  */
-ScrnBuf Allocate (int nrow, int ncol, Char **addr)
+ScrnBuf
+Allocate(int nrow, int ncol, Char ** addr)
 {
-	ScrnBuf base;
-	Char *tmp;
-	int i, j, k;
-	size_t entries = MAX_PTRS * nrow;
-	size_t length  = BUF_PTRS * nrow * ncol;
+    ScrnBuf base;
+    Char *tmp;
+    int i, j, k;
+    size_t entries = MAX_PTRS * nrow;
+    size_t length = BUF_PTRS * nrow * ncol;
 
-	if ((base = (ScrnBuf) calloc (entries, sizeof (char *))) == 0)
-		SysError (ERROR_SCALLOC);
+    if ((base = (ScrnBuf) calloc(entries, sizeof(char *))) == 0)
+	  SysError(ERROR_SCALLOC);
 
-	if ((tmp = (Char *)calloc (length, sizeof(Char))) == 0)
-		SysError (ERROR_SCALLOC2);
+    if ((tmp = (Char *) calloc(length, sizeof(Char))) == 0)
+	SysError(ERROR_SCALLOC2);
 
-	*addr = tmp;
-	for (i = k = 0; i < nrow; i++) {
-		base[k] = 0;	/* per-line flags */
-		k += BUF_HEAD;
-		for (j = BUF_HEAD; j < MAX_PTRS; j++) {
-			base[k++] = tmp;
-			tmp += ncol;
-		}
+    *addr = tmp;
+    for (i = k = 0; i < nrow; i++) {
+	base[k] = 0;		/* per-line flags */
+	k += BUF_HEAD;
+	for (j = BUF_HEAD; j < MAX_PTRS; j++) {
+	    base[k++] = tmp;
+	    tmp += ncol;
 	}
+    }
 
-	return (base);
+    return (base);
 }
 
 /*
@@ -116,97 +117,97 @@ ScrnBuf Allocate (int nrow, int ncol, Char **addr)
  */
 static int
 Reallocate(
-	ScrnBuf *sbuf,
-	Char **sbufaddr,
-	int nrow,
-	int ncol,
-	int oldrow,
-	int oldcol)
+	      ScrnBuf * sbuf,
+	      Char ** sbufaddr,
+	      int nrow,
+	      int ncol,
+	      int oldrow,
+	      int oldcol)
 {
-	ScrnBuf base;
-	Char *tmp;
-	int i, j, k, minrows;
-	size_t mincols;
-	Char *oldbuf;
-	int move_down = 0, move_up = 0;
-	size_t entries = MAX_PTRS * nrow;
-	size_t length  = BUF_PTRS * nrow * ncol;
+    ScrnBuf base;
+    Char *tmp;
+    int i, j, k, minrows;
+    size_t mincols;
+    Char *oldbuf;
+    int move_down = 0, move_up = 0;
+    size_t entries = MAX_PTRS * nrow;
+    size_t length = BUF_PTRS * nrow * ncol;
 
-	if (sbuf == NULL || *sbuf == NULL) {
-		return 0;
+    if (sbuf == NULL || *sbuf == NULL) {
+	return 0;
+    }
+
+    oldbuf = *sbufaddr;
+
+    /*
+     * Special case if oldcol == ncol - straight forward realloc and
+     * update of the additional lines in sbuf
+     *
+     * FIXME: this is a good idea, but doesn't seem to be implemented.
+     * -gildea
+     */
+
+    /*
+     * realloc sbuf, the pointers to all the lines.
+     * If the screen shrinks, remove lines off the top of the buffer
+     * if resizeGravity resource says to do so.
+     */
+    if (nrow < oldrow
+	&& term->misc.resizeGravity == SouthWestGravity) {
+	/* Remove lines off the top of the buffer if necessary. */
+	move_up = (oldrow - nrow)
+	    - (term->screen.max_row - term->screen.cur_row);
+	if (move_up < 0)
+	    move_up = 0;
+	/* Overlapping memmove here! */
+	memmove(*sbuf, *sbuf + (move_up * MAX_PTRS),
+		MAX_PTRS * (oldrow - move_up) * sizeof((*sbuf)[0]));
+    }
+    *sbuf = (ScrnBuf) realloc((char *) (*sbuf), entries * sizeof(char *));
+    if (*sbuf == 0)
+	SysError(ERROR_RESIZE);
+    base = *sbuf;
+
+    /*
+     *  create the new buffer space and copy old buffer contents there
+     *  line by line.
+     */
+    if ((tmp = (Char *) calloc(length, sizeof(Char))) == 0)
+	SysError(ERROR_SREALLOC);
+    *sbufaddr = tmp;
+    minrows = (oldrow < nrow) ? oldrow : nrow;
+    mincols = (oldcol < ncol) ? oldcol : ncol;
+    if (nrow > oldrow
+	&& term->misc.resizeGravity == SouthWestGravity) {
+	/* move data down to bottom of expanded screen */
+	move_down = Min(nrow - oldrow, term->screen.savedlines);
+	tmp += (ncol * move_down * BUF_PTRS);
+    }
+
+    for (i = k = 0; i < minrows; i++) {
+	k += BUF_HEAD;
+	for (j = BUF_HEAD; j < MAX_PTRS; j++) {
+	    memcpy(tmp, base[k++], mincols);
+	    tmp += ncol;
 	}
+    }
 
-	oldbuf = *sbufaddr;
-
-	/*
-	 * Special case if oldcol == ncol - straight forward realloc and
-	 * update of the additional lines in sbuf
-	 *
-	 * FIXME: this is a good idea, but doesn't seem to be implemented.
-	 * -gildea
-	 */
-
-	/*
-	 * realloc sbuf, the pointers to all the lines.
-	 * If the screen shrinks, remove lines off the top of the buffer
-	 * if resizeGravity resource says to do so.
-	 */
-	if (nrow < oldrow
-	 && term->misc.resizeGravity == SouthWestGravity) {
-	    /* Remove lines off the top of the buffer if necessary. */
-	    move_up = (oldrow - nrow)
-		        - (term->screen.max_row - term->screen.cur_row);
-	    if (move_up < 0)
-		move_up = 0;
-	    /* Overlapping memmove here! */
-	    memmove( *sbuf, *sbuf + (move_up * MAX_PTRS),
-		  MAX_PTRS * (oldrow - move_up) * sizeof((*sbuf)[0]) );
+    /*
+     * update the pointers in sbuf
+     */
+    for (i = k = 0, tmp = *sbufaddr; i < nrow; i++) {
+	for (j = 0; j < BUF_HEAD; j++)
+	    base[k++] = 0;
+	for (j = BUF_HEAD; j < MAX_PTRS; j++) {
+	    base[k++] = tmp;
+	    tmp += ncol;
 	}
-	*sbuf = (ScrnBuf) realloc((char *) (*sbuf), entries * sizeof(char *));
-	if (*sbuf == 0)
-	    SysError(ERROR_RESIZE);
-	base = *sbuf;
+    }
 
-	/*
-	 *  create the new buffer space and copy old buffer contents there
-	 *  line by line.
-	 */
-	if ((tmp = (Char *)calloc(length, sizeof(Char))) == 0)
-		SysError(ERROR_SREALLOC);
-	*sbufaddr = tmp;
-	minrows = (oldrow < nrow) ? oldrow : nrow;
-	mincols = (oldcol < ncol) ? oldcol : ncol;
-	if (nrow > oldrow
-	 && term->misc.resizeGravity == SouthWestGravity) {
-	    /* move data down to bottom of expanded screen */
-	    move_down = Min(nrow - oldrow, term->screen.savedlines);
-	    tmp += (ncol * move_down * BUF_PTRS);
-	}
+    /* Now free the old buffer */
+    free(oldbuf);
 
-	for (i = k = 0; i < minrows; i++) {
-		k += BUF_HEAD;
-		for (j = BUF_HEAD; j < MAX_PTRS; j++) {
-			memcpy(tmp, base[k++], mincols);
-			tmp += ncol;
-		}
-	}
-
-	/*
-	 * update the pointers in sbuf
-	 */
-	for (i = k = 0, tmp = *sbufaddr; i < nrow; i++) {
-		for (j = 0; j < BUF_HEAD; j++)
-			base[k++] = 0;
-		for (j = BUF_HEAD; j < MAX_PTRS; j++) {
-			base[k++] = tmp;
-			tmp += ncol;
-		}
-	}
-
-	/* Now free the old buffer */
-	free(oldbuf);
-
-	return move_down ? move_down : -move_up; /* convert to rows */
+    return move_down ? move_down : -move_up;	/* convert to rows */
 }
 
 int last_written_row = -1;
@@ -217,246 +218,257 @@ int last_written_col = -1;
  * to match flags.
  */
 void
-ScreenWrite (
-	TScreen *screen,
-	PAIRED_CHARS(Char *str, Char *str2),
-	unsigned flags,
-	unsigned cur_fg_bg,
-	int len)		/* length of string */
+ScreenWrite(
+	       TScreen * screen,
+	       PAIRED_CHARS(Char * str, Char * str2),
+	       unsigned flags,
+	       unsigned cur_fg_bg,
+	       int len)		/* length of string */
 {
 #if OPT_ISO_COLORS
 #if OPT_EXT_COLORS
-	Char *fbf = 0;
-	Char *fbb = 0;
+    Char *fbf = 0;
+    Char *fbb = 0;
 #else
-	Char *fb = 0;
+    Char *fb = 0;
 #endif
 #endif
 #if OPT_DEC_CHRSET
-	Char *cb = 0;
+    Char *cb = 0;
 #endif
-	int length = len;	/* workaround for compiler bug? */
-	Char *attrs;
-	int avail  = screen->max_col - screen->cur_col + 1;
-	Char *col;
-	int wrappedbit;
+    int length = len;		/* workaround for compiler bug? */
+    Char *attrs;
+    int avail = screen->max_col - screen->cur_col + 1;
+    Char *col;
+    int wrappedbit;
 #if OPT_WIDE_CHARS
- 	Char starcol, starcol2; 
- 	Char *comb1l = 0, *comb1h = 0, *comb2l = 0, *comb2h = 0;
+    Char starcol, starcol2;
+    Char *comb1l = 0, *comb1h = 0, *comb2l = 0, *comb2h = 0;
 #endif
- 
+
 #if OPT_WIDE_CHARS
- 	int real_width = visual_width(PAIRED_CHARS(str, str2), length);
+    int real_width = visual_width(PAIRED_CHARS(str, str2), length);
 #else
- 	int real_width = length;
+    int real_width = length;
 #endif
 
-	if (length > avail)
-	    length = avail;
-	if (length <= 0)
-		return;
+    if (length > avail)
+	length = avail;
+    if (length <= 0)
+	return;
 
-	col   = SCRN_BUF_CHARS(screen, screen->cur_row) + screen->cur_col;
-	attrs = SCRN_BUF_ATTRS(screen, screen->cur_row) + screen->cur_col;
+    col = SCRN_BUF_CHARS(screen, screen->cur_row) + screen->cur_col;
+    attrs = SCRN_BUF_ATTRS(screen, screen->cur_row) + screen->cur_col;
 
-	if_OPT_WIDE_CHARS(screen,{
-		comb1l   = SCRN_BUF_COM1L(screen, screen->cur_row) + screen->cur_col;
-		comb1h   = SCRN_BUF_COM1H(screen, screen->cur_row) + screen->cur_col;
-		comb2l   = SCRN_BUF_COM2L(screen, screen->cur_row) + screen->cur_col;
-		comb2h   = SCRN_BUF_COM2H(screen, screen->cur_row) + screen->cur_col;
-	})
+    if_OPT_WIDE_CHARS(screen, {
+	comb1l = SCRN_BUF_COM1L(screen, screen->cur_row) + screen->cur_col;
+	comb1h = SCRN_BUF_COM1H(screen, screen->cur_row) + screen->cur_col;
+	comb2l = SCRN_BUF_COM2L(screen, screen->cur_row) + screen->cur_col;
+	comb2h = SCRN_BUF_COM2H(screen, screen->cur_row) + screen->cur_col;
+    });
 
-	if_OPT_EXT_COLORS(screen,{
-		fbf = SCRN_BUF_FGRND(screen, screen->cur_row) + screen->cur_col;
-		fbb = SCRN_BUF_BGRND(screen, screen->cur_row) + screen->cur_col;
-	})
-	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
-		fb = SCRN_BUF_COLOR(screen, screen->cur_row) + screen->cur_col;
-	})
-	if_OPT_DEC_CHRSET({
-		cb = SCRN_BUF_CSETS(screen, screen->cur_row) + screen->cur_col;
-	})
+    if_OPT_EXT_COLORS(screen, {
+	fbf = SCRN_BUF_FGRND(screen, screen->cur_row) + screen->cur_col;
+	fbb = SCRN_BUF_BGRND(screen, screen->cur_row) + screen->cur_col;
+    });
+    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	fb = SCRN_BUF_COLOR(screen, screen->cur_row) + screen->cur_col;
+    });
+    if_OPT_DEC_CHRSET({
+	cb = SCRN_BUF_CSETS(screen, screen->cur_row) + screen->cur_col;
+    });
 
-	wrappedbit = ScrnTstWrapped(screen, screen->cur_row);
+    wrappedbit = ScrnTstWrapped(screen, screen->cur_row);
 
 #if OPT_WIDE_CHARS
-	starcol = *col;
-	starcol2 = col[length-1];
+    starcol = *col;
+    starcol2 = col[length - 1];
 #endif
 
-	/* write blanks if we're writing invisible text */
-	if (flags & INVISIBLE) {
-		memset(col, ' ', length);
-	} else {
-		memcpy(col, str, length); /* This can stand for the present. If it
-                                             is wrong, we will scribble over it */
-	}
+    /* write blanks if we're writing invisible text */
+    if (flags & INVISIBLE) {
+	memset(col, ' ', length);
+    } else {
+	memcpy(col, str, length);	/* This can stand for the present. If it
+					   is wrong, we will scribble over it */
+    }
 #define ERROR_1 0x20
 #define ERROR_2 0x00
-	if_OPT_WIDE_CHARS(screen,{
+    if_OPT_WIDE_CHARS(screen, {
 
-		Char *wc;
+	Char *wc;
 
-		if (real_width != length) {
-			Char *c = col;
-			wc = SCRN_BUF_WIDEC(screen, screen->cur_row);
-			wc += screen->cur_col;
-			if (screen->cur_col && starcol == HIDDEN_LO && *wc == HIDDEN_HI
-			    && iswide(c[-1] | (wc[-1] << 8))) {
-				c[-1] = ERROR_1;
-				wc[-1] = ERROR_2;
-			}
-			/* if we are overwriting the right hand half of a
-                           wide character, make the other half vanish */
-			while (length) {
-				int ch = *str;
-				if (str2) ch |= *str2 << 8;
+	if (real_width != length) {
+	    Char *c = col;
+	    wc = SCRN_BUF_WIDEC(screen, screen->cur_row);
+	    wc += screen->cur_col;
+	    if (screen->cur_col && starcol == HIDDEN_LO && *wc == HIDDEN_HI
+		&& iswide(c[-1] | (wc[-1] << 8))) {
+		c[-1] = ERROR_1;
+		wc[-1] = ERROR_2;
+	    }
+	    /* if we are overwriting the right hand half of a
+	       wide character, make the other half vanish */
+	    while (length) {
+		int ch = *str;
+		if (str2)
+		    ch |= *str2 << 8;
 
-				*c = *str;
-				c++; str++;
-				
-				if (str2) { *wc = *str2; str2++; } else *wc = 0;
-				wc++;
-				length--;
+		*c = *str;
+		c++;
+		str++;
 
-				if (iswide(ch)) {
-					*c = HIDDEN_LO; *wc = HIDDEN_HI;
-					c++; wc++;
-				}
-			}
+		if (str2) {
+		    *wc = *str2;
+		    str2++;
+		} else
+		    *wc = 0;
+		wc++;
+		length--;
 
-			if (*c == HIDDEN_LO && *wc == HIDDEN_HI && c[-1] == HIDDEN_LO && wc[-1] == HIDDEN_HI) {
-				*c = ERROR_1;
-				*wc = ERROR_2;
-			}
-			/* if we are overwriting the left hand half of a
-                           wide character, make the other half vanish */
+		if (iswide(ch)) {
+		    *c = HIDDEN_LO;
+		    *wc = HIDDEN_HI;
+		    c++;
+		    wc++;
 		}
+	    }
 
-		else {
+	    if (*c == HIDDEN_LO
+		&& *wc == HIDDEN_HI
+		&& c[-1] == HIDDEN_LO
+		&& wc[-1] == HIDDEN_HI) {
+		*c = ERROR_1;
+		*wc = ERROR_2;
+	    }
+	    /* if we are overwriting the left hand half of a
+	       wide character, make the other half vanish */
+	}
 
-		if ((wc = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
-			wc += screen->cur_col;
-			if (screen->cur_col && starcol == HIDDEN_LO && *wc == HIDDEN_HI
-			    && iswide(col[-1] | (wc[-1] << 8))) {
-				col[-1] = ERROR_1;
-				wc[-1] = ERROR_2;
-			}
-			/* if we are overwriting the right hand half of a
-                           wide character, make the other half vanish */
-			if (col[length] == HIDDEN_LO && wc[length] == HIDDEN_HI &&
-                            iswide(starcol2 | (wc[length-1]<<8))) {
-				col[length] = ERROR_1;
-				wc[length] = ERROR_2;
-			}
-			/* if we are overwriting the left hand half of a
-                           wide character, make the other half vanish */
-			if ((flags & INVISIBLE) || (str2 == 0))
-				memset(wc, 0, length);
-			else
-				memcpy(wc, str2, length);
+	else {
+
+	    if ((wc = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
+		wc += screen->cur_col;
+		if (screen->cur_col && starcol == HIDDEN_LO && *wc == HIDDEN_HI
+		    && iswide(col[-1] | (wc[-1] << 8))) {
+		    col[-1] = ERROR_1;
+		    wc[-1] = ERROR_2;
 		}
-        }
-	})
+		/* if we are overwriting the right hand half of a
+		   wide character, make the other half vanish */
+		if (col[length] == HIDDEN_LO && wc[length] == HIDDEN_HI &&
+		    iswide(starcol2 | (wc[length - 1] << 8))) {
+		    col[length] = ERROR_1;
+		    wc[length] = ERROR_2;
+		}
+		/* if we are overwriting the left hand half of a
+		   wide character, make the other half vanish */
+		if ((flags & INVISIBLE) || (str2 == 0))
+		    memset(wc, 0, length);
+		else
+		    memcpy(wc, str2, length);
+	    }
+	}
+    });
 
-	flags &= ATTRIBUTES;
-	flags |= CHARDRAWN;
-	memset( attrs, flags,  real_width);
+    flags &= ATTRIBUTES;
+    flags |= CHARDRAWN;
+    memset(attrs, flags, real_width);
 
-	if_OPT_WIDE_CHARS(screen,{
-		memset( comb1l,   0, real_width);
-		memset( comb2l,   0, real_width);
-		memset( comb1h,   0, real_width);
-		memset( comb2h,   0, real_width);
-	})
-	if_OPT_EXT_COLORS(screen,{
-		memset( fbf,  cur_fg_bg >> 8, real_width);
-		memset( fbb,  cur_fg_bg & 0xff, real_width);
-	})
-	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
-		memset( fb,   cur_fg_bg, real_width);
-	})
-	if_OPT_DEC_CHRSET({
-		memset( cb,   curXtermChrSet(screen->cur_row), real_width);
-	})
+    if_OPT_WIDE_CHARS(screen, {
+	memset(comb1l, 0, real_width);
+	memset(comb2l, 0, real_width);
+	memset(comb1h, 0, real_width);
+	memset(comb2h, 0, real_width);
+    });
+    if_OPT_EXT_COLORS(screen, {
+	memset(fbf, cur_fg_bg >> 8, real_width);
+	memset(fbb, cur_fg_bg & 0xff, real_width);
+    });
+    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	memset(fb, cur_fg_bg, real_width);
+    });
+    if_OPT_DEC_CHRSET({
+	memset(cb, curXtermChrSet(screen->cur_row), real_width);
+    });
 
-	if (wrappedbit)
-	    ScrnSetWrapped(screen, screen->cur_row);
-	else
-	    ScrnClrWrapped(screen, screen->cur_row);
+    if (wrappedbit)
+	ScrnSetWrapped(screen, screen->cur_row);
+    else
+	ScrnClrWrapped(screen, screen->cur_row);
 
-	last_written_col = screen->cur_col + real_width - 1;
-	last_written_row = screen->cur_row;
+    last_written_col = screen->cur_col + real_width - 1;
+    last_written_row = screen->cur_row;
 
-	if_OPT_XMC_GLITCH(screen,{
-		Resolve_XMC(screen);
-	})
+    if_OPT_XMC_GLITCH(screen, {
+	Resolve_XMC(screen);
+    });
 }
 
 /*
  * Saves pointers to the n lines beginning at sb + where, and clears the lines
  */
 static void
-ScrnClearLines (TScreen *screen, ScrnBuf sb, int where, int n, int size)
+ScrnClearLines(TScreen * screen, ScrnBuf sb, int where, int n, int size)
 {
-	int i, j;
-	size_t len = ScrnPointers(screen, n);
-	int last = (n * MAX_PTRS);
+    int i, j;
+    size_t len = ScrnPointers(screen, n);
+    int last = (n * MAX_PTRS);
 
-	/* save n lines at where */
-	memcpy ( (char *) screen->save_ptr,
-		 (char *) &sb[MAX_PTRS * where],
-		 len);
+    /* save n lines at where */
+    memcpy((char *) screen->save_ptr,
+	   (char *) &sb[MAX_PTRS * where],
+	   len);
 
-	/* clear contents of old rows */
-	if (TERM_COLOR_FLAGS) {
-		int flags = TERM_COLOR_FLAGS;
-		for (i = 0; i < last; i += MAX_PTRS) {
-			for (j = 0; j < MAX_PTRS; j++) {
-				if (j < BUF_HEAD)
-					screen->save_ptr[i+j] = 0;
-				else if (j == OFF_ATTRS)
-					memset(screen->save_ptr[i+j], flags, size);
+    /* clear contents of old rows */
+    if (TERM_COLOR_FLAGS) {
+	int flags = TERM_COLOR_FLAGS;
+	for (i = 0; i < last; i += MAX_PTRS) {
+	    for (j = 0; j < MAX_PTRS; j++) {
+		if (j < BUF_HEAD)
+		    screen->save_ptr[i + j] = 0;
+		else if (j == OFF_ATTRS)
+		    memset(screen->save_ptr[i + j], flags, size);
 #if OPT_ISO_COLORS
 #if OPT_EXT_COLORS
-				else if (j == OFF_FGRND)
-					memset(screen->save_ptr[i+j], term->sgr_foreground, size);
-				else if (j == OFF_BGRND)
-					memset(screen->save_ptr[i+j], term->cur_background, size);
+		else if (j == OFF_FGRND)
+		    memset(screen->save_ptr[i + j], term->sgr_foreground, size);
+		else if (j == OFF_BGRND)
+		    memset(screen->save_ptr[i + j], term->cur_background, size);
 #else
-				else if (j == OFF_COLOR)
-					memset(screen->save_ptr[i+j], xtermColorPair(), size);
+		else if (j == OFF_COLOR)
+		    memset(screen->save_ptr[i + j], xtermColorPair(), size);
 #endif
 #endif
-				else
-					bzero( screen->save_ptr[i+j], size);
-			}
-		}
-	} else {
-		for (i = 0; i < last; i += MAX_PTRS) {
-			for (j = 0; j < BUF_HEAD; j++)
-				screen->save_ptr[i+j] = 0;
-			for (j = BUF_HEAD; j < MAX_PTRS; j++)
-				bzero (screen->save_ptr[i+j], size);
-		}
+		else
+		    bzero(screen->save_ptr[i + j], size);
+	    }
 	}
+    } else {
+	for (i = 0; i < last; i += MAX_PTRS) {
+	    for (j = 0; j < BUF_HEAD; j++)
+		screen->save_ptr[i + j] = 0;
+	    for (j = BUF_HEAD; j < MAX_PTRS; j++)
+		bzero(screen->save_ptr[i + j], size);
+	}
+    }
 }
 
 size_t
-ScrnPointers (TScreen *screen, size_t len)
+ScrnPointers(TScreen * screen, size_t len)
 {
-	len *= (MAX_PTRS * sizeof(Char *));
+    len *= (MAX_PTRS * sizeof(Char *));
 
-	if (len > screen->save_len) {
-		if (screen->save_len)
-			screen->save_ptr = (Char **)realloc(screen->save_ptr, len);
-		else
-			screen->save_ptr = (Char **)malloc(len);
-		screen->save_len = len;
-		if (screen->save_ptr == 0)
-			SysError (ERROR_SAVE_PTR);
-	}
-	return len;
+    if (len > screen->save_len) {
+	if (screen->save_len)
+	    screen->save_ptr = (Char **) realloc(screen->save_ptr, len);
+	else
+	    screen->save_ptr = (Char **) malloc(len);
+	screen->save_len = len;
+	if (screen->save_ptr == 0)
+	    SysError(ERROR_SAVE_PTR);
+    }
+    return len;
 }
 
 /*
@@ -465,30 +477,30 @@ ScrnPointers (TScreen *screen, size_t len)
  * Requires: 0 <= where < where + n <= last
  */
 void
-ScrnInsertLine (TScreen *screen, ScrnBuf sb, int last, int where, int n, int size)
+ScrnInsertLine(TScreen * screen, ScrnBuf sb, int last, int where, int n, int size)
 {
-	size_t len = ScrnPointers(screen, n);
+    size_t len = ScrnPointers(screen, n);
 
-	/* save n lines at bottom */
-	ScrnClearLines(screen, sb, (last -= n - 1), n, size);
+    /* save n lines at bottom */
+    ScrnClearLines(screen, sb, (last -= n - 1), n, size);
 
-	/*
-	 * WARNING, overlapping copy operation.  Move down lines (pointers).
-	 *
-	 *   +----|---------|--------+
-	 *
-	 * is copied in the array to:
-	 *
-	 *   +--------|---------|----+
-	 */
-	memmove( (char *) &sb [MAX_PTRS * (where + n)],
-		 (char *) &sb [MAX_PTRS * where],
-		 MAX_PTRS * sizeof (char *) * (last - where));
+    /*
+     * WARNING, overlapping copy operation.  Move down lines (pointers).
+     *
+     *   +----|---------|--------+
+     *
+     * is copied in the array to:
+     *
+     *   +--------|---------|----+
+     */
+    memmove((char *) &sb[MAX_PTRS * (where + n)],
+	    (char *) &sb[MAX_PTRS * where],
+	    MAX_PTRS * sizeof(char *) * (last - where));
 
-	/* reuse storage for new lines at where */
-	memcpy ( (char *) &sb[MAX_PTRS * where],
-		 (char *) screen->save_ptr,
-		 len);
+    /* reuse storage for new lines at where */
+    memcpy((char *) &sb[MAX_PTRS * where],
+	   (char *) screen->save_ptr,
+	   len);
 }
 
 /*
@@ -497,19 +509,19 @@ ScrnInsertLine (TScreen *screen, ScrnBuf sb, int last, int where, int n, int siz
  * Requires 0 <= where < where + n < = last
  */
 void
-ScrnDeleteLine (TScreen *screen, ScrnBuf sb, int last, int where, int n, int size)
+ScrnDeleteLine(TScreen * screen, ScrnBuf sb, int last, int where, int n, int size)
 {
-	ScrnClearLines(screen, sb, where, n, size);
+    ScrnClearLines(screen, sb, where, n, size);
 
-	/* move up lines */
-	memmove( (char *) &sb[MAX_PTRS * where],
-		 (char *) &sb[MAX_PTRS * (where + n)],
-		MAX_PTRS * sizeof (char *) * ((last -= n - 1) - where));
+    /* move up lines */
+    memmove((char *) &sb[MAX_PTRS * where],
+	    (char *) &sb[MAX_PTRS * (where + n)],
+	    MAX_PTRS * sizeof(char *) * ((last -= n - 1) - where));
 
-	/* reuse storage for new bottom lines */
-	memcpy ( (char *) &sb[MAX_PTRS * last],
-		 (char *)screen->save_ptr,
-		MAX_PTRS * sizeof(char *) * n);
+    /* reuse storage for new bottom lines */
+    memcpy((char *) &sb[MAX_PTRS * last],
+	   (char *) screen->save_ptr,
+	   MAX_PTRS * sizeof(char *) * n);
 }
 
 /*
@@ -517,148 +529,148 @@ ScrnDeleteLine (TScreen *screen, ScrnBuf sb, int last, int where, int n, int siz
  * row.
  */
 void
-ScrnInsertChar (TScreen *screen, int n)
+ScrnInsertChar(TScreen * screen, int n)
 {
-	ScrnBuf sb = screen->visbuf;
-	int size = screen->max_col + 1;
-	int row = screen->cur_row;
-	int col = screen->cur_col;
-	int i, j;
-	Char *ptr = BUF_CHARS(sb, row);
-	Char *attrs = BUF_ATTRS(sb, row);
-	int wrappedbit = ScrnTstWrapped(screen, row);
-	int flags = CHARDRAWN | TERM_COLOR_FLAGS;
-	size_t nbytes;
+    ScrnBuf sb = screen->visbuf;
+    int size = screen->max_col + 1;
+    int row = screen->cur_row;
+    int col = screen->cur_col;
+    int i, j;
+    Char *ptr = BUF_CHARS(sb, row);
+    Char *attrs = BUF_ATTRS(sb, row);
+    int wrappedbit = ScrnTstWrapped(screen, row);
+    int flags = CHARDRAWN | TERM_COLOR_FLAGS;
+    size_t nbytes;
 
-	if (size - (col + n) <= 0) {
-	    if ((n = size - col) <= 0) {
-		return;
-	    }
+    if (size - (col + n) <= 0) {
+	if ((n = size - col) <= 0) {
+	    return;
 	}
-	nbytes = (size - (col + n));
+    }
+    nbytes = (size - (col + n));
 
-	ScrnClrWrapped(screen, row); /* make sure the bit isn't moved */
-	for (i = size - 1; i >= col + n; i--) {
-		ptr[i] = ptr[j = i - n];
-		attrs[i] = attrs[j];
-	}
+    ScrnClrWrapped(screen, row);	/* make sure the bit isn't moved */
+    for (i = size - 1; i >= col + n; i--) {
+	ptr[i] = ptr[j = i - n];
+	attrs[i] = attrs[j];
+    }
 
-	for (i=col; i<col+n; i++)
-	    ptr[i] = ' ';
-	for (i=col; i<col+n; i++)
-	    attrs[i] = flags;
-	if_OPT_EXT_COLORS(screen,{
-	    ptr = BUF_FGRND(sb, row);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, term->sgr_foreground, n);
-	    ptr = BUF_BGRND(sb, row);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, term->cur_background, n);
-	})
-	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
-	    ptr = BUF_COLOR(sb, row);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, xtermColorPair(), n);
-	})
-	if_OPT_DEC_CHRSET({
-	    ptr = BUF_CSETS(sb, row);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, curXtermChrSet(row), n);
-	})
-	if_OPT_WIDE_CHARS(screen,{
-	    ptr = BUF_WIDEC(sb, row);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, 0, n);
+    for (i = col; i < col + n; i++)
+	ptr[i] = ' ';
+    for (i = col; i < col + n; i++)
+	attrs[i] = flags;
+    if_OPT_EXT_COLORS(screen, {
+	ptr = BUF_FGRND(sb, row);
+	memmove(ptr + col + n, ptr + col, nbytes);
+	memset(ptr + col, term->sgr_foreground, n);
+	ptr = BUF_BGRND(sb, row);
+	memmove(ptr + col + n, ptr + col, nbytes);
+	memset(ptr + col, term->cur_background, n);
+    });
+    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	ptr = BUF_COLOR(sb, row);
+	memmove(ptr + col + n, ptr + col, nbytes);
+	memset(ptr + col, xtermColorPair(), n);
+    });
+    if_OPT_DEC_CHRSET({
+	ptr = BUF_CSETS(sb, row);
+	memmove(ptr + col + n, ptr + col, nbytes);
+	memset(ptr + col, curXtermChrSet(row), n);
+    });
+    if_OPT_WIDE_CHARS(screen, {
+	ptr = BUF_WIDEC(sb, row);
+	memmove(ptr + col + n, ptr + col, nbytes);
+	memset(ptr + col, 0, n);
 
-	    ptr = BUF_COM1L(sb, row);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, 0, n);
-	    
-	    ptr = BUF_COM1H(sb, row);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, 0, n);
-	    
-	    ptr = BUF_COM2L(sb, row);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, 0, n);
-	    
-	    ptr = BUF_COM2H(sb, row);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, 0, n);
-	})
+	ptr = BUF_COM1L(sb, row);
+	memmove(ptr + col + n, ptr + col, nbytes);
+	memset(ptr + col, 0, n);
 
-	if (wrappedbit)
-	    ScrnSetWrapped(screen, row);
-	else
-	    ScrnClrWrapped(screen, row);
+	ptr = BUF_COM1H(sb, row);
+	memmove(ptr + col + n, ptr + col, nbytes);
+	memset(ptr + col, 0, n);
+
+	ptr = BUF_COM2L(sb, row);
+	memmove(ptr + col + n, ptr + col, nbytes);
+	memset(ptr + col, 0, n);
+
+	ptr = BUF_COM2H(sb, row);
+	memmove(ptr + col + n, ptr + col, nbytes);
+	memset(ptr + col, 0, n);
+    });
+
+    if (wrappedbit)
+	ScrnSetWrapped(screen, row);
+    else
+	ScrnClrWrapped(screen, row);
 }
 
 /*
  * Deletes n characters at current row, col.
  */
 void
-ScrnDeleteChar (TScreen *screen, int n)
+ScrnDeleteChar(TScreen * screen, int n)
 {
-	ScrnBuf sb = screen->visbuf;
-	int size = screen->max_col + 1;
-	int row = screen->cur_row;
-	int col = screen->cur_col;
-	Char *ptr = BUF_CHARS(sb, row);
-	Char *attrs = BUF_ATTRS(sb, row);
-	size_t nbytes;
+    ScrnBuf sb = screen->visbuf;
+    int size = screen->max_col + 1;
+    int row = screen->cur_row;
+    int col = screen->cur_col;
+    Char *ptr = BUF_CHARS(sb, row);
+    Char *attrs = BUF_ATTRS(sb, row);
+    size_t nbytes;
 
-	if (size - (col + n) <= 0) {
-	    if ((n = size - col) <= 0) {
-		return;
-	    }
+    if (size - (col + n) <= 0) {
+	if ((n = size - col) <= 0) {
+	    return;
 	}
-	nbytes = (size - (col + n));
+    }
+    nbytes = (size - (col + n));
 
-	memmove (ptr   + col, ptr   + col + n, nbytes);
-	memmove (attrs + col, attrs + col + n, nbytes);
-	bzero  (ptr + size - n, n);
-	memset (attrs + size - n, TERM_COLOR_FLAGS, n);
+    memmove(ptr + col, ptr + col + n, nbytes);
+    memmove(attrs + col, attrs + col + n, nbytes);
+    bzero(ptr + size - n, n);
+    memset(attrs + size - n, TERM_COLOR_FLAGS, n);
 
-	if_OPT_EXT_COLORS(screen,{
-	    ptr = BUF_FGRND(sb, row);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + size - n, term->sgr_foreground, n);
-	    ptr = BUF_BGRND(sb, row);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + size - n, term->cur_background, n);
-	})
-	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
-	    ptr = BUF_COLOR(sb, row);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + size - n, xtermColorPair(), n);
-	})
-	if_OPT_DEC_CHRSET({
-	    ptr = BUF_CSETS(sb, row);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + size - n, curXtermChrSet(row), n);
-	})
-	if_OPT_WIDE_CHARS(screen,{
-	    ptr = BUF_WIDEC(sb, row);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + size - n, 0, n);
+    if_OPT_EXT_COLORS(screen, {
+	ptr = BUF_FGRND(sb, row);
+	memmove(ptr + col, ptr + col + n, nbytes);
+	memset(ptr + size - n, term->sgr_foreground, n);
+	ptr = BUF_BGRND(sb, row);
+	memmove(ptr + col, ptr + col + n, nbytes);
+	memset(ptr + size - n, term->cur_background, n);
+    });
+    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	ptr = BUF_COLOR(sb, row);
+	memmove(ptr + col, ptr + col + n, nbytes);
+	memset(ptr + size - n, xtermColorPair(), n);
+    });
+    if_OPT_DEC_CHRSET({
+	ptr = BUF_CSETS(sb, row);
+	memmove(ptr + col, ptr + col + n, nbytes);
+	memset(ptr + size - n, curXtermChrSet(row), n);
+    });
+    if_OPT_WIDE_CHARS(screen, {
+	ptr = BUF_WIDEC(sb, row);
+	memmove(ptr + col, ptr + col + n, nbytes);
+	memset(ptr + size - n, 0, n);
 
-	    ptr = BUF_COM1L(sb, row);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + size - n, 0, n);
-	      
-	    ptr = BUF_COM1H(sb, row);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + size - n, 0, n);
-	      
-	    ptr = BUF_COM2L(sb, row);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + size - n, 0, n);
-	      
-	    ptr = BUF_COM2H(sb, row);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + size - n, 0, n);
-	})
-	ScrnClrWrapped(screen, row);
+	ptr = BUF_COM1L(sb, row);
+	memmove(ptr + col, ptr + col + n, nbytes);
+	memset(ptr + size - n, 0, n);
+
+	ptr = BUF_COM1H(sb, row);
+	memmove(ptr + col, ptr + col + n, nbytes);
+	memset(ptr + size - n, 0, n);
+
+	ptr = BUF_COM2L(sb, row);
+	memmove(ptr + col, ptr + col + n, nbytes);
+	memset(ptr + size - n, 0, n);
+
+	ptr = BUF_COM2H(sb, row);
+	memmove(ptr + col, ptr + col + n, nbytes);
+	memset(ptr + size - n, 0, n);
+    });
+    ScrnClrWrapped(screen, row);
 }
 
 /*
@@ -669,390 +681,393 @@ ScrnDeleteChar (TScreen *screen, int n)
  *	     all dimensions are based on single-characters.
  */
 void
-ScrnRefresh (
-	TScreen *screen,
-	int toprow,
-	int leftcol,
-	int nrows,
-	int ncols,
-	Bool force
-)			/* ... leading/trailing spaces */
+ScrnRefresh(
+	       TScreen * screen,
+	       int toprow,
+	       int leftcol,
+	       int nrows,
+	       int ncols,
+	       Bool force
+)				/* ... leading/trailing spaces */
 {
-	int y = toprow * FontHeight(screen) + screen->border;
-	int row;
-	int topline = screen->topline;
-	int maxrow = toprow + nrows - 1;
-	int scrollamt = screen->scroll_amt;
-	int max = screen->max_row;
-	int gc_changes = 0;
+    int y = toprow * FontHeight(screen) + screen->border;
+    int row;
+    int topline = screen->topline;
+    int maxrow = toprow + nrows - 1;
+    int scrollamt = screen->scroll_amt;
+    int max = screen->max_row;
+    int gc_changes = 0;
 #ifdef __CYGWIN__
-	static char first_time = 1;
+    static char first_time = 1;
 #endif
-        static int recurse = 0;
+    static int recurse = 0;
 
-	TRACE(("ScrnRefresh (%d,%d) - (%d,%d)%s\n",
-		toprow, leftcol,
-		nrows, ncols,
-		force ? " force" : ""));
+    TRACE(("ScrnRefresh (%d,%d) - (%d,%d)%s\n",
+	   toprow, leftcol,
+	   nrows, ncols,
+	   force ? " force" : ""));
 
-	if(screen->cursor_col >= leftcol
+    if (screen->cursor_col >= leftcol
 	&& screen->cursor_col <= (leftcol + ncols - 1)
 	&& screen->cursor_row >= toprow + topline
 	&& screen->cursor_row <= maxrow + topline)
-		screen->cursor_state = OFF;
+	screen->cursor_state = OFF;
 
-	for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
+    for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
 #if OPT_EXT_COLORS
-	   Char *fbf = 0;
-	   Char *fbb = 0;
+	Char *fbf = 0;
+	Char *fbb = 0;
 #define ColorOf(col) ((fbf[col] << 8) | fbb[col])
 #else
-	   Char *fb = 0;
+	Char *fb = 0;
 #define ColorOf(col) (fb[col])
 #endif
 #endif
 #if OPT_DEC_CHRSET
-	   Char *cb = 0;
+	Char *cb = 0;
 #endif
 #if OPT_WIDE_CHARS
-	   int wideness = 0;
-	   Char *widec = 0;
+	int wideness = 0;
+	Char *widec = 0;
 #define WIDEC_PTR(cell) widec ? &widec[cell] : 0
 #endif
-	   Char cs = 0;
-	   Char *chars;
-	   Char *attrs;
-	   int col = leftcol;
-	   int maxcol = leftcol + ncols - 1;
-	   int hi_col = maxcol;
-	   int lastind;
-	   int flags;
-	   int test;
-	   int fg_bg = 0, fg = 0, bg = 0;
-	   int x;
-	   GC gc;
-	   Boolean hilite;
+	Char cs = 0;
+	Char *chars;
+	Char *attrs;
+	int col = leftcol;
+	int maxcol = leftcol + ncols - 1;
+	int hi_col = maxcol;
+	int lastind;
+	int flags;
+	int test;
+	int fg_bg = 0, fg = 0, bg = 0;
+	int x;
+	GC gc;
+	Boolean hilite;
 
-	   if (row < screen->top_marg || row > screen->bot_marg)
-		lastind = row;
-	   else
-		lastind = row - scrollamt;
+	if (row < screen->top_marg || row > screen->bot_marg)
+	    lastind = row;
+	else
+	    lastind = row - scrollamt;
 
-	   if (lastind < 0 || lastind > max)
-	   	continue;
+	if (lastind < 0 || lastind > max)
+	    continue;
 
-	   chars = SCRN_BUF_CHARS(screen, lastind + topline);
-	   attrs = SCRN_BUF_ATTRS(screen, lastind + topline);
+	chars = SCRN_BUF_CHARS(screen, lastind + topline);
+	attrs = SCRN_BUF_ATTRS(screen, lastind + topline);
 
-	   if_OPT_DEC_CHRSET({
-		cb = SCRN_BUF_CSETS(screen, lastind + topline);
-	   })
+	if_OPT_DEC_CHRSET({
+	    cb = SCRN_BUF_CSETS(screen, lastind + topline);
+	});
 
-	   if_OPT_WIDE_CHARS(screen,{
-		widec = SCRN_BUF_WIDEC(screen, lastind + topline);
-	   })
+	if_OPT_WIDE_CHARS(screen, {
+	    widec = SCRN_BUF_WIDEC(screen, lastind + topline);
+	});
 
-	   if_OPT_WIDE_CHARS(screen,{
-		/* This fixes an infinite recursion bug, that leads
-		   to display anomalies. It seems to be related to 
-		   problems with the selection. */
-		if (recurse < 3) {
-		    /* adjust to redraw all of a widechar if we just wanted 
-		      to draw the right hand half */
-		    if (iswide(chars[leftcol - 1] | (widec[leftcol -1]<<8)) &&
-			(chars[leftcol] | (widec[leftcol]<<8))==HIDDEN_CHAR)
-		    {
-			leftcol--;
-			ncols++;
-			col = leftcol;
-		    }
-	       } else {
-		    fprintf(stderr, "This should not happen. Why is it so?\n");
-	       }
-	   })
+	if_OPT_WIDE_CHARS(screen, {
+	    /* This fixes an infinite recursion bug, that leads
+	       to display anomalies. It seems to be related to 
+	       problems with the selection. */
+	    if (recurse < 3) {
+		/* adjust to redraw all of a widechar if we just wanted 
+		   to draw the right hand half */
+		if (iswide(chars[leftcol - 1] | (widec[leftcol - 1] << 8)) &&
+		    (chars[leftcol] | (widec[leftcol] << 8)) == HIDDEN_CHAR) {
+		    leftcol--;
+		    ncols++;
+		    col = leftcol;
+		}
+	    } else {
+		fprintf(stderr, "This should not happen. Why is it so?\n");
+	    }
+	});
 
-	   if (row < screen->startHRow || row > screen->endHRow ||
-	       (row == screen->startHRow && maxcol < screen->startHCol) ||
-	       (row == screen->endHRow && col >= screen->endHCol))
-	   {
+	if (row < screen->startHRow || row > screen->endHRow ||
+	    (row == screen->startHRow && maxcol < screen->startHCol) ||
+	    (row == screen->endHRow && col >= screen->endHCol)) {
 #if OPT_DEC_CHRSET
-	       /*
-	        * Temporarily change dimensions to double-sized characters so
-		* we can reuse the recursion on this function.
-	        */
-	       if (CSET_DOUBLE(*cb)) {
-		   col /= 2;
-		   maxcol /= 2;
-	       }
+	    /*
+	     * Temporarily change dimensions to double-sized characters so
+	     * we can reuse the recursion on this function.
+	     */
+	    if (CSET_DOUBLE(*cb)) {
+		col /= 2;
+		maxcol /= 2;
+	    }
 #endif
-	       /* row does not intersect selection; don't hilite */
-	       if (!force) {
-		   while (col <= maxcol && (attrs[col] & ~BOLD) == 0 &&
-			  (chars[col] & ~040) == 0)
-		       col++;
+	    /* row does not intersect selection; don't hilite */
+	    if (!force) {
+		while (col <= maxcol && (attrs[col] & ~BOLD) == 0 &&
+		       (chars[col] & ~040) == 0)
+		    col++;
 
-		   while (col <= maxcol && (attrs[maxcol] & ~BOLD) == 0 &&
-			  (chars[maxcol] & ~040) == 0)
-		       maxcol--;
-	       }
+		while (col <= maxcol && (attrs[maxcol] & ~BOLD) == 0 &&
+		       (chars[maxcol] & ~040) == 0)
+		    maxcol--;
+	    }
 #if OPT_DEC_CHRSET
-	       if (CSET_DOUBLE(*cb)) {
-		   col *= 2;
-		   maxcol *= 2;
-	       }
+	    if (CSET_DOUBLE(*cb)) {
+		col *= 2;
+		maxcol *= 2;
+	    }
 #endif
-	       hilite = False;
-	   }
-	   else {
-	       /* row intersects selection; split into pieces of single type */
-	       if (row == screen->startHRow && col < screen->startHCol) {
-		   recurse++;
-		   ScrnRefresh(screen, row, col, 1, screen->startHCol - col,
-			       force);
-		   col = screen->startHCol;
-	       }
-	       if (row == screen->endHRow && maxcol >= screen->endHCol) {
-		   recurse++;
-		   ScrnRefresh(screen, row, screen->endHCol, 1,
-			       maxcol - screen->endHCol + 1, force);
-		   maxcol = screen->endHCol - 1;
-	       }
+	    hilite = False;
+	} else {
+	    /* row intersects selection; split into pieces of single type */
+	    if (row == screen->startHRow && col < screen->startHCol) {
+		recurse++;
+		ScrnRefresh(screen, row, col, 1, screen->startHCol - col,
+			    force);
+		col = screen->startHCol;
+	    }
+	    if (row == screen->endHRow && maxcol >= screen->endHCol) {
+		recurse++;
+		ScrnRefresh(screen, row, screen->endHCol, 1,
+			    maxcol - screen->endHCol + 1, force);
+		maxcol = screen->endHCol - 1;
+	    }
 
-	       /*
-		* If we're highlighting because the user is doing cut/paste,
-		* trim the trailing blanks from the highlighted region so we're
-		* showing the actual extent of the text that'll be cut.  If
-		* we're selecting a blank line, we'll highlight one column
-		* anyway.
-		*
-		* We don't do this if the mouse-hilite mode is set because that
-		* would be too confusing.
-		*
-		* The default if the highlightSelection resource isn't set will
-		* highlight the whole width of the terminal, which is easy to
-		* see, but harder to use (because trailing blanks aren't as
-		* apparent).
-	        */
-	       if (screen->highlight_selection
+	    /*
+	     * If we're highlighting because the user is doing cut/paste,
+	     * trim the trailing blanks from the highlighted region so we're
+	     * showing the actual extent of the text that'll be cut.  If
+	     * we're selecting a blank line, we'll highlight one column
+	     * anyway.
+	     *
+	     * We don't do this if the mouse-hilite mode is set because that
+	     * would be too confusing.
+	     *
+	     * The default if the highlightSelection resource isn't set will
+	     * highlight the whole width of the terminal, which is easy to
+	     * see, but harder to use (because trailing blanks aren't as
+	     * apparent).
+	     */
+	    if (screen->highlight_selection
 		&& screen->send_mouse_pos != VT200_HIGHLIGHT_MOUSE) {
-		   hi_col = screen->max_col;
-	           while (hi_col > 0 && !(attrs[hi_col] & CHARDRAWN))
-		       hi_col--;
-	       }
+		hi_col = screen->max_col;
+		while (hi_col > 0 && !(attrs[hi_col] & CHARDRAWN))
+		    hi_col--;
+	    }
 
-	       /* remaining piece should be hilited */
-	       hilite = True;
-	   }
-
-	   if (col > maxcol) continue;
-
-	   /*
-	    * Go back to double-sized character dimensions if the line has
-	    * double-width characters.  Note that 'hi_col' is already in the
-	    * right units.
-	    */
-	   if_OPT_DEC_CHRSET({
-		if (CSET_DOUBLE(*cb)) {
-			col /= 2;
-			maxcol /= 2;
-		}
-		cs = cb[col];
-	   })
-
-	   flags = attrs[col];
-#if OPT_WIDE_CHARS
-	   if (widec)
-	     wideness = iswide(chars[col] | (widec[col]<<8));
-	   else
-	     wideness = 0;
-#endif
-	   if_OPT_EXT_COLORS(screen,{
-		fbf = SCRN_BUF_FGRND(screen, lastind + topline);
-		fbb = SCRN_BUF_BGRND(screen, lastind + topline);
-		fg_bg = ColorOf(col);
-		/* this combines them, then splits them again.	but
-		   extract_fg does more, so seems reasonable */
-		fg = extract_fg(fg_bg, flags);
-		bg = extract_bg(fg_bg, flags);
-	   })
-	   if_OPT_ISO_TRADITIONAL_COLORS(screen,{
-		fb = SCRN_BUF_COLOR(screen, lastind + topline);
-		fg_bg = ColorOf(col);
-		fg = extract_fg(fg_bg, flags);
-		bg = extract_bg(fg_bg, flags);
-	   })
-
-	   gc = updatedXtermGC(screen, flags, fg_bg, hilite);
-	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
-
-	   x = CurCursorX(screen, row + topline, col);
-	   lastind = col;
-
-	   for (; col <= maxcol; col++) {
-		if ((attrs[col] != flags)
-		 || (hilite && (col > hi_col))
-#if OPT_ISO_COLORS
-		 || ((flags & FG_COLOR)
-		   && ((extract_fg(ColorOf(col), attrs[col]) != fg)
-		    || (extract_bg(ColorOf(col), attrs[col]) != bg)))
-#endif
-#if OPT_WIDE_CHARS
-                 || (widec 
-                     && ((iswide(chars[col] | (widec[col]<<8))) != wideness)
-                     && !((chars[col] | (widec[col]<<8))==HIDDEN_CHAR))
-#endif
-#if OPT_DEC_CHRSET
-		 || (cb[col] != cs)
-#endif
-		 ) {
-		   TRACE(("%s @%d, calling drawXtermText %d..%d:%s\n",
-		   	__FILE__, __LINE__,
-		   	lastind, col,
-			visibleChars(
-				PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
-				col - lastind)));
-
-		   test = flags;
-		   checkVeryBoldColors(test, fg);
-
-		   x = drawXtermText(screen, test, gc, x, y,
-			cs,
-			PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
-			col - lastind, 0);
- 
-		   if_OPT_WIDE_CHARS(screen, 
- 		   {
- 			int i;
-  	       	 	Char *comb1l = BUF_COM1L(screen->visbuf, row + topline);
- 			Char *comb2l = BUF_COM2L(screen->visbuf, row + topline);
-  	       	 	Char *comb1h = BUF_COM1H(screen->visbuf, row + topline);
- 			Char *comb2h = BUF_COM2H(screen->visbuf, row + topline);
- 			for (i = lastind ; i < col; i++) {
-			    int my_x = CurCursorX(screen, row + topline, i);
-			    int base = chars[i] | (widec[i] << 8);
-			    int comb1 = comb1l[i] | (comb1h[i] << 8);
-			    int comb2 = comb2l[i] | (comb2h[i] << 8);
-
-			    if (iswide(base)) my_x = CurCursorX(screen, row + topline, i-1);
-
-			    if (comb1 != 0) {
-				    drawXtermText(screen, test, gc, my_x, y, cs,
-						  PAIRED_CHARS(comb1l+i, comb1h+i), 1, iswide(base));
-			    }
-
-			    if (comb2 != 0) {
-				    drawXtermText(screen, test, gc, my_x, y, cs,
-						  PAIRED_CHARS(comb2l+i, comb2h+i), 1, iswide(base));
-			    }
- 			}
- 	   	   })
- 
-		   resetXtermGC(screen, flags, hilite);
-
-		   lastind = col;
-
-		   if (hilite && (col > hi_col))
-			hilite = False;
-
-		   flags = attrs[col];
-		   if_OPT_EXT_COLORS(screen,{
-			fg_bg = ColorOf(col);
-		        fg = extract_fg(fg_bg, flags);
-		        bg = extract_bg(fg_bg, flags);
-		   })
-		   if_OPT_ISO_TRADITIONAL_COLORS(screen,{
-			fg_bg = ColorOf(col);
-		        fg = extract_fg(fg_bg, flags);
-		        bg = extract_bg(fg_bg, flags);
-		   })
-		   if_OPT_DEC_CHRSET({
-		        cs = cb[col];
-		   })
-#if OPT_WIDE_CHARS
-		   if (widec)
-                     wideness = iswide(chars[col] | (widec[col]<<8));
-#endif
-
-	   	   gc = updatedXtermGC(screen, flags, fg_bg, hilite);
-	   	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
-		}
-
-		if(chars[col] == 0) {
-#if OPT_WIDE_CHARS
-		    if (widec == 0 || widec[col] == 0)
-#endif
-			chars[col] = ' ';
-		}
-	   }
-
-	   TRACE(("%s @%d, calling drawXtermText %d..%d:%s\n",
-	   	__FILE__, __LINE__,
-		lastind, col,
-		visibleChars(PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)), col - lastind)));
-
-	   test = flags;
-	   checkVeryBoldColors(test, fg);
-
-	   drawXtermText(screen, test, gc, x, y,
-	   	cs,
-		PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
-		col - lastind, 0);
-
-	   if_OPT_WIDE_CHARS(screen, {
-		int i;
-		Char *comb1l = BUF_COM1L(screen->visbuf, row + topline);
-		Char *comb2l = BUF_COM2L(screen->visbuf, row + topline);
-		Char *comb1h = BUF_COM1H(screen->visbuf, row + topline);
-		Char *comb2h = BUF_COM2H(screen->visbuf, row + topline);
-		for (i = lastind ; i < col; i++) {
-		    int my_x = CurCursorX(screen, row + topline, i);
-		    int base = chars[i] | (widec[i] << 8);
-		    int comb1 = comb1l[i] | (comb1h[i] << 8);
-		    int comb2 = comb2l[i] | (comb2h[i] << 8);
-
-		    if (iswide(base)) my_x = CurCursorX(screen, row + topline, i-1);
-
-		    if (comb1 != 0) {
-			    drawXtermText(screen, test, gc, my_x, y, cs,
-					  PAIRED_CHARS(comb1l+i, comb1h+i), 1, iswide(base));
-		    }
-
-		    if (comb2 != 0) {
-			    drawXtermText(screen, test, gc, my_x, y, cs,
-					  PAIRED_CHARS(comb2l+i, comb2h+i), 1, iswide(base));
-		    }
-		}
-	   })
-
-	   resetXtermGC(screen, flags, hilite);
+	    /* remaining piece should be hilited */
+	    hilite = True;
 	}
+
+	if (col > maxcol)
+	    continue;
 
 	/*
-	 * If we're in color mode, reset the various GC's to the current
-	 * screen foreground and background so that other functions (e.g.,
-	 * ClearRight) will get the correct colors.
+	 * Go back to double-sized character dimensions if the line has
+	 * double-width characters.  Note that 'hi_col' is already in the
+	 * right units.
 	 */
-	if_OPT_ISO_COLORS(screen,{
-	    if (gc_changes & FG_COLOR)
-		SGR_Foreground(term->cur_foreground);
-	    if (gc_changes & BG_COLOR)
-		SGR_Background(term->cur_background);
-	})
+	if_OPT_DEC_CHRSET({
+	    if (CSET_DOUBLE(*cb)) {
+		col /= 2;
+		maxcol /= 2;
+	    }
+	    cs = cb[col];
+	});
+
+	flags = attrs[col];
+#if OPT_WIDE_CHARS
+	if (widec)
+	    wideness = iswide(chars[col] | (widec[col] << 8));
+	else
+	    wideness = 0;
+#endif
+	if_OPT_EXT_COLORS(screen, {
+	    fbf = SCRN_BUF_FGRND(screen, lastind + topline);
+	    fbb = SCRN_BUF_BGRND(screen, lastind + topline);
+	    fg_bg = ColorOf(col);
+	    /* this combines them, then splits them again.  but
+	       extract_fg does more, so seems reasonable */
+	    fg = extract_fg(fg_bg, flags);
+	    bg = extract_bg(fg_bg, flags);
+	});
+	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	    fb = SCRN_BUF_COLOR(screen, lastind + topline);
+	    fg_bg = ColorOf(col);
+	    fg = extract_fg(fg_bg, flags);
+	    bg = extract_bg(fg_bg, flags);
+	});
+
+	gc = updatedXtermGC(screen, flags, fg_bg, hilite);
+	gc_changes |= (flags & (FG_COLOR | BG_COLOR));
+
+	x = CurCursorX(screen, row + topline, col);
+	lastind = col;
+
+	for (; col <= maxcol; col++) {
+	    if ((attrs[col] != flags)
+		|| (hilite && (col > hi_col))
+#if OPT_ISO_COLORS
+		|| ((flags & FG_COLOR)
+		    && ((extract_fg(ColorOf(col), attrs[col]) != fg)
+			|| (extract_bg(ColorOf(col), attrs[col]) != bg)))
+#endif
+#if OPT_WIDE_CHARS
+		|| (widec
+		    && ((iswide(chars[col] | (widec[col] << 8))) != wideness)
+		    && !((chars[col] | (widec[col] << 8)) == HIDDEN_CHAR))
+#endif
+#if OPT_DEC_CHRSET
+		|| (cb[col] != cs)
+#endif
+		) {
+		TRACE(("ScrnRefresh looping drawXtermText %d..%d:%s\n",
+		       lastind, col,
+		       visibleChars(
+				       PAIRED_CHARS(&chars[lastind],
+						    WIDEC_PTR(lastind)),
+				       col - lastind)));
+
+		test = flags;
+		checkVeryBoldColors(test, fg);
+
+		x = drawXtermText(screen, test, gc, x, y,
+				  cs,
+				  PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
+				  col - lastind, 0);
+
+		if_OPT_WIDE_CHARS(screen, {
+		    int i;
+		    Char *comb1l = BUF_COM1L(screen->visbuf, row + topline);
+		    Char *comb2l = BUF_COM2L(screen->visbuf, row + topline);
+		    Char *comb1h = BUF_COM1H(screen->visbuf, row + topline);
+		    Char *comb2h = BUF_COM2H(screen->visbuf, row + topline);
+		    for (i = lastind; i < col; i++) {
+			int my_x = CurCursorX(screen, row + topline, i);
+			int base = chars[i] | (widec[i] << 8);
+			int comb1 = comb1l[i] | (comb1h[i] << 8);
+			int comb2 = comb2l[i] | (comb2h[i] << 8);
+
+			if (iswide(base))
+			    my_x = CurCursorX(screen, row + topline, i - 1);
+
+			if (comb1 != 0) {
+			    drawXtermText(screen, test, gc, my_x, y, cs,
+					  PAIRED_CHARS(comb1l + i, comb1h + i),
+					  1, iswide(base));
+			}
+
+			if (comb2 != 0) {
+			    drawXtermText(screen, test, gc, my_x, y, cs,
+					  PAIRED_CHARS(comb2l + i, comb2h + i),
+					  1, iswide(base));
+			}
+		    }
+		});
+
+		resetXtermGC(screen, flags, hilite);
+
+		lastind = col;
+
+		if (hilite && (col > hi_col))
+		    hilite = False;
+
+		flags = attrs[col];
+		if_OPT_EXT_COLORS(screen, {
+		    fg_bg = ColorOf(col);
+		    fg = extract_fg(fg_bg, flags);
+		    bg = extract_bg(fg_bg, flags);
+		});
+		if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+		    fg_bg = ColorOf(col);
+		    fg = extract_fg(fg_bg, flags);
+		    bg = extract_bg(fg_bg, flags);
+		});
+		if_OPT_DEC_CHRSET({
+		    cs = cb[col];
+		});
+#if OPT_WIDE_CHARS
+		if (widec)
+		    wideness = iswide(chars[col] | (widec[col] << 8));
+#endif
+
+		gc = updatedXtermGC(screen, flags, fg_bg, hilite);
+		gc_changes |= (flags & (FG_COLOR | BG_COLOR));
+	    }
+
+	    if (chars[col] == 0) {
+#if OPT_WIDE_CHARS
+		if (widec == 0 || widec[col] == 0)
+#endif
+		    chars[col] = ' ';
+	    }
+	}
+
+	TRACE(("ScrnRefresh calling drawXtermText %d..%d:%s\n",
+	       lastind, col,
+	       visibleChars(PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
+			    col - lastind)));
+
+	test = flags;
+	checkVeryBoldColors(test, fg);
+
+	drawXtermText(screen, test, gc, x, y,
+		      cs,
+		      PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
+		      col - lastind, 0);
+
+	if_OPT_WIDE_CHARS(screen, {
+	    int i;
+	    Char *comb1l = BUF_COM1L(screen->visbuf, row + topline);
+	    Char *comb2l = BUF_COM2L(screen->visbuf, row + topline);
+	    Char *comb1h = BUF_COM1H(screen->visbuf, row + topline);
+	    Char *comb2h = BUF_COM2H(screen->visbuf, row + topline);
+	    for (i = lastind; i < col; i++) {
+		int my_x = CurCursorX(screen, row + topline, i);
+		int base = chars[i] | (widec[i] << 8);
+		int comb1 = comb1l[i] | (comb1h[i] << 8);
+		int comb2 = comb2l[i] | (comb2h[i] << 8);
+
+		if (iswide(base))
+		    my_x = CurCursorX(screen, row + topline, i - 1);
+
+		if (comb1 != 0) {
+		    drawXtermText(screen, test, gc, my_x, y, cs,
+				  PAIRED_CHARS(comb1l + i, comb1h + i),
+				  1, iswide(base));
+		}
+
+		if (comb2 != 0) {
+		    drawXtermText(screen, test, gc, my_x, y, cs,
+				  PAIRED_CHARS(comb2l + i, comb2h + i),
+				  1, iswide(base));
+		}
+	    }
+	});
+
+	resetXtermGC(screen, flags, hilite);
+    }
+
+    /*
+     * If we're in color mode, reset the various GC's to the current
+     * screen foreground and background so that other functions (e.g.,
+     * ClearRight) will get the correct colors.
+     */
+    if_OPT_ISO_COLORS(screen, {
+	if (gc_changes & FG_COLOR)
+	    SGR_Foreground(term->cur_foreground);
+	if (gc_changes & BG_COLOR)
+	    SGR_Background(term->cur_background);
+    });
 
 #if defined(__CYGWIN__) && defined(TIOCSWINSZ)
-	if (first_time == 1) {
-		struct winsize ws;
+    if (first_time == 1) {
+	struct winsize ws;
 
-		first_time = 0;
-		ws.ws_row = nrows;
-		ws.ws_col = ncols;
-		ws.ws_xpixel = term->core.width;
-		ws.ws_ypixel = term->core.height;
-		ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
-	}
+	first_time = 0;
+	ws.ws_row = nrows;
+	ws.ws_col = ncols;
+	ws.ws_xpixel = term->core.width;
+	ws.ws_ypixel = term->core.height;
+	ioctl(screen->respond, TIOCSWINSZ, (char *) &ws);
+    }
 #endif
-	recurse--;
+    recurse--;
 }
 
 /*
@@ -1060,39 +1075,39 @@ ScrnRefresh (
  * Requires first <= last; first, last are rows of screen->buf.
  */
 void
-ClearBufRows (
-	TScreen *screen,
-	int first,
-	int last)
+ClearBufRows(
+		TScreen * screen,
+		int first,
+		int last)
 {
-	ScrnBuf	buf = screen->visbuf;
-	int	len = screen->max_col + 1;
-	int	row;
-	int	flags = TERM_COLOR_FLAGS;
+    ScrnBuf buf = screen->visbuf;
+    int len = screen->max_col + 1;
+    int row;
+    int flags = TERM_COLOR_FLAGS;
 
-	TRACE(("ClearBufRows %d..%d\n", first, last));
-	for (row = first; row <= last; row++) {
-	    ScrnClrWrapped(screen, row);
-	    bzero (BUF_CHARS(buf, row), len);
-	    memset(BUF_ATTRS(buf, row), flags, len);
-	    if_OPT_EXT_COLORS(screen,{
-		memset(BUF_FGRND(buf, row), term->sgr_foreground, len);
-		memset(BUF_BGRND(buf, row), term->cur_background, len);
-	    })
-	    if_OPT_ISO_TRADITIONAL_COLORS(screen,{
-		memset(BUF_COLOR(buf, row), xtermColorPair(), len);
-	    })
-	    if_OPT_DEC_CHRSET({
-		memset(BUF_CSETS(buf, row), 0, len);
-	    })
-	    if_OPT_WIDE_CHARS(screen,{
-		memset(BUF_WIDEC(buf, row), 0, len);
-		memset(BUF_COM1L(buf, row), 0, len);
-		memset(BUF_COM1H(buf, row), 0, len);
-		memset(BUF_COM2L(buf, row), 0, len);
-		memset(BUF_COM2H(buf, row), 0, len);
-	    })
-	}
+    TRACE(("ClearBufRows %d..%d\n", first, last));
+    for (row = first; row <= last; row++) {
+	ScrnClrWrapped(screen, row);
+	bzero(BUF_CHARS(buf, row), len);
+	memset(BUF_ATTRS(buf, row), flags, len);
+	if_OPT_EXT_COLORS(screen, {
+	    memset(BUF_FGRND(buf, row), term->sgr_foreground, len);
+	    memset(BUF_BGRND(buf, row), term->cur_background, len);
+	});
+	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	    memset(BUF_COLOR(buf, row), xtermColorPair(), len);
+	});
+	if_OPT_DEC_CHRSET({
+	    memset(BUF_CSETS(buf, row), 0, len);
+	});
+	if_OPT_WIDE_CHARS(screen, {
+	    memset(BUF_WIDEC(buf, row), 0, len);
+	    memset(BUF_COM1L(buf, row), 0, len);
+	    memset(BUF_COM1H(buf, row), 0, len);
+	    memset(BUF_COM2L(buf, row), 0, len);
+	    memset(BUF_COM2H(buf, row), 0, len);
+	});
+    }
 }
 
 /*
@@ -1112,170 +1127,176 @@ ClearBufRows (
   8. Returns 0
   */
 int
-ScreenResize (
-	TScreen *screen,
-	int width,
-	int height,
-	unsigned *flags)
+ScreenResize(
+		TScreen * screen,
+		int width,
+		int height,
+		unsigned *flags)
 {
-	int code;
-	int rows, cols;
-	int border = 2 * screen->border;
-	int move_down_by;
+    int code;
+    int rows, cols;
+    int border = 2 * screen->border;
+    int move_down_by;
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
-	struct ttysize ts;
+    struct ttysize ts;
 #elif defined(TIOCSWINSZ)
-	struct winsize ws;
-#endif	/* sun vs TIOCSWINSZ */
-	Window tw = VWindow (screen);
+    struct winsize ws;
+#endif /* sun vs TIOCSWINSZ */
+    Window tw = VWindow(screen);
 
-	TRACE(("ScreenResize %dx%d\n", height, width));
+    TRACE(("ScreenResize %dx%d\n", height, width));
 
-	/* clear the right and bottom internal border because of NorthWest
-	   gravity might have left junk on the right and bottom edges */
-	if (width >= FullWidth(screen)) {
-		XClearArea (screen->display, tw,
-			    FullWidth(screen), 0,             /* right edge */
-			    0, height,                /* from top to bottom */
-			    False);
+    /* clear the right and bottom internal border because of NorthWest
+       gravity might have left junk on the right and bottom edges */
+    if (width >= FullWidth(screen)) {
+	XClearArea(screen->display, tw,
+		   FullWidth(screen), 0,	/* right edge */
+		   0, height,	/* from top to bottom */
+		   False);
+    }
+    if (height >= FullHeight(screen)) {
+	XClearArea(screen->display, tw,
+		   0, FullHeight(screen),	/* bottom */
+		   width, 0,	/* all across the bottom */
+		   False);
+    }
+
+    /* round so that it is unlikely the screen will change size on  */
+    /* small mouse movements.                                       */
+    rows = (height + FontHeight(screen) / 2 - border) /
+	FontHeight(screen);
+    cols = (width + FontWidth(screen) / 2 - border - ScrollbarWidth(screen)) /
+	FontWidth(screen);
+    if (rows < 1)
+	rows = 1;
+    if (cols < 1)
+	cols = 1;
+
+    /* update buffers if the screen has changed size */
+    if (screen->max_row != rows - 1 || screen->max_col != cols - 1) {
+	int savelines = screen->scrollWidget
+	? screen->savelines : 0;
+	int delta_rows = rows - (screen->max_row + 1);
+
+	TRACE(("...ScreenResize chars %dx%d\n", rows, cols));
+
+	if (screen->cursor_state)
+	    HideCursor();
+	if (screen->alternate
+	    && term->misc.resizeGravity == SouthWestGravity)
+	    /* swap buffer pointers back to make all this hair work */
+	    SwitchBufPtrs(screen);
+	if (screen->altbuf)
+	    (void) Reallocate(&screen->altbuf,
+			      &screen->abuf_address,
+			      rows,
+			      cols,
+			      screen->max_row + 1,
+			      screen->max_col + 1);
+	move_down_by = Reallocate(&screen->allbuf,
+				  &screen->sbuf_address,
+				  rows + savelines, cols,
+				  screen->max_row + 1 + savelines,
+				  screen->max_col + 1);
+	screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
+
+	screen->max_row += delta_rows;
+	screen->max_col = cols - 1;
+
+	if (term->misc.resizeGravity == SouthWestGravity) {
+	    screen->savedlines -= move_down_by;
+	    if (screen->savedlines < 0)
+		screen->savedlines = 0;
+	    if (screen->savedlines > screen->savelines)
+		screen->savedlines = screen->savelines;
+	    if (screen->topline < -screen->savedlines)
+		screen->topline = -screen->savedlines;
+	    screen->cur_row += move_down_by;
+	    screen->cursor_row += move_down_by;
+	    ScrollSelection(screen, move_down_by);
+
+	    if (screen->alternate)
+		SwitchBufPtrs(screen);	/* put the pointers back */
 	}
-	if (height >= FullHeight(screen)) {
-		XClearArea (screen->display, tw,
-		    	0, FullHeight(screen),	                  /* bottom */
-		    	width, 0,                  /* all across the bottom */
-		    	False);
-	}
 
-	/* round so that it is unlikely the screen will change size on  */
-	/* small mouse movements.					*/
-	rows = (height + FontHeight(screen) / 2 - border) /
-	 FontHeight(screen);
-	cols = (width + FontWidth(screen) / 2 - border - ScrollbarWidth(screen)) /
-	 FontWidth(screen);
-	if (rows < 1) rows = 1;
-	if (cols < 1) cols = 1;
+	/* adjust scrolling region */
+	screen->top_marg = 0;
+	screen->bot_marg = screen->max_row;
+	*flags &= ~ORIGIN;
 
-	/* update buffers if the screen has changed size */
-	if (screen->max_row != rows - 1 || screen->max_col != cols - 1) {
-		int savelines = screen->scrollWidget
-				? screen->savelines : 0;
-		int delta_rows = rows - (screen->max_row + 1);
+	if (screen->cur_row > screen->max_row)
+	    screen->cur_row = screen->max_row;
+	if (screen->cur_col > screen->max_col)
+	    screen->cur_col = screen->max_col;
 
-		TRACE(("...ScreenResize chars %dx%d\n", rows, cols));
+	screen->fullVwin.height = height - border;
+	screen->fullVwin.width = width - border - screen->fullVwin.sb_info.width;
 
-		if(screen->cursor_state)
-			HideCursor();
-		if ( screen->alternate
-		     && term->misc.resizeGravity == SouthWestGravity )
-		    /* swap buffer pointers back to make all this hair work */
-		    SwitchBufPtrs(screen);
-		if (screen->altbuf)
-		    (void) Reallocate(&screen->altbuf, &screen->abuf_address,
-			 rows, cols, screen->max_row + 1, screen->max_col + 1);
-		move_down_by = Reallocate(&screen->allbuf,
-					  &screen->sbuf_address,
-					  rows + savelines, cols,
-					  screen->max_row + 1 + savelines,
-					  screen->max_col + 1);
-		screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
+    } else if (FullHeight(screen) == height && FullWidth(screen) == width)
+	return (0);		/* nothing has changed at all */
 
-		screen->max_row += delta_rows;
-		screen->max_col = cols - 1;
+    screen->fullVwin.fullheight = height;
+    screen->fullVwin.fullwidth = width;
 
-		if (term->misc.resizeGravity == SouthWestGravity) {
-		    screen->savedlines -= move_down_by;
-		    if (screen->savedlines < 0)
-			screen->savedlines = 0;
-		    if (screen->savedlines > screen->savelines)
-			screen->savedlines = screen->savelines;
-		    if (screen->topline < -screen->savedlines)
-			screen->topline = -screen->savedlines;
-		    screen->cur_row += move_down_by;
-		    screen->cursor_row += move_down_by;
-		    ScrollSelection(screen, move_down_by);
+    if (screen->scrollWidget)
+	ResizeScrollBar(screen);
 
-		    if (screen->alternate)
-			SwitchBufPtrs(screen); /* put the pointers back */
-		}
-
-		/* adjust scrolling region */
-		screen->top_marg = 0;
-		screen->bot_marg = screen->max_row;
-		*flags &= ~ORIGIN;
-
-		if (screen->cur_row > screen->max_row)
-			screen->cur_row = screen->max_row;
-		if (screen->cur_col > screen->max_col)
-			screen->cur_col = screen->max_col;
-
-		screen->fullVwin.height = height - border;
-		screen->fullVwin.width = width - border - screen->fullVwin.sb_info.width;
-
-	} else if(FullHeight(screen) == height && FullWidth(screen) == width)
-	 	return(0);	/* nothing has changed at all */
-
-	screen->fullVwin.fullheight = height;
-	screen->fullVwin.fullwidth = width;
-
-	if(screen->scrollWidget)
-		ResizeScrollBar(screen);
-
-	ResizeSelection (screen, rows, cols);
+    ResizeSelection(screen, rows, cols);
 
 #ifndef NO_ACTIVE_ICON
-	if (screen->iconVwin.window) {
-	    XWindowChanges changes;
-	    screen->iconVwin.width =
-		(screen->max_col + 1) * screen->iconVwin.f_width;
+    if (screen->iconVwin.window) {
+	XWindowChanges changes;
+	screen->iconVwin.width =
+	    (screen->max_col + 1) * screen->iconVwin.f_width;
 
-	    screen->iconVwin.height =
-		(screen->max_row + 1) * screen->iconVwin.f_height;
+	screen->iconVwin.height =
+	    (screen->max_row + 1) * screen->iconVwin.f_height;
 
-	    changes.width = screen->iconVwin.fullwidth =
-		screen->iconVwin.width + 2 * screen->border;
+	changes.width = screen->iconVwin.fullwidth =
+	    screen->iconVwin.width + 2 * screen->border;
 
-	    changes.height = screen->iconVwin.fullheight =
-		screen->iconVwin.height + 2 * screen->border;
+	changes.height = screen->iconVwin.fullheight =
+	    screen->iconVwin.height + 2 * screen->border;
 
-	    XConfigureWindow(XtDisplay(term), screen->iconVwin.window,
-			     CWWidth|CWHeight,&changes);
-	}
+	XConfigureWindow(XtDisplay(term), screen->iconVwin.window,
+			 CWWidth | CWHeight, &changes);
+    }
 #endif /* NO_ACTIVE_ICON */
 
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
-	/* Set tty's idea of window size */
-	ts.ts_lines = rows;
-	ts.ts_cols = cols;
-	code = ioctl (screen->respond, TIOCSSIZE, &ts);
-	TRACE(("return %d from TIOCSSIZE %dx%d\n", code, rows, cols));
+    /* Set tty's idea of window size */
+    ts.ts_lines = rows;
+    ts.ts_cols = cols;
+    code = ioctl(screen->respond, TIOCSSIZE, &ts);
+    TRACE(("return %d from TIOCSSIZE %dx%d\n", code, rows, cols));
 #ifdef SIGWINCH
-	if(screen->pid > 1) {
-		int	pgrp;
+    if (screen->pid > 1) {
+	int pgrp;
 
-		if (ioctl (screen->respond, TIOCGPGRP, &pgrp) != -1)
-			kill_process_group(pgrp, SIGWINCH);
-	}
-#endif	/* SIGWINCH */
+	if (ioctl(screen->respond, TIOCGPGRP, &pgrp) != -1)
+	    kill_process_group(pgrp, SIGWINCH);
+    }
+#endif /* SIGWINCH */
 #elif defined(TIOCSWINSZ)
-	/* Set tty's idea of window size */
-	ws.ws_row = rows;
-	ws.ws_col = cols;
-	ws.ws_xpixel = width;
-	ws.ws_ypixel = height;
-	code = ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
-	TRACE(("return %d from TIOCSWINSZ %dx%d\n", code, rows, cols));
-#ifdef notdef	/* change to SIGWINCH if this doesn't work for you */
-	if(screen->pid > 1) {
-		int	pgrp;
+    /* Set tty's idea of window size */
+    ws.ws_row = rows;
+    ws.ws_col = cols;
+    ws.ws_xpixel = width;
+    ws.ws_ypixel = height;
+    code = ioctl(screen->respond, TIOCSWINSZ, (char *) &ws);
+    TRACE(("return %d from TIOCSWINSZ %dx%d\n", code, rows, cols));
+#ifdef notdef			/* change to SIGWINCH if this doesn't work for you */
+    if (screen->pid > 1) {
+	int pgrp;
 
-		if (ioctl (screen->respond, TIOCGPGRP, &pgrp) != -1)
-		    kill_process_group(pgrp, SIGWINCH);
-	}
-#endif	/* SIGWINCH */
+	if (ioctl(screen->respond, TIOCGPGRP, &pgrp) != -1)
+	    kill_process_group(pgrp, SIGWINCH);
+    }
+#endif /* SIGWINCH */
 #else
-	TRACE(("ScreenResize cannot do anything to pty\n"));
-#endif	/* sun vs TIOCSWINSZ */
-	return (0);
+    TRACE(("ScreenResize cannot do anything to pty\n"));
+#endif /* sun vs TIOCSWINSZ */
+    return (0);
 }
 
 /*
@@ -1284,27 +1305,27 @@ ScreenResize (
  */
 Bool
 non_blank_line(
-	ScrnBuf sb,
-	int row,
-	int col,
-	int len)
+		  ScrnBuf sb,
+		  int row,
+		  int col,
+		  int len)
 {
-	int i;
-	Char *ptr = BUF_CHARS(sb, row);
+    int i;
+    Char *ptr = BUF_CHARS(sb, row);
 
-	for (i = col; i < len; i++) {
+    for (i = col; i < len; i++) {
+	if (ptr[i])
+	    return True;
+    }
+
+    if_OPT_WIDE_CHARS((&(term->screen)), {
+	if ((ptr = BUF_WIDEC(sb, row)) != 0) {
+	    for (i = col; i < len; i++) {
 		if (ptr[i])
-			return True;
+		    return True;
+	    }
 	}
+    });
 
-	if_OPT_WIDE_CHARS((&(term->screen)),{
-		if ((ptr = BUF_WIDEC(sb, row)) != 0) {
-			for (i = col; i < len; i++) {
-				if (ptr[i])
-					return True;
-			}
-		}
-	})
-
-	return False;
+    return False;
 }

@@ -1,4 +1,4 @@
--- $XFree86: xc/programs/xterm/INSTALL,v 3.25 2001/11/23 19:50:46 dawes Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.26 2002/08/17 19:52:25 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -230,6 +230,15 @@ The options (in alphabetic order):
 
 	Logging was disabled in X11R5 xterm because of security problems.
 	They were addressed in X11R6, but the feature was not reinstated.
+
+  --enable-luit           enable support for luit filter (Unicode translation)
+
+	Luit is a filter that can be run between an arbitrary application and a
+	UTF-8 terminal emulator.  It will convert application output from the
+	locale's encoding into UTF-8, and convert terminal input from UTF-8
+	into the locale's encoding.
+
+	This sets "--enable-wide-chars" as a side-effect.
 
   --enable-sco-fkeys      enable support for SCO-style function keys
 

@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.92 2002/03/26 01:46:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.97 2002/08/24 18:54:39 dickey Exp $ */
 
 /*
  * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
@@ -72,7 +72,6 @@
 #include <X11/Xosdefs.h>
 #include <X11/Xmu/Converters.h>
 #ifdef XRENDERFONT
-#include <X11/extensions/Xrender.h>
 #include <X11/Xft/Xft.h>
 #endif
 
@@ -125,7 +124,7 @@
 #define USE_PTY_DEVICE 1
 #define USE_PTY_SEARCH 1
 
-#if defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
+#if defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)) || defined(__NetBSD__)
 #undef USE_PTY_DEVICE
 #undef USE_PTY_SEARCH
 #define USE_PTS_DEVICE 1
@@ -177,11 +176,11 @@
 #ifdef __hpux
 #define PTYCHAR1	"zyxwvutsrqp"
 #else	/* !__hpux */
-#ifdef __EMX__
+#ifdef __UNIXOS2__
 #define PTYCHAR1	"pq"
 #else
 #define	PTYCHAR1	"pqrstuvwxyzPQRSTUVWXYZ"
-#endif  /* !__EMX__ */
+#endif  /* !__UNIXOS2__ */
 #endif	/* !__hpux */
 #endif	/* !PTYCHAR1 */
 
@@ -492,16 +491,20 @@ typedef struct {
 #define OPT_HIGHLIGHT_COLOR 1 /* true if xterm supports color highlighting */
 #endif
 
+#ifndef OPT_LUIT_PROG
+#define OPT_LUIT_PROG   0 /* true if xterm supports luit */
+#endif
+
 #ifndef OPT_MAXIMIZE
 #define OPT_MAXIMIZE	1 /* add actions for iconify ... maximize */
 #endif
 
-#ifndef OPT_NUM_LOCK
-#define OPT_NUM_LOCK	1 /* use NumLock key only for numeric-keypad */
+#ifndef OPT_MOD_FKEYS
+#define OPT_MOD_FKEYS	1 /* modify cursor- and function-keys in normal mode */
 #endif
 
-#ifndef OPT_SAME_NAME
-#define OPT_SAME_NAME   1 /* suppress redundant updates of title, icon, etc. */
+#ifndef OPT_NUM_LOCK
+#define OPT_NUM_LOCK	1 /* use NumLock key only for numeric-keypad */
 #endif
 
 #ifndef OPT_PC_COLORS
@@ -510,6 +513,14 @@ typedef struct {
 
 #ifndef OPT_PRINT_COLORS
 #define OPT_PRINT_COLORS 1 /* true if we print color information */
+#endif
+
+#ifndef OPT_READLINE
+#define OPT_READLINE	0 /* mouse-click/paste support for readline */
+#endif
+
+#ifndef OPT_SAME_NAME
+#define OPT_SAME_NAME   1 /* suppress redundant updates of title, icon, etc. */
 #endif
 
 #ifndef OPT_SCO_FUNC_KEYS
@@ -726,6 +737,10 @@ typedef struct {
 #define CurMaxCol(screen, row) screen->max_col
 #define CurCursorX(screen, row, col) CursorX(screen, col)
 #define CurFontWidth(screen, row) FontWidth(screen)
+#endif
+
+#if OPT_LUIT_PROG && !OPT_WIDE_CHARS
+#error Luit requires the wide-chars configuration
 #endif
 
 	/* the number of pointers per row in 'ScrnBuf' */
@@ -1072,6 +1087,14 @@ typedef struct {
 	unsigned long	event_mask;
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
+#if OPT_READLINE
+	unsigned	click1_moves;
+	unsigned	paste_moves;
+	unsigned	dclick3_deletes;
+	unsigned	paste_brackets;
+	unsigned	paste_quotes;
+	unsigned	paste_literal_nl;
+#endif	/* OPT_READLINE */
 #if OPT_DEC_LOCATOR
 	Boolean		locator_reset;	/* turn mouse off after 1 report? */
 	Boolean		locator_pixels;	/* report in pixels?		*/
@@ -1308,7 +1331,16 @@ typedef struct _TekPart {
 #endif
 } TekPart;
 
-
+#if OPT_READLINE
+#define SCREEN_FLAG(screenp,f)		(1&(screenp)->f)
+#define SCREEN_FLAG_set(screenp,f)	((screenp)->f |= 1)
+#define SCREEN_FLAG_unset(screenp,f)	((screenp)->f &= ~1L)
+#define SCREEN_FLAG_save(screenp,f)	\
+	((screenp)->f = (((screenp)->f)<<1) | SCREEN_FLAG(screenp,f))
+#define SCREEN_FLAG_restore(screenp,f)	((screenp)->f = (((screenp)->f)>>1))
+#else
+#define SCREEN_FLAG(screenp,f)		(0)
+#endif
 
 /* meaning of bits in screen.select flag */
 #define	INWINDOW	01	/* the mouse is in one of the windows */
@@ -1332,6 +1364,7 @@ typedef struct
 #if OPT_INITIAL_ERASE
     int	reset_DECBKM;		/* reset should set DECBKM */
 #endif
+    int modify_cursor_keys;	/* how to handle modifiers */
 } TKeyboard;
 
 typedef struct _Misc {
@@ -1342,6 +1375,12 @@ typedef struct _Misc {
 #if OPT_WIDE_CHARS
     char *f_w;
     char *f_wb;
+#endif
+#if OPT_LUIT_PROG
+    Boolean callfilter;		/* true to invoke luit */
+    Boolean use_encoding;	/* true to use -encoding option for luit */
+    char *locale_str;		/* "locale" resource */
+    char *localefilter;		/* path for luit */
 #endif
 #if OPT_INPUT_METHOD
     char *f_x;

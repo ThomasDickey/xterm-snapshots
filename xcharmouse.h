@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xcharmouse.h,v 1.2 1999/09/27 06:30:23 dawes Exp $
+ * $XFree86: xc/programs/xterm/xcharmouse.h,v 1.3 2002/08/24 18:54:39 dickey Exp $
  */
 
 /************************************************************
@@ -27,13 +27,14 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ********************************************************/
 
-
 #ifndef included_xcharmouse_h
 #define included_xcharmouse_h
 
 /*
  * Macros for dpmodes
  * J. Bacon, acadix@execpc.com, June 1998
+ * Steve Wall, September 1999
+ * Ilya Zakharevich, August 2002
  */
 
 /* DECSET arguments for turning on mouse reporting modes */
@@ -42,6 +43,13 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define SET_VT200_HIGHLIGHT_MOUSE   1001
 #define SET_BTN_EVENT_MOUSE         1002
 #define SET_ANY_EVENT_MOUSE         1003
+
+#define SET_BUTTON1_MOVE_POINT      2001 /* click1 emit Esc seq to move point*/
+#define SET_BUTTON2_MOVE_POINT      2002 /* press2 emit Esc seq to move point*/
+#define SET_DBUTTON3_DELETE         2003 /* Double click-3 deletes */
+#define SET_PASTE_IN_BRACKET        2004 /* Surround paste by escapes */
+#define SET_PASTE_QUOTE             2005 /* Quote each char during paste */
+#define SET_PASTE_LITERAL_NL        2006 /* Paste "\n" as C-j */
 
 #if OPT_DEC_LOCATOR
 
@@ -52,17 +60,17 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* Special values for screen->loc_filter_* */
 #define	LOC_FILTER_POS		-1
 
-#endif	/* OPT_DEC_LOCATOR */
+#endif /* OPT_DEC_LOCATOR */
 
 /* Values for screen->send_mouse_pos */
 enum {
-	MOUSE_OFF
-	, X10_MOUSE
-	, VT200_MOUSE
-	, VT200_HIGHLIGHT_MOUSE
-	, BTN_EVENT_MOUSE
-	, ANY_EVENT_MOUSE
-	, DEC_LOCATOR
+    MOUSE_OFF
+    ,X10_MOUSE
+    ,VT200_MOUSE
+    ,VT200_HIGHLIGHT_MOUSE
+    ,BTN_EVENT_MOUSE
+    ,ANY_EVENT_MOUSE
+    ,DEC_LOCATOR
 };
 
 #endif /* included_xcharmouse_h */

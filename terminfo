@@ -5,7 +5,7 @@
 # XFree86 updates/notes/new entries (including xterm-8bit, xterm-16color)
 # - Thomas E. Dickey
 #
-# $XFree86: xc/programs/xterm/terminfo,v 3.45 2001/04/12 01:02:51 dickey Exp $
+# $XFree86: xc/programs/xterm/terminfo,v 3.46 2002/08/24 18:54:39 dickey Exp $
 #
 # Special Capabilities:
 # --------------------
@@ -99,13 +99,13 @@
 xterm-xfree86|xterm-new|xterm terminal emulator (XFree86),
 	npc,
 	kDC=\E[3;2~,
-	kEND=\EO2F,
-	kHOM=\EO2H,
+	kEND=\E[1;2F,
+	kHOM=\E[1;2H,
 	kIC=\E[2;2~,
-	kLFT=\EO2D,
+	kLFT=\E[1;2D,
 	kNXT=\E[6;2~,
 	kPRV=\E[5;2~,
-	kRIT=\EO2C,
+	kRIT=\E[1;2C,
 	kb2=\EOE,
 	kcbt=\E[Z,
 	kcub1=\EOD,

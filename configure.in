@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.52 2002/03/26 01:46:40 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.53 2002/08/17 19:52:26 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -88,7 +88,7 @@ AC_ARG_WITH(utempter,
 	[use_utempter=no])
 AC_MSG_RESULT($use_utempter)
 
-if test $use_utempter = yes ; then
+if test "$use_utempter" = yes ; then
 	CF_UTEMPTER
 fi
 
@@ -141,7 +141,7 @@ CF_ARG_DISABLE(imake,
 	[enable_imake=no],
 	[enable_imake=yes])
 AC_MSG_RESULT($enable_imake)
-if test $enable_imake = yes ; then
+if test "$enable_imake" = yes ; then
 	CF_IMAKE_CFLAGS($(MAIN_DEFINES))
 	CF_ADD_CFLAGS($IMAKE_CFLAGS)
 fi
@@ -172,9 +172,9 @@ AC_ARG_WITH(own-terminfo,
 	[TERMINFO_DIR=$withval],
 	[TERMINFO_DIR=${TERMINFO-none}])
 AC_MSG_RESULT($TERMINFO_DIR)
-if test $TERMINFO_DIR = yes ; then
+if test "$TERMINFO_DIR" = yes ; then
 	AC_MSG_WARN(no value given)
-elif test $TERMINFO_DIR != none ; then
+elif test "$TERMINFO_DIR" != none ; then
 	if test -d $TERMINFO_DIR ; then
 		AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$TERMINFO_DIR")
 	else
@@ -204,7 +204,7 @@ CF_ARG_DISABLE(active-icon,
 	[enable_active_icon=no],
 	[enable_active_icon=yes])
 AC_MSG_RESULT($enable_active_icon)
-if test $enable_active_icon = no ; then
+if test "$enable_active_icon" = no ; then
 	AC_DEFINE(NO_ACTIVE_ICON)
 fi
 
@@ -214,9 +214,9 @@ CF_ARG_DISABLE(ansi-color,
 	[enable_ansi_color=no],
 	[enable_ansi_color=yes])
 AC_MSG_RESULT($enable_ansi_color)
-test $enable_ansi_color = no && AC_DEFINE(OPT_ISO_COLORS,0)
+test "$enable_ansi_color" = no && AC_DEFINE(OPT_ISO_COLORS,0)
 
-if test $enable_ansi_color = yes ; then
+if test "$enable_ansi_color" = yes ; then
 
 	AC_MSG_CHECKING(if you want 16 colors like aixterm)
 	CF_ARG_DISABLE(16-color,
@@ -224,7 +224,7 @@ if test $enable_ansi_color = yes ; then
 		[enable_16_color=no],
 		[enable_16_color=yes])
 	AC_MSG_RESULT($enable_16_color)
-	test $enable_16_color = no && AC_DEFINE(OPT_AIX_COLORS,0)
+	test "$enable_16_color" = no && AC_DEFINE(OPT_AIX_COLORS,0)
 
 	AC_MSG_CHECKING(if you want 256 colors)
 	CF_ARG_ENABLE(256-color,
@@ -232,7 +232,7 @@ if test $enable_ansi_color = yes ; then
 		[enable_256_color=yes],
 		[enable_256_color=no])
 	AC_MSG_RESULT($enable_256_color)
-	if test $enable_256_color = yes ; then
+	if test "$enable_256_color" = yes ; then
 		CHARPROC_DEPS="$CHARPROC_DEPS 256colres.h"
 		EXTRAHDRS="$EXTRAHDRS 256colres.h"
 		AC_DEFINE(OPT_256_COLORS,1)
@@ -243,7 +243,7 @@ if test $enable_ansi_color = yes ; then
 		[enable_88_color=yes],
 		[enable_88_color=no])
 	AC_MSG_RESULT($enable_88_color)
-	if test $enable_88_color = yes ; then
+	if test "$enable_88_color" = yes ; then
 		CHARPROC_DEPS="$CHARPROC_DEPS 88colres.h"
 		EXTRAHDRS="$EXTRAHDRS 88colres.h"
 		AC_DEFINE(OPT_88_COLORS,1)
@@ -258,9 +258,9 @@ CF_ARG_DISABLE(blink-cursor,
 	[enable_blink_curs=no],
 	[enable_blink_curs=yes])
 AC_MSG_RESULT($enable_blink_curs)
-test $enable_blink_curs = no && AC_DEFINE(OPT_BLINK_CURS,0)
+test "$enable_blink_curs" = no && AC_DEFINE(OPT_BLINK_CURS,0)
 
-if test $enable_ansi_color = yes ; then
+if test "$enable_ansi_color" = yes ; then
 
 	AC_MSG_CHECKING(if you want bold colors mapped like IBM PC)
 	CF_ARG_DISABLE(bold-color,
@@ -268,7 +268,7 @@ if test $enable_ansi_color = yes ; then
 		[enable_pc_color=no],
 		[enable_pc_color=yes])
 	AC_MSG_RESULT($enable_pc_color)
-	test $enable_pc_color = no && AC_DEFINE(OPT_PC_COLORS,0)
+	test "$enable_pc_color" = no && AC_DEFINE(OPT_PC_COLORS,0)
 
 	AC_MSG_CHECKING(if you want separate color-classes)
 	CF_ARG_DISABLE(color-class,
@@ -276,7 +276,7 @@ if test $enable_ansi_color = yes ; then
 		[enable_color_class=no],
 		[enable_color_class=yes])
 	AC_MSG_RESULT($enable_color_class)
-	test $enable_color_class = no && AC_DEFINE(OPT_COLOR_CLASS,FALSE)
+	test "$enable_color_class" = no && AC_DEFINE(OPT_COLOR_CLASS,FALSE)
 
 	AC_MSG_CHECKING(if you want color-mode enabled by default)
 	CF_ARG_DISABLE(color-mode,
@@ -284,7 +284,7 @@ if test $enable_ansi_color = yes ; then
 		[default_colormode=no],
 		[default_colormode=yes])
 	AC_MSG_RESULT($default_colormode)
-	test $default_colormode = no && AC_DEFINE(DFT_COLORMODE,FALSE)
+	test "$default_colormode" = no && AC_DEFINE(DFT_COLORMODE,FALSE)
 
 fi
 
@@ -294,7 +294,7 @@ CF_ARG_DISABLE(highlighting,
 	[default_highlight=no],
 	[default_highlight=yes])
 AC_MSG_RESULT($default_highlight)
-test $default_highlight = no && AC_DEFINE(OPT_HIGHLIGHT_COLOR,0)
+test "$default_highlight" = no && AC_DEFINE(OPT_HIGHLIGHT_COLOR,0)
 
 AC_MSG_CHECKING(if you want support for doublesize characters)
 CF_ARG_DISABLE(doublechars,
@@ -302,7 +302,7 @@ CF_ARG_DISABLE(doublechars,
 	[enable_doublechars=no],
 	[enable_doublechars=yes])
 AC_MSG_RESULT($enable_doublechars)
-test $enable_doublechars = no && AC_DEFINE(OPT_DEC_CHRSET,0)
+test "$enable_doublechars" = no && AC_DEFINE(OPT_DEC_CHRSET,0)
 
 AC_MSG_CHECKING(if you want fallback-support for box characters)
 CF_ARG_DISABLE(boxchars,
@@ -310,7 +310,7 @@ CF_ARG_DISABLE(boxchars,
 	[enable_boxchars=no],
 	[enable_boxchars=yes])
 AC_MSG_RESULT($enable_boxchars)
-test $enable_boxchars = no && AC_DEFINE(OPT_BOX_CHARS,0)
+test "$enable_boxchars" = no && AC_DEFINE(OPT_BOX_CHARS,0)
 
 AC_MSG_CHECKING(if you want to use FreeType library)
 CF_ARG_DISABLE(freetype,
@@ -318,7 +318,7 @@ CF_ARG_DISABLE(freetype,
 	[enable_freetype=no],
 	[enable_freetype=yes])
 AC_MSG_RESULT($enable_freetype)
-if test $enable_freetype = yes ; then
+if test "$enable_freetype" = yes ; then
 	CF_X_FREETYPE
 else
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
@@ -330,7 +330,7 @@ CF_ARG_ENABLE(hp-fkeys,
 	[enable_hp_fkeys=yes],
 	[enable_hp_fkeys=no])
 AC_MSG_RESULT($enable_hp_fkeys)
-if test $enable_hp_fkeys = yes ; then
+if test "$enable_hp_fkeys" = yes ; then
 	AC_DEFINE(OPT_HP_FUNC_KEYS,1)
 fi
 
@@ -340,7 +340,7 @@ CF_ARG_ENABLE(sco-fkeys,
 	[enable_sco_fkeys=yes],
 	[enable_sco_fkeys=no])
 AC_MSG_RESULT($enable_sco_fkeys)
-if test $enable_sco_fkeys = yes ; then
+if test "$enable_sco_fkeys" = yes ; then
 	AC_DEFINE(OPT_SCO_FUNC_KEYS,1)
 fi
 
@@ -350,7 +350,7 @@ CF_ARG_DISABLE(i18n,
 	[enable_i18n=no],
 	[enable_i18n=yes])
 AC_MSG_RESULT($enable_i18n)
-if test $enable_i18n = no ; then
+if test "$enable_i18n" = no ; then
 	AC_DEFINE(OPT_I18N_SUPPORT,0)
 fi
 
@@ -360,7 +360,7 @@ CF_ARG_DISABLE(initial-erase,
 	[enable_ie=no],
 	[enable_ie=yes])
 AC_MSG_RESULT($enable_ie)
-if test $enable_ie = no ; then
+if test "$enable_ie" = no ; then
 	AC_DEFINE(OPT_INITIAL_ERASE,0)
 fi
 
@@ -372,7 +372,7 @@ CF_ARG_DISABLE(input-method,
 AC_MSG_RESULT($enable_ximp)
 CF_INPUT_METHOD
 test "$cf_cv_input_method" = no && enable_ximp=no
-if test $enable_ximp = no ; then
+if test "$enable_ximp" = no ; then
 	AC_DEFINE(OPT_INPUT_METHOD,0)
 fi
 
@@ -382,7 +382,7 @@ CF_ARG_ENABLE(logging,
 	[enable_logging=yes],
 	[enable_logging=no])
 AC_MSG_RESULT($enable_logging)
-if test $enable_logging = yes ; then
+if test "$enable_logging" = yes ; then
 	AC_DEFINE(ALLOWLOGGING)
 	AC_MSG_CHECKING(if you want to allow logging via a pipe)
 	CF_ARG_ENABLE(logfile-exec,
@@ -390,7 +390,7 @@ if test $enable_logging = yes ; then
 		[enable_log_exec=yes],
 		[enable_log_exec=no])
 	AC_MSG_RESULT($enable_log_exec)
-	if test $enable_log_exec = yes ; then
+	if test "$enable_log_exec" = yes ; then
 		AC_DEFINE(ALLOWLOGFILEEXEC)
 	fi
 fi
@@ -401,7 +401,7 @@ CF_ARG_DISABLE(maximize,
 	[enable_maximize=no],
 	[enable_maximize=yes])
 AC_MSG_RESULT($enable_maximize)
-test $enable_maximize = no && AC_DEFINE(OPT_MAXIMIZE,0)
+test "$enable_maximize" = no && AC_DEFINE(OPT_MAXIMIZE,0)
 
 AC_MSG_CHECKING(if you want NumLock to override keyboard tables)
 CF_ARG_DISABLE(num-lock,
@@ -409,7 +409,7 @@ CF_ARG_DISABLE(num-lock,
 	[enable_numlock=no],
 	[enable_numlock=yes])
 AC_MSG_RESULT($enable_numlock)
-test $enable_numlock = no && AC_DEFINE(OPT_NUM_LOCK,0)
+test "$enable_numlock" = no && AC_DEFINE(OPT_NUM_LOCK,0)
 
 AC_MSG_CHECKING(if you want support for right-scrollbar)
 CF_ARG_DISABLE(rightbar,
@@ -417,7 +417,7 @@ CF_ARG_DISABLE(rightbar,
 	[enable_rightbar=no],
 	[enable_rightbar=yes])
 AC_MSG_RESULT($enable_rightbar)
-if test $enable_rightbar = yes ; then
+if test "$enable_rightbar" = yes ; then
 	AC_DEFINE(SCROLLBAR_RIGHT)
 fi
 
@@ -427,7 +427,7 @@ CF_ARG_DISABLE(samename,
 	[enable_samename=no],
 	[enable_samename=yes])
 AC_MSG_RESULT($enable_samename)
-test $enable_samename = no && AC_DEFINE(OPT_SAME_NAME,0)
+test "$enable_samename" = no && AC_DEFINE(OPT_SAME_NAME,0)
 
 AC_MSG_CHECKING(if you want to use termcap-query/report)
 CF_ARG_ENABLE(tcap-query,
@@ -435,7 +435,7 @@ CF_ARG_ENABLE(tcap-query,
 	[enable_tcap_query=yes],
 	[enable_tcap_query=no])
 AC_MSG_RESULT($enable_tcap_query)
-test $enable_tcap_query = yes && AC_DEFINE(OPT_TCAP_QUERY,1)
+test "$enable_tcap_query" = yes && AC_DEFINE(OPT_TCAP_QUERY,1)
 
 AC_MSG_CHECKING(if you want support for tek4014)
 CF_ARG_DISABLE(tek4014,
@@ -443,7 +443,7 @@ CF_ARG_DISABLE(tek4014,
 	[enable_tek4014=no],
 	[enable_tek4014=yes])
 AC_MSG_RESULT($enable_tek4014)
-if test $enable_tek4014 = no ; then
+if test "$enable_tek4014" = no ; then
 	AC_DEFINE(OPT_TEK4014,0)
 else
 	EXTRAHDRS="$EXTRAHDRS Tekparse.h"
@@ -457,7 +457,7 @@ CF_ARG_ENABLE(toolbar,
 	[enable_toolbar=yes],
 	[enable_toolbar=no])
 AC_MSG_RESULT($enable_toolbar)
-if test $enable_toolbar = yes ; then
+if test "$enable_toolbar" = yes ; then
 	# The Xaw library in XFree86 4.x is broken.  Let's try to avoid using
 	# that for the toolbar.
 	cf_broken_xaw=no
@@ -475,7 +475,7 @@ make an error
 	cf_broken_xaw=yes
 	])
 	AC_MSG_RESULT($cf_broken_xaw)
-	if test $cf_broken_xaw = no ; then
+	if test "$cf_broken_xaw" = no ; then
 		AC_DEFINE(OPT_TOOLBAR,1)
 	fi
 fi
@@ -486,15 +486,26 @@ CF_ARG_DISABLE(vt52,
 	[enable_vt52=no],
 	[enable_vt52=yes])
 AC_MSG_RESULT($enable_vt52)
-test $enable_vt52 = no && AC_DEFINE(OPT_VT52_MODE,0)
+test "$enable_vt52" = no && AC_DEFINE(OPT_VT52_MODE,0)
+
+AC_MSG_CHECKING(if you want to use luit)
+CF_ARG_ENABLE(luit,
+	[  --enable-luit           enable luit filter (Unicode translation)],
+	[enable_luit=yes],
+	[enable_luit=no])
+AC_MSG_RESULT($enable_luit)
+if test "$enable_luit" = yes ; then
+	AC_DEFINE(OPT_LUIT_PROG,1)
+fi
 
 AC_MSG_CHECKING(if you want wide-character support)
-CF_ARG_ENABLE(wide-chars,
+CF_ARG_OPTION(wide-chars,
 	[  --enable-wide-chars     enable wide-character support],
 	[enable_wchar=yes],
-	[enable_wchar=no])
+	[enable_wchar=$enable_luit],
+	[$enable_luit])
 AC_MSG_RESULT($enable_wchar)
-if test $enable_wchar = yes ; then
+if test "$enable_wchar" = yes ; then
 	AC_DEFINE(OPT_WIDE_CHARS,1)
 	EXTRAHDRS="$EXTRAHDRS charclass.h precompose.h wcwidth.h"
 	EXTRASRCS="$EXTRASRCS charclass.c precompose.c wcwidth.c"
@@ -507,7 +518,7 @@ CF_ARG_ENABLE(dec-locator,
 	[enable_dec_locator=yes],
 	[enable_dec_locator=no])
 AC_MSG_RESULT($enable_dec_locator)
-if test $enable_dec_locator = yes ; then
+if test "$enable_dec_locator" = yes ; then
 	AC_DEFINE(OPT_DEC_LOCATOR,1)
 fi
 
@@ -517,7 +528,7 @@ CF_ARG_DISABLE(ziconbeep,
 	[enable_ziconbeep=no],
 	[enable_ziconbeep=yes])
 AC_MSG_RESULT($enable_ziconbeep)
-test $enable_ziconbeep = no && AC_DEFINE(OPT_ZICONBEEP,0)
+test "$enable_ziconbeep" = no && AC_DEFINE(OPT_ZICONBEEP,0)
 
 ###############################################################################
 CF_HELP_MESSAGE(Testing/development Options:)
@@ -528,7 +539,7 @@ CF_ARG_ENABLE(trace,
 	[enable_trace=yes],
 	[enable_trace=no])
 AC_MSG_RESULT($enable_trace)
-if test $enable_trace = yes ; then
+if test "$enable_trace" = yes ; then
 	AC_DEFINE(OPT_TRACE)
 	EXTRASRCS="$EXTRASRCS trace.c"
 	EXTRAOBJS="$EXTRAOBJS trace.o"
@@ -542,7 +553,7 @@ CF_ARG_ENABLE(xmc-glitch,
 	[enable_xmc=yes],
 	[enable_xmc=no])
 AC_MSG_RESULT($enable_xmc)
-if test $enable_xmc = yes ; then
+if test "$enable_xmc" = yes ; then
 	AC_DEFINE(OPT_XMC_GLITCH,1)
 	EXTRASRCS="$EXTRASRCS testxmc.c"
 	EXTRAOBJS="$EXTRAOBJS testxmc.o"
@@ -569,8 +580,11 @@ AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
 
 ###	remove from CPPFLAGS the optional features we define in xtermcfg.h
+###	that may be defined via imake:
 for cf_def in \
 	ALLOWLOGGING \
+	ALLOWLOGFILEEXEC \
+	OPT_LUIT_PROG \
 	OPT_WIDE_CHARS \
 	SCROLLBAR_RIGHT \
 	USE_TTY_GROUP \
