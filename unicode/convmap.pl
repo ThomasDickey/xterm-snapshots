@@ -119,7 +119,7 @@ print <<EOT;
  * This software is in the public domain. Share and enjoy!
  */
 
-#include "keysym2ucs.h"
+#include <keysym2ucs.h>
 
 struct codepair {
   unsigned short keysym;

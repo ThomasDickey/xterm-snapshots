@@ -3,7 +3,7 @@ dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.28 2000/01/18 16:35:56 tsi Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
-dnl Copyright 1997,1998,1999 by Thomas E. Dickey <dickey@clark.net>
+dnl Copyright 1997-2000 by Thomas E. Dickey <dickey@clark.net>
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -45,7 +45,7 @@ for cf_arg in "-DCC_HAS_PROTOS" \
 	"" \
 	-qlanglvl=ansi \
 	-std1 \
-	"-Aa -D_HPUX_SOURCE +e" \
+	-Ae \
 	"-Aa -D_HPUX_SOURCE" \
 	-Xc
 do
@@ -364,7 +364,7 @@ cat > conftest.i <<EOF
 EOF
 if test -n "$GCC"
 then
-	AC_CHECKING([for gcc __attribute__ directives])
+	AC_CHECKING([for $CC __attribute__ directives])
 	changequote(,)dnl
 cat > conftest.$ac_ext <<EOF
 #line __oline__ "configure"
@@ -391,7 +391,7 @@ EOF
 	do
 		CF_UPPER(CF_ATTRIBUTE,$cf_attribute)
 		cf_directive="__attribute__(($cf_attribute))"
-		echo "checking for gcc $cf_directive" 1>&AC_FD_CC
+		echo "checking for $CC $cf_directive" 1>&AC_FD_CC
 		case $cf_attribute in
 		scanf|printf)
 		cat >conftest.h <<EOF
@@ -437,7 +437,7 @@ then
 int main(int argc, char *argv[]) { return (argv[argc-1] == 0) ; }
 EOF
 	changequote([,])dnl
-	AC_CHECKING([for gcc warning options])
+	AC_CHECKING([for $CC warning options])
 	cf_save_CFLAGS="$CFLAGS"
 	EXTRA_CFLAGS="-W -Wall"
 	cf_warn_CONST=""
@@ -494,7 +494,6 @@ make an error
 ])
 test "$cf_cv_gnu_source" = yes && CFLAGS="$CFLAGS -D_GNU_SOURCE"
 ])dnl
-dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
 dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
 dnl get these, but if imake is properly configured there is no point in doing
@@ -798,6 +797,28 @@ AC_DEFUN([CF_UPPER],
 changequote(,)dnl
 $1=`echo $2 | tr '[a-z]' '[A-Z]'`
 changequote([,])dnl
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Try to link with utempter library
+AC_DEFUN([CF_UTEMPTER],
+[
+AC_CACHE_CHECK(if we can link with utempter library,cf_cv_have_utempter,[
+cf_save_LIBS="$LIBS"
+LIBS="-lutempter $LIBS"
+AC_TRY_LINK([
+#include <utempter.h>
+],[
+	addToUtmp("/dev/tty", 0, 1);
+	removeFromUtmp();
+],[
+	cf_cv_have_utempter=yes],[
+	cf_cv_have_utempter=no])
+LIBS="$cf_save_LIBS"
+])
+if test "$cf_cv_have_utempter" = yes ; then
+	AC_DEFINE(USE_UTEMPTER)
+	LIBS="-lutempter $LIBS"
+fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for UTMP/UTMPX headers

@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1997,1998 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1997-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -92,6 +92,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef USE_TERMCAP		/* CF_FUNC_TGETENT */
 #undef USE_TERMINFO		/* CF_FUNC_TGETENT */
 #undef USE_TTY_GROUP		/* CF_TTY_GROUP */
+#undef USE_UTEMPTER		/* CF_UTEMPTER */
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef const			/* AC_CONST */
 #undef size_t			/* AC_TYPE_SIZE_T */

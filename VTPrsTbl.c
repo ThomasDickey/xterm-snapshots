@@ -5,7 +5,7 @@
 
 /*
  *
- * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
  *
  *                         All Rights Reserved
  *
@@ -55,18 +55,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
-#ifndef OPT_VT52_MODE
-#define OPT_VT52_MODE   1 /* true if xterm supports VT52 emulation */
-#endif
-
-#ifndef OPT_WIDE_CHARS
-#define OPT_WIDE_CHARS  0 /* true if xterm supports 16-bit characters */
-#endif
 
 #include <VTparse.h>
 

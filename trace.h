@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1997 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1997-2000 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -39,6 +39,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <ptyx.h>
 
+#if OPT_TRACE
+
 extern	void	Trace ( char *, ... )
 #ifdef GCC_PRINTF
 	__attribute__ ((format(printf,1,2)))
@@ -51,5 +53,7 @@ extern	char *	visibleIChar (IChar *, unsigned);
 
 extern	char	*trace_who;
 #define TRACE_CHILD int tracing_child = (trace_who = "child") != 0;
+
+#endif
 
 #endif	/* included_trace_h */
