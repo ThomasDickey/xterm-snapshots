@@ -49,7 +49,7 @@ EXTRAOBJ	= @EXTRAOBJS@
 	  	  data.c doublechr.c fontutils.c input.c \
 		  $(MAINSRC) menu.c misc.c print.c \
 		  screen.c scrollbar.c tabs.c util.c \
-		  TekPrsTbl.c Tekproc.c VTPrsTbl.c $(EXTRASRC)
+		  VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button.o charproc.o charsets.o cursor.o \
 	  	  data.o doublechr.o fontutils.o input.o \
 		  main.o menu.o misc.o print.o \

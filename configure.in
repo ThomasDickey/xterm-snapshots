@@ -2,11 +2,11 @@ dnl
 dnl $XFree86: xc/programs/xterm/configure.in,v 3.20 1999/01/23 09:56:20 dawes Exp $
 dnl
 dnl ---------------------------------------------------------------------------
-dnl 
-dnl Copyright 1997,1998 by Thomas E. Dickey <dickey@clark.net>
-dnl 
+dnl
+dnl Copyright 1997,1998,1999 by Thomas E. Dickey <dickey@clark.net>
+dnl
 dnl                         All Rights Reserved
-dnl 
+dnl
 dnl Permission to use, copy, modify, and distribute this software and its
 dnl documentation for any purpose and without fee is hereby granted,
 dnl provided that the above copyright notice appear in all copies and that
@@ -15,7 +15,7 @@ dnl supporting documentation, and that the name of the above listed
 dnl copyright holder(s) not be used in advertising or publicity pertaining
 dnl to distribution of the software without specific, written prior
 dnl permission.
-dnl 
+dnl
 dnl THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
 dnl TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
 dnl AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
@@ -23,11 +23,11 @@ dnl LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
 dnl WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 dnl ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-dnl 
+dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.12.971230)
+AC_PREREQ(2.13.19990117)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
 CF_CHECK_CACHE
@@ -44,7 +44,7 @@ AC_ISC_POSIX
 AC_MINIX
 
 ###	checks for header files
-AC_CHECK_HEADERS(stdlib.h unistd.h)
+AC_CHECK_HEADERS(stdlib.h termios.h unistd.h)
 
 ###	checks for typedefs
 CF_SIZE_T
@@ -55,6 +55,7 @@ AC_CHECK_FUNCS( \
 	bcopy \
 	memmove \
 	strerror \
+	tcgetattr \
 	waitpid \
 	)
 CF_FUNC_MEMMOVE
@@ -62,6 +63,7 @@ CF_FUNC_TGETENT
 
 ###	checks for structures
 CF_TYPE_FD_SET
+CF_POSIX_VDISABLE
 
 ###	checks for external data
 CF_ERRNO
@@ -142,8 +144,14 @@ AC_ARG_WITH(own-terminfo,
 	[private_TERMINFO=$withval],
 	[private_TERMINFO=${TERMINFO-none}])
 AC_MSG_RESULT($private_TERMINFO)
-if test $private_TERMINFO != none ; then
-	AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$private_TERMINFO")
+if test $private_TERMINFO = yes ; then
+	AC_MSG_WARN(no value given)
+elif test $private_TERMINFO != none ; then
+	if test -d $private_TERMINFO ; then
+		AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$private_TERMINFO")
+	else
+		AC_MSG_WARN(not a directory)
+	fi
 elif test -d /usr/lib/terminfo ; then
 	private_TERMINFO=/usr/lib/terminfo
 else
@@ -266,6 +274,22 @@ if test $enable_logging = yes ; then
 		AC_DEFINE(ALLOWLOGFILEEXEC)
 	fi
 fi
+
+AC_MSG_CHECKING(if you want support for iconify/maximize translations)
+CF_ARG_DISABLE(maximize,
+	[  --disable-maximize      disable actions for iconify/deiconify/maximize/restore],
+	[enable_maximize=no],
+	[enable_maximize=yes])
+AC_MSG_RESULT($enable_maximize)
+test $enable_maximize = no && AC_DEFINE(OPT_MAXIMIZE,0)
+
+AC_MSG_CHECKING(if you want NumLock to override keyboard tables)
+CF_ARG_DISABLE(num-lock,
+	[  --disable-num-lock      disable NumLock keypad support],
+	[enable_numlock=no],
+	[enable_numlock=yes])
+AC_MSG_RESULT($enable_numlock)
+test $enable_numlock = no && AC_DEFINE(OPT_NUM_LOCK,0)
 
 AC_MSG_CHECKING(if you want support for right-scrollbar)
 CF_ARG_DISABLE(rightbar,

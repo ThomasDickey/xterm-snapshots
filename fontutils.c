@@ -828,10 +828,10 @@ xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y)
 		return;
 
 	values.foreground = values.background;
-	gc2 = XCreateGC(screen->display, TextWindow(screen), GCForeground, &values);
+	gc2 = XCreateGC(screen->display, VWindow(screen), GCForeground, &values);
 
 	XFillRectangle(
-		screen->display, TextWindow(screen), gc2, x, y,
+		screen->display, VWindow(screen), gc2, x, y,
 		screen->fnt_wide,
 		screen->fnt_high);
 
@@ -860,7 +860,7 @@ xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y)
 				SCALE_X(coord[2]); SCALE_Y(coord[3]);
 				XDrawLine(
 					screen->display,
-					TextWindow(screen), gc2,
+					VWindow(screen), gc2,
 					x + coord[0], y + coord[1],
 					x + coord[2], y + coord[3]);
 				n = 0;
@@ -870,7 +870,7 @@ xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y)
 #if 0	/* bounding rectangle, for debugging */
 	else {
 		XDrawRectangle(
-			screen->display, TextWindow(screen), gc, x, y,
+			screen->display, VWindow(screen), gc, x, y,
 			screen->fnt_wide-1,
 			screen->fnt_high-1);
 	}

@@ -174,7 +174,7 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
 	gcv.foreground = screen->foreground;
 	gcv.background = term->core.background_pixel;
 
-	screen->double_gc[n] = XCreateGC (screen->display, TextWindow(screen), mask, &gcv);
+	screen->double_gc[n] = XCreateGC (screen->display, VWindow(screen), mask, &gcv);
 	XCopyGC(screen->display, old_gc, ~GCFont, screen->double_gc[n]);
 	return screen->double_gc[n];
 }

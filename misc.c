@@ -4,6 +4,36 @@
  */
 
 /*
+ *
+ * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ *
+ *                        All Rights Reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ *
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -234,6 +264,39 @@ void HandleStringEvent(
     else {
 	StringInput (screen, *params, strlen(*params));
     }
+}
+
+/*
+ * Rather than sending characters to the host, put them directly into our
+ * input queue.  That lets a user have access to any of the control sequences
+ * for a key binding.  This is the equivalent of local function key support.
+ *
+ * NOTE:  This code does not support the hexidecimal kludge used in
+ * HandleStringEvent because it prevents us from sending an arbitrary string
+ * (but it appears in a lot of examples - so we are stuck with it).  The
+ * standard string converter does recognize "\" for newline ("\n") and for
+ * octal constants (e.g., "\007" for BEL).  So we assume the user can make do
+ * without a specialized converter.  (Don't try to use \000, though).
+ */
+/* ARGSUSED */
+void HandleInterpret(
+	Widget w GCC_UNUSED,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    unsigned need;
+    if (*param_count != 1) return;
+    need = strlen(params[0]);
+    if (bcnt < 0)
+	bcnt = 0;
+    if ((unsigned)bcnt + need >= BUF_SIZE) return;
+    if (bcnt != 0
+     && (unsigned)(bptr - VTbuffer) < need)
+	memmove(bptr + need - (bptr - VTbuffer), bptr, bcnt);
+    bcnt += need;
+    bptr -= need;
+    memcpy(bptr, params[0], need);
 }
 
 static void DoSpecialEnterNotify (register XEnterWindowEvent *ev)
@@ -476,6 +539,165 @@ void HandleBellPropertyChange(
 	screen->bellInProgress = FALSE;
     }
 }
+
+
+#if OPT_MAXIMIZE
+/*ARGSUSED*/
+void HandleDeIconify (
+    Widget gw,
+    XEvent *event GCC_UNUSED,
+    String *params GCC_UNUSED,
+    Cardinal *nparams GCC_UNUSED)
+{
+    if (IsXtermWidget(gw)) {
+    	register TScreen *screen = &((XtermWidget)gw)->screen;
+	XMapWindow(screen->display, VShellWindow);
+    }
+}
+
+/*ARGSUSED*/
+void HandleIconify (
+    Widget gw,
+    XEvent *event GCC_UNUSED,
+    String *params GCC_UNUSED,
+    Cardinal *nparams GCC_UNUSED)
+{
+    if (IsXtermWidget(gw)) {
+    	register TScreen *screen = &((XtermWidget)gw)->screen;
+	XIconifyWindow(screen->display,
+		       VShellWindow,
+		       DefaultScreen(screen->display));
+    }
+}
+
+int QueryMaximize(TScreen *screen, unsigned *width, unsigned *height)
+{
+    XSizeHints hints;
+    long supp = 0;
+    Window root_win;
+    int root_x = -1;		/* saved co-ordinates */
+    int root_y = -1;
+    unsigned root_border;
+    unsigned root_depth;
+
+    if (XGetGeometry(screen->display,
+		    XDefaultRootWindow(screen->display),
+		    &root_win,
+		    &root_x,
+		    &root_y,
+		    width,
+		    height,
+		    &root_border,
+		    &root_depth)) {
+	TRACE(("QueryMaximize: XGetGeometry position %d,%d size %d,%d border %d\n",
+		root_x,
+		root_y,
+		*width,
+		*height,
+		root_border))
+	*width -= (screen->border * 2),
+	*height -= (screen->border * 2);
+
+	if (XGetWMNormalHints(screen->display,
+			    VShellWindow,
+			    &hints,
+			    &supp)) {
+
+	    TRACE(("QueryMaximize: WM hints max_w %#x max_h %#x\n",
+		    hints.max_width,
+		    hints.max_height))
+
+	    if ((unsigned) hints.max_width < *width)
+		*width = hints.max_width;
+	    if ((unsigned) hints.max_height < *height)
+		*height = hints.max_height;
+	}
+	return 1;
+    }
+    return 0;
+}
+
+void RequestMaximize (XtermWidget termw, int maximize)
+{
+    register TScreen	*screen	= &termw->screen;
+    XWindowAttributes win_attrs;
+    Position root_x, root_y;
+    unsigned root_width, root_height;
+
+    if (maximize) {
+
+	if (QueryMaximize(screen, &root_width, &root_height)) {
+
+	    if (XGetWindowAttributes(screen->display,
+				     VShellWindow,
+				     &win_attrs)) {
+		XtTranslateCoords(toplevel, 0, 0, &root_x, &root_y);
+
+		if (screen->restore_data != True
+		 || screen->restore_width != root_width
+		 || screen->restore_height != root_height) {
+		    screen->restore_data = True;
+		    screen->restore_x = root_x - win_attrs.x;
+		    screen->restore_y = root_y - win_attrs.y;
+		    screen->restore_width = win_attrs.width;
+		    screen->restore_height = win_attrs.height;
+		    TRACE(("HandleMaximize: save window position %d,%d size %d,%d\n",
+			    screen->restore_x,
+			    screen->restore_y,
+			    screen->restore_width,
+			    screen->restore_height))
+		}
+
+		XMoveResizeWindow(screen->display,
+				  VShellWindow,
+				  0, /* x */
+				  0, /* y */
+				  root_width,
+				  root_height);
+	    }
+	}
+    } else {
+	if (screen->restore_data) {
+	    TRACE(("HandleRestoreSize: position %d,%d size %d,%d\n",
+		    screen->restore_x,
+		    screen->restore_y,
+		    screen->restore_width,
+		    screen->restore_height))
+	    screen->restore_data = False;
+	    XMoveResizeWindow(screen->display,
+			      VShellWindow,
+			      screen->restore_x,
+			      screen->restore_y,
+			      screen->restore_width,
+			      screen->restore_height);
+	}
+    }
+}
+
+/*ARGSUSED*/
+void HandleMaximize (
+    Widget gw,
+    XEvent *event GCC_UNUSED,
+    String *params GCC_UNUSED,
+    Cardinal *nparams GCC_UNUSED)
+{
+    if (IsXtermWidget(gw)) {
+	RequestMaximize((XtermWidget)gw, 1);
+    }
+}
+
+/*ARGSUSED*/
+void HandleRestoreSize (
+    Widget gw,
+    XEvent *event GCC_UNUSED,
+    String *params GCC_UNUSED,
+    Cardinal *nparams GCC_UNUSED)
+{
+    if (IsXtermWidget(gw)) {
+	RequestMaximize((XtermWidget)gw, 0);
+    }
+}
+#endif /* OPT_MAXIMIZE */
 
 void
 Redraw(void)
@@ -880,10 +1102,14 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 				if_OPT_ISO_COLORS(screen,{
 				if (term->flags & FG_COLOR)
 					sprintf(reply+strlen(reply),
-						";3%d", term->cur_foreground);
+						";%d%d",
+						term->cur_foreground >= 8 ? 9 : 3,
+						term->cur_foreground);
 				if (term->flags & BG_COLOR)
 					sprintf(reply+strlen(reply),
-						";4%d", term->cur_background);
+						";%d%d",
+						term->cur_background >= 8 ? 10 : 4,
+						term->cur_background);
 				})
 				strcat(reply, "m");
 			} else

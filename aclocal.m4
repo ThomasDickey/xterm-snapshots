@@ -546,6 +546,48 @@ AC_SUBST(IMAKE_CFLAGS)
 AC_SUBST(IMAKE_LOADFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl Special test to workaround gcc 2.6.2, which cannot parse C-preprocessor
+dnl conditionals.
+dnl
+dnl AC_CHECK_HEADERS(termios.h unistd.h)
+dnl AC_CHECK_FUNCS(tcgetattr)
+dnl
+AC_DEFUN([CF_POSIX_VDISABLE],
+[
+AC_MSG_CHECKING(if POSIX VDISABLE symbol should be used)
+AC_CACHE_VAL(cf_cv_posix_vdisable,[
+	AC_TRY_RUN([
+#if HAVE_TERMIOS_H && HAVE_TCGETATTR
+#include <termios.h>
+#endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if defined(_POSIX_VDISABLE)
+int main() { exit(_POSIX_VDISABLE == -1); }
+#endif],
+	[cf_cv_posix_vdisable=yes],
+	[cf_cv_posix_vdisable=no],
+	[AC_TRY_COMPILE([
+#if HAVE_TERMIOS_H && HAVE_TCGETATTR
+#include <termios.h>
+#endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif],[
+#if defined(_POSIX_VDISABLE) && (_POSIX_VDISABLE != -1)
+int temp = _POSIX_VDISABLE;
+#else
+this did not work
+#endif],
+	[cf_cv_posix_vdisable=yes],
+	[cf_cv_posix_vdisable=no],
+	)])
+])
+AC_MSG_RESULT($cf_cv_posix_vdisable)
+test $cf_cv_posix_vdisable = yes && AC_DEFINE(HAVE_POSIX_VDISABLE)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl	On both Ultrix and CLIX, I find size_t defined in <stdio.h>
 AC_DEFUN([CF_SIZE_T],
 [
@@ -600,6 +642,25 @@ dnl ---------------------------------------------------------------------------
 dnl Use AC_VERBOSE w/o the warnings
 AC_DEFUN([CF_VERBOSE],
 [test -n "$verbose" && echo "	$1" 1>&AC_FD_MSG
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Check if xterm is installed setuid, assume we want to do the same on a
+dnl new install
+AC_DEFUN([CF_XTERM_MODE],[
+AC_PATH_PROG(XTERM_PATH,xterm)
+XTERM_MODE=755
+AC_MSG_CHECKING(for presumed installation-mode)
+if test -f "$XTERM_PATH" ; then
+	ls -l $XTERM_PATH >conftest.out
+	read cf_mode cf_rest <conftest.out
+	case ".$cf_mode" in #(vi
+	.???s*)
+		XTERM_MODE=4711
+		;;
+	esac
+fi
+AC_MSG_RESULT($XTERM_MODE)
+AC_SUBST(XTERM_MODE)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for Xaw (Athena) libraries
@@ -695,23 +756,4 @@ if test $cf_have_X_LIBS = no ; then
 test program.  You will have to check and add the proper libraries by hand
 to makefile.])
 fi
-])dnl
-dnl ---------------------------------------------------------------------------
-dnl Check if xterm is installed setuid, assume we want to do the same on a
-dnl new install
-AC_DEFUN([CF_XTERM_MODE],[
-AC_PATH_PROG(XTERM_PATH,xterm)
-XTERM_MODE=755
-AC_MSG_CHECKING(for presumed installation-mode)
-if test -f "$XTERM_PATH" ; then
-	ls -l $XTERM_PATH >conftest.out
-	read cf_mode cf_rest <conftest.out
-	case ".$cf_mode" in #(vi
-	.???s*)
-		XTERM_MODE=4711
-		;;
-	esac
-fi
-AC_MSG_RESULT($XTERM_MODE)
-AC_SUBST(XTERM_MODE)
 ])dnl

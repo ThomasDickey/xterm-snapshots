@@ -298,7 +298,7 @@ WindowScroll(register TScreen *screen, int top)
 
 	XClearArea(
 	    screen->display,
-	    TextWindow(screen),
+	    VWindow(screen),
 	    (int) x,
 	    (int) refreshtop * FontHeight(screen) + screen->border,
 	    (unsigned) Width(screen),

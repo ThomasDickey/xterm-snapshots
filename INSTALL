@@ -26,37 +26,230 @@ Options:
 Autoconf configure scripts recognize two types of application-defined
 options, enable/disable and with/without.  The latter, by convention, are
 used for denoting inclusion of external packages, while the former denote
-enabling/disabling of internal features.  The configure --help option
-lists the available options.  This script uses "enable" and "disable"
-to indicate the sense of the default behavior.
+enabling/disabling of internal features.  The configure --help option lists
+the available options.  This script uses "enable" and "disable" to indicate
+the sense of the default behavior.
 
 The options (in alphabetic order):
 
   --disable-16-color      disable 16-color support (default: on)
+
+	Do not compile-in code to recognize aixterm-style control sequences
+	that support color values 8-15.
+	
+	Most color applications know only about 8 ANSI colors, but some
+	(e.g., ones built with ncurses) do.
+
   --disable-active-icon   disable X11R6.3 active-icon feature (default: on)
+
+	Do not compile-in code to support the active-icon feature.  This is
+	not configured on systems (e.g., X11R5) which lack the library
+	support needed.
+	
+	Xterms with an active icon continue to respond to input and update
+	their display when iconified.  Not all window managers support
+	active icons.  Those that do include fvwm, olvwm and mwm.
+
   --disable-ansi-color    disable ANSI color (default: on)
+
+  	Do not compile-in code for ANSI colors.
+
   --disable-bold-color    disable PC-style mapping of bold colors (default: on)
+
+	Do not compile-in code that maps colors 8-15 to bold versions of
+	colors 0-7.
+
+	Some applications have hardcoded logic that assumes this.  It does
+	not interfere with the 16-color support.
+
   --disable-boxchars      disable fallback-support for box chars (default: on)
+
+  	Do not compile-in code to generate approximations for box/graphic
+	characters.
+
+	Most fonts do not contain the vt100-style graphic characters in
+	positions 0-31.  Many applications use the line-drawing characters,
+	e.g., to make boxes.  When xterm loads a font, it checks if those
+	characters are present, and draws its own if they are missing.
+
   --disable-color-mode    disable default colorMode resource (default: on)
+
+  	Do not compile-in code that sets the default value of the colorMode
+	resource to ``true''.
+
   --disable-doublechars   disable support for double-size chars (default: on)
+
+  	Do not compile-in code that supports font-manipulation needed to
+	implement vt100-style double-sized characters.
+
   --disable-echo          test: display "compiling" commands (default: on)
+
+  	Modify the generated Makefile so that most compiler options are
+	not shown.  This makes it simpler to read a build log and see the
+	actual warning messages.
+
   --disable-highlighting  disable support for color highlighting (default: on)
+
+  	Do not compile-in code that allows the selected region to be a
+	different color than the reverse of foreground/background colors.
+
+	See the discussion of highlightColor in the manual.
+
   --disable-i18n          disable internationalization (default: on)
+
+  	Do not compile-in code to handle multi-byte characters.  This is
+	related to, but not identical with the input method logic.
+
   --disable-imake         disable use of imake for definitions (default: on)
+
+  	Do not attempt to use imake to determine compiler options.
+
+	The main.c file has many ifdef's which rely on obscure combinations
+	known only to imake.  The configure script implements only a
+	portion of the tests needed to supplant imake.
+
   --disable-input-method  disable input-method (default: on)
+
+	Do not compile-in code for "input method".  This is an X11R6
+	feature which deals with translation of composite characters.
+
+	Some user report problems with their configuration, e.g., messages
+	stating that there is no input method defined for the given preedit
+	type.  If you do not need input method (and are troubled by the
+	warning messages), it is safe to disable this option.
+
+  --disable-maximize      disable actions for iconify/deiconify/maximize/restore
+
+	Do not compile-in code that implements runtime 'actions' for
+	iconifying, maximizing, etc.
+
+	Most users will find that the window manager is more suitable for
+	this sort of manipulation than putting the capabilities into xterm.
+
+  --disable-num-lock      disable NumLock keypad support
+
+	Do not compile-in code that looks for the actual NumLock key to
+	support vt100/vt220 keypad translation.
+
+	This is used in xterm to simplify logic, and to workaround some
+	quirks of the keyboard tables.  Use the ``numLock'' resource to
+	disable this feature if you must customize xterm in some other way.
+
   --disable-rightbar      disable right-scrollbar support (default: on)
+
+  	Do not compile-in code that supports a scrollbar on the right.
+
+	Left/right scrollbars are a matter of taste.  Some older libraries
+	(e.g., X11R5) do not perform the geometry computation correctly,
+	leaving the right scrollbar incorrectly positioned after changing
+	the font size.
+
   --disable-samename      disable check for redundant name-change (default: on)
+
+	Do not compile-in code that suppresses redundant updates to the
+	titlebar when the text has not changed.
+
   --disable-tek4014       disable tek4014 emulation (default: on)
+
+  	Do not compile-in code to support Tektronix 4014 emulation.
+
+	This reduces the executable size by 17% (checked 1999/3/13).
+
+	Some people use the Tektronix emulation (which has been in xterm
+	for many years) as an example of code bloat, though this is not an
+	accurate impression.
+
   --disable-vt52          disable VT52 emulation (default: on)
+
+  	Do not compile-in code to support vt52 emulation.
+
+	A genuine vt100 emulates a vt52.
+
   --disable-ziconbeep     disable -ziconbeep option (default: on)
+
+	Do not compile-in code that modifies the icon's title and sounds a
+	beep when they receive output.
+
   --enable-hp-fkeys       enable support for HP-style function keys (default: off)
+
+  	Compile-in code to support HP-style function keys.
+
   --enable-logfile-exec   enable exec'd logfile filter (default: off)
+
+  	Compile-in code that allows logging piped via an external filter.
+
   --enable-logging        enable logging (default: off)
+
+  	Compile-in code that allows logging.
+
+	Logging was disabled in X11R5 xterm because of security problems.
+	They were addressed in X11R6, but the feature was not reinstated.
+
   --enable-trace          test: set to enable debugging traces (default: off)
+
+  	Compile-in code to trace xterm's internal states.
+
+	This is a debugging feature.  It causes xterm to produce two files
+	(Trace-parent.out and Trace-child.out).
+
   --enable-warnings       test: turn on GCC compiler warnings (default: off)
+
+	Modify the generate Makefile to turn on gcc compiler warnings.
+
+	I use this option regularly, and correct all but a few (difficult)
+	problems.
+
   --enable-xmc-glitch     test: enable xmc magic-cookie emulation (default: off)
+
+  	Compile-in code that simulates the terminfo "magic cookie" glitch.
+
+	This is for testing ncurses.
+
   --with-Xaw3d            link with Xaw 3d library
+
+  	Look for, compile and link with the Xaw 3d widget library.
+
   --with-neXtaw           link with neXT Athena library
+
+  	Look for, compile and link with the neXT Athena widget library.
+
   --with-own-terminfo=P   set default $TERMINFO (default: from environment)
+
+  	Modify the generated Makefile to set the target for the 'install-ti'
+	rule to point to the given directory.
+
+	If you have the $TERMINFO variable defined in your environment, the
+	configure script will use that value.  If no option and no variable
+	are are given, the configure script uses /usr/lib/terminfo, if it
+	exists.
+
+	You do not have to run "make install-ti", if there is already a
+	workable terminfo description.  Be advised, however, that the
+	common variety of "xterm-color" is not suited for xterm, but is
+	directed to other variations (such as nxterm) which do not
+	support the back-color erase capability.
+
   --with-terminal-id[=V]  set default decTerminalID (default: vt100)
+
+  	Set the default emulation level.
+
+	DEC terminals vt52/vt100/vt220/etc form a series where succeeding
+	models emulate features of the older terminals.  While most
+	features of these terminals are recognized by xterm at all levels,
+	a few behave differently according to the emulation level.
+
+	You can always override this with the command-line option "-ti".
+
   --with-terminal-type=T  set default $TERM (default: xterm)
+
+	Set the default value for $TERM.  Xterm supports legacy termcap
+	applications by constructing a modified version of the $TERMCAP
+	variable at initialization, which supplies the resulting screen
+	size.  It also sets $TERM, if not already set, for use by programs
+	running within xterm.
+
+	The default value "xterm", can be overridden to avoid conflict
+	with older versions of xterm, e.g., those that do not implement
+	vt220 emulation. 
+
+	You can always override this with the command-line option "-tn".

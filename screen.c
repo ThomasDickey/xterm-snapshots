@@ -812,7 +812,7 @@ ScreenResize (
 #elif defined(TIOCSWINSZ)
 	struct winsize ws;
 #endif	/* sun vs TIOCSWINSZ */
-	Window tw = TextWindow (screen);
+	Window tw = VWindow (screen);
 
 	TRACE(("ScreenResize %dx%d\n", height, width))
 

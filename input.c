@@ -4,6 +4,35 @@
  */
 
 /*
+ * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * 
+ *                         All Rights Reserved
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ * 
+ * 
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -40,14 +69,43 @@
 #include <data.h>
 #include <fontutils.h>
 
-static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
-static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
-static char *cur = "HDACB  FE";
+/*                       0123456789 abc def0123456789abdef0123456789abcdef0123456789abcd */
+static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XX=";
+
+/*                       0123456789abcdef0123456789abdef0123456789abcdef0123456789abcd */
+static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXX";
+
+static char *curfinal = "HDACB  FE";
 
 static int decfuncvalue (KeySym keycode);
 static int sunfuncvalue (KeySym keycode);
 #if OPT_HP_FUNC_KEYS
 static int hpfuncvalue (KeySym keycode);
+#endif
+
+#if OPT_TRACE
+static char *
+ModifierName(unsigned modifier)
+{
+    char *s = "";
+    if (modifier & ShiftMask)
+	s = " Shift";
+    else if (modifier & LockMask)
+	s = " Lock";
+    else if (modifier & ControlMask)
+	s = " Control";
+    else if (modifier & Mod1Mask)
+	s = " Mod1";
+    else if (modifier & Mod2Mask)
+	s = " Mod2";
+    else if (modifier & Mod3Mask)
+	s = " Mod3";
+    else if (modifier & Mod4Mask)
+	s = " Mod4";
+    else if (modifier & Mod5Mask)
+	s = " Mod5";
+    return s;
+}
 #endif
 
 static void
@@ -94,6 +152,49 @@ IsEditFunctionKey(KeySym keysym)
 	}
 }
 
+#if OPT_SUNPC_KBD
+/*
+ * If we have told xterm that our keyboard is really a Sun/PC keyboard, this is
+ * enough to make a reasonable approximation to DEC vt220 numeric and editing
+ * keypads.
+ */
+static KeySym
+TranslateFromSUNPC(KeySym keysym)
+{
+	static struct {
+		KeySym before, after;
+	} table[] = {
+#ifdef DXK_Remove
+		{ XK_Delete,       DXK_Remove },
+#endif
+		{ XK_Home,         XK_Find },
+		{ XK_End,          XK_Select },
+#ifdef XK_KP_Home
+		{ XK_KP_Delete,    XK_KP_Decimal },
+		{ XK_KP_Insert,    XK_KP_0 },
+		{ XK_KP_End,       XK_KP_1 },
+		{ XK_KP_Down,      XK_KP_2 },
+		{ XK_KP_Next,      XK_KP_3 },
+		{ XK_KP_Left,      XK_KP_4 },
+		{ XK_KP_Begin,     XK_KP_5 },
+		{ XK_KP_Right,     XK_KP_6 },
+		{ XK_KP_Home,      XK_KP_7 },
+		{ XK_KP_Up,        XK_KP_8 },
+		{ XK_KP_Prior,     XK_KP_9 },
+#endif
+	};
+	unsigned n;
+
+	for (n = 0; n < sizeof(table)/sizeof(table[0]); n++) {
+		if (table[n].before == keysym) {
+			keysym = table[n].after;
+			TRACE(("...Input keypad changed to %#04lx\n", keysym))
+			break;
+		}
+	}
+	return keysym;
+}
+#endif
 /*
  * Modifiers other than shift, control and numlock should be reserved for the
  * user.  We use the first two explicitly to support VT220 keyboard, and the
@@ -102,6 +203,17 @@ IsEditFunctionKey(KeySym keysym)
 #define isModified(event) \
     (event->state & \
     	(Mod1Mask | Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
+
+#define VT52_KEYPAD \
+	if_OPT_VT52_MODE(screen,{ \
+		reply.a_type = ESC; \
+		reply.a_pintro = '?'; \
+		})
+
+#define VT52_CURSOR_KEYS \
+	if_OPT_VT52_MODE(screen,{ \
+		reply.a_type = ESC; \
+		})
 
 void
 Input (
@@ -146,6 +258,50 @@ Input (
 	reply.a_nparam = 0;
 	reply.a_inters = 0;
 
+	TRACE(("Input keysym %#04lx, %d:'%.*s'%s%s%s%s%s%s%s%s\n",
+		keysym,
+		nbytes,
+		nbytes > 0 ? nbytes : 1,
+		nbytes > 0 ? strbuf : "",
+		ModifierName(event->state & ShiftMask),
+		ModifierName(event->state & LockMask),
+		ModifierName(event->state & ControlMask),
+		ModifierName(event->state & Mod1Mask),
+		ModifierName(event->state & Mod2Mask),
+		ModifierName(event->state & Mod3Mask),
+		ModifierName(event->state & Mod4Mask),
+		ModifierName(event->state & Mod5Mask)))
+
+#if OPT_SUNPC_KBD
+	/*
+	 * DEC keyboards don't have keypad(+), but do have keypad(,) instead. 
+	 * Other (Sun, PC) keyboards commonly have keypad(+), but no keypad(,)
+	 * - it's a pain for users to work around.
+	 */
+	if (!sunFunctionKeys
+	 && sunKeyboard
+	 && keysym == XK_KP_Add)
+		keysym = XK_KP_Separator;
+#endif
+
+	/*
+	 * The keyboard tables may give us different keypad codes according to
+	 * whether NumLock is pressed.  Use this check to simplify the process
+	 * of determining whether we generate an escape sequence for a keypad
+	 * key, or use the string returned by the keyboard tables.  There is no
+	 * fixed modifier for this feature, so we assume that it is the one
+	 * assigned to the NumLock key.
+	 */
+#if OPT_NUM_LOCK
+	if (nbytes == 1
+	 && IsKeypadKey(keysym)
+	 && term->misc.real_NumLock
+	 && (term->misc.num_lock & event->state) != 0) {
+		keysym = *string;
+		TRACE(("...Input num_lock, change keysym to %#04lx\n", keysym))
+	}
+#endif
+
 #if OPT_SHIFT_KEYS
 	if (term->misc.shift_keys
 	 && (event->state & ShiftMask) != 0) {
@@ -166,54 +322,49 @@ Input (
 	if ((nbytes == 1)
 	 && (term->flags & NATIONAL)) {
 		keysym = xtermCharSetIn(keysym, screen->keyboard_dialect[0]);
-		if (keysym < 128)
+		if (keysym < 128) {
 			strbuf[0] = keysym;
+			TRACE(("...input NRC changed to %d\n", *strbuf))
+		}
 	}
+
+	/*
+	 * VT220 & up:  users expect that the Delete key on the editing keypad
+	 * should be mapped to \E[3~.  However, we won't get there unless it is
+	 * treated as a keypad key, which XK_Delete is not.  This presumes that
+	 * we have a backarrow key to supply a DEL character, which is still
+	 * needed in a number of applications.
+	 */
+#ifdef XK_KP_Delete
+	if (keysym == XK_Delete) {
+		keysym = XK_KP_Delete;
+		TRACE(("...Input delete changed to %#04lx\n", keysym))
+	}
+#endif
 
 	/* VT300 & up: backarrow toggle */
 	if ((nbytes == 1)
-	 && !isModified(event)
 	 && (((term->keyboard.flags & MODE_DECBKM) == 0)
 	   ^ ((event->state & ControlMask) != 0))
 	 && (keysym == XK_BackSpace)) {
 		strbuf[0] = '\177';
+		TRACE(("...Input backarrow changed to %d\n", *strbuf))
 	}
-
-#ifdef XK_KP_Home
-	if (keysym >= XK_KP_Home && keysym <= XK_KP_Begin) {
-	    keysym += XK_Home - XK_KP_Home;
-	}
-#endif
-
-#define VT52_KEYPAD \
-	if_OPT_VT52_MODE(screen,{ \
-		reply.a_type = ESC; \
-		reply.a_pintro = '?'; \
-		})
-
-#define VT52_CURSOR_KEYS \
-	if_OPT_VT52_MODE(screen,{ \
-		reply.a_type = ESC; \
-		})
 
 #if OPT_SUNPC_KBD
 	/* make an DEC editing-keypad from a Sun or PC editing-keypad */
-	if (sunKeyboard && !isModified(event)) {
-		switch (keysym) {
-		case XK_Delete:
-#ifdef DXK_Remove
-			keysym = DXK_Remove;
+	if (sunKeyboard)
+		keysym = TranslateFromSUNPC(keysym);
+	else
 #endif
-			break;
-		case XK_Home:
-			keysym = XK_Find;
-			break;
-		case XK_End:
-			keysym = XK_Select;
-			break;
-		}
+	{
+#ifdef XK_KP_Home
+	if (keysym >= XK_KP_Home && keysym <= XK_KP_Begin) {
+		keysym += XK_Home - XK_KP_Home;
+		TRACE(("...Input keypad changed to %#04lx\n", keysym))
 	}
 #endif
+	}
 
 #if OPT_HP_FUNC_KEYS
 	if (hpFunctionKeys
@@ -239,13 +390,13 @@ Input (
 		keysym != XK_Prior && keysym != XK_Next) {
 		if (keyboard->flags & MODE_DECCKM) {
 			reply.a_type = SS3;
-			reply.a_final = cur[keysym-XK_Home];
+			reply.a_final = curfinal[keysym-XK_Home];
 			VT52_CURSOR_KEYS
 			unparseseq(&reply, pty);
 		} else {
 			reply.a_type = CSI;
 			if_OPT_VT52_MODE(screen,{ reply.a_type = ESC; })
-			reply.a_final = cur[keysym-XK_Home];
+			reply.a_final = curfinal[keysym-XK_Home];
 			unparseseq(&reply, pty);
 		}
 		key = TRUE;
@@ -294,25 +445,14 @@ Input (
 		}
 		key = TRUE;
 	} else if (IsKeypadKey(keysym)) {
-#if OPT_SUNPC_KBD
-		/*
-		 * DEC keyboards don't have keypad(+), but do have keypad(,)
-		 * instead.  Other (Sun, PC) keyboards commonly have keypad(+),
-		 * but no keypad(,) - it's a pain for users to work around.
-		 */
-		if (!sunFunctionKeys
-		 && !isModified(event)
-		 && sunKeyboard
-		 && keysym == XK_KP_Add)
-			keysym = XK_KP_Separator;
-#endif
 		if ((keyboard->flags & MODE_DECKPAM) != 0) {
 			reply.a_type  = SS3;
 			reply.a_final = kypd_apl[keysym-XK_KP_Space];
 			VT52_KEYPAD
 			unparseseq(&reply, pty);
-		} else
+		} else {
 			unparseputc(kypd_num[keysym-XK_KP_Space], pty);
+		}
 		key = TRUE;
 	} else if (nbytes > 0) {
 #if OPT_TEK4014
@@ -500,3 +640,38 @@ sunfuncvalue (KeySym  keycode)
 		default:	return(-1);
 	}
 }
+
+#if OPT_NUM_LOCK
+/*
+ * Determine which modifier mask (if any) applies to the Num_Lock keysym.
+ */
+void
+VTInitModifiers(void)
+{
+    int i, j, k;
+    Display *dpy = XtDisplay(term);
+    XModifierKeymap *keymap = XGetModifierMapping(dpy);
+
+    if (keymap != 0) {
+
+	TRACE(("VTInitModifiers\n"))
+	for (i = k = 0; i < 8; i++) {
+	    for (j = 0; j < keymap->max_keypermod; j++) {
+		KeyCode code = keymap->modifiermap[k];
+		if (code != 0) {
+		    KeySym keysym = XKeycodeToKeysym(dpy,code,0);
+		    if (keysym == XK_Num_Lock) {
+			term->misc.num_lock = (1<<i);
+			TRACE(("numlock mask %#lx is%s modifier\n",
+				term->misc.num_lock,
+				ModifierName(term->misc.num_lock)))
+		    }
+		}
+		k++;
+	    }
+	}
+
+	XFreeModifiermap(keymap);
+    }
+}
+#endif /* OPT_NUM_LOCK */

@@ -1003,7 +1003,7 @@ main (int argc, char **argv, char **envp)
 	    term->flags |= WRAPAROUND;
 	    update_autowrap();
 	}
-	if (term->misc.re_verse) {
+	if (term->misc.re_verse != term->misc.re_verse0) {
 	    term->flags |= REVERSE_VIDEO;
 	    update_reversevideo();
 	}
@@ -1828,6 +1828,15 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 	if (*s == '^') {
 	    s++;
 	    c = ((*s == '?') ? 0177 : *s & 31);	 /* keep control bits */
+	    if (*s == '-') {
+		errno = 0;
+		c = fpathconf(0, _PC_VDISABLE);
+		if (c == -1) {
+		    if (errno != 0)
+			continue;	/* skip this (error) */
+		    c = 0377;
+		}
+	    }
 	} else {
 	    c = *s;
 	}

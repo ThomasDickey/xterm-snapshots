@@ -193,16 +193,11 @@ static Bool IsPts = False;
 #include <termio.h>
 #endif
 
-#ifdef CSRG_BASED
-#define USE_POSIX_TERMIOS
-#endif
-
 #ifdef SCO325
 #define _SVID3
 #endif
 
 #ifdef __GNU__
-#define USE_POSIX_TERMIOS
 #define USE_SYSV_PGRP
 #define WTMP
 #define HAS_BSD_GROUPS
@@ -1647,7 +1642,7 @@ main (int argc, char *argv[])
 	    term->flags |= WRAPAROUND;
 	    update_autowrap();
 	}
-	if (term->misc.re_verse) {
+	if (term->misc.re_verse != term->misc.re_verse0) {
 	    term->flags |= REVERSE_VIDEO;
 	    update_reversevideo();
 	}
@@ -4166,6 +4161,25 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 	if (*s == '^') {
 	    s++;
 	    c = ((*s == '?') ? 0177 : *s & 31);	 /* keep control bits */
+	    if (*s == '-') {
+#if HAVE_TERMIOS_H && HAVE_TCGETATTR
+#  if HAVE_POSIX_VDISABLE
+		c = _POSIX_VDISABLE;
+#  else
+		errno = 0;
+		c = fpathconf(0, _PC_VDISABLE);
+		if (c == -1) {
+		    if (errno != 0)
+			continue;	/* skip this (error) */
+		    c = 0377;
+		}
+#  endif
+#elif defined(VDISABLE)
+		c = VDISABLE;
+#else
+		continue;		/* ignore */
+#endif
+	    }
 	} else {
 	    c = *s;
 	}

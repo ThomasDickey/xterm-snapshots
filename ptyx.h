@@ -4,6 +4,35 @@
  */
 
 /*
+ * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ * 
+ *                         All Rights Reserved
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ * 
+ * 
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -49,7 +78,7 @@
     :  (XtPointer)malloc((unsigned)(size)))
 
 #define MyStackFree(pointer, stack_cache_array) \
-    if ((pointer) != ((XtPointer)(stack_cache_array))) free(pointer)
+    if ((pointer) != ((char *)(stack_cache_array))) free(pointer)
 
 #ifdef AMOEBA
 /* Avoid name clashes with standard Amoeba types: */
@@ -352,6 +381,14 @@ typedef struct {
 
 #ifndef OPT_HIGHLIGHT_COLOR
 #define OPT_HIGHLIGHT_COLOR 1 /* true if xterm supports color highlighting */
+#endif
+
+#ifndef OPT_MAXIMIZE
+#define OPT_MAXIMIZE	1 /* add actions for iconify ... maximize */
+#endif
+
+#ifndef OPT_NUM_LOCK
+#define OPT_NUM_LOCK	1 /* use NumLock key only for numeric-keypad */
 #endif
 
 #ifndef OPT_SAME_NAME
@@ -784,6 +821,13 @@ typedef struct {
 	Boolean         always_highlight; /* whether to highlight cursor */
 	Boolean		underline;	/* whether to underline text	*/
 
+#if OPT_MAXIMIZE
+	Boolean		restore_data;
+	unsigned	restore_x;
+	unsigned	restore_y;
+	unsigned	restore_width;
+	unsigned	restore_height;
+#endif
 	/* Testing */
 #if OPT_XMC_GLITCH
 	int		xmc_glitch;	/* # of spaces to pad on SGR's	*/
@@ -886,6 +930,7 @@ typedef struct _Misc {
 #endif
     Boolean login_shell;
     Boolean re_verse;
+    Boolean re_verse0;	/* initial value of "-rv" */
     XtGravity resizeGravity;
     Boolean reverseWrap;
     Boolean autoWrap;
@@ -919,6 +964,10 @@ typedef struct _Misc {
 #endif
 #if OPT_SHIFT_KEYS
     Boolean shift_keys;		/* true if we interpret shifted special-keys */
+#endif
+#if OPT_NUM_LOCK
+    Boolean real_NumLock;	/* true if we treat NumLock key specially */
+    unsigned long num_lock;
 #endif
 } Misc;
 
@@ -1056,7 +1105,6 @@ typedef struct _TekWidgetRec {
 #define IsIcon(screen)		((screen)->whichVwin == &(screen)->iconVwin)
 #define VWindow(screen)		((screen)->whichVwin->window)
 #define VShellWindow		term->core.parent->core.window
-#define TextWindow(screen)      ((screen)->whichVwin->window)
 #define TWindow(screen)		((screen)->whichTwin->window)
 #define TShellWindow		tekWidget->core.parent->core.window
 #define Width(screen)		((screen)->whichVwin->width)
@@ -1085,7 +1133,6 @@ typedef struct _TekWidgetRec {
 #define IsIcon(screen)		(False)
 #define VWindow(screen)		((screen)->fullVwin.window)
 #define VShellWindow		term->core.parent->core.window
-#define TextWindow(screen)      ((screen)->fullVwin.window)
 #define TWindow(screen)		((screen)->fullTwin.window)
 #define TShellWindow		tekWidget->core.parent->core.window
 #define Width(screen)		((screen)->fullVwin.width)
