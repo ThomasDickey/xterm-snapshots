@@ -925,6 +925,7 @@ Valid values for the first parameter:
   \*(Ps = \*6\*1 \(-> VT100
   \*(Ps = \*6\*2 \(-> VT200
   \*(Ps = \*6\*3 \(-> VT300
+.br
 Valid values for the second parameter:
   \*(Ps = \*0 \(-> 8-bit controls
   \*(Ps = \*1 \(-> 7-bit controls (always set for VT100)

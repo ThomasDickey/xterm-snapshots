@@ -320,6 +320,12 @@ static Bool IsPts = False;
 #include <sys/ptyio.h>
 #endif /* __hpux */
 
+#ifdef __osf__
+#define HAS_BSD_GROUPS
+#undef  USE_SYSV_PGRP
+#define setpgrp setpgid
+#endif
+
 #ifdef __sgi
 #define HAS_BSD_GROUPS
 #include <sys/sysmacros.h>
@@ -331,11 +337,10 @@ static Bool IsPts = False;
 
 #else /* } !SYSV { */			/* BSD systems */
 
-#ifdef MINIX /* { */
-
-#else /* } !MINIX { */
+#ifndef MINIX /* { */
 
 #ifdef __QNX__
+
 #undef TIOCSLTC  /* <sgtty.h> conflicts with <termios.h> */
 #undef TIOCLSET
 #ifndef __QNXNTO__
@@ -344,6 +349,7 @@ static Bool IsPts = False;
 #define USE_SYSV_PGRP
 extern __inline__ ttyslot() {return 1;} /* yuk */
 #endif
+
 #else
 
 #ifndef linux
@@ -359,9 +365,6 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 #include <resource.h>
 #endif
 #define HAS_BSD_GROUPS
-#ifdef __osf__
-#define setpgrp setpgid
-#endif
 #endif /* !VMS */
 #endif /* !linux */
 
@@ -1299,14 +1302,21 @@ main (int argc, char *argv[])
 	Widget form_top, menu_top;
 	register TScreen *screen;
 	int mode;
+	char *app_name = "XTerm";
 
 	/* Do these first, since we may not be able to open the display */
 	ProgramName = argv[0];
 	if (argc > 1) {
+		int n;
 		if (abbrev(argv[1], "-version"))
 			Version();
 		if (abbrev(argv[1], "-help"))
 			Help();
+		for (n = 1; n < argc - 1; n++) {
+			if (abbrev(argv[n], "-name")) {
+				app_name = argv[n+1];
+			}
+		}
 	}
 
 	/* This dumps core on HP-UX 9.05 with X11R5 */
@@ -1615,7 +1625,7 @@ main (int argc, char *argv[])
 #endif
 
 	    XtSetErrorHandler(xt_error);
-	    toplevel = XtAppInitialize (&app_con, "XTerm",
+	    toplevel = XtAppInitialize (&app_con, app_name,
 					optionDescList,
 					XtNumber(optionDescList),
 					&argc, argv, fallback_resources,
@@ -2107,7 +2117,7 @@ get_pty (int *pty)
 static int
 pty_search(int *pty)
 {
-    static int devindex, letter = 0;
+    static int devindex = 0, letter = 0;
 
 #if defined(CRAY) || defined(__MVS__)
     for (; devindex < MAXPTTYS; devindex++) {
@@ -2442,6 +2452,9 @@ spawn (void)
 		no_dev_tty = FALSE;
 		if (tty < 0) {
 			if (tty_got_hung || errno == ENXIO || errno == EIO ||
+#ifdef ENODEV
+			    errno == ENODEV ||
+#endif
 			    errno == EINVAL || errno == ENOTTY || errno == EACCES) {
 				no_dev_tty = TRUE;
 #ifdef HAS_LTCHARS
@@ -3279,17 +3292,9 @@ spawn (void)
 		ioctl(0, TIOCSCTTY, 0);
 #endif
 		ioctl(0, TIOCSPGRP, (char *)&pgrp);
-#ifndef __osf__
 		setpgrp(0,0);
-#else
-		setpgid(0,0);
-#endif
 		close(open(ttydev, O_WRONLY, 0));
-#ifndef __osf__
 		setpgrp (0, pgrp);
-#else
-		setpgid (0, pgrp);
-#endif
 #endif /* !USE_SYSV_PGRP */
 
 #if defined(__QNX__)

@@ -49,6 +49,7 @@ APPSDIR		= $(DESTDIR)$(appsdir)
 
 INSTALL_DIRS    = $(BINDIR) $(APPSDIR) $(MANDIR)
 
+CLASS		= XTerm
 EXTRAHDR	= @EXTRAHDRS@
 EXTRASRC	= @EXTRASRCS@
 EXTRAOBJ	= @EXTRAOBJS@
@@ -106,16 +107,37 @@ resize : $(OBJS2)
 
 charproc.o : @CHARPROC_DEPS@
 
+install \
+install-bin \
+install-man \
 install-full \
-install :: $(INSTALL_DIRS) xterm resize
+install-dirs :: $(INSTALL_DIRS)
+
+install \
+install-bin \
+install-full :: xterm resize
 	$(srcdir)/sinstall.sh "$(INSTALL_PROGRAM)" xterm  @XTERM_PATH@ $(BINDIR)/xterm
 	$(INSTALL_PROGRAM) -s -m  755 resize $(BINDIR)/resize
+
+install \
+install-man \
+install-full ::
 	$(INSTALL_DATA) $(srcdir)/xterm.man    $(MANDIR)/xterm.$(manext)
 	$(INSTALL_DATA) $(srcdir)/resize.man   $(MANDIR)/resize.$(manext)
-	$(INSTALL_DATA) $(srcdir)/XTerm.ad     $(APPSDIR)/XTerm
-	$(INSTALL_DATA) $(srcdir)/XTerm-col.ad $(APPSDIR)/XTerm-color
-	@echo 'Completed installation of executables and documentation.'
+
+install \
+install-app \
+install-full ::
+	@echo installing $(APPSDIR)/$(CLASS)
+	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm.ad >XTerm.tmp
+	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)
+	@echo installing $(APPSDIR)/$(CLASS)-color
+	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm-col.ad >XTerm.tmp
+	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)-color
+	@rm -f XTerm.tmp
+
 install ::
+	@echo 'Completed installation of executables and documentation.'
 	@echo 'Use "make install-ti" to install terminfo description.'
 
 TERMINFO_DIR = @TERMINFO_DIR@
@@ -137,11 +159,11 @@ uninstall:
 	-$(RM) $(BINDIR)/resize
 	-$(RM) $(MANDIR)/xterm.$(manext)
 	-$(RM) $(MANDIR)/resize.$(manext)
-	-$(RM) $(APPSDIR)/XTerm
-	-$(RM) $(APPSDIR)/XTerm-color
+	-$(RM) $(APPSDIR)/$(CLASS)
+	-$(RM) $(APPSDIR)/$(CLASS)-color
 
 mostlyclean:
-	-$(RM) *.[ois] XtermLog.* .pure core *~ *.bak *.BAK *.out
+	-$(RM) *.[ois] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
 clean: mostlyclean
 	-$(RM) $(PROGRAMS)

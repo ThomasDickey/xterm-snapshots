@@ -567,6 +567,7 @@ EOF
 	  armlinux)   echo "${UNAME_MACHINE}-unknown-linux-gnuaout" ; exit 0 ;;
 	  m68klinux)  echo "${UNAME_MACHINE}-unknown-linux-gnuaout" ; exit 0 ;;
 	  elf32ppc*)  echo "powerpc-unknown-linux-gnu"              ; exit 0 ;;
+	  elf64_ia64) echo "${UNAME_MACHINE}-unknown-linux-gnu"     ; exit 0 ;;
 	esac
 
 	if test "${UNAME_MACHINE}" = "alpha" ; then
@@ -817,11 +818,11 @@ EOF
 	exit 0 ;;
     R3000:*System_V*:*:* | R4000:UNIX_SYSV:*:* | R4000:UNIX_SV:*:*)
 	if [ -d /usr/nec ]; then
-	        echo mips-nec-sysv${UNAME_RELEASE}
+		echo mips-nec-sysv${UNAME_RELEASE}
 	else
-	        echo mips-unknown-sysv${UNAME_RELEASE}
+		echo mips-unknown-sysv${UNAME_RELEASE}
 	fi
-        exit 0 ;;
+	exit 0 ;;
     BeBox:BeOS:*:*)	# BeOS running on hardware made by Be, PPC only.
 	echo powerpc-be-beos
 	exit 0 ;;
@@ -830,6 +831,12 @@ EOF
 	exit 0 ;;
     BePC:BeOS:*:*)	# BeOS running on Intel PC compatible.
 	echo i586-pc-beos
+	exit 0 ;;
+    Power*Macintosh:Rhapsody:*:*)
+	echo powerpc-apple-rhapsody${UNAME_RELEASE}
+	exit 0 ;;
+    *:Rhapsody:*:*)
+	echo ${UNAME_MACHINE}-apple-rhapsody${UNAME_RELEASE}
 	exit 0 ;;
 esac
 

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# Author: Steve Wall <swall@redcom.com>
+# Author: Steve Wall <steve_wall@redcom.com>
 # $XFree86: xc/programs/xterm/88colres.pl,v 1.2 2000/02/10 18:57:35 dawes Exp $
 # Made from 256colres.pl
 
