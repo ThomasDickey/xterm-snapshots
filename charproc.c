@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.149 2003/10/27 01:07:56 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.151 2003/11/28 00:49:17 dickey Exp $ */
 
 /*
 
@@ -859,9 +859,9 @@ void
 resetCharsets(TScreen * screen)
 {
     screen->gsets[0] = 'B';	/* ASCII_G              */
-    screen->gsets[1] = '0';	/* line drawing         */
-    screen->gsets[2] = 'B';	/* DEC supplemental.    */
-    screen->gsets[3] = 'B';
+    screen->gsets[1] = 'B';	/* ASCII_G              */
+    screen->gsets[2] = 'B';	/* ASCII_G              */
+    screen->gsets[3] = 'B';	/* ASCII_G              */
     screen->curgl = 0;		/* G0 => GL.            */
     screen->curgr = 2;		/* G2 => GR.            */
     screen->curss = 0;		/* No single shift.     */
@@ -2940,13 +2940,21 @@ dotext(TScreen * screen,
 	}
 
 	while (width_here <= width_available && chars_chomped < (len - offset)) {
-	    width_here += my_wcwidth(buf[chars_chomped + offset]);
+	    if (!screen->utf8_mode
+		|| (screen->vt100_graphics && charset == '0'))
+		width_here++;
+	    else
+		width_here += my_wcwidth(buf[chars_chomped + offset]);
 	    chars_chomped++;
 	}
 
 	if (width_here > width_available) {
 	    chars_chomped--;
-	    width_here -= my_wcwidth(buf[chars_chomped + offset]);
+	    if (!screen->utf8_mode
+		|| (screen->vt100_graphics && charset == '0'))
+		width_here--;
+	    else
+		width_here -= my_wcwidth(buf[chars_chomped + offset]);
 	    need_wrap = 1;
 	}
 
@@ -6235,7 +6243,7 @@ HandleKeymapChange(Widget w,
     (void) sprintf(pmapName, "%sKeymap", params[0]);
     (void) strcpy(pmapClass, pmapName);
     if (islower(CharOf(pmapClass[0])))
-	pmapClass[0] = toupper(pmapClass[0]);
+	pmapClass[0] = toupper(CharOf(pmapClass[0]));
     XtGetSubresources(w, (XtPointer) & keymap, pmapName, pmapClass,
 		      key_resources, (Cardinal) 1, NULL, (Cardinal) 0);
     if (keymap != NULL)

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-181
+MANIFEST for xterm, version xterm-182
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -10,6 +10,7 @@ INSTALL                         configure script: options and related install in
 Imakefile                       imake template for Makefile
 Makefile.in                     configure script template for Makefile
 README                          overview & caveats for 'xterm'
+README.i18n                     i18n readme:
 README.os390                    overview for os390 (EBCDIC) port of 'xterm'
 TekPrsTbl.c                     Tek4014 parser state tables
 Tekparse.def                    template for generating Tekparse.h

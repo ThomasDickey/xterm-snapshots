@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.170 2003/10/24 20:38:23 tsi Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.173 2003/11/25 01:54:43 dickey Exp $ */
 
 /* main.c */
 
@@ -133,6 +133,11 @@ SOFTWARE.
 #ifdef __osf__
 #define USE_SYSV_SIGNALS
 #define WTMP
+#include <pty.h>		/* openpty() */
+#endif
+
+#ifdef __sgi
+#include <grp.h>		/* initgroups() */
 #endif
 
 #ifdef USE_ISPTS_FLAG
@@ -178,7 +183,7 @@ static Bool IsPts = False;
 #define _SVID3
 #endif
 
-#ifdef __GNU__
+#if defined(__GLIBC__) && !defined(linux)
 #define USE_SYSV_PGRP
 #define WTMP
 #define HAS_BSD_GROUPS
@@ -2688,7 +2693,7 @@ spawn(void)
 
     /* Noisy compilers */
     (void) rc;
-#ifdef USE_SYSV_UTMP
+#if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP)
     (void) utret;
 #endif
 
@@ -4012,7 +4017,7 @@ spawn(void)
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvp(*command_to_exec, command_to_exec);
 		if (command_to_exec[1] == 0)
-		    execlp(ptr, shname, "-c", command_to_exec[0], 0);
+		    execlp(ptr, shname, "-c", command_to_exec[0], (void *) 0);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
 			xterm_name, *command_to_exec, strerror(errno));

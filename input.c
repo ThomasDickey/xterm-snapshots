@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.66 2003/10/21 23:16:19 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.67 2003/12/03 00:22:57 dawes Exp $ */
 
 /*
  * Copyright 1999-2001,2002 by Thomas E. Dickey
@@ -686,7 +686,7 @@ Input(TKeyboard * keyboard,
 	     */
 	    if (screen->meta_sends_esc
 		&& ((event->state & term->misc.meta_left) != 0
-		    || (event->state & term->misc.meta_right)) != 0) {
+		    || (event->state & term->misc.meta_right) != 0)) {
 		TRACE(("...input-char is modified by META\n"));
 		eightbit = False;
 		unparseputc(ESC, pty);	/* escape */
@@ -1048,7 +1048,7 @@ TranslationsUseKeyword(Widget w, const char *keyword)
     return result;
 }
 
-#define SaveMask(name)	term->misc.name = mask;\
+#define SaveMask(name)	term->misc.name |= mask;\
 			TRACE(("%s mask %#lx is%s modifier\n", \
 				#name, \
 				term->misc.name, \
@@ -1068,15 +1068,26 @@ VTInitModifiers(void)
     Display *dpy = XtDisplay(term);
     XModifierKeymap *keymap = XGetModifierMapping(dpy);
     unsigned long mask;
+    int min_keycode, max_keycode, keysyms_per_keycode = 0;
 
     if (keymap != 0) {
 
 	TRACE(("VTInitModifiers\n"));
+
+	XDisplayKeycodes(dpy, &min_keycode, &max_keycode);
+	XGetKeyboardMapping(dpy, min_keycode, (max_keycode - min_keycode + 1),
+			    &keysyms_per_keycode);
+
 	for (i = k = 0, mask = 1; i < 8; i++, mask <<= 1) {
 	    for (j = 0; j < keymap->max_keypermod; j++) {
 		KeyCode code = keymap->modifiermap[k];
 		if (code != 0) {
-		    KeySym keysym = XKeycodeToKeysym(dpy, code, 0);
+		    KeySym keysym;
+		    int l = 0;
+		    do {
+			keysym = XKeycodeToKeysym(dpy, code, l);
+			l++;
+		    } while (!keysym && l < keysyms_per_keycode);
 		    if (keysym == XK_Num_Lock) {
 			SaveMask(num_lock);
 		    } else if (keysym == XK_Alt_L) {
