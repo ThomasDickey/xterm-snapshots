@@ -249,7 +249,8 @@ typedef Char **ScrnBuf;
 #define	NBOX	5			/* Number of Points in box	*/
 #define	NPARAM	10			/* Max. parameters		*/
 
-#define	MINHILITE	32
+#define MAYBE		2		/* not exactly True		*/
+#define MAYBENOT	3		/* not exactly False		*/
 
 typedef struct {
 	unsigned char	a_type;

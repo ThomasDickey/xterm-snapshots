@@ -614,6 +614,7 @@ ScrnRefresh (
 #endif
 #if OPT_WIDE_CHARS
 	   Char *widec = 0;
+#define WIDEC_PTR(cell) widec ? &widec[cell] : 0
 #endif
 	   Char cs = 0;
 	   register Char *chars;
@@ -761,11 +762,11 @@ ScrnRefresh (
 		   	__FILE__, __LINE__,
 		   	lastind, col,
 			visibleChars(
-				PAIRED_CHARS(&chars[lastind], &widec[lastind]),
+				PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
 				col - lastind)))
 		   x = drawXtermText(screen, flags, gc, x, y,
 		   	cs,
-			PAIRED_CHARS(&chars[lastind], &widec[lastind]),
+			PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
 			col - lastind);
 		   resetXtermGC(screen, flags, hilite);
 
@@ -794,10 +795,10 @@ ScrnRefresh (
 	   TRACE(("%s @%d, calling drawXtermText %d..%d:%s\n",
 	   	__FILE__, __LINE__,
 		lastind, col,
-		visibleChars(PAIRED_CHARS(&chars[lastind], &widec[lastind]), col - lastind)))
+		visibleChars(PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)), col - lastind)))
 	   drawXtermText(screen, flags, gc, x, y,
 	   	cs,
-		PAIRED_CHARS(&chars[lastind], &widec[lastind]),
+		PAIRED_CHARS(&chars[lastind], WIDEC_PTR(lastind)),
 		col - lastind);
 	   resetXtermGC(screen, flags, hilite);
 	}
