@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.122 2000/11/01 01:12:39 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.124 2000/12/30 19:15:46 dickey Exp $ */
 
 
 /* main.c */
@@ -395,9 +395,6 @@ extern struct utmp *getutid __((struct utmp *_Id));
 
 #ifdef SIGTSTP
 #include <sys/wait.h>
-#ifdef __hpux
-#include <sys/bsdtty.h>
-#endif
 #endif
 
 #ifdef X_NOT_POSIX
@@ -888,6 +885,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"+im",		"*useInsertMode", XrmoptionNoArg,	(caddr_t) "off"},
 {"-vb",		"*visualBell",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+vb",		"*visualBell",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-pob",	"*popOnBell",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+pob",	"*popOnBell",	XrmoptionNoArg,		(caddr_t) "off"},
 #if OPT_WIDE_CHARS
 {"-wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -1015,6 +1014,7 @@ static struct _options {
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 #endif
 { "-/+vb",                 "turn on/off visual bell" },
+{ "-/+pob",                "turn on/off pop on bell" },
 #if OPT_WIDE_CHARS
 { "-/+wc",                 "turn on/off wide-character mode" },
 #endif

@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.h,v 1.9 2000/11/01 01:12:39 dawes Exp $
+ * $XFree86: xc/programs/xterm/fontutils.h,v 1.10 2000/12/30 19:15:46 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1998,1999 by Thomas E. Dickey
+Copyright 1998,1999,2000 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -65,7 +65,7 @@ extern Bool xtermMissingChar(unsigned ch, XFontStruct *font);
 extern void xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y);
 #endif
 
-#if OPT_SHIFT_KEYS
+#if OPT_SHIFT_FONTS
 extern void HandleSmallerFont PROTO_XT_ACTIONS_ARGS;
 extern void HandleLargerFont PROTO_XT_ACTIONS_ARGS;
 #endif

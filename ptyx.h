@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.81 2000/11/29 08:39:26 keithp Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.82 2000/12/30 19:15:47 dickey Exp $
  */
 
 /*
@@ -510,8 +510,8 @@ typedef struct {
 #define OPT_SCO_FUNC_KEYS 0 /* true if xterm supports SCO-style function keys */
 #endif
 
-#ifndef OPT_SHIFT_KEYS
-#define OPT_SHIFT_KEYS  1 /* true if xterm interprets shifted special-keys */
+#ifndef OPT_SHIFT_FONTS
+#define OPT_SHIFT_FONTS 1 /* true if xterm interprets fontsize-shifting */
 #endif
 
 #ifndef OPT_SUNPC_KBD
@@ -1038,6 +1038,7 @@ typedef struct {
 	int		mouse_col;	/* ...and its column		*/
 	int		select;		/* xterm selected		*/
 	Boolean		visualbell;	/* visual bell mode		*/
+	Boolean		poponbell;	/* pop on bell mode		*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
@@ -1322,8 +1323,8 @@ typedef struct _Misc {
 #if OPT_DEC_SOFTFONT
     Boolean font_loadable;
 #endif
-#if OPT_SHIFT_KEYS
-    Boolean shift_keys;		/* true if we interpret shifted special-keys */
+#if OPT_SHIFT_FONTS
+    Boolean shift_fonts;	/* true if we interpret fontsize-shifting */
 #endif
 #if OPT_SUNPC_KBD
     int ctrl_fkeys;		/* amount to add to XK_F1 for ctrl modifier */

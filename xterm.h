@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.65 2000/12/07 10:12:34 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.67 2000/12/30 19:15:47 dickey Exp $ */
 
 /************************************************************
 
@@ -322,7 +322,7 @@ extern int errno;
 #define XtNscrollLines		"scrollLines"
 #define XtNscrollPos		"scrollPos"
 #define XtNscrollTtyOutput	"scrollTtyOutput"
-#define XtNshiftKeys		"shiftKeys"
+#define XtNshiftFonts		"shiftFonts"
 #define XtNsignalInhibit	"signalInhibit"
 #define XtNtekGeometry		"tekGeometry"
 #define XtNtekInhibit		"tekInhibit"
@@ -333,6 +333,7 @@ extern int errno;
 #define XtNunderLine		"underLine"
 #define XtNutf8			"utf8"
 #define XtNvisualBell		"visualBell"
+#define XtNpopOnBell		"popOnBell"
 #define XtNwideChars		"wideChars"
 #define XtNwideFont		"wideFont"
 #define XtNwideBoldFont		"wideBoldFont"
@@ -406,7 +407,7 @@ extern int errno;
 #define XtCScrollCond		"ScrollCond"
 #define XtCScrollLines		"ScrollLines"
 #define XtCScrollPos		"ScrollPos"
-#define XtCShiftKeys		"ShiftKeys"
+#define XtCShiftFonts		"ShiftFonts"
 #define XtCSignalInhibit	"SignalInhibit"
 #define XtCTekInhibit		"TekInhibit"
 #define XtCTekSmall		"TekSmall"
@@ -416,6 +417,7 @@ extern int errno;
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
 #define XtCVisualBell		"VisualBell"
+#define XtCPopOnBell		"PopOnBell"
 #define XtCWideChars		"WideChars"
 #define XtCWideFont		"WideFont"
 #define XtCWideBoldFont		"WideBoldFont"

@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.112 2000/11/29 08:39:24 keithp Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.114 2000/12/30 19:15:45 dickey Exp $
  */
 
 /*
@@ -208,6 +208,14 @@ static char defaultTranslations[] =
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \n\
          Shift <KeyPress> Select:select-cursor-start() select-cursor-end(PRIMARY, CUT_BUFFER0) \n\
          Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \n\
+"
+#if OPT_SHIFT_FONTS
+"\
+         Shift <KeyPress> KP_Add:larger-vt-font() \n\
+    Shift <KeyPress> KP_Subtract:smaller-vt-font() \n\
+"
+#endif
+"\
                 ~Meta <KeyPress>:insert-seven-bit() \n\
                  Meta <KeyPress>:insert-eight-bit() \n\
                 !Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
@@ -293,6 +301,7 @@ static XtActionsRec actionsList[] = {
     { "set-sun-keyboard",	HandleSunKeyboard },
     { "set-titeInhibit",	HandleTiteInhibit },
     { "set-visual-bell",	HandleSetVisualBell },
+    { "set-pop-on-bell",	HandleSetPopOnBell },
     { "set-vt-font",		HandleSetFont },
     { "soft-reset",		HandleSoftReset },
     { "start-cursor-extend",	HandleKeyboardStartExtend },
@@ -331,7 +340,7 @@ static XtActionsRec actionsList[] = {
 #if OPT_SCO_FUNC_KEYS
     { "set-sco-function-keys",	HandleScoFunctionKeys },
 #endif
-#if OPT_SHIFT_KEYS
+#if OPT_SHIFT_FONTS
     { "larger-vt-font",		HandleLargerFont },
     { "smaller-vt-font",	HandleSmallerFont },
 #endif
@@ -390,6 +399,7 @@ Bres(XtNtiteInhibit,	XtCTiteInhibit, misc.titeInhibit,	FALSE),
 Bres(XtNtrimSelection,	XtCTrimSelection, screen.trim_selection, FALSE),
 Bres(XtNunderLine,	XtCUnderLine, screen.underline,		TRUE),
 Bres(XtNvisualBell,	XtCVisualBell,	screen.visualbell,	FALSE),
+Bres(XtNpopOnBell,	XtCPopOnBell,	screen.poponbell,	FALSE),
 Cres(XtNcursorColor,	screen.cursorcolor,	XtDefaultForeground),
 Cres(XtNforeground,	screen.foreground,	XtDefaultForeground),
 Cres(XtNpointerColor,	screen.mousecolor,	XtDefaultForeground),
@@ -515,8 +525,8 @@ Bres(XtNnumLock,	XtCNumLock,	misc.real_NumLock,	TRUE),
 Ires(XtNprintAttributes, XtCPrintAttributes, screen.print_attributes, 1),
 #endif
 
-#if OPT_SHIFT_KEYS
-Bres(XtNshiftKeys,	XtCShiftKeys,	misc.shift_keys,	TRUE),
+#if OPT_SHIFT_FONTS
+Bres(XtNshiftFonts,	XtCShiftFonts,	misc.shift_fonts,	TRUE),
 #endif
 
 #if OPT_SUNPC_KBD
@@ -819,7 +829,9 @@ static void VTparse(void)
 	int lastchar;		/* positive iff we had a graphic character */
 	int nextstate;
 	int laststate;
+#if OPT_WIDE_CHARS
 	int last_was_wide;
+#endif
 
 	/* We longjmp back to this point in VTReset() */
 	(void)setjmp(vtjmpbuf);
@@ -834,7 +846,9 @@ static void VTparse(void)
 	string_mode = 0;
 	lastchar = -1;		/* not a legal IChar */
 	nextstate = -1;		/* not a legal state */
+#if OPT_WIDE_CHARS
 	last_was_wide = 0;
+#endif
 
 	for( ; ; ) {
 	    int thischar = -1;
@@ -865,15 +879,12 @@ static void VTparse(void)
 
 		if (precomposed != -1) {
 		    putXtermCell(screen, last_written_row, last_written_col, precomposed);
-		    ScrnRefresh(screen, last_written_row, last_written_col, 1, 1, 1);
-		    continue;
 		} else {
 		    addXtermCombining(screen, last_written_row, last_written_col, c);
-		    if (!screen->scroll_amt)
-			ScrnRefresh(screen, last_written_row, last_written_col, 1, 1, 1);
-			/* does this suffice? */
-		    continue;
 		}
+		if (!screen->scroll_amt)
+		    ScrnRefresh(screen, last_written_row, last_written_col, 1, 1, 1);
+		continue;
 	    }
 #endif
 
@@ -3139,9 +3150,9 @@ dpmodes(
 			if (screen->fullVwin.scrollbar != ((func == bitset) ? ON : OFF))
 				ToggleScrollBar(termw);
 			break;
-#if OPT_SHIFT_KEYS
+#if OPT_SHIFT_FONTS
 		case 35:		/* rxvt */
-			term->misc.shift_keys = (func == bitset) ? ON : OFF;
+			term->misc.shift_fonts = (func == bitset) ? ON : OFF;
 			break;
 #endif
 		case 38:		/* DECTEK			*/
@@ -4259,6 +4270,7 @@ static void VTInitialize (
 
    wnew->screen.ansi_level = (wnew->screen.terminal_id / 100);
    wnew->screen.visualbell = request->screen.visualbell;
+   wnew->screen.poponbell = request->screen.poponbell;
    wnew->misc.limit_resize = request->misc.limit_resize;
 #if OPT_NUM_LOCK
    wnew->misc.real_NumLock = request->misc.real_NumLock;
@@ -4270,8 +4282,8 @@ static void VTInitialize (
    wnew->misc.meta_left = 0;
    wnew->misc.meta_right = 0;
 #endif
-#if OPT_SHIFT_KEYS
-   wnew->misc.shift_keys = request->misc.shift_keys;
+#if OPT_SHIFT_FONTS
+   wnew->misc.shift_fonts = request->misc.shift_fonts;
 #endif
 #if OPT_SUNPC_KBD
    wnew->misc.ctrl_fkeys = request->misc.ctrl_fkeys;
@@ -5565,7 +5577,6 @@ static void HandleVisualBell(
 {
     VisualBell();
 }
-
 
 /* ARGSUSED */
 static void HandleIgnore(

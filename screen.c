@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.52 2000/09/22 10:42:08 alanh Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.54 2000/12/30 19:15:47 dickey Exp $ */
 
 /* screen.c */
 
@@ -240,8 +240,8 @@ ScreenWrite (
 	int avail  = screen->max_col - screen->cur_col + 1;
 	Char *col;
 	int wrappedbit;
- 	Char starcol, starcol2; 
 #if OPT_WIDE_CHARS
+ 	Char starcol, starcol2; 
  	Char *comb1l = 0, *comb1h = 0, *comb2l = 0, *comb2h = 0;
 #endif
  
@@ -279,8 +279,10 @@ ScreenWrite (
 
 	wrappedbit = ScrnTstWrapped(screen, screen->cur_row);
 
+#if OPT_WIDE_CHARS
 	starcol = *col;
 	starcol2 = col[length-1];
+#endif
 
 	/* write blanks if we're writing invisible text */
 	if (flags & INVISIBLE) {
