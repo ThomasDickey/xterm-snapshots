@@ -847,7 +847,8 @@ main (int argc, char **argv, char **envp)
 		if (abbrev(argv[1], "-help"))
 			Help();
 		for (n = 1; n < argc; n++) {
-			if (abbrev(argv[n], "-class"))
+			if (strlen(argv[n]) > 2
+			 && abbrev(argv[n], "-class"))
 				if ((my_class = argv[++n]) == 0)
 					Help();
 		}
