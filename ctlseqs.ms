@@ -608,7 +608,7 @@ Delete \*(Ps Character(s) (default = 1) (DCH)
 Scroll up \*(Ps lines (default = 1) (SU)
 .
 .IP \\*(Cs\\*(Ps\\*s\\*T
-Scroll down \*(Ps lines (default = 1) (SD, according to DEC)
+Scroll down \*(Ps lines (default = 1) (SD)
 .
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*;\\*(Ps\\*s\\*T
 Initiate hilite mouse tracking.
@@ -620,9 +620,6 @@ Erase \*(Ps Character(s) (default = 1) (ECH)
 .
 .IP \\*(Cs\\*(Ps\\*s\\*Z
 Cursor Backward Tabulation \*(Ps tab stops (default = 1) (CBT)
-.
-.IP \\*(Cs\\*(Ps\\*s\\*^
-Scroll down \*(Ps lines (default = 1) (SD, according to ISO)
 .
 .IP \\*(Cs\\*(Pm\\*s\\*`
 Character Position Absolute  [column] (default = [row,1]) (HPA)
@@ -959,7 +956,8 @@ and window title.
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt
   \*(Ps = \*3 \(-> Set X property on top-level window. \*(Pt should be in the form
 "\fIprop=value\fP", or just "\fIprop\fP" to delete the property
-  \*(Ps = \*4 ; \fIc ; name\fP \(-> Change Color #\fIc\fP to \fIcname\fP
+  \*(Ps = \*4 ; \fIc ; name\fP \(-> Change Color #\fIc\fP to \fIcname\fP.  Any
+number of \fIc name\fP pairs may be given.
   \*(Ps = \*1\*0 \(-> Change color names starting with text foreground to \*(Pt
 (a list of one or more color names or RGB specifications, separated by
 semicolon, up to eight, as per \fIXParseColor\fP).

@@ -1847,7 +1847,7 @@ SaveText(
 #endif
     *eol = !ScrnTstWrapped(screen, row);
     for (i = scol; i < ecol; i++) {
-	c = XTERM_CELL(row, i);
+	c = E2A(XTERM_CELL(row, i));
 	if (c == 0) {
 	    c = E2A(' ');
 	} else if (c < E2A(' ')) {

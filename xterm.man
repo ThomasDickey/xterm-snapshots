@@ -262,7 +262,7 @@ disabling the display of characters with bold attribute as color
 .B "\+bdc"
 Set the \fIvt100\fP resource \fBcolorBDMode\fR to TRUE,
 enabling the display of characters with bold attribute as color
-rather than bold 
+rather than bold
 .TP 8
 .B "\-cb"
 Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to FALSE.
@@ -559,11 +559,11 @@ color rather than with underlining.
 .TP 8
 .B \-ut
 This option indicates that \fIxterm\fP shouldn't write a record into the
-the system log file \fI/etc/utmp\fP.
+the system \fIutmp\fP log file.
 .TP 8
 .B \+ut
-This option indicates that \fIxterm\fP should write a record into the system
-log file \fI/etc/utmp\fP.
+This option indicates that \fIxterm\fP should write a record into
+the system \fIutmp\fP log file.
 .TP 8
 .B \-vb
 This option indicates that a visual bell is preferred over an audible one.
@@ -797,7 +797,8 @@ The default is ``false.''
 .TP 8
 .B "utmpInhibit (\fPclass\fB UtmpInhibit)"
 Specifies whether or not \fIxterm\fP should try to record the user's terminal
-in \fI/etc/utmp\fP.
+in
+the system \fIutmp\fP log file.
 .TP 8
 .B "waitForMap (\fPclass\fB WaitForMap)"
 Specifies whether or not \fIxterm\fP should wait for the initial window map
@@ -986,6 +987,15 @@ respectively, black, red, green, yellow, blue, magenta, cyan, and white.
 These specify the colors for the ISO 6429 extension if the bold attribute
 is also enabled.  The defaults are, respectively, black, red, green,
 yellow, blue, magenta, cyan, and white.
+.TP 8
+.B "color16 (\fPclass\fB Foreground)"
+.TP 8
+through
+.TP 8
+.B "color255 \fPclass\fB Foreground)"
+These specify the colors for the 256-color extension.  The defaults for
+are for colors 16 through 231 to make a 6x6x6 color cube, and colors
+232 through 255 to make a grayscale ramp.
 .TP 8
 .B "colorBD (\fPclass\fB Foreground)"
 This specifies the color to use to display bold characters if
@@ -2372,6 +2382,26 @@ The environment variable ``WINDOWID'' is set to the X window id number
 of the
 .I xterm
 window.
+.SH FILES
+The actual pathnames given may differ on your system.
+.TP 5
+\fI/etc/utmp\fP
+the system logfile, which records user logins.
+.TP 5
+\fI/etc/wtmp\fP
+the system logfile, which records user logins and logouts.
+.TP 5
+\fI/usr/lib/X11/app-defaults/XTerm\fP
+the \fIxterm\fP default application resources.
+.TP 5
+\fI/usr/lib/X11/app-defaults/XTerm-color\fP
+the \fIxterm\fP color application resources.
+If your display supports color, use this
+.in +10
+*customization: -color
+.in -10
+in your .Xdefaults file to
+automatically turn on color in \fIxterm\fP and similar applications.
 .SH "SEE ALSO"
 resize(1), X(1), pty(4), tty(4)
 .br

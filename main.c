@@ -1982,6 +1982,8 @@ get_pty (int *pty)
 	    return 1;
 	}
 	strcpy(ttydev, ptsname(*pty));
+#elif defined(__MVS__)
+	return pty_search(pty);
 #else
 	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0) {
 	    return 1;

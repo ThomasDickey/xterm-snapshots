@@ -949,7 +949,8 @@ FlushLog(register TScreen *screen)
 	register int i;
 
 	cp = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);
-	if((i = cp - screen->logstart) > 0) {
+	if (screen->logstart != 0
+	 && (i = cp - screen->logstart) > 0) {
 #if OPT_WIDE_CHARS
 		Char temp[80];
 		IChar code;
@@ -989,7 +990,8 @@ static void ReportAnsiColorRequest(XtermWidget pTerm, int colornum, int final)
 	TRACE(("ReportAnsiColorRequest %d\n", colornum))
 	color.pixel = pTerm->screen.Acolors[colornum];
 	XQueryColor(term->screen.display, cmap, &color);
-	sprintf(buffer, "rgb:%04x/%04x/%04x",
+	sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
+                colornum,
 		color.red,
 		color.green,
 		color.blue);
@@ -1026,28 +1028,36 @@ ChangeAnsiColorRequest(
 {
     char *name;
     int color;
+    int r = False;
 
     TRACE(("ChangeAnsiColorRequest string='%s'\n", buf))
 
-    name = strchr(buf, ';');
-    if (name == NULL)
-	return(FALSE);
-    *name = '\0';
-    name++;
-    color = atoi(buf);
-    if (color < 0 || color > 255)
-	return(FALSE);
-    if (!strcmp(name, "?"))
-	ReportAnsiColorRequest(pTerm, color, final);
-    else {
-	if (!AllocateAnsiColor(pTerm, color, name))
-	    return(FALSE);
-	ChangeAnsiColors(pTerm);
+    while (buf && *buf) {
+	name = strchr(buf, ';');
+	if (name == NULL)
+	    break;
+	*name = '\0';
+	name++;
+	color = atoi(buf);
+	if (color < 0 || color >= NUM_ANSI_COLORS)
+	    break;
+	buf = strchr(name, ';');
+	if (buf) {
+	    *buf = '\0';
+	    buf++;
+	}
+	if (!strcmp(name, "?"))
+	    ReportAnsiColorRequest(pTerm, color, final);
+	else if (!AllocateAnsiColor(pTerm, color, name))
+	    break;
 	/* FIXME:  free old color somehow?  We aren't for the other color
 	 * change style (dynamic colors).
 	 */
+	r = True;
     }
-    return(TRUE);
+    if (r)
+	ChangeAnsiColors(pTerm);
+    return(r);
 }
 #endif /* OPT_ISO_COLORS */
 

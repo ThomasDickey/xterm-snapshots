@@ -113,7 +113,7 @@ The options (in alphabetic order):
 	known only to imake.  The configure script implements only a
 	portion of the tests needed to supplant imake.
 
-  --disable-initial-erase disable initial-erase setup
+  --disable-initial-erase disable setup for stty erase
 
 	Do not compile-in code which aligns the stty erase and the backarrow
 	key.  When compiled-in, xterm will optionally use the pty's sense
@@ -181,6 +181,10 @@ The options (in alphabetic order):
 
 	Do not compile-in code that modifies the icon's title and sounds a
 	beep when they receive output.
+
+  --enable-256-color      enable 256-color support
+
+  	Compile-in code that interprets SGR 38 and 48 for 256-colors. 
 
   --enable-hp-fkeys       enable support for HP-style function keys
 

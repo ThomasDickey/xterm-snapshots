@@ -845,8 +845,9 @@ static XtResource resources[] = {
 {XtNcolor15, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_15]),
 	XtRString, DFT_COLOR("white")},
-/* colors 16-256? should be settable, but surely there's a better way
-   than reproducing this template another 240 times */
+#if OPT_256_COLORS
+#include "256colres.h"
+#endif
 {XtNcolorBD, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_BD]),
 	XtRString, DFT_COLOR("XtDefaultForeground")},
@@ -1600,7 +1601,7 @@ static void VTparse(void)
 					param[2]-1, param[1]-1,
 					param[3]-1, param[4]-2);
 			} else {
-				/* SD as per DEC vt400 documentation */
+				/* SD */
 				if((count = param[0]) < 1)
 					count = 1;
 				RevScroll(screen, count);
@@ -1789,14 +1790,14 @@ static void VTparse(void)
 					   like, but it should properly eat all
 				 	   the parameters for unsupported modes
 					*/
-					if_OPT_256_COLORS(screen,{
+					if_OPT_ISO_COLORS(screen,{
 						row++;
 						if (row < nparam) {
 							switch(param[row]) {
 							 case 5:
 								row++;
 								if (row < nparam &&
-								    param[row] < 256) {
+								    param[row] < NUM_ANSI_COLORS) {
 									term->sgr_foreground = param[row];
 									setExtendedFG();
 								}
@@ -1826,14 +1827,14 @@ static void VTparse(void)
 					})
 					break;
 				 case 48:
-					if_OPT_256_COLORS(screen,{
+					if_OPT_ISO_COLORS(screen,{
 						row++;
 						if (row < nparam) {
 							switch(param[row]) {
 							 case 5:
 								row++;
 								if (row < nparam &&
-								    param[row] < 256) {
+								    param[row] < NUM_ANSI_COLORS) {
 									SGR_Background(param[row]);
 								}
 								break;
@@ -2146,7 +2147,7 @@ static void VTparse(void)
 				do_dcs(string_area, string_used);
 				break;
 			case OSC:
-				do_osc(string_area, string_used, c);
+				do_osc(string_area, string_used, ST);
 				break;
 			case PM:
 				/* ignored */
@@ -2198,15 +2199,6 @@ static void VTparse(void)
 			if((count = param[0]) < 1)
 				count = 1;
 			Scroll(screen, count);
-			parsestate = groundtable;
-			break;
-
-		 case CASE_SD:
-			/* SD as per ISO 6429 */
-			if((count = param[0]) < 1)
-				count = 1;
-			RevScroll(screen, count);
-			do_xevents();
 			parsestate = groundtable;
 			break;
 

@@ -1858,7 +1858,7 @@ unsigned getXtermCell (TScreen *screen, int row, int col)
     if_OPT_WIDE_CHARS(screen,{
 	ch |= (SCRN_BUF_WIDEC(screen, row)[col] << 8);
     })
-    return E2A(ch);
+    return ch;
 }
 
 /*

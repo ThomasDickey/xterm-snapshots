@@ -200,11 +200,15 @@ if test $enable_ansi_color = yes ; then
 
 	AC_MSG_CHECKING(if you want 256 colors)
 	CF_ARG_ENABLE(256-color,
-		[  --disable-256-color     enable 256-color support],
+		[  --enable-256-color      enable 256-color support],
 		[enable_256_color=yes],
 		[enable_256_color=no])
 	AC_MSG_RESULT($enable_256_color)
-	test $enable_256_color = yes && AC_DEFINE(OPT_256_COLORS,1)
+	if test $enable_256_color = yes ; then
+		CHARPROC_DEPS="$CHARPROC_DEPS 256colres.h"
+		EXTRAHDRS="$EXTRAHDRS 256colres.h"
+		AC_DEFINE(OPT_256_COLORS,1)
+	fi
 
 fi
 
@@ -438,6 +442,7 @@ fi
 fi
 
 AC_SUBST(EXTRA_CFLAGS)
+AC_SUBST(CHARPROC_DEPS)
 AC_SUBST(EXTRAHDRS)
 AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
