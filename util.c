@@ -1134,6 +1134,9 @@ GetColors(tw,pColors)
 	SET_COLOR_VALUE(pColors,TEXT_CURSOR,	screen->cursorcolor);
 	SET_COLOR_VALUE(pColors,MOUSE_FG,	screen->mousecolor);
 	SET_COLOR_VALUE(pColors,MOUSE_BG,	screen->mousecolorback);
+#if OPT_HIGHLIGHT_COLOR
+	SET_COLOR_VALUE(pColors,HIGHLIGHT_BG,	screen->highlightcolor);
+#endif
 #if OPT_TEK4014
 	SET_COLOR_VALUE(pColors,TEK_FG,		screen->Tforeground);
 	SET_COLOR_VALUE(pColors,TEK_BG,		screen->Tbackground);
@@ -1196,6 +1199,13 @@ ChangeColors(tw,pNew)
 		screen->mousecolor, screen->mousecolorback);
 	    XDefineCursor(screen->display, TextWindow(screen),
 					   screen->pointer_cursor);
+
+#if OPT_HIGHLIGHT_COLOR
+	if (COLOR_DEFINED(pNew,HIGHLIGHT_BG)) {
+	    screen->highlightcolor=	COLOR_VALUE(pNew,HIGHLIGHT_BG);
+	}
+#endif
+
 #if OPT_TEK4014
 	    if(tek)
 		XDefineCursor(screen->display, tek, screen->arrow);
@@ -1432,6 +1442,9 @@ updatedXtermGC(screen, flags, fg_bg, hilite)
 {
 	Pixel fg_pix = getXtermForeground(flags,extract_fg(fg_bg,flags));
 	Pixel bg_pix = getXtermBackground(flags,extract_bg(fg_bg));
+#if OPT_HIGHLIGHT_COLOR
+	Pixel hi_pix = screen->highlightcolor;
+#endif
 	GC gc;
 
 	if ( (!hilite && (flags & INVERSE) != 0)
@@ -1441,9 +1454,13 @@ updatedXtermGC(screen, flags, fg_bg, hilite)
 		else
 			gc = ReverseGC(screen);
 
+#if OPT_HIGHLIGHT_COLOR
+		XSetForeground(screen->display, gc, hi_pix ? fg_pix : bg_pix);
+		XSetBackground(screen->display, gc, hi_pix ? hi_pix : fg_pix);
+#else
 		XSetForeground(screen->display, gc, bg_pix);
 		XSetBackground(screen->display, gc, fg_pix);
-
+#endif
 	} else {
 		if (flags & (BOLD|BLINK))
 			gc = NormalBoldGC(screen);

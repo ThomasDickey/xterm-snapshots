@@ -686,6 +686,7 @@ Boolean force;			/* ... leading/trailing spaces */
 		   x = drawXtermText(screen, flags, gc, x, y,
 		   	cs,
 			&chars[lastind], col - lastind);
+		   resetXtermGC(screen, flags, hilite);
 
 		   lastind = col;
 
@@ -713,6 +714,7 @@ Boolean force;			/* ... leading/trailing spaces */
 	   drawXtermText(screen, flags, gc, x, y,
 	   	cs,
 		&chars[lastind], col - lastind);
+	   resetXtermGC(screen, flags, hilite);
 	}
 
 	/*

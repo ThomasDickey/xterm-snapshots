@@ -243,15 +243,15 @@ This option indicates that \fIxterm\fP should not work around the
 bug mentioned above.
 .TP 8
 .B "\-dc"
-This option disables the escape sequence to change the vt100 foreground
-and background colors, the text cursor color, the mouse cursor foreground
-and background colors and the Tektronix emulator foreground and background
-colors.
+This option disables the escape sequence to change dynamic colors:
+the vt100 foreground and background colors,
+the text cursor color,
+the mouse cursor foreground and background colors,
+the Tektronix emulator foreground and background colors,
+and highlight color.
 .TP 8
 .B "\+dc"
-This option enables the escape sequence to change the vt100 foreground
-and background colors, the text cursor color, the mouse cursor foreground
-and background colors and the Tektronix emulator foreground and background
+This option enables the escape sequence to change dynamic colors.
 .TP 8
 .BI \-e " program \fP[ \fIarguments \fP.\|.\|. ]\fI"
 This option specifies the program (and its command line arguments) to be
@@ -270,6 +270,11 @@ The default is to do overstriking of the normal font.
 .B \-fi
 This option sets the font for active icons if that feature was compiled
 in to xterm.
+.TP 8
+.BI \-hc " color"
+This option specifies the color to use for the background of
+selected or otherwise highlighted text.  If not specified,
+reverse video is used.
 .TP 8
 .B \-im
 Turn on the \fBuseInsertMode\fP resource.
@@ -795,6 +800,10 @@ the ``colorULMode'' resource is enabled.
 .TP 8
 .B "cursorColor (\fPclass\fB Foreground)"
 Specifies the color to use for the text cursor.  The default is ``black.''
+.TP 8
+.B "highlightColor (\fPclass\fB Foreground)"
+Specifies the color to use for the background of selected or otherwise
+highlighted text.  If not specified, reverse video is used.
 .TP 8
 .B "decTerminalID (\fPclass\fB DecTerminalID)"
 Specifies the emulation level (100=VT100, 220=VT220, etc.), used to determine

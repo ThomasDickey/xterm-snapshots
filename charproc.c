@@ -261,6 +261,9 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtNcolorAttrMode "colorAttrMode"
 #define XtNboldColors "boldColors"
 #define XtNdynamicColors "dynamicColors"
+#if OPT_HIGHLIGHT_COLOR
+#define XtNhighlightColor "highlightColor"
+#endif /* OPT_HIGHLIGHT_COLOR */
 #define XtNunderLine "underLine"
 #define XtNdecTerminalID "decTerminalID"
 
@@ -776,6 +779,11 @@ static XtResource resources[] = {
 {XtNdynamicColors, XtCDynamicColors, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.dynamicColors),
 	XtRBoolean, (XtPointer) &defaultTRUE},
+#if OPT_HIGHLIGHT_COLOR
+{XtNhighlightColor, XtCForeground, XtRPixel, sizeof(Pixel),
+	XtOffsetOf(XtermWidgetRec, screen.highlightcolor),
+	XtRString, "XtDefaultForeground"},
+#endif /* OPT_HIGHLIGHT_COLOR */
 {XtNunderLine, XtCUnderLine, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.underline),
 	XtRBoolean, (XtPointer) &defaultTRUE},
@@ -3694,6 +3702,10 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->num_ptrs = new->screen.colorMode ? 3 : 2;
    new->sgr_foreground = -1;
 #endif /* OPT_ISO_COLORS */
+
+#if OPT_HIGHLIGHT_COLOR
+   new->screen.highlightcolor = request->screen.highlightcolor;
+#endif
 
 #if OPT_DEC_CHRSET
    new->num_ptrs = 5;

@@ -260,7 +260,8 @@ typedef struct {
 #define	MOUSE_BG	4
 #define	TEK_FG		5
 #define	TEK_BG		6
-#define	NCOLORS		7
+#define	HIGHLIGHT_BG	7
+#define	NCOLORS		8
 
 #define	COLOR_DEFINED(s,w)	((s)->which&(1<<(w)))
 #define	COLOR_VALUE(s,w)	((s)->colors[w])
@@ -322,7 +323,11 @@ typedef struct {
 #endif
 
 #ifndef OPT_PC_COLORS
-#define OPT_PC_COLORS   1 /* true if xterm is supports PC-style (bold) colors */
+#define OPT_PC_COLORS   1 /* true if xterm supports PC-style (bold) colors */
+#endif
+
+#ifndef OPT_HIGHLIGHT_COLOR
+#define OPT_HIGHLIGHT_COLOR 1 /* true if xterm supports color highlighting */
 #endif
 
 #ifndef OPT_SUNPC_KBD
@@ -562,6 +567,9 @@ typedef struct {
 	Boolean		colorBDMode;	/* use color for bold?		*/
 	Boolean		colorBLMode;	/* use color for blink?		*/
 	Boolean		colorAttrMode;	/* prefer colorUL/BD to SGR	*/
+#endif
+#if OPT_HIGHLIGHT_COLOR
+	Pixel		highlightcolor;	/* Highlight background color	*/
 #endif
 #if OPT_DEC_CHRSET
 	Char		chrset;		/* character-set index & code	*/
