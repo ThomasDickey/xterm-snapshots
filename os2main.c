@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.57 2002/12/27 21:05:22 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.58 2003/03/09 23:39:14 dickey Exp $ */
 
 /***********************************************************
 
@@ -377,6 +377,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"+hold",	"*hold",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "off"},
+#if OPT_C1_PRINT
+{"-k8",		"*allowC1Printable", XrmoptionNoArg,	(caddr_t) "on"},
+{"+k8",		"*allowC1Printable", XrmoptionNoArg,	(caddr_t) "off"},
+#endif
 /* parse logging options anyway for compatibility */
 {"-l",		"*logging",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+l",		"*logging",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -534,6 +538,9 @@ static OptionHelp xtermOptions[] = {
 { "-/+hold",		   "turn on/off logic that retains window after exit" },
 { "-/+im",		   "use insert mode for TERMCAP" },
 { "-/+j",                  "turn on/off jump scroll" },
+#if OPT_C1_PRINT
+{ "-/+k8",                 "turn on/off C1-printable classification"},
+#endif
 #ifdef ALLOWLOGGING
 { "-/+l",                  "turn on/off logging" },
 { "-lf filename",          "logging filename" },

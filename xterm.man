@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.90 2003/02/25 23:36:56 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.91 2003/03/09 23:39:14 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - August 2002.
 .TH XTERM 1 __vendorversion__
@@ -490,6 +490,14 @@ feature on or off.
 .TP 8
 .B +j
 This option indicates that \fIxterm\fP should not do jump scrolling.
+.TP 8
+.B \-k8
+This option sets the \fBallowC1Printable\fP resource.
+When \fBallowC1Printable\fP is set, \fIxterm\fP overrides the mapping
+of C1 control characters (code 128-159) to treat them as printable.
+.TP 8
+.B \+k8
+This option resets the \fBallowC1Printable\fP resource.
 .TP 8
 .B \-l
 Turn logging on.
@@ -1092,8 +1100,15 @@ Not all window managers
 necessarily support application icon windows.
 Some window managers
 will allow you to enter keystrokes into the active icon window.
-The
-default is ``false.''
+The default is ``false.''
+.TP 8
+.B "allowC1Printable (\fPclass\fB AllowC1Printable)"
+If true, overrides the mapping of C1 controls
+(codes 128-159) to make them be treated
+as if they were printable characters.
+Although this corresponds to no particular standard,
+some users insist it is a VT100.
+The default is ``false.''
 .TP 8
 .B "allowSendEvents (\fPclass\fB AllowSendEvents)"
 Specifies whether or not synthetic key and button events (generated using
@@ -1241,7 +1256,7 @@ should be worked around.
 See the \fB\-cu\fP option for details.
 The default is ``false.''
 .TP 8
-.B "colorAttrMode (\fPclass\fB ColorMode)"
+.B "colorAttrMode (\fPclass\fB ColorAttrMode)"
 Specifies whether ``colorBD'', ``colorBL'', ``colorUL'', and
 ``colorRV'' should override ANSI colors.
 If not, these are displayed only when no ANSI colors
@@ -1253,23 +1268,23 @@ Specifies whether or not recognition of ANSI (ISO 6429)
 color change escape sequences should be enabled.
 The default is ``true.''
 .TP 8
-.B "colorBDMode (\fPclass\fB ColorMode)"
+.B "colorBDMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the bold attribute should be displayed in
 color or as bold characters.
 Note that setting \fBcolorMode\fR off disables
 all colors, including bold.
 .TP 8
-.B "colorBLMode (\fPclass\fB ColorMode)"
+.B "colorBLMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the blink attribute should be displayed in
 color.
 Note that setting \fBcolorMode\fR off disables all colors, including this.
 .TP 8
-.B "colorRVMode (\fPclass\fB ColorMode)"
+.B "colorRVMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the reverse attribute should be displayed in
 color.
 Note that setting \fBcolorMode\fR off disables all colors, including this.
 .TP 8
-.B "colorULMode (\fPclass\fB ColorMode)"
+.B "colorULMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the underline attribute should be displayed
 in color or as underlined characters.
 Note that setting \fBcolorMode\fR off
@@ -1836,7 +1851,7 @@ The default is ``0'' (off).
 Any other value will turn on UTF-8 mode.
 See the \fBlocale\fR resource for non-UTF-8 locales.
 .TP 8
-.B "veryBoldColors (\fPclass\fB ColorMode)"
+.B "veryBoldColors (\fPclass\fB VeryBoldColors)"
 Specifies whether to combine video attributes with colors specified by
 \fBcolorBD\fR, \fBcolorBL\fR and \fBcolorUL\fR.
 The resource value is the sum of values for each attribute:

@@ -1,9 +1,9 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.56 2002/12/27 21:05:22 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.57 2003/03/09 23:39:13 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2002 by Thomas E. Dickey
+dnl Copyright 1997-2002,2003 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -128,7 +128,7 @@ AC_CHECK_FUNCS(grantpt, [], AC_CHECK_LIB(util,openpty))
 AC_PATH_PROG(XTERM_PATH,xterm)
 
 AC_CHECK_FUNCS( \
-	XkbStdBell \
+	XkbBell \
 	)
 AC_CHECK_FUNCS(Xutf8LookupString, [],[
 	EXTRAHDRS="$EXTRAHDRS xutf8.h"
@@ -260,6 +260,14 @@ CF_ARG_DISABLE(blink-cursor,
 	[enable_blink_curs=yes])
 AC_MSG_RESULT($enable_blink_curs)
 test "$enable_blink_curs" = no && AC_DEFINE(OPT_BLINK_CURS,0)
+
+AC_MSG_CHECKING(if you want printable 128-159)
+CF_ARG_DISABLE(c1-print,
+	[  --disable-c1-print      disallow -k8 option for printable 128-159],
+	[enable_c1_print=no],
+	[enable_c1_print=yes])
+AC_MSG_RESULT($enable_c1_print)
+test "$enable_c1_print" = no && AC_DEFINE(OPT_C1_PRINT,0)
 
 if test "$enable_ansi_color" = yes ; then
 

@@ -3,7 +3,7 @@
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.40 2003/02/25 23:36:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.41 2003/03/09 23:39:12 dickey Exp $ */
 
 /*
 
@@ -427,7 +427,7 @@ Tekparse(void)
 	} else
 #endif
 	    nextstate = Tparsestate[c];
-	TRACE(("Tekparse %d -> %d\n", c, nextstate));
+	TRACE(("Tekparse %04X -> %d\n", c, nextstate));
 
 	switch (nextstate) {
 	case CASE_REPORT:
@@ -643,10 +643,11 @@ Tekparse(void)
 	    TRACE(("case: Plt: vector\n"));
 	    unput(c);
 	    if (getpoint()) {
-		if (screen->pen == PENDOWN)
+		if (screen->pen == PENDOWN) {
 		    TekDraw(screen->cur.x, screen->cur.y);
-		else
+		} else {
 		    TekMove(screen->cur.x, screen->cur.y);
+		}
 		screen->pen = PENDOWN;
 	    }
 	    break;
@@ -950,11 +951,11 @@ dorefresh(void)
     if (wait_cursor == None)
 	wait_cursor = make_colored_cursor(XC_watch, screen->mousecolor,
 					  screen->mousecolorback);
-    XDefineCursor(screen->display, TShellWindow, wait_cursor);
+    XDefineCursor(screen->display, TWindow(screen), wait_cursor);
     XFlush(screen->display);
     if (!setjmp(Tekjump))
 	Tekparse();
-    XDefineCursor(screen->display, TShellWindow,
+    XDefineCursor(screen->display, TWindow(screen),
 		  (screen->TekGIN && GINcursor) ? GINcursor : screen->arrow);
 }
 
@@ -1131,6 +1132,7 @@ AddToDraw(int x1, int y1, int x2, int y2)
     register TScreen *screen = &term->screen;
     register XSegment *lp;
 
+    TRACE(("AddToDraw (%d,%d) (%d,%d)\n", x1, y1, x2, y2));
     if (nplot >= MAX_PTS) {
 	TekFlush();
     }
@@ -1142,6 +1144,7 @@ AddToDraw(int x1, int y1, int x2, int y2)
     lp->y2 = y2 = (int) ((TEKHEIGHT + TEKTOPPAD - y2) * TekScale(screen) +
 			 screen->border);
     nplot++;
+    TRACE(("...AddToDraw %d points\n", nplot));
 }
 
 static void
@@ -1168,6 +1171,7 @@ TekFlush(void)
 {
     register TScreen *screen = &term->screen;
 
+    TRACE(("TekFlush\n"));
     XDrawSegments(screen->display, TWindow(screen),
 		  ((screen->cur.linetype == SOLIDLINE) ? screen->TnormalGC :
 		   screen->linepat[screen->cur.linetype - 1]),
@@ -1181,7 +1185,8 @@ TekGINoff(void)
 {
     register TScreen *screen = &term->screen;
 
-    XDefineCursor(screen->display, TShellWindow, screen->arrow);
+    TRACE(("TekGINoff\n"));
+    XDefineCursor(screen->display, TWindow(screen), screen->arrow);
     if (GINcursor)
 	XFreeCursor(screen->display, GINcursor);
     if (screen->TekGIN) {
@@ -1198,6 +1203,7 @@ TekEnqMouse(int c)		/* character pressed */
     unsigned int mask;		/* XQueryPointer */
     Window root, subw;
 
+    TRACE(("TekEnqMouse\n"));
     XQueryPointer(
 		     screen->display, TWindow(screen),
 		     &root, &subw,
@@ -1226,6 +1232,7 @@ TekEnq(int status,
     int len = 5;
     int adj = (status != 0) ? 0 : 1;
 
+    TRACE(("TekEnq\n"));
     cplot[0] = status;
     /* Translate x and y to Tektronix code */
     cplot[1] = 040 | ((x >> SHIFTHI) & FIVEBITS);
@@ -1539,7 +1546,7 @@ TekRealize(Widget gw,
     screen->margin = MARGIN1;	/* Margin 1             */
     screen->TekGIN = FALSE;	/* GIN off              */
 
-    XDefineCursor(screen->display, TShellWindow, screen->pointer_cursor);
+    XDefineCursor(screen->display, TWindow(screen), screen->pointer_cursor);
 
     {				/* there's gotta be a better way... */
 	static Arg args[] =

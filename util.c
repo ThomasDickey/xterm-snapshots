@@ -2,10 +2,10 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.73 2002/12/27 21:05:23 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.74 2003/03/09 23:39:14 dickey Exp $ */
 
 /*
- * Copyright 1999-2001,2002 by Thomas E. Dickey
+ * Copyright 1999-2002,2003 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1440,7 +1440,7 @@ drawXtermText(TScreen * screen,
 	    screen->renderDraw = XftDrawCreate(dpy, draw, visual,
 					       DefaultColormap(dpy, scr));
 	}
-	if ((flags & (BOLD | BLINK)) && screen->renderFontBold)
+	if ((flags & (BOLD | BLINK)) && !screen->colorBDMode && screen->renderFontBold)
 	    font = screen->renderFontBold;
 	else
 	    font = screen->renderFont;
@@ -1469,7 +1469,41 @@ drawXtermText(TScreen * screen,
 			    x, y, sbuf, len);
 	} else
 #endif
-	{
+	if (!screen->force_box_chars) {
+	    /* adding code to substitute simulated line-drawing characters */
+	    Cardinal last, first = 0;
+	    Dimension old_wide, old_high = 0;
+
+	    for (last = 0; last < len; last++) {
+		unsigned ch = text[last];
+		if (ch > 0 && ch < 32) {
+		    /* line drawing character time */
+		    if (last > first) {
+			XftDrawString8(screen->renderDraw,
+				       getColor(values.foreground),
+				       font,
+				       x + (first * FontWidth(screen)), y,
+				       (unsigned char *) text + first,
+				       last - first);
+		    }
+		    old_wide = screen->fnt_wide;
+		    old_high = screen->fnt_high;
+		    screen->fnt_wide = FontWidth(screen);
+		    screen->fnt_high = FontHeight(screen);
+		    xtermDrawBoxChar(screen, ch, flags, gc,
+				     x + (last * FontWidth(screen)),
+				     y - FontAscent(screen));
+		    screen->fnt_wide = old_wide;
+		    screen->fnt_high = old_high;
+		    first = last + 1;
+		}
+	    }
+	    if (last > first) {
+		XftDrawString8(screen->renderDraw, getColor(values.foreground),
+			       font, x + (first * FontWidth(screen)), y,
+			       (unsigned char *) text + first, last - first);
+	    }
+	} else {
 	    XftDrawString8(screen->renderDraw,
 			   getColor(values.foreground),
 			   font,

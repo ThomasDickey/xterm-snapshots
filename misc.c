@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.75 2003/02/06 23:09:43 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.76 2003/03/09 23:39:14 dickey Exp $ */
 
 /*
  *
@@ -505,14 +505,15 @@ Bell(int which GCC_UNUSED, int percent)
 	lastBellTime = now_msecs;
     }
 
-    if (screen->visualbell)
+    if (screen->visualbell) {
 	VisualBell();
-    else
-#ifdef XKB
-	XkbStdBell(screen->display, TWindow(screen), percent, which);
+    } else {
+#if defined(HAVE_XKBBELL)
+	XkbBell(screen->display, VShellWindow, percent, which);
 #else
 	XBell(screen->display, percent);
 #endif
+    }
 
     if (screen->poponbell)
 	XRaiseWindow(screen->display, VShellWindow);

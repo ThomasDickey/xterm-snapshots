@@ -1,7 +1,7 @@
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
 
-Copyright 1999-2001,2002 by Thomas E. Dickey
+Copyright 1999-2002,2003 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -45,7 +45,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.49 2002/10/05 17:57:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.50 2003/03/09 23:39:14 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -53,6 +53,8 @@ in this Software without prior written authorization from The Open Group.
 #include <fontutils.h>
 
 #include <X11/Xmu/CharSet.h>
+
+#define app_con Xaw_app_con	/* quiet a warning from SimpleMenu.h */
 
 #if defined(HAVE_LIB_XAW)
 
@@ -91,6 +93,8 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 #endif
+
+#undef app_con
 
 #include <stdio.h>
 #include <signal.h>
@@ -533,6 +537,18 @@ domenu(Widget w GCC_UNUSED,
 	    set_sensitivity(mw,
 			    mainMenuEntries[mainMenu_continue].widget, FALSE);
 #endif
+#ifdef ALLOWLOGGING
+	    if (screen->inhibit & I_LOG) {
+		set_sensitivity(mw,
+				mainMenuEntries[mainMenu_logging].widget, FALSE);
+	    }
+#endif
+	    if (screen->inhibit & I_SIGNAL) {
+		mainMenuIndices n;
+		for (n = mainMenu_suspend; n <= mainMenu_quit; ++n) {
+		    set_sensitivity(mw, mainMenuEntries[n].widget, FALSE);
+		}
+	    }
 	}
 	break;
 
@@ -564,6 +580,14 @@ domenu(Widget w GCC_UNUSED,
 	    } else
 		update_activeicon();
 #endif /* NO_ACTIVE_ICON */
+#if OPT_TEK4014
+	    if (screen->inhibit & I_TEK) {
+		vtMenuIndices n;
+		for (n = vtMenu_tekshow; n <= vtMenu_vthide; ++n) {
+		    set_sensitivity(mw, vtMenuEntries[n].widget, FALSE);
+		}
+	    }
+#endif
 	}
 	break;
 
@@ -2173,4 +2197,385 @@ SetupMenus(Widget shell, Widget * forms, Widget * menus)
     TRACE(("...shell=%#lx\n", (long) shell));
     TRACE(("...forms=%#lx\n", (long) *forms));
     TRACE(("...menus=%#lx\n", (long) *menus));
+}
+
+void
+update_securekbd(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_securekbd].widget,
+		     term->screen.grabbedKbd);
+}
+
+void
+update_allowsends(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_allowsends].widget,
+		     term->screen.allowSendEvents);
+}
+
+#ifdef ALLOWLOGGING
+void
+update_logging(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_logging].widget,
+		     term->screen.logging);
+}
+#endif
+
+void
+update_print_redir(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_print_redir].widget,
+		     term->screen.printer_controlmode);
+}
+
+void
+update_8bit_control(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_8bit_ctrl].widget,
+		     term->screen.control_eight_bits);
+}
+
+void
+update_decbkm(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_backarrow].widget,
+		     term->keyboard.flags & MODE_DECBKM);
+}
+
+#if OPT_NUM_LOCK
+void
+update_num_lock(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_num_lock].widget,
+		     term->misc.real_NumLock);
+}
+
+void
+update_meta_esc(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_meta_esc].widget,
+		     term->screen.meta_sends_esc);
+}
+#endif
+
+void
+update_sun_fkeys(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_sun_fkeys].widget,
+		     term->keyboard.type == keyboardIsSun);
+}
+
+void
+update_old_fkeys(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_old_fkeys].widget,
+		     term->keyboard.type == keyboardIsLegacy);
+}
+
+void
+update_delete_del(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_delete_del].widget,
+		     xtermDeleteIsDEL());
+}
+
+#if OPT_SUNPC_KBD
+void
+update_sun_kbd(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_sun_kbd].widget,
+		     term->keyboard.type == keyboardIsVT220);
+}
+#endif
+
+#if OPT_HP_FUNC_KEYS
+void
+update_hp_fkeys(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_hp_fkeys].widget,
+		     term->keyboard.type == keyboardIsHP);
+}
+#endif
+
+#if OPT_SCO_FUNC_KEYS
+void
+update_sco_fkeys(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_sco_fkeys].widget,
+		     term->keyboard.type == keyboardIsSCO);
+}
+#endif
+
+void
+update_scrollbar(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_scrollbar].widget,
+		     ScrollbarWidth(&term->screen));
+}
+
+void
+update_jumpscroll(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_jumpscroll].widget,
+		     term->screen.jumpscroll);
+}
+
+void
+update_reversevideo(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_reversevideo].widget,
+		     (term->misc.re_verse));
+}
+
+void
+update_autowrap(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_autowrap].widget,
+		     (term->flags & WRAPAROUND));
+}
+
+void
+update_reversewrap(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_reversewrap].widget,
+		     (term->flags & REVERSEWRAP));
+}
+
+void
+update_autolinefeed(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_autolinefeed].widget,
+		     (term->flags & LINEFEED));
+}
+
+void
+update_appcursor(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_appcursor].widget,
+		     (term->keyboard.flags & MODE_DECCKM));
+}
+
+void
+update_appkeypad(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_appkeypad].widget,
+		     (term->keyboard.flags & MODE_DECKPAM));
+}
+
+void
+update_scrollkey(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_scrollkey].widget,
+		     term->screen.scrollkey);
+}
+
+void
+update_scrollttyoutput(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_scrollttyoutput].widget,
+		     term->screen.scrollttyoutput);
+}
+
+void
+update_allow132(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_allow132].widget,
+		     term->screen.c132);
+}
+
+void
+update_cursesemul(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_cursesemul].widget,
+		     term->screen.curses);
+}
+
+void
+update_visualbell(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_visualbell].widget,
+		     term->screen.visualbell);
+}
+
+void
+update_poponbell(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_poponbell].widget,
+		     term->screen.poponbell);
+}
+
+void
+update_marginbell(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_marginbell].widget,
+		     term->screen.marginbell);
+}
+
+#if OPT_BLINK_CURS
+void
+update_cursorblink(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_cursorblink].widget,
+		     term->screen.cursor_blink);
+}
+#endif
+
+void
+update_altscreen(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_altscreen].widget,
+		     term->screen.alternate);
+}
+
+void
+update_titeInhibit(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_titeInhibit].widget,
+		     !(term->misc.titeInhibit));
+}
+
+#ifndef NO_ACTIVE_ICON
+void
+update_activeicon(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_activeicon].widget,
+		     term->misc.active_icon);
+}
+#endif /* NO_ACTIVE_ICON */
+
+#if OPT_DEC_CHRSET
+void
+update_font_doublesize(void)
+{
+    update_menu_item(term->screen.fontMenu,
+		     fontMenuEntries[fontMenu_font_doublesize].widget,
+		     term->screen.font_doublesize);
+}
+#endif
+
+#if OPT_BOX_CHARS
+void
+update_font_boxchars(void)
+{
+    update_menu_item(term->screen.fontMenu,
+		     fontMenuEntries[fontMenu_font_boxchars].widget,
+		     term->screen.force_box_chars);
+}
+#endif
+
+#if OPT_DEC_SOFTFONT
+void
+update_font_loadable(void)
+{
+    update_menu_item(term->screen.fontMenu,
+		     fontMenuEntries[fontMenu_font_loadable].widget,
+		     term->misc.font_loadable);
+}
+#endif
+
+#if OPT_TEK4014
+void
+update_tekshow(void)
+{
+    if (!(term->screen.inhibit & I_TEK)) {
+	update_menu_item(term->screen.vtMenu,
+			 vtMenuEntries[vtMenu_tekshow].widget,
+			 term->screen.Tshow);
+    }
+}
+
+void
+update_vttekmode(void)
+{
+    if (!(term->screen.inhibit & I_TEK)) {
+	update_menu_item(term->screen.vtMenu,
+			 vtMenuEntries[vtMenu_tekmode].widget,
+			 term->screen.TekEmu);
+	update_menu_item(term->screen.tekMenu,
+			 tekMenuEntries[tekMenu_vtmode].widget,
+			 !term->screen.TekEmu);
+    }
+}
+
+void
+update_vtshow(void)
+{
+    if (!(term->screen.inhibit & I_TEK)) {
+	update_menu_item(term->screen.tekMenu,
+			 tekMenuEntries[tekMenu_vtshow].widget,
+			 term->screen.Vshow);
+    }
+}
+
+void
+set_vthide_sensitivity(void)
+{
+    if (!(term->screen.inhibit & I_TEK)) {
+	set_sensitivity(term->screen.vtMenu,
+			vtMenuEntries[vtMenu_vthide].widget,
+			term->screen.Tshow);
+    }
+}
+
+void
+set_tekhide_sensitivity(void)
+{
+    if (!(term->screen.inhibit & I_TEK)) {
+	set_sensitivity(term->screen.tekMenu,
+			tekMenuEntries[tekMenu_tekhide].widget,
+			term->screen.Vshow);
+    }
+}
+
+void
+set_tekfont_menu_item(int n, int val)
+{
+    if (!(term->screen.inhibit & I_TEK)) {
+	update_menu_item(term->screen.tekMenu,
+			 tekMenuEntries[FS2MI(n)].widget,
+			 (val));
+    }
+}
+#endif /* OPT_TEK4014 */
+
+void
+set_menu_font(int val)
+{
+    update_menu_item(term->screen.fontMenu,
+		     fontMenuEntries[term->screen.menu_font_number].widget,
+		     (val));
 }

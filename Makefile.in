@@ -1,6 +1,6 @@
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.40 2002/03/26 01:46:39 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.41 2003/03/09 23:39:12 dickey Exp $ ##
 ##
-## Copyright 2002 by Thomas E. Dickey
+## Copyright 2002,2003 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -54,9 +54,9 @@ prefix		= @prefix@
 exec_prefix	= @exec_prefix@
 
 manext		= 1
-bindir		= $(exec_prefix)/bin
-libdir		= $(exec_prefix)/lib
-mandir		= $(prefix)/man/man$(manext)
+bindir		= @bindir@
+libdir		= @libdir@
+mandir		= @mandir@/man$(manext)
 appsdir		= $(libdir)/X11/app-defaults
 
 #### End of system configuration section. ####

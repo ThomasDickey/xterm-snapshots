@@ -2,10 +2,10 @@
  *	$Xorg: data.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.h,v 3.28 2002/12/08 22:31:48 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.h,v 3.29 2003/03/09 23:39:13 dickey Exp $ */
 
 /*
- * Copyright 2002 by Thomas E. Dickey
+ * Copyright 2002,2003 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -132,12 +132,9 @@ extern EventMode eventMode;
 
 extern XtermWidget term;
 
-#ifdef NO_XKBSTDBELL
-#undef XKB
-#endif
-
-#ifdef XKB
-#include <X11/extensions/XKBbells.h>
+#ifdef HAVE_XKBBELL
+#include <X11/XKBlib.h>		/* has the prototype */
+#include <X11/extensions/XKBbells.h>	/* has the XkbBI_xxx definitions */
 #else
 #define	XkbBI_Info			0
 #define	XkbBI_MinorError		1

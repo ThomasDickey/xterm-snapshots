@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.36 2002/12/08 22:31:48 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.37 2003/03/09 23:39:13 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1998-2001,2002 by Thomas E. Dickey
+Copyright 1998-2002,2003 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -756,6 +756,8 @@ xtermLoadFont(TScreen * screen,
     screen->fnt_bold = bfs;
 #if OPT_WIDE_CHARS
     screen->fnt_dwd = wfs;
+    if (wbfs == NULL)
+	wbfs = wfs;
     screen->fnt_dwdb = wbfs;
 #endif
     screen->fnt_prop = proportional;
