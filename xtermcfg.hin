@@ -30,6 +30,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* This is a template for <xtermcfg.h> */
 
 #undef ALLOWLOGGING	/* CF_ARG_ENABLE(enable-logging) */
+#undef ALLOWLOGFILEEXEC	/* CF_ARG_ENABLE(enable-logfile-exec) */
 #undef CC_HAS_PROTOS	/* CF_ANSI_CC */
 #undef DFT_COLORMODE	/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID	/* AC_ARG_WITH(default-terminal-id) */

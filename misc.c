@@ -607,11 +607,29 @@ creat_as(uid, gid, pathname, mode)
 #endif
 
 #ifdef ALLOWLOGGING
+
 /*
- * logging is a security hole, since it allows a setuid program to
- * write arbitrary data to an arbitrary file.  So it is disabled
- * by default.
+ * Logging is a security hole, since it allows a setuid program to write
+ * arbitrary data to an arbitrary file.  So it is disabled by default. 
+ * (However, this version of xterm resets the setuid before opening the
+ * logfile).
  */ 
+
+#ifdef ALLOWLOGFILEEXEC
+static SIGNAL_T logpipe PROTO((int sig));
+
+static SIGNAL_T logpipe (sig)
+	int sig GCC_UNUSED;
+{
+	register TScreen *screen = &term->screen;
+
+#ifdef SYSV
+	(void) signal(SIGPIPE, SIG_IGN);
+#endif	/* SYSV */
+	if(screen->logging)
+		CloseLog(screen);
+}
+#endif /* ALLOWLOGFILEEXEC */
 
 void
 StartLog(screen)
@@ -621,7 +639,6 @@ register TScreen *screen;
 #ifdef ALLOWLOGFILEEXEC
 	register char *cp;
 	register int i;
-	void logpipe();
 #ifdef SYSV
 	/* SYSV has another pointer which should be part of the
 	** FILE structure but is actually a separate array.
@@ -655,42 +672,43 @@ register TScreen *screen;
 		 */
 		int p[2];
 		static char *shell;
+		register struct passwd *pw;
 
 		if(pipe(p) < 0 || (i = fork()) < 0)
 			return;
 		if(i == 0) {	/* child */
+			/*
+			 * Close our output (we won't be talking back to the
+			 * parent), and redirect our child's output to the
+			 * original stderr.
+			 */
 			close(p[1]);
 			dup2(p[0], 0);
 			close(p[0]);
 			dup2(fileno(stderr), 1);
 			dup2(fileno(stderr), 2);
-#ifdef SYSV
-			old_bufend = _bufend(stderr);
-#endif	/* SYSV */
+
 			close(fileno(stderr));
-			stderr->_file = 2;
-#ifdef SYSV
-			_bufend(stderr) = old_bufend;
-#endif	/* SYSV */
 			close(ConnectionNumber(screen->display));
 			close(screen->respond);
-			if(!shell) {
-				register struct passwd *pw;
-				struct passwd *getpwuid();
 
-				if(((cp = getenv("SHELL")) == NULL || *cp == 0)
-				 && ((pw = getpwuid(screen->uid)) == NULL ||
-				 *(cp = pw->pw_shell) == 0) ||
-				 (shell = malloc((unsigned) strlen(cp) + 1)) == NULL)
-					shell = "/bin/sh";
-				else
-					strcpy(shell, cp);
-			}
+			if ((((cp = getenv("SHELL")) == NULL || *cp == 0)
+			  && ((pw = getpwuid(screen->uid)) == NULL
+			   || *(cp = pw->pw_shell) == 0))
+			 || (shell = malloc(strlen(cp) + 1)) == NULL)
+				shell = "/bin/sh";
+			else
+				strcpy(shell, cp);
+
 			signal(SIGHUP, SIG_DFL);
 			signal(SIGCHLD, SIG_DFL);
+
+			/* (this is redundant) */
 			setgid(screen->gid);
 			setuid(screen->uid);
+
 			execl(shell, shell, "-c", &screen->logfile[1], 0);
+
 			fprintf(stderr, "%s: Can't exec `%s'\n", xterm_name,
 			 &screen->logfile[1]);
 			exit(ERROR_LOGEXEC);
@@ -749,18 +767,6 @@ register TScreen *screen;
 	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer, buffer);
 }
 
-#ifdef ALLOWLOGFILEEXEC
-void logpipe()
-{
-	register TScreen *screen = &term->screen;
-
-#ifdef SYSV
-	(void) signal(SIGPIPE, SIG_IGN);
-#endif	/* SYSV */
-	if(screen->logging)
-		CloseLog(screen);
-}
-#endif /* ALLOWLOGFILEEXEC */
 #endif /* ALLOWLOGGING */
 
 void

@@ -27,7 +27,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.12)
+AC_PREREQ(2.12.971230)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
 CF_CHECK_CACHE
@@ -216,6 +216,15 @@ CF_ARG_ENABLE(logging,
 AC_MSG_RESULT($enable_logging)
 if test $enable_logging = yes ; then
 	AC_DEFINE(ALLOWLOGGING)
+	AC_MSG_CHECKING(if you want to allow logging via a pipe)
+	CF_ARG_ENABLE(logfile-exec,
+		[  --enable-logfile-exec   enable exec'd logfile filter],
+		[enable_log_exec=yes],
+		[enable_log_exec=no])
+	AC_MSG_RESULT($enable_log_exec)
+	if test $enable_log_exec = yes ; then
+		AC_DEFINE(ALLOWLOGFILEEXEC)
+	fi
 fi
 
 AC_MSG_CHECKING(if you want support for right-scrollbar)
