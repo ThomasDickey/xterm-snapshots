@@ -1043,9 +1043,9 @@ HandleExposure (screen, event)
 	int both_x1 = Max(screen->copy_src_x, reply->x);
 	int both_y1 = Max(screen->copy_src_y, reply->y);
 	int both_x2 = Min(screen->copy_src_x+screen->copy_width,
-			  reply->x+reply->width);
+			  (unsigned)(reply->x+reply->width));
 	int both_y2 = Min(screen->copy_src_y+screen->copy_height,
-			  reply->y+reply->height);
+			  (unsigned)(reply->y+reply->height));
 	int value = 0;
 
 	/* was anything copied affected? */
@@ -1329,7 +1329,7 @@ recolor_cursor (cursor, fg, bg)
 /*
  * Draws text with the specified combination of bold/underline
  */
-void
+int
 drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 	register TScreen *screen;
 	unsigned flags;
@@ -1351,12 +1351,54 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 			temp[n++] = *text++;
 			temp[n++] = ' ';
 		}
-		drawXtermText(screen, flags, gc, x, y, 0, temp, n);
-		x += FontWidth(screen) * n;
+		x = drawXtermText(screen, flags, gc, x, y, 0, temp, n);
 		free(temp);
-		return;
+		return x;
 	}
 #endif
+	/*
+	 * If we're asked to display a proportional font, do this with a fixed
+	 * pitch.  Yes, it's ugly.  But we cannot distinguish the use of xterm
+	 * as a dumb terminal vs its use as in fullscreen programs such as vi.
+	 */
+	if (screen->fnt_prop) {
+		int	adj, width;
+		GC	fillGC = gc;	/* might be cursorGC */
+		XFontStruct *fs = (flags & BOLD)
+				? screen->fnt_bold
+				: screen->fnt_norm;
+		screen->fnt_prop = False;
+
+#define GC_PAIRS(a,b) \
+	if (gc == a) fillGC = b; \
+	if (gc == b) fillGC = a
+
+		/*
+		 * Fill the area where we'll write the characters, otherwise
+		 * we'll get gaps between them.  The cursor is a special case,
+		 * because the XFillRectangle call only uses the foreground,
+		 * while we've set the cursor color in the background.  So we
+		 * need a special GC for that.
+		 */
+		if (gc == screen->cursorGC
+		 || gc == screen->reversecursorGC)
+			fillGC = screen->fillCursorGC;
+		GC_PAIRS(NormalGC(screen),      ReverseGC(screen));
+		GC_PAIRS(NormalBoldGC(screen),  ReverseBoldGC(screen));
+
+		XFillRectangle (screen->display, TextWindow(screen), fillGC,
+			x, y, len * FontWidth(screen), FontHeight(screen));
+
+		while (len-- > 0) {
+			width = XTextWidth(fs, text, 1);
+			adj = (FontWidth(screen) - width) / 2;
+			(void)drawXtermText(screen, flags, gc, x + adj, y, chrset, text++, 1);
+			x += FontWidth(screen);
+		}
+		screen->fnt_prop = True;
+		return x;
+	}
+
 	TRACE(("drawtext%c[%4d,%4d] (%d) %d:%.*s\n",
 		screen->cursor_state == OFF ? ' ' : '*',
 		y, x, chrset, len, len, text))
@@ -1372,6 +1414,8 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 		XDrawLine(screen->display, TextWindow(screen), gc, 
 			x, y, x + len * FontWidth(screen), y);
 	}
+
+	return x + len * FontWidth(screen);
 }
 
 /*

@@ -866,8 +866,11 @@ void SGR_Foreground(color)
 
 	XSetForeground(screen->display, NormalGC(screen), fg);
 	XSetBackground(screen->display, ReverseGC(screen), fg);
-	XSetForeground(screen->display, NormalBoldGC(screen), fg);
-	XSetBackground(screen->display, ReverseBoldGC(screen), fg);
+
+	if (NormalGC(screen) != NormalBoldGC(screen)) {
+		XSetForeground(screen->display, NormalBoldGC(screen), fg);
+		XSetBackground(screen->display, ReverseBoldGC(screen), fg);
+	}
 }
 
 void SGR_Background(color)
@@ -886,8 +889,11 @@ void SGR_Background(color)
 
 	XSetBackground(screen->display, NormalGC(screen), bg);
 	XSetForeground(screen->display, ReverseGC(screen), bg);
-	XSetBackground(screen->display, NormalBoldGC(screen), bg);
-	XSetForeground(screen->display, ReverseBoldGC(screen), bg);
+
+	if (NormalGC(screen) != NormalBoldGC(screen)) {
+		XSetBackground(screen->display, NormalBoldGC(screen), bg);
+		XSetForeground(screen->display, ReverseBoldGC(screen), bg);
+	}
 }
 
 /* Invoked after updating bold/underline flags, computes the extended color
@@ -4246,6 +4252,7 @@ ShowCursor()
 	}
 
 	TRACE(("%s @%d, calling drawXtermText\n", __FILE__, __LINE__))
+
 	drawXtermText(screen, flags, currentGC,
 		x = CurCursorX(screen, screen->cur_row, screen->cur_col),
 		y = CursorY(screen, screen->cur_row),
@@ -4810,6 +4817,7 @@ LoadNewFont (screen, nfontname, bfontname, doresize, fontnum)
     GC new_reverseGC = NULL, new_reverseboldGC = NULL;
     Pixel new_normal, new_revers;
     char *tmpname = NULL;
+    Boolean proportional = False;
 
     if (!nfontname) return 0;
 
@@ -4830,6 +4838,14 @@ LoadNewFont (screen, nfontname, bfontname, doresize, fontnum)
     else
 	if (bfs->ascent + bfs->descent == 0  ||  bfs->max_bounds.width == 0)
 	    goto bad;		/* can't use a 0-sized font */
+
+    if (nfs->min_bounds.width != nfs->max_bounds.width
+     || bfs->min_bounds.width != bfs->max_bounds.width
+     || nfs->min_bounds.width != bfs->min_bounds.width
+     || nfs->max_bounds.width != bfs->max_bounds.width) {
+	TRACE(("Proportional font!\n"))
+	proportional = True;
+    }
 
     mask = (GCFont | GCForeground | GCBackground | GCGraphicsExposures |
 	    GCFunction);
@@ -4891,6 +4907,7 @@ LoadNewFont (screen, nfontname, bfontname, doresize, fontnum)
 
     screen->fnt_norm = nfs;
     screen->fnt_bold = bfs;
+    screen->fnt_prop = proportional;
 
     screen->enbolden = (nfs == bfs);
     set_menu_font (False);
@@ -4984,6 +5001,7 @@ set_cursor_gcs (screen)
     Pixel fg = screen->foreground;
     Pixel bg = term->core.background_pixel;
     GC new_cursorGC = NULL;
+    GC new_cursorFillGC = NULL;
     GC new_reversecursorGC = NULL;
     GC new_cursoroutlineGC = NULL;
 
@@ -5027,6 +5045,10 @@ set_cursor_gcs (screen)
 	    xgcv.background = cc;
 	    new_cursorGC = XCreateGC (screen->display, TextWindow(screen), mask, &xgcv);
 
+	    xgcv.foreground = cc;
+	    xgcv.background = fg;
+	    new_cursorFillGC = XCreateGC (screen->display, TextWindow(screen), mask, &xgcv);
+
 	    if (screen->always_highlight) {
 		new_reversecursorGC = (GC) 0;
 		new_cursoroutlineGC = (GC) 0;
@@ -5045,9 +5067,14 @@ set_cursor_gcs (screen)
 	/* we have a colored cursor */
 	xgcv.font = screen->fnt_norm->fid;
 	mask = (GCForeground | GCBackground | GCFont);
+
 	xgcv.foreground = fg;
 	xgcv.background = cc;
 	new_cursorGC = XtGetGC ((Widget) term, mask, &xgcv);
+
+	xgcv.foreground = cc;
+	xgcv.background = fg;
+	new_cursorFillGC = XtGetGC ((Widget) term, mask, &xgcv);
 
 	if (screen->always_highlight) {
 	    new_reversecursorGC = (GC) 0;
@@ -5067,6 +5094,8 @@ set_cursor_gcs (screen)
     {
 	if (screen->cursorGC)
 	    XFreeGC (screen->display, screen->cursorGC);
+	if (screen->fillCursorGC)
+	    XFreeGC (screen->display, screen->fillCursorGC);
 	if (screen->reversecursorGC)
 	    XFreeGC (screen->display, screen->reversecursorGC);
 	if (screen->cursoroutlineGC)
@@ -5077,13 +5106,16 @@ set_cursor_gcs (screen)
     {
 	if (screen->cursorGC)
 	    XtReleaseGC ((Widget)term, screen->cursorGC);
+	if (screen->fillCursorGC)
+	    XtReleaseGC ((Widget)term, screen->fillCursorGC);
 	if (screen->reversecursorGC)
 	    XtReleaseGC ((Widget)term, screen->reversecursorGC);
 	if (screen->cursoroutlineGC)
 	    XtReleaseGC ((Widget)term, screen->cursoroutlineGC);
     }
 
-    screen->cursorGC = new_cursorGC;
+    screen->cursorGC        = new_cursorGC;
+    screen->fillCursorGC    = new_cursorFillGC;
     screen->reversecursorGC = new_reversecursorGC;
     screen->cursoroutlineGC = new_cursoroutlineGC;
 }

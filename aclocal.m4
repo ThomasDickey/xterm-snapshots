@@ -3,7 +3,7 @@ dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.9 1997/12/28 21:28:38 hohndel Exp
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
-dnl Copyright 1997 by Thomas E. Dickey <dickey@clark.net>
+dnl Copyright 1997,1998 by Thomas E. Dickey <dickey@clark.net>
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -375,7 +375,7 @@ fi
 AC_SUBST(EXTRA_CFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl Use imake to obtain compiler flags.  We could, in principal, write tests to
+dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
 dnl get these, but if imake is properly configured there is no point in doing
 dnl this.
 AC_DEFUN([CF_IMAKE_CFLAGS],
@@ -419,14 +419,15 @@ CF_EOF
 			esac
 		done
 		if test -z "$cf_config" ; then
-			AC_ERROR(Could not find imake config-directory)
-		fi
-		cf_imake_opts="$cf_imake_opts -I$cf_config"
-		if ( $IMAKE -v $cf_imake_opts 2>&AC_FD_CC)
-		then
-			CF_VERBOSE(Using $IMAKE $cf_config)
+			AC_WARN(Could not find imake config-directory)
 		else
-			AC_ERROR(Cannot run $IMAKE)
+			cf_imake_opts="$cf_imake_opts -I$cf_config"
+			if ( $IMAKE -v $cf_imake_opts 2>&AC_FD_CC)
+			then
+				CF_VERBOSE(Using $IMAKE $cf_config)
+			else
+				AC_WARN(Cannot run $IMAKE)
+			fi
 		fi
 	fi
 
@@ -436,6 +437,41 @@ CF_EOF
 
 	cd ..
 	rm -rf conftestdir
+
+	# We use $(ALLDEFINES) rather than $(STD_DEFINES) because the former
+	# declares XTFUNCPROTO there.  However, some vendors (e.g., SGI) have
+	# modified it to support site.cf, adding a kludge for the /usr/include
+	# directory.  Try to filter that out, otherwise gcc won't find its
+	# headers.
+	if test -n "$GCC" ; then
+	    if test -n "$IMAKE_CFLAGS" ; then
+		cf_nostdinc=""
+		cf_std_incl=""
+		cf_cpp_opts=""
+		for cf_opt in $IMAKE_CFLAGS
+		do
+		    case "$cf_opt" in
+		    -nostdinc) #(vi
+			cf_nostdinc="$cf_opt"
+			;;
+		    -I/usr/include) #(vi
+			cf_std_incl="$cf_opt"
+			;;
+		    *) #(vi
+			cf_cpp_opts="$cf_cpp_opts $cf_opt"
+			;;
+		    esac
+		done
+		if test -z "$cf_nostdinc" ; then
+		    IMAKE_CFLAGS="$cf_cpp_opts $cf_std_incl"
+		elif test -z "$cf_std_incl" ; then
+		    IMAKE_CFLAGS="$cf_cpp_opts $cf_nostdinc"
+		else
+		    CF_VERBOSE(suppressed \"$cf_nostdinc\" and \"$cf_std_incl\")
+		    IMAKE_CFLAGS="$cf_cpp_opts"
+		fi
+	    fi
+	fi
 fi
 AC_SUBST(IMAKE_CFLAGS)
 ])dnl

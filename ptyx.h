@@ -535,6 +535,7 @@ typedef struct {
 	int		uid;		/* user id of actual person	*/
 	int		gid;		/* group id of actual person	*/
 	GC		cursorGC;	/* normal cursor painting	*/
+	GC		fillCursorGC;	/* special cursor painting	*/
 	GC		reversecursorGC;/* reverse cursor painting	*/
 	GC		cursoroutlineGC;/* for painting lines around    */
 	Pixel		foreground;	/* foreground color		*/
@@ -597,7 +598,7 @@ typedef struct {
 	Boolean printer_formfeed;	/* print formfeed per function	*/
 	int printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
 
-	/* Terminal fonts must be of the same size and of fixed width */
+	Boolean		fnt_prop;	/* true if proportional fonts	*/
 	XFontStruct	*fnt_norm;	/* normal font of terminal	*/
 	XFontStruct	*fnt_bold;	/* bold font of terminal	*/
 #ifndef NO_ACTIVE_ICON
