@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.41 2003/10/27 01:07:57 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.42 2003/10/28 23:11:58 dickey Exp $
  */
 
 /************************************************************
@@ -265,16 +265,21 @@ get_font_name_props(Display * dpy, XFontStruct * fs, char *result)
  * comes from a static variable, so be careful if you reuse it.
  */
 static char *
-bold_font_name(FontNameProperties * props)
+bold_font_name(FontNameProperties * props, Bool useWidth)
 {
     static char ret[MAX_FONTNAME];
+    char average_width[MAX_FONTNAME];
 
     /*
      * Put together something in the form
      * "<beginning>-bold-<middle>-<pixel_size>-<point_size>-<res_x>-<res_y>"\
      * "-<spacing>-*-<end>"
      */
-    sprintf(ret, "%s-bold-%s-%s-%s-%d-%s-%d-%d-%s-*-%s",
+    if (useWidth)
+	sprintf(average_width, "%d", props->average_width);
+    else
+	strcpy(average_width, "*");
+    sprintf(ret, "%s-bold-%s-%s-%s-%d-%s-%d-%d-%s-%s-%s",
 	    props->beginning,
 	    props->slant,
 	    props->wideness,
@@ -284,6 +289,7 @@ bold_font_name(FontNameProperties * props)
 	    props->res_x,
 	    props->res_y,
 	    props->spacing,
+	    average_width,
 	    props->end);
     return ret;
 }
@@ -501,7 +507,7 @@ is_fixed_font(XFontStruct * fs)
 static int
 is_double_width_font(XFontStruct * fs)
 {
-    return (2 * fs->min_bounds.width == fs->max_bounds.width);
+    return ((2 * fs->min_bounds.width) == fs->max_bounds.width);
 }
 #else
 #define is_double_width_font(fs) 0
@@ -633,11 +639,14 @@ xtermLoadFont(TScreen * screen,
     if (myfonts.f_b == 0) {
 	fp = get_font_name_props(screen->display, nfs, normal);
 	if (fp != 0) {
-	    myfonts.f_b = bold_font_name(fp);
+	    myfonts.f_b = bold_font_name(fp, True);
+	    if ((bfs = XLoadQueryFont(screen->display, myfonts.f_b)) == 0) {
+		myfonts.f_b = bold_font_name(fp, False);
+		bfs = XLoadQueryFont(screen->display, myfonts.f_b);
+	    }
 	    TRACE(("...derived bold %s\n", myfonts.f_b));
 	}
-	if (myfonts.f_b == 0
-	    || (bfs = XLoadQueryFont(screen->display, myfonts.f_b)) == 0) {
+	if (fp == 0 || bfs == 0) {
 	    bfs = nfs;
 	    TRACE(("...cannot load a matching bold font\n"));
 	} else if (same_font_size(nfs, bfs)
