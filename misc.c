@@ -66,6 +66,9 @@
 #include <ctype.h>
 #include <pwd.h>
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 
@@ -73,6 +76,12 @@
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>
 #include <X11/Xmu/WinUtil.h>
+
+#ifdef X_NOT_STDC_ENV
+extern time_t time ();
+#else
+#include <time.h>
+#endif
 
 #include <data.h>
 #include <error.h>
@@ -762,24 +771,88 @@ Redraw(void)
 #endif
 }
 
-#if (defined(ALLOWLOGGING) || defined(DEBUG)) && !defined(VMS)
+#ifdef VMS
+#define TIMESTAMP_FMT "%s%d-%02d-%02d-%02d-%02d-%02d"
+#else
+#define TIMESTAMP_FMT "%s%d-%02d-%02d.%02d:%02d:%02d"
+#endif
 
+void
+timestamp_filename(char *dst, const char *src)
+{
+    time_t tstamp;
+    struct tm *tstruct;
+
+    time(&tstamp);
+    tstruct = localtime(&tstamp);
+    sprintf(dst, TIMESTAMP_FMT,
+	    src,
+	    tstruct->tm_year + 1900,
+	    tstruct->tm_mon + 1,
+	    tstruct->tm_mday,
+	    tstruct->tm_hour,
+	    tstruct->tm_min,
+	    tstruct->tm_sec);
+}
+
+int
+open_userfile(int uid, int gid, char *path, Boolean append)
+{
+    int fd;
+    struct stat sb;
+
+#ifdef VMS
+    if((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0) {
+	fprintf(stderr, "%s: cannot open %s\n", xterm_name, path);
+	return -1;
+    }
+    chown(path, uid, gid);
+#else
+    if ((access(path, F_OK) != 0 && (errno != ENOENT))
+     || (!(creat_as(uid, gid, append, path, 0644)))
+     || ((fd = open(path, O_WRONLY | O_APPEND, 0644)) < 0)) {
+	fprintf(stderr, "%s: cannot open %s\n", xterm_name, path);
+	return -1;
+    }
+#endif
+
+    /*
+     * Doublecheck that the user really owns the file that we've opened before
+     * we do any damage.
+     */
+    if (fstat(fd, &sb) < 0
+     || (int) sb.st_uid != uid
+     || (int) sb.st_gid != gid
+     || (sb.st_mode & 022) != 0) {
+	fprintf(stderr, "%s: you do not own %s\n", xterm_name, path);
+	close(fd);
+	return -1;
+    }
+    return fd;
+}
+
+#ifndef VMS
 /*
- * create a file only if we could with the permissions of the real user id.
+ * Create a file only if we could with the permissions of the real user id.
  * We could emulate this with careful use of access() and following
  * symbolic links, but that is messy and has race conditions.
  * Forking is messy, too, but we can't count on setreuid() or saved set-uids
  * being available.
  *
- * Note:  when called for user logging, we have ensured that the real and
+ * Note: When called for user logging, we have ensured that the real and
  * effective user ids are the same, so this remains as a convenience function
  * for the debug logs.
+ *
+ * Returns 1 if we can proceed to open the file in relative safety, 0
+ * otherwise.
  */
-void
-creat_as(int uid, int gid, char *pathname, int mode)
+int
+creat_as(int uid, int gid, Boolean append, char *pathname, int mode)
 {
     int fd;
     int pid;
+    int retval = 0;
+    int childstat;
 #ifndef HAVE_WAITPID
     int waited;
     SIGNAL_T (*chldfunc) (int);
@@ -793,7 +866,7 @@ creat_as(int uid, int gid, char *pathname, int mode)
     case 0:			/* child */
 	setgid(gid);
 	setuid(uid);
-	fd = open(pathname, O_WRONLY|O_CREAT|O_APPEND, mode);
+	fd = open(pathname, O_WRONLY|O_CREAT|(append ? O_APPEND : O_EXCL), mode);
 	if (fd >= 0) {
 	    close(fd);
 	    _exit(0);
@@ -801,12 +874,12 @@ creat_as(int uid, int gid, char *pathname, int mode)
 	    _exit(1);
 	/* NOTREACHED */
     case -1:			/* error */
-	return;
+	return retval;
     default:			/* parent */
 #ifdef HAVE_WAITPID
-	waitpid(pid, NULL, 0);
+	waitpid(pid, &childstat, 0);
 #else  /* HAVE_WAITPID */
-	waited = wait(NULL);
+	waited = wait(&childstat);
 	signal(SIGCHLD, chldfunc);
 	/*
 	  Since we had the signal handler uninstalled for a while,
@@ -818,9 +891,14 @@ creat_as(int uid, int gid, char *pathname, int mode)
 		Cleanup(0);
 	while ( (waited=nonblocking_wait()) > 0);
 #endif /* HAVE_WAITPID */
+#ifndef WIFEXITED
+#define WIFEXITED(status) ((status & 0xff) != 0)
+#endif
+	if (WIFEXITED(childstat)) retval = 1;
+	return retval;
     }
 }
-#endif /* defined(ALLOWLOGGING) || defined(DEBUG) */
+#endif /* !VMS */
 
 #ifdef ALLOWLOGGING
 
@@ -845,7 +923,6 @@ static SIGNAL_T logpipe (int sig GCC_UNUSED)
 void
 StartLog(register TScreen *screen)
 {
-	struct stat sb;
 	static char *log_default;
 #ifdef ALLOWLOGFILEEXEC
 	register char *cp;
@@ -937,32 +1014,8 @@ StartLog(register TScreen *screen)
 		return;
 #endif
 	} else {
-		if(access(screen->logfile, F_OK) != 0) {
-		    if (errno == ENOENT)
-			creat_as(screen->uid, screen->gid,
-				 screen->logfile, 0644);
-		    else
-			return;
-		}
-
-		if(access(screen->logfile, F_OK) != 0
-		   || access(screen->logfile, W_OK) != 0)
+	    if ((screen->logfd = open_userfile(screen->uid, screen->gid, screen->logfile, (log_default != 0))) < 0)
 		    return;
-		if((screen->logfd = open(screen->logfile, O_WRONLY | O_APPEND,
-					 0644)) < 0)
-			return;
-		/*
-		 * If the logfile is specified by the user, it may be in an
-		 * insecure location.  Doublecheck that the user really owns
-		 * the file that we've opened before we do any damage.
-		 */
-		if (fstat(screen->logfd, &sb) < 0
-		 || (int) sb.st_uid != screen->uid
-		 || (int) sb.st_gid != screen->gid) {
-			fprintf(stderr, "%s: you do not own %s\n",
-				xterm_name, screen->logfile);
-			close(screen->logfd);
-		}
 	}
 #endif /*VMS*/
 	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);

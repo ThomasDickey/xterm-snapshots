@@ -337,7 +337,7 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
 #define update_delete_del() \
   update_menu_item (term->screen.mainMenu, \
 		    mainMenuEntries[mainMenu_delete_del].widget, \
-		    term->screen.delete_is_del)
+		    xtermDeleteIsDEL())
 
 #if OPT_SUNPC_KBD
 #define update_sun_kbd() \

@@ -1062,7 +1062,7 @@ main (int argc, char **argv, char **envp)
 	 so the debug feature is disabled by default. */
 	int i = -1;
 	if(debug) {
-	        creat_as (getuid(), getgid(), "xterm.debug.log", 0666);
+	        creat_as (getuid(), getgid(), True, "xterm.debug.log", 0666);
 		i = open ("xterm.debug.log", O_WRONLY | O_TRUNC, 0666);
 	}
 	if(i >= 0) {

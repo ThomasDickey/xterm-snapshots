@@ -765,7 +765,10 @@ static void do_delete_del (
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    term->screen.delete_is_del = ! term->screen.delete_is_del;
+    if (xtermDeleteIsDEL())
+	term->screen.delete_is_del = False;
+    else
+	term->screen.delete_is_del = True;
     update_delete_del();
 }
 

@@ -473,7 +473,7 @@ Cres(XtNcursorColor,	screen.cursorcolor,	XtDefaultForeground),
 {XtNoldXtermFKeys, XtCOldXtermFKeys, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.old_fkeys),
 	XtRBoolean, (XtPointer) &defaultFALSE},
-Bres(XtNdeleteIsDEL,	XtCDeleteIsDEL,		screen.delete_is_del,	FALSE),
+Bres(XtNdeleteIsDEL,	XtCDeleteIsDEL,		screen.delete_is_del,	2),
 #ifdef ALLOWLOGGING
 {XtNlogFile, XtCLogfile, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, screen.logfile),
@@ -4310,6 +4310,7 @@ static void VTInitialize (
        wnew->screen.Acolors[i] = request->screen.Acolors[i];
 #if OPT_COLOR_RES
        TRACE(("Acolors[%d] = %s\n", i, request->screen.Acolors[i].resource));
+       wnew->screen.Acolors[i].mode = False;
        if (strcmp(wnew->screen.Acolors[i].resource, XtDefaultForeground))
 	   color_ok = True;
 #else

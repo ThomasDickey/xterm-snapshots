@@ -202,6 +202,7 @@ TranslateFromSUNPC(KeySym keysym)
 
 	for (n = 0; n < sizeof(table)/sizeof(table[0]); n++) {
 		if (table[n].before == keysym) {
+			TRACE(("...Input keypad before was %#04lx\n", keysym));
 			keysym = table[n].after;
 			TRACE(("...Input keypad changed to %#04lx\n", keysym));
 			break;
@@ -277,6 +278,37 @@ convertFromUTF8(unsigned long c, Char *strbuf)
 	return nbytes;
 }
 #endif /* OPT_WIDE_CHARS */
+
+/*
+ * Determine if we use the \E[3~ sequence for Delete, or the legacy ^?.  We
+ * maintain the delete_is_del value as 3 states:  unspecified(2), true and
+ * false.  If unspecified, it is handled differently according to whether the
+ * legacy keybord support is enabled, or if xterm emulates a VT220.
+ *
+ * Once the user (or application) has specified delete_is_del via resource
+ * settting, popup menu or escape sequence, it overrides the keyboard type
+ * rather than the reverse.
+ */
+Boolean
+xtermDeleteIsDEL(void)
+{
+	TScreen *screen = &term->screen;
+	Boolean result = True;
+
+	if (term->keyboard.type == keyboardIsDefault
+	 || term->keyboard.type == keyboardIsVT220)
+		result = (screen->delete_is_del == True);
+
+	if (term->keyboard.type == keyboardIsLegacy)
+		result = (screen->delete_is_del != False);
+
+	TRACE(("xtermDeleteIsDEL(%d/%d) = %d\n", 
+		term->keyboard.type,
+		screen->delete_is_del,
+		result));
+
+	return result;
+}
 
 void
 Input (
@@ -472,13 +504,15 @@ Input (
 
 #if OPT_SUNPC_KBD
 	/* make an DEC editing-keypad from a Sun or PC editing-keypad */
-	if (term->keyboard.type == keyboardIsVT220)
+	if (term->keyboard.type == keyboardIsVT220
+	 && (keysym != XK_Delete || !xtermDeleteIsDEL()))
 		keysym = TranslateFromSUNPC(keysym);
 	else
 #endif
 	{
 #ifdef XK_KP_Home
 	if (keysym >= XK_KP_Home && keysym <= XK_KP_Begin) {
+		TRACE(("...Input keypad before was %#04lx\n", keysym));
 		keysym += XK_Home - XK_KP_Home;
 		TRACE(("...Input keypad changed to %#04lx\n", keysym));
 	}
@@ -535,12 +569,7 @@ Input (
 		|| IsEditFunctionKey(keysym)
 		|| (keysym == XK_Delete
 		 && ((modify_parm > 1)
-#if OPT_SUNPC_KBD
-		  || ( !screen->delete_is_del
-		   && term->keyboard.type == keyboardIsDefault)
-		  || term->keyboard.type == keyboardIsVT220
-#endif
-		  ))) {
+		  || !xtermDeleteIsDEL()))) {
 #if OPT_SUNPC_KBD
 		if (term->keyboard.type == keyboardIsVT220) {
 			if ((event->state & ControlMask)
