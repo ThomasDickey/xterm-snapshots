@@ -1026,9 +1026,6 @@ ConvertConsoleSelection(w, selection, target, type, value, length, format)
 }
 #endif /* TIOCCONS */
 
-
-extern WidgetClass xtermWidgetClass;
-
 Arg ourTopLevelShellArgs[] = {
 	{ XtNallowShellResize, (XtArgVal) TRUE },	
 	{ XtNinput, (XtArgVal) TRUE },
