@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.163 2004/04/28 00:40:59 tom Exp $
+dnl $XTermId: configure.in,v 1.165 2004/05/13 00:41:20 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.63 2004/04/28 00:40:59 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.64 2004/05/13 00:41:20 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -572,6 +572,16 @@ if test "$enable_wchar" = yes ; then
 	EXTRAHDRS="$EXTRAHDRS charclass.h precompose.h wcwidth.h"
 	EXTRASRCS="$EXTRASRCS charclass.c precompose.c wcwidth.c"
 	EXTRAOBJS="$EXTRAOBJS charclass.o precompose.o wcwidth.o"
+fi
+
+AC_MSG_CHECKING(if you want dynamic-abbreviation support)
+CF_ARG_ENABLE(dec-locator,
+	[  --enable-dabbrev        enable dynamic-abbreviation support],
+	[enable_dabbrev=yes],
+	[enable_dabbrev=no])
+AC_MSG_RESULT($enable_dabbrev)
+if test "$enable_dabbrev" = yes ; then
+	AC_DEFINE(OPT_DABBREV,1)
 fi
 
 AC_MSG_CHECKING(if you want DECterm Locator support)

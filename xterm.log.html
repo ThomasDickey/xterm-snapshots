@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.139 2004/04/28 00:41:00 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.121 2004/04/28 00:41:00 dickey Exp $
+  $XTermId: xterm.log.html,v 1.142 2004/05/13 00:41:21 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.122 2004/05/13 00:41:21 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_188">Patch #188 - 2004/5/12 - XFree86 4.4.99.6</A>
 <LI><A HREF="#xterm_187">Patch #187 - 2004/4/27 - XFree86 4.4.99.4</A>
 <LI><A HREF="#xterm_186">Patch #186 - 2004/4/18 - XFree86 4.4.99.4</A>
 <LI><A HREF="#xterm_185">Patch #185 - 2004/3/3 - XFree86 4.4</A>
@@ -235,6 +236,60 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_188">Patch #188 - 2004/5/12 - XFree86 4.4.99.6</A></H1>
+<ul>
+	<li>correct table entry for DEL in the ground state, which marked it
+	    as a printable character from <a href="#xterm_171">patch #171</a>
+	    (report by D Hugh Redelmeier).
+
+	<li>improve fix in <a href="#xterm_186">patch #186</a> for failure in
+	    xim_real_init() by adding a sleep.
+
+	<li>fix a typo in os2main.c
+	    (XFree86 Bugzilla #1358, report/patch by Frank Giessler).
+
+	<li>make escape sequence reporting dynamic colors consistent with the
+	    logic that sets it; choosing the opposite color when reverse
+	    video is set (XFree86 Bugzilla #1361, reported by Bradd W Szonye).
+
+	<li>modify initialization of 256- and 88-colors so that colors beyond
+	    16 are normally not X resources.  This works around a hard-coded
+	    limit in Xt which breaks xterm when 256-colors and luit are both
+	    configured (report by Noah Friedman).
+
+	<li>remove <code>ncv</code> from <code>xterm-256color</code> terminfo
+	    entry since it is no longer needed (report by Eli Zaretskii).
+
+	<li>add "erase2" and "eol2" keywords to <code>ttyModes</code> resource,
+	    for recent/current FreeBSD.
+
+	<li>improve ifdef's for utempter library to omit direct calls to
+	    <code>setutent()</code> or <code>getutent()</code> (adapted from
+	    patch by Christian Biere).
+
+	<li>add dynamic abbreviation support like Emacs (patch by Tomasz
+	    Cholewo).  This is ifdef'd with <code>OPT_DABBREV</code>, and
+	    enabled via the configure script <code>--enable-dabbrev</code>
+	    option.
+
+	<li>fix problem responding to session management events, e.g., which
+	    would make logging out very slow (patch by Eddy De Greef, Debian
+	    #233883).
+
+	<li>work around a newer bug in toolbar with XFree86 by forcing menus
+	    to be fully initialized at startup.  In older versions of XFree86
+	    and X11R6, it was possible to delay initialization of the menu
+	    contents until it was popped up.  (The longstanding bug with
+	    XFree86 4.x layout for toolbar still exists, though).
+
+	<li>modify <code>xtermAddInput</code> to work around core dump on
+	    IRIX64 when initializing scrollbar translations if toolbar is
+	    compiled-in.
+
+	<li>fix some minor conflicts in the 2-character entry names in the
+	    termcap file.
+</ul>
 
 <H1><A NAME="xterm_187">Patch #187 - 2004/4/27 - XFree86 4.4.99.4</A></H1>
 <ul>

@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.121 2004/04/28 00:41:00 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.124 2004/05/13 00:41:21 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.49 2004/04/28 00:41:00 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.50 2004/05/13 00:41:21 dickey Exp $
  */
 
 /************************************************************
@@ -81,6 +81,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_BROKEN_ST		/* CF_ARG_DISABLE(broken-st) */
 #undef OPT_C1_PRINT		/* CF_ARG_DISABLE(c1-print) */
 #undef OPT_COLOR_CLASS		/* CF_ARG_DISABLE(color-class) */
+#undef OPT_DABBREV		/* CF_ARG_ENABLE(dabbrev) */
 #undef OPT_DEC_CHRSET		/* CF_ARG_DISABLE(doublechars) */
 #undef OPT_DEC_LOCATOR		/* CF_ARG_ENABLE(dec-locator) */
 #undef OPT_HIGHLIGHT_COLOR	/* CF_ARG_DISABLE(highlighting) */

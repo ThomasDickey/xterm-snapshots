@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.376 2004/04/28 00:40:59 tom Exp $ */
+/* $XTermId: main.c,v 1.381 2004/05/13 00:41:20 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.179 2004/04/28 00:40:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.180 2004/05/13 00:41:20 dickey Exp $ */
 
 /* main.c */
 
@@ -458,7 +458,7 @@ static Bool added_utmp_entry = False;
 static gid_t utmpGid = -1;
 #endif
 
-#ifdef USE_SYSV_UTMP
+#if defined(USE_SYSV_UTMP) && !defined(USE_UTEMPTER)
 static Bool xterm_exiting = False;
 #endif
 
@@ -586,48 +586,53 @@ static struct jtchars d_jtc =
  * SVR4 has only termio.c_cc, but it includes everything from ltchars.
  * POSIX termios has termios.c_cc, which is similar to SVR4.
  */
+#define TTYMODE(name) { name, sizeof(name)-1, 0, 0 }
 static int override_tty_modes = 0;
 /* *INDENT-OFF* */
 struct _xttymodes {
     char *name;
     size_t len;
     int set;
-    char value;
+    Char value;
 } ttymodelist[] = {
-    { "intr",	4, 0, '\0' },	/* tchars.t_intrc ; VINTR */
-#define XTTYMODE_intr 0
-    { "quit",	4, 0, '\0' },	/* tchars.t_quitc ; VQUIT */
-#define XTTYMODE_quit 1
-    { "erase",	5, 0, '\0' },	/* sgttyb.sg_erase ; VERASE */
-#define XTTYMODE_erase 2
-    { "kill",	4, 0, '\0' },	/* sgttyb.sg_kill ; VKILL */
-#define XTTYMODE_kill 3
-    { "eof",	3, 0, '\0' },	/* tchars.t_eofc ; VEOF */
-#define XTTYMODE_eof 4
-    { "eol",	3, 0, '\0' },	/* VEOL */
-#define XTTYMODE_eol 5
-    { "swtch",	5, 0, '\0' },	/* VSWTCH */
-#define XTTYMODE_swtch 6
-    { "start",	5, 0, '\0' },	/* tchars.t_startc */
-#define XTTYMODE_start 7
-    { "stop",	4, 0, '\0' },	/* tchars.t_stopc */
-#define XTTYMODE_stop 8
-    { "brk",	3, 0, '\0' },	/* tchars.t_brkc */
-#define XTTYMODE_brk 9
-    { "susp",	4, 0, '\0' },	/* ltchars.t_suspc ; VSUSP */
-#define XTTYMODE_susp 10
-    { "dsusp",	5, 0, '\0' },	/* ltchars.t_dsuspc ; VDSUSP */
-#define XTTYMODE_dsusp 11
-    { "rprnt",	5, 0, '\0' },	/* ltchars.t_rprntc ; VREPRINT */
-#define XTTYMODE_rprnt 12
-    { "flush",	5, 0, '\0' },	/* ltchars.t_flushc ; VDISCARD */
-#define XTTYMODE_flush 13
-    { "weras",	5, 0, '\0' },	/* ltchars.t_werasc ; VWERASE */
-#define XTTYMODE_weras 14
-    { "lnext",	5, 0, '\0' },	/* ltchars.t_lnextc ; VLNEXT */
-#define XTTYMODE_lnext 15
-    { "status", 6, 0, '\0' },	/* VSTATUS */
-#define XTTYMODE_status 16
+    TTYMODE("intr"),		/* tchars.t_intrc ; VINTR */
+#define XTTYMODE_intr	0
+    TTYMODE("quit"),		/* tchars.t_quitc ; VQUIT */
+#define XTTYMODE_quit	1
+    TTYMODE("erase"),		/* sgttyb.sg_erase ; VERASE */
+#define XTTYMODE_erase	2
+    TTYMODE("kill"),		/* sgttyb.sg_kill ; VKILL */
+#define XTTYMODE_kill	3
+    TTYMODE("eof"),		/* tchars.t_eofc ; VEOF */
+#define XTTYMODE_eof	4
+    TTYMODE("eol"),		/* VEOL */
+#define XTTYMODE_eol	5
+    TTYMODE("swtch"),		/* VSWTCH */
+#define XTTYMODE_swtch	6
+    TTYMODE("start"),		/* tchars.t_startc ; VSTART */
+#define XTTYMODE_start	7
+    TTYMODE("stop"),		/* tchars.t_stopc ; VSTOP */
+#define XTTYMODE_stop	8
+    TTYMODE("brk"),		/* tchars.t_brkc */
+#define XTTYMODE_brk	9
+    TTYMODE("susp"),		/* ltchars.t_suspc ; VSUSP */
+#define XTTYMODE_susp	10
+    TTYMODE("dsusp"),		/* ltchars.t_dsuspc ; VDSUSP */
+#define XTTYMODE_dsusp	11
+    TTYMODE("rprnt"),		/* ltchars.t_rprntc ; VREPRINT */
+#define XTTYMODE_rprnt	12
+    TTYMODE("flush"),		/* ltchars.t_flushc ; VDISCARD */
+#define XTTYMODE_flush	13
+    TTYMODE("weras"),		/* ltchars.t_werasc ; VWERASE */
+#define XTTYMODE_weras	14
+    TTYMODE("lnext"),		/* ltchars.t_lnextc ; VLNEXT */
+#define XTTYMODE_lnext	15
+    TTYMODE("status"),		/* VSTATUS */
+#define XTTYMODE_status	16
+    TTYMODE("erase2"),		/* VERASE2 */
+#define XTTYMODE_erase2	17
+    TTYMODE("eol2"),		/* VEOL2 */
+#define XTTYMODE_eol2	18
     { NULL,	0, 0, '\0' },	/* end of data */
 };
 /* *INDENT-ON* */
@@ -645,6 +650,7 @@ extern struct utmp *getutid();
 static char etc_utmp[] = UTMP_FILENAME;
 #endif /* USE_SYSV_UTMP */
 
+#ifndef USE_UTEMPTER
 #ifdef USE_LASTLOG
 static char etc_lastlog[] = LASTLOG_FILENAME;
 #endif
@@ -652,6 +658,7 @@ static char etc_lastlog[] = LASTLOG_FILENAME;
 #ifdef WTMP
 static char etc_wtmp[] = WTMP_FILENAME;
 #endif
+#endif /* !USE_UTEMPTER */
 
 /*
  * Some people with 4.3bsd /bin/login seem to like to use login -p -f user
@@ -1992,6 +1999,9 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 						 (XtPointer) 0);
     /* this causes the initialize method to be called */
+#if OPT_TOOLBAR
+    SetupToolbar(toplevel);
+#endif
 
 #if OPT_HP_FUNC_KEYS
     init_keyboard_type(keyboardIsHP, resource.hpFunctionKeys);
@@ -2174,6 +2184,15 @@ main(int argc, char *argv[]ENVP_ARG)
     if (ioctl(screen->respond, FIONBIO, (char *) &mode) == -1)
 	SysError(ERROR_FIONBIO);
 #endif /* USE_ANY_SYSV_TERMIO, etc */
+
+    /* The erase character is used to delete the current completion */
+#if OPT_DABBREV
+#ifdef USE_ANY_SYSV_TERMIO
+    screen->dabbrev_erase_char = d_tio.c_cc[VERASE];
+#else
+    screen->dabbrev_erase_char = d_sg.sg_erase;
+#endif
+#endif
 
     FD_ZERO(&pty_mask);
     FD_ZERO(&X_mask);
@@ -2688,6 +2707,7 @@ spawn(void)
 #endif
     struct passwd *pw = NULL;
     char *login_name = NULL;
+#ifndef USE_UTEMPTER
 #ifdef HAVE_UTMP
     struct UTMP_STR utmp;
 #ifdef USE_SYSV_UTMP
@@ -2700,10 +2720,11 @@ spawn(void)
     struct lastlogx lastlog;
 #endif /* USE_LASTLOG */
 #endif /* HAVE_UTMP */
+#endif /* !USE_UTEMPTER */
 
-    /* Noisy compilers */
+    /* Noisy compilers (suppress some unused-variable warnings) */
     (void) rc;
-#if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP)
+#if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP) && !defined(USE_UTEMPTER)
     (void) utret;
 #endif
 
@@ -2993,7 +3014,16 @@ spawn(void)
 #if defined(USE_UTEMPTER)
 #undef UTMP
     if (!resource.utmpInhibit) {
-	addToUtmp(ttydev, NULL, screen->respond);
+	struct UTMP_STR dummy;
+	char host[sizeof(dummy.ut_host) + 1], *endptr;
+
+	(void) strncpy(host, DisplayString(screen->display), sizeof host);
+	host[sizeof(host) - 1] = '\0';
+	endptr = strrchr(host, ':');
+	if (endptr) {
+	    *endptr = '\0';
+	}
+	addToUtmp(ttydev, host, screen->respond);
 	added_utmp_entry = True;
     }
 #endif
@@ -3390,6 +3420,12 @@ spawn(void)
 #ifdef VSTATUS
 		    TMODE(XTTYMODE_status, tio.c_cc[VSTATUS]);
 #endif
+#ifdef VERASE2
+		    TMODE(XTTYMODE_erase2, tio.c_cc[VERASE2]);
+#endif
+#ifdef VEOL2
+		    TMODE(XTTYMODE_eol2, tio.c_cc[VEOL2]);
+#endif
 #ifdef HAS_LTCHARS
 		    /* both SYSV and BSD have ltchars */
 		    TMODE(XTTYMODE_susp, ltc.t_suspc);
@@ -3682,6 +3718,7 @@ spawn(void)
 	    if (login_name != NULL) {
 		xtermSetenv("LOGNAME=", login_name);	/* for POSIX */
 	    }
+#ifndef USE_UTEMPTER
 #ifdef USE_SYSV_UTMP
 	    /* Set up our utmp entry now.  We need to do it here
 	     * for the following reasons:
@@ -3889,6 +3926,7 @@ spawn(void)
 		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
 	    }
 #endif /* OPT_PTY_HANDSHAKE */
+#endif /* USE_UTEMPTER */
 #endif /* HAVE_UTMP */
 
 	    (void) setgid(screen->gid);
@@ -4487,13 +4525,17 @@ parse_tty_modes(char *s, struct _xttymodes *modelist)
 
     TRACE(("parse_tty_modes\n"));
     while (1) {
+	size_t len;
+
 	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s)))
 	    s++;
 	if (!*s)
 	    return count;
 
+	for (len = 0; isalnum(CharOf(s[len])); ++len) ;
 	for (mp = modelist; mp->name; mp++) {
-	    if (strncmp(s, mp->name, mp->len) == 0)
+	    if (len == mp->len
+		&& strncmp(s, mp->name, mp->len) == 0)
 		break;
 	}
 	if (!mp->name)

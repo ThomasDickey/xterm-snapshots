@@ -1,11 +1,13 @@
+/* $XTermId: VTPrsTbl.c,v 1.36 2004/05/13 00:41:20 tom Exp $ */
+
 /*
  *	$Xorg: VTPrsTbl.c,v 1.3 2000/08/17 19:55:07 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.25 2003/12/31 17:12:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.26 2004/05/13 00:41:20 dickey Exp $ */
 /*
  *
- * Copyright 1999-2000 by Thomas E. Dickey
+ * Copyright 1999-2000,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -234,7 +236,7 @@ CASE_PRINT,
 CASE_PRINT,
 CASE_PRINT,
 CASE_PRINT,
-CASE_PRINT,
+CASE_IGNORE,
 /*      0x80            0x81            0x82            0x83    */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -1044,6 +1046,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_IGNORE,
 };
+
 Const PARSE_T csi_ex_table[] =		/* CSI ! */
 {
 /*	NUL		SOH		STX		ETX	*/
@@ -3313,6 +3316,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_IGNORE,
 };
+
 Const PARSE_T eigtable[] =		/* CASE_ESC_IGNORE */
 {
 /*	NUL		SOH		STX		ETX	*/
@@ -5585,7 +5589,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_IGNORE,
 };
-#endif
+#endif /* OPT_WIDE_CHARS */
 
 #if OPT_VT52_MODE
 Const PARSE_T vt52_table[] =
@@ -6073,7 +6077,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_IGNORE, 
+CASE_IGNORE,
 /*      0x80            0x81            0x82            0x83    */
 CASE_IGNORE,
 CASE_IGNORE,
@@ -6560,4 +6564,3 @@ CASE_IGNORE,
 CASE_IGNORE,
 };
 #endif /* OPT_VT52_MODE */
-

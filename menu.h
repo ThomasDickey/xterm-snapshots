@@ -1,3 +1,5 @@
+/* $XTermId: menu.h,v 1.82 2004/05/13 00:41:21 tom Exp $ */
+
 /* $Xorg: menu.h,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
 
@@ -48,7 +50,7 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.32 2004/03/04 02:21:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.33 2004/05/13 00:41:21 dickey Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h
@@ -123,6 +125,10 @@ extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
 
 extern void DoSecureKeyboard (Time tp);
 extern void SetupMenus (Widget shell, Widget *forms, Widget *menus);
+
+#if OPT_TOOLBAR
+extern void SetupToolbar(Widget shell);
+#endif
 
 /*
  * The following definitions MUST match the order of entries given in

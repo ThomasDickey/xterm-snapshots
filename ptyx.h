@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.315 2004/04/18 20:49:43 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.318 2004/05/13 00:41:21 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.114 2004/04/18 20:49:43 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.115 2004/05/13 00:41:21 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -411,6 +411,15 @@ typedef struct {
 
 #ifndef OPT_COLOR_RES
 #define OPT_COLOR_RES   1 /* true if xterm delays color-resource evaluation */
+#undef  OPT_COLOR_RES2
+#endif
+
+#ifndef OPT_COLOR_RES2
+#define OPT_COLOR_RES2 OPT_COLOR_RES /* true to avoid using extra resources */
+#endif
+
+#ifndef OPT_DABBREV
+#define OPT_DABBREV 0	/* dynamic abbreviations */
 #endif
 
 #ifndef OPT_DEC_CHRSET
@@ -677,16 +686,17 @@ typedef enum {
 #define COLOR_13	13
 #define COLOR_14	14
 #define COLOR_15	15
+#define MIN_ANSI_COLORS 16
 
 #if OPT_256_COLORS
 # define NUM_ANSI_COLORS 256
 #elif OPT_88_COLORS
 # define NUM_ANSI_COLORS 88
 #else
-# define NUM_ANSI_COLORS 16
+# define NUM_ANSI_COLORS MIN_ANSI_COLORS
 #endif
 
-#if NUM_ANSI_COLORS > 16
+#if NUM_ANSI_COLORS > MIN_ANSI_COLORS
 # define OPT_EXT_COLORS  1
 #else
 # define OPT_EXT_COLORS  0
@@ -1432,6 +1442,10 @@ typedef struct {
 #if OPT_INPUT_METHOD
 	XFontSet	fs;		/* fontset for XIM preedit */
 	int		fs_ascent;	/* ascent of fs */
+#endif
+#if OPT_DABBREV
+	int		dabbrev_working;	/* nonzero during dabbrev process */
+	unsigned char	dabbrev_erase_char;	/* used for deleting inserted completion */
 #endif
 } TScreen;
 
