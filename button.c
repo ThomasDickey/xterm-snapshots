@@ -1436,7 +1436,7 @@ SaveText(screen, row, scol, ecol, lp, eol)
 	i = Length(screen, row, scol, ecol);
 	ecol = scol + i;
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0])) {
+	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row + screen->topline)[0])) {
 		scol = (scol + 0) / 2;
 		ecol = (ecol + 1) / 2;
 	}

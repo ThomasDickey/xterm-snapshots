@@ -94,7 +94,7 @@ ScrnBuf Allocate (nrow, ncol, addr)
    the actual character array and the second (odd) one is the attributes.
    each line is formed from four char arrays.  The first one is the actual
    character array, the second one is the attributes, the third is the
-   foreground color, and the fourth is the background color.
+   foreground and background colors, and the fourth denotes the character set.
  */
 register int nrow, ncol;
 Char **addr;
