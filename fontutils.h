@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.h,v 1.4 1998/12/20 11:58:33 dawes Exp $
+ * $XFree86: xc/programs/xterm/fontutils.h,v 1.5 1999/02/07 06:18:57 dawes Exp $
  */
 
 /************************************************************
