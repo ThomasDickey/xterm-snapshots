@@ -60,7 +60,7 @@
 #define CANT_OPEN_DEV_TTY
 #endif
 
-#ifdef __EMX__
+#if defined(__EMX__) || defined(__CYGWIN__)
 #define USE_SYSV_TERMIO
 #define USE_TERMCAP
 #endif
@@ -93,7 +93,7 @@
 #endif
 #endif
 
-#if defined(SYSV) || defined(__CYGWIN32__)
+#if defined(SYSV) || defined(__CYGWIN__)
 #define USE_SYSV_TERMIO
 #elif defined(__QNX__)
 #define USE_TERMINFO
@@ -114,7 +114,7 @@
 #define USE_TERMIOS
 #endif
 
-#ifndef __CYGWIN32__
+#ifndef __CYGWIN__
 #include <sys/ioctl.h>
 #endif
 
@@ -263,7 +263,6 @@ static void Usage (void);
 static void readstring (FILE *fp, char *buf, char *str);
 
 #ifdef USE_TERMCAP
-static char *strindex (char *s1, char *s2);
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
 #if defined(NCURSES_VERSION)
@@ -277,6 +276,10 @@ static char *strindex (char *s1, char *s2);
 #else
 #include <curses.h>
 #endif /* HAVE_TERMCAP_H  */
+#endif
+
+#ifdef USE_TERMCAP
+static char *strindex (char *s1, char *s2);
 #endif
 
 #define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */

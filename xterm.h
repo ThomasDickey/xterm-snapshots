@@ -88,11 +88,22 @@ authorization.
 #define HAVE_UTMP 1
 #endif
 
-#if (defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN32__)
+#if (defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN__)
 #define UTMPX_FOR_UTMP 1
 #endif
 
 #define HAVE_UTMP_UT_HOST 1
+
+#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
+#define HAVE_UTMP_UT_XTIME 1
+#endif
+
+#if defined(linux) || defined(__CYGWIN__)
+#define USE_LASTLOG
+#define HAVE_LASTLOG_H
+#elif defined(BSD) && (BSD >= 199103)
+#define USE_LASTLOG
+#endif
 
 #if defined(AIXV3) || defined(CRAY) || defined(SCO) || defined(SVR4) || (defined(SYSV) && defined(i386)) || defined(__MVS__) || defined(__hpux) || defined(__osf__) || defined(linux) || defined(macII)
 #define USE_SYSV_UTMP
