@@ -352,7 +352,6 @@ static Bool IsPts = False;
 #endif
 
 #if !defined(MINIX) && !defined(WIN32) && !defined(Lynx)
-#undef	NBBY		/* Xpoll.h has conflicting value that we don't use */
 #include <sys/param.h>	/* for NOFILE */
 #endif
 
