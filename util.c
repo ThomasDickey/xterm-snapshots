@@ -1,10 +1,10 @@
-/* $XTermId: util.c,v 1.188 2004/06/06 22:15:26 tom Exp $ */
+/* $XTermId: util.c,v 1.190 2004/07/20 01:14:41 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.82 2004/06/06 22:15:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.83 2004/07/20 01:14:41 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -2376,6 +2376,10 @@ set_keyboard_type(xtermKeyboardType type, Bool set)
 {
     xtermKeyboardType save = term->keyboard.type;
 
+    TRACE(("set_keyboard_type(%s, %s) currently %s\n",
+	   visibleKeyboardType(type),
+	   BtoS(set),
+	   visibleKeyboardType(term->keyboard.type)));
     if (set) {
 	term->keyboard.type = type;
     } else {
@@ -2392,6 +2396,9 @@ toggle_keyboard_type(xtermKeyboardType type)
 {
     xtermKeyboardType save = term->keyboard.type;
 
+    TRACE(("toggle_keyboard_type(%s) currently %s\n",
+	   visibleKeyboardType(type),
+	   visibleKeyboardType(term->keyboard.type)));
     if (term->keyboard.type == type) {
 	term->keyboard.type = keyboardIsDefault;
     } else {
@@ -2408,6 +2415,10 @@ init_keyboard_type(xtermKeyboardType type, Bool set)
 {
     static Bool wasSet = False;
 
+    TRACE(("init_keyboard_type(%s, %s) currently %s\n",
+	   visibleKeyboardType(type),
+	   BtoS(set),
+	   visibleKeyboardType(term->keyboard.type)));
     if (set) {
 	if (wasSet) {
 	    fprintf(stderr, "Conflicting keyboard type option (%d/%d)\n",
@@ -2415,5 +2426,6 @@ init_keyboard_type(xtermKeyboardType type, Bool set)
 	}
 	term->keyboard.type = type;
 	wasSet = True;
+	update_keyboard_type();
     }
 }

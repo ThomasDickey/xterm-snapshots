@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.168 2004/06/06 22:15:25 tom Exp $ */
+/* $XTermId: os2main.c,v 1.170 2004/07/20 01:14:41 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.69 2004/06/06 22:15:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.70 2004/07/20 01:14:41 dickey Exp $ */
 
 /***********************************************************
 
@@ -965,6 +965,7 @@ main(int argc, char **argv ENVP_ARG)
     XtGetApplicationResources(toplevel, (XtPointer) & resource,
 			      application_resources,
 			      XtNumber(application_resources), NULL, 0);
+    TRACE_XRES();
 
     waiting_for_initial_map = resource.wait_for_map;
 

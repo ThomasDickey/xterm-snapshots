@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.31 2004/06/06 22:15:25 tom Exp $ */
+/* $XTermId: trace.h,v 1.33 2004/07/20 01:14:41 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/trace.h,v 3.15 2004/06/06 22:15:25 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.h,v 3.16 2004/07/20 01:14:41 dickey Exp $
  */
 
 /************************************************************
@@ -61,6 +61,9 @@ extern	void	TraceSizeHints(XSizeHints *);
 
 extern	void	TraceTranslations(const char *, Widget);
 #define	TRACE_TRANS(name,w) TraceTranslations(name,w)
+
+extern	void	TraceXtermResources(void);
+#define	TRACE_XRES() TraceXtermResources()
 
 extern	void	TraceArgv(const char *tag, char **argv);
 #define	TRACE_ARGV(tag,argv) TraceArgv(tag,argv)

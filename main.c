@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.390 2004/07/13 00:41:28 tom Exp $ */
+/* $XTermId: main.c,v 1.394 2004/07/20 01:14:41 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.183 2004/07/13 00:41:28 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.184 2004/07/20 01:14:41 dickey Exp $ */
 
 /* main.c */
 
@@ -1825,6 +1825,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	XtGetApplicationResources(toplevel, (XtPointer) & resource,
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
+	TRACE_XRES();
 
 #ifdef HAS_SAVED_IDS_AND_SETEUID
 	if (seteuid(euid) == -1) {
@@ -2653,6 +2654,37 @@ set_owner(char *device, int uid, int gid, int mode)
     }
     chmod(device, mode);
 }
+
+#if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP) && !defined(USE_UTEMPTER)
+/*
+ * getutid() only looks at ut_type and ut_id.
+ * But we'll also check ut_line in find_utmp().
+ */
+static void
+init_utmp(int type, struct UTMP_STR *tofind)
+{
+    memset(tofind, 0, sizeof(*tofind));
+    tofind->ut_type = type;
+    (void) strncpy(tofind->ut_id, my_utmp_id(ttydev), sizeof(tofind->ut_id));
+    (void) strncpy(tofind->ut_line, my_pty_name(ttydev), sizeof(tofind->ut_line));
+}
+
+/*
+ * We could use getutline() if we didn't support old systems.
+ */
+static struct UTMP_STR *
+find_utmp(struct UTMP_STR *tofind)
+{
+    struct UTMP_STR *result;
+
+    while ((result = getutid(tofind)) != 0) {
+	if (!strcmp(result->ut_line, tofind->ut_line)) {
+	    break;
+	}
+    }
+    return result;
+}
+#endif /* HAVE_UTMP... */
 
 static int
 spawn(void)
@@ -3731,18 +3763,14 @@ spawn(void)
 	     *     user and group id's.
 	     */
 	    (void) setutent();
-	    /* set up entry to search for */
-	    bzero((char *) &utmp, sizeof(utmp));
-	    (void) strncpy(utmp.ut_id, my_utmp_id(ttydev), sizeof(utmp.ut_id));
-
-	    utmp.ut_type = DEAD_PROCESS;
+	    init_utmp(DEAD_PROCESS, &utmp);
 
 	    /* position to entry in utmp file */
 	    /* Test return value: beware of entries left behind: PSz 9 Mar 00 */
-	    if (!(utret = getutid(&utmp))) {
+	    if (!(utret = find_utmp(&utmp))) {
 		(void) setutent();
-		utmp.ut_type = USER_PROCESS;
-		if (!(utret = getutid(&utmp))) {
+		init_utmp(USER_PROCESS, &utmp);
+		if (!(utret = find_utmp(&utmp))) {
 		    (void) setutent();
 		}
 	    }
@@ -3798,8 +3826,10 @@ spawn(void)
 	    if (!resource.utmpInhibit) {
 		errno = 0;
 		pututline(&utmp);
-		TRACE(("pututline: %d %d %s\n",
-		       resource.utmpInhibit,
+		TRACE(("pututline: id %s, line %s, pid %ld, errno %d %s\n",
+		       utmp.ut_id,
+		       utmp.ut_line,
+		       (long) utmp.ut_pid,
 		       errno, (errno != 0) ? strerror(errno) : ""));
 	    }
 #ifdef WTMP
@@ -4281,43 +4311,47 @@ Exit(int n)
 	    setegid(utmpGid);
 	}
 #endif
-	utmp.ut_type = USER_PROCESS;
-	(void) strncpy(utmp.ut_id, my_utmp_id(ttydev), sizeof(utmp.ut_id));
+	init_utmp(USER_PROCESS, &utmp);
 	(void) setutent();
-	utptr = getutid(&utmp);
-	/* write it out only if it exists, and the pid's match */
-	if (utptr && (utptr->ut_pid == screen->pid)) {
-	    utptr->ut_type = DEAD_PROCESS;
+
+	/*
+	 * We could use getutline() if we didn't support old systems.
+	 */
+	while ((utptr = find_utmp(&utmp)) != 0) {
+	    if (utptr->ut_pid == screen->pid) {
+		utptr->ut_type = DEAD_PROCESS;
 #if defined(HAVE_UTMP_UT_XTIME)
 #if defined(HAVE_UTMP_UT_SESSION)
-	    utptr->ut_session = getsid(0);
+		utptr->ut_session = getsid(0);
 #endif
-	    utptr->ut_xtime = time((time_t *) 0);
-	    utptr->ut_tv.tv_usec = 0;
+		utptr->ut_xtime = time((time_t *) 0);
+		utptr->ut_tv.tv_usec = 0;
 #else
-	    *utptr->ut_user = 0;
-	    utptr->ut_time = time((time_t *) 0);
+		*utptr->ut_user = 0;
+		utptr->ut_time = time((time_t *) 0);
 #endif
-	    (void) pututline(utptr);
+		(void) pututline(utptr);
 #ifdef WTMP
 #if defined(WTMPX_FILE) && (defined(SVR4) || defined(__SCO__))
-	    if (term->misc.login_shell)
-		updwtmpx(WTMPX_FILE, utptr);
+		if (term->misc.login_shell)
+		    updwtmpx(WTMPX_FILE, utptr);
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
-	    strncpy(utmp.ut_line, utptr->ut_line, sizeof(utmp.ut_line));
-	    if (term->misc.login_shell)
-		updwtmp(etc_wtmp, utptr);
+		strncpy(utmp.ut_line, utptr->ut_line, sizeof(utmp.ut_line));
+		if (term->misc.login_shell)
+		    updwtmp(etc_wtmp, utptr);
 #else
-	    /* set wtmp entry if wtmp file exists */
-	    if (term->misc.login_shell) {
-		int fd;
-		if ((fd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
-		    write(fd, utptr, sizeof(*utptr));
-		    close(fd);
+		/* set wtmp entry if wtmp file exists */
+		if (term->misc.login_shell) {
+		    int fd;
+		    if ((fd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
+			write(fd, utptr, sizeof(*utptr));
+			close(fd);
+		    }
 		}
+#endif
+#endif
+		break;
 	    }
-#endif
-#endif
 
 	}
 	(void) endutent();
