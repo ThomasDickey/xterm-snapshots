@@ -3,7 +3,7 @@
 !
 !
 !
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.8 1998/04/27 03:14:55 robin Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.9 1998/12/20 11:58:28 dawes Exp $
 
 XTerm.JoinSession:False
 
