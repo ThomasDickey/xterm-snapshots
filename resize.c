@@ -2,7 +2,7 @@
  *	$Xorg: resize.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/resize.c,v 3.56 2003/03/23 02:01:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/resize.c,v 3.57 2004/04/03 22:26:26 dawes Exp $ */
 
 /*
  * Copyright 2003 by Thomas E. Dickey
@@ -69,7 +69,7 @@
 #endif
 
 #ifndef USE_TERMINFO		/* avoid conflict with configure script */
-#if defined(__QNX__) || defined(SCO) || defined(sco) || defined(linux) || defined(__OpenBSD__)
+#if defined(__QNX__) || defined(__SCO__) || defined(linux) || defined(__OpenBSD__)
 #define USE_TERMINFO
 #endif
 #endif

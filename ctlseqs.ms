@@ -1,14 +1,16 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
+.\" $XTermId: ctlseqs.ms,v 1.139 2004/04/18 15:18:48 tom Exp $
+.\"
+.\"
 .\" $Xorg: ctlseqs.ms,v 1.3 2000/08/17 19:42:51 cpqbld Exp $
 .\"
 .\"
 .\"
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.52 2004/04/18 15:18:48 dickey Exp $
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.50 2003/10/27 01:10:31 dickey Exp $
 .\"
-.\"
-.\" Copyright 1996-2002,2003 by Thomas E. Dickey
+.\" Copyright 1996-2003,2004 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -392,7 +394,7 @@ Carriage Return (Ctrl-M)
 .IP \\*(En
 Return Terminal Status (Ctrl-E).
 Default response is an empty string, but may be overridden
-by a resource \fIanswerbackString\fP.
+by a resource \fBanswerbackString\fP.
 .
 .IP \\*(Ff
 Form Feed or New Page (NP) (Ctrl-L) same as LF
@@ -755,7 +757,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*3\*5 \(-> Enable font-shifting functions (rxvt).
   \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK)
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode
-  \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fIcurses\fP resource)
+  \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fBcurses\fP resource)
   \*(Ps = \*4\*2 \(-> Enable Nation Replacement Character sets (DECNRCM)
   \*(Ps = \*4\*4 \(-> Turn On Margin Bell
   \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode
@@ -782,7 +784,9 @@ disabled by the \fBtiteInhibit\fP resource)
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*4\*9 \(-> Save cursor as in DECSC
 and use Alternate Screen Buffer, clearing it first (unless
-disabled by the \fBtiteInhibit\fP resource)
+disabled by the \fBtiteInhibit\fP resource).
+This combines the effects of the \*1\*0\*4\*7 and \*1\*0\*4\*8 modes.
+Use this with terminfo-based applications rather than the \*4\*7 mode.
   \*(Ps = \*1\*0\*5\*1 \(-> Set Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Set HP function-key mode.
   \*(Ps = \*1\*0\*6\*0 \(-> Set legacy keyboard emulation (X11R6).
@@ -827,7 +831,7 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*3\*0 \(-> Don't show scrollbar (rxvt).
   \*(Ps = \*3\*5 \(-> Disable font-shifting functions (rxvt).
   \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode
-  \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fIcurses\fP resource)
+  \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fBcurses\fP resource)
   \*(Ps = \*4\*2 \(-> Disable Nation Replacement Character sets (DECNRCM)
   \*(Ps = \*4\*4 \(-> Turn Off Margin Bell
   \*(Ps = \*4\*5 \(-> No Reverse-wraparound Mode
@@ -855,7 +859,9 @@ disabled by the \fBtiteInhibit\fP resource)
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*4\*9 \(-> Use Normal Screen Buffer and restore cursor
 as in DECRC (unless
-disabled by the \fBtiteInhibit\fP resource)
+disabled by the \fBtiteInhibit\fP resource).
+This combines the effects of the \*1\*0\*4\*7 and \*1\*0\*4\*8 modes.
+Use this with terminfo-based applications rather than the \*4\*7 mode.
   \*(Ps = \*1\*0\*5\*1 \(-> Reset Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Reset HP function-key mode.
   \*(Ps = \*1\*0\*6\*0 \(-> Reset legacy keyboard emulation (X11R6).
@@ -1174,6 +1180,7 @@ be given in one control sequence, \fBxterm\fR can make more than one reply.
   \*(Ps = \*1\*5 \(-> Change Tektronix foreground color to \*(Pt
   \*(Ps = \*1\*6 \(-> Change Tektronix background color to \*(Pt
   \*(Ps = \*1\*7 \(-> Change highlight color to \*(Pt
+  \*(Ps = \*1\*8 \(-> Change Tektronix cursor color to \*(Pt
 .sp
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt (normally disabled by a
 compile-time option)
@@ -1299,7 +1306,7 @@ _
 .TE
 .LP
 Older versions of \fIxterm\fP implement different escape sequences for F1 through F4.
-These can be activated by setting the \fIoldXtermFKeys\fP resource.
+These can be activated by setting the \fBoldXtermFKeys\fP resource.
 However, since they do not correspond to any hardware terminal, they have been deprecated.
 (The DEC VT220 reserves F1 through F5 for local functions such as \fBSetup\fP).
 .TS
@@ -1483,6 +1490,39 @@ HP-Style Function Keys
 .LP
 Similarly, \fIxterm\fP can be compiled to support HP keyboards.
 See the xterm-hp terminfo entry for details.
+.SH
+The Alternate Screen Buffer
+.LP
+\fBXterm\fP maintains two screen buffers.
+The normal screen buffer allows you to scroll back to view saved lines
+of output up to the maximum set by the \fBsaveLines\fP resource.
+The alternate screen buffer is exactly as large as the display,
+contains no additional saved lines.
+When the alternate screen buffer is active,
+you cannot scroll back to view saved lines.
+\fBXterm\fP provides control sequences and menu entries
+for switching between the two.
+.LP
+Most full-screen applications use terminfo or termcap to obtain
+strings used to start/stop full-screen mode,
+i.e., \fIsmcup\fP and \fIrmcup\fP for terminfo,
+or the corresponding \fIti\fP and \fIte\fP for termcap.
+The \fBtiteInhibit\fP resource removes the \fIti\fP and \fIte\fP strings
+from the TERMCAP string which is set in the environment for some platforms.
+That is not done when \fBxterm\fP is built with terminfo libraries because
+terminfo does not provide the whole text of the termcap data in one piece.
+It would not work for terminfo anyway, since terminfo data is not passed
+in environment variables;
+setting an environment variable in this manner would have no effect on
+the application's ability to switch between normal and alternate screen
+buffers.
+Instead, the newer private mode controls
+(such as \*1\*0\*4\*9)
+for switching between normal
+and alternate screen buffers simply disable the switching.
+They add other features such as clearing the display for the same reason:
+to make the details of switching independent of the application that
+requests the switch.
 .SH
 Mouse Tracking
 .ds RH Mouse Tracking

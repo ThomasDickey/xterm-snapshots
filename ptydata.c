@@ -1,5 +1,7 @@
+/* $XTermId: ptydata.c,v 1.48 2004/04/18 20:49:43 tom Exp $ */
+
 /*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.18 2004/03/04 02:21:56 dickey Exp $
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.19 2004/04/18 20:49:43 dickey Exp $
  */
 
 /************************************************************
@@ -241,7 +243,7 @@ switchPtyData(TScreen * screen, PtyData * data, int flag)
 	screen->utf8_mode = flag;
 
 	TRACE(("FIXME turning UTF-8 mode %s after using %d/%d entries (%d bytes)\n",
-	       flag ? "ON" : "OFF",
+	       BtoS(flag),
 	       used, data->cnt2, data->len2));
 
 	if (flag) {

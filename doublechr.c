@@ -1,5 +1,7 @@
+/* $XTermId: doublechr.c,v 1.33 2004/04/18 20:49:43 tom Exp $ */
+
 /*
- * $XFree86: xc/programs/xterm/doublechr.c,v 3.12 2003/10/13 00:58:22 dickey Exp $
+ * $XFree86: xc/programs/xterm/doublechr.c,v 3.13 2004/04/18 20:49:43 dickey Exp $
  */
 
 /************************************************************
@@ -252,8 +254,8 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
 
     gcv.graphics_exposures = TRUE;	/* default */
     gcv.font = data->fs->fid;
-    gcv.foreground = screen->foreground;
-    gcv.background = term->core.background_pixel;
+    gcv.foreground = T_COLOR(screen, TEXT_FG);
+    gcv.background = T_COLOR(screen, TEXT_BG);
 
     data->gc = XCreateGC(screen->display, VWindow(screen), mask, &gcv);
     XCopyGC(screen->display, old_gc, ~GCFont, data->gc);

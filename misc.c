@@ -1,8 +1,10 @@
+/* $XTermId: misc.c,v 1.212 2004/04/18 20:49:43 tom Exp $ */
+
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.83 2004/03/04 02:21:56 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.84 2004/04/18 20:49:43 dickey Exp $ */
 
 /*
  *
@@ -547,7 +549,8 @@ VisualBell(void)
     TScreen *screen = &term->screen;
 
     if (VB_DELAY > 0) {
-	Pixel xorPixel = screen->foreground ^ term->core.background_pixel;
+	Pixel xorPixel = (T_COLOR(screen, TEXT_FG) ^
+			  T_COLOR(screen, TEXT_BG));
 	XGCValues gcval;
 	GC visualGC;
 
@@ -1312,7 +1315,7 @@ xtermGetColorRes(ColorRes * res)
 	TRACE(("xtermGetColorRes for Acolors[%d]\n",
 	       res - term->screen.Acolors));
 	if (!AllocateAnsiColor(term, res, res->resource)) {
-	    res->value = term->screen.foreground;
+	    res->value = term->screen.Tcolors[TEXT_FG].value;
 	    res->mode = -True;
 	    fprintf(stderr,
 		    "%s: Cannot allocate color %s\n",
@@ -1438,14 +1441,19 @@ do_osc(Char * oscbuf, int len GCC_UNUSED, int final)
 	ChangeAnsiColorRequest(term, buf, final);
 	break;
 #endif
-    case 10:
-    case 11:
-    case 12:
-    case 13:
-    case 14:
-    case 15:
-    case 16:
-    case 17:
+    case 10 + TEXT_FG:
+    case 10 + TEXT_BG:
+    case 10 + TEXT_CURSOR:
+    case 10 + MOUSE_FG:
+    case 10 + MOUSE_BG:
+#if OPT_HIGHLIGHT_COLOR
+    case 10 + HIGHLIGHT_BG:
+#endif
+#if OPT_TEK4014
+    case 10 + TEK_FG:
+    case 10 + TEK_BG:
+    case 10 + TEK_CURSOR:
+#endif
 	if (term->misc.dynamicColors)
 	    ChangeColorsRequest(term, mode - 10, buf, final);
 	break;
@@ -1943,9 +1951,7 @@ ReportColorRequest(XtermWidget pTerm, int ndx, int final)
 }
 
 static Boolean
-UpdateOldColors(
-		   XtermWidget pTerm GCC_UNUSED,
-		   ScrnColors * pNew)
+UpdateOldColors(XtermWidget pTerm GCC_UNUSED, ScrnColors * pNew)
 {
     int i;
 
@@ -2001,18 +2007,17 @@ ReverseOldColors(void)
 	EXCHANGE(pOld->colors[MOUSE_FG], pOld->colors[MOUSE_BG], tmpPix);
 	EXCHANGE(pOld->names[MOUSE_FG], pOld->names[MOUSE_BG], tmpName);
 
+#if OPT_TEK4014
 	EXCHANGE(pOld->colors[TEK_FG], pOld->colors[TEK_BG], tmpPix);
 	EXCHANGE(pOld->names[TEK_FG], pOld->names[TEK_BG], tmpName);
+#endif
     }
     return;
 }
 
-static Boolean
-AllocateColor(
-		 XtermWidget pTerm,
-		 ScrnColors * pNew,
-		 int ndx,
-		 char *name)
+Boolean
+AllocateTermColor(XtermWidget pTerm, ScrnColors * pNew, int ndx, const
+		  char *name)
 {
     XColor def;
     register TScreen *screen = &pTerm->screen;
@@ -2026,11 +2031,41 @@ AllocateColor(
 	SET_COLOR_VALUE(pNew, ndx, def.pixel);
 	strcpy(newName, name);
 	SET_COLOR_NAME(pNew, ndx, newName);
-	TRACE(("AllocateColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel));
+	TRACE(("AllocateTermColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel));
 	return (TRUE);
     }
-    TRACE(("AllocateColor #%d: %s (failed)\n", ndx, name));
+    TRACE(("AllocateTermColor #%d: %s (failed)\n", ndx, name));
     return (FALSE);
+}
+
+static int
+oppositeColor(int n)
+{
+    switch (n) {
+    case TEXT_FG:
+	n = TEXT_BG;
+	break;
+    case TEXT_BG:
+	n = TEXT_FG;
+	break;
+    case MOUSE_FG:
+	n = MOUSE_BG;
+	break;
+    case MOUSE_BG:
+	n = MOUSE_FG;
+	break;
+#if OPT_TEK4014
+    case TEK_FG:
+	n = TEK_BG;
+	break;
+    case TEK_BG:
+	n = TEK_FG;
+	break;
+#endif
+    default:
+	break;
+    }
+    return n;
 }
 
 static Boolean
@@ -2056,7 +2091,7 @@ ChangeColorsRequest(
     }
     for (i = start; i < NCOLORS; i++) {
 	if (term->misc.re_verse)
-	    ndx = OPPOSITE_COLOR(i);
+	    ndx = oppositeColor(i);
 	else
 	    ndx = i;
 	if ((names == NULL) || (names[0] == '\0')) {
@@ -2076,7 +2111,7 @@ ChangeColorsRequest(
 	    else if (!pOldColors->names[ndx]
 		     || (thisName
 			 && strcmp(thisName, pOldColors->names[ndx]))) {
-		AllocateColor(pTerm, &newColors, ndx, thisName);
+		AllocateTermColor(pTerm, &newColors, ndx, thisName);
 	    }
 	}
     }

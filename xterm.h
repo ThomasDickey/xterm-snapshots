@@ -1,4 +1,6 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.95 2004/03/04 02:21:56 dickey Exp $ */
+/* $XTermId: xterm.h,v 1.277 2004/04/18 20:49:43 tom Exp $ */
+
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.98 2004/04/18 20:49:43 dickey Exp $ */
 
 /************************************************************
 
@@ -89,8 +91,20 @@ authorization.
 #define USE_POSIX_TERMIOS 1
 #endif
 
+#ifdef __NetBSD__
+#include <sys/param.h>
+#if __NetBSD_Version__ >= 106030000	/* 1.6C */
+#define BSD_UTMPX 1
+#define ut_xtime ut_tv.tv_sec
+#endif
+#endif
+
 #if defined(hpux) && !defined(__hpux)
 #define __hpux 1		/* HPUX 11.0 does not define this */
+#endif
+
+#if !defined(__SCO__) && (defined(SCO) || defined(sco) || defined(SCO325))
+#define __SCO__ 1
 #endif
 
 #ifdef USE_POSIX_TERMIOS
@@ -98,7 +112,7 @@ authorization.
 #define HAVE_TCGETATTR 1
 #endif
 
-#if defined(__UNIXOS2__) || defined(SCO) || defined(sco)
+#if defined(__UNIXOS2__) || defined(__SCO__)
 #define USE_TERMCAP 1
 #endif
 
@@ -106,7 +120,7 @@ authorization.
 #define HAVE_UTMP 1
 #endif
 
-#if (defined(__MVS__) || defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN__)
+#if (defined(__MVS__) || defined(SVR4) || defined(__SCO__) || defined(BSD_UTMPX)) && !defined(__CYGWIN__)
 #define UTMPX_FOR_UTMP 1
 #endif
 
@@ -122,7 +136,7 @@ authorization.
 #define ut_xstatus ut_exit.e_exit
 #endif
 
-#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
+#if defined(SVR4) || defined(__SCO__) || defined(BSD_UTMPX) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
 #define HAVE_UTMP_UT_XTIME 1
 #endif
 
@@ -130,19 +144,23 @@ authorization.
 #define USE_LASTLOG
 #define HAVE_LASTLOG_H
 #elif defined(BSD) && (BSD >= 199103)
+#ifdef BSD_UTMPX
+#define USE_LASTLOGX
+#else
 #define USE_LASTLOG
 #endif
+#endif
 
-#if defined(SCO)
+#if defined(__SCO__)
 #define DEFDELETE_DEL TRUE
 #define OPT_SCO_FUNC_KEYS 1
 #endif
 
-#if defined(SCO) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103)) || defined(__CYGWIN__)
+#if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103)) || defined(__CYGWIN__)
 #define USE_POSIX_WAIT
 #endif
 
-#if defined(AIXV3) || defined(CRAY) || defined(SCO) || defined(SVR4) || (defined(SYSV) && defined(i386)) || defined(__MVS__) || defined(__hpux) || defined(__osf__) || defined(linux) || defined(macII)
+#if defined(AIXV3) || defined(CRAY) || defined(__SCO__) || defined(SVR4) || (defined(SYSV) && defined(i386)) || defined(__MVS__) || defined(__hpux) || defined(__osf__) || defined(linux) || defined(macII) || defined(BSD_UTMPX)
 #define USE_SYSV_UTMP
 #endif
 
@@ -678,6 +696,7 @@ extern void do_hangup          PROTO_XT_CALLBACK_ARGS;
 extern void show_8bit_control  (Bool value);
 
 /* misc.c */
+extern Boolean AllocateTermColor(XtermWidget, ScrnColors *, int, const char *);
 extern Cursor make_colored_cursor (unsigned cursorindex, unsigned long fg, unsigned long bg);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
 extern Window WMFrameWindow(XtermWidget termw);
@@ -865,20 +884,22 @@ extern void ClearCurBackground (TScreen *screen, int top, int left, unsigned hei
 #define getXtermForeground(flags, color) \
 	(((flags) & FG_COLOR) && ((color) >= 0 && (color) < MAXCOLORS) \
 			? GET_COLOR_RES(term->screen.Acolors[color]) \
-			: term->screen.foreground)
+			: T_COLOR(&(term->screen), TEXT_FG))
 
 #define getXtermBackground(flags, color) \
 	(((flags) & BG_COLOR) && ((color) >= 0 && (color) < MAXCOLORS) \
 			? GET_COLOR_RES(term->screen.Acolors[color]) \
-			: term->core.background_pixel)
+			: T_COLOR(&(term->screen), TEXT_BG))
 
 #if OPT_COLOR_RES
-#define GET_COLOR_RES(res) xtermGetColorRes(&res)
-#define SET_COLOR_RES(res,color) res->value = color
+#define GET_COLOR_RES(res) xtermGetColorRes(&(res))
+#define SET_COLOR_RES(res,color) (res)->value = color
+#define T_COLOR(v,n) (v)->Tcolors[n].value
 extern Pixel xtermGetColorRes(ColorRes *res);
 #else
 #define GET_COLOR_RES(res) res
 #define SET_COLOR_RES(res,color) *res = color
+#define T_COLOR(v,n) (v)->Tcolors[n]
 #endif
 
 #if OPT_EXT_COLORS
@@ -912,8 +933,9 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #define extract_bg(color, flags) term->cur_background
 
 		/* FIXME: Reverse-Video? */
-#define getXtermBackground(flags, color) term->core.background_pixel
-#define getXtermForeground(flags, color) term->screen.foreground
+#define T_COLOR(v,n) (v)->Tcolors[n]
+#define getXtermBackground(flags, color) T_COLOR(&(term->screen), TEXT_BG)
+#define getXtermForeground(flags, color) T_COLOR(&(term->screen), TEXT_FG)
 #define makeColorPair(fg, bg) 0
 #define xtermColorPair() 0
 
@@ -952,6 +974,8 @@ int visual_width(PAIRED_CHARS(Char *str, Char *str2), Cardinal len);
 #else
 #define visual_width(a, b) (b)
 #endif
+
+#define BtoS(b) ((b) ? "on" : "off")
 
 #ifdef __cplusplus
 	}

@@ -1,3 +1,5 @@
+/* $XTermId: os2main.c,v 1.159 2004/04/18 20:49:43 tom Exp $ */
+
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
  */
@@ -5,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.63 2004/03/04 02:21:56 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.65 2004/04/18 20:49:43 dickey Exp $ */
 
 /***********************************************************
 
@@ -271,6 +273,9 @@ static XtResource application_resources[] =
 #endif
 #if OPT_HP_FUNC_KEYS
     Bres("hpFunctionKeys", "HpFunctionKeys", hpFunctionKeys, FALSE),
+#endif
+#if OPT_SCO_FUNC_KEYS
+    Bres("scoFunctionKeys", "ScoFunctionKeys", scoFunctionKeys, FALSE),
 #endif
     Bres("waitForMap", "WaitForMap", wait_for_map, FALSE),
     Bres("useInsertMode", "UseInsertMode", useInsertMode, FALSE),
@@ -763,21 +768,18 @@ Help(void)
     OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     char **cpp;
 
-    fprintf(stderr,
-	    "%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
-	    XFREE86_VERSION, XTERM_PATCH, ProgramName);
-    fprintf(stderr, "where options include:\n");
+    printf("%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
+	   XFREE86_VERSION, XTERM_PATCH, ProgramName);
+    printf("where options include:\n");
     for (opt = list; opt->opt; opt++) {
-	fprintf(stderr, "    %-28s %s\n", opt->opt, opt->desc);
+	printf("    %-28s %s\n", opt->opt, opt->desc);
     }
 
-    putc('\n', stderr);
-    for (cpp = message; *cpp; cpp++) {
-	fputs(*cpp, stderr);
-	putc('\n', stderr);
-    }
-    putc('\n', stderr);
-    fflush(stderr);
+    putchar('\n');
+    for (cpp = message; *cpp; cpp++)
+	puts(*cpp);
+    putchar('\n');
+    fflush(stdout);
 }
 
 /* ARGSUSED */
@@ -1352,8 +1354,8 @@ get_terminal(void)
     register TScreen *screen = &term->screen;
 
     screen->arrow = make_colored_cursor(XC_left_ptr,
-					screen->mousecolor,
-					screen->mousecolorback);
+					T_COLOR(screen, MOUSE_FG),
+					T_COLOR(screen, MOUSE_BG));
 }
 
 /*

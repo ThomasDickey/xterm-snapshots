@@ -1,8 +1,10 @@
+/* $XTermId: ptyx.h,v 1.315 2004/04/18 20:49:43 tom Exp $ */
+
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.112 2004/03/04 02:21:56 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.114 2004/04/18 20:49:43 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -357,61 +359,7 @@ typedef struct {
 #define	SAVELINES		64      /* default # lines to save      */
 #define SCROLLLINES 1			/* default # lines to scroll    */
 
-/***====================================================================***/
-
-#define	TEXT_FG		0
-#define	TEXT_BG		1
-#define	TEXT_CURSOR	2
-#define	MOUSE_FG	3
-#define	MOUSE_BG	4
-#define	TEK_FG		5
-#define	TEK_BG		6
-#define	HIGHLIGHT_BG	7
-#define	NCOLORS		8
-
-#define EXCHANGE(a,b,tmp) tmp = a; a = b; b = tmp;
-
-#define	COLOR_DEFINED(s,w)	((s)->which&(1<<(w)))
-#define	COLOR_VALUE(s,w)	((s)->colors[w])
-#define	SET_COLOR_VALUE(s,w,v)	(((s)->colors[w]=(v)),((s)->which|=(1<<(w))))
-
-#define	COLOR_NAME(s,w)		((s)->names[w])
-#define	SET_COLOR_NAME(s,w,v)	(((s)->names[w]=(v)),((s)->which|=(1<<(w))))
-
-#define	UNDEFINE_COLOR(s,w)	((s)->which&=(~((w)<<1)))
-#define	OPPOSITE_COLOR(n)	(((n)==TEXT_FG?TEXT_BG:\
-				 ((n)==TEXT_BG?TEXT_FG:\
-				 ((n)==MOUSE_FG?MOUSE_BG:\
-				 ((n)==MOUSE_BG?MOUSE_FG:\
-				 ((n)==TEK_FG?TEK_BG:\
-				 ((n)==TEXT_BG?TEK_FG:(n))))))))
-
-#ifndef RES_OFFSET
-#define RES_OFFSET(offset) XtOffsetOf(XtermWidgetRec, offset)
-#endif
-
-#define RES_NAME(name) name
-#define RES_CLASS(name) name
-
-#define Bres(name,class,offset,value) \
-	{RES_NAME(name), RES_CLASS(class), XtRBoolean, sizeof(Boolean), \
-	 RES_OFFSET(offset), XtRImmediate, (XtPointer) value}
-
-#define Cres(name,class,offset,value) \
-	{RES_NAME(name), RES_CLASS(class), XtRPixel, sizeof(Pixel), \
-	 RES_OFFSET(offset), XtRString, (XtPointer) value}
-
-#define Fres(name,class,offset,value) \
-	{RES_NAME(name), RES_CLASS(class), XtRFontStruct, sizeof(XFontStruct *), \
-	 RES_OFFSET(offset), XtRString, (XtPointer) value}
-
-#define Ires(name,class,offset,value) \
-	{RES_NAME(name), RES_CLASS(class), XtRInt, sizeof(int), \
-	 RES_OFFSET(offset), XtRImmediate, (XtPointer) value}
-
-#define Sres(name,class,offset,value) \
-	{RES_NAME(name), RES_CLASS(class), XtRString, sizeof(char *), \
-	 RES_OFFSET(offset), XtRString, (XtPointer) value}
+#define EXCHANGE(a,b,tmp) tmp = a; a = b; b = tmp
 
 /***====================================================================***/
 
@@ -641,6 +589,12 @@ typedef struct {
 #define OPT_AIX_COLORS 0
 #endif
 
+#if OPT_COLOR_RES && !OPT_ISO_COLORS
+/* You must have ANSI/ISO colors to support ColorRes logic */
+#undef  OPT_COLOR_RES
+#define OPT_COLOR_RES 0
+#endif
+
 #if OPT_PC_COLORS && !OPT_ISO_COLORS
 /* You must have ANSI/ISO colors to support PC colors */
 #undef  OPT_PC_COLORS
@@ -670,6 +624,37 @@ typedef struct {
 #undef  OPT_88_COLORS
 #define OPT_88_COLORS 0
 #endif
+
+/***====================================================================***/
+
+/* indices for the normal terminal colors in screen.Tcolors[] */
+typedef enum {
+    TEXT_FG = 0			/* text foreground */
+    , TEXT_BG = 1		/* text background */
+    , TEXT_CURSOR = 2		/* text cursor */
+    , MOUSE_FG = 3		/* mouse foreground */
+    , MOUSE_BG = 4		/* mouse background */
+#if OPT_TEK4014
+    , TEK_FG = 5		/* tektronix foreground */
+    , TEK_BG = 6		/* tektronix background */
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    , HIGHLIGHT_BG = 7		/* highlight background */
+#endif
+#if OPT_TEK4014
+    , TEK_CURSOR = 8		/* tektronix cursor */
+#endif
+    , NCOLORS			/* total number of colors */
+} TermColors;
+
+#define	COLOR_DEFINED(s,w)	((s)->which & (1<<(w)))
+#define	COLOR_VALUE(s,w)	((s)->colors[w])
+#define	SET_COLOR_VALUE(s,w,v)	(((s)->colors[w] = (v)), ((s)->which |= (1<<(w))))
+
+#define	COLOR_NAME(s,w)		((s)->names[w])
+#define	SET_COLOR_NAME(s,w,v)	(((s)->names[w] = (v)), ((s)->which |= (1<<(w))))
+
+#define	UNDEFINE_COLOR(s,w)	((s)->which &= (~((w)<<1)))
 
 /***====================================================================***/
 
@@ -766,8 +751,10 @@ typedef struct {
 
 #if OPT_COLOR_RES
 #define COLOR_RES(root,offset,value) Sres(COLOR_RES_NAME(root), COLOR_RES_CLASS(root), offset.resource, value)
+#define COLOR_RES2(name,class,offset,value) Sres(name, class, offset.resource, value)
 #else
 #define COLOR_RES(root,offset,value) Cres(COLOR_RES_NAME(root), COLOR_RES_CLASS(root), offset, value)
+#define COLOR_RES2(name,class,offset,value) Cres(name, class, offset, value)
 #endif
 
 /***====================================================================***/
@@ -881,6 +868,38 @@ typedef unsigned IChar;		/* for 8 or 16-bit characters, plus flag */
 #define PAIRED_CHARS(a,b) a
 typedef unsigned char IChar;	/* for 8-bit characters */
 #endif
+
+/***====================================================================***/
+
+#ifndef RES_OFFSET
+#define RES_OFFSET(offset) XtOffsetOf(XtermWidgetRec, offset)
+#endif
+
+#define RES_NAME(name) name
+#define RES_CLASS(name) name
+
+#define Bres(name, class, offset, dftvalue) \
+	{RES_NAME(name), RES_CLASS(class), XtRBoolean, sizeof(Boolean), \
+	 RES_OFFSET(offset), XtRImmediate, (XtPointer) dftvalue}
+
+#define Cres(name, class, offset, dftvalue) \
+	{RES_NAME(name), RES_CLASS(class), XtRPixel, sizeof(Pixel), \
+	 RES_OFFSET(offset), XtRString, (XtPointer) dftvalue}
+
+#define Tres(name, class, offset, dftvalue) \
+	COLOR_RES2(name, class, screen.Tcolors[offset], dftvalue) \
+
+#define Fres(name, class, offset, dftvalue) \
+	{RES_NAME(name), RES_CLASS(class), XtRFontStruct, sizeof(XFontStruct *), \
+	 RES_OFFSET(offset), XtRString, (XtPointer) dftvalue}
+
+#define Ires(name, class, offset, dftvalue) \
+	{RES_NAME(name), RES_CLASS(class), XtRInt, sizeof(int), \
+	 RES_OFFSET(offset), XtRImmediate, (XtPointer) dftvalue}
+
+#define Sres(name, class, offset, dftvalue) \
+	{RES_NAME(name), RES_CLASS(class), XtRString, sizeof(char *), \
+	 RES_OFFSET(offset), XtRString, (XtPointer) dftvalue}
 
 /***====================================================================***/
 
@@ -1046,7 +1065,7 @@ typedef struct {
 #endif
 
 typedef struct {
-	unsigned	which;	/* must have NCOLORS bits */
+	unsigned	which;		/* must have NCOLORS bits */
 	Pixel		colors[NCOLORS];
 	char		*names[NCOLORS];
 } ScrnColors;
@@ -1124,10 +1143,7 @@ typedef struct {
 	GC		fillCursorGC;	/* special cursor painting	*/
 	GC		reversecursorGC;/* reverse cursor painting	*/
 	GC		cursoroutlineGC;/* for painting lines around    */
-	Pixel		foreground;	/* foreground color		*/
-	Pixel		cursorcolor;	/* Cursor color			*/
-	Pixel		mousecolor;	/* Mouse color			*/
-	Pixel		mousecolorback;	/* Mouse color background	*/
+	ColorRes	Tcolors[NCOLORS]; /* terminal colors		*/
 #if OPT_ISO_COLORS
 	ColorRes	Acolors[MAXCOLORS]; /* ANSI color emulation	*/
 	int		veryBoldColors;	/* modifier for boldColors	*/
@@ -1138,9 +1154,6 @@ typedef struct {
 	Boolean		colorBLMode;	/* use color for blink?		*/
 	Boolean		colorRVMode;	/* use color for reverse?	*/
 	Boolean		colorAttrMode;	/* prefer colorUL/BD to SGR	*/
-#endif
-#if OPT_HIGHLIGHT_COLOR
-	Pixel		highlightcolor;	/* Highlight background color	*/
 #endif
 #if OPT_DEC_CHRSET
 	Boolean		font_doublesize;/* enable font-scaling		*/
@@ -1357,11 +1370,7 @@ typedef struct {
 /* Tektronix window parameters */
 	GC		TnormalGC;	/* normal painting		*/
 	GC		TcursorGC;	/* normal cursor painting	*/
-	Pixel		Tforeground;	/* foreground color		*/
-	Pixel		Tbackground;	/* Background color		*/
-	Pixel		Tcursorcolor;	/* Cursor color			*/
 
-	int		Tcolor;		/* colors used			*/
 	Boolean		Tshow;		/* Tek window showing		*/
 	Boolean		waitrefresh;	/* postpone refresh		*/
 	struct _tekwin	fullTwin;
@@ -1370,7 +1379,6 @@ typedef struct {
 	struct _tekwin *whichTwin;
 #endif /* NO_ACTIVE_ICON */
 
-	int		xorplane;	/* z plane for inverts		*/
 	GC		linepat[TEKNUMLINES]; /* line patterns		*/
 	Boolean		TekEmu;		/* true if Tektronix emulation	*/
 	int		cur_X;		/* current x			*/
@@ -1527,6 +1535,7 @@ typedef struct _Misc {
     char* input_method;
     char* preedit_type;
     Boolean open_im;
+    Boolean cannot_im;		/* true if we cannot use input-method */
 #endif
     Boolean dynamicColors;
     Boolean shared_ic;

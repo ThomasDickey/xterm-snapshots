@@ -1,8 +1,10 @@
+/* $XTermId: charproc.c,v 1.464 2004/04/18 20:49:42 tom Exp $ */
+
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.153 2004/03/04 02:21:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.157 2004/04/18 20:49:42 dickey Exp $ */
 
 /*
 
@@ -434,11 +436,7 @@ static XtResource resources[] =
     Bres(XtNtrimSelection, XtCTrimSelection, screen.trim_selection, FALSE),
     Bres(XtNunderLine, XtCUnderLine, screen.underline, TRUE),
     Bres(XtNvisualBell, XtCVisualBell, screen.visualbell, FALSE),
-    Cres(XtNcursorColor, XtCCursorColor, screen.cursorcolor, XtDefaultForeground),
-    Cres(XtNforeground, XtCForeground, screen.foreground, XtDefaultForeground),
-    Cres(XtNpointerColor, XtCPointerColor, screen.mousecolor, XtDefaultForeground),
-    Cres(XtNbackground, XtCBackground, core.background_pixel, XtDefaultBackground),
-    Cres(XtNpointerColorBackground, XtCBackground, screen.mousecolorback, XtDefaultBackground),
+
     Ires(XtNbellSuppressTime, XtCBellSuppressTime, screen.bellSuppressTime, BELLSUPPRESSMSEC),
     Ires(XtNinternalBorder, XtCBorderWidth, screen.border, DEFBORDER),
     Ires(XtNlimitResize, XtCLimitResize, misc.limit_resize, 1),
@@ -449,6 +447,7 @@ static XtResource resources[] =
     Ires(XtNvisualBellDelay, XtCVisualBellDelay, screen.visualBellDelay, 100),
     Ires(XtNsaveLines, XtCSaveLines, screen.savelines, SAVELINES),
     Ires(XtNscrollLines, XtCScrollLines, screen.scrolllines, SCROLLLINES),
+
     Sres(XtNfont1, XtCFont1, screen.menu_font_names[fontMenu_font1], NULL),
     Sres(XtNfont2, XtCFont2, screen.menu_font_names[fontMenu_font2], NULL),
     Sres(XtNfont3, XtCFont3, screen.menu_font_names[fontMenu_font3], NULL),
@@ -464,6 +463,12 @@ static XtResource resources[] =
     Sres(XtNkeyboardDialect, XtCKeyboardDialect, screen.keyboard_dialect, DFT_KBD_DIALECT),
     Sres(XtNprinterCommand, XtCPrinterCommand, screen.printer_command, OS_DEPENDENT_PRINT_COMMAND),
     Sres(XtNtekGeometry, XtCGeometry, misc.T_geometry, NULL),
+
+    Tres(XtNcursorColor, XtCCursorColor, TEXT_CURSOR, XtDefaultForeground),
+    Tres(XtNforeground, XtCForeground, TEXT_FG, XtDefaultForeground),
+    Tres(XtNpointerColor, XtCPointerColor, MOUSE_FG, XtDefaultForeground),
+    Tres(XtNbackground, XtCBackground, TEXT_BG, XtDefaultBackground),
+    Tres(XtNpointerColorBackground, XtCBackground, MOUSE_BG, XtDefaultBackground),
 
     {XtNresizeGravity, XtCResizeGravity, XtRGravity, sizeof(XtGravity),
      XtOffsetOf(XtermWidgetRec, misc.resizeGravity),
@@ -482,8 +487,8 @@ static XtResource resources[] =
 #ifndef NO_ACTIVE_ICON
     Bres("activeIcon", "ActiveIcon", misc.active_icon, FALSE),
     Ires("iconBorderWidth", XtCBorderWidth, misc.icon_border_width, 2),
-    Fres("iconFont", "IconFont", screen.fnt_icon, XtExtdefaultfont),
-    Cres("iconBorderColor", XtCBorderColor, misc.icon_border_pixel, XtExtdefaultbackground),
+    Fres("iconFont", "IconFont", screen.fnt_icon, XtDefaultFont),
+    Cres("iconBorderColor", XtCBorderColor, misc.icon_border_pixel, XtDefaultBackground),
 #endif				/* NO_ACTIVE_ICON */
 
 #if OPT_BLINK_CURS
@@ -522,7 +527,7 @@ static XtResource resources[] =
 #endif
 
 #if OPT_HIGHLIGHT_COLOR
-    Cres(XtNhighlightColor, XtCHighlightColor, screen.highlightcolor, XtDefaultForeground),
+    Tres(XtNhighlightColor, XtCHighlightColor, HIGHLIGHT_BG, XtDefaultForeground),
 #endif				/* OPT_HIGHLIGHT_COLOR */
 
 #if OPT_INPUT_METHOD
@@ -2107,23 +2112,32 @@ VTparse(void)
 #endif
 
 	case CASE_ANSI_LEVEL_1:
+	    TRACE(("CASE_ANSI_LEVEL_1\n"));
 	    set_ansi_conformance(screen, 1);
 	    parsestate = groundtable;
 	    break;
 
 	case CASE_ANSI_LEVEL_2:
+	    TRACE(("CASE_ANSI_LEVEL_2\n"));
 	    set_ansi_conformance(screen, 2);
 	    parsestate = groundtable;
 	    break;
 
 	case CASE_ANSI_LEVEL_3:
+	    TRACE(("CASE_ANSI_LEVEL_3\n"));
 	    set_ansi_conformance(screen, 3);
 	    parsestate = groundtable;
 	    break;
 
 	case CASE_DECSCL:
+	    TRACE(("CASE_DECSCL(%d,%d)\n", param[0], param[1]));
 	    if (param[0] >= 61 && param[0] <= 65) {
-		VTReset(TRUE, TRUE);
+		/*
+		 * VT300, VT420, VT520 manuals claim that DECSCL does a hard
+		 * reset (RIS).  VT220 manual states that it is a soft reset.
+		 * Perhaps both are right (unlikely).  Kermit says it's soft.
+		 */
+		VTReset(FALSE, FALSE);
 		screen->vtXX_level = param[0] - 60;
 		if (param[0] > 61) {
 		    if (param[1] == 1)
@@ -2475,7 +2489,7 @@ VTparse(void)
 	case CASE_UTF8:
 	    /* If we did not set UTF-8 mode from resource or the
 	     * command-line, allow it to be enabled/disabled by
-	     * control sequence. 
+	     * control sequence.
 	     */
 	    if (!screen->wide_chars) {
 		WriteNow();
@@ -2485,10 +2499,10 @@ VTparse(void)
 		&& screen->utf8_mode != 2) {
 		switchPtyData(screen, &VTbuffer, c == 'G');
 		TRACE(("UTF8 mode %s\n",
-		       screen->utf8_mode ? "ON" : "OFF"));
+		       BtoS(screen->utf8_mode)));
 	    } else {
 		TRACE(("UTF8 mode NOT turned %s (%s)\n",
-		       (c == 'G') ? "ON" : "OFF",
+		       BtoS(c == 'G'),
 		       (screen->utf8_mode == 2)
 		       ? "UTF-8 mode set from command-line"
 		       : "wideChars resource was not set"));
@@ -2798,11 +2812,18 @@ in_put(void)
     register TScreen *screen = &term->screen;
     register int i, time_select;
     static struct timeval select_timeout;
+
 #if OPT_BLINK_CURS
-#define	TICK	(1000/8)
-#define	MIN(a,b)	(((a)<(b))?(a):(b))
-#define	MAX(a,b)	(((a)>(b))?(a):(b))
-    int tick = MAX(1, MIN(screen->blink_on, screen->blink_off)) * TICK;
+    /*
+     * Compute the timeout for the blinking cursor to be much smaller than
+     * the "on" or "off" interval.
+     */
+    int tick = ((screen->blink_on < screen->blink_off)
+		? screen->blink_on
+		: screen->blink_off);
+    tick *= (1000 / 8);		/* 1000 for msec/usec, 8 for "much" smaller */
+    if (tick < 1)
+	tick = 1;
 #endif
 
     for (;;) {
@@ -2923,8 +2944,8 @@ PreeditPosition(TScreen * screen)
     spot.y = CursorY(screen, screen->cur_row) + screen->fs_ascent;
     list = XVaCreateNestedList(0,
 			       XNSpotLocation, &spot,
-			       XNForeground, screen->foreground,
-			       XNBackground, term->core.background_pixel,
+			       XNForeground, T_COLOR(screen, TEXT_FG),
+			       XNBackground, T_COLOR(screen, TEXT_BG),
 			       NULL);
     XSetICValues(screen->xic, XNPreeditAttributes, list, NULL);
     XFree(list);
@@ -3291,7 +3312,6 @@ HandleStructNotify(Widget w GCC_UNUSED,
 static void
 SetCursorBlink(register TScreen * screen, int enable)
 {
-    ShowCursor();
     if (enable) {
 	screen->cursor_blink = TRUE;
 	StartBlinking(screen);
@@ -3553,9 +3573,7 @@ dpmodes(XtermWidget termw,
 	    /* back-arrow mapped to backspace or delete(D) */
 	    (*func) (&termw->keyboard.flags, MODE_DECBKM);
 	    TRACE(("DECSET DECBKM %s\n",
-		   (termw->keyboard.flags & MODE_DECBKM)
-		   ? "on"
-		   : "off"));
+		   BtoS(termw->keyboard.flags & MODE_DECBKM)));
 	    update_decbkm();
 	    break;
 	case SET_VT200_MOUSE:	/* xterm bogus sequence         */
@@ -4584,8 +4602,7 @@ VTClassInit(void)
 #if OPT_TRACE
 #define init_Bres(name) \
 	TRACE(("init " #name " = %s\n", \
-		(wnew->name = request->name) != FALSE \
-			? "on" : "off"))
+		BtoS(wnew->name = request->name)))
 #define init_Cres(name) \
 	TRACE(("init " #name " = %#lx\n", \
 		wnew->name = request->name))
@@ -4596,11 +4613,53 @@ VTClassInit(void)
 	TRACE(("init " #name " = \"%s\"\n", \
 		(wnew->name = x_strtrim(request->name)) != NULL \
 			? wnew->name : "<null>"))
+#define init_Tres(offset) \
+	TRACE(("init screen.Tcolors[" #offset "] = %#lx\n", \
+		fill_Tres(wnew, request, offset)))
 #else
 #define init_Bres(name) wnew->name = request->name
 #define init_Cres(name) wnew->name = request->name
 #define init_Ires(name) wnew->name = request->name
 #define init_Sres(name) wnew->name = x_strtrim(request->name)
+#define init_Tres(offset) fill_Tres(wnew, request, offset)
+#endif
+
+#if OPT_COLOR_RES
+/*
+ * Override the use of XtDefaultForeground/XtDefaultBackground to make some
+ * colors, such as cursor color, use the actual foreground/background value
+ * if there is no explicit resource value used.
+ */
+static Pixel
+fill_Tres(XtermWidget target, XtermWidget source, int offset)
+{
+    char *name;
+    ScrnColors temp;
+
+    target->screen.Tcolors[offset] = source->screen.Tcolors[offset];
+    target->screen.Tcolors[offset].mode = False;
+
+    name = target->screen.Tcolors[offset].resource;
+    if (!x_strcasecmp(name, XtDefaultForeground)) {
+	target->screen.Tcolors[offset].value =
+	    ((offset == TEXT_FG || offset == TEXT_BG)
+	     ? target->dft_foreground
+	     : target->screen.Tcolors[TEXT_FG].value);
+    } else if (!x_strcasecmp(name, XtDefaultBackground)) {
+	target->screen.Tcolors[offset].value =
+	    ((offset == TEXT_FG || offset == TEXT_BG)
+	     ? target->dft_background
+	     : target->screen.Tcolors[TEXT_BG].value);
+    } else {
+	if (AllocateTermColor(target, &temp, offset, name)) {
+	    target->screen.Tcolors[offset].value = temp.colors[offset];
+	}
+    }
+    return target->screen.Tcolors[offset].value;
+}
+#else
+#define fill_Tres(target, source, offset) \
+	target->screen.Tcolors[offset] = source->screen.Tcolors[offset]
 #endif
 
 #if OPT_WIDE_CHARS
@@ -4609,6 +4668,9 @@ VTInitialize_locale(XtermWidget request)
 {
     char *locale;
     Boolean is_utf8;
+
+    TRACE(("VTInitialize_locale\n"));
+    TRACE(("... request screen.utf8_mode = %d\n", request->screen.utf8_mode));
 
     if ((locale = getenv("LC_ALL")) == 0 || *locale == '\0')
 	if ((locale = getenv("LC_CTYPE")) == 0 || *locale == '\0')
@@ -4619,10 +4681,14 @@ VTInitialize_locale(XtermWidget request)
 #else
     is_utf8 = (strstr(locale, "UTF-8") != NULL);
 #endif
+    TRACE(("... is_utf8 = %s\n", BtoS(is_utf8)));
 
 #if OPT_LUIT_PROG
     request->misc.callfilter = 0;
     request->misc.use_encoding = 0;
+
+    TRACE(("... setup for luit:\n"));
+    TRACE(("... request misc.locale_str = \"%s\"\n", request->misc.locale_str));
 
     if (x_strcasecmp(request->misc.locale_str, "TRUE") == 0 ||
 	x_strcasecmp(request->misc.locale_str, "ON") == 0 ||
@@ -4670,11 +4736,15 @@ VTInitialize_locale(XtermWidget request)
 	request->screen.utf8_mode = 2;
 	request->misc.use_encoding = 1;
     }
+    TRACE(("... updated misc.callfilter = %s\n", BtoS(request->misc.callfilter)));
+    TRACE(("... updated misc.use_encoding = %s\n", BtoS(request->misc.use_encoding)));
 #else
     if (request->screen.utf8_mode == 3) {
 	request->screen.utf8_mode = is_utf8 ? 2 : 0;
     }
 #endif /* OPT_LUIT_PROG */
+    TRACE(("... updated screen.utf8_mode = %d\n", request->screen.utf8_mode));
+    TRACE(("...VTInitialize_locale done\n"));
 
 }
 #endif
@@ -4731,11 +4801,14 @@ VTInitialize(Widget wrequest,
 	wnew->dft_foreground = MyBlackPixel(wnew->screen.display);
 	wnew->dft_background = MyWhitePixel(wnew->screen.display);
     }
+    init_Tres(TEXT_FG);
+    init_Tres(TEXT_BG);
+
     TRACE(("Color resource initialization:\n"));
     TRACE(("   Default foreground %#lx\n", wnew->dft_foreground));
     TRACE(("   Default background %#lx\n", wnew->dft_background));
-    TRACE(("   Screen foreground  %#lx\n", request->screen.foreground));
-    TRACE(("   Screen background  %#lx\n", request->core.background_pixel));
+    TRACE(("   Screen foreground  %#lx\n", T_COLOR(&(wnew->screen), TEXT_FG)));
+    TRACE(("   Screen background  %#lx\n", T_COLOR(&(wnew->screen), TEXT_BG)));
 
     wnew->screen.mouse_button = -1;
     wnew->screen.mouse_row = -1;
@@ -4756,8 +4829,6 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.xmc_inline);
     init_Bres(screen.move_sgr_ok);
 #endif
-    init_Cres(screen.foreground);
-    init_Cres(screen.cursorcolor);
 #if OPT_BLINK_CURS
     init_Bres(screen.cursor_blink);
     init_Ires(screen.blink_on);
@@ -4777,8 +4848,6 @@ VTInitialize(Widget wrequest,
     init_Sres(screen.logfile);
 #endif
     init_Bres(screen.marginbell);
-    init_Cres(screen.mousecolor);
-    init_Cres(screen.mousecolorback);
     init_Bres(screen.multiscroll);
     init_Ires(screen.nmarginbell);
     init_Ires(screen.savelines);
@@ -4920,13 +4989,20 @@ VTInitialize(Widget wrequest,
 #if OPT_COLOR_RES
 	TRACE(("Acolors[%d] = %s\n", i, request->screen.Acolors[i].resource));
 	wnew->screen.Acolors[i].mode = False;
-	if (strcmp(wnew->screen.Acolors[i].resource, XtDefaultForeground))
+	if (!x_strcasecmp(wnew->screen.Acolors[i].resource, XtDefaultForeground)) {
+	    wnew->screen.Acolors[i].value = T_COLOR(&(wnew->screen), TEXT_FG);
+	    wnew->screen.Acolors[i].mode = True;
+	} else if (!x_strcasecmp(wnew->screen.Acolors[i].resource, XtDefaultBackground)) {
+	    wnew->screen.Acolors[i].value = T_COLOR(&(wnew->screen), TEXT_BG);
+	    wnew->screen.Acolors[i].mode = True;
+	} else {
 	    color_ok = True;
+	}
 #else
 	TRACE(("Acolors[%d] = %#lx\n", i, request->screen.Acolors[i]));
-	if (wnew->screen.Acolors[i] != wnew->dft_foreground
-	    && wnew->screen.Acolors[i] != request->screen.foreground
-	    && wnew->screen.Acolors[i] != request->core.background_pixel)
+	if (wnew->screen.Acolors[i] != wnew->dft_foreground &&
+	    wnew->screen.Acolors[i] != T_COLOR(&(wnew->screen), TEXT_FG) &&
+	    wnew->screen.Acolors[i] != T_COLOR(&(wnew->screen), TEXT_BG))
 	    color_ok = True;
 #endif
     }
@@ -4972,8 +5048,24 @@ VTInitialize(Widget wrequest,
     wnew->sgr_extended = 0;
 #endif /* OPT_ISO_COLORS */
 
+    init_Tres(MOUSE_FG);
+    init_Tres(MOUSE_BG);
+    init_Tres(TEXT_CURSOR);
 #if OPT_HIGHLIGHT_COLOR
-    init_Cres(screen.highlightcolor);
+    init_Tres(HIGHLIGHT_BG);
+#endif
+
+#if OPT_TEK4014
+    /*
+     * The Tek4014 window has no separate resources for foreground, background
+     * and cursor color.  Since xterm always creates the vt100 widget first, we
+     * can set the Tektronix colors here.  That lets us use escape sequences to
+     * set its dynamic colors and get consistent behavior whether or not the
+     * window is displayed.
+     */
+    T_COLOR(&(wnew->screen), TEK_BG) = T_COLOR(&(wnew->screen), TEXT_BG);
+    T_COLOR(&(wnew->screen), TEK_FG) = T_COLOR(&(wnew->screen), TEXT_FG);
+    T_COLOR(&(wnew->screen), TEK_CURSOR) = T_COLOR(&(wnew->screen), TEXT_CURSOR);
 #endif
 
 #if OPT_DEC_CHRSET
@@ -4998,13 +5090,16 @@ VTInitialize(Widget wrequest,
 #endif
 
     init_Bres(screen.vt100_graphics);
+    init_Ires(screen.utf8_mode);
     init_Bres(screen.wide_chars);
     init_Bres(misc.cjk_width);
     if (request->screen.utf8_mode) {
+	TRACE(("setting utf8_mode to 2, wide_chars on\n"));
 	wnew->screen.wide_chars = True;
 	wnew->screen.utf8_mode = 2;	/* disable further change */
 	xtermLoadVTFonts(wnew, "utf8Fonts", "Utf8Fonts");
     } else {
+	TRACE(("setting utf8_mode to 0\n"));
 	wnew->screen.utf8_mode = 0;
     }
     TRACE(("initialized UTF-8 mode to %d\n", wnew->screen.utf8_mode));
@@ -5023,7 +5118,7 @@ VTInitialize(Widget wrequest,
     if (wnew->screen.backarrow_key)
 	wnew->keyboard.flags |= MODE_DECBKM;
     TRACE(("initialized DECBKM %s\n",
-	   (wnew->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
+	   BtoS(wnew->keyboard.flags & MODE_DECBKM)));
 
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
@@ -5158,13 +5253,16 @@ VTRealize(Widget w,
     }
 
     /* making cursor */
-    if (!screen->pointer_cursor)
-	screen->pointer_cursor = make_colored_cursor(XC_xterm,
-						     screen->mousecolor,
-						     screen->mousecolorback);
-    else
+    if (!screen->pointer_cursor) {
+	screen->pointer_cursor =
+	    make_colored_cursor(XC_xterm,
+				T_COLOR(screen, MOUSE_FG),
+				T_COLOR(screen, MOUSE_BG));
+    } else {
 	recolor_cursor(screen->pointer_cursor,
-		       screen->mousecolor, screen->mousecolorback);
+		       T_COLOR(screen, MOUSE_FG),
+		       T_COLOR(screen, MOUSE_BG));
+    }
 
     scrollbar_width = (term->misc.scrollbar ?
 		       screen->scrollWidget->core.width : 0);
@@ -5295,8 +5393,8 @@ VTRealize(Widget w,
 		GCGraphicsExposures | GCFunction);
 
 	xgcv.font = screen->fnt_icon->fid;
-	xgcv.foreground = screen->foreground;
-	xgcv.background = term->core.background_pixel;
+	xgcv.foreground = T_COLOR(screen, TEXT_FG);
+	xgcv.background = T_COLOR(screen, TEXT_BG);
 	xgcv.graphics_exposures = TRUE;		/* default */
 	xgcv.function = GXcopy;
 
@@ -5304,8 +5402,8 @@ VTRealize(Widget w,
 	    screen->iconVwin.normalboldGC =
 	    XtGetGC(shell, mask, &xgcv);
 
-	xgcv.foreground = term->core.background_pixel;
-	xgcv.background = screen->foreground;
+	xgcv.foreground = T_COLOR(screen, TEXT_BG);
+	xgcv.background = T_COLOR(screen, TEXT_FG);
 
 	screen->iconVwin.reverseGC =
 	    screen->iconVwin.reverseboldGC =
@@ -5418,7 +5516,7 @@ xim_real_init(void)
 
     term->screen.xic = NULL;
 
-    if (!term->misc.open_im) {
+    if (!term->misc.open_im || term->misc.cannot_im) {
 	return;
     }
 
@@ -5470,6 +5568,7 @@ xim_real_init(void)
 	|| !xim_styles->count_styles) {
 	fprintf(stderr, "input method doesn't support any style\n");
 	XCloseIM(xim);
+	term->misc.cannot_im = True;
 	return;
     }
 
@@ -5513,6 +5612,7 @@ xim_real_init(void)
 		"input method doesn't support my preedit type (%s)\n",
 		term->misc.preedit_type);
 	XCloseIM(xim);
+	term->misc.cannot_im = True;
 	return;
     }
 
@@ -5523,6 +5623,7 @@ xim_real_init(void)
 	fprintf(stderr,
 		"This program doesn't support the 'OffTheSpot' preedit type\n");
 	XCloseIM(xim);
+	term->misc.cannot_im = True;
 	return;
     }
 
@@ -5561,6 +5662,7 @@ xim_real_init(void)
 	    fprintf(stderr, "Preparation of default font set "
 		    "\"%s\" for XIM failed.\n", DEFXIMFONT);
 	    XCloseIM(xim);
+	    term->misc.cannot_im = True;
 	    return;
 	}
 	(void) XExtentsOfFontSet(term->screen.fs);
@@ -5610,7 +5712,7 @@ VTInitI18N(void)
     xim_real_init();
 
 #if defined(USE_XIM_INSTANTIATE_CB)
-    if (term->screen.xic == NULL)
+    if (term->screen.xic == NULL && !term->misc.cannot_im)
 	XRegisterIMInstantiateCallback(XtDisplay(term), NULL, NULL, NULL,
 				       xim_instantiate_cb, NULL);
 #endif
@@ -5629,11 +5731,13 @@ VTSetValues(Widget cur,
     Boolean refresh_needed = FALSE;
     Boolean fonts_redone = FALSE;
 
-    if (curvt->core.background_pixel != newvt->core.background_pixel
-	|| curvt->screen.foreground != newvt->screen.foreground
-	|| curvt->screen.menu_font_names[curvt->screen.menu_font_number]
-	!= newvt->screen.menu_font_names[newvt->screen.menu_font_number]
-	|| curvt->misc.default_font.f_n != newvt->misc.default_font.f_n) {
+    if ((T_COLOR(&(curvt->screen), TEXT_BG) !=
+	 T_COLOR(&(newvt->screen), TEXT_BG)) ||
+	(T_COLOR(&(curvt->screen), TEXT_FG) !=
+	 T_COLOR(&(newvt->screen), TEXT_FG)) ||
+	(curvt->screen.menu_font_names[curvt->screen.menu_font_number] !=
+	 newvt->screen.menu_font_names[newvt->screen.menu_font_number]) ||
+	(curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)) {
 	if (curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)
 	    newvt->screen.menu_font_names[fontMenu_fontdefault] = newvt->misc.default_font.f_n;
 	if (xtermLoadFont(&newvt->screen,
@@ -5646,7 +5750,8 @@ VTSetValues(Widget cur,
 	    newvt->screen.menu_font_names[fontMenu_fontdefault] = curvt->misc.default_font.f_n;
     }
     if (!fonts_redone
-	&& curvt->screen.cursorcolor != newvt->screen.cursorcolor) {
+	&& (T_COLOR(&(curvt->screen), TEXT_CURSOR) !=
+	    T_COLOR(&(newvt->screen), TEXT_CURSOR))) {
 	set_cursor_gcs(&newvt->screen);
 	refresh_needed = TRUE;
     }
@@ -5656,11 +5761,13 @@ VTSetValues(Widget cur,
 	newvt->misc.re_verse = !newvt->misc.re_verse;	/* ReverseVideo toggles */
 	refresh_needed = TRUE;
     }
-    if (curvt->screen.mousecolor != newvt->screen.mousecolor
-	|| curvt->screen.mousecolorback != newvt->screen.mousecolorback) {
+    if ((T_COLOR(&(curvt->screen), MOUSE_FG) !=
+	 T_COLOR(&(newvt->screen), MOUSE_FG)) ||
+	(T_COLOR(&(curvt->screen), MOUSE_BG) !=
+	 T_COLOR(&(newvt->screen), MOUSE_BG))) {
 	recolor_cursor(newvt->screen.pointer_cursor,
-		       newvt->screen.mousecolor,
-		       newvt->screen.mousecolorback);
+		       T_COLOR(&(newvt->screen), MOUSE_FG),
+		       T_COLOR(&(newvt->screen), MOUSE_BG));
 	refresh_needed = TRUE;
     }
     if (curvt->misc.scrollbar != newvt->misc.scrollbar) {
@@ -5690,7 +5797,7 @@ ShowCursor(void)
     Pixel bg_pix;
     Pixel tmp;
 #if OPT_HIGHLIGHT_COLOR
-    Pixel hi_pix = screen->highlightcolor;
+    Pixel hi_pix = T_COLOR(screen, HIGHLIGHT_BG);
 #endif
 #if OPT_WIDE_CHARS
     Char chi = 0;
@@ -5799,7 +5906,7 @@ ShowCursor(void)
 		}
 	    }
 #if OPT_HIGHLIGHT_COLOR
-	    if (hi_pix != screen->foreground
+	    if (hi_pix != T_COLOR(screen, TEXT_FG)
 		&& hi_pix != fg_pix
 		&& hi_pix != bg_pix
 		&& hi_pix != term->dft_foreground) {
@@ -5807,7 +5914,7 @@ ShowCursor(void)
 		fg_pix = hi_pix;
 	    }
 #endif
-	    EXCHANGE(fg_pix, bg_pix, tmp)
+	    EXCHANGE(fg_pix, bg_pix, tmp);
 	} else {		/* normal video */
 	    if (screen->reversecursorGC) {
 		setGC(screen->reversecursorGC);
@@ -5819,14 +5926,14 @@ ShowCursor(void)
 		}
 	    }
 	}
-	if (screen->cursorcolor == term->dft_foreground) {
+	if (T_COLOR(screen, TEXT_CURSOR) == term->dft_foreground) {
 	    XSetBackground(screen->display, currentGC, fg_pix);
 	}
 	XSetForeground(screen->display, currentGC, bg_pix);
     } else {			/* not selected */
 	if (reversed) {		/* text is reverse video */
 #if OPT_HIGHLIGHT_COLOR
-	    if (hi_pix != screen->foreground
+	    if (hi_pix != T_COLOR(screen, TEXT_FG)
 		&& hi_pix != fg_pix
 		&& hi_pix != bg_pix
 		&& hi_pix != term->dft_foreground) {
@@ -6181,7 +6288,7 @@ VTReset(Bool full, Bool saved)
 	    if (term->screen.backarrow_key)
 		term->keyboard.flags |= MODE_DECBKM;
 	TRACE(("full reset DECBKM %s\n",
-	       (term->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
+	       BtoS(term->keyboard.flags & MODE_DECBKM)));
 	update_appcursor();
 	update_appkeypad();
 	update_decbkm();
@@ -6503,9 +6610,9 @@ set_cursor_gcs(TScreen * screen)
 {
     XGCValues xgcv;
     XtGCMask mask;
-    Pixel cc = screen->cursorcolor;
-    Pixel fg = screen->foreground;
-    Pixel bg = term->core.background_pixel;
+    Pixel cc = T_COLOR(screen, TEXT_CURSOR);
+    Pixel fg = T_COLOR(screen, TEXT_FG);
+    Pixel bg = T_COLOR(screen, TEXT_BG);
     GC new_cursorGC = NULL;
     GC new_cursorFillGC = NULL;
     GC new_reversecursorGC = NULL;
