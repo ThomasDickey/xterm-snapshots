@@ -324,6 +324,10 @@ typedef struct {
 #define OPT_ISO_COLORS  1 /* true if xterm is configured with ISO colors */
 #endif
 
+#ifndef OPT_PC_COLORS
+#define OPT_PC_COLORS   1 /* true if xterm is supports PC-style (bold) colors */
+#endif
+
 #ifndef OPT_SUNPC_KBD
 #define OPT_SUNPC_KBD	1 /* true if xterm supports Sun/PC keyboard map */
 #endif
@@ -371,7 +375,7 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 #define COLOR_BD	16
 #define COLOR_UL	17
 #ifndef DFT_COLORMODE
-#define DFT_COLORMODE FALSE	/* default colorMode resource */
+#define DFT_COLORMODE TRUE	/* default colorMode resource */
 #endif
 #else
 #define if_OPT_ISO_COLORS(screen, code) /* nothing */
@@ -497,9 +501,11 @@ typedef struct {
 	Pixel		mousecolorback;	/* Mouse color background	*/
 #if OPT_ISO_COLORS
 	Pixel		Acolors[MAXCOLORS]; /* ANSI color emulation	*/
+	Boolean		boldColors;	/* can we make bold colors?	*/
 	Boolean		colorMode;	/* are we using color mode?	*/
 	Boolean		colorULMode;	/* use color for underline?	*/
 	Boolean		colorBDMode;	/* use color for bold?		*/
+	Boolean		colorAttrMode;	/* prefer colorUL/BD to SGR	*/
 #endif
 #if OPT_DEC_CHRSET
 	Char		chrset;		/* character-set index & code	*/

@@ -1,6 +1,7 @@
-MANIFEST for xterm, version XFree86-3_9q
+MANIFEST for xterm, version xterm-52
 --------------------------------------------------------------------------------
 MANIFEST                        this file
+INSTALL                         configure script: options and related install instructions
 Imakefile                       imake template for Makefile
 Makefile.in                     configure script template for Makefile
 README                          overview & caveats for 'xterm'

@@ -533,13 +533,22 @@ creat_as(uid, gid, pathname, mode)
     int mode;
 {
     int fd;
-    int waited;
     int pid;
 #ifndef HAS_WAITPID
+    int waited;
     int (*chldfunc)();
 
     chldfunc = signal(SIGCHLD, SIG_DFL);
 #endif
+
+    if (done_setuid) {
+	fd = open(pathname, O_WRONLY|O_CREAT|O_APPEND, mode);
+	if (fd >= 0) {
+	    close(fd);
+	}
+	return;
+    }
+
     pid = fork();
     switch (pid)
     {
@@ -585,10 +594,10 @@ void
 StartLog(screen)
 register TScreen *screen;
 {
-	register char *cp;
-	register int i;
 	static char *log_default;
 #ifdef ALLOWLOGFILEEXEC
+	register char *cp;
+	register int i;
 	void logpipe();
 #ifdef SYSV
 	/* SYSV has another pointer which should be part of the
@@ -603,10 +612,14 @@ register TScreen *screen;
 	if(screen->logfile == NULL || *screen->logfile == 0) {
 		if(screen->logfile)
 			free(screen->logfile);
-		if(log_default == NULL)
-			log_default = log_def_name;
+		if(log_default == NULL) {
+			log_default = malloc(strlen(log_def_name) + 1);
+			if (log_default == 0)
+				return;
+			strcpy(log_default, log_def_name);
 			mktemp(log_default);
-		if((screen->logfile = malloc((unsigned)strlen(log_default) + 1)) == NULL)
+		}
+		if((screen->logfile = malloc(strlen(log_default) + 1)) == NULL)
 			return;
 		strcpy(screen->logfile, log_default);
 	}

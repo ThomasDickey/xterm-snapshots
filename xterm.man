@@ -311,6 +311,13 @@ This option enables the display of underlining.
 .B "\+nul"
 This option disables the display of underlining.
 .TP 8
+.B \-pc
+This option enables the PC-style use of bold colors (see boldColors
+resource).
+.TP 8
+.B \+pc
+This option disables the PC-style use of bold colors.
+.TP 8
 .B \-rw
 This option indicates that reverse-wraparound should be allowed.  This allows
 the cursor to back up from the leftmost column of one line to the rightmost
@@ -655,6 +662,12 @@ will also be suppressed until the server reports that processing of
 the first bell has been completed; this feature is most useful with
 the visible bell.
 .TP 8
+.B "boldColors (\fPclass\fB ColorMode)"
+Specifies whether to combine bold attribute with colors like the IBM PC,
+i.e., map colors 0 through 7 to colors 8 through 15.
+These normally are the brighter versions of the first 8 colors, hence bold.
+The default is ``true.''
+.TP 8
 .B "boldFont (\fPclass\fB BoldFont)"
 Specifies the name of the bold font to use instead of overstriking.
 .TP 8
@@ -686,9 +699,16 @@ Specifies whether or not the last column bug in
 should be worked around.  See the \fB\-cu\fP option for details.
 The default is ``false.''
 .TP 8
+.B "colorAttrMode (\fPclass\fB ColorMode)"
+Specifies whether ``colorBD'' and ``colorUL'' should override ANSI colors.
+If not, these are displayed only when no ANSI colors
+have been set for the corresponding position.
+The default is ``false.''
+.TP 8
 .B "colorMode (\fPclass\fB ColorMode)"
 Specifies whether or not recognition of ANSI (ISO 6429)
 color change escape sequences should be enabled.
+The default is ``true.''
 .TP 8
 .B "colorBDMode (\fPclass\fB ColorMode)"
 Specifies whether characters with the bold attribute should be displayed in

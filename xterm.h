@@ -172,7 +172,7 @@ extern ScrnBuf Allocate PROTO((int nrow, int ncol, Char **addr));
 extern int ScreenResize PROTO((TScreen *screen, int width, int height, unsigned *flags));
 extern int ScrnGetAttributes PROTO((TScreen *screen, int row, int col, Char *str, int length));
 extern void ClearBufRows PROTO((TScreen *screen, int first, int last));
-extern void ScreenWrite PROTO((TScreen *screen, Char *str, unsigned flags, unsigned cur_fg, unsigned cur_bg, int length));
+extern void ScreenWrite PROTO((TScreen *screen, Char *str, unsigned flags, unsigned cur_fg_bg, int length));
 extern void ScrnDeleteChar PROTO((TScreen *screen, int n, int size));
 extern void ScrnDeleteLine PROTO((ScrnBuf sb, int n, int last, int size, int where));
 extern void ScrnInsertChar PROTO((TScreen *screen, int n, int size));
@@ -202,7 +202,7 @@ extern void TabSet PROTO((Tabs tabs, int col));
 extern void TabZonk PROTO((Tabs	tabs));
 
 /* util.c */
-extern GC updatedXtermGC PROTO((TScreen *screen, int flags, int fg, int bg, Bool hilite));
+extern GC updatedXtermGC PROTO((TScreen *screen, int flags, int fg_bg, Bool hilite));
 extern int AddToRefresh PROTO((TScreen *screen));
 extern int HandleExposure PROTO((TScreen *screen, XEvent *event));
 extern void ChangeColors PROTO((XtermWidget tw, ScrnColors *pNew));

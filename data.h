@@ -66,6 +66,7 @@ extern int T_lasty;
 extern int Tbcnt;
 extern int Ttoggled;
 extern int am_slave;
+extern int done_setuid;
 extern int bcnt;
 #ifdef DEBUG
 extern int debug;

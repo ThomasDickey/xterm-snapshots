@@ -203,7 +203,7 @@ Reallocate(sbuf, sbufaddr, nrow, ncol, oldrow, oldcol)
 }
 
 void
-ScreenWrite (screen, str, flags, cur_fg, cur_bg, length)
+ScreenWrite (screen, str, flags, cur_fg_bg, length)
 /*
  * Writes str into buf at screen's current row and column.  Characters are set
  * to match flags.
@@ -211,7 +211,7 @@ ScreenWrite (screen, str, flags, cur_fg, cur_bg, length)
 TScreen *screen;
 Char *str;
 register unsigned flags;
-register unsigned cur_fg, cur_bg;
+register unsigned cur_fg_bg;
 register int length;		/* length of string */
 {
 #if OPT_ISO_COLORS
@@ -254,7 +254,7 @@ register int length;		/* length of string */
 	memset( attrs, flags,  length);
 
 	if_OPT_ISO_COLORS(screen,{
-		memset( fb,   makeColorPair(cur_fg, cur_bg), length);
+		memset( fb,   cur_fg_bg, length);
 	})
 	if_OPT_DEC_CHRSET({
 		memset( cb,   curXtermChrSet(screen->cur_row), length);
@@ -481,7 +481,7 @@ Boolean force;			/* ... leading/trailing spaces */
 	   int hi_col = maxcol;
 	   int lastind;
 	   int flags;
-	   int fg = 0, bg = 0;
+	   int fg_bg = 0, fg = 0, bg = 0;
 	   int x;
 	   GC gc;
 	   Boolean hilite;	
@@ -590,10 +590,11 @@ Boolean force;			/* ... leading/trailing spaces */
 	   flags = attrs[col];
 	   if_OPT_ISO_COLORS(screen,{
 		fb = SCRN_BUF_COLOR(screen, lastind + topline);
-		fg = extract_fg(fb[col], flags);
-		bg = extract_bg(fb[col]);
+		fg_bg = fb[col];
+		fg = extract_fg(fg_bg, flags);
+		bg = extract_bg(fg_bg);
 	   })
-	   gc = updatedXtermGC(screen, flags, fg, bg, hilite);
+	   gc = updatedXtermGC(screen, flags, fg_bg, hilite);
 	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
 
 	   x = CurCursorX(screen, row, col);
@@ -624,13 +625,14 @@ Boolean force;			/* ... leading/trailing spaces */
 
 		   flags = attrs[col];
 		   if_OPT_ISO_COLORS(screen,{
-		        fg = extract_fg(fb[col], flags);
-		        bg = extract_bg(fb[col]);
+			fg_bg = fb[col];
+		        fg = extract_fg(fg_bg, flags);
+		        bg = extract_bg(fg_bg);
 		   })
 		   if_OPT_DEC_CHRSET({
 		        cs = cb[col];
 		   })
-	   	   gc = updatedXtermGC(screen, flags, fg, bg, hilite);
+	   	   gc = updatedXtermGC(screen, flags, fg_bg, hilite);
 	   	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
 		}
 

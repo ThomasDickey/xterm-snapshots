@@ -27,7 +27,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Revision: 1.14 $)
+AC_REVISION($Revision: 1.16 $)
 AC_PREREQ(2.12)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -127,16 +127,24 @@ CF_ARG_DISABLE(16-color,
 	[  --disable-16-color      disable 16-color support],
 	[enable_16_color=no],
 	[enable_16_color=yes])
-AC_MSG_RESULT($enable_ansi_color)
+AC_MSG_RESULT($enable_16_color)
 test $enable_16_color = no && AC_DEFINE(OPT_AIX_COLORS,0)
 
-AC_MSG_CHECKING(for default color-mode)
-CF_ARG_ENABLE(color-mode,
-	[  --enable-color-mode     set default colorMode resource],
-	[default_colormode=TRUE],
-	[default_colormode=FALSE])
+AC_MSG_CHECKING(if you want bold colors mapped like IBM PC)
+CF_ARG_DISABLE(bold-color,
+	[  --disable-bold-color    disable PC-style mapping of bold colors],
+	[enable_pc_color=no],
+	[enable_pc_color=yes])
+AC_MSG_RESULT($enable_pc_color)
+test $enable_pc_color = no && AC_DEFINE(OPT_PC_COLORS,0)
+
+AC_MSG_CHECKING(if you want color-mode enabled by default)
+CF_ARG_DISABLE(color-mode,
+	[  --disable-color-mode    disable default colorMode resource],
+	[default_colormode=no],
+	[default_colormode=yes])
 AC_MSG_RESULT($default_colormode)
-AC_DEFINE_UNQUOTED(DFT_COLORMODE,$default_colormode)
+test $default_colormode = no && AC_DEFINE(DFT_COLORMODE,FALSE)
 
 AC_MSG_CHECKING(for doublesize characters)
 CF_ARG_DISABLE(doublechars,
