@@ -890,7 +890,7 @@ typedef struct {
 	Boolean		locator_pixels;	/* report in pixels?		*/
 					/* if false, report in cells	*/
 	unsigned short	locator_events;	/* what events to report	*/
-	int		loc_filter;	/* is filter rectangle active?	*/
+	Boolean		loc_filter;	/* is filter rectangle active?	*/
 	int		loc_filter_top;	/* filter rectangle for DEC Locator */
 	int		loc_filter_left;
 	int		loc_filter_bottom;

@@ -2520,6 +2520,10 @@ in_put(void)
 	/* Update the masks and, unless X events are already in the queue,
 	   wait for I/O to be possible. */
 	XFD_COPYSET (&Select_mask, &select_mask);
+	/* in selection mode xterm does not read pty */
+	if (eventMode != NORMAL)
+		FD_CLR (screen->respond, &select_mask);
+
 	if (v_bufptr > v_bufstr) {
 	    XFD_COPYSET (&pty_mask, &write_mask);
 	} else

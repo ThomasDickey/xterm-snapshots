@@ -53,7 +53,7 @@ xf|xterm-xfree86|XFree86 xterm:\
 #	  12-fkey keyboard can support vt220's 20-fkeys.
 #	+ maps numeric keypad "+" to ",".
 #	+ uses DEC-style control sequences for the application keypad.
-#	  
+#
 vt|xterm-vt220|xterm emulating vt220:\
 	:kH=\E[4~::@7=\E[4~:*6=\E[4~:
 	:kh=\E[1~:\

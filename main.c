@@ -170,7 +170,6 @@ static Bool IsPts = False;
 #define USE_TERMIOS
 #define USE_SYSV_PGRP
 #define USE_SYSV_SIGNALS
-#define LASTLOG
 #define WTMP
 #undef  HAS_LTCHARS
 #if (__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
@@ -190,10 +189,9 @@ static Bool IsPts = False;
 #undef  HAS_LTCHARS
 #endif
 
-#ifdef __CYGWIN32__
+#ifdef __CYGWIN__
 #define SYSV
 #define SVR4
-#define LASTLOG
 #define WTMP
 #define ATT
 #endif
@@ -223,7 +221,7 @@ static Bool IsPts = False;
 #include <grp.h>
 #endif
 
-#ifndef __CYGWIN32__
+#ifndef __CYGWIN__
 #include <sys/ioctl.h>
 #endif
 
@@ -388,7 +386,6 @@ static Bool IsPts = False;
 
 #if defined(BSD) && (BSD >= 199103)
 #define USE_POSIX_WAIT
-#define LASTLOG
 #define WTMP
 #define HAS_SAVED_IDS_AND_SETEUID
 #endif
@@ -433,7 +430,7 @@ extern struct utmp *getutid __((struct utmp *_Id));
 
 #endif
 
-#if defined(LASTLOG) && (!defined(BSD) || (BSD < 199103))
+#if defined(USE_LASTLOG) && defined(HAVE_LASTLOG_H)
 #include <lastlog.h>
 #endif
 
@@ -714,7 +711,7 @@ extern void endpwent();
 static char etc_utmp[] = UTMP_FILENAME;
 #endif	/* USE_SYSV_UTMP */
 
-#ifdef LASTLOG
+#ifdef USE_LASTLOG
 static char etc_lastlog[] = LASTLOG_FILENAME;
 #endif
 
@@ -725,7 +722,7 @@ static char etc_wtmp[] = WTMP_FILENAME;
 /*
  * Some people with 4.3bsd /bin/login seem to like to use login -p -f user
  * to implement xterm -ls.  They can turn on USE_LOGIN_DASH_P and turn off
- * WTMP and LASTLOG.
+ * WTMP and USE_LASTLOG.
  */
 #ifdef USE_LOGIN_DASH_P
 #ifndef LOGIN_FILENAME
@@ -1949,7 +1946,7 @@ get_pty (int *pty)
 	if (pty_search(pty) == 0)
 	    return 0;
 	return 1;
-#elif defined(USE_USG_PTYS) || defined(__CYGWIN32__)
+#elif defined(USE_USG_PTYS) || defined(__CYGWIN__)
 #ifdef __GLIBC__ /* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
 	/* GNU libc 2 allows us to abstract away from having to know the
 	   master pty device name. */
@@ -2311,14 +2308,14 @@ spawn (void)
 #endif
 	struct passwd *pw = NULL;
 #ifdef HAVE_UTMP
-#if (defined(SVR4) || defined(SCO325)) && !defined(__CYGWIN32__)
+#if defined(UTMPX_FOR_UTMP)
 	struct utmpx utmp;
 #else
 	struct utmp utmp;
 #endif
-#ifdef LASTLOG
+#ifdef USE_LASTLOG
 	struct lastlog lastlog;
-#endif	/* LASTLOG */
+#endif	/* USE_LASTLOG */
 #endif	/* HAVE_UTMP */
 
 	screen->uid = getuid();
@@ -3316,7 +3313,7 @@ spawn (void)
 			       sizeof(utmp.ut_name));
 
 		utmp.ut_pid = getpid();
-#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
+#if defined(HAVE_UTMP_UT_XTIME)
 #ifndef __MVS__
 		utmp.ut_session = getsid(0);
 #endif
@@ -3407,7 +3404,7 @@ spawn (void)
 #endif /* USE_HANDSHAKE */
 #endif /* USE_SYSV_UTMP */
 
-#ifdef LASTLOG
+#ifdef USE_LASTLOG
 				if (term->misc.login_shell &&
 				(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 				    bzero((char *)&lastlog,
@@ -3425,7 +3422,7 @@ spawn (void)
 					sizeof (struct lastlog));
 				    close(i);
 				}
-#endif /* LASTLOG */
+#endif /* USE_LASTLOG */
 
 #ifdef USE_HANDSHAKE
 		/* Let our parent know that we set up our utmp entry
@@ -4124,7 +4121,7 @@ Exit(int n)
 	    /* write it out only if it exists, and the pid's match */
 	    if (utptr && (utptr->ut_pid == screen->pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
-#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
+#if defined(HAVE_UTMP_UT_XTIME)
 #ifndef __MVS__
 		    utptr->ut_session = getsid(0);
 #endif
@@ -4416,7 +4413,7 @@ int GetBytesAvailable (int fd)
     long arg;
     ioctl (fd, FIONREAD, (char *) &arg);
     return (int) arg;
-#elif defined(__CYGWIN32__)
+#elif defined(__CYGWIN__)
     fd_set set;
     struct timeval timeout = {0, 0};
 

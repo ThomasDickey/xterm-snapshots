@@ -71,7 +71,7 @@
 #include <VTparse.h>
 
 #if !OPT_DEC_LOCATOR
-#undef  CASE_CSI_TICK_STATE,
+#undef  CASE_CSI_TICK_STATE
 #define CASE_CSI_TICK_STATE CASE_ESC_IGNORE
 #endif
 

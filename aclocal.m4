@@ -595,6 +595,29 @@ AC_TRY_LINK([
 [cf_cv_input_method=no])])
 ])dnl
 dnl ---------------------------------------------------------------------------
+AC_DEFUN([CF_LASTLOG],
+[
+AC_CHECK_HEADERS(lastlog.h paths.h)
+AC_CACHE_CHECK(for lastlog path,cf_cv_path_lastlog,[
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#ifdef HAVE_LASTLOG_H
+#include <lastlog.h>
+#else
+#ifdef HAVE_PATHS_H
+#include <paths.h>
+#endif
+#endif],[char *path = _PATH_LASTLOG],
+	[cf_cv_path_lastlog="_PATH_LASTLOG"],
+	[if test -f /usr/adm/lastlog ; then
+	 	cf_cv_path_lastlog=/usr/adm/lastlog
+	else
+		cf_cv_path_lastlog=no
+	fi])
+])
+test $cf_cv_path_lastlog != no && AC_DEFINE(USE_LASTLOG)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl Special test to workaround gcc 2.6.2, which cannot parse C-preprocessor
 dnl conditionals.
 dnl
@@ -662,7 +685,7 @@ AC_DEFUN([CF_SYSV_UTMP],
 [
 AC_REQUIRE([CF_UTMP])
 AC_CACHE_CHECK(if $cf_cv_have_utmp is SYSV flavor,cf_cv_sysv_utmp,[
-AC_TRY_COMPILE([
+AC_TRY_LINK([
 #include <sys/types.h>
 #include <${cf_cv_have_utmp}.h>],[
 struct $cf_cv_have_utmp x;
@@ -733,25 +756,29 @@ dnl ---------------------------------------------------------------------------
 dnl Check for UTMP/UTMPX headers
 AC_DEFUN([CF_UTMP],
 [
+AC_REQUIRE([CF_LASTLOG])
 AC_CACHE_CHECK(for utmp implementation,cf_cv_have_utmp,[
+	cf_cv_have_utmp=no
+for cf_header in utmpx utmp ; do
 	AC_TRY_COMPILE([
 #include <sys/types.h>
-#include <utmp.h>],
-	[struct utmp x],
-	[cf_cv_have_utmp=utmp],
-	[AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <utmpx.h>],
-		[struct utmpx x],
-		[cf_cv_have_utmp=utmpx],
-		[cf_cv_have_utmp=no])
-		])
-	])
+#include <${cf_header}.h>
+#define getutent getutxent
+#ifdef USE_LASTLOG
+#include <lastlog.h>	/* may conflict with utmpx.h on Linux */
+#endif
+],
+	[struct $cf_header x],
+	[cf_cv_have_utmp=$cf_header
+	 break])
+done
+])
 
 if test $cf_cv_have_utmp != no ; then
 	AC_DEFINE(HAVE_UTMP)
 	test $cf_cv_have_utmp = utmpx && AC_DEFINE(UTMPX_FOR_UTMP)
 	CF_UTMP_UT_HOST
+	CF_UTMP_UT_XTIME
 	CF_SYSV_UTMP
 fi
 ])
@@ -760,22 +787,38 @@ dnl Check if UTMP/UTMPX struct defines ut_host member
 AC_DEFUN([CF_UTMP_UT_HOST],
 [
 AC_REQUIRE([CF_UTMP])
+if test $cf_cv_have_utmp != no ; then
 AC_MSG_CHECKING(if utmp.ut_host is declared)
 AC_CACHE_VAL(cf_cv_have_utmp_ut_host,[
 	AC_TRY_COMPILE([
 #include <sys/types.h>
-#ifdef UTMPX_FOR_UTMP
-#include <utmpx.h>
-#define utmp utmpx
-#else
-#include <utmp.h>
-#endif],
-	[struct utmp x; char *y = &x.ut_host[0]],
+#include <${cf_cv_have_utmp}.h>],
+	[struct $cf_cv_have_utmp x; char *y = &x.ut_host[0]],
 	[cf_cv_have_utmp_ut_host=yes],
 	[cf_cv_have_utmp_ut_host=no])
 	])
 AC_MSG_RESULT($cf_cv_have_utmp_ut_host)
 test $cf_cv_have_utmp_ut_host != no && AC_DEFINE(HAVE_UTMP_UT_HOST)
+fi
+])
+dnl ---------------------------------------------------------------------------
+dnl Check if UTMP/UTMPX struct defines ut_xtime member
+AC_DEFUN([CF_UTMP_UT_XTIME],
+[
+AC_REQUIRE([CF_UTMP])
+if test $cf_cv_have_utmp != no ; then
+AC_MSG_CHECKING(if utmp.ut_xtime is declared)
+AC_CACHE_VAL(cf_cv_have_utmp_ut_xtime,[
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <${cf_cv_have_utmp}.h>],
+	[struct $cf_cv_have_utmp x; long y = x.ut_xtime],
+	[cf_cv_have_utmp_ut_xtime=yes],
+	[cf_cv_have_utmp_ut_xtime=no])
+	])
+AC_MSG_RESULT($cf_cv_have_utmp_ut_xtime)
+test $cf_cv_have_utmp_ut_xtime != no && AC_DEFINE(HAVE_UTMP_UT_XTIME)
+fi
 ])
 dnl ---------------------------------------------------------------------------
 dnl Use AC_VERBOSE w/o the warnings
