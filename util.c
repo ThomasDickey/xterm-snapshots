@@ -1463,7 +1463,9 @@ drawXtermText(
 	Cardinal len,
 	int on_wide)
 {
-	int real_length = len;
+    int real_length = len;
+    int draw_len;
+
 #ifdef XRENDERFONT
     if (screen->renderFont)
     {
@@ -1717,10 +1719,17 @@ drawXtermText(
 				}
 			}
 			/* This is probably wrong. But it works. */
-			if (wideness && screen->fnt_dwd->fid) {
-				real_length = len * 2;
-				XSetFont(screen->display, gc, screen->fnt_dwd->fid);
-				ascent_adjust = screen->fnt_dwd->ascent - screen->fnt_norm->ascent;
+			draw_len = len;
+			if (wideness && (screen->fnt_dwd->fid || screen->fnt_dwdb->fid)) {
+				draw_len = real_length = len * 2;
+				if (flags & (BOLD|BLINK) && screen->fnt_dwdb->fid) {
+				  XSetFont(screen->display, gc, screen->fnt_dwdb->fid);
+				  ascent_adjust = screen->fnt_dwdb->ascent - screen->fnt_norm->ascent;
+				}
+				else {
+				  XSetFont(screen->display, gc, screen->fnt_dwd->fid);
+				  ascent_adjust = screen->fnt_dwd->ascent - screen->fnt_norm->ascent;
+				}
 				/* fix ascent */
 			}
 			else if (flags & (BOLD|BLINK) && screen->fnt_bold->fid)
@@ -1744,6 +1753,7 @@ drawXtermText(
 		{
 		XDrawImageString(screen->display, VWindow(screen), gc,
 			x, y,  (char *)text, len);
+		draw_len = len;
 #if !OPT_WIDE_CHARS
 		/* FIXME: This is rather broken with wide chars. It should
 		 * use XDrawString16 where appropriate.
@@ -1781,7 +1791,7 @@ drawXtermText(
 			if (FontDescent(screen) > 1)
 				y++;
 			XDrawLine(screen->display, VWindow(screen), gc,
-				x, y, x + len * screen->fnt_wide - 1, y);
+				x, y, x + draw_len * screen->fnt_wide - 1, y);
 		}
 #if OPT_BOX_CHARS
 #define DrawX(col) x + (col * (screen->fnt_wide))

@@ -1003,7 +1003,7 @@ TranslationsUseKeyword(Widget w, const char *keyword)
 		    if ((state != 0
 		      || !isalnum(prv))
 		     && ((keyword[++state] == 0)
-		      && !isalnum(*p))) {
+		      && !isalnum(CharOf(*p)))) {
 			result = True;
 			break;
 		    }
@@ -1171,6 +1171,10 @@ xtermcapKeycode(char **params, unsigned *state)
 		DATA(	"kl",	"kcub1",	XK_Left,	0),
 		DATA(	"kr",	"kcuf1",	XK_Right,	0),
 		DATA(	"ku",	"kcuu1",	XK_Up,		0),
+# if OPT_ISO_COLORS
+		/* XK_COLORS is a fake code. */
+		DATA(	"Co",	"colors",	XK_COLORS,	0),
+# endif
 	};
 	Cardinal n;
 	unsigned len = 0;

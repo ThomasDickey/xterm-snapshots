@@ -473,15 +473,17 @@ is_fixed_font(XFontStruct *fs)
 	   &&   fs->min_bounds.width == fs->min_bounds.width);
 }
 
-#define EmptyFont(fs) ((fs)->ascent + (fs)->descent == 0 \
-		   ||  (fs)->max_bounds.width == 0)
+#define EmptyFont(fs) (fs != 0 \
+		   && ((fs)->ascent + (fs)->descent == 0 \
+		    || (fs)->max_bounds.width == 0))
+
 #define FontSize(fs) (((fs)->ascent + (fs)->descent) \
 		    *  (fs)->max_bounds.width)
 
 int
 xtermLoadFont (
 	TScreen *screen,
-	VT_FONTSET(char *nfontname, char *bfontname, char *wfontname),
+	VT_FONTSET(char *nfontname, char *bfontname, char *wfontname, char *wbfontname),
 	Bool doresize,
 	int fontnum)
 {
@@ -489,7 +491,10 @@ xtermLoadFont (
 	FontNameProperties *fp;
 	XFontStruct *nfs = NULL;
 	XFontStruct *bfs = NULL;
+#if OPT_WIDE_CHARS
 	XFontStruct *wfs = NULL;
+	XFontStruct *wbfs = NULL;
+#endif
 	XGCValues xgcv;
 	unsigned long mask;
 	GC new_normalGC      = NULL;
@@ -544,10 +549,10 @@ xtermLoadFont (
 		TRACE(("...cannot load bold font %s\n", bfontname));
 	}
 
-	/* if there is no widefont specified, fake it by doubling
-	 * AVERAGE_WIDTH of normal fonts XLFD, and asking for it.
-	 * This plucks out 18x18ja and 12x13ja as the corresponding
-	 * fonts for 9x18 and 6x13.
+	/*
+	 * If there is no widefont specified, fake it by doubling AVERAGE_WIDTH
+	 * of normal fonts XLFD, and asking for it.  This plucks out 18x18ja
+	 * and 12x13ja as the corresponding fonts for 9x18 and 6x13.
 	 */
 	if_OPT_WIDE_CHARS(screen, {
 		if (wfontname == 0) {
@@ -558,16 +563,25 @@ xtermLoadFont (
 			}
 		}
 		if (wfontname
-		 && (wfs = XLoadQueryFont( screen->display, wfontname)) == 0) {
+		 && (wfs = XLoadQueryFont(screen->display, wfontname)) == 0) {
 		}
+		if (wbfontname) {
+			wbfs = XLoadQueryFont(screen->display, wbfontname);
+		} else {
+			wbfs = wfs;
+			TRACE(("...cannot load wide bold font %s\n", wbfontname));
+		}
+		if (EmptyFont(wbfs))
+			goto bad;	/* can't use a 0-sized font */
 	})
 
-	/* Most of the time this call to load the font will succeed, even if there is
-	 * no wide font : the X server doubles the width of the normal font, or similar.
+	/*
+	 * Most of the time this call to load the font will succeed, even if
+	 * there is no wide font :  the X server doubles the width of the
+	 * normal font, or similar.
 	 *
 	 * But if it did fail for some reason, then nevermind.
 	 */
-
 	if (EmptyFont(bfs))
 		goto bad;		/* can't use a 0-sized font */
 
@@ -587,11 +601,30 @@ xtermLoadFont (
 			return xtermLoadFont (screen,
 					      VT_FONTSET(nfontname,
 					      NULL,	/* throw it away! */
-					      wfontname),
+					      wfontname,
+					      wbfontname),
 					      doresize,
 					      fontnum);
 		}
 	}
+
+	if_OPT_WIDE_CHARS(screen, {
+	  if (!same_font_size(wfs, wbfs)
+	      && (is_fixed_font(wfs) && is_fixed_font(wbfs))) {
+	    XFreeFont(screen->display, wbfs);
+	    wbfs = wfs;
+	    TRACE(("...fixing mismatched normal/bold wide fonts\n"));
+	    if (bfontname != 0) {
+	      return xtermLoadFont (screen,
+				    VT_FONTSET(nfontname,
+					       bfontname,
+					       wfontname,
+					       NULL),
+				    doresize,
+				    fontnum);
+	    }
+	  }
+	})
 
 	/*
 	 * Normal/bold fonts should be the same width.  Also, the min/max
@@ -607,6 +640,19 @@ xtermLoadFont (
 			bfs->max_bounds.width));
 		proportional = True;
 	}
+
+	if_OPT_WIDE_CHARS(screen, {
+	  if (!is_fixed_font(wfs)
+	      || !is_fixed_font(wbfs)
+	      || wfs->max_bounds.width != wbfs->max_bounds.width) {
+	    TRACE(("Proportional font! wide %d/%d, wide bold %d/%d\n",
+		   wfs->min_bounds.width,
+		   wfs->max_bounds.width,
+		   wbfs->min_bounds.width,
+		   wbfs->max_bounds.width));
+	    proportional = True;
+	  }
+	})
 
 	/* TODO : enforce that the width of the wide font is 2* the width
 	   of the narrow font */
@@ -674,7 +720,10 @@ xtermLoadFont (
 
 	screen->fnt_norm = nfs;
 	screen->fnt_bold = bfs;
+#if OPT_WIDE_CHARS
 	screen->fnt_dwd = wfs;
+	screen->fnt_dwdb = wbfs;
+#endif
 	screen->fnt_prop = proportional;
 	screen->fnt_boxes = True;
 
@@ -742,6 +791,12 @@ bad:
 		XFreeFont (screen->display, nfs);
 	if (bfs && nfs != bfs)
 		XFreeFont (screen->display, bfs);
+#if OPT_WIDE_CHARS
+	if (wfs)
+		XFreeFont (screen->display, wfs);
+	if (wbfs && wbfs != wfs)
+		XFreeFont (screen->display, wbfs);
+#endif
 	return 0;
 }
 
@@ -768,7 +823,7 @@ xtermSetCursorBox (TScreen *screen)
 void
 xtermComputeFontInfo (TScreen *screen, struct _vtwin *win, XFontStruct *font, int sbwidth)
 {
-	int i, j, width, height;
+    int i, j, width, height;
 
 #ifdef XRENDERFONT
     Display			    *dpy = screen->display;
@@ -803,17 +858,17 @@ xtermComputeFontInfo (TScreen *screen, struct _vtwin *win, XFontStruct *font, in
     {
 	win->f_width  = (font->max_bounds.width);
 	win->f_height = (font->ascent + font->descent);
-        win->f_ascent = font->ascent;
+	win->f_ascent = font->ascent;
 	win->f_descent = font->descent;
     }
-	i = 2 * screen->border + sbwidth;
-	j = 2 * screen->border;
-	width  = (screen->max_col + 1) * win->f_width + i;
-	height = (screen->max_row + 1) * win->f_height + j;
-	win->fullwidth  = width;
-	win->fullheight = height;
-	win->width  = width - i;
-	win->height = height - j;
+    i = 2 * screen->border + sbwidth;
+    j = 2 * screen->border;
+    width  = (screen->max_col + 1) * win->f_width + i;
+    height = (screen->max_row + 1) * win->f_height + j;
+    win->fullwidth  = width;
+    win->fullheight = height;
+    win->width  = width - i;
+    win->height = height - j;
 }
 
 
@@ -1202,7 +1257,7 @@ HandleLargerFont(
 			m = n;
 	}
 	if (m >= 0) {
-		SetVTFont (m, TRUE, VT_FONTSET(NULL, NULL, NULL));
+		SetVTFont (m, TRUE, VT_FONTSET(NULL, NULL, NULL, NULL));
 	} else {
 		Bell(XkbBI_MinorError,0);
 	}
@@ -1228,7 +1283,7 @@ HandleSmallerFont(
 			m = n;
 	}
 	if (m >= 0) {
-		SetVTFont (m, TRUE, VT_FONTSET(NULL, NULL, NULL));
+		SetVTFont (m, TRUE, VT_FONTSET(NULL, NULL, NULL, NULL));
 	} else {
 		Bell(XkbBI_MinorError,0);
 	}
@@ -1244,7 +1299,7 @@ HandleSetFont(
 	Cardinal *param_count)
 {
     int fontnum;
-    char *name1 = NULL, *name2 = NULL, *name3 = NULL;
+    char *name1 = NULL, *name2 = NULL, *name3 = NULL, *name4 = NULL;
 
     if (*param_count == 0) {
 	fontnum = fontMenu_fontdefault;
@@ -1267,7 +1322,7 @@ HandleSetFont(
 	  case '6':
 	    fontnum = fontMenu_font6; break;
 	  case 'e': case 'E':
-	    fontnum = fontMenu_fontescape; maxparams = 4; break;
+	    fontnum = fontMenu_fontescape; maxparams = 5; break;
 	  case 's': case 'S':
 	    fontnum = fontMenu_fontsel; maxparams = 2; break;
 	  default:
@@ -1279,6 +1334,9 @@ HandleSetFont(
 	    return;
 	}
 	switch (*param_count) {		/* assign 'em */
+	  case 5:
+	    name4 = params[4];
+	    /* FALLTHRU */
 	  case 4:
 	    name3 = params[3];
 	    /* FALLTHRU */
@@ -1291,13 +1349,13 @@ HandleSetFont(
 	}
     }
 
-    SetVTFont (fontnum, True, VT_FONTSET(name1, name2, name3));
+    SetVTFont (fontnum, True, VT_FONTSET(name1, name2, name3, name4));
 }
 
 void SetVTFont (
 	int i,
 	Bool doresize,
-	VT_FONTSET(char *name1, char *name2, char *name3))
+	VT_FONTSET(char *name1, char *name2, char *name3, char *name4))
 {
     TScreen *screen = &term->screen;
 
@@ -1312,7 +1370,7 @@ void SetVTFont (
 	} else {
 	    if (name1 == 0)
 		name1 = screen->menu_font_names[i];
-	    if (xtermLoadFont(screen, VT_FONTSET(name1, name2, name3), doresize, i)) {
+	    if (xtermLoadFont(screen, VT_FONTSET(name1, name2, name3, name4), doresize, i)) {
 		return;
 	    }
 	}

@@ -483,18 +483,23 @@ AC_TRY_COMPILE([#include <sys/types.h>],[
 make an error
 #endif],
 	[cf_cv_gnu_source=no],
-	[cf_save="$CFLAGS"
-	 CFLAGS="$CFLAGS -D_GNU_SOURCE"
+	[cf_save="$CPPFLAGS"
+	 CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
 	 AC_TRY_COMPILE([#include <sys/types.h>],[
 #ifdef _XOPEN_SOURCE
 make an error
 #endif],
 	[cf_cv_gnu_source=no],
 	[cf_cv_gnu_source=yes])
-	CFLAGS="$cf_save"
+	CPPFLAGS="$cf_save"
 	])
 ])
-test "$cf_cv_gnu_source" = yes && CFLAGS="$CFLAGS -D_GNU_SOURCE"
+test "$cf_cv_gnu_source" = yes && CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Insert text into the help-message, for readability, from AC_ARG_WITH.
+AC_DEFUN([CF_HELP_MESSAGE],
+[AC_DIVERT_HELP([$1])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
@@ -1122,10 +1127,10 @@ for cf_path in default \
 do
 
 	if test -z "$cf_x_athena_include" ; then
-		cf_save="$CFLAGS"
+		cf_save="$CPPFLAGS"
 		cf_test=X11/$cf_x_athena/SimpleMenu.h
 		if test $cf_path != default ; then
-			CFLAGS="-I$cf_path/include $cf_save"
+			CPPFLAGS="-I$cf_path/include $cf_save"
 			AC_MSG_CHECKING(for $cf_test in $cf_path)
 		else
 			AC_MSG_CHECKING(for $cf_test)
@@ -1139,7 +1144,7 @@ do
 		if test "$cf_result" = yes ; then
 			cf_x_athena_include=$cf_path
 		else
-			CFLAGS="$cf_save"
+			CPPFLAGS="$cf_save"
 		fi
 	fi
 

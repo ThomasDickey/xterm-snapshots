@@ -247,7 +247,7 @@ typedef enum {NORMAL, LEFTEXTENSION, RIGHTEXTENSION} EventMode;
 typedef unsigned char Char;		/* to support 8 bit chars */
 typedef Char **ScrnBuf;
 
-#define CharOf(n) ((n) & 0xff)
+#define CharOf(n) ((unsigned char)(n))
 
 /*
  * ANSI emulation, special character codes
@@ -384,6 +384,10 @@ typedef struct {
 
 #define Cres(name,offset,value) \
 	{RES_NAME(name), XtCForeground, XtRPixel, sizeof(Pixel), \
+	 RES_OFFSET(offset), XtRString, value}
+
+#define Dres(name,offset,value) \
+	{RES_NAME(name), XtCBackground, XtRPixel, sizeof(Pixel), \
 	 RES_OFFSET(offset), XtRString, value}
 
 #define Ires(name,class,offset,value) \
@@ -623,6 +627,12 @@ typedef struct {
 		    ( !screen->colorRVMode && \
 		      (( (flags & INVERSE) && !hilite) || \
 		       (!(flags & INVERSE) &&  hilite)) ))
+
+/* Define a fake XK code, we need it for the fake color response in
+ * xtermcapKeycode(). */
+#ifdef OPT_TCAP_QUERY
+# define XK_COLORS 0x0003
+#endif
 
 #else	/* !OPT_ISO_COLORS */
 
@@ -1066,7 +1076,10 @@ typedef struct {
 	Dimension	fnt_high;
 	XFontStruct	*fnt_norm;	/* normal font of terminal	*/
 	XFontStruct	*fnt_bold;	/* bold font of terminal	*/
+#if OPT_WIDE_CHARS
 	XFontStruct	*fnt_dwd;	/* wide font of terminal	*/
+	XFontStruct	*fnt_dwdb;	/* wide bold font of terminal	*/
+#endif
 #ifndef NO_ACTIVE_ICON
 	XFontStruct	*fnt_icon;	/* icon font */
 #endif /* NO_ACTIVE_ICON */
@@ -1270,7 +1283,10 @@ typedef struct _Misc {
     char *T_geometry;
     char *f_n;
     char *f_b;
+#if OPT_WIDE_CHARS
     char *f_w;
+    char *f_wb;
+#endif
     int limit_resize;
 #ifdef ALLOWLOGGING
     Boolean log_on;

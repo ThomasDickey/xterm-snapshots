@@ -13,7 +13,7 @@ It is a large file (~460kb), so it is not included in this distribution.
 
 convmap.pl is used to generate ../keysym2ucs.c, e.g.,
 
-	./convmap.plp >../keysym2ucs.c
+	./convmap.pl >../keysym2ucs.c
 
 keysym.map is input data for convmap.pl
 

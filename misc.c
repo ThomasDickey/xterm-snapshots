@@ -273,7 +273,8 @@ void HandleStringEvent(
     if (*nparams != 1) return;
 
     if ((*params)[0] == '0' && (*params)[1] == 'x' && (*params)[2] != '\0') {
-	char c, *p, hexval[2];
+	Char c, *p;
+	char hexval[2];
 	hexval[0] = hexval[1] = 0;
 	for (p = *params+2; (c = *p); p++) {
 	    hexval[0] *= 16;
@@ -1310,7 +1311,7 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 			    buf++;
 			}
 
-			if (isdigit(*buf)) {
+			if (isdigit(CharOf(*buf))) {
 			    int val = atoi(buf);
 			    if (rel > 0)
 				num += val;
@@ -1331,7 +1332,7 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 			    break;
 			}
 		    }
-		    SetVTFont (fontMenu_fontescape, True, VT_FONTSET(buf, NULL, NULL));
+		    SetVTFont (fontMenu_fontescape, True, VT_FONTSET(buf, NULL, NULL, NULL));
 		}
 		break;
 	case 51:
@@ -1512,13 +1513,31 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 				for (tmp = cp; *tmp;) {
 					screen->tc_query = -1;
 					if ((code = xtermcapKeycode(&tmp, &state)) >= 0) {
-						XKeyEvent event;
-						event.state = state;
 						if (count++)
 							unparseputc(';', screen->respond);
 						screen->tc_query = code;
-						Input (&(term->keyboard),
-							screen, &event, False);
+						/* XK_COLORS is a fake code for the "Co" entry (maximum
+						 * number of colors) */
+						if (code == XK_COLORS) {
+# if OPT_256_COLORS
+							unparseputc('2', screen->respond);
+							unparseputc('5', screen->respond);
+							unparseputc('6', screen->respond);
+# elif OPT_88_COLORS
+							unparseputc('8', screen->respond);
+							unparseputc('8', screen->respond);
+# else
+							unparseputc('1', screen->respond);
+							unparseputc('6', screen->respond);
+# endif
+
+						}
+						else {
+							XKeyEvent event;
+							event.state = state;
+							Input (&(term->keyboard),
+									screen, &event, False);
+						}
 						screen->tc_query = -1;
 					}
 				}
@@ -1528,7 +1547,7 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 		break;
 #endif
 	default:
-		if (isdigit(*cp)) { /* digits are DECUDK, otherwise ignore */
+		if (isdigit(CharOf(*cp))) { /* digits are DECUDK, otherwise ignore */
 			clear_all = True;
 			lock_keys = True;
 
@@ -1562,7 +1581,7 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 				unsigned key = 0;
 				int len = 0;
 
-				while (isdigit(*cp))
+				while (isdigit(CharOf(*cp)))
 					key = (key * 10) + (*cp++ - '0');
 				if (*cp == '/') {
 					cp++;

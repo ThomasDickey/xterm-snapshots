@@ -551,12 +551,12 @@ static struct _options {
 { "-T string",             "title name for window" },
 { "-n string",             "icon name for window" },
 { "-C",                    "intercept console messages" },
-{ "-Sxxd",                 "slave mode on \"ttyxx\", file descriptor \"d\"" },
+{ "-Sccn",                 "slave mode on \"ttycc\", file descriptor \"n\"" },
 #if OPT_ZICONBEEP
 { "-ziconbeep percent",    "beep and flag icon of window having hidden output" },
 #endif
 #if OPT_SAME_NAME
-{"-/+sameName",	   "Turn on/off the no flicker option for title and icon name" },
+{"-/+samename",	           "turn on/off the no flicker option for title and icon name" },
 #endif
 { NULL, NULL }};
 
@@ -1792,7 +1792,7 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
     int count = 0;
 
     while (1) {
-	while (*s && isascii(*s) && isspace(*s)) s++;
+	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s))) s++;
 	if (!*s) return count;
 
 	for (mp = modelist; mp->name; mp++) {
@@ -1801,7 +1801,7 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 	if (!mp->name) return -1;
 
 	s += mp->len;
-	while (*s && isascii(*s) && isspace(*s)) s++;
+	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s))) s++;
 	if (!*s) return -1;
 
 	if (*s == '^') {

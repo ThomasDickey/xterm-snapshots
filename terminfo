@@ -77,6 +77,8 @@
 # keycodes.  To get a VMS-bias, make these substitutions:
 #	1. change khome to kfnd
 #	2. change kend to kslt
+# The original xterm-r6 entry does in fact have a VMS bias.
+#
 # Some legacy applications using the termcap emulation may expect kll where
 # we have specified kend.
 #
@@ -413,14 +415,6 @@ xterm-sco|XFree86 xterm with SCO function keys,
 	kcuu1=\E[A,
 	kend=\E[F,
 	kf1=\E[M,
-	kf2=\E[N,
-	kf3=\E[O,
-	kf4=\E[P,
-	kf5=\E[Q,
-	kf6=\E[R,
-	kf7=\E[S,
-	kf8=\E[T,
-	kf9=\E[U,
 	kf10=\E[V,
 	kf11=\E[W,
 	kf12=\E[X,
@@ -430,6 +424,7 @@ xterm-sco|XFree86 xterm with SCO function keys,
 	kf17=\E[c,
 	kf18=\E[d,
 	kf19=\E[e,
+	kf2=\E[N,
 	kf20=\E[f,
 	kf21=\E[g,
 	kf22=\E[h,
@@ -440,12 +435,19 @@ xterm-sco|XFree86 xterm with SCO function keys,
 	kf27=\E[m,
 	kf28=\E[n,
 	kf29=\E[o,
+	kf3=\E[O,
 	kf30=\E[p,
 	kf31=\E[q,
 	kf32=\E[r,
 	kf33=\E[s,
 	kf34=\E[t,
 	kf35=\E[u,
+	kf4=\E[P,
+	kf5=\E[Q,
+	kf6=\E[R,
+	kf7=\E[S,
+	kf8=\E[T,
+	kf9=\E[U,
 	khome=\E[H,
 	kich1=\E[L,
 	knp=\E[G,
@@ -467,9 +469,9 @@ xterm-boldso|xterm with bold for standout (X Window System),
 	rmso=\E[m,
 	smso=\E[1m,
 	use=xterm,
-xtermm|monochrome xterm,
-	colors@,
+xterm-mono|monochrome xterm,
 	bce@,
+	colors@,
 	ncv@,
 	pairs@,
 	op@,
@@ -479,8 +481,6 @@ xtermm|monochrome xterm,
 	setf@,
 	sgr@,
 	use=xterm,
-xterm-mono|monochrome xterm (X Window System),
-	use=xtermm,
 #
 # VTxxx terminals are usually set up so that full-screen applications will use
 # the cursor application mode strings.  This is good for full-screen
@@ -551,14 +551,14 @@ xterm-ic|xterm-vi|xterm with insert character instead of insert mode,
 # to ncurses).
 xterm-xmc|xterm with magic-cookie glitch,
 	xmc#1,
-	use=xterm,
+	use=xterm-xfree86,
 #
 # This one also is primarily for testing ncurses; while the ISO 6429 defines
 # the REP control, none of the DEC VTxxx terminals (VT52 through VT420) support
 # it.
 xterm-rep|xterm with repeat-character control,
 	rep=%p1%c\E[%p2%{1}%-%db,
-	use=xterm,
+	use=xterm-xfree86,
 #
 # This is mainly for testing xterm; the real VT220 will not let you switch
 # character sets without first altering the keyboard language in the setup
@@ -568,7 +568,7 @@ xterm-rep|xterm with repeat-character control,
 xterm-nrc|xterm with VT220 national replacement character sets,
 	csnm=%?%p1%{1}%=%tNorth American%e%p1%{2}%=%tBritish%e%p1%{3}%=%tFlemish%e%p1%{4}%=%tFrench Canadian%e%p1%{5}%=%tDanish%e%p1%{6}%=%tFinnish%e%p1%{7}%=%tGerman%e%p1%{8}%=%tDutch%e%p1%{9}%=%tItalian%e%p1%{10}%=%tSwiss (French)%e%p1%{11}%=%tSwiss (German)%e%p1%{12}%=%tSwedish%e%p1%{13}%=%tNorwegian%e%p1%{14}%=%tFrench/Belgian%e%p1%{15}%=%tSpanish%;,
 	scs=%?%p1%{1}%=%t\E(B%e%p1%{2}%=%t\E(A%e%p1%{3}%=%t\E(R%e%p1%{4}%=%t\E(9%e%p1%{5}%=%t\E(E%e%p1%{6}%=%t\E(5%e%p1%{7}%=%t\E(K%e%p1%{8}%=%t\E(4%e%p1%{9}%=%t\E(Y%e%p1%{10}%=%t\E(=%e%p1%{11}%=%t\E(=%e%p1%{12}%=%t\E(7%e%p1%{13}%=%t\E(E%e%p1%{14}%=%t\E(R%e%p1%{15}%=%t\E(Z%;,
-	use=xterm,
+	use=xterm-xfree86,
 #
 # Foreground 0-15 maps (with toggles) into 30-37 & 90-97
 # Background 0-15 maps (with toggles) into 40-47 & 100-107
@@ -670,7 +670,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	il1=\233L,
 	ind=^J,
 	invis=\2338m,
-	is2=\E7\E G\233r\233m\233?7h\233?1;3;4;6l\2334l\E8\E>,
+	is2=\E[62"p\E G\233m\233?7h\E>\E7\233?1;3;4;6l\2334l\233r\E8,
 	ka1=\217w,
 	ka3=\217u,
 	kb2=\217y,
@@ -728,7 +728,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	rmso=\23327m,
 	rmul=\23324m,
 	rs1=\Ec,
-	rs2=\E7\E[62"p\E G\233r\233m\233?7h\233?1;3;4;6l\2334l\E8\E>,
+	rs2=\E[62"p\E G\233m\233?7h\E>\E7\233?1;3;4;6l\2334l\233r\E8,
 	sc=\E7,
 	setab=\2334%p1%dm,
 	setaf=\2333%p1%dm,
@@ -755,7 +755,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 #	  alternate character set)
 #	+ added u6, u7, u8, u9 strings for Daniel Weaver's tack program.
 #	+ added kmous string for ncurses.
-#	+ added khome/kend strings.
+#	+ added khome/kend strings (which conflict with kfnd/kslt, see note).
 xterm-r6|xterm-old|xterm X11R6 version,
 	am,
 	km,
@@ -793,7 +793,7 @@ xterm-r6|xterm-old|xterm X11R6 version,
 	il=\E[%p1%dL,
 	il1=\E[L,
 	ind=^J,
-	is2=\E7\E[r\E[m\E[?7h\E[?1;3;4;6l\E[4l\E8\E>,
+	is2=\E[m\E[?7h\E[4l\E>\E7\E[r\E[?1;3;4;6l\E8,
 	kbs=^H,
 	kcub1=\EOD,
 	kcud1=\EOB,
@@ -837,7 +837,7 @@ xterm-r6|xterm-old|xterm X11R6 version,
 	rmkx=\E[?1l\E>,
 	rmso=\E[m,
 	rmul=\E[m,
-	rs2=\E7\E[r\E[m\E[?7h\E[?1;3;4;6l\E[4l\E8\E>,
+	rs2=\E[m\E[?7h\E[4l\E>\E7\E[r\E[?1;3;4;6l\E8,
 	sc=\E7,
 	sgr0=\E[m,
 	smacs=^N,
@@ -862,6 +862,8 @@ xterm-r6|xterm-old|xterm X11R6 version,
 #	+ make khome consistent with other entries.
 #	+ use rmul/smul, rmir/smir from termcap, but not rmcup/smcup because
 #	  not everyone wants the alternate screen.
+#	+ added u6, u7, u8, u9 strings for Daniel Weaver's tack program.
+#	+ added kmous string for ncurses.
 xterm-r5|xterm R5 version,
 	am,
 	km,
@@ -924,6 +926,7 @@ xterm-r5|xterm R5 version,
 	khome=\E[1~,
 	kich1=\E[2~,
 	kil1=\E[30~,
+	kmous=\E[M,
 	knp=\E[6~,
 	kpp=\E[5~,
 	rc=\E8,
@@ -942,6 +945,10 @@ xterm-r5|xterm R5 version,
 	smso=\E[7m,
 	smul=\E[4m,
 	tbc=\E[3g,
+	u6=\E[%i%d;%dR,
+	u7=\E[6n,
+	u8=\E[?1;2c,
+	u9=\E[c,
 #
 # This is the only entry which you should have to customize, since "xterm"
 # is widely used for a variety of incompatible terminal emulations including

@@ -349,131 +349,138 @@ static XtActionsRec actionsList[] = {
 #endif
 };
 
-static XtResource resources[] = {
-Sres(XtNfont,		XtCFont,	misc.f_n,		DEFFONT),
-Sres(XtNboldFont,	XtCBoldFont,	misc.f_b,		DEFBOLDFONT),
-Bres(XtNc132,		XtCC132,	screen.c132,		FALSE),
-Sres(XtNcharClass,	XtCCharClass,	screen.charClass,	NULL),
-Bres(XtNcurses,		XtCCurses,	screen.curses,		FALSE),
-Bres(XtNhpLowerleftBugCompat, XtCHpLowerleftBugCompat, screen.hp_ll_bc, FALSE),
-#if OPT_XMC_GLITCH
-Ires(XtNxmcGlitch,	XtCXmcGlitch,	screen.xmc_glitch,	0),
-Ires(XtNxmcAttributes,	XtCXmcAttributes, screen.xmc_attributes, 1),
-Bres(XtNxmcInline,	XtCXmcInline,	screen.xmc_inline,	FALSE),
-Bres(XtNxmcMoveSGR,	XtCXmcMoveSGR,	screen.move_sgr_ok,	TRUE),
-#endif
-Bres(XtNcutNewline,	XtCCutNewline,	screen.cutNewline,	TRUE),
-Bres(XtNcutToBeginningOfLine, XtCCutToBeginningOfLine, screen.cutToBeginningOfLine, TRUE),
-Bres(XtNhighlightSelection, XtCHighlightSelection, screen.highlight_selection, FALSE),
-Bres(XtNtrimSelection, XtCTrimSelection, screen.trim_selection, FALSE),
-{XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, core.background_pixel),
-	XtRString, XtDefaultBackground},
-Cres(XtNforeground,	screen.foreground,	XtDefaultForeground),
-Cres(XtNcursorColor,	screen.cursorcolor,	XtDefaultForeground),
-#if OPT_BLINK_CURS
-Bres(XtNcursorBlink,	XtCCursorBlink, screen.cursor_blink,	FALSE),
-Ires(XtNcursorOnTime,	XtCCursorOnTime, screen.cursor_on,	600),
-Ires(XtNcursorOffTime,	XtCCursorOffTime, screen.cursor_off,	300),
-#endif
-Sres(XtNkeyboardDialect, XtCKeyboardDialect, screen.keyboard_dialect, DFT_KBD_DIALECT),
-Bres(XtNeightBitInput, XtCEightBitInput, screen.input_eight_bits, TRUE),
-Bres(XtNeightBitOutput, XtCEightBitOutput, screen.output_eight_bits, TRUE),
-Bres(XtNeightBitControl, XtCEightBitControl, screen.control_eight_bits, FALSE),
-Bres(XtNmetaSendsEscape, XtCMetaSendsEscape, screen.meta_sends_esc, FALSE),
-Sres(XtNgeometry,	XtCGeometry, misc.geo_metry,		NULL),
-Bres(XtNalwaysHighlight, XtCAlwaysHighlight, screen.always_highlight, FALSE),
-Bres(XtNappcursorDefault, XtCAppcursorDefault, misc.appcursorDefault, FALSE),
-Bres(XtNappkeypadDefault, XtCAppkeypadDefault, misc.appkeypadDefault, FALSE),
-Bres(XtNbackarrowKey, XtCBackarrowKey, screen.backarrow_key, TRUE),
-Ires(XtNbellSuppressTime, XtCBellSuppressTime, screen.bellSuppressTime, BELLSUPPRESSMSEC),
-Sres(XtNtekGeometry,	XtCGeometry, misc.T_geometry,		NULL),
-Ires(XtNinternalBorder, XtCBorderWidth, screen.border,		DEFBORDER),
-Bres(XtNjumpScroll,	XtCJumpScroll, screen.jumpscroll,	TRUE),
-Bres(XtNoldXtermFKeys,	XtCOldXtermFKeys, screen.old_fkeys,	FALSE),
-Bres(XtNdeleteIsDEL,	XtCDeleteIsDEL,	screen.delete_is_del,	2),
-#ifdef ALLOWLOGGING
-Sres(XtNlogFile,	XtCLogfile, screen.logfile,		NULL),
-Bres(XtNlogging,	XtCLogging, misc.log_on,		FALSE),
-Bres(XtNlogInhibit,	XtCLogInhibit, misc.logInhibit,		FALSE),
-#endif
-Bres(XtNloginShell,	XtCLoginShell, misc.login_shell,	FALSE),
-Bres(XtNmarginBell,	XtCMarginBell, screen.marginbell,	FALSE),
-Cres(XtNpointerColor,	screen.mousecolor,	XtDefaultForeground),
-{XtNpointerColorBackground, XtCBackground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.mousecolorback),
-	XtRString, "XtDefaultBackground"},
-{XtNpointerShape,XtCCursor, XtRCursor, sizeof(Cursor),
-	XtOffsetOf(XtermWidgetRec, screen.pointer_cursor),
-	XtRString, (XtPointer) "xterm"},
-Sres(XtNanswerbackString, XtCAnswerbackString, screen.answer_back, ""),
-#if OPT_PRINT_COLORS
-Ires(XtNprintAttributes, XtCPrintAttributes, screen.print_attributes, 1),
-#endif
-Bres(XtNprinterAutoClose, XtCPrinterAutoClose, screen.printer_autoclose, FALSE),
-Ires(XtNprinterControlMode, XtCPrinterControlMode, screen.printer_controlmode, 0),
 #ifdef VMS
 #define OS_DEPENDENT_PRINT_COMMAND "print/delete/noflag"
 #else  /* VMS */
 #define OS_DEPENDENT_PRINT_COMMAND "lpr"
 #endif /* VMS */
-Sres(XtNprinterCommand,	XtCPrinterCommand, screen.printer_command, OS_DEPENDENT_PRINT_COMMAND),
+
+static XtResource resources[] = {
+Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvents, FALSE),
+Bres(XtNalwaysHighlight, XtCAlwaysHighlight, screen.always_highlight, FALSE),
+Bres(XtNappcursorDefault, XtCAppcursorDefault, misc.appcursorDefault, FALSE),
+Bres(XtNappkeypadDefault, XtCAppkeypadDefault, misc.appkeypadDefault, FALSE),
+Bres(XtNautoWrap,	XtCAutoWrap,	misc.autoWrap,		TRUE),
+Bres(XtNawaitInput,	XtCAwaitInput,	screen.awaitInput,	FALSE),
+Bres(XtNbackarrowKey,	XtCBackarrowKey, screen.backarrow_key, TRUE),
+Bres(XtNboldMode,	XtCBoldMode, screen.bold_mode,		TRUE),
+Bres(XtNc132,		XtCC132,	screen.c132,		FALSE),
+Bres(XtNcurses,		XtCCurses,	screen.curses,		FALSE),
+Bres(XtNcutNewline,	XtCCutNewline,	screen.cutNewline,	TRUE),
+Bres(XtNcutToBeginningOfLine, XtCCutToBeginningOfLine, screen.cutToBeginningOfLine, TRUE),
+Bres(XtNdeleteIsDEL,	XtCDeleteIsDEL,	screen.delete_is_del,	2),
+Bres(XtNdynamicColors,	XtCDynamicColors, misc.dynamicColors,	TRUE),
+Bres(XtNeightBitControl, XtCEightBitControl, screen.control_eight_bits, FALSE),
+Bres(XtNeightBitInput,	XtCEightBitInput, screen.input_eight_bits, TRUE),
+Bres(XtNeightBitOutput, XtCEightBitOutput, screen.output_eight_bits, TRUE),
+Bres(XtNhighlightSelection, XtCHighlightSelection, screen.highlight_selection, FALSE),
+Bres(XtNhpLowerleftBugCompat, XtCHpLowerleftBugCompat, screen.hp_ll_bc, FALSE),
+Bres(XtNjumpScroll,	XtCJumpScroll, screen.jumpscroll,	TRUE),
+Bres(XtNloginShell,	XtCLoginShell, misc.login_shell,	FALSE),
+Bres(XtNmarginBell,	XtCMarginBell, screen.marginbell,	FALSE),
+Bres(XtNmetaSendsEscape, XtCMetaSendsEscape, screen.meta_sends_esc, FALSE),
+Bres(XtNmultiScroll,	XtCMultiScroll, screen.multiscroll, FALSE),
+Bres(XtNoldXtermFKeys,	XtCOldXtermFKeys, screen.old_fkeys,	FALSE),
+Bres(XtNprinterAutoClose, XtCPrinterAutoClose, screen.printer_autoclose, FALSE),
 Bres(XtNprinterExtent,	XtCPrinterExtent, screen.printer_extent, FALSE),
 Bres(XtNprinterFormFeed, XtCPrinterFormFeed, screen.printer_formfeed, FALSE),
-Ires(XtNmultiClickTime, XtCMultiClickTime, screen.multiClickTime, MULTICLICKTIME),
-Bres(XtNmultiScroll,	XtCMultiScroll, screen.multiscroll, FALSE),
-Ires(XtNnMarginBell,	XtCColumn, screen.nmarginbell, N_MARGINBELL),
 Bres(XtNreverseVideo,	XtCReverseVideo, misc.re_verse, FALSE),
+Bres(XtNreverseWrap,	XtCReverseWrap, misc.reverseWrap,	FALSE),
+Bres(XtNscrollBar,	XtCScrollBar,	misc.scrollbar,		FALSE),
+Bres(XtNscrollKey,	XtCScrollCond,	screen.scrollkey,	FALSE),
+Bres(XtNscrollTtyOutput, XtCScrollCond, screen.scrollttyoutput, TRUE),
+Bres(XtNsignalInhibit,	XtCSignalInhibit, misc.signalInhibit,	FALSE),
+Bres(XtNtiteInhibit,	XtCTiteInhibit, misc.titeInhibit,	FALSE),
+Bres(XtNtrimSelection,	XtCTrimSelection, screen.trim_selection, FALSE),
+Bres(XtNunderLine,	XtCUnderLine, screen.underline,		TRUE),
+Bres(XtNvisualBell,	XtCVisualBell,	screen.visualbell,	FALSE),
+Cres(XtNcursorColor,	screen.cursorcolor,	XtDefaultForeground),
+Cres(XtNforeground,	screen.foreground,	XtDefaultForeground),
+Cres(XtNpointerColor,	screen.mousecolor,	XtDefaultForeground),
+Dres(XtNbackground,	core.background_pixel,	XtDefaultBackground),
+Dres(XtNpointerColorBackground, screen.mousecolorback, "XtDefaultBackground"),
+Ires(XtNbellSuppressTime, XtCBellSuppressTime, screen.bellSuppressTime, BELLSUPPRESSMSEC),
+Ires(XtNinternalBorder, XtCBorderWidth, screen.border,		DEFBORDER),
+Ires(XtNlimitResize,	XtCLimitResize, misc.limit_resize,	1),
+Ires(XtNmultiClickTime, XtCMultiClickTime, screen.multiClickTime, MULTICLICKTIME),
+Ires(XtNnMarginBell,	XtCColumn, screen.nmarginbell, N_MARGINBELL),
+Ires(XtNprinterControlMode, XtCPrinterControlMode, screen.printer_controlmode, 0),
+Ires(XtNsaveLines,	XtCSaveLines,	screen.savelines,	SAVELINES),
+Ires(XtNscrollLines,	XtCScrollLines,	screen.scrolllines,	SCROLLLINES),
+Sres("font1",		"Font1", screen.menu_font_names[fontMenu_font1], NULL),
+Sres("font2",		"Font2", screen.menu_font_names[fontMenu_font2], NULL),
+Sres("font3",		"Font3", screen.menu_font_names[fontMenu_font3], NULL),
+Sres("font4",		"Font4", screen.menu_font_names[fontMenu_font4], NULL),
+Sres("font5",		"Font5", screen.menu_font_names[fontMenu_font5], NULL),
+Sres("font6",		"Font6", screen.menu_font_names[fontMenu_font6], NULL),
+Sres(XtNanswerbackString, XtCAnswerbackString, screen.answer_back, ""),
+Sres(XtNboldFont,	XtCBoldFont,	misc.f_b,		DEFBOLDFONT),
+Sres(XtNcharClass,	XtCCharClass,	screen.charClass,	NULL),
+Sres(XtNdecTerminalID,	XtCDecTerminalID, screen.term_id,	DFT_DECID),
+Sres(XtNfont,		XtCFont,	misc.f_n,		DEFFONT),
+Sres(XtNgeometry,	XtCGeometry, misc.geo_metry,		NULL),
+Sres(XtNkeyboardDialect, XtCKeyboardDialect, screen.keyboard_dialect, DFT_KBD_DIALECT),
+Sres(XtNprinterCommand,	XtCPrinterCommand, screen.printer_command, OS_DEPENDENT_PRINT_COMMAND),
+Sres(XtNtekGeometry,	XtCGeometry,	misc.T_geometry,	NULL),
+
 {XtNresizeGravity, XtCResizeGravity, XtRGravity, sizeof(XtGravity),
 	XtOffsetOf(XtermWidgetRec, misc.resizeGravity),
 	XtRImmediate, (XtPointer) SouthWestGravity},
-Bres(XtNreverseWrap,	XtCReverseWrap, misc.reverseWrap,	FALSE),
-Bres(XtNautoWrap,	XtCAutoWrap,	misc.autoWrap,		TRUE),
-Ires(XtNsaveLines,	XtCSaveLines,	screen.savelines,	SAVELINES),
-Bres(XtNscrollBar,	XtCScrollBar,	misc.scrollbar,		FALSE),
-Ires(XtNlimitResize,	XtCLimitResize, misc.limit_resize,	1),
-#ifdef SCROLLBAR_RIGHT
-Bres(XtNrightScrollBar, XtCRightScrollBar, misc.useRight, FALSE),
+
+{XtNpointerShape,XtCCursor, XtRCursor, sizeof(Cursor),
+	XtOffsetOf(XtermWidgetRec, screen.pointer_cursor),
+	XtRString, (XtPointer) "xterm"},
+
+#ifdef ALLOWLOGGING
+Bres(XtNlogInhibit,	XtCLogInhibit, misc.logInhibit,		FALSE),
+Bres(XtNlogging,	XtCLogging, misc.log_on,		FALSE),
+Sres(XtNlogFile,	XtCLogfile, screen.logfile,		NULL),
 #endif
-Bres(XtNscrollTtyOutput, XtCScrollCond, screen.scrollttyoutput, TRUE),
-Bres(XtNscrollKey,	XtCScrollCond,	screen.scrollkey,	FALSE),
-Ires(XtNscrollLines,	XtCScrollLines,	screen.scrolllines,	SCROLLLINES),
-Bres(XtNsignalInhibit,	XtCSignalInhibit, misc.signalInhibit,	FALSE),
-#if OPT_NUM_LOCK
-Bres(XtNnumLock,	XtCNumLock,	misc.real_NumLock,	TRUE),
-Bres(XtNalwaysUseMods,	XtCAlwaysUseMods, misc.alwaysUseMods,	FALSE),
+
+#ifndef NO_ACTIVE_ICON
+Bres("activeIcon",	"ActiveIcon", misc.active_icon,		FALSE),
+Ires("iconBorderWidth", XtCBorderWidth, misc.icon_border_width, 2),
+
+{"iconFont", "IconFont", XtRFontStruct, sizeof(XFontStruct),
+	XtOffsetOf(XtermWidgetRec, screen.fnt_icon),
+	XtRString, (XtPointer)XtExtdefaultfont},
+
+{"iconBorderColor", XtCBorderColor, XtRPixel, sizeof(Pixel),
+	XtOffsetOf(XtermWidgetRec, misc.icon_border_pixel),
+	XtRString, XtExtdefaultbackground},
+
+#endif /* NO_ACTIVE_ICON */
+
+#if OPT_BLINK_CURS
+Bres(XtNcursorBlink,	XtCCursorBlink, screen.cursor_blink,	FALSE),
+Ires(XtNcursorOnTime,	XtCCursorOnTime, screen.cursor_on,	600),
+Ires(XtNcursorOffTime,	XtCCursorOffTime, screen.cursor_off,	300),
 #endif
-#if OPT_SHIFT_KEYS
-Bres(XtNshiftKeys,	XtCShiftKeys,	misc.shift_keys,	TRUE),
-#endif
-#if OPT_SUNPC_KBD
-Ires(XtNctrlFKeys,	XtCCtrlFKeys,	misc.ctrl_fkeys,	10),
-#endif
-#if OPT_TEK4014
-Bres(XtNtekInhibit,	XtCTekInhibit,	misc.tekInhibit,	FALSE),
-Bres(XtNtekSmall,	XtCTekSmall,	misc.tekSmall,		FALSE),
-Bres(XtNtekStartup,	XtCTekStartup,	screen.TekEmu,		FALSE),
-#endif
-Bres(XtNtiteInhibit,	XtCTiteInhibit, misc.titeInhibit,	FALSE),
-Bres(XtNvisualBell,	XtCVisualBell,	screen.visualbell,	FALSE),
-Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvents, FALSE),
-Bres(XtNawaitInput,	XtCAwaitInput,	screen.awaitInput,	FALSE),
-Sres("font1", "Font1", screen.menu_font_names[fontMenu_font1], NULL),
-Sres("font2", "Font2", screen.menu_font_names[fontMenu_font2], NULL),
-Sres("font3", "Font3", screen.menu_font_names[fontMenu_font3], NULL),
-Sres("font4", "Font4", screen.menu_font_names[fontMenu_font4], NULL),
-Sres("font5", "Font5", screen.menu_font_names[fontMenu_font5], NULL),
-Sres("font6", "Font6", screen.menu_font_names[fontMenu_font6], NULL),
+
 #if OPT_DEC_CHRSET
 Bres(XtNfontDoublesize, XtCFontDoublesize, screen.font_doublesize, TRUE),
 Ires(XtNcacheDoublesize, XtCCacheDoublesize, screen.cache_doublesize, NUM_CHRSET),
 #endif
+
+#if OPT_HIGHLIGHT_COLOR
+Cres(XtNhighlightColor,	screen.highlightcolor,	XtDefaultForeground),
+#endif /* OPT_HIGHLIGHT_COLOR */
+
 #if OPT_INPUT_METHOD
+Bres(XtNopenIm,		XtCOpenIm,	misc.open_im,		TRUE),
 Sres(XtNinputMethod,	XtCInputMethod,	misc.input_method,	NULL),
 Sres(XtNpreeditType,	XtCPreeditType,	misc.preedit_type,	"Root"),
-Bres(XtNopenIm,		XtCOpenIm,	misc.open_im,		TRUE),
 #endif
+
 #if OPT_ISO_COLORS
+Bres(XtNboldColors,	XtCColorMode, screen.boldColors,	TRUE),
+Bres(XtNcolorAttrMode,	XtCColorMode, screen.colorAttrMode,	FALSE),
+Bres(XtNcolorBDMode,	XtCColorMode, screen.colorBDMode,	FALSE),
+Bres(XtNcolorBLMode,	XtCColorMode, screen.colorBLMode,	FALSE),
+Bres(XtNcolorMode,	XtCColorMode, screen.colorMode,		DFT_COLORMODE),
+Bres(XtNcolorRVMode,	XtCColorMode, screen.colorRVMode,	FALSE),
+Bres(XtNcolorULMode,	XtCColorMode, screen.colorULMode,	FALSE),
+
 COLOR_RES(XtNcolor0,	screen.Acolors[COLOR_0],	DFT_COLOR("black")),
 COLOR_RES(XtNcolor1,	screen.Acolors[COLOR_1],	DFT_COLOR("red3")),
 COLOR_RES(XtNcolor2,	screen.Acolors[COLOR_2],	DFT_COLOR("green3")),
@@ -490,56 +497,72 @@ COLOR_RES(XtNcolor12,	screen.Acolors[COLOR_12],	DFT_COLOR("blue")),
 COLOR_RES(XtNcolor13,	screen.Acolors[COLOR_13],	DFT_COLOR("magenta")),
 COLOR_RES(XtNcolor14,	screen.Acolors[COLOR_14],	DFT_COLOR("cyan")),
 COLOR_RES(XtNcolor15,	screen.Acolors[COLOR_15],	DFT_COLOR("white")),
+COLOR_RES(XtNcolorBD,	screen.Acolors[COLOR_BD],	DFT_COLOR(XtDefaultForeground)),
+COLOR_RES(XtNcolorBL,	screen.Acolors[COLOR_BL],	DFT_COLOR(XtDefaultForeground)),
+COLOR_RES(XtNcolorUL,	screen.Acolors[COLOR_UL],	DFT_COLOR(XtDefaultForeground)),
+COLOR_RES(XtNcolorRV,	screen.Acolors[COLOR_RV],	DFT_COLOR(XtDefaultForeground)),
+
 #if OPT_256_COLORS
 # include <256colres.h>
 #elif OPT_88_COLORS
 # include <88colres.h>
 #endif
-COLOR_RES(XtNcolorBD,	screen.Acolors[COLOR_BD],	DFT_COLOR(XtDefaultForeground)),
-COLOR_RES(XtNcolorBL,	screen.Acolors[COLOR_BL],	DFT_COLOR(XtDefaultForeground)),
-COLOR_RES(XtNcolorUL,	screen.Acolors[COLOR_UL],	DFT_COLOR(XtDefaultForeground)),
-COLOR_RES(XtNcolorRV,	screen.Acolors[COLOR_RV],	DFT_COLOR(XtDefaultForeground)),
-Bres(XtNcolorMode,	XtCColorMode, screen.colorMode,	DFT_COLORMODE),
-Bres(XtNcolorULMode,	XtCColorMode, screen.colorULMode,	FALSE),
-Bres(XtNcolorBDMode,	XtCColorMode, screen.colorBDMode,	FALSE),
-Bres(XtNcolorBLMode,	XtCColorMode, screen.colorBLMode,	FALSE),
-Bres(XtNcolorRVMode,	XtCColorMode, screen.colorRVMode,	FALSE),
-Bres(XtNcolorAttrMode,	XtCColorMode, screen.colorAttrMode,	FALSE),
-Bres(XtNboldColors,	XtCColorMode, screen.boldColors,	TRUE),
+
 #endif /* OPT_ISO_COLORS */
-Bres(XtNdynamicColors, XtCDynamicColors, misc.dynamicColors,	TRUE),
-#if OPT_HIGHLIGHT_COLOR
-Cres(XtNhighlightColor,	screen.highlightcolor,	XtDefaultForeground),
-#endif /* OPT_HIGHLIGHT_COLOR */
-Bres(XtNboldMode,	XtCBoldMode, screen.bold_mode,		TRUE),
-Bres(XtNunderLine,	XtCUnderLine, screen.underline,		TRUE),
-Sres(XtNdecTerminalID,	XtCDecTerminalID, screen.term_id,	DFT_DECID),
-#ifndef NO_ACTIVE_ICON
-Bres("activeIcon",	"ActiveIcon", misc.active_icon,		FALSE),
-{"iconFont", "IconFont", XtRFontStruct, sizeof(XFontStruct),
-	XtOffsetOf(XtermWidgetRec, screen.fnt_icon),
-	XtRString, (XtPointer)XtExtdefaultfont},
-Ires("iconBorderWidth", XtCBorderWidth, misc.icon_border_width, 2),
-{"iconBorderColor", XtCBorderColor, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, misc.icon_border_pixel),
-	XtRString, XtExtdefaultbackground},
-#endif /* NO_ACTIVE_ICON */
+
+#if OPT_NUM_LOCK
+Bres(XtNalwaysUseMods,	XtCAlwaysUseMods, misc.alwaysUseMods,	FALSE),
+Bres(XtNnumLock,	XtCNumLock,	misc.real_NumLock,	TRUE),
+#endif
+
+#if OPT_PRINT_COLORS
+Ires(XtNprintAttributes, XtCPrintAttributes, screen.print_attributes, 1),
+#endif
+
+#if OPT_SHIFT_KEYS
+Bres(XtNshiftKeys,	XtCShiftKeys,	misc.shift_keys,	TRUE),
+#endif
+
+#if OPT_SUNPC_KBD
+Ires(XtNctrlFKeys,	XtCCtrlFKeys,	misc.ctrl_fkeys,	10),
+#endif
+
+#if OPT_TEK4014
+Bres(XtNtekInhibit,	XtCTekInhibit,	misc.tekInhibit,	FALSE),
+Bres(XtNtekSmall,	XtCTekSmall,	misc.tekSmall,		FALSE),
+Bres(XtNtekStartup,	XtCTekStartup,	screen.TekEmu,		FALSE),
+#endif
+
 #if OPT_TOOLBAR
 {XtNmenuBar, XtCMenuBar, XtRWidget, sizeof(Widget),
 	XtOffsetOf(XtermWidgetRec, screen.fullVwin.menu_bar),
 	XtRWidget, (XtPointer) 0},
 Ires(XtNmenuHeight, XtCMenuHeight, screen.fullVwin.menu_height, 25),
 #endif
+
 #if OPT_WIDE_CHARS
 {XtNutf8, XtCUtf8, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.utf8_mode),
 	XtRString, defaultUTF8},
-Bres(XtNwideChars,	XtCWideChars,	screen.wide_chars,	FALSE),
-Sres(XtNwideFont,	XtCWideFont,	misc.f_w,		DEFWIDEFONT),
+Bres(XtNwideChars,	XtCWideChars,		screen.wide_chars,	FALSE),
+Sres(XtNwideBoldFont,	XtCWideBoldFont,	misc.f_wb,		DEFWIDEBOLDFONT),
+Sres(XtNwideFont,	XtCWideFont,		misc.f_w,		DEFWIDEFONT),
 #endif
+
+#if OPT_XMC_GLITCH
+Bres(XtNxmcInline,	XtCXmcInline,	screen.xmc_inline,	FALSE),
+Bres(XtNxmcMoveSGR,	XtCXmcMoveSGR,	screen.move_sgr_ok,	TRUE),
+Ires(XtNxmcAttributes,	XtCXmcAttributes, screen.xmc_attributes, 1),
+Ires(XtNxmcGlitch,	XtCXmcGlitch,	screen.xmc_glitch,	0),
+#endif
+
+#ifdef SCROLLBAR_RIGHT
+Bres(XtNrightScrollBar, XtCRightScrollBar, misc.useRight, FALSE),
+#endif
+
 #ifdef XRENDERFONT
-Sres(XtNfaceName,	XtCFaceName,	misc.face_name,		DEFFACENAME),
 Ires(XtNfaceSize,	XtCFaceSize,	misc.face_size,		DEFFACESIZE),
+Sres(XtNfaceName,	XtCFaceName,	misc.face_name,		DEFFACENAME),
 #endif
 };
 
@@ -4226,7 +4249,7 @@ static void VTInitialize (
 
    wnew->screen.term_id = request->screen.term_id;
    for (s = request->screen.term_id; *s; s++) {
-	if (!isalpha(*s))
+	if (!isalpha(CharOf(*s)))
 	    break;
    }
    wnew->screen.terminal_id = atoi(s);
@@ -4502,18 +4525,24 @@ static void VTRealize (
 	TabReset (term->tabs);
 
 	screen->menu_font_names[fontMenu_fontdefault] = term->misc.f_n;
-	screen->fnt_norm = screen->fnt_bold = screen->fnt_dwd = NULL;
+	screen->fnt_norm = NULL;
+	screen->fnt_bold = NULL;
+#if OPT_WIDE_CHARS
+	screen->fnt_dwd = NULL;
+	screen->fnt_dwdb = NULL;
+#endif
 	if (!xtermLoadFont(screen,
 			   VT_FONTSET(term->misc.f_n,
 				      term->misc.f_b,
-				      term->misc.f_w),
+				      term->misc.f_w,
+				      term->misc.f_wb),
 			   False, 0)) {
 	    if (XmuCompareISOLatin1(term->misc.f_n, "fixed") != 0) {
 		fprintf (stderr,
 		     "%s:  unable to open font \"%s\", trying \"fixed\"....\n",
 		     xterm_name, term->misc.f_n);
 		(void) xtermLoadFont (screen,
-				      VT_FONTSET("fixed", NULL, NULL),
+				      VT_FONTSET("fixed", NULL, NULL, NULL),
 				      False, 0);
 		screen->menu_font_names[fontMenu_fontdefault] = "fixed";
 	    }
@@ -4756,11 +4785,11 @@ static void VTInitI18N(void)
 	    SysError(ERROR_VINIT);
 
 	for(ns = s; ns && *s;) {
-	    while (*s && isspace(*s)) s++;
+	    while (*s && isspace(CharOf(*s))) s++;
 	    if (!*s) break;
 	    if ((ns = end = strchr(s, ',')) == 0)
 		end = s + strlen(s);
-	    while ((end != s) && isspace(end[-1])) end--;
+	    while ((end != s) && isspace(CharOf(end[-1]))) end--;
 
 	    if (end != s) {
 		strcpy(t, "@im=");
@@ -4793,13 +4822,13 @@ static void VTInitI18N(void)
 
     found = False;
     for(s = term->misc.preedit_type; s && !found;) {
-	while (*s && isspace(*s)) s++;
+	while (*s && isspace(CharOf(*s))) s++;
 	if (!*s) break;
 	if ((ns = end = strchr(s, ',')) != 0)
 	    ns++;
 	else
 	    end = s + strlen(s);
-	while ((end != s) && isspace(end[-1])) end--;
+	while ((end != s) && isspace(CharOf(end[-1]))) end--;
 
 	if (end != s) {	/* just in case we have a spurious comma */
 	    if (!strncmp(s, "OverTheSpot", end - s)) {
@@ -4877,6 +4906,7 @@ static Boolean VTSetValues (
 	if (xtermLoadFont(&newvt->screen,
 			VT_FONTSET(newvt->screen.menu_font_names[curvt->screen.menu_font_number],
 				   newvt->screen.menu_font_names[curvt->screen.menu_font_number],
+				   NULL,
 				   NULL),
 			TRUE, newvt->screen.menu_font_number)) {
 	    /* resizing does the redisplay, so don't ask for it here */
@@ -5394,7 +5424,7 @@ set_character_class (register char *s)
 
     for (i = 0, len = strlen (s), acc = 0, numbers = digits = 0;
 	 i < len; i++) {
-	char c = s[i];
+	Char c = s[i];
 
 	if (isspace(c)) {
 	    continue;
@@ -5507,7 +5537,7 @@ static void HandleKeymapChange(
 
     (void) sprintf( pmapName, "%sKeymap", params[0] );
     (void) strcpy( pmapClass, pmapName );
-    if (islower(pmapClass[0])) pmapClass[0] = toupper(pmapClass[0]);
+    if (islower(CharOf(pmapClass[0]))) pmapClass[0] = toupper(pmapClass[0]);
     XtGetSubresources( w, (XtPointer)&keymap, pmapName, pmapClass,
 		       key_resources, (Cardinal)1, NULL, (Cardinal)0 );
     if (keymap != NULL)
@@ -5580,7 +5610,7 @@ DoSetSelectedFont(
 	   we are a little more liberal here. */
 	if (len > 1000  ||  strchr(val, '\n'))
 	    return;
-	if (!xtermLoadFont (&term->screen, VT_FONTSET(val, NULL, NULL), True, fontMenu_fontsel))
+	if (!xtermLoadFont (&term->screen, VT_FONTSET(val, NULL, NULL, NULL), True, fontMenu_fontsel))
 	    Bell(XkbBI_MinorError,0);
     }
 }
