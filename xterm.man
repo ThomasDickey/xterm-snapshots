@@ -371,6 +371,15 @@ should not cause the window to be repositioned.
 This option specifies the number of lines to save that have been scrolled 
 off the top of the screen.  The default is 64.
 .TP 8
+.B \-sp
+This option indicates that Sun/PC keyboard should be assumed,
+providing mapping for keypad `+' to `,', and
+CTRL-F1 to F13, CTRL-F2 to F14, etc.
+.TP 8
+.B \+sp
+This option indicates that the standard escape codes should be generated for
+keypad and function keys.
+.TP 8
 .B \-t
 This option indicates that \fIxterm\fP should start in Tektronix mode, rather
 than in VT102 mode.  Switching between the two windows is done using the
@@ -575,6 +584,13 @@ in \fI/etc/utmp\fP.
 .B "sunFunctionKeys (\fPclass\fB SunFunctionKeys)"
 Specifies whether or not Sun Function Key escape codes should be generated for
 function keys instead of standard escape sequences.
+.TP 8
+.B "sunKeyboard (\fPclass\fB SunKeyboard)"
+Specifies whether or not Sun/PC keyboard layout should be assumed rather
+than DEC VT220.
+This causes the keypad `+' to be mapped to `,'.
+and
+CTRL-F1 to F13, CTRL-F2 to F14, etc.
 .\".in -1in
 .TP 8
 .B "waitForMap (\fPclass\fB WaitForMap)"

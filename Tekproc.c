@@ -682,7 +682,7 @@ static void Tekparse()
 				int c2, len = 0;
 				while ((c2 = Tinput()) != BEL) {
 					if (!isprint(c2 & 0x7f)
-					 || len+2 >= sizeof(buf2))
+					 || len+2 >= (int) sizeof(buf2))
 						break;
 					buf2[len++] = c2;
 				}
@@ -1269,7 +1269,8 @@ static unsigned char *dashes[TEKNUMLINES] = {
  */
 
 static void TekInitialize(request, new, args, num_args)
-    Widget request, new GCC_UNUSED;
+    Widget request GCC_UNUSED;
+    Widget new GCC_UNUSED;
     ArgList args GCC_UNUSED;
     Cardinal *num_args GCC_UNUSED;
 {

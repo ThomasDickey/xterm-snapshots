@@ -91,6 +91,9 @@ XtAppContext app_con;
 XtermWidget term;		/* master data structure for client */
 char *xterm_name;	/* argv[0] */
 Boolean sunFunctionKeys;
+#if OPT_SUNPC_KBD
+Boolean sunKeyboard;
+#endif
 
 int am_slave = 0;	/* set to 1 if running as a slave process */
 int max_plus1;

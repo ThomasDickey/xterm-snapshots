@@ -44,6 +44,10 @@ authorization.
 #include "data.h"
 #include "xterm.h"
 
+#define Strlen(a) strlen((char *)a)
+#define Strcmp(a,b) strcmp((char *)a,(char *)b)
+#define Strncmp(a,b,c) strncmp((char *)a,(char *)b,c)
+
 #define SGR_MASK (BOLD|UNDERLINE|INVERSE)
 
 static void charToPrinter PROTO((int chr));
@@ -293,15 +297,15 @@ int xtermPrinterControl(chr)
 	case 'i':
 		bfr[length++] = chr;
 		for (n = 0; n < sizeof(tbl)/sizeof(tbl[0]); n++) {
-			Size_t len = strlen(tbl[n].seq);
+			Size_t len = Strlen(tbl[n].seq);
 
 			if (length == len
-			 && strcmp(bfr, tbl[n].seq) == 0) {
+			 && Strcmp(bfr, tbl[n].seq) == 0) {
 				screen->printer_controlmode = tbl[n].active;
 				length = 0;
 				return 0;
 			} else if (len > length
-			 && strncmp(bfr, tbl[n].seq, length) == 0) {
+			 && Strncmp(bfr, tbl[n].seq, length) == 0) {
 				return 0;
 			}
 		}

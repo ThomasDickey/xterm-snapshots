@@ -1,7 +1,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c /main/247 1996/11/29 10:33:51 swick $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/main.c,v 3.55 1997/08/26 10:01:55 hohndel Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.56 1997/09/09 10:28:03 hohndel Exp $ */
 
 /*
  * 				 W A R N I N G
@@ -710,6 +710,9 @@ static struct _resource {
     char *tty_modes;
     Boolean utmpInhibit;
     Boolean sunFunctionKeys;	/* %%% should be widget resource? */
+#if OPT_SUNPC_KBD
+    Boolean sunKeyboard;
+#endif
     Boolean wait_for_map;
     Boolean useInsertMode;
 } resource;
@@ -735,6 +738,10 @@ static XtResource application_resources[] = {
 	offset(utmpInhibit), XtRString, "false"},
     {"sunFunctionKeys", "SunFunctionKeys", XtRBoolean, sizeof (Boolean),
 	offset(sunFunctionKeys), XtRString, "false"},
+#if OPT_SUNPC_KBD
+    {"sunKeyboard", "SunKeyboard", XtRBoolean, sizeof (Boolean),
+	offset(sunKeyboard), XtRString, "false"},
+#endif
     {"waitForMap", "WaitForMap", XtRBoolean, sizeof (Boolean),
         offset(wait_for_map), XtRString, "false"},
     {"useInsertMode", "UseInsertMode", XtRBoolean, sizeof (Boolean),
@@ -817,6 +824,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"-sk",		"*scrollKey",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+sk",		"*scrollKey",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-sl",		"*saveLines",	XrmoptionSepArg,	(caddr_t) NULL},
+#if OPT_SUNPC_KBD
+{"-sp",		"*sunKeyboard", XrmoptionNoArg,	(caddr_t) "on"},
+{"+sp",		"*sunKeyboard", XrmoptionNoArg,	(caddr_t) "off"},
+#endif
 {"-t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-tm",		"*ttyModes",	XrmoptionSepArg,	(caddr_t) NULL},
@@ -900,6 +911,7 @@ static struct _options {
 { "-/+si",                 "turn on/off scroll-on-tty-output inhibit" },
 { "-/+sk",                 "turn on/off scroll-on-keypress" },
 { "-sl number",            "number of scrolled lines to save" },
+{ "-/+sp",                 "turn on/off Sun/PC Function/Keypad mapping" },
 { "-/+t",                  "turn on/off Tek emulation window" },
 { "-tm string",            "terminal mode keywords and characters" },
 { "-tn name",              "TERM environment variable name" },
@@ -1386,6 +1398,9 @@ char **argv;
 
 	xterm_name = resource.xterm_name;
 	sunFunctionKeys = resource.sunFunctionKeys;
+#if OPT_SUNPC_KBD
+	sunKeyboard = resource.sunKeyboard;
+#endif
 	if (strcmp(xterm_name, "-") == 0) xterm_name = "xterm";
 	if (resource.icon_geometry != NULL) {
 	    int scr, junk;
@@ -2934,7 +2949,7 @@ spawn ()
 
 		/* set up the new entry */
 		utmp.ut_type = USER_PROCESS;
-#if !defined(linux) && !defined(SVR4)
+#if !(defined(linux) && __GLIBC__ < 2) && !defined(SVR4)
 		utmp.ut_exit.e_exit = 2;
 #endif
 		(void) strncpy(utmp.ut_user,
@@ -2962,7 +2977,7 @@ spawn ()
 			       sizeof(utmp.ut_name));
 
 		utmp.ut_pid = getpid();
-#if defined(SVR4) || defined(SCO325)
+#if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2)
 		utmp.ut_session = getsid(0);
 		utmp.ut_xtime = time ((Time_t *) 0);
 		utmp.ut_tv.tv_usec = 0;
@@ -2978,11 +2993,16 @@ spawn ()
 		if (term->misc.login_shell)
 		    updwtmpx(WTMPX_FILE, &utmp);
 #else
+#if defined(linux) && __GLIBC__ >= 2
+		if (term->misc.login_shell)
+		    updwtmp(etc_wtmp, &utmp);
+#else
 		if (term->misc.login_shell &&
 		     (i = open(etc_wtmp, O_WRONLY|O_APPEND)) >= 0) {
 		    write(i, (char *)&utmp, sizeof(struct utmp));
 		    close(i);
 		}
+#endif
 #endif
 #endif
 		/* close the file */
@@ -3737,7 +3757,7 @@ Exit(n)
 #endif
 	char* ptyname;
 	char* ptynameptr = 0;
-#if defined(WTMP) && !defined(SVR4)
+#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && __GLIBC__ >= 2)
 	int fd;			/* for /etc/wtmp */
 	int i;
 #endif
@@ -3769,7 +3789,7 @@ Exit(n)
 	    /* write it out only if it exists, and the pid's match */
 	    if (utptr && (utptr->ut_pid == term->screen.pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
-#if defined(SVR4) || defined(SCO325)
+#if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2)
 		    utmp.ut_session = getsid(0);
 		    utmp.ut_xtime = time ((Time_t *) 0);
 		    utmp.ut_tv.tv_usec = 0;
@@ -3783,12 +3803,17 @@ Exit(n)
 		    if (term->misc.login_shell)
 			updwtmpx(WTMPX_FILE, &utmp);
 #else
+#if defined(linux) && __GLIBC__ >= 2
+		    if (term->misc.login_shell)
+			updwtmp(etc_wtmp, &utmp);
+#else
 		    /* set wtmp entry if wtmp file exists */
 		    if (term->misc.login_shell &&
 			(fd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
 		      i = write(fd, utptr, sizeof(utmp));
 		      i = close(fd);
 		    }
+#endif
 #endif
 #endif
 

@@ -837,7 +837,7 @@ hexvalue(c)
 void
 do_dcs(dcsbuf, dcslen)
 Char *dcsbuf;
-int dcslen;
+Size_t dcslen;
 {
 	register TScreen *screen = &term->screen;
 	char *cp = (char *)dcsbuf;
@@ -873,10 +873,10 @@ int dcslen;
 				if (term->flags & INVISIBLE)
 					strcat(reply, ";8");
 				if_OPT_ISO_COLORS(screen,{
-				if (term->flags & BG_COLOR)
+				if (term->flags & FG_COLOR)
 					sprintf(reply+strlen(reply),
 						";3%d", term->cur_foreground);
-				if (term->flags & FG_COLOR)
+				if (term->flags & BG_COLOR)
 					sprintf(reply+strlen(reply),
 						";4%d", term->cur_background);
 				})

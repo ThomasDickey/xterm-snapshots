@@ -82,6 +82,7 @@ static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
 static void do_softreset       PROTO_XT_CALLBACK_ARGS;
 static void do_sun_fkeys       PROTO_XT_CALLBACK_ARGS;
+static void do_sun_kbd         PROTO_XT_CALLBACK_ARGS;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_tekcopy         PROTO_XT_CALLBACK_ARGS;
 static void do_tekhide         PROTO_XT_CALLBACK_ARGS;
@@ -107,25 +108,26 @@ static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
  * The order of entries MUST match the values given in menu.h
  */
 MenuEntry mainMenuEntries[] = {
-    { "securekbd",	do_securekbd, NULL },		/*  0 */
-    { "allowsends",	do_allowsends, NULL },		/*  1 */
+    { "securekbd",	do_securekbd,	NULL },
+    { "allowsends",	do_allowsends,	NULL },
 #ifdef ALLOWLOGGING
-    { "logging",	do_logging, NULL },		/*  2 */
+    { "logging",	do_logging,	NULL },
 #endif
-    { "redraw",		do_redraw, NULL },		/*  3 */
-    { "line1",		NULL, NULL },			/*  4 */
-    { "8-bit control",	do_8bit_control, NULL },	/*  5 */
-    { "backarrow key",	do_backarrow, NULL },		/*  5 */
-    { "sun function-keys",do_sun_fkeys, NULL },		/*  6 */
-    { "line2",		NULL, NULL },			/*  7 */
-    { "suspend",	do_suspend, NULL },		/*  8 */
-    { "continue",	do_continue, NULL },		/*  9 */
-    { "interrupt",	do_interrupt, NULL },		/* 10 */
-    { "hangup",		do_hangup, NULL },		/* 11 */
-    { "terminate",	do_terminate, NULL },		/* 12 */
-    { "kill",		do_kill, NULL },		/* 13 */
-    { "line3",		NULL, NULL },			/* 14 */
-    { "quit",		do_quit, NULL }};		/* 15 */
+    { "redraw",		do_redraw,	NULL },
+    { "line1",		NULL,		NULL },
+    { "8-bit control",	do_8bit_control, NULL },
+    { "backarrow key",	do_backarrow,	NULL },
+    { "sun function-keys",do_sun_fkeys,	NULL },
+    { "sun keyboard",	do_sun_kbd,	NULL },
+    { "line2",		NULL,		NULL },
+    { "suspend",	do_suspend,	NULL },
+    { "continue",	do_continue,	NULL },
+    { "interrupt",	do_interrupt,	NULL },
+    { "hangup",		do_hangup,	NULL },
+    { "terminate",	do_terminate,	NULL },
+    { "kill",		do_kill,	NULL },
+    { "line3",		NULL,		NULL },
+    { "quit",		do_quit,	NULL }};
 
 MenuEntry vtMenuEntries[] = {
     { "scrollbar",	do_scrollbar, NULL },		/*  0 */
@@ -525,6 +527,17 @@ static void do_sun_fkeys (gw, closure, data)
     sunFunctionKeys = ! sunFunctionKeys;
     update_sun_fkeys();
 }
+
+
+#if OPT_SUNPC_KBD
+static void do_sun_kbd (gw, closure, data)
+    Widget gw GCC_UNUSED;
+    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+{
+    sunKeyboard = ! sunKeyboard;
+    update_sun_kbd();
+}
+#endif
 
 
 /*
@@ -1147,6 +1160,18 @@ void HandleSunFunctionKeys(w, event, params, param_count)
     handle_toggle (do_sun_fkeys, (int) sunFunctionKeys,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
+
+#if OPT_SUNPC_KBD
+void HandleSunKeyboard(w, event, params, param_count)
+    Widget w;
+    XEvent *event GCC_UNUSED;
+    String *params;
+    Cardinal *param_count;
+{
+    handle_toggle (do_sun_kbd, (int) sunKeyboard,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+#endif
 
 void HandleScrollbar(w, event, params, param_count)
     Widget w;

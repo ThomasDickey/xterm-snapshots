@@ -2492,8 +2492,8 @@ WriteText(screen, str, len)
     register int	len;
 {
 	unsigned flags	= term->flags;
-	unsigned fg     = term->cur_foreground;
-	unsigned bg     = term->cur_background;
+	int	fg     = term->cur_foreground;
+	int	bg     = term->cur_background;
 	GC	currentGC;
  
 	TRACE(("WriteText (%2d,%2d) (%d) %3d:%.*s\n",
@@ -3194,7 +3194,7 @@ unparseputc(c, fd)
 char c;
 int fd;
 {
-	char	buf[2];
+	Char	buf[2];
 	register i = 1;
 
 #ifdef AMOEBA
@@ -3204,7 +3204,7 @@ int fd;
 		buf[1] = '\n';
 		i++;
 	}
-	v_write(fd, buf, i);
+	v_write(fd, (char *)buf, i);
 
 	/* If send/receive mode is reset, we echo characters locally */
 	if ((term->keyboard.flags & MODE_SRM) == 0) {
@@ -3437,6 +3437,10 @@ static void RequestResize(termw, rows, cols, text)
 	    (Widget) termw, 
 	     askedWidth,  askedHeight,
 	    &replyWidth, &replyHeight);
+
+	XSync(screen->display, FALSE);	/* synchronize */
+	if(XtAppPending(app_con))
+		xevents();
 
 	if (status == XtGeometryYes ||
 	    status == XtGeometryDone) {

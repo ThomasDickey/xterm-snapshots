@@ -1436,12 +1436,12 @@ resetXtermGC(screen, flags, hilite)
  * BOLD or UNDERLINE color-mode active, those will be used unless we've got
  * an SGR foreground color active.
  */
-unsigned
+int
 extract_fg (color, flags)
 	unsigned color;
 	unsigned flags;
 {
-	unsigned fg = (color >> 4) & 0xf;
+	int fg = (int) ((color >> 4) & 0xf);
 	if (fg == extract_bg(color))
 	{
 		if (term->screen.colorULMode && (flags & UNDERLINE))
@@ -1452,11 +1452,11 @@ extract_fg (color, flags)
 	return fg;
 }
 
-unsigned
+int
 extract_bg (color)
 	unsigned color;
 {
-	return color & 0xf;
+	return (int) (color & 0xf);
 }
 
 /*

@@ -11,7 +11,8 @@ INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 INSTALL_DATA	= @INSTALL_DATA@
 
 IMAKE_CFLAGS	= @IMAKE_CFLAGS@
-CFLAGS		= @CFLAGS@ $(IMAKE_CFLAGS)
+EXTRA_CFLAGS	= @EXTRA_CFLAGS@
+CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS) $(IMAKE_CFLAGS)
 LIBS		= @LIBS@
 
 X_CFLAGS	= @X_CFLAGS@
@@ -58,11 +59,11 @@ all:	$(PROGRAMS)
 .SUFFIXES : .i
 
 .c.o:
-@SHOW_CC@
+@RULE_CC@
 	@ECHO_CC@$(CC) $(CPPFLAGS) $(CFLAGS) -c $(srcdir)/$*.c
 
 .c.i:
-@SHOW_CC@
+@RULE_CC@
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
 
 xterm : $(OBJS1)
@@ -87,7 +88,7 @@ uninstall:
 		$(mandir)/resize.$(manext)
 
 mostlyclean:
-	-$(RM) *.[oi] core *~ *.BAK
+	-$(RM) *.[oi] .pure core *~ *.BAK
 
 clean: mostlyclean
 	-$(RM) $(PROGRAMS)
