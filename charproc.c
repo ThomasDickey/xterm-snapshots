@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.142 2003/05/19 00:47:31 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.143 2003/05/21 22:59:12 dickey Exp $ */
 
 /*
 
@@ -100,6 +100,8 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xaw3d/XawImP.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/XawImP.h>
+#elif defined(HAVE_LIB_XAWPLUS)
+#include <X11/XawPlus/XawImP.h>
 #endif
 
 #endif

@@ -3,7 +3,7 @@
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.42 2003/03/23 02:01:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.43 2003/05/21 22:59:11 dickey Exp $ */
 
 /*
 
@@ -98,6 +98,8 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xaw3d/Form.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/Form.h>
+#elif defined(HAVE_LIB_XAWPLUS)
+#include <X11/XawPlus/Form.h>
 #endif
 
 #endif /* OPT_TOOLBAR */

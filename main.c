@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.166 2003/05/19 00:47:32 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.167 2003/05/21 22:59:13 dickey Exp $ */
 
 /* main.c */
 
@@ -109,6 +109,8 @@ SOFTWARE.
 #include <X11/Xaw3d/Form.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/Form.h>
+#elif defined(HAVE_LIB_XAWPLUS)
+#include <X11/XawPlus/Form.h>
 #endif
 
 #endif /* OPT_TOOLBAR */
@@ -3734,7 +3736,7 @@ spawn(void)
 		       errno, (errno != 0) ? strerror(errno) : ""));
 	    }
 #ifdef WTMP
-#if defined(SVR4) || defined(SCO325)
+#if defined(WTMPX_FILE) && (defined(SVR4) || defined(SCO325))
 	    if (term->misc.login_shell)
 		updwtmpx(WTMPX_FILE, &utmp);
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
@@ -4175,7 +4177,10 @@ Exit(int n)
 #ifdef USE_SYSV_UTMP
     struct UTMP_STR utmp;
     struct UTMP_STR *utptr;
-#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
+
+#if defined(WTMPX_FILE) && (defined(SVR4) || defined(SCO325))
+#elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
+#else
     int fd;			/* for /etc/wtmp */
 #endif
 
@@ -4219,7 +4224,7 @@ Exit(int n)
 #endif
 	    (void) pututline(utptr);
 #ifdef WTMP
-#if defined(SVR4) || defined(SCO325)
+#if defined(WTMPX_FILE) && (defined(SVR4) || defined(SCO325))
 	    if (term->misc.login_shell)
 		updwtmpx(WTMPX_FILE, utptr);
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))

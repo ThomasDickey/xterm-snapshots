@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.46 2003/05/19 00:47:31 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.47 2003/05/21 22:59:11 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -500,7 +500,7 @@ rm -rf conftest*
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 12 updated: 2002/11/23 16:02:49
+dnl CF_GCC_WARNINGS version: 13 updated: 2003/05/19 23:35:40
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -541,7 +541,7 @@ EOF
 		if AC_TRY_EVAL(ac_compile); then
 			test -n "$verbose" && AC_MSG_RESULT(... -$cf_opt)
 			EXTRA_CFLAGS="$EXTRA_CFLAGS -$cf_opt"
-			test "$cf_opt" = Wcast-qual && EXTRA_CFLAGS="$EXTRA_CFLAGS -DXTSTRINGDEFINES"
+			test "$cf_opt" = Wcast-qual && CPPFLAGS="$CPPFLAGS -DXTSTRINGDEFINES"
 		fi
 	done
 	rm -f conftest*
@@ -779,6 +779,30 @@ AC_TRY_LINK([
 [cf_cv_posix_wait=no])
 ])
 test "$cf_cv_posix_wait" = yes && AC_DEFINE(USE_POSIX_WAIT)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_PROG_EXT version: 8 updated: 2002/12/21 19:25:52
+dnl -----------
+dnl Compute $PROG_EXT, used for non-Unix ports, such as OS/2 EMX.
+AC_DEFUN([CF_PROG_EXT],
+[
+AC_REQUIRE([CF_CHECK_CACHE])
+PROG_EXT=
+case $cf_cv_system_name in
+os2*)
+    # We make sure -Zexe is not used -- it would interfere with @PROG_EXT@
+    CFLAGS="$CFLAGS -Zmt"
+    CPPFLAGS="$CPPFLAGS -D__ST_MT_ERRNO__"
+    CXXFLAGS="$CXXFLAGS -Zmt"
+    LDFLAGS=`echo "$LDFLAGS -Zmt -Zcrtdll" | sed -e "s%-Zexe%%g"`
+    PROG_EXT=".exe"
+    ;;
+cygwin*)
+    PROG_EXT=".exe"
+    ;;
+esac
+AC_SUBST(PROG_EXT)
+test -n "$PROG_EXT" && AC_DEFINE_UNQUOTED(PROG_EXT,"$PROG_EXT")
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_SIZE_T version: 4 updated: 2000/01/22 00:19:54
