@@ -894,8 +894,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
 #if OPT_HP_FUNC_KEYS
-{"-hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "on"},
-{"+hf",		"*hpKeyboard",  XrmoptionNoArg,		(caddr_t) "off"},
+{"-hf",		"*hpFunctionKeys",XrmoptionNoArg,	(caddr_t) "on"},
+{"+hf",		"*hpFunctionKeys",XrmoptionNoArg,	(caddr_t) "off"},
 #endif
 {"-hold",	"*hold",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+hold",	"*hold",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -3296,8 +3296,8 @@ spawn (void)
 
 		/* set up the new entry */
 		utmp.ut_type = USER_PROCESS;
-#if !(defined(linux) && (!defined(__GLIBC__) || (__GLIBC__ < 2))) && !defined(SVR4)
-		utmp.ut_exit.e_exit = 2;
+#ifdef HAVE_UTMP_UT_XSTATUS
+		utmp.ut_xstatus = 2;
 #endif
 		(void) strncpy(utmp.ut_user,
 			       (pw && pw->pw_name) ? pw->pw_name : "????",

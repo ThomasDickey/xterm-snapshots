@@ -722,14 +722,15 @@ AC_DEFUN([CF_SYSV_UTMP],
 [
 AC_REQUIRE([CF_UTMP])
 AC_CACHE_CHECK(if $cf_cv_have_utmp is SYSV flavor,cf_cv_sysv_utmp,[
+test "$cf_cv_have_utmp" = "utmp" && cf_prefix="ut" || cf_prefix="utx"
 AC_TRY_LINK([
 #include <sys/types.h>
 #include <${cf_cv_have_utmp}.h>],[
 struct $cf_cv_have_utmp x;
-	setutent ();
-	getutid(&x);
-	pututline(&x);
-	endutent();],
+	set${cf_prefix}ent ();
+	get${cf_prefix}id(&x);
+	put${cf_prefix}line(&x);
+	end${cf_prefix}ent();],
 	[cf_cv_sysv_utmp=yes],
 	[cf_cv_sysv_utmp=no])
 ])
@@ -842,6 +843,7 @@ if test $cf_cv_have_utmp != no ; then
 	AC_DEFINE(HAVE_UTMP)
 	test $cf_cv_have_utmp = utmpx && AC_DEFINE(UTMPX_FOR_UTMP)
 	CF_UTMP_UT_HOST
+	CF_UTMP_UT_XSTATUS
 	CF_UTMP_UT_XTIME
 	CF_UTMP_UT_SESSION
 	CF_SYSV_UTMP
@@ -886,6 +888,43 @@ fi
 fi
 ])
 dnl ---------------------------------------------------------------------------
+dnl Check for known variants on the UTMP/UTMPX struct's exit-status as reported
+dnl by various people:
+dnl
+dnl	ut_exit.__e_exit (HPUX 11 - David Ellement, also in glibc2)
+dnl	ut_exit.e_exit (SVR4)
+dnl	ut_exit.ut_e_exit (os390 - Greg Smith)
+dnl	ut_exit.ut_exit (Tru64 4.0f - Jeremie Petit, 4.0e - Tomas Vanhala)
+dnl
+dnl Note: utmp_xstatus is not a conventional compatibility definition in the
+dnl system header files.
+AC_DEFUN([CF_UTMP_UT_XSTATUS],
+[
+AC_REQUIRE([CF_UTMP])
+if test $cf_cv_have_utmp != no ; then
+AC_CACHE_CHECK(for exit-status in $cf_cv_have_utmp,cf_cv_have_utmp_ut_xstatus,[
+for cf_result in \
+	ut_exit.__e_exit \
+	ut_exit.e_exit \
+	ut_exit.ut_e_exit \
+	ut_exit.ut_exit
+do
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <${cf_cv_have_utmp}.h>],
+	[struct $cf_cv_have_utmp x; long y = x.$cf_result = 0],
+	[cf_cv_have_utmp_ut_xstatus=$cf_result
+	 break],
+	[cf_cv_have_utmp_ut_xstatus=no])
+done
+])
+if test $cf_cv_have_utmp_ut_xstatus != no ; then
+	AC_DEFINE(HAVE_UTMP_UT_XSTATUS)
+	AC_DEFINE_UNQUOTED(ut_xstatus,$cf_cv_have_utmp_ut_xstatus)
+fi
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl Check if UTMP/UTMPX struct defines ut_xtime member
 AC_DEFUN([CF_UTMP_UT_XTIME],
 [
@@ -895,7 +934,7 @@ AC_CACHE_CHECK(if utmp.ut_xtime is declared, cf_cv_have_utmp_ut_xtime,[
 	AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <${cf_cv_have_utmp}.h>],
-	[struct $cf_cv_have_utmp x; long y = x.ut_xtime],
+	[struct $cf_cv_have_utmp x; long y = x.ut_xtime = 0],
 	[cf_cv_have_utmp_ut_xtime=yes],
 	[AC_TRY_COMPILE([
 #include <sys/types.h>
