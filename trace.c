@@ -30,10 +30,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /*
  * debugging support via TRACE macro.
  */
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
-
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -90,4 +86,66 @@ Trace(char *fmt, ...)
 		(void)fflush(stderr);
 	}
 	va_end(ap);
+}
+
+char *
+visibleChars(PAIRED_CHARS(Char *buf, Char *buf2), unsigned len)
+{
+	static char *result;
+	static unsigned used;
+	unsigned limit = ((len + 1) * 8) + 1;
+	char *dst;
+
+	if (limit > used) {
+		used = limit;
+		result = XtRealloc(result, used);
+	}
+	dst = result;
+	while (len--) {
+		unsigned value = *buf++;
+#if OPT_WIDE_CHARS
+		if (buf2 != 0) {
+			value |= (*buf2 << 8);
+			buf2++;
+		}
+		if (value > 127)
+			sprintf(dst, "\\u+%04X", value);
+		else
+#endif
+		if (value < 32 || (value > 127 && value < 160))
+			sprintf(dst, "\\%03o", value);
+		else
+			sprintf(dst, "%c", value);
+		dst += strlen(dst);
+	}
+	return result;
+}
+
+char *
+visibleIChar(IChar *buf, unsigned len)
+{
+	static char *result;
+	static unsigned used;
+	unsigned limit = ((len + 1) * 6) + 1;
+	char *dst;
+
+	if (limit > used) {
+		used = limit;
+		result = XtRealloc(result, used);
+	}
+	dst = result;
+	while (len--) {
+		unsigned value = *buf++;
+#if OPT_WIDE_CHARS
+		if (value > 127)
+			sprintf(dst, "\\u+%04X", value);
+		else
+#endif
+		if (value < 32 || (value > 127 && value < 160))
+			sprintf(dst, "\\%03o", value);
+		else
+			sprintf(dst, "%c", value);
+		dst += strlen(dst);
+	}
+	return result;
 }

@@ -241,19 +241,19 @@ unsigned xtermCharSetIn(unsigned code, int charset)
  * Translate a string to the display form.  This assumes the font has the
  * DEC graphic characters in cells 0-31, and otherwise is ISO-8859-1.
  */
-int xtermCharSetOut(Char *buf, Char *ptr, char leftset)
+int xtermCharSetOut(IChar *buf, IChar *ptr, char leftset)
 {
-	Char *s;
+	IChar *s;
 	register TScreen *screen = &term->screen;
 	int count = 0;
 	int rightset = screen->gsets[(int)(screen->curgr)];
 
-	TRACE(("CHARSET GL=%c(G%d) GR=%c(G%d) %.*s\n",
+	TRACE(("CHARSET GL=%c(G%d) GR=%c(G%d) %s\n",
 		leftset,  screen->curss ? screen->curss : screen->curgl,
 		rightset, screen->curgr,
-		ptr-buf, buf))
+		visibleIChar(buf, ptr-buf)))
 
-	for (s=buf; s<ptr; ++s) {
+	for (s = buf; s < ptr; ++s) {
 		int cs = (*s >= 128) ? rightset : leftset;
 
 		count++;

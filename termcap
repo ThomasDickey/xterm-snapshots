@@ -32,7 +32,7 @@ xf|xterm-xfree86|XFree86 xterm:\
 	:k;=\E[21~:F1=\E[23~:F2=\E[24~:\
 	:kn#12:\
 	:kH=\EOF::@7=\EOF:kh=\EOH:\
-	:@0=\EOH:kI=\E[2~:kD=\E[3~:\
+	:@0=\EOH:kI=\E[2~:kD=^?:\
 	:*6=\EOF:kP=\E[5~:kN=\E[6~:\
 	:km:\
 	:kb=^H:ku=\EOA:kd=\EOB:kr=\EOC:kl=\EOD:\
@@ -94,7 +94,7 @@ r6|xterm-r6|xterm-old|X11R6 xterm:\
 	:F1=\E[23~:F2=\E[24~:F3=\E[25~:F4=\E[26~:F5=\E[28~:\
 	:F6=\E[29~:F7=\E[31~:F8=\E[32~:F9=\E[33~:FA=\E[34~:\
 	:kn#20:\
-	:@0=\E[1~:kI=\E[2~:kD=\E[3~:\
+	:@0=\E[1~:kI=\E[2~:kD=^?:\
 	:*6=\E[4~:kP=\E[5~:kN=\E[6~:\
 	:km:\
 	:kb=^H:ku=\EOA:kd=\EOB:kr=\EOC:kl=\EOD:\

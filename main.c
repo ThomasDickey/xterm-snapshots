@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.86 1999/04/11 13:11:32 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.87 1999/04/25 10:03:00 dawes Exp $ */
 
 
 /* main.c */
@@ -177,8 +177,7 @@ static Bool IsPts = False;
 #define LASTLOG
 #define WTMP
 #undef  HAS_LTCHARS
-#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1
-#define USE_USG_PTYS 1
+#if (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)
 #include <pty.h>
 #endif
 #endif
@@ -388,7 +387,6 @@ static Bool IsPts = False;
 #endif
 
 #include <stdio.h>
-#include <setjmp.h>
 
 #ifdef X_NOT_STDC_ENV
 extern time_t time ();
@@ -927,6 +925,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"-ti",		"*decTerminalID",XrmoptionSepArg,	(caddr_t) NULL},
 {"-tm",		"*ttyModes",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-tn",		"*termName",	XrmoptionSepArg,	(caddr_t) NULL},
+#if OPT_WIDE_CHARS
+{"-u8",		"*utf8",	XrmoptionNoArg,		(caddr_t) "2"},
+{"+u8",		"*utf8",	XrmoptionNoArg,		(caddr_t) "0"},
+#endif
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ut",		"*utmpInhibit",	XrmoptionNoArg,		(caddr_t) "on"},
@@ -1001,6 +1003,9 @@ static struct _options {
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
 #endif
+#if OPT_INITIAL_ERASE
+{ "-/+ie",		   "turn on/off initialization of 'erase' from pty" },
+#endif
 { "-/+im",		   "use insert mode for TERMCAP" },
 { "-/+j",                  "turn on/off jump scroll" },
 #ifdef ALLOWLOGGING
@@ -1039,6 +1044,9 @@ static struct _options {
 { "-tm string",            "terminal mode keywords and characters" },
 { "-tn name",              "TERM environment variable name" },
 { "-/+ulc",                "turn off/on display of underline as color" },
+#if OPT_WIDE_CHARS
+{ "-/+u8",                 "turn on/off UTF-8 mode (implies wide-characters)" },
+#endif
 #ifdef UTMP
 { "-/+ut",                 "turn on/off utmp inhibit" },
 #else
@@ -1885,7 +1893,7 @@ base_name(char *name)
 static int
 get_pty (int *pty)
 {
-#if defined(__osf__) || (defined(linux) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1)
+#if defined(__osf__) || (defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
     int tty;
     return (openpty(pty, &tty, ttydev, NULL, NULL));
 #elif defined(SYSV) && defined(i386) && !defined(SVR4)
@@ -2666,7 +2674,7 @@ spawn (void)
 #endif
 #endif /* USE_SYSV_PGRP */
 		while (1) {
-#if defined(TIOCNOTTY) && !(defined(linux) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1)
+#if defined(TIOCNOTTY) && !(defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
 			if (!no_dev_tty && (tty = open ("/dev/tty", O_RDWR)) >= 0) {
 				ioctl (tty, TIOCNOTTY, (char *) NULL);
 				close (tty);
@@ -3231,7 +3239,7 @@ spawn (void)
 			       sizeof(utmp.ut_name));
 
 		utmp.ut_pid = getpid();
-#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
+#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
 		utmp.ut_session = getsid(0);
 		utmp.ut_xtime = time ((time_t *) 0);
 		utmp.ut_tv.tv_usec = 0;
@@ -3246,7 +3254,7 @@ spawn (void)
 #if defined(SVR4) || defined(SCO325)
 		if (term->misc.login_shell)
 		    updwtmpx(WTMPX_FILE, &utmp);
-#elif defined(linux) && defined(__GLIBC__) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
+#elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
 		if (term->misc.login_shell)
 		    updwtmp(etc_wtmp, &utmp);
 #else
@@ -4005,7 +4013,7 @@ Exit(int n)
 #endif
 	char* ptyname;
 	char* ptynameptr = 0;
-#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && defined(__GLIBC__) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
+#if defined(WTMP) && !defined(SVR4) && !(defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && __GLIBC__ == 2 && (__GLIBC_MINOR__ == 0)))
 	int fd;			/* for /etc/wtmp */
 	int i;
 #endif
@@ -4037,7 +4045,7 @@ Exit(int n)
 	    /* write it out only if it exists, and the pid's match */
 	    if (utptr && (utptr->ut_pid == screen->pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
-#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) &&__GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0))
+#if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
 		    utptr->ut_session = getsid(0);
 		    utptr->ut_xtime = time ((time_t *) 0);
 		    utptr->ut_tv.tv_usec = 0;
@@ -4050,7 +4058,7 @@ Exit(int n)
 #if defined(SVR4) || defined(SCO325)
 		    if (term->misc.login_shell)
 			updwtmpx(WTMPX_FILE, utptr);
-#elif defined(linux) && defined(__GLIBC__) && __GLIBC__ >= 2 && !(defined(__powerpc__) && __GLIBC__ == 2 && __GLIBC_MINOR__ == 0)
+#elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
 		    strncpy (utmp.ut_line, utptr->ut_line, sizeof (utmp.ut_line));
 		    if (term->misc.login_shell)
 			updwtmp(etc_wtmp, utptr);

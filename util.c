@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c /main/33 1996/12/01 23:47:10 swick $
- *	$XFree86: xc/programs/xterm/util.c,v 3.36 1999/04/11 13:11:36 dawes Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.37 1999/04/25 10:03:02 dawes Exp $
  */
 
 /*
@@ -1360,7 +1360,7 @@ drawXtermText(
 	if (text2 == 0) {
 		static Char *dbuf;
 		static unsigned dlen;
-		if (dlen < len) {
+		if (dlen <= len) {
 			dlen = (len + 1) * 2;
 			dbuf = XtRealloc(dbuf, dlen);
 			memset(dbuf, 0, dlen);
@@ -1455,11 +1455,12 @@ drawXtermText(
 			SAVE_FONT_INFO (screen);
 
 		} else {	/* simulate double-sized characters */
-			Char *temp = (Char *) malloc(2 * len);
+			unsigned need = 2 * len;
+			Char *temp = (Char *) malloc(need);
 			Char *wide = 0;
 			int n = 0;
 			if_OPT_WIDE_CHARS(screen,{
-				wide = (Char *)malloc(2 * len);
+				wide = (Char *)malloc(need);
 			})
 			while (len--) {
 				if_OPT_WIDE_CHARS(screen,{
@@ -1525,9 +1526,10 @@ drawXtermText(
 
 	/* If the font is complete, draw it as-is */
 	if (screen->fnt_boxes) {
-		TRACE(("drawtext%c[%4d,%4d] (%d) %d:%.*s\n",
+		TRACE(("drawtext%c[%4d,%4d] (%d) %d:%s\n",
 			screen->cursor_state == OFF ? ' ' : '*',
-			y, x, chrset, len, (int)len, text))
+			y, x, chrset, len,
+			visibleChars(PAIRED_CHARS(text, text2), len)))
 		y += FontAscent(screen);
 
 #if OPT_WIDE_CHARS

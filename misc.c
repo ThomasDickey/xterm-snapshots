@@ -60,7 +60,6 @@
 
 #include <X11/Xos.h>
 #include <stdio.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <ctype.h>
 #include <pwd.h>
@@ -95,10 +94,6 @@
 #endif
 
 extern char **environ;		/* used in 'Setenv()' */
-
-extern jmp_buf Tekend;
-extern jmp_buf VTend;
-
 extern Widget toplevel;		/* used in 'ChangeGroup()' */
 
 #if OPT_TEK4014
@@ -271,7 +266,7 @@ void HandleStringEvent(
  * input queue.  That lets a user have access to any of the control sequences
  * for a key binding.  This is the equivalent of local function key support.
  *
- * NOTE:  This code does not support the hexidecimal kludge used in
+ * NOTE:  This code does not support the hexadecimal kludge used in
  * HandleStringEvent because it prevents us from sending an arbitrary string
  * (but it appears in a lot of examples - so we are stuck with it).  The
  * standard string converter does recognize "\" for newline ("\n") and for
@@ -285,18 +280,33 @@ void HandleInterpret(
 	String *params,
 	Cardinal *param_count)
 {
-    unsigned need;
-    if (*param_count != 1) return;
-    need = strlen(params[0]);
-    if (bcnt < 0)
-	bcnt = 0;
-    if ((unsigned)bcnt + need >= BUF_SIZE) return;
-    if (bcnt != 0
-     && (unsigned)(bptr - VTbuffer) < need)
-	memmove(bptr + need - (bptr - VTbuffer), bptr, bcnt);
-    bcnt += need;
-    bptr -= need;
-    memcpy(bptr, params[0], need);
+    if (*param_count == 1) {
+	char *value = params[0];
+	int need = strlen(value);
+	int used = usedPtyData(&VTbuffer);
+	int have = (VTbuffer.cnt >= 0) ? VTbuffer.cnt : 0;
+	int n;
+
+	if (have - used + need < BUF_SIZE) {
+
+	    FlushLog(&term->screen);
+
+	    if (have != 0
+	     && used < have) {
+		memmove(VTbuffer.ptr + (need - used),
+			VTbuffer.ptr,
+			VTbuffer.cnt * sizeof(*VTbuffer.ptr));
+	    } else {
+		initPtyData(&VTbuffer);
+		used = 0;
+	    }
+
+	    VTbuffer.cnt += (need - used);
+	    VTbuffer.ptr -= used;
+	    for (n = 0; n < need; n++)
+		VTbuffer.ptr[n] = (value[n] & 0xff);
+	}
+    }
 }
 
 static void DoSpecialEnterNotify (register XEnterWindowEvent *ev)
@@ -916,7 +926,7 @@ StartLog(register TScreen *screen)
 					 0644)) < 0)
 			return;
 	}
-	screen->logstart = CURRENT_EMU_VAL(screen, Tbptr, bptr);
+	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);
 	screen->logging = TRUE;
 	update_logging();
 }
@@ -938,10 +948,10 @@ FlushLog(register TScreen *screen)
 	register Char *cp;
 	register int i;
 
-	cp = CURRENT_EMU_VAL(screen, Tbptr, bptr);
+	cp = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);
 	if((i = cp - screen->logstart) > 0)
 		write(screen->logfd, (char *)screen->logstart, i);
-	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer, VTbuffer);
+	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer->buf, VTbuffer.buf);
 }
 
 #endif /* ALLOWLOGGING */
@@ -1733,7 +1743,7 @@ void end_tek_mode (void)
 #ifdef ALLOWLOGGING
 	if (screen->logging) {
 	    FlushLog (screen);
-	    screen->logstart = VTbuffer;
+	    screen->logstart = VTbuffer.buf;
 	}
 #endif
 	longjmp(Tekend, 1);
@@ -1747,9 +1757,9 @@ void end_vt_mode (void)
 
     if (!screen->TekEmu) {
 #ifdef ALLOWLOGGING
-	if(screen->logging) {
+	if(screen->logging && TekPtyData()) {
 	    FlushLog(screen);
-	    screen->logstart = Tbuffer;
+	    screen->logstart = Tbuffer->buf;
 	}
 #endif
 	screen->TekEmu = TRUE;

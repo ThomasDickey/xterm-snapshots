@@ -7,11 +7,14 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.21 1998/10/25 07:12:37 dawes Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.22 1999/04/25 10:02:58 dawes Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
 SCROLLBAR_RIGHT = -DSCROLLBAR_RIGHT
+
+/* Uncomment UTF8_OPTION to compile-in support for UTF-8 */
+UTF8_OPTION	= -DOPT_WIDE_CHARS
 
 /*
  * Fixes to allow compile with X11R5
@@ -77,7 +80,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 		  -DOSMINORVERSION=$(OSMINORVERSION)
    MISC_DEFINES = /* -DALLOWLOGGING -DALLOWLOGFILEEXEC */ 
     XKB_DEFINES = XkbClientDefines
-        DEFINES = -I. $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT)
+        DEFINES = -I. $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION)
 
 #ifdef OS2Architecture
           MAINSRC = os2main.c
@@ -88,12 +91,12 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 #endif
           SRCS1 = button.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
-		  $(MAINSRC) menu.c misc.c print.c \
+		  $(MAINSRC) menu.c misc.c print.c ptydata.c \
 		  screen.c scrollbar.c tabs.c util.c \
 		  TekPrsTbl.c Tekproc.c VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button.o charproc.o charsets.o cursor.o \
 		  data.o doublechr.o fontutils.o input.o \
-		  $(MAINOBJ) menu.o misc.o print.o \
+		  $(MAINOBJ) menu.o misc.o print.o ptydata.o \
 		  screen.o scrollbar.o tabs.o util.o \
 		  TekPrsTbl.o Tekproc.o VTPrsTbl.o $(EXTRAOBJ)
           SRCS2 = resize.c

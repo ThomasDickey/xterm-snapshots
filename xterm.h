@@ -131,6 +131,7 @@ extern "C" {
 
 /* Tekproc.c */
 extern int TekInit (void);
+extern int TekPtyData (void);
 extern void ChangeTekColors (TScreen *screen, ScrnColors *pNew);
 extern void TCursorToggle (int toggle);
 extern void TekCopy (void);
@@ -175,7 +176,7 @@ extern void SwitchBufPtrs (TScreen *screen);
 extern void ToggleAlternate (TScreen *screen);
 extern void VTReset (int full, int saved);
 extern void VTRun (void);
-extern void dotext (TScreen *screen, int charset, PAIRED_CHARS(Char *buf, Char *buf2), Cardinal len);
+extern void dotext (TScreen *screen, int charset, IChar *buf, Cardinal len);
 extern void resetCharsets (TScreen *screen);
 extern void set_cursor_gcs (TScreen *screen);
 extern void unparseputc (int c, int fd);
@@ -190,7 +191,7 @@ extern void SGR_Foreground (int color);
 
 /* charsets.c */
 extern unsigned xtermCharSetIn (unsigned code, int charset);
-extern int xtermCharSetOut (Char *buf, Char *ptr, char charset);
+extern int xtermCharSetOut (IChar *buf, IChar *ptr, char charset);
 
 /* cursor.c */
 extern void CarriageReturn (TScreen *screen);
@@ -296,6 +297,8 @@ extern void RequestMaximize (XtermWidget termw, int maximize);
 extern void StartLog (TScreen *screen);
 extern void CloseLog (TScreen *screen);
 extern void FlushLog (TScreen *screen);
+#else
+#define FlushLog(screen) /*nothing*/
 #endif
 
 /* print.c */
@@ -304,6 +307,13 @@ extern void xtermAutoPrint (int chr);
 extern void xtermMediaControl (int param, int private_seq);
 extern void xtermPrintScreen (void);
 
+/* ptydata.c */
+extern int getPtyData (TScreen *screen, fd_set *select_mask, PtyData *data);
+extern int morePtyData (PtyData *data);
+extern int nextPtyData (PtyData *data);
+extern unsigned usedPtyData(PtyData *data);
+extern void initPtyData (PtyData *data);
+
 /* screen.c */
 extern Bool non_blank_line (ScrnBuf sb, int row, int col, int len);
 extern ScrnBuf Allocate (int nrow, int ncol, Char **addr);
@@ -311,7 +321,7 @@ extern int ScreenResize (TScreen *screen, int width, int height, unsigned *flags
 extern int ScrnTstWrapped (TScreen *screen, int row);
 extern size_t ScrnPointers (TScreen *screen, size_t len);
 extern void ClearBufRows (TScreen *screen, int first, int last);
-extern void ScreenWrite (TScreen *screen, Char *str, unsigned flags, unsigned cur_fg_bg, int length);
+extern void ScreenWrite (TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), unsigned flags, unsigned cur_fg_bg, int length);
 extern void ScrnClrWrapped (TScreen *screen, int row);
 extern void ScrnDeleteChar (TScreen *screen, int n, int size);
 extern void ScrnDeleteLine (TScreen *screen, ScrnBuf sb, int n, int last, int size, int where);

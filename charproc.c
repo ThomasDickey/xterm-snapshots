@@ -100,7 +100,6 @@ in this Software without prior written authorization from the X Consortium.
 #endif
 
 #include <stdio.h>
-#include <setjmp.h>
 #include <ctype.h>
 
 #ifdef MINIX
@@ -123,22 +122,6 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/Shell.h>
 #endif /* NO_ACTIVE_ICON */
 
-/*
- * Check for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
- * systems are broken and return EWOULDBLOCK when they should return EAGAIN.
- * Note that this macro may evaluate its argument more than once.
- */
-#if defined(EAGAIN) && defined(EWOULDBLOCK)
-#define E_TEST(err) ((err) == EAGAIN || (err) == EWOULDBLOCK)
-#else
-#ifdef EAGAIN
-#define E_TEST(err) ((err) == EAGAIN)
-#else
-#define E_TEST(err) ((err) == EWOULDBLOCK)
-#endif
-#endif
-
-extern jmp_buf VTend;
 extern Widget toplevel;
 extern char *ProgramName;
 
@@ -265,6 +248,7 @@ static void StopBlinking (TScreen *screen);
 #define XtNtekStartup		"tekStartup"
 #define XtNtiteInhibit		"titeInhibit"
 #define XtNunderLine		"underLine"
+#define XtNutf8			"utf8"
 #define XtNvisualBell		"visualBell"
 #define XtNwideChars		"wideChars"
 #define XtNxmcAttributes	"xmcAttributes"
@@ -330,6 +314,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCTekStartup		"TekStartup"
 #define XtCTiteInhibit		"TiteInhibit"
 #define XtCUnderLine		"UnderLine"
+#define XtCUtf8			"Utf8"
 #define XtCVisualBell		"VisualBell"
 #define XtCWideChars		"WideChars"
 #define XtCXmcAttributes	"XmcAttributes"
@@ -342,7 +327,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCGeometry		"Geometry"
 #endif
 
-#define	doinput()		(bcnt-- > 0 ? *bptr++ : in_put())
+#define	doinput()		(morePtyData(&VTbuffer) ? nextPtyData(&VTbuffer) : in_put())
 
 static int nparam;
 static ANSI reply;
@@ -883,6 +868,9 @@ static XtResource resources[] = {
 	XtRString, XtExtdefaultbackground},
 #endif /* NO_ACTIVE_ICON */
 #if OPT_WIDE_CHARS
+{XtNutf8, XtCUtf8, XtRInt, sizeof(int),
+	XtOffsetOf(XtermWidgetRec, screen.utf8_mode),
+	XtRString, "0"},
 {XtNwideChars, XtCWideChars, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.wide_chars),
 	XtRBoolean, (XtPointer) &defaultFALSE},
@@ -1055,8 +1043,28 @@ void resetCharsets(TScreen *screen)
 	screen->curss = 0;			/* No single shift.	*/
 }
 
+	/* allocate larger buffer if needed/possible */
+#define SafeAlloc(type, area, used, size) \
+		type *new_string = area; \
+		unsigned new_length = size; \
+		if (new_length == 0) { \
+		    new_length = 256; \
+		    new_string = (type *)malloc(new_length * sizeof(type)); \
+		} else if (used+1 >= new_length) { \
+		    new_length = size * 2; \
+		    new_string = (type *)malloc(new_length * sizeof(type)); \
+		    if (new_string != 0 \
+		     && area != 0 \
+		     && used != 0) \
+			memcpy(new_string, area, used * sizeof(type)); \
+		}
+
 static void VTparse(void)
 {
+	/* Buffer for processing printable text */
+	static IChar *print_area;
+	static size_t print_size, print_used;
+
 	/* Buffer for processing strings (e.g., OSC ... ST) */
 	static Char *string_area;
 	static size_t string_size, string_used;
@@ -1066,14 +1074,16 @@ static void VTparse(void)
 #endif
 
 	Const PARSE_T *groundtable = ansi_table;
-	register TScreen *screen = &term->screen;
-	register Const PARSE_T *parsestate;
-	register unsigned int c;
-	register unsigned char *cp;
-	register int row, col, top, bot, scstype, count;
+	TScreen *screen = &term->screen;
+	Const PARSE_T *parsestate;
+	unsigned int c;
+	Char *cp;
+	int row, col, top, bot, scstype, count;
 	Bool private_function;	/* distinguish private-mode from standard */
 	int string_mode;	/* nonzero iff we're processing a string */
 	int lastchar;		/* positive iff we had a graphic character */
+	int nextstate;
+	int laststate;
 
 	/* We longjmp back to this point in VTReset() */
 	(void)setjmp(vtjmpbuf);
@@ -1086,7 +1096,8 @@ static void VTparse(void)
 	scstype = 0;
 	private_function = False;
 	string_mode = 0;
-	lastchar = -1;
+	lastchar = -1;		/* not a legal IChar */
+	nextstate = -1;		/* not a legal state */
 
 	for( ; ; ) {
             int thischar = -1;
@@ -1096,23 +1107,6 @@ static void VTparse(void)
 	    if (screen->printer_controlmode == 2) {
 		if ((c = xtermPrinterControl(c)) == 0)
 		    continue;
-	    }
-
-	    /* Accumulate string for APC, DCS, PM, OSC, SOS controls */
-	    if (parsestate == sos_table) {
-		if (string_size == 0) {
-			string_area = (Char *)malloc(string_size = 256);
-		} else if (string_used+1 >= string_size) {
-			string_size += string_size;
-			string_area = (Char *)realloc(string_area, string_size);
-			if (string_area == NULL)
-			    SysError(ERROR_VTREALLOC);
-		}
-		string_area[string_used++] = c;
-	    } else if (parsestate != esc_table) {
-		/* if we were accumulating, we're not any more */
-	    	string_mode = 0;
-		string_used = 0;
 	    }
 
 	    /*
@@ -1138,44 +1132,98 @@ static void VTparse(void)
 	    }
 #endif
 
-	    TRACE(("parse %d -> %d\n", c, parsestate[c]))
-	    switch (parsestate[c]) {
-		 case CASE_PRINT:
-			/* printable characters */
-			top = bcnt > TEXT_BUF_SIZE ? TEXT_BUF_SIZE : bcnt;
-			cp = bptr;
-			*--bptr = c;
-			while(top > 0 && isprint(*cp & 0x7f)) {
-#if OPT_VT52_MODE
-				/*
-				 * Strip output text to 7-bits for VT52.  We
-				 * should do this for VT100 also (which is a
-				 * 7-bit device), but since xterm has been
-				 * doing this for so long we shouldn't change
-				 * this behavior.
-				 */
-				if (screen->ansi_level < 1)
-					*cp &= 0x7f;
+	    /*
+	     * The parsing tables all have 256 entries.  If we're supporting
+	     * wide characters, we handle them by treating them the same as
+	     * printing characters.
+	     */
+	    laststate = nextstate;
+#if OPT_WIDE_CHARS
+	    if (c > 255) {
+		nextstate = (parsestate == groundtable)
+			? CASE_PRINT
+			: CASE_GROUND_STATE;
+	    } else
 #endif
-				top--;
-				bcnt--;
-				cp++;
-			}
-			if(screen->curss) {
-				thischar = *bptr;
-				dotext(screen,
-					screen->gsets[(int)(screen->curss)],
-				 	PAIRED_CHARS(bptr, 0), 1);
-				bptr += 1;
-				screen->curss = 0;
-			}
-			if(bptr < cp) {
-				thischar = cp[-1];
-				dotext(screen,
-					screen->gsets[(int)(screen->curgl)],
-				 	PAIRED_CHARS(bptr, 0), cp - bptr);
-			}
-			bptr = cp;
+	      nextstate = parsestate[c];
+
+	    /* 
+	     * Accumulate string for printable text.  This may be 8/16-bit
+	     * characters.
+	     */
+	    if (nextstate == CASE_PRINT) {
+		SafeAlloc(IChar, print_area, print_used, print_size);
+		if (new_string == 0) {
+		    fprintf(stderr,
+			    "Cannot allocate %d bytes for printable text\n",
+			    new_length);
+		    continue;
+		}
+
+#if OPT_VT52_MODE
+		/*
+		 * Strip output text to 7-bits for VT52.  We should do this for
+		 * VT100 also (which is a 7-bit device), but xterm has been
+		 * doing this for so long we shouldn't change this behavior.
+		 */
+		if (screen->ansi_level < 1)
+		    c &= 0x7f;
+#endif
+		print_area = new_string;
+		print_size = new_length;
+		print_area[print_used++] = lastchar = thischar = c;
+		if (morePtyData(&VTbuffer)) {
+		    continue;
+		}
+	    }
+
+	    if (nextstate == CASE_PRINT
+	     || (laststate == CASE_PRINT && print_used)) {
+		unsigned single = 0;
+
+		if (screen->curss) {
+		    dotext(screen,
+			    screen->gsets[(int)(screen->curss)],
+			    print_area, 1);
+		    screen->curss = 0;
+		    single++;
+		}
+		if (print_used > single) {
+		    dotext(screen,
+			    screen->gsets[(int)(screen->curgl)],
+			    print_area + single,
+			    print_used - single);
+		}
+		print_used = 0;
+	    }
+
+	    /*
+	     * Accumulate string for APC, DCS, PM, OSC, SOS controls
+	     * This should always be 8-bit characters.
+	     */
+	    if (parsestate == sos_table) {
+		SafeAlloc(Char, string_area, string_used, string_size);
+		if (new_string == 0) {
+		    fprintf(stderr,
+			    "Cannot allocate %d bytes for string mode %d\n",
+			    new_length, string_mode);
+		    continue;
+		}
+
+		string_area = new_string;
+		string_size = new_length;
+		string_area[string_used++] = c;
+	    } else if (parsestate != esc_table) {
+		/* if we were accumulating, we're not any more */
+	    	string_mode = 0;
+		string_used = 0;
+	    }
+
+	    TRACE(("parse %d -> %d\n", c, nextstate))
+
+	    switch (nextstate) {
+		 case CASE_PRINT:
+			/* printable characters (see above) */
 			break;
 
 		 case CASE_GROUND_STATE:
@@ -1877,7 +1925,7 @@ static void VTparse(void)
 				bzero(SCRN_BUF_ATTRS(screen, row),
 				 col = screen->max_col + 1);
 				for(cp = SCRN_BUF_CHARS(screen, row) ; col > 0 ; col--)
-					*cp++ = (unsigned char) 'E';
+					*cp++ = (Char)'E';
 				if_OPT_WIDE_CHARS(screen,{
 					bzero(SCRN_BUF_WIDEC(screen, row),
 					      screen->max_col+1);
@@ -2161,13 +2209,13 @@ static void VTparse(void)
 		 case CASE_REP:
 			/* REP */
 			if (lastchar >= 0 && isprint(lastchar)) {
-			    Char repeated[2];
+			    IChar repeated[2];
 			    count = (param[0] < 1) ? 1 : param[0];
 			    repeated[0] = lastchar;
 			    while (count-- > 0) {
 				dotext(screen,
 					screen->gsets[(int)(screen->curgl)],
-					PAIRED_CHARS(repeated, 0), 1);
+					repeated, 1);
 			    }
 			}
 			parsestate = groundtable;
@@ -2219,7 +2267,12 @@ static void VTparse(void)
 			break;
 #if OPT_WIDE_CHARS
 		 case CASE_UTF8:
-			screen->utf8_mode = (c == 'G');
+			/* If we did not set UTF-8 mode from resource or
+			 * the command-line, allow it to be enabled/disabled
+			 * by control sequence.
+			 */
+			if (screen->utf8_mode != 2)
+				screen->utf8_mode = (c == 'G');
 			parsestate = groundtable;
 			break;
 #endif
@@ -2403,67 +2456,18 @@ in_put(void)
     static struct timeval select_timeout;
 
     for( ; ; ) {
-#ifndef AMOEBA
-	if (FD_ISSET (screen->respond, &select_mask) && eventMode == NORMAL)
-#else
-	if ((bcnt = cb_full(screen->tty_outq)) > 0 && eventMode == NORMAL)
-#endif
-	{
-#ifdef ALLOWLOGGING
-	    if (screen->logging)
-		FlushLog(screen);
-#endif
-#ifndef AMOEBA
-	    bcnt = read(screen->respond, (char *)(bptr = VTbuffer), BUF_SIZE);
-#else
-	    bptr = VTbuffer;
-	    if ((bcnt = cb_gets(screen->tty_outq, bptr, bcnt, BUF_SIZE)) == 0) {
-		errno = EIO;
-		bcnt = -1;
-	    }
-#endif
-	    if (bcnt <= 0) {
-/*
- * Yes, I know this is a majorly f*ugly hack, however it seems to be
- * necessary for Solaris x86.   DWH 11/15/94
- * Dunno why though..
- */
-#if defined(i386) && defined(SVR4) && defined(sun)
-		if (errno == EIO || errno == 0 )
-#else
-		if (errno == EIO)
-#endif
-		    Cleanup (0);
-		else if (!E_TEST(errno))
-		    Panic(
-			  "input: read returned unexpected error (%d)\n",
-			  errno);
-	    } else if (bcnt == 0) {
-#if defined(MINIX) || defined(__EMX__)
-		Cleanup(0);
-#else
-		Panic("input: read returned zero\n", 0);
-#endif
-	    } else {
-		/* read from pty was successful */
-		if (!screen->output_eight_bits) {
-		    register int bc = bcnt;
-		    register Char *b = bptr;
-
-		    for (; bc > 0; bc--, b++) {
-			*b &= (Char) 0x7f;
-		    }
-		}
-		if ( screen->scrollWidget && screen->scrollttyoutput &&
-		     screen->topline < 0)
-		    WindowScroll(screen, 0);  /* Scroll to bottom */
-		pty_read_bytes += bcnt;
-		/* stop speed reading at some point to look for X stuff */
-		/* (4096 is just a random large number.) */
-		if (pty_read_bytes > 4096)
-		    FD_CLR (screen->respond, &select_mask);
-		break;
-	    }
+	if (eventMode == NORMAL
+	 && getPtyData(screen, &select_mask, &VTbuffer)) {
+	    if (screen->scrollWidget
+	     && screen->scrollttyoutput
+	     && screen->topline < 0)
+		WindowScroll(screen, 0);  /* Scroll to bottom */
+	    pty_read_bytes += VTbuffer.cnt;
+	    /* stop speed reading at some point to look for X stuff */
+	    /* (4096 is just a random large number.) */
+	    if (pty_read_bytes > 4096)
+		FD_CLR (screen->respond, &select_mask);
+	    break;
 	}
 	pty_read_bytes = 0;
 	/* update the screen */
@@ -2530,7 +2534,7 @@ in_put(void)
 	if (XtAppPending(app_con) ||
 	    FD_ISSET (ConnectionNumber(screen->display), &select_mask)) {
 	    xevents();
-	    if (bcnt > 0)	/* HandleInterpret */
+	    if (VTbuffer.cnt > 0)	/* HandleInterpret */
 		break;
 	}
 #else  /* AMOEBA */
@@ -2539,7 +2543,7 @@ in_put(void)
 	   it counts as being readable */
 	if (XtAppPending(app_con) || i > 0) {
 	    xevents();
-	    if (bcnt > 0)	/* HandleInterpret */
+	    if (VTbuffer.cnt > 0)	/* HandleInterpret */
 		break;
 	    continue;
 	} else if (i < 0) {
@@ -2552,8 +2556,7 @@ in_put(void)
 #endif /* AMOENA */
 
     }
-    bcnt--;
-    return(*bptr++);
+    return nextPtyData(&VTbuffer);
 }
 
 /*
@@ -2562,13 +2565,16 @@ in_put(void)
  */
 void
 dotext(
-	register TScreen *screen,
+	TScreen *screen,
 	int	charset,
-	PAIRED_CHARS(Char *buf,Char *buf2), /* start of characters to process */
+	IChar	*buf,		/* start of characters to process */
 	Cardinal len)		/* end */
 {
 	Cardinal n, next_col, offset;
 
+#if OPT_WIDE_CHARS
+	if (!screen->utf8_mode || charset == '0') /* don't translate if we use UTF-8 */
+#endif
 	if (!xtermCharSetOut(buf, buf+len, charset))
 		return;
 
@@ -2599,9 +2605,46 @@ dotext(
 			n = len - offset;
 		next_col = screen->cur_col + n;
 
+#if OPT_WIDE_CHARS
+		/*
+		 * Split the wide characters back into separate arrays of 8-bit
+		 * characters so we can use the existing interface.
+		 *
+		 * FIXME:  If we rewrote this interface, it would involve
+		 * rewriting all of the memory-management for the screen
+		 * buffers (perhaps this is simpler).
+		 */
+		{
+			static unsigned limit;
+			static Char *hibyte, *lobyte;
+			Boolean both = False;
+			unsigned j, k;
+
+			if (n >= limit) {
+				limit = (n + 1) * 2;
+				lobyte = XtRealloc(lobyte, limit);
+				hibyte = XtRealloc(hibyte, limit);
+			}
+			for (j = offset; j < offset+n; j++) {
+				k = j-offset;
+				lobyte[k] = buf[j];
+				if (buf[j] > 255) {
+					hibyte[k] = (buf[j] >> 8);
+					both = True;
+				} else {
+					hibyte[k] = 0;
+				}
+			}
+
+			WriteText(screen, PAIRED_CHARS(
+				lobyte,
+				both ? hibyte : 0), n);
+		}
+#else
 		WriteText(screen, PAIRED_CHARS(
 			buf+offset,
 			buf2 ? buf2+offset : 0), n);
+#endif
 
 		/*
 		 * the call to WriteText updates screen->cur_col.
@@ -2637,11 +2680,11 @@ WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 	int	fg_bg = makeColorPair(term->cur_foreground, term->cur_background);
 	GC	currentGC;
 
-	TRACE(("WriteText (%2d,%2d) (%d) %3d:%.*s\n",
+	TRACE(("WriteText (%2d,%2d) (%d) %3d:%s\n",
 		screen->cur_row,
 		screen->cur_col,
 		curXtermChrSet(screen->cur_row),
-		len, (int)len, str))
+		len, visibleChars(PAIRED_CHARS(str, str2), len)))
 
 	if(screen->cur_row - screen->topline <= screen->max_row) {
 		if(screen->cursor_state)
@@ -2656,8 +2699,13 @@ WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 			if(screen->scroll_amt)
 				FlushScroll(screen);
 
-			if (flags & INVISIBLE)
+			if (flags & INVISIBLE) {
 				memset(str, ' ', len);
+				if_OPT_WIDE_CHARS(screen,{
+					if (str2 != 0)
+						memset(str2, ' ', len);
+				})
+			}
 
 			TRACE(("%s @%d, calling drawXtermText (%d,%d)\n",
 				__FILE__, __LINE__,
@@ -2683,7 +2731,7 @@ WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 #endif
 		}
 	}
-	ScreenWrite(screen, str, flags, fg_bg, len);
+	ScreenWrite(screen, PAIRED_CHARS(str, str2), flags, fg_bg, len);
 	CursorForward(screen, len);
 #if OPT_ZICONBEEP
 	/* Flag icon name with "***"  on window output when iconified.
@@ -2884,9 +2932,9 @@ dpmodes(
 #if OPT_TEK4014
 			if(func == bitset && !(screen->inhibit & I_TEK)) {
 #ifdef ALLOWLOGGING
-				if(screen->logging) {
+				if(screen->logging && TekPtyData()) {
 					FlushLog(screen);
-					screen->logstart = Tbuffer;
+					screen->logstart = Tbuffer->buf;
 				}
 #endif
 				screen->TekEmu = TRUE;
@@ -3491,7 +3539,7 @@ unparseputn(unsigned int n, int fd)
 void
 unparseputc(int c, int fd)
 {
-	Char	buf[2];
+	IChar	buf[2];
 	register int i = 1;
 
 #ifdef AMOEBA
@@ -3506,8 +3554,7 @@ unparseputc(int c, int fd)
 	/* If send/receive mode is reset, we echo characters locally */
 	if ((term->keyboard.flags & MODE_SRM) == 0) {
 		register TScreen *screen = &term->screen;
-		dotext(screen, screen->gsets[(int)(screen->curgl)],
-			PAIRED_CHARS(buf, 0), i);
+		dotext(screen, screen->gsets[(int)(screen->curgl)], buf, i);
 	}
 }
 
@@ -3615,17 +3662,16 @@ VTRun(void)
 	screen->cursor_set = ON;
 	StartBlinking(screen);
 
-	bcnt = 0;
-	bptr = VTbuffer;
+	initPtyData(&VTbuffer);
 #if OPT_TEK4014
 	while(Tpushb > Tpushback) {
-		*bptr++ = *--Tpushb;
-		bcnt++;
+		*(VTbuffer.ptr)++ = *--Tpushb;
+		VTbuffer.cnt++;
 	}
-	bcnt += (i = Tbcnt);
+	VTbuffer.cnt += (i = (Tbuffer ? Tbuffer->cnt : 0));
 	for( ; i > 0 ; i--)
-		*bptr++ = *Tbptr++;
-	bptr = VTbuffer;
+		*(VTbuffer.ptr)++ = *(Tbuffer->ptr)++;
+	VTbuffer.ptr = DecodedData(&VTbuffer);
 #endif
 	if(!setjmp(VTend))
 		VTparse();
@@ -4004,8 +4050,13 @@ static void VTInitialize (
 #endif
 
 #if OPT_WIDE_CHARS
-   wnew->screen.utf8_mode = False; /* will activate with control-sequence */
-   if ((wnew->screen.wide_chars = request->screen.wide_chars) != False)
+   wnew->screen.wide_chars = request->screen.wide_chars;
+   if (request->screen.utf8_mode) {
+      wnew->screen.wide_chars = True;
+      wnew->screen.utf8_mode = 2; /* disable further change */
+      TRACE(("initialized UTF-8 mode\n"));
+   }
+   if (wnew->screen.wide_chars != False)
       wnew->num_ptrs += 1;
 #endif
 
@@ -4539,8 +4590,10 @@ ShowCursor(void)
 	    chi = SCRN_BUF_WIDEC(screen, screen->cursor_row)[screen->cursor_col];
 	})
 
-	if (clo == 0)
+	if (clo == 0) {
 		clo = ' ';
+		if_OPT_WIDE_CHARS(screen,{chi = 0;})
+	}
 
 	/*
 	 * Compare the current cell to the last set of colors used for the
@@ -4690,8 +4743,10 @@ HideCursor(void)
 
 	currentGC = updatedXtermGC(screen, flags, fg_bg, in_selection);
 
-	if (clo == 0)
+	if (clo == 0) {
 		clo = ' ';
+		if_OPT_WIDE_CHARS(screen,{chi = 0;})
+	}
 
 	TRACE(("%s @%d, HideCursor calling drawXtermText\n", __FILE__, __LINE__))
 	drawXtermText(screen, flags, currentGC,

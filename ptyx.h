@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.51 1999/04/11 13:11:34 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.52 1999/04/25 10:03:02 dawes Exp $
  */
 
 /*
@@ -132,7 +132,7 @@
 #ifdef __hpux
 #define TTYDEV		"/dev/pty/ttyxx"
 #else	/* !__hpux */
-#if defined(__osf__) || (defined(linux) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1)
+#if defined(__osf__) || (defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
 #define TTYDEV		"/dev/ttydirs/xxx/xxxxxxxxxxxxxx"
 #else
 #define	TTYDEV		"/dev/ttyxx"
@@ -548,15 +548,6 @@ typedef struct {
 
 /***====================================================================***/
 
-#if OPT_TRACE
-#include <trace.h>
-#else
-#define TRACE(p) /*nothing*/
-#define TRACE_CHILD /*nothing*/
-#endif
-
-/***====================================================================***/
-
 #if OPT_VT52_MODE
 #define if_OPT_VT52_MODE(screen, code) if(screen->ansi_level == 0) code
 #else
@@ -578,9 +569,37 @@ typedef struct {
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define PAIRED_CHARS(a,b) a,b
+typedef unsigned short IChar;	/* for 8 or 16-bit characters */
+#undef  ALLOWLOGGING		/* FIXME: not yet */
 #else
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
 #define PAIRED_CHARS(a,b) a
+typedef unsigned char IChar;	/* for 8-bit characters */
+#endif
+
+/***====================================================================***/
+
+#define BUF_SIZE 4096
+
+typedef struct {
+	int	cnt;		/* number of chars left to process */
+	IChar *	ptr;		/* pointer into decoded data */
+	Char	buf[BUF_SIZE];	/* we read directly into this */
+#if OPT_WIDE_CHARS
+	IChar	buf2[BUF_SIZE];	/* ...and may decode into this */
+#define DecodedData(data) (data)->buf2
+#else
+#define DecodedData(data) (data)->buf
+#endif
+	} PtyData;
+
+/***====================================================================***/
+
+#if OPT_TRACE
+#include <trace.h>
+#else
+#define TRACE(p) /*nothing*/
+#define TRACE_CHILD /*nothing*/
 #endif
 
 /***====================================================================***/
@@ -718,7 +737,9 @@ typedef struct {
 #endif
 #if OPT_WIDE_CHARS
 	Boolean		wide_chars;	/* true when 16-bit chars	*/
-	Boolean		utf8_mode;	/* use UTF-8 decode/encode	*/
+	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
+	int		utf_count;	/* state of utf_char */
+	IChar		utf_char;	/* in-progress character */
 #endif
 	int		border;		/* inner border			*/
 	Cursor		arrow;		/* arrow cursor			*/
@@ -1053,8 +1074,6 @@ typedef struct _TekWidgetRec {
     TekPart tek;
 } TekWidgetRec, *TekWidget;
 #endif /* OPT_TEK4014 */
-
-#define BUF_SIZE 4096
 
 /*
  * terminal flags
