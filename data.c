@@ -2,7 +2,7 @@
  *	$Xorg: data.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.c,v 3.27 2003/10/13 00:58:22 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.c,v 3.28 2003/10/27 01:07:57 dickey Exp $ */
 
 /*
  * Copyright 2002,2003 by Thomas E. Dickey
@@ -55,7 +55,6 @@
  * SOFTWARE.
  */
 
-#include <ptyx.h>		/* gets Xt stuff, too */
 #include <data.h>
 
 Widget toplevel;		/* top-most widget in xterm */

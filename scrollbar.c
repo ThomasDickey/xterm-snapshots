@@ -2,7 +2,7 @@
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.38 2003/09/21 17:12:48 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.39 2003/10/20 00:58:55 dickey Exp $ */
 
 /*
  * Copyright 2000-2002,2003 by Thomas E. Dickey
@@ -597,12 +597,20 @@ params_to_pixels(TScreen * screen, String * params, Cardinal n)
 static long
 AmountToScroll(Widget gw, String * params, Cardinal nparams)
 {
-    if (IsXtermWidget(gw)) {
-	TScreen *screen = &((XtermWidget) gw)->screen;
-	if (nparams > 2
-	    && screen->send_mouse_pos != MOUSE_OFF)
-	    return 0;
-	return params_to_pixels(screen, params, nparams);
+    if (gw != 0) {
+	if (IsXtermWidget(gw)) {
+	    TScreen *screen = &((XtermWidget) gw)->screen;
+	    if (nparams > 2
+		&& screen->send_mouse_pos != MOUSE_OFF)
+		return 0;
+	    return params_to_pixels(screen, params, nparams);
+	} else {
+	    /*
+	     * This may have been the scrollbar widget.  Try its parent, which
+	     * would be the VT100 widget.
+	     */
+	    return AmountToScroll(XtParent(gw), params, nparams);
+	}
     }
     return 0;
 }

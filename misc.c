@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.79 2003/09/21 17:12:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.81 2003/10/27 01:07:57 dickey Exp $ */
 
 /*
  *
@@ -1477,13 +1477,17 @@ do_osc(Char * oscbuf, int len GCC_UNUSED, int final)
 		unparseputs(buf, screen->respond);
 	    }
 	    unparseputc1(final, screen->respond);
-	} else {
+	} else if (buf != 0) {
+	    VTFontNames fonts;
+
+	    memset(&fonts, 0, sizeof(fonts));
+
 	    /*
 	     * If the font specification is a "#", followed by an
 	     * optional sign and optional number, lookup the
 	     * corresponding menu font entry.
 	     */
-	    if (buf != 0 && *buf == '#') {
+	    if (*buf == '#') {
 		int num = screen->menu_font_number;
 		int rel = 0;
 
@@ -1498,16 +1502,18 @@ do_osc(Char * oscbuf, int len GCC_UNUSED, int final)
 		if (isdigit(CharOf(*buf))) {
 		    int val = atoi(buf);
 		    if (rel > 0)
-			num += val;
+			rel = val;
 		    else if (rel < 0)
-			num -= val;
+			rel = -val;
 		    else
 			num = val;
-		} else if (rel) {
-		    num += rel;
-		} else {
+		} else if (rel == 0) {
 		    num = 0;
 		}
+
+		if (rel != 0)
+		    num = lookupRelativeFontSize(screen,
+						 screen->menu_font_number, rel);
 
 		if (num < 0
 		    || num > fontMenu_lastBuiltin
@@ -1516,7 +1522,8 @@ do_osc(Char * oscbuf, int len GCC_UNUSED, int final)
 		    break;
 		}
 	    }
-	    SetVTFont(fontMenu_fontescape, True, VT_FONTSET(buf, NULL, NULL, NULL));
+	    fonts.f_n = buf;
+	    SetVTFont(fontMenu_fontescape, True, &fonts);
 	}
 	break;
     case 51:
@@ -1586,7 +1593,6 @@ do_dcs(Char * dcsbuf, size_t dcslen)
     char *cp = (char *) dcsbuf;
     Bool okay;
     Bool clear_all;
-    Bool lock_keys;
 
     TRACE(("do_dcs(%s:%d)\n", (char *) dcsbuf, dcslen));
 
@@ -1735,7 +1741,6 @@ do_dcs(Char * dcsbuf, size_t dcslen)
     default:
 	if (isdigit(CharOf(*cp))) {	/* digits are DECUDK, otherwise ignore */
 	    clear_all = True;
-	    lock_keys = True;
 
 	    if (*cp == '0') {
 		cp++;
@@ -1753,7 +1758,6 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 		cp++;
 	    } else if (*cp == '1') {
 		cp++;
-		lock_keys = False;
 	    }
 
 	    if (*cp++ != '|')
@@ -2507,13 +2511,13 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
     static OptionHelp *opt_array = 0;
 
     if (opt_array == 0) {
-	Cardinal opt_count, j, k;
+	Cardinal opt_count, j;
 #if OPT_TRACE
+	Cardinal k;
 	XrmOptionDescRec *res_array = sortedOptDescs(descs, numDescs);
 	int code;
 	char *mesg;
 #else
-	(void) k;
 	(void) descs;
 	(void) numDescs;
 #endif

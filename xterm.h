@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.90 2003/09/21 17:12:48 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.92 2003/10/27 01:07:58 dickey Exp $ */
 
 /************************************************************
 
@@ -131,6 +131,11 @@ authorization.
 #define HAVE_LASTLOG_H
 #elif defined(BSD) && (BSD >= 199103)
 #define USE_LASTLOG
+#endif
+
+#if defined(SCO)
+#define DEFDELETE_DEL TRUE
+#define OPT_SCO_FUNC_KEYS 1
 #endif
 
 #if defined(SCO) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103)) || defined(__CYGWIN__)
@@ -313,6 +318,12 @@ extern int errno;
 #define XtNeightBitOutput	"eightBitOutput"
 #define XtNfaceName		"faceName"
 #define XtNfaceSize		"faceSize"
+#define XtNfont1		"font1"
+#define XtNfont2		"font2"
+#define XtNfont3		"font3"
+#define XtNfont4		"font4"
+#define XtNfont5		"font5"
+#define XtNfont6		"font6"
 #define XtNfontDoublesize	"fontDoublesize"
 #define XtNfontStyle		"fontStyle"
 #define XtNforceBoxChars	"forceBoxChars"
@@ -423,6 +434,12 @@ extern int errno;
 #define XtCEightBitOutput	"EightBitOutput"
 #define XtCFaceName		"FaceName"
 #define XtCFaceSize		"FaceSize"
+#define XtCFont1		"Font1"
+#define XtCFont2		"Font2"
+#define XtCFont3		"Font3"
+#define XtCFont4		"Font4"
+#define XtCFont5		"Font5"
+#define XtCFont6		"Font6"
 #define XtCFontDoublesize	"FontDoublesize"
 #define XtCFontStyle		"FontStyle"
 #define XtCHighlightSelection	"HighlightSelection"
@@ -570,6 +587,7 @@ extern void unparseputc (int c, int fd);
 extern void unparseputc1 (int c, int fd);
 extern void unparseputs (char *s, int fd);
 extern void unparseseq (ANSI *ap, int fd);
+extern void xtermAddInput(Widget w);
 
 #if OPT_BLINK_CURS
 extern void ToggleCursorBlink(TScreen *screen);
@@ -611,7 +629,6 @@ extern GC xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc);
 extern Boolean xtermDeleteIsDEL (void);
 extern void Input (TKeyboard *keyboard, TScreen *screen, XKeyEvent *event, Bool eightbit);
 extern void StringInput (TScreen *screen, Char *string, size_t nbytes);
-extern void xtermAddInput(Widget w);
 
 #if OPT_NUM_LOCK
 extern void VTInitModifiers(void);

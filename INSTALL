@@ -1,4 +1,4 @@
--- $XFree86: xc/programs/xterm/INSTALL,v 3.32 2003/09/21 17:12:44 dickey Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.33 2003/10/27 01:07:55 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -255,6 +255,11 @@ The options (in alphabetic order):
   --enable-hp-fkeys       enable support for HP-style function keys
 
   	Compile-in code to support HP-style function keys.
+
+  --enable-load-vt-fonts  enable load-vt-fonts() action
+
+  	Compile-in code that allows user to define load different VT-font
+	definitions at runtime.
 
   --enable-logfile-exec   enable exec'd logfile filter
 

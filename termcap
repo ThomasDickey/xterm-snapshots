@@ -15,7 +15,7 @@
 #	I checked the limits using ncurses "captoinfo -CrTv", which prints
 #	the resolved length of each entry in a comment at the end - T.Dickey
 #
-# $XFree86: xc/programs/xterm/termcap,v 3.30 2003/10/13 00:58:22 dickey Exp $
+# $XFree86: xc/programs/xterm/termcap,v 3.31 2003/10/27 01:07:57 dickey Exp $
 #
 xf|xterm-xfree86|XFree86 xterm:\
 	:k1=\EOP:k2=\EOQ:k3=\EOR:k4=\EOS:\
@@ -75,7 +75,7 @@ xn|xterm-noapp|xterm with cursor keys in normal mode:\
 # and in a few special cases (with "smart" optimization) the wrong color will
 # be painted in spots.
 vc|xterm-color|generic "ANSI" color xterm:\
-	:Co#8:NC@:pa#64:op=\E[m:AB=\E[4%dm:AF=\E[3%dm:ac@:tc=xterm-r6:
+	:Co#8:NC@:pa#64:op=\E[m:AB=\E[4%dm:AF=\E[3%dm:ac=:tc=xterm-r6:
 #
 # These aliases are for compatibility with the terminfo; termcap cannot provide
 # the extra features, but termcap applications still want the names.  Note that
@@ -125,7 +125,7 @@ xS|xterm-sco|XFree86 xterm with SCO function keys:\
 	:F1=\E[W:F2=\E[X:F3=\E[Y:F5=\E[a:F6=\E[b:\
 	:F7=\E[c:F8=\E[d:F9=\E[e:FA=\E[f:FB=\E[g:\
 	:FC=\E[h:FD=\E[i:FE=\E[j:FF=\E[k:\
-	:kh=\E[H:kI=\E[L:kN=\E[G:kP=\E[I:ac@:tc=xterm-basic:
+	:kh=\E[H:kI=\E[L:kN=\E[G:kP=\E[I:ac=:tc=xterm-basic:
 #
 v5|xterm-vt52|xterm emulating vt52:\
 	:bs:\
