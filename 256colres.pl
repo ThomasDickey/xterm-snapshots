@@ -1,3 +1,4 @@
+#! /usr/bin/perl
 # Author: Thomas E. Dickey
 # $XFree86: xc/programs/xterm/256colres.pl,v 1.4 2000/06/13 23:15:53 dawes Exp $
 
