@@ -2442,6 +2442,7 @@ spawn ()
 		/*
 		 * now in child process
 		 */
+		TRACE_CHILD
 #if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__) || defined(SCO325)
 		int pgrp = setsid();
 #else
@@ -2451,7 +2452,6 @@ spawn ()
 		char* ptyname;
 		char* ptynameptr = 0;
 #endif
-		TRACE_CHILD;
 
 #ifdef USE_USG_PTYS
 #if defined(SYSV) && defined(i386) && !defined(SVR4)

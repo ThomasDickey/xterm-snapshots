@@ -636,10 +636,13 @@ typedef struct {
 #endif /* NO_ACTIVE_ICON */
 	Cursor pointer_cursor;		/* pointer cursor in window	*/
 
-	String printer_command;		/* pipe/shell command string	*/
+	String	printer_command;	/* pipe/shell command string	*/
 	Boolean printer_extent;		/* print complete page		*/
 	Boolean printer_formfeed;	/* print formfeed per function	*/
-	int printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
+	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
+#ifdef OPT_PRINT_COLORS
+	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
+#endif
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
 	XFontStruct	*fnt_norm;	/* normal font of terminal	*/
