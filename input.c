@@ -1,7 +1,8 @@
 /*
- *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.51 2000/12/30 19:15:46 dickey Exp $
+ *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
+
+/* $XFree86: xc/programs/xterm/input.c,v 3.52 2001/01/17 23:46:36 dawes Exp $ */
 
 /*
  * Copyright 1999-2000 by Thomas E. Dickey

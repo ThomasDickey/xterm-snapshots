@@ -1,5 +1,5 @@
 /*
- *	$TOG: screen.c /main/37 1997/08/26 14:13:55 kaleb $
+ *	$Xorg: screen.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
 /*
@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.54 2000/12/30 19:15:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.55 2001/01/17 23:46:38 dawes Exp $ */
 
 /* screen.c */
 

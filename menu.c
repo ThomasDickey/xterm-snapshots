@@ -1,5 +1,4 @@
-/* $XConsortium: menu.c /main/66 1996/12/01 23:46:59 swick $ */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.40 2000/12/30 19:15:46 dickey Exp $ */
+/* $Xorg: menu.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $ */
 /*
 
 Copyright 1999-2000 by Thomas E. Dickey
@@ -48,6 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from the X Consortium.
 
 */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.41 2001/01/17 23:46:37 dawes Exp $ */
 
 #include <xterm.h>
 #include <data.h>

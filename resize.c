@@ -1,7 +1,8 @@
 /*
- *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.44 2000/12/28 00:51:51 dickey Exp $
+ *	$Xorg: resize.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
+
+/* $XFree86: xc/programs/xterm/resize.c,v 3.46 2001/02/13 19:19:18 dawes Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -39,13 +40,8 @@
 #define CANT_OPEN_DEV_TTY
 #endif
 
-#ifdef __OpenBSD__
-#define USE_TERMINFO
-#include <term.h>
-#endif
-
 #ifndef USE_TERMINFO	/* avoid conflict with configure script */
-#if defined(__QNX__) || defined(SCO) || defined(sco) || defined(linux)
+#if defined(__QNX__) || defined(SCO) || defined(sco) || defined(linux) || defined(__OpenBSD__)
 #define USE_TERMINFO
 #endif
 #endif

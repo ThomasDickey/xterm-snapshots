@@ -1,9 +1,9 @@
 /*
- *	$XConsortium: error.h,v 1.9 93/02/25 17:21:29 gildea Exp $
+ *	$Xorg: error.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
 
-/* $XFree86: xc/programs/xterm/error.h,v 1.5 1998/10/10 15:25:48 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/error.h,v 1.6 2001/01/17 23:46:36 dawes Exp $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *

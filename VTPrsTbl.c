@@ -1,8 +1,8 @@
 /*
- *	$XConsortium: VTPrsTbl.c,v 1.10 95/06/09 22:17:06 gildea Exp $
- *	$XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.22 2000/06/13 02:28:37 dawes Exp $
+ *	$Xorg: VTPrsTbl.c,v 1.3 2000/08/17 19:55:07 cpqbld Exp $
  */
 
+/* $XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.23 2001/01/17 23:46:34 dawes Exp $ */
 /*
  *
  * Copyright 1999-2000 by Thomas E. Dickey

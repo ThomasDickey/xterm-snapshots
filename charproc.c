@@ -1,11 +1,12 @@
 /*
- * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.114 2000/12/30 19:15:45 dickey Exp $
+ * $Xorg: charproc.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
+
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.115 2001/01/17 23:46:35 dawes Exp $ */
 
 /*
 
-Copyright 1999-2000 by Thomas E. Dickey
+Copyright 1999-2001 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -380,12 +381,14 @@ Bres(XtNeightBitInput,	XtCEightBitInput, screen.input_eight_bits, TRUE),
 Bres(XtNeightBitOutput, XtCEightBitOutput, screen.output_eight_bits, TRUE),
 Bres(XtNhighlightSelection, XtCHighlightSelection, screen.highlight_selection, FALSE),
 Bres(XtNhpLowerleftBugCompat, XtCHpLowerleftBugCompat, screen.hp_ll_bc, FALSE),
+Bres(XtNi18nSelections,	XtCI18nSelections, screen.i18nSelections, TRUE),
 Bres(XtNjumpScroll,	XtCJumpScroll, screen.jumpscroll,	TRUE),
 Bres(XtNloginShell,	XtCLoginShell, misc.login_shell,	FALSE),
 Bres(XtNmarginBell,	XtCMarginBell, screen.marginbell,	FALSE),
 Bres(XtNmetaSendsEscape, XtCMetaSendsEscape, screen.meta_sends_esc, FALSE),
 Bres(XtNmultiScroll,	XtCMultiScroll, screen.multiscroll, FALSE),
 Bres(XtNoldXtermFKeys,	XtCOldXtermFKeys, screen.old_fkeys,	FALSE),
+Bres(XtNpopOnBell,	XtCPopOnBell,	screen.poponbell,	FALSE),
 Bres(XtNprinterAutoClose, XtCPrinterAutoClose, screen.printer_autoclose, FALSE),
 Bres(XtNprinterExtent,	XtCPrinterExtent, screen.printer_extent, FALSE),
 Bres(XtNprinterFormFeed, XtCPrinterFormFeed, screen.printer_formfeed, FALSE),
@@ -399,7 +402,6 @@ Bres(XtNtiteInhibit,	XtCTiteInhibit, misc.titeInhibit,	FALSE),
 Bres(XtNtrimSelection,	XtCTrimSelection, screen.trim_selection, FALSE),
 Bres(XtNunderLine,	XtCUnderLine, screen.underline,		TRUE),
 Bres(XtNvisualBell,	XtCVisualBell,	screen.visualbell,	FALSE),
-Bres(XtNpopOnBell,	XtCPopOnBell,	screen.poponbell,	FALSE),
 Cres(XtNcursorColor,	screen.cursorcolor,	XtDefaultForeground),
 Cres(XtNforeground,	screen.foreground,	XtDefaultForeground),
 Cres(XtNpointerColor,	screen.mousecolor,	XtDefaultForeground),
@@ -4029,6 +4031,10 @@ static void RequestResize(
 	int cols,
 	int text)
 {
+#ifndef nothack
+	XSizeHints sizehints;
+	long supp;
+#endif
 	TScreen	*screen	= &termw->screen;
 	unsigned long value;
 	Dimension replyWidth, replyHeight;
@@ -4093,6 +4099,12 @@ static void RequestResize(
 			askedWidth = wide;
 	}
 
+#ifndef nothack
+	if (! XGetWMNormalHints(screen->display, VShellWindow,
+				&sizehints, &supp))
+	    bzero(&sizehints, sizeof(sizehints));
+#endif
+
 	status = XtMakeResizeRequest (
 	    (Widget) termw,
 	     askedWidth,  askedHeight,
@@ -4108,10 +4120,26 @@ static void RequestResize(
 			  replyWidth,
 			  replyHeight,
 			  &termw->flags);
-	    XSync(screen->display, FALSE);	/* synchronize */
-	    if(XtAppPending(app_con))
-		xevents();
 	}
+
+#ifndef nothack
+	/*
+	 * XtMakeResizeRequest() has the undesirable side-effect of clearing
+	 * the window manager's hints, even on a failed request.  This would
+	 * presumably be fixed if the shell did its own work.
+	 */
+	if (sizehints.flags
+	 && replyHeight
+	 && replyWidth) {
+		sizehints.height = replyHeight;
+		sizehints.width = replyWidth;
+		XSetWMNormalHints(screen->display, VShellWindow, &sizehints);
+	}
+#endif
+
+	XSync(screen->display, FALSE);	/* synchronize */
+	if(XtAppPending(app_con))
+	    xevents();
 }
 
 extern Atom wm_delete_window;	/* for ICCCM delete window */
@@ -4594,6 +4622,7 @@ static void VTRealize (
 			- height - (XtParent(term)->core.border_width * 2);
 
 	/* set up size hints for window manager; min 1 char by 1 char */
+	bzero(&sizehints, sizeof(sizehints));
 	sizehints.base_width = 2 * screen->border + scrollbar_width;
 	sizehints.base_height = 2 * screen->border;
 	sizehints.width_inc = FontWidth(screen);
@@ -4776,6 +4805,14 @@ static void VTInitI18N(void)
     XIMStyles  *xim_styles;
     XIMStyle	input_style = 0;
     Boolean	found;
+    static struct {
+	char *name;
+	unsigned long code;
+    } known_style[] = {
+	{ "OverTheSpot",	(XIMPreeditPosition | XIMStatusArea) },
+	{ "OffTheSpot",		(XIMPreeditArea     | XIMStatusArea) },
+	{ "Root",		(XIMPreeditNothing  | XIMStatusNothing) },
+    };
 
     term->screen.xic = NULL;
 
@@ -4819,9 +4856,11 @@ static void VTInitI18N(void)
 	fprintf(stderr, "Failed to open input method\n");
 	return;
     }
+    TRACE(("VTInitI18N opened input method\n"));
 
     if (XGetIMValues(xim, XNQueryInputStyle, &xim_styles, NULL)
-	|| !xim_styles) {
+	|| !xim_styles
+	|| !xim_styles->count_styles) {
 	fprintf(stderr, "input method doesn't support any style\n");
 	XCloseIM(xim);
 	return;
@@ -4838,17 +4877,19 @@ static void VTInitI18N(void)
 	while ((end != s) && isspace(CharOf(end[-1]))) end--;
 
 	if (end != s) {	/* just in case we have a spurious comma */
-	    if (!strncmp(s, "OverTheSpot", end - s)) {
-		input_style = (XIMPreeditPosition | XIMStatusArea);
-	    } else if (!strncmp(s, "OffTheSpot", end - s)) {
-		input_style = (XIMPreeditArea | XIMStatusArea);
-	    } else if (!strncmp(s, "Root", end - s)) {
-		input_style = (XIMPreeditNothing | XIMStatusNothing);
-	    }
-	    for (i = 0; (unsigned short)i < xim_styles->count_styles; i++) {
-		if (input_style == xim_styles->supported_styles[i]) {
-		    found = True;
-		    break;
+	    TRACE(("looking for style '%.*s'\n", end - s, s));
+	    for (i = 0; i < sizeof(known_style)/sizeof(known_style[0]); i++) {
+		if ((int)strlen(known_style[i].name) == (end - s)
+		 && !strncmp(s, known_style[i].name, end - s)) {
+		    input_style = known_style[i].code;
+		    for (i = 0; i < xim_styles->count_styles; i++) {
+			if (input_style == xim_styles->supported_styles[i]) {
+			    found = True;
+			    break;
+			}
+		    }
+		    if (found)
+			break;
 		}
 	    }
 	}
@@ -4858,7 +4899,8 @@ static void VTInitI18N(void)
     XFree(xim_styles);
 
     if (!found) {
-	fprintf(stderr, "input method doesn't support my preedit type\n");
+	fprintf(stderr, "input method doesn't support my preedit type (%s)\n",
+		term->misc.preedit_type);
 	XCloseIM(xim);
 	return;
     }

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-150
+MANIFEST for xterm, version xterm-151
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -49,6 +49,7 @@ main.h                          default definitions for 'xterm'
 make.com                        build-script for VMS port of 'xterm'
 menu.c                          popup/pulldown menus for 'xterm'
 menu.h                          interface of menu.c
+minstall.sh                     script for installing manpages
 misc.c                          miscellaneous utility functions for 'xterm'
 mkdirs.sh                       configure script: make directories for install process
 os2main.c                       main program for OS/2 EMX port of 'xterm'

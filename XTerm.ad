@@ -1,9 +1,9 @@
-! $XConsortium: XTerm.ad /main/35 1996/12/03 16:44:38 swick $
+! $Xorg: XTerm.ad,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
 !
 !
 !
 !
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.18 2000/12/30 19:15:44 dickey Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.19 2001/01/17 23:46:34 dawes Exp $
 
 XTerm.JoinSession:False
 

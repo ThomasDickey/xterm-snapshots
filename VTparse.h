@@ -1,8 +1,8 @@
 /*
- *	$XConsortium: VTparse.h,v 1.6 92/09/15 15:28:31 gildea Exp $
- *	$XFree86: xc/programs/xterm/VTparse.h,v 3.14 2000/01/24 22:21:52 dawes Exp $
+ *	$Xorg: VTparse.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
+/* $XFree86: xc/programs/xterm/VTparse.h,v 3.15 2001/01/17 23:46:34 dawes Exp $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *

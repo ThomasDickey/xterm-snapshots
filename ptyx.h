@@ -1,7 +1,8 @@
 /*
- *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.82 2000/12/30 19:15:47 dickey Exp $
+ *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
+
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.83 2001/01/17 23:46:38 dawes Exp $ */
 
 /*
  * Copyright 1999-2000 by Thomas E. Dickey
@@ -550,6 +551,14 @@ typedef struct {
 #define OPT_ZICONBEEP   1 /* true if xterm supports "-ziconbeep" option */
 #endif
 
+#ifndef OPT_USE_UTF8_API
+#define OPT_USE_UTF8_API 1
+#endif
+#ifndef X_HAVE_UTF8_STRING
+#undef OPT_USE_UTF8_API
+#define OPT_USE_UTF8_API 0
+#endif
+
 /***====================================================================***/
 
 #if OPT_AIX_COLORS && !OPT_ISO_COLORS
@@ -797,8 +806,12 @@ typedef struct {
 #if OPT_TRACE
 #include <trace.h>
 #else
+#ifndef TRACE
 #define TRACE(p) /*nothing*/
+#endif
+#ifndef TRACE_CHILD
 #define TRACE_CHILD /*nothing*/
+#endif
 #endif
 
 /***====================================================================***/
@@ -1215,6 +1228,7 @@ typedef struct {
 	Boolean		cutToBeginningOfLine;  /* line cuts to BOL? */
 	Boolean		highlight_selection; /* controls appearance of selection */
 	Boolean		trim_selection; /* controls trimming of selection */
+	Boolean		i18nSelections;
 	char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
 	int		selection_length; /* number of significant bytes */

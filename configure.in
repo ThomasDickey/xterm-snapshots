@@ -296,6 +296,18 @@ CF_ARG_DISABLE(boxchars,
 AC_MSG_RESULT($enable_boxchars)
 test $enable_boxchars = no && AC_DEFINE(OPT_BOX_CHARS,0)
 
+AC_MSG_CHECKING(if you want to use FreeType library)
+CF_ARG_DISABLE(freetype,
+	[  --disable-freetype      disable freetype library-support],
+	[enable_freetype=no],
+	[enable_freetype=yes])
+AC_MSG_RESULT($enable_freetype)
+if test $enable_freetype = yes ; then
+	CF_X_FREETYPE
+else
+	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
+fi
+
 AC_MSG_CHECKING(if you want support for HP-style function keys)
 CF_ARG_ENABLE(hp-fkeys,
 	[  --enable-hp-fkeys       enable support for HP-style function keys],

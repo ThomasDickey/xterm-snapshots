@@ -1,5 +1,4 @@
-# $XConsortium: termcap,v 1.13 94/10/13 21:24:32 gildea Exp $
-# $XFree86: xc/programs/xterm/termcap,v 3.27 2000/11/01 01:12:42 dawes Exp $
+# $Xorg: termcap,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
 #
 # Note:
 #	termcap format is limited to 1023 characters.  This set of descriptions
@@ -15,6 +14,8 @@
 #
 #	I checked the limits using ncurses "captoinfo -CrTv", which prints
 #	the resolved length of each entry in a comment at the end - T.Dickey
+#
+# $XFree86: xc/programs/xterm/termcap,v 3.28 2001/01/17 23:46:39 dawes Exp $
 #
 xf|xterm-xfree86|XFree86 xterm:\
 	:k1=\EOP:k2=\EOQ:k3=\EOR:k4=\EOS:\
