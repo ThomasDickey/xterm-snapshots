@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.42.2.2 1997/05/25 05:06:58 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.45 1997/06/10 12:30:36 hohndel Exp $
  */
 
 /*
@@ -787,6 +787,7 @@ void SGR_Foreground(color)
 	register TScreen *screen = &term->screen;
 	Pixel	fg;
 
+	HideCursor();
 	if (color >= 0) {
 		term->flags |= FG_COLOR;
 	} else {
@@ -4778,10 +4779,42 @@ set_cursor_gcs (screen)
      * above by setting cursor color to foreground.
      */
 
-    xgcv.font = screen->fnt_norm->fid;
-    mask = (GCForeground | GCBackground | GCFont);
+#if OPT_ISO_COLORS
+    /*
+     * If we're using ANSI colors, the functions manipulating the SGR code will
+     * use the same GC's.  To avoid having the cursor change color, we use the
+     * Xlib calls rather than the Xt calls.
+     *
+     * Use the colorMode value to determine which we'll do (the TextWindow may
+     * not be set before the widget's realized, so it's tested separately).
+     */
+    if(screen->colorMode) {
+	if (TextWindow(screen) != 0) {
+	    /* we might have a colored foreground/background later */
+	    xgcv.font = screen->fnt_norm->fid;
+	    mask = (GCForeground | GCBackground | GCFont);
+	    xgcv.foreground = fg;
+	    xgcv.background = cc;
+	    new_cursorGC = XCreateGC (screen->display, TextWindow(screen), mask, &xgcv);
+
+	    if (screen->always_highlight) {
+		new_reversecursorGC = (GC) 0;
+		new_cursoroutlineGC = (GC) 0;
+	    } else {
+		xgcv.foreground = bg;
+		xgcv.background = cc;
+		new_reversecursorGC = XCreateGC (screen->display, TextWindow(screen), mask, &xgcv);
+		xgcv.foreground = cc;
+		xgcv.background = bg;
+		new_cursoroutlineGC = XCreateGC (screen->display, TextWindow(screen), mask, &xgcv);
+	    }
+	}
+    } else
+#endif
     if (cc != fg && cc != bg) {
 	/* we have a colored cursor */
+	xgcv.font = screen->fnt_norm->fid;
+	mask = (GCForeground | GCBackground | GCFont);
 	xgcv.foreground = fg;
 	xgcv.background = cc;
 	new_cursorGC = XtGetGC ((Widget) term, mask, &xgcv);
@@ -4796,17 +4829,34 @@ set_cursor_gcs (screen)
 	    xgcv.foreground = cc;
 	    xgcv.background = bg;
 	    new_cursoroutlineGC = XtGetGC ((Widget) term, mask, &xgcv);
-		}
+	}
     } else {
 	new_cursorGC = (GC) 0;
 	new_reversecursorGC = (GC) 0;
 	new_cursoroutlineGC = (GC) 0;
     }
-    if (screen->cursorGC) XtReleaseGC ((Widget)term, screen->cursorGC);
-    if (screen->reversecursorGC)
-	XtReleaseGC ((Widget)term, screen->reversecursorGC);
-    if (screen->cursoroutlineGC)
-	XtReleaseGC ((Widget)term, screen->cursoroutlineGC);
+
+#if OPT_ISO_COLORS
+    if(screen->colorMode)
+    {
+	if (screen->cursorGC)
+	    XFreeGC (screen->display, screen->cursorGC);
+	if (screen->reversecursorGC)
+	    XFreeGC (screen->display, screen->reversecursorGC);
+	if (screen->cursoroutlineGC)
+	    XFreeGC (screen->display, screen->cursoroutlineGC);
+    }
+    else
+#endif
+    {
+	if (screen->cursorGC)
+	    XtReleaseGC ((Widget)term, screen->cursorGC);
+	if (screen->reversecursorGC)
+	    XtReleaseGC ((Widget)term, screen->reversecursorGC);
+	if (screen->cursoroutlineGC)
+	    XtReleaseGC ((Widget)term, screen->cursoroutlineGC);
+    }
+
     screen->cursorGC = new_cursorGC;
     screen->reversecursorGC = new_reversecursorGC;
     screen->cursoroutlineGC = new_cursoroutlineGC;

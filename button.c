@@ -1,5 +1,5 @@
 /* $XConsortium: button.c /main/75 1996/11/29 10:33:33 swick $ */
-/* $XFree86: xc/programs/xterm/button.c,v 3.11.2.1 1997/05/23 09:24:33 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.12 1997/05/23 09:19:46 dawes Exp $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *

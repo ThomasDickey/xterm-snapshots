@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: screen.c /main/35 1996/12/01 23:47:05 swick $
- *	$XFree86: xc/programs/xterm/screen.c,v 3.12.2.1 1997/05/23 09:24:42 dawes Exp $
+ *	$XFree86: xc/programs/xterm/screen.c,v 3.13 1997/05/23 09:19:54 dawes Exp $
  */
 
 /*
