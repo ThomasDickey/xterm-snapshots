@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.72 1999/01/23 09:56:18 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.73 1999/01/31 12:22:31 dawes Exp $
  */
 
 /*
@@ -193,7 +193,7 @@ static void StopBlinking (TScreen *screen);
 #define XtNeightBitInput	"eightBitInput"
 #define XtNeightBitOutput	"eightBitOutput"
 #define XtNfontDoublesize       "fontDoublesize"
-#define XtNgeometry		"geometry"
+/* #define XtNgeometry		"geometry" */	/* See Xt/Shell.h */
 #define XtNhighlightColor	"highlightColor"
 #define XtNhighlightSelection	"highlightSelection"
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
@@ -264,7 +264,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCEightBitInput	"EightBitInput"
 #define XtCEightBitOutput	"EightBitOutput"
 #define XtCFontDoublesize       "FontDoublesize"
-#define XtCGeometry		"Geometry"
+/* #define XtCGeometry		"Geometry" */	/* See Xt/Shell.h */
 #define XtCHighlightSelection	"HighlightSelection"
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
 #define XtCJumpScroll		"JumpScroll"

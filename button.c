@@ -21,7 +21,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.27 1998/11/01 12:57:07 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.28 1999/01/31 12:22:31 dawes Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1272,10 +1272,9 @@ ConvertSelection(
 	Atom* targetP;
 	Atom* std_targets;
 	unsigned long std_length;
-	XmuConvertStandardSelection(
-		    w, screen->selection_time, selection,
-		    target, type, (XPointer *)&std_targets, &std_length, format
-		   );
+	XmuConvertStandardSelection(w, screen->selection_time, selection,
+				    target, type, (XtPointer *)&std_targets,
+				    &std_length, format);
 	*length = std_length + 5;
 	targetP = (Atom*)XtMalloc(sizeof(Atom)*(*length));
 	*value = (XtPointer) targetP;
@@ -1339,8 +1338,7 @@ ConvertSelection(
 	return True;
     }
     if (XmuConvertStandardSelection(w, screen->selection_time, selection,
-				    target, type,
-				    (XPointer *)value, length, format))
+				    target, type, value, length, format))
 	return True;
 
     /* else */
