@@ -9,6 +9,9 @@ XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
 
+/* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
+SCROLLBAR_RIGHT = -DSCROLLBAR_RIGHT
+
 /*
  * Fixes to allow compile with X11R5
  */
@@ -73,7 +76,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 		  -DOSMINORVERSION=$(OSMINORVERSION)
    MISC_DEFINES = /* -DALLOWLOGFILEEXEC */ 
     XKB_DEFINES = XkbClientDefines
-        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES)
+        DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT)
 
 #ifdef OS2Architecture
           MAINSRC = os2main.c

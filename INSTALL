@@ -1,4 +1,4 @@
--- $Id: INSTALL,v 1.2 1997/09/29 23:09:28 tom Exp $
+-- $XFree86$
 -- Thomas E. Dickey <dickey@clark.net>
 
 Xterm is normally built as part of the X Windows source tree, using
@@ -42,6 +42,7 @@ The options (in alphabetic order):
   --disable-i18n          disable internationalization (default: on)
   --disable-imake         disable use of imake for definitions (default: on)
   --disable-input-method  disable input-method (default: on)
+  --disable-rightbar      enable logging (default: on)
   --disable-vt52          disable VT52 emulation (default: on)
   --enable-logging        enable logging (default: off)
   --enable-trace          test: set to enable debugging traces (default: off)
@@ -50,3 +51,6 @@ The options (in alphabetic order):
   --with-Xaw3d            link with Xaw 3d library
   --with-neXtaw           link with neXT Athena library
   --with-terminal-id[=V]  set default decTerminalID (default: vt100)
+
+
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.2 1997/09/30 05:08:19 hohndel Exp $

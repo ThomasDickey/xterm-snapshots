@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.7 1997/09/19 08:30:21 hohndel Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.8 1997/09/30 04:51:15 hohndel Exp $
  */
 
 /************************************************************
@@ -48,6 +48,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_TRACE	/* CF_ARG_ENABLE(trace) */
 #undef OPT_VT52_MODE	/* CF_ARG_DISABLE(vt52) */
 #undef OPT_XMC_GLITCH	/* CF_ARG_ENABLE(xmc-glitch) */
+#undef SCROLLBAR_RIGHT	/* CF_ARG_ENABLE(rightbar) */
 #undef USE_MY_MEMMOVE	/* CF_FUNC_MEMMOVE */
 #undef USE_OK_BCOPY	/* CF_FUNC_MEMMOVE */
 #undef USE_SYS_SELECT_H	/* CF_TYPE_FD_SET */

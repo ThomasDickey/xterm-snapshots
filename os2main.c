@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.7 1997/09/19 08:30:18 hohndel Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.8 1997/09/30 04:51:12 hohndel Exp $ */
 
 /***********************************************************
 
@@ -348,16 +348,20 @@ static XrmOptionDescRec optionDescList[] = {
 {"+s",		"*multiScroll",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-sb",		"*scrollBar",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+sb",		"*scrollBar",	XrmoptionNoArg,		(caddr_t) "off"},
+#ifdef SCROLLBAR_RIGHT
+{"-leftbar",	"*rightScrollBar", XrmoptionNoArg,	(caddr_t) "off"},
+{"-rightbar",	"*rightScrollBar", XrmoptionNoArg,	(caddr_t) "on"},
+#endif
 {"-sf",		"*sunFunctionKeys", XrmoptionNoArg,	(caddr_t) "on"},
 {"+sf",		"*sunFunctionKeys", XrmoptionNoArg,	(caddr_t) "off"},
-{"-si",		"*scrollTtyOutput",	XrmoptionNoArg,		(caddr_t) "off"},
-{"+si",		"*scrollTtyOutput",	XrmoptionNoArg,		(caddr_t) "on"},
+{"-si",		"*scrollTtyOutput", XrmoptionNoArg,	(caddr_t) "off"},
+{"+si",		"*scrollTtyOutput", XrmoptionNoArg,	(caddr_t) "on"},
 {"-sk",		"*scrollKey",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+sk",		"*scrollKey",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-sl",		"*saveLines",	XrmoptionSepArg,	(caddr_t) NULL},
 #if OPT_SUNPC_KBD
-{"-sp",		"*sunKeyboard", XrmoptionNoArg,	(caddr_t) "on"},
-{"+sp",		"*sunKeyboard", XrmoptionNoArg,	(caddr_t) "off"},
+{"-sp",		"*sunKeyboard", XrmoptionNoArg,		(caddr_t) "on"},
+{"+sp",		"*sunKeyboard", XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 {"-t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -439,6 +443,10 @@ static struct _options {
 { "-/+rw",                 "turn on/off reverse wraparound" },
 { "-/+s",                  "turn on/off multiscroll" },
 { "-/+sb",                 "turn on/off scrollbar" },
+#ifdef SCROLLBAR_RIGHT
+{ "-useRight",             "force scrollbar right (default left)" },
+{ "-useLeft",              "force scrollbar left" },
+#endif
 { "-/+sf",                 "turn on/off Sun Function Key escape codes" },
 { "-/+si",                 "turn on/off scroll-on-tty-output inhibit" },
 { "-/+sk",                 "turn on/off scroll-on-keypress" },
@@ -1022,13 +1030,22 @@ char **envp;
 	max_plus1 = (screen->respond < ConnectionNumber(screen->display)) ? 
 		(1 + ConnectionNumber(screen->display)) : 
 		(1 + screen->respond);
-	
+
 #ifdef DEBUG
 	if (debug) printf ("debugging on\n");
 #endif	/* DEBUG */
 	XSetErrorHandler(xerror);
 	XSetIOErrorHandler(xioerror);
 
+	(void) setuid (screen->uid); /* we're done with privileges... */
+	(void) setgid (screen->gid);
+	done_setuid = 1;
+
+#ifdef ALLOWLOGGING
+	if (term->misc.log_on) {
+		StartLog(screen);
+	}
+#endif
 	for( ; ; ) {
 		if(screen->TekEmu) {
 			TekRun();
@@ -1038,7 +1055,8 @@ char **envp;
 	}
 }
 
-char *base_name(name)
+static char *
+base_name(name)
 char *name;
 {
 	register char *cp;

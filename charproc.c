@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.51 1997/09/19 08:30:12 hohndel Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.52 1997/09/30 04:51:07 hohndel Exp $
  */
 
 /*
@@ -222,6 +222,7 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtNautoWrap "autoWrap"
 #define XtNsaveLines "saveLines"
 #define XtNscrollBar "scrollBar"
+#define XtNrightScrollBar "rightScrollBar"
 #define XtNscrollTtyOutput "scrollTtyOutput"
 #define XtNscrollKey "scrollKey"
 #define XtNscrollLines "scrollLines"
@@ -305,6 +306,7 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtCPrinterFormFeed "PrinterFormFeed"
 #define XtCSaveLines "SaveLines"
 #define XtCScrollBar "ScrollBar"
+#define XtCRightScrollBar "RightScrollBar"
 #define XtCScrollLines "ScrollLines"
 #define XtCScrollPos "ScrollPos"
 #define XtCScrollCond "ScrollCond"
@@ -621,6 +623,11 @@ static XtResource resources[] = {
 {XtNscrollBar, XtCScrollBar, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, misc.scrollbar),
 	XtRBoolean, (XtPointer) &defaultFALSE},
+#ifdef SCROLLBAR_RIGHT
+{XtNrightScrollBar, XtCRightScrollBar, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, misc.useRight),
+	XtRBoolean, (XtPointer) &defaultFALSE},
+#endif
 {XtNscrollTtyOutput,XtCScrollCond, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.scrollttyoutput),
 	XtRBoolean, (XtPointer) &defaultTRUE},
@@ -3271,7 +3278,7 @@ SwitchBufs(screen)
 			XClearArea(
 			    screen->display,
 			    TextWindow(screen),
-			    (int) screen->border + Scrollbar(screen),
+			    (int) OriginX(screen),
 			    (int) top * FontHeight(screen) + screen->border,
 			    (unsigned) Width(screen),
 			    (unsigned) (screen->max_row - top + 1)
@@ -4900,8 +4907,7 @@ update_font_info (screen, doresize)
 	}
 	DoResizeScreen (term);		/* set to the new natural size */
 	if (screen->scrollWidget)
-	  ResizeScrollBar (screen->scrollWidget, -1, -1,
-			   screen->fullVwin.height + screen->border * 2);
+	    ResizeScrollBar (screen);
 	Redraw ();
     }
     set_vt_box (screen);

@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.17 1997/09/19 08:30:21 hohndel Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.18 1997/09/30 04:51:14 hohndel Exp $
 .\" Copyright (c) 1989  X Consortium
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining
@@ -86,7 +86,7 @@ the
 .B Tektronix
 menu; see below).
 The name of the file will be
-``\fBCOPY\fIyy\fB\-\fIMM\fB\-\fIdd\fB.\fIhh\fB:\fImm\fB:\fIss\fR'', where
+``\fBCOPY\fIyyyy\fB\-\fIMM\fB\-\fIdd\fB.\fIhh\fB:\fImm\fB:\fIss\fR'', where
 .IR yy ,
 .IR MM ,
 .IR dd ,
@@ -277,6 +277,10 @@ feature on or off.
 .B \+j
 This option indicates that \fIxterm\fP should not do jump scrolling.
 .TP 8
+.B \-leftbar
+Force scrollbar to the left side of VT100 screen.
+This is the default, unless you have set the rightScrollBar resource.
+.TP 8
 .B \-ls
 This option indicates that the shell that is started in the \fIxterm\fP window
 will be a login shell (i.e., the first character of argv[0] will be a dash,
@@ -317,6 +321,9 @@ resource).
 .TP 8
 .B \+pc
 This option disables the PC-style use of bold colors.
+.TP 8
+.B \-rightbar
+Force scrollbar to the right side of VT100 screen.
 .TP 8
 .B \-rw
 This option indicates that reverse-wraparound should be allowed.  This allows
@@ -466,7 +473,7 @@ Toolkit provides standard options that accomplish the same task.
 This option specifies the preferred size and position of the Tektronix window.
 It is shorthand for specifying the ``\fI*tekGeometry\fP'' resource.
 .TP 8
-.B \#\fIgeom\fP
+.B \ #\fIgeom\fP
 This option specifies the preferred position of the icon window.
 It is shorthand for specifying the ``\fI*iconGeometry\fP'' resource.
 .TP 8
@@ -950,6 +957,11 @@ Specifies whether or not reverse video should be simulated.  The default is
 Specifies whether or not reverse-wraparound should be enabled.  The default is
 ``false.''
 .TP 8
+.B "rightScrollBar (\fPclass\fB RightScrollBar)"
+Specifies whether or not the scrollbar should be displayed on the right
+rather than the left.
+The default is ``false.''
+.TP 8
 .B "saveLines (\fPclass\fB SaveLines)"
 Specifies the number of lines to save beyond the top of the screen when a
 scrollbar is turned on.  The default is 64.
@@ -1063,6 +1075,9 @@ This entry invokes the \fBsecure()\fP action.
 .B "allowsends (\fPclass\fB SmeBSB)"
 This entry invokes the \fBallow-send-events(toggle)\fP action.
 .TP 8
+.B "logging (\fPclass\fB SmeBSB)"
+This entry invokes the \fBlogging(toggle)\fP action.
+.TP 8
 .B "redraw (\fPclass\fB SmeBSB)"
 This entry invokes the \fBredraw()\fP action.
 .TP 8
@@ -1075,8 +1090,11 @@ This entry invokes the \fBset-8-bit-control(toggle)\fP action.
 .B "backarrow key (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-backarrow(toggle)\fP action.
 .TP 8
-.B "sun-function-keys (\fPclass\fB SmeBSB)"
-This entry invokes the \fBsun-function-keys(toggle)\fP action.
+.B "sun\ function-keys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBsun\ function-keys(toggle)\fP action.
+.TP 8
+.B "sun\ keyboard (\fPclass\fB SmeBSB)"
+This entry invokes the \fBsun\ keyboard(toggle)\fP action.
 .TP 8
 .B "line2 (\fPclass\fB SmeLine)"
 This is a separator.

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: screen.c /main/35 1996/12/01 23:47:05 swick $
- *	$XFree86: xc/programs/xterm/screen.c,v 3.18 1997/09/19 08:30:19 hohndel Exp $
+ *	$XFree86: xc/programs/xterm/screen.c,v 3.19 1997/09/30 04:51:13 hohndel Exp $
  */
 
 /*
@@ -805,11 +805,12 @@ ScreenResize (screen, width, height, flags)
 	} else if(FullHeight(screen) == height && FullWidth(screen) == width)
 	 	return(0);	/* nothing has changed at all */
 
-	if(screen->scrollWidget)
-		ResizeScrollBar(screen->scrollWidget, -1, -1, height);
-	
 	screen->fullVwin.fullheight = height;
 	screen->fullVwin.fullwidth = width;
+
+	if(screen->scrollWidget)
+		ResizeScrollBar(screen);
+	
 	ResizeSelection (screen, rows, cols);
 
 #ifndef NO_ACTIVE_ICON
