@@ -56,7 +56,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.77 2001/10/24 01:21:25 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.78 2001/10/25 00:18:55 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996.
 .TH XTERM 1 __vendorversion__
@@ -2766,10 +2766,10 @@ the system logfile, which records user logins.
 \fI/etc/wtmp\fP
 the system logfile, which records user logins and logouts.
 .TP 5
-\fI/usr/lib/X11/app-defaults/XTerm\fP
+.I __apploaddir__/app-defaults/XTerm
 the \fIxterm\fP default application resources.
 .TP 5
-\fI/usr/lib/X11/app-defaults/XTerm-color\fP
+.I __apploaddir__/XTerm-color
 the \fIxterm\fP color application resources.
 If your display supports color, use this
 .in +10
