@@ -1,5 +1,5 @@
 /* $XConsortium: menu.h /main/27 1996/12/01 23:47:03 swick $ */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.6 1997/09/19 08:30:17 hohndel Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.7 1997/10/25 13:51:22 hohndel Exp $ */
 /*
 
 Copyright (c) 1989  X Consortium

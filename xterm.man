@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.19 1997/10/13 17:17:00 hohndel Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.20 1997/10/25 13:51:25 hohndel Exp $
 .\" Copyright (c) 1989  X Consortium
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining

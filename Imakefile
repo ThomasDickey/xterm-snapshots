@@ -1,5 +1,4 @@
-XCOMM $XConsortium: Imakefile /main/65 1996/02/02 14:27:54 kaleb $
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.16 1997/10/13 17:16:54 hohndel Exp $
+XCOMM $TOG: Imakefile /main/68 1997/08/28 08:08:34 kaleb $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -7,6 +6,8 @@ XCOMM
 XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
+XCOMM
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.17 1997/10/26 13:25:48 dawes Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -101,7 +102,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 
 #ifndef TermcapLibrary
 #if SystemV && !defined(MacIIArchitecture)
-#if defined(CrayArchitecture) || defined(HPArchitecture) || defined(RsArchitecture)
+#if defined(CrayArchitecture) || (defined(HPArchitecture) && OSMajorVersion < 10) || defined(RsArchitecture)
 #define TermcapLibrary -lcurses		/* special cases of System V */
 #else
 #define TermcapLibrary -ltermlib	/* usually in here */
