@@ -77,6 +77,8 @@ all:	$(PROGRAMS)
 
 main.o: version.h
 
+$(OBJS1) : ptyx.h
+
 xterm : $(OBJS1)
 	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
 
