@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XFree86: xc/programs/xterm/vttests/resize.sh,v 1.2 1999/04/11 13:11:44 dawes Exp $
+# $XFree86: xc/programs/xterm/vttests/resize.sh,v 1.3 2000/10/27 18:31:17 dawes Exp $
 #
 # -- Thomas Dickey (1999/3/27)
 # Obtain the current screen size, then resize the terminal to the nominal

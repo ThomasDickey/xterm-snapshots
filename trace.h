@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/trace.h,v 3.9 2000/06/13 02:28:41 dawes Exp $
+ * $XFree86: xc/programs/xterm/trace.h,v 3.10 2000/09/22 10:42:09 alanh Exp $
  */
 
 /************************************************************

@@ -7,7 +7,7 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.30 2000/08/26 16:19:23 dawes Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.33 2000/10/13 13:41:18 keithp Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -95,13 +95,21 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
         UTF8SRC = charclass.c keysym2ucs.c precompose.c wcwidth.c
         UTF8OBJ = charclass.o keysym2ucs.o precompose.o wcwidth.o
 #endif
+#if BuildXftLibrary
+#define XRenderSupport
+#endif
+#ifdef XRenderSupport
+	 XRFDEF = -DXRENDERFONT
+        XRFLIBS = XftClientLibs $(XRENDERLIB)
+     XRFDEPLIBS = XftClientDepLibs $(DEPXRENDERLIB)
+#endif
 
    MAIN_DEFINES = $(UTMPDEF) $(TTYGROUPDEF) $(PUCCPTYDDEF) $(NOPOSIXTERMIOS) \
 		  -DOSMAJORVERSION=$(OSMAJORVERSION) \
 		  -DOSMINORVERSION=$(OSMINORVERSION)
    MISC_DEFINES = /* -DALLOWLOGGING -DALLOWLOGFILEEXEC */
     XKB_DEFINES = XkbClientDefines
-        DEFINES = -I. $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION)
+        DEFINES = -I. $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF)
 
 #ifdef OS2Architecture
           MAINSRC = os2main.c
@@ -127,7 +135,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
        PROGRAMS = ProgramTargetName(resize) ProgramTargetName(xterm)
-       DEPLIBS1 = XkbClientDepLibs XawClientDepLibs
+       DEPLIBS1 = XkbClientDepLibs XawClientDepLibs $(XRFDEPLIBS)
        DEPLIBS2 =
 
 #ifndef TermcapLibrary
@@ -153,9 +161,9 @@ SpecialCObjectRule(charproc,$(_NOOP_),$(MISC_DEFINES))
 SpecialCObjectRule(data,$(_NOOP_),$(MISC_DEFINES))
 
 #if InstallXtermSetUID
-SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
+SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
 #else
-NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(UTMPLIB) $(PTYLIB))
+NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(UTMPLIB) $(PTYLIB))
 #endif
 
 #if InstallXtermSetUID && defined(SunArchitecture) && HasSharedLibraries && (OSMajorVersion < 5)
@@ -174,7 +182,10 @@ LDRESUME = -Bdynamic
 install:: ProgramTargetName(xterm)
 	MakeDir($(DESTDIR)$(BINDIR))
 	RemoveFile(ProgramTargetName(xterm.inst))
-	LinkRule(ProgramTargetName(xterm.inst),$(CDEBUGFLAGS) $(CCOPTIONS) $(EXTRA_LDOPTIONS) $(LOCAL_LDFLAGS),$(OBJS1),$(LDOVERRIDE) XawClientLibs $(LDRESUME) $(LDLIBS) $(TERMCAPLIB) $(PTYLIB))
+	LinkRule(ProgramTargetName(xterm.inst),$(CDEBUGFLAGS) $(CCOPTIONS)
+	$(EXTRA_LDOPTIONS) $(LOCAL_LDFLAGS),$(OBJS1),$(LDOVERRIDE)
+	$(XRFLIBS) XawClientLibs $(LDRESUME) $(LDLIBS) $(TERMCAPLIB)
+	$(PTYLIB))
 	$(INSTALL) -c $(INSTPGMFLAGS) $(INSTUIDFLAGS) ProgramTargetName(xterm.inst) $(DESTDIR)$(BINDIR)/ProgramTargetName(xterm)
 	RemoveFile(ProgramTargetName(xterm.inst))
 #else

@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.49 2000/08/25 21:51:08 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.51 2000/09/26 15:57:26 tsi Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -2247,13 +2247,13 @@ _OwnSelection(
 		 * understood this!  So now it converts to Latin1 first.
 		 *   Robert Brady, 2000-09-05
 		 */
-		long length = termw->screen.selection_length;
-		Char *data = termw->screen.selection_data;
+		unsigned long length = termw->screen.selection_length;
+		Char *data = (Char *)termw->screen.selection_data;
 		if_OPT_WIDE_CHARS((&(termw->screen)), {
 		    data = UTF8toLatin1(data, length, &length);
 		})
 		XStoreBuffer( XtDisplay((Widget)termw),
-			      data, length, cutbuffer );
+			      (char *)data, length, cutbuffer );
 	    }
 	} else if (!replyToEmacs) {
 	    have_selection |=

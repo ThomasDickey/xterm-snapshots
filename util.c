@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c /main/33 1996/12/01 23:47:10 swick $
- *	$XFree86: xc/programs/xterm/util.c,v 3.55 2000/08/25 21:51:14 dawes Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.58 2000/10/05 18:06:36 keithp Exp $
  */
 
 /*
@@ -500,9 +500,14 @@ DeleteLine(TScreen *screen, int n)
 void
 InsertChar (TScreen *screen, int n)
 {
+	register int width;
+
 	if(screen->cursor_state)
 		HideCursor();
 	screen->do_wrap = 0;
+	if (n > (width = screen->max_col + 1 - screen->cur_col))
+	    n = width;
+
 	if(screen->cur_row - screen->topline <= screen->max_row) {
 	    if(!AddToRefresh(screen)) {
 		int col = screen->max_col + 1 - n;
@@ -1369,6 +1374,80 @@ recolor_cursor (
 #define SAVE_FONT_INFO(screen) xtermSaveFontInfo (screen, screen->fnt_norm)
 #endif
 
+#ifdef XRENDERFONT
+static Pixel
+getColor(Pixel pixel)
+{
+#define CACHE_SIZE  4
+    static struct {
+	Pixel	    pixel;
+	Pixel	    color;
+	int	    use;
+    } cache[CACHE_SIZE];
+    static int	    use;
+    int		    i;
+    int		    oldest, oldestuse;
+    XColor	    color;
+    
+    oldestuse = 0x7fffffff;
+    oldest = 0;
+    for (i = 0; i < CACHE_SIZE; i++)
+    {
+	if (cache[i].use)
+	{
+	    if (cache[i].pixel == pixel) 
+	    {
+		cache[i].use = ++use;
+		return cache[i].color;
+	    }
+	}
+	if (cache[i].use < oldestuse)
+	{
+	    oldestuse = cache[i].use;
+	    oldest = i;
+	}
+    }
+    i = oldest;
+    color.pixel = pixel;
+    XQueryColor (term->screen.display, term->core.colormap, &color);
+    cache[i].color = ((((Pixel) color.red   & 0xff00) << 8) |
+		      (((Pixel) color.green & 0xff00)     ) |
+		      (((Pixel) color.blue  & 0xff00) >> 8));
+    cache[i].pixel = pixel;
+    cache[i].use = ++use;
+    return cache[i].color;
+}
+
+static Picture
+getColorPicture (Pixel pixel)
+{
+    Pixel   color = getColor (pixel);
+    Display *dpy = term->screen.display;
+    TScreen *screen = &term->screen;
+    if (!screen->renderColor)
+    {
+	XRenderPictureAttributes    pa;
+	XRenderPictFormat	    pf, *pix_format;
+	
+	pf.depth = 24;
+	pf.type = PictTypeDirect;
+	pix_format = XRenderFindFormat (dpy, PictFormatType|PictFormatDepth, &pf, 0);
+	if (!pix_format)
+	    return 0;
+	screen->renderColorPix = XCreatePixmap (dpy, RootWindow (dpy, DefaultScreen (dpy)),
+					1, 1, 24);
+	pa.repeat = True;
+	screen->renderColor = XRenderCreatePicture (dpy, screen->renderColorPix, pix_format, CPRepeat, &pa);
+	screen->renderPixGC = XCreateGC (dpy, screen->renderColorPix, 0, 0);
+    }
+    if (!screen->renderColor)
+	return 0;
+    XSetForeground (dpy, screen->renderPixGC, color);
+    XFillRectangle (dpy, screen->renderColorPix, screen->renderPixGC, 0, 0, 1, 1);
+    return screen->renderColor;
+}
+#endif
+
 /*
  * Draws text with the specified combination of bold/underline
  */
@@ -1385,6 +1464,44 @@ drawXtermText(
 	int on_wide)
 {
 	int real_length = len;
+#ifdef XRENDERFONT
+    if (screen->renderFont)
+    {
+	Display		*dpy = screen->display;
+	XftFont		*font;
+	XGCValues	values;
+	
+	if (!screen->renderPicture)
+	{
+	    int			    scr;
+	    Drawable		    draw = VWindow(screen);
+	    XRenderPictFormat	    *format;
+	    Visual		    *visual;
+
+	    scr = DefaultScreen (dpy);
+	    visual = DefaultVisual (dpy, scr);
+	    format = XRenderFindVisualFormat (dpy, visual);
+
+	    screen->renderPicture = XRenderCreatePicture (dpy, draw, format, 0, 0);
+
+	    screen->renderGC = XCreateGC (dpy, draw, 0, 0);
+	}
+	if ((flags & (BOLD|BLINK)) && screen->renderFontBold)
+	    font = screen->renderFontBold;
+	else
+	    font = screen->renderFont;
+	XGetGCValues (dpy, gc, GCForeground|GCBackground, &values);
+	XSetForeground (dpy, screen->renderGC, values.background);
+	XFillRectangle (dpy, VWindow(screen), screen->renderGC, x, y, 
+			len * FontWidth(screen), FontHeight(screen));
+			
+	y += XftFontAscent (dpy, font);
+	XftDrawString (dpy, getColorPicture (values.foreground), font, screen->renderPicture,
+		       0, 0, x, y, (char *) text, len);
+
+	return x + len * FontWidth(screen);
+    }
+#endif
 #if OPT_WIDE_CHARS
 	/*
 	 * It's simpler to pass in a null pointer for text2 in places where

@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.108 2000/08/25 21:51:09 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.110 2000/10/05 18:06:35 keithp Exp $
  */
 
 /*
@@ -536,6 +536,10 @@ Ires(XtNmenuHeight, XtCMenuHeight, screen.fullVwin.menu_height, 25),
 	XtRString, defaultUTF8},
 Bres(XtNwideChars,	XtCWideChars,	screen.wide_chars,	FALSE),
 Sres(XtNwideFont,	XtCWideFont,	misc.f_w,		DEFWIDEFONT),
+#endif
+#ifdef XRENDERFONT
+Sres(XtNfaceName,	XtCFaceName,	misc.face_name,		DEFFACENAME),
+Ires(XtNfaceSize,	XtCFaceSize,	misc.face_size,		DEFFACESIZE),
 #endif
 };
 
@@ -4386,6 +4390,12 @@ static void VTInitialize (
 
    wnew->screen.bold_mode = request->screen.bold_mode;
    wnew->screen.underline = request->screen.underline;
+#ifdef XRENDERFONT
+   wnew->screen.renderFont = 0;
+   wnew->screen.renderFontBold = 0;
+   wnew->screen.renderColor = 0;
+   wnew->screen.renderPicture = 0;
+#endif
 
    wnew->cur_foreground = 0;
    wnew->cur_background = 0;

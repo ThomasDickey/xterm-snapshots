@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.61 2000/08/25 21:51:15 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.63 2000/10/05 18:06:36 keithp Exp $ */
 
 /************************************************************
 
@@ -278,6 +278,8 @@ extern int errno;
 #define XtNeightBitOutput	"eightBitOutput"
 #define XtNfontDoublesize	"fontDoublesize"
 #define XtNfontStyle		"fontStyle"
+#define XtNfaceName		"faceName"
+#define XtNfaceSize		"faceSize"
 #define XtNhighlightColor	"highlightColor"
 #define XtNhighlightSelection	"highlightSelection"
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
@@ -364,6 +366,8 @@ extern int errno;
 #define XtCEightBitControl	"EightBitControl"
 #define XtCEightBitInput	"EightBitInput"
 #define XtCEightBitOutput	"EightBitOutput"
+#define XtCFaceName		"FaceName"
+#define XtCFaceSize		"FaceSize"
 #define XtCFontDoublesize	"FontDoublesize"
 #define XtCFontStyle		"FontStyle"
 #define XtCHighlightSelection	"HighlightSelection"
