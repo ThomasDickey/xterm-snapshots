@@ -1,5 +1,6 @@
 /*
  *	$XConsortium: VTparse.h,v 1.6 92/09/15 15:28:31 gildea Exp $
+ *	$XFree86: xc/programs/xterm/VTparse.h,v 3.4 1996/09/22 06:10:33 dawes Exp $
  */
 
 /*
@@ -39,6 +40,8 @@ typedef char PARSE_T;
 extern Const PARSE_T csi_quo_table[];
 extern Const PARSE_T csi_table[];
 extern Const PARSE_T dec_table[];
+extern Const PARSE_T dec2_table[];
+extern Const PARSE_T dec3_table[];
 extern Const PARSE_T eigtable[];
 extern Const PARSE_T esc_sp_table[];
 extern Const PARSE_T esc_table[];
@@ -162,3 +165,7 @@ extern Const PARSE_T sos_table[];
 #define CASE_ANSI_LEVEL_2 99
 #define CASE_ANSI_LEVEL_3 100
 #define CASE_MC 101
+#define CASE_DEC2_STATE 102
+#define CASE_DA2 103
+#define CASE_DEC3_STATE 104
+#define CASE_DECRPTUI 105

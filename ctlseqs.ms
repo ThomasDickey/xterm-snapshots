@@ -1,7 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
 .\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.4 1996/08/13 11:24:24 dawes Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.5 1996/09/22 04:59:06 dawes Exp $
 .\"
 .\" Copyright 1991, 1994 X Consortium
 .\"
@@ -462,11 +462,11 @@ The string following the "q" is one of the following:
   \*m		\(-> SGR
 .br
 \fIxterm\fP responds with
-\*(Dc\*0\*$\*r\*(Pt\*s\*(ST
+\*(Dc\*1\*$\*r\*(Pt\*s\*(ST
 for valid requests, replacing the \*(Pt with the corresponding \*(Cs
 string,
 or
-\*(Dc\*1\*$\*r\*(Pt\*s\*(ST
+\*(Dc\*0\*$\*r\*(Pt\*s\*(ST
 for invalid requests.
 .
 .sp

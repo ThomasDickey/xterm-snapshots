@@ -1,7 +1,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c /main/239 1995/12/10 17:21:49 gildea $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/main.c,v 3.42 1996/08/20 12:33:50 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.44 1996/10/03 08:50:34 dawes Exp $ */
 
 /*
  * 				 W A R N I N G
@@ -186,6 +186,10 @@ static Bool IsPts = False;
 #define USE_POSIX_TERMIOS
 #endif
 
+#ifdef SCO325
+#define _SVID3
+#endif
+
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
@@ -218,9 +222,6 @@ static Bool IsPts = False;
 #else /* USE_TERMIOS */
 #ifdef SYSV
 #include <sys/termio.h>
-#ifdef SCO /* broken TIOCSWINSZ ioctl so disable it */
-#undef TIOCSWINSZ
-#endif
 #endif /* SYSV */
 #endif /* USE_TERMIOS else */
 #endif /* USE_POSIX_TERMIOS */
@@ -238,7 +239,7 @@ static Bool IsPts = False;
 #ifdef USE_USG_PTYS			/* AT&T SYSV has no ptyio.h */
 #include <sys/stream.h>			/* get typedef used in ptem.h */
 #include <sys/stropts.h>		/* for I_PUSH */
-#ifndef SVR4
+#if !defined(SVR4) || defined(SCO325)
 #include <sys/ptem.h>			/* get struct winsize */
 #endif
 #include <poll.h>			/* for POLLIN */
@@ -270,10 +271,11 @@ static Bool IsPts = False;
 #include <sgtty.h>
 #include <sys/resource.h>
 #endif
-#ifdef sco
+#ifdef SCO
 #define USE_SYSV_UTMP
 #define USE_POSIX_WAIT
-#endif /* sco */
+#define HAS_UTMP_UT_HOST
+#endif /* SCO */
 #ifdef hpux
 #define HAS_BSD_GROUPS
 #define USE_SYSV_UTMP
@@ -448,7 +450,7 @@ int	Ptyfd;
 #include <unistd.h>
 #else
 extern long lseek();
-#if defined(USG) || defined(SCO324)
+#if defined(USG)
 extern unsigned sleep();
 #else
 extern void sleep();
@@ -472,7 +474,7 @@ extern char *ttyname();
 #include <locale.h>
 #endif
 
-#ifdef SYSV
+#if defined(SYSV) && !defined(SCO)
 extern char *ptsname PROTO((int));
 #endif
 
@@ -641,12 +643,6 @@ static int parse_tty_modes PROTO((char *s, struct _xttymodes *modelist));
 extern struct utmp *getutent();
 extern struct utmp *getutid();
 extern struct utmp *getutline();
-#ifndef SCO324
-extern void pututline();
-extern void setutent();
-extern void endutent();
-extern void utmpname();
-#endif /* SCO324 */
 #endif /* X_NOT_STDC_ENV || AIXV3 */
 
 #ifdef X_NOT_STDC_ENV		/* could remove paragraph unconditionally? */
@@ -1195,13 +1191,13 @@ char **argv;
 #ifdef ECHOCTL
 	d_tio.c_lflag |= ECHOCTL|IEXTEN;
 #endif
+#ifndef USE_POSIX_TERMIOS
 #ifdef NTTYDISC
         d_tio.c_line = NTTYDISC;
 #else
-#ifndef USE_POSIX_TERMIOS
 	d_tio.c_line = 0;
-#endif /* USE_POSIX_TERMIOS */
 #endif	
+#endif /* USE_POSIX_TERMIOS */
 #ifdef __sgi
         d_tio.c_cflag &= ~(HUPCL|PARENB);
         d_tio.c_iflag |= BRKINT|ISTRIP|IGNPAR;
@@ -1823,7 +1819,7 @@ pty_search(pty)
 {
     static int devindex, letter = 0;
 
-#if defined(CRAY) || defined(sco)
+#if defined(CRAY)
     for (; devindex < MAXPTTYS; devindex++) {
 	sprintf (ttydev, TTYFORMAT, devindex);
 	sprintf (ptydev, PTYFORMAT, devindex);
@@ -1836,7 +1832,7 @@ pty_search(pty)
 	    return 0;
 	}
     }
-#else /* CRAY || sco */
+#else /* CRAY */
     while (PTYCHAR1[letter]) {
 	ttydev [strlen(ttydev) - 2]  = ptydev [strlen(ptydev) - 2] =
 	    PTYCHAR1 [letter];
@@ -1864,7 +1860,7 @@ pty_search(pty)
 	devindex = 0;
 	(void) letter++;
     }
-#endif /* CRAY || sco else */
+#endif /* CRAY else */
     /*
      * We were unable to allocate a pty master!  Return an error
      * condition and let our caller terminate cleanly.

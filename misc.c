@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: misc.c /main/106 1996/02/02 14:27:57 kaleb $
- *	$XFree86: xc/programs/xterm/misc.c,v 3.14 1996/08/20 12:33:53 dawes Exp $
+ *	$XFree86: xc/programs/xterm/misc.c,v 3.15 1996/09/22 05:16:10 dawes Exp $
  */
 
 /*
@@ -881,7 +881,7 @@ int dcslen;
 				okay = False;
 
 			unparseputc1(DCS, screen->respond);
-			unparseputc(okay ? '0' : '1', screen->respond);
+			unparseputc(okay ? '1' : '0', screen->respond);
 			unparseputc('$', screen->respond);
 			unparseputc('r', screen->respond);
 			if (okay)

@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/191 1996/01/23 11:34:26 kaleb $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.35 1996/09/01 04:50:55 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.36 1996/09/22 05:16:06 dawes Exp $
  */
 
 /*
@@ -238,6 +238,7 @@ static void setColorUL PROTO((void));
 #define XtNcolorBDMode "colorBDMode"
 #define XtNdynamicColors "dynamicColors"
 #define XtNunderLine "underLine"
+#define XtNdecTerminalID "decTerminalID"
 
 #define XtCAlwaysHighlight "AlwaysHighlight"
 #define XtCAppcursorDefault "AppcursorDefault"
@@ -286,6 +287,7 @@ static void setColorUL PROTO((void));
 #define XtCColorMode "ColorMode"
 #define XtCDynamicColors "DynamicColors"
 #define XtCUnderLine "UnderLine"
+#define XtCDecTerminalID "DecTerminalID"
 
 #define	doinput()		(bcnt-- > 0 ? *bptr++ : in_put())
 
@@ -319,6 +321,7 @@ static	int	defaultScrollLines = SCROLLLINES;
 static  int	defaultNMarginBell = N_MARGINBELL;
 static  int	defaultMultiClickTime = MULTICLICKTIME;
 static  int	defaultBellSuppressTime = BELLSUPPRESSMSEC;
+static	int	default_DECID = MIN_DECID;
 static	char *	_Font_Selected_ = "yes";  /* string is arbitrary */
 
 #if OPT_BLINK_CURS
@@ -684,6 +687,9 @@ static XtResource resources[] = {
 {XtNunderLine, XtCUnderLine, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.underline),
 	XtRBoolean, (XtPointer) &defaultTRUE},
+{XtNdecTerminalID, XtCDecTerminalID, XtRInt, sizeof(int),
+	XtOffsetOf(XtermWidgetRec, screen.terminal_id),
+	XtRInt, (XtPointer) &default_DECID},
 };
 
 static void VTClassInit PROTO((void));
@@ -1050,6 +1056,16 @@ static void VTparse()
 			parsestate = dec_table;
 			break;
 
+		 case CASE_DEC2_STATE:
+			/* enter dec2 mode */
+			parsestate = dec2_table;
+			break;
+
+		 case CASE_DEC3_STATE:
+			/* enter dec3 mode */
+			parsestate = dec3_table;
+			break;
+
 		 case CASE_ICH:
 			/* ICH */
 			if((row = param[0]) < 1)
@@ -1191,26 +1207,75 @@ static void VTparse()
 		 case CASE_DA1:
 			/* DA1 */
 			if (param[0] <= 0) {	/* less than means DEFAULT */
+			    count = 0;
+			    reply.a_type   = CSI;
+			    reply.a_pintro = '?';
+
+			    /* The first param corresponds to the highest
+			     * operating level (i.e., service level) of the
+			     * emulation.  A DEC terminal can be setup to
+			     * respond with a different DA response, but
+			     * there's no control sequence that modifies this.
+			     * We set it via a resource.
+			     */
+			    if (screen->terminal_id < 200) {
+				switch (screen->terminal_id) {
+				case 102:
+				    reply.a_param[count++] = 6; /* VT102 */
+				    break;
+				case 101:
+				    reply.a_param[count++] = 1; /* VT101 */
+				    reply.a_param[count++] = 0; /* no options */
+				    break;
+				default: /* VT100 */
+				    reply.a_param[count++] = 1; /* VT100 */
+				    reply.a_param[count++] = 2; /* AVO */
+				    break;
+				}
+			    } else { 	
+				reply.a_param[count++] = 60 + screen->terminal_id/100;
+				reply.a_param[count++] = 1; /* 132-columns */
+				/* reply.a_param[count++] = 2; NO printer */
+				reply.a_param[count++] = 6; /* selective-erase */
+				reply.a_param[count++] = 8; /* user-defined-keys */
+				reply.a_param[count++] = 15; /* technical characters */
+			    }
+			    reply.a_nparam = count;
+			    reply.a_inters = 0;
+			    reply.a_final  = 'c';
+			    unparseseq(&reply, screen->respond);
+			}
+			parsestate = groundtable;
+			break;
+
+		 case CASE_DA2:
+			/* DA2 */
+			if ((screen->terminal_id >= 200)
+			 && (param[0] <= 0)) {	/* less than means DEFAULT */
 				count = 0;
 				reply.a_type   = CSI;
-				reply.a_pintro = '?';
-				if (screen->ansi_level >= 1) {
-					reply.a_param[count++] = screen->ansi_level + 60;
-					reply.a_param[count++] = 1; /* 132-columns */
-					reply.a_param[count++] = 2; /* printer */
-					if (screen->ansi_level > 1) {
-						reply.a_param[count++] = 6; /* selective-erase */
-						reply.a_param[count++] = 8; /* user-defined-keys */
-					}
-					reply.a_param[count++] = 15; /* technical characters */
-				} else {
-					reply.a_param[count++] = 1; /* STP: VT100 */
-					reply.a_param[count++] = 2; /* AVO: 132-columns */
-				}
+				reply.a_pintro = '>';
+
+				reply.a_param[count++] = 1; /* VT220 */
+				reply.a_param[count++] = 0; /* Version */
+				reply.a_param[count++] = 0; /* options (none) */
 				reply.a_nparam = count;
 				reply.a_inters = 0;
 				reply.a_final  = 'c';
 				unparseseq(&reply, screen->respond);
+			}
+			parsestate = groundtable;
+			break;
+
+		 case CASE_DECRPTUI:
+			/* DECRPTUI */
+			if ((screen->terminal_id >= 400)
+			 && (param[0] <= 0)) {	/* less than means DEFAULT */
+				unparseputc1(DCS, screen->respond);
+				unparseputc('!',  screen->respond);
+				unparseputc('|',  screen->respond);
+				unparseputc('0',  screen->respond);
+				unparseputc1(ST,  screen->respond);
 			}
 			parsestate = groundtable;
 			break;
@@ -1372,8 +1437,10 @@ static void VTparse()
 				/* keyboard status */
 				reply.a_param[count++] = 27;
 				reply.a_param[count++] = 1; /* North American */
-				reply.a_param[count++] = 0; /* ready */
-				reply.a_param[count++] = 0; /* LK201 */
+				if (screen->terminal_id >= 400) {
+					reply.a_param[count++] = 0; /* ready */
+					reply.a_param[count++] = 0; /* LK201 */
+				}
 				break;
 			}
 
@@ -1419,9 +1486,10 @@ static void VTparse()
 
 		 case CASE_DECREQTPARM:
 			/* DECREQTPARM */
-			if ((row = param[0]) == DEFAULT)
+			if (screen->terminal_id < 200) { /* VT102 */
+			    if ((row = param[0]) == DEFAULT)
 				row = 0;
-			if (row == 0 || row == 1) {
+			    if (row == 0 || row == 1) {
 				reply.a_type = CSI;
 				reply.a_pintro = 0;
 				reply.a_nparam = 7;
@@ -1435,6 +1503,7 @@ static void VTparse()
 				reply.a_inters = 0;
 				reply.a_final  = 'x';
 				unparseseq(&reply, screen->respond);
+			    }
 			}
 			parsestate = groundtable;
 			break;
@@ -1482,6 +1551,12 @@ static void VTparse()
 		 case CASE_DECRC:
 			/* DECRC */
 			CursorRestore(term, &screen->sc);
+			if_OPT_ISO_COLORS(screen,{
+				if (term->flags & BOLD)
+					setColorBD();
+				if (term->flags & UNDERLINE)
+					setColorUL();
+			})
 			parsestate = groundtable;
 			break;
 
@@ -3159,6 +3234,12 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->screen.scrolllines = request->screen.scrolllines;
    new->screen.scrollttyoutput = request->screen.scrollttyoutput;
    new->screen.scrollkey = request->screen.scrollkey;
+   new->screen.terminal_id = request->screen.terminal_id;
+   if (new->screen.terminal_id < MIN_DECID)
+       new->screen.terminal_id = MIN_DECID;
+   if (new->screen.terminal_id > MAX_DECID)
+       new->screen.terminal_id = MAX_DECID;
+   new->screen.ansi_level = (new->screen.terminal_id / 100);
    new->screen.visualbell = request->screen.visualbell;
    new->screen.TekEmu = request->screen.TekEmu;
    new->misc.re_verse = request->misc.re_verse;
