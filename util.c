@@ -1560,7 +1560,7 @@ drawXtermText(
 				x, y, x + len * FontWidth(screen) - 1, y);
 		}
 #if OPT_BOX_CHARS
-#define DrawX(col) x + (col * FontWidth(screen))
+#define DrawX(col) x + (col * (screen->fnt_wide))
 #define DrawSegment(first,last) (void)drawXtermText(screen, flags, gc, DrawX(first), y, chrset, PAIRED_CHARS(text+first, text2+first), last-first)
 	} else {	/* fill in missing box-characters */
 		XFontStruct *font = (flags & BOLD)

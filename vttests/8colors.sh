@@ -4,7 +4,26 @@
 # -- Thomas Dickey (1999/3/27)
 # Show a simple 8-color test pattern
 
-trap 'echo -n "[0m"; exit' 0 1 2 5 15
+ESC=""
+CMD='echo'
+OPT='-n'
+SUF=''
+TMP=/tmp/xterm$$
+for verb in print printf ; do
+    rm -f $TMP
+    eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
+    if test -f $TMP ; then
+	if test ! -s $TMP ; then
+	    CMD="$verb"
+	    OPT=
+	    SUF='\c'
+	    break
+	fi
+    fi
+done
+rm -f $TMP
+
+trap '$CMD $OPT "[0m"; exit' 0 1 2 5 15
 echo "[0m"
 while true
 do
@@ -28,8 +47,8 @@ do
 	    6) fcolor="cyan    ";;
 	    7) fcolor="white   ";;
 	    esac
-	    echo -n "[0;${AT}m$attr"
-	    echo -n "[3${FG}m$fcolor"
+	    $CMD $OPT "[0;${AT}m$attr"
+	    $CMD $OPT "[3${FG}m$fcolor"
 	    for BG in 1 2 3 4 5 6 7
 	    do
 		case $BG in
@@ -42,7 +61,7 @@ do
 		6) bcolor="cyan    ";;
 		7) bcolor="white   ";;
 		esac
-		echo -n "[4${BG}m$bcolor"
+		$CMD $OPT "[4${BG}m$bcolor"
 	    done
 	    echo "[0m"
 	done

@@ -94,15 +94,15 @@ resize : $(OBJS2)
 install : $(INSTALL_DIRS) xterm resize
 	$(INSTALL_PROGRAM) -s -m @XTERM_MODE@ xterm  $(bindir)/xterm
 	$(INSTALL_PROGRAM) -s -m  755 resize $(bindir)/resize
-	$(INSTALL_DATA) xterm.man    $(mandir)/xterm.$(manext)
-	$(INSTALL_DATA) resize.man   $(mandir)/resize.$(manext)
-	$(INSTALL_DATA) XTerm.ad     $(appsdir)/XTerm
-	$(INSTALL_DATA) XTerm-col.ad $(appsdir)/XTerm-color
+	$(INSTALL_DATA) $(srcdir)/xterm.man    $(mandir)/xterm.$(manext)
+	$(INSTALL_DATA) $(srcdir)/resize.man   $(mandir)/resize.$(manext)
+	$(INSTALL_DATA) $(srcdir)/XTerm.ad     $(appsdir)/XTerm
+	$(INSTALL_DATA) $(srcdir)/XTerm-col.ad $(appsdir)/XTerm-color
 	@echo 'Completed installation of executables and documentation.'
 	@echo 'Use "make install-ti" to install terminfo description.'
 
 install-ti:
-	TERMINFO=@private_TERMINFO@ tic terminfo
+	TERMINFO=@private_TERMINFO@ tic $(srcdir)/terminfo
 
 installdirs: $(INSTALL_DIRS)
 

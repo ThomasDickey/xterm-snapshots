@@ -132,7 +132,7 @@
 #ifdef __hpux
 #define TTYDEV		"/dev/pty/ttyxx"
 #else	/* !__hpux */
-#ifdef __osf__
+#if defined(__osf__) || (defined(linux) && __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1)
 #define TTYDEV		"/dev/ttydirs/xxx/xxxxxxxxxxxxxx"
 #else
 #define	TTYDEV		"/dev/ttyxx"

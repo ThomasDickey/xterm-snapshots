@@ -34,7 +34,8 @@ read original
 stty $old
 
 # We actually get this terminated by an <esc>backslash, but the backslash
-# is lost.  We'll also lose doublequote characters when restoring the title.
+# is lost.  We may lose doublequote characters when restoring the title,
+# depending on the shell.
 original=`echo "$original" |sed -e 's/^...//' -e 's/.$//'`
 original=${ESC}]2\;"${original}"${SUF}
 

@@ -2242,6 +2242,8 @@ resize(1), X(1), pty(4), tty(4)
 .br
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).
+.sp
+http://www.clark.net/pub/dickey/xterm/xterm.html
 .SH BUGS
 .PP
 Large pastes do not work on some systems.  This is not a bug in

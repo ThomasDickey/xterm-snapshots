@@ -7,7 +7,26 @@
 # The high (8-15) combinations for foreground or background are marked with
 # a '+' sign.
 
-trap 'echo -n "[0m"; exit' 0 1 2 5 15
+ESC=""
+CMD='echo'
+OPT='-n'
+SUF=''
+TMP=/tmp/xterm$$
+for verb in print printf ; do
+    rm -f $TMP
+    eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
+    if test -f $TMP ; then
+	if test ! -s $TMP ; then
+	    CMD="$verb"
+	    OPT=
+	    SUF='\c'
+	    break
+	fi
+    fi
+done
+rm -f $TMP
+
+trap '$CMD "[0m"; exit' 0 1 2 5 15
 echo "[0m"
 while true
 do
@@ -38,8 +57,8 @@ do
 		else
 		    color="+$fcolor"
 		fi
-		echo -n "[0;${AT}m$attr"
-		echo -n "[${HI}${FG}m$color"
+		$CMD $OPT "[0;${AT}m$attr"
+		$CMD $OPT "[${HI}${FG}m$color"
 		for BG in 1 2 3 4 5 6 7
 		do
 		    case $BG in
@@ -52,8 +71,8 @@ do
 		    6) bcolor="CYN ";;
 		    7) bcolor="WHT ";;
 		    esac
-		    echo -n "[4${BG}m$bcolor"
-		    echo -n "[10${BG}m+$bcolor"
+		    $CMD $OPT "[4${BG}m$bcolor"
+		    $CMD $OPT "[10${BG}m+$bcolor"
 		done
 		echo "[0m"
 	    done
