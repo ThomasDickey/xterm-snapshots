@@ -4796,7 +4796,8 @@ set_cursor_gcs (screen)
     Pixel cc = screen->cursorcolor;
     Pixel fg = screen->foreground;
     Pixel bg = term->core.background_pixel;
-    GC new_cursorGC = NULL, new_reversecursorGC = NULL;
+    GC new_cursorGC = NULL;
+    GC new_reversecursorGC = NULL;
     GC new_cursoroutlineGC = NULL;
 
     /*
@@ -4831,7 +4832,7 @@ set_cursor_gcs (screen)
      * not be set before the widget's realized, so it's tested separately).
      */
     if(screen->colorMode) {
-	if (TextWindow(screen) != 0) {
+	if (TextWindow(screen) != 0 && (cc != bg)) {
 	    /* we might have a colored foreground/background later */
 	    xgcv.font = screen->fnt_norm->fid;
 	    mask = (GCForeground | GCBackground | GCFont);
@@ -4872,10 +4873,6 @@ set_cursor_gcs (screen)
 	    xgcv.background = bg;
 	    new_cursoroutlineGC = XtGetGC ((Widget) term, mask, &xgcv);
 	}
-    } else {
-	new_cursorGC = (GC) 0;
-	new_reversecursorGC = (GC) 0;
-	new_cursoroutlineGC = (GC) 0;
     }
 
 #if OPT_ISO_COLORS
