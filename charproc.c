@@ -144,7 +144,6 @@ static void bitset PROTO((unsigned *p, unsigned mask));
 static void dpmodes PROTO((XtermWidget termw, void (*func)(unsigned *p, unsigned mask)));
 static void report_win_label PROTO((TScreen *screen, int code, XTextProperty *text, Status ok));
 static void restoremodes PROTO((XtermWidget termw));
-static void resetCharsets PROTO((TScreen *screen));
 static void savemodes PROTO((XtermWidget termw));
 static void set_vt_box PROTO((TScreen *screen));
 static void unparseputn PROTO((unsigned int n, int fd));
@@ -963,7 +962,7 @@ reset_SGR_Colors()
 }
 #endif /* OPT_ISO_COLORS */
 
-static void resetCharsets(screen)
+void resetCharsets(screen)
 	TScreen *screen;
 {
 	screen->gsets[0] = 'B';			/* ASCII_G		*/
@@ -3336,10 +3335,12 @@ SwitchBufs(screen)
 
 	if(screen->cursor_state)
 		HideCursor();
+
 	rows = screen->max_row + 1;
 	SwitchBufPtrs(screen);
 	TrackText(0, 0, 0, 0);	/* remove any highlighting */
-	if((top = -screen->topline) <= screen->max_row) {
+
+	if((top = -screen->topline) < rows) {
 		if(screen->scroll_amt)
 			FlushScroll(screen);
 		if(top == 0)
@@ -3351,8 +3352,7 @@ SwitchBufs(screen)
 			    (int) OriginX(screen),
 			    (int) top * FontHeight(screen) + screen->border,
 			    (unsigned) Width(screen),
-			    (unsigned) (screen->max_row - top + 1)
-				* FontHeight(screen),
+			    (unsigned) (rows - top) * FontHeight(screen),
 			    FALSE);
 	}
 	ScrnRefresh(screen, 0, 0, rows, screen->max_col + 1, False);

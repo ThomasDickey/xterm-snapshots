@@ -143,6 +143,25 @@ Input (keyboard, screen, event, eightbit)
 		reply.a_type = ESC; \
 		})
 
+#if OPT_SUNPC_KBD
+	/* make an DEC editing-keypad from a Sun or PC editing-keypad */
+	if (sunKeyboard) {
+		switch (keysym) {
+		case XK_Delete:
+#ifdef DXK_Remove
+			keysym = DXK_Remove;
+#endif
+			break;
+		case XK_Home:
+			keysym = XK_Find;
+			break;
+		case XK_End:
+			keysym = XK_Select;
+			break;
+		}
+	}
+#endif
+
 	if (IsPFKey(keysym)) {
 		reply.a_type = SS3;
 		reply.a_final = keysym-XK_KP_F1+'P';

@@ -236,15 +236,25 @@ register SavedCursor *sc;
 {
 	register TScreen *screen = &tw->screen;
 
+	sc->saved = True;
 	sc->row = screen->cur_row;
 	sc->col = screen->cur_col;
 	sc->flags = tw->flags;
 	sc->curgl = screen->curgl;
 	sc->curgr = screen->curgr;
+#if OPT_ISO_COLORS
+	sc->cur_foreground = tw->cur_foreground;
+	sc->cur_background = tw->cur_background;
+	sc->sgr_foreground = tw->sgr_foreground;
+#endif
 	memmove( sc->gsets, screen->gsets, sizeof(screen->gsets));
 }
 
-#define DECSC_FLAGS (BOLD|BLINK|INVERSE|UNDERLINE|ORIGIN|WRAPAROUND|PROTECTED)
+/*
+ * We save/restore all visible attributes, plus wrapping, origin mode, and the
+ * selective erase attribute.
+ */
+#define DECSC_FLAGS (ATTRIBUTES|ORIGIN|WRAPAROUND|PROTECTED)
 
 /*
  * Restore Cursor and Attributes
@@ -256,13 +266,30 @@ register SavedCursor *sc;
 {
 	register TScreen *screen = &tw->screen;
 
-	memmove( screen->gsets, sc->gsets, sizeof(screen->gsets));
-	screen->curgl = sc->curgl;
-	screen->curgr = sc->curgr;
+	/* Restore the character sets, unless we never did a save-cursor op.
+	 * In that case, we'll reset the character sets.
+	 */
+	if (sc->saved) {
+		memmove( screen->gsets, sc->gsets, sizeof(screen->gsets));
+		screen->curgl = sc->curgl;
+		screen->curgr = sc->curgr;
+	} else {
+		resetCharsets(screen);
+	}
+
 	tw->flags &= ~DECSC_FLAGS;
 	tw->flags |= sc->flags & DECSC_FLAGS;
-	CursorSet (screen, (tw->flags & ORIGIN) ? sc->row - screen->top_marg
-			   : sc->row, sc->col, tw->flags);
+	CursorSet (screen,
+		(tw->flags & ORIGIN)
+			? sc->row - screen->top_marg
+			: sc->row,
+		sc->col, tw->flags);
+
+#if OPT_ISO_COLORS
+	tw->sgr_foreground = sc->sgr_foreground;
+	SGR_Foreground(tw->flags & FG_COLOR ? sc->cur_foreground : -1);
+	SGR_Background(tw->flags & BG_COLOR ? sc->cur_background : -1);
+#endif
 }
 
 /*

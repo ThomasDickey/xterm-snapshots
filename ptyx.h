@@ -210,15 +210,6 @@ typedef struct {
 	char	a_nastyf;		/* Error flag			*/
 } ANSI;
 
-typedef struct {
-	int		row;
-	int		col;
-	unsigned	flags;	/* Vt100 saves graphics rendition. Ugh! */
-	char		curgl;
-	char		curgr;
-	char		gsets[4];
-} SavedCursor;
-
 #define TEK_FONT_LARGE 0
 #define TEK_FONT_2 1
 #define TEK_FONT_3 2
@@ -537,6 +528,21 @@ typedef enum {
 
 #define DoSM(code,value) screen->save_modes[code] = value
 #define DoRM(code,value) value = screen->save_modes[code]
+
+typedef struct {
+	Boolean		saved;
+	int		row;
+	int		col;
+	unsigned	flags;		/* VTxxx saves graphics rendition */
+	char		curgl;
+	char		curgr;
+	char		gsets[4];
+#if OPT_ISO_COLORS
+	int		cur_foreground; /* current foreground color	*/
+	int		cur_background; /* current background color	*/
+	int		sgr_foreground; /* current SGR foreground color */
+#endif
+} SavedCursor;
 
 typedef struct {
 /* These parameters apply to both windows */
@@ -901,8 +907,8 @@ typedef struct _TekWidgetRec {
 #define BOLD		0x04
 #define BLINK		0x08
 /* global flags (also character attributes) */
-#define BG_COLOR	0x10  /* true if background set */
-#define FG_COLOR	0x20  /* true if foreground set */
+#define BG_COLOR	0x10	/* true if background set */
+#define FG_COLOR	0x20	/* true if foreground set */
 
 /* character flags (internal attributes) */
 #define PROTECTED	0x40	/* a character is drawn that cannot be erased */

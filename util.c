@@ -1400,7 +1400,7 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 			x, y, len * FontWidth(screen), FontHeight(screen));
 
 		while (len-- > 0) {
-			width = XTextWidth(fs, text, 1);
+			width = XTextWidth(fs, (char *)text, 1);
 			adj = (FontWidth(screen) - width) / 2;
 			(void)drawXtermText(screen, flags, gc, x + adj, y, chrset, text++, 1);
 			x += FontWidth(screen);
