@@ -31,14 +31,28 @@
 #include <xterm.h>
 #include <data.h>
 
+/*
+ * Clear the selection if the cursor moves "before" the current position. 
+ * Moving "after" is ok.
+ *
+ * That sounds fine - if the cursor really had anything direct relationship to
+ * the selection.  For instance, if the cursor moved due to command line
+ * editing, it would be nice to deselect.  However, what that means in practice
+ * is that a fullscreen program which scrolls back a line will (because it must
+ * temporarily reposition the cursor) clear the selection.
+ *
+ * However, it has an indirect relationship to the selection - we want to
+ * prevent the application from changing the screen contents under the
+ * highlighted region.
+ */
 static void _CheckSelection (register TScreen *screen)
 {
-    if (screen->cur_row > screen->endHRow ||
+    if ((screen->cur_row < screen->endHRow) ||
 	(screen->cur_row == screen->endHRow &&
-	 screen->cur_col >= screen->endHCol))
-	 ;
-    else
+	 screen->cur_col < screen->endHCol))
+    {
 	DisownSelection(term);
+    }
 }
 
 

@@ -316,20 +316,24 @@ xtermSpecialFont(unsigned atts, unsigned chrset)
 /*
  * Case-independent comparison for font-names, including wildcards.
  */
-static int
-same_font_name(char *name1, char *name2)
+static Boolean
+same_font_name(char *pattern, char *match)
 {
-	while (*name1 && *name2) {
-		if (*name1 == '*') {
-			return same_font_name(name1+1, name2+1)
-			   ||  same_font_name(name1, name2+1);
-		} else if (*name2 == '*') {
-			return same_font_name(name2, name1);
-		} else if (char2lower(*name1++) != char2lower(*name2++)) {
-			return 0;
+	while (*pattern && *match) {
+		if (*pattern == '*') {
+			if (same_font_name(pattern+1, match)) {
+				return True;
+			} else if (same_font_name(pattern, match+1)) {
+				return True;
+			} else {
+				return False;
+			}
+		} else {
+			if (char2lower(*pattern++) != char2lower(*match++))
+				return False;
 		}
 	}
-	return (*name1 == *name2);	/* both should be NUL */
+	return (*pattern == *match);	/* both should be NUL */
 }
 
 /*

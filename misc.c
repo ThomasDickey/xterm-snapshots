@@ -1010,6 +1010,10 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 		Changetitle(buf);
 		break;
 
+	case 3: /* change X property */
+		ChangeXprop(buf);
+		break;
+
 	case 10:	case 11:	case 12:
 	case 13:	case 14:	case 15:
 	case 16:	case 17:
@@ -1316,6 +1320,30 @@ void
 Changetitle(register char *name)
 {
     ChangeGroup( XtNtitle, (XtArgVal)name );
+}
+
+void
+ChangeXprop(register char *buf)
+{
+    Display *dpy = XtDisplay(toplevel);
+    Window w = XtWindow(toplevel);
+    XTextProperty text_prop;
+    Atom aprop;
+    char *pchEndPropName = strchr(buf,'=');
+
+    if (pchEndPropName)
+	*pchEndPropName = '\0';
+    aprop = XInternAtom(dpy, buf, False);
+    if (pchEndPropName == NULL) {
+    /* no "=value" given, so delete the property */
+	XDeleteProperty(dpy, w, aprop);
+    } else {
+	text_prop.value = pchEndPropName+1;
+	text_prop.encoding = XA_STRING;
+	text_prop.format = 8;
+	text_prop.nitems = strlen(text_prop.value);
+	XSetTextProperty(dpy,w,&text_prop,aprop);
+    }
 }
 
 /***====================================================================***/

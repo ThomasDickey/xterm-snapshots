@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.46 1999/06/20 08:41:47 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.47 1999/06/27 14:08:44 dawes Exp $
 .\"
 .\"
 .\" Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
@@ -1087,6 +1087,15 @@ between the beginning of the selection and the current position.
 If ``true'', \fIxterm\fP highlights only the positions that contain text that
 can be selected.
 The default is ``false.''
+.PP
+Depending on the way your applications write to the screen, there may
+be trailing blanks on a line.
+\fIXterm\fP stores data as it is shown on the screen.
+Erasing the display changes the internal state of each cell
+so it is not considered a blank for the purpose of selection.
+Blanks written since the last erase are selectable.
+If you do not wish to have trailing blanks in a selection,
+use the \fBtrimSelection\fP resource.
 .TP 8
 .B "hpLowerleftBugCompat (\fPclass\fB HpLowerleftBugCompat)"
 Specifies whether to work around a bug in HP's \fIxdb\fP,
