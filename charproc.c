@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.84 1999/06/13 13:47:53 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.85 1999/06/20 08:41:43 dawes Exp $
  */
 
 /*
@@ -253,6 +253,7 @@ static void StopBlinking (TScreen *screen);
 #define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
 #define XtNutf8			"utf8"
+#define XtNutf8controls		"utf8controls"
 #define XtNvisualBell		"visualBell"
 #define XtNwideChars		"wideChars"
 #define XtNxmcAttributes	"xmcAttributes"
@@ -323,6 +324,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
+#define XtCUtf8controls		"Utf8controls"
 #define XtCVisualBell		"VisualBell"
 #define XtCWideChars		"WideChars"
 #define XtCXmcAttributes	"XmcAttributes"
@@ -896,6 +898,9 @@ static XtResource resources[] = {
 {XtNutf8, XtCUtf8, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.utf8_mode),
 	XtRString, "0"},
+{XtNutf8controls, XtCUtf8controls, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.utf8_controls),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNwideChars, XtCWideChars, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.wide_chars),
 	XtRBoolean, (XtPointer) &defaultFALSE},
@@ -1235,6 +1240,17 @@ static void VTparse(void)
 		    continue;
 		}
 
+#if OPT_WIDE_CHARS
+		/*
+		 * We cannot display codes above 255, but let's try to
+		 * accommodate the application a little by not aborting the
+		 * string.
+		 */
+		if ((c & 0xffff) > 255) {
+		    nextstate = CASE_PRINT;
+		    c = '?';
+		}
+#endif
 		string_area = new_string;
 		string_size = new_length;
 		string_area[string_used++] = c;
@@ -4113,6 +4129,7 @@ static void VTInitialize (
    if (request->screen.utf8_mode) {
       wnew->screen.wide_chars = True;
       wnew->screen.utf8_mode = 2; /* disable further change */
+      wnew->screen.utf8_controls = request->screen.utf8_controls;
       TRACE(("initialized UTF-8 mode\n"));
    }
    if (wnew->screen.wide_chars != False)

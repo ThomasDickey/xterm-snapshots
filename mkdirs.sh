@@ -5,12 +5,11 @@
 # Last modified: 1994-03-25
 # Public domain
 #
-# Header: /usr2/foxharp/src/pgf/vile/RCS/mkdirs.sh,v 1.2 1994/07/11 22:56:20 pgf Exp
-#
 
 errstatus=0
+umask 022
 
-for file in ${1+"$@"} ; do 
+for file in ${1+"$@"} ; do
    set fnord `echo ":$file" | sed -ne 's/^:\//#/;s/^://;s/\// /g;s/^#/\//;p'`
    shift
 

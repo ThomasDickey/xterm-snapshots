@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.36 1999/06/13 13:47:52 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.37 1999/06/20 08:41:42 dawes Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -459,9 +459,9 @@ filterUTF8(Char *t, Char *s, int len)
 	    codepoint = (p[0] & 0x1F) << 6 | (p[1] & 0x3F);
 	    size = 2;
 	} else if ((*p & 0x70) == 0x60 && p < s + len - 2) {
-	    codepoint = (s[0] & 0x0F) << 12
-		      | (s[1] & 0x3F) << 6
-		      | (s[2] & 0x3F);
+	    codepoint = (p[0] & 0x0F) << 12
+		      | (p[1] & 0x3F) << 6
+		      | (p[2] & 0x3F);
 	    size = 3;
 	} else if ((*p & 0x78) == 0x70 && p < s + len - 3) {
 	    p += 4;		/* eliminate surrogates */
@@ -1102,9 +1102,9 @@ LastTextCol(register int row)
 	register int i;
 	register Char *ch;
 
-	if ((row += screen->topline) >= 0) {
+	if ((row += screen->topline) + screen->savedlines >= 0) {
 		for ( i = screen->max_col,
-			ch = SCRN_BUF_ATTRS(screen, (row)) + i ;
+			ch = SCRN_BUF_ATTRS(screen, row) + i ;
 		      i >= 0 && !(*ch & CHARDRAWN) ;
 		      ch--, i--)
 		    ;
@@ -1114,7 +1114,7 @@ LastTextCol(register int row)
 		}
 #endif
 	} else {
-		i = 0;
+		i = -1;
 	}
 	return(i);
 }

@@ -1942,7 +1942,7 @@ get_pty (int *pty)
 	  */
 	if (pty_search(pty) == 0)
 	    return 0;
-#elif defined(USE_USG_PTYS)
+#elif defined(USE_USG_PTYS) || defined(__CYGWIN32__)
 #ifdef __GLIBC__ /* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
 	/* GNU libc 2 allows us to abstract away from having to know the
 	   master pty device name. */

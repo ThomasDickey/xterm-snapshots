@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.31 1999/06/12 15:37:17 dawes Exp $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.32 1999/06/20 08:41:44 dawes Exp $
  */
 
 /*
@@ -341,7 +341,7 @@ Input (
 	reply.a_nparam = 0;
 	reply.a_inters = 0;
 
-	TRACE(("Input keysym %#04lx, %d:'%.*s'%s%s%s%s%s%s%s%s\n",
+	TRACE(("Input keysym %#04lx, %d:'%.*s'%s%s%s%s%s%s%s%s %s\n",
 		keysym,
 		nbytes,
 		nbytes > 0 ? nbytes : 1,
@@ -353,7 +353,8 @@ Input (
 		ModifierName(event->state & Mod2Mask),
 		ModifierName(event->state & Mod3Mask),
 		ModifierName(event->state & Mod4Mask),
-		ModifierName(event->state & Mod5Mask)))
+		ModifierName(event->state & Mod5Mask),
+		eightbit ? "8bit" : "7bit"))
 
 #if OPT_SUNPC_KBD
 	/*
