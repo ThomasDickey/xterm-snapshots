@@ -267,6 +267,7 @@ static Bool domenu (w, event, params, param_count)
 #endif
 	    update_8bit_control();
 	    update_decbkm();
+	    update_sun_kbd();
 	    if (screen->terminal_id < 200) {
 		set_sensitivity (screen->mainMenu,
 				 mainMenuEntries[mainMenu_8bit_ctrl].widget,

@@ -2328,9 +2328,9 @@ in_put()
 		FlushLog(screen);
 #endif
 #ifndef AMOEBA
-	    bcnt = read(screen->respond, (char *)(bptr = buffer), BUF_SIZE);
+	    bcnt = read(screen->respond, (char *)(bptr = VTbuffer), BUF_SIZE);
 #else
-	    bptr = buffer;
+	    bptr = VTbuffer;
 	    if ((bcnt = cb_gets(screen->tty_outq, bptr, bcnt, BUF_SIZE)) == 0) {
 		errno = EIO;
 		bcnt = -1;
@@ -2477,7 +2477,6 @@ dotext(screen, charset, buf, ptr)
     Char	*buf;		/* start of characters to process */
     Char	*ptr;		/* end */
 {
-	register Char	*s;
 	register int	len;
 	register int	n;
 	register int	next_col;
@@ -2486,6 +2485,7 @@ dotext(screen, charset, buf, ptr)
 		return;
 
 	if_OPT_XMC_GLITCH(screen,{
+		register Char	*s;
 		if (charset != '?')
 			for (s=buf; s<ptr; ++s)
 				if (*s == XMC_GLITCH)
@@ -3463,7 +3463,7 @@ VTRun()
 	StartBlinking(screen);
 
 	bcnt = 0;
-	bptr = buffer;
+	bptr = VTbuffer;
 #if OPT_TEK4014
 	while(Tpushb > Tpushback) {
 		*bptr++ = *--Tpushb;
@@ -3472,7 +3472,7 @@ VTRun()
 	bcnt += (i = Tbcnt);
 	for( ; i > 0 ; i--)
 		*bptr++ = *Tbptr++;
-	bptr = buffer;
+	bptr = VTbuffer;
 #endif
 	if(!setjmp(VTend))
 		VTparse();

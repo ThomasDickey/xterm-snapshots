@@ -77,8 +77,8 @@ int Ttoggled = 0;
 #endif
 
 int bcnt = 0;
-Char buffer[BUF_SIZE];
-Char *bptr = buffer;
+Char VTbuffer[BUF_SIZE];
+Char *bptr = VTbuffer;
 jmp_buf VTend;
 XPoint VTbox[NBOX] = {
 	{0, 0},

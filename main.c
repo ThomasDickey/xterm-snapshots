@@ -490,7 +490,9 @@ static void resize PROTO((TScreen *s, char *oldtc, char *newtc));
 
 static Bool added_utmp_entry = False;
 
+#ifdef USE_SYSV_UTMP
 static Bool xterm_exiting = False;
+#endif
 
 /*
 ** Ordinarily it should be okay to omit the assignment in the following
@@ -3895,7 +3897,7 @@ Exit(n)
 	    (void) setutent();
 	    utptr = getutid(&utmp);
 	    /* write it out only if it exists, and the pid's match */
-	    if (utptr && (utptr->ut_pid == term->screen.pid)) {
+	    if (utptr && (utptr->ut_pid == screen->pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
 #if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2)
 		    utmp.ut_session = getsid(0);
@@ -3954,7 +3956,7 @@ Exit(n)
 #endif	/* USE_SYSV_UTMP */
 #endif	/* UTMP */
 #ifndef AMOEBA
-        close(term->screen.respond); /* close explicitly to avoid race with slave side */
+        close(screen->respond); /* close explicitly to avoid race with slave side */
 #endif
 #ifdef ALLOWLOGGING
 	if(screen->logging)
