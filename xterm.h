@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.20 1997/12/28 21:28:45 hohndel Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.21 1998/01/11 03:48:43 dawes Exp $ */
 /*
  * Common/useful definitions for XTERM application
  */
