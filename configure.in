@@ -54,6 +54,7 @@ AC_CHECK_FUNCS( \
 	bcopy \
 	memmove \
 	strerror \
+	waitpid \
 	)
 CF_FUNC_MEMMOVE
 CF_FUNC_TGETENT
@@ -68,6 +69,7 @@ CF_ANSI_CC_CHECK
 ###	checks for system services and user specified options
 
 AC_CHECK_HEADERS(unistd.h)
+AC_HEADER_SYS_WAIT
 
 CF_X_TOOLKIT
 

@@ -71,7 +71,6 @@ extern Boolean sunKeyboard;
 #endif
 extern Char buffer[];
 extern int am_slave;
-extern int done_setuid;
 extern int bcnt;
 #ifdef DEBUG
 extern int debug;

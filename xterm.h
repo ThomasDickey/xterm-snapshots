@@ -1,6 +1,9 @@
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.22 1998/01/24 01:53:43 hohndel Exp $ */
 /*
- * Common/useful definitions for XTERM application
+ * Common/useful definitions for XTERM application.
+ *
+ * This is also where we put the fallback definitions if we do not build using
+ * the configure script.
  */
 #ifndef	included_xterm_h
 #define	included_xterm_h
@@ -19,7 +22,29 @@
 #define DFT_TERMTYPE "xterm"
 #endif
 
+#ifndef X_NOT_POSIX
+#define HAVE_WAITPID 1
+#define HAVE_STDLIB_H 1
+#define HAVE_SYS_WAIT_H 1
 #endif
+
+#endif
+
+/***====================================================================***/
+
+#ifdef HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+
+/*
+ * FIXME:  Toggling logging from xterm hangs under Linux 2.0.29 with libc5 if
+ * we use 'waitpid()', while 'wait()' seems to work properly.
+ */
+#ifdef linux
+#undef HAVE_WAITPID
+#endif
+
+/***====================================================================***/
 
 #include "proto.h"
 

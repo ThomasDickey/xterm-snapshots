@@ -1067,10 +1067,6 @@ char **envp;
 	XSetErrorHandler(xerror);
 	XSetIOErrorHandler(xioerror);
 
-	(void) setuid (screen->uid); /* we're done with privileges... */
-	(void) setgid (screen->gid);
-	done_setuid = 1;
-
 #ifdef ALLOWLOGGING
 	if (term->misc.log_on) {
 		StartLog(screen);

@@ -36,8 +36,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef DFT_DECID	/* AC_ARG_WITH(default-terminal-id) */
 #undef DFT_TERMTYPE	/* AC_ARG_WITH(default-term-type) */
 #undef HAVE_STRERROR	/* AC_CHECK_FUNCS(strerror) */
+#undef HAVE_SYS_WAIT_H	/* AC_HEADER_SYS_WAIT */
 #undef HAVE_TERMCAP_H	/* AC_CHECK_HEADERS(termcap.h) */
 #undef HAVE_UNISTD_H	/* AC_CHECK_HEADERS(unistd.h) */
+#undef HAVE_WAITPID	/* AC_CHECK_FUNCS(waitpid) */
 #undef HAVE_XKBSTDBELL	/* AC_CHECK_FUNCS(XkbStdBell) */
 #undef HAVE_X11_DECKEYSYM_H /* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #undef HAVE_X11_XPOLL_H	/* AC_CHECK_HEADERS(X11/Xpoll.h) */
