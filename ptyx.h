@@ -2,10 +2,10 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.90 2001/11/14 01:52:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.91 2002/01/05 22:05:03 dickey Exp $ */
 
 /*
- * Copyright 1999-2000 by Thomas E. Dickey
+ * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1319,7 +1319,7 @@ typedef struct
     xtermKeyboardType type;
     unsigned	flags;
 #if OPT_INITIAL_ERASE
-    Boolean	reset_DECBKM;	/* reset should set DECBKM */
+    int	reset_DECBKM;		/* reset should set DECBKM */
 #endif
 } TKeyboard;
 

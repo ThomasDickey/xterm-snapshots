@@ -1,12 +1,12 @@
 /*
- * $Xorg: charproc.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
+ * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.125 2001/11/14 01:52:46 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.127 2002/01/05 22:05:02 dickey Exp $ */
 
 /*
 
-Copyright 1999-2001 by Thomas E. Dickey
+Copyright 1999, 2000, 2001, 2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -35,14 +35,13 @@ sale, use or other dealings in this Software without prior written
 authorization.
 
 
-Copyright (c) 1988  X Consortium
+Copyright 1988  The Open Group
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
 
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
@@ -50,13 +49,13 @@ all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
 AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Except as contained in this notice, the name of the X Consortium shall not be
+Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from the X Consortium.
+in this Software without prior written authorization from The Open Group.
 
 */
 /*
@@ -3293,6 +3292,10 @@ dpmodes(
 		case 67:	/* DECBKM */
 			/* back-arrow mapped to backspace or delete(D)*/
 			(*func)(&termw->keyboard.flags, MODE_DECBKM);
+			TRACE(("DECSET DECBKM %s\n", 
+				(termw->keyboard.flags & MODE_DECBKM)
+					? "on"
+					: "off"));
 			update_decbkm();
 			break;
 		case SET_VT200_MOUSE:	/* xterm bogus sequence		*/
@@ -4246,6 +4249,27 @@ static void VTClassInit (void)
 		   (XtConvertArgList) NULL, (Cardinal) 0);
 }
 
+#if OPT_TRACE
+#define init_Bres(name) \
+	TRACE(("init " #name " = %s\n", \
+		(wnew->name = request->name) != FALSE \
+			? "on" : "off"))
+#define init_Cres(name) \
+	TRACE(("init " #name " = %#lx\n", \
+		wnew->name = request->name))
+#define init_Ires(name) \
+	TRACE(("init " #name " = %d\n", \
+		wnew->name = request->name))
+#define init_Sres(name) \
+	TRACE(("init " #name " = %s\n", \
+		(wnew->name = request->name) != NULL \
+			? wnew->name : "<null>"))
+#else
+#define init_Bres(name) wnew->name = request->name
+#define init_Cres(name) wnew->name = request->name
+#define init_Ires(name) wnew->name = request->name
+#define init_Sres(name) wnew->name = request->name
+#endif
 
 /* ARGSUSED */
 static void VTInitialize (
@@ -4307,46 +4331,46 @@ static void VTInitialize (
    wnew->screen.mouse_row = -1;
    wnew->screen.mouse_col = -1;
 
-   wnew->screen.force_box_chars= request->screen.force_box_chars;
-   wnew->screen.free_bold_box  = request->screen.free_bold_box;
+   init_Bres(screen.force_box_chars);
+   init_Bres(screen.free_bold_box);
 
-   wnew->screen.c132 = request->screen.c132;
-   wnew->screen.curses = request->screen.curses;
-   wnew->screen.hp_ll_bc = request->screen.hp_ll_bc;
+   init_Bres(screen.c132);
+   init_Bres(screen.curses);
+   init_Bres(screen.hp_ll_bc);
 #if OPT_XMC_GLITCH
-   wnew->screen.xmc_glitch = request->screen.xmc_glitch;
-   wnew->screen.xmc_attributes = request->screen.xmc_attributes;
-   wnew->screen.xmc_inline = request->screen.xmc_inline;
-   wnew->screen.move_sgr_ok = request->screen.move_sgr_ok;
+   init_Ires(screen.xmc_glitch);
+   init_Ires(screen.xmc_attributes);
+   init_Bres(screen.xmc_inline);
+   init_Bres(screen.move_sgr_ok);
 #endif
-   wnew->screen.foreground = request->screen.foreground;
-   wnew->screen.cursorcolor = request->screen.cursorcolor;
+   init_Cres(screen.foreground);
+   init_Cres(screen.cursorcolor);
 #if OPT_BLINK_CURS
-   wnew->screen.cursor_blink = request->screen.cursor_blink;
-   wnew->screen.cursor_on = request->screen.cursor_on;
-   wnew->screen.cursor_off = request->screen.cursor_off;
+   init_Bres(screen.cursor_blink);
+   init_Ires(screen.cursor_on);
+   init_Ires(screen.cursor_off);
 #endif
-   wnew->screen.border = request->screen.border;
-   wnew->screen.jumpscroll = request->screen.jumpscroll;
-   wnew->screen.old_fkeys = request->screen.old_fkeys;
-   wnew->screen.delete_is_del = request->screen.delete_is_del;
+   init_Ires(screen.border);
+   init_Bres(screen.jumpscroll);
+   init_Bres(screen.old_fkeys);
+   init_Bres(screen.delete_is_del);
    wnew->keyboard.type = wnew->screen.old_fkeys
 		? keyboardIsLegacy
 		: keyboardIsDefault;
 #ifdef ALLOWLOGGING
-   wnew->screen.logfile = request->screen.logfile;
+   init_Sres(screen.logfile);
 #endif
-   wnew->screen.marginbell = request->screen.marginbell;
-   wnew->screen.mousecolor = request->screen.mousecolor;
-   wnew->screen.mousecolorback = request->screen.mousecolorback;
-   wnew->screen.multiscroll = request->screen.multiscroll;
-   wnew->screen.nmarginbell = request->screen.nmarginbell;
-   wnew->screen.savelines = request->screen.savelines;
-   wnew->screen.scrolllines = request->screen.scrolllines;
-   wnew->screen.scrollttyoutput = request->screen.scrollttyoutput;
-   wnew->screen.scrollkey = request->screen.scrollkey;
+   init_Bres(screen.marginbell);
+   init_Cres(screen.mousecolor);
+   init_Cres(screen.mousecolorback);
+   init_Bres(screen.multiscroll);
+   init_Ires(screen.nmarginbell);
+   init_Ires(screen.savelines);
+   init_Ires(screen.scrolllines);
+   init_Bres(screen.scrollttyoutput);
+   init_Bres(screen.scrollkey);
 
-   wnew->screen.term_id = request->screen.term_id;
+   init_Sres(screen.term_id);
    for (s = request->screen.term_id; *s; s++) {
 	if (!isalpha(CharOf(*s)))
 	    break;
@@ -4361,12 +4385,12 @@ static void VTInitialize (
 	wnew->screen.terminal_id));
 
    wnew->screen.ansi_level = (wnew->screen.terminal_id / 100);
-   wnew->screen.visualbell = request->screen.visualbell;
-   wnew->screen.poponbell = request->screen.poponbell;
-   wnew->misc.limit_resize = request->misc.limit_resize;
+   init_Bres(screen.visualbell);
+   init_Bres(screen.poponbell);
+   init_Ires(misc.limit_resize);
 #if OPT_NUM_LOCK
-   wnew->misc.real_NumLock = request->misc.real_NumLock;
-   wnew->misc.alwaysUseMods = request->misc.alwaysUseMods;
+   init_Bres(misc.real_NumLock);
+   init_Bres(misc.alwaysUseMods);
    wnew->misc.num_lock = 0;
    wnew->misc.alt_left = 0;
    wnew->misc.alt_right = 0;
@@ -4375,63 +4399,60 @@ static void VTInitialize (
    wnew->misc.meta_right = 0;
 #endif
 #if OPT_SHIFT_FONTS
-   wnew->misc.shift_fonts = request->misc.shift_fonts;
+   init_Bres(misc.shift_fonts);
 #endif
 #if OPT_SUNPC_KBD
-   wnew->misc.ctrl_fkeys = request->misc.ctrl_fkeys;
+   init_Ires(misc.ctrl_fkeys);
 #endif
 #if OPT_TEK4014
-   wnew->misc.tekInhibit = request->misc.tekInhibit;
-   wnew->misc.tekSmall = request->misc.tekSmall;
-   wnew->screen.TekEmu = request->screen.TekEmu;
+   init_Bres(misc.tekInhibit);
+   init_Bres(misc.tekSmall);
+   init_Bres(screen.TekEmu);
 #endif
 #if OPT_TCAP_QUERY
    wnew->screen.tc_query = -1;
 #endif
-   wnew->misc.re_verse0 =
-   wnew->misc.re_verse = request->misc.re_verse;
-   wnew->screen.multiClickTime = request->screen.multiClickTime;
-   wnew->screen.bellSuppressTime = request->screen.bellSuppressTime;
-   wnew->screen.charClass = request->screen.charClass;
-   wnew->screen.cutNewline = request->screen.cutNewline;
-   wnew->screen.cutToBeginningOfLine = request->screen.cutToBeginningOfLine;
-   wnew->screen.highlight_selection = request->screen.highlight_selection;
-   wnew->screen.trim_selection = request->screen.trim_selection;
-   wnew->screen.i18nSelections = request->screen.i18nSelections;
-   wnew->screen.brokenSelections = request->screen.brokenSelections;
-   wnew->screen.always_highlight = request->screen.always_highlight;
+   wnew->misc.re_verse0 = request->misc.re_verse;
+   init_Bres(misc.re_verse);
+   init_Ires(screen.multiClickTime);
+   init_Ires(screen.bellSuppressTime);
+   init_Sres(screen.charClass);
+   init_Bres(screen.cutNewline);
+   init_Bres(screen.cutToBeginningOfLine);
+   init_Bres(screen.highlight_selection);
+   init_Bres(screen.trim_selection);
+   init_Bres(screen.i18nSelections);
+   init_Bres(screen.brokenSelections);
+   init_Bres(screen.always_highlight);
    wnew->screen.pointer_cursor = request->screen.pointer_cursor;
 
-   wnew->screen.answer_back = request->screen.answer_back;
+   init_Sres(screen.answer_back);
 
-   wnew->screen.printer_command = request->screen.printer_command;
-   wnew->screen.printer_autoclose = request->screen.printer_autoclose;
-   wnew->screen.printer_extent = request->screen.printer_extent;
-   wnew->screen.printer_formfeed = request->screen.printer_formfeed;
-   wnew->screen.printer_controlmode = request->screen.printer_controlmode;
+   init_Sres(screen.printer_command);
+   init_Bres(screen.printer_autoclose);
+   init_Bres(screen.printer_extent);
+   init_Bres(screen.printer_formfeed);
+   init_Ires(screen.printer_controlmode);
 #if OPT_PRINT_COLORS
-   wnew->screen.print_attributes = request->screen.print_attributes;
+   init_Ires(screen.print_attributes);
 #endif
 
-   TRACE(("keyboard_dialect:%s\n", request->screen.keyboard_dialect));
-   wnew->screen.keyboard_dialect = request->screen.keyboard_dialect;
+   init_Sres(screen.keyboard_dialect);
 
-   wnew->screen.input_eight_bits = request->screen.input_eight_bits;
-   wnew->screen.output_eight_bits = request->screen.output_eight_bits;
-   wnew->screen.control_eight_bits = request->screen.control_eight_bits;
-   wnew->screen.backarrow_key = request->screen.backarrow_key;
-   TRACE(("resource backarrowKey: %s\n", 
-	   wnew->screen.backarrow_key ? "true" : "false"));
-   wnew->screen.meta_sends_esc = request->screen.meta_sends_esc;
-   wnew->screen.allowSendEvents = request->screen.allowSendEvents;
+   init_Bres(screen.input_eight_bits);
+   init_Bres(screen.output_eight_bits);
+   init_Bres(screen.control_eight_bits);
+   init_Bres(screen.backarrow_key);
+   init_Bres(screen.meta_sends_esc);
+   init_Bres(screen.allowSendEvents);
 #ifndef NO_ACTIVE_ICON
    wnew->screen.fnt_icon = request->screen.fnt_icon;
 #endif /* NO_ACTIVE_ICON */
-   wnew->misc.titeInhibit = request->misc.titeInhibit;
-   wnew->misc.tiXtraScroll = request->misc.tiXtraScroll;
-   wnew->misc.dynamicColors = request->misc.dynamicColors;
+   init_Bres(misc.titeInhibit);
+   init_Bres(misc.tiXtraScroll);
+   init_Bres(misc.dynamicColors);
    for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
-       wnew->screen.menu_font_names[i] = request->screen.menu_font_names[i];
+       init_Sres(screen.menu_font_names[i]);
    }
    /* set default in realize proc */
    wnew->screen.menu_font_names[fontMenu_fontdefault] = NULL;
@@ -4440,8 +4461,8 @@ static void VTInitialize (
    wnew->screen.menu_font_number = fontMenu_fontdefault;
 
 #if OPT_DEC_CHRSET
-   wnew->screen.font_doublesize = request->screen.font_doublesize;
-   wnew->screen.cache_doublesize = request->screen.cache_doublesize;
+   init_Bres(screen.font_doublesize);
+   init_Ires(screen.cache_doublesize);
    if (wnew->screen.cache_doublesize > NUM_CHRSET)
        wnew->screen.cache_doublesize = NUM_CHRSET;
    if (wnew->screen.cache_doublesize == 0)
@@ -4451,15 +4472,17 @@ static void VTInitialize (
        wnew->screen.cache_doublesize));
 #endif
 
+#if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS
    wnew->num_ptrs = (OFF_ATTRS+1); /* OFF_FLAGS, OFF_CHARS, OFF_ATTRS */
+#endif
 #if OPT_ISO_COLORS
-   wnew->screen.boldColors    = request->screen.boldColors;
-   wnew->screen.colorAttrMode = request->screen.colorAttrMode;
-   wnew->screen.colorBDMode   = request->screen.colorBDMode;
-   wnew->screen.colorBLMode   = request->screen.colorBLMode;
-   wnew->screen.colorMode     = request->screen.colorMode;
-   wnew->screen.colorULMode   = request->screen.colorULMode;
-   wnew->screen.colorRVMode   = request->screen.colorRVMode;
+   init_Bres(screen.boldColors);
+   init_Bres(screen.colorAttrMode);
+   init_Bres(screen.colorBDMode);
+   init_Bres(screen.colorBLMode);
+   init_Bres(screen.colorMode);
+   init_Bres(screen.colorULMode);
+   init_Bres(screen.colorRVMode);
 
    for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
        wnew->screen.Acolors[i] = request->screen.Acolors[i];
@@ -4498,7 +4521,7 @@ static void VTInitialize (
 #endif /* OPT_ISO_COLORS */
 
 #if OPT_HIGHLIGHT_COLOR
-   wnew->screen.highlightcolor = request->screen.highlightcolor;
+   init_Cres(screen.highlightcolor);
 #endif
 
 #if OPT_DEC_CHRSET
@@ -4506,7 +4529,7 @@ static void VTInitialize (
 #endif
 
 #if OPT_WIDE_CHARS
-   wnew->screen.wide_chars = request->screen.wide_chars;
+   init_Bres(screen.wide_chars);
    if (request->screen.utf8_mode) {
       wnew->screen.wide_chars = True;
       wnew->screen.utf8_mode = 2; /* disable further change */
@@ -4516,8 +4539,8 @@ static void VTInitialize (
       wnew->num_ptrs = (OFF_COM2H+1);
 #endif
 
-   wnew->screen.bold_mode = request->screen.bold_mode;
-   wnew->screen.underline = request->screen.underline;
+   init_Bres(screen.bold_mode);
+   init_Bres(screen.underline);
 #ifdef XRENDERFONT
    wnew->screen.renderFont = 0;
    wnew->screen.renderFontBold = 0;
@@ -4550,7 +4573,7 @@ static void VTInitialize (
 #if HANDLE_STRUCT_NOTIFY
 #if OPT_TOOLBAR
    wnew->screen.fullVwin.menu_bar = request->screen.fullVwin.menu_bar;
-   wnew->screen.fullVwin.menu_height = request->screen.fullVwin.menu_height;
+   init_Ires(screen.fullVwin.menu_height);
 #else
    /* Flag icon name with "***"  on window output when iconified.
     * Put in a handler that will tell us when we get Map/Unmap events.
@@ -4588,6 +4611,8 @@ static void VTInitialize (
 
     if (wnew->screen.savelines < 0)
 	wnew->screen.savelines = 0;
+
+    init_Bres(screen.awaitInput);
 
     wnew->flags = 0;
     if (!wnew->screen.jumpscroll)
@@ -5531,11 +5556,14 @@ VTReset(Bool full, Bool saved)
 		TabReset (term->tabs);
 		term->keyboard.flags = MODE_SRM;
 #if OPT_INITIAL_ERASE
-		if (term->keyboard.reset_DECBKM)
+		if (term->keyboard.reset_DECBKM == 1)
 			term->keyboard.flags |= MODE_DECBKM;
+		else if (term->keyboard.reset_DECBKM == 2)
 #endif
 		if (term->screen.backarrow_key)
 			term->keyboard.flags |= MODE_DECBKM;
+		TRACE(("full reset DECBKM %s\n", 
+			(term->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
 		update_appcursor();
 		update_appkeypad();
 		update_decbkm();

@@ -1,6 +1,6 @@
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
- * Copyright 1999-2000 by Thomas E. Dickey
+ * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.63 2001/09/09 01:07:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.65 2002/01/06 01:34:23 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -976,7 +976,7 @@ static void _GetSelection(
       default:		   cutbuffer = -1;
     }
     TRACE(("Cutbuffer: %d, target: %lu\n", cutbuffer,
-	   (unsigned long)targets[0]));
+	   targets ? (unsigned long)targets[0] : 0));
     if (cutbuffer >= 0) {
 	int inbytes;
 	unsigned long nbytes;
@@ -997,28 +997,30 @@ static void _GetSelection(
 	    targets = _SelectionTargets(w);
 	}
 
-	target = targets[0];
+	if (targets != 0) {
+	    target = targets[0];
 
-	if (targets[1] == None) { /* last target in list */
-	    params++;
-	    num_params--;
-	    targets = _SelectionTargets(w);
-	} else {
-	    targets = &(targets[1]);
+	    if (targets[1] == None) { /* last target in list */
+		params++;
+		num_params--;
+		targets = _SelectionTargets(w);
+	    } else {
+		targets = &(targets[1]);
+	    }
+
+	    if (num_params) {
+		list = XtNew(struct _SelectionList);
+		list->params = params;
+		list->count = num_params;
+		list->targets = targets;
+		list->time = ev_time;
+	    } else list = NULL;
+
+	    XtGetSelectionValue(w, selection,
+				target,
+				SelectionReceived,
+				(XtPointer)list, ev_time);
 	}
-
-	if (num_params) {
-	    list = XtNew(struct _SelectionList);
-	    list->params = params;
-	    list->count = num_params;
-	    list->targets = targets;
-	    list->time = ev_time;
-	} else list = NULL;
-
-	XtGetSelectionValue(w, selection,
-			    target,
-			    SelectionReceived,
-			    (XtPointer)list, ev_time);
     }
 }
 
@@ -1733,7 +1735,7 @@ static int charClass[256] = {
 /*  E`   E'   E^   E:   I`   I'   I^   I: */
     48,  48,  48,  48,  48,  48,  48,  48,
 /*  D-   N~   O`   O'   O^   O~   O:    X */
-    48,  48,  48,  48,  48,  48,  48, 216,
+    48,  48,  48,  48,  48,  48,  48, 215,
 /*  O/   U`   U'   U^   U:   Y'    P    B */
     48,  48,  48,  48,  48,  48,  48,  48,
 /*  a`   a'   a^   a~   a:   ao   ae   c, */
@@ -1741,7 +1743,7 @@ static int charClass[256] = {
 /*  e`   e'   e^   e:    i`  i'   i^   i: */
     48,  48,  48,  48,  48,  48,  48,  48,
 /*   d   n~   o`   o'   o^   o~   o:   -: */
-    48,  48,  48,  48,  48,  48,  48,  248,
+    48,  48,  48,  48,  48,  48,  48, 247,
 /*  o/   u`   u'   u^   u:   y'    P   y: */
     48,  48,  48,  48,  48,  48,  48,  48};
 

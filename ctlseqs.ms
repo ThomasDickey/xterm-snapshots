@@ -5,10 +5,10 @@
 .\"
 .\"
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.43 2001/03/29 22:48:02 dickey Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.44 2002/01/05 21:55:11 dickey Exp $
 .\"
 .\"
-.\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey
+.\" Copyright 1996,1997,1998,1999,2000,2001,2002 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -281,7 +281,7 @@ X Consortium (1994)
 .AU
 Thomas Dickey
 .AI
-XFree86 Project (1996-1999)
+XFree86 Project (1996-2002)
 .AU
 .
 .am BT                  \" add page numbers after first page
@@ -965,6 +965,9 @@ Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM)
 Restore DEC Private Mode Values.  The value of \*(Ps previously saved is
 restored.  \*(Ps values are the same as for DECSET.
 .
+.IP \\*(Cs\\*(cs
+Save cursor (ANSI.SYS)
+.
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*(cs
 Save DEC Private Mode Values.  \*(Ps values are the same as for DECSET.
 .
@@ -997,6 +1000,9 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps = \*2\*1 \(-> Report \fIxterm\fP window's title as
 \*(Os\*s\*l\*s\fItitle\fP\*s\*(ST
   \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP)
+.
+.IP \\*(Cs\\*u
+Save cursor (ANSI.SYS)
 .
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*(qu\\*w
 Enable Filter Rectangle (DECEFR)

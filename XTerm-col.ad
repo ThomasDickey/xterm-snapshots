@@ -1,16 +1,19 @@
-! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.0 1995/09/17 06:33:11 dawes Exp $
+! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.1 2002/01/05 22:05:02 dickey Exp $
 
 #include "XTerm"
 
 *VT100*colorMode: on
 *VT100*dynamicColors: on
 
-! Uncomment this use color for underline attribute
+! Uncomment this to use color for underline attribute
 !*VT100*colorULMode: on
 !*VT100*underLine: off
 
 ! Uncomment this to use color for the bold attribute
 !*VT100*colorBDMode: on
+
+! Uncomment this to use the bold/underline colors in preference to other colors
+!*VT100*colorAttrMode: on
 
 *VT100*color0: black
 *VT100*color1: red3
@@ -30,4 +33,3 @@
 *VT100*color15: white
 *VT100*colorUL: yellow
 *VT100*colorBD: white
-

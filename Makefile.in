@@ -1,4 +1,4 @@
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.38 2001/10/08 01:08:10 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.39 2002/01/05 22:05:02 dickey Exp $ ##
 
 SHELL		= /bin/sh
 
@@ -129,7 +129,7 @@ install-bin \
 install-full :: xterm$x resize$x
 	$(SHELL) $(srcdir)/sinstall.sh "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
 	$(INSTALL_PROGRAM) -s -m  755 resize$x $(BINDIR)/$(binary_resize)
-	$(INSTALL_PROGRAM) -m  755 uxterm $(BINDIR)/$(binary_uxterm)
+	$(INSTALL_PROGRAM) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm)
 
 install \
 install-man \
