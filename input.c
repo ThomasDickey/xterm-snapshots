@@ -188,7 +188,7 @@ Input (
 		VT52_CURSOR_KEYS
 		unparseseq(&reply, pty);
 		key = TRUE;
-#if OPT_SUNPC_KBD
+#if 0	/* OPT_SUNPC_KBD should suppress - but only for vt220 compatibility */
 	} else if (sunKeyboard
 	 	&& screen->old_fkeys == False
 	 	&& screen->ansi_level <= 1
