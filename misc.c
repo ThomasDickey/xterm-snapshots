@@ -1,10 +1,10 @@
-/* $XTermId: misc.c,v 1.214 2004/04/28 00:41:00 tom Exp $ */
+/* $XTermId: misc.c,v 1.218 2004/05/13 00:41:21 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.85 2004/04/28 00:41:00 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.86 2004/05/13 00:41:21 dickey Exp $ */
 
 /*
  *
@@ -159,6 +159,15 @@ xevents(void)
      */
     while ((input_mask = XtAppPending(app_con)) & XtIMTimer)
 	XtAppProcessEvent(app_con, XtIMTimer);
+#if OPT_SESSION_MGT
+    /*
+     * Session management events are alternative input events. Deal with
+     * them in the same way.
+     */
+    while ((input_mask = XtAppPending(app_con)) & XtIMAlternateInput)
+	XtAppProcessEvent(app_con, XtIMAlternateInput);
+#endif
+
     /*
      * If there's no XEvents, don't wait around...
      */
@@ -207,10 +216,9 @@ xevents(void)
 }
 
 Cursor
-make_colored_cursor(
-		       unsigned cursorindex,	/* index into font */
-		       unsigned long fg,	/* pixel value */
-		       unsigned long bg)	/* pixel value */
+make_colored_cursor(unsigned cursorindex,	/* index into font */
+		    unsigned long fg,	/* pixel value */
+		    unsigned long bg)	/* pixel value */
 {
     register TScreen *screen = &term->screen;
     Cursor c;
@@ -226,11 +234,10 @@ make_colored_cursor(
 
 /* ARGSUSED */
 void
-HandleKeyPressed(
-		    Widget w GCC_UNUSED,
-		    XEvent * event,
-		    String * params GCC_UNUSED,
-		    Cardinal * nparams GCC_UNUSED)
+HandleKeyPressed(Widget w GCC_UNUSED,
+		 XEvent * event,
+		 String * params GCC_UNUSED,
+		 Cardinal * nparams GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -242,11 +249,10 @@ HandleKeyPressed(
 
 /* ARGSUSED */
 void
-HandleEightBitKeyPressed(
-			    Widget w GCC_UNUSED,
-			    XEvent * event,
-			    String * params GCC_UNUSED,
-			    Cardinal * nparams GCC_UNUSED)
+HandleEightBitKeyPressed(Widget w GCC_UNUSED,
+			 XEvent * event,
+			 String * params GCC_UNUSED,
+			 Cardinal * nparams GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -258,11 +264,10 @@ HandleEightBitKeyPressed(
 
 /* ARGSUSED */
 void
-HandleStringEvent(
-		     Widget w GCC_UNUSED,
-		     XEvent * event GCC_UNUSED,
-		     String * params,
-		     Cardinal * nparams)
+HandleStringEvent(Widget w GCC_UNUSED,
+		  XEvent * event GCC_UNUSED,
+		  String * params,
+		  Cardinal * nparams)
 {
     register TScreen *screen = &term->screen;
 
@@ -310,11 +315,10 @@ HandleStringEvent(
  */
 /* ARGSUSED */
 void
-HandleInterpret(
-		   Widget w GCC_UNUSED,
-		   XEvent * event GCC_UNUSED,
-		   String * params,
-		   Cardinal * param_count)
+HandleInterpret(Widget w GCC_UNUSED,
+		XEvent * event GCC_UNUSED,
+		String * params,
+		Cardinal * param_count)
 {
     if (*param_count == 1) {
 	char *value = params[0];
@@ -361,11 +365,10 @@ DoSpecialEnterNotify(register XEnterWindowEvent * ev)
 
 /*ARGSUSED*/
 void
-HandleEnterWindow(
-		     Widget w GCC_UNUSED,
-		     XtPointer eventdata GCC_UNUSED,
-		     XEvent * event GCC_UNUSED,
-		     Boolean * cont GCC_UNUSED)
+HandleEnterWindow(Widget w GCC_UNUSED,
+		  XtPointer eventdata GCC_UNUSED,
+		  XEvent * event GCC_UNUSED,
+		  Boolean * cont GCC_UNUSED)
 {
     /* NOP since we handled it above */
 }
@@ -386,22 +389,20 @@ DoSpecialLeaveNotify(register XEnterWindowEvent * ev)
 
 /*ARGSUSED*/
 void
-HandleLeaveWindow(
-		     Widget w GCC_UNUSED,
-		     XtPointer eventdata GCC_UNUSED,
-		     XEvent * event GCC_UNUSED,
-		     Boolean * cont GCC_UNUSED)
+HandleLeaveWindow(Widget w GCC_UNUSED,
+		  XtPointer eventdata GCC_UNUSED,
+		  XEvent * event GCC_UNUSED,
+		  Boolean * cont GCC_UNUSED)
 {
     /* NOP since we handled it above */
 }
 
 /*ARGSUSED*/
 void
-HandleFocusChange(
-		     Widget w GCC_UNUSED,
-		     XtPointer eventdata GCC_UNUSED,
-		     XEvent * ev,
-		     Boolean * cont GCC_UNUSED)
+HandleFocusChange(Widget w GCC_UNUSED,
+		  XtPointer eventdata GCC_UNUSED,
+		  XEvent * ev,
+		  Boolean * cont GCC_UNUSED)
 {
     register XFocusChangeEvent *event = (XFocusChangeEvent *) ev;
     register TScreen *screen = &term->screen;
@@ -576,11 +577,10 @@ VisualBell(void)
 
 /* ARGSUSED */
 void
-HandleBellPropertyChange(
-			    Widget w GCC_UNUSED,
-			    XtPointer data GCC_UNUSED,
-			    XEvent * ev,
-			    Boolean * more GCC_UNUSED)
+HandleBellPropertyChange(Widget w GCC_UNUSED,
+			 XtPointer data GCC_UNUSED,
+			 XEvent * ev,
+			 Boolean * more GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -614,14 +614,144 @@ WMFrameWindow(XtermWidget termw)
     return win_current;
 }
 
+#if OPT_DABBREV
+/*
+ * The following code implements `dynamic abbreviation' expansion a la
+ * Emacs.  It looks in the preceding visible screen and its scrollback
+ * to find expansions of a typed word.  It compares consecutive
+ * expansions and ignores one of them if they are identical.
+ * (Tomasz J. Cholewo, t.cholewo@ieee.org)
+ */
+
+#define IS_WORD_CONSTITUENT(x) ((x) != ' ' && (x) != '\0')
+#define MAXWLEN 1024		/* maximum word length as in tcsh */
+
+static int
+dabbrev_prev_char(int *xp, int *yp, TScreen * screen)
+{
+    char *linep;
+    while (*yp >= 0) {
+	linep = BUF_CHARS(screen->allbuf, *yp);
+	if (--*xp >= 0)
+	    return linep[*xp];
+	if (--*yp < 0)		/* go to previous line */
+	    break;
+	*xp = screen->max_col + 1;
+	if (!((long) BUF_FLAGS(screen->allbuf, *yp) & LINEWRAPPED))
+	    return ' ';		/* treat lines as separate */
+    }
+    return -1;
+}
+
+static char *
+dabbrev_prev_word(int *xp, int *yp, TScreen * screen)
+{
+    static char ab[MAXWLEN];
+    char *abword;
+    int c;
+
+    abword = ab + MAXWLEN - 1;
+    *abword = '\0';		/* end of string marker */
+
+    while ((c = dabbrev_prev_char(xp, yp, screen)) >= 0 &&
+	   IS_WORD_CONSTITUENT(c))
+	if (abword > ab)	/* store only |MAXWLEN| last chars */
+	    *(--abword) = c;
+    if (c < 0) {
+	if (abword < ab + MAXWLEN - 1)
+	    return abword;
+	else
+	    return 0;
+    }
+
+    while ((c = dabbrev_prev_char(xp, yp, screen)) >= 0 &&
+	   !IS_WORD_CONSTITUENT(c)) ;	/* skip preceding spaces */
+    (*xp)++;			/* can be | > screen->max_col| */
+    return abword;
+}
+
+static int
+dabbrev_expand(TScreen * screen)
+{
+    int pty = screen->respond;	/* file descriptor of pty */
+
+    static int x, y;
+    static char *dabbrev_hint = 0, *lastexpansion = 0;
+
+    char *expansion, *copybuffer;
+    size_t hint_len;
+    int del_cnt, buf_cnt, i;
+
+    if (!screen->dabbrev_working) {	/* initialize */
+	x = screen->cur_col;
+	y = screen->cur_row + screen->savelines;
+
+	free(dabbrev_hint);	/* free(NULL) is OK */
+	dabbrev_hint = dabbrev_prev_word(&x, &y, screen);
+	if (!dabbrev_hint)
+	    return 0;		/* no preceding word? */
+	free(lastexpansion);
+	if (!(lastexpansion = strdup(dabbrev_hint)))	/* make own copy */
+	    return 0;
+	if (!(dabbrev_hint = strdup(dabbrev_hint))) {
+	    free(lastexpansion);
+	    return 0;
+	}
+	screen->dabbrev_working = 1;	/* we are in the middle of dabbrev process */
+    }
+
+    hint_len = strlen(dabbrev_hint);
+    while ((expansion = dabbrev_prev_word(&x, &y, screen))) {
+	if (!strncmp(dabbrev_hint, expansion, hint_len) &&	/* empty hint matches everything */
+	    strlen(expansion) > hint_len &&	/* trivial expansion disallowed */
+	    strcmp(expansion, lastexpansion))	/* different from previous */
+	    break;
+    }
+    if (!expansion)		/* no expansion found */
+	return 0;
+
+    del_cnt = strlen(lastexpansion) - hint_len;
+    buf_cnt = del_cnt + strlen(expansion) - hint_len;
+    if (!(copybuffer = (char *) malloc(buf_cnt)))
+	return 0;
+    for (i = 0; i < del_cnt; i++) {	/* delete previous expansion */
+	copybuffer[i] = screen->dabbrev_erase_char;
+    }
+    memmove(copybuffer + del_cnt,
+	    expansion + hint_len,
+	    strlen(expansion) - hint_len);
+    v_write(pty, copybuffer, buf_cnt);
+    screen->dabbrev_working = 1;	/* v_write() just set it to 1 */
+    free(copybuffer);
+
+    free(lastexpansion);
+    lastexpansion = strdup(expansion);
+    if (!lastexpansion)
+	return 0;
+    return 1;
+}
+
+/*ARGSUSED*/
+void
+HandleDabbrevExpand(Widget gw,
+		    XEvent * event GCC_UNUSED,
+		    String * params GCC_UNUSED,
+		    Cardinal * nparams GCC_UNUSED)
+{
+    XtermWidget w = (XtermWidget) gw;
+    TScreen *screen = &w->screen;
+    if (!dabbrev_expand(screen))
+	Bell(XkbBI_TerminalBell, 0);
+}
+#endif /* OPT_DABBREV */
+
 #if OPT_MAXIMIZE
 /*ARGSUSED*/
 void
-HandleDeIconify(
-		   Widget gw,
-		   XEvent * event GCC_UNUSED,
-		   String * params GCC_UNUSED,
-		   Cardinal * nparams GCC_UNUSED)
+HandleDeIconify(Widget gw,
+		XEvent * event GCC_UNUSED,
+		String * params GCC_UNUSED,
+		Cardinal * nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
 	register TScreen *screen = &((XtermWidget) gw)->screen;
@@ -631,11 +761,10 @@ HandleDeIconify(
 
 /*ARGSUSED*/
 void
-HandleIconify(
-		 Widget gw,
-		 XEvent * event GCC_UNUSED,
-		 String * params GCC_UNUSED,
-		 Cardinal * nparams GCC_UNUSED)
+HandleIconify(Widget gw,
+	      XEvent * event GCC_UNUSED,
+	      String * params GCC_UNUSED,
+	      Cardinal * nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
 	register TScreen *screen = &((XtermWidget) gw)->screen;
@@ -765,11 +894,10 @@ RequestMaximize(XtermWidget termw, int maximize)
 
 /*ARGSUSED*/
 void
-HandleMaximize(
-		  Widget gw,
-		  XEvent * event GCC_UNUSED,
-		  String * params GCC_UNUSED,
-		  Cardinal * nparams GCC_UNUSED)
+HandleMaximize(Widget gw,
+	       XEvent * event GCC_UNUSED,
+	       String * params GCC_UNUSED,
+	       Cardinal * nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
 	RequestMaximize((XtermWidget) gw, 1);
@@ -778,11 +906,10 @@ HandleMaximize(
 
 /*ARGSUSED*/
 void
-HandleRestoreSize(
-		     Widget gw,
-		     XEvent * event GCC_UNUSED,
-		     String * params GCC_UNUSED,
-		     Cardinal * nparams GCC_UNUSED)
+HandleRestoreSize(Widget gw,
+		  XEvent * event GCC_UNUSED,
+		  String * params GCC_UNUSED,
+		  Cardinal * nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
 	RequestMaximize((XtermWidget) gw, 0);
@@ -1329,10 +1456,9 @@ xtermGetColorRes(ColorRes * res)
 #endif
 
 static Boolean
-ChangeAnsiColorRequest(
-			  XtermWidget pTerm,
-			  register char *buf,
-			  int final)
+ChangeAnsiColorRequest(XtermWidget pTerm,
+		       register char *buf,
+		       int final)
 {
     char *name;
     int color;
@@ -1931,6 +2057,36 @@ GetOldColors(XtermWidget pTerm)
     return (TRUE);
 }
 
+static int
+oppositeColor(int n)
+{
+    switch (n) {
+    case TEXT_FG:
+	n = TEXT_BG;
+	break;
+    case TEXT_BG:
+	n = TEXT_FG;
+	break;
+    case MOUSE_FG:
+	n = MOUSE_BG;
+	break;
+    case MOUSE_BG:
+	n = MOUSE_FG;
+	break;
+#if OPT_TEK4014
+    case TEK_FG:
+	n = TEK_BG;
+	break;
+    case TEK_BG:
+	n = TEK_FG;
+	break;
+#endif
+    default:
+	break;
+    }
+    return n;
+}
+
 static void
 ReportColorRequest(XtermWidget pTerm, int ndx, int final)
 {
@@ -1938,14 +2094,21 @@ ReportColorRequest(XtermWidget pTerm, int ndx, int final)
     Colormap cmap = pTerm->core.colormap;
     char buffer[80];
 
+    /*
+     * ChangeColorsRequest() has "always" chosen the opposite color when
+     * reverse-video is set.  Report this as the original color index, but
+     * reporting the opposite color which would be used.
+     */
+    int i = (term->misc.re_verse) ? oppositeColor(ndx) : ndx;
+
     GetOldColors(pTerm);
     color.pixel = pOldColors->colors[ndx];
-    TRACE(("ReportColors %d: %#lx\n", ndx, pOldColors->colors[ndx]));
     XQueryColor(term->screen.display, cmap, &color);
-    sprintf(buffer, "%d;rgb:%04x/%04x/%04x", ndx + 10,
+    sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
 	    color.red,
 	    color.green,
 	    color.blue);
+    TRACE(("ReportColors %d: %#lx as %s\n", ndx, pOldColors->colors[ndx], buffer));
     unparseputc1(OSC, pTerm->screen.respond);
     unparseputs(buffer, pTerm->screen.respond);
     unparseputc1(final, pTerm->screen.respond);
@@ -2039,42 +2202,11 @@ AllocateTermColor(XtermWidget pTerm, ScrnColors * pNew, int ndx, const
     return (FALSE);
 }
 
-static int
-oppositeColor(int n)
-{
-    switch (n) {
-    case TEXT_FG:
-	n = TEXT_BG;
-	break;
-    case TEXT_BG:
-	n = TEXT_FG;
-	break;
-    case MOUSE_FG:
-	n = MOUSE_BG;
-	break;
-    case MOUSE_BG:
-	n = MOUSE_FG;
-	break;
-#if OPT_TEK4014
-    case TEK_FG:
-	n = TEK_BG;
-	break;
-    case TEK_BG:
-	n = TEK_FG;
-	break;
-#endif
-    default:
-	break;
-    }
-    return n;
-}
-
 static Boolean
-ChangeColorsRequest(
-		       XtermWidget pTerm,
-		       int start,
-		       register char *names,
-		       int final)
+ChangeColorsRequest(XtermWidget pTerm,
+		    int start,
+		    register char *names,
+		    int final)
 {
     char *thisName;
     ScrnColors newColors;

@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.464 2004/04/18 20:49:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.471 2004/05/13 00:41:20 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.157 2004/04/18 20:49:42 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.158 2004/05/13 00:41:20 dickey Exp $ */
 
 /*
 
@@ -222,6 +222,11 @@ static char defaultTranslations[] =
          Shift <KeyPress> Select:select-cursor-start() select-cursor-end(PRIMARY, CUT_BUFFER0) \n\
          Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \n\
 "
+#if OPT_DABBREV
+"\
+                 Meta <KeyPress> /:dabbrev-expand() \n\
+"
+#endif
 #if OPT_SHIFT_FONTS
 "\
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \n\
@@ -332,6 +337,9 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_BOX_CHARS
     { "set-font-linedrawing",	HandleFontBoxChars },
+#endif
+#if OPT_DABBREV
+    { "dabbrev-expand",		HandleDabbrevExpand },
 #endif
 #if OPT_DEC_CHRSET
     { "set-font-doublesize",	HandleFontDoublesize },
@@ -569,11 +577,13 @@ static XtResource resources[] =
     COLOR_RES("UL", screen.Acolors[COLOR_UL], DFT_COLOR(XtDefaultForeground)),
     COLOR_RES("RV", screen.Acolors[COLOR_RV], DFT_COLOR(XtDefaultForeground)),
 
+#if !OPT_COLOR_RES2
 #if OPT_256_COLORS
 # include <256colres.h>
 #elif OPT_88_COLORS
 # include <88colres.h>
 #endif
+#endif				/* !OPT_COLOR_RES2 */
 
 #endif				/* OPT_ISO_COLORS */
 
@@ -733,7 +743,37 @@ void
 xtermAddInput(Widget w)
 {
 #if OPT_TOOLBAR
-    XtAppAddActions(app_con, actionsList, XtNumber(actionsList));
+    /* *INDENT-OFF* */
+    XtActionsRec input_actions[] = {
+	{ "insert",		    HandleKeyPressed }, /* alias */
+	{ "insert-eight-bit",	    HandleEightBitKeyPressed },
+	{ "insert-seven-bit",	    HandleKeyPressed },
+	{ "secure",		    HandleSecure },
+	{ "string",		    HandleStringEvent },
+	{ "scroll-back",	    HandleScrollBack },
+	{ "scroll-forw",	    HandleScrollForward },
+	{ "select-cursor-end",	    HandleKeyboardSelectEnd },
+	{ "select-cursor-start",    HandleKeyboardSelectStart },
+	{ "insert-selection",	    HandleInsertSelection },
+	{ "select-start",	    HandleSelectStart },
+	{ "select-extend",	    HandleSelectExtend },
+	{ "start-extend",	    HandleStartExtend },
+	{ "select-end",		    HandleSelectEnd },
+	{ "clear-saved-lines",	    HandleClearSavedLines },
+	{ "popup-menu",		    HandlePopupMenu },
+	{ "bell",		    HandleBell },
+	{ "ignore",		    HandleIgnore },
+#if OPT_DABBREV
+	{ "dabbrev-expand",	    HandleDabbrevExpand },
+#endif
+#if OPT_SHIFT_FONTS
+	{ "larger-vt-font",	    HandleLargerFont },
+	{ "smaller-vt-font",	    HandleSmallerFont },
+#endif
+    };
+    /* *INDENT-ON* */
+
+    XtAppAddActions(app_con, input_actions, XtNumber(input_actions));
 #endif
     XtAugmentTranslations(w, XtParseTranslationTable(defaultTranslations));
 }
@@ -2568,6 +2608,9 @@ v_write(int f, Char * data, int len)
      */
 
     if (len > 0) {
+#if OPT_DABBREV
+	term->screen.dabbrev_working = 0;	/* break dabbrev sequence */
+#endif
 	if (v_bufend < v_bufptr + len) {	/* we've run out of room */
 	    if (v_bufstr != v_buffer) {
 		/* there is unused space, move everything down */
@@ -2898,6 +2941,16 @@ in_put(void)
 		select_timeout.tv_usec -= 1000000;
 		select_timeout.tv_sec++;
 	    }
+	    time_select = 1;
+#endif
+#if OPT_SESSION_MGT
+	} else if (resource.sessionMgt) {
+	    /*
+	     * When session management is enabled, we should not block since
+	     * session related events can arrive any time. 
+	     */
+	    select_timeout.tv_sec = 1;
+	    select_timeout.tv_usec = 0;
 	    time_select = 1;
 #endif
 	}
@@ -4000,12 +4053,11 @@ window_ops(XtermWidget termw)
 	values.x = param[1];
 	values.y = param[2];
 	value_mask = (CWX | CWY);
-	XReconfigureWMWindow(
-				screen->display,
-				VShellWindow,
-				DefaultScreen(screen->display),
-				value_mask,
-				&values);
+	XReconfigureWMWindow(screen->display,
+			     VShellWindow,
+			     DefaultScreen(screen->display),
+			     value_mask,
+			     &values);
 	break;
 
     case 4:			/* Resize the window to given size in pixels */
@@ -4310,14 +4362,13 @@ SwitchBufs(register TScreen * screen)
 	if (top == 0)
 	    XClearWindow(screen->display, VWindow(screen));
 	else
-	    XClearArea(
-			  screen->display,
-			  VWindow(screen),
-			  (int) OriginX(screen),
-			  (int) top * FontHeight(screen) + screen->border,
-			  (unsigned) Width(screen),
-			  (unsigned) (rows - top) * FontHeight(screen),
-			  FALSE);
+	    XClearArea(screen->display,
+		       VWindow(screen),
+		       (int) OriginX(screen),
+		       (int) top * FontHeight(screen) + screen->border,
+		       (unsigned) Width(screen),
+		       (unsigned) (rows - top) * FontHeight(screen),
+		       FALSE);
     }
     ScrnRefresh(screen, 0, 0, rows, screen->max_col + 1, False);
 }
@@ -4516,10 +4567,9 @@ RequestResize(XtermWidget termw, int rows, int cols, int text)
 	bzero(&sizehints, sizeof(sizehints));
 #endif
 
-    status = XtMakeResizeRequest(
-				    (Widget) termw,
-				    askedWidth, askedHeight,
-				    &replyWidth, &replyHeight);
+    status = XtMakeResizeRequest((Widget) termw,
+				 askedWidth, askedHeight,
+				 &replyWidth, &replyHeight);
     TRACE(("charproc.c XtMakeResizeRequest %dx%d -> %dx%d (status %d)\n",
 	   askedHeight, askedWidth,
 	   replyHeight, replyWidth,
@@ -4640,7 +4690,9 @@ fill_Tres(XtermWidget target, XtermWidget source, int offset)
     target->screen.Tcolors[offset].mode = False;
 
     name = target->screen.Tcolors[offset].resource;
-    if (!x_strcasecmp(name, XtDefaultForeground)) {
+    if (name == 0) {
+	target->screen.Tcolors[offset].value = target->dft_foreground;
+    } else if (!x_strcasecmp(name, XtDefaultForeground)) {
 	target->screen.Tcolors[offset].value =
 	    ((offset == TEXT_FG || offset == TEXT_BG)
 	     ? target->dft_foreground
@@ -4760,10 +4812,22 @@ VTInitialize(Widget wrequest,
     XtermWidget wnew = (XtermWidget) new_arg;
     Widget my_parent = SHELL_OF(wnew);
     int i;
+    char *s;
+
 #if OPT_ISO_COLORS
     Boolean color_ok;
 #endif
-    char *s;
+
+#if OPT_COLOR_RES2 && (MAXCOLORS > MIN_ANSI_COLORS)
+    static XtResource fake_resources[] =
+    {
+#if OPT_256_COLORS
+# include <256colres.h>
+#elif OPT_88_COLORS
+# include <88colres.h>
+#endif
+    };
+#endif /* OPT_COLOR_RES2 */
 
     TRACE(("VTInitialize\n"));
 
@@ -4985,9 +5049,28 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.colorRVMode);
 
     for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
-	wnew->screen.Acolors[i] = request->screen.Acolors[i];
+
+#if OPT_COLOR_RES2 && (MAXCOLORS > MIN_ANSI_COLORS)
+	/*
+	 * Xt has a hardcoded limit on the maximum number of resources that can
+	 * be used in a widget.  If we configure both luit (which implies
+	 * wide-characters) and 256-colors, it goes over that limit.  Most
+	 * people would not need a resource-file with 256-colors; the default
+	 * values in our table are sufficient.  In that case, fake the resource
+	 * setting by copying the default value from the table.  The #define's
+	 * can be overridden to make these true resources.
+	 */
+	if (i >= MIN_ANSI_COLORS && i < NUM_ANSI_COLORS) {
+	    wnew->screen.Acolors[i].resource = fake_resources[i -
+							      MIN_ANSI_COLORS].default_addr;
+	    if (wnew->screen.Acolors[i].resource == 0)
+		wnew->screen.Acolors[i].resource = XtDefaultForeground;
+	} else
+#endif /* OPT_COLOR_RES2 */
+	    wnew->screen.Acolors[i] = request->screen.Acolors[i];
+
 #if OPT_COLOR_RES
-	TRACE(("Acolors[%d] = %s\n", i, request->screen.Acolors[i].resource));
+	TRACE(("Acolors[%d] = %s\n", i, wnew->screen.Acolors[i].resource));
 	wnew->screen.Acolors[i].mode = False;
 	if (!x_strcasecmp(wnew->screen.Acolors[i].resource, XtDefaultForeground)) {
 	    wnew->screen.Acolors[i].value = T_COLOR(&(wnew->screen), TEXT_FG);
@@ -5006,6 +5089,7 @@ VTInitialize(Widget wrequest,
 	    color_ok = True;
 #endif
     }
+
     /*
      * Check if we're trying to use color in a monochrome screen.  Disable
      * color in that case, since that would make ANSI colors unusable.  A 4-bit
@@ -5712,9 +5796,11 @@ VTInitI18N(void)
     xim_real_init();
 
 #if defined(USE_XIM_INSTANTIATE_CB)
-    if (term->screen.xic == NULL && !term->misc.cannot_im)
+    if (term->screen.xic == NULL && !term->misc.cannot_im) {
+	sleep(3);
 	XRegisterIMInstantiateCallback(XtDisplay(term), NULL, NULL, NULL,
 				       xim_instantiate_cb, NULL);
+    }
 #endif
 }
 #endif /* OPT_I18N_SUPPORT && OPT_INPUT_METHOD */
@@ -6312,13 +6398,12 @@ VTReset(Bool full, Bool saved)
 
 	if (screen->c132 && (term->flags & IN132COLUMNS)) {
 	    Dimension junk;
-	    XtMakeResizeRequest(
-				   (Widget) term,
-				   (Dimension) 80 * FontWidth(screen)
-				   + 2 * screen->border + ScrollbarWidth(screen),
-				   (Dimension) FontHeight(screen)
-				   * (screen->max_row + 1) + 2 * screen->border,
-				   &junk, &junk);
+	    XtMakeResizeRequest((Widget) term,
+				(Dimension) 80 * FontWidth(screen)
+				+ 2 * screen->border + ScrollbarWidth(screen),
+				(Dimension) FontHeight(screen)
+				* (screen->max_row + 1) + 2 * screen->border,
+				&junk, &junk);
 	    XSync(screen->display, FALSE);	/* synchronize */
 	    if (XtAppPending(app_con))
 		xevents();

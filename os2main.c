@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.162 2004/04/28 00:41:00 tom Exp $ */
+/* $XTermId: os2main.c,v 1.164 2004/05/12 22:54:46 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.66 2004/04/28 00:41:00 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.67 2004/05/06 00:54:37 dawes Exp $ */
 
 /***********************************************************
 
@@ -2025,7 +2025,7 @@ ptioctl(int fd, int func, void *data)
 
     switch (func) {
     case TCGETA:
-	rc = DosDevIOCtl(fd, XFREE86_PTY, func,
+	rc = DosDevIOCtl(fd, XFREE86_PTY, XTY_TIOCGETA,
 			 NULL, 0, NULL,
 			 (ULONG *) & pt, sizeof(struct pt_termios), &len);
 	if (rc)

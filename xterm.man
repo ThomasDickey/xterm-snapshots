@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.262 2004/04/28 00:41:00 tom Exp $
+.\" $XTermId: xterm.man,v 1.267 2004/05/13 00:41:21 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.104 2004/04/28 00:41:00 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.105 2004/05/13 00:41:21 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - April 2004.
 .TH XTERM 1 __vendorversion__
@@ -791,10 +791,8 @@ The term_id argument specifies the terminal ID to use.
 This option specifies a series of terminal setting keywords followed by the
 characters that should be bound to those functions, similar to the \fIstty\fP
 program.
-Allowable keywords include: intr, quit, erase, kill, eof,
-eol, swtch, start, stop, brk, susp, dsusp, rprnt, flush, weras, and lnext.
-Control characters may be specified as ^char (e.g., ^c or ^u) and ^? may be
-used to indicate delete (127).
+The keywords and their values are described in detail in the \fBttyModes\fP
+resource.
 .TP 8
 .BI \-tn " name"
 This option specifies the name of the terminal type to be set in the TERM
@@ -1110,26 +1108,28 @@ this application.
 Specifies a string containing terminal setting keywords and the characters
 to which they may be bound.
 Allowable keywords include:
-intr,
-quit,
-erase,
-kill,
-eof,
-eol,
-swtch,
-start,
-stop,
 brk,
-susp,
 dsusp,
-rprnt,
+eof, 
+eol,
+eol2,
+erase,
+erase2,
 flush,
-weras,
-lnext and
-status.
+intr,
+kill,
+lnext,
+quit,
+rprnt,
+start,
+status,
+stop,
+susp,
+swtch and
+weras.
 Control characters may be specified as ^char (e.g., ^c or ^u)
 and \fB^?\fP may be used to indicate delete (127).
-Use \fB^-\fP to denote undef.
+Use \fB^-\fP to denote \fIundef\fP.
 Use \fB\\034\fP to represent \fB^\\\fP, since a literal backslash in
 an X resource escapes the next character.
 .IP
@@ -1137,7 +1137,7 @@ This is very useful for overriding
 the default terminal settings without having to do an \fIstty\fP every time
 an \fIxterm\fP is started.
 Note, however, that the stty program on a given host may use different
-keywords; \fIxterm\fR's table is builtin.
+keywords; \fIxterm\fR's table is built-in.
 .TP 8
 .B "useInsertMode (\fPclass\fB UseInsertMode)"
 Force use of insert mode by adding appropriate entries to the TERMCAP
@@ -1202,12 +1202,6 @@ Specifies whether extended window control sequences (as used in dtterm)
 for should be allowed.
 The default is ``true.''
 .TP 8
-.B "answerbackString (\fPclass\fB AnswerbackString)"
-Specifies the string that \fIxterm\fR sends in response to an ENQ (control/E)
-character from the host.
-The default is a blank string, i.e., ``''.
-A hardware VT100 implements this feature as a setup option.
-.TP 8
 .B "alwaysHighlight (\fPclass\fB AlwaysHighlight)"
 Specifies whether or not \fIxterm\fP should always display a highlighted
 text cursor.
@@ -1221,6 +1215,12 @@ Override the \fBnumLock\fP resource, telling \fIxterm\fR to use the Alt and Meta
 modifiers as to construct parameters for function key sequences even if
 those modifiers appear in the translations resource.
 The default is ``false.''
+.TP 8
+.B "answerbackString (\fPclass\fB AnswerbackString)"
+Specifies the string that \fIxterm\fR sends in response to an ENQ (control/E)
+character from the host.
+The default is a blank string, i.e., ``''.
+A hardware VT100 implements this feature as a setup option.
 .TP 8
 .B "appcursorDefault (\fPclass\fB AppcursorDefault)"
 If ``true,'' the cursor keys are initially in application mode.
@@ -1341,18 +1341,6 @@ Specifies whether or not the VT102 DECCOLM escape sequence,
 used to switch between 80 and 132 columns, should be honored.
 The default is ``false.''
 .TP 8
-.B "cutNewline (\fPclass\fB CutNewline)"
-If ``false'', triple clicking to select a line does not include the Newline
-at the end of the line.
-If ``true'', the Newline is selected.
-The default is ``true.''
-.TP 8
-.B "cutToBeginningOfLine (\fPclass\fB CutToBeginningOfLine)"
-If ``false'', triple clicking to select a line selects only from the
-current word forward.
-If ``true'', the entire line is selected.
-The default is ``true.''
-.TP 8
 .B "cacheDoublesize (\fPclass\fB CacheDoublesize)"
 Specifies the maximum number of double-sized fonts which are cached by
 \fIxterm\fR.
@@ -1374,51 +1362,6 @@ When turned on, characters with East Asian Ambiguous (A) category in UTR
 You may have to set this option to ``true''
 if you have some old East Asian terminal based programs that assume that
 line-drawing characters have a column width of 2.
-The default is ``false.''
-.TP 8
-.B "curses (\fPclass\fB Curses)"
-Specifies whether or not the last column bug in
-.IR more (1)
-should be worked around.
-See the \fB\-cu\fP option for details.
-The default is ``false.''
-.TP 8
-.B "colorAttrMode (\fPclass\fB ColorAttrMode)"
-Specifies whether ``colorBD'', ``colorBL'', ``colorUL'', and
-``colorRV'' should override ANSI colors.
-If not, these are displayed only when no ANSI colors
-have been set for the corresponding position.
-The default is ``false.''
-.TP 8
-.B "colorMode (\fPclass\fB ColorMode)"
-Specifies whether or not recognition of ANSI (ISO 6429)
-color change escape sequences should be enabled.
-The default is ``true.''
-.TP 8
-.B "colorBDMode (\fPclass\fB ColorAttrMode)"
-Specifies whether characters with the bold attribute should be displayed in
-color or as bold characters.
-Note that setting \fBcolorMode\fR off disables
-all colors, including bold.
-The default is ``false.''
-.TP 8
-.B "colorBLMode (\fPclass\fB ColorAttrMode)"
-Specifies whether characters with the blink attribute should be displayed in
-color.
-Note that setting \fBcolorMode\fR off disables all colors, including this.
-The default is ``false.''
-.TP 8
-.B "colorRVMode (\fPclass\fB ColorAttrMode)"
-Specifies whether characters with the reverse attribute should be displayed in
-color.
-Note that setting \fBcolorMode\fR off disables all colors, including this.
-The default is ``false.''
-.TP 8
-.B "colorULMode (\fPclass\fB ColorAttrMode)"
-Specifies whether characters with the underline attribute should be displayed
-in color or as underlined characters.
-Note that setting \fBcolorMode\fR off
-disables all colors, including underlining.
 The default is ``false.''
 .TP 8
 .B "color0 (\fPclass\fB Color0)"
@@ -1472,25 +1415,63 @@ The default resource values
 are for colors 16 through 231 to make a 6x6x6 color cube, and colors
 232 through 255 to make a grayscale ramp.
 .TP 8
+.B "colorAttrMode (\fPclass\fB ColorAttrMode)"
+Specifies whether ``colorBD'', ``colorBL'', ``colorUL'', and
+``colorRV'' should override ANSI colors.
+If not, these are displayed only when no ANSI colors
+have been set for the corresponding position.
+The default is ``false.''
+.TP 8
 .B "colorBD (\fPclass\fB ColorBD)"
 This specifies the color to use to display bold characters if
 the ``colorBDMode'' resource is enabled.
 The default is ``XtDefaultForeground.''
+.TP 8
+.B "colorBDMode (\fPclass\fB ColorAttrMode)"
+Specifies whether characters with the bold attribute should be displayed in
+color or as bold characters.
+Note that setting \fBcolorMode\fR off disables
+all colors, including bold.
+The default is ``false.''
 .TP 8
 .B "colorBL (\fPclass\fB ColorBL)"
 This specifies the color to use to display blink characters if
 the ``colorBLMode'' resource is enabled.
 The default is ``XtDefaultForeground.''
 .TP 8
+.B "colorBLMode (\fPclass\fB ColorAttrMode)"
+Specifies whether characters with the blink attribute should be displayed in
+color.
+Note that setting \fBcolorMode\fR off disables all colors, including this.
+The default is ``false.''
+.TP 8
+.B "colorMode (\fPclass\fB ColorMode)"
+Specifies whether or not recognition of ANSI (ISO 6429)
+color change escape sequences should be enabled.
+The default is ``true.''
+.TP 8
 .B "colorRV (\fPclass\fB ColorRV)"
 This specifies the color to use to display reverse characters if
 the ``colorRVMode'' resource is enabled.
 The default is ``XtDefaultForeground.''
 .TP 8
+.B "colorRVMode (\fPclass\fB ColorAttrMode)"
+Specifies whether characters with the reverse attribute should be displayed in
+color.
+Note that setting \fBcolorMode\fR off disables all colors, including this.
+The default is ``false.''
+.TP 8
 .B "colorUL (\fPclass\fB ColorUL)"
 This specifies the color to use to display underlined characters if
 the ``colorULMode'' resource is enabled.
 The default is ``XtDefaultForeground.''
+.TP 8
+.B "colorULMode (\fPclass\fB ColorAttrMode)"
+Specifies whether characters with the underline attribute should be displayed
+in color or as underlined characters.
+Note that setting \fBcolorMode\fR off
+disables all colors, including underlining.
+The default is ``false.''
 .TP 8
 .B "ctrlFKeys (\fPclass\fB CtrlFKeys)"
 In VT220 keyboard mode (see \fBsunKeyboard\fP resource),
@@ -1498,6 +1479,13 @@ specifies the amount by which to shift F1-F12 given a control modifier (CTRL).
 This allows you to generate key symbols for F10-F20 on a Sun/PC keyboard.
 The default is ``10'', which means that CTRL F1 generates the key
 symbol for F11.
+.TP 8
+.B "curses (\fPclass\fB Curses)"
+Specifies whether or not the last column bug in
+.IR more (1)
+should be worked around.
+See the \fB\-cu\fP option for details.
+The default is ``false.''
 .TP 8
 .B "cursorBlink (\fPclass\fB CursorBlink)"
 Specifies whether to make the cursor blink.
@@ -1519,11 +1507,17 @@ in milliseconds.
 The same timer is used for text blinking.
 The default is 600.
 .TP 8
-.B "highlightColor (\fPclass\fB HighlightColor)"
-Specifies the color to use for the background of selected or otherwise
-highlighted text.
-If not specified, reverse video is used.
-The default is ``XtDefaultForeground.''
+.B "cutNewline (\fPclass\fB CutNewline)"
+If ``false'', triple clicking to select a line does not include the Newline
+at the end of the line.
+If ``true'', the Newline is selected.
+The default is ``true.''
+.TP 8
+.B "cutToBeginningOfLine (\fPclass\fB CutToBeginningOfLine)"
+If ``false'', triple clicking to select a line selects only from the
+current word forward.
+If ``true'', the entire line is selected.
+The default is ``true.''
 .TP 8
 .B "decTerminalID (\fPclass\fB DecTerminalID)"
 Specifies the emulation level (100=VT100, 220=VT220, etc.), used to determine
@@ -1639,6 +1633,12 @@ The default is ``false'', which means that the comparison is performed.
 .B "geometry (\fPclass\fB Geometry)"
 Specifies the preferred size and position of the VT102 window.
 There is no default for this resource.
+.TP 8
+.B "highlightColor (\fPclass\fB HighlightColor)"
+Specifies the color to use for the background of selected or otherwise
+highlighted text.
+If not specified, reverse video is used.
+The default is ``XtDefaultForeground.''
 .TP 8
 .B "highlightSelection (\fPclass\fB HighlightSelection)"
 If ``false'', selecting with the mouse highlights all positions on the screen
@@ -2000,6 +2000,15 @@ The default is ``false.''
 Specifies whether or not \fIxterm\fP should start up in Tektronix mode.
 The default is ``false.''
 .TP 8
+.B "tiXtraScroll (\fPclass\fB TiXtraScroll)"
+Specifies whether \fIxterm\fP should scroll to a new page when processing
+the \fIti\fP termcap entry, i.e., the private modes 47, 1047 or 1049.
+This is only in effect if \fItiteInhibit\fP is ``true'',
+because the intent of this option is to provide a picture of the full-screen
+application's display on the scrollback without wiping out the text that
+would be shown before the application was initialized.
+The default for this resource is ``false.''
+.TP 8
 .B "titeInhibit (\fPclass\fB TiteInhibit)"
 Specifies whether or not \fIxterm\fP should remove \fIti\fP and \fIte\fP
 termcap entries (used to switch between alternate screens on startup of many
@@ -2010,15 +2019,6 @@ alternate screen.
 \fIXterm\fP supports terminfo in a different way, supporting composite control
 sequences (also known as private modes) 1047, 1048 and 1049 which have the same
 effect as the original 47 control sequence.
-The default for this resource is ``false.''
-.TP 8
-.B "tiXtraScroll (\fPclass\fB TiXtraScroll)"
-Specifies whether \fIxterm\fP should scroll to a new page when processing
-the \fIti\fP termcap entry, i.e., the private modes 47, 1047 or 1049.
-This is only in effect if \fItiteInhibit\fP is ``true'',
-because the intent of this option is to provide a picture of the full-screen
-application's display on the scrollback without wiping out the text that
-would be shown before the application was initialized.
 The default for this resource is ``false.''
 .TP 8
 .B "translations (\fPclass\fB Translations)"
@@ -3009,9 +3009,9 @@ The current font size is checked in the modes section of the menu.
 .TP
 Large Characters (tektextlarge)
 .TP
-\#2 Size Characters (tektext2)
+#2 Size Characters (tektext2)
 .TP
-\#3 Size Characters (tektext3)
+#3 Size Characters (tektext3)
 .TP
 Small Characters (tektextsmall)
 .RE
@@ -3246,6 +3246,22 @@ This action creates one of the menus used by \fIxterm\fP,
 if it has not been previously created.
 The parameter values are the menu names:
 \fImainMenu\fP, \fIvtMenu\fP, \fIfontMenu\fP, \fItekMenu\fP, respectively.
+.TP 8
+.B "dabbrev-expand()"
+Expands the word before cursor by searching in the preceding text on the
+screen and in the scrollback buffer for words starting with that
+abbreviation.
+By default bound to \fBMeta\ /\fP.
+Repeating \fBdabbrev-expand()\fP several times in sequence searches for an
+alternative expansion by looking farther back.
+Lack of more matches is signaled by a \fBbeep()\fP.
+Attempts to expand an empty word
+(i.e., when cursor is preceded by a space) yield successively all previous
+words.
+Consecutive identical expansions are ignored.
+The word here is defined as a sequence of non-whitespace characters.
+This feature partially emulates the behavior
+of `dynamic abbreviation' expansion in Emacs (also bound there to M-/).
 .TP 8
 .B "deiconify()"
 Changes the window state back to normal, if it was iconified.

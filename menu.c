@@ -1,3 +1,5 @@
+/* $XTermId: menu.c,v 1.144 2004/05/13 00:41:21 tom Exp $ */
+
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
 
@@ -45,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.54 2004/03/04 02:21:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.55 2004/05/13 00:41:21 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -2308,6 +2310,25 @@ SetupMenus(Widget shell, Widget * forms, Widget * menus)
     TRACE(("...forms=%#lx\n", (long) *forms));
     TRACE(("...menus=%#lx\n", (long) *menus));
 }
+
+#if OPT_TOOLBAR
+void
+SetupToolbar(Widget shell)
+{
+    int n;
+    if (shell == toplevel) {	/* vt100 */
+	for (n = mainMenu; n <= fontMenu; n++) {
+	    InitPopup(vt_shell[n].w, menu_names[n].internal_name, 0);
+	}
+    }
+#if OPT_TEK4014
+    else {			/* tek4014 */
+	InitPopup(tek_shell[mainMenu].w, menu_names[mainMenu].internal_name, 0);
+	InitPopup(tek_shell[tekMenu].w, menu_names[tekMenu].internal_name, 0);
+    }
+#endif
+}
+#endif
 
 void
 update_securekbd(void)
