@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1997 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1997,1998 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -42,8 +42,10 @@ authorization.
 
 #include "ptyx.h"
 #include "data.h"
+#include "error.h"
 #include "xterm.h"
 
+#define isForm(c) ((c) == '\r' || (c) == '\n' || (c) == '\f')
 #define Strlen(a) strlen((char *)a)
 #define Strcmp(a,b) strcmp((char *)a,(char *)b)
 #define Strncmp(a,b,c) strncmp((char *)a,(char *)b,c)
@@ -99,13 +101,21 @@ static void printLine(row, chr)
 			break;
 	}
 	if (last) {
-		send_CharSet(row);	/* FIXME: is this needed? */
-		send_SGR(0,-1,-1);
+		if (screen->print_attributes) {
+			send_CharSet(row);
+			send_SGR(0,-1,-1);
+		}
 		for (col = 0; col < last; col++) {
 #if OPT_PRINT_COLORS
 			if_OPT_ISO_COLORS(screen,{
-				fg = (a[col] & FG_COLOR) ? extract_fg(fb[col], a[col]) : -1;
-				bg = (a[col] & BG_COLOR) ? extract_bg(fb[col]) : -1;
+				if (screen->print_attributes > 1) {
+					fg = (a[col] & FG_COLOR)
+						? extract_fg(fb[col], a[col])
+						: -1;
+					bg = (a[col] & BG_COLOR)
+						? extract_bg(fb[col])
+						: -1;
+				}
 			})
 #endif
 			if ((((a[col] & SGR_MASK) != attr)
@@ -117,11 +127,13 @@ static void printLine(row, chr)
 				attr = (a[col] & SGR_MASK);
 				last_fg = fg;
 				last_bg = bg;
-				send_SGR(attr, fg, bg);
+				if (screen->print_attributes)
+					send_SGR(attr, fg, bg);
 			}
 			charToPrinter(c[col] ? c[col] : ' ');
 		}
-		send_SGR(0,-1,-1);
+		if (screen->print_attributes)
+			send_SGR(0,-1,-1);
 	}
 	charToPrinter('\r');
 	charToPrinter(chr);
@@ -202,13 +214,38 @@ static void charToPrinter(chr)
 {
 	static int initialized;
 	if (!initialized) {
+		FILE	*input;
+		int	my_pipe[2];
+		int	my_pid;
+		int	c;
 		register TScreen *screen = &term->screen;
-		Printer = popen(screen->printer_command, "w");
+
+	    	if (pipe(my_pipe))
+			SysError (ERROR_FORK);
+		if ((my_pid = fork()) < 0)
+			SysError (ERROR_FORK);
+
+		if (my_pid == 0) {
+			close(my_pipe[1]);	/* printer is silent */
+			setgid (screen->gid);
+			setuid (screen->uid);
+			Printer = popen(screen->printer_command, "w");
+			input = fdopen(my_pipe[0], "r");
+			while ((c = fgetc(input)) != EOF) {
+				fputc(c, Printer);
+				if (isForm(c))
+					fflush(Printer);
+			}
+			exit(0);
+		} else {
+			close(my_pipe[0]);	/* won't read from printer */
+			Printer = fdopen(my_pipe[1], "w");
+		}
 		initialized++;
 	}
 	if (Printer != 0) {
 		fputc(chr, Printer);
-		if (chr == '\r' || chr == '\n' || chr == '\f')
+		if (isForm(chr))
 			fflush(Printer);
 	}
 }

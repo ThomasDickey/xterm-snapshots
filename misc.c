@@ -591,8 +591,6 @@ creat_as(uid, gid, pathname, mode)
 /*
  * Logging is a security hole, since it allows a setuid program to write
  * arbitrary data to an arbitrary file.  So it is disabled by default.
- * (However, this version of xterm resets the setuid before opening the
- * logfile).
  */
 
 #ifdef ALLOWLOGFILEEXEC

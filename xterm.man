@@ -975,6 +975,16 @@ Specifies the background color of the pointer.  The default is
 .B "pointerShape (\fPclass\fB Cursor)"
 Specifies the name of the shape of the pointer.  The default is ``xterm.''
 .TP 8
+.B "printAttributes (\fPclass\fB PrintAttributes)"
+Specifies whether to print graphic attributes along with the text.
+A real DEC VTxxx terminal will print the underline, highlighting codes
+but your printer may not handle these.
+A ``0'' disables the attributes.
+A ``1'' prints the normal set of attributes (bold, underline, inverse and blink)
+as VT100-style control sequences.
+A ``2'' prints ANSI color attributes as well.
+The default is ``0.''
+.TP 8
 .B "printerControlMode (\fPclass\fB PrinterControlMode)"
 Specifies the printer control mode.
 A ``1'' selects autoprint mode, which causes

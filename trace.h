@@ -43,6 +43,6 @@ extern	void	Trace PROTO(( char *, ... ))
 #define TRACE(p) Trace p;
 
 extern	char	*trace_who;
-#define TRACE_CHILD trace_who = "child"
+#define TRACE_CHILD int tracing_child = (trace_who = "child") != 0;
 
 #endif	/* included_trace_h */
