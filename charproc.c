@@ -2,11 +2,11 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.138 2003/02/06 23:09:42 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.139 2003/02/25 23:36:55 dickey Exp $ */
 
 /*
 
-Copyright 1999-2001,2002 by Thomas E. Dickey
+Copyright 1999-2002,2003 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -378,6 +378,7 @@ static XtActionsRec actionsList[] = {
 static XtResource resources[] =
 {
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvents, FALSE),
+    Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOps, TRUE),
     Bres(XtNalwaysHighlight, XtCAlwaysHighlight, screen.always_highlight, FALSE),
     Bres(XtNappcursorDefault, XtCAppcursorDefault, misc.appcursorDefault, FALSE),
     Bres(XtNappkeypadDefault, XtCAppkeypadDefault, misc.appkeypadDefault, FALSE),
@@ -2312,7 +2313,8 @@ VTparse(void)
 	    break;
 
 	case CASE_XTERM_WINOPS:
-	    window_ops(term);
+	    if (screen->allowWindowOps)
+		window_ops(term);
 	    parsestate = groundtable;
 	    break;
 #if OPT_WIDE_CHARS
@@ -4638,6 +4640,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.backarrow_key);
     init_Bres(screen.meta_sends_esc);
     init_Bres(screen.allowSendEvents);
+    init_Bres(screen.allowWindowOps);
 #ifndef NO_ACTIVE_ICON
     wnew->screen.fnt_icon = request->screen.fnt_icon;
 #endif /* NO_ACTIVE_ICON */

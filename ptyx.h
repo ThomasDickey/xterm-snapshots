@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.99 2002/10/05 17:57:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.100 2003/02/25 23:36:55 dickey Exp $ */
 
 /*
  * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
@@ -1107,6 +1107,7 @@ typedef struct {
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		poponbell;	/* pop on bell mode		*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
+	Boolean		allowWindowOps;	/* WindowOps mode		*/
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
 #ifdef ALLOWLOGGING

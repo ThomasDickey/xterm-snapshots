@@ -3,11 +3,11 @@
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.39 2002/10/05 17:57:11 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.40 2003/02/25 23:36:55 dickey Exp $ */
 
 /*
 
-Copyright 2001,2002 by Thomas E. Dickey
+Copyright 2001-2002,2003 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -427,11 +427,11 @@ Tekparse(void)
 	} else
 #endif
 	    nextstate = Tparsestate[c];
-	TRACE(("parse %d -> %d\n", c, nextstate));
+	TRACE(("Tekparse %d -> %d\n", c, nextstate));
 
 	switch (nextstate) {
 	case CASE_REPORT:
-	    /* report address */
+	    TRACE(("case: report address\n"));
 	    if (screen->TekGIN) {
 		TekGINoff();
 		TekEnqMouse(0);
@@ -446,7 +446,7 @@ Tekparse(void)
 	    break;
 
 	case CASE_VT_MODE:
-	    /* special return to vt102 mode */
+	    TRACE(("case: special return to vt102 mode\n"));
 	    Tparsestate = curstate;
 	    TekRecord->ptr[-1] = NAK;	/* remove from recording */
 #ifdef ALLOWLOGGING
@@ -458,26 +458,27 @@ Tekparse(void)
 	    return;
 
 	case CASE_SPT_STATE:
-	    /* Enter Special Point Plot mode */
+	    TRACE(("case: Enter Special Point Plot mode\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    Tparsestate = curstate = Tspttable;
 	    break;
 
 	case CASE_GIN:
-	    /* Do Tek GIN mode */
+	    TRACE(("case: Do Tek GIN mode\n"));
 	    screen->TekGIN = &TekRecord->ptr[-1];
 	    /* Set cross-hair cursor raster array */
 	    if ((GINcursor =
 		 make_colored_cursor(XC_tcross, screen->mousecolor,
-				     screen->mousecolorback)) != 0)
-		XDefineCursor(screen->display, TShellWindow,
+				     screen->mousecolorback)) != 0) {
+		XDefineCursor(screen->display, TWindow(screen),
 			      GINcursor);
+	    }
 	    Tparsestate = Tbyptable;	/* Bypass mode */
 	    break;
 
 	case CASE_BEL:
-	    /* BEL */
+	    TRACE(("case: BEL\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    if (!TekRefresh)
@@ -486,7 +487,7 @@ Tekparse(void)
 	    break;
 
 	case CASE_BS:
-	    /* BS */
+	    TRACE(("case: BS\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    Tparsestate = curstate;	/* clear bypass condition */
@@ -494,14 +495,14 @@ Tekparse(void)
 	    break;
 
 	case CASE_PT_STATE:
-	    /* Enter Tek Point Plot mode */
+	    TRACE(("case: Enter Tek Point Plot mode\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    Tparsestate = curstate = Tpttable;
 	    break;
 
 	case CASE_PLT_STATE:
-	    /* Enter Tek Plot mode */
+	    TRACE(("case: Enter Tek Plot mode\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    Tparsestate = curstate = Tplttable;
@@ -514,7 +515,7 @@ Tekparse(void)
 	    break;
 
 	case CASE_TAB:
-	    /* HT */
+	    TRACE(("case: HT\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    Tparsestate = curstate;	/* clear bypass condition */
@@ -522,14 +523,14 @@ Tekparse(void)
 	    break;
 
 	case CASE_IPL_STATE:
-	    /* Enter Tek Incremental Plot mode */
+	    TRACE(("case: Enter Tek Incremental Plot mode\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    Tparsestate = curstate = Tipltable;
 	    break;
 
 	case CASE_ALP_STATE:
-	    /* Enter Tek Alpha mode from any other mode */
+	    TRACE(("case: Enter Tek Alpha mode from any other mode\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    /* if in one of graphics states, move alpha cursor */
@@ -539,7 +540,7 @@ Tekparse(void)
 	    break;
 
 	case CASE_UP:
-	    /* cursor up */
+	    TRACE(("case: cursor up\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    Tparsestate = curstate;	/* clear bypass condition */
@@ -547,7 +548,7 @@ Tekparse(void)
 	    break;
 
 	case CASE_COPY:
-	    /* make copy */
+	    TRACE(("case: make copy\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    TekCopy();
@@ -556,46 +557,46 @@ Tekparse(void)
 	    break;
 
 	case CASE_PAGE:
-	    /* Page Function */
+	    TRACE(("case: Page Function\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    TekPage();		/* clear bypass condition */
 	    break;
 
 	case CASE_BES_STATE:
-	    /* Byp: an escape char */
+	    TRACE(("case: Byp: an escape char\n"));
 	    Tparsestate = Tbestable;
 	    break;
 
 	case CASE_BYP_STATE:
-	    /* set bypass condition */
+	    TRACE(("case: set bypass condition\n"));
 	    Tparsestate = Tbyptable;
 	    break;
 
 	case CASE_IGNORE:
-	    /* Esc: totally ignore CR, ESC, LF, ~ */
+	    TRACE(("case: Esc: totally ignore CR, ESC, LF, ~\n"));
 	    break;
 
 	case CASE_ASCII:
-	    /* Select ASCII char set */
+	    TRACE(("case: Select ASCII char set\n"));
 	    /* ignore for now */
 	    Tparsestate = curstate;
 	    break;
 
 	case CASE_APL:
-	    /* Select APL char set */
+	    TRACE(("case: Select APL char set\n"));
 	    /* ignore for now */
 	    Tparsestate = curstate;
 	    break;
 
 	case CASE_CHAR_SIZE:
-	    /* character size selector */
+	    TRACE(("case: character size selector\n"));
 	    TekSetFontSize(c & 03);
 	    Tparsestate = curstate;
 	    break;
 
 	case CASE_BEAM_VEC:
-	    /* beam and vector selector */
+	    TRACE(("case: beam and vector selector\n"));
 	    /* only line types */
 	    if ((c &= LINEMASK) != screen->cur.linetype) {
 		if (nplot > 0)
@@ -611,17 +612,17 @@ Tekparse(void)
 	    break;
 
 	case CASE_PENUP:
-	    /* Ipl: penup */
+	    TRACE(("case: Ipl: penup\n"));
 	    screen->pen = PENUP;
 	    break;
 
 	case CASE_PENDOWN:
-	    /* Ipl: pendown */
+	    TRACE(("case: Ipl: pendown\n"));
 	    screen->pen = PENDOWN;
 	    break;
 
 	case CASE_IPL_POINT:
-	    /* Ipl: point */
+	    TRACE(("case: Ipl: point\n"));
 	    x = screen->cur_X;
 	    y = screen->cur_Y;
 	    if (c & NORTH)
@@ -639,7 +640,7 @@ Tekparse(void)
 	    break;
 
 	case CASE_PLT_VEC:
-	    /* Plt: vector */
+	    TRACE(("case: Plt: vector\n"));
 	    unput(c);
 	    if (getpoint()) {
 		if (screen->pen == PENDOWN)
@@ -651,7 +652,7 @@ Tekparse(void)
 	    break;
 
 	case CASE_PT_POINT:
-	    /* Pt: point */
+	    TRACE(("case: Pt: point\n"));
 	    unput(c);
 	    if (getpoint()) {
 		TekMove(screen->cur.x, screen->cur.y);
@@ -660,7 +661,7 @@ Tekparse(void)
 	    break;
 
 	case CASE_SPT_POINT:
-	    /* Spt: point */
+	    TRACE(("case: Spt: point\n"));
 	    /* ignore intensity character in c */
 	    if (getpoint()) {
 		TekMove(screen->cur.x, screen->cur.y);
@@ -669,7 +670,7 @@ Tekparse(void)
 	    break;
 
 	case CASE_CR:
-	    /* CR */
+	    TRACE(("case: CR\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    if (nplot > 0)	/* flush line Tbuffer */
@@ -680,12 +681,12 @@ Tekparse(void)
 	    break;
 
 	case CASE_ESC_STATE:
-	    /* ESC */
+	    TRACE(("case: ESC\n"));
 	    Tparsestate = Tesctable;
 	    break;
 
 	case CASE_LF:
-	    /* LF */
+	    TRACE(("case: LF\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
 	    TCursorDown();
@@ -694,12 +695,12 @@ Tekparse(void)
 	    break;
 
 	case CASE_SP:
-	    /* SP */
+	    TRACE(("case: SP\n"));
 	    TCursorForward();
 	    break;
 
 	case CASE_PRINT:
-	    /* printable character */
+	    TRACE(("case: printable character\n"));
 	    ch = c;
 	    c = screen->cur.fontsize;
 	    x = (int) (screen->cur_X * TekScale(screen))
@@ -735,7 +736,7 @@ Tekparse(void)
 	    /* FIXME:  someone should disentangle the input queues
 	     * of this code so that it can be state-driven.
 	     */
-	    /* do osc escape */
+	    TRACE(("case: do osc escape\n"));
 	    {
 		Char buf2[512];
 		int c2, len = 0;

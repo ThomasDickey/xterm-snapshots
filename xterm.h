@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.86 2002/12/27 21:05:23 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.87 2003/02/25 23:36:55 dickey Exp $ */
 
 /************************************************************
 
@@ -266,6 +266,7 @@ extern int errno;
 /***====================================================================***/
 
 #define XtNallowSendEvents	"allowSendEvents"
+#define XtNallowWindowOps	"allowWindowOps"
 #define XtNalwaysHighlight	"alwaysHighlight"
 #define XtNalwaysUseMods	"alwaysUseMods"
 #define XtNanswerbackString	"answerbackString"
@@ -376,6 +377,7 @@ extern int errno;
 #define XtNxmcMoveSGR		"xmcMoveSGR"
 
 #define XtCAllowSendEvents	"AllowSendEvents"
+#define XtCAllowWindowOps	"AllowWindowOps"
 #define XtCAlwaysHighlight	"AlwaysHighlight"
 #define XtCAlwaysUseMods	"AlwaysUseMods"
 #define XtCAnswerbackString	"AnswerbackString"
