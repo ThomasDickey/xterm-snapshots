@@ -1274,7 +1274,7 @@ ConvertSelection(
 	unsigned long std_length;
 	XmuConvertStandardSelection(
 		    w, screen->selection_time, selection,
-		    target, type, (XtPointer *)&std_targets, &std_length, format
+		    target, type, (XPointer *)&std_targets, &std_length, format
 		   );
 	*length = std_length + 5;
 	targetP = (Atom*)XtMalloc(sizeof(Atom)*(*length));
@@ -1340,7 +1340,7 @@ ConvertSelection(
     }
     if (XmuConvertStandardSelection(w, screen->selection_time, selection,
 				    target, type,
-				    (XtPointer *)value, length, format))
+				    (XPointer *)value, length, format))
 	return True;
 
     /* else */
