@@ -56,7 +56,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.76 2001/10/10 19:46:23 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.77 2001/10/24 01:21:25 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996.
 .TH XTERM 1 __vendorversion__
@@ -1049,6 +1049,7 @@ selections as carrying text in the current locale's encoding. Normally
 selections carry ISO-8859-1 encoded text. Setting this resource to
 ``true'' violates the ICCCM; it may, however, be useful for interacting
 with some broken X clients.
+The default is ``false.''
 .TP 8
 .B "c132 (\fPclass\fB C132)"
 Specifies whether or not the VT102 DECCOLM escape sequence should be honored.

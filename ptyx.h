@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.88 2001/09/09 01:07:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.89 2001/10/24 01:21:25 dickey Exp $ */
 
 /*
  * Copyright 1999-2000 by Thomas E. Dickey
@@ -301,6 +301,11 @@ typedef Char **ScrnBuf;
 
 #define	NBOX	5			/* Number of Points in box	*/
 #define	NPARAM	30			/* Max. parameters		*/
+
+typedef struct {
+	char *opt;
+	char *desc;
+} OptionHelp;
 
 typedef struct {
 	unsigned char	a_type;
@@ -809,8 +814,14 @@ typedef struct {
 #ifndef TRACE
 #define TRACE(p) /*nothing*/
 #endif
+#ifndef TRACE_ARGV
+#define TRACE_ARGV(tag,argv) /*nothing*/
+#endif
 #ifndef TRACE_CHILD
 #define TRACE_CHILD /*nothing*/
+#endif
+#ifndef TRACE_OPTS
+#define TRACE_OPTS(opts,ress,lens) /*nothing*/
 #endif
 #ifndef TRACE_TRANS
 #define TRACE_TRANS(name,w) /*nothing*/

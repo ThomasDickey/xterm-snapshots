@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.12 2001/09/09 01:07:26 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.13 2001/10/24 01:21:25 dickey Exp $
  */
 
 /************************************************************
@@ -36,6 +36,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <X11/StringDefs.h>
 
 #include <time.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -186,12 +187,198 @@ TraceTranslations(const char *name, Widget w)
 		      XtNtranslations, &xlations,
 		      XtNaccelerators, &xcelerat,
 		      NULL);
-	Trace("... xlations %#08lx\n", (long) xlations);
-	Trace("... xcelerat %#08lx\n", (long) xcelerat);
+	TRACE(("... xlations %#08lx\n", (long) xlations));
+	TRACE(("... xcelerat %#08lx\n", (long) xcelerat));
 	result = _XtPrintXlations(w, xlations, xcelerat, True);
 	TRACE(("%s\n", result != 0 ? result : "(null)"));
     } else {
 	TRACE(("none (widget is null)\n"));
     }
     XSetErrorHandler(save);
+}
+
+void
+TraceArgv(const char *tag, char **argv)
+{
+    int n = 0;
+
+    TRACE(("%s:\n", tag));
+    while (*argv != 0) {
+	TRACE(("  %d:%s\n", n++, *argv++));
+    }
+}
+
+static int
+cmp_options(const void *a, const void *b)
+{
+    return strcmp(((const OptionHelp *) a)->opt,
+		  ((const OptionHelp *) b)->opt);
+}
+
+static int
+cmp_resources(const void *a, const void *b)
+{
+    return strcmp(((const XrmOptionDescRec *) a)->option,
+		  ((const XrmOptionDescRec *) b)->option);
+}
+
+static char *
+parse_option(char *dst, char *src, char first)
+{
+    char *s;
+
+    if (!strncmp(src, "-/+", 3)) {
+	dst[0] = first;
+	strcpy(dst + 1, src + 3);
+    } else {
+	strcpy(dst, src);
+    }
+    for (s = dst; *s != '\0'; s++) {
+	if (*s == '#' || *s == '%' || *s == 'S') {
+	    s[1] = '\0';
+	} else if (*s == ' ') {
+	    *s = '\0';
+	    break;
+	}
+    }
+    return dst;
+}
+
+static Boolean
+same_option(OptionHelp * opt, XrmOptionDescRec * res)
+{
+    char temp[BUFSIZ];
+    return !strcmp(parse_option(temp, opt->opt, res->option[0]), res->option);
+}
+
+static Boolean
+standard_option(char *opt)
+{
+    static char *table[] =
+    {
+	"+rv",
+	"+synchronous",
+	"-background",
+	"-bd",
+	"-bg",
+	"-bordercolor",
+	"-borderwidth",
+	"-bw",
+	"-display",
+	"-fg",
+	"-fn",
+	"-font",
+	"-foreground",
+	"-geometry",
+	"-iconic",
+	"-name",
+	"-reverse",
+	"-rv",
+	"-selectionTimeout",
+	"-synchronous",
+	"-title",
+	"-xnllanguage",
+	"-xrm",
+	"-xtsessionID",
+    };
+    Cardinal n;
+    char temp[BUFSIZ];
+
+    opt = parse_option(temp, opt, '-');
+    for (n = 0; n < XtNumber(table); n++) {
+	if (!strcmp(opt, table[n]))
+	    return True;
+    }
+    return False;
+}
+
+/*
+ * Analyse the options/help messages for inconsistencies.
+ */
+void
+TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_count)
+{
+    OptionHelp *opt_array;
+    size_t opt_count, j, k;
+    XrmOptionDescRec *res_array;
+    Boolean first, found;
+
+    TRACE(("Checking options-tables for inconsistencies:\n"));
+
+    /* count 'options' and make a sorted index to it */
+    for (opt_count = 0; options[opt_count].opt != 0; ++opt_count) ;
+    opt_array = (OptionHelp *) calloc(opt_count, sizeof(OptionHelp));
+    for (j = 0; j < opt_count; j++)
+	opt_array[j] = options[j];
+    qsort(opt_array, opt_count, sizeof(OptionHelp), cmp_options);
+
+    /* make a sorted index to 'resources' */
+    res_array = (XrmOptionDescRec *) calloc(res_count, sizeof(*res_array));
+    for (j = 0; j < res_count; j++)
+	res_array[j] = resources[j];
+    qsort(res_array, res_count, sizeof(*res_array), cmp_resources);
+
+#if 0
+    TRACE(("Options listed in help-message:\n"));
+    for (j = 0; j < opt_count; j++)
+	TRACE(("%5d %-28s %s\n", j, opt_array[j].opt, opt_array[j].desc));
+    TRACE(("Options listed in resource-table:\n"));
+    for (j = 0; j < res_count; j++)
+	TRACE(("%5d %-28s %s\n", j, res_array[j].option, res_array[j].specifier));
+#endif
+
+    /* list all options[] not found in resources[] */
+    for (j = 0, first = True; j < opt_count; j++) {
+	found = False;
+	for (k = 0; k < res_count; k++) {
+	    if (same_option(&opt_array[j], &res_array[k])) {
+		found = True;
+		break;
+	    }
+	}
+	if (!found) {
+	    if (first) {
+		TRACE(("Options listed in help, not found in resource list:\n"));
+		first = False;
+	    }
+	    TRACE(("  %-28s%s\n", opt_array[j].opt,
+		   standard_option(opt_array[j].opt) ? " (standard)" : ""));
+	}
+    }
+
+    /* list all resources[] not found in options[] */
+    for (j = 0, first = True; j < res_count; j++) {
+	found = False;
+	for (k = 0; k < opt_count; k++) {
+	    if (same_option(&opt_array[k], &res_array[j])) {
+		found = True;
+		break;
+	    }
+	}
+	if (!found) {
+	    if (first) {
+		TRACE(("Resource list items not found in options-help:\n"));
+		first = False;
+	    }
+	    TRACE(("  %s\n", res_array[j].option));
+	}
+    }
+
+    TRACE(("Resource list items that will be ignored by XtAppInitialize:\n"));
+    for (j = 0; j < res_count; j++) {
+	switch (res_array[j].argKind) {
+	case XrmoptionSkipArg:
+	    TRACE(("  %-28s {param}\n", res_array[j].option));
+	    break;
+	case XrmoptionSkipNArgs:
+	    TRACE(("  %-28s {%d params}\n", res_array[j].option, (int)
+		   res_array[j].value));
+	    break;
+	case XrmoptionSkipLine:
+	    TRACE(("  %-28s {remainder of line}\n", res_array[j].option));
+	    break;
+	default:
+	    break;
+	}
+    }
 }

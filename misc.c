@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.65 2001/09/20 01:06:35 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.66 2001/10/24 01:21:24 dickey Exp $ */
 
 /*
  *
@@ -1998,6 +1998,16 @@ Error (int i)
 	Cleanup(i);
 }
 
+static void
+Sleep (int msec)
+{
+	static struct timeval select_timeout;
+
+	select_timeout.tv_sec = 0;
+	select_timeout.tv_usec = msec * 1000;
+	select(0, 0, 0, 0, &select_timeout);
+}
+
 /*
  * cleanup by sending SIGHUP to client processes
  */
@@ -2021,6 +2031,7 @@ Cleanup (int code)
 		hold_screen = 2;
 		while (hold_screen) {
 			xevents();
+			Sleep(10);
 		}
 	}
 
