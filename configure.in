@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.6 1997/07/29 13:26:04 hohndel Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.7 1997/08/26 10:01:55 hohndel Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
@@ -27,7 +27,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Revision: 1.8 $)
+AC_REVISION($Revision: 1.9 $)
 AC_PREREQ(2.12)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
