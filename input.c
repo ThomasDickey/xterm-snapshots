@@ -322,7 +322,9 @@ Input (
 		if (nbytes == 1) {
 		/* Take ISO 8859-1 character delivered by XLookupString() */
 			ucs = (unsigned char) strbuf[0];
-		} else if (!nbytes && keysym >= 0x100 && keysym <= 0xf000)
+		} else if (!nbytes && 
+			   ((keysym >= 0x100 && keysym <= 0xf000) ||
+			    (keysym & 0xff000000) == 0x01000000))
 			ucs = keysym2ucs(keysym);
 		else
 			ucs = -2;

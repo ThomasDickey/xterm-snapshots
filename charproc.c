@@ -169,6 +169,7 @@ static void StopBlinking (TScreen *screen);
 #define XtNbellSuppressTime	"bellSuppressTime"
 #define XtNboldColors		"boldColors"
 #define XtNboldFont		"boldFont"
+#define XtNboldMode		"boldMode"
 #define XtNc132			"c132"
 #define XtNcharClass		"charClass"
 #define XtNcolor0		"color0"
@@ -197,9 +198,9 @@ static void StopBlinking (TScreen *screen);
 #define XtNcolorULMode		"colorULMode"
 #define XtNcurses		"curses"
 #define XtNcursorBlink		"cursorBlink"
-#define XtNcursorOnTime		"cursorOnTime"
-#define XtNcursorOffTime	"cursorOffTime"
 #define XtNcursorColor		"cursorColor"
+#define XtNcursorOffTime	"cursorOffTime"
+#define XtNcursorOnTime		"cursorOnTime"
 #define XtNcutNewline		"cutNewline"
 #define XtNcutToBeginningOfLine	"cutToBeginningOfLine"
 #define XtNdecTerminalID	"decTerminalID"
@@ -269,6 +270,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCBackarrowKey		"BackarrowKey"
 #define XtCBellSuppressTime	"BellSuppressTime"
 #define XtCBoldFont		"BoldFont"
+#define XtCBoldMode		"BoldMode"
 #define XtCC132			"C132"
 #define XtCCharClass		"CharClass"
 #define XtCColorMode		"ColorMode"
@@ -867,6 +869,9 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, screen.highlightcolor),
 	XtRString, "XtDefaultForeground"},
 #endif /* OPT_HIGHLIGHT_COLOR */
+{XtNboldMode, XtCBoldMode, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.bold_mode),
+	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNunderLine, XtCUnderLine, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.underline),
 	XtRBoolean, (XtPointer) &defaultTRUE},
@@ -4114,6 +4119,7 @@ static void VTInitialize (
       wnew->num_ptrs = (OFF_WIDEC+1);
 #endif
 
+   wnew->screen.bold_mode = request->screen.bold_mode;
    wnew->screen.underline = request->screen.underline;
 
    wnew->cur_foreground = 0;

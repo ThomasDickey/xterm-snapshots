@@ -866,6 +866,7 @@ typedef struct {
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
 	Boolean         always_highlight; /* whether to highlight cursor */
 	Boolean		underline;	/* whether to underline text	*/
+	Boolean		bold_mode;	/* whether to use bold font	*/
 
 #if OPT_MAXIMIZE
 	Boolean		restore_data;

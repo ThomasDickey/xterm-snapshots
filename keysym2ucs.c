@@ -12,6 +12,14 @@
  * by Xlib via XmbLookupString() and should ideally not have to be
  * done in X applications. But we are not there yet.
  *
+ * We allow to represent any UCS character in the range U+00000000 to
+ * U+00FFFFFF by a keysym value in the range 0x01000000 to 0x01ffffff.
+ * This admittedly does not cover the entire 31-bit space of UCS, but
+ * it does cover all of the characters up to U+10FFFF, which can be
+ * represented by UTF-16, and more, and it is very unlikely that higher
+ * UCS codes will ever be assigned by ISO. So to get Unicode character
+ * U+ABCD you can directly use keysym 0x1000abcd.
+ *
  * NOTE: The comments in the table below contain the actual character
  * encoded in UTF-8, so for viewing and editing best use an editor in
  * UTF-8 mode.
@@ -586,7 +594,7 @@ struct codepair {
   { 0x0bc4, 0x230a }, /*                   downstile ⌊ LEFT FLOOR */
   { 0x0bc6, 0x005f }, /*                    underbar _ LOW LINE */
   { 0x0bca, 0x2218 }, /*                         jot ∘ RING OPERATOR */
-  { 0x0bcc, 0x2395 }, /*                        quad ⎕ ??? */
+  { 0x0bcc, 0x2395 }, /*                        quad ⎕ APL FUNCTIONAL SYMBOL QUAD (Unicode 3.0) */
   { 0x0bce, 0x22a5 }, /*                      uptack ⊥ UP TACK */
   { 0x0bcf, 0x25cb }, /*                      circle ○ WHITE CIRCLE */
   { 0x0bd3, 0x2308 }, /*                     upstile ⌈ LEFT CEILING */
@@ -827,8 +835,12 @@ long keysym2ucs(KeySym keysym)
         (keysym >= 0x00a0 && keysym <= 0x00ff))
         return keysym;
 
+    /* also check for directly encoded 24-bit UCS characters */
+    if ((keysym & 0xff000000) == 0x01000000)
+	return keysym & 0x00ffffff;
+
     /* binary search in table */
-    while (max > min) {
+    while (max >= min) {
 	mid = (min + max) / 2;
 	if (keysymtab[mid].keysym < keysym)
 	    min = mid + 1;

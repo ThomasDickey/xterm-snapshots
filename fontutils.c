@@ -570,7 +570,8 @@ xtermLoadFont (
 	}
 #endif
 
-	screen->enbolden = (nfs == bfs) || same_font_name(normal, bfontname);
+	screen->enbolden = screen->bold_mode
+		&& ((nfs == bfs) || same_font_name(normal, bfontname));
 	TRACE(("Will %suse 1-pixel offset/overstrike to simulate bold\n", screen->enbolden ? "" : "not "))
 
 	set_menu_font (False);

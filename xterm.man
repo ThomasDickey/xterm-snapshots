@@ -882,6 +882,13 @@ The default is ``true.''
 .B "boldFont (\fPclass\fB BoldFont)"
 Specifies the name of the bold font to use instead of overstriking.
 .TP 8
+.B "boldMode (\fPclass\fB BoldMode)"
+This specifies whether or not text with the bold attribute should be
+overstruck to simulate bold fonts if the resolved bold font is the
+same as the normal font.
+It may be desirable to disable bold fonts when color is being
+used for the bold attribute.
+.TP 8
 .B "c132 (\fPclass\fB C132)"
 Specifies whether or not the VT102 DECCOLM escape sequence should be honored.
 The default is ``false.''
