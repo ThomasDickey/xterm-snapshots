@@ -1,5 +1,5 @@
 /*
- *	$XConsortium: data.c,v 1.11 93/02/25 17:21:27 gildea Exp $
+ *	$XConsortium: data.c,v 1.12 95/04/05 19:58:47 kaleb Exp $
  */
 
 /*
@@ -26,6 +26,7 @@
  */
 
 #include "ptyx.h"		/* gets Xt stuff, too */
+#include <X11/Xpoll.h>
 #include "data.h"
 #include <setjmp.h>
 
@@ -84,9 +85,9 @@ XtermWidget term;		/* master data structure for client */
 char *xterm_name;	/* argv[0] */
 int am_slave = 0;	/* set to 1 if running as a slave process */
 int max_plus1;
-int pty_mask;
-int Select_mask;
-int X_mask;
+fd_set Select_mask;
+fd_set X_mask;
+fd_set pty_mask;
 char *ptydev;
 char *ttydev;
 #ifdef ALLOWLOGGING

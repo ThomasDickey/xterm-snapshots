@@ -11,5 +11,5 @@ If you are porting this to a machine that has problems with overlapping
 bcopy's, watch out!
 
 There are two documents on xterm: the man page, xterm.man, which describes
-how to use it, and ctlseq.ms, which describes the control sequences it
+how to use it, and ctlseqs.ms, which describes the control sequences it
 understands.

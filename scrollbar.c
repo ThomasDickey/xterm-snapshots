@@ -1,5 +1,5 @@
 /*
- *	$XConsortium: scrollbar.c,v 1.41 91/05/22 15:20:07 gildea Exp $
+ *	$XConsortium: scrollbar.c /main/45 1996/01/14 16:53:05 kaleb $
  */
 
 /*
@@ -270,8 +270,6 @@ WindowScroll(screen, top)
 		return;
 	}
 
-	ScrollSelection(screen, i);
-
 	if(screen->cursor_state)
 		HideCursor();
 	lines = i > 0 ? i : -i;
@@ -287,6 +285,9 @@ WindowScroll(screen, top)
 	x = screen->scrollbar +	screen->border;
 	scrolling_copy_area(screen, scrolltop, scrollheight, -i);
 	screen->topline = top;
+
+	ScrollSelection(screen, i);
+
 	XClearArea(
 	    screen->display,
 	    TextWindow(screen), 
@@ -319,7 +320,7 @@ ScrollBarOn (xw, init, doalloc)
 	    /* make it a dummy size and resize later */
 	    if ((screen->scrollWidget = CreateScrollBar (xw, -1, - 1, 5))
 		== NULL) {
-		Bell();
+		Bell(XkbBI_MinorError,0);
 		return;
 	    }
 
@@ -328,8 +329,8 @@ ScrollBarOn (xw, init, doalloc)
 	}
 
 	if (!screen->scrollWidget) {
-	    Bell ();
-	    Bell ();
+	    Bell (XkbBI_MinorError,0);
+	    Bell (XkbBI_MinorError,0);
 	    return;
 	}
 
@@ -342,7 +343,7 @@ ScrollBarOn (xw, init, doalloc)
 	       == NULL)
 	      Error (ERROR_SBRALLOC);
 	    screen->buf = &screen->allbuf[2 * screen->savelines];
-	    bcopy ((char *)screen->allbuf, (char *)screen->buf,
+	    memmove( (char *)screen->buf, (char *)screen->allbuf, 
 		   2 * (screen->max_row + 2) * sizeof (char *));
 	    for(i = 2 * screen->savelines - 1 ; i >= 0 ; i--)
 	      if((screen->allbuf[i] =
@@ -383,11 +384,12 @@ ScrollBarOff(screen)
 }
 
 /*ARGSUSED*/
-static void ScrollTextTo(scrollbarWidget, closure, topPercent)
+static void ScrollTextTo(scrollbarWidget, client_data, call_data)
 	Widget scrollbarWidget;
-	caddr_t closure;
-	float *topPercent;
+	XtPointer client_data;
+	XtPointer call_data;
 {
+	float *topPercent = (float *) call_data;
 	register TScreen *screen = &term->screen;
 	int thumbTop;	/* relative to first saved line */
 	int newTopLine;
@@ -404,11 +406,13 @@ static void ScrollTextTo(scrollbarWidget, closure, topPercent)
 }
 
 /*ARGSUSED*/
-static void ScrollTextUpDownBy(scrollbarWidget, closure, pixels)
+static void ScrollTextUpDownBy(scrollbarWidget, client_data, call_data)
 	Widget scrollbarWidget;
-	Opaque closure;
-	int pixels;
+	XtPointer client_data;
+	XtPointer call_data;
 {
+	int pixels = (int) call_data;
+
 	register TScreen *screen = &term->screen;
 	register int rowOnScreen, newTopLine;
 
@@ -495,8 +499,8 @@ void HandleScrollForward (gw, event, params, nparams)
     XtermWidget w = (XtermWidget) gw;
     register TScreen *screen = &w->screen;
 
-    ScrollTextUpDownBy (gw, (Opaque) NULL,
-			params_to_pixels (screen, params, (int) *nparams));
+    ScrollTextUpDownBy (gw, (XtPointer) NULL,
+			(XtPointer)params_to_pixels (screen, params, (int) *nparams));
     return;
 }
 
@@ -511,9 +515,7 @@ void HandleScrollBack (gw, event, params, nparams)
     XtermWidget w = (XtermWidget) gw;
     register TScreen *screen = &w->screen;
 
-    ScrollTextUpDownBy (gw, (Opaque) NULL,
-			-params_to_pixels (screen, params, (int) *nparams));
+    ScrollTextUpDownBy (gw, (XtPointer) NULL,
+			(XtPointer)-params_to_pixels (screen, params, (int) *nparams));
     return;
 }
-
-

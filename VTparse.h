@@ -1,5 +1,5 @@
 /*
- *	$XConsortium: VTparse.h,v 1.5 91/01/06 12:47:08 rws Exp $
+ *	$XConsortium: VTparse.h,v 1.6 92/09/15 15:28:31 gildea Exp $
  */
 
 /*
@@ -25,14 +25,11 @@
  * SOFTWARE.
  */
 
-/* @(#)VTparse.h	X10/6.6	11/6/86 */
-
 /*
  * The following list of definitions is generated from VTparse.def using the
  * following command line:
  *
- *     egrep -v '^CASE_' VTparse.def | \
- *     awk 'BEGIN {n = 0;} {printf "#define %s %d\n", $1, n; n++}'
+ *     grep '^CASE_' VTparse.def | awk '{printf "#define %s %d\n", $1, n++}'
  *
  * You you need to change something, change VTparse.def and regenerate the
  * definitions.  This would have been automatic, but since this doesn't change
@@ -107,3 +104,6 @@
 #define CASE_XTERM_RESTORE 65
 #define CASE_XTERM_TITLE 66
 #define CASE_DECID 67
+#define CASE_HP_MEM_LOCK 68
+#define CASE_HP_MEM_UNLOCK 69
+#define CASE_HP_BUGGY_LL 70

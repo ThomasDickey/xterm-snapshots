@@ -1,5 +1,5 @@
 /*
- *	$XConsortium: resize.c,v 1.27 91/07/23 11:11:19 rws Exp $
+ *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
  */
 
 /*
@@ -32,8 +32,13 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#if defined(att) || (defined(SYSV) && defined(SYSV386))
+#if defined(att) || (defined(SYSV) && defined(i386))
 #define ATT
+#endif
+
+#if defined(sgi) && defined(SVR4)
+#undef SVR4
+#define SYSV
 #endif
 
 #ifdef SVR4
@@ -54,7 +59,7 @@
 #undef SYSV				/* pretend to be bsd */
 #endif /* macII */
 
-#ifdef SYSV
+#if defined(SYSV) || defined(linux)
 #define USE_SYSV_TERMIO
 #define USE_SYSV_UTMP
 #else /* else not SYSV */
@@ -65,12 +70,16 @@
 #ifdef USE_SYSV_TERMIO
 #include <sys/termio.h>
 #else /* else not USE_SYSV_TERMIO */
+#ifndef linux
 #include <sgtty.h>
+#endif
 #endif	/* USE_SYSV_TERMIO */
 
 #ifdef USE_USG_PTYS
 #include <sys/stream.h>
+#ifndef SVR4
 #include <sys/ptem.h>
+#endif
 #endif
 
 #include <signal.h>
@@ -90,9 +99,9 @@ char *getenv();
 
 #ifdef USE_SYSV_TERMIO
 #ifdef X_NOT_POSIX
-#ifndef SYSV386
+#ifndef i386
 extern struct passwd *getpwuid(); 	/* does ANYBODY need this? */
-#endif /* SYSV386 */
+#endif /* i386 */
 #endif /* X_NOT_POSIX */
 #define	bzero(s, n)	memset(s, 0, n)
 #endif	/* USE_SYSV_TERMIO */
@@ -130,7 +139,7 @@ char *getsize[EMULATIONS] = {
 	"\0337\033[r\033[999;999H\033[6n",
 	"\033[18t",
 };
-#ifndef sun
+#if !defined(sun) || defined(SVR4)
 #ifdef TIOCSWINSZ
 char *getwsize[EMULATIONS] = {	/* size in pixels */
 	0,
@@ -159,7 +168,7 @@ char *size[EMULATIONS] = {
 char sunname[] = "sunsize";
 int tty;
 FILE *ttyfp;
-#ifndef sun
+#if !defined(sun) || defined(SVR4)
 #ifdef TIOCSWINSZ
 char *wsize[EMULATIONS] = {
 	0,
@@ -195,7 +204,7 @@ main (argc, argv)
 	char newtc [1024];
 #endif /* USE_TERMCAP */
 	char buf[BUFSIZ];
-#ifdef sun
+#if defined(sun) && !defined(SVR4)
 #ifdef TIOCSSIZE
 	struct ttysize ts;
 #endif	/* TIOCSSIZE */
@@ -209,7 +218,7 @@ main (argc, argv)
 	extern char *ttyname();
 #endif
 
-	ptr = rindex(myname = argv[0], '/');
+	ptr = strrchr(myname = argv[0], '/');
 	if(ptr)
 		myname = ptr + 1;
 	if(strcmp(myname, sunname) == 0)
@@ -242,7 +251,7 @@ main (argc, argv)
 			/* this is the same default that xterm uses */
 			ptr = "/bin/sh";
 
-		shell = rindex(ptr, '/');
+		shell = strrchr(ptr, '/');
 		if(shell)
 			shell++;
 		else
@@ -335,7 +344,7 @@ main (argc, argv)
 	}
 	if(restore[emu])
 		write(tty, restore[emu], strlen(restore[emu]));
-#ifdef sun
+#if defined(sun) && !defined(SVR4)
 #ifdef TIOCGSIZE
 	/* finally, set the tty's window size */
 	if (ioctl (tty, TIOCGSIZE, &ts) != -1) {
@@ -394,7 +403,7 @@ main (argc, argv)
 	i = ptr - termcap + 3;
 	strncpy (newtc, termcap, i);
 	sprintf (newtc + i, "%d", cols);
-	ptr = index (ptr, ':');
+	ptr = strchr(ptr, ':');
 	strcat (newtc, ptr);
 
 	/* now do lines */
@@ -406,7 +415,7 @@ main (argc, argv)
 	i = ptr - newtc + 3;
 	strncpy (termcap, newtc, i);
 	sprintf (termcap + i, "%d", rows);
-	ptr = index (ptr, ':');
+	ptr = strchr(ptr, ':');
 	strcat (termcap, ptr);
 #endif /* USE_TERMCAP */
 
@@ -447,7 +456,7 @@ register char *s1, *s2;
 	register char *s3;
 	int s2len = strlen (s2);
 
-	while ((s3 = index (s1, *s2)) != NULL)
+	while ((s3 = strchr(s1, *s2)) != NULL)
 	{
 		if (strncmp (s3, s2, s2len) == 0) return (s3);
 		s1 = ++s3;
@@ -472,12 +481,12 @@ readstring(fp, buf, str)
     char *str;
 {
 	register int last, c;
-	SIGNAL_T timeout();
+	SIGNAL_T resize_timeout();
 #ifndef USG
 	struct itimerval it;
 #endif
 
-	signal(SIGALRM, timeout);
+	signal(SIGALRM, resize_timeout);
 #ifdef USG
 	alarm (TIMEOUT);
 #else
@@ -515,10 +524,10 @@ Usage()
 }
 
 SIGNAL_T
-timeout(sig)
+resize_timeout(sig)
     int sig;
 {
-	fprintf(stderr, "%s: Time out occurred\r\n", myname);
+	fprintf(stderr, "\n%s: Time out occurred\r\n", myname);
 	onintr(sig);
 }
 

@@ -1,5 +1,5 @@
 /*
- *	$XConsortium: screen.c,v 1.30 91/08/22 16:27:13 gildea Exp $
+ *	$XConsortium: screen.c,v 1.33 94/04/02 17:34:36 gildea Exp $
  */
 
 /*
@@ -117,8 +117,8 @@ Reallocate(sbuf, sbufaddr, nrow, ncol, oldrow, oldcol)
 		        - 2*(term->screen.max_row - term->screen.cur_row);
 	    if (move_up < 0)
 		move_up = 0;
-	    /* Overlapping bcopy here! */
-	    bcopy(*sbuf+move_up, *sbuf,
+	    /* Overlapping memmove here! */
+	    memmove( *sbuf, *sbuf+move_up, 
 		  (oldrow-move_up)*sizeof((*sbuf)[0]) );
 	}
 	*sbuf = (ScrnBuf) realloc((char *) (*sbuf),
@@ -142,7 +142,7 @@ Reallocate(sbuf, sbufaddr, nrow, ncol, oldrow, oldcol)
 	    tmp += ncol*move_down;
 	}
 	for (i = 0; i < minrows; i++, tmp += ncol) {
-		bcopy(base[i], tmp, mincols);
+		memmove( tmp, base[i], mincols);
 	}
 	/*
 	 * update the pointers in sbuf
@@ -166,9 +166,10 @@ char *str;
 register unsigned flags;
 register int length;		/* length of string */
 {
-	register Char *attrs;
+	register Char *attrs, *attrs0;
 	register int avail  = screen->max_col - screen->cur_col + 1;
 	register Char *col;
+	register int wrappedbit;
 
 	if (length > avail)
 	    length = avail;
@@ -176,12 +177,15 @@ register int length;		/* length of string */
 		return;
 
 	col = screen->buf[avail = 2 * screen->cur_row] + screen->cur_col;
-	attrs = screen->buf[avail + 1] + screen->cur_col;
+	attrs = attrs0 = screen->buf[avail + 1] + screen->cur_col;
+	wrappedbit = *attrs0&LINEWRAPPED;
 	flags &= ATTRIBUTES;
 	flags |= CHARDRAWN;
-	bcopy(str, col, length);
+	memmove( col, str, length);
 	while(length-- > 0)
 		*attrs++ = flags;
+	if (wrappedbit)
+	    *attrs0 |= LINEWRAPPED;
 }
 
 ScrnInsertLine (sb, last, where, n, size)
@@ -200,7 +204,7 @@ register int where, n, size;
 
 
 	/* save n lines at bottom */
-	bcopy ((char *) &sb [2 * (last -= n - 1)], (char *) save,
+	memmove( (char *) save, (char *) &sb [2 * (last -= n - 1)], 
 		2 * sizeof (char *) * n);
 	
 	/* clear contents of old rows */
@@ -216,11 +220,11 @@ register int where, n, size;
 	 *
 	 *   +--------|---------|----+
 	 */
-	bcopy ((char *) &sb [2 * where], (char *) &sb [2 * (where + n)],
+	memmove( (char *) &sb [2 * (where + n)], (char *) &sb [2 * where], 
 		2 * sizeof (char *) * (last - where));
 
 	/* reuse storage for new lines at where */
-	bcopy ((char *)save, (char *) &sb[2 * where], 2 * sizeof(char *) * n);
+	memmove( (char *) &sb[2 * where], (char *)save, 2 * sizeof(char *) * n);
 }
 
 
@@ -239,18 +243,18 @@ int where;
 	char *save [2 * MAX_ROWS];
 
 	/* save n lines at where */
-	bcopy ((char *) &sb[2 * where], (char *)save, 2 * sizeof(char *) * n);
+	memmove( (char *)save, (char *) &sb[2 * where], 2 * sizeof(char *) * n);
 
 	/* clear contents of old rows */
 	for (i = 2 * n - 1 ; i >= 0 ; i--)
 		bzero ((char *) save [i], size);
 
 	/* move up lines */
-	bcopy ((char *) &sb[2 * (where + n)], (char *) &sb[2 * where],
+	memmove( (char *) &sb[2 * where], (char *) &sb[2 * (where + n)], 
 		2 * sizeof (char *) * ((last -= n - 1) - where));
 
 	/* reuse storage for new bottom lines */
-	bcopy ((char *)save, (char *) &sb[2 * last],
+	memmove( (char *) &sb[2 * last], (char *)save, 
 		2 * sizeof(char *) * n);
 }
 
@@ -297,8 +301,8 @@ ScrnDeleteChar (sb, row, col, n, size)
 	register nbytes = (size - n - col);
 	int wrappedbit = attrs[0]&LINEWRAPPED;
 
-	bcopy (ptr + col + n, ptr + col, nbytes);
-	bcopy (attrs + col + n, attrs + col, nbytes);
+	memmove( ptr + col, ptr + col + n, nbytes);
+	memmove( attrs + col, attrs + col + n, nbytes);
 	bzero (ptr + size - n, n);
 	bzero (attrs + size - n, n);
 	if (wrappedbit)
@@ -485,7 +489,7 @@ ScreenResize (screen, width, height, flags)
 	int rows, cols;
 	int border = 2 * screen->border;
 	int move_down_by;
-#ifdef sun
+#if defined(sun) && !defined(SVR4)
 #ifdef TIOCSSIZE
 	struct ttysize ts;
 #endif	/* TIOCSSIZE */
@@ -579,7 +583,7 @@ ScreenResize (screen, width, height, flags)
 	screen->fullVwin.fullheight = height;
 	screen->fullVwin.fullwidth = width;
 	ResizeSelection (screen, rows, cols);
-#ifdef sun
+#if defined(sun) && !defined(SVR4)
 #ifdef TIOCSSIZE
 	/* Set tty's idea of window size */
 	ts.ts_lines = rows;

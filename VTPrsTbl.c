@@ -1,5 +1,5 @@
 /*
- *	$XConsortium: VTPrsTbl.c,v 1.8 91/05/29 18:06:08 gildea Exp $
+ *	$XConsortium: VTPrsTbl.c,v 1.10 95/06/09 22:17:06 gildea Exp $
  */
 
 /*
@@ -27,7 +27,7 @@
 
 #include "VTparse.h"
 
-#if __STDC__
+#ifdef __STDC__
 #define Const const
 #else
 #define Const /**/
@@ -1425,7 +1425,7 @@ CASE_GROUND_STATE,
 /*	D		E		F		G	*/
 CASE_IND,
 CASE_NEL,
-CASE_GROUND_STATE,
+CASE_HP_BUGGY_LL,
 CASE_GROUND_STATE,
 /*	H		I		J		K	*/
 CASE_HTS,
@@ -1473,8 +1473,8 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	l		m		n		o	*/
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_HP_MEM_LOCK,
+CASE_HP_MEM_UNLOCK,
 CASE_LS2,
 CASE_LS3,
 /*	p		q		r		s	*/

@@ -1,4 +1,4 @@
-/* $XConsortium: button.c,v 1.66 91/05/31 17:00:03 gildea Exp $ */
+/* $XConsortium: button.c /main/70 1996/01/14 16:52:34 kaleb $ */
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
@@ -348,7 +348,7 @@ Cardinal *num_params;
 
 static void
 SetSelectUnit(buttonDownTime, defaultUnit)
-    unsigned long buttonDownTime;
+    Time buttonDownTime;
     SelectUnit defaultUnit;
 {
 /* Do arithmetic as integers, but compare as unsigned solves clock wraparound */
@@ -428,8 +428,9 @@ TrackDown(event)
 			else if (x >= screen->max_row) \
 			    x = screen->max_row;
 
+void
 TrackMouse(func, startrow, startcol, firstrow, lastrow)
-int func, startrow, startcol, firstrow, lastrow;
+    int func, startrow, startcol, firstrow, lastrow;
 {
 	TScreen *screen = &term->screen;
 
@@ -661,56 +662,35 @@ Cardinal *num_params;		/* unused */
 }
 
 
-
-
-
 ScrollSelection(screen, amount)
 register TScreen* screen;
 register int amount;
 {
-    register int minrow = -screen->savedlines;
+    register int minrow = -screen->savedlines - screen->topline;
+    register int maxrow = screen->max_row - screen->topline;
+    register int maxcol = screen->max_col;
 
-    /* Sent by scrollbar stuff, so amount never takes selection out of
-       saved text */
+#define scroll_update_one(row, col) \
+    	row += amount; \
+	if (row < minrow) { \
+	    row = minrow; \
+	    col = 0; \
+	} \
+	if (row > maxrow) { \
+	    row = maxrow; \
+	    col = maxcol; \
+	}
 
-    /* XXX - the preceeding is false; cat /etc/termcap (or anything
-       larger than the number of saved lines plus the screen height) and then
-       hit extend select */
+    scroll_update_one(startRRow, startRCol);
+    scroll_update_one(endRRow, endRCol);
+    scroll_update_one(startSRow, startSCol);
+    scroll_update_one(endSRow, endSCol);
 
-    startRRow += amount; endRRow += amount;
-    startSRow += amount; endSRow += amount;
-    rawRow += amount;
-    screen->startHRow += amount;
-    screen->endHRow += amount;
+    scroll_update_one(rawRow, rawCol);
 
-    if (startRRow < minrow) {
-	startRRow = minrow;
-	startRCol = 0;
-    }
-    if (endRRow < minrow) {
-	endRRow = minrow;
-        endRCol = 0;
-    }
-    if (startSRow < minrow) {
-	startSRow = minrow;
-	startSCol = 0;
-    }
-    if (endSRow < minrow) {
-	endSRow = minrow;
-	endSCol = 0;
-    }
-    if (rawRow < minrow) {
-	rawRow = minrow;
-	rawCol = 0;
-    }
-    if (screen->startHRow < minrow) {
-	screen->startHRow = minrow;
-	screen->startHCol = 0;
-    }
-    if (screen->endHRow < minrow) {
-	screen->endHRow = minrow;
-	screen->endHCol = 0;
-    }
+    scroll_update_one(screen->startHRow, screen->startHCol);
+    scroll_update_one(screen->endHRow, screen->endHCol);
+
     screen->startHCoord = Coordinate (screen->startHRow, screen->startHCol);
     screen->endHCoord = Coordinate (screen->endHRow, screen->endHCol);
 }
@@ -1046,7 +1026,7 @@ ReHiliteText(frow, fcol, trow, tcol)
 	}
 }
 
-static _OwnSelection();
+static void _OwnSelection();
 
 static void
 SaltTextAway(crow, ccol, row, col, params, num_params)
@@ -1140,7 +1120,7 @@ int *format;
 	*targetP++ = XA_COMPOUND_TEXT(d);
 	*targetP++ = XA_LENGTH(d);
 	*targetP++ = XA_LIST_LENGTH(d);
-	bcopy((char*)std_targets, (char*)targetP, sizeof(Atom)*std_length);
+	memmove( (char*)targetP, (char*)std_targets, sizeof(Atom)*std_length);
 	XtFree((char*)std_targets);
 	*type = XA_ATOM;
 	*format = 32;
@@ -1165,7 +1145,7 @@ int *format;
 	    *(long*)*value = 1;
 	else {
 	    long temp = 1;
-	    bcopy( ((char*)&temp)+sizeof(long)-4, (char*)*value, 4);
+	    memmove( (char*)*value, ((char*)&temp)+sizeof(long)-4, 4);
 	}
 	*type = XA_INTEGER;
 	*length = 1;
@@ -1178,7 +1158,7 @@ int *format;
 	    *(long*)*value = xterm->screen.selection_length;
 	else {
 	    long temp = xterm->screen.selection_length;
-	    bcopy( ((char*)&temp)+sizeof(long)-4, (char*)*value, 4);
+	    memmove( (char*)*value, ((char*)&temp)+sizeof(long)-4, 4);
 	}
 	*type = XA_INTEGER;
 	*length = 1;
@@ -1246,7 +1226,7 @@ Atom *selection, *target;
 }
 
 
-static /* void */ _OwnSelection(termw, selections, count)
+static void _OwnSelection(termw, selections, count)
     register XtermWidget termw;
     String *selections;
     Cardinal count;
@@ -1431,13 +1411,13 @@ void HandleGINInput (w, event, param_list, nparamsp)
 	  case 'L': case 'M': case 'R':
 	    break;
 	  default:
-	    Bell ();			/* let them know they goofed */
-	    c = 'l';			/* provide a default */
+	    Bell (XkbBI_MinorError,0);	/* let them know they goofed */
+	    c = 'l';				/* provide a default */
 	}
 	TekEnqMouse (c | 0x80);
 	TekGINoff();
     } else {
-	Bell ();
+	Bell (XkbBI_MinorError,0);
     }
 }
 

@@ -1,3 +1,5 @@
+! $XConsortium: XTerm.ad,v 1.32 94/02/09 18:19:21 converse Exp $
+XTerm.JoinSession:False
 *SimpleMenu*BackingStore: NotUseful
 *SimpleMenu*menuLabel.font: -adobe-helvetica-bold-r-normal--*-120-*-*-*-*-iso8859-*
 *SimpleMenu*menuLabel.vertSpace: 	100

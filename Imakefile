@@ -1,4 +1,4 @@
-XCOMM $XConsortium: Imakefile,v 1.56 92/03/11 17:35:22 gildea Exp $
+XCOMM $XConsortium: Imakefile /main/65 1996/02/02 14:27:54 kaleb $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -12,10 +12,10 @@ XCOMM
  * add -DWTMP and -DLASTLOG if you want them; make sure that bcopy can
  * handle overlapping copies before using it.
  */
-#ifdef SetTtyGroup			/* turn on in config/machine.cf */
+#if SetTtyGroup			/* turn on in config/machine.cf */
    TTYGROUPDEF = -DUSE_TTY_GROUP
 #endif
-#ifdef UsePUCCPtyd			/* turn on in config/site.def */
+#if UsePUCCPtyd			/* turn on in config/site.def */
     PUCCPTYDDEF = -DPUCC_PTYD		/* does not need to be setuid */
          PTYLIB = -lpucc
 #endif
@@ -26,8 +26,9 @@ XCOMM
    MAIN_DEFINES = -DUTMP $(TTYGROUPDEF) $(PUCCPTYDDEF) \
 		  -DOSMAJORVERSION=$(OSMAJORVERSION) \
 		  -DOSMINORVERSION=$(OSMINORVERSION)
-   MISC_DEFINES = /* -DALLOWLOGFILEEXEC */
-
+   MISC_DEFINES = /* -DALLOWLOGFILEEXEC */ 
+    XKB_DEFINES = XkbClientDefines
+        DEFINES = $(XKB_DEFINES)
           SRCS1 = button.c charproc.c cursor.c data.c input.c \
 		  main.c menu.c misc.c screen.c scrollbar.c tabs.c \
 		  TekPrsTbl.c Tekproc.c util.c VTPrsTbl.c
@@ -39,7 +40,7 @@ XCOMM
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
        PROGRAMS = resize xterm
-       DEPLIBS1 = XawClientDepLibs
+       DEPLIBS1 = XkbClientDepLibs XawClientDepLibs
        DEPLIBS2 = 
        PROGRAMS = xterm resize
 
@@ -59,19 +60,19 @@ XCOMM
 
 AllTarget($(PROGRAMS))
 
-SpecialObjectRule(main.o,NullParameter,$(MAIN_DEFINES))
-SpecialObjectRule(misc.o,NullParameter,$(MISC_DEFINES))
-SpecialObjectRule(charproc.o,NullParameter,$(MISC_DEFINES))
+SpecialCObjectRule(main,$(_NOOP_),$(MAIN_DEFINES))
+SpecialCObjectRule(misc,$(_NOOP_),$(MISC_DEFINES))
+SpecialCObjectRule(charproc,$(_NOOP_),$(MISC_DEFINES))
 
 #if InstallXtermSetUID
-SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
+SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
 #else
-NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
+NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
 #endif
 
-#if InstallXtermSetUID && defined(SunArchitecture) && HasSharedLibraries
+#if InstallXtermSetUID && defined(SunArchitecture) && HasSharedLibraries && OSMajorVersion < 5
 #if AlternateUsrLibDir
-#if OSMajorVersion > 4 || (OSMajorVersion == 4 && OSMinorVersion >= 1)
+#if OSMajorVersion == 4 && OSMinorVersion >= 1
 LDOVERRIDE = -L$(DESTDIR)$(USRLIBDIR)
 #else
 #if HasGcc
@@ -84,10 +85,10 @@ LDRESUME = -Bdynamic
 #endif
 install:: xterm
 	MakeDir($(DESTDIR)$(BINDIR))
-	$(RM) xterm.inst
-	$(CC) -o xterm.inst $(OBJS1) $(LDOPTIONS) $(LDOVERRIDE) -lXaw -lXmu -lXt -lXext -lX11 $(LDRESUME) $(LDLIBS) $(TERMCAPLIB) $(PTYLIB) $(EXTRA_LOAD_FLAGS)
+	RemoveFile(xterm.inst)
+	LinkRule(xterm.inst,$(CDEBUGFLAGS) $(CCOPTIONS) $(EXTRA_LDOPTIONS) $(LOCAL_LDFLAGS),$(OBJS1),$(LDOVERRIDE) XawClientLibs $(LDRESUME) $(LDLIBS) $(TERMCAPLIB) $(PTYLIB))
 	$(INSTALL) -c $(INSTPGMFLAGS) $(INSTUIDFLAGS) xterm.inst $(DESTDIR)$(BINDIR)/xterm
-	$(RM) xterm.inst
+	RemoveFile(xterm.inst)
 #else
 #if InstallXtermSetUID
 InstallProgramWithFlags(xterm,$(BINDIR),$(INSTUIDFLAGS))

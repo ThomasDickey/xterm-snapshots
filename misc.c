@@ -1,5 +1,5 @@
 /*
- *	$XConsortium: misc.c,v 1.95.1.1 93/11/04 08:56:48 gildea Exp $
+ *	$XConsortium: misc.c /main/106 1996/02/02 14:27:57 kaleb $
  */
 
 /*
@@ -56,9 +56,6 @@ extern jmp_buf VTend;
 extern char *malloc();
 extern char *getenv();
 #endif
-#if defined(macII) && !defined(__STDC__)  /* stdlib.h fails to define these */
-char *malloc();
-#endif /* macII */
 
 static void DoSpecialEnterNotify();
 static void DoSpecialLeaveNotify();
@@ -254,7 +251,7 @@ caddr_t eventdata;
 			       (event->detail == NotifyPointer) ? INWINDOW :
 								  FOCUS);
 		if (screen->grabbedKbd && (event->mode == NotifyUngrab)) {
-		    XBell(screen->display, 100);
+		    Bell(XkbBI_Info, 100);
 		    ReverseVideo(term);
 		    screen->grabbedKbd = FALSE;
 		    update_securekbd();
@@ -276,6 +273,9 @@ register int flag;
 			TCursorToggle(TOGGLE);
 		return;
 	} else {
+		if (screen->xic)
+		    XSetICFocus(screen->xic);
+
 		if(screen->cursor_state &&
 		   (screen->cursor_col != screen->cur_col ||
 		    screen->cursor_row != screen->cur_row))
@@ -298,6 +298,8 @@ register int flag;
 	screen->select &= ~flag;
 	if(!Ttoggled) TCursorToggle(TOGGLE);
     } else {
+	if (screen->xic)
+	    XUnsetICFocus(screen->xic);
 	screen->select &= ~flag;
 	if(screen->cursor_state &&
 	   (screen->cursor_col != screen->cur_col ||
@@ -310,7 +312,9 @@ register int flag;
 
 static long lastBellTime;	/* in milliseconds */
 
-Bell()
+Bell(which,percent)
+     int which;
+     int percent;
 {
     extern XtermWidget term;
     register TScreen *screen = &term->screen;
@@ -328,7 +332,7 @@ Bell()
 		return;
 	    }
 	}
-	gettimeofday(&curtime, NULL);
+	X_GETTIMEOFDAY(&curtime);
 	now_msecs = 1000*curtime.tv_sec + curtime.tv_usec/1000;
 	if(lastBellTime != 0  &&  now_msecs - lastBellTime >= 0  &&
 	   now_msecs - lastBellTime < screen->bellSuppressTime) {
@@ -340,7 +344,11 @@ Bell()
     if (screen->visualbell)
 	VisualBell();
     else
-	XBell(screen->display, 0);
+#ifdef XKB
+	XkbStdBell(screen->display,TWindow(screen),percent,which);
+#else
+	XBell(screen->display, percent);
+#endif
 
     if(screen->bellSuppressTime) {
 	/* now we change a property and wait for the notify event to come
@@ -594,8 +602,8 @@ register TScreen *screen;
 		screen->logfd = p[1];
 		signal(SIGPIPE, logpipe);
 #else
-		Bell();
-		Bell();
+		Bell(XkbBI_Info,0);
+		Bell(XkbBI_Info,0);
 		return;
 #endif
 	} else {
@@ -708,8 +716,8 @@ int (*func)();
 			free(term->screen.logfile);
 		term->screen.logfile = cp;
 #else
-		Bell();
-		Bell();
+		Bell(XkbBI_Info,0);
+		Bell(XkbBI_Info,0);
 #endif
 		break;
 #endif /* ALLOWLOGGING */
@@ -768,10 +776,8 @@ int a;
 char *SysErrorMsg (n)
     int n;
 {
-    extern char *sys_errlist[];
-    extern int sys_nerr;
-
-    return ((n >= 0 && n < sys_nerr) ? sys_errlist[n] : "unknown error");
+    register char *s = strerror(n);
+    return s ? s : "unknown error";
 }
 
 
@@ -856,7 +862,7 @@ register char	*s1, *s2;
 	register char	*s3;
 	int s2len = strlen (s2);
 
-	while ((s3=index(s1, *s2)) != NULL) {
+	while ((s3=strchr(s1, *s2)) != NULL) {
 		if (strncmp(s3, s2, s2len) == 0)
 			return (s3);
 		s1 = ++s3;
@@ -884,6 +890,15 @@ Display *dpy;
 		    DisplayString (dpy));
 
     Exit(ERROR_XIOERROR);
+}
+
+void xt_error(message)
+    String message;
+{
+    extern char *ProgramName;
+
+    (void) fprintf (stderr, "%s Xt error: %s\n", ProgramName, message);
+    exit(1);
 }
 
 XStrCmp(s1, s2)
