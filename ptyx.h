@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.36 1998/04/05 00:46:11 robin Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.39 1998/04/28 02:51:02 robin Exp $
  */
 
 /*
