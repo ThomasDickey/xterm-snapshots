@@ -8,13 +8,6 @@
 #ifndef	included_xterm_h
 #define	included_xterm_h
 
-#ifdef __EMX__
-/* must be cleaned up through ANSIFICATION: X_NOT_STDC_ENV is wrong below,
- * because size_t mustn't be set to int. Xos.h sets it right
- */
-#include <X11/Xos.h>
-#endif
-
 #ifndef GCC_UNUSED
 #define GCC_UNUSED /* nothing */
 #endif
@@ -59,7 +52,7 @@ extern void exit();
 extern void free();
 #endif
 
-#if defined(HAVE_UNISTD_H)
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.20 1998/06/04 16:43:57 hohndel Exp $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.19 1998/04/27 03:14:59 robin Exp $
  */
 
 /*
@@ -73,6 +73,29 @@ AdjustAfterInput (register TScreen *screen)
 	}
 }
 
+/* returns true if the key is on the editing keypad */
+static Boolean
+IsEditFunctionKey(KeySym keysym)
+{
+	switch (keysym) {
+	case XK_Prior:
+	case XK_Next:
+	case XK_Insert:
+	case XK_Find:
+	case XK_Select:
+#ifdef DXK_Remove
+	case DXK_Remove:
+#endif
+#ifdef XK_KP_Delete
+	case XK_KP_Delete:
+	case XK_KP_Insert:
+#endif
+		return True;
+	default:
+		return False;
+	}
+}
+
 void
 Input (
 	register TKeyboard *keyboard,
@@ -120,7 +143,6 @@ Input (
 	if ((nbytes == 1)
 	 && !(term->keyboard.flags & MODE_DECBKM)
 	 && (keysym == XK_BackSpace)) {
-		keysym = XK_Delete;
 		strbuf[0] = '\177';
 	}
 
@@ -166,9 +188,16 @@ Input (
 		VT52_CURSOR_KEYS
 		unparseseq(&reply, pty);
 		key = TRUE;
-        } else if (IsCursorKey(keysym) &&
-        	keysym != XK_Prior && keysym != XK_Next) {
-       		if (keyboard->flags & MODE_DECCKM) {
+#if OPT_SUNPC_KBD
+	} else if (sunKeyboard
+	 	&& screen->old_fkeys == False
+	 	&& screen->ansi_level <= 1
+		&& IsEditFunctionKey(keysym)) {
+		key = FALSE;	/* ignore editing-keypad in vt100 mode */
+#endif
+	} else if (IsCursorKey(keysym) &&
+		keysym != XK_Prior && keysym != XK_Next) {
+		if (keyboard->flags & MODE_DECCKM) {
 			reply.a_type = SS3;
 			reply.a_final = cur[keysym-XK_Home];
 			VT52_CURSOR_KEYS
@@ -180,17 +209,9 @@ Input (
 			unparseseq(&reply, pty);
 		}
 		key = TRUE;
-	 } else if (IsFunctionKey(keysym) || IsMiscFunctionKey(keysym)
-	 	|| keysym == XK_Prior
-		|| keysym == XK_Next
-#ifdef DXK_Remove
-		|| keysym == DXK_Remove
-#endif
-#ifdef XK_KP_Delete
-		|| keysym == XK_KP_Delete
-		|| keysym == XK_KP_Insert
-#endif
-		) {
+	 } else if (IsFunctionKey(keysym)
+		|| IsMiscFunctionKey(keysym)
+		|| IsEditFunctionKey(keysym)) {
 #if OPT_SUNPC_KBD
 		if ((event->state & ControlMask)
 		 && sunKeyboard
@@ -208,8 +229,8 @@ Input (
 		/*
 		 * Interpret F1-F4 as PF1-PF4 for VT52, VT100
 		 */
-		else if (screen->ansi_level <= 1
-		  && (dec_code >= 11 && dec_code <= 14))
+		else if (screen->old_fkeys == False
+		 && (dec_code >= 11 && dec_code <= 14))
 		{
 			reply.a_type = SS3;
 			VT52_CURSOR_KEYS
@@ -243,7 +264,7 @@ Input (
 		 && keysym == XK_KP_Add)
 			keysym = XK_KP_Separator;
 #endif
-	  	if ((keyboard->flags & MODE_DECKPAM) != 0) {
+		if ((keyboard->flags & MODE_DECKPAM) != 0) {
 			reply.a_type  = SS3;
 			reply.a_final = kypd_apl[keysym-XK_KP_Space];
 			VT52_KEYPAD
@@ -383,7 +404,7 @@ sunfuncvalue (KeySym  keycode)
 		case XK_R13:	return(220);
 		case XK_R14:	return(221);
 		case XK_R15:	return(222);
-  
+
 		case XK_Find :	return(1);
 		case XK_Insert:	return(2);
 		case XK_Delete:	return(3);

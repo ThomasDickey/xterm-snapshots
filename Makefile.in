@@ -1,4 +1,4 @@
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.12 1998/06/04 16:43:48 hohndel Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.11 1998/04/05 00:46:08 robin Exp $ ##
 
 #### Start of system configuration section. ####
 
@@ -14,6 +14,7 @@ INSTALL_DATA	= @INSTALL_DATA@
 
 X_CFLAGS	= @X_CFLAGS@
 X_LIBS		= @X_LIBS@
+X_EXTRA_LIBS	= @X_EXTRA_LIBS@
 
 IMAKE_CFLAGS	= @IMAKE_CFLAGS@
 EXTRA_CFLAGS	= @EXTRA_CFLAGS@
@@ -77,10 +78,10 @@ all:	$(PROGRAMS)
 main.o: version.h
 
 xterm : $(OBJS1)
-	$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
+	$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize : $(OBJS2)
-	$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(LIBS)
+	$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
 install: $(INSTALL_DIRS) xterm resize
 	$(INSTALL_PROGRAM) -s -m 4711 xterm  $(bindir)/xterm

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.40 1998/06/04 16:44:00 hohndel Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.39 1998/04/28 02:51:02 robin Exp $
  */
 
 /*
@@ -727,6 +727,7 @@ typedef struct {
 	int		scroll_amt;	/* amount to scroll		*/
 	int		refresh_amt;	/* amount to refresh		*/
 	int		protected_mode;	/* 0=off, 1=DEC, 2=ISO		*/
+	Boolean		old_fkeys;	/* true for compatible fkeys	*/
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
 	Boolean         always_highlight; /* whether to highlight cursor */
 	Boolean		underline;	/* whether to underline text	*/
@@ -901,6 +902,8 @@ typedef struct _XtermWidgetRec {
     unsigned	flags;		/* mode flags			*/
     int         cur_foreground;	/* current foreground color	*/
     int         cur_background;	/* current background color	*/
+    Pixel       dft_foreground;	/* default foreground color	*/
+    Pixel       dft_background;	/* default background color	*/
 #if OPT_ISO_COLORS
     int         sgr_foreground;	/* current SGR foreground color	*/
 #endif

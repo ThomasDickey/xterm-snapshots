@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.72 1998/06/04 16:43:58 hohndel Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.71 1998/04/28 02:51:00 robin Exp $ */
 
 
 /* main.c */
@@ -3897,29 +3897,29 @@ Exit(int n)
 	    /* write it out only if it exists, and the pid's match */
 	    if (utptr && (utptr->ut_pid == screen->pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
+		    *utptr->ut_user = 0;
 #if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2)
-		    utmp.ut_session = getsid(0);
-		    utmp.ut_xtime = time ((time_t *) 0);
-		    utmp.ut_tv.tv_usec = 0;
+		    utptr->ut_session = getsid(0);
+		    utptr->ut_xtime = time ((time_t *) 0);
+		    utptr->ut_tv.tv_usec = 0;
 #else
-		    *utptr->ut_user=0;
 		    utptr->ut_time = time((time_t *) 0);
 #endif
 		    (void) pututline(utptr);
 #ifdef WTMP
 #if defined(SVR4) || defined(SCO325)
 		    if (term->misc.login_shell)
-			updwtmpx(WTMPX_FILE, &utmp);
+			updwtmpx(WTMPX_FILE, utptr);
 #else
 #if defined(linux) && __GLIBC__ >= 2
-	            strncpy (utmp.ut_line, utptr->ut_line, sizeof (utmp.ut_line));
+		    strncpy (utmp.ut_line, utptr->ut_line, sizeof (utmp.ut_line));
 		    if (term->misc.login_shell)
-			updwtmp(etc_wtmp, &utmp);
+			updwtmp(etc_wtmp, utptr);
 #else
 		    /* set wtmp entry if wtmp file exists */
 		    if (term->misc.login_shell &&
 			(fd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
-		      i = write(fd, utptr, sizeof(utmp));
+		      i = write(fd, utptr, sizeof(*utptr));
 		      i = close(fd);
 		    }
 #endif

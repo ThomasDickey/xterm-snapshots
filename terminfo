@@ -4,21 +4,57 @@
 # XFree86 updates/notes/new entries (including xterm-8bit, xterm-16color)
 # - Thomas E. Dickey <dickey@clark.net>
 #
-# meml locks memory above the cursor; memu unlocks (ala HP terminals)
+# Special Capabilities:
+# --------------------
+# ich has a corresponding capability that inserts a single blank.  We could
+#	have used ich1=\E[@, which works with ncurses, but that is not standard
+#	behavior.  If it is set, then SVr4 vi (e.g., Solaris 2.6) emits both
+#	smir/rmir and ich1.
+# meml locks memory above the cursor; memu unlocks (ala HP terminals).  This
+#	is not recognized by some older (e.g., SVr3) tic programs, but none
+#	do more than warn about it.  Ignore the warning.
 # rmcup clears memory before switching to the alternate screen.  The older
 #	(deprecated) \E[?47h did not do this, requiring applications to
 #	embed a \E[2J in the rmcup string.  However, that behavior cannot
 #	be disabled via titeInhibit, making that resource not function as
 #	intended on systems with terminfo.
 #
-# We could have used ich1=\E[@, which works with ncurses, but that is not
-# standard behavior.  If it is set, then SVr4 vi (e.g., Solaris 2.6) emits
-# both smir/rmir and ich1.
+# Editing Keypad:
+# --------------
+# XFree86 xterm emulates vt220 if the decTerminalID resource is set to 200 or
+# higher.  Otherwise it emulates a vt100 or vt52 depending on the value of the
+# resource.  When emulating a vt220, we support the editing keypad.  Sun and PC
+# keyboards have an editing keypad which is similar to the vt220:
 #
-# The xterm-r6 entry does not define acsc, which is probably an error (but
-# it matches the X11R5 to X11R6.3 distributions).
+#	VT220 editing keypad
+#	----------------------------
+#	Find      Insert      Remove
+#	Select    Prev        Next
+#	----------------------------
 #
-xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
+#	Sun/PC editing keypad
+#	----------------------------
+#	Insert    Home        PageUp
+#	Delete    End         PageDn
+#	----------------------------
+#
+# If the sunKeyboard resource is true, we map it this way (adjusting the values
+# of Home, End and Delete):
+#	VT220		      Sun/PC
+#	----------------------------
+#	Find		      Home
+#	Select		      End
+#	Insert		      Insert
+#	Remove		      Delete
+#	Prev		      PageUp
+#	Next		      PageDn
+#	----------------------------
+#
+# Note that all of the keys on the editing keypad transmit escape sequences.  A
+# vt220 does this only when in vt220 mode; when emulating a vt100 the editing
+# keypad is inactive.
+#
+xterm-xfree86|xterm-new|xterm terminal emulator (XFree86),
 	am,
 	bce,
 	km,
@@ -31,7 +67,7 @@ xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
 	it#8,
 	lines#24,
 	pairs#64,
-	acsc=``aaffggjjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~,
+	acsc=``aaffggiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~,
 	bel=^G,
 	blink=\E[5m,
 	bold=\E[1m,
@@ -82,7 +118,7 @@ xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
 	kcud1=\EOB,
 	kcuf1=\EOC,
 	kcuu1=\EOA,
-	kdch1=\177,
+	kdch1=\E[3~,
 	kend=\EOF,
 	kent=\EOM,
 	kf1=\EOP,
@@ -145,13 +181,37 @@ xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
 	smso=\E[7m,
 	smul=\E[4m,
 	tbc=\E[3g,
+	u6=\E[%i%d;%dR,
+	u7=\E[6n,
+	u8=\E[?1;2c,
+	u9=\E[c,
 	vpa=\E[%i%p1%dd,
+#
+# The xterm-xfree86 description has all of the features, but is not completely
+# compatible with vt220.  If you are using a Sun or PC keyboard, set the
+# sunKeyboard resource to true:
+#	+ maps the editing keypad
+#	+ interprets control-function-key as a second array of keys, so a
+#	  12-fkey keyboard can support vt220's 20-fkeys.
+#	+ maps numeric keypad "+" to ",".
+#	  
+xterm-vt220|XFree86 xterm emulating vt220,
+	kdch1=\E[3~,
+	kend=\E[4~,
+	kfnd=\E[1~,
+	khome=\E[1~,
+	kslt=\E[4~,
+	use=xterm-xfree86,
+
+# Other variants:
+xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
+	lines#24,
+	use=xterm,
 xterm-65|xterm with tall window 65x80 (X Window System),
 	lines#65,
 	use=xterm,
 xterm-bold|xterm with bold instead of underline (X Window System),
-	rmul=\E[22m,
-	smul=\E[1m,
+	smso=\E[1m,
 	use=xterm,
 xtermm|monochrome xterm (X Window System),
 	colors@,
@@ -164,8 +224,20 @@ xtermm|monochrome xterm (X Window System),
 	setf@,
 	sgr@,
 	use=xterm,
+#
+# This should work for the commonly used "color xterm" variations (XFree86
+# xterm, color_xterm, nxterm, rxvt):
+xterm-color|generic "ANSI" color xterm (X Window System),
+	colors#8,
+	ncv@,
+	pairs#64,
+	op=\E[m,
+	setab=\E[4%p1%dm,
+	setaf=\E[3%p1%dm,
+	use=xterm-r6,
+#
 xterm-boldso|xterm with bold for standout (X Window System),
-	rmso=\E[22m,
+	rmso=\E[m,
 	smso=\E[1m,
 	use=xterm,
 #
@@ -177,13 +249,6 @@ xterm-ic|xterm-vi|xterm with insert character instead of insert mode,
 	ich1=\E[@,
 	rmir@,
 	smir@,
-	use=xterm,
-#
-xterm-vt220|xterm emulating vt220,
-	kf1=\E[11~,
-	kf2=\E[12~,
-	kf3=\E[13~,
-	kf4=\E[14~,
 	use=xterm,
 #
 # This is used only for testing (it's not relevant to DEC VTxxx terminals, but
@@ -227,7 +292,7 @@ xterm-16color|xterm with 16 colors,
 	setaf=\E[%?%p1%{8}%<%t%p1%{30}%+%e%p1%{82}%+%;%dm,
 	setb=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
 	setf=%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
-	use=xterm,
+	use=xterm-xfree86,
 # This is an 8-bit version of xterm, which emulates DEC vt220 with ANSI color.
 # To use it, your decTerminalID resource must be set to 200 or above.
 #
@@ -249,9 +314,9 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	it#8,
 	lines#24,
 	pairs#64,
-	acsc=``aaffggjjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~,
+	acsc=``aaffggiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~,
 	bel=^G,
-	blink=\23325m,
+	blink=\2335m,
 	bold=\2331m,
 	cbt=\233Z,
 	civis=\233?25l,
@@ -363,9 +428,17 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	smso=\2337m,
 	smul=\2334m,
 	tbc=\2333g,
+	u6=\233[%i%d;%dR,
+	u7=\E[6n,
+	u8=\233[?1;2c,
+	u9=\E[c,
 	vpa=\233%i%p1%dd,
 #
-# Compatible with the R6 xterm
+# Compatible with the R6 xterm, with the following changes:
+#	+ added acsc (perhaps some versions of tic assume the standard vt100
+#	  alternate character set)
+#	+ added u6, u7, u8, u9 strings for Daniel Weaver's tack program.
+#	+ added kmous string for ncurses.
 xterm-r6|xterm-old|xterm X11R6 version,
 	am,
 	km,
@@ -373,7 +446,9 @@ xterm-r6|xterm-old|xterm X11R6 version,
 	msgr,
 	xenl,
 	cols#80,
+	it#8,
 	lines#24,
+	acsc=``aaffggiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~,
 	bel=^G,
 	blink@,
 	bold=\E[1m,
@@ -430,6 +505,7 @@ xterm-r6|xterm-old|xterm X11R6 version,
 	kf9=\E[20~,
 	kfnd=\E[1~,
 	kich1=\E[2~,
+	kmous=\E[M,
 	knp=\E[6~,
 	kpp=\E[5~,
 	kslt=\E[4~,
@@ -454,8 +530,17 @@ xterm-r6|xterm-old|xterm X11R6 version,
 	smso=\E[7m,
 	smul=\E[4m,
 	tbc=\E[3g,
+	u6=\E[%i%d;%dR,
+	u7=\E[6n,
+	u8=\E[?1;2c,
+	u9=\E[c,
 #
-# Compatible with the R5 xterm
+# Compatible with the R5 xterm, with the following changes:
+#	+ changed 'blink=@', to 'blink@' (the former meant that "@" would start
+#	  a blink, the latter that it is not supported).
+#	+ changed kf1 through kf4 to correspond with actual usage.  Though X
+#	  supports keypad symbols for PF1 to PF4, and xterm interprets these
+#	  correctly, the F1 to F4 codes are commonly (but incorrectly) used.
 xterm-r5|xterm R5 version,
 	am,
 	km,
@@ -465,7 +550,7 @@ xterm-r5|xterm R5 version,
 	it#8,
 	lines#24,
 	bel=^G,
-	blink=@,
+	blink@,
 	bold=\E[1m,
 	clear=\E[H\E[2J,
 	cr=^M,
@@ -502,13 +587,13 @@ xterm-r5|xterm R5 version,
 	kdl1=\E[31~,
 	kel=\E[8~,
 	kf0=\EOq,
-	kf1=\EOP,
+	kf1=\E[11~,
 	kf10=\E[21~,
 	kf11=\E[23~,
 	kf12=\E[24~,
-	kf2=\EOQ,
-	kf3=\EOR,
-	kf4=\EOS,
+	kf2=\E[12~,
+	kf3=\E[13~,
+	kf4=\E[14~,
 	kf5=\E[15~,
 	kf6=\E[17~,
 	kf7=\E[18~,
@@ -531,3 +616,10 @@ xterm-r5|xterm R5 version,
 	smkx=\E[?1h\E=,
 	smso=\E[7m,
 	tbc=\E[3g,
+#
+# This is the only entry which you should have to customize, since "xterm"
+# is widely used for a variety of incompatible terminal emulations including
+# color_xterm and rxvt.
+xterm|X Windows terminal emulator,
+	use=xterm-xfree86,
+#	use=xterm-r6,

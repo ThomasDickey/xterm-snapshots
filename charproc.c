@@ -206,6 +206,7 @@ static void StopBlinking (TScreen *screen);
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
+#define XtNoldXtermFKeys	"oldXtermFKeys"
 #define XtNpointerColor		"pointerColor"
 #define XtNpointerColorBackground	"pointerColorBackground"
 #define XtNpointerShape		"pointerShape"
@@ -280,6 +281,7 @@ static void StopBlinking (TScreen *screen);
 #define XtCMarginBell		"MarginBell"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
+#define XtCOldXtermFKeys	"OldXtermFKeys"
 #define XtCPrintAttributes	"PrintAttributes"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
 #define XtCPrinterCommand	"PrinterCommand"
@@ -561,6 +563,9 @@ static XtResource resources[] = {
 {XtNjumpScroll, XtCJumpScroll, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.jumpscroll),
 	XtRBoolean, (XtPointer) &defaultTRUE},
+{XtNoldXtermFKeys, XtCOldXtermFKeys, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.old_fkeys),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 #ifdef ALLOWLOGGING
 {XtNlogFile, XtCLogfile, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, screen.logfile),
@@ -3633,11 +3638,41 @@ static void VTInitialize (
    Boolean color_ok;
 #endif
 
-   /* Zero out the entire "screen" component of "new" widget,
-      then do field-by-field assigment of "screen" fields
-      that are named in the resource list. */
-
+   /* Zero out the entire "screen" component of "new" widget, then do
+    * field-by-field assigment of "screen" fields that are named in the
+    * resource list.
+    */
    bzero ((char *) &new->screen, sizeof(new->screen));
+
+   /* dummy values so that we don't try to Realize the parent shell with height
+    * or width of 0, which is illegal in X.  The real size is computed in the
+    * xtermWidget's Realize proc, but the shell's Realize proc is called first,
+    * and must see a valid size.
+    */
+   new->core.height = new->core.width = 1;
+
+   /*
+    * The definition of -rv now is that it changes the definition of
+    * XtDefaultForeground and XtDefaultBackground.  So, we no longer
+    * need to do anything special.
+    */
+   new->screen.display = new->core.screen->display;
+
+   /*
+    * We use the default foreground/background colors to compare/check if a
+    * color-resource has been set.
+    */
+#define MyBlackPixel(dpy) BlackPixel(dpy,DefaultScreen(dpy))
+#define MyWhitePixel(dpy) WhitePixel(dpy,DefaultScreen(dpy))
+
+   if (request->misc.re_verse) {
+	new->dft_foreground = MyWhitePixel(new->screen.display);
+	new->dft_background = MyBlackPixel(new->screen.display);
+   } else {
+	new->dft_foreground = MyBlackPixel(new->screen.display);
+	new->dft_background = MyWhitePixel(new->screen.display);
+   }
+
    new->screen.c132 = request->screen.c132;
    new->screen.curses = request->screen.curses;
    new->screen.hp_ll_bc = request->screen.hp_ll_bc;
@@ -3654,6 +3689,7 @@ static void VTInitialize (
 #endif
    new->screen.border = request->screen.border;
    new->screen.jumpscroll = request->screen.jumpscroll;
+   new->screen.old_fkeys = request->screen.old_fkeys;
 #ifdef ALLOWLOGGING
    new->screen.logfile = request->screen.logfile;
 #endif
@@ -3724,7 +3760,8 @@ static void VTInitialize (
 
    for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
        new->screen.Acolors[i] = request->screen.Acolors[i];
-       if (new->screen.Acolors[i] != request->screen.foreground
+       if (new->screen.Acolors[i] != new->dft_foreground
+        && new->screen.Acolors[i] != request->screen.foreground
         && new->screen.Acolors[i] != request->core.background_pixel)
 	   color_ok = True;
    }
@@ -3757,19 +3794,6 @@ static void VTInitialize (
    new->keyboard.flags = MODE_SRM;
    if (new->screen.backarrow_key)
 	   new->keyboard.flags |= MODE_DECBKM;
-
-    /*
-     * The definition of -rv now is that it changes the definition of
-     * XtDefaultForeground and XtDefaultBackground.  So, we no longer
-     * need to do anything special.
-     */
-   new->screen.display = new->core.screen->display;
-   new->core.height = new->core.width = 1;
-      /* dummy values so that we don't try to Realize the parent shell
-	 with height or width of 0, which is illegal in X.  The real
-	 size is computed in the xtermWidget's Realize proc,
-	 but the shell's Realize proc is called first, and must see
-	 a valid size. */
 
    /* look for focus related events on the shell, because we need
     * to care about the shell's border being part of our focus.
