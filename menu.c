@@ -45,7 +45,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.51 2003/03/23 02:01:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.52 2003/05/21 22:59:13 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -90,6 +90,18 @@ in this Software without prior written authorization from The Open Group.
 #if OPT_TOOLBAR
 #include <X11/neXtaw/MenuButton.h>
 #include <X11/neXtaw/Form.h>
+#endif
+
+#elif defined(HAVE_LIB_XAWPLUS)
+
+#include <X11/XawPlus/SimpleMenu.h>
+#include <X11/XawPlus/Box.h>
+#include <X11/XawPlus/SmeBSB.h>
+#include <X11/XawPlus/SmeLine.h>
+
+#if OPT_TOOLBAR
+#include <X11/XawPlus/MenuButton.h>
+#include <X11/XawPlus/Form.h>
 #endif
 
 #endif

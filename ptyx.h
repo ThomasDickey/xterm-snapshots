@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.104 2003/05/19 00:47:33 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.105 2003/05/21 22:59:13 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey
@@ -132,17 +132,20 @@
 #define USE_ISPTS_FLAG 1
 #endif
 
-#if (defined(ATT) && !defined(__sgi)) || defined(__MVS__) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
+#if (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 #define USE_USG_PTYS
-#if defined(sun)	/* Solaris */
-#define USE_HANDSHAKE 1
-#endif
+#define USE_HANDSHAKE 0	/* "recent" Linux systems do not require handshaking */
+#elif (defined(ATT) && !defined(__sgi)) || defined(__MVS__) || (defined(SYSV) && defined(i386))
+#define USE_USG_PTYS
 #else
 #define USE_HANDSHAKE 1
 #endif
 
+/*
+ * More systems than not require pty-handshaking.
+ */
 #ifndef USE_HANDSHAKE
-#define USE_HANDSHAKE	0
+#define USE_HANDSHAKE 1
 #endif
 
 /*
