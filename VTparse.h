@@ -1,6 +1,5 @@
 /*
  *	$XConsortium: VTparse.h,v 1.6 92/09/15 15:28:31 gildea Exp $
- *	$XFree86: xc/programs/xterm/VTparse.h,v 3.4 1996/09/22 06:10:33 dawes Exp $
  */
 
 /*
@@ -26,39 +25,13 @@
  * SOFTWARE.
  */
 
-#ifdef __STDC__
-#define Const const
-#else
-#define Const /**/
-#endif
-
-/*
- * PARSE_T has to be large enough to handle the number of cases enumerated here.
- */
-typedef char PARSE_T;
-
-extern Const PARSE_T csi_quo_table[];
-extern Const PARSE_T csi_table[];
-extern Const PARSE_T dec_table[];
-extern Const PARSE_T dec2_table[];
-extern Const PARSE_T dec3_table[];
-extern Const PARSE_T eigtable[];
-extern Const PARSE_T esc_sp_table[];
-extern Const PARSE_T esc_table[];
-extern Const PARSE_T groundtable[];
-extern Const PARSE_T iestable[];
-extern Const PARSE_T igntable[];
-extern Const PARSE_T scrtable[];
-extern Const PARSE_T scstable[];
-extern Const PARSE_T sos_table[];
-
 /*
  * The following list of definitions is generated from VTparse.def using the
  * following command line:
  *
  *     grep '^CASE_' VTparse.def | awk '{printf "#define %s %d\n", $1, n++}'
  *
- * If you need to change something, change VTparse.def and regenerate the
+ * You you need to change something, change VTparse.def and regenerate the
  * definitions.  This would have been automatic, but since this doesn't change
  * very often, it isn't worth the makefile hassle.
  */
@@ -134,38 +107,3 @@ extern Const PARSE_T sos_table[];
 #define CASE_HP_MEM_LOCK 68
 #define CASE_HP_MEM_UNLOCK 69
 #define CASE_HP_BUGGY_LL 70
-#define CASE_HPA 71
-#define CASE_VPA 72
-#define CASE_XTERM_WINOPS 73
-#define CASE_ECH 74
-#define CASE_CHT 75
-#define CASE_CPL 76
-#define CASE_CNL 77
-#define CASE_CBT 78
-#define CASE_SU 79
-#define CASE_SD 80
-#define CASE_S7C1T 81
-#define CASE_S8C1T 82
-#define CASE_ESC_SP_STATE 83
-#define CASE_ENQ 84
-#define CASE_DECSCL 85
-#define CASE_DECSCA 86
-#define CASE_DECSED 87
-#define CASE_DECSEL 88
-#define CASE_DCS 89
-#define CASE_PM 90
-#define CASE_SOS 91
-#define CASE_ST 92
-#define CASE_APC 93
-#define CASE_EPA 94
-#define CASE_SPA 95
-#define CASE_CSI_QUOTE_STATE 96
-#define CASE_DSR 97
-#define CASE_ANSI_LEVEL_1 98
-#define CASE_ANSI_LEVEL_2 99
-#define CASE_ANSI_LEVEL_3 100
-#define CASE_MC 101
-#define CASE_DEC2_STATE 102
-#define CASE_DA2 103
-#define CASE_DEC3_STATE 104
-#define CASE_DECRPTUI 105

@@ -1,5 +1,5 @@
-.\" $XConsortium: resize.man /main/11 1995/12/15 14:01:01 gildea $
-.TH RESIZE 1 "Release 6.1" "X Version 11"
+.\" $XConsortium: resize.man /main/12 1996/12/09 17:10:48 kaleb $
+.TH RESIZE 1 "Release 6.3" "X Version 11"
 .SH NAME
 resize \- set TERMCAP and terminal settings to current xterm window size
 .SH SYNOPSIS
