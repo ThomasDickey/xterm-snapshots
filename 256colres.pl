@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 # Author: Thomas E. Dickey
-# $XFree86: xc/programs/xterm/256colres.pl,v 1.4 2000/06/13 23:15:53 dawes Exp $
+# $XFree86: xc/programs/xterm/256colres.pl,v 1.5 2000/06/17 00:27:35 dawes Exp $
 
 # Construct a header file defining default resources for the 256-color model
 # of xterm.  This is modeled after the 256colors2.pl script.
