@@ -121,7 +121,11 @@ SOFTWARE.
 #define BSDLY	0
 #define VTDLY	0
 #define FFDLY	0
+#else /* MINIX */
+#ifdef DEBUG
+#include <time.h>
 #endif
+#endif /* MINIX */
 
 #ifdef att
 #define ATT
@@ -175,6 +179,7 @@ static Bool IsPts = False;
 #ifdef __GLIBC__
 #if (__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
 #include <pty.h>
+#include <stdlib.h> /* getpt() */
 #endif
 #endif
 #endif
@@ -1801,10 +1806,13 @@ main (int argc, char *argv[])
 	/* Set up stderr properly.  Opening this log file cannot be
 	 done securely by a privileged xterm process (although we try),
 	 so the debug feature is disabled by default. */
+	char dbglogfile[45];
 	int i = -1;
 	if(debug) {
-		creat_as (getuid(), getgid(), "xterm.debug.log", 0666);
-		i = open ("xterm.debug.log", O_WRONLY | O_TRUNC, 0666);
+		timestamp_filename(dbglogfile, "xterm.debug.log.");
+		if(creat_as (getuid(), getgid(), False, dbglogfile, 0666)) {
+			i = open (dbglogfile, O_WRONLY | O_TRUNC, 0666);
+		}
 	}
 	if(i >= 0) {
 #if defined(USE_SYSV_TERMIO) && !defined(SVR4) && !defined(linux)
@@ -1822,11 +1830,7 @@ main (int argc, char *argv[])
 #endif
 		_bufend(stderr) = old_bufend;
 #else	/* USE_SYSV_TERMIO */
-#ifndef linux
-		stderr->_file = i;
-#else
-		setfileno(stderr, i);
-#endif
+		freopen(dbglogfile, "w", stderr);
 #endif	/* USE_SYSV_TERMIO */
 
 		/* mark this file as close on exec */

@@ -277,6 +277,9 @@ static void readstring (FILE *fp, char *buf, char *str);
 #endif
 #else
 #include <curses.h>
+#ifdef NCURSES_VERSION
+#include <term.h> /* tgetent() */
+#endif
 #endif /* HAVE_TERMCAP_H  */
 #endif
 

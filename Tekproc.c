@@ -79,9 +79,7 @@ in this Software without prior written authorization from the X Consortium.
 #include <error.h>
 #include <menu.h>
 
-#ifdef X_NOT_STDC_ENV
-extern time_t time ();
-#else
+#ifndef X_NOT_STDC_ENV
 #include <time.h>
 #endif
 
@@ -1732,11 +1730,9 @@ void TekSimulatePageButton (Bool reset)
     if (!tekWidget)
 	return;
     if (reset) {
-/*	bzero ((char *)&curmodes, sizeof(Tmodes));	       */
 	bzero ((char *) &screen->cur, sizeof screen->cur);
     }
     TekRefresh = (TekLink *)0;
-/*    screen->cur = curmodes; */
     TekPage ();
     screen->cur_X = 0;
     screen->cur_Y = TEKHOME;
@@ -1747,40 +1743,28 @@ void TekSimulatePageButton (Bool reset)
 void
 TekCopy(void)
 {
-	register TScreen *screen = &term->screen;
-	register struct tm *tp;
-	time_t l;
-	char buf[32];
-	int pid;
-#ifndef HAVE_WAITPID
-	int waited;
-	SIGNAL_T (*chldfunc) (int);
+    TScreen *screen = &term->screen;
 
-	chldfunc = signal(SIGCHLD, SIG_DFL);
+    TekLink *Tp;
+    char buf[32];
+    char initbuf[5];
+    int tekcopyfd;
+
+    timestamp_filename(buf, "COPY");
+    if (access(buf, F_OK) >= 0
+     && access(buf, W_OK) < 0) {
+	Bell(XkbBI_MinorError,0);
+	return;
+    }
+
+#ifndef VMS
+    if(access(".", W_OK) < 0) {	/* can't write in directory */
+	Bell(XkbBI_MinorError,0);
+	return;
+    }
 #endif
-#ifdef VMS
-	register int tekcopyfd;
-	register TekLink *Tp;
-	char initbuf[5];
-#endif /* VMS */
 
-	time(&l);
-	tp = localtime(&l);
-	/* VMS needs alternate format??? DRM */
-	sprintf(buf, "COPY%d-%02d-%02d.%02d:%02d:%02d", tp->tm_year + 1900,
-	 tp->tm_mon + 1, tp->tm_mday, tp->tm_hour, tp->tm_min, tp->tm_sec);
-	if(access(buf, F_OK) >= 0) {	/* file exists */
-		if(access(buf, W_OK) < 0) {
-			Bell(XkbBI_MinorError,0);
-			return;
-		}
-#ifdef VMS
-
-	if((tekcopyfd = open(buf, O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0) {
-		Bell(XkbBI_MinorError,0);
-		return;
-	}
-	chown(buf, screen->uid, screen->gid);
+    if ((tekcopyfd = open_userfile(screen->uid, screen->gid, buf, False)) >= 0) {
 	sprintf(initbuf, "%c%c%c%c",
 	    ESC, screen->page.fontsize + '8',
 	    ESC, screen->page.linetype + '`');
@@ -1791,57 +1775,5 @@ TekCopy(void)
 	    Tp = Tp->next;
 	} while(Tp);
 	close(tekcopyfd);
-#else /* VMS */
-	} else if(access(".", W_OK) < 0) {	/* can't write in directory */
-		Bell(XkbBI_MinorError,0);
-		return;
-	}
-
-	/* Write the file in an unprivileged child process because
-	   using access before the open still leaves a small window
-	   of opportunity. */
-	pid = fork();
-
-	if (pid == 0) {			/* child */
-	    register int tekcopyfd;
-	    char initbuf[5];
-	    register TekLink *Tp;
-
-	    setgid(screen->gid);
-	    setuid(screen->uid);
-	    tekcopyfd = open(buf, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	    if (tekcopyfd < 0)
-		_exit(1);
-	    sprintf(initbuf, "%c%c%c%c",
-		ESC, screen->page.fontsize + '8',
-		ESC, screen->page.linetype + '`');
-	    write(tekcopyfd, initbuf, 4);
-	    Tp = &Tek0;
-	    do {
-		write(tekcopyfd, (char *)Tp->data, Tp->count);
-		Tp = Tp->next;
-	    } while(Tp);
-	    close(tekcopyfd);
-	    _exit(0);
-	} else if (pid < 0) {	/* error */
-	    Bell(XkbBI_MinorError,0);
-	    return;
-	} else {		/* parent */
-#ifdef HAVE_WAITPID
-	    waitpid(pid, NULL, 0);
-#else
-	    waited = wait(NULL);
-	    signal(SIGCHLD, chldfunc);
-	    /*
-	      Since we had the signal handler uninstalled for a while,
-	      we might have missed the termination of our screen child.
-	      If we can check for this possibility without hanging, do so.
-	      */
-	    do
-		if (waited == term->screen.pid)
-		    Cleanup(0);
-	    while ( (waited=nonblocking_wait()) > 0);
-#endif
-#endif /* VMS */
-	}
+    }
 }

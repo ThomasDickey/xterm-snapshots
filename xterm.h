@@ -502,6 +502,7 @@ extern GC xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc);
 #endif
 
 /* input.c */
+extern Boolean xtermDeleteIsDEL (void);
 extern void Input (TKeyboard *keyboard, TScreen *screen, XKeyEvent *event, Bool eightbit);
 extern void StringInput (TScreen *screen, char *string, size_t nbytes);
 
@@ -539,6 +540,8 @@ extern char *SysErrorMsg (int n);
 extern char *strindex (char *s1, char *s2);
 extern char *udk_lookup (int keycode, int *len);
 extern int XStrCmp (char *s1, char *s2);
+extern int creat_as (int uid, int gid, Boolean append, char *pathname, int mode);
+extern int open_userfile (int uid, int gid, char *path, Boolean append);
 extern int xerror (Display *d, XErrorEvent *ev);
 extern int xioerror (Display *dpy);
 extern void Bell (int which, int percent);
@@ -558,7 +561,8 @@ extern void HandleStringEvent        PROTO_XT_ACTIONS_ARGS;
 extern void Panic (char *s, int a);
 extern void Redraw (void);
 extern void ReverseOldColors (void);
-extern void creat_as (int uid, int gid, char *pathname, int mode);
+extern void SysError (int i);
+extern void VisualBell (void);
 extern void do_dcs (Char *buf, size_t len);
 extern void do_osc (Char *buf, int len, int final);
 extern void do_xevents (void);
@@ -570,11 +574,10 @@ extern void reset_decudk (void);
 extern void set_tek_visibility (Boolean on);
 extern void set_vt_visibility (Boolean on);
 extern void switch_modes (Bool tovt);
-extern void SysError (int i);
-extern void VisualBell (void);
+extern void timestamp_filename(char *dst, const char *src);
 extern void xevents (void);
-extern void xtermSetenv (char *var, char *value);
 extern void xt_error (String message);
+extern void xtermSetenv (char *var, char *value);
 
 #if OPT_MAXIMIZE
 extern int QueryMaximize (TScreen *screen, unsigned *width, unsigned *height);

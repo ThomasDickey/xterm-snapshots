@@ -1895,6 +1895,7 @@ int char2lower(int ch)
 
 void update_keyboard_type(void)
 {
+    update_delete_del();
     update_old_fkeys();
     update_hp_fkeys();
     update_sco_fkeys();
