@@ -813,7 +813,7 @@ static void VTResize PROTO((Widget w));
 static void VTDestroy PROTO((Widget w));
 static Boolean VTSetValues PROTO((Widget cur, Widget request, Widget new, ArgList args, Cardinal *num_args));
 
-#if OPT_I18N_SUPPORT
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 static void VTInitI18N PROTO((void));
 #endif
 
@@ -1083,6 +1083,7 @@ static void VTparse()
 				dotext(screen,
 				 screen->gsets[(int)(screen->curss)],
 				 	bptr, bptr + 1);
+				bptr += 1;
 				screen->curss = 0;
 			}
 			if(bptr < cp) {
@@ -2470,30 +2471,8 @@ dotext(screen, charset, buf, ptr)
 	register int	n;
 	register int	next_col;
 
-	switch (charset) {
-	case 'A':	/* United Kingdom set			*/
-		for (s=buf; s<ptr; ++s)
-			if (*s == '#')
-				*s = '\036';	/* UK pound sign*/
-		break;
-
-#if OPT_XMC_GLITCH
-	case '?':
-#endif
-	case '1':	/* Alternate Character ROM standard characters */
-	case '2':	/* Alternate Character ROM special graphics */
-	case 'B':	/* ASCII set				*/
-		break;
-
-	case '0':	/* special graphics (line drawing)	*/
-		for (s=buf; s<ptr; ++s)
-			if (*s>=0x5f && *s<=0x7e)
-				*s = *s == 0x5f ? 0x7f : *s - 0x5f;
-		break;
-
-	default:	/* any character sets we don't recognize*/
+	if (!xtermCharSets(buf, ptr, charset))
 		return;
-	}
 
 	if_OPT_XMC_GLITCH(screen,{
 		if (charset != '?')
@@ -2748,6 +2727,9 @@ dpmodes(termw, func)
 		case 41:		/* curses hack			*/
 			screen->curses = (func == bitset);
 			update_cursesemul();
+			break;
+		case 42:		/* DECNRCM national charset (VT220) */
+			(*func)(&termw->flags, NATIONAL);
 			break;
 		case 44:		/* margin bell			*/
 			screen->marginbell = (func == bitset);
@@ -3977,7 +3959,7 @@ static void VTRealize (w, valuemask, values)
 	}
 #endif /* NO_ACTIVE_ICON */
 
-#if OPT_I18N_SUPPORT
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 	VTInitI18N();
 #else
 	term->screen.xic = NULL;
@@ -4022,7 +4004,7 @@ static void VTRealize (w, valuemask, values)
 	return;
 }
 
-#if OPT_I18N_SUPPORT
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 static void VTInitI18N()
 {
     int		i;
@@ -5075,7 +5057,7 @@ set_cursor_gcs (screen)
      * not be set before the widget's realized, so it's tested separately).
      */
     if(screen->colorMode) {
-	if (TextWindow(screen) != 0 && (cc != bg)) {
+	if (TextWindow(screen) != 0 && (cc != bg) && (cc != fg)) {
 	    /* we might have a colored foreground/background later */
 	    xgcv.font = screen->fnt_norm->fid;
 	    mask = (GCForeground | GCBackground | GCFont);

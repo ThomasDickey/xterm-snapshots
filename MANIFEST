@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-3_9Af
+MANIFEST for xterm, version xterm-70
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 INSTALL                         configure script: options and related install instructions
@@ -18,6 +18,7 @@ XTerm.ad                        resource definitions for XTerm class
 aclocal.m4                      configure script: custom macros
 button.c                        mouse button and selection processing
 charproc.c                      VT100 parser functions
+charsets.c                      module to translate character-sets
 config.guess                    configure script: guess the system type
 config.sub                      configure script: validate system type
 configure.in                    template for generating configure script

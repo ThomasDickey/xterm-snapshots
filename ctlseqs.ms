@@ -156,6 +156,7 @@
 .[] N N
 .[] O O
 .[] P P
+.[] Q Q
 .[] R R
 .[] S S
 .[] T T
@@ -385,27 +386,30 @@ DEC Screen Alignment Test (DECALN)
 .
 .IP \\*(Es\\*(((\\*(Cc
 Designate G0 Character Set (ISO 2022)
-  \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set
-  \*(Cc = \*A \(-> United Kingdom (UK)
-  \*(Cc = \*(cB \(-> United States (USASCII)
-.
 .IP \\*(Es\\*)\\*(Cc
 Designate G1 Character Set (ISO 2022)
-  \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set
-  \*(Cc = \*A \(-> United Kingdom (UK)
-  \*(Cc = \*(cB \(-> United States (USASCII)
 .
 .IP \\*(Es\\**\\*(Cc
 Designate G2 Character Set (ISO 2022)
-  \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set
-  \*(Cc = \*A \(-> United Kingdom (UK)
-  \*(Cc = \*(cB \(-> United States (USASCII)
 .
 .IP \\*(Es\\*+\\*(Cc
 Designate G3 Character Set (ISO 2022)
+.br
+Final character \*(Cc for designating character sets
+(\*0, \*A and \*(cB apply to VT100 and up, the remainder to VT220 and up):
   \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set
   \*(Cc = \*A \(-> United Kingdom (UK)
   \*(Cc = \*(cB \(-> United States (USASCII)
+  \*(Cc = \*4 \(-> Dutch
+  \*(Cc = \*C or \*5 \(-> Finnish
+  \*(Cc = \*R \(-> French
+  \*(Cc = \*Q \(-> French Canadian
+  \*(Cc = \*K \(-> German
+  \*(Cc = \*Y \(-> Italian
+  \*(Cc = \*E or \*6 \(-> Norwegian/Danish
+  \*(Cc = \*Z \(-> Spanish
+  \*(Cc = \*H or \*7 \(-> Swedish
+  \*(Cc = \*= \(-> Swiss
 .
 .IP \\*(Es\\*7
 Save Cursor (DECSC)
@@ -771,6 +775,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK)
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode
   \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fIcurses\fP resource)
+  \*(Ps = \*4\*2 \(-> Enable Nation Replacement Character sets (DECNRCM)
   \*(Ps = \*4\*4 \(-> Turn On Margin Bell
   \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode
   \*(Ps = \*4\*6 \(-> Start Logging
@@ -803,6 +808,7 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*2\*5 \(-> Hide Cursor (DECTCEM)
   \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode
   \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fIcurses\fP resource)
+  \*(Ps = \*4\*2 \(-> Disable Nation Replacement Character sets (DECNRCM)
   \*(Ps = \*4\*4 \(-> Turn Off Margin Bell
   \*(Ps = \*4\*5 \(-> No Reverse-wraparound Mode
   \*(Ps = \*4\*6 \(-> Stop Logging
