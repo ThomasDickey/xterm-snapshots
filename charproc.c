@@ -1110,6 +1110,8 @@ static void VTparse(void)
 			if((row = param[nparam - 1]) == DEFAULT)
 				row = 0;
 			param[nparam - 1] = 10 * row + (c - '0');
+			if (param[nparam - 1] > 65535)
+				param[nparam - 1] = 65535;
 			break;
 
 		 case CASE_ESC_SEMI:

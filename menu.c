@@ -193,16 +193,16 @@ MenuEntry mainMenuEntries[] = {
     { "meta-esc",	do_meta_esc,	NULL },
 #endif
     { "delete-is-del",	do_delete_del,	NULL },
-    { "old function-keys",do_old_fkeys,	NULL },
+    { "oldFunctionKeys",do_old_fkeys,	NULL },
 #if OPT_HP_FUNC_KEYS
-    { "hp function-keys",do_hp_fkeys,	NULL },
+    { "hpFunctionKeys",	do_hp_fkeys,	NULL },
 #endif
 #if OPT_SCO_FUNC_KEYS
-    { "sco function-keys",do_sco_fkeys,	NULL },
+    { "scoFunctionKeys",do_sco_fkeys,	NULL },
 #endif
-    { "sun function-keys",do_sun_fkeys,	NULL },
+    { "sunFunctionKeys",do_sun_fkeys,	NULL },
 #if OPT_SUNPC_KBD
-    { "sun keyboard",	do_sun_kbd,	NULL },
+    { "sunKeyboard",	do_sun_kbd,	NULL },
 #endif
     { "line2",		NULL,		NULL },
     { "suspend",	do_suspend,	NULL },

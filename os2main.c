@@ -825,6 +825,7 @@ int ptioctl(int fd, int func, void* data)
 #endif /* __EMX__ */
 
 char **gblenvp;
+extern char **environ;
 
 int
 main (int argc, char **argv, char **envp)
@@ -832,15 +833,21 @@ main (int argc, char **argv, char **envp)
 	Widget form_top, menu_top;
 	register TScreen *screen;
 	int mode;
-	extern char **environ;
+	char *app_name = "XTerm";
 
 	/* Do these first, since we may not be able to open the display */
 	ProgramName = argv[0];
 	if (argc > 1) {
+		int n;
 		if (abbrev(argv[1], "-version"))
 			Version();
 		if (abbrev(argv[1], "-help"))
 			Help();
+		for (n = 1; n < argc - 1; n++) {
+			if (abbrev(argv[n], "-name")) {
+				app_name = argv[n+1];
+			}
+		}
 	}
 
 	/* XXX: for some obscure reason EMX seems to lose the value of

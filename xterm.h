@@ -192,7 +192,7 @@ extern int errno;
 #define USE_XPOLL_H 1
 #else
 #define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
-#define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
+#define XFD_COPYSET(src,dst) memcpy((dst)->fds_bits, (src)->fds_bits, sizeof(fd_set))
 #ifdef __MVS__
 #include <sys/time.h>
 #endif
@@ -645,9 +645,9 @@ extern int ScreenResize (TScreen *screen, int width, int height, unsigned *flags
 extern size_t ScrnPointers (TScreen *screen, size_t len);
 extern void ClearBufRows (TScreen *screen, int first, int last);
 extern void ScreenWrite (TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), unsigned flags, unsigned cur_fg_bg, int length);
-extern void ScrnDeleteChar (TScreen *screen, int n, int size);
+extern void ScrnDeleteChar (TScreen *screen, int n);
 extern void ScrnDeleteLine (TScreen *screen, ScrnBuf sb, int n, int last, int size, int where);
-extern void ScrnInsertChar (TScreen *screen, int n, int size);
+extern void ScrnInsertChar (TScreen *screen, int n);
 extern void ScrnInsertLine (TScreen *screen, ScrnBuf sb, int last, int where, int n, int size);
 extern void ScrnRefresh (TScreen *screen, int toprow, int leftcol, int nrows, int ncols, int force);
 

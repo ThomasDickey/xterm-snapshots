@@ -1516,20 +1516,20 @@ This entry invokes the \fBmeta-sends-escape(toggle)\fP action.
 .B "delete-is-del (\fPclass\fB SmeBSB)"
 This entry invokes the \fBdelete-is-del(toggle)\fP action.
 .TP 8
-.B "old\ function-keys (\fPclass\fB SmeBSB)"
-This entry invokes the \fBold\ function-keys(toggle)\fP action.
+.B "oldFunctionKeys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBold-function-keys(toggle)\fP action.
 .TP 8
-.B "hp\ function-keys (\fPclass\fB SmeBSB)"
-This entry invokes the \fBhp\ function-keys(toggle)\fP action.
+.B "hpFunctionKeys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBhp-function-keys(toggle)\fP action.
 .TP 8
-.B "sco\ function-keys (\fPclass\fB SmeBSB)"
-This entry invokes the \fBsco\ function-keys(toggle)\fP action.
+.B "scoFunctionKeys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBsco-function-keys(toggle)\fP action.
 .TP 8
-.B "sun\ function-keys (\fPclass\fB SmeBSB)"
-This entry invokes the \fBsun\ function-keys(toggle)\fP action.
+.B "sunFunctionKeys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBsun-function-keys(toggle)\fP action.
 .TP 8
-.B "sun\ keyboard (\fPclass\fB SmeBSB)"
-This entry invokes the \fBsun\ keyboard(toggle)\fP action.
+.B "sunKeyboard (\fPclass\fB SmeBSB)"
+This entry invokes the \fBsunKeyboard(toggle)\fP action.
 .TP 8
 .B "line2 (\fPclass\fB SmeLine)"
 This is a separator.
@@ -2250,7 +2250,7 @@ the \fBfont-doublesize\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-hp-function-keys(\fIon/off/toggle\fP)"
 This action toggles the \fBhpFunctionKeys\fP resource and is also invoked by
-the \fBhp\ function-keys\fP entry in \fImainMenu\fP.
+the \fBhpFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-jumpscroll(\fIon/off/toggle\fP)"
 This action toggles the \fBjumpscroll\fP resource and is also invoked by the
@@ -2266,7 +2266,7 @@ This action toggles the state of the logging option.
 .TP 8
 .B "set-old-function-keys(\fIon/off/toggle\fP)"
 This action toggles the state of legacy function keys and is also invoked by
-the \fBold\ function-keys\fP entry in \fImainMenu\fP.
+the \fBoldFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-marginbell(\fIon/off/toggle\fP)"
 This action toggles the \fBmarginBell\fP resource and is also invoked from
@@ -2297,15 +2297,15 @@ the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-sco-function-keys(\fIon/off/toggle\fP)"
 This action toggles the \fBscoFunctionKeys\fP resource and is also invoked by
-the \fBsco\ function-keys\fP entry in \fImainMenu\fP.
+the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-sun-function-keys(\fIon/off/toggle\fP)"
 This action toggles the \fBsunFunctionKeys\fP resource and is also invoked by
-the \fBsun\ function-keys\fP entry in \fImainMenu\fP.
+the \fBsunFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-sun-keyboard(\fIon/off/toggle\fP)"
 This action toggles the \fBsunKeyboard\fP resource and is also invoked by
-the \fBsun keyboard\fP entry in \fImainMenu\fP.
+the \fBsunKeyboard\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-tek-text(\fIlarge/2/3/small\fP)"
 This action sets font used in the Tektronix window to the value of the
@@ -2574,6 +2574,6 @@ Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
 Jason Bacon <acadix@execpc.com>,
-Stephen P. Wall <swall@redcom.com>,
+Stephen P. Wall <steve_wall@redcom.com>,
 David Wexelblat, and
 Thomas Dickey (XFree86 Project).
