@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.42 1999/07/11 08:49:40 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.43 1999/08/21 13:49:07 dawes Exp $ */
 
 /* screen.c */
 

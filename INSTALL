@@ -1,4 +1,4 @@
--- $XFree86: xc/programs/xterm/INSTALL,v 3.14 1999/07/18 03:27:04 dawes Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.15 1999/08/21 13:48:52 dawes Exp $
 -- Thomas E. Dickey <dickey@clark.net>
 
 Xterm is normally built as part of the X Windows source tree, using
