@@ -2444,7 +2444,7 @@ dotext(screen, charset, buf, ptr)
  * write a string str of length len onto the screen at
  * the current cursor position.  update cursor position.
  */
-void
+static void
 WriteText(screen, str, len)
     register TScreen	*screen;
     register Char	*str;

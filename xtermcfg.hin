@@ -29,11 +29,13 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 /* This is a template for <xtermcfg.h> */
 
+#undef ALLOWLOGGING	/* CF_ARG_ENABLE(enable-logging) */
 #undef CC_HAS_PROTOS	/* CF_ANSI_CC */
 #undef DFT_COLORMODE	/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID	/* AC_ARG_WITH(default-terminal-id) */
 #undef HAVE_STRERROR	/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_TERMCAP_H	/* AC_CHECK_HEADERS(termcap.h) */
+#undef HAVE_X11_XPOLL_H	/* AC_CHECK_HEADERS(X11/Xpoll.h) */
 #undef OPT_AIX_COLORS	/* CF_ARG_DISABLE(16-color) */
 #undef OPT_DEC_CHRSET	/* CF_ARG_DISABLE(doublechars) */
 #undef OPT_ISO_COLORS	/* CF_ARG_DISABLE(ansi-color) */
@@ -62,4 +64,8 @@ extern char *my_strerror();
 
 #if !HAVE_TERMCAP_H && !defined(NO_TERMCAP_H)
 #define NO_TERMCAP_H
+#endif
+
+#if !HAVE_X11_XPOLL_H
+#define NO_XPOLL_H	/* X11R6.1 & up use Xpoll.h for select() definitions */
 #endif

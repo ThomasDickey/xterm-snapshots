@@ -31,12 +31,8 @@
 #endif
 
 #include "ptyx.h"		/* gets Xt stuff, too */
-
-#if XtSpecificationRelease >= 6
-#include <X11/Xpoll.h>
-#endif
-
 #include "data.h"
+
 #include <setjmp.h>
 
 XPoint T_boxlarge[NBOX] = {

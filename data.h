@@ -25,7 +25,7 @@
  * SOFTWARE.
  */
 
-#if XtSpecificationRelease >= 6
+#if XtSpecificationRelease >= 6 && !defined(NO_XPOLL_H)
 #include <X11/Xpoll.h>
 #else
 #define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
