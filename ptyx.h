@@ -361,6 +361,10 @@ typedef struct {
 #define OPT_DEC_CHRSET  1 /* true if xterm is configured for DEC charset */
 #endif
 
+#ifndef OPT_DEC_LOCATOR
+#define	OPT_DEC_LOCATOR 0 /* true if xterm supports VT220-style mouse events */
+#endif
+
 #ifndef OPT_DEC_SOFTFONT
 #define OPT_DEC_SOFTFONT 0 /* true if xterm is configured for VT220 softfonts */
 #endif
@@ -881,6 +885,17 @@ typedef struct {
 	unsigned long	event_mask;
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
+#if OPT_DEC_LOCATOR
+	Boolean		locator_reset;	/* turn mouse off after 1 report? */
+	Boolean		locator_pixels;	/* report in pixels?		*/
+					/* if false, report in cells	*/
+	unsigned short	locator_events;	/* what events to report	*/
+	int		loc_filter;	/* is filter rectangle active?	*/
+	int		loc_filter_top;	/* filter rectangle for DEC Locator */
+	int		loc_filter_left;
+	int		loc_filter_bottom;
+	int		loc_filter_right;
+#endif	/* OPT_DEC_LOCATOR */
 	int		mouse_button;	/* current button pressed	*/
 	int		mouse_row;	/* ...and its row		*/
 	int		mouse_col;	/* ...and its column		*/

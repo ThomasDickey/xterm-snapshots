@@ -55,6 +55,7 @@ extern char *ptydev;
 extern char *ttydev;
 extern char *xterm_name;
 extern Boolean sunFunctionKeys;
+extern int hold_screen;
 
 #if OPT_HP_FUNC_KEYS
 extern Boolean hpFunctionKeys;

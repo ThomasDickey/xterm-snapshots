@@ -589,6 +589,7 @@ static void handle_send_signal (Widget gw GCC_UNUSED, int sig)
 {
     register TScreen *screen = &term->screen;
 
+    if (hold_screen > 1) hold_screen = 0;
     if (screen->pid > 1) kill_process_group (screen->pid, sig);
 }
 
@@ -1966,8 +1967,9 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus)
 				boxWidgetClass,		*forms,
 				XtNorientation,		XtorientHorizontal,
 				XtNtop,			XawChainTop,
+				XtNbottom,		XawChainTop,
 				XtNleft,		XawChainLeft,
-				XtNright,		XawChainRight,
+				XtNright,		XawChainLeft,
 				NULL);
 
 	if (shell == toplevel) {	/* vt100 */

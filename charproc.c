@@ -940,6 +940,13 @@ void resetCharsets(TScreen *screen)
 			memcpy(new_string, area, used * sizeof(type)); \
 		}
 
+#define	MotionOff( s, t )							\
+	if ((s)->event_mask & PointerMotionMask) {				\
+	    (s)->event_mask |= ButtonMotionMask;				\
+	    (s)->event_mask &= ~PointerMotionMask;				\
+	    XSelectInput(XtDisplay((t)), XtWindow((t)), (s)->event_mask);	\
+	}
+
 static void VTparse(void)
 {
 	/* Buffer for processing printable text */
@@ -2104,9 +2111,91 @@ static void VTparse(void)
 			break;
 
 		 case CASE_CSI_EX_STATE:
-			/* esc exclamation */
+			/* csi exclamation */
 			parsestate = csi_ex_table;
 			break;
+
+#if OPT_DEC_LOCATOR
+		 case CASE_CSI_TICK_STATE:
+			/* csi tick (') */
+			parsestate = csi_tick_table;
+			break;
+
+		 case CASE_DECEFR:
+			/* DECEFR - Enable Filter Rectangle */
+			if (screen->send_mouse_pos == DEC_LOCATOR) {
+			    MotionOff( screen, term );
+			    if((screen->loc_filter_top = param[0]) < 1)
+				screen->loc_filter_top = LOC_FILTER_POS;
+			    if(nparam < 2 || (screen->loc_filter_left = param[1]) < 1)
+				screen->loc_filter_left = LOC_FILTER_POS;
+			    if(nparam < 3 || (screen->loc_filter_bottom = param[2]) < 1)
+				screen->loc_filter_bottom = LOC_FILTER_POS;
+			    if(nparam < 4 || (screen->loc_filter_right = param[3]) < 1)
+				screen->loc_filter_right = LOC_FILTER_POS;
+			    InitLocatorFilter( term );
+			}
+			parsestate = groundtable;
+			break;
+
+		 case CASE_DECELR:
+			/* DECELR - Enable Locator Reports */
+			MotionOff( screen, term );
+			if (param[0] <= 0 || param[0] > 2) {
+			    screen->send_mouse_pos = MOUSE_OFF;
+			} else {
+			    screen->send_mouse_pos = DEC_LOCATOR;
+			    if (param[0] == 2) {
+				screen->locator_reset = TRUE;
+			    } else {
+				screen->locator_reset = FALSE;
+			    }
+			    if (nparam < 2 || param[1] != 1) {
+				screen->locator_pixels = FALSE;
+			    } else {
+				screen->locator_pixels = TRUE;
+			    }
+			    screen->loc_filter = FALSE;
+			}
+			parsestate = groundtable;
+			break;
+
+		 case CASE_DECSLE:
+			/* DECSLE - Select Locator Events */
+			for (count=0; count<nparam; ++count) {
+			    switch (param[count]) {
+				case DEFAULT:
+				case 0:
+				    MotionOff( screen, term );
+				    screen->loc_filter = FALSE;
+				    screen->locator_events = 0;
+				    break;
+				case 1:
+				    screen->locator_events |= LOC_BTNS_DN;
+				    break;
+				case 2:
+				    screen->locator_events &= ~LOC_BTNS_DN;
+				    break;
+				case 3:
+				    screen->locator_events |= LOC_BTNS_UP;
+				    break;
+				case 4:
+				    screen->locator_events &= ~LOC_BTNS_UP;
+				    break;
+			    }
+			}
+			parsestate = groundtable;
+			break;
+
+		 case CASE_DECRQLP:
+			/* DECRQLP - Request Locator Position */
+			if( param[0] < 2 ) {
+			    /* Issue DECLRP Locator Position Report */
+			    GetLocatorPosition( term );
+			}
+			parsestate = groundtable;
+			break;
+#endif	/* OPT_DEC_LOCATOR */
 
 		 case CASE_S7C1T:
 			show_8bit_control(False);
@@ -2881,6 +2970,7 @@ dpmodes(
 			/* ignore autorepeat */
 			break;
 		case SET_X10_MOUSE:     /* MIT bogus sequence           */
+			MotionOff( screen, termw );
 			set_mousemode(X10_MOUSE);
 			break;
 		case 18:		/* DECPFF: print form feed */
@@ -2986,13 +3076,16 @@ dpmodes(
 			(*func)(&termw->keyboard.flags, MODE_DECBKM);
 			update_decbkm();
 			break;
-		case SET_VT200_MOUSE:   /* xterm bogus sequence         */
+		case SET_VT200_MOUSE:	/* xterm bogus sequence		*/
+			MotionOff( screen, termw );
 			set_mousemode(VT200_MOUSE);
 			break;
 		case SET_VT200_HIGHLIGHT_MOUSE: /* xterm sequence w/hilite tracking */
+			MotionOff( screen, termw );
 			set_mousemode(VT200_HIGHLIGHT_MOUSE);
 			break;
 		case SET_BTN_EVENT_MOUSE:
+			MotionOff( screen, termw );
 			set_mousemode(BTN_EVENT_MOUSE);
 			break;
 		case SET_ANY_EVENT_MOUSE:

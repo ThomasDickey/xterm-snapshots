@@ -76,7 +76,6 @@
 
 #ifdef linux
 #define USE_TERMIOS
-#define USE_SYSV_UTMP
 #endif
 
 #ifdef Lynx
@@ -96,7 +95,6 @@
 
 #if defined(SYSV) || defined(__CYGWIN32__)
 #define USE_SYSV_TERMIO
-#define USE_SYSV_UTMP
 #elif defined(__QNX__)
 #define USE_TERMINFO
 #include <unix.h>

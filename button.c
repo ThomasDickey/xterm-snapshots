@@ -152,6 +152,12 @@ Boolean SendMousePosition(Widget w, XEvent* event)
     if (screen->send_mouse_pos == MOUSE_OFF)
 	return False;
 
+#if OPT_DEC_LOCATOR
+    if (screen->send_mouse_pos == DEC_LOCATOR) {
+	return( SendLocatorPosition( w, event ) );
+    }
+#endif	/* OPT_DEC_LOCATOR */
+
     /* Make sure the event is an appropriate type */
     if ((screen->send_mouse_pos != BTN_EVENT_MOUSE)
      && (screen->send_mouse_pos != ANY_EVENT_MOUSE)
@@ -177,14 +183,6 @@ Boolean SendMousePosition(Widget w, XEvent* event)
 	}
 	return False;
 
-      case VT200_MOUSE: /* DEC vt200 compatible */
-
-	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
-	    EditorButton((XButtonEvent *)event);
-	    return True;
-	}
-	return False;
-
       case VT200_HIGHLIGHT_MOUSE: /* DEC vt200 hilite tracking */
 	if (  event->type == ButtonPress &&
 	      KeyModifiers == 0 &&
@@ -197,6 +195,8 @@ Boolean SendMousePosition(Widget w, XEvent* event)
 	    return True;
 	}
 	return False;
+
+      case VT200_MOUSE:	/* DEC vt200 compatible */
 
       /* xterm extension for motion reporting. June 1998 */
       /* EditorButton() will distinguish between the modes */
@@ -213,6 +213,474 @@ Boolean SendMousePosition(Widget w, XEvent* event)
     }
 #undef KeyModifiers
 }
+
+#if OPT_DEC_LOCATOR
+
+#define KeyModifiers \
+    (event->xbutton.state & (ShiftMask | LockMask | ControlMask | Mod1Mask | \
+			     Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
+
+#define	LocatorCoords( row, col, x, y, oor )			\
+    if( screen->locator_pixels ) {				\
+	(oor)=FALSE; (row) = (y)+1; (col) = (x)+1;		\
+	/* Limit to screen dimensions */			\
+	if ((row) < 1) (row) = 1,(oor)=TRUE;			\
+	else if ((row) > screen->border*2+Height(screen))	\
+	    (row) = screen->border*2+Height(screen),(oor)=TRUE;	\
+	if ((col) < 1) (col) = 1,(oor)=TRUE;			\
+	else if ((col) > OriginX(screen)*2+Width(screen))	\
+	    (col) = OriginX(screen)*2+Width(screen),(oor)=TRUE;	\
+    } else {							\
+	(oor)=FALSE;						\
+	/* Compute character position of mouse pointer */	\
+	(row) = ((y) - screen->border) / FontHeight(screen);	\
+	(col) = ((x) - OriginX(screen)) / FontWidth(screen);	\
+	/* Limit to screen dimensions */			\
+	if ((row) < 0) (row) = 0,(oor)=TRUE;			\
+	else if ((row) > screen->max_row)			\
+	    (row) = screen->max_row,(oor)=TRUE;			\
+	if ((col) < 0) (col) = 0,(oor)=TRUE;			\
+	else if ((col) > screen->max_col)			\
+	    (col) = screen->max_col,(oor)=TRUE;			\
+	(row)++; (col)++;					\
+    }
+
+#define	MotionOff( s, t ) {						\
+	    (s)->event_mask |= ButtonMotionMask;			\
+	    (s)->event_mask &= ~PointerMotionMask;			\
+	    XSelectInput(XtDisplay((t)), XtWindow((t)), (s)->event_mask); }
+
+#define	MotionOn( s, t ) {						\
+	    (s)->event_mask &= ~ButtonMotionMask;			\
+	    (s)->event_mask |= PointerMotionMask;			\
+	    XSelectInput(XtDisplay((t)), XtWindow((t)), (s)->event_mask); }
+
+Boolean
+SendLocatorPosition(Widget w, XEvent* event)
+{
+    TScreen	*screen = &((XtermWidget)w)->screen;
+    int		pty = screen->respond;
+    Char	line[20];
+    int		row, col;
+    Boolean	oor;
+    int		button, count = 0;
+    int		state;
+
+    /* Make sure the event is an appropriate type */
+    if ((event->type != ButtonPress &&
+	 event->type != ButtonRelease &&
+	 !screen->loc_filter) ||
+	(KeyModifiers != 0 && KeyModifiers != ControlMask))
+	return( False );
+
+    if ((event->type == ButtonPress &&
+	 !(screen->locator_events & LOC_BTNS_DN)) ||
+	(event->type == ButtonRelease &&
+	 !(screen->locator_events & LOC_BTNS_UP)))
+	return( True );
+
+    if( event->type == MotionNotify ) {
+	CheckLocatorPosition( w, event );
+	return( True );
+    }
+
+    /* get button # */
+    button = event->xbutton.button - 1;
+
+    LocatorCoords( row, col, event->xbutton.x, event->xbutton.y, oor );
+
+    /*
+    * DECterm mouse:
+    *
+    * ESCAPE '[' event ; mask ; row ; column '&' 'w'
+    */
+    /* Build key sequence starting with \E[ */
+    if (screen->control_eight_bits) {
+	    line[count++] = CSI;
+    } else {
+	    line[count++] = ESC;
+	    line[count++] = '[';
+    }
+
+    if( oor) {
+	/* Event - 0 = locator unavailable */
+	line[count++] = '0';
+
+	/* Sequence termination */
+	line[count++] = '&';
+	line[count++] = 'w';
+
+	/* Transmit key sequence to process running under xterm */
+	v_write(pty, line, count);
+
+	if( screen->locator_reset ) {
+	    MotionOff( screen, term );
+	    screen->send_mouse_pos = MOUSE_OFF;
+	}
+	return( True );
+    }
+
+    /*
+    * event:
+    *	1	no buttons
+    *	2	left button down
+    *	3	left button up
+    *	4	middle button down
+    *	5	middle button up
+    *	6	right button down
+    *	7	right button up
+    *	8	M4 down
+    *	9	M4 up
+    */
+    switch(event->type)
+    {
+	case ButtonPress:
+	    line[count++] = '2' + (button<<1);
+	    break;
+	case ButtonRelease:
+	    line[count++] = '3' + (button<<1);
+	    break;
+	default:
+	    return( True );
+    }
+    line[count++] = ';';
+    /*
+    * mask:
+    * bit 7   bit 6   bit 5   bit 4   bit 3   bit 2       bit 1         bit 0
+    *                                 M4 down left down   middle down   right down
+    *
+    * Notice that Button1 (left) and Button3 (right) are swapped in the mask.
+    * Also, mask should be the state after the button press/release,
+    * X provides the state not including the button press/release.
+    */
+    state = (event->xbutton.state & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8;
+    state ^= 1 << button;	/* update mask to "after" state */
+    state = (state & ~(4|1)) | ((state&1)?4:0) | ((state&4)?1:0);	/* swap Button1 & Button3 */
+    sprintf( &(line[count]), "%d;%d;%d&w", state, row, col );
+    count = strlen( line );
+
+    /* Transmit key sequence to process running under xterm */
+    v_write(pty, line, count);
+
+    if( screen->locator_reset ) {
+	MotionOff( screen, term );
+	screen->send_mouse_pos = MOUSE_OFF;
+    }
+
+    /*
+    * DECterm turns the Locator off if a button is pressed while a filter rectangle
+    * is active. This might be a bug, but I don't know, so I'll emulate it anyways.
+    */
+    if( screen->loc_filter ) {
+	screen->send_mouse_pos = MOUSE_OFF;
+	screen->loc_filter = FALSE;
+	screen->locator_events = 0;
+	MotionOff( screen, term );
+    }
+
+    return( True );
+}
+#undef KeyModifiers
+
+#define KeyModifiers \
+    (mask & (ShiftMask | LockMask | ControlMask | Mod1Mask | \
+			     Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask ))
+/*
+* mask:
+* bit 7   bit 6   bit 5   bit 4   bit 3   bit 2       bit 1         bit 0
+*                                 M4 down left down   middle down   right down
+*
+* Button1 (left) and Button3 (right) are swapped in the mask relative to X.
+*/
+#define	ButtonState(state, mask)	\
+{ (state) = ((mask) & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8;	\
+  /* swap Button1 & Button3 */								\
+  (state) = ((state) & ~(4|1)) | (((state)&1)?4:0) | (((state)&4)?1:0);			\
+}
+
+void
+GetLocatorPosition(XtermWidget w)
+{
+    TScreen		*screen = &w->screen;
+    Window		root, child;
+    int			rx, ry, x, y;
+    unsigned int	mask;
+    Char		line[20];
+    int			pty = screen->respond;
+    int			row = 0, col = 0;
+    Boolean		oor = FALSE;
+    Bool		ret = FALSE;
+    int			count = 0;
+    int			state;
+
+
+    /*
+    * DECterm turns the Locator off if the position is requested while a filter rectangle
+    * is active.  This might be a bug, but I don't know, so I'll emulate it anyways.
+    */
+    if( screen->loc_filter ) {
+	screen->send_mouse_pos = MOUSE_OFF;
+	screen->loc_filter = FALSE;
+	screen->locator_events = 0;
+	MotionOff( screen, term );
+    }
+
+    /* Build key sequence starting with \E[ */
+    if (screen->control_eight_bits) {
+	line[count++] = CSI;
+    } else {
+	line[count++] = ESC;
+	line[count++] = '[';
+    }
+    if (screen->send_mouse_pos == DEC_LOCATOR) {
+	ret = XQueryPointer( screen->display, VWindow(screen), &root,
+			&child, &rx, &ry, &x, &y, &mask );
+	if (ret) {
+	    LocatorCoords( row, col, x, y, oor );
+	}
+    }
+    if( ret == FALSE || oor /* || (KeyModifiers != 0 && KeyModifiers != ControlMask) */ )
+    {
+	/* Event - 0 = locator unavailable */
+	line[count++] = '0';
+
+	/* Sequence termination */
+	line[count++] = '&';
+	line[count++] = 'w';
+
+	/* Transmit key sequence to process running under xterm */
+	v_write(pty, line, count);
+
+	if( screen->locator_reset ) {
+	    MotionOff( screen, term );
+	    screen->send_mouse_pos = MOUSE_OFF;
+	}
+	return;
+    }
+
+    /* Event - 1 = response to locator request */
+    line[count++] = '1';
+    line[count++] = ';';
+
+    ButtonState( state, mask );
+    sprintf( &(line[count]), "%d;%d;%d&w", state, row, col );
+    count = strlen( line );
+
+    /* Transmit key sequence to process running under xterm */
+    v_write(pty, line, count);
+
+    if( screen->locator_reset ) {
+	MotionOff( screen, term );
+	screen->send_mouse_pos = MOUSE_OFF;
+    }
+}
+
+void
+InitLocatorFilter( XtermWidget w )
+{
+    TScreen		*screen = &w->screen;
+    Window		root, child;
+    int			rx, ry, x, y;
+    unsigned int	mask;
+    Char		line[20];
+    int			pty = screen->respond;
+    int			row, col;
+    Boolean		oor;
+    Bool		ret;
+    int			count = 0;
+    int			state;
+
+
+    ret = XQueryPointer( screen->display, VWindow(screen),
+			    &root, &child, &rx, &ry, &x, &y, &mask );
+    if (ret) {
+	LocatorCoords( row, col, x, y, oor );
+    }
+    if( ret == FALSE || oor )
+    {
+	/* Locator is unavailable */
+
+	if( screen->loc_filter_top != LOC_FILTER_POS ||
+	    screen->loc_filter_left != LOC_FILTER_POS ||
+	    screen->loc_filter_bottom != LOC_FILTER_POS ||
+	    screen->loc_filter_right != LOC_FILTER_POS )
+	{
+	    /*
+	    * If any explicit coordinates were received,
+	    * report immediately with no coordinates.
+	    */
+	    /* Build key sequence starting with \E[ */
+	    if (screen->control_eight_bits) {
+		line[count++] = CSI;
+	    } else {
+		line[count++] = ESC;
+		line[count++] = '[';
+	    }
+	    /* Event - 0 = locator unavailable */
+	    line[count++] = '0';
+
+	    /* Sequence termination */
+	    line[count++] = '&';
+	    line[count++] = 'w';
+
+	    /* Transmit key sequence to process running under xterm */
+	    v_write(pty, line, count);
+
+	    if( screen->locator_reset ) {
+		MotionOff( screen, term );
+		screen->send_mouse_pos = MOUSE_OFF;
+	    }
+	} else {
+	    /*
+	    * No explicit coordinates were received, and the pointer is
+	    * unavailable.  Report when the pointer re-enters the window.
+	    */
+	    screen->loc_filter = TRUE;
+	    MotionOn( screen, term );
+	}
+	return;
+    }
+
+    /*
+    * Adjust rectangle coordinates:
+    *  1. Replace "LOC_FILTER_POS" with current coordinates
+    *  2. Limit coordinates to screen size
+    *  3. make sure top and left are less than bottom and right, resp.
+    */
+    if( screen->locator_pixels ) {
+	rx = OriginX(screen)*2+Width(screen);
+	ry = screen->border*2+Height(screen);
+    } else {
+	rx = screen->max_col;
+	ry = screen->max_row;
+    }
+
+#define	Adjust( coord, def, max )				\
+	if( (coord) == LOC_FILTER_POS )	(coord) = (def);	\
+	else if ((coord) < 1)		(coord) = 1;		\
+	else if ((coord) > (max))	(coord) = (max)
+
+    Adjust( screen->loc_filter_top, row, ry );
+    Adjust( screen->loc_filter_left, col, rx );
+    Adjust( screen->loc_filter_bottom, row, ry );
+    Adjust( screen->loc_filter_right, col, rx );
+
+    if( screen->loc_filter_top > screen->loc_filter_bottom ) {
+	ry = screen->loc_filter_top;
+	screen->loc_filter_top = screen->loc_filter_bottom;
+	screen->loc_filter_bottom = ry;
+    }
+
+    if( screen->loc_filter_left > screen->loc_filter_right ) {
+	rx = screen->loc_filter_left;
+	screen->loc_filter_left = screen->loc_filter_right;
+	screen->loc_filter_right = rx;
+    }
+
+    if( (col < screen->loc_filter_left) ||
+	(col > screen->loc_filter_right) ||
+	(row < screen->loc_filter_top) ||
+	(row > screen->loc_filter_bottom) )
+    {
+	/* Pointer is already outside the rectangle - report immediately */
+	/* Build key sequence starting with \E[ */
+	if (screen->control_eight_bits) {
+	    line[count++] = CSI;
+	} else {
+	    line[count++] = ESC;
+	    line[count++] = '[';
+	}
+	/* Event - 10 = locator outside filter */
+	line[count++] = '1';
+	line[count++] = '0';
+	line[count++] = ';';
+
+	ButtonState( state, mask );
+	sprintf( &(line[count]), "%d;%d;%d&w", state, row, col );
+	count = strlen( line );
+
+	/* Transmit key sequence to process running under xterm */
+	v_write(pty, line, count);
+
+	if( screen->locator_reset ) {
+	    MotionOff( screen, term );
+	    screen->send_mouse_pos = MOUSE_OFF;
+	}
+	return;
+    }
+
+    /*
+    * Rectangle is set up.  Allow pointer tracking
+    * to detect if the mouse leaves the rectangle.
+    */
+    screen->loc_filter = TRUE;
+    MotionOn( screen, term );
+}
+
+void
+CheckLocatorPosition( Widget w, XEvent *event )
+{
+    TScreen		*screen = &((XtermWidget)w)->screen;
+    Char		line[20];
+    int			pty = screen->respond;
+    int			row, col;
+    Boolean		oor;
+    int			count = 0;
+    int			state;
+
+    LocatorCoords( row, col, event->xbutton.x, event->xbutton.y, oor );
+
+    /*
+    * Send report if the pointer left the filter rectangle, if
+    * the pointer left the window, or if the filter rectangle
+    * had no coordinates and the pointer re-entered the window.
+    */
+    if (oor || (screen->loc_filter_top == LOC_FILTER_POS) ||
+	(col < screen->loc_filter_left) ||
+	(col > screen->loc_filter_right) ||
+	(row < screen->loc_filter_top) ||
+	(row > screen->loc_filter_bottom))
+    {
+	/* Filter triggered - disable it */
+	screen->loc_filter = FALSE;
+	MotionOff( screen, term );
+
+	/* Build key sequence starting with \E[ */
+	if (screen->control_eight_bits) {
+	    line[count++] = CSI;
+	} else {
+	    line[count++] = ESC;
+	    line[count++] = '[';
+	}
+
+	if (oor) {
+	    /* Event - 0 = locator unavailable */
+	    line[count++] = '0';
+
+	    /* Sequence termination */
+	    line[count++] = '&';
+	    line[count++] = 'w';
+	} else {
+	    /* Event - 10 = locator outside filter */
+	    line[count++] = '1';
+	    line[count++] = '0';
+	    line[count++] = ';';
+
+	    ButtonState( state, event->xbutton.state );
+	    sprintf( &(line[count]), "%d;%d;%d&w", state, row, col );
+	    count = strlen( line );
+	}
+	/* Transmit key sequence to process running under xterm */
+	v_write(pty, line, count);
+
+	if( screen->locator_reset ) {
+	    MotionOff( screen, term );
+	    screen->send_mouse_pos = MOUSE_OFF;
+	}
+    }
+}
+#undef KeyModifiers
+#endif	/* OPT_DEC_LOCATOR */
 
 void
 DiredButton(

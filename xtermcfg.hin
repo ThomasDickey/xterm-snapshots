@@ -47,6 +47,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_TERMCAP_H		/* AC_CHECK_HEADERS(termcap.h) */
 #undef HAVE_TERMIOS_H		/* AC_CHECK_HEADERS(termios.h) */
 #undef HAVE_UNISTD_H		/* AC_CHECK_HEADERS(unistd.h) */
+#undef HAVE_UTMP		/* CF_UTMP */
+#undef HAVE_UTMP_UT_HOST	/* CF_UTMP_UT_HOST */
 #undef HAVE_WAITPID		/* AC_CHECK_FUNCS(waitpid) */
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #undef HAVE_X11_XPOLL_H		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
@@ -58,6 +60,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_BLINK_CURS		/* CF_ARG_DISABLE(blink-cursor) */
 #undef OPT_BOX_CHARS		/* CF_ARG_DISABLE(boxchars) */
 #undef OPT_DEC_CHRSET		/* CF_ARG_DISABLE(doublechars) */
+#undef OPT_DEC_LOCATOR		/* CF_ARG_ENABLE(dec-locator) */
 #undef OPT_HIGHLIGHT_COLOR	/* CF_ARG_DISABLE(highlighting) */
 #undef OPT_HP_FUNC_KEYS		/* CF_ARG_ENABLE(hp-fkeys) */
 #undef OPT_I18N_SUPPORT		/* CF_ARG_DISABLE(i18n) */
@@ -78,8 +81,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef SCROLLBAR_RIGHT		/* CF_ARG_ENABLE(rightbar) */
 #undef USE_MY_MEMMOVE		/* CF_FUNC_MEMMOVE */
 #undef USE_OK_BCOPY		/* CF_FUNC_MEMMOVE */
+#undef USE_SYSV_UTMP		/* CF_UTMP */
 #undef USE_SYS_SELECT_H		/* CF_TYPE_FD_SET */
 #undef USE_TERMINFO		/* CF_FUNC_TGETENT */
+#undef USE_TTY_GROUP		/* CF_TTY_GROUP */
+#undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef const			/* AC_CONST */
 #undef size_t			/* AC_TYPE_SIZE_T */
 #undef time_t			/* AC_CHECK_TYPE(time_t, long) */
