@@ -4,9 +4,9 @@
 
 /*
  * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
- * 
+ *
  *                         All Rights Reserved
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -14,10 +14,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,7 +25,7 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  * Except as contained in this notice, the name(s) of the above copyright
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
@@ -125,10 +125,10 @@ extern int ptioctl(int fd, int func, void* data);
 #define TIOCSWINSZ	113
 #define TIOCGWINSZ	117
 struct winsize {
-        unsigned short  ws_row;         /* rows, in characters */
-        unsigned short  ws_col;         /* columns, in characters */
-        unsigned short  ws_xpixel;      /* horizontal size, pixels */
-        unsigned short  ws_ypixel;      /* vertical size, pixels */
+	unsigned short	ws_row;		/* rows, in characters */
+	unsigned short	ws_col;		/* columns, in characters */
+	unsigned short	ws_xpixel;	/* horizontal size, pixels */
+	unsigned short	ws_ypixel;	/* vertical size, pixels */
 };
 #endif
 
@@ -268,7 +268,7 @@ Reallocate(
 		}
 	}
 
-        /* Now free the old buffer */
+	/* Now free the old buffer */
 	free(oldbuf);
 
 	return move_down ? move_down : -move_up; /* convert to rows */
@@ -287,7 +287,12 @@ ScreenWrite (
 	register int length)		/* length of string */
 {
 #if OPT_ISO_COLORS
+#if OPT_256_COLORS
+	register Char *fbf = 0;
+	register Char *fbb = 0;
+#else
 	register Char *fb = 0;
+#endif
 #endif
 #if OPT_DEC_CHRSET
 	register Char *cb = 0;
@@ -305,7 +310,11 @@ ScreenWrite (
 	col   = SCRN_BUF_CHARS(screen, screen->cur_row) + screen->cur_col;
 	attrs = SCRN_BUF_ATTRS(screen, screen->cur_row) + screen->cur_col;
 
-	if_OPT_ISO_COLORS(screen,{
+	if_OPT_256_COLORS(screen,{
+		fbf = SCRN_BUF_FGRND(screen, screen->cur_row) + screen->cur_col;
+		fbb = SCRN_BUF_BGRND(screen, screen->cur_row) + screen->cur_col;
+	})
+	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 		fb = SCRN_BUF_COLOR(screen, screen->cur_row) + screen->cur_col;
 	})
 	if_OPT_DEC_CHRSET({
@@ -335,7 +344,11 @@ ScreenWrite (
 	flags |= CHARDRAWN;
 	memset( attrs, flags,  length);
 
-	if_OPT_ISO_COLORS(screen,{
+	if_OPT_256_COLORS(screen,{
+		memset( fbf,  cur_fg_bg >> 8, length);
+		memset( fbb,  cur_fg_bg & 0xff, length);
+	})
+	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 		memset( fb,   cur_fg_bg, length);
 	})
 	if_OPT_DEC_CHRSET({
@@ -377,8 +390,15 @@ ScrnClearLines (TScreen *screen, ScrnBuf sb, int where, int n, int size)
 				else if (j == OFF_ATTRS)
 					memset(screen->save_ptr[i+j], flags, size);
 #if OPT_ISO_COLORS
+#if OPT_256_COLORS
+				else if (j == OFF_FGRND)
+					memset(screen->save_ptr[i+j], term->sgr_foreground, size);
+				else if (j == OFF_BGRND)
+					memset(screen->save_ptr[i+j], term->cur_background, size);
+#else
 				else if (j == OFF_COLOR)
 					memset(screen->save_ptr[i+j], xtermColorPair(), size);
+#endif
 #endif
 				else
 					bzero( screen->save_ptr[i+j], size);
@@ -506,7 +526,15 @@ ScrnInsertChar (
 	    ptr[i] = ' ';
 	for (i=col; i<col+n; i++)
 	    attrs[i] = flags;
-	if_OPT_ISO_COLORS(screen,{
+	if_OPT_256_COLORS(screen,{
+	    ptr = BUF_FGRND(sb, row);
+	    memmove(ptr + col + n, ptr + col, nbytes);
+	    memset(ptr + col, term->sgr_foreground, n);
+	    ptr = BUF_BGRND(sb, row);
+	    memmove(ptr + col + n, ptr + col, nbytes);
+	    memset(ptr + col, term->cur_background, n);
+	})
+	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 	    ptr = BUF_COLOR(sb, row);
 	    memmove(ptr + col + n, ptr + col, nbytes);
 	    memset(ptr + col, xtermColorPair(), n);
@@ -549,7 +577,15 @@ ScrnDeleteChar (
 	bzero  (ptr + size - n, n);
 	memset (attrs + size - n, TERM_COLOR_FLAGS, n);
 
-	if_OPT_ISO_COLORS(screen,{
+	if_OPT_256_COLORS(screen,{
+	    ptr = BUF_FGRND(sb, row);
+	    memmove(ptr + col, ptr + col + n, nbytes);
+	    memset(ptr + size - n, term->sgr_foreground, n);
+	    ptr = BUF_BGRND(sb, row);
+	    memmove(ptr + col, ptr + col + n, nbytes);
+	    memset(ptr + size - n, term->cur_background, n);
+	})
+	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 	    ptr = BUF_COLOR(sb, row);
 	    memmove(ptr + col, ptr + col + n, nbytes);
 	    memset(ptr + size - n, xtermColorPair(), n);
@@ -607,7 +643,12 @@ ScrnRefresh (
 
 	for (row = toprow; row <= maxrow; y += FontHeight(screen), row++) {
 #if OPT_ISO_COLORS
+#if OPT_256_COLORS
+	   register Char *fbf = 0;
+	   register Char *fbb = 0;
+#else
 	   register Char *fb = 0;
+#endif
 #endif
 #if OPT_DEC_CHRSET
 	   register Char *cb = 0;
@@ -712,7 +753,7 @@ ScrnRefresh (
 		&& screen->send_mouse_pos != VT200_HIGHLIGHT_MOUSE) {
 		   hi_col = screen->max_col;
 	           while (hi_col > 0 && !(attrs[hi_col] & CHARDRAWN))
-                       hi_col--;
+		       hi_col--;
 	       }
 
 	       /* remaining piece should be hilited */
@@ -735,7 +776,16 @@ ScrnRefresh (
 	   })
 
 	   flags = attrs[col];
-	   if_OPT_ISO_COLORS(screen,{
+	   if_OPT_256_COLORS(screen,{
+		fbf = SCRN_BUF_FGRND(screen, lastind + topline);
+		fbb = SCRN_BUF_BGRND(screen, lastind + topline);
+		fg_bg = (fbf[col] << 8) | (fbb[col]);
+		/* this combines them, then splits them again.	but
+		   extract_fg does more, so seems reasonable */
+		fg = extract_fg(fg_bg, flags);
+		bg = extract_bg(fg_bg);
+	   })
+	   if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 		fb = SCRN_BUF_COLOR(screen, lastind + topline);
 		fg_bg = fb[col];
 		fg = extract_fg(fg_bg, flags);
@@ -751,8 +801,13 @@ ScrnRefresh (
 		if ((attrs[col] != flags)
 		 || (hilite && (col > hi_col))
 #if OPT_ISO_COLORS
+#if OPT_256_COLORS
+		 || ((flags & FG_COLOR) && (extract_fg((fbf[col]<<8)|fbb[col],attrs[col]) != fg))
+		 || ((flags & BG_COLOR) && (extract_bg((fbf[col]<<8)|fbb[col]) != bg))
+#else
 		 || ((flags & FG_COLOR) && (extract_fg(fb[col],attrs[col]) != fg))
 		 || ((flags & BG_COLOR) && (extract_bg(fb[col]) != bg))
+#endif
 #endif
 #if OPT_DEC_CHRSET
 		 || (cb[col] != cs)
@@ -776,7 +831,12 @@ ScrnRefresh (
 			hilite = False;
 
 		   flags = attrs[col];
-		   if_OPT_ISO_COLORS(screen,{
+		   if_OPT_256_COLORS(screen,{
+			fg_bg = (fbf[col]<<8) | fbb[col];
+		        fg = extract_fg(fg_bg, flags);
+		        bg = extract_bg(fg_bg);
+		   })
+		   if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 			fg_bg = fb[col];
 		        fg = extract_fg(fg_bg, flags);
 		        bg = extract_bg(fg_bg);
@@ -853,7 +913,11 @@ ClearBufRows (
 	    ScrnClrWrapped(screen, row);
 	    bzero (BUF_CHARS(buf, row), len);
 	    memset(BUF_ATTRS(buf, row), flags, len);
-	    if_OPT_ISO_COLORS(screen,{
+	    if_OPT_256_COLORS(screen,{
+		memset(BUF_FGRND(buf, row), term->sgr_foreground, len);
+		memset(BUF_BGRND(buf, row), term->cur_background, len);
+	    })
+	    if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 		memset(BUF_COLOR(buf, row), xtermColorPair(), len);
 	    })
 	    if_OPT_DEC_CHRSET({

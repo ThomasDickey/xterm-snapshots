@@ -130,6 +130,9 @@ extern int errno;
 #else
 #define Select(n,r,w,e,t) select(n,(fd_set*)r,(fd_set*)w,(fd_set*)e,(struct timeval *)t)
 #define XFD_COPYSET(src,dst) bcopy((src)->fds_bits, (dst)->fds_bits, sizeof(fd_set))
+#ifdef __MVS__
+#include <sys/time.h>
+#endif
 #endif
 
 #ifdef USE_SYS_SELECT_H
@@ -230,14 +233,20 @@ extern void xterm_DECDHL (Bool top);
 extern void xterm_DECSWL (void);
 extern void xterm_DECDWL (void);
 #if OPT_DEC_CHRSET
+extern int xterm_Double_index(unsigned chrset, unsigned flags);
 extern GC xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc);
 #endif
 
 /* input.c */
 extern void Input (TKeyboard *keyboard, TScreen *screen, XKeyEvent *event, Bool eightbit);
 extern void StringInput (TScreen *screen, char *string, size_t nbytes);
+
 #if OPT_NUM_LOCK
 extern void VTInitModifiers(void);
+#endif
+
+#if OPT_WIDE_CHARS
+extern int convertFromUTF8(unsigned long c, Char *strbuf);
 #endif
 
 /* main.c */
@@ -384,6 +393,7 @@ extern int AddToRefresh (TScreen *screen);
 extern int HandleExposure (TScreen *screen, XEvent *event);
 extern int char2lower(int ch);
 extern int drawXtermText (TScreen *screen, unsigned flags, GC gc, int x, int y, int chrset, PAIRED_CHARS(Char *text, Char *text2), Cardinal len);
+extern void ChangeAnsiColors (XtermWidget tw);
 extern void ChangeColors (XtermWidget tw, ScrnColors *pNew);
 extern void ClearRight (TScreen *screen, int n);
 extern void ClearScreen (TScreen *screen);

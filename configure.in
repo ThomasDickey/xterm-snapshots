@@ -188,13 +188,25 @@ CF_ARG_DISABLE(ansi-color,
 AC_MSG_RESULT($enable_ansi_color)
 test $enable_ansi_color = no && AC_DEFINE(OPT_ISO_COLORS,0)
 
-AC_MSG_CHECKING(if you want 16 colors like aixterm)
-CF_ARG_DISABLE(16-color,
-	[  --disable-16-color      disable 16-color support],
-	[enable_16_color=no],
-	[enable_16_color=yes])
-AC_MSG_RESULT($enable_16_color)
-test $enable_16_color = no && AC_DEFINE(OPT_AIX_COLORS,0)
+if test $enable_ansi_color = yes ; then
+
+	AC_MSG_CHECKING(if you want 16 colors like aixterm)
+	CF_ARG_DISABLE(16-color,
+		[  --disable-16-color      disable 16-color support],
+		[enable_16_color=no],
+		[enable_16_color=yes])
+	AC_MSG_RESULT($enable_16_color)
+	test $enable_16_color = no && AC_DEFINE(OPT_AIX_COLORS,0)
+
+	AC_MSG_CHECKING(if you want 256 colors)
+	CF_ARG_ENABLE(256-color,
+		[  --disable-256-color     enable 256-color support],
+		[enable_256_color=yes],
+		[enable_256_color=no])
+	AC_MSG_RESULT($enable_256_color)
+	test $enable_256_color = yes && AC_DEFINE(OPT_256_COLORS,1)
+
+fi
 
 AC_MSG_CHECKING(if you want blinking cursor)
 CF_ARG_DISABLE(blink-cursor,
@@ -204,21 +216,25 @@ CF_ARG_DISABLE(blink-cursor,
 AC_MSG_RESULT($enable_blink_curs)
 test $enable_blink_curs = no && AC_DEFINE(OPT_BLINK_CURS,0)
 
-AC_MSG_CHECKING(if you want bold colors mapped like IBM PC)
-CF_ARG_DISABLE(bold-color,
-	[  --disable-bold-color    disable PC-style mapping of bold colors],
-	[enable_pc_color=no],
-	[enable_pc_color=yes])
-AC_MSG_RESULT($enable_pc_color)
-test $enable_pc_color = no && AC_DEFINE(OPT_PC_COLORS,0)
+if test $enable_ansi_color = yes ; then
 
-AC_MSG_CHECKING(if you want color-mode enabled by default)
-CF_ARG_DISABLE(color-mode,
-	[  --disable-color-mode    disable default colorMode resource],
-	[default_colormode=no],
-	[default_colormode=yes])
-AC_MSG_RESULT($default_colormode)
-test $default_colormode = no && AC_DEFINE(DFT_COLORMODE,FALSE)
+	AC_MSG_CHECKING(if you want bold colors mapped like IBM PC)
+	CF_ARG_DISABLE(bold-color,
+		[  --disable-bold-color    disable PC-style mapping of bold colors],
+		[enable_pc_color=no],
+		[enable_pc_color=yes])
+	AC_MSG_RESULT($enable_pc_color)
+	test $enable_pc_color = no && AC_DEFINE(OPT_PC_COLORS,0)
+
+	AC_MSG_CHECKING(if you want color-mode enabled by default)
+	CF_ARG_DISABLE(color-mode,
+		[  --disable-color-mode    disable default colorMode resource],
+		[default_colormode=no],
+		[default_colormode=yes])
+	AC_MSG_RESULT($default_colormode)
+	test $default_colormode = no && AC_DEFINE(DFT_COLORMODE,FALSE)
+
+fi
 
 AC_MSG_CHECKING(if you want support for color highlighting)
 CF_ARG_DISABLE(highlighting,

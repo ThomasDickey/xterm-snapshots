@@ -945,16 +945,113 @@ CloseLog(register TScreen *screen)
 void
 FlushLog(register TScreen *screen)
 {
-	register Char *cp;
+	register IChar *cp;
 	register int i;
 
 	cp = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);
-	if((i = cp - screen->logstart) > 0)
+	if((i = cp - screen->logstart) > 0) {
+#if OPT_WIDE_CHARS
+		Char temp[80];
+		IChar code;
+		unsigned n;
+		while (i-- > 0) {
+			code = *(screen->logstart)++;
+			if (screen->utf8_mode) {
+				n = convertFromUTF8(code & 0xffff, temp);
+			} else {
+				temp[0] = code;
+				n = 1;
+				while (i > 0 && n < sizeof(temp)) {
+					i--;
+					temp[n++] = *(screen->logstart)++;
+				}
+			}
+			write(screen->logfd, temp, n);
+		}
+#else
 		write(screen->logfd, (char *)screen->logstart, i);
-	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer->buf, VTbuffer.buf);
+#endif
+	}
+	screen->logstart = DecodedData(CURRENT_EMU_VAL(screen, Tbuffer, &VTbuffer));
 }
 
 #endif /* ALLOWLOGGING */
+
+/***====================================================================***/
+
+#if OPT_ISO_COLORS
+static void ReportAnsiColorRequest(XtermWidget pTerm, int colornum, int final)
+{
+	XColor color;
+	Colormap cmap =	pTerm->core.colormap;
+	char buffer[80];
+
+	TRACE(("ReportAnsiColorRequest %d\n", colornum))
+	color.pixel = pTerm->screen.Acolors[colornum];
+	XQueryColor(term->screen.display, cmap, &color);
+	sprintf(buffer, "rgb:%04x/%04x/%04x",
+		color.red,
+		color.green,
+		color.blue);
+	unparseputc1(OSC,   pTerm->screen.respond);
+	unparseputs(buffer, pTerm->screen.respond);
+	unparseputc1(final, pTerm->screen.respond);
+}
+
+static Boolean
+AllocateAnsiColor(
+	XtermWidget	 pTerm,
+	int		 color,
+	char		*name)
+{
+XColor			 def;
+register TScreen	*screen =	&pTerm->screen;
+Colormap		 cmap =		pTerm->core.colormap;
+
+    if (XParseColor(screen->display, cmap, name, &def)
+     && XAllocColor(screen->display, cmap, &def)) {
+	screen->Acolors[color] = def.pixel;
+	TRACE(("AllocateAnsiColor #%d: %s (pixel %#lx)\n", color, name, def.pixel))
+	return(TRUE);
+    }
+    TRACE(("AllocateAnsiColor #%d: %s (failed)\n", color, name))
+    return(FALSE);
+}
+
+static Boolean
+ChangeAnsiColorRequest(
+	XtermWidget	pTerm,
+	register char	*buf,
+	int		final)
+{
+    char *name;
+    int color;
+
+    TRACE(("ChangeAnsiColorRequest string='%s'\n", buf))
+
+    name = strchr(buf, ';');
+    if (name == NULL)
+	return(FALSE);
+    *name = '\0';
+    name++;
+    color = atoi(buf);
+    if (color < 0 || color > 255)
+	return(FALSE);
+    if (!strcmp(name, "?"))
+	ReportAnsiColorRequest(pTerm, color, final);
+    else {
+	if (!AllocateAnsiColor(pTerm, color, name))
+	    return(FALSE);
+	ChangeAnsiColors(pTerm);
+	/* FIXME:  free old color somehow?  We aren't for the other color
+	 * change style (dynamic colors).
+	 */
+    }
+    return(TRUE);
+}
+#endif /* OPT_ISO_COLORS */
+
+/***====================================================================***/
 
 void
 do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
@@ -1013,7 +1110,11 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 	case 3: /* change X property */
 		ChangeXprop(buf);
 		break;
-
+#if OPT_ISO_COLORS
+	case 4:
+		ChangeAnsiColorRequest(term, buf, final);
+		break;
+#endif
 	case 10:	case 11:	case 12:
 	case 13:	case 14:	case 15:
 	case 16:	case 17:
@@ -1171,16 +1272,44 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 					strcat(reply, ";7");
 				if (term->flags & INVISIBLE)
 					strcat(reply, ";8");
-				if_OPT_ISO_COLORS(screen,{
+				if_OPT_256_COLORS(screen,{
+				if (term->flags & FG_COLOR)
+					if (term->cur_foreground >= 16)
+						sprintf(reply+strlen(reply),
+							";38;5;%d", term->cur_foreground);
+					else
+						sprintf(reply+strlen(reply),
+							";%d%d",
+							term->cur_foreground >= 8 ? 9 : 3,
+							term->cur_foreground >= 8 ?
+							term->cur_foreground - 8 :
+							term->cur_foreground);
+				if (term->flags & BG_COLOR)
+					if (term->cur_background >= 16)
+						sprintf(reply+strlen(reply),
+							";48;5;%d", term->cur_foreground);
+					else
+						sprintf(reply+strlen(reply),
+							";%d%d",
+							term->cur_background >= 8 ? 10 : 4,
+							term->cur_background >= 8 ?
+							term->cur_background - 8 :
+							term->cur_background);
+				})
+				if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 				if (term->flags & FG_COLOR)
 					sprintf(reply+strlen(reply),
 						";%d%d",
 						term->cur_foreground >= 8 ? 9 : 3,
+						term->cur_foreground >= 8 ?
+						term->cur_foreground - 8 :
 						term->cur_foreground);
 				if (term->flags & BG_COLOR)
 					sprintf(reply+strlen(reply),
 						";%d%d",
 						term->cur_background >= 8 ? 10 : 4,
+						term->cur_background >= 8 ?
+						term->cur_background - 8 :
 						term->cur_background);
 				})
 				strcat(reply, "m");
@@ -1322,6 +1451,8 @@ Changetitle(register char *name)
     ChangeGroup( XtNtitle, (XtArgVal)name );
 }
 
+#define ustrlen(s) strlen((char *)(s))
+
 void
 ChangeXprop(register char *buf)
 {
@@ -1329,7 +1460,7 @@ ChangeXprop(register char *buf)
     Window w = XtWindow(toplevel);
     XTextProperty text_prop;
     Atom aprop;
-    char *pchEndPropName = strchr(buf,'=');
+    Char *pchEndPropName = (Char *)strchr(buf,'=');
 
     if (pchEndPropName)
 	*pchEndPropName = '\0';
@@ -1341,7 +1472,7 @@ ChangeXprop(register char *buf)
 	text_prop.value = pchEndPropName+1;
 	text_prop.encoding = XA_STRING;
 	text_prop.format = 8;
-	text_prop.nitems = strlen(text_prop.value);
+	text_prop.nitems = ustrlen(text_prop.value);
 	XSetTextProperty(dpy,w,&text_prop,aprop);
     }
 }
@@ -1771,7 +1902,7 @@ void end_tek_mode (void)
 #ifdef ALLOWLOGGING
 	if (screen->logging) {
 	    FlushLog (screen);
-	    screen->logstart = VTbuffer.buf;
+	    screen->logstart = DecodedData(&VTbuffer);
 	}
 #endif
 	longjmp(Tekend, 1);
@@ -1787,7 +1918,7 @@ void end_vt_mode (void)
 #ifdef ALLOWLOGGING
 	if(screen->logging && TekPtyData()) {
 	    FlushLog(screen);
-	    screen->logstart = Tbuffer->buf;
+	    screen->logstart = DecodedData(Tbuffer);
 	}
 #endif
 	screen->TekEmu = TRUE;

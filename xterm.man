@@ -387,6 +387,10 @@ This is the default, unless you have set the rightScrollBar resource.
 This option indicates that the shell that is started in the \fIxterm\fP window
 will be a login shell (i.e., the first character of argv[0] will be a dash,
 indicating to the shell that it should read the user's .login or .profile).
+.sp
+Note that this is incompatible with \fB\-e\fP, since the \fIlogin\fP program
+does not provide a way to specify the command to run in the new shell.
+If you specify both, \fIxterm\fP uses \fB\-ls\fP.
 .TP 8
 .B \+ls
 This option indicates that the shell that is started should not be a login
@@ -1330,8 +1334,8 @@ Any other value will turn on UTF-8 mode.
 .TP 8
 .B "utf8controls (\fPclass\fB Utf8controls)"
 If \fIxterm\fP is running in UTF-8 mode, this specifies whether to
-interpret Unicode values as control characters, e.g., U+0000 to U+001F as
-C0 controls.
+interpret UTF-8 forms as control characters,
+e.g., 0xC0 0x8A (which is interpreted as U+000A) as a C0 control.
 The Unicode standard does not cover this area, leaving it unspecified for
 higher level protocols.
 Your application may require this interpretation.

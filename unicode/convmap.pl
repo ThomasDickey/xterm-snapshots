@@ -146,7 +146,7 @@ print <<EOT;
 long keysym2ucs(KeySym keysym)
 {
     int min = 0;
-    int max = sizeof(keysymtab) / sizeof(struct codepair);
+    int max = sizeof(keysymtab) / sizeof(struct codepair) - 1;
     int mid;
 
     /* first check for Latin-1 characters (1:1 mapping) */

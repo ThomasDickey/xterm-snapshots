@@ -182,6 +182,21 @@ static Bool IsPts = False;
 #endif
 #endif
 
+#ifdef __MVS__
+#define SVR4
+#define USE_POSIX_TERMIOS
+#define USE_USG_PTYS
+#define USE_SYSV_PGRP
+#define USE_SYSV_UTMP
+#define USE_SYSV_SIGNALS
+#define USE_TTY_GROUP
+#define UTMP
+#define HAS_UTMP_UT_HOST
+#define ut_name ut_user
+#define ut_xtime ut_tv.tv_sec
+#undef  HAS_LTCHARS
+#endif
+
 #ifdef __CYGWIN32__
 #define SYSV
 #define SVR4
@@ -264,7 +279,7 @@ static Bool IsPts = False;
 #undef TIOCLSET				/* defined, but not useable */
 #endif
 
-#ifdef __GNU__
+#if defined(__GNU__) || defined(__MVS__)
 #undef TIOCLSET
 #undef TIOCSLTC
 #endif
@@ -382,7 +397,7 @@ static Bool IsPts = False;
 #ifndef NOFILE
 #define NOFILE OPEN_MAX
 #endif
-#elif !defined(MINIX) && !defined(WIN32) && !defined(Lynx) && !defined(__GNU__)
+#elif !defined(MINIX) && !defined(WIN32) && !defined(Lynx) && !defined(__GNU__) && !defined(__MVS__)
 #include <sys/param.h>	/* for NOFILE */
 #endif
 
@@ -440,7 +455,7 @@ extern struct utmp *getutid __((struct utmp *_Id));
 #endif
 
 #ifndef ISC
-#ifdef UTMP
+#if defined(UTMP) && !defined(__MVS__)
 #include <utmp.h>
 #endif
 #if defined(LASTLOG) && (!defined(BSD) || (BSD < 199103))
@@ -530,9 +545,6 @@ extern int tgetent (char *ptr, char *name);
 	}
 #endif
 
-#undef  CTRL
-#define	CTRL(c)	((c) & 0x1f)
-
 static SIGNAL_T reapchild (int n);
 static char *base_name (char *name);
 static int pty_search (int *pty);
@@ -605,13 +617,13 @@ static struct jtchars d_jtc = {
 
 /* allow use of system default characters if defined and reasonable */
 #ifndef CEOF
-#define CEOF     CTRL('D')
+#define CEOF     CONTROL('D')
 #endif
 #ifndef CSUSP
-#define CSUSP    CTRL('Z')
+#define CSUSP    CONTROL('Z')
 #endif
 #ifndef CQUIT
-#define CQUIT    CTRL('\\')
+#define CQUIT    CONTROL('\\')
 #endif
 #ifndef CEOL
 #define CEOL 0
@@ -623,22 +635,22 @@ static struct jtchars d_jtc = {
 #define CSWTCH 0
 #endif
 #ifndef CLNEXT
-#define CLNEXT   CTRL('V')
+#define CLNEXT   CONTROL('V')
 #endif
 #ifndef CWERASE
-#define CWERASE  CTRL('W')
+#define CWERASE  CONTROL('W')
 #endif
 #ifndef CRPRNT
-#define CRPRNT   CTRL('R')
+#define CRPRNT   CONTROL('R')
 #endif
 #ifndef CFLUSH
-#define CFLUSH   CTRL('O')
+#define CFLUSH   CONTROL('O')
 #endif
 #ifndef CSTOP
-#define CSTOP    CTRL('S')
+#define CSTOP    CONTROL('S')
 #endif
 #ifndef CSTART
-#define CSTART   CTRL('Q')
+#define CSTART   CONTROL('Q')
 #endif
 
 /*
@@ -1389,9 +1401,9 @@ main (int argc, char *argv[])
         d_tio.c_cflag &= ~(HUPCL|PARENB);
         d_tio.c_iflag |= BRKINT|ISTRIP|IGNPAR;
 #endif
-	d_tio.c_cc[VINTR] = CTRL('C');		/* '^C'	*/
+	d_tio.c_cc[VINTR] = CONTROL('C');	/* '^C'	*/
 	d_tio.c_cc[VERASE] = 0x7f;		/* DEL	*/
-	d_tio.c_cc[VKILL] = CTRL('U');		/* '^U'	*/
+	d_tio.c_cc[VKILL] = CONTROL('U');	/* '^U'	*/
 	d_tio.c_cc[VQUIT] = CQUIT;		/* '^\'	*/
     	d_tio.c_cc[VEOF] = CEOF;		/* '^D'	*/
 	d_tio.c_cc[VEOL] = CEOL;		/* '^@'	*/
@@ -1511,10 +1523,18 @@ main (int argc, char *argv[])
 #ifdef VSTATUS
 	d_tio.c_cc[VSTATUS] = '\377';
 #endif
+#ifdef VREPRINT
 	d_tio.c_cc[VREPRINT] = '\377';
+#endif
+#ifdef VDISCARD
 	d_tio.c_cc[VDISCARD] = '\377';
+#endif
+#ifdef VWERASE
 	d_tio.c_cc[VWERASE] = '\377';
+#endif
+#ifdef VLNEXT
 	d_tio.c_cc[VLNEXT] = '\377';
+#endif
 #endif /* } USE_TERMIOS */
 #ifdef TIOCLSET /* { */
 	d_lmode = 0;
@@ -1532,10 +1552,16 @@ main (int argc, char *argv[])
 	    gid_t rgid = getgid();
 
 	    if (setegid(rgid) == -1)
+#ifdef __MVS__
+	       if (!(errno == EMVSERR)) /* could happen if _BPX_SHAREAS=REUSE */
+#endif
 		(void) fprintf(stderr, "setegid(%d): %s\n",
 			       (int) rgid, strerror(errno));
 
 	    if (seteuid(ruid) == -1)
+#ifdef __MVS__
+	       if (!(errno == EMVSERR))
+#endif
 		(void) fprintf(stderr, "seteuid(%d): %s\n",
 			       (int) ruid, strerror(errno));
 #endif
@@ -1554,10 +1580,16 @@ main (int argc, char *argv[])
 
 #ifdef HAS_SAVED_IDS_AND_SETEUID
 	    if (seteuid(euid) == -1)
+#ifdef __MVS__
+	       if (!(errno == EMVSERR))
+#endif
 		(void) fprintf(stderr, "seteuid(%d): %s\n",
 			       (int) euid, strerror(errno));
 
 	    if (setegid(egid) == -1)
+#ifdef __MVS__
+	       if (!(errno == EMVSERR))
+#endif
 		(void) fprintf(stderr, "setegid(%d): %s\n",
 			       (int) egid, strerror(errno));
 #endif
@@ -1845,7 +1877,7 @@ main (int argc, char *argv[])
 	if (fcntl(screen->respond, F_SETFD, mode) == -1)
 		Error(1);
 	nbio_register(screen->respond);
-#elif defined(USE_SYSV_TERMIO)
+#elif defined(USE_SYSV_TERMIO) || defined(__MVS__)
 	if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
 		Error(1);
 #ifdef O_NDELAY
@@ -2039,7 +2071,7 @@ pty_search(int *pty)
 {
     static int devindex, letter = 0;
 
-#if defined(CRAY)
+#if defined(CRAY) || defined(__MVS__)
     for (; devindex < MAXPTTYS; devindex++) {
 	sprintf (ttydev, TTYFORMAT, devindex);
 	sprintf (ptydev, PTYFORMAT, devindex);
@@ -2052,7 +2084,7 @@ pty_search(int *pty)
 	    return 0;
 	}
     }
-#else /* CRAY */
+#else /* CRAY || __MVS__ */
     while (PTYCHAR1[letter]) {
 	ttydev [strlen(ttydev) - 2]  = ptydev [strlen(ptydev) - 2] =
 	    PTYCHAR1 [letter];
@@ -2642,7 +2674,7 @@ spawn (void)
 		    SysError (5);
 		}
 #endif /* SVR4 */
-#endif
+#endif /* I_PUSH */
 		tty = ptyfd;
 		close (screen->respond);
 #ifdef TIOCSWINSZ
@@ -2854,6 +2886,10 @@ spawn (void)
 #else /* USE_POSIX_TERMIOS */
 		    cfsetispeed(&tio, B9600);
 		    cfsetospeed(&tio, B9600);
+#ifdef __MVS__
+		    /* turn off bits that can't be set from the slave side */
+		    tio.c_cflag &= ~(PACKET|PKT3270|PTU3270|PKTXTND);
+#endif /* __MVS__ */
 		    /* Clear CLOCAL so that SIGHUP is sent to us
 		       when the xterm ends */
 		    tio.c_cflag &= ~CLOCAL;
@@ -2874,10 +2910,15 @@ spawn (void)
 #ifdef ECHOCTL
 		    tio.c_lflag |= ECHOCTL|IEXTEN;
 #endif
+#ifndef __MVS__
 		    /* reset EOL to default value */
 		    tio.c_cc[VEOL] = CEOL;			/* '^@' */
 		    /* certain shells (ksh & csh) change EOF as well */
 		    tio.c_cc[VEOF] = CEOF;			/* '^D' */
+#else
+		    if(tio.c_cc[VEOL]==0) tio.c_cc[VEOL] = CEOL;			/* '^@' */
+		    if(tio.c_cc[VEOF]==0) tio.c_cc[VEOF] = CEOF;			/* '^D' */
+#endif
 #ifdef VLNEXT
 		    tio.c_cc[VLNEXT] = CLNEXT;
 #endif
@@ -3270,7 +3311,9 @@ spawn (void)
 
 		utmp.ut_pid = getpid();
 #if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
+#ifndef __MVS__
 		utmp.ut_session = getsid(0);
+#endif
 		utmp.ut_xtime = time ((time_t *) 0);
 		utmp.ut_tv.tv_usec = 0;
 #else
@@ -4076,7 +4119,9 @@ Exit(int n)
 	    if (utptr && (utptr->ut_pid == screen->pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
 #if defined(SVR4) || defined(SCO325) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0)))
+#ifndef __MVS__
 		    utptr->ut_session = getsid(0);
+#endif
 		    utptr->ut_xtime = time ((time_t *) 0);
 		    utptr->ut_tv.tv_usec = 0;
 #else
@@ -4304,7 +4349,7 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 
 	if (*s == '^') {
 	    s++;
-	    c = ((*s == '?') ? 0177 : CTRL(*s));
+	    c = ((*s == '?') ? 0177 : CONTROL(*s));
 	    if (*s == '-') {
 #if HAVE_TERMIOS_H && HAVE_TCGETATTR
 #  if HAVE_POSIX_VDISABLE
@@ -4401,3 +4446,60 @@ kill_process_group(int pid, int sig)
     return killpg (pid, sig);
 #endif /* AMOEBA */
 }
+
+#if OPT_EBCDIC
+int A2E(int x)
+{
+    char c;
+    c=x;
+    __atoe_l(&c,1);
+    return c;
+}
+
+int E2A(int x)
+{
+    char c;
+    c=x;
+    __etoa_l(&c,1);
+    return c;
+}
+
+char CONTROL(char c)
+{
+    /* this table was built through trial & error */
+    static char ebcdic_control_chars[256]={
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 00 - 07 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 08 - 0f */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 10 - 17 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 18 - 1f */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 20 - 27 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 28 - 2f */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 30 - 37 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 38 - 3f */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 40 - 47 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 48 - 4f */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 50 - 57 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 58 - 5f */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00,   /* 60 - 67 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07,   /* 68 - 6f */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 70 - 77 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 78 - 7f */
+                0x00, 0x01, 0x02, 0x03, 0x37, 0x2d, 0x2e, 0x2f,   /* 80 - 87 */
+                0x16, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 88 - 8f */
+                0x00, 0x15, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,   /* 90 - 97 */
+                0x11, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* 98 - 9f */
+                0x00, 0x00, 0x13, 0x3c, 0x3d, 0x32, 0x26, 0x18,   /* a0 - a7 */
+                0x19, 0x3f, 0x00, 0x00, 0x00, 0x27, 0x00, 0x00,   /* a8 - af */
+                0x1e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* b0 - b7 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x1d, 0x00, 0x00,   /* b8 - bf */
+                0x00, 0x01, 0x02, 0x03, 0x37, 0x2d, 0x2e, 0x2f,   /* c0 - c7 */
+                0x16, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* c8 - cf */
+                0x00, 0x15, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10,   /* d0 - d7 */
+                0x11, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* d8 - df */
+                0x1c, 0x00, 0x13, 0x3c, 0x3d, 0x32, 0x26, 0x18,   /* e0 - e7 */
+                0x19, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* e8 - ef */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,   /* f0 - f7 */
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};  /* f8 - ff */
+    return ebcdic_control_chars[c & 0xff];
+}
+#endif

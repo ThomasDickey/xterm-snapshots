@@ -225,9 +225,9 @@ TranslateFromSUNPC(KeySym keysym)
 	}
 
 #if OPT_WIDE_CHARS
-/* Convert a Unicode value c into a UTF-8 sequence srtbuf */
-static int
-to_utf8(unsigned long c, char *strbuf)
+/* Convert a Unicode value c into a UTF-8 sequence in strbuf */
+int
+convertFromUTF8(unsigned long c, Char *strbuf)
 {
 	int nbytes = 0;
 
@@ -251,7 +251,7 @@ to_utf8(unsigned long c, char *strbuf)
 		strbuf[nbytes++] = 0x80 | ((c >> 12) & 0x3f);
 		strbuf[nbytes++] = 0x80 | ((c >>  6) & 0x3f);
 		strbuf[nbytes++] = 0x80 | ( c        & 0x3f);
-	} else if (c < 0x80000000) {
+	} else if (c < 0x80000000U) {
 		strbuf[nbytes++] = 0xfe |  (c >> 30);
 		strbuf[nbytes++] = 0x80 | ((c >> 24) & 0x3f);
 		strbuf[nbytes++] = 0x80 | ((c >> 18) & 0x3f);
@@ -259,7 +259,7 @@ to_utf8(unsigned long c, char *strbuf)
 		strbuf[nbytes++] = 0x80 | ((c >> 6)  & 0x3f);
 		strbuf[nbytes++] = 0x80 | ( c        & 0x3f);
 	} else
-		return to_utf8(0xfffd, strbuf);
+		return convertFromUTF8(0xfffd, strbuf);
 
 	return nbytes;
 }
@@ -324,14 +324,14 @@ Input (
 			ucs = (unsigned char) strbuf[0];
 		} else if (!nbytes && 
 			   ((keysym >= 0x100 && keysym <= 0xf000) ||
-			    (keysym & 0xff000000) == 0x01000000))
+			    (keysym & 0xff000000U) == 0x01000000))
 			ucs = keysym2ucs(keysym);
 		else
 			ucs = -2;
 		if (ucs == -1)
 			nbytes = 0;
 		if (ucs >= 0)
-			nbytes = to_utf8(ucs, strbuf);
+			nbytes = convertFromUTF8(ucs, (Char *)strbuf);
 	}
 #endif
 
@@ -544,7 +544,7 @@ Input (
 		{
 			reply.a_type = SS3;
 			VT52_CURSOR_KEYS
-			reply.a_final = dec_code - 11 + 'P';
+			reply.a_final = A2E(dec_code - 11 + E2A('P')) ;
 			MODIFIER_PARM
 			unparseseq(&reply, pty);
 		}

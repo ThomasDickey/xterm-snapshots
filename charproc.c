@@ -551,10 +551,10 @@ static XtResource resources[] = {
 #if OPT_XMC_GLITCH
 {XtNxmcGlitch, XtCXmcGlitch, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.xmc_glitch),
-        XtRString, "0"},
+	XtRString, "0"},
 {XtNxmcAttributes, XtCXmcAttributes, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.xmc_attributes),
-        XtRString, "1"},
+	XtRString, "1"},
 {XtNxmcInline, XtCXmcInline, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.xmc_inline),
 	XtRBoolean, (XtPointer) &defaultFALSE},
@@ -569,11 +569,11 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, screen.cutToBeginningOfLine),
 	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNhighlightSelection,XtCHighlightSelection,XtRBoolean,
-        sizeof(Boolean),XtOffsetOf(XtermWidgetRec, screen.highlight_selection),
-        XtRBoolean, (XtPointer) &defaultFALSE},
+	sizeof(Boolean),XtOffsetOf(XtermWidgetRec, screen.highlight_selection),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNtrimSelection,XtCTrimSelection,XtRBoolean,
-        sizeof(Boolean),XtOffsetOf(XtermWidgetRec, screen.trim_selection),
-        XtRBoolean, (XtPointer) &defaultFALSE},
+	sizeof(Boolean),XtOffsetOf(XtermWidgetRec, screen.trim_selection),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, core.background_pixel),
 	XtRString, "XtDefaultBackground"},
@@ -610,20 +610,20 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, misc.geo_metry),
 	XtRString, (XtPointer) NULL},
 {XtNalwaysHighlight,XtCAlwaysHighlight,XtRBoolean,
-        sizeof(Boolean),XtOffsetOf(XtermWidgetRec, screen.always_highlight),
-        XtRBoolean, (XtPointer) &defaultFALSE},
+	sizeof(Boolean),XtOffsetOf(XtermWidgetRec, screen.always_highlight),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNappcursorDefault,XtCAppcursorDefault,XtRBoolean,
-        sizeof(Boolean),XtOffsetOf(XtermWidgetRec, misc.appcursorDefault),
-        XtRBoolean, (XtPointer) &defaultFALSE},
+	sizeof(Boolean),XtOffsetOf(XtermWidgetRec, misc.appcursorDefault),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNappkeypadDefault,XtCAppkeypadDefault,XtRBoolean,
-        sizeof(Boolean),XtOffsetOf(XtermWidgetRec, misc.appkeypadDefault),
-        XtRBoolean, (XtPointer) &defaultFALSE},
+	sizeof(Boolean),XtOffsetOf(XtermWidgetRec, misc.appkeypadDefault),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNbackarrowKey, XtCBackarrowKey, XtRBoolean, sizeof(Boolean),
-        XtOffsetOf(XtermWidgetRec, screen.backarrow_key),
-        XtRBoolean, (XtPointer) &defaultTRUE},
+	XtOffsetOf(XtermWidgetRec, screen.backarrow_key),
+	XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNbellSuppressTime, XtCBellSuppressTime, XtRInt, sizeof(int),
-        XtOffsetOf(XtermWidgetRec, screen.bellSuppressTime),
-        XtRInt, (XtPointer) &defaultBellSuppressTime},
+	XtOffsetOf(XtermWidgetRec, screen.bellSuppressTime),
+	XtRInt, (XtPointer) &defaultBellSuppressTime},
 {XtNtekGeometry,XtCGeometry, XtRString, sizeof(char *),
 	XtOffsetOf(XtermWidgetRec, misc.T_geometry),
 	XtRString, (XtPointer) NULL},
@@ -675,7 +675,7 @@ static XtResource resources[] = {
 	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNprinterControlMode, XtCPrinterControlMode, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.printer_controlmode),
-        XtRInt, (XtPointer) &defaultZERO},
+	XtRInt, (XtPointer) &defaultZERO},
 {XtNprinterCommand,XtCPrinterCommand, XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.printer_command),
 	XtRString, (XtPointer) "lpr"},
@@ -845,6 +845,8 @@ static XtResource resources[] = {
 {XtNcolor15, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_15]),
 	XtRString, DFT_COLOR("white")},
+/* colors 16-256? should be settable, but surely there's a better way
+   than reproducing this template another 240 times */
 {XtNcolorBD, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_BD]),
 	XtRString, DFT_COLOR("XtDefaultForeground")},
@@ -1046,7 +1048,7 @@ setExtendedFG(void)
 	 * much sense for 16-color applications, but we keep it to retain
 	 * compatiblity with ANSI-color applications.
 	 */
-#if OPT_PC_COLORS
+#if OPT_PC_COLORS /* XXXJTL should be settable at runtime (resource or OSC?) */
 	if (term->screen.boldColors
 	 && (fg >= 0)
 	 && (fg < 8)
@@ -1140,7 +1142,7 @@ static void VTparse(void)
 	nextstate = -1;		/* not a legal state */
 
 	for( ; ; ) {
-            int thischar = -1;
+	    int thischar = -1;
 	    c = doinput();
 
 	    /* Intercept characters for printer controller mode */
@@ -1193,7 +1195,7 @@ static void VTparse(void)
 		}
 	    } else
 #endif
-	      nextstate = parsestate[c];
+	      nextstate = parsestate[E2A(c)];
 
 	    /*
 	     * Accumulate string for printable text.  This may be 8/16-bit
@@ -1782,6 +1784,30 @@ static void VTparse(void)
 					  setExtendedFG();
 					})
 					break;
+				 case 38:
+					/* This is more complicated than I'd
+					   like, but it should properly eat all
+				 	   the parameters for unsupported modes
+					*/
+					if_OPT_256_COLORS(screen,{
+						row++;
+						if (row < nparam) {
+							switch(param[row]) {
+							 case 5:
+								row++;
+								if (row < nparam &&
+								    param[row] < 256) {
+									term->sgr_foreground = param[row];
+									setExtendedFG();
+								}
+								break;
+							default:
+								row += 7;
+								break;
+							}
+						}
+					})
+					break;
 				 case 39:
 					if_OPT_ISO_COLORS(screen,{
 					  reset_SGR_Foreground();
@@ -1797,6 +1823,25 @@ static void VTparse(void)
 				 case 47:
 					if_OPT_ISO_COLORS(screen,{
 					  SGR_Background(param[row] - 40);
+					})
+					break;
+				 case 48:
+					if_OPT_256_COLORS(screen,{
+						row++;
+						if (row < nparam) {
+							switch(param[row]) {
+							 case 5:
+								row++;
+								if (row < nparam &&
+								    param[row] < 256) {
+									SGR_Background(param[row]);
+								}
+								break;
+							default:
+								row += 7;
+								break;
+							}
+						}
 					})
 					break;
 				 case 49:
@@ -2643,7 +2688,8 @@ dotext(
 	IChar	*buf,		/* start of characters to process */
 	Cardinal len)		/* end */
 {
-	Cardinal n, next_col, offset;
+	int this_col;		/* must be signed */
+	Cardinal n, next_col, offset, last_col;
 
 #if OPT_WIDE_CHARS
 	if (!screen->utf8_mode || charset == '0') /* don't translate if we use UTF-8 */
@@ -2660,9 +2706,10 @@ dotext(
 		}
 	})
 
-	for (offset = 0; offset < len; offset += n) {
-		n = screen->max_col - screen->cur_col +1;
-		if (n <= 1) {
+	for (offset = 0; offset < len; offset += this_col) {
+		last_col = CurMaxCol(screen, screen->cur_row);
+		this_col = last_col - screen->cur_col +1;
+		if (this_col <= 1) {
 			if (screen->do_wrap && (term->flags & WRAPAROUND)) {
 			    /* mark that we had to wrap this line */
 			    ScrnSetWrapped(screen, screen->cur_row);
@@ -2670,13 +2717,14 @@ dotext(
 			    Index(screen, 1);
 			    screen->cur_col = 0;
 			    screen->do_wrap = 0;
-			    n = screen->max_col+1;
+			    this_col = last_col + 1;
 			} else
-			    n = 1;
+			    this_col = 1;
 		}
-		if (offset + n > len)
-			n = len - offset;
-		next_col = screen->cur_col + n;
+		if (offset + this_col > len) {
+			this_col = len - offset;
+		}
+		next_col = screen->cur_col + this_col;
 
 #if OPT_WIDE_CHARS
 		/*
@@ -2693,12 +2741,12 @@ dotext(
 			Boolean both = False;
 			unsigned j, k;
 
-			if (n >= limit) {
-				limit = (n + 1) * 2;
+			if (this_col >= (int) limit) {
+				limit = (this_col + 1) * 2;
 				lobyte = (Char *)XtRealloc((char *)lobyte, limit);
 				hibyte = (Char *)XtRealloc((char *)hibyte, limit);
 			}
-			for (j = offset; j < offset+n; j++) {
+			for (j = offset; j < offset+this_col; j++) {
 				k = j-offset;
 				lobyte[k] = buf[j];
 				if (buf[j] > 255) {
@@ -2711,12 +2759,12 @@ dotext(
 
 			WriteText(screen, PAIRED_CHARS(
 				lobyte,
-				both ? hibyte : 0), n);
+				both ? hibyte : 0), this_col);
 		}
 #else
 		WriteText(screen, PAIRED_CHARS(
 			buf+offset,
-			buf2 ? buf2+offset : 0), n);
+			buf2 ? buf2+offset : 0), this_col);
 #endif
 
 		/*
@@ -2840,7 +2888,7 @@ static void HandleMapUnmap(
 {
     static char *icon_name;
     static Arg args[] = {
-            { XtNiconName, (XtArgVal) &icon_name }
+	    { XtNiconName, (XtArgVal) &icon_name }
     };
 
     TRACE(("event %d\n", event->type))
@@ -3007,7 +3055,7 @@ dpmodes(
 #ifdef ALLOWLOGGING
 				if(screen->logging && TekPtyData()) {
 					FlushLog(screen);
-					screen->logstart = Tbuffer->buf;
+					screen->logstart = DecodedData(Tbuffer);
 				}
 #endif
 				screen->TekEmu = TRUE;
@@ -3565,8 +3613,8 @@ unparseputc1(int c, int fd)
 {
 	if (c >= 0x80 && c <= 0x9F) {
 		if (!term->screen.control_eight_bits) {
-			unparseputc(ESC, fd);
-			c -= 0x40;
+			unparseputc(A2E(ESC), fd);
+			c = A2E(c-0x40);
 		}
 	}
 	unparseputc(c, fd);
@@ -4123,8 +4171,8 @@ static void VTInitialize (
        TRACE(("Acolors[%d] = %#lx\n", i, request->screen.Acolors[i]))
        wnew->screen.Acolors[i] = request->screen.Acolors[i];
        if (wnew->screen.Acolors[i] != wnew->dft_foreground
-        && wnew->screen.Acolors[i] != request->screen.foreground
-        && wnew->screen.Acolors[i] != request->core.background_pixel)
+	&& wnew->screen.Acolors[i] != request->screen.foreground
+	&& wnew->screen.Acolors[i] != request->core.background_pixel)
 	   color_ok = True;
    }
 
@@ -4138,7 +4186,11 @@ static void VTInitialize (
 	TRACE(("All colors are foreground or background: disable colorMode\n"))
    }
 
+#if OPT_256_COLORS
+   wnew->num_ptrs = (OFF_BGRND+1);
+#else
    wnew->num_ptrs = (OFF_COLOR+1);
+#endif
    wnew->sgr_foreground = -1;
 #endif /* OPT_ISO_COLORS */
 
@@ -4204,7 +4256,7 @@ static void VTInitialize (
 
    /* make sure that the resize gravity acceptable */
    if ( wnew->misc.resizeGravity != NorthWestGravity &&
-        wnew->misc.resizeGravity != SouthWestGravity) {
+	wnew->misc.resizeGravity != SouthWestGravity) {
        Cardinal nparams = 1;
 
        XtAppWarningMsg(app_con, "rangeError", "resizeGravity", "XTermError",
@@ -4338,7 +4390,7 @@ static void VTRealize (
 	 * is information that the shell widget ought to have before we get
 	 * realized, so that it can do the right thing.
 	 */
-        if (sizehints.flags & USPosition)
+	if (sizehints.flags & USPosition)
 	    XMoveWindow (XtDisplay(term), term->core.parent->core.window,
 			 sizehints.x, sizehints.y);
 
@@ -4431,7 +4483,7 @@ static void VTRealize (
 
 	XDefineCursor(screen->display, VShellWindow, screen->pointer_cursor);
 
-        screen->cur_col = screen->cur_row = 0;
+	screen->cur_col = screen->cur_row = 0;
 	screen->max_col = Width(screen)/screen->fullVwin.f_width - 1;
 	screen->top_marg = 0;
 	screen->bot_marg = screen->max_row = Height(screen) /
@@ -4521,10 +4573,10 @@ static void VTInitI18N(void)
     }
 
     if (XGetIMValues(xim, XNQueryInputStyle, &xim_styles, NULL)
-        || !xim_styles) {
+	|| !xim_styles) {
 	fprintf(stderr, "input method doesn't support any style\n");
-        XCloseIM(xim);
-        return;
+	XCloseIM(xim);
+	return;
     }
 
     found = False;
@@ -4606,7 +4658,7 @@ static Boolean VTSetValues (
     if(curvt->core.background_pixel != newvt->core.background_pixel
        || curvt->screen.foreground != newvt->screen.foreground
        || curvt->screen.menu_font_names[curvt->screen.menu_font_number]
-          != newvt->screen.menu_font_names[newvt->screen.menu_font_number]
+	  != newvt->screen.menu_font_names[newvt->screen.menu_font_number]
        || curvt->misc.f_n != newvt->misc.f_n) {
 	if(curvt->misc.f_n != newvt->misc.f_n)
 	    newvt->screen.menu_font_names[fontMenu_fontdefault] = newvt->misc.f_n;
@@ -4655,7 +4707,7 @@ ShowCursor(void)
 	register TScreen *screen = &term->screen;
 	register int x, y, flags;
 	Char	clo;
-	Char	fg_bg = 0;
+	int	fg_bg = 0;
 	GC	currentGC;
 	Boolean	in_selection;
 	Pixel fg_pix;
@@ -4705,11 +4757,13 @@ ShowCursor(void)
 	 * Compare the current cell to the last set of colors used for the
 	 * cursor and update the GC's if needed.
 	 */
-#if OPT_ISO_COLORS
-	if_OPT_ISO_COLORS(screen,{
+	if_OPT_256_COLORS(screen,{
+	    fg_bg = (SCRN_BUF_FGRND(screen, screen->cursor_row)[screen->cursor_col] << 8) |
+		    (SCRN_BUF_BGRND(screen, screen->cursor_row)[screen->cursor_col]);
+	})
+	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 	    fg_bg = SCRN_BUF_COLOR(screen, screen->cursor_row)[screen->cursor_col];
 	})
-#endif
 	fg_pix = getXtermForeground(flags,extract_fg(fg_bg,flags));
 	bg_pix = getXtermBackground(flags,extract_bg(fg_bg));
 
@@ -4830,7 +4884,11 @@ HideCursor(void)
 	clo   = SCRN_BUF_CHARS(screen, screen->cursor_row)[screen->cursor_col];
 	flags = SCRN_BUF_ATTRS(screen, screen->cursor_row)[screen->cursor_col];
 
-	if_OPT_ISO_COLORS(screen,{
+	if_OPT_256_COLORS(screen,{
+	    fg_bg = (SCRN_BUF_FGRND(screen, screen->cursor_row)[screen->cursor_col] << 8) |
+		    (SCRN_BUF_BGRND(screen, screen->cursor_row)[screen->cursor_col]);
+	})
+	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 	    fg_bg = SCRN_BUF_COLOR(screen, screen->cursor_row)[screen->cursor_col];
 	})
 

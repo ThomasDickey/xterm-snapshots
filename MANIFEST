@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-3_9Pv
+MANIFEST for xterm, version xterm-111
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 INSTALL                         configure script: options and related install instructions
@@ -76,7 +76,10 @@ unicode/convmap.pl              perl script for generating the lookup table for 
 unicode/keysym.map              keysym mapping from UTF-8
 vttests                         subdirectory
 vttests/16colors.sh             test-script to show 16-colors
+vttests/256colors.pl            script to illustrate 256-colors
+vttests/256colors2.pl           fancy test-script for 256-colors
 vttests/8colors.sh              test-script to illustrate 8-colors
+vttests/doublechars.sh          test script to demonstrate doublesize chars
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
 vttests/fonts.sh                script to demonstrate font-switching sequences
 vttests/resize.sh               script to demonstrate resizing

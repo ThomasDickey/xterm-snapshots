@@ -413,6 +413,22 @@ xterm-16color|xterm with 16 colors,
 	setb=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
 	setf=%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
 	use=xterm-xfree86,
+# OPT_PC_MODE should be settable with OSC, and the init for this
+# should turn it off; then ncv could be 0
+# this uses RGB values 0..255; terminfo(5) says they're terminal-dependant
+# if curses assumes something else (0..1000, like the API?) then this needs
+# to be modified
+xterm-256color|xterm with 256 colors,
+	ccc,
+	colors#256,
+	ncv#32,
+	pairs#0,
+	initc=\E]4;%p1%d;rgb\:%p2%2.2X/%p3%2.2X/%p4%2.2X\E\\,
+	setab=\E[48;5;%p1%dm,
+	setaf=\E[38;5;%p1%dm,
+	setb=\E[48;5;%p1%dm,
+	setf=\E[38;5;%p1%dm,
+	use=xterm-xfree86,
 #
 # This is an 8-bit version of xterm, which emulates DEC vt220 with ANSI color.
 # To use it, your decTerminalID resource must be set to 200 or above, and the
