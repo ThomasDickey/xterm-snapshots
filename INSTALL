@@ -1,4 +1,4 @@
--- $XFree86$
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.3 1997/10/13 17:16:54 hohndel Exp $
 -- Thomas E. Dickey <dickey@clark.net>
 
 Xterm is normally built as part of the X Windows source tree, using
@@ -53,4 +53,4 @@ The options (in alphabetic order):
   --with-terminal-id[=V]  set default decTerminalID (default: vt100)
 
 
--- $XFree86: xc/programs/xterm/INSTALL,v 3.2 1997/09/30 05:08:19 hohndel Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.3 1997/10/13 17:16:54 hohndel Exp $

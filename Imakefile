@@ -1,5 +1,5 @@
 XCOMM $XConsortium: Imakefile /main/65 1996/02/02 14:27:54 kaleb $
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.15 1997/08/26 10:01:51 hohndel Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.16 1997/10/13 17:16:54 hohndel Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
