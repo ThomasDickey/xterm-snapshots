@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.114 2000/06/14 00:16:18 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.117 2000/08/25 21:51:11 dawes Exp $ */
 
 
 /* main.c */
@@ -201,6 +201,7 @@ static Bool IsPts = False;
 #ifdef __CYGWIN__
 #define SYSV
 #define SVR4
+#define LASTLOG
 #define WTMP
 #define ATT
 #endif

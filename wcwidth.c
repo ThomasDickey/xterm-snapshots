@@ -6,6 +6,8 @@
  * Markus Kuhn -- 2000-02-08 -- public domain
  */
 
+/* $XFree86: xc/programs/xterm/wcwidth.c,v 1.1 2000/08/26 04:33:54 dawes Exp $ */
+
 #include <wcwidth.h>
 
 /* These functions define the column width of an ISO 10646 character

@@ -1,4 +1,4 @@
-! $XFree86$
+! $XFree86: xc/programs/xterm/UXTerm.ad,v 1.1 2000/08/26 04:33:53 dawes Exp $
 
 ! Use
 !	xterm -class UXTerm
