@@ -294,6 +294,7 @@ A single (usually optional) numeric parameter, composed of one of more digits.
 .IP \*(Pm
 A multiple numeric parameter composed of any number of single numeric
 parameters, separated by \*; character(s).
+Individual values for the parameters are listed with \*(Ps .
 .IP \*(Pt
 A text parameter composed of printable characters.
 .
@@ -673,7 +674,7 @@ The response depends on the \fBdecTerminalId\fP resource setting.
 It should apply only to VT220 and up, but \fIxterm\fP extends this to VT100.
   \(-> \*(Cs\*(Pp\*s\*;\*(Pv\*s\*;\*(Pc\*s\*c
 .br
-where \*(Pc denotes the terminal type
+where \*(Pp denotes the terminal type
   \(-> \*0 (``VT100'')
   \(-> \*1 (``VT220'')
 .br

@@ -24,7 +24,7 @@ TST_PROG="$4"
 test -z "$SINSTALL" && SINSTALL=install
 test -z "$NEW_PROG" && NEW_PROG=xterm
 test -z "$REF_PROG" && REF_PROG=/usr/bin/X11/xterm
-test -z "$TST_PROG" && REF_PROG="$REF_PROG"
+test -z "$TST_PROG" && TST_PROG="$REF_PROG"
 
 PROG_MODE=755
 PROG_USR=

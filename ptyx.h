@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.71 2000/02/13 00:56:14 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.72 2000/02/29 03:09:28 dawes Exp $
  */
 
 /*
@@ -974,6 +974,7 @@ typedef struct {
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
+	Boolean		force_box_chars; /* true if we assume that	*/
 	Dimension	fnt_wide;
 	Dimension	fnt_high;
 	XFontStruct	*fnt_norm;	/* normal font of terminal	*/

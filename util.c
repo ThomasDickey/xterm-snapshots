@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c /main/33 1996/12/01 23:47:10 swick $
- *	$XFree86: xc/programs/xterm/util.c,v 3.50 2000/02/10 18:57:42 dawes Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.51 2000/02/29 03:09:30 dawes Exp $
  */
 
 /*
@@ -1554,7 +1554,7 @@ drawXtermText(
 	}
 
 	/* If the font is complete, draw it as-is */
-	if (screen->fnt_boxes) {
+	if (screen->fnt_boxes && !screen->force_box_chars) {
 		TRACE(("drawtext%c[%4d,%4d] (%d) %d:%s\n",
 			screen->cursor_state == OFF ? ' ' : '*',
 			y, x, chrset, len,
@@ -1624,6 +1624,7 @@ drawXtermText(
 				  ? screen->fnt_bold
 				  : screen->fnt_norm;
 		Cardinal last, first = 0;
+		Boolean save_force = screen->force_box_chars;
 
 		screen->fnt_boxes = True;
 		for (last = 0; last < len; last++) {
@@ -1634,16 +1635,20 @@ drawXtermText(
 #endif
 			if (xtermMissingChar(ch, font)) {
 				if (last > first) {
+					screen->force_box_chars = False;
 					DrawSegment(first,last);
+					screen->force_box_chars = save_force;
 				}
 				xtermDrawBoxChar(screen, ch, flags, gc, DrawX(last), y);
 				first = last + 1;
 			}
 		}
 		if (last > first) {
+			screen->force_box_chars = False;
 			DrawSegment(first,last);
 		}
 		screen->fnt_boxes = False;
+		screen->force_box_chars = save_force;
 #endif
 	}
 

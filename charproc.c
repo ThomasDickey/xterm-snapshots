@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.101 2000/02/18 12:20:22 tsi Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.102 2000/02/29 03:09:26 dawes Exp $
  */
 
 /*
@@ -251,16 +251,16 @@ static char defaultTranslations[] =
      ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
           ~Ctrl ~Meta <Btn3Down>:start-extend() \n\
               ~Meta <Btn3Motion>:select-extend()      \n\
-                 Ctrl <Btn4Down>:scroll-back(1,halfpage) \n\
-            Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \n\
-  Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \n\
-       @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \n\
-                      <Btn4Down>:scroll-back(5,line)     \n\
-                 Ctrl <Btn5Down>:scroll-forw(1,halfpage) \n\
-            Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \n\
-  Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \n\
-       @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \n\
-                      <Btn5Down>:scroll-forw(5,line)     \n\
+                 Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
+            Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
+  Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
+       @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
+                      <Btn4Down>:scroll-back(5,line,m)     \n\
+                 Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \n\
+            Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \n\
+  Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \n\
+       @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \n\
+                      <Btn5Down>:scroll-forw(5,line,m)     \n\
                          <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \n\
                        <BtnDown>:bell(0) \
 "; /* PROCURA added "Meta <Btn2Down>:clear-saved-lines()" */
@@ -327,6 +327,9 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_BLINK_CURS
     { "set-cursorblink",	HandleCursorBlink },
+#endif
+#if OPT_BOX_CHARS
+    { "set-font-linedrawing",	HandleFontBoxChars },
 #endif
 #if OPT_DEC_CHRSET
     { "set-font-doublesize",	HandleFontDoublesize },
@@ -3291,7 +3294,7 @@ dpmodes(
 #endif
 #if OPT_SCO_FUNC_KEYS
 		case 1053:
-			set_keyboard_type(keyboardIsHP, func == bitset);
+			set_keyboard_type(keyboardIsSCO, func == bitset);
 			break;
 #endif
 		case 1060:

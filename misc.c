@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: misc.c /main/112 1996/11/29 10:34:07 swick $
- *	$XFree86: xc/programs/xterm/misc.c,v 3.48 2000/02/08 17:19:38 dawes Exp $
+ *	$XFree86: xc/programs/xterm/misc.c,v 3.49 2000/02/29 03:09:27 dawes Exp $
  */
 
 /*
@@ -59,6 +59,8 @@
 #include <xterm.h>
 
 #include <X11/Xos.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <signal.h>
 #include <ctype.h>
@@ -843,6 +845,7 @@ static SIGNAL_T logpipe (int sig GCC_UNUSED)
 void
 StartLog(register TScreen *screen)
 {
+	struct stat sb;
 	static char *log_default;
 #ifdef ALLOWLOGFILEEXEC
 	register char *cp;
@@ -948,6 +951,18 @@ StartLog(register TScreen *screen)
 		if((screen->logfd = open(screen->logfile, O_WRONLY | O_APPEND,
 					 0644)) < 0)
 			return;
+		/*
+		 * If the logfile is specified by the user, it may be in an
+		 * insecure location.  Doublecheck that the user really owns
+		 * the file that we've opened before we do any damage.
+		 */
+		if (fstat(screen->logfd, &sb) < 0
+		 || (int) sb.st_uid != screen->uid
+		 || (int) sb.st_gid != screen->gid) {
+			fprintf(stderr, "%s: you do not own %s\n",
+				xterm_name, screen->logfile);
+			close(screen->logfd);
+		}
 	}
 #endif /*VMS*/
 	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);

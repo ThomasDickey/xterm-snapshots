@@ -4261,7 +4261,7 @@ Exit(int n)
 
 /* ARGSUSED */
 static void
-resize(TScreen *screen, register char *oldtc, register char *newtc)
+resize(TScreen *screen, register char *oldtc, char *newtc)
 {
 #ifndef USE_SYSV_ENVVARS
 	register char *ptr1, *ptr2;

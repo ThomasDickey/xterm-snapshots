@@ -613,9 +613,9 @@ AC_TRY_LINK([
 ],[
 {
 	XIM xim;
-	XIMStyles *xim_styles;
+	XIMStyles *xim_styles = 0;
 	XIMStyle input_style;
-	Widget w;
+	Widget w = 0;
 
 	XSetLocaleModifiers("@im=none");
 	xim = XOpenIM(XtDisplay(w), NULL, NULL, NULL);

@@ -125,6 +125,10 @@ static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
 static void do_cursorblink     PROTO_XT_CALLBACK_ARGS;
 #endif
 
+#if OPT_BOX_CHARS
+static void do_font_boxchars   PROTO_XT_CALLBACK_ARGS;
+#endif
+
 #if OPT_DEC_CHRSET
 static void do_font_doublesize PROTO_XT_CALLBACK_ARGS;
 #endif
@@ -257,8 +261,11 @@ MenuEntry fontMenuEntries[] = {
     { "fontescape",	do_vtfont,	NULL },
     { "fontsel",	do_vtfont,	NULL },
     /* down to here should match NMENUFONTS in ptyx.h */
-#if OPT_DEC_CHRSET || OPT_DEC_SOFTFONT
+#if OPT_DEC_CHRSET || OPT_BOX_CHARS || OPT_DEC_SOFTFONT
     { "line1",		NULL,		NULL },
+#if OPT_BOX_CHARS
+    { "font-linedrawing",do_font_boxchars,NULL },
+#endif
 #if OPT_DEC_CHRSET
     { "font-doublesize",do_font_doublesize,NULL },
 #endif
@@ -534,14 +541,20 @@ static Bool domenu (
 			     fontMenuEntries[fontMenu_fontescape].widget,
 			     (screen->menu_font_names[fontMenu_fontescape]
 			      ? TRUE : FALSE));
-	    update_font_doublesize();
-	    update_font_loadable();
+#if OPT_BOX_CHARS
+	    update_font_boxchars();
+	    set_sensitivity (mw,
+			     fontMenuEntries[fontMenu_font_boxchars].widget,
+			     True);
+#endif
 #if OPT_DEC_SOFTFONT	/* FIXME: not implemented */
+	    update_font_loadable();
 	    set_sensitivity (mw,
 			     fontMenuEntries[fontMenu_font_loadable].widget,
 			     FALSE);
 #endif
 #if OPT_DEC_CHRSET
+	    update_font_doublesize();
 	    if (term->screen.cache_doublesize == 0)
 		set_sensitivity (mw,
 				fontMenuEntries[fontMenu_font_doublesize].widget,
@@ -1197,6 +1210,18 @@ static void do_font_doublesize (
 }
 #endif
 
+#if OPT_BOX_CHARS
+static void do_font_boxchars (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    term->screen.force_box_chars = ! term->screen.force_box_chars;
+    update_font_boxchars();
+    Redraw ();
+}
+#endif
+
 #if OPT_DEC_SOFTFONT
 static void do_font_loadable (
 	Widget gw GCC_UNUSED,
@@ -1795,6 +1820,18 @@ void HandleFontDoublesize(
 	Cardinal *param_count)
 {
     handle_toggle (do_font_doublesize, (int) term->screen.font_doublesize,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+#endif
+
+#if OPT_BOX_CHARS
+void HandleFontBoxChars(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    handle_toggle (do_font_boxchars, (int) term->screen.force_box_chars,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 #endif

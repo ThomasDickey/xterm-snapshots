@@ -136,6 +136,11 @@ are the year, month, day, hour, minute and second when the COPY was performed
 .I xterm
 is started in, or the home directory for a login
 .IR xterm ).
+.PP
+Not all of the features described in this manual are necessarily available in
+this version of xterm.  Some (e.g., the non-VT220 extensions) are available
+only if they were compiled in, though the most commonly-used are in the
+default configuration.
 .SH "OTHER FEATURES"
 .I Xterm
 automatically highlights the text cursor when the
@@ -1484,6 +1489,9 @@ This entry invokes the \fBold\ function-keys(toggle)\fP action.
 .B "hp\ function-keys (\fPclass\fB SmeBSB)"
 This entry invokes the \fBhp\ function-keys(toggle)\fP action.
 .TP 8
+.B "sco\ function-keys (\fPclass\fB SmeBSB)"
+This entry invokes the \fBsco\ function-keys(toggle)\fP action.
+.TP 8
 .B "sun\ function-keys (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsun\ function-keys(toggle)\fP action.
 .TP 8
@@ -1635,6 +1643,9 @@ This entry invokes the \fBset-vt-font(s)\fP action.
 .TP 8
 .B "line1 (\fPclass\fB SmeLine)"
 This is a separator.
+.TP 8
+.B "font-linedrawing (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-font-linedrawing(s)\fP action.
 .TP 8
 .B "font-doublesize (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-font-doublesize(s)\fP action.
@@ -2101,13 +2112,15 @@ This action redraws the window and is also invoked by the
 .B "restore()"
 Restores the window to the size before it was last maximized.
 .TP 8
-.B "scroll-back(\fIcount\fP [,\fIunits\fP])"
+.B "scroll-back(\fIcount\fP [,\fIunits\fP [,\fImouse\fP] ])"
 This action scrolls the text window backward so that text that had previously
 scrolled off the top of the screen is now visible.  The \fIcount\fP argument
 indicates the number of \fIunits\fP (which may be \fIpage\fP, \fIhalfpage\fP,
 \fIpixel\fP, or \fIline\fP) by which to scroll.
+If the third parameter \fImouse\fP is given, the action is ignored when
+mouse reporting is enabled.
 .TP 8
-.B "scroll-forw(\fIcount\fP [,\fIunits\fP])"
+.B "scroll-forw(\fIcount\fP [,\fIunits\fP [,\fImouse\fP] ])"
 This action scrolls is similar to \fBscroll-back\fP except that it scrolls
 the other direction.
 .TP 8
@@ -2204,18 +2217,23 @@ the \fBfont-doublesize\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-hp-function-keys(\fIon/off/toggle\fP)"
 This action toggles the \fBhpFunctionKeys\fP resource and is also invoked by
-the \fBhp function-keys\fP entry in \fImainMenu\fP.
+the \fBhp\ function-keys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-jumpscroll(\fIon/off/toggle\fP)"
 This action toggles the \fBjumpscroll\fP resource and is also invoked by the
 \fBjumpscroll\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-font-linedrawing(\fIon/off/toggle\fP)"
+This action toggles the xterm's state regarding whether the current font
+has line-drawing characters and whether it should draw them directly.
+It is also invoked by the \fBfont-linedrawing\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-logging()"
 This action toggles the state of the logging option.
 .TP 8
 .B "set-old-function-keys(\fIon/off/toggle\fP)"
 This action toggles the state of legacy function keys and is also invoked by
-the \fBold function-keys\fP entry in \fImainMenu\fP.
+the \fBold\ function-keys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-marginbell(\fIon/off/toggle\fP)"
 This action toggles the \fBmarginBell\fP resource and is also invoked from
@@ -2244,9 +2262,13 @@ from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 This action toggles the \fBscrollbar\fP resource and is also invoked by
 the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set-sco-function-keys(\fIon/off/toggle\fP)"
+This action toggles the \fBscoFunctionKeys\fP resource and is also invoked by
+the \fBsco\ function-keys\fP entry in \fImainMenu\fP.
+.TP 8
 .B "set-sun-function-keys(\fIon/off/toggle\fP)"
 This action toggles the \fBsunFunctionKeys\fP resource and is also invoked by
-the \fBsun function-keys\fP entry in \fImainMenu\fP.
+the \fBsun\ function-keys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-sun-keyboard(\fIon/off/toggle\fP)"
 This action toggles the \fBsunKeyboard\fP resource and is also invoked by
@@ -2375,7 +2397,7 @@ The default bindings in the VT102 window are:
  !Lock Ctrl @Num_Lock <Btn2Down>:popup-menu(vtMenu) \\n\\
      ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\
           ~Ctrl ~Meta <Btn2Down>:ignore() \\n\\
-                 Meta <Btn2Down>:clear-saved-lines() \n\
+                 Meta <Btn2Down>:clear-saved-lines() \\n\\
             ~Ctrl ~Meta <Btn2Up>:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
                 !Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\
            !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\
@@ -2383,16 +2405,16 @@ The default bindings in the VT102 window are:
      ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\
           ~Ctrl ~Meta <Btn3Down>:start-extend() \\n\\
               ~Meta <Btn3Motion>:select-extend() \\n\\
-                 Ctrl <Btn4Down>:scroll-back(1,halfpage) \\n\\
-            Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \\n\\
-  Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \\n\\
-       @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \\n\\
-                      <Btn4Down>:scroll-back(5,line)     \\n\\
-                 Ctrl <Btn5Down>:scroll-forw(1,halfpage) \\n\\
-            Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \\n\\
-  Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \\n\\
-       @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \\n\\
-                      <Btn5Down>:scroll-forw(5,line)     \\n\\
+                 Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\
+            Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\
+  Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\
+       @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \\n\\
+                      <Btn4Down>:scroll-back(5,line,m)     \\n\\
+                 Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\
+            Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\
+  Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\
+       @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\
+                      <Btn5Down>:scroll-forw(5,line,m)     \\n\\
                          <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \\n\\
                        <BtnDown>:bell(0)
 .fi

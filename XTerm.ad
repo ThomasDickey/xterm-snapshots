@@ -83,6 +83,7 @@ XTerm.JoinSession:False
 *fontMenu*fontescape*Label:	Escape Sequence
 *fontMenu*fontsel*Label:		Selection
 !fontescape and fontsel overridden by application
+*fontMenu*font-linedrawing*Label: Line-Drawing Characters
 *fontMenu*font-doublesize*Label: Doublesized Characters
 *fontMenu*font-loadable*Label:	VT220 Soft Fonts
 
