@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1997,1998 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1997,1998,1999 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -21,7 +21,7 @@ in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
@@ -100,15 +100,24 @@ static void printLine(int row, int chr)
 	int last = screen->max_col;
 	int col;
 #if OPT_ISO_COLORS && OPT_PRINT_COLORS
+#if OPT_256_COLORS
+	register Char *fbf = 0;
+	register Char *fbb = 0;
+#else
 	register Char *fb = 0;
+#endif
 #endif
 	int fg = -1, last_fg = -1;
 	int bg = -1, last_bg = -1;
 	int cs = CSET_IN,last_cs = CSET_IN;
 
-	TRACE(("printLine(row=%d, chr=%d)\n", row, chr))
+	TRACE(("printLine(row=%d, chr=%d)\n", row, chr));
 
-	if_OPT_ISO_COLORS(screen,{
+	if_OPT_256_COLORS(screen,{
+		fbf = SCRN_BUF_FGRND(screen, row);
+		fbb = SCRN_BUF_BGRND(screen, row);
+	})
+	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 		fb = SCRN_BUF_COLOR(screen, row);
 	})
 	while (last > 0) {
@@ -125,7 +134,17 @@ static void printLine(int row, int chr)
 		for (col = 0; col < last; col++) {
 			Char ch = c[col];
 #if OPT_PRINT_COLORS
-			if_OPT_ISO_COLORS(screen,{
+			if_OPT_256_COLORS(screen,{
+				if (screen->print_attributes > 1) {
+					fg = (a[col] & FG_COLOR)
+						? extract_fg((fbf[col]<<8)|(fbb[col]), a[col])
+						: -1;
+					bg = (a[col] & BG_COLOR)
+						? extract_bg((fbf[col]<<8)|(fbb[col]))
+						: -1;
+				}
+			})
+			if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 				if (screen->print_attributes > 1) {
 					fg = (a[col] & FG_COLOR)
 						? extract_fg(fb[col], a[col])
@@ -159,7 +178,7 @@ static void printLine(int row, int chr)
 						? SHIFT_OUT
 						: SHIFT_IN);
 				}
-				last_cs = cs; 	
+				last_cs = cs;
 			}
 
 			/* FIXME:  we shouldn't have to map back from the

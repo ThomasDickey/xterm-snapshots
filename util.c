@@ -716,7 +716,11 @@ ClearInLine(register TScreen *screen, int row, int col, int len)
 	memset(SCRN_BUF_CHARS(screen, row) + col, ' ',   len);
 	memset(SCRN_BUF_ATTRS(screen, row) + col, flags, len);
 
-	if_OPT_ISO_COLORS(screen,{
+	if_OPT_256_COLORS(screen,{
+		memset(SCRN_BUF_FGRND(screen, row) + col, term->sgr_foreground, len);
+		memset(SCRN_BUF_BGRND(screen, row) + col, term->cur_background, len);
+	})
+	if_OPT_ISO_TRADITIONAL_COLORS(screen,{
 		memset(SCRN_BUF_COLOR(screen, row) + col, xtermColorPair(), len);
 	})
 	if_OPT_DEC_CHRSET({
@@ -1228,6 +1232,17 @@ ChangeColors(XtermWidget tw, ScrnColors *pNew)
 #endif
 }
 
+void
+ChangeAnsiColors(XtermWidget tw)
+{
+	register TScreen *screen = &tw->screen;
+
+	XClearWindow(screen->display, VWindow(screen));
+	ScrnRefresh (screen, 0, 0,
+			screen->max_row + 1,
+			screen->max_col + 1, False);
+}
+
 /***====================================================================***/
 
 void
@@ -1376,7 +1391,11 @@ drawXtermText(
 #endif
 #if OPT_DEC_CHRSET
 	if (CSET_DOUBLE(chrset)) {
-		GC gc2 = screen->font_doublesize
+		/* We could try drawing double-size characters in the icon, but
+		 * given that the icon font is usually nil or nil2, there
+		 * doesn't seem to be much point.
+		 */
+		GC gc2 = (!IsIcon(screen) && screen->font_doublesize)
 			? xterm_DoubleGC(chrset, flags, gc)
 			: 0;
 
@@ -1385,7 +1404,7 @@ drawXtermText(
 			y, x, chrset, len, (int)len, text))
 
 		if (gc2 != 0) {	/* draw actual double-sized characters */
-			XFontStruct *fs = screen->double_fs[chrset % NUM_CHRSET];
+			XFontStruct *fs = screen->double_fs[xterm_Double_index(chrset, flags)];
 			XRectangle rect, *rp = &rect;
 			Cardinal nr = 1;
 			int adjust;
@@ -1567,7 +1586,7 @@ drawXtermText(
 			if (FontDescent(screen) > 1)
 				y++;
 			XDrawLine(screen->display, VWindow(screen), gc,
-				x, y, x + len * FontWidth(screen) - 1, y);
+				x, y, x + len * screen->fnt_wide - 1, y);
 		}
 #if OPT_BOX_CHARS
 #define DrawX(col) x + (col * (screen->fnt_wide))
@@ -1693,7 +1712,13 @@ extract_fg (
 	unsigned color,
 	unsigned flags)
 {
-	int fg = (int) ((color >> 4) & 0xf);
+	int fg;
+
+#if OPT_256_COLORS
+	fg = (int) ((color >> 8) & 0xff);
+#else
+	fg = (int) ((color >> 4) & 0xf);
+#endif
 
 	if (term->screen.colorAttrMode
 	 || (fg == extract_bg(color))) {
@@ -1710,7 +1735,11 @@ extract_fg (
 int
 extract_bg (unsigned color)
 {
+#if OPT_256_COLORS
+	return (int) (color & 0xff);
+#else
 	return (int) (color & 0xf);
+#endif
 }
 
 /*
@@ -1725,9 +1754,17 @@ extract_bg (unsigned color)
 unsigned
 makeColorPair (int fg, int bg)
 {
-	unsigned my_bg = (bg >= 0) && (bg < 16) ? bg : 0;
-	unsigned my_fg = (fg >= 0) && (fg < 16) ? fg : my_bg;
+	unsigned my_bg;
+	unsigned my_fg;
+#if OPT_256_COLORS
+	my_bg = (bg >= 0) && (bg < 256) ? bg : 0;
+	my_fg = (fg >= 0) && (fg < 256) ? fg : my_bg;
+	return (my_fg << 8) | my_bg;
+#else
+	my_bg = (bg >= 0) && (bg < 16) ? bg : 0;
+	my_fg = (fg >= 0) && (fg < 16) ? fg : my_bg;
 	return (my_fg << 4) | my_bg;
+#endif
 }
 
 unsigned
@@ -1821,7 +1858,7 @@ unsigned getXtermCell (TScreen *screen, int row, int col)
     if_OPT_WIDE_CHARS(screen,{
 	ch |= (SCRN_BUF_WIDEC(screen, row)[col] << 8);
     })
-    return ch;
+    return E2A(ch);
 }
 
 /*

@@ -77,9 +77,6 @@ button.c	Handles button events in the terminal emulator.
 #include <menu.h>
 #include <xcharmouse.h>
 
-#undef  CTRL
-#define	CTRL(c)	((c) & 0x1f)
-
 #define XTERM_CELL(row,col) getXtermCell(screen, row + screen->topline, col)
 
 #define KeyState(x) (((x) & (ShiftMask|ControlMask)) + (((x) & Mod1Mask) ? 2 : 0))
@@ -237,7 +234,7 @@ DiredButton(
     if (event->type == ButtonPress || event->type == ButtonRelease) {
 	line = ( event->xbutton.y - screen->border ) / FontHeight( screen );
 	col  = ( event->xbutton.x - OriginX(screen)) / FontWidth( screen );
-	Line[0] = CTRL('X');
+	Line[0] = CONTROL('X');
 	Line[1] = ESC;
 	Line[2] = 'G';
 	Line[3] = ' ' + col;
@@ -268,9 +265,9 @@ ViButton(
 
 	    if ( line < 0 ) {
 		line = -line;
-		Line[0] = CTRL('n');
+		Line[0] = CONTROL('n');
 	    } else {
-		Line[0] = CTRL('p');
+		Line[0] = CONTROL('p');
 	    }
 	    while ( --line >= 0 )
 		v_write(pty, Line, 1 );
@@ -1852,10 +1849,10 @@ SaveText(
     for (i = scol; i < ecol; i++) {
 	c = XTERM_CELL(row, i);
 	if (c == 0) {
-	    c = ' ';
-	} else if (c < ' ') {
-	    if (c == '\036')
-		c = '#';	/* char on screen is pound sterling */
+	    c = E2A(' ');
+	} else if (c < E2A(' ')) {
+	    if (c == XPOUND)
+		c = 0x23;	/* char on screen is pound sterling */
 	    else
 		c += 0x5f;	/* char is from DEC drawing set */
 	} else if (c == 0x7f) {
@@ -1866,8 +1863,8 @@ SaveText(
 	    lp = convertToUTF8(lp, c);
 	else
 #endif
-	*lp++ = c;
-	if (c != ' ')
+	*lp++ = A2E(c);
+	if (c != E2A(' '))
 	    result = lp;
     }
 

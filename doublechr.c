@@ -132,6 +132,17 @@ xterm_DECDWL(void)
 
 
 #if OPT_DEC_CHRSET
+int
+xterm_Double_index(unsigned chrset, unsigned flags)
+{
+	int n = (chrset % 4);
+#if NUM_CHRSET == 8
+	if (flags & BOLD)
+		n |= 4;
+#endif
+	return n;
+}
+
 /*
  * Lookup/cache a GC for the double-size character display.  We save up to
  * NUM_CHRSET values.
@@ -142,7 +153,7 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
 	XGCValues gcv;
 	register TScreen *screen = &term->screen;
 	unsigned long mask = (GCForeground | GCBackground | GCFont);
-	int n = (chrset % NUM_CHRSET);
+	int n = xterm_Double_index(chrset, flags);
 	char *name = xtermSpecialFont(flags, chrset);
 
 	if (name == 0)
@@ -163,7 +174,7 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
 		screen->double_fs[n] = 0;
 	}
 
-	TRACE(("xterm_DoubleGC %s %d: %s\n", flags&BOLD ? "BOLD" : "NORM", chrset, name))
+	TRACE(("xterm_DoubleGC %s %d: %s\n", flags&BOLD ? "BOLD" : "NORM", n, name))
 
 	if ((screen->double_fs[n] = XLoadQueryFont (screen->display, name)) == 0)
 		return 0;

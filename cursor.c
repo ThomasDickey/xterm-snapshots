@@ -115,8 +115,8 @@ void
 CursorForward(register TScreen *screen, int n)
 {
 	screen->cur_col += n;
-	if (screen->cur_col > screen->max_col)
-		screen->cur_col = screen->max_col;
+	if (screen->cur_col > CurMaxCol(screen, screen->cur_row))
+		screen->cur_col = CurMaxCol(screen, screen->cur_row);
 	screen->do_wrap = 0;
 	_CheckSelection(screen);
 }

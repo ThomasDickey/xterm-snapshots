@@ -758,6 +758,10 @@ If \fIxterm\fP is compiled with the 16-color support disabled, it supports
 the following, from \fIrxvt\fP:
   \*(Ps = \*1\*0\*0 \(-> Set foreground and background color to default
 .sp
+If 256-color support is compiled, the following apply.
+  \*(Ps = \*3\*8 ; \*5 ; \*(Ps \(-> Set background color to \*(Ps
+  \*(Ps = \*4\*8 ; \*5 ; \*(Ps \(-> Set foreground color to \*(Ps
+.sp
 .
 .IP \\*(Cs\\*(Ps\\*s\\*n
 Device Status Report (DSR)
@@ -955,6 +959,7 @@ and window title.
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt
   \*(Ps = \*3 \(-> Set X property on top-level window. \*(Pt should be in the form
 "\fIprop=value\fP", or just "\fIprop\fP" to delete the property
+  \*(Ps = \*4 ; \fIc ; name\fP \(-> Change Color #\fIc\fP to \fIcname\fP
   \*(Ps = \*1\*0 \(-> Change color names starting with text foreground to \*(Pt
 (a list of one or more color names or RGB specifications, separated by
 semicolon, up to eight, as per \fIXParseColor\fP).

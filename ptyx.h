@@ -119,25 +119,25 @@
 ** allow for mobility of the pty master/slave directories
 */
 #ifndef PTYDEV
-#ifdef __hpux
+#if defined(__hpux)
 #define	PTYDEV		"/dev/ptym/ptyxx"
-#else	/* !__hpux */
-#ifndef __osf__
+#elif defined(__MVS__)
+#define	PTYDEV		"/dev/ptypxxxx"
+#elif !defined(__osf__)
 #define	PTYDEV		"/dev/ptyxx"
 #endif
-#endif	/* !__hpux */
 #endif	/* !PTYDEV */
 
 #ifndef TTYDEV
-#ifdef __hpux
+#if defined(__hpux)
 #define TTYDEV		"/dev/pty/ttyxx"
-#else	/* !__hpux */
-#if defined(__osf__) || (defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
+#elif defined(__MVS__)
+#define TTYDEV		"/dev/ptypxxxx"
+#elif defined(__osf__) || (defined(linux) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1))
 #define TTYDEV		"/dev/ttydirs/xxx/xxxxxxxxxxxxxx"
 #else
 #define	TTYDEV		"/dev/ttyxx"
 #endif
-#endif	/* !__hpux */
 #endif	/* !TTYDEV */
 
 #ifndef PTYCHAR1
@@ -165,20 +165,24 @@
 #endif	/* !PTYCHAR2 */
 
 #ifndef TTYFORMAT
-#ifdef CRAY
+#if defined(CRAY)
 #define TTYFORMAT "/dev/ttyp%03d"
+#elif defined(__MVS__)
+#define TTYFORMAT "/dev/ttyp%04d"
 #else
 #define TTYFORMAT "/dev/ttyp%d"
 #endif
-#endif
+#endif /* TTYFORMAT */
 
 #ifndef PTYFORMAT
 #ifdef CRAY
 #define PTYFORMAT "/dev/pty/%03d"
+#elif defined(__MVS__)
+#define PTYFORMAT "/dev/ptyp%04d"
 #else
 #define PTYFORMAT "/dev/ptyp%d"
 #endif
-#endif
+#endif /* PTYFORMAT */
 
 #ifndef MAXPTTYS
 #ifdef CRAY
@@ -213,6 +217,7 @@ typedef Char **ScrnBuf;
 #define	CAN	0x18
 #define	SUB	0x1A
 #define	ESC	0x1B
+#define XPOUND	0x1E			/* internal mapping for '#'	*/
 #define US	0x1F
 #define	DEL	0x7F
 #define HTS     ('H'+0x40)
@@ -355,6 +360,14 @@ typedef struct {
 #define OPT_DEC_SOFTFONT 0 /* true if xterm is configured for VT220 softfonts */
 #endif
 
+#ifndef OPT_EBCDIC
+#ifdef __MVS__
+#define OPT_EBCDIC 1
+#else
+#define OPT_EBCDIC 0
+#endif
+#endif
+
 #ifndef OPT_HP_FUNC_KEYS
 #define OPT_HP_FUNC_KEYS 0 /* true if xterm supports HP-style function keys */
 #endif
@@ -381,6 +394,10 @@ typedef struct {
 
 #ifndef OPT_ISO_COLORS
 #define OPT_ISO_COLORS  1 /* true if xterm is configured with ISO colors */
+#endif
+
+#ifndef OPT_256_COLORS
+#define OPT_256_COLORS  0 /* true if xterm is configured with 256 colors */
 #endif
 
 #ifndef OPT_HIGHLIGHT_COLOR
@@ -451,12 +468,15 @@ typedef struct {
 #undef OPT_PC_COLORS
 #endif
 
+#if OPT_256_COLORS && !OPT_ISO_COLORS
+/* You must have ANSI/ISO colors to support 256 colors */
+#undef OPT_256_COLORS
+#endif
 /***====================================================================***/
 
 #if OPT_ISO_COLORS
 #define if_OPT_ISO_COLORS(screen, code) if(screen->colorMode) code
 #define TERM_COLOR_FLAGS (term->flags & (FG_COLOR|BG_COLOR))
-#define MAXCOLORS 19
 #define COLOR_0		0
 #define COLOR_1		1
 #define COLOR_2		2
@@ -473,9 +493,17 @@ typedef struct {
 #define COLOR_13	13
 #define COLOR_14	14
 #define COLOR_15	15
+#if OPT_256_COLORS
+#define COLOR_BD        256
+#define COLOR_UL        257
+#define COLOR_BL        258
+#define MAXCOLORS       259
+#else /* ! OPT_256_COLORS */
 #define COLOR_BD	16	/* BOLD */
 #define COLOR_UL	17	/* UNDERLINE */
 #define COLOR_BL	18	/* BLINK */
+#define MAXCOLORS       19
+#endif /* OPT_256_COLORS */
 #ifndef DFT_COLORMODE
 #define DFT_COLORMODE TRUE	/* default colorMode resource */
 #endif
@@ -490,6 +518,17 @@ typedef struct {
 #define if_OPT_AIX_COLORS(screen, code) /* nothing */
 #endif
 
+#if OPT_256_COLORS
+#define if_OPT_256_COLORS(screen, code) if(screen->colorMode) code
+#define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /* nothing */
+#elif OPT_ISO_COLORS
+#define if_OPT_256_COLORS(screen, code) /* nothing */
+#define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) if(screen->colorMode) code
+#else
+#define if_OPT_256_COLORS(screen, code) /* nothing */
+#define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /*nothing*/
+#endif
+
 /***====================================================================***/
 
 #if OPT_DEC_CHRSET
@@ -499,7 +538,7 @@ typedef struct {
 #define CSET_DHL_TOP    1
 #define CSET_DHL_BOT    2
 #define CSET_DWL        3
-#define NUM_CHRSET      4
+#define NUM_CHRSET      8	/* normal/bold and 4 CSET_xxx values */
 	/* Use remaining bits for encoding the other character-sets */
 #define CSET_NORMAL(code)  ((code) == CSET_SWL)
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
@@ -533,6 +572,18 @@ typedef struct {
 #define BUF_HEAD 1
 	/* the number that point to Char data */
 #define BUF_PTRS (MAX_PTRS - BUF_HEAD)
+
+/***====================================================================***/
+
+#if OPT_EBCDIC
+extern int E2A(int);
+extern int A2E(int);
+extern char CONTROL(char);
+#else
+#define E2A(a) (a)
+#define A2E(a) (a)
+#define CONTROL(a) ((a)&037)
+#endif
 
 /***====================================================================***/
 
@@ -570,7 +621,6 @@ typedef struct {
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define PAIRED_CHARS(a,b) a,b
 typedef unsigned IChar;		/* for 8 or 16-bit characters, plus flag */
-#undef  ALLOWLOGGING		/* FIXME: not yet */
 #else
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
 #define PAIRED_CHARS(a,b) a
@@ -610,7 +660,12 @@ typedef enum {
 	, OFF_CHARS = 1
 	, OFF_ATTRS = 2
 #if OPT_ISO_COLORS
+#if OPT_256_COLORS
+	, OFF_FGRND
+	, OFF_BGRND
+#else
 	, OFF_COLOR
+#endif
 #endif
 #if OPT_DEC_CHRSET
 	, OFF_CSETS
@@ -625,6 +680,8 @@ typedef enum {
 #define BUF_CHARS(buf, row) (buf[MAX_PTRS * (row) + OFF_CHARS])
 #define BUF_ATTRS(buf, row) (buf[MAX_PTRS * (row) + OFF_ATTRS])
 #define BUF_COLOR(buf, row) (buf[MAX_PTRS * (row) + OFF_COLOR])
+#define BUF_FGRND(buf, row) (buf[MAX_PTRS * (row) + OFF_FGRND])
+#define BUF_BGRND(buf, row) (buf[MAX_PTRS * (row) + OFF_BGRND])
 #define BUF_CSETS(buf, row) (buf[MAX_PTRS * (row) + OFF_CSETS])
 #define BUF_WIDEC(buf, row) (buf[MAX_PTRS * (row) + OFF_WIDEC])
 
@@ -633,6 +690,8 @@ typedef enum {
 #define SCRN_BUF_CHARS(screen, row) BUF_CHARS(screen->visbuf, row)
 #define SCRN_BUF_ATTRS(screen, row) BUF_ATTRS(screen->visbuf, row)
 #define SCRN_BUF_COLOR(screen, row) BUF_COLOR(screen->visbuf, row)
+#define SCRN_BUF_FGRND(screen, row) BUF_FGRND(screen->visbuf, row)
+#define SCRN_BUF_BGRND(screen, row) BUF_BGRND(screen->visbuf, row)
 #define SCRN_BUF_CSETS(screen, row) BUF_CSETS(screen->visbuf, row)
 #define SCRN_BUF_WIDEC(screen, row) BUF_WIDEC(screen->visbuf, row)
 
@@ -760,7 +819,7 @@ typedef struct {
 	int		logging;	/* logging mode			*/
 	int		logfd;		/* file descriptor of log	*/
 	char		*logfile;	/* log file name		*/
-	unsigned char	*logstart;	/* current start of log buffer	*/
+	IChar		*logstart;	/* current start of log buffer	*/
 #endif
 	int		inhibit;	/* flags for inhibiting changes	*/
 

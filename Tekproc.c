@@ -400,7 +400,7 @@ static void Tekparse(void)
 #ifdef ALLOWLOGGING
 			if(screen->logging) {
 				FlushLog(screen);
-				screen->logstart = VTbuffer.buf;
+				screen->logstart = DecodedData(&(VTbuffer));
 			}
 #endif
 			return;
