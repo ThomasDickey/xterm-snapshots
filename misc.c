@@ -91,6 +91,7 @@ extern time_t time ();
 #include <menu.h>
 #include <fontutils.h>
 #include <xcharmouse.h>
+#include <VTparse.h>
 
 #if (XtSpecificationRelease < 6)
 #ifndef X_GETTIMEOFDAY
@@ -1223,7 +1224,7 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 			state = 3;
 			/* FALLTHRU */
 		default:
-			if (!isprint(*cp & 0x7f))
+			if (ansi_table[CharOf(*cp)] != CASE_PRINT)
 				return;
 		}
 	}
@@ -1600,11 +1601,12 @@ udk_lookup(int keycode, int *len)
 }
 
 static void
-ChangeGroup(String attribute, XtArgVal value)
+ChangeGroup(String attribute, char * value)
 {
 	Arg args[1];
 	char *name = (value != 0) ? (char *)value : "";
 
+	TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
 #if OPT_SAME_NAME
 	/* If the attribute isn't going to change, then don't bother... */
 
@@ -1635,17 +1637,17 @@ Changename(register char *name)
 	}
 	strcpy(newname, "*** ");
 	strcat(newname, name);
-	ChangeGroup( XtNiconName, (XtArgVal)newname );
+	ChangeGroup( XtNiconName, newname );
 	free(newname);
     } else
 #endif /* OPT_ZICONBEEP */
-	ChangeGroup( XtNiconName, (XtArgVal)name );
+	ChangeGroup( XtNiconName, name );
 }
 
 void
 Changetitle(register char *name)
 {
-    ChangeGroup( XtNtitle, (XtArgVal)name );
+    ChangeGroup( XtNtitle, name );
 }
 
 #define Strlen(s) strlen((char *)(s))

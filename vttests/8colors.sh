@@ -9,7 +9,7 @@ CMD='echo'
 OPT='-n'
 SUF=''
 TMP=/tmp/xterm$$
-for verb in print printf ; do
+for verb in printf print ; do
     rm -f $TMP
     eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
     if test -f $TMP ; then
