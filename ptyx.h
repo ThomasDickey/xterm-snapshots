@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.102 2003/03/23 02:01:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.103 2003/03/23 17:18:55 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey
@@ -128,14 +128,14 @@
 
 #if defined(SYSV) && defined(i386) && !defined(SVR4)
 #define ATT
-#define USE_HANDSHAKE
+#define USE_HANDSHAKE 1
 #define USE_ISPTS_FLAG 1
 #endif
 
 #if (defined(ATT) && !defined(__sgi)) || defined(__MVS__) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 #define USE_USG_PTYS
 #else
-#define USE_HANDSHAKE
+#define USE_HANDSHAKE 1
 #endif
 
 /*
