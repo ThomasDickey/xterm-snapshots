@@ -51,8 +51,7 @@ authorization.
 #endif
 #endif
 
-#define UTF8_FLAG       0x80000000U
-#define UTF8_CODE(code) ((code) | (screen->utf8_controls ? 0 : UTF8_FLAG))
+#define UTF8_CODE(code) ((code) | (screen->utf8_controls ? 0 : UCS_LIMIT))
 
 int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 {
@@ -107,16 +106,16 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 		    /* Combine UTF-8 into Unicode */
 		    if (c < 0x80) {
 			if (screen->utf_count > 0)
-			    data->buf2[j++] = 0xfffd;
+			    data->buf2[j++] = UCS_REPL;
 			data->buf2[j++] = c;
 			screen->utf_count = 0;
 		    } else if (c < 0xc0) {
 			if (screen->utf_count < 1) {
-			    data->buf2[j++] = 0xfffd;
+			    data->buf2[j++] = UCS_REPL;
 			} else {
 			    if (screen->utf_char > 0x03ff) {
 				/* value would be >0xffff */
-				screen->utf_char = 0xfffd;
+				screen->utf_char = UCS_REPL;
 			    } else {
 			      screen->utf_char <<= 6;
 			      screen->utf_char |= (c & 0x3f);
@@ -127,7 +126,7 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 			}
 		    } else {
 			if (screen->utf_count > 0)
-			    data->buf2[j++] = 0xfffd;
+			    data->buf2[j++] = UCS_REPL;
 			if (c < 0xe0) {
 			    screen->utf_count = 1;
 			    screen->utf_char = (c & 0x1f);
@@ -144,7 +143,7 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 			    screen->utf_count = 5;
 			    screen->utf_char = (c & 0x01);
 			} else {
-			    data->buf2[j++] = 0xfffd;
+			    data->buf2[j++] = UCS_REPL;
 			    screen->utf_count = 0;
 			}
 		    }
@@ -169,8 +168,8 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 	    for (i = 0; i < data->cnt; i++) {
 		if (!(i%8)) TRACE(("%s", i ? "\n    " : "READ"))
 		TRACE((" %c%04X",
-			(UTF8_FLAG & data->ptr[i]) ? '*' : ' ',
-			data->ptr[i] & ~UTF8_FLAG))
+			(UCS_LIMIT & data->ptr[i]) ? '*' : ' ',
+			data->ptr[i] & ~UCS_LIMIT))
 	    }
 	    TRACE(("\n"))
 #endif

@@ -54,7 +54,7 @@ extern char *xtermSpecialFont(unsigned atts, unsigned chrset);
 #endif
 
 #if OPT_BOX_CHARS
-extern Bool xtermMissingChar(int ch, XFontStruct *font);
+extern Bool xtermMissingChar(unsigned ch, XFontStruct *font);
 extern void xtermDrawBoxChar(TScreen *screen, int ch, unsigned flags, GC gc, int x, int y);
 #endif
 

@@ -1843,22 +1843,24 @@ SaveText(
     *eol = !ScrnTstWrapped(screen, row);
     for (i = scol; i < ecol; i++) {
 	c = E2A(XTERM_CELL(row, i));
-	if (c == 0) {
-	    c = E2A(' ');
-	} else if (c < E2A(' ')) {
-	    if (c == XPOUND)
-		c = 0x23;	/* char on screen is pound sterling */
-	    else
-		c += 0x5f;	/* char is from DEC drawing set */
-	} else if (c == 0x7f) {
-	    c = 0x5f;
-	}
 #if OPT_WIDE_CHARS
 	if (screen->utf8_mode)
 	    lp = convertToUTF8(lp, c);
 	else
 #endif
-	*lp++ = A2E(c);
+	{
+	    if (c == 0) {
+		c = E2A(' ');
+	    } else if (c < E2A(' ')) {
+		if (c == XPOUND)
+		    c = 0x23;	/* char on screen is pound sterling */
+		else
+		    c += 0x5f;	/* char is from DEC drawing set */
+	    } else if (c == 0x7f) {
+		c = 0x5f;
+	    }
+	    *lp++ = A2E(c);
+	}
 	if (c != E2A(' '))
 	    result = lp;
     }

@@ -132,15 +132,73 @@ xterm_DECDWL(void)
 
 
 #if OPT_DEC_CHRSET
+static void
+discard_font(TScreen *screen, XTermFonts *data)
+{
+	TRACE(("discard_font chrset=%d %s\n", data->chrset,
+		(data->fn != 0) ? data->fn : "<no-name>"))
+
+	data->chrset = 0;
+	data->flags = 0;
+	if (data->gc != 0) {
+		XFreeGC(screen->display, data->gc);
+		data->gc = 0;
+	}
+	if (data->fn != 0) {
+		free(data->fn);
+		data->fn = 0;
+	}
+	if (data->fs != 0) {
+		XFreeFont(screen->display, data->fs);
+		data->fs = 0;
+	}
+}
+
 int
 xterm_Double_index(unsigned chrset, unsigned flags)
 {
-	int n = (chrset % 4);
-#if NUM_CHRSET == 8
-	if (flags & BOLD)
-		n |= 4;
-#endif
-	return n;
+	int n;
+	TScreen *screen = &term->screen;
+	XTermFonts *data = screen->double_fonts;
+
+	flags &= BOLD;
+	TRACE(("xterm_Double_index chrset=%#x, flags=%#x\n", chrset, flags))
+
+	for (n = 0; n < screen->fonts_used; n++) {
+		if (data[n].chrset == chrset
+		 && data[n].flags == flags) {
+			if (n != 0) {
+				XTermFonts save;
+				TRACE(("...xterm_Double_index -> %d (OLD:%d)\n", n, screen->fonts_used))
+				save = data[n];
+				while (n > 0) {
+					data[n] = data[n-1];
+					n--;
+				}
+				data[n] = save;
+			}
+			return n;
+		}
+	}
+
+	/* Not, found, push back existing fonts and create a new entry */
+	if (screen->fonts_used >= screen->cache_doublesize) {
+		TRACE(("...xterm_Double_index: discard oldest\n"))
+		discard_font(screen, &(data[screen->fonts_used - 1]));
+	} else {
+		screen->fonts_used += 1;
+	}
+	for (n = screen->fonts_used; n > 0; n--)
+		data[n] = data[n-1];
+
+	TRACE(("...xterm_Double_index -> (NEW:%d)\n", screen->fonts_used))
+
+	data[0].chrset = chrset;
+	data[0].flags = flags;
+	data[0].fn = 0;
+	data[0].fs = 0;
+	data[0].gc = 0;
+	return 0;
 }
 
 /*
@@ -153,40 +211,41 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
 	XGCValues gcv;
 	register TScreen *screen = &term->screen;
 	unsigned long mask = (GCForeground | GCBackground | GCFont);
-	int n = xterm_Double_index(chrset, flags);
-	char *name = xtermSpecialFont(flags, chrset);
+	int n;
+	char *name;
+	XTermFonts *data;
 
-	if (name == 0)
+	if ((name = xtermSpecialFont(flags, chrset)) == 0)
 		return 0;
 
-	if (screen->double_fn[n] != 0) {
-		if (!strcmp(screen->double_fn[n], name)) {
-			if (screen->double_fs[n] != 0) {
-				XCopyGC(screen->display, old_gc, ~GCFont, screen->double_gc[n]);
-				return screen->double_gc[n];
+	n = xterm_Double_index(chrset, flags);
+	data = &(screen->double_fonts[n]);
+	if (data->fn != 0) {
+		if (!strcmp(data->fn, name)) {
+			if (data->fs != 0) {
+				XCopyGC(screen->display, old_gc, ~GCFont, data->gc);
+				return data->gc;
 			}
 		}
+		discard_font(screen, data);
+		data->chrset = chrset;
+		data->flags  = flags & BOLD;
 	}
-	screen->double_fn[n] = name;
-
-	if (screen->double_fs[n] != 0) {
-		XFreeFont(screen->display, screen->double_fs[n]);
-		screen->double_fs[n] = 0;
-	}
+	data->fn = name;
 
 	TRACE(("xterm_DoubleGC %s %d: %s\n", flags&BOLD ? "BOLD" : "NORM", n, name))
 
-	if ((screen->double_fs[n] = XLoadQueryFont (screen->display, name)) == 0)
+	if ((data->fs = XLoadQueryFont (screen->display, name)) == 0)
 		return 0;
 	TRACE(("-> OK\n"))
 
 	gcv.graphics_exposures = TRUE;	/* default */
-	gcv.font       = screen->double_fs[n]->fid;
+	gcv.font       = data->fs->fid;
 	gcv.foreground = screen->foreground;
 	gcv.background = term->core.background_pixel;
 
-	screen->double_gc[n] = XCreateGC (screen->display, VWindow(screen), mask, &gcv);
-	XCopyGC(screen->display, old_gc, ~GCFont, screen->double_gc[n]);
-	return screen->double_gc[n];
+	data->gc = XCreateGC (screen->display, VWindow(screen), mask, &gcv);
+	XCopyGC(screen->display, old_gc, ~GCFont, data->gc);
+	return data->gc;
 }
 #endif

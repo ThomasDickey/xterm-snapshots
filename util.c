@@ -716,7 +716,7 @@ ClearInLine(register TScreen *screen, int row, int col, int len)
 	memset(SCRN_BUF_CHARS(screen, row) + col, ' ',   len);
 	memset(SCRN_BUF_ATTRS(screen, row) + col, flags, len);
 
-	if_OPT_256_COLORS(screen,{
+	if_OPT_EXT_COLORS(screen,{
 		memset(SCRN_BUF_FGRND(screen, row) + col, term->sgr_foreground, len);
 		memset(SCRN_BUF_BGRND(screen, row) + col, term->cur_background, len);
 	})
@@ -866,12 +866,6 @@ do_erase_display(
 			ClearAbove(screen);
 		break;
 
-	case 3:
-		/* xterm addition - erase saved lines. */
-		screen->savedlines = 0;
-		ScrollBarDrawThumb( screen->scrollWidget );
-		break;
-
 	case 2:
 		/*
 		 * We use 'ClearScreen()' throughout the remainder of the
@@ -889,6 +883,12 @@ do_erase_display(
 		} else {
 			ClearScreen(screen);
 		}
+		break;
+
+	case 3:
+		/* xterm addition - erase saved lines. */
+		screen->savedlines = 0;
+		ScrollBarDrawThumb( screen->scrollWidget );
 		break;
 	}
 	screen->protected_mode = saved_mode;
@@ -1404,7 +1404,7 @@ drawXtermText(
 			y, x, chrset, len, (int)len, text))
 
 		if (gc2 != 0) {	/* draw actual double-sized characters */
-			XFontStruct *fs = screen->double_fs[xterm_Double_index(chrset, flags)];
+			XFontStruct *fs = screen->double_fonts[xterm_Double_index(chrset, flags)].fs;
 			XRectangle rect, *rp = &rect;
 			Cardinal nr = 1;
 			int adjust;
@@ -1599,11 +1599,16 @@ drawXtermText(
 
 		screen->fnt_boxes = True;
 		for (last = 0; last < len; last++) {
-			if (xtermMissingChar(text[last], font)) {
+			unsigned ch = text[last];
+#if OPT_WIDE_CHARS
+			if (text2 != 0)
+				ch |= (text2[last] << 8);
+#endif
+			if (xtermMissingChar(ch, font)) {
 				if (last > first) {
 					DrawSegment(first,last);
 				}
-				xtermDrawBoxChar(screen, text[last], flags, gc, DrawX(last), y);
+				xtermDrawBoxChar(screen, ch, flags, gc, DrawX(last), y);
 				first = last + 1;
 			}
 		}
@@ -1714,12 +1719,17 @@ extract_fg (
 {
 	int fg;
 
-#if OPT_256_COLORS
+#if OPT_EXT_COLORS
 	fg = (int) ((color >> 8) & 0xff);
 #else
 	fg = (int) ((color >> 4) & 0xf);
 #endif
 
+	/*
+	 * If we allow exactly 256 colors, there is no room in a byte for
+	 * the bold/blink/underline colors.
+	 */
+#if NUM_ANSI_COLORS < 256
 	if (term->screen.colorAttrMode
 	 || (fg == extract_bg(color))) {
 		if (term->screen.colorULMode && (flags & UNDERLINE))
@@ -1729,13 +1739,14 @@ extract_fg (
 		if (term->screen.colorBLMode && (flags & BLINK))
 			fg = COLOR_BL;
 	}
+#endif
 	return fg;
 }
 
 int
 extract_bg (unsigned color)
 {
-#if OPT_256_COLORS
+#if OPT_EXT_COLORS
 	return (int) (color & 0xff);
 #else
 	return (int) (color & 0xf);
@@ -1756,9 +1767,9 @@ makeColorPair (int fg, int bg)
 {
 	unsigned my_bg;
 	unsigned my_fg;
-#if OPT_256_COLORS
-	my_bg = (bg >= 0) && (bg < 256) ? bg : 0;
-	my_fg = (fg >= 0) && (fg < 256) ? fg : my_bg;
+#if OPT_EXT_COLORS
+	my_bg = (bg >= 0) && (bg < NUM_ANSI_COLORS) ? bg : 0;
+	my_fg = (fg >= 0) && (fg < NUM_ANSI_COLORS) ? fg : my_bg;
 	return (my_fg << 8) | my_bg;
 #else
 	my_bg = (bg >= 0) && (bg < 16) ? bg : 0;
@@ -1843,7 +1854,7 @@ curXtermChrSet(int row)
 	TScreen *screen = &term->screen;
 	Char set = SCRN_BUF_CSETS(screen, row)[0];
 	if (!CSET_DOUBLE(set))
-		set = screen->chrset;
+		set = screen->cur_chrset;
 	return set;
 }
 #endif /* OPT_DEC_CHRSET */

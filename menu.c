@@ -528,6 +528,12 @@ static Bool domenu (
 			     fontMenuEntries[fontMenu_font_loadable].widget,
 			     FALSE);
 #endif
+#if OPT_DEC_CHRSET
+	    if (term->screen.cache_doublesize == 0)
+		set_sensitivity (mw,
+				fontMenuEntries[fontMenu_font_doublesize].widget,
+				False);
+#endif
 	}
 	FindFontSelection (NULL, True);
 	set_sensitivity (mw,
@@ -1140,7 +1146,8 @@ static void do_font_doublesize (
 	XtPointer closure GCC_UNUSED,
 	XtPointer data GCC_UNUSED)
 {
-    term->screen.font_doublesize = ! term->screen.font_doublesize;
+    if (term->screen.cache_doublesize != 0)
+        term->screen.font_doublesize = ! term->screen.font_doublesize;
     update_font_doublesize();
     Redraw ();
 }

@@ -458,8 +458,8 @@ xterm-16color|xterm with 16 colors,
 	use=xterm-xfree86,
 #
 # OPT_PC_MODE should be settable with OSC, and the init for this
-# should turn it off; then ncv could be 0
-# this uses RGB values 0..255; terminfo(5) says they're terminal-dependant
+# should turn it off; then ncv could be 0.
+# This uses RGB values 0..255; terminfo(5) says they're terminal-dependant
 # if curses assumes something else (0..1000, like the API?) then this needs
 # to be modified
 xterm-256color|xterm with 256 colors,
@@ -473,6 +473,9 @@ xterm-256color|xterm with 256 colors,
 	setb=\E[48;5;%p1%dm,
 	setf=\E[38;5;%p1%dm,
 	use=xterm-xfree86,
+xterm-88color|xterm with 88 colors,
+	colors#88,
+	use=xterm-256color,
 #
 # This is an 8-bit version of xterm, which emulates DEC vt220 with ANSI color.
 # To use it, your decTerminalID resource must be set to 200 or above, and the

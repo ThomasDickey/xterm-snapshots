@@ -1281,7 +1281,7 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 					strcat(reply, ";7");
 				if (term->flags & INVISIBLE)
 					strcat(reply, ";8");
-				if_OPT_256_COLORS(screen,{
+				if_OPT_EXT_COLORS(screen,{
 				if (term->flags & FG_COLOR) {
 					if (term->cur_foreground >= 16)
 						sprintf(reply+strlen(reply),
