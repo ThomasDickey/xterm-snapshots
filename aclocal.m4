@@ -1,6 +1,6 @@
-dnl $XTermId: aclocal.m4,v 1.171 2004/05/26 01:19:54 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.173 2004/07/13 00:41:24 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.52 2004/05/26 01:19:54 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.53 2004/07/13 00:41:24 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1508,7 +1508,7 @@ int x = XkbBI_Info
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 11 updated: 2004/01/26 20:58:41
+dnl CF_XOPEN_SOURCE version: 12 updated: 2004/06/26 18:29:41
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality.
@@ -1523,7 +1523,7 @@ hpux*) #(vi
 irix6.*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_SGI_SOURCE"
 	;;
-linux*) #(vi
+linux*|gnu*) #(vi
 	CF_GNU_SOURCE
 	;;
 mirbsd*) #(vi
@@ -1587,25 +1587,47 @@ test "$cf_cv_xopen_source" = yes && CPPFLAGS="$CPPFLAGS -D_POSIX_C_SOURCE"
 esac
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA version: 11 updated: 2002/12/26 20:56:10
+dnl CF_X_ATHENA version: 12 updated: 2004/06/15 21:14:41
 dnl -----------
 dnl Check for Xaw (Athena) libraries
 dnl
+dnl Sets $cf_x_athena according to the flavor of Xaw which is used.
 AC_DEFUN([CF_X_ATHENA],
 [AC_REQUIRE([CF_X_TOOLKIT])
 cf_x_athena=${cf_x_athena-Xaw}
 
+AC_MSG_CHECKING(if you want to link with Xaw 3d library)
+withval=
 AC_ARG_WITH(Xaw3d,
-	[  --with-Xaw3d            link with Xaw 3d library],
-	[cf_x_athena=Xaw3d])
+	[  --with-Xaw3d            link with Xaw 3d library])
+if test "$withval" = yes ; then
+	cf_x_athena=Xaw3d
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
 
+AC_MSG_CHECKING(if you want to link with neXT Athena library)
+withval=
 AC_ARG_WITH(neXtaw,
-	[  --with-neXtaw           link with neXT Athena library],
-	[cf_x_athena=neXtaw])
+	[  --with-neXtaw           link with neXT Athena library])
+if test "$withval" = yes ; then
+	cf_x_athena=neXtaw
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
 
+AC_MSG_CHECKING(if you want to link with Athena-Plus library)
+withval=
 AC_ARG_WITH(XawPlus,
-	[  --with-XawPlus          link with Athena-Plus library],
-	[cf_x_athena=XawPlus])
+	[  --with-XawPlus          link with Athena-Plus library])
+if test "$withval" = yes ; then
+	cf_x_athena=XawPlus
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
 
 AC_CHECK_LIB(Xext,XextCreateExtension,
 	[LIBS="-lXext $LIBS"])

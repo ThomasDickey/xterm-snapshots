@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.288 2004/06/06 22:15:26 tom Exp $ */
+/* $XTermId: xterm.h,v 1.291 2004/07/13 00:41:30 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.101 2004/06/06 22:15:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.102 2004/07/13 00:41:30 dickey Exp $ */
 
 /************************************************************
 
@@ -149,6 +149,12 @@ authorization.
 #else
 #define USE_LASTLOG
 #endif
+#endif
+
+#if defined(__OpenBSD__)
+#define DEFDELETE_DEL TRUE
+#define DEF_BACKARO_ERASE TRUE
+#define DEF_INITIAL_ERASE TRUE
 #endif
 
 #if defined(__SCO__)
@@ -991,7 +997,8 @@ int visual_width(PAIRED_CHARS(Char *str, Char *str2), Cardinal len);
 #define visual_width(a, b) (b)
 #endif
 
-#define BtoS(b) ((b) ? "on" : "off")
+#define BtoS(b)    ((b) ? "on" : "off")
+#define NonNull(s) ((s) ? (s) : "<null>")
 
 #ifdef __cplusplus
 	}

@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.484 2004/06/06 22:15:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.489 2004/07/13 00:41:25 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.161 2004/06/06 22:15:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.162 2004/07/13 00:41:25 dickey Exp $ */
 
 /*
 
@@ -561,7 +561,7 @@ static XtResource resources[] =
     COLOR_RES("1", screen.Acolors[COLOR_1], DFT_COLOR("red3")),
     COLOR_RES("2", screen.Acolors[COLOR_2], DFT_COLOR("green3")),
     COLOR_RES("3", screen.Acolors[COLOR_3], DFT_COLOR("yellow3")),
-    COLOR_RES("4", screen.Acolors[COLOR_4], DFT_COLOR("DodgerBlue1")),
+    COLOR_RES("4", screen.Acolors[COLOR_4], DFT_COLOR(DEF_COLOR4)),
     COLOR_RES("5", screen.Acolors[COLOR_5], DFT_COLOR("magenta3")),
     COLOR_RES("6", screen.Acolors[COLOR_6], DFT_COLOR("cyan3")),
     COLOR_RES("7", screen.Acolors[COLOR_7], DFT_COLOR("gray90")),
@@ -569,7 +569,7 @@ static XtResource resources[] =
     COLOR_RES("9", screen.Acolors[COLOR_9], DFT_COLOR("red")),
     COLOR_RES("10", screen.Acolors[COLOR_10], DFT_COLOR("green")),
     COLOR_RES("11", screen.Acolors[COLOR_11], DFT_COLOR("yellow")),
-    COLOR_RES("12", screen.Acolors[COLOR_12], DFT_COLOR("SteelBlue1")),
+    COLOR_RES("12", screen.Acolors[COLOR_12], DFT_COLOR(DEF_COLOR12)),
     COLOR_RES("13", screen.Acolors[COLOR_13], DFT_COLOR("magenta")),
     COLOR_RES("14", screen.Acolors[COLOR_14], DFT_COLOR("cyan")),
     COLOR_RES("15", screen.Acolors[COLOR_15], DFT_COLOR("white")),
@@ -3024,7 +3024,7 @@ dotext(TScreen * screen,
        Cardinal len)		/* end */
 {
 #if OPT_WIDE_CHARS
-    Cardinal chars_chomped;
+    Cardinal chars_chomped = 1;
 #else
     int next_col, last_col, this_col;	/* must be signed */
 #endif
@@ -3052,7 +3052,7 @@ dotext(TScreen * screen,
     });
 
 #if OPT_WIDE_CHARS
-    for (offset = 0; offset < len; offset += chars_chomped) {
+    for (offset = 0; offset < len && chars_chomped > 0; offset += chars_chomped) {
 	int width_available = screen->max_col - screen->cur_col + 1;
 	int width_here = 0, need_wrap = 0;
 	chars_chomped = 0;
@@ -3301,6 +3301,7 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
     }
     mapstate = -1;
 #endif /* OPT_ZICONBEEP */
+    return;
 }
 
 #if HANDLE_STRUCT_NOTIFY
@@ -4413,7 +4414,7 @@ VTRun(void)
     initPtyData(&VTbuffer);
 #if OPT_TEK4014
     if (Tpushb > Tpushback) {
-	fillPtyData(screen, &VTbuffer, (char *)Tpushback, Tpushb - Tpushback);
+	fillPtyData(screen, &VTbuffer, (char *) Tpushback, Tpushb - Tpushback);
 	Tpushb = Tpushback;
     }
 #endif
@@ -5167,6 +5168,13 @@ VTInitialize(Widget wrequest,
     init_Sres(misc.face_name);
     init_Sres(misc.face_wide_name);
     init_Bres(misc.render_font);
+    /* minor tweak to make debug traces consistent: */
+    if (wnew->misc.render_font) {
+	if (wnew->misc.face_name == 0) {
+	    wnew->misc.render_font = FALSE;
+	    TRACE(("reset render_font since there is no face_name\n"));
+	}
+    }
 #endif
 
     init_Bres(screen.vt100_graphics);

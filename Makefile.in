@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.109 2004/06/06 22:15:25 tom Exp $
+## $XTermId: Makefile.in,v 1.111 2004/07/13 00:41:24 tom Exp $
 ##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.47 2004/06/06 22:15:25 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.48 2004/07/13 00:41:24 dickey Exp $ ##
 ##
 ## Copyright 2002-2003,2004 by Thomas E. Dickey
 ##
@@ -216,7 +216,7 @@ maintainer-clean : realclean
 	-$(RM) 256colres.h 88colres.h
 
 ctlseqs.txt : ctlseqs.ms
-	tbl ctlseqs.ms | nroff -ms >$@
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl ctlseqs.ms | nroff -Tascii -ms" >$@
 
 ctlseqs.ps : ctlseqs.ms
 	tbl ctlseqs.ms | groff -ms >$@

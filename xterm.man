@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.267 2004/05/13 00:41:21 tom Exp $
+.\" $XTermId: xterm.man,v 1.275 2004/07/13 00:41:31 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,15 +55,15 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.105 2004/05/13 00:41:21 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.107 2004/07/13 00:41:31 dickey Exp $
 .\"
-.\" updated by Thomas E. Dickey for XFree86, July 1996 - April 2004.
+.\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .TH XTERM 1 __vendorversion__
 .SH NAME
 xterm \- terminal emulator for X
 .SH SYNOPSIS
 .B xterm
-[\-\fItoolkitoption\fP ...] [\-option ...]
+[-\fItoolkitoption\fP ...] [-option ...]
 .SH DESCRIPTION
 The \fIxterm\fP program is a terminal emulator for the X Window System.
 It provides DEC VT102/VT220 (VTxxx) and Tektronix 4014
@@ -134,7 +134,7 @@ the
 .B Tektronix
 menu; see below).
 The name of the file will be
-``\fBCOPY\fIyyyy\fB\-\fIMM\fB\-\fIdd\fB.\fIhh\fB:\fImm\fB:\fIss\fR'', where
+``\fBCOPY\fIyyyy\fB-\fIMM\fB-\fIdd\fB.\fIhh\fB:\fImm\fB:\fIss\fR'', where
 .IR yyyy ,
 .IR MM ,
 .IR dd ,
@@ -150,7 +150,7 @@ is started in, or the home directory for a login
 .
 .PP
 Not all of the features described in this manual are necessarily available in
-this version of xterm.
+this version of \fIxterm\fP.
 Some (e.g., the non-VT220 extensions) are available
 only if they were compiled in, though the most commonly-used are in the
 default configuration.
@@ -204,15 +204,15 @@ accepts all of the standard X Toolkit command line options as well as
 the following (if the option begins with a
 .RB ` + '
 instead of a
-.RB ` \- ',
+.RB ` - ',
 the option is restored to its default value).
-The \fB\-version\fP and \fB\-help\fP options are interpreted even if \fIxterm\fP cannot
+The \fB-version\fP and \fB-help\fP options are interpreted even if \fIxterm\fP cannot
 open the display, and are useful for testing and configuration scripts:
 .TP 8
-.B \-version
+.B -version
 This causes \fIxterm\fP to print a version number to the standard output.
 .TP 8
-.B \-help
+.B -help
 This causes \fIxterm\fP to print out a verbose message describing its options.
 The message is written to the standard error.
 .
@@ -220,14 +220,14 @@ The message is written to the standard error.
 The other options are used to control the appearance and behavior.
 Not all options are necessarily configured into your copy of \fIxterm\fP.
 .TP 8
-.B \-132
+.B -132
 Normally, the VT102 DECCOLM escape sequence that switches between 80 and
 132 column mode is ignored.
 This option causes the DECCOLM escape sequence to be recognized, and the
 .I xterm
 window will resize appropriately.
 .TP 8
-.B \-ah
+.B -ah
 This option indicates that
 .I xterm
 should always highlight the text cursor.
@@ -241,19 +241,19 @@ This option indicates that
 .I xterm
 should do text cursor highlighting based on focus.
 .TP 8
-.B \-ai
+.B -ai
 This option disables active icon support if that feature was compiled
-into xterm.
+into \fIxterm\fP.
 This is equivalent to setting the \fIvt100\fP resource
 \fBactiveIcon\fP to FALSE.
 .TP 8
 .B +ai
 This option enables active icon support if that feature was compiled
-into xterm.
+into \fIxterm\fP.
 This is equivalent to setting the \fIvt100\fP resource
 \fBactiveIcon\fP to TRUE.
 .TP 8
-.B \-aw
+.B -aw
 This option indicates that auto-wraparound should be allowed.
 This
 allows the cursor to automatically wrap to the beginning of the next
@@ -263,7 +263,7 @@ output.
 .B +aw
 This option indicates that auto-wraparound should not be allowed.
 .TP 8
-.BI \-b " number"
+.BI -b " number"
 This option specifies the size of the inner border (the distance between
 the outer edge of the characters and the window border) in pixels.
 The
@@ -273,17 +273,17 @@ default is 2.
 turn off text cursor blinking.
 This overrides the \fBcursorBlink\fR resource.
 .TP 8
-.B \-bc
+.B -bc
 turn on text cursor blinking.
 This overrides the \fBcursorBlink\fR resource.
 .TP 8
-.BI \-bcf " milliseconds"
+.BI -bcf " milliseconds"
 time text cursor is off when blinking
 .TP 8
-.BI \-bcn " milliseconds"
+.BI -bcn " milliseconds"
 time text cursor is on when blinking
 .TP 8
-.B "\-bdc"
+.B "-bdc"
 Set the \fIvt100\fP resource \fBcolorBDMode\fR to FALSE,
 disabling the display of characters with bold attribute as color
 .TP 8
@@ -292,18 +292,18 @@ Set the \fIvt100\fP resource \fBcolorBDMode\fR to TRUE,
 enabling the display of characters with bold attribute as color
 rather than bold
 .TP 8
-.B "\-cb"
+.B "-cb"
 Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to FALSE.
 .TP 8
 .B "+cb"
 Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to TRUE.
 .TP 8
-.B "\-cc \fIcharacterclassrange\fP:\fIvalue\fP[,...]"
+.B "-cc \fIcharacterclassrange\fP:\fIvalue\fP[,...]"
 This sets classes indicated by the given ranges for using in selecting by
 words.
 See the section specifying character classes.
 .TP 8
-.B "\-cjk_width"
+.B "-cjk_width"
 Set the \fBcjkWidth\fP resource to ``true''.
 When turned on, characters with East Asian Ambiguous (A) category in UTR 11
 have a column width of 2.
@@ -312,38 +312,38 @@ This may be useful for some legacy CJK text
 terminal-based programs assuming box drawings and others to have a column
 width of 2.
 It also has to be turned on when you specify a truetype
-CJK double-width (bi-width/monospace) font either with \fB\-fa\fP at
+CJK double-width (bi-width/monospace) font either with \fB-fa\fP at
 the command line or \fBfaceName\fP resource.
 The default is ``false''
 .TP 8
 .B "+cjk_width"
 Reset the \fBcjkWidth\fP resource.
 .TP 8
-.BI \-class " string"
+.BI -class " string"
 This option allows you to override \fIxterm\fP's resource class.
 Normally it is ``XTerm'', but
 can be set to another class such as ``UXTerm'' to override selected resources.
 .TP 8
-.B "\-cm"
+.B "-cm"
 This option disables recognition of ANSI color-change escape sequences.
 .TP 8
 .B "+cm"
 This option enables recognition of ANSI color-change escape sequences.
 This is the same as the \fIvt100\fP resource \fBcolorMode\fP.
 .TP 8
-.B "\-cn"
+.B "-cn"
 This option indicates that newlines should not be cut in line-mode
 selections.
 .TP 8
 .B +cn
 This option indicates that newlines should be cut in line-mode selections.
 .TP 8
-.BI \-cr " color"
+.BI -cr " color"
 This option specifies the color to use for text cursor.
 The default is to
 use the same foreground color that is used for text.
 .TP 8
-.B \-cu
+.B -cu
 This option indicates that \fIxterm\fP should work around a bug in the
 .IR more (1)
 program that causes it
@@ -360,7 +360,7 @@ This option indicates that \fIxterm\fP should not work around the
 .IR more (1)
 bug mentioned above.
 .TP 8
-.B "\-dc"
+.B "-dc"
 This option disables the escape sequence to change dynamic colors:
 the vt100 foreground and background colors,
 its text cursor color,
@@ -372,22 +372,22 @@ and highlight color.
 .B "+dc"
 This option enables the escape sequence to change dynamic colors.
 .TP 8
-.BI \-e " program \fP[ \fIarguments \fP.\|.\|. ]\fI"
+.BI -e " program \fP[ \fIarguments \fP.\|.\|. ]\fI"
 This option specifies the program (and its command line arguments) to be
 run in the \fIxterm\fP window.
 It also sets the window title and icon
-name to be the basename of the program being executed if neither \fI\-T\fP
-nor \fI\-n\fP are given on the command line.
+name to be the basename of the program being executed if neither \fI-T\fP
+nor \fI-n\fP are given on the command line.
 \fBThis must be the last option on the command line.\fP
 .TP 8
-.BI \-en " encoding"
+.BI -en " encoding"
 This option determines the encoding on which \fIxterm\fP runs.
 It corresponds to the \fBlocale\fR resource.
 Encodings other than UTF-8 are supported by using \fIluit\fR.
-The \fB\-lc\fR option should be used instead of \fB\-en\fR for
+The \fB-lc\fR option should be used instead of \fB-en\fR for
 systems with locale support.
 .TP 8
-.BI \-fb " font"
+.BI -fb " font"
 This option specifies a font to be used when displaying bold text.
 This font must be the same height and width as the normal font.
 If only one of the normal or bold fonts is specified, it will be used as the
@@ -395,15 +395,15 @@ normal font and the bold font will be produced by overstriking this font.
 The default is to do overstriking of the normal font.
 See also the discussion of \fBboldFont\fP and \fBboldMode\fP resources.
 .TP 8
-.BI \-fa " pattern"
+.BI -fa " pattern"
 This option sets the pattern for fonts selected from the FreeType
-library if support for that library was compiled into xterm.
+library if support for that library was compiled into \fIxterm\fP.
 This corresponds to the \fBfaceName\fP resource.
 When a CJK
 double-width font is specified, you also need to turn
 on the \fBcjkWidth\fP resource.
 .TP 8
-.BI \-fbb
+.BI -fbb
 This option indicates that \fIxterm\fP should compare normal and bold fonts bounding
 boxes to ensure they are compatible.
 .TP 8
@@ -411,31 +411,31 @@ boxes to ensure they are compatible.
 This option indicates that \fIxterm\fP should not compare normal and bold fonts bounding
 boxes to ensure they are compatible.
 .TP 8
-.BI \-fbx
+.BI -fbx
 This option indicates that \fIxterm\fP should not assume that the
 normal and bold fonts have VT100 line-drawing characters.
-If any are missing, xterm will draw the characters directly.
+If any are missing, \fIxterm\fP will draw the characters directly.
 .TP 8
 .BI +fbx
 This option indicates that \fIxterm\fP should assume that the
 normal and bold fonts have VT100 line-drawing characters.
 .TP 8
-.BI \-fd " pattern"
+.BI -fd " pattern"
 This option sets the pattern for double-width fonts selected from the FreeType
-library if support for that library was compiled into xterm.
+library if support for that library was compiled into \fIxterm\fP.
 This corresponds to the \fBfaceNameDoublesize\fP resource.
 .TP 8
-.BI \-fi " font"
+.BI -fi " font"
 This option sets the font for active icons if that feature was compiled
-into xterm.
+into \fIxterm\fP.
 See also the discussion of the \fBiconFont\fP resource.
 .TP 8
-.BI \-fs " size"
+.BI -fs " size"
 This option sets the pointsize for fonts selected from the FreeType
-library if support for that library was compiled into xterm.
+library if support for that library was compiled into \fIxterm\fP.
 This corresponds to the \fBfaceSize\fP resource.
 .TP 8
-.B \-fw \fIfont\fP
+.B -fw \fIfont\fP
 This option specifies the font to be used for displaying wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
@@ -444,7 +444,7 @@ If no doublewidth font is found, it will improvise, by stretching
 the normal font.
 This corresponds to the \fBwideFont\fP resource.
 .TP 8
-.B \-fwb \fIfont\fP
+.B -fwb \fIfont\fP
 This option specifies the font to be used for displaying bold wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
@@ -453,18 +453,18 @@ If no doublewidth font is found, it will improvise, by stretching
 the bold font.
 This corresponds to the \fBwideBoldFont\fP resource.
 .TP 8
-.B \-fx \fIfont\fP
+.B -fx \fIfont\fP
 This option specifies the font to be used for displaying the preedit string
 in the "OverTheSpot" input method.
 See also the discussion of the \fBximFont\fP resource.
 .TP 8
-.BI \-hc " color"
+.BI -hc " color"
 This option specifies the color to use for the background of
 selected or otherwise highlighted text.
 If not specified,
 reverse video is used.
 .TP 8
-.BI \-hf
+.BI -hf
 This option indicates that HP Function Key escape codes should be generated
 for function keys.
 .TP 8
@@ -472,17 +472,17 @@ for function keys.
 This option indicates that HP Function Key escape codes should not be generated
 for function keys.
 .TP 8
-.BI \-hold
+.BI -hold
 Turn on the \fBhold\fP resource, i.e.,
-xterm will not immediately destroy its window when the shell command completes.
+\fIxterm\fP will not immediately destroy its window when the shell command completes.
 It will wait until you use the window manager to destroy/kill the window, or
 if you use the menu entries that send a signal, e.g., HUP or KILL.
 .TP 8
 .BI +hold
 Turn off the \fBhold\fP resource, i.e.,
-xterm will immediately destroy its window when the shell command completes.
+\fIxterm\fP will immediately destroy its window when the shell command completes.
 .TP 8
-.B \-ie
+.B -ie
 Turn on the \fBptyInitialErase\fP resource, i.e.,
 use the pseudo-terminal's sense of the stty erase value.
 .TP 8
@@ -491,18 +491,18 @@ Turn off the \fBptyInitialErase\fP resource, i.e.,
 set the stty erase value using the \fBkb\fP string from the termcap entry as
 a reference, if available.
 .TP 8
-.B \-im
+.B -im
 Turn on the \fBuseInsertMode\fP resource.
 .TP 8
 .B +im
 Turn off the \fBuseInsertMode\fP resource.
 .TP 8
-.BI \-into " windowId"
+.BI -into " windowId"
 Given an X window identifier (a decimal integer),
-xterm will reparent its top-level shell widget to that window.
-This is used to embed xterm within other applications.
+\fIxterm\fP will reparent its top-level shell widget to that window.
+This is used to embed \fIxterm\fP within other applications.
 .TP 8
-.B \-j
+.B -j
 This option indicates that \fIxterm\fP should do jump scrolling.
 Normally,
 text is scrolled one line at a time; this option allows \fIxterm\fP to move
@@ -518,7 +518,7 @@ feature on or off.
 .B +j
 This option indicates that \fIxterm\fP should not do jump scrolling.
 .TP 8
-.B \-k8
+.B -k8
 This option sets the \fBallowC1Printable\fP resource.
 When \fBallowC1Printable\fP is set, \fIxterm\fP overrides the mapping
 of C1 control characters (code 128-159) to treat them as printable.
@@ -526,11 +526,11 @@ of C1 control characters (code 128-159) to treat them as printable.
 .B +k8
 This option resets the \fBallowC1Printable\fP resource.
 .TP 8
-.B \-l
+.B -l
 Turn logging on.
 Normally logging is not supported, due to security concerns.
 Some versions of \fIxterm\fP may have logging enabled.
-The logfile is written to the directory from which xterm is
+The logfile is written to the directory from which \fIxterm\fP is
 invoked.
 The filename is generated, of the form
 .sp
@@ -540,12 +540,12 @@ or
 .sp
 	Xterm.log.\fIhostname.yyyy.mm.dd.hh.mm.ss.XXXXXX\fR
 .sp
-depending on how xterm was built.
+depending on how \fIxterm\fP was built.
 .TP 8
 .B +l
 Turn logging off.
 .TP 8
-.B \-lc
+.B -lc
 Turn on support of various encodings according to the users'
 locale setting, i.e., LC_ALL, LC_CTYPE, or LANG environment variables.
 This is achieved by turning on UTF-8 mode and by invoking \fIluit\fR for
@@ -555,57 +555,57 @@ This corresponds to the \fBlocale\fR resource.
 .IP
 The actual list of encodings which are supported is determined by \fIluit\fR.
 Consult the \fIluit\fR manual page for further details.
-See also the discussion of the \fB\-u8\fP option which supports UTF-8 locales.
+See also the discussion of the \fB-u8\fP option which supports UTF-8 locales.
 .TP 8
 .B +lc
 Turn off support of automatic selection of locale encodings.
-Conventional 8bit mode or, in UTF-8 locales or with \fB\-u8\fP option,
+Conventional 8bit mode or, in UTF-8 locales or with \fB-u8\fP option,
 UTF-8 mode will be used.
 .TP 8
-.BI \-lcc " path"
+.BI -lcc " path"
 File name for the encoding converter from/to locale encodings
-and UTF-8 which is used with \fB\-lc\fP option or \fBlocale\fR resource.
+and UTF-8 which is used with \fB-lc\fP option or \fBlocale\fR resource.
 This corresponds to the \fBlocaleFilter\fR resource.
 .TP 8
-.B \-leftbar
+.B -leftbar
 Force scrollbar to the left side of VT100 screen.
 This is the default, unless you have set the rightScrollBar resource.
 .TP 8
-.BI \-lf " filename"
+.BI -lf " filename"
 Specify the log-filename.
-See the \fB\-l\fP option.
+See the \fB-l\fP option.
 .TP 8
-.B \-ls
+.B -ls
 This option indicates that the shell that is started in the \fIxterm\fP window
 will be a login shell (i.e., the first character of argv[0] will be a dash,
 indicating to the shell that it should read the user's .login or .profile).
 .IP
-The \fB\-ls\fP flag and the \fBloginShell\fP resource
-are ignored if \fB\-e\fP is also given,
+The \fB-ls\fP flag and the \fBloginShell\fP resource
+are ignored if \fB-e\fP is also given,
 because \fIxterm\fP does not know how to make the shell
 start the given command after whatever it does when it is a login
-shell \- the user's shell of choice need not be a Bourne shell after all.
-Also, \fIxterm\ \-e\fP is supposed to provide a consistent
+shell - the user's shell of choice need not be a Bourne shell after all.
+Also, \fIxterm\ -e\fP is supposed to provide a consistent
 functionality for other applications that need to start text-mode
 programs in a window, and if \fBloginShell\fP were not ignored, the
 result of ~/.profile might interfere with that.
 .IP
-If you do want the effect of \fB\-ls\fP and \fB\-a\fP simultaneously, you
+If you do want the effect of \fB-ls\fP and \fB-a\fP simultaneously, you
 may get away with something like
 .RS 15
 xterm -e /bin/bash -l -c "my command here"
 .RE
 .IP
-Finally, \fB\-ls\fP is not completely ignored,
-because \fIxterm\ \-ls\ \-e\fP does write a \fI/etc/wtmp\fP entry
+Finally, \fB-ls\fP is not completely ignored,
+because \fIxterm\ -ls\ -e\fP does write a \fI/etc/wtmp\fP entry
 (if configured to do so),
-whereas \fIxterm\ \-e\fP does not.
+whereas \fIxterm\ -e\fP does not.
 .TP 8
 .B +ls
 This option indicates that the shell that is started should not be a login
 shell (i.e., it will be a normal ``subshell'').
 .TP 8
-.B \-mb
+.B -mb
 This option indicates that \fIxterm\fP should ring a margin bell when
 the user types near the right end of a line.
 This option can be turned on
@@ -614,10 +614,10 @@ and off from the ``VT Options'' menu.
 .B +mb
 This option indicates that margin bell should not be rung.
 .TP 8
-.BI \-mc " milliseconds"
+.BI -mc " milliseconds"
 This option specifies the maximum time between multi-click selections.
 .TP 8
-.B \-mesg
+.B -mesg
 Turn off the \fBmessages\fP resource, i.e.,
 disallow write access to the terminal.
 .TP 8
@@ -625,30 +625,30 @@ disallow write access to the terminal.
 Turn on the \fBmessages\fP resource, i.e.,
 allow write access to the terminal.
 .TP 8
-.BI \-ms " color"
+.BI -ms " color"
 This option specifies the color to be used for the pointer cursor.
 The default
 is to use the foreground color.
 .TP 8
-.BI \-nb " number"
+.BI -nb " number"
 This option specifies the number of characters from the right end of a line
 at which the margin bell, if enabled, will ring.
 The default is 10.
 .TP 8
-.B "\-nul"
+.B "-nul"
 This option disables the display of underlining.
 .TP 8
 .B "+nul"
 This option enables the display of underlining.
 .TP 8
-.B \-pc
+.B -pc
 This option enables the PC-style use of bold colors (see boldColors
 resource).
 .TP 8
 .B +pc
 This option disables the PC-style use of bold colors.
 .TP 8
-.B \-pob
+.B -pob
 This option indicates that the window should be raised whenever a
 Control-G is received.
 .TP 8
@@ -656,16 +656,16 @@ Control-G is received.
 This option indicates that the window should not be raised whenever a
 Control-G is received.
 .TP 8
-.B \-rightbar
+.B -rightbar
 Force scrollbar to the right side of VT100 screen.
 .TP 8
-.B "\-rvc"
+.B "-rvc"
 This option disables the display of characters with reverse attribute as color.
 .TP 8
 .B "+rvc"
 This option enables the display of characters with reverse attribute as color.
 .TP 8
-.B \-rw
+.B -rw
 This option indicates that reverse-wraparound should be allowed.
 This allows
 the cursor to back up from the leftmost column of one line to the rightmost
@@ -678,7 +678,7 @@ the ``VT Options'' menu.
 .B +rw
 This option indicates that reverse-wraparound should not be allowed.
 .TP 8
-.B \-s
+.B -s
 This option indicates that \fIxterm\fP may scroll asynchronously, meaning that
 the screen does not have to be kept completely up to date while scrolling.
 This allows \fIxterm\fP to run faster when network latencies are very high
@@ -688,7 +688,7 @@ gateways.
 .B +s
 This option indicates that \fIxterm\fP should scroll synchronously.
 .TP 8
-.B \-samename
+.B -samename
 Does not send title and icon name change requests when the request
 would have no effect: the name is not changed.
 This has the advantage
@@ -700,7 +700,7 @@ this should never be a problem.
 .B +samename
 Always send title and icon name change requests.
 .TP 8
-.B \-sb
+.B -sb
 This option indicates that some number of lines that are scrolled off the top
 of the window should be saved and that a scrollbar should be displayed so that
 those lines can be viewed.
@@ -710,7 +710,7 @@ This option may be turned on and off from the
 .B +sb
 This option indicates that a scrollbar should not be displayed.
 .TP 8
-.B \-sf
+.B -sf
 This option indicates that Sun Function Key escape codes should be generated
 for function keys.
 .TP 8
@@ -718,7 +718,7 @@ for function keys.
 This option indicates that the standard escape codes should be generated for
 function keys.
 .TP 8
-.B \-si
+.B -si
 This option indicates that output to a window should not automatically
 reposition the screen to the bottom of the scrolling region.
 This option can be turned on and off from the ``VT Options'' menu.
@@ -727,7 +727,7 @@ This option can be turned on and off from the ``VT Options'' menu.
 This option indicates that output to a window should cause it to
 scroll to the bottom.
 .TP 8
-.B \-sk
+.B -sk
 This option indicates that pressing a key while
 using the scrollbar to review previous lines of text should
 cause the window to be repositioned automatically in the normal position at the
@@ -737,14 +737,14 @@ bottom of the scroll region.
 This option indicates that pressing a key while using the scrollbar
 should not cause the window to be repositioned.
 .TP 8
-.BI \-sl " number"
+.BI -sl " number"
 This option specifies the number of lines to save that have been scrolled
 off the top of the screen.
 This corresponds to the \fBsaveLines\fP resource.
 The default is 64.
 .TP 8
-.B \-sm
-This option, corresponding to the \fIsessionMgt\fR resource,
+.B -sm
+This option, corresponding to the \fBsessionMgt\fR resource,
 indicates that \fIxterm\fR should
 set up session manager callbacks.
 .TP 8
@@ -752,7 +752,7 @@ set up session manager callbacks.
 This option indicates that \fIxterm\fR should
 not set up session manager callbacks.
 .TP 8
-.B \-sp
+.B -sp
 This option indicates that Sun/PC keyboard should be assumed,
 providing mapping for keypad `+' to `,', and
 CTRL-F1 to F13, CTRL-F2 to F14, etc.
@@ -761,7 +761,7 @@ CTRL-F1 to F13, CTRL-F2 to F14, etc.
 This option indicates that the standard escape codes should be generated for
 keypad and function keys.
 .TP 8
-.B \-t
+.B -t
 This option indicates that \fIxterm\fP should start in Tektronix mode, rather
 than in VT102 mode.
 Switching between the two windows is done using the
@@ -777,7 +777,7 @@ sets the ``TERM'' and the ``TERMCAP'' environment variables.
 .B +t
 This option indicates that \fIxterm\fP should start in VT102 mode.
 .TP 8
-.BI \-ti " term_id"
+.BI -ti " term_id"
 Specify the name used by \fIxterm\fP to select the
 correct response to terminal ID queries.
 It also specifies the emulation level,
@@ -785,43 +785,43 @@ used to determine the type of response to a DA control sequence.
 Valid values include vt52, vt100, vt101, vt102, and vt220 (the "vt" is optional).
 The default is vt100.
 The term_id argument specifies the terminal ID to use.
-(This is the same as the \fIdecTerminalID\fP resource).
+(This is the same as the \fBdecTerminalID\fP resource).
 .TP 8
-.BI \-tm " string"
+.BI -tm " string"
 This option specifies a series of terminal setting keywords followed by the
 characters that should be bound to those functions, similar to the \fIstty\fP
 program.
 The keywords and their values are described in detail in the \fBttyModes\fP
 resource.
 .TP 8
-.BI \-tn " name"
+.BI -tn " name"
 This option specifies the name of the terminal type to be set in the TERM
 environment variable.
 This terminal type must exist in the \fItermcap(5)\fP
 database and should have \fIli#\fP and \fIco#\fP entries.
 .TP 8
-.B \-u8
+.B -u8
 This option sets the \fButf8\fP resource.
-When \fButf8\fP is set, xterm interprets incoming data as UTF-8.
+When \fButf8\fP is set, \fIxterm\fP interprets incoming data as UTF-8.
 This sets the \fBwideChars\fP resource as a side-effect,
 but the UTF-8 mode set by this option prevents it from being turned off.
 If you must turn it on and off, use the \fBwideChars\fP resource.
 .IP
 This option and the \fButf8\fR resource are overridden by
-the \fB\-lc\fP and \fB\-en\fP options and \fBlocale\fR resource.
+the \fB-lc\fP and \fB-en\fP options and \fBlocale\fR resource.
 That is, if \fIxterm\fP has been compiled to support \fIluit\fR,
 and the \fBlocale\fP resource is not ``false''
 this option is ignored.
 We recommend using
-the \fB\-lc\fR option or the ``\fBlocale:\ true\fR'' resource
+the \fB-lc\fR option or the ``\fBlocale:\ true\fR'' resource
 in UTF-8 locales when your operating system supports locale,
-or \fB\-en\ UTF-8\fP option or the ``\fBlocale:\ UTF-8\fR'' resource
+or \fB-en\ UTF-8\fP option or the ``\fBlocale:\ UTF-8\fR'' resource
 when your operating system does not support locale.
 .TP 8
 .B +u8
 This option resets the \fButf8\fP resource.
 .TP 8
-.B "\-ulc"
+.B "-ulc"
 This option disables the display of characters with underline attribute as
 color rather than with underlining.
 .TP 8
@@ -829,7 +829,7 @@ color rather than with underlining.
 This option enables the display of characters with underline attribute as
 color rather than with underlining.
 .TP 8
-.B \-ut
+.B -ut
 This option indicates that \fIxterm\fP should not write a record into the
 the system \fIutmp\fP log file.
 .TP 8
@@ -837,7 +837,7 @@ the system \fIutmp\fP log file.
 This option indicates that \fIxterm\fP should write a record into
 the system \fIutmp\fP log file.
 .TP 8
-.B \-vb
+.B -vb
 This option indicates that a visual bell is preferred over an audible one.
 Instead of ringing the terminal bell whenever a Control-G is received, the
 window will be flashed.
@@ -845,18 +845,18 @@ window will be flashed.
 .B +vb
 This option indicates that a visual bell should not be used.
 .TP 8
-.B \-wc
+.B -wc
 This option sets the \fBwideChars\fP resource.
-When \fBwideChars\fP is set, xterm maintains internal structures for 16-bit
+When \fBwideChars\fP is set, \fIxterm\fP maintains internal structures for 16-bit
 characters.
 If you do not set this resource to ``true'',
-xterm will ignore the escape sequence which turns UTF-8 mode on and off.
+\fIxterm\fP will ignore the escape sequence which turns UTF-8 mode on and off.
 The default is ``false''.
 .TP 8
 .B +wc
 This option resets the \fBwideChars\fP resource.
 .TP 8
-.B \-wf
+.B -wf
 This option indicates that \fIxterm\fP should wait for the window to be mapped
 the first time before starting the subprocess so that the initial terminal
 size settings and environment variables are correct.
@@ -867,16 +867,16 @@ responsibility to catch subsequent terminal size changes.
 This option indicates that \fIxterm\fP show not wait before starting the
 subprocess.
 .TP 8
-.B \-ziconbeep \fIpercent\fP
+.B -ziconbeep \fIpercent\fP
 Same as zIconBeep resource.
 If percent is non-zero, xterms that produce output while iconified
 will cause an XBell sound at the given volume
 and have "***" prepended to their icon titles.
 Most window managers will detect this change immediately, showing you
 which window has the output.
-(A similar feature was in x10 xterm.)
+(A similar feature was in x10 \fIxterm\fP.)
 .TP 8
-.B \-C
+.B -C
 This option indicates that this window should receive console output.
 This
 is not supported on all systems.
@@ -887,7 +887,7 @@ If you are running X under \fIxdm\fP on the console screen you may
 need to have the session startup and reset programs explicitly change the
 ownership of the console device in order to get this option to work.
 .TP 8
-.B \-S\fIccn\fP
+.B -S\fIccn\fP
 This option allows \fIxterm\fP to be used as an input and
 output channel for an existing program and is sometimes used in specialized
 applications.
@@ -909,7 +909,7 @@ Note that \fIxterm\fP does not close any file descriptor
 which it did not open for its own use.
 It is possible (though probably not portable) to have an application
 which passes an open file descriptor down to \fIxterm\fP past the
-initialization or the \fB\-S\fP option to a process running in the \fIxterm\fP.
+initialization or the \fB-S\fP option to a process running in the \fIxterm\fP.
 .PP
 The following command line arguments are provided for compatibility with
 older versions.
@@ -924,68 +924,71 @@ It is shorthand for specifying the ``\fI*tekGeometry\fP'' resource.
 This option specifies the preferred position of the icon window.
 It is shorthand for specifying the ``\fI*iconGeometry\fP'' resource.
 .TP 8
-.BI \-T " string"
+.BI -T " string"
 This option specifies the title for \fIxterm\fP's windows.
-It is equivalent to \fB\-title\fP.
+It is equivalent to \fB-title\fP.
 .TP 8
-.BI \-n " string"
+.BI -n " string"
 This option specifies the icon name for \fIxterm\fP's windows.
 It is shorthand for specifying the ``\fI*iconName\fP'' resource.
-Note that this is not the same as the toolkit option \fB\-name\fP (see below).
+Note that this is not the same as the toolkit option \fB-name\fP (see below).
 The default icon name is the application name.
 .TP 8
-.B \-r
+.B -r
 This option indicates that reverse video should be simulated by swapping
 the foreground and background colors.
 It is equivalent to
-\fB\-rv\fP.
+\fB-rv\fP.
 .TP 8
-.BI \-w " number"
+.BI -w " number"
 This option specifies the width in pixels of the border surrounding the window.
-It is equivalent to \fB\-borderwidth\fP or \fB\-bw\fP.
+It is equivalent to \fB-borderwidth\fP or \fB-bw\fP.
 .
 .PP
 The following standard X Toolkit command line arguments are commonly used
 with \fIxterm\fP:
 .TP 8
-.B \-bd \fIcolor\fP
+.B -bd \fIcolor\fP
 This option specifies the color to use for the border of the window.
 The default is ``black.''
 .TP 8
-.B \-bg \fIcolor\fP
+.B -bg \fIcolor\fP
 This option specifies the color to use for the background of the window.
 The default is ``white.''
 .TP 8
-.B \-bw \fInumber\fP
+.B -bw \fInumber\fP
 This option specifies the width in pixels of the border surrounding the window.
 .TP 8
-.B \-display \fIdisplay\fP
+.B -display \fIdisplay\fP
 This option specifies the X server to contact; see \fIX(__miscmansuffix__)\fP.
 .TP 8
-.B \-fg \fIcolor\fP
+.B -fg \fIcolor\fP
 This option specifies the color to use for displaying text.
 The default is
 ``black.''
 .TP 8
-.B \-fn \fIfont\fP
+.B -fn \fIfont\fP
 This option specifies the font to be used for displaying normal text.
 The
 default is \fIfixed\fP.
 .TP 8
-.B \-geometry \fIgeometry\fP
+.B -font \fIfont\fP
+This is the same as \fB-fn\fP.
+.TP 8
+.B -geometry \fIgeometry\fP
 This option specifies the preferred size and position of the VT102 window;
 see \fIX(__miscmansuffix__)\fP.
 .TP 8
-.B \-iconic
+.B -iconic
 This option indicates that \fIxterm\fP should ask the window manager to
 start it as an icon rather than as the normal window.
 .TP 8
-.B \-name \fIname\fP
+.B -name \fIname\fP
 This option specifies the application name under which resources are to be
 obtained, rather than the default executable file name.
 \fIName\fP should not contain ``.'' or ``*'' characters.
 .TP 8
-.B \-rv
+.B -rv
 This option indicates that reverse video should be simulated by swapping
 the foreground and background colors.
 .TP 8
@@ -993,14 +996,14 @@ the foreground and background colors.
 Disable the simulation of reverse video by swapping foreground and background
 colors.
 .TP 8
-.B \-title \fIstring\fP
+.B -title \fIstring\fP
 This option specifies the window title string, which may be displayed by
 window managers if the user so chooses.
 The default title is the command
-line specified after the \fB\-e\fP option, if any, otherwise the application
+line specified after the \fB-e\fP option, if any, otherwise the application
 name.
 .TP 8
-.B \-xrm \fIresourcestring\fP
+.B -xrm \fIresourcestring\fP
 This option specifies a resource string to be used.
 This is especially
 useful for setting resources that do not have separate command line options.
@@ -1018,7 +1021,7 @@ The default is ``false'', which disables this feature.
 .TP 8
 .B "hold (\fPclass\fB Hold)"
 If true,
-xterm will not immediately destroy its window when the shell command completes.
+\fIxterm\fP will not immediately destroy its window when the shell command completes.
 It will wait until you use the window manager to destroy/kill the window, or
 if you use the menu entries that send a signal, e.g., HUP or KILL.
 You may scroll back, select text, etc., to perform most graphical operations.
@@ -1062,7 +1065,7 @@ which \fIxterm\fP sets.
 The default is ``false''.
 .TP 8
 .B "sameName (\fPclass\fB SameName)"
-If the value of this resource is ``true'', xterm does not send
+If the value of this resource is ``true'', \fIxterm\fP does not send
 title and icon name change requests when the request
 would have no effect: the name is not changed.
 This has the advantage
@@ -1078,7 +1081,7 @@ function keys instead of standard escape sequences.
 .TP 8
 .B "sessionMgt (\fPclass\fB SessionMgt)"
 If the value of this resource is ``true'',
-xterm sets up session manager callbacks
+\fIxterm\fP sets up session manager callbacks
 for \fBXtNdieCallback\fR and \fBXtNsaveCallback\fR.
 The default is ``true''.
 .TP 8
@@ -1096,6 +1099,15 @@ resource.
 so \fIxterm\fP emulates a DEC VT220 more accurately.
 Otherwise (the default, with \fBsunKeyboard\fP set to ``false''),
 \fIxterm\fP uses PC-style bindings for the function keys and keypad.
+.IP
+PC-style bindings
+use the Shift, Alt, Control and Meta keys as modifiers for function-keys
+and keypad
+(see the document \fIXterm Control Sequences\fP for details).
+The PC-style bindings are analogous to PCTerm, but not the same thing.
+Normally these bindings do not conflict with the use of the Meta key
+as described for the \fBeightBitInput\fP resource.
+If they do, note that the PC-style bindings are evaluated first.
 .TP 8
 .B "termName (\fPclass\fB TermName)"
 Specifies the terminal type name to be set in the TERM environment variable.
@@ -1156,7 +1168,7 @@ before starting the subprocess.
 The default is ``false.''
 .TP 8
 .B "zIconBeep (\fPclass\fB ZIconBeep)"
-Same as \-ziconbeep command line argument.
+Same as -ziconbeep command line argument.
 If the value of this resource is non-zero, xterms that produce output
 while iconified will cause an XBell sound at the given volume
 and have "***" prepended to their icon titles.
@@ -1212,7 +1224,7 @@ The default is ``false.''
 .TP 8
 .B "alwaysUseMods (\fPclass\fB AlwaysUseMods)"
 Override the \fBnumLock\fP resource, telling \fIxterm\fR to use the Alt and Meta
-modifiers as to construct parameters for function key sequences even if
+modifiers to construct parameters for function key sequences even if
 those modifiers appear in the translations resource.
 The default is ``false.''
 .TP 8
@@ -1295,7 +1307,7 @@ but the result is not always readable.
 XFree86 provides a feature which can be used to suppress the scaling.
 In the X server's configuration file (e.g., "/etc/X11/XFree86"), you
 can add ":unscaled" to the end of the directory specification for the
-"misc" fonts, which comprise the fixed-pitch fonts that are used by xterm.
+"misc" fonts, which comprise the fixed-pitch fonts that are used by \fIxterm\fP.
 For example
 .RS
 	FontPath	"/usr/lib/X11/fonts/misc/"
@@ -1349,7 +1361,7 @@ Set this to zero to disable doublesize fonts altogether.
 .TP 8
 .B "charClass (\fPclass\fB CharClass)"
 Specifies comma-separated lists of character class bindings of the form
-[\fIlow\fP\-]\fIhigh\fP:\fIvalue\fP.
+[\fIlow\fP-]\fIhigh\fP:\fIvalue\fP.
 These are used in determining which
 sets of characters should be treated the same when doing cut and paste.
 See the CHARACTER CLASSES section.
@@ -1381,7 +1393,16 @@ The default is ``false.''
 .B "color7 (\fPclass\fB Color7)"
 These specify the colors for the ISO 6429 extension.
 The defaults are,
-respectively, black, red3, green3, yellow3, DodgerBlue1, magenta3, cyan3, and gray90.
+respectively,
+black,
+red3,
+green3,
+yellow3,
+a customizable dark blue,
+magenta3,
+cyan3,
+and
+gray90.
 The default shades of color are chosen to allow the colors 8-15
 to be used as brighter versions.
 .TP 8
@@ -1402,8 +1423,16 @@ to be used as brighter versions.
 .B "color15 (\fPclass\fB Color15)"
 These specify the colors for the ISO 6429 extension if the bold attribute
 is also enabled.
-The default resource values are, respectively, gray30, red, green,
-yellow, SteelBlue1, magenta, cyan, and white.
+The default resource values are respectively,
+gray30,
+red,
+green,
+yellow,
+a customizable light blue,
+magenta,
+cyan,
+and
+white.
 .TP 8
 .B "color16 (\fPclass\fB Color16)"
 .TP 8
@@ -1484,7 +1513,7 @@ symbol for F11.
 Specifies whether or not the last column bug in
 .IR more (1)
 should be worked around.
-See the \fB\-cu\fP option for details.
+See the \fB-cu\fP option for details.
 The default is ``false.''
 .TP 8
 .B "cursorBlink (\fPclass\fB CursorBlink)"
@@ -1539,7 +1568,9 @@ terminal should be eight-bit characters or escape sequences.
 The default is ``false.''
 .TP 8
 .B "eightBitInput (\fPclass\fB EightBitInput\fP)"
-If ``true'', Meta characters input from the keyboard are presented as a
+If ``true'', Meta characters
+(a character combined with the \fIkeys\fP modifier key)
+input from the keyboard are presented as a
 single character with the eighth bit turned on.
 The terminal is put into 8-bit mode.
 If ``false'', Meta characters are converted into a two-character
@@ -1547,6 +1578,26 @@ sequence with the character itself preceded by ESC.
 The terminal is put into 7-bit mode.
 The \fBmetaSendsEscape\fP resource may override this.
 The default is ``true.''
+.IP
+Note that the \fIAlt\fP key is not necessarily the same as the
+\fIMeta\fP modifier.
+\fIxmodmap\fP lists your key modifiers.
+X defines modifiers for shift, (caps) lock and control,
+as well as 5 additional modifiers which are generally used to configure
+key modifiers.
+\fIxterm\fP inspects the same information to find the modifier associated
+with either \fIMeta\fP key (left or right),
+and uses that key as the \fIMeta\fP modifier.
+It also looks for the NumLock key,
+to recognize the modifier which is associated with that.
+.IP
+If your \fIxmodmap\fP configuration
+uses the same keycodes for Alt- and Meta-keys,
+\fIxterm\fP will only see the Alt-key definitions, since those are tested
+before Meta-keys.
+NumLock is tested first.
+It is important to keep these keys distinct;
+otherwise some of \fIxterm\fP's functionality is not available.
 .TP 8
 .B "eightBitOutput (\fPclass\fB EightBitOutput\fP)"
 Specifies whether or not eight-bit characters sent from the host should be
@@ -1580,6 +1631,23 @@ The default is ``fixed.''
 .IP
 See the discussion of the \fBlocale\fP resource,
 which describes how this font may be overridden.
+.IP
+NOTE: some resource files use patterns such as
+.RS
+*font: fixed
+.RE
+.IP
+which are overly broad, affecting both
+.RS
+xterm.vt100.font
+.RE
+.IP
+and
+.RS
+xterm.vt100..utf8fonts.font
+.RE
+.IP
+which is probably not what you intended.
 .TP 8
 .B "font1 (\fPclass\fB Font1)"
 Specifies the name of the first alternative font.
@@ -1737,7 +1805,7 @@ For other locales, \fIxterm\fR will use conventional 8bit mode.
 .TP 4
 .I no
 \fIxterm\fR will use conventional 8bit mode
-or UTF-8 mode according to \fButf8\fR resource or \fB\-u8\fP option.
+or UTF-8 mode according to \fButf8\fR resource or \fB-u8\fP option.
 .RE
 .IP
 Any other value, e.g., ``UTF-8'' or ``ISO8859-2'',
@@ -1763,8 +1831,8 @@ but do not rely on them unless you are using the locale mechanism.
 .TP 8
 .B "localeFilter (\fPclass\fB LocaleFilter)"
 Specifies the file name for the encoding converter from/to locale
-encodings and UTF-8 which is used with the \fB\-lc\fR option or \fBlocale\fR resource.
-The help message shown by ``xterm \-help'' lists the default value,
+encodings and UTF-8 which is used with the \fB-lc\fR option or \fBlocale\fR resource.
+The help message shown by ``xterm -help'' lists the default value,
 which depends on your system configuration.
 .TP 8
 .B "loginShell (\fPclass\fB LoginShell)"
@@ -1779,7 +1847,7 @@ The default is ``false.''
 .TP 8
 .B "metaSendsEscape (\fPclass\fB MetaSendsEscape\fP)"
 If ``true'', Meta characters
-(a character combined with the \fImeta\fP modifier key)
+(a character combined with the \fIMeta\fP modifier key)
 are converted into a two-character
 sequence with the character itself preceded by ESC.
 This applies as well to function key control sequences, unless \fIxterm\fP
@@ -1790,7 +1858,7 @@ The default is ``false.''
 .TP 8
 .B "modifyCursorKeys (\fPclass\fB ModifyCursorKeys\fP)"
 Tells how to handle the special case where
-control-, shift-, alt- or meta-modifiers are used to add a parameter to
+Control-, Shift-, Alt- or Meta-modifiers are used to add a parameter to
 the escape sequence returned by a cursor-key.
 Set it to 0 to use the old/obsolete behavior.
 Set it to 1 to prefix modified sequences with CSI.
@@ -1965,7 +2033,7 @@ The default is ``true.''
 Tells \fIxterm\fP whether to display text with blink-attribute the same
 as bold.
 If \fIxterm\fP has not been configured to support blinking text,
-the default is ``true.'', which corresponds to older versions of xterm,
+the default is ``true.'', which corresponds to older versions of \fIxterm\fP,
 otherwise the default is ``false.''
 .TP 8
 .B "showMissingGlyphs (\fPclass\fB ShowMissingGlyphs)"
@@ -2003,7 +2071,7 @@ The default is ``false.''
 .B "tiXtraScroll (\fPclass\fB TiXtraScroll)"
 Specifies whether \fIxterm\fP should scroll to a new page when processing
 the \fIti\fP termcap entry, i.e., the private modes 47, 1047 or 1049.
-This is only in effect if \fItiteInhibit\fP is ``true'',
+This is only in effect if \fBtiteInhibit\fP is ``true'',
 because the intent of this option is to provide a picture of the full-screen
 application's display on the scrollback without wiping out the text that
 would be shown before the application was initialized.
@@ -2061,7 +2129,7 @@ UTF-8 mode is initially on.
 Escape sequences for turning UTF-8 mode on/off are allowed.
 .TP
 2
-The command-line option \fB\-u8\fP sets the resource to this value.
+The command-line option \fB-u8\fP sets the resource to this value.
 Escape sequences for turning UTF-8 mode on/off are ignored.
 .TP
 3
@@ -2587,7 +2655,7 @@ Commands for capturing output:
 .TP
 Log to File (logging)
 Captures text sent to the screen in a logfile,
-as in the \fB\-l\fP logging option.
+as in the \fB-l\fP logging option.
 .TP
 Print Window (print)
 Sends the text of the current window to the program given in the
@@ -2611,27 +2679,27 @@ e.g., sending a byte in the range 128-159 rather than the escape character
 followed by a second byte.
 \fIXterm\fP always interprets both 8-bit and 7-bit control sequences
 (see the document \fIXterm Control Sequences\fP).
-This corresponds to the \fIeightBitControl\fP resource.
+This corresponds to the \fBeightBitControl\fP resource.
 .TP
 Backarrow Key (BS/DEL) (backarrow\ key)
 Modifies the behavior of the backarrow key, making it transmit
 either a backspace (8)
 or delete (127) character.
-This corresponds to the \fIbackarrowKey\fP resource.
+This corresponds to the \fBbackarrowKey\fP resource.
 .TP
 Alt/NumLock Modifiers (num-lock)
 Controls the treatment of Alt- and NumLock-key modifiers.
-This corresponds to the \fInumLock\fP resource.
+This corresponds to the \fBnumLock\fP resource.
 .TP
 Meta Sends Escape (meta-esc)
-Controls whether \fImeta\fP characters are converted into a two-character
+Controls whether \fIMeta\fP keys are converted into a two-character
 sequence with the character itself preceded by ESC.
-This corresponds to the \fImetaSendsEscape\fP resource.
+This corresponds to the \fBmetaSendsEscape\fP resource.
 .TP
 Delete is DEL (delete-is-del)
 Controls whether the Delete key on the editing keypad should send DEL (127)
 or the VT220-style Remove escape sequence.
-This corresponds to the \fIdeleteIsDEL\fP resource.
+This corresponds to the \fBdeleteIsDEL\fP resource.
 .TP
 Old Function-Keys (oldFunctionKeys)
 .TP
@@ -2674,7 +2742,7 @@ function is especially useful if the user has accidentally typed CTRL-Z,
 suspending the process.
 .TP
 Quit (quit)
-Stop processing X events except to support the \fB\-hold\fP option,
+Stop processing X events except to support the \fB-hold\fP option,
 and then send a SIGHUP signal to the 
 the process group of the process running under
 .I xterm
@@ -2696,7 +2764,7 @@ VT102/VT220 Modes:
 Enable Scrollbar (scrollbar)
 Enable (or disable) the scrollbar.
 This corresponds to the 
-.B \-sb
+.B -sb
 option and the
 .B scrollBar
 resource.
@@ -2705,7 +2773,7 @@ resource.
 Enable Jump Scroll (jumpscroll)
 Enable (or disable) jump scrolling.
 This corresponds to the 
-.B \-j
+.B -j
 option and the
 .B jumpScroll
 resource.
@@ -2714,7 +2782,7 @@ resource.
 Enable Reverse Video (reversevideo)
 Enable (or disable) reverse-video.
 This corresponds to the 
-.B \-rv
+.B -rv
 option and the
 .B reverseVideo
 resource.
@@ -2723,7 +2791,7 @@ resource.
 Enable Auto Wraparound (autowrap)
 Enable (or disable) auto-wraparound.
 This corresponds to the 
-.B \-aw
+.B -aw
 option and the
 .B autoWrap
 resource.
@@ -2732,7 +2800,7 @@ resource.
 Enable Reverse Wraparound (reversewrap)
 Enable (or disable) reverse wraparound.
 This corresponds to the 
-.B \-rw
+.B -rw
 option and the
 .B reverseWrap
 resource.
@@ -2764,7 +2832,7 @@ There is no corresponding command-line option.
 Scroll to Bottom on Key Press (scrollkey)
 Enable (or disable) scrolling to the bottom of the scrolling region on a keypress.
 This corresponds to the 
-.B \-sk
+.B -sk
 option and the
 .B scrollKey
 resource.
@@ -2773,7 +2841,7 @@ resource.
 Scroll to Bottom on Tty Output (scrollttyoutput)
 Enable (or disable) scrolling to the bottom of the scrolling region on output to the terminal..
 This corresponds to the 
-.B \-si
+.B -si
 option and the
 .B scrollTtyOutput
 resource.
@@ -2782,7 +2850,7 @@ resource.
 Allow 80/132 Column Switching (allow132)
 Enable (or disable) switching between 80 and 132 columns.
 This corresponds to the 
-.B \-132
+.B -132
 option and the
 .B c132
 resource.
@@ -2791,7 +2859,7 @@ resource.
 Enable Curses Emulation (cursesemul)
 Enable (or disable) a workaround for the so-called "curses bug".
 This corresponds to the 
-.B \-cu
+.B -cu
 option and the
 .B curses
 resource.
@@ -2800,7 +2868,7 @@ resource.
 Enable Visual Bell (visualbell)
 Enable (or disable) visible bell (i.e., flashing) instead of an audible bell.
 This corresponds to the 
-.B \-vb
+.B -vb
 option and the
 .B visualBell
 resource.
@@ -2809,7 +2877,7 @@ resource.
 Enable Pop on Bell (poponbell)
 Enable (or disable) raising of the window when Control-G is received.
 This corresponds to the 
-.B \-pop
+.B -pop
 option and the
 .B popOnBell
 resource.
@@ -2818,7 +2886,7 @@ resource.
 Enable Margin Bell (marginbell)
 Enable (or disable) a bell when the user types near the right margin.
 This corresponds to the 
-.B \-mb
+.B -mb
 option and the
 .B marginBell
 resource.
@@ -2827,7 +2895,7 @@ resource.
 Enable Blinking Cursor (cursorblink)
 Enable (or disable) the blinking-cursor feature.
 This corresponds to the 
-.B \-bc
+.B -bc
 option and the
 .B cursorBlink
 resource.
@@ -2844,7 +2912,7 @@ There is no corresponding command-line option.
 Enable Active Icon (activeicon)
 Enable (or disable) the active-icon feature.
 This corresponds to the 
-.B \-ai
+.B -ai
 option and the
 .B activeIcon
 resource.
@@ -3009,9 +3077,9 @@ The current font size is checked in the modes section of the menu.
 .TP
 Large Characters (tektextlarge)
 .TP
-#2 Size Characters (tektext2)
+\&#2 Size Characters (tektext2)
 .TP
-#3 Size Characters (tektext3)
+\&#3 Size Characters (tektext3)
 .TP
 Small Characters (tektextsmall)
 .RE
@@ -3103,7 +3171,7 @@ You can also bring up the menu again and make sure that a check
 mark appears next to the entry.
 .
 .PP
-\fBSecure Keyboard\fP mode will be disabled automatically if your xterm
+\fBSecure Keyboard\fP mode will be disabled automatically if your \fIxterm\fP
 window becomes iconified (or otherwise unmapped), or if you start up
 a reparenting window manager (that places a title bar or other decoration
 around the window) while in \fBSecure Keyboard\fP mode.
@@ -3114,13 +3182,13 @@ will sound in warning.
 .
 .
 .SH "CHARACTER CLASSES"
-Clicking the middle mouse button twice in rapid succession will cause all
+Clicking the left mouse button twice in rapid succession will cause all
 characters of the same class (e.g., letters, white space, punctuation) to be
 selected.
 Since different people have different preferences for what should
 be selected (for example, should filenames be selected as a whole or only
 the separate subnames), the default mapping can be overridden through the use
-of the \fIcharClass\fP (class \fICharClass\fP) resource.
+of the \fBcharClass\fP (class \fICharClass\fP) resource.
 .
 .PP
 This resource is a
@@ -3153,7 +3221,7 @@ static int charClass[256] = {
 /\(**  SP    !    "    #    $    %    &    ' */
 .\"   " <- for emacs autocolor to work well :-)
     32,  33,  34,  35,  36,  37,  38,  39,
-/\(**   (    )    *    +    ,    \-    .    / */
+/\(**   (    )    *    +    ,    -    .    / */
     40,  41,  42,  43,  44,  45,  46,  47,
 /\(**   0    1    2    3    4    5    6    7 */
     48,  48,  48,  48,  48,  48,  48,  48,
@@ -3429,7 +3497,7 @@ the section on \fBPOINTER USAGE\fP for information on making selections.
 .B "send-signal(\fIsigname\fP)"
 This action sends the signal named by \fIsigname\fP
 to the \fIxterm\fP subprocess (the shell or program specified with
-the \fI\-e\fP command line option) and is also invoked by the
+the \fI-e\fP command line option) and is also invoked by the
 .BR suspend ,
 .BR continue ,
 .BR interrupt ,
@@ -3521,7 +3589,7 @@ This action toggles the \fBrenderFont\fP resource and is also invoked by
 the \fBrender-font\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-reverse-video(\fIon/off/toggle\fP)"
-This action toggles the \fIreverseVideo\fP resource and is also invoked by
+This action toggles the \fBreverseVideo\fP resource and is also invoked by
 the \fBreversevideo\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-reversewrap(\fIon/off/toggle\fP)"

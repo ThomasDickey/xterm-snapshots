@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.151 2004/06/06 22:15:26 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.125 2004/06/06 22:15:26 dickey Exp $
+  $XTermId: xterm.log.html,v 1.156 2004/07/13 00:41:30 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.126 2004/07/13 00:41:30 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_192">Patch #192 - 2004/7/12 - XFree86 4.4.99.9</A>
 <LI><A HREF="#xterm_191">Patch #191 - 2004/6/6 - XFree86 4.4.99.7</A>
 <LI><A HREF="#xterm_190">Patch #190 - 2004/5/25 - XFree86 4.4.99.6</A>
 <LI><A HREF="#xterm_189">Patch #189 - 2004/5/16 - XFree86 4.4.99.6</A>
@@ -239,6 +240,67 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_192">Patch #192 - 2004/7/12 - XFree86 4.4.99.9</A></H1>
+<ul>
+	<li>change resource settings for color4 and color12, add some discussion
+	    in <code>XTerm-col.ad</code> (Debian #241717).
+
+	<li>add a note in xterm manpage discussing the difference between
+	    alt- and meta-keys, and the way the latter is used in the
+	    <code>eightBitInput</code> resource.
+
+	<li>add a note in xterm manpage regarding possible conflict between
+	    resource settings for <code>xterm.vt100.font</code> and
+	    <code>xterm.vt100.utf8Fonts.font</code> (Debian #254650).
+
+	<li>add compile-time customization of <code>backarrowKeyIsErase</code>
+	    and <code>ptyInitialErase</code> default resource values
+	    (adapted from OpenBSD CVS).
+
+	<li>change parameter of <code>FIONREAD<code> <code>ioctl()</code> call
+	    from long to int
+	    (discussion on tech-x11@netbsd.org regarding LP64 by
+	    John Heasley and Matthias Scheler).
+
+	<li>modify configure script options for Athena widgets to work as
+	    expected for "--without-Xaw3d", etc., (GenToo Bugzilla #53455).
+
+	<li>add case to uxterm to accommodate locales ending with "@euro",
+	    e.g., fr_FR.UTF-8@euro (Debian #255197, report/analysis by
+	    Matthieu Lagouge).
+
+	<li>add special case for VT100 graphic's "box" character (discussion
+	    with Ben Armstrong).
+
+	<li>add missing initialization for bitmap-font sizes needed to make
+	    fonts menu work with TrueType fonts (report by Ben Armstrong).
+
+	<li>save the fontnames for bold fonts that are derived from normal
+	    fonts, or from the <code>boldFont</code> resource, so the same
+	    value is restored when switching with the VT Fonts menu (Debian
+	    #256086).
+
+	<li>fix manpage preprocessing (Marc La France).
+
+	<li>fix typo in manpage's description of character classes (Debian
+	    #257073).
+
+	<li>modify terminfo to accommodate luit, which relies on G1 being used
+	    via an ISO-2022 escape sequence (Debian #254316, analysis by
+	    Juliusz Chroboczek).
+
+	<li>modify Makefile.in rule for ctlseqs.txt to work around groff SGR
+	    misfeature.
+
+	<li>modify <code>XTerm.ad</code> to set <code>saveLines</code> default
+	    to 1024 (Redhat Bugzilla #127132).
+
+	<li>add a limit-check in <code>dotext()</code> to prevent infinite
+	    loop in a corner case of UTF-8 configuration.
+
+	<li>update config.guess, config.sub
+</ul>
 
 <H1><A NAME="xterm_191">Patch #191 - 2004/6/6 - XFree86 4.4.99.7</A></H1>
 <ul>
