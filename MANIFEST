@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-3_9Ab
+MANIFEST for xterm, version xterm-58
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 INSTALL                         configure script: options and related install instructions
@@ -51,6 +51,7 @@ trace.c                         debugging trace functions for 'xterm'
 trace.h                         interface of trace.c
 ttysvr.c                        simple tty server for AMOEBA port of 'xterm'
 util.c                          miscellaneous utility functions for 'xterm'
+version.h                       version of xterm
 xterm.h                         common includes, definitions and prototypes for 'xterm'
 xterm.man                       manual page for 'xterm'
 xtermcfg.hin                    configure script: template for xtermcfg.h

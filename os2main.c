@@ -124,7 +124,9 @@ static void DeleteWindow PROTO_XT_ACTIONS_ARGS;
 static void Help PROTO((void));
 static void KeyboardMapping PROTO_XT_ACTIONS_ARGS;
 static void Syntax PROTO((char *badOption));
+static void Version PROTO((void));
 static void get_terminal PROTO((void));
+static void my_error_handler PROTO((String message));
 static void resize PROTO((TScreen *s, char *oldtc, char *newtc));
 static SIGNAL_T reapchild PROTO((int n));
 
@@ -407,6 +409,7 @@ static struct _options {
   char *opt;
   char *desc;
 } options[] = {
+{ "-version",              "print the version number" },
 { "-help",                 "print out this message" },
 { "-display displayname",  "X server to contact" },
 { "-geometry geom",        "size (in characters) and position" },
@@ -501,12 +504,11 @@ static void closecons()
 }
 */
 static char *message[] = {
-"Fonts must be fixed width and, if both normal and bold are specified, must",
+"Fonts should be fixed width and, if both normal and bold are specified, should",
 "have the same size.  If only a normal font is specified, it will be used for",
 "both normal and bold text (by doing overstriking).  The -e option, if given,",
-"must be appear at the end of the command line, otherwise the user's default",
-"shell will be started.  Options that start with a plus sign (+) restore the",
-"default.",
+"must appear at the end of the command line, otherwise the user's default shell",
+"will be started.  Options that start with a plus sign (+) restore the default.",
 NULL};
 
 static void Syntax (badOption)
@@ -535,13 +537,19 @@ static void Syntax (badOption)
     exit (1);
 }
 
+static void Version ()
+{
+    puts (XTERM_VERSION);
+    exit (0);
+}
+
 static void Help ()
 {
     struct _options *opt;
     char **cpp;
 
-    fprintf (stderr, "usage:\n        %s [-options ...] [-e command args]\n\n",
-	     ProgramName);
+    fprintf (stderr, "%s usage:\n    %s [-options ...] [-e command args]\n\n",
+	     XTERM_VERSION, ProgramName);
     fprintf (stderr, "where options include:\n");
     for (opt = options; opt->opt; opt++) {
 	fprintf (stderr, "    %-28s %s\n", opt->opt, opt->desc);
@@ -755,6 +763,15 @@ char **envp;
 	int mode;
 	extern char **environ;
 
+	/* Do these first, since we may not be able to open the display */
+	ProgramName = argv[0];
+	if (argc >= 1) {
+		if (!strncmp(argv[1], "-v", 2))
+			Version();
+		if (!strncmp(argv[1], "-h", 2))
+			Help();
+	}
+
 	/* XXX: for some obscure reason EMX seems to lose the value of 
 	 * the environ variable, don't understand why, so save it recently
 	 */
@@ -763,8 +780,6 @@ char **envp;
 #ifdef I18N
 	setlocale(LC_ALL, NULL);
 #endif
-
-	ProgramName = argv[0];
 
 /*debug	opencons();*/
 
@@ -805,6 +820,7 @@ char **envp;
 					XtNumber(optionDescList),
 					&argc, argv, fallback_resources,
 					NULL, 0);
+	    XtSetErrorHandler((XtErrorHandler)0);
 
 	    XtGetApplicationResources(toplevel, (XtPointer) &resource,
 				      application_resources,
@@ -1441,11 +1457,12 @@ opencons();*/
 			 * (from ttyname)
 			 */
 #ifdef EMXNOTBOGUS
-			if (ptr = ttyname(tty)) {
+			if ((ptr = ttyname(tty)) != 0)
+			{
 				/* it may be bigger */
 				ttydev = realloc (ttydev, 
 					(unsigned) (strlen(ptr) + 1));
-				strcpy(ttydev, ptr);
+				(void) strcpy(ttydev, ptr);
 			}
 #else
 			ptr = ttydev;

@@ -73,6 +73,7 @@ SOFTWARE.
 #include <xtermcfg.h>
 #endif
 
+#include "version.h"
 #include "ptyx.h"
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
@@ -490,6 +491,7 @@ int switchfb[] = {0, 2, 1, 3};
 
 extern int tgetent PROTO((char *ptr, char *name));
 
+static SIGNAL_T reapchild PROTO((int n));
 static char *base_name PROTO((char *name));
 static int pty_search PROTO((int *pty));
 static int remove_termcap_entry PROTO((char *buf, char *str));
@@ -499,9 +501,9 @@ static void Help PROTO((void));
 static void HsSysError PROTO((int pf, int error));
 static void KeyboardMapping PROTO_XT_ACTIONS_ARGS;
 static void Syntax PROTO((char *badOption));
+static void Version PROTO((void));
 static void get_terminal PROTO((void));
 static void resize PROTO((TScreen *s, char *oldtc, char *newtc));
-static SIGNAL_T reapchild PROTO((int n));
 
 static Bool added_utmp_entry = False;
 
@@ -873,6 +875,7 @@ static struct _options {
   char *opt;
   char *desc;
 } options[] = {
+{ "-version",              "print the version number" },
 { "-help",                 "print out this message" },
 { "-display displayname",  "X server to contact" },
 { "-geometry geom",        "size (in characters) and position" },
@@ -960,12 +963,11 @@ static struct _options {
 { NULL, NULL }};
 
 static char *message[] = {
-"Fonts must be fixed width and, if both normal and bold are specified, must",
+"Fonts should be fixed width and, if both normal and bold are specified, should",
 "have the same size.  If only a normal font is specified, it will be used for",
 "both normal and bold text (by doing overstriking).  The -e option, if given,",
-"must be appear at the end of the command line, otherwise the user's default",
-"shell will be started.  Options that start with a plus sign (+) restore the",
-"default.",
+"must appear at the end of the command line, otherwise the user's default shell",
+"will be started.  Options that start with a plus sign (+) restore the default.",
 NULL};
 
 static void Syntax (badOption)
@@ -994,13 +996,19 @@ static void Syntax (badOption)
     exit (1);
 }
 
+static void Version ()
+{
+    puts (XTERM_VERSION);
+    exit (0);
+}
+
 static void Help ()
 {
     struct _options *opt;
     char **cpp;
 
-    fprintf (stderr, "usage:\n        %s [-options ...] [-e command args]\n\n",
-	     ProgramName);
+    fprintf (stderr, "%s usage:\n    %s [-options ...] [-e command args]\n\n",
+	     XTERM_VERSION, ProgramName);
     fprintf (stderr, "where options include:\n");
     for (opt = options; opt->opt; opt++) {
 	fprintf (stderr, "    %-28s %s\n", opt->opt, opt->desc);
@@ -1098,12 +1106,19 @@ char **argv;
 	register TScreen *screen;
 	int mode;
 
+	/* Do these first, since we may not be able to open the display */
+	ProgramName = argv[0];
+	if (argc >= 1) {
+		if (!strncmp(argv[1], "-v", 2))
+			Version();
+		if (!strncmp(argv[1], "-h", 2))
+			Help();
+	}
+
 	/* This dumps core on HP-UX 9.05 with X11R5 */
 #if OPT_I18N_SUPPORT
 	XtSetLanguageProc (NULL, NULL, NULL);
 #endif
-
-	ProgramName = argv[0];
 
 #ifndef AMOEBA
 	/* +2 in case longer tty name like /dev/ttyq255 */
@@ -1378,11 +1393,13 @@ char **argv;
 			       (int) ruid, strerror(errno));
 #endif
 
+	    XtSetErrorHandler(xt_error);
 	    toplevel = XtAppInitialize (&app_con, "XTerm", 
 					optionDescList,
 					XtNumber(optionDescList),
 					&argc, argv, fallback_resources,
 					NULL, 0);
+	    XtSetErrorHandler((XtErrorHandler)0);
 
 	    XtGetApplicationResources(toplevel, (XtPointer) &resource,
 				      application_resources,
@@ -2284,8 +2301,10 @@ spawn ()
 
 	/* avoid double MapWindow requests */
 	XtSetMappedWhenManaged(XtParent(CURRENT_EMU(screen)), False );
+
 	wm_delete_window = XInternAtom(XtDisplay(toplevel), "WM_DELETE_WINDOW",
 				       False);
+
 	if (!TEK4014_ACTIVE(screen))
 	    VTInit();		/* realize now so know window size for tty driver */
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
@@ -2550,12 +2569,13 @@ spawn ()
 		}
 
 		/* use the same tty name that everyone else will use
-		** (from ttyname)
-		*/
+		 * (from ttyname)
+		 */
 		if ((ptr = ttyname(tty)) != 0)
 		{
 			/* it may be bigger */
-			ttydev = realloc (ttydev, (unsigned) (strlen(ptr) + 1));
+			ttydev = realloc (ttydev,
+				(unsigned) (strlen(ptr) + 1));
 			(void) strcpy(ttydev, ptr);
 		}
 #if defined(SYSV) && defined(i386) && !defined(SVR4)

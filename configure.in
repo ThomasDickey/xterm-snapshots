@@ -210,7 +210,7 @@ AC_MSG_RESULT($enable_tek4014)
 if test $enable_tek4014 = no ; then
 	AC_DEFINE(OPT_TEK4014,0)
 else
-	EXTRAHDRS="$EXTRAHDRS TekParse.h"
+	EXTRAHDRS="$EXTRAHDRS Tekparse.h"
 	EXTRASRCS="$EXTRASRCS TekPrsTbl.c Tekproc.c"
 	EXTRAOBJS="$EXTRAOBJS TekPrsTbl.o Tekproc.o"
 fi

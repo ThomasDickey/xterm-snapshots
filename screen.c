@@ -642,12 +642,10 @@ Boolean force;			/* ... leading/trailing spaces */
 		 || (cb[col] != cs)
 #endif
 		 ) {
-		   TRACE(("%s @%d, calling drawXtermText\n", __FILE__, __LINE__))
-		   drawXtermText(screen, flags, gc, x, y,
+		   TRACE(("%s @%d, calling drawXtermText %d..%d\n", __FILE__, __LINE__, lastind, col))
+		   x = drawXtermText(screen, flags, gc, x, y,
 		   	cs,
 			&chars[lastind], col - lastind);
-
-		   x += (col - lastind) * CurFontWidth(screen,row);
 
 		   lastind = col;
 
@@ -671,7 +669,7 @@ Boolean force;			/* ... leading/trailing spaces */
 			chars[col] = ' ';
 	   }
 
-	   TRACE(("%s @%d, calling drawXtermText\n", __FILE__, __LINE__))
+	   TRACE(("%s @%d, calling drawXtermText %d..%d\n", __FILE__, __LINE__, lastind, col))
 	   drawXtermText(screen, flags, gc, x, y,
 	   	cs,
 		&chars[lastind], col - lastind);

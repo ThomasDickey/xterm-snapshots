@@ -86,7 +86,7 @@ the
 .B Tektronix
 menu; see below).
 The name of the file will be
-``\fBCOPY\fIyyyy\fB\-\fIMM\fB\-\fIdd\fB.\fIhh\fB:\fImm\fB:\fIss\fR'', where
+``\fBCOPY\fIyyyy\fB\-\fIMM\fB\-\fIdd\fB.\fIhh\fB:\fImm\fB:\fIss\fP'', where
 .IR yy ,
 .IR MM ,
 .IR dd ,
@@ -133,10 +133,18 @@ the following (if the option begins with a
 .RB ` + '
 instead of a
 .RB ` \- ',
-the option is restored to its default value):
+the option is restored to its default value).
+The \-version and \-help options are interpreted even if \fIxterm\fP cannot
+open the display, and are useful for testing and configuration scripts:
+.TP 8
+.B \-version
+This causes \fIxterm\fP to print a version number to the standard output.
 .TP 8
 .B \-help
 This causes \fIxterm\fP to print out a verbose message describing its options.
+The message is written to the standard error.
+.PP
+The other options are used to control the appearance and behavior:
 .TP 8
 .B \-132
 Normally, the VT102 DECCOLM escape sequence that switches between 80 and
@@ -235,10 +243,15 @@ This option indicates that \fIxterm\fP should not work around the
 bug mentioned above.
 .TP 8
 .B "\-dc"
-This option disables recognition of color-change escape sequences.
+This option disables the escape sequence to change the vt100 foreground
+and background colors, the text cursor color, the mouse cursor foreground
+and background colors and the Tektronix emulator foreground and background
+colors.
 .TP 8
 .B "\+dc"
-This option enables recognition of color-change escape sequences.
+This option enables the escape sequence to change the vt100 foreground
+and background colors, the text cursor color, the mouse cursor foreground
+and background colors and the Tektronix emulator foreground and background
 .TP 8
 .BI \-e " program \fP[ \fIarguments \fP.\|.\|. ]\fI"
 This option specifies the program (and its command line arguments) to be
@@ -499,16 +512,19 @@ It is equivalent to \fB\-borderwidth\fP or \fB\-bw\fP.
 The following standard X Toolkit command line arguments are commonly used 
 with \fIxterm\fP:
 .TP 8
-.B \-bg \fIcolor\fP
-This option specifies the color to use for the background of the window.  
-The default is ``white.''
-.TP 8
 .B \-bd \fIcolor\fP
 This option specifies the color to use for the border of the window.
 The default is ``black.''
 .TP 8
+.B \-bg \fIcolor\fP
+This option specifies the color to use for the background of the window.  
+The default is ``white.''
+.TP 8
 .B \-bw \fInumber\fP
 This option specifies the width in pixels of the border surrounding the window.
+.TP 8
+.B \-display \fIdisplay\fP
+This option specifies the X server to contact; see \fIX(1)\fP.
 .TP 8
 .B \-fg \fIcolor\fP
 This option specifies the color to use for displaying text.  The default is 
@@ -518,10 +534,22 @@ This option specifies the color to use for displaying text.  The default is
 This option specifies the font to be used for displaying normal text.  The
 default is \fIfixed\fP.
 .TP 8
+.B \-geometry \fIgeometry\fP
+This option specifies the preferred size and position of the VT102 window;
+see \fIX(1)\fP.
+.TP 8
+.B \-iconic
+This option indicates that \fIxterm\fP should ask the window manager to 
+start it as an icon rather than as the normal window.
+.TP 8
 .B \-name \fIname\fP
 This option specifies the application name under which resources are to be
 obtained, rather than the default executable file name.
 \fIName\fP should not contain ``.'' or ``*'' characters.
+.TP 8
+.B \-rv
+This option indicates that reverse video should be simulated by swapping
+the foreground and background colors.
 .TP 8
 .B \-title \fIstring\fP
 This option specifies the window title string, which may be displayed by
@@ -529,35 +557,9 @@ window managers if the user so chooses.  The default title is the command
 line specified after the \fB\-e\fP option, if any, otherwise the application
 name.
 .TP 8
-.B \-rv
-This option indicates that reverse video should be simulated by swapping
-the foreground and background colors.
-.TP 8
-.B \-geometry \fIgeometry\fP
-This option specifies the preferred size and position of the VT102 window;
-see \fIX(1)\fP.
-.TP 8
-.B \-display \fIdisplay\fP
-This option specifies the X server to contact; see \fIX(1)\fP.
-.TP 8
 .B \-xrm \fIresourcestring\fP
 This option specifies a resource string to be used.  This is especially
 useful for setting resources that do not have separate command line options.
-.TP 8
-.B \-iconic
-This option indicates that \fIxterm\fP should ask the window manager to 
-start it as an icon rather than as the normal window.
-.TP 8
-.B \-dc
-This option disables the escape sequence to change the vt100 foreground
-and background colors, the text cursor color, the mouse cursor foreground
-and background colors and the Tektronix emulator foreground and background
-colors.
-.TP 8
-.B \+dc
-This option enables the escape sequence to change the vt100 foreground
-and background colors, the text cursor color, the mouse cursor foreground
-and background colors and the Tektronix emulator foreground and background
 .SH RESOURCES
 The program understands all of the core X Toolkit resource names and
 classes as well as:
@@ -569,6 +571,18 @@ It is not necessarily obeyed by all window managers.
 .TP 8
 .B "iconName (\fPclass\fB IconName)"
 Specifies the icon name.  The default is the application name.
+.TP 8
+.B "sunFunctionKeys (\fPclass\fB SunFunctionKeys)"
+Specifies whether or not Sun Function Key escape codes should be generated for
+function keys instead of standard escape sequences.
+.TP 8
+.B "sunKeyboard (\fPclass\fB SunKeyboard)"
+Specifies whether or not Sun/PC keyboard layout should be assumed rather
+than DEC VT220.
+This causes the keypad `+' to be mapped to `,'.
+and
+CTRL-F1 to F13, CTRL-F2 to F14, etc.
+.\".in -1in
 .TP 8
 .B "termName (\fPclass\fB TermName)"
 Specifies the terminal type name to be set in the TERM environment variable.
@@ -594,18 +608,6 @@ The default is ``false.''
 .B "utmpInhibit (\fPclass\fB UtmpInhibit)"
 Specifies whether or not \fIxterm\fP should try to record the user's terminal
 in \fI/etc/utmp\fP.
-.TP 8
-.B "sunFunctionKeys (\fPclass\fB SunFunctionKeys)"
-Specifies whether or not Sun Function Key escape codes should be generated for
-function keys instead of standard escape sequences.
-.TP 8
-.B "sunKeyboard (\fPclass\fB SunKeyboard)"
-Specifies whether or not Sun/PC keyboard layout should be assumed rather
-than DEC VT220.
-This causes the keypad `+' to be mapped to `,'.
-and
-CTRL-F1 to F13, CTRL-F2 to F14, etc.
-.\".in -1in
 .TP 8
 .B "waitForMap (\fPclass\fB WaitForMap)"
 Specifies whether or not \fIxterm\fP should wait for the initial window map
@@ -660,6 +662,10 @@ Specifies whether the backarrow key transmits
 a backspace
 or delete character.
 The default (backspace) is ``true.''
+.TP 8
+.B "background (\fPclass\fB Background)"
+Specifies the color to use for the background of the window.  The default is 
+``white.''
 .TP 8
 .B "bellSuppressTime (\fPclass\fB BellSuppressTime)"
 Number of milliseconds after a bell command is sent during which additional
@@ -771,6 +777,14 @@ the ``colorBDMode'' resource is enabled.
 .B "colorUL (\fPclass\fB Foreground)"
 This specifies the color to use to display underlined characters if
 the ``colorULMode'' resource is enabled.
+.\" .TP 8
+.\" .B "cursorBlinkTime (\fPclass\fB CursorBlinkTime)"
+.\" Specifies the cursor blink cycle-time
+.\" (i.e., the time to turn the cursor on and off).
+.\" The default is 0, which disables blinking.
+.TP 8
+.B "cursorColor (\fPclass\fB Foreground)"
+Specifies the color to use for the text cursor.  The default is ``black.''
 .TP 8
 .B "decTerminalID (\fPclass\fB DecTerminalID)"
 Specifies the emulation level (100=VT100, 220=VT220, etc.), used to determine
@@ -781,23 +795,10 @@ The default is 100.
 Specifies whether or not escape sequences to change colors assigned to
 different attributes are recognized.
 .TP 8
-.B "background (\fPclass\fB Background)"
-Specifies the color to use for the background of the window.  The default is 
-``white.''
-.TP 8
-.B "foreground (\fPclass\fB Foreground)"
-Specifies the color to use for displaying text in the window.  Setting the
-class name instead of the instance name is an easy way to have everything
-that would normally appear in the text color change color.  The default
-is ``black.''
-.\" .TP 8
-.\" .B "cursorBlinkTime (\fPclass\fB CursorBlinkTime)"
-.\" Specifies the cursor blink cycle-time
-.\" (i.e., the time to turn the cursor on and off).
-.\" The default is 0, which disables blinking.
-.TP 8
-.B "cursorColor (\fPclass\fB Foreground)"
-Specifies the color to use for the text cursor.  The default is ``black.''
+.B "eightBitControl (\fPclass\fB EightBitControl\fP)"
+Specifies whether or not control sequences sent by the
+terminal should be eight-bit characters or escape sequences.
+The default is ``false.''
 .TP 8
 .B "eightBitInput (\fPclass\fB EightBitInput\fP)"
 If true, Meta characters input from the keyboard are presented as a
@@ -809,11 +810,6 @@ The default is ``true.''
 .B "eightBitOutput (\fPclass\fB EightBitOutput\fP)"
 Specifies whether or not eight-bit characters sent from the host should be
 accepted as is or stripped when printed.  The default is ``true.''
-.TP 8
-.B "eightBitControl (\fPclass\fB EightBitControl\fP)"
-Specifies whether or not control sequences sent by the
-terminal should be eight-bit characters or escape sequences.
-The default is ``false.''
 .TP 8
 .B "font (\fPclass\fB Font)"
 Specifies the name of the normal font.  The default is ``fixed.''
@@ -836,6 +832,12 @@ Specifies the name of the fifth alternative font.
 .B "font6 (\fPclass\fB Font6)"
 Specifies the name of the sixth alternative font.
 .TP 8
+.B "foreground (\fPclass\fB Foreground)"
+Specifies the color to use for displaying text in the window.  Setting the
+class name instead of the instance name is an easy way to have everything
+that would normally appear in the text color change color.  The default
+is ``black.''
+.TP 8
 .B "geometry (\fPclass\fB Geometry)"
 Specifies the preferred size and position of the VT102 window.
 .TP 8
@@ -853,15 +855,15 @@ ESC F to move to the lower left corner.
 ``true'' causes \fIxterm\fP to interpret ESC F as a request to move to the
 lower left corner of the screen.  The default is ``false.''
 .TP 8
-.B "iconBorderWidth (\fPclass\fB BorderWidth)"
-Specifies the border width for the active icon window if this feature
-is compiled into xterm.  The default is 0 (no border).  Not all window
-managers will make the border visible.
-.TP 8
 .B "iconBorderColor (\fPclass\fB BorderColor)"
 Specifies the border color for the active icon window if this feature
 is compiled into xterm.  Not all window managers will make the icon
 border visible.
+.TP 8
+.B "iconBorderWidth (\fPclass\fB BorderWidth)"
+Specifies the border width for the active icon window if this feature
+is compiled into xterm.  The default is 0 (no border).  Not all window
+managers will make the border visible.
 .TP 8
 .B "iconFont (\fPclass\fB IconFont)"
 Specifies the font for the miniature active icon window, if this feature
@@ -933,10 +935,6 @@ Controls whether a form feed is sent to the printer at the end of a print
 page function.
 The default is ``false.''
 .TP 8
-.B "dynamicColors (\fPclass\fB DynamicColors)"
-Specifies whether or not dynamic modification of colors using the escape
-sequence is allowed.
-.TP 8
 .B "resizeGravity (\fPclass\fB ResizeGravity)"
 Affects the behavior when the window is resized to be taller or
 shorter.  \fBNorthWest\fP
@@ -970,11 +968,6 @@ scrollbar is turned on.  The default is 64.
 Specifies whether or not the scrollbar should be displayed.  The default is
 ``false.''
 .TP 8
-.B "scrollTtyOutput (\fPclass\fB ScrollCond)"
-Specifies whether or not output to the terminal should automatically cause
-the scrollbar to go to the bottom of the scrolling region.  The default is
-``true.''
-.TP 8
 .B "scrollKey (\fPclass\fB ScrollCond)"
 Specifies whether or not pressing a key should automatically cause the
 scrollbar to go to the bottom of the scrolling region.  The default is
@@ -983,6 +976,11 @@ scrollbar to go to the bottom of the scrolling region.  The default is
 .B "scrollLines (\fPclass\fB ScrollLines)"
 Specifies the number of lines that the \fIscroll-back\fP and
 \fIscroll-forw\fP actions should use as a default.  The default value is 1.
+.TP 8
+.B "scrollTtyOutput (\fPclass\fB ScrollCond)"
+Specifies whether or not output to the terminal should automatically cause
+the scrollbar to go to the bottom of the scrolling region.  The default is
+``true.''
 .TP 8
 .B "signalInhibit (\fPclass\fB SignalInhibit)"
 Specifies whether or not the entries in the ``Main Options'' menu for sending
@@ -1031,34 +1029,34 @@ The following resources are specified as part of the \fItek4014\fP widget
 (class \fITek4014\fP):
 .\".in +1in
 .TP 8
-.B "width (\fPclass\fB Width)"
-Specifies the width of the Tektronix window in pixels.
-.TP 8
-.B "height (\fPclass\fB Height)"
-Specifies the height of the Tektronix window in pixels.
-.TP 8
-.B "fontLarge (\fPclass\fB Font)"
-Specifies the large font to use in the Tektronix window.
-.TP 8
 .B "font2 (\fPclass\fB Font)"
 Specifies font number 2 to use in the Tektronix window.
 .TP 8
 .B "font3 (\fPclass\fB Font)"
 Specifies font number 3 to use in the Tektronix window.
 .TP 8
+.B "fontLarge (\fPclass\fB Font)"
+Specifies the large font to use in the Tektronix window.
+.TP 8
 .B "fontSmall (\fPclass\fB Font)"
 Specifies the small font to use in the Tektronix window.
-.TP 8
-.B "initialFont (\fPclass\fB InitialFont)"
-Specifies which of the four Tektronix fonts to use initially.
-Values are the same as for the \fIset-tek-text\fP action.
-The default is ``large.''
 .TP 8
 .B "ginTerminator (\fPclass\fB GinTerminator)"
 Specifies what character(s) should follow a GIN report or status report.
 The possibilities are ``none,'' which sends no terminating characters,
 ``CRonly,'' which sends CR, and ``CR&EOT,'' which sends both CR and EOT.
 The default is ``none.''
+.TP 8
+.B "height (\fPclass\fB Height)"
+Specifies the height of the Tektronix window in pixels.
+.TP 8
+.B "initialFont (\fPclass\fB InitialFont)"
+Specifies which of the four Tektronix fonts to use initially.
+Values are the same as for the \fIset-tek-text\fP action.
+The default is ``large.''
+.TP 8
+.B "width (\fPclass\fB Width)"
+Specifies the width of the Tektronix window in pixels.
 .\".in -1in
 .sp
 .PP
@@ -1565,15 +1563,39 @@ is not expected, and will cause unpredictable behavior.  The following
 actions are provided for using within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
 .TP 8
+.B "allow-send-events(\fIon/off/toggle\fP)"
+This action set or toggles the \fBallowSendEvents\fP resource and is also
+invoked by the \fBallowsends\fP entry in \fImainMenu\fP.
+.TP
+.TP 8
 .B "bell([\fIpercent\fP])"
 This action rings the keyboard bell at the specified percentage
 above or below the base volume.
+.TP 8
+.B "clear-saved-lines()"
+This action does \fBhard-reset()\fP (see above) and also clears the history
+of lines saved off the top of the screen.
+It is also invoked from the \fBclearsavedlines\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "create-menu(\fIm/v/f/t\fP)"
 This action creates one of the menus used by \fIxterm\fP,
 if it has not been previously created.
 The parameter values are the menu names:
 \fImainMenu\fP, \fIvtMenu\fP, \fIfontMenu\fP, \fItekMenu\fP, respectively.
+.TP 8
+.B "dired-button()"
+Handles a button event (other than press and release)
+by echoing the event's position
+(i.e., character line and column) in the following format:
+.sp
+.in +8
+^X ESC G <line+' '> <col+' '>
+.in -8
+.TP 8
+.B "hard-reset()"
+This action resets the scrolling region, tabs, window size, and cursor keys
+and clears the screen.  It is also invoked from the \fBhardreset\fP
+entry in \fIvtMenu\fP.
 .TP 8
 .B "ignore()"
 This action ignores the event but checks for special pointer position
@@ -1582,9 +1604,6 @@ escape sequences.
 .B "insert()"
 This action inserts the character or string associated with
 the key that was pressed.
-.TP 8
-.B "insert-seven-bit()"
-This action is a synonym for \fBinsert()\fP
 .TP 8
 .B "insert-eight-bit()"
 This action inserts an eight-bit (Meta) version of the character or string
@@ -1598,6 +1617,9 @@ significant) until one is found.  Commonly-used selections include:
 \fIPRIMARY\fP, \fISECONDARY\fP, and \fICLIPBOARD\fP.  Cut buffers are 
 typically named \fICUT_BUFFER0\fP through \fICUT_BUFFER7\fP.
 .TP 8
+.B "insert-seven-bit()"
+This action is a synonym for \fBinsert()\fP
+.TP 8
 .B "keymap(\fIname\fP)"
 This action dynamically defines a new translation table whose resource 
 name is \fIname\fP with the suffix \fIKeymap\fP (case is significant).
@@ -1608,61 +1630,13 @@ This action displays the specified popup menu.  Valid names (case is
 significant) include:  \fImainMenu\fP, \fIvtMenu\fP, \fIfontMenu\fP, 
 and \fItekMenu\fP.
 .TP 8
-.B "secure()"
-This action toggles the \fISecure Keyboard\fP mode described in the
-section named \fBSECURITY\fP, and is invoked from the \fBsecurekbd\fP
-entry in \fImainMenu\fP.
+.B "quit()"
+This action sends a SIGHUP to the subprogram and exits.  It is also invoked
+by the \fBquit\fP entry in \fImainMenu\fP.
 .TP 8
-.B "select-start()"
-This action begins text selection at the current pointer location.  See
-the section on \fBPOINTER USAGE\fP for information on making selections.
-.TP 8
-.B "select-extend()"
-This action tracks the pointer and extends the selection.  It 
-should only be bound to Motion events.
-.TP 8
-.B "select-end(\fIdestname\fP [, ...])"
-This action puts the currently selected text into all of the selections or 
-cutbuffers specified by \fIdestname\fP.
-.TP 8
-.B "select-set()"
-This action stores text that corresponds to the current selection,
-without affecting the selection mode.
-.TP 8
-.B "select-cursor-start()"
-This action is similar to \fBselect-start\fP except that it begins the
-selection at the current text cursor position.
-.TP 8
-.B "select-cursor-end(\fIdestname\fP [, ...])"
-This action is similar to \fBselect-end\fP except that it should be used
-with \fBselect-cursor-start\fP.
-.TP 8
-.B "set-vt-font(\fId/1/2/3/4/5/6/e/s\fP [,\fInormalfont\fP [, \fIboldfont\fP]])"
-This action sets the font or fonts currently being used in the VT102 window.
-The first argument is a single character that specifies the font to be 
-used: \fId\fP or \fID\fP indicate the default font (the font initially 
-used when
-\fIxterm\fP was started), \fI1\fP through \fI6\fP indicate the fonts 
-specified by the \fIfont1\fP through \fIfont6\fP resources, \fIe\fP or \fIE\fP
-indicate the normal and bold fonts that have been set through escape codes 
-(or specified as the second and third action arguments, respectively), and
-\fIs\fP or \fIS\fP indicate the font selection (as made by programs such as
-\fIxfontsel(1)\fP) indicated by the second action argument.
-.TP 8
-.B "start-extend()"
-This action is similar to \fBselect-start\fP except that the 
-selection is extended to the current pointer location.
-.TP 8
-.B "start-cursor-extend()"
-This action is similar to \fBselect-extend\fP except that the 
-selection is extended to the current text cursor position.
-.TP 8
-.B "string(\fIstring\fP)"
-This action inserts the specified text string as if it had been typed.
-Quotation is necessary if the string contains whitespace or
-non-alphanumeric characters.  If the string argument begins with the
-characters ``0x'', it is interpreted
-as a hex character constant.
+.B "redraw()"
+This action redraws the window and is also invoked by the
+\fIredraw\fP entry in \fImainMenu\fP.
 .TP 8
 .B "scroll-back(\fIcount\fP [,\fIunits\fP])"
 This action scrolls the text window backward so that text that had previously
@@ -1674,16 +1648,34 @@ indicates the number of \fIunits\fP (which may be \fIpage\fP, \fIhalfpage\fP,
 This action scrolls is similar to \fBscroll-back\fP except that it scrolls
 the other direction.
 .TP 8
-.B "allow-send-events(\fIon/off/toggle\fP)"
-This action set or toggles the \fBallowSendEvents\fP resource and is also
-invoked by the \fBallowsends\fP entry in \fImainMenu\fP.
-.TP
-.B "set-logging()"
-This action toggles the state of the logging option.
+.B "secure()"
+This action toggles the \fISecure Keyboard\fP mode described in the
+section named \fBSECURITY\fP, and is invoked from the \fBsecurekbd\fP
+entry in \fImainMenu\fP.
 .TP 8
-.B "redraw()"
-This action redraws the window and is also invoked by the
-\fIredraw\fP entry in \fImainMenu\fP.
+.B "select-cursor-end(\fIdestname\fP [, ...])"
+This action is similar to \fBselect-end\fP except that it should be used
+with \fBselect-cursor-start\fP.
+.TP 8
+.B "select-cursor-start()"
+This action is similar to \fBselect-start\fP except that it begins the
+selection at the current text cursor position.
+.TP 8
+.B "select-end(\fIdestname\fP [, ...])"
+This action puts the currently selected text into all of the selections or 
+cutbuffers specified by \fIdestname\fP.
+.TP 8
+.B "select-extend()"
+This action tracks the pointer and extends the selection.  It 
+should only be bound to Motion events.
+.TP 8
+.B "select-set()"
+This action stores text that corresponds to the current selection,
+without affecting the selection mode.
+.TP 8
+.B "select-start()"
+This action begins text selection at the current pointer location.  See
+the section on \fBPOINTER USAGE\fP for information on making selections.
 .TP 8
 .B "send-signal(\fIsigname\fP)"
 This action sends the signal named by \fIsigname\fP
@@ -1704,33 +1696,12 @@ as \fItstp\fP), \fIcont\fP
 \fIquit\fP,
 \fIalrm\fP, \fIalarm\fP (same as \fIalrm\fP) and \fIkill\fP.
 .TP 8
-.B "quit()"
-This action sends a SIGHUP to the subprogram and exits.  It is also invoked
-by the \fBquit\fP entry in \fImainMenu\fP.
+.B "set-allow132(\fIon/off/toggle\fP)"
+This action toggles the \fBc132\fP resource and is also invoked from the
+\fBallow132\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-scrollbar(\fIon/off/toggle\fP)"
-This action toggles the \fBscrollbar\fP resource and is also invoked by
-the \fBscrollbar\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set-jumpscroll(\fIon/off/toggle\fP)"
-This action toggles the \fBjumpscroll\fP resource and is also invoked by the
-\fBjumpscroll\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set-reverse-video(\fIon/off/toggle\fP)"
-This action toggles the \fIreverseVideo\fP resource and is also invoked by
-the \fBreversevideo\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set-autowrap(\fIon/off/toggle\fP)"
-This action toggles automatic wrapping of long lines and is also invoked by
-the \fBautowrap\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set-reversewrap(\fIon/off/toggle\fP)"
-This action toggles the \fBreverseWrap\fP resource and is also invoked by
-the \fBreversewrap\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set-autolinefeed(\fIon/off/toggle\fP)"
-This action toggles automatic insertion of linefeeds and is also invoked by
-the \fBautolinefeed\fP entry in \fIvtMenu\fP.
+.B "set-altscreen(\fIon/off/toggle\fP)"
+This action toggles between the alternate and current screens.
 .TP 8
 .B "set-appcursor(\fIon/off/toggle\fP)"
 This action toggles the handling Application Cursor Key mode 
@@ -1740,6 +1711,37 @@ and is also invoked by the \fBappcursor\fP entry in \fIvtMenu\fP.
 This action toggles the handling of Application Keypad mode and is also 
 invoked by the \fBappkeypad\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set-autolinefeed(\fIon/off/toggle\fP)"
+This action toggles automatic insertion of linefeeds and is also invoked by
+the \fBautolinefeed\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-autowrap(\fIon/off/toggle\fP)"
+This action toggles automatic wrapping of long lines and is also invoked by
+the \fBautowrap\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-cursesemul(\fIon/off/toggle\fP)"
+This action toggles the \fBcurses\fP resource and is also invoked from the 
+\fBcursesemul\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-jumpscroll(\fIon/off/toggle\fP)"
+This action toggles the \fBjumpscroll\fP resource and is also invoked by the
+\fBjumpscroll\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-logging()"
+This action toggles the state of the logging option.
+.TP 8
+.B "set-marginbell(\fIon/off/toggle\fP)"
+This action toggles the \fBmarginBell\fP resource and is also invoked from 
+the \fBmarginbell\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-reverse-video(\fIon/off/toggle\fP)"
+This action toggles the \fIreverseVideo\fP resource and is also invoked by
+the \fBreversevideo\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-reversewrap(\fIon/off/toggle\fP)"
+This action toggles the \fBreverseWrap\fP resource and is also invoked by
+the \fBreversewrap\fP entry in \fIvtMenu\fP.
+.TP 8
 .B "set-scroll-on-key(\fIon/off/toggle\fP)"
 This action toggles the \fBscrollKey\fP resource and is also invoked from
 the \fBscrollkey\fP entry in \fIvtMenu\fP.
@@ -1748,38 +1750,15 @@ the \fBscrollkey\fP entry in \fIvtMenu\fP.
 This action toggles the \fBscrollTtyOutput\fP resource and is also invoked
 from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-allow132(\fIon/off/toggle\fP)"
-This action toggles the \fBc132\fP resource and is also invoked from the
-\fBallow132\fP entry in \fIvtMenu\fP.
+.B "set-scrollbar(\fIon/off/toggle\fP)"
+This action toggles the \fBscrollbar\fP resource and is also invoked by
+the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-cursesemul(\fIon/off/toggle\fP)"
-This action toggles the \fBcurses\fP resource and is also invoked from the 
-\fBcursesemul\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set-visual-bell(\fIon/off/toggle\fP)"
-This action toggles the \fBvisualBell\fP resource and is also invoked
-by the \fBvisualbell\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set-marginbell(\fIon/off/toggle\fP)"
-This action toggles the \fBmarginBell\fP resource and is also invoked from 
-the \fBmarginbell\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "set-altscreen(\fIon/off/toggle\fP)"
-This action toggles between the alternate and current screens.
-.TP 8
-.B "soft-reset()"
-This action resets the scrolling region and is also invoked from the 
-\fBsoftreset\fP entry in \fIvtMenu\fP.
-.TP 8
-.B "hard-reset()"
-This action resets the scrolling region, tabs, window size, and cursor keys
-and clears the screen.  It is also invoked from the \fBhardreset\fP
-entry in \fIvtMenu\fP.
-.TP 8
-.B "clear-saved-lines()"
-This action does \fBhard-reset()\fP (see above) and also clears the history
-of lines saved off the top of the screen.
-It is also invoked from the \fBclearsavedlines\fP entry in \fIvtMenu\fP.
+.B "set-tek-text(\fIlarge/2/3/small\fP)"
+This action sets font used in the Tektronix window to the value of the 
+resources \fBtektextlarge\fP, \fBtektext2\fP, \fBtektext3\fP, and
+\fBtektextsmall\fP according to the argument.  It is also by the entries
+of the same names as the resources in \fItekMenu\fP.
 .TP 8
 .B "set-terminal-type(\fItype\fP)"
 This action directs output to either the \fIvt\fP or \fItek\fP windows,
@@ -1793,11 +1772,45 @@ visible.  It is also invoked from the \fBtekshow\fP and \fBvthide\fP entries
 in \fIvtMenu\fP and the \fBvtshow\fP and \fBtekhide\fP entries in 
 \fItekMenu\fP.
 .TP 8
-.B "set-tek-text(\fIlarge/2/3/small\fP)"
-This action sets font used in the Tektronix window to the value of the 
-resources \fBtektextlarge\fP, \fBtektext2\fP, \fBtektext3\fP, and
-\fBtektextsmall\fP according to the argument.  It is also by the entries
-of the same names as the resources in \fItekMenu\fP.
+.B "set-visual-bell(\fIon/off/toggle\fP)"
+This action toggles the \fBvisualBell\fP resource and is also invoked
+by the \fBvisualbell\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-vt-font(\fId/1/2/3/4/5/6/e/s\fP [,\fInormalfont\fP [, \fIboldfont\fP]])"
+This action sets the font or fonts currently being used in the VT102 window.
+The first argument is a single character that specifies the font to be 
+used: \fId\fP or \fID\fP indicate the default font (the font initially 
+used when
+\fIxterm\fP was started), \fI1\fP through \fI6\fP indicate the fonts 
+specified by the \fIfont1\fP through \fIfont6\fP resources, \fIe\fP or \fIE\fP
+indicate the normal and bold fonts that have been set through escape codes 
+(or specified as the second and third action arguments, respectively), and
+\fIs\fP or \fIS\fP indicate the font selection (as made by programs such as
+\fIxfontsel(1)\fP) indicated by the second action argument.
+.TP 8
+.B "soft-reset()"
+This action resets the scrolling region and is also invoked from the 
+\fBsoftreset\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "start-extend()"
+This action is similar to \fBselect-start\fP except that the 
+selection is extended to the current pointer location.
+.TP 8
+.B "start-cursor-extend()"
+This action is similar to \fBselect-extend\fP except that the 
+selection is extended to the current text cursor position.
+.TP 8
+.B "string(\fIstring\fP)"
+This action inserts the specified text string as if it had been typed.
+Quotation is necessary if the string contains whitespace or
+non-alphanumeric characters.  If the string argument begins with the
+characters ``0x'', it is interpreted
+as a hex character constant.
+.TP 8
+.B "tek-copy()"
+This action copies the escape codes used to generate the current window
+contents to a file in the current directory beginning with the name COPY.
+It is also invoked from the \fItekcopy\fP entry in \fItekMenu\fP.
 .TP 8
 .B "tek-page()"
 This action clears the Tektronix window and is also invoked by the
@@ -1806,23 +1819,6 @@ This action clears the Tektronix window and is also invoked by the
 .B "tek-reset()"
 This action resets the Tektronix window and is also invoked by the
 \fItekreset\fP entry in \fItekMenu\fP.
-.TP 8
-.B "tek-copy()"
-This action copies the escape codes used to generate the current window
-contents to a file in the current directory beginning with the name COPY.
-It is also invoked from the \fItekcopy\fP entry in \fItekMenu\fP.
-.TP 8
-.B "visual-bell()"
-This action flashes the window quickly.
-.TP 8
-.B "dired-button()"
-Handles a button event (other than press and release)
-by echoing the event's position
-(i.e., character line and column) in the following format:
-.sp
-.in +8
-^X ESC G <line+' '> <col+' '>
-.in -8
 .TP 8
 .B "vi-button()"
 Handles a button event (other than press and release)
@@ -1843,6 +1839,9 @@ The ^N (or ^P) is repeated once for each line that the event differs
 from the current line.
 The control sequence is omitted altogether if the button event is on the
 current line.
+.TP 8
+.B "visual-bell()"
+This action flashes the window quickly.
 .PP
 The Tektronix window also has the following action:
 .TP 8
@@ -1961,8 +1960,6 @@ to know if the write has succeeded.
 Many of the options are not resettable after
 .I xterm
 starts.
-.PP
-Only fixed-width, character-cell fonts are supported.
 .PP
 This program still needs to be rewritten.  It should be split into very
 modular sections, with the various emulators being completely separate
