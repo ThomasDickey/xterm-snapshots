@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.74 2001/09/09 01:07:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.75 2001/10/08 01:08:10 dickey Exp $ */
 
 /************************************************************
 
@@ -132,6 +132,10 @@ authorization.
 
 #if defined(__GNU__) || defined(__MVS__) || defined(__osf__)
 #define USE_TTY_GROUP
+#endif
+
+#if defined(__CYGWIN__)
+#define HAVE_NCURSES_TERM_H 1
 #endif
 
 #ifdef __osf__

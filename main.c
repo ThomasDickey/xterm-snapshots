@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.137 2001/09/20 01:06:35 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.138 2001/10/08 01:08:10 dickey Exp $ */
 
 
 /* main.c */
@@ -329,7 +329,6 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 
 #include <utmpx.h>
 #define setutent setutxent
-#define getutent getutxent
 #define getutid getutxid
 #define endutent endutxent
 #define pututline pututxline
@@ -599,10 +598,8 @@ struct _xttymodes {
 static int parse_tty_modes (char *s, struct _xttymodes *modelist);
 
 #ifdef USE_SYSV_UTMP
-#if (defined(AIXV3) && (OSMAJORVERSION < 4)) && !(defined(getutent) || defined(getutid) || defined(getutline))
-extern struct utmp *getutent();
+#if (defined(AIXV3) && (OSMAJORVERSION < 4)) && !(defined(getutid))
 extern struct utmp *getutid();
-extern struct utmp *getutline();
 #endif /* AIXV3 */
 
 #else	/* not USE_SYSV_UTMP */
@@ -1366,6 +1363,39 @@ ParseSccn(char *option)
 		passedPty, am_slave, code ? "OK" : "ERR"));
 	return code;
 }
+
+#ifdef USE_SYSV_UTMP
+/*
+ * From "man utmp":
+ * xterm and other terminal emulators directly create a USER_PROCESS record
+ * and generate the ut_id by using the last two letters of /dev/ttyp%c or by
+ * using p%d for /dev/pts/%d.  If they find a DEAD_PROCESS for this id, they
+ * recycle it, otherwise they create a new entry.  If they can, they will mark
+ * it as DEAD_PROCESS on exiting and it is advised that they null ut_line,
+ * ut_time, ut_user and ut_host as well.
+ *
+ * Generally ut_id allows no more than 3 characters (plus null), even if the
+ * pty implementation allows more than 3 digits.   
+ */
+static char *
+my_utmp_id(char *device)
+{
+	static char result[PTYCHARLEN + 4];
+	char *name = my_pty_name(device);
+	char *leaf = x_basename(name);
+
+	if (name == leaf) {	/* no '/' in the name */
+		int len = strlen(leaf);
+		if (PTYCHARLEN < len)
+			leaf = leaf + (len - PTYCHARLEN);
+		strcpy(result, leaf);
+	} else {
+		sprintf(result, "p%s", leaf);
+	}
+	TRACE(("my_utmp_id  (%s) -> '%s'\n", device, result));
+	return result;
+}
+#endif
 
 #ifdef USE_POSIX_SIGNALS
 
@@ -3508,13 +3538,14 @@ spawn (void)
 		(void) setutent ();
 		/* set up entry to search for */
 		bzero((char *)&utmp, sizeof(utmp));
-		(void) strncpy(utmp.ut_id, my_pty_id(ttydev), sizeof (utmp.ut_id));
+		(void) strncpy(utmp.ut_id, my_utmp_id(ttydev), sizeof (utmp.ut_id));
 
 		utmp.ut_type = DEAD_PROCESS;
 
 		/* position to entry in utmp file */
 		/* Test return value: beware of entries left behind: PSz 9 Mar 00 */
 		if (! ( utret = getutid(&utmp) ) ) {
+		    (void) setutent();
 		    utmp.ut_type = USER_PROCESS;
 		    if (! ( utret = getutid(&utmp) ) ) {
 			(void) setutent();
@@ -3522,11 +3553,11 @@ spawn (void)
 		}
 #if OPT_TRACE
 		if ( ! utret )
-		    TRACE(("getutid: NULL\n."));
+		    TRACE(("getutid: NULL\n"));
 		else
 		    TRACE(("getutid: pid=%d type=%d user=%s line=%s id=%s\n",
 			utret->ut_pid, utret->ut_type, utret->ut_user,
-			utret->ut_line, utret->ut_id ));
+			utret->ut_line, utret->ut_id));
 #endif
 
 		/* set up the new entry */
@@ -3539,7 +3570,7 @@ spawn (void)
 			       sizeof(utmp.ut_user));
 
 		/* why are we copying this string again?  (see above) */
-		(void) strncpy(utmp.ut_id, my_pty_id(ttydev), sizeof(utmp.ut_id));
+		(void) strncpy(utmp.ut_id, my_utmp_id(ttydev), sizeof(utmp.ut_id));
 		(void) strncpy (utmp.ut_line,
 			my_pty_name(ttydev), sizeof (utmp.ut_line));
 
@@ -4346,7 +4377,7 @@ Exit(int n)
 #endif /* USE_HANDSHAKE */
 	    ) {
 	    utmp.ut_type = USER_PROCESS;
-	    (void) strncpy(utmp.ut_id, my_pty_id(ttydev), sizeof(utmp.ut_id));
+	    (void) strncpy(utmp.ut_id, my_utmp_id(ttydev), sizeof(utmp.ut_id));
 	    (void) setutent();
 	    utptr = getutid(&utmp);
 	    /* write it out only if it exists, and the pid's match */

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-159
+MANIFEST for xterm, version xterm-160
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -73,6 +73,7 @@ trace.c                         debugging trace functions for 'xterm'
 trace.h                         interface of trace.c
 ttysvr.c                        simple tty server for AMOEBA port of 'xterm'
 util.c                          miscellaneous utility functions for 'xterm'
+uxterm                          wrapper script to make unicode-xterm
 version.h                       version of xterm
 vms.c                           VMS version of xterm's spawn(), etc.
 vms.h                           system headers and definitions for vms.c
