@@ -87,7 +87,7 @@ all:	$(PROGRAMS)
 .def.hin:
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
-main.o: version.h
+main.o: main.h version.h
 
 $(OBJS1) : ptyx.h xtermcfg.h
 
@@ -105,7 +105,7 @@ resize : $(OBJS2)
 	-rm -f $@
 	perl $(srcdir)/88colres.pl > $@
 
-charproc.o : @CHARPROC_DEPS@
+charproc.o : main.h @CHARPROC_DEPS@
 
 install \
 install-bin \

@@ -440,9 +440,9 @@ CF_ARG_ENABLE(wide-chars,
 AC_MSG_RESULT($enable_wchar)
 if test $enable_wchar = yes ; then
 	AC_DEFINE(OPT_WIDE_CHARS,1)
-	EXTRAHDRS="$EXTRAHDRS keysym2ucs.h"
-	EXTRASRCS="$EXTRASRCS keysym2ucs.c"
-	EXTRAOBJS="$EXTRAOBJS keysym2ucs.o"
+	EXTRAHDRS="$EXTRAHDRS charclass.h keysym2ucs.h precompose.h wcwidth.h"
+	EXTRASRCS="$EXTRASRCS charclass.c keysym2ucs.c precompose.c wcwidth.c"
+	EXTRAOBJS="$EXTRAOBJS charclass.o keysym2ucs.o precompose.o wcwidth.o"
 fi
 
 AC_MSG_CHECKING(if you want DECterm Locator support)

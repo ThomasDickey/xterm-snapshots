@@ -279,6 +279,11 @@ Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to TRUE.
 This sets classes indicated by the given ranges for using in selecting by
 words.  See the section specifying character classes.
 .TP 8
+.BI \-class " string"
+This option allows you to override \fIxterm\fP's resource class.
+Normally it is ``XTerm'', but
+can be set to another class such as ``UXTerm'' to override selected resources.
+.TP 8
 .B "\-cm"
 This option disables recognition of ANSI color-change escape sequences.
 .TP 8
@@ -338,6 +343,12 @@ This font must be the same height and width as the normal font.
 If only one of the normal or bold fonts is specified, it will be used as the
 normal font and the bold font will be produced by overstriking this font.
 The default is to do overstriking of the normal font.
+.TP 8
+.B \-fw \fIfont\fP
+This option specifies the font to be used for displaying wide text.  By default,
+it will attempt to use a font twice as wide as the font that will be used to
+draw normal text.  If no doublewidth font is found, it will improvise, by stretching 
+the normal font.
 .TP 8
 .B \-fi
 This option sets the font for active icons if that feature was compiled
@@ -1951,11 +1962,12 @@ This resource is a
 series of comma-separated
 of \fIrange\fP:\fIvalue\fP pairs.  The
 \fIrange\fP is either a single number or \fIlow\fP-\fIhigh\fP in the range of 0
-to 255, corresponding to the 8-bit code for the character or characters to be
+to 65535, corresponding to the code for the character or characters to be
 set.  The \fIvalue\fP is arbitrary, although the default table uses the
-character number of the first character occurring in the set.
+character number of the first character occurring in the set. When not in 
+UTF-8 mode, only the first 256 bytes of this table will be used.
 .PP
-The default table is
+The default table starts as follows -
 .sp
 .in +8
 .ft C			\" Courier
@@ -2341,8 +2353,8 @@ used: \fId\fP or \fID\fP indicate the default font (the font initially
 used when
 \fIxterm\fP was started), \fI1\fP through \fI6\fP indicate the fonts
 specified by the \fIfont1\fP through \fIfont6\fP resources, \fIe\fP or \fIE\fP
-indicate the normal and bold fonts that have been set through escape codes
-(or specified as the second and third action arguments, respectively), and
+indicate the normal, bold and wide fonts that have been set through escape codes
+(or specified as the second, third and fourth action arguments, respectively), and
 \fIs\fP or \fIS\fP indicate the font selection (as made by programs such as
 \fIxfontsel(1)\fP) indicated by the second action argument.
 .TP 8

@@ -99,6 +99,11 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/Xaw/XawImP.h>
 #endif
 
+#if OPT_WIDE_CHARS
+#include <wcwidth.h>
+#include <precompose.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 
@@ -529,7 +534,8 @@ Ires(XtNmenuHeight, XtCMenuHeight, screen.fullVwin.menu_height, 25),
 {XtNutf8, XtCUtf8, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.utf8_mode),
 	XtRString, defaultUTF8},
-Bres(XtNwideChars, XtCWideChars, screen.wide_chars, FALSE),
+Bres(XtNwideChars,	XtCWideChars,	screen.wide_chars,	FALSE),
+Sres(XtNwideFont,	XtCWideFont,	misc.f_w,		DEFWIDEFONT),
 #endif
 };
 
@@ -763,6 +769,8 @@ void resetCharsets(TScreen *screen)
 	    XSelectInput(XtDisplay((t)), XtWindow((t)), (s)->event_mask);	\
 	}
 
+extern int last_written_col, last_written_row;
+
 static void VTparse(void)
 {
 	/* Buffer for processing printable text */
@@ -788,6 +796,7 @@ static void VTparse(void)
 	int lastchar;		/* positive iff we had a graphic character */
 	int nextstate;
 	int laststate;
+	int last_was_wide;
 
 	/* We longjmp back to this point in VTReset() */
 	(void)setjmp(vtjmpbuf);
@@ -802,10 +811,47 @@ static void VTparse(void)
 	string_mode = 0;
 	lastchar = -1;		/* not a legal IChar */
 	nextstate = -1;		/* not a legal state */
+	last_was_wide = 0;
 
 	for( ; ; ) {
 	    int thischar = -1;
 	    c = doinput();
+
+#if OPT_WIDE_CHARS
+	    if (my_wcwidth(c) == 0) {
+		unsigned single = 0;
+		int prev, precomposed;
+
+		if (screen->curss) {
+		    dotext(screen, screen->gsets[(int)(screen->curss)],
+			   print_area, 1);
+		    screen->curss = 0;
+		    single++;
+		}
+		if (print_used > single) {
+		    dotext(screen,
+			    screen->gsets[(int)(screen->curgl)],
+			    print_area + single,
+			    print_used - single);
+		}
+		print_used = 0;
+
+		prev = getXtermCell(screen, last_written_row, last_written_col);
+		precomposed = do_precomposition(prev, c);
+
+		if (precomposed != -1) {
+		    putXtermCell(screen, last_written_row, last_written_col, precomposed);
+		    ScrnRefresh(screen, last_written_row, last_written_col, 1, 1, 1);
+		    continue;
+		} else {
+		    addXtermCombining(screen, last_written_row, last_written_col, c);
+		    if (!screen->scroll_amt)
+			ScrnRefresh(screen, last_written_row, last_written_col, 1, 1, 1);
+			/* does this suffice? */
+		    continue;
+		}
+	    }
+#endif
 
 	    /* Intercept characters for printer controller mode */
 	    if (screen->printer_controlmode == 2) {
@@ -859,6 +905,31 @@ static void VTparse(void)
 #endif
 	      nextstate = parsestate[E2A(c)];
 
+#if OPT_WIDE_CHARS
+	    /* if this character is a different width than
+	       the last one, put the previous text into
+	       the buffer and draw it now */
+
+	    if (iswide(c) != last_was_wide) {
+		unsigned single = 0;
+
+		if (screen->curss) {
+		    dotext(screen,
+			    screen->gsets[(int)(screen->curss)],
+			    print_area, 1);
+		    screen->curss = 0;
+		    single++;
+		}
+		if (print_used > single) {
+		    dotext(screen,
+			    screen->gsets[(int)(screen->curgl)],
+			    print_area + single,
+			    print_used - single);
+		}
+		print_used = 0;
+	    }
+#endif
+
 	    /*
 	     * Accumulate string for printable text.  This may be 8/16-bit
 	     * characters.
@@ -884,6 +955,9 @@ static void VTparse(void)
 		print_area = new_string;
 		print_size = new_length;
 		print_area[print_used++] = lastchar = thischar = c;
+#if OPT_WIDE_CHARS
+		last_was_wide = iswide(c);
+#endif
 		if (morePtyData(&VTbuffer)) {
 		    continue;
 		}
@@ -2598,12 +2672,17 @@ dotext(
 	IChar	*buf,		/* start of characters to process */
 	Cardinal len)		/* end */
 {
-	int this_col;		/* must be signed */
-	Cardinal n, next_col, offset, last_col;
+#if OPT_WIDE_CHARS
+	Cardinal chars_chomped;
+#else
+	int next_col, last_col, this_col;	/* must be signed */
+#endif
+	Cardinal n, offset;
 
 #if OPT_WIDE_CHARS
 	if (!screen->utf8_mode || charset == '0') /* don't translate if we use UTF-8 */
 #endif
+
 	if (!xtermCharSetOut(buf, buf+len, charset))
 		return;
 
@@ -2615,6 +2694,81 @@ dotext(
 			}
 		}
 	})
+
+
+#if OPT_WIDE_CHARS
+	for (offset = 0; offset < len; offset += chars_chomped) {
+		int width_available = screen->max_col - screen->cur_col + 1;
+		int width_here = 0, need_wrap = 0;
+		chars_chomped = 0;
+
+		if (screen->do_wrap && (term->flags & WRAPAROUND)) {
+			/* mark that we had to wrap this line */
+			ScrnSetWrapped(screen, screen->cur_row);
+			xtermAutoPrint('\n');
+			xtermIndex(screen, 1);
+			screen->cur_col = 0;
+			screen->do_wrap = 0;
+			width_available = screen->max_col - screen->cur_col + 1;
+		}
+
+		while (width_here <= width_available && chars_chomped < (len - offset)) {
+			width_here += my_wcwidth(buf[chars_chomped + offset]);
+			chars_chomped ++;
+		}
+
+		if (width_here > width_available) {
+			chars_chomped --;
+			width_here -= my_wcwidth(buf[chars_chomped + offset]);
+			need_wrap = 1;
+		}
+
+		if (width_here = 0) {
+			screen->do_wrap = 0;
+			continue;
+		}
+
+		if (chars_chomped != (len - offset)) {
+			need_wrap = 1;
+		}
+
+		/*
+		 * Split the wide characters back into separate arrays of 8-bit
+		 * characters so we can use the existing interface.
+		 *
+		 * FIXME:  If we rewrote this interface, it would involve
+		 * rewriting all of the memory-management for the screen
+		 * buffers (perhaps this is simpler).
+		 */
+		{
+			static unsigned limit;
+			static Char *hibyte, *lobyte;
+			Boolean both = False;
+			unsigned j, k;
+
+			if (chars_chomped >= limit) {
+				limit = (chars_chomped + 1) * 2;
+				lobyte = (Char *)XtRealloc((char *)lobyte, limit);
+				hibyte = (Char *)XtRealloc((char *)hibyte, limit);
+			}
+			for (j = offset; j < offset+chars_chomped; j++) {
+				k = j-offset;
+				lobyte[k] = buf[j];
+				if (buf[j] > 255) {
+					hibyte[k] = (buf[j] >> 8);
+					both = True;
+				} else {
+					hibyte[k] = 0;
+				}
+			}
+
+			WriteText(screen, PAIRED_CHARS(
+				lobyte,
+				both ? hibyte : 0), chars_chomped);
+		}
+		screen->do_wrap = need_wrap;
+	}
+#else
 
 	for (offset = 0; offset < len; offset += this_col) {
 		last_col = CurMaxCol(screen, screen->cur_row);
@@ -2636,46 +2790,9 @@ dotext(
 		}
 		next_col = screen->cur_col + this_col;
 
-#if OPT_WIDE_CHARS
-		/*
-		 * Split the wide characters back into separate arrays of 8-bit
-		 * characters so we can use the existing interface.
-		 *
-		 * FIXME:  If we rewrote this interface, it would involve
-		 * rewriting all of the memory-management for the screen
-		 * buffers (perhaps this is simpler).
-		 */
-		{
-			static unsigned limit;
-			static Char *hibyte, *lobyte;
-			Boolean both = False;
-			unsigned j, k;
-
-			if (this_col >= (int) limit) {
-				limit = (this_col + 1) * 2;
-				lobyte = (Char *)XtRealloc((char *)lobyte, limit);
-				hibyte = (Char *)XtRealloc((char *)hibyte, limit);
-			}
-			for (j = offset; j < offset+this_col; j++) {
-				k = j-offset;
-				lobyte[k] = buf[j];
-				if (buf[j] > 255) {
-					hibyte[k] = (buf[j] >> 8);
-					both = True;
-				} else {
-					hibyte[k] = 0;
-				}
-			}
-
-			WriteText(screen, PAIRED_CHARS(
-				lobyte,
-				both ? hibyte : 0), this_col);
-		}
-#else
 		WriteText(screen, PAIRED_CHARS(
 			buf+offset,
 			buf2 ? buf2+offset : 0), this_col);
-#endif
 
 		/*
 		 * the call to WriteText updates screen->cur_col.
@@ -2684,6 +2801,8 @@ dotext(
 		 */
 		screen->do_wrap = (screen->cur_col < (int)next_col);
 	}
+
+#endif
 }
 
 #if HANDLE_STRUCT_NOTIFY
@@ -2698,6 +2817,24 @@ dotext(
  */
 static int mapstate = -1;
 #endif /* HANDLE_STRUCT_NOTIFY */
+
+#if OPT_WIDE_CHARS
+int visual_width(PAIRED_CHARS(Char *str, Char *str2), Cardinal len) {
+	/* returns the visual width of a string (doublewide characters count
+	   as 2, normalwide characters count as 1) */
+	int my_len = 0;
+	while (len) {
+		int ch = *str;
+		if (str2) ch |= *str2 << 8;
+		if (str) str++;
+		if (str2) str2++;
+		if (iswide(ch)) my_len += 2;
+		else my_len++;
+		len--;
+	}
+	return my_len;
+}
+#endif
 
 /*
  * write a string str of length len onto the screen at
@@ -2720,8 +2857,9 @@ WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 		if(screen->cursor_state)
 			HideCursor();
 
-		if (flags & INSERT)
-			InsertChar(screen, len);
+		if (flags & INSERT) {
+			InsertChar(screen, visual_width(PAIRED_CHARS(str, str2), len));
+		}
 		if (!AddToRefresh(screen)) {
 			/* make sure that the correct GC is current */
 			currentGC = updatedXtermGC(screen, flags, fg_bg, False);
@@ -2762,7 +2900,7 @@ WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 		}
 	}
 	ScreenWrite(screen, PAIRED_CHARS(str, str2), flags, fg_bg, len);
-	CursorForward(screen, len);
+	CursorForward(screen, visual_width(PAIRED_CHARS(str, str2), len));
 #if OPT_ZICONBEEP
 	/* Flag icon name with "***"  on window output when iconified.
 	 */
@@ -4242,7 +4380,7 @@ static void VTInitialize (
       TRACE(("initialized UTF-8 mode\n"));
    }
    if (wnew->screen.wide_chars != False)
-      wnew->num_ptrs = (OFF_WIDEC+1);
+      wnew->num_ptrs = (OFF_COM2H+1);
 #endif
 
    wnew->screen.bold_mode = request->screen.bold_mode;
@@ -4353,13 +4491,19 @@ static void VTRealize (
 	TabReset (term->tabs);
 
 	screen->menu_font_names[fontMenu_fontdefault] = term->misc.f_n;
-	screen->fnt_norm = screen->fnt_bold = NULL;
-	if (!xtermLoadFont(screen, term->misc.f_n, term->misc.f_b, False, 0)) {
+	screen->fnt_norm = screen->fnt_bold = screen->fnt_dwd = NULL;
+	if (!xtermLoadFont(screen,
+			   VT_FONTSET(term->misc.f_n,
+				      term->misc.f_b,
+				      term->misc.f_w),
+			   False, 0)) {
 	    if (XmuCompareISOLatin1(term->misc.f_n, "fixed") != 0) {
 		fprintf (stderr,
 		     "%s:  unable to open font \"%s\", trying \"fixed\"....\n",
 		     xterm_name, term->misc.f_n);
-		(void) xtermLoadFont (screen, "fixed", NULL, False, 0);
+		(void) xtermLoadFont (screen,
+				      VT_FONTSET("fixed", NULL, NULL),
+				      False, 0);
 		screen->menu_font_names[fontMenu_fontdefault] = "fixed";
 	    }
 	}
@@ -4720,8 +4864,9 @@ static Boolean VTSetValues (
 	if(curvt->misc.f_n != newvt->misc.f_n)
 	    newvt->screen.menu_font_names[fontMenu_fontdefault] = newvt->misc.f_n;
 	if (xtermLoadFont(&newvt->screen,
-			newvt->screen.menu_font_names[curvt->screen.menu_font_number],
-			newvt->screen.menu_font_names[curvt->screen.menu_font_number],
+			VT_FONTSET(newvt->screen.menu_font_names[curvt->screen.menu_font_number],
+				   newvt->screen.menu_font_names[curvt->screen.menu_font_number],
+				   NULL),
 			TRUE, newvt->screen.menu_font_number)) {
 	    /* resizing does the redisplay, so don't ask for it here */
 	    refresh_needed = TRUE;
@@ -4776,6 +4921,10 @@ ShowCursor(void)
 #endif
 #if OPT_WIDE_CHARS
 	Char	chi = 0;
+	Char    c1h = 0;
+	Char    c1l = 0;
+	Char    c2h = 0;
+	Char    c2l = 0;
 #endif
 
 	if (screen->cursor_state == BLINKED_OFF)
@@ -4801,6 +4950,10 @@ ShowCursor(void)
 
 	if_OPT_WIDE_CHARS(screen,{
 	    chi = SCRN_BUF_WIDEC(screen, screen->cursor_row)[screen->cursor_col];
+	    c1l = SCRN_BUF_COM1L(screen, screen->cursor_row)[screen->cursor_col];
+	    c1h = SCRN_BUF_COM1H(screen, screen->cursor_row)[screen->cursor_col];
+	    c2l = SCRN_BUF_COM2L(screen, screen->cursor_row)[screen->cursor_col];
+	    c2h = SCRN_BUF_COM2H(screen, screen->cursor_row)[screen->cursor_col];
 	})
 
 	if (clo == 0
@@ -4907,6 +5060,21 @@ ShowCursor(void)
 		curXtermChrSet(screen->cur_row),
 		PAIRED_CHARS(&clo, &chi), 1);
 
+#if OPT_WIDE_CHARS
+	if (c1l || c1h) {
+		drawXtermText(screen, flags, currentGC,
+			      x, y,
+			      curXtermChrSet(screen->cur_row),
+			      PAIRED_CHARS(&c1l, &c1h), 1);
+
+		if (c2l || c2h)
+			drawXtermText(screen, flags, currentGC,
+				      x, y,
+				      curXtermChrSet(screen->cur_row),
+				      PAIRED_CHARS(&c2l, &c2h), 1);
+	}
+#endif
+
 	if (!screen->select && !screen->always_highlight) {
 		screen->box->x = x;
 		screen->box->y = y;
@@ -4928,10 +5096,15 @@ HideCursor(void)
 	GC	currentGC;
 	register int flags;
 	register int fg_bg = 0;
+	int x, y;
 	Char	clo;
 	Boolean	in_selection;
 #if OPT_WIDE_CHARS
 	Char	chi = 0;
+	Char    c1h = 0;
+	Char    c1l = 0;
+	Char    c2h = 0;
+	Char    c2l = 0;
 #endif
 
 	if (screen->cursor_state == OFF)	/* FIXME */
@@ -4959,6 +5132,10 @@ HideCursor(void)
 
 	if_OPT_WIDE_CHARS(screen,{
 	    chi = SCRN_BUF_WIDEC(screen, screen->cursor_row)[screen->cursor_col];
+	    c1l = SCRN_BUF_COM1L(screen, screen->cursor_row)[screen->cursor_col];
+	    c1h = SCRN_BUF_COM1H(screen, screen->cursor_row)[screen->cursor_col];
+	    c2l = SCRN_BUF_COM2L(screen, screen->cursor_row)[screen->cursor_col];
+	    c2h = SCRN_BUF_COM2H(screen, screen->cursor_row)[screen->cursor_col];
 	})
 
 	if (screen->cursor_row > screen->endHRow ||
@@ -4984,11 +5161,25 @@ HideCursor(void)
 	TRACE(("%s @%d, HideCursor calling drawXtermText cur(%d,%d)\n", __FILE__, __LINE__,
 		screen->cursor_row, screen->cursor_col));
 	drawXtermText(screen, flags, currentGC,
-		CurCursorX(screen, screen->cursor_row, screen->cursor_col),
-		CursorY(screen, screen->cursor_row),
+		x = CurCursorX(screen, screen->cursor_row, screen->cursor_col),
+		y = CursorY(screen, screen->cursor_row),
 		curXtermChrSet(screen->cursor_row),
 		PAIRED_CHARS(&clo, &chi), 1);
 
+#if OPT_WIDE_CHARS
+	if (c1l || c1h) {
+		drawXtermText (screen, flags, currentGC,
+				x, y,
+				curXtermChrSet(screen->cur_row),
+				PAIRED_CHARS(&c1l, &c1h), 1);
+
+		if (c2l || c2h)
+			drawXtermText (screen, flags, currentGC,
+					x, y,
+					curXtermChrSet(screen->cur_row),
+					PAIRED_CHARS(&c2l, &c2h), 1);
+	}
+#endif
 	screen->cursor_state = OFF;
 	resetXtermGC(screen, flags, in_selection);
 }
@@ -5362,7 +5553,7 @@ DoSetSelectedFont(
 	   we are a little more liberal here. */
 	if (len > 1000  ||  strchr(val, '\n'))
 	    return;
-	if (!xtermLoadFont (&term->screen, val, NULL, True, fontMenu_fontsel))
+	if (!xtermLoadFont (&term->screen, VT_FONTSET(val, NULL, NULL), True, fontMenu_fontsel))
 	    Bell(XkbBI_MinorError,0);
     }
 }
