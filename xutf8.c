@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xutf8.c,v 1.1 2001/06/18 19:09:28 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xutf8.c,v 1.2 2002/04/28 19:04:22 dickey Exp $ */
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
 
@@ -35,11 +35,12 @@ THE SOFTWARE.
 
 #ifndef X_HAVE_UTF8_STRING
 #undef XA_UTF8_STRING
-Atom _xa_utf8_string(Display *dpy)
+Atom
+_xa_utf8_string(Display * dpy)
 {
     static AtomPtr p = NULL;
 
-    if(p == NULL)
+    if (p == NULL)
 	p = XmuMakeAtom("UTF8_STRING");
 
     return XmuInternAtom(dpy, p);
@@ -49,14 +50,14 @@ Atom _xa_utf8_string(Display *dpy)
 static int
 utf8countBytes(int c)
 {
-    if(c < 0)
+    if (c < 0)
 	return 0;
 
-    if(c <= 0x7F) {
+    if (c <= 0x7F) {
 	return 1;
-    } else if(c <= 0x7FF) {
+    } else if (c <= 0x7FF) {
 	return 2;
-    } else if(c <= 0xFFFF) {
+    } else if (c <= 0xFFFF) {
 	return 3;
     } else
 	return 4;
@@ -65,17 +66,17 @@ utf8countBytes(int c)
 static void
 utf8insert(char *dest, int c, int *len_return)
 {
-    if(c < 0)
+    if (c < 0)
 	return;
 
-    if(c <= 0x7F) {
-	 dest[0] = c;
-	 *len_return = 1;
-    } else if(c <= 0x7FF) {
+    if (c <= 0x7F) {
+	dest[0] = c;
+	*len_return = 1;
+    } else if (c <= 0x7FF) {
 	dest[0] = 0xC0 | ((c >> 6) & 0x1F);
 	dest[1] = 0x80 | (c & 0x3F);
-	 *len_return = 2;
-    } else if(c <= 0xFFFF) {
+	*len_return = 2;
+    } else if (c <= 0xFFFF) {
 	dest[0] = 0xE0 | ((c >> 12) & 0x0F);
 	dest[1] = 0x80 | ((c >> 6) & 0x3F);
 	dest[2] = 0x80 | (c & 0x3F);
@@ -93,8 +94,8 @@ static int
 l1countUtf8Bytes(char *s, int len)
 {
     int l = 0;
-    while(len > 0) {
-	if((*s & 0x80) == 0)
+    while (len > 0) {
+	if ((*s & 0x80) == 0)
 	    l++;
 	else
 	    l += 2;
@@ -105,10 +106,10 @@ l1countUtf8Bytes(char *s, int len)
 }
 
 static void
-l1utf8copy (char *d, char *s, int len)
+l1utf8copy(char *d, char *s, int len)
 {
     int l;
-    while(len > 0) {
+    while (len > 0) {
 	utf8insert(d, (*s) & 0xFF, &l);
 	d += l;
 	s++;
@@ -117,22 +118,22 @@ l1utf8copy (char *d, char *s, int len)
 }
 
 static void
-utf8l1strcpy (char *d, char *s)
+utf8l1strcpy(char *d, char *s)
 {
 #define SKIP do { s++; } while(((*s & 0x80) != 0) && (*s & 0xC0) != 0xC0)
-    while(*s) {
-	if((*s & 0x80) == 0)
+    while (*s) {
+	if ((*s & 0x80) == 0)
 	    *d++ = *s++;
-	else if((*s & 0x7C) == 0x40) {
-	    if((s[1] & 0x80) == 0) {
-		 s++;            /* incorrect UTF-8 */
-		 continue;
-	    } else if((*s & 0x7C) == 0x40) {
-		 *d++ = ((*s & 0x03) << 6) | (s[1] & 0x3F);
-		 s += 2;
+	else if ((*s & 0x7C) == 0x40) {
+	    if ((s[1] & 0x80) == 0) {
+		s++;		/* incorrect UTF-8 */
+		continue;
+	    } else if ((*s & 0x7C) == 0x40) {
+		*d++ = ((*s & 0x03) << 6) | (s[1] & 0x3F);
+		s += 2;
 	    } else {
-		 *d++ = '?';
-		 SKIP;
+		*d++ = '?';
+		SKIP;
 	    }
 	} else {
 	    *d++ = '?';
@@ -149,20 +150,20 @@ utf8l1strlen(char *s)
 {
 #define SKIP do { s++; } while(((*s & 0x80) != 0) && (*s & 0xC0) != 0xC0)
     int len = 0;
-    while(*s) {
-	if((*s & 0x80) == 0) {
+    while (*s) {
+	if ((*s & 0x80) == 0) {
 	    s++;
 	    len++;
-	} else if((*s & 0x7C) == 0x40) {
-	    if((s[1] & 0x80) == 0) {
-		 s++;
-		 continue;
-	    } else if((*s & 0x7C) == 0x40) {
-		 len++;
-		 s += 2;
+	} else if ((*s & 0x7C) == 0x40) {
+	    if ((s[1] & 0x80) == 0) {
+		s++;
+		continue;
+	    } else if ((*s & 0x7C) == 0x40) {
+		len++;
+		s += 2;
 	    } else {
-		 len++;
-		 SKIP;
+		len++;
+		SKIP;
 	    }
 	} else {
 	    len++;
@@ -174,11 +175,10 @@ utf8l1strlen(char *s)
 }
 
 int
-Xutf8TextPropertyToTextList(
-    Display *dpy,
-    const XTextProperty *tp,
-    char ***list_return,
-    int *count_return)
+Xutf8TextPropertyToTextList(Display * dpy,
+			    const XTextProperty * tp,
+			    char ***list_return,
+			    int *count_return)
 {
     int utf8;
     char **list;
@@ -189,12 +189,12 @@ Xutf8TextPropertyToTextList(
     int datalen = (int) tp->nitems;
     int len;
 
-    if(tp->format != 8)
+    if (tp->format != 8)
 	return XConverterNotFound;
 
-    if(tp->encoding == XA_STRING)
+    if (tp->encoding == XA_STRING)
 	utf8 = 0;
-    else if(tp->encoding == XA_UTF8_STRING(dpy))
+    else if (tp->encoding == XA_UTF8_STRING(dpy))
 	utf8 = 1;
     else
 	return XConverterNotFound;
@@ -207,27 +207,29 @@ Xutf8TextPropertyToTextList(
 
     nelements = 1;
     for (cp = (char *) tp->value, i = datalen; i > 0; cp++, i--) {
-	if (*cp == '\0') nelements++;
+	if (*cp == '\0')
+	    nelements++;
     }
 
-    list = (char **) malloc (nelements * sizeof (char *));
-    if (!list) return XNoMemory;
+    list = (char **) malloc(nelements * sizeof(char *));
+    if (!list)
+	return XNoMemory;
 
-    if(utf8)
+    if (utf8)
 	len = datalen;
     else
-	len = l1countUtf8Bytes((char*)tp->value, datalen);
+	len = l1countUtf8Bytes((char *) tp->value, datalen);
 
-    start = (char *) malloc ((len + 1) * sizeof (char));
+    start = (char *) malloc((len + 1) * sizeof(char));
     if (!start) {
-	free ((char *) list);
+	free((char *) list);
 	return XNoMemory;
     }
 
-    if(utf8)
-	memcpy(start, (char*)tp->value, datalen);
+    if (utf8)
+	memcpy(start, (char *) tp->value, datalen);
     else
-	l1utf8copy(start, (char*)tp->value, datalen);
+	l1utf8copy(start, (char *) tp->value, datalen);
     start[len] = '\0';
 
     for (cp = start, i = len + 1, j = 0; i > 0; cp++, i--) {
@@ -245,26 +247,25 @@ Xutf8TextPropertyToTextList(
 }
 
 int
-Xutf8TextListToTextProperty(
-    Display *dpy,
-    char **list,
-    int count,
-    XICCEncodingStyle style,
-    XTextProperty *text_prop)
+Xutf8TextListToTextProperty(Display * dpy,
+			    char **list,
+			    int count,
+			    XICCEncodingStyle style,
+			    XTextProperty * text_prop)
 {
     XTextProperty proto;
     unsigned int nbytes;
     int i;
 
-    if(style != XStringStyle &&
-       style != XCompoundTextStyle &&
-       style != XStdICCTextStyle &&
-       style != XUTF8StringStyle)
+    if (style != XStringStyle &&
+	style != XCompoundTextStyle &&
+	style != XStdICCTextStyle &&
+	style != XUTF8StringStyle)
 	return XConverterNotFound;
 
-    if(style == XUTF8StringStyle) {
+    if (style == XUTF8StringStyle) {
 	for (i = 0, nbytes = 0; i < count; i++) {
-	    nbytes += (unsigned) ((list[i] ? strlen (list[i]) : 0) + 1);
+	    nbytes += (unsigned) ((list[i] ? strlen(list[i]) : 0) + 1);
 	}
     } else {
 	for (i = 0, nbytes = 0; i < count; i++) {
@@ -272,9 +273,9 @@ Xutf8TextListToTextProperty(
 	}
     }
 
-    if(style == XCompoundTextStyle)
+    if (style == XCompoundTextStyle)
 	proto.encoding = XA_COMPOUND_TEXT(dpy);
-    else if(style == XUTF8StringStyle)
+    else if (style == XUTF8StringStyle)
 	proto.encoding = XA_UTF8_STRING(dpy);
     else
 	proto.encoding = XA_STRING;
@@ -286,27 +287,29 @@ Xutf8TextListToTextProperty(
     proto.value = NULL;
 
     if (nbytes > 0) {
-	register char *buf = malloc (nbytes);
-	if (!buf) return XNoMemory;
+	register char *buf = malloc(nbytes);
+	if (!buf)
+	    return XNoMemory;
 
 	proto.value = (unsigned char *) buf;
 	for (i = 0; i < count; i++) {
 	    char *arg = list[i];
 
 	    if (arg) {
-		 if(style == XUTF8StringStyle) {
-		     strcpy(buf, arg);
-		 } else {
-		     utf8l1strcpy(buf, arg);
-		 }
-		 buf += (strlen(buf) + 1);
+		if (style == XUTF8StringStyle) {
+		    strcpy(buf, arg);
+		} else {
+		    utf8l1strcpy(buf, arg);
+		}
+		buf += (strlen(buf) + 1);
 	    } else {
 		*buf++ = '\0';
 	    }
 	}
     } else {
-	proto.value = (unsigned char *) malloc (1);	/* easier for client */
-	if (!proto.value) return XNoMemory;
+	proto.value = (unsigned char *) malloc(1);	/* easier for client */
+	if (!proto.value)
+	    return XNoMemory;
 
 	proto.value[0] = '\0';
     }
@@ -316,13 +319,12 @@ Xutf8TextListToTextProperty(
 }
 
 int
-Xutf8LookupString(
-    XIC ic GCC_UNUSED,
-    register XKeyEvent *ev,
-    char *buffer,
-    int nbytes,
-    KeySym *keysym_return,
-    Status *status_return)
+Xutf8LookupString(XIC ic GCC_UNUSED,
+		  register XKeyEvent * ev,
+		  char *buffer,
+		  int nbytes,
+		  KeySym * keysym_return,
+		  Status * status_return)
 {
     int rc;
     KeySym keysym;
@@ -331,14 +333,14 @@ Xutf8LookupString(
 
     rc = XLookupString(ev, buffer, nbytes, &keysym, NULL);
 
-    if(rc > 0) {
+    if (rc > 0) {
 	codepoint = buffer[0] & 0xFF;
     } else {
 	codepoint = keysym2ucs(keysym);
     }
 
-    if(codepoint < 0) {
-	if(keysym == None) {
+    if (codepoint < 0) {
+	if (keysym == None) {
 	    *status_return = XLookupNone;
 	} else {
 	    *status_return = XLookupKeySym;
@@ -347,14 +349,14 @@ Xutf8LookupString(
 	return 0;
     }
 
-    if(nbytes < utf8countBytes(codepoint)) {
+    if (nbytes < utf8countBytes(codepoint)) {
 	*status_return = XBufferOverflow;
 	return utf8countBytes(codepoint);
     }
 
     utf8insert(buffer, codepoint, &len);
 
-    if(keysym != None) {
+    if (keysym != None) {
 	*keysym_return = keysym;
 	*status_return = XLookupBoth;
     } else {
@@ -364,7 +366,8 @@ Xutf8LookupString(
 }
 #else /* X_HAVE_UTF8_STRING */
 /* Silence the compiler */
-void xutf8_dummy(void)
+void
+xutf8_dummy(void)
 {
     return;
 }

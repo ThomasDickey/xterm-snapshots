@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.7 2002/01/07 21:02:44 dawes Exp $
+ * $XFree86: xc/programs/xterm/xterm_io.h,v 1.8 2002/06/01 00:54:50 dickey Exp $
  */
 
 /*
@@ -59,7 +59,7 @@
 #define USE_SYSV_TERMIO
 #endif
 
-#ifdef __EMX__
+#ifdef __UNIXOS2__
 #define USE_SYSV_TERMIO
 #endif
 
@@ -180,7 +180,8 @@
 #define TIOCSPGRP (_IOW('t', 118, pid_t))
 #endif
 
-#ifdef __EMX__
+#ifdef __UNIXOS2__
+
 #define XFREE86_PTY	0x76
 
 #define XTY_TIOCSETA	0x48
@@ -199,6 +200,7 @@
 #define NCCS 11
 #endif
 
+#define TIOCCONS	108
 #define TIOCSWINSZ	113
 #define TIOCGWINSZ	117
 
@@ -219,10 +221,12 @@ struct winsize {
 	unsigned short	ws_ypixel;	/* vertical size, pixels */
 };
 
+#ifdef XTERM_MAIN
 extern int ptioctl(int fd, int func, void* data);
 #define ioctl ptioctl
+#endif
 
-#endif /* __EMX__ */
+#endif /* __UNIXOS2__ */
 
 #ifdef __hpux
 #include <sys/bsdtty.h>		/* defines TIOCSLTC */

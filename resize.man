@@ -1,8 +1,8 @@
 .\" $Xorg: resize.man,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
 .\"
-.\" updated by Thomas E. Dickey for XFree86, Februrary 1998.
+.\" updated by Thomas E. Dickey for XFree86, 1998-2002.
 .\"
-.\" $XFree86: xc/programs/xterm/resize.man,v 1.8 2001/01/27 18:21:24 dawes Exp $
+.\" $XFree86: xc/programs/xterm/resize.man,v 1.10 2002/08/17 19:52:27 dickey Exp $
 .TH RESIZE 1 __vendorversion__
 .SH NAME
 resize \- set TERMCAP and terminal settings to current xterm window size

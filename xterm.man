@@ -31,16 +31,16 @@
 .\"
 .\"
 .\" Copyright 1989  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -48,15 +48,15 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.82 2002/03/26 01:46:41 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.85 2002/08/24 18:54:39 dickey Exp $
 .\"
-.\" updated by Thomas E. Dickey for XFree86, July 1996.
+.\" updated by Thomas E. Dickey for XFree86, July 1996 - August 2002.
 .TH XTERM 1 __vendorversion__
 .SH NAME
 xterm \- terminal emulator for X
@@ -336,6 +336,13 @@ name to be the basename of the program being executed if neither \fI\-T\fP
 nor \fI\-n\fP are given on the command line.
 \fBThis must be the last option on the command line.\fP
 .TP 8
+.BI \-en " encoding"
+This options determines the encoding on which \fIxterm\fP runs.
+Encodings other than UTF-8 are supported by using \fBluit\fR.
+The \fB\-lc\fR option should be used instead of \fB\-en\fR for
+systems with locale support.
+This corresponds to the \fBlocale\fR resource.
+.TP 8
 .BI \-fb " font"
 This option specifies a font to be used when displaying bold text.
 This font must be the same height and width as the normal font.
@@ -381,7 +388,7 @@ This option specifies the font to be used for displaying wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
 draw normal text.
-If no doublewidth font is found, it will improvise, by stretching 
+If no doublewidth font is found, it will improvise, by stretching
 the normal font.
 This corresponds to the \fBwideFont\fP resource.
 .TP 8
@@ -390,7 +397,7 @@ This option specifies the font to be used for displaying bold wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
 draw bold text.
-If no doublewidth font is found, it will improvise, by stretching 
+If no doublewidth font is found, it will improvise, by stretching
 the bold font.
 This corresponds to the \fBwideBoldFont\fP resource.
 .TP 8
@@ -458,11 +465,33 @@ Some versions of \fIxterm\fP may have logging enabled.
 .B +l
 Turn logging off.
 .TP 8
+.B \-lc
+Turn on support of various encodings according to users'
+LC_CTYPE locale setting, i.e., LC_ALL, LC_CTYPE, or LANG variables.
+This is achieved by turning on UTF-8 mode and by invoking \fBluit\fR for
+conversion between locale encodings and UTF-8.  (\fBluit\fR is not
+invoked in UTF-8 locales.)  All you need is an iso10646-1 font
+regardless of your locale and encoding.
+This corresponds to the \fBlocale\fR resource.
+.sp
+The actual list of encodings which are supported is determined by \fBluit\fR.
+Consult the \fBluit\fR manual page for futher details.
+.TP 8
+.B +lc
+Turn off support of automatic selection of locale encodings.
+Conventional 8bit mode or, in UTF-8 locales or with \-u8 option,
+UTF-8 mode will be used.
+.TP 8
+.BI \-lcc " path"
+File name for the encoding converter from/to locale encodings
+and UTF-8 which is used with \-lc option or \fBlocale\fR resource.
+This corresponds to the \fBlocaleFilter\fR resource.
+.TP 8
 .B \-leftbar
 Force scrollbar to the left side of VT100 screen.
 This is the default, unless you have set the rightScrollBar resource.
 .TP 8
-.BI \-lf " filename
+.BI \-lf " filename"
 Specify the log-filename.
 See the \fB\-l\fP option.
 .TP 8
@@ -487,7 +516,7 @@ and off from the ``VT Options'' menu.
 .B +mb
 This option indicates that margin bell should not be rung.
 .TP 8
-.B "\-mc milliseconds"
+.BI \-mc " milliseconds"
 This option specifies the maximum time between multi-click selections.
 .TP 8
 .B \-mesg
@@ -652,6 +681,12 @@ When \fButf8\fP is set, xterm interprets incoming data as UTF-8.
 This sets \fBwideChars\fP as a side-effect,
 but UTF-8 mode set by this option prevents it from being turned off.
 If you must turn it on and off, use the \fBwideChars\fP resource.
+Note this option and the \fButf8\fR resource are
+overridden by the \-lc and \-en options and \fBlocale\fR resource.
+Instead, please use ``\-lc'' option or ``locale: true'' resource
+in UTF-8 locales when your operating system supports locale,
+or ``\-en UTF-8'' option or ``locale: UTF-8'' resource
+when your operating system does not support locale.
 .TP 8
 .B +u8
 This option resets the \fButf8\fP resource.
@@ -929,7 +964,7 @@ an \fIxterm\fP is started.
 Note, however, that the stty program on a given host may use different
 keywords; xterm's table is builtin.
 .TP 8
-.B "useInsertMode (\fPclass\fB UseInsertMode)
+.B "useInsertMode (\fPclass\fB UseInsertMode)"
 Force use of insert mode by adding appropriate entries to the TERMCAP
 environment variable.  This is useful if the system termcap is broken.
 The default is ``false.''
@@ -1244,7 +1279,7 @@ Specifies whether or not eight-bit characters sent from the host should be
 accepted as is or stripped when printed.  The default is ``true,''
 which means that they are accepted as is.
 .TP 8
-.B "faceName" (\fPclass\fB FaceName)"
+.B "faceName (\fPclass\fB FaceName)"
 Specify the pattern for fonts selected from the FreeType
 library if support for that library was compiled into xterm.
 There is no default.
@@ -1252,7 +1287,7 @@ If not specified,
 or if there is no match for both normal and bold fonts,
 xterm uses the \fBfont\fP and related resources.
 .TP 8
-.B "faceSize" (\fPclass\fB FaceSize)"
+.B "faceSize (\fPclass\fB FaceSize)"
 Specify the pointsize for fonts selected from the FreeType
 library if support for that library was compiled into xterm.
 The default is ``14.''
@@ -1316,7 +1351,7 @@ between the beginning of the selection and the current position.
 If ``true'', \fIxterm\fP highlights only the positions that contain text that
 can be selected.
 The default is ``false.''
-.PP
+.sp
 Depending on the way your applications write to the screen, there may
 be trailing blanks on a line.
 \fIXterm\fP stores data as it is shown on the screen.
@@ -1374,6 +1409,30 @@ Limits resizing of the screen via control sequence to a given multiple of
 the display dimensions.
 The default is ``1''.
 .TP 8
+.B "locale (\fPclass\fB Locale)"
+Specifies how to use \fBluit\fR, an encoding converter between UTF-8
+and locale encodings.  If this is ``true'', \fIxterm\fR will use the
+encoding specified by the users' LC_CTYPE locale (i.e., LC_ALL,
+LC_CTYPE, or LANG variables) as far as possible.  This is realized
+by always enabling UTF-8 mode and invoking \fBluit\fR in non-UTF-8
+locales.  If this is ``medium'', \fIxterm\fR will follow users'
+LC_CTYPE locale only for UTF-8, east Asian, and Thai locales,
+where the encodings were not supported by conventional 8bit mode
+with changing fonts.
+For other locales, \fIxterm\fR will use conventional 8bit mode.
+If this is ``no'', \fIxterm\fR will use conventional 8bit mode
+or UTF-8 mode according to \fButf8\fR resource or \-u8 option.
+Any other value such as ``UTF-8'' and ``ISO8859-2'' will be assumed
+to be an encoding name; \fBluit\fR will be invoked to support the encoding.
+The actual list of supported encodings depends on \fBluit\fR.
+The default is ``medium''.
+.TP 8
+.B "localeFilter (\fPclass\fB LocaleFilter)"
+Specifies the file name for the encoding converter from/to locale
+encodings and UTF-8 which is used with the \fB\-lc\fR option or \fBlocale\fR resource.
+The help message shown by ``xterm \-help'' lists the default value,
+which depends on your system configuration.
+.TP 8
 .B "loginShell (\fPclass\fB LoginShell)"
 Specifies whether or not the shell to be run in the window should be started
 as a login shell.  The default is ``false.''
@@ -1390,6 +1449,16 @@ sees that \fBMeta\fP is used in your key translations.
 If ``false'', Meta characters input from the keyboard are handled according
 to the \fBeightBitInput\fP resource.
 The default is ``false.''
+.TP 8
+.B "modifyCursorKeys (\fPclass\fB ModifyCursorKeys\fP)"
+Tells how to handle the special case where
+control-, shift-, alt- or meta-modifiers are used to add a parameter to
+the escape sequence returned by a cursor-key.
+Set it to 0 to use the old/obsolete behavior.
+Set it to 1 to prefix modified sequences with CSI.
+Set it to 2 to force the modifier to be the second parameter.
+Set it to 3 to mark the sequence with a '>' to hint that it is private.
+The default is ``2''.
 .TP 8
 .B "multiClickTime (\fPclass\fB MultiClickTime)"
 Specifies the maximum time in milliseconds between multi-click select
@@ -1453,6 +1522,7 @@ Specifies a shell command to which
 will open a pipe when the first
 MC (Media Copy) command is initiated.
 The default is ``lpr.''
+If the resource value is given as a blank string, the printer is disabled.
 .TP 8
 .B "printerControlMode (\fPclass\fB PrinterControlMode)"
 Specifies the printer control mode.
@@ -1563,8 +1633,8 @@ effect as the original 47 control sequence.
 .TP 8
 .B "tiXtraScroll (\fPclass\fB TiXtraScroll)"
 Specifies whether \fIxterm\fP should scroll to a new page when processing
-the \fIti\fP termcap entry, i.e., the privde modes 47, 1047 or 1049.
-This is only in effect if \fItiteInhibit\fP is ``false'',
+the \fIti\fP termcap entry, i.e., the private modes 47, 1047 or 1049.
+This is only in effect if \fItiteInhibit\fP is ``true'',
 because the intent of this option is to provide a picture of the full-screen
 application's display on the scrollback without wiping out the text that
 would be shown before the application was initialized.
@@ -1598,6 +1668,7 @@ If you set this resource, \fIxterm\fP also sets the \fBwideChars\fP resource as 
 When set via a resource, \fIxterm\fP cannot be switched via control sequences out of UTF-8 mode.
 The default is ``0'' (off).
 Any other value will turn on UTF-8 mode.
+See the \fBlocale\fR resource for non-UTF-8 locales.
 .TP 8
 .B "veryBoldColors (\fPclass\fB ColorMode)"
 Specifies whether to combine video attributes with colors specified by
@@ -1622,7 +1693,7 @@ This option specifies the font to be used for displaying bold wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
 draw bold text.
-If no doublewidth font is found, it will improvise, by stretching 
+If no doublewidth font is found, it will improvise, by stretching
 the bold font.
 .TP 8
 .B "wideChars (\fPclass\fB WideChars)"
@@ -1634,7 +1705,7 @@ This option specifies the font to be used for displaying wide text.
 By default,
 it will attempt to use a font twice as wide as the font that will be used to
 draw normal text.
-If no doublewidth font is found, it will improvise, by stretching 
+If no doublewidth font is found, it will improvise, by stretching
 the normal font.
 .TP 8
 .B "ximFont (\fPclass\fB XimFont)"
@@ -1689,6 +1760,8 @@ Specifies the width of the Tektronix window in pixels.
 The resources that may be specified for the various menus are described in
 the documentation for the Athena \fBSimpleMenu\fP widget.  The name and classes
 of the entries in each of the menus are listed below.
+Resources named "\fBline\fR\fIN\fR" where \fIN\fR is a number
+are separators with class \fBSmeLine\fR.
 .PP
 The \fImainMenu\fP has the following entries:
 .TP 8
@@ -1698,17 +1771,17 @@ This entry invokes the \fBsecure()\fP action.
 .B "allowsends (\fPclass\fB SmeBSB)"
 This entry invokes the \fBallow-send-events(toggle)\fP action.
 .TP 8
+.B "redraw (\fPclass\fB SmeBSB)"
+This entry invokes the \fBredraw()\fP action.
+.TP 8
 .B "logging (\fPclass\fB SmeBSB)"
 This entry invokes the \fBlogging(toggle)\fP action.
 .TP 8
 .B "print (\fPclass\fB SmeBSB)"
 This entry invokes the \fBprint()\fP action.
 .TP 8
-.B "redraw (\fPclass\fB SmeBSB)"
-This entry invokes the \fBredraw()\fP action.
-.TP 8
-.B "line1 (\fPclass\fB SmeLine)"
-This is a separator.
+.B "print-redir (\fPclass\fB SmeBSB)"
+This entry invokes the \fBprint-redir()\fP action.
 .TP 8
 .B "8-bit-control (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-8-bit-control(toggle)\fP action.
@@ -1740,9 +1813,6 @@ This entry invokes the \fBsun-function-keys(toggle)\fP action.
 .B "sunKeyboard (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsunKeyboard(toggle)\fP action.
 .TP 8
-.B "line2 (\fPclass\fB SmeLine)"
-This is a separator.
-.TP 8
 .B "suspend (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsend-signal(tstp)\fP action on systems that
 support job control.
@@ -1762,9 +1832,6 @@ This entry invokes the \fBsend-signal(term)\fP action.
 .TP 8
 .B "kill (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsend-signal(kill)\fP action.
-.TP 8
-.B "line3 (\fPclass\fB SmeLine)"
-This is a separator.
 .TP 8
 .B "quit (\fPclass\fB SmeBSB)"
 This entry invokes the \fBquit()\fP action.
@@ -1829,9 +1896,6 @@ compiled into \fIxterm\fP.  It is enabled only if \fIxterm\fP
 was started with the command line option +ai or the \fBactiveIcon\fP
 resource is set to ``True.''
 .TP 8
-.B "line1 (\fPclass\fB SmeLine)"
-This is a separator.
-.TP 8
 .B "softreset (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsoft-reset()\fP action.
 .TP 8
@@ -1840,9 +1904,6 @@ This entry invokes the \fBhard-reset()\fP action.
 .TP 8
 .B "clearsavedlines (\fPclass\fB SmeBSB)"
 This entry invokes the \fBclear-saved-lines()\fP action.
-.TP 8
-.B "line2 (\fPclass\fB SmeLine)"
-This is a separator.
 .TP 8
 .B "tekshow (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-visibility(tek,toggle)\fP action.
@@ -1886,9 +1947,6 @@ This entry invokes the \fBset-vt-font(e)\fP action.
 .B "fontsel (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-vt-font(s)\fP action.
 .TP 8
-.B "line1 (\fPclass\fB SmeLine)"
-This is a separator.
-.TP 8
 .B "font-linedrawing (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-font-linedrawing(s)\fP action.
 .TP 8
@@ -1910,9 +1968,6 @@ This entry invokes the \fBset-tek-text(3)\fP action.
 .B "tektextsmall (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-tek-text(s)\fP action.
 .TP 8
-.B "line1 (\fPclass\fB SmeLine)"
-This is a separator.
-.TP 8
 .B "tekpage (\fPclass\fB SmeBSB)"
 This entry invokes the \fBtek-page()\fP action.
 .TP 8
@@ -1921,9 +1976,6 @@ This entry invokes the \fBtek-reset()\fP action.
 .TP 8
 .B "tekcopy (\fPclass\fB SmeBSB)"
 This entry invokes the \fBtek-copy()\fP action.
-.TP 8
-.B "line2 (\fPclass\fB SmeLine)"
-This is a separator.
 .TP 8
 .B "vtshow (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-visibility(vt,toggle)\fP action.
@@ -2165,7 +2217,7 @@ of \fIrange\fP:\fIvalue\fP pairs.  The
 \fIrange\fP is either a single number or \fIlow\fP-\fIhigh\fP in the range of 0
 to 65535, corresponding to the code for the character or characters to be
 set.  The \fIvalue\fP is arbitrary, although the default table uses the
-character number of the first character occurring in the set. When not in 
+character number of the first character occurring in the set. When not in
 UTF-8 mode, only the first 256 bytes of this table will be used.
 .PP
 The default table starts as follows -
@@ -2183,6 +2235,7 @@ static int charClass[256] = {
 /* CAN   EM  SUB  ESC   FS   GS   RS   US */
      1,   1,   1,   1,   1,   1,   1,   1,
 /*  SP    !    "    #    $    %    &    ' */
+.\"   " <- for emacs autocolor to work well :-)
     32,  33,  34,  35,  36,  37,  38,  39,
 /*   (    )    *    +    ,    \-    .    / */
     40,  41,  42,  43,  44,  45,  46,  47,
@@ -2351,6 +2404,12 @@ and \fItekMenu\fP.
 .B "print()"
 This action prints the window and is also invoked by the
 \fIprint\fP entry in \fImainMenu\fP.
+.TP 8
+.B "print-redir()"
+This action toggles the \fBprinterControlMode\fR between 0 and 2.
+The corresponding popup menu entry is useful for switching the printer
+off if you happen to change your mind after deciding to print random
+binary files on the terminal.
 .TP 8
 .B "quit()"
 This action sends a SIGHUP to the subprogram and exits.  It is also invoked
@@ -2786,7 +2845,7 @@ If your display supports color, use this
 in your .Xdefaults file to
 automatically turn on color in \fIxterm\fP and similar applications.
 .SH "SEE ALSO"
-resize(1), X(__miscmansuffix__), pty(4), tty(4)
+resize(1), luit(1), X(__miscmansuffix__), pty(4), tty(4)
 .br
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).

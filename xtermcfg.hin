@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.40 2002/03/26 01:46:41 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.41 2002/08/17 19:52:27 dickey Exp $
  */
 
 /************************************************************
@@ -80,6 +80,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_INITIAL_ERASE	/* CF_ARG_DISABLE(initial-erase) */
 #undef OPT_INPUT_METHOD		/* CF_ARG_DISABLE(input-method) */
 #undef OPT_ISO_COLORS		/* CF_ARG_DISABLE(ansi-color) */
+#undef OPT_LUIT_PROG		/* CF_ARG_ENABLE(luit) */
 #undef OPT_MAXIMIZE		/* CF_ARG_DISABLE(maximize) */
 #undef OPT_NUM_LOCK		/* CF_ARG_DISABLE(num-lock) */
 #undef OPT_PC_COLORS		/* CF_ARG_DISABLE(pc-color) */
@@ -90,7 +91,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_TOOLBAR		/* CF_ARG_ENABLE(toolbar) */
 #undef OPT_TRACE		/* CF_ARG_ENABLE(trace) */
 #undef OPT_VT52_MODE		/* CF_ARG_DISABLE(vt52) */
-#undef OPT_WIDE_CHARS		/* CF_ARG_ENABLE(wide-chars) */
+#undef OPT_WIDE_CHARS		/* CF_ARG_OPTION(wide-chars) */
 #undef OPT_XMC_GLITCH		/* CF_ARG_ENABLE(xmc-glitch) */
 #undef OPT_ZICONBEEP		/* CF_ARG_DISABLE(ziconbeep) */
 #undef OWN_TERMINFO_DIR		/* AC_ARG_WITH(own-terminfo) */

@@ -2,7 +2,7 @@
  *	$Xorg: data.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.h,v 3.25 2001/01/17 23:46:36 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/data.h,v 3.26 2002/08/17 19:52:26 dickey Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -45,8 +45,8 @@ extern int tt_pasting;
 extern int tt_new_output;
 #define VMS_TERM_BUFFER_SIZE	500
 struct q_head {
-	int flink;
-	int blink;
+    int flink;
+    int blink;
 };
 extern struct q_head read_queue;
 #endif
@@ -89,7 +89,7 @@ extern jmp_buf VTend;
 
 #ifdef DEBUG
 extern int debug;
-#endif	/* DEBUG */
+#endif /* DEBUG */
 
 #ifdef VMS
 extern int Select_mask;
@@ -122,7 +122,6 @@ extern XtermWidget term;
 #endif
 
 #if OPT_WIDE_CHARS
-extern char defaultUTF8[];
 extern const unsigned short dec2ucs[32];
 #endif
 
