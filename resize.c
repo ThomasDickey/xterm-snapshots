@@ -2,7 +2,7 @@
  *	$Xorg: resize.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/resize.c,v 3.54 2002/10/05 17:57:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/resize.c,v 3.55 2002/12/27 21:05:23 dickey Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -193,6 +193,32 @@ static void readstring(FILE * fp, char *buf, char *str);
 #endif
 
 #define TERMCAP_SIZE 1500	/* 1023 is standard; 'screen' exceeds */
+
+#ifdef USE_TERMCAP
+static void
+print_termcap(const char *termcap)
+{
+    int ch;
+
+    putchar('\'');
+    while ((ch = *termcap++) != '\0') {
+	switch (ch & 0xff) {
+	case 127:		/* undo bug in GNU termcap */
+	    printf("^?");
+	    break;
+	case '\'':		/* must escape anyway (unlikely) */
+	    /* FALLTHRU */
+	case '!':		/* must escape for SunOS csh */
+	    putchar('\\');
+	    /* FALLTHRU */
+	default:
+	    putchar(ch);
+	    break;
+	}
+    }
+    putchar('\'');
+}
+#endif /* USE_TERMCAP */
 
 /*
    resets termcap string to reflect current screen size
@@ -437,9 +463,11 @@ main(int argc, char **argv ENVP_ARG)
     if (SHELL_BOURNE == shell_type) {
 
 #ifdef USE_TERMCAP
-	if (ok_tcap)
-	    printf("%sTERMCAP='%s';\n",
-		   setname, termcap);
+	if (ok_tcap) {
+	    printf("%sTERMCAP=", setname);
+	    print_termcap(termcap);
+	    printf(";\nexport TERMCAP;\n");
+	}
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
 	printf("%sCOLUMNS=%d;\nLINES=%d;\nexport COLUMNS LINES;\n",
@@ -449,9 +477,11 @@ main(int argc, char **argv ENVP_ARG)
     } else {			/* not Bourne shell */
 
 #ifdef USE_TERMCAP
-	if (ok_tcap)
-	    printf("set noglob;\n%ssetenv TERMCAP '%s';\nunset noglob;\n",
-		   setname, termcap);
+	if (ok_tcap) {
+	    printf("set noglob;\n%ssetenv TERMCAP ", setname);
+	    print_termcap(termcap);
+	    printf(";\nunset noglob;\n");
+	}
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
 	printf("set noglob;\n%ssetenv COLUMNS '%d';\nsetenv LINES '%d';\nunset noglob;\n",

@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.55 2002/12/08 22:31:48 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.56 2002/12/27 21:05:22 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -432,7 +432,7 @@ test "$enable_samename" = no && AC_DEFINE(OPT_SAME_NAME,0)
 
 AC_MSG_CHECKING(if you want support for session management)
 CF_ARG_DISABLE(session-mgt,
-	[  --disable-session-mgt   compile-in support for session management],
+	[  --disable-session-mgt   disable support for session management],
 	[enable_session_mgt=no],
 	[enable_session_mgt=yes])
 AC_MSG_RESULT($enable_session_mgt)
@@ -589,8 +589,9 @@ AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
 
 ###	remove from CPPFLAGS the optional features we define in xtermcfg.h
-###	that may be defined via imake:
+###	or other conflicting symbols that may be defined via imake:
 for cf_def in \
+	__STDC__ \
 	ALLOWLOGGING \
 	ALLOWLOGFILEEXEC \
 	OPT_LUIT_PROG \

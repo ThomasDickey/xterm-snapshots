@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.56 2002/12/08 22:31:49 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.57 2002/12/27 21:05:22 dickey Exp $ */
 
 /***********************************************************
 
@@ -1253,11 +1253,11 @@ main(int argc, char **argv ENVP_ARG)
     screen->inhibit = inhibit;
 
     if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
-	Error(1);
+	SysError(ERROR_F_GETFL);
     mode |= O_NDELAY;
 
     if (fcntl(screen->respond, F_SETFL, mode))
-	Error(1);
+	SysError(ERROR_F_SETFL);
 
     FD_ZERO(&pty_mask);
     FD_ZERO(&X_mask);
