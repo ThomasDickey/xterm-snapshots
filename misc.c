@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.76 2003/03/09 23:39:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.77 2003/03/23 02:01:40 dickey Exp $ */
 
 /*
  *
@@ -1200,14 +1200,14 @@ find_closest_color(Display * display, Colormap cmap, XColor * def)
     double tmp, distance, closestDistance;
     int i, closest, numFound, cmap_size;
     XColor *colortable;
-    XVisualInfo template, *visInfoPtr;
+    XVisualInfo myTemplate, *visInfoPtr;
     char *found;
     int attempts;
 
-    template.visualid = XVisualIDFromVisual(DefaultVisual(display,
-							  XDefaultScreen(display)));
+    myTemplate.visualid = XVisualIDFromVisual(DefaultVisual(display,
+							    XDefaultScreen(display)));
     visInfoPtr = XGetVisualInfo(display, (long) VisualIDMask,
-				&template, &numFound);
+				&myTemplate, &numFound);
     if (numFound < 1) {
 	/* FindClosestColor couldn't lookup visual */
 	return FALSE;
@@ -1815,7 +1815,7 @@ static void
 ChangeGroup(String attribute, char *value)
 {
     Arg args[1];
-    char *name = (value != 0) ? (char *) value : "";
+    const char *name = (value != 0) ? (char *) value : "";
 
     TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
 #if OPT_SAME_NAME
@@ -2099,8 +2099,9 @@ Panic(char *s GCC_UNUSED, int a GCC_UNUSED)
 char *
 SysErrorMsg(int n)
 {
-    register char *s = strerror(n);
-    return s ? s : "unknown error";
+    static char unknown[] = "unknown error";
+    char *s = strerror(n);
+    return s ? s : unknown;
 }
 
 void

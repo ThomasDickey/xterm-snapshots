@@ -89,9 +89,11 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.163 2003/03/09 23:39:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.164 2003/03/23 02:01:40 dickey Exp $ */
 
 /* main.c */
+
+#define RES_OFFSET(field)	XtOffsetOf(XTERM_RESOURCE, field)
 
 #include <version.h>
 #include <xterm.h>
@@ -672,62 +674,43 @@ static sigjmp_buf env;
 
 /* used by VT (charproc.c) */
 
-#define offset(field)	XtOffsetOf(XTERM_RESOURCE, field)
-
 static XtResource application_resources[] =
 {
-    {"name", "Name", XtRString, sizeof(char *),
-     offset(xterm_name), XtRString, DFT_TERMTYPE},
-    {"iconGeometry", "IconGeometry", XtRString, sizeof(char *),
-     offset(icon_geometry), XtRString, (caddr_t) NULL},
-    {XtNtitle, XtCTitle, XtRString, sizeof(char *),
-     offset(title), XtRString, (caddr_t) NULL},
-    {XtNiconName, XtCIconName, XtRString, sizeof(char *),
-     offset(icon_name), XtRString, (caddr_t) NULL},
-    {"termName", "TermName", XtRString, sizeof(char *),
-     offset(term_name), XtRString, (caddr_t) NULL},
-    {"ttyModes", "TtyModes", XtRString, sizeof(char *),
-     offset(tty_modes), XtRString, (caddr_t) NULL},
-    {"hold", "Hold", XtRBoolean, sizeof(Boolean),
-     offset(hold_screen), XtRString, "false"},
-    {"utmpInhibit", "UtmpInhibit", XtRBoolean, sizeof(Boolean),
-     offset(utmpInhibit), XtRString, "false"},
-    {"messages", "Messages", XtRBoolean, sizeof(Boolean),
-     offset(messages), XtRString, "true"},
-    {"sunFunctionKeys", "SunFunctionKeys", XtRBoolean, sizeof(Boolean),
-     offset(sunFunctionKeys), XtRString, "false"},
+    Sres("name", "Name", xterm_name, DFT_TERMTYPE),
+    Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
+    Sres(XtNtitle, XtCTitle, title, NULL),
+    Sres(XtNiconName, XtCIconName, icon_name, NULL),
+    Sres("termName", "TermName", term_name, NULL),
+    Sres("ttyModes", "TtyModes", tty_modes, NULL),
+    Bres("hold", "Hold", hold_screen, FALSE),
+    Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, FALSE),
+    Bres("messages", "Messages", messages, TRUE),
+    Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, FALSE),
 #if OPT_SUNPC_KBD
-    {"sunKeyboard", "SunKeyboard", XtRBoolean, sizeof(Boolean),
-     offset(sunKeyboard), XtRString, "false"},
+    Bres("sunKeyboard", "SunKeyboard", sunKeyboard, FALSE),
 #endif
 #if OPT_HP_FUNC_KEYS
-    {"hpFunctionKeys", "HpFunctionKeys", XtRBoolean, sizeof(Boolean),
-     offset(hpFunctionKeys), XtRString, "false"},
+    Bres("hpFunctionKeys", "HpFunctionKeys", hpFunctionKeys, FALSE),
 #endif
 #if OPT_INITIAL_ERASE
-    {"ptyInitialErase", "PtyInitialErase", XtRBoolean, sizeof(Boolean),
-     offset(ptyInitialErase), XtRString, "false"},
-    {"backarrowKeyIsErase", "BackarrowKeyIsErase", XtRBoolean, sizeof(Boolean),
-     offset(backarrow_is_erase), XtRString, "false"},
+    Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, FALSE),
+    Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, FALSE),
 #endif
-    {"waitForMap", "WaitForMap", XtRBoolean, sizeof(Boolean),
-     offset(wait_for_map), XtRString, "false"},
-    {"useInsertMode", "UseInsertMode", XtRBoolean, sizeof(Boolean),
-     offset(useInsertMode), XtRString, "false"},
+    Bres("waitForMap", "WaitForMap", wait_for_map, FALSE),
+    Bres("useInsertMode", "UseInsertMode", useInsertMode, FALSE),
 #if OPT_ZICONBEEP
-    {"zIconBeep", "ZIconBeep", XtRInt, sizeof(int),
-     offset(zIconBeep), XtRImmediate, 0},
+    Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
+#endif
+#if OPT_PTY_HANDSHAKE
+    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, TRUE),
 #endif
 #if OPT_SAME_NAME
-    {"sameName", "SameName", XtRBoolean, sizeof(Boolean),
-     offset(sameName), XtRString, "true"},
+    Bres("sameName", "SameName", sameName, TRUE),
 #endif
 #if OPT_SESSION_MGT
-    {"sessionMgt", "SessionMgt", XtRBoolean, sizeof(Boolean),
-     offset(sessionMgt), XtRString, "true"},
+    Bres("sessionMgt", "SessionMgt", sessionMgt, TRUE),
 #endif
 };
-#undef offset
 
 static char *fallback_resources[] =
 {
@@ -890,7 +873,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"-wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "off"},
 #if OPT_ZICONBEEP
-{"-ziconbeep",  "*zIconBeep",   XrmoptionSepArg,        (caddr_t) NULL},
+{"-ziconbeep", "*zIconBeep", XrmoptionSepArg, (caddr_t) NULL},
 #endif
 #if OPT_SAME_NAME
 {"-samename",	"*sameName",	XrmoptionNoArg,		(caddr_t) "on"},
@@ -956,7 +939,7 @@ static OptionHelp xtermOptions[] = {
 { "-fi fontname",          "icon font for active icon" },
 #endif /* NO_ACTIVE_ICON */
 { "-b number",             "internal border in pixels" },
-{ "-/+bc",		   "turn on/off text cursor blinking" },
+{ "-/+bc",                 "turn on/off text cursor blinking" },
 { "-bcf milliseconds",     "time text cursor is off when blinking"},
 { "-bcn milliseconds",     "time text cursor is on when blinking"},
 { "-/+bdc",                "turn off/on display of bold as color"},
@@ -966,18 +949,18 @@ static OptionHelp xtermOptions[] = {
 { "-/+cn",                 "turn on/off cut newline inhibit" },
 { "-cr color",             "text cursor color" },
 { "-/+cu",                 "turn on/off curses emulation" },
-{ "-/+dc",		   "turn off/on dynamic color selection" },
+{ "-/+dc",                 "turn off/on dynamic color selection" },
 #if OPT_HIGHLIGHT_COLOR
 { "-hc color",             "selection background color" },
 #endif
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
 #endif
-{ "-/+hold",		   "turn on/off logic that retains window after exit" },
+{ "-/+hold",               "turn on/off logic that retains window after exit" },
 #if OPT_INITIAL_ERASE
-{ "-/+ie",		   "turn on/off initialization of 'erase' from pty" },
+{ "-/+ie",                 "turn on/off initialization of 'erase' from pty" },
 #endif
-{ "-/+im",		   "use insert mode for TERMCAP" },
+{ "-/+im",                 "use insert mode for TERMCAP" },
 { "-/+j",                  "turn on/off jump scroll" },
 #if OPT_C1_PRINT
 { "-/+k8",                 "turn on/off C1-printable classification"},
@@ -992,7 +975,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+ls",                 "turn on/off login shell" },
 { "-/+mb",                 "turn on/off margin bell" },
 { "-mc milliseconds",      "multiclick time in milliseconds" },
-{ "-/+mesg",		   "forbid/allow messages" },
+{ "-/+mesg",               "forbid/allow messages" },
 { "-ms color",             "pointer color" },
 { "-nb number",            "margin bell in characters from right end" },
 { "-/+nul",                "turn off/on display of underlining" },
@@ -1005,7 +988,7 @@ static OptionHelp xtermOptions[] = {
 { "-rightbar",             "force scrollbar right (default left)" },
 { "-leftbar",              "force scrollbar left" },
 #endif
-{ "-/+rvc",		   "turn off/on display of reverse as color" },
+{ "-/+rvc",                "turn off/on display of reverse as color" },
 { "-/+sf",                 "turn on/off Sun Function Key escape codes" },
 { "-/+si",                 "turn on/off scroll-on-tty-output inhibit" },
 { "-/+sk",                 "turn on/off scroll-on-keypress" },
@@ -2540,12 +2523,12 @@ hungtty(int i GCC_UNUSED)
 }
 
 /*
- * declared outside USE_HANDSHAKE so HsSysError() callers can use
+ * declared outside OPT_PTY_HANDSHAKE so HsSysError() callers can use
  */
 static int pc_pipe[2];		/* this pipe is used for parent to child transfer */
 static int cp_pipe[2];		/* this pipe is used for child to parent transfer */
 
-#ifdef USE_HANDSHAKE
+#if OPT_PTY_HANDSHAKE
 typedef enum {			/* c == child, p == parent                        */
     PTY_BAD,			/* c->p: can't open pty slave for some reason     */
     PTY_FATALERROR,		/* c->p: we had a fatal error with the pty        */
@@ -2619,7 +2602,7 @@ first_map_occurred(void)
 {
     return;
 }
-#endif /* USE_HANDSHAKE else !USE_HANDSHAKE */
+#endif /* OPT_PTY_HANDSHAKE else !OPT_PTY_HANDSHAKE */
 
 #ifndef VMS
 extern char **environ;
@@ -2646,7 +2629,7 @@ spawn(void)
  */
 {
     register TScreen *screen = &term->screen;
-#ifdef USE_HANDSHAKE
+#if OPT_PTY_HANDSHAKE
     handshake_t handshake;
     int done;
 #endif
@@ -2686,11 +2669,9 @@ spawn(void)
     int envsize;		/* elements in new environment */
     char buf[64];
     char *TermName = NULL;
-#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
-    struct ttysize ts;
-#elif defined(TIOCSWINSZ)
-    struct winsize ws;
-#endif /* sun vs TIOCSWINSZ */
+#ifdef TTYSIZE_STRUCT
+    TTYSIZE_STRUCT ts;
+#endif
     struct passwd *pw = NULL;
     char *login_name = NULL;
 #ifdef HAVE_UTMP
@@ -2912,19 +2893,16 @@ spawn(void)
      * the program to proceed (but not to set $TERMCAP) if the termcap
      * entry is not found.
      */
-    get_termcap(TermName = resource.term_name, ptr, newtc);
-
-    /*
-     * This block is invoked only if there was no terminal name specified
-     * by the command-line option "-tn".
-     */
-    if (!TermName) {
+    if (!get_termcap(TermName = resource.term_name, ptr, newtc)) {
+	char *last = NULL;
 	TermName = *envnew;
 	while (*envnew != NULL) {
-	    if (get_termcap(*envnew, ptr, newtc)) {
+	    if ((last == NULL || strcmp(last, *envnew))
+		&& get_termcap(*envnew, ptr, newtc)) {
 		TermName = *envnew;
 		break;
 	    }
+	    last = *envnew;
 	    envnew++;
 	}
     }
@@ -2962,36 +2940,31 @@ spawn(void)
     }
 #endif /* OPT_INITIAL_ERASE */
 
-#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
-    /* tell tty how big window is */
-    if (TEK4014_ACTIVE(screen)) {
-	ts.ts_lines = 38;
-	ts.ts_cols = 81;
-    } else {
-	ts.ts_lines = screen->max_row + 1;
-	ts.ts_cols = screen->max_col + 1;
-    }
-    i = ioctl(screen->respond, TIOCSSIZE, &ts);
-    TRACE(("spawn TIOCSSIZE %dx%d return %d\n", ts.ts_lines, ts.ts_cols, i));
-#elif defined(TIOCSWINSZ)
+#ifdef TTYSIZE_STRUCT
     /* tell tty how big window is */
 #if OPT_TEK4014
     if (TEK4014_ACTIVE(screen)) {
-	ws.ws_row = 38;
-	ws.ws_col = 81;
-	ws.ws_xpixel = TFullWidth(screen);
-	ws.ws_ypixel = TFullHeight(screen);
+	TTYSIZE_ROWS(ts) = 38;
+	TTYSIZE_COLS(ts) = 81;
+#if defined(USE_STRUCT_WINSIZE)
+	ts.ws_xpixel = TFullWidth(screen);
+	ts.ws_ypixel = TFullHeight(screen);
+#endif
     } else
 #endif
     {
-	ws.ws_row = screen->max_row + 1;
-	ws.ws_col = screen->max_col + 1;
-	ws.ws_xpixel = FullWidth(screen);
-	ws.ws_ypixel = FullHeight(screen);
+	TTYSIZE_ROWS(ts) = screen->max_row + 1;
+	TTYSIZE_COLS(ts) = screen->max_col + 1;
+#if defined(USE_STRUCT_WINSIZE)
+	ts.ws_xpixel = FullWidth(screen);
+	ts.ws_ypixel = FullHeight(screen);
+#endif
     }
-    i = ioctl(screen->respond, TIOCSWINSZ, (char *) &ws);
-    TRACE(("spawn TIOCSWINSZ %dx%d return %d\n", ws.ws_row, ws.ws_col, i));
-#endif /* sun vs TIOCSWINSZ */
+    i = SET_TTYSIZE(screen->respond, ts);
+    TRACE(("spawn SET_TTYSIZE %dx%d return %d\n",
+	   TTYSIZE_ROWS(ts),
+	   TTYSIZE_COLS(ts), i));
+#endif /* TTYSIZE_STRUCT */
 
 #if defined(USE_UTEMPTER)
 #undef UTMP
@@ -3002,8 +2975,8 @@ spawn(void)
 #endif
 
     if (am_slave < 0) {
-#ifdef USE_HANDSHAKE
-	if (pipe(pc_pipe) || pipe(cp_pipe))
+#if OPT_PTY_HANDSHAKE
+	if (resource.ptyHandshake && (pipe(pc_pipe) || pipe(cp_pipe)))
 	    SysError(ERROR_FORK);
 #endif
 	TRACE(("Forking...\n"));
@@ -3057,149 +3030,158 @@ spawn(void)
 #endif /* I_PUSH */
 		tty = ptyfd;
 		close(screen->respond);
-#ifdef TIOCSWINSZ
+
+#ifdef TTYSIZE_STRUCT
 		/* tell tty how big window is */
 #if OPT_TEK4014
 		if (TEK4014_ACTIVE(screen)) {
-		    ws.ws_row = 24;
-		    ws.ws_col = 80;
-		    ws.ws_xpixel = TFullWidth(screen);
-		    ws.ws_ypixel = TFullHeight(screen);
+		    TTYSIZE_ROWS(ts) = 24;
+		    TTYSIZE_COLS(ts) = 80;
+#ifdef USE_STRUCT_WINSIZE
+		    ts.ws_xpixel = TFullWidth(screen);
+		    ts.ws_ypixel = TFullHeight(screen);
+#endif
 		} else
-#endif
+#endif /* OPT_TEK4014 */
 		{
-		    ws.ws_row = screen->max_row + 1;
-		    ws.ws_col = screen->max_col + 1;
-		    ws.ws_xpixel = FullWidth(screen);
-		    ws.ws_ypixel = FullHeight(screen);
-		}
+		    TTYSIZE_ROWS(ts) = screen->max_row + 1;
+		    TTYSIZE_COLS(ts) = screen->max_col + 1;
+#ifdef USE_STRUCT_WINSIZE
+		    ts.ws_xpixel = FullWidth(screen);
+		    ts.ws_ypixel = FullHeight(screen);
 #endif
+		}
+#endif /* TTYSIZE_STRUCT */
+
 #ifdef USE_ISPTS_FLAG
 	    } else {		/* else pty, not pts */
 #endif
 #endif /* USE_USG_PTYS */
 
-#ifdef USE_HANDSHAKE		/* warning, goes for a long ways */
-		/* close parent's sides of the pipes */
-		close(cp_pipe[0]);
-		close(pc_pipe[1]);
+#if OPT_PTY_HANDSHAKE		/* warning, goes for a long ways */
+		if (resource.ptyHandshake) {
+		    /* close parent's sides of the pipes */
+		    close(cp_pipe[0]);
+		    close(pc_pipe[1]);
 
-		/* Make sure that our sides of the pipes are not in the
-		 * 0, 1, 2 range so that we don't fight with stdin, out
-		 * or err.
-		 */
-		if (cp_pipe[1] <= 2) {
-		    if ((i = fcntl(cp_pipe[1], F_DUPFD, 3)) >= 0) {
-			(void) close(cp_pipe[1]);
-			cp_pipe[1] = i;
+		    /* Make sure that our sides of the pipes are not in the
+		     * 0, 1, 2 range so that we don't fight with stdin, out
+		     * or err.
+		     */
+		    if (cp_pipe[1] <= 2) {
+			if ((i = fcntl(cp_pipe[1], F_DUPFD, 3)) >= 0) {
+			    (void) close(cp_pipe[1]);
+			    cp_pipe[1] = i;
+			}
 		    }
-		}
-		if (pc_pipe[0] <= 2) {
-		    if ((i = fcntl(pc_pipe[0], F_DUPFD, 3)) >= 0) {
-			(void) close(pc_pipe[0]);
-			pc_pipe[0] = i;
+		    if (pc_pipe[0] <= 2) {
+			if ((i = fcntl(pc_pipe[0], F_DUPFD, 3)) >= 0) {
+			    (void) close(pc_pipe[0]);
+			    pc_pipe[0] = i;
+			}
 		    }
-		}
 
-		/* we don't need the socket, or the pty master anymore */
-		close(ConnectionNumber(screen->display));
-		close(screen->respond);
+		    /* we don't need the socket, or the pty master anymore */
+		    close(ConnectionNumber(screen->display));
+		    close(screen->respond);
 
-		/* Now is the time to set up our process group and
-		 * open up the pty slave.
-		 */
+		    /* Now is the time to set up our process group and
+		     * open up the pty slave.
+		     */
 #ifdef USE_SYSV_PGRP
 #if defined(CRAY) && (OSMAJORVERSION > 5)
-		(void) setsid();
+		    (void) setsid();
 #else
-		(void) setpgrp();
+		    (void) setpgrp();
 #endif
 #endif /* USE_SYSV_PGRP */
 
 #if defined(__QNX__) && !defined(__QNXNTO__)
-		qsetlogin(getlogin(), ttydev);
+		    qsetlogin(getlogin(), ttydev);
 #endif
-		while (1) {
+		    while (1) {
 #if defined(TIOCNOTTY) && (!defined(__GLIBC__) || (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ < 1)))
-		    if (!no_dev_tty && (tty = open("/dev/tty", O_RDWR)) >= 0) {
-			ioctl(tty, TIOCNOTTY, (char *) NULL);
-			close(tty);
-		    }
+			if (!no_dev_tty
+			    && (tty = open("/dev/tty", O_RDWR)) >= 0) {
+			    ioctl(tty, TIOCNOTTY, (char *) NULL);
+			    close(tty);
+			}
 #endif /* TIOCNOTTY && !glibc >= 2.1 */
 #ifdef CSRG_BASED
-		    (void) revoke(ttydev);
+			(void) revoke(ttydev);
 #endif
-		    if ((tty = open(ttydev, O_RDWR)) >= 0) {
+			if ((tty = open(ttydev, O_RDWR)) >= 0) {
 #if defined(CRAY) && defined(TCSETCTTY)
-			/* make /dev/tty work */
-			ioctl(tty, TCSETCTTY, 0);
+			    /* make /dev/tty work */
+			    ioctl(tty, TCSETCTTY, 0);
 #endif
 #ifdef USE_SYSV_PGRP
-			/* We need to make sure that we are actually
-			 * the process group leader for the pty.  If
-			 * we are, then we should now be able to open
-			 * /dev/tty.
-			 */
-			if ((i = open("/dev/tty", O_RDWR)) >= 0) {
-			    /* success! */
-			    close(i);
-			    break;
-			}
+			    /* We need to make sure that we are actually
+			     * the process group leader for the pty.  If
+			     * we are, then we should now be able to open
+			     * /dev/tty.
+			     */
+			    if ((i = open("/dev/tty", O_RDWR)) >= 0) {
+				/* success! */
+				close(i);
+				break;
+			    }
 #else /* USE_SYSV_PGRP */
-			break;
+			    break;
 #endif /* USE_SYSV_PGRP */
-		    }
-		    perror("open ttydev");
+			}
+			perror("open ttydev");
 #ifdef TIOCSCTTY
-		    ioctl(tty, TIOCSCTTY, 0);
+			ioctl(tty, TIOCSCTTY, 0);
 #endif
-		    /* let our master know that the open failed */
-		    handshake.status = PTY_BAD;
-		    handshake.error = errno;
-		    strcpy(handshake.buffer, ttydev);
-		    write(cp_pipe[1], (char *) &handshake,
-			  sizeof(handshake));
+			/* let our master know that the open failed */
+			handshake.status = PTY_BAD;
+			handshake.error = errno;
+			strcpy(handshake.buffer, ttydev);
+			write(cp_pipe[1], (char *) &handshake,
+			      sizeof(handshake));
 
-		    /* get reply from parent */
-		    i = read(pc_pipe[0], (char *) &handshake,
-			     sizeof(handshake));
-		    if (i <= 0) {
-			/* parent terminated */
-			exit(1);
+			/* get reply from parent */
+			i = read(pc_pipe[0], (char *) &handshake,
+				 sizeof(handshake));
+			if (i <= 0) {
+			    /* parent terminated */
+			    exit(1);
+			}
+
+			if (handshake.status == PTY_NOMORE) {
+			    /* No more ptys, let's shutdown. */
+			    exit(1);
+			}
+
+			/* We have a new pty to try */
+			free(ttydev);
+			ttydev = (char *) malloc((unsigned)
+						 (strlen(handshake.buffer) + 1));
+			if (ttydev == NULL) {
+			    SysError(ERROR_SPREALLOC);
+			}
+			strcpy(ttydev, handshake.buffer);
 		    }
 
-		    if (handshake.status == PTY_NOMORE) {
-			/* No more ptys, let's shutdown. */
-			exit(1);
+		    /* use the same tty name that everyone else will use
+		     * (from ttyname)
+		     */
+		    if ((ptr = ttyname(tty)) != 0) {
+			/* it may be bigger */
+			ttydev = (char *) realloc(ttydev,
+						  (unsigned) (strlen(ptr) + 1));
+			if (ttydev == NULL) {
+			    SysError(ERROR_SPREALLOC);
+			}
+			(void) strcpy(ttydev, ptr);
 		    }
-
-		    /* We have a new pty to try */
-		    free(ttydev);
-		    ttydev = (char *) malloc((unsigned)
-					     (strlen(handshake.buffer) + 1));
-		    if (ttydev == NULL) {
-			SysError(ERROR_SPREALLOC);
-		    }
-		    strcpy(ttydev, handshake.buffer);
 		}
+#endif /* OPT_PTY_HANDSHAKE -- from near fork */
 
-		/* use the same tty name that everyone else will use
-		 * (from ttyname)
-		 */
-		if ((ptr = ttyname(tty)) != 0) {
-		    /* it may be bigger */
-		    ttydev = (char *) realloc(ttydev,
-					      (unsigned) (strlen(ptr) + 1));
-		    if (ttydev == NULL) {
-			SysError(ERROR_SPREALLOC);
-		    }
-		    (void) strcpy(ttydev, ptr);
-		}
 #ifdef USE_ISPTS_FLAG
 	    }			/* end of IsPts else clause */
 #endif
-
-#endif /* USE_HANDSHAKE -- from near fork */
 
 #ifdef USE_TTY_GROUP
 	    {
@@ -3743,10 +3725,10 @@ spawn(void)
 	    /* write out the entry */
 	    if (!resource.utmpInhibit) {
 		errno = 0;
-		pututline(&utmp);
+		rc = (pututline(&utmp) == 0);
 		TRACE(("pututline: %d %d %s\n",
 		       resource.utmpInhibit,
-		       errno, strerror(errno)));
+		       errno, (rc != 0) ? strerror(errno) : ""));
 	    }
 #ifdef WTMP
 #if defined(SVR4) || defined(SCO325)
@@ -3815,9 +3797,11 @@ spawn(void)
 	    /* Let's pass our ttyslot to our parent so that it can
 	     * clean up after us.
 	     */
-#ifdef USE_HANDSHAKE
-	    handshake.tty_slot = tslot;
-#endif /* USE_HANDSHAKE */
+#if OPT_PTY_HANDSHAKE
+	    if (resource.ptyHandshake) {
+		handshake.tty_slot = tslot;
+	    }
+#endif /* OPT_PTY_HANDSHAKE */
 #endif /* USE_SYSV_UTMP */
 
 #ifdef USE_LASTLOG
@@ -3846,15 +3830,17 @@ spawn(void)
 	    }
 #endif
 
-#ifdef USE_HANDSHAKE
+#if OPT_PTY_HANDSHAKE
 	    /* Let our parent know that we set up our utmp entry
 	     * so that it can clean up after us.
 	     */
-	    handshake.status = UTMP_ADDED;
-	    handshake.error = 0;
-	    strcpy(handshake.buffer, ttydev);
-	    (void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
-#endif /* USE_HANDSHAKE */
+	    if (resource.ptyHandshake) {
+		handshake.status = UTMP_ADDED;
+		handshake.error = 0;
+		strcpy(handshake.buffer, ttydev);
+		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
+	    }
+#endif /* OPT_PTY_HANDSHAKE */
 #endif /* HAVE_UTMP */
 
 	    (void) setgid(screen->gid);
@@ -3869,43 +3855,44 @@ spawn(void)
 	    if (setuid(screen->uid)) {
 		SysError(ERROR_SETUID);
 	    }
-#ifdef USE_HANDSHAKE
-	    /* mark the pipes as close on exec */
-	    fcntl(cp_pipe[1], F_SETFD, 1);
-	    fcntl(pc_pipe[0], F_SETFD, 1);
+#if OPT_PTY_HANDSHAKE
+	    if (resource.ptyHandshake) {
+		/* mark the pipes as close on exec */
+		fcntl(cp_pipe[1], F_SETFD, 1);
+		fcntl(pc_pipe[0], F_SETFD, 1);
 
-	    /* We are at the point where we are going to
-	     * exec our shell (or whatever).  Let our parent
-	     * know we arrived safely.
-	     */
-	    handshake.status = PTY_GOOD;
-	    handshake.error = 0;
-	    (void) strcpy(handshake.buffer, ttydev);
-	    (void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
+		/* We are at the point where we are going to
+		 * exec our shell (or whatever).  Let our parent
+		 * know we arrived safely.
+		 */
+		handshake.status = PTY_GOOD;
+		handshake.error = 0;
+		(void) strcpy(handshake.buffer, ttydev);
+		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
 
-	    if (waiting_for_initial_map) {
-		i = read(pc_pipe[0], (char *) &handshake,
-			 sizeof(handshake));
-		if (i != sizeof(handshake) ||
-		    handshake.status != PTY_EXEC) {
-		    /* some very bad problem occurred */
-		    exit(ERROR_PTY_EXEC);
-		}
-		if (handshake.rows > 0 && handshake.cols > 0) {
-		    screen->max_row = handshake.rows;
-		    screen->max_col = handshake.cols;
-#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
-		    ts.ts_lines = screen->max_row + 1;
-		    ts.ts_cols = screen->max_col + 1;
-#elif defined(TIOCSWINSZ)
-		    ws.ws_row = screen->max_row + 1;
-		    ws.ws_col = screen->max_col + 1;
-		    ws.ws_xpixel = FullWidth(screen);
-		    ws.ws_ypixel = FullHeight(screen);
-#endif /* sun vs TIOCSWINSZ */
+		if (waiting_for_initial_map) {
+		    i = read(pc_pipe[0], (char *) &handshake,
+			     sizeof(handshake));
+		    if (i != sizeof(handshake) ||
+			handshake.status != PTY_EXEC) {
+			/* some very bad problem occurred */
+			exit(ERROR_PTY_EXEC);
+		    }
+		    if (handshake.rows > 0 && handshake.cols > 0) {
+			screen->max_row = handshake.rows;
+			screen->max_col = handshake.cols;
+#ifdef TTYSIZE_STRUCT
+			TTYSIZE_ROWS(ts) = screen->max_row + 1;
+			TTYSIZE_COLS(ts) = screen->max_col + 1;
+#if defined(USE_STRUCT_WINSIZE)
+			ts.ws_xpixel = FullWidth(screen);
+			ts.ws_ypixel = FullHeight(screen);
+#endif
+#endif /* TTYSIZE_STRUCT */
+		    }
 		}
 	    }
-#endif /* USE_HANDSHAKE */
+#endif /* OPT_PTY_HANDSHAKE */
 
 #ifdef USE_SYSV_ENVVARS
 	    {
@@ -3962,17 +3949,16 @@ spawn(void)
 #endif /* USE_SYSV_ENVVARS */
 
 	    /* need to reset after all the ioctl bashing we did above */
-#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
-	    i = ioctl(0, TIOCSSIZE, &ts);
-	    TRACE(("spawn TIOCSSIZE %dx%d return %d\n",
-		   ts.ts_lines, ts.ts_cols, i));
-#elif defined(TIOCSWINSZ)
-	    i = ioctl(0, TIOCSWINSZ, (char *) &ws);
-	    TRACE(("spawn TIOCSWINSZ %dx%d return %d\n",
-		   ws.ws_row, ws.ws_col, i));
-#else
-	    TRACE(("spawn cannot tell pty its size\n"));
-#endif /* sun vs TIOCSWINSZ */
+#if OPT_PTY_HANDSHAKE
+	    if (resource.ptyHandshake) {
+#ifdef TTYSIZE_STRUCT
+		i = SET_TTYSIZE(0, ts);
+		TRACE(("spawn SET_TTYSIZE %dx%d return %d\n",
+		       TTYSIZE_ROWS(ts),
+		       TTYSIZE_COLS(ts), i));
+#endif /* TTYSIZE_STRUCT */
+	    }
+#endif /* OPT_PTY_HANDSHAKE */
 	    signal(SIGHUP, SIG_DFL);
 
 #ifdef HAVE_UTMP
@@ -4041,80 +4027,84 @@ spawn(void)
 	    exit(ERROR_EXEC);
 	}
 	/* end if in child after fork */
-#ifdef USE_HANDSHAKE
-	/* Parent process.  Let's handle handshaked requests to our
-	 * child process.
-	 */
+#if OPT_PTY_HANDSHAKE
+	if (resource.ptyHandshake) {
+	    /* Parent process.  Let's handle handshaked requests to our
+	     * child process.
+	     */
 
-	/* close childs's sides of the pipes */
-	close(cp_pipe[1]);
-	close(pc_pipe[0]);
+	    /* close childs's sides of the pipes */
+	    close(cp_pipe[1]);
+	    close(pc_pipe[0]);
 
-	for (done = 0; !done;) {
-	    if (read(cp_pipe[0], (char *) &handshake, sizeof(handshake)) <= 0) {
-		/* Our child is done talking to us.  If it terminated
-		 * due to an error, we will catch the death of child
-		 * and clean up.
-		 */
-		break;
-	    }
-
-	    switch (handshake.status) {
-	    case PTY_GOOD:
-		/* Success!  Let's free up resources and
-		 * continue.
-		 */
-		done = 1;
-		break;
-
-	    case PTY_BAD:
-		/* The open of the pty failed!  Let's get
-		 * another one.
-		 */
-		(void) close(screen->respond);
-		if (get_pty(&screen->respond, XDisplayString(screen->display))) {
-		    /* no more ptys! */
-		    fprintf(stderr,
-			    "%s: child process can find no available ptys: %s\n",
-			    xterm_name, strerror(errno));
-		    handshake.status = PTY_NOMORE;
-		    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
-		    exit(ERROR_PTYS);
+	    for (done = 0; !done;) {
+		if (read(cp_pipe[0],
+			 (char *) &handshake,
+			 sizeof(handshake)) <= 0) {
+		    /* Our child is done talking to us.  If it terminated
+		     * due to an error, we will catch the death of child
+		     * and clean up.
+		     */
+		    break;
 		}
-		handshake.status = PTY_NEW;
-		(void) strcpy(handshake.buffer, ttydev);
-		write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
-		break;
 
-	    case PTY_FATALERROR:
-		errno = handshake.error;
+		switch (handshake.status) {
+		case PTY_GOOD:
+		    /* Success!  Let's free up resources and
+		     * continue.
+		     */
+		    done = 1;
+		    break;
+
+		case PTY_BAD:
+		    /* The open of the pty failed!  Let's get
+		     * another one.
+		     */
+		    (void) close(screen->respond);
+		    if (get_pty(&screen->respond, XDisplayString(screen->display))) {
+			/* no more ptys! */
+			fprintf(stderr,
+				"%s: child process can find no available ptys: %s\n",
+				xterm_name, strerror(errno));
+			handshake.status = PTY_NOMORE;
+			write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+			exit(ERROR_PTYS);
+		    }
+		    handshake.status = PTY_NEW;
+		    (void) strcpy(handshake.buffer, ttydev);
+		    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+		    break;
+
+		case PTY_FATALERROR:
+		    errno = handshake.error;
+		    close(cp_pipe[0]);
+		    close(pc_pipe[1]);
+		    SysError(handshake.fatal_error);
+		    /*NOTREACHED */
+
+		case UTMP_ADDED:
+		    /* The utmp entry was set by our slave.  Remember
+		     * this so that we can reset it later.
+		     */
+		    added_utmp_entry = True;
+#ifndef	USE_SYSV_UTMP
+		    tslot = handshake.tty_slot;
+#endif /* USE_SYSV_UTMP */
+		    free(ttydev);
+		    ttydev = x_strdup(handshake.buffer);
+		    break;
+		default:
+		    fprintf(stderr, "%s: unexpected handshake status %d\n",
+			    xterm_name, handshake.status);
+		}
+	    }
+	    /* close our sides of the pipes */
+	    if (!waiting_for_initial_map) {
 		close(cp_pipe[0]);
 		close(pc_pipe[1]);
-		SysError(handshake.fatal_error);
-		/*NOTREACHED */
-
-	    case UTMP_ADDED:
-		/* The utmp entry was set by our slave.  Remember
-		 * this so that we can reset it later.
-		 */
-		added_utmp_entry = True;
-#ifndef	USE_SYSV_UTMP
-		tslot = handshake.tty_slot;
-#endif /* USE_SYSV_UTMP */
-		free(ttydev);
-		ttydev = x_strdup(handshake.buffer);
-		break;
-	    default:
-		fprintf(stderr, "%s: unexpected handshake status %d\n",
-			xterm_name, handshake.status);
 	    }
 	}
-	/* close our sides of the pipes */
-	if (!waiting_for_initial_map) {
-	    close(cp_pipe[0]);
-	    close(pc_pipe[1]);
-	}
-#endif /* USE_HANDSHAKE */
+#endif /* OPT_PTY_HANDSHAKE */
     }
 
     /* end if no slave */
@@ -4197,9 +4187,9 @@ Exit(int n)
 
     /* cleanup the utmp entry we forged earlier */
     if (!resource.utmpInhibit
-#ifdef USE_HANDSHAKE		/* without handshake, no way to know */
-	&& added_utmp_entry
-#endif /* USE_HANDSHAKE */
+#if OPT_PTY_HANDSHAKE		/* without handshake, no way to know */
+	&& (resource.ptyHandshake && added_utmp_entry)
+#endif /* OPT_PTY_HANDSHAKE */
 	) {
 #ifdef __OpenBSD__
 	if (utmpGid != -1) {

@@ -2,10 +2,10 @@
  *	$Xorg: data.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.c,v 3.25 2002/12/08 22:31:48 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.c,v 3.26 2003/03/23 02:01:40 dickey Exp $ */
 
 /*
- * Copyright 2002 by Thomas E. Dickey
+ * Copyright 2002,2003 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -151,11 +151,11 @@ const unsigned short dec2ucs[32] =
     0x250c,			/* box drawings light down and right          */
     0x2514,			/* box drawings light up and right            */
     0x253c,			/* box drawings light vertical and horizontal */
-    UCS_REPL,			/* replacement character                      */
-    UCS_REPL,			/* replacement character                      */
+    0x23ba,			/* box drawings scan 1                        */
+    0x23bb,			/* box drawings scan 3                        */
     0x2500,			/* box drawings light horizontal              */
-    UCS_REPL,			/* replacement character                      */
-    UCS_REPL,			/* replacement character                      */
+    0x23bc,			/* box drawings scan 7                        */
+    0x23bd,			/* box drawings scan 9                        */
     0x251c,			/* box drawings light vertical and right      */
     0x2524,			/* box drawings light vertical and left       */
     0x2534,			/* box drawings light up and horizontal       */

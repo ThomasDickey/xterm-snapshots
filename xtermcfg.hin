@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.43 2003/03/09 23:39:15 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.44 2003/03/23 02:01:41 dickey Exp $
  */
 
 /************************************************************
@@ -66,7 +66,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #undef HAVE_X11_SUNKEYSYM_H	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
 #undef HAVE_X11_XPOLL_H		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
-#undef HAVE_XKBBELL		/* AC_CHECK_FUNCS(XkbBell) */
+#undef HAVE_XKB_BELL_EXT	/* CF_XKB_BELL_EXT */
 #undef NO_ACTIVE_ICON		/* CF_ARG_DISABLE(active-icon) */
 #undef OPT_256_COLORS		/* CF_ARG_ENABLE(256-color) */
 #undef OPT_88_COLORS		/* CF_ARG_ENABLE(88-color) */
@@ -87,6 +87,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_MAXIMIZE		/* CF_ARG_DISABLE(maximize) */
 #undef OPT_NUM_LOCK		/* CF_ARG_DISABLE(num-lock) */
 #undef OPT_PC_COLORS		/* CF_ARG_DISABLE(pc-color) */
+#undef OPT_PTY_HANDSHAKE	/* CF_ARG_ENABLE(pty-handshake) */
 #undef OPT_SAME_NAME
 #undef OPT_SCO_FUNC_KEYS	/* CF_ARG_ENABLE(sco-fkeys) */
 #undef OPT_TCAP_QUERY
@@ -122,8 +123,13 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef ut_xstatus		/* CF_UTMP_UT_XSTATUS */
 #undef ut_xtime			/* CF_UTMP_UT_XTIME */
 
+/*
+ * g++ support for __attribute__() is haphazard.
+ */
+#ifndef __cplusplus
 #undef GCC_PRINTF
 #undef GCC_UNUSED
+#endif
 
 #ifdef USE_OK_BCOPY
 #define memmove(d,s,n) bcopy(s,d,n)

@@ -45,7 +45,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.50 2003/03/09 23:39:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.51 2003/03/23 02:01:40 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -452,10 +452,10 @@ create_menu(Widget w, XtermWidget xtw, MenuIndex num)
     return m;
 }
 
-static int
+static MenuIndex
 indexOfMenu(String menuName)
 {
-    int me;
+    MenuIndex me;
     switch (*menuName) {
     case 'm':
 	me = mainMenu;
@@ -472,7 +472,7 @@ indexOfMenu(String menuName)
 	break;
 #endif
     default:
-	me = -1;
+	me = noMenu;
     }
     return (me);
 }
@@ -489,7 +489,7 @@ domenu(Widget w GCC_UNUSED,
        Cardinal * param_count)	/* 0 or 1 */
 {
     TScreen *screen = &term->screen;
-    int me;
+    MenuIndex me;
     Boolean created = False;
     Widget mw;
 
@@ -498,14 +498,14 @@ domenu(Widget w GCC_UNUSED,
 	return False;
     }
 
-    if ((me = indexOfMenu(params[0])) < 0) {
+    if ((me = indexOfMenu(params[0])) == noMenu) {
 	Bell(XkbBI_MinorError, 0);
 	return False;
     }
 
-    if ((mw = obtain_menu(w, (MenuIndex) me)) == 0
+    if ((mw = obtain_menu(w, me)) == 0
 	|| sizeof_menu(w, me) == 0) {
-	mw = create_menu(w, term, (MenuIndex) me);
+	mw = create_menu(w, term, me);
 	created = (mw != 0);
     }
     if (mw == 0)
@@ -544,8 +544,8 @@ domenu(Widget w GCC_UNUSED,
 	    }
 #endif
 	    if (screen->inhibit & I_SIGNAL) {
-		mainMenuIndices n;
-		for (n = mainMenu_suspend; n <= mainMenu_quit; ++n) {
+		int n;
+		for (n = (int) mainMenu_suspend; n <= (int) mainMenu_quit; ++n) {
 		    set_sensitivity(mw, mainMenuEntries[n].widget, FALSE);
 		}
 	    }
@@ -582,8 +582,8 @@ domenu(Widget w GCC_UNUSED,
 #endif /* NO_ACTIVE_ICON */
 #if OPT_TEK4014
 	    if (screen->inhibit & I_TEK) {
-		vtMenuIndices n;
-		for (n = vtMenu_tekshow; n <= vtMenu_vthide; ++n) {
+		int n;
+		for (n = (int) vtMenu_tekshow; n <= (int) vtMenu_vthide; ++n) {
 		    set_sensitivity(mw, vtMenuEntries[n].widget, FALSE);
 		}
 	    }
@@ -633,6 +633,8 @@ domenu(Widget w GCC_UNUSED,
 	}
 	break;
 #endif
+    default:
+	break;
     }
 
     return True;

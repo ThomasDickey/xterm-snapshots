@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.57 2003/03/09 23:39:13 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.58 2003/03/23 02:01:39 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -127,9 +127,7 @@ AC_CHECK_FUNCS(grantpt, [], AC_CHECK_LIB(util,openpty))
 
 AC_PATH_PROG(XTERM_PATH,xterm)
 
-AC_CHECK_FUNCS( \
-	XkbBell \
-	)
+CF_XKB_BELL_EXT
 AC_CHECK_FUNCS(Xutf8LookupString, [],[
 	EXTRAHDRS="$EXTRAHDRS xutf8.h"
 	EXTRASRCS="$EXTRASRCS xutf8.c"
@@ -419,6 +417,14 @@ CF_ARG_DISABLE(num-lock,
 	[enable_numlock=yes])
 AC_MSG_RESULT($enable_numlock)
 test "$enable_numlock" = no && AC_DEFINE(OPT_NUM_LOCK,0)
+
+AC_MSG_CHECKING(if you want support for pty-handshaking)
+CF_ARG_ENABLE(pty-handshake,
+	[  --enable-pty-handshake  enable pty-handshake support],
+	[enable_pty_handshake=yes],
+	[enable_pty_handshake=no])
+AC_MSG_RESULT($enable_pty_handshake)
+test "$enable_pty_handshake" = yes && AC_DEFINE(OPT_PTY_HANDSHAKE,1)
 
 AC_MSG_CHECKING(if you want support for right-scrollbar)
 CF_ARG_DISABLE(rightbar,

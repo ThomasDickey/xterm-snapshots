@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.140 2003/03/09 23:39:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.141 2003/03/23 02:01:39 dickey Exp $ */
 
 /*
 
@@ -471,15 +471,8 @@ static XtResource resources[] =
 #ifndef NO_ACTIVE_ICON
     Bres("activeIcon", "ActiveIcon", misc.active_icon, FALSE),
     Ires("iconBorderWidth", XtCBorderWidth, misc.icon_border_width, 2),
-
-    {"iconFont", "IconFont", XtRFontStruct, sizeof(XFontStruct),
-     XtOffsetOf(XtermWidgetRec, screen.fnt_icon),
-     XtRString, (XtPointer) XtExtdefaultfont},
-
-    {"iconBorderColor", XtCBorderColor, XtRPixel, sizeof(Pixel),
-     XtOffsetOf(XtermWidgetRec, misc.icon_border_pixel),
-     XtRString, XtExtdefaultbackground},
-
+    Fres("iconFont", "IconFont", screen.fnt_icon, XtExtdefaultfont),
+    Cres("iconBorderColor", XtCBorderColor, misc.icon_border_pixel, XtExtdefaultbackground),
 #endif				/* NO_ACTIVE_ICON */
 
 #if OPT_BLINK_CURS
@@ -4731,13 +4724,13 @@ VTInitialize(Widget wrequest,
      */
     if (color_ok) {
 	Display *display = wnew->screen.display;
-	XVisualInfo template, *visInfoPtr;
+	XVisualInfo myTemplate, *visInfoPtr;
 	int numFound;
 
-	template.visualid = XVisualIDFromVisual(DefaultVisual(display,
-							      XDefaultScreen(display)));
+	myTemplate.visualid = XVisualIDFromVisual(DefaultVisual(display,
+								XDefaultScreen(display)));
 	visInfoPtr = XGetVisualInfo(display, (long) VisualIDMask,
-				    &template, &numFound);
+				    &myTemplate, &numFound);
 	if (visInfoPtr == 0
 	    || numFound == 0
 	    || visInfoPtr->depth <= 1) {
@@ -4900,7 +4893,7 @@ VTInitialize(Widget wrequest,
 static void
 VTDestroy(Widget w)
 {
-    XtFree(((XtermWidget) w)->screen.selection_data);
+    XtFree((char *) (((XtermWidget) w)->screen.selection_data));
 }
 
 /*ARGSUSED*/
@@ -5155,7 +5148,8 @@ VTRealize(Widget w,
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 
-#if defined(XtSpecificationRelease) && XtSpecificationRelease >= 6 && !defined(sun)
+/* limit this feature to recent XFree86 since X11R6.x core dumps */
+#if defined(XtSpecificationRelease) && XtSpecificationRelease >= 6 && defined(X_HAVE_UTF8_STRING)
 #define USE_XIM_INSTANTIATE_CB
 
 static void
@@ -5207,8 +5201,9 @@ xim_real_init(void)
 
     term->screen.xic = NULL;
 
-    if (!term->misc.open_im)
+    if (!term->misc.open_im) {
 	return;
+    }
 
     if (!term->misc.input_method || !*term->misc.input_method) {
 	if ((p = XSetLocaleModifiers("")) != NULL && *p)
