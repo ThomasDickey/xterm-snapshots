@@ -80,7 +80,7 @@ button.c	Handles button events in the terminal emulator.
 #define XTERM_CELL(row,col) getXtermCell(screen, row + screen->topline, col)
 
       /*
-       * We reserve shift modifier for cut/paste operations.  In principal we
+       * We reserve shift modifier for cut/paste operations.  In principle we
        * can pass through control and meta modifiers, but in practice, the
        * popup menu uses control, and the window manager is likely to use meta,
        * so those events are not delivered to SendMousePosition.
@@ -2303,6 +2303,7 @@ EditorButton(register XButtonEvent *event)
 
 	/* If button event, get button # adjusted for DEC compatibility */
 	button = event->button - 1;
+	if (button >= 3) button++;
 
 	/* Compute character position of mouse pointer */
 	row = (event->y - screen->border) / FontHeight(screen);
@@ -2345,7 +2346,14 @@ EditorButton(register XButtonEvent *event)
 		line[count++] = BtnCode(event, screen->mouse_button = button);
 		break;
 	    case ButtonRelease:
-		line[count++] = BtnCode(event, screen->mouse_button = -1);
+		/*
+		 * Wheel mouse interface generates release-events for buttons
+		 * 4 and 5, coded here as 3 and 4 respectively.  We change the
+		 * release for buttons 1..3 to a -1.
+		 */
+		if (button < 3)
+			button = -1;
+		line[count++] = BtnCode(event, screen->mouse_button = button);
 		break;
 	    case MotionNotify:
 		/* BTN_EVENT_MOUSE and ANY_EVENT_MOUSE modes send motion
@@ -2367,6 +2375,9 @@ EditorButton(register XButtonEvent *event)
 	/* Add pointer position to key sequence */
 	line[count++] = ' ' + col + 1;
 	line[count++] = ' ' + row + 1;
+
+	TRACE(("mouse at %d,%d button+mask = %#x\n", row, col,
+		(screen->control_eight_bits) ? line[2] : line[3]))
 
 	/* Transmit key sequence to process running under xterm */
 	v_write(pty, line, count);

@@ -451,6 +451,8 @@ Bell(int which GCC_UNUSED, int percent)
     struct timeval curtime;
     long now_msecs;
 
+    TRACE(("BELL %d\n", percent))
+
     /* has enough time gone by that we are allowed to ring
        the bell again? */
     if(screen->bellSuppressTime) {
@@ -1410,7 +1412,7 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 char *
 udk_lookup(int keycode, int *len)
 {
-	if (keycode < MAX_UDK) {
+	if (keycode >= 0 && keycode < MAX_UDK) {
 		*len = user_keys[keycode].len;
 		return user_keys[keycode].str;
 	}

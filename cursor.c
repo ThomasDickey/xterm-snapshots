@@ -45,17 +45,11 @@
  * prevent the application from changing the screen contents under the
  * highlighted region.
  */
-static void _CheckSelection (register TScreen *screen)
-{
-    if ((screen->cur_row < screen->endHRow) ||
-	(screen->cur_row == screen->endHRow &&
-	 screen->cur_col < screen->endHCol))
-    {
+#define _CheckSelection(screen) \
+    if ((screen->cur_row < screen->endHRow) || \
+	(screen->cur_row == screen->endHRow && \
+	 screen->cur_col < screen->endHCol)) \
 	DisownSelection(term);
-    }
-}
-
-
 
 /*
  * Moves the cursor to the specified position, checking for bounds.

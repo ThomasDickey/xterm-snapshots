@@ -1112,26 +1112,6 @@ ScreenResize (
 	return (0);
 }
 
-void
-ScrnClrWrapped(TScreen *screen, int row)
-{
-	long value = (long)SCRN_BUF_FLAGS(screen, row + screen->topline) & ~ LINEWRAPPED;
-	SCRN_BUF_FLAGS(screen, row + screen->topline) = (Char *)value;
-}
-
-void
-ScrnSetWrapped(TScreen *screen, int row)
-{
-	long value = (long)SCRN_BUF_FLAGS(screen, row + screen->topline) | LINEWRAPPED;
-	SCRN_BUF_FLAGS(screen, row + screen->topline) = (Char *)value;
-}
-
-Bool
-ScrnTstWrapped(TScreen *screen, int row)
-{
-	return (long)SCRN_BUF_FLAGS(screen, row + screen->topline) & LINEWRAPPED;
-}
-
 /*
  * Return true if any character cell starting at [row,col], for len-cells is
  * nonnull.

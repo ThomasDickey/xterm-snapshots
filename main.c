@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.102 1999/11/19 13:55:19 hohndel Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.103 1999/12/14 02:10:37 robin Exp $ */
 
 
 /* main.c */
@@ -333,7 +333,12 @@ static Bool IsPts = False;
 #undef TIOCSLTC  /* <sgtty.h> conflicts with <termios.h> */
 #undef TIOCLSET
 #define USE_POSIX_WAIT
+#ifndef __QNXNTO__
 #define ttyslot() 1
+#else
+#define USE_SYSV_PGRP
+extern __inline__ ttyslot() {return 1;} /* yuk */
+#endif
 #else
 
 #ifndef linux
@@ -1923,7 +1928,7 @@ get_pty (int *pty)
 #if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS))
 	int tty;
 	return (openpty(pty, &tty, ttydev, NULL, NULL));
-#elif defined(SYSV) && defined(i386) && !defined(SVR4)
+#elif (defined(SYSV) && defined(i386) && !defined(SVR4)) || defined(__QNXNTO__)
 	/*
 	  The order of this code is *important*.  On SYSV/386 we want to open
 	  a /dev/ttyp? first if at all possible.  If none are available, then
@@ -2737,7 +2742,7 @@ spawn (void)
 #endif
 #endif /* USE_SYSV_PGRP */
 
-#if defined(__QNX__)
+#if defined(__QNX__) && !defined(__QNXNTO__)
 		qsetlogin( getlogin(), ttydev );
 #endif
 		while (1) {
@@ -4532,7 +4537,7 @@ char CONTROL(char c)
 }
 #endif
 
-#if defined(__QNX__)
+#if defined(__QNX__) && !defined(__QNXNTO__)
 #include <sys/types.h>
 #include <sys/proc_msg.h>
 #include <sys/kernel.h>

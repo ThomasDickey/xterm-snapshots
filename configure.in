@@ -163,6 +163,8 @@ elif test $TERMINFO_DIR != none ; then
 	else
 		AC_MSG_WARN(not a directory)
 	fi
+elif test "$prefix" != NONE ; then
+	TERMINFO_DIR='${prefix}/lib/terminfo'
 elif test -d /usr/lib/terminfo ; then
 	TERMINFO_DIR=/usr/lib/terminfo
 else

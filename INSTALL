@@ -147,6 +147,8 @@ The options (in alphabetic order):
 	quirks of the keyboard tables.  Use the ``numLock'' resource to
 	disable this feature if you must customize xterm in some other way.
 
+	(The same ifdef controls the metaSendsEscape support).
+
   --disable-rightbar      disable right-scrollbar support
 
   	Do not compile-in code that supports a scrollbar on the right.

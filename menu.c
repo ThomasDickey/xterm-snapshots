@@ -137,6 +137,7 @@ static void do_hp_fkeys        PROTO_XT_CALLBACK_ARGS;
 
 #if OPT_NUM_LOCK
 static void do_num_lock        PROTO_XT_CALLBACK_ARGS;
+static void do_meta_esc        PROTO_XT_CALLBACK_ARGS;
 #endif
 
 #if OPT_SUNPC_KBD
@@ -179,6 +180,7 @@ MenuEntry mainMenuEntries[] = {
     { "backarrow key",	do_backarrow,	NULL },
 #if OPT_NUM_LOCK
     { "num-lock",	do_num_lock,	NULL },
+    { "meta-esc",	do_meta_esc,	NULL },
 #endif
     { "sun function-keys",do_sun_fkeys,	NULL },
 #if OPT_SUNPC_KBD
@@ -464,6 +466,7 @@ static Bool domenu (
 	    update_8bit_control();
 	    update_decbkm();
 	    update_num_lock();
+	    update_meta_esc();
 	    update_sun_kbd();
 	    if (screen->terminal_id < 200) {
 		set_sensitivity (mw,
@@ -729,6 +732,15 @@ static void do_num_lock (
 {
     term->misc.real_NumLock = ! term->misc.real_NumLock;
     update_num_lock();
+}
+
+static void do_meta_esc (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    term->screen.meta_sends_esc = ! term->screen.meta_sends_esc;
+    update_meta_esc();
 }
 #endif
 
@@ -1479,6 +1491,16 @@ void HandleNumLock(
 	Cardinal *param_count)
 {
     handle_toggle (do_num_lock, (int) term->misc.real_NumLock,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+
+void HandleMetaEsc(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    handle_toggle (do_meta_esc, (int) term->screen.meta_sends_esc,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 #endif

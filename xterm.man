@@ -1085,8 +1085,11 @@ The default is ``false.''
 .B "eightBitInput (\fPclass\fB EightBitInput\fP)"
 If ``true'', Meta characters input from the keyboard are presented as a
 single character with the eighth bit turned on.
+The terminal is put into 8-bit mode.
 If ``false'', Meta characters are converted into a two-character
 sequence with the character itself preceded by ESC.
+The terminal is put into 7-bit mode.
+The \fBmetaSendsEscape\fP resource may override this.
 The default is ``true.''
 .TP 8
 .B "eightBitOutput (\fPclass\fB EightBitOutput\fP)"
@@ -1191,6 +1194,15 @@ as a login shell.  The default is ``false.''
 .B "marginBell (\fPclass\fB MarginBell)"
 Specifies whether or not the bell should be run when the user types near the
 right margin.  The default is ``false.''
+.TP 8
+.B "metaSendsEscape (\fPclass\fB MetaSendsEscape\fP)"
+If ``true'', Meta characters are converted into a two-character
+sequence with the character itself preceded by ESC.
+This applies as well to function key control sequences, unless \fIxterm\fP
+sees that \fBMeta\fP is used in your key translations.
+If ``false'', Meta characters input from the keyboard are handled according
+to the \fBeightBitInput\fP resource.
+The default is ``false.''
 .TP 8
 .B "multiClickTime (\fPclass\fB MultiClickTime)"
 Specifies the maximum time in milliseconds between multi-click select
@@ -2018,7 +2030,9 @@ the key that was pressed.
 .B "insert-eight-bit()"
 This action inserts an eight-bit (Meta) version of the character or string
 associated with the key that was pressed.
-The exact action depends on the value of the \fBeightBitInput\fP resource.
+The exact action depends on the value of
+the \fBmetaSendsEscape\fP and
+the \fBeightBitInput\fP resources.
 .TP 8
 .B "insert-selection(\fIsourcename\fP [, ...])"
 This action inserts the string found in the selection or cutbuffer indicated
@@ -2316,33 +2330,44 @@ The default bindings in the VT102 window are:
 .TA 2.5i
 .ta 2.5i
 .nf
-          Shift <KeyPress> Prior:	scroll-back(1,halfpage) \\n\\
-           Shift <KeyPress> Next:	scroll-forw(1,halfpage) \\n\\
-         Shift <KeyPress> Select:	select-cursor-start() \\
-                                        select-cursor-end(PRIMARY, CUT_BUFFER0) \\n\\
-         Shift <KeyPress> Insert:	insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
-                 ~Meta<KeyPress>:	insert-seven-bit() \\n\\
-                  Meta<KeyPress>:	insert-eight-bit() \\n\\
-                !Ctrl <Btn1Down>:	popup-menu(mainMenu) \\n\\
-           !Lock Ctrl <Btn1Down>:	popup-menu(mainMenu) \\n\\
- !Lock Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\
-     ! @Num_Lock Ctrl <Btn1Down>:	popup-menu(mainMenu) \\n\\
-                ~Meta <Btn1Down>:	select-start() \\n\\
-              ~Meta <Btn1Motion>:	select-extend() \\n\\
-                !Ctrl <Btn2Down>:	popup-menu(vtMenu) \\n\\
-           !Lock Ctrl <Btn2Down>:	popup-menu(vtMenu) \\n\\
- !Lock Ctrl @Num_Lock <Btn2Down>:	popup-menu(vtMenu) \\n\\
-     ! @Num_Lock Ctrl <Btn2Down>:	popup-menu(vtMenu) \\n\\
-          ~Ctrl ~Meta <Btn2Down>:	ignore() \\n\\
-            ~Ctrl ~Meta <Btn2Up>:	insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
-                !Ctrl <Btn3Down>:	popup-menu(fontMenu) \\n\\
-           !Lock Ctrl <Btn3Down>:	popup-menu(fontMenu) \\n\\
- !Lock Ctrl @Num_Lock <Btn3Down>:	popup-menu(fontMenu) \\n\\
-     ! @Num_Lock Ctrl <Btn3Down>:	popup-menu(fontMenu) \\n\\
-          ~Ctrl ~Meta <Btn3Down>:	start-extend() \\n\\
-              ~Meta <Btn3Motion>:	select-extend() \\n\\
-                         <BtnUp>:	select-end(PRIMARY, CUT_BUFFER0) \\n\\
-                       <BtnDown>:	bell(0)
+          Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\
+           Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\
+         Shift <KeyPress> Select:select-cursor-start() \\
+                                 select-cursor-end(PRIMARY, CUT_BUFFER0) \\n\\
+         Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
+                ~Meta <KeyPress>:insert-seven-bit() \\n\\
+                 Meta <KeyPress>:insert-eight-bit() \\n\\
+                !Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\
+           !Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\
+ !Lock Ctrl @Num_Lock <Btn1Down>:popup-menu(mainMenu) \\n\\
+     ! @Num_Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\
+                ~Meta <Btn1Down>:select-start() \\n\\
+              ~Meta <Btn1Motion>:select-extend() \\n\\
+                !Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\
+           !Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\
+ !Lock Ctrl @Num_Lock <Btn2Down>:popup-menu(vtMenu) \\n\\
+     ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\
+          ~Ctrl ~Meta <Btn2Down>:ignore() \\n\\
+                 Meta <Btn2Down>:clear-saved-lines() \n\
+            ~Ctrl ~Meta <Btn2Up>:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
+                !Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\
+           !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\
+ !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \\n\\
+     ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\
+          ~Ctrl ~Meta <Btn3Down>:start-extend() \\n\\
+              ~Meta <Btn3Motion>:select-extend() \\n\\
+                 Ctrl <Btn4Down>:scroll-back(1,halfpage) \\n\\
+            Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \\n\\
+  Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \\n\\
+       @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage) \\n\\
+                      <Btn4Down>:scroll-back(5,line)     \\n\\
+                 Ctrl <Btn5Down>:scroll-forw(1,halfpage) \\n\\
+            Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \\n\\
+  Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \\n\\
+       @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage) \\n\\
+                      <Btn5Down>:scroll-forw(5,line)     \\n\\
+                         <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \\n\\
+                       <BtnDown>:bell(0)
 .fi
 .DE
 .sp

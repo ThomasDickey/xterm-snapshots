@@ -1576,12 +1576,38 @@ drawXtermText(
 				x, y, sbuf, len);
 		} else
 #endif
+		{
 		XDrawImageString(screen->display, VWindow(screen), gc,
 			x, y,  (char *)text, len);
 
-		if ((flags & (BOLD|BLINK)) && screen->enbolden)
+		if ((flags & (BOLD|BLINK)) && screen->enbolden) {
+#if OPT_CLIP_BOLD
+			/*
+			 * This special case is a couple of percent slower, but
+			 * avoids a lot of pixel trash in rxcurses' hanoi.cmd
+			 * demo (e.g., 10x20 font).
+			 */
+			if (screen->fnt_wide > 2) {
+				XRectangle clip;
+				int clip_x = x;
+				int clip_y = y - FontHeight(screen) + FontDescent(screen);
+				clip.x = 0;
+				clip.y = 0;
+				clip.height = FontHeight(screen);
+				clip.width = screen->fnt_wide * len;
+				XSetClipRectangles(screen->display, gc,
+					clip_x, clip_y,
+					&clip, 1, Unsorted);
+			}
+#endif
 			XDrawString(screen->display, VWindow(screen), gc,
-				x+1, y,  (char *)text, len);
+				x + 1, y, (char *)text, len);
+#if OPT_CLIP_BOLD
+			XSetClipMask(screen->display, gc, None);
+#endif
+		}
+		}
+
 		if ((flags & UNDERLINE) && screen->underline) {
 			if (FontDescent(screen) > 1)
 				y++;
@@ -1743,16 +1769,6 @@ extract_fg (
 	return fg;
 }
 
-int
-extract_bg (unsigned color)
-{
-#if OPT_EXT_COLORS
-	return (int) (color & 0xff);
-#else
-	return (int) (color & 0xf);
-#endif
-}
-
 /*
  * Combine the current foreground and background into a single 8-bit number.
  * Note that we're storing the SGR foreground, since cur_foreground may be set
@@ -1774,48 +1790,6 @@ makeColorPair (int fg, int bg)
 #endif
 }
 
-unsigned
-xtermColorPair (void)
-{
-	/* FIXME? */
-	return makeColorPair(term->sgr_foreground, term->cur_background);
-}
-
-Pixel
-getXtermForeground(int flags, int color)
-{
-	Pixel fg = (flags & FG_COLOR) && (color >= 0)
-			? term->screen.Acolors[color]
-			: term->screen.foreground;
-
-	return fg;
-}
-
-Pixel
-getXtermBackground(int flags, int color)
-{
-	Pixel bg = (flags & BG_COLOR) && (color >= 0)
-			? term->screen.Acolors[color]
-			: term->core.background_pixel;
-	return bg;
-}
-
-/*
- * Update the screen's background (for XClearArea)
- *
- * If the argument is true, sets the window's background to the value set
- * in the current SGR background. Otherwise, reset to the window's default
- * background.
- */
-void useCurBackground(Bool flag)
-{
-	TScreen *screen = &term->screen;
-	int color = flag ? term->cur_background : -1;
-	Pixel	bg = getXtermBackground(term->flags, color);
-
-	XSetWindowBackground(screen->display, VWindow(screen), bg);
-}
-
 /*
  * Using the "current" SGR background, clear a rectangle.
  */
@@ -1826,34 +1800,20 @@ void ClearCurBackground(
 	unsigned height,
 	unsigned width)
 {
-	useCurBackground(TRUE);
+	XSetWindowBackground(
+		screen->display,
+		VWindow(screen),
+		getXtermBackground(term->flags, term->cur_background));
+
 	XClearArea (screen->display, VWindow(screen),
 		left, top, width, height, FALSE);
-	useCurBackground(FALSE);
+
+	XSetWindowBackground(
+		screen->display,
+		VWindow(screen),
+		getXtermBackground(term->flags, -1));
 }
 #endif /* OPT_ISO_COLORS */
-
-#if OPT_DEC_CHRSET
-int
-getXtermChrSet(int row, int col)
-{
-	TScreen *screen = &term->screen;
-	Char set = SCRN_BUF_CSETS(screen, row)[0];
-	if (!CSET_DOUBLE(set))
-		set = SCRN_BUF_CSETS(screen, row)[col];
-	return set;
-}
-
-int
-curXtermChrSet(int row)
-{
-	TScreen *screen = &term->screen;
-	Char set = SCRN_BUF_CSETS(screen, row)[0];
-	if (!CSET_DOUBLE(set))
-		set = screen->cur_chrset;
-	return set;
-}
-#endif /* OPT_DEC_CHRSET */
 
 #if OPT_WIDE_CHARS
 /*
