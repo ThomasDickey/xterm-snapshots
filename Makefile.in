@@ -60,16 +60,20 @@ xterm : $(OBJS1)
 resize : $(OBJS2)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(LIBS)
 
-install: $(INSTALL_DIRS) \
-	$(bindir)/xterm \
-	$(mandir)/xterm.$(manext) \
+install: $(INSTALL_DIRS) xterm resize
+	$(INSTALL_PROGRAM) -s -m 4711 xterm  $(bindir)/xterm
+	$(INSTALL_PROGRAM) -s -m  755 resize $(bindir)/resize
+	$(INSTALL_DATA) xterm.man  $(mandir)/xterm.$(manext)
+	$(INSTALL_DATA) resize.man $(mandir)/resize.$(manext)
 	@echo 'Completed installation.'
 
 installdirs: $(INSTALL_DIRS)
 
 uninstall:
 	-$(RM) $(bindir)/xterm \
-		$(mandir)/xterm.$(manext)
+		$(bindir)/resize \
+		$(mandir)/xterm.$(manext) \
+		$(mandir)/resize.$(manext)
 
 mostlyclean:
 	-$(RM) *.o core *~ *.BAK
