@@ -73,7 +73,6 @@ in this Software without prior written authorization from the X Consortium.
 #endif
 
 #include <stdio.h>
-#include <errno.h>
 #include <setjmp.h>
 #include <ctype.h>
 
@@ -90,14 +89,8 @@ in this Software without prior written authorization from the X Consortium.
 #include "error.h"
 #include "menu.h"
 #include "main.h"
+#include "xterm.h"
 
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-extern char *malloc();
-extern char *realloc();
-extern void exit();
-#endif
 #ifndef NO_ACTIVE_ICON
 #include <X11/Shell.h>
 #endif /* NO_ACTIVE_ICON */
@@ -116,8 +109,6 @@ extern void exit();
 #define E_TEST(err) ((err) == EWOULDBLOCK)
 #endif
 #endif
-
-#include "xterm.h"
 
 extern jmp_buf VTend;
 extern XtermWidget term;
@@ -411,42 +402,43 @@ static char defaultTranslations[] =
 ";
 
 static XtActionsRec actionsList[] = {
-    { "bell",		  HandleBell },
-    { "create-menu",	  HandleCreateMenu },
-    { "ignore",		  HandleIgnore },
-    { "insert",		  HandleKeyPressed },  /* alias for insert-seven-bit */
-    { "insert-seven-bit", HandleKeyPressed },
-    { "insert-eight-bit", HandleEightBitKeyPressed },
-    { "insert-selection", HandleInsertSelection },
-    { "keymap", 	  HandleKeymapChange },
-    { "popup-menu",	  HandlePopupMenu },
-    { "secure",		  HandleSecure },
-    { "select-start",	  HandleSelectStart },
-    { "select-extend",	  HandleSelectExtend },
-    { "select-end",	  HandleSelectEnd },
-    { "select-set",	  HandleSelectSet },
-    { "select-cursor-start",	  HandleKeyboardSelectStart },
-    { "select-cursor-end",	  HandleKeyboardSelectEnd },
-    { "set-vt-font",	  HandleSetFont },
-    { "start-extend",	  HandleStartExtend },
-    { "start-cursor-extend",	  HandleKeyboardStartExtend },
-    { "string",		  HandleStringEvent },
-    { "scroll-forw",	  HandleScrollForward },
-    { "scroll-back",	  HandleScrollBack },
+    { "bell",			HandleBell },
+    { "create-menu",		HandleCreateMenu },
+    { "ignore", 		HandleIgnore },
+    { "insert", 		HandleKeyPressed },  /* alias for insert-seven-bit */
+    { "insert-seven-bit",	HandleKeyPressed },
+    { "insert-eight-bit",	HandleEightBitKeyPressed },
+    { "insert-selection",	HandleInsertSelection },
+    { "keymap", 		HandleKeymapChange },
+    { "popup-menu",		HandlePopupMenu },
+    { "secure", 		HandleSecure },
+    { "select-start",		HandleSelectStart },
+    { "select-extend",		HandleSelectExtend },
+    { "select-end",		HandleSelectEnd },
+    { "select-set",		HandleSelectSet },
+    { "select-cursor-start",	HandleKeyboardSelectStart },
+    { "select-cursor-end",	HandleKeyboardSelectEnd },
+    { "set-vt-font",		HandleSetFont },
+    { "start-extend",		HandleStartExtend },
+    { "start-cursor-extend",	HandleKeyboardStartExtend },
+    { "string", 		HandleStringEvent },
+    { "scroll-forw",		HandleScrollForward },
+    { "scroll-back",		HandleScrollBack },
     /* menu actions */
     { "allow-send-events",	HandleAllowSends },
     { "set-visual-bell",	HandleSetVisualBell },
 #ifdef ALLOWLOGGING
     { "set-logging",		HandleLogging },
 #endif
-    { "redraw",			HandleRedraw },
+    { "print", 			HandlePrint },
+    { "redraw", 		HandleRedraw },
     { "send-signal",		HandleSendSignal },
     { "quit",			HandleQuit },
     { "set-8-bit-control",	Handle8BitControl },
     { "set-backarrow",		HandleBackarrow },
     { "set-sun-function-keys",	HandleSunFunctionKeys },
     { "set-scrollbar",		HandleScrollbar },
-    { "set-jumpscroll",		HandleJumpscroll },
+    { "set-jumpscroll", 	HandleJumpscroll },
     { "set-reverse-video",	HandleReverseVideo },
     { "set-autowrap",		HandleAutoWrap },
     { "set-reversewrap",	HandleReverseWrap },
@@ -454,17 +446,17 @@ static XtActionsRec actionsList[] = {
     { "set-appcursor",		HandleAppCursor },
     { "set-appkeypad",		HandleAppKeypad },
     { "set-scroll-on-key",	HandleScrollKey },
-    { "set-scroll-on-tty-output",	HandleScrollTtyOutput },
+    { "set-scroll-on-tty-output", HandleScrollTtyOutput },
     { "set-allow132",		HandleAllow132 },
-    { "set-cursesemul",		HandleCursesEmul },
-    { "set-marginbell",		HandleMarginBell },
+    { "set-cursesemul", 	HandleCursesEmul },
+    { "set-marginbell", 	HandleMarginBell },
     { "set-altscreen",		HandleAltScreen },
     { "soft-reset",		HandleSoftReset },
     { "hard-reset",		HandleHardReset },
     { "clear-saved-lines",	HandleClearSavedLines },
 #if OPT_TEK4014
     { "set-terminal-type",	HandleSetTerminalType },
-    { "set-visibility",		HandleVisibility },
+    { "set-visibility", 	HandleVisibility },
     { "set-tek-text",		HandleSetTekText },
     { "tek-page",		HandleTekPage },
     { "tek-reset",		HandleTekReset },
@@ -981,7 +973,7 @@ static void VTparse()
 {
 	/* Buffer for processing strings (e.g., OSC ... ST) */
 	static Char *string_area;
-	static Size_t string_size, string_used;
+	static size_t string_size, string_used;
 
 #if OPT_VT52_MODE
 	static Bool vt52_cup = FALSE;
@@ -2630,7 +2622,7 @@ static void HandleMapUnmap(w, closure, event, cont )
             { XtNiconName, (XtArgVal) &icon_name }
     };
 
-    TRACE((stderr,"HandleMapUnmap event %d\n", event->type))
+    TRACE(("event %d\n", event->type))
 
     switch( event->type ){
     case MapNotify:
@@ -3425,7 +3417,7 @@ void
 SwitchBufPtrs(screen)
     register TScreen *screen;
 {
-    Size_t len = ScrnPointers(screen, screen->max_row + 1);
+    size_t len = ScrnPointers(screen, screen->max_row + 1);
 
     memcpy ( (char *)screen->save_ptr, (char *)screen->visbuf,   len);
     memcpy ( (char *)screen->visbuf,   (char *)screen->altbuf,   len);

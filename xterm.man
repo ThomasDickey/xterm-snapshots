@@ -1144,6 +1144,9 @@ This entry invokes the \fBallow-send-events(toggle)\fP action.
 .B "logging (\fPclass\fB SmeBSB)"
 This entry invokes the \fBlogging(toggle)\fP action.
 .TP 8
+.B "print (\fPclass\fB SmeBSB)"
+This entry invokes the \fBprint()\fP action.
+.TP 8
 .B "redraw (\fPclass\fB SmeBSB)"
 This entry invokes the \fBredraw()\fP action.
 .TP 8
@@ -1697,6 +1700,10 @@ The name \fINone\fP restores the original translation table.
 This action displays the specified popup menu.  Valid names (case is 
 significant) include:  \fImainMenu\fP, \fIvtMenu\fP, \fIfontMenu\fP, 
 and \fItekMenu\fP.
+.TP 8
+.B "print()"
+This action prints the window and is also invoked by the
+\fIprint\fP entry in \fImainMenu\fP.
 .TP 8
 .B "quit()"
 This action sends a SIGHUP to the subprogram and exits.  It is also invoked

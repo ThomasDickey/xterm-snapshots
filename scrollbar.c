@@ -32,13 +32,6 @@
 
 #include "ptyx.h"		/* gets Xt headers, too */
 
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-extern Char *realloc();
-extern Char *calloc();
-#endif
-
 #include <stdio.h>
 #include <ctype.h>
 #include <X11/Xatom.h>

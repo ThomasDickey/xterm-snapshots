@@ -283,7 +283,7 @@ void
 StringInput (screen, string, nbytes)
     register TScreen	*screen;
     register char *string;
-    Size_t nbytes;
+    size_t nbytes;
 {
 	int	pty	= screen->respond;
 

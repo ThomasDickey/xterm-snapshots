@@ -24,16 +24,43 @@
 
 #ifndef X_NOT_POSIX
 #define HAVE_WAITPID 1
-#define HAVE_STDLIB_H 1
 #define HAVE_SYS_WAIT_H 1
+#define HAVE_UNISTD_H 1
 #endif
 
+#ifndef X_NOT_STDC_ENV
+#define HAVE_STDLIB_H 1
+#define DECL_ERRNO 1
+#define size_t int
+#define time_t long
 #endif
+
+#endif /* HAVE_CONFIG_H */
 
 /***====================================================================***/
 
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#else
+extern char *calloc();
+extern char *getenv();
+extern char *malloc();
+extern char *realloc();
+extern void exit();
+extern void free();
+#endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
+
+#include <errno.h>
+#ifdef DECL_ERRNO
+extern int errno;
 #endif
 
 /*
@@ -131,7 +158,7 @@ extern void xterm_DECDWL PROTO((void));
 
 /* input.c */
 extern void Input PROTO((TKeyboard *keyboard, TScreen *screen, XKeyEvent *event, Bool eightbit));
-extern void StringInput PROTO((TScreen *screen, char *string, Size_t nbytes));
+extern void StringInput PROTO((TScreen *screen, char *string, size_t nbytes));
 
 /* main.c */
 extern int main PROTO((int argc, char **argv));
@@ -176,7 +203,7 @@ extern void Setenv PROTO((char *var, char *value));
 extern void SysError PROTO((int i));
 extern void VisualBell PROTO((void));
 extern void creat_as PROTO((int uid, int gid, char *pathname, int mode));
-extern void do_dcs PROTO((Char *buf, Size_t len));
+extern void do_dcs PROTO((Char *buf, size_t len));
 extern void do_osc PROTO((Char *buf, int len));
 extern void do_xevents PROTO((void));
 extern void end_tek_mode PROTO((void));
@@ -200,6 +227,7 @@ extern void FlushLog PROTO((TScreen *screen));
 extern int xtermPrinterControl PROTO((int chr));
 extern void xtermAutoPrint PROTO((int chr));
 extern void xtermMediaControl PROTO((int param, int private));
+extern void xtermPrintScreen PROTO((void));
 
 /* screen.c */
 extern Bool non_blank_line PROTO((ScrnBuf sb, int row, int col, int len));

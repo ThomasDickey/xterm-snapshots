@@ -53,9 +53,8 @@ authorization.
 static void charToPrinter PROTO((int chr));
 static void printCursorLine PROTO((void));
 static void printLine PROTO((int row, int chr));
-static void printPage PROTO((void));
 static void send_CharSet PROTO((int row));
-static void send_SGR PROTO((unsigned attr));
+static void send_SGR PROTO((unsigned attr, int fg, int bg));
 static void stringToPrinter PROTO((char * str));
 
 static FILE *Printer;
@@ -81,9 +80,18 @@ static void printLine(row, chr)
 	Char *a = SCRN_BUF_ATTRS(screen, row);
 	Char attr = *a & SGR_MASK;
 	int last = screen->max_col;
+	int col;
+#if OPT_ISO_COLORS && OPT_PRINT_COLORS
+	register Char *fb = 0;
+#endif
+	int fg = -1, last_fg = -1;
+	int bg = -1, last_bg = -1;
 
 	TRACE(("printLine(row=%d, chr=%d)\n", row, chr))
 
+	if_OPT_ISO_COLORS(screen,{
+		fb = SCRN_BUF_COLOR(screen, row);
+	})
 	while (last > 0) {
 		if ((a[last-1] & CHARDRAWN) == 0)
 			last--;
@@ -92,28 +100,40 @@ static void printLine(row, chr)
 	}
 	if (last) {
 		send_CharSet(row);	/* FIXME: is this needed? */
-		send_SGR(0);
-		while (last--) {
-			if (((*a & SGR_MASK) != attr) && *c) {
-				send_SGR(attr = (*a & SGR_MASK));
+		send_SGR(0,-1,-1);
+		for (col = 0; col < last; col++) {
+#if OPT_PRINT_COLORS
+			if_OPT_ISO_COLORS(screen,{
+				fg = (a[col] & FG_COLOR) ? extract_fg(fb[col], a[col]) : -1;
+				bg = (a[col] & BG_COLOR) ? extract_bg(fb[col]) : -1;
+			})
+#endif
+			if ((((a[col] & SGR_MASK) != attr)
+#if OPT_PRINT_COLORS
+			    || (last_fg != fg) || (last_bg != bg)
+#endif
+			    )
+			 && c[col]) {
+				attr = (a[col] & SGR_MASK);
+				last_fg = fg;
+				last_bg = bg;
+				send_SGR(attr, fg, bg);
 			}
-			charToPrinter(*c ? *c : ' ');
-			c++;
-			a++;
+			charToPrinter(c[col] ? c[col] : ' ');
 		}
-		send_SGR(0);
+		send_SGR(0,-1,-1);
 	}
 	charToPrinter('\r');
 	charToPrinter(chr);
 }
 
-static void printPage()
+void xtermPrintScreen()
 {
 	register TScreen *screen = &term->screen;
 	int top = screen->printer_extent ? 0 : screen->top_marg;
 	int bot = screen->printer_extent ? screen->max_row : screen->bot_marg;
 
-	TRACE(("printPage, rows %d..%d\n", top, bot))
+	TRACE(("xtermPrintScreen, rows %d..%d\n", top, bot))
 
 	while (top <= bot)
 		printLine(top++, '\n');
@@ -147,8 +167,10 @@ static void send_CharSet(row)
 #endif /* OPT_DEC_CHRSET */
 }
 
-static void send_SGR(attr)
+static void send_SGR(attr, fg, bg)
 	unsigned attr;
+	int fg;
+	int bg;
 {
 	char msg[80];
 	strcpy(msg, "\033[0");
@@ -160,6 +182,14 @@ static void send_SGR(attr)
 		strcat(msg, ";5");
 	if (attr & INVERSE)	/* typo? DEC documents this as invisible */
 		strcat(msg, ";7");
+#if OPT_PRINT_COLORS
+	if (bg >= 0) {
+		sprintf(msg + strlen(msg), ";%d", (bg < 8) ? (40 + bg) : (92 + bg));
+	}
+	if (fg >= 0) {
+		sprintf(msg + strlen(msg), ";%d", (fg < 8) ? (30 + fg) : (82 + fg));
+	}
+#endif
 	strcat(msg, "m");
 	stringToPrinter(msg);
 }
@@ -222,7 +252,7 @@ void xtermMediaControl (param, private)
 		switch (param) {
 		case -1:
 		case  0:
-			printPage();
+			xtermPrintScreen();
 			break;
 		case  4:
 			screen->printer_controlmode = 0;
@@ -283,8 +313,8 @@ int xtermPrinterControl(chr)
 	};
 
 	static Char bfr[10];
-	static Size_t length;
-	Size_t n;
+	static size_t length;
+	size_t n;
 
 	TRACE(("In printer:%d\n", chr))
 
@@ -302,7 +332,7 @@ int xtermPrinterControl(chr)
 	case 'i':
 		bfr[length++] = chr;
 		for (n = 0; n < sizeof(tbl)/sizeof(tbl[0]); n++) {
-			Size_t len = Strlen(tbl[n].seq);
+			size_t len = Strlen(tbl[n].seq);
 
 			if (length == len
 			 && Strcmp(bfr, tbl[n].seq) == 0) {

@@ -25,6 +25,9 @@
  * SOFTWARE.
  */
 
+#ifndef included_data_h
+#define included_data_h 1
+
 #if XtSpecificationRelease >= 6 && !defined(NO_XPOLL_H)
 #include <X11/Xpoll.h>
 #else
@@ -114,3 +117,5 @@ extern XtermWidget term;
 #define	XkbBI_MarginBell		10
 #define	XkbBI_CursorStuck		11
 #endif
+
+#endif /* included_data_h */

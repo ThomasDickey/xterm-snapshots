@@ -36,15 +36,7 @@
 #include "ptyx.h"
 #include "error.h"
 #include "data.h"
-
 #include "xterm.h"
-
-#ifndef X_NOT_STDC_ENV
-#include <stdlib.h>
-#else
-extern Char *calloc(), *malloc(), *realloc();
-extern void free();
-#endif
 
 #include <stdio.h>
 #include <signal.h>
@@ -161,7 +153,7 @@ Reallocate(sbuf, sbufaddr, nrow, ncol, oldrow, oldcol)
 	register ScrnBuf base;
 	register Char *tmp;
 	register int i, j, k, minrows;
-	register Size_t mincols;
+	register size_t mincols;
 	Char *oldbuf;
 	int move_down = 0, move_up = 0;
 	size_t entries = MAX_PTRS * nrow;
@@ -485,7 +477,7 @@ ScrnDeleteChar (screen, n, size)
 	int col = screen->cur_col;
 	register Char *ptr = BUF_CHARS(sb, row);
 	register Char *attrs = BUF_ATTRS(sb, row);
-	register Size_t nbytes = (size - n - col);
+	register size_t nbytes = (size - n - col);
 	int wrappedbit = ScrnTstWrapped(screen, row);
 
 	memcpy (ptr   + col, ptr   + col + n, nbytes);
@@ -779,6 +771,7 @@ ScreenResize (screen, width, height, flags)
     int width, height;
     unsigned *flags;
 {
+	int code;
 	int rows, cols;
 	int border = 2 * screen->border;
 	int move_down_by;
@@ -906,7 +899,8 @@ ScreenResize (screen, width, height, flags)
 	/* Set tty's idea of window size */
 	ts.ts_lines = rows;
 	ts.ts_cols = cols;
-	ioctl (screen->respond, TIOCSSIZE, &ts);
+	code = ioctl (screen->respond, TIOCSSIZE, &ts);
+	TRACE(("return %d from TIOCSSIZE %dx%d\n", code, rows, cols))
 #ifdef SIGWINCH
 	if(screen->pid > 1) {
 		int	pgrp;
@@ -922,7 +916,8 @@ ScreenResize (screen, width, height, flags)
 	ws.ws_col = cols;
 	ws.ws_xpixel = width;
 	ws.ws_ypixel = height;
-	ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
+	code = ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
+	TRACE(("return %d from TIOCSWINSZ %dx%d\n", code, rows, cols))
 #ifdef notdef	/* change to SIGWINCH if this doesn't work for you */
 	if(screen->pid > 1) {
 		int	pgrp;
@@ -931,6 +926,8 @@ ScreenResize (screen, width, height, flags)
 		    kill_process_group(pgrp, SIGWINCH);
 	}
 #endif	/* SIGWINCH */
+#else
+	TRACE(("ScreenResize cannot do anything to pty\n"))
 #endif	/* TIOCSWINSZ */
 #endif	/* sun */
 	return (0);

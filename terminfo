@@ -11,9 +11,9 @@
 #	be disabled via titeInhibit, making that resource not function as
 #	intended on systems with terminfo.
 #
-# We could have used ich=\E[%p1%d@, ich1=\E[@, which work with ncurses, but
-# that is not standard behavior.  If they are set, then SVr4 vi (e.g., Solaris
-# 2.6) emits both smir/rmir and ich1.
+# We could have used ich1=\E[@, which works with ncurses, but that is not
+# standard behavior.  If it is set, then SVr4 vi (e.g., Solaris 2.6) emits
+# both smir/rmir and ich1.
 #
 # The xterm-r6 entry does not define acsc, which is probably an error (but
 # it matches the X11R5 to X11R6.3 distributions).
@@ -307,16 +307,28 @@ xterm-nrc|xterm with VT220 national replacement character sets,
 #
 # Foreground 0-15 maps (with toggles) into 30-37 & 90-97
 # Background 0-15 maps (with toggles) into 40-47 & 100-107
-# We should not have to suppress setaf/setab, however ncurses selects these
-# if they're set, ignoring setf/setb (will be fixed in 4.2).  SVr4 curses
-# does not use more than 8 colors anyway, so using 16 colors is either for
-# terminfo-level applications or via ncurses.
+#
+# Originally I suppressed setaf/setab, since ANSI specifies only 8 colors, but
+# Stephen Marley persuaded me to allow the "ANSI" color controls to extend to
+# 16 colors.  (Note that ncurses 4.2 uses setf/setb from this description;
+# however 4.3 will select either according to their availability).  - T.Dickey
+#
+# SVr4 curses does not use more than 8 colors anyway, so using 16 colors is
+# either for terminfo-level applications or via ncurses.
 xterm-16color|xterm with 16 colors,
 	colors#16,
 	ncv#32,
 	pairs#256,
-	setab@,
-	setaf@,
+	setab=\E[
+		%?%p1%{8}%<
+			%t%p1%{40}%+
+			%e%p1%{92}%+
+		%;%dm,
+	setaf=\E[
+		%?%p1%{8}%<
+			%t%p1%{30}%+
+			%e%p1%{82}%+
+		%;%dm,
 	setb=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa
 		%?%ga%{1}%=
 			%t4

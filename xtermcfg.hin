@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1997 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1997,1998 by Thomas E. Dickey <dickey@clark.net>
 
                         All Rights Reserved
 
@@ -27,30 +27,35 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ********************************************************/
 
+#ifndef included_xtermcfg_h
+#define included_xtermcfg_h 1
+
 /* This is a template for <xtermcfg.h> */
 
-#undef ALLOWLOGGING	/* CF_ARG_ENABLE(enable-logging) */
 #undef ALLOWLOGFILEEXEC	/* CF_ARG_ENABLE(enable-logfile-exec) */
+#undef ALLOWLOGGING	/* CF_ARG_ENABLE(enable-logging) */
 #undef CC_HAS_PROTOS	/* CF_ANSI_CC */
+#undef DECL_ERRNO	/* CF_ERRNO */
 #undef DFT_COLORMODE	/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID	/* AC_ARG_WITH(default-terminal-id) */
 #undef DFT_TERMTYPE	/* AC_ARG_WITH(default-term-type) */
+#undef HAVE_STDLIB_H	/* AC_CHECK_HEADERS(stdlib.h) */
 #undef HAVE_STRERROR	/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_SYS_WAIT_H	/* AC_HEADER_SYS_WAIT */
 #undef HAVE_TERMCAP_H	/* AC_CHECK_HEADERS(termcap.h) */
 #undef HAVE_UNISTD_H	/* AC_CHECK_HEADERS(unistd.h) */
 #undef HAVE_WAITPID	/* AC_CHECK_FUNCS(waitpid) */
-#undef HAVE_XKBSTDBELL	/* AC_CHECK_FUNCS(XkbStdBell) */
 #undef HAVE_X11_DECKEYSYM_H /* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #undef HAVE_X11_XPOLL_H	/* AC_CHECK_HEADERS(X11/Xpoll.h) */
+#undef HAVE_XKBSTDBELL	/* AC_CHECK_FUNCS(XkbStdBell) */
 #undef NO_ACTIVE_ICON	/* CF_ARG_DISABLE(active-icon) */
 #undef OPT_AIX_COLORS	/* CF_ARG_DISABLE(16-color) */
 #undef OPT_DEC_CHRSET	/* CF_ARG_DISABLE(doublechars) */
+#undef OPT_HIGHLIGHT_COLOR /* CF_ARG_DISABLE(highlighting) */
 #undef OPT_I18N_SUPPORT	/* CF_ARG_DISABLE(i18n) */
 #undef OPT_INPUT_METHOD	/* CF_ARG_DISABLE(input-method) */
 #undef OPT_ISO_COLORS	/* CF_ARG_DISABLE(ansi-color) */
 #undef OPT_PC_COLORS	/* CF_ARG_DISABLE(pc-color) */
-#undef OPT_HIGHLIGHT_COLOR /* CF_ARG_DISABLE(highlighting) */
 #undef OPT_TEK4014	/* CF_ARG_DISABLE(tek4014) */
 #undef OPT_TRACE	/* CF_ARG_ENABLE(trace) */
 #undef OPT_VT52_MODE	/* CF_ARG_DISABLE(vt52) */
@@ -86,3 +91,5 @@ extern char *my_strerror();
 #if !HAVE_XKBSTDBELL
 #define NO_XKBSTDBELL	/* IRIX 6.2 incorrectly defines XKB in imake */
 #endif
+
+#endif /* included_xtermcfg_h */
