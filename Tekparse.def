@@ -1,5 +1,5 @@
 #
-# $XConsortium: Tekparse.def,v 1.2 88/09/06 14:35:12 jim Exp $
+# $Xorg: Tekparse.def,v 1.3 2000/08/17 19:55:07 cpqbld Exp $
 #
 # List of symbols that need to be defined for Tekparse.h.  If you need to 
 # change any of the CASE_ macros, make the change here and rerun the command

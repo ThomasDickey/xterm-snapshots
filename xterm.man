@@ -1,5 +1,4 @@
-.\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.67 2000/12/30 19:15:48 dickey Exp $
+.\" $Xorg: xterm.man,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
 .\"
 .\"
 .\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey
@@ -57,8 +56,10 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.70 2001/01/27 18:21:24 dawes Exp $
+.\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996.
-.TH XTERM 1 "Release 6.3" "X Version 11"
+.TH XTERM 1 __vendorversion__
 .SH NAME
 xterm \- terminal emulator for X
 .SH SYNOPSIS
@@ -743,7 +744,7 @@ The default is ``white.''
 This option specifies the width in pixels of the border surrounding the window.
 .TP 8
 .B \-display \fIdisplay\fP
-This option specifies the X server to contact; see \fIX(1)\fP.
+This option specifies the X server to contact; see \fIX(__miscmansuffix__)\fP.
 .TP 8
 .B \-fg \fIcolor\fP
 This option specifies the color to use for displaying text.  The default is
@@ -755,7 +756,7 @@ default is \fIfixed\fP.
 .TP 8
 .B \-geometry \fIgeometry\fP
 This option specifies the preferred size and position of the VT102 window;
-see \fIX(1)\fP.
+see \fIX(__miscmansuffix__)\fP.
 .TP 8
 .B \-iconic
 This option indicates that \fIxterm\fP should ask the window manager to
@@ -1256,6 +1257,19 @@ which ignores termcap and always sends
 ESC F to move to the lower left corner.
 ``true'' causes \fIxterm\fP to interpret ESC F as a request to move to the
 lower left corner of the screen.  The default is ``false.''
+.TP 8
+.B "i18nSelections (\fPclass\fB I18nSelections)"
+If false, \fIxterm\fP will never request the targets
+.B COMPOUND_TEXT
+or
+.BR TEXT .
+In addition, when in 8-bit mode,
+.B STRING
+will be interpreted as carrying text in the current locale's encoding.
+Setting this resource to ``false'' breaks the ICCCM, and is strongly
+discouraged; it may, however, be useful for interacting with some
+broken clients (such as some versions of \fIxterm\fP).
+The default is ``true.''
 .TP 8
 .B "iconBorderColor (\fPclass\fB BorderColor)"
 Specifies the border color for the active icon window if this feature
@@ -2506,8 +2520,8 @@ The default bindings in the VT102 window are:
          Shift <KeyPress> Select:select-cursor-start() \\
                                  select-cursor-end(PRIMARY, CUT_BUFFER0) \\n\\
          Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
-         Shift <KeyPress> KP_Add:larger-vt-font() \n\
-    Shift <KeyPress> KP_Subtract:smaller-vt-font() \n\
+         Shift <KeyPress> KP_Add:larger-vt-font() \\n\\
+    Shift <KeyPress> KP_Subtract:smaller-vt-font() \\n\\
                 ~Meta <KeyPress>:insert-seven-bit() \\n\\
                  Meta <KeyPress>:insert-eight-bit() \\n\\
                 !Ctrl <Btn1Down>:popup-menu(mainMenu) \\n\\
@@ -2656,7 +2670,7 @@ If your display supports color, use this
 in your .Xdefaults file to
 automatically turn on color in \fIxterm\fP and similar applications.
 .SH "SEE ALSO"
-resize(1), X(1), pty(4), tty(4)
+resize(1), X(__miscmansuffix__), pty(4), tty(4)
 .br
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).

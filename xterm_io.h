@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.2 2000/12/30 19:15:48 dickey Exp $
+ * $XFree86: xc/programs/xterm/xterm_io.h,v 1.3 2001/02/13 19:19:19 dawes Exp $
  */
 
 /*
@@ -132,12 +132,14 @@
 /* this hacked termios support only works on SYSV */
 #define USE_ANY_SYSV_TERMIO
 #define termio termios
+#ifndef __CYGWIN__
 #undef  TCGETA
 #define TCGETA TCGETS
 #undef  TCSETA
 #define TCSETA TCSETS
 #undef  TCSETAW
 #define TCSETAW TCSETSW
+#endif
 #elif defined(USE_SYSV_TERMIO)
 # define USE_ANY_SYSV_TERMIO
 # ifdef Lynx

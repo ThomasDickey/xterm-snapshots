@@ -1,5 +1,5 @@
 #ifndef lint
-static char *rid="$TOG: main.c /main/249 1997/08/26 14:13:43 kaleb $";
+static char *rid="$Xorg: main.c,v 1.6 2000/08/18 11:04:49 xorgcvs Exp $";
 #endif /* lint */
 
 /*
@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.124 2000/12/30 19:15:46 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.125 2001/01/17 23:46:36 dawes Exp $ */
 
 
 /* main.c */
@@ -904,7 +904,7 @@ static XrmOptionDescRec optionDescList[] = {
    standard XtAppInitialize options now */
 {"%",		"*tekGeometry",	XrmoptionStickyArg,	(caddr_t) NULL},
 {"#",		".iconGeometry",XrmoptionStickyArg,	(caddr_t) NULL},
-{"-T",		"*title",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-T",		".title",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-n",		"*iconName",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-r",		"*reverseVideo",XrmoptionNoArg,		(caddr_t) "on"},
 {"+r",		"*reverseVideo",XrmoptionNoArg,		(caddr_t) "off"},

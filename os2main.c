@@ -436,7 +436,7 @@ static XrmOptionDescRec optionDescList[] = {
    standard XtAppInitialize options now */
 {"%",		"*tekGeometry",	XrmoptionStickyArg,	(caddr_t) NULL},
 {"#",		".iconGeometry",XrmoptionStickyArg,	(caddr_t) NULL},
-{"-T",		"*title",	XrmoptionSepArg,	(caddr_t) NULL},
+{"-T",		".title",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-n",		"*iconName",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-r",		"*reverseVideo",XrmoptionNoArg,		(caddr_t) "on"},
 {"+r",		"*reverseVideo",XrmoptionNoArg,		(caddr_t) "off"},

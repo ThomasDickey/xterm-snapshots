@@ -1,5 +1,4 @@
-/* $XConsortium: menu.h /main/27 1996/12/01 23:47:03 swick $ */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.24 2000/12/30 19:15:46 dickey Exp $ */
+/* $Xorg: menu.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $ */
 /*
 
 Copyright 1999-2000 by Thomas E. Dickey
@@ -51,6 +50,7 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.25 2001/01/17 23:46:37 dawes Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h

@@ -93,6 +93,11 @@ The options (in alphabetic order):
 	not shown.  This makes it simpler to read a build log and see the
 	actual warning messages.
 
+  --disable-freetype      disable freetype library-support
+
+ 	Do not use freetype libraries if they are found.  Normally they will
+	be used automatically.
+
   --disable-highlighting  disable support for color highlighting
 
   	Do not compile-in code that allows the selected region to be a
