@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1999-2000 by Thomas E. Dickey
 
                         All Rights Reserved
 

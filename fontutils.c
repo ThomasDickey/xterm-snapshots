@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1998-2000 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1998-2000 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -757,7 +757,7 @@ xtermMissingChar(unsigned ch, XFontStruct *font)
 				return True;
 			}
 #endif
-			CI_GET_CHAR_INFO_1D (font, ch, tmp, pc);
+			CI_GET_CHAR_INFO_1D (font, E2A(ch), tmp, pc);
 		}
 #if OPT_WIDE_CHARS
 		else {

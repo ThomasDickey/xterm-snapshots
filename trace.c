@@ -4,7 +4,7 @@
 
 /************************************************************
 
-Copyright 1997-2000 by Thomas E. Dickey <dickey@clark.net>
+Copyright 1997-2000 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -112,7 +112,7 @@ visibleChars(PAIRED_CHARS(Char *buf, Char *buf2), unsigned len)
 			sprintf(dst, "\\u+%04X", value);
 		else
 #endif
-		if (value < 32 || (value > 127 && value < 160))
+		if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
 			sprintf(dst, "\\%03o", value);
 		else
 			sprintf(dst, "%c", value);
@@ -141,7 +141,7 @@ visibleIChar(IChar *buf, unsigned len)
 			sprintf(dst, "\\u+%04X", value);
 		else
 #endif
-		if (value < 32 || (value > 127 && value < 160))
+		if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
 			sprintf(dst, "\\%03o", value);
 		else
 			sprintf(dst, "%c", value);

@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -238,7 +238,7 @@ typedef Char **ScrnBuf;
 #endif
 
 /* constants used for utf8 mode */
-#define UCS_REPL	0xfffd		
+#define UCS_REPL	0xfffd
 #define UCS_LIMIT	0x80000000U	/* both limit and flag for non-UCS */
 
 #define TERMCAP_SIZE 1500		/* 1023 is standard; 'screen' exceeds */
@@ -555,15 +555,26 @@ typedef struct {
 #define COLOR_BD	(NUM_ANSI_COLORS)	/* BOLD */
 #define COLOR_UL	(NUM_ANSI_COLORS+1)	/* UNDERLINE */
 #define COLOR_BL	(NUM_ANSI_COLORS+2)	/* BLINK */
-#define MAXCOLORS	(NUM_ANSI_COLORS+3)
+#define COLOR_RV	(NUM_ANSI_COLORS+3)	/* REVERSE */
+#define MAXCOLORS	(NUM_ANSI_COLORS+4)
 #ifndef DFT_COLORMODE
 #define DFT_COLORMODE TRUE	/* default colorMode resource */
 #endif
+
+#define ReverseOrHilite(screen,flags,hilite) \
+		(( screen->colorRVMode && hilite ) || \
+		    ( !screen->colorRVMode && \
+		      (( (flags & INVERSE) && !hilite) || \
+		       (!(flags & INVERSE) &&  hilite)) ))
 
 #else	/* !OPT_ISO_COLORS */
 
 #define if_OPT_ISO_COLORS(screen, code) /* nothing */
 #define TERM_COLOR_FLAGS 0
+
+#define ReverseOrHilite(screen,flags,hilite) \
+		      (( (flags & INVERSE) && !hilite) || \
+		       (!(flags & INVERSE) &&  hilite))
 
 #endif	/* OPT_ISO_COLORS */
 
@@ -641,12 +652,12 @@ typedef struct {
 #if OPT_EBCDIC
 extern int E2A(int);
 extern int A2E(int);
-extern char CONTROL(char);
 #else
 #define E2A(a) (a)
 #define A2E(a) (a)
-#define CONTROL(a) ((a)&037)
 #endif
+
+#define CONTROL(a) (A2E(E2A(a)&037))
 
 /***====================================================================***/
 
@@ -841,6 +852,7 @@ typedef struct {
 	int		cur_foreground; /* current foreground color	*/
 	int		cur_background; /* current background color	*/
 	int		sgr_foreground; /* current SGR foreground color */
+	int		sgr_background; /* current SGR background color */
 	Boolean		sgr_extended;	/* SGR set with extended codes? */
 #endif
 } SavedCursor;
@@ -902,6 +914,7 @@ typedef struct {
 	Boolean		colorULMode;	/* use color for underline?	*/
 	Boolean		colorBDMode;	/* use color for bold?		*/
 	Boolean		colorBLMode;	/* use color for blink?		*/
+	Boolean		colorRVMode;	/* use color for reverse?	*/
 	Boolean		colorAttrMode;	/* prefer colorUL/BD to SGR	*/
 #endif
 #if OPT_HIGHLIGHT_COLOR
@@ -1219,6 +1232,7 @@ typedef struct _Misc {
 #endif
 #if OPT_NUM_LOCK
     Boolean real_NumLock;	/* true if we treat NumLock key specially */
+    Boolean alwaysUseMods;	/* true if we always want f-key modifiers */
     unsigned long num_lock;	/* modifier for Num_Lock */
     unsigned long alt_left;	/* modifier for Alt_L */
     unsigned long alt_right;	/* modifier for Alt_R */
@@ -1271,6 +1285,7 @@ typedef struct _XtermWidgetRec {
     Pixel       dft_background;	/* default background color	*/
 #if OPT_ISO_COLORS
     int         sgr_foreground;	/* current SGR foreground color	*/
+    int         sgr_background;	/* current SGR background color	*/
     Boolean     sgr_extended;	/* SGR set with extended codes? */
 #endif
 #if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS

@@ -392,6 +392,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-leftbar",	"*rightScrollBar", XrmoptionNoArg,	(caddr_t) "off"},
 {"-rightbar",	"*rightScrollBar", XrmoptionNoArg,	(caddr_t) "on"},
 #endif
+{"-rvc",	"*colorRVMode",	XrmoptionNoArg,		(caddr_t) "off"},
+{"+rvc",	"*colorRVMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-sf",		"*sunFunctionKeys", XrmoptionNoArg,	(caddr_t) "on"},
 {"+sf",		"*sunFunctionKeys", XrmoptionNoArg,	(caddr_t) "off"},
 {"-si",		"*scrollTtyOutput", XrmoptionNoArg,	(caddr_t) "off"},
@@ -514,6 +516,7 @@ static struct _options {
 { "-rightbar",             "force scrollbar right (default left)" },
 { "-leftbar",              "force scrollbar left" },
 #endif
+{ "-/+rvc",		   "turn off/on display of reverse as color" },
 { "-/+sf",                 "turn on/off Sun Function Key escape codes" },
 { "-/+si",                 "turn on/off scroll-on-tty-output inhibit" },
 { "-/+sk",                 "turn on/off scroll-on-keypress" },

@@ -4,7 +4,7 @@
  */
 
 /*
- * Copyright 1999-2000 by Thomas E. Dickey <dickey@clark.net>
+ * Copyright 1999-2000 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1668,14 +1668,13 @@ updatedXtermGC(
 	Bool hilite)
 {
 	Pixel fg_pix = getXtermForeground(flags,extract_fg(fg_bg,flags));
-	Pixel bg_pix = getXtermBackground(flags,extract_bg(fg_bg));
+	Pixel bg_pix = getXtermBackground(flags,extract_bg(fg_bg,flags));
 #if OPT_HIGHLIGHT_COLOR
 	Pixel hi_pix = screen->highlightcolor;
 #endif
 	GC gc;
 
-	if ( (!hilite && (flags & INVERSE) != 0)
-	  ||  (hilite && (flags & INVERSE) == 0) ) {
+	if (ReverseOrHilite(screen, flags, hilite)) {
 		if (flags & (BOLD|BLINK))
 			gc = ReverseBoldGC(screen);
 		else
@@ -1719,8 +1718,7 @@ resetXtermGC(
 	Pixel bg_pix = getXtermBackground(flags,term->cur_background);
 	GC gc;
 
-	if ( (!hilite && (flags & INVERSE) != 0)
-	  ||  (hilite && (flags & INVERSE) == 0) ) {
+	if (ReverseOrHilite(screen, flags, hilite)) {
 		if (flags & (BOLD|BLINK))
 			gc = ReverseBoldGC(screen);
 		else
@@ -1750,16 +1748,10 @@ extract_fg (
 	unsigned color,
 	unsigned flags)
 {
-	int fg;
-
-#if OPT_EXT_COLORS
-	fg = (int) ((color >> 8) & 0xff);
-#else
-	fg = (int) ((color >> 4) & 0xf);
-#endif
+	int fg = (int)ExtractForeground(color);
 
 	if (term->screen.colorAttrMode
-	 || (fg == extract_bg(color))) {
+	 || (fg == (int)ExtractBackground(color))) {
 		if (term->screen.colorULMode && (flags & UNDERLINE))
 			fg = COLOR_UL;
 		if (term->screen.colorBDMode && (flags & BOLD))
@@ -1768,6 +1760,25 @@ extract_fg (
 			fg = COLOR_BL;
 	}
 	return fg;
+}
+
+/*
+ * Extract the background-color index from a one-byte color pair.
+ * If we've got INVERSE color-mode active, that will be used.
+ */
+int
+extract_bg (
+	unsigned color,
+	unsigned flags)
+{
+	int bg = (int)ExtractBackground(color);
+
+	if (term->screen.colorAttrMode
+	 || (bg == (int)ExtractForeground(color))) {
+		if (term->screen.colorRVMode && (flags & INVERSE))
+			bg = COLOR_RV;
+	}
+	return bg;
 }
 
 /*

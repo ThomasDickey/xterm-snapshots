@@ -4,7 +4,7 @@
 .\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.36 2000/03/03 20:02:05 dawes Exp $
 .\"
 .\"
-.\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey <dickey@clark.net>
+.\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -64,7 +64,7 @@
 .\" Originally written by Edward Moy, University of California,
 .\" Berkeley, edmoy@violet.berkeley.edu, for the X.V10R4 xterm.
 .\" The X Consortium staff has since updated it for X11.
-.\" Updated by Thomas Dickey <dickey@clark.net> for XFree86 3.2.
+.\" Updated by Thomas E. Dickey for XFree86 3.2 - XFree86 4.0
 .\"
 .\" Run this file through troff and use the -ms macro package.
 .\"
@@ -1234,6 +1234,9 @@ _
 .TE
 For example, shift-F5 would be sent as
 \*(Cs\*1\*5\*;\*2\*(c~
+
+If the \fBalwaysUseMods\fP resource is set, the Meta modifier also is
+recognized, making parameters 9 through 16.
 .SH
 VT220-Style Function Keys
 .LP

@@ -1,4 +1,4 @@
-http://www.clark.net/pub/dickey/xterm/xterm.html
+http://dickey.his.com/xterm/xterm.html
 
 Downloaded 1.22 variant (current Linux version) on 18-JAN-2000.
 
