@@ -57,7 +57,6 @@ extern Char *calloc();
 static Widget CreateScrollBar PROTO((XtermWidget xw, int x, int y, int height));
 static int params_to_pixels PROTO((TScreen *screen, String *params, Cardinal n));
 static int specialcmplowerwiths PROTO((char *a, char *b));
-static void RealizeScrollBar PROTO((Widget sbw, TScreen *screen));
 static void ResizeScreen PROTO((XtermWidget xw, int min_width, int min_height));
 
 /* Event handlers */
@@ -155,10 +154,10 @@ static void ResizeScreen(xw, min_width, min_height )
 	sizehints.height = (screen->max_row + 1) * FontHeight(screen)
 	     + min_height;
 #endif
-	
+
 	/*
-	 * Note: width and height are not set here because they are 
-	 * obsolete. 						
+	 * Note: width and height are not set here because they are
+	 * obsolete.
 	 */
 	XtVaSetValues(XtParent(xw),
 		      XtNbaseWidth, min_width,
@@ -211,26 +210,20 @@ static Widget CreateScrollBar(xw, x, y, height)
 	   {XtNreverseVideo,	(XtArgVal) 0},
 	   {XtNorientation,	(XtArgVal) XtorientVertical},
 	   {XtNborderWidth,	(XtArgVal) 1},
-	};   
+	};
 
 	argList[0].value = (XtArgVal) x;
 	argList[1].value = (XtArgVal) y;
 	argList[2].value = (XtArgVal) height;
 	argList[3].value = (XtArgVal) xw->misc.re_verse;
 
-	scrollWidget = XtCreateWidget("scrollbar", scrollbarWidgetClass, 
+	scrollWidget = XtCreateWidget("scrollbar", scrollbarWidgetClass,
 	  (Widget)xw, argList, XtNumber(argList));
         XtAddCallback (scrollWidget, XtNscrollProc, ScrollTextUpDownBy, 0);
         XtAddCallback (scrollWidget, XtNjumpProc, ScrollTextTo, 0);
 	return (scrollWidget);
 }
 
-static void RealizeScrollBar (sbw, screen)
-    Widget sbw;
-    TScreen *screen GCC_UNUSED;
-{
-    XtRealizeWidget (sbw);
-}
 
 void
 ScrollBarReverseVideo(scrollWidget)
@@ -264,7 +257,7 @@ ScrollBarDrawThumb(scrollWidget)
 {
 	register TScreen *screen = &term->screen;
 	register int thumbTop, thumbHeight, totalHeight;
-	
+
 	thumbTop    = screen->topline + screen->savedlines;
 	thumbHeight = screen->max_row + 1;
 	totalHeight = thumbHeight + screen->savedlines;
@@ -275,14 +268,25 @@ ScrollBarDrawThumb(scrollWidget)
 }
 
 void
-ResizeScrollBar(scrollWidget, x, y, height)
-	register Widget scrollWidget;
-	int x, y;
-	unsigned height;
+ResizeScrollBar(screen)
+	TScreen *screen;
 {
-	XtConfigureWidget(scrollWidget, x, y, scrollWidget->core.width,
-	    height, scrollWidget->core.border_width);
-	ScrollBarDrawThumb(scrollWidget);
+	XtConfigureWidget(
+		screen->scrollWidget,
+#ifdef SCROLLBAR_RIGHT
+        	(term->misc.useRight)
+			? (screen->fullVwin.fullwidth -
+			   screen->scrollWidget->core.width -
+			   screen->scrollWidget->core.border_width)
+			: 0,
+#else
+		0,
+#endif
+		0,
+		screen->scrollWidget->core.width,
+		screen->fullVwin.height + screen->border * 2,
+		screen->scrollWidget->core.border_width);
+	ScrollBarDrawThumb(screen->scrollWidget);
 }
 
 void
@@ -315,7 +319,7 @@ WindowScroll(screen, top)
 		scrolltop = lines;
 		refreshtop = scrollheight;
 	}
-	x = Scrollbar(screen) +	screen->border;
+	x = OriginX(screen);
 	scrolling_copy_area(screen, scrolltop, scrollheight, -i);
 	screen->topline = top;
 
@@ -323,9 +327,9 @@ WindowScroll(screen, top)
 
 	XClearArea(
 	    screen->display,
-	    TextWindow(screen), 
+	    TextWindow(screen),
 	    (int) x,
-	    (int) refreshtop * FontHeight(screen) + screen->border, 
+	    (int) refreshtop * FontHeight(screen) + screen->border,
 	    (unsigned) Width(screen),
 	    (unsigned) lines * FontHeight(screen),
 	    FALSE);
@@ -375,7 +379,7 @@ ScrollBarOn (xw, init, doalloc)
 	       == NULL)
 	      Error (ERROR_SBRALLOC);
 	    screen->buf = &screen->allbuf[MAX_PTRS * screen->savelines];
-	    memmove( (char *)screen->buf, (char *)screen->allbuf, 
+	    memmove( (char *)screen->buf, (char *)screen->allbuf,
 		   MAX_PTRS * (screen->max_row + 2) * sizeof (char *));
 	    for(i = MAX_PTRS * screen->savelines - 1 ; i >= 0 ; i--)
 	      if((screen->allbuf[i] =
@@ -384,9 +388,8 @@ ScrollBarOn (xw, init, doalloc)
 		Error (ERROR_SBRALLOC2);
 	}
 
-	ResizeScrollBar (screen->scrollWidget, -1, -1, 
-			 screen->fullVwin.height + border);
-	RealizeScrollBar (screen->scrollWidget, screen);
+	ResizeScrollBar (screen);
+	XtRealizeWidget (screen->scrollWidget);
 	screen->fullVwin.scrollbar = screen->scrollWidget->core.width +
 	     screen->scrollWidget->core.border_width;
 

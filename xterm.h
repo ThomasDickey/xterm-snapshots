@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.15 1997/09/19 08:30:20 hohndel Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.16 1997/09/30 04:51:14 hohndel Exp $ */
 /*
  * Common/useful definitions for XTERM application
  */
@@ -184,7 +184,7 @@ extern void ScrnSetAttributes PROTO((TScreen *screen, int row, int col, unsigned
 extern void DoResizeScreen PROTO((XtermWidget xw));
 extern void HandleScrollBack PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollForward PROTO_XT_ACTIONS_ARGS;
-extern void ResizeScrollBar PROTO((Widget scrollWidget, int x, int y, unsigned height));
+extern void ResizeScrollBar PROTO((TScreen *screen));
 extern void ScrollBarDrawThumb PROTO((Widget scrollWidget));
 extern void ScrollBarOff PROTO((TScreen *screen));
 extern void ScrollBarOn PROTO((XtermWidget xw, int init, int doalloc));

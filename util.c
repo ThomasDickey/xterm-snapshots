@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: util.c /main/33 1996/12/01 23:47:10 swick $
- *	$XFree86: xc/programs/xterm/util.c,v 3.18 1997/09/19 08:30:20 hohndel Exp $
+ *	$XFree86: xc/programs/xterm/util.c,v 3.19 1997/09/30 04:51:13 hohndel Exp $
  */
 
 /*
@@ -134,7 +134,7 @@ register TScreen *screen;
 	if(refreshheight > 0) {
 		ClearCurBackground(screen,
 		    (int) refreshtop * FontHeight(screen) + screen->border,
-		    (int) screen->border + Scrollbar(screen),
+		    (int) OriginX(screen),
 		    (unsigned) refreshheight * FontHeight(screen),
 		    (unsigned) Width(screen));
 		ScrnRefresh(screen, refreshtop, 0, refreshheight,
@@ -253,7 +253,7 @@ register int amount;
 	if(refreshheight > 0) {
 		ClearCurBackground(screen,
 		    (int) refreshtop * FontHeight(screen) + screen->border,
-		    (int) screen->border + Scrollbar(screen),
+		    (int) OriginX(screen),
 		    (unsigned) refreshheight * FontHeight(screen),
 		    (unsigned) Width(screen));
 		if(refreshheight > shift)
@@ -331,7 +331,7 @@ register int amount;
 	if(refreshheight > 0) {
 		ClearCurBackground(screen,
 		    (int) refreshtop * FontHeight(screen) + screen->border,
-		    (int) screen->border + Scrollbar(screen),
+		    (int) OriginX(screen),
 		    (unsigned) refreshheight * FontHeight(screen),
 		    (unsigned) Width(screen));
 	}
@@ -391,7 +391,7 @@ register int n;
 	if(refreshheight > 0) {
 		ClearCurBackground(screen,
 		    (int) refreshtop * FontHeight(screen) + screen->border,
-		    (int) screen->border + Scrollbar(screen),
+		    (int) OriginX(screen),
 		    (unsigned) refreshheight * FontHeight(screen),
 		    (unsigned) Width(screen));
 	}
@@ -467,7 +467,7 @@ register int n;
 	if(refreshheight > 0) {
 		ClearCurBackground(screen,
 		    (int) refreshtop * FontHeight(screen) + screen->border,
-		    (int) screen->border + Scrollbar(screen),
+		    (int) OriginX(screen),
 		    (unsigned) refreshheight * FontHeight(screen),
 		    (unsigned) Width(screen));
 	}
@@ -592,7 +592,7 @@ register TScreen *screen;
 			if((height -= top) > 0) {
 				ClearCurBackground(screen,
 				    top * FontHeight(screen) + screen->border,
-				    screen->border + Scrollbar(screen),
+				    OriginX(screen),
 				    height * FontHeight(screen),
 				    Width(screen));
 			}
@@ -626,7 +626,7 @@ register TScreen *screen;
 			if(++top <= screen->max_row) {
 				ClearCurBackground(screen,
 				    top * FontHeight(screen) + screen->border,
-				    screen->border + Scrollbar(screen),
+				    OriginX(screen),
 				    (screen->max_row - top + 1) * FontHeight(screen),
 				    Width(screen));
 			}
@@ -787,7 +787,7 @@ register TScreen *screen;
 			FlushScroll(screen);
 		ClearCurBackground(screen,
 		    top * FontHeight(screen) + screen->border,	
-		    screen->border + Scrollbar(screen), 
+		    OriginX(screen), 
 		    (screen->max_row - top + 1) * FontHeight(screen),
 		    Width(screen));
 	}
@@ -987,7 +987,7 @@ vertical_copy_area(screen, firstline, nlines, amount)
     int amount;			/* number of lines to move up (neg=down) */
 {
     if(nlines > 0) {
-	int src_x = screen->border + Scrollbar(screen);
+	int src_x = OriginX(screen);
 	int src_y = firstline * FontHeight(screen) + screen->border;
 
 	copy_area(screen, src_x, src_y,
@@ -1083,15 +1083,14 @@ handle_translated_exposure (screen, rect_x, rect_y, rect_width, rect_height)
 	toprow = (rect_y - screen->border) / FontHeight(screen);
 	if(toprow < 0)
 		toprow = 0;
-	leftcol = (rect_x - screen->border - Scrollbar(screen))
+	leftcol = (rect_x - OriginX(screen))
 	    / CurFontWidth(screen,screen->cur_row);
 	if(leftcol < 0)
 		leftcol = 0;
 	nrows = (rect_y + rect_height - 1 - screen->border) / 
 		FontHeight(screen) - toprow + 1;
-	ncols =
-	 (rect_x + rect_width - 1 - screen->border - Scrollbar(screen)) /
-			FontWidth(screen) - leftcol + 1;
+	ncols = (rect_x + rect_width - 1 - OriginX(screen)) /
+		FontWidth(screen) - leftcol + 1;
 	toprow -= screen->scrolls;
 	if (toprow < 0) {
 		nrows += toprow;

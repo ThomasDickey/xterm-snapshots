@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.8 1997/09/19 08:30:14 hohndel Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.9 1997/09/30 04:51:08 hohndel Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
@@ -27,7 +27,6 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Revision: 1.16 $)
 AC_PREREQ(2.12)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -182,6 +181,16 @@ CF_ARG_ENABLE(logging,
 AC_MSG_RESULT($enable_logging)
 if test $enable_logging = yes ; then
 	AC_DEFINE(ALLOWLOGGING)
+fi
+
+AC_MSG_CHECKING(if you want support for right-scrollbar)
+CF_ARG_DISABLE(rightbar,
+	[  --disable-rightbar      enable logging],
+	[enable_rightbar=no],
+	[enable_rightbar=yes])
+AC_MSG_RESULT($enable_rightbar)
+if test $enable_rightbar = yes ; then
+	AC_DEFINE(SCROLLBAR_RIGHT)
 fi
 
 AC_MSG_CHECKING(if you want debugging traces)

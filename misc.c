@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: misc.c /main/112 1996/11/29 10:34:07 swick $
- *	$XFree86: xc/programs/xterm/misc.c,v 3.20 1997/09/19 08:30:17 hohndel Exp $
+ *	$XFree86: xc/programs/xterm/misc.c,v 3.21 1997/09/30 04:51:12 hohndel Exp $
  */
 
 /*
@@ -524,6 +524,10 @@ Redraw()
  * symbolic links, but that is messy and has race conditions.
  * Forking is messy, too, but we can't count on setreuid() or saved set-uids
  * being available.
+ *
+ * Note:  when called for user logging, we have ensured that the real and
+ * effective user ids are the same, so this remains as a convenience function
+ * for the debug logs.
  */
 void
 creat_as(uid, gid, pathname, mode)
