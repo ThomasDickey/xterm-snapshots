@@ -66,6 +66,13 @@ extern char *ptydev;
 extern char *ttydev;
 extern char *xterm_name;
 extern Boolean sunFunctionKeys;
+#if OPT_ZICONBEEP 
+extern int zIconBeep; 
+extern Boolean zIconBeep_flagged; 
+#endif 
+#if OPT_SAME_NAME 
+extern Boolean sameName; 
+#endif 
 #if OPT_SUNPC_KBD
 extern Boolean sunKeyboard;
 #endif

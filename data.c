@@ -96,6 +96,18 @@ XtAppContext app_con;
 XtermWidget term;		/* master data structure for client */
 char *xterm_name;	/* argv[0] */
 Boolean sunFunctionKeys;
+
+#if OPT_ZICONBEEP
+int zIconBeep;  /* non-zero means beep; see charproc.c for details -IAN! */
+Boolean zIconBeep_flagged; /* True if the icon name has been changed */
+#endif /* OPT_ZICONBEEP */
+
+#if OPT_SAME_NAME
+Boolean sameName;            /* Don't change the title or icon name if it
+			is the same.  This prevents flicker on the screen at
+			the cost of an extra request to the server */
+#endif
+
 #if OPT_SUNPC_KBD
 Boolean sunKeyboard;
 #endif
