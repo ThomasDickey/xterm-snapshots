@@ -256,7 +256,7 @@ int main() {
 		[cf_cv_good_bcopy=unknown])
 		])
 	],[cf_cv_good_bcopy=no])
-	if test $cf_cv_good_bcopy = yes ; then
+	if test "$cf_cv_good_bcopy" = yes ; then
 		AC_DEFINE(USE_OK_BCOPY)
 	else
 		AC_DEFINE(USE_MY_MEMMOVE)
@@ -907,7 +907,7 @@ dnl $1=uppercase($2)
 AC_DEFUN([CF_UPPER],
 [
 changequote(,)dnl
-$1=`echo $2 | tr '[a-z]' '[A-Z]'`
+$1=`echo "$2" | sed y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%`
 changequote([,])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------

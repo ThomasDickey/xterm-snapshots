@@ -939,12 +939,6 @@ StartLog(register TScreen *screen)
 #ifdef ALLOWLOGFILEEXEC
 	register char *cp;
 	register int i = 0;
-#ifdef SYSV
-	/* SYSV has another pointer which should be part of the
-	** FILE structure but is actually a separate array.
-	*/
-	unsigned char *old_bufend;
-#endif	/* SYSV */
 #endif /* ALLOWLOGFILEEXEC */
 
 	if(screen->logging || (screen->inhibit & I_LOG))
