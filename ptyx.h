@@ -792,6 +792,10 @@ typedef struct _XtermClassRec {
     XtermClassPart xterm_class;
 } XtermClassRec;
 
+extern WidgetClass xtermWidgetClass;
+
+#define IsXtermWidget(w) (XtClass(w) == xtermWidgetClass)
+
 typedef struct _TekClassRec {
     CoreClassPart core_class;
     TekClassPart tek_class;

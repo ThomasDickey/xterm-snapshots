@@ -553,9 +553,6 @@ ConvertConsoleSelection(w, selection, target, type, value, length, format)
     return False;
 }
 
-
-extern WidgetClass xtermWidgetClass;
-
 Arg ourTopLevelShellArgs[] = {
 	{ XtNallowShellResize, (XtArgVal) TRUE },	
 	{ XtNinput, (XtArgVal) TRUE },

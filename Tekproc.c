@@ -123,8 +123,6 @@ extern long time();		/* included in <time.h> by Xos.h */
 
 #include "xterm.h"
 
-#define TekColormap DefaultColormap( screen->display, \
-				    DefaultScreen(screen->display) )
 #define DefaultGCID XGContextFromGC(DefaultGC(screen->display, DefaultScreen(screen->display)))
 
 /* Tek defines */

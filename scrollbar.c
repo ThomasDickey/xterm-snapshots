@@ -548,11 +548,11 @@ void HandleScrollForward (gw, event, params, nparams)
     String *params;
     Cardinal *nparams;
 {
-    XtermWidget w = (XtermWidget) gw;
-    register TScreen *screen = &w->screen;
-
-    ScrollTextUpDownBy (gw, (XtPointer) NULL,
+    if (IsXtermWidget(gw)) {
+    	register TScreen *screen = &((XtermWidget)gw)->screen;
+	ScrollTextUpDownBy (gw, (XtPointer) 0,
 			(XtPointer)(params_to_pixels (screen, params, *nparams)));
+    }
     return;
 }
 
@@ -564,10 +564,10 @@ void HandleScrollBack (gw, event, params, nparams)
     String *params;
     Cardinal *nparams;
 {
-    XtermWidget w = (XtermWidget) gw;
-    register TScreen *screen = &w->screen;
-
-    ScrollTextUpDownBy (gw, (XtPointer) NULL,
+    if (IsXtermWidget(gw)) {
+    	register TScreen *screen = &((XtermWidget)gw)->screen;
+	ScrollTextUpDownBy (gw, (XtPointer) 0,
 			(XtPointer)(-params_to_pixels (screen, params, *nparams)));
+    }
     return;
 }
