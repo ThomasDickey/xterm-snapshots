@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.70 2001/04/12 01:02:51 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.72 2001/06/18 19:09:27 dickey Exp $ */
 
 /************************************************************
 
@@ -127,7 +127,7 @@ authorization.
 #define USE_LASTLOG
 #endif
 
-#if defined(AMOEBA) || defined(SCO) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103))
+#if defined(AMOEBA) || defined(SCO) || defined(SVR4) || defined(_POSIX_SOURCE) || defined(__QNX__) || defined(__hpux) || (defined(BSD) && (BSD >= 199103)) || defined(__CYGWIN__)
 #define USE_POSIX_WAIT
 #endif
 
@@ -268,31 +268,11 @@ extern int errno;
 #define XtNc132			"c132"
 #define XtNcacheDoublesize	"cacheDoublesize"
 #define XtNcharClass		"charClass"
-#define XtNcolor0		"color0"
-#define XtNcolor1		"color1"
-#define XtNcolor10		"color10"
-#define XtNcolor11		"color11"
-#define XtNcolor12		"color12"
-#define XtNcolor13		"color13"
-#define XtNcolor14		"color14"
-#define XtNcolor15		"color15"
-#define XtNcolor2		"color2"
-#define XtNcolor3		"color3"
-#define XtNcolor4		"color4"
-#define XtNcolor5		"color5"
-#define XtNcolor6		"color6"
-#define XtNcolor7		"color7"
-#define XtNcolor8		"color8"
-#define XtNcolor9		"color9"
 #define XtNcolorAttrMode	"colorAttrMode"
-#define XtNcolorBD		"colorBD"
 #define XtNcolorBDMode		"colorBDMode"
-#define XtNcolorBL		"colorBL"
 #define XtNcolorBLMode		"colorBLMode"
 #define XtNcolorMode		"colorMode"
-#define XtNcolorRV		"colorRV"
 #define XtNcolorRVMode		"colorRVMode"
-#define XtNcolorUL		"colorUL"
 #define XtNcolorULMode		"colorULMode"
 #define XtNctrlFKeys		"ctrlFKeys"
 #define XtNcurses		"curses"
@@ -312,6 +292,8 @@ extern int errno;
 #define XtNfaceSize		"faceSize"
 #define XtNfontDoublesize	"fontDoublesize"
 #define XtNfontStyle		"fontStyle"
+#define XtNforceBoxChars	"forceBoxChars"
+#define XtNfreeBoldBox		"freeBoldBox"
 #define XtNhighlightColor	"highlightColor"
 #define XtNhighlightSelection	"highlightSelection"
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
@@ -358,6 +340,7 @@ extern int errno;
 #define XtNtekInhibit		"tekInhibit"
 #define XtNtekSmall		"tekSmall"
 #define XtNtekStartup		"tekStartup"
+#define XtNtiXtraScroll		"tiXtraScroll"
 #define XtNtiteInhibit		"titeInhibit"
 #define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
@@ -444,6 +427,7 @@ extern int errno;
 #define XtCTekInhibit		"TekInhibit"
 #define XtCTekSmall		"TekSmall"
 #define XtCTekStartup		"TekStartup"
+#define XtCTiXtraScroll		"TiXtraScroll"
 #define XtCTiteInhibit		"TiteInhibit"
 #define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
@@ -462,13 +446,14 @@ extern int errno;
 #define XtCGeometry		"Geometry"
 #endif
 
-#ifdef VMS
-#define XtCbackground		"background"
-#define XtCbordercolor		"borderColor"
-#define XtCborderwidth		"borderWidth"
-#define XtCforeground		"foreground"
-#define XtCfont			"font"
-#define XtCiconic		"iconic"
+#if OPT_COLOR_CLASS
+#define XtCCursorColor		"CursorColor"
+#define XtCPointerColor		"PointerColor"
+#define XtCHighlightColor	"HighlightColor"
+#else
+#define XtCCursorColor		XtCForeground
+#define XtCPointerColor		XtCForeground
+#define XtCHighlightColor	XtCForeground
 #endif
 
 /***====================================================================***/

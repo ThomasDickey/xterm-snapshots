@@ -1,8 +1,8 @@
-/* $XFree86: xc/programs/xterm/xstrings.c,v 1.1 2000/09/22 10:44:29 alanh Exp $ */
+/* $XFree86: xc/programs/xterm/xstrings.c,v 1.2 2001/06/18 19:09:27 dickey Exp $ */
 
 /************************************************************
 
-Copyright 2000 by Thomas E. Dickey
+Copyright 2000,2001 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -32,8 +32,11 @@ authorization.
 
 ********************************************************/
 
+#include <xterm.h>
+
 #include <sys/types.h>
 #include <string.h>
+
 #include <xstrings.h>
 
 char *
@@ -47,6 +50,22 @@ x_basename(char *name)
 	cp = strrchr(name, '\\');
 #endif
     return (cp ? cp + 1 : name);
+}
+
+/*
+ * Allocates a copy of a string
+ */
+char *
+x_strdup(char *s)
+{
+    if (s != 0) {
+	char *t = malloc(strlen(s) + 1);
+	if (t != 0) {
+	    strcpy(t, s);
+	}
+	s = t;
+    }
+    return s;
 }
 
 /*

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.31 2001/01/04 18:26:12 keithp Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.32 2001/06/18 19:09:26 dickey Exp $
  */
 
 /************************************************************
@@ -44,6 +44,7 @@ authorization.
 
 #include <data.h>
 #include <menu.h>
+#include <xstrings.h>
 #include <xterm.h>
 
 #include <stdio.h>
@@ -455,11 +456,11 @@ static int
 same_font_size(XFontStruct *nfs, XFontStruct *bfs)
 {
 	TRACE(("same_font_size height %d/%d, min %d/%d max %d/%d\n",
-		nfs->ascent + nfs->descent,           
+		nfs->ascent + nfs->descent,
 		bfs->ascent + bfs->descent,
 		nfs->min_bounds.width, bfs->min_bounds.width,
 		nfs->max_bounds.width, bfs->max_bounds.width));
-	return (
+	return term->screen.free_bold_box || (
 	 (nfs->ascent + nfs->descent) == (bfs->ascent + bfs->descent)
 	 &&  (	nfs->min_bounds.width == bfs->min_bounds.width
 	   ||	nfs->min_bounds.width == bfs->min_bounds.width + 1)
@@ -531,10 +532,8 @@ xtermLoadFont (
 
 	if (fontnum == fontMenu_fontescape
 	 && nfontname != screen->menu_font_names[fontnum]) {
-		tmpname = (char *) malloc (strlen(nfontname) + 1);
-		if (!tmpname)
+		if ((tmpname = x_strdup(nfontname)) == 0)
 			return 0;
-		strcpy (tmpname, nfontname);
 	}
 
 	TRACE(("xtermLoadFont normal %s\n", nfontname));
@@ -763,7 +762,6 @@ xtermLoadFont (
 	 * characters.  Check that they are all present.  The null character
 	 * (0) is special, and is not used.
 	 */
-	screen->force_box_chars = False;
 	for (ch = 1; ch < 32; ch++) {
 		int n = ch;
 #if OPT_WIDE_CHARS
@@ -810,12 +808,12 @@ bad:
 	if (tmpname)
 		free (tmpname);
 	if (new_normalGC)
-		XtReleaseGC ((Widget) term, screen->fullVwin.normalGC);
-	if (new_normalGC && new_normalGC != new_normalboldGC)
+		XtReleaseGC ((Widget) term, new_normalGC);
+	if (new_normalboldGC && new_normalGC != new_normalboldGC)
 		XtReleaseGC ((Widget) term, new_normalboldGC);
 	if (new_reverseGC)
 		XtReleaseGC ((Widget) term, new_reverseGC);
-	if (new_reverseGC && new_reverseGC != new_reverseboldGC)
+	if (new_reverseboldGC && new_reverseGC != new_reverseboldGC)
 		XtReleaseGC ((Widget) term, new_reverseboldGC);
 	if (nfs)
 		XFreeFont (screen->display, nfs);
@@ -864,7 +862,7 @@ xtermComputeFontInfo (TScreen *screen, struct _vtwin *win, XFontStruct *font, in
 	XftResult   result;
 
 	pat = XftNameParse (term->misc.face_name);
-	XftPatternBuild (pat, 
+	XftPatternBuild (pat,
 			 XFT_FAMILY, XftTypeString, "mono",
 			 XFT_SIZE, XftTypeInteger, term->misc.face_size,
 			 XFT_SPACING, XftTypeInteger, XFT_MONO,

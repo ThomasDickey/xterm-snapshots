@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.52 2001/01/17 23:46:36 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.53 2001/06/18 19:09:26 dickey Exp $ */
 
 /*
  * Copyright 1999-2000 by Thomas E. Dickey
@@ -78,9 +78,10 @@
 #include <X11/StringDefs.h>
 #include <ctype.h>
 
+#include <xutf8.h>
+
 #include <data.h>
 #include <fontutils.h>
-#include <keysym2ucs.h>
 
 /*                       0123456789 abc def0123456789abdef0123456789abcdef0123456789abcd */
 static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XX=";
@@ -335,9 +336,6 @@ Input (
 	int	dec_code;
 	short	modify_parm = 0;
 	int	keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
-#if OPT_WIDE_CHARS
-	long    ucs;
-#endif
 
 	/* Ignore characters typed at the keyboard */
 	if (keyboard->flags & MODE_KAM)
@@ -352,16 +350,19 @@ Input (
 	else
 #endif
 #if OPT_I18N_SUPPORT
-	if (screen->xic
-#if OPT_WIDE_CHARS
-	 && !screen->utf8_mode
-#endif
-	 ) {
+        if (screen->xic) {
 	    Status status_return;
-	    nbytes = XmbLookupString (screen->xic, event,
-				      strbuf, sizeof(strbuf),
-				      &keysym, &status_return);
-	}
+#if OPT_WIDE_CHARS
+            if(screen->utf8_mode)
+                nbytes = Xutf8LookupString (screen->xic, event,
+                                            strbuf, sizeof(strbuf),
+                                            &keysym, &status_return);
+            else
+#endif
+                nbytes = XmbLookupString (screen->xic, event,
+                                          strbuf, sizeof(strbuf),
+                                          &keysym, &status_return);
+        }
 	else
 #endif
 	{
@@ -369,33 +370,6 @@ Input (
 	    nbytes = XLookupString (event, strbuf, sizeof(strbuf),
 				    &keysym, &compose_status);
 	}
-
-#if OPT_WIDE_CHARS
-	/*
-	 * FIXME:  As long as Xlib does not provide proper UTF-8 conversion via
-	 * XLookupString(), we have to generate them here.  Once Xlib is fully
-	 * UTF-8 capable, this code here should be removed again.
-	 */
-	if (screen->utf8_mode) {
-		ucs = -1;
-		if (nbytes == 1 && strbuf[0]) {
-		/* Take ISO 8859-1 character delivered by XLookupString() */
-			ucs = (unsigned char) strbuf[0];
-		} else if ((!nbytes || !strbuf[0]) &&
-			   ((keysym >= 0x100 && keysym <= 0xf000) ||
-			    (keysym & 0xff000000U) == 0x01000000))
-			ucs = keysym2ucs(keysym);
-		else
-			ucs = -2;
-		if (nbytes == 1 && !strbuf[0]) {
-			nbytes = 0;
-		}
-		if (ucs == -1)
-			nbytes = 0;
-		if (ucs >= 0)
-			nbytes = convertFromUTF8(ucs, (Char *)strbuf);
-	}
-#endif
 
 	string = (Char *)&strbuf[0];
 	reply.a_pintro = 0;
@@ -1143,8 +1117,10 @@ xtermcapKeycode(char *params, unsigned *state)
 		DATA(	"FN",	"kf33",		XK_F33,		0),
 		DATA(	"FO",	"kf34",		XK_F34,		0),
 		DATA(	"FP",	"kf35",		XK_F35,		0),
+#ifdef SunXK_F36
 		DATA(	"FQ",	"kf36",		SunXK_F36,	0),
 		DATA(	"FR",	"kf37",		SunXK_F37,	0),
+#endif
 		DATA(	"K1",	"ka1",		XK_KP_Home,	0),
 		DATA(	"K4",	"kc1",		XK_KP_End,	0),
 		DATA(	"k1",	"kf1",		XK_F1,		0),

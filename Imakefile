@@ -7,7 +7,7 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.35 2001/01/17 23:46:33 dawes Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.37 2001/06/18 19:09:25 dickey Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -92,8 +92,8 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 
 #ifdef UTF8support
     UTF8_OPTION = -DOPT_WIDE_CHARS
-        UTF8SRC = charclass.c keysym2ucs.c precompose.c wcwidth.c
-        UTF8OBJ = charclass.o keysym2ucs.o precompose.o wcwidth.o
+        UTF8SRC = charclass.c precompose.c wcwidth.c xutf8.c
+        UTF8OBJ = charclass.o precompose.o wcwidth.o xutf8.o
 #endif
 #if BuildXftLibrary
 #define XRenderSupport
@@ -198,6 +198,16 @@ InstallProgramWithFlags(xterm,$(BINDIR),NullParameter)
 
 NormalProgramTarget(resize,$(OBJS2),$(DEPLIBS2),NullParameter,$(TERMCAPLIB))
 InstallProgramWithFlags(resize,$(BINDIR),NullParameter)
+
+/*
+ * termcap is a special name that does not install correctly with
+ * InstallNamedNonExec()
+ */
+install::
+	MakeDir($(DESTDIR)$(LIBDIR)/etc)
+	$(INSTALL) $(INSTALLFLAGS) $(INSTDATFLAGS) termcap \
+		$(DESTDIR)$(LIBDIR)/etc/xterm.termcap
+InstallNamedNonExec(terminfo,xterm.terminfo,$(LIBDIR)/etc)
 
 InstallAppDefaults(XTerm)
 InstallAppDefaultsLong(XTerm-col,XTerm-color)

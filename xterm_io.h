@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.3 2001/02/13 19:19:19 dawes Exp $
+ * $XFree86: xc/programs/xterm/xterm_io.h,v 1.5 2001/06/08 09:48:16 alanh Exp $
  */
 
 /*

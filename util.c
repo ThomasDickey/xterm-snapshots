@@ -2,7 +2,7 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.66 2001/04/12 01:02:51 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.68 2001/06/18 19:09:27 dickey Exp $ */
 
 /*
  * Copyright 1999,2000,2001 by Thomas E. Dickey
@@ -1467,10 +1467,33 @@ drawXtermText(
 		     len * FontWidth(screen), FontHeight(screen));
 			
 	y += font->ascent;
-	XftDrawString8 (screen->renderDraw,
-			getColor (values.foreground),
-			font,
-			x, y, (unsigned char *) text, len);
+#if OPT_WIDE_CHARS
+	if (text2)
+	{
+	    static XftChar16    *sbuf;
+	    static unsigned	slen;
+	    unsigned		n;
+
+	    if (slen < len)
+	    {
+		slen = (len + 1) * 2;
+		sbuf = (XftChar16 *) XtRealloc ((char *) sbuf, slen * sizeof (XftChar16));
+	    }
+	    for (n = 0; n < len; n++)
+		sbuf[n] = *text++| (*text2++ << 8);
+	    XftDrawString16 (screen->renderDraw,
+			     getColor (values.foreground),
+			     font,
+			     x, y, sbuf, len);
+	}
+	else
+#endif
+	{
+	    XftDrawString8 (screen->renderDraw,
+			    getColor (values.foreground),
+			    font,
+			    x, y, (unsigned char *) text, len);
+	}
 
 	return x + len * FontWidth(screen);
     }

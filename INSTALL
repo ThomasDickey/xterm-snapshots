@@ -1,4 +1,4 @@
--- $XFree86: xc/programs/xterm/INSTALL,v 3.22 2000/11/01 01:12:36 dawes Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.24 2001/06/18 19:09:25 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Windows source tree, using
@@ -76,6 +76,14 @@ The options (in alphabetic order):
 	positions 0-31.  Many applications use the line-drawing characters,
 	e.g., to make boxes.  When xterm loads a font, it checks if those
 	characters are present, and draws its own if they are missing.
+
+  --disable-color-class   disable color class resources
+
+	Use this option to change most of the color resources to use Foreground
+	as the color class.  This is the older (before patch #157) behavior
+	which has the drawback that setting the Foreground resource on most
+	platforms prevents use of color since the class is evaluated before
+	the instance.
 
   --disable-color-mode    disable default colorMode resource
 
