@@ -1,7 +1,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c /main/247 1996/11/29 10:33:51 swick $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/main.c,v 3.52 1997/06/20 09:24:51 hohndel Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.53 1997/07/06 05:31:07 dawes Exp $ */
 
 /*
  * 				 W A R N I N G
@@ -365,7 +365,7 @@ extern Time_t time ();
 #include <sys/filio.h>
 #endif
 
-#ifdef SVR4
+#if defined(SVR4) || defined(SCO325)
 #include <utmpx.h>
 #define setutent setutxent
 #define getutent getutxent
@@ -1732,7 +1732,7 @@ get_pty (pty)
 	if ((*pty = open ("/dev/ptmx", O_RDWR)) < 0) {
 	    return 1;
 	}
-#if defined(SVR4) || (defined(i386) && defined(SYSV))
+#if defined(SVR4) || defined(SCO325) || (defined(i386) && defined(SYSV))
 	strcpy(ttydev, ptsname(*pty));
 #if defined (SYSV) && defined(i386) && !defined(SVR4)
 	IsPts = True;
@@ -2072,7 +2072,7 @@ spawn ()
 #endif	/* sun */
 	struct passwd *pw = NULL;
 #ifdef UTMP
-#ifdef SVR4
+#if defined(SVR4) || defined(SCO325)
 	struct utmpx utmp;
 #else
 	struct utmp utmp;
@@ -2338,7 +2338,7 @@ spawn ()
 		/*
 		 * now in child process
 		 */
-#if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__)
+#if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__) || defined(SCO325)
 		int pgrp = setsid();
 #else
 		int pgrp = getpid();
@@ -2962,7 +2962,7 @@ spawn ()
 			       sizeof(utmp.ut_name));
 
 		utmp.ut_pid = getpid();
-#ifdef SVR4
+#if defined(SVR4) || defined(SCO325)
 		utmp.ut_session = getsid(0);
 		utmp.ut_xtime = time ((Time_t *) 0);
 		utmp.ut_tv.tv_usec = 0;
@@ -2974,7 +2974,7 @@ spawn ()
 		if (!resource.utmpInhibit)
 		    (void) pututline(&utmp);
 #ifdef WTMP
-#ifdef SVR4
+#if defined(SVR4) || defined(SCO325)
 		if (term->misc.login_shell)
 		    updwtmpx(WTMPX_FILE, &utmp);
 #else
@@ -3728,7 +3728,7 @@ Exit(n)
 {
 #ifdef UTMP
 #ifdef USE_SYSV_UTMP
-#ifdef SVR4
+#if defined(SVR4) || defined(SCO325)
 	struct utmpx utmp;
 	struct utmpx *utptr;
 #else
@@ -3769,7 +3769,7 @@ Exit(n)
 	    /* write it out only if it exists, and the pid's match */
 	    if (utptr && (utptr->ut_pid == term->screen.pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
-#ifdef SVR4
+#if defined(SVR4) || defined(SCO325)
 		    utmp.ut_session = getsid(0);
 		    utmp.ut_xtime = time ((Time_t *) 0);
 		    utmp.ut_tv.tv_usec = 0;
@@ -3779,7 +3779,7 @@ Exit(n)
 #endif
 		    (void) pututline(utptr);
 #ifdef WTMP
-#ifdef SVR4
+#if defined(SVR4) || defined(SCO325)
 		    if (term->misc.login_shell)
 			updwtmpx(WTMPX_FILE, &utmp);
 #else

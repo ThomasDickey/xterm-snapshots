@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.46 1997/06/29 07:54:41 dawes Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.47 1997/07/06 05:31:05 dawes Exp $
  */
 
 /*
@@ -135,11 +135,11 @@ static void VTGraphicsOrNoExpose PROTO((XEvent *event));
 static void VTNonMaskableEvent PROTO_XT_EV_HANDLER_ARGS;
 static void VTallocbuf PROTO((void));
 static void VTparse PROTO((void));
+static void WriteText PROTO((TScreen *screen, Char *str, int len));
 static void ansi_modes PROTO((XtermWidget termw, void (*func)(unsigned *p, unsigned mask)));
 static void bitclr PROTO((unsigned *p, unsigned mask));
 static void bitcpy PROTO((unsigned *p, unsigned q, unsigned mask));
 static void bitset PROTO((unsigned *p, unsigned mask));
-static void dotext PROTO((TScreen *screen, int charset, Char *buf, Char *ptr));
 static void dpmodes PROTO((XtermWidget termw, void (*func)(unsigned *p, unsigned mask)));
 static void report_win_label PROTO((TScreen *screen, int code, XTextProperty *text, Status ok));
 static void restoremodes PROTO((XtermWidget termw));
@@ -180,6 +180,10 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtNcharClass "charClass"
 #define XtNcurses "curses"
 #define XtNhpLowerleftBugCompat "hpLowerleftBugCompat"
+#define XtNxmcGlitch "xmcGlitch"
+#define XtNxmcAttributes "xmcAttributes"
+#define XtNxmcInline "xmcInline"
+#define XtNxmcMoveSGR "xmcMoveSGR"
 #define XtNcursorColor "cursorColor"
 #define XtNcursorBlinkTime "cursorBlinkTime"
 #define XtNcutNewline "cutNewline"
@@ -258,6 +262,10 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtCCharClass "CharClass"
 #define XtCCurses "Curses"
 #define XtCHpLowerleftBugCompat "HpLowerleftBugCompat"
+#define XtCXmcGlitch "XmcGlitch"
+#define XtCXmcAttributes "XmcAttributes"
+#define XtCXmcInline "XmcInline"
+#define XtCXmcMoveSGR "XmcMoveSGR"
 #define XtCCutNewline "CutNewline"
 #define XtCCutToBeginningOfLine "CutToBeginningOfLine"
 #define XtCCursorBlinkTime "CursorBlinkTime"
@@ -460,6 +468,20 @@ static XtResource resources[] = {
 {XtNhpLowerleftBugCompat, XtCHpLowerleftBugCompat, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.hp_ll_bc),
 	XtRBoolean, (XtPointer) &defaultFALSE},
+#if OPT_XMC_GLITCH
+{XtNxmcGlitch, XtCXmcGlitch, XtRInt, sizeof(int),
+	XtOffsetOf(XtermWidgetRec, screen.xmc_glitch),
+        XtRString, "0"},
+{XtNxmcAttributes, XtCXmcAttributes, XtRInt, sizeof(int),
+	XtOffsetOf(XtermWidgetRec, screen.xmc_attributes),
+        XtRString, "1"},
+{XtNxmcInline, XtCXmcInline, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.xmc_inline),
+	XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNxmcMoveSGR, XtCXmcMoveSGR, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.move_sgr_ok),
+	XtRBoolean, (XtPointer) &defaultTRUE},
+#endif
 {XtNcutNewline, XtCCutNewline, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.cutNewline),
 	XtRBoolean, (XtPointer) &defaultTRUE},
@@ -1214,6 +1236,9 @@ static void VTparse()
 
 		 case CASE_CUP:
 			/* CUP | HVP */
+			if_OPT_XMC_GLITCH(screen,{
+				Jump_XMC(screen);
+			})
 			if((row = param[0]) < 1)
 				row = 1;
 			if(nparam < 2 || (col = param[1]) < 1)
@@ -1417,6 +1442,9 @@ static void VTparse()
 		 case CASE_SGR:
 			/* SGR */
 			for (row=0; row<nparam; ++row) {
+				if_OPT_XMC_GLITCH(screen,{
+					Mark_XMC(screen,param[row]);
+				})
 				switch (param[row]) {
 				 case DEFAULT:
 				 case 0:
@@ -2335,7 +2363,7 @@ in_put()
  * process a string of characters according to the character set indicated
  * by charset.  worry about end of line conditions (wraparound if selected).
  */
-static void
+void
 dotext(screen, charset, buf, ptr)
     register TScreen	*screen;
     char	charset;
@@ -2354,6 +2382,9 @@ dotext(screen, charset, buf, ptr)
 				*s = '\036';	/* UK pound sign*/
 		break;
 
+#if OPT_XMC_GLITCH
+	case '?':
+#endif
 	case '1':	/* Alternate Character ROM standard characters */
 	case '2':	/* Alternate Character ROM special graphics */
 	case 'B':	/* ASCII set				*/
@@ -2368,6 +2399,13 @@ dotext(screen, charset, buf, ptr)
 	default:	/* any character sets we don't recognize*/
 		return;
 	}
+
+	if_OPT_XMC_GLITCH(screen,{
+		if (charset != '?')
+			for (s=buf; s<ptr; ++s)
+				if (*s == XMC_GLITCH)
+					*s = XMC_GLITCH+1;
+	})
 
 	len = ptr - buf; 
 	ptr = buf;
@@ -2417,7 +2455,7 @@ WriteText(screen, str, len)
 	unsigned bg     = term->cur_background;
 	GC	currentGC;
  
-	TRACE(("write (%2d,%2d) (%d) %3d:%.*s\n",
+	TRACE(("WriteText (%2d,%2d) (%d) %3d:%.*s\n",
 		screen->cur_row,
 		screen->cur_col,
 		curXtermChrSet(screen->cur_row),
@@ -3413,6 +3451,12 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->screen.c132 = request->screen.c132;
    new->screen.curses = request->screen.curses;
    new->screen.hp_ll_bc = request->screen.hp_ll_bc;
+#if OPT_XMC_GLITCH
+   new->screen.xmc_glitch = request->screen.xmc_glitch;
+   new->screen.xmc_attributes = request->screen.xmc_attributes;
+   new->screen.xmc_inline = request->screen.xmc_inline;
+   new->screen.move_sgr_ok = request->screen.move_sgr_ok;
+#endif
    new->screen.foreground = request->screen.foreground;
    new->screen.cursorcolor = request->screen.cursorcolor;
 #if OPT_BLINK_CURS

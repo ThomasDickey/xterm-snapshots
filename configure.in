@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.4 1997/06/29 07:54:42 dawes Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.5 1997/07/06 05:31:07 dawes Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
@@ -27,7 +27,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Revision: 1.4 $)
+AC_REVISION($Revision: 1.5 $)
 AC_PREREQ(2.12)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -118,7 +118,7 @@ test $enable_16_color = no && AC_DEFINE(OPT_AIX_COLORS,0)
 
 AC_MSG_CHECKING(for default color-mode)
 CF_ARG_ENABLE(color-mode,
-	[  --enable-color-mode     set default colorMode resource ],
+	[  --enable-color-mode     set default colorMode resource],
 	[default_colormode=TRUE],
 	[default_colormode=FALSE])
 AC_MSG_RESULT($default_colormode)
@@ -126,7 +126,7 @@ AC_DEFINE_UNQUOTED(DFT_COLORMODE,$default_colormode)
 
 AC_MSG_CHECKING(for doublesize characters)
 CF_ARG_DISABLE(doublechars,
-	[  --disable-doublechars   disable support for double-size characters],
+	[  --disable-doublechars   disable support for double-size chars],
 	[enable_doublechars=no],
 	[enable_doublechars=yes])
 AC_MSG_RESULT($enable_doublechars)
@@ -134,7 +134,7 @@ test $enable_doublechars = no && AC_DEFINE(OPT_DEC_CHRSET,0)
 
 AC_MSG_CHECKING(if you want debugging traces)
 CF_ARG_ENABLE(trace,
-	[  --enable-trace          set to enable debugging traces],
+	[  --enable-trace          test: set to enable debugging traces],
 	[enable_trace=yes],
 	[enable_trace=no])
 AC_MSG_RESULT($enable_trace)
@@ -152,10 +152,23 @@ CF_ARG_DISABLE(vt52,
 AC_MSG_RESULT($enable_vt52)
 test $enable_vt52 = no && AC_DEFINE(OPT_VT52_MODE,0)
 
+# this is only for testing purposes
+AC_MSG_CHECKING(if you want magic cookie emulation)
+CF_ARG_ENABLE(xmc-glitch,
+	[  --enable-xmc-glitch     test: enable xmc magic-cookie emulation],
+	[enable_xmc=yes],
+	[enable_xmc=no])
+AC_MSG_RESULT($enable_xmc)
+if test $enable_xmc = yes ; then
+	AC_DEFINE(OPT_XMC_GLITCH,1)
+	EXTRASRCS="$EXTRASRCS testxmc.c"
+	EXTRAOBJS="$EXTRAOBJS testxmc.o"
+fi
+
 if test -n "$GCC" ; then
 AC_MSG_CHECKING(if you want to turn on gcc warnings)
 CF_ARG_ENABLE(warnings,
-	[  --enable-warnings       turn on GCC compiler warnings],
+	[  --enable-warnings       test: turn on GCC compiler warnings],
 	[with_warnings=yes],
 	[with_warnings=no])
 AC_MSG_RESULT($with_warnings)
