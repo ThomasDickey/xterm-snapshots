@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-45
+MANIFEST for xterm, version xterm-46
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 Imakefile                       imake template for Makefile
@@ -42,6 +42,7 @@ scrollbar.c                     VT100 scrollbar support functions
 tabs.c                          VT100 tabstop support-functions
 termcap                         termcap entries for 'xterm'
 terminfo                        terminfo entries for 'xterm'
+testxmc.c                       testing: xmc/magic-cookies
 trace.c                         debugging trace functions for 'xterm'
 trace.h                         interface of trace.c
 ttysvr.c                        simple tty server for AMOEBA port of 'xterm'

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.22 1997/06/29 07:54:42 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.23 1997/07/06 05:31:08 dawes Exp $
  */
 
 /*
@@ -310,6 +310,10 @@ typedef struct {
 #define OPT_VT52_MODE   1 /* true if xterm supports VT52 emulation */
 #endif
 
+#ifndef OPT_XMC_GLITCH
+#define OPT_XMC_GLITCH	0 /* true if xterm supports xmc (magic cookie glitch) */
+#endif
+
 /***====================================================================***/
 
 #if OPT_AIX_COLORS && !OPT_ISO_COLORS
@@ -407,6 +411,16 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 #define if_OPT_VT52_MODE(screen, code) if(screen->ansi_level == 0) code
 #else
 #define if_OPT_VT52_MODE(screen, code) /* nothing */
+#endif
+
+/***====================================================================***/
+
+#if OPT_XMC_GLITCH
+#define if_OPT_XMC_GLITCH(screen, code) if(screen->xmc_glitch) code
+#define XMC_GLITCH 1	/* the character we'll show */
+#define XMC_FLAGS (INVERSE|UNDERLINE|BOLD)
+#else
+#define if_OPT_XMC_GLITCH(screen, code) /* nothing */
 #endif
 
 /***====================================================================***/
@@ -577,6 +591,14 @@ typedef struct {
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
 	Boolean         always_highlight; /* whether to highlight cursor */
 	Boolean		underline;	/* whether to underline text	*/
+
+	/* Testing */
+#if OPT_XMC_GLITCH
+	int		xmc_glitch;	/* # of spaces to pad on SGR's	*/
+	int		xmc_attributes;	/* attrs that make a glitch	*/
+	Boolean		xmc_inline;	/* SGR's propagate only to eol	*/
+	Boolean		move_sgr_ok;	/* SGR is reset on move		*/
+#endif
 
 /* Tektronix window parameters */
 	GC		TnormalGC;	/* normal painting		*/

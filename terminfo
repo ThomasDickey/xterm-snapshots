@@ -1,5 +1,5 @@
 # $XConsortium: terminfo,v 1.11 94/10/13 21:24:31 gildea Exp $
-# $XFree86: xc/programs/xterm/terminfo,v 3.14 1997/05/25 14:41:28 dawes Exp $
+# $XFree86: xc/programs/xterm/terminfo,v 3.15 1997/07/06 05:31:08 dawes Exp $
 # meml locks memory above the cursor; memu unlocks (ala HP terminals)
 #
 xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
@@ -164,6 +164,15 @@ xterm-vt220|xterm emulating vt220,
 	kf4=\E[14~,
 	use=xterm,
 #
+# This is used only for testing (it's not relevant to DEC VTxxx terminals, but
+# to ncurses).
+xterm-xmc|xterm with magic-cookie glitch,
+	xmc#1,
+	use=xterm,
+#
+# This one also is primarily for testing ncurses; while the ISO 6429 defines
+# the REP control, none of the DEC VTxxx terminals (VT52 through VT420) support
+# it.
 xterm-rep|xterm with repeat-character control,
 	rep=%p1%c\E[%p2%{1}%-%db,
 	use=xterm,

@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.11 1997/06/29 07:54:44 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.12 1997/07/06 05:31:09 dawes Exp $ */
 /*
  * Common/useful definitions for XTERM application
  */
@@ -53,7 +53,7 @@ extern void ShowCursor PROTO((void));
 extern void SwitchBufPtrs PROTO((TScreen *screen));
 extern void VTReset PROTO((int full));
 extern void VTRun PROTO((void));
-extern void WriteText PROTO(( TScreen *screen, Char *str, int len));
+extern void dotext PROTO((TScreen *screen, int charset, Char *buf, Char *ptr));
 extern void set_cursor_gcs PROTO((TScreen *screen));
 extern void unparseputc1 PROTO((int c, int fd));
 extern void unparseputc PROTO((int c, int fd));
@@ -247,6 +247,12 @@ extern int curXtermChrSet PROTO((int row));
 #else
 #define getXtermChrSet(row, col) 0
 #define curXtermChrSet(row) 0
+#endif
+
+#if OPT_XMC_GLITCH
+extern void Mark_XMC PROTO((TScreen *screen, int param));
+extern void Jump_XMC PROTO((TScreen *screen));
+extern void Resolve_XMC PROTO((TScreen *screen));
 #endif
 
 #endif	/* included_xterm_h */

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.3 1997/06/29 07:54:45 dawes Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.4 1997/07/06 05:31:09 dawes Exp $
  */
 
 /************************************************************
@@ -39,6 +39,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_ISO_COLORS	/* CF_ARG_DISABLE(ansi-color) */
 #undef OPT_TRACE	/* CF_ARG_ENABLE(trace) */
 #undef OPT_VT52_MODE	/* CF_ARG_DISABLE(vt52) */
+#undef OPT_XMC_GLITCH	/* CF_ARG_ENABLE(xmc-glitch) */
 #undef USE_MY_MEMMOVE	/* CF_FUNC_MEMMOVE */
 #undef USE_OK_BCOPY	/* CF_FUNC_MEMMOVE */
 #undef USE_TERMINFO	/* CF_FUNC_TGETENT */
