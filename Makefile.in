@@ -9,7 +9,7 @@ CC		= @CC@
 CPP		= @CPP@
 LINK		= $(CC) $(CFLAGS)
 INSTALL		= @INSTALL@
-INSTALL_PROGRAM	= @INSTALL_PROGRAM@ @XTERM_USR@ @XTERM_GRP@
+INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 INSTALL_DATA	= @INSTALL_DATA@
 
 X_CFLAGS	= @X_CFLAGS@
@@ -108,7 +108,7 @@ charproc.o : @CHARPROC_DEPS@
 
 install-full \
 install :: $(INSTALL_DIRS) xterm resize
-	$(INSTALL_PROGRAM) -s -m @XTERM_MODE@ xterm  $(BINDIR)/xterm
+	$(srcdir)/sinstall.sh "$(INSTALL_PROGRAM)" xterm  @XTERM_PATH@ $(BINDIR)/xterm
 	$(INSTALL_PROGRAM) -s -m  755 resize $(BINDIR)/resize
 	$(INSTALL_DATA) $(srcdir)/xterm.man    $(MANDIR)/xterm.$(manext)
 	$(INSTALL_DATA) $(srcdir)/resize.man   $(MANDIR)/resize.$(manext)
@@ -150,7 +150,10 @@ distclean: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
 
 realclean: distclean
-	-$(RM) tags TAGS
+	-$(RM) tags TAGS ctlseqs.ps
+
+ctlseqs.ps : ctlseqs.ms
+	tbl ctlseqs.ms | groff -ms >$@
 
 lint:
 	lint $(CPPFLAGS) $(SRCS1)

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-117
+MANIFEST for xterm, version xterm-118
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -54,6 +54,7 @@ resize.c                        program to compute/modify xterm's window size
 resize.man                      manual page for 'resize'
 screen.c                        VT100 screen update functions
 scrollbar.c                     VT100 scrollbar support functions
+sinstall.sh                     install setuid if existing program was
 tabs.c                          VT100 tabstop support-functions
 termcap                         termcap entries for 'xterm'
 terminfo                        terminfo entries for 'xterm'

@@ -202,8 +202,10 @@
 .[] bS \\e
 .[] { {
 .[] ] ]
+.[] & &
 .[] ^ ^
 .[] _ _
+.[] qu \`
 .[] ` \`
 .[] a a
 .[] b b
@@ -242,6 +244,7 @@
 .ds Cy \fIC\v'.3m'\h'-.2m'\s-2y\s0\v'-.3m'\fP
 .ds Pb \fIP\v'.3m'\h'-.2m'\s-2b\s0\v'-.3m'\fP
 .ds Pc \fIP\v'.3m'\h'-.2m'\s-2c\s0\v'-.3m'\fP
+.ds Pe \fIP\v'.3m'\h'-.2m'\s-2e\s0\v'-.3m'\fP
 .ds Pl \fIP\v'.3m'\h'-.2m'\s-2l\s0\v'-.3m'\fP
 .ds Pm \fIP\v'.3m'\h'-.2m'\s-2m\s0\v'-.3m'\fP
 .ds Pp \fIP\v'.3m'\h'-.2m'\s-2p\s0\v'-.3m'\fP
@@ -560,47 +563,6 @@ for invalid requests.
 Functions using CSI, ordered by the final character(s)
 .IP \\*(Cs\\*(Ps\\*s\\*@
 Insert \*(Ps (Blank) Character(s) (default = 1) (ICH)
-.
-.IP \\*(Cs\\*(Ps\\*s\\*'\\*s\\*|
-Request Locator Position (DECRQLP)
-.br
-Valid values for the parameter are:
-  \*(Ps = \*0, 1 or omitted \(-> transmit a single DECLRP locator report
-.sp
-If Locator Reporting has been enabled by a DECELR, xterm will respond
-with a DECLRP Locator Report.  This report is also generated on button
-up and down events if they have been enabled with a DECSLE, or when
-the locator is detected outside of a filter rectangle, if filter rectangles
-have been enabled with a DECEFR.
-.sp
-  \(-> \*(Cs\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\*;\*(Ps\*s\\&\*s\*w
-.sp
-Parameters are [event;button;row;column;page].
-.br
-Valid values for the event:
-  \*(Ps = \*0 \(-> locator unavailable - no other parameters sent
-  \*(Ps = \*1 \(-> request - xterm received a DECRQLP
-  \*(Ps = \*2 \(-> left button down
-  \*(Ps = \*3 \(-> left button up
-  \*(Ps = \*4 \(-> middle button down
-  \*(Ps = \*5 \(-> middle button up
-  \*(Ps = \*6 \(-> right button down
-  \*(Ps = \*7 \(-> right button up
-  \*(Ps = \*8 \(-> M4 button down
-  \*(Ps = \*9 \(-> M4 button up
-  \*(Ps = \*1\*0 \(-> locator outside filter rectangle
-.br
-``button'' parameter is a bitmask indicating which buttons are pressed:
-  \*(Ps = \*0 \(-> no buttons down
-  \*(Ps & \*1 \(-> right button down
-  \*(Ps & \*2 \(-> middle button down
-  \*(Ps & \*4 \(-> left button down
-  \*(Ps & \*8 \(-> M4 button down
-.br
-``row'' and ``column'' parameters are the coordinates of the locator
-position in the xterm window, encoded as ASCII decimal.
-.br
-The ``page'' parameter is not used by xterm, and will be omitted.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*A
 Cursor Up \*(Ps Times (default = 1) (CUU)
@@ -1000,7 +962,7 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
 \*(Os\*s\*l\*s\fItitle\fP\*s\*(ST
   \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP)
 .
-.IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*s\\*(Pb\\*s\\*;\\*s\\*(Pr\\*s\\*s\\*'\\*s\\*w
+.IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*(qu\\*w
 Enable Filter Rectangle (DECEFR)
 .br
 Parameters are [top;left;bottom;right].
@@ -1016,7 +978,7 @@ DECELR always cancels any prevous rectangle definition.
 .IP \\*(Cs\\*(Ps\\*s\\*x
 Request Terminal Parameters (DECREQTPARM)
 .
-.IP \\*(Cs\\*(Ps\\*s\\*;\\*(Pu\\*s\\*s\\*'\\*s\\*z
+.IP \\*(Cs\\*(Ps\\*s\\*;\\*(Pu\\*s\\*(qu\\*z
 Enable Locator Reporting (DECELR)
 .br
 Valid values for the first parameter:
@@ -1031,7 +993,7 @@ Valid values for the second parameter:
   \*(Pu = \*1 \(-> device physical pixels
   \*(Pu = \*2 \(-> character cells
 .
-.IP \\*(Cs\\*(Pm\\*s\\*s\\*'\\*s\\*{
+.IP \\*(Cs\\*(Pm\\*s\\*(qu\\*{
 Select Locator Events (DECSLE)
 .br
 Valid values for the first (and any additional parameters) are:
@@ -1041,6 +1003,48 @@ Valid values for the first (and any additional parameters) are:
   \*(Ps = \*2 \(-> do not report button down transitions
   \*(Ps = \*3 \(-> report button up transitions
   \*(Ps = \*4 \(-> do not report button up transitions
+.
+.IP \\*(Cs\\*(Ps\\*s\\*(qu\\*|
+Request Locator Position (DECRQLP)
+.br
+Valid values for the parameter are:
+  \*(Ps = \*0, 1 or omitted \(-> transmit a single DECLRP locator report
+.sp
+If Locator Reporting has been enabled by a DECELR, xterm will respond
+with a DECLRP Locator Report.  This report is also generated on button
+up and down events if they have been enabled with a DECSLE, or when
+the locator is detected outside of a filter rectangle, if filter rectangles
+have been enabled with a DECEFR.
+.sp
+  \(-> \*(Cs\*(Pe\*s\*;\*(Pb\*s\*;\*(Pr\*s\*;\*(Pc\*s\*;\*(Pp\*s\*&\*s\*w
+.sp
+Parameters are [event;button;row;column;page].
+.br
+Valid values for the event:
+  \*(Pe = \*0 \(-> locator unavailable - no other parameters sent
+  \*(Pe = \*1 \(-> request - xterm received a DECRQLP
+  \*(Pe = \*2 \(-> left button down
+  \*(Pe = \*3 \(-> left button up
+  \*(Pe = \*4 \(-> middle button down
+  \*(Pe = \*5 \(-> middle button up
+  \*(Pe = \*6 \(-> right button down
+  \*(Pe = \*7 \(-> right button up
+  \*(Pe = \*8 \(-> M4 button down
+  \*(Pe = \*9 \(-> M4 button up
+  \*(Pe = \*1\*0 \(-> locator outside filter rectangle
+.br
+``button'' parameter is a bitmask indicating which buttons are pressed:
+  \*(Pb = \*0 \(-> no buttons down
+  \*(Pb & \*1 \(-> right button down
+  \*(Pb & \*2 \(-> middle button down
+  \*(Pb & \*4 \(-> left button down
+  \*(Pb & \*8 \(-> M4 button down
+.br
+``row'' and ``column'' parameters are the coordinates of the locator
+position in the xterm window, encoded as ASCII decimal.
+.br
+The ``page'' parameter is not used by xterm, and will be omitted.
+.
 .Ed
 .
 .St
