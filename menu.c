@@ -1,7 +1,7 @@
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
 
-Copyright 1999, 2001 by Thomas E. Dickey
+Copyright 1999-2001,2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -46,7 +46,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.44 2002/01/05 22:05:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.45 2002/03/26 01:46:40 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -57,6 +57,8 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Shell.h>
 #include <X11/Xmu/CharSet.h>
 
+#if defined(HAVE_LIB_XAW)
+
 #include <X11/Xaw/SimpleMenu.h>
 #include <X11/Xaw/Box.h>
 #include <X11/Xaw/SmeBSB.h>
@@ -65,6 +67,32 @@ in this Software without prior written authorization from The Open Group.
 #if OPT_TOOLBAR
 #include <X11/Xaw/MenuButton.h>
 #include <X11/Xaw/Form.h>
+#endif
+
+#elif defined(HAVE_LIB_XAW3D)
+
+#include <X11/Xaw3d/SimpleMenu.h>
+#include <X11/Xaw3d/Box.h>
+#include <X11/Xaw3d/SmeBSB.h>
+#include <X11/Xaw3d/SmeLine.h>
+
+#if OPT_TOOLBAR
+#include <X11/Xaw3d/MenuButton.h>
+#include <X11/Xaw3d/Form.h>
+#endif
+
+#elif defined(HAVE_LIB_NEXTAW)
+
+#include <X11/neXtaw/SimpleMenu.h>
+#include <X11/neXtaw/Box.h>
+#include <X11/neXtaw/SmeBSB.h>
+#include <X11/neXtaw/SmeLine.h>
+
+#if OPT_TOOLBAR
+#include <X11/neXtaw/MenuButton.h>
+#include <X11/neXtaw/Form.h>
+#endif
+
 #endif
 
 #include <stdio.h>

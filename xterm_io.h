@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.5 2001/06/08 09:48:16 alanh Exp $
+ * $XFree86: xc/programs/xterm/xterm_io.h,v 1.7 2002/01/07 21:02:44 dawes Exp $
  */
 
 /*
@@ -64,7 +64,9 @@
 #endif
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#ifndef USE_POSIX_TERMIOS
 #define USE_POSIX_TERMIOS
+#endif
 #endif
 
 #ifdef linux
@@ -233,7 +235,7 @@ extern int ptioctl(int fd, int func, void* data);
 
 #ifdef Lynx
 #include <resource.h>
-#elif !(defined(SYSV) || defined(linux) || defined(VMS))
+#elif !(defined(SYSV) || defined(linux) || defined(VMS) || (defined(__QNX__)&&!defined(__QNXNTO__)))
 #include <sys/resource.h>
 #endif
 

@@ -3,12 +3,12 @@
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.35 2002/01/05 22:05:02 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.36 2002/03/26 01:46:39 dickey Exp $ */
 
 
 /*
 
-Copyright 2001 by Thomas E. Dickey
+Copyright 2001,2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -94,8 +94,16 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xmu/CharSet.h>
 
 #if OPT_TOOLBAR
+
+#if defined(HAVE_LIB_XAW)
 #include <X11/Xaw/Form.h>
+#elif defined(HAVE_LIB_XAW3D)
+#include <X11/Xaw3d/Form.h>
+#elif defined(HAVE_LIB_NEXTAW)
+#include <X11/neXtaw/Form.h>
 #endif
+
+#endif /* OPT_TOOLBAR */
 
 #include <stdio.h>
 #include <ctype.h>
@@ -403,7 +411,7 @@ TekPtyData(void)
 static void Tekparse(void)
 {
 	register TScreen *screen = &term->screen;
-	register int c, x, y;
+	register int c = 0, x, y;
 	Char ch;
 	int nextstate;
 

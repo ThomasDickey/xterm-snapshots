@@ -2,11 +2,11 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.127 2002/01/05 22:05:02 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.129 2002/03/26 01:46:39 dickey Exp $ */
 
 /*
 
-Copyright 1999, 2000, 2001, 2002 by Thomas E. Dickey
+Copyright 1999-2001,2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -96,7 +96,15 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xmu/Converters.h>
 
 #if OPT_INPUT_METHOD
+
+#if defined(HAVE_LIB_XAW)
 #include <X11/Xaw/XawImP.h>
+#elif defined(HAVE_LIB_XAW3D)
+#include <X11/Xaw3d/XawImP.h>
+#elif defined(HAVE_LIB_NEXTAW)
+#include <X11/neXtaw/XawImP.h>
+#endif
+
 #endif
 
 #if OPT_WIDE_CHARS
@@ -126,6 +134,7 @@ in this Software without prior written authorization from The Open Group.
 #include <main.h>
 #include <fontutils.h>
 #include <xcharmouse.h>
+#include <charclass.h>
 
 #if OPT_ZICONBEEP || OPT_TOOLBAR
 #define HANDLE_STRUCT_NOTIFY 1
@@ -494,6 +503,7 @@ Sres(XtNpreeditType,	XtCPreeditType,	misc.preedit_type,	"OverTheSpot,Root"),
 
 #if OPT_ISO_COLORS
 Bres(XtNboldColors,	XtCColorMode, screen.boldColors,	TRUE),
+Ires(XtNveryBoldColors,	XtCColorMode, screen.veryBoldColors,	0),
 Bres(XtNcolorAttrMode,	XtCColorMode, screen.colorAttrMode,	FALSE),
 Bres(XtNcolorBDMode,	XtCColorMode, screen.colorBDMode,	FALSE),
 Bres(XtNcolorBLMode,	XtCColorMode, screen.colorBLMode,	FALSE),
@@ -565,6 +575,7 @@ Ires(XtNmenuHeight, XtCMenuHeight, screen.fullVwin.menu_height, 25),
 	XtOffsetOf(XtermWidgetRec, screen.utf8_mode),
 	XtRString, defaultUTF8},
 Bres(XtNwideChars,	XtCWideChars,		screen.wide_chars,	FALSE),
+Bres(XtNvt100Graphics,	XtCVT100Graphics,	screen.vt100_graphics,	TRUE),
 Sres(XtNwideBoldFont,	XtCWideBoldFont,	misc.f_wb,		DEFWIDEBOLDFONT),
 Sres(XtNwideFont,	XtCWideFont,		misc.f_w,		DEFWIDEFONT),
 #endif
@@ -1455,20 +1466,6 @@ static void VTparse(void)
 #if OPT_DEC_LOCATOR
 				reply.a_param[count++] = 29; /* ANSI text locator */
 #endif
-#if 0				/* not sure how this fits in */
-				if_OPT_ISO_COLORS(screen,{
-				    reply.a_param[count++] = 30 +
-					(((term->flags & FG_COLOR) != 0
-					 && (term->cur_foreground >= 0))
-					    ? term->cur_foreground
-					    : 9);
-				    reply.a_param[count++] = 40 +
-					(((term->flags & BG_COLOR) != 0
-					 && (term->cur_background >= 0))
-					    ? term->cur_background
-					    : 9);
-				})
-#endif
 			    }
 			    reply.a_nparam = count;
 			    reply.a_inters = 0;
@@ -2272,13 +2269,32 @@ static void VTparse(void)
 			parsestate = groundtable;
 			break;
 #if OPT_WIDE_CHARS
+		 case CASE_ESC_PERCENT:
+			parsestate = esc_pct_table;
+			break;
+
 		 case CASE_UTF8:
-			/* If we did not set UTF-8 mode from resource or
-			 * the command-line, allow it to be enabled/disabled
-			 * by control sequence.
+			/* If we did not set UTF-8 mode from resource or the
+			 * command-line, allow it to be enabled/disabled by
+			 * control sequence.  To keep the logic simple, require
+			 * that wide_chars have been set during initialization
+			 * so that we have been maintaining data structures for
+			 * wide characters, anyway.  Otherwise we would have to
+			 * reallocate everything the first time we turned UTF-8
+			 * mode on.
 			 */
-			if (screen->utf8_mode != 2)
+			if (screen->wide_chars
+			 && screen->utf8_mode != 2) {
 				screen->utf8_mode = (c == 'G');
+				TRACE(("UTF8 mode %s\n", 
+					screen->utf8_mode ? "ON" : "OFF"));
+			} else {
+				TRACE(("UTF8 mode NOT turned %s (%s)\n", 
+					(c == 'G') ? "ON" : "OFF",
+					(screen->utf8_mode == 2)
+					? "UTF-8 mode set from command-line"
+					: "wideChars resource was not set"));
+			}
 			parsestate = groundtable;
 			break;
 #endif
@@ -2761,7 +2777,11 @@ dotext(
 	Cardinal offset;
 
 #if OPT_WIDE_CHARS
-	if (!screen->utf8_mode || charset == '0') /* don't translate if we use UTF-8 */
+	/* don't translate if we use UTF-8, and are not handling legacy support
+	 * for line-drawing characters.
+	 */
+	if (!screen->utf8_mode
+	  || (screen->vt100_graphics && charset == '0'))
 #endif
 
 	if (!xtermCharSetOut(buf, buf+len, charset))
@@ -2924,6 +2944,7 @@ int visual_width(PAIRED_CHARS(Char *str, Char *str2), Cardinal len) {
 static void
 WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 {
+	unsigned test;
 	unsigned flags	= term->flags;
 	int	fg_bg = makeColorPair(term->cur_foreground, term->cur_background);
 	GC	currentGC;
@@ -2960,7 +2981,11 @@ WriteText(TScreen *screen, PAIRED_CHARS(Char *str, Char *str2), Cardinal len)
 				__FILE__, __LINE__,
 				screen->cur_col,
 				screen->cur_row));
-			drawXtermText(screen, flags, currentGC,
+
+			test = flags;
+			checkVeryBoldColors(test, term->cur_foreground);
+
+			drawXtermText(screen, test, currentGC,
 				CurCursorX(screen, screen->cur_row, screen->cur_col),
 				CursorY(screen, screen->cur_row),
 				curXtermChrSet(screen->cur_row),
@@ -3292,7 +3317,7 @@ dpmodes(
 		case 67:	/* DECBKM */
 			/* back-arrow mapped to backspace or delete(D)*/
 			(*func)(&termw->keyboard.flags, MODE_DECBKM);
-			TRACE(("DECSET DECBKM %s\n", 
+			TRACE(("DECSET DECBKM %s\n",
 				(termw->keyboard.flags & MODE_DECBKM)
 					? "on"
 					: "off"));
@@ -4476,6 +4501,7 @@ static void VTInitialize (
    wnew->num_ptrs = (OFF_ATTRS+1); /* OFF_FLAGS, OFF_CHARS, OFF_ATTRS */
 #endif
 #if OPT_ISO_COLORS
+   init_Ires(screen.veryBoldColors);
    init_Bres(screen.boldColors);
    init_Bres(screen.colorAttrMode);
    init_Bres(screen.colorBDMode);
@@ -4498,6 +4524,28 @@ static void VTInitialize (
 	&& wnew->screen.Acolors[i] != request->core.background_pixel)
 	   color_ok = True;
 #endif
+   }
+   /*
+    * Check if we're trying to use color in a monochrome screen.  Disable color
+    * in that case, since that would make ANSI colors unusable.  A 4-bit or
+    * 8-bit display is usable, so we do not have to check for anything more
+    * specific.
+    */
+   if (color_ok) {
+      Display *display = wnew->screen.display;
+      XVisualInfo	template, *visInfoPtr;
+      int		numFound;
+
+      template.visualid = XVisualIDFromVisual(DefaultVisual(display,
+					    XDefaultScreen(display)));
+      visInfoPtr = XGetVisualInfo(display, (long)VisualIDMask,
+				&template, &numFound);
+      if (visInfoPtr == 0
+       || numFound == 0
+       || visInfoPtr->depth <= 1) {
+	 TRACE(("disabling color since screen is monochrome\n"));
+	 color_ok = False;
+      }
    }
 
    /* If none of the colors are anything other than the foreground or
@@ -4530,6 +4578,7 @@ static void VTInitialize (
 
 #if OPT_WIDE_CHARS
    init_Bres(screen.wide_chars);
+   init_Bres(screen.vt100_graphics);
    if (request->screen.utf8_mode) {
       wnew->screen.wide_chars = True;
       wnew->screen.utf8_mode = 2; /* disable further change */
@@ -5562,7 +5611,7 @@ VTReset(Bool full, Bool saved)
 #endif
 		if (term->screen.backarrow_key)
 			term->keyboard.flags |= MODE_DECBKM;
-		TRACE(("full reset DECBKM %s\n", 
+		TRACE(("full reset DECBKM %s\n",
 			(term->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
 		update_appcursor();
 		update_appkeypad();

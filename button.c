@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.65 2002/01/06 01:34:23 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.66 2002/03/26 01:46:39 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -73,9 +73,9 @@ button.c	Handles button events in the terminal emulator.
 #include <error.h>
 #include <menu.h>
 #include <xcharmouse.h>
+#include <charclass.h>
 
 #if OPT_WIDE_CHARS
-#include <charclass.h>
 #include <wcwidth.h>
 #else
 #define CharacterClass(value) \
@@ -1802,6 +1802,9 @@ ComputeSelect(
 	register int length;
 	register int cclass;
 
+	TRACE(("ComputeSelect(startRow=%d, startCol=%d, endRow=%d, endCol=%d, %sextend)\n",
+		startRow, startCol, endRow, endCol, extend ? "" : "no"));
+
 #if OPT_WIDE_CHARS
 	if (startCol > 1
 	 && iswide(XTERM_CELL(startRow, startCol-1))
@@ -1929,6 +1932,15 @@ ComputeSelect(
 			break;
 	}
 
+	if (startSRow < 0)
+		startSRow = 0;
+	if (startSCol < 0)
+		startSCol = 0;
+	if (endSRow < 0)
+		endSRow = 0;
+	if (endSCol < 0)
+		endSCol = 0;
+
 	TrackText(startSRow, startSCol, endSRow, endSCol);
 	return;
 }
@@ -1944,6 +1956,8 @@ TrackText(
 	register int from, to;
 	register TScreen *screen = &term->screen;
 	int old_startrow, old_startcol, old_endrow, old_endcol;
+
+	TRACE(("TrackText(frow=%d, fcol=%d, trow=%d, tcol=%d)\n", frow, fcol, trow, tcol));
 
 	old_startrow = screen->startHRow;
 	old_startcol = screen->startHCol;

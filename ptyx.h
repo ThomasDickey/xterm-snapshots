@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.91 2002/01/05 22:05:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.92 2002/03/26 01:46:40 dickey Exp $ */
 
 /*
  * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
@@ -560,27 +560,38 @@ typedef struct {
 
 #if OPT_AIX_COLORS && !OPT_ISO_COLORS
 /* You must have ANSI/ISO colors to support AIX colors */
-#undef OPT_AIX_COLORS
+#undef  OPT_AIX_COLORS
+#define OPT_AIX_COLORS 0
 #endif
 
 #if OPT_PC_COLORS && !OPT_ISO_COLORS
 /* You must have ANSI/ISO colors to support PC colors */
-#undef OPT_PC_COLORS
+#undef  OPT_PC_COLORS
+#define OPT_PC_COLORS 0
+#endif
+
+#if OPT_PRINT_COLORS && !OPT_ISO_COLORS
+/* You must have ANSI/ISO colors to be able to print them */
+#undef  OPT_PRINT_COLORS
+#define OPT_PRINT_COLORS 0
 #endif
 
 #if OPT_256_COLORS && !OPT_ISO_COLORS
 /* You must have ANSI/ISO colors to support 256 colors */
-#undef OPT_256_COLORS
+#undef  OPT_256_COLORS
+#define OPT_256_COLORS 0
 #endif
 
 #if OPT_88_COLORS && !OPT_ISO_COLORS
 /* You must have ANSI/ISO colors to support 88 colors */
-#undef OPT_88_COLORS
+#undef  OPT_88_COLORS
+#define OPT_88_COLORS 0
 #endif
 
 #if OPT_88_COLORS && OPT_256_COLORS
 /* 256 colors supersedes 88 colors */
-#undef OPT_88_COLORS
+#undef  OPT_88_COLORS
+#define OPT_88_COLORS 0
 #endif
 
 /***====================================================================***/
@@ -1030,6 +1041,7 @@ typedef struct {
 	Pixel		mousecolorback;	/* Mouse color background	*/
 #if OPT_ISO_COLORS
 	ColorRes	Acolors[MAXCOLORS]; /* ANSI color emulation	*/
+	int		veryBoldColors;	/* modifier for boldColors	*/
 	Boolean		boldColors;	/* can we make bold colors?	*/
 	Boolean		colorMode;	/* are we using color mode?	*/
 	Boolean		colorULMode;	/* use color for underline?	*/
@@ -1050,6 +1062,7 @@ typedef struct {
 #endif
 #if OPT_WIDE_CHARS
 	Boolean		wide_chars;	/* true when 16-bit chars	*/
+	Boolean		vt100_graphics;	/* true to allow vt100-graphics	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
 	int		utf_count;	/* state of utf_char */
 	IChar		utf_char;	/* in-progress character */
@@ -1103,9 +1116,7 @@ typedef struct {
 	Boolean printer_extent;		/* print complete page		*/
 	Boolean printer_formfeed;	/* print formfeed per function	*/
 	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
-#if OPT_PRINT_COLORS
 	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
-#endif
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
@@ -1423,8 +1434,11 @@ typedef struct _TekClassRec {
 
 
 #define N_MARGINBELL	10
-#define MAX_TABS	320
+
+#define TAB_BITS_SHIFT	5	/* 2**5 == 32 */
+#define TAB_BITS_WIDTH	(1 << TAB_BITS_SHIFT)
 #define TAB_ARRAY_SIZE	10	/* number of ints to provide MAX_TABS bits */
+#define MAX_TABS	(TAB_BITS_WIDTH * TAB_ARRAY_SIZE)
 
 typedef unsigned Tabs [TAB_ARRAY_SIZE];
 

@@ -1,9 +1,9 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.51 2001/11/05 02:07:15 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.52 2002/03/26 01:46:40 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2000 by Thomas E. Dickey
+dnl Copyright 1997-2002 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -457,7 +457,28 @@ CF_ARG_ENABLE(toolbar,
 	[enable_toolbar=yes],
 	[enable_toolbar=no])
 AC_MSG_RESULT($enable_toolbar)
-test $enable_toolbar = yes && AC_DEFINE(OPT_TOOLBAR,1)
+if test $enable_toolbar = yes ; then
+	# The Xaw library in XFree86 4.x is broken.  Let's try to avoid using
+	# that for the toolbar.
+	cf_broken_xaw=no
+	AC_MSG_CHECKING(for broken Xaw library)
+	AC_TRY_COMPILE([
+#include <X11/Intrinsic.h>
+#include <X11/Xaw/XawInit.h>
+	],[
+#if defined(XawVersion) && XawVersion > 7000000L
+make an error
+#endif
+	],[
+	cf_broken_xaw=no
+	],[
+	cf_broken_xaw=yes
+	])
+	AC_MSG_RESULT($cf_broken_xaw)
+	if test $cf_broken_xaw = no ; then
+		AC_DEFINE(OPT_TOOLBAR,1)
+	fi
+fi
 
 AC_MSG_CHECKING(if you want VT52 emulation)
 CF_ARG_DISABLE(vt52,

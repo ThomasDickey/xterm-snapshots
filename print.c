@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/print.c,v 1.16 2000/06/13 02:28:40 dawes Exp $
+ * $XFree86: xc/programs/xterm/print.c,v 1.17 2002/03/26 01:46:40 dickey Exp $
  */
 
 /************************************************************
@@ -120,8 +120,10 @@ static void printLine(int row, int chr)
 #if OPT_EXT_COLORS
 	register Char *fbf = 0;
 	register Char *fbb = 0;
+#define ColorOf(col) ((fbf[col] << 8) | fbb[col])
 #else
 	register Char *fb = 0;
+#define ColorOf(col) (fb[col])
 #endif
 #endif
 	int fg = -1, last_fg = -1;
@@ -160,26 +162,16 @@ static void printLine(int row, int chr)
 				ch = getXtermCell (screen, row, col);
 			})
 #if OPT_PRINT_COLORS
-			if_OPT_EXT_COLORS(screen,{
+			if (screen->colorMode) {
 				if (screen->print_attributes > 1) {
 					fg = (a[col] & FG_COLOR)
-						? extract_fg((fbf[col]<<8)|(fbb[col]), a[col])
+						? extract_fg(ColorOf(col), a[col])
 						: -1;
 					bg = (a[col] & BG_COLOR)
-						? extract_bg((fbf[col]<<8)|(fbb[col]), a[col])
+						? extract_bg(ColorOf(col), a[col])
 						: -1;
 				}
-			})
-			if_OPT_ISO_TRADITIONAL_COLORS(screen,{
-				if (screen->print_attributes > 1) {
-					fg = (a[col] & FG_COLOR)
-						? extract_fg(fb[col], a[col])
-						: -1;
-					bg = (a[col] & BG_COLOR)
-						? extract_bg(fb[col], a[col])
-						: -1;
-				}
-			})
+			}
 #endif
 			if ((((a[col] & SGR_MASK) != attr)
 #if OPT_PRINT_COLORS

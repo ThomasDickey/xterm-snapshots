@@ -2,10 +2,10 @@
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.31 2001/09/09 01:07:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.32 2002/03/26 01:46:40 dickey Exp $ */
 
 /*
- * Copyright 2000,2001 by Thomas E. Dickey
+ * Copyright 2000-2001,2002 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -62,7 +62,13 @@
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
 
+#if defined(HAVE_LIB_XAW)
 #include <X11/Xaw/Scrollbar.h>
+#elif defined(HAVE_LIB_XAW3D)
+#include <X11/Xaw3d/Scrollbar.h>
+#elif defined(HAVE_LIB_NEXTAW)
+#include <X11/neXtaw/Scrollbar.h>
+#endif
 
 #include <data.h>
 #include <error.h>

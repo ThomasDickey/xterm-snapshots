@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/testxmc.c,v 3.8 2000/06/13 02:28:41 dawes Exp $
+ * $XFree86: xc/programs/xterm/testxmc.c,v 3.9 2002/03/26 01:46:40 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2000 by Thomas E. Dickey
+Copyright 1997-2000,2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -64,9 +64,11 @@ authorization.
  *		INVERSE		1
  *		UNDERLINE	2
  *		BOLD		4
+ *		BLINK		8
  *
  *	The default is `1' (INVERSE).  Some terminals emit glitches for
- *	underline.
+ *	underline.  Just for completeness, we recognize all of the video
+ *	attributes.
  *
  * xmcInline (class XmcInline)
  *	When true, limits the extent of an SGR change to the current line.
@@ -91,120 +93,132 @@ authorization.
 #define MARK_ON(a)  (my_attrs & a) != 0 && (term->flags & (whichone = a)) == 0
 #define MARK_OFF(a) (my_attrs & a) != 0 && (term->flags & (whichone = a)) != 0
 
-void Mark_XMC(register TScreen *screen, int param)
+void
+Mark_XMC(register TScreen * screen, int param)
 {
-	static IChar *glitch;
-	Boolean found = FALSE;
-	Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
-	Char whichone = 0;
+    static IChar *glitch;
+    Boolean found = FALSE;
+    Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
+    Char whichone = 0;
 
-	if (glitch == 0) {
-		unsigned len = screen->xmc_glitch;
-		glitch = (IChar *)malloc(len * sizeof(IChar));
-		while (len--)
-			glitch[len] = XMC_GLITCH;
-	}
-	switch (param) {
-	case -1:/* DEFAULT */
-	case 0: /* FALLTHRU */
-		found = MARK_OFF((term->flags & XMC_FLAGS));
-		break;
-	case 1:
-		found = MARK_ON(BOLD);
-		break;
-	case 4:
-		found = MARK_ON(UNDERLINE);
-		break;
-	case 7:
-		found = MARK_ON(INVERSE);
-		break;
-	case 22:
-		found = MARK_OFF(BOLD);
-		break;
-	case 24:
-		found = MARK_OFF(UNDERLINE);
-		break;
-	case 27:
-		found = MARK_OFF(INVERSE);
-		break;
-	}
+    if (glitch == 0) {
+	unsigned len = screen->xmc_glitch;
+	glitch = (IChar *) malloc(len * sizeof(IChar));
+	while (len--)
+	    glitch[len] = XMC_GLITCH;
+    }
+    switch (param) {
+    case -1:			/* DEFAULT */
+    case 0:			/* FALLTHRU */
+	found = MARK_OFF((term->flags & XMC_FLAGS));
+	break;
+    case 1:
+	found = MARK_ON(BOLD);
+	break;
+    case 4:
+	found = MARK_ON(UNDERLINE);
+	break;
+    case 5:
+	found = MARK_ON(BLINK);
+	break;
+    case 7:
+	found = MARK_ON(INVERSE);
+	break;
+    case 22:
+	found = MARK_OFF(BOLD);
+	break;
+    case 24:
+	found = MARK_OFF(UNDERLINE);
+	break;
+    case 25:
+	found = MARK_OFF(BLINK);
+	break;
+    case 27:
+	found = MARK_OFF(INVERSE);
+	break;
+    }
 
-	/*
-	 * Write a glitch with the attributes temporarily set to the new(er)
-	 * ones.
-	 */
-	if (found) {
-		unsigned save = term->flags;
-		term->flags ^= whichone;
-		TRACE(("XMC Writing glitch (%d/%d) after SGR %d\n", my_attrs, whichone, param));
-		dotext(screen, '?', glitch, screen->xmc_glitch);
-		term->flags = save;
-	}
+    /*
+     * Write a glitch with the attributes temporarily set to the new(er)
+     * ones.
+     */
+    if (found) {
+	unsigned save = term->flags;
+	term->flags ^= whichone;
+	TRACE(("XMC Writing glitch (%d/%d) after SGR %d\n", my_attrs,
+	       whichone, param));
+	dotext(screen, '?', glitch, screen->xmc_glitch);
+	term->flags = save;
+    }
 }
 
 /*
  * Force a glitch on cursor movement when we're in standout mode and not at the
  * end of a line.
  */
-void Jump_XMC(register TScreen *screen)
+void
+Jump_XMC(register TScreen * screen)
 {
-	if (!screen->move_sgr_ok
-	 && screen->cur_col <= CurMaxCol(screen, screen->cur_row)) {
-		Mark_XMC(screen, -1);
-	}
+    if (!screen->move_sgr_ok
+	&& screen->cur_col <= CurMaxCol(screen, screen->cur_row)) {
+	Mark_XMC(screen, -1);
+    }
 }
 
 /*
  * After writing text to the screen, resolve mismatch between the current
  * location and any attributes that would have been set by preceding locations.
  */
-void Resolve_XMC(register TScreen *screen)
+void
+Resolve_XMC(register TScreen * screen)
 {
-	Boolean changed = False;
-	Char start;
-	Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
-	int row = screen->cur_row;
-	int col = screen->cur_col;
+    Boolean changed = False;
+    Char start;
+    Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
+    int row = screen->cur_row;
+    int col = screen->cur_col;
 
-	/* Find the preceding cell.
-	 */
-	if (getXtermCell(screen, row, col) != XMC_GLITCH) {
-		if (col != 0) {
-			col--;
-		} else if (!screen->xmc_inline && row != 0) {
-			row--;
-			col = CurMaxCol(screen, row);
-		}
+    /* Find the preceding cell.
+     */
+    if (getXtermCell(screen, row, col) != XMC_GLITCH) {
+	if (col != 0) {
+	    col--;
+	} else if (!screen->xmc_inline && row != 0) {
+	    row--;
+	    col = CurMaxCol(screen, row);
 	}
-	start = (SCRN_BUF_ATTRS(screen, row)[col] & my_attrs);
+    }
+    start = (SCRN_BUF_ATTRS(screen, row)[col] & my_attrs);
 
-	/* Now propagate the starting state until we reach a cell which holds
-	 * a glitch.
-	 */
-	for (;;) {
-		if (col < CurMaxCol(screen, row)) {
-			col++;
-		} else if (!screen->xmc_inline && row < screen->max_row) {
-			row++;
-			col = 0;
-		} else
-			break;
-		if (getXtermCell(screen, row, col) == XMC_GLITCH)
-			break;
-		if ((SCRN_BUF_ATTRS(screen, row)[col] & my_attrs) != start) {
-			SCRN_BUF_ATTRS(screen, row)[col] = start |
-				(SCRN_BUF_ATTRS(screen, row)[col] & ~my_attrs);
-			changed = True;
-		}
+    /* Now propagate the starting state until we reach a cell which holds
+     * a glitch.
+     */
+    for (;;) {
+	if (col < CurMaxCol(screen, row)) {
+	    col++;
+	} else if (!screen->xmc_inline && row < screen->max_row) {
+	    row++;
+	    col = 0;
+	} else
+	    break;
+	if (getXtermCell(screen, row, col) == XMC_GLITCH)
+	    break;
+	if ((SCRN_BUF_ATTRS(screen, row)[col] & my_attrs) != start) {
+	    SCRN_BUF_ATTRS(screen, row)[col] = start |
+		(SCRN_BUF_ATTRS(screen, row)[col] & ~my_attrs);
+	    changed = True;
 	}
+    }
 
-	TRACE(("XMC %s (%s:%d/%d) from %d,%d to %d,%d\n",
-		changed ? "Ripple" : "Nochange",
-		term->flags & my_attrs ? "on" : "off",
-		my_attrs, start,
-		screen->cur_row, screen->cur_col, row, col));
+    TRACE(("XMC %s (%s:%d/%d) from %d,%d to %d,%d\n",
+	   changed ? "Ripple" : "Nochange",
+	   term->flags & my_attrs ? "on" : "off",
+	   my_attrs, start,
+	   screen->cur_row, screen->cur_col,
+	   row, col));
 
-	if (changed) {
-		ScrnRefresh (screen, screen->cur_row, 0, row + 1 - screen->cur_row, screen->max_col + 1, True);
-	}
+    if (changed) {
+	ScrnRefresh(screen, screen->cur_row, 0, row + 1 - screen->cur_row,
+		    screen->max_col + 1, True);
+    }
 }

@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.39 2001/10/08 01:08:11 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.40 2002/03/26 01:46:41 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2000 by Thomas E. Dickey
+Copyright 1997-2001,2002 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -41,6 +41,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef DFT_TERMTYPE		/* AC_ARG_WITH(default-term-type) */
 #undef HAVE_GETLOGIN		/* AC_CHECK_FUNCS(getlogin) */
 #undef HAVE_LASTLOG_H		/* CF_LASTLOG */
+#undef HAVE_LIB_NEXTAW		/* CF_X_ATHENA(--with-neXtaw) */
+#undef HAVE_LIB_XAW		/* CF_X_ATHENA */
+#undef HAVE_LIB_XAW3D		/* CF_X_ATHENA(--with-Xaw3d) */
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
