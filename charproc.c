@@ -196,7 +196,7 @@ static  Boolean	defaultCOLORMODE   = DFT_COLORMODE;
 #if DFT_COLORMODE
 #define DFT_COLOR(name) name
 #else
-#define DFT_COLOR(name) "XtDefaultForeground"
+#define DFT_COLOR(name) XtDefaultForeground
 #endif
 #endif
 
@@ -411,9 +411,9 @@ static XtResource resources[] = {
 	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, core.background_pixel),
-	XtRString, "XtDefaultBackground"},
-COLOR_RES(XtNforeground,	screen.foreground,	"XtDefaultForeground"),
-COLOR_RES(XtNcursorColor,	screen.cursorcolor,	"XtDefaultForeground"),
+	XtRString, XtDefaultBackground},
+Cres(XtNforeground,	screen.foreground,	XtDefaultForeground),
+Cres(XtNcursorColor,	screen.cursorcolor,	XtDefaultForeground),
 #if OPT_BLINK_CURS
 {XtNcursorBlink, XtCCursorBlink, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.cursor_blink),
@@ -488,7 +488,7 @@ Bres(XtNdeleteIsDEL,	XtCDeleteIsDEL,		screen.delete_is_del,	FALSE),
 {XtNmarginBell, XtCMarginBell, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.marginbell),
 	XtRBoolean, (XtPointer) &defaultFALSE},
-COLOR_RES(XtNpointerColor,	screen.mousecolor,	"XtDefaultForeground"),
+Cres(XtNpointerColor,	screen.mousecolor,	XtDefaultForeground),
 {XtNpointerColorBackground, XtCBackground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.mousecolorback),
 	XtRString, "XtDefaultBackground"},
@@ -659,9 +659,9 @@ COLOR_RES(XtNcolor15,	screen.Acolors[COLOR_15],	DFT_COLOR("white")),
 #elif OPT_88_COLORS
 # include <88colres.h>
 #endif
-COLOR_RES(XtNcolorBD,	screen.Acolors[COLOR_BD],	DFT_COLOR("XtDefaultForeground")),
-COLOR_RES(XtNcolorBL,	screen.Acolors[COLOR_BL],	DFT_COLOR("XtDefaultForeground")),
-COLOR_RES(XtNcolorUL,	screen.Acolors[COLOR_UL],	DFT_COLOR("XtDefaultForeground")),
+COLOR_RES(XtNcolorBD,	screen.Acolors[COLOR_BD],	DFT_COLOR(XtDefaultForeground)),
+COLOR_RES(XtNcolorBL,	screen.Acolors[COLOR_BL],	DFT_COLOR(XtDefaultForeground)),
+COLOR_RES(XtNcolorUL,	screen.Acolors[COLOR_UL],	DFT_COLOR(XtDefaultForeground)),
 {XtNcolorMode, XtCColorMode, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.colorMode),
 	XtRBoolean, (XtPointer) &defaultCOLORMODE},
@@ -685,7 +685,7 @@ COLOR_RES(XtNcolorUL,	screen.Acolors[COLOR_UL],	DFT_COLOR("XtDefaultForeground")
 	XtOffsetOf(XtermWidgetRec, misc.dynamicColors),
 	XtRBoolean, (XtPointer) &defaultTRUE},
 #if OPT_HIGHLIGHT_COLOR
-COLOR_RES(XtNhighlightColor,	screen.highlightcolor,	"XtDefaultForeground"),
+Cres(XtNhighlightColor,	screen.highlightcolor,	XtDefaultForeground),
 #endif /* OPT_HIGHLIGHT_COLOR */
 {XtNboldMode, XtCBoldMode, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.bold_mode),
@@ -857,7 +857,6 @@ setExtendedFG(void)
 {
 	int fg = term->sgr_foreground;
 
-#if NUM_ANSI_COLORS < 256
 	if (term->screen.colorAttrMode
 	 || (fg < 0)) {
 		if (term->screen.colorULMode && (term->flags & UNDERLINE))
@@ -867,7 +866,6 @@ setExtendedFG(void)
 		if (term->screen.colorBLMode && (term->flags & BLINK))
 			fg = COLOR_BL;
 	}
-#endif
 
 	/* This implements the IBM PC-style convention of 8-colors, with one
 	 * bit for bold, thus mapping the 0-7 codes to 8-15.  It won't make
@@ -4306,12 +4304,18 @@ static void VTInitialize (
    wnew->screen.colorULMode   = request->screen.colorULMode;
 
    for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
-       TRACE(("Acolors[%d] = %#lx\n", i, request->screen.Acolors[i]));
        wnew->screen.Acolors[i] = request->screen.Acolors[i];
+#if OPT_COLOR_RES
+       TRACE(("Acolors[%d] = %s\n", i, request->screen.Acolors[i].resource));
+       if (strcmp(wnew->screen.Acolors[i].resource, XtDefaultForeground))
+	   color_ok = True;
+#else
+       TRACE(("Acolors[%d] = %#lx\n", i, request->screen.Acolors[i]));
        if (wnew->screen.Acolors[i] != wnew->dft_foreground
 	&& wnew->screen.Acolors[i] != request->screen.foreground
 	&& wnew->screen.Acolors[i] != request->core.background_pixel)
 	   color_ok = True;
+#endif
    }
 
    /* If none of the colors are anything other than the foreground or

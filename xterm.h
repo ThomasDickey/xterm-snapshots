@@ -701,13 +701,22 @@ extern void ClearCurBackground (TScreen *screen, int top, int left, unsigned hei
 
 #define getXtermForeground(flags, color) \
 	(((flags) & FG_COLOR) && ((color) >= 0) \
-			? term->screen.Acolors[color] \
+			? GET_COLOR_RES(term->screen.Acolors[color]) \
 			: term->screen.foreground)
 
 #define getXtermBackground(flags, color) \
 	(((flags) & BG_COLOR) && ((color) >= 0) \
-			? term->screen.Acolors[color] \
+			? GET_COLOR_RES(term->screen.Acolors[color]) \
 			: term->core.background_pixel)
+
+#if OPT_COLOR_RES
+#define GET_COLOR_RES(res) xtermGetColorRes(&res)
+#define SET_COLOR_RES(res,color) res->value = color
+extern Pixel xtermGetColorRes(ColorRes *res);
+#else
+#define GET_COLOR_RES(res) res
+#define SET_COLOR_RES(res,color) *res = color
+#endif
 
 #if OPT_EXT_COLORS
 #define extract_bg(color) ((int)((color) & 0xff))

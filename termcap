@@ -116,7 +116,7 @@ x8|xterm-8bit|xterm terminal emulator 8-bit controls (X Window System):\
 	:nd=\233C:rc=\E8:sc=\E7:se=\23327m:sf=^J:so=\2337m:sr=\215:\
 	:st=\210:ta=^I:te=\233?1049l:ti=\233?1049h:ue=\23324m:\
 	:up=\233A:us=\2334m:vb=\233?5h\233?5l:ve=\233?25h:\
-	:vi=\233?25l:vs=\233?25h:
+	:vi=\233?25l:
 #
 hp|xterm-hp|XFree86 xterm with hpterm function keys:\
 	:k1=\Ep:k2=\Eq:k3=\Er:k4=\Es:k5=\Et:\

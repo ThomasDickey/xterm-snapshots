@@ -322,27 +322,24 @@ typedef struct {
 #define RES_OFFSET(offset) XtOffsetOf(XtermWidgetRec, offset)
 #endif
 
+#define RES_NAME(name) name
+#define RES_CLASS(name) name
+
 #define Bres(name,class,offset,value) \
-	{name, class, XtRBoolean, sizeof(Boolean), \
+	{RES_NAME(name), RES_CLASS(class), XtRBoolean, sizeof(Boolean), \
 	 RES_OFFSET(offset), XtRImmediate, (XtPointer) value}
 
-#define Ires(name,class,offset,value) \
-	{name, class, XtRInt, sizeof(int), \
-	 RES_OFFSET(offset), XtRInt, (XtPointer) value}
-
-#define Sres(name,class,offset,value) \
-	{name, class, XtRString, sizeof(String), \
-	 RES_OFFSET(offset), XtRString, (XtPointer) value}
-
-#define COLOR_RES(name,offset,value) \
-	{name, XtCForeground, XtRPixel, sizeof(Pixel), \
+#define Cres(name,offset,value) \
+	{RES_NAME(name), XtCForeground, XtRPixel, sizeof(Pixel), \
 	 RES_OFFSET(offset), XtRString, value}
 
-typedef struct {
-	unsigned	which;	/* must have NCOLORS bits */
-	Pixel		colors[NCOLORS];
-	char		*names[NCOLORS];
-} ScrnColors;
+#define Ires(name,class,offset,value) \
+	{RES_NAME(name), RES_CLASS(class), XtRInt, sizeof(int), \
+	 RES_OFFSET(offset), XtRImmediate, (XtPointer) value}
+
+#define Sres(name,class,offset,value) \
+	{RES_NAME(name), RES_CLASS(class), XtRString, sizeof(char *), \
+	 RES_OFFSET(offset), XtRString, (XtPointer) value}
 
 /***====================================================================***/
 
@@ -366,6 +363,10 @@ typedef struct {
 
 #ifndef OPT_CLIP_BOLD
 #define OPT_CLIP_BOLD	1 /* true if xterm uses clipping to avoid bold-trash */
+#endif
+
+#ifndef OPT_COLOR_RES
+#define OPT_COLOR_RES   1 /* true if xterm delays color-resource evaluation */
 #endif
 
 #ifndef OPT_DEC_CHRSET
@@ -581,6 +582,12 @@ typedef struct {
 #else
 # define if_OPT_EXT_COLORS(screen, code) /* nothing */
 # define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /*nothing*/
+#endif
+
+#if OPT_COLOR_RES
+#define COLOR_RES(name,offset,value) Sres(name, XtCForeground, offset.resource, value)
+#else
+#define COLOR_RES(name,offset,value) Cres(name, offset, value)
 #endif
 
 /***====================================================================***/
@@ -806,6 +813,22 @@ typedef enum {
 
 #define NUM_POPUP_MENUS 4
 
+#if OPT_COLOR_RES
+typedef struct {
+	String		resource;
+	Pixel		value;
+	int		mode;
+} ColorRes;
+#else
+#define ColorRes Pixel
+#endif
+
+typedef struct {
+	unsigned	which;	/* must have NCOLORS bits */
+	Pixel		colors[NCOLORS];
+	char		*names[NCOLORS];
+} ScrnColors;
+
 typedef struct {
 	Boolean		saved;
 	int		row;
@@ -873,7 +896,7 @@ typedef struct {
 	Pixel		mousecolor;	/* Mouse color			*/
 	Pixel		mousecolorback;	/* Mouse color background	*/
 #if OPT_ISO_COLORS
-	Pixel		Acolors[MAXCOLORS]; /* ANSI color emulation	*/
+	ColorRes	Acolors[MAXCOLORS]; /* ANSI color emulation	*/
 	Boolean		boldColors;	/* can we make bold colors?	*/
 	Boolean		colorMode;	/* are we using color mode?	*/
 	Boolean		colorULMode;	/* use color for underline?	*/
