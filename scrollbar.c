@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: scrollbar.c /main/47 1996/12/01 23:47:08 swick $
- *	$XFree86: xc/programs/xterm/scrollbar.c,v 3.19 1998/07/17 12:05:25 dawes Exp $
+ *	$XFree86: xc/programs/xterm/scrollbar.c,v 3.20 1998/10/25 07:12:48 dawes Exp $
  */
 
 /*

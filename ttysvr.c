@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/ttysvr.c,v 3.2 1997/05/23 09:19:56 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/ttysvr.c,v 3.3 1998/10/25 07:12:53 dawes Exp $ */
 /*
  *
  * ttysvr.c

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/print.c,v 1.6 1998/06/04 16:44:00 hohndel Exp $
+ * $XFree86: xc/programs/xterm/print.c,v 1.7 1998/10/25 07:12:46 dawes Exp $
  */
 
 /************************************************************
