@@ -54,6 +54,11 @@ The options (in alphabetic order):
 
   	Do not compile-in code for ANSI colors.
 
+  --disable-blink-cursor  disable support for blinking cursor
+
+	Do not compile-in code that implements a blinking cursor.  The blinking
+	cursor is enabled either by resource setting or by popup menu entry.
+
   --disable-bold-color    disable PC-style mapping of bold colors
 
 	Do not compile-in code that maps colors 8-15 to bold versions of

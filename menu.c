@@ -2,6 +2,28 @@
 /* $XFree86: xc/programs/xterm/menu.c,v 3.22 1999/03/28 15:33:19 dawes Exp $ */
 /*
 
+Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+
+                        All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of the above listed
+copyright holder(s) not be used in advertising or publicity pertaining
+to distribution of the software without specific, written prior
+permission.
+
+THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
+TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
+LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+
 Copyright (c) 1989  X Consortium
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -88,6 +110,10 @@ static void do_logging         PROTO_XT_CALLBACK_ARGS;
 #ifndef NO_ACTIVE_ICON
 static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
 #endif /* NO_ACTIVE_ICON */
+
+#if OPT_BLINK_CURS
+static void do_cursorblink     PROTO_XT_CALLBACK_ARGS;
+#endif
 
 #if OPT_DEC_CHRSET
 static void do_font_doublesize PROTO_XT_CALLBACK_ARGS;
@@ -178,6 +204,9 @@ MenuEntry vtMenuEntries[] = {
     { "cursesemul",	do_cursesemul,	NULL },
     { "visualbell",	do_visualbell,	NULL },
     { "marginbell",	do_marginbell,	NULL },
+#if OPT_BLINK_CURS
+    { "cursorblink",	do_cursorblink,	NULL },
+#endif
     { "titeInhibit",	do_titeInhibit,	NULL },
 #ifndef NO_ACTIVE_ICON
     { "activeicon",	do_activeicon,	NULL },
@@ -325,6 +354,7 @@ static Bool domenu (
 	    update_cursesemul();
 	    update_visualbell();
 	    update_marginbell();
+	    update_cursorblink();
 	    update_altscreen();
 	    update_titeInhibit();
 #ifndef NO_ACTIVE_ICON
@@ -882,6 +912,18 @@ static void do_tekonoff (
     handle_tekshow (gw, False);
 }
 #endif /* OPT_TEK4014 */
+
+#if OPT_BLINK_CURS
+/* ARGSUSED */
+static void do_cursorblink (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
+{
+    TScreen *screen = &term->screen;
+    ToggleCursorBlink(screen);
+}
+#endif
 
 /* ARGSUSED */
 static void do_altscreen (
@@ -1487,6 +1529,19 @@ void HandleMarginBell(
     handle_toggle (do_marginbell, (int) term->screen.marginbell,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
+
+#if OPT_BLINK_CURS
+void HandleCursorBlink(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
+{
+    /* eventually want to see if sensitive or not */
+    handle_toggle (do_cursorblink, (int) term->screen.cursor_blink,
+		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
+}
+#endif
 
 void HandleAltScreen(
 	Widget w,

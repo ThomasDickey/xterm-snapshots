@@ -191,6 +191,14 @@ CF_ARG_DISABLE(16-color,
 AC_MSG_RESULT($enable_16_color)
 test $enable_16_color = no && AC_DEFINE(OPT_AIX_COLORS,0)
 
+AC_MSG_CHECKING(if you want blinking cursor)
+CF_ARG_DISABLE(blink-cursor,
+	[  --disable-blink-cursor  disable support for blinking cursor],
+	[enable_blink_curs=no],
+	[enable_blink_curs=yes])
+AC_MSG_RESULT($enable_blink_curs)
+test $enable_blink_curs = no && AC_DEFINE(OPT_BLINK_CURS,0)
+
 AC_MSG_CHECKING(if you want bold colors mapped like IBM PC)
 CF_ARG_DISABLE(bold-color,
 	[  --disable-bold-color    disable PC-style mapping of bold colors],

@@ -2,6 +2,28 @@
 /* $XFree86: xc/programs/xterm/menu.h,v 3.14 1999/03/28 15:33:20 dawes Exp $ */
 /*
 
+Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+
+                        All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of the above listed
+copyright holder(s) not be used in advertising or publicity pertaining
+to distribution of the software without specific, written prior
+permission.
+
+THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
+TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
+LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+
 Copyright (c) 1989  X Consortium
 
 Permission is hereby granted, free of charge, to any person obtaining
@@ -64,6 +86,7 @@ extern void HandleBackarrow        PROTO_XT_ACTIONS_ARGS;
 extern void HandleClearSavedLines  PROTO_XT_ACTIONS_ARGS;
 extern void HandleCreateMenu       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursesEmul       PROTO_XT_ACTIONS_ARGS;
+extern void HandleCursorBlink      PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
@@ -156,6 +179,9 @@ typedef enum {
     vtMenu_cursesemul,
     vtMenu_visualbell,
     vtMenu_marginbell,
+#if OPT_BLINK_CURS
+    vtMenu_cursorblink,
+#endif
     vtMenu_titeInhibit,
 #ifndef NO_ACTIVE_ICON
     vtMenu_activeicon,
@@ -368,6 +394,15 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
   update_menu_item (term->screen.vtMenu, \
 		    vtMenuEntries[vtMenu_marginbell].widget, \
 		    term->screen.marginbell)
+
+#if OPT_BLINK_CURS
+#define update_cursorblink() \
+  update_menu_item (term->screen.vtMenu, \
+		    vtMenuEntries[vtMenu_cursorblink].widget, \
+		    term->screen.cursor_blink)
+#else
+#define update_cursorblink() /* nothing */
+#endif
 
 #define update_altscreen() \
   update_menu_item (term->screen.vtMenu, \

@@ -5,9 +5,9 @@
 
 /*
  * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
- * 
+ *
  *                         All Rights Reserved
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -15,10 +15,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -26,7 +26,7 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  * Except as contained in this notice, the name(s) of the above copyright
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
@@ -862,6 +862,12 @@ do_erase_display(
 			ClearAbove(screen);
 		break;
 
+	case 3:
+		/* xterm addition - erase saved lines. */
+		screen->savedlines = 0;
+		ScrollBarDrawThumb( screen->scrollWidget );
+		break;
+
 	case 2:
 		/*
 		 * We use 'ClearScreen()' throughout the remainder of the
@@ -1455,9 +1461,11 @@ drawXtermText(
 			SAVE_FONT_INFO (screen);
 
 		} else {	/* simulate double-sized characters */
+#if OPT_WIDE_CHARS
+			Char *wide = 0;
+#endif
 			unsigned need = 2 * len;
 			Char *temp = (Char *) malloc(need);
-			Char *wide = 0;
 			int n = 0;
 			if_OPT_WIDE_CHARS(screen,{
 				wide = (Char *)malloc(need);

@@ -198,6 +198,10 @@ extern void unparseputc1 (int c, int fd);
 extern void unparseputs (char *s, int fd);
 extern void unparseseq (ANSI *ap, int fd);
 
+#if OPT_BLINK_CURS
+extern void ToggleCursorBlink(TScreen *screen);
+#endif
+
 #if OPT_ISO_COLORS
 extern void SGR_Background (int color);
 extern void SGR_Foreground (int color);
