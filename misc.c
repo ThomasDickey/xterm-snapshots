@@ -1728,7 +1728,14 @@ Error (int i)
 void
 Cleanup (int code)
 {
+	static Boolean cleaning;
 	register TScreen *screen;
+
+	if (cleaning) {
+		hold_screen = 0;
+		return;
+	}
+	cleaning = TRUE;
 
 	TRACE(("Cleanup %d\n", code))
 

@@ -31,6 +31,13 @@
 
 #ifdef HAVE_CONFIG_H
 #include <xtermcfg.h>
+
+#else
+
+#if defined(__EMX__) || defined(__CYGWIN__) || defined(SCO) || defined(sco)
+#define USE_TERMCAP 1
+#endif
+
 #endif
 
 #include <X11/Xos.h>
@@ -62,17 +69,12 @@
 
 #if defined(__EMX__) || defined(__CYGWIN__)
 #define USE_SYSV_TERMIO
-#define USE_TERMCAP
 #endif
 
 #ifdef macII
 #define USE_SYSV_TERMIO
 #undef SYSV				/* pretend to be bsd */
 #endif /* macII */
-
-#if defined(SCO) || defined(sco)
-#define USE_TERMCAP
-#endif
 
 #ifdef linux
 #define USE_TERMIOS
@@ -98,7 +100,7 @@
 #elif defined(__QNX__)
 #define USE_TERMINFO
 #include <unix.h>
-#else
+#elif !defined(USE_TERMCAP)
 #define USE_TERMCAP
 #endif /* SYSV */
 

@@ -4290,7 +4290,8 @@ static SIGNAL_T reapchild (int n GCC_UNUSED)
 #ifdef DEBUG
 	    if (debug) fputs ("Exiting\n", stderr);
 #endif
-	    Cleanup (0);
+	    if (!hold_screen)
+		Cleanup (0);
 	}
     } while ( (pid=nonblocking_wait()) > 0);
 

@@ -75,13 +75,14 @@ CF_ERRNO
 CF_TTY_GROUP
 
 ###	checks for compiler characteristics
-AC_CONST
 CF_ANSI_CC_CHECK
+AC_CONST
 
 ###	checks for system services and user specified options
 
 AC_HEADER_SYS_WAIT
 
+CF_GNU_SOURCE
 CF_X_TOOLKIT
 
 # Change CPPFLAGS temporarily so that checks for X include files will
@@ -111,7 +112,7 @@ LIBS="$LIBS $X_EXTRA_LIBS"
 # available. E.g. for GNU libc 2.0.
 AC_CHECK_FUNCS(grantpt, [], AC_CHECK_LIB(util,openpty))
 
-CF_XTERM_MODE
+AC_PATH_PROG(XTERM_PATH,xterm)
 
 AC_CHECK_FUNCS( \
 	XkbStdBell \
