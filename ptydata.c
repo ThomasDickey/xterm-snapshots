@@ -103,43 +103,51 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 		for (i = 0; i < data->cnt; i++) {
 		    unsigned c = data->buf[i];
 		    /* Combine UTF-8 into Unicode */
-		    /* Incomplete characters silently ignored,
-		     * should probably be better represented by U+fffc
-		     * (replacement character).
-		     */
-		    if (c > 0x7f) {
-			if (screen->utf_count > 0 && (c & 0xc0) == 0x80) {
-				screen->utf_char <<= 6;
-				screen->utf_char |= (c & 0x3f);
-				screen->utf_count--;
-				if (screen->utf_count == 0)
-				    data->buf2[j++] = c = screen->utf_char;
-			} else {
-			    if ((c & 0xe0) == 0xc0) {
-				screen->utf_count = 1;
-				screen->utf_char = (c & 0x1f);
-			    } else if ((c & 0xf0) == 0xe0) {
-				screen->utf_count = 2;
-				screen->utf_char = (c & 0x0f);
-			    } else if ((c & 0xf8) == 0xf0) {
-				screen->utf_count = 3;
-				screen->utf_char = (c & 0x07);
-			    } else if ((c & 0xfc) == 0xf8) {
-				screen->utf_count = 4;
-				screen->utf_char = (c & 0x03);
-			    } else if ((c & 0xfe) == 0xfc) {
-				screen->utf_count = 5;
-				screen->utf_char = (c & 0x01);
-			    } else {
-				screen->utf_count = 0;
-			    }
-			}
-		    } else {
+		    if (c < 0x80) {
+			if (screen->utf_count > 0)
+			    data->buf2[j++] = 0xfffd;
 			data->buf2[j++] = c;
 			screen->utf_count = 0;
+		    } else if (c < 0xc0) {
+			if (screen->utf_count < 1) {
+			    data->buf2[j++] = 0xfffd;
+			} else {
+			    if (screen->utf_char > 0x03ff) {
+				/* value would be >0xffff */
+				screen->utf_char = 0xfffd;
+			    } else {
+			      screen->utf_char <<= 6;
+			      screen->utf_char |= (c & 0x3f);
+			    }
+			    screen->utf_count--;
+			    if (screen->utf_count == 0)
+				data->buf2[j++] = c = screen->utf_char;
+			}
+		    } else {
+			if (screen->utf_count > 0)
+			    data->buf2[j++] = 0xfffd;
+			if (c < 0xe0) {
+			    screen->utf_count = 1;
+			    screen->utf_char = (c & 0x1f);
+			} else if (c < 0xf0) {
+			    screen->utf_count = 2;
+			    screen->utf_char = (c & 0x0f);
+			} else if (c < 0xf8) {
+			    screen->utf_count = 3;
+			    screen->utf_char = (c & 0x07);
+			} else if (c < 0xfc) {
+			    screen->utf_count = 4;
+			    screen->utf_char = (c & 0x03);
+			} else if (c < 0xfe) {
+			    screen->utf_count = 5;
+			    screen->utf_char = (c & 0x01);
+			} else {
+			    data->buf2[j++] = 0xfffd;
+			    screen->utf_count = 0;
+			}
 		    }
 		}
-		TRACE(("UTF8 count %d, char %04X input %d/%d bytes\n",
+		TRACE(("UTF-8 count %d, char %04X input %d/%d bytes\n",
 			screen->utf_count,
 			screen->utf_char,
 			data->cnt, j))

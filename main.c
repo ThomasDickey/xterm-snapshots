@@ -738,7 +738,7 @@ static Atom mit_console;
 #ifndef USE_SYSV_UTMP
 static int tslot;
 #endif	/* USE_SYSV_UTMP */
-static jmp_buf env;
+static sigjmp_buf env;
 
 char *ProgramName;
 
@@ -759,6 +759,7 @@ static struct _resource {
 #endif
 #if OPT_INITIAL_ERASE
     Boolean ptyInitialErase;	/* if true, use pty's sense of erase char */
+    Boolean backarrow_is_erase;	/* override backspace/delete */
 #endif
     Boolean wait_for_map;
     Boolean useInsertMode;
@@ -806,6 +807,8 @@ static XtResource application_resources[] = {
 #if OPT_INITIAL_ERASE
     {"ptyInitialErase", "PtyInitialErase", XtRBoolean, sizeof (Boolean),
 	offset(ptyInitialErase), XtRString, "false"},
+    {"backarrowKeyIsErase", "BackarrowKeyIsErase", XtRBoolean, sizeof(Boolean),
+        offset(backarrow_is_erase), XtRBoolean, "false"},
 #endif
     {"waitForMap", "WaitForMap", XtRBoolean, sizeof (Boolean),
 	offset(wait_for_map), XtRString, "false"},
@@ -2398,7 +2401,7 @@ spawn (void)
 				initial_erase = sg.sg_erase;
 #endif	/* USE_SYSV_TERMIO */
 			}
-			if (term->screen.backarrow_key == MAYBE)
+			if (resource.backarrow_is_erase)
 			if (initial_erase == 0177) {	/* see input.c */
 				term->keyboard.flags &= ~MODE_DECBKM;
 			}

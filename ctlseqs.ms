@@ -659,8 +659,9 @@ where \*(Pc denotes the terminal type
   \(-> \*1 (``VT220'')
 .br
 and \*(Pv is the firmware version (for \fIxterm\fP, this is the XFree86
-patch number, starting with 95), and \*(Pc indicates the ROM cartridge
-registration number (always zero).
+patch number, starting with 95).
+In a DEC terminal, \*(Pc indicates the ROM cartridge
+registration number and is always zero.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*d
 Line Position Absolute  [row] (default = [1,column]) (VPA)

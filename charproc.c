@@ -361,7 +361,6 @@ static  Boolean	defaultCOLORMODE   = DFT_COLORMODE;
 #endif
 static  Boolean	defaultFALSE	   = FALSE;
 static  Boolean	defaultTRUE	   = TRUE;
-static  Boolean	defaultMAYBE	   = MAYBE;
 static  int	defaultZERO        = 0;
 static  int	defaultIntBorder   = DEFBORDER;
 static  int	defaultSaveLines   = SAVELINES;
@@ -587,7 +586,7 @@ static XtResource resources[] = {
         XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNbackarrowKey, XtCBackarrowKey, XtRBoolean, sizeof(Boolean),
         XtOffsetOf(XtermWidgetRec, screen.backarrow_key),
-        XtRBoolean, (XtPointer) &defaultMAYBE},
+        XtRBoolean, (XtPointer) &defaultTRUE},
 {XtNbellSuppressTime, XtCBellSuppressTime, XtRInt, sizeof(int),
         XtOffsetOf(XtermWidgetRec, screen.bellSuppressTime),
         XtRInt, (XtPointer) &defaultBellSuppressTime},
@@ -2623,8 +2622,8 @@ dotext(
 
 			if (n >= limit) {
 				limit = (n + 1) * 2;
-				lobyte = XtRealloc(lobyte, limit);
-				hibyte = XtRealloc(hibyte, limit);
+				lobyte = (Char *)XtRealloc(lobyte, limit);
+				hibyte = (Char *)XtRealloc(hibyte, limit);
 			}
 			for (j = offset; j < offset+n; j++) {
 				k = j-offset;
@@ -4023,7 +4022,7 @@ static void VTInitialize (
    wnew->screen.font_doublesize = request->screen.font_doublesize;
 #endif
 
-   wnew->num_ptrs = 3;	/* OFF_FLAGS, OFF_CHARS, OFF_ATTRS */
+   wnew->num_ptrs = (OFF_ATTRS+1); /* OFF_FLAGS, OFF_CHARS, OFF_ATTRS */
 #if OPT_ISO_COLORS
    wnew->screen.boldColors    = request->screen.boldColors;
    wnew->screen.colorAttrMode = request->screen.colorAttrMode;
@@ -4048,7 +4047,7 @@ static void VTInitialize (
    if (!color_ok)
 	wnew->screen.colorMode = False;
 
-   wnew->num_ptrs += 1;
+   wnew->num_ptrs = (OFF_COLOR+1);
    wnew->sgr_foreground = -1;
 #endif /* OPT_ISO_COLORS */
 
@@ -4057,7 +4056,7 @@ static void VTInitialize (
 #endif
 
 #if OPT_DEC_CHRSET
-   wnew->num_ptrs += 1;
+   wnew->num_ptrs = (OFF_CSETS+1);
 #endif
 
 #if OPT_WIDE_CHARS
@@ -4068,7 +4067,7 @@ static void VTInitialize (
       TRACE(("initialized UTF-8 mode\n"));
    }
    if (wnew->screen.wide_chars != False)
-      wnew->num_ptrs += 1;
+      wnew->num_ptrs = (OFF_WIDEC+1);
 #endif
 
    wnew->screen.underline = request->screen.underline;

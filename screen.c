@@ -325,7 +325,7 @@ ScreenWrite (
 		if (str2 != 0
 		 && (wc = SCRN_BUF_WIDEC(screen, screen->cur_row) + screen->cur_col) != 0) {
 			if (flags & INVISIBLE)
-				memset(wc, ' ', length);
+				memset(wc, 0, length);
 			else
 				memcpy(wc, str2, length);
 		}
@@ -788,8 +788,12 @@ ScrnRefresh (
 	   	   gc_changes |= (flags & (FG_COLOR|BG_COLOR));
 		}
 
-		if(chars[col] == 0)
+		if(chars[col] == 0) {
+#if OPT_WIDE_CHARS
+		    if (widec == 0 || widec[col] == 0)
+#endif
 			chars[col] = ' ';
+		}
 	   }
 
 	   TRACE(("%s @%d, calling drawXtermText %d..%d:%s\n",

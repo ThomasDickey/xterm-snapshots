@@ -336,10 +336,13 @@ This option indicates that HP Function Key escape codes should not be generated
 for function keys.
 .TP 8
 .B \-ie
-Turn on the \fBptyInitialErase\fP resource.
+Turn on the \fBptyInitialErase\fP resource, i.e.,
+use the pseudo-terminal's sense of the stty erase value.
 .TP 8
 .B +ie
-Turn off the \fBptyInitialErase\fP resource.
+Turn off the \fBptyInitialErase\fP resource, i.e.,
+set the stty erase value using the \fBkD\fP string from the termcap entry as
+a reference, if available.
 .TP 8
 .B \-im
 Turn on the \fBuseInsertMode\fP resource.
@@ -679,6 +682,12 @@ useful for setting resources that do not have separate command line options.
 The program understands all of the core X Toolkit resource names and
 classes as well as:
 .TP 8
+.B "backarrowKeyIsErase (\fPclass\fB BackarrowKeyIsErase)"
+Tie the VTxxx \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
+together by setting the DECBKM state according to whether the initial value of
+stty erase is a backspace or delete character.
+The default is ``false'', which disables this feature.
+.TP 8
 .B "hpFunctionKeys (\fPclass\fB HpFunctionKeys)"
 Specifies whether or not HP Function Key escape codes should be generated for
 function keys instead of standard escape sequences.
@@ -692,7 +701,7 @@ Specifies the icon name.  The default is the application name.
 .TP 8
 .B "ptyInitialErase (\fPclass\fB PtyInitialErase)"
 If ``true'', \fIxterm\fP will use the pseudo-terminal's sense of the stty erase
-value to set the \fBbackarrowKey\fP resource toggle.
+value.
 If ``false'', \fIxterm\fP will set the stty erase value to match its own
 configuration, using the \fBkD\fP string from the termcap entry as
 a reference, if available.
@@ -834,6 +843,7 @@ The default is ``false.''
 Specifies whether the backarrow key transmits
 a backspace
 or delete character.
+This corresponds to the DECBKM control sequence.
 The default (backspace) is ``true.''
 Pressing the control key toggles this behavior.
 .TP 8
