@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.137 2002/12/27 21:05:21 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.138 2003/02/06 23:09:42 dickey Exp $ */
 
 /*
 
@@ -5800,6 +5800,11 @@ VTReset(Bool full, Bool saved)
     screen->protected_mode = OFF_PROTECT;
 
     if (full) {			/* RIS */
+	/* reset the mouse mode */
+	screen->send_mouse_pos = MOUSE_OFF;
+	waitingForTrackInfo = FALSE;
+	eventMode = NORMAL;
+
 	TabReset(term->tabs);
 	term->keyboard.flags = MODE_SRM;
 #if OPT_INITIAL_ERASE

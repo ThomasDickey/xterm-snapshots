@@ -2,11 +2,11 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.74 2002/12/27 21:05:22 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.75 2003/02/06 23:09:43 dickey Exp $ */
 
 /*
  *
- * Copyright 1999-2001,2002 by Thomas E. Dickey
+ * Copyright 1999-2002,2003 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -121,6 +121,7 @@ static void DoSpecialEnterNotify(XEnterWindowEvent * ev);
 static void DoSpecialLeaveNotify(XEnterWindowEvent * ev);
 static void selectwindow(TScreen * screen, int flag);
 static void unselectwindow(TScreen * screen, int flag);
+static void Sleep(int msec);
 
 void
 do_xevents(void)
@@ -161,8 +162,15 @@ xevents(void)
     if ((input_mask & XtIMXEvent) != XtIMXEvent)
 	return;
     do {
-	if (waitingForTrackInfo)
+	/*
+	 * This check makes xterm hang when in mouse hilite tracking mode.
+	 * We simply ignore all events except for those not passed down to
+	 * this function, e.g., those handled in in_put().
+	 */
+	if (waitingForTrackInfo) {
+	    Sleep(10);
 	    return;
+	}
 	XtAppNextEvent(app_con, &event);
 	/*
 	 * Hack to get around problems with the toolkit throwing away
@@ -1759,6 +1767,7 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 		reset_decudk();
 
 	    while (*cp) {
+		char *base = cp;
 		char *str = (char *) malloc(strlen(cp) + 2);
 		unsigned key = 0;
 		int lo, hi;
@@ -1783,6 +1792,8 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 		}
 		if (*cp == ';')
 		    cp++;
+		if (cp == base)	/* badly-formed sequence - bail out */
+		    break;
 	    }
 	}
 	break;
@@ -2108,7 +2119,7 @@ SysError(int i)
 	,"spawn: ioctl() failed on I_PUSH/\"ptem\""	/* 19 */
 	,"spawn: ioctl() failed on I_PUSH/\"consem\""	/* 20 */
 	,"spawn: ioctl() failed on I_PUSH/\"ldterm\""	/* 21 */
-	,"spawn: ioctl() failed on I_PUSH/\"ttcompat\""	/* 22 */
+	,"spawn: ioctl() failed on I_PUSH/\"ttcompat\""		/* 22 */
 	,"spawn: ioctl() failed on TIOCSETP"	/* 23 */
 	,"spawn: ioctl() failed on TIOCSETC"	/* 24 */
 	,"spawn: ioctl() failed on TIOCSETD"	/* 25 */
