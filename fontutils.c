@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.2 1998/10/25 04:31:23 dawes Exp $
+ * $XFree86$
  */
 
 /************************************************************
@@ -302,6 +302,23 @@ got_bold_font(Display *dpy, XFontStruct *fs, char *fontname)
 	return (*p == *fontname);	/* both should be NUL */
 }
 
+/*
+ * If the font server tries to adjust another font, it may not adjust it
+ * properly.  Check that the bounding boxes are compatible.  Otherwise we'll
+ * leave trash on the display when we mix normal and bold fonts.
+ */
+static int
+same_font_size(XFontStruct *nfs, XFontStruct *bfs)
+{
+	return (
+		nfs->ascent           == bfs->ascent
+	 &&	nfs->descent          == bfs->descent
+	 &&	nfs->min_bounds.width == bfs->min_bounds.width
+	 &&	nfs->min_bounds.width == bfs->min_bounds.width
+	 &&	nfs->max_bounds.width == bfs->max_bounds.width
+	 &&	nfs->max_bounds.width == bfs->max_bounds.width);
+}
+
 #define EmptyFont(fs) ((fs)->ascent + (fs)->descent == 0 \
 		   ||  (fs)->max_bounds.width == 0)
 
@@ -353,7 +370,8 @@ xtermLoadFont (
 		 || (bfs = XLoadQueryFont (screen->display, bfontname)) == 0) {
 			bfs = nfs;
 			TRACE(("...cannot load a matching bold font\n"))
-		} else if (!got_bold_font(screen->display, bfs, bfontname)) {
+		} else if (!same_font_size(nfs, bfs)
+		 || !got_bold_font(screen->display, bfs, bfontname)) {
 			XFreeFont(screen->display, bfs);
 			bfs = nfs;
 			TRACE(("...did not get a matching bold font\n"))
