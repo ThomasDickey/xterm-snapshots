@@ -1173,7 +1173,7 @@ This entry invokes the \fBset-visualbell(toggle)\fP action.
 This entry invokes the \fBset-marginbell(toggle)\fP action.
 .TP 8
 .B "altscreen (\fPclass\fB SmeBSB)"
-This entry is currently disabled.
+This entry invokes the \fBset-altscreen(toggle)\fP action.
 .TP 8
 .B "activeicon (\fPclass\fB SMeBSB)"
 This entry toggles active icons on and off if this feature was

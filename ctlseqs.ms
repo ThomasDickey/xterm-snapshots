@@ -782,6 +782,10 @@ disabled by the \fBtiteInhibit\fP resource)
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
 See the section \fBMouse Tracking\fP.
+  \*(Ps = \*1\*0\*4\*7 \(-> Use Alternate Screen Buffer (unless
+disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*4\*8 \(-> Save cursor as in DECSC (unless
+disabled by the \fBtiteInhibit\fP resource)
 .
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*l
 DEC Private Mode Reset (DECRST)
@@ -808,6 +812,11 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*1\*0\*0\*0 \(-> Don't Send Mouse X & Y on button press and
 release
   \*(Ps = \*1\*0\*0\*1 \(-> Don't Use Hilite Mouse Tracking
+  \*(Ps = \*1\*0\*4\*7 \(-> Use Normal Screen Buffer, clearing screen
+first if in the Alternate Screen (unless
+disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*1\*0\*4\*8 \(-> Restore cursor as in DECRC (unless
+disabled by the \fBtiteInhibit\fP resource)
 .
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*r
 Restore DEC Private Mode Values.  The value of \*(Ps previously saved is

@@ -344,7 +344,6 @@ ScrollBarOn (xw, init, doalloc)
     int init, doalloc;
 {
 	register TScreen *screen = &xw->screen;
-	register int border = 2 * screen->border;
 	register int i;
 
 	if(screen->fullVwin.scrollbar)
@@ -395,6 +394,21 @@ ScrollBarOn (xw, init, doalloc)
 
 	ScrollBarDrawThumb(screen->scrollWidget);
 	DoResizeScreen (xw);
+
+#ifdef SCROLLBAR_RIGHT
+	/*
+	 * Adjust the scrollbar position if we're asked to turn on scrollbars
+	 * for the first time after the xterm is already running.  That makes
+	 * the window grow after we've initially configured the scrollbar's
+	 * position.  (There must be a better way).
+	 */
+	if (term->misc.useRight
+	 && screen->fullVwin.fullwidth < term->core.width)
+	    XtVaSetValues(screen->scrollWidget,
+		XtNx, screen->fullVwin.fullwidth - screen->scrollWidget->core.border_width,
+		NULL);
+#endif
+
 	XtMapWidget(screen->scrollWidget);
 	update_scrollbar ();
 	if (screen->buf) {

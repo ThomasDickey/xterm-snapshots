@@ -2741,12 +2741,17 @@ dpmodes(termw, func)
 #endif /* ALLOWLOGFILEONOFF */
 			break;
 #endif
+		case 1047:
 		case 47:		/* alternate buffer */
 			if (!termw->misc.titeInhibit) {
-			    if(func == bitset)
+			    if(func == bitset) {
 				ToAlternate(screen);
-			    else
+			    } else {
+				if (screen->alternate
+				 && (param[i] == 1047))
+				    ClearScreen(screen);
 				FromAlternate(screen);
+			    }
 			}
 			break;
 		case 66:	/* DECNKM */
@@ -2769,6 +2774,11 @@ dpmodes(termw, func)
 			else
 				screen->send_mouse_pos = 0;
 			break;
+		case 1048:
+			if (!termw->misc.titeInhibit) {
+				CursorRestore(termw, &screen->sc);
+			}
+			break;
 		}
 	}
 }
@@ -2786,55 +2796,60 @@ savemodes(termw)
 	for (i = 0; i < nparam; i++) {
 		switch (param[i]) {
 		case 1:			/* DECCKM			*/
-			screen->save_modes[0] = termw->keyboard.flags &
-			 MODE_DECCKM;
+			DoSM(DP_DECCKM, termw->keyboard.flags & MODE_DECCKM);
 			break;
 		case 3:			/* DECCOLM			*/
 			if(screen->c132)
-			    screen->save_modes[1] = termw->flags & IN132COLUMNS;
+			    DoSM(DP_DECCOLM, termw->flags & IN132COLUMNS);
 			break;
 		case 4:			/* DECSCLM (slow scroll)	*/
-			screen->save_modes[2] = termw->flags & SMOOTHSCROLL;
+			DoSM(DP_DECSCLM, termw->flags & SMOOTHSCROLL);
 			break;
 		case 5:			/* DECSCNM			*/
-			screen->save_modes[3] = termw->flags & REVERSE_VIDEO;
+			DoSM(DP_DECSCNM, termw->flags & REVERSE_VIDEO);
 			break;
 		case 6:			/* DECOM			*/
-			screen->save_modes[4] = termw->flags & ORIGIN;
+			DoSM(DP_DECOM, termw->flags & ORIGIN);
 			break;
 
 		case 7:			/* DECAWM			*/
-			screen->save_modes[5] = termw->flags & WRAPAROUND;
+			DoSM(DP_DECAWM, termw->flags & WRAPAROUND);
 			break;
 		case 8:			/* DECARM			*/
 			/* ignore autorepeat */
 			break;
 		case 9:			/* mouse bogus sequence */
-			screen->save_modes[7] = screen->send_mouse_pos;
+			DoSM(DP_X_X10MSE, screen->send_mouse_pos);
 			break;
 		case 40:		/* 132 column mode		*/
-			screen->save_modes[8] = screen->c132;
+			DoSM(DP_X_DECCOLM, screen->c132);
 			break;
 		case 41:		/* curses hack			*/
-			screen->save_modes[9] = screen->curses;
+			DoSM(DP_X_MORE, screen->curses);
 			break;
 		case 44:		/* margin bell			*/
-			screen->save_modes[12] = screen->marginbell;
+			DoSM(DP_X_MARGIN, screen->marginbell);
 			break;
 		case 45:		/* reverse wraparound	*/
-			screen->save_modes[13] = termw->flags & REVERSEWRAP;
+			DoSM(DP_X_REVWRAP, termw->flags & REVERSEWRAP);
 			break;
 #ifdef ALLOWLOGGING
 		case 46:		/* logging		*/
-			screen->save_modes[14] = screen->logging;
+			DoSM(DP_X_LOGGING, screen->logging);
 			break;
 #endif
+		case 1047:		/* alternate buffer		*/
 		case 47:		/* alternate buffer		*/
-			screen->save_modes[15] = screen->alternate;
+			DoSM(DP_X_ALTSCRN, screen->alternate);
 			break;
 		case 1000:		/* mouse bogus sequence		*/
 		case 1001:
-			screen->save_modes[7] = screen->send_mouse_pos;
+			DoSM(DP_X_MOUSE, screen->send_mouse_pos);
+			break;
+		case 1048:
+			if (!termw->misc.titeInhibit) {
+				CursorSave(termw, &screen->sc);
+			}
 			break;
 		}
 	}
@@ -2854,75 +2869,75 @@ restoremodes(termw)
 		switch (param[i]) {
 		case 1:			/* DECCKM			*/
 			bitcpy(&termw->keyboard.flags,
-				screen->save_modes[0], MODE_DECCKM);
+				screen->save_modes[DP_DECCKM], MODE_DECCKM);
 			update_appcursor();
 			break;
 		case 3:			/* DECCOLM			*/
 			if(screen->c132) {
 				ClearScreen(screen);
 				CursorSet(screen, 0, 0, termw->flags);
-				if((j = (screen->save_modes[1] & IN132COLUMNS)
+				if((j = (screen->save_modes[DP_DECCOLM] & IN132COLUMNS)
 				 ? 132 : 80) != ((termw->flags & IN132COLUMNS)
 				 ? 132 : 80) || j != screen->max_col + 1)
 					RequestResize(termw, -1, j, TRUE);
 				bitcpy(&termw->flags,
-					screen->save_modes[1],
+					screen->save_modes[DP_DECCOLM],
 					IN132COLUMNS);
 			}
 			break;
 		case 4:			/* DECSCLM (slow scroll)	*/
-			if (screen->save_modes[2] & SMOOTHSCROLL) {
+			if (screen->save_modes[DP_DECSCLM] & SMOOTHSCROLL) {
 				screen->jumpscroll = 0;
 				if (screen->scroll_amt)
 					FlushScroll(screen);
 			} else
 				screen->jumpscroll = 1;
-			bitcpy(&termw->flags, screen->save_modes[2], SMOOTHSCROLL);
+			bitcpy(&termw->flags, screen->save_modes[DP_DECSCLM], SMOOTHSCROLL);
 			update_jumpscroll();
 			break;
 		case 5:			/* DECSCNM			*/
-			if((screen->save_modes[3] ^ termw->flags) & REVERSE_VIDEO) {
-				bitcpy(&termw->flags, screen->save_modes[3], REVERSE_VIDEO);
+			if((screen->save_modes[DP_DECSCNM] ^ termw->flags) & REVERSE_VIDEO) {
+				bitcpy(&termw->flags, screen->save_modes[DP_DECSCNM], REVERSE_VIDEO);
 				ReverseVideo(termw);
 				/* update_reversevideo done in RevVid */
 			}
 			break;
 		case 6:			/* DECOM			*/
-			bitcpy(&termw->flags, screen->save_modes[4], ORIGIN);
+			bitcpy(&termw->flags, screen->save_modes[DP_DECOM], ORIGIN);
 			CursorSet(screen, 0, 0, termw->flags);
 			break;
 
 		case 7:			/* DECAWM			*/
-			bitcpy(&termw->flags, screen->save_modes[5], WRAPAROUND);
+			bitcpy(&termw->flags, screen->save_modes[DP_DECAWM], WRAPAROUND);
 			update_autowrap();
 			break;
 		case 8:			/* DECARM			*/
 			/* ignore autorepeat */
 			break;
 		case 9:			/* MIT bogus sequence		*/
-			screen->send_mouse_pos = screen->save_modes[7];
+			DoRM(DP_X_X10MSE, screen->send_mouse_pos);
 			break;
 		case 40:		/* 132 column mode		*/
-			screen->c132 = screen->save_modes[8];
+			DoRM(DP_X_DECCOLM, screen->c132);
 			update_allow132();
 			break;
 		case 41:		/* curses hack			*/
-			screen->curses = screen->save_modes[9];
+			DoRM(DP_X_MORE, screen->curses);
 			update_cursesemul();
 			break;
 		case 44:		/* margin bell			*/
-			if((screen->marginbell = screen->save_modes[12]) == 0)
+			if((DoRM(DP_X_MARGIN, screen->marginbell)) == 0)
 				screen->bellarmed = -1;
 			update_marginbell();
 			break;
 		case 45:		/* reverse wraparound	*/
-			bitcpy(&termw->flags, screen->save_modes[13], REVERSEWRAP);
+			bitcpy(&termw->flags, screen->save_modes[DP_X_REVWRAP], REVERSEWRAP);
 			update_reversewrap();
 			break;
 #ifdef ALLOWLOGGING
 		case 46:		/* logging		*/
 #ifdef ALLOWLOGFILEONOFF
-			if(screen->save_modes[14])
+			if(screen->save_modes[DP_X_LOGGING])
 				StartLog(screen);
 			else
 				CloseLog(screen);
@@ -2930,9 +2945,10 @@ restoremodes(termw)
 			/* update_logging done by StartLog and CloseLog */
 			break;
 #endif
+		case 1047:		/* alternate buffer */
 		case 47:		/* alternate buffer */
 			if (!termw->misc.titeInhibit) {
-			    if(screen->save_modes[15])
+			    if(screen->save_modes[DP_X_ALTSCRN])
 				ToAlternate(screen);
 			    else
 				FromAlternate(screen);
@@ -2941,7 +2957,12 @@ restoremodes(termw)
 			break;
 		case 1000:		/* mouse bogus sequence		*/
 		case 1001:
-			screen->send_mouse_pos = screen->save_modes[7];
+			DoRM(DP_X_MOUSE, screen->send_mouse_pos);
+			break;
+		case 1048:
+			if (!termw->misc.titeInhibit) {
+				CursorRestore(termw, &screen->sc);
+			}
 			break;
 		}
 	}
@@ -3231,6 +3252,16 @@ int fd;
 		register TScreen *screen = &term->screen;
 		dotext(screen, screen->gsets[(int)(screen->curgl)], buf, buf+i);
 	}
+}
+
+void
+ToggleAlternate(screen)
+    register TScreen *screen;
+{
+	if (screen->alternate)
+		FromAlternate(screen);
+	else
+		ToAlternate(screen);
 }
 
 static void
