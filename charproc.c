@@ -2046,13 +2046,13 @@ static void VTparse()
 
 		 case CASE_RIS:
 			/* RIS */
-			VTReset(TRUE);
+			VTReset(TRUE, TRUE);
 			parsestate = groundtable;
 			break;
 
 		 case CASE_DECSTR:
 			/* DECSTR */
-			VTReset(FALSE);
+			VTReset(FALSE, FALSE);
 			parsestate = groundtable;
 			break;
 
@@ -4409,12 +4409,20 @@ BlinkCursor(closure, id)	/* XtTimerCallbackProc */
  *
  *	+ autowrap mode should be reset (instead it's reset to the resource
  *	  default).
+ *	+ the popup menu offers a choice of resetting the savedLines, or not.
+ *	  (but the control sequence does this anyway).
  */
 void
-VTReset(full)
+VTReset(full, saved)
     Boolean full;
+    Boolean saved;
 {
 	register TScreen *screen = &term->screen;
+
+	if (saved) {
+		screen->savedlines = 0;
+		ScrollBarDrawThumb(screen->scrollWidget);
+	}
 
 	/* make cursor visible */
 	screen->cursor_set = ON;
@@ -4443,6 +4451,7 @@ VTReset(full)
 		update_appkeypad();
 		update_decbkm();
 		show_8bit_control(False);
+		reset_decudk();
 
 		FromAlternate(screen);
 		ClearScreen(screen);
