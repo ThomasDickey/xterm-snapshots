@@ -1,10 +1,12 @@
+/* $XTermId: VTparse.h,v 1.33 2004/12/01 01:27:46 tom Exp $ */
+
 /*
  *	$Xorg: VTparse.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/VTparse.h,v 3.19 2003/12/31 17:12:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/VTparse.h,v 3.20 2004/12/01 01:27:46 dickey Exp $ */
 /*
- * Copyright 2002 by Thomas E. Dickey
+ * Copyright 2002-2003,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -63,26 +65,32 @@
 /*
  * PARSE_T has to be large enough to handle the number of cases enumerated here.
  */
-typedef char PARSE_T;
+typedef unsigned char PARSE_T;
 
 extern Const PARSE_T ansi_table[];
+extern Const PARSE_T cigtable[];
+extern Const PARSE_T csi2_table[];
 extern Const PARSE_T csi_ex_table[];
 extern Const PARSE_T csi_quo_table[];
-#if OPT_DEC_LOCATOR
-extern Const PARSE_T csi_tick_table[];
-#endif	/* OPT_DEC_LOCATOR */
 extern Const PARSE_T csi_table[];
-extern Const PARSE_T csi2_table[];
 extern Const PARSE_T dec2_table[];
 extern Const PARSE_T dec3_table[];
 extern Const PARSE_T dec_table[];
-extern Const PARSE_T cigtable[];
 extern Const PARSE_T eigtable[];
 extern Const PARSE_T esc_sp_table[];
 extern Const PARSE_T esc_table[];
 extern Const PARSE_T scrtable[];
 extern Const PARSE_T scstable[];
 extern Const PARSE_T sos_table[];
+
+#if OPT_DEC_LOCATOR
+extern Const PARSE_T csi_tick_table[];
+#endif	/* OPT_DEC_LOCATOR */
+
+#if OPT_DEC_RECTOPS
+extern Const PARSE_T csi_dollar_table[];
+extern Const PARSE_T csi_star_table[];
+#endif	/* OPT_DEC_LOCATOR */
 
 #if OPT_VT52_MODE
 extern Const PARSE_T vt52_table[];
@@ -227,5 +235,14 @@ extern Const PARSE_T esc_pct_table[];
 #define CASE_CSI_IGNORE 119
 #define CASE_VT52_IGNORE 120
 #define CASE_VT52_FINISH 121
+#define CASE_CSI_DOLLAR_STATE 122
+#define CASE_DECCRA 123
+#define CASE_DECERA 124
+#define CASE_DECFRA 125
+#define CASE_DECSERA 126
+#define CASE_DECSACE 127
+#define CASE_DECCARA 128
+#define CASE_DECRARA 129
+#define CASE_CSI_STAR_STATE 130
 
 #endif /* included_VTparse_h */

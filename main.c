@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.396 2004/08/15 21:07:59 tom Exp $ */
+/* $XTermId: main.c,v 1.404 2004/12/01 01:27:47 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.185 2004/08/15 21:07:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.186 2004/12/01 01:27:47 dickey Exp $ */
 
 /* main.c */
 
@@ -283,6 +283,10 @@ ttyslot()
 
 #else
 
+#ifdef __INTERIX
+#define setpgrp setpgid
+#endif
+
 #ifndef linux
 #ifndef VMS
 #ifndef USE_POSIX_TERMIOS
@@ -295,7 +299,9 @@ ttyslot()
 #else
 #include <sys/resource.h>
 #endif
+#ifndef __INTERIX
 #define HAS_BSD_GROUPS
+#endif
 #endif /* !VMS */
 #endif /* !linux */
 
@@ -479,7 +485,10 @@ static char **command_to_exec_with_luit = NULL;
 #define VAL_INITIAL_ERASE A2E(8)
 
 /* choose a nice default value for speed - if we make it too low, users who
- * mistakenly use $TERM set to vt100 will get padding delays
+ * mistakenly use $TERM set to vt100 will get padding delays.  Setting it to a
+ * higher value is not useful since legacy applications (termcap) that care
+ * about padding generally store the code in a short, which does not have
+ * enough bits for the extended values.
  */
 #ifdef B38400			/* everyone should define this */
 #define VAL_LINE_SPEED B38400
@@ -589,7 +598,7 @@ static struct jtchars d_jtc =
 #define TTYMODE(name) { name, sizeof(name)-1, 0, 0 }
 static int override_tty_modes = 0;
 /* *INDENT-OFF* */
-struct _xttymodes {
+static struct _xttymodes {
     char *name;
     size_t len;
     int set;
@@ -860,8 +869,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"-sp",		"*sunKeyboard", XrmoptionNoArg,		(caddr_t) "on"},
 {"+sp",		"*sunKeyboard", XrmoptionNoArg,		(caddr_t) "off"},
 #endif
+#if OPT_TEK4014
 {"-t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+t",		"*tekStartup",	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
 {"-ti",		"*decTerminalID",XrmoptionSepArg,	(caddr_t) NULL},
 {"-tm",		"*ttyModes",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-tn",		"*termName",	XrmoptionSepArg,	(caddr_t) NULL},
@@ -1237,7 +1248,7 @@ ConvertConsoleSelection(Widget w GCC_UNUSED,
 			Atom * selection GCC_UNUSED,
 			Atom * target GCC_UNUSED,
 			Atom * type GCC_UNUSED,
-			XtPointer * value GCC_UNUSED,
+			XtPointer *value GCC_UNUSED,
 			unsigned long *length GCC_UNUSED,
 			int *format GCC_UNUSED)
 {
@@ -1278,7 +1289,7 @@ static void
 DeleteWindow(Widget w,
 	     XEvent * event GCC_UNUSED,
 	     String * params GCC_UNUSED,
-	     Cardinal * num_params GCC_UNUSED)
+	     Cardinal *num_params GCC_UNUSED)
 {
 #if OPT_TEK4014
     if (w == toplevel) {
@@ -1298,7 +1309,7 @@ static void
 KeyboardMapping(Widget w GCC_UNUSED,
 		XEvent * event,
 		String * params GCC_UNUSED,
-		Cardinal * num_params GCC_UNUSED)
+		Cardinal *num_params GCC_UNUSED)
 {
     switch (event->type) {
     case MappingNotify:
@@ -1307,7 +1318,7 @@ KeyboardMapping(Widget w GCC_UNUSED,
     }
 }
 
-XtActionsRec actionProcs[] =
+static XtActionsRec actionProcs[] =
 {
     {"DeleteWindow", DeleteWindow},
     {"KeyboardMapping", KeyboardMapping},
@@ -1822,7 +1833,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif /* OPT_SESSION_MGT */
 	XtSetErrorHandler((XtErrorHandler) 0);
 
-	XtGetApplicationResources(toplevel, (XtPointer) & resource,
+	XtGetApplicationResources(toplevel, (XtPointer) &resource,
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
@@ -3312,6 +3323,13 @@ spawn(void)
 		/* input: nl->nl, don't ignore cr, cr->nl */
 		tio.c_iflag &= ~(INLCR | IGNCR);
 		tio.c_iflag |= ICRNL;
+#if OPT_WIDE_CHARS && defined(linux) && defined(IUTF8)
+#if OPT_LUIT_PROG
+		if (command_to_exec_with_luit == 0)
+#endif
+		    if (screen->utf8_mode)
+			tio.c_iflag |= IUTF8;
+#endif
 		/* ouput: cr->cr, nl is not return, no delays, ln->cr/nl */
 #ifndef USE_POSIX_TERMIOS
 		tio.c_oflag &=
@@ -4212,7 +4230,8 @@ spawn(void)
 		    break;
 		default:
 		    fprintf(stderr, "%s: unexpected handshake status %d\n",
-			    xterm_name, handshake.status);
+			    xterm_name,
+			    (int) handshake.status);
 		}
 	    }
 	    /* close our sides of the pipes */
@@ -4393,6 +4412,32 @@ Exit(int n)
 	set_owner(ptydev, 0, 0, 0666);
 #endif
     }
+#if OPT_TRACE || defined(NO_LEAKS)
+    if (n == 0) {
+	TRACE(("Freeing memory leaks\n"));
+	if (term != 0) {
+	    Display *dpy = term->screen.display;
+
+	    if (term->screen.sbuf_address) {
+		free(term->screen.sbuf_address);
+		TRACE(("freed screen.sbuf_address\n"));
+	    }
+	    if (term->screen.allbuf) {
+		free(term->screen.allbuf);
+		TRACE(("freed screen.allbuf\n"));
+	    }
+	    if (term->screen.xim) {
+		XCloseIM(term->screen.xim);
+		TRACE(("freed screen.xim\n"));
+	    }
+	    if (toplevel)
+		XtDestroyWidget(toplevel);
+	    XtCloseDisplay(dpy);
+	}
+	TRACE((0));
+    }
+#endif
+
     exit(n);
     SIGNAL_RETURN;
 }

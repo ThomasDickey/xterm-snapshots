@@ -1,14 +1,14 @@
-/* $XTermId: misc.c,v 1.231 2004/07/28 00:53:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.235 2004/12/01 01:27:47 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.92 2004/07/28 00:53:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.93 2004/12/01 01:27:47 dickey Exp $ */
 
 /*
  *
- * Copyright 1999-2002,2003 by Thomas E. Dickey
+ * Copyright 1999-2003,2004 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -237,7 +237,7 @@ void
 HandleKeyPressed(Widget w GCC_UNUSED,
 		 XEvent * event,
 		 String * params GCC_UNUSED,
-		 Cardinal * nparams GCC_UNUSED)
+		 Cardinal *nparams GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -253,7 +253,7 @@ void
 HandleEightBitKeyPressed(Widget w GCC_UNUSED,
 			 XEvent * event,
 			 String * params GCC_UNUSED,
-			 Cardinal * nparams GCC_UNUSED)
+			 Cardinal *nparams GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -269,7 +269,7 @@ void
 HandleStringEvent(Widget w GCC_UNUSED,
 		  XEvent * event GCC_UNUSED,
 		  String * params,
-		  Cardinal * nparams)
+		  Cardinal *nparams)
 {
     register TScreen *screen = &term->screen;
 
@@ -320,7 +320,7 @@ void
 HandleInterpret(Widget w GCC_UNUSED,
 		XEvent * event GCC_UNUSED,
 		String * params,
-		Cardinal * param_count)
+		Cardinal *param_count)
 {
     if (*param_count == 1) {
 	char *value = params[0];
@@ -729,7 +729,7 @@ void
 HandleDabbrevExpand(Widget gw,
 		    XEvent * event GCC_UNUSED,
 		    String * params GCC_UNUSED,
-		    Cardinal * nparams GCC_UNUSED)
+		    Cardinal *nparams GCC_UNUSED)
 {
     XtermWidget w = (XtermWidget) gw;
     TScreen *screen = &w->screen;
@@ -744,7 +744,7 @@ void
 HandleDeIconify(Widget gw,
 		XEvent * event GCC_UNUSED,
 		String * params GCC_UNUSED,
-		Cardinal * nparams GCC_UNUSED)
+		Cardinal *nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
 	register TScreen *screen = &((XtermWidget) gw)->screen;
@@ -757,7 +757,7 @@ void
 HandleIconify(Widget gw,
 	      XEvent * event GCC_UNUSED,
 	      String * params GCC_UNUSED,
-	      Cardinal * nparams GCC_UNUSED)
+	      Cardinal *nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
 	register TScreen *screen = &((XtermWidget) gw)->screen;
@@ -890,7 +890,7 @@ void
 HandleMaximize(Widget gw,
 	       XEvent * event GCC_UNUSED,
 	       String * params GCC_UNUSED,
-	       Cardinal * nparams GCC_UNUSED)
+	       Cardinal *nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
 	RequestMaximize((XtermWidget) gw, 1);
@@ -902,7 +902,7 @@ void
 HandleRestoreSize(Widget gw,
 		  XEvent * event GCC_UNUSED,
 		  String * params GCC_UNUSED,
-		  Cardinal * nparams GCC_UNUSED)
+		  Cardinal *nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
 	RequestMaximize((XtermWidget) gw, 0);
@@ -976,11 +976,12 @@ open_userfile(int uid, int gid, char *path, Boolean append)
 
 #ifdef VMS
     if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0) {
+	int the_error = errno;
 	fprintf(stderr, "%s: cannot open %s: %d:%s\n",
 		xterm_name,
 		path,
-		errno,
-		SysErrorMsg(errno));
+		the_error,
+		SysErrorMsg(the_error));
 	return -1;
     }
     chown(path, uid, gid);
@@ -988,11 +989,12 @@ open_userfile(int uid, int gid, char *path, Boolean append)
     if ((access(path, F_OK) != 0 && (errno != ENOENT))
 	|| (!(creat_as(uid, gid, append, path, 0644)))
 	|| ((fd = open(path, O_WRONLY | O_APPEND)) < 0)) {
+	int the_error = errno;
 	fprintf(stderr, "%s: cannot open %s: %d:%s\n",
 		xterm_name,
 		path,
-		errno,
-		SysErrorMsg(errno));
+		the_error,
+		SysErrorMsg(the_error));
 	return -1;
     }
 #endif
@@ -1707,6 +1709,190 @@ reset_decudk(void)
     }
 }
 
+/*
+ * Parse the data for DECUDK (user-defined keys).
+ */
+static void
+parse_decudk(char *cp)
+{
+    while (*cp) {
+	char *base = cp;
+	char *str = (char *) malloc(strlen(cp) + 2);
+	unsigned key = 0;
+	int lo, hi;
+	int len = 0;
+
+	while (isdigit(CharOf(*cp)))
+	    key = (key * 10) + (*cp++ - '0');
+	if (*cp == '/') {
+	    cp++;
+	    while ((hi = udk_value(&cp)) >= 0
+		   && (lo = udk_value(&cp)) >= 0) {
+		str[len++] = (hi << 4) | lo;
+	    }
+	}
+	if (len > 0 && key < MAX_UDK) {
+	    if (user_keys[key].str != 0)
+		free(user_keys[key].str);
+	    user_keys[key].str = str;
+	    user_keys[key].len = len;
+	} else {
+	    free(str);
+	}
+	if (*cp == ';')
+	    cp++;
+	if (cp == base)		/* badly-formed sequence - bail out */
+	    break;
+    }
+}
+
+#if OPT_TRACE
+#define SOFT_WIDE 10
+#define SOFT_HIGH 20
+
+static void
+parse_decdld(ANSI * params, char *string)
+{
+    char DscsName[8];
+    int len;
+    int Pfn = params->a_param[0];
+    int Pcn = params->a_param[1];
+    int Pe = params->a_param[2];
+    int Pcmw = params->a_param[3];
+    int Pw = params->a_param[4];
+    int Pt = params->a_param[5];
+    int Pcmh = params->a_param[6];
+    int Pcss = params->a_param[7];
+
+    int start_char = Pcn + 0x20;
+    int char_wide = ((Pcmw == 0)
+		     ? (Pcss ? 6 : 10)
+		     : (Pcmw > 4
+			? Pcmw
+			: (Pcmw + 3)));
+    int char_high = ((Pcmh == 0)
+		     ? ((Pcmw >= 2 || Pcmw <= 4)
+			? 10
+			: 20)
+		     : Pcmh);
+    Char ch;
+    Char bits[SOFT_HIGH][SOFT_WIDE];
+    Boolean first = True;
+    Boolean prior = False;
+    int row = 0, col = 0;
+
+    TRACE(("Parsing DECDLD\n"));
+    TRACE(("  font number   %d\n", Pfn));
+    TRACE(("  starting char %d\n", Pcn));
+    TRACE(("  erase control %d\n", Pe));
+    TRACE(("  char-width    %d\n", Pcmw));
+    TRACE(("  font-width    %d\n", Pw));
+    TRACE(("  text/full     %d\n", Pt));
+    TRACE(("  char-height   %d\n", Pcmh));
+    TRACE(("  charset-size  %d\n", Pcss));
+
+    if (Pfn > 1
+	|| Pcn > 95
+	|| Pe > 2
+	|| Pcmw > 10
+	|| Pcmw == 1
+	|| Pt > 2
+	|| Pcmh > 20
+	|| Pcss > 1
+	|| char_wide > SOFT_WIDE
+	|| char_high > SOFT_HIGH) {
+	TRACE(("DECDLD illegal parameter\n"));
+	return;
+    }
+
+    len = 0;
+    while (*string != '\0') {
+	ch = CharOf(*string++);
+	if (ch >= 0x20 && ch <= 0x2f) {
+	    if (len < 2)
+		DscsName[len++] = ch;
+	} else if (ch >= 0x30 && ch <= 0x7e) {
+	    DscsName[len++] = ch;
+	    break;
+	}
+    }
+    DscsName[len] = 0;
+    TRACE(("  Dscs name     '%s'\n", DscsName));
+
+    TRACE(("  character matrix %dx%d\n", char_high, char_wide));
+    while (*string != '\0') {
+	if (first) {
+	    TRACE(("Char %d:\n", start_char));
+	    if (prior) {
+		for (row = 0; row < char_high; ++row) {
+		    TRACE(("%.*s\n", char_wide, bits[row]));
+		}
+	    }
+	    prior = False;
+	    first = False;
+	    for (row = 0; row < char_high; ++row) {
+		for (col = 0; col < char_wide; ++col) {
+		    bits[row][col] = '.';
+		}
+	    }
+	    row = col = 0;
+	}
+	ch = CharOf(*string++);
+	if (ch >= 0x3f && ch <= 0x7e) {
+	    int n;
+
+	    ch -= 0x3f;
+	    for (n = 0; n < 6; ++n) {
+		bits[row + n][col] = (ch & (1 << n)) ? '*' : '.';
+	    }
+	    col += 1;
+	    prior = True;
+	} else if (ch == '/') {
+	    row += 6;
+	    col = 0;
+	} else if (ch == ';') {
+	    first = True;
+	    ++start_char;
+	}
+    }
+}
+#else
+#define parse_decdld(p,q)	/* nothing */
+#endif
+
+/*
+ * Parse numeric parameters.  Normally we use a state machine to simplify
+ * interspersing with control characters, but have the string already.
+ */
+static void
+parse_ansi_params(ANSI * params, char **string)
+{
+    char *cp = *string;
+    short nparam = 0;
+
+    memset(params, 0, sizeof(*params));
+    while (*cp != '\0') {
+	Char ch = CharOf(*cp++);
+
+	if (isdigit(ch)) {
+	    if (nparam < NPARAM) {
+		params->a_param[nparam] *= 10;
+		params->a_param[nparam] += (ch - '0');
+	    }
+	} else if (ch == ';') {
+	    if (++nparam < NPARAM)
+		params->a_nparam = nparam;
+	} else if (ch < 32) {
+	    ;
+	} else {
+	    /* should be 0x30 to 0x7e */
+	    params->a_final = ch;
+	    break;
+	}
+    }
+    *string = cp;
+}
+
 void
 do_dcs(Char * dcsbuf, size_t dcslen)
 {
@@ -1714,7 +1900,7 @@ do_dcs(Char * dcsbuf, size_t dcslen)
     char reply[BUFSIZ];
     char *cp = (char *) dcsbuf;
     Bool okay;
-    Bool clear_all;
+    ANSI params;
 
     TRACE(("do_dcs(%s:%d)\n", (char *) dcsbuf, dcslen));
 
@@ -1861,62 +2047,16 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 	break;
 #endif
     default:
-	if (isdigit(CharOf(*cp))) {	/* digits are DECUDK, otherwise ignore */
-	    clear_all = True;
-
-	    if (*cp == '0') {
-		cp++;
-	    } else if (*cp == '1') {
-		cp++;
-		clear_all = False;
-	    }
-
-	    if (*cp == ';')
-		cp++;
-	    else if (*cp != '|')
-		return;
-
-	    if (*cp == '0') {
-		cp++;
-	    } else if (*cp == '1') {
-		cp++;
-	    }
-
-	    if (*cp++ != '|')
-		return;
-
-	    if (clear_all)
+	parse_ansi_params(&params, &cp);
+	switch (params.a_final) {
+	case '|':		/* DECUDK */
+	    if (params.a_param[0] == 0)
 		reset_decudk();
-
-	    while (*cp) {
-		char *base = cp;
-		char *str = (char *) malloc(strlen(cp) + 2);
-		unsigned key = 0;
-		int lo, hi;
-		int len = 0;
-
-		while (isdigit(CharOf(*cp)))
-		    key = (key * 10) + (*cp++ - '0');
-		if (*cp == '/') {
-		    cp++;
-		    while ((hi = udk_value(&cp)) >= 0
-			   && (lo = udk_value(&cp)) >= 0) {
-			str[len++] = (hi << 4) | lo;
-		    }
-		}
-		if (len > 0 && key < MAX_UDK) {
-		    if (user_keys[key].str != 0)
-			free(user_keys[key].str);
-		    user_keys[key].str = str;
-		    user_keys[key].len = len;
-		} else {
-		    free(str);
-		}
-		if (*cp == ';')
-		    cp++;
-		if (cp == base)	/* badly-formed sequence - bail out */
-		    break;
-	    }
+	    parse_decudk(cp);
+	    break;
+	case '{':		/* DECDLD */
+	    parse_decdld(&params, cp);
+	    break;
 	}
 	break;
     }
@@ -2010,7 +2150,7 @@ ChangeXprop(register char *buf)
 
 /***====================================================================***/
 
-ScrnColors *pOldColors = NULL;
+static ScrnColors *pOldColors = NULL;
 
 static Boolean
 GetOldColors(XtermWidget pTerm)
@@ -2435,9 +2575,11 @@ xerror(Display * d, register XErrorEvent * ev)
 int
 xioerror(Display * dpy)
 {
+    int the_error = errno;
+
     (void) fprintf(stderr,
 		   "%s:  fatal IO error %d (%s) or KillClient on X server \"%s\"\r\n",
-		   xterm_name, errno, SysErrorMsg(errno),
+		   xterm_name, the_error, SysErrorMsg(the_error),
 		   DisplayString(dpy));
 
     Exit(ERROR_XIOERROR);
@@ -2621,8 +2763,9 @@ skip_punct(const char *s)
 static int
 cmp_options(const void *a, const void *b)
 {
-    return strcmp(skip_punct(((const OptionHelp *) a)->opt),
-		  skip_punct(((const OptionHelp *) b)->opt));
+    const char *s1 = skip_punct(((const OptionHelp *) a)->opt);
+    const char *s2 = skip_punct(((const OptionHelp *) b)->opt);
+    return strcmp(s1, s2);
 }
 
 static int

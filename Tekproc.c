@@ -1,11 +1,11 @@
-/* $XTermId: Tekproc.c,v 1.105 2004/06/06 22:15:25 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.109 2004/12/01 01:27:46 tom Exp $ */
 
 /*
  * $Xorg: Tekproc.c,v 1.5 2001/02/09 02:06:02 xorgcvs Exp $
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.49 2004/06/06 22:15:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.50 2004/12/01 01:27:46 dickey Exp $ */
 
 /*
 
@@ -232,6 +232,9 @@ static XtActionsRec actionsList[] = {
     { "tek-page",		HandleTekPage },
     { "tek-reset",		HandleTekReset },
     { "tek-copy",		HandleTekCopy },
+#if OPT_TOOLBAR
+    { "set-toolbar",		HandleToolbar },
+#endif
 };
 /* *INDENT-ON* */
 
@@ -264,10 +267,8 @@ static XtResource resources[] =
     Sres("initialFont", "InitialFont", tek.initial_font, "large"),
     Sres("ginTerminator", "GinTerminator", tek.gin_terminator_str, GIN_TERM_NONE_STR),
 #if OPT_TOOLBAR
-    {XtNmenuBar, XtCMenuBar, XtRWidget, sizeof(Widget),
-     XtOffsetOf(TekWidgetRec, tek.menu_bar),
-     XtRWidget, (XtPointer) 0},
-    Ires(XtNmenuHeight, XtCMenuHeight, tek.menu_height, 25),
+    Wres(XtNmenuBar, XtCMenuBar, tek.tb_info.menu_bar, 0),
+    Ires(XtNmenuHeight, XtCMenuHeight, tek.tb_info.menu_height, 25),
 #endif
 };
 
@@ -285,7 +286,7 @@ static void TekFlush(void);
 static void TekInitialize(Widget request,
 			  Widget wnew,
 			  ArgList args,
-			  Cardinal * num_args);
+			  Cardinal *num_args);
 static void TekPage(void);
 static void TekRealize(Widget gw,
 		       XtValueMask * valuemaskp,
@@ -318,7 +319,7 @@ static WidgetClassRec tekClassRec =
 	TekExpose,		/* expose                       */
 	NULL,			/* set_values                   */
 	NULL,			/* set_values_hook              */
-	NULL,			/* set_values_almost            */
+	XtInheritSetValuesAlmost,	/* set_values_almost    */
 	NULL,			/* get_values_hook              */
 	NULL,			/* accept_focus                 */
 	XtVersion,		/* version                      */
@@ -1280,7 +1281,7 @@ static void
 TekInitialize(Widget request GCC_UNUSED,
 	      Widget wnew GCC_UNUSED,
 	      ArgList args GCC_UNUSED,
-	      Cardinal * num_args GCC_UNUSED)
+	      Cardinal *num_args GCC_UNUSED)
 {
     Widget tekparent = SHELL_OF(wnew);
 
@@ -1749,8 +1750,8 @@ TekCopy(void)
 
     if ((tekcopyfd = open_userfile(screen->uid, screen->gid, buf, False)) >= 0) {
 	sprintf(initbuf, "%c%c%c%c",
-		ESC, screen->page.fontsize + '8',
-		ESC, screen->page.linetype + '`');
+		ESC, (char)(screen->page.fontsize + '8'),
+		ESC, (char)(screen->page.linetype + '`'));
 	write(tekcopyfd, initbuf, 4);
 	Tp = &Tek0;
 	do {

@@ -1,4 +1,5 @@
--- $XFree86: xc/programs/xterm/unicode/README,v 1.4 2000/11/01 01:12:47 dawes Exp $
+-- $XTermId: README,v 1.10 2004/12/01 01:27:49 tom Exp $
+-- $XFree86: xc/programs/xterm/unicode/README,v 1.5 2004/12/01 01:27:49 dickey Exp $
 -- Thomas E. Dickey
 
 These are some scripts and datafiles used for generating tables used in the
@@ -7,9 +8,9 @@ experimental UTF-8 implementation in xterm.
 To run the convmap.pl script, you will need a copy of UnicodeData-Latest.txt
 which is currently available as
 
-         ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData-Latest.txt
+         ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt
 
-It is a large file (~460kb), so it is not included in this distribution.
+It is a large file (~877kb), so it is not included in this distribution.
 
 convmap.pl is used to generate ../keysym2ucs.c, e.g.,
 

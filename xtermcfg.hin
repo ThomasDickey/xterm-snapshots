@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.126 2004/05/26 01:19:55 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.128 2004/12/01 01:27:47 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.51 2004/05/26 01:19:55 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.52 2004/12/01 01:27:47 dickey Exp $
  */
 
 /************************************************************
@@ -94,6 +94,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_LOAD_VTFONTS		/* CF_ARG_ENABLE(load-vt-fonts) */
 #undef OPT_LUIT_PROG		/* CF_ARG_ENABLE(luit) */
 #undef OPT_MAXIMIZE		/* CF_ARG_DISABLE(maximize) */
+#undef OPT_MINI_LUIT		/* CF_ARG_ENABLE(mini-luit) */
 #undef OPT_NUM_LOCK		/* CF_ARG_DISABLE(num-lock) */
 #undef OPT_PC_COLORS		/* CF_ARG_DISABLE(pc-color) */
 #undef OPT_PTY_HANDSHAKE	/* CF_ARG_ENABLE(pty-handshake) */

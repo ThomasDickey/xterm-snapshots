@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.279 2004/07/28 00:53:26 tom Exp $
+.\" $XTermId: xterm.man,v 1.288 2004/12/01 01:27:47 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.109 2004/07/28 00:53:26 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.110 2004/12/01 01:27:47 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .TH XTERM 1 __vendorversion__
@@ -201,11 +201,12 @@ See \fIXterm Control Sequences\fP for details.
 .SH OPTIONS
 The \fIxterm\fP terminal emulator
 accepts all of the standard X Toolkit command line options as well as
-the following (if the option begins with a
+the following.
+If the option begins with a
 .RB ` + '
 instead of a
 .RB ` - ',
-the option is restored to its default value).
+the option is restored to its default value.
 The \fB-version\fP and \fB-help\fP options are interpreted even if \fIxterm\fP cannot
 open the display, and are useful for testing and configuration scripts:
 .TP 8
@@ -797,8 +798,13 @@ resource.
 .BI -tn " name"
 This option specifies the name of the terminal type to be set in the TERM
 environment variable.
-This terminal type must exist in the \fItermcap(5)\fP
-database and should have \fIli#\fP and \fIco#\fP entries.
+It corresponds to the \fBtermName\fP resource.
+This terminal type must exist in the terminal
+database
+(termcap or terminfo, depending on how \fIxterm\fP is built)
+and should have \fIli#\fP and \fIco#\fP entries.
+If the terminal type is not found, \fIxterm\fP uses the built-in list
+``xterm'', ``vt102'', etc.
 .TP 8
 .B -u8
 This option sets the \fButf8\fP resource.
@@ -1122,7 +1128,7 @@ to which they may be bound.
 Allowable keywords include:
 brk,
 dsusp,
-eof, 
+eof,
 eol,
 eol2,
 erase,
@@ -1551,6 +1557,7 @@ The default is ``true.''
 .B "decTerminalID (\fPclass\fB DecTerminalID)"
 Specifies the emulation level (100=VT100, 220=VT220, etc.), used to determine
 the type of response to a DA control sequence.
+Leading non-digit characters are ignored, e.g., "vt100" and "100" are the same.
 The default is 100.
 .TP 8
 .B "deleteIsDEL (\fPclass\fB DeleteIsDEL)"
@@ -1679,8 +1686,12 @@ normal characters with spaces between them.
 .B "forceBoxChars (\fPclass\fB ForceBoxChars)"
 Specifies whether \fIxterm\fP should assume the normal and bold fonts
 have VT100 line-drawing characters.
-If ``false'', \fIxterm\fP will check for missing characters in the 1-31
-cells and make line-drawing characters directly.
+The fixed-pitch fonts used by \fIxterm\fP
+normally have the VT100 line-drawing glyphs in cells 1-31.
+Other fixed-pitch fonts may be more attractive, but lack these glyphs.
+If ``false'', \fIxterm\fP will check for missing glyphs in cells 1-31
+and make line-drawing characters directly.
+If ``true'', \fIxterm\fP uses whatever is in cells 1-31 without checking.
 The default is ``false.''
 .TP 8
 .B "foreground (\fPclass\fB Foreground)"
@@ -1795,15 +1806,22 @@ LC_CTYPE, or LANG variables) as far as possible.
 This is realized
 by always enabling UTF-8 mode and invoking \fIluit\fR in non-UTF-8
 locales.
-.TP 4
+.TP
 .I medium
 \fIxterm\fR will follow users'
 LC_CTYPE locale only for UTF-8, east Asian, and Thai locales,
 where the encodings were not supported by conventional 8bit mode
 with changing fonts.
 For other locales, \fIxterm\fR will use conventional 8bit mode.
-.TP 4
-.I no
+.TP
+.I checkfont
+If mini-luit is compiled-in, \fIxterm\fR will check if a Unicode font has
+been specified.  If so, it checks if the character encoding for the
+current locale is POSIX, Latin-1 or Latin-9, uses the appropriate
+mapping to support those with the Unicode font.
+For other encodings, \fIxterm\fR assumes that UTF-8 encoding is required.
+.TP
+.I false
 \fIxterm\fR will use conventional 8bit mode
 or UTF-8 mode according to \fButf8\fR resource or \fB-u8\fP option.
 .RE
@@ -2088,10 +2106,19 @@ alternate screen.
 sequences (also known as private modes) 1047, 1048 and 1049 which have the same
 effect as the original 47 control sequence.
 The default for this resource is ``false.''
+.\" -- resource does not work properly (forms/layout issues)
+.\".TP 8
+.\".B "toolBar (\fPclass\fB ToolBar)"
+.\"Specifies whether or not the toolbar should be displayed.
+.\"The default is
+.\"``false.''
 .TP 8
 .B "translations (\fPclass\fB Translations)"
 Specifies the key and button bindings for menus, selections, ``programmed
 strings,'' etc.
+The \fBtranslations\fP resource,
+which provides much of \fIxterm\fP's configurability,
+is a feature of the X Toolkit Intrinsics library (Xt).
 See the \fBACTIONS\fP section.
 .TP 8
 .B "trimSelection (\fPclass\fB TrimSelection)"
@@ -2252,6 +2279,9 @@ are separators with class \fBSmeLine\fR.
 .
 .PP
 The \fImainMenu\fP has the following entries:
+.TP 8
+.B "toolbar (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-toolbar(toggle)\fP action.
 .TP 8
 .B "securekbd (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsecure()\fP action.
@@ -2517,8 +2547,7 @@ Move the cursor to beginning of the text,
 and then hold the button down while moving the cursor to the end of the region
 and releasing the button.
 The selected text is highlighted and is saved in the global cut buffer
-and made the PRIMARY selection when
-the button is released.
+and made the PRIMARY selection when the button is released.
 Double-clicking selects by words.
 Triple-clicking
 selects by lines.
@@ -2560,8 +2589,8 @@ By cutting and pasting pieces of text without trailing new lines,
 you can take text from several places in different windows and form a command
 to the shell, for example, or take output from a program and insert it into
 your favorite editor.
-Since the cut buffer is globally shared among different applications,
-you should regard it as a `file' whose contents you know.
+Since cut buffers are globally shared among different applications,
+you may regard each as a `file' whose contents you know.
 The terminal emulator and other text programs should be treating it as if it
 were a text file, i.e., the text is delimited by new lines.
 .
@@ -2743,7 +2772,7 @@ suspending the process.
 .TP
 Quit (quit)
 Stop processing X events except to support the \fB-hold\fP option,
-and then send a SIGHUP signal to the 
+and then send a SIGHUP signal to the
 the process group of the process running under
 .I xterm
 (usually the shell).
@@ -2763,7 +2792,7 @@ VT102/VT220 Modes:
 .TP
 Enable Scrollbar (scrollbar)
 Enable (or disable) the scrollbar.
-This corresponds to the 
+This corresponds to the
 .B -sb
 option and the
 .B scrollBar
@@ -2772,7 +2801,7 @@ resource.
 .TP
 Enable Jump Scroll (jumpscroll)
 Enable (or disable) jump scrolling.
-This corresponds to the 
+This corresponds to the
 .B -j
 option and the
 .B jumpScroll
@@ -2781,7 +2810,7 @@ resource.
 .TP
 Enable Reverse Video (reversevideo)
 Enable (or disable) reverse-video.
-This corresponds to the 
+This corresponds to the
 .B -rv
 option and the
 .B reverseVideo
@@ -2790,7 +2819,7 @@ resource.
 .TP
 Enable Auto Wraparound (autowrap)
 Enable (or disable) auto-wraparound.
-This corresponds to the 
+This corresponds to the
 .B -aw
 option and the
 .B autoWrap
@@ -2799,7 +2828,7 @@ resource.
 .TP
 Enable Reverse Wraparound (reversewrap)
 Enable (or disable) reverse wraparound.
-This corresponds to the 
+This corresponds to the
 .B -rw
 option and the
 .B reverseWrap
@@ -2831,7 +2860,7 @@ There is no corresponding command-line option.
 .TP
 Scroll to Bottom on Key Press (scrollkey)
 Enable (or disable) scrolling to the bottom of the scrolling region on a keypress.
-This corresponds to the 
+This corresponds to the
 .B -sk
 option and the
 .B scrollKey
@@ -2840,7 +2869,7 @@ resource.
 .TP
 Scroll to Bottom on Tty Output (scrollttyoutput)
 Enable (or disable) scrolling to the bottom of the scrolling region on output to the terminal..
-This corresponds to the 
+This corresponds to the
 .B -si
 option and the
 .B scrollTtyOutput
@@ -2849,7 +2878,7 @@ resource.
 .TP
 Allow 80/132 Column Switching (allow132)
 Enable (or disable) switching between 80 and 132 columns.
-This corresponds to the 
+This corresponds to the
 .B -132
 option and the
 .B c132
@@ -2858,7 +2887,7 @@ resource.
 .TP
 Enable Curses Emulation (cursesemul)
 Enable (or disable) a workaround for the so-called "curses bug".
-This corresponds to the 
+This corresponds to the
 .B -cu
 option and the
 .B curses
@@ -2867,7 +2896,7 @@ resource.
 .TP
 Enable Visual Bell (visualbell)
 Enable (or disable) visible bell (i.e., flashing) instead of an audible bell.
-This corresponds to the 
+This corresponds to the
 .B -vb
 option and the
 .B visualBell
@@ -2876,7 +2905,7 @@ resource.
 .TP
 Enable Pop on Bell (poponbell)
 Enable (or disable) raising of the window when Control-G is received.
-This corresponds to the 
+This corresponds to the
 .B -pop
 option and the
 .B popOnBell
@@ -2885,7 +2914,7 @@ resource.
 .TP
 Enable Margin Bell (marginbell)
 Enable (or disable) a bell when the user types near the right margin.
-This corresponds to the 
+This corresponds to the
 .B -mb
 option and the
 .B marginBell
@@ -2894,7 +2923,7 @@ resource.
 .TP
 Enable Blinking Cursor (cursorblink)
 Enable (or disable) the blinking-cursor feature.
-This corresponds to the 
+This corresponds to the
 .B -bc
 option and the
 .B cursorBlink
@@ -2908,7 +2937,7 @@ if only one is enabled, the cursor will blink.
 .TP
 Enable Alternate Screen Switching (titeInhibit)
 Enable (or disable) switching between the normal and alternate screens.
-This corresponds to the 
+This corresponds to the
 .B titeInhibit
 resource.
 There is no corresponding command-line option.
@@ -2916,7 +2945,7 @@ There is no corresponding command-line option.
 .TP
 Enable Active Icon (activeicon)
 Enable (or disable) the active-icon feature.
-This corresponds to the 
+This corresponds to the
 .B -ai
 option and the
 .B activeIcon
@@ -3040,7 +3069,7 @@ This allows you to set the font last specified by the Set
 Font escape sequence (see the document \fIXterm Control Sequences\fP).
 .TP
 Selection (fontsel)
-This allows you to set the font specified 
+This allows you to set the font specified
 the current selection as a font name (if the PRIMARY selection is owned).
 .RE
 .PP
@@ -3293,11 +3322,13 @@ for cutting and pasting electronic mailing addresses and filenames.
 .
 .SH ACTIONS
 It is possible to rebind keys (or sequences of keys) to arbitrary strings
-for input, by changing the translations for the vt100 or tek4014 widgets.
-Changing the translations for events other than key and button events
-is not expected, and will cause unpredictable behavior.
+for input, by changing the \fBtranslations\fP resources
+for the vt100 or tek4014 widgets.
+Changing the \fBtranslations\fP resource
+for events other than key and button events is not expected,
+and will cause unpredictable behavior.
 The following
-actions are provided for using within the \fIvt100\fP or \fItek4014\fP
+actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
 .TP 8
 .B "allow-send-events(\fIon/off/toggle\fP)"
@@ -3465,8 +3496,8 @@ If the third parameter \fImouse\fP is given, the action is ignored when
 mouse reporting is enabled.
 .TP 8
 .B "scroll-forw(\fIcount\fP [,\fIunits\fP [,\fImouse\fP] ])"
-This action scrolls is similar to \fBscroll-back\fP except that it scrolls
-the other direction.
+This action is similar to \fBscroll-back\fP except that it scrolls
+in the other direction.
 .TP 8
 .B "secure()"
 This action toggles the \fISecure Keyboard\fP mode described in the
@@ -3487,8 +3518,7 @@ cutbuffers specified by \fIdestname\fP.
 .TP 8
 .B "select-extend()"
 This action tracks the pointer and extends the selection.
-It
-should only be bound to Motion events.
+It should only be bound to Motion events.
 .TP 8
 .B "select-set()"
 This action stores text that corresponds to the current selection,
@@ -3642,6 +3672,11 @@ It is also invoked by the
 .B "set-titeInhibit(\fIon/off/toggle\fP)"
 This action toggles the \fBtiteInhibit\fP resource,
 which controls switching between the alternate and current screens.
+.TP 8
+.\" should toggle "toolBar" resource (see note).
+.B "set-toolbar(\fIon/off/toggle\fP)"
+This action toggles the toolbar feature and is also invoked by
+the \fBtoolbar\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-utf8-mode(\fIon/off/toggle\fP)"
 This action toggles the \fButf8\fP resource and is also invoked by
@@ -3797,7 +3832,7 @@ The default bindings in the VT102 window are:
        @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\
                       <Btn5Down>:scroll-forw(5,line,m)     \\n\\
                          <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \\n\\
-                       <BtnDown>:bell(0)
+                       <BtnDown>:ignore()
 .fi
 .ft P
 .sp
@@ -3825,6 +3860,32 @@ The default bindings in the Tektronix window are:
                 ~Meta<Btn2Down>:	gin-press(m) \\n\\
           Shift ~Meta<Btn3Down>:	gin-press(R) \\n\\
                 ~Meta<Btn3Down>:	gin-press(r)
+.fi
+.ft P
+.sp
+.in -4
+.PP
+Here is an example which uses shifted select/paste to copy to the clipboard,
+and unshifted select/paste for the primary selection.
+In each case, a (different) cut buffer is
+also a target or source of the select/paste operation.
+It is important to remember however,
+that cut buffers store data in ISO-8859-1 encoding,
+while selections can store data in a variety of formats and encodings.
+While \fIxterm\fP owns the selection, it highlights it.
+When it loses the selection, it removes the corresponding highlight.
+But you can still paste from the corresponding cut buffer.
+.sp
+.in +4
+.nf
+.ta .5i 1.5i
+.nf
+.ft C			\" Courier
+*VT100*translations:    #override \\n\\
+    ~Shift~Ctrl<Btn2Up>: insert-selection(PRIMARY, CUT_BUFFER0) \\n\\
+    Shift~Ctrl<Btn2Up>:  insert-selection(CLIPBOARD, CUT_BUFFER1) \\n\\
+    ~Shift<BtnUp>:       select-end(PRIMARY, CUT_BUFFER0) \\n\\
+    Shift<BtnUp>:        select-end(CLIPBOARD, CUT_BUFFER1)
 .fi
 .ft P
 .sp

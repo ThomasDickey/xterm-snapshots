@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.70 2004/03/04 02:21:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.71 2004/12/01 01:27:46 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -254,47 +254,6 @@ TranslateFromSUNPC(KeySym keysym)
 #else
 #define MODIFIER_PARM		/*nothing */
 #endif
-
-#if OPT_WIDE_CHARS
-/* Convert a Unicode value c into a UTF-8 sequence in strbuf */
-int
-convertFromUTF8(unsigned long c, Char * strbuf)
-{
-    int nbytes = 0;
-
-    if (c < 0x80) {
-	strbuf[nbytes++] = c;
-    } else if (c < 0x800) {
-	strbuf[nbytes++] = 0xc0 | (c >> 6);
-	strbuf[nbytes++] = 0x80 | (c & 0x3f);
-    } else if (c < 0x10000) {
-	strbuf[nbytes++] = 0xe0 | (c >> 12);
-	strbuf[nbytes++] = 0x80 | ((c >> 6) & 0x3f);
-	strbuf[nbytes++] = 0x80 | (c & 0x3f);
-    } else if (c < 0x200000) {
-	strbuf[nbytes++] = 0xf0 | (c >> 18);
-	strbuf[nbytes++] = 0x80 | ((c >> 12) & 0x3f);
-	strbuf[nbytes++] = 0x80 | ((c >> 6) & 0x3f);
-	strbuf[nbytes++] = 0x80 | (c & 0x3f);
-    } else if (c < 0x4000000) {
-	strbuf[nbytes++] = 0xf8 | (c >> 24);
-	strbuf[nbytes++] = 0x80 | ((c >> 18) & 0x3f);
-	strbuf[nbytes++] = 0x80 | ((c >> 12) & 0x3f);
-	strbuf[nbytes++] = 0x80 | ((c >> 6) & 0x3f);
-	strbuf[nbytes++] = 0x80 | (c & 0x3f);
-    } else if (c < UCS_LIMIT) {
-	strbuf[nbytes++] = 0xfe | (c >> 30);
-	strbuf[nbytes++] = 0x80 | ((c >> 24) & 0x3f);
-	strbuf[nbytes++] = 0x80 | ((c >> 18) & 0x3f);
-	strbuf[nbytes++] = 0x80 | ((c >> 12) & 0x3f);
-	strbuf[nbytes++] = 0x80 | ((c >> 6) & 0x3f);
-	strbuf[nbytes++] = 0x80 | (c & 0x3f);
-    } else
-	return convertFromUTF8(UCS_REPL, strbuf);
-
-    return nbytes;
-}
-#endif /* OPT_WIDE_CHARS */
 
 /*
  * Determine if we use the \E[3~ sequence for Delete, or the legacy ^?.  We
@@ -1028,7 +987,7 @@ TranslationsUseKeyword(Widget w, const char *keyword)
     Bool result = False;
 
     XtGetSubresources(w,
-		      (XtPointer) & data,
+		      (XtPointer) &data,
 		      "vt100",
 		      "VT100",
 		      key_resources,
@@ -1092,37 +1051,42 @@ VTInitModifiers(void)
     int min_keycode, max_keycode, keysyms_per_keycode = 0;
 
     if (keymap != 0) {
+	KeySym *theMap;
 
 	TRACE(("VTInitModifiers\n"));
 
 	XDisplayKeycodes(dpy, &min_keycode, &max_keycode);
-	XGetKeyboardMapping(dpy, min_keycode, (max_keycode - min_keycode + 1),
-			    &keysyms_per_keycode);
+	theMap = XGetKeyboardMapping(dpy, min_keycode, (max_keycode -
+							min_keycode + 1),
+				     &keysyms_per_keycode);
 
-	for (i = k = 0, mask = 1; i < 8; i++, mask <<= 1) {
-	    for (j = 0; j < keymap->max_keypermod; j++) {
-		KeyCode code = keymap->modifiermap[k];
-		if (code != 0) {
-		    KeySym keysym;
-		    int l = 0;
-		    do {
-			keysym = XKeycodeToKeysym(dpy, code, l);
-			l++;
-		    } while (!keysym && l < keysyms_per_keycode);
-		    if (keysym == XK_Num_Lock) {
-			SaveMask(num_lock);
-		    } else if (keysym == XK_Alt_L) {
-			SaveMask(alt_left);
-		    } else if (keysym == XK_Alt_R) {
-			SaveMask(alt_right);
-		    } else if (keysym == XK_Meta_L) {
-			SaveMask(meta_left);
-		    } else if (keysym == XK_Meta_R) {
-			SaveMask(meta_right);
+	if (theMap != 0) {
+	    for (i = k = 0, mask = 1; i < 8; i++, mask <<= 1) {
+		for (j = 0; j < keymap->max_keypermod; j++) {
+		    KeyCode code = keymap->modifiermap[k];
+		    if (code != 0) {
+			KeySym keysym;
+			int l = 0;
+			do {
+			    keysym = XKeycodeToKeysym(dpy, code, l);
+			    l++;
+			} while (!keysym && l < keysyms_per_keycode);
+			if (keysym == XK_Num_Lock) {
+			    SaveMask(num_lock);
+			} else if (keysym == XK_Alt_L) {
+			    SaveMask(alt_left);
+			} else if (keysym == XK_Alt_R) {
+			    SaveMask(alt_right);
+			} else if (keysym == XK_Meta_L) {
+			    SaveMask(meta_left);
+			} else if (keysym == XK_Meta_R) {
+			    SaveMask(meta_right);
+			}
 		    }
+		    k++;
 		}
-		k++;
 	    }
+	    XFree(theMap);
 	}
 
 	/* Don't disable any mods if "alwaysUseMods" is true. */

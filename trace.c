@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.53 2004/07/20 01:14:41 tom Exp $ */
+/* $XTermId: trace.c,v 1.56 2004/12/01 01:27:47 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.20 2004/07/20 01:14:41 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.21 2004/12/01 01:27:47 dickey Exp $
  */
 
 /************************************************************
@@ -249,6 +249,8 @@ TraceTranslations(const char *name, Widget w)
 	TRACE(("... xcelerat %#08lx\n", (long) xcelerat));
 	result = _XtPrintXlations(w, xlations, xcelerat, True);
 	TRACE(("%s\n", result != 0 ? result : "(null)"));
+	if (result)
+	    XFree(result);
     } else {
 	TRACE(("none (widget is null)\n"));
     }
@@ -347,7 +349,7 @@ same_option(OptionHelp * opt, XrmOptionDescRec * res)
 static Boolean
 standard_option(char *opt)
 {
-    static char *table[] =
+    static const char *table[] =
     {
 	"+rv",
 	"+synchronous",

@@ -1,3 +1,5 @@
+/* $XTermId: screen.c,v 1.149 2004/12/01 01:27:47 tom Exp $ */
+
 /*
  *	$Xorg: screen.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
@@ -54,7 +56,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.66 2004/03/04 02:21:56 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.67 2004/12/01 01:27:47 dickey Exp $ */
 
 /* screen.c */
 
@@ -70,6 +72,11 @@
 #endif
 
 #include <signal.h>
+
+#define getMinRow(screen) ((term->flags & ORIGIN) ? (screen)->top_marg : 0)
+#define getMaxRow(screen) ((term->flags & ORIGIN) ? (screen)->bot_marg : (screen)->max_row)
+#define getMinCol(screen) 0
+#define getMaxCol(screen) ((screen)->max_col)
 
 /*
  * Allocates memory for a 2-dimensional array of chars and returns a pointer
@@ -304,8 +311,17 @@ ChangeToWide(TScreen * screen)
 }
 #endif
 
-int last_written_row = -1;
-int last_written_col = -1;
+/*
+ * Disown the selection and repaint the area that is highlighted so it is no
+ * longer highlighted.
+ */
+void
+ScrnDisownSelection(TScreen * screen)
+{
+    if (ScrnHaveSelection(screen)) {
+	DisownSelection(term);
+    }
+}
 
 /*
  * Writes str into buf at screen's current row and column.  Characters are set
@@ -332,10 +348,10 @@ ScreenWrite(TScreen * screen,
     int length = len;		/* workaround for compiler bug? */
     Char *attrs;
     int avail = screen->max_col - screen->cur_col + 1;
-    Char *col;
+    Char *chars;
     int wrappedbit;
 #if OPT_WIDE_CHARS
-    Char starcol, starcol2;
+    Char starcol1, starcol2;
     Char *comb1l = 0, *comb1h = 0, *comb2l = 0, *comb2h = 0;
 #endif
 
@@ -350,7 +366,7 @@ ScreenWrite(TScreen * screen,
     if (length <= 0)
 	return;
 
-    col = SCRN_BUF_CHARS(screen, screen->cur_row) + screen->cur_col;
+    chars = SCRN_BUF_CHARS(screen, screen->cur_row) + screen->cur_col;
     attrs = SCRN_BUF_ATTRS(screen, screen->cur_row) + screen->cur_col;
 
     if_OPT_WIDE_CHARS(screen, {
@@ -374,15 +390,15 @@ ScreenWrite(TScreen * screen,
     wrappedbit = ScrnTstWrapped(screen, screen->cur_row);
 
 #if OPT_WIDE_CHARS
-    starcol = *col;
-    starcol2 = col[length - 1];
+    starcol1 = *chars;
+    starcol2 = chars[length - 1];
 #endif
 
     /* write blanks if we're writing invisible text */
     if (flags & INVISIBLE) {
-	memset(col, ' ', length);
+	memset(chars, ' ', length);
     } else {
-	memcpy(col, str, length);	/* This can stand for the present. If it
+	memcpy(chars, str, length);	/* This can stand for the present. If it
 					   is wrong, we will scribble over it */
     }
 
@@ -396,16 +412,16 @@ ScreenWrite(TScreen * screen,
 #define ERROR_2 0x00
     if_OPT_WIDE_CHARS(screen, {
 
-	Char *wc;
+	Char *char2;
 
 	if (real_width != length) {
-	    Char *c = col;
-	    wc = SCRN_BUF_WIDEC(screen, screen->cur_row);
-	    wc += screen->cur_col;
-	    if (screen->cur_col && starcol == HIDDEN_LO && *wc == HIDDEN_HI
-		&& iswide(c[-1] | (wc[-1] << 8))) {
-		c[-1] = ERROR_1;
-		wc[-1] = ERROR_2;
+	    Char *char1 = chars;
+	    char2 = SCRN_BUF_WIDEC(screen, screen->cur_row);
+	    char2 += screen->cur_col;
+	    if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
+		&& iswide(char1[-1] | (char2[-1] << 8))) {
+		char1[-1] = ERROR_1;
+		char2[-1] = ERROR_2;
 	    }
 	    /* if we are overwriting the right hand half of a
 	       wide character, make the other half vanish */
@@ -414,32 +430,32 @@ ScreenWrite(TScreen * screen,
 		if (str2)
 		    ch |= *str2 << 8;
 
-		*c = *str;
-		c++;
+		*char1 = *str;
+		char1++;
 		str++;
 
 		if (str2) {
-		    *wc = *str2;
+		    *char2 = *str2;
 		    str2++;
 		} else
-		    *wc = 0;
-		wc++;
+		    *char2 = 0;
+		char2++;
 		length--;
 
 		if (iswide(ch)) {
-		    *c = HIDDEN_LO;
-		    *wc = HIDDEN_HI;
-		    c++;
-		    wc++;
+		    *char1 = HIDDEN_LO;
+		    *char2 = HIDDEN_HI;
+		    char1++;
+		    char2++;
 		}
 	    }
 
-	    if (*c == HIDDEN_LO
-		&& *wc == HIDDEN_HI
-		&& c[-1] == HIDDEN_LO
-		&& wc[-1] == HIDDEN_HI) {
-		*c = ERROR_1;
-		*wc = ERROR_2;
+	    if (*char1 == HIDDEN_LO
+		&& *char2 == HIDDEN_HI
+		&& char1[-1] == HIDDEN_LO
+		&& char2[-1] == HIDDEN_HI) {
+		*char1 = ERROR_1;
+		*char2 = ERROR_2;
 	    }
 	    /* if we are overwriting the left hand half of a
 	       wide character, make the other half vanish */
@@ -447,26 +463,26 @@ ScreenWrite(TScreen * screen,
 
 	else {
 
-	    if ((wc = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
-		wc += screen->cur_col;
-		if (screen->cur_col && starcol == HIDDEN_LO && *wc == HIDDEN_HI
-		    && iswide(col[-1] | (wc[-1] << 8))) {
-		    col[-1] = ERROR_1;
-		    wc[-1] = ERROR_2;
+	    if ((char2 = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
+		char2 += screen->cur_col;
+		if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
+		    && iswide(chars[-1] | (char2[-1] << 8))) {
+		    chars[-1] = ERROR_1;
+		    char2[-1] = ERROR_2;
 		}
 		/* if we are overwriting the right hand half of a
 		   wide character, make the other half vanish */
-		if (col[length] == HIDDEN_LO && wc[length] == HIDDEN_HI &&
-		    iswide(starcol2 | (wc[length - 1] << 8))) {
-		    col[length] = ERROR_1;
-		    wc[length] = ERROR_2;
+		if (chars[length] == HIDDEN_LO && char2[length] == HIDDEN_HI &&
+		    iswide(starcol2 | (char2[length - 1] << 8))) {
+		    chars[length] = ERROR_1;
+		    char2[length] = ERROR_2;
 		}
 		/* if we are overwriting the left hand half of a
 		   wide character, make the other half vanish */
 		if ((flags & INVISIBLE) || (str2 == 0))
-		    memset(wc, 0, length);
+		    memset(char2, 0, length);
 		else
-		    memcpy(wc, str2, length);
+		    memcpy(char2, str2, length);
 	    }
 	}
     });
@@ -497,8 +513,10 @@ ScreenWrite(TScreen * screen,
     else
 	ScrnClrWrapped(screen, screen->cur_row);
 
-    last_written_col = screen->cur_col + real_width - 1;
-    last_written_row = screen->cur_row;
+    if_OPT_WIDE_CHARS(screen, {
+	screen->last_written_col = screen->cur_col + real_width - 1;
+	screen->last_written_row = screen->cur_row;
+    });
 
     if_OPT_XMC_GLITCH(screen, {
 	Resolve_XMC(screen);
@@ -514,6 +532,8 @@ ScrnClearLines(TScreen * screen, ScrnBuf sb, int where, int n, int size)
     int i, j;
     size_t len = ScrnPointers(screen, n);
     int last = (n * MAX_PTRS);
+
+    TRACE(("ScrnClearLines(where %d, n %d, size %d)\n", where, n, size));
 
     /* save n lines at where */
     memcpy((char *) screen->save_ptr,
@@ -829,6 +849,9 @@ ScrnRefresh(TScreen * screen,
 	int wideness = 0;
 	Char *widec = 0;
 #define WIDEC_PTR(cell) widec ? &widec[cell] : 0
+#define BLANK_CEL(cell) ((chars[cell] == ' ') && (widec == 0 || widec[cell] == 0))
+#else
+#define BLANK_CEL(cell) (chars[cell] == ' ')
 #endif
 	Char cs = 0;
 	Char *chars;
@@ -896,14 +919,16 @@ ScrnRefresh(TScreen * screen,
 		maxcol /= 2;
 	    }
 #endif
-	    /* row does not intersect selection; don't hilite */
+	    /*
+	     * If row does not intersect selection; don't hilite blanks.
+	     */
 	    if (!force) {
 		while (col <= maxcol && (attrs[col] & ~BOLD) == 0 &&
-		       (chars[col] & ~040) == 0)
+		       BLANK_CEL(col))
 		    col++;
 
 		while (col <= maxcol && (attrs[maxcol] & ~BOLD) == 0 &&
-		       (chars[maxcol] & ~040) == 0)
+		       BLANK_CEL(maxcol))
 		    maxcol--;
 	    }
 #if OPT_DEC_CHRSET
@@ -1175,6 +1200,26 @@ ScrnRefresh(TScreen * screen,
 }
 
 /*
+ * Call this wrapper to ScrnRefresh() when the data has changed.  If the
+ * refresh region overlaps the selection, we will release the primary selection.
+ */
+void
+ScrnUpdate(TScreen * screen,
+	   int toprow,
+	   int leftcol,
+	   int nrows,
+	   int ncols,
+	   Bool force)		/* ... leading/trailing spaces */
+{
+    if (ScrnHaveSelection(screen)
+	&& (toprow <= screen->endHRow)
+	&& (toprow + nrows - 1 >= screen->startHRow)) {
+	ScrnDisownSelection(screen);
+    }
+    ScrnRefresh(screen, toprow, leftcol, nrows, ncols, force);
+}
+
+/*
  * Sets the rows first though last of the buffer of screen to spaces.
  * Requires first <= last; first, last are rows of screen->buf.
  */
@@ -1312,7 +1357,7 @@ ScreenResize(TScreen * screen,
 		screen->topline = -screen->savedlines;
 	    screen->cur_row += move_down_by;
 	    screen->cursor_row += move_down_by;
-	    ScrollSelection(screen, move_down_by);
+	    ScrollSelection(screen, move_down_by, True);
 
 	    if (screen->alternate)
 		SwitchBufPtrs(screen);	/* put the pointers back */
@@ -1418,3 +1463,301 @@ non_blank_line(ScrnBuf sb,
 
     return False;
 }
+
+/*
+ * Copy the rectangle boundaries into a struct, providing default values as
+ * needed.
+ */
+void
+xtermParseRect(TScreen * screen, int nparams, int *params, XTermRect * target)
+{
+    memset(target, 0, sizeof(*target));
+    target->top = (nparams > 0) ? params[0] : getMinRow(screen) + 1;
+    target->left = (nparams > 1) ? params[1] : getMinCol(screen) + 1;
+    target->bottom = (nparams > 2) ? params[2] : getMaxRow(screen) + 1;
+    target->right = (nparams > 3) ? params[3] : getMaxCol(screen) + 1;
+    TRACE(("parsed rectangle %d,%d %d,%d\n",
+	   target->top,
+	   target->left,
+	   target->bottom,
+	   target->right));
+}
+
+static Bool
+validRect(TScreen * screen, XTermRect * target)
+{
+    TRACE(("comparing against screensize %dx%d\n",
+	   getMaxRow(screen) + 1,
+	   getMaxCol(screen) + 1));
+    return (target != 0
+	    && target->top > getMinRow(screen)
+	    && target->left > getMinCol(screen)
+	    && target->top <= target->bottom
+	    && target->left <= target->right
+	    && target->top <= getMaxRow(screen) + 1
+	    && target->right <= getMaxCol(screen) + 1);
+}
+
+/*
+ * Fills a rectangle with the given character and video-attributes.
+ */
+void
+ScrnFillRectangle(TScreen * screen, XTermRect * target, Char value, unsigned flags)
+{
+    TRACE(("filling rectangle with '%c'\n", value));
+    if (validRect(screen, target)) {
+	int left = target->left - 1;
+	int size = target->right - left;
+	int row;
+
+	flags &= ATTRIBUTES;
+	flags |= CHARDRAWN;
+	for (row = target->bottom - 1; row >= (target->top - 1); row--) {
+	    TRACE(("filling %d [%d..%d]\n", row, left + 1, left + size));
+	    memset(SCRN_BUF_ATTRS(screen, row) + left, flags, size);
+	    memset(SCRN_BUF_CHARS(screen, row) + left, value, size);
+	    if_OPT_WIDE_CHARS(screen, {
+		bzero(SCRN_BUF_WIDEC(screen, row) + left, size);
+	    });
+	}
+	ScrnUpdate(screen,
+		   target->top - 1,
+		   target->left - 1,
+		   (target->bottom - target->top) + 1,
+		   (target->right - target->left) + 1,
+		   False);
+    }
+}
+
+#if OPT_DEC_RECTOPS
+/*
+ * Copies the source rectangle to the target location, including video
+ * attributes.
+ *
+ * This implementation ignores page numbers.
+ *
+ * The reference manual does not indicate if it handles overlapping copy
+ * properly - so we make a local copy of the source rectangle first, then apply
+ * the target from that.
+ */
+void
+ScrnCopyRectangle(TScreen * screen, XTermRect * source, int nparam, int *params)
+{
+    TRACE(("copying rectangle\n"));
+
+    if (validRect(screen, source)) {
+	XTermRect target;
+	xtermParseRect(screen,
+		       ((nparam > 3) ? 2 : (nparam - 1)),
+		       params + 1,
+		       &target);
+	if (validRect(screen, &target)) {
+	    int high = (source->bottom - source->top) + 1;
+	    int wide = (source->right - source->left) + 1;
+	    int size = (high * wide);
+	    int row, col, n;
+
+	    Char *attrs = malloc(size);
+	    Char *chars = malloc(size);
+
+#if OPT_WIDE_CHARS
+	    Char *widec = malloc(size);
+	    if (widec == 0)
+		return;
+#endif
+	    if (attrs == 0
+		|| chars == 0)
+		return;
+
+	    TRACE(("OK - make copy %dx%d\n", high, wide));
+	    target.bottom = target.top + (high - 1);
+	    target.right = target.left + (wide - 1);
+
+	    for (row = source->top - 1; row < source->bottom; ++row) {
+		for (col = source->left - 1; col < source->right; ++col) {
+		    n = ((1 + row - source->top) * wide) + (1 + col - source->left);
+		    attrs[n] = SCRN_BUF_ATTRS(screen, row)[col] | CHARDRAWN;
+		    chars[n] = SCRN_BUF_CHARS(screen, row)[col];
+		    if_OPT_WIDE_CHARS(screen, {
+			widec[n] = SCRN_BUF_WIDEC(screen, row)[col];
+		    })
+		}
+	    }
+	    for (row = target.top - 1; row < target.bottom; ++row) {
+		for (col = target.left - 1; col < target.right; ++col) {
+		    if (row >= getMinRow(screen)
+			&& row <= getMaxRow(screen)
+			&& col >= getMinCol(screen)
+			&& col <= getMaxCol(screen)) {
+			n = ((1 + row - target.top) * wide) + (1 + col - target.left);
+			SCRN_BUF_ATTRS(screen, row)[col] = attrs[n];
+			SCRN_BUF_CHARS(screen, row)[col] = chars[n];
+			if_OPT_WIDE_CHARS(screen, {
+			    SCRN_BUF_WIDEC(screen, row)[col] = widec[n];
+			})
+		    }
+		}
+	    }
+	    free(attrs);
+	    free(chars);
+#if OPT_WIDE_CHARS
+	    free(widec);
+#endif
+
+	    ScrnUpdate(screen,
+		       (target.top - 1),
+		       (target.left - 1),
+		       (target.bottom - target.top) + 1,
+		       ((target.right - target.left) + 1),
+		       False);
+	}
+    }
+}
+
+/*
+ * Modifies the video-attributes only - so selection is unaffected.
+ */
+void
+ScrnMarkRectangle(TScreen * screen,
+		  XTermRect * target,
+		  Bool reverse,
+		  int nparam,
+		  int *params)
+{
+    Bool exact = (screen->cur_decsace == 2);
+
+    TRACE(("%s %s\n",
+	   reverse ? "reversing" : "marking",
+	   (exact
+	    ? "rectangle"
+	    : "region")));
+
+    if (validRect(screen, target)) {
+	int top = target->top - 1;
+	int bottom = target->bottom - 1;
+	int row, col;
+	int n;
+
+	for (row = top; row <= bottom; ++row) {
+	    int left = ((exact || (row == top))
+			? (target->left - 1)
+			: getMinCol(screen));
+	    int right = ((exact || (row == bottom))
+			 ? (target->right - 1)
+			 : getMaxCol(screen));
+
+	    TRACE(("marking %d [%d..%d]\n", row, left + 1, right + 1));
+	    for (col = left; col <= right; ++col) {
+		unsigned flags = SCRN_BUF_ATTRS(screen, row)[col];
+
+		for (n = 0; n < nparam; ++n) {
+#if OPT_TRACE
+		    if (row == top && col == left)
+			TRACE(("attr param[%d] %d\n", n + 1, params[n]));
+#endif
+		    if (reverse) {
+			switch (params[n]) {
+			case 1:
+			    flags ^= BOLD;
+			    break;
+			case 4:
+			    flags ^= UNDERLINE;
+			    break;
+			case 5:
+			    flags ^= BLINK;
+			    break;
+			case 7:
+			    flags ^= INVERSE;
+			    break;
+			}
+		    } else {
+			switch (params[n]) {
+			case 0:
+			    flags &= ~SGR_MASK;
+			    break;
+			case 1:
+			    flags |= BOLD;
+			    break;
+			case 4:
+			    flags |= UNDERLINE;
+			    break;
+			case 5:
+			    flags |= BLINK;
+			    break;
+			case 7:
+			    flags |= INVERSE;
+			    break;
+			case 22:
+			    flags &= ~BOLD;
+			    break;
+			case 24:
+			    flags &= ~UNDERLINE;
+			    break;
+			case 25:
+			    flags &= ~BLINK;
+			    break;
+			case 27:
+			    flags &= ~INVERSE;
+			    break;
+			}
+		    }
+		}
+#if OPT_TRACE
+		if (row == top && col == left)
+		    TRACE(("first mask-change is %#x\n",
+			   SCRN_BUF_ATTRS(screen, row)[col] ^ flags));
+#endif
+		SCRN_BUF_ATTRS(screen, row)[col] = flags;
+	    }
+	}
+	ScrnRefresh(screen,
+		    (target->top - 1),
+		    (exact ? (target->left - 1) : getMinCol(screen)),
+		    (target->bottom - target->top) + 1,
+		    (exact
+		     ? ((target->right - target->left) + 1)
+		     : (getMaxCol(screen) - getMinCol(screen) + 1)),
+		    False);
+    }
+}
+
+/*
+ * Resets characters to space, except where prohibited by DECSCA.  Video
+ * attributes are untouched.
+ */
+void
+ScrnWipeRectangle(TScreen * screen,
+		  XTermRect * target)
+{
+    TRACE(("wiping rectangle\n"));
+
+    if (validRect(screen, target)) {
+	int top = target->top - 1;
+	int bottom = target->bottom - 1;
+	int row, col;
+
+	for (row = top; row <= bottom; ++row) {
+	    int left = (target->left - 1);
+	    int right = (target->right - 1);
+
+	    TRACE(("wiping %d [%d..%d]\n", row, left + 1, right + 1));
+	    for (col = left; col <= right; ++col) {
+		if (!((screen->protected_mode == DEC_PROTECT)
+		      && (SCRN_BUF_ATTRS(screen, row)[col] & PROTECTED))) {
+		    SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
+		    SCRN_BUF_CHARS(screen, row)[col] = ' ';
+		    if_OPT_WIDE_CHARS(screen, {
+			SCRN_BUF_WIDEC(screen, row)[col] = '\0';
+		    })
+		}
+	    }
+	}
+	ScrnUpdate(screen,
+		   (target->top - 1),
+		   (target->left - 1),
+		   (target->bottom - target->top) + 1,
+		   ((target->right - target->left) + 1),
+		   False);
+    }
+}
+#endif /* OPT_DEC_RECTOPS */

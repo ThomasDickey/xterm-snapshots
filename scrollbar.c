@@ -2,10 +2,10 @@
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.39 2003/10/20 00:58:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.40 2004/12/01 01:27:47 dickey Exp $ */
 
 /*
- * Copyright 2000-2002,2003 by Thomas E. Dickey
+ * Copyright 2000-2003,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -95,10 +95,10 @@ ResizeScreen(XtermWidget xw, int min_width, int min_height)
     XtGeometryResult geomreqresult;
     Dimension reqWidth, reqHeight, repWidth, repHeight;
 #ifndef NO_ACTIVE_ICON
-    struct _vtwin *saveWin = screen->whichVwin;
+    struct _vtwin *saveWin = WhichVWin(screen);
 
     /* all units here want to be in the normal font units */
-    screen->whichVwin = &screen->fullVwin;
+    WhichVWin(screen) = &screen->fullVwin;
 #endif /* NO_ACTIVE_ICON */
 
     /*
@@ -209,7 +209,7 @@ ResizeScreen(XtermWidget xw, int min_width, int min_height)
     XSetWMNormalHints(screen->display, XtWindow(XtParent(xw)), &sizehints);
 #endif
 #ifndef NO_ACTIVE_ICON
-    screen->whichVwin = saveWin;
+    WhichVWin(screen) = saveWin;
 #endif /* NO_ACTIVE_ICON */
 }
 
@@ -343,7 +343,7 @@ WindowScroll(TScreen * screen, int top)
     scrolling_copy_area(screen, scrolltop, scrollheight, -i);
     screen->topline = top;
 
-    ScrollSelection(screen, i);
+    ScrollSelection(screen, i, True);
 
     XClearArea(
 		  screen->display,
@@ -621,7 +621,7 @@ HandleScrollForward(
 		       Widget gw,
 		       XEvent * event GCC_UNUSED,
 		       String * params,
-		       Cardinal * nparams)
+		       Cardinal *nparams)
 {
     long amount;
 
@@ -636,7 +636,7 @@ HandleScrollBack(
 		    Widget gw,
 		    XEvent * event GCC_UNUSED,
 		    String * params,
-		    Cardinal * nparams)
+		    Cardinal *nparams)
 {
     long amount;
 

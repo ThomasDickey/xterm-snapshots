@@ -1,5 +1,5 @@
--- $XTermId: INSTALL,v 1.75 2004/05/13 00:41:20 tom Exp $
--- $XFree86: xc/programs/xterm/INSTALL,v 3.35 2004/05/13 00:41:20 dickey Exp $
+-- $XTermId: INSTALL,v 1.77 2004/12/01 01:27:46 tom Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.36 2004/12/01 01:27:46 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -286,6 +286,13 @@ The options (in alphabetic order):
 	into the locale's encoding.
 
 	This sets "--enable-wide-chars" as a side-effect.
+
+  --enable-mini-luit      enable support for poor man's luit filter (Latin-9)
+
+	Provide built-in support for Latin-9, relying on having specified
+	Unicode (ISO10646) fonts and setting the locale resource to "checkfont".
+
+	This sets "--enable-luit" as a side-effect.
 
   --enable-sco-fkeys      enable support for SCO-style function keys
 
