@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.476 2004/05/26 01:19:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.484 2004/06/06 22:15:25 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.160 2004/05/26 01:19:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.161 2004/06/06 22:15:25 dickey Exp $ */
 
 /*
 
@@ -139,7 +139,7 @@ in this Software without prior written authorization from The Open Group.
 #define HANDLE_STRUCT_NOTIFY 0
 #endif
 
-static IChar in_put(void);
+static IChar doinput(void);
 static int set_character_class(char *s);
 static void FromAlternate(TScreen * screen);
 static void RequestResize(XtermWidget termw, int rows, int cols, int text);
@@ -174,8 +174,6 @@ static void PreeditPosition(TScreen * screen);
 
 #define	DEFAULT		-1
 #define BELLSUPPRESSMSEC 200
-
-#define doinput() (morePtyData(&VTbuffer) ? nextPtyData(&VTbuffer) : in_put())
 
 static int nparam;
 static ANSI reply;
@@ -1263,7 +1261,7 @@ VTparse(void)
 #if OPT_WIDE_CHARS
 	    last_was_wide = iswide(c);
 #endif
-	    if (morePtyData(&VTbuffer)) {
+	    if (morePtyData(screen, &VTbuffer)) {
 		continue;
 	    }
 	}
@@ -2556,7 +2554,7 @@ VTparse(void)
 	    }
 	    if (screen->wide_chars
 		&& screen->utf8_mode != 2) {
-		switchPtyData(screen, &VTbuffer, c == 'G');
+		switchPtyData(screen, c == 'G');
 		TRACE(("UTF8 mode %s\n",
 		       BtoS(screen->utf8_mode)));
 	    } else {
@@ -2751,22 +2749,24 @@ v_write(int f, Char * data, int len)
 }
 
 #ifdef VMS
-static int select_mask;
-static int write_mask;
-static int pty_read_bytes;
-
 #define	ptymask()	(v_bufptr > v_bufstr ? pty_mask : 0)
 
-static IChar
+static void
 in_put(void)
 {
+    static PtySelect select_mask;
+    static PtySelect write_mask;
+    static int pty_read_bytes;
+    int update = VTbuffer.update;
+    int size;
+
     int status;
     Dimension replyWidth, replyHeight;
     XtGeometryResult stat;
 
-    register TScreen *screen = &term->screen;
-    register char *cp;
-    register int i;
+    TScreen *screen = &term->screen;
+    char *cp;
+    int i;
 
     select_mask = pty_mask;	/* force initial read */
     for (;;) {
@@ -2794,31 +2794,14 @@ in_put(void)
 	    }
 	}
 
-	if ((select_mask & pty_mask) && (eventMode == NORMAL)) {
-#ifdef ALLOWLOGGING
-	    if (screen->logging) {
-		FlushLog(screen);
-	    }
-#endif
-
-	    if (read_queue.flink != 0) {
-		VTbuffer.cnt = tt_read(VTbuffer.ptr = VTbuffer.buf);
-		if (VTbuffer.cnt == 0)
-		    Panic("input: read returned zero\n", 0);
-		else {
-		    /* strip parity bit */
-		    for (i = VTbuffer.cnt, cp = VTbuffer.ptr; i > 0; i--)
-			*cp++ &= 0177;	/* originally CHAR */
-		    if (screen->scrollWidget && screen->scrollttyoutput &&
-			screen->topline < 0)
-			/* Scroll to bottom */
-			WindowScroll(screen, 0);
-		    break;
-		}
-	    } else {
-		sys$hiber();
-	    }
-
+	if (eventMode == NORMAL
+	    && readPtyData(screen, &select_mask, &VTbuffer)) {
+	    if (screen->scrollWidget
+		&& screen->scrollttyoutput
+		&& screen->topline < 0)
+		/* Scroll to bottom */
+		WindowScroll(screen, 0);
+	    break;
 	}
 	if (screen->scroll_amt)
 	    FlushScroll(screen);
@@ -2851,28 +2834,25 @@ in_put(void)
 	}
 
 	if (select_mask & X_mask) {
-	    if (VTbuffer.cnt <= 0) {
-		VTbuffer.cnt = 0;
-		VTbuffer.ptr = VTbuffer.buf;
-	    }
 	    xevents();
-	    if (VTbuffer.cnt > 0)
+	    if (VTbuffer.update != update)
 		break;
 	}
     }
-    VTbuffer.cnt--;
-    return (*VTbuffer.ptr++);
 }
 #else /* VMS */
-static fd_set select_mask;
-static fd_set write_mask;
-static int pty_read_bytes;
-
-static IChar
+static void
 in_put(void)
 {
+    static PtySelect select_mask;
+    static PtySelect write_mask;
+    static int pty_read_bytes;
+
     register TScreen *screen = &term->screen;
     register int i, time_select;
+    int size;
+    int update = VTbuffer.update;
+
     static struct timeval select_timeout;
 
 #if OPT_BLINK_CURS
@@ -2890,15 +2870,15 @@ in_put(void)
 
     for (;;) {
 	if (eventMode == NORMAL
-	    && getPtyData(screen, &select_mask, &VTbuffer)) {
+	    && (size = readPtyData(screen, &select_mask, &VTbuffer)) != 0) {
 	    if (screen->scrollWidget
 		&& screen->scrollttyoutput
 		&& screen->topline < 0)
 		WindowScroll(screen, 0);	/* Scroll to bottom */
-	    pty_read_bytes += VTbuffer.cnt;
+	    pty_read_bytes += size;
 	    /* stop speed reading at some point to look for X stuff */
-	    /* (4096 is just a random large number.) */
-	    if (pty_read_bytes > 4096)
+	    /* (BUF_SIZE is just a random large number.) */
+	    if (pty_read_bytes > BUF_SIZE)
 		FD_CLR(screen->respond, &select_mask);
 	    break;
 	}
@@ -2973,8 +2953,8 @@ in_put(void)
 	    time_select = 1;
 #endif
 	}
-	i = select(max_plus1, &select_mask, &write_mask, 0,
-		   time_select ? &select_timeout : 0);
+	i = Select(max_plus1, &select_mask, &write_mask, 0,
+		   (time_select ? &select_timeout : 0));
 	if (i < 0) {
 	    if (errno != EINTR)
 		SysError(ERROR_SELECT);
@@ -2991,14 +2971,23 @@ in_put(void)
 	if (XtAppPending(app_con) ||
 	    FD_ISSET(ConnectionNumber(screen->display), &select_mask)) {
 	    xevents();
-	    if (VTbuffer.cnt > 0)	/* HandleInterpret */
+	    if (VTbuffer.update != update)	/* HandleInterpret */
 		break;
 	}
 
     }
-    return nextPtyData(&VTbuffer);
 }
 #endif /* VMS */
+
+static IChar
+doinput(void)
+{
+    TScreen *screen = &term->screen;
+
+    while (!morePtyData(screen, &VTbuffer))
+	in_put();
+    return nextPtyData(screen, &VTbuffer);
+}
 
 #if OPT_INPUT_METHOD
 /*
@@ -3556,12 +3545,7 @@ dpmodes(XtermWidget termw,
 	case 38:		/* DECTEK                       */
 #if OPT_TEK4014
 	    if (func == bitset && !(screen->inhibit & I_TEK)) {
-#ifdef ALLOWLOGGING
-		if (screen->logging && TekPtyData()) {
-		    FlushLog(screen);
-		    screen->logstart = DecodedData(Tbuffer);
-		}
-#endif
+		FlushLog(screen);
 		screen->TekEmu = TRUE;
 	    }
 #endif
@@ -4407,9 +4391,6 @@ void
 VTRun(void)
 {
     register TScreen *screen = &term->screen;
-#if OPT_TEK4014
-    register int i;
-#endif
 
     if (!screen->Vshow) {
 	set_vt_visibility(TRUE);
@@ -4431,14 +4412,10 @@ VTRun(void)
 
     initPtyData(&VTbuffer);
 #if OPT_TEK4014
-    while (Tpushb > Tpushback) {
-	*(VTbuffer.ptr)++ = *--Tpushb;
-	VTbuffer.cnt++;
+    if (Tpushb > Tpushback) {
+	fillPtyData(screen, &VTbuffer, (char *)Tpushback, Tpushb - Tpushback);
+	Tpushb = Tpushback;
     }
-    VTbuffer.cnt += (i = (Tbuffer ? Tbuffer->cnt : 0));
-    for (; i > 0; i--)
-	*(VTbuffer.ptr)++ = *(Tbuffer->ptr)++;
-    VTbuffer.ptr = DecodedData(&VTbuffer);
 #endif
     if (!setjmp(VTend))
 	VTparse();

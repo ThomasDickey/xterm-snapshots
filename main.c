@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.384 2004/05/16 23:59:13 tom Exp $ */
+/* $XTermId: main.c,v 1.388 2004/06/06 22:15:25 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.181 2004/05/16 23:59:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.182 2004/06/06 22:15:25 dickey Exp $ */
 
 /* main.c */
 
@@ -1393,7 +1393,7 @@ ParseSccn(char *option)
 
     if (leaf != option) {
 	if (leaf - option > 1
-	    && isdigit(*leaf)
+	    && isdigit(CharOf(*leaf))
 	    && sscanf(leaf, "%d", &am_slave) == 1) {
 	    size_t len = leaf - option - 1;
 	    /*
@@ -1977,7 +1977,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		++argv;
 		winToEmbedInto = (Window) strtol(argv[0], &endPtr, 10);
 	    }
-	    break;
+	    continue;
 
 	default:
 	    Syntax(*argv);
@@ -4572,7 +4572,7 @@ GetBytesAvailable(int fd)
 
     FD_ZERO(&set);
     FD_SET(fd, &set);
-    if (select(fd + 1, &set, NULL, NULL, &timeout) > 0)
+    if (Select(fd + 1, &set, NULL, NULL, &timeout) > 0)
 	return 1;
     else
 	return 0;

@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.281 2004/05/13 00:41:21 tom Exp $ */
+/* $XTermId: xterm.h,v 1.288 2004/06/06 22:15:26 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.100 2004/05/13 00:41:21 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.101 2004/06/06 22:15:26 dickey Exp $ */
 
 /************************************************************
 
@@ -552,7 +552,7 @@ extern "C" {
 
 /* Tekproc.c */
 extern int TekInit (void);
-extern int TekPtyData (void);
+extern int TekPtyData(void);
 extern void ChangeTekColors (TScreen *screen, ScrnColors *pNew);
 extern void TCursorToggle (int toggle);
 extern void TekCopy (void);
@@ -773,18 +773,29 @@ extern void xtermMediaControl (int param, int private_seq);
 extern void xtermPrintScreen (Boolean use_DECPEX);
 
 /* ptydata.c */
-extern int getPtyData (TScreen *screen, fd_set *select_mask, PtyData *data);
-extern unsigned usedPtyData(PtyData *data);
-extern void initPtyData (PtyData *data);
+#ifdef VMS
+#define PtySelect int
+#else
+#define PtySelect fd_set
+#endif
 
-#define nextPtyData(data) ((data)->cnt)--, (*((data)->ptr)++)
-#define morePtyData(data) ((data)->cnt > 0)
+extern int readPtyData (TScreen *screen, PtySelect *select_mask, PtyData *data);
+extern void fillPtyData (TScreen *screen, PtyData *data, char *value, int length);
+extern void initPtyData (PtyData *data);
+extern void trimPtyData (TScreen *screen, PtyData *data);
 
 #if OPT_WIDE_CHARS
-extern Char * convertToUTF8(Char *lp, unsigned c);
-extern void switchPtyData(TScreen *screen, PtyData *data, int f);
-extern void writePtyData(int f, IChar *d, unsigned len);
+extern Boolean morePtyData (TScreen *screen, PtyData *data);
+extern Char *convertToUTF8 (Char *lp, unsigned c);
+extern IChar nextPtyData (TScreen *screen, PtyData *data);
+extern void switchPtyData (TScreen *screen, int f);
+extern void writePtyData (int f, IChar *d, unsigned len);
 #else
+#define morePtyData(screen, data) ((data)->last > (data)->next)
+#define nextPtyData(screen, data) (*((data)->next++) & \
+					(screen->output_eight_bits \
+					? 0xff \
+					: 0x7f))
 #define writePtyData(f,d,len) v_write(f,d,len)
 #endif
 

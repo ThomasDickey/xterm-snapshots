@@ -1,10 +1,10 @@
-/* $XTermId: util.c,v 1.186 2004/04/18 20:49:43 tom Exp $ */
+/* $XTermId: util.c,v 1.188 2004/06/06 22:15:26 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.81 2004/04/18 20:49:43 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.82 2004/06/06 22:15:26 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -1418,7 +1418,7 @@ getColor(Pixel pixel)
  */
 static void
 xtermXftDrawString(TScreen * screen,
-		   unsigned flags,
+		   unsigned flags GCC_UNUSED,
 		   XftColor * color,
 		   XftFont * font,
 		   int x,

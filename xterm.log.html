@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.147 2004/05/26 01:19:55 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.124 2004/05/26 01:19:55 dickey Exp $
+  $XTermId: xterm.log.html,v 1.151 2004/06/06 22:15:26 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.125 2004/06/06 22:15:26 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_191">Patch #191 - 2004/6/6 - XFree86 4.4.99.7</A>
 <LI><A HREF="#xterm_190">Patch #190 - 2004/5/25 - XFree86 4.4.99.6</A>
 <LI><A HREF="#xterm_189">Patch #189 - 2004/5/16 - XFree86 4.4.99.6</A>
 <LI><A HREF="#xterm_188">Patch #188 - 2004/5/12 - XFree86 4.4.99.6</A>
@@ -238,6 +239,29 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_191">Patch #191 - 2004/6/6 - XFree86 4.4.99.7</A></H1>
+<ul>
+	<li>correct options parsing for <code>-into</code> option so it
+	    can be combined with <code>-e</code> (Redhat Bugzilla #124518,
+	    report/patch by James Armstrong).
+
+	<li>fix ifdef's for <code>OPT_COLOR_RES2</code>
+	    so that the fake resource table introduced in
+	    <a href="#xterm_188">patch #188</a>
+	    is not compiled if it is empty.
+	    This happened to work with gcc (report by Joel Konkle-Parker).
+
+	<li>reorganize ptydata.c to use one input buffer shared between
+	    the VTxxx and tek4014 emulators.  In the new scheme, UTF-8
+	    decoding is performed on characters as they are needed by the
+	    state machine rather than on buffers as they are read.
+
+	<li>work around change in quoting of PROJECTROOT symbol when using
+	    configure script, from changes made in
+	    <a href="#xterm_187">patch #187</a> for CF_IMAKE_CFLAGS
+	    (GenToo Bugzilla #50982).
+</ul>
 
 <H1><A NAME="xterm_190">Patch #190 - 2004/5/25 - XFree86 4.4.99.6</A></H1>
 <ul>

@@ -1,10 +1,10 @@
-/* $XTermId: misc.c,v 1.222 2004/05/26 01:19:55 tom Exp $ */
+/* $XTermId: misc.c,v 1.225 2004/06/06 22:15:25 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.88 2004/05/26 01:19:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.89 2004/06/06 22:15:25 dickey Exp $ */
 
 /*
  *
@@ -323,28 +323,15 @@ HandleInterpret(Widget w GCC_UNUSED,
     if (*param_count == 1) {
 	char *value = params[0];
 	int need = strlen(value);
-	int used = usedPtyData(&VTbuffer);
-	int have = (VTbuffer.cnt >= 0) ? VTbuffer.cnt : 0;
-	int n;
+	int used = VTbuffer.next - VTbuffer.buffer;
+	int have = VTbuffer.last - VTbuffer.buffer;
 
-	if (have - used + need < BUF_SIZE) {
+	if (have - used + need < (int) sizeof(VTbuffer.buffer)) {
 
-	    FlushLog(&term->screen);
+	    fillPtyData(&term->screen, &VTbuffer, value, (int) strlen(value));
 
-	    if (have != 0
-		&& used < have) {
-		memmove(VTbuffer.ptr + (need - used),
-			VTbuffer.ptr,
-			VTbuffer.cnt * sizeof(*VTbuffer.ptr));
-	    } else {
-		initPtyData(&VTbuffer);
-		used = 0;
-	    }
-
-	    VTbuffer.cnt += (need - used);
-	    VTbuffer.ptr -= used;
-	    for (n = 0; n < need; n++)
-		VTbuffer.ptr[n] = CharOf(value[n]);
+	    TRACE(("Interpret %s\n", value));
+	    VTbuffer.update++;
 	}
     }
 }
@@ -1244,7 +1231,7 @@ StartLog(register TScreen * screen)
 	    return;
     }
 #endif /*VMS */
-    screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);
+    screen->logstart = VTbuffer.next;
     screen->logging = TRUE;
     update_logging();
 }
@@ -1263,41 +1250,23 @@ CloseLog(register TScreen * screen)
 void
 FlushLog(register TScreen * screen)
 {
-    register IChar *cp;
-    register int i;
+    if (screen->logging && !(screen->inhibit & I_LOG)) {
+	register Char *cp;
+	register int i;
 
 #ifdef VMS			/* avoid logging output loops which otherwise occur sometimes
 				   when there is no output and cp/screen->logstart are 1 apart */
-    if (!tt_new_output)
-	return;
-    tt_new_output = FALSE;
+	if (!tt_new_output)
+	    return;
+	tt_new_output = FALSE;
 #endif /* VMS */
-    cp = CURRENT_EMU_VAL(screen, Tbuffer->ptr, VTbuffer.ptr);
-    if (screen->logstart != 0
-	&& (i = cp - screen->logstart) > 0) {
-#if OPT_WIDE_CHARS
-	Char temp[80];
-	IChar code;
-	unsigned n;
-	while (i-- > 0) {
-	    code = *(screen->logstart)++;
-	    if (screen->utf8_mode) {
-		n = convertFromUTF8(code & 0xffff, temp);
-	    } else {
-		temp[0] = code;
-		n = 1;
-		while (i > 0 && n < sizeof(temp)) {
-		    i--;
-		    temp[n++] = *(screen->logstart)++;
-		}
-	    }
-	    write(screen->logfd, temp, n);
+	cp = VTbuffer.next;
+	if (screen->logstart != 0
+	    && (i = cp - screen->logstart) > 0) {
+	    write(screen->logfd, (char *) screen->logstart, i);
 	}
-#else
-	write(screen->logfd, (char *) screen->logstart, i);
-#endif
+	screen->logstart = VTbuffer.next;
     }
-    screen->logstart = DecodedData(CURRENT_EMU_VAL(screen, Tbuffer, &VTbuffer));
 }
 
 #endif /* ALLOWLOGGING */
@@ -2583,12 +2552,7 @@ end_tek_mode(void)
     register TScreen *screen = &term->screen;
 
     if (screen->TekEmu) {
-#ifdef ALLOWLOGGING
-	if (screen->logging) {
-	    FlushLog(screen);
-	    screen->logstart = DecodedData(&VTbuffer);
-	}
-#endif
+	FlushLog(screen);
 	longjmp(Tekend, 1);
     }
     return;
@@ -2600,12 +2564,7 @@ end_vt_mode(void)
     register TScreen *screen = &term->screen;
 
     if (!screen->TekEmu) {
-#ifdef ALLOWLOGGING
-	if (screen->logging && TekPtyData()) {
-	    FlushLog(screen);
-	    screen->logstart = DecodedData(Tbuffer);
-	}
-#endif
+	FlushLog(screen);
 	screen->TekEmu = TRUE;
 	longjmp(VTend, 1);
     }

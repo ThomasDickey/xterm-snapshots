@@ -1,11 +1,11 @@
-/* $XTermId: Tekproc.c,v 1.100 2004/05/26 01:19:54 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.105 2004/06/06 22:15:25 tom Exp $ */
 
 /*
  * $Xorg: Tekproc.c,v 1.5 2001/02/09 02:06:02 xorgcvs Exp $
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.48 2004/05/26 01:19:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.49 2004/06/06 22:15:25 dickey Exp $ */
 
 /*
 
@@ -375,15 +375,12 @@ TekInit(void)
 int
 TekPtyData(void)
 {
-    if (Tbuffer == 0) {
-	if ((Tbuffer = (PtyData *) malloc(sizeof(PtyData))) == NULL
-	    || (Tpushb = (Char *) malloc(10)) == NULL
+    if (Tpushb == 0) {
+	if ((Tpushb = (Char *) malloc(10)) == NULL
 	    || (Tline = (XSegment *) malloc(MAX_VTX * sizeof(XSegment))) == NULL) {
 	    fprintf(stderr, "%s: Not enough core for Tek mode\n", xterm_name);
 	    if (Tpushb)
 		free((char *) Tpushb);
-	    if (Tbuffer)
-		free((char *) Tbuffer);
 	    Tfailed = TRUE;
 	    return 0;
 	}
@@ -437,12 +434,7 @@ Tekparse(void)
 	    TRACE(("case: special return to vt102 mode\n"));
 	    Tparsestate = curstate;
 	    TekRecord->ptr[-1] = NAK;	/* remove from recording */
-#ifdef ALLOWLOGGING
-	    if (screen->logging) {
-		FlushLog(screen);
-		screen->logstart = DecodedData(&(VTbuffer));
-	    }
-#endif
+	    FlushLog(screen);
 	    return;
 
 	case CASE_SPT_STATE:
@@ -523,7 +515,7 @@ Tekparse(void)
 	    if (screen->TekGIN)
 		TekGINoff();
 	    /* if in one of graphics states, move alpha cursor */
-	    if (nplot > 0)	/* flush line Tbuffer */
+	    if (nplot > 0)	/* flush line VTbuffer */
 		TekFlush();
 	    Tparsestate = curstate = Talptable;
 	    break;
@@ -663,7 +655,7 @@ Tekparse(void)
 	    TRACE(("case: CR\n"));
 	    if (screen->TekGIN)
 		TekGINoff();
-	    if (nplot > 0)	/* flush line Tbuffer */
+	    if (nplot > 0)	/* flush line VTbuffer */
 		TekFlush();
 	    screen->cur_X = screen->margin == MARGIN1 ? 0 :
 		TEKWIDTH / 2;
@@ -748,11 +740,7 @@ Tekparse(void)
 
 static int rcnt;
 static char *rptr;
-#ifdef VMS
-static int Tselect_mask;
-#else /* VMS */
-static fd_set Tselect_mask;
-#endif /* VMS */
+static PtySelect Tselect_mask;
 
 static IChar
 Tinput(void)
@@ -776,8 +764,10 @@ Tinput(void)
 	longjmp(Tekjump, 1);
     }
   again:
-    if (Tbuffer->cnt-- <= 0) {
-	if (nplot > 0)		/* flush line Tbuffer */
+    if (VTbuffer.next >= VTbuffer.last) {
+	int update = VTbuffer.update;
+
+	if (nplot > 0)		/* flush line */
 	    TekFlush();
 #ifdef VMS
 	Tselect_mask = pty_mask;	/* force a read */
@@ -793,28 +783,9 @@ Tinput(void)
 			  &Tselect_mask, NULL, NULL,
 			  &crocktimeout);
 #endif
-#ifdef VMS
-	    if (Tselect_mask & pty_mask) {
-#ifdef ALLOWLOGGING
-		if (screen->logging)
-		    FlushLog(screen);
-#endif
-		if (read_queue.flink != 0) {
-		    Tbuffer->cnt = tt_read(Tbuffer->ptr = Tbuffer->buf);
-		    if (Tbuffer->cnt == 0) {
-			Panic("input: read returned zero\n", 0);
-		    } else {
-			break;
-		    }
-		} else {
-		    sys$hiber();
-		}
-	    }
-#else /* VMS */
-	    if (getPtyData(screen, &Tselect_mask, Tbuffer)) {
+	    if (readPtyData(screen, &Tselect_mask, &VTbuffer)) {
 		break;
 	    }
-#endif /* VMS */
 	    if (Ttoggled && curstate == Talptable) {
 		TCursorToggle(TOGGLE);
 		Ttoggled = FALSE;
@@ -842,18 +813,17 @@ Tinput(void)
 #ifdef VMS
 	    if (Tselect_mask & X_mask) {
 		xevents();
-		if (Tbuffer->cnt > 0)
+		if (VTbuffer.update != update)
 		    goto again;
 	    }
 #else /* VMS */
 	    if (FD_ISSET(ConnectionNumber(screen->display), &Tselect_mask)) {
 		xevents();
-		if (Tbuffer->cnt > 0)
+		if (VTbuffer.update != update)
 		    goto again;
 	    }
 #endif /* VMS */
 	}
-	Tbuffer->cnt--;
 	if (!Ttoggled && curstate == Talptable) {
 	    TCursorToggle(TOGGLE);
 	    Ttoggled = TRUE;
@@ -872,7 +842,9 @@ Tinput(void)
 	tek->ptr = tek->data;
     }
     tek->count++;
-    return (*tek->ptr++ = *(Tbuffer->ptr)++);
+
+    (void) morePtyData(screen, &VTbuffer);
+    return (*tek->ptr++ = nextPtyData(screen, &VTbuffer));
 }
 
 /* this should become the Tek Widget's Resize proc */
@@ -1243,7 +1215,6 @@ void
 TekRun(void)
 {
     register TScreen *screen = &term->screen;
-    register int i;
 
     if (!TWindow(screen) && !TekInit()) {
 	if (VWindow(screen)) {
@@ -1261,10 +1232,6 @@ TekRun(void)
     set_tekhide_sensitivity();
 
     Tpushback = Tpushb;
-    Tbuffer->ptr = DecodedData(Tbuffer);
-    for (i = Tbuffer->cnt = VTbuffer.cnt; i > 0; i--)
-	*(Tbuffer->ptr)++ = *(VTbuffer.ptr)++;
-    Tbuffer->ptr = DecodedData(Tbuffer);
     Ttoggled = TRUE;
     if (!setjmp(Tekend))
 	Tekparse();
@@ -1565,7 +1532,6 @@ TekRealize(Widget gw,
     tek->count = 0;
     tek->ptr = tek->data;
     Tpushback = Tpushb;
-    Tbuffer->ptr = DecodedData(Tbuffer);
     screen->cur_X = 0;
     screen->cur_Y = TEKHOME;
     line_pt = Tline;

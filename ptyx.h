@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.318 2004/05/13 00:41:21 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.321 2004/06/06 22:15:25 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.115 2004/05/13 00:41:21 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.116 2004/06/06 22:15:25 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -604,6 +604,12 @@ typedef struct {
 #define OPT_COLOR_RES 0
 #endif
 
+#if OPT_COLOR_RES2 && !(OPT_256_COLORS || OPT_88_COLORS)
+/* You must have 88/256 colors to need fake-resource logic */
+#undef  OPT_COLOR_RES2
+#define OPT_COLOR_RES2 0
+#endif
+
 #if OPT_PC_COLORS && !OPT_ISO_COLORS
 /* You must have ANSI/ISO colors to support PC colors */
 #undef  OPT_PC_COLORS
@@ -914,45 +920,51 @@ typedef unsigned char IChar;	/* for 8-bit characters */
 /***====================================================================***/
 
 #define BUF_SIZE 4096
+#define FRG_SIZE 128
 
 typedef struct {
-	int	cnt;		/* number of IChar's left to process */
-	IChar *	ptr;		/* pointer into decoded data */
-	Char	buf[BUF_SIZE];	/* we read directly into this */
+	Char	buffer[BUF_SIZE + FRG_SIZE];
+	Char *	next;
+	Char *	last;
+	int	update;		/* HandleInterpret */
 #if OPT_WIDE_CHARS
-	IChar	buf2[BUF_SIZE];	/* ...and may decode into this */
-	int	inx2[BUF_SIZE];	/* ...saving indices here */
-	int	cnt2;		/* ...and original number of IChar's */
-	int	len2;		/* ...and actual number of bytes in buf[] */
-#define DecodedData(data) (data)->buf2
-#else
-#define DecodedData(data) (data)->buf
+	IChar	utf_data;	/* resulting character */
+	int	utf_size;	/* ...number of bytes decoded */
 #endif
-	} PtyData;
+} PtyData;
 
 /***====================================================================***/
 
 #if OPT_TRACE
 #include <trace.h>
-#else
+#endif
+
 #ifndef TRACE
 #define TRACE(p) /*nothing*/
 #endif
+
 #ifndef TRACE_ARGV
 #define TRACE_ARGV(tag,argv) /*nothing*/
 #endif
+
 #ifndef TRACE_CHILD
 #define TRACE_CHILD /*nothing*/
 #endif
+
 #ifndef TRACE_HINTS
 #define TRACE_HINTS(hints) /*nothing*/
 #endif
+
 #ifndef TRACE_OPTS
 #define TRACE_OPTS(opts,ress,lens) /*nothing*/
 #endif
+
 #ifndef TRACE_TRANS
 #define TRACE_TRANS(name,w) /*nothing*/
 #endif
+
+#ifndef TRACE2
+#define TRACE2(p) /*nothing*/
 #endif
 
 /***====================================================================***/
@@ -1048,7 +1060,7 @@ typedef enum {
 	DP_CRS_BLINK,
 #endif
 	DP_LAST
-	} SaveModes;
+} SaveModes;
 
 #define DoSM(code,value) screen->save_modes[code] = value
 #define DoRM(code,value) value = screen->save_modes[code]
@@ -1226,7 +1238,7 @@ typedef struct {
 	int		logging;	/* logging mode			*/
 	int		logfd;		/* file descriptor of log	*/
 	char		*logfile;	/* log file name		*/
-	IChar		*logstart;	/* current start of log buffer	*/
+	Char		*logstart;	/* current start of log buffer	*/
 #endif
 	int		inhibit;	/* flags for inhibiting changes	*/
 
