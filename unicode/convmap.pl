@@ -87,7 +87,6 @@ close(LIST);
 
 print <<EOT;
 /* \$XFree86\$
-/*
  * This module converts keysym values into the corresponding ISO 10646-1
  * (UCS, Unicode) values.
  *
@@ -99,6 +98,14 @@ print <<EOT;
  * The keysym -> UTF-8 conversion will hopefully one day be provided
  * by Xlib via XmbLookupString() and should ideally not have to be
  * done in X applications. But we are not there yet.
+ *
+ * We allow to represent any UCS character in the range U+00000000 to
+ * U+00FFFFFF by a keysym value in the range 0x01000000 to 0x01ffffff.
+ * This admittedly does not cover the entire 31-bit space of UCS, but
+ * it does cover all of the characters up to U+10FFFF, which can be
+ * represented by UTF-16, and more, and it is very unlikely that higher
+ * UCS codes will ever be assigned by ISO. So to get Unicode character
+ * U+ABCD you can directly use keysym 0x1000abcd.
  *
  * NOTE: The comments in the table below contain the actual character
  * encoded in UTF-8, so for viewing and editing best use an editor in
@@ -147,8 +154,12 @@ long keysym2ucs(KeySym keysym)
         (keysym >= 0x00a0 && keysym <= 0x00ff))
         return keysym;
 
+    /* also check for directly encoded 24-bit UCS characters */
+    if ((keysym & 0xff000000) == 0x01000000)
+	return keysym & 0x00ffffff;
+
     /* binary search in table */
-    while (max > min) {
+    while (max >= min) {
 	mid = (min + max) / 2;
 	if (keysymtab[mid].keysym < keysym)
 	    min = mid + 1;

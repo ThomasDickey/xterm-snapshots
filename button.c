@@ -360,12 +360,12 @@ void HandleKeyboardSelectEnd(
 }
 
 #if OPT_WIDE_CHARS
-static Atom XA_UTF_8(Display *dpy)
+static Atom XA_UTF8_STRING(Display *dpy)
 {
     static AtomPtr p = NULL;
 
     if(p == NULL)
-	p = XmuMakeAtom("UTF-8");
+	p = XmuMakeAtom("UTF8_STRING");
     return XmuInternAtom(dpy, p);
 }
 #endif
@@ -391,25 +391,28 @@ UTF8toLatin1(Char *s, int len, unsigned long *result)
     Char *q;
 
     if (used == 0) {
-	buffer = XtMalloc(used = len);
+	buffer = (Char*)XtMalloc(used = len);
     } else if (len > (int) used) {
-	buffer = XtRealloc(buffer, used = len);
+	buffer = (Char*)XtRealloc((char*)buffer, used = len);
     }
     q = buffer;
+
+     /* We're assuming that the xterm widget never contains Unicode
+	control characters. */
 
     while (p < s + len) {
 	if ((*p & 0x80) == 0) {
 	    *q++ = *p++;
-	} else if ((*p & 0x3C) == 0 && p < s + len - 1) {
+	} else if ((*p & 0x7C) == 0x40 && p < s + len - 1) {
 	    *q++ = (*p & 0x03) << 6 | (p[1] & 0x3F);
 	    p += 2;
-	} else if ((*p & 0x20) == 0) {
+	} else if ((*p & 0x60) == 0x40) {
 	    *q++ = '#';
 	    p += 2;
-	} else if ((*p & 0x10) == 0) {
+	} else if ((*p & 0x50) == 0x40) {
 	    *q++ = '#';
 	    p += 3;
-	} else {		/* this cannot currently happen */
+	} else {		/* this cannot happen */
 	    *q++ = '#';
 	    p++;
 	}
@@ -452,24 +455,24 @@ filterUTF8(Char *t, Char *s, int len)
 	if ((*p & 0x80) == 0) {
 	    codepoint = *p & 0x7F;
 	    size = 1;
-	} else if ((*p & 0x20) == 0x20 && p < s + len - 1) {
+	} else if ((*p & 0x60) == 0x40 && p < s + len - 1) {
 	    codepoint = (p[0] & 0x1F) << 6 | (p[1] & 0x3F);
 	    size = 2;
-	} else if ((*p & 0x10) == 0 && p < s + len - 2) {
+	} else if ((*p & 0x70) == 0x60 && p < s + len - 2) {
 	    codepoint = (s[0] & 0x0F) << 12
-	              | (s[1] & 0x3F) << 6
+		      | (s[1] & 0x3F) << 6
 		      | (s[2] & 0x3F);
 	    size = 3;
-	} else if ((*p & 0x08) == 0 && p < s + len - 3) {
-	    p += 4;                     /* eliminate surrogates */
+	} else if ((*p & 0x78) == 0x70 && p < s + len - 3) {
+	    p += 4;		/* eliminate surrogates */
 	    continue;
-	} else if ((*p & 0x04) == 0 && p < s + len - 3) {
+	} else if ((*p & 0x7C) == 0x78 && p < s + len - 4) {
 	    p += 5;
 	    continue;
-	} else if ((*p & 0x02) == 0 && p < s + len - 3) {
+	} else if ((*p & 0x7E) == 0x7C && p < s + len - 5) {
 	    p += 6;
 	    continue;
-	} else {                    /* wrong UTF-8? */
+	} else {		/* wrong UTF-8?  Silently discard. */
 	    p++;
 	    continue;
 	}
@@ -486,16 +489,12 @@ filterUTF8(Char *t, Char *s, int len)
 		*q++ = 0x0A;
 	} else if (codepoint >= 0x202A && codepoint <= 0x202E) {
 	    /* ignore Unicode control characters; surrogates have already
-	    been eliminated */
+	       been eliminated */
 	    p += size;
 	} else {
 	    /* just copy the UTF-8 */
-	    if (size--)
-		*q++ = *p++;
-	    if (size--)
-		*q++ = *p++;
-	    if (size--)
-		*q++ = *p++;
+	  while (size--)
+	    *q++ = *p++;
 	}
     }
     return q - t;
@@ -547,16 +546,16 @@ static void _GetSelection(
     } else {
 	struct _SelectionList* list;
 #if OPT_WIDE_CHARS
-        if (!screen->wide_chars || utf8_failed) {
+	if (!screen->wide_chars || utf8_failed) {
 	    params++;
 	    num_params--;
 	    utf8_failed = False;
-        } else {
+	} else {
 	    utf8_failed = True;
-        }
+	}
 #else
-        params++;
-        num_params--;
+	params++;
+	num_params--;
 #endif
 
 	if (num_params) {
@@ -571,7 +570,7 @@ static void _GetSelection(
 	    XtGetSelectionValue(w, selection,
 #if OPT_WIDE_CHARS
 				(screen->wide_chars && utf8_failed) ?
-				XA_UTF_8(XtDisplay(w)) :
+				XA_UTF8_STRING(XtDisplay(w)) :
 #endif
 				XA_STRING,
 				SelectionReceived,
@@ -579,7 +578,7 @@ static void _GetSelection(
     }
 }
 
-#if OPT_TRACE
+#if OPT_TRACE && OPT_WIDE_CHARS
 static void GettingSelection(char *tag, char *line, int len)
 {
     char *cp;
@@ -631,12 +630,12 @@ static void SelectionReceived(
     len = *length;
 
     if_OPT_WIDE_CHARS(screen,{
-	if (*type == XA_UTF_8(XtDisplay(w))) {
+	if (*type == XA_UTF8_STRING(XtDisplay(w))) {
 	    buf = (Char*)XtMalloc(*length);
-	    GettingSelection("UTF-8", line, *length);
+	    GettingSelection("UTF8_STRING", line, *length);
 	    len = filterUTF8(buf, line, *length);
 	} else {
-	    buf = XtMalloc(2* *length);
+	    buf = (Char *)XtMalloc(2* *length);
 	    GettingSelection("Latin-1", line, *length);
 	    len = Latin1toUTF8(buf, line, *length);
 	}
@@ -660,7 +659,7 @@ static void SelectionReceived(
 	v_write(pty, lag, end - lag);
 
     if_OPT_WIDE_CHARS(screen,{
-	XtFree(buf);
+	XtFree((char*)buf);
     })
     XtFree((char *)client_data);
     XtFree((char *)value);
@@ -1103,16 +1102,20 @@ LastTextCol(register int row)
 	register int i;
 	register Char *ch;
 
-	for ( i = screen->max_col,
-		ch = SCRN_BUF_ATTRS(screen, (row + screen->topline)) + i ;
-	      i >= 0 && !(*ch & CHARDRAWN) ;
-	      ch--, i--)
-	    ;
+	if ((row += screen->topline) >= 0) {
+		for ( i = screen->max_col,
+			ch = SCRN_BUF_ATTRS(screen, (row)) + i ;
+		      i >= 0 && !(*ch & CHARDRAWN) ;
+		      ch--, i--)
+		    ;
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row + screen->topline)[0])) {
-		i *= 2;
-	}
+		if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row)[0])) {
+			i *= 2;
+		}
 #endif
+	} else {
+		i = 0;
+	}
 	return(i);
 }
 
@@ -1527,7 +1530,7 @@ ConvertSelection(
     screen = &((XtermWidget)w)->screen;
 
     if (screen->selection_data == NULL)
-	return False; 		/* can this happen? */
+	return False;		/* can this happen? */
 
     if (*target == XA_TARGETS(d)) {
 	Atom* targetP;
@@ -1541,11 +1544,11 @@ ConvertSelection(
 	*value = (XtPointer) targetP;
 	*targetP++ = XA_STRING;
 	*targetP++ = XA_TEXT(d);
-        *targetP = XA_COMPOUND_TEXT(d);
-        if_OPT_WIDE_CHARS(screen, {
-          *targetP = XA_UTF_8(d);
-        })
-        targetP++;
+	*targetP = XA_COMPOUND_TEXT(d);
+	if_OPT_WIDE_CHARS(screen, {
+	  *targetP = XA_UTF8_STRING(d);
+	})
+	targetP++;
 	*targetP++ = XA_LENGTH(d);
 	*targetP++ = XA_LIST_LENGTH(d);
 	memcpy ( (char*)targetP, (char*)std_targets, sizeof(Atom)*std_length);
@@ -1557,7 +1560,8 @@ ConvertSelection(
 
     if_OPT_WIDE_CHARS(screen,{
 	if (*target == XA_STRING) {
-	    *value = UTF8toLatin1(screen->selection_data, screen->selection_length, length);
+	    *value = UTF8toLatin1((Char*)screen->selection_data,
+				  screen->selection_length, length);
 	    *type = XA_STRING;
 	    *format = 8;
 	    return True;
@@ -1574,20 +1578,21 @@ ConvertSelection(
 	    }
 	    if (p < screen->selection_data + screen->selection_length) {
 		/* non ISO 8859-1 character found -- return UTF-8 */
-		*type = XA_UTF_8(d);
+		*type = XA_UTF8_STRING(d);
 		*value = screen->selection_data;
 		*length = screen->selection_length;
 		*format = 8;
 	    } else {
 		/* none found -- return STRING */
-		*value = UTF8toLatin1(screen->selection_data, screen->selection_length, length);
+		*value = UTF8toLatin1((Char*)screen->selection_data,
+				      screen->selection_length, length);
 		*type = XA_STRING;
 		*format = 8;
 	    }
 	    return True;
 	}
-	if (*target == XA_UTF_8(d)) {
-	    *type = XA_UTF_8(d);
+	if (*target == XA_UTF8_STRING(d)) {
+	    *type = XA_UTF8_STRING(d);
 	    *value = screen->selection_data;
 	    *length = screen->selection_length;
 	    *format = 8;
@@ -1608,7 +1613,7 @@ ConvertSelection(
 #if OPT_WIDE_CHARS
     && !screen->wide_chars
 #endif
-        ) {
+	) {
 	XTextProperty textprop;
 
 	*value = (XtPointer) screen->selection_data;
@@ -1638,7 +1643,7 @@ ConvertSelection(
     }
 
     if (*target == XA_LENGTH(d)) {
-        /* This value is wrong if we have UTF-8 text */
+	/* This value is wrong if we have UTF-8 text */
 	*value = XtMalloc(4);
 	if (sizeof(long) == 4)
 	    *(long*)*value = screen->selection_length;
@@ -1756,6 +1761,9 @@ _OwnSelection(
 			"%s: selection too big (%d bytes), not storing in CUT_BUFFER%d\n",
 			xterm_name, termw->screen.selection_length, cutbuffer);
 	    else
+	      /* Cutbuffers are untyped, so in the wide chars case, we
+		 just store the raw UTF-8 data.	 It is unlikely it
+		 will be useful to anyone. */
 		XStoreBuffer( XtDisplay((Widget)termw),
 			      termw->screen.selection_data,
 			      termw->screen.selection_length, cutbuffer );
