@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.275 2004/07/13 00:41:31 tom Exp $
+.\" $XTermId: xterm.man,v 1.277 2004/07/20 01:14:41 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.107 2004/07/13 00:41:31 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.108 2004/07/20 01:14:41 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .TH XTERM 1 __vendorversion__
@@ -2899,6 +2899,11 @@ This corresponds to the
 option and the
 .B cursorBlink
 resource.
+There is also an escape sequence
+(see the document \fIXterm Control Sequences\fP).
+The menu entry and the escape sequence states are XOR'd:
+if both are enabled, the cursor will not blink,
+if only one is enabled, the cursor will blink.
 .
 .TP
 Enable Alternate Screen Switching (titeInhibit)

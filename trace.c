@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.51 2004/04/28 00:41:00 tom Exp $ */
+/* $XTermId: trace.c,v 1.53 2004/07/20 01:14:41 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.19 2004/04/28 00:41:00 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.20 2004/07/20 01:14:41 dickey Exp $
  */
 
 /************************************************************
@@ -34,6 +34,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include <xterm.h>		/* for definition of GCC_UNUSED */
+#include <data.h>
 #include <trace.h>
 
 #include <time.h>
@@ -179,6 +180,23 @@ visibleIChar(IChar * buf, unsigned len)
     return result;
 }
 
+#define CASETYPE(name) case name: result = #name; break;
+
+const char *
+visibleKeyboardType(xtermKeyboardType type)
+{
+    const char *result = "?";
+    switch (type) {
+	CASETYPE(keyboardIsLegacy);	/* bogus vt220 codes for F1-F4, etc. */
+	CASETYPE(keyboardIsDefault);
+	CASETYPE(keyboardIsHP);
+	CASETYPE(keyboardIsSCO);
+	CASETYPE(keyboardIsSun);
+	CASETYPE(keyboardIsVT220);
+    }
+    return result;
+}
+
 void
 TraceSizeHints(XSizeHints * hints)
 {
@@ -235,6 +253,55 @@ TraceTranslations(const char *name, Widget w)
 	TRACE(("none (widget is null)\n"));
     }
     XSetErrorHandler(save);
+}
+
+#define XRES_S(name) Trace(#name " = %s\n", NonNull(resp->name))
+#define XRES_B(name) Trace(#name " = %s\n", BtoS(resp->name))
+#define XRES_I(name) Trace(#name " = %d\n", resp->name)
+
+void
+TraceXtermResources(void)
+{
+    XTERM_RESOURCE *resp = &resource;
+
+    Trace("XTERM_RESOURCE settings:\n");
+    XRES_S(xterm_name);
+    XRES_S(icon_geometry);
+    XRES_S(title);
+    XRES_S(icon_name);
+    XRES_S(term_name);
+    XRES_S(tty_modes);
+    XRES_B(hold_screen);
+    XRES_B(utmpInhibit);
+    XRES_B(messages);
+    XRES_B(sunFunctionKeys);
+#if OPT_SUNPC_KBD
+    XRES_B(sunKeyboard);
+#endif
+#if OPT_HP_FUNC_KEYS
+    XRES_B(hpFunctionKeys);
+#endif
+#if OPT_SCO_FUNC_KEYS
+    XRES_B(scoFunctionKeys);
+#endif
+#if OPT_INITIAL_ERASE
+    XRES_B(ptyInitialErase);
+    XRES_B(backarrow_is_erase);
+#endif
+    XRES_B(wait_for_map);
+    XRES_B(useInsertMode);
+#if OPT_ZICONBEEP
+    XRES_I(zIconBeep);
+#endif
+#if OPT_PTY_HANDSHAKE
+    XRES_B(ptyHandshake);
+#endif
+#if OPT_SAME_NAME
+    XRES_B(sameName);
+#endif
+#if OPT_SESSION_MGT
+    XRES_B(sessionMgt);
+#endif
 }
 
 void

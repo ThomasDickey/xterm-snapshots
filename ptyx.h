@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.323 2004/07/13 00:41:30 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.326 2004/07/20 01:14:41 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.117 2004/07/13 00:41:30 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.118 2004/07/20 01:14:41 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -963,6 +963,10 @@ typedef struct {
 #define TRACE_TRANS(name,w) /*nothing*/
 #endif
 
+#ifndef TRACE_XRES
+#define TRACE_XRES() /*nothing*/
+#endif
+
 #ifndef TRACE2
 #define TRACE2(p) /*nothing*/
 #endif
@@ -1285,6 +1289,8 @@ typedef struct {
 	int		cursor_busy;	/* do not redraw...		*/
 #if OPT_BLINK_CURS
 	Boolean		cursor_blink;	/* cursor blink enable		*/
+	Boolean		cursor_blink_res; /* initial cursor blink value	*/
+	Boolean		cursor_blink_esc; /* cursor blink escape-state	*/
 #endif
 #if OPT_BLINK_TEXT
 	Boolean		blink_as_bold;	/* text blink disable		*/
@@ -1498,6 +1504,10 @@ typedef enum {
     keyboardIsSun,
     keyboardIsVT220
 } xtermKeyboardType;
+
+#if OPT_TRACE
+extern	const char * visibleKeyboardType(xtermKeyboardType);
+#endif
 
 typedef struct
 {

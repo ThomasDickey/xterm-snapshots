@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.489 2004/07/13 00:41:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.492 2004/07/20 01:14:41 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.162 2004/07/13 00:41:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.163 2004/07/20 01:14:41 dickey Exp $ */
 
 /*
 
@@ -158,6 +158,8 @@ static void restoremodes(XtermWidget termw);
 static void savemodes(XtermWidget termw);
 static void unparseputn(unsigned int n, int fd);
 static void window_ops(XtermWidget termw);
+
+#define DoStartBlinking(s) ((s)->cursor_blink ^ (s)->cursor_blink_esc)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
 static void HandleBlinking(XtPointer closure, XtIntervalId * id);
@@ -502,9 +504,6 @@ static XtResource resources[] =
 
 #if OPT_BLINK_CURS
     Bres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink, FALSE),
-#endif
-
-#if OPT_BLINK_CURS
     Bres(XtNshowBlinkAsBold, XtCCursorBlink, screen.blink_as_bold, DEFBLINKASBOLD),
 #endif
 
@@ -3374,11 +3373,10 @@ HandleStructNotify(Widget w GCC_UNUSED,
 static void
 SetCursorBlink(register TScreen * screen, int enable)
 {
-    if (enable) {
-	screen->cursor_blink = TRUE;
+    screen->cursor_blink = enable;
+    if (DoStartBlinking(screen)) {
 	StartBlinking(screen);
     } else {
-	screen->cursor_blink = FALSE;
 #if !OPT_BLINK_TEXT
 	StopBlinking(screen);
 #endif
@@ -3522,7 +3520,10 @@ dpmodes(XtermWidget termw,
 	    break;
 #if OPT_BLINK_CURS
 	case 12:		/* att610: Start/stop blinking cursor */
-	    SetCursorBlink(screen, (func == bitset) ? ON : OFF);
+	    if (screen->cursor_blink_res) {
+		screen->cursor_blink_esc = (func == bitset) ? ON : OFF;
+		SetCursorBlink(screen, screen->cursor_blink);
+	    }
 	    break;
 #endif
 	case 18:		/* DECPFF: print form feed */
@@ -3767,7 +3768,9 @@ savemodes(XtermWidget termw)
 	    break;
 #if OPT_BLINK_CURS
 	case 12:		/* att610: Start/stop blinking cursor */
-	    DoSM(DP_CRS_BLINK, screen->cursor_blink);
+	    if (screen->cursor_blink_res) {
+		DoSM(DP_CRS_BLINK, screen->cursor_blink_esc);
+	    }
 	    break;
 #endif
 	case 18:		/* DECPFF: print form feed */
@@ -3899,8 +3902,10 @@ restoremodes(XtermWidget termw)
 	    break;
 #if OPT_BLINK_CURS
 	case 12:		/* att610: Start/stop blinking cursor */
-	    DoRM(DP_CRS_BLINK, screen->cursor_blink);
-	    SetCursorBlink(screen, screen->cursor_blink);
+	    if (screen->cursor_blink_res) {
+		DoRM(DP_CRS_BLINK, screen->cursor_blink_esc);
+		SetCursorBlink(screen, screen->cursor_blink);
+	    }
 	    break;
 #endif
 	case 18:		/* DECPFF: print form feed */
@@ -4407,7 +4412,7 @@ VTRun(void)
     screen->cursor_state = OFF;
     screen->cursor_set = ON;
 #if OPT_BLINK_CURS
-    if (screen->cursor_blink)
+    if (DoStartBlinking(screen))
 	StartBlinking(screen);
 #endif
 
@@ -4894,8 +4899,9 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.cursor_blink);
     init_Ires(screen.blink_on);
     init_Ires(screen.blink_off);
+    wnew->screen.cursor_blink_res = wnew->screen.cursor_blink;
 #endif
-#if OPT_BLINK_CURS
+#if OPT_BLINK_TEXT
     init_Ires(screen.blink_as_bold);
 #endif
     init_Ires(screen.border);
@@ -5707,6 +5713,7 @@ xim_real_init(void)
     /*
      * Check for styles we do not yet support.
      */
+    TRACE(("input_style %#lx\n", input_style));
     if (input_style == (XIMPreeditArea | XIMStatusArea)) {
 	fprintf(stderr,
 		"This program doesn't support the 'OffTheSpot' preedit type\n");
@@ -6258,7 +6265,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
     screen->blink_state = !screen->blink_state;
 
 #if OPT_BLINK_CURS
-    if (screen->cursor_blink) {
+    if (DoStartBlinking(screen)) {
 	if (screen->cursor_state == ON) {
 	    if (screen->select || screen->always_highlight) {
 		HideCursor();

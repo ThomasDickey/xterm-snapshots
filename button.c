@@ -1,6 +1,8 @@
+/* $XTermId: button.c,v 1.160 2004/07/20 01:14:41 tom Exp $ */
+
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
- * Copyright 1999-2002,2003 by Thomas E. Dickey
+ * Copyright 1999-2003,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -50,7 +52,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.74 2003/09/21 17:12:45 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.75 2004/07/20 01:14:41 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -2108,7 +2110,8 @@ ComputeSelect(int startRow,
 	    endCol--;
     }
 
-    if (iswide(XTERM_CELL(endRow, endCol - 1))
+    if (endCol > 1
+	&& iswide(XTERM_CELL(endRow, endCol - 1))
 	&& XTERM_CELL(endRow, endCol) == HIDDEN_CHAR) {
 	endCol += 1;
     }
