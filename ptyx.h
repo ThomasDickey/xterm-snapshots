@@ -928,6 +928,7 @@ typedef struct _TekWidgetRec {
 #define SMOOTHSCROLL	0x10000	/* true if in smooth scroll mode */
 #define IN132COLUMNS	0x20000	/* true if in 132 column mode */
 #define INVISIBLE	0x40000	/* true if writing invisible text */
+#define NATIONAL       0x100000	/* true if writing national charset */
 
 /*
  * Per-line flags

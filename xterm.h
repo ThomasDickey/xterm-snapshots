@@ -107,6 +107,9 @@ extern void SGR_Background PROTO((int color));
 extern void SGR_Foreground PROTO((int color));
 #endif
 
+/* charsets.c */
+extern int xtermCharSets (Char *buf, Char *ptr, char charset);
+
 /* cursor.c */
 extern void CarriageReturn PROTO((TScreen *screen));
 extern void CursorBack PROTO((TScreen *screen, int  n));
