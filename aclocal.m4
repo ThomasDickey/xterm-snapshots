@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.43 2002/12/08 22:31:47 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.44 2002/12/27 21:05:20 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -315,6 +315,14 @@ dnl size information to subprocesses.  (We cannot use terminfo's compatibility
 dnl function, since it cannot provide the termcap-format data).
 AC_DEFUN([CF_FUNC_TGETENT],
 [
+# compute a reasonable value for $TERM to give tgetent(), since we may be
+# running in 'screen', which sets $TERMCAP to a specific entry that is not
+# necessarily in /etc/termcap - unsetenv is not portable, so we cannot simply
+# discard $TERMCAP.
+cf_TERMVAR=vt100
+test -n "$TERMCAP" && cf_TERMVAR="$TERM"
+test -z "$cf_TERMVAR" && cf_TERMVAR=vt100
+
 AC_CACHE_CHECK(for full tgetent function,cf_cv_lib_tgetent,[
 cf_save_LIBS="$LIBS"
 cf_cv_lib_tgetent=no
@@ -331,7 +339,7 @@ int main()
 {
 	char buffer[1024];
 	buffer[0] = 0;
-	tgetent(buffer, "vt100");
+	tgetent(buffer, "$cf_TERMVAR");
 	exit(buffer[0] == 0); }],
 	[echo "yes, there is a termcap/tgetent in $cf_termlib" 1>&AC_FD_CC
 	 if test -n "$cf_termlib" ; then
@@ -368,7 +376,7 @@ else
 	cf_cv_lib_part_tgetent=no
 	for cf_termlib in $cf_TERMLIB ; do
 		LIBS="$cf_save_LIBS -l$cf_termlib"
-		AC_TRY_LINK([],[tgetent(0, 0)],
+		AC_TRY_LINK([],[tgetent(0, "$cf_TERMVAR")],
 			[echo "there is a terminfo/tgetent in $cf_termlib" 1>&AC_FD_CC
 			 cf_cv_lib_part_tgetent="-l$cf_termlib"
 			 break])

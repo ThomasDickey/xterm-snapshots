@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.161 2002/12/08 22:31:49 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.162 2002/12/27 21:05:22 dickey Exp $ */
 
 /* main.c */
 
@@ -2090,7 +2090,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	screen->TekEmu = FALSE;
 
     if (screen->TekEmu && !TekInit())
-	exit(ERROR_INIT);
+	SysError(ERROR_INIT);
 #endif
 
 #ifdef DEBUG
@@ -2107,23 +2107,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    }
 	}
 	if (i >= 0) {
-#if defined(USE_ANY_SYSV_TERMIO) && !defined(SVR4) && !defined(linux)
-	    /* SYSV has another pointer which should be part of the
-	     * FILE structure but is actually a separate array.
-	     */
-	    unsigned char *old_bufend;
-
-	    old_bufend = (unsigned char *) _bufend(stderr);
-#ifdef __hpux
-	    stderr->__fileH = (i >> 8);
-	    stderr->__fileL = i;
-#else
-	    stderr->_file = i;
-#endif
-	    _bufend(stderr) = old_bufend;
-#else /* USE_ANY_SYSV_TERMIO */
-	    freopen(dbglogfile, "w", stderr);
-#endif /* USE_ANY_SYSV_TERMIO */
+	    dup2(i, 2);
 
 	    /* mark this file as close on exec */
 	    (void) fcntl(i, F_SETFD, 1);
@@ -2178,14 +2162,14 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 #if defined(USE_ANY_SYSV_TERMIO) || defined(__MVS__)
     if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
-	Error(1);
+	SysError(ERROR_F_GETFL);
 #ifdef O_NDELAY
     mode |= O_NDELAY;
 #else
     mode |= O_NONBLOCK;
 #endif /* O_NDELAY */
     if (fcntl(screen->respond, F_SETFL, mode))
-	Error(1);
+	SysError(ERROR_F_SETFL);
 #else /* !USE_ANY_SYSV_TERMIO */
     mode = 1;
     if (ioctl(screen->respond, FIONBIO, (char *) &mode) == -1)
@@ -2851,10 +2835,7 @@ spawn(void)
 	}
 
 	if (get_pty(&screen->respond, XDisplayString(screen->display))) {
-	    /*  no ptys! */
-	    (void) fprintf(stderr, "%s: no available ptys: %s\n",
-			   xterm_name, strerror(errno));
-	    exit(ERROR_PTYS);
+	    SysError(ERROR_PTYS);
 	}
 #if OPT_INITIAL_ERASE
 	if (resource.ptyInitialErase) {
@@ -3036,25 +3017,27 @@ spawn(void)
 		setpgrp();
 		grantpt(screen->respond);
 		unlockpt(screen->respond);
-		if ((pty_name = ptsname(screen->respond)) == 0
-		    || (ptyfd = open(pty_name, O_RDWR)) < 0) {
-		    SysError(1);
+		if ((pty_name = ptsname(screen->respond)) == 0) {
+		    SysError(ERROR_PTSNAME);
+		}
+		if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
+		    SysError(ERROR_OPPTSNAME);
 		}
 #ifdef I_PUSH
 		if (ioctl(ptyfd, I_PUSH, "ptem") < 0) {
-		    SysError(2);
+		    SysError(ERROR_PTEM);
 		}
 #if !defined(SVR4) && !(defined(SYSV) && defined(i386))
 		if (!getenv("CONSEM") && ioctl(ptyfd, I_PUSH, "consem") < 0) {
-		    SysError(3);
+		    SysError(ERROR_CONSEM);
 		}
 #endif /* !SVR4 */
 		if (ioctl(ptyfd, I_PUSH, "ldterm") < 0) {
-		    SysError(4);
+		    SysError(ERROR_LDTERM);
 		}
 #ifdef SVR4			/* from Sony */
 		if (ioctl(ptyfd, I_PUSH, "ttcompat") < 0) {
-		    SysError(5);
+		    SysError(ERROR_TTCOMPAT);
 		}
 #endif /* SVR4 */
 #endif /* I_PUSH */
@@ -3588,8 +3571,7 @@ spawn(void)
 		(void) close(0);
 
 		if (open("/dev/tty", O_RDWR)) {
-		    fprintf(stderr, "cannot open /dev/tty: %s\n", strerror(errno));
-		    exit(1);
+		    SysError(ERROR_OPDEVTTY);
 		}
 		(void) close(1);
 		(void) close(2);
@@ -3866,13 +3848,12 @@ spawn(void)
 	    if (geteuid() == 0 && pw) {
 		if (initgroups(login_name, pw->pw_gid)) {
 		    perror("initgroups failed");
-		    exit(errno);
+		    SysError(ERROR_INIGROUPS);
 		}
 	    }
 #endif
 	    if (setuid(screen->uid)) {
-		perror("setuid failed");
-		exit(errno);
+		SysError(ERROR_SETUID);
 	    }
 #ifdef USE_HANDSHAKE
 	    /* mark the pipes as close on exec */
@@ -3979,6 +3960,19 @@ spawn(void)
 	    TRACE(("spawn cannot tell pty its size\n"));
 #endif /* sun vs TIOCSWINSZ */
 	    signal(SIGHUP, SIG_DFL);
+
+#ifdef HAVE_UTMP
+	    if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
+		((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
+		 *(ptr = pw->pw_shell) == 0))
+#else /* HAVE_UTMP */
+	    if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
+		((pw = getpwuid(screen->uid)) == NULL ||
+		 *(ptr = pw->pw_shell) == 0))
+#endif /* HAVE_UTMP */
+		ptr = "/bin/sh";
+	    shname = x_basename(ptr);
+
 #if OPT_LUIT_PROG
 	    /*
 	     * Use two copies of command_to_exec, in case luit is not actually
@@ -3998,6 +3992,8 @@ spawn(void)
 	    if (command_to_exec) {
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvp(*command_to_exec, command_to_exec);
+		if (command_to_exec[1] == 0)
+		    execlp(ptr, shname, "-c", command_to_exec[0], 0);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
 			xterm_name, *command_to_exec, strerror(errno));
@@ -4007,17 +4003,6 @@ spawn(void)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-#ifdef HAVE_UTMP
-	    if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
-		((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
-		 *(ptr = pw->pw_shell) == 0))
-#else /* HAVE_UTMP */
-	    if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
-		((pw = getpwuid(screen->uid)) == NULL ||
-		 *(ptr = pw->pw_shell) == 0))
-#endif /* HAVE_UTMP */
-		ptr = "/bin/sh";
-	    shname = x_basename(ptr);
 	    shname_minus = (char *) malloc(strlen(shname) + 2);
 	    (void) strcpy(shname_minus, "-");
 	    (void) strcat(shname_minus, shname);

@@ -3,7 +3,7 @@
  */
 
 /*
- * Copyright 1999-2000 by Thomas E. Dickey
+ * Copyright 1999-2000,2002 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.59 2002/04/28 19:04:21 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.60 2002/12/27 21:05:23 dickey Exp $ */
 
 /* screen.c */
 
@@ -116,13 +116,12 @@ Allocate(int nrow, int ncol, Char ** addr)
  *  (Return value only necessary with SouthWestGravity.)
  */
 static int
-Reallocate(
-	      ScrnBuf * sbuf,
-	      Char ** sbufaddr,
-	      int nrow,
-	      int ncol,
-	      int oldrow,
-	      int oldcol)
+Reallocate(ScrnBuf * sbuf,
+	   Char ** sbufaddr,
+	   int nrow,
+	   int ncol,
+	   int oldrow,
+	   int oldcol)
 {
     ScrnBuf base;
     Char *tmp;
@@ -218,12 +217,11 @@ int last_written_col = -1;
  * to match flags.
  */
 void
-ScreenWrite(
-	       TScreen * screen,
-	       PAIRED_CHARS(Char * str, Char * str2),
-	       unsigned flags,
-	       unsigned cur_fg_bg,
-	       int len)		/* length of string */
+ScreenWrite(TScreen * screen,
+	    PAIRED_CHARS(Char * str, Char * str2),
+	    unsigned flags,
+	    unsigned cur_fg_bg,
+	    int len)		/* length of string */
 {
 #if OPT_ISO_COLORS
 #if OPT_EXT_COLORS
@@ -681,14 +679,12 @@ ScrnDeleteChar(TScreen * screen, int n)
  *	     all dimensions are based on single-characters.
  */
 void
-ScrnRefresh(
-	       TScreen * screen,
-	       int toprow,
-	       int leftcol,
-	       int nrows,
-	       int ncols,
-	       Bool force
-)				/* ... leading/trailing spaces */
+ScrnRefresh(TScreen * screen,
+	    int toprow,
+	    int leftcol,
+	    int nrows,
+	    int ncols,
+	    Bool force)		/* ... leading/trailing spaces */
 {
     int y = toprow * FontHeight(screen) + screen->border;
     int row;
@@ -751,6 +747,7 @@ ScrnRefresh(
 	else
 	    lastind = row - scrollamt;
 
+	TRACE(("ScrnRefresh row=%d lastind=%d/%d\n", row, lastind, max));
 	if (lastind < 0 || lastind > max)
 	    continue;
 
@@ -904,8 +901,9 @@ ScrnRefresh(
 		|| (hilite && (col > hi_col))
 #if OPT_ISO_COLORS
 		|| ((flags & FG_COLOR)
-		    && ((extract_fg(ColorOf(col), attrs[col]) != fg)
-			|| (extract_bg(ColorOf(col), attrs[col]) != bg)))
+		    && (extract_fg(ColorOf(col), attrs[col]) != fg))
+		|| ((flags & BG_COLOR)
+		    && (extract_bg(ColorOf(col), attrs[col]) != bg))
 #endif
 #if OPT_WIDE_CHARS
 		|| (widec
@@ -918,10 +916,9 @@ ScrnRefresh(
 		) {
 		TRACE(("ScrnRefresh looping drawXtermText %d..%d:%s\n",
 		       lastind, col,
-		       visibleChars(
-				       PAIRED_CHARS(&chars[lastind],
-						    WIDEC_PTR(lastind)),
-				       col - lastind)));
+		       visibleChars(PAIRED_CHARS(&chars[lastind],
+						 WIDEC_PTR(lastind)),
+				    col - lastind)));
 
 		test = flags;
 		checkVeryBoldColors(test, fg);
@@ -1075,10 +1072,9 @@ ScrnRefresh(
  * Requires first <= last; first, last are rows of screen->buf.
  */
 void
-ClearBufRows(
-		TScreen * screen,
-		int first,
-		int last)
+ClearBufRows(TScreen * screen,
+	     int first,
+	     int last)
 {
     ScrnBuf buf = screen->visbuf;
     int len = screen->max_col + 1;
@@ -1127,11 +1123,10 @@ ClearBufRows(
   8. Returns 0
   */
 int
-ScreenResize(
-		TScreen * screen,
-		int width,
-		int height,
-		unsigned *flags)
+ScreenResize(TScreen * screen,
+	     int width,
+	     int height,
+	     unsigned *flags)
 {
     int code;
     int rows, cols;
@@ -1304,11 +1299,10 @@ ScreenResize(
  * nonnull.
  */
 Bool
-non_blank_line(
-		  ScrnBuf sb,
-		  int row,
-		  int col,
-		  int len)
+non_blank_line(ScrnBuf sb,
+	       int row,
+	       int col,
+	       int len)
 {
     int i;
     Char *ptr = BUF_CHARS(sb, row);

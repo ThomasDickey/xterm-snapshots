@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.136 2002/12/08 22:31:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.137 2002/12/27 21:05:21 dickey Exp $ */
 
 /*
 
@@ -128,6 +128,8 @@ in this Software without prior written authorization from The Open Group.
 
 #if OPT_ZICONBEEP || OPT_TOOLBAR
 #define HANDLE_STRUCT_NOTIFY 1
+#else
+#define HANDLE_STRUCT_NOTIFY 0
 #endif
 
 static IChar in_put(void);

@@ -2,7 +2,7 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.72 2002/10/05 17:57:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.73 2002/12/27 21:05:23 dickey Exp $ */
 
 /*
  * Copyright 1999-2001,2002 by Thomas E. Dickey
@@ -1667,7 +1667,7 @@ drawXtermText(TScreen * screen,
 
     /* If the font is complete, draw it as-is */
     if (screen->fnt_boxes && !screen->force_box_chars) {
-	TRACE(("drawtext%c[%4d,%4d] (%d) %d:%s\n",
+	TRACE(("drawXtermText%c[%4d,%4d] (%d) %d:%s\n",
 	       screen->cursor_state == OFF ? ' ' : '*',
 	       y, x, chrset, len,
 	       visibleChars(PAIRED_CHARS(text, text2), len)));

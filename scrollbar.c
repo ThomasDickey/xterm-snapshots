@@ -2,7 +2,7 @@
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.35 2002/10/05 17:57:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.36 2002/12/27 21:05:23 dickey Exp $ */
 
 /*
  * Copyright 2000-2001,2002 by Thomas E. Dickey
@@ -394,7 +394,7 @@ ScrollBarOn(XtermWidget xw, int init, int doalloc)
 						      screen->savelines) *
 			       sizeof(char *)))
 	    == NULL)
-	      Error(ERROR_SBRALLOC);
+	      SysError(ERROR_SBRALLOC);
 	screen->visbuf = &screen->allbuf[MAX_PTRS * screen->savelines];
 	memmove((char *) screen->visbuf, (char *) screen->allbuf,
 		MAX_PTRS * (screen->max_row + 2) * sizeof(char *));
@@ -405,7 +405,7 @@ ScrollBarOn(XtermWidget xw, int init, int doalloc)
 		     (Char *) calloc((unsigned) screen->max_col + 1,
 				     sizeof(Char))
 		    ) == NULL)
-		    Error(ERROR_SBRALLOC2);
+		    SysError(ERROR_SBRALLOC2);
 	    }
 	}
     }

@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.88 2002/12/08 22:31:50 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.89 2002/12/27 21:05:24 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - August 2002.
 .TH XTERM 1 __vendorversion__
@@ -1288,7 +1288,9 @@ disables all colors, including underlining.
 .B "color7 (\fPclass\fB Color7)"
 These specify the colors for the ISO 6429 extension.
 The defaults are,
-respectively, black, red, green, yellow, blue, magenta, cyan, and white.
+respectively, black, red3, green3, yellow3, blue3, magenta3, cyan3, and gray90.
+The default shades of color are chosen to allow the colors 8-15
+to be used as brighter versions.
 .TP 8
 .B "color8 (\fPclass\fB Color8)"
 .TP 8
@@ -1307,7 +1309,7 @@ respectively, black, red, green, yellow, blue, magenta, cyan, and white.
 .B "color15 (\fPclass\fB Color15)"
 These specify the colors for the ISO 6429 extension if the bold attribute
 is also enabled.
-The defaults are, respectively, black, red, green,
+The default resource values are, respectively, gray30, red, green,
 yellow, blue, magenta, cyan, and white.
 .TP 8
 .B "color16 (\fPclass\fB Color16)"
@@ -1316,7 +1318,7 @@ through
 .TP 8
 .B "color255 (\fPclass\fB Color255)"
 These specify the colors for the 256-color extension.
-The defaults
+The default resource values
 are for colors 16 through 231 to make a 6x6x6 color cube, and colors
 232 through 255 to make a grayscale ramp.
 .TP 8
@@ -2716,10 +2718,6 @@ This action toggles the \fBcurses\fP resource and is also invoked from the
 .B "set-font-doublesize(\fIon/off/toggle\fP)"
 This action toggles the \fBfontDoublesize\fP resource and is also invoked by
 the \fBfont-doublesize\fP entry in \fIfontMenu\fP.
-.\" .TP 8
-.\" .B "set-font-loadable(\fIon/off/toggle\fP)"
-.\" This action toggles the \fBfontLoadable\fP resource and is also invoked by
-.\" the \fBfont-loadable\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-hp-function-keys(\fIon/off/toggle\fP)"
 This action toggles the \fBhpFunctionKeys\fP resource and is also invoked by
@@ -3044,13 +3042,236 @@ If your display supports color, use this
 .in -10
 in your .Xdefaults file to
 automatically turn on color in \fIxterm\fP and similar applications.
-.SH "SEE ALSO"
-resize(1), luit(1), X(__miscmansuffix__), pty(4), tty(4)
+.SH ERROR MESSAGES
+Most of the fatal error messages from \fIxterm\fP use the following format:
+.RS
+xterm: Error \fIXXX\fP, errno \fIYYY\fP: \fIZZZ\fP
+.RE
+The \fIXXX\fP codes (which are used by \fIxterm\fP as its exit-code)
+are listed below, with a brief explanation.
+.TP 5
+1
+is used for miscellaneous errors, usually accompanied by a specific message,
+.TP
+11
+ERROR_FIONBIO
 .br
-\fIXterm Control Sequences\fP
-(this is the file ctlseqs.ms).
-.sp
-http://invisible-island.net/xterm/xterm.html
+main: ioctl() failed on FIONBIO 
+.TP
+12
+ERROR_F_GETFL
+.br
+main: ioctl() failed on F_GETFL
+.TP
+13
+ERROR_F_SETFL
+.br
+main: ioctl() failed on F_SETFL
+.TP
+14
+ERROR_OPDEVTTY
+.br
+spawn: open() failed on /dev/tty
+.TP
+15
+ERROR_TIOCGETP
+.br
+spawn: ioctl() failed on TIOCGETP
+.TP
+17
+ERROR_PTSNAME  
+.br
+spawn: ptsname() failed
+.TP
+18
+ERROR_OPPTSNAME
+.br
+spawn: open() failed on ptsname
+.TP
+19
+ERROR_PTEM     
+.br
+spawn: ioctl() failed on I_PUSH/"ptem"
+.TP
+20
+ERROR_CONSEM   
+.br
+spawn: ioctl() failed on I_PUSH/"consem"
+.TP
+21
+ERROR_LDTERM   
+.br
+spawn: ioctl() failed on I_PUSH/"ldterm"
+.TP
+22
+ERROR_TTCOMPAT 
+.br
+spawn: ioctl() failed on I_PUSH/"ttcompat"
+.TP
+23
+ERROR_TIOCSETP
+.br
+spawn: ioctl() failed on TIOCSETP
+.TP
+24
+ERROR_TIOCSETC
+.br
+spawn: ioctl() failed on TIOCSETC
+.TP
+25
+ERROR_TIOCSETD
+.br
+spawn: ioctl() failed on TIOCSETD
+.TP
+26
+ERROR_TIOCSLTC
+.br
+spawn: ioctl() failed on TIOCSLTC
+.TP
+27
+ERROR_TIOCLSET
+.br
+spawn: ioctl() failed on TIOCLSET
+.TP
+28
+ERROR_INIGROUPS
+.br
+spawn: initgroups() failed
+.TP
+29
+ERROR_FORK
+.br
+spawn: fork() failed
+.TP
+30
+ERROR_EXEC
+.br
+spawn: exec() failed
+.TP
+32
+ERROR_PTYS
+.br
+get_pty: not enough ptys
+.TP
+34
+ERROR_PTY_EXEC
+.br
+waiting for initial map
+.TP
+35
+ERROR_SETUID
+.br
+spawn: setuid() failed
+.TP
+36
+ERROR_INIT
+.br
+spawn: can't initialize window
+.TP
+46
+ERROR_TIOCKSET
+.br
+spawn: ioctl() failed on TIOCKSET
+.TP
+47
+ERROR_TIOCKSETC
+.br
+spawn: ioctl() failed on TIOCKSETC
+.TP
+48
+ERROR_SPREALLOC
+.br
+spawn: realloc of ttydev failed
+.TP
+49
+ERROR_LUMALLOC
+.br
+luit: command-line malloc failed
+.TP
+50
+ERROR_SELECT
+.br
+in_put: select() failed
+.TP
+54
+ERROR_VINIT
+.br
+VTInit: can't initialize window
+.TP
+57
+ERROR_KMMALLOC1
+.br
+HandleKeymapChange: malloc failed
+.TP
+60
+ERROR_TSELECT
+.br
+Tinput: select() failed
+.TP
+64
+ERROR_TINIT
+.br
+TekInit: can't initialize window
+.TP
+71
+ERROR_BMALLOC2
+.br
+SaltTextAway: malloc() failed
+.TP
+80
+ERROR_LOGEXEC
+.br
+StartLog: exec() failed
+.TP
+83
+ERROR_XERROR
+.br
+xerror: XError event
+.TP
+84
+ERROR_XIOERROR
+.br
+xioerror: X I/O error
+.TP
+90
+ERROR_SCALLOC
+.br
+Alloc: calloc() failed on base
+.TP
+91
+ERROR_SCALLOC2
+.br
+Alloc: calloc() failed on rows
+.TP
+92
+ERROR_SREALLOC
+.br
+ScreenResize: realloc() failed on alt base
+.TP
+96
+ERROR_RESIZE
+.br
+ScreenResize: malloc() or realloc() failed
+.TP
+102
+ERROR_SAVE_PTR
+.br
+ScrnPointers: malloc/realloc() failed
+.TP
+110
+ERROR_SBRALLOC
+.br
+ScrollBarOn: realloc() failed on base
+.TP
+111
+ERROR_SBRALLOC2
+.br
+ScrollBarOn: realloc() failed on rows
+.TP
+121
+ERROR_MMALLOC
+.br
+my_memmove: malloc/realloc failed
 .SH BUGS
 .PP
 Large pastes do not work on some systems.
@@ -3073,6 +3294,13 @@ Ideally, you'd like to be able to
 pick and choose emulator widgets and stick them into a single control widget.
 .PP
 There needs to be a dialog box to allow entry of the Tek COPY file name.
+.SH "SEE ALSO"
+resize(1), luit(1), X(__miscmansuffix__), pty(4), tty(4)
+.br
+\fIXterm Control Sequences\fP
+(this is the file ctlseqs.ms).
+.sp
+http://invisible-island.net/xterm/xterm.html
 .SH AUTHORS
 Far too many people, including:
 .sp
@@ -3083,7 +3311,7 @@ Mark Vandevoorde (MIT-Athena), Bob McNamara (DEC-MAD),
 Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
-Jason Bacon <acadix@execpc.com>,
+Jason Bacon,
 Stephen P. Wall,
 David Wexelblat, and
 Thomas Dickey (XFree86 Project).

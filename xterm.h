@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.85 2002/10/05 17:57:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.86 2002/12/27 21:05:23 dickey Exp $ */
 
 /************************************************************
 
@@ -468,7 +468,7 @@ extern int errno;
 #define XtCXmcInline		"XmcInline"
 #define XtCXmcMoveSGR		"XmcMoveSGR"
 
-#ifdef NO_ACTIVE_ICON
+#if defined(NO_ACTIVE_ICON) && !defined(XtNgeometry)
 #define XtNgeometry		"geometry"
 #define XtCGeometry		"Geometry"
 #endif
@@ -651,7 +651,6 @@ extern void ChangeXprop (char *name);
 extern void Changename (char *name);
 extern void Changetitle (char *name);
 extern void Cleanup (int code);
-extern void Error (int i);
 extern void HandleBellPropertyChange PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleEightBitKeyPressed PROTO_XT_ACTIONS_ARGS;
 extern void HandleEnterWindow        PROTO_XT_EV_HANDLER_ARGS;

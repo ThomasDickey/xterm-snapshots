@@ -391,7 +391,7 @@ Carriage Return (Ctrl-M)
 .
 .IP \\*(En
 Return Terminal Status (Ctrl-E).
-Default response is the terminal name, e.g., "xterm", but may be overridden
+Default response is an empty string, but may be overridden
 by a resource \fIanswerbackString\fP.
 .
 .IP \\*(Ff
@@ -866,12 +866,12 @@ Character Attributes (SGR)
   \*(Ps = \*4 \(-> Underlined
   \*(Ps = \*5 \(-> Blink (appears as Bold)
   \*(Ps = \*7 \(-> Inverse
-  \*(Ps = \*8 \(-> Invisible (hidden)
+  \*(Ps = \*8 \(-> Invisible, i.e., hidden (VT300)
   \*(Ps = \*2\*2 \(-> Normal (neither bold nor faint)
   \*(Ps = \*2\*4 \(-> Not underlined
   \*(Ps = \*2\*5 \(-> Steady (not blinking)
   \*(Ps = \*2\*7 \(-> Positive (not inverse)
-  \*(Ps = \*2\*8 \(-> Visible (not hidden)
+  \*(Ps = \*2\*8 \(-> Visible, i.e., not hidden (VT300)
   \*(Ps = \*3\*0 \(-> Set foreground color to Black
   \*(Ps = \*3\*1 \(-> Set foreground color to Red
   \*(Ps = \*3\*2 \(-> Set foreground color to Green
@@ -1563,8 +1563,8 @@ Similarly, motion with button 3
 down is reported as \*(Cs\*M\*(cB\*(Cx\*(Cy.
 ( \*(cB = 32 + 2 (button 3) + 32 (motion indicator) ).
 
-Any-event mode is the same as button-event mode, except that all motion
-events are reported instead of just those that enter a new character cell.
+Any-event mode is the same as button-event mode, except that all motion  
+events are reported, even if no mouse button is down.
 It is enabled by specifying 1003 to DECSET.
 .
 .br

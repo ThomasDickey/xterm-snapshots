@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.73 2002/12/08 22:31:49 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.74 2002/12/27 21:05:22 dickey Exp $ */
 
 /*
  *
@@ -1281,6 +1281,7 @@ AllocateAnsiColor(XtermWidget pTerm,
 	SET_COLOR_RES(res, def.pixel);
 	TRACE(("AllocateAnsiColor[%d] %s (pixel %#lx)\n",
 	       (res - screen->Acolors), spec, def.pixel));
+	res->mode = True;
 	return (TRUE);
     }
     TRACE(("AllocateAnsiColor %s (failed)\n", spec));
@@ -1294,9 +1295,7 @@ xtermGetColorRes(ColorRes * res)
     if (!res->mode) {
 	TRACE(("xtermGetColorRes for Acolors[%d]\n",
 	       res - term->screen.Acolors));
-	if (AllocateAnsiColor(term, res, res->resource)) {
-	    res->mode = True;
-	} else {
+	if (!AllocateAnsiColor(term, res, res->resource)) {
 	    res->value = term->screen.foreground;
 	    res->mode = -True;
 	    fprintf(stderr,
@@ -1537,16 +1536,29 @@ static struct {
     int len;
 } user_keys[MAX_UDK];
 
+/*
+ * Parse one nibble of a hex byte from the OSC string.  We have removed the
+ * string-terminator (replacing it with a null), so the only other delimiter
+ * that is expected is semicolon.  Ignore other characters (Ray Neuman says
+ * "real" terminals accept commas in the string definitions).
+ */
 static int
-hexvalue(int c)
+udk_value(char **cp)
 {
-    if (c >= '0' && c <= '9')
-	return c - '0';
-    if (c >= 'A' && c <= 'F')
-	return c - 'A' + 10;
-    if (c >= 'a' && c <= 'f')
-	return c - 'a' + 10;
-    return -1;
+    int c;
+
+    for (;;) {
+	if ((c = **cp) != '\0')
+	    *cp = *cp + 1;
+	if (c == ';' || c == '\0')
+	    return -1;
+	if (c >= '0' && c <= '9')
+	    return c - '0';
+	if (c >= 'A' && c <= 'F')
+	    return c - 'A' + 10;
+	if (c >= 'a' && c <= 'f')
+	    return c - 'a' + 10;
+    }
 }
 
 void
@@ -1749,17 +1761,15 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 	    while (*cp) {
 		char *str = (char *) malloc(strlen(cp) + 2);
 		unsigned key = 0;
+		int lo, hi;
 		int len = 0;
 
 		while (isdigit(CharOf(*cp)))
 		    key = (key * 10) + (*cp++ - '0');
 		if (*cp == '/') {
 		    cp++;
-		    while (*cp != ';' && *cp != '\0') {
-			int hi = hexvalue(*cp++);
-			int lo = hexvalue(*cp++);
-			if (hi < 0 || lo < 0)
-			    return;
+		    while ((hi = udk_value(&cp)) >= 0
+			   && (lo = udk_value(&cp)) >= 0) {
 			str[len++] = (hi << 4) | lo;
 		    }
 		}
@@ -2084,19 +2094,78 @@ SysErrorMsg(int n)
 void
 SysError(int i)
 {
+    static const char *table[] =
+    {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	,"main: ioctl() failed on FIONBIO"	/* 11 */
+	,"main: ioctl() failed on F_GETFL"	/* 12 */
+	,"main: ioctl() failed on F_SETFL"	/* 13 */
+	,"spawn: open() failed on /dev/tty"	/* 14 */
+	,"spawn: ioctl() failed on TIOCGETP"	/* 15 */
+	,0
+	,"spawn: ptsname() failed"	/* 17 */
+	,"spawn: open() failed on ptsname"	/* 18 */
+	,"spawn: ioctl() failed on I_PUSH/\"ptem\""	/* 19 */
+	,"spawn: ioctl() failed on I_PUSH/\"consem\""	/* 20 */
+	,"spawn: ioctl() failed on I_PUSH/\"ldterm\""	/* 21 */
+	,"spawn: ioctl() failed on I_PUSH/\"ttcompat\""	/* 22 */
+	,"spawn: ioctl() failed on TIOCSETP"	/* 23 */
+	,"spawn: ioctl() failed on TIOCSETC"	/* 24 */
+	,"spawn: ioctl() failed on TIOCSETD"	/* 25 */
+	,"spawn: ioctl() failed on TIOCSLTC"	/* 26 */
+	,"spawn: ioctl() failed on TIOCLSET"	/* 27 */
+	,"spawn: initgroups() failed"	/* 28 */
+	,"spawn: fork() failed"	/* 29 */
+	,"spawn: exec() failed"	/* 30 */
+	,0
+	,"get_pty: not enough ptys"	/* 32 */
+	,0
+	,"waiting for initial map"	/* 34 */
+	,"spawn: setuid() failed"	/* 35 */
+	,"spawn: can't initialize window"	/* 36 */
+	,0, 0, 0, 0, 0, 0, 0, 0, 0
+	,"spawn: ioctl() failed on TIOCKSET"	/* 46 */
+	,"spawn: ioctl() failed on TIOCKSETC"	/* 47 */
+	,"spawn: realloc of ttydev failed"	/* 48 */
+	,"luit: command-line malloc failed"	/* 49 */
+	,"in_put: select() failed"	/* 50 */
+	,0, 0, 0
+	,"VTInit: can't initialize window"	/* 54 */
+	,0, 0
+	,"HandleKeymapChange: malloc failed"	/* 57 */
+	,0, 0
+	,"Tinput: select() failed"	/* 60 */
+	,0, 0, 0
+	,"TekInit: can't initialize window"	/* 64 */
+	,0, 0, 0, 0, 0, 0
+	,"SaltTextAway: malloc() failed"	/* 71 */
+	,0, 0, 0, 0, 0, 0, 0, 0
+	,"StartLog: exec() failed"	/* 80 */
+	,0, 0
+	,"xerror: XError event"	/* 83 */
+	,"xioerror: X I/O error"	/* 84 */
+	,0, 0, 0, 0, 0
+	,"Alloc: calloc() failed on base"	/* 90 */
+	,"Alloc: calloc() failed on rows"	/* 91 */
+	,"ScreenResize: realloc() failed on alt base"	/* 92 */
+	,0, 0, 0
+	,"ScreenResize: malloc() or realloc() failed"	/* 96 */
+	,0, 0, 0, 0, 0
+	,"ScrnPointers: malloc/realloc() failed"	/* 102 */
+	,0, 0, 0, 0, 0, 0, 0
+	,"ScrollBarOn: realloc() failed on base"	/* 110 */
+	,"ScrollBarOn: realloc() failed on rows"	/* 111 */
+	,0, 0, 0, 0, 0, 0, 0, 0, 0
+	,"my_memmove: malloc/realloc failed"	/* 121 */
+    };
     int oerrno;
 
     oerrno = errno;
-    /* perror(3) write(2)s to file descriptor 2 */
     fprintf(stderr, "%s: Error %d, errno %d: ", xterm_name, i, oerrno);
     fprintf(stderr, "%s\n", SysErrorMsg(oerrno));
-    Cleanup(i);
-}
-
-void
-Error(int i)
-{
-    fprintf(stderr, "%s: Error %d\n", xterm_name, i);
+    if ((Cardinal) i < XtNumber(table) && table[i] != 0) {
+	fprintf(stderr, "Reason: %s\n", table[i]);
+    }
     Cleanup(i);
 }
 
