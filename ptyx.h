@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.76 2000/08/25 21:51:13 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.79 2000/10/05 18:30:42 keithp Exp $
  */
 
 /*
@@ -70,6 +70,10 @@
 #include <X11/Xfuncs.h>
 #include <X11/Xosdefs.h>
 #include <X11/Xmu/Converters.h>
+#ifdef XRENDERFONT
+#include <X11/extensions/Xrender.h>
+#include <X11/Xft/Xft.h>
+#endif
 
 /* adapted from IntrinsicI.h */
 #define MyStackAlloc(size, stack_cache_array)     \
@@ -930,6 +934,8 @@ struct _vtwin {
 	int		fullheight;	/* full height of window	*/
 	int		f_width;	/* width of fonts in pixels	*/
 	int		f_height;	/* height of fonts in pixels	*/
+	int		f_ascent;	/* ascent of font in pixels	*/
+	int		f_descent;	/* descent of font in pixels	*/
 	int		scrollbar;	/* if > 0, width of scrollbar,	*/
 					/* and scrollbar is showing	*/
 	GC		normalGC;	/* normal painting		*/
@@ -1215,6 +1221,14 @@ typedef struct {
 	unsigned long	menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
 	XIC		xic;
+#ifdef XRENDERFONT
+	XftFont		*renderFont;
+	XftFont		*renderFontBold;
+	Picture		renderPicture;
+	Pixmap		renderColorPix;
+	Picture		renderColor;
+	GC		renderGC, renderPixGC;
+#endif
 } TScreen;
 
 typedef struct _TekPart {
@@ -1310,6 +1324,10 @@ typedef struct _Misc {
     Boolean meta_trans;		/* true if Meta is used in translations */
     unsigned long meta_left;	/* modifier for Meta_L */
     unsigned long meta_right;	/* modifier for Meta_R */
+#endif
+#ifdef XRENDERFONT
+    char *face_name;
+    int face_size;
 #endif
 } Misc;
 
@@ -1456,9 +1474,9 @@ typedef struct _TekWidgetRec {
 #define FontWidth(screen)	((screen)->whichVwin->f_width)
 #define FontHeight(screen)	((screen)->whichVwin->f_height)
 #define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->ascent \
-						: (screen)->fnt_norm->ascent)
+						: (screen)->whichVwin->f_ascent)
 #define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->descent \
-						: (screen)->fnt_norm->descent)
+						: (screen)->whichVwin->f_descent)
 #define Scrollbar(screen)	((screen)->whichVwin->scrollbar)
 #define NormalGC(screen)	((screen)->whichVwin->normalGC)
 #define ReverseGC(screen)	((screen)->whichVwin->reverseGC)
@@ -1483,8 +1501,8 @@ typedef struct _TekWidgetRec {
 #define FullHeight(screen)	((screen)->fullVwin.fullheight)
 #define FontWidth(screen)	((screen)->fullVwin.f_width)
 #define FontHeight(screen)	((screen)->fullVwin.f_height)
-#define FontAscent(screen)	((screen)->fnt_norm->ascent)
-#define FontDescent(screen)	((screen)->fnt_norm->descent)
+#define FontAscent(screen)	((screen)->fullVwin.f_ascent)
+#define FontDescent(screen)	((screen)->fullVwin.f_descent)
 #define Scrollbar(screen)	((screen)->fullVwin.scrollbar)
 #define NormalGC(screen)	((screen)->fullVwin.normalGC)
 #define ReverseGC(screen)	((screen)->fullVwin.reverseGC)

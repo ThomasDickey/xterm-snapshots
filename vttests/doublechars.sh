@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XFree86: xc/programs/xterm/vttests/doublechars.sh,v 1.2 1999/09/25 14:38:51 dawes Exp $
+# $XFree86: xc/programs/xterm/vttests/doublechars.sh,v 1.3 2000/10/27 18:31:17 dawes Exp $
 #
 # -- Thomas Dickey (1999/7/7)
 # Illustrate the use of double-size characters by drawing successive lines in

@@ -1,4 +1,4 @@
--- $XFree86: xc/programs/xterm/README.os390,v 1.2 1999/11/19 13:55:13 hohndel Exp $
+-- $XFree86: xc/programs/xterm/README.os390,v 1.3 2000/09/22 10:42:05 alanh Exp $
 
 Below are install instructions for os/390 2.5 & below and
 for os/390 2.6 & above.  The basic reasons for exporting
