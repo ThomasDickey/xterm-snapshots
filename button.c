@@ -89,6 +89,9 @@ static int startERow, startECol, endERow, endECol;
 /* Saved values of raw selection for extend to restore to */
 static int saveStartRRow, saveStartRCol, saveEndRRow, saveEndRCol;
 
+/* Saved value of WORD selection for LINE processing to restore to */
+static int saveStartWRow, saveStartWCol;
+
 /* Multi-click handling */
 static int numberOfClicks = 0;
 static Time lastButtonUpTime = 0;
@@ -985,7 +988,6 @@ ComputeSelect(
 	register Char *ptr;
 	register int length;
 	register int class;
-	int osc = startSCol;
 
 	if (Coordinate(startRow, startCol) <= Coordinate(endRow, endCol)) {
 		startSRow = startRRow = startRow;
@@ -1021,6 +1023,13 @@ ComputeSelect(
 				do {
 					--startSCol;
 					--ptr;
+					if (startSCol <= 0
+					    && ScrnTstWrapped(screen, startSRow - 1)) {
+						--startSRow;
+						startSCol = LastTextCol(startSRow);
+						ptr = SCRN_BUF_CHARS(screen, startSRow+screen->topline)
+						 + startSCol;
+					}
 				} while (startSCol >= 0
 				 && charClass[*ptr] == class);
 				++startSCol;
@@ -1036,6 +1045,14 @@ ComputeSelect(
 				do {
 					++endSCol;
 					++ptr;
+					if (endSCol > length
+					    && ScrnTstWrapped(screen, endSRow)) {
+						endSCol = 0;
+						++endSRow;
+						length = LastTextCol(endSRow);
+						ptr = SCRN_BUF_CHARS(screen, endSRow+screen->topline)
+						 + endSCol;
+					}
 				} while (endSCol <= length
 				 && charClass[*ptr] == class);
 				/* Word select selects if pointing to any char
@@ -1047,12 +1064,31 @@ ComputeSelect(
 					++endSRow;
 				}
 			}
+			saveStartWRow = startSRow;
+			saveStartWCol = startSCol;
 			break;
 		case SELECTLINE :
-			if (term->screen.cutToBeginningOfLine) {
+			while (ScrnTstWrapped(screen, endSRow)) {
+				++endSRow;
+			}
+			if (term->screen.cutToBeginningOfLine
+			    || startSRow < saveStartWRow) {
 			    startSCol = 0;
+			    while (ScrnTstWrapped(screen, startSRow - 1)) {
+				--startSRow;
+			    }
 			} else if (!extend) {
-			    startSCol = osc;
+			    if ((startRow < saveStartWRow)
+				|| (startRow == saveStartWRow
+				    && startCol < saveStartWCol)) {
+				startSCol = 0;
+				while (ScrnTstWrapped(screen, startSRow - 1)) {
+				    --startSRow;
+				}
+			    } else {
+				startSRow = saveStartWRow;
+				startSCol = saveStartWCol;
+			    }
 			}
 			if (term->screen.cutNewline) {
 			    endSCol = 0;

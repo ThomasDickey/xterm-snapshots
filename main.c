@@ -2213,10 +2213,8 @@ spawn (void)
 	screen->uid = getuid();
 	screen->gid = getgid();
 
-#ifdef linux
-	bzero(termcap, sizeof termcap);
-	bzero(newtc, sizeof newtc);
-#endif
+	termcap[0] = '\0';
+	newtc[0] = '\0';
 
 #ifdef SIGTTOU
 	/* so that TIOCSWINSZ || TIOCSIZE doesn't block */
@@ -2630,6 +2628,9 @@ spawn (void)
 			free(ttydev);
 			ttydev = malloc((unsigned)
 			    (strlen(handshake.buffer) + 1));
+			if (ttydev == NULL) {
+			    SysError(ERROR_SPREALLOC);
+			}
 			strcpy(ttydev, handshake.buffer);
 		}
 
@@ -2641,6 +2642,9 @@ spawn (void)
 			/* it may be bigger */
 			ttydev = realloc (ttydev,
 				(unsigned) (strlen(ptr) + 1));
+			if (ttydev == NULL) {
+			    SysError(ERROR_SPREALLOC);
+			}
 			(void) strcpy(ttydev, ptr);
 		}
 #if defined(SYSV) && defined(i386) && !defined(SVR4)

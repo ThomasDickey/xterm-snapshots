@@ -487,7 +487,6 @@ ScrnDeleteChar (
 	register Char *ptr = BUF_CHARS(sb, row);
 	register Char *attrs = BUF_ATTRS(sb, row);
 	register size_t nbytes = (size - n - col);
-	int wrappedbit = ScrnTstWrapped(screen, row);
 
 	memmove (ptr   + col, ptr   + col + n, nbytes);
 	memmove (attrs + col, attrs + col + n, nbytes);
@@ -504,10 +503,7 @@ ScrnDeleteChar (
 	    memmove(csets + col, csets + col + n, nbytes);
 	    memset(csets + size - n, curXtermChrSet(row), n);
 	})
-	if (wrappedbit)
-	    ScrnSetWrapped(screen, row);
-	else
-	    ScrnClrWrapped(screen, row);
+	ScrnClrWrapped(screen, row);
 }
 
 /*
@@ -771,6 +767,7 @@ ClearBufRows (
 
 	TRACE(("ClearBufRows %d..%d\n", first, last))
 	for (row = first; row <= last; row++) {
+	    ScrnClrWrapped(screen, row);
 	    bzero (BUF_CHARS(buf, row), len);
 	    memset(BUF_ATTRS(buf, row), flags, len);
 	    if_OPT_ISO_COLORS(screen,{
