@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.15 1997/09/14 13:15:09 dawes Exp $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.16 1997/09/19 08:30:15 hohndel Exp $
  */
 
 /*

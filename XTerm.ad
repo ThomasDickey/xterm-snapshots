@@ -3,7 +3,7 @@
 !
 !
 !
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.4 1997/08/26 10:01:52 hohndel Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.5 1997/09/19 08:30:11 hohndel Exp $
 
 XTerm.JoinSession:False
 
