@@ -1266,8 +1266,9 @@ ReverseVideo (XtermWidget termw)
 	 * and background because that tends to produce bizarre effects.
 	 */
 	if_OPT_ISO_COLORS(screen,{
-		EXCHANGE( screen->Acolors[0], screen->Acolors[7],  tmp )
-		EXCHANGE( screen->Acolors[8], screen->Acolors[15], tmp )
+		ColorRes tmp2;
+		EXCHANGE( screen->Acolors[0], screen->Acolors[7],  tmp2 )
+		EXCHANGE( screen->Acolors[8], screen->Acolors[15], tmp2 )
 	})
 
 	tmp = termw->core.background_pixel;
@@ -1752,11 +1753,6 @@ extract_fg (
 	fg = (int) ((color >> 4) & 0xf);
 #endif
 
-	/*
-	 * If we allow exactly 256 colors, there is no room in a byte for
-	 * the bold/blink/underline colors.
-	 */
-#if NUM_ANSI_COLORS < 256
 	if (term->screen.colorAttrMode
 	 || (fg == extract_bg(color))) {
 		if (term->screen.colorULMode && (flags & UNDERLINE))
@@ -1766,7 +1762,6 @@ extract_fg (
 		if (term->screen.colorBLMode && (flags & BLINK))
 			fg = COLOR_BL;
 	}
-#endif
 	return fg;
 }
 

@@ -1017,7 +1017,7 @@ static void ReportAnsiColorRequest(XtermWidget pTerm, int colornum, int final)
 	char buffer[80];
 
 	TRACE(("ReportAnsiColorRequest %d\n", colornum));
-	color.pixel = pTerm->screen.Acolors[colornum];
+	color.pixel = GET_COLOR_RES(pTerm->screen.Acolors[colornum]);
 	XQueryColor(term->screen.display, cmap, &color);
 	sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
 		colornum,
@@ -1032,22 +1032,42 @@ static void ReportAnsiColorRequest(XtermWidget pTerm, int colornum, int final)
 static Boolean
 AllocateAnsiColor(
 	XtermWidget	 pTerm,
-	int		 color,
-	char		*name)
+	ColorRes	*res,
+	char		*spec)
 {
 XColor			 def;
 register TScreen	*screen =	&pTerm->screen;
 Colormap		 cmap =		pTerm->core.colormap;
 
-    if (XParseColor(screen->display, cmap, name, &def)
+    if (XParseColor(screen->display, cmap, spec, &def)
      && XAllocColor(screen->display, cmap, &def)) {
-	screen->Acolors[color] = def.pixel;
-	TRACE(("AllocateAnsiColor #%d: %s (pixel %#lx)\n", color, name, def.pixel));
+	SET_COLOR_RES(res, def.pixel);
+	TRACE(("AllocateAnsiColor %s (pixel %#lx)\n", spec, def.pixel));
 	return(TRUE);
     }
-    TRACE(("AllocateAnsiColor #%d: %s (failed)\n", color, name));
+    TRACE(("AllocateAnsiColor %s (failed)\n", spec));
     return(FALSE);
 }
+
+#if OPT_COLOR_RES
+Pixel
+xtermGetColorRes(ColorRes *res)
+{
+	if (!res->mode) {
+		if (AllocateAnsiColor(term, res, res->resource)) {
+			res->mode = True;
+		} else {
+			res->value = term->screen.foreground;
+			res->mode = -True;
+			fprintf(stderr,
+				"%s: Cannot allocate color %s\n",
+				xterm_name,
+				res->resource);
+		}
+	}
+	return res->value;
+}
+#endif
 
 static Boolean
 ChangeAnsiColorRequest(
@@ -1077,7 +1097,7 @@ ChangeAnsiColorRequest(
 	}
 	if (!strcmp(name, "?"))
 	    ReportAnsiColorRequest(pTerm, color, final);
-	else if (!AllocateAnsiColor(pTerm, color, name))
+	else if (!AllocateAnsiColor(pTerm, &(pTerm->screen.Acolors[color]), name))
 	    break;
 	/* FIXME:  free old color somehow?  We aren't for the other color
 	 * change style (dynamic colors).
