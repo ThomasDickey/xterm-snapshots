@@ -98,7 +98,7 @@ xterm$x : $(OBJS1)
 	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize$x : $(OBJS2)
-	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
 256colres.h : $(srcdir)/256colres.pl
 	-rm -f $@

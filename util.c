@@ -1943,8 +1943,8 @@ extract_bg (
 unsigned
 makeColorPair (int fg, int bg)
 {
-	unsigned my_bg = (bg >= 0) && (bg < NUM_ANSI_COLORS) ? bg : 0;
-	unsigned my_fg = (fg >= 0) && (fg < NUM_ANSI_COLORS) ? fg : my_bg;
+	unsigned my_bg = (bg >= 0) && (bg < NUM_ANSI_COLORS) ? (unsigned) bg : 0;
+	unsigned my_fg = (fg >= 0) && (fg < NUM_ANSI_COLORS) ? (unsigned) fg : my_bg;
 #if OPT_EXT_COLORS
 	return (my_fg << 8) | my_bg;
 #else
