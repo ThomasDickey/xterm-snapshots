@@ -1,5 +1,34 @@
 /* $TOG: button.c /main/76 1997/07/30 16:56:19 kaleb $ */
 /*
+ * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
+ *
+ *                         All Rights Reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ *
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -330,24 +359,164 @@ void HandleKeyboardSelectEnd(
 	do_select_end (w, event, params, num_params, True);
 }
 
+#if OPT_WIDE_CHARS
+static Atom XA_UTF_8(Display *dpy)
+{
+    static AtomPtr p = NULL;
 
-
+    if(p == NULL)
+	p = XmuMakeAtom("UTF-8");
+    return XmuInternAtom(dpy, p);
+}
+#endif
 
 struct _SelectionList {
     String *params;
     Cardinal count;
+    Bool utf8_failed;	/* only used for UTF-8, but a nuisance to ifdef */
     Time time;
 };
 
+/* convert a UTF-8 string to Latin-1, replacing non Latin-1 characters
+ * by `#'. */
+
+#if OPT_WIDE_CHARS
+static XtPointer
+UTF8toLatin1(Char *s, int len, unsigned long *result)
+{
+    static Char *buffer;
+    static size_t used;
+
+    Char *p = s;
+    Char *q;
+
+    if (used == 0) {
+	buffer = XtMalloc(used = len);
+    } else if (len > (int) used) {
+	buffer = XtRealloc(buffer, used = len);
+    }
+    q = buffer;
+
+    while (p < s + len) {
+	if ((*p & 0x80) == 0) {
+	    *q++ = *p++;
+	} else if ((*p & 0x3C) == 0 && p < s + len - 1) {
+	    *q++ = (*p & 0x03) << 6 | (p[1] & 0x3F);
+	    p += 2;
+	} else if ((*p & 0x20) == 0) {
+	    *q++ = '#';
+	    p += 2;
+	} else if ((*p & 0x10) == 0) {
+	    *q++ = '#';
+	    p += 3;
+	} else {		/* this cannot currently happen */
+	    *q++ = '#';
+	    p++;
+	}
+    }
+    *result = q - buffer;
+    return (XtPointer)buffer;
+}
+
+/* Convert a Latin-1 string to UTF-8 */
+
+static int
+Latin1toUTF8(Char *t, Char *s, int len)
+{
+    Char *p = s;
+    Char *q = t;
+    while (p < s + len) {
+	if ((*p & 0x80) == 0) {
+	    *q++ = *p++;
+	} else {
+	    *q++ = 0xC0 | ((*p >> 6) & 0x3);
+	    *q++ = 0x80 | (*p & 0x3F);
+	    p++;
+	}
+    }
+    return q - t;
+}
+
+/* Eliminate all control characters from a UTF-8 string, doing
+   something reasonable with PS and LS */
+
+static int
+filterUTF8(Char *t, Char *s, int len)
+{
+    Char *p=s;
+    Char *q=t;
+    unsigned codepoint;
+    int size;
+
+    while (p < (s + len) && q < (t + len)) {
+	if ((*p & 0x80) == 0) {
+	    codepoint = *p & 0x7F;
+	    size = 1;
+	} else if ((*p & 0x20) == 0x20 && p < s + len - 1) {
+	    codepoint = (p[0] & 0x1F) << 6 | (p[1] & 0x3F);
+	    size = 2;
+	} else if ((*p & 0x10) == 0 && p < s + len - 2) {
+	    codepoint = (s[0] & 0x0F) << 12
+	              | (s[1] & 0x3F) << 6
+		      | (s[2] & 0x3F);
+	    size = 3;
+	} else if ((*p & 0x08) == 0 && p < s + len - 3) {
+	    p += 4;                     /* eliminate surrogates */
+	    continue;
+	} else if ((*p & 0x04) == 0 && p < s + len - 3) {
+	    p += 5;
+	    continue;
+	} else if ((*p & 0x02) == 0 && p < s + len - 3) {
+	    p += 6;
+	    continue;
+	} else {                    /* wrong UTF-8? */
+	    p++;
+	    continue;
+	}
+
+	if(codepoint == 0x2028) {
+	    /* line separator -- replace by NL*/
+	    p += size;
+	    *q++ = 0x0A;
+	} else if (codepoint == 0x2029) {
+	    /* paragraph separator -- replace by NL NL */
+	    p += size;
+	    *q++ = 0x0A;
+	    if (q < t + len)
+		*q++ = 0x0A;
+	} else if (codepoint >= 0x202A && codepoint <= 0x202E) {
+	    /* ignore Unicode control characters; surrogates have already
+	    been eliminated */
+	    p += size;
+	} else {
+	    /* just copy the UTF-8 */
+	    if (size--)
+		*q++ = *p++;
+	    if (size--)
+		*q++ = *p++;
+	    if (size--)
+		*q++ = *p++;
+	}
+    }
+    return q - t;
+}
+#endif /* OPT_WIDE_CHARS */
 
 static void _GetSelection(
 	Widget w,
 	Time ev_time,
 	String *params,			/* selections in precedence order */
-	Cardinal num_params)
+	Cardinal num_params,
+	Bool utf8_failed GCC_UNUSED)	/* already tried UTF-8 */
 {
+    TScreen *screen;
     Atom selection;
     int cutbuffer;
+
+    if (!IsXtermWidget(w))
+	return;
+
+    screen = &((XtermWidget)w)->screen;
 
     XmuInternStrings(XtDisplay(w), params, (Cardinal)1, &selection);
     switch (selection) {
@@ -357,10 +526,12 @@ static void _GetSelection(
       case XA_CUT_BUFFER3: cutbuffer = 3; break;
       case XA_CUT_BUFFER4: cutbuffer = 4; break;
       case XA_CUT_BUFFER5: cutbuffer = 5; break;
+
       case XA_CUT_BUFFER6: cutbuffer = 6; break;
       case XA_CUT_BUFFER7: cutbuffer = 7; break;
       default:		   cutbuffer = -1;
     }
+    TRACE(("Cutbuffer: %d, utf8_failed: %d\n", cutbuffer, utf8_failed))
     if (cutbuffer >= 0) {
 	int inbytes;
 	unsigned long nbytes;
@@ -372,19 +543,54 @@ static void _GetSelection(
 	    SelectionReceived(w, NULL, &selection, &type, (XtPointer)line,
 			      &nbytes, &fmt8);
 	else if (num_params > 1)
-	    _GetSelection(w, ev_time, params+1, num_params-1);
+	    _GetSelection(w, ev_time, params+1, num_params-1, False);
     } else {
 	struct _SelectionList* list;
-	if (--num_params) {
+#if OPT_WIDE_CHARS
+        if (!screen->wide_chars || utf8_failed) {
+	    params++;
+	    num_params--;
+	    utf8_failed = False;
+        } else {
+	    utf8_failed = True;
+        }
+#else
+        params++;
+        num_params--;
+#endif
+
+	if (num_params) {
 	    list = XtNew(struct _SelectionList);
-	    list->params = params + 1;
-	    list->count = num_params; /* decremented above */
+	    list->params = params;
+	    list->count = num_params;
+#if OPT_WIDE_CHARS
+	    list->utf8_failed = utf8_failed;
+#endif
 	    list->time = ev_time;
 	} else list = NULL;
-	XtGetSelectionValue(w, selection, XA_STRING, SelectionReceived,
-			    (XtPointer)list, ev_time);
+	    XtGetSelectionValue(w, selection,
+#if OPT_WIDE_CHARS
+				(screen->wide_chars && utf8_failed) ?
+				XA_UTF_8(XtDisplay(w)) :
+#endif
+				XA_STRING,
+				SelectionReceived,
+				(XtPointer)list, ev_time);
     }
 }
+
+#if OPT_TRACE
+static void GettingSelection(char *tag, char *line, int len)
+{
+    char *cp;
+
+    Trace("Getting %s\n", tag);
+    for (cp = line; cp < line + len; cp++)
+	Trace("%c\n", *cp);
+}
+#else
+#define GettingSelection(tag,line,len) /* nothing */
+#endif
 
 /* SelectionReceived: stuff received selection text into pty */
 
@@ -401,28 +607,48 @@ static void SelectionReceived(
     int pty;
     register Char *lag, *cp, *end;
     Char *line = (Char*)value;
+    Char *buf;
+    int len;
+    TScreen *screen;
 
     if (!IsXtermWidget(w))
 	return;
+    screen = &((XtermWidget)w)->screen;
 
     pty = ((XtermWidget)w)->screen.respond;	/* file descriptor of pty */
     if (*type == 0 /*XT_CONVERT_FAIL*/ || *length == 0 || value == NULL) {
 	/* could not get this selection, so see if there are more to try */
 	struct _SelectionList* list = (struct _SelectionList*)client_data;
 	if (list != NULL) {
-	    _GetSelection(w, list->time, list->params, list->count);
+	    _GetSelection(w, list->time,
+			  list->params, list->count, list->utf8_failed);
 	    XtFree((char *)client_data);
 	}
 	return;
     }
 
+    buf = line;
+    len = *length;
+
+    if_OPT_WIDE_CHARS(screen,{
+	if (*type == XA_UTF_8(XtDisplay(w))) {
+	    buf = (Char*)XtMalloc(*length);
+	    GettingSelection("UTF-8", line, *length);
+	    len = filterUTF8(buf, line, *length);
+	} else {
+	    buf = XtMalloc(2* *length);
+	    GettingSelection("Latin-1", line, *length);
+	    len = Latin1toUTF8(buf, line, *length);
+	}
+    })
+
     /* Write data to pty a line at a time. */
     /* Doing this one line at a time may no longer be necessary
        because v_write has been re-written. */
 
-    end = &line[*length];
-    lag = line;
-    for (cp = line; cp != end; cp++)
+    end = &buf[len];
+    lag = buf;
+    for (cp = buf; cp != end; cp++)
     {
 	if (*cp == '\n') {
 	    *cp = '\r';
@@ -433,6 +659,9 @@ static void SelectionReceived(
     if (lag != end)
 	v_write(pty, lag, end - lag);
 
+    if_OPT_WIDE_CHARS(screen,{
+	XtFree(buf);
+    })
     XtFree((char *)client_data);
     XtFree((char *)value);
 }
@@ -446,7 +675,7 @@ HandleInsertSelection(
 	Cardinal *num_params)
 {
     if (SendMousePosition(w, event)) return;
-    _GetSelection(w, event->xbutton.time, params, *num_params);
+    _GetSelection(w, event->xbutton.time, params, *num_params, False);
 }
 
 
@@ -1297,10 +1526,10 @@ ConvertSelection(
 
     screen = &((XtermWidget)w)->screen;
 
-    if (screen->selection_data == NULL) {
+    if (screen->selection_data == NULL)
 	return False; 		/* can this happen? */
 
-    } else if (*target == XA_TARGETS(d)) {
+    if (*target == XA_TARGETS(d)) {
 	Atom* targetP;
 	Atom* std_targets;
 	unsigned long std_length;
@@ -1312,7 +1541,11 @@ ConvertSelection(
 	*value = (XtPointer) targetP;
 	*targetP++ = XA_STRING;
 	*targetP++ = XA_TEXT(d);
-	*targetP++ = XA_COMPOUND_TEXT(d);
+        *targetP = XA_COMPOUND_TEXT(d);
+        if_OPT_WIDE_CHARS(screen, {
+          *targetP = XA_UTF_8(d);
+        })
+        targetP++;
 	*targetP++ = XA_LENGTH(d);
 	*targetP++ = XA_LIST_LENGTH(d);
 	memcpy ( (char*)targetP, (char*)std_targets, sizeof(Atom)*std_length);
@@ -1322,27 +1555,74 @@ ConvertSelection(
 	return True;
     }
 
-    if (*target == XA_STRING ||
-	*target == XA_TEXT(d) ||
-	*target == XA_COMPOUND_TEXT(d)) {
-	if (*target == XA_COMPOUND_TEXT(d)) {
-	    XTextProperty textprop;
-
-	    *value = (XtPointer) screen->selection_data;
-	    if (XmbTextListToTextProperty (d, (char**)value, 1,
-					   XCompoundTextStyle, &textprop)
-			< Success) return False;
-	    *value = (XtPointer) textprop.value;
-	    *length = textprop.nitems;
-	    *type = *target;
-	} else {
+    if_OPT_WIDE_CHARS(screen,{
+	if (*target == XA_STRING) {
+	    *value = UTF8toLatin1(screen->selection_data, screen->selection_length, length);
 	    *type = XA_STRING;
+	    *format = 8;
+	    return True;
+	}
+	if (*target == XA_TEXT(d)) {
+	    char *p;
+	    /* walk the string, searching for non ISO 8859-1 characters */
+	    for (p = screen->selection_data;
+		    p < screen->selection_data+screen->selection_length;
+		    p++) {
+		if ((*p & 0xC0) == 0xC0
+		 && ((*p & 0x20) || (!(*p & 0x20) && (*p & 0x1C))))
+		    break;
+	    }
+	    if (p < screen->selection_data + screen->selection_length) {
+		/* non ISO 8859-1 character found -- return UTF-8 */
+		*type = XA_UTF_8(d);
+		*value = screen->selection_data;
+		*length = screen->selection_length;
+		*format = 8;
+	    } else {
+		/* none found -- return STRING */
+		*value = UTF8toLatin1(screen->selection_data, screen->selection_length, length);
+		*type = XA_STRING;
+		*format = 8;
+	    }
+	    return True;
+	}
+	if (*target == XA_UTF_8(d)) {
+	    *type = XA_UTF_8(d);
 	    *value = screen->selection_data;
 	    *length = screen->selection_length;
+	    *format = 8;
+	    return True;
 	}
+    })
+
+    /* We covered the XA_TEXT and XA_STRING cases for wide_chars above */
+    if ((*target == XA_TEXT(d) || *target == XA_STRING)) {
+	*type = XA_STRING;
+	*value = screen->selection_data;
+	*length = screen->selection_length;
 	*format = 8;
 	return True;
     }
+
+    if (*target == XA_COMPOUND_TEXT(d)
+#if OPT_WIDE_CHARS
+    && !screen->wide_chars
+#endif
+        ) {
+	XTextProperty textprop;
+
+	*value = (XtPointer) screen->selection_data;
+	if (XmbTextListToTextProperty (d, (char**)value, 1,
+				       XCompoundTextStyle,
+				       &textprop) < Success)
+	    return False;
+	*value = (XtPointer) textprop.value;
+	*length = textprop.nitems;
+	*type = XA_COMPOUND_TEXT(d);
+	*format = 8;
+	return True;
+    }
+
     if (*target == XA_LIST_LENGTH(d)) {
 	*value = XtMalloc(4);
 	if (sizeof(long) == 4)
@@ -1356,7 +1636,9 @@ ConvertSelection(
 	*format = 32;
 	return True;
     }
+
     if (*target == XA_LENGTH(d)) {
+        /* This value is wrong if we have UTF-8 text */
 	*value = XtMalloc(4);
 	if (sizeof(long) == 4)
 	    *(long*)*value = screen->selection_length;
@@ -1369,6 +1651,7 @@ ConvertSelection(
 	*format = 32;
 	return True;
     }
+
     if (XmuConvertStandardSelection(w, screen->selection_time, selection,
 				    target, type, (XPointer *)value,
 				    length, format))
@@ -1376,7 +1659,6 @@ ConvertSelection(
 
     /* else */
     return False;
-
 }
 
 

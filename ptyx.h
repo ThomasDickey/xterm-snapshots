@@ -5,9 +5,9 @@
 
 /*
  * Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
- * 
+ *
  *                         All Rights Reserved
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -15,10 +15,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -26,13 +26,13 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  * Except as contained in this notice, the name(s) of the above copyright
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- * 
- * 
+ *
+ *
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
  *
  *                         All Rights Reserved
@@ -339,7 +339,9 @@ typedef struct {
 #define OPT_AIX_COLORS  1 /* true if xterm is configured with AIX (16) colors */
 #endif
 
-#define OPT_BLINK_CURS  0 /* FIXME: do this later (96/7/31) */
+#ifndef OPT_BLINK_CURS
+#define OPT_BLINK_CURS  1 /* true if xterm has blinking cursor capability */
+#endif
 
 #ifndef OPT_BOX_CHARS
 #define OPT_BOX_CHARS	1 /* true if xterm can simulate box-characters */
@@ -794,7 +796,9 @@ typedef struct {
 
 	int		cursor_state;	/* ON, OFF, or BLINKED_OFF	*/
 #if OPT_BLINK_CURS
-	int		cursor_blink;	/* blink-rate (0=off) msecs	*/
+	Boolean		cursor_blink;	/* cursor blink enable		*/
+	int		cursor_on;	/* cursor on time (msecs)	*/
+	int		cursor_off;	/* cursor off time (msecs)	*/
 	XtIntervalId	cursor_timer;	/* timer-id for cursor-proc	*/
 #endif
 	int		cursor_set;	/* requested state		*/

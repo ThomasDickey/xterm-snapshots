@@ -196,7 +196,9 @@ static void StopBlinking (TScreen *screen);
 #define XtNcolorUL		"colorUL"
 #define XtNcolorULMode		"colorULMode"
 #define XtNcurses		"curses"
-#define XtNcursorBlinkTime	"cursorBlinkTime"
+#define XtNcursorBlink		"cursorBlink"
+#define XtNcursorOnTime		"cursorOnTime"
+#define XtNcursorOffTime	"cursorOffTime"
 #define XtNcursorColor		"cursorColor"
 #define XtNcutNewline		"cutNewline"
 #define XtNcutToBeginningOfLine	"cutToBeginningOfLine"
@@ -272,7 +274,9 @@ static void StopBlinking (TScreen *screen);
 #define XtCColorMode		"ColorMode"
 #define XtCColumn		"Column"
 #define XtCCurses		"Curses"
-#define XtCCursorBlinkTime	"CursorBlinkTime"
+#define XtCCursorBlink		"CursorBlink"
+#define XtCCursorOnTime		"CursorOnTime"
+#define XtCCursorOffTime	"CursorOffTime"
 #define XtCCutNewline		"CutNewline"
 #define XtCCutToBeginningOfLine	"CutToBeginningOfLine"
 #define XtCDecTerminalID	"DecTerminalID"
@@ -373,7 +377,8 @@ static  int	defaultBellSuppressTime = BELLSUPPRESSMSEC;
 static	char *	_Font_Selected_ = "yes";  /* string is arbitrary */
 
 #if OPT_BLINK_CURS
-static  int	defaultBlinkTime = 0;
+static  int	defaultBlinkOnTime = 600;
+static  int	defaultBlinkOffTime = 300;
 #endif
 
 #if OPT_PRINT_COLORS
@@ -475,6 +480,9 @@ static XtActionsRec actionsList[] = {
 #ifdef ALLOWLOGGING
     { "set-logging",		HandleLogging },
 #endif
+#if OPT_BLINK_CURS
+    { "set-cursorblink",	HandleCursorBlink },
+#endif
 #if OPT_DEC_CHRSET
     { "set-font-doublesize",	HandleFontDoublesize },
 #endif
@@ -562,9 +570,15 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, screen.cursorcolor),
 	XtRString, "XtDefaultForeground"},
 #if OPT_BLINK_CURS
-{XtNcursorBlinkTime, XtCCursorBlinkTime, XtRInt, sizeof(int),
+{XtNcursorBlink, XtCCursorBlink, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.cursor_blink),
-        XtRInt, (XtPointer) &defaultBlinkTime},
+	XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNcursorOnTime, XtCCursorOnTime, XtRInt, sizeof(int),
+	XtOffsetOf(XtermWidgetRec, screen.cursor_on),
+	XtRInt, (XtPointer) &defaultBlinkOnTime},
+{XtNcursorOffTime, XtCCursorOffTime, XtRInt, sizeof(int),
+	XtOffsetOf(XtermWidgetRec, screen.cursor_off),
+	XtRInt, (XtPointer) &defaultBlinkOffTime},
 #endif
 {XtNkeyboardDialect, XtCKeyboardDialect, XtRString, sizeof(String),
 	XtOffsetOf(XtermWidgetRec, screen.keyboard_dialect),
@@ -1153,7 +1167,7 @@ static void VTparse(void)
 #endif
 	      nextstate = parsestate[c];
 
-	    /* 
+	    /*
 	     * Accumulate string for printable text.  This may be 8/16-bit
 	     * characters.
 	     */
@@ -2458,8 +2472,14 @@ static int
 in_put(void)
 {
     register TScreen *screen = &term->screen;
-    register int i;
+    register int i, time_select;
     static struct timeval select_timeout;
+#if OPT_BLINK_CURS
+#define	TICK	(1000/8)
+#define	MIN(a,b)	(((a)<(b))?(a):(b))
+#define	MAX(a,b)	(((a)>(b))?(a):(b))
+    int tick = MAX( 1, MIN( screen->cursor_on, screen->cursor_off) ) * TICK;
+#endif
 
     for( ; ; ) {
 	if (eventMode == NORMAL
@@ -2502,6 +2522,8 @@ in_put(void)
 	} else
 	    FD_ZERO (&write_mask);
 	select_timeout.tv_sec = 0;
+	time_select = 0;
+
 	/*
 	 * if there's either an XEvent or an XtTimeout pending, just take
 	 * a quick peek, i.e. timeout from the select() immediately.  If
@@ -2510,20 +2532,26 @@ in_put(void)
 	 * The blocking is optional, because it tends to increase the load
 	 * on the host.
 	 */
-	if (XtAppPending(app_con)
-#if OPT_BLINK_CURS
-	 || (screen->cursor_blink > 0
-	  && (screen->select || screen->always_highlight))
-	 || screen->cursor_state == BLINKED_OFF
-#endif
-	 )
+	if (XtAppPending(app_con)) {
 		select_timeout.tv_usec = 0;
-	else
+		time_select = 1;
+	} else if (screen->awaitInput) {
 		select_timeout.tv_usec = 50000;
+		time_select = 1;
+#if OPT_BLINK_CURS
+	} else if ((screen->cursor_blink &&
+		    ((screen->select&FOCUS) || screen->always_highlight)) ||
+		   (screen->cursor_state == BLINKED_OFF)) {
+		select_timeout.tv_usec = tick;
+		while( select_timeout.tv_usec > 1000000 ) {
+		    select_timeout.tv_usec -= 1000000;
+		    select_timeout.tv_sec++;
+		}
+		time_select = 1;
+#endif
+	}
 	i = select(max_plus1, &select_mask, &write_mask, 0,
-			(select_timeout.tv_usec == 0) || screen->awaitInput
-			? &select_timeout
-			: 0);
+			time_select ? &select_timeout : 0);
 	if (i < 0) {
 	    if (errno != EINTR)
 		SysError(ERROR_SELECT);
@@ -3571,6 +3599,22 @@ unparseputs(char *s, int fd)
 		unparseputc(*s++, fd);
 }
 
+#if OPT_BLINK_CURS
+void
+ToggleCursorBlink(register TScreen *screen)
+{
+	ShowCursor();
+	if (screen->cursor_blink) {
+		screen->cursor_blink = FALSE;
+		StopBlinking(screen);
+	} else {
+		screen->cursor_blink = TRUE;
+		StartBlinking(screen);
+	}
+	update_cursorblink();
+}
+#endif
+
 void
 ToggleAlternate(register TScreen *screen)
 {
@@ -3926,6 +3970,8 @@ static void VTInitialize (
    wnew->screen.cursorcolor = request->screen.cursorcolor;
 #if OPT_BLINK_CURS
    wnew->screen.cursor_blink = request->screen.cursor_blink;
+   wnew->screen.cursor_on = request->screen.cursor_on;
+   wnew->screen.cursor_off = request->screen.cursor_off;
 #endif
    wnew->screen.border = request->screen.border;
    wnew->screen.jumpscroll = request->screen.jumpscroll;
@@ -4779,14 +4825,15 @@ HideCursor(void)
 static void
 StartBlinking(TScreen *screen)
 {
-	if (screen->cursor_blink > 0
+	if (screen->cursor_blink
 	 && screen->cursor_timer == 0) {
-		unsigned long half = screen->cursor_blink / 2;
-		if (half == 0)		/* wow! */
-			half = 1;	/* let's humor him anyway */
+		unsigned long interval = (screen->cursor_state == ON ?
+				screen->cursor_on : screen->cursor_off);
+		if (interval == 0)		/* wow! */
+			interval = 1;	/* let's humor him anyway */
 		screen->cursor_timer = XtAppAddTimeOut(
 			app_con,
-			half,
+			interval,
 			BlinkCursor,
 			screen);
 	}
@@ -4795,7 +4842,7 @@ StartBlinking(TScreen *screen)
 static void
 StopBlinking(TScreen *screen)
 {
-	if (screen->cursor_blink > 0)
+	if (screen->cursor_timer)
 		XtRemoveTimeOut(screen->cursor_timer);
 	screen->cursor_timer = 0;
 }
@@ -4806,7 +4853,7 @@ StopBlinking(TScreen *screen)
  * logic simple.
  */
 static void
-BlinkCursor(XtPointer closure, XtIntervalId* id)
+BlinkCursor(XtPointer closure, XtIntervalId* id GCC_UNUSED)
 {
 	TScreen *screen = (TScreen *)closure;
 

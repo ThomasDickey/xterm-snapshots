@@ -241,6 +241,20 @@ This option specifies the size of the inner border (the distance between
 the outer edge of the characters and the window border) in pixels.  The
 default is 2.
 .TP 8
+.B +bc
+turn off text cursor blinking.
+This overrides the \fBcursorBlink\fR resource.
+.TP 8
+.B \-bc
+turn on text cursor blinking.
+This overrides the \fBcursorBlink\fR resource.
+.TP 8
+.BI \-bcf " milliseconds"
+time text cursor is off when blinking
+.TP 8
+.BI \-bcn " milliseconds"
+time text cursor is on when blinking
+.TP 8
 .B "\-bdc"
 This option disables the display of characters with bold attribute as color
 rather than bold.
@@ -339,7 +353,7 @@ for function keys.
 Turn on the \fBptyInitialErase\fP resource, i.e.,
 use the pseudo-terminal's sense of the stty erase value.
 .TP 8
-.B +ie
+.B \+ie
 Turn off the \fBptyInitialErase\fP resource, i.e.,
 set the stty erase value using the \fBkD\fP string from the termcap entry as
 a reference, if available.
@@ -347,7 +361,7 @@ a reference, if available.
 .B \-im
 Turn on the \fBuseInsertMode\fP resource.
 .TP 8
-.B +im
+.B \+im
 Turn off the \fBuseInsertMode\fP resource.
 .TP 8
 .B \-j
@@ -438,7 +452,7 @@ of preventing flicker and the disadvantage of requiring an extra
 round trip to the server to find out the previous value.  In practice
 this should never be a problem.
 .TP 8
-.B +samename
+.B \+samename
 Always send title and icon name change requests.
 .TP 8
 .B \-sb
@@ -971,14 +985,23 @@ the ``colorBLMode'' resource is enabled.
 .B "colorUL (\fPclass\fB Foreground)"
 This specifies the color to use to display underlined characters if
 the ``colorULMode'' resource is enabled.
-.\" .TP 8
-.\" .B "cursorBlinkTime (\fPclass\fB CursorBlinkTime)"
-.\" Specifies the cursor blink cycle-time
-.\" (i.e., the time to turn the cursor on and off).
-.\" The default is 0, which disables blinking.
+.TP 8
+.B "cursorBlink (\fPclass\fB CursorBlink)"
+Specifies whether to make the cursor blink.
+The default is ``false.''
 .TP 8
 .B "cursorColor (\fPclass\fB Foreground)"
 Specifies the color to use for the text cursor.  The default is ``black.''
+.TP 8
+.B "cursorOffTime (\fPclass\fB CursorOffTime)"
+Specifies the duration of the "off" part of the cursor blink cycle-time
+in milliseconds.
+The default is 300.
+.TP 8
+.B "cursorOnTime (\fPclass\fB CursorOnTime)"
+Specifies the duration of the "on" part of the cursor blink cycle-time,
+in milliseconds.
+The default is 600.
 .TP 8
 .B "highlightColor (\fPclass\fB Foreground)"
 Specifies the color to use for the background of selected or otherwise
@@ -1007,7 +1030,8 @@ The default is ``true.''
 .TP 8
 .B "eightBitOutput (\fPclass\fB EightBitOutput\fP)"
 Specifies whether or not eight-bit characters sent from the host should be
-accepted as is or stripped when printed.  The default is ``true.''
+accepted as is or stripped when printed.  The default is ``true,''
+which means that they are accepted as is.
 .TP 8
 .B "font (\fPclass\fB Font)"
 Specifies the name of the normal font.  The default is ``fixed.''
@@ -1297,7 +1321,6 @@ process 16-bit characters.
 .PP
 The following resources are specified as part of the \fItek4014\fP widget
 (class \fITek4014\fP):
-.\".in +1in
 .TP 8
 .B "font2 (\fPclass\fB Font)"
 Specifies font number 2 to use in the Tektronix window.
@@ -1327,7 +1350,6 @@ The default is ``large.''
 .TP 8
 .B "width (\fPclass\fB Width)"
 Specifies the width of the Tektronix window in pixels.
-.\".in -1in
 .sp
 .PP
 The resources that may be specified for the various menus are described in
@@ -1335,7 +1357,6 @@ the documentation for the Athena \fBSimpleMenu\fP widget.  The name and classes
 of the entries in each of the menus are listed below.
 .PP
 The \fImainMenu\fP has the following entries:
-.\".in +1in
 .TP 8
 .B "securekbd (\fPclass\fB SmeBSB)"
 This entry invokes the \fBsecure()\fP action.
@@ -1398,11 +1419,9 @@ This is a separator.
 .TP 8
 .B "quit (\fPclass\fB SmeBSB)"
 This entry invokes the \fBquit()\fP action.
-.\".in -1in
 .sp
 .PP
 The \fIvtMenu\fP has the following entries:
-.\".in +1in
 .TP 8
 .B "scrollbar (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-scrollbar(toggle)\fP action.
@@ -1446,6 +1465,9 @@ This entry invokes the \fBset-visualbell(toggle)\fP action.
 .B "marginbell (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-marginbell(toggle)\fP action.
 .TP 8
+.B "cursorblink (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-cursorblink(toggle)\fP action.
+.TP 8
 .B "titeInhibit (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-titeInhibit(toggle)\fP action.
 .TP 8
@@ -1453,7 +1475,7 @@ This entry invokes the \fBset-titeInhibit(toggle)\fP action.
 This entry toggles active icons on and off if this feature was
 compiled into \fIxterm\fP.  It is enabled only if \fIxterm\fP
 was started with the command line option +ai or the \fBactiveIcon\fP
-resource set to ``True.''
+resource is set to ``True.''
 .TP 8
 .B "line1 (\fPclass\fB SmeLine)"
 This is a separator.
@@ -1481,11 +1503,9 @@ This entry invokes the \fBset-visibility(vt,off)\fP action.
 .TP 8
 .B "altscreen (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-altscreen(toggle)\fP action.
-.\".in -1in
 .sp
 .PP
 The \fIfontMenu\fP has the following entries:
-.\".in +1in
 .TP 8
 .B "fontdefault (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-vt-font(d)\fP action.
@@ -1513,11 +1533,15 @@ This entry invokes the \fBset-vt-font(e)\fP action.
 .TP 8
 .B "fontsel (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-vt-font(s)\fP action.
-.\".in -1in
+.TP 8
+.B "line1 (\fPclass\fB SmeLine)"
+This is a separator.
+.TP 8
+.B "font-doublesize (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-font-doublesize(s)\fP action.
 .sp
 .PP
 The \fItekMenu\fP has the following entries:
-.\".in +1in
 .TP 8
 .B "tektextlarge (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-tek-text(l)\fP action.
@@ -1554,12 +1578,10 @@ This entry invokes the \fBset-terminal-type(vt)\fP action.
 .TP 8
 .B "tekhide (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-visibility(tek,toggle)\fP action.
-.\".in -1in
 .sp
 .PP
 The following resources are useful when specified for the Athena Scrollbar
 widget:
-.\".in +1in
 .TP 8
 .B "thickness (\fPclass\fB Thickness)"
 Specifies the width in pixels of the scrollbar.
@@ -1571,7 +1593,6 @@ Specifies the color to use for the background of the scrollbar.
 Specifies the color to use for the foreground of the scrollbar.  The ``thumb''
 of the scrollbar is a simple checkerboard pattern alternating pixels for
 foreground and background color.
-.\".in -1in
 .SH "POINTER USAGE"
 .PP
 Once the VT102 window is created,
@@ -2053,6 +2074,14 @@ the \fBautolinefeed\fP entry in \fIvtMenu\fP.
 .B "set-autowrap(\fIon/off/toggle\fP)"
 This action toggles automatic wrapping of long lines and is also invoked by
 the \fBautowrap\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-backarrow(\fIon/off/toggle\fP)"
+This action toggles the \fBbackarrowKey\fP resource and is also invoked from the
+\fBbackarrow key\fP entry in \fIvtMenu\fP.
+.TP 8
+.B "set-cursorblink(\fIon/off/toggle\fP)"
+This action toggles the \fBcursorBlink\fP resource and is also invoked from the
+\fBcursorblink\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-cursesemul(\fIon/off/toggle\fP)"
 This action toggles the \fBcurses\fP resource and is also invoked from the
