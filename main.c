@@ -985,11 +985,11 @@ static void Help ()
 /* ARGSUSED */
 static Boolean
 ConvertConsoleSelection(w, selection, target, type, value, length, format)
-    Widget w;
-    Atom *selection, *target, *type;
-    XtPointer *value;
-    unsigned long *length;
-    int *format;
+    Widget w GCC_UNUSED;
+    Atom *selection GCC_UNUSED, *target GCC_UNUSED, *type GCC_UNUSED;
+    XtPointer *value GCC_UNUSED;
+    unsigned long *length GCC_UNUSED;
+    int *format GCC_UNUSED;
 {
     /* we don't save console output, so can't offer it */
     return False;
@@ -1015,9 +1015,9 @@ Bool waiting_for_initial_map;
 static void
 DeleteWindow(w, event, params, num_params)
     Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+    XEvent *event GCC_UNUSED;
+    String *params GCC_UNUSED;
+    Cardinal *num_params GCC_UNUSED;
 {
   if (w == toplevel)
     if (term->screen.Tshow)
@@ -1034,10 +1034,10 @@ DeleteWindow(w, event, params, num_params)
 /* ARGSUSED */
 static void
 KeyboardMapping(w, event, params, num_params)
-    Widget w;
+    Widget w GCC_UNUSED;
     XEvent *event;
-    String *params;
-    Cardinal *num_params;
+    String *params GCC_UNUSED;
+    Cardinal *num_params GCC_UNUSED;
 {
     switch (event->type) {
        case MappingNotify:
@@ -1064,7 +1064,10 @@ char **argv;
 	register TScreen *screen;
 	int mode;
 
+	/* This dumps core on HP-UX 9.05 with X11R5 */
+#if OPT_I18N_SUPPORT
 	XtSetLanguageProc (NULL, NULL, NULL);
+#endif
 
 	ProgramName = argv[0];
 
@@ -1662,6 +1665,8 @@ char **argv;
 #endif	/* DEBUG */
 	XSetErrorHandler(xerror);
 	XSetIOErrorHandler(xioerror);
+
+	(void) setuid (screen->uid); /* we're done with privileges... */
 	for( ; ; ) {
 		if(screen->TekEmu) {
 			TekRun();
@@ -1916,7 +1921,7 @@ static char *vtterm[] = {
 
 /* ARGSUSED */
 static SIGNAL_T hungtty(i)
-	int i;
+	int i GCC_UNUSED;
 {
 	longjmp(env, 1);
 	SIGNAL_RETURN;
@@ -3917,7 +3922,7 @@ nonblocking_wait()
 
 /* ARGSUSED */
 static SIGNAL_T reapchild (n)
-    int n;
+    int n GCC_UNUSED;
 {
     int pid;
 

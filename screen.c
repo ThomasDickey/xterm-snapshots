@@ -53,6 +53,10 @@ extern void free();
 #include <sys/ioctl.h>
 #endif
 
+#ifdef __hpux
+#include <sys/termio.h>
+#endif
+
 #ifdef att
 #include <sys/termio.h>
 #include <sys/stream.h>			/* get typedef used in ptem.h */

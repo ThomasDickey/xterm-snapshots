@@ -14,11 +14,15 @@ XTerm.JoinSession:False
 *SimpleMenu*Sme.height:	16
 
 *SimpleMenu*Cursor: left_ptr
+
 *mainMenu.Label:  Main Options
 *mainMenu*securekbd*Label:  Secure Keyboard
 *mainMenu*allowsends*Label:  Allow SendEvents
 *mainMenu*logging*Label:  Log to File
 *mainMenu*redraw*Label:  Redraw Window
+*mainMenu*8-bit control*Label: 8-Bit Controls
+*mainMenu*backarrow key*Label: Backarrow Key
+*mainMenu*sun function keys*Label: Sun Function-Keys
 *mainMenu*suspend*Label:  Send STOP Signal
 *mainMenu*continue*Label:  Send CONT Signal
 *mainMenu*interrupt*Label:  Send INT Signal
@@ -26,7 +30,6 @@ XTerm.JoinSession:False
 *mainMenu*terminate*Label:  Send TERM Signal
 *mainMenu*kill*Label:  Send KILL Signal
 *mainMenu*quit*Label:  Quit
-*mainMenu*eightBit*Label: 8-Bit Controls
 
 *vtMenu.Label:  VT Options
 *vtMenu*scrollbar*Label:  Enable Scrollbar

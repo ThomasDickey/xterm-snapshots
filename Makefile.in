@@ -4,6 +4,7 @@ srcdir		= @srcdir@
 VPATH  		= @srcdir@
 
 CC		= @CC@
+CPP		= @CPP@
 LINK		= $(CC) $(CFLAGS)
 INSTALL		= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
@@ -54,6 +55,16 @@ EXTRAOBJ	= @EXTRAOBJS@
 
 all:	$(PROGRAMS)
 
+.SUFFIXES : .i
+
+.c.o:
+@SHOW_CC@
+	@ECHO_CC@$(CC) $(CPPFLAGS) $(CFLAGS) -c $(srcdir)/$*.c
+
+.c.i:
+@SHOW_CC@
+	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
+
 xterm : $(OBJS1)
 	$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(LIBS)
 
@@ -76,7 +87,7 @@ uninstall:
 		$(mandir)/resize.$(manext)
 
 mostlyclean:
-	-$(RM) *.o core *~ *.BAK
+	-$(RM) *.[oi] core *~ *.BAK
 
 clean: mostlyclean
 	-$(RM) $(PROGRAMS)

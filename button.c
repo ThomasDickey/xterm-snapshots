@@ -193,10 +193,10 @@ XEvent* event;
 
 void
 DiredButton(w, event, params, num_params)
-Widget w;
+Widget w GCC_UNUSED;
 XEvent *event;			/* must be XButtonEvent */
-String *params;			/* selections */
-Cardinal *num_params;
+String *params GCC_UNUSED;	/* selections */
+Cardinal *num_params GCC_UNUSED;
 {	/* ^XM-G<line+' '><col+' '> */
 	register TScreen *screen = &term->screen;
 	int pty = screen->respond;
@@ -217,10 +217,10 @@ Cardinal *num_params;
 
 void
 ViButton(w, event, params, num_params)
-Widget w;
+Widget w GCC_UNUSED;
 XEvent *event;			/* must be XButtonEvent */
-String *params;			/* selections */
-Cardinal *num_params;
+String *params GCC_UNUSED;	/* selections */
+Cardinal *num_params GCC_UNUSED;
 {	/* ^XM-G<line+' '><col+' '> */
 	register TScreen *screen = &term->screen;
 	int pty = screen->respond;
@@ -252,8 +252,8 @@ Cardinal *num_params;
 void HandleSelectExtend(w, event, params, num_params)
 Widget w;
 XEvent *event;			/* must be XMotionEvent */
-String *params;			/* unused */
-Cardinal *num_params;		/* unused */
+String *params GCC_UNUSED;
+Cardinal *num_params GCC_UNUSED;
 {
 	register TScreen *screen = &((XtermWidget)w)->screen;
 	int row, col;
@@ -375,10 +375,10 @@ static void SelectionReceived(w, client_data, selection, type,
 			      value, length, format)
 Widget w;
 XtPointer client_data;
-Atom *selection, *type;
+Atom *selection GCC_UNUSED, *type;
 XtPointer value;
 unsigned long *length;
-int *format;
+int *format GCC_UNUSED;
 {
     int pty = ((XtermWidget)w)->screen.respond;	/* file descriptor of pty */
     register char *lag, *cp, *end;
@@ -466,8 +466,8 @@ void
 HandleSelectStart(w, event, params, num_params)
 Widget w;
 XEvent *event;			/* must be XButtonEvent* */
-String *params;			/* unused */
-Cardinal *num_params;		/* unused */
+String *params GCC_UNUSED;
+Cardinal *num_params GCC_UNUSED;
 {
 	register TScreen *screen = &((XtermWidget)w)->screen;
 	int startrow, startcol;
@@ -484,8 +484,8 @@ void
 HandleKeyboardSelectStart(w, event, params, num_params)
 Widget w;
 XEvent *event;			/* must be XButtonEvent* */
-String *params;			/* unused */
-Cardinal *num_params;		/* unused */
+String *params GCC_UNUSED;
+Cardinal *num_params GCC_UNUSED;
 {
 	register TScreen *screen = &((XtermWidget)w)->screen;
 
@@ -635,8 +635,8 @@ HandleSelectSet(w, event, params, num_params)
 /* ARGSUSED */
 static void
 SelectSet (w, event, params, num_params)
-    Widget	w;
-    XEvent	*event;
+    Widget	w GCC_UNUSED;
+    XEvent	*event GCC_UNUSED;
     String	*params;
     Cardinal    num_params;
 {
@@ -654,8 +654,8 @@ SelectSet (w, event, params, num_params)
 static void do_start_extend (w, event, params, num_params, use_cursor_loc)
 Widget w;
 XEvent *event;			/* must be XButtonEvent* */
-String *params;			/* unused */
-Cardinal *num_params;		/* unused */
+String *params GCC_UNUSED;
+Cardinal *num_params GCC_UNUSED;
 Bool use_cursor_loc;
 {
 	TScreen *screen = &((XtermWidget)w)->screen;
@@ -793,7 +793,7 @@ register int amount;
 /*ARGSUSED*/
 void
 ResizeSelection (screen, rows, cols)
-    TScreen *screen;
+    TScreen *screen GCC_UNUSED;
     int rows, cols;
 {
     rows--;				/* decr to get 0-max */
@@ -1322,8 +1322,8 @@ static void LoseSelection(w, selection)
 
 /* ARGSUSED */
 static void SelectionDone(w, selection, target)
-Widget w;
-Atom *selection, *target;
+Widget w GCC_UNUSED;
+Atom *selection GCC_UNUSED, *target GCC_UNUSED;
 {
     /* empty proc so Intrinsics know we want to keep storage */
 }
@@ -1418,7 +1418,7 @@ DisownSelection(termw)
 static int
 Length(screen, row, scol, ecol)
     register int row, scol, ecol;
-    register TScreen *screen;
+    register TScreen *screen GCC_UNUSED;
 {
         register int lastcol = LastTextCol(row);
 
@@ -1514,8 +1514,8 @@ EditorButton(event)
 
 /*ARGSUSED*/
 void HandleGINInput (w, event, param_list, nparamsp)
-    Widget w;
-    XEvent *event;
+    Widget w GCC_UNUSED;
+    XEvent *event GCC_UNUSED;
     String *param_list;
     Cardinal *nparamsp;
 {
@@ -1539,10 +1539,10 @@ void HandleGINInput (w, event, param_list, nparamsp)
 
 /* ARGSUSED */
 void HandleSecure(w, event, params, param_count)
-    Widget w;
+    Widget w GCC_UNUSED;
     XEvent *event;		/* unused */
-    String *params;		/* [0] = volume */
-    Cardinal *param_count;	/* 0 or 1 */
+    String *params GCC_UNUSED;		/* [0] = volume */
+    Cardinal *param_count GCC_UNUSED;	/* 0 or 1 */
 {
     Time ev_time = CurrentTime;
 

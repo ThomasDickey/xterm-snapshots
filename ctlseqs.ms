@@ -597,7 +597,9 @@ Tab Clear (TBC)
 .
 .IP \\*(Cs\\*(Pm\\*s\\*h
 Set Mode (SM)
+  \*(Ps = \*2 \(-> Keyboard Action Mode (AM)
   \*(Ps = \*4 \(-> Insert Mode (IRM)
+  \*(Ps = \*1\*2 \(-> Send/receive (SRM)
   \*(Ps = \*2\*0 \(-> Automatic Newline (LNM)
 .
 .IP \\*(Cs\\*(Pm\\*s\\*i
@@ -614,7 +616,9 @@ Media Copy (MC, DEC-specific)
 .
 .IP \\*(Cs\\*(Pm\\*s\\*l
 Reset Mode (RM)
+  \*(Ps = \*2 \(-> Keyboard Action Mode (AM)
   \*(Ps = \*4 \(-> Replace Mode (IRM)
+  \*(Ps = \*1\*2 \(-> Send/receive (SRM)
   \*(Ps = \*2\*0 \(-> Normal Linefeed (LNM)
 .
 .IP \\*(Cs\\*(Pm\\*s\\*m
@@ -773,6 +777,7 @@ See the section \fBMouse Tracking\fP.
 (normally disabled by a compile-time option)
   \*(Ps = \*4\*7 \(-> Use Alternate Screen Buffer (unless
 disabled by the \fBtiteInhibit\fP resource)
+  \*(Ps = \*6\*7 \(-> Backarrow key (DECBKM)
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
@@ -799,6 +804,7 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*4\*6 \(-> Stop Logging
 (normally disabled by a compile-time option)
   \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer
+  \*(Ps = \*6\*7 \(-> Backarrow key (DECBKM)
   \*(Ps = \*1\*0\*0\*0 \(-> Don't Send Mouse X & Y on button press and
 release
   \*(Ps = \*1\*0\*0\*1 \(-> Don't Use Hilite Mouse Tracking

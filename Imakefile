@@ -24,6 +24,15 @@ XCOMM
 #define XkbClientLibs /**/
 #endif
 
+#ifndef SpecialCObjectRule
+#define SpecialCObjectRule(module,ignore,defines) \
+module.o: ; $(CC) -c defines $(CFLAGS) module.c
+#endif
+
+#ifndef ProgramTargetName
+#define ProgramTargetName(program) program
+#endif
+
 /*
  * add -DWTMP and -DLASTLOG if you want them; make sure that bcopy can
  * handle overlapping copies before using it.

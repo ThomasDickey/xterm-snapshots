@@ -224,7 +224,7 @@ static Widget CreateScrollBar(xw, x, y, height)
 
 static void RealizeScrollBar (sbw, screen)
     Widget sbw;
-    TScreen *screen;
+    TScreen *screen GCC_UNUSED;
 {
     XtRealizeWidget (sbw);
 }
@@ -415,8 +415,8 @@ ScrollBarOff(screen)
 
 /*ARGSUSED*/
 static void ScrollTextTo(scrollbarWidget, client_data, call_data)
-	Widget scrollbarWidget;
-	XtPointer client_data;
+	Widget scrollbarWidget GCC_UNUSED;
+	XtPointer client_data GCC_UNUSED;
 	XtPointer call_data;
 {
 	float *topPercent = (float *) call_data;
@@ -437,8 +437,8 @@ static void ScrollTextTo(scrollbarWidget, client_data, call_data)
 
 /*ARGSUSED*/
 static void ScrollTextUpDownBy(scrollbarWidget, client_data, call_data)
-	Widget scrollbarWidget;
-	XtPointer client_data;
+	Widget scrollbarWidget GCC_UNUSED;
+	XtPointer client_data GCC_UNUSED;
 	XtPointer call_data;
 {
 	int pixels = (int) call_data;
@@ -524,7 +524,7 @@ static int params_to_pixels (screen, params, n)
 /*ARGSUSED*/
 void HandleScrollForward (gw, event, params, nparams)
     Widget gw;
-    XEvent *event;
+    XEvent *event GCC_UNUSED;
     String *params;
     Cardinal *nparams;
 {
@@ -540,7 +540,7 @@ void HandleScrollForward (gw, event, params, nparams)
 /*ARGSUSED*/
 void HandleScrollBack (gw, event, params, nparams)
     Widget gw;
-    XEvent *event;
+    XEvent *event GCC_UNUSED;
     String *params;
     Cardinal *nparams;
 {

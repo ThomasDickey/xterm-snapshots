@@ -27,7 +27,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Revision: 1.7 $)
+AC_REVISION($Revision: 1.8 $)
 AC_PREREQ(2.12)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
@@ -73,6 +73,7 @@ LDFLAGS="$LDFLAGS $X_LIBS"
 CFLAGS="$CFLAGS $X_CFLAGS"
 
 AC_CHECK_HEADERS( \
+	unistd.h \
 	X11/Xpoll.h \
 	)
 
@@ -93,7 +94,7 @@ AC_SUBST(IMAKE_CFLAGS)
 
 AC_MSG_CHECKING(for default terminal-id)
 AC_ARG_WITH(terminal-id,
-	[  --with-terminal-id[=V]  set default decTerminalId (default: vt100)],
+	[  --with-terminal-id[=V]  set default decTerminalID (default: vt100)],
 	[default_termid=$withval],
 	[default_termid=vt100])
 AC_MSG_RESULT($default_termid)
@@ -104,6 +105,16 @@ esac
 AC_DEFINE_UNQUOTED(DFT_DECID,$default_termid)
 
 ###	checks for optional features
+AC_MSG_CHECKING(if you want active-icons)
+CF_ARG_DISABLE(active-icon,
+	[  --disable-active-icon   disable X11R6.3 active-icon feature],
+	[enable_active_icon=no],
+	[enable_active_icon=yes])
+AC_MSG_RESULT($enable_active_icon)
+if test $enable_active_icon = no ; then
+	AC_DEFINE(NO_ACTIVE_ICON)
+fi
+
 AC_MSG_CHECKING(if you want ANSI color)
 CF_ARG_DISABLE(ansi-color,
 	[  --disable-ansi-color    disable ANSI color],
@@ -136,9 +147,29 @@ CF_ARG_DISABLE(doublechars,
 AC_MSG_RESULT($enable_doublechars)
 test $enable_doublechars = no && AC_DEFINE(OPT_DEC_CHRSET,0)
 
+AC_MSG_CHECKING(if you want support for input-method)
+CF_ARG_DISABLE(input-method,
+	[  --disable-input-method  disable input-method],
+	[enable_ximp=no],
+	[enable_ximp=yes])
+AC_MSG_RESULT($enable_ximp)
+if test $enable_ximp = no ; then
+	AC_DEFINE(OPT_INPUT_METHOD,0)
+fi
+
+AC_MSG_CHECKING(if you want support for internationalization)
+CF_ARG_DISABLE(i18n,
+	[  --disable-i18n          disable internationalization],
+	[enable_i18n=no],
+	[enable_i18n=yes])
+AC_MSG_RESULT($enable_i18n)
+if test $enable_i18n = no ; then
+	AC_DEFINE(OPT_I18N_SUPPORT,0)
+fi
+
 AC_MSG_CHECKING(if you want support for logging)
 CF_ARG_ENABLE(logging,
-	[  --enable-logging        set to enable logging],
+	[  --enable-logging        enable logging],
 	[enable_logging=yes],
 	[enable_logging=no])
 AC_MSG_RESULT($enable_logging)
@@ -166,7 +197,9 @@ CF_ARG_DISABLE(vt52,
 AC_MSG_RESULT($enable_vt52)
 test $enable_vt52 = no && AC_DEFINE(OPT_VT52_MODE,0)
 
-# this is only for testing purposes
+# development/testing aids
+CF_DISABLE_ECHO
+
 AC_MSG_CHECKING(if you want magic cookie emulation)
 CF_ARG_ENABLE(xmc-glitch,
 	[  --enable-xmc-glitch     test: enable xmc magic-cookie emulation],
@@ -178,6 +211,7 @@ if test $enable_xmc = yes ; then
 	EXTRASRCS="$EXTRASRCS testxmc.c"
 	EXTRAOBJS="$EXTRAOBJS testxmc.o"
 fi
+
 
 if test -n "$GCC" ; then
 AC_MSG_CHECKING(if you want to turn on gcc warnings)

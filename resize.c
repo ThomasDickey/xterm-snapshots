@@ -156,6 +156,10 @@ extern struct passwd *getpwuid(); 	/* does ANYBODY need this? */
 #endif
 #endif
 
+#ifndef GCC_UNUSED
+#define GCC_UNUSED /* nothing */
+#endif
+
 #define	EMULATIONS	2
 #define	SUN		1
 #define	TIMEOUT		10
@@ -646,7 +650,7 @@ resize_timeout(sig)
 /* ARGSUSED */
 static SIGNAL_T
 onintr(sig)
-    int sig;
+    int sig GCC_UNUSED;
 {
 #ifdef USE_SYSV_TERMIO
 	ioctl (tty, TCSETAW, &tioorig);

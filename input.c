@@ -89,7 +89,11 @@ Input (keyboard, screen, event, eightbit)
 	KeySym  keysym = 0;
 	ANSI	reply;
 
-#if XtSpecificationRelease >= 6
+	/* Ignore characters typed at the keyboard */
+	if (keyboard->flags & MODE_KAM)
+		return;
+
+#if OPT_I18N_SUPPORT
 	if (screen->xic) {
 	    Status status_return;
 	    nbytes = XmbLookupString (screen->xic, event, strbuf, STRBUFSIZE,
@@ -108,6 +112,14 @@ Input (keyboard, screen, event, eightbit)
 	reply.a_final = 0;
 	reply.a_nparam = 0;
 	reply.a_inters = 0;
+
+	/* VT300 & up: backarrow toggle */
+	if ((nbytes == 1)
+	 && !(term->keyboard.flags & MODE_DECBKM)
+	 && (keysym == XK_BackSpace)) {
+		keysym = XK_Delete;
+		strbuf[0] = '\177';
+	}
 
 #ifdef XK_KP_Home
 	if (keysym >= XK_KP_Home && keysym <= XK_KP_Begin) {
@@ -199,7 +211,7 @@ Input (keyboard, screen, event, eightbit)
 		 && keysym == XK_KP_Add)
 			keysym = XK_KP_Separator;
 #endif
-	  	if (keyboard->flags & MODE_DECKPAM)	{
+	  	if ((keyboard->flags & MODE_DECKPAM) != 0) {
 			reply.a_type   = SS3;
 			reply.a_final = kypd_apl[keysym-XK_KP_Space];
 			VT52_KEYPAD
