@@ -2,7 +2,7 @@
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.64 2001/09/09 01:07:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.65 2001/09/20 01:06:35 dickey Exp $ */
 
 /*
  *
@@ -1313,6 +1313,7 @@ do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 				return;
 		}
 	}
+	if (buf == 0) return;
 
 	switch(mode) {
 	case 0:	/* new icon name and title*/
