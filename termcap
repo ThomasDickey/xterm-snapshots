@@ -1,5 +1,5 @@
 # $XConsortium: termcap,v 1.13 94/10/13 21:24:32 gildea Exp $
-# $XFree86: xc/programs/xterm/termcap,v 3.21 1999/12/30 02:05:57 robin Exp $
+# $XFree86: xc/programs/xterm/termcap,v 3.22 2000/01/24 22:21:58 dawes Exp $
 #
 # Note:
 #	termcap format is limited to 1023 characters.  This set of descriptions
@@ -32,7 +32,7 @@ xf|xterm-xfree86|XFree86 xterm:\
 	:k9=\E[20~:k;=\E[21~:F1=\E[23~:F2=\E[24~:\
 	:kn#12:km:\
 	:kH=\EOF::@7=\EOF:kh=\EOH:\
-	:@0=\EOH:kI=\E[2~:kD=^?:\
+	:@0=\EOH:kI=\E[2~:kD=\E[3~:\
 	:*6=\EOF:kP=\E[5~:kN=\E[6~:\
 	:kb=^H:ku=\EOA:kd=\EOB:kr=\EOC:kl=\EOD:\
 	:li#24:md=\E[1m:me=\E[m^O:mr=\E[7m:ms:nd=\E[C:\

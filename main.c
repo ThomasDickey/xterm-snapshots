@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.104 2000/01/18 16:35:59 tsi Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.105 2000/01/24 22:21:56 dawes Exp $ */
 
 
 /* main.c */
@@ -4402,10 +4402,9 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 	    s++;
 	    c = ((*s == '?') ? 0177 : CONTROL(*s));
 	    if (*s == '-') {
-#if defined(HAVE_TERMIOS_H) && defined(HAVE_TCGETATTR)
-#  ifdef HAVE_POSIX_VDISABLE
+#if defined(HAVE_POSIX_VDISABLE)
 		c = _POSIX_VDISABLE;
-#  else
+#elif defined(_PC_VDISABLE)
 		errno = 0;
 		c = fpathconf(0, _PC_VDISABLE);
 		if (c == -1) {
@@ -4413,7 +4412,6 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 			continue;	/* skip this (error) */
 		    c = 0377;
 		}
-#  endif
 #elif defined(VDISABLE)
 		c = VDISABLE;
 #else

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Generate keysym2ucs.c file
 #
-# $XFree86: xc/programs/xterm/unicode/convmap.pl,v 1.4 1999/07/11 08:49:53 dawes Exp $
+# $XFree86: xc/programs/xterm/unicode/convmap.pl,v 1.5 2000/01/24 22:22:05 dawes Exp $
 
 sub utf8 ($) {
     my $c = shift(@_);

@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: VTparse.h,v 1.6 92/09/15 15:28:31 gildea Exp $
- *	$XFree86: xc/programs/xterm/VTparse.h,v 3.13 2000/01/18 16:35:55 tsi Exp $
+ *	$XFree86: xc/programs/xterm/VTparse.h,v 3.14 2000/01/24 22:21:52 dawes Exp $
  */
 
 /*
