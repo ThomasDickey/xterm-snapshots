@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: resize.c,v 1.34 95/05/24 22:12:04 gildea Exp $
- *	$XFree86: xc/programs/xterm/resize.c,v 3.13 1996/08/20 12:33:56 dawes Exp $
+ *	$XFree86: xc/programs/xterm/resize.c,v 3.14 1996/09/01 12:31:02 dawes Exp $
  */
 
 /*
@@ -233,6 +233,14 @@ static void readstring PROTO((FILE *fp, char *buf, char *str));
 static char *strindex PROTO((char *s1, char *s2));
 #if !defined(__NetBSD__) && !(defined(sun) && !defined(SVR4)) && !defined(SCO325)
 #include <termcap.h>
+#if defined(linux) && defined(NCURSES_VERSION)
+				/* The tgetent emulation function in
+                                   ncurses (1.9.9e) ignores the buffer, so
+                                   TERMCAP can't be set from it.  Instead,
+                                   just use terminfo. */
+#undef USE_TERMCAP
+#include <curses.h>
+#endif
 #else
 #include <curses.h>
 #endif /* __NetBSD__  */

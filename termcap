@@ -1,5 +1,5 @@
 # $XConsortium: termcap,v 1.13 94/10/13 21:24:32 gildea Exp $
-# $XFree86: xc/programs/xterm/termcap,v 3.3 1996/08/10 13:09:54 dawes Exp $
+# $XFree86: xc/programs/xterm/termcap,v 3.4 1996/09/01 04:50:57 dawes Exp $
 #
 # Note:
 #	termcap format is limited to 1023 characters.  This set of descriptions
@@ -38,7 +38,7 @@ vs|xterm|xterm-24|xterms|vs100|xterm terminal emulator (X Window System):\
 	:ti=\E7\E[?47h:te=\E[2J\E[?47l\E8:\
 	:vi=\E[?25l:ve=\E[?25h:\
 	:up=\E[A:us=\E[4m:ue=\E[24m:xn:\
-	:ut:Co#8:op=\E100m:AB=\E[4%dm:AF=\E[3%dm:
+	:ut:Co#8:op=\E[100m:AB=\E[4%dm:AF=\E[3%dm:
 v2|xterm-65|xterm with tall window 65x80 (X Window System):\
 	:li#65:tc=xterm:
 vb|xterm-bold|xterm with bold instead of underline (X Window System):\
