@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.136 2001/09/09 01:07:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.137 2001/09/20 01:06:35 dickey Exp $ */
 
 
 /* main.c */
@@ -3789,7 +3789,6 @@ spawn (void)
 
 
 		/* need to reset after all the ioctl bashing we did above */
-#ifdef USE_HANDSHAKE
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 		i = ioctl (0, TIOCSSIZE, &ts);
 		TRACE(("spawn TIOCSSIZE %dx%d return %d\n", ts.ts_lines, ts.ts_cols, i));
@@ -3799,7 +3798,6 @@ spawn (void)
 #else
 		TRACE(("spawn cannot tell pty its size\n"));
 #endif	/* sun vs TIOCSWINSZ */
-#endif
 		signal(SIGHUP, SIG_DFL);
 		if (command_to_exec) {
 			execvp(*command_to_exec, command_to_exec);
