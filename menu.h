@@ -48,17 +48,14 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.30 2003/03/09 23:39:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.31 2003/10/27 01:07:57 dickey Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h
 
-#ifdef HAVE_CONFIG_H
-#include <xtermcfg.h>
-#endif
+#include <xterm.h>
 
 #include <X11/Intrinsic.h>
-#include <proto.h>
 
 typedef struct _MenuEntry {
     char *name;

@@ -45,7 +45,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.52 2003/05/21 22:59:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.53 2003/10/27 01:07:57 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -1266,7 +1266,7 @@ do_vtfont(Widget gw GCC_UNUSED,
 
     for (i = 0; i < NMENUFONTS; i++) {
 	if (strcmp(entryname, fontMenuEntries[i].name) == 0) {
-	    SetVTFont(i, True, VT_FONTSET(NULL, NULL, NULL, NULL));
+	    SetVTFont(i, True, NULL);
 	    return;
 	}
     }

@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.64 2003/09/21 17:12:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.66 2003/10/21 23:16:19 dawes Exp $ */
 
 /*
  * Copyright 1999-2001,2002 by Thomas E. Dickey
@@ -325,36 +325,6 @@ xtermDeleteIsDEL(void)
 	   result));
 
     return result;
-}
-
-/*
- * Add input-actions for widgets that are overlooked (scrollbar and toolbar):
- *
- *	a) Sometimes the scrollbar passes through translations, sometimes it
- *	   doesn't.  We add the KeyPress translations here, just to be sure.
- *	b) In the normal (non-toolbar) configuration, the xterm widget covers
- *	   almost all of the window.  With a toolbar, there's a relatively
- *	   large area that the user would expect to enter keystrokes since the
- *	   program can get the focus.
- */
-void
-xtermAddInput(Widget w)
-{
-    static char input_trans[] = "\
-                ~Meta <KeyPress>:insert-seven-bit() \n\
-                 Meta <KeyPress>:insert-eight-bit() \n";
-    /* *INDENT-OFF* */
-    XtActionsRec input_actions[] = {
-	{ "insert",		HandleKeyPressed }, /* alias */
-	{ "insert-eight-bit",	HandleEightBitKeyPressed },
-	{ "insert-seven-bit",	HandleKeyPressed },
-	{ "secure",		HandleSecure },
-	{ "string",		HandleStringEvent },
-    };
-    /* *INDENT-ON* */
-
-    XtAppAddActions(app_con, input_actions, XtNumber(input_actions));
-    XtAugmentTranslations(w, XtParseTranslationTable(input_trans));
 }
 
 void
@@ -1049,6 +1019,7 @@ TranslationsUseKeyword(Widget w, const char *keyword)
 	char *p = data;
 	int state = 0;
 	int now = ' ', prv;
+	TRACE(("TranslationsUseKeyword(%p):%s\n", w, p));
 	while (*p != 0) {
 	    prv = now;
 	    now = char2lower(*p++);
@@ -1073,6 +1044,7 @@ TranslationsUseKeyword(Widget w, const char *keyword)
 	    }
 	}
     }
+    TRACE(("TranslationsUseKeyword(%p, %s) = %d\n", w, keyword, result));
     return result;
 }
 

@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.108 2003/10/13 00:58:22 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.110 2003/10/27 01:07:57 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey
@@ -521,6 +521,10 @@ typedef struct {
 #define OPT_HIGHLIGHT_COLOR 1 /* true if xterm supports color highlighting */
 #endif
 
+#ifndef OPT_LOAD_VTFONTS
+#define OPT_LOAD_VTFONTS 0 /* true if xterm has load-vt-fonts() action */
+#endif
+
 #ifndef OPT_LUIT_PROG
 #define OPT_LUIT_PROG   0 /* true if xterm supports luit */
 #endif
@@ -558,11 +562,7 @@ typedef struct {
 #endif
 
 #ifndef OPT_SCO_FUNC_KEYS
-#ifdef SCO
-#define OPT_SCO_FUNC_KEYS 1 /* true if xterm supports SCO-style function keys */
-#else
 #define OPT_SCO_FUNC_KEYS 0 /* true if xterm supports SCO-style function keys */
-#endif
 #endif
 
 #ifndef OPT_SESSION_MGT
@@ -968,27 +968,33 @@ typedef struct {
 
 	/* indices into save_modes[] */
 typedef enum {
-	DP_DECCKM,
+	DP_CRS_VISIBLE,
 	DP_DECANM,
+	DP_DECARM,
+	DP_DECAWM,
+	DP_DECBKM,
+	DP_DECCKM,
 	DP_DECCOLM,	/* IN132COLUMNS */
+	DP_DECOM,
+	DP_DECPEX,
+	DP_DECPFF,
 	DP_DECSCLM,
 	DP_DECSCNM,
-	DP_DECOM,
-	DP_DECAWM,
-	DP_DECARM,
-	DP_X_X10MSE,
-	DP_DECPFF,
-	DP_DECPEX,
 	DP_DECTCEM,
 	DP_DECTEK,
-	DP_X_DECCOLM,
-	DP_X_MORE,
-	DP_X_MARGIN,
-	DP_X_REVWRAP,
-	DP_X_LOGGING,
+	DP_PRN_EXTENT,
+	DP_PRN_FORMFEED,
 	DP_X_ALTSCRN,
-	DP_DECBKM,
+	DP_X_DECCOLM,
+	DP_X_LOGGING,
+	DP_X_MARGIN,
+	DP_X_MORE,
 	DP_X_MOUSE,
+	DP_X_REVWRAP,
+	DP_X_X10MSE,
+#if OPT_BLINK_CURS
+	DP_CRS_BLINK,
+#endif
 	DP_LAST
 	} SaveModes;
 
@@ -1270,7 +1276,7 @@ typedef struct {
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/
 	SavedCursor	sc[2];		/* data for restore cursor	*/
-	int		save_modes[24];	/* save dec/xterm private modes	*/
+	int		save_modes[DP_LAST]; /* save dec/xterm private modes */
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
@@ -1425,14 +1431,20 @@ typedef struct
     int modify_cursor_keys;	/* how to handle modifiers */
 } TKeyboard;
 
+typedef struct {
+    char *f_n;			/* the normal font */
+    char *f_b;			/* the bold font */
+#if OPT_WIDE_CHARS
+    char *f_w;			/* the normal wide font */
+    char *f_wb;			/* the bold wide font */
+#endif
+} VTFontNames;
+
 typedef struct _Misc {
+    VTFontNames default_font;
     char *geo_metry;
     char *T_geometry;
-    char *f_n;
-    char *f_b;
 #if OPT_WIDE_CHARS
-    char *f_w;
-    char *f_wb;
     Boolean	cjk_width;	/* true when CJK width convention is turned on */
 #endif
 #if OPT_LUIT_PROG
@@ -1442,7 +1454,7 @@ typedef struct _Misc {
     char *localefilter;		/* path for luit */
 #endif
 #if OPT_INPUT_METHOD
-    char *f_x;
+    char *f_x;			/* font for XIM */
 #endif
     int limit_resize;
 #ifdef ALLOWLOGGING
@@ -1450,7 +1462,7 @@ typedef struct _Misc {
 #endif
     Boolean login_shell;
     Boolean re_verse;
-    Boolean re_verse0;	/* initial value of "-rv" */
+    Boolean re_verse0;		/* initial value of "-rv" */
     XtGravity resizeGravity;
     Boolean reverseWrap;
     Boolean autoWrap;
@@ -1458,7 +1470,7 @@ typedef struct _Misc {
     Boolean signalInhibit;
 #if OPT_TEK4014
     Boolean tekInhibit;
-    Boolean tekSmall;	/* start tek window in small size */
+    Boolean tekSmall;		/* start tek window in small size */
 #endif
     Boolean scrollbar;
 #ifdef SCROLLBAR_RIGHT

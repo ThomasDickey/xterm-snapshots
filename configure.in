@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.61 2003/09/21 17:12:47 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.62 2003/10/27 01:07:57 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -404,6 +404,16 @@ CF_INPUT_METHOD
 test "$cf_cv_input_method" = no && enable_ximp=no
 if test "$enable_ximp" = no ; then
 	AC_DEFINE(OPT_INPUT_METHOD,0)
+fi
+
+AC_MSG_CHECKING(if you want support for load-vt-fonts)
+CF_ARG_ENABLE(load-vt-fonts,
+	[  --enable-load-vt-fonts  enable load-vt-fonts() action],
+	[enable_load_vt_fonts=yes],
+	[enable_load_vt_fonts=no])
+AC_MSG_RESULT($enable_load_vt_fonts)
+if test "$enable_load_vt_fonts" = yes ; then
+	AC_DEFINE(OPT_LOAD_VTFONTS,1)
 fi
 
 AC_MSG_CHECKING(if you want support for logging)

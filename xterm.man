@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.95 2003/09/21 17:12:49 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.96 2003/10/27 01:07:58 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - May 2003.
 .TH XTERM 1 __vendorversion__
@@ -197,7 +197,7 @@ the following (if the option begins with a
 instead of a
 .RB ` \- ',
 the option is restored to its default value).
-The \-version and \-help options are interpreted even if \fIxterm\fP cannot
+The \fB\-version\fP and \fB\-help\fP options are interpreted even if \fIxterm\fP cannot
 open the display, and are useful for testing and configuration scripts:
 .TP 8
 .B \-version
@@ -370,11 +370,11 @@ nor \fI\-n\fP are given on the command line.
 \fBThis must be the last option on the command line.\fP
 .TP 8
 .BI \-en " encoding"
-This options determines the encoding on which \fIxterm\fP runs.
-Encodings other than UTF-8 are supported by using \fBluit\fR.
+This option determines the encoding on which \fIxterm\fP runs.
+It corresponds to the \fBlocale\fR resource.
+Encodings other than UTF-8 are supported by using \fIluit\fR.
 The \fB\-lc\fR option should be used instead of \fB\-en\fR for
 systems with locale support.
-This corresponds to the \fBlocale\fR resource.
 .TP 8
 .BI \-fb " font"
 This option specifies a font to be used when displaying bold text.
@@ -530,26 +530,36 @@ depending on how xterm was built.
 Turn logging off.
 .TP 8
 .B \-lc
-Turn on support of various encodings according to users'
-LC_CTYPE locale setting, i.e., LC_ALL, LC_CTYPE, or LANG variables.
-This is achieved by turning on UTF-8 mode and by invoking \fBluit\fR for
+Turn on support of various encodings according to the users'
+locale setting, i.e., LC_ALL, LC_CTYPE, or LANG environment variables.
+This is achieved by turning on UTF-8 mode and by invoking \fIluit\fR for
 conversion between locale encodings and UTF-8.
-(\fBluit\fR is not
-invoked in UTF-8 locales.)  All you need is an iso10646-1 font
-regardless of your locale and encoding.
+(\fIluit\fR is not invoked in UTF-8 locales.)
 This corresponds to the \fBlocale\fR resource.
 .sp
-The actual list of encodings which are supported is determined by \fBluit\fR.
-Consult the \fBluit\fR manual page for further details.
+The actual list of encodings which are supported is determined by \fIluit\fR.
+Consult the \fIluit\fR manual page for further details.
+See also the discussion of the \fB\-u8\fP option which supports UTF-8 locales.
+.IP
+Regardless of your locale and encoding,
+you need an ISO-10646-1 font to display the result.
+Your configuration may not include this font,
+or locale-support by \fIxterm\fP may not be needed.
+At startup, \fIxterm\fP uses a mechanism equivalent to
+the \fBload-vt-fonts(utf8Fonts,\ Utf8Fonts)\fP action
+to load font name subresources of the VT100 widget.
+If no subresources are found, the normal fonts are used.
+The resource files distributed with \fIxterm\fP use ISO-10646-1 fonts,
+but do not rely on them unless you are using the locale mechanism.
 .TP 8
 .B +lc
 Turn off support of automatic selection of locale encodings.
-Conventional 8bit mode or, in UTF-8 locales or with \-u8 option,
+Conventional 8bit mode or, in UTF-8 locales or with \fB\-u8\fP option,
 UTF-8 mode will be used.
 .TP 8
 .BI \-lcc " path"
 File name for the encoding converter from/to locale encodings
-and UTF-8 which is used with \-lc option or \fBlocale\fR resource.
+and UTF-8 which is used with \fB\-lc\fP option or \fBlocale\fR resource.
 This corresponds to the \fBlocaleFilter\fR resource.
 .TP 8
 .B \-leftbar
@@ -789,14 +799,19 @@ database and should have \fIli#\fP and \fIco#\fP entries.
 .B \-u8
 This option sets the \fButf8\fP resource.
 When \fButf8\fP is set, xterm interprets incoming data as UTF-8.
-This sets \fBwideChars\fP as a side-effect,
-but UTF-8 mode set by this option prevents it from being turned off.
+This sets the \fBwideChars\fP resource as a side-effect,
+but the UTF-8 mode set by this option prevents it from being turned off.
 If you must turn it on and off, use the \fBwideChars\fP resource.
-Note this option and the \fButf8\fR resource are
-overridden by the \-lc and \-en options and \fBlocale\fR resource.
-Instead, please use ``\-lc'' option or ``locale: true'' resource
+.IP
+This option and the \fButf8\fR resource are overridden by
+the \fB\-lc\fP and \fB\-en\fP options and \fBlocale\fR resource.
+That is, if \fIxterm\fP has been compiled to support \fIluit\fR,
+and the \fBlocale\fP resource is not ``false''
+this option is ignored.
+We recommend using
+the \fB\-lc\fR option or the ``\fBlocale:\ true\fR'' resource
 in UTF-8 locales when your operating system supports locale,
-or ``\-en UTF-8'' option or ``locale: UTF-8'' resource
+or \fB\-en\ UTF-8\fP option or the ``\fBlocale:\ UTF-8\fR'' resource
 when your operating system does not support locale.
 .TP 8
 .B +u8
@@ -1617,24 +1632,35 @@ the display dimensions.
 The default is ``1''.
 .TP 8
 .B "locale (\fPclass\fB Locale)"
-Specifies how to use \fBluit\fR, an encoding converter between UTF-8
+Specifies how to use \fIluit\fR, an encoding converter between UTF-8
 and locale encodings.
-If this is ``true'', \fIxterm\fR will use the
+The resource value (ignoring case) may be:
+.RS
+.TP 4
+.I true
+\fIxterm\fR will use the
 encoding specified by the users' LC_CTYPE locale (i.e., LC_ALL,
 LC_CTYPE, or LANG variables) as far as possible.
 This is realized
-by always enabling UTF-8 mode and invoking \fBluit\fR in non-UTF-8
+by always enabling UTF-8 mode and invoking \fIluit\fR in non-UTF-8
 locales.
-If this is ``medium'', \fIxterm\fR will follow users'
+.TP 4
+.I medium
+\fIxterm\fR will follow users'
 LC_CTYPE locale only for UTF-8, east Asian, and Thai locales,
 where the encodings were not supported by conventional 8bit mode
 with changing fonts.
 For other locales, \fIxterm\fR will use conventional 8bit mode.
-If this is ``no'', \fIxterm\fR will use conventional 8bit mode
-or UTF-8 mode according to \fButf8\fR resource or \-u8 option.
-Any other value such as ``UTF-8'' and ``ISO8859-2'' will be assumed
-to be an encoding name; \fBluit\fR will be invoked to support the encoding.
-The actual list of supported encodings depends on \fBluit\fR.
+.TP 4
+.I no
+\fIxterm\fR will use conventional 8bit mode
+or UTF-8 mode according to \fButf8\fR resource or \fB\-u8\fP option.
+.RE
+.IP
+Any other value, e.g., ``UTF-8'' or ``ISO8859-2'',
+is assumed to be an encoding name;
+\fIluit\fR will be invoked to support the encoding.
+The actual list of supported encodings depends on \fIluit\fR.
 The default is ``medium''.
 .TP 8
 .B "localeFilter (\fPclass\fB LocaleFilter)"
@@ -2662,6 +2688,16 @@ The name \fINone\fP restores the original translation table.
 Set the font to the next larger one, based on the font dimensions.
 See also \fBset-vt-font()\fP.
 .TP 8
+.B "load-vt-fonts(\fIname\fP[,\fIclass\fP])"
+Load fontnames from the given subresource name and class.
+That is, load the "*VT100.\fIname\fP.font", resource as "*VT100.font" etc.
+If no name is given, the original set of fontnames is restored.
+.IP
+Unlike \fBset-vt-font()\fR, this does not affect the escape- and select-fonts,
+since those are not based on resource values.
+It does affect the fonts loosely organized under the ``Default'' menu
+entry: \fBfont\fP, \fBboldFont\fP, \fBwideFont\fP and \fBwideBoldFont\fP.
+.TP 8
 .B "maximize()"
 Resizes the window to fill the screen.
 .TP 8
@@ -2900,14 +2936,27 @@ by the \fBvisualbell\fP entry in \fIvtMenu\fP.
 .B "set-vt-font(\fId/1/2/3/4/5/6/e/s\fP [,\fInormalfont\fP [, \fIboldfont\fP]])"
 This action sets the font or fonts currently being used in the VT102 window.
 The first argument is a single character that specifies the font to be
-used: \fId\fP or \fID\fP indicate the default font (the font initially
+used:
+.RS 8
+.HP
+\fId\fP or \fID\fP indicate the default font (the font initially
 used when
-\fIxterm\fP was started), \fI1\fP through \fI6\fP indicate the fonts
-specified by the \fIfont1\fP through \fIfont6\fP resources, \fIe\fP or \fIE\fP
-indicate the normal, bold and wide fonts that have been set through escape codes
-(or specified as the second, third and fourth action arguments, respectively), and
+\fIxterm\fP was started),
+.HP
+\fI1\fP through \fI6\fP indicate the fonts
+specified by the \fIfont1\fP through \fIfont6\fP resources,
+.HP
+\fIe\fP or \fIE\fP
+indicate the normal and bold fonts that have been set through escape codes
+(or specified as the second and third action arguments, respectively), and
+.HP
 \fIs\fP or \fIS\fP indicate the font selection (as made by programs such as
 \fIxfontsel(1)\fP) indicated by the second action argument.
+.RE
+.IP
+If \fIxterm\fR is configured to support wide characters, an
+additional two optional parameters are recognized for the \fIe\fP argument:
+wide font and wide bold font.
 .TP 8
 .B "smaller-vt-font()"
 Set the font to the next smaller one, based on the font dimensions.
@@ -2979,6 +3028,7 @@ The default bindings in the VT102 window are:
 .sp
 .in +4
 .ta 2.5i
+.ft C			\" Courier
 .nf
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\
@@ -3022,6 +3072,7 @@ The default bindings in the VT102 window are:
                          <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \\n\\
                        <BtnDown>:bell(0)
 .fi
+.ft P
 .sp
 .in -4
 .PP
@@ -3030,6 +3081,7 @@ The default bindings in the Tektronix window are:
 .in +4
 .ta 2.5i
 .nf
+.ft C			\" Courier
                 ~Meta<KeyPress>: 	insert-seven-bit() \\n\\
                  Meta<KeyPress>: 	insert-eight-bit() \\n\\
                !Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\
@@ -3047,6 +3099,7 @@ The default bindings in the Tektronix window are:
           Shift ~Meta<Btn3Down>:	gin-press(R) \\n\\
                 ~Meta<Btn3Down>:	gin-press(r)
 .fi
+.ft P
 .sp
 .in -4
 .PP
@@ -3057,6 +3110,7 @@ keys for entering commonly-typed works:
 .nf
 .ta .5i 1.5i
 .nf
+.ft C			\" Courier
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\
 	<Key>F14:	keymap(None) \\n\\
@@ -3065,6 +3119,7 @@ keys for entering commonly-typed works:
 	<Key>F19:	string("continue") string(0x0d) \\n\\
 	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
 .fi
+.ft P
 .sp
 .in -4
 .SH "CONTROL SEQUENCES AND KEYBOARD"

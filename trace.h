@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/trace.h,v 3.13 2003/09/21 17:12:48 dickey Exp $
+ * $XFree86: xc/programs/xterm/trace.h,v 3.14 2003/10/27 01:07:57 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2001 by Thomas E. Dickey
+Copyright 1997-2001,2003 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -33,7 +33,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #ifndef	included_trace_h
 #define	included_trace_h
 
-#include <ptyx.h>
+#include <xterm.h>
 
 #if OPT_TRACE
 

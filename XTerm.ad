@@ -3,11 +3,7 @@
 !
 !
 !
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.25 2003/09/21 17:12:44 dickey Exp $
-
-! This is nonsense: if the xterm has no session management capabilities,
-! it is useless, and if it does, it is harmful.
-!XTerm.JoinSession:False
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.26 2003/10/27 01:07:56 dickey Exp $
 
 *SimpleMenu*BackingStore: NotUseful
 *SimpleMenu*menuLabel.font: -adobe-helvetica-bold-r-normal--*-120-*-*-*-*-iso8859-*
@@ -90,6 +86,13 @@
 *fontMenu*font-linedrawing*Label: Line-Drawing Characters
 *fontMenu*font-doublesize*Label: Doublesized Characters
 *fontMenu*font-loadable*Label:	VT220 Soft Fonts
+
+*VT100.utf8Fonts.font2:	-misc-fixed-medium-r-normal--8-80-75-75-c-50-iso10646-1
+*VT100.utf8Fonts.font:	-misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1
+*VT100.utf8Fonts.font3:	-misc-fixed-medium-r-normal--14-130-75-75-c-70-iso10646-1
+*VT100.utf8Fonts.font4:	-misc-fixed-medium-r-normal--13-120-75-75-c-80-iso10646-1
+*VT100.utf8Fonts.font5:	-misc-fixed-medium-r-normal--18-120-100-100-c-90-iso10646-1
+*VT100.utf8Fonts.font6:	-misc-fixed-medium-r-normal--20-200-75-75-c-100-iso10646-1
 
 *tekMenu.Label:  Tek Options
 *tekMenu*tektextlarge*Label:  Large Characters

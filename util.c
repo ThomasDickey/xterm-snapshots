@@ -2,7 +2,7 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.77 2003/10/13 00:58:22 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.78 2003/10/27 01:07:57 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey
@@ -1454,6 +1454,31 @@ xtermXftDrawString(XftDraw * draw,
 }
 #endif /* XRENDERFONT */
 
+#if OPT_CLIP_BOLD
+/*
+ * This special case is a couple of percent slower, but avoids a lot of pixel
+ * trash in rxcurses' hanoi.cmd demo (e.g., 10x20 font).
+ */
+#define beginClipping(screen,gc,pwidth,plength) \
+	    if (pwidth > 2) { \
+		XRectangle clip; \
+		int clip_x = x; \
+		int clip_y = y - FontHeight(screen) + FontDescent(screen); \
+		clip.x = 0; \
+		clip.y = 0; \
+		clip.height = FontHeight(screen); \
+		clip.width = pwidth * plength; \
+		XSetClipRectangles(screen->display, gc, \
+				   clip_x, clip_y, \
+				   &clip, 1, Unsorted); \
+	    }
+#define endClipping(screen,gc) \
+	    XSetClipMask(screen->display, gc, None)
+#else
+#define beginClipping(screen,gc,pwidth,plength)		/* nothing */
+#define endClipping(screen,gc)	/* nothing */
+#endif /* OPT_CLIP_BOLD */
+
 /*
  * Draws text with the specified combination of bold/underline
  */
@@ -1886,6 +1911,13 @@ drawXtermText(TScreen * screen,
 			       x, y + ascent_adjust,
 			       sbuf, n);
 
+	if ((flags & (BOLD | BLINK)) && screen->enbolden) {
+	    beginClipping(screen, gc, font_width, len);
+	    XDrawString16(screen->display, VWindow(screen), gc,
+			  x + 1, y + ascent_adjust, sbuf, n);
+	    endClipping(screen, gc);
+	}
+
     } else
 #endif /* OPT_WIDE_CHARS */
     {
@@ -1897,30 +1929,10 @@ drawXtermText(TScreen * screen,
 			     x, y, (char *) text, len);
 	underline_len = len;
 	if ((flags & (BOLD | BLINK)) && screen->enbolden) {
-#if OPT_CLIP_BOLD
-	    /*
-	     * This special case is a couple of percent slower, but
-	     * avoids a lot of pixel trash in rxcurses' hanoi.cmd
-	     * demo (e.g., 10x20 font).
-	     */
-	    if (font_width > 2) {
-		XRectangle clip;
-		int clip_x = x;
-		int clip_y = y - FontHeight(screen) + FontDescent(screen);
-		clip.x = 0;
-		clip.y = 0;
-		clip.height = FontHeight(screen);
-		clip.width = font_width * len;
-		XSetClipRectangles(screen->display, gc,
-				   clip_x, clip_y,
-				   &clip, 1, Unsorted);
-	    }
-#endif
+	    beginClipping(screen, gc, font_width, len);
 	    XDrawString(screen->display, VWindow(screen), gc,
 			x + 1, y, (char *) text, len);
-#if OPT_CLIP_BOLD
-	    XSetClipMask(screen->display, gc, None);
-#endif
+	    endClipping(screen, gc);
 	}
     }
 

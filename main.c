@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.169 2003/09/21 17:12:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.170 2003/10/24 20:38:23 tsi Exp $ */
 
 /* main.c */
 
@@ -2638,7 +2638,7 @@ spawn(void)
 #if OPT_INITIAL_ERASE
     int initial_erase = VAL_INITIAL_ERASE;
 #endif
-    int rc;
+    int rc = 0;
     int tty = -1;
 #ifdef USE_ANY_SYSV_TERMIO
     struct termio tio;
@@ -2679,12 +2679,18 @@ spawn(void)
 #ifdef HAVE_UTMP
     struct UTMP_STR utmp;
 #ifdef USE_SYSV_UTMP
-    struct UTMP_STR *utret;
+    struct UTMP_STR *utret = NULL;
 #endif
 #ifdef USE_LASTLOG
     struct lastlog lastlog;
 #endif /* USE_LASTLOG */
 #endif /* HAVE_UTMP */
+
+    /* Noisy compilers */
+    (void) rc;
+#ifdef USE_SYSV_UTMP
+    (void) utret;
+#endif
 
     screen->uid = getuid();
     screen->gid = getgid();
@@ -3504,23 +3510,31 @@ spawn(void)
 	    if (!resource.ptyInitialErase
 		&& !override_tty_modes
 		&& !ttymodelist[XTTYMODE_erase].set) {
+#if OPT_TRACE
 		int old_erase;
+#endif
 #ifdef USE_ANY_SYSV_TERMIO
 		if (ioctl(tty, TCGETA, &tio) == -1)
 		    tio = d_tio;
+#if OPT_TRACE
 		old_erase = tio.c_cc[VERASE];
+#endif
 		tio.c_cc[VERASE] = initial_erase;
 		rc = ioctl(tty, TCSETA, &tio);
 #elif defined(USE_POSIX_TERMIOS)
 		if (tcgetattr(tty, &tio) == -1)
 		    tio = d_tio;
+#if OPT_TRACE
 		old_erase = tio.c_cc[VERASE];
+#endif
 		tio.c_cc[VERASE] = initial_erase;
 		rc = tcsetattr(tty, TCSANOW, &tio);
 #else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 		if (ioctl(tty, TIOCGETP, (char *) &sg) == -1)
 		    sg = d_sg;
+#if OPT_TRACE
 		old_erase = sg.sg_erase;
+#endif
 		sg.sg_erase = initial_erase;
 		rc = ioctl(tty, TIOCSETP, (char *) &sg);
 #endif /* USE_ANY_SYSV_TERMIO */

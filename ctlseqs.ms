@@ -5,7 +5,7 @@
 .\"
 .\"
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.49 2003/05/18 21:51:07 dickey Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.50 2003/10/27 01:10:31 dickey Exp $
 .\"
 .\"
 .\" Copyright 1996-2002,2003 by Thomas E. Dickey
@@ -747,6 +747,7 @@ and set VT100 mode.
   \*(Ps = \*8 \(-> Auto-repeat Keys (DECARM)
   \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
 See the section \fBMouse Tracking\fP.
+  \*(Ps = \*1\*2 \(-> Start Blinking Cursor (att610)
   \*(Ps = \*1\*8 \(-> Print form feed (DECPFF)
   \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX)
   \*(Ps = \*2\*5 \(-> Show Cursor (DECTCEM)
@@ -819,6 +820,7 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*7 \(-> No Wraparound Mode (DECAWM)
   \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM)
   \*(Ps = \*9 \(-> Don't Send Mouse X & Y on button press
+  \*(Ps = \*1\*2 \(-> Stop Blinking Cursor (att610)
   \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF)
   \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX)
   \*(Ps = \*2\*5 \(-> Hide Cursor (DECTCEM)

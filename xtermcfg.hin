@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.46 2003/05/21 22:59:14 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.47 2003/10/27 01:07:58 dickey Exp $
  */
 
 /************************************************************
@@ -86,6 +86,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_INITIAL_ERASE	/* CF_ARG_DISABLE(initial-erase) */
 #undef OPT_INPUT_METHOD		/* CF_ARG_DISABLE(input-method) */
 #undef OPT_ISO_COLORS		/* CF_ARG_DISABLE(ansi-color) */
+#undef OPT_LOAD_VTFONTS		/* CF_ARG_ENABLE(load-vt-fonts) */
 #undef OPT_LUIT_PROG		/* CF_ARG_ENABLE(luit) */
 #undef OPT_MAXIMIZE		/* CF_ARG_DISABLE(maximize) */
 #undef OPT_NUM_LOCK		/* CF_ARG_DISABLE(num-lock) */

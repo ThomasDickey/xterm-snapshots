@@ -54,7 +54,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.64 2003/10/13 00:58:22 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.65 2003/10/20 00:58:54 dickey Exp $ */
 
 /* screen.c */
 
@@ -769,8 +769,9 @@ ScrnRefresh(TScreen * screen,
 	    if (recurse < 3) {
 		/* adjust to redraw all of a widechar if we just wanted 
 		   to draw the right hand half */
-		if (iswide(chars[leftcol - 1] | (widec[leftcol - 1] << 8)) &&
-		    (chars[leftcol] | (widec[leftcol] << 8)) == HIDDEN_CHAR) {
+		if (leftcol > 0 &&
+		    (chars[leftcol] | (widec[leftcol] << 8)) == HIDDEN_CHAR &&
+		    iswide(chars[leftcol - 1] | (widec[leftcol - 1] << 8))) {
 		    leftcol--;
 		    ncols++;
 		    col = leftcol;

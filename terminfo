@@ -5,7 +5,7 @@
 # XFree86 updates/notes/new entries (including xterm-8bit, xterm-16color)
 # - Thomas E. Dickey
 #
-# $XFree86: xc/programs/xterm/terminfo,v 3.47 2003/05/19 00:47:33 dickey Exp $
+# $XFree86: xc/programs/xterm/terminfo,v 3.49 2003/10/27 01:07:57 dickey Exp $
 #
 # Special Capabilities:
 # --------------------
@@ -96,10 +96,14 @@
 #
 # Note however, that even though the terminfo says a key might be sent, there
 # may be conflicts which prevent this.  For example, it is common to use
-# shifted pageup and pagedown for window manager functions. 
+# shifted pageup and pagedown for window manager functions.  The default
+# translation for xterm since X11R4 has overridden shifted Insert, Select,
+# PageUp and PageDown, which correspond to terminfo kIC, kEND, kPRV and kNXT
+# respectively.
 #
 xterm-xfree86|xterm-new|xterm terminal emulator (XFree86),
 	npc,
+	indn=\E[%p1%dS,
 	kDC=\E[3;2~,
 	kEND=\E[1;2F,
 	kHOM=\E[1;2H,
@@ -169,6 +173,7 @@ xterm-xfree86|xterm-new|xterm terminal emulator (XFree86),
 	kmous=\E[M,
 	knp=\E[6~,
 	kpp=\E[5~,
+	rin=\E[%p1%dT,
 	use=xterm-basic,
 #
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
@@ -192,7 +197,7 @@ xterm-basic|xterm terminal emulator - common (XFree86),
 	cbt=\E[Z,
 	civis=\E[?25l,
 	clear=\E[H\E[2J,
-	cnorm=\E[?25h,
+	cnorm=\E[?12l\E[?25h,
 	cr=^M,
 	csr=\E[%i%p1%d;%p2%dr,
 	cub=\E[%p1%dD,
@@ -204,6 +209,7 @@ xterm-basic|xterm terminal emulator - common (XFree86),
 	cup=\E[%i%p1%d;%p2%dH,
 	cuu=\E[%p1%dA,
 	cuu1=\E[A,
+	cvvis=\E[?12;25h,
 	dch=\E[%p1%dP,
 	dch1=\E[P,
 	dl=\E[%p1%dM,
@@ -648,7 +654,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	cbt=\233Z,
 	civis=\233?25l,
 	clear=\233H\2332J,
-	cnorm=\233?25h,
+	cnorm=\233?25l\233?25h,
 	cr=^M,
 	csr=\233%i%p1%d;%p2%dr,
 	cub=\233%p1%dD,
@@ -660,6 +666,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	cup=\233%i%p1%d;%p2%dH,
 	cuu=\233%p1%dA,
 	cuu1=\233A,
+	cvvis=\233?12;25h,
 	dch=\233%p1%dP,
 	dch1=\233P,
 	dl=\233%p1%dM,
