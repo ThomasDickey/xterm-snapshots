@@ -10,6 +10,8 @@
 # This script is compatible with the BSD install script, but was written
 # from scratch.
 #
+# $XFree86: xc/programs/xterm/install.sh,v 3.5 1999/09/27 14:59:29 dawes Exp $
+#
 
 
 # set DOITPROG to echo to test this script

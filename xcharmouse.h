@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xcharmouse.h,v 1.1 1998/08/29 06:57:22 dawes Exp $
+ * $XFree86: xc/programs/xterm/xcharmouse.h,v 1.2 1999/09/27 06:30:23 dawes Exp $
  */
 
 /************************************************************

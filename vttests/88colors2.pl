@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # Author: Steve Wall <swall@redcom.com>
-# $XFree86: xterm/vttests/88colors2.pl,v 1.1 1999/09/14 13:03:03 swall Exp $
+# $XFree86: xc/programs/xterm/vttests/88colors2.pl,v 1.1 1999/09/25 14:38:51 dawes Exp $
 # Made from 256colors2.pl
 
 # use the resources for colors 0-15 - usually more-or-less a
