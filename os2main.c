@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.34 2000/04/05 18:14:09 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.35 2000/05/18 16:30:05 dawes Exp $ */
 
 /***********************************************************
 
