@@ -426,6 +426,7 @@ Bres(XtNreverseWrap,	XtCReverseWrap, misc.reverseWrap,	FALSE),
 Bres(XtNautoWrap,	XtCAutoWrap,	misc.autoWrap,		TRUE),
 Ires(XtNsaveLines,	XtCSaveLines,	screen.savelines,	SAVELINES),
 Bres(XtNscrollBar,	XtCScrollBar,	misc.scrollbar,		FALSE),
+Ires(XtNlimitResize,	XtCLimitResize, misc.limit_resize,	1),
 #ifdef SCROLLBAR_RIGHT
 Bres(XtNrightScrollBar, XtCRightScrollBar, misc.useRight, FALSE),
 #endif
@@ -3829,13 +3830,16 @@ static void VTResize(Widget w)
 }
 
 
+#define okDimension(src,dst) ((src <= 32767) && ((dst = src) == src))
+
 static void RequestResize(
 	XtermWidget termw,
 	int rows,
 	int cols,
 	int text)
 {
-	register TScreen	*screen	= &termw->screen;
+	TScreen	*screen	= &termw->screen;
+	unsigned long value;
 	Dimension replyWidth, replyHeight;
 	Dimension askedWidth, askedHeight;
 	XtGeometryResult status;
@@ -3843,28 +3847,34 @@ static void RequestResize(
 
 	TRACE(("RequestResize(rows=%d, cols=%d, text=%d)\n", rows, cols, text));
 
-	askedWidth  = cols;
-	askedHeight = rows;
+	if ((askedWidth  = cols) < cols
+	 || (askedHeight = rows) < rows)
+		return;
 
 	if (askedHeight == 0
-	 || askedWidth  == 0) {
+	 || askedWidth  == 0
+	 || term->misc.limit_resize > 0) {
 		XGetWindowAttributes(XtDisplay(termw),
 			RootWindowOfScreen(XtScreen(termw)), &attrs);
 	}
 
 	if (text) {
-		if (rows != 0) {
+		if ((value = rows) != 0) {
 			if (rows < 0)
-				askedHeight = screen->max_row + 1;
-			askedHeight *= FontHeight(screen);
-			askedHeight += (2 * screen->border);
+				value = screen->max_row + 1;
+			value *= FontHeight(screen);
+			value += (2 * screen->border);
+			if (!okDimension(value, askedHeight))
+				return;
 		}
 
-		if (cols != 0) {
+		if ((value = cols) != 0) {
 			if (cols < 0)
-				askedWidth = screen->max_col + 1;
-			askedWidth  *= FontWidth(screen);
-			askedWidth  += (2 * screen->border) + Scrollbar(screen);
+				value = screen->max_col + 1;
+			value *= FontWidth(screen);
+			value += (2 * screen->border) + Scrollbar(screen);
+			if (!okDimension(value, askedWidth))
+				return;
 		}
 
 	} else {
@@ -3879,10 +3889,27 @@ static void RequestResize(
 	if (cols == 0)
 		askedWidth  = attrs.width;
 
+	if (term->misc.limit_resize > 0) {
+		Dimension high = term->misc.limit_resize * attrs.height;
+		Dimension wide = term->misc.limit_resize * attrs.width;
+		if (high < attrs.height)
+			high = attrs.height;
+		if (askedHeight > high)
+			askedHeight = high;
+		if (wide < attrs.width)
+			wide = attrs.width;
+		if (askedWidth > wide)
+			askedWidth = wide;
+	}
+
 	status = XtMakeResizeRequest (
 	    (Widget) termw,
 	     askedWidth,  askedHeight,
 	    &replyWidth, &replyHeight);
+	TRACE(("charproc.c XtMakeResizeRequest %dx%d -> %dx%d (status %d)\n",
+		askedHeight, askedWidth,
+		replyHeight, replyWidth,
+		status));
 
 	if (status == XtGeometryYes ||
 	    status == XtGeometryDone) {
@@ -4052,6 +4079,7 @@ static void VTInitialize (
 
    wnew->screen.ansi_level = (wnew->screen.terminal_id / 100);
    wnew->screen.visualbell = request->screen.visualbell;
+   wnew->misc.limit_resize = request->misc.limit_resize;
 #if OPT_NUM_LOCK
    wnew->misc.real_NumLock = request->misc.real_NumLock;
    wnew->misc.alwaysUseMods = request->misc.alwaysUseMods;
