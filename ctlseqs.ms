@@ -1,7 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
 .\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.10 1997/06/29 07:54:21 dawes Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.11 1997/08/12 12:01:53 hohndel Exp $
 .\"
 .\" Copyright 1991, 1994 X Consortium
 .\"
@@ -526,7 +526,7 @@ Erase in Display (ED)
   \*(Ps = \*1 \(-> Erase Above
   \*(Ps = \*2 \(-> Erase All
 .
-.IP \\*(Cs\\*(Ps\\*s\\*?\\*s\\*J
+.IP \\*(Cs\\*?\\*(Ps\\*s\\*J
 Erase in Display (DECSED)
   \*(Ps = \*0 \(-> Selective Erase Below (default)
   \*(Ps = \*1 \(-> Selective Erase Above
@@ -538,7 +538,7 @@ Erase in Line (EL)
   \*(Ps = \*1 \(-> Erase to Left
   \*(Ps = \*2 \(-> Erase All
 .
-.IP \\*(Cs\\*(Ps\\*s\\*?\\*s\\*K
+.IP \\*(Cs\\*?\\*(Ps\\*s\\*K
 Erase in Line (DECSEL)
   \*(Ps = \*0 \(-> Selective Erase to Right (default)
   \*(Ps = \*1 \(-> Selective Erase to Left
@@ -599,6 +599,18 @@ Tab Clear (TBC)
 Set Mode (SM)
   \*(Ps = \*4 \(-> Insert Mode (IRM)
   \*(Ps = \*2\*0 \(-> Automatic Newline (LNM)
+.
+.IP \\*(Cs\\*(Pm\\*s\\*i
+Media Copy (MC)
+  \*(Ps = \*0 \(-> Print screen (default)
+  \*(Ps = \*4 \(-> Turn off printer controller mode
+  \*(Ps = \*5 \(-> Turn on printer controller mode
+.
+.IP \\*(Cs\\*?\\*(Pm\\*s\\*i
+Media Copy (MC, DEC-specific)
+  \*(Ps = \*1 \(-> Print line containing cursor
+  \*(Ps = \*4 \(-> Turn off autoprint mode
+  \*(Ps = \*5 \(-> Turn on autoprint mode
 .
 .IP \\*(Cs\\*(Pm\\*s\\*l
 Reset Mode (RM)
@@ -667,7 +679,7 @@ Device Status Report (DSR)
   \*(Ps = \*6 \(-> Report Cursor Position (CPR) [row;column] as
 \*(Cs\*(Ir\*s\*;\*(Ic\*s\*R
 .
-.IP \\*(Cs\\*(Ps\\*s\\*?\\*n
+.IP \\*(Cs\\*?\\*(Ps\\*s\\*n
 Device Status Report (DSR, DEC-specific)
   \*(Ps = \*6 \(-> Report Cursor Position (CPR) [row;column] as
 \*(Cs\*?\*(Ir\*s\*;\*(Ic\*s\*R
@@ -749,6 +761,8 @@ and set VT100 mode.
   \*(Ps = \*8 \(-> Auto-repeat Keys (DECARM)
   \*(Ps = \*9 \(-> Send Mouse X & Y on button press.
 See the section \fBMouse Tracking\fP.
+  \*(Ps = \*1\*8 \(-> Print form feed (DECPFF)
+  \*(Ps = \*1\*9 \(-> Set print extent to full screen (DECPEX)
   \*(Ps = \*2\*5 \(-> Show Cursor (DECTCEM)
   \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK)
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode
@@ -775,6 +789,8 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*7 \(-> No Wraparound Mode (DECAWM)
   \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM)
   \*(Ps = \*9 \(-> Don't Send Mouse X & Y on button press
+  \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF)
+  \*(Ps = \*1\*9 \(-> Limit print to scrolling region (DECPEX)
   \*(Ps = \*2\*5 \(-> Hide Cursor (DECTCEM)
   \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode
   \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fIcurses\fP resource)

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version XFree86-3_9k
+MANIFEST for xterm, version XFree86-3_9m
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 Imakefile                       imake template for Makefile
@@ -33,6 +33,7 @@ menu.h                          interface of menu.c
 misc.c                          miscellaneous utility functions for 'xterm'
 mkdirs.sh                       configure script: make directories for install process
 os2main.c                       main program for OS/2 EMX port of 'xterm'
+print.c                         VT100+ print support functions
 proto.h                         macros to simplify function prototypes
 ptyx.h                          structure-definitions for 'xterm'
 resize.c                        program to compute/modify xterm's window size

@@ -1,6 +1,6 @@
 /*
  * $XConsortium: charproc.c /main/196 1996/12/03 16:52:46 swick $
- * $XFree86: xc/programs/xterm/charproc.c,v 3.48 1997/07/29 13:26:02 hohndel Exp $
+ * $XFree86: xc/programs/xterm/charproc.c,v 3.49 1997/08/12 12:02:18 hohndel Exp $
  */
 
 /*
@@ -84,6 +84,7 @@ in this Software without prior written authorization from the X Consortium.
 #define read(f,b,s) nbio_read(f,b,s)
 #define write(f,b,s) nbio_write(f,b,s)
 #endif
+
 #include "VTparse.h"
 #include "data.h"
 #include "error.h"
@@ -208,6 +209,10 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtNpointerColor "pointerColor"
 #define XtNpointerColorBackground "pointerColorBackground"
 #define XtNpointerShape "pointerShape"
+#define XtNprinterControlMode "printerControlMode"
+#define XtNprinterCommand "printerCommand"
+#define XtNprinterExtent "printerExtent"
+#define XtNprinterFormFeed "printerFormFeed"
 #define XtNmultiClickTime "multiClickTime"
 #define XtNmultiScroll "multiScroll"
 #define XtNnMarginBell "nMarginBell"
@@ -290,6 +295,10 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtCResizeGravity "ResizeGravity"
 #define XtCReverseWrap "ReverseWrap"
 #define XtCAutoWrap "AutoWrap"
+#define XtCPrinterControlMode "PrinterControlMode"
+#define XtCPrinterCommand "PrinterCommand"
+#define XtCPrinterExtent "PrinterExtent"
+#define XtCPrinterFormFeed "PrinterFormFeed"
 #define XtCSaveLines "SaveLines"
 #define XtCScrollBar "ScrollBar"
 #define XtCScrollLines "ScrollLines"
@@ -338,6 +347,7 @@ static void HandleVisualBell PROTO((Widget w, XEvent *event, String *params, Car
 static  Boolean	defaultCOLORMODE   = DFT_COLORMODE;
 static  Boolean	defaultFALSE	   = FALSE;
 static  Boolean	defaultTRUE	   = TRUE;
+static  int	defaultZERO        = 0;
 static  int	defaultIntBorder   = DEFBORDER;
 static  int	defaultSaveLines   = SAVELINES;
 static	int	defaultScrollLines = SCROLLLINES;
@@ -564,6 +574,18 @@ static XtResource resources[] = {
 {XtNpointerShape,XtCCursor, XtRCursor, sizeof(Cursor),
 	XtOffsetOf(XtermWidgetRec, screen.pointer_cursor),
 	XtRString, (XtPointer) "xterm"},
+{XtNprinterControlMode, XtCPrinterControlMode, XtRInt, sizeof(int),
+	XtOffsetOf(XtermWidgetRec, screen.printer_controlmode),
+        XtRInt, (XtPointer) &defaultZERO},
+{XtNprinterCommand,XtCPrinterCommand, XtRString, sizeof(String),
+	XtOffsetOf(XtermWidgetRec, screen.printer_command),
+	XtRString, (XtPointer) "lpr"},
+{XtNprinterExtent,XtCPrinterExtent, XtRBoolean, sizeof(String),
+	XtOffsetOf(XtermWidgetRec, screen.printer_extent),
+	XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNprinterFormFeed,XtCPrinterFormFeed, XtRBoolean, sizeof(String),
+	XtOffsetOf(XtermWidgetRec, screen.printer_formfeed),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNmultiClickTime,XtCMultiClickTime, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.multiClickTime),
 	XtRInt, (XtPointer) &defaultMultiClickTime},
@@ -934,6 +956,12 @@ static void VTparse()
             int thischar = -1;
 	    c = doinput();
 
+	    /* Intercept characters for printer controller mode */
+	    if (screen->printer_controlmode == 2) {
+		if ((c = xtermPrinterControl(c)) == 0)
+		    continue;
+	    }
+
 	    /* Accumulate string for APC, DCS, PM, OSC, SOS controls */
 	    if (parsestate == sos_table) {
 		if (string_size == 0) {
@@ -1077,6 +1105,7 @@ static void VTparse()
 			/*
 			 * form feed, line feed, vertical tab
 			 */
+			xtermAutoPrint(c);
 			Index(screen, 1);
 			if (term->flags & LINEFEED)
 				CarriageReturn(screen);
@@ -1607,7 +1636,12 @@ static void VTparse()
 			break;
 
 		 case CASE_MC:
-			/* FIXME: implement media control */
+			xtermMediaControl(param[0], FALSE);
+			parsestate = groundtable;
+			break;
+
+		 case CASE_DEC_MC:
+			xtermMediaControl(param[0], TRUE);
 			parsestate = groundtable;
 			break;
 
@@ -2416,6 +2450,7 @@ dotext(screen, charset, buf, ptr)
 			    /* mark that we had to wrap this line */
 			    ScrnSetAttributes(screen, screen->cur_row, 0,
 					      LINEWRAPPED, LINEWRAPPED, 1);
+			    xtermAutoPrint('\n');
 			    Index(screen, 1);
 			    screen->cur_col = 0;
 			    screen->do_wrap = 0;
@@ -2615,6 +2650,18 @@ dpmodes(termw, func)
 				screen->send_mouse_pos = 1;
 			else
 				screen->send_mouse_pos = 0;
+			break;
+		case 18:		/* DECPFF: print form feed */
+		        if(func == bitset)
+			        screen->printer_formfeed = ON;
+			else
+			        screen->printer_formfeed = OFF;
+			break;
+		case 19:		/* DECPEX: print extent */
+		        if(func == bitset)
+			        screen->printer_extent = ON;
+			else
+			        screen->printer_extent = OFF;
 			break;
 		case 25:		/* DECTCEM: Show/hide cursor (VT200) */
 		        if(func == bitset)
@@ -3493,6 +3540,12 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->screen.highlight_selection = request->screen.highlight_selection;
    new->screen.always_highlight = request->screen.always_highlight;
    new->screen.pointer_cursor = request->screen.pointer_cursor;
+
+   new->screen.printer_command = request->screen.printer_command;
+   new->screen.printer_extent = request->screen.printer_extent;
+   new->screen.printer_formfeed = request->screen.printer_formfeed;
+   new->screen.printer_controlmode = request->screen.printer_controlmode;
+
    new->screen.input_eight_bits = request->screen.input_eight_bits;
    new->screen.output_eight_bits = request->screen.output_eight_bits;
    new->screen.control_eight_bits = request->screen.control_eight_bits;

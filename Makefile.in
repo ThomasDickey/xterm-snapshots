@@ -39,10 +39,10 @@ EXTRASRC	= @EXTRASRCS@
 EXTRAOBJ	= @EXTRAOBJS@
 
           SRCS1 = button.c charproc.c cursor.c data.c doublechr.c input.c \
-		  main.c menu.c misc.c screen.c scrollbar.c tabs.c \
+		  main.c menu.c misc.c print.c screen.c scrollbar.c tabs.c \
 		  TekPrsTbl.c Tekproc.c util.c VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button.o charproc.o cursor.o data.o doublechr.o input.o \
-		  main.o menu.o misc.o screen.o scrollbar.o tabs.o \
+		  main.o menu.o misc.o print.o screen.o scrollbar.o tabs.o \
 		  TekPrsTbl.o Tekproc.o util.o VTPrsTbl.o $(EXTRAOBJ)
           SRCS2 = resize.c
           OBJS2 = resize.o

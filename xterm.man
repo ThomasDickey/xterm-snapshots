@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.14 1997/06/29 07:54:44 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.15 1997/08/12 12:02:20 hohndel Exp $
 .\" Copyright (c) 1989  X Consortium
 .\" 
 .\" Permission is hereby granted, free of charge, to any person obtaining
@@ -855,6 +855,34 @@ Specifies the background color of the pointer.  The default is
 .TP 8
 .B "pointerShape (\fPclass\fB Cursor)"
 Specifies the name of the shape of the pointer.  The default is ``xterm.''
+.TP 8
+.B "printerControlMode (\fPclass\fB PrinterControlMode)"
+Specifies the printer control mode.
+A ``1'' selects autoprint mode, which causes
+.I xterm
+to print a line from the screen when you move the cursor off that
+line with a line feed, form feed or vertical tab character, or an
+autowrap occurs.
+Autoprint mode is overridden by printer controller mode (a ``2''),
+which causes all of the output to be directed to the printer.
+The default is ``0.''
+.TP 8
+.B "printerCommand (\fPclass\fB PrinterCommand)"
+Specifies a shell command to which
+.I xterm
+will open a pipe when the first
+MC (Media Copy) command is initiated.
+The default is ``lpr.''
+.TP 8
+.B "printerExtent (\fPclass\fB PrinterExtent)"
+Controls whether a print page function will print the entire page (true), or
+only the the portion within the scrolling margins (false).
+The default is ``false.''
+.TP 8
+.B "printerFormFeed (\fPclass\fB PrinterFormFeed)"
+Controls whether a form feed is sent to the printer at the end of a print
+page function.
+The default is ``false.''
 .TP 8
 .B "dynamicColors (\fPclass\fB DynamicColors)"
 Specifies whether or not dynamic modification of colors using the escape
