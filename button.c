@@ -104,7 +104,7 @@ static SelectUnit selectUnit;
 /* Send emacs escape code when done selecting or extending? */
 static int replyToEmacs;
 
-static char *SaveText (TScreen *screen, int row, int scol, int ecol, char *lp, int *eol);
+static Char *SaveText (TScreen *screen, int row, int scol, int ecol, Char *lp, int *eol);
 static int Length (TScreen *screen, int row, int scol, int ecol);
 static void ComputeSelect (int startRow, int startCol, int endRow, int endCol, Bool extend);
 static void EditorButton (XButtonEvent *event);
@@ -979,7 +979,7 @@ int SetCharacterClassRange (
 #if OPT_WIDE_CHARS
 static int class_of(TScreen *screen, int row, int col)
 {
-    int value;
+    unsigned value;
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row + screen->topline)[0])) {
 	col /= 2;
@@ -1215,7 +1215,8 @@ SaltTextAway(
     register TScreen *screen = &term->screen;
     register int i, j = 0;
     int eol;
-    char *line, *lp;
+    char *line;
+    Char *lp;
 
     if (crow == row && ccol > col) {
 	int tmp = ccol;
@@ -1256,7 +1257,7 @@ SaltTextAway(
 	return;
 
     line[j] = '\0';		/* make sure it is null terminated */
-    lp = line;			/* lp points to where to save the text */
+    lp = (Char *)line;		/* lp points to where to save the text */
     if ( row == crow ) {
 	lp = SaveText(screen, row, ccol, col, lp, &eol);
     } else {
@@ -1274,7 +1275,7 @@ SaltTextAway(
     *lp = '\0';			/* make sure we have end marked */
 
     TRACE(("Salted TEXT:%.*s\n", lp - line, line))
-    screen->selection_length = (lp - line);
+    screen->selection_length = ((char *)lp - line);
     _OwnSelection(term, params, num_params);
 }
 
@@ -1536,17 +1537,17 @@ Length(
 }
 
 /* copies text into line, preallocated */
-static char *
+static Char *
 SaveText(
     TScreen *screen,
     int row,
     int scol,
     int ecol,
-    register char *lp,		/* pointer to where to put the text */
+    register Char *lp,		/* pointer to where to put the text */
     int *eol)
 {
     int i = 0;
-    int c;
+    unsigned c;
 
     i = Length(screen, row, scol, ecol);
     ecol = scol + i;

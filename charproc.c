@@ -2298,7 +2298,7 @@ v_write(int f, Char *data, int len)
 	int c = len;
 
 	if (v_bufstr == NULL  &&  len > 0) {
-	        v_buffer = XtMalloc(len);
+	        v_buffer = (Char *) XtMalloc(len);
 		v_bufstr = v_buffer;
 		v_bufptr = v_buffer;
 		v_bufend = v_buffer + len;

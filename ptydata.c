@@ -194,7 +194,7 @@ unsigned usedPtyData(PtyData *data)
 }
 
 #if OPT_WIDE_CHARS
-Char * convertToUTF8(Char *lp, int c)
+Char * convertToUTF8(Char *lp, unsigned c)
 {
     if (c < 0x80) {		/*  0*******  */
 	*lp++ = (c);
