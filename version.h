@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/version.h,v 3.44 2000/01/29 18:58:41 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/version.h,v 3.46 2000/02/10 18:57:43 dawes Exp $ */
 
 /*
  * These definitions are used to build the string that's printed in response to

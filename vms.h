@@ -1,4 +1,4 @@
-/* $XFree86$ */
+/* $XFree86: xc/programs/xterm/vms.h,v 1.1 2000/02/08 17:19:45 dawes Exp $ */
 
 /* vms.h
  */

@@ -2,6 +2,8 @@ $! make.com
 $! 25-JAN-2000, David Mathog
 $! builds xaw3d, xmu, and then xterm.
 $!
+$! $XFree86: xc/programs/xterm/make.com,v 1.1 2000/02/08 17:19:37 dawes Exp $
+$!
 $!************************************************************
 $!
 $! set up logicals for XAW, XMU and so forth

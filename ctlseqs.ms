@@ -1,7 +1,7 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
 .\" $XConsortium: ctlseqs.ms,v 1.16 94/12/28 20:45:48 gildea Exp $
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.32 1999/12/30 03:46:12 robin Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.34 2000/02/10 18:57:17 dawes Exp $
 .\"
 .\"
 .\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey <dickey@clark.net>
@@ -842,7 +842,7 @@ Character Attributes (SGR)
   \*(Ps = \*3\*3 \(-> Set foreground color to Yellow
   \*(Ps = \*3\*4 \(-> Set foreground color to Blue
   \*(Ps = \*3\*5 \(-> Set foreground color to Magenta
-  \*(Ps = \*3\*7 \(-> Set foreground color to Cyan
+  \*(Ps = \*3\*6 \(-> Set foreground color to Cyan
   \*(Ps = \*3\*7 \(-> Set foreground color to White
   \*(Ps = \*3\*9 \(-> Set foreground color to default (original)
   \*(Ps = \*4\*0 \(-> Set background color to Black

@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.106 2000/01/29 18:58:39 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.108 2000/02/10 18:57:39 dawes Exp $ */
 
 
 /* main.c */

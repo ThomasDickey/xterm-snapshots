@@ -1,3 +1,4 @@
+$! $XFree86: xc/programs/xterm/link_axp.com,v 1.1 2000/02/08 17:19:35 dawes Exp $
 $ SAVE_VERIFY='F$VERIFY(0)
 $ if p1 .Eqs. "CLEAN" then goto clean
 $ if p1 .Eqs. "CLOBBER" then goto clobber

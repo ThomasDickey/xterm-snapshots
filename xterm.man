@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.55 2000/01/29 18:58:43 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.57 2000/02/10 18:57:45 dawes Exp $
 .\"
 .\"
 .\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey <dickey@clark.net>
