@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 # Author: Todd Larason <jtl@molehill.org>
+# $XFree86: xc/programs/xterm/vttests/256colors2.pl,v 1.1 1999/07/11 08:49:54 dawes Exp $
 
 # use the resources for colors 0-15 - usually more-or-less a
 # reproduction of the standard ANSI colors, but possibly more

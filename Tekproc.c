@@ -1,6 +1,6 @@
 /*
  * $XConsortium: Tekproc.c /main/120 1996/11/29 10:33:20 swick $
- * $XFree86: xc/programs/xterm/Tekproc.c,v 3.26 1999/05/15 06:24:59 dawes Exp $
+ * $XFree86: xc/programs/xterm/Tekproc.c,v 3.27 1999/07/11 08:49:32 dawes Exp $
  *
  * Warning, there be crufty dragons here.
  */
