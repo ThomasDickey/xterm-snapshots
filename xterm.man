@@ -1,3 +1,4 @@
+.\" $XTermId: xterm.man,v 1.259 2004/04/18 20:49:43 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -54,9 +55,9 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.100 2004/03/04 02:21:57 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.103 2004/04/18 20:49:43 dickey Exp $
 .\"
-.\" updated by Thomas E. Dickey for XFree86, July 1996 - November 2003.
+.\" updated by Thomas E. Dickey for XFree86, July 1996 - April 2004.
 .TH XTERM 1 __vendorversion__
 .SH NAME
 xterm \- terminal emulator for X
@@ -362,9 +363,10 @@ bug mentioned above.
 .B "\-dc"
 This option disables the escape sequence to change dynamic colors:
 the vt100 foreground and background colors,
-the text cursor color,
-the mouse cursor foreground and background colors,
+its text cursor color,
+the pointer cursor foreground and background colors,
 the Tektronix emulator foreground and background colors,
+its text cursor color
 and highlight color.
 .TP 8
 .B "+dc"
@@ -738,6 +740,7 @@ should not cause the window to be repositioned.
 .BI \-sl " number"
 This option specifies the number of lines to save that have been scrolled
 off the top of the screen.
+This corresponds to the \fBsaveLines\fP resource.
 The default is 64.
 .TP 8
 .B \-sm
@@ -903,6 +906,12 @@ Examples:
 -Sab34
 .RE
 .fi
+.IP
+Note that \fIxterm\fP does not close any file descriptor
+which it did not open for its own use.
+It is possible (though probably not portable) to have an application
+which passes an open file descriptor down to \fIxterm\fP past the
+initialization or the \fB\-S\fP option to a process running in the \fIxterm\fP.
 .PP
 The following command line arguments are provided for compatibility with
 older versions.
@@ -1065,6 +1074,10 @@ In practice
 this should never be a problem.
 The default is ``true''.
 .TP 8
+.B "scoFunctionKeys (\fPclass\fB ScoFunctionKeys)"
+Specifies whether or not SCP Function Key escape codes should be generated for
+function keys instead of standard escape sequences.
+.TP 8
 .B "sessionMgt (\fPclass\fB SessionMgt)"
 If the value of this resource is ``true'',
 xterm sets up session manager callbacks
@@ -1211,6 +1224,7 @@ The default is ``false.''
 .TP 8
 .B "appcursorDefault (\fPclass\fB AppcursorDefault)"
 If ``true,'' the cursor keys are initially in application mode.
+This is the same as the VT102 private DECCKM mode,
 The default is ``false.''
 .TP 8
 .B "appkeypadDefault (\fPclass\fB AppkeypadDefault)"
@@ -1219,6 +1233,7 @@ The default is ``false.''
 .TP 8
 .B "autoWrap (\fPclass\fB AutoWrap)"
 Specifies whether or not auto-wraparound should be enabled.
+This is the same as the VT102 DECAWM.
 The
 default is ``true.''
 .TP 8
@@ -1301,6 +1316,7 @@ If true, \fIxterm\fP applies a workaround to ignore malformed control
 sequences that a Linux script might send.
 Compare the palette control sequences documented in \fIconsole_codes\fR
 with ECMA-48.
+The default is ``true.''
 .TP 8
 .B "brokenSelections (\fPclass\fB BrokenSelections)"
 If true, \fIxterm\fP in 8-bit mode will interpret
@@ -1321,7 +1337,8 @@ Set this to ``true'' if \fIxterm\fP appears to freeze when connecting.
 The default is ``false.''
 .TP 8
 .B "c132 (\fPclass\fB C132)"
-Specifies whether or not the VT102 DECCOLM escape sequence should be honored.
+Specifies whether or not the VT102 DECCOLM escape sequence,
+used to switch between 80 and 132 columns, should be honored.
 The default is ``false.''
 .TP 8
 .B "cutNewline (\fPclass\fB CutNewline)"
@@ -1679,6 +1696,7 @@ The default is 2.
 .TP 8
 .B "jumpScroll (\fPclass\fB JumpScroll)"
 Specifies whether or not jump scroll should be used.
+This corresponds to the VT102 DECSCLM private mode.
 The default is ``true.''
 .TP 8
 .B "keyboardDialect (\fPclass\fB KeyboardDialect)"
@@ -1755,12 +1773,14 @@ as a login shell.
 The default is ``false.''
 .TP 8
 .B "marginBell (\fPclass\fB MarginBell)"
-Specifies whether or not the bell should be run when the user types near the
+Specifies whether or not the bell should be rung when the user types near the
 right margin.
 The default is ``false.''
 .TP 8
 .B "metaSendsEscape (\fPclass\fB MetaSendsEscape\fP)"
-If ``true'', Meta characters are converted into a two-character
+If ``true'', Meta characters
+(a character combined with the \fImeta\fP modifier key)
+are converted into a two-character
 sequence with the character itself preceded by ESC.
 This applies as well to function key control sequences, unless \fIxterm\fP
 sees that \fBMeta\fP is used in your key translations.
@@ -1898,6 +1918,7 @@ The default is
 .TP 8
 .B "reverseWrap (\fPclass\fB ReverseWrap)"
 Specifies whether or not reverse-wraparound should be enabled.
+This corresponds to \fIxterm\fP's private mode 45.
 The default is
 ``false.''
 .TP 8
@@ -1919,6 +1940,7 @@ The default is
 .B "scrollKey (\fPclass\fB ScrollCond)"
 Specifies whether or not pressing a key should automatically cause the
 scrollbar to go to the bottom of the scrolling region.
+This corresponds to \fIxterm\fP's private mode 1011.
 The default is
 ``false.''
 .TP 8
@@ -2500,64 +2522,460 @@ has four menus, named
 and
 .IR tekMenu .
 Each menu pops up under the correct combinations of key and button presses.
-Most menus are divided into two section, separated by a horizontal line.
-The top portion contains various modes that can be altered.
+Each menu is divided into sections, separated by a horizontal line.
+Some menu entries correspond to modes that can be altered.
 A check mark appears next to a mode that is currently active.
 Selecting one of these modes toggles its state.
-The bottom portion of the menu are command entries; selecting one of these
-performs the indicated function.
-.
+Other menu entries are commands;
+selecting one of these performs the indicated function.
 .PP
-The
-.I xterm
-menu pops up when the ``control'' key and pointer button one are
-pressed in a window.
-The \fImainMenu\fP contains items that apply to both the VT102 and Tektronix
-windows.
+All of the menu entries correspond to X actions.
+In the list below, the menu label is shown followed by the action's
+name in parenthesis.
+.
+.\" ************************************************************************
+.PP
+The \fIxterm\fP \fImainMenu\fP pops up
+when the ``control'' key and pointer button one are pressed in a window.
+This menu contains items that apply to both the VT102 and Tektronix windows.
+There are several sections:
+.TP
+Commands for managing X events:
+.RS
+.TP
+Secure Keyboard (securekbd)
 The
 .B Secure Keyboard
-mode is be used when typing in passwords or other sensitive data in an
+mode is helpful when typing in passwords or other sensitive data in an
 unsecure environment;
-see \fBSECURITY\fP below.
-Notable entries in the command section of the menu are the
-.BR Continue ,
-.BR Suspend ,
-.BR Interrupt ,
-.BR Hangup ,
-.B Terminate
-and
-.B Kill
-which sends the SIGCONT, SIGTSTP, SIGINT, SIGHUP, SIGTERM and
-SIGKILL signals, respectively, to the process group of the process running
-under
+see \fBSECURITY\fP below (but read the limitations carefully).
+.TP
+Allow SendEvents (allowsends )
+Specifies whether or not synthetic key and button events generated using
+the X protocol SendEvent request should be interpreted or discarded.
+This corresponds to the \fBallowSendEvents\fP resource.
+.TP
+Redraw Window (redraw)
+Forces the X display to repaint;
+useful in some environments.
+.RE
+.TP
+Commands for capturing output:
+.RS
+.TP
+Log to File (logging)
+Captures text sent to the screen in a logfile,
+as in the \fB\-l\fP logging option.
+.TP
+Print Window (print)
+Sends the text of the current window to the program given in the
+\fBprinterCommand\fP resource.
+.TP
+Redirect to Printer (print-redir)
+This sets the \fBprinterControlMode\fR to 0 or 2.
+You can use this to turn the printer on as if an application had sent
+the appropriate control sequence.
+It is also useful for switching the printer
+off if an application turns it on without resetting the print control mode.
+.RE
+.TP
+Modes for setting keyboard style:
+.RS
+.TP
+8-Bit Controls (8-bit-control)
+Enabled for VT220 emulation, this controls whether \fIxterm\fP will send
+8-bit control sequences rather than using 7-bit (ASCII) controls,
+e.g., sending a byte in the range 128-159 rather than the escape character
+followed by a second byte.
+\fIXterm\fP always interprets both 8-bit and 7-bit control sequences
+(see the document \fIXterm Control Sequences\fP).
+This corresponds to the \fIeightBitControl\fP resource.
+.TP
+Backarrow Key (BS/DEL) (backarrow\ key)
+Modifies the behavior of the backarrow key, making it transmit
+either a backspace (8)
+or delete (127) character.
+This corresponds to the \fIbackarrowKey\fP resource.
+.TP
+Alt/NumLock Modifiers (num-lock)
+Controls the treatment of Alt- and NumLock-key modifiers.
+This corresponds to the \fInumLock\fP resource.
+.TP
+Meta Sends Escape (meta-esc)
+Controls whether \fImeta\fP characters are converted into a two-character
+sequence with the character itself preceded by ESC.
+This corresponds to the \fImetaSendsEscape\fP resource.
+.TP
+Delete is DEL (delete-is-del)
+Controls whether the Delete key on the editing keypad should send DEL (127)
+or the VT220-style Remove escape sequence.
+This corresponds to the \fIdeleteIsDEL\fP resource.
+.TP
+Old Function-Keys (oldFunctionKeys)
+.TP
+HP Function-Keys (hpFunctionKeys)
+.TP
+SCO Function-Keys (scoFunctionKeys)
+.TP
+Sun Function-Keys (sunFunctionKeys)
+.TP
+VT220 Keyboard (sunKeyboard)
+These act as a radio-button, selecting one style for the keyboard layout.
+It corresponds to more than one resource setting:
+.BR "sunKeyboard" ","
+.BR "sunFunctionKeys" ","
+.BR "scoFunctionKeys" " and"
+.BR "hpFunctionKeys "."
+.RE
+.TP
+Commands for process signalling:
+.RS
+.TP
+Send STOP Signal (suspend)
+.TP
+Send CONT Signal (continue)
+.TP
+Send INT Signal (interrupt)
+.TP
+Send HUP Signal (hangup)
+.TP
+Send TERM Signal (terminate)
+.TP
+Send KILL Signal (kill)
+These send the SIGTSTP, SIGCONT, SIGINT, SIGHUP, SIGTERM and SIGKILL
+signals respectively, to the process group of the process running under
 .I xterm
 (usually the shell).
 The
-.B Continue
+.B SIGCONT
 function is especially useful if the user has accidentally typed CTRL-Z,
 suspending the process.
+.TP
+Quit (quit)
+Stop processing X events except to support the \fB\-hold\fP option,
+and then send a SIGHUP signal to the 
+the process group of the process running under
+.I xterm
+(usually the shell).
+.RE
+.PP
 .
+.\" ************************************************************************
 .PP
 The
 .I vtMenu
 sets various modes in the VT102 emulation, and is popped up when the
 ``control'' key and pointer button two are pressed in the VT102 window.
-In the command section of this menu, the soft reset entry will reset
-scroll regions.
+.TP
+VT102/VT220 Modes:
+.RS
+.
+.TP
+Enable Scrollbar (scrollbar)
+Enable (or disable) the scrollbar.
+This corresponds to the 
+.B \-sb
+option and the
+.B scrollBar
+resource.
+.
+.TP
+Enable Jump Scroll (jumpscroll)
+Enable (or disable) jump scrolling.
+This corresponds to the 
+.B \-j
+option and the
+.B jumpScroll
+resource.
+.
+.TP
+Enable Reverse Video (reversevideo)
+Enable (or disable) reverse-video.
+This corresponds to the 
+.B \-rv
+option and the
+.B reverseVideo
+resource.
+.
+.TP
+Enable Auto Wraparound (autowrap)
+Enable (or disable) auto-wraparound.
+This corresponds to the 
+.B \-aw
+option and the
+.B autoWrap
+resource.
+.
+.TP
+Enable Reverse Wraparound (reversewrap)
+Enable (or disable) reverse wraparound.
+This corresponds to the 
+.B \-rw
+option and the
+.B reverseWrap
+resource.
+.
+.TP
+Enable Auto Linefeed (autolinefeed)
+Enable (or disable) auto-linefeed.
+This is the VT102 NEL function,
+which causes the emulator to emit a linefeed after each carriage return.
+There is no corresponding command-line option or resource setting.
+.
+.TP
+Enable Application Cursor Keys (appcursor)
+Enable (or disable) application cursor keys.
+This corresponds to the
+.B appcursorDefault
+resource.
+There is no corresponding command-line option.
+.
+.TP
+Enable Application Keypad (appkeypad)
+Enable (or disable) application keypad keys.
+This corresponds to the
+.B appkeypadDefault
+resource.
+There is no corresponding command-line option.
+.
+.TP
+Scroll to Bottom on Key Press (scrollkey)
+Enable (or disable) scrolling to the bottom of the scrolling region on a keypress.
+This corresponds to the 
+.B \-sk
+option and the
+.B scrollKey
+resource.
+.
+.TP
+Scroll to Bottom on Tty Output (scrollttyoutput)
+Enable (or disable) scrolling to the bottom of the scrolling region on output to the terminal..
+This corresponds to the 
+.B \-si
+option and the
+.B scrollTtyOutput
+resource.
+.
+.TP
+Allow 80/132 Column Switching (allow132)
+Enable (or disable) switching between 80 and 132 columns.
+This corresponds to the 
+.B \-132
+option and the
+.B c132
+resource.
+.
+.TP
+Enable Curses Emulation (cursesemul)
+Enable (or disable) a workaround for the so-called "curses bug".
+This corresponds to the 
+.B \-cu
+option and the
+.B curses
+resource.
+.
+.TP
+Enable Visual Bell (visualbell)
+Enable (or disable) visible bell (i.e., flashing) instead of an audible bell.
+This corresponds to the 
+.B \-vb
+option and the
+.B visualBell
+resource.
+.
+.TP
+Enable Pop on Bell (poponbell)
+Enable (or disable) raising of the window when Control-G is received.
+This corresponds to the 
+.B \-pop
+option and the
+.B popOnBell
+resource.
+.
+.TP
+Enable Margin Bell (marginbell)
+Enable (or disable) a bell when the user types near the right margin.
+This corresponds to the 
+.B \-mb
+option and the
+.B marginBell
+resource.
+.
+.TP
+Enable Blinking Cursor (cursorblink)
+Enable (or disable) the blinking-cursor feature.
+This corresponds to the 
+.B \-bc
+option and the
+.B cursorBlink
+resource.
+.
+.TP
+Enable Alternate Screen Switching (titeInhibit)
+Enable (or disable) switching between the normal and alternate screens.
+This corresponds to the 
+.B titeInhibit
+resource.
+There is no corresponding command-line option.
+.
+.TP
+Enable Active Icon (activeicon)
+Enable (or disable) the active-icon feature.
+This corresponds to the 
+.B \-ai
+option and the
+.B activeIcon
+resource.
+.RE
+.
+.TP
+VT102/VT220 Commands:
+.RS
+.TP
+Do Soft Reset (softreset)
+Reset scroll regions.
 This can be convenient when some program has left the scroll regions
 set incorrectly (often a problem when using VMS or TOPS-20).
+This corresponds to the VT220 DECSTR control sequence.
+.
+.TP
+Do Full Reset (hardreset)
 The full reset entry will clear the screen, reset tabs to every
 eight columns, and reset the terminal modes (such as wrap and smooth scroll)
 to their initial states just after
 .I xterm
 has finished processing the command line options.
+This corresponds to the VT102 RIS control sequence,
+with a few obvious differences.
+For example, your session is not disconnected as a real VT102 would do.
+.
+.TP
+Reset and Clear Saved Lines (clearsavedlines)
+Perform a full reset,
+and also clear the saved lines.
+.RE
+.
+.TP
+Commands for setting the current screen:
+.RS
+.
+.TP
+Show Tek Window (tekshow)
+When enabled,
+pops the Tektronix 4014 window up (makes it visible).
+When disabled,
+hides the Tektronix 4014 window.
+.
+.TP
+Switch to Tek Mode (tekmode)
+When enabled,
+pops the Tektronix 4014 window up if it is not already visible,
+and switches the input stream to that window.
+When disabled,
+hides the Tektronix 4014 window and
+switches input back to the VTxxx window.
+.
+.TP
+Hide VT Window (vthide)
+When enabled,
+hides the VTxxx window,
+shows the Tektronix 4014 window if
+it was not already visible
+and switches the input stream to that window.
+When disabled,
+shows the VTxxx window,
+and switches the input stream to that window.
+.
+.TP
+Show Alternate Screen (altscreen)
+When enabled,
+shows the alternate screen.
+When disabled,
+shows the normal screen.
+Note that the normal screen may have saved lines;
+the alternate screen does not.
+.RE
+.PP
 .
 .PP
-The \fIfontMenu\fP sets the font used in the VT102 window.
-In addition to the default font and a number of alternatives that are
-set with resources, the menu offers the font last specified by the Set
-Font escape sequence (see the document \fIXterm Control Sequences\fP)
-and the current selection as a font name (if the PRIMARY selection is owned).
+The \fIfontMenu\fP sets the font used in the VT102 window,
+or modifies the way the font is specified or displayed.
+There are three sections.
+.PP
+The first section allows you to select the font from a set of alternatives:
+.RS
+.TP
+Default (fontdefault)
+Set the font to the default, i.e., that given by the
+.B *VT100.font
+resource.
+.TP
+Unreadable (font1)
+Set the font to that given by the
+.B *VT100.font1
+resource.
+.TP
+Tiny (font2)
+Set the font to that given by the
+.B *VT100.font2
+resource.
+.TP
+Small (font3)
+Set the font to that given by the
+.B *VT100.font3
+resource.
+.TP
+Medium (font4)
+Set the font to that given by the
+.B *VT100.font4
+resource.
+.TP
+Large (font5)
+Set the font to that given by the
+.B *VT100.font5
+resource.
+.TP
+Huge (font6)
+Set the font to that given by the
+.B *VT100.font6
+resource.
+.TP
+Escape Sequence
+This allows you to set the font last specified by the Set
+Font escape sequence (see the document \fIXterm Control Sequences\fP).
+.TP
+Selection (fontsel)
+This allows you to set the font specified 
+the current selection as a font name (if the PRIMARY selection is owned).
+.RE
+.PP
+The second section allows you to modify the way it is displayed:
+.RS
+.TP
+Line-Drawing Characters (font-linedrawing)
+When set, tells \fIxterm\fP to draw its own line-drawing characters.
+Otherwise it relies on the font containing these.
+.TP
+Doublesized Characters (font-doublesize)
+When set, \fIxterm\fP may ask the font server to produce scaled versions
+of the normal font, for VT102 double-size characters.
+.RE
+.PP
+The third section allows you to modify the way it is specified:
+.RS
+.TP
+TrueType Fonts (render-font)
+If the
+.B "renderFont
+and corresponding resources were set,
+this is a further control whether \fIxterm\fP will actually use the
+Xft library calls to obtain a font.
+.TP
+UTF-8 (utf8-mode)
+This controls whether \fIxterm\fP uses UTF-8 encoding of input/output.
+It is useful for temporarily switching \fIxterm\fP to display
+text from an application which does not follow the locale settings.
+.RE
 .
 .PP
 The
@@ -2565,42 +2983,88 @@ The
 sets various modes in the Tektronix emulation, and is popped up when the
 ``control'' key and pointer button two are pressed in the Tektronix window.
 The current font size is checked in the modes section of the menu.
-The
-.B PAGE
-entry in the command section clears the Tektronix window.
+.RS
+.TP
+Large Characters (tektextlarge)
+.TP
+\#2 Size Characters (tektext2)
+.TP
+\#3 Size Characters (tektext3)
+.TP
+Small Characters (tektextsmall)
+.RE
+.PP
+Commands:
+.RS
+.TP
+PAGE (tekpage)
+Clear the Tektronix window.
+.TP
+RESET (tekreset)
+.TP
+COPY (tekcopy)
+.RE
+.PP
+Windows:
+.RS
+.TP
+Show VT Window (vtshow)
+.TP
+Switch to VT Mode (vtmode)
+.TP
+Hide Tek Window (tekhide)
+.RE
 .
 .
 .SH SECURITY
 .
 .PP
 X environments differ in their security consciousness.
-Most servers, run
-under \fIxdm\fP, are capable of using a ``magic cookie'' authorization
+Most servers,
+run under \fIxdm\fP,
+are capable of using a ``magic cookie'' authorization
 scheme that can provide a reasonable level of security for many people.
 If your server is only using a host-based mechanism to control access to
 the server (see \fIxhost(1)\fP), then if you enable access for a host and
-other users are also permitted to run clients on that same host, there is
-every possibility that someone can run an application that will use the
-basic services of the X protocol to snoop on your activities, potentially
-capturing a transcript of everything you type at the keyboard.
-This is of particular concern when you want to type in a password or other
-sensitive data.
+other users are also permitted to run clients on that same host,
+it is possible that someone can run an application which uses the
+basic services of the X protocol to snoop on your activities,
+potentially capturing a transcript of everything you type at the keyboard.
+Any process which has access to your X display can manipulate it
+in ways that you might not anticipate,
+even redirecting your keyboard to itself
+and sending events to your application's windows.
+This is true even with the ``magic cookie'' authorization scheme.
+While the \fBallowSendEvents\fP provides some protection against
+rogue applications tampering with your programs,
+guarding against a snooper is harder.
+.
+.PP
+The possibility of an application spying on your keystrokes
+is of particular concern when you want to type in a password
+or other sensitive data.
 The best solution to this problem is to use a better
-authorization mechanism that host-based control, but a simple
-mechanism exists for protecting keyboard input in \fIxterm\fP.
+authorization mechanism than is provided by X.
+Given all of these caveats,
+a simple mechanism exists for protecting keyboard input in \fIxterm\fP.
 .
 .PP
 The \fIxterm\fP menu (see \fBMENUS\fP above) contains a \fBSecure Keyboard\fP
-entry which, when enabled, ensures that all keyboard input is directed
+entry which, when enabled,
+attempts to ensure that all keyboard input is directed
 \fIonly\fP to \fIxterm\fP (using the GrabKeyboard protocol request).
 When an application prompts you for a password
 (or other sensitive data), you can enable \fBSecure Keyboard\fP using the
 menu, type in the data, and then disable \fBSecure Keyboard\fP using
 the menu again.
-Only one X client at a time can secure the keyboard,
+This ensures that you know which window is accepting your keystrokes.
+It cannot ensure that there are no processes which have access to your
+X display that might be observing the keystrokes as well.
+.
+.PP
+Only one X client at a time can grab the keyboard,
 so when you attempt to enable \fBSecure Keyboard\fP it may fail.
-In
-this case, the bell will sound.
+In this case, the bell will sound.
 If the \fBSecure Keyboard\fP succeeds,
 the foreground and background colors will be exchanged (as if you
 selected the \fBReverse Video\fP entry in the \fBModes\fP menu);
@@ -2608,8 +3072,7 @@ they will be exchanged again when you exit secure mode.
 If the colors
 do \fInot\fP switch, then
 you should be \fIvery\fP suspicious that you are being spoofed.
-If
-the application you are running displays a prompt before asking for
+If the application you are running displays a prompt before asking for
 the password, it is safest to enter secure mode \fIbefore\fP the
 prompt gets displayed, and to make sure that the prompt gets displayed
 correctly (in the new colors), to minimize the probability of

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.14 2004/03/04 02:21:57 dickey Exp $
+ * $XFree86: xc/programs/xterm/xterm_io.h,v 1.15 2004/04/03 22:26:26 dawes Exp $
  */
 
 /*
@@ -68,7 +68,7 @@
 #define USE_TERMIOS
 #endif
 
-#ifdef SCO325
+#ifdef __SCO__
 #define USE_TERMIOS
 #define _SVID3
 #endif
@@ -160,7 +160,7 @@
 #ifdef SYSV
 #ifdef USE_USG_PTYS
 #include <sys/stream.h>			/* get typedef used in ptem.h */
-#if !defined(SVR4) || defined(SCO325)
+#if !defined(SVR4) || defined(__SCO__)
 #include <sys/ptem.h>			/* get struct winsize */
 #endif
 #endif /* USE_USG_PTYS */

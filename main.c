@@ -1,3 +1,5 @@
+/* $XTermId: main.c,v 1.373 2004/04/18 20:49:43 tom Exp $ */
+
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
 #endif /* lint */
@@ -89,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.175 2004/03/04 02:21:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.178 2004/04/18 20:49:43 dickey Exp $ */
 
 /* main.c */
 
@@ -144,7 +146,7 @@ SOFTWARE.
 static Bool IsPts = False;
 #endif
 
-#if defined(SCO) || defined(SVR4) || defined(_POSIX_SOURCE)
+#if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE)
 #define USE_POSIX_SIGNALS
 #endif
 
@@ -179,7 +181,7 @@ static Bool IsPts = False;
 #define WTMP
 #endif
 
-#ifdef SCO325
+#ifdef __SCO__
 #ifndef _SVID3
 #define _SVID3
 #endif
@@ -405,7 +407,7 @@ extern struct utmp *getutid __((struct utmp * _Id));
 
 #include <signal.h>
 
-#if defined(sco) || (defined(ISC) && !defined(_POSIX_SOURCE))
+#if defined(__SCO__) || (defined(ISC) && !defined(_POSIX_SOURCE))
 #undef SIGTSTP			/* defined, but not the BSD way */
 #endif
 
@@ -700,6 +702,9 @@ static XtResource application_resources[] =
 #endif
 #if OPT_HP_FUNC_KEYS
     Bres("hpFunctionKeys", "HpFunctionKeys", hpFunctionKeys, FALSE),
+#endif
+#if OPT_SCO_FUNC_KEYS
+    Bres("scoFunctionKeys", "ScoFunctionKeys", scoFunctionKeys, FALSE),
 #endif
 #if OPT_INITIAL_ERASE
     Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, FALSE),
@@ -1205,21 +1210,18 @@ Help(void)
     OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     char **cpp;
 
-    fprintf(stderr,
-	    "%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
-	    XFREE86_VERSION, XTERM_PATCH, ProgramName);
-    fprintf(stderr, "where options include:\n");
+    printf("%s(%d) usage:\n    %s [-options ...] [-e command args]\n\n",
+	   XFREE86_VERSION, XTERM_PATCH, ProgramName);
+    printf("where options include:\n");
     for (opt = list; opt->opt; opt++) {
-	fprintf(stderr, "    %-28s %s\n", opt->opt, opt->desc);
+	printf("    %-28s %s\n", opt->opt, opt->desc);
     }
 
-    putc('\n', stderr);
-    for (cpp = message; *cpp; cpp++) {
-	fputs(*cpp, stderr);
-	putc('\n', stderr);
-    }
-    putc('\n', stderr);
-    fflush(stderr);
+    putchar('\n');
+    for (cpp = message; *cpp; cpp++)
+	puts(*cpp);
+    putchar('\n');
+    fflush(stdout);
 }
 
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
@@ -1385,17 +1387,14 @@ ParseSccn(char *option)
 
     if (leaf != option) {
 	if (leaf - option > 1
-	    && leaf - option <= PTYCHARLEN
+	    && isdigit(*leaf)
 	    && sscanf(leaf, "%d", &am_slave) == 1) {
 	    size_t len = leaf - option - 1;
 	    /*
-	     * If the given length is less than PTYCHARLEN, that is
-	     * all right because the calling application may be
-	     * giving us a path for /dev/pts, which would be
-	     * followed by one or more decimal digits.
-	     *
-	     * For fixed-width fields, it is up to the calling
-	     * application to provide leading 0's, if needed.
+	     * If we have a slash, we only care about the part after the slash,
+	     * which is a file-descriptor.  The part before the slash can be
+	     * the /dev/pts/XXX value, but since we do not need to reopen it,
+	     * it is useful mainly for display in a "ps -ef".
 	     */
 	    strncpy(passedPty, option, len);
 	    passedPty[len] = 0;
@@ -2323,7 +2322,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
 #endif
 	result = ((*pty = open("/dev/ptmx", O_RDWR)) < 0);
 #endif
-#if defined(SVR4) || defined(SCO325) || defined(USE_ISPTS_FLAG)
+#if defined(SVR4) || defined(__SCO__) || defined(USE_ISPTS_FLAG)
 	if (!result)
 	    strcpy(ttydev, ptsname(*pty));
 #ifdef USE_ISPTS_FLAG
@@ -2470,17 +2469,17 @@ pty_search(int *pty)
 }
 #endif /* USE_PTY_SEARCH */
 
-static void
-get_terminal(void)
 /*
  * sets up X and initializes the terminal structure except for term.buf.fildes.
  */
+static void
+get_terminal(void)
 {
     register TScreen *screen = &term->screen;
 
     screen->arrow = make_colored_cursor(XC_left_ptr,
-					screen->mousecolor,
-					screen->mousecolorback);
+					T_COLOR(screen, MOUSE_FG),
+					T_COLOR(screen, MOUSE_BG));
 }
 
 /*
@@ -2697,6 +2696,9 @@ spawn(void)
 #endif
 #ifdef USE_LASTLOG
     struct lastlog lastlog;
+#endif
+#ifdef USE_LASTLOGX
+    struct lastlogx lastlog;
 #endif /* USE_LASTLOG */
 #endif /* HAVE_UTMP */
 
@@ -3011,7 +3013,7 @@ spawn(void)
 	     * now in child process
 	     */
 	    TRACE_CHILD
-#if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__) || defined(SCO325) || defined(__QNX__)
+#if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__) || defined(__SCO__) || defined(__QNX__)
 		int pgrp = setsid();	/* variable may not be used... */
 #else
 		int pgrp = getpid();
@@ -3764,7 +3766,7 @@ spawn(void)
 		       errno, (errno != 0) ? strerror(errno) : ""));
 	    }
 #ifdef WTMP
-#if defined(WTMPX_FILE) && (defined(SVR4) || defined(SCO325))
+#if defined(WTMPX_FILE) && (defined(SVR4) || defined(__SCO__))
 	    if (term->misc.login_shell)
 		updwtmpx(WTMPX_FILE, &utmp);
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
@@ -3836,6 +3838,20 @@ spawn(void)
 	    }
 #endif /* OPT_PTY_HANDSHAKE */
 #endif /* USE_SYSV_UTMP */
+
+#ifdef USE_LASTLOGX
+	    if (term->misc.login_shell) {
+		bzero((char *) &lastlog, sizeof(lastlog));
+		(void) strncpy(lastlog.ll_line,
+			       my_pty_name(ttydev),
+			       sizeof(lastlog.ll_line));
+		X_GETTIMEOFDAY(&lastlog.ll_tv);
+		(void) strncpy(lastlog.ll_host,
+			       XDisplayString(screen->display),
+			       sizeof(lastlog.ll_host));
+		updlastlogx(_PATH_LASTLOGX, screen->uid, &lastlog);
+	    }
+#endif
 
 #ifdef USE_LASTLOG
 	    if (term->misc.login_shell &&
@@ -4246,7 +4262,7 @@ Exit(int n)
 #endif
 	    (void) pututline(utptr);
 #ifdef WTMP
-#if defined(WTMPX_FILE) && (defined(SVR4) || defined(SCO325))
+#if defined(WTMPX_FILE) && (defined(SVR4) || defined(__SCO__))
 	    if (term->misc.login_shell)
 		updwtmpx(WTMPX_FILE, utptr);
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))

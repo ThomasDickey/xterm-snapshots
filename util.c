@@ -1,8 +1,10 @@
+/* $XTermId: util.c,v 1.186 2004/04/18 20:49:43 tom Exp $ */
+
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.79 2004/03/04 02:21:56 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.81 2004/04/18 20:49:43 dickey Exp $ */
 
 /*
  * Copyright 1999-2003,2004 by Thomas E. Dickey
@@ -1151,20 +1153,12 @@ void
 GetColors(XtermWidget tw, ScrnColors * pColors)
 {
     TScreen *screen = &tw->screen;
+    int n;
 
     pColors->which = 0;
-    SET_COLOR_VALUE(pColors, TEXT_FG, screen->foreground);
-    SET_COLOR_VALUE(pColors, TEXT_BG, tw->core.background_pixel);
-    SET_COLOR_VALUE(pColors, TEXT_CURSOR, screen->cursorcolor);
-    SET_COLOR_VALUE(pColors, MOUSE_FG, screen->mousecolor);
-    SET_COLOR_VALUE(pColors, MOUSE_BG, screen->mousecolorback);
-#if OPT_HIGHLIGHT_COLOR
-    SET_COLOR_VALUE(pColors, HIGHLIGHT_BG, screen->highlightcolor);
-#endif
-#if OPT_TEK4014
-    SET_COLOR_VALUE(pColors, TEK_FG, screen->Tforeground);
-    SET_COLOR_VALUE(pColors, TEK_BG, screen->Tbackground);
-#endif
+    for (n = 0; n < NCOLORS; ++n) {
+	SET_COLOR_VALUE(pColors, n, T_COLOR(screen, n));
+    }
 }
 
 void
@@ -1175,20 +1169,21 @@ ChangeColors(XtermWidget tw, ScrnColors * pNew)
     Window tek = TWindow(screen);
 #endif
 
-    if (COLOR_DEFINED(pNew, TEXT_BG)) {
-	tw->core.background_pixel = COLOR_VALUE(pNew, TEXT_BG);
-    }
+    TRACE(("ChangeColors\n"));
 
     if (COLOR_DEFINED(pNew, TEXT_CURSOR)) {
-	screen->cursorcolor = COLOR_VALUE(pNew, TEXT_CURSOR);
-    } else if ((screen->cursorcolor == screen->foreground) &&
+	T_COLOR(screen, TEXT_CURSOR) = COLOR_VALUE(pNew, TEXT_CURSOR);
+	TRACE(("... TEXT_CURSOR: %#lx\n", T_COLOR(screen, TEXT_CURSOR)));
+    } else if ((T_COLOR(screen, TEXT_CURSOR) == T_COLOR(screen, TEXT_FG)) &&
 	       (COLOR_DEFINED(pNew, TEXT_FG))) {
-	screen->cursorcolor = COLOR_VALUE(pNew, TEXT_FG);
+	T_COLOR(screen, TEXT_CURSOR) = COLOR_VALUE(pNew, TEXT_FG);
+	TRACE(("... TEXT_CURSOR: %#lx\n", T_COLOR(screen, TEXT_CURSOR)));
     }
 
     if (COLOR_DEFINED(pNew, TEXT_FG)) {
 	Pixel fg = COLOR_VALUE(pNew, TEXT_FG);
-	screen->foreground = fg;
+	T_COLOR(screen, TEXT_FG) = fg;
+	TRACE(("... TEXT_FG: %#lx\n", T_COLOR(screen, TEXT_FG)));
 	XSetForeground(screen->display, NormalGC(screen), fg);
 	XSetBackground(screen->display, ReverseGC(screen), fg);
 	XSetForeground(screen->display, NormalBoldGC(screen), fg);
@@ -1197,30 +1192,38 @@ ChangeColors(XtermWidget tw, ScrnColors * pNew)
 
     if (COLOR_DEFINED(pNew, TEXT_BG)) {
 	Pixel bg = COLOR_VALUE(pNew, TEXT_BG);
-	tw->core.background_pixel = bg;
+	T_COLOR(screen, TEXT_BG) = bg;
+	TRACE(("... TEXT_BG: %#lx\n", T_COLOR(screen, TEXT_BG)));
 	XSetBackground(screen->display, NormalGC(screen), bg);
 	XSetForeground(screen->display, ReverseGC(screen), bg);
 	XSetBackground(screen->display, NormalBoldGC(screen), bg);
 	XSetForeground(screen->display, ReverseBoldGC(screen), bg);
 	XSetWindowBackground(screen->display, VWindow(screen),
-			     tw->core.background_pixel);
+			     T_COLOR(screen, TEXT_BG));
     }
 #if OPT_HIGHLIGHT_COLOR
     if (COLOR_DEFINED(pNew, HIGHLIGHT_BG)) {
-	screen->highlightcolor = COLOR_VALUE(pNew, HIGHLIGHT_BG);
+	T_COLOR(screen, HIGHLIGHT_BG) = COLOR_VALUE(pNew, HIGHLIGHT_BG);
+	TRACE(("... HIGHLIGHT_BG: %#lx\n", T_COLOR(screen, HIGHLIGHT_BG)));
     }
 #endif
 
     if (COLOR_DEFINED(pNew, MOUSE_FG) || (COLOR_DEFINED(pNew, MOUSE_BG))) {
-	if (COLOR_DEFINED(pNew, MOUSE_FG))
-	    screen->mousecolor = COLOR_VALUE(pNew, MOUSE_FG);
-	if (COLOR_DEFINED(pNew, MOUSE_BG))
-	    screen->mousecolorback = COLOR_VALUE(pNew, MOUSE_BG);
+	if (COLOR_DEFINED(pNew, MOUSE_FG)) {
+	    T_COLOR(screen, MOUSE_FG) = COLOR_VALUE(pNew, MOUSE_FG);
+	    TRACE(("... MOUSE_FG: %#lx\n", T_COLOR(screen, MOUSE_FG)));
+	}
+	if (COLOR_DEFINED(pNew, MOUSE_BG)) {
+	    T_COLOR(screen, MOUSE_BG) = COLOR_VALUE(pNew, MOUSE_BG);
+	    TRACE(("... MOUSE_BG: %#lx\n", T_COLOR(screen, MOUSE_BG)));
+	}
 
 	recolor_cursor(screen->pointer_cursor,
-		       screen->mousecolor, screen->mousecolorback);
+		       T_COLOR(screen, MOUSE_FG),
+		       T_COLOR(screen, MOUSE_BG));
 	recolor_cursor(screen->arrow,
-		       screen->mousecolor, screen->mousecolorback);
+		       T_COLOR(screen, MOUSE_FG),
+		       T_COLOR(screen, MOUSE_BG));
 	XDefineCursor(screen->display, VWindow(screen),
 		      screen->pointer_cursor);
 
@@ -1230,7 +1233,9 @@ ChangeColors(XtermWidget tw, ScrnColors * pNew)
 #endif
     }
 #if OPT_TEK4014
-    if ((tek) && (COLOR_DEFINED(pNew, TEK_FG) || COLOR_DEFINED(pNew, TEK_BG))) {
+    if (COLOR_DEFINED(pNew, TEK_FG) ||
+	COLOR_DEFINED(pNew, TEK_BG) ||
+	COLOR_DEFINED(pNew, TEK_CURSOR)) {
 	ChangeTekColors(screen, pNew);
     }
 #endif
@@ -1280,21 +1285,21 @@ ReverseVideo(XtermWidget termw)
      */
     if_OPT_ISO_COLORS(screen, {
 	ColorRes tmp2;
-	EXCHANGE(screen->Acolors[0], screen->Acolors[7], tmp2)
-	    EXCHANGE(screen->Acolors[8], screen->Acolors[15], tmp2)
+	EXCHANGE(screen->Acolors[0], screen->Acolors[7], tmp2);
+	EXCHANGE(screen->Acolors[8], screen->Acolors[15], tmp2);
     });
 
-    tmp = termw->core.background_pixel;
-    if (screen->cursorcolor == screen->foreground)
-	screen->cursorcolor = tmp;
-    termw->core.background_pixel = screen->foreground;
-    screen->foreground = tmp;
+    tmp = T_COLOR(screen, TEXT_BG);
+    if (T_COLOR(screen, TEXT_CURSOR) == T_COLOR(screen, TEXT_FG))
+	T_COLOR(screen, TEXT_CURSOR) = tmp;
+    T_COLOR(screen, TEXT_BG) = T_COLOR(screen, TEXT_FG);
+    T_COLOR(screen, TEXT_FG) = tmp;
 
-    EXCHANGE(screen->mousecolor, screen->mousecolorback, tmp)
-	EXCHANGE(NormalGC(screen), ReverseGC(screen), tmpGC)
-	EXCHANGE(NormalBoldGC(screen), ReverseBoldGC(screen), tmpGC)
+    EXCHANGE(T_COLOR(screen, MOUSE_FG), T_COLOR(screen, MOUSE_BG), tmp);
+    EXCHANGE(NormalGC(screen), ReverseGC(screen), tmpGC);
+    EXCHANGE(NormalBoldGC(screen), ReverseBoldGC(screen), tmpGC);
 #ifndef NO_ACTIVE_ICON
-	tmpGC = screen->iconVwin.normalGC;
+    tmpGC = screen->iconVwin.normalGC;
     screen->iconVwin.normalGC = screen->iconVwin.reverseGC;
     screen->iconVwin.reverseGC = tmpGC;
 
@@ -1304,9 +1309,11 @@ ReverseVideo(XtermWidget termw)
 #endif /* NO_ACTIVE_ICON */
 
     recolor_cursor(screen->pointer_cursor,
-		   screen->mousecolor, screen->mousecolorback);
+		   T_COLOR(screen, MOUSE_FG),
+		   T_COLOR(screen, MOUSE_BG));
     recolor_cursor(screen->arrow,
-		   screen->mousecolor, screen->mousecolorback);
+		   T_COLOR(screen, MOUSE_FG),
+		   T_COLOR(screen, MOUSE_BG));
 
     termw->misc.re_verse = !termw->misc.re_verse;
 
@@ -1319,17 +1326,15 @@ ReverseVideo(XtermWidget termw)
     if (screen->scrollWidget)
 	ScrollBarReverseVideo(screen->scrollWidget);
 
-    XSetWindowBackground(screen->display, VWindow(screen), termw->core.background_pixel);
+    XSetWindowBackground(screen->display, VWindow(screen), T_COLOR(screen, TEXT_BG));
 
     /* the shell-window's background will be used in the first repainting
      * on resizing
      */
-    XSetWindowBackground(screen->display, VShellWindow, termw->core.background_pixel);
+    XSetWindowBackground(screen->display, VShellWindow, T_COLOR(screen, TEXT_BG));
 
 #if OPT_TEK4014
-    if (tek) {
-	TekReverseVideo(screen);
-    }
+    TekReverseVideo(screen);
 #endif
     XClearWindow(screen->display, VWindow(screen));
     ScrnRefresh(screen, 0, 0, screen->max_row + 1,
@@ -2074,7 +2079,7 @@ updatedXtermGC(TScreen * screen, int flags, int fg_bg, Bool hilite)
     Pixel bg_pix = getXtermBackground(flags, my_bg);
     Pixel xx_pix;
 #if OPT_HIGHLIGHT_COLOR
-    Pixel hi_pix = screen->highlightcolor;
+    Pixel hi_pix = T_COLOR(screen, HIGHLIGHT_BG);
 #endif
     GC gc;
 
@@ -2087,7 +2092,7 @@ updatedXtermGC(TScreen * screen, int flags, int fg_bg, Bool hilite)
 	    gc = ReverseGC(screen);
 
 #if OPT_HIGHLIGHT_COLOR
-	if (hi_pix != screen->foreground
+	if (hi_pix != T_COLOR(screen, TEXT_FG)
 	    && hi_pix != fg_pix
 	    && hi_pix != bg_pix
 	    && hi_pix != term->dft_foreground) {

@@ -1,3 +1,5 @@
+# $XTermId: termcap,v 1.58 2004/04/18 20:49:43 tom Exp $
+#
 # $Xorg: termcap,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
 #
 # Note:
@@ -15,9 +17,9 @@
 #	I checked the limits using ncurses "captoinfo -CrTv", which prints
 #	the resolved length of each entry in a comment at the end - T.Dickey
 #
-# $XFree86: xc/programs/xterm/termcap,v 3.31 2003/10/27 01:07:57 dickey Exp $
+# $XFree86: xc/programs/xterm/termcap,v 3.32 2004/04/18 20:49:43 dickey Exp $
 #
-xf|xterm-xfree86|XFree86 xterm:\
+xf|xterm-new|modern xterm:\
 	:k1=\EOP:k2=\EOQ:k3=\EOR:k4=\EOS:\
 	:k5=\E[15~:k6=\E[17~:k7=\E[18~:k8=\E[19~:\
 	:k9=\E[20~:k;=\E[21~:F1=\E[23~:F2=\E[24~:\
@@ -26,7 +28,7 @@ xf|xterm-xfree86|XFree86 xterm:\
 	:ku=\EOA:kd=\EOB:kr=\EOC:kl=\EOD:Km=\E[M:tc=xterm-basic:
 #
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
-xb|xterm-basic|xterm common (XFree86):\
+xb|xterm-basic|modern xterm common:\
 	:li#24:co#80:am:kn#12:km:mi:ms:xn:bl=^G:\
 	:is=\E[!p\E[?3;4l\E[4l\E>:rs=\E[!p\E[?3;4l\E[4l\E>:le=^H:\
 	:AL=\E[%dL:DL=\E[%dM:DC=\E[%dP:al=\E[L:dc=\E[P:dl=\E[M:\
@@ -39,7 +41,7 @@ xb|xterm-basic|xterm common (XFree86):\
 	:ti=\E[?1049h:te=\E[?1049l:vi=\E[?25l:ve=\E[?25h:\
 	:ut:Co#8:pa#64:op=\E[39;49m:AB=\E[4%dm:AF=\E[3%dm:\
 
-# The xterm-xfree86 description has all of the features, but is not completely
+# The xterm-new description has all of the features, but is not completely
 # compatible with vt220.  If you are using a Sun or PC keyboard, set the
 # sunKeyboard resource to true:
 #	+ maps the editing keypad
@@ -81,13 +83,13 @@ vc|xterm-color|generic "ANSI" color xterm:\
 # the extra features, but termcap applications still want the names.  Note that
 # AF/AB really should be Sf/Sb, but there are applications which expect the
 # former.  The terminfo contains both strings.
-x1|xterm-16color|xterm alias:tc=xterm-xfree86:
+x1|xterm-16color|xterm alias:tc=xterm-new:
 
 x2|xterm-88color|xterm alias:\
 	:Co#88:pa#88:tc=xterm-256color:
 
 x3|xterm-256color|xterm alias:\
-	:Co#256:pa#256:AF=\E[38;5;%dm:AB=\E[48;5;%dm:tc=xterm-xfree86:
+	:Co#256:pa#256:AF=\E[38;5;%dm:AB=\E[48;5;%dm:tc=xterm-new:
 
 xn|xterm-nrc|xterm alias:tc=xterm:
 xr|xterm-rep|xterm alias:tc=xterm:
@@ -113,12 +115,12 @@ x8|xterm-8bit|xterm terminal emulator 8-bit controls (X Window System):\
 	:st=\210:ta=^I:te=\233?1049l:ti=\233?1049h:ue=\23324m:us=\2334m:\
 	:vb=\233?5h\233?5l:ve=\233?25h:vi=\233?25l:Km=\233M:
 #
-hp|xterm-hp|XFree86 xterm with hpterm function keys:\
+hp|xterm-hp|xterm with hpterm function keys:\
 	:k1=\Ep:k2=\Eq:k3=\Er:k4=\Es:k5=\Et:k6=\Eu:k7=\Ev:k8=\Ew:\
 	:kC=\EJ:kD=\EP:@7=\EF:kI=\EQ:kN=\ES:kP=\ET:kh=\Eh:\
 	:kd=\EB:kl=\ED:kr=\EC:ku=\EA:tc=xterm-basic:
 #
-xS|xterm-sco|XFree86 xterm with SCO function keys:\
+xS|xterm-sco|xterm with SCO function keys:\
 	:kl=\E[D:kd=\E[B:kr=\E[C:ku=\E[A:@7=\E[F:\
 	:k1=\E[M:k2=\E[N:k3=\E[O:k4=\E[P:k5=\E[Q:\
 	:k6=\E[R:k7=\E[S:k8=\E[T:k9=\E[U:k;=\E[V:\
@@ -187,9 +189,13 @@ r5|xterm-r5|X11R5 xterm X11R5:\
 	:te=\E[2J\E[?47l\E8:ti=\E7\E[?47h:\
 	:up=\E[A:us=\E[4m:ue=\E[m:xn:
 #
+# Customization begins here.
+x0|xterm-xfree86|xterm terminal emulator (XFree86):\
+	:tc=xterm-new:
+#
 # This is the only entry which you should have to customize, since "xterm"
 # is widely used for a variety of incompatible terminal emulations including
 # color_xterm and rxvt.
 v0|xterm|X11 terminal emulator:\
-	:tc=xterm-xfree86:
+	:tc=xterm-new:
 #	:tc=xterm-r6:

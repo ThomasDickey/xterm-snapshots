@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-185
+MANIFEST for xterm, version xterm-186
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -85,6 +85,7 @@ xstrings.c                      a few common string functions
 xstrings.h                      interface of xstrings.c
 xterm.dat                       application defaults for VMS port of 'xterm'
 xterm.h                         common includes, definitions and prototypes for 'xterm'
+xterm.log.html                  changelog for xterm
 xterm.man                       manual page for 'xterm'
 xterm_axp.opt                   linker options file for VMS port of 'xterm'
 xterm_io.h                      split-out definitions of termio/termios/sgtty and winsize from main.c, os2main.c, screen.c and resize.c
