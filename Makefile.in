@@ -1,4 +1,4 @@
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.19 1999/04/11 13:11:26 dawes Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.20 1999/04/25 10:02:59 dawes Exp $ ##
 
 #### Start of system configuration section. ####
 
@@ -50,12 +50,12 @@ EXTRAOBJ	= @EXTRAOBJS@
 
           SRCS1 = button.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
-		  $(MAINSRC) menu.c misc.c print.c \
+		  $(MAINSRC) menu.c misc.c print.c ptydata.c \
 		  screen.c scrollbar.c tabs.c util.c \
 		  VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button.o charproc.o charsets.o cursor.o \
 	  	  data.o doublechr.o fontutils.o input.o \
-		  main.o menu.o misc.o print.o \
+		  main.o menu.o misc.o print.o ptydata.o \
 		  screen.o scrollbar.o tabs.o util.o \
 		  VTPrsTbl.o $(EXTRAOBJ)
           SRCS2 = resize.c
@@ -115,7 +115,7 @@ uninstall:
 	-$(RM) $(appsdir)/XTerm-color
 
 mostlyclean:
-	-$(RM) *.[ois] XtermLog.* .pure core *~ *.BAK *.out
+	-$(RM) *.[ois] XtermLog.* .pure core *~ *.bak *.BAK *.out
 
 clean: mostlyclean
 	-$(RM) $(PROGRAMS)

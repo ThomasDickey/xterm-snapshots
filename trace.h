@@ -37,12 +37,17 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <xtermcfg.h>
 #endif
 
+#include <ptyx.h>
+
 extern	void	Trace ( char *, ... )
 #ifdef GCC_PRINTF
 	__attribute__ ((format(printf,1,2)))
 #endif
 	;
 #define TRACE(p) Trace p;
+
+extern	char *	visibleChars (PAIRED_CHARS(Char *buf, Char *buf2), unsigned len);
+extern	char *	visibleIChar (IChar *, unsigned);
 
 extern	char	*trace_who;
 #define TRACE_CHILD int tracing_child = (trace_who = "child") != 0;

@@ -93,14 +93,16 @@ authorization.
 
 void Mark_XMC(register TScreen *screen, int param)
 {
-	static Char *glitch;
+	static IChar *glitch;
 	Boolean found = FALSE;
 	Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
 	Char whichone = 0;
 
 	if (glitch == 0) {
-		glitch = (Char *)malloc(screen->xmc_glitch);
-		memset(glitch, XMC_GLITCH, screen->xmc_glitch);
+		unsigned len = screen->xmc_glitch;
+		glitch = (IChar *)malloc(len * sizeof(IChar));
+		while (len--)
+			glitch[len] = XMC_GLITCH;
 	}
 	switch (param) {
 	case -1:/* DEFAULT */
@@ -135,7 +137,7 @@ void Mark_XMC(register TScreen *screen, int param)
 		unsigned save = term->flags;
 		term->flags ^= whichone;
 		TRACE(("XMC Writing glitch (%d/%d) after SGR %d\n", my_attrs, whichone, param))
-		dotext(screen, '?', PAIRED_CHARS(glitch, 0), screen->xmc_glitch);
+		dotext(screen, '?', glitch, screen->xmc_glitch);
 		term->flags = save;
 	}
 }

@@ -42,23 +42,23 @@
 #include <sys/select.h>
 #endif
 
+#include <setjmp.h>
+
 extern XtAppContext app_con;
 
 #if OPT_TEK4014
-extern Char *Tbptr;
-extern Char *Tbuffer;
 extern Char *Tpushb;
 extern Char *Tpushback;
+extern PtyData *Tbuffer;
 extern TekLink *TekRefresh;
 extern TekWidget tekWidget;
 extern int TEKgcFontMask;
 extern int T_lastx;
 extern int T_lasty;
-extern int Tbcnt;
 extern int Ttoggled;
+extern jmp_buf Tekend;
 #endif
 
-extern Char *bptr;
 #ifdef ALLOWLOGGING
 extern char log_def_name[];
 #endif
@@ -84,10 +84,10 @@ extern Boolean sameName;
 extern Boolean sunKeyboard;
 #endif
 
-extern Char VTbuffer[];
+extern PtyData VTbuffer;
 extern int am_slave;
-extern int bcnt;
 extern int max_plus1;
+extern jmp_buf VTend;
 
 #ifdef DEBUG
 extern int debug;

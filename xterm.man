@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.39 1999/04/11 13:11:38 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.40 1999/04/25 10:03:05 dawes Exp $
 .\"
 .\"
 .\" Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
@@ -518,6 +518,14 @@ This option specifies the name of the terminal type to be set in the TERM
 environment variable.  This terminal type must exist in the \fItermcap(5)\fP
 database and should have \fIli#\fP and \fIco#\fP entries.
 .TP 8
+.B \-u8
+This option sets the \fButf8\fP resource.
+When \fButf8\fP is set, xterm interprets incoming data as UTF-8.
+This sets \fBwideChars\fP as a side-effect.
+.TP 8
+.B \+u8
+This option resets the \fButf8\fP resource.
+.TP 8
 .B "\-ulc"
 This option disables the display of characters with underline attribute as
 color rather than with underlining.
@@ -544,6 +552,11 @@ This option indicates that a visual bell should not be used.
 .TP 8
 .B \-wc
 This option sets the \fBwideChars\fP resource.
+When \fBwideChars\fP is set, xterm maintains internal structures for 16-bit
+characters.
+.TP 8
+.B \+wc
+This option resets the \fBwideChars\fP resource.
 .TP 8
 .B \-wf
 This option indicates that \fIxterm\fP should wait for the window to be mapped
@@ -1242,6 +1255,13 @@ strings,'' etc.  See \fBACTIONS\fP below.
 This specifies whether or not text with the underline attribute should be
 underlined.  It may be desirable to disable underlining when color is being
 used for the underline attribute.
+.TP 8
+.B "utf8 (\fPclass\fB Utf8)"
+This specifies whether \fIxterm\fP xterm will run in UTF-8 mode.
+If you set this resource, \fIxterm\fP also sets the \fBwideChars\fP resource as a side-effect.
+When set via a resource, \fIxterm\fP cannot be switched via control sequences out of UTF-8 mode.
+The default is ``0'' (off).
+Any other value will turn on UTF-8 mode.
 .TP 8
 .B "visualBell (\fPclass\fB VisualBell)"
 Specifies whether or not a visible bell (i.e. flashing) should be used instead

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-96
+MANIFEST for xterm, version xterm-97
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 INSTALL                         configure script: options and related install instructions
@@ -41,6 +41,7 @@ mkdirs.sh                       configure script: make directories for install p
 os2main.c                       main program for OS/2 EMX port of 'xterm'
 print.c                         VT100+ print support functions
 proto.h                         macros to simplify function prototypes
+ptydata.c                       functions to manipulate data read from pty
 ptyx.h                          structure-definitions for 'xterm'
 resize.c                        program to compute/modify xterm's window size
 resize.man                      manual page for 'resize'
