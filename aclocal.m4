@@ -83,7 +83,7 @@ dnl values.
 dnl
 dnl Parameters:
 dnl $1 = option name
-dnl $2 = help-string 
+dnl $2 = help-string
 dnl $3 = action to perform if option is not default
 dnl $4 = action if perform if option is default
 dnl $5 = default option value (either 'yes' or 'no')
@@ -122,7 +122,7 @@ test -z "$system_name" && system_name="$cf_cv_system_name"
 test -n "$cf_cv_system_name" && AC_MSG_RESULT("Configuring for $cf_cv_system_name")
 
 if test ".$system_name" != ".$cf_cv_system_name" ; then
-	AC_MSG_RESULT("Cached system name does not agree with actual")
+	AC_MSG_RESULT(Cached system name ($system_name) does not agree with actual ($cf_cv_system_name))
 	AC_ERROR("Please remove config.cache and try again.")
 fi
 ])dnl
@@ -163,7 +163,7 @@ dnl is found, add our own version of memmove to the list of objects.
 AC_DEFUN([CF_FUNC_MEMMOVE],
 [
 if test ".$ac_cv_func_memmove" != .yes ; then
-	if test $ac_cv_func_bcopy = yes ; then
+	if test ".$ac_cv_func_bcopy" = ".yes" ; then
 		AC_MSG_CHECKING(if bcopy does overlapping moves)
 		AC_CACHE_VAL(cf_cv_good_bcopy,[
 			AC_TRY_RUN([
@@ -480,7 +480,7 @@ dnl Check for Xaw (Athena) libraries
 dnl
 AC_DEFUN([CF_X_ATHENA],
 [AC_REQUIRE([CF_X_TOOLKIT])
-cf_x_athena=Xaw
+cf_x_athena=${cf_x_athena-Xaw}
 
 AC_ARG_WITH(Xaw3d,
 	[  --with-Xaw3d            link with Xaw 3d library],
@@ -505,6 +505,8 @@ AC_CHECK_LIB(${cf_x_athena}_s, XawSimpleMenuAddGlobalActions,
 	AC_ERROR(
 [Unable to successfully link Athena library (-l$cf_x_athena) with test program]),
 	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])])
+CF_UPPER(CF_X_ATHENA_LIBS,HAVE_LIB_$cf_x_athena)
+AC_DEFINE_UNQUOTED($CF_X_ATHENA_LIBS)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for X Toolkit libraries

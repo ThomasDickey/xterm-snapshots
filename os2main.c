@@ -67,20 +67,21 @@ SOFTWARE.
 #endif
 
 #include "ptyx.h"
-#include "data.h"
-#include "error.h"
-#include "menu.h"
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
-#ifdef I18N
-#include <X11/Xlocale.h>
-#endif
 
 #include <X11/Xos.h>
 #include <X11/cursorfont.h>
 #include <X11/Xaw/SimpleMenu.h>
+#ifdef I18N
+#include <X11/Xlocale.h>
+#endif
+
 #include <pwd.h>
 #include <ctype.h>
+#include "data.h"
+#include "error.h"
+#include "menu.h"
 
 #include <sys/termio.h>
 
@@ -106,17 +107,26 @@ char *ttyname(int fd) { return "/dev/tty"; }
 #define SIGNAL_T void
 #define SIGNAL_RETURN return
 
-SIGNAL_T Exit();
-
 #include <unistd.h>
 #include <stdlib.h>
 
 extern char *strindex ();
-extern void HandlePopupMenu();
+
+#include "xterm.h"
 
 int switchfb[] = {0, 2, 1, 3};
 
-static SIGNAL_T reapchild ();
+static char *base_name PROTO((char *name));
+static int pty_search PROTO((int *pty));
+static int remove_termcap_entry PROTO((char *buf, char *str));
+static int spawn PROTO((void));
+static void DeleteWindow PROTO_XT_ACTIONS_ARGS;
+static void Help PROTO((void));
+static void KeyboardMapping PROTO_XT_ACTIONS_ARGS;
+static void Syntax PROTO((char *badOption));
+static void get_terminal PROTO((void));
+static void resize PROTO((TScreen *s, char *oldtc, char *newtc));
+static SIGNAL_T reapchild PROTO((int n));
 
 static Bool added_utmp_entry = False;
 
@@ -163,7 +173,6 @@ static struct termio d_tio;
 #define CSTART ('Q'&037)
 #endif
 
-static int parse_tty_modes ();
 /*
  * SYSV has the termio.c_cc[V] and ltchars; BSD has tchars and ltchars;
  * SVR4 has only termio.c_cc, but it includes everything from ltchars.
@@ -210,6 +219,8 @@ struct _xttymodes {
 { NULL, 0, 0, '\0' },			/* end of data */
 };
 
+static int parse_tty_modes PROTO((char *s, struct _xttymodes *modelist));
+
 static int inhibit;
 static char passedPty[2];	/* name if pty if slave */
 
@@ -252,7 +263,7 @@ static struct _resource {
 
 static XtResource application_resources[] = {
     {"name", "Name", XtRString, sizeof(char *),
-	offset(xterm_name), XtRString, "xterm"},
+	offset(xterm_name), XtRString, DFT_TERMTYPE},
     {"iconGeometry", "IconGeometry", XtRString, sizeof(char *),
 	offset(icon_geometry), XtRString, (caddr_t) NULL},
     {XtNtitle, XtCTitle, XtRString, sizeof(char *),
@@ -286,7 +297,9 @@ static char *fallback_resources[] = {
     "XTerm*mainMenu.Label:  Main Options (no app-defaults)",
     "XTerm*vtMenu.Label:  VT Options (no app-defaults)",
     "XTerm*fontMenu.Label:  VT Fonts (no app-defaults)",
+#if OPT_TEK4014
     "XTerm*tekMenu.Label:  Tek Options (no app-defaults)",
+#endif
     NULL
 };
 
@@ -444,15 +457,17 @@ static struct _options {
 { "-/+s",                  "turn on/off multiscroll" },
 { "-/+sb",                 "turn on/off scrollbar" },
 #ifdef SCROLLBAR_RIGHT
-{ "-useRight",             "force scrollbar right (default left)" },
-{ "-useLeft",              "force scrollbar left" },
+{ "-rightbar",             "force scrollbar right (default left)" },
+{ "-leftbar",              "force scrollbar left" },
 #endif
 { "-/+sf",                 "turn on/off Sun Function Key escape codes" },
 { "-/+si",                 "turn on/off scroll-on-tty-output inhibit" },
 { "-/+sk",                 "turn on/off scroll-on-keypress" },
 { "-sl number",            "number of scrolled lines to save" },
 { "-/+sp",                 "turn on/off Sun/PC Function/Keypad mapping" },
+#if OPT_TEK4014
 { "-/+t",                  "turn on/off Tek emulation window" },
+#endif
 { "-tm string",            "terminal mode keywords and characters" },
 { "-tn name",              "TERM environment variable name" },
 { "-/+ulc",                "turn off/on display of underline as color" },
@@ -460,7 +475,9 @@ static struct _options {
 { "-/+vb",                 "turn on/off visual bell" },
 { "-/+wf",                 "turn on/off wait for map before command exec" },
 { "-e command args ...",   "command to execute" },
+#if OPT_TEK4014
 { "%geom",                 "Tek window geometry" },
+#endif
 { "#geom",                 "icon window geometry" },
 { "-T string",             "title name for window" },
 { "-n string",             "icon name for window" },
@@ -543,11 +560,11 @@ static void Help ()
 /* ARGSUSED */
 static Boolean
 ConvertConsoleSelection(w, selection, target, type, value, length, format)
-    Widget w;
-    Atom *selection, *target, *type;
-    XtPointer *value;
-    unsigned long *length;
-    int *format;
+    Widget w GCC_UNUSED;
+    Atom *selection GCC_UNUSED, *target GCC_UNUSED, *type GCC_UNUSED;
+    XtPointer *value GCC_UNUSED;
+    unsigned long *length GCC_UNUSED;
+    int *format GCC_UNUSED;
 {
     /* we don't save console output, so can't offer it */
     return False;
@@ -559,43 +576,41 @@ Arg ourTopLevelShellArgs[] = {
 };
 int number_ourTopLevelShellArgs = 2;
 	
-XtAppContext app_con;
 Widget toplevel;
 Bool waiting_for_initial_map;
-
-extern void do_hangup();
-extern void xt_error();
 
 /*
  * DeleteWindow(): Action proc to implement ICCCM delete_window.
  */
 /* ARGSUSED */
-void
+static void
 DeleteWindow(w, event, params, num_params)
     Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+    XEvent *event GCC_UNUSED;
+    String *params GCC_UNUSED;
+    Cardinal *num_params GCC_UNUSED;
 {
+#if OPT_TEK4014
   if (w == toplevel)
     if (term->screen.Tshow)
       hide_vt_window();
     else
-      do_hangup(w);
+      do_hangup(w, (XtPointer)0, (XtPointer)0);
   else
     if (term->screen.Vshow)
       hide_tek_window();
     else
-      do_hangup(w);
+#endif
+      do_hangup(w, (XtPointer)0, (XtPointer)0);
 }
 
 /* ARGSUSED */
-void
+static void
 KeyboardMapping(w, event, params, num_params)
-    Widget w;
+    Widget w GCC_UNUSED;
     XEvent *event;
-    String *params;
-    Cardinal *num_params;
+    String *params GCC_UNUSED;
+    Cardinal *num_params GCC_UNUSED;
 {
     switch (event->type) {
        case MappingNotify:
@@ -605,8 +620,8 @@ KeyboardMapping(w, event, params, num_params)
 }
 
 XtActionsRec actionProcs[] = {
-    "DeleteWindow", DeleteWindow,
-    "KeyboardMapping", KeyboardMapping,
+    { "DeleteWindow", DeleteWindow },
+    { "KeyboardMapping", KeyboardMapping },
 };
 
 Atom wm_delete_window;
@@ -738,8 +753,6 @@ char **envp;
 {
 	register TScreen *screen;
 	int mode;
-	char *base_name();
-	int xerror(), xioerror();
 	extern char **environ;
 
 	/* XXX: for some obscure reason EMX seems to lose the value of 
@@ -789,7 +802,7 @@ char **envp;
 	    XtSetErrorHandler(xt_error);
 	    toplevel = XtAppInitialize (&app_con, "XTerm", 
 					optionDescList,
-					XtNumber(optionDescList), 
+					XtNumber(optionDescList),
 					&argc, argv, fallback_resources,
 					NULL, 0);
 
@@ -823,7 +836,7 @@ char **envp;
 #if OPT_SUNPC_KBD
 	sunKeyboard = resource.sunKeyboard;
 #endif
-	if (strcmp(xterm_name, "-") == 0) xterm_name = "xterm";
+	if (strcmp(xterm_name, "-") == 0) xterm_name = DFT_TERMTYPE;
 	if (resource.icon_geometry != NULL) {
 	    int scr, junk;
 	    int ix, iy;
@@ -895,9 +908,10 @@ char **envp;
 
         term = (XtermWidget) XtCreateManagedWidget(
 	    "vt100", xtermWidgetClass, toplevel, NULL, 0);
+	    /* this causes the initialize method to be called */
 
-	/* this causes the initialize method to be called */
         screen = &term->screen;
+
 	if (screen->savelines < 0) screen->savelines = 0;
 
 	term->flags = 0;
@@ -920,10 +934,12 @@ char **envp;
 
 	inhibit = 0;
 #ifdef ALLOWLOGGING
-	if (term->misc.logInhibit) 	    inhibit |= I_LOG;
+	if (term->misc.logInhibit)		inhibit |= I_LOG;
 #endif
 	if (term->misc.signalInhibit)		inhibit |= I_SIGNAL;
-	if (term->misc.tekInhibit)			inhibit |= I_TEK;
+#if OPT_TEK4014
+	if (term->misc.tekInhibit)		inhibit |= I_TEK;
+#endif
 
 	term->initflags = term->flags;
 
@@ -958,11 +974,13 @@ char **envp;
 	    XtSetValues (toplevel, args, 2);
 	}
 
+#if OPT_TEK4014
 	if(inhibit & I_TEK)
 		screen->TekEmu = FALSE;
 
 	if(screen->TekEmu && !TekInit())
 		exit(ERROR_INIT);
+#endif
 
 #ifdef DEBUG
     {
@@ -978,7 +996,7 @@ char **envp;
 		dup2(i,2);
 
 		/* mark this file as close on exec */
-		fcntl(i, F_SETFD, 1);
+		(void) fcntl(i, F_SETFD, 1);
 	}
     }
 #endif	/* DEBUG */
@@ -989,7 +1007,7 @@ char **envp;
 	spawn ();
 
 	/* Child process is out there, let's catch its termination */
-	signal (SIGCHLD, reapchild);
+	(void) signal (SIGCHLD, reapchild);
 
 	/* Realize procs have now been executed */
 
@@ -997,25 +1015,18 @@ char **envp;
 	    char buf[80];
 
 	    buf[0] = '\0';
-	    sprintf (buf, "%lx\n", 
-	    	     screen->TekEmu ? XtWindow (XtParent (tekWidget)) :
-				      XtWindow (XtParent (term)));
+	    sprintf (buf, "%lx\n", XtWindow (XtParent (CURRENT_EMU(screen))));
 	    write (screen->respond, buf, strlen (buf));
 	}
 
-#ifdef ALLOWLOGGING
-	if (term->misc.log_on) {
-		StartLog(screen);
-	}
-#endif
 	screen->inhibit = inhibit;
 
 	if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
-		Error();
+		Error(1);
 	mode |= O_NDELAY;
 
 	if (fcntl(screen->respond, F_SETFL, mode))
-		Error();
+		Error(1);
 
 	FD_ZERO (&pty_mask);
 	FD_ZERO (&X_mask);
@@ -1044,11 +1055,12 @@ char **envp;
 	}
 #endif
 	for( ; ; ) {
-		if(screen->TekEmu) {
+#if OPT_TEK4014
+		if(screen->TekEmu)
 			TekRun();
-		} else {
+		else
+#endif
 			VTRun();
-		}
 	}
 }
 
@@ -1069,6 +1081,7 @@ char *name;
  * has problems, we can re-enter this function and get another one.
  */
 
+static int
 get_pty (pty)
     int *pty;
 {
@@ -1081,7 +1094,8 @@ get_pty (pty)
  * a functional interface for allocating a pty.
  * Returns 0 if found a pty, 1 if fails.
  */
-int pty_search(pty)
+static int
+pty_search(pty)
     int *pty;
 {
 	char namebuf[PTMS_BUFSZ];
@@ -1103,6 +1117,7 @@ int pty_search(pty)
 	return 1;
 }
 
+static void
 get_terminal ()
 /* 
  * sets up X and initializes the terminal structure except for term.buf.fildes.
@@ -1128,6 +1143,7 @@ get_terminal ()
  * All of these are supported by xterm.
  */
 
+#if OPT_TEK4014
 static char *tekterm[] = {
 	"tek4014",
 	"tek4015",		/* 4014 with APL character set support */
@@ -1137,6 +1153,7 @@ static char *tekterm[] = {
 	"dumb",
 	0
 };
+#endif
 
 /* The VT102 is a VT100 with the Advanced Video Option included standard.
  * It also adds Escape sequences for insert/delete character/line.
@@ -1149,6 +1166,7 @@ static char *vtterm[] = {
 #ifdef USE_X11TERM
 	"x11term",		/* for people who want special term name */
 #endif
+	DFT_TERMTYPE,		/* for people who want special term name */
 	"xterm",		/* the prefered name, should be fastest */
 	"vt102",
 	"vt100",
@@ -1158,8 +1176,8 @@ static char *vtterm[] = {
 };
 
 /* ARGSUSED */
-SIGNAL_T hungtty(i)
-	int i;
+static SIGNAL_T hungtty(i)
+	int i GCC_UNUSED;
 {
 	longjmp(env, 1);
 	SIGNAL_RETURN;
@@ -1205,6 +1223,7 @@ SIGNAL_T killit(int sig)
 	SIGNAL_RETURN;
 }
 
+static int
 spawn ()
 /* 
  *  Inits pty and tty and forks a login process.
@@ -1212,8 +1231,6 @@ spawn ()
  *  If slave, the pty named in passedPty is already open for use
  */
 {
-	extern char *SysErrorMsg();
-
 	register TScreen *screen = &term->screen;
 	int Xsocket = ConnectionNumber(screen->display);
 
@@ -1243,33 +1260,34 @@ spawn ()
 		setgid (screen->gid);
 		setuid (screen->uid);
 	} else {
-		Bool tty_got_hung = False;
+		Bool tty_got_hung;
 
- 		/*
- 		 * Sometimes /dev/tty hangs on open (as in the case of a pty
- 		 * that has gone away).  Simply make up some reasonable
- 		 * defaults.
- 		 */
+		/*
+		 * Sometimes /dev/tty hangs on open (as in the case of a pty
+		 * that has gone away).  Simply make up some reasonable
+		 * defaults.
+		 */
 
- 		signal(SIGALRM, hungtty);
- 		alarm(2);		/* alarm(1) might return too soon */
- 		if (! setjmp(env)) {
- 			tty = open ("/dev/tty", O_RDWR, 0);
- 			alarm(0);
- 		} else {
+		signal(SIGALRM, hungtty);
+		alarm(2);		/* alarm(1) might return too soon */
+		if (! setjmp(env)) {
+			tty = open ("/dev/tty", O_RDWR, 0);
+			alarm(0);
+			tty_got_hung = False;
+		} else {
 			tty_got_hung = True;
- 			tty = -1;
- 			errno = ENXIO;
- 		}
- 		signal(SIGALRM, SIG_DFL);
- 
+			tty = -1;
+			errno = ENXIO;
+		}
+		signal(SIGALRM, SIG_DFL);
+
 		/*
 		 * Check results and ignore current control terminal if
 		 * necessary.  ENXIO is what is normally returned if there is
 		 * no controlling terminal, but some systems (e.g. SunOS 4.0)
 		 * seem to return EIO.  Solaris 2.3 is said to return EINVAL.
 		 */
- 		if (tty < 0) {
+		if (tty < 0) {
 			if (tty_got_hung || errno == ENXIO || errno == EIO ||
 			    errno == EINVAL || errno == ENOTTY) {
 				no_dev_tty = TRUE;
@@ -1299,13 +1317,12 @@ spawn ()
 	}
 
 	/* avoid double MapWindow requests */
-	XtSetMappedWhenManaged( screen->TekEmu ? XtParent(tekWidget) :
-			        XtParent(term), False );
+	XtSetMappedWhenManaged(XtParent(CURRENT_EMU(screen)), False );
 
 	wm_delete_window = XInternAtom(XtDisplay(toplevel), "WM_DELETE_WINDOW",
 				       False);
 
-	if (!screen->TekEmu)
+	if (!TEK4014_ACTIVE(screen))
 	    VTInit();		/* realize now so know window size for tty driver */
 
 	if (Console) {
@@ -1316,53 +1333,67 @@ spawn ()
 	    XmuGetHostname (mit_console_name + MIT_CONSOLE_LEN, 255);
 	    mit_console = XInternAtom(screen->display, mit_console_name, False);
 	    /* the user told us to be the console, so we can use CurrentTime */
-	    XtOwnSelection(screen->TekEmu ? XtParent(tekWidget) : XtParent(term),
+	    XtOwnSelection(XtParent(CURRENT_EMU(screen)),
 			   mit_console, CurrentTime,
 			   ConvertConsoleSelection, NULL, NULL);
 	}
+#if OPT_TEK4014
 	if(screen->TekEmu) {
 		envnew = tekterm;
 		ptr = newtc;
-	} else {
+	}
+	else
+#endif
+	{
 		envnew = vtterm;
 		ptr = termcap;
 	}
+
+	/*
+	 * This used to exit if no termcap entry was found for the specified
+	 * terminal name.  That's a little unfriendly, so instead we'll allow
+	 * the program to proceed (but not to set $TERMCAP) if the termcap
+	 * entry is not found.
+	 */
+	*ptr = 0;	/* initialize, in case we're using terminfo's tgetent */
 	TermName = NULL;
 	if (resource.term_name) {
+	    TermName = resource.term_name;
 	    if (tgetent (ptr, resource.term_name) == 1) {
-		TermName = resource.term_name;
-		if (!screen->TekEmu)
-		    resize (screen, TermName, termcap, newtc);
-	    } else {
-		fprintf (stderr, "%s:  invalid termcap entry \"%s\".\n",
-			 ProgramName, resource.term_name);
+		if (*ptr)
+		    if (!TEK4014_ACTIVE(screen))
+			resize (screen, termcap, newtc);
 	    }
 	}
 
+	/*
+	 * This block is invoked only if there was no terminal name specified
+	 * by the command-line option "-tn".
+	 */
 	if (!TermName) {
+	    TermName = *envnew;
 	    while (*envnew != NULL) {
 		if(tgetent(ptr, *envnew) == 1) {
 			TermName = *envnew;
-			if(!screen->TekEmu)
-			    resize(screen, TermName, termcap, newtc);
+			if (*ptr) 
+			    if(!TEK4014_ACTIVE(screen))
+				resize(screen, termcap, newtc);
 			break;
 		}
 		envnew++;
 	    }
-	    if (TermName == NULL) {
-		fprintf (stderr, "%s:  unable to find usable termcap entry.\n",
-			 ProgramName);
-		Exit (1);
-	    }
 	}
 
 	/* tell tty how big window is */
-	if(screen->TekEmu) {
+#if OPT_TEK4014
+	if(TEK4014_ACTIVE(screen)) {
 		ws.ws_row = 38;
 		ws.ws_col = 81;
 		ws.ws_xpixel = TFullWidth(screen);
 		ws.ws_ypixel = TFullHeight(screen);
-	} else {
+	} else
+#endif
+	{
 		ws.ws_row = screen->max_row + 1;
 		ws.ws_col = screen->max_col + 1;
 		ws.ws_xpixel = FullWidth(screen);
@@ -1475,9 +1506,8 @@ opencons();*/
 			if(!TermName)
 				*newtc = 0;
 
-			sprintf (buf, "%lu", screen->TekEmu ? 
-				((unsigned long) XtWindow (XtParent(tekWidget))) :
-				((unsigned long) XtWindow (XtParent(term))));
+			sprintf (buf, "%lu",
+				((unsigned long) XtWindow (XtParent(CURRENT_EMU(screen)))));
 			Setenv ("WINDOWID=", buf);
 
 			/* put the display into the environment of the shell*/
@@ -1603,8 +1633,8 @@ opencons();*/
  */
 
 /*	signal (SIGINT, SIG_IGN);*/
-signal(SIGINT, killit);
-signal(SIGTERM, killit);
+	signal(SIGINT, killit);
+	signal(SIGTERM, killit);
 
 	/* hung shell problem */
 	signal (SIGQUIT, SIG_IGN);
@@ -1637,9 +1667,9 @@ Exit(n)
 }
 
 /* ARGSUSED */
-resize(screen, TermName, oldtc, newtc)
+static void
+resize(screen, oldtc, newtc)
 TScreen *screen;
-char *TermName;
 register char *oldtc, *newtc;
 {
 }
@@ -1660,16 +1690,16 @@ nonblocking_wait()
 
 /* ARGSUSED */
 static SIGNAL_T reapchild (n)
-    int n;
+    int n GCC_UNUSED;
 {
     int pid;
 
     pid = wait(NULL);
 
     /* cannot re-enable signal before waiting for child
-     * because then SVR4 loops.  Sigh.  HP-UX 9.01 too. 
+     * because then SVR4 loops.  Sigh.  HP-UX 9.01 too.
      */
-    signal(SIGCHLD, reapchild);
+    (void) signal(SIGCHLD, reapchild);
 
     do {
 	if (pid == term->screen.pid) {
@@ -1683,11 +1713,12 @@ static SIGNAL_T reapchild (n)
     SIGNAL_RETURN;
 }
 
+#if 0	/* this isn't used, but could be useful in debugging */
 /* VARARGS1 */
+void
 consolepr(fmt,x0,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 char *fmt;
 {
-	extern char *SysErrorMsg();
 	int oerrno;
 	int f;
  	char buf[ BUFSIZ ];
@@ -1709,8 +1740,9 @@ char *fmt;
 	}
 #endif	/* TIOCNOTTY */
 }
+#endif
 
-
+static int
 remove_termcap_entry (buf, str)
     char *buf;
     char *str;
@@ -1774,14 +1806,12 @@ static int parse_tty_modes (s, modelist)
     }
 }
 
-
 int GetBytesAvailable (fd)
     int fd;
 {
-    static long arg;
+    long arg;
     ioctl (fd, FIONREAD, (char *) &arg);
     return (int) arg;
-
 }
 
 /* Utility function to try to hide system differences from

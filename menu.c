@@ -84,9 +84,17 @@ static void do_softreset       PROTO_XT_CALLBACK_ARGS;
 static void do_sun_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_sun_kbd         PROTO_XT_CALLBACK_ARGS;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
+static void do_terminate       PROTO_XT_CALLBACK_ARGS;
+static void do_visualbell      PROTO_XT_CALLBACK_ARGS;
+static void do_vtfont          PROTO_XT_CALLBACK_ARGS;
+#ifndef NO_ACTIVE_ICON
+static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
+#endif /* NO_ACTIVE_ICON */
+#if OPT_TEK4014
 static void do_tekcopy         PROTO_XT_CALLBACK_ARGS;
 static void do_tekhide         PROTO_XT_CALLBACK_ARGS;
 static void do_tekmode         PROTO_XT_CALLBACK_ARGS;
+static void do_tekonoff        PROTO_XT_CALLBACK_ARGS;
 static void do_tekpage         PROTO_XT_CALLBACK_ARGS;
 static void do_tekreset        PROTO_XT_CALLBACK_ARGS;
 static void do_tekshow         PROTO_XT_CALLBACK_ARGS;
@@ -94,15 +102,13 @@ static void do_tektext2        PROTO_XT_CALLBACK_ARGS;
 static void do_tektext3        PROTO_XT_CALLBACK_ARGS;
 static void do_tektextlarge    PROTO_XT_CALLBACK_ARGS;
 static void do_tektextsmall    PROTO_XT_CALLBACK_ARGS;
-static void do_terminate       PROTO_XT_CALLBACK_ARGS;
-static void do_visualbell      PROTO_XT_CALLBACK_ARGS;
-static void do_vtfont          PROTO_XT_CALLBACK_ARGS;
 static void do_vthide          PROTO_XT_CALLBACK_ARGS;
 static void do_vtmode          PROTO_XT_CALLBACK_ARGS;
+static void do_vtonoff         PROTO_XT_CALLBACK_ARGS;
 static void do_vtshow          PROTO_XT_CALLBACK_ARGS;
-#ifndef NO_ACTIVE_ICON
-static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
-#endif /* NO_ACTIVE_ICON */
+static void handle_tekshow     PROTO((Widget gw, Bool allowswitch));
+static void handle_vtshow      PROTO((Widget gw, Bool allowswitch));
+#endif
 
 /*
  * The order of entries MUST match the values given in menu.h
@@ -152,10 +158,13 @@ MenuEntry vtMenuEntries[] = {
     { "softreset",	do_softreset, NULL },		/* 17 */
     { "hardreset",	do_hardreset, NULL },		/* 18 */
     { "clearsavedlines",do_clearsavedlines, NULL },	/* 19 */
+#if OPT_TEK4014
     { "line2",		NULL, NULL },			/* 20 */
     { "tekshow",	do_tekshow, NULL },		/* 21 */
     { "tekmode",	do_tekmode, NULL },		/* 22 */
-    { "vthide",		do_vthide, NULL }};		/* 23 */
+    { "vthide",		do_vthide, NULL },		/* 23 */
+#endif
+    };
 
 MenuEntry fontMenuEntries[] = {
     { "fontdefault",	do_vtfont, NULL },		/*  0 */
@@ -169,6 +178,7 @@ MenuEntry fontMenuEntries[] = {
     { "fontsel",	do_vtfont, NULL }};		/*  8 */
     /* this should match NMENUFONTS in ptyx.h */
 
+#if OPT_TEK4014
 MenuEntry tekMenuEntries[] = {
     { "tektextlarge",	do_tektextlarge, NULL },	/*  0 */
     { "tektext2",	do_tektext2, NULL },		/*  1 */
@@ -182,6 +192,7 @@ MenuEntry tekMenuEntries[] = {
     { "vtshow",		do_vtshow, NULL },		/*  9 */
     { "vtmode",		do_vtmode, NULL },		/* 10 */
     { "tekhide",	do_tekhide, NULL }};		/* 11 */
+#endif
 
 static Bool domenu
 	PROTO((Widget w,
@@ -196,11 +207,7 @@ static Widget create_menu
 		struct _MenuEntry *entries,
 		int nentries));
 
-static void do_tekonoff PROTO_XT_CALLBACK_ARGS;
-static void do_vtonoff PROTO_XT_CALLBACK_ARGS;
 static void handle_send_signal PROTO(( Widget gw, int sig));
-static void handle_tekshow PROTO(( Widget gw, Bool allowswitch));
-static void handle_vtshow PROTO((Widget gw, Bool allowswitch));
 
 static void handle_toggle 
 	PROTO((void (*proc)PROTO_XT_CALLBACK_ARGS,
@@ -321,6 +328,7 @@ static Bool domenu (w, event, params, param_count)
 			  ? TRUE : FALSE));
 	break;
 
+#if OPT_TEK4014
       case 't':
 	if (!screen->tekMenu) {
 	    screen->tekMenu = create_menu (term, toplevel, "tekMenu",
@@ -329,6 +337,7 @@ static Bool domenu (w, event, params, param_count)
 	    set_tekfont_menu_item (screen->cur.fontsize, TRUE);
 	}
 	break;
+#endif
 
       default:
 	Bell(XkbBI_MinorError,0);
@@ -752,6 +761,7 @@ static void do_marginbell (gw, closure, data)
 }
 
 
+#if OPT_TEK4014
 static void handle_tekshow (gw, allowswitch)
     Widget gw GCC_UNUSED;
     Bool allowswitch;
@@ -782,6 +792,7 @@ static void do_tekonoff (gw, closure, data)
 {
     handle_tekshow (gw, False);
 }
+#endif /* OPT_TEK4014 */
 
 /* ARGSUSED */
 static void do_altscreen (gw, closure, data)
@@ -839,6 +850,7 @@ static void do_clearsavedlines (gw, closure, data)
 }
 
 
+#if OPT_TEK4014
 static void do_tekmode (gw, closure, data)
     Widget gw GCC_UNUSED;
     XtPointer closure GCC_UNUSED, data GCC_UNUSED;
@@ -855,6 +867,7 @@ static void do_vthide (gw, closure, data)
 {
     hide_vt_window();
 }
+#endif /* OPT_TEK4014 */
 
 
 /*
@@ -882,6 +895,7 @@ static void do_vtfont (gw, closure, data)
  * tek menu
  */
 
+#if OPT_TEK4014
 static void do_tektextlarge (gw, closure, data)
     Widget gw GCC_UNUSED;
     XtPointer closure GCC_UNUSED, data GCC_UNUSED;
@@ -986,6 +1000,7 @@ static void do_tekhide (gw, closure, data)
 {
     hide_tek_window();
 }
+#endif /* OPT_TEK4014 */
 
 
 
@@ -1344,6 +1359,7 @@ void HandleClearSavedLines(w, event, params, param_count)
     do_clearsavedlines(w, (XtPointer)0, (XtPointer)0);
 }
 
+#if OPT_TEK4014
 void HandleSetTerminalType(w, event, params, param_count)
     Widget w;
     XEvent *event GCC_UNUSED;
@@ -1445,3 +1461,4 @@ void HandleTekCopy(w, event, params, param_count)
 {
     do_tekcopy(w, (XtPointer)0, (XtPointer)0);
 }
+#endif /* OPT_TEK4014 */

@@ -84,6 +84,18 @@ extern char *getenv();
 
 extern Widget toplevel;		/* used in 'ChangeGroup()' */
 
+#if OPT_TEK4014
+#define OUR_EVENT(event,Type) \
+		(event.type == Type && \
+		  (event.xcrossing.window == XtWindow(XtParent(term)) || \
+		    (tekWidget && \
+		     event.xcrossing.window == XtWindow(XtParent(tekWidget)))))
+#else
+#define OUR_EVENT(event,Type) \
+		(event.type == Type && \
+		   (event.xcrossing.window == XtWindow(XtParent(term))))
+#endif
+
 static Boolean AllocateColor PROTO((XtermWidget pTerm, ScrnColors *pNew, int ndx, char *name));
 static Boolean ChangeColorsRequest PROTO((XtermWidget pTerm, int start, char *names));
 static Boolean GetOldColors PROTO(( XtermWidget pTerm));
@@ -94,7 +106,10 @@ static void DoSpecialEnterNotify PROTO((XEnterWindowEvent *ev));
 static void DoSpecialLeaveNotify PROTO((XEnterWindowEvent *ev));
 static void selectwindow PROTO((TScreen *screen, int flag));
 static void unselectwindow PROTO((TScreen *screen, int flag));
+
+#if OPT_TEK4014
 static void withdraw_window PROTO((Display *dpy, Window w, int scr));
+#endif
 
 void
 do_xevents()
@@ -138,16 +153,10 @@ xevents()
 		 * looking at the event ourselves we make sure that we can
 		 * do the right thing.
 		 */
-		if(event.type == EnterNotify &&
-		   (event.xcrossing.window == XtWindow(XtParent(term)) ||
-		    (tekWidget &&
-		     event.xcrossing.window == XtWindow(XtParent(tekWidget)))))
+		if(OUR_EVENT(event, EnterNotify))
 		  DoSpecialEnterNotify (&event.xcrossing);
 		else 
-		if(event.type == LeaveNotify &&
-		   (event.xcrossing.window == XtWindow(XtParent(term)) ||
-		    (tekWidget &&
-		     event.xcrossing.window == XtWindow(XtParent(tekWidget)))))
+		if(OUR_EVENT(event, LeaveNotify))
 		  DoSpecialLeaveNotify (&event.xcrossing);
 
 		if (!event.xany.send_event ||
@@ -186,7 +195,7 @@ void HandleKeyPressed(w, event, params, nparams)
     register TScreen *screen = &term->screen;
 
 #ifdef ACTIVEWINDOWINPUTONLY
-    if (w == (screen->TekEmu ? (Widget)tekWidget : (Widget)term))
+    if (w == CURRENT_EMU(screen))
 #endif
 	Input (&term->keyboard, screen, &event->xkey, False);
 }
@@ -201,7 +210,7 @@ void HandleEightBitKeyPressed(w, event, params, nparams)
     register TScreen *screen = &term->screen;
 
 #ifdef ACTIVEWINDOWINPUTONLY
-    if (w == (screen->TekEmu ? (Widget)tekWidget : (Widget)term))
+    if (w == CURRENT_EMU(screen))
 #endif
 	Input (&term->keyboard, screen, &event->xkey, True);
 }
@@ -216,7 +225,8 @@ void HandleStringEvent(w, event, params, nparams)
     register TScreen *screen = &term->screen;
 
 #ifdef ACTIVEWINDOWINPUTONLY
-    if (w != (screen->TekEmu ? (Widget)tekWidget : (Widget)term)) return;
+    if (w != CURRENT_EMU(screen))
+    	return;
 #endif
 
     if (*nparams != 1) return;
@@ -247,8 +257,7 @@ static void DoSpecialEnterNotify (ev)
     register TScreen *screen = &term->screen;
 
 #ifdef ACTIVEWINDOWINPUTONLY
-    if (ev->window == XtWindow(XtParent(screen->TekEmu ?
-					(Widget)tekWidget : (Widget)term)))
+    if (ev->window == XtWindow(XtParent(CURRENT_EMU(screen))))
 #endif
       if (((ev->detail) != NotifyInferior) &&
 	  ev->focus &&
@@ -273,8 +282,7 @@ static void DoSpecialLeaveNotify (ev)
     register TScreen *screen = &term->screen;
 
 #ifdef ACTIVEWINDOWINPUTONLY
-    if (ev->window == XtWindow(XtParent(screen->TekEmu ?
-					(Widget)tekWidget : (Widget)term)))
+    if (ev->window == XtWindow(XtParent(CURRENT_EMU(screen))))
 #endif
       if (((ev->detail) != NotifyInferior) &&
 	  ev->focus &&
@@ -327,6 +335,7 @@ selectwindow(screen, flag)
 register TScreen *screen;
 register int flag;
 {
+#if OPT_TEK4014
 	if(screen->TekEmu) {
 		if(!Ttoggled)
 			TCursorToggle(TOGGLE);
@@ -334,7 +343,9 @@ register int flag;
 		if(!Ttoggled)
 			TCursorToggle(TOGGLE);
 		return;
-	} else {
+	} else
+#endif
+	{
 		if (screen->xic)
 		    XSetICFocus(screen->xic);
 
@@ -356,11 +367,14 @@ register int flag;
 {
     if (screen->always_highlight) return;
 
+#if OPT_TEK4014
     if(screen->TekEmu) {
 	if(!Ttoggled) TCursorToggle(TOGGLE);
 	screen->select &= ~flag;
 	if(!Ttoggled) TCursorToggle(TOGGLE);
-    } else {
+    } else
+#endif
+    {
 	if (screen->xic)
 	    XUnsetICFocus(screen->xic);
 	screen->select &= ~flag;
@@ -416,7 +430,7 @@ Bell(which,percent)
 	   back.  If the server is suspending operations while the bell
 	   is being emitted (problematic for audio bell), this lets us
 	   know when the previous bell has finished */
-	Widget w = screen->TekEmu ? (Widget) tekWidget : (Widget) term;
+	Widget w = CURRENT_EMU(screen);
 	XChangeProperty(XtDisplay(w), XtWindow(w),
 			XA_NOTICE, XA_NOTICE, 8, PropModeAppend, NULL, 0);
 	screen->bellInProgress = TRUE;
@@ -434,6 +448,7 @@ VisualBell()
     gcval.function = GXxor;
     gcval.foreground = xorPixel;
     visualGC = XtGetGC((Widget)term, GCFunction+GCForeground, &gcval);
+#if OPT_TEK4014
     if(screen->TekEmu) {
 	XFillRectangle(
 		       screen->display,
@@ -450,7 +465,9 @@ VisualBell()
 		       0, 0,
 		       (unsigned) TFullWidth(screen),
 		       (unsigned) TFullHeight(screen));
-    } else {
+    } else
+#endif
+    {
 	XFillRectangle(
 		       screen->display,
 		       VWindow(screen), 
@@ -504,12 +521,14 @@ Redraw()
 			(*screen->scrollWidget->core.widget_class->core_class.expose)(screen->scrollWidget, (XEvent *)&event, NULL);
 		}
 
+#if OPT_TEK4014
 	if(TWindow(screen) && screen->Tshow) {
 	        event.window = TWindow(screen);
 		event.width = tekWidget->core.width;
 		event.height = tekWidget->core.height;
 		TekExpose ((Widget)tekWidget, (XEvent *)&event, NULL);
 	}
+#endif
 }
 
 #if defined(ALLOWLOGGING) || defined(DEBUG)
@@ -700,7 +719,7 @@ register TScreen *screen;
 					 0644)) < 0)
 			return;
 	}
-	screen->logstart = screen->TekEmu ? Tbptr : bptr;
+	screen->logstart = CURRENT_EMU_VAL(screen, Tbptr, bptr);
 	screen->logging = TRUE;
 	update_logging();
 }
@@ -724,10 +743,10 @@ register TScreen *screen;
 	register Char *cp;
 	register int i;
 
-	cp = screen->TekEmu ? Tbptr : bptr;
+	cp = CURRENT_EMU_VAL(screen, Tbptr, bptr);
 	if((i = cp - screen->logstart) > 0)
 		write(screen->logfd, (char *)screen->logstart, i);
-	screen->logstart = screen->TekEmu ? Tbuffer : buffer;
+	screen->logstart = CURRENT_EMU_VAL(screen, Tbuffer, buffer);
 }
 
 #ifdef ALLOWLOGFILEEXEC
@@ -1369,6 +1388,7 @@ char *s1, *s2;
   return(0);
 }
 
+#if OPT_TEK4014
 static void withdraw_window (dpy, w, scr)
     Display *dpy;
     Window w;
@@ -1378,6 +1398,7 @@ static void withdraw_window (dpy, w, scr)
     XWithdrawWindow (dpy, w, scr);
     return;
 }
+#endif
 
 
 void set_vt_visibility (on)
@@ -1391,7 +1412,9 @@ void set_vt_visibility (on)
 	    XtMapWidget (term->core.parent);
 	    screen->Vshow = TRUE;
 	}
-    } else {
+    }
+#if OPT_TEK4014
+    else {
 	if (screen->Vshow && term) {
 	    withdraw_window (XtDisplay (term), 
 			     XtWindow(XtParent(term)),
@@ -1404,9 +1427,11 @@ void set_vt_visibility (on)
     update_vttekmode();
     update_tekshow();
     update_vtshow();
+#endif
     return;
 }
 				
+#if OPT_TEK4014
 extern Atom wm_delete_window;	/* for ICCCM delete window */
 
 void set_tek_visibility (on)
@@ -1502,3 +1527,4 @@ void hide_tek_window ()
     TekRefresh = (TekLink *)0;
     if (screen->TekEmu) switch_modes (True);	/* does longjmp to vt mode */
 }
+#endif /* OPT_TEK4014 */

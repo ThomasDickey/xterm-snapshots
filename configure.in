@@ -102,6 +102,14 @@ vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
 esac
 AC_DEFINE_UNQUOTED(DFT_DECID,$default_termid)
 
+AC_MSG_CHECKING(for default terminal-type)
+AC_ARG_WITH(terminal-type,
+	[  --with-terminal-type=T  set default \$TERM (default: xterm)],
+	[default_TERM=$withval],
+	[default_TERM=xterm])
+AC_MSG_RESULT($default_TERM)
+AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM")
+
 ###	checks for optional features
 AC_MSG_CHECKING(if you want active-icons)
 CF_ARG_DISABLE(active-icon,
@@ -185,7 +193,7 @@ fi
 
 AC_MSG_CHECKING(if you want support for right-scrollbar)
 CF_ARG_DISABLE(rightbar,
-	[  --disable-rightbar      enable logging],
+	[  --disable-rightbar      disable right-scrollbar support],
 	[enable_rightbar=no],
 	[enable_rightbar=yes])
 AC_MSG_RESULT($enable_rightbar)
@@ -193,6 +201,29 @@ if test $enable_rightbar = yes ; then
 	AC_DEFINE(SCROLLBAR_RIGHT)
 fi
 
+AC_MSG_CHECKING(if you want support for tek4014)
+CF_ARG_DISABLE(tek4014,
+	[  --disable-tek4014       disable tek4014 emulation],
+	[enable_tek4014=no],
+	[enable_tek4014=yes])
+AC_MSG_RESULT($enable_tek4014)
+if test $enable_tek4014 = no ; then
+	AC_DEFINE(OPT_TEK4014,0)
+else
+	EXTRAHDRS="$EXTRAHDRS TekParse.h"
+	EXTRASRCS="$EXTRASRCS TekPrsTbl.c Tekproc.c"
+	EXTRAOBJS="$EXTRAOBJS TekPrsTbl.o Tekproc.o"
+fi
+
+AC_MSG_CHECKING(if you want VT52 emulation)
+CF_ARG_DISABLE(vt52,
+	[  --disable-vt52          disable VT52 emulation],
+	[enable_vt52=no],
+	[enable_vt52=yes])
+AC_MSG_RESULT($enable_vt52)
+test $enable_vt52 = no && AC_DEFINE(OPT_VT52_MODE,0)
+
+# development/testing aids
 AC_MSG_CHECKING(if you want debugging traces)
 CF_ARG_ENABLE(trace,
 	[  --enable-trace          test: set to enable debugging traces],
@@ -205,15 +236,6 @@ if test $enable_trace = yes ; then
 	EXTRAOBJS="$EXTRAOBJS trace.o"
 fi
 
-AC_MSG_CHECKING(if you want VT52 emulation)
-CF_ARG_DISABLE(vt52,
-	[  --disable-vt52          disable VT52 emulation],
-	[enable_vt52=no],
-	[enable_vt52=yes])
-AC_MSG_RESULT($enable_vt52)
-test $enable_vt52 = no && AC_DEFINE(OPT_VT52_MODE,0)
-
-# development/testing aids
 CF_DISABLE_ECHO
 
 AC_MSG_CHECKING(if you want magic cookie emulation)
@@ -227,7 +249,6 @@ if test $enable_xmc = yes ; then
 	EXTRASRCS="$EXTRASRCS testxmc.c"
 	EXTRAOBJS="$EXTRAOBJS testxmc.o"
 fi
-
 
 if test -n "$GCC" ; then
 AC_MSG_CHECKING(if you want to turn on gcc warnings)
@@ -244,6 +265,7 @@ fi
 fi
 
 AC_SUBST(EXTRA_CFLAGS)
+AC_SUBST(EXTRAHDRS)
 AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
 

@@ -329,6 +329,10 @@ typedef struct {
 #define OPT_SUNPC_KBD	1 /* true if xterm supports Sun/PC keyboard map */
 #endif
 
+#ifndef OPT_TEK4014
+#define OPT_TEK4014     1 /* true if we're using tek4014 emulation */
+#endif
+
 #ifndef OPT_TRACE
 #define OPT_TRACE       0 /* true if we're using debugging traces */
 #endif
@@ -422,6 +426,18 @@ fixme: You must have ANSI/ISO colors to support AIX colors
 #define MAX_PTRS term->num_ptrs
 #else
 #define MAX_PTRS 2
+#endif
+
+/***====================================================================***/
+
+#if OPT_TEK4014
+#define TEK4014_ACTIVE(screen) ((screen)->TekEmu)
+#define CURRENT_EMU_VAL(screen,tek,vt) (TEK4014_ACTIVE(screen) ? tek : vt)
+#define CURRENT_EMU(screen) CURRENT_EMU_VAL(screen, (Widget)tekWidget, (Widget)term)
+#else
+#define TEK4014_ACTIVE(screen) 0
+#define CURRENT_EMU_VAL(screen,tek,vt) (vt)
+#define CURRENT_EMU(screen) ((Widget)term)
 #endif
 
 /***====================================================================***/
@@ -554,6 +570,7 @@ typedef struct {
 	int		inhibit;	/* flags for inhibiting changes	*/
 
 /* VT window parameters */
+	Boolean		Vshow;		/* VT window showing		*/
 	struct _vtwin {
 		Window	window;		/* X window id			*/
 		int	width;		/* width of columns		*/
@@ -665,6 +682,7 @@ typedef struct {
 	Boolean		move_sgr_ok;	/* SGR is reset on move		*/
 #endif
 
+#if OPT_TEK4014
 /* Tektronix window parameters */
 	GC		TnormalGC;	/* normal painting		*/
 	GC		TcursorGC;	/* normal cursor painting	*/
@@ -672,7 +690,6 @@ typedef struct {
 	Pixel		Tbackground;	/* Background color		*/
 	Pixel		Tcursorcolor;	/* Cursor color			*/
 	int		Tcolor;		/* colors used			*/
-	Boolean		Vshow;		/* VT window showing		*/
 	Boolean		Tshow;		/* Tek window showing		*/
 	Boolean		waitrefresh;	/* postpone refresh		*/
 	struct _tekwin {
@@ -698,6 +715,7 @@ typedef struct {
 	int		pen;		/* current Tektronix pen 0=up, 1=dn */
 	char		*TekGIN;	/* nonzero if Tektronix GIN mode*/
 	int		gin_terminator; /* Tek strap option */
+#endif /* OPT_TEK4014 */
 
 	int		multiClickTime;	 /* time between multiclick selects */
 	int		bellSuppressTime; /* msecs after Bell before another allowed */
@@ -762,13 +780,15 @@ typedef struct _Misc {
     Boolean autoWrap;
     Boolean logInhibit;
     Boolean signalInhibit;
+#if OPT_TEK4014
     Boolean tekInhibit;
+    Boolean tekSmall;	/* start tek window in small size */
+#endif
     Boolean scrollbar;
 #ifdef SCROLLBAR_RIGHT
     Boolean useRight;
 #endif
     Boolean titeInhibit;
-    Boolean tekSmall;	/* start tek window in small size */
     Boolean appcursorDefault;
     Boolean appkeypadDefault;
 #if OPT_INPUT_METHOD
@@ -796,10 +816,12 @@ extern WidgetClass xtermWidgetClass;
 
 #define IsXtermWidget(w) (XtClass(w) == xtermWidgetClass)
 
+#if OPT_TEK4014
 typedef struct _TekClassRec {
     CoreClassPart core_class;
     TekClassPart tek_class;
 } TekClassRec;
+#endif
 
 /* define masks for keyboard.flags */
 #define MODE_KAM	0x01	/* keyboard action mode */
@@ -833,10 +855,12 @@ typedef struct _XtermWidgetRec {
     Misc	misc;		/* miscellaneous parameters	*/
 } XtermWidgetRec, *XtermWidget;
 
+#if OPT_TEK4014
 typedef struct _TekWidgetRec {
     CorePart core;
     TekPart tek;
 } TekWidgetRec, *TekWidget;
+#endif /* OPT_TEK4014 */
 
 #define BUF_SIZE 4096
 
@@ -969,7 +993,7 @@ typedef struct _TekWidgetRec {
 
 #define	WINDOWEVENTS	(TWINDOWEVENTS | PointerMotionMask)
 
-
+#if OPT_TEK4014
 #define TEK_LINK_BLOCK_SIZE 1024
 
 typedef struct Tek_Link
@@ -981,6 +1005,7 @@ typedef struct Tek_Link
 	char *ptr;		/* current pointer into data */
 	char data [TEK_LINK_BLOCK_SIZE];
 } TekLink;
+#endif /* OPT_TEK4014 */
 
 /* flags for cursors */
 #define	OFF		0

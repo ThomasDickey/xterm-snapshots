@@ -1134,9 +1134,10 @@ GetColors(tw,pColors)
 	SET_COLOR_VALUE(pColors,TEXT_CURSOR,	screen->cursorcolor);
 	SET_COLOR_VALUE(pColors,MOUSE_FG,	screen->mousecolor);
 	SET_COLOR_VALUE(pColors,MOUSE_BG,	screen->mousecolorback);
-
+#if OPT_TEK4014
 	SET_COLOR_VALUE(pColors,TEK_FG,		screen->Tforeground);
 	SET_COLOR_VALUE(pColors,TEK_BG,		screen->Tbackground);
+#endif
 }
 
 void
@@ -1145,8 +1146,10 @@ ChangeColors(tw,pNew)
 	ScrnColors *pNew;
 {
 	register TScreen *screen = &tw->screen;
-	Window tek = TWindow(screen);
 	Bool	newCursor=	TRUE;
+#if OPT_TEK4014
+	Window tek = TWindow(screen);
+#endif
 
 	if (COLOR_DEFINED(pNew,TEXT_BG)) {
 	    tw->core.background_pixel=	COLOR_VALUE(pNew,TEXT_BG);
@@ -1193,21 +1196,27 @@ ChangeColors(tw,pNew)
 		screen->mousecolor, screen->mousecolorback);
 	    XDefineCursor(screen->display, TextWindow(screen),
 					   screen->pointer_cursor);
+#if OPT_TEK4014
 	    if(tek)
 		XDefineCursor(screen->display, tek, screen->arrow);
+#endif
 	}
 
+#if OPT_TEK4014
 	if ((tek)&&(COLOR_DEFINED(pNew,TEK_FG)||COLOR_DEFINED(pNew,TEK_BG))) {
 	    ChangeTekColors(screen,pNew);
 	}
+#endif
 	set_cursor_gcs(screen);
 	XClearWindow(screen->display, TextWindow(screen));
 	ScrnRefresh (screen, 0, 0, screen->max_row + 1,
 	 screen->max_col + 1, False);
+#if OPT_TEK4014
 	if(screen->Tshow) {
 	    XClearWindow(screen->display, tek);
 	    TekExpose((Widget)NULL, (XEvent *)NULL, (Region)NULL);
 	}
+#endif
 }
 
 /***====================================================================***/
@@ -1220,8 +1229,10 @@ ReverseVideo (termw)
 {
 	register TScreen *screen = &termw->screen;
 	GC tmpGC;
-	Window tek = TWindow(screen);
 	Pixel tmp;
+#if OPT_TEK4014
+	Window tek = TWindow(screen);
+#endif
 
 	/*
 	 * Swap SGR foreground and background colors.  By convention, these are
@@ -1265,8 +1276,10 @@ ReverseVideo (termw)
 	termw->misc.re_verse = !termw->misc.re_verse;
 
 	XDefineCursor(screen->display, TextWindow(screen), screen->pointer_cursor);
+#if OPT_TEK4014
 	if(tek)
 		XDefineCursor(screen->display, tek, screen->arrow);
+#endif
 
 	if(screen->scrollWidget)
 		ScrollBarReverseVideo(screen->scrollWidget);
@@ -1278,16 +1291,20 @@ ReverseVideo (termw)
 	 */
 	XSetWindowBackground(screen->display, VShellWindow, termw->core.background_pixel);
 
+#if OPT_TEK4014
 	if(tek) {
 	    TekReverseVideo(screen);
 	}
+#endif
 	XClearWindow(screen->display, TextWindow(screen));
 	ScrnRefresh (screen, 0, 0, screen->max_row + 1,
 	 screen->max_col + 1, False);
+#if OPT_TEK4014
 	if(screen->Tshow) {
 	    XClearWindow(screen->display, tek);
 	    TekExpose((Widget)NULL, (XEvent *)NULL, (Region)NULL);
 	}
+#endif
 	ReverseOldColors();
 	update_reversevideo();
 }

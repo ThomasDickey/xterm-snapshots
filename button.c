@@ -1545,6 +1545,7 @@ EditorButton(event)
 
 
 /*ARGSUSED*/
+#if OPT_TEK4014
 void HandleGINInput (w, event, param_list, nparamsp)
     Widget w GCC_UNUSED;
     XEvent *event GCC_UNUSED;
@@ -1567,6 +1568,7 @@ void HandleGINInput (w, event, param_list, nparamsp)
 	Bell (XkbBI_MinorError,0);
     }
 }
+#endif /* OPT_TEK4014 */
 
 
 /* ARGSUSED */

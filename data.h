@@ -39,16 +39,25 @@
 
 extern XtAppContext app_con;
 
+#if OPT_TEK4014
 extern TekLink *TekRefresh;
+extern TekWidget tekWidget;
+
 extern XPoint T_box2[];
 extern XPoint T_box3[];
 extern XPoint T_boxlarge[];
 extern XPoint T_boxsmall[];
-extern XPoint VTbox[];
 extern Char *Tbptr;
 extern Char *Tbuffer;
 extern Char *Tpushb;
 extern Char *Tpushback;
+extern int T_lastx;
+extern int T_lasty;
+extern int Tbcnt;
+extern int Ttoggled;
+#endif
+
+extern XPoint VTbox[];
 extern Char *bptr;
 #ifdef ALLOWLOGGING
 extern char log_def_name[];
@@ -61,10 +70,6 @@ extern Boolean sunFunctionKeys;
 extern Boolean sunKeyboard;
 #endif
 extern Char buffer[];
-extern int T_lastx;
-extern int T_lasty;
-extern int Tbcnt;
-extern int Ttoggled;
 extern int am_slave;
 extern int done_setuid;
 extern int bcnt;
@@ -88,7 +93,6 @@ extern int VTgcFontMask;
 extern int TEKgcFontMask;
 
 extern XtermWidget term;
-extern TekWidget tekWidget;
 
 #ifdef XKB
 #include <X11/extensions/XKBbells.h>

@@ -156,6 +156,10 @@ extern struct passwd *getpwuid(); 	/* does ANYBODY need this? */
 #endif
 #endif
 
+#ifndef DFT_TERMTYPE
+#define DFT_TERMTYPE "xterm"
+#endif
+
 #ifndef GCC_UNUSED
 #define GCC_UNUSED /* nothing */
 #endif
@@ -376,7 +380,7 @@ main (argc, argv)
 	tty = fileno(ttyfp);
 #ifdef USE_TERMCAP
 	if(!(env = getenv("TERM")) || !*env) {
-	    env = "xterm";
+	    env = DFT_TERMTYPE;
 	    if(SHELL_BOURNE == shell_type)
 		setname = "TERM=xterm;\nexport TERM;\n";
 	    else
@@ -388,7 +392,7 @@ main (argc, argv)
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
 	if(!(env = getenv("TERM")) || !*env) {
-		env = "xterm";
+		env = DFT_TERMTYPE;
 		if(SHELL_BOURNE == shell_type)
 			setname = "TERM=xterm;\nexport TERM;\n";
 		else	setname = "setenv TERM xterm;\n";
