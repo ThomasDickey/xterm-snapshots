@@ -1893,6 +1893,15 @@ int char2lower(int ch)
 	return ch;
 }
 
+void update_keyboard_type(void)
+{
+    update_old_fkeys();
+    update_hp_fkeys();
+    update_sco_fkeys();
+    update_sun_fkeys();
+    update_sun_kbd();
+}
+
 void set_keyboard_type(xtermKeyboardType type, Bool set)
 {
     xtermKeyboardType save = term->keyboard.type;
@@ -1904,9 +1913,7 @@ void set_keyboard_type(xtermKeyboardType type, Bool set)
     }
 
     if (save != term->keyboard.type) {
-	update_hp_fkeys();
-	update_sun_fkeys();
-	update_sun_kbd();
+	update_keyboard_type();
     }
 }
 
@@ -1921,9 +1928,7 @@ void toggle_keyboard_type(xtermKeyboardType type)
     }
 
     if (save != term->keyboard.type) {
-	update_hp_fkeys();
-	update_sun_fkeys();
-	update_sun_kbd();
+	update_keyboard_type();
     }
 }
 
@@ -1933,7 +1938,8 @@ void init_keyboard_type(xtermKeyboardType type, Bool set)
 
     if (set) {
 	if (wasSet) {
-	    fprintf(stderr, "Conflicting keyboard type option\n");
+	    fprintf(stderr, "Conflicting keyboard type option (%d/%d)\n",
+		    term->keyboard.type, type);
 	}
 	term->keyboard.type = type;
 	wasSet = True;

@@ -318,6 +318,10 @@ typedef struct {
 				 ((n)==TEK_FG?TEK_BG:\
 				 ((n)==TEXT_BG?TEK_FG:(n))))))))
 
+#define COLOR_RES(name,offset,value) \
+	{name, XtCForeground, XtRPixel, sizeof(Pixel), \
+	 XtOffsetOf(XtermWidgetRec, offset), XtRString, value}
+
 typedef struct {
 	unsigned	which;	/* must have NCOLORS bits */
 	Pixel		colors[NCOLORS];
@@ -426,6 +430,10 @@ typedef struct {
 
 #ifndef OPT_PRINT_COLORS
 #define OPT_PRINT_COLORS 1 /* true if we print color information */
+#endif
+
+#ifndef OPT_SCO_FUNC_KEYS
+#define OPT_SCO_FUNC_KEYS 0 /* true if xterm supports SCO-style function keys */
 #endif
 
 #ifndef OPT_SHIFT_KEYS
@@ -1106,10 +1114,12 @@ typedef struct _TekPart {
 #define MULTICLICKTIME 250	/* milliseconds */
 
 typedef enum {
+    keyboardIsLegacy,		/* bogus vt220 codes for F1-F4, etc. */
     keyboardIsDefault,
     keyboardIsHP,
+    keyboardIsSCO,
     keyboardIsSun,
-    keyboardIsVT220,
+    keyboardIsVT220
 } xtermKeyboardType;
 
 typedef struct

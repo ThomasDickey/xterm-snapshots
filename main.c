@@ -1718,6 +1718,20 @@ main (int argc, char *argv[])
 	    break;
 	}
 
+#if OPT_WIDE_CHARS
+	/* Test whether UTF-8 mode should be active by default */
+	{
+	    char *s;
+
+	    if ((s = getenv("LC_ALL")) ||
+		(s = getenv("LC_CTYPE")) ||
+		(s = getenv("LANG"))) {
+		if (strstr(s, "UTF-8"))
+		    defaultUTF8[0] = '2';
+	    }
+	}
+#endif
+
 	SetupMenus(toplevel, &form_top, &menu_top);
 
 	term = (XtermWidget) XtVaCreateManagedWidget(

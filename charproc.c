@@ -303,6 +303,7 @@ static XtActionsRec actionsList[] = {
     { "set-backarrow",		HandleBackarrow },
     { "set-cursesemul",		HandleCursesEmul },
     { "set-jumpscroll",		HandleJumpscroll },
+    { "set-old-function-keys",	HandleOldFunctionKeys },
     { "set-marginbell",		HandleMarginBell },
     { "set-reverse-video",	HandleReverseVideo },
     { "set-reversewrap",	HandleReverseWrap },
@@ -343,6 +344,9 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_NUM_LOCK
     { "set-num-lock",		HandleNumLock },
+#endif
+#if OPT_SCO_FUNC_KEYS
+    { "set-sco-function-keys",	HandleScoFunctionKeys },
 #endif
 #if OPT_SHIFT_KEYS
     { "larger-vt-font",		HandleLargerFont },
@@ -406,12 +410,8 @@ static XtResource resources[] = {
 {XtNbackground, XtCBackground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, core.background_pixel),
 	XtRString, "XtDefaultBackground"},
-{XtNforeground, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.foreground),
-	XtRString, "XtDefaultForeground"},
-{XtNcursorColor, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.cursorcolor),
-	XtRString, "XtDefaultForeground"},
+COLOR_RES(XtNforeground,	screen.foreground,	"XtDefaultForeground"),
+COLOR_RES(XtNcursorColor,	screen.cursorcolor,	"XtDefaultForeground"),
 #if OPT_BLINK_CURS
 {XtNcursorBlink, XtCCursorBlink, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.cursor_blink),
@@ -485,9 +485,7 @@ static XtResource resources[] = {
 {XtNmarginBell, XtCMarginBell, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.marginbell),
 	XtRBoolean, (XtPointer) &defaultFALSE},
-{XtNpointerColor, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.mousecolor),
-	XtRString, "XtDefaultForeground"},
+COLOR_RES(XtNpointerColor,	screen.mousecolor,	"XtDefaultForeground"),
 {XtNpointerColorBackground, XtCBackground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.mousecolorback),
 	XtRString, "XtDefaultBackground"},
@@ -637,68 +635,30 @@ static XtResource resources[] = {
 	XtRImmediate, (XtPointer)TRUE},
 #endif
 #if OPT_ISO_COLORS
-{XtNcolor0, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_0]),
-	XtRString, DFT_COLOR("black")},
-{XtNcolor1, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_1]),
-	XtRString, DFT_COLOR("red3")},
-{XtNcolor2, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_2]),
-	XtRString, DFT_COLOR("green3")},
-{XtNcolor3, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_3]),
-	XtRString, DFT_COLOR("yellow3")},
-{XtNcolor4, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_4]),
-	XtRString, DFT_COLOR("blue3")},
-{XtNcolor5, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_5]),
-	XtRString, DFT_COLOR("magenta3")},
-{XtNcolor6, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_6]),
-	XtRString, DFT_COLOR("cyan3")},
-{XtNcolor7, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_7]),
-	XtRString, DFT_COLOR("gray90")},
-{XtNcolor8, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_8]),
-	XtRString, DFT_COLOR("gray30")},
-{XtNcolor9, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_9]),
-	XtRString, DFT_COLOR("red")},
-{XtNcolor10, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_10]),
-	XtRString, DFT_COLOR("green")},
-{XtNcolor11, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_11]),
-	XtRString, DFT_COLOR("yellow")},
-{XtNcolor12, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_12]),
-	XtRString, DFT_COLOR("blue")},
-{XtNcolor13, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_13]),
-	XtRString, DFT_COLOR("magenta")},
-{XtNcolor14, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_14]),
-	XtRString, DFT_COLOR("cyan")},
-{XtNcolor15, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_15]),
-	XtRString, DFT_COLOR("white")},
+COLOR_RES(XtNcolor0,	screen.Acolors[COLOR_0],	DFT_COLOR("black")),
+COLOR_RES(XtNcolor1,	screen.Acolors[COLOR_1],	DFT_COLOR("red3")),
+COLOR_RES(XtNcolor2,	screen.Acolors[COLOR_2],	DFT_COLOR("green3")),
+COLOR_RES(XtNcolor3,	screen.Acolors[COLOR_3],	DFT_COLOR("yellow3")),
+COLOR_RES(XtNcolor4,	screen.Acolors[COLOR_4],	DFT_COLOR("blue3")),
+COLOR_RES(XtNcolor5,	screen.Acolors[COLOR_5],	DFT_COLOR("magenta3")),
+COLOR_RES(XtNcolor6,	screen.Acolors[COLOR_6],	DFT_COLOR("cyan3")),
+COLOR_RES(XtNcolor7,	screen.Acolors[COLOR_7],	DFT_COLOR("gray90")),
+COLOR_RES(XtNcolor8,	screen.Acolors[COLOR_8],	DFT_COLOR("gray30")),
+COLOR_RES(XtNcolor9,	screen.Acolors[COLOR_9],	DFT_COLOR("red")),
+COLOR_RES(XtNcolor10,	screen.Acolors[COLOR_10],	DFT_COLOR("green")),
+COLOR_RES(XtNcolor11,	screen.Acolors[COLOR_11],	DFT_COLOR("yellow")),
+COLOR_RES(XtNcolor12,	screen.Acolors[COLOR_12],	DFT_COLOR("blue")),
+COLOR_RES(XtNcolor13,	screen.Acolors[COLOR_13],	DFT_COLOR("magenta")),
+COLOR_RES(XtNcolor14,	screen.Acolors[COLOR_14],	DFT_COLOR("cyan")),
+COLOR_RES(XtNcolor15,	screen.Acolors[COLOR_15],	DFT_COLOR("white")),
 #if OPT_256_COLORS
 # include <256colres.h>
 #elif OPT_88_COLORS
 # include <88colres.h>
 #endif
-{XtNcolorBD, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_BD]),
-	XtRString, DFT_COLOR("XtDefaultForeground")},
-{XtNcolorBL, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_BL]),
-	XtRString, DFT_COLOR("XtDefaultForeground")},
-{XtNcolorUL, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_UL]),
-	XtRString, DFT_COLOR("XtDefaultForeground")},
+COLOR_RES(XtNcolorBD,	screen.Acolors[COLOR_BD],	DFT_COLOR("XtDefaultForeground")),
+COLOR_RES(XtNcolorBL,	screen.Acolors[COLOR_BL],	DFT_COLOR("XtDefaultForeground")),
+COLOR_RES(XtNcolorUL,	screen.Acolors[COLOR_UL],	DFT_COLOR("XtDefaultForeground")),
 {XtNcolorMode, XtCColorMode, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.colorMode),
 	XtRBoolean, (XtPointer) &defaultCOLORMODE},
@@ -722,9 +682,7 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, misc.dynamicColors),
 	XtRBoolean, (XtPointer) &defaultTRUE},
 #if OPT_HIGHLIGHT_COLOR
-{XtNhighlightColor, XtCForeground, XtRPixel, sizeof(Pixel),
-	XtOffsetOf(XtermWidgetRec, screen.highlightcolor),
-	XtRString, "XtDefaultForeground"},
+COLOR_RES(XtNhighlightColor,	screen.highlightcolor,	"XtDefaultForeground"),
 #endif /* OPT_HIGHLIGHT_COLOR */
 {XtNboldMode, XtCBoldMode, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.bold_mode),
@@ -760,7 +718,7 @@ static XtResource resources[] = {
 #if OPT_WIDE_CHARS
 {XtNutf8, XtCUtf8, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.utf8_mode),
-	XtRString, "0"},
+	XtRString, defaultUTF8},
 {XtNwideChars, XtCWideChars, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.wide_chars),
 	XtRBoolean, (XtPointer) &defaultFALSE},
@@ -3327,6 +3285,14 @@ dpmodes(
 			set_keyboard_type(keyboardIsHP, func == bitset);
 			break;
 #endif
+#if OPT_SCO_FUNC_KEYS
+		case 1053:
+			set_keyboard_type(keyboardIsHP, func == bitset);
+			break;
+#endif
+		case 1060:
+			set_keyboard_type(keyboardIsLegacy, func == bitset);
+			break;
 #if OPT_SUNPC_KBD
 		case 1061:
 			set_keyboard_type(keyboardIsVT220, func == bitset);
@@ -4216,6 +4182,7 @@ static void VTInitialize (
    wnew->screen.border = request->screen.border;
    wnew->screen.jumpscroll = request->screen.jumpscroll;
    wnew->screen.old_fkeys = request->screen.old_fkeys;
+   init_keyboard_type(keyboardIsLegacy, wnew->screen.old_fkeys);
 #ifdef ALLOWLOGGING
    wnew->screen.logfile = request->screen.logfile;
 #endif
