@@ -90,11 +90,6 @@
 #endif
 #endif
 
-#ifdef __OpenBSD__
-#define USE_TERMINFO
-#include <term.h>
-#endif
-
 #if defined(SYSV) || defined(Lynx) || defined(__CYGWIN32__)
 #define USE_SYSV_TERMIO
 #ifndef Lynx

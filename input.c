@@ -68,6 +68,7 @@
 
 #include <data.h>
 #include <fontutils.h>
+#include <keysym2ucs.h>
 
 /*                       0123456789 abc def0123456789abdef0123456789abcdef0123456789abcd */
 static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XX=";
@@ -223,6 +224,47 @@ TranslateFromSUNPC(KeySym keysym)
 	    reply.a_nparam += 1; \
 	}
 
+#if OPT_WIDE_CHARS
+/* Convert a Unicode value c into a UTF-8 sequence srtbuf */
+static int
+to_utf8(unsigned long c, char *strbuf)
+{
+	int nbytes = 0;
+
+	if (c < 0x80) {
+		strbuf[nbytes++] = c;
+	} else if (c < 0x800) {
+		strbuf[nbytes++] = 0xc0 | (c >> 6);
+		strbuf[nbytes++] = 0x80 | (c & 0x3f);
+	} else if (c < 0x10000) {
+		strbuf[nbytes++] = 0xe0 |  (c >> 12);
+		strbuf[nbytes++] = 0x80 | ((c >>  6) & 0x3f);
+		strbuf[nbytes++] = 0x80 | ( c        & 0x3f);
+	} else if (c < 0x200000) {
+		strbuf[nbytes++] = 0xf0 |  (c >> 18);
+		strbuf[nbytes++] = 0x80 | ((c >> 12) & 0x3f);
+		strbuf[nbytes++] = 0x80 | ((c >>  6) & 0x3f);
+		strbuf[nbytes++] = 0x80 | ( c        & 0x3f);
+	} else if (c < 0x4000000) {
+		strbuf[nbytes++] = 0xf8 |  (c >> 24);
+		strbuf[nbytes++] = 0x80 | ((c >> 18) & 0x3f);
+		strbuf[nbytes++] = 0x80 | ((c >> 12) & 0x3f);
+		strbuf[nbytes++] = 0x80 | ((c >>  6) & 0x3f);
+		strbuf[nbytes++] = 0x80 | ( c        & 0x3f);
+	} else if (c < 0x80000000) {
+		strbuf[nbytes++] = 0xfe |  (c >> 30);
+		strbuf[nbytes++] = 0x80 | ((c >> 24) & 0x3f);
+		strbuf[nbytes++] = 0x80 | ((c >> 18) & 0x3f);
+		strbuf[nbytes++] = 0x80 | ((c >> 12) & 0x3f);
+		strbuf[nbytes++] = 0x80 | ((c >> 6)  & 0x3f);
+		strbuf[nbytes++] = 0x80 | ( c        & 0x3f);
+	} else
+		return to_utf8(0xfffd, strbuf);
+
+	return nbytes;
+}
+#endif /* OPT_WIDE_CHARS */
+
 void
 Input (
 	register TKeyboard *keyboard,
@@ -243,13 +285,20 @@ Input (
 	int	dec_code;
 	short	modify_parm = 0;
 	int	keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
+#if OPT_WIDE_CHARS
+	long    ucs;
+#endif
 
 	/* Ignore characters typed at the keyboard */
 	if (keyboard->flags & MODE_KAM)
 		return;
 
 #if OPT_I18N_SUPPORT
-	if (screen->xic) {
+	if (screen->xic
+#if OPT_WIDE_CHARS
+	 && !screen->utf8_mode
+#endif
+	 ) {
 	    Status status_return;
 	    nbytes = XmbLookupString (screen->xic, event, strbuf, STRBUFSIZE,
 				      &keysym, &status_return);
@@ -261,6 +310,28 @@ Input (
 	    nbytes = XLookupString (event, strbuf, STRBUFSIZE,
 				    &keysym, &compose_status);
 	}
+
+#if OPT_WIDE_CHARS
+	/*
+	 * FIXME:  As long as Xlib does not provide proper UTF-8 conversion via
+	 * XLookupString(), we have to generate them here.  Once Xlib is fully
+	 * UTF-8 capable, this code here should be removed again.
+	 */
+	if (screen->utf8_mode) {
+		ucs = -1;
+		if (nbytes == 1) {
+		/* Take ISO 8859-1 character delivered by XLookupString() */
+			ucs = (unsigned char) strbuf[0];
+		} else if (!nbytes && keysym >= 0x100 && keysym <= 0xf000)
+			ucs = keysym2ucs(keysym);
+		else
+			ucs = -2;
+		if (ucs == -1)
+			nbytes = 0;
+		if (ucs >= 0)
+			nbytes = to_utf8(ucs, strbuf);
+	}
+#endif
 
 	string = &strbuf[0];
 	reply.a_pintro = 0;

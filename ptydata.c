@@ -162,6 +162,13 @@ int getPtyData(TScreen *screen, fd_set *select_mask, PtyData *data)
 		    data->ptr[i] &= 0x7f;
 		}
 	    }
+#if OPT_TRACE
+	    for (i = 0; i < data->cnt; i++) {
+		if (!(i%8)) TRACE(("%s", i ? "\n    " : "READ"))
+		TRACE((" %04X", data->ptr[i]))
+	    }
+	    TRACE(("\n"))
+#endif
 	    return (data->cnt);
 	}
     }
