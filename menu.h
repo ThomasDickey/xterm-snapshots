@@ -88,6 +88,7 @@ extern void HandleCreateMenu       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursesEmul       PROTO_XT_ACTIONS_ARGS;
 extern void HandleCursorBlink      PROTO_XT_ACTIONS_ARGS;
 extern void HandleDeleteIsDEL      PROTO_XT_ACTIONS_ARGS;
+extern void HandleFontBoxChars     PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
@@ -97,13 +98,13 @@ extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
 extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
 extern void HandleMetaEsc          PROTO_XT_ACTIONS_ARGS;
 extern void HandleNumLock          PROTO_XT_ACTIONS_ARGS;
+extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrint            PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
 extern void HandleReverseVideo     PROTO_XT_ACTIONS_ARGS;
 extern void HandleReverseWrap      PROTO_XT_ACTIONS_ARGS;
-extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandleScoFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollKey        PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollTtyOutput  PROTO_XT_ACTIONS_ARGS;
@@ -153,7 +154,7 @@ typedef enum {
     mainMenu_hp_fkeys,
 #endif
 #if OPT_SCO_FUNC_KEYS
-    mainMenu_sco_kbd,
+    mainMenu_sco_fkeys,
 #endif
     mainMenu_sun_fkeys,
 #if OPT_SUNPC_KBD
@@ -226,8 +227,11 @@ typedef enum {
     fontMenu_fontescape,
     fontMenu_fontsel,
 /* number of non-line items down to here should match NMENUFONTS in ptyx.h */
-#if OPT_DEC_CHRSET
+#if OPT_DEC_CHRSET || OPT_BOX_CHARS || OPT_DEC_SOFTFONT
     fontMenu_line1,
+#if OPT_BOX_CHARS
+    fontMenu_font_boxchars,
+#endif
 #if OPT_DEC_CHRSET
     fontMenu_font_doublesize,
 #endif
@@ -463,6 +467,15 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
 		    term->screen.font_doublesize)
 #else
 #define update_font_doublesize() /* nothing */
+#endif
+
+#if OPT_BOX_CHARS
+#define update_font_boxchars() \
+  update_menu_item (term->screen.fontMenu, \
+		    fontMenuEntries[fontMenu_font_boxchars].widget, \
+		    term->screen.force_box_chars)
+#else
+#define update_font_boxchars() /* nothing */
 #endif
 
 #if OPT_DEC_SOFTFONT

@@ -90,6 +90,9 @@ static int sunfuncvalue (KeySym keycode);
 #if OPT_HP_FUNC_KEYS
 static int hpfuncvalue (KeySym keycode);
 #endif
+#if OPT_SCO_FUNC_KEYS
+static int scofuncvalue (KeySym keycode);
+#endif
 
 #if OPT_TRACE
 static char *
@@ -490,6 +493,14 @@ Input (
 		unparseseq(&reply, pty);
 	} else
 #endif
+#if OPT_SCO_FUNC_KEYS
+	if (term->keyboard.type == keyboardIsSCO
+	 && (reply.a_final = scofuncvalue (keysym)) != 0) {
+		reply.a_type = CSI;
+		MODIFIER_PARM;
+		unparseseq(&reply, pty);
+	} else
+#endif
 	if (IsPFKey(keysym)) {
 		reply.a_type = SS3;
 		reply.a_final = keysym-XK_KP_F1+'P';
@@ -757,6 +768,64 @@ hpfuncvalue (KeySym  keycode)
 #endif
 		case XK_Select:		return('F');
 		case XK_Find:		return('h');
+		default:		return 0;
+	}
+}
+#endif
+
+#if OPT_SCO_FUNC_KEYS
+static int
+scofuncvalue (KeySym  keycode)
+{
+	switch (keycode) {
+		case XK_Up:		return('A');
+		case XK_Down:		return('B');
+		case XK_Right:		return('C');
+		case XK_Left:		return('D');
+		case XK_End:		return('F');
+		case XK_Insert:		return('L');
+		case XK_Next:		return('G');
+		case XK_Prior:		return('I');
+		case XK_Home:		return('H');
+		case XK_F1:		return('M');
+		case XK_F2:		return('N');
+		case XK_F3:		return('O');
+		case XK_F4:		return('P');
+		case XK_F5:		return('Q');
+		case XK_F6:		return('R');
+		case XK_F7:		return('S');
+		case XK_F8:		return('T');
+		case XK_F9:		return('U');
+		case XK_F10:		return('V');
+		case XK_F11:		return('W');
+		case XK_F12:		return('X');
+		case XK_F13:		return('Y');
+		case XK_F15:		return('a');
+		case XK_F16:		return('b');
+		case XK_F17:		return('c');
+		case XK_F18:		return('d');
+		case XK_F19:		return('e');
+		case XK_F20:		return('f');
+#if defined(XK_F21)
+		case XK_F21:		return('g');
+		case XK_F22:		return('h');
+		case XK_F23:		return('i');
+		case XK_F24:		return('j');
+		case XK_F25:		return('k');
+		case XK_F26:		return('l');
+		case XK_F27:		return('m');
+		case XK_F28:		return('n');
+		case XK_F29:		return('o');
+		case XK_F30:		return('p');
+		case XK_F31:		return('q');
+		case XK_F32:		return('r');
+		case XK_F33:		return('s');
+		case XK_F34:		return('t');
+		case XK_F35:		return('u');
+#endif
+#ifdef XK_KP_Insert
+		case XK_KP_Insert:	return('L');
+#endif
 		default:		return 0;
 	}
 }

@@ -601,6 +601,7 @@ xtermLoadFont (
 	 * characters.  Check that they are all present.  The null character
 	 * (0) is special, and is not used.
 	 */
+	screen->force_box_chars = False;
 	for (ch = 1; ch < 32; ch++) {
 		int n = ch;
 #if OPT_WIDE_CHARS
@@ -616,7 +617,9 @@ xtermLoadFont (
 			break;
 		}
 	}
+	TRACE(("Will %suse internal line-drawing characters\n", screen->fnt_boxes ? "not " : ""));
 #endif
+	screen->force_box_chars = !screen->fnt_boxes;
 
 	screen->enbolden = screen->bold_mode
 		&& ((nfs == bfs) || same_font_name(normal, bfontname));
@@ -766,6 +769,11 @@ xtermMissingChar(unsigned ch, XFontStruct *font)
 			TRACE(("xtermMissingChar %#04x (!exists)\n", ch));
 			return True;
 		}
+	}
+	if (ch < 32
+	 && term->screen.force_box_chars) {
+		TRACE(("xtermMissingChar %#04x (forced off)\n", ch));
+		return True;
 	}
 	return False;
 }

@@ -66,6 +66,7 @@
 #include <data.h>
 #include <error.h>
 #include <menu.h>
+#include <xcharmouse.h>
 
 /* Event handlers */
 
@@ -361,7 +362,7 @@ ScrollBarOn (XtermWidget xw, int init, int doalloc)
 	    if (screen->scrollWidget) return;
 
 	    /* make it a dummy size and resize later */
-	    if ((screen->scrollWidget = CreateScrollBar (xw, -1, - 1, 5))
+	    if ((screen->scrollWidget = CreateScrollBar (xw, -1, -1, 5))
 		== NULL) {
 		Bell(XkbBI_MinorError,0);
 		return;
@@ -561,6 +562,18 @@ params_to_pixels (TScreen *screen, String *params, Cardinal n)
     return mult;
 }
 
+static long
+AmountToScroll(Widget gw, String *params, Cardinal nparams)
+{
+    if (IsXtermWidget(gw)) {
+    	register TScreen *screen = &((XtermWidget)gw)->screen;
+	if (nparams > 2
+	 && screen->send_mouse_pos != MOUSE_OFF)
+	    return 0;
+	return params_to_pixels (screen, params, nparams);
+    }
+    return 0;
+}
 
 /*ARGSUSED*/
 void HandleScrollForward (
@@ -569,12 +582,11 @@ void HandleScrollForward (
     String *params,
     Cardinal *nparams)
 {
-    if (IsXtermWidget(gw)) {
-    	register TScreen *screen = &((XtermWidget)gw)->screen;
-	long amount = params_to_pixels (screen, params, *nparams);
+    long amount;
+
+    if ((amount = AmountToScroll(gw, params, *nparams)) != 0) {
 	ScrollTextUpDownBy (gw, (XtPointer) 0, (XtPointer)amount);
     }
-    return;
 }
 
 
@@ -585,10 +597,9 @@ void HandleScrollBack (
     String *params,
     Cardinal *nparams)
 {
-    if (IsXtermWidget(gw)) {
-    	register TScreen *screen = &((XtermWidget)gw)->screen;
-	long amount = -params_to_pixels (screen, params, *nparams);
+    long amount;
+
+    if ((amount = -AmountToScroll(gw, params, *nparams)) != 0) {
 	ScrollTextUpDownBy (gw, (XtPointer) 0, (XtPointer)amount);
     }
-    return;
 }
