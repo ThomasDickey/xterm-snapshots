@@ -37,7 +37,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#if defined(att) || (defined(SYSV) && defined(i386))
+#if defined(att)
 #define ATT
 #endif
 
@@ -52,7 +52,7 @@
 #define ATT
 #endif
 
-#ifdef ATT
+#if (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
 #define USE_USG_PTYS
 #endif
 
@@ -122,10 +122,12 @@
 # endif /* USE_TERMIOS */
 #endif	/* USE_SYSV_TERMIO */
 
+#ifdef SYSV
 #ifdef USE_USG_PTYS
 #include <sys/stream.h>
 #ifndef SVR4
 #include <sys/ptem.h>
+#endif
 #endif
 #endif
 

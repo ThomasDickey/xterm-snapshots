@@ -170,6 +170,7 @@ TranslateFromSUNPC(KeySym keysym)
 		{ XK_Home,         XK_Find },
 		{ XK_End,          XK_Select },
 #ifdef XK_KP_Home
+		{ XK_Delete,       XK_KP_Decimal },
 		{ XK_KP_Delete,    XK_KP_Decimal },
 		{ XK_KP_Insert,    XK_KP_0 },
 		{ XK_KP_End,       XK_KP_1 },
@@ -195,6 +196,7 @@ TranslateFromSUNPC(KeySym keysym)
 	return keysym;
 }
 #endif
+
 /*
  * Modifiers other than shift, control and numlock should be reserved for the
  * user.  We use the first two explicitly to support VT220 keyboard, and the
@@ -215,6 +217,12 @@ TranslateFromSUNPC(KeySym keysym)
 		reply.a_type = ESC; \
 		})
 
+#define MODIFIER_PARM \
+	if (modify_parm > 1) { \
+	    reply.a_param[(int) reply.a_nparam] = modify_parm; \
+	    reply.a_nparam += 1; \
+	}
+
 void
 Input (
 	register TKeyboard *keyboard,
@@ -233,6 +241,8 @@ Input (
 	KeySym  keysym = 0;
 	ANSI	reply;
 	int	dec_code;
+	short	modify_parm = 0;
+	int	keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
 
 	/* Ignore characters typed at the keyboard */
 	if (keyboard->flags & MODE_KAM)
@@ -279,28 +289,68 @@ Input (
 	 * - it's a pain for users to work around.
 	 */
 	if (!sunFunctionKeys
+	 && (event->state & ShiftMask) == 0
 	 && sunKeyboard
-	 && keysym == XK_KP_Add)
+	 && keysym == XK_KP_Add) {
 		keysym = XK_KP_Separator;
+		TRACE(("...Input keypad(+), change keysym to %#04lx\n", keysym))
+	}
 #endif
 
 	/*
 	 * The keyboard tables may give us different keypad codes according to
 	 * whether NumLock is pressed.  Use this check to simplify the process
 	 * of determining whether we generate an escape sequence for a keypad
-	 * key, or use the string returned by the keyboard tables.  There is no
-	 * fixed modifier for this feature, so we assume that it is the one
-	 * assigned to the NumLock key.
+	 * key, or force it to the value kypd_num[].  There is no fixed
+	 * modifier for this feature, so we assume that it is the one assigned
+	 * to the NumLock key.
+	 *
+	 * This check used to try to return the contents of strbuf, but that
+	 * does not work properly when a control modifier is given (trash is
+	 * returned in the buffer in some cases -- perhaps an X bug).
 	 */
 #if OPT_NUM_LOCK
 	if (nbytes == 1
 	 && IsKeypadKey(keysym)
 	 && term->misc.real_NumLock
 	 && (term->misc.num_lock & event->state) != 0) {
-		keysym = *string;
-		TRACE(("...Input num_lock, change keysym to %#04lx\n", keysym))
+		keypad_mode = 0;
+		TRACE(("...Input num_lock, force keypad_mode off\n"))
 	}
 #endif
+
+	/*
+	 * If we are in the normal (possibly Sun/PC) keyboard state, allow
+	 * modifiers to add a parameter to the function-key control sequences.
+	 */
+	if (event->state != 0
+	 && !(IsKeypadKey(keysym) && keypad_mode)
+#if OPT_SUNPC_KBD
+	 && !sunKeyboard
+#endif
+#if OPT_VT52_MODE
+	 && screen->ansi_level != 0
+#endif
+	) {
+#define ModifierParm(ctl,normal) \
+	    modify_parm = (event->state & ControlMask) ? ctl : normal
+#if OPT_NUM_LOCK
+	    if (term->misc.real_NumLock
+	     && (event->state & term->misc.alt_left
+	      || event->state & term->misc.alt_right)) {
+		if (event->state & ShiftMask) {
+		    ModifierParm(8, 4);
+		} else {
+		    ModifierParm(7, 3);
+		}
+	    } else
+#endif
+	    if (event->state & ShiftMask) {
+		ModifierParm(6, 2);
+	    } else {
+		ModifierParm(5, 1);
+	    }
+	}
 
 #if OPT_SHIFT_KEYS
 	if (term->misc.shift_keys
@@ -327,20 +377,6 @@ Input (
 			TRACE(("...input NRC changed to %d\n", *strbuf))
 		}
 	}
-
-	/*
-	 * VT220 & up:  users expect that the Delete key on the editing keypad
-	 * should be mapped to \E[3~.  However, we won't get there unless it is
-	 * treated as a keypad key, which XK_Delete is not.  This presumes that
-	 * we have a backarrow key to supply a DEL character, which is still
-	 * needed in a number of applications.
-	 */
-#ifdef XK_KP_Delete
-	if (keysym == XK_Delete) {
-		keysym = XK_KP_Delete;
-		TRACE(("...Input delete changed to %#04lx\n", keysym))
-	}
-#endif
 
 	/* VT300 & up: backarrow toggle */
 	if ((nbytes == 1)
@@ -370,6 +406,7 @@ Input (
 	if (hpFunctionKeys
 	 && (reply.a_final = hpfuncvalue (keysym)) != 0) {
 		reply.a_type = ESC;
+		MODIFIER_PARM
 		unparseseq(&reply, pty);
 	} else
 #endif
@@ -377,6 +414,7 @@ Input (
 		reply.a_type = SS3;
 		reply.a_final = keysym-XK_KP_F1+'P';
 		VT52_CURSOR_KEYS
+		MODIFIER_PARM
 		unparseseq(&reply, pty);
 		key = TRUE;
 #if 0	/* OPT_SUNPC_KBD should suppress - but only for vt220 compatibility */
@@ -392,11 +430,13 @@ Input (
 			reply.a_type = SS3;
 			reply.a_final = curfinal[keysym-XK_Home];
 			VT52_CURSOR_KEYS
+			MODIFIER_PARM
 			unparseseq(&reply, pty);
 		} else {
 			reply.a_type = CSI;
 			if_OPT_VT52_MODE(screen,{ reply.a_type = ESC; })
 			reply.a_final = curfinal[keysym-XK_Home];
+			MODIFIER_PARM
 			unparseseq(&reply, pty);
 		}
 		key = TRUE;
@@ -404,10 +444,11 @@ Input (
 		|| IsMiscFunctionKey(keysym)
 		|| IsEditFunctionKey(keysym)) {
 #if OPT_SUNPC_KBD
-		if ((event->state & ControlMask)
-		 && sunKeyboard
-		 && (keysym >= XK_F1 && keysym <= XK_F12))
-			keysym += 12;
+		if (sunKeyboard) {
+			if ((event->state & ControlMask)
+			 && (keysym >= XK_F1 && keysym <= XK_F12))
+				keysym += 12;
+		}
 #endif
 
 		dec_code = decfuncvalue(keysym);
@@ -427,6 +468,7 @@ Input (
 			reply.a_type = SS3;
 			VT52_CURSOR_KEYS
 			reply.a_final = dec_code - 11 + 'P';
+			MODIFIER_PARM
 			unparseseq(&reply, pty);
 		}
 #endif
@@ -440,15 +482,17 @@ Input (
 				reply.a_param[0] = dec_code;
 				reply.a_final = '~';
 			}
+			MODIFIER_PARM
 			if (reply.a_param[0] > 0)
 				unparseseq(&reply, pty);
 		}
 		key = TRUE;
 	} else if (IsKeypadKey(keysym)) {
-		if ((keyboard->flags & MODE_DECKPAM) != 0) {
+		if (keypad_mode) {
 			reply.a_type  = SS3;
 			reply.a_final = kypd_apl[keysym-XK_KP_Space];
 			VT52_KEYPAD
+			MODIFIER_PARM
 			unparseseq(&reply, pty);
 		} else {
 			unparseputc(kypd_num[keysym-XK_KP_Space], pty);
@@ -665,6 +709,16 @@ VTInitModifiers(void)
 			TRACE(("numlock mask %#lx is%s modifier\n",
 				term->misc.num_lock,
 				ModifierName(term->misc.num_lock)))
+		    } else if (keysym == XK_Alt_L) {
+			term->misc.alt_left = (1<<i);
+			TRACE(("alt_left mask %#lx is%s modifier\n",
+				term->misc.alt_left,
+				ModifierName(term->misc.alt_left)))
+		    } else if (keysym == XK_Alt_R) {
+			term->misc.alt_right = (1<<i);
+			TRACE(("alt_right mask %#lx is%s modifier\n",
+				term->misc.alt_right,
+				ModifierName(term->misc.alt_right)))
 		    }
 		}
 		k++;

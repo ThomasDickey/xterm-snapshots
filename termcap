@@ -127,6 +127,6 @@ r5|xterm-r5|X11R5 xterm X11R5:\
 # This is the only entry which you should have to customize, since "xterm"
 # is widely used for a variety of incompatible terminal emulations including
 # color_xterm and rxvt.
-v0|xterm|X Windows terminal emulator:\
+v0|xterm|X11 terminal emulator:\
 	:tc=xterm-xfree86:
 #	:tc=xterm-r6:

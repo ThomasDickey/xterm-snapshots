@@ -826,7 +826,8 @@ See the section \fBMouse Tracking\fP.
 (normally disabled by a compile-time option)
   \*(Ps = \*4\*7 \(-> Use Alternate Screen Buffer (unless
 disabled by the \fBtiteInhibit\fP resource)
-  \*(Ps = \*6\*7 \(-> Backarrow key (DECBKM)
+  \*(Ps = \*6\*6 \(-> Application keypad (DECNKM)
+  \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM)
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
@@ -834,6 +835,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking.
   \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
+  \*(Ps = \*1\*0\*3\*5 \(-> Enable special modifiers for Alt and NumLock keys.
   \*(Ps = \*1\*0\*4\*7 \(-> Use Alternate Screen Buffer (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*1\*0\*4\*8 \(-> Save cursor as in DECSC (unless
@@ -869,7 +871,8 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*4\*6 \(-> Stop Logging
 (normally disabled by a compile-time option)
   \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer
-  \*(Ps = \*6\*7 \(-> Backarrow key (DECBKM)
+  \*(Ps = \*6\*6 \(-> Numeric keypad (DECNKM)
+  \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM)
   \*(Ps = \*1\*0\*0\*0 \(-> Don't Send Mouse X & Y on button press and
 release.
 See the section \fBMouse Tracking\fP.
@@ -878,6 +881,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*3 \(-> Don't Use All Motion Mouse Tracking
   \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
+  \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for Alt and NumLock keys.
   \*(Ps = \*1\*0\*4\*7 \(-> Use Normal Screen Buffer, clearing screen
 first if in the Alternate Screen (unless
 disabled by the \fBtiteInhibit\fP resource)
@@ -900,12 +904,18 @@ Save DEC Private Mode Values.  \*(Ps values are the same as for DECSET.
 .sp
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(Be
-Set Text Parameters
+Set Text Parameters.
+For colors and font,
+if \*(Pt is a "?", the control sequence elicits a response which consists
+of the control sequence which would set the corresponding value.
+The \fIdtterm\fP control sequences allow you to determine the icon name
+and window title.
   \*(Ps = \*0 \(-> Change Icon Name and Window Title to \*(Pt
   \*(Ps = \*1 \(-> Change Icon Name to \*(Pt
   \*(Ps = \*2 \(-> Change Window Title to \*(Pt
-  \*(Ps = \*1\*0 \(-> Change color names starting with text foreground to \*(Pt (a
-list of one or more color names, separated by semicolon, up to seven).
+  \*(Ps = \*1\*0 \(-> Change color names starting with text foreground to \*(Pt
+(a list of one or more color names or RGB specifications, separated by
+semicolon, up to eight, as per \fIXParseColor\fP).
   \*(Ps = \*1\*1 \(-> Change colors starting with text background to \*(Pt
   \*(Ps = \*1\*2 \(-> Change colors starting with text cursor to \*(Pt
   \*(Ps = \*1\*3 \(-> Change colors starting with mouse foreground to \*(Pt
@@ -916,6 +926,10 @@ list of one or more color names, separated by semicolon, up to seven).
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt (normally disabled by a
 compile-time option)
   \*(Ps = \*5\*0 \(-> Set Font to \*(Pt
+If \*(Pt begins with a "#", index in the font menu, relative (if the
+next character is a plus or minus sign) or absolute.  A number is
+expected but not required after the sign (the default is the current
+entry for relative, zero for absolute indexing).
 .
 .sp
 .IP \\*(PM\\*(Pt\\*s\\*(ST
@@ -934,6 +948,12 @@ with a PC-style keyboard, so PC-style function keys result.
 Sun keyboards are similar to PC keyboards.
 Both have cursor and scrolling operations printed on the keypad,
 which duplicate the smaller cursor and scrolling keypads.
+.LP
+X does not predefine NumLock (used for VT220 keyboards) or Alt (used as
+an extension for the Sun/PC keyboards) as modifiers.
+These keys are recognized as modifiers when enabled
+by the \fBnumLock\fP resource,
+or by the DECSET \*1\*0\*3\*5 control sequence.
 .LP
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the \fBDECCKM\fP escape sequence.
@@ -957,34 +977,34 @@ Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are supporte
 the program.
 .TS
 center;
-cf3	cf3	cf3
-lf3w(2c)	lf3w(2c)	lf3w(2c) .
-Key	Numeric	Application
+cf3	cf3	cf3	cf3	cf3
+lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c) .
+Key	Numeric	Application	Terminfo	Termcap
 _
-Space	\*(Sp	\*(S3\*(Sp
-Tab	\*(Ta	\*(S3\*I
-Enter	\*(Cr	\*(S3\*M
-PF1	\*(S3\*P	\*(S3\*P
-PF2	\*(S3\*Q	\*(S3\*Q
-PF3	\*(S3\*R	\*(S3\*R
-PF4	\*(S3\*S	\*(S3\*S
-* \f1(multiply)\fP	*	\*(S3\*j
-+ \f1(add)\fP	+	\*(S3\*k
-, \f1(comma)\fP	,	\*(S3\*l
-- \f1(minus)\fP	-	\*(S3\*m
-\. \f1(Delete)\fP	\.	\*(S3\*3\*(c~
-/ \f1(divide)\fP	/	\*(S3\*o
-0 \f1(Insert)\fP	0	\*(Cs\*2\*(c~
-1 \f1(End)\fP	1	\*(Cs\*4\*(c~
-2 \f1(DownArrow)\fP	2	\*(Cs\*(cB
-3 \f1(PageDown)\fP	3	\*(Cs\*5\*(c~
-4 \f1(LeftArrow)\fP	4	\*(Cs\*D
-5 \f1(Begin)\fP	5	\*(Cs\*E
-6 \f1(RightArrow)\fP	6	\*(Cs\*C
-7 \f1(Home)\fP	7	\*(Cs\*1\*(c~
-8 \f1(UpArrow)\fP	8	\*(Cs\*A
-9 \f1(PageUp)\fP	9	\*(Cs\*5\*(c~
-= (equal)	\&=	\*(S3\*(XX
+Space	\*(Sp	\*(S3\*(Sp	-	-
+Tab	\*(Ta	\*(S3\*I	-	-
+Enter	\*(Cr	\*(S3\*M	kent	@8
+PF1	\*(S3\*P	\*(S3\*P	kf1	k1
+PF2	\*(S3\*Q	\*(S3\*Q	kf2	k2
+PF3	\*(S3\*R	\*(S3\*R	kf3	k3
+PF4	\*(S3\*S	\*(S3\*S	kf4	k4
+* \f1(multiply)\fP	*	\*(S3\*j	-	-
++ \f1(add)\fP	+	\*(S3\*k	-	-
+, \f1(comma)\fP	,	\*(S3\*l	-	-
+- \f1(minus)\fP	-	\*(S3\*m	-	-
+\. \f1(Delete)\fP	\.	\*(S3\*3\*(c~	-	-
+/ \f1(divide)\fP	/	\*(S3\*o	-	-
+0 \f1(Insert)\fP	0	\*(Cs\*2\*(c~	-	-
+1 \f1(End)\fP	1	\*(Cs\*4\*(c~	kc1	K4
+2 \f1(DownArrow)\fP	2	\*(Cs\*(cB	-	-
+3 \f1(PageDown)\fP	3	\*(Cs\*5\*(c~	kc3	K5
+4 \f1(LeftArrow)\fP	4	\*(Cs\*D	-	-
+5 \f1(Begin)\fP	5	\*(Cs\*E	kb2	K2
+6 \f1(RightArrow)\fP	6	\*(Cs\*C	-	-
+7 \f1(Home)\fP	7	\*(Cs\*1\*(c~	ka1	K1
+8 \f1(UpArrow)\fP	8	\*(Cs\*A	-	-
+9 \f1(PageUp)\fP	9	\*(Cs\*5\*(c~	ka3	K3
+= (equal)	\&=	\*(S3\*(XX	-	-
 .TE
 They also provide 12 function keys, as well as a few other special-purpose keys.
 .TS
@@ -1022,10 +1042,33 @@ F2	\*(Cs\*1\*2\*(c~
 F3	\*(Cs\*1\*3\*(c~
 F4	\*(Cs\*1\*4\*(c~
 .TE
+In normal mode, i.e., a Sun/PC keyboard
+when the \fBsunKeyboard\fP resource is false,
+\fIxterm\fP recognizes function key modifiers
+which are parameters appended before the final character
+of the control sequence.
+.TS
+center;
+cf3	lf3
+cf3w(2c)	lf3w(2c) .
+Code	Modifiers
+_
+2	Shift
+3	Alt
+4	Shift + Alt
+5	Control
+6	Shift + Control
+7	Alt + Control
+8	Shift + Alt + Control
+.TE
+For example, shift-F5 would be sent as
+\*(Cs\*1\*5\*;\*2\*(c~
 .SH
 VT220-Style Function Keys
 .LP
 However, \fIxterm\fP is most useful as a DEC VT102 or VT220 emulator.
+Set the \fBsunKeyboard\fP resource to true to force a Sun/PC keyboard
+to act like a VT220 keyboard.
 .LP
 The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling keypad:

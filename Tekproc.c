@@ -657,7 +657,7 @@ static void Tekparse(void)
 					buf2[len++] = c2;
 				}
 				if (c2 == BEL)
-					do_osc(buf2, len);
+					do_osc(buf2, len, BEL);
 			}
 			Tparsestate = curstate;
 			break;

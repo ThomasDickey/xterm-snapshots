@@ -36,7 +36,12 @@
 
 #include <signal.h>
 
+#ifdef att
+#define ATT
+#endif
+
 #ifdef SVR4
+#undef SYSV
 #define SYSV
 #include <termios.h>
 #else
@@ -52,6 +57,10 @@
 
 #ifdef __hpux
 #include <sys/termio.h>
+#endif
+
+#if (defined(ATT) && !defined(__sgi)) || (defined(SYSV) && defined(i386)) || (defined (__GLIBC__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
+#define USE_USG_PTYS
 #endif
 
 #ifdef SYSV

@@ -70,6 +70,7 @@ extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
 extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
+extern void HandleNumLock          PROTO_XT_ACTIONS_ARGS;
 extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrint            PROTO_XT_ACTIONS_ARGS;
@@ -114,6 +115,9 @@ typedef enum {
     mainMenu_line1,
     mainMenu_8bit_ctrl,
     mainMenu_backarrow,
+#if OPT_NUM_LOCK
+    mainMenu_num_lock,
+#endif
     mainMenu_sun_fkeys,
 #if OPT_SUNPC_KBD
     mainMenu_sun_kbd,
@@ -161,9 +165,11 @@ typedef enum {
     vtMenu_hardreset,
     vtMenu_clearsavedlines,
     vtMenu_line2,
+#if OPT_TEK4014
     vtMenu_tekshow,
     vtMenu_tekmode,
     vtMenu_vthide,
+#endif
     vtMenu_altscreen,
     vtMenu_LAST
 } vtMenuIndices;
@@ -185,8 +191,12 @@ typedef enum {
 /* number of non-line items down to here should match NMENUFONTS in ptyx.h */
 #if OPT_DEC_CHRSET
     fontMenu_line1,
+#if OPT_DEC_CHRSET
     fontMenu_font_doublesize,
+#endif
+#if OPT_DEC_SOFTFONT
     fontMenu_font_loadable,
+#endif
 #endif
     fontMenu_LAST
 } fontMenuIndices;
@@ -195,6 +205,7 @@ typedef enum {
 /*
  * items in tek4014 mode menu
  */
+#if OPT_TEK4014
 typedef enum {
     tekMenu_tektextlarge,
     tekMenu_tektext2,
@@ -210,6 +221,7 @@ typedef enum {
     tekMenu_tekhide,
     tekMenu_LAST
 } tekMenuIndices;
+#endif
 
 
 /*
@@ -243,6 +255,8 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
   update_menu_item (term->screen.mainMenu, \
 		    mainMenuEntries[mainMenu_logging].widget, \
 		    term->screen.logging)
+#else
+#define update_logging() /*nothing*/
 #endif
 
 #define update_8bit_control() \
@@ -254,6 +268,15 @@ extern void SetItemSensitivity(Widget mi, XtArgVal val);
   update_menu_item (term->screen.mainMenu, \
 		    mainMenuEntries[mainMenu_backarrow].widget, \
 		    term->keyboard.flags & MODE_DECBKM)
+
+#if OPT_NUM_LOCK
+#define update_num_lock() \
+  update_menu_item (term->screen.mainMenu, \
+		    mainMenuEntries[mainMenu_num_lock].widget, \
+		    term->misc.real_NumLock)
+#else
+#define update_num_lock() /*nothing*/
+#endif
 
 #define update_sun_fkeys() \
   update_menu_item (term->screen.mainMenu, \

@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.35 1999/03/14 03:22:45 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.36 1999/03/21 07:35:40 dawes Exp $ */
 
 /************************************************************
 
@@ -84,8 +84,6 @@ authorization.
 #define HAVE_TCGETATTR 1
 #endif
 
-#define XMU_POINTER XtPointer
-
 #endif /* HAVE_CONFIG_H */
 
 /***====================================================================***/
@@ -120,13 +118,6 @@ extern int errno;
  */
 #ifdef linux
 #undef HAVE_WAITPID
-#endif
-
-/*
- * FIXME:  Xmu interface in XFree86 3.9N* introduces an incompatibility.
- */
-#ifndef XMU_POINTER
-#define XMU_POINTER XPointer
 #endif
 
 /***====================================================================***/
@@ -189,6 +180,7 @@ extern void resetCharsets (TScreen *screen);
 extern void set_cursor_gcs (TScreen *screen);
 extern void unparseputc (int c, int fd);
 extern void unparseputc1 (int c, int fd);
+extern void unparseputs (Char *s, int fd);
 extern void unparseseq (ANSI *ap, int fd);
 
 #if OPT_ISO_COLORS
@@ -225,7 +217,9 @@ extern GC xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc);
 /* input.c */
 extern void Input (TKeyboard *keyboard, TScreen *screen, XKeyEvent *event, Bool eightbit);
 extern void StringInput (TScreen *screen, char *string, size_t nbytes);
+#if OPT_NUM_LOCK
 extern void VTInitModifiers(void);
+#endif
 
 /* main.c */
 #ifndef __EMX__
@@ -276,7 +270,7 @@ extern void SysError (int i);
 extern void VisualBell (void);
 extern void creat_as (int uid, int gid, char *pathname, int mode);
 extern void do_dcs (Char *buf, size_t len);
-extern void do_osc (Char *buf, int len);
+extern void do_osc (Char *buf, int len, int final);
 extern void do_xevents (void);
 extern void end_tek_mode (void);
 extern void end_vt_mode (void);

@@ -23,6 +23,7 @@ XTerm.JoinSession:False
 *mainMenu*redraw*Label:  Redraw Window
 *mainMenu*8-bit control*Label: 8-Bit Controls
 *mainMenu*backarrow key*Label: Backarrow Key
+*mainMenu*num-lock*Label: Alt/NumLock Modifiers
 *mainMenu*sun function-keys*Label: Sun Function-Keys
 *mainMenu*sun keyboard*Label: Sun/PC Keyboard
 *mainMenu*hp function-keys*Label: HP Function-Keys

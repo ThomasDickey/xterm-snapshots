@@ -32,6 +32,8 @@ bindir		= $(exec_prefix)/bin
 libdir		= $(exec_prefix)/lib
 mandir		= $(prefix)/man/man$(manext)
 
+appsdir		= $(libdir)/X11/app-defaults
+
 #### End of system configuration section. ####
 
 SHELL		= /bin/sh
@@ -39,7 +41,7 @@ RM              = rm -f
 
 LDFLAGS		=
 
-INSTALL_DIRS    = $(bindir) $(libdir) $(mandir)
+INSTALL_DIRS    = $(bindir) $(appsdir) $(mandir)
 
 EXTRAHDR	= @EXTRAHDRS@
 EXTRASRC	= @EXTRASRCS@
@@ -85,11 +87,13 @@ xterm : $(OBJS1)
 resize : $(OBJS2)
 	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
 
-install: $(INSTALL_DIRS) xterm resize
+install : $(INSTALL_DIRS) xterm resize
 	$(INSTALL_PROGRAM) -s -m @XTERM_MODE@ xterm  $(bindir)/xterm
 	$(INSTALL_PROGRAM) -s -m  755 resize $(bindir)/resize
-	$(INSTALL_DATA) xterm.man  $(mandir)/xterm.$(manext)
-	$(INSTALL_DATA) resize.man $(mandir)/resize.$(manext)
+	$(INSTALL_DATA) xterm.man    $(mandir)/xterm.$(manext)
+	$(INSTALL_DATA) resize.man   $(mandir)/resize.$(manext)
+	$(INSTALL_DATA) XTerm.ad     $(appsdir)/XTerm
+	$(INSTALL_DATA) XTerm-col.ad $(appsdir)/XTerm-color
 	@echo 'Completed installation of executables and documentation.'
 	@echo 'Use "make install-ti" to install terminfo description.'
 
@@ -99,10 +103,12 @@ install-ti:
 installdirs: $(INSTALL_DIRS)
 
 uninstall:
-	-$(RM) $(bindir)/xterm \
-		$(bindir)/resize \
-		$(mandir)/xterm.$(manext) \
-		$(mandir)/resize.$(manext)
+	-$(RM) $(bindir)/xterm
+	-$(RM) $(bindir)/resize
+	-$(RM) $(mandir)/xterm.$(manext)
+	-$(RM) $(mandir)/resize.$(manext)
+	-$(RM) $(appsdir)/XTerm
+	-$(RM) $(appsdir)/XTerm-color
 
 mostlyclean:
 	-$(RM) *.[ois] XtermLog.* .pure core *~ *.BAK *.out

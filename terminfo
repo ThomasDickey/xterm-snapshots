@@ -133,18 +133,18 @@ xterm-xfree86|xterm-new|xterm terminal emulator (XFree86),
 	ind=^J,
 	invis=\E[8m,
 	is2=\E[!p\E[?3;4l\E[4l\E>,
-	ka1=\EOw,
-	ka3=\EOu,
-	kb2=\EOy,
+	ka1=\EOH,
+	ka3=\E[5~,
+	kb2=\EOE,
 	kbeg=\EOE,
 	kbs=^H,
-	kc1=\EOq,
-	kc3=\EOs,
+	kc1=\EOF,
+	kc3=\E[6~,
 	kcub1=\EOD,
 	kcud1=\EOB,
 	kcuf1=\EOC,
 	kcuu1=\EOA,
-	kdch1=\E[3~,
+	kdch1=\177,
 	kend=\EOF,
 	kent=\EOM,
 	kf1=\EOP,
@@ -221,11 +221,17 @@ xterm-xfree86|xterm-new|xterm terminal emulator (XFree86),
 #	+ uses DEC-style control sequences for the application keypad.
 #	  
 xterm-vt220|XFree86 xterm emulating vt220,
+	ka1=\EOw,
+	ka3=\EOy,
+	kb2=\EOu,
+	kbeg=\EOu,
+	kc1=\EOq,
+	kc3=\EOs,
 	kdch1=\E[3~,
 	kend=\E[4~,
 	khome=\E[1~,
 	use=xterm-xfree86,
-
+#
 xterm-vt52|XFree86 xterm emulating dec vt52,
 	cols#80,
 	it#8,
@@ -253,7 +259,7 @@ xterm-vt52|XFree86 xterm emulating dec vt52,
 	ri=\EI,
 	rmacs=\EG,
 	smacs=\EF,
-
+#
 # kf30-kf45 are keysyms XK_R1 through XK_R15 on the Sun keyboard.
 xterm-sun|XFree86 xterm with sun function keys,
 	kb2=\E[218z,
@@ -293,7 +299,7 @@ xterm-sun|XFree86 xterm with sun function keys,
 	kich1=\E[2z,
 	kpp=\E[216z,
 	use=xterm,
-
+#
 xterm-hp|XFree86 xterm with hpterm function keys,
 	kclr=\EJ,
 	kcub1=\ED,
@@ -315,7 +321,7 @@ xterm-hp|XFree86 xterm with hpterm function keys,
 	knp=\ES,
 	kpp=\ET,
 	use=xterm,
-
+#
 # Other variants:
 xterm-24|xterms|vs100|xterm terminal emulator (X Window System),
 	lines#24,
@@ -394,7 +400,7 @@ xterm-nrc|xterm with VT220 national replacement character sets,
 # Originally I suppressed setaf/setab, since ANSI specifies only 8 colors, but
 # Stephen Marley persuaded me to allow the "ANSI" color controls to extend to
 # 16 colors.  (Note that ncurses 4.2 uses setf/setb from this description;
-# however 4.3 will select either according to their availability).  - T.Dickey
+# however 5.0 selects either according to their availability).  - T.Dickey
 #
 # SVr4 curses does not use more than 8 colors anyway, so using 16 colors is
 # either for terminfo-level applications or via ncurses.
@@ -407,8 +413,10 @@ xterm-16color|xterm with 16 colors,
 	setb=%p1%{8}%/%{6}%*%{4}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
 	setf=%p1%{8}%/%{6}%*%{3}%+\E[%d%p1%{8}%m%Pa%?%ga%{1}%=%t4%e%ga%{3}%=%t6%e%ga%{4}%=%t1%e%ga%{6}%=%t3%e%ga%d%;m,
 	use=xterm-xfree86,
+#
 # This is an 8-bit version of xterm, which emulates DEC vt220 with ANSI color.
-# To use it, your decTerminalID resource must be set to 200 or above.
+# To use it, your decTerminalID resource must be set to 200 or above, and the
+# sunKeyboard resource set to true.
 #
 #	HTS	\E H	\210
 #	RI	\E M	\215
@@ -742,6 +750,6 @@ xterm-r5|xterm R5 version,
 # This is the only entry which you should have to customize, since "xterm"
 # is widely used for a variety of incompatible terminal emulations including
 # color_xterm and rxvt.
-xterm|X Windows terminal emulator,
+xterm|X11 terminal emulator,
 	use=xterm-xfree86,
 #	use=xterm-r6,

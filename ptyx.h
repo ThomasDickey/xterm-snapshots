@@ -967,7 +967,9 @@ typedef struct _Misc {
 #endif
 #if OPT_NUM_LOCK
     Boolean real_NumLock;	/* true if we treat NumLock key specially */
-    unsigned long num_lock;
+    unsigned long num_lock;	/* modifier for Num_Lock */
+    unsigned long alt_left;	/* modifier for Alt_L */
+    unsigned long alt_right;	/* modifier for Alt_R */
 #endif
 } Misc;
 

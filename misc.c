@@ -113,7 +113,7 @@ extern Widget toplevel;		/* used in 'ChangeGroup()' */
 		   (event.xcrossing.window == XtWindow(XtParent(term))))
 #endif
 
-static Boolean ChangeColorsRequest (XtermWidget pTerm, int start, char *names);
+static Boolean ChangeColorsRequest (XtermWidget pTerm, int start, char *names, int final);
 static void DoSpecialEnterNotify (XEnterWindowEvent *ev);
 static void DoSpecialLeaveNotify (XEnterWindowEvent *ev);
 static void selectwindow (TScreen *screen, int flag);
@@ -945,15 +945,20 @@ FlushLog(register TScreen *screen)
 #endif /* ALLOWLOGGING */
 
 void
-do_osc(Char *oscbuf, int len GCC_UNUSED)
+do_osc(Char *oscbuf, int len GCC_UNUSED, int final)
 {
+	register TScreen *screen = &(term->screen);
 	register int mode;
 	register Char *cp;
 	int state = 0;
 	char *buf = 0;
 
 	/*
-	 * lines should be of the form <OSC> number ; string <ST>
+	 * Lines should be of the form <OSC> number ; string <ST>, however
+	 * older xterms can accept <BEL> as a final character.  We will respond
+	 * with the same final character as the application sends to make this
+	 * work better with shell scripts, which may have trouble reading an
+	 * <ESC><backslash>, which is the 7-bit equivalent to <ST>.
 	 */
 	mode = 0;
 	for (cp = oscbuf; *cp != '\0'; cp++) {
@@ -993,14 +998,12 @@ do_osc(Char *oscbuf, int len GCC_UNUSED)
 		Changetitle(buf);
 		break;
 
-        case 10:       case 11:        case 12:
-        case 13:       case 14:        case 15:
-        case 16:
-               {
-                   if (term->misc.dynamicColors)
-                       ChangeColorsRequest(term,mode-10,buf);
-               }
-               break;
+	case 10:	case 11:	case 12:
+	case 13:	case 14:	case 15:
+	case 16:	case 17:
+		if (term->misc.dynamicColors)
+		       ChangeColorsRequest(term, mode-10, buf, final);
+	        break;
 
 #ifdef ALLOWLOGGING
 	 case 46:	/* new log file */
@@ -1009,21 +1012,74 @@ do_osc(Char *oscbuf, int len GCC_UNUSED)
 		 * Warning, enabling this feature allows people to overwrite
 		 * arbitrary files accessible to the person running xterm.
 		 */
-		if((cp = malloc((unsigned)strlen(buf) + 1)) == NULL)
+		if (buf != 0
+		 && strcmp(buf, "?")
+		 && ((cp = malloc((unsigned)strlen(buf) + 1)) != NULL) {
+			strcpy(cp, buf);
+			if(screen->logfile)
+				free(screen->logfile);
+			screen->logfile = cp;
 			break;
-		strcpy(cp, buf);
-		if(term->screen.logfile)
-			free(term->screen.logfile);
-		term->screen.logfile = cp;
-#else
-		Bell(XkbBI_Info,0);
-		Bell(XkbBI_Info,0);
+		}
 #endif
+		Bell(XkbBI_Info,0);
+		Bell(XkbBI_Info,0);
 		break;
 #endif /* ALLOWLOGGING */
 
 	case 50:
-		SetVTFont (fontMenu_fontescape, True, buf, NULL);
+		if (buf != 0 && !strcmp(buf, "?")) {
+		    int num = screen->menu_font_number;
+
+		    unparseputc1(OSC,   screen->respond);
+		    unparseputs("50",   screen->respond);
+
+		    if ((buf = screen->menu_font_names[num]) != 0) {
+			unparseputc(';', screen->respond);
+			unparseputs(buf, screen->respond);
+		    }
+		    unparseputc1(final,    screen->respond);
+		} else {
+		    /*
+		     * If the font specification is a "#", followed by an
+		     * optional sign and optional number, lookup the
+		     * corresponding menu font entry.
+		     */
+		    if (buf != 0 && *buf == '#') {
+			int num = screen->menu_font_number;
+			int rel = 0;
+
+			if (*++buf == '+') {
+			    rel = 1;
+			    buf++;
+			} else if (*buf == '-') {
+			    rel = -1;
+			    buf++;
+			}
+
+			if (isdigit(*buf)) {
+			    int val = atoi(buf);
+			    if (rel > 0)
+				num += val;
+			    else if (rel < 1)
+				num -= val;
+			    else
+				num = val;
+			} else if (rel) {
+			    num += rel;
+			} else {
+			    num = 0;
+			}
+
+			if (num < 0
+			 || num > fontMenu_lastBuiltin 
+			 || (buf = screen->menu_font_names[num]) == 0) {
+			    Bell(XkbBI_MinorError,0);
+			    break;
+			}
+		    }
+		    SetVTFont (fontMenu_fontescape, True, buf, NULL);
+		}
 		break;
 
 	/*
@@ -1121,8 +1177,7 @@ do_dcs(Char *dcsbuf, size_t dcslen)
 			unparseputc('r', screen->respond);
 			if (okay)
 				cp = reply;
-			while (*cp != '\0')
-				unparseputc(*cp++, screen->respond);
+			unparseputs(cp, screen->respond);
 			unparseputc1(ST, screen->respond);
 		} else {
 			unparseputc(CAN, screen->respond);
@@ -1227,6 +1282,8 @@ ChangeGroup(String attribute, XtArgVal value)
 void
 Changename(register char *name)
 {
+    if (name == 0)
+	name = "";
 #if OPT_ZICONBEEP	/* If warning should be given then give it */
     if ( zIconBeep && zIconBeep_flagged ) {
 	char *newname = (char *)malloc(strlen(name)+ 4 + 1);
@@ -1257,20 +1314,39 @@ static Boolean
 GetOldColors(XtermWidget pTerm)
 {
 int	i;
-    if (pOldColors==NULL) {
-	pOldColors=	(ScrnColors *)XtMalloc(sizeof(ScrnColors));
-	if (pOldColors==NULL) {
+    if (pOldColors == NULL) {
+	pOldColors = (ScrnColors *)XtMalloc(sizeof(ScrnColors));
+	if (pOldColors == NULL) {
 	    fprintf(stderr,"allocation failure in GetOldColors\n");
 	    return(FALSE);
 	}
-	pOldColors->which=	0;
-	for (i=0;i<NCOLORS;i++) {
-	    pOldColors->colors[i]=	0;
-	    pOldColors->names[i]=	NULL;
+	pOldColors->which = 0;
+	for (i = 0; i < NCOLORS; i++) {
+	    pOldColors->colors[i] = 0;
+	    pOldColors->names[i] = NULL;
 	}
 	GetColors(pTerm,pOldColors);
     }
     return(TRUE);
+}
+
+static void ReportColorRequest(XtermWidget pTerm, int ndx, int final)
+{
+	XColor color;
+	Colormap cmap =	pTerm->core.colormap;
+	char buffer[80];
+
+	GetOldColors(pTerm);
+	color.pixel = pOldColors->colors[ndx];
+	TRACE(("ReportColors %d: %#lx\n", ndx, pOldColors->colors[ndx]))
+	XQueryColor(term->screen.display, cmap, &color);
+	sprintf(buffer, "%d;rgb:%04x/%04x/%04x", ndx + 10,
+		color.red,
+		color.green,
+		color.blue);
+	unparseputc1(OSC,   pTerm->screen.respond);
+	unparseputs(buffer, pTerm->screen.respond);
+	unparseputc1(final, pTerm->screen.respond);
 }
 
 static Boolean
@@ -1287,16 +1363,16 @@ int	i;
      * (clearly) fails is if someone is trying a boatload of colors, in
      * which case they can restart xterm
      */
-    for (i=0;i<NCOLORS;i++) {
-	if (COLOR_DEFINED(pNew,i)) {
-	    if (pOldColors->names[i]!=NULL) {
+    for (i = 0; i < NCOLORS; i++) {
+	if (COLOR_DEFINED(pNew, i)) {
+	    if (pOldColors->names[i] != NULL) {
 		XtFree(pOldColors->names[i]);
-		pOldColors->names[i]= NULL;
+		pOldColors->names[i] = NULL;
 	    }
 	    if (pNew->names[i]) {
-		pOldColors->names[i]= pNew->names[i];
+		pOldColors->names[i] = pNew->names[i];
 	    }
-	    pOldColors->colors[i]=	pNew->colors[i];
+	    pOldColors->colors[i] = pNew->colors[i];
 	}
     }
     return(TRUE);
@@ -1311,14 +1387,14 @@ char	*tmpName;
 
     if (pOld) {
 	/* change text cursor, if necesary */
-	if (pOld->colors[TEXT_CURSOR]==pOld->colors[TEXT_FG]) {
-	    pOld->colors[TEXT_CURSOR]=	pOld->colors[TEXT_BG];
+	if (pOld->colors[TEXT_CURSOR] == pOld->colors[TEXT_FG]) {
+	    pOld->colors[TEXT_CURSOR] =	 pOld->colors[TEXT_BG];
 	    if (pOld->names[TEXT_CURSOR]) {
 		XtFree(pOldColors->names[TEXT_CURSOR]);
-		pOld->names[TEXT_CURSOR]= NULL;
+		pOld->names[TEXT_CURSOR] = NULL;
 	    }
 	    if (pOld->names[TEXT_BG]) {
-		tmpName= XtMalloc(strlen(pOld->names[TEXT_BG])+1);
+		tmpName = XtMalloc(strlen(pOld->names[TEXT_BG])+1);
 		if (tmpName) {
 		    strcpy(tmpName,pOld->names[TEXT_BG]);
 		    pOld->names[TEXT_CURSOR]= tmpName;
@@ -1326,29 +1402,14 @@ char	*tmpName;
 	    }
 	}
 
-	/* swap text FG and BG */
-	tmpPix=		pOld->colors[TEXT_FG];
-	tmpName=	pOld->names[TEXT_FG];
-	pOld->colors[TEXT_FG]=	pOld->colors[TEXT_BG];
-	pOld->names[TEXT_FG]=	pOld->names[TEXT_BG];
-	pOld->colors[TEXT_BG]=	tmpPix;
-	pOld->names[TEXT_BG]=	tmpName;
+	EXCHANGE(pOld->colors[TEXT_FG],	pOld->colors[TEXT_BG], tmpPix);
+	EXCHANGE(pOld->names[TEXT_FG],	pOld->names[TEXT_BG], tmpName);
 
-	/* swap mouse FG and BG */
-	tmpPix=		pOld->colors[MOUSE_FG];
-	tmpName=	pOld->names[MOUSE_FG];
-	pOld->colors[MOUSE_FG]=	pOld->colors[MOUSE_BG];
-	pOld->names[MOUSE_FG]=	pOld->names[MOUSE_BG];
-	pOld->colors[MOUSE_BG]=	tmpPix;
-	pOld->names[MOUSE_BG]=	tmpName;
+	EXCHANGE(pOld->colors[MOUSE_FG],pOld->colors[MOUSE_BG], tmpPix);
+	EXCHANGE(pOld->names[MOUSE_FG],	pOld->names[MOUSE_BG], tmpName);
 
-	/* swap Tek FG and BG */
-	tmpPix=		pOld->colors[TEK_FG];
-	tmpName=	pOld->names[TEK_FG];
-	pOld->colors[TEK_FG]=	pOld->colors[TEK_BG];
-	pOld->names[TEK_FG]=	pOld->names[TEK_BG];
-	pOld->colors[TEK_BG]=	tmpPix;
-	pOld->names[TEK_BG]=	tmpName;
+	EXCHANGE(pOld->colors[TEK_FG],	pOld->colors[TEK_BG], tmpPix);
+	EXCHANGE(pOld->names[TEK_FG],	pOld->names[TEK_BG], tmpName);
     }
     return;
 }
@@ -1361,20 +1422,20 @@ AllocateColor(
 	char		*name)
 {
 XColor			 def;
-register TScreen	*screen=	&pTerm->screen;
-Colormap		 cmap=		pTerm->core.colormap;
+register TScreen	*screen =	&pTerm->screen;
+Colormap		 cmap =		pTerm->core.colormap;
 char			*newName;
 
-    if ((XParseColor(screen->display,cmap,name,&def))&&
-	(XAllocColor(screen->display,cmap,&def))) {
-	SET_COLOR_VALUE(pNew,ndx,def.pixel);
-	newName= XtMalloc(strlen(name)+1);
-	if (newName) {
-	    strcpy(newName,name);
-	    SET_COLOR_NAME(pNew,ndx,newName);
-	}
+    if (XParseColor(screen->display, cmap, name, &def)
+     && XAllocColor(screen->display, cmap, &def)
+     && (newName = XtMalloc(strlen(name)+1)) != 0) {
+	SET_COLOR_VALUE(pNew, ndx, def.pixel);
+	strcpy(newName, name);
+	SET_COLOR_NAME(pNew, ndx, newName);
+	TRACE(("AllocateColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel))
 	return(TRUE);
     }
+    TRACE(("AllocateColor #%d: %s (failed)\n", ndx, name))
     return(FALSE);
 }
 
@@ -1382,46 +1443,53 @@ static Boolean
 ChangeColorsRequest(
 	XtermWidget	pTerm,
 	int		start,
-	register char	*names)
+	register char	*names,
+	int		final)
 {
 char		*thisName;
 ScrnColors	newColors;
-int		i,ndx;
+int		i, ndx;
 
-    if ((pOldColors==NULL)&&(!GetOldColors(pTerm))) {
+    TRACE(("ChangeColorsRequest start=%d, names='%s'\n", start, names))
+
+    if ((pOldColors == NULL)
+     && (!GetOldColors(pTerm))) {
 	return(FALSE);
     }
-    newColors.which=	0;
-    for (i=0;i<NCOLORS;i++) {
-	newColors.names[i]=	NULL;
+    newColors.which = 0;
+    for (i = 0; i < NCOLORS; i++) {
+	newColors.names[i] = NULL;
     }
-    for (i=start;i<NCOLORS;i++) {
-	if (term->misc.re_verse)	ndx=	OPPOSITE_COLOR(i);
-	else				ndx=	i;
-	if ((names==NULL)||(names[0]=='\0')) {
-	    newColors.names[ndx]=	NULL;
+    for (i = start; i < NCOLORS; i++) {
+	if (term->misc.re_verse)	ndx = OPPOSITE_COLOR(i);
+	else				ndx = i;
+	if ((names == NULL) || (names[0] == '\0')) {
+	    newColors.names[ndx] = NULL;
 	}
 	else {
-	    if (names[0]==';')
+	    if (names[0] == ';')
 		 thisName=	NULL;
 	    else thisName=	names;
-	    names = strchr(names,';');
-	    if (names!=NULL) {
+	    names = strchr(names, ';');
+	    if (names != NULL) {
 		*names=	'\0';
 		names++;
 	    }
-	    if ((!pOldColors->names[ndx])||
-		(thisName&&(strcmp(thisName,pOldColors->names[ndx])))) {
-		AllocateColor(pTerm,&newColors,ndx,thisName);
+	    if (thisName != 0 && !strcmp(thisName, "?"))
+	        ReportColorRequest(pTerm, ndx, final);
+	    else if (!pOldColors->names[ndx]
+	     || (thisName
+	      && strcmp(thisName, pOldColors->names[ndx]))) {
+		AllocateColor(pTerm, &newColors, ndx, thisName);
 	    }
 	}
     }
 
-    if (newColors.which==0)
+    if (newColors.which == 0)
 	return(TRUE);
 
-    ChangeColors(pTerm,&newColors);
-    UpdateOldColors(pTerm,&newColors);
+    ChangeColors(pTerm, &newColors);
+    UpdateOldColors(pTerm, &newColors);
     return(TRUE);
 }
 

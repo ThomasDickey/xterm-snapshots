@@ -499,6 +499,9 @@ static XtActionsRec actionsList[] = {
     { "maximize",		HandleMaximize },
     { "restore",		HandleRestoreSize },
 #endif
+#if OPT_NUM_LOCK
+    { "set-num-lock",		HandleNumLock },
+#endif
 #if OPT_SHIFT_KEYS
     { "larger-vt-font",		HandleLargerFont },
     { "smaller-vt-font",	HandleSmallerFont },
@@ -1195,7 +1198,7 @@ static void VTparse(void)
 			if (string_mode == OSC) {
 				if (string_used)
 					string_area[--string_used] = '\0';
-				do_osc(string_area, string_used);
+				do_osc(string_area, string_used, c);
 				parsestate = groundtable;
 			} else {
 				/* bell */
@@ -1973,7 +1976,7 @@ static void VTparse(void)
 				do_dcs(string_area, string_used);
 				break;
 			case OSC:
-				do_osc(string_area, string_used);
+				do_osc(string_area, string_used, c);
 				break;
 			case PM:
 				/* ignored */
@@ -2855,7 +2858,7 @@ dpmodes(
 				ToggleScrollBar(termw);
 			break;
 #if OPT_SHIFT_KEYS
-		case 35:
+		case 35:		/* rxvt */
 			term->misc.shift_keys = (func == bitset) ? ON : OFF;
 			break;
 #endif
@@ -2936,7 +2939,8 @@ dpmodes(
 			}
 			break;
 		case 66:	/* DECNKM */
-			/* FIXME: VT300 numeric keypad */
+			(*func)(&termw->keyboard.flags, MODE_DECKPAM);
+			update_appkeypad();
 			break;
 		case 67:	/* DECBKM */
 			/* back-arrow mapped to backspace or delete(D)*/
@@ -2971,6 +2975,11 @@ dpmodes(
 			screen->scrollkey = (func == bitset) ? ON : OFF;
 			update_scrollkey();
 			break;
+#if OPT_NUM_LOCK
+		case 1035:
+			term->misc.real_NumLock = (func == bitset) ? ON : OFF;
+			break;
+#endif
 		case 1048:
 			if (!termw->misc.titeInhibit) {
 		        	if(func == bitset)
@@ -3356,8 +3365,8 @@ window_ops(XtermWidget termw)
 		reply.a_pintro = 0;
 		reply.a_nparam = 3;
 		reply.a_param[0] = 9;
-		reply.a_param[1] = root_height;
-		reply.a_param[2] = root_width;
+		reply.a_param[1] = root_height / FontHeight(screen);
+		reply.a_param[2] = root_width / FontWidth(screen);
 		reply.a_inters = 0;
 		reply.a_final  = 't';
 		unparseseq(&reply, screen->respond);
@@ -3481,6 +3490,13 @@ unparseputc(int c, int fd)
 		register TScreen *screen = &term->screen;
 		dotext(screen, screen->gsets[(int)(screen->curgl)], buf, buf+i);
 	}
+}
+
+void
+unparseputs(Char *s, int fd)
+{
+	while (*s)
+		unparseputc(*s++, fd);
 }
 
 void
@@ -3872,6 +3888,9 @@ static void VTInitialize (
 
    wnew->screen.ansi_level = (wnew->screen.terminal_id / 100);
    wnew->screen.visualbell = request->screen.visualbell;
+#if OPT_NUM_LOCK
+   wnew->misc.real_NumLock = request->misc.real_NumLock;
+#endif
 #if OPT_SHIFT_KEYS
    wnew->misc.shift_keys = request->misc.shift_keys;
 #endif
