@@ -170,7 +170,7 @@ Boolean SendMousePosition(Widget w, XEvent* event)
 	    EditorButton((XButtonEvent *)event);
 	    return True;
 	}
-	/* fall through */
+	/* FALLTHRU */
 
       default:
 	return False;
@@ -823,7 +823,7 @@ PointToRowCol(
        maximum value. */
 {
 	register TScreen *screen = &term->screen;
-	register row, col;
+	register int row, col;
 
 	row = (y - screen->border) / FontHeight(screen);
 	if(row < firstValidRow)

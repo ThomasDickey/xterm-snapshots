@@ -169,6 +169,10 @@ static Bool IsPts = False;
 #define KANJI
 #endif
 
+#ifdef TIOCSLTC
+#define HAS_LTCHARS
+#endif
+
 #ifdef linux
 #define USE_TERMIOS
 #define USE_SYSV_PGRP
@@ -177,6 +181,7 @@ static Bool IsPts = False;
 #define HAS_UTMP_UT_HOST
 #define LASTLOG
 #define WTMP
+#undef  HAS_LTCHARS
 #endif
 
 #ifdef __CYGWIN32__
@@ -189,7 +194,7 @@ static Bool IsPts = False;
 
 #ifdef Lynx
 #define USE_SYSV_TERMIO
-#undef  TIOCSLTC
+#undef  HAS_LTCHARS
 #include <termio.h>
 #endif
 
@@ -246,7 +251,7 @@ static Bool IsPts = False;
 #endif /* USE_POSIX_TERMIOS */
 
 #ifdef SVR4
-#undef TIOCSLTC				/* defined, but not useable */
+#undef HAS_LTCHARS			/* defined, but not useable */
 #endif
 #define USE_TERMCAP_ENVVARS	/* every one uses this except SYSV maybe */
 
@@ -347,6 +352,7 @@ static Bool IsPts = False;
 #endif
 
 #if !defined(MINIX) && !defined(WIN32) && !defined(Lynx)
+#undef	NBBY		/* Xpoll.h has conflicting value that we don't use */
 #include <sys/param.h>	/* for NOFILE */
 #endif
 
@@ -514,9 +520,9 @@ static char **command_to_exec = NULL;
 ** contents.
 */
 static struct termio d_tio;
-#ifdef TIOCSLTC
+#ifdef HAS_LTCHARS
 static struct ltchars d_ltc;
-#endif	/* TIOCSLTC */
+#endif	/* HAS_LTCHARS */
 
 #ifdef __sgi
 #undef TIOCLSET /* XXX why is this undef-ed again? */
@@ -1237,14 +1243,14 @@ main (int argc, char *argv[])
 	d_tio.c_cc[VMIN] = 1;
 	d_tio.c_cc[VTIME] = 0;
 #endif /* } */
-#ifdef TIOCSLTC /* { */
+#ifdef HAS_LTCHARS /* { */
         d_ltc.t_suspc = CSUSP;		/* t_suspc */
         d_ltc.t_dsuspc = CDSUSP;	/* t_dsuspc */
         d_ltc.t_rprntc = CRPRNT;
         d_ltc.t_flushc = CFLUSH;
         d_ltc.t_werasc = CWERASE;
         d_ltc.t_lnextc = CLNEXT;
-#endif /* } TIOCSLTC */
+#endif /* } HAS_LTCHARS */
 #ifdef TIOCLSET /* { */
 	d_lmode = 0;
 #endif /* } TIOCLSET */
@@ -1378,14 +1384,14 @@ main (int argc, char *argv[])
 		}
 	    }
 	}
-#ifdef TIOCSLTC /* { */
+#ifdef HAS_LTCHARS /* { */
         d_ltc.t_suspc = '\000';		/* t_suspc */
         d_ltc.t_dsuspc = '\000';	/* t_dsuspc */
         d_ltc.t_rprntc = '\377';	/* reserved...*/
         d_ltc.t_flushc = '\377';
         d_ltc.t_werasc = '\377';
         d_ltc.t_lnextc = '\377';
-#endif	/* } TIOCSLTC */
+#endif	/* } HAS_LTCHARS */
 #if defined(USE_TERMIOS) || defined(USE_POSIX_TERMIOS) /* { */
 	d_tio.c_cc[VSUSP] = CSUSP;
 #ifdef VDSUSP
@@ -2137,9 +2143,9 @@ spawn (void)
 #ifdef TIOCLSET
 	unsigned lmode;
 #endif	/* TIOCLSET */
-#ifdef TIOCSLTC
+#ifdef HAS_LTCHARS
 	struct ltchars ltc;
-#endif	/* TIOCSLTC */
+#endif	/* HAS_LTCHARS */
 #else	/* else not USE_SYSV_TERMIO */
 #ifdef USE_POSIX_TERMIOS
 	struct termios tio;
@@ -2240,9 +2246,9 @@ spawn (void)
 			if (tty_got_hung || errno == ENXIO || errno == EIO ||
 			    errno == EINVAL || errno == ENOTTY) {
 				no_dev_tty = TRUE;
-#ifdef TIOCSLTC
+#ifdef HAS_LTCHARS
 				ltc = d_ltc;
-#endif	/* TIOCSLTC */
+#endif	/* HAS_LTCHARS */
 #ifdef TIOCLSET
 				lmode = d_lmode;
 #endif	/* TIOCLSET */
@@ -2267,10 +2273,10 @@ spawn (void)
 			 * if started directly from xdm or xinit,
 			 * in which case we just use the defaults as above.
 			 */
-#ifdef TIOCSLTC
+#ifdef HAS_LTCHARS
 			if(ioctl(tty, TIOCGLTC, &ltc) == -1)
 				ltc = d_ltc;
-#endif	/* TIOCSLTC */
+#endif	/* HAS_LTCHARS */
 #ifdef TIOCLSET
 			if(ioctl(tty, TIOCLGET, &lmode) == -1)
 				lmode = d_lmode;
@@ -2788,7 +2794,7 @@ spawn (void)
 #ifdef VSTOP
 			TMODE (XTTYMODE_stop, tio.c_cc[VSTOP]);
 #endif
-#ifdef TIOCSLTC
+#ifdef HAS_LTCHARS
 			/* both SYSV and BSD have ltchars */
 			TMODE (XTTYMODE_susp, ltc.t_suspc);
 			TMODE (XTTYMODE_dsusp, ltc.t_dsuspc);
@@ -2800,7 +2806,7 @@ spawn (void)
 		    }
 #undef TMODE
 
-#ifdef TIOCSLTC
+#ifdef HAS_LTCHARS
 #ifdef __hpux
 		    /* ioctl chokes when the "reserved" process group controls
 		     * are not set to _POSIX_VDISABLE */
@@ -2809,7 +2815,7 @@ spawn (void)
 #endif /* __hpux */
 		    if (ioctl (tty, TIOCSLTC, &ltc) == -1)
 			    HsSysError(cp_pipe[1], ERROR_TIOCSETC);
-#endif	/* TIOCSLTC */
+#endif	/* HAS_LTCHARS */
 #ifdef TIOCLSET
 		    if (ioctl (tty, TIOCLSET, (char *)&lmode) == -1)
 			    HsSysError(cp_pipe[1], ERROR_TIOCLSET);
@@ -3512,11 +3518,7 @@ extern struct caplist *capv;
  * I made this a function since it cannot be a macro.
  */
 void
-setcap(capvec, n, name, cap)
-    struct caplist *capvec;
-    int n;
-    char *name;
-    capability *cap;
+setcap(struct caplist *capvec, int n, char *name, capability *cap)
 {
     capvec[n].cl_name = name;
     capvec[n].cl_cap = cap;
@@ -3527,9 +3529,7 @@ setcap(capvec, n, name, cap)
  * necessarily running down the user's PATH.
  */
 errstat
-find_program(program, programcap)
-    char *program;
-    capability *programcap;
+find_program(char *program, capability *programcap)
 {
     errstat err;
 
@@ -3568,13 +3568,13 @@ find_program(program, programcap)
 static semaphore main_sema;
 
 void
-InitMainThread()
+InitMainThread(void)
 {
     sema_init(&main_sema, 0);
 }
 
 void
-WakeupMainThread()
+WakeupMainThread(void)
 {
     sema_up(&main_sema);
 }
@@ -3651,6 +3651,7 @@ static int spawn(void)
 	    if (*ptr)
 		if (!TEK4014_ACTIVE(screen))
 		    resize (screen, termcap, newtc);
+	}
     }
 
     if (!TermName) {
@@ -3817,7 +3818,7 @@ static int spawn(void)
  * X watch-dog thread. This thread unblocks the main
  * thread when there's an X event.
  */
-xwatchdogthread()
+xwatchdogthread(void)
 {
     register TScreen *screen = &term->screen;
 
@@ -3834,7 +3835,7 @@ xwatchdogthread()
 }
 
 void
-SleepMainThread()
+SleepMainThread(void)
 {
     int remaining;
 
@@ -3897,12 +3898,12 @@ Exit(int n)
 	    /* write it out only if it exists, and the pid's match */
 	    if (utptr && (utptr->ut_pid == screen->pid)) {
 		    utptr->ut_type = DEAD_PROCESS;
-		    *utptr->ut_user = 0;
 #if defined(SVR4) || defined(SCO325) || (defined(linux) && __GLIBC__ >= 2)
 		    utptr->ut_session = getsid(0);
 		    utptr->ut_xtime = time ((time_t *) 0);
 		    utptr->ut_tv.tv_usec = 0;
 #else
+		    *utptr->ut_user = 0;
 		    utptr->ut_time = time((time_t *) 0);
 #endif
 		    (void) pututline(utptr);
@@ -4077,38 +4078,6 @@ static SIGNAL_T reapchild (int n GCC_UNUSED)
 
     SIGNAL_RETURN;
 }
-
-#if 0	/* this isn't used, but could be useful in debugging */
-/* VARARGS1 */
-void
-consolepr(fmt,x0,x1,x2,x3,x4,x5,x6,x7,x8,x9)
-char *fmt;
-{
-	int oerrno;
-	int f;
- 	char buf[ BUFSIZ ];
-
-	oerrno = errno;
- 	strcpy(buf, "xterm: ");
- 	sprintf(buf+strlen(buf), fmt, x0,x1,x2,x3,x4,x5,x6,x7,x8,x9);
- 	strcat(buf, ": ");
- 	strcat(buf, SysErrorMsg (oerrno));
- 	strcat(buf, "\n");
-#ifndef AMOEBA
-	f = open("/dev/console",O_WRONLY);
-	write(f, buf, strlen(buf));
-	close(f);
-#else
-	fputs(buf, stderr);
-#endif
-#ifdef TIOCNOTTY
-	if ((f = open("/dev/tty", 2)) >= 0) {
-		ioctl(f, TIOCNOTTY, (char *)NULL);
-		close(f);
-	}
-#endif	/* TIOCNOTTY */
-}
-#endif
 
 static int
 remove_termcap_entry (char *buf, char *str)

@@ -719,11 +719,12 @@ again:
 				       &crocktimeout);
 #endif
 #ifndef AMOEBA
-			if(FD_ISSET (screen->respond, &Tselect_mask)) {
+			if(FD_ISSET (screen->respond, &Tselect_mask))
 #else
 			/* XXX resolve polling since it wastes CPU cycles */
-			if ((Tbcnt = cb_full(screen->tty_outq)) > 0) {
+			if ((Tbcnt = cb_full(screen->tty_outq)) > 0)
 #endif /* AMOEBA */
+			{
 #ifdef ALLOWLOGGING
 				if(screen->logging)
 					FlushLog(screen);
@@ -1732,10 +1733,8 @@ TekCopy(void)
 	   using access before the open still leaves a small window
 	   of opportunity. */
 	pid = fork();
-	switch (pid)
-	{
-	case 0:			/* child */
-	{
+
+	if (pid == 0) {			/* child */
 	    register int tekcopyfd;
 	    char initbuf[5];
 	    register TekLink *Tp;
@@ -1756,11 +1755,10 @@ TekCopy(void)
 	    } while(Tp);
 	    close(tekcopyfd);
 	    _exit(0);
-	}
-	case -1:		/* error */
+	} else if (pid < 0) {	/* error */
 	    Bell(XkbBI_MinorError,0);
 	    return;
-	default:		/* parent */
+	} else {		/* parent */
 #ifdef HAVE_WAITPID
 	    waitpid(pid, NULL, 0);
 #else

@@ -266,6 +266,8 @@ typedef struct {
 #define	HIGHLIGHT_BG	7
 #define	NCOLORS		8
 
+#define EXCHANGE(a,b,tmp) tmp = a; a = b; b = tmp;
+
 #define	COLOR_DEFINED(s,w)	((s)->which&(1<<(w)))
 #define	COLOR_VALUE(s,w)	((s)->colors[w])
 #define	SET_COLOR_VALUE(s,w,v)	(((s)->colors[w]=(v)),((s)->which|=(1<<(w))))
