@@ -3604,8 +3604,12 @@ spawn (void)
 		}
 #if OPT_INITIAL_ERASE
 		if (*newtc) {
+		    unsigned len;
 		    remove_termcap_entry (newtc, TERMCAP_ERASE "=");
-		    sprintf(newtc + strlen(newtc), ":%s=\\%03o", TERMCAP_ERASE, initial_erase & 0377);
+		    len = strlen(newtc);
+		    if (len != 0 && newtc[len-1] == ':')
+			len--;
+		    sprintf(newtc + len, ":%s=\\%03o:", TERMCAP_ERASE, initial_erase & 0377);
 		}
 #endif
 		if(*newtc)
