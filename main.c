@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.164 2003/03/23 02:01:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.166 2003/05/19 00:47:32 dickey Exp $ */
 
 /* main.c */
 
@@ -2525,10 +2525,10 @@ hungtty(int i GCC_UNUSED)
 /*
  * declared outside OPT_PTY_HANDSHAKE so HsSysError() callers can use
  */
-static int pc_pipe[2];		/* this pipe is used for parent to child transfer */
 static int cp_pipe[2];		/* this pipe is used for child to parent transfer */
 
 #if OPT_PTY_HANDSHAKE
+static int pc_pipe[2];		/* this pipe is used for parent to child transfer */
 typedef enum {			/* c == child, p == parent                        */
     PTY_BAD,			/* c->p: can't open pty slave for some reason     */
     PTY_FATALERROR,		/* c->p: we had a fatal error with the pty        */
@@ -2966,6 +2966,7 @@ spawn(void)
 	   TTYSIZE_COLS(ts), i));
 #endif /* TTYSIZE_STRUCT */
 
+    added_utmp_entry = False;
 #if defined(USE_UTEMPTER)
 #undef UTMP
     if (!resource.utmpInhibit) {
@@ -3057,6 +3058,8 @@ spawn(void)
 	    } else {		/* else pty, not pts */
 #endif
 #endif /* USE_USG_PTYS */
+
+		(void) pgrp;	/* not all branches use this variable */
 
 #if OPT_PTY_HANDSHAKE		/* warning, goes for a long ways */
 		if (resource.ptyHandshake) {
@@ -3725,10 +3728,10 @@ spawn(void)
 	    /* write out the entry */
 	    if (!resource.utmpInhibit) {
 		errno = 0;
-		rc = (pututline(&utmp) == 0);
+		pututline(&utmp);
 		TRACE(("pututline: %d %d %s\n",
 		       resource.utmpInhibit,
-		       errno, (rc != 0) ? strerror(errno) : ""));
+		       errno, (errno != 0) ? strerror(errno) : ""));
 	    }
 #ifdef WTMP
 #if defined(SVR4) || defined(SCO325)

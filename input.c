@@ -2,7 +2,7 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.62 2002/12/27 21:05:22 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.63 2003/05/19 00:47:32 dickey Exp $ */
 
 /*
  * Copyright 1999-2001,2002 by Thomas E. Dickey
@@ -86,11 +86,11 @@
 
 #define KEYSYM_FMT "0x%04lX"	/* simplify matching <X11/keysymdef.h> */
 
-/*                       0123456789 abc def0123456789abdef0123456789abcdef0123456789abcd */
-static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XX=";
+/*                       0123456789 abc def0123456789abcdef0123456789abcdef0123456789abcd */
+static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
 
-/*                       0123456789abcdef0123456789abdef0123456789abcdef0123456789abcd */
-static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXX";
+/*                       0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd */
+static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
 
 static char *curfinal = "HDACB  FE";
 

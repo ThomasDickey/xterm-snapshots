@@ -2,7 +2,7 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.74 2003/03/09 23:39:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.75 2003/05/19 00:47:33 dickey Exp $ */
 
 /*
  * Copyright 1999-2002,2003 by Thomas E. Dickey
@@ -1405,7 +1405,63 @@ getColor(Pixel pixel)
     cache[i].use = ++use;
     return &cache[i].color;
 }
+
+/*
+ * fontconfig/Xft combination prior to 2.2 has a problem with
+ * CJK truetype 'double-width' (bi-width/monospace) fonts leading
+ * to the 's p a c e d o u t' rendering. Consequently, we can't
+ * rely on XftDrawString8/16  when one of  those fonts is used.
+ * Instead, we need to roll out our own using XftDrawCharSpec.
+ * A patch in the same spirit (but in a rather different form)
+ * was applied to gnome vte and gtk2 port of vim.
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=196312
+ */
+static void
+xtermXftDrawString(XftDraw * draw,
+		   XftColor * color,
+		   XftFont * font,
+		   int x,
+		   int y,
+		   PAIRED_CHARS(Char * text, Char * text2),
+		   int len,
+		   int fwidth,
+		   int *deltax)
+{
+#if OPT_WIDE_CHARS
+    static XftCharSpec *sbuf;
+    static unsigned slen;
+    int n;
+    int ncells = 0;		/* # of 'half-width' charcells */
+
+    if ((int) slen < len) {
+	slen = (len + 1) * 2;
+	sbuf = (XftCharSpec *) XtRealloc((char *) sbuf,
+					 slen * sizeof(XftCharSpec));
+    }
+    for (n = 0; n < len; n++) {
+	FcChar32 wc;
+	if (text2)
+	    wc = *text++ | (*text2++ << 8);
+	else
+	    wc = *text++;
+	sbuf[n].ucs4 = wc;
+	sbuf[n].x = x + fwidth * ncells;
+	ncells += my_wcwidth(wc);
+	sbuf[n].y = y;
+    }
+    XftDrawCharSpec(draw, color, font, sbuf, len);
+    if (deltax)
+	*deltax = ncells * fwidth;
+#else
+    XftDrawString8(draw,
+		   color,
+		   font,
+		   x, y, (unsigned char *) text, len);
+    if (deltax)
+	*deltax = len * fwidth;
 #endif
+}
+#endif /* XRENDERFONT */
 
 /*
  * Draws text with the specified combination of bold/underline
@@ -1440,7 +1496,11 @@ drawXtermText(TScreen * screen,
 	    screen->renderDraw = XftDrawCreate(dpy, draw, visual,
 					       DefaultColormap(dpy, scr));
 	}
-	if ((flags & (BOLD | BLINK)) && !screen->colorBDMode && screen->renderFontBold)
+	if ((flags & (BOLD | BLINK))
+#if OPT_ISO_COLORS
+	    && !screen->colorBDMode
+#endif
+	    && screen->renderFontBold)
 	    font = screen->renderFontBold;
 	else
 	    font = screen->renderFont;
@@ -1453,61 +1513,59 @@ drawXtermText(TScreen * screen,
 	y += font->ascent;
 #if OPT_WIDE_CHARS
 	if (text2) {
-	    static XftChar16 *sbuf;
-	    static unsigned slen;
-	    unsigned n;
-
-	    if (slen < len) {
-		slen = (len + 1) * 2;
-		sbuf = (XftChar16 *) XtRealloc((char *) sbuf, slen * sizeof(XftChar16));
-	    }
-	    for (n = 0; n < len; n++)
-		sbuf[n] = *text++ | (*text2++ << 8);
-	    XftDrawString16(screen->renderDraw,
-			    getColor(values.foreground),
-			    font,
-			    x, y, sbuf, len);
+	    xtermXftDrawString(screen->renderDraw,
+			       getColor(values.foreground),
+			       font, x, y, text, text2,
+			       len, FontWidth(screen), NULL);
 	} else
 #endif
+#if OPT_BOX_CHARS
 	if (!screen->force_box_chars) {
 	    /* adding code to substitute simulated line-drawing characters */
 	    Cardinal last, first = 0;
 	    Dimension old_wide, old_high = 0;
+	    int curX = x;
 
 	    for (last = 0; last < len; last++) {
 		unsigned ch = text[last];
+		int deltax = 0;
 		if (ch > 0 && ch < 32) {
 		    /* line drawing character time */
 		    if (last > first) {
-			XftDrawString8(screen->renderDraw,
-				       getColor(values.foreground),
-				       font,
-				       x + (first * FontWidth(screen)), y,
-				       (unsigned char *) text + first,
-				       last - first);
+			xtermXftDrawString(screen->renderDraw,
+					   getColor(values.foreground),
+					   font, curX, y,
+					   PAIRED_CHARS(text + first, NULL),
+					   last - first, FontWidth(screen),
+					   &deltax);
+			curX += deltax;
 		    }
 		    old_wide = screen->fnt_wide;
 		    old_high = screen->fnt_high;
 		    screen->fnt_wide = FontWidth(screen);
 		    screen->fnt_high = FontHeight(screen);
 		    xtermDrawBoxChar(screen, ch, flags, gc,
-				     x + (last * FontWidth(screen)),
-				     y - FontAscent(screen));
+				     curX, y - FontAscent(screen));
+		    curX += FontWidth(screen);
 		    screen->fnt_wide = old_wide;
 		    screen->fnt_high = old_high;
 		    first = last + 1;
 		}
 	    }
 	    if (last > first) {
-		XftDrawString8(screen->renderDraw, getColor(values.foreground),
-			       font, x + (first * FontWidth(screen)), y,
-			       (unsigned char *) text + first, last - first);
+		xtermXftDrawString(screen->renderDraw,
+				   getColor(values.foreground),
+				   font, curX, y,
+				   PAIRED_CHARS(text + first, NULL),
+				   last - first, FontWidth(screen), NULL);
 	    }
-	} else {
-	    XftDrawString8(screen->renderDraw,
-			   getColor(values.foreground),
-			   font,
-			   x, y, (unsigned char *) text, len);
+	} else
+#endif /* OPT_BOX_CHARS */
+	{
+	    xtermXftDrawString(screen->renderDraw,
+			       getColor(values.foreground),
+			       font, x, y, PAIRED_CHARS(text, NULL),
+			       len, FontWidth(screen), NULL);
 	}
 
 	return x + len * FontWidth(screen);
@@ -1700,7 +1758,11 @@ drawXtermText(TScreen * screen,
     }
 
     /* If the font is complete, draw it as-is */
-    if (screen->fnt_boxes && !screen->force_box_chars) {
+    if (screen->fnt_boxes
+#if OPT_BOX_CHARS
+	&& !screen->force_box_chars
+#endif
+	) {
 	TRACE(("drawXtermText%c[%4d,%4d] (%d) %d:%s\n",
 	       screen->cursor_state == OFF ? ' ' : '*',
 	       y, x, chrset, len,

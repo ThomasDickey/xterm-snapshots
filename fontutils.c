@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.37 2003/03/09 23:39:13 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.38 2003/05/19 00:47:32 dickey Exp $
  */
 
 /************************************************************
@@ -487,8 +487,68 @@ is_double_width_font(XFontStruct * fs)
 {
     return (2 * fs->min_bounds.width == fs->max_bounds.width);
 }
+
+#ifdef XRENDERFONT
+#define HALF_WIDTH_TEST_STRING "1234567890"
+
+/* '1234567890' in Chinese characters in UTF-8 */
+#define FULL_WIDTH_TEST_STRING "\xe4\xb8\x80\xe4\xba\x8c\xe4\xb8\x89" \
+                               "\xe5\x9b\x9b\xe4\xba\x94" \
+			       "\xef\xa7\x91\xe4\xb8\x83\xe5\x85\xab" \
+			       "\xe4\xb9\x9d\xef\xa6\xb2"
+
+/* '1234567890' in Korean script in UTF-8 */
+#define FULL_WIDTH_TEST_STRING2 "\xec\x9d\xbc\xec\x9d\xb4\xec\x82\xbc" \
+                                "\xec\x82\xac\xec\x98\xa4" \
+			        "\xec\x9c\xa1\xec\xb9\xa0\xed\x8c\x94" \
+			        "\xea\xb5\xac\xec\x98\x81"
+
+#define HALF_WIDTH_CHAR1  0x0031	/* 'l' */
+#define HALF_WIDTH_CHAR2  0x0057	/* 'W' */
+#define FULL_WIDTH_CHAR1  0x4E00	/* CJK Ideograph 'number one' */
+#define FULL_WIDTH_CHAR2  0xAC00	/* Korean script syllable 'Ka' */
+
+static int
+is_double_width_font_xft(Display * dpy, XftFont * font)
+{
+    XGlyphInfo gi1, gi2;
+    FcChar32 c1 = HALF_WIDTH_CHAR1, c2 = HALF_WIDTH_CHAR2;
+    char *fwstr = FULL_WIDTH_TEST_STRING;
+    char *hwstr = HALF_WIDTH_TEST_STRING;
+
+    /* Some Korean fonts don't have Chinese characters at all. */
+    if (!XftCharExists(dpy, font, FULL_WIDTH_CHAR1)) {
+	if (!XftCharExists(dpy, font, FULL_WIDTH_CHAR2))
+	    return 0;		/* Not a CJK font */
+	else			/* a Korean font without CJK Ideographs */
+	    fwstr = FULL_WIDTH_TEST_STRING2;
+    }
+
+    XftTextExtents32(dpy, font, &c1, 1, &gi1);
+    XftTextExtents32(dpy, font, &c2, 1, &gi2);
+    if (gi1.xOff != gi2.xOff)	/* Not a fixed-width font */
+	return 0;
+
+    XftTextExtentsUtf8(dpy, font, (FcChar8 *)hwstr, strlen(hwstr), &gi1);
+    XftTextExtentsUtf8(dpy, font, (FcChar8 *)fwstr, strlen(fwstr), &gi2);
+
+    /*
+     * fontconfig and Xft prior to 2.2(?) set the width of half-width
+     * characters identical to that of full-width character in CJK double-width
+     * (bi-width / monospace) font even though the former is half as wide as
+     * the latter.  This was fixed sometime before the release of fontconfig
+     * 2.2 in early 2003.  See
+     *  http://bugzilla.mozilla.org/show_bug.cgi?id=196312
+     * In the meantime, we have to check both possibilities.
+     */
+    return ((2 * gi1.xOff == gi2.xOff) || (gi1.xOff == gi2.xOff));
+}
+#endif
 #else
 #define is_double_width_font(fs) 0
+#ifdef XRENDERFONT
+#define is_double_width_font_xft(dpy, xftfont) 0
+#endif
 #endif
 
 #define EmptyFont(fs) (fs != 0 \
@@ -899,6 +959,8 @@ xtermComputeFontInfo(TScreen * screen,
 	win->f_height = screen->renderFont->height;
 	win->f_ascent = screen->renderFont->ascent;
 	win->f_descent = screen->renderFont->descent;
+	if (is_double_width_font_xft(screen->display, screen->renderFont))
+	    win->f_width >>= 1;
     } else
 #endif
     {
