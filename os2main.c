@@ -5,7 +5,7 @@
 #ifndef lint
 static char *rid="$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.32 2000/02/08 17:19:39 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.34 2000/04/05 18:14:09 dawes Exp $ */
 
 /***********************************************************
 
@@ -473,7 +473,7 @@ static struct _options {
 { "-b number",             "internal border in pixels" },
 { "-/+bc",		   "turn on/off text cursor blinking" },
 { "-bcf milliseconds",	   "time text cursor is off when blinking"},
-{ "-bcn milliseconds",	   "time text cursor is on when blinking"}.
+{ "-bcn milliseconds",	   "time text cursor is on when blinking"},
 { "-/+bdc",                "turn off/on display of bold as color"},
 { "-/+cb",                 "turn on/off cut-to-beginning-of-line inhibit" },
 { "-cc classrange",        "specify additional character classes" },

@@ -1,5 +1,5 @@
 .\" $XConsortium: xterm.man /main/85 1996/12/09 17:10:53 kaleb $
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.58 2000/02/13 00:56:17 dawes Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.59 2000/03/03 20:02:36 dawes Exp $
 .\"
 .\"
 .\" Copyright 1996,1997,1998,1999,2000 by Thomas E. Dickey <dickey@clark.net>
@@ -124,7 +124,7 @@ the
 menu; see below).
 The name of the file will be
 ``\fBCOPY\fIyyyy\fB\-\fIMM\fB\-\fIdd\fB.\fIhh\fB:\fImm\fB:\fIss\fP'', where
-.IR yy ,
+.IR yyyy ,
 .IR MM ,
 .IR dd ,
 .IR hh ,
@@ -783,7 +783,8 @@ Specifies whether or not Sun/PC keyboard layout should be assumed rather
 than DEC VT220.
 This causes the keypad `+' to be mapped to `,'.
 and
-CTRL-F1 to F13, CTRL-F2 to F14, etc.,
+CTRL F1-F12 to F11-F20, depending on the setting of the \fBctrlFKeys\fP
+resource.
 so \fIxterm\fP emulates a DEC VT220 more accurately.
 Otherwise (the default, with \fBsunKeyboard\fP set to ``false''),
 \fIxterm\fP uses PC-style bindings for the function keys and keypad.
@@ -1051,6 +1052,13 @@ the ``colorBLMode'' resource is enabled.
 .B "colorUL (\fPclass\fB Foreground)"
 This specifies the color to use to display underlined characters if
 the ``colorULMode'' resource is enabled.
+.TP 8
+.B "ctrlFKeys (\fPclass\fB CtrlFKeys)"
+In VT220 keyboard mode (see \fBsunKeyboard\fP resource),
+specifies the amount by which to shift F1-F12 given a control modifier (CTRL).
+This allows you to generate key symbols for F10-F20 on a Sun/PC keyboard.
+The default is ``10'', which means that CTRL F1 generates the key
+symbol for F11.
 .TP 8
 .B "cursorBlink (\fPclass\fB CursorBlink)"
 Specifies whether to make the cursor blink.

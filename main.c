@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.108 2000/02/10 18:57:39 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.110 2000/03/31 20:13:44 dawes Exp $ */
 
 
 /* main.c */
@@ -133,6 +133,7 @@ SOFTWARE.
 
 #ifdef __osf__
 #define USE_SYSV_SIGNALS
+#define WTMP
 #endif
 
 #ifdef SVR4
@@ -223,6 +224,10 @@ static Bool IsPts = False;
 
 #ifdef USE_TTY_GROUP
 #include <grp.h>
+#endif
+
+#ifndef TTY_GROUP_NAME
+#define TTY_GROUP_NAME "tty"
 #endif
 
 #ifndef __CYGWIN__
@@ -2875,7 +2880,7 @@ spawn (void)
 #ifdef USE_TTY_GROUP
 	{
 		struct group *ttygrp;
-		if ((ttygrp = getgrnam("tty")) != 0) {
+		if ((ttygrp = getgrnam(TTY_GROUP_NAME)) != 0) {
 			/* change ownership of tty to real uid, "tty" gid */
 			set_owner (ttydev, screen->uid, ttygrp->gr_gid,
 				   (resource.messages? 0620 : 0600));
@@ -3327,7 +3332,7 @@ spawn (void)
 		(void) setutent ();
 		/* set up entry to search for */
 		ptyname = ttydev;
-		bzero(&utmp, sizeof(utmp));
+		bzero((char *)&utmp, sizeof(utmp));
 #ifndef __sgi
 		if (PTYCHARLEN >= (int)strlen(ptyname))
 		    ptynameptr = ptyname;
@@ -3341,7 +3346,13 @@ spawn (void)
 		utmp.ut_type = DEAD_PROCESS;
 
 		/* position to entry in utmp file */
-		(void) getutid(&utmp);
+		/* Test return value: beware of entries left behind: PSz 9 Mar 00 */
+		if (! getutid(&utmp)) {
+		    utmp.ut_type = USER_PROCESS;
+		    if (! getutid(&utmp)) {
+			(void) setutent();
+		    }
+		}
 
 		/* set up the new entry */
 		utmp.ut_type = USER_PROCESS;
@@ -3396,7 +3407,7 @@ spawn (void)
 #else
 		if (term->misc.login_shell &&
 		     (i = open(etc_wtmp, O_WRONLY|O_APPEND)) >= 0) {
-		    write(i, (char *)&utmp, sizeof(struct utmp));
+		    write(i, (char *)&utmp, sizeof(utmp));
 		    close(i);
 		}
 #endif
@@ -3413,7 +3424,7 @@ spawn (void)
 		{
 			if (pw && !resource.utmpInhibit &&
 			    (i = open(etc_utmp, O_WRONLY)) >= 0) {
-				bzero((char *)&utmp, sizeof(struct utmp));
+				bzero((char *)&utmp, sizeof(utmp));
 				(void) strncpy(utmp.ut_line,
 					       ttydev + strlen("/dev/"),
 					       sizeof(utmp.ut_line));
@@ -3430,8 +3441,8 @@ spawn (void)
 #endif
 				/* cast needed on Ultrix 4.4 */
 				time((time_t*)&utmp.ut_time);
-				lseek(i, (long)(tslot * sizeof(struct utmp)), 0);
-				write(i, (char *)&utmp, sizeof(struct utmp));
+				lseek(i, (long)(tslot * sizeof(utmp)), 0);
+				write(i, (char *)&utmp, sizeof(utmp));
 				close(i);
 				added_utmp_entry = True;
 #if defined(WTMP)
@@ -3439,16 +3450,15 @@ spawn (void)
 				(i = open(etc_wtmp, O_WRONLY|O_APPEND)) >= 0) {
 				    int status;
 				    status = write(i, (char *)&utmp,
-						   sizeof(struct utmp));
+						   sizeof(utmp));
 				    status = close(i);
 				}
 #elif defined(MNX_LASTLOG)
 				if (term->misc.login_shell &&
 				(i = open(_U_LASTLOG, O_WRONLY)) >= 0) {
 				    lseek(i, (long)(screen->uid *
-					sizeof (struct utmp)), 0);
-				    write(i, (char *)&utmp,
-					sizeof (struct utmp));
+					sizeof (utmp)), 0);
+				    write(i, (char *)&utmp, sizeof (utmp));
 				    close(i);
 				}
 #endif /* WTMP or MNX_LASTLOG */
@@ -3465,23 +3475,22 @@ spawn (void)
 #endif /* USE_SYSV_UTMP */
 
 #ifdef USE_LASTLOG
-				if (term->misc.login_shell &&
-				(i = open(etc_lastlog, O_WRONLY)) >= 0) {
-				    bzero((char *)&lastlog,
-					sizeof (struct lastlog));
-				    (void) strncpy(lastlog.ll_line, ttydev +
-					sizeof("/dev"),
-					sizeof (lastlog.ll_line));
-				    (void) strncpy(lastlog.ll_host,
-					  XDisplayString (screen->display),
-					  sizeof (lastlog.ll_host));
-				    time(&lastlog.ll_time);
-				    lseek(i, (long)(screen->uid *
-					sizeof (struct lastlog)), 0);
-				    write(i, (char *)&lastlog,
-					sizeof (struct lastlog));
-				    close(i);
-				}
+		if (term->misc.login_shell &&
+		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
+		    bzero((char *)&lastlog, sizeof (struct lastlog));
+		    (void) strncpy(lastlog.ll_line, ttydev +
+			sizeof("/dev"),
+			sizeof (lastlog.ll_line));
+		    (void) strncpy(lastlog.ll_host,
+			  XDisplayString (screen->display),
+			  sizeof (lastlog.ll_host));
+		    time(&lastlog.ll_time);
+		    lseek(i, (long)(screen->uid *
+			sizeof (struct lastlog)), 0);
+		    write(i, (char *)&lastlog,
+			sizeof (struct lastlog));
+		    close(i);
+		}
 #endif /* USE_LASTLOG */
 
 #ifdef USE_HANDSHAKE
@@ -3497,10 +3506,22 @@ spawn (void)
 
 		(void) setgid (screen->gid);
 #ifdef HAS_BSD_GROUPS
-		if (geteuid() == 0 && pw)
-		  initgroups (pw->pw_name, pw->pw_gid);
+		if (geteuid() == 0 && pw) {
+		    if (initgroups (pw->pw_name, pw->pw_gid)) {
+			perror( "initgroups failed" );
+			exit (errno);
+		    }
+		}
 #endif
-		(void) setuid (screen->uid);
+		if (setuid (screen->uid)) {
+			perror( "setuid failed" );
+			exit (errno);
+		}
+		/* A bit of paranoia: PSz 9 Mar 00 */
+		if (screen->uid && ! setuid(0)) {
+			fprintf (stderr, "can still get back to root\n");
+			exit (EACCES);
+		}
 
 #ifdef USE_HANDSHAKE
 		/* mark the pipes as close on exec */
@@ -4224,9 +4245,9 @@ Exit(int n)
 
 	if (!resource.utmpInhibit && added_utmp_entry &&
 	    (!am_slave && tslot > 0 && (wfd = open(etc_utmp, O_WRONLY)) >= 0)){
-		bzero((char *)&utmp, sizeof(struct utmp));
-		lseek(wfd, (long)(tslot * sizeof(struct utmp)), 0);
-		write(wfd, (char *)&utmp, sizeof(struct utmp));
+		bzero((char *)&utmp, sizeof(utmp));
+		lseek(wfd, (long)(tslot * sizeof(utmp)), 0);
+		write(wfd, (char *)&utmp, sizeof(utmp));
 		close(wfd);
 #ifdef WTMP
 		if (term->misc.login_shell &&
@@ -4235,7 +4256,7 @@ Exit(int n)
 			(void) strncpy(utmp.ut_line, ttydev +
 			    sizeof("/dev"), sizeof (utmp.ut_line));
 			time(&utmp.ut_time);
-			i = write(wfd, (char *)&utmp, sizeof(struct utmp));
+			i = write(wfd, (char *)&utmp, sizeof(utmp));
 			i = close(wfd);
 		}
 #endif /* WTMP */

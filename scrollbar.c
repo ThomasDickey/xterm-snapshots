@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: scrollbar.c /main/47 1996/12/01 23:47:08 swick $
- *	$XFree86: xc/programs/xterm/scrollbar.c,v 3.25 2000/02/08 17:19:41 dawes Exp $
+ *	$XFree86: xc/programs/xterm/scrollbar.c,v 3.26 2000/03/03 20:02:34 dawes Exp $
  */
 
 /*
@@ -288,7 +288,7 @@ ResizeScrollBar(TScreen *screen)
 		screen->scrollWidget,
 #ifdef SCROLLBAR_RIGHT
         	(term->misc.useRight)
-			? (term->core.width -
+			? (screen->fullVwin.fullwidth -
 			   screen->scrollWidget->core.width -
 			   screen->scrollWidget->core.border_width)
 			: -1,

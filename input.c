@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: input.c /main/21 1996/04/17 15:54:23 kaleb $
- *	$XFree86: xc/programs/xterm/input.c,v 3.43 2000/02/13 00:56:12 dawes Exp $
+ *	$XFree86: xc/programs/xterm/input.c,v 3.45 2000/03/31 20:13:43 dawes Exp $
  */
 
 /*
@@ -574,7 +574,7 @@ Input (
 		if (term->keyboard.type == keyboardIsVT220) {
 			if ((event->state & ControlMask)
 			 && (keysym >= XK_F1 && keysym <= XK_F12))
-				keysym += 12;
+				keysym += term->misc.ctrl_fkeys;
 		}
 #endif
 
