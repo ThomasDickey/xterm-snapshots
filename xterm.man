@@ -713,7 +713,8 @@ should be worked around.  See the \fB\-cu\fP option for details.
 The default is ``false.''
 .TP 8
 .B "colorAttrMode (\fPclass\fB ColorMode)"
-Specifies whether ``colorBD'' and ``colorUL'' should override ANSI colors.
+Specifies whether ``colorBD'', ``colorBL'' and ``colorUL''
+should override ANSI colors.
 If not, these are displayed only when no ANSI colors
 have been set for the corresponding position.
 The default is ``false.''
@@ -727,6 +728,11 @@ The default is ``true.''
 Specifies whether characters with the bold attribute should be displayed in
 color or as bold characters.  Note that setting ``colorMode'' off disables
 all colors, including bold.
+.TP 8
+.B "colorBLMode (\fPclass\fB ColorMode)"
+Specifies whether characters with the blink attribute should be displayed in
+color.
+Note that setting ``colorMode'' off disables all colors, including this.
 .TP 8
 .B "colorULMode (\fPclass\fB ColorMode)"
 Specifies whether characters with the underline attribute should be displayed
@@ -773,6 +779,10 @@ yellow, blue, magenta, cyan, and white.
 .B "colorBD (\fPclass\fB Foreground)"
 This specifies the color to use to display bold characters if
 the ``colorBDMode'' resource is enabled.
+.TP 8
+.B "colorBL (\fPclass\fB Foreground)"
+This specifies the color to use to display blink characters if
+the ``colorBLMode'' resource is enabled.
 .TP 8
 .B "colorUL (\fPclass\fB Foreground)"
 This specifies the color to use to display underlined characters if

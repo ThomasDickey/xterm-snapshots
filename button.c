@@ -1472,10 +1472,8 @@ SaveText(screen, row, scol, ecol, lp, eol)
 {
 	register int i = 0;
 	register Char *ch = SCRN_BUF_CHARS(screen, row + screen->topline);
-	Char attr;
 	register int c;
 
-	*eol = 0;
 	i = Length(screen, row, scol, ecol);
 	ecol = scol + i;
 #if OPT_DEC_CHRSET
@@ -1484,17 +1482,7 @@ SaveText(screen, row, scol, ecol, lp, eol)
 		ecol = (ecol + 1) / 2;
 	}
 #endif
-	if (*eol == 0) {
-		if(ScrnGetAttributes(screen, row + screen->topline, 0, &attr, 1) == 1) {
-			*eol = (attr & LINEWRAPPED) ? 0 : 1;
-		} else {
-			/* If we can't get the attributes, assume no wrap */
-			/* CANTHAPPEN */
-			(void)fprintf(stderr, "%s: no attributes for %d, %d\n",
-				xterm_name, row, ecol - 1);
-			*eol = 1;
-		}
-	}
+	*eol = !ScrnTstWrapped(screen, row);
 	for (i = scol; i < ecol; i++) {
 	        c = ch[i];
 		if (c == 0)

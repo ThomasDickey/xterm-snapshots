@@ -105,30 +105,44 @@ static void ScrnClearLines PROTO((TScreen *screen, ScrnBuf sb, int where, int n,
 
 ScrnBuf Allocate (nrow, ncol, addr)
 /*
-   allocates memory for a 2-dimensional array of chars and returns a pointer
-   thereto
-   each line is formed from a pair of char arrays.  The first (even) one is
-   the actual character array and the second (odd) one is the attributes.
-   each line is formed from four char arrays.  The first one is the actual
-   character array, the second one is the attributes, the third is the
-   foreground and background colors, and the fourth denotes the character set.
+ * Allocates memory for a 2-dimensional array of chars and returns a pointer
+ * thereto.  Each line is formed from a set of char arrays, with an index
+ * (i.e., the ScrnBuf type).  The first pointer in the index is reserved for
+ * per-line flags, and does not point to data.
+ *
+ * After the per-line flags, we have a series of pointers to char arrays:  The
+ * first one is the actual character array, the second one is the attributes,
+ * the third is the foreground and background colors, and the fourth denotes
+ * the character set.
+ *
+ * We store it all as pointers, because of alignment considerations, together
+ * with the intention of being able to change the total number of pointers per
+ * row according to whether the user wants color or not.
  */
 register int nrow, ncol;
 Char **addr;
 {
 	register ScrnBuf base;
 	register Char *tmp;
-	register int i;
+	register int i, j, k;
+	size_t entries = MAX_PTRS * nrow;
+	size_t length  = BUF_PTRS * nrow * ncol;
 
-	if ((base = (ScrnBuf) calloc ((unsigned)(nrow *= MAX_PTRS), sizeof (char *))) == 0)
+	if ((base = (ScrnBuf) calloc (entries, sizeof (char *))) == 0)
 		SysError (ERROR_SCALLOC);
 
-	if ((tmp = (Char *)calloc ((unsigned) (nrow * ncol), sizeof(Char))) == 0)
+	if ((tmp = (Char *)calloc (length, sizeof(Char))) == 0)
 		SysError (ERROR_SCALLOC2);
 
 	*addr = tmp;
-	for (i = 0; i < nrow; i++, tmp += ncol)
-		base[i] = tmp;
+	for (i = k = 0; i < nrow; i++) {
+		base[k] = 0;	/* per-line flags */
+		k += BUF_HEAD;
+		for (j = BUF_HEAD; j < MAX_PTRS; j++) {
+			base[k++] = tmp;
+			tmp += ncol;
+		}
+	}
 
 	return (base);
 }
@@ -146,42 +160,44 @@ Reallocate(sbuf, sbufaddr, nrow, ncol, oldrow, oldcol)
 {
 	register ScrnBuf base;
 	register Char *tmp;
-	register int i, minrows;
+	register int i, j, k, minrows;
 	register Size_t mincols;
 	Char *oldbuf;
 	int move_down = 0, move_up = 0;
+	size_t entries = MAX_PTRS * nrow;
+	size_t length  = BUF_PTRS * nrow * ncol;
 
-	if (sbuf == NULL || *sbuf == NULL)
+	if (sbuf == NULL || *sbuf == NULL) {
 		return 0;
+	}
 
-	oldrow *= MAX_PTRS;
 	oldbuf = *sbufaddr;
 
 	/*
 	 * Special case if oldcol == ncol - straight forward realloc and
 	 * update of the additional lines in sbuf
+	 *
+	 * FIXME: this is a good idea, but doesn't seem to be implemented.
+	 * -gildea
 	 */
-
-	/* this is a good idea, but doesn't seem to be implemented.  -gildea */
 
 	/* 
 	 * realloc sbuf, the pointers to all the lines.
 	 * If the screen shrinks, remove lines off the top of the buffer
 	 * if resizeGravity resource says to do so.
 	 */
-	nrow *= MAX_PTRS;
-	if (nrow < oldrow  &&  term->misc.resizeGravity == SouthWestGravity) {
+	if (nrow < oldrow
+	 && term->misc.resizeGravity == SouthWestGravity) {
 	    /* Remove lines off the top of the buffer if necessary. */
-	    move_up = oldrow-nrow 
-		        - MAX_PTRS*(term->screen.max_row - term->screen.cur_row);
+	    move_up = (oldrow - nrow)
+		        - (term->screen.max_row - term->screen.cur_row);
 	    if (move_up < 0)
 		move_up = 0;
 	    /* Overlapping memmove here! */
-	    memmove( *sbuf, *sbuf+move_up, 
-		  (oldrow-move_up)*sizeof((*sbuf)[0]) );
+	    memmove( *sbuf, *sbuf + (move_up * MAX_PTRS),
+		  MAX_PTRS * (oldrow - move_up) * sizeof((*sbuf)[0]) );
 	}
-	*sbuf = (ScrnBuf) realloc((char *) (*sbuf),
-				  (unsigned) (nrow * sizeof(char *)));
+	*sbuf = (ScrnBuf) realloc((char *) (*sbuf), entries * sizeof(char *));
 	if (*sbuf == 0)
 	    SysError(ERROR_RESIZE);
 	base = *sbuf;
@@ -190,29 +206,42 @@ Reallocate(sbuf, sbufaddr, nrow, ncol, oldrow, oldcol)
 	 *  create the new buffer space and copy old buffer contents there
 	 *  line by line.
 	 */
-	if ((tmp = (Char *)calloc((unsigned) (nrow * ncol), sizeof(Char))) == 0)
+	if ((tmp = (Char *)calloc(length, sizeof(Char))) == 0)
 		SysError(ERROR_SREALLOC);
 	*sbufaddr = tmp;
 	minrows = (oldrow < nrow) ? oldrow : nrow;
 	mincols = (oldcol < ncol) ? oldcol : ncol;
-	if (nrow > oldrow  &&  term->misc.resizeGravity == SouthWestGravity) {
+	if (nrow > oldrow
+	 && term->misc.resizeGravity == SouthWestGravity) {
 	    /* move data down to bottom of expanded screen */
-	    move_down = Min(nrow-oldrow, MAX_PTRS*term->screen.savedlines);
-	    tmp += ncol*move_down;
+	    move_down = Min(nrow - oldrow, term->screen.savedlines);
+	    tmp += (ncol * move_down * BUF_PTRS);
 	}
-	for (i = 0; i < minrows; i++, tmp += ncol) {
-		memcpy( tmp, base[i], mincols);
+
+	for (i = k = 0; i < minrows; i++) {
+		k += BUF_HEAD;
+		for (j = BUF_HEAD; j < MAX_PTRS; j++) {
+			memcpy(tmp, base[k++], mincols);
+			tmp += ncol;
+		}
 	}
+
 	/*
 	 * update the pointers in sbuf
 	 */
-	for (i = 0, tmp = *sbufaddr; i < nrow; i++, tmp += ncol)
-	    base[i] = tmp;
+	for (i = k = 0, tmp = *sbufaddr; i < nrow; i++) {
+		for (j = 0; j < BUF_HEAD; j++)
+			base[k++] = 0;
+		for (j = BUF_HEAD; j < MAX_PTRS; j++) {
+			base[k++] = tmp;
+			tmp += ncol;
+		}
+	}
 
         /* Now free the old buffer */
 	free(oldbuf);
 
-	return move_down ? move_down/MAX_PTRS : -move_up/MAX_PTRS; /* convert to rows */
+	return move_down ? move_down : -move_up; /* convert to rows */
 }
 
 void
@@ -253,7 +282,7 @@ register int length;		/* length of string */
 		cb = SCRN_BUF_CSETS(screen, screen->cur_row) + screen->cur_col;
 	})
 
-	wrappedbit = *attrs & LINEWRAPPED;
+	wrappedbit = ScrnTstWrapped(screen, screen->cur_row);
 
 	/* write blanks if we're writing invisible text */
 	if (flags & INVISIBLE) {
@@ -274,7 +303,9 @@ register int length;		/* length of string */
 	})
 
 	if (wrappedbit)
-	    *attrs |= LINEWRAPPED;
+	    ScrnSetWrapped(screen, screen->cur_row);
+	else
+	    ScrnClrWrapped(screen, screen->cur_row);
 
 	if_OPT_XMC_GLITCH(screen,{
 		Resolve_XMC(screen);
@@ -290,8 +321,9 @@ TScreen *screen;
 ScrnBuf sb;
 int where, n, size;
 {
-	register int i;
+	register int i, j;
 	size_t len = ScrnPointers(screen, n);
+	int last = (n * MAX_PTRS);
 
 	/* save n lines at where */
 	memcpy ( (char *) screen->save_ptr,
@@ -300,16 +332,20 @@ int where, n, size;
 
 	/* clear contents of old rows */
 	if (TERM_COLOR_FLAGS) {
-		int last = (n * MAX_PTRS);
 		int flags = TERM_COLOR_FLAGS;
 		for (i = 0; i < last; i += MAX_PTRS) {
-			bzero(screen->save_ptr[i+0], size);
-			memset(screen->save_ptr[i+1], flags, size);
-			memset(screen->save_ptr[i+2], xtermColorPair(), size);
+			screen->save_ptr[i] = 0;
+			bzero( screen->save_ptr[i+ OFF_CHARS], size);
+			memset(screen->save_ptr[i+ OFF_ATTRS], flags, size);
+			memset(screen->save_ptr[i+ OFF_COLOR], xtermColorPair(), size);
 		}
 	} else {
-		for (i = MAX_PTRS * n - 1 ; i >= 0 ; i--)
-			bzero (screen->save_ptr[i], size);
+		for (i = 0; i < last; i += MAX_PTRS) {
+			for (j = 0; j < BUF_HEAD; j++)
+				screen->save_ptr[i+j] = 0;
+			for (j = BUF_HEAD; j < MAX_PTRS; j++)
+				bzero (screen->save_ptr[i+j], size);
+		}
 	}
 }
 
@@ -403,16 +439,16 @@ ScrnInsertChar (screen, n, size)
     register int n;
     int size;
 {
-	ScrnBuf sb = screen->buf;
+	ScrnBuf sb = screen->visbuf;
 	int row = screen->cur_row;
 	int col = screen->cur_col;
 	register int i, j;
 	register Char *ptr = BUF_CHARS(sb, row);
 	register Char *attrs = BUF_ATTRS(sb, row);
-	int wrappedbit = attrs[0]&LINEWRAPPED;
+	int wrappedbit = ScrnTstWrapped(screen, row);
 	int flags = CHARDRAWN | TERM_COLOR_FLAGS;
 
-	attrs[0] &= ~LINEWRAPPED; /* make sure the bit isn't moved */
+	ScrnClrWrapped(screen, row); /* make sure the bit isn't moved */
 	for (i = size - 1; i >= col + n; i--) {
 		ptr[i] = ptr[j = i - n];
 		attrs[i] = attrs[j];
@@ -430,7 +466,9 @@ ScrnInsertChar (screen, n, size)
 	})
 
 	if (wrappedbit)
-	    attrs[0] |= LINEWRAPPED;
+	    ScrnSetWrapped(screen, row);
+	else
+	    ScrnClrWrapped(screen, row);
 }
 
 void
@@ -442,13 +480,13 @@ ScrnDeleteChar (screen, n, size)
     register int size;
     register int n;
 {
-	ScrnBuf sb = screen->buf;
+	ScrnBuf sb = screen->visbuf;
 	int row = screen->cur_row;
 	int col = screen->cur_col;
 	register Char *ptr = BUF_CHARS(sb, row);
 	register Char *attrs = BUF_ATTRS(sb, row);
 	register Size_t nbytes = (size - n - col);
-	int wrappedbit = attrs[0]&LINEWRAPPED;
+	int wrappedbit = ScrnTstWrapped(screen, row);
 
 	memcpy (ptr   + col, ptr   + col + n, nbytes);
 	memcpy (attrs + col, attrs + col + n, nbytes);
@@ -462,7 +500,9 @@ ScrnDeleteChar (screen, n, size)
 	    memset(BUF_CSETS(sb, row) + size - n, curXtermChrSet(row), n);
 	})
 	if (wrappedbit)
-	    attrs[0] |= LINEWRAPPED;
+	    ScrnSetWrapped(screen, row);
+	else
+	    ScrnClrWrapped(screen, row);
 }
 
 void
@@ -697,7 +737,7 @@ ClearBufRows (screen, first, last)
 register TScreen *screen;
 register int first, last;
 {
-	ScrnBuf	buf = screen->buf;
+	ScrnBuf	buf = screen->visbuf;
 	int	len = screen->max_col + 1;
 	register int row;
 	register int flags = TERM_COLOR_FLAGS;
@@ -795,7 +835,7 @@ ScreenResize (screen, width, height, flags)
 					  rows + savelines, cols,
 					  screen->max_row + 1 + savelines,
 					  screen->max_col + 1);
-		screen->buf = &screen->allbuf[MAX_PTRS * savelines];
+		screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
 
 		screen->max_row += delta_rows;
 		screen->max_col = cols - 1;
@@ -894,62 +934,30 @@ ScreenResize (screen, width, height, flags)
 	return (0);
 }
 
-/*
- * Sets the attributes from the row, col, to row, col + length according to
- * mask and value. The bits in the attribute byte specified by the mask are
- * set to the corresponding bits in the value byte. If length would carry us
- * over the end of the line, it stops at the end of the line.
- */
 void
-ScrnSetAttributes(screen, row, col, mask, value, length)
-TScreen *screen;
-int row, col;
-unsigned mask, value;
-register int length;		/* length of string */
+ScrnClrWrapped(screen, row)
+	TScreen *screen;
+	int row;
 {
-	register Char *attrs;
-	register int avail  = screen->max_col - col + 1;
-
-	if (length > avail)
-	    length = avail;
-	if (length <= 0)
-		return;
-	attrs = SCRN_BUF_ATTRS(screen, row) + col;
-	value &= mask;	/* make sure we only change the bits allowed by mask*/
-	while(length-- > 0) {
-		*attrs &= ~mask;	/* clear the bits */
-		*attrs |= value;	/* copy in the new values */
-		attrs++;
-	}
+	long value = (long)SCRN_BUF_FLAGS(screen, row + screen->topline) & ~ LINEWRAPPED;
+	SCRN_BUF_FLAGS(screen, row + screen->topline) = (Char *)value;
 }
 
-/*
- * Gets the attributes from the row, col, to row, col + length into the
- * supplied array, which is assumed to be big enough.  If length would carry us
- * over the end of the line, it stops at the end of the line. Returns
- * the number of bytes of attributes (<= length)
- */
-int
-ScrnGetAttributes(screen, row, col, str, length)
-TScreen *screen;
-int row, col;
-Char *str;
-register int length;		/* length of string */
+void
+ScrnSetWrapped(screen, row)
+	TScreen *screen;
+	int row;
 {
-	register Char *attrs;
-	register int avail  = screen->max_col - col + 1;
-	int ret;
+	long value = (long)SCRN_BUF_FLAGS(screen, row + screen->topline) | LINEWRAPPED;
+	SCRN_BUF_FLAGS(screen, row + screen->topline) = (Char *)value;
+}
 
-	if (length > avail)
-	    length = avail;
-	if (length <= 0)
-		return 0;
-	ret = length;
-	attrs = SCRN_BUF_ATTRS(screen, row) + col;
-	while(length-- > 0) {
-		*str++ = *attrs++;
-	}
-	return ret;
+Bool
+ScrnTstWrapped(screen, row)
+	TScreen *screen;
+	int row;
+{
+	return (long)SCRN_BUF_FLAGS(screen, row + screen->topline) & LINEWRAPPED;
 }
 
 Bool

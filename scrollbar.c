@@ -344,7 +344,7 @@ ScrollBarOn (xw, init, doalloc)
     int init, doalloc;
 {
 	register TScreen *screen = &xw->screen;
-	register int i;
+	register int i, j, k;
 
 	if(screen->fullVwin.scrollbar)
 		return;
@@ -370,21 +370,26 @@ ScrollBarOn (xw, init, doalloc)
 	}
 
 	if (doalloc && screen->allbuf) {
+	    /* FIXME: this is not integrated well with Allocate */
 	    if((screen->allbuf =
-		(ScrnBuf) realloc((char *) screen->buf,
+		(ScrnBuf) realloc((char *) screen->visbuf,
 				  (unsigned) MAX_PTRS*(screen->max_row + 2 +
 						screen->savelines) *
 				  sizeof(char *)))
-	       == NULL)
-	      Error (ERROR_SBRALLOC);
-	    screen->buf = &screen->allbuf[MAX_PTRS * screen->savelines];
-	    memmove( (char *)screen->buf, (char *)screen->allbuf,
+	    		== NULL)
+	        Error (ERROR_SBRALLOC);
+	    screen->visbuf = &screen->allbuf[MAX_PTRS * screen->savelines];
+	    memmove( (char *)screen->visbuf, (char *)screen->allbuf,
 		   MAX_PTRS * (screen->max_row + 2) * sizeof (char *));
-	    for(i = MAX_PTRS * screen->savelines - 1 ; i >= 0 ; i--)
-	      if((screen->allbuf[i] =
-		  (Char *)calloc((unsigned) screen->max_col + 1, sizeof(Char))) ==
-		 NULL)
-		Error (ERROR_SBRALLOC2);
+	    for (i = k = 0; i < screen->savelines; i++) {
+		k += BUF_HEAD;
+		for (j = BUF_HEAD; j < MAX_PTRS; j++) {
+		    if((screen->allbuf[k++] =
+			(Char *)calloc((unsigned) screen->max_col + 1, sizeof(Char))) ==
+			NULL)
+			Error (ERROR_SBRALLOC2);
+		}
+	    }
 	}
 
 	ResizeScrollBar (screen);
@@ -411,7 +416,7 @@ ScrollBarOn (xw, init, doalloc)
 
 	XtMapWidget(screen->scrollWidget);
 	update_scrollbar ();
-	if (screen->buf) {
+	if (screen->visbuf) {
 	    XClearWindow (screen->display, XtWindow (term));
 	    Redraw ();
 	}
@@ -427,7 +432,7 @@ ScrollBarOff(screen)
 	screen->fullVwin.scrollbar = 0;
 	DoResizeScreen (term);
 	update_scrollbar ();
-	if (screen->buf) {
+	if (screen->visbuf) {
 	    XClearWindow (screen->display, XtWindow (term));
 	    Redraw ();
 	}

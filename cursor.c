@@ -244,6 +244,8 @@ register SavedCursor *sc;
 	memmove( sc->gsets, screen->gsets, sizeof(screen->gsets));
 }
 
+#define DECSC_FLAGS (BOLD|BLINK|INVERSE|UNDERLINE|ORIGIN|WRAPAROUND|PROTECTED)
+
 /*
  * Restore Cursor and Attributes
  */
@@ -257,8 +259,8 @@ register SavedCursor *sc;
 	memmove( screen->gsets, sc->gsets, sizeof(screen->gsets));
 	screen->curgl = sc->curgl;
 	screen->curgr = sc->curgr;
-	tw->flags &= ~(BOLD|INVERSE|UNDERLINE|ORIGIN);
-	tw->flags |= sc->flags & (BOLD|INVERSE|UNDERLINE|ORIGIN);
+	tw->flags &= ~DECSC_FLAGS;
+	tw->flags |= sc->flags & DECSC_FLAGS;
 	CursorSet (screen, (tw->flags & ORIGIN) ? sc->row - screen->top_marg
 			   : sc->row, sc->col, tw->flags);
 }

@@ -252,10 +252,12 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtNcolor14 "color14"
 #define XtNcolor15 "color15"
 #define XtNcolorBD "colorBD"
+#define XtNcolorBL "colorBL"
 #define XtNcolorUL "colorUL"
 #define XtNcolorMode "colorMode"
 #define XtNcolorULMode "colorULMode"
 #define XtNcolorBDMode "colorBDMode"
+#define XtNcolorBLMode "colorBLMode"
 #define XtNcolorAttrMode "colorAttrMode"
 #define XtNboldColors "boldColors"
 #define XtNdynamicColors "dynamicColors"
@@ -746,6 +748,9 @@ static XtResource resources[] = {
 {XtNcolorBD, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_BD]),
 	XtRString, "XtDefaultForeground"},
+{XtNcolorBL, XtCForeground, XtRPixel, sizeof(Pixel),
+	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_BL]),
+	XtRString, "XtDefaultForeground"},
 {XtNcolorUL, XtCForeground, XtRPixel, sizeof(Pixel),
 	XtOffsetOf(XtermWidgetRec, screen.Acolors[COLOR_UL]),
 	XtRString, "XtDefaultForeground"},
@@ -757,6 +762,9 @@ static XtResource resources[] = {
 	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNcolorBDMode, XtCColorMode, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.colorBDMode),
+	XtRBoolean, (XtPointer) &defaultFALSE},
+{XtNcolorBLMode, XtCColorMode, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.colorBLMode),
 	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNcolorAttrMode, XtCColorMode, XtRBoolean, sizeof(Boolean),
 	XtOffsetOf(XtermWidgetRec, screen.colorAttrMode),
@@ -911,6 +919,9 @@ setExtendedFG()
 
 		if (term->screen.colorBDMode && (term->flags & BOLD))
 			fg = COLOR_BD;
+
+		if (term->screen.colorBLMode && (term->flags & BLINK))
+			fg = COLOR_BL;
 	}
 
 	/* This implements the IBM PC-style convention of 8-colors, with one
@@ -1515,13 +1526,15 @@ static void VTparse()
 				 case DEFAULT:
 				 case 0:
 					term->flags &=
-						~(INVERSE|BOLD|UNDERLINE|INVISIBLE);
+						~(INVERSE|BOLD|BLINK|UNDERLINE|INVISIBLE);
 					if_OPT_ISO_COLORS(screen,{reset_SGR_Colors();})
 					break;
-				 case 1:	/* Bold				*/
-					/* FALLTHRU */
-				 case 5:	/* Blink, really.	*/
+				 case 1:	/* Bold			*/
 					term->flags |= BOLD;
+					if_OPT_ISO_COLORS(screen,{setExtendedFG();})
+					break;
+				 case 5:	/* Blink		*/
+					term->flags |= BLINK;
 					if_OPT_ISO_COLORS(screen,{setExtendedFG();})
 					break;
 				 case 4:	/* Underscore		*/
@@ -1539,9 +1552,11 @@ static void VTparse()
 					if_OPT_ISO_COLORS(screen,{setExtendedFG();})
 					break;
 				 case 22: /* reset 'bold' */
-				 	/* FALLTHRU */
-				 case 25: /* reset 'blink' */
 					term->flags &= ~BOLD;
+					if_OPT_ISO_COLORS(screen,{setExtendedFG();})
+					break;
+				 case 25: /* reset 'blink' */
+					term->flags &= ~BLINK;
 					if_OPT_ISO_COLORS(screen,{setExtendedFG();})
 					break;
 				 case 27:
@@ -2487,8 +2502,7 @@ dotext(screen, charset, buf, ptr)
 		if (n <= 1) {
 			if (screen->do_wrap && (term->flags & WRAPAROUND)) {
 			    /* mark that we had to wrap this line */
-			    ScrnSetAttributes(screen, screen->cur_row, 0,
-					      LINEWRAPPED, LINEWRAPPED, 1);
+			    ScrnSetWrapped(screen, screen->cur_row);
 			    xtermAutoPrint('\n');
 			    Index(screen, 1);
 			    screen->cur_col = 0;
@@ -2790,7 +2804,10 @@ dpmodes(termw, func)
 			break;
 		case 1048:
 			if (!termw->misc.titeInhibit) {
-				CursorRestore(termw, &screen->sc);
+		        	if(func == bitset)
+					CursorSave(termw, &screen->sc);
+				else
+					CursorRestore(termw, &screen->sc);
 			}
 			break;
 		}
@@ -3340,8 +3357,8 @@ SwitchBufPtrs(screen)
 {
     Size_t len = ScrnPointers(screen, screen->max_row + 1);
 
-    memcpy ( (char *)screen->save_ptr, (char *)screen->buf,      len);
-    memcpy ( (char *)screen->buf,      (char *)screen->altbuf,   len);
+    memcpy ( (char *)screen->save_ptr, (char *)screen->visbuf,   len);
+    memcpy ( (char *)screen->visbuf,   (char *)screen->altbuf,   len);
     memcpy ( (char *)screen->altbuf,   (char *)screen->save_ptr, len);
 }
 
@@ -3505,16 +3522,15 @@ static void RequestResize(termw, rows, cols, text)
 	     askedWidth,  askedHeight,
 	    &replyWidth, &replyHeight);
 
-	XSync(screen->display, FALSE);	/* synchronize */
-	if(XtAppPending(app_con))
-		xevents();
-
 	if (status == XtGeometryYes ||
 	    status == XtGeometryDone) {
 	    ScreenResize (&termw->screen,
 			  replyWidth,
 			  replyHeight,
 			  &termw->flags);
+	    XSync(screen->display, FALSE);	/* synchronize */
+	    if(XtAppPending(app_con))
+		xevents();
 	}
 }
 				
@@ -3549,9 +3565,9 @@ static void VTallocbuf ()
     screen->allbuf = Allocate (nrows, screen->max_col + 1,
      &screen->sbuf_address);
     if (screen->scrollWidget)
-      screen->buf = &screen->allbuf[MAX_PTRS * screen->savelines];
+      screen->visbuf = &screen->allbuf[MAX_PTRS * screen->savelines];
     else
-      screen->buf = screen->allbuf;
+      screen->visbuf = screen->allbuf;
     return;
 }
 
@@ -3656,6 +3672,7 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->screen.boldColors    = request->screen.boldColors;
    new->screen.colorAttrMode = request->screen.colorAttrMode;
    new->screen.colorBDMode   = request->screen.colorBDMode;
+   new->screen.colorBLMode   = request->screen.colorBLMode;
    new->screen.colorMode     = request->screen.colorMode;
    new->screen.colorULMode   = request->screen.colorULMode;
 
@@ -3679,7 +3696,7 @@ static void VTInitialize (wrequest, wnew, args, num_args)
 #endif /* OPT_ISO_COLORS */
 
 #if OPT_DEC_CHRSET
-   new->num_ptrs = 4;
+   new->num_ptrs = 5;
 #endif
 
    new->screen.underline = request->screen.underline;
@@ -3977,7 +3994,7 @@ static void VTRealize (w, valuemask, values)
 #if OPT_TEK4014
 	if (!tekWidget)			/* if not called after fork */
 #endif
-	  screen->buf = screen->allbuf = NULL;
+	  screen->visbuf = screen->allbuf = NULL;
 
 	screen->do_wrap = 0;
 	screen->scrolls = screen->incopy = 0;
@@ -4224,7 +4241,7 @@ ShowCursor()
 		    if (screen->cursorGC) {
 			currentGC = screen->cursorGC;
 		    } else {
-			if (flags & BOLD) {
+			if (flags & (BOLD|BLINK)) {
 				currentGC = NormalBoldGC(screen);
 			} else {
 				currentGC = NormalGC(screen);
@@ -4234,7 +4251,7 @@ ShowCursor()
 		    if (screen->reversecursorGC) {
 			currentGC = screen->reversecursorGC;
 		    } else {
-			if (flags & BOLD) {
+			if (flags & (BOLD|BLINK)) {
 				currentGC = ReverseBoldGC(screen);
 			} else {
 				currentGC = ReverseGC(screen);
@@ -4467,7 +4484,7 @@ VTReset(full)
 		 */
 		term->keyboard.flags &= ~(MODE_DECCKM|MODE_KAM);
 		bitcpy(&term->flags, term->initflags, WRAPAROUND|REVERSEWRAP);
-		bitclr(&term->flags, INSERT|INVERSE|BOLD|UNDERLINE|INVISIBLE);
+		bitclr(&term->flags, INSERT|INVERSE|BOLD|BLINK|UNDERLINE|INVISIBLE);
 		if_OPT_ISO_COLORS(screen,{reset_SGR_Colors();})
 		update_appcursor();
 		update_autowrap();

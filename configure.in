@@ -79,6 +79,10 @@ CF_X_ATHENA
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 
+AC_CHECK_FUNCS( \
+	XkbStdBell \
+	)
+
 AC_MSG_CHECKING(if we should use imake to help)
 CF_ARG_DISABLE(imake,
 	[  --disable-imake         disable use of imake for definitions],

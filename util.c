@@ -265,7 +265,7 @@ register int amount;
 			screen->bot_marg + screen->savelines, 0,
 			amount, screen->max_col + 1);
 	else
-		ScrnDeleteLine(screen, screen->buf,
+		ScrnDeleteLine(screen, screen->visbuf,
 			screen->bot_marg, screen->top_marg,
 			amount, screen->max_col + 1);
 	if(refreshheight > 0)
@@ -338,7 +338,7 @@ register int amount;
 		    (unsigned) Width(screen));
 	}
     }
-    ScrnInsertLine(screen, screen->buf, screen->bot_marg, screen->top_marg,
+    ScrnInsertLine(screen, screen->visbuf, screen->bot_marg, screen->top_marg,
 		   amount, screen->max_col + 1);
 }
 
@@ -398,7 +398,7 @@ register int n;
 		    (unsigned) Width(screen));
 	}
     }
-    ScrnInsertLine(screen, screen->buf, screen->bot_marg, screen->cur_row, n,
+    ScrnInsertLine(screen, screen->visbuf, screen->bot_marg, screen->cur_row, n,
 		   screen->max_col + 1);
 }
 
@@ -479,7 +479,7 @@ register int n;
 			screen->bot_marg + screen->savelines, 0,
 			n, screen->max_col + 1);
 	else
-		ScrnDeleteLine(screen, screen->buf,
+		ScrnDeleteLine(screen, screen->visbuf,
 			screen->bot_marg, screen->cur_row,
 			n, screen->max_col + 1);
 }
@@ -510,7 +510,7 @@ InsertChar (screen, n)
 		 * prevent InsertChar from shifting the end of a line over
 		 * if it is being appended to
 		 */
-		if (non_blank_line (screen->buf, screen->cur_row, 
+		if (non_blank_line (screen->visbuf, screen->cur_row, 
 				    screen->cur_col, screen->max_col + 1))
 		    horizontal_copy_area(screen, screen->cur_col,
 					 col - screen->cur_col,
@@ -753,7 +753,7 @@ int n;
 	(void) ClearInLine(screen, screen->cur_row, screen->cur_col, len);
 
 	/* with the right part cleared, we can't be wrapping */
-	BUF_ATTRS(screen->buf, screen->cur_row)[0] &= ~LINEWRAPPED;
+	ScrnClrWrapped(screen, screen->cur_row);
 }
 
 /*
@@ -1364,7 +1364,7 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 	if (screen->fnt_prop) {
 		int	adj, width;
 		GC	fillGC = gc;	/* might be cursorGC */
-		XFontStruct *fs = (flags & BOLD)
+		XFontStruct *fs = (flags & (BOLD|BLINK))
 				? screen->fnt_bold
 				: screen->fnt_norm;
 		screen->fnt_prop = False;
@@ -1405,7 +1405,7 @@ drawXtermText(screen, flags, gc, x, y, chrset, text, len)
 	y += FontAscent(screen);
 	XDrawImageString(screen->display, TextWindow(screen), gc, 
 		x, y,  (char *)text, len);
-	if ((flags & BOLD) && screen->enbolden)
+	if ((flags & (BOLD|BLINK)) && screen->enbolden)
 		XDrawString(screen->display, TextWindow(screen), gc,
 			x+1, y,  (char *)text, len);
 	if ((flags & UNDERLINE) && screen->underline) {
@@ -1436,7 +1436,7 @@ updatedXtermGC(screen, flags, fg_bg, hilite)
 
 	if ( (!hilite && (flags & INVERSE) != 0)
 	  ||  (hilite && (flags & INVERSE) == 0) ) {
-		if (flags & BOLD)
+		if (flags & (BOLD|BLINK))
 			gc = ReverseBoldGC(screen);
 		else
 			gc = ReverseGC(screen);
@@ -1445,7 +1445,7 @@ updatedXtermGC(screen, flags, fg_bg, hilite)
 		XSetBackground(screen->display, gc, fg_pix);
 
 	} else {
-		if (flags & BOLD)
+		if (flags & (BOLD|BLINK))
 			gc = NormalBoldGC(screen);
 		else
 			gc = NormalGC(screen);
@@ -1473,7 +1473,7 @@ resetXtermGC(screen, flags, hilite)
 
 	if ( (!hilite && (flags & INVERSE) != 0)
 	  ||  (hilite && (flags & INVERSE) == 0) ) {
-		if (flags & BOLD)
+		if (flags & (BOLD|BLINK))
 			gc = ReverseBoldGC(screen);
 		else
 			gc = ReverseGC(screen);
@@ -1482,7 +1482,7 @@ resetXtermGC(screen, flags, hilite)
 		XSetBackground(screen->display, gc, fg_pix);
 
 	} else {
-		if (flags & BOLD)
+		if (flags & (BOLD|BLINK))
 			gc = NormalBoldGC(screen);
 		else
 			gc = NormalGC(screen);
@@ -1510,6 +1510,8 @@ extract_fg (color, flags)
 			fg = COLOR_UL;
 		if (term->screen.colorBDMode && (flags & BOLD))
 			fg = COLOR_BD;
+		if (term->screen.colorBLMode && (flags & BLINK))
+			fg = COLOR_BL;
 	}
 	return fg;
 }
@@ -1524,10 +1526,11 @@ extract_bg (color)
 /*
  * Combine the current foreground and background into a single 8-bit number.
  * Note that we're storing the SGR foreground, since cur_foreground may be set
- * to COLOR_UL or COLOR_BD, which would make the code larger than 8 bits.
+ * to COLOR_UL, COLOR_BD or COLOR_BL, which would make the code larger than 8
+ * bits.
  *
- * FIXME: I'm using the coincidence of fg/bg values to unmask COLOR_UL/COLOR_BD,
- * which will require more work...
+ * This assumes that fg/bg are equal when we override with one of the special
+ * attribute colors.
  */
 unsigned
 makeColorPair (fg, bg)
