@@ -87,6 +87,7 @@ button.c	Handles button events in the terminal emulator.
 
 #define	Coordinate(r,c)		((r) * (term->screen.max_col+1) + (c))
 
+static ANSI reply;
 
 /* Selection/extension variables */
 
@@ -259,11 +260,9 @@ Boolean
 SendLocatorPosition(Widget w, XEvent* event)
 {
     TScreen	*screen = &((XtermWidget)w)->screen;
-    int		pty = screen->respond;
-    Char	line[20];
     int		row, col;
     Boolean	oor;
-    int		button, count = 0;
+    int		button;
     int		state;
 
     /* Make sure the event is an appropriate type */
@@ -294,24 +293,14 @@ SendLocatorPosition(Widget w, XEvent* event)
     *
     * ESCAPE '[' event ; mask ; row ; column '&' 'w'
     */
-    /* Build key sequence starting with \E[ */
-    if (screen->control_eight_bits) {
-	    line[count++] = CSI;
-    } else {
-	    line[count++] = ESC;
-	    line[count++] = '[';
-    }
+    reply.a_type   = CSI;
 
     if( oor) {
-	/* Event - 0 = locator unavailable */
-	line[count++] = '0';
-
-	/* Sequence termination */
-	line[count++] = '&';
-	line[count++] = 'w';
-
-	/* Transmit key sequence to process running under xterm */
-	v_write(pty, line, count);
+	reply.a_nparam = 1;
+	reply.a_param[0] = 0; /* Event - 0 = locator unavailable */
+	reply.a_inters = '&';
+	reply.a_final  = 'w';
+	unparseseq(&reply, screen->respond);
 
 	if( screen->locator_reset ) {
 	    MotionOff( screen, term );
@@ -332,18 +321,18 @@ SendLocatorPosition(Widget w, XEvent* event)
     *	8	M4 down
     *	9	M4 up
     */
+    reply.a_nparam = 4;
     switch(event->type)
     {
 	case ButtonPress:
-	    line[count++] = '2' + (button<<1);
+	    reply.a_param[0] = 2 + (button<<1);
 	    break;
 	case ButtonRelease:
-	    line[count++] = '3' + (button<<1);
+	    reply.a_param[0] = 3 + (button<<1);
 	    break;
 	default:
 	    return( True );
     }
-    line[count++] = ';';
     /*
     * mask:
     * bit 7   bit 6   bit 5   bit 4   bit 3   bit 2       bit 1         bit 0
@@ -356,11 +345,14 @@ SendLocatorPosition(Widget w, XEvent* event)
     state = (event->xbutton.state & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8;
     state ^= 1 << button;	/* update mask to "after" state */
     state = (state & ~(4|1)) | ((state&1)?4:0) | ((state&4)?1:0);	/* swap Button1 & Button3 */
-    sprintf( &(line[count]), "%d;%d;%d&w", state, row, col );
-    count = strlen( line );
 
-    /* Transmit key sequence to process running under xterm */
-    v_write(pty, line, count);
+    reply.a_param[1] = state;
+    reply.a_param[2] = row;
+    reply.a_param[3] = col;
+    reply.a_inters = '&';
+    reply.a_final  = 'w';
+
+    unparseseq(&reply, screen->respond);
 
     if( screen->locator_reset ) {
 	MotionOff( screen, term );
@@ -405,14 +397,10 @@ GetLocatorPosition(XtermWidget w)
     Window		root, child;
     int			rx, ry, x, y;
     unsigned int	mask;
-    Char		line[20];
-    int			pty = screen->respond;
     int			row = 0, col = 0;
     Boolean		oor = FALSE;
     Bool		ret = FALSE;
-    int			count = 0;
     int			state;
-
 
     /*
     * DECterm turns the Locator off if the position is requested while a filter rectangle
@@ -425,13 +413,8 @@ GetLocatorPosition(XtermWidget w)
 	MotionOff( screen, term );
     }
 
-    /* Build key sequence starting with \E[ */
-    if (screen->control_eight_bits) {
-	line[count++] = CSI;
-    } else {
-	line[count++] = ESC;
-	line[count++] = '[';
-    }
+    reply.a_type   = CSI;
+
     if (screen->send_mouse_pos == DEC_LOCATOR) {
 	ret = XQueryPointer( screen->display, VWindow(screen), &root,
 			&child, &rx, &ry, &x, &y, &mask );
@@ -441,15 +424,11 @@ GetLocatorPosition(XtermWidget w)
     }
     if( ret == FALSE || oor /* || (KeyModifiers != 0 && KeyModifiers != ControlMask) */ )
     {
-	/* Event - 0 = locator unavailable */
-	line[count++] = '0';
-
-	/* Sequence termination */
-	line[count++] = '&';
-	line[count++] = 'w';
-
-	/* Transmit key sequence to process running under xterm */
-	v_write(pty, line, count);
+	reply.a_nparam = 1;
+	reply.a_param[0] = 0; /* Event - 0 = locator unavailable */
+	reply.a_inters = '&';
+	reply.a_final  = 'w';
+	unparseseq(&reply, screen->respond);
 
 	if( screen->locator_reset ) {
 	    MotionOff( screen, term );
@@ -458,16 +437,16 @@ GetLocatorPosition(XtermWidget w)
 	return;
     }
 
-    /* Event - 1 = response to locator request */
-    line[count++] = '1';
-    line[count++] = ';';
-
     ButtonState( state, mask );
-    sprintf( &(line[count]), "%d;%d;%d&w", state, row, col );
-    count = strlen( line );
 
-    /* Transmit key sequence to process running under xterm */
-    v_write(pty, line, count);
+    reply.a_nparam = 4;
+    reply.a_param[0] = 1; /* Event - 1 = response to locator request */
+    reply.a_param[1] = state;
+    reply.a_param[2] = row;
+    reply.a_param[3] = col;
+    reply.a_inters = '&';
+    reply.a_final  = 'w';
+    unparseseq(&reply, screen->respond);
 
     if( screen->locator_reset ) {
 	MotionOff( screen, term );
@@ -482,14 +461,10 @@ InitLocatorFilter( XtermWidget w )
     Window		root, child;
     int			rx, ry, x, y;
     unsigned int	mask;
-    Char		line[20];
-    int			pty = screen->respond;
     int			row, col;
     Boolean		oor;
     Bool		ret;
-    int			count = 0;
     int			state;
-
 
     ret = XQueryPointer( screen->display, VWindow(screen),
 			    &root, &child, &rx, &ry, &x, &y, &mask );
@@ -500,31 +475,21 @@ InitLocatorFilter( XtermWidget w )
     {
 	/* Locator is unavailable */
 
-	if( screen->loc_filter_top != LOC_FILTER_POS ||
-	    screen->loc_filter_left != LOC_FILTER_POS ||
+	if( screen->loc_filter_top    != LOC_FILTER_POS ||
+	    screen->loc_filter_left   != LOC_FILTER_POS ||
 	    screen->loc_filter_bottom != LOC_FILTER_POS ||
-	    screen->loc_filter_right != LOC_FILTER_POS )
+	    screen->loc_filter_right  != LOC_FILTER_POS )
 	{
 	    /*
 	    * If any explicit coordinates were received,
 	    * report immediately with no coordinates.
 	    */
-	    /* Build key sequence starting with \E[ */
-	    if (screen->control_eight_bits) {
-		line[count++] = CSI;
-	    } else {
-		line[count++] = ESC;
-		line[count++] = '[';
-	    }
-	    /* Event - 0 = locator unavailable */
-	    line[count++] = '0';
-
-	    /* Sequence termination */
-	    line[count++] = '&';
-	    line[count++] = 'w';
-
-	    /* Transmit key sequence to process running under xterm */
-	    v_write(pty, line, count);
+	    reply.a_type   = CSI;
+	    reply.a_nparam = 1;
+	    reply.a_param[0] = 0; /* Event - 0 = locator unavailable */
+	    reply.a_inters = '&';
+	    reply.a_final  = 'w';
+	    unparseseq(&reply, screen->respond);
 
 	    if( screen->locator_reset ) {
 		MotionOff( screen, term );
@@ -583,24 +548,17 @@ InitLocatorFilter( XtermWidget w )
 	(row > screen->loc_filter_bottom) )
     {
 	/* Pointer is already outside the rectangle - report immediately */
-	/* Build key sequence starting with \E[ */
-	if (screen->control_eight_bits) {
-	    line[count++] = CSI;
-	} else {
-	    line[count++] = ESC;
-	    line[count++] = '[';
-	}
-	/* Event - 10 = locator outside filter */
-	line[count++] = '1';
-	line[count++] = '0';
-	line[count++] = ';';
-
 	ButtonState( state, mask );
-	sprintf( &(line[count]), "%d;%d;%d&w", state, row, col );
-	count = strlen( line );
 
-	/* Transmit key sequence to process running under xterm */
-	v_write(pty, line, count);
+	reply.a_type   = CSI;
+	reply.a_nparam = 4;
+	reply.a_param[0] = 10; /* Event - 10 = locator outside filter */
+	reply.a_param[1] = state;
+	reply.a_param[2] = row;
+	reply.a_param[3] = col;
+	reply.a_inters = '&';
+	reply.a_final  = 'w';
+	unparseseq(&reply, screen->respond);
 
 	if( screen->locator_reset ) {
 	    MotionOff( screen, term );
@@ -621,11 +579,8 @@ void
 CheckLocatorPosition( Widget w, XEvent *event )
 {
     TScreen		*screen = &((XtermWidget)w)->screen;
-    Char		line[20];
-    int			pty = screen->respond;
     int			row, col;
     Boolean		oor;
-    int			count = 0;
     int			state;
 
     LocatorCoords( row, col, event->xbutton.x, event->xbutton.y, oor );
@@ -636,42 +591,32 @@ CheckLocatorPosition( Widget w, XEvent *event )
     * had no coordinates and the pointer re-entered the window.
     */
     if (oor || (screen->loc_filter_top == LOC_FILTER_POS) ||
-	(col < screen->loc_filter_left) ||
+	(col < screen->loc_filter_left)  ||
 	(col > screen->loc_filter_right) ||
-	(row < screen->loc_filter_top) ||
+	(row < screen->loc_filter_top)   ||
 	(row > screen->loc_filter_bottom))
     {
 	/* Filter triggered - disable it */
 	screen->loc_filter = FALSE;
 	MotionOff( screen, term );
 
-	/* Build key sequence starting with \E[ */
-	if (screen->control_eight_bits) {
-	    line[count++] = CSI;
-	} else {
-	    line[count++] = ESC;
-	    line[count++] = '[';
-	}
-
+	reply.a_type   = CSI;
 	if (oor) {
-	    /* Event - 0 = locator unavailable */
-	    line[count++] = '0';
-
-	    /* Sequence termination */
-	    line[count++] = '&';
-	    line[count++] = 'w';
+	    reply.a_nparam = 1;
+	    reply.a_param[0] = 0; /* Event - 0 = locator unavailable */
 	} else {
-	    /* Event - 10 = locator outside filter */
-	    line[count++] = '1';
-	    line[count++] = '0';
-	    line[count++] = ';';
-
 	    ButtonState( state, event->xbutton.state );
-	    sprintf( &(line[count]), "%d;%d;%d&w", state, row, col );
-	    count = strlen( line );
+
+	    reply.a_nparam = 4;
+	    reply.a_param[0] = 10; /* Event - 10 = locator outside filter */
+	    reply.a_param[1] = state;
+	    reply.a_param[2] = row;
+	    reply.a_param[3] = col;
 	}
-	/* Transmit key sequence to process running under xterm */
-	v_write(pty, line, count);
+
+	reply.a_inters = '&';
+	reply.a_final  = 'w';
+	unparseseq(&reply, screen->respond);
 
 	if( screen->locator_reset ) {
 	    MotionOff( screen, term );

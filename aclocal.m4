@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.25 1999/09/27 06:30:12 dawes Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.26 1999/10/13 04:21:40 dawes Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl 
@@ -476,15 +476,15 @@ dnl Well, yes we could work around it...
 AC_DEFUN([CF_GNU_SOURCE],
 [
 AC_CACHE_CHECK(if we must define _GNU_SOURCE,cf_cv_gnu_source,[
-AC_TRY_COMPILE([],[
+AC_TRY_COMPILE([#include <sys/types.h>],[
 #ifndef _XOPEN_SOURCE
 make an error
 #endif],
 	[cf_cv_gnu_source=no],
 	[cf_save="$CFLAGS"
 	 CFLAGS="$CFLAGS -D_GNU_SOURCE"
-	 AC_TRY_COMPILE([],[
-#ifndef _XOPEN_SOURCE
+	 AC_TRY_COMPILE([#include <sys/types.h>],[
+#ifdef _XOPEN_SOURCE
 make an error
 #endif],
 	[cf_cv_gnu_source=no],
@@ -757,22 +757,31 @@ test $cf_cv_tty_group = yes && AC_DEFINE(USE_TTY_GROUP)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl Check for the declaration of fd_set.  Some platforms declare it in
-dnl <sys/types.h>, and some in <sys/select.h>, which requires <sys/types.h>
+dnl <sys/types.h>, and some in <sys/select.h>, which requires <sys/types.h>.
+dnl Finally, if we are using this for an X application, Xpoll.h may include
+dnl <sys/select.h>, so we don't want to do it twice.
 AC_DEFUN([CF_TYPE_FD_SET],
 [
-AC_MSG_CHECKING(for declaration of fd_set)
-AC_CACHE_VAL(cf_cv_type_fd_set,[
+AC_CACHE_CHECK(for declaration of fd_set,cf_cv_type_fd_set,
+	[echo "trying sys/types alone" 1>&AC_FD_CC
 AC_TRY_COMPILE([
 #include <sys/types.h>],
 	[fd_set x],
 	[cf_cv_type_fd_set=sys/types.h],
-	[AC_TRY_COMPILE([
+	[echo "trying X11/Xpoll.h" 1>&AC_FD_CC
+AC_TRY_COMPILE([
+#ifdef HAVE_X11_XPOLL_H
+#include <X11/Xpoll.h>
+#endif],
+	[fd_set x],
+	[cf_cv_type_fd_set=X11/Xpoll.h],
+	[echo "trying sys/select.h" 1>&AC_FD_CC
+AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <sys/select.h>],
 	[fd_set x],
 	[cf_cv_type_fd_set=sys/select.h],
-	[cf_cv_type_fd_set=unknown])])])
-AC_MSG_RESULT($cf_cv_type_fd_set)
+	[cf_cv_type_fd_set=unknown])])])])
 if test $cf_cv_type_fd_set = sys/select.h ; then
 	AC_DEFINE(USE_SYS_SELECT_H)
 fi
