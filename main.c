@@ -17,7 +17,7 @@ static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
 
 /***********************************************************
 
-Copyright 2002 by Thomas E. Dickey
+Copyright 2002,2003 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -89,7 +89,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.162 2002/12/27 21:05:22 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.163 2003/03/09 23:39:13 dickey Exp $ */
 
 /* main.c */
 
@@ -812,6 +812,10 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 {"-j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "off"},
+#if OPT_C1_PRINT
+{"-k8",		"*allowC1Printable", XrmoptionNoArg,	(caddr_t) "on"},
+{"+k8",		"*allowC1Printable", XrmoptionNoArg,	(caddr_t) "off"},
+#endif
 /* parse logging options anyway for compatibility */
 {"-l",		"*logging",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+l",		"*logging",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -975,6 +979,9 @@ static OptionHelp xtermOptions[] = {
 #endif
 { "-/+im",		   "use insert mode for TERMCAP" },
 { "-/+j",                  "turn on/off jump scroll" },
+#if OPT_C1_PRINT
+{ "-/+k8",                 "turn on/off C1-printable classification"},
+#endif
 #ifdef ALLOWLOGGING
 { "-/+l",                  "turn on/off logging" },
 { "-lf filename",          "logging filename" },
@@ -2375,8 +2382,15 @@ get_pty(int *pty, char *from GCC_UNUSED)
      * Use the clone device if it works, otherwise use pty_search logic.
      */
     if ((*pty = open("/dev/ptym/clone", O_RDWR)) >= 0) {
-	strcpy(ttydev, ptsname(*pty));
-	result = 0;
+	char *name = ptsname(*pty);
+	if (name != 0) {
+	    strcpy(ttydev, name);
+	    result = 0;
+	} else {		/* permissions, or other unexpected problem */
+	    close(*pty);
+	    *pty = -1;
+	    result = pty_search(pty);
+	}
     } else {
 	result = pty_search(pty);
     }

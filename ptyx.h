@@ -2,10 +2,10 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.100 2003/02/25 23:36:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.101 2003/03/09 23:39:14 dickey Exp $ */
 
 /*
- * Copyright 1999,2000,2001,2002 by Thomas E. Dickey
+ * Copyright 1999-2002,2003 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -408,6 +408,10 @@ typedef struct {
 
 #ifndef OPT_BOX_CHARS
 #define OPT_BOX_CHARS	1 /* true if xterm can simulate box-characters */
+#endif
+
+#ifndef OPT_C1_PRINT
+#define OPT_C1_PRINT	1 /* true if xterm allows C1 controls to be printable */
 #endif
 
 #ifndef OPT_CLIP_BOLD
@@ -1076,6 +1080,9 @@ typedef struct {
 	int		utf_count;	/* state of utf_char */
 	IChar		utf_char;	/* in-progress character */
 #endif
+#if OPT_C1_PRINT
+	Boolean		c1_printable;	/* true if we treat C1 as print	*/
+#endif
 	int		border;		/* inner border			*/
 	Cursor		arrow;		/* arrow cursor			*/
 	unsigned long	event_mask;
@@ -1284,7 +1291,7 @@ typedef struct {
 	Boolean		trim_selection; /* controls trimming of selection */
 	Boolean		i18nSelections;
 	Boolean		brokenSelections;
-	char		*selection_data; /* the current selection */
+	Char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
 	int		selection_length; /* number of significant bytes */
 	Time		selection_time;	/* latest event timestamp */

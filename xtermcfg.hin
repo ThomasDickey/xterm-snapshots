@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.42 2002/12/08 22:31:50 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.43 2003/03/09 23:39:15 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2001,2002 by Thomas E. Dickey
+Copyright 1997-2002,2003 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -66,13 +66,14 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #undef HAVE_X11_SUNKEYSYM_H	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
 #undef HAVE_X11_XPOLL_H		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
-#undef HAVE_XKBSTDBELL		/* AC_CHECK_FUNCS(XkbStdBell) */
+#undef HAVE_XKBBELL		/* AC_CHECK_FUNCS(XkbBell) */
 #undef NO_ACTIVE_ICON		/* CF_ARG_DISABLE(active-icon) */
 #undef OPT_256_COLORS		/* CF_ARG_ENABLE(256-color) */
 #undef OPT_88_COLORS		/* CF_ARG_ENABLE(88-color) */
 #undef OPT_AIX_COLORS		/* CF_ARG_DISABLE(16-color) */
 #undef OPT_BLINK_CURS		/* CF_ARG_DISABLE(blink-cursor) */
 #undef OPT_BOX_CHARS		/* CF_ARG_DISABLE(boxchars) */
+#undef OPT_C1_PRINT		/* CF_ARG_DISABLE(c1-print) */
 #undef OPT_COLOR_CLASS		/* CF_ARG_DISABLE(color-class) */
 #undef OPT_DEC_CHRSET		/* CF_ARG_DISABLE(doublechars) */
 #undef OPT_DEC_LOCATOR		/* CF_ARG_ENABLE(dec-locator) */
@@ -140,10 +141,6 @@ extern char *my_strerror(int n);
 
 #ifndef HAVE_X11_XPOLL_H
 #define NO_XPOLL_H	/* X11R6.1 & up use Xpoll.h for select() definitions */
-#endif
-
-#ifndef HAVE_XKBSTDBELL
-#define NO_XKBSTDBELL	/* IRIX 6.2 incorrectly defines XKB in imake */
 #endif
 
 #endif /* included_xtermcfg_h */

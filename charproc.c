@@ -2,7 +2,7 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.139 2003/02/25 23:36:55 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.140 2003/03/09 23:39:12 dickey Exp $ */
 
 /*
 
@@ -488,6 +488,10 @@ static XtResource resources[] =
     Ires(XtNcursorOffTime, XtCCursorOffTime, screen.cursor_off, 300),
 #endif
 
+#if OPT_C1_PRINT
+    Bres(XtNallowC1Printable, XtCAllowC1Printable, screen.c1_printable, FALSE),
+#endif
+
 #if OPT_DEC_CHRSET
     Bres(XtNfontDoublesize, XtCFontDoublesize, screen.font_doublesize, TRUE),
     Ires(XtNcacheDoublesize, XtCCacheDoublesize, screen.cache_doublesize, NUM_CHRSET),
@@ -506,13 +510,14 @@ static XtResource resources[] =
 
 #if OPT_ISO_COLORS
     Bres(XtNboldColors, XtCColorMode, screen.boldColors, TRUE),
-    Ires(XtNveryBoldColors, XtCColorMode, screen.veryBoldColors, 0),
-    Bres(XtNcolorAttrMode, XtCColorMode, screen.colorAttrMode, FALSE),
-    Bres(XtNcolorBDMode, XtCColorMode, screen.colorBDMode, FALSE),
-    Bres(XtNcolorBLMode, XtCColorMode, screen.colorBLMode, FALSE),
+    Ires(XtNveryBoldColors, XtCVeryBoldColors, screen.veryBoldColors, 0),
     Bres(XtNcolorMode, XtCColorMode, screen.colorMode, DFT_COLORMODE),
-    Bres(XtNcolorRVMode, XtCColorMode, screen.colorRVMode, FALSE),
-    Bres(XtNcolorULMode, XtCColorMode, screen.colorULMode, FALSE),
+
+    Bres(XtNcolorAttrMode, XtCColorAttrMode, screen.colorAttrMode, FALSE),
+    Bres(XtNcolorBDMode, XtCColorAttrMode, screen.colorBDMode, FALSE),
+    Bres(XtNcolorBLMode, XtCColorAttrMode, screen.colorBLMode, FALSE),
+    Bres(XtNcolorRVMode, XtCColorAttrMode, screen.colorRVMode, FALSE),
+    Bres(XtNcolorULMode, XtCColorAttrMode, screen.colorULMode, FALSE),
 
     COLOR_RES("0", screen.Acolors[COLOR_0], DFT_COLOR("black")),
     COLOR_RES("1", screen.Acolors[COLOR_1], DFT_COLOR("red3")),
@@ -998,6 +1003,20 @@ VTparse(void)
 	} else
 #endif
 	    nextstate = parsestate[E2A(c)];
+
+#if OPT_C1_PRINT
+	/*
+	 * This is not completely foolproof, but will allow an application
+	 * with values in the C1 range to use them as printable characters,
+	 * provided that they are not intermixed with an escape sequence.
+	 */
+	if (screen->c1_printable
+	    && (c >= 128 && c < 160)) {
+	    nextstate = parsestate[E2A(160)];
+	    if (nextstate == CASE_ESC_SP_STATE)
+		nextstate = CASE_ESC_IGNORE;
+	}
+#endif
 
 #if OPT_WIDE_CHARS
 	/* if this character is a different width than
@@ -3052,8 +3071,13 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	    zIconBeep_flagged = True;
 	    Changename(icon_name);
 	}
-	if (zIconBeep > 0)
+	if (zIconBeep > 0) {
+#if defined(HAVE_XKBBELL)
+	    XkbBell(XtDisplay(toplevel), VShellWindow, zIconBeep, XkbBI_Info);
+#else
 	    XBell(XtDisplay(toplevel), zIconBeep);
+#endif
+	}
     }
     mapstate = -1;
 #endif /* OPT_ZICONBEEP */
@@ -3235,7 +3259,10 @@ dpmodes(XtermWidget termw,
 	    update_autowrap();
 	    break;
 	case 8:		/* DECARM                       */
-	    /* ignore autorepeat */
+	    /* ignore autorepeat
+	     * XAutoRepeatOn() and XAutoRepeatOff() can do this, but only
+	     * for the whole display - not limited to a given window.
+	     */
 	    break;
 	case SET_X10_MOUSE:	/* MIT bogus sequence           */
 	    MotionOff(screen, termw);
@@ -3721,17 +3748,19 @@ report_win_label(TScreen * screen,
 }
 
 /*
- * Window operations (from CDE dtterm description, as well as extensions)
+ * Window operations (from CDE dtterm description, as well as extensions).
+ * See also "allowWindowOps" resource.
  */
 static void
 window_ops(XtermWidget termw)
 {
-    register TScreen *screen = &termw->screen;
+    TScreen *screen = &termw->screen;
     XWindowChanges values;
     XWindowAttributes win_attrs;
     XTextProperty text;
-    unsigned int value_mask;
-    unsigned root_width, root_height;
+    unsigned value_mask;
+    unsigned root_width;
+    unsigned root_height;
 
     switch (param[0]) {
     case 1:			/* Restore (de-iconify) window */
@@ -3862,18 +3891,12 @@ window_ops(XtermWidget termw)
 
     case 20:			/* Report the icon's label */
 	report_win_label(screen, 'L', &text,
-			 XGetWMIconName(
-					   screen->display,
-					   VShellWindow,
-					   &text));
+			 XGetWMIconName(screen->display, VShellWindow, &text));
 	break;
 
     case 21:			/* Report the window's title */
 	report_win_label(screen, 'l', &text,
-			 XGetWMName(
-				       screen->display,
-				       VShellWindow,
-				       &text));
+			 XGetWMName(screen->display, VShellWindow, &text));
 	break;
 
     default:			/* DECSLPP (24, 25, 36, 48, 72, 144) */
@@ -4656,6 +4679,10 @@ VTInitialize(Widget wrequest,
     wnew->screen.menu_font_names[fontMenu_fontsel] = NULL;
     wnew->screen.menu_font_number = fontMenu_fontdefault;
 
+#if OPT_C1_PRINT
+    init_Bres(screen.c1_printable);
+#endif
+
 #if OPT_DEC_CHRSET
     init_Bres(screen.font_doublesize);
     init_Ires(screen.cache_doublesize);
@@ -5127,8 +5154,35 @@ VTRealize(Widget w,
 }
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+
+#if defined(XtSpecificationRelease) && XtSpecificationRelease >= 6 && !defined(sun)
+#define USE_XIM_INSTANTIATE_CB
+
 static void
-VTInitI18N(void)
+xim_instantiate_cb(Display * display,
+		   XPointer client_data GCC_UNUSED,
+		   XPointer call_data GCC_UNUSED)
+{
+    if (display != XtDisplay(term))
+	return;
+
+    VTInitI18N();
+}
+
+static void
+xim_destroy_cb(XIM im GCC_UNUSED,
+	       XPointer client_data GCC_UNUSED,
+	       XPointer call_data GCC_UNUSED)
+{
+    term->screen.xic = NULL;
+
+    XRegisterIMInstantiateCallback(XtDisplay(term), NULL, NULL, NULL,
+				   xim_instantiate_cb, NULL);
+}
+#endif /* X11R6+ */
+
+static void
+xim_real_init(void)
 {
     unsigned i, j;
     char *p, *s, *t, *ns, *end, buf[32];
@@ -5325,10 +5379,32 @@ VTInitI18N(void)
 	fprintf(stderr, "Failed to create input context\n");
 	XCloseIM(xim);
     }
+#if defined(USE_XIM_INSTANTIATE_CB)
+    else {
+	XIMCallback destroy_cb;
+
+	destroy_cb.callback = xim_destroy_cb;
+	destroy_cb.client_data = NULL;
+	if (XSetIMValues(xim, XNDestroyCallback, &destroy_cb, NULL))
+	    fprintf(stderr, "Could not set destroy callback to IM\n");
+    }
+#endif
 
     return;
 }
+
+static void
+VTInitI18N(void)
+{
+    xim_real_init();
+
+#if defined(USE_XIM_INSTANTIATE_CB)
+    if (term->screen.xic == NULL)
+	XRegisterIMInstantiateCallback(XtDisplay(term), NULL, NULL, NULL,
+				       xim_instantiate_cb, NULL);
 #endif
+}
+#endif /* OPT_I18N_SUPPORT && OPT_INPUT_METHOD */
 
 static Boolean
 VTSetValues(Widget cur,
