@@ -50,11 +50,8 @@ authorization.
 #define curChrSet SCRN_BUF_CSETS(screen, screen->cur_row)[0]
 
 #if OPT_DEC_CHRSET
-static void repaint_line PROTO((unsigned set));
-
 static void
-repaint_line(newChrSet)
-	unsigned newChrSet;
+repaint_line(unsigned newChrSet)
 {
 	register TScreen *screen = &term->screen;
 	int curcol = screen->cur_col;
@@ -86,8 +83,7 @@ repaint_line(newChrSet)
  * we'll be using it for the top (true) or bottom (false) of the line.
  */
 void
-xterm_DECDHL(top)
-	Bool top;
+xterm_DECDHL(Bool top)
 {
 #if OPT_DEC_CHRSET
 	repaint_line(top ? CSET_DHL_TOP : CSET_DHL_BOT);
@@ -98,7 +94,7 @@ xterm_DECDHL(top)
  * Set the line to single-width characters (the normal state).
  */
 void
-xterm_DECSWL()
+xterm_DECSWL(void)
 {
 #if OPT_DEC_CHRSET
 	repaint_line(CSET_SWL);
@@ -109,7 +105,7 @@ xterm_DECSWL()
  * Set the line to double-width characters
  */
 void
-xterm_DECDWL()
+xterm_DECDWL(void)
 {
 #if OPT_DEC_CHRSET
 	repaint_line(CSET_DWL);

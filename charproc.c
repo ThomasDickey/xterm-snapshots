@@ -115,45 +115,45 @@ extern XtermWidget term;
 extern Widget toplevel;
 extern char *ProgramName;
 
-static int LoadNewFont PROTO((TScreen *screen, char *nfontname, char *bfontname, Bool doresize, int fontnum));
-static int in_put PROTO((void));
-static int set_character_class PROTO((char *s));
+static int LoadNewFont (TScreen *screen, char *nfontname, char *bfontname, Bool doresize, int fontnum);
+static int in_put (void);
+static int set_character_class (char *s);
 static void DoSetSelectedFont PROTO_XT_SEL_CB_ARGS;
-static void FromAlternate PROTO((TScreen *screen));
-static void RequestResize PROTO((XtermWidget termw, int rows, int cols, int text));
-static void SwitchBufs PROTO((TScreen *screen));
-static void ToAlternate PROTO((TScreen *screen));
-static void VTGraphicsOrNoExpose PROTO((XEvent *event));
+static void FromAlternate (TScreen *screen);
+static void RequestResize (XtermWidget termw, int rows, int cols, int text);
+static void SwitchBufs (TScreen *screen);
+static void ToAlternate (TScreen *screen);
+static void VTGraphicsOrNoExpose (XEvent *event);
 static void VTNonMaskableEvent PROTO_XT_EV_HANDLER_ARGS;
-static void VTallocbuf PROTO((void));
-static void VTparse PROTO((void));
-static void WriteText PROTO((TScreen *screen, Char *str, int len));
-static void ansi_modes PROTO((XtermWidget termw, void (*func)(unsigned *p, unsigned mask)));
-static void bitclr PROTO((unsigned *p, unsigned mask));
-static void bitcpy PROTO((unsigned *p, unsigned q, unsigned mask));
-static void bitset PROTO((unsigned *p, unsigned mask));
-static void dpmodes PROTO((XtermWidget termw, void (*func)(unsigned *p, unsigned mask)));
-static void report_win_label PROTO((TScreen *screen, int code, XTextProperty *text, Status ok));
-static void restoremodes PROTO((XtermWidget termw));
-static void savemodes PROTO((XtermWidget termw));
-static void set_vt_box PROTO((TScreen *screen));
-static void unparseputn PROTO((unsigned int n, int fd));
-static void update_font_info PROTO((TScreen *screen, Bool doresize));
-static void window_ops PROTO((XtermWidget termw));
+static void VTallocbuf (void);
+static void VTparse (void);
+static void WriteText (TScreen *screen, Char *str, int len);
+static void ansi_modes (XtermWidget termw, void (*func)(unsigned *p, unsigned mask));
+static void bitclr (unsigned *p, unsigned mask);
+static void bitcpy (unsigned *p, unsigned q, unsigned mask);
+static void bitset (unsigned *p, unsigned mask);
+static void dpmodes (XtermWidget termw, void (*func)(unsigned *p, unsigned mask));
+static void report_win_label (TScreen *screen, int code, XTextProperty *text, Status ok);
+static void restoremodes (XtermWidget termw);
+static void savemodes (XtermWidget termw);
+static void set_vt_box (TScreen *screen);
+static void unparseputn (unsigned int n, int fd);
+static void update_font_info (TScreen *screen, Bool doresize);
+static void window_ops (XtermWidget termw);
 
 #if OPT_BLINK_CURS
-static void BlinkCursor PROTO(( XtPointer closure, XtIntervalId* id));
-static void StartBlinking PROTO((TScreen *screen));
-static void StopBlinking PROTO((TScreen *screen));
+static void BlinkCursor ( XtPointer closure, XtIntervalId* id);
+static void StartBlinking (TScreen *screen);
+static void StopBlinking (TScreen *screen);
 #else
 #define StartBlinking(screen) /* nothing */
 #define StopBlinking(screen) /* nothing */
 #endif
 
 #if OPT_ISO_COLORS
-static void setExtendedFG PROTO((void));
-static void reset_SGR_Colors PROTO((void));
-static void reset_SGR_Foreground PROTO((void));
+static void setExtendedFG (void);
+static void reset_SGR_Colors (void);
+static void reset_SGR_Foreground (void);
 #endif
 
 #define	DEFAULT		-1
@@ -221,6 +221,7 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtNpointerColorBackground	"pointerColorBackground"
 #define XtNpointerShape		"pointerShape"
 #define XtNprintAttributes	"printAttributes"
+#define XtNprinterAutoClose	"printerAutoClose"
 #define XtNprinterCommand	"printerCommand"
 #define XtNprinterControlMode	"printerControlMode"
 #define XtNprinterExtent	"printerExtent"
@@ -291,6 +292,7 @@ static void reset_SGR_Foreground PROTO((void));
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
 #define XtCPrintAttributes	"PrintAttributes"
+#define XtCPrinterAutoClose	"PrinterAutoClose"
 #define XtCPrinterCommand	"PrinterCommand"
 #define XtCPrinterControlMode	"PrinterControlMode"
 #define XtCPrinterExtent	"PrinterExtent"
@@ -601,6 +603,9 @@ static XtResource resources[] = {
 	XtOffsetOf(XtermWidgetRec, screen.print_attributes),
 	XtRInt, (XtPointer) &defaultONE},
 #endif
+{XtNprinterAutoClose,XtCPrinterAutoClose, XtRBoolean, sizeof(Boolean),
+	XtOffsetOf(XtermWidgetRec, screen.printer_autoclose),
+	XtRBoolean, (XtPointer) &defaultFALSE},
 {XtNprinterControlMode, XtCPrinterControlMode, XtRInt, sizeof(int),
 	XtOffsetOf(XtermWidgetRec, screen.printer_controlmode),
         XtRInt, (XtPointer) &defaultZERO},
@@ -816,16 +821,16 @@ static XtResource resources[] = {
 #endif /* NO_ACTIVE_ICON */
 };
 
-static void VTClassInit PROTO((void));
-static void VTInitialize PROTO((Widget wrequest, Widget wnew, ArgList args, Cardinal *num_args));
-static void VTRealize PROTO((Widget w, XtValueMask *valuemask, XSetWindowAttributes *values));
-static void VTExpose PROTO((Widget w, XEvent *event, Region region));
-static void VTResize PROTO((Widget w));
-static void VTDestroy PROTO((Widget w));
-static Boolean VTSetValues PROTO((Widget cur, Widget request, Widget new, ArgList args, Cardinal *num_args));
+static void VTClassInit (void);
+static void VTInitialize (Widget wrequest, Widget wnew, ArgList args, Cardinal *num_args);
+static void VTRealize (Widget w, XtValueMask *valuemask, XSetWindowAttributes *values);
+static void VTExpose (Widget w, XEvent *event, Region region);
+static void VTResize (Widget w);
+static void VTDestroy (Widget w);
+static Boolean VTSetValues (Widget cur, Widget request, Widget new, ArgList args, Cardinal *num_args);
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
-static void VTInitI18N PROTO((void));
+static void VTInitI18N (void);
 #endif
 
 static WidgetClassRec xtermClassRec = {
@@ -2672,7 +2677,7 @@ static void HandleMapUnmap(w, closure, event, cont )
 static void
 ansi_modes(termw, func)
     XtermWidget	termw;
-    void (*func) PROTO((unsigned *p, unsigned mask));
+    void (*func) (unsigned *p, unsigned mask);
 {
 	register int	i;
 
@@ -2704,7 +2709,7 @@ ansi_modes(termw, func)
 static void
 dpmodes(termw, func)
     XtermWidget	termw;
-    void (*func) PROTO((unsigned *p, unsigned mask));
+    void (*func) (unsigned *p, unsigned mask);
 {
 	register TScreen	*screen	= &termw->screen;
 	register int	i, j;
@@ -3723,6 +3728,7 @@ static void VTInitialize (wrequest, wnew, args, num_args)
    new->screen.pointer_cursor = request->screen.pointer_cursor;
 
    new->screen.printer_command = request->screen.printer_command;
+   new->screen.printer_autoclose = request->screen.printer_autoclose;
    new->screen.printer_extent = request->screen.printer_extent;
    new->screen.printer_formfeed = request->screen.printer_formfeed;
    new->screen.printer_controlmode = request->screen.printer_controlmode;
@@ -4108,9 +4114,10 @@ static void VTRealize (w, valuemask, values)
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 static void VTInitI18N()
 {
-    int		i;
+    unsigned	i;
     char       *p,
 	       *s,
+	       *t,
 	       *ns,
 	       *end,
 	  	buf[32];
@@ -4127,24 +4134,31 @@ static void VTInitI18N()
 	if ((p = XSetLocaleModifiers("@im=none")) != NULL && *p)
 	    xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL);
     } else {
-	for(ns=s=term->misc.input_method; ns && *s;) {
+	s = term->misc.input_method;
+	i = 5 + strlen(s);
+	t = MyStackAlloc(i, buf);
+	if (t == NULL)
+	    SysError(ERROR_VINIT);
+
+	for(ns = s; ns && *s;) {
 	    while (*s && isspace(*s)) s++;
 	    if (!*s) break;
 	    if ((ns = end = strchr(s, ',')) == 0)
 		end = s + strlen(s);
-	    while (isspace(*end)) end--;
+	    while ((end != s) && isspace(end[-1])) end--;
 
-	    strcpy(buf, "@im=");
-	    if (end - (s + (sizeof(buf) - 5)) > 0)
-		end = s + (sizeof(buf) - 5);
-	    strncat(buf, s, end - s);
+	    if (end != s) {
+		strcpy(t, "@im=");
+		strncat(t, s, end - s);
 
-	    if ((p = XSetLocaleModifiers(buf)) != NULL && *p
-		&& (xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL)) != NULL)
-		break;
+		if ((p = XSetLocaleModifiers(t)) != 0 && *p
+		    && (xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL)) != 0)
+		    break;
 
+	    }
 	    s = ns + 1;
 	}
+	MyStackFree(t, buf);
     }
 
     if (xim == NULL && (p = XSetLocaleModifiers("@im=none")) != NULL && *p)
@@ -4170,20 +4184,23 @@ static void VTInitI18N()
 	    ns++;
 	else
 	    end = s + strlen(s);
-	while (isspace(*end)) end--;
+	while ((end != s) && isspace(end[-1])) end--;
 
-	if (!strncmp(s, "OverTheSpot", end - s)) {
-	    input_style = (XIMPreeditPosition | XIMStatusArea);
-	} else if (!strncmp(s, "OffTheSpot", end - s)) {
-	    input_style = (XIMPreeditArea | XIMStatusArea);
-	} else if (!strncmp(s, "Root", end - s)) {
-	    input_style = (XIMPreeditNothing | XIMStatusNothing);
-	}
-	for (i = 0; (unsigned short)i < xim_styles->count_styles; i++)
-	    if (input_style == xim_styles->supported_styles[i]) {
-		found = True;
-		break;
+	if (end != s) {	/* just in case we have a spurious comma */
+	    if (!strncmp(s, "OverTheSpot", end - s)) {
+		input_style = (XIMPreeditPosition | XIMStatusArea);
+	    } else if (!strncmp(s, "OffTheSpot", end - s)) {
+		input_style = (XIMPreeditArea | XIMStatusArea);
+	    } else if (!strncmp(s, "Root", end - s)) {
+		input_style = (XIMPreeditNothing | XIMStatusNothing);
 	    }
+	    for (i = 0; (unsigned short)i < xim_styles->count_styles; i++) {
+		if (input_style == xim_styles->supported_styles[i]) {
+		    found = True;
+		    break;
+		}
+	    }
+	}
 
 	s = ns;
     }
@@ -4718,6 +4735,9 @@ static void HandleKeymapChange(w, event, params, param_count)
     };
     char mapName[1000];
     char mapClass[1000];
+    char* pmapName;
+    char* pmapClass;
+    size_t len;
 
     if (*param_count != 1) return;
 
@@ -4727,13 +4747,25 @@ static void HandleKeymapChange(w, event, params, param_count)
 	XtOverrideTranslations(w, original);
 	return;
     }
-    (void) sprintf( mapName, "%.*sKeymap", (int)sizeof(mapName) - 10, params[0] );
-    (void) strcpy( mapClass, mapName );
-    if (islower(mapClass[0])) mapClass[0] = toupper(mapClass[0]);
-    XtGetSubresources( w, (XtPointer)&keymap, mapName, mapClass,
+
+    len = strlen (params[0]) + 7;
+
+    pmapName  = MyStackAlloc(len, mapName);
+    pmapClass = MyStackAlloc(len, mapClass);
+    if (pmapName == NULL
+     || pmapClass == NULL)
+	SysError(ERROR_KMMALLOC1);
+
+    (void) sprintf( pmapName, "%sKeymap", params[0] );
+    (void) strcpy( pmapClass, pmapName );
+    if (islower(pmapClass[0])) pmapClass[0] = toupper(pmapClass[0]);
+    XtGetSubresources( w, (XtPointer)&keymap, pmapName, pmapClass,
 		       key_resources, (Cardinal)1, NULL, (Cardinal)0 );
     if (keymap != NULL)
 	XtOverrideTranslations(w, keymap);
+
+    MyStackFree(pmapName,  mapName);
+    MyStackFree(pmapClass, mapClass);
 }
 
 

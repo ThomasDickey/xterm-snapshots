@@ -49,13 +49,11 @@ static char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./01234
 static char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
 static char *cur = "HDACB  FE";
 
-static int decfuncvalue PROTO((KeySym keycode));
-static int sunfuncvalue PROTO((KeySym keycode));
-static void AdjustAfterInput PROTO((TScreen *screen));
+static int decfuncvalue (KeySym keycode);
+static int sunfuncvalue (KeySym keycode);
 
 static void
-AdjustAfterInput (screen)
-register TScreen *screen;
+AdjustAfterInput (register TScreen *screen)
 {
 	if(screen->scrollkey && screen->topline != 0)
 		WindowScroll(screen, 0);
@@ -76,11 +74,11 @@ register TScreen *screen;
 }
 
 void
-Input (keyboard, screen, event, eightbit)
-    register TKeyboard	*keyboard;
-    register TScreen	*screen;
-    register XKeyEvent *event;
-    Bool eightbit;
+Input (
+	register TKeyboard *keyboard,
+	register TScreen *screen,
+	register XKeyEvent *event,
+	Bool eightbit)
 {
 
 #define STRBUFSIZE 500
@@ -280,10 +278,7 @@ Input (keyboard, screen, event, eightbit)
 }
 
 void
-StringInput (screen, string, nbytes)
-    register TScreen	*screen;
-    register char *string;
-    size_t nbytes;
+StringInput ( register TScreen *screen, register char *string, size_t nbytes)
 {
 	int	pty	= screen->respond;
 
@@ -301,8 +296,8 @@ StringInput (screen, string, nbytes)
 }
 
 /* These definitions are DEC-style (e.g., vt320) */
-static int decfuncvalue (keycode)
-	KeySym  keycode;
+static int
+decfuncvalue (KeySym keycode)
 {
 	switch (keycode) {
 		case XK_F1:	return(11);
@@ -346,8 +341,8 @@ static int decfuncvalue (keycode)
 }
 
 
-static int sunfuncvalue (keycode)
-	KeySym  keycode;
+static int
+sunfuncvalue (KeySym  keycode)
 {
   	switch (keycode) {
 		case XK_F1:	return(224);

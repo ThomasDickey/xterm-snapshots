@@ -86,7 +86,7 @@ extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
 extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
 
-extern void DoSecureKeyboard PROTO((Time tp));
+extern void DoSecureKeyboard (Time tp);
 
 /*
  * The following definitions MUST match the order of entries given in 

@@ -88,19 +88,19 @@ extern Widget toplevel;		/* used in 'ChangeGroup()' */
 		   (event.xcrossing.window == XtWindow(XtParent(term))))
 #endif
 
-static Boolean AllocateColor PROTO((XtermWidget pTerm, ScrnColors *pNew, int ndx, char *name));
-static Boolean ChangeColorsRequest PROTO((XtermWidget pTerm, int start, char *names));
-static Boolean GetOldColors PROTO(( XtermWidget pTerm));
-static Boolean UpdateOldColors PROTO((XtermWidget pTerm, ScrnColors *pNew));
-static int hexvalue PROTO((int c));
-static void ChangeGroup PROTO((String attribute, XtArgVal value));
-static void DoSpecialEnterNotify PROTO((XEnterWindowEvent *ev));
-static void DoSpecialLeaveNotify PROTO((XEnterWindowEvent *ev));
-static void selectwindow PROTO((TScreen *screen, int flag));
-static void unselectwindow PROTO((TScreen *screen, int flag));
+static Boolean AllocateColor (XtermWidget pTerm, ScrnColors *pNew, int ndx, char *name);
+static Boolean ChangeColorsRequest (XtermWidget pTerm, int start, char *names);
+static Boolean GetOldColors ( XtermWidget pTerm);
+static Boolean UpdateOldColors (XtermWidget pTerm, ScrnColors *pNew);
+static int hexvalue (int c);
+static void ChangeGroup (String attribute, XtArgVal value);
+static void DoSpecialEnterNotify (XEnterWindowEvent *ev);
+static void DoSpecialLeaveNotify (XEnterWindowEvent *ev);
+static void selectwindow (TScreen *screen, int flag);
+static void unselectwindow (TScreen *screen, int flag);
 
 #if OPT_TEK4014
-static void withdraw_window PROTO((Display *dpy, Window w, int scr));
+static void withdraw_window (Display *dpy, Window w, int scr);
 #endif
 
 void
@@ -547,7 +547,7 @@ creat_as(uid, gid, pathname, mode)
     int pid;
 #ifndef HAVE_WAITPID
     int waited;
-    SIGNAL_T (*chldfunc) PROTO((int));
+    SIGNAL_T (*chldfunc) (int);
 
     chldfunc = signal(SIGCHLD, SIG_DFL);
 #endif
@@ -594,10 +594,7 @@ creat_as(uid, gid, pathname, mode)
  */
 
 #ifdef ALLOWLOGFILEEXEC
-static SIGNAL_T logpipe PROTO((int sig));
-
-static SIGNAL_T logpipe (sig)
-	int sig GCC_UNUSED;
+static SIGNAL_T logpipe (int sig GCC_UNUSED)
 {
 	register TScreen *screen = &term->screen;
 
@@ -1013,24 +1010,23 @@ ChangeGroup(attribute, value)
      String attribute;
      XtArgVal value;
 {
-    if (value != 0) {
 	Arg args[1];
-#if OPT_SAME_NAME
-	char *buf;
+	char *name = (value != 0) ? (char *)value : "";
 
+#if OPT_SAME_NAME
 	/* If the attribute isn't going to change, then don't bother... */
 
 	if( sameName ) {
+	    char *buf;
 	    XtSetArg( args[0], attribute, &buf );
 	    XtGetValues( toplevel, args, 1 );
-	    if (strcmp((char *)value, buf) == 0)
+	    if (strcmp(name, buf) == 0)
 		return;
 	}
 #endif /* OPT_SAME_NAME */
 
-	XtSetArg( args[0], attribute, value );
+	XtSetArg( args[0], attribute, name );
 	XtSetValues( toplevel, args, 1 );
-    }
 }
 
 void
@@ -1419,8 +1415,7 @@ static void withdraw_window (dpy, w, scr)
 #endif
 
 
-void set_vt_visibility (on)
-    Boolean on;
+void set_vt_visibility (Boolean on)
 {
     register TScreen *screen = &term->screen;
 
@@ -1452,8 +1447,7 @@ void set_vt_visibility (on)
 #if OPT_TEK4014
 extern Atom wm_delete_window;	/* for ICCCM delete window */
 
-void set_tek_visibility (on)
-    Boolean on;
+void set_tek_visibility (Boolean on)
 {
     register TScreen *screen = &term->screen;
     if (on) {
@@ -1485,7 +1479,7 @@ void set_tek_visibility (on)
     return;
 }
 
-void end_tek_mode ()
+void end_tek_mode (void)
 {
     register TScreen *screen = &term->screen;
 
@@ -1501,7 +1495,7 @@ void end_tek_mode ()
     return;
 }
 
-void end_vt_mode ()
+void end_vt_mode (void)
 {
     register TScreen *screen = &term->screen;
 
@@ -1518,8 +1512,7 @@ void end_vt_mode ()
     return;
 }
 
-void switch_modes (tovt)
-    Bool tovt;				/* if true, then become vt mode */
+void switch_modes (Bool tovt)		/* if true, then become vt mode */
 {
     if (tovt) {
 	if (TekRefresh) dorefresh();
@@ -1529,7 +1522,7 @@ void switch_modes (tovt)
     }
 }
 
-void hide_vt_window ()
+void hide_vt_window (void)
 {
     register TScreen *screen = &term->screen;
 
@@ -1537,7 +1530,7 @@ void hide_vt_window ()
     if (!screen->TekEmu) switch_modes (False);	/* switch to tek mode */
 }
 
-void hide_tek_window ()
+void hide_tek_window (void)
 {
     register TScreen *screen = &term->screen;
 

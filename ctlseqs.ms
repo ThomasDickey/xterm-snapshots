@@ -632,10 +632,12 @@ Character Attributes (SGR)
   \*(Ps = \*4 \(-> Underlined
   \*(Ps = \*5 \(-> Blink (appears as Bold)
   \*(Ps = \*7 \(-> Inverse
+  \*(Ps = \*8 \(-> Invisible (hidden)
   \*(Ps = \*2\*2 \(-> Normal (neither bold nor faint)
   \*(Ps = \*2\*4 \(-> Not underlined
   \*(Ps = \*2\*5 \(-> Steady (not blinking)
   \*(Ps = \*2\*7 \(-> Positive (not inverse)
+  \*(Ps = \*2\*8 \(-> Visible (not hidden)
   \*(Ps = \*3\*0 \(-> Set foreground color to Black
   \*(Ps = \*3\*1 \(-> Set foreground color to Red
   \*(Ps = \*3\*2 \(-> Set foreground color to Green

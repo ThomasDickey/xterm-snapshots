@@ -109,19 +109,19 @@ extern char *strindex ();
 
 int switchfb[] = {0, 2, 1, 3};
 
-static SIGNAL_T reapchild PROTO((int n));
-static char *base_name PROTO((char *name));
-static int pty_search PROTO((int *pty));
-static int remove_termcap_entry PROTO((char *buf, char *str));
-static int spawn PROTO((void));
+static SIGNAL_T reapchild (int n);
+static char *base_name (char *name);
+static int pty_search (int *pty);
+static int remove_termcap_entry (char *buf, char *str);
+static int spawn (void);
 static void DeleteWindow PROTO_XT_ACTIONS_ARGS;
-static void Help PROTO((void));
+static void Help (void);
 static void KeyboardMapping PROTO_XT_ACTIONS_ARGS;
-static void Syntax PROTO((char *badOption));
-static void Version PROTO((void));
-static void get_terminal PROTO((void));
-static void my_error_handler PROTO((String message));
-static void resize PROTO((TScreen *s, char *oldtc, char *newtc));
+static void Syntax (char *badOption);
+static void Version (void);
+static void get_terminal (void);
+static void my_error_handler (String message);
+static void resize (TScreen *s, char *oldtc, char *newtc);
 
 static Bool added_utmp_entry = False;
 
@@ -214,7 +214,7 @@ struct _xttymodes {
 { NULL, 0, 0, '\0' },			/* end of data */
 };
 
-static int parse_tty_modes PROTO((char *s, struct _xttymodes *modelist));
+static int parse_tty_modes (char *s, struct _xttymodes *modelist);
 
 static int inhibit;
 static char passedPty[2];	/* name if pty if slave */
@@ -528,7 +528,7 @@ static struct _options {
         }
 }
 
-static void closecons()
+static void closecons(void)
 {
 	fclose(confd);
 }
@@ -547,8 +547,7 @@ static int abbrev (char *tst, char *cmp)
 	return ((len >= 2) && (!strncmp(tst, cmp, len)));
 }
 
-static void Syntax (badOption)
-    char *badOption;
+static void Syntax (char *badOption)
 {
     struct _options *opt;
     int col;
@@ -573,13 +572,13 @@ static void Syntax (badOption)
     exit (1);
 }
 
-static void Version ()
+static void Version (void)
 {
     puts (XTERM_VERSION);
     exit (0);
 }
 
-static void Help ()
+static void Help (void)
 {
     struct _options *opt;
     char **cpp;
@@ -603,12 +602,14 @@ static void Help ()
 
 /* ARGSUSED */
 static Boolean
-ConvertConsoleSelection(w, selection, target, type, value, length, format)
-    Widget w GCC_UNUSED;
-    Atom *selection GCC_UNUSED, *target GCC_UNUSED, *type GCC_UNUSED;
-    XtPointer *value GCC_UNUSED;
-    unsigned long *length GCC_UNUSED;
-    int *format GCC_UNUSED;
+ConvertConsoleSelection(
+    Widget w GCC_UNUSED,
+    Atom *selection GCC_UNUSED,
+    Atom *target GCC_UNUSED,
+    Atom *type GCC_UNUSED,
+    XtPointer *value GCC_UNUSED,
+    unsigned long *length GCC_UNUSED,
+    int *format GCC_UNUSED)
 {
     /* we don't save console output, so can't offer it */
     return False;
@@ -628,11 +629,11 @@ Bool waiting_for_initial_map;
  */
 /* ARGSUSED */
 static void
-DeleteWindow(w, event, params, num_params)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *num_params GCC_UNUSED;
+DeleteWindow(
+    Widget w,
+    XEvent *event GCC_UNUSED,
+    String *params GCC_UNUSED,
+    Cardinal *num_params GCC_UNUSED)
 {
 #if OPT_TEK4014
   if (w == toplevel)
@@ -650,11 +651,11 @@ DeleteWindow(w, event, params, num_params)
 
 /* ARGSUSED */
 static void
-KeyboardMapping(w, event, params, num_params)
-    Widget w GCC_UNUSED;
-    XEvent *event;
-    String *params GCC_UNUSED;
-    Cardinal *num_params GCC_UNUSED;
+KeyboardMapping(
+    Widget w GCC_UNUSED,
+    XEvent *event,
+    String *params GCC_UNUSED,
+    Cardinal *num_params GCC_UNUSED)
 {
     switch (event->type) {
        case MappingNotify:
@@ -790,10 +791,8 @@ int ptioctl(int fd, int func, void* data)
 
 char **gblenvp;
 
-main (argc, argv, envp)
-int argc;
-char **argv;
-char **envp;
+int
+main (int argc, char **argv, char **envp)
 {
 	register TScreen *screen;
 	int mode;
@@ -1121,11 +1120,11 @@ char **envp;
 #endif
 			VTRun();
 	}
+	return 0;
 }
 
 static char *
-base_name(name)
-char *name;
+base_name(char *name)
 {
 	register char *cp;
 
@@ -1141,8 +1140,7 @@ char *name;
  */
 
 static int
-get_pty (pty)
-    int *pty;
+get_pty (int *pty)
 {
 	return pty_search(pty);
 }
@@ -1154,8 +1152,7 @@ get_pty (pty)
  * Returns 0 if found a pty, 1 if fails.
  */
 static int
-pty_search(pty)
-    int *pty;
+pty_search(int *pty)
 {
 	char namebuf[PTMS_BUFSZ];
 
@@ -1177,7 +1174,7 @@ pty_search(pty)
 }
 
 static void
-get_terminal ()
+get_terminal (void)
 /*
  * sets up X and initializes the terminal structure except for term.buf.fildes.
  */
@@ -1235,8 +1232,7 @@ static char *vtterm[] = {
 };
 
 /* ARGSUSED */
-static SIGNAL_T hungtty(i)
-	int i GCC_UNUSED;
+static SIGNAL_T hungtty(int i GCC_UNUSED)
 {
 	longjmp(env, 1);
 	SIGNAL_RETURN;
@@ -1247,7 +1243,7 @@ struct {
 	int cols;
 } handshake = {-1,-1};
 
-void first_map_occurred ()
+void first_map_occurred (void)
 {
     register TScreen *screen = &term->screen;
     handshake.rows = screen->max_row;
@@ -1283,7 +1279,7 @@ SIGNAL_T killit(int sig)
 }
 
 static int
-spawn ()
+spawn (void)
 /*
  *  Inits pty and tty and forks a login process.
  *  Does not close fd Xsocket.
@@ -1702,8 +1698,7 @@ opencons();*/
 }							/* end spawn */
 
 SIGNAL_T
-Exit(n)
-	int n;
+Exit(int n)
 {
 	register TScreen *screen = &term->screen;
         int pty = term->screen.respond;  /* file descriptor of pty */
@@ -1727,9 +1722,7 @@ Exit(n)
 
 /* ARGSUSED */
 static void
-resize(screen, oldtc, newtc)
-TScreen *screen;
-register char *oldtc, *newtc;
+resize(TScreen *screen, register char *oldtc, register char *newtc)
 {
 }
 
@@ -1739,7 +1732,7 @@ register char *oldtc, *newtc;
  * Returns the pid of the child, or 0 or -1 if none or error.
  */
 int
-nonblocking_wait()
+nonblocking_wait(void)
 {
         pid_t pid;
 
@@ -1748,8 +1741,7 @@ nonblocking_wait()
 }
 
 /* ARGSUSED */
-static SIGNAL_T reapchild (n)
-    int n GCC_UNUSED;
+static SIGNAL_T reapchild (int n GCC_UNUSED)
 {
     int pid;
 
@@ -1772,39 +1764,8 @@ static SIGNAL_T reapchild (n)
     SIGNAL_RETURN;
 }
 
-#if 0	/* this isn't used, but could be useful in debugging */
-/* VARARGS1 */
-void
-consolepr(fmt,x0,x1,x2,x3,x4,x5,x6,x7,x8,x9)
-char *fmt;
-{
-	int oerrno;
-	int f;
- 	char buf[ BUFSIZ ];
-
-	oerrno = errno;
- 	strcpy(buf, "xterm: ");
- 	sprintf(buf+strlen(buf), fmt, x0,x1,x2,x3,x4,x5,x6,x7,x8,x9);
- 	strcat(buf, ": ");
- 	strcat(buf, SysErrorMsg (oerrno));
- 	strcat(buf, "\n");
-
-	f = open("/dev/console",O_WRONLY);
-	write(f, buf, strlen(buf));
-	close(f);
-#ifdef TIOCNOTTY
-	if ((f = open("/dev/tty", 2)) >= 0) {
-		ioctl(f, TIOCNOTTY, (char *)NULL);
-		close(f);
-	}
-#endif	/* TIOCNOTTY */
-}
-#endif
-
 static int
-remove_termcap_entry (buf, str)
-    char *buf;
-    char *str;
+remove_termcap_entry (char *buf, char *str)
 {
     register char *strinbuf;
 
@@ -1831,9 +1792,7 @@ remove_termcap_entry (buf, str)
  * where setting consists of the words in the modelist followed by a character
  * or ^char.
  */
-static int parse_tty_modes (s, modelist)
-    char *s;
-    struct _xttymodes *modelist;
+static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 {
     struct _xttymodes *mp;
     int c;
@@ -1865,8 +1824,7 @@ static int parse_tty_modes (s, modelist)
     }
 }
 
-int GetBytesAvailable (fd)
-    int fd;
+int GetBytesAvailable (int fd)
 {
     long arg;
     ioctl (fd, FIONREAD, (char *) &arg);
@@ -1877,9 +1835,7 @@ int GetBytesAvailable (fd)
    everybody who used to call killpg() */
 
 int
-kill_process_group(pid, sig)
-    int pid;
-    int sig;
+kill_process_group(int pid, int sig)
 {
     return kill (-pid, sig);
 }

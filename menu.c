@@ -110,8 +110,8 @@ static void do_vthide          PROTO_XT_CALLBACK_ARGS;
 static void do_vtmode          PROTO_XT_CALLBACK_ARGS;
 static void do_vtonoff         PROTO_XT_CALLBACK_ARGS;
 static void do_vtshow          PROTO_XT_CALLBACK_ARGS;
-static void handle_tekshow     PROTO((Widget gw, Bool allowswitch));
-static void handle_vtshow      PROTO((Widget gw, Bool allowswitch));
+static void handle_tekshow     (Widget gw, Bool allowswitch);
+static void handle_vtshow      (Widget gw, Bool allowswitch);
 #endif
 
 /*
@@ -199,28 +199,23 @@ MenuEntry tekMenuEntries[] = {
     { "tekhide",	do_tekhide, NULL }};		/* 11 */
 #endif
 
-static Bool domenu
-	PROTO((Widget w,
-		XEvent *event,
-		String *params,
-		Cardinal *param_count));
-
-static Widget create_menu
-	PROTO((XtermWidget xtw,
+static Widget create_menu (
+		XtermWidget xtw,
 		Widget toplevelw,
 		char *name,
 		struct _MenuEntry *entries,
-		int nentries));
+		int nentries);
 
-static void handle_send_signal PROTO(( Widget gw, int sig));
+static void handle_send_signal (Widget gw, int sig);
 
-static void handle_toggle 
-	PROTO((void (*proc)PROTO_XT_CALLBACK_ARGS,
+static void handle_toggle (
+		void (*proc)PROTO_XT_CALLBACK_ARGS,
 		int var,
 		String *params,
 		Cardinal nparams,
 		Widget w,
-		XtPointer closure, XtPointer data));
+		XtPointer closure,
+		XtPointer data);
 
 extern Widget toplevel;
 
@@ -241,11 +236,11 @@ static unsigned char check_bits[] = {
  */
 
 /* ARGSUSED */
-static Bool domenu (w, event, params, param_count)
-    Widget w GCC_UNUSED;
-    XEvent *event GCC_UNUSED;
-    String *params;             /* mainMenu, vtMenu, or tekMenu */
-    Cardinal *param_count;      /* 0 or 1 */
+static Bool domenu (
+	Widget w GCC_UNUSED,
+	XEvent *event GCC_UNUSED,
+	String *params,             /* mainMenu, vtMenu, or tekMenu */
+	Cardinal *param_count)      /* 0 or 1 */
 {
     TScreen *screen = &term->screen;
 
@@ -353,20 +348,20 @@ static Bool domenu (w, event, params, param_count)
     return True;
 }
 
-void HandleCreateMenu (w, event, params, param_count)
-    Widget w;
-    XEvent *event;              /* unused */
-    String *params;             /* mainMenu, vtMenu, or tekMenu */
-    Cardinal *param_count;      /* 0 or 1 */
+void HandleCreateMenu (
+	Widget w,
+	XEvent *event,              /* unused */
+	String *params,             /* mainMenu, vtMenu, or tekMenu */
+	Cardinal *param_count)      /* 0 or 1 */
 {
     (void) domenu (w, event, params, param_count);
 }
 
-void HandlePopupMenu (w, event, params, param_count)
-    Widget w;
-    XEvent *event;              /* unused */
-    String *params;             /* mainMenu, vtMenu, or tekMenu */
-    Cardinal *param_count;      /* 0 or 1 */
+void HandlePopupMenu (
+	Widget w,
+	XEvent *event,              /* unused */
+	String *params,             /* mainMenu, vtMenu, or tekMenu */
+	Cardinal *param_count)      /* 0 or 1 */
 {
     if (domenu (w, event, params, param_count)) {
 	XtCallActionProc (w, "XawPositionSimpleMenu", event, params, 1);
@@ -383,12 +378,13 @@ void HandlePopupMenu (w, event, params, param_count)
  * create_menu - create a popup shell and stuff the menu into it.
  */
 
-static Widget create_menu (xtw, toplevelw, name, entries, nentries)
-    XtermWidget xtw;
-    Widget toplevelw;
-    char *name;
-    struct _MenuEntry *entries;
-    int nentries;
+static Widget
+create_menu (
+	XtermWidget xtw,
+	Widget toplevelw,
+	char *name,
+	struct _MenuEntry *entries,
+	int nentries)
 {
     Widget m;
     TScreen *screen = &xtw->screen;
@@ -419,9 +415,7 @@ static Widget create_menu (xtw, toplevelw, name, entries, nentries)
 }
 
 /* ARGSUSED */
-static void handle_send_signal (gw, sig)
-    Widget gw GCC_UNUSED;
-    int sig;
+static void handle_send_signal (Widget gw GCC_UNUSED, int sig)
 {
     register TScreen *screen = &term->screen;
 
@@ -434,15 +428,15 @@ static void handle_send_signal (gw, sig)
  */
 
 /* ARGSUSED */
-void DoSecureKeyboard (tp)
-    Time tp GCC_UNUSED;
+void DoSecureKeyboard (Time tp GCC_UNUSED)
 {
     do_securekbd (term->screen.mainMenu, (XtPointer)0, (XtPointer)0);
 }
 
-static void do_securekbd (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_securekbd (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
     Time now = CurrentTime;		/* XXX - wrong */
@@ -465,9 +459,10 @@ static void do_securekbd (gw, closure, data)
 }
 
 
-static void do_allowsends (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_allowsends (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -475,9 +470,10 @@ static void do_allowsends (gw, closure, data)
     update_allowsends ();
 }
 
-static void do_visualbell (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_visualbell (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -486,10 +482,10 @@ static void do_visualbell (gw, closure, data)
 }
 
 #ifdef ALLOWLOGGING
-static void do_logging (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED;
-    XtPointer data GCC_UNUSED;
+static void do_logging (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -502,24 +498,25 @@ static void do_logging (gw, closure, data)
 }
 #endif
 
-static void do_print (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_print (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     xtermPrintScreen ();
 }
 
 
-static void do_redraw (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_redraw (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     Redraw ();
 }
 
 
-void show_8bit_control (value)
-    Bool value;
+void show_8bit_control (Bool value)
 {
     if (term->screen.control_eight_bits != value) {
 	term->screen.control_eight_bits = value;
@@ -527,24 +524,27 @@ void show_8bit_control (value)
     }
 }
 
-static void do_8bit_control (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_8bit_control (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     show_8bit_control(! term->screen.control_eight_bits);
 }
 
-static void do_backarrow (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_backarrow (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     term->keyboard.flags ^= MODE_DECBKM;
     update_decbkm();
 }
 
-static void do_sun_fkeys (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_sun_fkeys (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     sunFunctionKeys = ! sunFunctionKeys;
     update_sun_fkeys();
@@ -552,9 +552,10 @@ static void do_sun_fkeys (gw, closure, data)
 
 
 #if OPT_SUNPC_KBD
-static void do_sun_kbd (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_sun_kbd (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     sunKeyboard = ! sunKeyboard;
     update_sun_kbd();
@@ -569,9 +570,10 @@ static void do_sun_kbd (gw, closure, data)
 
 
 /* ARGSUSED */
-static void do_suspend (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_suspend (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
 #if defined(SIGTSTP) && !defined(AMOEBA)
     handle_send_signal (gw, SIGTSTP);
@@ -579,9 +581,10 @@ static void do_suspend (gw, closure, data)
 }
 
 /* ARGSUSED */
-static void do_continue (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_continue (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
 #if defined(SIGCONT) && !defined(AMOEBA)
     handle_send_signal (gw, SIGCONT);
@@ -589,40 +592,45 @@ static void do_continue (gw, closure, data)
 }
 
 /* ARGSUSED */
-static void do_interrupt (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_interrupt (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     handle_send_signal (gw, SIGINT);
 }
 
 /* ARGSUSED */
-void do_hangup (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+void do_hangup (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     handle_send_signal (gw, SIGHUP);
 }
 
 /* ARGSUSED */
-static void do_terminate (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_terminate (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     handle_send_signal (gw, SIGTERM);
 }
 
 /* ARGSUSED */
-static void do_kill (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_kill (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     handle_send_signal (gw, SIGKILL);
 }
 
-static void do_quit (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_quit (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     Cleanup (0);
 }
@@ -633,9 +641,10 @@ static void do_quit (gw, closure, data)
  * vt menu callbacks
  */
 
-static void do_scrollbar (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_scrollbar (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -648,9 +657,10 @@ static void do_scrollbar (gw, closure, data)
 }
 
 
-static void do_jumpscroll (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_jumpscroll (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -665,9 +675,10 @@ static void do_jumpscroll (gw, closure, data)
 }
 
 
-static void do_reversevideo (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_reversevideo (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     term->flags ^= REVERSE_VIDEO;
     ReverseVideo (term);
@@ -675,54 +686,60 @@ static void do_reversevideo (gw, closure, data)
 }
 
 
-static void do_autowrap (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_autowrap (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     term->flags ^= WRAPAROUND;
     update_autowrap();
 }
 
 
-static void do_reversewrap (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_reversewrap (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     term->flags ^= REVERSEWRAP;
     update_reversewrap();
 }
 
 
-static void do_autolinefeed (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_autolinefeed (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     term->flags ^= LINEFEED;
     update_autolinefeed();
 }
 
 
-static void do_appcursor (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_appcursor (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     term->keyboard.flags ^= MODE_DECCKM;
     update_appcursor();
 }
 
 
-static void do_appkeypad (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_appkeypad (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     term->keyboard.flags ^= MODE_DECKPAM;
     update_appkeypad();
 }
 
 
-static void do_scrollkey (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_scrollkey (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -731,9 +748,10 @@ static void do_scrollkey (gw, closure, data)
 }
 
 
-static void do_scrollttyoutput (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_scrollttyoutput (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -742,9 +760,10 @@ static void do_scrollttyoutput (gw, closure, data)
 }
 
 
-static void do_allow132 (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_allow132 (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -753,9 +772,10 @@ static void do_allow132 (gw, closure, data)
 }
 
 
-static void do_cursesemul (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_cursesemul (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -764,9 +784,10 @@ static void do_cursesemul (gw, closure, data)
 }
 
 
-static void do_marginbell (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_marginbell (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -776,9 +797,7 @@ static void do_marginbell (gw, closure, data)
 
 
 #if OPT_TEK4014
-static void handle_tekshow (gw, allowswitch)
-    Widget gw GCC_UNUSED;
-    Bool allowswitch;
+static void handle_tekshow (Widget gw GCC_UNUSED, Bool allowswitch)
 {
     register TScreen *screen = &term->screen;
 
@@ -792,26 +811,29 @@ static void handle_tekshow (gw, allowswitch)
 }
 
 /* ARGSUSED */
-static void do_tekshow (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tekshow (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     handle_tekshow (gw, True);
 }
 
 /* ARGSUSED */
-static void do_tekonoff (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tekonoff (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     handle_tekshow (gw, False);
 }
 #endif /* OPT_TEK4014 */
 
 /* ARGSUSED */
-static void do_altscreen (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_altscreen (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     TScreen *screen = &term->screen;
     ToggleAlternate(screen);
@@ -819,9 +841,10 @@ static void do_altscreen (gw, closure, data)
 
 #ifndef NO_ACTIVE_ICON
 /* ARGSUSED */
-static void do_activeicon (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_activeicon (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     TScreen *screen = &term->screen;
 
@@ -836,34 +859,38 @@ static void do_activeicon (gw, closure, data)
 }
 #endif /* NO_ACTIVE_ICON */
 
-static void do_softreset (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_softreset (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     VTReset (FALSE, FALSE);
 }
 
 
-static void do_hardreset (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_hardreset (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     VTReset (TRUE, FALSE);
 }
 
 
-static void do_clearsavedlines (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_clearsavedlines (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     VTReset (TRUE, TRUE); 
 }
 
 
 #if OPT_TEK4014
-static void do_tekmode (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tekmode (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -871,9 +898,10 @@ static void do_tekmode (gw, closure, data)
 }
 
 /* ARGSUSED */
-static void do_vthide (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_vthide (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     hide_vt_window();
 }
@@ -884,9 +912,10 @@ static void do_vthide (gw, closure, data)
  * vtfont menu
  */
 
-static void do_vtfont (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_vtfont (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     char *entryname = (char *) closure;
     int i;
@@ -906,66 +935,71 @@ static void do_vtfont (gw, closure, data)
  */
 
 #if OPT_TEK4014
-static void do_tektextlarge (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tektextlarge (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     TekSetFontSize (tekMenu_tektextlarge);
 }
 
 
-static void do_tektext2 (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tektext2 (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     TekSetFontSize (tekMenu_tektext2);
 }
 
 
-static void do_tektext3 (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tektext3 (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     TekSetFontSize (tekMenu_tektext3);
 }
 
 
-static void do_tektextsmall (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tektextsmall (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
 
     TekSetFontSize (tekMenu_tektextsmall);
 }
 
 
-static void do_tekpage (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tekpage (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     TekSimulatePageButton (False);
 }
 
 
-static void do_tekreset (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tekreset (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     TekSimulatePageButton (True);
 }
 
 
-static void do_tekcopy (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tekcopy (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     TekCopy ();
 }
 
 
-static void handle_vtshow (gw, allowswitch)
-    Widget gw GCC_UNUSED;
-    Bool allowswitch;
+static void handle_vtshow (Widget gw GCC_UNUSED, Bool allowswitch)
 {
     register TScreen *screen = &term->screen;
 
@@ -979,23 +1013,26 @@ static void handle_vtshow (gw, allowswitch)
       Bell(XkbBI_MinorError, 0);
 }
 
-static void do_vtshow (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_vtshow (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     handle_vtshow (gw, True);
 }
 
-static void do_vtonoff (gw, closure, data)
-    Widget gw;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_vtonoff (
+	Widget gw,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     handle_vtshow (gw, False);
 }
 
-static void do_vtmode (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_vtmode (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     register TScreen *screen = &term->screen;
 
@@ -1004,9 +1041,10 @@ static void do_vtmode (gw, closure, data)
 
 
 /* ARGSUSED */
-static void do_tekhide (gw, closure, data)
-    Widget gw GCC_UNUSED;
-    XtPointer closure GCC_UNUSED, data GCC_UNUSED;
+static void do_tekhide (
+	Widget gw GCC_UNUSED,
+	XtPointer closure GCC_UNUSED,
+	XtPointer data GCC_UNUSED)
 {
     hide_tek_window();
 }
@@ -1018,13 +1056,14 @@ static void do_tekhide (gw, closure, data)
  * public handler routines
  */
 
-static void handle_toggle (proc, var, params, nparams, w, closure, data)
-    void (*proc)PROTO_XT_CALLBACK_ARGS;
-    int var;
-    String *params;
-    Cardinal nparams;
-    Widget w;
-    XtPointer closure, data;
+static void handle_toggle (
+	void (*proc)PROTO_XT_CALLBACK_ARGS,
+	int var,
+	String *params,
+	Cardinal nparams,
+	Widget w,
+	XtPointer closure,
+	XtPointer data)
 {
     int dir = -2;
 
@@ -1061,32 +1100,32 @@ static void handle_toggle (proc, var, params, nparams, w, closure, data)
     return;
 }
 
-void HandleAllowSends(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleAllowSends(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_allowsends, (int) term->screen.allowSendEvents,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleSetVisualBell(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleSetVisualBell(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_visualbell, (int) term->screen.visualbell,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
 #ifdef ALLOWLOGGING
-void HandleLogging(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleLogging(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_logging, (int) term->screen.logging,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
@@ -1094,31 +1133,31 @@ void HandleLogging(w, event, params, param_count)
 #endif
 
 /* ARGSUSED */
-void HandlePrint(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *param_count GCC_UNUSED;
+void HandlePrint(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
 {
     do_print(w, (XtPointer)0, (XtPointer)0);
 }
 
 /* ARGSUSED */
-void HandleRedraw(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *param_count GCC_UNUSED;
+void HandleRedraw(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
 {
     do_redraw(w, (XtPointer)0, (XtPointer)0);
 }
 
 /* ARGSUSED */
-void HandleSendSignal(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleSendSignal(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     static struct sigtab {
 	char *name;
@@ -1157,192 +1196,192 @@ void HandleSendSignal(w, event, params, param_count)
 }
 
 /* ARGSUSED */
-void HandleQuit(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *param_count GCC_UNUSED;
+void HandleQuit(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
 {
     do_quit(w, (XtPointer)0, (XtPointer)0);
 }
 
-void Handle8BitControl(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void Handle8BitControl(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_8bit_control, (int) term->screen.control_eight_bits,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleBackarrow(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleBackarrow(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_backarrow, (int) term->keyboard.flags & MODE_DECBKM,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleSunFunctionKeys(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleSunFunctionKeys(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_sun_fkeys, (int) sunFunctionKeys,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
 #if OPT_SUNPC_KBD
-void HandleSunKeyboard(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleSunKeyboard(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_sun_kbd, (int) sunKeyboard,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 #endif
 
-void HandleScrollbar(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleScrollbar(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_scrollbar, (int) term->screen.fullVwin.scrollbar,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleJumpscroll(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleJumpscroll(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_jumpscroll, (int) term->screen.jumpscroll,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleReverseVideo(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleReverseVideo(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_reversevideo, (int) (term->flags & REVERSE_VIDEO),
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleAutoWrap(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleAutoWrap(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_autowrap, (int) (term->flags & WRAPAROUND),
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleReverseWrap(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleReverseWrap(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_reversewrap, (int) (term->flags & REVERSEWRAP),
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleAutoLineFeed(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleAutoLineFeed(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_autolinefeed, (int) (term->flags & LINEFEED),
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleAppCursor(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleAppCursor(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_appcursor, (int) (term->keyboard.flags & MODE_DECCKM),
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleAppKeypad(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleAppKeypad(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_appkeypad, (int) (term->keyboard.flags & MODE_DECKPAM),
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleScrollKey(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleScrollKey(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_scrollkey, (int) term->screen.scrollkey,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleScrollTtyOutput(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleScrollTtyOutput(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_scrollttyoutput, (int) term->screen.scrollttyoutput,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleAllow132(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleAllow132(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_allow132, (int) term->screen.c132,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleCursesEmul(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleCursesEmul(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_cursesemul, (int) term->screen.curses,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleMarginBell(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleMarginBell(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     handle_toggle (do_marginbell, (int) term->screen.marginbell,
 		   params, *param_count, w, (XtPointer)0, (XtPointer)0);
 }
 
-void HandleAltScreen(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleAltScreen(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     /* eventually want to see if sensitive or not */
     handle_toggle (do_altscreen, (int) term->screen.alternate,
@@ -1350,41 +1389,41 @@ void HandleAltScreen(w, event, params, param_count)
 }
 
 /* ARGSUSED */
-void HandleSoftReset(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *param_count GCC_UNUSED;
+void HandleSoftReset(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
 {
     do_softreset(w, (XtPointer)0, (XtPointer)0);
 }
 
 /* ARGSUSED */
-void HandleHardReset(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *param_count GCC_UNUSED;
+void HandleHardReset(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
 {
     do_hardreset(w, (XtPointer)0, (XtPointer)0);
 }
 
 /* ARGSUSED */
-void HandleClearSavedLines(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *param_count GCC_UNUSED;
+void HandleClearSavedLines(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
 {
     do_clearsavedlines(w, (XtPointer)0, (XtPointer)0);
 }
 
 #if OPT_TEK4014
-void HandleSetTerminalType(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleSetTerminalType(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     if (*param_count == 1) {
 	switch (params[0][0]) {
@@ -1402,11 +1441,11 @@ void HandleSetTerminalType(w, event, params, param_count)
     }
 }
 
-void HandleVisibility(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleVisibility(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     if (*param_count == 2) {
 	switch (params[0][0]) {
@@ -1427,11 +1466,11 @@ void HandleVisibility(w, event, params, param_count)
 }
 
 /* ARGSUSED */
-void HandleSetTekText(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params;
-    Cardinal *param_count;
+void HandleSetTekText(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params,
+	Cardinal *param_count)
 {
     void (*proc)PROTO_XT_CALLBACK_ARGS = 0;
 
@@ -1453,31 +1492,31 @@ void HandleSetTekText(w, event, params, param_count)
 }
 
 /* ARGSUSED */
-void HandleTekPage(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *param_count GCC_UNUSED;
+void HandleTekPage(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
 {
     do_tekpage(w, (XtPointer)0, (XtPointer)0);
 }
 
 /* ARGSUSED */
-void HandleTekReset(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *param_count GCC_UNUSED;
+void HandleTekReset(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
 {
     do_tekreset(w, (XtPointer)0, (XtPointer)0);
 }
 
 /* ARGSUSED */
-void HandleTekCopy(w, event, params, param_count)
-    Widget w;
-    XEvent *event GCC_UNUSED;
-    String *params GCC_UNUSED;
-    Cardinal *param_count GCC_UNUSED;
+void HandleTekCopy(
+	Widget w,
+	XEvent *event GCC_UNUSED,
+	String *params GCC_UNUSED,
+	Cardinal *param_count GCC_UNUSED)
 {
     do_tekcopy(w, (XtPointer)0, (XtPointer)0);
 }

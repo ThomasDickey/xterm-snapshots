@@ -81,7 +81,7 @@
 #define USE_SYSV_UTMP
 #endif
 
-#if defined(SYSV) || defined(Lynx)
+#if defined(SYSV) || defined(Lynx) || defined(__CYGWIN32__)
 #define USE_SYSV_TERMIO
 #ifndef Lynx
 #define USE_SYSV_UTMP
@@ -104,7 +104,10 @@
 #define USE_TERMIOS
 #endif
 
+#ifndef __CYGWIN32__
 #include <sys/ioctl.h>
+#endif
+
 #ifdef USE_SYSV_TERMIO
 # ifndef Lynx
 #  include <sys/termio.h>
@@ -241,21 +244,19 @@ char *wsize[EMULATIONS] = {
 
 #include "proto.h"
 
-extern int main PROTO((int argc, char **argv));
-
-static SIGNAL_T onintr PROTO((int sig));
-static SIGNAL_T resize_timeout PROTO((int sig));
-static int checkdigits PROTO((char *str));
-static void Usage PROTO((void));
-static void readstring PROTO((FILE *fp, char *buf, char *str));
+static SIGNAL_T onintr (int sig);
+static SIGNAL_T resize_timeout (int sig);
+static int checkdigits (char *str);
+static void Usage (void);
+static void readstring (FILE *fp, char *buf, char *str);
 
 #ifdef USE_TERMCAP
-static char *strindex PROTO((char *s1, char *s2));
+static char *strindex (char *s1, char *s2);
 #if HAVE_TERMCAP_H
 #include <termcap.h>
 #if defined(NCURSES_VERSION)
 	/* The tgetent emulation function in SVr4-style curses implementations
-	 * (e.g., ncurses) ignores the buffer, so TERMCAP can't be set from it. 
+	 * (e.g., ncurses) ignores the buffer, so TERMCAP can't be set from it.
 	 * Instead, just use terminfo.
 	 */
 #undef USE_TERMCAP
@@ -270,9 +271,7 @@ static char *strindex PROTO((char *s1, char *s2));
    resets termcap string to reflect current screen size
  */
 int
-main (argc, argv)
-    int argc;
-    char **argv;
+main (int argc, char **argv)
 {
 	register char *ptr, *env;
 	register int emu = VT100;
@@ -368,7 +367,7 @@ main (argc, argv)
 		Usage();	/* Never returns */
 
 #ifdef CANT_OPEN_DEV_TTY
-	if ((name_of_tty = ttyname(fileno(stderr))) == NULL) 
+	if ((name_of_tty = ttyname(fileno(stderr))) == NULL)
 #endif
 	  name_of_tty = "/dev/tty";
 
@@ -562,12 +561,11 @@ main (argc, argv)
 
 #ifdef USE_TERMCAP
 static char *
-strindex (s1, s2)
+strindex (register char *s1, register char *s2)
 /*
    returns a pointer to the first occurrence of s2 in s1, or NULL if there are
    none.
  */
-register char *s1, *s2;
 {
 	register char *s3;
 	size_t s2len = strlen (s2);
@@ -582,8 +580,7 @@ register char *s1, *s2;
 #endif
 
 static int
-checkdigits(str)
-register char *str;
+checkdigits(register char *str)
 {
 	while(*str) {
 		if(!isdigit(*str))
@@ -594,10 +591,7 @@ register char *str;
 }
 
 static void
-readstring(fp, buf, str)
-    register FILE *fp;
-    register char *buf;
-    char *str;
+readstring(register FILE *fp, register char *buf, char *str)
 {
 	register int last, c;
 #if !defined(USG) && !defined(AMOEBA) && !defined(MINIX) && !(__EMX__)
@@ -635,7 +629,7 @@ readstring(fp, buf, str)
 }
 
 static void
-Usage()
+Usage(void)
 {
 	fprintf(stderr, strcmp(myname, sunname) == 0 ?
 	 "Usage: %s [rows cols]\n" :
@@ -644,8 +638,7 @@ Usage()
 }
 
 static SIGNAL_T
-resize_timeout(sig)
-    int sig;
+resize_timeout(int sig)
 {
 	fprintf(stderr, "\n%s: Time out occurred\r\n", myname);
 	onintr(sig);
@@ -653,8 +646,7 @@ resize_timeout(sig)
 
 /* ARGSUSED */
 static SIGNAL_T
-onintr(sig)
-    int sig GCC_UNUSED;
+onintr(int sig GCC_UNUSED)
 {
 #ifdef USE_SYSV_TERMIO
 	ioctl (tty, TCSETAW, &tioorig);
