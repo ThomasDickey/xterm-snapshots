@@ -1,5 +1,5 @@
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.36 2000/11/01 01:12:36 dawes Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.37 2000/12/07 02:22:12 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -26,6 +26,22 @@ dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
+dnl Copy non-preprocessor flags to $CFLAGS, preprocessor flags to $CPPFLAGS
+AC_DEFUN([CF_ADD_CFLAGS],
+[
+for cf_add_cflags in $1
+do
+	case $cf_add_cflags in #(vi
+	-I*|-D*|-U*|-E|-P|-C) #(vi
+		CPPFLAGS="$CPPFLAGS $cf_add_cflags"
+		;;
+	*)
+		CFLAGS="$CFLAGS $cf_add_cflags"
+		;;
+	esac
+done
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl This is adapted from the macros 'fp_PROG_CC_STDC' and 'fp_C_PROTOTYPES'
 dnl in the sharutils 4.2 distribution.
 AC_DEFUN([CF_ANSI_CC_CHECK],
@@ -34,6 +50,7 @@ AC_MSG_CHECKING(for ${CC-cc} option to accept ANSI C)
 AC_CACHE_VAL(cf_cv_ansi_cc,[
 cf_cv_ansi_cc=no
 cf_save_CFLAGS="$CFLAGS"
+cf_save_CPPFLAGS="$CPPFLAGS"
 # Don't try gcc -ansi; that turns off useful extensions and
 # breaks some systems' header files.
 # AIX			-qlanglvl=ansi
@@ -49,7 +66,7 @@ for cf_arg in "-DCC_HAS_PROTOS" \
 	"-Aa -D_HPUX_SOURCE" \
 	-Xc
 do
-	CFLAGS="$cf_save_CFLAGS $cf_arg"
+	CF_ADD_CFLAGS($cf_arg)
 	AC_TRY_COMPILE(
 [
 #ifndef CC_HAS_PROTOS
@@ -64,6 +81,7 @@ choke me
 	[cf_cv_ansi_cc="$cf_arg"; break])
 done
 CFLAGS="$cf_save_CFLAGS"
+CPPFLAGS="$cf_save_CPPFLAGS"
 ])
 AC_MSG_RESULT($cf_cv_ansi_cc)
 

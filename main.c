@@ -74,8 +74,6 @@ SOFTWARE.
 
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
-
-#include <X11/Xos.h>
 #include <X11/cursorfont.h>
 #include <X11/Xlocale.h>
 
@@ -91,6 +89,7 @@ SOFTWARE.
 #include <menu.h>
 #include <main.h>
 #include <xstrings.h>
+#include <xterm_io.h>
 
 #if OPT_WIDE_CHARS
 #include <charclass.h>
@@ -101,12 +100,10 @@ SOFTWARE.
 #include <cmdreg.h>
 #include <stderr.h>
 #include <thread.h>
-#define  _POSIX_SOURCE
 #include <limits.h>
 #include <module/proc.h>
 #include <module/name.h>
 
-#define USE_TERMIOS
 #define NILCAP ((capability *)NULL)
 #endif
 
@@ -114,7 +111,6 @@ SOFTWARE.
 #include <sys/nbio.h>
 
 #define setpgrp(pid, pgid) setpgid(pid, pgid)
-#define USE_TERMIOS
 #define MNX_LASTLOG
 #define WTMP
 /* Remap or define non-existing termios flags */
@@ -137,10 +133,6 @@ SOFTWARE.
 #define WTMP
 #endif
 
-#if defined(SVR4) && !defined(__sgi)
-#define USE_TERMIOS
-#endif
-
 #ifdef USE_ISPTS_FLAG
 static Bool IsPts = False;
 #endif
@@ -155,49 +147,25 @@ static Bool IsPts = False;
 #define KANJI
 #endif
 
-#ifdef TIOCSLTC
-#define HAS_LTCHARS
-#endif
-
 #ifdef linux
-#define USE_TERMIOS
 #define USE_SYSV_PGRP
 #define USE_SYSV_SIGNALS
 #define WTMP
-#undef  HAS_LTCHARS
 #ifdef __GLIBC__
 #if (__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1))
 #include <pty.h>
-#include <stdlib.h> /* getpt() */
 #endif
 #endif
 #endif
 
 #ifdef __MVS__
-#define SVR4
-#define USE_POSIX_TERMIOS
 #define USE_SYSV_PGRP
 #define USE_SYSV_SIGNALS
-#undef  HAS_LTCHARS
 #endif
 
 #ifdef __CYGWIN__
-#define SYSV
-#define SVR4
 #define LASTLOG
 #define WTMP
-#define ATT
-#endif
-
-#ifdef __QNX__
-#define USE_POSIX_TERMIOS
-#include <ioctl.h>
-#endif
-
-#ifdef Lynx
-#define USE_SYSV_TERMIO
-#undef  HAS_LTCHARS
-#include <termio.h>
 #endif
 
 #ifdef SCO325
@@ -218,10 +186,6 @@ static Bool IsPts = False;
 #define TTY_GROUP_NAME "tty"
 #endif
 
-#ifndef __CYGWIN__
-#include <sys/ioctl.h>
-#endif
-
 #include <sys/stat.h>
 
 #ifdef Lynx
@@ -236,56 +200,20 @@ static Bool IsPts = False;
 #endif
 #endif
 
-#if defined(USE_POSIX_TERMIOS)
-#include <termios.h>
-#elif defined(USE_TERMIOS)
-#include <termios.h>
-/* this hacked termios support only works on SYSV */
-#define USE_SYSV_TERMIO
-#define termio termios
-#undef TCGETA
-#define TCGETA TCGETS
-#undef TCSETA
-#define TCSETA TCSETS
-#elif defined(SYSV)
-#include <sys/termio.h>
-#elif defined(sun) && !defined(SVR4)
-#include <sys/ttycom.h>
-#ifdef TIOCSWINSZ
-#undef TIOCSSIZE
-#endif
-#endif /* USE_POSIX_TERMIOS */
-
-#ifdef SVR4
-#undef HAS_LTCHARS			/* defined, but not useable */
-#endif
-#define USE_TERMCAP_ENVVARS	/* every one uses this except SYSV maybe */
-
-#if defined(__sgi) && (OSMAJORVERSION >= 5)
-#undef TIOCLSET				/* defined, but not useable */
-#endif
-
-#if defined(__GNU__) || defined(__MVS__)
-#undef TIOCLSET
-#undef TIOCSLTC
-#endif
-
 #ifdef SYSV /* { */
 
 #ifdef USE_USG_PTYS			/* AT&T SYSV has no ptyio.h */
-#include <sys/stream.h>			/* get typedef used in ptem.h */
 #include <sys/stropts.h>		/* for I_PUSH */
-#if !defined(SVR4) || defined(SCO325)
-#include <sys/ptem.h>			/* get struct winsize */
-#endif
 #include <poll.h>			/* for POLLIN */
 #endif /* USE_USG_PTYS */
-#define USE_SYSV_TERMIO
+
 #define USE_SYSV_SIGNALS
 #define	USE_SYSV_PGRP
+
 #if !defined(TIOCSWINSZ)
 #define USE_SYSV_ENVVARS		/* COLUMNS/LINES vs. TERMCAP */
 #endif
+
 /*
  * now get system-specific includes
  */
@@ -330,8 +258,6 @@ static Bool IsPts = False;
 
 #ifdef __QNX__
 
-#undef TIOCSLTC  /* <sgtty.h> conflicts with <termios.h> */
-#undef TIOCLSET
 #ifndef __QNXNTO__
 #define ttyslot() 1
 #else
@@ -344,14 +270,14 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 #ifndef linux
 #ifndef VMS
 #ifndef USE_POSIX_TERMIOS
-#ifndef USE_SYSV_TERMIO
+#ifndef USE_ANY_SYSV_TERMIO
 #include <sgtty.h>
 #endif
 #endif /* USE_POSIX_TERMIOS */
-#ifndef Lynx
-#include <sys/resource.h>
-#else
+#ifdef Lynx
 #include <resource.h>
+#else
+#include <sys/resource.h>
 #endif
 #define HAS_BSD_GROUPS
 #endif /* !VMS */
@@ -376,10 +302,8 @@ extern __inline__ ttyslot() {return 1;} /* yuk */
 #ifndef NOFILE
 #define NOFILE OPEN_MAX
 #endif
-#elif !defined(MINIX) && !defined(WIN32) && !defined(Lynx) && !defined(__GNU__) && !defined(__MVS__)
-#ifndef VMS
+#elif !(defined(VMS) || defined(MINIX) || defined(WIN32) || defined(Lynx) || defined(__GNU__) || defined(__MVS__))
 #include <sys/param.h>	/* for NOFILE */
-#endif /* !VMS */
 #endif
 
 #if defined(BSD) && (BSD >= 199103)
@@ -402,12 +326,6 @@ extern time_t time ();
 #if defined(apollo) && (OSMAJORVERSION == 10) && (OSMINORVERSION < 4)
 #define ttyslot() 1
 #endif /* apollo */
-
-#ifdef sun
-#include <sys/filio.h>
-#endif
-
-#include <sys/types.h>
 
 #if defined(USE_UTEMPTER)
 
@@ -439,15 +357,13 @@ extern struct utmp *getutid __((struct utmp *_Id));
 #include <local/openpty.h>
 #endif /* PUCC_PTYD */
 
-#ifndef UTMP_FILENAME
-#ifdef UTMP_FILE
+#if !defined(UTMP_FILENAME)
+#if defined(UTMP_FILE)
 #define UTMP_FILENAME UTMP_FILE
-#else
-#ifdef _PATH_UTMP
+#elif defined(_PATH_UTMP)
 #define UTMP_FILENAME _PATH_UTMP
 #else
 #define UTMP_FILENAME "/etc/utmp"
-#endif
 #endif
 #endif
 
@@ -459,19 +375,15 @@ extern struct utmp *getutid __((struct utmp *_Id));
 #endif
 #endif
 
-#ifndef WTMP_FILENAME
-#ifdef WTMP_FILE
+#if !defined(WTMP_FILENAME)
+#if defined(WTMP_FILE)
 #define WTMP_FILENAME WTMP_FILE
-#else
-#ifdef _PATH_WTMP
+#elif defined(_PATH_WTMP)
 #define WTMP_FILENAME _PATH_WTMP
-#else
-#ifdef SYSV
+#elif defined(SYSV)
 #define WTMP_FILENAME "/etc/wtmp"
 #else
 #define WTMP_FILENAME "/usr/adm/wtmp"
-#endif
-#endif
 #endif
 #endif
 
@@ -540,15 +452,6 @@ static Bool xterm_exiting = False;
 */
 static char **command_to_exec = NULL;
 
-#ifdef USE_SYSV_TERMIO
-#ifndef ICRNL
-#include <sys/termio.h>
-#endif
-#if defined (__sgi) || (defined(__linux__) && defined(__sparc__))
-#undef TIOCLSET /* XXX why is this undef-ed again? */
-#endif
-#endif /* USE_SYSV_TERMIO */
-
 #define TERMCAP_ERASE "kb"
 #define VAL_INITIAL_ERASE A2E(127)
 
@@ -612,7 +515,7 @@ static char **command_to_exec = NULL;
 #endif
 
 #ifndef VMS
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 /* The following structures are initialized in main() in order
 ** to eliminate any assumptions about the internal order of their
 ** contents.
@@ -628,7 +531,7 @@ static unsigned int d_lmode;
 
 #elif defined(USE_POSIX_TERMIOS)
 static struct termios d_tio;
-#else /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 static struct  sgttyb d_sg = {
 	0, 0, 0177, CKILL, EVENP|ODDP|ECHO|XTABS|CRMOD
 };
@@ -648,7 +551,7 @@ static struct jtchars d_jtc = {
 	'J', 'B'
 };
 #endif /* sony */
-#endif /* USE_SYSV_TERMIO */
+#endif /* USE_ANY_SYSV_TERMIO */
 #endif /* ! VMS */
 
 /*
@@ -1471,7 +1374,7 @@ main (int argc, char *argv[])
 	d_tio.c_cc[VREPRINT]= TREPRINT_DEF;
 	d_tio.c_cc[VLNEXT]= TLNEXT_DEF;
 	d_tio.c_cc[VDISCARD]= TDISCARD_DEF;
-#elif defined(USE_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS) /* { */
+#elif defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS) /* { */
 	/* Initialization is done here rather than above in order
 	** to prevent any assumptions about the order of the contents
 	** of the various terminal structures (which may change from
@@ -1961,7 +1864,7 @@ main (int argc, char *argv[])
 		}
 	}
 	if(i >= 0) {
-#if defined(USE_SYSV_TERMIO) && !defined(SVR4) && !defined(linux)
+#if defined(USE_ANY_SYSV_TERMIO) && !defined(SVR4) && !defined(linux)
 		/* SYSV has another pointer which should be part of the
 		** FILE structure but is actually a separate array.
 		*/
@@ -1975,9 +1878,9 @@ main (int argc, char *argv[])
 		stderr->_file = i;
 #endif
 		_bufend(stderr) = old_bufend;
-#else	/* USE_SYSV_TERMIO */
+#else	/* USE_ANY_SYSV_TERMIO */
 		freopen(dbglogfile, "w", stderr);
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO */
 
 		/* mark this file as close on exec */
 		(void) fcntl(i, F_SETFD, 1);
@@ -2037,7 +1940,7 @@ main (int argc, char *argv[])
 	if (fcntl(screen->respond, F_SETFD, mode) == -1)
 		Error(1);
 	nbio_register(screen->respond);
-#elif defined(USE_SYSV_TERMIO) || defined(__MVS__)
+#elif defined(USE_ANY_SYSV_TERMIO) || defined(__MVS__)
 	if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
 		Error(1);
 #ifdef O_NDELAY
@@ -2047,7 +1950,7 @@ main (int argc, char *argv[])
 #endif /* O_NDELAY */
 	if (fcntl(screen->respond, F_SETFL, mode))
 		Error(1);
-#else	/* !MINIX && !USE_SYSV_TERMIO */
+#else	/* !MINIX && !USE_ANY_SYSV_TERMIO */
 	mode = 1;
 	if (ioctl (screen->respond, FIONBIO, (char *)&mode) == -1) SysError (ERROR_FIONBIO);
 #endif	/* MINIX, etc */
@@ -2479,7 +2382,7 @@ spawn (void)
 	int initial_erase = VAL_INITIAL_ERASE;
 #endif
 	int tty = -1;
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 	struct termio tio;
 #ifdef TIOCLSET
 	unsigned lmode;
@@ -2489,7 +2392,7 @@ spawn (void)
 #endif	/* HAS_LTCHARS */
 #elif defined(USE_POSIX_TERMIOS)
 	struct termios tio;
-#else /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 	int ldisc = 0;
 	int discipline;
 	unsigned lmode;
@@ -2500,7 +2403,7 @@ spawn (void)
 	int jmode;
 	struct jtchars jtc;
 #endif /* sony */
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO */
 
 	char termcap [TERMCAP_SIZE];
 	char newtc [TERMCAP_SIZE];
@@ -2514,7 +2417,7 @@ spawn (void)
 	struct ttysize ts;
 #elif defined(TIOCSWINSZ)
 	struct winsize ws;
-#endif
+#endif	/* sun vs TIOCSWINSZ */
 	struct passwd *pw = NULL;
 #ifdef HAVE_UTMP
 #if defined(UTMPX_FOR_UTMP)
@@ -2591,9 +2494,9 @@ spawn (void)
 #ifdef TIOCLSET
 				lmode = d_lmode;
 #endif	/* TIOCLSET */
-#if defined(USE_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)
+#if defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)
 				tio = d_tio;
-#else	/* not USE_SYSV_TERMIO and not USE_POSIX_TERMIOS */
+#else	/* not USE_ANY_SYSV_TERMIO and not USE_POSIX_TERMIOS */
 				sg = d_sg;
 				tc = d_tc;
 				discipline = d_disipline;
@@ -2601,7 +2504,7 @@ spawn (void)
 				jmode = d_jmode;
 				jtc = d_jtc;
 #endif /* sony */
-#endif	/* USE_SYSV_TERMIO or USE_POSIX_TERMIOS */
+#endif	/* USE_ANY_SYSV_TERMIO or USE_POSIX_TERMIOS */
 			} else {
 			    SysError(ERROR_OPDEVTTY);
 			}
@@ -2621,13 +2524,13 @@ spawn (void)
 			if(ioctl(tty, TIOCLGET, &lmode) == -1)
 				lmode = d_lmode;
 #endif	/* TIOCLSET */
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 			if(ioctl(tty, TCGETA, &tio) == -1)
 				tio = d_tio;
 #elif defined(USE_POSIX_TERMIOS)
 			if (tcgetattr(tty, &tio) == -1)
 				tio = d_tio;
-#else   /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else   /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 			if(ioctl(tty, TIOCGETP, (char *)&sg) == -1)
 				sg = d_sg;
 			if(ioctl(tty, TIOCGETC, (char *)&tc) == -1)
@@ -2640,17 +2543,17 @@ spawn (void)
 			if(ioctl(tty, TIOCKGETC, (char *)&jtc) == -1)
 				jtc = d_jtc;
 #endif /* sony */
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO */
 
 #if OPT_INITIAL_ERASE
 			if (resource.ptyInitialErase) {
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 				initial_erase = tio.c_cc[VERASE];
 #elif defined(USE_POSIX_TERMIOS)
 				initial_erase = tio.c_cc[VERASE];
-#else   /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else   /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 				initial_erase = sg.sg_erase;
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO */
 			}
 			TRACE(("%s @%d, ptyInitialErase:%d, backarrow_is_erase:%d, initial_erase:%d (from /dev/tty)\n",
 				__FILE__, __LINE__,
@@ -2681,7 +2584,7 @@ spawn (void)
 
 #if OPT_INITIAL_ERASE
 		if (resource.ptyInitialErase) {
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 			struct termio my_tio;
 			if(ioctl(screen->respond, TCGETA, &my_tio) == 0)
 				initial_erase = my_tio.c_cc[VERASE];
@@ -2689,11 +2592,11 @@ spawn (void)
 			struct termios my_tio;
 			if (tcgetattr(screen->respond, &my_tio) == 0)
 				initial_erase = my_tio.c_cc[VERASE];
-#else   /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else   /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 			struct sgttyb my_sg;
 			if(ioctl(screen->respond, TIOCGETP, (char *)&my_sg) == 0)
 				initial_erase = my_sg.sg_erase;
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO */
 		}
 		if (resource.backarrow_is_erase)
 		if (initial_erase == 127) {	/* see input.c */
@@ -3054,7 +2957,7 @@ spawn (void)
 		 * set up the tty modes
 		 */
 		{
-#if defined(USE_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)
+#if defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)
 #if defined(umips) || defined(CRAY) || defined(linux)
 		    /* If the control tty had its modes screwed around with,
 		       eg. by lineedit in the shell, or emacs, etc. then tio
@@ -3236,7 +3139,7 @@ spawn (void)
 		    if (tcsetattr (tty, TCSANOW, &tio) == -1)
 			    HsSysError(cp_pipe[1], ERROR_TIOCSETP);
 #endif  /* USE_POSIX_TERMIOS */
-#else	/* USE_SYSV_TERMIO or USE_POSIX_TERMIOS */
+#else	/* USE_ANY_SYSV_TERMIO or USE_POSIX_TERMIOS */
 		    sg.sg_flags &= ~(ALLDELAY | XTABS | CBREAK | RAW);
 		    sg.sg_flags |= ECHO | CRMOD;
 		    /* make sure speed is set on pty so that editors work right*/
@@ -3290,7 +3193,7 @@ spawn (void)
 		    if (ioctl (tty, TIOCKSETC, (char *)&jtc) == -1)
 			    HsSysError (cp_pipe[1], ERROR_TIOCKSETC);
 #endif /* sony */
-#endif	/* !USE_SYSV_TERMIO */
+#endif	/* !USE_ANY_SYSV_TERMIO */
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 		    if (Console) {
 #ifdef TIOCCONS
@@ -3331,7 +3234,7 @@ spawn (void)
 		if (! resource.ptyInitialErase
 		 && !override_tty_modes
 		 && !ttymodelist[XTTYMODE_erase].set) {
-#ifdef USE_SYSV_TERMIO
+#ifdef USE_ANY_SYSV_TERMIO
 			if(ioctl(tty, TCGETA, &tio) == -1)
 				tio = d_tio;
 			tio.c_cc[VERASE] = initial_erase;
@@ -3341,12 +3244,12 @@ spawn (void)
 				tio = d_tio;
 			tio.c_cc[VERASE] = initial_erase;
 			tcsetattr(tty, TCSANOW, &tio);
-#else   /* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else   /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 			if(ioctl(tty, TIOCGETP, (char *)&sg) == -1)
 				sg = d_sg;
 			sg.sg_erase = initial_erase;
 			ioctl(tty, TIOCSETP, (char *)&sg);
-#endif	/* USE_SYSV_TERMIO */
+#endif	/* USE_ANY_SYSV_TERMIO */
 		}
 #endif
 
@@ -3769,11 +3672,11 @@ spawn (void)
 		shname_minus = (char *)malloc(strlen(shname) + 2);
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
-#if !defined(USE_SYSV_TERMIO) && !defined(USE_POSIX_TERMIOS)
+#if !defined(USE_ANY_SYSV_TERMIO) && !defined(USE_POSIX_TERMIOS)
 		ldisc = XStrCmp("csh", shname + strlen(shname) - 3) == 0 ?
 		 NTTYDISC : 0;
 		ioctl(0, TIOCSETD, (char *)&ldisc);
-#endif	/* !USE_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#endif	/* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 
 #ifdef USE_LOGIN_DASH_P
 		if (term->misc.login_shell && pw && added_utmp_entry)
@@ -4609,8 +4512,8 @@ int GetBytesAvailable (int fd)
     else
       return 0;
 #elif defined(MINIX)
-    /* The answer doesn't have to correct. Calling nbio_isinprogress is
-     * much cheaper than called nbio_select.
+    /* The answer doesn't have to be correct.  Calling nbio_isinprogress() is
+     * much cheaper than nbio_select().
      */
     if (nbio_isinprogress(fd, ASIO_READ))
 	return 0;

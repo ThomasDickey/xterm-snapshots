@@ -1,6 +1,6 @@
 /*
  *	$XConsortium: ptyx.h /main/67 1996/11/29 10:34:19 swick $
- *	$XFree86: xc/programs/xterm/ptyx.h,v 3.80 2000/11/01 01:12:41 dawes Exp $
+ *	$XFree86: xc/programs/xterm/ptyx.h,v 3.81 2000/11/29 08:39:26 keithp Exp $
  */
 
 /*
@@ -1237,10 +1237,7 @@ typedef struct {
 #ifdef XRENDERFONT
 	XftFont		*renderFont;
 	XftFont		*renderFontBold;
-	Picture		renderPicture;
-	Pixmap		renderColorPix;
-	Picture		renderColor;
-	GC		renderGC, renderPixGC;
+	XftDraw		*renderDraw;
 #endif
 } TScreen;
 

@@ -27,8 +27,6 @@
 
 #if OPT_WIDE_CHARS
 
-#include <stdlib.h>
-
 struct classentry {
   int class;
   int first;

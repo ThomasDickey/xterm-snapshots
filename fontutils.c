@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.25 2000/11/01 01:12:38 dawes Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.27 2000/12/03 19:09:26 keithp Exp $
  */
 
 /************************************************************
@@ -469,9 +469,22 @@ same_font_size(XFontStruct *nfs, XFontStruct *bfs)
 static int
 is_fixed_font(XFontStruct *fs)
 {
-	return (fs->min_bounds.width == fs->max_bounds.width
-	   &&   fs->min_bounds.width == fs->min_bounds.width);
+	return (fs->min_bounds.width == fs->max_bounds.width);
 }
+
+/*
+ * Check if the font looks like a double width font (i.e. contains
+ * characters of width X and 2X
+ */
+#if OPT_WIDE_CHARS
+static int
+is_double_width_font(XFontStruct *fs)
+{
+	return (2 * fs->min_bounds.width == fs->max_bounds.width);
+}
+#else
+#define is_double_width_font(fs) 0
+#endif
 
 #define EmptyFont(fs) (fs != 0 \
 		   && ((fs)->ascent + (fs)->descent == 0 \
@@ -555,22 +568,29 @@ xtermLoadFont (
 	 * and 12x13ja as the corresponding fonts for 9x18 and 6x13.
 	 */
 	if_OPT_WIDE_CHARS(screen, {
-		if (wfontname == 0) {
+		if (wfontname == 0 && !is_double_width_font(nfs)) {
 			fp = get_font_name_props(screen->display, nfs, normal);
 			if (fp != 0) {
 				wfontname = wide_font_name(fp);
 				TRACE(("...derived wide %s\n", wfontname));
 			}
 		}
-		if (wfontname
-		 && (wfs = XLoadQueryFont(screen->display, wfontname)) == 0) {
+
+		if (wfontname) {
+			wfs = XLoadQueryFont(screen->display, wfontname);
+		} else {
+			wfs = nfs;
 		}
+
 		if (wbfontname) {
 			wbfs = XLoadQueryFont(screen->display, wbfontname);
+		} else if (is_double_width_font(bfs)) {
+			wbfs = bfs;
 		} else {
 			wbfs = wfs;
 			TRACE(("...cannot load wide bold font %s\n", wbfontname));
 		}
+
 		if (EmptyFont(wbfs))
 			goto bad;	/* can't use a 0-sized font */
 	})
@@ -830,33 +850,40 @@ xtermComputeFontInfo (TScreen *screen, struct _vtwin *win, XFontStruct *font, in
     if (!screen->renderFont && term->misc.face_name &&
 	XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))))
     {
-	XftFontName		    fn;
-	
-	fn.mask = XftFontNameFace | XftFontNameSize | XftFontNameSpacing;
-	fn.face = term->misc.face_name;
-	fn.size = term->misc.face_size * 64;
-	fn.spacing = XftFontSpacingCell;
-	screen->renderFont = XftLoadFont (dpy, &fn);
-	screen->renderFontBold = 0;
-	if (screen->renderFont &&
-	    (XftFontMaxAdvanceWidth (dpy, screen->renderFont) == 0 ||
-	     XftFontHeight (dpy, screen->renderFont) == 0))
+	screen->renderFont = XftFontOpen (dpy, DefaultScreen (dpy),
+					  XFT_FAMILY, XftTypeString, term->misc.face_name,
+					  XFT_FAMILY, XftTypeString, "mono",
+					  XFT_SIZE, XftTypeInteger, term->misc.face_size,
+					  XFT_SPACING, XftTypeInteger, XFT_MONO,
+					  0);
+	if (screen->renderFont)
 	{
-	    XftFreeFont (dpy, screen->renderFont);
-	    screen->renderFont = 0;
+	    screen->renderFontBold = XftFontOpen (dpy, DefaultScreen (dpy),
+						  XFT_FAMILY, XftTypeString, term->misc.face_name,
+						  XFT_FAMILY, XftTypeString, "mono",
+						  XFT_SIZE, XftTypeInteger, term->misc.face_size,
+						  XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
+						  XFT_SPACING, XftTypeInteger, XFT_MONO,
+						  XFT_CHAR_WIDTH, XftTypeInteger, 
+						    screen->renderFont->max_advance_width,
+						  0);
 	}
     }
     if (screen->renderFont)
     {
-	win->f_width = XftFontMaxAdvanceWidth (dpy, screen->renderFont);
-	win->f_height = XftFontHeight (dpy, screen->renderFont);
-	win->f_ascent = XftFontAscent (dpy, screen->renderFont);
-	win->f_descent = XftFontDescent (dpy, screen->renderFont);
+	win->f_width = screen->renderFont->max_advance_width;
+	win->f_height = screen->renderFont->height;
+	win->f_ascent = screen->renderFont->ascent;
+	win->f_descent = screen->renderFont->descent;
     }
     else
 #endif
     {
-	win->f_width  = (font->max_bounds.width);
+	if (is_double_width_font(font)) {
+	    win->f_width  = (font->min_bounds.width);
+	} else {
+	    win->f_width  = (font->max_bounds.width);
+	}
 	win->f_height = (font->ascent + font->descent);
 	win->f_ascent = font->ascent;
 	win->f_descent = font->descent;

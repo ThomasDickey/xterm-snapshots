@@ -63,63 +63,9 @@
 #include <error.h>
 #include <data.h>
 #include <xcharmouse.h>
+#include <xterm_io.h>
 
 #include <signal.h>
-
-#ifdef SVR4
-#include <termios.h>
-#elif !defined(__CYGWIN__)
-#include <sys/ioctl.h>
-#endif
-
-#if defined(__CYGWIN__) && !defined(TIOCSPGRP)
-#include <termios.h>
-#define TIOCSPGRP (_IOW('t', 118, pid_t))
-#endif
-
-#ifdef __hpux
-#include <sys/termio.h>
-#endif
-
-#ifdef SYSV
-#if !defined(DGUX)			/* Intel DG/ux uses termios.h */
-#include <sys/termio.h>
-#endif /* DGUX */
-#ifdef USE_USG_PTYS
-#include <sys/stream.h>			/* get typedef used in ptem.h */
-#include <sys/ptem.h>
-#endif
-#elif defined(sun) && !defined(SVR4)
-#include <sys/ttycom.h>
-#ifdef TIOCSWINSZ
-#undef TIOCSSIZE
-#endif
-#endif
-
-#ifdef MINIX
-#include <termios.h>
-#endif
-
-#ifdef ISC
-#ifndef SYSV
-#include <sys/termio.h>
-#endif
-#define TIOCGPGRP TCGETPGRP
-#define TIOCSPGRP TCSETPGRP
-#endif
-
-#ifdef __EMX__
-extern int ptioctl(int fd, int func, void* data);
-#define ioctl ptioctl
-#define TIOCSWINSZ	113
-#define TIOCGWINSZ	117
-struct winsize {
-	unsigned short	ws_row;		/* rows, in characters */
-	unsigned short	ws_col;		/* columns, in characters */
-	unsigned short	ws_xpixel;	/* horizontal size, pixels */
-	unsigned short	ws_ypixel;	/* vertical size, pixels */
-};
-#endif
 
 /*
  * Allocates memory for a 2-dimensional array of chars and returns a pointer
