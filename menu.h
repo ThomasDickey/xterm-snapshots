@@ -1,5 +1,5 @@
 /* $XConsortium: menu.h /main/27 1996/12/01 23:47:03 swick $ */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.16 1999/08/21 13:49:04 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.17 1999/12/30 02:05:55 robin Exp $ */
 /*
 
 Copyright 1999 by Thomas E. Dickey <dickey@clark.net>
