@@ -8,9 +8,17 @@
 #	'xtermm' drops color in favor of additional function keys.  If you need
 #	both, use terminfo.
 #
-xf|xterm-xfree86|xterm-new|xterm terminal emulator (XFree86):\
-	:is=\E7\E[r\E[m\E[?7h\E[?1;3;4;6l\E[4l\E8\E>:\
-	:rs=\E7\E[r\E[m\E[?7h\E[?1;3;4;6l\E[4l\E8\E>:\
+#	The 1023-character limit applies to each entry after resolving the
+#	"tc=" strings.  Some implementations may discount all or part of the
+#	formatting characters in the entry (i.e., the backslash newline tab
+#	colon).  GNU termcap does not have this limit.
+#
+#	I checked the limits using ncurses "captoinfo -CrTv", which prints
+#	the resolved length of each entry in a comment at the end - T.Dickey
+#
+xf|xterm-xfree86|XFree86 xterm:\
+	:is=\E[!p\E[?3;4l\E[4l\E>:\
+	:rs=\E[!p\E[?3;4l\E[4l\E>:\
 	:AL=\E[%dL:DL=\E[%dM:DC=\E[%dP:DO=\E[%dB:UP=\E[%dA:\
 	:LE=\E[%dD:RI=\E[%dC:\
 	:al=\E[L:am:bl=^G:\
@@ -23,49 +31,51 @@ xf|xterm-xfree86|xterm-new|xterm terminal emulator (XFree86):\
 	:k5=\E[15~:k6=\E[17~:k7=\E[18~:k8=\E[19~:k9=\E[20~:\
 	:k;=\E[21~:F1=\E[23~:F2=\E[24~:\
 	:kn#12:\
-	:@7=\E[4~:kh=\E[1~:\
+	:kH=\E[4~::@7=\E[4~:kh=\E[1~:\
 	:@0=\E[1~:kI=\E[2~:kD=\E[3~:\
 	:*6=\E[4~:kP=\E[5~:kN=\E[6~:\
 	:km:\
 	:kb=^H:ku=\EOA:kd=\EOB:kr=\EOC:kl=\EOD:\
 	:li#24:md=\E[1m:me=\E[m^O:mr=\E[7m:ms:nd=\E[C:\
-	:eA=\E)0:as=^N:ae=^O:\
-	:ml=\El:mu=\Em:\
-	:sc=\E7:rc=\E8:sf=\n:so=\E[7m:se=\E[27m:sr=\EM:\
-	:st=\EH:\
+	:eA=\E)0:as=^N:ae=^O:ml=\El:mu=\Em:\
+	:sc=\E7:rc=\E8:sf=\n:so=\E[7m:se=\E[27m:sr=\EM:st=\EH:\
 	:ti=\E7\E[?47h:te=\E[2J\E[?47l\E8:\
 	:vi=\E[?25l:ve=\E[?25h:\
 	:up=\E[A:us=\E[4m:ue=\E[24m:xn:\
 	:ut:Co#8:op=\E[39;49m:AB=\E[4%dm:AF=\E[3%dm:\
 	:pa#64:Sf=\E[3%dm:Sb=\E[4%dm:
-v1|xterm-24|xterms|vs100|xterm terminal emulator (X Window System):\
+v1|xterm-24|xterms|vs100|24x80 xterm:\
 	:li#24:\
 	:tc=xterm:
-v2|xterm-65|xterm with tall window 65x80 (X Window System):\
+v2|xterm-65|65x80 xterm:\
 	:li#65:tc=xterm:
-vb|xterm-bold|xterm with bold instead of underline (X Window System):\
+vb|xterm-bold|xterm with bold for underline:\
 	:us=\E[1m:tc=xterm:
-vb|xterm-boldso|xterm with bold for standout (X Window System):\
-	:so=\E[1m:tc=xterm:
-vm|xtermm|monochrome xterm (X Window System):\
+vb|xterm-boldso|xterm with bold for standout:\
+	:se=\E[m:so=\E[1m:tc=xterm:
+vm|xtermm|monochrome xterm:\
 	:F1=\E[23~:F2=\E[24~:F3=\E[25~:F4=\E[26~:F5=\E[28~:\
 	:F6=\E[29~:F7=\E[31~:F8=\E[32~:F9=\E[33~:FA=\E[34~:\
 	:kn#20:\
 	:st@:ut@:Co@:NC@:op@:AB@:AF@:pa@:Sf@:Sb@:tc=xterm:
 #
 # This should work for the commonly used "color xterm" variations (XFree86
-# xterm, color_xterm, nxterm, rxvt):
-vc|xterm-color|generic "ANSI" color xterm (X Window System):\
+# xterm, color_xterm, nxterm, rxvt).  You may have trouble with this using
+# conventional termcap because ncurses reports it is longer than 1023
+# characters.  That is because resolving it adds the alternate character-set
+# (you can suppress it with "ac@").
+vc|xterm-color|generic "ANSI" color xterm:\
 	:Co#8:NC@:pa#64:op=\E[m:AB=\E[4%dm:AF=\E[3%dm:tc=xterm-r6:
 vt|xterm-vt220|xterm emulating vt220:\
 	:tc=xterm-xfree86:
 #
 # vi may work better with this entry, because vi doesn't use insert mode much.
-vi|xterm-ic|xterm-vi|xterm with insert character instead of insert mode:\
+# |xterm-ic|xterm-vi|xterm with insert character instead of insert mode:\
+vi|xterm-ic|xterm-vi|xterm with insert char:\
 	:im@:ei@:mi@:ic=\E[@:IC=\E[%d@:tc=xterm:
 #
 # Compatible with the R6 xterm
-r6|xterm-r6|xterm-old|xterm X11R6 version:\
+r6|xterm-r6|xterm-old|X11R6 xterm:\
 	:is=\E7\E[r\E[m\E[?7h\E[?1;3;4;6l\E[4l\E8\E>:\
 	:rs=\E7\E[r\E[m\E[?7h\E[?1;3;4;6l\E[4l\E8\E>:\
 	:AL=\E[%dL:DL=\E[%dM:DC=\E[%dP:DO=\E[%dB:UP=\E[%dA:\
@@ -94,7 +104,7 @@ r6|xterm-r6|xterm-old|xterm X11R6 version:\
 	:up=\E[A:us=\E[4m:ue=\E[m:xn:
 #
 # Compatible with the R5 xterm
-r5|xterm-r5|xterm X11R5 version:\
+r5|xterm-r5|X11R5 xterm X11R5:\
 	:AL=\E[%dL:DC=\E[%dP:DL=\E[%dM:DO=\E[%dB:IC=\E[%d@:UP=\E[%dA:\
 	:al=\E[L:am:\
 	:bs:cd=\E[J:ce=\E[K:cl=\E[H\E[2J:cm=\E[%i%d;%dH:co#80:\
@@ -103,7 +113,7 @@ r5|xterm-r5|xterm X11R5 version:\
 	:im=\E[4h:ei=\E[4l:mi:\
 	:ho=\E[H:\
 	:is=\E[r\E[m\E[2J\E[H\E[?7h\E[?1;3;4;6l\E[4l:\
-	:rs=\E[r\E[m\E[2J\E[H\E[?7h\E[?1;3;4;6l\E[4l\E<:\
+	:rs=\E>\E[?1;3;4;5;6l\E[4l\E[?7h\E[m\E[r\E[2J\E[H:\
 	:k1=\E[11~:k2=\E[12~:k3=\E[13~:k4=\E[14~:kb=^H:kd=\EOB:ke=\E[?1l\E>:\
 	:kl=\EOD:km:kn#4:kr=\EOC:ks=\E[?1h\E=:ku=\EOA:\
 	:@7=\E[4~:kh=\E[1~:\

@@ -65,12 +65,14 @@
 #define	ERROR_TIOCKGETC	45	/* spawn: ioctl() failed on TIOCKGETC */
 #define	ERROR_TIOCKSET	46	/* spawn: ioctl() failed on TIOCKSET */
 #define	ERROR_TIOCKSETC	47	/* spawn: ioctl() failed on TIOCKSETC */
+#define	ERROR_SPREALLOC 48	/* spawn: realloc of ttydev failed */
 /* charproc.c */
 #define	ERROR_SELECT	50	/* in_put: select() failed */
 #define	ERROR_VINIT	54	/* VTInit: can't initialize window */
 #define	ERROR_CNMALLOC1	55	/* Changename: malloc failed */
 #define	ERROR_CNMALLOC2	56	/* Changename: malloc failed */
-#define	ERROR_KMMALLOC1	57	/* HandleKeymapChange: malloc failed */
+#define	ERROR_KMMALLOC1 57	/* HandleKeymapChange: malloc failed */
+#define	ERROR_VTREALLOC	58	/* VTParse: realloc failed */
 /* Tekproc.c */
 #define	ERROR_TSELECT	60	/* Tinput: select() failed */
 #define	ERROR_TINIT	64	/* TekInit: can't initialize window */
@@ -106,3 +108,4 @@
 #define	ERROR_SBRALLOC2	111	/* ScrollBarOn: realloc() failed on rows */
 /* util.c */
 #define	ERROR_UBACK	120	/* ReverseVideo: can't make background */
+#define	ERROR_MMALLOC   121     /* my_memmove: malloc/realloc failed */
