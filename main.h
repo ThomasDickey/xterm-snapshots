@@ -2,7 +2,7 @@
  *	$Xorg: main.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/main.h,v 3.8 2003/10/27 01:07:57 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.h,v 3.9 2004/03/04 02:21:55 dickey Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -40,6 +40,12 @@
 #define DEFBORDER		2
 #define DEFFACENAME		NULL
 #define DEFFACESIZE		14
+
+#if OPT_BLINK_TEXT
+#define DEFBLINKASBOLD		FALSE
+#else
+#define DEFBLINKASBOLD		TRUE
+#endif
 
 #ifndef DEFDELETE_DEL
 #define DEFDELETE_DEL 2

@@ -1,8 +1,8 @@
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.93 2003/12/18 21:12:16 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.95 2004/03/04 02:21:56 dickey Exp $ */
 
 /************************************************************
 
-Copyright 1999-2002,2003 by Thomas E. Dickey
+Copyright 1999-2003,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -317,6 +317,7 @@ extern int errno;
 #define XtNeightBitInput	"eightBitInput"
 #define XtNeightBitOutput	"eightBitOutput"
 #define XtNfaceName		"faceName"
+#define XtNfaceNameDoublesize	"faceNameDoublesize"
 #define XtNfaceSize		"faceSize"
 #define XtNfont1		"font1"
 #define XtNfont2		"font2"
@@ -362,6 +363,7 @@ extern int errno;
 #define XtNprinterControlMode	"printerControlMode"
 #define XtNprinterExtent	"printerExtent"
 #define XtNprinterFormFeed	"printerFormFeed"
+#define XtNrenderFont		"renderFont"
 #define XtNresizeGravity	"resizeGravity"
 #define XtNreverseWrap		"reverseWrap"
 #define XtNrightScrollBar	"rightScrollBar"
@@ -372,6 +374,8 @@ extern int errno;
 #define XtNscrollPos		"scrollPos"
 #define XtNscrollTtyOutput	"scrollTtyOutput"
 #define XtNshiftFonts		"shiftFonts"
+#define XtNshowBlinkAsBold	"showBlinkAsBold"
+#define XtNshowMissingGlyphs	"showMissingGlyphs"
 #define XtNsignalInhibit	"signalInhibit"
 #define XtNtekGeometry		"tekGeometry"
 #define XtNtekInhibit		"tekInhibit"
@@ -433,6 +437,7 @@ extern int errno;
 #define XtCEightBitInput	"EightBitInput"
 #define XtCEightBitOutput	"EightBitOutput"
 #define XtCFaceName		"FaceName"
+#define XtCFaceNameDoublesize	"FaceNameDoublesize"
 #define XtCFaceSize		"FaceSize"
 #define XtCFont1		"Font1"
 #define XtCFont2		"Font2"
@@ -442,6 +447,8 @@ extern int errno;
 #define XtCFont6		"Font6"
 #define XtCFontDoublesize	"FontDoublesize"
 #define XtCFontStyle		"FontStyle"
+#define XtCForceBoxChars	"ForceBoxChars"
+#define XtCFreeBoldBox		"FreeBoldBox"
 #define XtCHighlightSelection	"HighlightSelection"
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
 #define XtCI18nSelections	"I18nSelections"
@@ -470,6 +477,7 @@ extern int errno;
 #define XtCPrinterControlMode	"PrinterControlMode"
 #define XtCPrinterExtent	"PrinterExtent"
 #define XtCPrinterFormFeed	"PrinterFormFeed"
+#define XtCRenderFont		"RenderFont"
 #define XtCResizeGravity	"ResizeGravity"
 #define XtCReverseWrap		"ReverseWrap"
 #define XtCRightScrollBar	"RightScrollBar"
@@ -479,6 +487,8 @@ extern int errno;
 #define XtCScrollLines		"ScrollLines"
 #define XtCScrollPos		"ScrollPos"
 #define XtCShiftFonts		"ShiftFonts"
+#define XtCShowBlinkAsBold	"ShowBlinkAsBold"
+#define XtCShowMissingGlyphs	"ShowMissingGlyphs"
 #define XtCSignalInhibit	"SignalInhibit"
 #define XtCTekInhibit		"TekInhibit"
 #define XtCTekSmall		"TekSmall"
@@ -748,6 +758,7 @@ extern void initPtyData (PtyData *data);
 
 #if OPT_WIDE_CHARS
 extern Char * convertToUTF8(Char *lp, unsigned c);
+extern void switchPtyData(TScreen *screen, PtyData *data, int f);
 extern void writePtyData(int f, IChar *d, unsigned len);
 #else
 #define writePtyData(f,d,len) v_write(f,d,len)
@@ -766,16 +777,28 @@ extern void ScrnInsertChar (TScreen *screen, int n);
 extern void ScrnInsertLine (TScreen *screen, ScrnBuf sb, int last, int where, int n, int size);
 extern void ScrnRefresh (TScreen *screen, int toprow, int leftcol, int nrows, int ncols, Bool force);
 
-#define ScrnClrWrapped(screen, row) \
+#define ScrnClrFlag(screen, row, flag) \
 	SCRN_BUF_FLAGS(screen, row + screen->topline) = \
-		(Char *)((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & ~ LINEWRAPPED)
+		(Char *)((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & ~ (flag))
 
-#define ScrnSetWrapped(screen, row) \
+#define ScrnSetFlag(screen, row, flag) \
 	SCRN_BUF_FLAGS(screen, row + screen->topline) = \
-		(Char *)(((long)SCRN_BUF_FLAGS(screen, row + screen->topline) | LINEWRAPPED))
+		(Char *)(((long)SCRN_BUF_FLAGS(screen, row + screen->topline) | (flag)))
 
-#define ScrnTstWrapped(screen, row) \
-	((row + screen->topline) >= 0 && ((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & LINEWRAPPED) != 0)
+#define ScrnTstFlag(screen, row, flag) \
+	((row + screen->savelines + screen->topline) >= 0 && ((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & (flag)) != 0)
+
+#define ScrnClrBlinked(screen, row) ScrnClrFlag(screen, row, BLINK)
+#define ScrnSetBlinked(screen, row) ScrnSetFlag(screen, row, BLINK)
+#define ScrnTstBlinked(screen, row) ScrnTstFlag(screen, row, BLINK)
+
+#define ScrnClrWrapped(screen, row) ScrnClrFlag(screen, row, LINEWRAPPED)
+#define ScrnSetWrapped(screen, row) ScrnSetFlag(screen, row, LINEWRAPPED)
+#define ScrnTstWrapped(screen, row) ScrnTstFlag(screen, row, LINEWRAPPED)
+
+#if OPT_WIDE_CHARS
+extern void ChangeToWide(TScreen * screen);
+#endif
 
 /* scrollbar.c */
 extern void DoResizeScreen (XtermWidget xw);

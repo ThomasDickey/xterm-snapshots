@@ -2,10 +2,10 @@
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.69 2003/12/31 17:12:28 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.70 2004/03/04 02:21:55 dickey Exp $ */
 
 /*
- * Copyright 1999-2002,2003 by Thomas E. Dickey
+ * Copyright 1999-2003,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -354,8 +354,13 @@ Input(TKeyboard * keyboard,
 #if OPT_TCAP_QUERY
     if (screen->tc_query >= 0) {
 	keysym = screen->tc_query;
-	nbytes = 0;
-	strbuf[0] = 0;
+	if (keysym != XK_BackSpace) {
+	    nbytes = 0;
+	    strbuf[0] = 0;
+	} else {
+	    nbytes = 1;
+	    strbuf[0] = 8;
+	}
     } else
 #endif
 #if OPT_I18N_SUPPORT

@@ -2,11 +2,11 @@
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.152 2003/12/31 17:12:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.153 2004/03/04 02:21:54 dickey Exp $ */
 
 /*
 
-Copyright 1999-2002,2003 by Thomas E. Dickey
+Copyright 1999-2003,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -154,8 +154,8 @@ static void savemodes(XtermWidget termw);
 static void unparseputn(unsigned int n, int fd);
 static void window_ops(XtermWidget termw);
 
-#if OPT_BLINK_CURS
-static void BlinkCursor(XtPointer closure, XtIntervalId * id);
+#if OPT_BLINK_CURS || OPT_BLINK_TEXT
+static void HandleBlinking(XtPointer closure, XtIntervalId * id);
 static void StartBlinking(TScreen * screen);
 static void StopBlinking(TScreen * screen);
 #else
@@ -356,6 +356,9 @@ static XtActionsRec actionsList[] = {
 #if OPT_READLINE
     { "readline-button",	ReadLineButton },
 #endif
+#if OPT_RENDERFONT
+    { "set-render-font",	HandleRenderFont },
+#endif
 #if OPT_SCO_FUNC_KEYS
     { "set-sco-function-keys",	HandleScoFunctionKeys },
 #endif
@@ -370,6 +373,9 @@ static XtActionsRec actionsList[] = {
     { "tek-page",		HandleTekPage },
     { "tek-reset",		HandleTekReset },
     { "tek-copy",		HandleTekCopy },
+#endif
+#if OPT_WIDE_CHARS
+    { "set-utf8-mode",		HandleUTF8Mode },
 #endif
 };
 /* *INDENT-ON* */
@@ -389,7 +395,7 @@ static XtResource resources[] =
     Bres(XtNappkeypadDefault, XtCAppkeypadDefault, misc.appkeypadDefault, FALSE),
     Bres(XtNautoWrap, XtCAutoWrap, misc.autoWrap, TRUE),
     Bres(XtNawaitInput, XtCAwaitInput, screen.awaitInput, FALSE),
-    Bres(XtNfreeBoldBox, XtCBoolean, screen.free_bold_box, FALSE),
+    Bres(XtNfreeBoldBox, XtCFreeBoldBox, screen.free_bold_box, FALSE),
     Bres(XtNbackarrowKey, XtCBackarrowKey, screen.backarrow_key, TRUE),
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, TRUE),
     Bres(XtNbrokenSelections, XtCBrokenSelections, screen.brokenSelections, FALSE),
@@ -482,12 +488,20 @@ static XtResource resources[] =
 
 #if OPT_BLINK_CURS
     Bres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink, FALSE),
-    Ires(XtNcursorOnTime, XtCCursorOnTime, screen.cursor_on, 600),
-    Ires(XtNcursorOffTime, XtCCursorOffTime, screen.cursor_off, 300),
+#endif
+
+#if OPT_BLINK_CURS
+    Bres(XtNshowBlinkAsBold, XtCCursorBlink, screen.blink_as_bold, DEFBLINKASBOLD),
+#endif
+
+#if OPT_BLINK_CURS || OPT_BLINK_TEXT
+    Ires(XtNcursorOnTime, XtCCursorOnTime, screen.blink_on, 600),
+    Ires(XtNcursorOffTime, XtCCursorOffTime, screen.blink_off, 300),
 #endif
 
 #if OPT_BOX_CHARS
-    Bres(XtNforceBoxChars, XtCBoolean, screen.force_box_chars, FALSE),
+    Bres(XtNforceBoxChars, XtCForceBoxChars, screen.force_box_chars, FALSE),
+    Bres(XtNshowMissingGlyphs, XtCShowMissingGlyphs, screen.force_all_chars, FALSE),
 #endif
 
 #if OPT_BROKEN_OSC
@@ -622,9 +636,11 @@ static XtResource resources[] =
     Bres(XtNrightScrollBar, XtCRightScrollBar, misc.useRight, FALSE),
 #endif
 
-#ifdef XRENDERFONT
+#if OPT_RENDERFONT
     Ires(XtNfaceSize, XtCFaceSize, misc.face_size, DEFFACESIZE),
     Sres(XtNfaceName, XtCFaceName, misc.face_name, DEFFACENAME),
+    Sres(XtNfaceNameDoublesize, XtCFaceNameDoublesize, misc.face_wide_name, DEFFACENAME),
+    Bres(XtNrenderFont, XtCRenderFont, misc.render_font, TRUE),
 #endif
 };
 
@@ -928,6 +944,25 @@ set_ansi_conformance(TScreen * screen, int level)
 	    XSelectInput(XtDisplay((t)), XtWindow((t)), (s)->event_mask);	\
 	}
 
+#define WriteNow() {						\
+	    unsigned single = 0;				\
+								\
+	    if (screen->curss) {				\
+		dotext(screen,					\
+		       screen->gsets[(int) (screen->curss)],	\
+		       print_area, 1);				\
+		screen->curss = 0;				\
+		single++;					\
+	    }							\
+	    if (print_used > single) {				\
+		dotext(screen,					\
+		       screen->gsets[(int) (screen->curgl)],	\
+		       print_area + single,			\
+		       print_used - single);			\
+	    }							\
+	    print_used = 0;					\
+	}							\
+
 extern int last_written_col, last_written_row;
 
 static void
@@ -984,22 +1019,9 @@ VTparse(void)
 #if OPT_WIDE_CHARS
 	if (screen->wide_chars
 	    && my_wcwidth(c) == 0) {
-	    unsigned single = 0;
 	    int prev, precomposed;
 
-	    if (screen->curss) {
-		dotext(screen, screen->gsets[(int) (screen->curss)],
-		       print_area, 1);
-		screen->curss = 0;
-		single++;
-	    }
-	    if (print_used > single) {
-		dotext(screen,
-		       screen->gsets[(int) (screen->curgl)],
-		       print_area + single,
-		       print_used - single);
-	    }
-	    print_used = 0;
+	    WriteNow();
 
 	    prev = getXtermCell(screen, last_written_row, last_written_col);
 	    precomposed = do_precomposition(prev, c);
@@ -1146,22 +1168,7 @@ VTparse(void)
 	   the buffer and draw it now */
 
 	if (iswide(c) != last_was_wide) {
-	    unsigned single = 0;
-
-	    if (screen->curss) {
-		dotext(screen,
-		       screen->gsets[(int) (screen->curss)],
-		       print_area, 1);
-		screen->curss = 0;
-		single++;
-	    }
-	    if (print_used > single) {
-		dotext(screen,
-		       screen->gsets[(int) (screen->curgl)],
-		       print_area + single,
-		       print_used - single);
-	    }
-	    print_used = 0;
+	    WriteNow();
 	}
 #endif
 
@@ -1199,22 +1206,7 @@ VTparse(void)
 
 	if (nextstate == CASE_PRINT
 	    || (laststate == CASE_PRINT && print_used)) {
-	    unsigned single = 0;
-
-	    if (screen->curss) {
-		dotext(screen,
-		       screen->gsets[(int) (screen->curss)],
-		       print_area, 1);
-		screen->curss = 0;
-		single++;
-	    }
-	    if (print_used > single) {
-		dotext(screen,
-		       screen->gsets[(int) (screen->curgl)],
-		       print_area + single,
-		       print_used - single);
-	    }
-	    print_used = 0;
+	    WriteNow();
 	}
 
 	/*
@@ -1723,6 +1715,7 @@ VTparse(void)
 		    break;
 		case 5:	/* Blink                */
 		    term->flags |= BLINK;
+		    StartBlinking(screen);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG();
 		    });
@@ -2482,16 +2475,15 @@ VTparse(void)
 	case CASE_UTF8:
 	    /* If we did not set UTF-8 mode from resource or the
 	     * command-line, allow it to be enabled/disabled by
-	     * control sequence.  To keep the logic simple, require
-	     * that wide_chars have been set during initialization
-	     * so that we have been maintaining data structures for
-	     * wide characters, anyway.  Otherwise we would have to
-	     * reallocate everything the first time we turned UTF-8
-	     * mode on.
+	     * control sequence. 
 	     */
+	    if (!screen->wide_chars) {
+		WriteNow();
+		ChangeToWide(screen);
+	    }
 	    if (screen->wide_chars
 		&& screen->utf8_mode != 2) {
-		screen->utf8_mode = (c == 'G');
+		switchPtyData(screen, &VTbuffer, c == 'G');
 		TRACE(("UTF8 mode %s\n",
 		       screen->utf8_mode ? "ON" : "OFF"));
 	    } else {
@@ -2810,7 +2802,7 @@ in_put(void)
 #define	TICK	(1000/8)
 #define	MIN(a,b)	(((a)<(b))?(a):(b))
 #define	MAX(a,b)	(((a)>(b))?(a):(b))
-    int tick = MAX(1, MIN(screen->cursor_on, screen->cursor_off)) * TICK;
+    int tick = MAX(1, MIN(screen->blink_on, screen->blink_off)) * TICK;
 #endif
 
     for (;;) {
@@ -2877,7 +2869,7 @@ in_put(void)
 	    select_timeout.tv_usec = 50000;
 	    time_select = 1;
 #if OPT_BLINK_CURS
-	} else if ((screen->cursor_blink &&
+	} else if ((screen->blink_timer != 0 &&
 		    ((screen->select & FOCUS) || screen->always_highlight)) ||
 		   (screen->cursor_state == BLINKED_OFF)) {
 	    select_timeout.tv_usec = tick;
@@ -3305,7 +3297,9 @@ SetCursorBlink(register TScreen * screen, int enable)
 	StartBlinking(screen);
     } else {
 	screen->cursor_blink = FALSE;
+#if !OPT_BLINK_TEXT
 	StopBlinking(screen);
+#endif
     }
     update_cursorblink();
 }
@@ -4342,7 +4336,10 @@ VTRun(void)
 
     screen->cursor_state = OFF;
     screen->cursor_set = ON;
-    StartBlinking(screen);
+#if OPT_BLINK_CURS
+    if (screen->cursor_blink)
+	StartBlinking(screen);
+#endif
 
     initPtyData(&VTbuffer);
 #if OPT_TEK4014
@@ -4746,6 +4743,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_BOX_CHARS
     init_Bres(screen.force_box_chars);
+    init_Bres(screen.force_all_chars);
 #endif
     init_Bres(screen.free_bold_box);
 
@@ -4762,8 +4760,11 @@ VTInitialize(Widget wrequest,
     init_Cres(screen.cursorcolor);
 #if OPT_BLINK_CURS
     init_Bres(screen.cursor_blink);
-    init_Ires(screen.cursor_on);
-    init_Ires(screen.cursor_off);
+    init_Ires(screen.blink_on);
+    init_Ires(screen.blink_off);
+#endif
+#if OPT_BLINK_CURS
+    init_Ires(screen.blink_as_bold);
 #endif
     init_Ires(screen.border);
     init_Bres(screen.jumpscroll);
@@ -4989,6 +4990,13 @@ VTInitialize(Widget wrequest,
     init_Sres(misc.localefilter);
 #endif
 
+#if OPT_RENDERFONT
+    init_Ires(misc.face_size);
+    init_Sres(misc.face_name);
+    init_Sres(misc.face_wide_name);
+    init_Bres(misc.render_font);
+#endif
+
     init_Bres(screen.vt100_graphics);
     init_Bres(screen.wide_chars);
     init_Bres(misc.cjk_width);
@@ -5007,11 +5015,6 @@ VTInitialize(Widget wrequest,
 
     init_Bres(screen.bold_mode);
     init_Bres(screen.underline);
-#ifdef XRENDERFONT
-    wnew->screen.renderFont = 0;
-    wnew->screen.renderFontBold = 0;
-    wnew->screen.renderDraw = 0;
-#endif
 
     wnew->cur_foreground = 0;
     wnew->cur_background = 0;
@@ -5667,6 +5670,8 @@ VTSetValues(Widget cur,
     return refresh_needed;
 }
 
+#define setGC(value) set_at = __LINE__, currentGC = value
+
 /*
  * Shows cursor at new cursor position in screen.
  */
@@ -5678,6 +5683,7 @@ ShowCursor(void)
     Char clo;
     int fg_bg = 0;
     GC currentGC;
+    int set_at;
     Boolean in_selection;
     Boolean reversed;
     Pixel fg_pix;
@@ -5784,12 +5790,12 @@ ShowCursor(void)
     if (screen->select || screen->always_highlight) {
 	if (reversed) {		/* text is reverse video */
 	    if (screen->cursorGC) {
-		currentGC = screen->cursorGC;
+		setGC(screen->cursorGC);
 	    } else {
-		if (flags & (BOLD | BLINK)) {
-		    currentGC = NormalBoldGC(screen);
+		if (flags & BOLDATTR(screen)) {
+		    setGC(NormalBoldGC(screen));
 		} else {
-		    currentGC = NormalGC(screen);
+		    setGC(NormalGC(screen));
 		}
 	    }
 #if OPT_HIGHLIGHT_COLOR
@@ -5804,12 +5810,12 @@ ShowCursor(void)
 	    EXCHANGE(fg_pix, bg_pix, tmp)
 	} else {		/* normal video */
 	    if (screen->reversecursorGC) {
-		currentGC = screen->reversecursorGC;
+		setGC(screen->reversecursorGC);
 	    } else {
-		if (flags & (BOLD | BLINK)) {
-		    currentGC = ReverseBoldGC(screen);
+		if (flags & BOLDATTR(screen)) {
+		    setGC(ReverseBoldGC(screen));
 		} else {
-		    currentGC = ReverseGC(screen);
+		    setGC(ReverseGC(screen));
 		}
 	    }
 	}
@@ -5828,47 +5834,52 @@ ShowCursor(void)
 		fg_pix = hi_pix;
 	    }
 #endif
-	    currentGC = ReverseGC(screen);
+	    setGC(ReverseGC(screen));
 	    XSetForeground(screen->display, currentGC, bg_pix);
 	    XSetBackground(screen->display, currentGC, fg_pix);
 	} else {		/* normal video */
-	    currentGC = NormalGC(screen);
+	    setGC(NormalGC(screen));
 	    XSetForeground(screen->display, currentGC, fg_pix);
 	    XSetBackground(screen->display, currentGC, bg_pix);
 	}
     }
 
-    TRACE(("ShowCursor calling drawXtermText cur(%d,%d)\n",
-	   screen->cur_row, screen->cur_col));
+    if (screen->cursor_busy == 0
+	&& (screen->cursor_state != ON || screen->cursor_GC != set_at)) {
 
-    drawXtermText(screen, flags & DRAWX_MASK, currentGC,
-		  x = CurCursorX(screen, screen->cur_row, cursor_col),
-		  y = CursorY(screen, screen->cur_row),
-		  curXtermChrSet(screen->cur_row),
-		  PAIRED_CHARS(&clo, &chi), 1, 0);
+	screen->cursor_GC = set_at;
+	TRACE(("ShowCursor calling drawXtermText cur(%d,%d)\n",
+	       screen->cur_row, screen->cur_col));
+
+	drawXtermText(screen, flags & DRAWX_MASK, currentGC,
+		      x = CurCursorX(screen, screen->cur_row, cursor_col),
+		      y = CursorY(screen, screen->cur_row),
+		      curXtermChrSet(screen->cur_row),
+		      PAIRED_CHARS(&clo, &chi), 1, 0);
 
 #if OPT_WIDE_CHARS
-    if (c1l || c1h) {
-	drawXtermText(screen, (flags & DRAWX_MASK) | NOBACKGROUND,
-		      currentGC, x, y,
-		      curXtermChrSet(screen->cur_row),
-		      PAIRED_CHARS(&c1l, &c1h), 1, iswide(base));
-
-	if (c2l || c2h)
+	if (c1l || c1h) {
 	    drawXtermText(screen, (flags & DRAWX_MASK) | NOBACKGROUND,
 			  currentGC, x, y,
 			  curXtermChrSet(screen->cur_row),
-			  PAIRED_CHARS(&c2l, &c2h), 1, iswide(base));
-    }
+			  PAIRED_CHARS(&c1l, &c1h), 1, iswide(base));
+
+	    if (c2l || c2h)
+		drawXtermText(screen, (flags & DRAWX_MASK) | NOBACKGROUND,
+			      currentGC, x, y,
+			      curXtermChrSet(screen->cur_row),
+			      PAIRED_CHARS(&c2l, &c2h), 1, iswide(base));
+	}
 #endif
 
-    if (!screen->select && !screen->always_highlight) {
-	screen->box->x = x;
-	screen->box->y = y;
-	XDrawLines(screen->display, VWindow(screen),
-		   screen->cursoroutlineGC ? screen->cursoroutlineGC
-		   : currentGC,
-		   screen->box, NBOX, CoordModePrevious);
+	if (!screen->select && !screen->always_highlight) {
+	    screen->box->x = x;
+	    screen->box->y = y;
+	    XDrawLines(screen->display, VWindow(screen),
+		       screen->cursoroutlineGC ? screen->cursoroutlineGC
+		       : currentGC,
+		       screen->box, NBOX, CoordModePrevious);
+	}
     }
     screen->cursor_state = ON;
 }
@@ -5991,30 +6002,47 @@ HideCursor(void)
     resetXtermGC(screen, flags, in_selection);
 }
 
-#if OPT_BLINK_CURS
+#if OPT_BLINK_CURS || OPT_BLINK_TEXT
 static void
 StartBlinking(TScreen * screen)
 {
-    if (screen->cursor_blink
-	&& screen->cursor_timer == 0) {
+    if (screen->blink_timer == 0) {
 	unsigned long interval = (screen->cursor_state == ON ?
-				  screen->cursor_on : screen->cursor_off);
+				  screen->blink_on : screen->blink_off);
 	if (interval == 0)	/* wow! */
 	    interval = 1;	/* let's humor him anyway */
-	screen->cursor_timer = XtAppAddTimeOut(app_con,
-					       interval,
-					       BlinkCursor,
-					       screen);
+	screen->blink_timer = XtAppAddTimeOut(app_con,
+					      interval,
+					      HandleBlinking,
+					      screen);
     }
 }
 
 static void
 StopBlinking(TScreen * screen)
 {
-    if (screen->cursor_timer)
-	XtRemoveTimeOut(screen->cursor_timer);
-    screen->cursor_timer = 0;
+    if (screen->blink_timer)
+	XtRemoveTimeOut(screen->blink_timer);
+    screen->blink_timer = 0;
 }
+
+#if OPT_BLINK_TEXT
+static Bool
+ScrnHasBlinking(TScreen * screen, int row)
+{
+    Char *attrs = SCRN_BUF_ATTRS(screen, row);
+    int col;
+    Bool result = False;
+
+    for (col = 0; col < screen->max_col; ++col) {
+	if (attrs[col] & BLINK) {
+	    result = True;
+	    break;
+	}
+    }
+    return result;
+}
+#endif
 
 /*
  * Blink the cursor by alternately showing/hiding cursor.  We leave the timer
@@ -6022,26 +6050,78 @@ StopBlinking(TScreen * screen)
  * logic simple.
  */
 static void
-BlinkCursor(XtPointer closure, XtIntervalId * id GCC_UNUSED)
+HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 {
     TScreen *screen = (TScreen *) closure;
+    Bool resume = False;
 
-    screen->cursor_timer = 0;
-    if (screen->cursor_state == ON) {
-	if (screen->select || screen->always_highlight) {
-	    HideCursor();
+    screen->blink_timer = 0;
+    screen->blink_state = !screen->blink_state;
+
+#if OPT_BLINK_CURS
+    if (screen->cursor_blink) {
+	if (screen->cursor_state == ON) {
+	    if (screen->select || screen->always_highlight) {
+		HideCursor();
+		if (screen->cursor_state == OFF)
+		    screen->cursor_state = BLINKED_OFF;
+	    }
+	} else if (screen->cursor_state == BLINKED_OFF) {
+	    screen->cursor_state = OFF;
+	    ShowCursor();
 	    if (screen->cursor_state == OFF)
 		screen->cursor_state = BLINKED_OFF;
 	}
-    } else if (screen->cursor_state == BLINKED_OFF) {
-	screen->cursor_state = OFF;
-	ShowCursor();
-	if (screen->cursor_state == OFF)
-	    screen->cursor_state = BLINKED_OFF;
+	resume = True;
     }
-    StartBlinking(screen);
+#endif
+
+#if OPT_BLINK_TEXT
+    /*
+     * Inspect the line on the current screen to see if any have the BLINK flag
+     * associated with them.  Prune off any that have had the corresponding
+     * cells reset.  If any are left, repaint those lines with ScrnRefresh().
+     */
+    {
+	int row;
+	int first_row = screen->max_row;
+	int last_row = -1;
+
+	for (row = screen->max_row; row >= 0; row--) {
+	    if (ScrnTstBlinked(screen, row)) {
+		if (ScrnHasBlinking(screen, row)) {
+		    resume = True;
+		    if (row > last_row)
+			last_row = row;
+		    if (row < first_row)
+			first_row = row;
+		} else {
+		    ScrnClrBlinked(screen, row);
+		}
+	    }
+	}
+	/*
+	 * FIXME: this could be a little more efficient, e.g,. by limiting the
+	 * columns which are updated.
+	 */
+	if (first_row <= last_row) {
+	    ScrnRefresh(screen,
+			first_row,
+			0,
+			last_row + 1 - first_row,
+			screen->max_col,
+			True);
+	}
+    }
+#endif
+
+    /*
+     * If either the cursor or text is blinking, restart the timer.
+     */
+    if (resume)
+	StartBlinking(screen);
 }
-#endif /* OPT_BLINK_CURS */
+#endif /* OPT_BLINK_CURS || OPT_BLINK_TEXT */
 
 /*
  * Implement soft or hard (full) reset of the VTxxx emulation.  There are a

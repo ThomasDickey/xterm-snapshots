@@ -2,10 +2,10 @@
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.78 2003/10/27 01:07:57 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.79 2004/03/04 02:21:56 dickey Exp $ */
 
 /*
- * Copyright 1999-2002,2003 by Thomas E. Dickey
+ * Copyright 1999-2003,2004 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -215,6 +215,7 @@ xtermScroll(TScreen * screen, int amount)
     int scrolltop;
     int scrollheight;
 
+    screen->cursor_busy += 1;
     if (screen->cursor_state)
 	HideCursor();
     if (amount > i)
@@ -296,6 +297,7 @@ xtermScroll(TScreen * screen, int amount)
     if (refreshheight > 0)
 	ScrnRefresh(screen, refreshtop, 0, refreshheight,
 		    screen->max_col + 1, False);
+    screen->cursor_busy -= 1;
 }
 
 /*
@@ -315,6 +317,7 @@ RevScroll(TScreen * screen, int amount)
     int scrolltop;
     int scrollheight;
 
+    screen->cursor_busy += 1;
     if (screen->cursor_state)
 	HideCursor();
     if (amount > i)
@@ -362,6 +365,7 @@ RevScroll(TScreen * screen, int amount)
     }
     ScrnInsertLine(screen, screen->visbuf, screen->bot_marg, screen->top_marg,
 		   amount, screen->max_col + 1);
+    screen->cursor_busy -= 1;
 }
 
 /*
@@ -1357,7 +1361,7 @@ recolor_cursor(Cursor cursor,	/* X cursor ID to set */
     return;
 }
 
-#ifdef XRENDERFONT
+#if OPT_RENDERFONT
 static XftColor *
 getColor(Pixel pixel)
 {
@@ -1408,7 +1412,8 @@ getColor(Pixel pixel)
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=196312
  */
 static void
-xtermXftDrawString(XftDraw * draw,
+xtermXftDrawString(TScreen * screen,
+		   unsigned flags,
 		   XftColor * color,
 		   XftFont * font,
 		   int x,
@@ -1418,33 +1423,70 @@ xtermXftDrawString(XftDraw * draw,
 		   int fwidth,
 		   int *deltax)
 {
-#if OPT_WIDE_CHARS && defined(HAVE_TYPE_XFTCHARSPEC)
-    static XftCharSpec *sbuf;
-    static unsigned slen;
+#if OPT_RENDERWIDE
+    XftFont *wfont;
     int n;
     int ncells = 0;		/* # of 'half-width' charcells */
+    static XftCharSpec *sbuf;
+    static int slen = 0;
+    XftFont *lastFont = 0;
+    XftFont *currFont = 0;
+    int start = 0;
+    int charWidth;
+    FcChar32 wc;
+    int fontnum = screen->menu_font_number;
+
+    if (len == 0 || !(*text || *text2)) {
+	return;
+    }
+
+    if ((flags & BOLDATTR(screen))
+	&& screen->renderFontBold[fontnum]) {
+	wfont = screen->renderWideBold[fontnum];
+    } else {
+	wfont = screen->renderWideNorm[fontnum];
+    }
 
     if ((int) slen < len) {
 	slen = (len + 1) * 2;
 	sbuf = (XftCharSpec *) XtRealloc((char *) sbuf,
 					 slen * sizeof(XftCharSpec));
     }
+
     for (n = 0; n < len; n++) {
-	FcChar32 wc;
 	if (text2)
 	    wc = *text++ | (*text2++ << 8);
 	else
 	    wc = *text++;
 	sbuf[n].ucs4 = wc;
 	sbuf[n].x = x + fwidth * ncells;
-	ncells += my_wcwidth(wc);
 	sbuf[n].y = y;
+	charWidth = my_wcwidth(wc);
+	currFont = (charWidth == 2) ? wfont : font;
+	ncells += charWidth;
+	if (lastFont != currFont) {
+	    if (lastFont != 0) {
+		XftDrawCharSpec(screen->renderDraw,
+				color,
+				lastFont,
+				sbuf + start,
+				n - start);
+	    }
+	    start = n;
+	    lastFont = currFont;
+	}
     }
-    XftDrawCharSpec(draw, color, font, sbuf, len);
+    XftDrawCharSpec(screen->renderDraw,
+		    color,
+		    lastFont,
+		    sbuf + start,
+		    n - start);
+
     if (deltax)
 	*deltax = ncells * fwidth;
 #else
-    XftDrawString8(draw,
+
+    XftDrawString8(screen->renderDraw,
 		   color,
 		   font,
 		   x, y, (unsigned char *) text, len);
@@ -1452,7 +1494,75 @@ xtermXftDrawString(XftDraw * draw,
 	*deltax = len * fwidth;
 #endif
 }
-#endif /* XRENDERFONT */
+#endif /* OPT_RENDERFONT */
+
+#define DrawX(col) x + (col * (font_width))
+#define DrawSegment(first,last) (void)drawXtermText(screen, flags|NOTRANSLATION, gc, DrawX(first), y, chrset, PAIRED_CHARS(text+first, text2+first), last-first, on_wide)
+
+#if OPT_WIDE_CHARS
+/*
+ * Actually this should be called "groff_workaround()" - for the places where
+ * groff stomps on compatibility.  Still, if enough people get used to it,
+ * this might someday become a quasi-standard.
+ */
+static int
+ucs_workaround(TScreen * screen,
+	       int ch,
+	       unsigned flags,
+	       GC gc,
+	       int x,
+	       int y,
+	       int chrset,
+	       int on_wide)
+{
+    int fixed = FALSE;
+
+    if (screen->wide_chars && screen->utf8_mode && ch > 256) {
+	switch (ch) {
+	case 0x2010:		/* groff "-" */
+	case 0x2011:
+	case 0x2012:
+	case 0x2013:
+	case 0x2014:
+	case 0x2015:
+	case 0x2212:		/* groff "\-" */
+	    ch = '-';
+	    fixed = TRUE;
+	    break;
+	case 0x2018:		/* groff "`" */
+	    ch = '`';
+	    fixed = TRUE;
+	    break;
+	case 0x2019:		/* groff ' */
+	    ch = '\'';
+	    fixed = TRUE;
+	    break;
+	case 0x201C:		/* groff lq */
+	case 0x201D:		/* groff rq */
+	    ch = '"';
+	    fixed = TRUE;
+	    break;
+	}
+	if (fixed) {
+	    Char text[2];
+	    Char text2[2];
+
+	    text[0] = ch;
+	    text2[0] = 0;
+	    drawXtermText(screen,
+			  flags,
+			  gc,
+			  x,
+			  y,
+			  chrset,
+			  PAIRED_CHARS(text, text2),
+			  1,
+			  on_wide);
+	}
+    }
+    return fixed;
+}
+#endif
 
 #if OPT_CLIP_BOLD
 /*
@@ -1480,7 +1590,8 @@ xtermXftDrawString(XftDraw * draw,
 #endif /* OPT_CLIP_BOLD */
 
 /*
- * Draws text with the specified combination of bold/underline
+ * Draws text with the specified combination of bold/underline.  The return
+ * value is the updated x position.
  */
 int
 drawXtermText(TScreen * screen,
@@ -1516,11 +1627,12 @@ drawXtermText(TScreen * screen,
 	text2 = dbuf;
     }
 #endif
-#ifdef XRENDERFONT
-    if (screen->renderFont) {
+#if OPT_RENDERFONT
+    if (term->misc.render_font) {
 	Display *dpy = screen->display;
 	XftFont *font;
 	XGCValues values;
+	int fontnum = screen->menu_font_number;
 
 	if (!screen->renderDraw) {
 	    int scr;
@@ -1532,11 +1644,11 @@ drawXtermText(TScreen * screen,
 	    screen->renderDraw = XftDrawCreate(dpy, draw, visual,
 					       DefaultColormap(dpy, scr));
 	}
-	if ((flags & (BOLD | BLINK))
-	    && screen->renderFontBold)
-	    font = screen->renderFontBold;
+	if ((flags & BOLDATTR(screen))
+	    && screen->renderFontBold[fontnum])
+	    font = screen->renderFontBold[fontnum];
 	else
-	    font = screen->renderFont;
+	    font = screen->renderFontNorm[fontnum];
 	XGetGCValues(dpy, gc, GCForeground | GCBackground, &values);
 	if (!(flags & NOBACKGROUND))
 	    XftDrawRect(screen->renderDraw,
@@ -1569,7 +1681,7 @@ drawXtermText(TScreen * screen,
 		if (ch > 0 && ch < 32) {
 		    /* line drawing character time */
 		    if (last > first) {
-			xtermXftDrawString(screen->renderDraw,
+			xtermXftDrawString(screen, flags,
 					   getColor(values.foreground),
 					   font, curX, y,
 					   PAIRED_CHARS(text + first,
@@ -1591,7 +1703,7 @@ drawXtermText(TScreen * screen,
 		}
 	    }
 	    if (last > first) {
-		xtermXftDrawString(screen->renderDraw,
+		xtermXftDrawString(screen, flags,
 				   getColor(values.foreground),
 				   font, curX, y,
 				   PAIRED_CHARS(text + first, text2 + first),
@@ -1600,7 +1712,7 @@ drawXtermText(TScreen * screen,
 	} else
 #endif /* OPT_BOX_CHARS */
 	{
-	    xtermXftDrawString(screen->renderDraw,
+	    xtermXftDrawString(screen, flags,
 			       getColor(values.foreground),
 			       font, x, y, PAIRED_CHARS(text, text2),
 			       len, FontWidth(screen), NULL);
@@ -1614,7 +1726,7 @@ drawXtermText(TScreen * screen,
 	}
 	return x + len * FontWidth(screen);
     }
-#endif /* XRENDERFONT */
+#endif /* OPT_RENDERFONT */
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(chrset)) {
 	/* We could try drawing double-size characters in the icon, but
@@ -1752,7 +1864,7 @@ drawXtermText(TScreen * screen,
     if (!(flags & CHARBYCHAR) && screen->fnt_prop) {
 	int adj, width;
 	GC fillGC = gc;		/* might be cursorGC */
-	XFontStruct *fs = ((flags & (BOLD | BLINK))
+	XFontStruct *fs = ((flags & BOLDATTR(screen))
 			   ? screen->fnt_bold
 			   : screen->fnt_norm);
 
@@ -1788,8 +1900,6 @@ drawXtermText(TScreen * screen,
 	return x;
     }
 #if OPT_BOX_CHARS
-#define DrawX(col) x + (col * (font_width))
-#define DrawSegment(first,last) (void)drawXtermText(screen, flags|NOTRANSLATION, gc, DrawX(first), y, chrset, PAIRED_CHARS(text+first, text2+first), last-first, on_wide)
     /* If the font is incomplete, draw some substitutions */
     if (!(flags & NOTRANSLATION)
 	&& (!screen->fnt_boxes || screen->force_box_chars)) {
@@ -1818,7 +1928,11 @@ drawXtermText(TScreen * screen,
 	    if (isMissing) {
 		if (last > first)
 		    DrawSegment(first, last);
-		xtermDrawBoxChar(screen, ch, flags, gc, DrawX(last), y);
+#if OPT_WIDE_CHARS
+		if (!ucs_workaround(screen, ch, flags, gc, DrawX(last), y,
+				    chrset, on_wide))
+#endif
+		    xtermDrawBoxChar(screen, ch, flags, gc, DrawX(last), y);
 		first = last + 1;
 	    }
 	}
@@ -1884,7 +1998,7 @@ drawXtermText(TScreen * screen,
 	} else if (wideness
 		   && (screen->fnt_dwd->fid || screen->fnt_dwdb->fid)) {
 	    underline_len = real_length = len * 2;
-	    if ((flags & (BOLD | BLINK)) != 0
+	    if ((flags & BOLDATTR(screen)) != 0
 		&& screen->fnt_dwdb->fid) {
 		XSetFont(screen->display, gc, screen->fnt_dwdb->fid);
 		ascent_adjust = screen->fnt_dwdb->ascent - screen->fnt_norm->ascent;
@@ -1893,7 +2007,7 @@ drawXtermText(TScreen * screen,
 		ascent_adjust = screen->fnt_dwd->ascent - screen->fnt_norm->ascent;
 	    }
 	    /* fix ascent */
-	} else if ((flags & (BOLD | BLINK)) != 0
+	} else if ((flags & BOLDATTR(screen)) != 0
 		   && screen->fnt_bold->fid) {
 	    XSetFont(screen->display, gc, screen->fnt_bold->fid);
 	} else {
@@ -1911,7 +2025,7 @@ drawXtermText(TScreen * screen,
 			       x, y + ascent_adjust,
 			       sbuf, n);
 
-	if ((flags & (BOLD | BLINK)) && screen->enbolden) {
+	if ((flags & BOLDATTR(screen)) && screen->enbolden) {
 	    beginClipping(screen, gc, font_width, len);
 	    XDrawString16(screen->display, VWindow(screen), gc,
 			  x + 1, y + ascent_adjust, sbuf, n);
@@ -1928,7 +2042,7 @@ drawXtermText(TScreen * screen,
 	    XDrawImageString(screen->display, VWindow(screen), gc,
 			     x, y, (char *) text, len);
 	underline_len = len;
-	if ((flags & (BOLD | BLINK)) && screen->enbolden) {
+	if ((flags & BOLDATTR(screen)) && screen->enbolden) {
 	    beginClipping(screen, gc, font_width, len);
 	    XDrawString(screen->display, VWindow(screen), gc,
 			x + 1, y, (char *) text, len);
@@ -1958,6 +2072,7 @@ updatedXtermGC(TScreen * screen, int flags, int fg_bg, Bool hilite)
     int my_bg = extract_bg(fg_bg, flags);
     Pixel fg_pix = getXtermForeground(flags, my_fg);
     Pixel bg_pix = getXtermBackground(flags, my_bg);
+    Pixel xx_pix;
 #if OPT_HIGHLIGHT_COLOR
     Pixel hi_pix = screen->highlightcolor;
 #endif
@@ -1966,7 +2081,7 @@ updatedXtermGC(TScreen * screen, int flags, int fg_bg, Bool hilite)
     checkVeryBoldColors(flags, my_fg);
 
     if (ReverseOrHilite(screen, flags, hilite)) {
-	if (flags & (BOLD | BLINK))
+	if (flags & BOLDATTR(screen))
 	    gc = ReverseBoldGC(screen);
 	else
 	    gc = ReverseGC(screen);
@@ -1980,17 +2095,25 @@ updatedXtermGC(TScreen * screen, int flags, int fg_bg, Bool hilite)
 	    fg_pix = hi_pix;
 	}
 #endif
-	XSetForeground(screen->display, gc, bg_pix);
-	XSetBackground(screen->display, gc, fg_pix);
+	xx_pix = bg_pix;
+	bg_pix = fg_pix;
+	fg_pix = xx_pix;
     } else {
-	if (flags & (BOLD | BLINK))
+	if (flags & BOLDATTR(screen))
 	    gc = NormalBoldGC(screen);
 	else
 	    gc = NormalGC(screen);
 
-	XSetForeground(screen->display, gc, fg_pix);
-	XSetBackground(screen->display, gc, bg_pix);
     }
+
+#if OPT_BLINK_TEXT
+    if ((screen->blink_state == ON) && (flags & BLINK)) {
+	fg_pix = bg_pix;
+    }
+#endif
+
+    XSetForeground(screen->display, gc, fg_pix);
+    XSetBackground(screen->display, gc, bg_pix);
     return gc;
 }
 
@@ -2009,7 +2132,7 @@ resetXtermGC(TScreen * screen, int flags, Bool hilite)
     checkVeryBoldColors(flags, term->cur_foreground);
 
     if (ReverseOrHilite(screen, flags, hilite)) {
-	if (flags & (BOLD | BLINK))
+	if (flags & BOLDATTR(screen))
 	    gc = ReverseBoldGC(screen);
 	else
 	    gc = ReverseGC(screen);
@@ -2018,7 +2141,7 @@ resetXtermGC(TScreen * screen, int flags, Bool hilite)
 	XSetBackground(screen->display, gc, fg_pix);
 
     } else {
-	if (flags & (BOLD | BLINK))
+	if (flags & BOLDATTR(screen))
 	    gc = NormalBoldGC(screen);
 	else
 	    gc = NormalGC(screen);

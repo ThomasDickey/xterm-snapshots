@@ -1,7 +1,7 @@
 /* $Xorg: menu.h,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
 
-Copyright 1999-2001, 2002 by Thomas E. Dickey
+Copyright 1999-2001,2004 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -48,7 +48,7 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.31 2003/10/27 01:07:57 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.32 2004/03/04 02:21:55 dickey Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h
@@ -99,6 +99,7 @@ extern void HandlePrintControlMode PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
+extern void HandleRenderFont       PROTO_XT_ACTIONS_ARGS;
 extern void HandleReverseVideo     PROTO_XT_ACTIONS_ARGS;
 extern void HandleReverseWrap      PROTO_XT_ACTIONS_ARGS;
 extern void HandleScoFunctionKeys  PROTO_XT_ACTIONS_ARGS;
@@ -106,10 +107,10 @@ extern void HandleScrollKey        PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollTtyOutput  PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollbar        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSendSignal       PROTO_XT_ACTIONS_ARGS;
+extern void HandleSetPopOnBell     PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTekText       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetVisualBell    PROTO_XT_ACTIONS_ARGS;
-extern void HandleSetPopOnBell     PROTO_XT_ACTIONS_ARGS;
 extern void HandleSoftReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSunFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandleSunKeyboard      PROTO_XT_ACTIONS_ARGS;
@@ -117,6 +118,7 @@ extern void HandleTekCopy          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekPage          PROTO_XT_ACTIONS_ARGS;
 extern void HandleTekReset         PROTO_XT_ACTIONS_ARGS;
 extern void HandleTiteInhibit      PROTO_XT_ACTIONS_ARGS;
+extern void HandleUTF8Mode         PROTO_XT_ACTIONS_ARGS;
 extern void HandleVisibility       PROTO_XT_ACTIONS_ARGS;
 
 extern void DoSecureKeyboard (Time tp);
@@ -227,6 +229,7 @@ typedef enum {
     fontMenu_fontescape,
     fontMenu_fontsel,
 /* number of non-line items down to here should match NMENUFONTS in ptyx.h */
+
 #if OPT_DEC_CHRSET || OPT_BOX_CHARS || OPT_DEC_SOFTFONT
     fontMenu_line1,
 #if OPT_BOX_CHARS
@@ -239,6 +242,17 @@ typedef enum {
     fontMenu_font_loadable,
 #endif
 #endif
+
+#if OPT_RENDERFONT || OPT_WIDE_CHARS
+    fontMenu_line2,
+#if OPT_RENDERFONT
+    fontMenu_render_font,
+#endif
+#if OPT_WIDE_CHARS
+    fontMenu_wide_chars,
+#endif
+#endif
+
     fontMenu_LAST
 } fontMenuIndices;
 
@@ -364,6 +378,18 @@ extern void update_font_boxchars(void);
 extern void update_font_loadable(void);
 #else
 #define update_font_loadable() /* nothing */
+#endif
+
+#if OPT_RENDERFONT
+extern void update_font_renderfont(void);
+#else
+#define update_font_renderfont() /* nothing */
+#endif
+
+#if OPT_WIDE_CHARS
+extern void update_font_utf8_mode(void);
+#else
+#define update_font_utf8_mode() /* nothing */
 #endif
 
 #if OPT_TEK4014
