@@ -2,7 +2,7 @@
  *	$Xorg: main.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/main.h,v 3.5 2001/01/17 23:46:37 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/main.h,v 3.6 2001/09/09 01:07:26 dickey Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -31,6 +31,7 @@
 #define DEFFONT			"fixed"
 #define DEFWIDEFONT		NULL	/* grab one which is 2x as wide */
 #define DEFWIDEBOLDFONT		NULL
+#define DEFXIMFONT		"*"
 #define DEFBOLDFONT		NULL	/* no bold font uses overstriking */
 #define DEFBORDER		2
 #define DEFFACENAME		NULL

@@ -1,10 +1,10 @@
 /*
- * $XFree86: xc/programs/xterm/trace.c,v 3.11 2000/06/13 02:28:41 dawes Exp $
+ * $XFree86: xc/programs/xterm/trace.c,v 3.12 2001/09/09 01:07:26 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2000 by Thomas E. Dickey
+Copyright 1997-2001 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -30,122 +30,168 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /*
  * debugging support via TRACE macro.
  */
-#include <stdio.h>
+
+#include <trace.h>
+
+#include <X11/StringDefs.h>
+
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <stdio.h>
 #include <stdarg.h>
 
-#include <trace.h>
+#ifdef HAVE_X11_TRANSLATEI_H
+#include <X11/TranslateI.h>
+#else
+extern String _XtPrintXlations(Widget w,
+			       XtTranslations xlations,
+			       Widget accelWidget,
+			       _XtBoolean includeRHS);
+#endif
 
 char *trace_who = "parent";
 
 void
-Trace(char *fmt, ...)
+Trace(char *fmt,...)
 {
-	static	FILE	*fp;
-	static	char	*trace_out;
-	va_list ap;
+    static FILE *fp;
+    static char *trace_out;
+    va_list ap;
 
-	if (fp != 0
-	 && trace_who != trace_out) {
-		fclose(fp);
-		fp = 0;
-	}
-	trace_out = trace_who;
+    if (fp != 0
+	&& trace_who != trace_out) {
+	fclose(fp);
+	fp = 0;
+    }
+    trace_out = trace_who;
 
-	if (!fp) {
-		char name[BUFSIZ];
-		sprintf(name, "Trace-%s.out", trace_who);
-		fp = fopen(name, "w");
-		if (fp != 0) {
-			time_t now = time((time_t*)0);
+    if (!fp) {
+	char name[BUFSIZ];
+	sprintf(name, "Trace-%s.out", trace_who);
+	fp = fopen(name, "w");
+	if (fp != 0) {
+	    time_t now = time((time_t *) 0);
 #ifdef HAVE_UNISTD_H
-			fprintf(fp, "process %d real (%d/%d) effective (%d/%d) -- %s",
-				getpid(),
-				getuid(), getgid(),
-				geteuid(), getegid(),
-				ctime(&now));
+	    fprintf(fp, "process %d real (%d/%d) effective (%d/%d) -- %s",
+		    getpid(),
+		    getuid(), getgid(),
+		    geteuid(), getegid(),
+		    ctime(&now));
 #else
-			fprintf(fp, "process %d -- %s",
-				getpid(),
-				ctime(&now));
+	    fprintf(fp, "process %d -- %s",
+		    getpid(),
+		    ctime(&now));
 #endif
-		}
 	}
-	if (!fp)
-		abort();
+    }
+    if (!fp)
+	abort();
 
-	va_start(ap,fmt);
-	if (fmt != 0) {
-		vfprintf(fp, fmt, ap);
-		(void)fflush(fp);
-	} else {
-		(void)fclose(fp);
-		(void)fflush(stdout);
-		(void)fflush(stderr);
-	}
-	va_end(ap);
+    va_start(ap, fmt);
+    if (fmt != 0) {
+	vfprintf(fp, fmt, ap);
+	(void) fflush(fp);
+    } else {
+	(void) fclose(fp);
+	(void) fflush(stdout);
+	(void) fflush(stderr);
+    }
+    va_end(ap);
 }
 
 char *
-visibleChars(PAIRED_CHARS(Char *buf, Char *buf2), unsigned len)
+visibleChars(PAIRED_CHARS(Char * buf, Char * buf2), unsigned len)
 {
-	static char *result;
-	static unsigned used;
-	unsigned limit = ((len + 1) * 8) + 1;
-	char *dst;
+    static char *result;
+    static unsigned used;
+    unsigned limit = ((len + 1) * 8) + 1;
+    char *dst;
 
-	if (limit > used) {
-		used = limit;
-		result = XtRealloc(result, used);
-	}
-	dst = result;
-	while (len--) {
-		unsigned value = *buf++;
+    if (limit > used) {
+	used = limit;
+	result = XtRealloc(result, used);
+    }
+    dst = result;
+    while (len--) {
+	unsigned value = *buf++;
 #if OPT_WIDE_CHARS
-		if (buf2 != 0) {
-			value |= (*buf2 << 8);
-			buf2++;
-		}
-		if (value > 255)
-			sprintf(dst, "\\u+%04X", value);
-		else
-#endif
-		if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
-			sprintf(dst, "\\%03o", value);
-		else
-			sprintf(dst, "%c", value);
-		dst += strlen(dst);
+	if (buf2 != 0) {
+	    value |= (*buf2 << 8);
+	    buf2++;
 	}
-	return result;
+	if (value > 255)
+	    sprintf(dst, "\\u+%04X", value);
+	else
+#endif
+	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
+	    sprintf(dst, "\\%03o", value);
+	else
+	    sprintf(dst, "%c", value);
+	dst += strlen(dst);
+    }
+    return result;
 }
 
 char *
-visibleIChar(IChar *buf, unsigned len)
+visibleIChar(IChar * buf, unsigned len)
 {
-	static char *result;
-	static unsigned used;
-	unsigned limit = ((len + 1) * 6) + 1;
-	char *dst;
+    static char *result;
+    static unsigned used;
+    unsigned limit = ((len + 1) * 6) + 1;
+    char *dst;
 
-	if (limit > used) {
-		used = limit;
-		result = XtRealloc(result, used);
-	}
-	dst = result;
-	while (len--) {
-		unsigned value = *buf++;
+    if (limit > used) {
+	used = limit;
+	result = XtRealloc(result, used);
+    }
+    dst = result;
+    while (len--) {
+	unsigned value = *buf++;
 #if OPT_WIDE_CHARS
-		if (value > 255)
-			sprintf(dst, "\\u+%04X", value);
-		else
+	if (value > 255)
+	    sprintf(dst, "\\u+%04X", value);
+	else
 #endif
-		if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
-			sprintf(dst, "\\%03o", value);
-		else
-			sprintf(dst, "%c", value);
-		dst += strlen(dst);
-	}
-	return result;
+	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
+	    sprintf(dst, "\\%03o", value);
+	else
+	    sprintf(dst, "%c", value);
+	dst += strlen(dst);
+    }
+    return result;
+}
+
+/*
+ * Some calls to XGetAtom() will fail, and we don't want to stop.  So we use
+ * our own error-handler.
+ */
+static int
+no_error(Display * dpy GCC_UNUSED, XErrorEvent * event GCC_UNUSED)
+{
+    return 1;
+}
+
+void
+TraceTranslations(const char *name, Widget w)
+{
+    String result;
+    XErrorHandler save = XSetErrorHandler(no_error);
+    XtTranslations xlations;
+    Widget xcelerat;
+
+    TRACE(("TraceTranslations for %s (widget %#lx)\n", name, (long) w));
+    if (w) {
+	XtVaGetValues(w,
+		      XtNtranslations, &xlations,
+		      XtNaccelerators, &xcelerat,
+		      NULL);
+	Trace("... xlations %#08lx\n", (long) xlations);
+	Trace("... xcelerat %#08lx\n", (long) xcelerat);
+	result = _XtPrintXlations(w, xlations, xcelerat, True);
+	TRACE(("%s\n", result != 0 ? result : "(null)"));
+    } else {
+	TRACE(("none (widget is null)\n"));
+    }
+    XSetErrorHandler(save);
 }

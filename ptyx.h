@@ -2,7 +2,7 @@
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.87 2001/06/18 19:09:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.88 2001/09/09 01:07:26 dickey Exp $ */
 
 /*
  * Copyright 1999-2000 by Thomas E. Dickey
@@ -812,6 +812,9 @@ typedef struct {
 #ifndef TRACE_CHILD
 #define TRACE_CHILD /*nothing*/
 #endif
+#ifndef TRACE_TRANS
+#define TRACE_TRANS(name,w) /*nothing*/
+#endif
 #endif
 
 /***====================================================================***/
@@ -949,6 +952,17 @@ typedef struct {
 #endif
 } SavedCursor;
 
+typedef struct {
+	int		width;		/* if > 0, width of scrollbar,	*/
+					/* and scrollbar is showing	*/
+	Boolean		rv_cached;	/* see ScrollBarReverseVideo	*/
+	int		rv_active;	/* ...current reverse-video	*/
+	Pixel		bg;		/* ...cached background color	*/
+	Pixel		fg;		/* ...cached foreground color	*/
+	Pixel		bdr;		/* ...cached border color	*/
+	Pixmap		bdpix;		/* ...cached border pixmap	*/
+} SbInfo;
+
 struct _vtwin {
 	Window		window;		/* X window id			*/
 	int		width;		/* width of columns		*/
@@ -959,8 +973,7 @@ struct _vtwin {
 	int		f_height;	/* height of fonts in pixels	*/
 	int		f_ascent;	/* ascent of font in pixels	*/
 	int		f_descent;	/* descent of font in pixels	*/
-	int		scrollbar;	/* if > 0, width of scrollbar,	*/
-					/* and scrollbar is showing	*/
+	SbInfo		sb_info;
 	GC		normalGC;	/* normal painting		*/
 	GC		reverseGC;	/* reverse painting		*/
 	GC		normalboldGC;	/* normal painting, bold font	*/
@@ -1256,6 +1269,10 @@ typedef struct {
 	XftFont		*renderFontBold;
 	XftDraw		*renderDraw;
 #endif
+#ifdef OPT_INPUT_METHOD
+	XFontSet	fs;		/* fontset for XIM preedit */
+	int		fs_ascent;	/* ascent of fs */
+#endif
 } TScreen;
 
 typedef struct _TekPart {
@@ -1300,6 +1317,9 @@ typedef struct _Misc {
 #if OPT_WIDE_CHARS
     char *f_w;
     char *f_wb;
+#endif
+#if OPT_INPUT_METHOD
+    char *f_x;
 #endif
     int limit_resize;
 #ifdef ALLOWLOGGING
@@ -1483,9 +1503,9 @@ typedef struct _TekWidgetRec {
 #define ISO_PROTECT 2
 
 #ifdef SCROLLBAR_RIGHT
-#define OriginX(screen) (((term->misc.useRight)?0:Scrollbar(screen)) + screen->border)
+#define OriginX(screen) (((term->misc.useRight)?0:ScrollbarWidth(screen)) + screen->border)
 #else
-#define OriginX(screen) (Scrollbar(screen) + screen->border)
+#define OriginX(screen) (ScrollbarWidth(screen) + screen->border)
 #endif
 
 #define CursorX(screen,col) ((col) * FontWidth(screen) + OriginX(screen))
@@ -1508,7 +1528,7 @@ typedef struct _TekWidgetRec {
 						: (screen)->whichVwin->f_ascent)
 #define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->descent \
 						: (screen)->whichVwin->f_descent)
-#define Scrollbar(screen)	((screen)->whichVwin->scrollbar)
+#define ScrollbarWidth(screen)	((screen)->whichVwin->sb_info.width)
 #define NormalGC(screen)	((screen)->whichVwin->normalGC)
 #define ReverseGC(screen)	((screen)->whichVwin->reverseGC)
 #define NormalBoldGC(screen)	((screen)->whichVwin->normalboldGC)
@@ -1534,7 +1554,7 @@ typedef struct _TekWidgetRec {
 #define FontHeight(screen)	((screen)->fullVwin.f_height)
 #define FontAscent(screen)	((screen)->fullVwin.f_ascent)
 #define FontDescent(screen)	((screen)->fullVwin.f_descent)
-#define Scrollbar(screen)	((screen)->fullVwin.scrollbar)
+#define ScrollbarWidth(screen)	((screen)->fullVwin.sb_info.width)
 #define NormalGC(screen)	((screen)->fullVwin.normalGC)
 #define ReverseGC(screen)	((screen)->fullVwin.reverseGC)
 #define NormalBoldGC(screen)	((screen)->fullVwin.normalboldGC)

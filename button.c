@@ -50,7 +50,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.62 2001/06/18 19:09:25 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.63 2001/09/09 01:07:25 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1030,7 +1030,7 @@ static void GettingSelection(Display *dpy, Atom type, Char *line, int len)
 
     name = XGetAtomName(dpy, type);
 
-    Trace("Getting %s (%ld)\n", XGetAtomName(type), (long int)type);
+    Trace("Getting %s (%ld)\n", XGetAtomName(dpy, type), (long int)type);
     for (cp = line; cp < line + len; cp++)
 	Trace("%c\n", *cp);
 }

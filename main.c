@@ -64,7 +64,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.132 2001/06/18 19:09:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.136 2001/09/09 01:07:26 dickey Exp $ */
 
 
 /* main.c */
@@ -599,19 +599,11 @@ struct _xttymodes {
 static int parse_tty_modes (char *s, struct _xttymodes *modelist);
 
 #ifdef USE_SYSV_UTMP
-#if (defined(X_NOT_STDC_ENV) || (defined(AIXV3) && (OSMAJORVERSION < 4))) && !(defined(getutent) || defined(getutid) || defined(getutline))
+#if (defined(AIXV3) && (OSMAJORVERSION < 4)) && !(defined(getutent) || defined(getutid) || defined(getutline))
 extern struct utmp *getutent();
 extern struct utmp *getutid();
 extern struct utmp *getutline();
-#endif /* X_NOT_STDC_ENV || AIXV3 */
-
-#ifdef X_NOT_STDC_ENV		/* could remove paragraph unconditionally? */
-extern struct passwd *getpwent();
-extern struct passwd *getpwuid();
-extern struct passwd *getpwnam();
-extern void setpwent();
-extern void endpwent();
-#endif
+#endif /* AIXV3 */
 
 #else	/* not USE_SYSV_UTMP */
 static char etc_utmp[] = UTMP_FILENAME;
@@ -811,6 +803,9 @@ static XrmOptionDescRec optionDescList[] = {
 {"-fw",		"*wideFont",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-fwb",	"*wideBoldFont", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
+#if OPT_INPUT_METHOD
+{"-fx",		"*ximFont",	XrmoptionSepArg,	(caddr_t) NULL},
+#endif
 #if OPT_HIGHLIGHT_COLOR
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
@@ -936,6 +931,9 @@ static struct _options {
 { "-fw fontname",          "doublewidth text font" },
 { "-fwb fontname",         "doublewidth bold text font" },
 #endif
+#if OPT_INPUT_METHOD
+{ "-fx fontname",          "XIM fontset" },
+#endif
 { "-iconic",               "start iconic" },
 { "-name string",          "client instance, icon, and title strings" },
 { "-class string",         "class string (XTerm)" },
@@ -1052,6 +1050,62 @@ static char *message[] = {
 "will be started.  Options that start with a plus sign (+) restore the default.",
 NULL};
 
+/*
+ * Decode a key-definition.  This combines the termcap and ttyModes, for
+ * comparison.  Note that octal escapes in ttyModes are done by the normal
+ * resource translation.  Also, ttyModes allows '^-' as a synonym for disabled.
+ */
+static int decode_keyvalue(char *string, int termcap)
+{
+    int value = -1;
+
+    TRACE(("...decode '%s'\n", string));
+    if (*string == '^') {
+	switch (*++string) {
+	case '?':
+	    value = A2E(127);
+	    break;
+	case '-':
+	    if (!termcap) {
+		errno = 0;
+#if defined(_POSIX_VDISABLE) && defined(HAVE_UNISTD_H)
+		value = _POSIX_VDISABLE;
+#endif
+#if defined(_PC_VDISABLE)
+		if (value == -1) {
+		    value = fpathconf(0, _PC_VDISABLE);
+		    if (value == -1) {
+			if (errno != 0)
+			    break;	/* skip this (error) */
+			value = 0377;
+		    }
+		}
+#elif defined(VDISABLE)
+		if (value == -1)
+		    value = VDISABLE;
+#endif
+		break;
+	    }
+	    /* FALLTHRU */
+	default:
+	    value = CONTROL(*string);
+	    break;
+	}
+    } else if (termcap && (*string == '\\')) {
+	char *d;
+	int temp = strtol(string, &d, 8);
+	if (temp > 0 && d != string)
+	    value = temp;
+    } else {
+	value = CharOf(*string);
+    }
+    return value;
+}
+
+/*
+ * If we're linked to terminfo, tgetent() will return an empty buffer.  We
+ * cannot use that to adjust the $TERMCAP variable.
+ */
 static Boolean get_termcap(char *name, char *buffer, char *resized)
 {
     register TScreen *screen = &term->screen;
@@ -1059,14 +1113,19 @@ static Boolean get_termcap(char *name, char *buffer, char *resized)
     *buffer = 0;	/* initialize, in case we're using terminfo's tgetent */
 
     if (name != 0) {
-	if (tgetent (buffer, name) == 1
-	 && *buffer) {
-	    if (!TEK4014_ACTIVE(screen)) {
-		resize (screen, buffer, resized);
+	if (tgetent (buffer, name) == 1) {
+	    TRACE(("get_termcap(%s) succeeded (%s)\n", name,
+	    	*buffer
+		? "ok:termcap, we can update $TERMCAP"
+		: "assuming this is terminfo"));
+	    if (*buffer) {
+		if (!TEK4014_ACTIVE(screen)) {
+		    resize (screen, buffer, resized);
+		}
 	    }
 	    return True;
 	} else {
-	    *buffer = 0;
+	    *buffer = 0;	/* just in case */
 	}
     }
     return False;
@@ -2411,6 +2470,7 @@ spawn (void)
 #if OPT_INITIAL_ERASE
 	int initial_erase = VAL_INITIAL_ERASE;
 #endif
+	int rc;
 	int tty = -1;
 #ifdef USE_ANY_SYSV_TERMIO
 	struct termio tio;
@@ -2512,12 +2572,16 @@ spawn (void)
 		 * necessary.  ENXIO is what is normally returned if there is
 		 * no controlling terminal, but some systems (e.g. SunOS 4.0)
 		 * seem to return EIO.  Solaris 2.3 is said to return EINVAL.
+		 * Cygwin returns ENOENT.
 		 */
 		no_dev_tty = FALSE;
 		if (tty < 0) {
 			if (tty_got_hung || errno == ENXIO || errno == EIO ||
 #ifdef ENODEV
 			    errno == ENODEV ||
+#endif
+#ifdef __CYGWIN__
+			    errno == ENOENT ||
 #endif
 			    errno == EINVAL || errno == ENOTTY || errno == EACCES) {
 				no_dev_tty = TRUE;
@@ -2558,26 +2622,32 @@ spawn (void)
 				lmode = d_lmode;
 #endif	/* TIOCLSET */
 #ifdef USE_ANY_SYSV_TERMIO
-			if(ioctl(tty, TCGETA, &tio) == -1)
+			if ((rc = ioctl(tty, TCGETA, &tio)) == -1)
 				tio = d_tio;
 #elif defined(USE_POSIX_TERMIOS)
-			if (tcgetattr(tty, &tio) == -1)
+			if ((rc = tcgetattr(tty, &tio)) == -1)
 				tio = d_tio;
 #else   /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
-			if(ioctl(tty, TIOCGETP, (char *)&sg) == -1)
+			if ((rc = ioctl(tty, TIOCGETP, (char *)&sg)) == -1)
 				sg = d_sg;
-			if(ioctl(tty, TIOCGETC, (char *)&tc) == -1)
+			if (ioctl(tty, TIOCGETC, (char *)&tc) == -1)
 				tc = d_tc;
-			if(ioctl(tty, TIOCGETD, (char *)&discipline) == -1)
+			if (ioctl(tty, TIOCGETD, (char *)&discipline) == -1)
 				discipline = d_disipline;
 #ifdef sony
-			if(ioctl(tty, TIOCKGET, (char *)&jmode) == -1)
+			if (ioctl(tty, TIOCKGET, (char *)&jmode) == -1)
 				jmode = d_jmode;
-			if(ioctl(tty, TIOCKGETC, (char *)&jtc) == -1)
+			if (ioctl(tty, TIOCKGETC, (char *)&jtc) == -1)
 				jtc = d_jtc;
 #endif /* sony */
 #endif	/* USE_ANY_SYSV_TERMIO */
 
+			/*
+			 * If ptyInitialErase is set, we want to get the pty's
+			 * erase value.  Just in case that will fail, first get
+			 * the value from /dev/tty, so we will have something
+			 * at least.
+			 */
 #if OPT_INITIAL_ERASE
 			if (resource.ptyInitialErase) {
 #ifdef USE_ANY_SYSV_TERMIO
@@ -2587,12 +2657,10 @@ spawn (void)
 #else   /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 				initial_erase = sg.sg_erase;
 #endif	/* USE_ANY_SYSV_TERMIO */
+				TRACE(("%s initial_erase:%d (from /dev/tty)\n",
+					rc == 0 ? "OK" : "FAIL",
+					initial_erase));
 			}
-			TRACE(("%s @%d, ptyInitialErase:%d, backarrow_is_erase:%d, initial_erase:%d (from /dev/tty)\n",
-				__FILE__, __LINE__,
-				resource.ptyInitialErase,
-				resource.backarrow_is_erase,
-				initial_erase));
 #endif
 
 #ifdef MINIX
@@ -2606,7 +2674,6 @@ spawn (void)
 			tty = -1;
 		}
 
-		TRACE(("%s @%d, calling get_pty...\n", __FILE__, __LINE__));
 		if (get_pty (&screen->respond, XDisplayString(screen->display)))
 		{
 			/*  no ptys! */
@@ -2619,28 +2686,22 @@ spawn (void)
 		if (resource.ptyInitialErase) {
 #ifdef USE_ANY_SYSV_TERMIO
 			struct termio my_tio;
-			if(ioctl(screen->respond, TCGETA, &my_tio) == 0)
+			if ((rc = ioctl(screen->respond, TCGETA, &my_tio)) == 0)
 				initial_erase = my_tio.c_cc[VERASE];
 #elif defined(USE_POSIX_TERMIOS)
 			struct termios my_tio;
-			if (tcgetattr(screen->respond, &my_tio) == 0)
+			if ((rc = tcgetattr(screen->respond, &my_tio)) == 0)
 				initial_erase = my_tio.c_cc[VERASE];
 #else   /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
 			struct sgttyb my_sg;
-			if(ioctl(screen->respond, TIOCGETP, (char *)&my_sg) == 0)
+			if ((rc = ioctl(screen->respond, TIOCGETP, (char *)&my_sg)) == 0)
 				initial_erase = my_sg.sg_erase;
 #endif	/* USE_ANY_SYSV_TERMIO */
+			TRACE(("%s initial_erase:%d (from pty)\n",
+				(rc == 0) ? "OK" : "FAIL",
+				initial_erase));
 		}
-		if (resource.backarrow_is_erase)
-		if (initial_erase == 127) {	/* see input.c */
-			term->keyboard.flags &= ~MODE_DECBKM;
-		}
-		TRACE(("%s @%d, ptyInitialErase:%d, backarrow_is_erase:%d, initial_erase:%d (from pty)\n",
-			__FILE__, __LINE__,
-			resource.ptyInitialErase,
-			resource.backarrow_is_erase,
-			initial_erase));
-#endif
+#endif	/* OPT_INITIAL_ERASE */
 	}
 
 	/* avoid double MapWindow requests */
@@ -2700,39 +2761,34 @@ spawn (void)
 	    }
 	}
 
+	/*
+	 * Check if ptyInitialErase is not set.  If so, we rely on the termcap
+	 * (or terminfo) to tell us what the erase mode should be set to.
+	 */
 #if OPT_INITIAL_ERASE
-	TRACE(("%s @%d, resource ptyInitialErase:%d, backarrow_is_erase:%d\n",
-		__FILE__, __LINE__,
-		resource.ptyInitialErase,
-		resource.backarrow_is_erase));
+	TRACE(("resource ptyInitialErase is %sset\n",
+		resource.ptyInitialErase ? "" : "not "));
 	if (!resource.ptyInitialErase) {
 		char temp[1024], *p = temp;
 		char *s = tgetstr(TERMCAP_ERASE, &p);
-		TRACE(("extracting initial_erase value from termcap\n"));
+		TRACE(("...extracting initial_erase value from termcap\n"));
 		if (s != 0) {
-			if (*s == '^') {
-				if (*++s == '?') {
-					initial_erase = 127;
-				} else {
-					initial_erase = CONTROL(*s);
-				}
-			} else if (*s == '\\') {
-				char *d;
-				int value = strtol(s, &d, 8);
-				if (value > 0 && d != s)
-					initial_erase = value;
-			} else {
-				initial_erase = *s;
-			}
-			initial_erase = CharOf(initial_erase);
-			TRACE(("... initial_erase:%d\n", initial_erase));
+			initial_erase = decode_keyvalue(s, True);
 		}
 	}
-	if (resource.backarrow_is_erase && initial_erase == 127) {
-		/* see input.c */
-		term->keyboard.flags &= ~MODE_DECBKM;
+	TRACE(("...initial_erase:%d\n", initial_erase));
+
+	TRACE(("resource backarrowKeyIsErase is %sset\n",
+		resource.backarrow_is_erase ? "" : "not "));
+	if (resource.backarrow_is_erase) { /* see input.c */
+		if (initial_erase == 127)
+		    term->keyboard.flags &= ~MODE_DECBKM;
+		else
+		    term->keyboard.flags |= MODE_DECBKM;
+		TRACE(("...sets DECBKM %s\n", 
+		    (term->keyboard.flags & MODE_DECBKM) ? "on" : "off"));
 	}
-#endif
+#endif	/* OPT_INITIAL_ERASE */
 
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 	/* tell tty how big window is */
@@ -2743,6 +2799,8 @@ spawn (void)
 		ts.ts_lines = screen->max_row + 1;
 		ts.ts_cols = screen->max_col + 1;
 	}
+	i = ioctl (screen->respond, TIOCSSIZE, &ts);
+	TRACE(("spawn TIOCSSIZE %dx%d return %d\n", ts.ts_lines, ts.ts_cols, i));
 #elif defined(TIOCSWINSZ)
 	/* tell tty how big window is */
 #if OPT_TEK4014
@@ -2759,6 +2817,8 @@ spawn (void)
 		ws.ws_xpixel = FullWidth(screen);
 		ws.ws_ypixel = FullHeight(screen);
 	}
+	i = ioctl (screen->respond, TIOCSWINSZ, (char *)&ws);
+	TRACE(("spawn TIOCSWINSZ %dx%d return %d\n", ws.ws_row, ws.ws_col, i));
 #endif	/* sun vs TIOCSWINSZ */
 
 #if defined(USE_UTEMPTER)
@@ -2774,6 +2834,7 @@ spawn (void)
 	    if (pipe(pc_pipe) || pipe(cp_pipe))
 		SysError (ERROR_FORK);
 #endif
+	    TRACE(("Forking...\n"));
 	    if ((screen->pid = fork ()) == -1)
 		SysError (ERROR_FORK);
 
@@ -3261,31 +3322,46 @@ spawn (void)
 		signal (SIGQUIT, SIG_DFL);
 		signal (SIGTERM, SIG_DFL);
 
+		/*
+		 * If we're not asked to make the parent process set the
+		 * terminal's erase mode, and if we had no ttyModes resource,
+		 * then set the terminal's erase mode from our best guess.
+		 */
 #if OPT_INITIAL_ERASE
-		TRACE(("%s @%d, ptyInitialErase:%d, overide_tty_modes:%d, XTTYMODE_erase:%d\n",
-			__FILE__, __LINE__,
+		TRACE(("check if we should set erase to %d:%s\n\tptyInitialErase:%d,\n\toveride_tty_modes:%d,\n\tXTTYMODE_erase:%d\n",
+			initial_erase,
+			(! resource.ptyInitialErase
+			 && !override_tty_modes
+			 && !ttymodelist[XTTYMODE_erase].set)
+				? "YES" : "NO",
 			resource.ptyInitialErase,
 			override_tty_modes,
 			ttymodelist[XTTYMODE_erase].set));
 		if (! resource.ptyInitialErase
 		 && !override_tty_modes
 		 && !ttymodelist[XTTYMODE_erase].set) {
+			int old_erase;
 #ifdef USE_ANY_SYSV_TERMIO
-			if(ioctl(tty, TCGETA, &tio) == -1)
+			if (ioctl(tty, TCGETA, &tio) == -1)
 				tio = d_tio;
+			old_erase = tio.c_cc[VERASE];
 			tio.c_cc[VERASE] = initial_erase;
-			ioctl(tty, TCSETA, &tio);
+			rc = ioctl(tty, TCSETA, &tio);
 #elif defined(USE_POSIX_TERMIOS)
 			if (tcgetattr(tty, &tio) == -1)
 				tio = d_tio;
+			old_erase = tio.c_cc[VERASE];
 			tio.c_cc[VERASE] = initial_erase;
-			tcsetattr(tty, TCSANOW, &tio);
+			rc = tcsetattr(tty, TCSANOW, &tio);
 #else   /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
-			if(ioctl(tty, TIOCGETP, (char *)&sg) == -1)
+			if (ioctl(tty, TIOCGETP, (char *)&sg) == -1)
 				sg = d_sg;
+			old_erase = sg.sg_erase;
 			sg.sg_erase = initial_erase;
-			ioctl(tty, TIOCSETP, (char *)&sg);
+			rc = ioctl(tty, TIOCSETP, (char *)&sg);
 #endif	/* USE_ANY_SYSV_TERMIO */
+			TRACE(("%s setting erase to %d (was %d)\n",
+				rc ? "FAIL" : "OK", initial_erase, old_erase));
 		}
 #endif
 
@@ -3698,22 +3774,22 @@ spawn (void)
 		    if(*newtc)
 			strcat (newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
 		}
-#if OPT_INITIAL_ERASE
 		if (*newtc) {
+#if OPT_INITIAL_ERASE
 		    unsigned len;
 		    remove_termcap_entry (newtc, TERMCAP_ERASE "=");
 		    len = strlen(newtc);
 		    if (len != 0 && newtc[len-1] == ':')
 			len--;
 		    sprintf(newtc + len, ":%s=\\%03o:", TERMCAP_ERASE, initial_erase & 0377);
-		}
 #endif
-		if(*newtc)
 		    xtermSetenv ("TERMCAP=", newtc);
+		}
 #endif /* USE_SYSV_ENVVARS */
 
 
 		/* need to reset after all the ioctl bashing we did above */
+#ifdef USE_HANDSHAKE
 #if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
 		i = ioctl (0, TIOCSSIZE, &ts);
 		TRACE(("spawn TIOCSSIZE %dx%d return %d\n", ts.ts_lines, ts.ts_cols, i));
@@ -3723,7 +3799,7 @@ spawn (void)
 #else
 		TRACE(("spawn cannot tell pty its size\n"));
 #endif	/* sun vs TIOCSWINSZ */
-
+#endif
 		signal(SIGHUP, SIG_DFL);
 		if (command_to_exec) {
 			execvp(*command_to_exec, command_to_exec);
@@ -4401,6 +4477,7 @@ resize(TScreen *screen, register char *oldtc, char *newtc)
 }
 
 #endif /* ! VMS */
+
 /*
  * Does a non-blocking wait for a child process.  If the system
  * doesn't support non-blocking wait, do nothing.
@@ -4511,6 +4588,7 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
     int c;
     int count = 0;
 
+    TRACE(("parse_tty_modes\n"));
     while (1) {
 	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s))) s++;
 	if (!*s) return count;
@@ -4524,38 +4602,13 @@ static int parse_tty_modes (char *s, struct _xttymodes *modelist)
 	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s))) s++;
 	if (!*s) return -1;
 
-	if (*s == '^') {
-	    s++;
-	    c = ((*s == '?') ? A2E(0177) : CONTROL(*s));
-	    if (*s == '-') {
-		c = -1;
-		errno = 0;
-#if defined(_POSIX_VDISABLE) && defined(HAVE_UNISTD_H)
-		c = _POSIX_VDISABLE;
-#endif
-#if defined(_PC_VDISABLE)
-		if (c == -1) {
-		    c = fpathconf(0, _PC_VDISABLE);
-		    if (c == -1) {
-			if (errno != 0)
-			    continue;	/* skip this (error) */
-			c = 0377;
-		    }
-		}
-#elif defined(VDISABLE)
-		if (c == -1)
-		    c = VDISABLE;
-#endif
-		if (c == -1)
-		    continue;		/* ignore */
-	    }
-	} else {
-	    c = *s;
+	if ((c = decode_keyvalue(s++, False)) != -1) {
+	    mp->value = c;
+	    mp->set = 1;
+	    count++;
+	    TRACE(("...parsed #%d: %s=%#x\n", count, mp->name, c));
 	}
-	mp->value = c;
-	mp->set = 1;
-	count++;
-	s++;
+	while (*s && isascii(CharOf(*s)) && isgraph(CharOf(*s))) s++;
     }
 }
 
