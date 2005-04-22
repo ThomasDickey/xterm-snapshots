@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.191 2005/02/06 21:42:38 tom Exp $ */
+/* $XTermId: os2main.c,v 1.196 2005/04/22 00:21:54 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.75 2005/02/06 21:42:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.76 2005/04/22 00:21:54 dickey Exp $ */
 
 /***********************************************************
 
@@ -102,7 +102,6 @@ SOFTWARE.
 
 #if OPT_WIDE_CHARS
 #include <charclass.h>
-#include <wcwidth.h>
 #endif
 
 int
@@ -272,6 +271,8 @@ static XtResource application_resources[] =
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
     Bres("hold", "Hold", hold_screen, False),
     Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, False),
+    Ires("minBufSize", "MinBufSize", minBufSize, 128),
+    Ires("maxBufSize", "MaxBufSize", maxBufSize, 4096),
     Bres("messages", "Messages", messages, True),
     Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #if OPT_SUNPC_KBD
@@ -377,6 +378,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-k8",		"*allowC1Printable", XrmoptionNoArg,	(caddr_t) "on"},
 {"+k8",		"*allowC1Printable", XrmoptionNoArg,	(caddr_t) "off"},
 #endif
+{"-kt",		"*keyboardType", XrmoptionSepArg,	(caddr_t) NULL},
+{"+kt",		"*keyboardType", XrmoptionSepArg,	(caddr_t) NULL},
 /* parse logging options anyway for compatibility */
 {"-l",		"*logging",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+l",		"*logging",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -447,8 +450,10 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_WIDE_CHARS
 {"-wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "off"},
-{"-cjk_width", "*cjkWidth",	XrmoptionNoArg,		(caddr_t) "on"},
-{"+cjk_width", "*cjkWidth",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-mk_width",	"*mkWidth",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+mk_width",	"*mkWidth",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-cjk_width",	"*cjkWidth",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+cjk_width",	"*cjkWidth",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 {"-wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -540,6 +545,7 @@ static OptionHelp xtermOptions[] = {
 #if OPT_C1_PRINT
 { "-/+k8",                 "turn on/off C1-printable classification"},
 #endif
+{ "-kt keyboardtype",      "set keyboard type:" KEYBOARD_TYPES },
 #ifdef ALLOWLOGGING
 { "-/+l",                  "turn on/off logging" },
 { "-lf filename",          "logging filename" },
@@ -590,6 +596,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+pob",                "turn on/off pop on bell" },
 #if OPT_WIDE_CHARS
 { "-/+wc",                 "turn on/off wide-character mode" },
+{ "-/+mk_width",           "turn on/off simple width convention" },
 { "-/+cjk_width",          "turn on/off legacy CJK width convention" },
 #endif
 { "-/+wf",                 "turn on/off wait for map before command exec" },
@@ -823,10 +830,6 @@ save_callback(Widget w GCC_UNUSED,
     token->save_success = True;
 }
 #endif /* OPT_SESSION_MGT */
-
-#if OPT_WIDE_CHARS
-int (*my_wcwidth) (wchar_t);
-#endif
 
 /*
  * DeleteWindow(): Action proc to implement ICCCM delete_window.
@@ -1116,14 +1119,11 @@ main(int argc, char **argv ENVP_ARG)
 #endif
 						 (XtPointer) 0);
     /* this causes the initialize method to be called */
+#if OPT_TOOLBAR
+    SetupToolbar(toplevel);
+#endif
 
-#if OPT_HP_FUNC_KEYS
-    init_keyboard_type(keyboardIsHP, resource.hpFunctionKeys);
-#endif
-    init_keyboard_type(keyboardIsSun, resource.sunFunctionKeys);
-#if OPT_SUNPC_KBD
-    init_keyboard_type(keyboardIsVT220, resource.sunKeyboard);
-#endif
+    decode_keyboard_type(&resource);
 
     screen = &term->screen;
 
@@ -1137,12 +1137,6 @@ main(int argc, char **argv ENVP_ARG)
 #if OPT_TEK4014
     if (term->misc.tekInhibit)
 	inhibit |= I_TEK;
-#endif
-
-#if OPT_WIDE_CHARS
-    my_wcwidth = &mk_wcwidth;
-    if (term->misc.cjk_width)
-	my_wcwidth = &mk_wcwidth_cjk;
 #endif
 
 #if OPT_SESSION_MGT

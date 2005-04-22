@@ -1,10 +1,10 @@
-/* $XTermId: data.c,v 1.71 2005/01/14 01:50:02 tom Exp $ */
+/* $XTermId: data.c,v 1.74 2005/04/22 00:21:53 tom Exp $ */
 
 /*
  *	$Xorg: data.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.c,v 3.30 2005/01/14 01:50:02 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.c,v 3.31 2005/04/22 00:21:53 dickey Exp $ */
 
 /*
  * Copyright 2002-2004,2005 by Thomas E. Dickey
@@ -88,7 +88,7 @@ Atom wm_delete_window;		/* for ICCCM delete window */
 
 XTERM_RESOURCE resource;
 
-PtyData VTbuffer;
+PtyData *VTbuffer;
 
 jmp_buf VTend;
 
@@ -121,5 +121,5 @@ PtySelect pty_mask;
 char *ptydev;
 char *ttydev;
 
-int waitingForTrackInfo = 0;
+Boolean waitingForTrackInfo = False;
 EventMode eventMode = NORMAL;

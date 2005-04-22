@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.181 2005/01/14 01:50:02 tom Exp $
+dnl $XTermId: configure.in,v 1.185 2005/04/22 00:21:53 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.68 2005/01/14 01:50:02 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.69 2005/04/22 00:21:53 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -70,6 +70,7 @@ ncurses/term.h \
 stdlib.h \
 termios.h \
 unistd.h \
+wchar.h \
 )
 AC_HEADER_TIME
 AM_LANGINFO_CODESET
@@ -88,11 +89,13 @@ AC_CHECK_FUNCS( \
 	getlogin \
 	memmove \
 	putenv \
+	sched_yield \
 	strerror \
 	strftime \
 	tcgetattr \
 	waitpid \
-	)
+	wcswidth \
+	wcwidth )
 CF_FUNC_MEMMOVE
 CF_FUNC_TGETENT
 CF_UTMP
@@ -588,7 +591,7 @@ if test "$enable_wchar" = yes ; then
 fi
 
 AC_MSG_CHECKING(if you want dynamic-abbreviation support)
-CF_ARG_ENABLE(dec-locator,
+CF_ARG_ENABLE(dabbrev,
 	[  --enable-dabbrev        enable dynamic-abbreviation support],
 	[enable_dabbrev=yes],
 	[enable_dabbrev=no])

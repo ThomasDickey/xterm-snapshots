@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.154 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: menu.c,v 1.160 2005/04/22 00:21:54 tom Exp $ */
 
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -47,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.58 2005/01/14 01:50:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.59 2005/04/22 00:21:54 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -669,10 +669,6 @@ domenu(Widget w GCC_UNUSED,
 #endif
 #if OPT_WIDE_CHARS
 	    update_font_utf8_mode();
-	    if (term->screen.utf8_mode > 1)
-		set_sensitivity(mw,
-				fontMenuEntries[fontMenu_wide_chars].widget,
-				False);
 #endif
 	}
 	FindFontSelection(NULL, True);
@@ -1381,8 +1377,20 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
 {
     TScreen *screen = &term->screen;
 
+    /*
+     * If xterm was started with -wc option, it might not have the wide fonts.
+     * If xterm was not started with -wc, it might not have wide cells.
+     */
+    if (!screen->utf8_mode) {
+	if (screen->wide_chars) {
+	    if (xtermLoadWideFonts(term)) {
+		SetVTFont(screen->menu_font_number, TRUE, NULL);
+	    }
+	} else {
+	    ChangeToWide(screen);
+	}
+    }
     switchPtyData(screen, !screen->utf8_mode);
-    update_font_utf8_mode();
     /*
      * We don't repaint the screen when switching UTF-8 on/off.  When switching
      * on - the Latin-1 codes should paint as-is.  When switching off, that's
@@ -2264,7 +2272,8 @@ void
 SetupMenus(Widget shell, Widget *forms, Widget *menus)
 {
 #if OPT_TOOLBAR
-    int n;
+    Cardinal n;
+    Arg args[10];
     Widget menu_tops[NUM_POPUP_MENUS];
 #endif
 
@@ -2288,14 +2297,17 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus)
      * the grip, because it's too easy to make the toolbar look bad that
      * way.
      */
-    *menus = XtVaCreateManagedWidget("menubar",
-				     boxWidgetClass, *forms,
-				     XtNorientation, XtorientHorizontal,
-				     XtNtop, XawChainTop,
-				     XtNbottom, XawChainTop,
-				     XtNleft, XawChainLeft,
-				     XtNright, XawChainLeft,
-				     (XtPointer) 0);
+    XtSetArg(args[0], XtNorientation, XtorientHorizontal);
+    XtSetArg(args[1], XtNtop, XawChainTop);
+    XtSetArg(args[2], XtNbottom, XawChainTop);
+    XtSetArg(args[3], XtNleft, XawChainLeft);
+    XtSetArg(args[4], XtNright, XawChainLeft);
+
+    if (resource.toolBar)
+	*menus = XtCreateManagedWidget("menubar", boxWidgetClass, *forms,
+				       args, 5);
+    else
+	*menus = XtCreateWidget("menubar", boxWidgetClass, *forms, args, 5);
 
     if (shell == toplevel) {	/* vt100 */
 	for (n = mainMenu; n <= fontMenu; n++) {
@@ -2335,7 +2347,7 @@ SetupToolbar(Widget shell)
 	InitPopup(tek_shell[tekMenu].w, menu_names[tekMenu].internal_name, 0);
     }
 #endif
-    term->screen.toolbars = True;
+    ShowToolbar(resource.toolBar);
     update_toolbar();
 }
 
@@ -2354,6 +2366,7 @@ hide_toolbar(Widget w)
 	TbInfo *info = toolbar_info(w);
 
 	if (info->menu_bar != 0) {
+	    XtUnmanageChild(info->menu_bar);
 	    if (XtIsRealized(info->menu_bar))
 		XtUnmapWidget(info->menu_bar);
 	}
@@ -2370,12 +2383,13 @@ show_toolbar(Widget w)
 	TbInfo *info = toolbar_info(w);
 
 	if (info->menu_bar != 0) {
+	    XtVaSetValues(w,
+			  XtNfromVert, info->menu_bar,
+			  (XtPointer) 0);
+	    XtManageChild(info->menu_bar);
 	    if (XtIsRealized(info->menu_bar))
 		XtMapWidget(info->menu_bar);
 	}
-	XtVaSetValues(w,
-		      XtNfromVert, info->menu_bar,
-		      (XtPointer) 0);
 	/*
 	 * This is needed to make the terminal widget move down below the
 	 * toolbar.
@@ -2402,7 +2416,7 @@ HandleToolbar(Widget w,
 	      String * params GCC_UNUSED,
 	      Cardinal *param_count GCC_UNUSED)
 {
-    handle_toggle(do_toolbar, (int) term->screen.toolbars,
+    handle_toggle(do_toolbar, (int) resource.toolBar,
 		  params, *param_count, w, (XtPointer) 0, (XtPointer) 0);
 }
 
@@ -2417,7 +2431,7 @@ do_toolbar(Widget gw GCC_UNUSED,
      * menu which contains the checkbox indicating whether the toolbar is
      * active.
      */
-    ShowToolbar(term->screen.toolbars = !term->screen.toolbars);
+    ShowToolbar(resource.toolBar = !resource.toolBar);
     update_toolbar();
 }
 
@@ -2426,7 +2440,7 @@ update_toolbar(void)
 {
     update_menu_item(term->screen.mainMenu,
 		     mainMenuEntries[mainMenu_toolbar].widget,
-		     term->screen.toolbars);
+		     resource.toolBar);
 }
 #endif /* OPT_TOOLBAR */
 
@@ -2752,9 +2766,13 @@ update_font_renderfont(void)
 void
 update_font_utf8_mode(void)
 {
-    update_menu_item(term->screen.fontMenu,
-		     fontMenuEntries[fontMenu_wide_chars].widget,
-		     term->screen.utf8_mode);
+    Widget iw = fontMenuEntries[fontMenu_wide_chars].widget;
+    Bool active = (term->screen.utf8_mode <= 1);
+    Bool enable = term->screen.utf8_mode;
+
+    TRACE(("update_font_utf8_mode active %d, enable %d\n", active, enable));
+    set_sensitivity(term->screen.fontMenu, iw, active);
+    update_menu_item(term->screen.fontMenu, iw, enable);
 }
 #endif
 

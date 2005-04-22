@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.38 2005/01/14 01:50:02 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.40 2005/04/22 00:21:53 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/doublechr.c,v 3.15 2005/01/14 01:50:02 dickey Exp $
+ * $XFree86: xc/programs/xterm/doublechr.c,v 3.16 2005/04/22 00:21:53 dickey Exp $
  */
 
 /************************************************************
@@ -95,9 +95,9 @@ repaint_line(unsigned newChrSet)
     /* FIXME: do VT220 softchars allow double-sizes? */
     memset(SCRN_BUF_CSETS(screen, currow), (Char) newChrSet, len);
 
-    screen->cur_col = 0;
+    set_cur_col(screen, 0);
     ScrnUpdate(screen, currow, 0, 1, (int) len, True);
-    screen->cur_col = curcol;
+    set_cur_col(screen, curcol);
 }
 #endif
 

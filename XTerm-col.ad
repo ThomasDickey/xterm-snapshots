@@ -1,5 +1,5 @@
-! $XTermId: XTerm-col.ad,v 1.10 2004/07/13 00:41:24 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.3 2004/07/13 00:41:24 dickey Exp $
+! $XTermId: XTerm-col.ad,v 1.12 2005/04/22 00:21:53 tom Exp $
+! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.4 2005/04/22 00:21:53 dickey Exp $
 
 #include "XTerm"
 
@@ -10,6 +10,9 @@
 ! Uncomment this for "white" text on a dark background.
 !*VT100*foreground: gray90
 !*VT100*background: black
+
+! Color the popup/pulldown menu border to match the text widget's foreground.
+!*SimpleMenu*borderColor: gray15
 
 ! Uncomment this to use color for underline attribute
 !*VT100*colorULMode: on
@@ -83,17 +86,27 @@
 ! Some refinement is certainly possible (you are welcome to try) -TD
 
 
+#if PLANES > 8
+! Color the popup menus and the menubar to match:
+*SimpleMenu.*.background: AntiqueWhite
+*SimpleMenu.*.foreground: gray15
+*menubar.*.background: AntiqueWhite
+*menubar.*.foreground: gray15
+
+*menubar.*.background: AntiqueWhite
+*menubar.*.foreground: gray15
+
+! Set the background for the terminal window to match the menubar.  This is
+! because the form/box construction leaves empty space after the pulldown
+! menu-buttons which is colored only by the top-level widget.  Since we will
+! color the text widget also, this is a workable solution.
+*.background: AntiqueWhite
+
 ! The following two sections take advantage of new features in version 7
 ! of the Athena widget library.  Comment them out if you have a shallow
 ! color depth.
-!*mainMenu*backgroundPixmap:     gradient:vertical?dimension=350&start=gray90&end=gray60
-!*mainMenu*foreground:           gray15
-!*vtMenu*backgroundPixmap:       gradient:vertical?dimension=445&start=gray90&end=gray60
-!*vtMenu*foreground:             gray15
-!*fontMenu*backgroundPixmap:     gradient:vertical?dimension=220&start=gray90&end=gray60
-!*fontMenu*foreground:           gray15
-!*tekMenu*backgroundPixmap:      gradient:vertical?dimension=205&start=gray90&end=gray60
-!*tekMenu*foreground:            gray15
+!*SimpleMenu*backgroundPixmap:   gradient:vertical?dimension=350&start=gray90&end=gray60
+!*SimpleMenu*foreground:         gray15
 
 !*VT100.scrollbar.thumb:         vlines2
 !*VT100.scrollbar.width:         14
@@ -105,3 +118,4 @@
 !lines           1,-1,-1,-1,-1,1;\
 !foreground      gray60;\
 !lines           -1,0,0,0,0,-1
+#endif

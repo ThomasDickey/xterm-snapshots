@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.179 2005/02/06 21:42:37 tom Exp $ */
+/* $XTermId: button.c,v 1.181 2005/04/22 00:21:53 tom Exp $ */
 
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
@@ -52,7 +52,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.78 2005/02/06 21:42:37 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.79 2005/04/22 00:21:53 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1583,7 +1583,7 @@ TrackDown(XButtonEvent * event)
 	replyToEmacs = True;
 	StartSelect(startrow, startcol);
     } else {
-	waitingForTrackInfo = 1;
+	waitingForTrackInfo = True;
 	EditorButton((XButtonEvent *) event);
     }
 }
@@ -1601,7 +1601,7 @@ TrackMouse(int func, int startrow, int startcol, int firstrow, int lastrow)
     if (!waitingForTrackInfo) {	/* Timed out, so ignore */
 	return;
     }
-    waitingForTrackInfo = 0;
+    waitingForTrackInfo = False;
     if (func == 0)
 	return;
     boundsCheck(startrow)

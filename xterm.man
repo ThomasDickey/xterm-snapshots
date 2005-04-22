@@ -1,8 +1,8 @@
-.\" $XTermId: xterm.man,v 1.293 2005/01/14 01:50:03 tom Exp $
+.\" $XTermId: xterm.man,v 1.302 2005/04/22 00:21:54 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
-.\" Copyright 1996-2003,2004 by Thomas E. Dickey
+.\" Copyright 1996-2004,2005 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.112 2005/01/14 01:50:03 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.113 2005/04/22 00:21:54 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .TH XTERM 1 __vendorversion__
@@ -218,8 +218,20 @@ This causes \fIxterm\fP to print out a verbose message describing its options.
 The message is written to the standard error.
 .
 .PP
+One parameter (after all options) may be given.
+That overrides \fIxterm\fP's built-in choice of shell program.
+Normally \fIxterm\fP checks the SHELL variable.
+If that is not set, \fIxterm\fP tries to use the shell program specified
+in the password file.
+If that is not set, \fIxterm\fP uses \fI/bin/sh\fP.
+If the parameter names an executable file, \fIxterm\fP uses that instead.
+The parameter must be an absolute path, or name a file found on the user's
+PATH (and thereby construct an absolute path).
+The \fB-e\fP option cannot be used with this parameter since
+it uses all parameters following the option.
+.PP
 The other options are used to control the appearance and behavior.
-Not all options are necessarily configured into your copy of \fIxterm\fP.
+Not all options are necessarily configured into your copy of \fIxterm\fP:
 .TP 8
 .B -132
 Normally, the VT102 DECCOLM escape sequence that switches between 80 and
@@ -527,6 +539,12 @@ of C1 control characters (code 128-159) to treat them as printable.
 .B +k8
 This option resets the \fBallowC1Printable\fP resource.
 .TP 8
+.BI -kt " keyboardtype"
+This option sets the \fBkeyboardType\fP resource.
+Possible values include: ``hp'', ``sco'', ``sun'' and ``vt220''.
+The default value ``unknown'',
+causes the corresponding resource to be ignored.
+.TP 8
 .B -l
 Turn logging on.
 Normally logging is not supported, due to security concerns.
@@ -625,6 +643,15 @@ disallow write access to the terminal.
 .B +mesg
 Turn on the \fBmessages\fP resource, i.e.,
 allow write access to the terminal.
+.TP 8
+.B "-mk_width"
+Set the \fBmkWidth\fP resource to ``true''.
+This makes \fIxterm\fP use a built-in version of the wide-character width
+calculation.
+The default is ``false''
+.TP 8
+.B "+mk_width"
+Reset the \fBmkWidth\fP resource.
 .TP 8
 .BI -ms " color"
 This option specifies the color to be used for the pointer cursor.
@@ -777,6 +804,16 @@ sets the ``TERM'' and the ``TERMCAP'' environment variables.
 .TP 8
 .B +t
 This option indicates that \fIxterm\fP should start in VT102 mode.
+.TP 8
+.B -tb
+This option, corresponding to the \fBtoolBar\fR resource,
+indicates that \fIxterm\fR should display a toolbar (or menubar)
+at the top of its window.  The buttons in the toolbar correspond to
+the popup menus, e.g., control/left/mouse for "Main Options".
+.TP 8
+.B +tb
+This option indicates that \fIxterm\fR should
+not set up a toolbar.
 .TP 8
 .BI -ti " term_id"
 Specify the name used by \fIxterm\fP to select the
@@ -1037,6 +1074,7 @@ with the shell which is no longer running.
 .B "hpFunctionKeys (\fPclass\fB HpFunctionKeys)"
 Specifies whether or not HP Function Key escape codes should be generated for
 function keys instead of standard escape sequences.
+See also the \fBkeyboardType\fP resource.
 .TP 8
 .B "iconGeometry (\fPclass\fB IconGeometry)"
 Specifies the preferred size and position of the application when iconified.
@@ -1046,13 +1084,41 @@ It is not necessarily obeyed by all window managers.
 Specifies the icon name.
 The default is the application name.
 .TP 8
+.B "keyboardType (\fPclass\fB KeyboardType)"
+Enables one (or none) of the various keyboard-type resources:
+\fBhpFunctionKeys\fP,
+\fBscoFunctionKeys\fP,
+\fBsunFunctionKeys\fP and
+\fBsunKeyboard\fP.
+The resource's value should be one of the corresponding strings
+hp, sco, sun or vt220.
+The individual resources are provided for legacy support;
+this resource is simpler to use.
+.TP 8
+.B "maxBufSize (\fPclass\fB MaxBufSize)"
+Specify the maximum size of the input buffer.
+The default is 4096.
+You cannot set this to a value less than the \fBminBufSize\fR resource.
+It will be increased as needed to make that value evenly divide this one.
+.IP
+On some systems you may want to increase one or both of the
+\fBmaxBufSize\fP and
+\fBminBufSize\fP resource values to achieve better performance
+if the operating system prefers larger buffer sizes.
+.TP 8
 .B "messages (\fPclass\fB Messages)"
 Specifies whether write access to the terminal is allowed initially.
 See
 .BR mesg (1).
 The default is ``true''.
 .TP 8
-.B "ptyHandshake (\fPclass\fBPtyHandshake)
+.B "minBufSize (\fPclass\fB MinBufSize)"
+Specify the minimum size of the input buffer, i.e., the amount of data
+that \fIxterm\fR requests on each read.
+The default is 128.
+You cannot set this to a value less than 64.
+.TP 8
+.B "ptyHandshake (\fPclass\fB PtyHandshake)
 If ``true'', \fIxterm\fP will perform handshaking during initialization
 to ensure that the parent and child processes update the \fButmp\fP
 and \fBstty\fP state.
@@ -1084,6 +1150,7 @@ The default is ``true''.
 .B "scoFunctionKeys (\fPclass\fB ScoFunctionKeys)"
 Specifies whether or not SCP Function Key escape codes should be generated for
 function keys instead of standard escape sequences.
+See also the \fBkeyboardType\fP resource.
 .TP 8
 .B "sessionMgt (\fPclass\fB SessionMgt)"
 If the value of this resource is ``true'',
@@ -1094,6 +1161,7 @@ The default is ``true''.
 .B "sunFunctionKeys (\fPclass\fB SunFunctionKeys)"
 Specifies whether or not Sun Function Key escape codes should be generated for
 function keys instead of standard escape sequences.
+See also the \fBkeyboardType\fP resource.
 .TP 8
 .B "sunKeyboard (\fPclass\fB SunKeyboard)"
 Specifies whether or not Sun/PC keyboard layout should be assumed rather
@@ -1114,6 +1182,7 @@ The PC-style bindings are analogous to PCTerm, but not the same thing.
 Normally these bindings do not conflict with the use of the Meta key
 as described for the \fBeightBitInput\fP resource.
 If they do, note that the PC-style bindings are evaluated first.
+See also the \fBkeyboardType\fP resource.
 .TP 8
 .B "termName (\fPclass\fB TermName)"
 Specifies the terminal type name to be set in the TERM environment variable.
@@ -1121,6 +1190,11 @@ Specifies the terminal type name to be set in the TERM environment variable.
 .B "title (\fPclass\fB Title)"
 Specifies a string that may be used by the window manager when displaying
 this application.
+.TP 8
+.B "toolBar (\fPclass\fB ToolBar)"
+Specifies whether or not the toolbar should be displayed.
+The default is
+``true.''
 .TP 8
 .B "ttyModes (\fPclass\fB TtyModes)"
 Specifies a string containing terminal setting keywords and the characters
@@ -1588,13 +1662,13 @@ The default is ``false.''
 .TP 8
 .B "eightBitInput (\fPclass\fB EightBitInput\fP)"
 If ``true'', Meta characters
-(a character combined with the \fIkeys\fP modifier key)
+(a single-byte character combined with the \fIkeys\fP modifier key)
 input from the keyboard are presented as a
 single character with the eighth bit turned on.
 The terminal is put into 8-bit mode.
 If ``false'', Meta characters are converted into a two-character
 sequence with the character itself preceded by ESC.
-The terminal is put into 7-bit mode.
+On startup, \fIxterm\fP tries to put the terminal into 7-bit mode.
 The \fBmetaSendsEscape\fP resource may override this.
 The default is ``true.''
 .IP
@@ -1772,9 +1846,8 @@ border visible.
 .B "iconBorderWidth (\fPclass\fB BorderWidth)"
 Specifies the border width for the active icon window if this feature
 is compiled into \fIxterm\fR.
-The default is 0 (no border).
-Not all window
-managers will make the border visible.
+The default is 2.
+Not all window managers will make the border visible.
 .TP 8
 .B "iconFont (\fPclass\fB IconFont)"
 Specifies the font for the miniature active icon window, if this feature
@@ -1884,6 +1957,11 @@ This applies as well to function key control sequences, unless \fIxterm\fP
 sees that \fBMeta\fP is used in your key translations.
 If ``false'', Meta characters input from the keyboard are handled according
 to the \fBeightBitInput\fP resource.
+The default is ``false.''
+.TP 8
+.B "mkWidth (\fPclass\fB MkWidth)"
+Specifies whether \fIxterm\fP should use a built-in version of the wide
+character width calculation. 
 The default is ``false.''
 .TP 8
 .B "modifyCursorKeys (\fPclass\fB ModifyCursorKeys\fP)"
@@ -2118,12 +2196,6 @@ alternate screen.
 sequences (also known as private modes) 1047, 1048 and 1049 which have the same
 effect as the original 47 control sequence.
 The default for this resource is ``false.''
-.\" -- resource does not work properly (forms/layout issues)
-.\".TP 8
-.\".B "toolBar (\fPclass\fB ToolBar)"
-.\"Specifies whether or not the toolbar should be displayed.
-.\"The default is
-.\"``false.''
 .TP 8
 .B "translations (\fPclass\fB Translations)"
 Specifies the key and button bindings for menus, selections, ``programmed
@@ -2161,6 +2233,7 @@ The resource is an integer, expected to range from 0 to 3:
 .TP
 0
 UTF-8 mode is initially off.
+The command-line option \fB+u8\fP sets the resource to this value.
 Escape sequences for turning UTF-8 mode on/off are allowed.
 .TP
 1
@@ -2179,7 +2252,7 @@ See the \fBlocale\fR resource for additional discussion of non-UTF-8 locales.
 .RE
 .IP
 If you want to set the value of \fButf8\fP, it should be in this range.
-Other nonzero values are treated the same a ``1'',
+Other nonzero values are treated the same as ``1'',
 i.e., UTF-8 mode is initially on, and
 escape sequences for turning UTF-8 mode on/off are allowed.
 .TP 8
@@ -2673,6 +2746,10 @@ There are several sections:
 .TP
 Commands for managing X events:
 .RS
+.TP
+Toolbar
+Clicking on the "Toolbar" menu entry hides the toolbar if it is visible,
+and shows it if it is not.
 .TP
 Secure Keyboard (securekbd)
 The
@@ -3414,9 +3491,17 @@ the key that was pressed.
 .B "insert-eight-bit()"
 This action inserts an eight-bit (Meta) version of the character or string
 associated with the key that was pressed.
+This only applies to single-byte values.
 The exact action depends on the value of
 the \fBmetaSendsEscape\fP and
 the \fBeightBitInput\fP resources.
+The \fBmetaSendsEscape\fP resource is tested first.
+.IP
+The term "eight-bit" is misleading:
+\fIxterm\fP checks if the key's value is less than 128.
+If so, \fIxterm\fP adds 128 to the value, setting its eighth bit.
+Otherwise \fIxterm\fP sends an ESC byte before the key.
+In other applications' documentation, that is referred to as a "meta key".
 .TP 8
 .B "insert-selection(\fIsourcename\fP [, ...])"
 This action inserts the string found in the selection or cutbuffer indicated
@@ -3430,6 +3515,9 @@ typically named \fICUT_BUFFER0\fP through \fICUT_BUFFER7\fP.
 .TP 8
 .B "insert-seven-bit()"
 This action is a synonym for \fBinsert()\fP
+The term "seven-bit" is misleading:
+it only implies that \fIxterm\fP does not try to add 128 to the key's value
+as in \fBinsert-eight-bit()\fP.
 .TP 8
 .B "interpret(\fIcontrol-sequence\fP)"
 Interpret the given control sequence locally, i.e., without passing it to

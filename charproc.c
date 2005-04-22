@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.551 2005/02/06 21:42:38 tom Exp $ */
+/* $XTermId: charproc.c,v 1.564 2005/04/22 00:21:53 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.168 2005/02/06 21:42:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.169 2005/04/22 00:21:53 dickey Exp $ */
 
 /*
 
@@ -122,6 +122,10 @@ in this Software without prior written authorization from The Open Group.
 
 #include <stdio.h>
 #include <ctype.h>
+
+#if defined(HAVE_SCHED_YIELD)
+#include <sched.h>
+#endif
 
 #include <VTparse.h>
 #include <data.h>
@@ -621,12 +625,12 @@ static XtResource resources[] =
 #if OPT_TOOLBAR
     Wres(XtNmenuBar, XtCMenuBar, VT100_TB_INFO(menu_bar), 0),
     Ires(XtNmenuHeight, XtCMenuHeight, VT100_TB_INFO(menu_height), 25),
-    Bres(XtNtoolBar, XtCToolBar, screen.toolbars, True),
 #endif
 
 #if OPT_WIDE_CHARS
     Ires(XtNutf8, XtCUtf8, screen.utf8_mode, 3),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
+    Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, True),
     Sres(XtNwideBoldFont, XtCWideBoldFont, misc.default_font.f_wb, DEFWIDEBOLDFONT),
@@ -982,6 +986,10 @@ set_tb_margins(TScreen * screen, int top, int bottom)
 	screen->top_marg = top;
 	screen->bot_marg = bottom;
     }
+    if (screen->top_marg > screen->max_row)
+	screen->top_marg = screen->max_row;
+    if (screen->bot_marg > screen->max_row)
+	screen->bot_marg = screen->max_row;
 }
 
 void
@@ -1324,7 +1332,7 @@ doparsing(unsigned c, struct ParseState *sp)
 #if OPT_WIDE_CHARS
 	    sp->last_was_wide = iswide((int) c);
 #endif
-	    if (morePtyData(screen, &VTbuffer)) {
+	    if (morePtyData(screen, VTbuffer)) {
 		continue;
 	    }
 	}
@@ -1448,7 +1456,7 @@ doparsing(unsigned c, struct ParseState *sp)
 	    if ((count = param[0]) == DEFAULT)
 		count = 1;
 	    while ((count-- > 0)
-		   && (TabToPrevStop())) ;
+		   && (TabToPrevStop(screen))) ;
 	    sp->parsestate = sp->groundtable;
 	    break;
 
@@ -1457,13 +1465,13 @@ doparsing(unsigned c, struct ParseState *sp)
 	    if ((count = param[0]) == DEFAULT)
 		count = 1;
 	    while ((count-- > 0)
-		   && (TabToNextStop())) ;
+		   && (TabToNextStop(screen))) ;
 	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_TAB:
 	    /* tab */
-	    TabToNextStop();
+	    TabToNextStop(screen);
 	    break;
 
 	case CASE_SI:
@@ -2731,6 +2739,12 @@ doparsing(unsigned c, struct ParseState *sp)
 	if (sp->parsestate == sp->groundtable)
 	    sp->lastchar = thischar;
     } while (0);
+
+#if OPT_WIDE_CHARS
+    screen->utf8_inparse = (screen->utf8_mode != 0
+			    && sp->parsestate != sos_table);
+#endif
+
     return True;
 }
 
@@ -2937,8 +2951,7 @@ in_put(void)
 {
     static PtySelect select_mask;
     static PtySelect write_mask;
-    static int pty_read_bytes;
-    int update = VTbuffer.update;
+    int update = VTbuffer->update;
     int size;
 
     int status;
@@ -2976,7 +2989,7 @@ in_put(void)
 	}
 
 	if (eventMode == NORMAL
-	    && readPtyData(screen, &select_mask, &VTbuffer)) {
+	    && readPtyData(screen, &select_mask, VTbuffer)) {
 	    if (screen->scrollWidget
 		&& screen->scrollttyoutput
 		&& screen->topline < 0)
@@ -3015,7 +3028,7 @@ in_put(void)
 
 	if (select_mask & X_mask) {
 	    xevents();
-	    if (VTbuffer.update != update)
+	    if (VTbuffer->update != update)
 		break;
 	}
     }
@@ -3026,12 +3039,11 @@ in_put(void)
 {
     static PtySelect select_mask;
     static PtySelect write_mask;
-    static int pty_read_bytes;
 
     TScreen *screen = &term->screen;
     int i, time_select;
     int size;
-    int update = VTbuffer.update;
+    int update = VTbuffer->update;
 
     static struct timeval select_timeout;
 
@@ -3050,19 +3062,26 @@ in_put(void)
 
     for (;;) {
 	if (eventMode == NORMAL
-	    && (size = readPtyData(screen, &select_mask, &VTbuffer)) != 0) {
+	    && (size = readPtyData(screen, &select_mask, VTbuffer)) != 0) {
 	    if (screen->scrollWidget
 		&& screen->scrollttyoutput
 		&& screen->topline < 0)
 		WindowScroll(screen, 0);	/* Scroll to bottom */
-	    pty_read_bytes += size;
 	    /* stop speed reading at some point to look for X stuff */
 	    /* (BUF_SIZE is just a random large number.) */
-	    if (pty_read_bytes > BUF_SIZE)
+	    if ((VTbuffer->last - VTbuffer->buffer) > BUF_SIZE) {
 		FD_CLR(screen->respond, &select_mask);
+		break;
+	    }
+#if defined(HAVE_SCHED_YIELD)
+	    if (size < FRG_SIZE) {
+		sched_yield();
+		break;
+	    }
+#else
 	    break;
+#endif
 	}
-	pty_read_bytes = 0;
 	/* update the screen */
 	if (screen->scroll_amt)
 	    FlushScroll(screen);
@@ -3150,7 +3169,7 @@ in_put(void)
 	if (XtAppPending(app_con) ||
 	    FD_ISSET(ConnectionNumber(screen->display), &select_mask)) {
 	    xevents();
-	    if (VTbuffer.update != update)	/* HandleInterpret */
+	    if (VTbuffer->update != update)	/* HandleInterpret */
 		break;
 	}
 
@@ -3163,9 +3182,9 @@ doinput(void)
 {
     TScreen *screen = &term->screen;
 
-    while (!morePtyData(screen, &VTbuffer))
+    while (!morePtyData(screen, VTbuffer))
 	in_put();
-    return nextPtyData(screen, &VTbuffer);
+    return nextPtyData(screen, VTbuffer);
 }
 
 #if OPT_INPUT_METHOD
@@ -3244,7 +3263,7 @@ dotext(TScreen * screen,
 	    ScrnSetWrapped(screen, screen->cur_row);
 	    xtermAutoPrint('\n');
 	    xtermIndex(screen, 1);
-	    screen->cur_col = 0;
+	    set_cur_col(screen, 0);
 	    screen->do_wrap = 0;
 	    width_available = screen->max_col - screen->cur_col + 1;
 	}
@@ -3319,7 +3338,7 @@ dotext(TScreen * screen,
 		ScrnSetWrapped(screen, screen->cur_row);
 		xtermAutoPrint('\n');
 		xtermIndex(screen, 1);
-		screen->cur_col = 0;
+		set_cur_col(screen, 0);
 		screen->do_wrap = 0;
 		this_col = last_col + 1;
 	    } else
@@ -3390,9 +3409,11 @@ visual_width(PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 static void
 WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 {
+    ScrnPtr PAIRED_CHARS(temp_str = 0, temp_str2 = 0);
     unsigned test;
     unsigned flags = term->flags;
     unsigned fg_bg = makeColorPair(term->cur_foreground, term->cur_background);
+    unsigned cells = visual_width(PAIRED_CHARS(str, str2), len);
     GC currentGC;
 
     TRACE(("WriteText (%2d,%2d) (%d) %3d:%s\n",
@@ -3411,7 +3432,7 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	    HideCursor();
 
 	if (flags & INSERT) {
-	    InsertChar(screen, visual_width(PAIRED_CHARS(str, str2), len));
+	    InsertChar(screen, cells);
 	}
 	if (!AddToRefresh(screen)) {
 	    /* make sure that the correct GC is current */
@@ -3421,6 +3442,18 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 		FlushScroll(screen);
 
 	    if (flags & INVISIBLE) {
+		if (cells > len) {
+		    str = temp_str = malloc(cells);
+		    if (str == 0)
+			return;
+		}
+		if_OPT_WIDE_CHARS(screen, {
+		    if (cells > len) {
+			str2 = temp_str2 = malloc(cells);
+		    }
+		});
+		len = cells;
+
 		memset(str, ' ', len);
 		if_OPT_WIDE_CHARS(screen, {
 		    if (str2 != 0)
@@ -3446,7 +3479,7 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
     }
 
     ScreenWrite(screen, PAIRED_CHARS(str, str2), flags, fg_bg, len);
-    CursorForward(screen, (int) visual_width(PAIRED_CHARS(str, str2), len));
+    CursorForward(screen, (int) cells);
 #if OPT_ZICONBEEP
     /* Flag icon name with "***"  on window output when iconified.
      */
@@ -3474,6 +3507,12 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
     }
     mapstate = -1;
 #endif /* OPT_ZICONBEEP */
+    if (temp_str != 0)
+	free(temp_str);
+    if_OPT_WIDE_CHARS(screen, {
+	if (temp_str2 != 0)
+	    free(temp_str2);
+    });
     return;
 }
 
@@ -3941,7 +3980,7 @@ savemodes(XtermWidget termw)
 	    break;
 #if OPT_TOOLBAR
 	case 10:		/* rxvt */
-	    DoSM(DP_TOOLBAR, screen->toolbars);
+	    DoSM(DP_TOOLBAR, resource.toolBar);
 	    break;
 #endif
 #if OPT_BLINK_CURS
@@ -4081,8 +4120,8 @@ restoremodes(XtermWidget termw)
 	    break;
 #if OPT_TOOLBAR
 	case 10:		/* rxvt */
-	    DoRM(DP_TOOLBAR, screen->toolbars);
-	    ShowToolbar(screen->toolbars);
+	    DoRM(DP_TOOLBAR, resource.toolBar);
+	    ShowToolbar(resource.toolBar);
 	    break;
 #endif
 #if OPT_BLINK_CURS
@@ -4605,7 +4644,7 @@ VTRun(void)
 
 #if OPT_TEK4014
     if (Tpushb > Tpushback) {
-	fillPtyData(screen, &VTbuffer, (char *) Tpushback, Tpushb - Tpushback);
+	fillPtyData(screen, VTbuffer, (char *) Tpushback, Tpushb - Tpushback);
 	Tpushb = Tpushback;
     }
 #endif
@@ -4914,26 +4953,10 @@ fill_Tres(XtermWidget target, XtermWidget source, int offset)
 static void
 VTInitialize_locale(XtermWidget request)
 {
-    char *locale;
-    Bool is_utf8;
-#ifdef HAVE_LANGINFO_CODESET
-    char *encoding;
-#endif
+    Bool is_utf8 = xtermEnvUTF8();
 
     TRACE(("VTInitialize_locale\n"));
     TRACE(("... request screen.utf8_mode = %d\n", request->screen.utf8_mode));
-
-    if ((locale = getenv("LC_ALL")) == 0 || *locale == '\0')
-	if ((locale = getenv("LC_CTYPE")) == 0 || *locale == '\0')
-	    if ((locale = getenv("LANG")) == 0 || *locale == '\0')
-		locale = "";
-#ifdef HAVE_LANGINFO_CODESET
-    encoding = nl_langinfo(CODESET);
-    is_utf8 = (strcmp(encoding, "UTF-8") == 0);
-#else
-    is_utf8 = (strstr(locale, "UTF-8") != NULL);
-#endif
-    TRACE(("... is_utf8 = %s\n", BtoS(is_utf8)));
 
     request->screen.latin9_mode = 0;
     request->screen.unicode_font = 0;
@@ -4944,6 +4967,9 @@ VTInitialize_locale(XtermWidget request)
     TRACE(("... setup for luit:\n"));
     TRACE(("... request misc.locale_str = \"%s\"\n", request->misc.locale_str));
 
+    if (request->screen.utf8_mode == 0) {
+	TRACE(("... command-line +u8 overrides\n"));
+    } else
 #if OPT_MINI_LUIT
     if (x_strcasecmp(request->misc.locale_str, "CHECKFONT") == 0) {
 	int fl = (request->misc.default_font.f_n
@@ -4955,11 +4981,11 @@ VTInitialize_locale(XtermWidget request)
 	    request->screen.unicode_font = 1;
 	    /* unicode font, use True */
 #ifdef HAVE_LANGINFO_CODESET
-	    if (!strcmp(encoding, "ANSI_X3.4-1968")
-		|| !strcmp(encoding, "ISO-8859-1")) {
+	    if (!strcmp(xtermEnvEncoding(), "ANSI_X3.4-1968")
+		|| !strcmp(xtermEnvEncoding(), "ISO-8859-1")) {
 		if (request->screen.utf8_mode == 3)
 		    request->screen.utf8_mode = 0;
-	    } else if (!strcmp(encoding, "ISO-8859-15")) {
+	    } else if (!strcmp(xtermEnvEncoding(), "ISO-8859-15")) {
 		if (request->screen.utf8_mode == 3)
 		    request->screen.utf8_mode = 0;
 		request->screen.latin9_mode = 1;
@@ -5004,12 +5030,12 @@ VTInitialize_locale(XtermWidget request)
 #ifdef MB_CUR_MAX
 		      MB_CUR_MAX > 1 ||
 #else
-		      !strncmp(locale, "ja", 2) ||
-		      !strncmp(locale, "ko", 2) ||
-		      !strncmp(locale, "zh", 2) ||
+		      !strncmp(xtermEnvLocale(), "ja", 2) ||
+		      !strncmp(xtermEnvLocale(), "ko", 2) ||
+		      !strncmp(xtermEnvLocale(), "zh", 2) ||
 #endif
-		      !strncmp(locale, "th", 2) ||
-		      !strncmp(locale, "vi", 2)) {
+		      !strncmp(xtermEnvLocale(), "th", 2) ||
+		      !strncmp(xtermEnvLocale(), "vi", 2)) {
 	    request->misc.callfilter = 1;
 	    request->screen.utf8_mode = 2;
 	} else {
@@ -5032,9 +5058,11 @@ VTInitialize_locale(XtermWidget request)
 	request->screen.utf8_mode = is_utf8 ? 2 : 0;
     }
 #endif /* OPT_LUIT_PROG */
+
+    request->screen.utf8_inparse = (request->screen.utf8_mode != 0);
+
     TRACE(("... updated screen.utf8_mode = %d\n", request->screen.utf8_mode));
     TRACE(("...VTInitialize_locale done\n"));
-
 }
 #endif
 
@@ -5157,9 +5185,6 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.scrolllines);
     init_Bres(screen.scrollttyoutput);
     init_Bres(screen.scrollkey);
-#if OPT_TOOLBAR
-    init_Bres(screen.toolbars);
-#endif
 
     init_Sres(screen.term_id);
     for (s = request->screen.term_id; *s; s++) {
@@ -5430,12 +5455,13 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.vt100_graphics);
     init_Ires(screen.utf8_mode);
     init_Bres(screen.wide_chars);
+    init_Bres(misc.mk_width);
     init_Bres(misc.cjk_width);
     if (request->screen.utf8_mode) {
 	TRACE(("setting utf8_mode to 2, wide_chars on\n"));
 	wnew->screen.wide_chars = True;
 	wnew->screen.utf8_mode = 2;	/* disable further change */
-	xtermLoadVTFonts(wnew, "utf8Fonts", "Utf8Fonts");
+	xtermLoadWideFonts(wnew);
     } else {
 	TRACE(("setting utf8_mode to 0\n"));
 	wnew->screen.utf8_mode = 0;
@@ -5455,6 +5481,10 @@ VTInitialize(Widget wrequest,
 
     if (wnew->screen.wide_chars != False)
 	wnew->num_ptrs = (OFF_COM2H + 1);
+
+    decode_wcwidth((wnew->misc.cjk_width ? 2 : 0)
+		   + (wnew->misc.mk_width ? 1 : 0)
+		   + 1);
 #endif /* OPT_WIDE_CHARS */
 
     init_Bres(screen.bold_mode);
@@ -5791,7 +5821,8 @@ VTRealize(Widget w,
 
     XDefineCursor(screen->display, VShellWindow, screen->pointer_cursor);
 
-    screen->cur_col = screen->cur_row = 0;
+    set_cur_col(screen, 0);
+    set_cur_row(screen, 0);
     set_max_col(screen, Width(screen) / screen->fullVwin.f_width - 1);
     set_max_row(screen, Height(screen) / screen->fullVwin.f_height - 1);
     set_tb_margins(screen, 0, screen->max_row);

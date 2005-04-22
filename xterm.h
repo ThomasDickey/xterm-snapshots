@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.326 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: xterm.h,v 1.334 2005/04/22 00:21:54 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.104 2005/01/14 01:50:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.105 2005/04/22 00:21:54 dickey Exp $ */
 
 /************************************************************
 
@@ -384,6 +384,7 @@ extern char **environ;
 #define XtNmenuBar		"menuBar"
 #define XtNmenuHeight		"menuHeight"
 #define XtNmetaSendsEscape	"metaSendsEscape"
+#define XtNmkWidth		"mkWidth"
 #define XtNmodifyCursorKeys	"modifyCursorKeys"
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
@@ -418,9 +419,9 @@ extern char **environ;
 #define XtNtekInhibit		"tekInhibit"
 #define XtNtekSmall		"tekSmall"
 #define XtNtekStartup		"tekStartup"
-#define XtNtoolBar		"toolBar"
 #define XtNtiXtraScroll		"tiXtraScroll"
 #define XtNtiteInhibit		"titeInhibit"
+#define XtNtoolBar		"toolBar"
 #define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
 #define XtNutf8			"utf8"
@@ -504,6 +505,7 @@ extern char **environ;
 #define XtCMenuBar		"MenuBar"
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
+#define XtCMkWidth 		"MkWidth"
 #define XtCModifyCursorKeys	"ModifyCursorKeys"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
@@ -534,8 +536,8 @@ extern char **environ;
 #define XtCTekStartup		"TekStartup"
 #define XtCTiXtraScroll		"TiXtraScroll"
 #define XtCTiteInhibit		"TiteInhibit"
-#define XtCTrimSelection	"TrimSelection"
 #define XtCToolBar		"ToolBar"
+#define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
 #define XtCVT100Graphics	"VT100Graphics"
@@ -571,6 +573,8 @@ extern char **environ;
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct XTERM_RESOURCE;
 
 /* Tekproc.c */
 extern int TekInit (void);
@@ -679,6 +683,14 @@ extern void CursorUp (TScreen *screen, int  n);
 extern void RevIndex (TScreen *screen, int amount);
 extern void xtermIndex (TScreen *screen, int amount);
 
+#if OPT_TRACE
+extern int set_cur_col(TScreen *screen, int value);
+extern int set_cur_row(TScreen *screen, int value);
+#else
+#define set_cur_col(screen, value) screen->cur_col = value
+#define set_cur_row(screen, value) screen->cur_row = value
+#endif
+
 /* doublechr.c */
 extern void xterm_DECDHL (Bool top);
 extern void xterm_DECSWL (void);
@@ -734,6 +746,9 @@ extern Window WMFrameWindow(XtermWidget termw);
 extern XrmOptionDescRec * sortedOptDescs(XrmOptionDescRec *, Cardinal);
 extern char *SysErrorMsg (int n);
 extern char *udk_lookup (int keycode, int *len);
+extern char *xtermEnvEncoding (void);
+extern char *xtermEnvLocale (void);
+extern char *xtermFindShell(char *leaf);
 extern char *xtermVersion(void);
 extern int XStrCmp (char *s1, char *s2);
 extern int creat_as (uid_t uid, gid_t gid, Bool append, char *pathname, int mode);
@@ -787,6 +802,12 @@ extern void HandleRestoreSize        PROTO_XT_ACTIONS_ARGS;
 extern void RequestMaximize (XtermWidget termw, int maximize);
 #endif
 
+#if OPT_WIDE_CHARS
+extern Bool xtermEnvUTF8(void);
+#else
+#define xtermEnvUTF8() False
+#endif
+
 #ifdef ALLOWLOGGING
 extern void StartLog (TScreen *screen);
 extern void CloseLog (TScreen *screen);
@@ -812,7 +833,7 @@ extern void xtermPrintScreen (Bool use_DECPEX);
 
 extern int readPtyData (TScreen *screen, PtySelect *select_mask, PtyData *data);
 extern void fillPtyData (TScreen *screen, PtyData *data, char *value, int length);
-extern void initPtyData (PtyData *data);
+extern void initPtyData (PtyData **data);
 extern void trimPtyData (TScreen *screen, PtyData *data);
 
 #if OPT_WIDE_CHARS
@@ -906,10 +927,8 @@ extern void ToggleScrollBar (XtermWidget w);
 extern void WindowScroll (TScreen *screen, int top);
 
 /* tabs.c */
-extern Bool TabToNextStop (void);
-extern Bool TabToPrevStop (void);
-extern int TabNext (Tabs tabs, int col);
-extern int TabPrev (Tabs tabs, int col);
+extern Bool TabToNextStop (TScreen *screen);
+extern Bool TabToPrevStop (TScreen *screen);
 extern void TabClear (Tabs tabs, int col);
 extern void TabReset (Tabs tabs);
 extern void TabSet (Tabs tabs, int col);
@@ -933,6 +952,8 @@ extern void InsertChar (TScreen *screen, unsigned n);
 extern void InsertLine (TScreen *screen, int n);
 extern void RevScroll (TScreen *screen, int amount);
 extern void ReverseVideo (XtermWidget termw);
+extern void decode_keyboard_type(struct XTERM_RESOURCE *rp);
+extern void decode_wcwidth(int mode);
 extern void do_erase_display (TScreen *screen, int param, int mode);
 extern void do_erase_line (TScreen *screen, int param, int mode);
 extern void init_keyboard_type (xtermKeyboardType, Bool set);

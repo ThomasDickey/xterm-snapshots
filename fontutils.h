@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/programs/xterm/fontutils.h,v 1.14 2005/01/14 01:50:02 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.h,v 1.15 2005/04/22 00:21:54 dickey Exp $
  */
 
 /************************************************************
@@ -39,6 +39,7 @@ authorization.
 
 #include <xterm.h>
 
+extern Bool xtermLoadDefaultFonts (XtermWidget w);
 extern const VTFontNames * xtermFontName(char *normal);
 extern int lookupRelativeFontSize(TScreen * screen, int old, int relative);
 extern int xtermLoadFont (TScreen *screen,
@@ -65,7 +66,7 @@ extern void HandleLoadVTFonts PROTO_XT_ACTIONS_ARGS;
 #endif
 
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
-extern Bool xtermLoadVTFonts(XtermWidget w, char *aName, char *cName);
+extern Bool xtermLoadWideFonts(XtermWidget w);
 #endif
 
 #define xtermIsDecGraphic(ch) ((ch) > 0 && (ch) < 32)

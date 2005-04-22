@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.225 2005/02/06 21:42:38 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.136 2005/02/06 21:42:38 dickey Exp $
+  $XTermId: xterm.log.html,v 1.244 2005/04/22 00:21:54 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.137 2005/04/22 00:21:54 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_201">Patch #201 - 2005/4/21 - XFree86 4.5.99.2</A>
 <LI><A HREF="#xterm_200">Patch #200 - 2005/2/6 - XFree86 4.4.99.23</A>
 <LI><A HREF="#xterm_199">Patch #199 - 2005/1/17 - XFree86 4.4.99.22</A>
 <LI><A HREF="#xterm_198">Patch #198 - 2005/1/13 - XFree86 4.4.99.21</A>
@@ -248,6 +249,91 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_201">Patch #201 - 2005/4/21 - XFree86 4.5.99.2</A></H1>
+<ul>
+	<li>improve resource files to show how the menubar and popup menus can
+	    be colored (prompted by report by Joe Wells).
+
+	<li>modify parsing of OSC (and SOS, etc), strings so their contents
+	    are not interpreted as UTF-8.  This allows non-ASCII title strings
+	    to be set, provided that the window manager complies (report by
+	    Thomas Wolff).
+
+	<li>improved some of the built-in line-drawing glyphs.
+
+	<li>correct color of "box" character drawn for line-drawing glyph 1
+	    (report by Nicolas George).
+
+	<li>improve behavior when switching to UTF-8 mode after startup so
+	    xterm will check if the current fonts are already wide
+	    (ISO10646-1).  If they are not, xterm will use the
+	    <code>utf8Fonts</code> subresource to load appropriate fonts
+	    (request by Bram Moolenaar).
+
+	<li>modify logic for setting title-string so it applies to the current
+	    widget rather than the vt100 widget.
+
+	<li>modify initialization for wide-bold fontname, to search for one
+	    if none is given (report by Michael Schroeder).
+
+	<li>add resource <code>mkWidth</code> and command-line option
+	    <code>-mk_width</code> to control whether xterm uses the built-in
+	    version of wcwidth().
+
+	<li>add resource settings for minimum/maximum input buffer size, and
+	    call to <code>sched_yield</code> to improve performance with newer
+	    Linux kernels (adapted from patch by Nicolas George).
+
+	<li>correct computation of width for wide characters with the invisible
+	    attribute (report by Thomas Wolff).
+
+	<li>modify interaction between <code>+u8</code> and <code>locale</code>
+	    resource to allow the command-line option to override the resource
+	    (requested by Thomas Wolff).
+
+	<li>add a limit check for scrolling margins in a one-line screen,
+	    overlooked in fixes for
+	    <a href="#xterm_198">patch #198</a> (Debian #297430).
+
+	<li>correct treatment of <code>iconBorderWidth</code> for resizing
+	    an active-icon, and its description in manpage (Debian #296592).
+
+	<li>modify configure script <code>--disable-imake</code> to use the
+	    script's definitions anyway if it cannot detect imake (prompted
+	    by FreeBSD bug 77408).
+
+	<li>ignore error in the I/O initialization that tries to set the
+	    tty to 7-bit input for the case where <code>eightBitInput</code>
+	    resource is false (Debian #298551).
+
+	<li>modify command-processing to accept an optional parameter that
+	    tells xterm which shell program to use (request by Zdenek Sekera).
+
+	<li>add simpler resource <code>keyboardType</code> which, when set,
+	    overrides the individual keyboard-type resources and eliminates
+	    the possibility of conflict between them.
+
+	<li>add initialization for <code>scoFunctionKeys</code> resource
+	    (report by Rick K).
+
+	<li>correct logic of <code>ReallocateBufOffsets()</code> which did not
+	    copy the content of the old screen buffer to the proper location,
+	    making a repaint clear after switching to wide-character mode
+	    (report by Bram Moolenaar):
+
+	<li>implement the remaining pieces to make xterm allocate cells for
+	    wide-characters when the "UTF-8" menu entry is selected.  Also,
+	    load the UTF-8 font when that menu entry is selected, or the escape
+	    sequence for UTF-8 mode is received (report by Bram Moolenaar):
+
+	<li>add command-line options (<code>-tb</code>, <code>+tb</code>) and
+	    resource <code>toolBar</code> to allow menu/toolbar to disabled or
+	    enabled at startup (prompted by reports by Joe Wells).
+
+	<li>correct typo in configure script's --enable-dec-locator option
+	    (report by Bram Moolenaar).
+</ul>
 
 <H1><A NAME="xterm_200">Patch #200 - 2005/2/6 - XFree86 4.4.99.23</A></H1>
 <ul>
