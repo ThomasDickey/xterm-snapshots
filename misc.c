@@ -1,10 +1,10 @@
-/* $XTermId: misc.c,v 1.248 2005/01/29 22:17:32 tom Exp $ */
+/* $XTermId: misc.c,v 1.257 2005/04/22 00:21:54 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.95 2005/01/29 22:17:32 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.96 2005/04/22 00:21:54 dickey Exp $ */
 
 /*
  *
@@ -77,6 +77,10 @@
 #include <X11/Xmu/WinUtil.h>
 #if HAVE_X11_SUNKEYSYM_H
 #include <X11/Sunkeysym.h>
+#endif
+
+#ifdef HAVE_LANGINFO_CODESET
+#include <langinfo.h>
 #endif
 
 #include <data.h>
@@ -321,15 +325,15 @@ HandleInterpret(Widget w GCC_UNUSED,
     if (*param_count == 1) {
 	char *value = params[0];
 	int need = strlen(value);
-	int used = VTbuffer.next - VTbuffer.buffer;
-	int have = VTbuffer.last - VTbuffer.buffer;
+	int used = VTbuffer->next - VTbuffer->buffer;
+	int have = VTbuffer->last - VTbuffer->buffer;
 
-	if (have - used + need < (int) sizeof(VTbuffer.buffer)) {
+	if (have - used + need < (int) sizeof(VTbuffer->buffer)) {
 
-	    fillPtyData(&term->screen, &VTbuffer, value, (int) strlen(value));
+	    fillPtyData(&term->screen, VTbuffer, value, (int) strlen(value));
 
 	    TRACE(("Interpret %s\n", value));
-	    VTbuffer.update++;
+	    VTbuffer->update++;
 	}
     }
 }
@@ -1252,7 +1256,7 @@ StartLog(TScreen * screen)
 	    return;
     }
 #endif /*VMS */
-    screen->logstart = VTbuffer.next;
+    screen->logstart = VTbuffer->next;
     screen->logging = True;
     update_logging();
 }
@@ -1281,12 +1285,12 @@ FlushLog(TScreen * screen)
 	    return;
 	tt_new_output = False;
 #endif /* VMS */
-	cp = VTbuffer.next;
+	cp = VTbuffer->next;
 	if (screen->logstart != 0
 	    && (i = cp - screen->logstart) > 0) {
 	    write(screen->logfd, (char *) screen->logstart, (unsigned) i);
 	}
-	screen->logstart = VTbuffer.next;
+	screen->logstart = VTbuffer->next;
     }
 }
 
@@ -1516,6 +1520,8 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
     Char *cp;
     int state = 0;
     char *buf = 0;
+
+    TRACE(("do_osc %s\n", oscbuf));
 
     /*
      * Lines should be of the form <OSC> number ; string <ST>, however
@@ -2106,22 +2112,60 @@ ChangeGroup(String attribute, char *value)
 {
     Arg args[1];
     const char *name = (value != 0) ? (char *) value : "";
+    TScreen *screen = &term->screen;
+    Widget w = CURRENT_EMU(screen);
+    Widget top = SHELL_OF(w);
 
     TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
+
+#if OPT_WIDE_CHARS
+    /*
+     * Title strings are limited to ISO-8859-1, which is consistent with the
+     * printable data in sos_table.  However, if we're running in UTF-8 mode,
+     * it is likely that non-ASCII text in the string will be rejected because
+     * it is not printable in the current locale.  So we convert it to UTF-8,
+     * allowing the X library to convert it back.
+     */
+    if (xtermEnvUTF8()) {
+	int n;
+	unsigned limit = strlen(name);
+
+	if (limit < 1024) {
+	    for (n = 0; name[n] != '\0'; ++n) {
+		if (CharOf(name[n]) > 127) {
+		    static Char *converted;
+		    if (converted != 0)
+			free(converted);
+		    if ((converted = malloc(1 + (5 * limit))) != 0) {
+			Char *temp = converted;
+			while (*name != 0) {
+			    temp = convertToUTF8(temp, CharOf(*name));
+			    ++name;
+			}
+			*temp = 0;
+			name = converted;
+		    }
+		    break;
+		}
+	    }
+	}
+    }
+#endif
+
 #if OPT_SAME_NAME
     /* If the attribute isn't going to change, then don't bother... */
 
     if (sameName) {
 	char *buf;
 	XtSetArg(args[0], attribute, &buf);
-	XtGetValues(toplevel, args, 1);
+	XtGetValues(top, args, 1);
 	if (strcmp(name, buf) == 0)
 	    return;
     }
 #endif /* OPT_SAME_NAME */
 
     XtSetArg(args[0], attribute, name);
-    XtSetValues(toplevel, args, 1);
+    XtSetValues(top, args, 1);
 }
 
 void
@@ -2561,6 +2605,60 @@ Cleanup(int code)
     Exit(code);
 }
 
+#ifndef VMS
+char *
+xtermFindShell(char *leaf)
+{
+    char *s;
+    char *d;
+    char *tmp;
+    char *result = leaf;
+
+    TRACE(("xtermFindShell(%s)\n", leaf));
+    if (*result != '\0' && strchr("+/-", *result) == 0) {
+	/* find it in $PATH */
+	if ((s = getenv("PATH")) != 0) {
+	    if ((tmp = malloc(strlen(leaf) + strlen(s) + 1)) != 0) {
+		Bool found = False;
+		while (*s != '\0') {
+		    strcpy(tmp, s);
+		    for (d = tmp;; ++d) {
+			if (*d == ':' || *d == '\0') {
+			    int skip = (*d != '\0');
+			    *d = '/';
+			    strcpy(d + 1, leaf);
+			    if (skip)
+				++d;
+			    s += (d - tmp);
+			    if (*tmp == '/'
+				&& strstr(tmp, "..") == 0
+				&& access(tmp, X_OK) == 0) {
+				result = x_strdup(tmp);
+				found = True;
+			    }
+			    break;
+			}
+			if (found)
+			    break;
+		    }
+		    if (found)
+			break;
+		}
+		free(tmp);
+	    }
+	}
+    }
+    TRACE(("...xtermFindShell(%s)\n", result));
+    if (*result != '/'
+	|| strstr(result, "..") != 0
+	|| access(result, X_OK) != 0) {
+	fprintf(stderr, "No absolute path found for shell: %s\n", result);
+	result = 0;
+    }
+    return result;
+}
+#endif /* VMS */
+
 /*
  * sets the value of var to be arg in the Unix 4.2 BSD environment env.
  * Var should end with '=' (bindings are of the form "var=value").
@@ -2922,6 +3020,70 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
     }
     return opt_array;
 }
+
+/*
+ * Report the locale that xterm was started in.
+ */
+char *
+xtermEnvLocale(void)
+{
+    static char *result;
+
+    if (result == 0) {
+	if ((result = getenv("LC_ALL")) == 0 || *result == '\0')
+	    if ((result = getenv("LC_CTYPE")) == 0 || *result == '\0')
+		if ((result = getenv("LANG")) == 0 || *result == '\0')
+		    result = "";
+	TRACE(("xtermEnvLocale ->%s\n", result));
+    }
+    return result;
+}
+
+char *
+xtermEnvEncoding(void)
+{
+    static char *result;
+
+    if (result == 0) {
+#ifdef HAVE_LANGINFO_CODESET
+	result = nl_langinfo(CODESET);
+#else
+	char *locale = xtermEnvLocale();
+	if (*locale == 0 || !strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
+	    result = "ASCII";
+	} else {
+	    result = "ISO-8859-1";
+	}
+#endif
+	TRACE(("xtermEnvEncoding ->%s\n", result));
+    }
+    return result;
+}
+
+#if OPT_WIDE_CHARS
+/*
+ * Tell whether xterm was started in a locale that uses UTF-8 encoding for
+ * characters.  That environment is inherited by subprocesses and used in
+ * various library calls.
+ */
+Bool
+xtermEnvUTF8(void)
+{
+    static Bool init = False;
+    static Bool result = False;
+
+    if (!init) {
+	init = True;
+#ifdef HAVE_LANGINFO_CODESET
+	result = (strcmp(xtermEnvEncoding(), "UTF-8") == 0);
+#else
+	result = (strstr(xtermEnvLocale(), "UTF-8") != NULL);
+#endif
+	TRACE(("xtermEnvUTF8 ->%s\n", BtoS(result)));
+    }
+    return result;
+}
+#endif /* OPT_WIDE_CHARS */
 
 /*
  * Returns the version-string used in the "-v' message as well as a few other

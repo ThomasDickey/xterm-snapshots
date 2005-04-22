@@ -1,10 +1,10 @@
-/* $XTermId: util.c,v 1.223 2005/02/06 21:42:38 tom Exp $ */
+/* $XTermId: util.c,v 1.227 2005/04/22 00:21:54 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.88 2005/02/06 21:42:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.89 2005/04/22 00:21:54 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey
@@ -66,8 +66,12 @@
 #include <error.h>
 #include <menu.h>
 #include <fontutils.h>
+#include <xstrings.h>
 
 #if OPT_WIDE_CHARS
+#if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
+#include <wchar.h>
+#endif
 #include <wcwidth.h>
 #endif
 
@@ -91,6 +95,10 @@ static void vertical_copy_area(TScreen * screen,
 			       int firstline,
 			       int nlines,
 			       int amount);
+
+#if OPT_WIDE_CHARS
+int (*my_wcwidth) (wchar_t);
+#endif
 
 /*
  * These routines are used for the jump scroll feature
@@ -788,6 +796,7 @@ DeleteChar(TScreen * screen, unsigned n)
 
     assert(screen->cur_col <= screen->max_col);
     limit = screen->max_col + 1 - screen->cur_col;
+
     if (n > limit)
 	n = limit;
 
@@ -2750,3 +2759,78 @@ init_keyboard_type(xtermKeyboardType type, Bool set)
 	update_keyboard_type();
     }
 }
+
+/*
+ * If the keyboardType resource is set, use that, overriding the individual
+ * boolean resources for different keyboard types.
+ */
+void
+decode_keyboard_type(XTERM_RESOURCE * rp)
+{
+#define DATA(n, t, f) { n, t, XtOffsetOf(XTERM_RESOURCE, f) }
+#define FLAG(n) *(Boolean *)(((char *)rp) + table[n].offset)
+    static struct {
+	const char *name;
+	xtermKeyboardType type;
+	unsigned offset;
+    } table[] = {
+#if OPT_HP_FUNC_KEYS
+	DATA(NAME_HP_KT, keyboardIsHP, hpFunctionKeys),
+#endif
+#if OPT_SCO_FUNC_KEYS
+	    DATA(NAME_SCO_KT, keyboardIsSCO, scoFunctionKeys),
+#endif
+	    DATA(NAME_SUN_KT, keyboardIsSun, sunFunctionKeys),
+#if OPT_SUNPC_KBD
+	    DATA(NAME_VT220_KT, keyboardIsVT220, sunKeyboard),
+#endif
+    };
+    Cardinal n;
+
+    if (x_strcasecmp(rp->keyboardType, "unknown")) {
+	Bool found = False;
+	for (n = 0; n < XtNumber(table); ++n) {
+	    if (!x_strcasecmp(rp->keyboardType, table[n].name + 1)) {
+		FLAG(n) = True;
+		found = True;
+		init_keyboard_type(table[n].type, FLAG(n));
+	    } else {
+		FLAG(n) = False;
+	    }
+	}
+	if (!found) {
+	    fprintf(stderr,
+		    "KeyboardType resource \"%s\" not found\n",
+		    rp->keyboardType);
+	}
+    } else {
+	for (n = 0; n < XtNumber(table); ++n)
+	    init_keyboard_type(table[n].type, FLAG(n));
+    }
+#undef DATA
+#undef FLAG
+}
+
+#if OPT_WIDE_CHARS
+void
+decode_wcwidth(int mode)
+{
+    switch (mode) {
+    default:
+#if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
+	my_wcwidth = wcwidth;
+	TRACE(("using system wcwidth() function\n"));
+	break;
+    case 2:
+#endif
+	my_wcwidth = &mk_wcwidth;
+	TRACE(("using MK wcwidth() function\n"));
+	break;
+    case 3:
+    case 4:
+	my_wcwidth = &mk_wcwidth_cjk;
+	TRACE(("using MK-CJK wcwidth() function\n"));
+	break;
+    }
+}
+#endif

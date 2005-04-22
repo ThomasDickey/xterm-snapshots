@@ -1,6 +1,6 @@
-dnl $XTermId: aclocal.m4,v 1.190 2005/02/06 21:42:37 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.192 2005/04/22 00:21:53 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.56 2005/02/06 21:42:37 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.57 2005/04/22 00:21:53 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -738,7 +738,7 @@ AC_DEFUN([CF_HELP_MESSAGE],
 [AC_DIVERT_HELP([$1])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_IMAKE_CFLAGS version: 26 updated: 2005/02/05 10:39:02
+dnl CF_IMAKE_CFLAGS version: 27 updated: 2005/04/05 18:26:15
 dnl ---------------
 dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
 dnl get these, but if imake is properly configured there is no point in doing
@@ -750,6 +750,9 @@ dnl	$2 = optional value to append to $IMAKE_LOADFLAGS
 AC_DEFUN([CF_IMAKE_CFLAGS],
 [
 AC_PATH_PROGS(IMAKE,xmkmf imake)
+
+if test -n "$IMAKE" ; then
+
 case $IMAKE in # (vi
 */imake)
 	cf_imake_opts="-DUseInstalled=YES" # (vi
@@ -765,7 +768,6 @@ esac
 
 # If it's installed properly, imake (or its wrapper, xmkmf) will point to the
 # config directory.
-if test -n "$IMAKE" ; then
 if mkdir conftestdir; then
 	CDPATH=; export CDPATH
 	cf_makefile=`cd $srcdir;pwd`/Imakefile
@@ -868,7 +870,6 @@ CF_EOF
 	    fi
 	fi
 fi
-fi
 
 # Some imake configurations define PROJECTROOT with an empty value.  Remove
 # the empty definition.
@@ -879,6 +880,8 @@ case $IMAKE_CFLAGS in
 	IMAKE_CFLAGS=`echo "$IMAKE_CFLAGS" |sed -e "s,-DPROJECTROOT=[[ 	]], ,"`
 	;;
 esac
+
+fi
 
 CF_VERBOSE(IMAKE_CFLAGS $IMAKE_CFLAGS)
 CF_VERBOSE(IMAKE_LOADFLAGS $IMAKE_LOADFLAGS)
@@ -1608,20 +1611,25 @@ AC_DEFUN([CF_VERBOSE],
 [test -n "$verbose" && echo "	$1" 1>&AC_FD_MSG
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_IMAKE_CFLAGS version: 6 updated: 2005/02/06 13:47:10
+dnl CF_WITH_IMAKE_CFLAGS version: 7 updated: 2005/04/05 18:26:15
 dnl --------------------
 dnl xterm and similar programs build more readily when propped up with imake's
 dnl hand-tuned definitions.  If we do not use imake, provide fallbacks for the
 dnl most common definitions that we're not likely to do by autoconf tests.
 AC_DEFUN([CF_WITH_IMAKE_CFLAGS],[
+
 AC_MSG_CHECKING(if we should use imake to help)
 CF_ARG_DISABLE(imake,
 	[  --disable-imake         disable use of imake for definitions],
 	[enable_imake=no],
 	[enable_imake=yes])
 AC_MSG_RESULT($enable_imake)
+
 if test "$enable_imake" = yes ; then
 	CF_IMAKE_CFLAGS(ifelse($1,,,$1))
+fi
+
+if test -n "$IMAKE" && test -n "$IMAKE_CFLAGS" ; then
 	CF_ADD_CFLAGS($IMAKE_CFLAGS)
 else
 	IMAKE_CFLAGS=

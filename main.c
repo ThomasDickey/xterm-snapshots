@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.431 2005/02/06 21:42:38 tom Exp $ */
+/* $XTermId: main.c,v 1.441 2005/04/22 00:21:54 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.191 2005/02/06 21:42:38 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.192 2005/04/22 00:21:54 dickey Exp $ */
 
 /* main.c */
 
@@ -128,7 +128,6 @@ SOFTWARE.
 
 #if OPT_WIDE_CHARS
 #include <charclass.h>
-#include <wcwidth.h>
 #endif
 
 #ifdef __osf__
@@ -468,6 +467,8 @@ static gid_t utmpGid = -1;
 static Bool xterm_exiting = False;
 #endif
 
+static char *explicit_shname = NULL;
+
 /*
 ** Ordinarily it should be okay to omit the assignment in the following
 ** statement. Apparently the c89 compiler on AIX 4.1.3 has a bug, or does
@@ -546,13 +547,23 @@ static char **command_to_exec_with_luit = NULL;
 #define CWERASE CONTROL('W')
 #endif
 
-#ifndef VMS
 #ifdef USE_ANY_SYSV_TERMIO
+#define TERMIO_STRUCT struct termio
+#define ttySetAttr(fd, datap) ioctl(fd, TCSETA, datap)
+#define ttyGetAttr(fd, datap) ioctl(fd, TCGETA, datap)
+#elif defined(USE_POSIX_TERMIOS)
+#define TERMIO_STRUCT struct termios
+#define ttySetAttr(fd, datap) tcsetattr(fd, TCSANOW, datap)
+#define ttyGetAttr(fd, datap) tcgetattr(fd, datap)
+#endif /* USE_ANY_SYSV_TERMIO */
+
+#ifndef VMS
+#ifdef TERMIO_STRUCT
 /* The following structures are initialized in main() in order
 ** to eliminate any assumptions about the internal order of their
 ** contents.
 */
-static struct termio d_tio;
+static TERMIO_STRUCT d_tio;
 
 #ifdef HAS_LTCHARS
 static struct ltchars d_ltc;
@@ -562,18 +573,7 @@ static struct ltchars d_ltc;
 static unsigned int d_lmode;
 #endif /* TIOCLSET */
 
-#elif defined(USE_POSIX_TERMIOS)
-static struct termios d_tio;
-
-#ifdef HAS_LTCHARS
-static struct ltchars d_ltc;
-#endif /* HAS_LTCHARS */
-
-#ifdef TIOCLSET
-static unsigned int d_lmode;
-#endif /* TIOCLSET */
-
-#else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else /* !TERMIO_STRUCT */
 static struct sgttyb d_sg =
 {
     0, 0, 0177, CKILL, (EVENP | ODDP | ECHO | XTABS | CRMOD)
@@ -597,7 +597,7 @@ static struct jtchars d_jtc =
     'J', 'B'
 };
 #endif /* sony */
-#endif /* USE_ANY_SYSV_TERMIO */
+#endif /* TERMIO_STRUCT */
 #endif /* ! VMS */
 
 /*
@@ -737,6 +737,9 @@ static XtResource application_resources[] =
     Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, False),
     Bres("utmpDisplayId", "UtmpDisplayId", utmpDisplayId, True),
     Bres("messages", "Messages", messages, True),
+    Ires("minBufSize", "MinBufSize", minBufSize, 128),
+    Ires("maxBufSize", "MaxBufSize", maxBufSize, 4096),
+    Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
     Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -764,6 +767,9 @@ static XtResource application_resources[] =
 #endif
 #if OPT_SESSION_MGT
     Bres("sessionMgt", "SessionMgt", sessionMgt, True),
+#endif
+#if OPT_TOOLBAR
+    Bres(XtNtoolBar, XtCToolBar, toolBar, True),
 #endif
 };
 
@@ -855,6 +861,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-k8",		"*allowC1Printable", XrmoptionNoArg,	(caddr_t) "on"},
 {"+k8",		"*allowC1Printable", XrmoptionNoArg,	(caddr_t) "off"},
 #endif
+{"-kt",		"*keyboardType", XrmoptionSepArg,	(caddr_t) NULL},
+{"+kt",		"*keyboardType", XrmoptionSepArg,	(caddr_t) NULL},
 /* parse logging options anyway for compatibility */
 {"-l",		"*logging",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+l",		"*logging",	XrmoptionNoArg,		(caddr_t) "off"},
@@ -925,6 +933,8 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_WIDE_CHARS
 {"-wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wc",		"*wideChars",	XrmoptionNoArg,		(caddr_t) "off"},
+{"-mk_width",	"*mkWidth",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+mk_width",	"*mkWidth",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-cjk_width",	"*cjkWidth",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+cjk_width",	"*cjkWidth",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
@@ -940,6 +950,10 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_SESSION_MGT
 {"-sm",		"*sessionMgt",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+sm",		"*sessionMgt",	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
+#if OPT_TOOLBAR
+{"-tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "on"},
+{"+tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
@@ -1024,6 +1038,7 @@ static OptionHelp xtermOptions[] = {
 #if OPT_C1_PRINT
 { "-/+k8",                 "turn on/off C1-printable classification"},
 #endif
+{ "-kt keyboardtype",      "set keyboard type:" KEYBOARD_TYPES },
 #ifdef ALLOWLOGGING
 { "-/+l",                  "turn on/off logging" },
 { "-lf filename",          "logging filename" },
@@ -1058,6 +1073,9 @@ static OptionHelp xtermOptions[] = {
 #if OPT_TEK4014
 { "-/+t",                  "turn on/off Tek emulation window" },
 #endif
+#if OPT_TOOLBAR
+{ "-/+tb",                 "turn on/off toolbar" },
+#endif
 { "-ti termid",            "terminal identifier" },
 { "-tm string",            "terminal mode keywords and characters" },
 { "-tn name",              "TERM environment variable name" },
@@ -1078,6 +1096,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+pob",                "turn on/off pop on bell" },
 #if OPT_WIDE_CHARS
 { "-/+wc",                 "turn on/off wide-character mode" },
+{ "-/+mk_width",           "turn on/off simple width convention" },
 { "-/+cjk_width",          "turn on/off legacy CJK width convention" },
 #endif
 { "-/+wf",                 "turn on/off wait for map before command exec" },
@@ -1302,10 +1321,6 @@ save_callback(Widget w GCC_UNUSED,
     token->save_success = True;
 }
 #endif /* OPT_SESSION_MGT */
-
-#if OPT_WIDE_CHARS
-int (*my_wcwidth) (wchar_t);
-#endif
 
 /*
  * DeleteWindow(): Action proc to implement ICCCM delete_window.
@@ -1587,7 +1602,7 @@ main(int argc, char *argv[]ENVP_ARG)
     XtSetLanguageProc(NULL, NULL, NULL);
 #endif
 
-#if defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)	/* { */
+#ifdef TERMIO_STRUCT		/* { */
     /* Initialization is done here rather than above in order
      * to prevent any assumptions about the order of the contents
      * of the various terminal structures (which may change from
@@ -1730,14 +1745,8 @@ main(int argc, char *argv[]ENVP_ARG)
 	int i;
 
 	for (i = 0; i <= 2; i++) {
-#ifndef USE_POSIX_TERMIOS
-	    struct termio deftio;
-	    if (ioctl(i, TCGETA, &deftio) == 0)
-#else
-	    struct termios deftio;
-	    if (tcgetattr(i, &deftio) == 0)
-#endif
-	    {
+	    TERMIO_STRUCT deftio;
+	    if (ttyGetAttr(i, &deftio) == 0) {
 		d_tio.c_cc[VINTR] = deftio.c_cc[VINTR];
 		d_tio.c_cc[VQUIT] = deftio.c_cc[VQUIT];
 		d_tio.c_cc[VERASE] = deftio.c_cc[VERASE];
@@ -1820,7 +1829,7 @@ main(int argc, char *argv[]ENVP_ARG)
     d_lmode = 0;
 #endif /* } TIOCLSET */
 #endif /* } macII, ATT, CRAY */
-#endif /* } USE_ANY_SYSV_TERMIO || USE_POSIX_TERMIOS */
+#endif /* } TERMIO_STRUCT */
 
     /* Init the Toolkit. */
     {
@@ -1960,8 +1969,17 @@ main(int argc, char *argv[]ENVP_ARG)
     /* Parse the rest of the command line */
     TRACE_ARGV("After XtOpenApplication", argv);
     for (argc--, argv++; argc > 0; argc--, argv++) {
+#ifdef VMS
 	if (**argv != '-')
 	    Syntax(*argv);
+#else
+	if (**argv != '-') {
+	    if (argc > 1)
+		Syntax(*argv);
+	    explicit_shname = xtermFindShell(*argv);
+	    continue;
+	}
+#endif
 
 	TRACE(("parsing %s\n", argv[0]));
 	switch (argv[0][1]) {
@@ -2047,13 +2065,7 @@ main(int argc, char *argv[]ENVP_ARG)
     SetupToolbar(toplevel);
 #endif
 
-#if OPT_HP_FUNC_KEYS
-    init_keyboard_type(keyboardIsHP, resource.hpFunctionKeys);
-#endif
-    init_keyboard_type(keyboardIsSun, resource.sunFunctionKeys);
-#if OPT_SUNPC_KBD
-    init_keyboard_type(keyboardIsVT220, resource.sunKeyboard);
-#endif
+    decode_keyboard_type(&resource);
 
     screen = &term->screen;
 
@@ -2067,12 +2079,6 @@ main(int argc, char *argv[]ENVP_ARG)
 #if OPT_TEK4014
     if (term->misc.tekInhibit)
 	inhibit |= I_TEK;
-#endif
-
-#if OPT_WIDE_CHARS
-    my_wcwidth = &mk_wcwidth;
-    if (term->misc.cjk_width)
-	my_wcwidth = &mk_wcwidth_cjk;
 #endif
 
 #if OPT_SESSION_MGT
@@ -2201,14 +2207,14 @@ main(int argc, char *argv[]ENVP_ARG)
      */
 
     {
-	struct termio tio;
+	TERMIO_STRUCT tio;
 
-	if (ioctl(screen->respond, TCGETA, &tio) == -1)
+	if (ttyGetAttr(screen->respond, &tio) == -1)
 	    SysError(ERROR_TIOCGETP);
 
 	tio.c_cflag &= ~(CLOCAL);
 
-	if (ioctl(screen->respond, TCSETA, &tio) == -1)
+	if (ttySetAttr(screen->respond, &tio) == -1)
 	    SysError(ERROR_TIOCSETP);
     }
 #endif
@@ -2231,7 +2237,7 @@ main(int argc, char *argv[]ENVP_ARG)
 
     /* The erase character is used to delete the current completion */
 #if OPT_DABBREV
-#if defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)
+#ifdef TERMIO_STRUCT
     screen->dabbrev_erase_char = d_tio.c_cc[VERASE];
 #else
     screen->dabbrev_erase_char = d_sg.sg_erase;
@@ -2756,23 +2762,15 @@ spawn(void)
     int rc = 0;
     int ttyfd = -1;
 
-#ifdef USE_ANY_SYSV_TERMIO
-    struct termio tio;
+#ifdef TERMIO_STRUCT
+    TERMIO_STRUCT tio;
 #ifdef TIOCLSET
     unsigned lmode;
 #endif /* TIOCLSET */
 #ifdef HAS_LTCHARS
     struct ltchars ltc;
 #endif /* HAS_LTCHARS */
-#elif defined(USE_POSIX_TERMIOS)
-    struct termios tio;
-#ifdef TIOCLSET
-    unsigned lmode;
-#endif /* TIOCLSET */
-#ifdef HAS_LTCHARS
-    struct ltchars ltc;
-#endif /* HAS_LTCHARS */
-#else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else /* !TERMIO_STRUCT */
     int ldisc = 0;
     int discipline;
     unsigned lmode;
@@ -2783,7 +2781,7 @@ spawn(void)
     int jmode;
     struct jtchars jtc;
 #endif /* sony */
-#endif /* USE_ANY_SYSV_TERMIO */
+#endif /* TERMIO_STRUCT */
 
     char termcap[TERMCAP_SIZE];
     char newtc[TERMCAP_SIZE];
@@ -2887,9 +2885,9 @@ spawn(void)
 #ifdef TIOCLSET
 		lmode = d_lmode;
 #endif /* TIOCLSET */
-#if defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)
+#ifdef TERMIO_STRUCT
 		tio = d_tio;
-#else /* not USE_ANY_SYSV_TERMIO and not USE_POSIX_TERMIOS */
+#else /* !TERMIO_STRUCT */
 		sg = d_sg;
 		tc = d_tc;
 		discipline = d_disipline;
@@ -2897,7 +2895,7 @@ spawn(void)
 		jmode = d_jmode;
 		jtc = d_jtc;
 #endif /* sony */
-#endif /* USE_ANY_SYSV_TERMIO or USE_POSIX_TERMIOS */
+#endif /* TERMIO_STRUCT */
 	    } else {
 		SysError(ERROR_OPDEVTTY);
 	    }
@@ -2917,13 +2915,10 @@ spawn(void)
 	    if (ioctl(ttyfd, TIOCLGET, &lmode) == -1)
 		lmode = d_lmode;
 #endif /* TIOCLSET */
-#ifdef USE_ANY_SYSV_TERMIO
-	    if ((rc = ioctl(ttyfd, TCGETA, &tio)) == -1)
+#ifdef TERMIO_STRUCT
+	    if ((rc = ttyGetAttr(ttyfd, &tio)) == -1)
 		tio = d_tio;
-#elif defined(USE_POSIX_TERMIOS)
-	    if ((rc = tcgetattr(ttyfd, &tio)) == -1)
-		tio = d_tio;
-#else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else /* !TERMIO_STRUCT */
 	    if ((rc = ioctl(ttyfd, TIOCGETP, (char *) &sg)) == -1)
 		sg = d_sg;
 	    if (ioctl(ttyfd, TIOCGETC, (char *) &tc) == -1)
@@ -2936,7 +2931,7 @@ spawn(void)
 	    if (ioctl(ttyfd, TIOCKGETC, (char *) &jtc) == -1)
 		jtc = d_jtc;
 #endif /* sony */
-#endif /* USE_ANY_SYSV_TERMIO */
+#endif /* TERMIO_STRUCT */
 
 	    /*
 	     * If ptyInitialErase is set, we want to get the pty's
@@ -2946,13 +2941,11 @@ spawn(void)
 	     */
 #if OPT_INITIAL_ERASE
 	    if (resource.ptyInitialErase) {
-#ifdef USE_ANY_SYSV_TERMIO
+#ifdef TERMIO_STRUCT
 		initial_erase = tio.c_cc[VERASE];
-#elif defined(USE_POSIX_TERMIOS)
-		initial_erase = tio.c_cc[VERASE];
-#else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else /* !TERMIO_STRUCT */
 		initial_erase = sg.sg_erase;
-#endif /* USE_ANY_SYSV_TERMIO */
+#endif /* TERMIO_STRUCT */
 		TRACE(("%s initial_erase:%d (from /dev/tty)\n",
 		       rc == 0 ? "OK" : "FAIL",
 		       initial_erase));
@@ -2967,19 +2960,15 @@ spawn(void)
 	}
 #if OPT_INITIAL_ERASE
 	if (resource.ptyInitialErase) {
-#ifdef USE_ANY_SYSV_TERMIO
-	    struct termio my_tio;
-	    if ((rc = ioctl(screen->respond, TCGETA, &my_tio)) == 0)
+#ifdef TERMIO_STRUCT
+	    TERMIO_STRUCT my_tio;
+	    if ((rc = ttyGetAttr(screen->respond, &my_tio)) == 0)
 		initial_erase = my_tio.c_cc[VERASE];
-#elif defined(USE_POSIX_TERMIOS)
-	    struct termios my_tio;
-	    if ((rc = tcgetattr(screen->respond, &my_tio)) == 0)
-		initial_erase = my_tio.c_cc[VERASE];
-#else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#else /* !TERMIO_STRUCT */
 	    struct sgttyb my_sg;
 	    if ((rc = ioctl(screen->respond, TIOCGETP, (char *) &my_sg)) == 0)
 		initial_erase = my_sg.sg_erase;
-#endif /* USE_ANY_SYSV_TERMIO */
+#endif /* TERMIO_STRUCT */
 	    TRACE(("%s initial_erase:%d (from pty)\n",
 		   (rc == 0) ? "OK" : "FAIL",
 		   initial_erase));
@@ -3348,13 +3337,13 @@ spawn(void)
 	     * set up the tty modes
 	     */
 	    {
-#if defined(USE_ANY_SYSV_TERMIO) || defined(USE_POSIX_TERMIOS)
+#ifdef TERMIO_STRUCT
 #if defined(umips) || defined(CRAY) || defined(linux)
 		/* If the control tty had its modes screwed around with,
 		   eg. by lineedit in the shell, or emacs, etc. then tio
 		   will have bad values.  Let's just get termio from the
 		   new tty and tailor it.  */
-		if (ioctl(ttyfd, TCGETA, &tio) == -1)
+		if (ttyGetAttr(ttyfd, &tio) == -1)
 		    SysError(ERROR_TIOCGETP);
 		tio.c_lflag |= ECHOE;
 #endif /* umips */
@@ -3412,11 +3401,6 @@ spawn(void)
 		   when the xterm ends */
 		tio.c_cflag &= ~CLOCAL;
 #endif /* USE_POSIX_TERMIOS */
-		tio.c_cflag &= ~CSIZE;
-		if (screen->input_eight_bits)
-		    tio.c_cflag |= CS8;
-		else
-		    tio.c_cflag |= CS7;
 		/* enable signals, canonical processing (erase, kill, etc),
 		 * echo
 		 */
@@ -3542,14 +3526,18 @@ spawn(void)
 		if (ioctl(ttyfd, TIOCLSET, (char *) &lmode) == -1)
 		    HsSysError(cp_pipe[1], ERROR_TIOCLSET);
 #endif /* TIOCLSET */
-#ifndef USE_POSIX_TERMIOS
-		if (ioctl(ttyfd, TCSETA, &tio) == -1)
+		if (ttySetAttr(ttyfd, &tio) == -1)
 		    HsSysError(cp_pipe[1], ERROR_TIOCSETP);
-#else /* USE_POSIX_TERMIOS */
-		if (tcsetattr(ttyfd, TCSANOW, &tio) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETP);
-#endif /* USE_POSIX_TERMIOS */
-#else /* USE_ANY_SYSV_TERMIO or USE_POSIX_TERMIOS */
+
+		/* ignore errors here - some platforms don't work */
+		tio.c_cflag &= ~CSIZE;
+		if (screen->input_eight_bits)
+		    tio.c_cflag |= CS8;
+		else
+		    tio.c_cflag |= CS7;
+		(void) ttySetAttr(ttyfd, &tio);
+
+#else /* !TERMIO_STRUCT */
 		sg.sg_flags &= ~(ALLDELAY | XTABS | CBREAK | RAW);
 		sg.sg_flags |= ECHO | CRMOD;
 		/* make sure speed is set on pty so that editors work right */
@@ -3603,7 +3591,7 @@ spawn(void)
 		if (ioctl(ttyfd, TIOCKSETC, (char *) &jtc) == -1)
 		    HsSysError(cp_pipe[1], ERROR_TIOCKSETC);
 #endif /* sony */
-#endif /* !USE_ANY_SYSV_TERMIO */
+#endif /* TERMIO_STRUCT */
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 		if (Console) {
 #ifdef TIOCCONS
@@ -3656,23 +3644,15 @@ spawn(void)
 #if OPT_TRACE
 		int old_erase;
 #endif
-#ifdef USE_ANY_SYSV_TERMIO
-		if (ioctl(ttyfd, TCGETA, &tio) == -1)
+#ifdef TERMIO_STRUCT
+		if (ttyGetAttr(ttyfd, &tio) == -1)
 		    tio = d_tio;
 #if OPT_TRACE
 		old_erase = tio.c_cc[VERASE];
 #endif
 		tio.c_cc[VERASE] = initial_erase;
-		rc = ioctl(ttyfd, TCSETA, &tio);
-#elif defined(USE_POSIX_TERMIOS)
-		if (tcgetattr(ttyfd, &tio) == -1)
-		    tio = d_tio;
-#if OPT_TRACE
-		old_erase = tio.c_cc[VERASE];
-#endif
-		tio.c_cc[VERASE] = initial_erase;
-		rc = tcsetattr(ttyfd, TCSANOW, &tio);
-#else /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+		rc = ttySetAttr(ttyfd, &tio);
+#else /* !TERMIO_STRUCT */
 		if (ioctl(ttyfd, TIOCGETP, (char *) &sg) == -1)
 		    sg = d_sg;
 #if OPT_TRACE
@@ -3680,7 +3660,7 @@ spawn(void)
 #endif
 		sg.sg_erase = initial_erase;
 		rc = ioctl(ttyfd, TIOCSETP, (char *) &sg);
-#endif /* USE_ANY_SYSV_TERMIO */
+#endif /* TERMIO_STRUCT */
 		TRACE(("%s setting erase to %d (was %d)\n",
 		       rc ? "FAIL" : "OK", initial_erase, old_erase));
 	    }
@@ -3767,11 +3747,11 @@ spawn(void)
 
 #ifdef Lynx
 	    {
-		struct termio t;
-		if (ioctl(0, TCGETA, &t) >= 0) {
+		TERMIO_STRUCT t;
+		if (ttyGetAttr(0, &t) >= 0) {
 		    /* this gets lost somewhere on our way... */
 		    t.c_oflag |= OPOST;
-		    ioctl(0, TCSETA, &t);
+		    ttySetAttr(0, &t);
 		}
 	    }
 #endif
@@ -4128,17 +4108,17 @@ spawn(void)
 #endif /* OPT_PTY_HANDSHAKE */
 	    signal(SIGHUP, SIG_DFL);
 
-#ifdef HAVE_UTMP
-	    if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
-		((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
-		 *(ptr = pw->pw_shell) == 0))
-#else /* HAVE_UTMP */
-	    if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
-		((pw = getpwuid(screen->uid)) == NULL ||
-		 *(ptr = pw->pw_shell) == 0))
-#endif /* HAVE_UTMP */
-		ptr = "/bin/sh";
+	    if ((ptr = explicit_shname) == NULL) {
+		if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
+		    ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
+		     *(ptr = pw->pw_shell) == 0)) {
+		    ptr = "/bin/sh";
+		}
+	    } else {
+		xtermSetenv("SHELL=", explicit_shname);
+	    }
 	    shname = x_basename(ptr);
+	    TRACE(("shell path '%s' leaf '%s'\n", ptr, shname));
 
 #if OPT_LUIT_PROG
 	    /*
@@ -4170,14 +4150,14 @@ spawn(void)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    shname_minus = CastMallocN(char, strlen(shname) + 1);
+	    shname_minus = CastMallocN(char, strlen(shname) + 2);
 	    (void) strcpy(shname_minus, "-");
 	    (void) strcat(shname_minus, shname);
-#if !defined(USE_ANY_SYSV_TERMIO) && !defined(USE_POSIX_TERMIOS)
+#ifndef TERMIO_STRUCT
 	    ldisc = XStrCmp("csh", shname + strlen(shname) - 3) == 0 ?
 		NTTYDISC : 0;
 	    ioctl(0, TIOCSETD, (char *) &ldisc);
-#endif /* !USE_ANY_SYSV_TERMIO && !USE_POSIX_TERMIOS */
+#endif /* !TERMIO_STRUCT */
 
 #ifdef USE_LOGIN_DASH_P
 	    if (term->misc.login_shell && pw && added_utmp_entry)

@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.60 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.65 2005/04/22 00:21:54 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.22 2005/01/14 01:50:03 dickey Exp $
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.23 2005/04/22 00:21:54 dickey Exp $
  */
 
 /************************************************************
@@ -37,6 +37,10 @@ authorization.
 ********************************************************/
 
 #include <data.h>
+
+#if OPT_WIDE_CHARS
+#include <menu.h>
+#endif
 
 /*
  * Check for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
@@ -190,7 +194,7 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
     if (FD_ISSET(screen->respond, select_mask)) {
 	trimPtyData(screen, data);
 
-	size = read(screen->respond, (char *) data->last, BUF_SIZE);
+	size = read(screen->respond, (char *) data->last, FRG_SIZE);
 	if (size <= 0) {
 	    /*
 	     * Yes, I know this is a majorly f*ugly hack, however it seems to
@@ -231,7 +235,7 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
 #endif
 	data->last += size;
 #ifdef ALLOWLOGGING
-	term->screen.logstart = VTbuffer.next;
+	term->screen.logstart = VTbuffer->next;
 #endif
     }
 
@@ -248,7 +252,7 @@ Bool
 morePtyData(TScreen * screen GCC_UNUSED, PtyData * data)
 {
     Bool result = (data->last > data->next);
-    if (result && screen->utf8_mode) {
+    if (result && screen->utf8_inparse) {
 	if (!data->utf_size)
 	    result = decodeUtf8(data);
     }
@@ -267,7 +271,7 @@ IChar
 nextPtyData(TScreen * screen, PtyData * data)
 {
     IChar result;
-    if (screen->utf8_mode) {
+    if (screen->utf8_inparse) {
 	result = data->utf_data;
 	data->next += data->utf_size;
 	data->utf_size = 0;
@@ -290,18 +294,38 @@ switchPtyData(TScreen * screen, int flag)
 {
     if (screen->utf8_mode != flag) {
 	screen->utf8_mode = flag;
+	screen->utf8_inparse = (flag != 0);
 
 	TRACE(("turning UTF-8 mode %s\n", BtoS(flag)));
+	update_font_utf8_mode();
     }
 }
 #endif
 
 void
-initPtyData(PtyData * data)
+initPtyData(PtyData ** result)
 {
+    PtyData *data;
+
+    TRACE(("initPtyData given minBufSize %d, maxBufSize %d\n",
+	   FRG_SIZE, BUF_SIZE));
+
+    if (FRG_SIZE < 64)
+	FRG_SIZE = 64;
+    if (BUF_SIZE < FRG_SIZE)
+	BUF_SIZE = FRG_SIZE;
+    if (BUF_SIZE % FRG_SIZE)
+	BUF_SIZE = BUF_SIZE + FRG_SIZE - (BUF_SIZE % FRG_SIZE);
+
+    TRACE(("initPtyData using minBufSize %d, maxBufSize %d\n",
+	   FRG_SIZE, BUF_SIZE));
+
+    data = (PtyData *) XtMalloc(sizeof(*data) + BUF_SIZE + FRG_SIZE);
+
     memset(data, 0, sizeof(*data));
     data->next = data->buffer;
     data->last = data->buffer;
+    *result = data;
 }
 
 /*
@@ -341,16 +365,16 @@ fillPtyData(TScreen * screen, PtyData * data, char *value, int length)
     /* remove the used portion of the buffer */
     trimPtyData(screen, data);
 
-    VTbuffer.last += length;
-    size = VTbuffer.last - VTbuffer.next;
+    VTbuffer->last += length;
+    size = VTbuffer->last - VTbuffer->next;
 
     /* shift the unused portion up to make room */
     for (n = size; n >= length; --n)
-	VTbuffer.next[n] = VTbuffer.next[n - length];
+	VTbuffer->next[n] = VTbuffer->next[n - length];
 
     /* insert the new bytes to interpret */
     for (n = 0; n < length; n++)
-	VTbuffer.next[n] = CharOf(value[n]);
+	VTbuffer->next[n] = CharOf(value[n]);
 }
 
 #if OPT_WIDE_CHARS

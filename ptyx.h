@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.358 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.366 2005/04/22 00:21:54 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.121 2005/01/14 01:50:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.122 2005/04/22 00:21:54 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey
@@ -949,11 +949,10 @@ typedef unsigned char IChar;	/* for 8-bit characters */
 
 /***====================================================================***/
 
-#define BUF_SIZE 4096
-#define FRG_SIZE 128
+#define FRG_SIZE resource.minBufSize
+#define BUF_SIZE resource.maxBufSize
 
 typedef struct {
-	Char	buffer[BUF_SIZE + FRG_SIZE];
 	Char *	next;
 	Char *	last;
 	int	update;		/* HandleInterpret */
@@ -961,6 +960,7 @@ typedef struct {
 	IChar	utf_data;	/* resulting character */
 	int	utf_size;	/* ...number of bytes decoded */
 #endif
+	Char	buffer[1];
 } PtyData;
 
 /***====================================================================***/
@@ -1011,24 +1011,24 @@ typedef struct {
 /* The order of ifdef's matches the logic for num_ptrs in VTInitialize */
 typedef enum {
 	OFF_FLAGS = 0		/* BUF_HEAD */
-	, OFF_CHARS = 1
-	, OFF_ATTRS = 2
+	, OFF_CHARS = 1		/* first (or only) byte of cell's character */
+	, OFF_ATTRS = 2		/* video attributes */
 #if OPT_ISO_COLORS
 #if OPT_256_COLORS || OPT_88_COLORS
-	, OFF_FGRND
-	, OFF_BGRND
+	, OFF_FGRND		/* foreground color number */
+	, OFF_BGRND		/* background color number */
 #else
-	, OFF_COLOR
+	, OFF_COLOR		/* foreground+background color numbers */
 #endif
 #endif
 #if OPT_DEC_CHRSET
-	, OFF_CSETS
+	, OFF_CSETS		/* DEC character-set */
 #endif
 #if OPT_WIDE_CHARS
-	, OFF_WIDEC
-	, OFF_COM1L
+	, OFF_WIDEC		/* second byte of first wide-character */
+	, OFF_COM1L		/* first combining character */
 	, OFF_COM1H
-	, OFF_COM2L
+	, OFF_COM2L		/* second combining character */
 	, OFF_COM2H
 #endif
 } BufOffsets;
@@ -1247,6 +1247,7 @@ typedef struct {
 #if OPT_WIDE_CHARS
 	Boolean		wide_chars;	/* true when 16-bit chars	*/
 	Boolean		vt100_graphics;	/* true to allow vt100-graphics	*/
+	Boolean		utf8_inparse;	/* true to enable UTF-8 parser	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
 	int		latin9_mode;	/* poor man's luit, latin9	*/
 	int		unicode_font;	/* font uses unicode encoding	*/
@@ -1314,9 +1315,6 @@ typedef struct {
 	struct _vtwin	iconVwin;
 	struct _vtwin *	whichVwin;
 #endif /* NO_ACTIVE_ICON */
-#if OPT_TOOLBAR
-	Boolean		toolbars;	/* true if toolbars are used	*/
-#endif
 
 	Cursor	pointer_cursor;		/* pointer cursor in window	*/
 
@@ -1410,7 +1408,7 @@ typedef struct {
 	Boolean		marginbell;	/* true if margin bell on	*/
 	int		nmarginbell;	/* columns from right margin	*/
 	int		bellarmed;	/* cursor below bell margin	*/
-	Boolean 	multiscroll;	/* true if multi-scroll		*/
+	Boolean		multiscroll;	/* true if multi-scroll		*/
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/
 	SavedCursor	sc[2];		/* data for restore cursor	*/
@@ -1432,7 +1430,7 @@ typedef struct {
 	Boolean		old_fkeys;	/* true for compatible fkeys	*/
 	Boolean		delete_is_del;	/* true for compatible Delete key */
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
-	Boolean         always_highlight; /* whether to highlight cursor */
+	Boolean		always_highlight; /* whether to highlight cursor */
 	Boolean		underline;	/* whether to underline text	*/
 	Boolean		bold_mode;	/* whether to use bold font	*/
 
@@ -1570,6 +1568,28 @@ typedef enum {
     keyboardIsVT220
 } xtermKeyboardType;
 
+#if OPT_HP_FUNC_KEYS
+#define NAME_HP_KT " hp"
+#else
+#define NAME_HP_KT /*nothing*/
+#endif
+
+#if OPT_SCO_FUNC_KEYS
+#define NAME_SCO_KT " sco"
+#else
+#define NAME_SCO_KT /*nothing*/
+#endif
+
+#define NAME_SUN_KT " sun"
+
+#if OPT_SUNPC_KBD
+#define NAME_VT220_KT " vt220"
+#else
+#define NAME_VT220_KT /*nothing*/
+#endif
+
+#define KEYBOARD_TYPES NAME_HP_KT NAME_SCO_KT NAME_SUN_KT NAME_VT220_KT
+
 #if OPT_TRACE
 extern	const char * visibleKeyboardType(xtermKeyboardType);
 #endif
@@ -1598,7 +1618,8 @@ typedef struct _Misc {
     char *geo_metry;
     char *T_geometry;
 #if OPT_WIDE_CHARS
-    Boolean	cjk_width;	/* true when CJK width convention is turned on */
+    Boolean cjk_width;		/* true for built-in CJK wcwidth() */
+    Boolean mk_width;		/* true for simpler built-in wcwidth() */
 #endif
 #if OPT_LUIT_PROG
     Boolean callfilter;		/* true to invoke luit */
@@ -1713,17 +1734,17 @@ typedef struct _XtermWidgetRec {
     TKeyboard	keyboard;	/* terminal keyboard		*/
     TScreen	screen;		/* terminal screen		*/
     unsigned	flags;		/* mode flags			*/
-    int         cur_foreground;	/* current foreground color	*/
-    int         cur_background;	/* current background color	*/
-    Pixel       dft_foreground;	/* default foreground color	*/
-    Pixel       dft_background;	/* default background color	*/
+    int		cur_foreground; /* current foreground color	*/
+    int		cur_background; /* current background color	*/
+    Pixel	dft_foreground; /* default foreground color	*/
+    Pixel	dft_background; /* default background color	*/
 #if OPT_ISO_COLORS
-    int         sgr_foreground;	/* current SGR foreground color	*/
-    int         sgr_background;	/* current SGR background color	*/
-    Boolean     sgr_extended;	/* SGR set with extended codes? */
+    int		sgr_foreground; /* current SGR foreground color */
+    int		sgr_background; /* current SGR background color */
+    Boolean	sgr_extended;	/* SGR set with extended codes? */
 #endif
 #if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS
-    int         num_ptrs;	/* number of pointers per row in 'ScrnBuf' */
+    int		num_ptrs;	/* number of pointers per row in 'ScrnBuf' */
 #endif
     unsigned	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
@@ -1741,7 +1762,7 @@ typedef struct _TekWidgetRec {
  * terminal flags
  * There are actually two namespaces mixed together here.
  * One is the set of flags that can go in screen->visbuf attributes
- * and which must fit in a char.
+ * and which must fit in a char (see OFF_ATTRS).
  * The other is the global setting stored in
  * term->flags and screen->save_modes.  This need only fit in an unsigned.
  */
@@ -1796,7 +1817,7 @@ typedef struct _TekWidgetRec {
 #define SMOOTHSCROLL	0x10000	/* true if in smooth scroll mode */
 #define IN132COLUMNS	0x20000	/* true if in 132 column mode */
 #define INVISIBLE	0x40000	/* true if writing invisible text */
-#define NATIONAL       0x100000	/* true if writing national charset */
+#define NATIONAL       0x100000 /* true if writing national charset */
 
 /*
  * Per-line flags
@@ -1844,7 +1865,7 @@ typedef struct _TekWidgetRec {
 #define WhichTWin(screen)	((screen)->whichTwin)
 
 #define WhichVFont(screen,name)	(IsIcon(screen) ? (screen)->fnt_icon \
- 						: (screen)->name)
+						: (screen)->name)
 #define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->ascent \
 						: WhichVWin(screen)->f_ascent)
 #define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->descent \

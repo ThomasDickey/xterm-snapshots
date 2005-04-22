@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.163 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: screen.c,v 1.169 2005/04/22 00:21:54 tom Exp $ */
 
 /*
  *	$Xorg: screen.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -56,7 +56,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.68 2005/01/14 01:50:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.69 2005/04/22 00:21:54 dickey Exp $ */
 
 /* screen.c */
 
@@ -69,6 +69,7 @@
 
 #if OPT_WIDE_CHARS
 #include <fontutils.h>
+#include <menu.h>
 #endif
 
 #include <assert.h>
@@ -222,6 +223,38 @@ Reallocate(ScrnBuf * sbuf,
 }
 
 #if OPT_WIDE_CHARS
+#if 0
+static void
+dump_screen(const char *tag,
+	    ScrnBuf sbuf,
+	    Char * sbufaddr,
+	    unsigned nrow,
+	    unsigned ncol)
+{
+    unsigned y, x;
+
+    TRACE(("DUMP %s, ptrs %d\n", tag, term->num_ptrs));
+    TRACE(("  sbuf      %p\n", sbuf));
+    TRACE(("  sbufaddr  %p\n", sbufaddr));
+    TRACE(("  nrow      %d\n", nrow));
+    TRACE(("  ncol      %d\n", ncol));
+
+    for (y = 0; y < nrow; ++y) {
+	ScrnPtr ptr = BUF_CHARS(sbuf, y);
+	TRACE(("%3d:%p:", y, ptr));
+	for (x = 0; x < ncol; ++x) {
+	    Char c = ptr[x];
+	    if (c == 0)
+		c = '~';
+	    TRACE(("%c", c));
+	}
+	TRACE(("\n"));
+    }
+}
+#else
+#define dump_screen(tag, sbuf, sbufaddr, nrow, ncol)	/* nothing */
+#endif
+
 /*
  * This function reallocates memory if changing the number of Buf offsets.
  * The code is based on Reallocate().
@@ -249,6 +282,8 @@ ReallocateBufOffsets(ScrnBuf * sbuf,
     assert(ncol != 0);
     assert(new_max_offsets != 0);
 
+    dump_screen("before", *sbuf, *sbufaddr, nrow, ncol);
+
     term->num_ptrs = new_max_offsets;
 
     entries = MAX_PTRS * nrow;
@@ -270,6 +305,7 @@ ReallocateBufOffsets(ScrnBuf * sbuf,
 	    memcpy(tmp, base[k++], ncol);
 	    tmp += ncol;
 	}
+	tmp += ncol * (new_max_offsets - old_max_ptrs);
     }
 
     /*
@@ -286,6 +322,8 @@ ReallocateBufOffsets(ScrnBuf * sbuf,
 
     /* Now free the old buffer and restore num_ptrs */
     free(oldbuf);
+    dump_screen("after", *sbuf, *sbufaddr, nrow, ncol);
+
     term->num_ptrs = old_max_ptrs;
 }
 
@@ -301,7 +339,8 @@ ChangeToWide(TScreen * screen)
     if (screen->wide_chars)
 	return;
 
-    if (xtermLoadVTFonts(term, "utf8Fonts", "Utf8Fonts")) {
+    TRACE(("ChangeToWide\n"));
+    if (xtermLoadWideFonts(term)) {
 	if (savelines < 0)
 	    savelines = 0;
 	ReallocateBufOffsets(&screen->allbuf, &screen->sbuf_address,
@@ -316,7 +355,10 @@ ChangeToWide(TScreen * screen)
 	screen->wide_chars = True;
 	term->num_ptrs = new_bufoffset;
 	screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
+	update_font_utf8_mode();
+	SetVTFont(screen->menu_font_number, TRUE, NULL);
     }
+    TRACE(("...ChangeToWide\n"));
 }
 #endif
 
@@ -362,12 +404,7 @@ ScreenWrite(TScreen * screen,
     Char starcol1, starcol2;
     Char *comb1l = 0, *comb1h = 0, *comb2l = 0, *comb2h = 0;
 #endif
-
-#if OPT_WIDE_CHARS
     unsigned real_width = visual_width(PAIRED_CHARS(str, str2), length);
-#else
-    unsigned real_width = length;
-#endif
 
     if (avail <= 0)
 	return;
@@ -1400,7 +1437,7 @@ ScreenResize(TScreen * screen,
 		screen->savedlines = screen->savelines;
 	    if (screen->topline < -screen->savedlines)
 		screen->topline = -screen->savedlines;
-	    screen->cur_row += move_down_by;
+	    set_cur_row(screen, screen->cur_row + move_down_by);
 	    screen->cursor_row += move_down_by;
 	    ScrollSelection(screen, move_down_by, True);
 
@@ -1413,9 +1450,9 @@ ScreenResize(TScreen * screen,
 	*flags &= ~ORIGIN;
 
 	if (screen->cur_row > screen->max_row)
-	    screen->cur_row = screen->max_row;
+	    set_cur_row(screen, screen->max_row);
 	if (screen->cur_col > screen->max_col)
-	    screen->cur_col = screen->max_col;
+	    set_cur_col(screen, screen->max_col);
 
 	screen->fullVwin.height = height - border;
 	screen->fullVwin.width = width - border - screen->fullVwin.sb_info.width;
@@ -1441,11 +1478,11 @@ ScreenResize(TScreen * screen,
 	    (screen->max_row + 1) * screen->iconVwin.f_height;
 
 	changes.width = screen->iconVwin.fullwidth =
-	    screen->iconVwin.width + 2 * screen->border;
-
+	    screen->iconVwin.width + 2 * term->misc.icon_border_width;
 	changes.height = screen->iconVwin.fullheight =
-	    screen->iconVwin.height + 2 * screen->border;
+	    screen->iconVwin.height + 2 * term->misc.icon_border_width;
 
+	TRACE(("resizing icon window %dx%d\n", changes.height, changes.width));
 	XConfigureWindow(XtDisplay(term), screen->iconVwin.window,
 			 CWWidth | CWHeight, &changes);
     }

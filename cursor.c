@@ -1,13 +1,13 @@
-/* $XTermId: cursor.c,v 1.32 2004/12/01 01:27:46 tom Exp $ */
+/* $XTermId: cursor.c,v 1.34 2005/04/22 00:21:53 tom Exp $ */
 
 /*
  *	$Xorg: cursor.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/cursor.c,v 3.16 2004/12/01 01:27:46 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/cursor.c,v 3.17 2005/04/22 00:21:53 dickey Exp $ */
 
 /*
- * Copyright 2002,2004 by Thomas E. Dickey
+ * Copyright 2002-2004,2005 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -62,6 +62,8 @@
 #include <xterm.h>
 #include <data.h>
 
+#include <assert.h>
+
 /*
  * Moves the cursor to the specified position, checking for bounds.
  * (this includes scrolling regions)
@@ -74,14 +76,14 @@ CursorSet(TScreen * screen, int row, int col, unsigned flags)
     int max_row;
 
     col = (col < 0 ? 0 : col);
-    screen->cur_col = (col <= screen->max_col ? col : screen->max_col);
+    set_cur_col(screen, (col <= screen->max_col ? col : screen->max_col));
     max_row = screen->max_row;
     if (flags & ORIGIN) {
 	use_row += screen->top_marg;
 	max_row = screen->bot_marg;
     }
     use_row = (use_row < 0 ? 0 : use_row);
-    screen->cur_row = (use_row <= max_row ? use_row : max_row);
+    set_cur_row(screen, (use_row <= max_row ? use_row : max_row));
     screen->do_wrap = 0;
 
     TRACE(("CursorSet(%d,%d) margins [%d..%d] -> %d,%d %s\n",
@@ -112,10 +114,10 @@ CursorBack(TScreen * screen, int n)
 		k = j * (screen->max_row + 1);
 		i += ((-i) / k + 1) * k;
 	    }
-	    screen->cur_row = i / j;
-	    screen->cur_col = i % j;
+	    set_cur_row(screen, i / j);
+	    set_cur_col(screen, i % j);
 	} else
-	    screen->cur_col = 0;
+	    set_cur_col(screen, 0);
     }
     screen->do_wrap = 0;
 }
@@ -126,9 +128,13 @@ CursorBack(TScreen * screen, int n)
 void
 CursorForward(TScreen * screen, int n)
 {
-    screen->cur_col += n;
-    if (screen->cur_col > CurMaxCol(screen, screen->cur_row))
-	screen->cur_col = CurMaxCol(screen, screen->cur_row);
+    int next = screen->cur_col + n;
+    int max = CurMaxCol(screen, screen->cur_row);
+
+    if (next > max)
+	next = max;
+
+    set_cur_col(screen, next);
     screen->do_wrap = 0;
 }
 
@@ -140,13 +146,16 @@ void
 CursorDown(TScreen * screen, int n)
 {
     int max;
+    int next = screen->cur_row + n;
 
     max = (screen->cur_row > screen->bot_marg ?
 	   screen->max_row : screen->bot_marg);
+    if (next > max)
+	next = max;
+    if (next > screen->max_row)
+	next = screen->max_row;
 
-    screen->cur_row += n;
-    if (screen->cur_row > max)
-	screen->cur_row = max;
+    set_cur_row(screen, next);
     screen->do_wrap = 0;
 }
 
@@ -158,14 +167,17 @@ void
 CursorUp(TScreen * screen, int n)
 {
     int min;
+    int next = screen->cur_row - n;
 
     min = ((screen->cur_row < screen->top_marg)
 	   ? 0
 	   : screen->top_marg);
+    if (next < min)
+	next = min;
+    if (next < 0)
+	next = 0;
 
-    screen->cur_row -= n;
-    if (screen->cur_row < min)
-	screen->cur_row = min;
+    set_cur_row(screen, next);
     screen->do_wrap = 0;
 }
 
@@ -220,7 +232,7 @@ RevIndex(TScreen * screen, int amount)
 void
 CarriageReturn(TScreen * screen)
 {
-    screen->cur_col = 0;
+    set_cur_col(screen, 0);
     screen->do_wrap = 0;
 }
 
@@ -309,3 +321,25 @@ CursorPrevLine(TScreen * screen, int count)
     CarriageReturn(screen);
     do_xevents();
 }
+
+#if OPT_TRACE
+int
+set_cur_row(TScreen * screen, int value)
+{
+    assert(screen != 0);
+    assert(value >= 0);
+    assert(value <= screen->max_row);
+    screen->cur_row = value;
+    return value;
+}
+
+int
+set_cur_col(TScreen * screen, int value)
+{
+    assert(screen != 0);
+    assert(value >= 0);
+    assert(value <= screen->max_col);
+    screen->cur_col = value;
+    return value;
+}
+#endif /* OPT_TRACE */

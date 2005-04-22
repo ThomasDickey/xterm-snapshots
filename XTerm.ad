@@ -3,8 +3,8 @@
 !
 !
 !
-! $XTermId: XTerm.ad,v 1.63 2004/12/01 01:27:46 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.29 2004/12/01 01:27:46 dickey Exp $
+! $XTermId: XTerm.ad,v 1.65 2005/04/22 00:21:53 tom Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.30 2005/04/22 00:21:53 dickey Exp $
 
 *saveLines: 1024
 
@@ -116,3 +116,69 @@
 *tek4014*font2: 8x13
 *tek4014*font3: 6x13
 *tek4014*fontSmall: 6x10
+
+! If xterm is built with a toolbar, the widget hierarchy looks like this,
+! showing widget name / class names.  The complete menu hierarchy is built
+! at startup because it is needed to make the layout work for the menubar:
+!
+!	xterm/XTerm
+!		form/Form
+!			menubar/Box
+!				mainMenuButton/MenuButton
+!					mainMenu/SimpleMenu
+!						menuLabel/SmeBSB
+!						toolbar/SmeBSB
+!						...
+!					vtMenu/SimpleMenu
+!						menuLabel/SmeBSB
+!						scrollbar/SmeBSB
+!						...
+!					fontMenu/SimpleMenu
+!						menuLabel/SmeBSB
+!						fontdefault/SmeBSB
+!						...
+!					tekMenu/SimpleMenu
+!						menuLabel/SmeBSB
+!						fontdefault/SmeBSB
+!						...
+!			vt100/VT100
+!			tektronix/TopLevelShell
+!				shellext/VendorShellExt
+!					tek4014/Tek4014 
+!
+! If built without a toolbar, the widget hierarchy is simpler, because there
+! is no form, and the popup menu widgets are created only when they are first
+! used.
+!
+!	xterm/XTerm
+!		shellext/VendorShellExt
+!			mainMenu/SimpleMenu
+!				menuLabel/SmeBSB
+!				...
+!			...
+!		vt100/VT100
+!		tektronix/TopLevelShell
+!			shellext/VendorShellExt
+!				tek4014/Tek4014 
+!
+! A more complete list of the widget/class names can be obtained using editres
+! to dump a file.  Some widget names are not available until the corresponding
+! menu has been created.
+
+! These resources reduce space around the menubar, by eliminating padding in
+! the enclosing form (Thickness) and the border of the Box which represents
+! the menubar widget.
+*form.Thickness: 0
+*menubar.borderWidth: 0
+
+! If we wanted to eliminate the border of the popup menus, we could do this
+! instead, since they are children of the menubar:
+!*menubar.*.borderWidth: 0
+
+! Eliminate the border of the buttons in the menubar, so the only line around
+! the text is for the highlighted button:
+*MenuButton*borderWidth: 0
+
+! Set a border for the menus to make them simpler to distinguish against the
+! vt100 widget:
+*SimpleMenu*borderWidth: 2

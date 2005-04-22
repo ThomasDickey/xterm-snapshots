@@ -1,10 +1,10 @@
-/* $XTermId: data.h,v 1.83 2005/01/14 01:50:02 tom Exp $ */
+/* $XTermId: data.h,v 1.89 2005/04/22 00:21:53 tom Exp $ */
 
 /*
  *	$Xorg: data.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.h,v 3.35 2005/01/14 01:50:02 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.h,v 3.36 2005/04/22 00:21:53 dickey Exp $ */
 
 /*
  * Copyright 2002-2004,2005 by Thomas E. Dickey
@@ -107,7 +107,7 @@ extern Boolean zIconBeep_flagged;
 extern Boolean sameName;
 #endif
 
-extern PtyData VTbuffer;
+extern PtyData *VTbuffer;
 extern int am_slave;
 extern int max_plus1;
 extern jmp_buf VTend;
@@ -120,7 +120,7 @@ extern PtySelect Select_mask;
 extern PtySelect X_mask;
 extern PtySelect pty_mask;
 
-extern int waitingForTrackInfo;
+extern Boolean waitingForTrackInfo;
 
 extern EventMode eventMode;
 
@@ -145,17 +145,23 @@ extern Cardinal number_ourTopLevelShellArgs;
 extern Bool waiting_for_initial_map;
 extern Atom wm_delete_window;
 
-typedef struct {
+typedef struct XTERM_RESOURCE {
     char *xterm_name;
     char *icon_geometry;
     char *title;
     char *icon_name;
     char *term_name;
     char *tty_modes;
+
+    int minBufSize;
+    int maxBufSize;
+
     Boolean hold_screen;	/* true if we keep window open  */
     Boolean utmpInhibit;
     Boolean utmpDisplayId;
     Boolean messages;
+
+    String keyboardType;
     Boolean sunFunctionKeys;	/* %%% should be widget resource? */
 #if OPT_SUNPC_KBD
     Boolean sunKeyboard;
@@ -166,6 +172,7 @@ typedef struct {
 #if OPT_SCO_FUNC_KEYS
     Boolean scoFunctionKeys;
 #endif
+
 #if OPT_INITIAL_ERASE
     Boolean ptyInitialErase;	/* if true, use pty's sense of erase char */
     Boolean backarrow_is_erase;	/* override backspace/delete */
@@ -187,6 +194,9 @@ typedef struct {
 #endif
 #if OPT_SESSION_MGT
     Boolean sessionMgt;
+#endif
+#if OPT_TOOLBAR
+    Boolean toolBar;
 #endif
 } XTERM_RESOURCE;
 

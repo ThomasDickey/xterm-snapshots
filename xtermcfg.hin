@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.133 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.137 2005/04/22 00:21:54 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.53 2005/01/14 01:50:03 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.54 2005/04/22 00:21:54 dickey Exp $
  */
 
 /************************************************************
@@ -53,6 +53,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
 #undef HAVE_PUTENV		/* AC_CHECK_FUNCS(putenv) */
+#undef HAVE_SCHED_YIELD		/* AC_CHECK_FUNCS(sched_yield) */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
 #undef HAVE_STRERROR		/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_STRFTIME		/* AC_CHECK_FUNCS(strftime) */
@@ -69,6 +70,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_UTMP_UT_XSTATUS	/* CF_UTMP_UT_XSTATUS */
 #undef HAVE_UTMP_UT_XTIME	/* CF_UTMP_UT_XTIME */
 #undef HAVE_WAITPID		/* AC_CHECK_FUNCS(waitpid) */
+#undef HAVE_WCHAR_H		/* AC_CHECK_HEADERS(wchar.h) */
+#undef HAVE_WCSWIDTH		/* AC_CHECK_FUNCS(wcswidth) */
+#undef HAVE_WCWIDTH		/* AC_CHECK_FUNCS(wcwidth) */
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #undef HAVE_X11_SUNKEYSYM_H	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
 #undef HAVE_X11_XPOLL_H		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
