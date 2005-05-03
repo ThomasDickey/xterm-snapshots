@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.196 2005/04/22 00:21:54 tom Exp $ */
+/* $XTermId: os2main.c,v 1.198 2005/05/03 00:38:24 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.76 2005/04/22 00:21:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.77 2005/05/03 00:38:24 dickey Exp $ */
 
 /***********************************************************
 
@@ -1726,12 +1726,12 @@ opencons();*/
 	    signal(SIGQUIT, SIG_DFL);
 	    signal(SIGTERM, SIG_DFL);
 
-	    /* copy the environment before Setenving */
+	    /* copy the environment before Setenv'ing */
 	    for (i = 0; gblenvp[i] != NULL; i++) ;
 
 	    /* compute number of xtermSetenv() calls below */
 	    envsize = 1;	/* (NULL terminating entry) */
-	    envsize += 3;	/* TERM, WINDOWID, DISPLAY */
+	    envsize += 5;	/* TERM, WINDOWID, DISPLAY, _SHELL, _VERSION */
 	    envsize += 2;	/* COLUMNS, LINES */
 
 	    envnew = TypeCallocN(char *, (unsigned) i + envsize);
@@ -1747,6 +1747,8 @@ opencons();*/
 
 	    /* put the display into the environment of the shell */
 	    xtermSetenv("DISPLAY=", XDisplayString(screen->display));
+
+	    xtermSetenv("XTERM_VERSION=", xtermVersion());
 
 	    signal(SIGTERM, SIG_DFL);
 
@@ -1806,6 +1808,7 @@ opencons();*/
 	     * to command that the user gave anyway.
 	     */
 	    if (command_to_exec_with_luit) {
+		xtermSetenv("XTERM_SHELL=", xtermFindShell(*command_to_exec_with_luit));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
@@ -1816,6 +1819,7 @@ opencons();*/
 	    }
 #endif
 	    if (command_to_exec) {
+		xtermSetenv("XTERM_SHELL=", xtermFindShell(*command_to_exec));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvpe(*command_to_exec, command_to_exec, gblenvp);
 
@@ -1832,6 +1836,7 @@ opencons();*/
 		ptr = getenv("OS2_SHELL");
 	    if (!ptr)
 		ptr = "SORRY_NO_SHELL_FOUND";
+	    xtermSetenv("XTERM_SHELL=", ptr);
 
 	    shname = x_basename(ptr);
 	    if (command_to_exec) {
@@ -1848,9 +1853,7 @@ opencons();*/
 		exargv[8] = command_to_exec[6];
 		exargv[9] = 0;
 		execvpe(exargv[0], exargv, gblenvp);
-/*
-		execvpe(*command_to_exec, command_to_exec, gblenvp);
-*/
+
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s\n",
 			xterm_name, *command_to_exec);

@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.302 2005/04/22 00:21:54 tom Exp $
+.\" $XTermId: xterm.man,v 1.305 2005/05/03 00:38:25 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.113 2005/04/22 00:21:54 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.114 2005/05/03 00:38:25 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .TH XTERM 1 __vendorversion__
@@ -63,7 +63,7 @@
 xterm \- terminal emulator for X
 .SH SYNOPSIS
 .B xterm
-[-\fItoolkitoption\fP ...] [-option ...]
+[-\fItoolkitoption\fP ...] [-\fIoption\fP ...] [\fIshell\fP]
 .SH DESCRIPTION
 The \fIxterm\fP program is a terminal emulator for the X Window System.
 It provides DEC VT102/VT220 (VTxxx) and Tektronix 4014
@@ -4019,13 +4019,32 @@ terminals, or from more widely used standards such as ISO 6429.
 .
 .SH ENVIRONMENT
 .I Xterm
-sets the environment variables ``TERM'' for the window you have created.
-It also uses and sets the environment
-variable ``DISPLAY'' to specify which bit map display terminal to use.
-The environment variable ``WINDOWID'' is set to the X window id number
-of the
-.I xterm
-window.
+sets several environment variables:
+.TP 5
+DISPLAY
+is the display name,
+pointing to the X server (see \fBDISPLAY NAMES\fP in X(__miscmansuffix__)).
+.TP 5
+TERM
+is set according to the termcap (or terminfo) entry which it is using as
+a reference.
+.TP 5
+WINDOWID
+is set to the X window id number of the \fIxterm\fP window.
+.TP 5
+XTERM_SHELL
+is set to the pathname of the program which is invoked.
+Usually that is a shell program, e.g., \fB/bin/sh\fP.
+Since it is not necessarily a shell program however,
+it is distinct from ``SHELL''.
+.TP 5
+XTERM_VERSION
+is set to the string displayed by the \fB-version\fP option.
+That is normally an identifier for the X Window libraries used to
+build \fBxterm\fP, followed by
+\fBxterm\fP's patch number in parenthesis.
+The patch number is also part of the response to a Secondary Device Attributes
+(DA) control sequence (see \fIXterm Control Sequences\fP).
 .
 .PP
 Depending on your system configuration, \fIxterm\fP may also set the
@@ -4045,6 +4064,7 @@ when \fIxterm\fP is configured to update utmp.
 .TP 5
 SHELL
 when \fIxterm\fP is configured to update utmp.
+It is also set if you provide the shell name as the optional parameter.
 .TP 5
 TERMCAP
 the contents of the termcap entry corresponding to $TERM,

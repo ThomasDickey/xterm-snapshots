@@ -1,5 +1,5 @@
-! $XTermId: XTerm-col.ad,v 1.12 2005/04/22 00:21:53 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.4 2005/04/22 00:21:53 dickey Exp $
+! $XTermId: XTerm-col.ad,v 1.15 2005/05/03 00:38:24 tom Exp $
+! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.5 2005/05/03 00:38:24 dickey Exp $
 
 #include "XTerm"
 
@@ -10,6 +10,15 @@
 ! Uncomment this for "white" text on a dark background.
 !*VT100*foreground: gray90
 !*VT100*background: black
+
+! - OR -
+! Uncomment this for black text on a "white" background.
+!*VT100*foreground: black
+!*VT100*background: gray90
+
+! - OR -
+! leave the foreground/background colors alone (at the mercy of your desktop
+! designer).
 
 ! Color the popup/pulldown menu border to match the text widget's foreground.
 !*SimpleMenu*borderColor: gray15
@@ -90,17 +99,11 @@
 ! Color the popup menus and the menubar to match:
 *SimpleMenu.*.background: AntiqueWhite
 *SimpleMenu.*.foreground: gray15
-*menubar.*.background: AntiqueWhite
-*menubar.*.foreground: gray15
 
-*menubar.*.background: AntiqueWhite
-*menubar.*.foreground: gray15
-
-! Set the background for the terminal window to match the menubar.  This is
-! because the form/box construction leaves empty space after the pulldown
-! menu-buttons which is colored only by the top-level widget.  Since we will
-! color the text widget also, this is a workable solution.
-*.background: AntiqueWhite
+! Color the menubar to match:
+*.Form.menubar.*.background: AntiqueWhite
+*.Form.menubar.*.foreground: gray15
+*.Form.background: AntiqueWhite
 
 ! The following two sections take advantage of new features in version 7
 ! of the Athena widget library.  Comment them out if you have a shallow
