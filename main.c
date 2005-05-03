@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.441 2005/04/22 00:21:54 tom Exp $ */
+/* $XTermId: main.c,v 1.443 2005/05/03 00:38:24 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.192 2005/04/22 00:21:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.193 2005/05/03 00:38:24 dickey Exp $ */
 
 /* main.c */
 
@@ -3666,11 +3666,11 @@ spawn(void)
 	    }
 #endif
 
-	    /* copy the environment before Setenving */
+	    /* copy the environment before Setenv'ing */
 	    for (i = 0; environ[i] != NULL; i++) ;
 	    /* compute number of xtermSetenv() calls below */
 	    envsize = 1;	/* (NULL terminating entry) */
-	    envsize += 3;	/* TERM, WINDOWID, DISPLAY */
+	    envsize += 5;	/* TERM, WINDOWID, DISPLAY, _SHELL, _VERSION */
 #ifdef HAVE_UTMP
 	    envsize += 1;	/* LOGNAME */
 #endif /* HAVE_UTMP */
@@ -3698,6 +3698,8 @@ spawn(void)
 
 	    /* put the display into the environment of the shell */
 	    xtermSetenv("DISPLAY=", XDisplayString(screen->display));
+
+	    xtermSetenv("XTERM_VERSION=", xtermVersion());
 
 	    signal(SIGTERM, SIG_DFL);
 
@@ -4117,6 +4119,8 @@ spawn(void)
 	    } else {
 		xtermSetenv("SHELL=", explicit_shname);
 	    }
+	    xtermSetenv("XTERM_SHELL=", ptr);
+
 	    shname = x_basename(ptr);
 	    TRACE(("shell path '%s' leaf '%s'\n", ptr, shname));
 
@@ -4127,6 +4131,7 @@ spawn(void)
 	     * to command that the user gave anyway.
 	     */
 	    if (command_to_exec_with_luit) {
+		xtermSetenv("XTERM_SHELL=", xtermFindShell(*command_to_exec_with_luit));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
@@ -4137,6 +4142,7 @@ spawn(void)
 	    }
 #endif
 	    if (command_to_exec) {
+		xtermSetenv("XTERM_SHELL=", xtermFindShell(*command_to_exec));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvp(*command_to_exec, command_to_exec);
 		if (command_to_exec[1] == 0)

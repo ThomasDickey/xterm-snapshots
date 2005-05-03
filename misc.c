@@ -1,10 +1,10 @@
-/* $XTermId: misc.c,v 1.257 2005/04/22 00:21:54 tom Exp $ */
+/* $XTermId: misc.c,v 1.260 2005/05/03 00:38:24 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.96 2005/04/22 00:21:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.97 2005/05/03 00:38:24 dickey Exp $ */
 
 /*
  *
@@ -2136,14 +2136,14 @@ ChangeGroup(String attribute, char *value)
 		    static Char *converted;
 		    if (converted != 0)
 			free(converted);
-		    if ((converted = malloc(1 + (5 * limit))) != 0) {
+		    if ((converted = TypeMallocN(Char, 1 + (5 * limit))) != 0) {
 			Char *temp = converted;
 			while (*name != 0) {
 			    temp = convertToUTF8(temp, CharOf(*name));
 			    ++name;
 			}
 			*temp = 0;
-			name = converted;
+			name = (const char *) converted;
 		    }
 		    break;
 		}
@@ -2618,7 +2618,7 @@ xtermFindShell(char *leaf)
     if (*result != '\0' && strchr("+/-", *result) == 0) {
 	/* find it in $PATH */
 	if ((s = getenv("PATH")) != 0) {
-	    if ((tmp = malloc(strlen(leaf) + strlen(s) + 1)) != 0) {
+	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 1)) != 0) {
 		Bool found = False;
 		while (*s != '\0') {
 		    strcpy(tmp, s);

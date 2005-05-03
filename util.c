@@ -1,10 +1,10 @@
-/* $XTermId: util.c,v 1.227 2005/04/22 00:21:54 tom Exp $ */
+/* $XTermId: util.c,v 1.230 2005/05/03 00:38:24 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.89 2005/04/22 00:21:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.90 2005/05/03 00:38:24 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey
@@ -2812,15 +2812,61 @@ decode_keyboard_type(XTERM_RESOURCE * rp)
 }
 
 #if OPT_WIDE_CHARS
+#if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
+/*
+ * If xterm is running in a UTF-8 locale, it is still possible to encounter
+ * old runtime configurations which yield incomplete or inaccurate data.
+ */
+static Bool
+systemWcwidthOk(void)
+{
+    wchar_t n;
+    int oops = 0;
+    int last = 1024;
+
+    for (n = 0; n < last; ++n) {
+	int system_code = wcwidth(n);
+	int intern_code = mk_wcwidth(n);
+
+	/*
+	 * Since mk_wcwidth() is designed to check for nonspacing characters,
+	 * and has rough range-checks for double-width characters, it will
+	 * generally not detect cases where a code has not been assigned.
+	 *
+	 * Some experimentation with GNU libc suggests that up to 1/4 of the
+	 * codes would differ, simply because the runtime library would have a
+	 * table listing the unassigned codes, and return -1 for those.  If
+	 * mk_wcwidth() has no information about a code, it returns 1.  On the
+	 * other hand, if the runtime returns a positive number, the two should
+	 * agree.
+	 *
+	 * The "up to" is measured for 4k, 8k, 16k of data.  With only 1k, the
+	 * number of differences was only 77.  However, that is only one
+	 * system, and this is only a sanity check to avoid using broken
+	 * libraries.
+	 */
+	if ((system_code < 0 && intern_code >= 1)
+	    || (system_code >= 0 && intern_code != system_code)) {
+	    ++oops;
+	}
+    }
+    TRACE(("systemWcwidthOk: %d/%d mismatches\n", oops, last));
+    return (oops < (last / 4));
+}
+#endif /* HAVE_WCWIDTH */
+
 void
 decode_wcwidth(int mode)
 {
     switch (mode) {
     default:
 #if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
-	my_wcwidth = wcwidth;
-	TRACE(("using system wcwidth() function\n"));
-	break;
+	if (xtermEnvUTF8() && systemWcwidthOk()) {
+	    my_wcwidth = wcwidth;
+	    TRACE(("using system wcwidth() function\n"));
+	    break;
+	}
+	/* FALLTHRU */
     case 2:
 #endif
 	my_wcwidth = &mk_wcwidth;

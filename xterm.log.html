@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.244 2005/04/22 00:21:54 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.137 2005/04/22 00:21:54 dickey Exp $
+  $XTermId: xterm.log.html,v 1.254 2005/05/03 00:38:25 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.138 2005/05/03 00:38:25 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_202">Patch #202 - 2005/5/2 - XFree86 4.5.99.3</A>
 <LI><A HREF="#xterm_201">Patch #201 - 2005/4/21 - XFree86 4.5.99.2</A>
 <LI><A HREF="#xterm_200">Patch #200 - 2005/2/6 - XFree86 4.4.99.23</A>
 <LI><A HREF="#xterm_199">Patch #199 - 2005/1/17 - XFree86 4.4.99.22</A>
@@ -249,6 +250,41 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_202">Patch #202 - 2005/5/2 - XFree86 4.5.99.3</A></H1>
+<ul>
+	<li>add extended shift- and control-modifier cursor keys to
+	    "xterm+pcfkeys" terminfo entry to correspond to ncurses 20050430
+	    patch.
+
+	<li>fix a rare case where text would be written with the wrong colors
+	    because output of scrolled text would reset the colors and the
+	    new text would be written with the same colors (report/testcase
+	    by Thomas Glanzmann).
+
+	<li>rename <code>$CMD</code> variable in <code>plink.sh</code> because
+	    it is a reserved symbol in bash 3.00.16 (report by Ted Taylor).
+
+	<li>add environment variables $XTERM_SHELL and $XTERM_VERSION
+	    (request by Zdenek Sekera).
+
+	<li>corrected workaround for background color of menubar, which gave
+	    a too-broad expression, coloring the background of the VT100
+	    widget unless overridden by another resource setting.
+
+	<li>correct an error in the logic which decides when
+	    <code>sched_yield()</code> is run; it would occasionally hang when
+	    contending with other pseudo-terminal applications such as screen
+	    (report by Kirill Ponomarew).
+
+	<li>modify initialization to decide whether to default to built-in
+	    <code>wcwidth()</code> versus system's version based on the
+	    starting locale and whether the system's version is poor quality
+	    (suggested by Bram Moolenaar).
+
+	<li>update table for <code>mk_width()</code> from UnicodeData 4.1.0
+	    using Markus Kuhn's <code>uniset</code> script.
+</ul>
 
 <H1><A NAME="xterm_201">Patch #201 - 2005/4/21 - XFree86 4.5.99.2</A></H1>
 <ul>

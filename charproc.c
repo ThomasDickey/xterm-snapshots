@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.564 2005/04/22 00:21:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.572 2005/05/03 00:38:24 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.169 2005/04/22 00:21:53 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.170 2005/05/03 00:38:24 dickey Exp $ */
 
 /*
 
@@ -3034,6 +3034,7 @@ in_put(void)
     }
 }
 #else /* VMS */
+
 static void
 in_put(void)
 {
@@ -3068,19 +3069,32 @@ in_put(void)
 		&& screen->topline < 0)
 		WindowScroll(screen, 0);	/* Scroll to bottom */
 	    /* stop speed reading at some point to look for X stuff */
-	    /* (BUF_SIZE is just a random large number.) */
+	    TRACE(("VTbuffer uses %d/%d\n",
+		   VTbuffer->last - VTbuffer->buffer,
+		   BUF_SIZE));
 	    if ((VTbuffer->last - VTbuffer->buffer) > BUF_SIZE) {
 		FD_CLR(screen->respond, &select_mask);
 		break;
 	    }
 #if defined(HAVE_SCHED_YIELD)
-	    if (size < FRG_SIZE) {
-		sched_yield();
-		break;
-	    }
-#else
-	    break;
+	    /*
+	     * If we've read a full (small/fragment) buffer, let the operating
+	     * system have a turn, and we'll resume reading until we've either
+	     * read only a fragment of the buffer, or we've filled the large
+	     * buffer (see above).  Doing this helps keep up with large bursts
+	     * of output.
+	     */
+	    if (size == FRG_SIZE) {
+		select_timeout.tv_sec = 0;
+		i = Select(max_plus1, &select_mask, &write_mask, 0,
+			   &select_timeout);
+		if (i > 0) {
+		    sched_yield();
+		} else
+		    break;
+	    } else
 #endif
+		break;
 	}
 	/* update the screen */
 	if (screen->scroll_amt)
@@ -3435,21 +3449,19 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	    InsertChar(screen, cells);
 	}
 	if (!AddToRefresh(screen)) {
-	    /* make sure that the correct GC is current */
-	    currentGC = updatedXtermGC(screen, flags, fg_bg, False);
 
 	    if (screen->scroll_amt)
 		FlushScroll(screen);
 
 	    if (flags & INVISIBLE) {
 		if (cells > len) {
-		    str = temp_str = malloc(cells);
+		    str = temp_str = TypeMallocN(Char, cells);
 		    if (str == 0)
 			return;
 		}
 		if_OPT_WIDE_CHARS(screen, {
 		    if (cells > len) {
-			str2 = temp_str2 = malloc(cells);
+			str2 = temp_str2 = TypeMallocN(Char, cells);
 		    }
 		});
 		len = cells;
@@ -3467,6 +3479,9 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 
 	    test = flags;
 	    checkVeryBoldColors(test, term->cur_foreground);
+
+	    /* make sure that the correct GC is current */
+	    currentGC = updatedXtermGC(screen, flags, fg_bg, False);
 
 	    drawXtermText(screen, test & DRAWX_MASK, currentGC,
 			  CurCursorX(screen, screen->cur_row, screen->cur_col),

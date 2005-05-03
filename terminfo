@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.106 2005/02/06 21:42:38 tom Exp $
+# $XTermId: terminfo,v 1.109 2005/05/03 00:38:24 tom Exp $
 #
 # $Xorg: terminfo,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
 #
@@ -7,7 +7,7 @@
 # XFree86 updates/notes/new entries (including xterm-8bit, xterm-16color)
 # - Thomas E. Dickey
 #
-# $XFree86: xc/programs/xterm/terminfo,v 3.55 2005/02/06 21:42:38 dickey Exp $
+# $XFree86: xc/programs/xterm/terminfo,v 3.56 2005/05/03 00:38:24 dickey Exp $
 #
 # Special Capabilities:
 # --------------------
@@ -130,7 +130,8 @@ xterm-new|modern xterm terminal emulator,
 	rin=\E[%p1%dT,
 	use=xterm+pcfkeys,
 	use=xterm-basic,
-#
+# Encode modifiers using parameters (see ctlseqs.msg).
+# Note that this is unrelated to PCTERM.
 xterm+pcfkeys|fragment for PC-style keys,
 	kf1=\EOP,
 	kf10=\E[21~,
@@ -195,6 +196,16 @@ xterm+pcfkeys|fragment for PC-style keys,
 	kf7=\E[18~,
 	kf8=\E[19~,
 	kf9=\E[20~,
+	kDN=\E[1;2B,
+	kDN5=\E[1;5B,
+	kDN6=\E[1;6B,
+	kLFT5=\E[1;5D,
+	kLFT6=\E[1;6D,
+	kRIT5=\E[1;5C,
+	kRIT6=\E[1;6C,
+	kUP=\E[1;2A,
+	kUP5=\E[1;5A,
+	kUP6=\E[1;6A,
 #
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
 xterm-basic|modern xterm terminal emulator - common,
