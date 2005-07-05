@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.137 2005/04/22 00:21:54 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.138 2005/06/21 00:32:10 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.54 2005/04/22 00:21:54 dickey Exp $
@@ -102,12 +102,13 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_MAXIMIZE		/* CF_ARG_DISABLE(maximize) */
 #undef OPT_MINI_LUIT		/* CF_ARG_ENABLE(mini-luit) */
 #undef OPT_NUM_LOCK		/* CF_ARG_DISABLE(num-lock) */
+#undef OPT_PASTE64		/* CF_ARG_ENABLE(past64) */
 #undef OPT_PC_COLORS		/* CF_ARG_DISABLE(pc-color) */
 #undef OPT_PTY_HANDSHAKE	/* CF_ARG_ENABLE(pty-handshake) */
-#undef OPT_SAME_NAME
+#undef OPT_SAME_NAME		/* CF_ARG_DISABLE(samename) */
 #undef OPT_SCO_FUNC_KEYS	/* CF_ARG_ENABLE(sco-fkeys) */
 #undef OPT_SESSION_MGT		/* CF_ARG_DISABLE(session-mgt) */
-#undef OPT_TCAP_QUERY
+#undef OPT_TCAP_QUERY		/* CF_ARG_ENABLE(tcap-query) */
 #undef OPT_TEK4014		/* CF_ARG_DISABLE(tek4014) */
 #undef OPT_TOOLBAR		/* CF_ARG_ENABLE(toolbar) */
 #undef OPT_TRACE		/* CF_ARG_ENABLE(trace) */

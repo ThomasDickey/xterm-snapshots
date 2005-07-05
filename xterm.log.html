@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.254 2005/05/03 00:38:25 tom Exp $
+  $XTermId: xterm.log.html,v 1.276 2005/07/04 22:47:19 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.138 2005/05/03 00:38:25 dickey Exp $
   -->
 <HTML>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_203">Patch #203 - 2005/7/4 - XFree86 4.5.99.7</A>
 <LI><A HREF="#xterm_202">Patch #202 - 2005/5/2 - XFree86 4.5.99.3</A>
 <LI><A HREF="#xterm_201">Patch #201 - 2005/4/21 - XFree86 4.5.99.2</A>
 <LI><A HREF="#xterm_200">Patch #200 - 2005/2/6 - XFree86 4.4.99.23</A>
@@ -250,6 +251,71 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_203">Patch #203 - 2005/7/4 - XFree86 4.5.99.7</A></H1>
+<ul>
+	<li>modify initialization of <code>allowSendEvents</code> and
+	    <code>allowWindowOps</code> to prevent modification with the
+	    editres protocol.
+
+	<li>fix compiler warning for NetBSD by including util.h in main.c
+	    (XFree86 Bugzilla #1596).
+
+	<li>fix to build on Darwin 8.x, which no longer provides
+	    <code>setpgrp()</code> (patch by Min Sik Kim).
+
+	<li>adapted fixes for Legend (SCO) from diffs attached to 
+	    Freedesktop.Org Bugzilla #3180.
+
+	<li>fix typo in xterm manpage description of <code>-ls</code> option
+	    (Freedesktop.Org Bugzilla #3543).
+
+	<li>add support for interpreting the underline attribute as an italic
+	    font in Xft mode (patch by Chuck Blake).
+
+	<li>improve initialization of toolbar so that individual pulldown
+	    menus are initialized on demand, as they are in the scenario
+	    where they are invoked as popup menus (GenToo Bugzilla #90697).
+
+	<li>fixes to make <code>-geom</code> option work with the toolbar
+	    configuration (GenToo Bugzilla #90717).
+
+	<li>fix logic in <code>find_utmp</code>, which did not reset result
+	    in <code>getutid()</code>, causing an infinite loop in some
+	    conditions (report by Emil Mikulic).
+
+	<li>set the <code>_NET_WM_PID</code> property (GenToo Bugzilla #91008).
+
+	<li>modify ifdef's in ptyx.h and xterm_io.h to build with DragonFly
+	    (patch by Jeroen Ruigrok).
+
+	<li>change default values for <code>minBufSize</code> and
+	    <code>maxBufSize</code> to 4096 and 32768 respectively so that the
+	    initial read request will match the value from before changes to
+	    use <code>sched_yield()</code>.
+
+	<li>make paste of UTF-8 faster for Western character sets by checking
+	    range of incoming data (patch by Joe Allen).
+
+	<li>adapted patch by Joe Allen to add experimental option to allow
+	    applications to get or set the selection data.
+
+	<li>fix an off-by-one error parsing <code>-S/nn</code> option
+	    (Debian #311438, report/fix by Peter Chubb).
+
+	<li>fix an initialization bug from 
+	    <a href="xterm_201">patch #201</a> that broke logging
+	    (report by Rodney Thayer).
+
+	<li>amend change to command-line processing in
+	    <a href="xterm_201">patch #201</a> to avoid
+	    conflict with <code>-e</code> option (report by Servatius Brandt).
+
+	<li>suppress configure check for <code>_XOPEN_SOURCE</code> on
+	    darwin.
+
+	<li>update config.guess, config.sub
+</ul>
 
 <H1><A NAME="xterm_202">Patch #202 - 2005/5/2 - XFree86 4.5.99.3</A></H1>
 <ul>
@@ -1433,10 +1499,10 @@ is the latest version of this file.
 	    on a shell-window no longer work.  The tek4014 emulation used this.
 	    Use the next lower window (report by Karl Rudolf Bauchspiess).
 
-	<li>add a resource setting to control whether the extended window
-	    operations should be allowed, e.g., resize, iconify, report
-	    window attributes.  This is to accommodate people who are not
-	    capable of using a pager to view log-files.
+	<li>add a resource setting <code>allowWindowOps</code> to control
+	    whether the extended window operations should be allowed, e.g.,
+	    resize, iconify, report window attributes.  This is to accommodate
+	    people who are not capable of using a pager to view log-files.
 </ul>
 
 <H1><A NAME="xterm_173">Patch #173 - 2003/2/6 - XFree86 4.2.99.902</A></H1>
@@ -3096,7 +3162,7 @@ is the latest version of this file.
 <H1><A NAME="xterm_123">Patch #123 - 2000/1/22 - XFree86 3.9.17a</A></H1>
 <ul>
 	<li>add a note reserving OSC 51 for use in Emacs shell (request by
-	  Rob Myoff &lt;mayoff@dqd.com&gt;).
+	  Rob Mayoff &lt;mayoff@dqd.com&gt;).
 
 	<li>correct a missing backslash in xterm-vt220 termcap.
 

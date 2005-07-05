@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.334 2005/04/22 00:21:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.339 2005/07/04 17:24:31 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.105 2005/04/22 00:21:54 dickey Exp $ */
 
@@ -116,7 +116,7 @@ authorization.
 #define HAVE_TCGETATTR 1
 #endif
 
-#if defined(__UNIXOS2__) || defined(__SCO__)
+#if defined(__UNIXOS2__) || defined(__SCO__) || defined(__UNIXWARE__)
 #define USE_TERMCAP 1
 #endif
 
@@ -161,7 +161,7 @@ authorization.
 #define DEF_INITIAL_ERASE TRUE
 #endif
 
-#if defined(__SCO__)
+#if defined(__SCO__) || defined(__UNIXWARE__)
 #define DEFDELETE_DEL TRUE
 #define OPT_SCO_FUNC_KEYS 1
 #endif
@@ -371,6 +371,7 @@ extern char **environ;
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
 #define XtNi18nSelections	"i18nSelections"
 #define XtNinternalBorder	"internalBorder"
+#define XtNitalicULMode         "italicULMode"
 #define XtNjumpScroll		"jumpScroll"
 #define XtNkeyboardDialect	"keyboardDialect"
 #define XtNlimitResize		"limitResize"
@@ -630,6 +631,13 @@ extern void GetLocatorPosition (XtermWidget w);
 extern void InitLocatorFilter (XtermWidget w);
 #endif	/* OPT_DEC_LOCATOR */
 
+#if OPT_PASTE64
+extern void AppendToSelectionBuffer (TScreen *screen, unsigned c);
+extern void ClearSelectionBuffer (void);
+extern void CompleteSelection (char **args, Cardinal len);
+extern void xtermGetSelection (Widget w, Time ev_time, String *params, Cardinal num_params, Atom *targets);
+#endif
+
 #if OPT_WIDE_CHARS
 extern Bool iswide(int i);
 #endif
@@ -748,7 +756,7 @@ extern char *SysErrorMsg (int n);
 extern char *udk_lookup (int keycode, int *len);
 extern char *xtermEnvEncoding (void);
 extern char *xtermEnvLocale (void);
-extern char *xtermFindShell(char *leaf);
+extern char *xtermFindShell(char *leaf, Bool warning);
 extern char *xtermVersion(void);
 extern int XStrCmp (char *s1, char *s2);
 extern int creat_as (uid_t uid, gid_t gid, Bool append, char *pathname, int mode);

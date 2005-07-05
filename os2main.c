@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.198 2005/05/03 00:38:24 tom Exp $ */
+/* $XTermId: os2main.c,v 1.203 2005/07/04 23:02:41 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -271,8 +271,8 @@ static XtResource application_resources[] =
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
     Bres("hold", "Hold", hold_screen, False),
     Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, False),
-    Ires("minBufSize", "MinBufSize", minBufSize, 128),
-    Ires("maxBufSize", "MaxBufSize", maxBufSize, 4096),
+    Ires("minBufSize", "MinBufSize", minBufSize, 4096),
+    Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
     Bres("messages", "Messages", messages, True),
     Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #if OPT_SUNPC_KBD
@@ -439,6 +439,8 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
+{"-ulit",       "*italicULMode", XrmoptionNoArg,        (caddr_t) "off"},
+{"+ulit",       "*italicULMode", XrmoptionNoArg,        (caddr_t) "on"},
 {"-ut",		"*utmpInhibit",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+ut",		"*utmpInhibit",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-im",		"*useInsertMode", XrmoptionNoArg,	(caddr_t) "on"},
@@ -1120,7 +1122,7 @@ main(int argc, char **argv ENVP_ARG)
 						 (XtPointer) 0);
     /* this causes the initialize method to be called */
 #if OPT_TOOLBAR
-    SetupToolbar(toplevel);
+    SetupToolbar();
 #endif
 
     decode_keyboard_type(&resource);
@@ -1274,6 +1276,7 @@ main(int argc, char **argv ENVP_ARG)
     XSetErrorHandler(xerror);
     XSetIOErrorHandler(xioerror);
 
+    initPtyData(&VTbuffer);
 #ifdef ALLOWLOGGING
     if (term->misc.log_on) {
 	StartLog(screen);
@@ -1292,7 +1295,6 @@ main(int argc, char **argv ENVP_ARG)
 			winToEmbedInto, 0, 0);
     }
 
-    initPtyData(&VTbuffer);
     for (;;) {
 #if OPT_TEK4014
 	if (screen->TekEmu)
@@ -1808,7 +1810,8 @@ opencons();*/
 	     * to command that the user gave anyway.
 	     */
 	    if (command_to_exec_with_luit) {
-		xtermSetenv("XTERM_SHELL=", xtermFindShell(*command_to_exec_with_luit));
+		xtermSetenv("XTERM_SHELL=",
+			    xtermFindShell(*command_to_exec_with_luit, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
@@ -1819,7 +1822,8 @@ opencons();*/
 	    }
 #endif
 	    if (command_to_exec) {
-		xtermSetenv("XTERM_SHELL=", xtermFindShell(*command_to_exec));
+		xtermSetenv("XTERM_SHELL=",
+			    xtermFindShell(*command_to_exec, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvpe(*command_to_exec, command_to_exec, gblenvp);
 

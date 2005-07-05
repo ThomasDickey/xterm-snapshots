@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.192 2005/04/22 00:21:53 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.193 2005/06/21 00:50:24 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.57 2005/04/22 00:21:53 dickey Exp $
 dnl
@@ -519,7 +519,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_ATTRIBUTES version: 9 updated: 2002/12/21 19:25:52
+dnl CF_GCC_ATTRIBUTES version: 10 updated: 2005/05/28 13:16:28
 dnl -----------------
 dnl Test for availability of useful gcc __attribute__ directives to quiet
 dnl compiler warnings.  Though useful, not all are supported -- and contrary
@@ -567,18 +567,18 @@ int main(int argc GCC_UNUSED, char *argv[[]] GCC_UNUSED) { return 0; }
 EOF
 	for cf_attribute in scanf printf unused noreturn
 	do
-		CF_UPPER(CF_ATTRIBUTE,$cf_attribute)
+		CF_UPPER(cf_ATTRIBUTE,$cf_attribute)
 		cf_directive="__attribute__(($cf_attribute))"
 		echo "checking for $CC $cf_directive" 1>&AC_FD_CC
 		case $cf_attribute in
 		scanf|printf)
 		cat >conftest.h <<EOF
-#define GCC_$CF_ATTRIBUTE 1
+#define GCC_$cf_ATTRIBUTE 1
 EOF
 			;;
 		*)
 		cat >conftest.h <<EOF
-#define GCC_$CF_ATTRIBUTE $cf_directive
+#define GCC_$cf_ATTRIBUTE $cf_directive
 EOF
 			;;
 		esac
@@ -1707,7 +1707,7 @@ int x = XkbBI_Info
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 17 updated: 2005/02/06 12:07:45
+dnl CF_XOPEN_SOURCE version: 19 updated: 2005/05/15 19:19:07
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality.
@@ -1723,6 +1723,9 @@ cf_POSIX_C_SOURCE=ifelse($2,,199506L,$2)
 case $host_os in #(vi
 aix[[45]]*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_ALL_SOURCE"
+	;;
+darwin*) #(vi
+	# setting _XOPEN_SOURCE breaks things on Darwin
 	;;
 freebsd*) #(vi
 	# 5.x headers associate

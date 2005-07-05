@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.185 2005/04/22 00:21:53 tom Exp $
+dnl $XTermId: configure.in,v 1.186 2005/06/21 00:30:32 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/configure.in,v 3.69 2005/04/22 00:21:53 dickey Exp $
 dnl
@@ -476,6 +476,19 @@ CF_ARG_DISABLE(num-lock,
 	[enable_numlock=yes])
 AC_MSG_RESULT($enable_numlock)
 test "$enable_numlock" = no && AC_DEFINE(OPT_NUM_LOCK,0)
+
+AC_MSG_CHECKING(if you want support for get/set of base64 selection data)
+
+CF_ARG_ENABLE(paste64,
+	[  --enable-paste64        enable get/set base64 selection data],
+	[enable_paste64=yes],
+	[enable_paste64=no])
+AC_MSG_RESULT($enable_paste64)
+if test "$enable_paste64" = yes ; then
+	AC_DEFINE(OPT_PASTE64,1)
+else
+	AC_DEFINE(OPT_PASTE64,0)
+fi
 
 AC_MSG_CHECKING(if you want support for pty-handshaking)
 

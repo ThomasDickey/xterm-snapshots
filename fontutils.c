@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.148 2005/05/03 00:38:24 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.149 2005/07/04 15:28:46 Chuck.Blake Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.51 2005/05/03 00:38:24 dickey Exp $
@@ -1269,9 +1269,11 @@ xtermComputeFontInfo(TScreen * screen,
 	int fontnum = screen->menu_font_number;
 	XftFont *norm = screen->renderFontNorm[fontnum];
 	XftFont *bold = screen->renderFontBold[fontnum];
+	XftFont *ital = screen->renderFontItal[fontnum];
 #if OPT_RENDERWIDE
 	XftFont *wnorm = screen->renderWideNorm[fontnum];
 	XftFont *wbold = screen->renderWideBold[fontnum];
+	XftFont *wital = screen->renderWideItal[fontnum];
 #endif
 
 	if (norm == 0 && term->misc.face_name) {
@@ -1321,6 +1323,15 @@ xtermComputeFontInfo(TScreen * screen,
 		if ((bold == 0) && match)
 		    XftPatternDestroy(match);
 
+		XftPatternBuild(pat,
+				XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC,
+				XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width,
+				(void *) 0);
+		match = XftFontMatch(dpy, DefaultScreen(dpy), pat, &result);
+		ital = XftFontOpenPattern(dpy, match);
+		if ((ital == 0) && match)
+		    XftPatternDestroy(match);
+
 		/*
 		 * FIXME:  just assume that the corresponding font has no
 		 * graphics characters.
@@ -1337,6 +1348,7 @@ xtermComputeFontInfo(TScreen * screen,
 
 	    CACHE_XFT(screen->renderFontNorm, norm);
 	    CACHE_XFT(screen->renderFontBold, bold);
+	    CACHE_XFT(screen->renderFontItal, ital);
 
 	    /*
 	     * See xtermXftDrawString().
@@ -1367,8 +1379,17 @@ xtermComputeFontInfo(TScreen * screen,
 				    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
 				    (void *) 0);
 
+		wital = XftFontOpen(dpy, DefaultScreen(dpy),
+				    XFT_FAMILY, XftTypeString, face_name,
+				    XFT_SIZE, XftTypeDouble, face_size,
+				    XFT_SPACING, XftTypeInteger, XFT_MONO,
+				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
+				    XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC,
+				    (void *) 0);
+
 		CACHE_XFT(screen->renderWideNorm, wnorm);
 		CACHE_XFT(screen->renderWideBold, wbold);
+		CACHE_XFT(screen->renderWideItal, wital);
 	    }
 #endif
 	}

@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.92 2004/12/01 01:27:47 tom Exp $ */
+/* $XTermId: resize.c,v 1.93 2005/07/04 17:24:31 tom Exp $ */
 
 /*
  *	$Xorg: resize.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -71,7 +71,7 @@
 #endif
 
 #ifndef USE_TERMINFO		/* avoid conflict with configure script */
-#if defined(__QNX__) || defined(__SCO__) || defined(linux) || defined(__OpenBSD__)
+#if defined(__QNX__) || defined(__SCO__) || defined(linux) || defined(__OpenBSD__) || defined(__UNIXWARE__)
 #define USE_TERMINFO
 #endif
 #endif

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.260 2005/05/03 00:38:24 tom Exp $ */
+/* $XTermId: misc.c,v 1.266 2005/07/03 20:23:18 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -1510,6 +1510,79 @@ ChangeAnsiColorRequest(XtermWidget pTerm,
 #define find_closest_color(display, cmap, def) 0
 #endif /* OPT_ISO_COLORS */
 
+#if OPT_PASTE64
+static void
+ManipulateSelectionData(TScreen * screen, Char * buf, int final)
+{
+#define PDATA(a,b) { a, #b }
+    static struct {
+	char given;
+	char *result;
+    } table[] = {
+	PDATA('p', PRIMARY),
+	    PDATA('c', CLIPBOARD),
+	    PDATA('0', CUT_BUFFER0),
+	    PDATA('1', CUT_BUFFER1),
+	    PDATA('2', CUT_BUFFER2),
+	    PDATA('3', CUT_BUFFER3),
+	    PDATA('4', CUT_BUFFER4),
+	    PDATA('5', CUT_BUFFER5),
+	    PDATA('6', CUT_BUFFER6),
+	    PDATA('7', CUT_BUFFER7),
+    };
+
+    Char *base = buf;
+    Cardinal j, n = 0;
+    char **select_args = 0;
+
+    TRACE(("Manipulate selection data\n"));
+
+    while (*buf != ';' && *buf != '\0') {
+	++buf;
+    }
+
+    if (*buf == ';') {
+	*buf++ = '\0';
+
+	if (*base == '\0')
+	    base = "p0";
+	if ((select_args = TypeCallocN(String, 1 + strlen(base))) == 0)
+	    return;
+	while (*base != '\0') {
+	    for (j = 0; j < XtNumber(table); ++j) {
+		if (*base == table[j].given) {
+		    select_args[n++] = table[j].result;
+		    TRACE(("atom[%d] %s\n", n, table[j].result));
+		    break;
+		}
+	    }
+	    ++base;
+	}
+
+	if (!strcmp(buf, "?")) {
+	    TRACE(("Getting selection\n"));
+	    unparseputc1(OSC, screen->respond);
+	    unparseputs("52", screen->respond);
+	    unparseputc(';', screen->respond);
+
+	    unparseputs(base, screen->respond);
+	    unparseputc(';', screen->respond);
+
+	    screen->base64_paste = 1;	/* Tells xtermGetSelection data is base64 encoded */
+	    xtermGetSelection((Widget) term, 0, select_args, n, NULL);
+	    unparseputc1(final, screen->respond);
+	} else {
+	    TRACE(("Setting selection with %s\n", buf));
+	    ClearSelectionBuffer();
+	    while (*buf != '\0')
+		AppendToSelectionBuffer(screen, *buf++);
+	    CompleteSelection(select_args, n);
+	}
+	free(select_args);
+    }
+}
+#endif /* OPT_PASTE64 */
+
 /***====================================================================***/
 
 void
@@ -1686,9 +1759,15 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	}
 	break;
     case 51:
-	/* reserved for Emacs shell (Rob Myoff <mayoff@dqd.com>) */
+	/* reserved for Emacs shell (Rob Mayoff <mayoff@dqd.com>) */
 	break;
 
+#if OPT_PASTE64
+    case 52:
+	if (screen->allowWindowOps && (buf != 0))
+	    ManipulateSelectionData(screen, buf, final);
+	break;
+#endif
 	/*
 	 * One could write code to send back the display and host names,
 	 * but that could potentially open a fairly nasty security hole.
@@ -2607,7 +2686,7 @@ Cleanup(int code)
 
 #ifndef VMS
 char *
-xtermFindShell(char *leaf)
+xtermFindShell(char *leaf, Bool warning)
 {
     char *s;
     char *d;
@@ -2652,7 +2731,8 @@ xtermFindShell(char *leaf)
     if (*result != '/'
 	|| strstr(result, "..") != 0
 	|| access(result, X_OK) != 0) {
-	fprintf(stderr, "No absolute path found for shell: %s\n", result);
+	if (warning)
+	    fprintf(stderr, "No absolute path found for shell: %s\n", result);
 	result = 0;
     }
     return result;
@@ -2669,28 +2749,30 @@ xtermFindShell(char *leaf)
 void
 xtermSetenv(char *var, char *value)
 {
-    int envindex = 0;
-    size_t len = strlen(var);
+    if (value != 0) {
+	int envindex = 0;
+	size_t len = strlen(var);
 
-    TRACE(("xtermSetenv(var=%s, value=%s)\n", var, value));
+	TRACE(("xtermSetenv(var=%s, value=%s)\n", var, value));
 
-    while (environ[envindex] != NULL) {
-	if (strncmp(environ[envindex], var, len) == 0) {
-	    /* found it */
-	    environ[envindex] = CastMallocN(char, len + strlen(value));
-	    strcpy(environ[envindex], var);
-	    strcat(environ[envindex], value);
-	    return;
+	while (environ[envindex] != NULL) {
+	    if (strncmp(environ[envindex], var, len) == 0) {
+		/* found it */
+		environ[envindex] = CastMallocN(char, len + strlen(value));
+		strcpy(environ[envindex], var);
+		strcat(environ[envindex], value);
+		return;
+	    }
+	    envindex++;
 	}
-	envindex++;
+
+	TRACE(("...expanding env to %d\n", envindex + 1));
+
+	environ[envindex] = CastMallocN(char, len + strlen(value));
+	(void) strcpy(environ[envindex], var);
+	strcat(environ[envindex], value);
+	environ[++envindex] = NULL;
     }
-
-    TRACE(("...expanding env to %d\n", envindex + 1));
-
-    environ[envindex] = CastMallocN(char, len + strlen(value));
-    (void) strcpy(environ[envindex], var);
-    strcat(environ[envindex], value);
-    environ[++envindex] = NULL;
 }
 
 /*ARGSUSED*/
@@ -2778,7 +2860,7 @@ set_vt_visibility(Bool on)
     else {
 	if (screen->Vshow && term) {
 	    withdraw_window(XtDisplay(term),
-			    XtWindow(SHELL_OF(term)),
+			    VShellWindow,
 			    XScreenNumberOfScreen(XtScreen(term)));
 	    screen->Vshow = False;
 	}
@@ -2820,7 +2902,7 @@ set_tek_visibility(Bool on)
     } else {
 	if (screen->Tshow && tekWidget) {
 	    withdraw_window(XtDisplay(tekWidget),
-			    XtWindow(SHELL_OF(tekWidget)),
+			    TShellWindow,
 			    XScreenNumberOfScreen(XtScreen(tekWidget)));
 	    screen->Tshow = False;
 	}

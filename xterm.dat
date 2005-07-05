@@ -130,6 +130,7 @@
 
 ! Uncomment this use color for underline attribute
 !*VT100*colorULMode: on
+!*VT100*italicULMode: on
 !*VT100*underLine: off
 
 ! Uncomment this to use color for the bold attribute
