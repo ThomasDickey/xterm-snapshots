@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.572 2005/05/03 00:38:24 tom Exp $ */
+/* $XTermId: charproc.c,v 1.587 2005/07/05 00:21:46 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
@@ -404,8 +404,8 @@ static XtActionsRec actionsList[] = {
 
 static XtResource resources[] =
 {
-    Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvents, False),
-    Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOps, True),
+    Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
+    Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, True),
     Bres(XtNalwaysHighlight, XtCAlwaysHighlight, screen.always_highlight, False),
     Bres(XtNappcursorDefault, XtCAppcursorDefault, misc.appcursorDefault, False),
     Bres(XtNappkeypadDefault, XtCAppkeypadDefault, misc.appkeypadDefault, False),
@@ -562,6 +562,7 @@ static XtResource resources[] =
     Bres(XtNcolorBLMode, XtCColorAttrMode, screen.colorBLMode, False),
     Bres(XtNcolorRVMode, XtCColorAttrMode, screen.colorRVMode, False),
     Bres(XtNcolorULMode, XtCColorAttrMode, screen.colorULMode, False),
+    Bres(XtNitalicULMode, XtCColorAttrMode, screen.italicULMode, False),
 
     COLOR_RES("0", screen.Acolors[COLOR_0], DFT_COLOR("black")),
     COLOR_RES("1", screen.Acolors[COLOR_1], DFT_COLOR("red3")),
@@ -1129,7 +1130,14 @@ doparsing(unsigned c, struct ParseState *sp)
 
     do {
 #if OPT_WIDE_CHARS
-	if (screen->wide_chars
+
+	/*
+	 * Handle zero-width combining characters.  Make it faster by noting
+	 * that according to the Unicode charts, the majority of Western
+	 * character sets do not use this feature.  There are some unassigned
+	 * codes at 0x242, but no zero-width characters until past 0x300.
+	 */
+	if (c >= 0x300 && screen->wide_chars
 	    && my_wcwidth((int) c) == 0) {
 	    int prev, precomposed;
 
@@ -5276,8 +5284,14 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.control_eight_bits);
     init_Bres(screen.backarrow_key);
     init_Bres(screen.meta_sends_esc);
-    init_Bres(screen.allowSendEvents);
-    init_Bres(screen.allowWindowOps);
+
+    init_Bres(screen.allowSendEvent0);
+    init_Bres(screen.allowWindowOp0);
+
+    /* make a copy so that editres cannot change the resource after startup */
+    wnew->screen.allowSendEvents = wnew->screen.allowSendEvent0;
+    wnew->screen.allowWindowOps = wnew->screen.allowWindowOp0;
+
 #ifndef NO_ACTIVE_ICON
     wnew->screen.fnt_icon = request->screen.fnt_icon;
     init_Bres(misc.active_icon);
@@ -5331,6 +5345,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.colorBLMode);
     init_Bres(screen.colorMode);
     init_Bres(screen.colorULMode);
+    init_Bres(screen.italicULMode);
     init_Bres(screen.colorRVMode);
 
     for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
@@ -5539,7 +5554,7 @@ VTInitialize(Widget wrequest,
     if (zIconBeep)
 #endif
 	XtAddEventHandler(my_parent, StructureNotifyMask, False,
-			  HandleStructNotify, (XtPointer) 0);
+			  HandleStructNotify, (Opaque) 0);
 #endif /* HANDLE_STRUCT_NOTIFY */
 
     wnew->screen.bellInProgress = False;
@@ -5611,8 +5626,10 @@ VTRealize(Widget w,
     unsigned width, height;
     TScreen *screen = &term->screen;
     int xpos, ypos, pr;
+    int rc;
     XSizeHints sizehints;
     int scrollbar_width;
+    Atom pid_atom;
 
     TRACE(("VTRealize\n"));
 
@@ -5666,8 +5683,12 @@ VTRealize(Widget w,
     ypos = 1;
     width = 80;
     height = 24;
+
+    TRACE(("parsing geo_metry %s\n", NonNull(term->misc.geo_metry)));
     pr = XParseGeometry(term->misc.geo_metry, &xpos, &ypos,
 			&width, &height);
+    TRACE(("... position %d,%d size %dx%d\n", ypos, xpos, height, width));
+
     set_max_col(screen, (int) (width - 1));	/* units in character cells */
     set_max_row(screen, (int) (height - 1));	/* units in character cells */
     xtermUpdateFontInfo(&term->screen, False);
@@ -5721,20 +5742,34 @@ VTRealize(Widget w,
     else
 	sizehints.flags |= PSize;
 
+    TRACE(("make resize request %dx%d\n", height, width));
     (void) XtMakeResizeRequest((Widget) term,
 			       (Dimension) width, (Dimension) height,
 			       &term->core.width, &term->core.height);
+    TRACE(("...made resize request %dx%d\n", term->core.height, term->core.width));
 
     /* XXX This is bogus.  We are parsing geometries too late.  This
      * is information that the shell widget ought to have before we get
      * realized, so that it can do the right thing.
      */
     if (sizehints.flags & USPosition)
-	XMoveWindow(XtDisplay(term), XtWindow(XtParent(term)),
-		    sizehints.x, sizehints.y);
+	XMoveWindow(XtDisplay(term), VShellWindow, sizehints.x, sizehints.y);
 
-    XSetWMNormalHints(XtDisplay(term), XtWindow(XtParent(term)),
-		      &sizehints);
+    XSetWMNormalHints(XtDisplay(term), VShellWindow, &sizehints);
+
+    /*
+     * _NET_WM_PID must only be set if WM_CLIENT_MACHINE is set.
+     */
+    if (XInternAtom(XtDisplay(term), "WM_CLIENT_MACHINE", True) != None
+	&& (pid_atom = XInternAtom(XtDisplay(term), "_NET_WM_PID", False))
+	!= None) {
+	unsigned long pid_l = (unsigned long) getpid();
+	TRACE(("Setting _NET_WM_PID property to %lu\n", pid_l));
+	rc = XChangeProperty(XtDisplay(term), VShellWindow,
+			     pid_atom, XA_CARDINAL, 32, PropModeReplace,
+			     (unsigned char *) &pid_l, 1);
+    }
+
     XFlush(XtDisplay(term));	/* get it out to window manager */
 
     /* use ForgetGravity instead of SouthWestGravity because translating

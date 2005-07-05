@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.181 2005/04/22 00:21:53 tom Exp $ */
+/* $XTermId: button.c,v 1.190 2005/06/28 20:12:47 tom Exp $ */
 
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
@@ -1174,12 +1174,17 @@ CutBuffer(unsigned code)
     return cutbuffer;
 }
 
-static void
-_GetSelection(Widget w,
-	      Time ev_time,
-	      String * params,	/* selections in precedence order */
-	      Cardinal num_params,
-	      Atom * targets)
+#define ResetPaste64() term->screen.base64_paste = 0
+
+#if !OPT_PASTE64
+static
+#endif
+void
+xtermGetSelection(Widget w,
+		  Time ev_time,
+		  String * params,	/* selections in precedence order */
+		  Cardinal num_params,
+		  Atom * targets)
 {
     Atom selection;
     int cutbuffer;
@@ -1189,7 +1194,7 @@ _GetSelection(Widget w,
 	return;
 
 #if OPT_TRACE
-    TRACE(("_GetSelection\n"));
+    TRACE(("xtermGetSelection\n"));
     if (num_params > 0) {
 	Cardinal n;
 	for (n = 0; n < num_params; ++n) {
@@ -1212,11 +1217,16 @@ _GetSelection(Widget w,
 	/* 'line' is freed in SelectionReceived */
 	line = XFetchBuffer(XtDisplay(w), &inbytes, cutbuffer);
 	nbytes = (unsigned long) inbytes;
+
 	if (nbytes > 0)
 	    SelectionReceived(w, NULL, &selection, &type, (XtPointer) line,
 			      &nbytes, &fmt8);
 	else if (num_params > 1)
-	    _GetSelection(w, ev_time, params + 1, num_params - 1, NULL);
+	    xtermGetSelection(w, ev_time, params + 1, num_params - 1, NULL);
+#if OPT_PASTE64
+	else
+	    ResetPaste64();
+#endif
 	return;
     } else {
 	struct _SelectionList *list;
@@ -1266,9 +1276,15 @@ GettingSelection(Display * dpy, Atom type, Char * line, unsigned long len)
 
     name = XGetAtomName(dpy, type);
 
-    Trace("Getting %s (%ld)\n", name, (long int) type);
-    for (cp = line; cp < line + len; cp++)
-	Trace("%c\n", *cp);
+    TRACE(("Getting %s (%ld)\n", name, (long int) type));
+    for (cp = line; cp < line + len; cp++) {
+	TRACE(("[%d:%lu]", cp + 1 - line, len));
+	if (isprint(*cp)) {
+	    TRACE(("%c\n", *cp));
+	} else {
+	    TRACE(("\\x%02x\n", *cp));
+	}
+    }
 }
 #else
 #define GettingSelection(dpy,type,line,len)	/* nothing */
@@ -1280,9 +1296,80 @@ GettingSelection(Display * dpy, Atom type, Char * line, unsigned long len)
 #  define tty_vwrite(pty,lag,l)		v_write(pty,lag,l)
 #endif /* defined VMS */
 
+#if OPT_PASTE64
+/* Return base64 code character given 6-bit number */
+static const char base64_code[] = "\
+ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+abcdefghijklmnopqrstuvwxyz\
+0123456789+/";
+static void
+base64_flush(TScreen * screen)
+{
+    Char x;
+    switch (screen->base64_count) {
+    case 0:
+	break;
+    case 2:
+	x = base64_code[screen->base64_accu << 4];
+	tty_vwrite(screen->respond, &x, 1);
+	break;
+    case 4:
+	x = base64_code[screen->base64_accu << 2];
+	tty_vwrite(screen->respond, &x, 1);
+	break;
+    }
+    if (screen->base64_pad & 3)
+	tty_vwrite(screen->respond, "===", 4 - (screen->base64_pad & 3));
+    screen->base64_count = 0;
+    screen->base64_accu = 0;
+    screen->base64_pad = 0;
+}
+#endif /* OPT_PASTE64 */
+
 static void
 _qWriteSelectionData(TScreen * screen, Char * lag, unsigned length)
 {
+#if OPT_PASTE64
+    if (screen->base64_paste) {
+	/* Send data as base64 */
+	Char *p = lag;
+	Char buf[64];
+	unsigned x = 0;
+	while (length--) {
+	    switch (screen->base64_count) {
+	    case 0:
+		buf[x++] = base64_code[*p >> 2];
+		screen->base64_accu = (*p & 0x3);
+		screen->base64_count = 2;
+		++p;
+		break;
+	    case 2:
+		buf[x++] = base64_code[(screen->base64_accu << 4) + (*p >> 4)];
+		screen->base64_accu = (*p & 0xF);
+		screen->base64_count = 4;
+		++p;
+		break;
+	    case 4:
+		buf[x++] = base64_code[(screen->base64_accu << 2) + (*p >> 6)];
+		buf[x++] = base64_code[*p & 0x3F];
+		screen->base64_accu = 0;
+		screen->base64_count = 0;
+		++p;
+		break;
+	    }
+	    if (x >= 63) {
+		/* Write 63 or 64 characters */
+		screen->base64_pad += x;
+		tty_vwrite(screen->respond, buf, x);
+		x = 0;
+	    }
+	}
+	if (x != 0) {
+	    screen->base64_pad += x;
+	    tty_vwrite(screen->respond, buf, x);
+	}
+    } else
+#endif /* OPT_PASTE64 */
 #if OPT_READLINE
     if (SCREEN_FLAG(screen, paste_quotes)) {
 	while (length--) {
@@ -1301,7 +1388,7 @@ _WriteSelectionData(TScreen * screen, Char * line, int length)
     /* Doing this one line at a time may no longer be necessary
        because v_write has been re-written. */
 
-    Char *lag, *cp, *end;
+    Char *lag, *end;
 
     /* in the VMS version, if tt_pasting isn't set to True then qio
        reads aren't blocked and an infinite loop is entered, where the
@@ -1313,17 +1400,28 @@ _WriteSelectionData(TScreen * screen, Char * line, int length)
 
     end = &line[length];
     lag = line;
-    if (!SCREEN_FLAG(screen, paste_literal_nl)) {
-	for (cp = line; cp != end; cp++) {
-	    if (*cp == '\n') {
-		*cp = '\r';
-		_qWriteSelectionData(screen, lag, (unsigned) (cp - lag + 1));
-		lag = cp + 1;
+
+#if OPT_PASTE64
+    if (screen->base64_paste) {
+	_qWriteSelectionData(screen, lag, (unsigned) (end - lag));
+	base64_flush(screen);
+    } else
+#endif
+    {
+	if (!SCREEN_FLAG(screen, paste_literal_nl)) {
+	    Char *cp;
+	    for (cp = line; cp != end; cp++) {
+		if (*cp == '\n') {
+		    *cp = '\r';
+		    _qWriteSelectionData(screen, lag, (unsigned) (cp - lag + 1));
+		    lag = cp + 1;
+		}
 	    }
 	}
-    }
-    if (lag != end) {
-	_qWriteSelectionData(screen, lag, (unsigned) (end - lag));
+
+	if (lag != end) {
+	    _qWriteSelectionData(screen, lag, (unsigned) (end - lag));
+	}
     }
 #ifdef VMS
     tt_pasting = False;
@@ -1434,17 +1532,29 @@ SelectionReceived(Widget w,
     if (text_list != NULL && text_list_count != 0) {
 	int i;
 
+#if OPT_PASTE64
+	if (screen->base64_paste) {
+	    ;
+	} else
+#endif
 #if OPT_READLINE
-	if (SCREEN_FLAG(screen, paste_brackets))
+	if (SCREEN_FLAG(screen, paste_brackets)) {
 	    _WriteKey(screen, "200");
+	}
 #endif
 	for (i = 0; i < text_list_count; i++) {
 	    int len = strlen(text_list[i]);
 	    _WriteSelectionData(screen, (Char *) text_list[i], len);
 	}
+#if OPT_PASTE64
+	if (screen->base64_paste) {
+	    ResetPaste64();
+	} else
+#endif
 #if OPT_READLINE
-	if (SCREEN_FLAG(screen, paste_brackets))
+	if (SCREEN_FLAG(screen, paste_brackets)) {
 	    _WriteKey(screen, "201");
+	}
 #endif
 	XFreeStringList(text_list);
     } else
@@ -1458,9 +1568,13 @@ SelectionReceived(Widget w,
   fail:
     if (client_data != 0) {
 	struct _SelectionList *list = (struct _SelectionList *) client_data;
-	_GetSelection(w, list->time,
-		      list->params, list->count, list->targets);
+	xtermGetSelection(w, list->time,
+			  list->params, list->count, list->targets);
 	XtFree((char *) client_data);
+#if OPT_PASTE64
+    } else {
+	ResetPaste64();
+#endif
     }
     return;
 }
@@ -1489,7 +1603,7 @@ HandleInsertSelection(Widget w,
 	ReadLineMovePoint(eventColBetween(event), ldelta);
 #endif /* OPT_READLINE */
 
-    _GetSelection(w, event->xbutton.time, params, *num_params, NULL);
+    xtermGetSelection(w, event->xbutton.time, params, *num_params, NULL);
 }
 
 static SelectUnit
@@ -2452,6 +2566,104 @@ SaltTextAway(int crow, int ccol, int row, int col,
     _OwnSelection(term, params, num_params);
 }
 
+#if OPT_PASTE64
+void
+ClearSelectionBuffer()
+{
+    TScreen *screen = &term->screen;
+    screen->selection_length = 0;
+    screen->base64_count = 0;
+}
+
+static void
+AppendStrToSelectionBuffer(Char * text, int len)
+{
+    TScreen *screen = &term->screen;
+    if (len != 0) {
+	int j = screen->selection_length + len;		/* New length */
+	int k = j + (j >> 2) + 80;	/* New size if we grow buffer: grow by ~50% */
+	if (j + 1 >= screen->selection_size) {
+	    if (!screen->selection_length) {
+		/* New buffer */
+		Char *line;
+		if ((line = (Char *) malloc((unsigned) k)) == 0)
+		    SysError(ERROR_BMALLOC2);
+		XtFree((char *) screen->selection_data);
+		screen->selection_data = line;
+	    } else {
+		/* Realloc buffer */
+		screen->selection_data = (Char *)
+		    realloc(screen->selection_data,
+			    (unsigned) k);
+		if (screen->selection_data == 0)
+		    SysError(ERROR_BMALLOC2);
+	    }
+	    screen->selection_size = k;
+	}
+	memcpy(screen->selection_data + screen->selection_length, text, len);
+	screen->selection_length += len;
+	screen->selection_data[screen->selection_length] = 0;
+    }
+}
+
+void
+AppendToSelectionBuffer(TScreen * screen, unsigned c)
+{
+    int six;
+    Char ch;
+
+    /* Decode base64 character */
+    if (c >= 'A' && c <= 'Z')
+	six = c - 'A';
+    else if (c >= 'a' && c <= 'z')
+	six = c - 'a' + 26;
+    else if (c >= '0' && c <= '9')
+	six = c - '0' + 52;
+    else if (c == '+')
+	six = 62;
+    else if (c == '/')
+	six = 63;
+    else
+	return;
+
+    /* Accumulate bytes */
+    switch (screen->base64_count) {
+    case 0:
+	screen->base64_accu = six;
+	screen->base64_count = 6;
+	break;
+
+    case 2:
+	ch = (screen->base64_accu << 6) + six;
+	screen->base64_count = 0;
+	AppendStrToSelectionBuffer(&ch, 1);
+	break;
+
+    case 4:
+	ch = (screen->base64_accu << 4) + (six >> 2);
+	screen->base64_accu = (six & 0x3);
+	screen->base64_count = 2;
+	AppendStrToSelectionBuffer(&ch, 1);
+	break;
+
+    case 6:
+	ch = (screen->base64_accu << 2) + (six >> 4);
+	screen->base64_accu = (six & 0xF);
+	screen->base64_count = 4;
+	AppendStrToSelectionBuffer(&ch, 1);
+	break;
+    }
+}
+
+void
+CompleteSelection(char **args, Cardinal len)
+{
+    term->screen.base64_count = 0;
+    term->screen.base64_accu = 0;
+    _OwnSelection(term, args, len);
+}
+#endif /* OPT_PASTE64 */
+
 static Bool
 _ConvertSelectionHelper(Widget w,
 			Atom * type, XtPointer *value,
@@ -2884,6 +3096,18 @@ SaveText(TScreen * screen,
 
     return (result);
 }
+
+/* 32 + following 7-bit word:
+
+   1:0  Button no: 0, 1, 2.  3=release.
+     2  shift
+     3  meta
+     4  ctrl
+     5  set for motion notify
+     6  set for wheel
+*/
+
+/* Position: 32 - 255. */
 
 static int
 BtnCode(XButtonEvent * event, int button)

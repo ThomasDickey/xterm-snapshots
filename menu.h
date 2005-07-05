@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.88 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: menu.h,v 1.89 2005/07/04 23:02:20 tom Exp $ */
 
 /* $Xorg: menu.h,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -128,7 +128,7 @@ extern void DoSecureKeyboard (Time tp);
 extern void SetupMenus (Widget shell, Widget *forms, Widget *menus);
 
 #if OPT_TOOLBAR
-extern void SetupToolbar(Widget);
+extern void SetupToolbar(void);
 extern void ShowToolbar(Bool);
 #endif
 

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.230 2005/05/03 00:38:24 tom Exp $ */
+/* $XTermId: util.c,v 1.232 2005/07/05 00:15:46 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
@@ -1714,9 +1714,15 @@ xtermXftDrawString(TScreen * screen,
     if (len == 0 || !(*text || *text2)) {
 	return;
     }
-
-    if ((flags & BOLDATTR(screen))
-	&& screen->renderFontBold[fontnum]) {
+#if OPT_ISO_COLORS
+    if ((flags & UNDERLINE)
+	&& screen->italicULMode
+	&& screen->renderWideItal[fontnum]) {
+	wfont = screen->renderWideItal[fontnum];
+    } else
+#endif
+	if ((flags & BOLDATTR(screen))
+	    && screen->renderWideBold[fontnum]) {
 	wfont = screen->renderWideBold[fontnum];
     } else {
 	wfont = screen->renderWideNorm[fontnum];
@@ -1884,6 +1890,7 @@ drawXtermText(TScreen * screen,
     /* Intended width of the font to draw (as opposed to the actual width of
        the X font, and the width of the default font) */
     int font_width = ((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
+    Bool did_ul = False;
 
 #if OPT_WIDE_CHARS
     /*
@@ -2048,11 +2055,20 @@ drawXtermText(TScreen * screen,
 	    screen->renderDraw = XftDrawCreate(dpy, draw, visual,
 					       DefaultColormap(dpy, scr));
 	}
-	if ((flags & BOLDATTR(screen))
-	    && screen->renderFontBold[fontnum])
+#if OPT_ISO_COLORS
+	if ((flags & UNDERLINE)
+	    && screen->italicULMode
+	    && screen->renderFontItal[fontnum]) {
+	    font = screen->renderFontItal[fontnum];
+	    did_ul = True;
+	} else
+#endif
+	    if ((flags & BOLDATTR(screen))
+		&& screen->renderFontBold[fontnum]) {
 	    font = screen->renderFontBold[fontnum];
-	else
+	} else {
 	    font = screen->renderFontNorm[fontnum];
+	}
 	XGetGCValues(dpy, gc, GCForeground | GCBackground, &values);
 	if (!(flags & NOBACKGROUND))
 	    XftDrawRect(screen->renderDraw,
@@ -2136,7 +2152,7 @@ drawXtermText(TScreen * screen,
 			       (int) len, FontWidth(screen), NULL);
 	}
 
-	if ((flags & UNDERLINE) && screen->underline) {
+	if ((flags & UNDERLINE) && screen->underline && !did_ul) {
 	    if (FontDescent(screen) > 1)
 		y++;
 	    XDrawLine(screen->display, VWindow(screen), gc,
@@ -2388,7 +2404,7 @@ drawXtermText(TScreen * screen,
 	}
     }
 
-    if ((flags & UNDERLINE) && screen->underline) {
+    if ((flags & UNDERLINE) && screen->underline && !did_ul) {
 	if (FontDescent(screen) > 1)
 	    y++;
 	XDrawLine(screen->display, VWindow(screen), gc,

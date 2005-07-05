@@ -1,4 +1,4 @@
-/* $XTermId: VTparse.h,v 1.33 2004/12/01 01:27:46 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.35 2005/06/23 21:29:07 tom Exp $ */
 
 /*
  *	$Xorg: VTparse.h,v 1.3 2000/08/17 19:55:08 cpqbld Exp $

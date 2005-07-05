@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.443 2005/05/03 00:38:24 tom Exp $ */
+/* $XTermId: main.c,v 1.454 2005/07/04 23:02:41 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -223,7 +223,7 @@ static Bool IsPts = False;
 #define USE_SYSV_SIGNALS
 #define	USE_SYSV_PGRP
 
-#if !defined(TIOCSWINSZ)
+#if !defined(TIOCSWINSZ) || defined(__SCO__) || defined(__UNIXWARE__)
 #define USE_SYSV_ENVVARS	/* COLUMNS/LINES vs. TERMCAP */
 #endif
 
@@ -282,7 +282,7 @@ ttyslot()
 
 #else
 
-#ifdef __INTERIX
+#if defined(__INTERIX) || defined(__APPLE__) 
 #define setpgrp setpgid
 #endif
 
@@ -375,7 +375,7 @@ extern struct utmp *getutid __((struct utmp * _Id));
 #include <local/openpty.h>
 #endif /* PUCC_PTYD */
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__NetBSD__)
 #include <util.h>
 #endif
 
@@ -417,6 +417,11 @@ extern struct utmp *getutid __((struct utmp * _Id));
 
 #ifdef SIGTSTP
 #include <sys/wait.h>
+#endif
+
+#if defined(__SCO__) || defined(__UNIXWARE__)
+#undef ECHOKE
+#undef ECHOCTL
 #endif
 
 #ifdef X_NOT_POSIX
@@ -737,8 +742,8 @@ static XtResource application_resources[] =
     Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, False),
     Bres("utmpDisplayId", "UtmpDisplayId", utmpDisplayId, True),
     Bres("messages", "Messages", messages, True),
-    Ires("minBufSize", "MinBufSize", minBufSize, 128),
-    Ires("maxBufSize", "MaxBufSize", maxBufSize, 4096),
+    Ires("minBufSize", "MinBufSize", minBufSize, 4096),
+    Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
     Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #if OPT_SUNPC_KBD
@@ -922,6 +927,8 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
+{"-ulit",       "*italicULMode", XrmoptionNoArg,        (caddr_t) "off"},
+{"+ulit",       "*italicULMode", XrmoptionNoArg,        (caddr_t) "on"},
 {"-ut",		"*utmpInhibit",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+ut",		"*utmpInhibit",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-im",		"*useInsertMode", XrmoptionNoArg,	(caddr_t) "on"},
@@ -1087,6 +1094,7 @@ static OptionHelp xtermOptions[] = {
 { "-lcc path",             "filename of locale converter (" DEFLOCALEFILTER ")" },
 #endif
 { "-/+ulc",                "turn off/on display of underline as color" },
+{ "-/+ulit",               "turn off/on display of underline as italics" },
 #ifdef HAVE_UTMP
 { "-/+ut",                 "turn on/off utmp support" },
 #else
@@ -1444,7 +1452,7 @@ ParseSccn(char *option)
     Bool code = False;
 
     if (leaf != option) {
-	if (leaf - option > 1
+	if (leaf - option > 0
 	    && isdigit(CharOf(*leaf))
 	    && sscanf(leaf, "%d", &am_slave) == 1) {
 	    size_t len = leaf - option - 1;
@@ -1483,22 +1491,51 @@ ParseSccn(char *option)
 static char *
 my_utmp_id(char *device)
 {
-    static char result[PTYCHARLEN + 4];
+    typedef struct UTMP_STR UTMP_STRUCT;
+#define	UTIDSIZE	(sizeof(((UTMP_STRUCT *)NULL)->ut_id))
+    static char result[UTIDSIZE + 1];
+
+#if defined(__SCO__) || defined(__UNIXWARE__)
+    /*
+     * Legend does not support old-style pty's, has no related compatibility
+     * issues, and can use the available space in ut_id differently from the
+     * default convention.
+     *
+     * This scheme is intended to avoid conflicts both with other users of
+     * utmpx as well as between multiple xterms.  First, Legend uses all of the
+     * characters of ut_id, and adds no terminating NUL is required (the
+     * default scheme may add a trailing NUL).  Second, all xterm entries will
+     * start with the letter 'x' followed by three digits, which will be the
+     * last three digits of the device name, regardless of the format of the
+     * device name, with leading 0's added where necessary.  For instance, an
+     * xterm on /dev/pts/3 will have a ut_id of x003; an xterm on /dev/pts123
+     * will have a ut_id of x123.  Under the other convention, /dev/pts/3 would
+     * have a ut_id of p3 and /dev/pts123 would have a ut_id of p123.
+     */
+    int len, n;
+
+    len = strlen(device);
+    n = UTIDSIZE;
+    result[n] = '\0';
+    while ((n > 0) && (len > 0) && isdigit(device[len - 1]))
+	result[--n] = device[--len];
+    while (n > 0)
+	result[--n] = '0';
+    result[0] = 'x';
+#else
     char *name = my_pty_name(device);
     char *leaf = x_basename(name);
+    size_t len = strlen(leaf);
 
-    if (name == leaf) {		/* no '/' in the name */
-	int len = strlen(leaf);
-	if (PTYCHARLEN < len)
-	    leaf = leaf + (len - PTYCHARLEN);
-	strcpy(result, leaf);
-    } else {
-	sprintf(result, "p%s", leaf);
-    }
+    if ((UTIDSIZE - 1) < len)
+	leaf = leaf + (len - (UTIDSIZE - 1));
+    sprintf(result, "p%s", leaf);
+#endif
+
     TRACE(("my_utmp_id (%s) -> '%s'\n", device, result));
     return result;
 }
-#endif
+#endif /* USE_SYSV_UTMP */
 
 #ifdef USE_POSIX_SIGNALS
 
@@ -1976,7 +2013,8 @@ main(int argc, char *argv[]ENVP_ARG)
 	if (**argv != '-') {
 	    if (argc > 1)
 		Syntax(*argv);
-	    explicit_shname = xtermFindShell(*argv);
+	    if (command_to_exec == 0)	/* if no "-e" option */
+		explicit_shname = xtermFindShell(*argv, True);
 	    continue;
 	}
 #endif
@@ -2062,7 +2100,7 @@ main(int argc, char *argv[]ENVP_ARG)
 						 (XtPointer) 0);
     /* this causes the initialize method to be called */
 #if OPT_TOOLBAR
-    SetupToolbar(toplevel);
+    SetupToolbar();
 #endif
 
     decode_keyboard_type(&resource);
@@ -2263,6 +2301,7 @@ main(int argc, char *argv[]ENVP_ARG)
     XSetErrorHandler(xerror);
     XSetIOErrorHandler(xioerror);
 
+    initPtyData(&VTbuffer);
 #ifdef ALLOWLOGGING
     if (term->misc.log_on) {
 	StartLog(screen);
@@ -2281,7 +2320,6 @@ main(int argc, char *argv[]ENVP_ARG)
 			winToEmbedInto, 0, 0);
     }
 
-    initPtyData(&VTbuffer);
     for (;;) {
 #if OPT_TEK4014
 	if (screen->TekEmu)
@@ -2736,6 +2774,12 @@ find_utmp(struct UTMP_STR *tofind)
 	    break;
 	if (!strcmp(result->ut_line, tofind->ut_line))
 	    break;
+	/*
+	 * Solaris, IRIX64 and HPUX manpages say to fill the static area
+	 * pointed to by the return-value to zeros if searching for multiple
+	 * occurrences.  Otherwise it will continue to return the same value.
+	 */
+	memset(result, 0, sizeof(*result));
     }
     return result;
 }
@@ -2743,13 +2787,13 @@ find_utmp(struct UTMP_STR *tofind)
 
 #define close_fd(fd) close(fd), fd = -1
 
-static int
-spawn(void)
 /*
  *  Inits pty and tty and forks a login process.
  *  Does not close fd Xsocket.
  *  If slave, the pty named in passedPty is already open for use
  */
+static int
+spawn(void)
 {
     TScreen *screen = &term->screen;
 #if OPT_PTY_HANDSHAKE
@@ -4131,7 +4175,8 @@ spawn(void)
 	     * to command that the user gave anyway.
 	     */
 	    if (command_to_exec_with_luit) {
-		xtermSetenv("XTERM_SHELL=", xtermFindShell(*command_to_exec_with_luit));
+		xtermSetenv("XTERM_SHELL=",
+			    xtermFindShell(*command_to_exec_with_luit, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
@@ -4142,7 +4187,8 @@ spawn(void)
 	    }
 #endif
 	    if (command_to_exec) {
-		xtermSetenv("XTERM_SHELL=", xtermFindShell(*command_to_exec));
+		xtermSetenv("XTERM_SHELL=",
+			    xtermFindShell(*command_to_exec, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvp(*command_to_exec, command_to_exec);
 		if (command_to_exec[1] == 0)

@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.39 2004/12/01 01:27:46 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.41 2005/06/23 21:28:17 tom Exp $ */
 
 /*
  *	$Xorg: VTPrsTbl.c,v 1.3 2000/08/17 19:55:07 cpqbld Exp $

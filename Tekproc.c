@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.118 2005/04/22 00:21:53 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.123 2005/07/04 23:02:41 tom Exp $ */
 
 /*
  * $Xorg: Tekproc.c,v 1.5 2001/02/09 02:06:02 xorgcvs Exp $
@@ -364,7 +364,7 @@ TekInit(void)
 #endif
 				    (XtPointer) 0);
 #if OPT_TOOLBAR
-	SetupToolbar((Widget) tekWidget);
+	SetupToolbar();
 #endif
     }
     return (!Tfailed);
@@ -1293,21 +1293,20 @@ TekInitialize(Widget request GCC_UNUSED,
      * to care about the shell's border being part of our focus.
      */
     XtAddEventHandler(tekparent, EnterWindowMask, False,
-		      HandleEnterWindow, (caddr_t) 0);
+		      HandleEnterWindow, (Opaque) 0);
     XtAddEventHandler(tekparent, LeaveWindowMask, False,
-		      HandleLeaveWindow, (caddr_t) 0);
+		      HandleLeaveWindow, (Opaque) 0);
     XtAddEventHandler(tekparent, FocusChangeMask, False,
-		      HandleFocusChange, (caddr_t) 0);
+		      HandleFocusChange, (Opaque) 0);
     XtAddEventHandler((Widget) wnew, PropertyChangeMask, False,
 		      HandleBellPropertyChange, (Opaque) 0);
 }
 
 static void
-TekRealize(Widget gw,
+TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
 	   XtValueMask * valuemaskp,
 	   XSetWindowAttributes * values)
 {
-    TekWidget tw = (TekWidget) gw;
     TScreen *screen = &term->screen;
     int i;
     TekLink *tek;
@@ -1326,13 +1325,13 @@ TekRealize(Widget gw,
     term->screen.whichTwin = &term->screen.fullTwin;
 #endif /* NO_ACTIVE_ICON */
 
-    tw->core.border_pixel = term->core.border_pixel;
+    tekWidget->core.border_pixel = term->core.border_pixel;
 
     for (i = 0; i < TEKNUMFONTS; i++) {
-	if (!tw->tek.Tfont[i]) {
-	    tw->tek.Tfont[i] = XQueryFont(screen->display, DefaultGCID);
+	if (!tekWidget->tek.Tfont[i]) {
+	    tekWidget->tek.Tfont[i] = XQueryFont(screen->display, DefaultGCID);
 	}
-	tw->tek.tobaseline[i] = tw->tek.Tfont[i]->ascent;
+	tekWidget->tek.tobaseline[i] = tekWidget->tek.Tfont[i]->ascent;
     }
 
     if (!TekPtyData())
@@ -1357,11 +1356,13 @@ TekRealize(Widget gw,
     width = TEKDEFWIDTH + border;
     height = TEKDEFHEIGHT + border;
 
+    TRACE(("parsing T_geometry %s\n", NonNull(term->misc.T_geometry)));
     pr = XParseGeometry(term->misc.T_geometry,
 			&winX,
 			&winY,
 			(unsigned int *) &width,
 			(unsigned int *) &height);
+    TRACE(("... position %d,%d size %dx%d\n", winY, winX, height, width));
     if ((pr & XValue) && (pr & XNegative))
 	winX += DisplayWidth(screen->display, DefaultScreen(screen->display))
 	    - width - (SHELL_OF(term)->core.border_width * 2);
@@ -1395,6 +1396,7 @@ TekRealize(Widget gw,
 	    break;
 	}
     } else {
+	/* set a default size, but do *not* set position */
 	sizehints.flags |= PSize;
     }
     sizehints.width = width;
@@ -1404,30 +1406,31 @@ TekRealize(Widget gw,
     else
 	sizehints.flags |= PSize;
 
-    (void) XtMakeResizeRequest((Widget) tw, width, height,
-			       &tw->core.width, &tw->core.height);
+    TRACE(("make resize request %dx%d\n", height, width));
+    (void) XtMakeResizeRequest((Widget) tekWidget,
+			       width, height,
+			       &tekWidget->core.width, &tekWidget->core.height);
+    TRACE(("...made resize request %dx%d\n", tekWidget->core.height, tekWidget->core.width));
 
     /* XXX This is bogus.  We are parsing geometries too late.  This
      * is information that the shell widget ought to have before we get
      * realized, so that it can do the right thing.
      */
     if (sizehints.flags & USPosition)
-	XMoveWindow(XtDisplay(tw), XtWindow(SHELL_OF(tw)),
-		    sizehints.x, sizehints.y);
+	XMoveWindow(XtDisplay(tekWidget), TShellWindow, sizehints.x, sizehints.y);
 
-    XSetWMNormalHints(XtDisplay(tw), XtWindow(SHELL_OF(tw)),
-		      &sizehints);
-    XFlush(XtDisplay(tw));	/* get it out to window manager */
+    XSetWMNormalHints(XtDisplay(tekWidget), TShellWindow, &sizehints);
+    XFlush(XtDisplay(tekWidget));	/* get it out to window manager */
 
     values->win_gravity = NorthWestGravity;
     values->background_pixel = T_COLOR(screen, TEK_BG);
 
-    XtWindow(tw) = TWindow(screen) =
+    XtWindow(tekWidget) = TWindow(screen) =
 	XCreateWindow(screen->display,
-		      XtWindow(SHELL_OF(tw)),
-		      tw->core.x, tw->core.y,
-		      tw->core.width, tw->core.height, tw->core.border_width,
-		      (int) tw->core.depth,
+		      XtWindow(SHELL_OF(tekWidget)),
+		      tekWidget->core.x, tekWidget->core.y,
+		      tekWidget->core.width, tekWidget->core.height, tekWidget->core.border_width,
+		      (int) tekWidget->core.depth,
 		      InputOutput, CopyFromParent,
 		      ((*valuemaskp) | CWBackPixel | CWWinGravity),
 		      values);
@@ -1442,8 +1445,8 @@ TekRealize(Widget gw,
 	TekScale(screen) = d;
 
     screen->cur.fontsize = TEK_FONT_LARGE;
-    if (tw->tek.initial_font) {
-	char *s = tw->tek.initial_font;
+    if (tekWidget->tek.initial_font) {
+	char *s = tekWidget->tek.initial_font;
 
 	if (XmuCompareISOLatin1(s, "large") == 0)
 	    screen->cur.fontsize = TEK_FONT_LARGE;
@@ -1456,7 +1459,7 @@ TekRealize(Widget gw,
 	else if (XmuCompareISOLatin1(s, "small") == 0)
 	    screen->cur.fontsize = TEK_FONT_SMALL;
     }
-#define TestGIN(s) XmuCompareISOLatin1(tw->tek.gin_terminator_str, s)
+#define TestGIN(s) XmuCompareISOLatin1(tekWidget->tek.gin_terminator_str, s)
 
     if (TestGIN(GIN_TERM_NONE_STR) == 0)
 	screen->gin_terminator = GIN_TERM_NONE;
@@ -1466,10 +1469,10 @@ TekRealize(Widget gw,
 	screen->gin_terminator = GIN_TERM_EOT;
     else
 	fprintf(stderr, "%s: illegal GIN terminator setting \"%s\"\n",
-		xterm_name, tw->tek.gin_terminator_str);
+		xterm_name, tekWidget->tek.gin_terminator_str);
 
     gcv.graphics_exposures = True;	/* default */
-    gcv.font = tw->tek.Tfont[screen->cur.fontsize]->fid;
+    gcv.font = tekWidget->tek.Tfont[screen->cur.fontsize]->fid;
     gcv.foreground = T_COLOR(screen, TEK_FG);
     gcv.background = T_COLOR(screen, TEK_BG);
 
@@ -1517,7 +1520,7 @@ TekRealize(Widget gw,
 
 	args[0].value = (XtArgVal) & icon_name;
 	args[1].value = (XtArgVal) & title;
-	XtGetValues(SHELL_OF(tw), args, 2);
+	XtGetValues(SHELL_OF(tekWidget), args, 2);
 	tek_icon_name = XtMalloc(strlen(icon_name) + 7);
 	strcpy(tek_icon_name, icon_name);
 	strcat(tek_icon_name, "(Tek)");
@@ -1526,7 +1529,7 @@ TekRealize(Widget gw,
 	strcat(tek_title, "(Tek)");
 	args[0].value = (XtArgVal) tek_icon_name;
 	args[1].value = (XtArgVal) tek_title;
-	XtSetValues(SHELL_OF(tw), args, 2);
+	XtSetValues(SHELL_OF(tekWidget), args, 2);
 	XtFree(tek_icon_name);
 	XtFree(tek_title);
     }

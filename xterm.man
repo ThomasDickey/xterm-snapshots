@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.305 2005/05/03 00:38:25 tom Exp $
+.\" $XTermId: xterm.man,v 1.308 2005/07/04 15:49:15 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -609,7 +609,7 @@ functionality for other applications that need to start text-mode
 programs in a window, and if \fBloginShell\fP were not ignored, the
 result of ~/.profile might interfere with that.
 .IP
-If you do want the effect of \fB-ls\fP and \fB-a\fP simultaneously, you
+If you do want the effect of \fB-ls\fP and \fB-e\fP simultaneously, you
 may get away with something like
 .RS 15
 xterm -e /bin/bash -l -c "my command here"
@@ -1097,7 +1097,7 @@ this resource is simpler to use.
 .TP 8
 .B "maxBufSize (\fPclass\fB MaxBufSize)"
 Specify the maximum size of the input buffer.
-The default is 4096.
+The default is 32768.
 You cannot set this to a value less than the \fBminBufSize\fR resource.
 It will be increased as needed to make that value evenly divide this one.
 .IP
@@ -1115,7 +1115,7 @@ The default is ``true''.
 .B "minBufSize (\fPclass\fB MinBufSize)"
 Specify the minimum size of the input buffer, i.e., the amount of data
 that \fIxterm\fR requests on each read.
-The default is 128.
+The default is 4096.
 You cannot set this to a value less than 64.
 .TP 8
 .B "ptyHandshake (\fPclass\fB PtyHandshake)
@@ -1857,6 +1857,10 @@ The default is "nil2".
 .B "internalBorder (\fPclass\fB BorderWidth)"
 Specifies the number of pixels between the characters and the window border.
 The default is 2.
+.TP 8
+.B "italicULMode (\fPclass\fB ColorAttrMode)"
+Specifies whether characters with the underline attribute should be displayed
+in an italic font or as underlined characters.
 .TP 8
 .B "jumpScroll (\fPclass\fB JumpScroll)"
 Specifies whether or not jump scroll should be used.
