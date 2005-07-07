@@ -1,11 +1,11 @@
-/* $XTermId: Tekproc.c,v 1.123 2005/07/04 23:02:41 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.124 2005/07/07 00:46:13 tom Exp $ */
 
 /*
  * $Xorg: Tekproc.c,v 1.5 2001/02/09 02:06:02 xorgcvs Exp $
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.52 2005/04/22 00:21:53 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.53 2005/07/07 00:46:13 dickey Exp $ */
 
 /*
 

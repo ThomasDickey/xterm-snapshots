@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.164 2005/07/04 23:02:41 tom Exp $ */
+/* $XTermId: menu.c,v 1.165 2005/07/07 00:46:14 tom Exp $ */
 
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -47,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.59 2005/04/22 00:21:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.60 2005/07/07 00:46:14 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>

@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.186 2005/06/21 00:30:32 tom Exp $
+dnl $XTermId: configure.in,v 1.187 2005/07/07 00:46:14 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.69 2005/04/22 00:21:53 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.70 2005/07/07 00:46:14 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl

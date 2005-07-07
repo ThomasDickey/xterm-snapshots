@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.339 2005/07/04 17:24:31 tom Exp $ */
+/* $XTermId: xterm.h,v 1.340 2005/07/07 00:46:15 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.105 2005/04/22 00:21:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.106 2005/07/07 00:46:15 dickey Exp $ */
 
 /************************************************************
 

@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.150 2005/07/06 20:38:13 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.151 2005/07/07 00:46:14 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.51 2005/05/03 00:38:24 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.52 2005/07/07 00:46:14 dickey Exp $
  */
 
 /************************************************************
