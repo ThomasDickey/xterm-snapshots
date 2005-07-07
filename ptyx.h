@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.371 2005/07/04 19:45:03 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.372 2005/07/05 23:34:51 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -1942,6 +1942,12 @@ typedef struct _TekWidgetRec {
 #define TFullWidth(screen)	WhichTWin(screen)->fullwidth
 #define TFullHeight(screen)	WhichTWin(screen)->fullheight
 #define TekScale(screen)	WhichTWin(screen)->tekscale
+
+#if OPT_TOOLBAR
+#define ToolbarHeight(w) ((resource.toolBar) ? term->VT100_TB_INFO(menu_height) : 0)
+#else
+#define ToolbarHeight(w) 0
+#endif
 
 #if OPT_TEK4014
 #define TEK_LINK_BLOCK_SIZE 1024

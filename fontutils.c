@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.149 2005/07/04 15:28:46 Chuck.Blake Exp $ */
+/* $XTermId: fontutils.c,v 1.150 2005/07/06 20:38:13 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.51 2005/05/03 00:38:24 dickey Exp $
@@ -1445,6 +1445,7 @@ xtermSaveFontInfo(TScreen * screen, XFontStruct * font)
 {
     screen->fnt_wide = (font->max_bounds.width);
     screen->fnt_high = (font->ascent + font->descent);
+    TRACE(("xtermSaveFontInfo %dx%d\n", screen->fnt_high, screen->fnt_wide));
 }
 
 /*
@@ -1467,10 +1468,12 @@ xtermUpdateFontInfo(TScreen * screen, Bool doresize)
 	if (VWindow(screen)) {
 	    XClearWindow(screen->display, VWindow(screen));
 	}
+	TRACE(("xtermUpdateFontInfo {{\n"));
 	DoResizeScreen(term);	/* set to the new natural size */
 	if (screen->scrollWidget)
 	    ResizeScrollBar(screen);
 	Redraw();
+	TRACE(("... }} xtermUpdateFontInfo\n"));
     }
     xtermSetCursorBox(screen);
 }
