@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.454 2005/07/04 23:02:41 tom Exp $ */
+/* $XTermId: main.c,v 1.455 2005/07/07 00:46:14 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.193 2005/05/03 00:38:24 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.194 2005/07/07 00:46:14 dickey Exp $ */
 
 /* main.c */
 

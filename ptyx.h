@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.373 2005/07/06 23:52:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.374 2005/07/07 00:46:14 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.122 2005/04/22 00:21:54 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.123 2005/07/07 00:46:14 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey

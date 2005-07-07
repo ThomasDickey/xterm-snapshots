@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.588 2005/07/06 23:54:57 tom Exp $ */
+/* $XTermId: charproc.c,v 1.590 2005/07/07 00:46:13 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.170 2005/05/03 00:38:24 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.172 2005/07/07 00:46:13 dickey Exp $ */
 
 /*
 
@@ -3100,9 +3100,13 @@ in_put(void)
 		    sched_yield();
 		} else
 		    break;
-	    } else
-#endif
+	    } else {
 		break;
+	    }
+#else
+	    (void) size;	/* unused in this branch */
+	    break;
+#endif
 	}
 	/* update the screen */
 	if (screen->scroll_amt)

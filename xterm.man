@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.308 2005/07/04 15:49:15 tom Exp $
+.\" $XTermId: xterm.man,v 1.309 2005/07/07 00:46:15 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.114 2005/05/03 00:38:25 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.115 2005/07/07 00:46:15 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .TH XTERM 1 __vendorversion__

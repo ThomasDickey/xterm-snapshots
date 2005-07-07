@@ -1,6 +1,6 @@
-dnl $XTermId: aclocal.m4,v 1.193 2005/06/21 00:50:24 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.194 2005/07/07 00:46:13 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.57 2005/04/22 00:21:53 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.58 2005/07/07 00:46:13 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl

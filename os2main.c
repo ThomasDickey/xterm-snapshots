@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.203 2005/07/04 23:02:41 tom Exp $ */
+/* $XTermId: os2main.c,v 1.204 2005/07/07 00:46:14 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.77 2005/05/03 00:38:24 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.78 2005/07/07 00:46:14 dickey Exp $ */
 
 /***********************************************************
 

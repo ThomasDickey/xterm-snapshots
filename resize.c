@@ -1,10 +1,10 @@
-/* $XTermId: resize.c,v 1.93 2005/07/04 17:24:31 tom Exp $ */
+/* $XTermId: resize.c,v 1.94 2005/07/07 00:46:14 tom Exp $ */
 
 /*
  *	$Xorg: resize.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/resize.c,v 3.58 2004/12/01 01:27:47 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/resize.c,v 3.59 2005/07/07 00:46:14 dickey Exp $ */
 
 /*
  * Copyright 2003,2004 by Thomas E. Dickey

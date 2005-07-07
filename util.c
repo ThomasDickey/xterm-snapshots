@@ -1,10 +1,10 @@
-/* $XTermId: util.c,v 1.232 2005/07/05 00:15:46 tom Exp $ */
+/* $XTermId: util.c,v 1.233 2005/07/07 00:46:14 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.90 2005/05/03 00:38:24 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.91 2005/07/07 00:46:14 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey

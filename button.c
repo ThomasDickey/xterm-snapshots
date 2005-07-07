@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.190 2005/06/28 20:12:47 tom Exp $ */
+/* $XTermId: button.c,v 1.191 2005/07/07 00:46:13 tom Exp $ */
 
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
@@ -52,7 +52,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.79 2005/04/22 00:21:53 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.80 2005/07/07 00:46:13 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
