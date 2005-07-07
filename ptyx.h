@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.372 2005/07/05 23:34:51 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.373 2005/07/06 23:52:59 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -1239,7 +1239,7 @@ typedef struct {
 	Boolean		boldColors;	/* can we make bold colors?	*/
 	Boolean		colorMode;	/* are we using color mode?	*/
 	Boolean		colorULMode;	/* use color for underline?	*/
-        Boolean         italicULMode;   /* italic font for underline?   */
+	Boolean		italicULMode;	/* italic font for underline?	*/
 	Boolean		colorBDMode;	/* use color for bold?		*/
 	Boolean		colorBLMode;	/* use color for blink?		*/
 	Boolean		colorRVMode;	/* use color for reverse?	*/
@@ -1539,10 +1539,10 @@ typedef struct {
 #if OPT_RENDERFONT
 	XftFont *	renderFontNorm[NMENUFONTS];
 	XftFont *	renderFontBold[NMENUFONTS];
-        XftFont *       renderFontItal[NMENUFONTS];
+	XftFont *	renderFontItal[NMENUFONTS];
 	XftFont *	renderWideNorm[NMENUFONTS];
 	XftFont *	renderWideBold[NMENUFONTS];
-        XftFont *       renderWideItal[NMENUFONTS];
+	XftFont *	renderWideItal[NMENUFONTS];
 	XftDraw *	renderDraw;
 #endif
 #if OPT_INPUT_METHOD

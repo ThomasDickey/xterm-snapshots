@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.587 2005/07/05 00:21:46 tom Exp $ */
+/* $XTermId: charproc.c,v 1.588 2005/07/06 23:54:57 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
@@ -5753,9 +5753,11 @@ VTRealize(Widget w,
      * realized, so that it can do the right thing.
      */
     if (sizehints.flags & USPosition)
-	XMoveWindow(XtDisplay(term), VShellWindow, sizehints.x, sizehints.y);
+	XMoveWindow(XtDisplay(term), XtWindow(XtParent(term)),
+		    sizehints.x, sizehints.y);
 
-    XSetWMNormalHints(XtDisplay(term), VShellWindow, &sizehints);
+    XSetWMNormalHints(XtDisplay(term), XtWindow(XtParent(term)),
+		      &sizehints);
 
     /*
      * _NET_WM_PID must only be set if WM_CLIENT_MACHINE is set.
