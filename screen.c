@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.170 2005/07/04 15:38:32 tom Exp $ */
+/* $XTermId: screen.c,v 1.171 2005/07/06 20:39:30 tom Exp $ */
 
 /*
  *	$Xorg: screen.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -1368,7 +1368,10 @@ ScreenResize(TScreen * screen,
 #endif
     Window tw = VWindow(screen);
 
-    TRACE(("ScreenResize %dx%d\n", height, width));
+    TRACE(("ScreenResize %dx%d border %d font %dx%d\n",
+	   height, width, border,
+	   FontHeight(screen), FontWidth(screen)));
+
     assert(width > 0);
     assert(height > 0);
 

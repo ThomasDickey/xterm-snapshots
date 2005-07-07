@@ -1,3 +1,5 @@
+/* $XTermId: scrollbar.c,v 1.94 2005/07/06 22:14:42 tom Exp $ */
+
 /*
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
@@ -5,7 +7,7 @@
 /* $XFree86: xc/programs/xterm/scrollbar.c,v 3.41 2005/01/14 01:50:03 dickey Exp $ */
 
 /*
- * Copyright 2000-2003,2004 by Thomas E. Dickey
+ * Copyright 2000-2004,2005 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -88,7 +90,7 @@ static void
 ResizeScreen(XtermWidget xw, int min_width, int min_height)
 {
     TScreen *screen = &xw->screen;
-#ifndef nothack
+#if 1				/* ndef nothack */
     XSizeHints sizehints;
     long supp;
 #endif
@@ -145,21 +147,28 @@ ResizeScreen(XtermWidget xw, int min_width, int min_height)
      * to have time to completely rewrite xterm.
      */
 
-    TRACE(("ResizeScreen(min_width=%d, min_height=%d) xw=%#lx\n",
-	   min_width, min_height, (long) xw));
+    TRACE(("ResizeScreen(min_width=%d, min_height=%d) xw=%#lx font %dx%d\n",
+	   min_width, min_height, (long) xw,
+	   FontHeight(screen), FontWidth(screen)));
 
-#ifndef nothack
+#if 1				/* ndef nothack */
     /*
      * NOTE: If you change the way any of the hints are calculated
      * below, make sure you change the calculation both in the
      * sizehints assignments and in the XtVaSetValues.
      */
 
-    if (!XGetWMNormalHints(screen->display, XtWindow(XtParent(xw)),
+    if (!XGetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)),
 			   &sizehints, &supp))
 	bzero(&sizehints, sizeof(sizehints));
+
+    TRACE(("GetHints base %dx%d inc %dx%d min %dx%d\n",
+	   sizehints.base_height, sizehints.base_width,
+	   sizehints.height_inc, sizehints.width_inc,
+	   sizehints.min_height, sizehints.min_width));
+
     sizehints.base_width = min_width;
-    sizehints.base_height = min_height;
+    sizehints.base_height = min_height + ToolbarHeight(xw);
     sizehints.width_inc = FontWidth(screen);
     sizehints.height_inc = FontHeight(screen);
     sizehints.min_width = sizehints.base_width + sizehints.width_inc;
@@ -172,17 +181,22 @@ ResizeScreen(XtermWidget xw, int min_width, int min_height)
 	+ min_height;
 #endif
 
+    TRACE(("SetHints base %dx%d inc %dx%d min %dx%d\n",
+	   sizehints.base_height, sizehints.base_width,
+	   sizehints.height_inc, sizehints.width_inc,
+	   sizehints.min_height, sizehints.min_width));
+
     /*
      * Note: width and height are not set here because they are
      * obsolete.
      */
-    XtVaSetValues(XtParent(xw),
-		  XtNbaseWidth, min_width,
-		  XtNbaseHeight, min_height,
-		  XtNwidthInc, FontWidth(screen),
-		  XtNheightInc, FontHeight(screen),
-		  XtNminWidth, min_width + FontWidth(screen),
-		  XtNminHeight, min_height + FontHeight(screen),
+    XtVaSetValues(SHELL_OF(xw),
+		  XtNbaseWidth, sizehints.base_width,
+		  XtNbaseHeight, sizehints.base_height,
+		  XtNwidthInc, sizehints.width_inc,
+		  XtNheightInc, sizehints.height_inc,
+		  XtNminWidth, sizehints.min_width,
+		  XtNminHeight, sizehints.min_height,
 		  (XtPointer) 0);
 
     reqWidth = screen->fullVwin.f_width * (screen->max_col + 1) + min_width;
@@ -206,7 +220,7 @@ ResizeScreen(XtermWidget xw, int min_width, int min_height)
 	xevents();
 
 #ifndef nothack
-    XSetWMNormalHints(screen->display, XtWindow(XtParent(xw)), &sizehints);
+    XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)), &sizehints);
 #endif
 #ifndef NO_ACTIVE_ICON
     WhichVWin(screen) = saveWin;
@@ -216,7 +230,7 @@ ResizeScreen(XtermWidget xw, int min_width, int min_height)
 void
 DoResizeScreen(XtermWidget xw)
 {
-    int border = 2 * xw->screen.border;
+    int border = 3 * xw->screen.border;
     ResizeScreen(xw, border + xw->screen.fullVwin.sb_info.width, border);
 }
 
