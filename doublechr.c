@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.40 2005/04/22 00:21:53 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.43 2005/08/05 01:25:39 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/doublechr.c,v 3.16 2005/04/22 00:21:53 dickey Exp $
+ * $XFree86: xc/programs/xterm/doublechr.c,v 3.17 2005/08/05 01:25:39 dickey Exp $
  */
 
 /************************************************************
@@ -56,11 +56,11 @@ repaint_line(unsigned newChrSet)
     register TScreen *screen = &term->screen;
     int curcol = screen->cur_col;
     int currow = screen->cur_row;
-    unsigned len = screen->max_col + 1;
+    unsigned len = MaxCols(screen);
     int width = len;
     unsigned oldChrSet = SCRN_BUF_CSETS(screen, currow)[0];
 
-    assert(screen->max_col >= 0);
+    assert(width > 0);
 
     /*
      * Ignore repetition.
@@ -219,7 +219,7 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
     char *name;
     XTermFonts *data;
 
-    if ((name = xtermSpecialFont(flags, chrset)) == 0)
+    if ((name = xtermSpecialFont(screen, flags, chrset)) == 0)
 	return 0;
 
     n = xterm_Double_index(chrset, flags);
@@ -241,7 +241,7 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
 
     if ((data->fs = XLoadQueryFont(screen->display, name)) == 0) {
 	/* Retry with * in resolutions */
-	char *nname = xtermSpecialFont(flags | NORESOLUTION, chrset);
+	char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
 
 	if (!nname)
 	    return 0;

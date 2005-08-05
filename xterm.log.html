@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.279 2005/07/07 00:46:15 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.139 2005/07/07 00:46:15 dickey Exp $
+  $XTermId: xterm.log.html,v 1.287 2005/08/05 01:25:40 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.140 2005/08/05 01:25:40 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_204">Patch #204 - 2005/8/4 - XFree86 4.5.99.9</A>
 <LI><A HREF="#xterm_203">Patch #203 - 2005/7/6 - XFree86 4.5.99.7</A>
 <LI><A HREF="#xterm_202">Patch #202 - 2005/5/2 - XFree86 4.5.99.3</A>
 <LI><A HREF="#xterm_201">Patch #201 - 2005/4/21 - XFree86 4.5.99.2</A>
@@ -251,6 +252,40 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_204">Patch #204 - 2005/8/4 - XFree86 4.5.99.9</A></H1>
+<ul>
+	<li>work around quirk in shell which allowed user to "run" uxterm
+	    script when there was no UTF-8 locale installed by entering
+	    "sh -x uxterm".  Also popup an xmessage to show the problem
+	    for users who run this via a GUI (Debian #318513).
+
+	<li>disallow changes to fonts, toolbar and scrollbar when the vt100
+	    window is iconified, to simplify management of the active icon.
+
+	<li>fixes to make <code>-geom</code> option work properly with the
+	    toolbar configuration (Gentoo Bugzilla #90717, #91967).
+
+	<li>minor improvements to scrollbar layout: ensure that the scrollbar
+	    border is zero if the vt100 border is zero.
+
+	<li>improve initialization due to <code>utf8</code> resource by
+	    loading the <code>utf8Fonts</code> resource in the case where
+	    <code>locale</code> resource is false.  Also in this case, do
+	    not disable switching UTF-8 mode on/off.
+
+	<li>minor optimization of TrueType font-loading, loads italic font
+	    only when needed.
+
+	<li>correct variable used to store temporary result from lookup of bold
+	    font, when initializing the wide-bold-font data and no immediate
+	    match is found by asking for a bold variant of the wide-font.  The
+	    result was to use overstriking rather than the actual bold font
+	    (Debian #318162, patch by Eugene Konev).
+
+	<li>add checks to ensure vt100 widget is realized when it might be
+	    updated via actions handled from a tek4014-only configuration.
+</ul>
 
 <H1><A NAME="xterm_203">Patch #203 - 2005/7/6 - XFree86 4.5.99.7</A></H1>
 <ul>

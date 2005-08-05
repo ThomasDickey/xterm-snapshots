@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.60 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: print.c,v 1.63 2005/08/05 01:25:40 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/print.c,v 1.21 2005/01/14 01:50:03 dickey Exp $
+ * $XFree86: xc/programs/xterm/print.c,v 1.22 2005/08/05 01:25:40 dickey Exp $
  */
 
 /************************************************************
@@ -126,7 +126,7 @@ printLine(int row, int chr)
     Char *a = SCRN_BUF_ATTRS(screen, row);
     Char attr = 0;
     unsigned ch;
-    int last = screen->max_col + 1;
+    int last = MaxCols(screen);
     int col;
 #if OPT_ISO_COLORS && OPT_PRINT_COLORS
 #if OPT_EXT_COLORS
@@ -239,21 +239,25 @@ printLine(int row, int chr)
 void
 xtermPrintScreen(Bool use_DECPEX)
 {
-    TScreen *screen = &term->screen;
-    Bool extent = (use_DECPEX && screen->printer_extent);
-    int top = extent ? 0 : screen->top_marg;
-    int bot = extent ? screen->max_row : screen->bot_marg;
-    int was_open = initialized;
+    if (XtIsRealized((Widget) term)) {
+	TScreen *screen = &term->screen;
+	Bool extent = (use_DECPEX && screen->printer_extent);
+	int top = extent ? 0 : screen->top_marg;
+	int bot = extent ? screen->max_row : screen->bot_marg;
+	int was_open = initialized;
 
-    TRACE(("xtermPrintScreen, rows %d..%d\n", top, bot));
+	TRACE(("xtermPrintScreen, rows %d..%d\n", top, bot));
 
-    while (top <= bot)
-	printLine(top++, '\n');
-    if (screen->printer_formfeed)
-	charToPrinter('\f');
+	while (top <= bot)
+	    printLine(top++, '\n');
+	if (screen->printer_formfeed)
+	    charToPrinter('\f');
 
-    if (!was_open || screen->printer_autoclose) {
-	closePrinter();
+	if (!was_open || screen->printer_autoclose) {
+	    closePrinter();
+	}
+    } else {
+	Bell(XkbBI_MinorError, 0);
     }
 }
 

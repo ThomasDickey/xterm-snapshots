@@ -1,10 +1,10 @@
-/* $XTermId: cursor.c,v 1.34 2005/04/22 00:21:53 tom Exp $ */
+/* $XTermId: cursor.c,v 1.36 2005/08/05 01:25:39 tom Exp $ */
 
 /*
  *	$Xorg: cursor.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/cursor.c,v 3.17 2005/04/22 00:21:53 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/cursor.c,v 3.18 2005/08/05 01:25:39 dickey Exp $ */
 
 /*
  * Copyright 2002-2004,2005 by Thomas E. Dickey
@@ -109,9 +109,9 @@ CursorBack(TScreen * screen, int n)
 	n--;
     if ((screen->cur_col -= n) < 0) {
 	if (rev) {
-	    if ((i = ((j = screen->max_col + 1)
+	    if ((i = ((j = MaxCols(screen))
 		      * screen->cur_row) + screen->cur_col) < 0) {
-		k = j * (screen->max_row + 1);
+		k = j * MaxRows(screen);
 		i += ((-i) / k + 1) * k;
 	    }
 	    set_cur_row(screen, i / j);

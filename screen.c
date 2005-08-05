@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.172 2005/07/07 00:46:14 tom Exp $ */
+/* $XTermId: screen.c,v 1.179 2005/08/05 01:25:40 tom Exp $ */
 
 /*
  *	$Xorg: screen.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -56,7 +56,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.70 2005/07/07 00:46:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.71 2005/08/05 01:25:40 dickey Exp $ */
 
 /* screen.c */
 
@@ -340,23 +340,23 @@ ChangeToWide(TScreen * screen)
 	return;
 
     TRACE(("ChangeToWide\n"));
-    if (xtermLoadWideFonts(term)) {
+    if (xtermLoadWideFonts(term, True)) {
 	if (savelines < 0)
 	    savelines = 0;
 	ReallocateBufOffsets(&screen->allbuf, &screen->sbuf_address,
-			     (unsigned) (screen->max_row + 1 + savelines),
-			     (unsigned) (screen->max_col + 1),
+			     (unsigned) (MaxRows(screen) + savelines),
+			     (unsigned) MaxCols(screen),
 			     new_bufoffset);
 	if (screen->altbuf)
 	    ReallocateBufOffsets(&screen->altbuf, &screen->abuf_address,
-				 (unsigned) (screen->max_row + 1),
-				 (unsigned) (screen->max_col + 1),
+				 (unsigned) MaxRows(screen),
+				 (unsigned) MaxCols(screen),
 				 new_bufoffset);
 	screen->wide_chars = True;
 	term->num_ptrs = new_bufoffset;
 	screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
 	update_font_utf8_mode();
-	SetVTFont(screen->menu_font_number, TRUE, NULL);
+	SetVTFont(term, screen->menu_font_number, TRUE, NULL);
     }
     TRACE(("...ChangeToWide\n"));
 }
@@ -397,7 +397,7 @@ ScreenWrite(TScreen * screen,
     Char *cb = 0;
 #endif
     Char *attrs;
-    int avail = screen->max_col - screen->cur_col + 1;
+    int avail = MaxCols(screen) - screen->cur_col;
     Char *chars;
     int wrappedbit;
 #if OPT_WIDE_CHARS
@@ -591,8 +591,8 @@ ScrnClearLines(TScreen * screen, ScrnBuf sb, int where, unsigned n, unsigned siz
 	   len);
 
     /* clear contents of old rows */
-    if (TERM_COLOR_FLAGS) {
-	int flags = TERM_COLOR_FLAGS;
+    if (TERM_COLOR_FLAGS(term)) {
+	int flags = TERM_COLOR_FLAGS(term);
 	for (i = 0; i < last; i += MAX_PTRS) {
 	    for (j = 0; j < MAX_PTRS; j++) {
 		if (j < BUF_HEAD)
@@ -718,14 +718,14 @@ void
 ScrnInsertChar(TScreen * screen, unsigned n)
 {
     ScrnBuf sb = screen->visbuf;
-    unsigned last = screen->max_col + 1;
+    unsigned last = MaxCols(screen);
     int row = screen->cur_row;
     unsigned col = screen->cur_col;
     unsigned i;
     Char *ptr = BUF_CHARS(sb, row);
     Char *attrs = BUF_ATTRS(sb, row);
     int wrappedbit = ScrnTstWrapped(screen, row);
-    int flags = CHARDRAWN | TERM_COLOR_FLAGS;
+    int flags = CHARDRAWN | TERM_COLOR_FLAGS(term);
     size_t nbytes;
 
     if (last <= (col + n)) {
@@ -805,7 +805,7 @@ void
 ScrnDeleteChar(TScreen * screen, unsigned n)
 {
     ScrnBuf sb = screen->visbuf;
-    unsigned last = screen->max_col + 1;
+    unsigned last = MaxCols(screen);
     unsigned row = screen->cur_row;
     unsigned col = screen->cur_col;
     Char *ptr = BUF_CHARS(sb, row);
@@ -827,7 +827,7 @@ ScrnDeleteChar(TScreen * screen, unsigned n)
     memmove(ptr + col, ptr + col + n, nbytes);
     memmove(attrs + col, attrs + col + n, nbytes);
     bzero(ptr + last - n, n);
-    memset(attrs + last - n, (Char) (TERM_COLOR_FLAGS), n);
+    memset(attrs + last - n, (Char) (TERM_COLOR_FLAGS(term)), n);
 
     if_OPT_EXT_COLORS(screen, {
 	ptr = BUF_FGRND(sb, row);
@@ -1309,9 +1309,9 @@ ClearBufRows(TScreen * screen,
 	     int last)
 {
     ScrnBuf buf = screen->visbuf;
-    unsigned len = screen->max_col + 1;
+    unsigned len = MaxCols(screen);
     int row;
-    int flags = TERM_COLOR_FLAGS;
+    int flags = TERM_COLOR_FLAGS(term);
 
     TRACE(("ClearBufRows %d..%d\n", first, last));
     for (row = first; row <= last; row++) {
@@ -1402,10 +1402,11 @@ ScreenResize(TScreen * screen,
 	cols = 1;
 
     /* update buffers if the screen has changed size */
-    if (screen->max_row != rows - 1 || screen->max_col != cols - 1) {
-	int savelines = screen->scrollWidget
-	? screen->savelines : 0;
-	int delta_rows = rows - (screen->max_row + 1);
+    if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
+	int savelines = (screen->scrollWidget
+			 ? screen->savelines
+			 : 0);
+	int delta_rows = rows - MaxRows(screen);
 
 	TRACE(("...ScreenResize chars %dx%d\n", rows, cols));
 
@@ -1420,13 +1421,13 @@ ScreenResize(TScreen * screen,
 			      &screen->abuf_address,
 			      rows,
 			      cols,
-			      screen->max_row + 1,
-			      screen->max_col + 1);
+			      MaxRows(screen),
+			      MaxCols(screen));
 	move_down_by = Reallocate(&screen->allbuf,
 				  &screen->sbuf_address,
 				  rows + savelines, cols,
-				  screen->max_row + 1 + savelines,
-				  screen->max_col + 1);
+				  MaxRows(screen) + savelines,
+				  MaxCols(screen));
 	screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
 
 	set_max_row(screen, screen->max_row + delta_rows);
@@ -1467,7 +1468,7 @@ ScreenResize(TScreen * screen,
     screen->fullVwin.fullwidth = width;
 
     if (screen->scrollWidget)
-	ResizeScrollBar(screen);
+	ResizeScrollBar(term);
 
     ResizeSelection(screen, rows, cols);
 
@@ -1475,10 +1476,10 @@ ScreenResize(TScreen * screen,
     if (screen->iconVwin.window) {
 	XWindowChanges changes;
 	screen->iconVwin.width =
-	    (screen->max_col + 1) * screen->iconVwin.f_width;
+	    MaxCols(screen) * screen->iconVwin.f_width;
 
 	screen->iconVwin.height =
-	    (screen->max_row + 1) * screen->iconVwin.f_height;
+	    MaxRows(screen) * screen->iconVwin.f_height;
 
 	changes.width = screen->iconVwin.fullwidth =
 	    screen->iconVwin.width + 2 * term->misc.icon_border_width;

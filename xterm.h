@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.340 2005/07/07 00:46:15 tom Exp $ */
+/* $XTermId: xterm.h,v 1.345 2005/08/05 01:25:40 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.106 2005/07/07 00:46:15 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.107 2005/08/05 01:25:40 dickey Exp $ */
 
 /************************************************************
 
@@ -926,13 +926,19 @@ extern void ChangeToWide(TScreen * screen);
 extern void DoResizeScreen (XtermWidget xw);
 extern void HandleScrollBack PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollForward PROTO_XT_ACTIONS_ARGS;
-extern void ResizeScrollBar (TScreen *screen);
+extern void ResizeScrollBar (XtermWidget xw);
 extern void ScrollBarDrawThumb (Widget scrollWidget);
 extern void ScrollBarOff (TScreen *screen);
 extern void ScrollBarOn (XtermWidget xw, int init, int doalloc);
 extern void ScrollBarReverseVideo (Widget scrollWidget);
 extern void ToggleScrollBar (XtermWidget w);
 extern void WindowScroll (TScreen *screen, int top);
+
+#ifdef SCROLLBAR_RIGHT
+extern void updateRightScrollbar(XtermWidget xw);
+#else
+#define updateRightScrollbar(xw) /* nothing */
+#endif
 
 /* tabs.c */
 extern Bool TabToNextStop (TScreen *screen);
@@ -946,7 +952,7 @@ extern void TabZonk (Tabs tabs);
 extern GC updatedXtermGC (TScreen *screen, unsigned flags, unsigned fg_bg, Bool hilite);
 extern int AddToRefresh (TScreen *screen);
 extern int HandleExposure (TScreen *screen, XEvent *event);
-extern int char2lower(int ch);
+extern int char2lower (int ch);
 extern int drawXtermText (TScreen *screen, unsigned flags, GC gc, int x, int y, int chrset, PAIRED_CHARS(Char *text, Char *text2), Cardinal len, int on_wide);
 extern void ChangeAnsiColors (XtermWidget tw);
 extern void ChangeColors (XtermWidget tw, ScrnColors *pNew);
@@ -960,8 +966,8 @@ extern void InsertChar (TScreen *screen, unsigned n);
 extern void InsertLine (TScreen *screen, int n);
 extern void RevScroll (TScreen *screen, int amount);
 extern void ReverseVideo (XtermWidget termw);
-extern void decode_keyboard_type(struct XTERM_RESOURCE *rp);
-extern void decode_wcwidth(int mode);
+extern void decode_keyboard_type (struct XTERM_RESOURCE *rp);
+extern void decode_wcwidth (int mode);
 extern void do_erase_display (TScreen *screen, int param, int mode);
 extern void do_erase_line (TScreen *screen, int param, int mode);
 extern void init_keyboard_type (xtermKeyboardType, Bool set);
@@ -971,7 +977,9 @@ extern void scrolling_copy_area (TScreen *screen, int firstline, int nlines, int
 extern void set_keyboard_type (xtermKeyboardType type, Bool set);
 extern void toggle_keyboard_type (xtermKeyboardType type);
 extern void update_keyboard_type (void);
+extern void xtermFixupSizes (XtermWidget xw, XSizeHints *sizehints);
 extern void xtermScroll (TScreen *screen, int amount);
+extern void xtermSizeHints (XtermWidget xw, XSizeHints *sizehints, int scrollbarWidth);
 
 #if OPT_ISO_COLORS
 

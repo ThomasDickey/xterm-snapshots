@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.590 2005/07/07 00:46:13 tom Exp $ */
+/* $XTermId: charproc.c,v 1.603 2005/08/05 01:25:39 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.172 2005/07/07 00:46:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.173 2005/08/05 01:25:39 dickey Exp $ */
 
 /*
 
@@ -629,7 +629,7 @@ static XtResource resources[] =
 #endif
 
 #if OPT_WIDE_CHARS
-    Ires(XtNutf8, XtCUtf8, screen.utf8_mode, 3),
+    Ires(XtNutf8, XtCUtf8, screen.utf8_mode, uDefault),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
     Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
@@ -2123,9 +2123,9 @@ doparsing(unsigned c, struct ParseState *sp)
 	    if ((top = param[0]) < 1)
 		top = 1;
 	    if (nparam < 2 || (bot = param[1]) == DEFAULT
-		|| bot > screen->max_row + 1
+		|| bot > MaxRows(screen)
 		|| bot == 0)
-		bot = screen->max_row + 1;
+		bot = MaxRows(screen);
 	    if (bot > top) {
 		if (screen->scroll_amt)
 		    FlushScroll(screen);
@@ -2725,14 +2725,14 @@ doparsing(unsigned c, struct ParseState *sp)
 		ChangeToWide(screen);
 	    }
 	    if (screen->wide_chars
-		&& screen->utf8_mode != 2) {
+		&& screen->utf8_mode != uAlways) {
 		switchPtyData(screen, c == 'G');
 		TRACE(("UTF8 mode %s\n",
 		       BtoS(screen->utf8_mode)));
 	    } else {
 		TRACE(("UTF8 mode NOT turned %s (%s)\n",
 		       BtoS(c == 'G'),
-		       (screen->utf8_mode == 2)
+		       (screen->utf8_mode == uAlways)
 		       ? "UTF-8 mode set from command-line"
 		       : "wideChars resource was not set"));
 	    }
@@ -2749,7 +2749,7 @@ doparsing(unsigned c, struct ParseState *sp)
     } while (0);
 
 #if OPT_WIDE_CHARS
-    screen->utf8_inparse = (screen->utf8_mode != 0
+    screen->utf8_inparse = (screen->utf8_mode != uFalse
 			    && sp->parsestate != sos_table);
 #endif
 
@@ -3258,7 +3258,7 @@ dotext(TScreen * screen,
     /* don't translate if we use UTF-8, and are not handling legacy support
      * for line-drawing characters.
      */
-    if (!screen->utf8_mode
+    if ((screen->utf8_mode == uFalse)
 	|| (screen->vt100_graphics && charset == '0'))
 #endif
 
@@ -3279,7 +3279,7 @@ dotext(TScreen * screen,
     for (offset = 0;
 	 offset < len && (chars_chomped > 0 || screen->do_wrap);
 	 offset += chars_chomped) {
-	int width_available = screen->max_col - screen->cur_col + 1;
+	int width_available = MaxCols(screen) - screen->cur_col;
 	int width_here = 0;
 	int need_wrap = 0;
 	chars_chomped = 0;
@@ -3291,7 +3291,7 @@ dotext(TScreen * screen,
 	    xtermIndex(screen, 1);
 	    set_cur_col(screen, 0);
 	    screen->do_wrap = 0;
-	    width_available = screen->max_col - screen->cur_col + 1;
+	    width_available = MaxCols(screen) - screen->cur_col;
 	}
 
 	while (width_here <= width_available && chars_chomped < (len - offset)) {
@@ -3712,7 +3712,7 @@ dpmodes(XtermWidget termw,
 		CursorSet(screen, 0, 0, termw->flags);
 		if ((j = func == bitset ? 132 : 80) !=
 		    ((termw->flags & IN132COLUMNS) ? 132 : 80) ||
-		    j != screen->max_col + 1)
+		    j != MaxCols(screen))
 		    RequestResize(termw, -1, j, True);
 		(*func) (&termw->flags, IN132COLUMNS);
 	    }
@@ -4106,7 +4106,7 @@ restoremodes(XtermWidget termw)
 		CursorSet(screen, 0, 0, termw->flags);
 		if ((j = (screen->save_modes[DP_DECCOLM] & IN132COLUMNS)
 		     ? 132 : 80) != ((termw->flags & IN132COLUMNS)
-				     ? 132 : 80) || j != screen->max_col + 1)
+				     ? 132 : 80) || j != MaxCols(screen))
 		    RequestResize(termw, -1, j, True);
 		bitcpy(&termw->flags,
 		       screen->save_modes[DP_DECCOLM],
@@ -4399,8 +4399,8 @@ window_ops(XtermWidget termw)
 	reply.a_pintro = 0;
 	reply.a_nparam = 3;
 	reply.a_param[0] = 8;
-	reply.a_param[1] = screen->max_row + 1;
-	reply.a_param[2] = screen->max_col + 1;
+	reply.a_param[1] = MaxRows(screen);
+	reply.a_param[2] = MaxCols(screen);
 	reply.a_inters = 0;
 	reply.a_final = 't';
 	unparseseq(&reply, screen->respond);
@@ -4585,8 +4585,8 @@ ToAlternate(TScreen * screen)
 	return;
     TRACE(("ToAlternate\n"));
     if (!screen->altbuf)
-	screen->altbuf = Allocate(screen->max_row + 1, screen->max_col
-				  + 1, &screen->abuf_address);
+	screen->altbuf = Allocate(MaxRows(screen), MaxCols(screen),
+				  &screen->abuf_address);
     SwitchBufs(screen);
     screen->alternate = True;
     update_altscreen();
@@ -4613,7 +4613,7 @@ SwitchBufs(TScreen * screen)
     if (screen->cursor_state)
 	HideCursor();
 
-    rows = screen->max_row + 1;
+    rows = MaxRows(screen);
     SwitchBufPtrs(screen);
 
     if ((top = -screen->topline) < rows) {
@@ -4630,14 +4630,14 @@ SwitchBufs(TScreen * screen)
 		       (unsigned) (rows - top) * FontHeight(screen),
 		       False);
     }
-    ScrnUpdate(screen, 0, 0, rows, screen->max_col + 1, False);
+    ScrnUpdate(screen, 0, 0, rows, MaxCols(screen), False);
 }
 
 /* swap buffer line pointers between alt and regular screens */
 void
 SwitchBufPtrs(TScreen * screen)
 {
-    size_t len = ScrnPointers(screen, (unsigned) (screen->max_row + 1));
+    size_t len = ScrnPointers(screen, (unsigned) MaxRows(screen));
 
     memcpy((char *) screen->save_ptr, (char *) screen->visbuf, len);
     memcpy((char *) screen->visbuf, (char *) screen->altbuf, len);
@@ -4739,8 +4739,9 @@ VTNonMaskableEvent(Widget w GCC_UNUSED,
 static void
 VTResize(Widget w)
 {
-    if (XtIsRealized(w))
+    if (XtIsRealized(w)) {
 	ScreenResize(&term->screen, term->core.width, term->core.height, &term->flags);
+    }
 }
 
 #define okDimension(src,dst) ((src <= 32767) && ((dst = src) == src))
@@ -4775,7 +4776,7 @@ RequestResize(XtermWidget termw, int rows, int cols, int text)
     if (text) {
 	if ((value = rows) != 0) {
 	    if (rows < 0)
-		value = screen->max_row + 1;
+		value = MaxRows(screen);
 	    value *= FontHeight(screen);
 	    value += (2 * screen->border);
 	    if (!okDimension(value, askedHeight))
@@ -4784,7 +4785,7 @@ RequestResize(XtermWidget termw, int rows, int cols, int text)
 
 	if ((value = cols) != 0) {
 	    if (cols < 0)
-		value = screen->max_col + 1;
+		value = MaxCols(screen);
 	    value *= FontWidth(screen);
 	    value += (2 * screen->border) + ScrollbarWidth(screen);
 	    if (!okDimension(value, askedWidth))
@@ -4882,12 +4883,12 @@ static void
 VTallocbuf(void)
 {
     TScreen *screen = &term->screen;
-    int nrows = screen->max_row + 1;
+    int nrows = MaxRows(screen);
 
     /* allocate screen buffer now, if necessary. */
     if (screen->scrollWidget)
 	nrows += screen->savelines;
-    screen->allbuf = Allocate(nrows, screen->max_col + 1,
+    screen->allbuf = Allocate(nrows, MaxCols(screen),
 			      &screen->sbuf_address);
     if (screen->scrollWidget)
 	screen->visbuf = &screen->allbuf[MAX_PTRS * screen->savelines];
@@ -4985,6 +4986,12 @@ VTInitialize_locale(XtermWidget request)
     TRACE(("VTInitialize_locale\n"));
     TRACE(("... request screen.utf8_mode = %d\n", request->screen.utf8_mode));
 
+    if (request->screen.utf8_mode < 0)
+	request->screen.utf8_mode = uFalse;
+
+    if (request->screen.utf8_mode > 3)
+	request->screen.utf8_mode = uDefault;
+
     request->screen.latin9_mode = 0;
     request->screen.unicode_font = 0;
 #if OPT_LUIT_PROG
@@ -4994,7 +5001,7 @@ VTInitialize_locale(XtermWidget request)
     TRACE(("... setup for luit:\n"));
     TRACE(("... request misc.locale_str = \"%s\"\n", request->misc.locale_str));
 
-    if (request->screen.utf8_mode == 0) {
+    if (request->screen.utf8_mode == uFalse) {
 	TRACE(("... command-line +u8 overrides\n"));
     } else
 #if OPT_MINI_LUIT
@@ -5010,24 +5017,24 @@ VTInitialize_locale(XtermWidget request)
 #ifdef HAVE_LANGINFO_CODESET
 	    if (!strcmp(xtermEnvEncoding(), "ANSI_X3.4-1968")
 		|| !strcmp(xtermEnvEncoding(), "ISO-8859-1")) {
-		if (request->screen.utf8_mode == 3)
-		    request->screen.utf8_mode = 0;
+		if (request->screen.utf8_mode == uDefault)
+		    request->screen.utf8_mode = uFalse;
 	    } else if (!strcmp(xtermEnvEncoding(), "ISO-8859-15")) {
-		if (request->screen.utf8_mode == 3)
-		    request->screen.utf8_mode = 0;
+		if (request->screen.utf8_mode == uDefault)
+		    request->screen.utf8_mode = uFalse;
 		request->screen.latin9_mode = 1;
 	    } else {
 		request->misc.callfilter = is_utf8 ? 0 : 1;
-		request->screen.utf8_mode = 2;
+		request->screen.utf8_mode = uAlways;
 	    }
 #else
 	    request->misc.callfilter = is_utf8 ? 0 : 1;
-	    request->screen.utf8_mode = 2;
+	    request->screen.utf8_mode = uAlways;
 #endif
 	} else {
 	    /* other encoding, use False */
-	    if (request->screen.utf8_mode == 3) {
-		request->screen.utf8_mode = is_utf8 ? 2 : 0;
+	    if (request->screen.utf8_mode == uDefault) {
+		request->screen.utf8_mode = is_utf8 ? uAlways : uFalse;
 	    }
 	}
     } else
@@ -5039,20 +5046,20 @@ VTInitialize_locale(XtermWidget request)
 	    strcmp(request->misc.locale_str, "1") == 0) {
 	/* when true ... fully obeying LC_CTYPE locale */
 	request->misc.callfilter = is_utf8 ? 0 : 1;
-	request->screen.utf8_mode = 2;
+	request->screen.utf8_mode = uAlways;
     } else if (x_strcasecmp(request->misc.locale_str, "FALSE") == 0 ||
 	       x_strcasecmp(request->misc.locale_str, "OFF") == 0 ||
 	       x_strcasecmp(request->misc.locale_str, "NO") == 0 ||
 	       strcmp(request->misc.locale_str, "0") == 0) {
 	/* when false ... original value of utf8_mode is effective */
-	if (request->screen.utf8_mode == 3) {
-	    request->screen.utf8_mode = is_utf8 ? 2 : 0;
+	if (request->screen.utf8_mode == uDefault) {
+	    request->screen.utf8_mode = is_utf8 ? uAlways : uFalse;
 	}
     } else if (x_strcasecmp(request->misc.locale_str, "MEDIUM") == 0 ||
 	       x_strcasecmp(request->misc.locale_str, "SEMIAUTO") == 0) {
 	/* when medium ... obeying locale only for UTF-8 and Asian */
 	if (is_utf8) {
-	    request->screen.utf8_mode = 2;
+	    request->screen.utf8_mode = uAlways;
 	} else if (
 #ifdef MB_CUR_MAX
 		      MB_CUR_MAX > 1 ||
@@ -5064,29 +5071,29 @@ VTInitialize_locale(XtermWidget request)
 		      !strncmp(xtermEnvLocale(), "th", 2) ||
 		      !strncmp(xtermEnvLocale(), "vi", 2)) {
 	    request->misc.callfilter = 1;
-	    request->screen.utf8_mode = 2;
+	    request->screen.utf8_mode = uAlways;
 	} else {
-	    request->screen.utf8_mode = 0;
+	    request->screen.utf8_mode = uFalse;
 	}
     } else if (x_strcasecmp(request->misc.locale_str, "UTF-8") == 0 ||
 	       x_strcasecmp(request->misc.locale_str, "UTF8") == 0) {
 	/* when UTF-8 ... UTF-8 mode */
-	request->screen.utf8_mode = 2;
+	request->screen.utf8_mode = uAlways;
     } else {
 	/* other words are regarded as encoding name passed to luit */
 	request->misc.callfilter = 1;
-	request->screen.utf8_mode = 2;
+	request->screen.utf8_mode = uAlways;
 	request->misc.use_encoding = 1;
     }
     TRACE(("... updated misc.callfilter = %s\n", BtoS(request->misc.callfilter)));
     TRACE(("... updated misc.use_encoding = %s\n", BtoS(request->misc.use_encoding)));
 #else
-    if (request->screen.utf8_mode == 3) {
-	request->screen.utf8_mode = is_utf8 ? 2 : 0;
+    if (request->screen.utf8_mode == uDefault) {
+	request->screen.utf8_mode = is_utf8 ? uAlways : uFalse;
     }
 #endif /* OPT_LUIT_PROG */
 
-    request->screen.utf8_inparse = (request->screen.utf8_mode != 0);
+    request->screen.utf8_inparse = (request->screen.utf8_mode != uFalse);
 
     TRACE(("... updated screen.utf8_mode = %d\n", request->screen.utf8_mode));
     TRACE(("...VTInitialize_locale done\n"));
@@ -5492,13 +5499,11 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.mk_width);
     init_Bres(misc.cjk_width);
     if (request->screen.utf8_mode) {
-	TRACE(("setting utf8_mode to 2, wide_chars on\n"));
+	TRACE(("setting wide_chars on\n"));
 	wnew->screen.wide_chars = True;
-	wnew->screen.utf8_mode = 2;	/* disable further change */
-	xtermLoadWideFonts(wnew);
     } else {
 	TRACE(("setting utf8_mode to 0\n"));
-	wnew->screen.utf8_mode = 0;
+	wnew->screen.utf8_mode = uFalse;
     }
     TRACE(("initialized UTF-8 mode to %d\n", wnew->screen.utf8_mode));
 
@@ -5627,33 +5632,34 @@ VTRealize(Widget w,
 	  XtValueMask * valuemask,
 	  XSetWindowAttributes * values)
 {
+    XtermWidget xw = (XtermWidget) w;
+    TScreen *screen = &xw->screen;
+
     unsigned width, height;
-    TScreen *screen = &term->screen;
     int xpos, ypos, pr;
     int rc;
     XSizeHints sizehints;
-    int scrollbar_width;
     Atom pid_atom;
 
     TRACE(("VTRealize\n"));
 
-    TabReset(term->tabs);
+    TabReset(xw->tabs);
 
-    screen->menu_font_names[fontMenu_fontdefault] = term->misc.default_font.f_n;
+    screen->menu_font_names[fontMenu_fontdefault] = xw->misc.default_font.f_n;
     screen->fnt_norm = NULL;
     screen->fnt_bold = NULL;
 #if OPT_WIDE_CHARS
     screen->fnt_dwd = NULL;
     screen->fnt_dwdb = NULL;
 #endif
-    if (!xtermLoadFont(screen,
-		       &(term->misc.default_font),
+    if (!xtermLoadFont(xw,
+		       &(xw->misc.default_font),
 		       False, 0)) {
-	if (XmuCompareISOLatin1(term->misc.default_font.f_n, "fixed") != 0) {
+	if (XmuCompareISOLatin1(xw->misc.default_font.f_n, "fixed") != 0) {
 	    fprintf(stderr,
 		    "%s:  unable to open font \"%s\", trying \"fixed\"....\n",
-		    xterm_name, term->misc.default_font.f_n);
-	    (void) xtermLoadFont(screen,
+		    xterm_name, xw->misc.default_font.f_n);
+	    (void) xtermLoadFont(xw,
 				 xtermFontName("fixed"),
 				 False, 0);
 	    screen->menu_font_names[fontMenu_fontdefault] = "fixed";
@@ -5666,6 +5672,13 @@ VTRealize(Widget w,
 		xterm_name);
 	Exit(1);
     }
+#if OPT_WIDE_CHARS
+    if (xw->screen.utf8_mode) {
+	TRACE(("check if this is a wide font, if not try again\n"));
+	if (xtermLoadWideFonts(xw, False))
+	    SetVTFont(xw, screen->menu_font_number, TRUE, NULL);
+    }
+#endif
 
     /* making cursor */
     if (!screen->pointer_cursor) {
@@ -5679,43 +5692,45 @@ VTRealize(Widget w,
 		       T_COLOR(screen, MOUSE_BG));
     }
 
-    scrollbar_width = (term->misc.scrollbar ?
-		       screen->scrollWidget->core.width : 0);
-
     /* set defaults */
     xpos = 1;
     ypos = 1;
     width = 80;
     height = 24;
 
-    TRACE(("parsing geo_metry %s\n", NonNull(term->misc.geo_metry)));
-    pr = XParseGeometry(term->misc.geo_metry, &xpos, &ypos,
+    TRACE(("parsing geo_metry %s\n", NonNull(xw->misc.geo_metry)));
+    pr = XParseGeometry(xw->misc.geo_metry, &xpos, &ypos,
 			&width, &height);
     TRACE(("... position %d,%d size %dx%d\n", ypos, xpos, height, width));
 
     set_max_col(screen, (int) (width - 1));	/* units in character cells */
     set_max_row(screen, (int) (height - 1));	/* units in character cells */
-    xtermUpdateFontInfo(&term->screen, False);
+    xtermUpdateFontInfo(xw, False);
 
     width = screen->fullVwin.fullwidth;
     height = screen->fullVwin.fullheight;
 
-    if ((pr & XValue) && (XNegative & pr))
+    TRACE(("... border widget %d parent %d shell %d\n",
+	   BorderWidth(xw),
+	   BorderWidth(XtParent(xw)),
+	   BorderWidth(SHELL_OF(xw))));
+
+    if ((pr & XValue) && (XNegative & pr)) {
 	xpos += DisplayWidth(screen->display, DefaultScreen(screen->display))
-	    - width - (XtParent(term)->core.border_width * 2);
-    if ((pr & YValue) && (YNegative & pr))
+	    - width - (BorderWidth(XtParent(xw)) * 2);
+    }
+    if ((pr & YValue) && (YNegative & pr)) {
 	ypos += DisplayHeight(screen->display, DefaultScreen(screen->display))
-	    - height - (XtParent(term)->core.border_width * 2);
+	    - height - (BorderWidth(XtParent(xw)) * 2);
+    }
 
     /* set up size hints for window manager; min 1 char by 1 char */
     bzero(&sizehints, sizeof(sizehints));
-    sizehints.base_width = 2 * screen->border + scrollbar_width;
-    sizehints.base_height = 2 * screen->border;
-    sizehints.width_inc = FontWidth(screen);
-    sizehints.height_inc = FontHeight(screen);
-    sizehints.min_width = sizehints.base_width + sizehints.width_inc;
-    sizehints.min_height = sizehints.base_height + sizehints.height_inc;
-    sizehints.flags = (PBaseSize | PMinSize | PResizeInc);
+    xtermSizeHints(xw, &sizehints, (xw->misc.scrollbar
+				    ? (screen->scrollWidget->core.width
+				       + BorderWidth(screen->scrollWidget))
+				    : 0));
+
     sizehints.x = xpos;
     sizehints.y = ypos;
     if ((XValue & pr) || (YValue & pr)) {
@@ -5741,89 +5756,90 @@ VTRealize(Widget w,
     }
     sizehints.width = width;
     sizehints.height = height;
+
     if ((WidthValue & pr) || (HeightValue & pr))
 	sizehints.flags |= USSize;
     else
 	sizehints.flags |= PSize;
 
     TRACE(("make resize request %dx%d\n", height, width));
-    (void) XtMakeResizeRequest((Widget) term,
+    (void) XtMakeResizeRequest((Widget) xw,
 			       (Dimension) width, (Dimension) height,
-			       &term->core.width, &term->core.height);
-    TRACE(("...made resize request %dx%d\n", term->core.height, term->core.width));
+			       &xw->core.width, &xw->core.height);
+    TRACE(("...made resize request %dx%d\n", xw->core.height, xw->core.width));
 
     /* XXX This is bogus.  We are parsing geometries too late.  This
      * is information that the shell widget ought to have before we get
      * realized, so that it can do the right thing.
      */
     if (sizehints.flags & USPosition)
-	XMoveWindow(XtDisplay(term), XtWindow(XtParent(term)),
+	XMoveWindow(XtDisplay(xw), XtWindow(SHELL_OF(xw)),
 		    sizehints.x, sizehints.y);
 
-    XSetWMNormalHints(XtDisplay(term), XtWindow(XtParent(term)),
+    XSetWMNormalHints(XtDisplay(xw), XtWindow(SHELL_OF(xw)),
 		      &sizehints);
 
     /*
      * _NET_WM_PID must only be set if WM_CLIENT_MACHINE is set.
      */
-    if (XInternAtom(XtDisplay(term), "WM_CLIENT_MACHINE", True) != None
-	&& (pid_atom = XInternAtom(XtDisplay(term), "_NET_WM_PID", False))
+    if (XInternAtom(XtDisplay(xw), "WM_CLIENT_MACHINE", True) != None
+	&& (pid_atom = XInternAtom(XtDisplay(xw), "_NET_WM_PID", False))
 	!= None) {
 	unsigned long pid_l = (unsigned long) getpid();
 	TRACE(("Setting _NET_WM_PID property to %lu\n", pid_l));
-	rc = XChangeProperty(XtDisplay(term), VShellWindow,
+	rc = XChangeProperty(XtDisplay(xw), VShellWindow,
 			     pid_atom, XA_CARDINAL, 32, PropModeReplace,
 			     (unsigned char *) &pid_l, 1);
     }
 
-    XFlush(XtDisplay(term));	/* get it out to window manager */
+    XFlush(XtDisplay(xw));	/* get it out to window manager */
 
     /* use ForgetGravity instead of SouthWestGravity because translating
        the Expose events for ConfigureNotifys is too hard */
-    values->bit_gravity = ((term->misc.resizeGravity == NorthWestGravity)
+    values->bit_gravity = ((xw->misc.resizeGravity == NorthWestGravity)
 			   ? NorthWestGravity
 			   : ForgetGravity);
-    term->screen.fullVwin.window = XtWindow(term) =
-	XCreateWindow(XtDisplay(term), XtWindow(XtParent(term)),
-		      term->core.x, term->core.y,
-		      term->core.width, term->core.height, term->core.border_width,
-		      (int) term->core.depth,
+    xw->screen.fullVwin.window = XtWindow(xw) =
+	XCreateWindow(XtDisplay(xw), XtWindow(XtParent(xw)),
+		      xw->core.x, xw->core.y,
+		      xw->core.width, xw->core.height, BorderWidth(xw),
+		      (int) xw->core.depth,
 		      InputOutput, CopyFromParent,
 		      *valuemask | CWBitGravity, values);
     screen->event_mask = values->event_mask;
 
 #ifndef NO_ACTIVE_ICON
-    if (term->misc.active_icon && screen->fnt_icon) {
+    if (xw->misc.active_icon && screen->fnt_icon) {
 	int iconX = 0, iconY = 0;
-	Widget shell = SHELL_OF(term);
+	Widget shell = SHELL_OF(xw);
 	unsigned long mask;
 	XGCValues xgcv;
 
 	TRACE(("Initializing active-icon\n"));
 	XtVaGetValues(shell, XtNiconX, &iconX, XtNiconY, &iconY, (XtPointer) 0);
-	xtermComputeFontInfo(screen, &(screen->iconVwin), screen->fnt_icon, 0);
+	xtermComputeFontInfo(xw, &(screen->iconVwin), screen->fnt_icon, 0);
 
 	/* since only one client is permitted to select for Button
 	 * events, we have to let the window manager get 'em...
 	 */
 	values->event_mask &= ~(ButtonPressMask | ButtonReleaseMask);
-	values->border_pixel = term->misc.icon_border_pixel;
+	values->border_pixel = xw->misc.icon_border_pixel;
 
 	screen->iconVwin.window =
-	    XCreateWindow(XtDisplay(term),
+	    XCreateWindow(XtDisplay(xw),
 			  RootWindowOfScreen(XtScreen(shell)),
 			  iconX, iconY,
 			  screen->iconVwin.fullwidth,
 			  screen->iconVwin.fullheight,
-			  term->misc.icon_border_width,
-			  (int) term->core.depth,
+			  xw->misc.icon_border_width,
+			  (int) xw->core.depth,
 			  InputOutput, CopyFromParent,
 			  *valuemask | CWBitGravity | CWBorderPixel,
 			  values);
 	XtVaSetValues(shell,
 		      XtNiconWindow, screen->iconVwin.window,
 		      (XtPointer) 0);
-	XtRegisterDrawable(XtDisplay(term), screen->iconVwin.window, w);
+	XtRegisterDrawable(XtDisplay(xw), screen->iconVwin.window, w);
 
 	mask = (GCFont | GCForeground | GCBackground |
 		GCGraphicsExposures | GCFunction);
@@ -5856,14 +5872,14 @@ VTRealize(Widget w,
 #endif
     } else {
 	TRACE(("Disabled active-icon\n"));
-	term->misc.active_icon = False;
+	xw->misc.active_icon = False;
     }
 #endif /* NO_ACTIVE_ICON */
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
     VTInitI18N();
 #else
-    term->screen.xic = NULL;
+    xw->screen.xic = NULL;
 #endif
 #if OPT_NUM_LOCK
     VTInitModifiers();
@@ -5900,11 +5916,11 @@ VTRealize(Widget w,
 
     screen->savedlines = 0;
 
-    if (term->misc.scrollbar) {
+    if (xw->misc.scrollbar) {
 	screen->fullVwin.sb_info.width = 0;
-	ScrollBarOn(term, False, True);
+	ScrollBarOn(xw, False, True);
     }
-    CursorSave(term);
+    CursorSave(xw);
     return;
 }
 
@@ -6197,7 +6213,7 @@ VTSetValues(Widget cur,
 	(curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)) {
 	if (curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)
 	    newvt->screen.menu_font_names[fontMenu_fontdefault] = newvt->misc.default_font.f_n;
-	if (xtermLoadFont(&newvt->screen,
+	if (xtermLoadFont(newvt,
 			  xtermFontName(newvt->screen.menu_font_names[curvt->screen.menu_font_number]),
 			  True, newvt->screen.menu_font_number)) {
 	    /* resizing does the redisplay, so don't ask for it here */
@@ -6336,12 +6352,12 @@ ShowCursor(void)
      * but not the background, do not treat it as a colored cell.
      */
 #if OPT_ISO_COLORS
-    if ((flags & TERM_COLOR_FLAGS) == BG_COLOR
+    if ((flags & TERM_COLOR_FLAGS(term)) == BG_COLOR
 #if OPT_WIDE_CHARS
 	&& chi == 0
 #endif
 	&& clo == ' ') {
-	flags &= ~TERM_COLOR_FLAGS;
+	flags &= ~TERM_COLOR_FLAGS(term);
     }
 #endif
 
@@ -6612,7 +6628,7 @@ ScrnHasBlinking(TScreen * screen, int row)
     int col;
     Bool result = False;
 
-    for (col = 0; col < screen->max_col + 1; ++col) {
+    for (col = 0; col < MaxCols(screen); ++col) {
 	if (attrs[col] & BLINK) {
 	    result = True;
 	    break;
@@ -6687,7 +6703,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 			first_row,
 			0,
 			last_row + 1 - first_row,
-			screen->max_col + 1,
+			MaxCols(screen),
 			True);
 	}
     }
@@ -6715,6 +6731,11 @@ void
 VTReset(Bool full, Bool saved)
 {
     TScreen *screen = &term->screen;
+
+    if (!XtIsRealized((Widget) term)) {
+	Bell(XkbBI_MinorError, 0);
+	return;
+    }
 
     if (saved) {
 	screen->savedlines = 0;
@@ -6787,7 +6808,7 @@ VTReset(Bool full, Bool saved)
 				(Dimension) 80 * FontWidth(screen)
 				+ 2 * screen->border + ScrollbarWidth(screen),
 				(Dimension) FontHeight(screen)
-				* (screen->max_row + 1) + 2 * screen->border,
+				* MaxRows(screen) + 2 * screen->border,
 				&junk, &junk);
 	    XSync(screen->display, False);	/* synchronize */
 	    if (XtAppPending(app_con))
@@ -7033,7 +7054,7 @@ DoSetSelectedFont(Widget w GCC_UNUSED,
 	   we are a little more liberal here. */
 	if (len > 1000 || strchr(val, '\n'))
 	    return;
-	if (!xtermLoadFont(&term->screen,
+	if (!xtermLoadFont(term,
 			   xtermFontName(val),
 			   True,
 			   fontMenu_fontsel))

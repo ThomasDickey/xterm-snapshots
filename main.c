@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.455 2005/07/07 00:46:14 tom Exp $ */
+/* $XTermId: main.c,v 1.457 2005/08/05 01:25:39 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.194 2005/07/07 00:46:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.195 2005/08/05 01:25:39 dickey Exp $ */
 
 /* main.c */
 
@@ -3119,8 +3119,8 @@ spawn(void)
     } else
 #endif
     {
-	TTYSIZE_ROWS(ts) = screen->max_row + 1;
-	TTYSIZE_COLS(ts) = screen->max_col + 1;
+	TTYSIZE_ROWS(ts) = MaxRows(screen);
+	TTYSIZE_COLS(ts) = MaxCols(screen);
 #if defined(USE_STRUCT_WINSIZE)
 	ts.ws_xpixel = FullWidth(screen);
 	ts.ws_ypixel = FullHeight(screen);
@@ -3215,8 +3215,8 @@ spawn(void)
 		} else
 #endif /* OPT_TEK4014 */
 		{
-		    TTYSIZE_ROWS(ts) = screen->max_row + 1;
-		    TTYSIZE_COLS(ts) = screen->max_col + 1;
+		    TTYSIZE_ROWS(ts) = MaxRows(screen);
+		    TTYSIZE_COLS(ts) = MaxCols(screen);
 #ifdef USE_STRUCT_WINSIZE
 		    ts.ws_xpixel = FullWidth(screen);
 		    ts.ws_ypixel = FullHeight(screen);
@@ -4075,8 +4075,8 @@ spawn(void)
 			set_max_row(screen, handshake.rows);
 			set_max_col(screen, handshake.cols);
 #ifdef TTYSIZE_STRUCT
-			TTYSIZE_ROWS(ts) = screen->max_row + 1;
-			TTYSIZE_COLS(ts) = screen->max_col + 1;
+			TTYSIZE_ROWS(ts) = MaxRows(screen);
+			TTYSIZE_COLS(ts) = MaxCols(screen);
 #if defined(USE_STRUCT_WINSIZE)
 			ts.ws_xpixel = FullWidth(screen);
 			ts.ws_ypixel = FullHeight(screen);
@@ -4090,9 +4090,9 @@ spawn(void)
 #ifdef USE_SYSV_ENVVARS
 	    {
 		char numbuf[12];
-		sprintf(numbuf, "%d", screen->max_col + 1);
+		sprintf(numbuf, "%d", MaxCols(screen));
 		xtermSetenv("COLUMNS=", numbuf);
-		sprintf(numbuf, "%d", screen->max_row + 1);
+		sprintf(numbuf, "%d", MaxRows(screen));
 		xtermSetenv("LINES=", numbuf);
 	    }
 #ifdef HAVE_UTMP
@@ -4539,15 +4539,15 @@ resize(TScreen * screen, char *oldtc, char *newtc)
     strncpy(newtc, oldtc, i = ptr1 - oldtc);
     temp = newtc + i;
     sprintf(temp, "%d", (li_first
-			 ? screen->max_row + 1
-			 : screen->max_col + 1));
+			 ? MaxRows(screen)
+			 : MaxCols(screen)));
     temp += strlen(temp);
     ptr1 = strchr(ptr1, ':');
     strncpy(temp, ptr1, i = ptr2 - ptr1);
     temp += i;
     sprintf(temp, "%d", (li_first
-			 ? screen->max_col + 1
-			 : screen->max_row + 1));
+			 ? MaxCols(screen)
+			 : MaxRows(screen)));
     ptr2 = strchr(ptr2, ':');
     strcat(temp, ptr2);
     TRACE(("   ==> %s\n", newtc));

@@ -1,10 +1,10 @@
-/* $XTermId: util.c,v 1.233 2005/07/07 00:46:14 tom Exp $ */
+/* $XTermId: util.c,v 1.248 2005/08/05 01:25:40 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.91 2005/07/07 00:46:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.92 2005/08/05 01:25:40 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey
@@ -177,7 +177,7 @@ FlushScroll(TScreen * screen)
 			   (unsigned) refreshheight * FontHeight(screen),
 			   (unsigned) Width(screen));
 	ScrnRefresh(screen, refreshtop, 0, refreshheight,
-		    screen->max_col + 1, False);
+		    MaxCols(screen), False);
     }
     return;
 }
@@ -439,20 +439,20 @@ xtermScroll(TScreen * screen, int amount)
 			   screen->bot_marg + screen->savelines,
 			   0,
 			   (unsigned) amount,
-			   (unsigned) (screen->max_col + 1));
+			   (unsigned) MaxCols(screen));
 	} else {
 	    ScrnDeleteLine(screen,
 			   screen->visbuf,
 			   screen->bot_marg,
 			   screen->top_marg,
 			   (unsigned) amount,
-			   (unsigned) (screen->max_col + 1));
+			   (unsigned) MaxCols(screen));
 	}
     }
 
     if (refreshheight > 0) {
 	ScrnRefresh(screen, refreshtop, 0, refreshheight,
-		    screen->max_col + 1, False);
+		    MaxCols(screen), False);
     }
 
     screen->cursor_busy -= 1;
@@ -539,7 +539,7 @@ RevScroll(TScreen * screen, int amount)
 		       screen->bot_marg,
 		       screen->top_marg,
 		       (unsigned) amount,
-		       (unsigned) (screen->max_col + 1));
+		       (unsigned) MaxCols(screen));
     }
     screen->cursor_busy -= 1;
     return;
@@ -580,7 +580,7 @@ InsertLine(TScreen * screen, int n)
     if (screen->jumpscroll) {
 	if (screen->scroll_amt <= 0 &&
 	    screen->cur_row <= -screen->refresh_amt) {
-	    if (-screen->refresh_amt + n > screen->max_row + 1)
+	    if (-screen->refresh_amt + n > MaxRows(screen))
 		FlushScroll(screen);
 	    screen->scroll_amt -= n;
 	    screen->refresh_amt -= n;
@@ -613,7 +613,7 @@ InsertLine(TScreen * screen, int n)
 		       screen->bot_marg,
 		       screen->cur_row,
 		       (unsigned) n,
-		       (unsigned) (screen->max_col + 1));
+		       (unsigned) MaxCols(screen));
     }
 }
 
@@ -650,7 +650,7 @@ DeleteLine(TScreen * screen, int n)
 	n = i;
     if (screen->jumpscroll) {
 	if (screen->scroll_amt >= 0 && screen->cur_row == screen->top_marg) {
-	    if (screen->refresh_amt + n > screen->max_row + 1)
+	    if (screen->refresh_amt + n > MaxRows(screen))
 		FlushScroll(screen);
 	    screen->scroll_amt += n;
 	    screen->refresh_amt += n;
@@ -704,14 +704,14 @@ DeleteLine(TScreen * screen, int n)
 			   screen->bot_marg + screen->savelines,
 			   0,
 			   (unsigned) n,
-			   (unsigned) (screen->max_col + 1));
+			   (unsigned) MaxCols(screen));
 	else
 	    ScrnDeleteLine(screen,
 			   screen->visbuf,
 			   screen->bot_marg,
 			   screen->cur_row,
 			   (unsigned) n,
-			   (unsigned) (screen->max_col + 1));
+			   (unsigned) MaxCols(screen));
     }
 }
 
@@ -736,7 +736,7 @@ InsertChar(TScreen * screen, unsigned n)
     screen->do_wrap = 0;
 
     assert(screen->cur_col <= screen->max_col);
-    limit = screen->max_col + 1 - screen->cur_col;
+    limit = MaxCols(screen) - screen->cur_col;
 
     if (n > limit)
 	n = limit;
@@ -744,13 +744,13 @@ InsertChar(TScreen * screen, unsigned n)
     assert(n != 0);
     if (row <= screen->max_row) {
 	if (!AddToRefresh(screen)) {
-	    int col = screen->max_col + 1 - n;
+	    int col = MaxCols(screen) - n;
 	    if (screen->scroll_amt)
 		FlushScroll(screen);
 
 #if OPT_DEC_CHRSET
 	    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
-		col = (screen->max_col + 1) / 2 - n;
+		col = MaxCols(screen) / 2 - n;
 	    }
 #endif
 	    /*
@@ -758,7 +758,7 @@ InsertChar(TScreen * screen, unsigned n)
 	     * if it is being appended to
 	     */
 	    if (non_blank_line(screen->visbuf, screen->cur_row,
-			       screen->cur_col, screen->max_col + 1))
+			       screen->cur_col, MaxCols(screen)))
 		horizontal_copy_area(screen, screen->cur_col,
 				     col - screen->cur_col,
 				     (int) n);
@@ -795,7 +795,7 @@ DeleteChar(TScreen * screen, unsigned n)
     screen->do_wrap = 0;
 
     assert(screen->cur_col <= screen->max_col);
-    limit = screen->max_col + 1 - screen->cur_col;
+    limit = MaxCols(screen) - screen->cur_col;
 
     if (n > limit)
 	n = limit;
@@ -803,13 +803,13 @@ DeleteChar(TScreen * screen, unsigned n)
     assert(n != 0);
     if (row <= screen->max_row) {
 	if (!AddToRefresh(screen)) {
-	    int col = screen->max_col + 1 - n;
+	    int col = MaxCols(screen) - n;
 	    if (screen->scroll_amt)
 		FlushScroll(screen);
 
 #if OPT_DEC_CHRSET
 	    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
-		col = (screen->max_col + 1) / 2 - n;
+		col = MaxCols(screen) / 2 - n;
 	    }
 #endif
 	    horizontal_copy_area(screen,
@@ -838,7 +838,7 @@ ClearAbove(TScreen * screen)
 {
     if (screen->protected_mode != OFF_PROTECT) {
 	int row;
-	unsigned len = screen->max_col + 1;
+	unsigned len = MaxCols(screen);
 
 	assert(screen->max_col >= 0);
 	for (row = 0; row <= screen->max_row; row++)
@@ -878,7 +878,7 @@ ClearBelow(TScreen * screen)
 
     if (screen->protected_mode != OFF_PROTECT) {
 	int row;
-	unsigned len = screen->max_col + 1;
+	unsigned len = MaxCols(screen);
 
 	assert(screen->max_col >= 0);
 	for (row = screen->cur_row + 1; row <= screen->max_row; row++)
@@ -910,7 +910,7 @@ static int
 ClearInLine(TScreen * screen, int row, int col, unsigned len)
 {
     int rc = 1;
-    int flags = TERM_COLOR_FLAGS;
+    int flags = TERM_COLOR_FLAGS(term);
 
     TRACE(("ClearInLine(row=%d, col=%d, len=%d) vs %d..%d\n",
 	   row, col, len,
@@ -928,10 +928,10 @@ ClearInLine(TScreen * screen, int row, int col, unsigned len)
      * so this has the effect of suppressing trailing blanks from a
      * selection.
      */
-    if (col + (int) len < screen->max_col + 1) {
+    if (col + (int) len < MaxCols(screen)) {
 	flags |= CHARDRAWN;
     } else {
-	len = screen->max_col + 1 - col;
+	len = MaxCols(screen) - col;
     }
 
     /* If we've marked protected text on the screen, we'll have to
@@ -1022,13 +1022,13 @@ ClearInLine(TScreen * screen, int row, int col, unsigned len)
 void
 ClearRight(TScreen * screen, int n)
 {
-    unsigned len = (screen->max_col - screen->cur_col + 1);
+    unsigned len = (MaxCols(screen) - screen->cur_col);
 
     assert(screen->max_col >= 0);
     assert(screen->max_col >= screen->cur_col);
 
     if (n < 0)			/* the remainder of the line */
-	n = screen->max_col + 1;
+	n = MaxCols(screen);
     if (n == 0)			/* default for 'ECH' */
 	n = 1;
 
@@ -1059,7 +1059,7 @@ ClearLeft(TScreen * screen)
 static void
 ClearLine(TScreen * screen)
 {
-    unsigned len = screen->max_col + 1;
+    unsigned len = MaxCols(screen);
 
     assert(screen->max_col >= 0);
     (void) ClearInLine(screen, screen->cur_row, 0, len);
@@ -1164,7 +1164,7 @@ do_erase_display(TScreen * screen, int param, int mode)
 	if (screen->protected_mode != OFF_PROTECT) {
 	    int row;
 	    int rc = 1;
-	    unsigned len = screen->max_col + 1;
+	    unsigned len = MaxCols(screen);
 
 	    assert(screen->max_col >= 0);
 	    for (row = 0; row <= screen->max_row; row++)
@@ -1322,11 +1322,16 @@ HandleExposure(TScreen * screen, XEvent * event)
 #ifndef NO_ACTIVE_ICON
     if (reply->window == screen->iconVwin.window) {
 	WhichVWin(screen) = &screen->iconVwin;
-	TRACE(("HandleExposure - icon\n"));
+	TRACE(("HandleExposure - icon"));
     } else {
 	WhichVWin(screen) = &screen->fullVwin;
-	TRACE(("HandleExposure - normal\n"));
+	TRACE(("HandleExposure - normal"));
     }
+    TRACE((" event %d,%d %dx%d\n",
+	   reply->y,
+	   reply->x,
+	   reply->height,
+	   reply->width));
 #endif /* NO_ACTIVE_ICON */
 
     /* if not doing CopyArea or if this is a GraphicsExpose, don't translate */
@@ -1377,30 +1382,37 @@ handle_translated_exposure(TScreen * screen,
 			   int rect_height)
 {
     int toprow, leftcol, nrows, ncols;
+    int x0, x1;
+    int y0, y1;
 
-    TRACE(("handle_translated_exposure (%d,%d) - (%d,%d)\n",
+    TRACE(("handle_translated_exposure at %d,%d size %dx%d\n",
 	   rect_y, rect_x, rect_height, rect_width));
 
-    toprow = (rect_y - screen->border) / FontHeight(screen);
+    x0 = (rect_x - OriginX(screen));
+    x1 = (x0 + rect_width);
+
+    y0 = (rect_y - OriginY(screen));
+    y1 = (y0 + rect_height);
+
+    toprow = y0 / FontHeight(screen);
     if (toprow < 0)
 	toprow = 0;
-    leftcol = (rect_x - OriginX(screen))
-	/ CurFontWidth(screen, screen->cur_row);
+
+    leftcol = x0 / CurFontWidth(screen, screen->cur_row);
     if (leftcol < 0)
 	leftcol = 0;
-    nrows = (rect_y + rect_height - 1 - screen->border) /
-	FontHeight(screen) - toprow + 1;
-    ncols = (rect_x + rect_width - 1 - OriginX(screen)) /
-	FontWidth(screen) - leftcol + 1;
+
+    nrows = (y1 - 1) / FontHeight(screen) - toprow + 1;
+    ncols = (x1 - 1) / FontWidth(screen) - leftcol + 1;
     toprow -= screen->scrolls;
     if (toprow < 0) {
 	nrows += toprow;
 	toprow = 0;
     }
-    if (toprow + nrows - 1 > screen->max_row)
-	nrows = screen->max_row - toprow + 1;
-    if (leftcol + ncols - 1 > screen->max_col)
-	ncols = screen->max_col - leftcol + 1;
+    if (toprow + nrows > MaxRows(screen))
+	nrows = MaxRows(screen) - toprow;
+    if (leftcol + ncols > MaxCols(screen))
+	ncols = MaxCols(screen) - leftcol;
 
     if (nrows > 0 && ncols > 0) {
 	ScrnRefresh(screen, toprow, leftcol, nrows, ncols, False);
@@ -1511,8 +1523,8 @@ ChangeColors(XtermWidget tw, ScrnColors * pNew)
 #endif
     set_cursor_gcs(screen);
     XClearWindow(screen->display, VWindow(screen));
-    ScrnRefresh(screen, 0, 0, screen->max_row + 1,
-		screen->max_col + 1, False);
+    ScrnRefresh(screen, 0, 0, MaxRows(screen),
+		MaxCols(screen), False);
 #if OPT_TEK4014
     if (screen->Tshow) {
 	XClearWindow(screen->display, tek);
@@ -1528,8 +1540,8 @@ ChangeAnsiColors(XtermWidget tw)
 
     XClearWindow(screen->display, VWindow(screen));
     ScrnRefresh(screen, 0, 0,
-		screen->max_row + 1,
-		screen->max_col + 1, False);
+		MaxRows(screen),
+		MaxCols(screen), False);
 }
 
 /***====================================================================***/
@@ -1587,7 +1599,9 @@ ReverseVideo(XtermWidget termw)
 
     termw->misc.re_verse = !termw->misc.re_verse;
 
-    XDefineCursor(screen->display, VWindow(screen), screen->pointer_cursor);
+    if (XtIsRealized((Widget) termw)) {
+	XDefineCursor(screen->display, VWindow(screen), screen->pointer_cursor);
+    }
 #if OPT_TEK4014
     if (tek)
 	XDefineCursor(screen->display, tek, screen->arrow);
@@ -1596,19 +1610,24 @@ ReverseVideo(XtermWidget termw)
     if (screen->scrollWidget)
 	ScrollBarReverseVideo(screen->scrollWidget);
 
-    XSetWindowBackground(screen->display, VWindow(screen), T_COLOR(screen, TEXT_BG));
+    if (XtIsRealized((Widget) termw)) {
+	XSetWindowBackground(screen->display, VWindow(screen),
+			     T_COLOR(screen, TEXT_BG));
 
-    /* the shell-window's background will be used in the first repainting
-     * on resizing
-     */
-    XSetWindowBackground(screen->display, VShellWindow, T_COLOR(screen, TEXT_BG));
-
+	/* the shell-window's background will be used in the first repainting
+	 * on resizing
+	 */
+	XSetWindowBackground(screen->display, VShellWindow,
+			     T_COLOR(screen, TEXT_BG));
+    }
 #if OPT_TEK4014
     TekReverseVideo(screen);
 #endif
-    XClearWindow(screen->display, VWindow(screen));
-    ScrnRefresh(screen, 0, 0, screen->max_row + 1,
-		screen->max_col + 1, False);
+    if (XtIsRealized((Widget) termw)) {
+	XClearWindow(screen->display, VWindow(screen));
+	ScrnRefresh(screen, 0, 0, MaxRows(screen),
+		    MaxCols(screen), False);
+    }
 #if OPT_TEK4014
     if (screen->Tshow) {
 	XClearWindow(screen->display, tek);
@@ -1743,7 +1762,7 @@ xtermXftDrawString(TScreen * screen,
 	sbuf[n].x = x + fwidth * ncells;
 	sbuf[n].y = y;
 	charWidth = my_wcwidth((int) wc);
-	currFont = (charWidth == 2) ? wfont : font;
+	currFont = (charWidth == 2 && wfont != 0) ? wfont : font;
 	ncells += charWidth;
 	if (lastFont != currFont) {
 	    if (lastFont != 0) {
@@ -2039,7 +2058,7 @@ drawXtermText(TScreen * screen,
     }
 #endif
 #if OPT_RENDERFONT
-    if (UsingRenderFont()) {
+    if (UsingRenderFont(term)) {
 	Display *dpy = screen->display;
 	XftFont *font;
 	XGCValues values;
@@ -2101,7 +2120,7 @@ drawXtermText(TScreen * screen,
 		    unsigned part = ucs2dec(full);
 		    if (xtermIsDecGraphic(part) &&
 			(xtermIsLineDrawing(part)
-			 || xtermXftMissing(font, full)))
+			 || xtermXftMissing(term, font, full)))
 			ch = part;
 		    else
 			ch = full;
@@ -2126,7 +2145,7 @@ drawXtermText(TScreen * screen,
 		    old_high = screen->fnt_high;
 		    screen->fnt_wide = FontWidth(screen);
 		    screen->fnt_high = FontHeight(screen);
-		    xtermDrawBoxChar(screen, ch, flags, gc,
+		    xtermDrawBoxChar(term, ch, flags, gc,
 				     curX, y - FontAscent(screen));
 		    curX += FontWidth(screen);
 		    screen->fnt_wide = old_wide;
@@ -2229,13 +2248,13 @@ drawXtermText(TScreen * screen,
 	    if (text2 != 0)
 		ch |= (text2[last] << 8);
 	    isMissing = (ch != HIDDEN_CHAR)
-		&& (xtermMissingChar(ch,
+		&& (xtermMissingChar(term, ch,
 				     ((on_wide || iswide((int) ch))
 				      && screen->fnt_dwd)
 				     ? screen->fnt_dwd
 				     : font));
 #else
-	    isMissing = xtermMissingChar(ch, font);
+	    isMissing = xtermMissingChar(term, ch, font);
 #endif
 	    if (isMissing) {
 		if (last > first)
@@ -2244,7 +2263,7 @@ drawXtermText(TScreen * screen,
 		if (!ucs_workaround(screen, ch, flags, gc, DrawX(last), y,
 				    chrset, on_wide))
 #endif
-		    xtermDrawBoxChar(screen, ch, flags, gc, DrawX(last), y);
+		    xtermDrawBoxChar(term, ch, flags, gc, DrawX(last), y);
 		first = last + 1;
 	    }
 	}
@@ -2412,6 +2431,59 @@ drawXtermText(TScreen * screen,
     }
 
     return x + real_length * FontWidth(screen);
+}
+
+/* set up size hints for window manager; min 1 char by 1 char */
+void
+xtermSizeHints(XtermWidget xw, XSizeHints * sizehints, int scrollbarWidth)
+{
+    TScreen *screen = &xw->screen;
+
+    TRACE(("computing sizehints\n"));
+    TRACE(("   border    %d\n", xw->core.border_width));
+    TRACE(("   scrollbar %d\n", scrollbarWidth));
+
+    sizehints->base_width = 2 * screen->border + scrollbarWidth;
+    sizehints->base_height = 2 * screen->border;
+
+#if OPT_TOOLBAR
+    TRACE(("   toolbar   %d\n", ToolbarHeight(xw)));
+
+    sizehints->base_height += ToolbarHeight(xw);
+    sizehints->base_height += xw->core.border_width * 2;
+    sizehints->base_width += xw->core.border_width * 2;
+#endif
+
+    sizehints->width_inc = FontWidth(screen);
+    sizehints->height_inc = FontHeight(screen);
+    sizehints->min_width = sizehints->base_width + sizehints->width_inc;
+    sizehints->min_height = sizehints->base_height + sizehints->height_inc;
+
+    sizehints->flags |= (PBaseSize | PMinSize | PResizeInc);
+
+    TRACE(("...sizehints base %dx%d inc %dx%d min %dx%d max %dx%d\n",
+	   sizehints->base_height, sizehints->base_width,
+	   sizehints->height_inc, sizehints->width_inc,
+	   sizehints->min_height, sizehints->min_width,
+	   MaxRows(screen) * FontHeight(screen) + sizehints->min_height,
+	   MaxCols(screen) * FontWidth(screen) + sizehints->min_width));
+}
+
+/*
+ * Note: width and height are not set here because they are
+ * obsolete.
+ */
+void
+xtermFixupSizes(XtermWidget xw, XSizeHints * sizehints)
+{
+    XtVaSetValues(SHELL_OF(xw),
+		  XtNbaseWidth, sizehints->base_width,
+		  XtNbaseHeight, sizehints->base_height,
+		  XtNwidthInc, sizehints->width_inc,
+		  XtNheightInc, sizehints->height_inc,
+		  XtNminWidth, sizehints->min_width,
+		  XtNminHeight, sizehints->min_height,
+		  (XtPointer) 0);
 }
 
 /*

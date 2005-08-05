@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.191 2005/07/07 00:46:13 tom Exp $ */
+/* $XTermId: button.c,v 1.194 2005/08/05 01:25:39 tom Exp $ */
 
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
@@ -52,7 +52,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.80 2005/07/07 00:46:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.81 2005/08/05 01:25:39 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -106,7 +106,7 @@ button.c	Handles button events in the terminal emulator.
        meta key  -> 2
        control key -> 4 */
 
-#define	Coordinate(r,c)		((r) * (term->screen.max_col+1) + (c))
+#define	Coordinate(r,c)		((r) * MaxCols(&(term->screen)) + (c))
 
 #if OPT_DEC_LOCATOR
 static ANSI reply;
@@ -778,7 +778,7 @@ ReadLineMovePoint(int col, int ldelta)
     Char line[6];
     unsigned count = 0;
 
-    col += ldelta * (screen->max_col + 1) - screen->cur_col;
+    col += ldelta * MaxCols(screen) - screen->cur_col;
     if (col == 0)
 	return 0;
     if (screen->control_eight_bits) {
@@ -801,7 +801,7 @@ ReadLineDelete(int r1, int c1, int r2, int c2)
     TScreen *screen = &term->screen;
     int del;
 
-    del = c2 - c1 + (r2 - r1) * (screen->max_col + 1);
+    del = c2 - c1 + (r2 - r1) * MaxCols(screen);
     if (del <= 0)		/* Just in case... */
 	return 0;
     while (del--)
@@ -876,7 +876,7 @@ ReadLineButton(Widget w GCC_UNUSED,
     }
     /* Correct by half a width - we are acting on a boundary, not on a cell. */
     col = (event->xbutton.x - OriginX(screen) + (FontWidth(screen) - 1) / 2)
-	/ FontWidth(screen) - screen->cur_col + ldelta * (screen->max_col + 1);
+	/ FontWidth(screen) - screen->cur_col + ldelta * MaxCols(screen);
     if (col == 0)
 	goto finish;
     Line[0] = ESC;
@@ -2082,8 +2082,8 @@ PointToRowCol(int y,
     col = (x - OriginX(screen)) / FontWidth(screen);
     if (col < 0)
 	col = 0;
-    else if (col > screen->max_col + 1) {
-	col = screen->max_col + 1;
+    else if (col > MaxCols(screen)) {
+	col = MaxCols(screen);
     }
 #if OPT_WIDE_CHARS
     /*
@@ -2470,7 +2470,7 @@ ReHiliteText(int frow,
 	return;			/* nothing to do, since frow <= trow */
     else if (trow > screen->max_row) {
 	trow = screen->max_row;
-	tcol = screen->max_col + 1;
+	tcol = MaxCols(screen);
     }
     if (frow == trow && fcol == tcol)
 	return;
@@ -2480,7 +2480,7 @@ ReHiliteText(int frow,
 	    ScrnRefresh(screen, frow, fcol, 1, i, True);
 	}
 	if ((i = trow - frow - 1) > 0) {	/* middle rows */
-	    ScrnRefresh(screen, frow + 1, 0, i, screen->max_col + 1, True);
+	    ScrnRefresh(screen, frow + 1, 0, i, MaxCols(screen), True);
 	}
 	if (tcol > 0 && trow <= screen->max_row) {	/* last row */
 	    ScrnRefresh(screen, trow, 0, 1, tcol, True);
@@ -3041,7 +3041,7 @@ SaveText(TScreen * screen,
     for (i = scol; i < ecol; i++) {
 	c = E2A(XTERM_CELL(row, i));
 #if OPT_WIDE_CHARS
-	if (screen->utf8_mode) {
+	if (screen->utf8_mode != uFalse) {
 	    c_1 = E2A(XTERM_CELL_C1(row, i));
 	    c_2 = E2A(XTERM_CELL_C2(row, i));
 	}
@@ -3061,7 +3061,7 @@ SaveText(TScreen * screen,
 	    continue;
 	}
 	previous = c;
-	if (screen->utf8_mode) {
+	if (screen->utf8_mode != uFalse) {
 	    lp = convertToUTF8(lp, (c != 0) ? c : ' ');
 	    if (c_1) {
 		lp = convertToUTF8(lp, c_1);
