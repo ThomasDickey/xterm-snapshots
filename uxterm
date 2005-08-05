@@ -1,10 +1,14 @@
 #!/bin/sh
-# $XTermId: uxterm,v 1.18 2004/12/01 01:27:47 tom Exp $
-# $XFree86: xc/programs/xterm/uxterm,v 1.10 2004/12/01 01:27:47 dickey Exp $
+# $XTermId: uxterm,v 1.20 2005/08/05 01:25:40 tom Exp $
+# $XFree86: xc/programs/xterm/uxterm,v 1.11 2005/08/05 01:25:40 dickey Exp $
 # wrapper script to setup xterm with UTF-8 locale
 
 program=xterm
-locale=`(LC_ALL=C LC_CTYPE=C LANG=C locale >/dev/null) 2>&1`
+
+# Check if there is a workable locale program.  If there is not, we will read
+# something via the standard error.  Ignore whatever is written to the
+# standard output.
+locale=`sh -c "LC_ALL=C LC_CTYPE=C LANG=C locale >/dev/null" 2>&1`
 found=no
 
 # Check for -version and -help options, to provide a simple return without
@@ -52,14 +56,21 @@ if test $found != yes ; then
 		name="LC_CTYPE"
 		value="en_US.UTF-8"
 	fi
+	eval save=\$${name}
 	eval ${name}=${value}
 	eval export ${name}
 	if test -z "$locale" ; then
 		# The 'locale' program tries to do a sanity check.
-		check=`(locale >/dev/null) 2>&1`
+		check=`sh -c "locale >/dev/null" 2>&1`
 		if test -n "$check" ; then
-			echo "uxterm tried to use locale $value" >&2
-			echo "$check" >&2
+			eval ${name}=${save}
+			eval export ${name}
+
+			echo "uxterm tried to use locale $value by setting \$$name" >&2
+			xmessage -file - <<EOF
+uxterm tried unsuccessfully to use locale $value
+by setting \$$name to "${value}".
+EOF
 			exit 1
 		fi
 	fi

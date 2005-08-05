@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.165 2005/07/07 00:46:14 tom Exp $ */
+/* $XTermId: menu.c,v 1.175 2005/08/05 01:25:40 tom Exp $ */
 
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -47,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.60 2005/07/07 00:46:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.61 2005/08/05 01:25:40 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -759,7 +759,7 @@ do_securekbd(Widget gw GCC_UNUSED,
 	ReverseVideo(term);
 	screen->grabbedKbd = False;
     } else {
-	if (XGrabKeyboard(screen->display, XtWindow(term),
+	if (XGrabKeyboard(screen->display, XtWindow(CURRENT_EMU(screen)),
 			  True, GrabModeAsync, GrabModeAsync, now)
 	    != GrabSuccess) {
 	    Bell(XkbBI_MinorError, 100);
@@ -1307,7 +1307,7 @@ do_vtfont(Widget gw GCC_UNUSED,
 
     for (i = 0; i < NMENUFONTS; i++) {
 	if (strcmp(entryname, fontMenuEntries[i].name) == 0) {
-	    SetVTFont(i, True, NULL);
+	    SetVTFont(term, i, True, NULL);
 	    return;
 	}
     }
@@ -1362,10 +1362,10 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 
     term->misc.render_font = !term->misc.render_font;
     update_font_renderfont();
-    xtermLoadFont(screen, xtermFontName(name), True, fontnum);
+    xtermLoadFont(term, xtermFontName(name), True, fontnum);
     ScrnRefresh(screen, 0, 0,
-		screen->max_row + 1,
-		screen->max_col + 1, True);
+		MaxRows(screen),
+		MaxCols(screen), True);
 }
 #endif
 
@@ -1383,8 +1383,8 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
      */
     if (!screen->utf8_mode) {
 	if (screen->wide_chars) {
-	    if (xtermLoadWideFonts(term)) {
-		SetVTFont(screen->menu_font_number, TRUE, NULL);
+	    if (xtermLoadWideFonts(term, True)) {
+		SetVTFont(term, screen->menu_font_number, TRUE, NULL);
 	    }
 	} else {
 	    ChangeToWide(screen);
@@ -1815,8 +1815,12 @@ HandleScrollbar(Widget w,
 		String * params,
 		Cardinal *param_count)
 {
-    handle_vt_toggle(do_scrollbar, term->screen.fullVwin.sb_info.width,
-		     params, *param_count, w);
+    if (IsIcon(&(term->screen))) {
+	Bell(XkbBI_MinorError, 0);
+    } else {
+	handle_vt_toggle(do_scrollbar, term->screen.fullVwin.sb_info.width,
+			 params, *param_count, w);
+    }
 }
 
 void
@@ -2341,7 +2345,6 @@ SetupToolbar(void)
 {
     TRACE(("SetupToolbar\n"));
     ShowToolbar(resource.toolBar);
-    update_toolbar();
 }
 
 static TbInfo *
@@ -2351,6 +2354,25 @@ toolbar_info(Widget w)
     return ((w == (Widget) term)
 	    ? &(WhichVWin(&(term->screen))->tb_info)
 	    : &(tekWidget->tek.tb_info));
+}
+
+static void
+repairSizeHints(void)
+{
+    TScreen *screen = &term->screen;
+
+    XSizeHints sizehints;
+
+    if (XtIsRealized((Widget) term)) {
+	bzero(&sizehints, sizeof(sizehints));
+	xtermSizeHints(term, &sizehints, ScrollbarWidth(screen));
+	xtermFixupSizes(term, &sizehints);
+
+	sizehints.width = MaxCols(screen) * FontWidth(screen) + sizehints.min_width;
+	sizehints.height = MaxRows(screen) * FontHeight(screen) + sizehints.min_height;
+
+	XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(term)), &sizehints);
+    }
 }
 
 static void
@@ -2365,9 +2387,11 @@ hide_toolbar(Widget w)
 		      (XtPointer) 0);
 
 	if (info->menu_bar != 0) {
+	    repairSizeHints();
 	    XtUnmanageChild(info->menu_bar);
-	    if (XtIsRealized(info->menu_bar))
+	    if (XtIsRealized(info->menu_bar)) {
 		XtUnmapWidget(info->menu_bar);
+	    }
 	}
 	TRACE(("...hiding toolbar (done)\n"));
     }
@@ -2384,9 +2408,12 @@ show_toolbar(Widget w)
 	    XtVaSetValues(w,
 			  XtNfromVert, info->menu_bar,
 			  (XtPointer) 0);
-	    XtManageChild(info->menu_bar);
 	    if (XtIsRealized(info->menu_bar))
+		repairSizeHints();
+	    XtManageChild(info->menu_bar);
+	    if (XtIsRealized(info->menu_bar)) {
 		XtMapWidget(info->menu_bar);
+	    }
 	}
 	/*
 	 * This is needed to make the terminal widget move down below the
@@ -2400,12 +2427,17 @@ show_toolbar(Widget w)
 void
 ShowToolbar(Bool enable)
 {
-    if (enable) {
-	show_toolbar((Widget) term);
-	show_toolbar((Widget) tekWidget);
+    if (IsIcon(&(term->screen))) {
+	Bell(XkbBI_MinorError, 0);
     } else {
-	hide_toolbar((Widget) term);
-	hide_toolbar((Widget) tekWidget);
+	if (enable) {
+	    show_toolbar((Widget) term);
+	    show_toolbar((Widget) tekWidget);
+	} else {
+	    hide_toolbar((Widget) term);
+	    hide_toolbar((Widget) tekWidget);
+	}
+	update_toolbar();
     }
 }
 
@@ -2415,8 +2447,12 @@ HandleToolbar(Widget w,
 	      String * params GCC_UNUSED,
 	      Cardinal *param_count GCC_UNUSED)
 {
-    handle_vt_toggle(do_toolbar, resource.toolBar,
-		     params, *param_count, w);
+    if (IsIcon(&(term->screen))) {
+	Bell(XkbBI_MinorError, 0);
+    } else {
+	handle_vt_toggle(do_toolbar, resource.toolBar,
+			 params, *param_count, w);
+    }
 }
 
 /* ARGSUSED */
@@ -2430,8 +2466,11 @@ do_toolbar(Widget gw GCC_UNUSED,
      * menu which contains the checkbox indicating whether the toolbar is
      * active.
      */
-    ShowToolbar(resource.toolBar = !resource.toolBar);
-    update_toolbar();
+    if (IsIcon(&(term->screen))) {
+	Bell(XkbBI_MinorError, 0);
+    } else {
+	ShowToolbar(resource.toolBar = !resource.toolBar);
+    }
 }
 
 void
@@ -2766,8 +2805,8 @@ void
 update_font_utf8_mode(void)
 {
     Widget iw = fontMenuEntries[fontMenu_wide_chars].widget;
-    Bool active = (term->screen.utf8_mode <= 1);
-    Bool enable = term->screen.utf8_mode;
+    Bool active = (term->screen.utf8_mode != uAlways);
+    Bool enable = (term->screen.utf8_mode != uFalse);
 
     TRACE(("update_font_utf8_mode active %d, enable %d\n", active, enable));
     set_sensitivity(term->screen.fontMenu, iw, active);

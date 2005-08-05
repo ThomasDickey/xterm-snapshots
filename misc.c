@@ -1,10 +1,10 @@
-/* $XTermId: misc.c,v 1.267 2005/07/07 00:46:14 tom Exp $ */
+/* $XTermId: misc.c,v 1.270 2005/08/05 01:25:40 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.98 2005/07/07 00:46:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.99 2005/08/05 01:25:40 dickey Exp $ */
 
 /*
  *
@@ -628,7 +628,7 @@ dabbrev_prev_char(int *xp, int *yp, TScreen * screen)
 	    return linep[*xp];
 	if (--*yp < 0)		/* go to previous line */
 	    break;
-	*xp = screen->max_col + 1;
+	*xp = MaxCols(screen);
 	if (!((long) BUF_FLAGS(screen->allbuf, *yp) & LINEWRAPPED))
 	    return ' ';		/* treat lines as separate */
     }
@@ -1755,7 +1755,7 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 		}
 	    }
 	    fonts.f_n = buf;
-	    SetVTFont(fontMenu_fontescape, True, &fonts);
+	    SetVTFont(term, fontMenu_fontescape, True, &fonts);
 	}
 	break;
     case 51:

@@ -1,7 +1,7 @@
-/* $XTermId: testxmc.c,v 1.28 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.30 2005/08/05 01:25:40 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/testxmc.c,v 3.12 2005/01/14 01:50:03 dickey Exp $
+ * $XFree86: xc/programs/xterm/testxmc.c,v 3.13 2005/08/05 01:25:40 dickey Exp $
  */
 
 /************************************************************
@@ -221,6 +221,6 @@ Resolve_XMC(TScreen * screen)
 
     if (changed) {
 	ScrnUpdate(screen, screen->cur_row, 0, row + 1 - screen->cur_row,
-		   screen->max_col + 1, True);
+		   MaxCols(screen), True);
     }
 }

@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.204 2005/07/07 00:46:14 tom Exp $ */
+/* $XTermId: os2main.c,v 1.206 2005/08/05 01:25:40 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.78 2005/07/07 00:46:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.79 2005/08/05 01:25:40 dickey Exp $ */
 
 /***********************************************************
 
@@ -1632,8 +1632,8 @@ spawn(void)
     } else
 #endif
     {
-	TTYSIZE_ROWS(ts) = screen->max_row + 1;
-	TTYSIZE_COLS(ts) = screen->max_col + 1;
+	TTYSIZE_ROWS(ts) = MaxRows(screen);
+	TTYSIZE_COLS(ts) = MaxCols(screen);
 	ts.ws_xpixel = FullWidth(screen);
 	ts.ws_ypixel = FullHeight(screen);
     }
@@ -1774,15 +1774,15 @@ opencons();*/
 	    if (handshake.rows > 0 && handshake.cols > 0) {
 		set_max_row(screen, handshake.rows);
 		set_max_col(screen, handshake.cols);
-		TTYSIZE_ROWS(ts) = screen->max_row + 1;
-		TTYSIZE_COLS(ts) = screen->max_col + 1;
+		TTYSIZE_ROWS(ts) = MaxRows(screen);
+		TTYSIZE_COLS(ts) = MaxCols(screen);
 		ts.ws_xpixel = FullWidth(screen);
 		ts.ws_ypixel = FullHeight(screen);
 	    }
 
-	    sprintf(numbuf, "%d", screen->max_col + 1);
+	    sprintf(numbuf, "%d", MaxCols(screen));
 	    xtermSetenv("COLUMNS=", numbuf);
-	    sprintf(numbuf, "%d", screen->max_row + 1);
+	    sprintf(numbuf, "%d", MaxRows(screen));
 	    xtermSetenv("LINES=", numbuf);
 
 	    /* reconstruct dead environ variable */

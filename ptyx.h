@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.374 2005/07/07 00:46:14 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.382 2005/08/05 01:25:40 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.123 2005/07/07 00:46:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.124 2005/08/05 01:25:40 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey
@@ -268,6 +268,8 @@ typedef enum {NORMAL, LEFTEXTENSION, RIGHTEXTENSION} EventMode;
  * The origin of a screen is 0, 0.  Therefore, the number of rows
  * on a screen is screen->max_row + 1, and similarly for columns.
  */
+#define MaxCols(screen)		((screen)->max_col + 1)
+#define MaxRows(screen)		((screen)->max_row + 1)
 
 typedef unsigned char Char;		/* to support 8 bit chars */
 typedef Char *ScrnPtr;
@@ -707,7 +709,7 @@ typedef enum {
 
 #if OPT_ISO_COLORS
 #define if_OPT_ISO_COLORS(screen, code) if(screen->colorMode) code
-#define TERM_COLOR_FLAGS (term->flags & (FG_COLOR|BG_COLOR))
+#define TERM_COLOR_FLAGS(xw)	((xw)->flags & (FG_COLOR|BG_COLOR))
 #define COLOR_0		0
 #define COLOR_1		1
 #define COLOR_2		2
@@ -764,7 +766,7 @@ typedef enum {
 #else	/* !OPT_ISO_COLORS */
 
 #define if_OPT_ISO_COLORS(screen, code) /* nothing */
-#define TERM_COLOR_FLAGS 0
+#define TERM_COLOR_FLAGS(xw) 0
 
 #define ReverseOrHilite(screen,flags,hilite) \
 		      (( (flags & INVERSE) && !hilite) || \
@@ -1593,6 +1595,13 @@ typedef enum {
     keyboardIsVT220
 } xtermKeyboardType;
 
+typedef enum {			/* legal values for screen.utf8_mode */
+    uFalse = 0,
+    uTrue = 1,
+    uAlways = 2,
+    uDefault = 3
+} utf8ModeTypes;
+
 #if OPT_HP_FUNC_KEYS
 #define NAME_HP_KT " hp"
 #else
@@ -1871,6 +1880,8 @@ typedef struct _TekWidgetRec {
 #define OriginX(screen) (ScrollbarWidth(screen) + screen->border)
 #endif
 
+#define OriginY(screen) (screen->border)
+
 #define CursorMoved(screen) \
 		((screen)->cursor_moved || \
 		    ((screen)->cursor_col != (screen)->cur_col || \
@@ -1911,7 +1922,7 @@ typedef struct _TekWidgetRec {
 /*
  * Macro to check if we are iconified; do not use render for that case.
  */
-#define UsingRenderFont()	(term->misc.render_font && !IsIcon(&(term->screen)))
+#define UsingRenderFont(xw)	((xw)->misc.render_font && !IsIcon(&((xw)->screen)))
 
 /*
  * These definitions do not depend on whether xterm supports active-icon.
@@ -1942,6 +1953,9 @@ typedef struct _TekWidgetRec {
 #define TFullWidth(screen)	WhichTWin(screen)->fullwidth
 #define TFullHeight(screen)	WhichTWin(screen)->fullheight
 #define TekScale(screen)	WhichTWin(screen)->tekscale
+
+#define BorderWidth(w)		((w)->core.border_width)
+#define BorderPixel(w)		((w)->core.border_pixel)
 
 #if OPT_TOOLBAR
 #define ToolbarHeight(w) ((resource.toolBar) ? term->VT100_TB_INFO(menu_height) : 0)
