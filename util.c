@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.248 2005/08/05 01:25:40 tom Exp $ */
+/* $XTermId: util.c,v 1.250 2005/08/09 23:50:33 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
@@ -2439,7 +2439,7 @@ xtermSizeHints(XtermWidget xw, XSizeHints * sizehints, int scrollbarWidth)
 {
     TScreen *screen = &xw->screen;
 
-    TRACE(("computing sizehints\n"));
+    TRACE(("xtermSizeHints\n"));
     TRACE(("   border    %d\n", xw->core.border_width));
     TRACE(("   scrollbar %d\n", scrollbarWidth));
 
@@ -2476,6 +2476,8 @@ xtermSizeHints(XtermWidget xw, XSizeHints * sizehints, int scrollbarWidth)
 void
 xtermFixupSizes(XtermWidget xw, XSizeHints * sizehints)
 {
+    TScreen *screen = &xw->screen;
+
     XtVaSetValues(SHELL_OF(xw),
 		  XtNbaseWidth, sizehints->base_width,
 		  XtNbaseHeight, sizehints->base_height,
@@ -2484,6 +2486,8 @@ xtermFixupSizes(XtermWidget xw, XSizeHints * sizehints)
 		  XtNminWidth, sizehints->min_width,
 		  XtNminHeight, sizehints->min_height,
 		  (XtPointer) 0);
+
+    XFlush(screen->display);	/* synchronize */
 }
 
 /*

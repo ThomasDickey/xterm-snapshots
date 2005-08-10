@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.345 2005/08/05 01:25:40 tom Exp $ */
+/* $XTermId: xterm.h,v 1.346 2005/08/09 23:47:39 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.107 2005/08/05 01:25:40 dickey Exp $ */
 
@@ -923,7 +923,8 @@ extern void ChangeToWide(TScreen * screen);
 #endif
 
 /* scrollbar.c */
-extern void DoResizeScreen (XtermWidget xw);
+extern void DisableSizeHints(XtermWidget xw);
+extern void DoResizeScreen (XtermWidget xw, Bool disableHints);
 extern void HandleScrollBack PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollForward PROTO_XT_ACTIONS_ARGS;
 extern void ResizeScrollBar (XtermWidget xw);

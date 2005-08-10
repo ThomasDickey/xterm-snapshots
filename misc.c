@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.270 2005/08/05 01:25:40 tom Exp $ */
+/* $XTermId: misc.c,v 1.271 2005/08/07 22:26:43 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -343,6 +343,7 @@ DoSpecialEnterNotify(XEnterWindowEvent * ev)
 {
     TScreen *screen = &term->screen;
 
+    TRACE(("DoSpecialEnterNotify(%d)\n", screen->select));
 #ifdef ACTIVEWINDOWINPUTONLY
     if (ev->window == XtWindow(XtParent(CURRENT_EMU(screen))))
 #endif
@@ -360,6 +361,7 @@ HandleEnterWindow(Widget w GCC_UNUSED,
 		  Boolean * cont GCC_UNUSED)
 {
     /* NOP since we handled it above */
+    TRACE(("HandleEnterWindow ignored\n"));
 }
 
 static void
@@ -367,6 +369,7 @@ DoSpecialLeaveNotify(XEnterWindowEvent * ev)
 {
     TScreen *screen = &term->screen;
 
+    TRACE(("DoSpecialLeaveNotify(%d)\n", screen->select));
 #ifdef ACTIVEWINDOWINPUTONLY
     if (ev->window == XtWindow(XtParent(CURRENT_EMU(screen))))
 #endif
@@ -384,6 +387,7 @@ HandleLeaveWindow(Widget w GCC_UNUSED,
 		  Boolean * cont GCC_UNUSED)
 {
     /* NOP since we handled it above */
+    TRACE(("HandleLeaveWindow ignored\n"));
 }
 
 /*ARGSUSED*/
@@ -396,10 +400,28 @@ HandleFocusChange(Widget w GCC_UNUSED,
     XFocusChangeEvent *event = (XFocusChangeEvent *) ev;
     TScreen *screen = &term->screen;
 
+    TRACE(("HandleFocusChange type=%d, mode=%d, detail=%d\n",
+	   event->type,
+	   event->mode,
+	   event->detail));
+
     if (event->type == FocusIn) {
+	/*
+	 * NotifyNonlinear only happens (on FocusIn) if the pointer was not in
+	 * one of our windows.  Use this to reset a case where one xterm is
+	 * partly obscuring another, and X gets (us) confused about whether the
+	 * pointer was in the window.  In particular, this can happen if the
+	 * user is resizing the obscuring window, causing some events to not be
+	 * delivered to the obscured window.
+	 */
+	if (event->detail == NotifyNonlinear
+	    && (screen->select & INWINDOW) != 0) {
+	    unselectwindow(screen, INWINDOW);
+	}
 	selectwindow(screen,
-		     (event->detail == NotifyPointer) ? INWINDOW :
-		     FOCUS);
+		     ((event->detail == NotifyPointer)
+		      ? INWINDOW
+		      : FOCUS));
     } else {
 	/*
 	 * XGrabKeyboard() will generate FocusOut/NotifyGrab event that we want
@@ -407,8 +429,9 @@ HandleFocusChange(Widget w GCC_UNUSED,
 	 */
 	if (event->mode != NotifyGrab) {
 	    unselectwindow(screen,
-			   (event->detail == NotifyPointer) ? INWINDOW :
-			   FOCUS);
+			   ((event->detail == NotifyPointer)
+			    ? INWINDOW
+			    : FOCUS));
 	}
 	if (screen->grabbedKbd && (event->mode == NotifyUngrab)) {
 	    Bell(XkbBI_Info, 100);
@@ -422,6 +445,8 @@ HandleFocusChange(Widget w GCC_UNUSED,
 static void
 selectwindow(TScreen * screen, int flag)
 {
+    TRACE(("selectwindow(%d) flag=%d\n", screen->select, flag));
+
 #if OPT_TEK4014
     if (screen->TekEmu) {
 	if (!Ttoggled)
@@ -448,6 +473,8 @@ selectwindow(TScreen * screen, int flag)
 static void
 unselectwindow(TScreen * screen, int flag)
 {
+    TRACE(("unselectwindow(%d) flag=%d\n", screen->select, flag));
+
     if (screen->always_highlight)
 	return;
 

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.172 2005/08/05 01:25:39 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.175 2005/08/09 23:38:33 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.53 2005/08/05 01:25:39 dickey Exp $
@@ -1103,10 +1103,11 @@ xtermLoadVTFonts(XtermWidget w, char *myName, char *myClass)
 
 #if OPT_WIDE_CHARS
 static Bool
-isWideFont(XFontStruct * fp, Bool nullOk)
+isWideFont(XFontStruct * fp, char *tag, Bool nullOk)
 {
     Bool result = False;
 
+    (void) tag;
     if (fp != 0) {
 	unsigned count = 0;
 	if (fp->min_byte1 == 0 && fp->max_byte1 == 0) {
@@ -1117,7 +1118,7 @@ isWideFont(XFontStruct * fp, Bool nullOk)
 	    unsigned last = (fp->max_byte1 << 8) + fp->max_char_or_byte2;
 	    count = last + 1 - first;
 	}
-	TRACE(("isWideFont found %d cells\n", count));
+	TRACE(("isWideFont(%s) found %d cells\n", tag, count));
 	result = (count > 256) ? True : False;
     } else {
 	result = nullOk;
@@ -1131,10 +1132,10 @@ currentFontsAreWide(XtermWidget w, Bool nullOk)
     Bool result = True;
     TScreen *screen = &(w->screen);
 
-    result = (isWideFont(screen->fnt_norm, nullOk)
-	      && isWideFont(screen->fnt_bold, nullOk)
-	      && isWideFont(screen->fnt_dwd, nullOk)
-	      && isWideFont(screen->fnt_dwdb, nullOk));
+    result = (isWideFont(screen->fnt_norm, "normal", nullOk)
+	      && isWideFont(screen->fnt_bold, "bold", nullOk)
+	      && isWideFont(screen->fnt_dwd, "wide", nullOk)
+	      && isWideFont(screen->fnt_dwdb, "wide-bold", nullOk));
 
     TRACE(("currentFontsAreWide returns %d\n", result));
     return result;
@@ -1500,7 +1501,7 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
 	    XClearWindow(screen->display, VWindow(screen));
 	}
 	TRACE(("xtermUpdateFontInfo {{\n"));
-	DoResizeScreen(xw);	/* set to the new natural size */
+	DoResizeScreen(xw, True);	/* set to the new natural size */
 	if (screen->scrollWidget)
 	    ResizeScrollBar(xw);
 	Redraw();

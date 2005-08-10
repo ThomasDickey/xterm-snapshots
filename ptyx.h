@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.382 2005/08/05 01:25:40 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.383 2005/08/07 18:24:52 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -1185,6 +1185,7 @@ typedef struct {
 typedef struct {
 	Widget		menu_bar;	/* toolbar, if initialized	*/
 	Dimension	menu_height;	/* ...and its height		*/
+	Dimension	menu_border;	/* ...and its border		*/
 } TbInfo;
 #define VT100_TB_INFO(name) screen.fullVwin.tb_info.name
 #endif
@@ -1958,7 +1959,10 @@ typedef struct _TekWidgetRec {
 #define BorderPixel(w)		((w)->core.border_pixel)
 
 #if OPT_TOOLBAR
-#define ToolbarHeight(w) ((resource.toolBar) ? term->VT100_TB_INFO(menu_height) : 0)
+#define ToolbarHeight(w)	((resource.toolBar) \
+				 ? (term->VT100_TB_INFO(menu_height) \
+				  + term->VT100_TB_INFO(menu_border) * 2) \
+				 : 0)
 #else
 #define ToolbarHeight(w) 0
 #endif

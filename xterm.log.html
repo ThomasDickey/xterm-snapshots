@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.287 2005/08/05 01:25:40 tom Exp $
+  $XTermId: xterm.log.html,v 1.290 2005/08/10 00:22:28 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.140 2005/08/05 01:25:40 dickey Exp $
   -->
 <HTML>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_205">Patch #205 - 2005/8/? - XFree86 4.5.99.9</A>
 <LI><A HREF="#xterm_204">Patch #204 - 2005/8/4 - XFree86 4.5.99.9</A>
 <LI><A HREF="#xterm_203">Patch #203 - 2005/7/6 - XFree86 4.5.99.7</A>
 <LI><A HREF="#xterm_202">Patch #202 - 2005/5/2 - XFree86 4.5.99.3</A>
@@ -252,6 +253,17 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_205">Patch #205 - 2005/8/? - XFree86 4.5.99.9</A></H1>
+<ul>
+	<li>fixes to make toolbar layout work with IceWM.
+
+	<li>workaround for GenToo Bugzilla #100728.
+
+	<li>add menubar's border width to layout computation.  Normally this
+	    is zero, but patterns such as <code>XTerm*borderWidth:1</code>
+	    would give poor layout for the toolbar configuration.
+</ul>
 
 <H1><A NAME="xterm_204">Patch #204 - 2005/8/4 - XFree86 4.5.99.9</A></H1>
 <ul>
