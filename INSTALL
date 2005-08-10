@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.82 2005/07/07 00:46:13 tom Exp $
+-- $XTermId: INSTALL,v 1.83 2005/08/09 22:00:57 tom Exp $
 -- $XFree86: xc/programs/xterm/INSTALL,v 3.38 2005/07/07 00:46:13 dickey Exp $
 -- Thomas E. Dickey
 
@@ -330,6 +330,10 @@ The options (in alphabetic order):
 
   	Compile-in code that builds a toolbar with pulldown menus.  The
 	normal popup menus are still available.
+
+	This is an experimental option.  As of patch #204, it is known to
+	work well with fvwm, but not well with some other window managers,
+	e.g., KDE's Kwin and IceWM.
 
   --enable-trace          test: set to enable debugging traces
 

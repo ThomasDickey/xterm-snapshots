@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.106 2005/08/05 01:25:40 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.108 2005/08/09 23:54:25 tom Exp $ */
 
 /*
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
@@ -88,11 +88,21 @@
 static void ScrollTextTo PROTO_XT_CALLBACK_ARGS;
 static void ScrollTextUpDownBy PROTO_XT_CALLBACK_ARGS;
 
+void
+DisableSizeHints(XtermWidget xw)
+{
+    XSizeHints sizehints;
+    memset(&sizehints, 0, sizeof(sizehints));
+
+    XSetWMNormalHints(xw->screen.display, XtWindow(SHELL_OF(xw)), &sizehints);
+    XFlush(xw->screen.display);
+}
+
 /* Resize the text window for a terminal screen, modifying the
  * appropriate WM_SIZE_HINTS and taking advantage of bit gravity.
  */
 void
-DoResizeScreen(XtermWidget xw)
+DoResizeScreen(XtermWidget xw, Bool disableHints)
 {
     TScreen *screen = &xw->screen;
 
@@ -156,7 +166,7 @@ DoResizeScreen(XtermWidget xw)
      * to have time to completely rewrite xterm.
      */
 
-    TRACE(("ResizeScreen\n"));
+    TRACE(("DoResizeScreen\n"));
 
 #if 1				/* ndef nothack */
     /*
@@ -166,6 +176,9 @@ DoResizeScreen(XtermWidget xw)
 			   &sizehints, &supp))
 	bzero(&sizehints, sizeof(sizehints));
 
+    if (disableHints)
+	DisableSizeHints(xw);
+    sizehints.flags &= ~(USPosition | USSize | PPosition | PSize);
     xtermSizeHints(xw, &sizehints, ScrollbarWidth(screen));
 
     /* These are obsolete, but old clients may use them */
@@ -178,10 +191,11 @@ DoResizeScreen(XtermWidget xw)
     reqWidth = MaxCols(screen) * FontWidth(screen) + min_wide;
     reqHeight = MaxRows(screen) * FontHeight(screen) + min_high;
 
-    TRACE(("...requesting screensize chars %dx%d, pixels %dx%d\n",
+    TRACE(("...requesting screensize chars %dx%d, pixels %dx%d min %dx%d\n",
 	   MaxRows(screen),
 	   MaxCols(screen),
-	   reqHeight, reqWidth));
+	   reqHeight, reqWidth,
+	   min_high, min_wide));
 
     geomreqresult = XtMakeResizeRequest((Widget) xw, reqWidth, reqHeight,
 					&repWidth, &repHeight);
@@ -432,7 +446,7 @@ ScrollBarOn(XtermWidget xw, int init, int doalloc)
 	       BorderWidth(screen->scrollWidget)));
 
 	ScrollBarDrawThumb(screen->scrollWidget);
-	DoResizeScreen(xw);
+	DoResizeScreen(xw, False);
 
 #ifdef SCROLLBAR_RIGHT
 	updateRightScrollbar(term);
@@ -457,7 +471,7 @@ ScrollBarOff(TScreen * screen)
     if (XtIsRealized((Widget) term)) {
 	XtUnmapWidget(screen->scrollWidget);
 	screen->fullVwin.sb_info.width = 0;
-	DoResizeScreen(term);
+	DoResizeScreen(term, False);
 	update_scrollbar();
 	if (screen->visbuf) {
 	    XClearWindow(screen->display, XtWindow(term));

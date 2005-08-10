@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.603 2005/08/05 01:25:39 tom Exp $ */
+/* $XTermId: charproc.c,v 1.604 2005/08/07 18:37:24 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
@@ -3592,8 +3592,10 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	    if (Vwin->tb_info.menu_bar) {
 		XtVaGetValues(Vwin->tb_info.menu_bar,
 			      XtNheight, &Vwin->tb_info.menu_height,
+			      XtNborderWidth, &Vwin->tb_info.menu_border,
 			      (XtPointer) 0);
 		TRACE(("...menu_height %d\n", Vwin->tb_info.menu_height));
+		TRACE(("...menu_border %d\n", Vwin->tb_info.menu_border));
 	    }
 	}
 #endif
