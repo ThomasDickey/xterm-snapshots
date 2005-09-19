@@ -1,10 +1,10 @@
-/* $XTermId: misc.c,v 1.271 2005/08/07 22:26:43 tom Exp $ */
+/* $XTermId: misc.c,v 1.276 2005/09/18 23:48:13 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.99 2005/08/05 01:25:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.100 2005/09/18 23:48:13 dickey Exp $ */
 
 /*
  *
@@ -148,6 +148,9 @@ xevents(void)
     XEvent event;
     XtInputMask input_mask;
     TScreen *screen = &term->screen;
+
+    if (need_cleanup)
+	Cleanup(0);
 
     if (screen->scroll_amt)
 	FlushScroll(screen);
@@ -797,8 +800,9 @@ HandleIconify(Widget gw,
 }
 
 int
-QueryMaximize(TScreen * screen, unsigned *width, unsigned *height)
+QueryMaximize(XtermWidget termw, unsigned *width, unsigned *height)
 {
+    TScreen *screen = &termw->screen;
     XSizeHints hints;
     long supp = 0;
     Window root_win;
@@ -808,7 +812,7 @@ QueryMaximize(TScreen * screen, unsigned *width, unsigned *height)
     unsigned root_depth;
 
     if (XGetGeometry(screen->display,
-		     XDefaultRootWindow(screen->display),
+		     RootWindowOfScreen(XtScreen(termw)),
 		     &root_win,
 		     &root_x,
 		     &root_y,
@@ -856,7 +860,7 @@ RequestMaximize(XtermWidget termw, int maximize)
 
     if (maximize) {
 
-	if (QueryMaximize(screen, &root_width, &root_height)) {
+	if (QueryMaximize(termw, &root_width, &root_height)) {
 
 	    if (XGetWindowAttributes(screen->display,
 				     WMFrameWindow(termw),
@@ -1731,7 +1735,7 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    unparseputc1(OSC, screen->respond);
 	    unparseputs("50", screen->respond);
 
-	    if ((buf = screen->menu_font_names[num]) != 0) {
+	    if ((buf = screen->MenuFontName(num)) != 0) {
 		unparseputc(';', screen->respond);
 		unparseputs(buf, screen->respond);
 	    }
@@ -1776,7 +1780,7 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
 		if (num < 0
 		    || num > fontMenu_lastBuiltin
-		    || (buf = screen->menu_font_names[num]) == 0) {
+		    || (buf = screen->MenuFontName(num)) == 0) {
 		    Bell(XkbBI_MinorError, 0);
 		    break;
 		}
@@ -2150,38 +2154,56 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 	    unsigned state;
 	    int code;
 	    char *tmp;
+	    char *parsed = ++cp;
 
-	    ++cp;
-	    code = xtermcapKeycode(cp, &state);
 	    unparseputc1(DCS, screen->respond);
+
+	    code = xtermcapKeycode(&parsed, &state);
 	    unparseputc(code >= 0 ? '1' : '0', screen->respond);
+
 	    unparseputc('+', screen->respond);
 	    unparseputc('r', screen->respond);
-	    for (tmp = cp; *tmp; ++tmp)
-		unparseputc(*tmp, screen->respond);
-	    if (code >= 0) {
-		unparseputc('=', screen->respond);
-		screen->tc_query = code;
-		/* XK_COLORS is a fake code for the "Co" entry (maximum
-		 * number of colors) */
-		if (code == XK_COLORS) {
+
+	    while (*cp != 0) {
+		if (cp == parsed)
+		    break;	/* no data found, error */
+
+		for (tmp = cp; tmp != parsed; ++tmp)
+		    unparseputc(*tmp, screen->respond);
+
+		if (code >= 0) {
+		    unparseputc('=', screen->respond);
+		    screen->tc_query = code;
+		    /* XK_COLORS is a fake code for the "Co" entry (maximum
+		     * number of colors) */
+		    if (code == XK_COLORS) {
 # if OPT_256_COLORS
-		    unparseputc('2', screen->respond);
-		    unparseputc('5', screen->respond);
-		    unparseputc('6', screen->respond);
+			unparseputc('2', screen->respond);
+			unparseputc('5', screen->respond);
+			unparseputc('6', screen->respond);
 # elif OPT_88_COLORS
-		    unparseputc('8', screen->respond);
-		    unparseputc('8', screen->respond);
+			unparseputc('8', screen->respond);
+			unparseputc('8', screen->respond);
 # else
-		    unparseputc('1', screen->respond);
-		    unparseputc('6', screen->respond);
+			unparseputc('1', screen->respond);
+			unparseputc('6', screen->respond);
 # endif
+		    } else {
+			XKeyEvent event;
+			event.state = state;
+			Input(&(term->keyboard), screen, &event, False);
+		    }
+		    screen->tc_query = -1;
 		} else {
-		    XKeyEvent event;
-		    event.state = state;
-		    Input(&(term->keyboard), screen, &event, False);
+		    break;	/* no match found, error */
 		}
-		screen->tc_query = -1;
+
+		cp = parsed;
+		if (*parsed == ';') {
+		    unparseputc(*parsed++, screen->respond);
+		    cp = parsed;
+		    code = xtermcapKeycode(&parsed, &state);
+		}
 	    }
 	    unparseputc1(ST, screen->respond);
 	}
@@ -2686,6 +2708,7 @@ Cleanup(int code)
 	}
 
 	cleaning = True;
+	need_cleanup = FALSE;
 
 	TRACE(("Cleanup %d\n", code));
 

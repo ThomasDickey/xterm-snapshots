@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.90 2005/07/07 00:46:14 tom Exp $ */
+/* $XTermId: menu.h,v 1.93 2005/09/18 23:48:13 tom Exp $ */
 
 /* $Xorg: menu.h,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -50,14 +50,12 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.36 2005/07/07 00:46:14 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.h,v 3.37 2005/09/18 23:48:13 dickey Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h
 
 #include <xterm.h>
-
-#include <X11/Intrinsic.h>
 
 typedef struct _MenuEntry {
     char *name;
@@ -74,6 +72,7 @@ extern MenuEntry tekMenuEntries[];
 extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
+extern void HandleAltEsc           PROTO_XT_ACTIONS_ARGS;
 extern void HandleAltScreen        PROTO_XT_ACTIONS_ARGS;
 extern void HandleAppCursor        PROTO_XT_ACTIONS_ARGS;
 extern void HandleAppKeypad        PROTO_XT_ACTIONS_ARGS;
@@ -158,6 +157,7 @@ typedef enum {
     mainMenu_backarrow,
 #if OPT_NUM_LOCK
     mainMenu_num_lock,
+    mainMenu_alt_esc,
     mainMenu_meta_esc,
 #endif
     mainMenu_delete_del,
@@ -324,9 +324,11 @@ extern void update_decbkm(void);
 
 #if OPT_NUM_LOCK
 extern void update_num_lock(void);
+extern void update_alt_esc(void);
 extern void update_meta_esc(void);
 #else
 #define update_num_lock() /*nothing*/
+#define update_alt_esc()  /*nothing*/
 #define update_meta_esc() /*nothing*/
 #endif
 

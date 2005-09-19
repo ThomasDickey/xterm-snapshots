@@ -1,13 +1,13 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.155 2005/07/07 00:46:12 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.158 2005/09/18 23:48:10 tom Exp $
 .\"
 .\"
 .\" $Xorg: ctlseqs.ms,v 1.3 2000/08/17 19:42:51 cpqbld Exp $
 .\"
 .\"
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.56 2005/07/07 00:46:12 dickey Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.57 2005/09/18 23:48:10 dickey Exp $
 .\"
 .\"
 .\" Copyright 1996-2004,2005 by Thomas E. Dickey
@@ -684,7 +684,7 @@ Repeat the preceding graphic character \*(Ps times (REP)
 .
 .IP \\*(Cs\\*(Ps\\*s\\*c
 Send Device Attributes (Primary DA)
-  \*(Ps = \*0, 1 or omitted \(-> request attributes from terminal.
+  \*(Ps = \*0 or omitted \(-> request attributes from terminal.
 The response depends on the \fBdecTerminalID\fP resource setting.
   \(-> \*(Cs\*?\*1\*;\*2\*c (``VT100 with Advanced Video Option'')
   \(-> \*(Cs\*?\*1\*;\*0\*c (``VT101 with No Options'')
@@ -704,7 +704,7 @@ VT220 parameters do, telling the host what features the terminal supports:
 .
 .IP \\*(Cs\\*>\\*(Ps\\*s\\*c
 Send Device Attributes (Secondary DA)
-  \*(Ps = \*0, 1 or omitted \(-> request the terminal's identification code.
+  \*(Ps = \*0 or omitted \(-> request the terminal's identification code.
 The response depends on the \fBdecTerminalID\fP resource setting.
 It should apply only to VT220 and up, but \fIxterm\fP extends this to VT100.
   \(-> \*(Cs\*s\*>\*(Pp\*s\*;\*(Pv\*s\*;\*(Pc\*s\*c
@@ -767,7 +767,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*4\*7 \(-> Use Alternate Screen Buffer (unless
 disabled by the \fBtiteInhibit\fP resource)
   \*(Ps = \*6\*6 \(-> Application keypad (DECNKM)
-  \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM)
+  \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM)
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
@@ -843,7 +843,7 @@ DEC Private Mode Reset (DECRST)
 (normally disabled by a compile-time option)
   \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer
   \*(Ps = \*6\*6 \(-> Numeric keypad (DECNKM)
-  \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM)
+  \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM)
   \*(Ps = \*1\*0\*0\*0 \(-> Don't Send Mouse X & Y on button press and
 release.
 See the section \fBMouse Tracking\fP.

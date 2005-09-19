@@ -1,10 +1,10 @@
-/* $XTermId: scrollbar.c,v 1.108 2005/08/09 23:54:25 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.112 2005/09/18 23:48:13 tom Exp $ */
 
 /*
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.43 2005/08/05 01:25:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.44 2005/09/18 23:48:13 dickey Exp $ */
 
 /*
  * Copyright 2000-2004,2005 by Thomas E. Dickey
@@ -88,21 +88,11 @@
 static void ScrollTextTo PROTO_XT_CALLBACK_ARGS;
 static void ScrollTextUpDownBy PROTO_XT_CALLBACK_ARGS;
 
-void
-DisableSizeHints(XtermWidget xw)
-{
-    XSizeHints sizehints;
-    memset(&sizehints, 0, sizeof(sizehints));
-
-    XSetWMNormalHints(xw->screen.display, XtWindow(SHELL_OF(xw)), &sizehints);
-    XFlush(xw->screen.display);
-}
-
 /* Resize the text window for a terminal screen, modifying the
  * appropriate WM_SIZE_HINTS and taking advantage of bit gravity.
  */
 void
-DoResizeScreen(XtermWidget xw, Bool disableHints)
+DoResizeScreen(XtermWidget xw)
 {
     TScreen *screen = &xw->screen;
 
@@ -172,13 +162,12 @@ DoResizeScreen(XtermWidget xw, Bool disableHints)
     /*
      * NOTE: the hints and the XtVaSetValues() must match.
      */
+    TRACE(("%s@%d -- ", __FILE__, __LINE__));
+    TRACE_WM_HINTS(xw);
     if (!XGetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)),
 			   &sizehints, &supp))
 	bzero(&sizehints, sizeof(sizehints));
 
-    if (disableHints)
-	DisableSizeHints(xw);
-    sizehints.flags &= ~(USPosition | USSize | PPosition | PSize);
     xtermSizeHints(xw, &sizehints, ScrollbarWidth(screen));
 
     /* These are obsolete, but old clients may use them */
@@ -186,19 +175,24 @@ DoResizeScreen(XtermWidget xw, Bool disableHints)
     sizehints.height = MaxRows(screen) * FontHeight(screen) + sizehints.min_height;
 #endif
 
-    xtermFixupSizes(xw, &sizehints);
+    XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)), &sizehints);
 
     reqWidth = MaxCols(screen) * FontWidth(screen) + min_wide;
     reqHeight = MaxRows(screen) * FontHeight(screen) + min_high;
 
-    TRACE(("...requesting screensize chars %dx%d, pixels %dx%d min %dx%d\n",
+    TRACE(("...requesting screensize chars %dx%d, pixels %dx%d\n",
 	   MaxRows(screen),
 	   MaxCols(screen),
-	   reqHeight, reqWidth,
-	   min_high, min_wide));
+	   reqHeight, reqWidth));
 
     geomreqresult = XtMakeResizeRequest((Widget) xw, reqWidth, reqHeight,
 					&repWidth, &repHeight);
+    TRACE(("scrollbar.c XtMakeResizeRequest %dx%d -> %dx%d (status %d)\n",
+	   reqHeight, reqWidth,
+	   repHeight, repWidth,
+	   geomreqresult));
+    TRACE(("%s@%d -- ", __FILE__, __LINE__));
+    TRACE_WM_HINTS(xw);
 
     if (geomreqresult == XtGeometryAlmost) {
 	TRACE(("...almost, retry screensize %dx%d\n", repHeight, repWidth));
@@ -209,9 +203,6 @@ DoResizeScreen(XtermWidget xw, Bool disableHints)
     if (XtAppPending(app_con))
 	xevents();
 
-#ifndef nothack
-    XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)), &sizehints);
-#endif
 #ifndef NO_ACTIVE_ICON
     WhichVWin(screen) = saveWin;
 #endif /* NO_ACTIVE_ICON */
@@ -446,7 +437,7 @@ ScrollBarOn(XtermWidget xw, int init, int doalloc)
 	       BorderWidth(screen->scrollWidget)));
 
 	ScrollBarDrawThumb(screen->scrollWidget);
-	DoResizeScreen(xw, False);
+	DoResizeScreen(xw);
 
 #ifdef SCROLLBAR_RIGHT
 	updateRightScrollbar(term);
@@ -471,7 +462,7 @@ ScrollBarOff(TScreen * screen)
     if (XtIsRealized((Widget) term)) {
 	XtUnmapWidget(screen->scrollWidget);
 	screen->fullVwin.sb_info.width = 0;
-	DoResizeScreen(term, False);
+	DoResizeScreen(term);
 	update_scrollbar();
 	if (screen->visbuf) {
 	    XClearWindow(screen->display, XtWindow(term));

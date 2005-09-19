@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.290 2005/08/10 00:22:28 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.140 2005/08/05 01:25:40 dickey Exp $
+  $XTermId: xterm.log.html,v 1.308 2005/09/18 23:48:13 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.141 2005/09/18 23:48:13 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,7 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_205">Patch #205 - 2005/8/? - XFree86 4.5.99.9</A>
+<LI><A HREF="#xterm_205">Patch #205 - 2005/9/18 - XFree86 4.5.99.12</A>
 <LI><A HREF="#xterm_204">Patch #204 - 2005/8/4 - XFree86 4.5.99.9</A>
 <LI><A HREF="#xterm_203">Patch #203 - 2005/7/6 - XFree86 4.5.99.7</A>
 <LI><A HREF="#xterm_202">Patch #202 - 2005/5/2 - XFree86 4.5.99.3</A>
@@ -254,9 +254,83 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_205">Patch #205 - 2005/8/? - XFree86 4.5.99.9</A></H1>
+<H1><A NAME="xterm_205">Patch #205 - 2005/9/18 - XFree86 4.5.99.12</A></H1>
 <ul>
-	<li>fixes to make toolbar layout work with IceWM.
+	<li>correct a typo in CF_FUNC_TGETENT introduced in <a
+	    href="xterm_198">patch #198</a> fix for Gentoo #69926.
+
+	<li>implement logic in termcap query to process multiple parameters
+	    as documented in ctlseqs.ms
+
+	<li>fix buffer size used for termcap query, which was not long enough
+	    for the terminfo "colors" name (patch by Bradd W. Szonye).
+
+	<li>add configure option --enable-readline-mouse, which turns on the
+	    experimental OPT_READLINE code (patch by Ilya Zakharevich).
+
+	<li>for FreeBSD, drop setuid privileges after startup
+	    (XFree86 Bugzilla #878, report/patch by Alexander Pohoyda)
+
+	<li>add menu entry (alt-esc) and corresponding action (alt-sends-esc)
+	    to toggle the <code>eightBitInput</code> resource setting.
+
+	<li>generate configure script with autoconf 2.52 (patched) to use
+	    the feature therein which forces the script's locale to POSIX
+	    (Gentoo Bugzilla #105369).
+
+	<li>modify computation of rows/columns on resize to avoid extending
+	    beyond the given limits, e.g., if resizing in response to a
+	    "maximize" in Gnome or KDE which do not use the window manager
+	    hints for this case (Debian #289123, Novell #61153).
+
+	<li>modifications to work with z/OS 1.4 (Paul Giordano).
+
+	<li>improve error-reporting when chown/chmod of the pseudo-terminal
+	    fails, e.g., if a copy of xterm which was designed to work with
+	    old-style pseudo-terminals is not installed setuid or setgid
+	    (report by Jeremy C. Reed).
+
+	<li>patches from Emanuele Giaquinta:
+	    <ul>
+	    <li>ctlseqs.ms says that primary and secondary DA accept a
+	        nonzero parameter, which is incorrect.  Also modify code
+		to agree with this.
+
+	    <li>correct a comment in 88colres.pl
+
+	    <li>ctlseqs.ms says that the DEC Set/Reset control sequences for
+		the backarrow key make it send DEL/BS, respectively, while it's
+		the opposite.
+
+	    <li>update the menu entries for the metaSendsEscape, deleteIsDEL
+		and numLock resources when changing them with the corresponding
+		DEC Set/Reset control sequences.
+	    </ul>
+
+	<li>fixes for configure script:
+	    <ul>
+	    <li>add special case for QNX, defining _QNX_SOURCE.
+	    <li>check for preprocessors which do not perform -U and -D options
+	        in the given order.
+	    <li>improve macro to determine gcc version
+	    <li>improve check for Intel compiler and related warning options
+	    </ul>
+
+	<li>update config.guess, config.sub
+
+	<li>improve fix from <a href="xterm_198">patch #198</a> for
+	    <code>Cleanup()</code> by ensuring it is not called from the
+	    SIGCHLD handler (patch from OpenBSD by Todd Miller).
+
+	<li>eliminate a retry for a better-matching bold font, to work around
+	    recent font server changes.
+
+	<li>fixes for Novell #113277:
+	    <ul>
+	    <li>specify weight for wide font which may be derived from
+	        normal fontname.
+	    <li>cache the derived wide- and widebolt-fontnames.
+	    </ul>
 
 	<li>workaround for GenToo Bugzilla #100728.
 
@@ -311,7 +385,7 @@ is the latest version of this file.
 	<li>fix to build on Darwin 8.x, which no longer provides
 	    <code>setpgrp()</code> (patch by Min Sik Kim).
 
-	<li>adapted fixes for Legend (SCO) from diffs attached to 
+	<li>adapted fixes for Legend (SCO) from diffs attached to
 	    Freedesktop.Org Bugzilla #3180.
 
 	<li>fix typo in xterm manpage description of <code>-ls</code> option
@@ -347,7 +421,7 @@ is the latest version of this file.
 	<li>fix an off-by-one error parsing <code>-S/nn</code> option
 	    (Debian #311438, report/fix by Peter Chubb).
 
-	<li>fix an initialization bug from 
+	<li>fix an initialization bug from
 	    <a href="xterm_201">patch #201</a> that broke logging
 	    (report by Rodney Thayer).
 
@@ -553,7 +627,7 @@ is the latest version of this file.
 	<li>improve <code>$WINDOWID</code> for configuration with toolbar by
 	    making it refer to the top-level shell rather than the parent of
 	    the current window.  For that case, the parent is a form widget,
-	    which does not have a name, which made the <code>$WINDOWID</code> 
+	    which does not have a name, which made the <code>$WINDOWID</code>
 	    not very useful as a parameter for <code>xwininfo</code>
 	    (suggested by Dave Bodenstab).
 

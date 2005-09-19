@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 # Author: Steve Wall
-# $XFree86: xc/programs/xterm/88colres.pl,v 1.6 2002/10/05 17:57:11 dickey Exp $
+# $XTermId: 88colres.pl,v 1.15 2005/09/18 23:48:11 tom Exp $
+# $XFree86: xc/programs/xterm/88colres.pl,v 1.7 2005/09/18 23:48:11 dickey Exp $
 # Made from 256colres.pl
 
 # Construct a header file defining default resources for the
@@ -41,7 +42,7 @@ for ($red = 0; $red < 4; $red++) {
     }
 }
 
-# colors 80-91 are a grayscale ramp, intentionally leaving out
+# colors 80-87 are a grayscale ramp, intentionally leaving out
 # black and white
 for ($gray = 0; $gray < 8; $gray++) {
     $level = ($gray * 23.18181818) + 46.36363636;

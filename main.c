@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.457 2005/08/05 01:25:39 tom Exp $ */
+/* $XTermId: main.c,v 1.464 2005/09/18 23:48:12 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.195 2005/08/05 01:25:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.196 2005/09/18 23:48:12 dickey Exp $ */
 
 /* main.c */
 
@@ -282,7 +282,7 @@ ttyslot()
 
 #else
 
-#if defined(__INTERIX) || defined(__APPLE__) 
+#if defined(__INTERIX) || defined(__APPLE__)
 #define setpgrp setpgid
 #endif
 
@@ -379,6 +379,14 @@ extern struct utmp *getutid __((struct utmp * _Id));
 #include <util.h>
 #endif
 
+#ifdef __FreeBSD__
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <libutil.h>
+#include <grp.h>
+#endif
+
 #if !defined(UTMP_FILENAME)
 #if defined(UTMP_FILE)
 #define UTMP_FILENAME UTMP_FILE
@@ -464,7 +472,7 @@ static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
 static Bool added_utmp_entry = False;
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
 static gid_t utmpGid = -1;
 #endif
 
@@ -1475,7 +1483,7 @@ ParseSccn(char *option)
     return code;
 }
 
-#ifdef USE_SYSV_UTMP
+#if defined(USE_SYSV_UTMP) && !defined(USE_UTEMPTER)
 /*
  * From "man utmp":
  * xterm and other terminal emulators directly create a USER_PROCESS record
@@ -1598,11 +1606,11 @@ main(int argc, char *argv[]ENVP_ARG)
     strcpy(ptydev, PTYDEV);
 #endif
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
     get_pty(NULL, NULL);
     seteuid(getuid());
     setuid(getuid());
-#endif /* __OpenBSD__ */
+#endif
 
     /* Do these first, since we may not be able to open the display */
     TRACE_OPTS(xtermOptions, optionDescList, XtNumber(optionDescList));
@@ -1732,6 +1740,9 @@ main(int argc, char *argv[]ENVP_ARG)
 #ifdef __sgi
     d_tio.c_cflag &= ~(HUPCL | PARENB);
     d_tio.c_iflag |= BRKINT | ISTRIP | IGNPAR;
+#endif
+#ifdef __MVS__
+    d_tio.c_cflag &= ~(HUPCL | PARENB);
 #endif
     d_tio.c_cc[VINTR] = CONTROL('C');	/* '^C' */
     d_tio.c_cc[VERASE] = 0x7f;	/* DEL  */
@@ -1933,7 +1944,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
 #endif
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
 	if (resource.utmpInhibit) {
 	    /* Can totally revoke group privs */
 	    setegid(getgid());
@@ -2343,7 +2354,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
 {
     int result = 1;
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
     static int m_tty = -1;
     static int m_pty = -1;
     struct group *ttygrp;
@@ -2730,14 +2741,30 @@ first_map_occurred(void)
 static void
 set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 {
+    int why;
+
     if (chown(device, uid, gid) < 0) {
-	if (errno != ENOENT
+	why = errno;
+	if (why != ENOENT
 	    && getuid() == 0) {
 	    fprintf(stderr, "Cannot chown %s to %ld,%ld: %s\n",
-		    device, (long) uid, (long) gid, strerror(errno));
+		    device, (long) uid, (long) gid, strerror(why));
 	}
     }
-    chmod(device, mode);
+    if (chmod(device, mode) < 0) {
+	why = errno;
+	if (why != ENOENT) {
+	    struct stat sb;
+	    if (stat(device, &sb) < 0) {
+		fprintf(stderr, "Cannot chmod %s to %03o: %s\n",
+			device, mode, strerror(why));
+	    } else {
+		fprintf(stderr,
+			"Cannot chmod %s to %03o currently %03o: %s\n",
+			device, mode, (sb.st_mode & S_IFMT), strerror(why));
+	    }
+	}
+    }
 }
 
 #if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP) && !defined(USE_UTEMPTER)
@@ -2808,6 +2835,9 @@ spawn(void)
 
 #ifdef TERMIO_STRUCT
     TERMIO_STRUCT tio;
+#ifdef __MVS__
+    TERMIO_STRUCT gio;
+#endif /* __MVS__ */
 #ifdef TIOCLSET
     unsigned lmode;
 #endif /* TIOCLSET */
@@ -2995,6 +3025,12 @@ spawn(void)
 		       initial_erase));
 	    }
 #endif
+#ifdef __MVS__
+	    if (ttyGetAttr(ttyfd, &gio) == 0) {
+		gio.c_cflag &= ~(HUPCL | PARENB);
+		ttySetAttr(ttyfd, &gio);
+	    }
+#endif /* __MVS__ */
 
 	    close_fd(ttyfd);
 	}
@@ -3200,7 +3236,9 @@ spawn(void)
 #endif /* SVR4 */
 #endif /* I_PUSH */
 		ttyfd = ptyfd;
+#ifndef __MVS__
 		close_fd(screen->respond);
+#endif /* __MVS__ */
 
 #ifdef TTYSIZE_STRUCT
 		/* tell tty how big window is */
@@ -3256,7 +3294,9 @@ spawn(void)
 
 		    /* we don't need the socket, or the pty master anymore */
 		    close(ConnectionNumber(screen->display));
+#ifndef __MVS__
 		    close(screen->respond);
+#endif /* __MVS__ */
 
 		    /* Now is the time to set up our process group and
 		     * open up the pty slave.
@@ -3272,8 +3312,16 @@ spawn(void)
 #if defined(__QNX__) && !defined(__QNXNTO__)
 		    qsetlogin(getlogin(), ttydev);
 #endif
-		    if (ttyfd >= 0)
+		    if (ttyfd >= 0) {
+#ifdef __MVS__
+			if (ttyGetAttr(ttyfd, &gio) == 0) {
+			    gio.c_cflag &= ~(HUPCL | PARENB);
+			    ttySetAttr(ttyfd, &gio);
+			}
+#else /* !__MVS__ */
 			close_fd(ttyfd);
+#endif /* __MVS__ */
+		    }
 
 		    while (1) {
 #if defined(TIOCNOTTY) && (!defined(__GLIBC__) || (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ < 1)))
@@ -4013,7 +4061,7 @@ spawn(void)
 	    }
 #endif /* USE_LASTLOG */
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
 	    /* Switch to real gid after writing utmp entry */
 	    utmpGid = getegid();
 	    if (getgid() != getegid()) {
@@ -4388,7 +4436,7 @@ Exit(int n)
 	&& (resource.ptyHandshake && added_utmp_entry)
 #endif /* OPT_PTY_HANDSHAKE */
 	) {
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
 	if (utmpGid != -1) {
 	    /* Switch back to group utmp */
 	    setegid(utmpGid);
@@ -4609,7 +4657,7 @@ reapchild(int n GCC_UNUSED)
 		fputs("Exiting\n", stderr);
 #endif
 	    if (!hold_screen)
-		Cleanup(0);
+		need_cleanup = TRUE;
 	}
     } while ((pid = nonblocking_wait()) > 0);
 

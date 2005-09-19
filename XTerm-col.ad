@@ -1,5 +1,5 @@
-! $XTermId: XTerm-col.ad,v 1.17 2005/07/07 00:46:13 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.6 2005/07/07 00:46:13 dickey Exp $
+! $XTermId: XTerm-col.ad,v 1.19 2005/09/18 23:48:12 tom Exp $
+! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.7 2005/09/18 23:48:12 dickey Exp $
 
 #include "XTerm"
 
@@ -25,15 +25,23 @@
 
 ! Uncomment this to use color for underline attribute
 !*VT100*colorULMode: on
+*VT100*colorUL: yellow
+
 !*VT100*italicULMode: on
+
+! Uncomment this to disable underlining, e.g., if colorULMode is set.
 !*VT100*underLine: off
 
 ! Uncomment this to use color for the bold attribute
 !*VT100*colorBDMode: on
+*VT100*colorBD: white
 
 ! Uncomment this to use the bold/underline colors in preference to other colors
 !*VT100*colorAttrMode: on
 
+! These are the 8 ANSI colors and their bright equivalents.  Depending on
+! other resource settings, xterm may use the bright colors when displaying
+! bold text (see the boldColors resource).
 *VT100*color0: black
 *VT100*color1: red3
 *VT100*color2: green3
@@ -50,9 +58,6 @@
 *VT100*color13: magenta
 *VT100*color14: cyan
 *VT100*color15: white
-*VT100*colorUL: yellow
-*VT100*colorBD: white
-
 
 ! Disclaimer: there are no standard colors used in terminal emulation.
 !

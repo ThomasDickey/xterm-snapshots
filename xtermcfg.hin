@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.139 2005/07/07 00:46:15 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.141 2005/09/18 23:48:13 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.55 2005/07/07 00:46:15 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.56 2005/09/18 23:48:13 dickey Exp $
  */
 
 /************************************************************
@@ -118,6 +118,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_ZICONBEEP		/* CF_ARG_DISABLE(ziconbeep) */
 #undef OWN_TERMINFO_DIR		/* AC_ARG_WITH(own-terminfo) */
 #undef SCROLLBAR_RIGHT		/* CF_ARG_ENABLE(rightbar) */
+#undef SIG_ATOMIC_T		/* CF_SIG_ATOMIC_T */
 #undef SVR4			/* CF_SVR4, imake */
 #undef SYSV			/* CF_SYSV, imake */
 #undef TIME_WITH_SYS_TIME	/* AC_HEADER_TIME */
