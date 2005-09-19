@@ -1,10 +1,10 @@
-/* $XTermId: data.c,v 1.74 2005/04/22 00:21:53 tom Exp $ */
+/* $XTermId: data.c,v 1.77 2005/09/18 23:48:12 tom Exp $ */
 
 /*
  *	$Xorg: data.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/data.c,v 3.31 2005/04/22 00:21:53 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/data.c,v 3.32 2005/09/18 23:48:12 dickey Exp $ */
 
 /*
  * Copyright 2002-2004,2005 by Thomas E. Dickey
@@ -99,7 +99,9 @@ int debug = 0;			/* true causes error messages to be displayed */
 XtAppContext app_con;
 XtermWidget term;		/* master data structure for client */
 char *xterm_name;		/* argv[0] */
+
 int hold_screen;
+SIG_ATOMIC_T need_cleanup = FALSE;
 
 #if OPT_ZICONBEEP
 int zIconBeep;			/* non-zero means beep; see charproc.c for details -IAN! */

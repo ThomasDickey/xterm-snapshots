@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.346 2005/08/09 23:47:39 tom Exp $ */
+/* $XTermId: xterm.h,v 1.354 2005/09/18 23:48:13 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.107 2005/08/05 01:25:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.108 2005/09/18 23:48:13 dickey Exp $ */
 
 /************************************************************
 
@@ -286,9 +286,11 @@ extern int errno;
 # endif
 #endif
 
-#ifdef USE_SYS_SELECT_H
-
+/* these may be needed for sig_atomic_t */
 #include <sys/types.h>
+#include <signal.h>
+
+#ifdef USE_SYS_SELECT_H
 
 #if defined(USE_XPOLL_H) && defined(AIXV3) && defined(NFDBITS)
 #undef NFDBITS			/* conflict between X11/Xpoll.h and sys/select.h */
@@ -718,7 +720,7 @@ extern void VTInitModifiers(void);
 #endif
 
 #if OPT_TCAP_QUERY
-extern int xtermcapKeycode(char *params, unsigned *state);
+extern int xtermcapKeycode(char **params, unsigned *state);
 #endif
 
 /* main.c */
@@ -738,12 +740,17 @@ extern void first_map_occurred (void);
 extern SIGNAL_T Exit (int n);
 #endif
 
+#ifndef SIG_ATOMIC_T
+#define SIG_ATOMIC_T int
+#endif
+
 #if OPT_WIDE_CHARS
 extern int (*my_wcwidth)(wchar_t);
 #endif
 
 /* menu.c */
 extern void do_hangup          PROTO_XT_CALLBACK_ARGS;
+extern void repairSizeHints    (void);
 extern void show_8bit_control  (Bool value);
 
 /* misc.c */
@@ -802,7 +809,7 @@ extern void HandleDabbrevExpand      PROTO_XT_ACTIONS_ARGS;
 #endif
 
 #if OPT_MAXIMIZE
-extern int QueryMaximize (TScreen *screen, unsigned *width, unsigned *height);
+extern int QueryMaximize (XtermWidget termw, unsigned *width, unsigned *height);
 extern void HandleDeIconify          PROTO_XT_ACTIONS_ARGS;
 extern void HandleIconify            PROTO_XT_ACTIONS_ARGS;
 extern void HandleMaximize           PROTO_XT_ACTIONS_ARGS;
@@ -923,8 +930,7 @@ extern void ChangeToWide(TScreen * screen);
 #endif
 
 /* scrollbar.c */
-extern void DisableSizeHints(XtermWidget xw);
-extern void DoResizeScreen (XtermWidget xw, Bool disableHints);
+extern void DoResizeScreen (XtermWidget xw);
 extern void HandleScrollBack PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollForward PROTO_XT_ACTIONS_ARGS;
 extern void ResizeScrollBar (XtermWidget xw);
@@ -978,7 +984,6 @@ extern void scrolling_copy_area (TScreen *screen, int firstline, int nlines, int
 extern void set_keyboard_type (xtermKeyboardType type, Bool set);
 extern void toggle_keyboard_type (xtermKeyboardType type);
 extern void update_keyboard_type (void);
-extern void xtermFixupSizes (XtermWidget xw, XSizeHints *sizehints);
 extern void xtermScroll (TScreen *screen, int amount);
 extern void xtermSizeHints (XtermWidget xw, XSizeHints *sizehints, int scrollbarWidth);
 

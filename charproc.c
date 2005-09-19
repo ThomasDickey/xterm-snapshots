@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.604 2005/08/07 18:37:24 tom Exp $ */
+/* $XTermId: charproc.c,v 1.615 2005/09/18 23:48:12 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.173 2005/08/05 01:25:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.175 2005/09/18 23:48:12 dickey Exp $ */
 
 /*
 
@@ -363,6 +363,7 @@ static XtActionsRec actionsList[] = {
     { "restore",		HandleRestoreSize },
 #endif
 #if OPT_NUM_LOCK
+    { "alt-sends-escape",	HandleAltEsc },
     { "meta-sends-escape",	HandleMetaEsc },
     { "set-num-lock",		HandleNumLock },
 #endif
@@ -463,12 +464,12 @@ static XtResource resources[] =
     Ires(XtNsaveLines, XtCSaveLines, screen.savelines, SAVELINES),
     Ires(XtNscrollLines, XtCScrollLines, screen.scrolllines, SCROLLLINES),
 
-    Sres(XtNfont1, XtCFont1, screen.menu_font_names[fontMenu_font1], NULL),
-    Sres(XtNfont2, XtCFont2, screen.menu_font_names[fontMenu_font2], NULL),
-    Sres(XtNfont3, XtCFont3, screen.menu_font_names[fontMenu_font3], NULL),
-    Sres(XtNfont4, XtCFont4, screen.menu_font_names[fontMenu_font4], NULL),
-    Sres(XtNfont5, XtCFont5, screen.menu_font_names[fontMenu_font5], NULL),
-    Sres(XtNfont6, XtCFont6, screen.menu_font_names[fontMenu_font6], NULL),
+    Sres(XtNfont1, XtCFont1, screen.MenuFontName(fontMenu_font1), NULL),
+    Sres(XtNfont2, XtCFont2, screen.MenuFontName(fontMenu_font2), NULL),
+    Sres(XtNfont3, XtCFont3, screen.MenuFontName(fontMenu_font3), NULL),
+    Sres(XtNfont4, XtCFont4, screen.MenuFontName(fontMenu_font4), NULL),
+    Sres(XtNfont5, XtCFont5, screen.MenuFontName(fontMenu_font5), NULL),
+    Sres(XtNfont6, XtCFont6, screen.MenuFontName(fontMenu_font6), NULL),
     Sres(XtNanswerbackString, XtCAnswerbackString, screen.answer_back, ""),
     Sres(XtNboldFont, XtCBoldFont, misc.default_font.f_b, DEFBOLDFONT),
     Sres(XtNcharClass, XtCCharClass, screen.charClass, NULL),
@@ -1735,7 +1736,7 @@ doparsing(unsigned c, struct ParseState *sp)
 	    /* FALLTHRU */
 	case CASE_DA1:
 	    TRACE(("CASE_DA1\n"));
-	    if (param[0] <= 1) {	/* less than means DEFAULT */
+	    if (param[0] <= 0) {	/* less than means DEFAULT */
 		count = 0;
 		reply.a_type = CSI;
 		reply.a_pintro = '?';
@@ -3177,6 +3178,8 @@ in_put(void)
 	    time_select = 1;
 #endif
 	}
+	if (need_cleanup)
+	    Cleanup(0);
 	i = Select(max_plus1, &select_mask, &write_mask, 0,
 		   (time_select ? &select_timeout : 0));
 	if (i < 0) {
@@ -3587,15 +3590,40 @@ HandleStructNotify(Widget w GCC_UNUSED,
     case ConfigureNotify:
 	TRACE(("HandleStructNotify(ConfigureNotify)\n"));
 #if OPT_TOOLBAR
+	/* the notify is for the top-level widget, but we care about vt100 */
 	if (term->screen.Vshow) {
+	    TScreen *screen = &term->screen;
 	    struct _vtwin *Vwin = WhichVWin(&(term->screen));
-	    if (Vwin->tb_info.menu_bar) {
-		XtVaGetValues(Vwin->tb_info.menu_bar,
-			      XtNheight, &Vwin->tb_info.menu_height,
-			      XtNborderWidth, &Vwin->tb_info.menu_border,
+	    TbInfo *info = &(Vwin->tb_info);
+	    TbInfo save = *info;
+
+	    if (info->menu_bar) {
+		XtVaGetValues(info->menu_bar,
+			      XtNheight, &info->menu_height,
+			      XtNborderWidth, &info->menu_border,
 			      (XtPointer) 0);
-		TRACE(("...menu_height %d\n", Vwin->tb_info.menu_height));
-		TRACE(("...menu_border %d\n", Vwin->tb_info.menu_border));
+
+		if (save.menu_height != info->menu_height
+		    || save.menu_border != info->menu_border) {
+
+		    TRACE(("...menu_height %d\n", info->menu_height));
+		    TRACE(("...menu_border %d\n", info->menu_border));
+		    TRACE(("...had height  %d, border %d\n",
+			   save.menu_height,
+			   save.menu_border));
+
+		    repairSizeHints();
+		    /*
+		     * FIXME: Window manager still may be using the old values.
+		     * Try to fool it.
+		     */
+		    XtMakeResizeRequest((Widget) term,
+					screen->fullVwin.fullwidth,
+					info->menu_height
+					- save.menu_height
+					+ screen->fullVwin.fullheight,
+					NULL, NULL);
+		}
 	    }
 	}
 #endif
@@ -3908,13 +3936,16 @@ dpmodes(XtermWidget termw,
 #if OPT_NUM_LOCK
 	case 1035:
 	    term->misc.real_NumLock = (func == bitset) ? ON : OFF;
+	    update_num_lock();
 	    break;
 	case 1036:
 	    screen->meta_sends_esc = (func == bitset) ? ON : OFF;
+	    update_meta_esc();
 	    break;
 #endif
 	case 1037:
 	    screen->delete_is_del = (func == bitset) ? ON : OFF;
+	    update_delete_del();
 	    break;
 	case 1048:
 	    if (!termw->misc.titeInhibit) {
@@ -4410,7 +4441,7 @@ window_ops(XtermWidget termw)
 
 #if OPT_MAXIMIZE
     case 19:			/* Report the screen's size, in characters */
-	if (!QueryMaximize(screen, &root_height, &root_width)) {
+	if (!QueryMaximize(term, &root_height, &root_width)) {
 	    root_height = 0;
 	    root_width = 0;
 	}
@@ -5315,12 +5346,12 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.tiXtraScroll);
     init_Bres(misc.dynamicColors);
     for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
-	init_Sres(screen.menu_font_names[i]);
+	init_Sres(screen.MenuFontName(i));
     }
     /* set default in realize proc */
-    wnew->screen.menu_font_names[fontMenu_fontdefault] = NULL;
-    wnew->screen.menu_font_names[fontMenu_fontescape] = NULL;
-    wnew->screen.menu_font_names[fontMenu_fontsel] = NULL;
+    wnew->screen.MenuFontName(fontMenu_fontdefault) = NULL;
+    wnew->screen.MenuFontName(fontMenu_fontescape) = NULL;
+    wnew->screen.MenuFontName(fontMenu_fontsel) = NULL;
     wnew->screen.menu_font_number = fontMenu_fontdefault;
 
 #if OPT_BROKEN_OSC
@@ -5639,7 +5670,6 @@ VTRealize(Widget w,
 
     unsigned width, height;
     int xpos, ypos, pr;
-    int rc;
     XSizeHints sizehints;
     Atom pid_atom;
 
@@ -5647,7 +5677,7 @@ VTRealize(Widget w,
 
     TabReset(xw->tabs);
 
-    screen->menu_font_names[fontMenu_fontdefault] = xw->misc.default_font.f_n;
+    screen->MenuFontName(fontMenu_fontdefault) = xw->misc.default_font.f_n;
     screen->fnt_norm = NULL;
     screen->fnt_bold = NULL;
 #if OPT_WIDE_CHARS
@@ -5664,7 +5694,7 @@ VTRealize(Widget w,
 	    (void) xtermLoadFont(xw,
 				 xtermFontName("fixed"),
 				 False, 0);
-	    screen->menu_font_names[fontMenu_fontdefault] = "fixed";
+	    screen->MenuFontName(fontMenu_fontdefault) = "fixed";
 	}
     }
 
@@ -5756,14 +5786,22 @@ VTRealize(Widget w,
 	/* set a default size, but do *not* set position */
 	sizehints.flags |= PSize;
     }
-    sizehints.width = width;
-    sizehints.height = height;
+    sizehints.height = sizehints.base_height
+	+ sizehints.height_inc * MaxRows(screen);
+    sizehints.width = sizehints.base_width
+	+ sizehints.width_inc * MaxCols(screen);
 
     if ((WidthValue & pr) || (HeightValue & pr))
 	sizehints.flags |= USSize;
     else
 	sizehints.flags |= PSize;
 
+    /*
+     * Note that the size-hints are for the shell, while the resize-request
+     * is for the vt100 widget.  They are not the same size.
+     */
+    TRACE(("%s@%d -- ", __FILE__, __LINE__));
+    TRACE_WM_HINTS(xw);
     TRACE(("make resize request %dx%d\n", height, width));
     (void) XtMakeResizeRequest((Widget) xw,
 			       (Dimension) width, (Dimension) height,
@@ -5778,8 +5816,9 @@ VTRealize(Widget w,
 	XMoveWindow(XtDisplay(xw), XtWindow(SHELL_OF(xw)),
 		    sizehints.x, sizehints.y);
 
-    XSetWMNormalHints(XtDisplay(xw), XtWindow(SHELL_OF(xw)),
-		      &sizehints);
+    XSetWMNormalHints(XtDisplay(xw), XtWindow(SHELL_OF(xw)), &sizehints);
+    TRACE(("%s@%d -- ", __FILE__, __LINE__));
+    TRACE_WM_HINTS(xw);
 
     /*
      * _NET_WM_PID must only be set if WM_CLIENT_MACHINE is set.
@@ -5789,9 +5828,9 @@ VTRealize(Widget w,
 	!= None) {
 	unsigned long pid_l = (unsigned long) getpid();
 	TRACE(("Setting _NET_WM_PID property to %lu\n", pid_l));
-	rc = XChangeProperty(XtDisplay(xw), VShellWindow,
-			     pid_atom, XA_CARDINAL, 32, PropModeReplace,
-			     (unsigned char *) &pid_l, 1);
+	XChangeProperty(XtDisplay(xw), VShellWindow,
+			pid_atom, XA_CARDINAL, 32, PropModeReplace,
+			(unsigned char *) &pid_l, 1);
     }
 
     XFlush(XtDisplay(xw));	/* get it out to window manager */
@@ -6210,19 +6249,19 @@ VTSetValues(Widget cur,
 	 T_COLOR(&(newvt->screen), TEXT_BG)) ||
 	(T_COLOR(&(curvt->screen), TEXT_FG) !=
 	 T_COLOR(&(newvt->screen), TEXT_FG)) ||
-	(curvt->screen.menu_font_names[curvt->screen.menu_font_number] !=
-	 newvt->screen.menu_font_names[newvt->screen.menu_font_number]) ||
+	(curvt->screen.MenuFontName(curvt->screen.menu_font_number) !=
+	 newvt->screen.MenuFontName(newvt->screen.menu_font_number)) ||
 	(curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)) {
 	if (curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)
-	    newvt->screen.menu_font_names[fontMenu_fontdefault] = newvt->misc.default_font.f_n;
+	    newvt->screen.MenuFontName(fontMenu_fontdefault) = newvt->misc.default_font.f_n;
 	if (xtermLoadFont(newvt,
-			  xtermFontName(newvt->screen.menu_font_names[curvt->screen.menu_font_number]),
+			  xtermFontName(newvt->screen.MenuFontName(curvt->screen.menu_font_number)),
 			  True, newvt->screen.menu_font_number)) {
 	    /* resizing does the redisplay, so don't ask for it here */
 	    refresh_needed = True;
 	    fonts_redone = True;
 	} else if (curvt->misc.default_font.f_n != newvt->misc.default_font.f_n)
-	    newvt->screen.menu_font_names[fontMenu_fontdefault] = curvt->misc.default_font.f_n;
+	    newvt->screen.MenuFontName(fontMenu_fontdefault) = curvt->misc.default_font.f_n;
     }
     if (!fonts_redone
 	&& (T_COLOR(&(curvt->screen), TEXT_CURSOR) !=
@@ -7088,7 +7127,7 @@ FindFontSelection(char *atom_name, Bool justprobe)
 
     target = XmuInternAtom(XtDisplay(term), *pAtom);
     if (justprobe) {
-	term->screen.menu_font_names[fontMenu_fontsel] =
+	term->screen.MenuFontName(fontMenu_fontsel) =
 	    XGetSelectionOwner(XtDisplay(term), target) ? _Font_Selected_ : 0;
     } else {
 	XtGetSelectionValue((Widget) term, target, XA_STRING,

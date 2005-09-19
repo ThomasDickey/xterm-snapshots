@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.187 2005/07/07 00:46:14 tom Exp $
+dnl $XTermId: configure.in,v 1.191 2005/09/18 23:48:12 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.70 2005/07/07 00:46:14 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.71 2005/09/18 23:48:12 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -76,6 +76,7 @@ AC_HEADER_TIME
 AM_LANGINFO_CODESET
 
 ###	checks for typedefs
+CF_SIG_ATOMIC_T
 CF_SIZE_T
 AC_CHECK_TYPE(time_t, long)
 AC_TYPE_MODE_T
@@ -146,7 +147,7 @@ LIBS="$LIBS $X_EXTRA_LIBS"
 # Check for openpty() in -lutil if the UNIX98-style pty functions are not
 # available. E.g. for GNU libc 2.0.
 case $host_os in #(vi
-netbsd*)	# 2004/8/15 - revisit this if/when grantpt is known to work.
+freebsd*|netbsd*)	# 2004/8/15 - revisit this if/when grantpt is known to work.
 	AC_CHECK_LIB(util,openpty)
 	;;
 *)
@@ -501,6 +502,16 @@ if test "$enable_pty_handshake" = yes ; then
 	AC_DEFINE(OPT_PTY_HANDSHAKE,1)
 else
 	AC_DEFINE(OPT_PTY_HANDSHAKE,0)
+fi
+
+AC_MSG_CHECKING(if you want support for mouse in readline applications)
+CF_ARG_ENABLE(readline-mouse,
+	[  --enable-readline-mouse enable support for mouse in readline applications],
+	[enable_readline_mouse=yes],
+	[enable_readline_mouse=no])
+AC_MSG_RESULT($enable_readline_mouse)
+if test "$enable_readline_mouse" = yes ; then
+	AC_DEFINE(OPT_READLINE,1)
 fi
 
 AC_MSG_CHECKING(if you want support for right-scrollbar)

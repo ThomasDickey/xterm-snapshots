@@ -3,8 +3,8 @@
 !
 !
 !
-! $XTermId: XTerm.ad,v 1.65 2005/04/22 00:21:53 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.30 2005/04/22 00:21:53 dickey Exp $
+! $XTermId: XTerm.ad,v 1.67 2005/09/18 23:48:12 tom Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.31 2005/09/18 23:48:12 dickey Exp $
 
 *saveLines: 1024
 
@@ -27,6 +27,7 @@
 *mainMenu*8-bit control*Label: 8-Bit Controls
 *mainMenu*backarrow key*Label: Backarrow Key (BS/DEL)
 *mainMenu*num-lock*Label: Alt/NumLock Modifiers
+*mainMenu*alt-esc*Label: Alt Sends Escape
 *mainMenu*meta-esc*Label: Meta Sends Escape
 *mainMenu*delete-is-del*Label: Delete is DEL
 *mainMenu*oldFunctionKeys*Label: Old Function-Keys

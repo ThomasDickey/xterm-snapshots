@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.179 2005/08/05 01:25:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.182 2005/09/18 23:48:13 tom Exp $ */
 
 /*
  *	$Xorg: screen.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -56,7 +56,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.71 2005/08/05 01:25:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.72 2005/09/18 23:48:13 dickey Exp $ */
 
 /* screen.c */
 
@@ -1390,12 +1390,12 @@ ScreenResize(TScreen * screen,
 		   False);
     }
 
-    /* round so that it is unlikely the screen will change size on  */
-    /* small mouse movements.                                       */
-    rows = (height + FontHeight(screen) / 2 - border) /
-	FontHeight(screen);
-    cols = (width + FontWidth(screen) / 2 - border - ScrollbarWidth(screen)) /
-	FontWidth(screen);
+    TRACE(("..computing rows/cols: %.2f %.2f\n",
+	   (double) (height - border) / FontHeight(screen),
+	   (double) (width - border - ScrollbarWidth(screen)) / FontWidth(screen)));
+
+    rows = (height - border) / FontHeight(screen);
+    cols = (width - border - ScrollbarWidth(screen)) / FontWidth(screen);
     if (rows < 1)
 	rows = 1;
     if (cols < 1)

@@ -1,5 +1,5 @@
-/* $XTermId: version.h,v 1.249 2005/08/07 18:42:09 tom Exp $ */
-/* $XFree86: xc/programs/xterm/version.h,v 3.115 2005/08/05 01:25:40 dickey Exp $ */
+/* $XTermId: version.h,v 1.250 2005/09/18 23:48:13 tom Exp $ */
+/* $XFree86: xc/programs/xterm/version.h,v 3.116 2005/09/18 23:48:13 dickey Exp $ */
 
 /*
  * These definitions are used to build the string that's printed in response to

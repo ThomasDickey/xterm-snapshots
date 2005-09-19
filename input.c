@@ -1,10 +1,10 @@
-/* $XTermId: input.c,v 1.170 2005/01/14 01:50:03 tom Exp $ */
+/* $XTermId: input.c,v 1.174 2005/09/18 23:48:12 tom Exp $ */
 
 /*
  *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.72 2005/01/14 01:50:03 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.73 2005/09/18 23:48:12 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey
@@ -1144,7 +1144,7 @@ hex2int(int c)
  * Returns the (shift, control) state in *state.
  */
 int
-xtermcapKeycode(char *params, unsigned *state)
+xtermcapKeycode(char **params, unsigned *state)
 {
     /* *INDENT-OFF* */
 #define DATA(tc,ti,x,y) { tc, ti, x, y }
@@ -1229,25 +1229,31 @@ xtermcapKeycode(char *params, unsigned *state)
     unsigned len = 0;
     int code = -1;
 #define MAX_TNAME_LEN 6
-    char name[MAX_TNAME_LEN];
+    char name[MAX_TNAME_LEN + 1];
     char *p;
 
+    TRACE(("xtermcapKeycode(%s)\n", *params));
+
     /* Convert hex encoded name to ascii */
-    for (p = params; hex2int(p[0]) >= 0 && hex2int(p[1]) >= 0; p += 2) {
-	if (len == MAX_TNAME_LEN - 1)
-	    return -1;
+    for (p = *params; hex2int(p[0]) >= 0 && hex2int(p[1]) >= 0; p += 2) {
+	if (len >= MAX_TNAME_LEN)
+	    break;
 	name[len++] = (hex2int(p[0]) << 4) + hex2int(p[1]);
     }
-    if (*p)
-	return -1;
     name[len] = 0;
-    for (n = 0; n < XtNumber(table); n++) {
-	if (!strcmp(table[n].ti, name) || !strcmp(table[n].tc, name)) {
-	    code = table[n].code;
-	    *state = table[n].state;
-	    break;
+    *params = p;
+
+    if (*p == 0 || *p == ';') {
+	for (n = 0; n < XtNumber(table); n++) {
+	    if (!strcmp(table[n].ti, name) || !strcmp(table[n].tc, name)) {
+		code = table[n].code;
+		*state = table[n].state;
+		break;
+	    }
 	}
     }
+
+    TRACE(("... xtermcapKeycode(%s, %u) -> %#06x\n", name, *state, code));
     return code;
 }
 #endif

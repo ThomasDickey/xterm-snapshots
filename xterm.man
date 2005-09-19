@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.309 2005/07/07 00:46:15 tom Exp $
+.\" $XTermId: xterm.man,v 1.312 2005/09/18 23:48:13 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.115 2005/07/07 00:46:15 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.116 2005/09/18 23:48:13 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .TH XTERM 1 __vendorversion__
@@ -1537,8 +1537,8 @@ are for colors 16 through 231 to make a 6x6x6 color cube, and colors
 232 through 255 to make a grayscale ramp.
 .TP 8
 .B "colorAttrMode (\fPclass\fB ColorAttrMode)"
-Specifies whether ``colorBD'', ``colorBL'', ``colorUL'', and
-``colorRV'' should override ANSI colors.
+Specifies whether \fBcolorBD\fP, \fBcolorBL\fP, \fBcolorRV\fP, and
+\fBcolorUL\fP should override ANSI colors.
 If not, these are displayed only when no ANSI colors
 have been set for the corresponding position.
 The default is ``false.''
@@ -1671,6 +1671,12 @@ sequence with the character itself preceded by ESC.
 On startup, \fIxterm\fP tries to put the terminal into 7-bit mode.
 The \fBmetaSendsEscape\fP resource may override this.
 The default is ``true.''
+.IP
+Generally keyboards do not have a key labeled "Meta",
+but "Alt" keys are common, and they are conventionally used for "Meta".
+If they were synonymous, it would have been reasonable to name this
+resource "altSendsEscape", reversing its sense.
+For more background on this, see the \fBmeta\fP function in curses.
 .IP
 Note that the \fIAlt\fP key is not necessarily the same as the
 \fIMeta\fP modifier.
@@ -2265,11 +2271,17 @@ See the discussion of the \fBlocale\fP resource.
 .TP 8
 .B "veryBoldColors (\fPclass\fB VeryBoldColors)"
 Specifies whether to combine video attributes with colors specified by
-\fBcolorBD\fR, \fBcolorBL\fR and \fBcolorUL\fR.
+\fBcolorBD\fR, \fBcolorBL\fR, \fBcolorRV\fR and \fBcolorUL\fR.
 The resource value is the sum of values for each attribute:
+.RS 10
+.nf
+1 for reverse,
 2 for underline,
 4 for bold and
 8 for blink.
+.fi
+.RE
+.IP
 The default is ``0.''
 .TP 8
 .B "visualBell (\fPclass\fB VisualBell)"
@@ -2398,6 +2410,9 @@ This entry invokes the \fBset-backarrow(toggle)\fP action.
 .TP 8
 .B "num-lock (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-num-lock(toggle)\fP action.
+.TP 8
+.B "alt-esc (\fPclass\fB SmeBSB)"
+This entry invokes the \fBalt-sends-escape(toggle)\fP action.
 .TP 8
 .B "meta-esc (\fPclass\fB SmeBSB)"
 This entry invokes the \fBmeta-sends-escape(toggle)\fP action.
@@ -3427,6 +3442,9 @@ actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 .B "allow-send-events(\fIon/off/toggle\fP)"
 This action set or toggles the \fBallowSendEvents\fP resource and is also
 invoked by the \fBallowsends\fP entry in \fImainMenu\fP.
+.TP 8
+.B "alt-sends-escape()"
+This action toggles the state of the \fBeightBitInput\fP resource.
 .TP 8
 .B "bell([\fIpercent\fP])"
 This action rings the keyboard bell at the specified percentage

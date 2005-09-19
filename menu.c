@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.175 2005/08/05 01:25:40 tom Exp $ */
+/* $XTermId: menu.c,v 1.180 2005/09/18 23:48:12 tom Exp $ */
 
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -47,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.61 2005/08/05 01:25:40 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.62 2005/09/18 23:48:12 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -180,6 +180,7 @@ static void do_hp_fkeys        PROTO_XT_CALLBACK_ARGS;
 #endif
 
 #if OPT_NUM_LOCK
+static void do_alt_esc         PROTO_XT_CALLBACK_ARGS;
 static void do_num_lock        PROTO_XT_CALLBACK_ARGS;
 static void do_meta_esc        PROTO_XT_CALLBACK_ARGS;
 #endif
@@ -245,6 +246,7 @@ MenuEntry mainMenuEntries[] = {
     { "backarrow key",	do_backarrow,	NULL },
 #if OPT_NUM_LOCK
     { "num-lock",	do_num_lock,	NULL },
+    { "alt-esc",	do_alt_esc,	NULL },
     { "meta-esc",	do_meta_esc,	NULL },
 #endif
     { "delete-is-del",	do_delete_del,	NULL },
@@ -563,6 +565,7 @@ domenu(Widget w GCC_UNUSED,
 	    update_8bit_control();
 	    update_decbkm();
 	    update_num_lock();
+	    update_alt_esc();
 	    update_meta_esc();
 	    update_delete_del();
 	    update_keyboard_type();
@@ -879,6 +882,15 @@ do_num_lock(Widget gw GCC_UNUSED,
 {
     term->misc.real_NumLock = !term->misc.real_NumLock;
     update_num_lock();
+}
+
+static void
+do_alt_esc(Widget gw GCC_UNUSED,
+	   XtPointer closure GCC_UNUSED,
+	   XtPointer data GCC_UNUSED)
+{
+    term->screen.input_eight_bits = !term->screen.input_eight_bits;
+    update_alt_esc();
 }
 
 static void
@@ -1358,7 +1370,7 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 {
     TScreen *screen = &term->screen;
     int fontnum = screen->menu_font_number;
-    String name = term->screen.menu_font_names[fontnum];
+    String name = term->screen.MenuFontName(fontnum);
 
     term->misc.render_font = !term->misc.render_font;
     update_font_renderfont();
@@ -1739,6 +1751,16 @@ HandleNumLock(Widget w,
 	      Cardinal *param_count)
 {
     handle_vt_toggle(do_num_lock, term->misc.real_NumLock,
+		     params, *param_count, w);
+}
+
+void
+HandleAltEsc(Widget w,
+	     XEvent * event GCC_UNUSED,
+	     String * params,
+	     Cardinal *param_count)
+{
+    handle_vt_toggle(do_alt_esc, !term->screen.input_eight_bits,
 		     params, *param_count, w);
 }
 
@@ -2356,7 +2378,7 @@ toolbar_info(Widget w)
 	    : &(tekWidget->tek.tb_info));
 }
 
-static void
+void
 repairSizeHints(void)
 {
     TScreen *screen = &term->screen;
@@ -2366,10 +2388,6 @@ repairSizeHints(void)
     if (XtIsRealized((Widget) term)) {
 	bzero(&sizehints, sizeof(sizehints));
 	xtermSizeHints(term, &sizehints, ScrollbarWidth(screen));
-	xtermFixupSizes(term, &sizehints);
-
-	sizehints.width = MaxCols(screen) * FontWidth(screen) + sizehints.min_width;
-	sizehints.height = MaxRows(screen) * FontHeight(screen) + sizehints.min_height;
 
 	XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(term)), &sizehints);
     }
@@ -2539,6 +2557,14 @@ update_num_lock(void)
     update_menu_item(term->screen.mainMenu,
 		     mainMenuEntries[mainMenu_num_lock].widget,
 		     term->misc.real_NumLock);
+}
+
+void
+update_alt_esc(void)
+{
+    update_menu_item(term->screen.mainMenu,
+		     mainMenuEntries[mainMenu_alt_esc].widget,
+		     !term->screen.input_eight_bits);
 }
 
 void

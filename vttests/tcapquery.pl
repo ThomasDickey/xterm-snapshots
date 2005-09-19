@@ -1,8 +1,10 @@
 #!/usr/bin/perl
-# $XFree86: xc/programs/xterm/vttests/tcapquery.pl,v 1.1 2004/03/04 02:21:58 dickey Exp $
+# $XFree86: xc/programs/xterm/vttests/tcapquery.pl,v 1.2 2005/09/18 23:48:14 dickey Exp $
 #
 # -- Thomas Dickey (2004/3/3)
 # Test the tcap-query option of xterm.
+
+use strict;
 
 use IO::Handle;
 
@@ -16,7 +18,7 @@ sub write_tty {
 sub get_reply {
 	open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
 	autoflush TTY 1;
-	$old=`stty -g`;
+	my $old=`stty -g`;
 	system "stty raw -echo min 0 time 5";
 
 	print TTY @_;
@@ -41,6 +43,8 @@ sub csi_field {
 sub hexified {
 	my $value = @_[0];
 	my $result = "";
+	my $n;
+
 	for ( $n = 0; $n < length($value); ++$n) {
 		$result .= sprintf("%02X", ord substr($value,$n,1));
 	}
@@ -53,36 +57,45 @@ sub query_tcap {
 	my $param1 = hexified($tcap);
 	my $param2 = hexified($tinfo);
 
-	#FIXME: should be able to do both at once
-	#$reply=get_reply("\x1bP+q" . $param1 . ";" . $param2 . "\x1b\\");
-	$reply=get_reply("\x1bP+q" . $param1 . "\x1b\\");
+	# uncomment one of the following lines
+	my $reply=get_reply("\x1bP+q" . $param1 . ";" . $param2 . "\x1b\\");
+	#my $reply=get_reply("\x1bP+q" . $param2 . "\x1b\\");
 
 	if ( $reply =~ /\x1bP1\+r[[:xdigit:]]+=[[:xdigit:]]*.*/ ) {
 		my $value = $reply;
+		my $n;
 
-		$value =~ s/^.*=//;
-		$value =~ s/[^[:xdigit:]]*//;	# FIXME: should work, but doesn't
-		$value =~ s/\x1b.*//;		# ...do this anyway
+		$value =~ s/^\x1bP1\+r//;
+		$value =~ s/\x1b\\//;
 
 		my $result = "";
-		for ( $n = 0; $n < length($value); $n += 2) {
-			my $k = hex substr($value,$n,2);
-			if ( $k == 0x1b ) {
-				$result .= "\\E";
-			} elsif ( $k == 0x7f ) {
-				$result .= "^?";
-			} elsif ( $k == 32 ) {
-				$result .= "\\s";
-			} elsif ( $k < 32 ) {
-				$result .= sprintf("^%c", $k + 64);
-			} elsif ( $k > 128 ) {
-				$result .= sprintf("\\%03o", $k);
+		for ( $n = 0; $n < length($value); ) {
+			my $c = substr($value,$n,1);
+			# handle semicolon and equals
+			if ( $c =~ /[[:punct:]]/ ) {
+				$n += 1;
+				$result .= $c;
 			} else {
-				$result .= chr($k);
+				# handle hex-data
+				my $k = hex substr($value,$n,2);
+				if ( $k == 0x1b ) {
+					$result .= "\\E";
+				} elsif ( $k == 0x7f ) {
+					$result .= "^?";
+				} elsif ( $k == 32 ) {
+					$result .= "\\s";
+				} elsif ( $k < 32 ) {
+					$result .= sprintf("^%c", $k + 64);
+				} elsif ( $k > 128 ) {
+					$result .= sprintf("\\%03o", $k);
+				} else {
+					$result .= chr($k);
+				}
+				$n += 2;
 			}
 		}
 
-		printf "$tcap=$result\n";
+		printf "$result\n";
 	}
 }
 
