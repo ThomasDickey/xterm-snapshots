@@ -1,5 +1,5 @@
--- $XTermId: INSTALL,v 1.85 2005/09/18 23:48:11 tom Exp $
--- $XFree86: xc/programs/xterm/INSTALL,v 3.39 2005/09/18 23:48:11 dickey Exp $
+-- $XTermId: INSTALL,v 1.94 2005/11/03 13:17:26 tom Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.40 2005/11/03 13:17:26 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -264,7 +264,7 @@ The options (in alphabetic order):
 	translation.
 
   --enable-dec-locator    enable DECterm Locator support
-	Add support for for DEC Locator control sequences for xterm:
+	Add support for DEC Locator control sequences for xterm:
 
 		DECEFR - Enable Filter Rectangle
 	        DECELR - Enable Locator Reports
@@ -310,6 +310,24 @@ The options (in alphabetic order):
 
 	This sets "--enable-luit" as a side-effect.
 
+  --enable-narrowproto    enable narrow prototypes for X libraries
+
+	Originally xterm was built using imake rather than a configure script. 
+	One feature of imake that is not possible to guess within the
+	configure script is the wide-prototype compile-time definition
+	NARROWPROTO.  When this is not set properly, the Athena widget
+	scrollbars do not work properly.  xterm's configure script has a
+	fallback case which allows disabling imake.  However, this is moot
+	with the Xorg "modular" build, whose compiler options are unrelated to
+	imake or older versions of any libraries that it may distribute.  In
+	this case, the configure script needs some help.  Use this option to
+	enable or disable NARROW proto (and disable imake with the
+	--disable-imake option) to match the whims of Xorg hackers.
+
+	For instance
+
+		configure --disable-imake --disable-narrowproto
+
   --enable-paste64        enable support for bracketed paste mode
 
 	Compile-in code to support experimental bracketed paste mode, i.e.,
@@ -342,9 +360,14 @@ The options (in alphabetic order):
   	Compile-in code that builds a toolbar with pulldown menus.  The
 	normal popup menus are still available.
 
-	This is an experimental option.  As of patch #204, it is known to
-	work well with fvwm, but not well with some other window managers,
+	This is an experimental option.  As of patch #206, it is known to
+	work well with fvwm, but not as well with some other window managers,
 	e.g., KDE's Kwin and IceWM.
+
+	In addition to isolated layout problems, it is reported that some
+	flavors of the Athena widget library perform badly with ISO-10646
+	fonts.  You can work around those by setting the menu fonts to
+	an ISO-8859 variant in your X resources.
 
   --enable-trace          test: set to enable debugging traces
 
@@ -407,6 +430,22 @@ The options (in alphabetic order):
 	directed to other variations (such as nxterm) which do not
 	support the back-color erase capability.
 
+  --with-reference=XXX    program to use as permissions-reference
+
+	To install xterm with setuid permissions, the scripts usually compare
+	it with a previous install.  That works well for individual
+	maintainers, but can be a problem for packagers who may be
+	cross-compiling, etc.  This option lets the package builder specify
+	the file used for permissions reference.
+
+  --with-setuid=XXX       use the given setuid user
+
+	Install xterm setuid'd to the given user.  If no parameter value
+	is given, assume it is root.
+
+	See also --with-utmp-setgid and --with-utempter, which manipulate
+	the setgid group.
+
   --with-terminal-id[=V]  set default decTerminalID (default: vt100)
 
   	Set the default emulation level.
@@ -437,3 +476,12 @@ The options (in alphabetic order):
 	The utempter library is a set-uid wrapper for the utmp facility.
 	On systems with Unix98 pty's, xterm can use this library when
 	available so it need not be installed set-uid.
+
+  --with-utmp-setgid      use setgid for access to utmp
+
+	The option value specifies a group to use when installing.
+	xterm will be installed with setgid privilege to this group.
+	At runtime, xterm will drop the setuid privilege immediately
+	after opening the pseudo-terminal, and will have only the
+	group privilege needed to access the utmp file.  This relies
+	on having POSIX setuid behavior.

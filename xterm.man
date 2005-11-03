@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.312 2005/09/18 23:48:13 tom Exp $
+.\" $XTermId: xterm.man,v 1.318 2005/11/03 13:17:28 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,9 +55,22 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.116 2005/09/18 23:48:13 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.117 2005/11/03 13:17:28 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
+.
+.de DS
+.sp
+.in +4
+.nf
+.ft C			\" Courier
+..
+.de DE
+.fi
+.ft P
+.sp
+.in -4
+..
 .TH XTERM 1 __vendorversion__
 .SH NAME
 xterm \- terminal emulator for X
@@ -258,13 +271,13 @@ should do text cursor highlighting based on focus.
 This option disables active icon support if that feature was compiled
 into \fIxterm\fP.
 This is equivalent to setting the \fIvt100\fP resource
-\fBactiveIcon\fP to FALSE.
+\fBactiveIcon\fP to ``false''.
 .TP 8
 .B +ai
 This option enables active icon support if that feature was compiled
 into \fIxterm\fP.
 This is equivalent to setting the \fIvt100\fP resource
-\fBactiveIcon\fP to TRUE.
+\fBactiveIcon\fP to ``true''.
 .TP 8
 .B -aw
 This option indicates that auto-wraparound should be allowed.
@@ -279,6 +292,7 @@ This option indicates that auto-wraparound should not be allowed.
 .BI -b " number"
 This option specifies the size of the inner border (the distance between
 the outer edge of the characters and the window border) in pixels.
+That is the \fIvt100\fP \fIinternalBorder\fP resource.
 The
 default is 2.
 .TP 8
@@ -291,40 +305,43 @@ turn on text cursor blinking.
 This overrides the \fBcursorBlink\fR resource.
 .TP 8
 .BI -bcf " milliseconds"
-time text cursor is off when blinking
+set the amount of time text cursor is off when blinking via the
+\fIcursorOffTime\fP resource.
 .TP 8
 .BI -bcn " milliseconds"
-time text cursor is on when blinking
+set the amount of time text cursor is on when blinking via the
+\fIcursorOffTime\fP resource.
 .TP 8
 .B "-bdc"
-Set the \fIvt100\fP resource \fBcolorBDMode\fR to FALSE,
+Set the \fIvt100\fP resource \fBcolorBDMode\fR to ``false'',
 disabling the display of characters with bold attribute as color
 .TP 8
 .B "+bdc"
-Set the \fIvt100\fP resource \fBcolorBDMode\fR to TRUE,
+Set the \fIvt100\fP resource \fBcolorBDMode\fR to ``true'',
 enabling the display of characters with bold attribute as color
 rather than bold
 .TP 8
 .B "-cb"
-Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to FALSE.
+Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to ``false''.
 .TP 8
 .B "+cb"
-Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to TRUE.
+Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to ``true''.
 .TP 8
 .B "-cc \fIcharacterclassrange\fP:\fIvalue\fP[,...]"
 This sets classes indicated by the given ranges for using in selecting by
 words.
 See the section specifying character classes.
+and discussion of the \fIcharClass\fP resource.
 .TP 8
 .B "-cjk_width"
 Set the \fBcjkWidth\fP resource to ``true''.
 When turned on, characters with East Asian Ambiguous (A) category in UTR 11
 have a column width of 2.
-Othrwise, they have a column width of 1.
+Otherwise, they have a column width of 1.
 This may be useful for some legacy CJK text
 terminal-based programs assuming box drawings and others to have a column
 width of 2.
-It also has to be turned on when you specify a truetype
+It also has to be turned on when you specify a TrueType
 CJK double-width (bi-width/monospace) font either with \fB-fa\fP at
 the command line or \fBfaceName\fP resource.
 The default is ``false''
@@ -339,6 +356,7 @@ can be set to another class such as ``UXTerm'' to override selected resources.
 .TP 8
 .B "-cm"
 This option disables recognition of ANSI color-change escape sequences.
+It sets the \fIcolorMode\fP resource to ``false''.
 .TP 8
 .B "+cm"
 This option enables recognition of ANSI color-change escape sequences.
@@ -347,14 +365,17 @@ This is the same as the \fIvt100\fP resource \fBcolorMode\fP.
 .B "-cn"
 This option indicates that newlines should not be cut in line-mode
 selections.
+It sets the \fIcutNewline\fP resource to ``false''.
 .TP 8
 .B +cn
 This option indicates that newlines should be cut in line-mode selections.
+It sets the \fIcutNewline\fP resource to ``true''.
 .TP 8
 .BI -cr " color"
 This option specifies the color to use for text cursor.
 The default is to
 use the same foreground color that is used for text.
+It sets the \fIcursorColor\fP resource according to the parameter.
 .TP 8
 .B -cu
 This option indicates that \fIxterm\fP should work around a bug in the
@@ -381,9 +402,11 @@ the pointer cursor foreground and background colors,
 the Tektronix emulator foreground and background colors,
 its text cursor color
 and highlight color.
+The option sets the \fIdynamicColors\fP option to ``false''.
 .TP 8
 .B "+dc"
 This option enables the escape sequence to change dynamic colors.
+The option sets the \fIdynamicColors\fP option to ``true''.
 .TP 8
 .BI -e " program \fP[ \fIarguments \fP.\|.\|. ]\fI"
 This option specifies the program (and its command line arguments) to be
@@ -395,7 +418,7 @@ nor \fI-n\fP are given on the command line.
 .TP 8
 .BI -en " encoding"
 This option determines the encoding on which \fIxterm\fP runs.
-It corresponds to the \fBlocale\fR resource.
+It sets the \fBlocale\fR resource.
 Encodings other than UTF-8 are supported by using \fIluit\fR.
 The \fB-lc\fR option should be used instead of \fB-en\fR for
 systems with locale support.
@@ -419,19 +442,23 @@ on the \fBcjkWidth\fP resource.
 .BI -fbb
 This option indicates that \fIxterm\fP should compare normal and bold fonts bounding
 boxes to ensure they are compatible.
+It sets the \fBfreeBoldBox\fP resource to ``false''.
 .TP 8
 .BI +fbb
 This option indicates that \fIxterm\fP should not compare normal and bold fonts bounding
 boxes to ensure they are compatible.
+It sets the \fBfreeBoldBox\fP resource to ``true''.
 .TP 8
 .BI -fbx
 This option indicates that \fIxterm\fP should not assume that the
 normal and bold fonts have VT100 line-drawing characters.
 If any are missing, \fIxterm\fP will draw the characters directly.
+It sets the \fBforceBoxChars\fP resource to ``false''.
 .TP 8
 .BI +fbx
 This option indicates that \fIxterm\fP should assume that the
 normal and bold fonts have VT100 line-drawing characters.
+It sets the \fBforceBoxChars\fP resource to ``true''.
 .TP 8
 .BI -fd " pattern"
 This option sets the pattern for double-width fonts selected from the FreeType
@@ -476,14 +503,17 @@ This option specifies the color to use for the background of
 selected or otherwise highlighted text.
 If not specified,
 reverse video is used.
+See the discussion of the \fBhighlightColor\fP resource.
 .TP 8
 .BI -hf
 This option indicates that HP Function Key escape codes should be generated
 for function keys.
+It sets the \fBhpFunctionKeys\fP resource to ``true''.
 .TP 8
 .BI +hf
 This option indicates that HP Function Key escape codes should not be generated
 for function keys.
+It sets the \fBhpFunctionKeys\fP resource to ``false''.
 .TP 8
 .BI -hold
 Turn on the \fBhold\fP resource, i.e.,
@@ -505,7 +535,9 @@ set the stty erase value using the \fBkb\fP string from the termcap entry as
 a reference, if available.
 .TP 8
 .B -im
-Turn on the \fBuseInsertMode\fP resource.
+Turn on the \fBuseInsertMode\fP resource,
+which forces use of insert mode by adding appropriate entries to the TERMCAP
+environment variable.
 .TP 8
 .B +im
 Turn off the \fBuseInsertMode\fP resource.
@@ -517,6 +549,7 @@ This is used to embed \fIxterm\fP within other applications.
 .TP 8
 .B -j
 This option indicates that \fIxterm\fP should do jump scrolling.
+It corresponds to the \fBjumpScroll\fP resource.
 Normally,
 text is scrolled one line at a time; this option allows \fIxterm\fP to move
 multiple lines at a time so that it does not fall as far behind.
@@ -657,6 +690,7 @@ Reset the \fBmkWidth\fP resource.
 This option specifies the color to be used for the pointer cursor.
 The default
 is to use the foreground color.
+This sets the \fIpointerColor\fP resource.
 .TP 8
 .BI -nb " number"
 This option specifies the number of characters from the right end of a line
@@ -907,7 +941,7 @@ It is the application's
 responsibility to catch subsequent terminal size changes.
 .TP 8
 .B +wf
-This option indicates that \fIxterm\fP show not wait before starting the
+This option indicates that \fIxterm\fP should not wait before starting the
 subprocess.
 .TP 8
 .B -ziconbeep \fIpercent\fP
@@ -2122,6 +2156,13 @@ The default is 64.
 Specifies whether or not the scrollbar should be displayed.
 The default is
 ``false.''
+.TP 8
+.B "scrollBarBorder (\fPclass\fB ScrollBarBorder)"
+Specifies the width of the scrollbar border.
+Note that this is drawn to overlap the border of the \fIxterm\fP window.
+Modifying the scrollbar's border affects only the line between the VT100
+widget and the scrollbar.
+The default value is 1.
 .TP 8
 .B "scrollKey (\fPclass\fB ScrollCond)"
 Specifies whether or not pressing a key should automatically cause the
@@ -3347,10 +3388,7 @@ UTF-8 mode, only the first 256 bytes of this table will be used.
 .
 .PP
 The default table starts as follows -
-.sp
-.in +8
-.ft C			\" Courier
-.nf
+.DS
 static int charClass[256] = {
 /\(** NUL  SOH  STX  ETX  EOT  ENQ  ACK  BEL */
     32,   1,   1,   1,   1,   1,   1,   1,
@@ -3417,10 +3455,7 @@ static int charClass[256] = {
     48,  48,  48,  48,  48,  48,  48, 247,
 /\(**  o/   u`   u'   u^   u:   y'    P   y: */
     48,  48,  48,  48,  48,  48,  48,  48};
-.fi
-.ft P
-.in -8
-.sp
+.DE
 For example, the string ``33:48,37:48,45-47:48,38:48'' indicates that the
 exclamation mark, percent sign, dash, period, slash, and ampersand characters
 should be treated the same way as characters and numbers.
@@ -3466,7 +3501,6 @@ The parameter values are the menu names:
 Expands the word before cursor by searching in the preceding text on the
 screen and in the scrollback buffer for words starting with that
 abbreviation.
-By default bound to \fBMeta\ /\fP.
 Repeating \fBdabbrev-expand()\fP several times in sequence searches for an
 alternative expansion by looking farther back.
 Lack of more matches is signaled by a \fBbeep()\fP.
@@ -3476,7 +3510,12 @@ words.
 Consecutive identical expansions are ignored.
 The word here is defined as a sequence of non-whitespace characters.
 This feature partially emulates the behavior
-of `dynamic abbreviation' expansion in Emacs (also bound there to M-/).
+of `dynamic abbreviation' expansion in Emacs (bound there to M-/).
+Here is a resource setting for \fIxterm\fP which will do the same thing:
+.DS
+*VT100*translations:    #override \\n\\\&
+	Meta <KeyPress> /:dabbrev-expand()
+.DE
 .TP 8
 .B "deiconify()"
 Changes the window state back to normal, if it was iconified.
@@ -3909,11 +3948,8 @@ This action sends the indicated graphics input code.
 .
 .PP
 The default bindings in the VT102 window are:
-.sp
-.in +4
+.DS
 .ta 2.5i
-.ft C			\" Courier
-.nf
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\\&
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\\&
          Shift <KeyPress> Select:select-cursor-start() \\\&
@@ -3955,17 +3991,11 @@ The default bindings in the VT102 window are:
                       <Btn5Down>:scroll-forw(5,line,m)     \\n\\\&
                          <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
                        <BtnDown>:ignore()
-.fi
-.ft P
-.sp
-.in -4
+.DE
 .PP
 The default bindings in the Tektronix window are:
-.sp
-.in +4
+.DS
 .ta 2.5i
-.nf
-.ft C			\" Courier
                 ~Meta<KeyPress>: 	insert-seven-bit() \\n\\\&
                  Meta<KeyPress>: 	insert-eight-bit() \\n\\\&
                !Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\\&
@@ -3982,10 +4012,7 @@ The default bindings in the Tektronix window are:
                 ~Meta<Btn2Down>:	gin-press(m) \\n\\\&
           Shift ~Meta<Btn3Down>:	gin-press(R) \\n\\\&
                 ~Meta<Btn3Down>:	gin-press(r)
-.fi
-.ft P
-.sp
-.in -4
+.DE
 .PP
 Here is an example which uses shifted select/paste to copy to the clipboard,
 and unshifted select/paste for the primary selection.
@@ -3997,30 +4024,19 @@ while selections can store data in a variety of formats and encodings.
 While \fIxterm\fP owns the selection, it highlights it.
 When it loses the selection, it removes the corresponding highlight.
 But you can still paste from the corresponding cut buffer.
-.sp
-.in +4
-.nf
+.DS
 .ta .5i 1.5i
-.nf
-.ft C			\" Courier
 *VT100*translations:    #override \\n\\\&
     ~Shift~Ctrl<Btn2Up>: insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift~Ctrl<Btn2Up>:  insert-selection(CLIPBOARD, CUT_BUFFER1) \\n\\\&
     ~Shift<BtnUp>:       select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift<BtnUp>:        select-end(CLIPBOARD, CUT_BUFFER1)
-.fi
-.ft P
-.sp
-.in -4
+.DE
 .PP
 Below is a sample how of the \fBkeymap()\fP action is used to add special
 keys for entering commonly-typed works:
-.sp
-.in +4
-.nf
+.DS
 .ta .5i 1.5i
-.nf
-.ft C			\" Courier
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\\&
 	<Key>F14:	keymap(None) \\n\\\&
@@ -4028,10 +4044,7 @@ keys for entering commonly-typed works:
 	<Key>F18:	string("step") string(0x0d) \\n\\\&
 	<Key>F19:	string("continue") string(0x0d) \\n\\\&
 	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
-.fi
-.ft P
-.sp
-.in -4
+.DE
 .SH "CONTROL SEQUENCES AND KEYBOARD"
 The \fIXterm Control Sequences\fP document lists the control sequences which
 an application can send \fIxterm\fP to make it perform various operations.
@@ -4063,8 +4076,8 @@ it is distinct from ``SHELL''.
 XTERM_VERSION
 is set to the string displayed by the \fB-version\fP option.
 That is normally an identifier for the X Window libraries used to
-build \fBxterm\fP, followed by
-\fBxterm\fP's patch number in parenthesis.
+build \fIxterm\fP, followed by
+\fIxterm\fP's patch number in parenthesis.
 The patch number is also part of the response to a Secondary Device Attributes
 (DA) control sequence (see \fIXterm Control Sequences\fP).
 .

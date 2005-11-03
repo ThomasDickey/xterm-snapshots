@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.615 2005/09/18 23:48:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.625 2005/11/03 13:17:27 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.175 2005/09/18 23:48:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.176 2005/11/03 13:17:27 dickey Exp $ */
 
 /*
 
@@ -225,11 +225,6 @@ static char defaultTranslations[] =
          Shift <KeyPress> Select:select-cursor-start() select-cursor-end(PRIMARY, CUT_BUFFER0) \n\
          Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \n\
 "
-#if OPT_DABBREV
-"\
-                 Meta <KeyPress> /:dabbrev-expand() \n\
-"
-#endif
 #if OPT_SHIFT_FONTS
 "\
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \n\
@@ -297,6 +292,7 @@ static XtActionsRec actionsList[] = {
     { "scroll-forw",		HandleScrollForward },
     { "secure",			HandleSecure },
     { "select-cursor-end",	HandleKeyboardSelectEnd },
+    { "select-cursor-extend",   HandleKeyboardSelectExtend },
     { "select-cursor-start",	HandleKeyboardSelectStart },
     { "select-end",		HandleSelectEnd },
     { "select-extend",		HandleSelectExtend },
@@ -462,6 +458,7 @@ static XtResource resources[] =
 	 screen.printer_controlmode, 0),
     Ires(XtNvisualBellDelay, XtCVisualBellDelay, screen.visualBellDelay, 100),
     Ires(XtNsaveLines, XtCSaveLines, screen.savelines, SAVELINES),
+    Ires(XtNscrollBarBorder, XtCScrollBarBorder, screen.scrollBarBorder, 1),
     Ires(XtNscrollLines, XtCScrollLines, screen.scrolllines, SCROLLLINES),
 
     Sres(XtNfont1, XtCFont1, screen.MenuFontName(fontMenu_font1), NULL),
@@ -761,6 +758,7 @@ xtermAddInput(Widget w)
 	{ "scroll-back",	    HandleScrollBack },
 	{ "scroll-forw",	    HandleScrollForward },
 	{ "select-cursor-end",	    HandleKeyboardSelectEnd },
+	{ "select-cursor-extend",   HandleKeyboardSelectExtend },
 	{ "select-cursor-start",    HandleKeyboardSelectStart },
 	{ "insert-selection",	    HandleInsertSelection },
 	{ "select-start",	    HandleSelectStart },
@@ -1703,8 +1701,12 @@ doparsing(unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_TRACK_MOUSE:
-	    if (screen->send_mouse_pos == VT200_HIGHLIGHT_MOUSE
-		|| nparam > 1) {
+	    /*
+	     * A single parameter other than zero is always scroll-down.
+	     * A zero-parameter is used to reset the mouse mode, and is
+	     * not useful for scrolling anyway.
+	     */
+	    if (nparam > 1 || param[0] == 0) {
 		TRACE(("CASE_TRACK_MOUSE\n"));
 		/* Track mouse as long as in window and between
 		 * specified rows
@@ -2995,6 +2997,7 @@ in_put(void)
 		ScreenResize(&term->screen, replyWidth, replyHeight,
 			     &term->flags);
 	    }
+	    repairSizeHints();
 	}
 
 	if (eventMode == NORMAL
@@ -3612,7 +3615,6 @@ HandleStructNotify(Widget w GCC_UNUSED,
 			   save.menu_height,
 			   save.menu_border));
 
-		    repairSizeHints();
 		    /*
 		     * FIXME: Window manager still may be using the old values.
 		     * Try to fool it.
@@ -3623,10 +3625,11 @@ HandleStructNotify(Widget w GCC_UNUSED,
 					- save.menu_height
 					+ screen->fullVwin.fullheight,
 					NULL, NULL);
+		    repairSizeHints();
 		}
 	    }
 	}
-#endif
+#endif /* OPT_TOOLBAR */
 	break;
     default:
 	TRACE(("HandleStructNotify(event %d)\n", event->type));
@@ -4881,7 +4884,12 @@ RequestResize(XtermWidget termw, int rows, int cols, int text)
 	&& replyWidth) {
 	sizehints.height = replyHeight;
 	sizehints.width = replyWidth;
+
+	TRACE(("%s@%d -- ", __FILE__, __LINE__));
+	TRACE_HINTS(&sizehints);
 	XSetWMNormalHints(screen->display, VShellWindow, &sizehints);
+	TRACE(("%s@%d -- ", __FILE__, __LINE__));
+	TRACE_WM_HINTS(termw);
     }
 #endif
 
@@ -5249,6 +5257,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.multiscroll);
     init_Ires(screen.nmarginbell);
     init_Ires(screen.savelines);
+    init_Ires(screen.scrollBarBorder);
     init_Ires(screen.scrolllines);
     init_Bres(screen.scrollttyoutput);
     init_Bres(screen.scrollkey);
@@ -5637,6 +5646,8 @@ VTInitialize(Widget wrequest,
 	wnew->flags |= WRAPAROUND;
     if (wnew->misc.re_verse != wnew->misc.re_verse0)
 	wnew->flags |= REVERSE_VIDEO;
+    if (wnew->screen.c132)
+	wnew->flags |= IN132COLUMNS;
 
     wnew->initflags = wnew->flags;
 
@@ -5800,8 +5811,6 @@ VTRealize(Widget w,
      * Note that the size-hints are for the shell, while the resize-request
      * is for the vt100 widget.  They are not the same size.
      */
-    TRACE(("%s@%d -- ", __FILE__, __LINE__));
-    TRACE_WM_HINTS(xw);
     TRACE(("make resize request %dx%d\n", height, width));
     (void) XtMakeResizeRequest((Widget) xw,
 			       (Dimension) width, (Dimension) height,
@@ -5816,16 +5825,14 @@ VTRealize(Widget w,
 	XMoveWindow(XtDisplay(xw), XtWindow(SHELL_OF(xw)),
 		    sizehints.x, sizehints.y);
 
+    TRACE(("%s@%d -- ", __FILE__, __LINE__));
+    TRACE_HINTS(&sizehints);
     XSetWMNormalHints(XtDisplay(xw), XtWindow(SHELL_OF(xw)), &sizehints);
     TRACE(("%s@%d -- ", __FILE__, __LINE__));
     TRACE_WM_HINTS(xw);
 
-    /*
-     * _NET_WM_PID must only be set if WM_CLIENT_MACHINE is set.
-     */
-    if (XInternAtom(XtDisplay(xw), "WM_CLIENT_MACHINE", True) != None
-	&& (pid_atom = XInternAtom(XtDisplay(xw), "_NET_WM_PID", False))
-	!= None) {
+    if ((pid_atom = XInternAtom(XtDisplay(xw), "_NET_WM_PID", False)) != None) {
+	/* XChangeProperty format 32 really is "long" */
 	unsigned long pid_l = (unsigned long) getpid();
 	TRACE(("Setting _NET_WM_PID property to %lu\n", pid_l));
 	XChangeProperty(XtDisplay(xw), VShellWindow,
@@ -6844,17 +6851,26 @@ VTReset(Bool full, Bool saved)
 	update_jumpscroll();
 
 	if (screen->c132 && (term->flags & IN132COLUMNS)) {
-	    Dimension junk;
+	    Dimension reqWidth = (80 * FontWidth(screen)
+				  + 2 * screen->border + ScrollbarWidth(screen));
+	    Dimension reqHeight = (FontHeight(screen)
+				   * MaxRows(screen) + 2 * screen->border);
+	    Dimension replyWidth;
+	    Dimension replyHeight;
+
+	    TRACE(("Making resize-request to restore 80-columns %dx%d\n",
+		   reqHeight, reqWidth));
 	    XtMakeResizeRequest((Widget) term,
-				(Dimension) 80 * FontWidth(screen)
-				+ 2 * screen->border + ScrollbarWidth(screen),
-				(Dimension) FontHeight(screen)
-				* MaxRows(screen) + 2 * screen->border,
-				&junk, &junk);
+				reqWidth,
+				reqHeight,
+				&replyWidth, &replyHeight);
+	    TRACE(("...result %dx%d\n", replyHeight, replyWidth));
+	    repairSizeHints();
 	    XSync(screen->display, False);	/* synchronize */
 	    if (XtAppPending(app_con))
 		xevents();
 	}
+
 	CursorSet(screen, 0, 0, term->flags);
 	CursorSave(term);
     } else {			/* DECSTR */

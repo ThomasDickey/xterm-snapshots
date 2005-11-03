@@ -1,10 +1,10 @@
-/* $XTermId: misc.c,v 1.276 2005/09/18 23:48:13 tom Exp $ */
+/* $XTermId: misc.c,v 1.280 2005/11/03 13:17:28 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.100 2005/09/18 23:48:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.101 2005/11/03 13:17:28 dickey Exp $ */
 
 /*
  *
@@ -331,7 +331,7 @@ HandleInterpret(Widget w GCC_UNUSED,
 	int used = VTbuffer->next - VTbuffer->buffer;
 	int have = VTbuffer->last - VTbuffer->buffer;
 
-	if (have - used + need < (int) sizeof(VTbuffer->buffer)) {
+	if (have - used + need < BUF_SIZE) {
 
 	    fillPtyData(&term->screen, VTbuffer, value, (int) strlen(value));
 
@@ -1543,7 +1543,7 @@ ChangeAnsiColorRequest(XtermWidget pTerm,
 
 #if OPT_PASTE64
 static void
-ManipulateSelectionData(TScreen * screen, Char * buf, int final)
+ManipulateSelectionData(TScreen * screen, char *buf, int final)
 {
 #define PDATA(a,b) { a, #b }
     static struct {
@@ -1562,7 +1562,7 @@ ManipulateSelectionData(TScreen * screen, Char * buf, int final)
 	    PDATA('7', CUT_BUFFER7),
     };
 
-    Char *base = buf;
+    char *base = buf;
     Cardinal j, n = 0;
     char **select_args = 0;
 
@@ -1606,7 +1606,7 @@ ManipulateSelectionData(TScreen * screen, Char * buf, int final)
 	    TRACE(("Setting selection with %s\n", buf));
 	    ClearSelectionBuffer();
 	    while (*buf != '\0')
-		AppendToSelectionBuffer(screen, *buf++);
+		AppendToSelectionBuffer(screen, CharOf(*buf++));
 	    CompleteSelection(select_args, n);
 	}
 	free(select_args);
@@ -2902,6 +2902,7 @@ set_vt_visibility(Bool on)
 #if OPT_TOOLBAR
 	    /* we need both of these during initialization */
 	    XtMapWidget(SHELL_OF(term));
+	    ShowToolbar(resource.toolBar);
 #endif
 	    screen->Vshow = True;
 	}

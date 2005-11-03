@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.141 2005/09/18 23:48:13 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.143 2005/11/03 13:17:28 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.56 2005/09/18 23:48:13 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.57 2005/11/03 13:17:28 dickey Exp $
  */
 
 /************************************************************
@@ -132,6 +132,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef USE_TERMCAP		/* CF_FUNC_TGETENT */
 #undef USE_TERMINFO		/* CF_FUNC_TGETENT */
 #undef USE_TTY_GROUP		/* CF_TTY_GROUP */
+#undef USE_UTMP_SETGID		/* AC_ARG_WITH(utmp-setgid) */
 #undef USE_UTEMPTER		/* CF_UTEMPTER */
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef XRENDERFONT		/* CF_X_FREETYPE */

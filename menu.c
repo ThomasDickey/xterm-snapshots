@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.180 2005/09/18 23:48:12 tom Exp $ */
+/* $XTermId: menu.c,v 1.189 2005/11/03 13:17:27 tom Exp $ */
 
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -47,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.62 2005/09/18 23:48:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.63 2005/11/03 13:17:27 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -384,7 +384,8 @@ static MenuHeader menu_names[] = {
  * are initialized before the widget is created.
  */
 typedef struct {
-    Widget w;
+    Widget b;			/* the toolbar's buttons */
+    Widget w;			/* the popup shell activated by the button */
     Cardinal entries;
 } MenuList;
 
@@ -554,6 +555,7 @@ domenu(Widget w GCC_UNUSED,
     if (mw == 0)
 	return False;
 
+    TRACE(("domenu(%s) %s\n", params[0], created ? "create" : "update"));
     switch (me) {
     case mainMenu:
 	if (created) {
@@ -702,6 +704,7 @@ HandleCreateMenu(Widget w,
 		 String * params,	/* mainMenu, vtMenu, or tekMenu */
 		 Cardinal *param_count)		/* 0 or 1 */
 {
+    TRACE(("HandleCreateMenu\n"));
     (void) domenu(w, event, params, param_count);
 }
 
@@ -711,6 +714,7 @@ HandlePopupMenu(Widget w,
 		String * params,	/* mainMenu, vtMenu, or tekMenu */
 		Cardinal *param_count)	/* 0 or 1 */
 {
+    TRACE(("HandlePopupMenu\n"));
     if (domenu(w, event, params, param_count)) {
 #if OPT_TOOLBAR
 	w = select_menu(w, mainMenu)->w;
@@ -2259,11 +2263,12 @@ InitPopup(Widget gw,
 
     domenu(gw, (XEvent *) 0, params, &count);
 
-    XtRemoveCallback(gw, XtNpopupCallback, InitPopup, closure);
+    if (gw)
+	XtRemoveCallback(gw, XtNpopupCallback, InitPopup, closure);
 }
 
 static void
-SetupShell(Widget *menus, MenuList * shell, Widget *menu_tops, int n, int m)
+SetupShell(Widget *menus, MenuList * shell, int n, int m)
 {
     char temp[80];
     char *external_name = 0;
@@ -2271,7 +2276,7 @@ SetupShell(Widget *menus, MenuList * shell, Widget *menu_tops, int n, int m)
     shell[n].w = XtVaCreatePopupShell(menu_names[n].internal_name,
 				      simpleMenuWidgetClass,
 				      *menus,
-				      XtNgeometry, "1x1",
+				      XtNgeometry, NULL,
 				      (XtPointer) 0);
 
     XtAddCallback(shell[n].w, XtNpopupCallback, InitPopup, menu_names[n].internal_name);
@@ -2285,15 +2290,15 @@ SetupShell(Widget *menus, MenuList * shell, Widget *menu_tops, int n, int m)
 	   (long) shell[n].w));
 
     sprintf(temp, "%sButton", menu_names[n].internal_name);
-    menu_tops[n] = XtVaCreateManagedWidget(temp,
-					   menuButtonWidgetClass,
-					   *menus,
-					   XtNfromHoriz, ((m >= 0)
-							  ? menu_tops[m]
-							  : 0),
-					   XtNmenuName, menu_names[n].internal_name,
-					   XtNlabel, external_name,
-					   (XtPointer) 0);
+    shell[n].b = XtVaCreateManagedWidget(temp,
+					 menuButtonWidgetClass,
+					 *menus,
+					 XtNfromHoriz, ((m >= 0)
+							? shell[m].b
+							: 0),
+					 XtNmenuName, menu_names[n].internal_name,
+					 XtNlabel, external_name,
+					 (XtPointer) 0);
 }
 
 #endif
@@ -2304,7 +2309,6 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus)
 #if OPT_TOOLBAR
     Cardinal n;
     Arg args[10];
-    Widget menu_tops[NUM_POPUP_MENUS];
 #endif
 
     TRACE(("SetupMenus(%s)\n", shell == toplevel ? "vt100" : "tek4014"));
@@ -2341,13 +2345,13 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus)
 
     if (shell == toplevel) {	/* vt100 */
 	for (n = mainMenu; n <= fontMenu; n++) {
-	    SetupShell(menus, vt_shell, menu_tops, n, n - 1);
+	    SetupShell(menus, vt_shell, n, n - 1);
 	}
     }
 #if OPT_TEK4014
     else {			/* tek4014 */
-	SetupShell(menus, tek_shell, menu_tops, mainMenu, -1);
-	SetupShell(menus, tek_shell, menu_tops, tekMenu, mainMenu);
+	SetupShell(menus, tek_shell, mainMenu, -1);
+	SetupShell(menus, tek_shell, tekMenu, mainMenu);
     }
 #endif
 
@@ -2359,23 +2363,6 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus)
     TRACE(("...shell=%#lx\n", (long) shell));
     TRACE(("...forms=%#lx\n", (long) *forms));
     TRACE(("...menus=%#lx\n", (long) *menus));
-}
-
-#if OPT_TOOLBAR
-void
-SetupToolbar(void)
-{
-    TRACE(("SetupToolbar\n"));
-    ShowToolbar(resource.toolBar);
-}
-
-static TbInfo *
-toolbar_info(Widget w)
-{
-    TRACE(("...getting toolbar_info\n"));
-    return ((w == (Widget) term)
-	    ? &(WhichVWin(&(term->screen))->tb_info)
-	    : &(tekWidget->tek.tb_info));
 }
 
 void
@@ -2391,6 +2378,43 @@ repairSizeHints(void)
 
 	XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(term)), &sizehints);
     }
+}
+
+#if OPT_TOOLBAR
+static int called_SetupToolbar[2] =
+{False, False};
+
+static void
+SetupToolbar(int which)
+{
+    int n;
+
+    TRACE(("SetupToolbar(%s)\n", which ? "vt100" : "tek4014"));
+
+    if (which) {		/* vt100 */
+	for (n = mainMenu; n <= fontMenu; n++) {
+	    InitPopup(vt_shell[n].w, menu_names[n].internal_name, 0);
+	}
+    }
+#if OPT_TEK4014
+    else {			/* tek4014 */
+	InitPopup(tek_shell[mainMenu].w, menu_names[mainMenu].internal_name, 0);
+	InitPopup(tek_shell[tekMenu].w, menu_names[tekMenu].internal_name, 0);
+    }
+#endif
+    called_SetupToolbar[which] = True;
+    ShowToolbar(resource.toolBar);
+}
+
+static TbInfo *
+toolbar_info(Widget w)
+{
+    TRACE(("...getting toolbar_info\n"));
+#if OPT_TEK4014
+    if (w != (Widget) term)
+	return &(tekWidget->tek.tb_info);
+#endif
+    return &(WhichVWin(&(term->screen))->tb_info);
 }
 
 static void
@@ -2442,19 +2466,32 @@ show_toolbar(Widget w)
     }
 }
 
+/*
+ * Make the toolbar visible or invisible in the current window(s).
+ */
 void
 ShowToolbar(Bool enable)
 {
+    TRACE(("ShowToolbar(%d)\n", enable));
+
     if (IsIcon(&(term->screen))) {
 	Bell(XkbBI_MinorError, 0);
     } else {
 	if (enable) {
+	    int which = !TEK4014_ACTIVE(&(term->screen));
+	    if (!called_SetupToolbar[which])
+		SetupToolbar(which);
 	    show_toolbar((Widget) term);
+#if OPT_TEK4014
 	    show_toolbar((Widget) tekWidget);
+#endif
 	} else {
 	    hide_toolbar((Widget) term);
+#if OPT_TEK4014
 	    hide_toolbar((Widget) tekWidget);
+#endif
 	}
+	resource.toolBar = enable;
 	update_toolbar();
     }
 }
