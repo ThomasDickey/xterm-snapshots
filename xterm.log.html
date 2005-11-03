@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.308 2005/09/18 23:48:13 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.141 2005/09/18 23:48:13 dickey Exp $
+  $XTermId: xterm.log.html,v 1.338 2005/11/03 13:17:28 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.142 2005/11/03 13:17:28 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_206">Patch #206 - 2005/11/3 - XFree86 4.5.99.15</A>
 <LI><A HREF="#xterm_205">Patch #205 - 2005/9/18 - XFree86 4.5.99.12</A>
 <LI><A HREF="#xterm_204">Patch #204 - 2005/8/4 - XFree86 4.5.99.9</A>
 <LI><A HREF="#xterm_203">Patch #203 - 2005/7/6 - XFree86 4.5.99.7</A>
@@ -254,10 +255,118 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_206">Patch #206 - 2005/11/3 - XFree86 4.5.99.15</A></H1>
+<ul>
+	<li>add configure <code>--with-app-defaults</code> option to allow
+	    app-defaults directory for install-rules to be customized.
+
+	<li>remove default translations for <code>dabbrev-expand()</code>
+	    due to conflicts with existing keyboard arrangements.
+
+	<li>remove redundant check for <code>_NET_WM_PID</code>
+	    (report by Emanuele Giaquinta).
+
+	<li>set icon border width explicitly to work around fvwm problem
+	    with active icon resizing (report by Steve Morris, analysis
+	    by Dominik Vogt).
+
+	<li>modify resource files to make the font-resources a little
+	    more specific, e.g., changing "*VT100*" to "*VT100.", to
+	    make the distinction between VT100.font and VT100.utf8Fonts.font
+	    sharper, in case a packager modifies one of those.
+
+	<li>expanded comments in <code>UXTerm.ad</code> regarding the
+	    font resources (Debian #319179).
+
+	<li>add <code>--enable-narrowproto</code> configure option to
+	    accommodate Xorg "modular" build (report by Stephan Hermann,
+	    GenToo #17220).
+
+	<li>fix typo in xterm.man description of <code>+wf</code> (patch
+	    by Tobias Stoeckmann).
+
+	<li>add <code>scrollBarBorder</code> resource (request by Floyd L
+	    Davidson).
+
+	<li>modify <code>xterm-new</code> terminfo entry to use capabilities
+	    for shifted scroll forward/reverse as shifted cursor up/down.
+
+	<li>correct updating of checkmark for toolbar entry in popup menu
+	    (report by Emanuele Giaquinta).
+
+	<li>fix ifdef's to allow compiling with toolbar and without tek4014
+	    (patch by Emanuele Giaquinta).
+
+	<li>use <code>openpty()</code> for Darwin port (patch by Emanuele
+	    Giaquinta).
+
+	<li>fix GenToo #90697 a different way, postponing the logic in
+	    <code>SetupToolbar</code> until the toolbar is actually needed,
+	    i.e., the <code>+tb</code> option is handled as expected.
+
+	<li>revert fix made in <a href="#xterm_203">patch #203</a> for GenToo
+	    #90697.  That introduced a problem with the control mouse
+	    click-popups, while most of the performance problems can be
+	    resolved by restricting the menu fonts (report by Emanuele
+	    Giaquinta).
+
+	<li>fix a file-descriptor leak when calling <code>openpty()</code>
+	    (OpenBSD system/4561).
+
+	<li>make a special case of resizing work like vt100: a hard reset
+	    also resets the 132/80 mode.  The code to support this was
+	    present since X11R5, but not used because the corresponding
+	    initial state of the <code>-132</code> option was not saved.
+
+	<li>restore window manager hints after <code>XtMakeResizeRequest()</code>
+	    calls.  One instance from <a href="#xterm_205">patch #205</a>
+	    resulted in the window manager displaying pixels rather than
+	    than characters after selecting a different font size (FreeBSD
+	    ports/87424).
+
+	<li>remove special case for Darwin in CF_XOPEN_SOURCE
+	    (Emanuele Giaquinta).
+
+	<li>modify parsing of control sequence <code>CSI&nbsp;T</code>
+	    to allow scroll-down
+	    to be sent while mouse tracking is enabled (request by
+	    D Hugh Redelmeier). 
+
+	<li>correct termcap "me" (mode-end) string so it does not modify the
+	    alternate character set (report by Andrey Chernov).
+
+	<li>correct size-comparison in HandleInterpret() broken in changes
+	    from <a href="#xterm_201">patch #201</a> to allocate input
+	    buffer (Debian #334317).
+
+	<li>amend adjustments for scrollbar layout from
+	    <a href="#xterm_204">patch #204</a> to make
+	    this apply only to the toolbar configuration.  In the non-toolbar
+	    configuration, the resulting scrollbar was shifted by its
+	    borderwidth (report by Matthieu Herrb).
+
+	<li>add select-cursor-extend() action.
+
+	<li>fix some broken href's in xterm.log.html, and typo in the
+	    INSTALL file (report/patch by David Mart&#237;nez Moreno).
+
+	<li>modify <code>Imakefile</code> to use setgid mode for installing
+	    with Linux, OpenBSD and FreeBSD.
+
+	<li>add configure --with-setuid and --with-reference options to
+	    allow packagers more flexibility in customizing install
+	    permissions.
+
+	<li>generalize and make optional (configure --with-utmp-setgid)
+	    the change made for XFree86 Bugzilla #878 in
+	    <a href="#xterm_205">patch #205</a>
+	    (FreeBSD bug report #ports/86663).
+</ul>
+
 <H1><A NAME="xterm_205">Patch #205 - 2005/9/18 - XFree86 4.5.99.12</A></H1>
 <ul>
 	<li>correct a typo in CF_FUNC_TGETENT introduced in <a
-	    href="xterm_198">patch #198</a> fix for Gentoo #69926.
+	    href="#xterm_198">patch #198</a> fix for Gentoo #69926.
 
 	<li>implement logic in termcap query to process multiple parameters
 	    as documented in ctlseqs.ms
@@ -318,7 +427,7 @@ is the latest version of this file.
 
 	<li>update config.guess, config.sub
 
-	<li>improve fix from <a href="xterm_198">patch #198</a> for
+	<li>improve fix from <a href="#xterm_198">patch #198</a> for
 	    <code>Cleanup()</code> by ensuring it is not called from the
 	    SIGCHLD handler (patch from OpenBSD by Todd Miller).
 
@@ -422,11 +531,11 @@ is the latest version of this file.
 	    (Debian #311438, report/fix by Peter Chubb).
 
 	<li>fix an initialization bug from
-	    <a href="xterm_201">patch #201</a> that broke logging
+	    <a href="#xterm_201">patch #201</a> that broke logging
 	    (report by Rodney Thayer).
 
 	<li>amend change to command-line processing in
-	    <a href="xterm_201">patch #201</a> to avoid
+	    <a href="#xterm_201">patch #201</a> to avoid
 	    conflict with <code>-e</code> option (report by Servatius Brandt).
 
 	<li>suppress configure check for <code>_XOPEN_SOURCE</code> on

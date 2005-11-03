@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.115 2005/01/14 01:50:02 tom Exp $
+## $XTermId: Makefile.in,v 1.118 2005/11/03 13:17:27 tom Exp $
 ##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.50 2005/01/14 01:50:02 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.51 2005/11/03 13:17:27 dickey Exp $ ##
 ##
 ## Copyright 2002-2003,2004 by Thomas E. Dickey
 ##
@@ -63,7 +63,7 @@ manext		= 1
 bindir		= @bindir@
 libdir		= @libdir@
 mandir		= @mandir@/man$(manext)
-appsdir		= $(libdir)/X11/app-defaults
+appsdir		= @appsdir@
 
 #### End of system configuration section. ####
 
@@ -148,7 +148,7 @@ binary_uxterm = `echo uxterm|   $(TRANSFORM)`
 install \
 install-bin \
 install-full :: xterm$x resize$x $(BINDIR)
-@MAY_SETUID@	$(SHELL) $(srcdir)/sinstall.sh "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
+@MAY_SETUID@	$(SHELL) $(srcdir)/sinstall.sh @SINSTALL_OPTS@ "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
 @NOT_SETUID@	$(INSTALL_PROGRAM) xterm$x $(BINDIR)/$(binary_xterm)
 	$(INSTALL_PROGRAM) -m  755 resize$x $(BINDIR)/$(binary_resize)
 	$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm)

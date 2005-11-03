@@ -1,10 +1,10 @@
-/* $XTermId: ptyx.h,v 1.386 2005/09/18 23:48:13 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.390 2005/11/03 13:17:28 tom Exp $ */
 
 /*
  *	$Xorg: ptyx.h,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.125 2005/09/18 23:48:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.127 2005/11/03 13:17:28 dickey Exp $ */
 
 /*
  * Copyright 1999-2004,2005 by Thomas E. Dickey
@@ -139,7 +139,7 @@
 #define USE_PTY_DEVICE 1
 #define USE_PTY_SEARCH 1
 
-#if defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)) || defined(__NetBSD__)
+#if defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #undef USE_PTY_DEVICE
 #undef USE_PTY_SEARCH
 #define USE_PTS_DEVICE 1
@@ -263,19 +263,6 @@
  * mouse events into the proper routines. */
 
 typedef enum {NORMAL, LEFTEXTENSION, RIGHTEXTENSION} EventMode;
-
-/*
- * Indices for menu_font_names[][]
- */
-typedef enum {
-    fNorm = 0
-    , fBold
-#if OPT_WIDE_CHARS
-    , fWide
-    , fWBold
-#endif
-    , fMAX
-} VTFontEnum;
 
 /*
  * The origin of a screen is 0, 0.  Therefore, the number of rows
@@ -688,6 +675,19 @@ typedef struct {
 #endif
 
 /***====================================================================***/
+
+/*
+ * Indices for menu_font_names[][]
+ */
+typedef enum {
+    fNorm = 0
+    , fBold
+#if OPT_WIDE_CHARS
+    , fWide
+    , fWBold
+#endif
+    , fMAX
+} VTFontEnum;
 
 /* indices for the normal terminal colors in screen.Tcolors[] */
 typedef enum {
@@ -1250,6 +1250,7 @@ typedef struct {
 	Boolean		c1_printable;	/* true if we treat C1 as print	*/
 #endif
 	int		border;		/* inner border			*/
+	int		scrollBarBorder; /* scrollBar border		*/
 	Cursor		arrow;		/* arrow cursor			*/
 	unsigned long	event_mask;
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */

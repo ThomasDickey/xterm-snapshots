@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.194 2005/08/05 01:25:39 tom Exp $ */
+/* $XTermId: button.c,v 1.197 2005/11/03 13:17:27 tom Exp $ */
 
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
@@ -52,7 +52,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.81 2005/08/05 01:25:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.82 2005/11/03 13:17:27 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -805,7 +805,7 @@ ReadLineDelete(int r1, int c1, int r2, int c2)
     if (del <= 0)		/* Just in case... */
 	return 0;
     while (del--)
-	v_write(screen->respond, "\177", 1);	/* XXX Sometimes "\08"? */
+	v_write(screen->respond, (Char *) "\177", 1);
     return 1;
 }
 #endif /* OPT_READLINE */
@@ -962,6 +962,21 @@ HandleSelectExtend(Widget w,
 	}
 	break;
     }
+}
+
+void
+HandleKeyboardSelectExtend(Widget w,
+			   XEvent * event GCC_UNUSED,	/* must be XButtonEvent */
+			   String * params GCC_UNUSED,
+			   Cardinal *num_params GCC_UNUSED)
+{
+    TScreen *screen;
+
+    if (!IsXtermWidget(w))
+	return;
+
+    screen = &((XtermWidget) w)->screen;
+    ExtendExtend(screen->cursor_row, screen->cursor_col);
 }
 
 static void
@@ -1319,7 +1334,9 @@ base64_flush(TScreen * screen)
 	break;
     }
     if (screen->base64_pad & 3)
-	tty_vwrite(screen->respond, "===", 4 - (screen->base64_pad & 3));
+	tty_vwrite(screen->respond,
+		   (Char *) "===",
+		   4 - (screen->base64_pad & 3));
     screen->base64_count = 0;
     screen->base64_accu = 0;
     screen->base64_pad = 0;
@@ -1373,7 +1390,7 @@ _qWriteSelectionData(TScreen * screen, Char * lag, unsigned length)
 #if OPT_READLINE
     if (SCREEN_FLAG(screen, paste_quotes)) {
 	while (length--) {
-	    tty_vwrite(screen->respond, "\026", 1);	/* Control-V */
+	    tty_vwrite(screen->respond, (Char *) "\026", 1);	/* Control-V */
 	    tty_vwrite(screen->respond, lag++, 1);
 	}
     } else
@@ -1433,9 +1450,9 @@ _WriteSelectionData(TScreen * screen, Char * line, int length)
 static void
 _WriteKey(TScreen * screen, Char * in)
 {
-    char line[16];
+    Char line[16];
     unsigned count = 0;
-    unsigned length = strlen(in);
+    unsigned length = strlen((char *) in);
 
     if (screen->control_eight_bits) {
 	line[count++] = CSI;
@@ -1539,7 +1556,7 @@ SelectionReceived(Widget w,
 #endif
 #if OPT_READLINE
 	if (SCREEN_FLAG(screen, paste_brackets)) {
-	    _WriteKey(screen, "200");
+	    _WriteKey(screen, (Char *) "200");
 	}
 #endif
 	for (i = 0; i < text_list_count; i++) {
@@ -1553,7 +1570,7 @@ SelectionReceived(Widget w,
 #endif
 #if OPT_READLINE
 	if (SCREEN_FLAG(screen, paste_brackets)) {
-	    _WriteKey(screen, "201");
+	    _WriteKey(screen, (Char *) "201");
 	}
 #endif
 	XFreeStringList(text_list);
@@ -1705,7 +1722,7 @@ TrackDown(XButtonEvent * event)
 #define boundsCheck(x)	if (x < 0) \
 			    x = 0; \
 			else if (x >= screen->max_row) \
-			    x = screen->max_row;
+			    x = screen->max_row
 
 void
 TrackMouse(int func, int startrow, int startcol, int firstrow, int lastrow)
@@ -1718,10 +1735,10 @@ TrackMouse(int func, int startrow, int startcol, int firstrow, int lastrow)
     waitingForTrackInfo = False;
     if (func == 0)
 	return;
-    boundsCheck(startrow)
-	boundsCheck(firstrow)
-	boundsCheck(lastrow)
-	firstValidRow = firstrow;
+    boundsCheck(startrow);
+    boundsCheck(firstrow);
+    boundsCheck(lastrow);
+    firstValidRow = firstrow;
     lastValidRow = lastrow;
     replyToEmacs = True;
     StartSelect(startrow, startcol);

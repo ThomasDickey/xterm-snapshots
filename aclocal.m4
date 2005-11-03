@@ -1,6 +1,6 @@
-dnl $XTermId: aclocal.m4,v 1.200 2005/09/18 23:48:12 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.206 2005/11/03 13:17:27 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.59 2005/09/18 23:48:12 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.60 2005/11/03 13:17:27 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -368,6 +368,33 @@ AC_SUBST(RULE_CC)
 AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_ENABLE_NARROWPROTO version: 1 updated: 2005/11/02 15:04:41
+dnl ---------------------
+dnl If this is not set properly, Xaw's scrollbars will not work.
+dnl The so-called "modular" configuration for Xorg omits most of the
+dnl configure checks that would be needed to provide compatibility with
+dnl older X builds.  This one breaks things noticeably.
+AC_DEFUN([CF_ENABLE_NARROWPROTO],
+[
+AC_MSG_CHECKING(if you want narrow prototypes for X libraries)
+
+case `$ac_config_guess` in #(vi
+*cygwin*|*freebsd*|*gnu*|*irix5*|*irix6*|*linux-gnu*|*netbsd*|*openbsd*|*qnx*|*sco*|*sgi*) #(vi
+	cf_default_narrowproto=yes
+	;;
+*)
+	cf_default_narrowproto=no
+	;;
+esac
+
+CF_ARG_OPTION(narrowproto,
+	[  --enable-narrowproto    enable narrow prototypes for X libraries],
+	[enable_narrowproto=$enableval],
+	[enable_narrowproto=$default_narrowproto],
+	[$cf_default_narrowproto])
+AC_MSG_RESULT($enable_narrowproto)
+])
 dnl ---------------------------------------------------------------------------
 dnl CF_ERRNO version: 5 updated: 1997/11/30 12:44:39
 dnl --------
@@ -1011,6 +1038,89 @@ AC_DEFUN([CF_MSG_LOG],[
 echo "(line __oline__) testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_PATH_PROG version: 6 updated: 2004/01/26 20:58:41
+dnl ------------
+dnl Check for a given program, defining corresponding symbol.
+dnl	$1 = environment variable, which is suffixed by "_PATH" in the #define.
+dnl	$2 = program name to find.
+dnl	$3 = optional list of additional program names to test.
+dnl
+dnl If there is more than one token in the result, #define the remaining tokens
+dnl to $1_ARGS.  We need this for 'install' in particular.
+dnl
+dnl FIXME: we should allow this to be overridden by environment variables
+dnl
+AC_DEFUN([CF_PATH_PROG],[
+test -z "[$]$1" && $1=$2
+AC_PATH_PROGS($1,[$]$1 $2 $3,[$]$1)
+
+cf_path_prog=""
+cf_path_args=""
+IFS="${IFS= 	}"; cf_save_ifs="$IFS"
+case $host_os in #(vi
+os2*) #(vi
+	IFS="${IFS};"
+	;;
+*)
+	IFS="${IFS}:"
+	;;
+esac
+
+for cf_temp in $ac_cv_path_$1
+do
+	if test -z "$cf_path_prog" ; then
+		if test "$with_full_paths" = yes ; then
+			CF_PATH_SYNTAX(cf_temp,break)
+			cf_path_prog="$cf_temp"
+		else
+			cf_path_prog="`basename $cf_temp`"
+		fi
+	elif test -z "$cf_path_args" ; then
+		cf_path_args="$cf_temp"
+	else
+		cf_path_args="$cf_path_args $cf_temp"
+	fi
+done
+IFS="$cf_save_ifs"
+
+if test -n "$cf_path_prog" ; then
+	CF_MSG_LOG(defining path for ${cf_path_prog})
+	AC_DEFINE_UNQUOTED($1_PATH,"$cf_path_prog")
+	test -n "$cf_path_args" && AC_DEFINE_UNQUOTED($1_ARGS,"$cf_path_args")
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_PATH_SYNTAX version: 9 updated: 2002/09/17 23:03:38
+dnl --------------
+dnl Check the argument to see that it looks like a pathname.  Rewrite it if it
+dnl begins with one of the prefix/exec_prefix variables, and then again if the
+dnl result begins with 'NONE'.  This is necessary to work around autoconf's
+dnl delayed evaluation of those symbols.
+AC_DEFUN([CF_PATH_SYNTAX],[
+case ".[$]$1" in #(vi
+.\[$]\(*\)*|.\'*\'*) #(vi
+  ;;
+..|./*|.\\*) #(vi
+  ;;
+.[[a-zA-Z]]:[[\\/]]*) #(vi OS/2 EMX
+  ;;
+.\[$]{*prefix}*) #(vi
+  eval $1="[$]$1"
+  case ".[$]$1" in #(vi
+  .NONE/*)
+    $1=`echo [$]$1 | sed -e s%NONE%$ac_default_prefix%`
+    ;;
+  esac
+  ;; #(vi
+.NONE/*)
+  $1=`echo [$]$1 | sed -e s%NONE%$ac_default_prefix%`
+  ;;
+*)
+  ifelse($2,,[AC_ERROR([expected a pathname, not \"[$]$1\"])],$2)
+  ;;
+esac
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_POSIX_C_SOURCE version: 6 updated: 2005/07/14 20:25:10
 dnl -----------------
 dnl Define _POSIX_C_SOURCE to the given level, and _POSIX_SOURCE if needed.
@@ -1586,6 +1696,54 @@ if test $cf_cv_have_utmp != no ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_UTMP_GROUP version: 1 updated: 2005/10/06 20:29:29
+dnl -------------
+dnl Find the utmp/utmpx file and determine its group to allow setgid programs
+dnl to manipulate it, e.g., when there is no intermediary.
+AC_DEFUN([CF_UTMP_GROUP],[
+AC_REQUIRE([CF_UTMP])
+if test $cf_cv_have_utmp != no ; then
+AC_CACHE_CHECK(for utmp/utmpx group,cf_cv_utmp_group,[
+for cf_utmp_path in /var/adm /var/run
+do
+	for cf_utmp_file in utmpx utmp
+	do
+		if test -f $cf_utmp_path/$cf_utmp_file
+		then
+			cf_cv_utmp_group=root
+
+			cf_option="-l -L"
+
+			# Expect listing to have fields like this:
+			#-r--r--r--   1 user      group       34293 Jul 18 16:29 pathname
+			ls $cf_option $cf_utmp_path/$cf_utmp_file >conftest
+			read cf_mode cf_links cf_usr cf_grp cf_size cf_date1 cf_date2 cf_date3 cf_rest <conftest
+			if test -z "$cf_rest" ; then
+				cf_option="$cf_option -g"
+				ls $cf_option $cf_utmp_path/$cf_utmp_file >conftest
+				read cf_mode cf_links cf_usr cf_grp cf_size cf_date1 cf_date2 cf_date3 cf_rest <conftest
+			fi
+			rm -f conftest
+
+			# If we have a pathname, and the date fields look right, assume we've
+			# captured the group as well.
+			if test -n "$cf_rest" ; then
+				cf_test=`echo "${cf_date2}${cf_date3}" | sed -e 's/[[0-9:]]//g'`
+				if test -z "$cf_test" ; then
+					cf_cv_utmp_group=$cf_grp;
+				fi
+			fi
+			break
+		fi
+	done
+	test -n "$cf_cv_utmp_group" && break
+done
+])
+else
+	AC_MSG_ERROR(cannot find utmp group)
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_UTMP_UT_HOST version: 6 updated: 2002/10/27 23:21:42
 dnl ---------------
 dnl Check if UTMP/UTMPX struct defines ut_host member
@@ -1737,12 +1895,13 @@ AC_DEFUN([CF_VERBOSE],
 [test -n "$verbose" && echo "	$1" 1>&AC_FD_MSG
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_IMAKE_CFLAGS version: 7 updated: 2005/04/05 18:26:15
+dnl CF_WITH_IMAKE_CFLAGS version: 8 updated: 2005/11/02 15:04:41
 dnl --------------------
 dnl xterm and similar programs build more readily when propped up with imake's
 dnl hand-tuned definitions.  If we do not use imake, provide fallbacks for the
 dnl most common definitions that we're not likely to do by autoconf tests.
 AC_DEFUN([CF_WITH_IMAKE_CFLAGS],[
+AC_REQUIRE([CF_ENABLE_NARROWPROTO])
 
 AC_MSG_CHECKING(if we should use imake to help)
 CF_ARG_DISABLE(imake,
@@ -1789,10 +1948,9 @@ else
 	IMAKE_CFLAGS="-DFUNCPROTO=15 $IMAKE_CFLAGS"
 
 	# If this is not set properly, Xaw's scrollbars will not work
-	case `$ac_config_guess` in
-	*freebsd*|*gnu*|*irix5*|*irix6*|*linux-gnu*|*netbsd*|*openbsd*)
+	if test "$enable_narrowproto" = yes ; then
 		IMAKE_CFLAGS="-DNARROWPROTO=1 $IMAKE_CFLAGS"
-	esac
+	fi
 
 	# Other special definitions:
 	case $host_os in
@@ -1811,6 +1969,25 @@ else
 	AC_SUBST(IMAKE_CFLAGS)
 	AC_SUBST(IMAKE_LOADFLAGS)
 fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_PATH version: 6 updated: 1998/10/11 00:40:17
+dnl ------------
+dnl Wrapper for AC_ARG_WITH to ensure that user supplies a pathname, not just
+dnl defaulting to yes/no.
+dnl
+dnl $1 = option name
+dnl $2 = help-text
+dnl $3 = environment variable to set
+dnl $4 = default value, shown in the help-message, must be a constant
+dnl $5 = default value, if it's an expression & cannot be in the help-message
+dnl
+AC_DEFUN([CF_WITH_PATH],
+[AC_ARG_WITH($1,[$2 ](default: ifelse($4,,empty,$4)),,
+ifelse($4,,[withval="${$3}"],[withval="${$3-ifelse($5,,$4,$5)}"]))dnl
+CF_PATH_SYNTAX(withval)
+eval $3="$withval"
+AC_SUBST($3)dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_XKB_BELL_EXT version: 2 updated: 2003/05/18 17:28:57
@@ -1833,7 +2010,7 @@ int x = XkbBI_Info
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 22 updated: 2005/08/06 18:06:32
+dnl CF_XOPEN_SOURCE version: 23 updated: 2005/10/15 16:39:05
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality.
@@ -1851,9 +2028,6 @@ cf_POSIX_C_SOURCE=ifelse($2,,199506L,$2)
 case $host_os in #(vi
 aix[[45]]*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_ALL_SOURCE"
-	;;
-darwin*) #(vi
-	# setting _XOPEN_SOURCE breaks things on Darwin
 	;;
 freebsd*) #(vi
 	# 5.x headers associate

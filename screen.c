@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.182 2005/09/18 23:48:13 tom Exp $ */
+/* $XTermId: screen.c,v 1.184 2005/11/03 13:17:28 tom Exp $ */
 
 /*
  *	$Xorg: screen.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
@@ -56,7 +56,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.72 2005/09/18 23:48:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.73 2005/11/03 13:17:28 dickey Exp $ */
 
 /* screen.c */
 
@@ -1485,10 +1485,11 @@ ScreenResize(TScreen * screen,
 	    screen->iconVwin.width + 2 * term->misc.icon_border_width;
 	changes.height = screen->iconVwin.fullheight =
 	    screen->iconVwin.height + 2 * term->misc.icon_border_width;
+	changes.border_width = term->misc.icon_border_width;
 
 	TRACE(("resizing icon window %dx%d\n", changes.height, changes.width));
 	XConfigureWindow(XtDisplay(term), screen->iconVwin.window,
-			 CWWidth | CWHeight, &changes);
+			 CWWidth | CWHeight | CWBorderWidth, &changes);
     }
 #endif /* NO_ACTIVE_ICON */
 

@@ -1,10 +1,10 @@
-/* $XTermId: scrollbar.c,v 1.112 2005/09/18 23:48:13 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.116 2005/11/03 13:17:28 tom Exp $ */
 
 /*
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.44 2005/09/18 23:48:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.45 2005/11/03 13:17:28 dickey Exp $ */
 
 /*
  * Copyright 2000-2004,2005 by Thomas E. Dickey
@@ -81,7 +81,12 @@
  * The scrollbar's border overlaps the border of the vt100 window.  If there
  * is no border for the vt100, there can be no border for the scrollbar.
  */
-#define ScrollBarBorder(xw) (BorderWidth(xw) ? 1 : 0)
+#define SCROLLBAR_BORDER(xw) ((xw)->screen.scrollBarBorder)
+#if OPT_TOOLBAR
+#define ScrollBarBorder(xw) (BorderWidth(xw) ? SCROLLBAR_BORDER(xw) : 0)
+#else
+#define ScrollBarBorder(xw) SCROLLBAR_BORDER(xw)
+#endif
 
 /* Event handlers */
 
@@ -191,14 +196,27 @@ DoResizeScreen(XtermWidget xw)
 	   reqHeight, reqWidth,
 	   repHeight, repWidth,
 	   geomreqresult));
-    TRACE(("%s@%d -- ", __FILE__, __LINE__));
-    TRACE_WM_HINTS(xw);
 
     if (geomreqresult == XtGeometryAlmost) {
 	TRACE(("...almost, retry screensize %dx%d\n", repHeight, repWidth));
 	geomreqresult = XtMakeResizeRequest((Widget) xw, repWidth,
 					    repHeight, NULL, NULL);
     }
+#if 1				/* ndef nothack */
+    /*
+     * XtMakeResizeRequest() has the undesirable side-effect of clearing
+     * the window manager's hints, even on a failed request.  This would
+     * presumably be fixed if the shell did its own work.
+     */
+    if (sizehints.flags
+	&& repHeight
+	&& repWidth) {
+	sizehints.height = repHeight;
+	sizehints.width = repWidth;
+	TRACE_HINTS(&sizehints);
+	XSetWMNormalHints(screen->display, VShellWindow, &sizehints);
+    }
+#endif
     XSync(screen->display, FALSE);	/* synchronize */
     if (XtAppPending(app_con))
 	xevents();

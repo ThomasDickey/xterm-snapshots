@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.191 2005/09/18 23:48:12 tom Exp $
+dnl $XTermId: configure.in,v 1.197 2005/11/03 13:17:27 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.71 2005/09/18 23:48:12 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.72 2005/11/03 13:17:27 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -98,8 +98,29 @@ AC_CHECK_FUNCS( \
 	wcswidth \
 	wcwidth )
 CF_FUNC_MEMMOVE
-CF_FUNC_TGETENT
 CF_UTMP
+
+CF_HELP_MESSAGE(Compile/Install Options:)
+CF_FUNC_TGETENT
+
+AC_MSG_CHECKING(for directory to install resource files)
+CF_WITH_PATH(app-defaults,
+	[  --with-app-defaults=DIR directory in which to install resource files],
+	[appsdir],[EPREFIX/lib/X11/app-defaults],
+	['\$(exec_prefix)/lib/X11/app-defaults'])
+AC_MSG_RESULT($appsdir)
+AC_SUBST(appsdir)
+
+# inherit SINSTALL_OPTS from environment to allow packager to customize it.
+
+AC_MSG_CHECKING(for install-permissions reference)
+AC_ARG_WITH(reference,
+	[  --with-reference=XXX    program to use as permissions-reference],
+	[with_reference=$withval],
+	[with_reference=xterm])
+AC_MSG_RESULT($with_reference)
+
+CF_PATH_PROG(XTERM_PATH,$with_reference)
 
 AC_MSG_CHECKING(if you want to disable setuid)
 CF_ARG_DISABLE(setuid,
@@ -108,6 +129,41 @@ CF_ARG_DISABLE(setuid,
 	[disable_setuid=no],
 	no)
 AC_MSG_RESULT($disable_setuid)
+
+AC_MSG_CHECKING(if you want to run xterm setuid to a given user)
+AC_ARG_WITH(setuid,
+	[  --with-setuid=XXX       use the given setuid user],
+	[use_given_setuid=$withval],
+	[use_given_setuid=no])
+AC_MSG_RESULT($use_given_setuid)
+
+if test "$use_given_setuid" != no ; then
+	if test "$use_given_setuid" = yes ; then
+		cf_cv_given_setuid=root
+	else
+		cf_cv_given_setuid=$use_given_setuid
+	fi
+	SINSTALL_OPTS="$SINSTALL_OPTS u+s -u $cf_cv_given_setuid"
+fi
+
+AC_MSG_CHECKING(if you want to run xterm setgid to match utmp/utmpx file)
+AC_ARG_WITH(utmp-setgid,
+	[  --with-utmp-setgid=XXX  use setgid to match utmp/utmpx file],
+	[use_utmp_setgid=$withval],
+	[use_utmp_setgid=no])
+AC_MSG_RESULT($use_utmp_setgid)
+
+if test "$use_utmp_setgid" != no ; then
+	if test "$use_utmp_setgid" = yes ; then
+		CF_UTMP_GROUP
+	else
+		cf_cv_utmp_group=$use_utmp_setgid
+	fi
+	AC_DEFINE(USE_UTMP_SETGID)
+	SINSTALL_OPTS="$SINSTALL_OPTS g+s -g $cf_cv_utmp_group"
+fi
+
+AC_SUBST(SINSTALL_OPTS)
 
 AC_MSG_CHECKING(if you want to link with utempter)
 AC_ARG_WITH(utempter,
@@ -155,8 +211,6 @@ freebsd*|netbsd*)	# 2004/8/15 - revisit this if/when grantpt is known to work.
 	;;
 esac
 
-AC_PATH_PROG(XTERM_PATH,xterm)
-
 CF_XKB_BELL_EXT
 AC_CHECK_FUNCS(Xutf8LookupString, [],[
 	EXTRAHDRS="$EXTRAHDRS xutf8.h"
@@ -166,9 +220,11 @@ AC_CHECK_FUNCS(Xutf8LookupString, [],[
 
 CF_WITH_IMAKE_CFLAGS($(MAIN_DEFINES) $(VENDORMANDEFS))
 
+CF_HELP_MESSAGE(Terminal Configuration:)
+
 AC_MSG_CHECKING(for default terminal-id)
 AC_ARG_WITH(terminal-id,
-	[  --with-terminal-id[=V]  set default decTerminalID (default: vt100)],
+	[  --with-terminal-id=V    set default decTerminalID (default: vt100)],
 	[default_termid=$withval],
 	[default_termid=vt100])
 AC_MSG_RESULT($default_termid)
@@ -180,7 +236,7 @@ AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid")
 
 AC_MSG_CHECKING(for default terminal-type)
 AC_ARG_WITH(terminal-type,
-	[  --with-terminal-type=T  set default \$TERM (default: xterm)],
+	[  --with-terminal-type=T  set default $TERM (default: xterm)],
 	[default_TERM=$withval],
 	[default_TERM=xterm])
 AC_MSG_RESULT($default_TERM)
@@ -188,7 +244,7 @@ AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM")
 
 AC_MSG_CHECKING(for private terminfo-directory)
 AC_ARG_WITH(own-terminfo,
-	[  --with-own-terminfo=P   set default \$TERMINFO (default: from environment)],
+	[  --with-own-terminfo=P   set default $TERMINFO (default: from environment)],
 	[TERMINFO_DIR=$withval],
 	[TERMINFO_DIR=${TERMINFO-none}])
 AC_MSG_RESULT($TERMINFO_DIR)

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.464 2005/09/18 23:48:12 tom Exp $ */
+/* $XTermId: main.c,v 1.473 2005/11/03 13:17:27 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.196 2005/09/18 23:48:12 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.198 2005/11/03 13:17:27 dickey Exp $ */
 
 /* main.c */
 
@@ -191,7 +191,7 @@ static Bool IsPts = False;
 #define HAS_BSD_GROUPS
 #endif
 
-#ifdef USE_TTY_GROUP
+#if defined(USE_TTY_GROUP) || defined(USE_UTMP_SETGID)
 #include <grp.h>
 #endif
 
@@ -375,16 +375,12 @@ extern struct utmp *getutid __((struct utmp * _Id));
 #include <local/openpty.h>
 #endif /* PUCC_PTYD */
 
-#if defined(__OpenBSD__) || defined(__NetBSD__)
-#include <util.h>
+#if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+#include <util.h>		/* openpty() */
 #endif
 
 #ifdef __FreeBSD__
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <libutil.h>
-#include <grp.h>
+#include <libutil.h>		/* openpty() */
 #endif
 
 #if !defined(UTMP_FILENAME)
@@ -472,8 +468,9 @@ static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
 static Bool added_utmp_entry = False;
 
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
-static gid_t utmpGid = -1;
+#if defined(USE_UTMP_SETGID)
+static int utmpGid = -1;
+static int really_get_pty(int *pty, char *from);
 #endif
 
 #if defined(USE_SYSV_UTMP) && !defined(USE_UTEMPTER)
@@ -704,7 +701,6 @@ static char etc_wtmp[] = WTMP_FILENAME;
 static char bin_login[] = LOGIN_FILENAME;
 #endif
 
-static int inhibit;
 static char passedPty[PTYCHARLEN + 1];	/* name if pty if slave */
 
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
@@ -956,7 +952,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"-wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+wf",		"*waitForMap",	XrmoptionNoArg,		(caddr_t) "off"},
 #if OPT_ZICONBEEP
-{"-ziconbeep", "*zIconBeep", XrmoptionSepArg, (caddr_t) NULL},
+{"-ziconbeep",	"*zIconBeep",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
 #if OPT_SAME_NAME
 {"-samename",	"*sameName",	XrmoptionNoArg,		(caddr_t) "on"},
@@ -1606,10 +1602,11 @@ main(int argc, char *argv[]ENVP_ARG)
     strcpy(ptydev, PTYDEV);
 #endif
 
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(USE_UTMP_SETGID)
     get_pty(NULL, NULL);
     seteuid(getuid());
     setuid(getuid());
+#define get_pty(pty, from) really_get_pty(pty, from)
 #endif
 
     /* Do these first, since we may not be able to open the display */
@@ -1944,7 +1941,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
 #endif
 
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(USE_UTMP_SETGID)
 	if (resource.utmpInhibit) {
 	    /* Can totally revoke group privs */
 	    setegid(getgid());
@@ -2109,25 +2106,38 @@ main(int argc, char *argv[]ENVP_ARG)
 						 XtNbottom, XawChainBottom,
 #endif
 						 (XtPointer) 0);
-    /* this causes the initialize method to be called */
-#if OPT_TOOLBAR
-    SetupToolbar();
-#endif
-
     decode_keyboard_type(&resource);
 
     screen = &term->screen;
+    screen->inhibit = 0;
 
-    inhibit = 0;
 #ifdef ALLOWLOGGING
     if (term->misc.logInhibit)
-	inhibit |= I_LOG;
+	screen->inhibit |= I_LOG;
 #endif
     if (term->misc.signalInhibit)
-	inhibit |= I_SIGNAL;
+	screen->inhibit |= I_SIGNAL;
 #if OPT_TEK4014
     if (term->misc.tekInhibit)
-	inhibit |= I_TEK;
+	screen->inhibit |= I_TEK;
+#endif
+
+    /*
+     * We might start by showing the tek4014 window.
+     */
+#if OPT_TEK4014
+    if (screen->inhibit & I_TEK)
+	screen->TekEmu = False;
+
+    if (screen->TekEmu && !TekInit())
+	SysError(ERROR_INIT);
+#endif
+
+    /*
+     * Start the toolbar at this point, after the first window has been setup.
+     */
+#if OPT_TOOLBAR
+    ShowToolbar(resource.toolBar);
 #endif
 
 #if OPT_SESSION_MGT
@@ -2193,13 +2203,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
     }
 #endif
-#if OPT_TEK4014
-    if (inhibit & I_TEK)
-	screen->TekEmu = False;
-
-    if (screen->TekEmu && !TekInit())
-	SysError(ERROR_INIT);
-#endif
 
 #ifdef DEBUG
     {
@@ -2245,9 +2248,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU(screen))));
 	write(screen->respond, buf, strlen(buf));
     }
-
-    screen->inhibit = inhibit;
-
 #ifdef AIXV3
 #if (OSMAJORVERSION < 4)
     /* In AIXV3, xterms started from /dev/console have CLOCAL set.
@@ -2341,6 +2341,11 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 }
 
+#if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+#define USE_OPENPTY 1
+static int opened_tty = -1;
+#endif
+
 /*
  * This function opens up a pty master and stuffs its value into pty.
  *
@@ -2354,37 +2359,15 @@ get_pty(int *pty, char *from GCC_UNUSED)
 {
     int result = 1;
 
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
-    static int m_tty = -1;
-    static int m_pty = -1;
-    struct group *ttygrp;
-
-    if (pty == NULL) {
-	result = openpty(&m_pty, &m_tty, ttydev, NULL, NULL);
-
-	seteuid(0);
-	if ((ttygrp = getgrnam(TTY_GROUP_NAME)) != 0) {
-	    set_owner(ttydev, getuid(), ttygrp->gr_gid, 0600U);
-	} else {
-	    set_owner(ttydev, getuid(), getgid(), 0600U);
-	}
-	seteuid(getuid());
-    } else if (m_pty != -1) {
-	*pty = m_pty;
-	result = 0;
-    } else {
-	result = -1;
-    }
-#elif defined(PUCC_PTYD)
+#if defined(PUCC_PTYD)
 
     result = ((*pty = openrpty(ttydev, ptydev,
 			       (resource.utmpInhibit ? OPTY_NOP : OPTY_LOGIN),
 			       getuid(), from)) < 0);
 
-#elif defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS)) || defined(__NetBSD__)
+#elif defined(USE_OPENPTY)
 
-    int tty;
-    result = openpty(pty, &tty, ttydev, NULL, NULL);
+    result = openpty(pty, &opened_tty, ttydev, NULL, NULL);
 
 #elif defined(__QNXNTO__)
 
@@ -2525,6 +2508,57 @@ get_pty(int *pty, char *from GCC_UNUSED)
 	   pty != 0 ? *pty : -1));
     return result;
 }
+
+static void
+set_pty_permissions(uid_t uid, gid_t gid, mode_t mode)
+{
+#ifdef USE_TTY_GROUP
+    struct group *ttygrp;
+
+    if ((ttygrp = getgrnam(TTY_GROUP_NAME)) != 0) {
+	gid = ttygrp->gr_gid;
+	mode &= 0660U;
+    }
+    endgrent();
+#endif /* USE_TTY_GROUP */
+
+    set_owner(ttydev, uid, gid, mode);
+}
+
+#ifdef get_pty			/* USE_UTMP_SETGID */
+#undef get_pty
+/*
+ * Call the real get_pty() before relinquishing root-setuid, caching the
+ * result.
+ */
+static int
+get_pty(int *pty, char *from)
+{
+    static int m_pty = -1;
+    int result = -1;
+
+    if (pty == NULL) {
+	result = really_get_pty(&m_pty, from);
+
+	seteuid(0);
+	set_pty_permissions(getuid(), getgid(), 0600U);
+	seteuid(getuid());
+
+#ifdef USE_OPENPTY
+	if (opened_tty >= 0) {
+	    close(opened_tty);
+	    opened_tty = -1;
+	}
+#endif
+    } else if (m_pty != -1) {
+	*pty = m_pty;
+	result = 0;
+    } else {
+	result = -1;
+    }
+    return result;
+}
+#endif
 
 /*
  * Called from get_pty to iterate over likely pseudo terminals
@@ -2743,13 +2777,17 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 {
     int why;
 
+    TRACE(("set_owner(%s, uid=%d, gid=%d, mode=%#o\n", device, uid, gid, mode));
+
     if (chown(device, uid, gid) < 0) {
 	why = errno;
 	if (why != ENOENT
 	    && getuid() == 0) {
 	    fprintf(stderr, "Cannot chown %s to %ld,%ld: %s\n",
-		    device, (long) uid, (long) gid, strerror(why));
+		    device, (long) uid, (long) gid,
+		    strerror(why));
 	}
+	TRACE(("...chown failed: %s\n", strerror(why)));
     }
     if (chmod(device, mode) < 0) {
 	why = errno;
@@ -2757,13 +2795,18 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 	    struct stat sb;
 	    if (stat(device, &sb) < 0) {
 		fprintf(stderr, "Cannot chmod %s to %03o: %s\n",
-			device, mode, strerror(why));
-	    } else {
+			device, (unsigned) mode,
+			strerror(why));
+	    } else if (mode != (sb.st_mode & 0777U)) {
 		fprintf(stderr,
 			"Cannot chmod %s to %03o currently %03o: %s\n",
-			device, mode, (sb.st_mode & S_IFMT), strerror(why));
+			device, (unsigned) mode, (sb.st_mode & 0777U),
+			strerror(why));
+		TRACE(("...stat uid=%d, gid=%d, mode=%#o\n",
+		       sb.st_uid, sb.st_gid, sb.st_mode));
 	    }
 	}
+	TRACE(("...chmod failed: %s\n", strerror(why)));
     }
 }
 
@@ -3405,25 +3448,11 @@ spawn(void)
 	    }			/* end of IsPts else clause */
 #endif
 
-#ifdef USE_TTY_GROUP
-	    {
-		struct group *ttygrp;
-		if ((ttygrp = getgrnam(TTY_GROUP_NAME)) != 0) {
-		    /* change ownership of tty to real uid, "tty" gid */
-		    set_owner(ttydev, screen->uid, ttygrp->gr_gid,
-			      (resource.messages ? 0620U : 0600U));
-		} else {
-		    /* change ownership of tty to real group and user id */
-		    set_owner(ttydev, screen->uid, screen->gid,
-			      (resource.messages ? 0622U : 0600U));
-		}
-		endgrent();
-	    }
-#else /* else !USE_TTY_GROUP */
-	    /* change ownership of tty to real group and user id */
-	    set_owner(ttydev, screen->uid, screen->gid,
-		      (resource.messages ? 0622U : 0600U));
-#endif /* USE_TTY_GROUP */
+	    set_pty_permissions(screen->uid,
+				screen->gid,
+				(resource.messages
+				 ? 0622U
+				 : 0600U));
 
 	    /*
 	     * set up the tty modes
@@ -4061,12 +4090,13 @@ spawn(void)
 	    }
 #endif /* USE_LASTLOG */
 
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(USE_UTMP_SETGID)
 	    /* Switch to real gid after writing utmp entry */
 	    utmpGid = getegid();
 	    if (getgid() != getegid()) {
 		utmpGid = getegid();
 		setegid(getgid());
+		TRACE(("switch to real gid %d after writing utmp\n", getgid()));
 	    }
 #endif
 
@@ -4436,10 +4466,12 @@ Exit(int n)
 	&& (resource.ptyHandshake && added_utmp_entry)
 #endif /* OPT_PTY_HANDSHAKE */
 	) {
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(USE_UTMP_SETGID)
 	if (utmpGid != -1) {
 	    /* Switch back to group utmp */
 	    setegid(utmpGid);
+	    TRACE(("switched back to group %d (check: %d)\n",
+		   utmpGid, (int) getgid()));
 	}
 #endif
 	init_utmp(USER_PROCESS, &utmp);

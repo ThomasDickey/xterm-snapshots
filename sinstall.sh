@@ -1,37 +1,79 @@
 #!/bin/sh
-# $XFree86: xc/programs/xterm/sinstall.sh,v 1.3 2000/03/03 20:02:35 dawes Exp $
+# $XTermId: sinstall.sh,v 1.13 2005/11/03 13:17:28 tom Exp $
+# $XFree86: xc/programs/xterm/sinstall.sh,v 1.4 2005/11/03 13:17:28 dickey Exp $
 #
 # Install program setuid if the installer is running as root, and if xterm is
 # already installed on the system with setuid privilege.  This is a safeguard
 # for ordinary users installing xterm for themselves on systems where the
 # setuid is not needed to access a PTY, but only for things like utmp.
 #
+# Options:
+#	u+s, g+s as in chmod
+#	-u, -g and -m as in install.  If any options are given, $3 is ignored.
+#
 # Parameters:
 #	$1 = program to invoke as "install"
 #	$2 = program to install
 #	$3 = previously-installed program, for reference
 #	$4 = final installed-path, if different from reference
-#
-#
+
 trace=:
 trace=echo
 
+OPTS_SUID=
+OPTS_SGID=
+OPTS_MODE=
+OPTS_USR=
+OPTS_GRP=
+
+while test $# != 0
+do
+	case $1 in
+	-*)
+		OPT="$1"
+		shift
+		if test $# != 0
+		then
+			case $OPT in
+			-u)	OPTS_USR="$1"; shift;;
+			-g)	OPTS_GRP="$1"; shift;;
+			-m)	OPTS_MODE="$1"; shift;;
+			esac
+		else
+			break
+		fi
+		;;
+	u+s)	shift;	OPTS_SUID=4000;;
+	g+s)	shift;	OPTS_SGID=2000;;
+	*)	break
+		;;
+	esac
+done
+
 SINSTALL="$1"
-NEW_PROG="$2"
+SRC_PROG="$2"
 REF_PROG="$3"
-TST_PROG="$4"
+DST_PROG="$4"
 
 test -z "$SINSTALL" && SINSTALL=install
-test -z "$NEW_PROG" && NEW_PROG=xterm
+test -z "$SRC_PROG" && SRC_PROG=xterm
 test -z "$REF_PROG" && REF_PROG=/usr/bin/X11/xterm
-test -z "$TST_PROG" && TST_PROG="$REF_PROG"
+test -z "$DST_PROG" && DST_PROG="$REF_PROG"
 
-PROG_MODE=755
+test -n "$OPTS_SUID" && test -n "$OPTS_USR" && REF_PROG=
+test -n "$OPTS_SGID" && test -n "$OPTS_GRP" && REF_PROG=
+
+echo checking for presumed installation-mode
+
+PROG_SUID=
+PROG_SGID=
+PROG_MODE=
 PROG_USR=
 PROG_GRP=
 
-echo checking for presumed installation-mode
-if test -f "$REF_PROG" ; then
+if test -z "$REF_PROG" ; then
+	$trace "... reference program not used"
+elif test -f "$REF_PROG" ; then
 	cf_option="-l -L"
 	MYTEMP=${TMPDIR-/tmp}/sinstall$$
 
@@ -58,28 +100,44 @@ if test -f "$REF_PROG" ; then
 			PROG_GRP=$cf_grp;
 		fi
 	fi
-	$trace "... derived user \"$PROG_USR\", group \"$PROG_GRP\" of previously-installed $NEW_PROG"
+	$trace "... derived user \"$PROG_USR\", group \"$PROG_GRP\" of previously-installed $SRC_PROG"
 
 	$trace "... see if mode \"$cf_mode\" has s-bit set"
 	case ".$cf_mode" in #(vi
+	.???s??s*) #(vi
+		PROG_SUID=4000
+		PROG_SGID=2000
+		;;
 	.???s*) #(vi
-		PROG_MODE=4711
+		PROG_SUID=4000
 		PROG_GRP=
 		;;
 	.??????s*)
-		PROG_MODE=2711
+		PROG_SGID=2000
 		PROG_USR=
 		;;
 	esac
+	PROG_MODE=`echo ".$cf_mode" | sed -e 's/^..//' -e 's/rw./7/g' -e 's/r-./5/g' -e 's/--[sxt]/1/g'`
 fi
+
+# passed-in options override the reference
+test -n "$OPTS_SUID" && PROG_SUID="$OPTS_SUID"
+test -n "$OPTS_SGID" && PROG_SGID="$OPTS_SGID"
+test -n "$OPTS_MODE" && PROG_MODE="$OPTS_MODE"
+test -n "$OPTS_USR"  && PROG_USR="$OPTS_USR"
+test -n "$OPTS_GRP"  && PROG_GRP="$OPTS_GRP"
+
+# we always need a mode
+test -z "$PROG_MODE" && PROG_MODE=755
 
 if test -n "${PROG_USR}${PROG_GRP}" ; then
 	cf_uid=`id | sed -e 's/^[^=]*=//' -e 's/(.*$//'`
 	cf_usr=`id | sed -e 's/^[^(]*(//' -e 's/).*$//'`
 	cf_grp=`id | sed -e 's/^.* gid=[^(]*(//' -e 's/).*$//'`
-	$trace "... installing $NEW_PROG as user \"$cf_usr\", group \"$cf_grp\""
+	$trace "... installing $SRC_PROG as user \"$cf_usr\", group \"$cf_grp\""
 	if test "$cf_uid" != 0 ; then
-		PROG_MODE=755
+		PROG_SUID=
+		PROG_SGID=
 		PROG_USR=""
 		PROG_GRP=""
 	fi
@@ -87,8 +145,12 @@ if test -n "${PROG_USR}${PROG_GRP}" ; then
 	test "$PROG_GRP" = "$cf_grp" && PROG_GRP=""
 fi
 
+test -n "${PROG_SUID}${PROG_SGID}" && PROG_MODE=`expr $PROG_MODE % 1000`
+test -n "$PROG_SUID" && PROG_MODE=`expr $PROG_SUID + $PROG_MODE`
+test -n "$PROG_SGID" && PROG_MODE=`expr $PROG_SGID + $PROG_MODE`
+
 test -n "$PROG_USR" && PROG_USR="-o $PROG_USR"
 test -n "$PROG_GRP" && PROG_GRP="-g $PROG_GRP"
 
-echo "$SINSTALL -m $PROG_MODE $PROG_USR $PROG_GRP $NEW_PROG $TST_PROG"
-eval "$SINSTALL -m $PROG_MODE $PROG_USR $PROG_GRP $NEW_PROG $TST_PROG"
+echo "$SINSTALL -m $PROG_MODE $PROG_USR $PROG_GRP $SRC_PROG $DST_PROG"
+eval "$SINSTALL -m $PROG_MODE $PROG_USR $PROG_GRP $SRC_PROG $DST_PROG"

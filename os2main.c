@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.209 2005/09/18 23:48:13 tom Exp $ */
+/* $XTermId: os2main.c,v 1.213 2005/11/03 13:17:28 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -7,7 +7,7 @@
 #ifndef lint
 static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
 #endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.80 2005/09/18 23:48:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.81 2005/11/03 13:17:28 dickey Exp $ */
 
 /***********************************************************
 
@@ -156,40 +156,40 @@ static struct termio d_tio;
 
 /* allow use of system default characters if defined and reasonable */
 #ifndef CEOF
-#define CEOF     CONTROL('D')
+#define CEOF CONTROL('D')
 #endif
 #ifndef CEOL
 #define CEOL 0
 #endif
 #ifndef CFLUSH
-#define CFLUSH   CONTROL('O')
+#define CFLUSH CONTROL('O')
 #endif
 #ifndef CLNEXT
-#define CLNEXT   CONTROL('V')
+#define CLNEXT CONTROL('V')
 #endif
 #ifndef CNUL
 #define CNUL 0
 #endif
 #ifndef CQUIT
-#define CQUIT    CONTROL('\\')
+#define CQUIT CONTROL('\\')
 #endif
 #ifndef CRPRNT
-#define CRPRNT   CONTROL('R')
+#define CRPRNT CONTROL('R')
 #endif
 #ifndef CSTART
-#define CSTART   CONTROL('Q')
+#define CSTART CONTROL('Q')
 #endif
 #ifndef CSTOP
-#define CSTOP    CONTROL('S')
+#define CSTOP CONTROL('S')
 #endif
 #ifndef CSUSP
-#define CSUSP    CONTROL('Z')
+#define CSUSP CONTROL('Z')
 #endif
 #ifndef CSWTCH
 #define CSWTCH 0
 #endif
 #ifndef CWERASE
-#define CWERASE  CONTROL('W')
+#define CWERASE CONTROL('W')
 #endif
 
 /*
@@ -246,7 +246,6 @@ static struct _xttymodes {
 
 static int parse_tty_modes(char *s, struct _xttymodes *modelist);
 
-static int inhibit;
 static char passedPty[2];	/* name if pty if slave */
 
 static int Console;
@@ -271,9 +270,11 @@ static XtResource application_resources[] =
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
     Bres("hold", "Hold", hold_screen, False),
     Bres("utmpInhibit", "UtmpInhibit", utmpInhibit, False),
+    Bres("utmpDisplayId", "UtmpDisplayId", utmpDisplayId, True),
+    Bres("messages", "Messages", messages, True),
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
-    Bres("messages", "Messages", messages, True),
+    Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
     Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -284,16 +285,26 @@ static XtResource application_resources[] =
 #if OPT_SCO_FUNC_KEYS
     Bres("scoFunctionKeys", "ScoFunctionKeys", scoFunctionKeys, False),
 #endif
+#if OPT_INITIAL_ERASE
+    Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, DEF_INITIAL_ERASE),
+    Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, DEF_BACKARO_ERASE),
+#endif
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
     Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
 #if OPT_ZICONBEEP
     Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
+#endif
+#if OPT_PTY_HANDSHAKE
+    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
 #endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
 #endif
 #if OPT_SESSION_MGT
     Bres("sessionMgt", "SessionMgt", sessionMgt, True),
+#endif
+#if OPT_TOOLBAR
+    Bres(XtNtoolBar, XtCToolBar, toolBar, True),
 #endif
 };
 
@@ -363,6 +374,9 @@ static XrmOptionDescRec optionDescList[] = {
 {"-fw",		"*wideFont",	XrmoptionSepArg,	(caddr_t) NULL},
 {"-fwb",	"*wideBoldFont", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
+#if OPT_INPUT_METHOD
+{"-fx",		"*ximFont",	XrmoptionSepArg,	(caddr_t) NULL},
+#endif
 #if OPT_HIGHLIGHT_COLOR
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
@@ -372,6 +386,10 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 {"-hold",	"*hold",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+hold",	"*hold",	XrmoptionNoArg,		(caddr_t) "off"},
+#if OPT_INITIAL_ERASE
+{"-ie",		"*ptyInitialErase", XrmoptionNoArg,	(caddr_t) "on"},
+{"+ie",		"*ptyInitialErase", XrmoptionNoArg,	(caddr_t) "off"},
+#endif
 {"-j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+j",		"*jumpScroll",	XrmoptionNoArg,		(caddr_t) "off"},
 #if OPT_C1_PRINT
@@ -432,8 +450,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"+u8",		"*utf8",	XrmoptionNoArg,		(caddr_t) "0"},
 #endif
 #if OPT_LUIT_PROG
-{"-lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "True"},
-{"+lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "False"},
+{"-lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+lc",		"*locale",	XrmoptionNoArg,		(caddr_t) "off"},
 {"-lcc",	"*localeFilter",XrmoptionSepArg,	(caddr_t) NULL},
 {"-en",		"*locale",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
@@ -469,6 +487,10 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_SESSION_MGT
 {"-sm",		"*sessionMgt",	XrmoptionNoArg,		(caddr_t) "on"},
 {"+sm",		"*sessionMgt",	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
+#if OPT_TOOLBAR
+{"-tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "on"},
+{"+tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
@@ -512,6 +534,9 @@ static OptionHelp xtermOptions[] = {
 { "-fw fontname",          "doublewidth text font" },
 { "-fwb fontname",         "doublewidth bold text font" },
 #endif
+#if OPT_INPUT_METHOD
+{ "-fx fontname",          "XIM fontset" },
+#endif
 { "-iconic",               "start iconic" },
 { "-name string",          "client instance, icon, and title strings" },
 { "-class string",         "class string (XTerm)" },
@@ -542,6 +567,9 @@ static OptionHelp xtermOptions[] = {
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
 #endif
 { "-/+hold",               "turn on/off logic that retains window after exit" },
+#if OPT_INITIAL_ERASE
+{ "-/+ie",                 "turn on/off initialization of 'erase' from pty" },
+#endif
 { "-/+im",                 "use insert mode for TERMCAP" },
 { "-/+j",                  "turn on/off jump scroll" },
 #if OPT_C1_PRINT
@@ -582,6 +610,9 @@ static OptionHelp xtermOptions[] = {
 #if OPT_TEK4014
 { "-/+t",                  "turn on/off Tek emulation window" },
 #endif
+#if OPT_TOOLBAR
+{ "-/+tb",                 "turn on/off toolbar" },
+#endif
 { "-ti termid",            "terminal identifier" },
 { "-tm string",            "terminal mode keywords and characters" },
 { "-tn name",              "TERM environment variable name" },
@@ -594,6 +625,7 @@ static OptionHelp xtermOptions[] = {
 #endif
 { "-/+ulc",                "turn off/on display of underline as color" },
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
+{ "-/+ulit",               "turn off/on display of underline as italics" },
 { "-/+vb",                 "turn on/off visual bell" },
 { "-/+pob",                "turn on/off pop on bell" },
 #if OPT_WIDE_CHARS
@@ -1120,25 +1152,39 @@ main(int argc, char **argv ENVP_ARG)
 						 XtNbottom, XawChainBottom,
 #endif
 						 (XtPointer) 0);
-    /* this causes the initialize method to be called */
-#if OPT_TOOLBAR
-    SetupToolbar();
-#endif
 
     decode_keyboard_type(&resource);
 
     screen = &term->screen;
 
-    inhibit = 0;
+    screen->inhibit = 0;
 #ifdef ALLOWLOGGING
     if (term->misc.logInhibit)
-	inhibit |= I_LOG;
+	screen->inhibit |= I_LOG;
 #endif
     if (term->misc.signalInhibit)
-	inhibit |= I_SIGNAL;
+	screen->inhibit |= I_SIGNAL;
 #if OPT_TEK4014
     if (term->misc.tekInhibit)
-	inhibit |= I_TEK;
+	screen->inhibit |= I_TEK;
+#endif
+
+    /*
+     * We might start by showing the tek4014 window.
+     */
+#if OPT_TEK4014
+    if (screen->inhibit & I_TEK)
+	screen->TekEmu = False;
+
+    if (screen->TekEmu && !TekInit())
+	exit(ERROR_INIT);
+#endif
+
+    /*
+     * Start the toolbar at this point, after the first window has been setup.
+     */
+#if OPT_TOOLBAR
+    ShowToolbar(resource.toolBar);
 #endif
 
 #if OPT_SESSION_MGT
@@ -1204,13 +1250,6 @@ main(int argc, char **argv ENVP_ARG)
 	}
     }
 #endif
-#if OPT_TEK4014
-    if (inhibit & I_TEK)
-	screen->TekEmu = False;
-
-    if (screen->TekEmu && !TekInit())
-	exit(ERROR_INIT);
-#endif
 
 #ifdef DEBUG
     {
@@ -1248,8 +1287,6 @@ main(int argc, char **argv ENVP_ARG)
 	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU(screen))));
 	write(screen->respond, buf, strlen(buf));
     }
-
-    screen->inhibit = inhibit;
 
     if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
 	SysError(ERROR_F_GETFL);

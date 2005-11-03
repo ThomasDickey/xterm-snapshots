@@ -1,11 +1,11 @@
-/* $XTermId: Tekproc.c,v 1.127 2005/08/05 01:25:39 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.131 2005/11/03 13:17:27 tom Exp $ */
 
 /*
  * $Xorg: Tekproc.c,v 1.5 2001/02/09 02:06:02 xorgcvs Exp $
  *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.54 2005/08/05 01:25:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.55 2005/11/03 13:17:27 dickey Exp $ */
 
 /*
 
@@ -341,6 +341,8 @@ TekInit(void)
 
     if (!Tfailed
 	&& tekWidget == 0) {
+
+	TRACE(("TekInit\n"));
 	/* this causes the Initialize method to be called */
 	tekshellwidget =
 	    XtCreatePopupShell("tektronix", topLevelShellWidgetClass,
@@ -364,7 +366,7 @@ TekInit(void)
 #endif
 				    (XtPointer) 0);
 #if OPT_TOOLBAR
-	SetupToolbar();
+	ShowToolbar(resource.toolBar);
 #endif
     }
     return (!Tfailed);
