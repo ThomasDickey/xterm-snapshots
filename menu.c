@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.189 2005/11/03 13:17:27 tom Exp $ */
+/* $XTermId: menu.c,v 1.191 2005/11/13 23:10:36 tom Exp $ */
 
 /* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
@@ -47,7 +47,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.63 2005/11/03 13:17:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.64 2005/11/13 23:10:36 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -571,6 +571,14 @@ domenu(Widget w GCC_UNUSED,
 	    update_meta_esc();
 	    update_delete_del();
 	    update_keyboard_type();
+	    if (!xtermHasPrinter()) {
+		set_sensitivity(mw,
+				mainMenuEntries[mainMenu_print].widget,
+				False);
+		set_sensitivity(mw,
+				mainMenuEntries[mainMenu_print_redir].widget,
+				False);
+	    }
 	    if (screen->terminal_id < 200) {
 		set_sensitivity(mw,
 				mainMenuEntries[mainMenu_8bit_ctrl].widget,

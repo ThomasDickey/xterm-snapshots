@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.473 2005/11/03 13:17:27 tom Exp $ */
+/* $XTermId: main.c,v 1.477 2005/11/13 23:10:36 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.198 2005/11/03 13:17:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.199 2005/11/13 23:10:36 dickey Exp $ */
 
 /* main.c */
 
@@ -347,28 +347,43 @@ ttyslot()
 #endif
 
 #if defined(USE_UTEMPTER)
-
 #include <utempter.h>
+#endif
 
-#elif defined(UTMPX_FOR_UTMP)
+#if defined(UTMPX_FOR_UTMP)
 
 #include <utmpx.h>
-#define setutent setutxent
-#define getutid getutxid
-#define endutent endutxent
-#define pututline pututxline
+
+#define call_endutent  endutxent
+#define call_getutid   getutxid
+#define call_pututline pututxline
+#define call_setutent  setutxent
+#define call_updwtmp   updwtmpx
 
 #elif defined(HAVE_UTMP)
 
 #include <utmp.h>
+
 #if defined(_CRAY) && (OSMAJORVERSION < 8)
 extern struct utmp *getutid __((struct utmp * _Id));
 #endif
 
+#define call_endutent  endutent
+#define call_getutid   getutid
+#define call_pututline pututline
+#define call_setutent  setutent
+#define call_updwtmp   updwtmp
+
 #endif
 
 #if defined(USE_LASTLOG) && defined(HAVE_LASTLOG_H)
-#include <lastlog.h>
+#include <lastlog.h>		/* caution: glibc 2.3.5 includes utmp.h here */
+#endif
+
+#ifndef USE_LASTLOGX
+#if defined(_NETBSD_SOURCE) && defined(_PATH_LASTLOGX)
+#define USE_LASTLOGX 1
+#endif
 #endif
 
 #ifdef  PUCC_PTYD
@@ -2840,7 +2855,7 @@ find_utmp(struct UTMP_STR *tofind)
 #if defined(__digital__) && defined(__unix__) && (defined(OSMAJORVERSION) && OSMAJORVERSION < 5)
 	working.ut_type = 0;
 #endif
-	if ((result = getutid(&working)) == 0)
+	if ((result = call_getutid(&working)) == 0)
 	    break;
 	if (!strcmp(result->ut_line, tofind->ut_line))
 	    break;
@@ -3929,16 +3944,16 @@ spawn(void)
 	     *   - We need to do it before we go and change our
 	     *     user and group id's.
 	     */
-	    (void) setutent();
+	    (void) call_setutent();
 	    init_utmp(DEAD_PROCESS, &utmp);
 
 	    /* position to entry in utmp file */
 	    /* Test return value: beware of entries left behind: PSz 9 Mar 00 */
 	    if (!(utret = find_utmp(&utmp))) {
-		(void) setutent();
+		(void) call_setutent();
 		init_utmp(USER_PROCESS, &utmp);
 		if (!(utret = find_utmp(&utmp))) {
-		    (void) setutent();
+		    (void) call_setutent();
 		}
 	    }
 #if OPT_TRACE
@@ -3984,7 +3999,7 @@ spawn(void)
 	    /* write out the entry */
 	    if (!resource.utmpInhibit) {
 		errno = 0;
-		pututline(&utmp);
+		call_pututline(&utmp);
 		TRACE(("pututline: id %s, line %s, pid %ld, errno %d %s\n",
 		       utmp.ut_id,
 		       utmp.ut_line,
@@ -3997,7 +4012,7 @@ spawn(void)
 		updwtmpx(WTMPX_FILE, &utmp);
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
 	    if (term->misc.login_shell)
-		updwtmp(etc_wtmp, &utmp);
+		call_updwtmp(etc_wtmp, &utmp);
 #else
 	    if (term->misc.login_shell &&
 		(i = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
@@ -4007,7 +4022,7 @@ spawn(void)
 #endif
 #endif
 	    /* close the file */
-	    (void) endutent();
+	    (void) call_endutent();
 
 #else /* USE_SYSV_UTMP */
 	    /* We can now get our ttyslot!  We can also set the initial
@@ -4475,7 +4490,7 @@ Exit(int n)
 	}
 #endif
 	init_utmp(USER_PROCESS, &utmp);
-	(void) setutent();
+	(void) call_setutent();
 
 	/*
 	 * We could use getutline() if we didn't support old systems.
@@ -4493,7 +4508,7 @@ Exit(int n)
 		*utptr->ut_user = 0;
 		utptr->ut_time = time((time_t *) 0);
 #endif
-		(void) pututline(utptr);
+		(void) call_pututline(utptr);
 #ifdef WTMP
 #if defined(WTMPX_FILE) && (defined(SVR4) || defined(__SCO__))
 		if (term->misc.login_shell)
@@ -4501,7 +4516,7 @@ Exit(int n)
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
 		strncpy(utmp.ut_line, utptr->ut_line, sizeof(utmp.ut_line));
 		if (term->misc.login_shell)
-		    updwtmp(etc_wtmp, utptr);
+		    call_updwtmp(etc_wtmp, utptr);
 #else
 		/* set wtmp entry if wtmp file exists */
 		if (term->misc.login_shell) {
@@ -4517,7 +4532,7 @@ Exit(int n)
 	    }
 	    memset(utptr, 0, sizeof(*utptr));	/* keep searching */
 	}
-	(void) endutent();
+	(void) call_endutent();
     }
 #else /* not USE_SYSV_UTMP */
     int wfd;

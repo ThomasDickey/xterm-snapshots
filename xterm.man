@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.318 2005/11/03 13:17:28 tom Exp $
+.\" $XTermId: xterm.man,v 1.320 2005/11/13 23:10:36 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.117 2005/11/03 13:17:28 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.118 2005/11/13 23:10:36 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .
@@ -2085,7 +2085,7 @@ Specifies a shell command to which
 .I xterm
 will open a pipe when the first
 MC (Media Copy) command is initiated.
-The default is ``lpr.''
+The default is a blank string.
 If the resource value is given as a blank string, the printer is disabled.
 .TP 8
 .B "printerControlMode (\fPclass\fB PrinterControlMode)"

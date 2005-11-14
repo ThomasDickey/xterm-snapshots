@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.338 2005/11/03 13:17:28 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.142 2005/11/03 13:17:28 dickey Exp $
+  $XTermId: xterm.log.html,v 1.347 2005/11/13 23:10:36 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.143 2005/11/13 23:10:36 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_207">Patch #207 - 2005/11/13 - XFree86 4.5.99.16</A>
 <LI><A HREF="#xterm_206">Patch #206 - 2005/11/3 - XFree86 4.5.99.15</A>
 <LI><A HREF="#xterm_205">Patch #205 - 2005/9/18 - XFree86 4.5.99.12</A>
 <LI><A HREF="#xterm_204">Patch #204 - 2005/8/4 - XFree86 4.5.99.9</A>
@@ -254,6 +255,32 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_207">Patch #207 - 2005/11/13 - XFree86 4.5.99.16</A></H1>
+<ul>
+	<li>enable <code>lastlogx</code> support for NetBSD (was added, but
+	    not enabled in <a href="#xterm_186">patch #186</a>).
+
+	<li>work around broken <code>lastlog.h</code> in glibc 2.3.5, which
+	    includes <code>utmp.h</code>.
+
+	<li>revert part of recent XFree86 Imakefile change, restoring the
+	    <code>-I.</code> needed for <code>xmkmf</code> builds of xterm
+	    (XFree86 Bugzilla #1633, reports by Alexander Pohoyda and Matthieu
+	    Herrb).
+
+	<li>change compiled-in default for <code>printerCommand</code>
+	    resource to an empty string.  People who want to use the
+	    printer should be able to read the manual (Debian #311490).
+
+	<li>modify <code>Imakefile</code> to work around old problems in
+	    <code>imake</code> configuration to allow test-builds using
+	    <code>xmkmf</code> on Linux.  (This was not noticed since several
+	    releases had broken definitions relating to Xft which were harder
+	    to work around).
+
+	<li>link <code>resize</code> for SCO platforms (Kean Johnston).
+</ul>
 
 <H1><A NAME="xterm_206">Patch #206 - 2005/11/3 - XFree86 4.5.99.15</A></H1>
 <ul>
@@ -1203,7 +1230,7 @@ is the latest version of this file.
 
 	<li>replace ifdef's using <code>SCO</code>, <code>sco</code> and
 	    <code>SCO325</code> with <code>__SCO__</code>
-	    (XFree86 Bugzilla #1301, Kean Johnson).
+	    (XFree86 Bugzilla #1301, Kean Johnston).
 	    But ensure that it still builds on platforms where this symbol
 	    is not defined.
 
