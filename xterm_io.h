@@ -1,9 +1,9 @@
 /*
- * $XFree86: xc/programs/xterm/xterm_io.h,v 1.18 2005/07/07 00:46:15 dickey Exp $
+ * $XFree86: xc/programs/xterm/xterm_io.h,v 1.19 2005/11/13 23:10:37 dickey Exp $
  */
 
 /*
- * Copyright 2000-2003,2004 by Thomas E. Dickey
+ * Copyright 2000-2004,2005 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -128,7 +128,7 @@
  */
 #ifdef __QNX__
 #include <ioctl.h>
-#elif !defined(__CYGWIN__)
+#else
 #include <sys/ioctl.h>
 #endif
 
