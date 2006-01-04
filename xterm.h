@@ -1,10 +1,10 @@
-/* $XTermId: xterm.h,v 1.357 2005/11/03 13:17:28 tom Exp $ */
+/* $XTermId: xterm.h,v 1.360 2006/01/04 02:10:27 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.109 2005/11/03 13:17:28 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.110 2006/01/04 02:10:27 dickey Exp $ */
 
 /************************************************************
 
-Copyright 1999-2004,2005 by Thomas E. Dickey
+Copyright 1999-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -854,6 +854,10 @@ extern void fillPtyData (TScreen *screen, PtyData *data, char *value, int length
 extern void initPtyData (PtyData **data);
 extern void trimPtyData (TScreen *screen, PtyData *data);
 
+#if OPT_TRACE || defined(NO_LEAKS)
+extern void noleaks_ptydata (void);
+#endif
+
 #if OPT_WIDE_CHARS
 extern Bool morePtyData (TScreen *screen, PtyData *data);
 extern Char *convertToUTF8 (Char *lp, unsigned c);
@@ -887,15 +891,15 @@ extern void ScrnDisownSelection (TScreen *screen);
 extern void xtermParseRect (TScreen *, int, int *, XTermRect *);
 
 #define ScrnClrFlag(screen, row, flag) \
-	SCRN_BUF_FLAGS(screen, row + screen->topline) = \
-		(Char *)((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & ~ (flag))
+	SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) = \
+		(Char *)((long)SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) & ~ (flag))
 
 #define ScrnSetFlag(screen, row, flag) \
-	SCRN_BUF_FLAGS(screen, row + screen->topline) = \
-		(Char *)(((long)SCRN_BUF_FLAGS(screen, row + screen->topline) | (flag)))
+	SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) = \
+		(Char *)(((long)SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) | (flag)))
 
 #define ScrnTstFlag(screen, row, flag) \
-	((row + screen->savelines + screen->topline) >= 0 && ((long)SCRN_BUF_FLAGS(screen, row + screen->topline) & (flag)) != 0)
+	(ROW2INX(screen, row + screen->savelines) >= 0 && ((long)SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) & (flag)) != 0)
 
 #define ScrnClrBlinked(screen, row) ScrnClrFlag(screen, row, BLINK)
 #define ScrnSetBlinked(screen, row) ScrnSetFlag(screen, row, BLINK)

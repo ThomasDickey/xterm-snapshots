@@ -1,10 +1,10 @@
-dnl $XTermId: configure.in,v 1.197 2005/11/03 13:17:27 tom Exp $
+dnl $XTermId: configure.in,v 1.202 2006/01/04 02:10:24 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.72 2005/11/03 13:17:27 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.73 2006/01/04 02:10:24 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2004,2005 by Thomas E. Dickey
+dnl Copyright 1997-2005,2006 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -111,6 +111,10 @@ CF_WITH_PATH(app-defaults,
 AC_MSG_RESULT($appsdir)
 AC_SUBST(appsdir)
 
+no_appsdir=
+test "$appsdir" = no && no_appsdir="#"
+AC_SUBST(no_appsdir)
+
 # inherit SINSTALL_OPTS from environment to allow packager to customize it.
 
 AC_MSG_CHECKING(for install-permissions reference)
@@ -120,7 +124,28 @@ AC_ARG_WITH(reference,
 	[with_reference=xterm])
 AC_MSG_RESULT($with_reference)
 
+with_full_paths=yes
 CF_PATH_PROG(XTERM_PATH,$with_reference)
+
+# If any of --program-prefix, --program-suffix or --program-transform-name is
+# given, accept an option tell the makefile to create a symbolic link, e.g.,
+# to "xterm" on install.
+XTERM_SYMLINK=NONE
+AC_SUBST(XTERM_SYMLINK)
+if test "$program_transform_name" != "'s,,,'" ; then
+cf_name=`echo "$program_transform_name" | sed -e '[s,\\$\\$,$,g]'`
+cf_name=`echo xterm |sed -e "$cf_name"`
+AC_MSG_CHECKING(for symbolic link to create to $cf_name)
+AC_ARG_WITH(xterm-symlink,
+	[  --with-xterm-symlink=XXX make symbolic link to installed xterm],
+	[with_symlink=$withval],
+	[with_symlink=xterm])
+AC_MSG_RESULT($with_symlink)
+test -n "$with_symlink" && \
+	test "$with_symlink" != no && \
+	test "$with_symlink" != $cf_name && \
+	XTERM_SYMLINK="$with_symlink"
+fi
 
 AC_MSG_CHECKING(if you want to disable setuid)
 CF_ARG_DISABLE(setuid,
@@ -654,6 +679,7 @@ CF_ARG_ENABLE(luit,
 AC_MSG_RESULT($enable_luit)
 if test "$enable_luit" = yes ; then
 	AC_DEFINE(OPT_LUIT_PROG,1)
+	CF_PATH_PROG(LUIT,luit)
 fi
 
 AC_MSG_CHECKING(if you want wide-character support)

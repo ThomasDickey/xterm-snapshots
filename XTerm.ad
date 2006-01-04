@@ -3,8 +3,8 @@
 !
 !
 !
-! $XTermId: XTerm.ad,v 1.69 2005/11/03 13:17:27 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.32 2005/11/03 13:17:27 dickey Exp $
+! $XTermId: XTerm.ad,v 1.71 2006/01/04 02:10:17 tom Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.33 2006/01/04 02:10:17 dickey Exp $
 
 *saveLines: 1024
 
@@ -183,3 +183,6 @@
 ! Set a border for the menus to make them simpler to distinguish against the
 ! vt100 widget:
 *SimpleMenu*borderWidth: 2
+
+! Here is a pattern that is useful for double-clicking on a URL:
+*charClass: 33:48,35:48,37-38:48,43-47:48,58:48,61:48,63-64:48,126:48

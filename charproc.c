@@ -1,14 +1,14 @@
-/* $XTermId: charproc.c,v 1.627 2005/11/13 23:10:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.633 2006/01/04 02:10:19 tom Exp $ */
 
 /*
  * $Xorg: charproc.c,v 1.6 2001/02/09 02:06:02 xorgcvs Exp $
  */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.177 2005/11/13 23:10:35 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.178 2006/01/04 02:10:19 dickey Exp $ */
 
 /*
 
-Copyright 1999-2004,2005 by Thomas E. Dickey
+Copyright 1999-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -799,12 +799,12 @@ SGR_Foreground(int color)
     fg = getXtermForeground(term->flags, color);
     term->cur_foreground = color;
 
-    XSetForeground(screen->display, NormalGC(screen), fg);
-    XSetBackground(screen->display, ReverseGC(screen), fg);
-
     if (NormalGC(screen) != NormalBoldGC(screen)) {
 	XSetForeground(screen->display, NormalBoldGC(screen), fg);
 	XSetBackground(screen->display, ReverseBoldGC(screen), fg);
+    } else {
+	XSetForeground(screen->display, NormalGC(screen), fg);
+	XSetBackground(screen->display, ReverseGC(screen), fg);
     }
 }
 
@@ -831,12 +831,12 @@ SGR_Background(int color)
     bg = getXtermBackground(term->flags, color);
     term->cur_background = color;
 
-    XSetBackground(screen->display, NormalGC(screen), bg);
-    XSetForeground(screen->display, ReverseGC(screen), bg);
-
     if (NormalGC(screen) != NormalBoldGC(screen)) {
 	XSetBackground(screen->display, NormalBoldGC(screen), bg);
 	XSetForeground(screen->display, ReverseBoldGC(screen), bg);
+    } else {
+	XSetBackground(screen->display, NormalGC(screen), bg);
+	XSetForeground(screen->display, ReverseGC(screen), bg);
     }
 }
 
@@ -3449,11 +3449,11 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	   len, visibleChars(PAIRED_CHARS(str, str2), len)));
 
     if (ScrnHaveSelection(screen)
-	&& ScrnIsLineInSelection(screen, screen->cur_row - screen->topline)) {
+	&& ScrnIsLineInSelection(screen, INX2ROW(screen, screen->cur_row))) {
 	ScrnDisownSelection(screen);
     }
 
-    if (screen->cur_row - screen->topline <= screen->max_row) {
+    if (INX2ROW(screen, screen->cur_row) <= screen->max_row) {
 	if (screen->cursor_state)
 	    HideCursor();
 
@@ -4646,7 +4646,7 @@ SwitchBufs(TScreen * screen)
     rows = MaxRows(screen);
     SwitchBufPtrs(screen);
 
-    if ((top = -screen->topline) < rows) {
+    if ((top = INX2ROW(screen, 0)) < rows) {
 	if (screen->scroll_amt)
 	    FlushScroll(screen);
 	if (top == 0)
@@ -4663,7 +4663,13 @@ SwitchBufs(TScreen * screen)
     ScrnUpdate(screen, 0, 0, rows, MaxCols(screen), False);
 }
 
-/* swap buffer line pointers between alt and regular screens */
+/*
+ * Swap buffer line pointers between alternate and regular screens.
+ * visbuf contains pointers from allbuf or altbuf for the visible screen,
+ * and pointers from allbuf for the saved lines.  That makes it simple to
+ * scroll back over the saved lines without juggling pointers for the 
+ * regular and alternate screens.
+ */
 void
 SwitchBufPtrs(TScreen * screen)
 {
@@ -5659,8 +5665,80 @@ VTInitialize(Widget wrequest,
 }
 
 static void
+releaseCursorGCs(TScreen * screen)
+{
+    if (screen->cursorGC)
+	XFreeGC(screen->display, screen->cursorGC);
+    if (screen->fillCursorGC)
+	XFreeGC(screen->display, screen->fillCursorGC);
+    if (screen->reversecursorGC)
+	XFreeGC(screen->display, screen->reversecursorGC);
+    if (screen->cursoroutlineGC)
+	XFreeGC(screen->display, screen->cursoroutlineGC);
+}
+
+static void
+releaseWindowGCs(Widget w, struct _vtwin *win)
+{
+    XtReleaseGC(w, win->normalGC);
+    XtReleaseGC(w, win->reverseGC);
+    XtReleaseGC(w, win->normalboldGC);
+    XtReleaseGC(w, win->reverseboldGC);
+}
+
+static void
 VTDestroy(Widget w)
 {
+    XtermWidget xw = (XtermWidget) w;
+    TScreen *screen = &xw->screen;
+
+    if (screen->scrollWidget)
+	XtDestroyWidget(screen->scrollWidget);
+
+    if (screen->save_ptr) {
+	free(screen->save_ptr);
+	TRACE(("freed screen->save_ptr\n"));
+    }
+
+    if (screen->sbuf_address) {
+	free(screen->sbuf_address);
+	TRACE(("freed screen->sbuf_address\n"));
+    }
+    if (screen->allbuf) {
+	free(screen->allbuf);
+	TRACE(("freed screen->allbuf\n"));
+    }
+
+    if (screen->abuf_address) {
+	free(screen->abuf_address);
+	TRACE(("freed screen->abuf_address\n"));
+    }
+    if (screen->altbuf) {
+	free(screen->altbuf);
+	TRACE(("freed screen->altbuf\n"));
+    }
+#if OPT_WIDE_CHARS
+    if (screen->draw_buf) {
+	free(screen->draw_buf);
+	TRACE(("freed screen->draw_buf\n"));
+    }
+#endif
+#if OPT_INPUT_METHOD
+    if (screen->xim) {
+	XCloseIM(screen->xim);
+	TRACE(("freed screen->xim\n"));
+    }
+#endif
+    releaseCursorGCs(screen);
+    releaseWindowGCs(w, &(screen->fullVwin));
+    releaseWindowGCs(w, &(screen->iconVwin));
+
+    if (screen->fnt_bold != 0
+	&& screen->fnt_bold != screen->fnt_norm)
+	XFreeFont(screen->display, screen->fnt_bold);
+    if (screen->fnt_norm != 0)
+	XFreeFont(screen->display, screen->fnt_norm);
+
     XtFree((char *) (((XtermWidget) w)->screen.selection_data));
 }
 
@@ -6339,7 +6417,7 @@ ShowCursor(void)
     if (eventMode != NORMAL)
 	return;
 
-    if (screen->cur_row - screen->topline > screen->max_row)
+    if (INX2ROW(screen, screen->cur_row) > screen->max_row)
 	return;
 
     screen->cursor_row = screen->cur_row;
@@ -6550,7 +6628,7 @@ HideCursor(void)
 
     if (screen->cursor_state == OFF)	/* FIXME */
 	return;
-    if (screen->cursor_row - screen->topline > screen->max_row)
+    if (INX2ROW(screen, screen->cursor_row) > screen->max_row)
 	return;
 
     cursor_col = screen->cursor_col;
@@ -7159,6 +7237,7 @@ set_cursor_gcs(TScreen * screen)
     GC new_cursorFillGC = NULL;
     GC new_reversecursorGC = NULL;
     GC new_cursoroutlineGC = NULL;
+    Boolean changed = False;
 
     /*
      * Let's see, there are three things that have "color":
@@ -7218,6 +7297,8 @@ set_cursor_gcs(TScreen * screen)
 		new_cursoroutlineGC =
 		    XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
 	    }
+	    releaseCursorGCs(screen);
+	    changed = True;
 	}
     } else
 #endif
@@ -7245,32 +7326,14 @@ set_cursor_gcs(TScreen * screen)
 	    xgcv.background = bg;
 	    new_cursoroutlineGC = XtGetGC((Widget) term, mask, &xgcv);
 	}
-    }
-#if OPT_ISO_COLORS
-    if (screen->colorMode) {
-	if (screen->cursorGC)
-	    XFreeGC(screen->display, screen->cursorGC);
-	if (screen->fillCursorGC)
-	    XFreeGC(screen->display, screen->fillCursorGC);
-	if (screen->reversecursorGC)
-	    XFreeGC(screen->display, screen->reversecursorGC);
-	if (screen->cursoroutlineGC)
-	    XFreeGC(screen->display, screen->cursoroutlineGC);
-    } else
-#endif
-    {
-	if (screen->cursorGC)
-	    XtReleaseGC((Widget) term, screen->cursorGC);
-	if (screen->fillCursorGC)
-	    XtReleaseGC((Widget) term, screen->fillCursorGC);
-	if (screen->reversecursorGC)
-	    XtReleaseGC((Widget) term, screen->reversecursorGC);
-	if (screen->cursoroutlineGC)
-	    XtReleaseGC((Widget) term, screen->cursoroutlineGC);
+	releaseCursorGCs(screen);
+	changed = True;
     }
 
-    screen->cursorGC = new_cursorGC;
-    screen->fillCursorGC = new_cursorFillGC;
-    screen->reversecursorGC = new_reversecursorGC;
-    screen->cursoroutlineGC = new_cursoroutlineGC;
+    if (changed) {
+	screen->cursorGC = new_cursorGC;
+	screen->fillCursorGC = new_cursorFillGC;
+	screen->reversecursorGC = new_reversecursorGC;
+	screen->cursoroutlineGC = new_cursoroutlineGC;
+    }
 }

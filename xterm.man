@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.320 2005/11/13 23:10:36 tom Exp $
+.\" $XTermId: xterm.man,v 1.322 2006/01/04 02:10:27 tom Exp $
 .\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
 .\"
 .\"
@@ -55,7 +55,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.118 2005/11/13 23:10:36 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.119 2006/01/04 02:10:27 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
 .
@@ -213,22 +213,36 @@ See \fIXterm Control Sequences\fP for details.
 .
 .SH OPTIONS
 The \fIxterm\fP terminal emulator
-accepts all of the standard X Toolkit command line options as well as
-the following.
+accepts the standard X Toolkit command line options as well as
+many application-specific options.
 If the option begins with a
 .RB ` + '
 instead of a
 .RB ` - ',
 the option is restored to its default value.
-The \fB-version\fP and \fB-help\fP options are interpreted even if \fIxterm\fP cannot
-open the display, and are useful for testing and configuration scripts:
+The \fB-version\fP and \fB-help\fP options are interpreted even if \fIxterm\fP
+cannot open the display, and are useful for testing and configuration scripts:
 .TP 8
 .B -version
 This causes \fIxterm\fP to print a version number to the standard output.
 .TP 8
 .B -help
-This causes \fIxterm\fP to print out a verbose message describing its options.
-The message is written to the standard error.
+This causes \fIxterm\fP to print out a verbose message describing its options,
+one per line.
+The message is written to the standard output.
+\fIXterm\fP generates this message, sorting it and noting whether
+a "\fB-option\fP"
+or a "\fB+option\fP" turns the feature on or off,
+since some features historically have been one or the other.
+\fIXterm\fP generates a concise help message (multiple options per line)
+when an unknown option is used, e.g.,
+.RS
+	\fBxterm -z\fP
+.RE
+.IP
+If the logic for a particular option such as logging is not compiled
+into \fIxterm\fP, the help text for that option also is not displayed
+by the \fB-help\fP option.
 .
 .PP
 One parameter (after all options) may be given.

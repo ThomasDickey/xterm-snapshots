@@ -3,7 +3,7 @@
 #   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
 #   2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 
-timestamp='2005-06-02'
+timestamp='2005-11-13'
 
 # This file is (in principle) common to ALL GNU software.
 # The presence of a machine in this file suggests that SOME GNU software
@@ -171,6 +171,10 @@ case $os in
 	-hiux*)
 		os=-hiuxwe2
 		;;
+	-sco6)
+		os=-sco5v6
+		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
+		;;
 	-sco5)
 		os=-sco3.2v5
 		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
@@ -184,6 +188,10 @@ case $os in
 		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
 		;;
 	-sco3.2v[4-9]*)
+		# Don't forget version if it is 3.2v4 or newer.
+		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
+		;;
+	-sco5v6*)
 		# Don't forget version if it is 3.2v4 or newer.
 		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
 		;;
@@ -248,6 +256,7 @@ case $basic_machine in
 	| mips64vr4100 | mips64vr4100el \
 	| mips64vr4300 | mips64vr4300el \
 	| mips64vr5000 | mips64vr5000el \
+	| mips64vr5900 | mips64vr5900el \
 	| mipsisa32 | mipsisa32el \
 	| mipsisa32r2 | mipsisa32r2el \
 	| mipsisa64 | mipsisa64el \
@@ -259,11 +268,11 @@ case $basic_machine in
 	| ms1 \
 	| msp430 \
 	| ns16k | ns32k \
-	| openrisc | or32 \
+	| or32 \
 	| pdp10 | pdp11 | pj | pjl \
 	| powerpc | powerpc64 | powerpc64le | powerpcle | ppcbe \
 	| pyramid \
-	| sh | sh[1234] | sh[23]e | sh[34]eb | shbe | shle | sh[1234]le | sh3ele \
+	| sh | sh[1234] | sh[24]a | sh[23]e | sh[34]eb | shbe | shle | sh[1234]le | sh3ele \
 	| sh64 | sh64le \
 	| sparc | sparc64 | sparc64b | sparc86x | sparclet | sparclite \
 	| sparcv8 | sparcv9 | sparcv9b \
@@ -290,8 +299,8 @@ case $basic_machine in
 	# because (1) that's what they normally are, and
 	# (2) the word "unknown" tends to confuse beginning users.
 	i*86 | x86_64)
-	  basic_machine=$basic_machine-pc
-	  ;;
+		basic_machine=$basic_machine-pc
+		;;
 	# Object if more than one company name word.
 	*-*-*)
 		echo Invalid configuration \`$1\': machine \`$basic_machine\' not recognized 1>&2
@@ -326,6 +335,7 @@ case $basic_machine in
 	| mips64vr4100-* | mips64vr4100el-* \
 	| mips64vr4300-* | mips64vr4300el-* \
 	| mips64vr5000-* | mips64vr5000el-* \
+	| mips64vr5900-* | mips64vr5900el-* \
 	| mipsisa32-* | mipsisa32el-* \
 	| mipsisa32r2-* | mipsisa32r2el-* \
 	| mipsisa64-* | mipsisa64el-* \
@@ -342,7 +352,7 @@ case $basic_machine in
 	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* | ppcbe-* \
 	| pyramid-* \
 	| romp-* | rs6000-* \
-	| sh-* | sh[1234]-* | sh[23]e-* | sh[34]eb-* | shbe-* \
+	| sh-* | sh[1234]-* | sh[24]a-* | sh[23]e-* | sh[34]eb-* | shbe-* \
 	| shle-* | sh[1234]le-* | sh3ele-* | sh64-* | sh64le-* \
 	| sparc-* | sparc64-* | sparc64b-* | sparc86x-* | sparclet-* \
 	| sparclite-* \
@@ -375,7 +385,7 @@ case $basic_machine in
 		basic_machine=a29k-amd
 		os=-udi
 		;;
-    	abacus)
+	abacus)
 		basic_machine=abacus-unknown
 		;;
 	adobe68k)
@@ -769,9 +779,8 @@ case $basic_machine in
 		basic_machine=hppa1.1-oki
 		os=-proelf
 		;;
-	or32 | or32-*)
+	openrisc | openrisc-*)
 		basic_machine=or32-unknown
-		os=-coff
 		;;
 	os400)
 		basic_machine=powerpc-ibm
@@ -1097,11 +1106,8 @@ case $basic_machine in
 	we32k)
 		basic_machine=we32k-att
 		;;
-	sh3 | sh4 | sh[34]eb | sh[1234]le | sh[23]ele)
+	sh[1234] | sh[24]a | sh[34]eb | sh[1234]le | sh[23]ele)
 		basic_machine=sh-unknown
-		;;
-	sh64)
-		basic_machine=sh64-unknown
 		;;
 	sparc | sparcv8 | sparcv9 | sparcv9b)
 		basic_machine=sparc-sun
@@ -1147,8 +1153,8 @@ esac
 if [ x"$os" != x"" ]
 then
 case $os in
-        # First match some system type aliases
-        # that might get confused with valid system types.
+	# First match some system type aliases
+	# that might get confused with valid system types.
 	# -solaris* is a basic system type, with this one exception.
 	-solaris1 | -solaris1.*)
 		os=`echo $os | sed -e 's|solaris1|sunos4|'`
@@ -1189,7 +1195,8 @@ case $os in
 	      | -storm-chaos* | -tops10* | -tenex* | -tops20* | -its* \
 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
-	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* | -skyos*)
+	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+	      | -skyos* | haiku*)
 	# Remember, each alternative MUST END IN *, to match a version number.
 		;;
 	-qnx*)
@@ -1207,7 +1214,7 @@ case $os in
 		os=`echo $os | sed -e 's|nto|nto-qnx|'`
 		;;
 	-sim | -es1800* | -hms* | -xray | -os68k* | -none* | -v88r* \
-	      | -windows* | -osx | -abug | -netware* | -os9* | -beos* \
+	      | -windows* | -osx | -abug | -netware* | -os9* | -beos* | -haiku* \
 	      | -macos* | -mpw* | -magic* | -mmixware* | -mon960* | -lnews*)
 		;;
 	-mac*)
@@ -1228,7 +1235,7 @@ case $os in
 	-opened*)
 		os=-openedition
 		;;
-        -os400*)
+	-os400*)
 		os=-os400
 		;;
 	-wince*)
@@ -1277,7 +1284,7 @@ case $os in
 	-sinix*)
 		os=-sysv4
 		;;
-        -tpf*)
+	-tpf*)
 		os=-tpf
 		;;
 	-triton*)
@@ -1350,9 +1357,9 @@ case $basic_machine in
 	arm*-semi)
 		os=-aout
 		;;
-    c4x-* | tic4x-*)
-        os=-coff
-        ;;
+	c4x-* | tic4x-*)
+		os=-coff
+		;;
 	# This must come before the *-dec entry.
 	pdp10-*)
 		os=-tops20
@@ -1396,10 +1403,13 @@ case $basic_machine in
 	*-be)
 		os=-beos
 		;;
+	*-haiku)
+		os=-haiku
+		;;
 	*-ibm)
 		os=-aix
 		;;
-    	*-knuth)
+	*-knuth)
 		os=-mmixware
 		;;
 	*-wec)

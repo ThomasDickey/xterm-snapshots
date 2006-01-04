@@ -1,14 +1,14 @@
-/* $XTermId: misc.c,v 1.280 2005/11/03 13:17:28 tom Exp $ */
+/* $XTermId: misc.c,v 1.282 2006/01/04 02:10:25 tom Exp $ */
 
 /*
  *	$Xorg: misc.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.101 2005/11/03 13:17:28 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.102 2006/01/04 02:10:25 dickey Exp $ */
 
 /*
  *
- * Copyright 1999-2004,2005 by Thomas E. Dickey
+ * Copyright 1999-2005,2006 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -3054,6 +3054,12 @@ sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
 {
     static XrmOptionDescRec *res_array = 0;
 
+#if OPT_TRACE || defined(NO_LEAKS)
+    if (descs == 0 && res_array != 0) {
+	free(res_array);
+	res_array = 0;
+    } else
+#endif
     if (res_array == 0) {
 	Cardinal j;
 
@@ -3077,6 +3083,13 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 {
     static OptionHelp *opt_array = 0;
 
+#if OPT_TRACE || defined(NO_LEAKS)
+    if (descs == 0 && opt_array != 0) {
+	sortedOptDescs(descs, numDescs);
+	free(opt_array);
+	opt_array = 0;
+    } else
+#endif
     if (opt_array == 0) {
 	Cardinal opt_count, j;
 #if OPT_TRACE
