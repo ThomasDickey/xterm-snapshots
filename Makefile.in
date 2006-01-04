@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.118 2005/11/03 13:17:27 tom Exp $
+## $XTermId: Makefile.in,v 1.124 2006/01/04 02:10:17 tom Exp $
 ##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.51 2005/11/03 13:17:27 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.52 2006/01/04 02:10:17 dickey Exp $ ##
 ##
-## Copyright 2002-2003,2004 by Thomas E. Dickey
+## Copyright 2002-2005,2006 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -151,7 +151,18 @@ install-full :: xterm$x resize$x $(BINDIR)
 @MAY_SETUID@	$(SHELL) $(srcdir)/sinstall.sh @SINSTALL_OPTS@ "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
 @NOT_SETUID@	$(INSTALL_PROGRAM) xterm$x $(BINDIR)/$(binary_xterm)
 	$(INSTALL_PROGRAM) -m  755 resize$x $(BINDIR)/$(binary_resize)
-	$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm)
+	@$(SHELL) -c 'echo "... installing $(BINDIR)/$(binary_uxterm)"; \
+		if test "$(binary_xterm)" != "xterm"; then \
+			name="$(binary_xterm)"; \
+			sed -e "s,=xterm,=$$name," $(srcdir)/uxterm >uxterm.tmp; \
+			$(INSTALL_SCRIPT) -m  755 uxterm.tmp $(BINDIR)/$(binary_uxterm); \
+			rm -f uxterm.tmp; \
+		else \
+			$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm); \
+		fi'
+	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && rm -f @XTERM_SYMLINK@"
+	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && ln -s $(binary_xterm) @XTERM_SYMLINK@"
+	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && echo '... created symbolic link:' && ls -l $(binary_xterm) @XTERM_SYMLINK@"
 
 install \
 install-man \
@@ -159,19 +170,19 @@ install-full :: $(MANDIR)
 	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)
 	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext)
 
-install \
-install-app \
-install-full :: $(APPSDIR)
-	@echo installing $(APPSDIR)/$(CLASS)
-	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm.ad >XTerm.tmp
-	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)
-	@echo installing $(APPSDIR)/$(CLASS)-color
-	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm-col.ad >XTerm.tmp
-	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)-color
-	@echo installing $(APPSDIR)/UXTerm
-	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/UXTerm.ad >XTerm.tmp
-	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/UXTerm
-	@rm -f XTerm.tmp
+@no_appsdir@install \
+@no_appsdir@install-app \
+@no_appsdir@install-full :: $(APPSDIR)
+@no_appsdir@	@echo installing $(APPSDIR)/$(CLASS)
+@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm.ad >XTerm.tmp
+@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)
+@no_appsdir@	@echo installing $(APPSDIR)/$(CLASS)-color
+@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm-col.ad >XTerm.tmp
+@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)-color
+@no_appsdir@	@echo installing $(APPSDIR)/UXTerm
+@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/UXTerm.ad >XTerm.tmp
+@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/UXTerm
+@no_appsdir@	@rm -f XTerm.tmp
 
 install ::
 	@echo 'Completed installation of executables and documentation.'
@@ -191,15 +202,29 @@ install-tc ::
 
 installdirs : $(INSTALL_DIRS)
 
-uninstall :
+uninstall \
+uninstall-bin \
+uninstall-full ::
 	-$(RM) $(BINDIR)/$(binary_xterm)
 	-$(RM) $(BINDIR)/$(binary_resize)
 	-$(RM) $(BINDIR)/$(binary_uxterm)
+
+uninstall-bin \
+uninstall-full ::
+	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && rm -f @XTERM_SYMLINK@"
+
+uninstall \
+uninstall-man \
+uninstall-full ::
 	-$(RM) $(MANDIR)/$(actual_xterm).$(manext)
 	-$(RM) $(MANDIR)/$(actual_resize).$(manext)
-	-$(RM) $(APPSDIR)/$(CLASS)
-	-$(RM) $(APPSDIR)/$(CLASS)-color
-	-$(RM) $(APPSDIR)/UXTerm
+
+@no_appsdir@uninstall \
+@no_appsdir@uninstall-app \
+@no_appsdir@uninstall-full ::
+@no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)
+@no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)-color
+@no_appsdir@	-$(RM) $(APPSDIR)/UXTerm
 
 mostlyclean :
 	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp

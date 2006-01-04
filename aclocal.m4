@@ -1,10 +1,10 @@
-dnl $XTermId: aclocal.m4,v 1.206 2005/11/03 13:17:27 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.211 2006/01/04 02:10:19 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.60 2005/11/03 13:17:27 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.61 2006/01/04 02:10:19 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2004,2005 by Thomas E. Dickey
+dnl Copyright 1997-2005,2006 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -1090,7 +1090,7 @@ if test -n "$cf_path_prog" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_SYNTAX version: 9 updated: 2002/09/17 23:03:38
+dnl CF_PATH_SYNTAX version: 10 updated: 2006/01/02 19:36:00
 dnl --------------
 dnl Check the argument to see that it looks like a pathname.  Rewrite it if it
 dnl begins with one of the prefix/exec_prefix variables, and then again if the
@@ -1112,7 +1112,7 @@ case ".[$]$1" in #(vi
     ;;
   esac
   ;; #(vi
-.NONE/*)
+.no|.NONE/*)
   $1=`echo [$]$1 | sed -e s%NONE%$ac_default_prefix%`
   ;;
 *)
@@ -2251,25 +2251,43 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 11 updated: 2004/04/25 16:43:59
+dnl CF_X_FREETYPE version: 13 updated: 2005/11/24 21:35:11
 dnl -------------
-dnl Check for X FreeType headers and libraries (XFree86 4.x).
+dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
+dnl
+dnl First check for the appropriate config program, since the developers for
+dnl these libraries change their configuration (and config program) more or
+dnl less randomly.  If we cannot find the config program, do not bother trying
+dnl to guess the latest variation of include/lib directories.
 dnl
 dnl If either or both of these configure-script options are not given, rely on
-dnl the output of xft-config or the older freetype-config to provide the
-dnl cflags/libs options.
+dnl the output of the config program to provide the dnl cflags/libs options:
 dnl	--with-freetype-cflags
 dnl	--with-freetype-libs
 AC_DEFUN([CF_X_FREETYPE],
 [
 cf_extra_freetype_libs=
-AC_PATH_PROG(FREETYPE_CONFIG, xft-config, none)
-if test "$FREETYPE_CONFIG" = none; then
-	cf_extra_freetype_libs="-lXft"
-	AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, none)
+FREETYPE_CONFIG=
+FREETYPE_PARAMS=
+
+AC_PATH_PROG(FREETYPE_PKG_CONFIG, pkg-config, none)
+if test "$FREETYPE_PKG_CONFIG" != none; then
+	FREETYPE_CONFIG=$FREETYPE_PKG_CONFIG
+	FREETYPE_PARAMS=xft
+else
+	AC_PATH_PROG(FREETYPE_XFT_CONFIG, xft-config, none)
+	if test "$FREETYPE_XFT_CONFIG" != none; then
+		FREETYPE_CONFIG=$FREETYPE_XFT_CONFIG
+	else
+		cf_extra_freetype_libs="-lXft"
+		AC_PATH_PROG(FREETYPE_OLD_CONFIG, freetype-config, none)
+		if test "$FREETYPE_OLD_CONFIG" != none; then
+			FREETYPE_CONFIG=$FREETYPE_OLD_CONFIG
+		fi
+	fi
 fi
 
-if test "$FREETYPE_CONFIG" != none ; then
+if test -n "$FREETYPE_CONFIG" ; then
 
 AC_ARG_WITH(freetype-cflags,
 	[  --with-freetype-cflags  -D/-I options for compiling with FreeType],
@@ -2277,7 +2295,7 @@ AC_ARG_WITH(freetype-cflags,
  CF_VERBOSE(freetype-cflags $cf_cv_x_freetype_incs)
 ],[
 AC_CACHE_CHECK(for X FreeType headers,cf_cv_x_freetype_incs,[
-	cf_cv_x_freetype_incs="`$FREETYPE_CONFIG --cflags 2>/dev/null`"
+	cf_cv_x_freetype_incs="`$FREETYPE_CONFIG $FREETYPE_PARAMS --cflags 2>/dev/null`"
 ])])
 
 AC_ARG_WITH(freetype-libs,
@@ -2290,7 +2308,7 @@ AC_CACHE_CHECK(for X FreeType libraries,cf_cv_x_freetype_libs,[
 cf_save_LIBS="$LIBS"
 cf_save_INCS="$CPPFLAGS"
 
-cf_cv_x_freetype_libs="$cf_extra_freetype_libs `$FREETYPE_CONFIG --libs 2>/dev/null`"
+cf_cv_x_freetype_libs="$cf_extra_freetype_libs `$FREETYPE_CONFIG $FREETYPE_PARAMS --libs 2>/dev/null`"
 
 LIBS="$cf_cv_x_freetype_libs $LIBS"
 CPPFLAGS="$cf_cv_x_freetype_incs $CPPFLAGS"
@@ -2310,9 +2328,12 @@ if test -n "$cf_cv_x_freetype_libs" ; then
 	CF_ADD_CFLAGS($cf_cv_x_freetype_incs)
 	AC_DEFINE(XRENDERFONT)
 else
+	AC_MSG_WARN(No libraries found for FreeType)
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
 fi
+
 else
+	AC_MSG_WARN(Cannot find FreeType configuration program)
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
 fi
 

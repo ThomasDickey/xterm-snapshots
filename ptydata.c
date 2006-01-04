@@ -1,12 +1,12 @@
-/* $XTermId: ptydata.c,v 1.65 2005/04/22 00:21:54 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.67 2006/01/04 02:10:26 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.23 2005/04/22 00:21:54 dickey Exp $
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.24 2006/01/04 02:10:26 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1999-2004,2005 by Thomas E. Dickey
+Copyright 1999-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -416,5 +416,16 @@ writePtyData(int f, IChar * d, unsigned len)
     for (n = 0; n < len; n++)
 	dbuf[n] = d[n];
     v_write(f, dbuf, n);
+}
+#endif
+
+#if OPT_TRACE || defined(NO_LEAKS)
+void
+noleaks_ptydata(void)
+{
+    if (VTbuffer != 0) {
+	free(VTbuffer);
+	VTbuffer = 0;
+    }
 }
 #endif

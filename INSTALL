@@ -1,5 +1,5 @@
--- $XTermId: INSTALL,v 1.94 2005/11/03 13:17:26 tom Exp $
--- $XFree86: xc/programs/xterm/INSTALL,v 3.40 2005/11/03 13:17:26 dickey Exp $
+-- $XTermId: INSTALL,v 1.100 2006/01/04 02:10:17 tom Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.41 2006/01/04 02:10:17 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -402,6 +402,28 @@ The options (in alphabetic order):
 
   	Look for, compile and link with the Xaw Plus widget library.
 
+  --with-app-defaults=DIR directory in which to install resource files (default: EPREFIX/lib/X11/app-defaults)
+
+	autoconf scripts assume that all of the files should be installed
+	under the same top-level directory.  But X applications defaults
+	must be installed into a special directory, e.g.,
+
+		/usr/X11/lib/app-defaults
+
+	However, there is no standard for this pathname.  The manual page
+	for X notes that the environment variable $XUSERFILESEARCHPATH can
+	specify a list of places where X searches for applications defaults.
+	Also, it may look in $XAPPLRESDIR, but that usually is not related
+	to where xterm might be installed.  To keep it simple, the configure
+	script uses
+
+		EPREFIX/lib/X11/app-defaults
+
+	as the default (EPREFIX is --prefix).  That makes it work normally
+	for most systems if --prefix is /usr.  For other installs, e.g., to
+	/usr/local, you should use this option to customize the location to
+	match your system configuration.
+
   --with-freetype-cflags  -D/-I options for compiling with FreeType library
 
 	Override options provided by xft-config or freetype-config.
@@ -445,6 +467,17 @@ The options (in alphabetic order):
 
 	See also --with-utmp-setgid and --with-utempter, which manipulate
 	the setgid group.
+
+  --with-xterm-symlink=XXX  make symbolic link to installed xterm
+
+	If any of the configure options to modify the program name i.e.,
+	--program-prefix, --program-suffix or --program-transform-name
+	are given, this option allows the makefile to create a symbolic link,
+	e.g., to "xterm" on install.  The option value gives the name for
+	the link, which defaults to "xterm".
+
+	Use --without-xterm-symlink to disable a link to "xterm" if none
+	is wanted.
 
   --with-terminal-id[=V]  set default decTerminalID (default: vt100)
 

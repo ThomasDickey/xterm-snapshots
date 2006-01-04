@@ -1,6 +1,6 @@
 #!/bin/sh
-# $XTermId: sinstall.sh,v 1.13 2005/11/03 13:17:28 tom Exp $
-# $XFree86: xc/programs/xterm/sinstall.sh,v 1.4 2005/11/03 13:17:28 dickey Exp $
+# $XTermId: sinstall.sh,v 1.15 2006/01/04 02:10:27 tom Exp $
+# $XFree86: xc/programs/xterm/sinstall.sh,v 1.5 2006/01/04 02:10:27 dickey Exp $
 #
 # Install program setuid if the installer is running as root, and if xterm is
 # already installed on the system with setuid privilege.  This is a safeguard
@@ -117,7 +117,7 @@ elif test -f "$REF_PROG" ; then
 		PROG_USR=
 		;;
 	esac
-	PROG_MODE=`echo ".$cf_mode" | sed -e 's/^..//' -e 's/rw./7/g' -e 's/r-./5/g' -e 's/--[sxt]/1/g'`
+	PROG_MODE=`echo ".$cf_mode" | sed -e 's/^..//' -e 's/rw./7/g' -e 's/r-./5/g' -e 's/---/0/g' -e 's/--[sxt]/1/g' -e 's/+//g'`
 fi
 
 # passed-in options override the reference

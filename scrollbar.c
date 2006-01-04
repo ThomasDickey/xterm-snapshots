@@ -1,13 +1,13 @@
-/* $XTermId: scrollbar.c,v 1.116 2005/11/03 13:17:28 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.118 2006/01/04 02:10:27 tom Exp $ */
 
 /*
  *	$Xorg: scrollbar.c,v 1.4 2000/08/17 19:55:09 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.45 2005/11/03 13:17:28 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/scrollbar.c,v 3.46 2006/01/04 02:10:27 dickey Exp $ */
 
 /*
- * Copyright 2000-2004,2005 by Thomas E. Dickey
+ * Copyright 2000-2005,2006 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -287,7 +287,7 @@ ScrollBarDrawThumb(Widget scrollWidget)
     TScreen *screen = &term->screen;
     int thumbTop, thumbHeight, totalHeight;
 
-    thumbTop = screen->topline + screen->savedlines;
+    thumbTop = ROW2INX(screen, screen->savedlines);
     thumbHeight = MaxRows(screen);
     totalHeight = thumbHeight + screen->savedlines;
 
@@ -528,9 +528,7 @@ ScrollTextTo(
     /*
      * screen->savedlines : Number of offscreen text lines,
      * MaxRows(screen)    : Number of onscreen  text lines,
-     * screen->topline    : -Number of lines above the last screen->max_row+1 lines
      */
-
     thumbTop = (int) (*topPercent * (screen->savedlines + MaxRows(screen)));
     newTopLine = thumbTop - screen->savedlines;
     WindowScroll(screen, newTopLine);
@@ -555,7 +553,7 @@ ScrollTextUpDownBy(
 	else if (pixels > 0)
 	    rowOnScreen = 1;
     }
-    newTopLine = screen->topline + rowOnScreen;
+    newTopLine = ROW2INX(screen, rowOnScreen);
     WindowScroll(screen, newTopLine);
 }
 

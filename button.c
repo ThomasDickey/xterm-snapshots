@@ -1,8 +1,8 @@
-/* $XTermId: button.c,v 1.197 2005/11/03 13:17:27 tom Exp $ */
+/* $XTermId: button.c,v 1.199 2006/01/04 02:10:19 tom Exp $ */
 
 /* $Xorg: button.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $ */
 /*
- * Copyright 1999-2004,2005 by Thomas E. Dickey
+ * Copyright 1999-2005,2006 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -52,7 +52,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.82 2005/11/03 13:17:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.83 2006/01/04 02:10:19 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -84,9 +84,9 @@ button.c	Handles button events in the terminal emulator.
 	charClass[value & ((sizeof(charClass)/sizeof(charClass[0]))-1)]
 #endif
 
-#define XTERM_CELL(row,col) getXtermCell(screen, row + screen->topline, col)
-#define XTERM_CELL_C1(row,col) getXtermCellComb1(screen, row + screen->topline, col)
-#define XTERM_CELL_C2(row,col) getXtermCellComb2(screen, row + screen->topline, col)
+#define XTERM_CELL(row,col) getXtermCell(screen, ROW2INX(screen, row), col)
+#define XTERM_CELL_C1(row,col) getXtermCellComb1(screen, ROW2INX(screen, row), col)
+#define XTERM_CELL_C2(row,col) getXtermCellComb2(screen, ROW2INX(screen, row), col)
 
       /*
        * We reserve shift modifier for cut/paste operations.  In principle we
@@ -1988,8 +1988,8 @@ HandleKeyboardStartExtend(Widget w,
 void
 ScrollSelection(TScreen * screen, int amount, Bool always)
 {
-    int minrow = -screen->savedlines - screen->topline;
-    int maxrow = screen->max_row - screen->topline;
+    int minrow = INX2ROW(screen, -screen->savedlines);
+    int maxrow = INX2ROW(screen, screen->max_row);
     int maxcol = screen->max_col;
 
 #define scroll_update_one(row, col) \
@@ -2020,13 +2020,13 @@ ScrollSelection(TScreen * screen, int amount, Bool always)
     if (ScrnHaveSelection(screen)) {
 	int adjust;
 
-	adjust = screen->startHRow + screen->topline;
+	adjust = ROW2INX(screen, screen->startHRow);
 	if (always
 	    || !ScrnHaveLineMargins(screen)
 	    || ScrnIsLineInMargins(screen, adjust)) {
 	    scroll_update_one(screen->startHRow, screen->startHCol);
 	}
-	adjust = screen->endHRow + screen->topline;
+	adjust = ROW2INX(screen, screen->endHRow);
 	if (always
 	    || !ScrnHaveLineMargins(screen)
 	    || ScrnIsLineInMargins(screen, adjust)) {
@@ -2242,7 +2242,7 @@ class_of(TScreen * screen, int row, int col)
 {
     int value;
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row + screen->topline)[0])) {
+    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, ROW2INX(screen, row))[0])) {
 	col /= 2;
     }
 #endif
@@ -3049,7 +3049,7 @@ SaveText(TScreen * screen,
     i = Length(screen, row, scol, ecol);
     ecol = scol + i;
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, row + screen->topline)[0])) {
+    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, ROW2INX(screen, row))[0])) {
 	scol = (scol + 0) / 2;
 	ecol = (ecol + 1) / 2;
     }

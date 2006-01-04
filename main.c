@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.477 2005/11/13 23:10:36 tom Exp $ */
+/* $XTermId: main.c,v 1.482 2006/01/04 02:10:25 tom Exp $ */
 
 #if !defined(lint) && 0
 static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
@@ -19,7 +19,7 @@ static char *rid = "$Xorg: main.c,v 1.7 2001/02/09 02:06:02 xorgcvs Exp $";
 
 /***********************************************************
 
-Copyright 2002-2004,2005 by Thomas E. Dickey
+Copyright 2002-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -91,7 +91,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.199 2005/11/13 23:10:36 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.200 2006/01/04 02:10:25 dickey Exp $ */
 
 /* main.c */
 
@@ -3115,7 +3115,7 @@ spawn(void)
     }
 
     /* avoid double MapWindow requests */
-    XtSetMappedWhenManaged(XtParent(CURRENT_EMU(screen)), False);
+    XtSetMappedWhenManaged(SHELL_OF(CURRENT_EMU(screen)), False);
 
     wm_delete_window = XInternAtom(XtDisplay(toplevel), "WM_DELETE_WINDOW",
 				   False);
@@ -3131,7 +3131,7 @@ spawn(void)
 	XmuGetHostname(mit_console_name + MIT_CONSOLE_LEN, 255);
 	mit_console = XInternAtom(screen->display, mit_console_name, False);
 	/* the user told us to be the console, so we can use CurrentTime */
-	XtOwnSelection(XtParent(CURRENT_EMU(screen)),
+	XtOwnSelection(SHELL_OF(CURRENT_EMU(screen)),
 		       mit_console, CurrentTime,
 		       ConvertConsoleSelection, NULL, NULL);
     }
@@ -4091,7 +4091,8 @@ spawn(void)
 #endif
 
 #ifdef USE_LASTLOG
-	    if (term->misc.login_shell &&
+	    if (sizeof(lastlog.ll_time) == sizeof(time_t) &&	/* !Solaris */
+		term->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		bzero((char *) &lastlog, sizeof(struct lastlog));
 		(void) strncpy(lastlog.ll_line,
@@ -4577,23 +4578,17 @@ Exit(int n)
 	if (term != 0) {
 	    Display *dpy = term->screen.display;
 
-	    if (term->screen.sbuf_address) {
-		free(term->screen.sbuf_address);
-		TRACE(("freed screen.sbuf_address\n"));
-	    }
-	    if (term->screen.allbuf) {
-		free(term->screen.allbuf);
-		TRACE(("freed screen.allbuf\n"));
-	    }
-	    if (term->screen.xim) {
-		XCloseIM(term->screen.xim);
-		TRACE(("freed screen.xim\n"));
-	    }
 	    if (toplevel) {
 		XtDestroyWidget(toplevel);
 		TRACE(("destroyed top-level widget\n"));
 	    }
+	    sortedOpts(0, 0, 0);
+	    noleaks_ptydata();
+#if OPT_WIDE_CHARS
+	    noleaks_CharacterClass();
+#endif
 	    XtCloseDisplay(dpy);
+	    XtDestroyApplicationContext(app_con);
 	    TRACE(("closed display\n"));
 	}
 	TRACE((0));

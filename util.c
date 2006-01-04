@@ -1,13 +1,13 @@
-/* $XTermId: util.c,v 1.255 2005/09/18 23:48:13 tom Exp $ */
+/* $XTermId: util.c,v 1.259 2006/01/04 02:10:27 tom Exp $ */
 
 /*
  *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
  */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.93 2005/09/18 23:48:13 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.94 2006/01/04 02:10:27 dickey Exp $ */
 
 /*
- * Copyright 1999-2004,2005 by Thomas E. Dickey
+ * Copyright 1999-2005,2006 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -107,7 +107,7 @@ void
 FlushScroll(TScreen * screen)
 {
     int i;
-    int shift = -screen->topline;
+    int shift = INX2ROW(screen, 0);
     int bot = screen->max_row - shift;
     int refreshtop;
     int refreshheight;
@@ -381,7 +381,7 @@ xtermScroll(TScreen * screen, int amount)
 	    return;
 	}
 
-	shift = -screen->topline;
+	shift = INX2ROW(screen, 0);
 	bot = screen->max_row - shift;
 	scrollheight = i - amount;
 	refreshheight = amount;
@@ -503,7 +503,7 @@ RevScroll(TScreen * screen, int amount)
 	    screen->refresh_amt = -amount;
 	}
     } else {
-	shift = -screen->topline;
+	shift = INX2ROW(screen, 0);
 	bot = screen->max_row - shift;
 	refreshheight = amount;
 	scrollheight = screen->bot_marg - screen->top_marg -
@@ -561,7 +561,7 @@ InsertLine(TScreen * screen, int n)
     int scrolltop;
     int scrollheight;
 
-    if (!ScrnIsLineInMargins(screen, screen->cur_row - screen->topline))
+    if (!ScrnIsLineInMargins(screen, INX2ROW(screen, screen->cur_row)))
 	return;
 
     TRACE(("InsertLine count=%d\n", n));
@@ -588,7 +588,7 @@ InsertLine(TScreen * screen, int n)
 	    FlushScroll(screen);
     }
     if (!screen->scroll_amt) {
-	shift = -screen->topline;
+	shift = INX2ROW(screen, 0);
 	bot = screen->max_row - shift;
 	refreshheight = n;
 	scrollheight = screen->bot_marg - screen->cur_row - refreshheight + 1;
@@ -632,7 +632,7 @@ DeleteLine(TScreen * screen, int n)
     int scrolltop;
     int scrollheight;
 
-    if (!ScrnIsLineInMargins(screen, screen->cur_row - screen->topline))
+    if (!ScrnIsLineInMargins(screen, INX2ROW(screen, screen->cur_row)))
 	return;
 
     TRACE(("DeleteLine count=%d\n", n));
@@ -659,7 +659,7 @@ DeleteLine(TScreen * screen, int n)
     }
     if (!screen->scroll_amt) {
 
-	shift = -screen->topline;
+	shift = INX2ROW(screen, 0);
 	bot = screen->max_row - shift;
 	scrollheight = i - n;
 	refreshheight = n;
@@ -722,7 +722,7 @@ void
 InsertChar(TScreen * screen, unsigned n)
 {
     unsigned limit;
-    int row = screen->cur_row - screen->topline;
+    int row = INX2ROW(screen, screen->cur_row);
 
     if (screen->cursor_state)
 	HideCursor();
@@ -781,7 +781,7 @@ void
 DeleteChar(TScreen * screen, unsigned n)
 {
     unsigned limit;
-    int row = screen->cur_row - screen->topline;
+    int row = INX2ROW(screen, screen->cur_row);
 
     if (screen->cursor_state)
 	HideCursor();
@@ -848,7 +848,7 @@ ClearAbove(TScreen * screen)
 
 	if (screen->cursor_state)
 	    HideCursor();
-	if ((top = -screen->topline) <= screen->max_row) {
+	if ((top = INX2ROW(screen, 0)) <= screen->max_row) {
 	    if (screen->scroll_amt)
 		FlushScroll(screen);
 	    if ((height = screen->cur_row + top) > screen->max_row)
@@ -864,7 +864,7 @@ ClearAbove(TScreen * screen)
 	ClearBufRows(screen, 0, screen->cur_row - 1);
     }
 
-    if (screen->cur_row - screen->topline <= screen->max_row)
+    if (INX2ROW(screen, screen->cur_row) <= screen->max_row)
 	ClearLeft(screen);
 }
 
@@ -886,7 +886,7 @@ ClearBelow(TScreen * screen)
     } else {
 	int top;
 
-	if ((top = screen->cur_row - screen->topline) <= screen->max_row) {
+	if ((top = INX2ROW(screen, screen->cur_row)) <= screen->max_row) {
 	    if (screen->scroll_amt)
 		FlushScroll(screen);
 	    if (++top <= screen->max_row) {
@@ -978,7 +978,7 @@ ClearInLine(TScreen * screen, int row, int col, unsigned len)
 	HideCursor();
     screen->do_wrap = 0;
 
-    if (row - screen->topline <= screen->max_row) {
+    if (INX2ROW(screen, row) <= screen->max_row) {
 	if (!AddToRefresh(screen)) {
 	    if (screen->scroll_amt)
 		FlushScroll(screen);
@@ -1075,7 +1075,7 @@ ClearScreen(TScreen * screen)
 
     ScrnDisownSelection(screen);
     screen->do_wrap = 0;
-    if ((top = -screen->topline) <= screen->max_row) {
+    if ((top = INX2ROW(screen, 0)) <= screen->max_row) {
 	if (screen->scroll_amt)
 	    FlushScroll(screen);
 	ClearCurBackground(screen,
@@ -2304,24 +2304,24 @@ drawXtermText(TScreen * screen,
 #if OPT_WIDE_CHARS
     if (screen->wide_chars || screen->unicode_font) {
 	int ascent_adjust = 0;
-	static XChar2b *sbuf;
-	static Cardinal slen;
 	int n;
 	unsigned ch = text[0] | (text2[0] << 8);
 	int wideness = (!IsIcon(screen)
 			&& ((on_wide || iswide((int) ch) != 0)
 			    && (screen->fnt_dwd != NULL)));
 	unsigned char *endtext = text + len;
-	if (slen < len) {
-	    slen = (len + 1) * 2;
-	    sbuf = (XChar2b *) XtRealloc((char *) sbuf, slen * sizeof(*sbuf));
+	if (screen->draw_len < len) {
+	    screen->draw_len = (len + 1) * 2;
+	    screen->draw_buf = (XChar2b *) XtRealloc((char *) screen->draw_buf,
+						     screen->draw_len *
+						     sizeof(*screen->draw_buf));
 	}
 	for (n = 0; n < (int) len; n++) {
-	    sbuf[n].byte2 = *text;
-	    sbuf[n].byte1 = *text2;
+	    screen->draw_buf[n].byte2 = *text;
+	    screen->draw_buf[n].byte1 = *text2;
 #if OPT_MINI_LUIT
-#define UCS2SBUF(n,value)	sbuf[n].byte2 = (value & 0xff);\
-	    			sbuf[n].byte1 = (value >> 8)
+#define UCS2SBUF(n,value)	screen->draw_buf[n].byte2 = (value & 0xff);\
+	    			screen->draw_buf[n].byte1 = (value >> 8)
 #define Map2Sbuf(n,from,to) (*text == from) { UCS2SBUF(n,to); }
 	    if (screen->latin9_mode && !screen->utf8_mode && *text2 == 0) {
 
@@ -2389,17 +2389,19 @@ drawXtermText(TScreen * screen,
 	    XDrawString16(screen->display,
 			  VWindow(screen), gc,
 			  x, y + ascent_adjust,
-			  sbuf, n);
+			  screen->draw_buf, n);
 	else
 	    XDrawImageString16(screen->display,
 			       VWindow(screen), gc,
 			       x, y + ascent_adjust,
-			       sbuf, n);
+			       screen->draw_buf, n);
 
 	if ((flags & BOLDATTR(screen)) && screen->enbolden) {
 	    beginClipping(screen, gc, font_width, len);
 	    XDrawString16(screen->display, VWindow(screen), gc,
-			  x + 1, y + ascent_adjust, sbuf, n);
+			  x + 1,
+			  y + ascent_adjust,
+			  screen->draw_buf, n);
 	    endClipping(screen, gc);
 	}
 
