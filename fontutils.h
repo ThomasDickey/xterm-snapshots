@@ -1,10 +1,12 @@
+/* $XTermId: fontutils.h,v 1.57 2006/02/13 01:14:59 tom Exp $ */
+
 /*
- * $XFree86: xc/programs/xterm/fontutils.h,v 1.16 2005/08/05 01:25:39 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.h,v 1.17 2006/02/13 01:14:59 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1998-2004,2005 by Thomas E. Dickey
+Copyright 1998-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -39,26 +41,29 @@ authorization.
 
 #include <xterm.h>
 
-extern Bool xtermLoadDefaultFonts (XtermWidget w);
-extern const VTFontNames * xtermFontName(char *normal);
-extern int lookupRelativeFontSize(TScreen * screen, int old, int relative);
-extern int xtermLoadFont (XtermWidget xw,
-			  const VTFontNames *fonts,
-			  Bool doresize, int fontnum);
+extern Bool xtermLoadDefaultFonts (XtermWidget /* w */);
+extern XFontStruct * xtermOpenFont (TScreen * /* screen */, char */* name */);
+extern XFontStruct * xtermCloseFont(TScreen * /* screen */, XFontStruct * /* fnt */);
+extern const VTFontNames * xtermFontName (char */* normal */);
+extern int lookupRelativeFontSize (TScreen * /* screen */, int /* old */, int /* relative */);
+extern int xtermLoadFont (XtermWidget /* xw */,
+			  const VTFontNames */* fonts */,
+			  Bool /* doresize */, int /* fontnum */);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
-extern void SetVTFont (XtermWidget xw, int i, Bool doresize, const VTFontNames *fonts);
-extern void xtermComputeFontInfo (XtermWidget xw, struct _vtwin *win, XFontStruct *font, int sbwidth);
-extern void xtermSaveFontInfo (TScreen *screen, XFontStruct *font);
-extern void xtermSetCursorBox (TScreen *screen);
-extern void xtermUpdateFontInfo (XtermWidget xw, Bool doresize);
+extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
+extern void xtermCloseFonts(TScreen * /* screen */, XFontStruct ** /* fnts[fMAX] */);
+extern void xtermComputeFontInfo (XtermWidget /* xw */, struct _vtwin */* win */, XFontStruct */* font */, int /* sbwidth */);
+extern void xtermSaveFontInfo (TScreen */* screen */, XFontStruct */* font */);
+extern void xtermSetCursorBox (TScreen */* screen */);
+extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 
 #if OPT_DEC_CHRSET
-extern char *xtermSpecialFont(TScreen *screen, unsigned atts, unsigned chrset);
+extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsigned /* chrset */);
 #endif
 
 #if OPT_BOX_CHARS
-extern Bool xtermMissingChar(XtermWidget xw, unsigned ch, XFontStruct *font);
-extern void xtermDrawBoxChar(XtermWidget xw, unsigned ch, unsigned flags, GC gc, int x, int y);
+extern Bool xtermMissingChar (XtermWidget /* xw */, unsigned /* ch */, XFontStruct */* font */);
+extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */);
 #endif
 
 #if OPT_LOAD_VTFONTS
@@ -66,14 +71,14 @@ extern void HandleLoadVTFonts PROTO_XT_ACTIONS_ARGS;
 #endif
 
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
-extern Bool xtermLoadWideFonts(XtermWidget w, Bool nullOk);
+extern Bool xtermLoadWideFonts (XtermWidget /* w */, Bool /* nullOk */);
 #endif
 
-#define xtermIsDecGraphic(ch) ((ch) > 0 && (ch) < 32)
+#define xtermIsDecGraphic(ch)	((ch) > 0 && (ch) < 32)
 
 #if OPT_RENDERFONT && OPT_WIDE_CHARS
-extern Bool xtermIsLineDrawing(unsigned /* wc */);
-extern Bool xtermXftMissing(XtermWidget /* xw */, XftFont * /* font */, unsigned /* wc */);
+extern Bool xtermIsLineDrawing (unsigned /* wc */);
+extern Bool xtermXftMissing (XtermWidget /* xw */, XftFont * /* font */, unsigned /* wc */);
 #endif
 
 #if OPT_SHIFT_FONTS
@@ -82,8 +87,8 @@ extern void HandleLargerFont PROTO_XT_ACTIONS_ARGS;
 #endif
 
 #if OPT_WIDE_CHARS
-extern unsigned ucs2dec(unsigned);
-extern unsigned dec2ucs(unsigned);
+extern unsigned ucs2dec (unsigned);
+extern unsigned dec2ucs (unsigned);
 #endif
 
 #endif /* included_fontutils_h */

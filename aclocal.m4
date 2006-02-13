@@ -1,6 +1,6 @@
-dnl $XTermId: aclocal.m4,v 1.211 2006/01/04 02:10:19 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.219 2006/02/13 01:14:58 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.61 2006/01/04 02:10:19 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.62 2006/02/13 01:14:58 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -369,10 +369,10 @@ AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ENABLE_NARROWPROTO version: 1 updated: 2005/11/02 15:04:41
+dnl CF_ENABLE_NARROWPROTO version: 3 updated: 2006/02/12 17:46:00
 dnl ---------------------
 dnl If this is not set properly, Xaw's scrollbars will not work.
-dnl The so-called "modular" configuration for Xorg omits most of the
+dnl The so-called "modular" configuration for X.org omits most of the
 dnl configure checks that would be needed to provide compatibility with
 dnl older X builds.  This one breaks things noticeably.
 AC_DEFUN([CF_ENABLE_NARROWPROTO],
@@ -391,7 +391,7 @@ esac
 CF_ARG_OPTION(narrowproto,
 	[  --enable-narrowproto    enable narrow prototypes for X libraries],
 	[enable_narrowproto=$enableval],
-	[enable_narrowproto=$default_narrowproto],
+	[enable_narrowproto=$cf_default_narrowproto],
 	[$cf_default_narrowproto])
 AC_MSG_RESULT($enable_narrowproto)
 ])
@@ -1274,6 +1274,40 @@ AC_SUBST(PROG_EXT)
 test -n "$PROG_EXT" && AC_DEFINE_UNQUOTED(PROG_EXT,"$PROG_EXT")
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_REGEX version: 3 updated: 1997/11/01 14:26:01
+dnl --------
+dnl Attempt to determine if we've got one of the flavors of regular-expression
+dnl code that we can support.
+AC_DEFUN([CF_REGEX],
+[
+AC_MSG_CHECKING([for regular-expression headers])
+AC_CACHE_VAL(cf_cv_regex,[
+AC_TRY_LINK([#include <sys/types.h>
+#include <regex.h>],[
+	regex_t *p;
+	int x = regcomp(p, "", 0);
+	int y = regexec(p, "", 0, 0, 0);
+	regfree(p);
+	],[cf_cv_regex="regex.h"],[
+	AC_TRY_LINK([#include <regexp.h>],[
+		char *p = compile("", "", "", 0);
+		int x = step("", "");
+	],[cf_cv_regex="regexp.h"],[
+		cf_save_LIBS="$LIBS"
+		LIBS="-lgen $LIBS"
+		AC_TRY_LINK([#include <regexpr.h>],[
+			char *p = compile("", "", "");
+			int x = step("", "");
+		],[cf_cv_regex="regexpr.h"],[LIBS="$cf_save_LIBS"])])])
+])
+AC_MSG_RESULT($cf_cv_regex)
+case $cf_cv_regex in
+	regex.h)   AC_DEFINE(HAVE_REGEX_H_FUNCS) ;;
+	regexp.h)  AC_DEFINE(HAVE_REGEXP_H_FUNCS) ;;
+	regexpr.h) AC_DEFINE(HAVE_REGEXPR_H_FUNCS) ;;
+esac
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_REMOVE_DEFINE version: 2 updated: 2005/07/09 16:12:18
 dnl ----------------
 dnl Remove all -U and -D options that refer to the given symbol from a list
@@ -1485,12 +1519,22 @@ foo.c_ospeed = B9600;
 test "$cf_cv_termio_c_ispeed" = yes && AC_DEFINE(HAVE_TERMIO_C_ISPEED)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_TTY_GROUP version: 5 updated: 2003/03/19 23:52:35
+dnl CF_TTY_GROUP version: 6 updated: 2006/01/23 19:42:39
 dnl ------------
 dnl Check if the system has a tty-group defined.  This is used in xterm when
 dnl setting pty ownership.
 AC_DEFUN([CF_TTY_GROUP],
 [
+AC_MSG_CHECKING(for explicit tty group name)
+AC_ARG_WITH(tty-group,
+	[  --with-tty-group=XXX    use XXX for the tty-group],
+	[cf_tty_group=$withval],
+	[cf_tty_group=auto...])
+test -z "$cf_tty_group"    && cf_tty_group=auto...
+test "$cf_tty_group" = yes && cf_tty_group=auto...
+AC_MSG_RESULT($cf_tty_group)
+
+if test "$cf_tty_group" = "auto..." ; then
 AC_CACHE_CHECK(for tty group name,cf_cv_tty_group_name,[
 
 # If we are configuring as root, it is hard to get a clue about the tty group.
@@ -1498,6 +1542,7 @@ AC_CACHE_CHECK(for tty group name,cf_cv_tty_group_name,[
 # properly.
 
 cf_uid=`id | sed -e 's/^[^=]*=//' -e 's/(.*$//'`
+# )vi
 if test "$cf_uid" != 0 ; then
 cf_cv_tty_group_name=
 cf_tty_name=`tty`
@@ -1538,14 +1583,19 @@ osf*) #(vi
 esac
 fi
 ])
+cf_tty_group="$cf_cv_tty_group_name"
+else
+	# if configure option, always do this
+	AC_DEFINE(USE_TTY_GROUP)
+fi
 
-AC_DEFINE_UNQUOTED(TTY_GROUP_NAME,"$cf_cv_tty_group_name")
+AC_DEFINE_UNQUOTED(TTY_GROUP_NAME,"$cf_tty_group")
 
 # This is only a double-check that the group-name we obtained above really
 # does apply to the device.  We cannot perform this test if we are in batch
 # mode, or if we are cross-compiling.
 
-AC_CACHE_CHECK(if we may use $cf_cv_tty_group_name group,cf_cv_tty_group,[
+AC_CACHE_CHECK(if we may use the $cf_tty_group group,cf_cv_tty_group,[
 cf_tty_name=`tty`
 if test "$cf_tty_name" != "not a tty"
 then
@@ -1580,7 +1630,12 @@ else
 	cf_cv_tty_group=yes
 fi
 ])
-test $cf_cv_tty_group = yes && AC_DEFINE(USE_TTY_GROUP)
+
+if test $cf_cv_tty_group = no ; then
+	AC_MSG_WARN(Cannot use $cf_tty_group group)
+else
+	AC_DEFINE(USE_TTY_GROUP)
+fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_TYPE_FD_SET version: 3 updated: 1999/10/16 13:49:00
@@ -1990,6 +2045,35 @@ eval $3="$withval"
 AC_SUBST($3)dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITH_PCRE version: 3 updated: 2006/02/12 17:28:56
+dnl ------------
+dnl Add PCRE (Perl-compatible regular expressions) to the build if it is
+dnl available and the user requests it.  Assume the application will otherwise
+dnl use the POSIX interface.
+dnl
+dnl TODO allow $withval to specify package location
+AC_DEFUN([CF_WITH_PCRE],
+[
+AC_MSG_CHECKING(if you want to use PCRE for regular-expressions)
+AC_ARG_WITH(pcre,
+	[  --with-pcre             use PCRE for regular-expressions])
+test -z "$with_pcre" && with_pcre=no
+AC_MSG_RESULT($with_pcre)
+
+if test "$with_pcre" != no ; then
+	AC_CHECK_LIB(pcre,pcre_compile,
+		[AC_CHECK_HEADER(pcreposix.h,
+			[AC_CHECK_LIB(pcreposix,pcreposix_regcomp,
+				[AC_DEFINE(HAVE_LIB_PCRE)
+				 AC_DEFINE(HAVE_PCREPOSIX_H)
+				 LIBS="-lpcreposix -lpcre $LIBS"],
+				AC_MSG_ERROR(Cannot find PCRE POSIX library),
+				"-lpcre")],
+			AC_MSG_ERROR(Cannot find PCRE POSIX header))],
+		AC_MSG_ERROR(Cannot find PCRE library))
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_XKB_BELL_EXT version: 2 updated: 2003/05/18 17:28:57
 dnl ---------------
 dnl Check for XKB bell extension
@@ -2251,7 +2335,7 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 13 updated: 2005/11/24 21:35:11
+dnl CF_X_FREETYPE version: 15 updated: 2006/02/12 17:30:04
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -2271,7 +2355,7 @@ FREETYPE_CONFIG=
 FREETYPE_PARAMS=
 
 AC_PATH_PROG(FREETYPE_PKG_CONFIG, pkg-config, none)
-if test "$FREETYPE_PKG_CONFIG" != none; then
+if test "$FREETYPE_PKG_CONFIG" != none && "$FREETYPE_PKG_CONFIG" --exists xft; then
 	FREETYPE_CONFIG=$FREETYPE_PKG_CONFIG
 	FREETYPE_PARAMS=xft
 else
@@ -2288,7 +2372,7 @@ else
 fi
 
 if test -n "$FREETYPE_CONFIG" ; then
-
+withval=
 AC_ARG_WITH(freetype-cflags,
 	[  --with-freetype-cflags  -D/-I options for compiling with FreeType],
 [cf_cv_x_freetype_incs="$withval"
@@ -2297,7 +2381,7 @@ AC_ARG_WITH(freetype-cflags,
 AC_CACHE_CHECK(for X FreeType headers,cf_cv_x_freetype_incs,[
 	cf_cv_x_freetype_incs="`$FREETYPE_CONFIG $FREETYPE_PARAMS --cflags 2>/dev/null`"
 ])])
-
+withval=
 AC_ARG_WITH(freetype-libs,
 	[  --with-freetype-libs    -L/-l options to link FreeType],
 [cf_cv_x_freetype_libs="$withval"

@@ -1,12 +1,12 @@
-/* $XTermId: print.c,v 1.63 2005/08/05 01:25:40 tom Exp $ */
+/* $XTermId: print.c,v 1.67 2006/02/13 01:14:59 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/print.c,v 1.22 2005/08/05 01:25:40 dickey Exp $
+ * $XFree86: xc/programs/xterm/print.c,v 1.23 2006/02/13 01:14:59 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2004,2005 by Thomas E. Dickey
+Copyright 1997-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -122,8 +122,9 @@ static void
 printLine(int row, int chr)
 {
     TScreen *screen = &term->screen;
-    Char *c = SCRN_BUF_CHARS(screen, row);
-    Char *a = SCRN_BUF_ATTRS(screen, row);
+    int inx = ROW2INX(screen, row);
+    Char *c = SCRN_BUF_CHARS(screen, inx);
+    Char *a = SCRN_BUF_ATTRS(screen, inx);
     Char attr = 0;
     unsigned ch;
     int last = MaxCols(screen);
@@ -143,19 +144,19 @@ printLine(int row, int chr)
     int cs = CSET_IN;
     int last_cs = CSET_IN;
 
-    TRACE(("printLine(row=%d, top=%d:%d, chr=%d):%s\n",
-	   row, screen->topline, screen->max_row, chr,
+    TRACE(("printLine(row=%d/%d, top=%d:%d, chr=%d):%s\n",
+	   row, ROW2INX(screen, row), screen->topline, screen->max_row, chr,
 	   visibleChars(PAIRED_CHARS(c,
 				     screen->utf8_mode
-				     ? SCRN_BUF_WIDEC(screen, row)
+				     ? SCRN_BUF_WIDEC(screen, inx)
 				     : 0), (unsigned) last)));
 
     if_OPT_EXT_COLORS(screen, {
-	fbf = SCRN_BUF_FGRND(screen, row);
-	fbb = SCRN_BUF_BGRND(screen, row);
+	fbf = SCRN_BUF_FGRND(screen, inx);
+	fbb = SCRN_BUF_BGRND(screen, inx);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	fb = SCRN_BUF_COLOR(screen, row);
+	fb = SCRN_BUF_COLOR(screen, inx);
     });
     while (last > 0) {
 	if ((a[last - 1] & CHARDRAWN) == 0)
@@ -171,7 +172,7 @@ printLine(int row, int chr)
 	for (col = 0; col < last; col++) {
 	    ch = c[col];
 	    if_OPT_WIDE_CHARS(screen, {
-		ch = getXtermCell(screen, row, col);
+		ch = XTERM_CELL(row, col);
 	    });
 #if OPT_PRINT_COLORS
 	    if (screen->colorMode) {
@@ -224,6 +225,12 @@ printLine(int row, int chr)
 	    charToPrinter((int) ((cs == CSET_OUT)
 				 ? (ch == 0x7f ? 0x5f : (ch + 0x5f))
 				 : ch));
+	    if_OPT_WIDE_CHARS(screen, {
+		if ((ch = XTERM_CELL_C1(row, col)) != 0)
+		    charToPrinter(ch);
+		if ((ch = XTERM_CELL_C2(row, col)) != 0)
+		    charToPrinter(ch);
+	    });
 	}
 	if (screen->print_attributes) {
 	    send_SGR(0, NO_COLOR, NO_COLOR);
@@ -488,7 +495,7 @@ xtermAutoPrint(int chr)
 
     if (screen->printer_controlmode == 1) {
 	TRACE(("AutoPrint %d\n", chr));
-	printLine(screen->cursor_row, chr);
+	printLine(screen->cursorp.row, chr);
 	if (Printer != 0)
 	    fflush(Printer);
     }

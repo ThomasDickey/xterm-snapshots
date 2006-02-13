@@ -1,12 +1,12 @@
-/* $XTermId: doublechr.c,v 1.43 2005/08/05 01:25:39 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.45 2006/02/13 01:14:58 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/doublechr.c,v 3.17 2005/08/05 01:25:39 dickey Exp $
+ * $XFree86: xc/programs/xterm/doublechr.c,v 3.18 2006/02/13 01:14:58 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2004,2005 by Thomas E. Dickey
+Copyright 1997-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -152,10 +152,7 @@ discard_font(TScreen * screen, XTermFonts * data)
 	free(data->fn);
 	data->fn = 0;
     }
-    if (data->fs != 0) {
-	XFreeFont(screen->display, data->fs);
-	data->fs = 0;
-    }
+    data->fs = xtermCloseFont(screen, data->fs);
 }
 
 int
@@ -239,13 +236,13 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
 
     TRACE(("xterm_DoubleGC %s %d: %s\n", flags & BOLD ? "BOLD" : "NORM", n, name));
 
-    if ((data->fs = XLoadQueryFont(screen->display, name)) == 0) {
+    if ((data->fs = xtermOpenFont(screen, name)) == 0) {
 	/* Retry with * in resolutions */
 	char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
 
 	if (!nname)
 	    return 0;
-	if ((data->fs = XLoadQueryFont(screen->display, nname)) == 0) {
+	if ((data->fs = xtermOpenFont(screen, nname)) == 0) {
 	    XtFree(nname);
 	    return 0;
 	}

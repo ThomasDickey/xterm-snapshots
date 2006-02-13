@@ -1,13 +1,9 @@
-/* $XTermId: input.c,v 1.174 2005/09/18 23:48:12 tom Exp $ */
+/* $XTermId: input.c,v 1.176 2006/02/13 01:14:59 tom Exp $ */
+
+/* $XFree86: xc/programs/xterm/input.c,v 3.75 2006/02/13 01:14:59 dickey Exp $ */
 
 /*
- *	$Xorg: input.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
- */
-
-/* $XFree86: xc/programs/xterm/input.c,v 3.73 2005/09/18 23:48:12 dickey Exp $ */
-
-/*
- * Copyright 1999-2004,2005 by Thomas E. Dickey
+ * Copyright 1999-2005,2006 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

@@ -1,11 +1,11 @@
+/* $XTermId: tabs.c,v 1.26 2006/02/13 01:14:59 tom Exp $ */
+
 /*
- *	$XFree86: xc/programs/xterm/tabs.c,v 3.12 2005/04/22 00:21:54 dickey Exp $
+ *	$XFree86: xc/programs/xterm/tabs.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
  */
 
-/* $Xorg: tabs.c,v 1.3 2000/08/17 19:55:09 cpqbld Exp $ */
-
 /*
- * Copyright 2000-2002,2005 by Thomas E. Dickey
+ * Copyright 2000-2005,2006 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

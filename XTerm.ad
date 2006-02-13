@@ -1,10 +1,5 @@
-! $Xorg: XTerm.ad,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
-!
-!
-!
-!
-! $XTermId: XTerm.ad,v 1.71 2006/01/04 02:10:17 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.33 2006/01/04 02:10:17 dickey Exp $
+! $XTermId: XTerm.ad,v 1.76 2006/02/13 01:14:58 tom Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.35 2006/02/13 01:14:58 dickey Exp $
 
 *saveLines: 1024
 
@@ -55,6 +50,7 @@
 *vtMenu*scrollkey*Label:  Scroll to Bottom on Key Press
 *vtMenu*scrollttyoutput*Label:  Scroll to Bottom on Tty Output
 *vtMenu*allow132*Label: Allow 80/132 Column Switching
+*vtMenu*selectToClipboard*Label: Select to Clipboard
 *vtMenu*cursesemul*Label:  Enable Curses Emulation
 *vtMenu*visualbell*Label:  Enable Visual Bell
 *vtMenu*poponbell*Label:  Enable Pop on Bell
@@ -185,4 +181,7 @@
 *SimpleMenu*borderWidth: 2
 
 ! Here is a pattern that is useful for double-clicking on a URL:
-*charClass: 33:48,35:48,37-38:48,43-47:48,58:48,61:48,63-64:48,126:48
+!*charClass: 33:48,35:48,37-38:48,43-47:48,58:48,61:48,63-64:48,126:48
+!
+! Alternatively,
+!*on2Clicks: regex [[:alpha:]]+://([[:alnum:]!#+,./=?@~-]|(%[[:xdigit:]][[:xdigit:]]))+

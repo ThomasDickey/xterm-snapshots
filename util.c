@@ -1,10 +1,6 @@
-/* $XTermId: util.c,v 1.259 2006/01/04 02:10:27 tom Exp $ */
+/* $XTermId: util.c,v 1.267 2006/02/13 01:14:59 tom Exp $ */
 
-/*
- *	$Xorg: util.c,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
- */
-
-/* $XFree86: xc/programs/xterm/util.c,v 3.94 2006/01/04 02:10:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.96 2006/02/13 01:14:59 dickey Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -216,7 +212,7 @@ AddToRefresh(TScreen * screen)
  * If the selection is not contained within the scrolled region, clear it.
  */
 static void
-adjustHiliteOnFwdScroll(TScreen * screen, int amount, Boolean all_lines)
+adjustHiliteOnFwdScroll(TScreen * screen, int amount, Bool all_lines)
 {
     int lo_row = (all_lines
 		  ? (screen->bot_marg - screen->savelines)
@@ -228,46 +224,46 @@ adjustHiliteOnFwdScroll(TScreen * screen, int amount, Boolean all_lines)
 	    amount,
 	    all_lines ? "all" : "visible"));
     TRACE2(("  before highlite %d.%d .. %d.%d\n",
-	    screen->startHRow,
-	    screen->startHCol,
-	    screen->endHRow,
-	    screen->endHCol));
+	    screen->startH.row,
+	    screen->startH.col,
+	    screen->endH.row,
+	    screen->endH.col));
     TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
     TRACE2(("  limits  %d..%d\n", lo_row, hi_row));
 
-    if (screen->startHRow >= lo_row
-	&& screen->startHRow - amount < lo_row) {
+    if (screen->startH.row >= lo_row
+	&& screen->startH.row - amount < lo_row) {
 	/* truncate the selection because its start would move out of region */
-	if (lo_row + amount <= screen->endHRow) {
+	if (lo_row + amount <= screen->endH.row) {
 	    TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
-		    screen->startHRow,
-		    screen->startHCol,
+		    screen->startH.row,
+		    screen->startH.col,
 		    lo_row + amount,
 		    0));
-	    screen->startHRow = lo_row + amount;
-	    screen->startHCol = 0;
+	    screen->startH.row = lo_row + amount;
+	    screen->startH.col = 0;
 	} else {
 	    TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
-		    screen->startHRow,
-		    screen->startHCol,
-		    screen->endHRow,
-		    screen->endHCol,
+		    screen->startH.row,
+		    screen->startH.col,
+		    screen->endH.row,
+		    screen->endH.col,
 		    -amount,
 		    lo_row,
 		    hi_row));
 	    ScrnDisownSelection(screen);
 	}
-    } else if (screen->startHRow <= hi_row && screen->endHRow > hi_row) {
+    } else if (screen->startH.row <= hi_row && screen->endH.row > hi_row) {
 	ScrnDisownSelection(screen);
-    } else if (screen->startHRow < lo_row && screen->endHRow > lo_row) {
+    } else if (screen->startH.row < lo_row && screen->endH.row > lo_row) {
 	ScrnDisownSelection(screen);
     }
 
     TRACE2(("  after highlite %d.%d .. %d.%d\n",
-	    screen->startHRow,
-	    screen->startHCol,
-	    screen->endHRow,
-	    screen->endHCol));
+	    screen->startH.row,
+	    screen->startH.col,
+	    screen->endH.row,
+	    screen->endH.col));
 }
 
 /*
@@ -285,45 +281,45 @@ adjustHiliteOnBakScroll(TScreen * screen, int amount)
 	    amount,
 	    "visible"));
     TRACE2(("  before highlite %d.%d .. %d.%d\n",
-	    screen->startHRow,
-	    screen->startHCol,
-	    screen->endHRow,
-	    screen->endHCol));
+	    screen->startH.row,
+	    screen->startH.col,
+	    screen->endH.row,
+	    screen->endH.col));
     TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
 
-    if (screen->endHRow >= hi_row
-	&& screen->endHRow + amount > hi_row) {
+    if (screen->endH.row >= hi_row
+	&& screen->endH.row + amount > hi_row) {
 	/* truncate the selection because its start would move out of region */
-	if (hi_row - amount >= screen->startHRow) {
+	if (hi_row - amount >= screen->startH.row) {
 	    TRACE2(("truncate selection by changing start %d.%d to %d.%d\n",
-		    screen->startHRow,
-		    screen->startHCol,
+		    screen->startH.row,
+		    screen->startH.col,
 		    hi_row - amount,
 		    0));
-	    screen->endHRow = hi_row - amount;
-	    screen->endHCol = 0;
+	    screen->endH.row = hi_row - amount;
+	    screen->endH.col = 0;
 	} else {
 	    TRACE2(("deselect because %d.%d .. %d.%d shifted %d is outside margins %d..%d\n",
-		    screen->startHRow,
-		    screen->startHCol,
-		    screen->endHRow,
-		    screen->endHCol,
+		    screen->startH.row,
+		    screen->startH.col,
+		    screen->endH.row,
+		    screen->endH.col,
 		    amount,
 		    lo_row,
 		    hi_row));
 	    ScrnDisownSelection(screen);
 	}
-    } else if (screen->endHRow >= lo_row && screen->startHRow < lo_row) {
+    } else if (screen->endH.row >= lo_row && screen->startH.row < lo_row) {
 	ScrnDisownSelection(screen);
-    } else if (screen->endHRow > hi_row && screen->startHRow > hi_row) {
+    } else if (screen->endH.row > hi_row && screen->startH.row > hi_row) {
 	ScrnDisownSelection(screen);
     }
 
     TRACE2(("  after highlite %d.%d .. %d.%d\n",
-	    screen->startHRow,
-	    screen->startHCol,
-	    screen->endHRow,
-	    screen->endHCol));
+	    screen->startH.row,
+	    screen->startH.col,
+	    screen->endH.row,
+	    screen->endH.col));
 }
 
 /*
@@ -914,8 +910,8 @@ ClearInLine(TScreen * screen, int row, int col, unsigned len)
 
     TRACE(("ClearInLine(row=%d, col=%d, len=%d) vs %d..%d\n",
 	   row, col, len,
-	   screen->startHRow,
-	   screen->startHCol));
+	   screen->startH.row,
+	   screen->startH.col));
 
     if (ScrnHaveSelection(screen)
 	&& ScrnIsLineInSelection(screen, row)) {
@@ -1446,6 +1442,7 @@ GetColors(XtermWidget tw, ScrnColors * pColors)
 void
 ChangeColors(XtermWidget tw, ScrnColors * pNew)
 {
+    Bool repaint = False;
     TScreen *screen = &tw->screen;
 #if OPT_TEK4014
     Window tek = TWindow(screen);
@@ -1456,37 +1453,46 @@ ChangeColors(XtermWidget tw, ScrnColors * pNew)
     if (COLOR_DEFINED(pNew, TEXT_CURSOR)) {
 	T_COLOR(screen, TEXT_CURSOR) = COLOR_VALUE(pNew, TEXT_CURSOR);
 	TRACE(("... TEXT_CURSOR: %#lx\n", T_COLOR(screen, TEXT_CURSOR)));
+	/* no repaint needed */
     } else if ((T_COLOR(screen, TEXT_CURSOR) == T_COLOR(screen, TEXT_FG)) &&
 	       (COLOR_DEFINED(pNew, TEXT_FG))) {
 	T_COLOR(screen, TEXT_CURSOR) = COLOR_VALUE(pNew, TEXT_FG);
 	TRACE(("... TEXT_CURSOR: %#lx\n", T_COLOR(screen, TEXT_CURSOR)));
+	repaint = screen->Vshow;
     }
 
     if (COLOR_DEFINED(pNew, TEXT_FG)) {
 	Pixel fg = COLOR_VALUE(pNew, TEXT_FG);
 	T_COLOR(screen, TEXT_FG) = fg;
 	TRACE(("... TEXT_FG: %#lx\n", T_COLOR(screen, TEXT_FG)));
-	XSetForeground(screen->display, NormalGC(screen), fg);
-	XSetBackground(screen->display, ReverseGC(screen), fg);
-	XSetForeground(screen->display, NormalBoldGC(screen), fg);
-	XSetBackground(screen->display, ReverseBoldGC(screen), fg);
+	if (screen->Vshow) {
+	    XSetForeground(screen->display, NormalGC(screen), fg);
+	    XSetBackground(screen->display, ReverseGC(screen), fg);
+	    XSetForeground(screen->display, NormalBoldGC(screen), fg);
+	    XSetBackground(screen->display, ReverseBoldGC(screen), fg);
+	    repaint = True;
+	}
     }
 
     if (COLOR_DEFINED(pNew, TEXT_BG)) {
 	Pixel bg = COLOR_VALUE(pNew, TEXT_BG);
 	T_COLOR(screen, TEXT_BG) = bg;
 	TRACE(("... TEXT_BG: %#lx\n", T_COLOR(screen, TEXT_BG)));
-	XSetBackground(screen->display, NormalGC(screen), bg);
-	XSetForeground(screen->display, ReverseGC(screen), bg);
-	XSetBackground(screen->display, NormalBoldGC(screen), bg);
-	XSetForeground(screen->display, ReverseBoldGC(screen), bg);
-	XSetWindowBackground(screen->display, VWindow(screen),
-			     T_COLOR(screen, TEXT_BG));
+	if (screen->Vshow) {
+	    XSetBackground(screen->display, NormalGC(screen), bg);
+	    XSetForeground(screen->display, ReverseGC(screen), bg);
+	    XSetBackground(screen->display, NormalBoldGC(screen), bg);
+	    XSetForeground(screen->display, ReverseBoldGC(screen), bg);
+	    XSetWindowBackground(screen->display, VWindow(screen),
+				 T_COLOR(screen, TEXT_BG));
+	    repaint = True;
+	}
     }
 #if OPT_HIGHLIGHT_COLOR
     if (COLOR_DEFINED(pNew, HIGHLIGHT_BG)) {
 	T_COLOR(screen, HIGHLIGHT_BG) = COLOR_VALUE(pNew, HIGHLIGHT_BG);
 	TRACE(("... HIGHLIGHT_BG: %#lx\n", T_COLOR(screen, HIGHLIGHT_BG)));
+	repaint = screen->Vshow;
     }
 #endif
 
@@ -1513,24 +1519,31 @@ ChangeColors(XtermWidget tw, ScrnColors * pNew)
 	if (tek)
 	    XDefineCursor(screen->display, tek, screen->arrow);
 #endif
+	/* no repaint needed */
+    }
+
+    if (COLOR_DEFINED(pNew, TEXT_FG) ||
+	COLOR_DEFINED(pNew, TEXT_BG) ||
+	COLOR_DEFINED(pNew, TEXT_CURSOR)) {
+	set_cursor_gcs(screen);
     }
 #if OPT_TEK4014
     if (COLOR_DEFINED(pNew, TEK_FG) ||
-	COLOR_DEFINED(pNew, TEK_BG) ||
-	COLOR_DEFINED(pNew, TEK_CURSOR)) {
+	COLOR_DEFINED(pNew, TEK_BG)) {
+	ChangeTekColors(screen, pNew);
+	if (screen->Tshow) {
+	    XClearWindow(screen->display, tek);
+	    TekExpose((Widget) NULL, (XEvent *) NULL, (Region) NULL);
+	}
+    } else if (COLOR_DEFINED(pNew, TEK_CURSOR)) {
 	ChangeTekColors(screen, pNew);
     }
 #endif
-    set_cursor_gcs(screen);
-    XClearWindow(screen->display, VWindow(screen));
-    ScrnRefresh(screen, 0, 0, MaxRows(screen),
-		MaxCols(screen), False);
-#if OPT_TEK4014
-    if (screen->Tshow) {
-	XClearWindow(screen->display, tek);
-	TekExpose((Widget) NULL, (XEvent *) NULL, (Region) NULL);
+    if (repaint) {
+	XClearWindow(screen->display, VWindow(screen));
+	ScrnRefresh(screen, 0, 0, MaxRows(screen),
+		    MaxCols(screen), False);
     }
-#endif
 }
 
 void
@@ -2250,8 +2263,8 @@ drawXtermText(TScreen * screen,
 	    isMissing = (ch != HIDDEN_CHAR)
 		&& (xtermMissingChar(term, ch,
 				     ((on_wide || iswide((int) ch))
-				      && screen->fnt_dwd)
-				     ? screen->fnt_dwd
+				      && screen->fnts[fWide])
+				     ? screen->fnts[fWide]
 				     : font));
 #else
 	    isMissing = xtermMissingChar(term, ch, font);
@@ -2308,7 +2321,7 @@ drawXtermText(TScreen * screen,
 	unsigned ch = text[0] | (text2[0] << 8);
 	int wideness = (!IsIcon(screen)
 			&& ((on_wide || iswide((int) ch) != 0)
-			    && (screen->fnt_dwd != NULL)));
+			    && (screen->fnts[fWide] != NULL)));
 	unsigned char *endtext = text + len;
 	if (screen->draw_len < len) {
 	    screen->draw_len = (len + 1) * 2;
@@ -2341,7 +2354,7 @@ drawXtermText(TScreen * screen,
 	    if (screen->unicode_font
 		&& *text2 == 0
 		&& (*text == 0x7f || *text < 0x20)) {
-		int ni = dec2ucs(*text == 0x7f ? 0 : *text);
+		int ni = dec2ucs((unsigned) ((*text == 0x7f) ? 0 : *text));
 		UCS2SBUF(n, ni);
 	    }
 #endif /* OPT_MINI_LUIT */
@@ -2365,16 +2378,16 @@ drawXtermText(TScreen * screen,
 	if (flags & (DOUBLEHFONT | DOUBLEWFONT)) {
 	    ;			/* Do nothing: font is already set */
 	} else if (wideness
-		   && (screen->fnt_dwd->fid || screen->fnt_dwdb->fid)) {
+		   && (screen->fnts[fWide]->fid || screen->fnts[fWBold]->fid)) {
 	    underline_len = real_length = len * 2;
 	    if ((flags & BOLDATTR(screen)) != 0
-		&& screen->fnt_dwdb->fid) {
-		XSetFont(screen->display, gc, screen->fnt_dwdb->fid);
-		ascent_adjust = (screen->fnt_dwdb->ascent
+		&& screen->fnts[fWBold]->fid) {
+		XSetFont(screen->display, gc, screen->fnts[fWBold]->fid);
+		ascent_adjust = (screen->fnts[fWBold]->ascent
 				 - NormalFont(screen)->ascent);
 	    } else {
-		XSetFont(screen->display, gc, screen->fnt_dwd->fid);
-		ascent_adjust = (screen->fnt_dwd->ascent
+		XSetFont(screen->display, gc, screen->fnts[fWide]->fid);
+		ascent_adjust = (screen->fnts[fWide]->ascent
 				 - NormalFont(screen)->ascent);
 	    }
 	    /* fix ascent */
@@ -2452,8 +2465,8 @@ xtermSizeHints(XtermWidget xw, XSizeHints * sizehints, int scrollbarWidth)
     TRACE(("   toolbar   %d\n", ToolbarHeight(xw)));
 
     sizehints->base_height += ToolbarHeight(xw);
-    sizehints->base_height += xw->core.border_width * 2;
-    sizehints->base_width += xw->core.border_width * 2;
+    sizehints->base_height += BorderWidth(xw) * 2;
+    sizehints->base_width += BorderWidth(xw) * 2;
 #endif
 
     sizehints->width_inc = FontWidth(screen);

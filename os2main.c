@@ -1,13 +1,10 @@
-/* $XTermId: os2main.c,v 1.215 2006/01/04 02:10:26 tom Exp $ */
+/* $XTermId: os2main.c,v 1.218 2006/02/13 01:14:59 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
  */
 
-#ifndef lint
-static char *rid = "$XConsortium: main.c,v 1.227.1.2 95/06/29 18:13:15 kaleb Exp $";
-#endif /* lint */
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.82 2006/01/04 02:10:26 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.84 2006/02/13 01:14:59 dickey Exp $ */
 
 /***********************************************************
 
@@ -914,6 +911,7 @@ int
 main(int argc, char **argv ENVP_ARG)
 {
     Widget form_top, menu_top;
+    Dimension menu_high;
     TScreen *screen;
     int mode;
     char *my_class = DEFCLASS;
@@ -1138,7 +1136,7 @@ main(int argc, char **argv ENVP_ARG)
 	break;
     }
 
-    SetupMenus(toplevel, &form_top, &menu_top);
+    SetupMenus(toplevel, &form_top, &menu_top, &menu_high);
 
     term = (XtermWidget) XtVaCreateManagedWidget("vt100", xtermWidgetClass,
 						 form_top,
@@ -1150,6 +1148,7 @@ main(int argc, char **argv ENVP_ARG)
 						 XtNright, XawChainRight,
 						 XtNtop, XawChainTop,
 						 XtNbottom, XawChainBottom,
+						 XtNmenuHeight, menu_high,
 #endif
 						 (XtPointer) 0);
 

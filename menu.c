@@ -1,9 +1,8 @@
-/* $XTermId: menu.c,v 1.191 2005/11/13 23:10:36 tom Exp $ */
+/* $XTermId: menu.c,v 1.202 2006/02/13 01:14:59 tom Exp $ */
 
-/* $Xorg: menu.c,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $ */
 /*
 
-Copyright 1999-2004,2005 by Thomas E. Dickey
+Copyright 1999-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -47,7 +46,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.64 2005/11/13 23:10:36 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.66 2006/02/13 01:14:59 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -124,7 +123,6 @@ static void do_autowrap        PROTO_XT_CALLBACK_ARGS;
 static void do_backarrow       PROTO_XT_CALLBACK_ARGS;
 static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS;
 static void do_continue        PROTO_XT_CALLBACK_ARGS;
-static void do_cursesemul      PROTO_XT_CALLBACK_ARGS;
 static void do_delete_del      PROTO_XT_CALLBACK_ARGS;
 static void do_hardreset       PROTO_XT_CALLBACK_ARGS;
 static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
@@ -142,6 +140,7 @@ static void do_scrollbar       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollkey       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
+static void do_selectClipboard PROTO_XT_CALLBACK_ARGS;
 static void do_softreset       PROTO_XT_CALLBACK_ARGS;
 static void do_sun_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
@@ -283,7 +282,7 @@ MenuEntry vtMenuEntries[] = {
     { "scrollkey",	do_scrollkey,	NULL },
     { "scrollttyoutput",do_scrollttyoutput, NULL },
     { "allow132",	do_allow132,	NULL },
-    { "cursesemul",	do_cursesemul,	NULL },
+    { "selectToClipboard",do_selectClipboard, NULL },
     { "visualbell",	do_visualbell,	NULL },
     { "poponbell",	do_poponbell,	NULL },
     { "marginbell",	do_marginbell,	NULL },
@@ -754,13 +753,6 @@ handle_send_signal(Widget gw GCC_UNUSED, int sig)
  * action routines
  */
 
-/* ARGSUSED */
-void
-DoSecureKeyboard(Time tp GCC_UNUSED)
-{
-    do_securekbd(vt_shell[mainMenu].w, (XtPointer) 0, (XtPointer) 0);
-}
-
 static void
 do_securekbd(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
@@ -784,6 +776,26 @@ do_securekbd(Widget gw GCC_UNUSED,
 	}
     }
     update_securekbd();
+}
+
+/* ARGSUSED */
+void
+HandleSecure(Widget w GCC_UNUSED,
+	     XEvent * event GCC_UNUSED,		/* unused */
+	     String * params GCC_UNUSED,	/* [0] = volume */
+	     Cardinal *param_count GCC_UNUSED)	/* 0 or 1 */
+{
+#if 0
+    Time ev_time = CurrentTime;
+
+    if ((event->xany.type == KeyPress) ||
+	(event->xany.type == KeyRelease))
+	ev_time = event->xkey.time;
+    else if ((event->xany.type == ButtonPress) ||
+	     (event->xany.type == ButtonRelease))
+	ev_time = event->xbutton.time;
+#endif
+    do_securekbd(vt_shell[mainMenu].w, (XtPointer) 0, (XtPointer) 0);
 }
 
 static void
@@ -1153,6 +1165,17 @@ do_scrollttyoutput(Widget gw GCC_UNUSED,
 }
 
 static void
+do_selectClipboard(Widget gw GCC_UNUSED,
+		   XtPointer closure GCC_UNUSED,
+		   XtPointer data GCC_UNUSED)
+{
+    TScreen *screen = &term->screen;
+
+    screen->selectToClipboard = !screen->selectToClipboard;
+    update_selectToClipboard();
+}
+
+static void
 do_allow132(Widget gw GCC_UNUSED,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
@@ -1192,6 +1215,7 @@ handle_tekshow(Widget gw GCC_UNUSED, Bool allowswitch)
 {
     TScreen *screen = &term->screen;
 
+    TRACE(("Show tek-window\n"));
     if (!screen->Tshow) {	/* not showing, turn on */
 	set_tek_visibility(True);
     } else if (screen->Vshow || allowswitch) {	/* is showing, turn off */
@@ -1490,6 +1514,7 @@ handle_vtshow(Widget gw GCC_UNUSED, Bool allowswitch)
 {
     TScreen *screen = &term->screen;
 
+    TRACE(("Show vt-window\n"));
     if (!screen->Vshow) {	/* not showing, turn on */
 	set_vt_visibility(True);
     } else if (screen->Tshow || allowswitch) {	/* is showing, turn off */
@@ -1864,6 +1889,16 @@ HandleJumpscroll(Widget w,
 		 Cardinal *param_count)
 {
     handle_vt_toggle(do_jumpscroll, term->screen.jumpscroll,
+		     params, *param_count, w);
+}
+
+void
+HandleSetSelect(Widget w,
+		XEvent * event GCC_UNUSED,
+		String * params,
+		Cardinal *param_count)
+{
+    handle_vt_toggle(do_selectClipboard, term->screen.selectToClipboard,
 		     params, *param_count, w);
 }
 
@@ -2275,11 +2310,13 @@ InitPopup(Widget gw,
 	XtRemoveCallback(gw, XtNpopupCallback, InitPopup, closure);
 }
 
-static void
+static Dimension
 SetupShell(Widget *menus, MenuList * shell, int n, int m)
 {
     char temp[80];
     char *external_name = 0;
+    Dimension button_height;
+    Dimension button_border;
 
     shell[n].w = XtVaCreatePopupShell(menu_names[n].internal_name,
 				      simpleMenuWidgetClass,
@@ -2307,19 +2344,28 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
 					 XtNmenuName, menu_names[n].internal_name,
 					 XtNlabel, external_name,
 					 (XtPointer) 0);
-}
+    XtVaGetValues(shell[n].b,
+		  XtNheight, &button_height,
+		  XtNborderWidth, &button_border,
+		  (XtPointer) 0);
 
-#endif
+    return button_height + (button_border * 2);
+}
+#endif /* OPT_TOOLBAR */
 
 void
-SetupMenus(Widget shell, Widget *forms, Widget *menus)
+SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
 {
 #if OPT_TOOLBAR
-    Cardinal n;
+    Dimension button_height;
+    Dimension toolbar_hSpace;
+    Dimension toolbar_border;
     Arg args[10];
 #endif
 
     TRACE(("SetupMenus(%s)\n", shell == toplevel ? "vt100" : "tek4014"));
+
+    *menu_high = 0;
 
     if (shell == toplevel) {
 	XawSimpleMenuAddGlobalActions(app_con);
@@ -2345,23 +2391,43 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus)
     XtSetArg(args[3], XtNleft, XawChainLeft);
     XtSetArg(args[4], XtNright, XawChainLeft);
 
-    if (resource.toolBar)
+    if (resource.toolBar) {
 	*menus = XtCreateManagedWidget("menubar", boxWidgetClass, *forms,
 				       args, 5);
-    else
+    } else {
 	*menus = XtCreateWidget("menubar", boxWidgetClass, *forms, args, 5);
+    }
+
+    /*
+     * The toolbar widget's height is not necessarily known yet.  If the
+     * toolbar is not created as a managed widget, we can still make a good
+     * guess about its height by collecting the widget's other resource values.
+     */
+    XtVaGetValues(*menus,
+		  XtNhSpace, &toolbar_hSpace,
+		  XtNborderWidth, &toolbar_border,
+		  (XtPointer) 0);
 
     if (shell == toplevel) {	/* vt100 */
-	for (n = mainMenu; n <= fontMenu; n++) {
-	    SetupShell(menus, vt_shell, n, n - 1);
+	int j;
+	for (j = mainMenu; j <= fontMenu; j++) {
+	    button_height = SetupShell(menus, vt_shell, j, j - 1);
 	}
     }
 #if OPT_TEK4014
     else {			/* tek4014 */
-	SetupShell(menus, tek_shell, mainMenu, -1);
-	SetupShell(menus, tek_shell, tekMenu, mainMenu);
+	button_height = SetupShell(menus, tek_shell, mainMenu, -1);
+	button_height = SetupShell(menus, tek_shell, tekMenu, mainMenu);
     }
 #endif
+
+    /*
+     * Tell the main program how high the toolbar is, to help with the initial
+     * layout.
+     */
+    *menu_high = (button_height + 2 * (toolbar_hSpace + toolbar_border));
+    TRACE(("...menuHeight:%d = (%d + 2 * (%d + %d))\n",
+	   *menu_high, button_height, toolbar_hSpace, toolbar_border));
 
 #else
     *forms = shell;
@@ -2389,29 +2455,39 @@ repairSizeHints(void)
 }
 
 #if OPT_TOOLBAR
-static int called_SetupToolbar[2] =
-{False, False};
+#define INIT_POPUP(s, n) InitPopup(s[n].w, menu_names[n].internal_name, 0)
 
-static void
-SetupToolbar(int which)
+static Bool
+InitWidgetMenu(Widget shell)
 {
-    int n;
+    Bool result = False;
 
-    TRACE(("SetupToolbar(%s)\n", which ? "vt100" : "tek4014"));
-
-    if (which) {		/* vt100 */
-	for (n = mainMenu; n <= fontMenu; n++) {
-	    InitPopup(vt_shell[n].w, menu_names[n].internal_name, 0);
+    TRACE(("InitWidgetMenu(%p)\n", shell));
+    if (term != 0) {
+	if (shell == toplevel) {	/* vt100 */
+	    if (!term->init_vt_menu) {
+		INIT_POPUP(vt_shell, mainMenu);
+		INIT_POPUP(vt_shell, vtMenu);
+		INIT_POPUP(vt_shell, fontMenu);
+		term->init_vt_menu = True;
+		TRACE(("...InitWidgetMenu(vt)\n"));
+	    }
+	    result = term->init_vt_menu;
 	}
-    }
 #if OPT_TEK4014
-    else {			/* tek4014 */
-	InitPopup(tek_shell[mainMenu].w, menu_names[mainMenu].internal_name, 0);
-	InitPopup(tek_shell[tekMenu].w, menu_names[tekMenu].internal_name, 0);
-    }
+	else if (tekWidget) {	/* tek4014 */
+	    if (!term->init_tek_menu) {
+		INIT_POPUP(tek_shell, mainMenu);
+		INIT_POPUP(tek_shell, tekMenu);
+		term->init_tek_menu = True;
+		TRACE(("...InitWidgetMenu(tek)\n"));
+	    }
+	    result = term->init_tek_menu;
+	}
 #endif
-    called_SetupToolbar[which] = True;
-    ShowToolbar(resource.toolBar);
+    }
+    TRACE(("...InitWidgetMenu ->%d\n", result));
+    return result;
 }
 
 static TbInfo *
@@ -2486,12 +2562,11 @@ ShowToolbar(Bool enable)
 	Bell(XkbBI_MinorError, 0);
     } else {
 	if (enable) {
-	    int which = !TEK4014_ACTIVE(&(term->screen));
-	    if (!called_SetupToolbar[which])
-		SetupToolbar(which);
-	    show_toolbar((Widget) term);
+	    if (InitWidgetMenu(toplevel))
+		show_toolbar((Widget) term);
 #if OPT_TEK4014
-	    show_toolbar((Widget) tekWidget);
+	    if (InitWidgetMenu(tekshellwidget))
+		show_toolbar((Widget) tekWidget);
 #endif
 	} else {
 	    hide_toolbar((Widget) term);
@@ -2756,6 +2831,14 @@ update_scrollttyoutput(void)
 }
 
 void
+update_selectToClipboard(void)
+{
+    update_menu_item(term->screen.vtMenu,
+		     vtMenuEntries[vtMenu_selectToClipboard].widget,
+		     term->screen.selectToClipboard);
+}
+
+void
 update_allow132(void)
 {
     update_menu_item(term->screen.vtMenu,
@@ -2766,9 +2849,11 @@ update_allow132(void)
 void
 update_cursesemul(void)
 {
+#if 0				/* 2006-2-12: no longer menu entry */
     update_menu_item(term->screen.vtMenu,
 		     vtMenuEntries[vtMenu_cursesemul].widget,
 		     term->screen.curses);
+#endif
 }
 
 void

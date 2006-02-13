@@ -1,15 +1,13 @@
-/* $XTermId: Tekproc.c,v 1.131 2005/11/03 13:17:27 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.135 2006/02/13 01:14:57 tom Exp $ */
 
 /*
- * $Xorg: Tekproc.c,v 1.5 2001/02/09 02:06:02 xorgcvs Exp $
- *
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.55 2005/11/03 13:17:27 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.57 2006/02/13 01:14:57 dickey Exp $ */
 
 /*
 
-Copyright 2001-2004,2005 by Thomas E. Dickey
+Copyright 2001-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -338,6 +336,7 @@ int
 TekInit(void)
 {
     Widget form_top, menu_top;
+    Dimension menu_high;
 
     if (!Tfailed
 	&& tekWidget == 0) {
@@ -349,7 +348,7 @@ TekInit(void)
 			       toplevel, ourTopLevelShellArgs,
 			       number_ourTopLevelShellArgs);
 
-	SetupMenus(tekshellwidget, &form_top, &menu_top);
+	SetupMenus(tekshellwidget, &form_top, &menu_top, &menu_high);
 
 	/* this causes the Realize method to be called */
 	tekWidget = (TekWidget)
@@ -363,6 +362,7 @@ TekInit(void)
 				    XtNleft, XawChainLeft,
 				    XtNright, XawChainRight,
 				    XtNbottom, XawChainBottom,
+				    XtNmenuHeight, menu_high,
 #endif
 				    (XtPointer) 0);
 #if OPT_TOOLBAR
@@ -723,6 +723,12 @@ Tekparse(void)
 	     */
 	    TRACE(("case: do osc escape\n"));
 	    {
+		/*
+		 * do_osc() can call TekExpose(), which calls dorefresh(),
+		 * and sends us recurring here - don't do that...
+		 */
+		static int nested;
+
 		Char buf2[512];
 		IChar c2;
 		unsigned len = 0;
@@ -733,8 +739,11 @@ Tekparse(void)
 		    buf2[len++] = c2;
 		}
 		buf2[len] = 0;
-		if (c2 == BEL)
-		    do_osc(buf2, len, BEL);
+		if (!nested++) {
+		    if (c2 == BEL)
+			do_osc(buf2, len, BEL);
+		}
+		--nested;
 	    }
 	    Tparsestate = curstate;
 	    break;
@@ -1439,7 +1448,8 @@ TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
 	XCreateWindow(screen->display,
 		      XtWindow(SHELL_OF(tekWidget)),
 		      tekWidget->core.x, tekWidget->core.y,
-		      tekWidget->core.width, tekWidget->core.height, BorderWidth(tekWidget),
+		      tekWidget->core.width, tekWidget->core.height,
+		      BorderWidth(tekWidget),
 		      (int) tekWidget->core.depth,
 		      InputOutput, CopyFromParent,
 		      ((*valuemaskp) | CWBackPixel | CWWinGravity),
