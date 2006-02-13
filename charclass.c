@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.12 2006/01/04 02:10:19 tom Exp $ */
+/* $XTermId: charclass.c,v 1.14 2006/02/13 01:14:58 tom Exp $ */
 
 /*
  * Compact and efficient reimplementation of the
@@ -22,7 +22,7 @@
  * but merging in new intervals is significantly more hassle and
  * not worth the effort here.
  */
-/* $XFree86: xc/programs/xterm/charclass.c,v 1.6 2006/01/04 02:10:19 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charclass.c,v 1.7 2006/02/13 01:14:58 dickey Exp $ */
 
 #include <xterm.h>
 #include <charclass.h>
@@ -139,7 +139,7 @@ CharacterClass(int c)
     return cclass;
 }
 
-#if OPT_TRACE || defined(NO_LEAKS)
+#ifdef NO_LEAKS
 void
 noleaks_CharacterClass(void)
 {

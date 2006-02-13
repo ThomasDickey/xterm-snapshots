@@ -1,13 +1,11 @@
-# $XTermId: terminfo,v 1.111 2005/11/03 13:17:28 tom Exp $
-#
-# $Xorg: terminfo,v 1.3 2000/08/17 19:55:10 cpqbld Exp $
+# $XTermId: terminfo,v 1.114 2006/02/13 01:14:59 tom Exp $
 #
 # meml locks memory above the cursor; memu unlocks (ala HP terminals)
 #
 # XFree86 updates/notes/new entries (including xterm-8bit, xterm-16color)
 # - Thomas E. Dickey
 #
-# $XFree86: xc/programs/xterm/terminfo,v 3.57 2005/11/03 13:17:28 dickey Exp $
+# $XFree86: xc/programs/xterm/terminfo,v 3.59 2006/02/13 01:14:59 dickey Exp $
 #
 # Special Capabilities:
 # --------------------
@@ -651,8 +649,6 @@ xterm-256color|xterm with 256 colors,
 	initc=\E]4;%p1%d;rgb\:%p2%{255}%*%{1000}%/%2.2X/%p3%{255}%*%{1000}%/%2.2X/%p4%{255}%*%{1000}%/%2.2X\E\\,
 	setab=\E[48;5;%p1%dm,
 	setaf=\E[38;5;%p1%dm,
-	setb=\E[48;5;%p1%dm,
-	setf=\E[38;5;%p1%dm,
 	use=xterm-new,
 xterm-88color|xterm with 88 colors,
 	colors#88,

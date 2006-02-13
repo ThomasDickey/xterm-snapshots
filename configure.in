@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.202 2006/01/04 02:10:24 tom Exp $
+dnl $XTermId: configure.in,v 1.206 2006/02/13 01:14:58 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.73 2006/01/04 02:10:24 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.74 2006/02/13 01:14:58 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -28,7 +28,7 @@ dnl
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.13.20020210)
+AC_PREREQ(2.13.20030927)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
 CF_CHECK_CACHE
@@ -595,6 +595,23 @@ if test "$enable_readline_mouse" = yes ; then
 	AC_DEFINE(OPT_READLINE,1)
 fi
 
+AC_MSG_CHECKING(if you want support for regular-expression selections)
+CF_ARG_DISABLE(regex,
+	[  --disable-regex         disable regular-expression selections],
+	[enable_regex=no],
+	[enable_regex=yes])
+AC_MSG_RESULT($enable_regex)
+if test "$enable_regex" = yes ; then
+	CF_WITH_PCRE
+	if test "$with_pcre" = no ; then
+		CF_REGEX
+		if test "X$cf_cv_regex" != "Xregex.h" ; then
+			AC_MSG_ERROR(Only POSIX or PCRE regular expressions are supported)
+		fi
+	fi
+	AC_DEFINE(OPT_SELECT_REGEX)
+fi
+
 AC_MSG_CHECKING(if you want support for right-scrollbar)
 CF_ARG_DISABLE(rightbar,
 	[  --disable-rightbar      disable right-scrollbar support],
@@ -737,6 +754,16 @@ if test "$enable_trace" = yes ; then
 	AC_DEFINE(OPT_TRACE)
 	EXTRASRCS="$EXTRASRCS trace.c"
 	EXTRAOBJS="$EXTRAOBJS trace.o"
+fi
+
+AC_MSG_CHECKING(if you want to test memory leaks)
+CF_ARG_DISABLE(leaks,
+	[  --disable-leaks         test: set to test memory leaks],
+	[disable_leaks=yes],
+	[disable_leaks=no])
+AC_MSG_RESULT($disable_leaks)
+if test "$disable_leaks" = yes ; then
+	AC_DEFINE(NO_LEAKS)
 fi
 
 CF_DISABLE_ECHO

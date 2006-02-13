@@ -1,7 +1,4 @@
-/*
- *	$Xorg: TekPrsTbl.c,v 1.3 2000/08/17 19:55:07 cpqbld Exp $
- */
-
+/* $XTermId: TekPrsTbl.c,v 1.8 2006/02/13 01:14:57 tom Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -25,7 +22,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/TekPrsTbl.c,v 3.3 2001/01/17 23:46:33 dawes Exp $ */
+/* $XFree86: xc/programs/xterm/TekPrsTbl.c,v 3.5 2006/02/13 01:14:57 dickey Exp $ */
 
 #include <Tekparse.h>
 

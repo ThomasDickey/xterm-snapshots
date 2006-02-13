@@ -1,13 +1,9 @@
-/* $XTermId: cursor.c,v 1.36 2005/08/05 01:25:39 tom Exp $ */
+/* $XTermId: cursor.c,v 1.39 2006/02/13 01:14:58 tom Exp $ */
+
+/* $XFree86: xc/programs/xterm/cursor.c,v 3.20 2006/02/13 01:14:58 dickey Exp $ */
 
 /*
- *	$Xorg: cursor.c,v 1.3 2000/08/17 19:55:08 cpqbld Exp $
- */
-
-/* $XFree86: xc/programs/xterm/cursor.c,v 3.18 2005/08/05 01:25:39 dickey Exp $ */
-
-/*
- * Copyright 2002-2004,2005 by Thomas E. Dickey
+ * Copyright 2002-2005,2006 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -61,6 +57,7 @@
 
 #include <xterm.h>
 #include <data.h>
+#include <menu.h>
 
 #include <assert.h>
 
@@ -298,6 +295,7 @@ CursorRestore(XtermWidget tw)
     SGR_Foreground(tw->flags & FG_COLOR ? sc->cur_foreground : -1);
     SGR_Background(tw->flags & BG_COLOR ? sc->cur_background : -1);
 #endif
+    update_autowrap();
 }
 
 /*

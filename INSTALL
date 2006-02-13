@@ -1,5 +1,5 @@
--- $XTermId: INSTALL,v 1.100 2006/01/04 02:10:17 tom Exp $
--- $XFree86: xc/programs/xterm/INSTALL,v 3.41 2006/01/04 02:10:17 dickey Exp $
+-- $XTermId: INSTALL,v 1.105 2006/02/13 01:14:57 tom Exp $
+-- $XFree86: xc/programs/xterm/INSTALL,v 3.42 2006/02/13 01:14:57 dickey Exp $
 -- Thomas E. Dickey
 
 Xterm is normally built as part of the X Window System source tree, using
@@ -160,6 +160,12 @@ The options (in alphabetic order):
 	type.  If you do not need input method (and are troubled by the
 	warning messages), it is safe to disable this option.
 
+  --disable-leaks         test: set to test memory leaks
+
+  	Compile-in code which frees memory which might confuse a leak-testing
+	tool.  Normally these chunks of memory are retained as long as xterm
+	is running.
+
   --disable-maximize      disable actions for iconify/deiconify/maximize/restore
 
 	Do not compile-in code that implements runtime 'actions' for
@@ -184,6 +190,11 @@ The options (in alphabetic order):
 	This feature is used to ensure that the child process's terminal modes
 	match the parent's.  In particular, it addresses a problem where the
 	terminal size is not defined in the stty settings.
+
+  --disable-regex         disable regular-expression selections
+
+	Do not compile-in code to support the "regex" option for multiple
+	mouse clicks.
 
   --disable-rightbar      disable right-scrollbar support
 
@@ -318,11 +329,11 @@ The options (in alphabetic order):
 	NARROWPROTO.  When this is not set properly, the Athena widget
 	scrollbars do not work properly.  xterm's configure script has a
 	fallback case which allows disabling imake.  However, this is moot
-	with the Xorg "modular" build, whose compiler options are unrelated to
+	with the X.org "modular" build, whose compiler options are unrelated to
 	imake or older versions of any libraries that it may distribute.  In
 	this case, the configure script needs some help.  Use this option to
 	enable or disable NARROW proto (and disable imake with the
-	--disable-imake option) to match the whims of Xorg hackers.
+	--disable-imake option) to match the whims of X.org hackers.
 
 	For instance
 
@@ -450,7 +461,12 @@ The options (in alphabetic order):
 	workable terminfo description.  Be advised, however, that the
 	common variety of "xterm-color" is not suited for xterm, but is
 	directed to other variations (such as nxterm) which do not
-	support the back-color erase capability.
+	support the background-color erase capability.
+
+  --with-pcre             use PCRE for regular-expressions
+
+	If regular expressions are not disable (--disable-regex), use PCRE
+	rather than the POSIX regular expressions.
 
   --with-reference=XXX    program to use as permissions-reference
 
@@ -467,6 +483,25 @@ The options (in alphabetic order):
 
 	See also --with-utmp-setgid and --with-utempter, which manipulate
 	the setgid group.
+
+  --with-tty-group=XXX    use XXX for the tty-group
+
+	If xterm is installed setuid'd to root, change the group of the tty
+	device to the given value on startup.  Three cases are possible:
+	
+	a) If this option is not given, the configure script will attempt to
+	   find a suitable value (usually "tty"), and verify that it exists in
+	   the group database.
+
+	b) If the option value is given, it will use the value even if it does
+	   not exist in the group database (allowing packagers to work about
+	   deficient environments).
+
+	c) If the option is disabled, e.g., --without-tty-group, the
+	   permissions change will use the group-id of the process.
+
+	If xterm is not installed setuid'd to root, this option is not needed,
+	since it cannot change the tty device's ownership.
 
   --with-xterm-symlink=XXX  make symbolic link to installed xterm
 

@@ -1,12 +1,12 @@
-/* $XTermId: xtermcfg.hin,v 1.145 2006/01/04 02:10:28 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.148 2006/02/13 01:15:00 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.58 2006/01/04 02:10:28 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.59 2006/02/13 01:15:00 dickey Exp $
  */
 
 /************************************************************
 
-Copyright 1997-2004,2005 by Thomas E. Dickey
+Copyright 1997-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -47,11 +47,13 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_LANGINFO_CODESET	/* AM_LANGINFO_CODESET */
 #undef HAVE_LASTLOG_H		/* CF_LASTLOG */
 #undef HAVE_LIB_NEXTAW		/* CF_X_ATHENA(--with-neXtaw) */
+#undef HAVE_LIB_PCRE		/* CF_WITH_PCRE */
 #undef HAVE_LIB_XAW		/* CF_X_ATHENA */
 #undef HAVE_LIB_XAW3D		/* CF_X_ATHENA(--with-Xaw3d) */
 #undef HAVE_LIB_XAWPLUS		/* CF_X_ATHENA(--with-XawPlus) */
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
+#undef HAVE_PCREPOSIX_H		/* CF_WITH_PCRE */
 #undef HAVE_PUTENV		/* AC_CHECK_FUNCS(putenv) */
 #undef HAVE_SCHED_YIELD		/* AC_CHECK_FUNCS(sched_yield) */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
@@ -79,6 +81,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_XKB_BELL_EXT	/* CF_XKB_BELL_EXT */
 #undef LUIT_PATH		/* CF_ARG_ENABLE(luit) */
 #undef NO_ACTIVE_ICON		/* CF_ARG_DISABLE(active-icon) */
+#undef NO_LEAKS			/* CF_ARG_DISABLE(leaks) */
 #undef OPT_256_COLORS		/* CF_ARG_ENABLE(256-color) */
 #undef OPT_88_COLORS		/* CF_ARG_ENABLE(88-color) */
 #undef OPT_AIX_COLORS		/* CF_ARG_DISABLE(16-color) */
@@ -108,6 +111,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_PTY_HANDSHAKE	/* CF_ARG_ENABLE(pty-handshake) */
 #undef OPT_SAME_NAME		/* CF_ARG_DISABLE(samename) */
 #undef OPT_SCO_FUNC_KEYS	/* CF_ARG_ENABLE(sco-fkeys) */
+#undef OPT_SELECT_REGEX		/* CF_ARG_DISABLE(regex) */
 #undef OPT_SESSION_MGT		/* CF_ARG_DISABLE(session-mgt) */
 #undef OPT_TCAP_QUERY		/* CF_ARG_ENABLE(tcap-query) */
 #undef OPT_TEK4014		/* CF_ARG_DISABLE(tek4014) */
@@ -133,8 +137,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef USE_TERMCAP		/* CF_FUNC_TGETENT */
 #undef USE_TERMINFO		/* CF_FUNC_TGETENT */
 #undef USE_TTY_GROUP		/* CF_TTY_GROUP */
-#undef USE_UTMP_SETGID		/* AC_ARG_WITH(utmp-setgid) */
 #undef USE_UTEMPTER		/* CF_UTEMPTER */
+#undef USE_UTMP_SETGID		/* AC_ARG_WITH(utmp-setgid) */
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef XRENDERFONT		/* CF_X_FREETYPE */
 #undef const			/* AC_CONST */

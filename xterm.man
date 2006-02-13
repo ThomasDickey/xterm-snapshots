@@ -1,8 +1,6 @@
-.\" $XTermId: xterm.man,v 1.322 2006/01/04 02:10:27 tom Exp $
-.\" $Xorg: xterm.man,v 1.4 2001/02/09 02:06:03 xorgcvs Exp $
+.\" $XTermId: xterm.man,v 1.330 2006/02/13 01:15:00 tom Exp $
 .\"
-.\"
-.\" Copyright 1996-2004,2005 by Thomas E. Dickey
+.\" Copyright 1996-2005,2006 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -55,9 +53,9 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.119 2006/01/04 02:10:27 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.121 2006/02/13 01:15:00 dickey Exp $
 .\"
-.\" updated by Thomas E. Dickey for XFree86, July 1996 - July 2004.
+.\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .
 .de DS
 .sp
@@ -856,7 +854,8 @@ This option indicates that \fIxterm\fP should start in VT102 mode.
 .B -tb
 This option, corresponding to the \fBtoolBar\fR resource,
 indicates that \fIxterm\fR should display a toolbar (or menubar)
-at the top of its window.  The buttons in the toolbar correspond to
+at the top of its window.
+The buttons in the toolbar correspond to
 the popup menus, e.g., control/left/mouse for "Main Options".
 .TP 8
 .B +tb
@@ -1170,8 +1169,6 @@ You cannot set this to a value less than 64.
 If ``true'', \fIxterm\fP will perform handshaking during initialization
 to ensure that the parent and child processes update the \fButmp\fP
 and \fBstty\fP state.
-Platforms with newer pseudo-terminal interfaces do not require this feature;
-normally it is not configured.
 The default is ``true''.
 .TP 8
 .B "ptyInitialErase (\fPclass\fB PtyInitialErase)"
@@ -1287,7 +1284,7 @@ The default is ``false.''
 .TP 8
 .B "utmpDisplayId (\fPclass\fB UtmpDisplayId)"
 Specifies whether or not \fIxterm\fP should try to record the display
-identifier (display number and screen number) as well as the hostname in 
+identifier (display number and screen number) as well as the hostname in
 the system \fIutmp\fP log file.
 The default is ``true.''
 .TP 8
@@ -1504,7 +1501,7 @@ Specifies comma-separated lists of character class bindings of the form
 [\fIlow\fP-]\fIhigh\fP:\fIvalue\fP.
 These are used in determining which
 sets of characters should be treated the same when doing cut and paste.
-See the CHARACTER CLASSES section.
+See the \fBCHARACTER CLASSES\fP section.
 .TP 8
 .B "cjkWidth (\fPclass\fB CjkWidth)"
 Specifies whether \fIxterm\fP should follow
@@ -1959,7 +1956,8 @@ For other locales, \fIxterm\fR will use conventional 8bit mode.
 .TP
 .I checkfont
 If mini-luit is compiled-in, \fIxterm\fR will check if a Unicode font has
-been specified.  If so, it checks if the character encoding for the
+been specified.
+If so, it checks if the character encoding for the
 current locale is POSIX, Latin-1 or Latin-9, uses the appropriate
 mapping to support those with the Unicode font.
 For other encodings, \fIxterm\fR assumes that UTF-8 encoding is required.
@@ -2019,7 +2017,7 @@ The default is ``false.''
 .TP 8
 .B "mkWidth (\fPclass\fB MkWidth)"
 Specifies whether \fIxterm\fP should use a built-in version of the wide
-character width calculation. 
+character width calculation.
 The default is ``false.''
 .TP 8
 .B "modifyCursorKeys (\fPclass\fB ModifyCursorKeys\fP)"
@@ -2060,6 +2058,57 @@ Otherwise, it uses the VT100-style
 codes for PF1 to PF4.
 The default is ``false.''
 .TP 8
+.B "on2Clicks (\fPclass\fB On2Clicks)"
+.TP
+.B "on3Clicks (\fPclass\fB On3Clicks)"
+.TP
+.B "on4Clicks (\fPclass\fB On4Clicks)"
+.TP
+.B "on5Clicks (\fPclass\fB On5Clicks)"
+Specify selection behavior in response to multiple mouse clicks.
+A single mouse click is always interpreted as described in
+the \fBSELECTION\fP section (see \fBPOINTER USAGE\fP).
+Multiple mouse clicks (using the button which activates the \fBselect-start\fP
+action) are interpreted according to the resource values of
+\fBon2Clicks\fP, etc.
+The resource value can be one of these:
+.RS
+.TP 3
+word
+Select a ``word'' as determined by the \fBcharClass\fP resource.
+See the \fBCHARACTER CLASSES\fP section.
+.TP
+line
+Select a line (counting wrapping).
+.TP
+group
+Select a group of adjacent lines (counting wrapping).
+The selection stops on a blank line.
+.TP
+page
+Select all visible lines, i.e., the page.
+.TP
+all
+Select all lines, i.e., including the saved lines.
+.TP
+regex
+Select a ``word'' as determined by the regular expression which
+follows in the resource value.
+.TP
+none
+No selection action is associated with this resource.
+\fIxterm\fP interprets it as the end of the list.
+For example, you may use it to disable triple (and higher) clicking
+by setting \fBon3Clicks\fP to ``none''.
+.RE
+.IP
+The default values for \fBon2Clicks\fP and \fBon3Clicks\fP are
+``word'' and ``line'', respectively.
+There is no default value for \fBon4Clicks\fP or \fBon5Clicks\fP,
+making those inactive.
+On startup, \fIxterm\fP determines the maximum number of clicks
+by the \fBon\fP\fIX\fP\fBClicks\fP resource values which are set.
+.TP 8
 .B "pointerColor (\fPclass\fB PointerColor)"
 Specifies the foreground color of the pointer.
 The default is
@@ -2075,7 +2124,7 @@ Specifies the name of the shape of the pointer.
 The default is ``xterm.''
 .TP 8
 .B "popOnBell (\fPclass\fB PopOnBell)"
-Specifies whether the window whould be raised when Control-G is
+Specifies whether the window would be raised when Control-G is
 received.
 The default is ``false.''
 .TP 8
@@ -2194,6 +2243,14 @@ The default value is 1.
 Specifies whether or not output to the terminal should automatically cause
 the scrollbar to go to the bottom of the scrolling region.
 The default is ``true.''
+.TP
+.B "selectToClipboard (\fPclass\fB SelectToClipboard)"
+Tells \fIxterm\fP whether to use the PRIMARY or CLIPBOARD for
+SELECT tokens in the selection mechanism.
+The \fBset-select\fP action can change this at runtime,
+allowing the user to work with programs that handle only one of these
+mechanisms.
+The default is ``false'', which tells it to use PRIMARY.
 .TP 8
 .B "shiftFonts (\fPclass\fB ShiftFonts)"
 Specifies whether to enable the actions
@@ -2295,7 +2352,7 @@ This specifies whether \fIxterm\fP will run in UTF-8 mode.
 If you set this resource, \fIxterm\fP also sets the \fBwideChars\fP resource as a side-effect.
 The resource is an integer, expected to range from 0 to 3:
 .RS
-.TP
+.TP 3
 0
 UTF-8 mode is initially off.
 The command-line option \fB+u8\fP sets the resource to this value.
@@ -2694,6 +2751,7 @@ Once the VT102 window is created,
 .I xterm
 allows you to select text and copy it within the same or other windows.
 .
+.SS "SELECTION"
 .PP
 The selection functions are invoked when the pointer buttons are used with no
 modifiers, and when they are used with the ``shift'' key.
@@ -2707,10 +2765,20 @@ and then hold the button down while moving the cursor to the end of the region
 and releasing the button.
 The selected text is highlighted and is saved in the global cut buffer
 and made the PRIMARY selection when the button is released.
+Normally (but see the discussion of \fBon2Clicks\fP, etc):
+.RS
+.TP 3
+-
 Double-clicking selects by words.
+.TP
+-
 Triple-clicking
 selects by lines.
+.TP
+-
 Quadruple-clicking goes back to characters, etc.
+.RE
+.PP
 Multiple-click is determined by the time from button up to
 button down, so you can change the selection unit in the middle of a selection.
 Logical words and lines selected by double- or triple-clicking may wrap
@@ -2753,6 +2821,7 @@ you may regard each as a `file' whose contents you know.
 The terminal emulator and other text programs should be treating it as if it
 were a text file, i.e., the text is delimited by new lines.
 .
+.SS "SCROLLING"
 .PP
 The scroll region displays the position and amount of text currently showing
 in the window (highlighted) relative to the amount of text actually saved.
@@ -2771,6 +2840,7 @@ pointer position.
 Clicking button two moves the display to a position in the saved text
 that corresponds to the pointer's position in the scrollbar.
 .
+.SS "TEKTRONIX POINTER"
 .PP
 Unlike the VT102 window, the Tektronix window does not allow the copying of
 text.
@@ -2812,6 +2882,7 @@ In the list below, the menu label is shown followed by the action's
 name in parenthesis.
 .
 .\" ************************************************************************
+.SS "Main Options"
 .PP
 The \fIxterm\fP \fImainMenu\fP pops up
 when the ``control'' key and pointer button one are pressed in a window.
@@ -2943,6 +3014,7 @@ the process group of the process running under
 .PP
 .
 .\" ************************************************************************
+.SS "VT Options"
 .PP
 The
 .I vtMenu
@@ -3048,13 +3120,14 @@ option and the
 resource.
 .
 .TP
-Enable Curses Emulation (cursesemul)
-Enable (or disable) a workaround for the so-called "curses bug".
+Select to Clipboard (selectToClipboard)
+Tell \fIxterm\fP whether to use the PRIMARY or CLIPBOARD
+for SELECT tokens in the \fBtranslations\fP resource which
+maps keyboard and mouse actions to select/paste actions.
 This corresponds to the
-.B -cu
-option and the
-.B curses
+.B selectToClipboard
 resource.
+There is no corresponding command-line option.
 .
 .TP
 Enable Visual Bell (visualbell)
@@ -3184,8 +3257,11 @@ the alternate screen does not.
 .RE
 .PP
 .
+.SS "VT Fonts"
 .PP
-The \fIfontMenu\fP sets the font used in the VT102 window,
+The \fIfontMenu\fP pops up when
+when the ``control'' key and pointer button three are pressed in a window.
+It sets the font used in the VT102 window,
 or modifies the way the font is specified or displayed.
 There are three sections.
 .PP
@@ -3264,6 +3340,7 @@ It is useful for temporarily switching \fIxterm\fP to display
 text from an application which does not follow the locale settings.
 .RE
 .
+.SS "TEK Options"
 .PP
 The
 .I tekMenu
@@ -3379,9 +3456,9 @@ will sound in warning.
 .
 .
 .SH "CHARACTER CLASSES"
-Clicking the left mouse button twice in rapid succession will cause all
-characters of the same class (e.g., letters, white space, punctuation) to be
-selected.
+Clicking the left mouse button twice in rapid succession
+(double-clicking) causes all characters of the same class
+(e.g., letters, white space, punctuation) to be selected as a ``word''.
 Since different people have different preferences for what should
 be selected (for example, should filenames be selected as a whole or only
 the separate subnames), the default mapping can be overridden through the use
@@ -3818,6 +3895,10 @@ from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 This action toggles the \fBscrollbar\fP resource and is also invoked by
 the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set-select(\fIon/off/toggle\fP)"
+This action toggles the \fBselectToClipboard\fP resource and is also invoked by
+the \fBselectToClipboard\fP entry in \fIvtMenu\fP.
+.TP 8
 .B "set-sco-function-keys(\fIon/off/toggle\fP)"
 This action toggles the \fBscoFunctionKeys\fP resource and is also invoked by
 the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
@@ -3961,14 +4042,15 @@ The Tektronix window also has the following action:
 This action sends the indicated graphics input code.
 .
 .PP
-The default bindings in the VT102 window are:
+The default bindings in the VT102 window use the SELECT token,
+which is set by the \fBselectToClipboard\fP resource:
 .DS
 .ta 2.5i
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\\&
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\\&
          Shift <KeyPress> Select:select-cursor-start() \\\&
-                                 select-cursor-end(PRIMARY, CUT_BUFFER0) \\n\\\&
-         Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
+                                 select-cursor-end(SELECT, CUT_BUFFER0) \\n\\\&
+         Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\\&
     Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\\&
     Shift <KeyPress> KP_Subtract:smaller-vt-font() \\n\\\&
@@ -3986,7 +4068,7 @@ The default bindings in the VT102 window are:
      ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \\n\\\&
           ~Ctrl ~Meta <Btn2Down>:ignore() \\n\\\&
                  Meta <Btn2Down>:clear-saved-lines() \\n\\\&
-            ~Ctrl ~Meta <Btn2Up>:insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
+            ~Ctrl ~Meta <Btn2Up>:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
                 !Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\\&
            !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \\n\\\&
  !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \\n\\\&
@@ -4003,7 +4085,7 @@ The default bindings in the VT102 window are:
   Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
        @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \\n\\\&
                       <Btn5Down>:scroll-forw(5,line,m)     \\n\\\&
-                         <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
+                         <BtnUp>:select-end(SELECT, CUT_BUFFER0) \\n\\\&
                        <BtnDown>:ignore()
 .DE
 .PP
