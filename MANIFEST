@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-209
+MANIFEST for xterm, version xterm-210
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -110,15 +110,13 @@ unicode/precompose.c.head       header of precompose.c
 unicode/precompose.c.tail       tail of precompose.c
 vttests                         subdirectory
 vttests/16colors.sh             test-script to show 16-colors
-vttests/256colors.pl            script to illustrate 256-colors
 vttests/256colors2.pl           fancy test-script for 256-colors
-vttests/88colors.pl             sample script showing 88-colors
-vttests/88colors2.pl            sample script showing 88-colors
 vttests/8colors.sh              test-script to illustrate 8-colors
 vttests/acolors.sh              demonstrate changing the ANSI colors
 vttests/doublechars.sh          test script to demonstrate doublesize chars
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
 vttests/fonts.sh                script to demonstrate font-switching sequences
+vttests/paste64.pl              script to test base64-selection option
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
 vttests/resize.sh               script to demonstrate resizing
 vttests/tcapquery.pl            script to test tcap-query option

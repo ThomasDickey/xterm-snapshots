@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.160 2006/02/13 01:14:56 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.163 2006/03/13 01:27:53 tom Exp $
 .\"
 .\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.59 2006/02/13 01:14:56 dickey Exp $
+.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.60 2006/03/13 01:27:53 dickey Exp $
 .\"
 .\"
 .\" Copyright 1996-2005,2006 by Thomas E. Dickey
@@ -1239,14 +1239,15 @@ The parameter \*(Pt is parsed as
 	\*(Pc\*;\*(Pd
 .br
 The first, \*(Pc, may contain any character from the
-set \*c \*p \*0 \*1 \*2 \*3 \*4 \*5 \*6 \*7.
+set \*c \*p \*(cs \*0 \*1 \*2 \*3 \*4 \*5 \*6 \*7.
 It is used to construct a list of selection parameters for
 clipboard,
 primary,
+select,
 or cut buffers 0 through 8 respectively,
 in the order given.
-If the parameter is empty, \fIxterm\fP uses \*p\*0,
-to specify the primary selection and cut buffer 0.
+If the parameter is empty, \fIxterm\fP uses \*(cs\*0,
+to specify the configurable primary/clipboard selection and cut buffer 0.
 .br
 The second parameter, \*(Pd, gives the selection data.
 Normally this is a string encoded in base64.

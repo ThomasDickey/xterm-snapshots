@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.206 2006/02/13 01:14:58 tom Exp $
+dnl $XTermId: configure.in,v 1.208 2006/03/13 01:27:59 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.74 2006/02/13 01:14:58 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.75 2006/03/13 01:27:59 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -99,6 +99,7 @@ AC_CHECK_FUNCS( \
 	wcwidth )
 CF_FUNC_MEMMOVE
 CF_UTMP
+CF_STRUCT_LASTLOG
 
 CF_HELP_MESSAGE(Compile/Install Options:)
 CF_FUNC_TGETENT

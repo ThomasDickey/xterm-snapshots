@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.488 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: main.c,v 1.492 2006/03/13 01:27:59 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -87,7 +87,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.203 2006/02/13 01:14:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.207 2006/03/13 01:27:59 dickey Exp $ */
 
 /* main.c */
 
@@ -171,7 +171,6 @@ static Bool IsPts = False;
 #endif
 
 #ifdef __CYGWIN__
-#define LASTLOG
 #define WTMP
 #endif
 
@@ -373,7 +372,7 @@ extern struct utmp *getutid __((struct utmp * _Id));
 #endif
 
 #if defined(USE_LASTLOG) && defined(HAVE_LASTLOG_H)
-#include <lastlog.h>		/* caution: glibc 2.3.5 includes utmp.h here */
+#include <lastlog.h>		/* caution: glibc includes utmp.h here */
 #endif
 
 #ifndef USE_LASTLOGX
@@ -691,8 +690,10 @@ static char etc_utmp[] = UTMP_FILENAME;
 #endif /* USE_SYSV_UTMP */
 
 #ifndef USE_UTEMPTER
-#ifdef USE_LASTLOG
+#if defined(USE_LASTLOG) && defined(USE_STRUCT_LASTLOG)
 static char etc_lastlog[] = LASTLOG_FILENAME;
+#else
+#undef USE_LASTLOG
 #endif
 
 #ifdef WTMP
@@ -4093,8 +4094,7 @@ spawn(void)
 #endif
 
 #ifdef USE_LASTLOG
-	    if (sizeof(lastlog.ll_time) == sizeof(time_t) &&	/* !Solaris */
-		term->misc.login_shell &&
+	    if (term->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		bzero((char *) &lastlog, sizeof(struct lastlog));
 		(void) strncpy(lastlog.ll_line,

@@ -1,6 +1,6 @@
-/* $XTermId: charproc.c,v 1.665 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.669 2006/03/13 01:27:57 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.180 2006/02/13 01:14:58 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.181 2006/03/13 01:27:57 dickey Exp $ */
 
 /*
 
@@ -386,6 +386,7 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_WIDE_CHARS
     { "set-utf8-mode",		HandleUTF8Mode },
+    { "set-utf8-title",		HandleUTF8Title },
 #endif
 };
 /* *INDENT-ON* */
@@ -626,6 +627,7 @@ static XtResource resources[] =
 
 #if OPT_WIDE_CHARS
     Ires(XtNutf8, XtCUtf8, screen.utf8_mode, uDefault),
+    Ires(XtNutf8Title, XtCUtf8Title, screen.utf8_title, False),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
     Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
@@ -5600,6 +5602,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_WIDE_CHARS
     VTInitialize_locale(request);
+    init_Bres(screen.utf8_title);
 
 #if OPT_LUIT_PROG
     init_Bres(misc.callfilter);
@@ -7379,6 +7382,7 @@ set_cursor_gcs(TScreen * screen)
      * above by setting cursor color to foreground.
      */
 
+    TRACE(("set_cursor_gcs cc=%#lx, fg=%#lx, bg=%#lx\n", cc, fg, bg));
 #if OPT_ISO_COLORS
     /*
      * If we're using ANSI colors, the functions manipulating the SGR code will
@@ -7420,7 +7424,7 @@ set_cursor_gcs(TScreen * screen)
 	}
     } else
 #endif
-    if (cc != fg && cc != bg) {
+    if (VWindow(screen) != 0 && (cc != bg)) {
 	/* we have a colored cursor */
 	xgcv.font = screen->fnts[fNorm]->fid;
 	mask = (GCForeground | GCBackground | GCFont);
@@ -7449,6 +7453,7 @@ set_cursor_gcs(TScreen * screen)
     }
 
     if (changed) {
+	TRACE(("...set_cursor_gcs - done\n"));
 	screen->cursorGC = new_cursorGC;
 	screen->fillCursorGC = new_cursorFillGC;
 	screen->reversecursorGC = new_reversecursorGC;

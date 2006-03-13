@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.202 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: menu.c,v 1.204 2006/03/13 01:27:59 tom Exp $ */
 
 /*
 
@@ -46,7 +46,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.66 2006/02/13 01:14:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.67 2006/03/13 01:27:59 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -222,6 +222,7 @@ static void do_toolbar         PROTO_XT_CALLBACK_ARGS;
 
 #if OPT_WIDE_CHARS
 static void do_font_utf8_mode  PROTO_XT_CALLBACK_ARGS;
+static void do_font_utf8_title PROTO_XT_CALLBACK_ARGS;
 #endif
 
 /*
@@ -339,6 +340,7 @@ MenuEntry fontMenuEntries[] = {
 #endif
 #if OPT_WIDE_CHARS
     { "utf8-mode",	do_font_utf8_mode,NULL },
+    { "utf8-title",	do_font_utf8_title,NULL },
 #endif
 #endif /* toggles for other font extensions */
 
@@ -681,6 +683,7 @@ domenu(Widget w GCC_UNUSED,
 #endif
 #if OPT_WIDE_CHARS
 	    update_font_utf8_mode();
+	    update_font_utf8_title();
 #endif
 	}
 	FindFontSelection(NULL, True);
@@ -1445,6 +1448,17 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
      * hard to do properly.
      */
 }
+
+static void
+do_font_utf8_title(Widget gw GCC_UNUSED,
+		   XtPointer closure GCC_UNUSED,
+		   XtPointer data GCC_UNUSED)
+{
+    TScreen *screen = &term->screen;
+
+    screen->utf8_title = !screen->utf8_title;
+    update_font_utf8_title();
+}
 #endif
 
 /*
@@ -2133,6 +2147,16 @@ HandleUTF8Mode(Widget w,
 	       Cardinal *param_count)
 {
     handle_vt_toggle(do_font_utf8_mode, term->screen.utf8_mode,
+		     params, *param_count, w);
+}
+
+void
+HandleUTF8Title(Widget w,
+		XEvent * event GCC_UNUSED,
+		String * params,
+		Cardinal *param_count)
+{
+    handle_vt_toggle(do_font_utf8_title, term->screen.utf8_title,
 		     params, *param_count, w);
 }
 #endif
@@ -2965,6 +2989,18 @@ update_font_utf8_mode(void)
     Bool enable = (term->screen.utf8_mode != uFalse);
 
     TRACE(("update_font_utf8_mode active %d, enable %d\n", active, enable));
+    set_sensitivity(term->screen.fontMenu, iw, active);
+    update_menu_item(term->screen.fontMenu, iw, enable);
+}
+
+void
+update_font_utf8_title(void)
+{
+    Widget iw = fontMenuEntries[fontMenu_wide_title].widget;
+    Bool active = (term->screen.utf8_mode != uFalse);
+    Bool enable = (term->screen.utf8_title);
+
+    TRACE(("update_font_utf8_title active %d, enable %d\n", active, enable));
     set_sensitivity(term->screen.fontMenu, iw, active);
     update_menu_item(term->screen.fontMenu, iw, enable);
 }

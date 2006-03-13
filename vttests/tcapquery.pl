@@ -1,5 +1,6 @@
-#!/usr/bin/perl
-# $XFree86: xc/programs/xterm/vttests/tcapquery.pl,v 1.2 2005/09/18 23:48:14 dickey Exp $
+#!/usr/bin/perl -w
+# $XTermId: tcapquery.pl,v 1.7 2006/03/13 01:28:02 tom Exp $
+# $XFree86: xc/programs/xterm/vttests/tcapquery.pl,v 1.3 2006/03/13 01:28:02 dickey Exp $
 #
 # -- Thomas Dickey (2004/3/3)
 # Test the tcap-query option of xterm.
@@ -8,14 +9,7 @@ use strict;
 
 use IO::Handle;
 
-sub write_tty {
-	open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
-	autoflush TTY 1;
-	print TTY @_;
-	close TTY;
-}
-
-sub get_reply {
+sub get_reply($) {
 	open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
 	autoflush TTY 1;
 	my $old=`stty -g`;
@@ -28,20 +22,8 @@ sub get_reply {
 	return $reply;
 }
 
-sub csi_field {
-	my $first = @_[0];
-	my $second = @_[1];
-	$first =~ s/^[^0-9]+//;
-	while ( --$second > 0 ) {
-		$first =~ s/^[\d]+//;
-		$first =~ s/^[^\d]+//;
-	}
-	$first =~ s/[^\d]+.*$//;
-	return $first;
-}
-
-sub hexified {
-	my $value = @_[0];
+sub hexified($) {
+	my $value = $_[0];
 	my $result = "";
 	my $n;
 
@@ -51,9 +33,9 @@ sub hexified {
 	return $result;
 }
 
-sub query_tcap {
-	my $tcap = @_[0];
-	my $tinfo = @_[1];
+sub query_tcap($$) {
+	my $tcap = $_[0];
+	my $tinfo = $_[1];
 	my $param1 = hexified($tcap);
 	my $param2 = hexified($tinfo);
 
@@ -95,7 +77,7 @@ sub query_tcap {
 			}
 		}
 
-		printf "$result\n";
+		printf "%s\n", $result;
 	}
 }
 
@@ -106,8 +88,8 @@ query_tcap(	"%1",	"khlp");
 query_tcap(	"%i",	"kRIT");
 query_tcap(	"*6",	"kslt");
 query_tcap(	"*7",	"kEND");
-query_tcap(	"@0",	"kfnd");
-query_tcap(	"@7",	"kend");
+query_tcap(	"\@0",	"kfnd");
+query_tcap(	"\@7",	"kend");
 query_tcap(	"F1",	"kf11");
 query_tcap(	"F2",	"kf12");
 query_tcap(	"F3",	"kf13");

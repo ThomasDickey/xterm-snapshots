@@ -1,5 +1,5 @@
-! $XTermId: XTerm.ad,v 1.76 2006/02/13 01:14:58 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.35 2006/02/13 01:14:58 dickey Exp $
+! $XTermId: XTerm.ad,v 1.78 2006/03/13 01:27:57 tom Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.36 2006/03/13 01:27:57 dickey Exp $
 
 *saveLines: 1024
 
@@ -89,6 +89,7 @@
 *fontMenu*font-loadable*Label:	VT220 Soft Fonts
 *fontMenu*render-font*Label:	TrueType Fonts
 *fontMenu*utf8-mode*Label:	UTF-8
+*fontMenu*utf8-title*Label:	UTF-8 Titles
 
 *VT100.utf8Fonts.font2:	-misc-fixed-medium-r-normal--8-80-75-75-c-50-iso10646-1
 *VT100.utf8Fonts.font:	-misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1
