@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.198 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.201 2006/03/13 01:27:59 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/fontutils.c,v 1.57 2006/02/13 01:14:58 dickey Exp $
+ * $XFree86: xc/programs/xterm/fontutils.c,v 1.59 2006/03/13 01:27:59 dickey Exp $
  */
 
 /************************************************************
@@ -607,7 +607,7 @@ is_double_width_font(XFontStruct * fs)
 #define FULL_WIDTH_CHAR1  0x4E00	/* CJK Ideograph 'number one' */
 #define FULL_WIDTH_CHAR2  0xAC00	/* Korean script syllable 'Ka' */
 
-static int
+static Bool
 is_double_width_font_xft(Display * dpy, XftFont * font)
 {
     XGlyphInfo gi1, gi2;
@@ -618,7 +618,7 @@ is_double_width_font_xft(Display * dpy, XftFont * font)
     /* Some Korean fonts don't have Chinese characters at all. */
     if (!XftCharExists(dpy, font, FULL_WIDTH_CHAR1)) {
 	if (!XftCharExists(dpy, font, FULL_WIDTH_CHAR2))
-	    return 0;		/* Not a CJK font */
+	    return False;	/* Not a CJK font */
 	else			/* a Korean font without CJK Ideographs */
 	    fwstr = FULL_WIDTH_TEST_STRING2;
     }
@@ -626,7 +626,7 @@ is_double_width_font_xft(Display * dpy, XftFont * font)
     XftTextExtents32(dpy, font, &c1, 1, &gi1);
     XftTextExtents32(dpy, font, &c2, 1, &gi2);
     if (gi1.xOff != gi2.xOff)	/* Not a fixed-width font */
-	return 0;
+	return False;
 
     XftTextExtentsUtf8(dpy, font, (FcChar8 *) hwstr, (int) strlen(hwstr), &gi1);
     XftTextExtentsUtf8(dpy, font, (FcChar8 *) fwstr, (int) strlen(fwstr), &gi2);
@@ -1336,12 +1336,16 @@ xtermOpenXft(Display * dpy, XftPattern * pat, const char *tag GCC_UNUSED)
 
     if (pat != 0) {
 	match = XftFontMatch(dpy, DefaultScreen(dpy), pat, &status);
-	result = XftFontOpenPattern(dpy, match);
-	if ((result == 0) && match) {
-	    TRACE(("...did not match %s font\n", tag));
-	    XftPatternDestroy(match);
+	if (match != 0) {
+	    result = XftFontOpenPattern(dpy, match);
+	    if (result != 0) {
+		TRACE(("...matched %s font\n", tag));
+	    } else {
+		TRACE(("...could did not open %s font\n", tag));
+		XftPatternDestroy(match);
+	    }
 	} else {
-	    TRACE(("...matched %s font\n", tag));
+	    TRACE(("...did not match %s font\n", tag));
 	}
     }
     return result;
@@ -1407,44 +1411,44 @@ xtermComputeFontInfo(XtermWidget xw,
 	    }
 #endif
 
-	    pat = XftNameParse(xw->misc.face_name);
-	    XftPatternBuild(pat,
-			    XFT_FAMILY, XftTypeString, "mono",
-			    XFT_SIZE, XftTypeDouble, face_size,
-			    XFT_SPACING, XftTypeInteger, XFT_MONO,
-			    (void *) 0);
-	    norm = xtermOpenXft(dpy, pat, "normal");
-
-	    if (norm != 0) {
+	    if ((pat = XftNameParse(xw->misc.face_name)) != 0) {
 		XftPatternBuild(pat,
-				XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
-				XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width,
+				XFT_FAMILY, XftTypeString, "mono",
+				XFT_SIZE, XftTypeDouble, face_size,
+				XFT_SPACING, XftTypeInteger, XFT_MONO,
 				(void *) 0);
-		bold = xtermOpenXft(dpy, pat, "bold");
+		norm = xtermOpenXft(dpy, pat, "normal");
 
-#if OPT_ISO_COLORS
-		if (screen->italicULMode) {
+		if (norm != 0) {
 		    XftPatternBuild(pat,
-				    XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC,
+				    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
 				    XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width,
 				    (void *) 0);
-		    ital = xtermOpenXft(dpy, pat, "italic");
-		}
+		    bold = xtermOpenXft(dpy, pat, "bold");
+
+#if OPT_ISO_COLORS
+		    if (screen->italicULMode) {
+			XftPatternBuild(pat,
+					XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC,
+					XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width,
+					(void *) 0);
+			ital = xtermOpenXft(dpy, pat, "italic");
+		    }
 #endif /* OPT_ISO_COLORS */
 
-		/*
-		 * FIXME:  just assume that the corresponding font has no
-		 * graphics characters.
-		 */
-		if (screen->fnt_boxes) {
-		    screen->fnt_boxes = False;
-		    TRACE(("Xft opened - will %suse internal line-drawing characters\n",
-			   screen->fnt_boxes ? "not " : ""));
+		    /*
+		     * FIXME:  just assume that the corresponding font has no
+		     * graphics characters.
+		     */
+		    if (screen->fnt_boxes) {
+			screen->fnt_boxes = False;
+			TRACE(("Xft opened - will %suse internal line-drawing characters\n",
+			       screen->fnt_boxes ? "not " : ""));
+		    }
 		}
-	    }
 
-	    if (pat)
 		XftPatternDestroy(pat);
+	    }
 
 	    CACHE_XFT(screen->renderFontNorm, norm);
 	    CACHE_XFT(screen->renderFontBold, bold);
@@ -1464,39 +1468,38 @@ xtermComputeFontInfo(XtermWidget xw,
 		       face_name,
 		       char_width));
 
-		pat = XftNameParse(xw->misc.face_name);
-		XftPatternBuild(pat,
-				XFT_FAMILY, XftTypeString, face_name,
-				XFT_SIZE, XftTypeDouble, face_size,
-				XFT_SPACING, XftTypeInteger, XFT_MONO,
-				XFT_CHAR_WIDTH, XftTypeInteger, char_width,
-				(void *) 0);
-		wnorm = xtermOpenXft(dpy, pat, "wide");
-
-		if (wnorm != 0) {
+		if ((pat = XftNameParse(xw->misc.face_name)) != 0) {
 		    XftPatternBuild(pat,
 				    XFT_FAMILY, XftTypeString, face_name,
 				    XFT_SIZE, XftTypeDouble, face_size,
 				    XFT_SPACING, XftTypeInteger, XFT_MONO,
 				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
-				    XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
 				    (void *) 0);
-		    wbold = xtermOpenXft(dpy, pat, "wide-bold");
+		    wnorm = xtermOpenXft(dpy, pat, "wide");
 
-		    if (screen->italicULMode) {
+		    if (wnorm != 0) {
 			XftPatternBuild(pat,
 					XFT_FAMILY, XftTypeString, face_name,
 					XFT_SIZE, XftTypeDouble, face_size,
 					XFT_SPACING, XftTypeInteger, XFT_MONO,
 					XFT_CHAR_WIDTH, XftTypeInteger, char_width,
-					XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC,
+					XFT_WEIGHT, XftTypeInteger, XFT_WEIGHT_BOLD,
 					(void *) 0);
-			wital = xtermOpenXft(dpy, pat, "wide-italic");
-		    }
-		}
+			wbold = xtermOpenXft(dpy, pat, "wide-bold");
 
-		if (pat)
+			if (screen->italicULMode) {
+			    XftPatternBuild(pat,
+					    XFT_FAMILY, XftTypeString, face_name,
+					    XFT_SIZE, XftTypeDouble, face_size,
+					    XFT_SPACING, XftTypeInteger, XFT_MONO,
+					    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
+					    XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC,
+					    (void *) 0);
+			    wital = xtermOpenXft(dpy, pat, "wide-italic");
+			}
+		    }
 		    XftPatternDestroy(pat);
+		}
 
 		CACHE_XFT(screen->renderWideNorm, wnorm);
 		CACHE_XFT(screen->renderWideBold, wbold);
@@ -2027,12 +2030,15 @@ xtermDrawBoxChar(XtermWidget xw,
 Bool
 xtermXftMissing(XtermWidget xw, XftFont * font, unsigned wc)
 {
-    unsigned check = XftCharIndex(xw->screen.display, font, wc);
     Bool result = False;
 
-    if (check == 0) {
-	TRACE(("missingXft %d (%d)\n", wc, ucs2dec(wc)));
-	result = True;
+    if (font != 0) {
+	unsigned check = XftCharIndex(xw->screen.display, font, wc);
+
+	if (check == 0) {
+	    TRACE(("missingXft %d (%d)\n", wc, ucs2dec(wc)));
+	    result = True;
+	}
     }
     return result;
 }

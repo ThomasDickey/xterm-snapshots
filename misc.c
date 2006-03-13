@@ -1,6 +1,6 @@
-/* $XTermId: misc.c,v 1.290 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: misc.c,v 1.295 2006/03/13 01:27:59 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.104 2006/02/13 01:14:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.105 2006/03/13 01:27:59 dickey Exp $ */
 
 /*
  *
@@ -71,6 +71,7 @@
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>
 #include <X11/Xmu/WinUtil.h>
+#include <X11/Xmu/Xmu.h>
 #if HAVE_X11_SUNKEYSYM_H
 #include <X11/Sunkeysym.h>
 #endif
@@ -78,6 +79,8 @@
 #ifdef HAVE_LANGINFO_CODESET
 #include <langinfo.h>
 #endif
+
+#include <xutf8.h>
 
 #include <data.h>
 #include <error.h>
@@ -1549,7 +1552,7 @@ ManipulateSelectionData(TScreen * screen, char *buf, int final)
 	char given;
 	char *result;
     } table[] = {
-	PDATA('p', SELECT),
+	PDATA('s', SELECT),
 	    PDATA('p', PRIMARY),
 	    PDATA('c', CLIPBOARD),
 	    PDATA('0', CUT_BUFFER0),
@@ -1563,6 +1566,7 @@ ManipulateSelectionData(TScreen * screen, char *buf, int final)
     };
 
     char *base = buf;
+    char *used = x_strdup(base);
     Cardinal j, n = 0;
     char **select_args = 0;
 
@@ -1576,12 +1580,13 @@ ManipulateSelectionData(TScreen * screen, char *buf, int final)
 	*buf++ = '\0';
 
 	if (*base == '\0')
-	    base = "p0";
+	    base = "s0";
 	if ((select_args = TypeCallocN(String, 1 + strlen(base))) == 0)
 	    return;
 	while (*base != '\0') {
 	    for (j = 0; j < XtNumber(table); ++j) {
 		if (*base == table[j].given) {
+		    used[n] = *base;
 		    select_args[n++] = table[j].result;
 		    TRACE(("atom[%d] %s\n", n, table[j].result));
 		    break;
@@ -1589,6 +1594,7 @@ ManipulateSelectionData(TScreen * screen, char *buf, int final)
 	    }
 	    ++base;
 	}
+	used[n] = 0;
 
 	if (!strcmp(buf, "?")) {
 	    TRACE(("Getting selection\n"));
@@ -1596,12 +1602,15 @@ ManipulateSelectionData(TScreen * screen, char *buf, int final)
 	    unparseputs("52", screen->respond);
 	    unparseputc(';', screen->respond);
 
-	    unparseputs(base, screen->respond);
+	    unparseputs(used, screen->respond);
 	    unparseputc(';', screen->respond);
 
-	    screen->base64_paste = 1;	/* Tells xtermGetSelection data is base64 encoded */
+	    /* Tell xtermGetSelection data is base64 encoded */
+	    screen->base64_paste = n;
+	    screen->base64_final = final;
+
+	    /* terminator will be written in this call */
 	    xtermGetSelection((Widget) term, 0, select_args, n, NULL);
-	    unparseputc1(final, screen->respond);
 	} else {
 	    TRACE(("Setting selection with %s\n", buf));
 	    ClearSelectionBuffer(screen);
@@ -1609,7 +1618,6 @@ ManipulateSelectionData(TScreen * screen, char *buf, int final)
 		AppendToSelectionBuffer(screen, CharOf(*buf++));
 	    CompleteSelection(term, select_args, n);
 	}
-	free(select_args);
     }
 }
 #endif /* OPT_PASTE64 */
@@ -1640,14 +1648,18 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	case 0:
 	    if (isdigit(*cp)) {
 		mode = 10 * mode + (*cp - '0');
-		if (mode > 65535)
+		if (mode > 65535) {
+		    TRACE(("do_osc found unknown mode %d\n", mode));
 		    return;
+		}
 		break;
 	    }
 	    /* FALLTHRU */
 	case 1:
-	    if (*cp != ';')
+	    if (*cp != ';') {
+		TRACE(("do_osc did not find semicolon offset %d\n", cp - oscbuf));
 		return;
+	    }
 	    state = 2;
 	    break;
 	case 2:
@@ -1655,8 +1667,26 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    state = 3;
 	    /* FALLTHRU */
 	default:
-	    if (ansi_table[CharOf(*cp)] != CASE_PRINT)
-		return;
+	    if (ansi_table[CharOf(*cp)] != CASE_PRINT) {
+		switch (mode) {
+		case 0:
+		case 1:
+		case 2:
+#if OPT_WIDE_CHARS
+		    /*
+		     * If we're running with UTF-8, it is possible for title
+		     * strings to contain "nonprinting" text.
+		     */
+		    if (xtermEnvUTF8())
+#endif
+			break;
+		default:
+		    TRACE(("do_osc found nonprinting char %02X offset %d\n",
+			   CharOf(*cp),
+			   cp - oscbuf));
+		    return;
+		}
+	    }
 	}
     }
     if (buf == 0)
@@ -2238,13 +2268,24 @@ udk_lookup(int keycode, int *len)
 static void
 ChangeGroup(String attribute, char *value)
 {
+#if OPT_WIDE_CHARS
+    static Char *converted;	/* NO_LEAKS */
+#endif
     Arg args[1];
-    const char *name = (value != 0) ? (char *) value : "";
+    char *original = (value != 0) ? value : "";
+    char *name = original;
     TScreen *screen = &term->screen;
     Widget w = CURRENT_EMU(screen);
     Widget top = SHELL_OF(w);
+    unsigned limit = strlen(name);
 
     TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
+
+    /*
+     * Ignore titles that are too long to be plausible requests.
+     */
+    if (limit >= 1024)
+	return;
 
 #if OPT_WIDE_CHARS
     /*
@@ -2254,27 +2295,24 @@ ChangeGroup(String attribute, char *value)
      * it is not printable in the current locale.  So we convert it to UTF-8,
      * allowing the X library to convert it back.
      */
-    if (xtermEnvUTF8()) {
+    if (xtermEnvUTF8() && !screen->utf8_title) {
 	int n;
-	unsigned limit = strlen(name);
 
-	if (limit < 1024) {
-	    for (n = 0; name[n] != '\0'; ++n) {
-		if (CharOf(name[n]) > 127) {
-		    static Char *converted;
-		    if (converted != 0)
-			free(converted);
-		    if ((converted = TypeMallocN(Char, 1 + (5 * limit))) != 0) {
-			Char *temp = converted;
-			while (*name != 0) {
-			    temp = convertToUTF8(temp, CharOf(*name));
-			    ++name;
-			}
-			*temp = 0;
-			name = (const char *) converted;
+	for (n = 0; name[n] != '\0'; ++n) {
+	    if (CharOf(name[n]) > 127) {
+		if (converted != 0)
+		    free(converted);
+		if ((converted = TypeMallocN(Char, 1 + (5 * limit))) != 0) {
+		    Char *temp = converted;
+		    while (*name != 0) {
+			temp = convertToUTF8(temp, CharOf(*name));
+			++name;
 		    }
-		    break;
+		    *temp = 0;
+		    name = (char *) converted;
+		    TRACE(("...converted{%s}\n", name));
 		}
+		break;
 	    }
 	}
     }
@@ -2287,13 +2325,37 @@ ChangeGroup(String attribute, char *value)
 	char *buf;
 	XtSetArg(args[0], attribute, &buf);
 	XtGetValues(top, args, 1);
+	TRACE(("...comparing{%s}\n", buf));
 	if (strcmp(name, buf) == 0)
 	    return;
     }
 #endif /* OPT_SAME_NAME */
 
+    TRACE(("...updating %s\n", attribute));
     XtSetArg(args[0], attribute, name);
     XtSetValues(top, args, 1);
+
+#if OPT_WIDE_CHARS
+    if (xtermEnvUTF8()) {
+	Display *dpy = XtDisplay(term);
+	Atom my_atom;
+	char *propname = (!strcmp(attribute, XtNtitle)
+			  ? "_NET_WM_NAME"
+			  : "_NET_WM_ICON_NAME");
+	if ((my_atom = XInternAtom(dpy, propname, False)) != None) {
+	    if (screen->utf8_title) {
+		TRACE(("...updating %s\n", propname));
+		XChangeProperty(dpy, VShellWindow,
+				my_atom, XA_UTF8_STRING(dpy), 8,
+				PropModeReplace,
+				(Char *) original, strlen(original));
+	    } else {
+		TRACE(("...deleting %s\n", propname));
+		XDeleteProperty(dpy, VShellWindow, my_atom);
+	    }
+	}
+    }
+#endif
 }
 
 void
@@ -2457,6 +2519,10 @@ UpdateOldColors(XtermWidget pTerm GCC_UNUSED, ScrnColors * pNew)
     return (True);
 }
 
+/*
+ * This is part of ReverseVideo().  It reverses the data stored for the old
+ * "dynamic" colors that might have been retrieved using OSC 10-18.
+ */
 void
 ReverseOldColors(void)
 {
@@ -2473,9 +2539,7 @@ ReverseOldColors(void)
 		pOld->names[TEXT_CURSOR] = NULL;
 	    }
 	    if (pOld->names[TEXT_BG]) {
-		tmpName = XtMalloc(strlen(pOld->names[TEXT_BG]) + 1);
-		if (tmpName) {
-		    strcpy(tmpName, pOld->names[TEXT_BG]);
+		if ((tmpName = x_strdup(pOld->names[TEXT_BG])) != 0) {
 		    pOld->names[TEXT_CURSOR] = tmpName;
 		}
 	    }

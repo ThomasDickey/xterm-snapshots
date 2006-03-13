@@ -1,6 +1,6 @@
-/* $XTermId: ptyx.h,v 1.412 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.415 2006/03/13 01:27:59 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.130 2006/02/13 01:14:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.131 2006/03/13 01:27:59 dickey Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -1275,6 +1275,7 @@ typedef struct {
 	Boolean		vt100_graphics;	/* true to allow vt100-graphics	*/
 	Boolean		utf8_inparse;	/* true to enable UTF-8 parser	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
+	Boolean		utf8_title;	/* use UTF-8 titles		*/
 	int		latin9_mode;	/* poor man's luit, latin9	*/
 	int		unicode_font;	/* font uses unicode encoding	*/
 	int		utf_count;	/* state of utf_char		*/
@@ -1301,6 +1302,7 @@ typedef struct {
 					/* and position information	*/
 #if OPT_PASTE64
 	int		base64_paste;	/* set to send paste in base64	*/
+	int		base64_final;	/* string-terminator for paste	*/
 	/* _qWriteSelectionData expects these to be initialized to zero. 
 	 * base64_flush() is the last step of the conversion, it clears these
 	 * variables.

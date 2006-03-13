@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.239 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: button.c,v 1.242 2006/03/13 01:27:57 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -51,7 +51,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.85 2006/02/13 01:14:58 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.86 2006/03/13 01:27:57 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1184,7 +1184,7 @@ MapSelections(XtermWidget xw, String * params, Cardinal num_params)
 			    : "PRIMARY");
 
 	    UnmapSelections(xw);
-	    if ((result = CastMallocN(String, num_params + 1)) != 0) {
+	    if ((result = TypeMallocN(String, num_params + 1)) != 0) {
 		result[num_params] = 0;
 		for (j = 0; j < num_params; ++j) {
 		    result[j] = x_strdup((isSELECT(params[j])
@@ -1243,7 +1243,17 @@ CutBuffer(unsigned code)
     return cutbuffer;
 }
 
-#define ResetPaste64() screen->base64_paste = 0
+#if OPT_PASTE64
+static void
+FinishPaste64(TScreen * screen)
+{
+    TRACE(("FinishPaste64(%d)\n", screen->base64_paste));
+    if (screen->base64_paste) {
+	screen->base64_paste = 0;
+	unparseputc1(screen->base64_final, screen->respond);
+    }
+}
+#endif
 
 #if !OPT_PASTE64
 static
@@ -1285,12 +1295,12 @@ xtermGetSelection(Widget w,
 	if (nbytes > 0)
 	    SelectionReceived(w, NULL, &selection, &type, (XtPointer) line,
 			      &nbytes, &fmt8);
-	else if (num_params > 1)
+	else if (num_params > 1) {
 	    xtermGetSelection(w, ev_time, params + 1, num_params - 1, NULL);
+	}
 #if OPT_PASTE64
 	else {
-	    TScreen *screen = &(((XtermWidget) w)->screen);
-	    ResetPaste64();
+	    FinishPaste64(&(((XtermWidget) w)->screen));
 	}
 #endif
 	return;
@@ -1528,7 +1538,7 @@ SelectionReceived(Widget w,
 		  Atom * type,
 		  XtPointer value,
 		  unsigned long *length,
-		  int *format GCC_UNUSED)
+		  int *format)
 {
     char **text_list = NULL;
     int text_list_count;
@@ -1616,7 +1626,7 @@ SelectionReceived(Widget w,
 	}
 #if OPT_PASTE64
 	if (screen->base64_paste) {
-	    ResetPaste64();
+	    FinishPaste64(screen);
 	} else
 #endif
 #if OPT_READLINE
@@ -1641,7 +1651,7 @@ SelectionReceived(Widget w,
 	XtFree((char *) client_data);
 #if OPT_PASTE64
     } else {
-	ResetPaste64();
+	FinishPaste64(screen);
 #endif
     }
     return;

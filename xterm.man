@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.330 2006/02/13 01:15:00 tom Exp $
+.\" $XTermId: xterm.man,v 1.334 2006/03/13 01:27:59 tom Exp $
 .\"
 .\" Copyright 1996-2005,2006 by Thomas E. Dickey
 .\"
@@ -53,7 +53,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.121 2006/02/13 01:15:00 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.122 2006/03/13 01:27:59 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .
@@ -1040,11 +1040,11 @@ with \fIxterm\fP:
 .TP 8
 .B -bd \fIcolor\fP
 This option specifies the color to use for the border of the window.
-The default is ``black.''
+\fIxterm\fP uses the X Toolkit default, which is ``XtDefaultForeground''.
 .TP 8
 .B -bg \fIcolor\fP
 This option specifies the color to use for the background of the window.
-The default is ``white.''
+The default is ``XtDefaultBackground.''
 .TP 8
 .B -bw \fInumber\fP
 This option specifies the width in pixels of the border surrounding the window.
@@ -1055,7 +1055,7 @@ This option specifies the X server to contact; see \fIX(__miscmansuffix__)\fP.
 .B -fg \fIcolor\fP
 This option specifies the color to use for displaying text.
 The default is
-``black.''
+``XtDefaultForeground.''
 .TP 8
 .B -fn \fIfont\fP
 This option specifies the font to be used for displaying normal text.
@@ -1398,7 +1398,7 @@ Pressing the control key toggles this behavior.
 .B "background (\fPclass\fB Background)"
 Specifies the color to use for the background of the window.
 The default is
-``white.''
+``XtDefaultBackground.''
 .TP 8
 .B "bellOnReset (\fPclass\fB BellOnReset)"
 Specifies whether to sound a bell when doing a hard reset.
@@ -1659,7 +1659,10 @@ The default is ``false.''
 .TP 8
 .B "cursorColor (\fPclass\fB CursorColor)"
 Specifies the color to use for the text cursor.
-The default is ``black.''
+The default is ``XtDefaultForeground.''
+\fIXterm\fP attempts to keep this color from being the same as the background
+color, since it draws the cursor by filling the background of a text cell.
+The same restriction applies to control sequences which may change this color.
 .TP 8
 .B "cursorOffTime (\fPclass\fB CursorOffTime)"
 Specifies the duration of the "off" part of the cursor blink cycle-time
@@ -1837,7 +1840,7 @@ Setting the
 class name instead of the instance name is an easy way to have everything
 that would normally appear in the text color change color.
 The default
-is ``black.''
+is ``XtDefaultForeground.''
 .TP 8
 .B "freeBoldBox (\fPclass\fB freeBoldBox)"
 Specifies whether \fIxterm\fP should assume the bounding boxes for
@@ -2693,6 +2696,9 @@ This entry invokes the \fBset-render-font(s)\fP action.
 .TP 8
 .B "utf8-mode (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-utf8-mode(s)\fP action.
+.TP 8
+.B "utf8-title (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-utf8-title(s)\fP action.
 .
 .PP
 The \fItekMenu\fP has the following entries:
@@ -3929,7 +3935,6 @@ It is also invoked by the
 This action toggles the \fBtiteInhibit\fP resource,
 which controls switching between the alternate and current screens.
 .TP 8
-.\" should toggle "toolBar" resource (see note).
 .B "set-toolbar(\fIon/off/toggle\fP)"
 This action toggles the toolbar feature and is also invoked by
 the \fBtoolbar\fP entry in \fImainMenu\fP.
@@ -3937,6 +3942,10 @@ the \fBtoolbar\fP entry in \fImainMenu\fP.
 .B "set-utf8-mode(\fIon/off/toggle\fP)"
 This action toggles the \fButf8\fP resource and is also invoked by
 the \fButf8-mode\fP entry in \fIfontMenu\fP.
+.TP 8
+.B "set-utf8-title(\fIon/off/toggle\fP)"
+This action toggles the \fButf8Title\fP resource and is also invoked by
+the \fButf8-title\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-visibility(\fIvt/tek\fP,\fIon/off/toggle\fP)"
 This action controls whether or not the \fIvt\fP or \fItek\fP windows are

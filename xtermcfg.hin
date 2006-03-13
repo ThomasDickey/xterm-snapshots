@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.148 2006/02/13 01:15:00 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.150 2006/03/13 01:28:00 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.59 2006/02/13 01:15:00 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.60 2006/03/13 01:28:00 dickey Exp $
  */
 
 /************************************************************
@@ -132,6 +132,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef USE_MY_MEMMOVE		/* CF_FUNC_MEMMOVE */
 #undef USE_OK_BCOPY		/* CF_FUNC_MEMMOVE */
 #undef USE_POSIX_WAIT		/* CF_POSIX_WAIT */
+#undef USE_STRUCT_LASTLOG	/* CF_STRUCT_LASTLOG */
 #undef USE_SYSV_UTMP		/* CF_UTMP */
 #undef USE_SYS_SELECT_H		/* CF_TYPE_FD_SET */
 #undef USE_TERMCAP		/* CF_FUNC_TGETENT */

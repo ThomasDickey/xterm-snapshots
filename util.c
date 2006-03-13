@@ -1,6 +1,6 @@
-/* $XTermId: util.c,v 1.267 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: util.c,v 1.270 2006/03/13 01:27:59 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.96 2006/02/13 01:14:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.97 2006/03/13 01:27:59 dickey Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -64,16 +64,16 @@
 #include <fontutils.h>
 #include <xstrings.h>
 
+#include <stdio.h>
+#include <ctype.h>
+#include <assert.h>
+
 #if OPT_WIDE_CHARS
 #if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
 #include <wchar.h>
 #endif
 #include <wcwidth.h>
 #endif
-
-#include <stdio.h>
-#include <ctype.h>
-#include <assert.h>
 
 static int ClearInLine(TScreen * screen, int row, int col, unsigned len);
 static int handle_translated_exposure(TScreen * screen,
@@ -1569,6 +1569,8 @@ ReverseVideo(XtermWidget termw)
     Window tek = TWindow(screen);
 #endif
 
+    TRACE(("ReverseVideo\n"));
+
     /*
      * Swap SGR foreground and background colors.  By convention, these are
      * the colors assigned to "black" (SGR #0) and "white" (SGR #7).  Also,
@@ -1648,7 +1650,9 @@ ReverseVideo(XtermWidget termw)
     }
 #endif
     ReverseOldColors();
+    set_cursor_gcs(screen);
     update_reversevideo();
+    TRACE(("...ReverseVideo\n"));
 }
 
 void

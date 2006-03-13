@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.384 2006/02/13 01:14:59 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.145 2006/02/13 01:14:59 dickey Exp $
+  $XTermId: xterm.log.html,v 1.395 2006/03/13 01:27:59 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.146 2006/03/13 01:27:59 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_210">Patch #210 - 2006/3/12 - XFree86 4.5.99.902</A>
 <LI><A HREF="#xterm_209">Patch #209 - 2006/2/12 - XFree86 4.5.99.22</A>
 <LI><A HREF="#xterm_208">Patch #208 - 2006/1/3 - XFree86 4.5.99.19</A>
 <LI><A HREF="#xterm_207">Patch #207 - 2005/11/13 - XFree86 4.5.99.16</A>
@@ -257,6 +258,46 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_210">Patch #210 - 2006/3/12 - XFree86 4.5.99.902</A></H1>
+<ul>
+	<li>add configure check for workaround in
+	    <a href="#xterm_208">patch #208</a>
+	    for Solaris' inconsistent support for struct lastlog to quiet
+	    compiler warnings
+	    (prompted by David Dawes commit message for XFree86).
+
+	<li>fixes for BASE64 selection manipulation,
+	    e.g., ensure that the string
+	    terminator is written after cut-buffer data (report by Joe Allen).
+
+	<li>add vttests/paste64.pl script to test experimental option for
+	    setting/getting selection data.
+
+	<li>add some error-checking in fontutils.c 
+	    (prompted by David Dawes commit message for XFree86).
+
+	<li>change xterm manpage to show the actual color resource names
+	    <code>XtDefaultForeground</code> and
+	    <code>XtDefaultBackground</code> rather than black and white
+	    (prompted by discussion with Emanuele Giaquinta).
+
+	<li>add <code>utf8Title</code> resource and menu entry, allowing the
+	    user to control whether title strings are interpreted as ISO-8859-1
+	    or UTF-8 encoding (Novell #52655, #113206).
+
+	<li>change order of ifdef's for utempter versus platforms in
+	    <code>Imakefile</code> to ensure a proper value for
+	    <code>InstallXtermSetGID</code>
+	    (prompted by Marc La France commit message for XFree86).
+
+	<li>update the cursor GCs when menu entry for reverse video is toggled.
+	    (Redhat #183993).
+
+	<li>a memory-leak fix for <code>set_cursor_gcs()</code>
+	    in <a href="#xterm_208">patch #208</a> broke the
+	    <code>-cm</code> option (Redhat #182382).
+</ul>
 
 <H1><A NAME="xterm_209">Patch #209 - 2006/2/12 - XFree86 4.5.99.22</A></H1>
 <ul>
@@ -688,7 +729,7 @@ is the latest version of this file.
 	    range of incoming data (patch by Joe Allen).
 
 	<li>adapted patch by Joe Allen to add experimental option to allow
-	    applications to get or set the selection data.
+	    applications to get or set the selection data as a BASE64 string.
 
 	<li>fix an off-by-one error parsing <code>-S/nn</code> option
 	    (Debian #311438, report/fix by Peter Chubb).
