@@ -1,6 +1,6 @@
-/* $XTermId: ptyx.h,v 1.415 2006/03/13 01:27:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.419 2006/03/20 00:36:19 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.131 2006/03/13 01:27:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.132 2006/03/20 00:36:19 dickey Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -143,6 +143,8 @@
 #undef USE_PTY_DEVICE
 #undef USE_PTY_SEARCH
 #elif defined(PUCC_PTYD)
+#undef USE_PTY_SEARCH
+#elif (defined(sun) && defined(SVR4)) || defined(_ALL_SOURCE) || defined(__CYGWIN__)
 #undef USE_PTY_SEARCH
 #endif
 

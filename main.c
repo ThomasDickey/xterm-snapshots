@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.492 2006/03/13 01:27:59 tom Exp $ */
+/* $XTermId: main.c,v 1.495 2006/03/20 00:36:19 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -87,7 +87,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.207 2006/03/13 01:27:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.209 2006/03/20 00:36:19 dickey Exp $ */
 
 /* main.c */
 
@@ -448,7 +448,7 @@ extern void sleep();
 extern char *ttyname();
 #endif
 
-#ifdef SYSV
+#if defined(SYSV) && defined(DECL_PTSNAME)
 extern char *ptsname(int);
 #endif
 
@@ -2813,8 +2813,10 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 			strerror(why));
 	    } else if (mode != (sb.st_mode & 0777U)) {
 		fprintf(stderr,
-			"Cannot chmod %s to %03o currently %03o: %s\n",
-			device, (unsigned) mode, (sb.st_mode & 0777U),
+			"Cannot chmod %s to %03lo currently %03lo: %s\n",
+			device,
+			(unsigned long) mode,
+			(unsigned long) (sb.st_mode & 0777U),
 			strerror(why));
 		TRACE(("...stat uid=%d, gid=%d, mode=%#o\n",
 		       sb.st_uid, sb.st_gid, sb.st_mode));
@@ -4094,7 +4096,8 @@ spawn(void)
 #endif
 
 #ifdef USE_LASTLOG
-	    if (term->misc.login_shell &&
+	    if (sizeof(lastlog.ll_time) == sizeof(time_t) &&	/* !Solaris */
+		term->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		bzero((char *) &lastlog, sizeof(struct lastlog));
 		(void) strncpy(lastlog.ll_line,
