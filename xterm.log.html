@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.395 2006/03/13 01:27:59 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.146 2006/03/13 01:27:59 dickey Exp $
+  $XTermId: xterm.log.html,v 1.400 2006/03/20 00:36:19 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.147 2006/03/20 00:36:19 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_211">Patch #211 - 2006/3/19 - XFree86 4.5.99.902</A>
 <LI><A HREF="#xterm_210">Patch #210 - 2006/3/12 - XFree86 4.5.99.902</A>
 <LI><A HREF="#xterm_209">Patch #209 - 2006/2/12 - XFree86 4.5.99.22</A>
 <LI><A HREF="#xterm_208">Patch #208 - 2006/1/3 - XFree86 4.5.99.19</A>
@@ -258,6 +259,28 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_211">Patch #211 - 2006/3/19 - XFree86 4.5.99.902</A></H1>
+<ul>
+	<li>modify prefix/suffix transformation in makefile to make
+	    <code>uxterm</code> install properly on Cygwin.
+
+	<li>restore the sizeof-comparison for <code>struct lastlog</code>
+	    added in <a href="#xterm_208">patch #208</a>,
+	    rendered (mostly) obsolete in <a href="#xterm_210">patch #210</a>,
+	    since an imake configuration can still turn that code on
+	    (prompted by comment by David Dawes).
+
+	<li>remove feature for <code>FreeBSDArchitecture</code> from
+	    <code>Imakefile</code> which would install xterm using the
+	    <code>utmp</code> group since a standard FreeBSD system has no such
+	    group, though it would support this configuration.  FreeBSD
+	    packager uses the <code>configure</code> script, which can make the
+	    appropriate check (prompted by comment by David Dawes).
+
+	<li>fixes for gcc redefinition warnings when built using imake
+	    (reports by David Dawes, Marc La France).
+</ul>
 
 <H1><A NAME="xterm_210">Patch #210 - 2006/3/12 - XFree86 4.5.99.902</A></H1>
 <ul>

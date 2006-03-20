@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.124 2006/01/04 02:10:17 tom Exp $
+## $XTermId: Makefile.in,v 1.126 2006/03/20 00:36:19 tom Exp $
 ##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.52 2006/01/04 02:10:17 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.53 2006/03/20 00:36:19 dickey Exp $ ##
 ##
 ## Copyright 2002-2005,2006 by Thomas E. Dickey
 ##
@@ -138,12 +138,13 @@ resize$x : $(OBJS2)
 
 charproc$o : main.h @CHARPROC_DEPS@
 
-TRANSFORM = sed 's/$x$$//'|sed '$(transform)'|sed 's/$$/$x/'
 actual_xterm  = `echo xterm|    sed '$(transform)'`
 actual_resize = `echo resize|   sed '$(transform)'`
-binary_xterm  = `echo xterm$x|  $(TRANSFORM)`
-binary_resize = `echo resize$x| $(TRANSFORM)`
-binary_uxterm = `echo uxterm|   $(TRANSFORM)`
+actual_uxterm = `echo uxterm|   sed '$(transform)'`
+
+binary_xterm  = $(actual_xterm)$x
+binary_resize = $(actual_resize)$x
+binary_uxterm = $(actual_uxterm)
 
 install \
 install-bin \

@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.375 2006/03/13 01:27:59 tom Exp $ */
+/* $XTermId: xterm.h,v 1.379 2006/03/20 00:36:19 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.114 2006/03/13 01:27:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.115 2006/03/20 00:36:19 dickey Exp $ */
 
 /************************************************************
 
@@ -85,7 +85,14 @@ authorization.
 #endif
 
 #define HAVE_STDLIB_H 1
+
+#if defined(sun)
+/* errno is declared in <errno.h> */
+#else
 #define DECL_ERRNO 1
+#endif
+
+#undef DECL_PTSNAME		/* ptsname() is normally in stdlib.h */
 
 #ifndef NOPUTENV
 #define HAVE_PUTENV 1
@@ -308,7 +315,7 @@ extern int errno;
 #define environ gblenvp		/* circumvent a bug */
 #endif
 
-#if !defined(VMS) && !(defined(linux) && defined(__USE_GNU))
+#if !defined(VMS) && !(defined(linux) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__) 
 extern char **environ;
 #endif
 
