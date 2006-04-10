@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.495 2006/03/20 00:36:19 tom Exp $ */
+/* $XTermId: main.c,v 1.497 2006/04/10 00:34:36 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -87,7 +87,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.209 2006/03/20 00:36:19 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.210 2006/04/10 00:34:36 dickey Exp $ */
 
 /* main.c */
 
@@ -2939,7 +2939,7 @@ spawn(void)
     struct lastlog lastlog;
 #endif
 #ifdef USE_LASTLOGX
-    struct lastlogx lastlog;
+    struct lastlogx lastlogx;
 #endif /* USE_LASTLOG */
 #endif /* HAVE_UTMP */
 #endif /* !USE_UTEMPTER */
@@ -4047,8 +4047,7 @@ spawn(void)
 #ifdef HAVE_UTMP_UT_HOST
 		    SetUtmpHost(utmp.ut_host, screen);
 #endif
-		    /* cast needed on Ultrix 4.4 */
-		    time((time_t *) & utmp.ut_time);
+		    utmp.ut_time = time((time_t *) 0);
 		    lseek(i, (long) (tslot * sizeof(utmp)), 0);
 		    write(i, (char *) &utmp, sizeof(utmp));
 		    close(i);
@@ -4085,26 +4084,25 @@ spawn(void)
 
 #ifdef USE_LASTLOGX
 	    if (term->misc.login_shell) {
-		bzero((char *) &lastlog, sizeof(lastlog));
-		(void) strncpy(lastlog.ll_line,
+		bzero((char *) &lastlogx, sizeof(lastlogx));
+		(void) strncpy(lastlogx.ll_line,
 			       my_pty_name(ttydev),
-			       sizeof(lastlog.ll_line));
-		X_GETTIMEOFDAY(&lastlog.ll_tv);
-		SetUtmpHost(lastlog.ll_host, screen);
-		updlastlogx(_PATH_LASTLOGX, screen->uid, &lastlog);
+			       sizeof(lastlogx.ll_line));
+		X_GETTIMEOFDAY(&lastlogx.ll_tv);
+		SetUtmpHost(lastlogx.ll_host, screen);
+		updlastlogx(_PATH_LASTLOGX, screen->uid, &lastlogx);
 	    }
 #endif
 
 #ifdef USE_LASTLOG
-	    if (sizeof(lastlog.ll_time) == sizeof(time_t) &&	/* !Solaris */
-		term->misc.login_shell &&
+	    if (term->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		bzero((char *) &lastlog, sizeof(struct lastlog));
 		(void) strncpy(lastlog.ll_line,
 			       my_pty_name(ttydev),
 			       sizeof(lastlog.ll_line));
 		SetUtmpHost(lastlog.ll_host, screen);
-		time(&lastlog.ll_time);
+		lastlog.ll_time = time((time_t *) 0);
 		lseek(i, (long) (screen->uid * sizeof(struct lastlog)), 0);
 		write(i, (char *) &lastlog, sizeof(struct lastlog));
 		close(i);
@@ -4556,7 +4554,7 @@ Exit(int n)
 	    (void) strncpy(utmp.ut_line,
 			   my_pty_name(ttydev),
 			   sizeof(utmp.ut_line));
-	    time(&utmp.ut_time);
+	    utmp.ut_time = time((time_t *) 0);
 	    write(wfd, (char *) &utmp, sizeof(utmp));
 	    close(wfd);
 	}

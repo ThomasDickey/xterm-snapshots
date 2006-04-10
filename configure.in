@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.208 2006/03/13 01:27:59 tom Exp $
+dnl $XTermId: configure.in,v 1.210 2006/04/10 00:34:36 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.75 2006/03/13 01:27:59 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.76 2006/04/10 00:34:36 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -63,6 +63,7 @@ CF_ANSI_CC_CHECK
 AC_CONST
 CF_PROG_EXT
 CF_XOPEN_SOURCE
+CF_SIGWINCH
 
 ###	checks for header files
 AC_CHECK_HEADERS( \

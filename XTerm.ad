@@ -1,5 +1,5 @@
-! $XTermId: XTerm.ad,v 1.78 2006/03/13 01:27:57 tom Exp $
-! $XFree86: xc/programs/xterm/XTerm.ad,v 3.36 2006/03/13 01:27:57 dickey Exp $
+! $XTermId: XTerm.ad,v 1.80 2006/04/10 00:34:36 tom Exp $
+! $XFree86: xc/programs/xterm/XTerm.ad,v 3.37 2006/04/10 00:34:36 dickey Exp $
 
 *saveLines: 1024
 
@@ -182,7 +182,7 @@
 *SimpleMenu*borderWidth: 2
 
 ! Here is a pattern that is useful for double-clicking on a URL:
-!*charClass: 33:48,35:48,37-38:48,43-47:48,58:48,61:48,63-64:48,126:48
+!*charClass: 33:48,35:48,37-38:48,43-47:48,58:48,61:48,63-64:48,95:48,126:48
 !
 ! Alternatively,
-!*on2Clicks: regex [[:alpha:]]+://([[:alnum:]!#+,./=?@~-]|(%[[:xdigit:]][[:xdigit:]]))+
+!*on2Clicks: regex [[:alpha:]]+://([[:alnum:]!#+,./=?@_~-]|(%[[:xdigit:]][[:xdigit:]]))+

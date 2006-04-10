@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.126 2006/03/20 00:36:19 tom Exp $
+## $XTermId: Makefile.in,v 1.128 2006/04/10 00:34:36 tom Exp $
 ##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.53 2006/03/20 00:36:19 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.54 2006/04/10 00:34:36 dickey Exp $ ##
 ##
 ## Copyright 2002-2005,2006 by Thomas E. Dickey
 ##
@@ -168,8 +168,8 @@ install-full :: xterm$x resize$x $(BINDIR)
 install \
 install-man \
 install-full :: $(MANDIR)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(APPSDIR)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(APPSDIR)
 
 @no_appsdir@install \
 @no_appsdir@install-app \

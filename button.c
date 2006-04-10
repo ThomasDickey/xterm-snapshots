@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.242 2006/03/13 01:27:57 tom Exp $ */
+/* $XTermId: button.c,v 1.244 2006/04/10 00:34:36 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -51,7 +51,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.86 2006/03/13 01:27:57 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.87 2006/04/10 00:34:36 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -1036,9 +1036,9 @@ struct _SelectionList {
     Time time;
 };
 
-/* convert a UTF-8 string to Latin-1, replacing non Latin-1 characters
- * by `#'. */
-
+/*
+ * Convert a UTF-8 string to Latin-1, replacing non Latin-1 characters by `#'.
+ */
 #if OPT_WIDE_CHARS
 static Char *
 UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
@@ -3087,6 +3087,8 @@ ConvertSelection(Widget w,
 	Atom *std_targets;
 	XPointer std_return = 0;
 	unsigned long std_length;
+
+	TRACE(("ConvertSelection XA_TARGETS(d)\n"));
 	if (XmuConvertStandardSelection(w, screen->selection_time, selection,
 					target, type, &std_return,
 					&std_length, format)) {
@@ -3117,24 +3119,28 @@ ConvertSelection(Widget w,
     }
 #if OPT_WIDE_CHARS
     else if (screen->wide_chars && *target == XA_STRING) {
+	TRACE(("ConvertSelection XA_STRING - wide\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XStringStyle);
     } else if (screen->wide_chars && *target == XA_UTF8_STRING(d)) {
+	TRACE(("ConvertSelection XA_UTF8_STRING(d) - wide\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XUTF8StringStyle);
     } else if (screen->wide_chars && *target == XA_TEXT(d)) {
+	TRACE(("ConvertSelection XA_TEXT(d) - wide\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
 				    Xutf8TextListToTextProperty,
 				    XStdICCTextStyle);
     } else if (screen->wide_chars && *target == XA_COMPOUND_TEXT(d)) {
+	TRACE(("ConvertSelection XA_COMPOUND_TEXT(d) - wide\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
@@ -3150,18 +3156,21 @@ ConvertSelection(Widget w,
 	   properly internationalised, and dump raw eight-bit data
 	   with no conversion into the selection.  Yes, this breaks
 	   the ICCCM in non-Latin-1 locales. */
+	TRACE(("ConvertSelection XA_STRING\n"));
 	*type = XA_STRING;
 	*value = (XtPointer) screen->selection_data;
 	*length = screen->selection_length;
 	*format = 8;
 	result = True;
     } else if (*target == XA_TEXT(d)) {		/* not wide_chars */
+	TRACE(("ConvertSelection XA_TEXT(d)\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
 				    XmbTextListToTextProperty,
 				    XStdICCTextStyle);
     } else if (*target == XA_COMPOUND_TEXT(d)) {	/* not wide_chars */
+	TRACE(("ConvertSelection XA_COMPOUND_TEXT(d)\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
@@ -3170,6 +3179,7 @@ ConvertSelection(Widget w,
     }
 #ifdef X_HAVE_UTF8_STRING
     else if (*target == XA_UTF8_STRING(d)) {	/* not wide_chars */
+	TRACE(("ConvertSelection XA_UTF8_STRING(d)\n"));
 	result =
 	    _ConvertSelectionHelper(w,
 				    type, value, length, format,
@@ -3178,6 +3188,7 @@ ConvertSelection(Widget w,
     }
 #endif
     else if (*target == XA_LIST_LENGTH(d)) {
+	TRACE(("ConvertSelection XA_LIST_LENGTH(d)\n"));
 	*value = XtMalloc(4);
 	if (sizeof(long) == 4)
 	     *(long *) *value = 1;
@@ -3190,6 +3201,7 @@ ConvertSelection(Widget w,
 	*format = 32;
 	result = True;
     } else if (*target == XA_LENGTH(d)) {
+	TRACE(("ConvertSelection XA_LENGTH(d)\n"));
 	/* This value is wrong if we have UTF-8 text */
 	*value = XtMalloc(4);
 	if (sizeof(long) == 4) {
@@ -3206,6 +3218,7 @@ ConvertSelection(Widget w,
 					   screen->selection_time, selection,
 					   target, type, (XPointer *) value,
 					   length, format)) {
+	TRACE(("ConvertSelection XmuConvertStandardSelection\n"));
 	result = True;
     }
 
