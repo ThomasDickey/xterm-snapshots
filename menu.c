@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.204 2006/03/13 01:27:59 tom Exp $ */
+/* $XTermId: menu.c,v 1.206 2006/04/10 00:34:36 tom Exp $ */
 
 /*
 
@@ -46,7 +46,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.c,v 3.67 2006/03/13 01:27:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/menu.c,v 3.68 2006/04/10 00:34:36 dickey Exp $ */
 
 #include <xterm.h>
 #include <data.h>
@@ -622,6 +622,7 @@ domenu(Widget w GCC_UNUSED,
 	    update_scrollttyoutput();
 	    update_allow132();
 	    update_cursesemul();
+	    update_selectToClipboard();
 	    update_visualbell();
 	    update_poponbell();
 	    update_marginbell();

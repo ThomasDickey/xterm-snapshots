@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.334 2006/03/13 01:27:59 tom Exp $
+.\" $XTermId: xterm.man,v 1.338 2006/04/10 00:34:37 tom Exp $
 .\"
 .\" Copyright 1996-2005,2006 by Thomas E. Dickey
 .\"
@@ -53,7 +53,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.122 2006/03/13 01:27:59 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.123 2006/04/10 00:34:37 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .
@@ -1825,13 +1825,22 @@ normal characters with spaces between them.
 .TP 8
 .B "forceBoxChars (\fPclass\fB ForceBoxChars)"
 Specifies whether \fIxterm\fP should assume the normal and bold fonts
-have VT100 line-drawing characters.
-The fixed-pitch fonts used by \fIxterm\fP
+have VT100 line-drawing characters:
+.RS
+.TP 5
+-
+The fixed-pitch ISO-8859-*-encoded fonts used by \fIxterm\fP
 normally have the VT100 line-drawing glyphs in cells 1-31.
 Other fixed-pitch fonts may be more attractive, but lack these glyphs.
-If ``false'', \fIxterm\fP will check for missing glyphs in cells 1-31
-and make line-drawing characters directly.
-If ``true'', \fIxterm\fP uses whatever is in cells 1-31 without checking.
+.TP
+-
+When using an ISO-10646-1 font and the \fBwideChars\fP resource is true,
+\fIxterm\fP uses the Unicode glyphs which match the VT100 line-drawing glyphs.
+.RE
+.IP
+If ``false'', \fIxterm\fP checks for missing glyphs in the font
+and makes line-drawing characters directly as needed.
+If ``true'', \fIxterm\fP uses whatever is in the font without checking.
 The default is ``false.''
 .TP 8
 .B "foreground (\fPclass\fB Foreground)"
@@ -3324,6 +3333,7 @@ The second section allows you to modify the way it is displayed:
 Line-Drawing Characters (font-linedrawing)
 When set, tells \fIxterm\fP to draw its own line-drawing characters.
 Otherwise it relies on the font containing these.
+Compare to the \fBforceBoxChars\fP resource.
 .TP
 Doublesized Characters (font-doublesize)
 When set, \fIxterm\fP may ask the font server to produce scaled versions
@@ -4235,7 +4245,10 @@ If your display supports color, use this
 *customization: -color
 .in -10
 in your .Xdefaults file to
-automatically turn on color in \fIxterm\fP and similar applications.
+automatically use this resource file rather than
+.IR __apploaddir__/XTerm .
+If you do not do this,
+\fIxterm\fP uses its compiled-in default resource settings for colors.
 .
 .
 .SH ERROR MESSAGES

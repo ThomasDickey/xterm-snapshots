@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.94 2006/03/20 00:36:19 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.98 2006/04/10 00:34:36 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -7,7 +7,7 @@ XCOMM Xterm assumes that bcopy can handle overlapping arguments.  If your
 XCOMM bcopy (or memcpy) cannot, write a routine called bcopy and link it in
 XCOMM or add -Dbcopy=mybcopy to the DEFINES list below.
 XCOMM
-XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.68 2006/03/20 00:36:19 dickey Exp $
+XCOMM $XFree86: xc/programs/xterm/Imakefile,v 3.73 2006/04/10 00:34:36 dickey Exp $
 XCOMM
 
 /* Uncomment SCROLLBAR_RIGHT if you want the scroll bar to be on the right */
@@ -21,14 +21,21 @@ SCROLLBAR_RIGHT = -DSCROLLBAR_RIGHT
  *
  * This feature could also be applied to FreeBSD, but requires the installer
  * to define a "utmp" group as well as chgrp the utmp file to match.
+ *
+ * Note: InstallXtermSetUID is always defined; InstallXtermSetGID is defined
+ * in newer imake configurations.
  */
+#if !defined(InstallXtermSetGID) && !InstallXtermSetUID
 #if defined(OpenBSDArchitecture) || \
     (defined(LinuxArchitecture) && \
      (LinuxCLibMajorVersion == 6))
-#undef  InstallXtermSetGID
 #define InstallXtermSetGID YES
 #endif
+#endif
 
+/*
+ * Override the set uid/gid flags to use the utempter library.
+ */
 #if defined(UseUtempter)
 #undef InstallXtermSetUID /* imake sets this */
 #undef InstallXtermSetGID /* we set this */
@@ -38,8 +45,16 @@ SCROLLBAR_RIGHT = -DSCROLLBAR_RIGHT
 #endif
 
 /*
- * Fixes to allow compile with X11R5
+ * Fixes to allow compile with X11R5, etc.
  */
+#ifndef InstGidFlags
+#define InstGidFlags -m 2755 -g utmp
+#endif
+
+#ifndef InstUidFlags
+#define InstUidFlags -m 4711
+#endif
+
 #ifndef XkbClientDefines
 #define XkbClientDefines /**/
 #endif
@@ -58,6 +73,16 @@ SCROLLBAR_RIGHT = -DSCROLLBAR_RIGHT
 
 #ifndef XkbClientLibs
 #define XkbClientLibs /**/
+#endif
+
+/* This must come before setting DEFINES */
+#if InstallXtermSetUID
+INSTSETIDFLAGS = InstUidFlags 
+#elif InstallXtermSetGID
+CSGIDFLAGS = -DUSE_UTMP_SETGID
+INSTSETIDFLAGS = InstGidFlags 
+#else
+INSTSETIDFLAGS = NullParameter 
 #endif
 
 /*
@@ -147,7 +172,7 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
 #ifdef TraceXTerm
        TRACEDEF = -DOPT_TRACE=1
 #endif
-   MAIN_DEFINES = $(UTMPDEF) $(TTYGROUPDEF) $(PUCCPTYDDEF) \
+   MAIN_DEFINES = $(UTMPDEF) $(TTYGROUPDEF) $(PUCCPTYDDEF) $(CSGIDFLAGS) \
 		  -DOSMAJORVERSION=$(OSMAJORVERSION) \
 		  -DOSMINORVERSION=$(OSMINORVERSION)
    MISC_DEFINES = /* -DALLOWLOGGING -DALLOWLOGFILEEXEC */
@@ -214,15 +239,9 @@ SpecialCObjectRule(charproc,$(_NOOP_),$(MISC_DEFINES))
 SpecialCObjectRule(data,$(_NOOP_),$(MISC_DEFINES))
 
 #if InstallXtermSetUID
-INSTUIDFLAGS = -m 4711
 SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
 #else
 NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(UTMPLIB) $(PTYLIB))
-#endif
-
-#if InstallXtermSetGID
-CSGIDFLAGS  = -DUSE_UTMP_SETGID
-INSTUIDFLAGS = -m 2755 -g utmp
 #endif
 
 #if InstallXtermSetUID && defined(SunArchitecture) && HasSharedLibraries && (OSMajorVersion < 5)
@@ -245,14 +264,10 @@ install::
 	$(EXTRA_LDOPTIONS) $(LOCAL_LDFLAGS),$(OBJS1),$(LDOVERRIDE)
 	$(XRFLIBS) XawClientLibs $(LDRESUME) $(LDLIBS) $(TERMCAPLIB)
 	$(PTYLIB))
-	$(INSTALL) -c $(INSTPGMFLAGS) $(INSTUIDFLAGS) ProgramTargetName(xterm.inst) $(DESTDIR)$(BINDIR)/ProgramTargetName(xterm)
+	$(INSTALL) -c $(INSTPGMFLAGS) $(INSTSETIDFLAGS) ProgramTargetName(xterm.inst) $(DESTDIR)$(BINDIR)/ProgramTargetName(xterm)
 	RemoveFile(ProgramTargetName(xterm.inst))
 #else
-#if InstallXtermSetUID
-InstallProgramWithFlags(xterm,$(BINDIR),$(INSTUIDFLAGS))
-#else
-InstallProgramWithFlags(xterm,$(BINDIR),NullParameter)
-#endif
+InstallProgramWithFlags(xterm,$(BINDIR),$(INSTSETIDFLAGS))
 #endif
 
 InstallNamedProg(uxterm,uxterm,$(BINDIR))

@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.400 2006/03/20 00:36:19 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.147 2006/03/20 00:36:19 dickey Exp $
+  $XTermId: xterm.log.html,v 1.410 2006/04/10 00:34:37 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.148 2006/04/10 00:34:37 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_212">Patch #212 - 2006/4/9 - XFree86 4.5.99.904</A>
 <LI><A HREF="#xterm_211">Patch #211 - 2006/3/19 - XFree86 4.5.99.902</A>
 <LI><A HREF="#xterm_210">Patch #210 - 2006/3/12 - XFree86 4.5.99.902</A>
 <LI><A HREF="#xterm_209">Patch #209 - 2006/2/12 - XFree86 4.5.99.22</A>
@@ -259,6 +260,46 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_212">Patch #212 - 2006/4/9 - XFree86 4.5.99.904</A></H1>
+<ul>
+	<li>improve description of <code>forceBoxChars</code> in manpage
+	    (discussion with Joe Wells).
+
+	<li>set checkmark for "Select To Clipboard" menu entry on startup,
+	    from resource setting.
+
+	<li>update manpage to note that <code>*customization:color</code> is
+	    not needed, though it is useful (Redhat #188034).
+
+	<li>add underscore to sample pattern for URL in <code>XTerm.ad</code>
+	    (Redhat #188037).
+
+	<li>modify install rule for manpage to use the configured app-defaults
+	    directory (Redhat #188031).
+
+	<li>add checks in <code>releaseCursorGCs()</code> to ensure GC's are
+	    distinct, needed since memory leak changes for
+	    <a href="#xterm_208">patch #208</a>
+	    (Redhat #186935, patch by Jason Vas Dias).
+
+	<li>modify <code>Imakefile</code> definitions to allow
+	    <code>imake</code> to set <code>InstallXtermSetGID</code>.
+	    Add symbol <code>InstGidFlags</code>.
+
+	<li>add configure script check to ensure that SIGWINCH if defined even
+	    when headers undefine this as a side-effect of
+	    <code>_POSIX_C_SOURCE</code>, etc.
+
+	<li>resync with XFree86 CVS:
+	<ul>
+	   <li>ifdef-out chmod of terminal device for OS/2 (XFree86 #1663,
+	       Frank Giessler).
+	   <li>move new <code>Imakefile</code> chunk which defines
+	       <code>$(CSGIDFLAGS)</code> before DEFINES,
+	       e.g., for IRIX64 (Marc La France).
+	</ul>
+</ul>
 
 <H1><A NAME="xterm_211">Patch #211 - 2006/3/19 - XFree86 4.5.99.902</A></H1>
 <ul>

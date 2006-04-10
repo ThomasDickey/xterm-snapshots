@@ -1,6 +1,6 @@
-/* $XTermId: misc.c,v 1.295 2006/03/13 01:27:59 tom Exp $ */
+/* $XTermId: misc.c,v 1.297 2006/04/10 00:34:37 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.105 2006/03/13 01:27:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.106 2006/04/10 00:34:37 dickey Exp $ */
 
 /*
  *
@@ -991,7 +991,7 @@ timestamp_filename(char *dst, const char *src)
     time_t tstamp;
     struct tm *tstruct;
 
-    time(&tstamp);
+    tstamp = time((time_t *) 0);
     tstruct = localtime(&tstamp);
     sprintf(dst, TIMESTAMP_FMT,
 	    src,
@@ -1199,7 +1199,7 @@ StartLog(TScreen * screen)
 	    time_t now;
 	    struct tm *ltm;
 
-	    (void) time(&now);
+	    now = time((time_t *) 0);
 	    ltm = (struct tm *) localtime(&now);
 	    if ((gethostname(hostname, sizeof(hostname)) == 0) &&
 		(strftime(yyyy_mm_dd_hh_mm_ss,
