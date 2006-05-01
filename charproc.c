@@ -1,6 +1,6 @@
-/* $XTermId: charproc.c,v 1.671 2006/04/10 00:34:36 tom Exp $ */
+/* $XTermId: charproc.c,v 1.675 2006/04/30 21:55:39 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.182 2006/04/10 00:34:36 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.183 2006/04/30 21:55:39 dickey Exp $ */
 
 /*
 
@@ -627,7 +627,8 @@ static XtResource resources[] =
 
 #if OPT_WIDE_CHARS
     Ires(XtNutf8, XtCUtf8, screen.utf8_mode, uDefault),
-    Ires(XtNutf8Title, XtCUtf8Title, screen.utf8_title, False),
+    Bres(XtNutf8Latin1, XtCUtf8Latin1, screen.utf8_latin1, False),
+    Bres(XtNutf8Title, XtCUtf8Title, screen.utf8_title, False),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
     Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
     Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
@@ -5452,8 +5453,8 @@ VTInitialize(Widget wrequest,
 	   wnew->screen.cache_doublesize));
 #endif
 
-#if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS
-    wnew->num_ptrs = (OFF_ATTRS + 1);	/* OFF_FLAGS, OFF_CHARS, OFF_ATTRS */
+#if OPT_WIDE_CHARS
+    wnew->num_ptrs = (OFF_CHARS + 1);	/* minimum needed for cell */
 #endif
 #if OPT_ISO_COLORS
     init_Ires(screen.veryBoldColors);
@@ -5566,11 +5567,6 @@ VTInitialize(Widget wrequest,
 	wnew->screen.colorMode = False;
 	TRACE(("All colors are foreground or background: disable colorMode\n"));
     }
-#if OPT_EXT_COLORS
-    wnew->num_ptrs = (OFF_BGRND + 1);
-#else
-    wnew->num_ptrs = (OFF_COLOR + 1);
-#endif
     wnew->sgr_foreground = -1;
     wnew->sgr_background = -1;
     wnew->sgr_extended = False;
@@ -5596,12 +5592,9 @@ VTInitialize(Widget wrequest,
     T_COLOR(&(wnew->screen), TEK_CURSOR) = T_COLOR(&(wnew->screen), TEXT_CURSOR);
 #endif
 
-#if OPT_DEC_CHRSET
-    wnew->num_ptrs = (OFF_CSETS + 1);
-#endif
-
 #if OPT_WIDE_CHARS
     VTInitialize_locale(request);
+    init_Bres(screen.utf8_latin1);
     init_Bres(screen.utf8_title);
 
 #if OPT_LUIT_PROG
@@ -5651,7 +5644,7 @@ VTInitialize(Widget wrequest,
 #endif
 
     if (wnew->screen.wide_chars != False)
-	wnew->num_ptrs = (OFF_COM2H + 1);
+	wnew->num_ptrs = OFF_FINAL;
 
     decode_wcwidth((wnew->misc.cjk_width ? 2 : 0)
 		   + (wnew->misc.mk_width ? 1 : 0)
