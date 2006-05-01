@@ -1,6 +1,6 @@
-/* $XTermId: ptyx.h,v 1.419 2006/03/20 00:36:19 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.422 2006/04/30 21:55:39 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.132 2006/03/20 00:36:19 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.133 2006/04/30 21:55:39 dickey Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -893,10 +893,10 @@ typedef enum {
 #endif
 
 	/* the number of pointers per row in 'ScrnBuf' */
-#if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS
+#if OPT_WIDE_CHARS
 #define MAX_PTRS term->num_ptrs
 #else
-#define MAX_PTRS (OFF_ATTRS+1)
+#define MAX_PTRS (OFF_FINAL)
 #endif
 
 #define BUF_HEAD 1
@@ -1028,8 +1028,7 @@ typedef struct {
 /* The order of ifdef's matches the logic for num_ptrs in VTInitialize */
 typedef enum {
 	OFF_FLAGS = 0		/* BUF_HEAD */
-	, OFF_CHARS = 1		/* first (or only) byte of cell's character */
-	, OFF_ATTRS = 2		/* video attributes */
+	, OFF_ATTRS		/* video attributes */
 #if OPT_ISO_COLORS
 #if OPT_256_COLORS || OPT_88_COLORS
 	, OFF_FGRND		/* foreground color number */
@@ -1041,6 +1040,8 @@ typedef enum {
 #if OPT_DEC_CHRSET
 	, OFF_CSETS		/* DEC character-set */
 #endif
+	/* wide (16-bit) characters begin here */
+	, OFF_CHARS		/* first (or only) byte of cell's character */
 #if OPT_WIDE_CHARS
 	, OFF_WIDEC		/* second byte of first wide-character */
 	, OFF_COM1L		/* first combining character */
@@ -1048,6 +1049,7 @@ typedef enum {
 	, OFF_COM2L		/* second combining character */
 	, OFF_COM2H
 #endif
+	, OFF_FINAL		/* this is the last item in the enum */
 } BufOffsets;
 
 	/*
@@ -1277,6 +1279,7 @@ typedef struct {
 	Boolean		vt100_graphics;	/* true to allow vt100-graphics	*/
 	Boolean		utf8_inparse;	/* true to enable UTF-8 parser	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
+	Boolean		utf8_latin1;	/* use UTF-8 with Latin-1 bias	*/
 	Boolean		utf8_title;	/* use UTF-8 titles		*/
 	int		latin9_mode;	/* poor man's luit, latin9	*/
 	int		unicode_font;	/* font uses unicode encoding	*/

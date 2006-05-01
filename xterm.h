@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.379 2006/03/20 00:36:19 tom Exp $ */
+/* $XTermId: xterm.h,v 1.381 2006/04/30 21:55:39 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.115 2006/03/20 00:36:19 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.116 2006/04/30 21:55:39 dickey Exp $ */
 
 /************************************************************
 
@@ -439,6 +439,7 @@ extern char **environ;
 #define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
 #define XtNutf8			"utf8"
+#define XtNutf8Latin1		"utf8Latin1"
 #define XtNutf8Title		"utf8Title"
 #define XtNveryBoldColors	"veryBoldColors"
 #define XtNvisualBell		"visualBell"
@@ -557,6 +558,7 @@ extern char **environ;
 #define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
 #define XtCUtf8			"Utf8"
+#define XtCUtf8Latin1		"Utf8Latin1"
 #define XtCUtf8Title		"Utf8Title"
 #define XtCVT100Graphics	"VT100Graphics"
 #define XtCVeryBoldColors	"VeryBoldColors"

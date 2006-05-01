@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.410 2006/04/10 00:34:37 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.148 2006/04/10 00:34:37 dickey Exp $
+  $XTermId: xterm.log.html,v 1.414 2006/04/30 21:55:39 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.149 2006/04/30 21:55:39 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_213">Patch #213 - 2006/4/30 - XFree86 4.5.99.905</A>
 <LI><A HREF="#xterm_212">Patch #212 - 2006/4/9 - XFree86 4.5.99.904</A>
 <LI><A HREF="#xterm_211">Patch #211 - 2006/3/19 - XFree86 4.5.99.902</A>
 <LI><A HREF="#xterm_210">Patch #210 - 2006/3/12 - XFree86 4.5.99.902</A>
@@ -261,6 +262,26 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_213">Patch #213 - 2006/4/30 - XFree86 4.5.99.905</A></H1>
+<ul>
+	<li>minor optimization to cell layout; will use that to simplify some
+	    logic and allow for more than two combining characters in another
+	    patch.
+	    
+	<li>add <code>utf8Latin1</code> resource to make optional the
+	    feature from <a href="#xterm_209">patch #209</a> which
+	    allowed ISO-8859-1 fonts to be used in cases
+	    where a wide font was given.  This would only
+	    work for the special case where the user normally used Latin-1
+	    and wanted some wide characters (report by Rostislav Krasny).
+
+	<li>add <code>utf8Title</code> resource to manpage (Novell #52655).
+
+	<li>fix typo in table entry for <code>utf8Title</code> resource which
+	    made it treated as an integer rather than boolean (patch by Mike
+	    Fabian, Novell #52655).
+</ul>
+
 <H1><A NAME="xterm_212">Patch #212 - 2006/4/9 - XFree86 4.5.99.904</A></H1>
 <ul>
 	<li>improve description of <code>forceBoxChars</code> in manpage
@@ -377,7 +398,7 @@ is the latest version of this file.
 	    by precalculating the height of the toolbar.
 
 	<li>remove menu entry for "Enable Curses Emulation" (to make room for
-	    "Select To Clipboard).
+	    "Select To Clipboard").
 
 	<li>add resource <code>selectToClipboard</code>,
 	    action <code>set-select</code> and a menu entry to allow 
@@ -390,7 +411,7 @@ is the latest version of this file.
 	    href="#xterm_204">patch #204</a> to allow an ISO-8859-1 "normal"
 	    font to be combined with an ISO-10646 font if the latter is given
 	    via the <code>-fw</code> option or its corresponding resource
-	    value.
+	    value (prompted by comment in Novell #49305).
 
 	<li>add <code>TIOCSCTTY</code> <code>ioctl()</code> ifdef'd for
 	    <code>__GNU__</code> to set the controlling terminal (Debian

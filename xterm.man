@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.338 2006/04/10 00:34:37 tom Exp $
+.\" $XTermId: xterm.man,v 1.341 2006/04/30 21:55:39 tom Exp $
 .\"
 .\" Copyright 1996-2005,2006 by Thomas E. Dickey
 .\"
@@ -53,7 +53,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.123 2006/04/10 00:34:37 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.124 2006/04/30 21:55:39 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .
@@ -2392,6 +2392,29 @@ escape sequences for turning UTF-8 mode on/off are allowed.
 .TP 8
 .B "utf8Fonts (\fPclass\fB Utf8Fonts)"
 See the discussion of the \fBlocale\fP resource.
+.TP 8
+.B "utf8Latin1 (\fPclass\fB Utf8Latin1)"
+If true,
+allow an ISO-8859-1 \fInormal\fP
+font to be combined with an ISO-10646 font if the latter is given
+via the \fB-fw\fP option or its corresponding resource value.
+The default is ``false.''
+.TP 8
+.B "utf8Title (\fPclass\fB Utf8Title)"
+Applications can set \fIxterm\fP's title by writing a control sequence.
+Normally this control sequence follows the VT220 convention,
+which encodes the string in ISO-8859-1 and
+allows for an 8-bit string terminator.
+If \fIxterm\fP is started in a UTF-8 locale,
+it translates the ISO-8859-1 string to UTF-8 to work with the X libraries
+which assume the string is UTF-8.
+.IP
+However, some users may wish to write a title string encoded in UTF-8.
+Set this resource to ``true'' to allow UTF-8 encoded title strings.
+That cancels the translation to UTF-8,
+allowing UTF-8 strings to be displayed as is.
+.IP
+The default is ``false.''
 .TP 8
 .B "veryBoldColors (\fPclass\fB VeryBoldColors)"
 Specifies whether to combine video attributes with colors specified by
