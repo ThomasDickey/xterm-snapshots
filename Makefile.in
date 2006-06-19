@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.130 2006/04/30 21:55:39 tom Exp $
+## $XTermId: Makefile.in,v 1.134 2006/06/19 00:36:50 tom Exp $
 ##
-## $XFree86: xc/programs/xterm/Makefile.in,v 3.55 2006/04/30 21:55:39 dickey Exp $ ##
+## $XFree86: xc/programs/xterm/Makefile.in,v 3.56 2006/06/19 00:36:50 dickey Exp $ ##
 ##
 ## Copyright 2002-2005,2006 by Thomas E. Dickey
 ##
@@ -38,6 +38,10 @@ CPP		= @CPP@
 AWK		= @AWK@
 LINK		= $(CC) $(CFLAGS)
 
+LN_S		= @LN_S@
+RM              = rm -f
+LINT		= @LINT@
+
 INSTALL		= @INSTALL@
 INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 INSTALL_SCRIPT	= @INSTALL_SCRIPT@
@@ -66,9 +70,6 @@ mandir		= @mandir@/man$(manext)
 appsdir		= @appsdir@
 
 #### End of system configuration section. ####
-
-RM              = rm -f
-LINT		= @LINT@
 
 DESTDIR		=
 BINDIR		= $(DESTDIR)$(bindir)
@@ -162,14 +163,17 @@ install-full :: xterm$x resize$x $(BINDIR)
 			$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm); \
 		fi'
 	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && rm -f @XTERM_SYMLINK@"
-	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && ln -s $(binary_xterm) @XTERM_SYMLINK@"
+	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && $(LN_S) $(binary_xterm) @XTERM_SYMLINK@"
 	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && echo '... created symbolic link:' && ls -l $(binary_xterm) @XTERM_SYMLINK@"
 
 install \
 install-man \
 install-full :: $(MANDIR)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(APPSDIR)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(APPSDIR)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir)
+	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext)"
+	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext)"
+	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext)"
 
 @no_appsdir@install \
 @no_appsdir@install-app \
@@ -209,9 +213,6 @@ uninstall-full ::
 	-$(RM) $(BINDIR)/$(binary_xterm)
 	-$(RM) $(BINDIR)/$(binary_resize)
 	-$(RM) $(BINDIR)/$(binary_uxterm)
-
-uninstall-bin \
-uninstall-full ::
 	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && rm -f @XTERM_SYMLINK@"
 
 uninstall \
@@ -219,6 +220,7 @@ uninstall-man \
 uninstall-full ::
 	-$(RM) $(MANDIR)/$(actual_xterm).$(manext)
 	-$(RM) $(MANDIR)/$(actual_resize).$(manext)
+	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext)"
 
 @no_appsdir@uninstall \
 @no_appsdir@uninstall-app \
@@ -246,7 +248,7 @@ ctlseqs.html : ctlseqs.ms
 	GROFF_NO_SGR=stupid $(SHELL) -c "tbl ctlseqs.ms | groff -Thtml -ms" >$@
 
 ctlseqs.txt : ctlseqs.ms
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl ctlseqs.ms | nroff -Tascii -ms" >$@
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl ctlseqs.ms | nroff -Tascii -ms | col -bx" >$@
 
 ctlseqs.ps : ctlseqs.ms
 	tbl ctlseqs.ms | groff -ms >$@

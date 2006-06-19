@@ -1,6 +1,6 @@
-dnl $XTermId: aclocal.m4,v 1.223 2006/04/10 00:34:36 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.227 2006/06/19 00:36:50 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.64 2006/04/10 00:34:36 dickey Exp $
+dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.65 2006/06/19 00:36:50 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1198,6 +1198,44 @@ if test "$cf_cv_posix_c_source" != no ; then
 fi
 
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_POSIX_SAVED_IDS version: 4 updated: 2006/06/18 19:38:48
+dnl ------------------
+dnl
+dnl Check first if saved-ids are always supported.  Some systems
+dnl such require runtime checks.
+AC_DEFUN([CF_POSIX_SAVED_IDS],
+[
+AC_CACHE_CHECK(if POSIX saved-ids are supported,cf_cv_posix_saved_ids,[
+AC_TRY_LINK(
+[
+#include <unistd.h>
+],[
+#if defined(_POSIX_SAVED_IDS) && (_POSIX_SAVED_IDS > 0)
+int x = seteuid(geteuid());
+#else
+make an error
+#endif
+],[cf_cv_posix_saved_ids=yes
+],[
+AC_TRY_RUN([
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#include <unistd.h>
+int main()
+{
+	long code = sysconf(_SC_SAVED_IDS);
+	exit ((code > 0) ? 0 : 1);
+}],
+	cf_cv_posix_saved_ids=yes,
+	cf_cv_posix_saved_ids=no,
+	cf_cv_posix_saved_ids=unknown)
+])
+])
+
+test "$cf_cv_posix_saved_ids" = yes && AC_DEFINE(HAVE_POSIX_SAVED_IDS)
+])
 dnl ---------------------------------------------------------------------------
 dnl CF_POSIX_WAIT version: 2 updated: 2000/05/29 16:16:04
 dnl -------------

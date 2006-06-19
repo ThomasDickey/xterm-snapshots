@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.191 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: screen.c,v 1.193 2006/06/19 00:36:51 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -52,7 +52,7 @@
  * SOFTWARE.
  */
 
-/* $XFree86: xc/programs/xterm/screen.c,v 3.76 2006/02/13 01:14:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/screen.c,v 3.77 2006/06/19 00:36:51 dickey Exp $ */
 
 /* screen.c */
 
@@ -563,7 +563,7 @@ ScreenWrite(TScreen * screen,
 	memset(fbb, (Char) (cur_fg_bg & 0xff), real_width);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	memset(fb, cur_fg_bg, real_width);
+	memset(fb, (int) cur_fg_bg, real_width);
     });
     if_OPT_DEC_CHRSET({
 	memset(cb, curXtermChrSet(screen->cur_row), real_width);
@@ -621,7 +621,7 @@ ScrnClearLines(TScreen * screen, ScrnBuf sb, int where, unsigned n, unsigned siz
 		    memset(screen->save_ptr[i + j], term->cur_background, size);
 #else
 		else if (j == OFF_COLOR)
-		    memset(screen->save_ptr[i + j], xtermColorPair(), size);
+		    memset(screen->save_ptr[i + j], (int) xtermColorPair(), size);
 #endif
 #endif
 		else
@@ -777,7 +777,7 @@ ScrnInsertChar(TScreen * screen, unsigned n)
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
 	ptr = BUF_COLOR(sb, row);
 	memmove(ptr + col + n, ptr + col, nbytes);
-	memset(ptr + col, xtermColorPair(), n);
+	memset(ptr + col, (int) xtermColorPair(), n);
     });
     if_OPT_DEC_CHRSET({
 	ptr = BUF_CSETS(sb, row);
@@ -854,7 +854,7 @@ ScrnDeleteChar(TScreen * screen, unsigned n)
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
 	ptr = BUF_COLOR(sb, row);
 	memmove(ptr + col, ptr + col + n, nbytes);
-	memset(ptr + last - n, xtermColorPair(), n);
+	memset(ptr + last - n, (int) xtermColorPair(), n);
     });
     if_OPT_DEC_CHRSET({
 	ptr = BUF_CSETS(sb, row);
@@ -1338,7 +1338,7 @@ ClearBufRows(TScreen * screen,
 	    memset(BUF_BGRND(buf, row), term->cur_background, len);
 	});
 	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	    memset(BUF_COLOR(buf, row), xtermColorPair(), len);
+	    memset(BUF_COLOR(buf, row), (int) xtermColorPair(), len);
 	});
 	if_OPT_DEC_CHRSET({
 	    memset(BUF_CSETS(buf, row), 0, len);

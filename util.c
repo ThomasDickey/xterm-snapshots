@@ -1,6 +1,6 @@
-/* $XTermId: util.c,v 1.270 2006/03/13 01:27:59 tom Exp $ */
+/* $XTermId: util.c,v 1.273 2006/06/19 00:36:52 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/util.c,v 3.97 2006/03/13 01:27:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -994,7 +994,7 @@ ClearInLine(TScreen * screen, int row, int col, unsigned len)
 	memset(SCRN_BUF_BGRND(screen, row) + col, term->cur_background, len);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	memset(SCRN_BUF_COLOR(screen, row) + col, xtermColorPair(), len);
+	memset(SCRN_BUF_COLOR(screen, row) + col, (int) xtermColorPair(), len);
     });
     if_OPT_DEC_CHRSET({
 	memset(SCRN_BUF_CSETS(screen, row) + col,
@@ -2875,25 +2875,40 @@ decode_keyboard_type(XTERM_RESOURCE * rp)
     };
     Cardinal n;
 
-    if (x_strcasecmp(rp->keyboardType, "unknown")) {
+    TRACE(("decode_keyboard_type(%s)\n", rp->keyboardType));
+    if (!x_strcasecmp(rp->keyboardType, "unknown")) {
+	/*
+	 * Let the individual resources comprise the keyboard-type.
+	 */
+	for (n = 0; n < XtNumber(table); ++n)
+	    init_keyboard_type(table[n].type, FLAG(n));
+    } else if (!x_strcasecmp(rp->keyboardType, "default")) {
+	/*
+	 * Set the keyboard-type to the Sun/PC type, allowing modified
+	 * function keys, etc.
+	 */
+	for (n = 0; n < XtNumber(table); ++n)
+	    init_keyboard_type(table[n].type, False);
+    } else {
 	Bool found = False;
+
+	/*
+	 * Choose an individual keyboard type.
+	 */
 	for (n = 0; n < XtNumber(table); ++n) {
 	    if (!x_strcasecmp(rp->keyboardType, table[n].name + 1)) {
 		FLAG(n) = True;
 		found = True;
-		init_keyboard_type(table[n].type, FLAG(n));
 	    } else {
 		FLAG(n) = False;
 	    }
+	    init_keyboard_type(table[n].type, FLAG(n));
 	}
 	if (!found) {
 	    fprintf(stderr,
 		    "KeyboardType resource \"%s\" not found\n",
 		    rp->keyboardType);
 	}
-    } else {
-	for (n = 0; n < XtNumber(table); ++n)
-	    init_keyboard_type(table[n].type, FLAG(n));
     }
 #undef DATA
 #undef FLAG

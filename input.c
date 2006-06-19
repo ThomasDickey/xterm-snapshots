@@ -1,6 +1,6 @@
-/* $XTermId: input.c,v 1.176 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: input.c,v 1.186 2006/06/19 00:36:51 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/input.c,v 3.75 2006/02/13 01:14:59 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/input.c,v 3.76 2006/06/19 00:36:51 dickey Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -79,6 +79,18 @@
 
 #include <data.h>
 #include <fontutils.h>
+
+#define IsControlAlias(n) ((n) != 0 && strchr("2345678 @`\\/^~_?", (n)) != 0)
+
+#define IsControlInput(n) (((n) <= 0x1f) \
+			|| ((n) >= 0x40 && (n) <= 0x5f) \
+			|| ((n) >= 0x60 && (n) <= 0x7f))
+
+#ifdef XK_ISO_Left_Tab
+#define IsTabKey(n) ((n) == XK_Tab || (n) == XK_ISO_Left_Tab)
+#else
+#define IsTabKey(n) ((n) == XK_Tab)
+#endif
 
 #define MAP(from, to) case from: return(to)
 
@@ -324,15 +336,60 @@ Input(TKeyboard * keyboard,
     if (screen->xic) {
 	Status status_return;
 #if OPT_WIDE_CHARS
-	if (screen->utf8_mode)
+	if (screen->utf8_mode) {
 	    nbytes = Xutf8LookupString(screen->xic, event,
 				       strbuf, sizeof(strbuf),
 				       &keysym, &status_return);
-	else
+	} else
 #endif
+	{
 	    nbytes = XmbLookupString(screen->xic, event,
 				     strbuf, sizeof(strbuf),
 				     &keysym, &status_return);
+	}
+#if OPT_MOD_FKEYS
+	/*
+	 * X "normally" has some built-in translations, which the user may
+	 * want to suppress when processing the modifyOtherKeys resource.
+	 * In particular, the control modifier applied to some of the keyboard
+	 * digits gives results for control characters (see the IsControlAlias
+	 * macro):
+	 *
+	 * control 2   0    NUL
+	 * control SPC 0    NUL
+	 * control @   0    NUL
+	 * control `   0    NUL
+	 * control 3   0x1b ESC
+	 * control 4   0x1c FS
+	 * control \   0x1c FS
+	 * control 5   0x1d GS
+	 * control 6   0x1e RS
+	 * control ^   0x1e RS
+	 * control ~   0x1e RS
+	 * control 7   0x1f US
+	 * control /   0x1f US
+	 * control _   0x1f US
+	 * control 8   0x7f DEL
+	 *
+	 * It is possible that some other keyboards do not work for these
+	 * combinations, but they do work with modifyOtherKeys=2 for the US
+	 * keyboard:
+	 *
+	 * control `   0    NUL
+	 * control [   0x1b ESC
+	 * control \   0x1c FS
+	 * control ]   0x1d GS
+	 * control ?   0x7f DEL
+	 */
+	if (status_return == XLookupBoth
+	    && nbytes <= 1
+	    && keysym < 256
+	    && (keyboard->modify_other_keys > 1)
+	    && !IsControlInput(keysym)) {
+	    nbytes = 1;
+	    strbuf[0] = keysym;
+	}
+#endif /* OPT_MOD_FKEYS */
     } else
 #endif
     {
@@ -481,6 +538,21 @@ Input(TKeyboard * keyboard,
     }
 #endif /* OPT_MOD_FKEYS */
 
+#if OPT_MOD_FKEYS
+    /*
+     * Shift-tab is often mapped to XK_ISO_Left_Tab which is classified as
+     * IsEditFunctionKey(), and the conversion does not produce any bytes. 
+     * Check for this special case so we have data when handling the
+     * modifyOtherKeys resource.
+     */
+    if (keyboard->modify_other_keys > 1) {
+	if (IsTabKey(keysym) && nbytes == 0) {
+	    nbytes = 1;
+	    strbuf[0] = '\t';
+	}
+    }
+#endif
+
     /* VT300 & up: backarrow toggle */
     if ((nbytes == 1)
 	&& (((keyboard->flags & MODE_DECBKM) == 0)
@@ -557,9 +629,15 @@ Input(TKeyboard * keyboard,
 	MODIFIER_PARM;
 	unparseseq(&reply, pty);
 	key = True;
-    } else if (IsFunctionKey(keysym)
-	       || IsMiscFunctionKey(keysym)
-	       || IsEditFunctionKey(keysym)
+    } else if (((IsFunctionKey(keysym)
+		 || IsMiscFunctionKey(keysym)
+		 || IsEditFunctionKey(keysym))
+#if OPT_MOD_FKEYS
+		&& ((keyboard->modify_other_keys < 2)
+		    || (modify_parm != 5)
+		    || (!IsTabKey(keysym)))
+#endif
+	       )
 #ifdef SunXK_F36
 	       || keysym == SunXK_F36
 	       || keysym == SunXK_F37
@@ -631,6 +709,32 @@ Input(TKeyboard * keyboard,
 	    unparseputc(kypd_num[keysym - XK_KP_Space], pty);
 	}
 	key = True;
+#if OPT_MOD_FKEYS
+    } else if ((keyboard->modify_other_keys > 0)
+	       && (nbytes == 1)
+	       && (modify_parm != 0)
+	       && (modify_parm != 2 || keysym >= 256)
+	       && (!(event->state & ControlMask)
+		   || (keyboard->modify_other_keys > 1
+		       && !IsControlInput(keysym))
+		   || (keyboard->modify_other_keys == 1
+		       && !(IsControlInput(keysym)
+			    || IsControlAlias(keysym))))) {
+	/*
+	 * Function-key code 27 happens to not be used in the vt220-style
+	 * encoding.  xterm uses this to represent modified non-function-keys
+	 * such as control/+ in the Sun/PC keyboard layout.  See the
+	 * modifyOtherKeys resource in the manpage for more information.
+	 */
+	TRACE(("...modifyOtherKeys %d;%d\n", modify_parm, strbuf[0]));
+	reply.a_type = CSI;
+	APPEND_PARM(27);
+	APPEND_PARM(modify_parm);
+	APPEND_PARM(strbuf[0]);
+	reply.a_final = '~';
+
+	unparseseq(&reply, pty);
+#endif
     } else if (nbytes > 0) {
 #if OPT_TEK4014
 	if (screen->TekGIN) {

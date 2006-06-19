@@ -1,6 +1,6 @@
-/* $XTermId: misc.c,v 1.297 2006/04/10 00:34:37 tom Exp $ */
+/* $XTermId: misc.c,v 1.302 2006/06/19 00:36:51 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/misc.c,v 3.106 2006/04/10 00:34:37 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
 /*
  *
@@ -503,13 +503,13 @@ unselectwindow(TScreen * screen, int flag)
 static long lastBellTime;	/* in milliseconds */
 
 void
-Bell(int which GCC_UNUSED, int percent)
+Bell(Atom which GCC_UNUSED, int percent)
 {
     TScreen *screen = &term->screen;
     struct timeval curtime;
     long now_msecs;
 
-    TRACE(("BELL %d\n", percent));
+    TRACE(("BELL %ld %d%%\n", (long) which, percent));
     if (!XtIsRealized((Widget) term)) {
 	return;
     }
@@ -535,7 +535,7 @@ Bell(int which GCC_UNUSED, int percent)
     if (screen->visualbell) {
 	VisualBell();
     } else {
-#if defined(HAVE_XKBBELL)
+#if defined(HAVE_XKB_BELL_EXT)
 	XkbBell(screen->display, VShellWindow, percent, which);
 #else
 	XBell(screen->display, percent);
@@ -1022,7 +1022,7 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
     chown(path, uid, gid);
 #else
     if ((access(path, F_OK) != 0 && (errno != ENOENT))
-	|| (!(creat_as(uid, gid, append, path, 0644)))
+	|| (creat_as(uid, gid, append, path, 0644) <= 0)
 	|| ((fd = open(path, O_WRONLY | O_APPEND)) < 0)) {
 	int the_error = errno;
 	fprintf(stderr, "%s: cannot open %s: %d:%s\n",
@@ -1060,8 +1060,10 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
  * effective user ids are the same, so this remains as a convenience function
  * for the debug logs.
  *
- * Returns 1 if we can proceed to open the file in relative safety, 0
- * otherwise.
+ * Returns
+ *	 1 if we can proceed to open the file in relative safety,
+ *	-1 on error, e.g., cannot fork
+ *	 0 otherwise.
  */
 int
 creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, int mode)
@@ -1096,16 +1098,22 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, int mode)
     pid = fork();
     switch (pid) {
     case 0:			/* child */
-	setgid(gid);
-	setuid(uid);
-	fd = open(pathname,
-		  O_WRONLY | O_CREAT | (append ? O_APPEND : O_EXCL),
-		  mode);
-	if (fd >= 0) {
-	    close(fd);
-	    _exit(0);
-	} else
-	    _exit(1);
+	if (setgid(gid) == -1
+	    || setuid(uid) == -1) {
+	    /* we cannot report an error here via stderr, just quit */
+	    retval = 1;
+	} else {
+	    fd = open(pathname,
+		      O_WRONLY | O_CREAT | (append ? O_APPEND : O_EXCL),
+		      mode);
+	    if (fd >= 0) {
+		close(fd);
+		retval = 0;
+	    } else {
+		retval = 1;
+	    }
+	}
+	_exit(retval);
 	/* NOTREACHED */
     case -1:			/* error */
 	return retval;
@@ -1144,6 +1152,21 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, int mode)
     }
 }
 #endif /* !VMS */
+
+int
+xtermResetIds(TScreen * screen)
+{
+    int result = 0;
+    if (setgid(screen->gid) == -1) {
+	fprintf(stderr, "%s: unable to reset group-id\n", ProgramName);
+	result = -1;
+    }
+    if (setuid(screen->uid) == -1) {
+	fprintf(stderr, "%s: unable to reset user-id\n", ProgramName);
+	result = -1;
+    }
+    return result;
+}
 
 #ifdef ALLOWLOGGING
 
@@ -1264,8 +1287,8 @@ StartLog(TScreen * screen)
 	    signal(SIGCHLD, SIG_DFL);
 
 	    /* (this is redundant) */
-	    setgid(screen->gid);
-	    setuid(screen->uid);
+	    if (xtermResetIds(screen) < 0)
+		exit(ERROR_SETUID);
 
 	    execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
 
@@ -2348,7 +2371,7 @@ ChangeGroup(String attribute, char *value)
 		XChangeProperty(dpy, VShellWindow,
 				my_atom, XA_UTF8_STRING(dpy), 8,
 				PropModeReplace,
-				(Char *) original, strlen(original));
+				(Char *) original, (int) strlen(original));
 	    } else {
 		TRACE(("...deleting %s\n", propname));
 		XDeleteProperty(dpy, VShellWindow, my_atom);

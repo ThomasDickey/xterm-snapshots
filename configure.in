@@ -1,6 +1,6 @@
-dnl $XTermId: configure.in,v 1.210 2006/04/10 00:34:36 tom Exp $
+dnl $XTermId: configure.in,v 1.215 2006/06/19 00:36:51 tom Exp $
 dnl
-dnl $XFree86: xc/programs/xterm/configure.in,v 3.76 2006/04/10 00:34:36 dickey Exp $
+dnl $XFree86: xc/programs/xterm/configure.in,v 3.77 2006/06/19 00:36:51 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -51,6 +51,7 @@ AC_PROG_CPP
 AC_GCC_TRADITIONAL
 AC_PROG_AWK
 AC_PROG_INSTALL
+AC_PROG_LN_S
 AC_ARG_PROGRAM
 AC_CHECK_PROGS(LINT, tdlint lint alint)
 
@@ -83,6 +84,7 @@ AC_CHECK_TYPE(time_t, long)
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
 AC_TYPE_UID_T
+AC_TYPE_OFF_T
 
 ###	checks for library functions
 AC_CHECK_FUNCS( \
@@ -101,6 +103,7 @@ AC_CHECK_FUNCS( \
 CF_FUNC_MEMMOVE
 CF_UTMP
 CF_STRUCT_LASTLOG
+CF_POSIX_SAVED_IDS
 
 CF_HELP_MESSAGE(Compile/Install Options:)
 CF_FUNC_TGETENT
@@ -185,6 +188,9 @@ if test "$use_utmp_setgid" != no ; then
 		CF_UTMP_GROUP
 	else
 		cf_cv_utmp_group=$use_utmp_setgid
+	fi
+	if test "$cf_cv_posix_saved_ids" != yes ; then
+		AC_MSG_WARN(Your system does not support POSIX saved-ids)
 	fi
 	AC_DEFINE(USE_UTMP_SETGID)
 	SINSTALL_OPTS="$SINSTALL_OPTS g+s -g $cf_cv_utmp_group"
