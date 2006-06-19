@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.150 2006/03/13 01:28:00 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.152 2006/06/19 00:36:52 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.60 2006/03/13 01:28:00 dickey Exp $
+ * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
  */
 
 /************************************************************
@@ -145,6 +145,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef const			/* AC_CONST */
 #undef gid_t			/* AC_TYPE_UID_T */
 #undef mode_t			/* AC_TYPE_MODE_T */
+#undef off_t			/* AC_TYPE_OFF_T */
 #undef pid_t			/* AC_TYPE_PID_T */
 #undef size_t			/* AC_TYPE_SIZE_T */
 #undef time_t			/* AC_CHECK_TYPE(time_t, long) */

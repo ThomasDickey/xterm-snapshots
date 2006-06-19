@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.67 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: print.c,v 1.70 2006/06/19 00:36:51 tom Exp $ */
 
 /*
- * $XFree86: xc/programs/xterm/print.c,v 1.23 2006/02/13 01:14:59 dickey Exp $
+ * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
  */
 
 /************************************************************
@@ -61,8 +61,8 @@ authorization.
 #define VMS_TEMP_PRINT_FILE "sys$scratch:xterm_print.txt"
 #endif
 
-static void charToPrinter(int chr);
-static void printLine(int row, int chr);
+static void charToPrinter(unsigned chr);
+static void printLine(int row, unsigned chr);
 static void send_CharSet(int row);
 static void send_SGR(unsigned attr, unsigned fg, unsigned bg);
 static void stringToPrinter(char *str);
@@ -119,7 +119,7 @@ printCursorLine(void)
  * characters that xterm would allow as a selection (which may include blanks).
  */
 static void
-printLine(int row, int chr)
+printLine(int row, unsigned chr)
 {
     TScreen *screen = &term->screen;
     int inx = ROW2INX(screen, row);
@@ -210,9 +210,9 @@ printLine(int row, int chr)
 		cs = (ch >= ' ' && ch != 0x7f) ? CSET_IN : CSET_OUT;
 	    if (last_cs != cs) {
 		if (screen->print_attributes) {
-		    charToPrinter((cs == CSET_OUT)
+		    charToPrinter((unsigned)((cs == CSET_OUT)
 				  ? SHIFT_OUT
-				  : SHIFT_IN);
+				  : SHIFT_IN));
 		}
 		last_cs = cs;
 	    }
@@ -222,7 +222,7 @@ printLine(int row, int chr)
 	     * corresponding charset information is not encoded
 	     * into the CSETS array.
 	     */
-	    charToPrinter((int) ((cs == CSET_OUT)
+	    charToPrinter(((cs == CSET_OUT)
 				 ? (ch == 0x7f ? 0x5f : (ch + 0x5f))
 				 : ch));
 	    if_OPT_WIDE_CHARS(screen, {
@@ -356,7 +356,7 @@ send_SGR(unsigned attr, unsigned fg, unsigned bg)
  * This implementation only knows how to write to a pipe.
  */
 static void
-charToPrinter(int chr)
+charToPrinter(unsigned chr)
 {
     TScreen *screen = &term->screen;
 
@@ -395,8 +395,9 @@ charToPrinter(int chr)
 		close(fileno(stderr));
 	    }
 
-	    setgid(screen->gid);	/* don't want privileges! */
-	    setuid(screen->uid);
+	    /* don't want privileges! */
+	    if (xtermResetIds(screen) < 0)
+		exit(1);
 
 	    Printer = popen(screen->printer_command, "w");
 	    input = fdopen(my_pipe[0], "r");
@@ -420,11 +421,11 @@ charToPrinter(int chr)
 #if OPT_WIDE_CHARS
 	if (chr > 127) {
 	    Char temp[10];
-	    *convertToUTF8(temp, (unsigned) chr) = 0;
+	    *convertToUTF8(temp, chr) = 0;
 	    fputs((char *) temp, Printer);
 	} else
 #endif
-	    fputc(chr, Printer);
+	    fputc((int) chr, Printer);
 	if (isForm(chr))
 	    fflush(Printer);
     }
@@ -434,7 +435,7 @@ static void
 stringToPrinter(char *str)
 {
     while (*str)
-	charToPrinter(*str++);
+	charToPrinter(CharOf(*str++));
 }
 
 /*
@@ -489,7 +490,7 @@ xtermMediaControl(int param, int private_seq)
  * or VT) that moved the cursor off the previous line.
  */
 void
-xtermAutoPrint(int chr)
+xtermAutoPrint(unsigned chr)
 {
     TScreen *screen = &term->screen;
 

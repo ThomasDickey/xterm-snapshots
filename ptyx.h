@@ -1,6 +1,6 @@
-/* $XTermId: ptyx.h,v 1.422 2006/04/30 21:55:39 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.424 2006/06/19 00:36:51 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.133 2006/04/30 21:55:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -1712,7 +1712,8 @@ typedef struct
 #if OPT_INITIAL_ERASE
     int	reset_DECBKM;		/* reset should set DECBKM */
 #endif
-    int modify_cursor_keys;	/* how to handle modifiers */
+    int modify_cursor_keys;	/* how to handle cursor-key modifiers */
+    int modify_other_keys;	/* how to handle other key-modifiers */
 } TKeyboard;
 
 typedef struct {

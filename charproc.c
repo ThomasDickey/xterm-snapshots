@@ -1,6 +1,6 @@
-/* $XTermId: charproc.c,v 1.675 2006/04/30 21:55:39 tom Exp $ */
+/* $XTermId: charproc.c,v 1.680 2006/06/19 00:36:51 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.183 2006/04/30 21:55:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.184 2006/06/19 00:36:51 dickey Exp $ */
 
 /*
 
@@ -595,6 +595,8 @@ static XtResource resources[] =
 #if OPT_MOD_FKEYS
     Ires(XtNmodifyCursorKeys, XtCModifyCursorKeys,
 	 keyboard.modify_cursor_keys, 2),
+    Ires(XtNmodifyOtherKeys, XtCModifyOtherKeys,
+	 keyboard.modify_other_keys, 1),
 #endif
 
 #if OPT_NUM_LOCK
@@ -1451,7 +1453,7 @@ doparsing(unsigned c, struct ParseState *sp)
 	    /*
 	     * form feed, line feed, vertical tab
 	     */
-	    xtermAutoPrint((int) c);
+	    xtermAutoPrint(c);
 	    xtermIndex(screen, 1);
 	    if (term->flags & LINEFEED)
 		CarriageReturn(screen);
@@ -3179,7 +3181,7 @@ in_put(void)
 	} else if (resource.sessionMgt) {
 	    /*
 	     * When session management is enabled, we should not block since
-	     * session related events can arrive any time. 
+	     * session related events can arrive any time.
 	     */
 	    select_timeout.tv_sec = 1;
 	    select_timeout.tv_usec = 0;
@@ -3545,7 +3547,7 @@ WriteText(TScreen * screen, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	    Changename(icon_name);
 	}
 	if (zIconBeep > 0) {
-#if defined(HAVE_XKBBELL)
+#if defined(HAVE_XKB_BELL_EXT)
 	    XkbBell(XtDisplay(toplevel), VShellWindow, zIconBeep, XkbBI_Info);
 #else
 	    XBell(XtDisplay(toplevel), zIconBeep);
@@ -4690,7 +4692,7 @@ SwitchBufs(TScreen * screen)
  * Swap buffer line pointers between alternate and regular screens.
  * visbuf contains pointers from allbuf or altbuf for the visible screen,
  * and pointers from allbuf for the saved lines.  That makes it simple to
- * scroll back over the saved lines without juggling pointers for the 
+ * scroll back over the saved lines without juggling pointers for the
  * regular and alternate screens.
  */
 void
@@ -5735,6 +5737,7 @@ VTInitialize(Widget wrequest,
     wnew->initflags = wnew->flags;
 
     init_Ires(keyboard.modify_cursor_keys);
+    init_Ires(keyboard.modify_other_keys);
 
     init_Ires(misc.appcursorDefault);
     if (wnew->misc.appcursorDefault)
@@ -5755,28 +5758,54 @@ releaseCursorGCs(TScreen * screen)
     GC reverseCursorGC = screen->reversecursorGC;
     GC cursorOutlineGC = screen->cursoroutlineGC;
 
-    if (cursorGC)
-	XFreeGC(screen->display, cursorGC);
-    screen->cursorGC = 0;
+#if OPT_ISO_COLORS
+    if (screen->colorMode) {
+	if (cursorGC)
+	    XFreeGC(screen->display, cursorGC);
+	screen->cursorGC = 0;
 
-    if (fillCursorGC && (fillCursorGC != cursorGC))
-	XFreeGC(screen->display, fillCursorGC);
-    screen->fillCursorGC = 0;
+	if (fillCursorGC
+	    && (fillCursorGC != cursorGC))
+	    XFreeGC(screen->display, fillCursorGC);
+	screen->fillCursorGC = 0;
 
-    if (reverseCursorGC
-	&& (reverseCursorGC != cursorGC)
-	&& (reverseCursorGC != fillCursorGC)
-	)
-	XFreeGC(screen->display, screen->reversecursorGC);
-    screen->reversecursorGC = 0;
+	if (reverseCursorGC
+	    && (reverseCursorGC != cursorGC)
+	    && (reverseCursorGC != fillCursorGC))
+	    XFreeGC(screen->display, screen->reversecursorGC);
+	screen->reversecursorGC = 0;
 
-    if (cursorOutlineGC
-	&& (cursorOutlineGC != cursorGC)
-	&& (cursorOutlineGC != fillCursorGC)
-	&& (cursorOutlineGC != reverseCursorGC)
-	)
-	XFreeGC(screen->display, screen->cursoroutlineGC);
-    screen->cursoroutlineGC = 0;
+	if (cursorOutlineGC
+	    && (cursorOutlineGC != cursorGC)
+	    && (cursorOutlineGC != fillCursorGC)
+	    && (cursorOutlineGC != reverseCursorGC))
+	    XFreeGC(screen->display, screen->cursoroutlineGC);
+	screen->cursoroutlineGC = 0;
+    } else
+#endif
+    {
+	if (cursorGC)
+	    XtReleaseGC((Widget) term, cursorGC);
+	screen->cursorGC = 0;
+
+	if ((fillCursorGC)
+	    && (fillCursorGC != cursorGC))
+	    XtReleaseGC((Widget) term, fillCursorGC);
+	screen->fillCursorGC = 0;
+
+	if ((reverseCursorGC)
+	    && (reverseCursorGC != cursorGC)
+	    && (reverseCursorGC != fillCursorGC))
+	    XtReleaseGC((Widget) term, reverseCursorGC);
+	screen->reversecursorGC = 0;
+
+	if ((cursorOutlineGC)
+	    && (cursorOutlineGC != cursorGC)
+	    && (cursorOutlineGC != fillCursorGC)
+	    && (cursorOutlineGC != reverseCursorGC))
+	    XtReleaseGC((Widget) term, cursorOutlineGC);
+	screen->cursoroutlineGC = 0;
+    }
 }
 
 #ifdef NO_LEAKS

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.497 2006/04/10 00:34:36 tom Exp $ */
+/* $XTermId: main.c,v 1.501 2006/06/19 00:36:51 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -87,7 +87,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.210 2006/04/10 00:34:36 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.211 2006/06/19 00:36:51 dickey Exp $ */
 
 /* main.c */
 
@@ -1579,6 +1579,68 @@ posix_signal(int signo, sigfunc func)
 
 #endif /* linux && _POSIX_SOURCE */
 
+#if defined(DISABLE_SETUID) || defined(USE_UTMP_SETGID)
+static void
+disableSetUid(void)
+{
+    TRACE(("disableSetUid\n"));
+    if (seteuid(getuid()) == -1) {
+	fprintf(stderr, "%s: unable to reset effective uid\n", ProgramName);
+	exit(1);
+    }
+    if (setuid(getuid()) == -1) {
+	fprintf(stderr, "%s: unable to reset uid\n", ProgramName);
+	exit(1);
+    }
+}
+#endif
+
+#if defined(USE_UTMP_SETGID)
+static void
+disableSetGid(void)
+{
+    TRACE(("disableSetGid\n"));
+    if (setegid(getgid()) == -1) {
+	fprintf(stderr, "%s: unable to reset effective gid\n", ProgramName);
+	exit(1);
+    }
+    if (setgid(getgid()) == -1) {
+	fprintf(stderr, "%s: unable to reset gid\n", ProgramName);
+	exit(1);
+    }
+}
+#endif
+
+#ifdef HAS_SAVED_IDS_AND_SETEUID
+static void
+setEffectiveGroup(gid_t group)
+{
+    if (setegid(group) == -1) {
+#ifdef __MVS__
+	if (!(errno == EMVSERR))	/* could happen if _BPX_SHAREAS=REUSE */
+#endif
+	{
+	    (void) fprintf(stderr, "setegid(%d): %s\n",
+			   (int) group, strerror(errno));
+	}
+    }
+}
+
+static void
+setEffectiveUser(uid_t user)
+{
+    if (seteuid(user) == -1) {
+#ifdef __MVS__
+	if (!(errno == EMVSERR))
+#endif
+	{
+	    (void) fprintf(stderr, "seteuid(%d): %s\n",
+			   (int) user, strerror(errno));
+	}
+    }
+}
+#endif /* HAS_SAVED_IDS_AND_SETEUID */
+
 int
 main(int argc, char *argv[]ENVP_ARG)
 {
@@ -1589,12 +1651,11 @@ main(int argc, char *argv[]ENVP_ARG)
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
 
-#ifdef DISABLE_SETUID
-    seteuid(getuid());
-    setuid(getuid());
-#endif
-
     ProgramName = argv[0];
+
+#ifdef DISABLE_SETUID
+    disableSetUid();
+#endif
 
     /* extra length in case longer tty name like /dev/ttyq255 */
     ttydev = TypeMallocN(char, sizeof(TTYDEV) + 80);
@@ -1617,8 +1678,7 @@ main(int argc, char *argv[]ENVP_ARG)
 
 #if defined(USE_UTMP_SETGID)
     get_pty(NULL, NULL);
-    seteuid(getuid());
-    setuid(getuid());
+    disableSetUid();
 #define get_pty(pty, from) really_get_pty(pty, from)
 #endif
 
@@ -1897,21 +1957,8 @@ main(int argc, char *argv[]ENVP_ARG)
 	uid_t ruid = getuid();
 	gid_t rgid = getgid();
 
-	if (setegid(rgid) == -1) {
-#ifdef __MVS__
-	    if (!(errno == EMVSERR))	/* could happen if _BPX_SHAREAS=REUSE */
-#endif
-		(void) fprintf(stderr, "setegid(%d): %s\n",
-			       (int) rgid, strerror(errno));
-	}
-
-	if (seteuid(ruid) == -1) {
-#ifdef __MVS__
-	    if (!(errno == EMVSERR))
-#endif
-		(void) fprintf(stderr, "seteuid(%d): %s\n",
-			       (int) ruid, strerror(errno));
-	}
+	setEffectiveGroup(rgid);
+	setEffectiveUser(ruid);
 #endif
 
 	XtSetErrorHandler(xt_error);
@@ -1937,28 +1984,14 @@ main(int argc, char *argv[]ENVP_ARG)
 	TRACE_XRES();
 
 #ifdef HAS_SAVED_IDS_AND_SETEUID
-	if (seteuid(euid) == -1) {
-#ifdef __MVS__
-	    if (!(errno == EMVSERR))
-#endif
-		(void) fprintf(stderr, "seteuid(%d): %s\n",
-			       (int) euid, strerror(errno));
-	}
-
-	if (setegid(egid) == -1) {
-#ifdef __MVS__
-	    if (!(errno == EMVSERR))
-#endif
-		(void) fprintf(stderr, "setegid(%d): %s\n",
-			       (int) egid, strerror(errno));
-	}
+	setEffectiveUser(euid);
+	setEffectiveGroup(egid);
 #endif
 
 #if defined(USE_UTMP_SETGID)
 	if (resource.utmpInhibit) {
 	    /* Can totally revoke group privs */
-	    setegid(getgid());
-	    setgid(getgid());
+	    disableSetGid();
 	}
 #endif
     }
@@ -2227,7 +2260,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	int i = -1;
 	if (debug) {
 	    timestamp_filename(dbglogfile, "xterm.debug.log.");
-	    if (creat_as(getuid(), getgid(), False, dbglogfile, 0666)) {
+	    if (creat_as(getuid(), getgid(), False, dbglogfile, 0666) > 0) {
 		i = open(dbglogfile, O_WRONLY | O_TRUNC);
 	    }
 	}
@@ -2967,8 +3000,8 @@ spawn(void)
 #ifdef USE_PTY_DEVICE
 	set_pty_id(ptydev, passedPty);
 #endif
-	setgid(screen->gid);
-	setuid(screen->uid);
+	if (xtermResetIds(screen) < 0)
+	    exit(1);
     } else {
 	Bool tty_got_hung;
 
@@ -4097,14 +4130,18 @@ spawn(void)
 #ifdef USE_LASTLOG
 	    if (term->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
-		bzero((char *) &lastlog, sizeof(struct lastlog));
+		size_t size = sizeof(struct lastlog);
+		off_t offset = (screen->uid * size);
+
+		bzero((char *) &lastlog, size);
 		(void) strncpy(lastlog.ll_line,
 			       my_pty_name(ttydev),
 			       sizeof(lastlog.ll_line));
 		SetUtmpHost(lastlog.ll_host, screen);
 		lastlog.ll_time = time((time_t *) 0);
-		lseek(i, (long) (screen->uid * sizeof(struct lastlog)), 0);
-		write(i, (char *) &lastlog, sizeof(struct lastlog));
+		if (lseek(i, offset, 0) != (off_t) (-1)) {
+		    write(i, (char *) &lastlog, size);
+		}
 		close(i);
 	    }
 #endif /* USE_LASTLOG */

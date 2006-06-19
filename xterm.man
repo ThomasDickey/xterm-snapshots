@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.341 2006/04/30 21:55:39 tom Exp $
+.\" $XTermId: xterm.man,v 1.345 2006/06/19 00:36:52 tom Exp $
 .\"
 .\" Copyright 1996-2005,2006 by Thomas E. Dickey
 .\"
@@ -53,7 +53,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.124 2006/04/30 21:55:39 dickey Exp $
+.\" $XFree86: xc/programs/xterm/xterm.man,v 3.125 2006/06/19 00:36:52 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .
@@ -586,9 +586,25 @@ This option resets the \fBallowC1Printable\fP resource.
 .TP 8
 .BI -kt " keyboardtype"
 This option sets the \fBkeyboardType\fP resource.
-Possible values include: ``hp'', ``sco'', ``sun'' and ``vt220''.
-The default value ``unknown'',
+Possible values include:
+``unknown'',
+``default'',
+``hp'',
+``sco'',
+``sun'' and
+``vt220''.
+.IP
+The value ``unknown'',
 causes the corresponding resource to be ignored.
+.IP
+The value ``default'',
+suppresses the associated resources
+.BR hpFunctionKeys ,
+.BR scoFunctionKeys ,
+.BR sunFunctionKeys
+and
+.BR sunKeyboard ,
+using the Sun/PC keyboard layout.
 .TP 8
 .B -l
 Turn logging on.
@@ -2036,11 +2052,30 @@ The default is ``false.''
 Tells how to handle the special case where
 Control-, Shift-, Alt- or Meta-modifiers are used to add a parameter to
 the escape sequence returned by a cursor-key.
+The default is ``2'':
+.IP
 Set it to 0 to use the old/obsolete behavior.
+.br
 Set it to 1 to prefix modified sequences with CSI.
+.br
 Set it to 2 to force the modifier to be the second parameter.
+.br
 Set it to 3 to mark the sequence with a '>' to hint that it is private.
-The default is ``2''.
+.TP 8
+.B "modifyOtherKeys (\fPclass\fB ModifyOtherKeys\fP)"
+Like \fBmodifyCursorKeys\fP, tells \fIxterm\fP to construct an
+escape sequence for other keys (such as "2") when modified by
+Control-, Alt- or Meta-modifiers.
+This feature does not apply to function keys and well-defined
+keys such as ESC or the control keys.
+The default is ``1'':
+.IP
+Set it to 0 to disable this feature.
+.br
+Set it to 1 to enable this feature for keys except Tab and some special
+control character cases, e.g., Control-Space to make a NUL.
+.br
+Set it to 1 to enable this feature for keys including the exceptions listed.
 .TP 8
 .B "multiClickTime (\fPclass\fB MultiClickTime)"
 Specifies the maximum time in milliseconds between multi-click select

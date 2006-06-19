@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.414 2006/04/30 21:55:39 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.149 2006/04/30 21:55:39 dickey Exp $
+  $XTermId: xterm.log.html,v 1.426 2006/06/19 00:36:52 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.150 2006/06/19 00:36:52 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_214">Patch #214 - 2006/6/18 - XFree86 4.5.99.905</A>
 <LI><A HREF="#xterm_213">Patch #213 - 2006/4/30 - XFree86 4.5.99.905</A>
 <LI><A HREF="#xterm_212">Patch #212 - 2006/4/9 - XFree86 4.5.99.904</A>
 <LI><A HREF="#xterm_211">Patch #211 - 2006/3/19 - XFree86 4.5.99.902</A>
@@ -261,6 +262,45 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_214">Patch #214 - 2006/6/18 - XFree86 4.5.99.905</A></H1>
+<ul>
+	<li>modify makefile rule for ctlseqs.txt to strip backspace/overstrikes,
+	    and add a copy of ctlseqs.txt to the source tarballs (requests by
+	    Bram Moolenaar, Emanuele Giaquinta).
+
+	<li>add <code>modifyOtherKeys</code> resource, analogous to the
+	    <code>modifyCursorKeys</code> resource.  This applies to keys that
+	    normally would transmit nothing when a given modifier is applied
+	    (request by Dan Nicolaescu).
+
+	<li>add <code>default</code> to the acceptable values for the
+	    <code>keyboardType</code> resource, allowing the <code>-kt</code>
+	    command-line option to override app-defaults resource settings of
+	    <code>sunKeyboard</code>, etc.
+
+	<li>correct ifdef's for <code>XkbBell()</code> which used the header
+	    file but not the corresponding function in
+	    <a href="#xterm_175">patch #175</a>
+	    (report by Zach Beane).
+
+	<li>add xterm manpage to the <code>--with-symlink</code> logic.
+
+	<li>regenerated configure script to omit some debugging artifacts of
+	    the SIGWINCH test.
+
+	<li>fix <code>install-man</code> rule in <code>Makefile.in</code> to
+	    avoid including the <code>$(DESTDIR)</code> value in substitutions
+	    made on the manpages (patch by Emanuele Giaquinta).
+
+	<li>improved fix for cursor deallocation
+	    (Redhat #186935, patch by Jason Vas Dias).
+
+	<li>improve checks for setuid/setgid operation to accommodate limited
+	    resource management in some kernels (GenToo #193238).
+
+	<li>update config.guess, config.sub
+</ul>
 
 <H1><A NAME="xterm_213">Patch #213 - 2006/4/30 - XFree86 4.5.99.905</A></H1>
 <ul>

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.244 2006/04/10 00:34:36 tom Exp $ */
+/* $XTermId: button.c,v 1.246 2006/06/19 00:36:50 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -51,7 +51,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.87 2006/04/10 00:34:36 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/button.c,v 3.88 2006/06/19 00:36:50 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -87,6 +87,7 @@ button.c	Handles button events in the terminal emulator.
 #endif
 
 #if OPT_WIDE_CHARS
+#include <ctype.h>
 #include <wcwidth.h>
 #else
 #define CharacterClass(value) \
@@ -1397,7 +1398,7 @@ base64_flush(TScreen * screen)
     if (screen->base64_pad & 3)
 	tty_vwrite(screen->respond,
 		   (Char *) "===",
-		   4 - (screen->base64_pad & 3));
+		   (unsigned) (4 - (screen->base64_pad & 3)));
     screen->base64_count = 0;
     screen->base64_accu = 0;
     screen->base64_pad = 0;
@@ -2374,11 +2375,12 @@ lastRowOfLine(TScreen * screen, int row)
 /*
  * Returns the number of cells on the range of rows.
  */
-static int
+static unsigned
 lengthOfLines(TScreen * screen, int firstRow, int lastRow)
 {
-    int length = 0;
+    unsigned length = 0;
     int n;
+
     for (n = firstRow; n <= lastRow; ++n) {
 	int value = LastTextCol(screen, n);
 	if (value >= 0)
@@ -2393,7 +2395,7 @@ lengthOfLines(TScreen * screen, int firstRow, int lastRow)
  * the line.
  */
 static char *
-make_indexed_text(TScreen * screen, int row, int length, int *indexed)
+make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 {
     Char *result = 0;
     unsigned need = (length + 1);
@@ -2407,8 +2409,9 @@ make_indexed_text(TScreen * screen, int row, int length, int *indexed)
     });
 
     if ((result = TypeCallocN(Char, need + 1)) != 0) {
-	int used = 0;
+	unsigned used = 0;
 	Char *last = result;
+
 	do {
 	    int col = 0;
 	    int limit = LastTextCol(screen, row);
@@ -2516,7 +2519,7 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 	if (regcomp(&preg, expr, REG_EXTENDED) == 0) {
 	    int firstRow = firstRowOfLine(screen, startc->row, True);
 	    int lastRow = lastRowOfLine(screen, firstRow);
-	    int size = lengthOfLines(screen, firstRow, lastRow);
+	    unsigned size = lengthOfLines(screen, firstRow, lastRow);
 	    int actual = cellToColumn(screen, startc);
 
 	    TRACE(("regcomp ok rows %d..%d bytes %d\n",
@@ -2944,7 +2947,7 @@ ClearSelectionBuffer(TScreen * screen)
 }
 
 static void
-AppendStrToSelectionBuffer(TScreen * screen, Char * text, int len)
+AppendStrToSelectionBuffer(TScreen * screen, Char * text, unsigned len)
 {
     if (len != 0) {
 	int j = screen->selection_length + len;		/* New length */

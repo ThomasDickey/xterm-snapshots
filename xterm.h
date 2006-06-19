@@ -1,6 +1,6 @@
-/* $XTermId: xterm.h,v 1.381 2006/04/30 21:55:39 tom Exp $ */
+/* $XTermId: xterm.h,v 1.387 2006/06/19 00:36:52 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/xterm.h,v 3.116 2006/04/30 21:55:39 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
 /************************************************************
 
@@ -207,7 +207,7 @@ authorization.
 #endif
 
 #if defined(XKB)
-#define HAVE_XKBBELL 1
+#define HAVE_XKB_BELL_EXT 1
 #endif
 
 #endif /* HAVE_CONFIG_H */
@@ -398,6 +398,7 @@ extern char **environ;
 #define XtNmetaSendsEscape	"metaSendsEscape"
 #define XtNmkWidth		"mkWidth"
 #define XtNmodifyCursorKeys	"modifyCursorKeys"
+#define XtNmodifyOtherKeys	"modifyOtherKeys"
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
@@ -523,6 +524,7 @@ extern char **environ;
 #define XtCMetaSendsEscape	"MetaSendsEscape"
 #define XtCMkWidth 		"MkWidth"
 #define XtCModifyCursorKeys	"ModifyCursorKeys"
+#define XtCModifyOtherKeys	"ModifyOtherKeys"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
 #define XtCNumLock		"NumLock"
@@ -791,7 +793,8 @@ extern int creat_as (uid_t uid, gid_t gid, Bool append, char *pathname, int mode
 extern int open_userfile (uid_t uid, gid_t gid, char *path, Bool append);
 extern int xerror (Display *d, XErrorEvent *ev);
 extern int xioerror (Display *dpy);
-extern void Bell (int which, int percent);
+extern int xtermResetIds(TScreen * screen);
+extern void Bell (Atom which, int percent);
 extern void ChangeXprop (char *name);
 extern void Changename (char *name);
 extern void Changetitle (char *name);
@@ -856,7 +859,7 @@ extern void FlushLog (TScreen *screen);
 extern Bool xtermHasPrinter (void);
 extern int xtermPrinterControl (int chr);
 extern void setPrinterControlMode (int mode);
-extern void xtermAutoPrint (int chr);
+extern void xtermAutoPrint (unsigned chr);
 extern void xtermMediaControl (int param, int private_seq);
 extern void xtermPrintScreen (Bool use_DECPEX);
 

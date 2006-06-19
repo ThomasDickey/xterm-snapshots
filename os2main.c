@@ -1,10 +1,10 @@
-/* $XTermId: os2main.c,v 1.220 2006/04/10 00:34:37 tom Exp $ */
+/* $XTermId: os2main.c,v 1.222 2006/06/19 00:36:51 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
  */
 
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.86 2006/04/10 00:34:37 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/os2main.c,v 3.87 2006/06/19 00:36:51 dickey Exp $ */
 
 /***********************************************************
 
@@ -1567,8 +1567,7 @@ spawn(void)
 	ptydev[strlen(ptydev) - 1] =
 	    ttydev[strlen(ttydev) - 1] = passedPty[1];
 
-	setgid(screen->gid);
-	setuid(screen->uid);
+	(void) xtermResetIds(screen);
     } else {
 	Bool tty_got_hung;
 
@@ -1823,8 +1822,7 @@ opencons();*/
 		close_fd(ttyfd);
 
 	    setpgrp(0, pgrp);
-	    setgid(screen->gid);
-	    setuid(screen->uid);
+	    (void) xtermResetIds(screen);
 
 	    if (handshake.rows > 0 && handshake.cols > 0) {
 		set_max_row(screen, handshake.rows);

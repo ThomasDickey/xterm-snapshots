@@ -1,5 +1,5 @@
-/* $XTermId: version.h,v 1.266 2006/04/30 21:55:39 tom Exp $ */
-/* $XFree86: xc/programs/xterm/version.h,v 3.124 2006/04/30 21:55:39 dickey Exp $ */
+/* $XTermId: version.h,v 1.268 2006/06/19 00:36:52 tom Exp $ */
+/* $XFree86: xc/programs/xterm/version.h,v 3.125 2006/06/19 00:36:52 dickey Exp $ */
 
 /*
  * These definitions are used to build the string that's printed in response to
@@ -7,7 +7,7 @@
  * version of X to which this version of xterm has been built.  The number in
  * parentheses is my patch number (T.Dickey).
  */
-#define XTERM_PATCH   213
+#define XTERM_PATCH   214
 
 #ifndef __vendorversion__
 #define __vendorversion__ "XTerm"
