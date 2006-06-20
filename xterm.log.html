@@ -20,8 +20,8 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.426 2006/06/19 00:36:52 tom Exp $
-  $XFree86: xc/programs/xterm/xterm.log.html,v 1.150 2006/06/19 00:36:52 dickey Exp $
+  $XTermId: xterm.log.html,v 1.430 2006/06/20 00:50:00 tom Exp $
+  $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,7 +46,8 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_214">Patch #214 - 2006/6/18 - XFree86 4.5.99.905</A>
+<LI><A HREF="#xterm_215">Patch #215 - 2006/6/19 - XFree86 4.6.99.2</A>
+<LI><A HREF="#xterm_214">Patch #214 - 2006/6/18 - XFree86 4.6.99.2</A>
 <LI><A HREF="#xterm_213">Patch #213 - 2006/4/30 - XFree86 4.5.99.905</A>
 <LI><A HREF="#xterm_212">Patch #212 - 2006/4/9 - XFree86 4.5.99.904</A>
 <LI><A HREF="#xterm_211">Patch #211 - 2006/3/19 - XFree86 4.5.99.902</A>
@@ -263,7 +264,17 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_214">Patch #214 - 2006/6/18 - XFree86 4.5.99.905</A></H1>
+<H1><A NAME="xterm_215">Patch #215 - 2006/6/18 - XFree86 4.6.99.2</A></H1>
+<ul>
+	<li>improve setgid support by exploiting the saved-ids feature on which
+	    it relies (patch by Emanuele Giaquinta).
+
+	<li>make the <code>modifyOtherKeys</code> resource disabled by default
+	    since the intermediate setting altered some common bindings
+	    (report by Emanuele Giaquinta).
+</ul>
+
+<H1><A NAME="xterm_214">Patch #214 - 2006/6/18 - XFree86 4.6.99.2</A></H1>
 <ul>
 	<li>modify makefile rule for ctlseqs.txt to strip backspace/overstrikes,
 	    and add a copy of ctlseqs.txt to the source tarballs (requests by

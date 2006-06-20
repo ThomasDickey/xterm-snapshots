@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.501 2006/06/19 00:36:51 tom Exp $ */
+/* $XTermId: main.c,v 1.503 2006/06/20 00:42:38 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -87,7 +87,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* $XFree86: xc/programs/xterm/main.c,v 3.211 2006/06/19 00:36:51 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/main.c,v 3.212 2006/06/20 00:42:38 dickey Exp $ */
 
 /* main.c */
 
@@ -1609,7 +1609,29 @@ disableSetGid(void)
 	exit(1);
     }
 }
-#endif
+
+static void
+revoke_utmp_gid(void)
+{
+    /* Switch to real gid after writing utmp entry */
+    if (getgid() != getegid()) {
+	utmpGid = getegid();
+	setegid(getgid());
+	TRACE(("switch to real gid %d after writing utmp\n", getgid()));
+    }
+}
+
+static void
+acquire_utmp_gid(void)
+{
+    if (utmpGid != -1) {
+	/* Switch back to group utmp */
+	setegid(utmpGid);
+	TRACE(("switched back to group %d (check: %d)\n",
+	       utmpGid, (int) getgid()));
+    }
+}
+#endif /* USE_UTMP_SETGID */
 
 #ifdef HAS_SAVED_IDS_AND_SETEUID
 static void
@@ -1678,7 +1700,9 @@ main(int argc, char *argv[]ENVP_ARG)
 
 #if defined(USE_UTMP_SETGID)
     get_pty(NULL, NULL);
+    utmpGid = getegid();
     disableSetUid();
+    disableSetGid();
 #define get_pty(pty, from) really_get_pty(pty, from)
 #endif
 
@@ -1986,13 +2010,6 @@ main(int argc, char *argv[]ENVP_ARG)
 #ifdef HAS_SAVED_IDS_AND_SETEUID
 	setEffectiveUser(euid);
 	setEffectiveGroup(egid);
-#endif
-
-#if defined(USE_UTMP_SETGID)
-	if (resource.utmpInhibit) {
-	    /* Can totally revoke group privs */
-	    disableSetGid();
-	}
 #endif
     }
 
@@ -3972,6 +3989,9 @@ spawn(void)
 		xtermSetenv("LOGNAME=", login_name);	/* for POSIX */
 	    }
 #ifndef USE_UTEMPTER
+#ifdef USE_UTMP_SETGID
+	    acquire_utmp_gid();
+#endif
 #ifdef USE_SYSV_UTMP
 	    /* Set up our utmp entry now.  We need to do it here
 	     * for the following reasons:
@@ -4147,13 +4167,7 @@ spawn(void)
 #endif /* USE_LASTLOG */
 
 #if defined(USE_UTMP_SETGID)
-	    /* Switch to real gid after writing utmp entry */
-	    utmpGid = getegid();
-	    if (getgid() != getegid()) {
-		utmpGid = getegid();
-		setegid(getgid());
-		TRACE(("switch to real gid %d after writing utmp\n", getgid()));
-	    }
+	    revoke_utmp_gid();
 #endif
 
 #if OPT_PTY_HANDSHAKE
@@ -4523,12 +4537,7 @@ Exit(int n)
 #endif /* OPT_PTY_HANDSHAKE */
 	) {
 #if defined(USE_UTMP_SETGID)
-	if (utmpGid != -1) {
-	    /* Switch back to group utmp */
-	    setegid(utmpGid);
-	    TRACE(("switched back to group %d (check: %d)\n",
-		   utmpGid, (int) getgid()));
-	}
+	acquire_utmp_gid();
 #endif
 	init_utmp(USER_PROCESS, &utmp);
 	(void) call_setutent();
@@ -4598,7 +4607,11 @@ Exit(int n)
 #endif /* WTMP */
     }
 #endif /* USE_SYSV_UTMP */
+#ifdef USE_UTMP_SETGID
+    revoke_utmp_gid();
+#endif
 #endif /* HAVE_UTMP */
+
     close(screen->respond);	/* close explicitly to avoid race with slave side */
 #ifdef ALLOWLOGGING
     if (screen->logging)

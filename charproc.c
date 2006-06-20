@@ -1,6 +1,6 @@
-/* $XTermId: charproc.c,v 1.680 2006/06/19 00:36:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.682 2006/06/20 00:42:38 tom Exp $ */
 
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.184 2006/06/19 00:36:51 dickey Exp $ */
+/* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
 /*
 
@@ -596,7 +596,7 @@ static XtResource resources[] =
     Ires(XtNmodifyCursorKeys, XtCModifyCursorKeys,
 	 keyboard.modify_cursor_keys, 2),
     Ires(XtNmodifyOtherKeys, XtCModifyOtherKeys,
-	 keyboard.modify_other_keys, 1),
+	 keyboard.modify_other_keys, 0),
 #endif
 
 #if OPT_NUM_LOCK
