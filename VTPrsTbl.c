@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.46 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.48 2006/07/31 22:14:03 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/VTPrsTbl.c,v 3.31 2006/02/13 01:14:58 dickey Exp $ */
 /*
@@ -64,6 +64,13 @@
 #if !OPT_WIDE_CHARS
 #undef  CASE_ESC_PERCENT
 #define CASE_ESC_PERCENT CASE_ESC_IGNORE
+#endif
+
+#if !OPT_MOD_FKEYS
+#undef  CASE_SET_MOD_FKEYS
+#define CASE_SET_MOD_FKEYS CASE_GROUND_STATE
+#undef  CASE_SET_MOD_FKEYS0
+#define CASE_SET_MOD_FKEYS0 CASE_GROUND_STATE
 #endif
 
 /*
@@ -3130,8 +3137,8 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	l		m		n		o	*/
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_SET_MOD_FKEYS,
+CASE_SET_MOD_FKEYS0,
 CASE_GROUND_STATE,
 /*	p		q		r		s	*/
 CASE_GROUND_STATE,

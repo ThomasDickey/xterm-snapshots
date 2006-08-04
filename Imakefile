@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.98 2006/04/10 00:34:36 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.99 2006/07/21 00:11:15 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -76,13 +76,13 @@ SCROLLBAR_RIGHT = -DSCROLLBAR_RIGHT
 #endif
 
 /* This must come before setting DEFINES */
-#if InstallXtermSetUID
-INSTSETIDFLAGS = InstUidFlags 
-#elif InstallXtermSetGID
+#if InstallXtermSetGID
 CSGIDFLAGS = -DUSE_UTMP_SETGID
-INSTSETIDFLAGS = InstGidFlags 
+INSTSETIDFLAGS = InstGidFlags
+#elif InstallXtermSetUID
+INSTSETIDFLAGS = InstUidFlags
 #else
-INSTSETIDFLAGS = NullParameter 
+INSTSETIDFLAGS = NullParameter
 #endif
 
 /*

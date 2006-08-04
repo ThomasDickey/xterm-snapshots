@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.39 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: cursor.c,v 1.42 2006/07/23 20:23:52 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/cursor.c,v 3.20 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -96,11 +96,12 @@ CursorSet(TScreen * screen, int row, int col, unsigned flags)
  * moves the cursor left n, no wrap around
  */
 void
-CursorBack(TScreen * screen, int n)
+CursorBack(XtermWidget xw, int n)
 {
+    TScreen *screen = &xw->screen;
     int i, j, k, rev;
 
-    if ((rev = (term->flags & (REVERSEWRAP | WRAPAROUND)) ==
+    if ((rev = (xw->flags & (REVERSEWRAP | WRAPAROUND)) ==
 	 (REVERSEWRAP | WRAPAROUND)) != 0
 	&& screen->do_wrap)
 	n--;
@@ -183,8 +184,9 @@ CursorUp(TScreen * screen, int n)
  * Won't leave scrolling region. No carriage return.
  */
 void
-xtermIndex(TScreen * screen, int amount)
+xtermIndex(XtermWidget xw, int amount)
 {
+    TScreen *screen = &xw->screen;
     int j;
 
     /*
@@ -198,7 +200,7 @@ xtermIndex(TScreen * screen, int amount)
     }
 
     CursorDown(screen, j = screen->bot_marg - screen->cur_row);
-    xtermScroll(screen, amount - j);
+    xtermScroll(xw, amount - j);
 }
 
 /*
@@ -206,8 +208,10 @@ xtermIndex(TScreen * screen, int amount)
  * Won't leave scrolling region. No carriage return.
  */
 void
-RevIndex(TScreen * screen, int amount)
+RevIndex(XtermWidget xw, int amount)
 {
+    TScreen *screen = &xw->screen;
+
     /*
      * reverse indexing when above scrolling region is cursor up.
      * if cursor low enough, no reverse indexing needed
@@ -218,7 +222,7 @@ RevIndex(TScreen * screen, int amount)
 	return;
     }
 
-    RevScroll(screen, amount - (screen->cur_row - screen->top_marg));
+    RevScroll(xw, amount - (screen->cur_row - screen->top_marg));
     CursorUp(screen, screen->cur_row - screen->top_marg);
 }
 
@@ -237,21 +241,21 @@ CarriageReturn(TScreen * screen)
  * Save Cursor and Attributes
  */
 void
-CursorSave(XtermWidget tw)
+CursorSave(XtermWidget xw)
 {
-    TScreen *screen = &tw->screen;
+    TScreen *screen = &xw->screen;
     SavedCursor *sc = &screen->sc[screen->alternate != False];
 
     sc->saved = True;
     sc->row = screen->cur_row;
     sc->col = screen->cur_col;
-    sc->flags = tw->flags;
+    sc->flags = xw->flags;
     sc->curgl = screen->curgl;
     sc->curgr = screen->curgr;
 #if OPT_ISO_COLORS
-    sc->cur_foreground = tw->cur_foreground;
-    sc->cur_background = tw->cur_background;
-    sc->sgr_foreground = tw->sgr_foreground;
+    sc->cur_foreground = xw->cur_foreground;
+    sc->cur_background = xw->cur_background;
+    sc->sgr_foreground = xw->sgr_foreground;
 #endif
     memmove(sc->gsets, screen->gsets, sizeof(screen->gsets));
 }
@@ -266,9 +270,9 @@ CursorSave(XtermWidget tw)
  * Restore Cursor and Attributes
  */
 void
-CursorRestore(XtermWidget tw)
+CursorRestore(XtermWidget xw)
 {
-    TScreen *screen = &tw->screen;
+    TScreen *screen = &xw->screen;
     SavedCursor *sc = &screen->sc[screen->alternate != False];
 
     /* Restore the character sets, unless we never did a save-cursor op.
@@ -282,18 +286,18 @@ CursorRestore(XtermWidget tw)
 	resetCharsets(screen);
     }
 
-    tw->flags &= ~DECSC_FLAGS;
-    tw->flags |= sc->flags & DECSC_FLAGS;
+    xw->flags &= ~DECSC_FLAGS;
+    xw->flags |= sc->flags & DECSC_FLAGS;
     CursorSet(screen,
-	      ((tw->flags & ORIGIN)
+	      ((xw->flags & ORIGIN)
 	       ? sc->row - screen->top_marg
 	       : sc->row),
-	      sc->col, tw->flags);
+	      sc->col, xw->flags);
 
 #if OPT_ISO_COLORS
-    tw->sgr_foreground = sc->sgr_foreground;
-    SGR_Foreground(tw->flags & FG_COLOR ? sc->cur_foreground : -1);
-    SGR_Background(tw->flags & BG_COLOR ? sc->cur_background : -1);
+    xw->sgr_foreground = sc->sgr_foreground;
+    SGR_Foreground(xw, xw->flags & FG_COLOR ? sc->cur_foreground : -1);
+    SGR_Background(xw, xw->flags & BG_COLOR ? sc->cur_background : -1);
 #endif
     update_autowrap();
 }

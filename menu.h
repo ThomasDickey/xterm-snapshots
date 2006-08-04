@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.104 2006/03/13 01:27:59 tom Exp $ */
+/* $XTermId: menu.h,v 1.106 2006/07/23 14:59:13 tom Exp $ */
 
 /*
 
@@ -168,7 +168,9 @@ typedef enum {
 #if OPT_SCO_FUNC_KEYS
     mainMenu_sco_fkeys,
 #endif
+#if OPT_SUN_FUNC_KEYS
     mainMenu_sun_fkeys,
+#endif
 #if OPT_SUNPC_KBD
     mainMenu_sun_kbd,
 #endif
@@ -292,13 +294,9 @@ typedef enum {
 
 
 /*
- * macros for updating menus
+ * functions for updating menus
  */
 
-#define update_menu_item(w,mi,val) UpdateMenuItem(mi,val)
-extern void UpdateMenuItem(Widget mi, XtArgVal val);
-
-#define set_sensitivity(w,mi,val) SetItemSensitivity(mi,val)
 extern void SetItemSensitivity(Widget mi, XtArgVal val);
 
 /*
@@ -333,7 +331,6 @@ extern void update_meta_esc(void);
 #define update_meta_esc() /*nothing*/
 #endif
 
-extern void update_sun_fkeys(void);
 extern void update_old_fkeys(void);
 extern void update_delete_del(void);
 
@@ -351,6 +348,12 @@ extern void update_hp_fkeys(void);
 extern void update_sco_fkeys(void);
 #else
 #define update_sco_fkeys() /*nothing*/
+#endif
+
+#if OPT_SUN_FUNC_KEYS
+extern void update_sun_fkeys(void);
+#else
+#define update_sun_fkeys() /*nothing*/
 #endif
 
 extern void update_scrollbar(void);

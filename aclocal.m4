@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.227 2006/06/19 00:36:50 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.232 2006/08/03 19:24:02 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.65 2006/06/19 00:36:50 dickey Exp $
 dnl
@@ -1199,20 +1199,32 @@ fi
 
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_POSIX_SAVED_IDS version: 4 updated: 2006/06/18 19:38:48
+dnl CF_POSIX_SAVED_IDS version: 6 updated: 2006/08/02 20:37:21
 dnl ------------------
 dnl
 dnl Check first if saved-ids are always supported.  Some systems
-dnl such require runtime checks.
+dnl may require runtime checks.
 AC_DEFUN([CF_POSIX_SAVED_IDS],
 [
+AC_CHECK_HEADERS( \
+sys/param.h \
+)
+
 AC_CACHE_CHECK(if POSIX saved-ids are supported,cf_cv_posix_saved_ids,[
 AC_TRY_LINK(
 [
 #include <unistd.h>
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>		/* this may define "BSD" */
+#endif
 ],[
 #if defined(_POSIX_SAVED_IDS) && (_POSIX_SAVED_IDS > 0)
-int x = seteuid(geteuid());
+	void *p = (void *) seteuid;
+	int x = seteuid(geteuid());
+#elif defined(BSD) && (BSD >= 199103)
+/* The BSD's may implement the runtime check - and it fails.
+ * However, saved-ids work almost like POSIX (close enough for most uses).
+ */
 #else
 make an error
 #endif
@@ -1225,6 +1237,7 @@ AC_TRY_RUN([
 #include <unistd.h>
 int main()
 {
+	void *p = (void *) seteuid;
 	long code = sysconf(_SC_SAVED_IDS);
 	exit ((code > 0) ? 0 : 1);
 }],
@@ -1534,7 +1547,7 @@ static struct termio d_tio;
 test "$cf_cv_svr4" = yes && AC_DEFINE(SVR4)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SYSV version: 10 updated: 2005/09/18 15:42:35
+dnl CF_SYSV version: 12 updated: 2006/06/21 16:52:31
 dnl -------
 dnl Check if this is a SYSV platform, e.g., as used in <X11/Xos.h>, and whether
 dnl defining it will be helpful.  The following features are used to check:
@@ -1550,6 +1563,7 @@ dnl c) compile with type definitions that differ on SYSV hosts from standard C.
 AC_DEFUN([CF_SYSV],
 [
 AC_CHECK_HEADERS( \
+termios.h \
 stdlib.h \
 X11/Intrinsic.h \
 )
@@ -1566,12 +1580,18 @@ AC_TRY_COMPILE([
 #ifdef HAVE_X11_INTRINSIC_H
 #include <X11/Intrinsic.h>	/* Intrinsic.h has other traps... */
 #endif
+#ifdef HAVE_TERMIOS_H		/* needed for HPUX 10.20 */ 
+#include <termios.h> 
+#define STRUCT_TERMIOS struct termios 
+#else 
+#define STRUCT_TERMIOS struct termio 
+#endif 
 #include <curses.h>
 #include <term.h>		/* eliminate most BSD hacks */
 #include <errno.h>		/* declare sys_errlist on older systems */
 #include <sys/termio.h>		/* eliminate most of the remaining ones */
 ],[
-static struct termio d_tio;
+static STRUCT_TERMIOS d_tio;
 	d_tio.c_cc[VINTR] = 0;
 	d_tio.c_cc[VQUIT] = 0;
 	d_tio.c_cc[VERASE] = 0;
@@ -2148,7 +2168,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_PATH version: 6 updated: 1998/10/11 00:40:17
+dnl CF_WITH_PATH version: 7 updated: 2006/08/03 15:20:08
 dnl ------------
 dnl Wrapper for AC_ARG_WITH to ensure that user supplies a pathname, not just
 dnl defaulting to yes/no.
@@ -2163,7 +2183,7 @@ AC_DEFUN([CF_WITH_PATH],
 [AC_ARG_WITH($1,[$2 ](default: ifelse($4,,empty,$4)),,
 ifelse($4,,[withval="${$3}"],[withval="${$3-ifelse($5,,$4,$5)}"]))dnl
 CF_PATH_SYNTAX(withval)
-eval $3="$withval"
+$3="$withval"
 AC_SUBST($3)dnl
 ])dnl
 dnl ---------------------------------------------------------------------------

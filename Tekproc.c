@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.135 2006/02/13 01:14:57 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.138 2006/07/23 16:44:28 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -741,7 +741,7 @@ Tekparse(void)
 		buf2[len] = 0;
 		if (!nested++) {
 		    if (c2 == BEL)
-			do_osc(buf2, len, BEL);
+			do_osc(term, buf2, len, BEL);
 		}
 		--nested;
 	    }
@@ -1317,10 +1317,11 @@ TekInitialize(Widget request GCC_UNUSED,
 }
 
 static void
-TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
+TekRealize(Widget gw,
 	   XtValueMask * valuemaskp,
 	   XSetWindowAttributes * values)
 {
+    TekWidget tw = (TekWidget) gw;
     TScreen *screen = &term->screen;
     int i;
     TekLink *tek;
@@ -1329,7 +1330,6 @@ TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
     int pr;
     XGCValues gcv;
     int winX, winY, width, height;
-    XSizeHints sizehints;
     char Tdefault[32];
     unsigned TEKgcFontMask;
 
@@ -1339,18 +1339,18 @@ TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
     term->screen.whichTwin = &term->screen.fullTwin;
 #endif /* NO_ACTIVE_ICON */
 
-    BorderPixel(tekWidget) = BorderPixel(term);
+    BorderPixel(tw) = BorderPixel(term);
 
     for (i = 0; i < TEKNUMFONTS; i++) {
-	if (!tekWidget->tek.Tfont[i]) {
-	    tekWidget->tek.Tfont[i] = XQueryFont(screen->display, DefaultGCID);
+	if (!tw->tek.Tfont[i]) {
+	    tw->tek.Tfont[i] = XQueryFont(screen->display, DefaultGCID);
 	}
 	TRACE(("Tfont[%d] %dx%d\n",
 	       i,
-	       tekWidget->tek.Tfont[i]->ascent +
-	       tekWidget->tek.Tfont[i]->descent,
-	       tekWidget->tek.Tfont[i]->max_bounds.width));
-	tekWidget->tek.tobaseline[i] = tekWidget->tek.Tfont[i]->ascent;
+	       tw->tek.Tfont[i]->ascent +
+	       tw->tek.Tfont[i]->descent,
+	       tw->tek.Tfont[i]->max_bounds.width));
+	tw->tek.tobaseline[i] = tw->tek.Tfont[i]->ascent;
     }
 
     if (!TekPtyData())
@@ -1390,67 +1390,67 @@ TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
 	    - height - (BorderWidth(SHELL_OF(term)) * 2);
 
     /* set up size hints */
-    sizehints.min_width = TEKMINWIDTH + border;
-    sizehints.min_height = TEKMINHEIGHT + border;
-    sizehints.width_inc = 1;
-    sizehints.height_inc = 1;
-    sizehints.flags = PMinSize | PResizeInc;
-    sizehints.x = winX;
-    sizehints.y = winY;
+    tw->hints.min_width = TEKMINWIDTH + border;
+    tw->hints.min_height = TEKMINHEIGHT + border;
+    tw->hints.width_inc = 1;
+    tw->hints.height_inc = 1;
+    tw->hints.flags = PMinSize | PResizeInc;
+    tw->hints.x = winX;
+    tw->hints.y = winY;
     if ((XValue & pr) || (YValue & pr)) {
-	sizehints.flags |= USSize | USPosition;
-	sizehints.flags |= PWinGravity;
+	tw->hints.flags |= USSize | USPosition;
+	tw->hints.flags |= PWinGravity;
 	switch (pr & (XNegative | YNegative)) {
 	case 0:
-	    sizehints.win_gravity = NorthWestGravity;
+	    tw->hints.win_gravity = NorthWestGravity;
 	    break;
 	case XNegative:
-	    sizehints.win_gravity = NorthEastGravity;
+	    tw->hints.win_gravity = NorthEastGravity;
 	    break;
 	case YNegative:
-	    sizehints.win_gravity = SouthWestGravity;
+	    tw->hints.win_gravity = SouthWestGravity;
 	    break;
 	default:
-	    sizehints.win_gravity = SouthEastGravity;
+	    tw->hints.win_gravity = SouthEastGravity;
 	    break;
 	}
     } else {
 	/* set a default size, but do *not* set position */
-	sizehints.flags |= PSize;
+	tw->hints.flags |= PSize;
     }
-    sizehints.width = width;
-    sizehints.height = height;
+    tw->hints.width = width;
+    tw->hints.height = height;
     if ((WidthValue & pr) || (HeightValue & pr))
-	sizehints.flags |= USSize;
+	tw->hints.flags |= USSize;
     else
-	sizehints.flags |= PSize;
+	tw->hints.flags |= PSize;
 
     TRACE(("make resize request %dx%d\n", height, width));
-    (void) XtMakeResizeRequest((Widget) tekWidget,
+    (void) XtMakeResizeRequest((Widget) tw,
 			       width, height,
-			       &tekWidget->core.width, &tekWidget->core.height);
-    TRACE(("...made resize request %dx%d\n", tekWidget->core.height, tekWidget->core.width));
+			       &tw->core.width, &tw->core.height);
+    TRACE(("...made resize request %dx%d\n", tw->core.height, tw->core.width));
 
     /* XXX This is bogus.  We are parsing geometries too late.  This
      * is information that the shell widget ought to have before we get
      * realized, so that it can do the right thing.
      */
-    if (sizehints.flags & USPosition)
-	XMoveWindow(XtDisplay(tekWidget), TShellWindow, sizehints.x, sizehints.y);
+    if (tw->hints.flags & USPosition)
+	XMoveWindow(XtDisplay(tw), TShellWindow, tw->hints.x, tw->hints.y);
 
-    XSetWMNormalHints(XtDisplay(tekWidget), TShellWindow, &sizehints);
-    XFlush(XtDisplay(tekWidget));	/* get it out to window manager */
+    XSetWMNormalHints(XtDisplay(tw), TShellWindow, &tw->hints);
+    XFlush(XtDisplay(tw));	/* get it out to window manager */
 
     values->win_gravity = NorthWestGravity;
     values->background_pixel = T_COLOR(screen, TEK_BG);
 
-    XtWindow(tekWidget) = TWindow(screen) =
+    XtWindow(tw) = TWindow(screen) =
 	XCreateWindow(screen->display,
-		      XtWindow(SHELL_OF(tekWidget)),
-		      tekWidget->core.x, tekWidget->core.y,
-		      tekWidget->core.width, tekWidget->core.height,
-		      BorderWidth(tekWidget),
-		      (int) tekWidget->core.depth,
+		      XtWindow(SHELL_OF(tw)),
+		      tw->core.x, tw->core.y,
+		      tw->core.width, tw->core.height,
+		      BorderWidth(tw),
+		      (int) tw->core.depth,
 		      InputOutput, CopyFromParent,
 		      ((*valuemaskp) | CWBackPixel | CWWinGravity),
 		      values);
@@ -1465,8 +1465,8 @@ TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
 	TekScale(screen) = d;
 
     screen->cur.fontsize = TEK_FONT_LARGE;
-    if (tekWidget->tek.initial_font) {
-	char *s = tekWidget->tek.initial_font;
+    if (tw->tek.initial_font) {
+	char *s = tw->tek.initial_font;
 
 	if (XmuCompareISOLatin1(s, "large") == 0)
 	    screen->cur.fontsize = TEK_FONT_LARGE;
@@ -1479,7 +1479,7 @@ TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
 	else if (XmuCompareISOLatin1(s, "small") == 0)
 	    screen->cur.fontsize = TEK_FONT_SMALL;
     }
-#define TestGIN(s) XmuCompareISOLatin1(tekWidget->tek.gin_terminator_str, s)
+#define TestGIN(s) XmuCompareISOLatin1(tw->tek.gin_terminator_str, s)
 
     if (TestGIN(GIN_TERM_NONE_STR) == 0)
 	screen->gin_terminator = GIN_TERM_NONE;
@@ -1489,10 +1489,10 @@ TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
 	screen->gin_terminator = GIN_TERM_EOT;
     else
 	fprintf(stderr, "%s: illegal GIN terminator setting \"%s\"\n",
-		xterm_name, tekWidget->tek.gin_terminator_str);
+		xterm_name, tw->tek.gin_terminator_str);
 
     gcv.graphics_exposures = True;	/* default */
-    gcv.font = tekWidget->tek.Tfont[screen->cur.fontsize]->fid;
+    gcv.font = tw->tek.Tfont[screen->cur.fontsize]->fid;
     gcv.foreground = T_COLOR(screen, TEK_FG);
     gcv.background = T_COLOR(screen, TEK_BG);
 
@@ -1540,7 +1540,7 @@ TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
 
 	args[0].value = (XtArgVal) & icon_name;
 	args[1].value = (XtArgVal) & title;
-	XtGetValues(SHELL_OF(tekWidget), args, 2);
+	XtGetValues(SHELL_OF(tw), args, 2);
 	tek_icon_name = XtMalloc(strlen(icon_name) + 7);
 	strcpy(tek_icon_name, icon_name);
 	strcat(tek_icon_name, "(Tek)");
@@ -1549,7 +1549,7 @@ TekRealize(Widget gw GCC_UNUSED,	/* same as tekWidget */
 	strcat(tek_title, "(Tek)");
 	args[0].value = (XtArgVal) tek_icon_name;
 	args[1].value = (XtArgVal) tek_title;
-	XtSetValues(SHELL_OF(tekWidget), args, 2);
+	XtSetValues(SHELL_OF(tw), args, 2);
 	XtFree(tek_icon_name);
 	XtFree(tek_title);
     }

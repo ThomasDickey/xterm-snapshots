@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.120 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.124 2006/07/23 19:48:49 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/scrollbar.c,v 3.48 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -101,7 +101,6 @@ DoResizeScreen(XtermWidget xw)
     int min_wide = border + xw->screen.fullVwin.sb_info.width;
     int min_high = border;
 #if 1				/* ndef nothack */
-    XSizeHints sizehints;
     long supp;
 #endif
     XtGeometryResult geomreqresult;
@@ -166,17 +165,17 @@ DoResizeScreen(XtermWidget xw)
     TRACE(("%s@%d -- ", __FILE__, __LINE__));
     TRACE_WM_HINTS(xw);
     if (!XGetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)),
-			   &sizehints, &supp))
-	bzero(&sizehints, sizeof(sizehints));
+			   &xw->hints, &supp))
+	bzero(&xw->hints, sizeof(xw->hints));
 
-    xtermSizeHints(xw, &sizehints, ScrollbarWidth(screen));
+    xtermSizeHints(xw, ScrollbarWidth(screen));
 
     /* These are obsolete, but old clients may use them */
-    sizehints.width = MaxCols(screen) * FontWidth(screen) + sizehints.min_width;
-    sizehints.height = MaxRows(screen) * FontHeight(screen) + sizehints.min_height;
+    xw->hints.width = MaxCols(screen) * FontWidth(screen) + xw->hints.min_width;
+    xw->hints.height = MaxRows(screen) * FontHeight(screen) + xw->hints.min_height;
 #endif
 
-    XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)), &sizehints);
+    XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)), &xw->hints);
 
     reqWidth = MaxCols(screen) * FontWidth(screen) + min_wide;
     reqHeight = MaxRows(screen) * FontHeight(screen) + min_high;
@@ -204,13 +203,13 @@ DoResizeScreen(XtermWidget xw)
      * the window manager's hints, even on a failed request.  This would
      * presumably be fixed if the shell did its own work.
      */
-    if (sizehints.flags
+    if (xw->hints.flags
 	&& repHeight
 	&& repWidth) {
-	sizehints.height = repHeight;
-	sizehints.width = repWidth;
-	TRACE_HINTS(&sizehints);
-	XSetWMNormalHints(screen->display, VShellWindow, &sizehints);
+	xw->hints.height = repHeight;
+	xw->hints.width = repWidth;
+	TRACE_HINTS(&xw->hints);
+	XSetWMNormalHints(screen->display, VShellWindow, &xw->hints);
     }
 #endif
     XSync(screen->display, FALSE);	/* synchronize */
@@ -301,7 +300,7 @@ ResizeScrollBar(XtermWidget xw)
     int width = screen->scrollWidget->core.width;
     int ypos = -ScrollBarBorder(xw);
 #ifdef SCROLLBAR_RIGHT
-    int xpos = ((term->misc.useRight)
+    int xpos = ((xw->misc.useRight)
 		? (screen->fullVwin.fullwidth -
 		   screen->scrollWidget->core.width -
 		   BorderWidth(screen->scrollWidget))
@@ -349,7 +348,7 @@ WindowScroll(TScreen * screen, int top)
 	scrolltop = lines;
 	refreshtop = scrollheight;
     }
-    scrolling_copy_area(screen, scrolltop, scrollheight, -i);
+    scrolling_copy_area(term, scrolltop, scrollheight, -i);
     screen->topline = top;
 
     ScrollSelection(screen, i, True);
@@ -362,7 +361,7 @@ WindowScroll(TScreen * screen, int top)
 		  (unsigned) Width(screen),
 		  (unsigned) lines * FontHeight(screen),
 		  FALSE);
-    ScrnRefresh(screen, refreshtop, 0, lines, MaxCols(screen), False);
+    ScrnRefresh(term, refreshtop, 0, lines, MaxCols(screen), False);
 
     ScrollBarDrawThumb(screen->scrollWidget);
 }
@@ -408,7 +407,7 @@ ScrollBarOn(XtermWidget xw, int init, int doalloc)
 		Bell(XkbBI_MinorError, 0);
 	    }
 	}
-    } else if (!screen->scrollWidget || !XtIsRealized((Widget) term)) {
+    } else if (!screen->scrollWidget || !XtIsRealized((Widget) xw)) {
 	Bell(XkbBI_MinorError, 0);
 	Bell(XkbBI_MinorError, 0);
     } else {
@@ -454,13 +453,13 @@ ScrollBarOn(XtermWidget xw, int init, int doalloc)
 	DoResizeScreen(xw);
 
 #ifdef SCROLLBAR_RIGHT
-	updateRightScrollbar(term);
+	updateRightScrollbar(xw);
 #endif
 
 	XtMapWidget(screen->scrollWidget);
 	update_scrollbar();
 	if (screen->visbuf) {
-	    XClearWindow(screen->display, XtWindow(term));
+	    XClearWindow(screen->display, XtWindow(xw));
 	    Redraw();
 	}
     }

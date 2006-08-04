@@ -1,4 +1,4 @@
-/* $XTermId: testxmc.c,v 1.32 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.34 2006/07/23 18:53:12 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/testxmc.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2004,2005 by Thomas E. Dickey
+Copyright 1997-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -92,13 +92,15 @@ authorization.
 #include <xterm.h>
 #include <data.h>
 
-#define MARK_ON(a)  (my_attrs & a) != 0 && (term->flags & (whichone = a)) == 0
-#define MARK_OFF(a) (my_attrs & a) != 0 && (term->flags & (whichone = a)) != 0
+#define MARK_ON(a)  (my_attrs & a) != 0 && (xw->flags & (whichone = a)) == 0
+#define MARK_OFF(a) (my_attrs & a) != 0 && (xw->flags & (whichone = a)) != 0
 
 void
-Mark_XMC(TScreen * screen, int param)
+Mark_XMC(XtermWidget xw, int param)
 {
     static IChar *glitch;
+
+    TScreen *screen = &(xw->screen);
     Bool found = False;
     Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
     Char whichone = 0;
@@ -112,7 +114,7 @@ Mark_XMC(TScreen * screen, int param)
     switch (param) {
     case -1:			/* DEFAULT */
     case 0:			/* FALLTHRU */
-	found = MARK_OFF((term->flags & XMC_FLAGS));
+	found = MARK_OFF((xw->flags & XMC_FLAGS));
 	break;
     case 1:
 	found = MARK_ON(BOLD);
@@ -145,12 +147,12 @@ Mark_XMC(TScreen * screen, int param)
      * ones.
      */
     if (found) {
-	unsigned save = term->flags;
-	term->flags ^= whichone;
+	unsigned save = xw->flags;
+	xw->flags ^= whichone;
 	TRACE(("XMC Writing glitch (%d/%d) after SGR %d\n", my_attrs,
 	       whichone, param));
-	dotext(screen, '?', glitch, screen->xmc_glitch);
-	term->flags = save;
+	dotext(xw, '?', glitch, screen->xmc_glitch);
+	xw->flags = save;
     }
 }
 
@@ -159,11 +161,12 @@ Mark_XMC(TScreen * screen, int param)
  * end of a line.
  */
 void
-Jump_XMC(TScreen * screen)
+Jump_XMC(XtermWidget xw)
 {
+    TScreen *screen = &(xw->screen);
     if (!screen->move_sgr_ok
 	&& screen->cur_col <= CurMaxCol(screen, screen->cur_row)) {
-	Mark_XMC(screen, -1);
+	Mark_XMC(xw, -1);
     }
 }
 
@@ -172,8 +175,9 @@ Jump_XMC(TScreen * screen)
  * location and any attributes that would have been set by preceding locations.
  */
 void
-Resolve_XMC(TScreen * screen)
+Resolve_XMC(XtermWidget xw)
 {
+    TScreen *screen = &(xw->screen);
     Bool changed = False;
     Char start;
     Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
@@ -214,13 +218,13 @@ Resolve_XMC(TScreen * screen)
 
     TRACE(("XMC %s (%s:%d/%d) from %d,%d to %d,%d\n",
 	   changed ? "Ripple" : "Nochange",
-	   BtoS(term->flags & my_attrs),
+	   BtoS(xw->flags & my_attrs),
 	   my_attrs, start,
 	   screen->cur_row, screen->cur_col,
 	   row, col));
 
     if (changed) {
-	ScrnUpdate(screen, screen->cur_row, 0, row + 1 - screen->cur_row,
+	ScrnUpdate(xw, screen->cur_row, 0, row + 1 - screen->cur_row,
 		   MaxCols(screen), True);
     }
 }

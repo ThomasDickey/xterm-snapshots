@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.94 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: data.h,v 1.95 2006/07/15 12:05:25 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -160,7 +160,6 @@ typedef struct XTERM_RESOURCE {
     Boolean messages;
 
     String keyboardType;
-    Boolean sunFunctionKeys;	/* %%% should be widget resource? */
 #if OPT_SUNPC_KBD
     Boolean sunKeyboard;
 #endif
@@ -169,6 +168,9 @@ typedef struct XTERM_RESOURCE {
 #endif
 #if OPT_SCO_FUNC_KEYS
     Boolean scoFunctionKeys;
+#endif
+#if OPT_SUN_FUNC_KEYS
+    Boolean sunFunctionKeys;	/* %%% should be VT100 widget resource? */
 #endif
 
 #if OPT_INITIAL_ERASE

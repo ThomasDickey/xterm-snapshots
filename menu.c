@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.206 2006/04/10 00:34:36 tom Exp $ */
+/* $XTermId: menu.c,v 1.217 2006/07/23 20:13:22 tom Exp $ */
 
 /*
 
@@ -142,7 +142,6 @@ static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
 static void do_selectClipboard PROTO_XT_CALLBACK_ARGS;
 static void do_softreset       PROTO_XT_CALLBACK_ARGS;
-static void do_sun_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_terminate       PROTO_XT_CALLBACK_ARGS;
 static void do_titeInhibit     PROTO_XT_CALLBACK_ARGS;
@@ -190,6 +189,10 @@ static void do_font_renderfont PROTO_XT_CALLBACK_ARGS;
 
 #if OPT_SCO_FUNC_KEYS
 static void do_sco_fkeys       PROTO_XT_CALLBACK_ARGS;
+#endif
+
+#if OPT_SUN_FUNC_KEYS
+static void do_sun_fkeys       PROTO_XT_CALLBACK_ARGS;
 #endif
 
 #if OPT_SUNPC_KBD
@@ -257,7 +260,9 @@ MenuEntry mainMenuEntries[] = {
 #if OPT_SCO_FUNC_KEYS
     { "scoFunctionKeys",do_sco_fkeys,	NULL },
 #endif
+#if OPT_SUN_FUNC_KEYS
     { "sunFunctionKeys",do_sun_fkeys,	NULL },
+#endif
 #if OPT_SUNPC_KBD
     { "sunKeyboard",	do_sun_kbd,	NULL },
 #endif
@@ -573,36 +578,34 @@ domenu(Widget w GCC_UNUSED,
 	    update_delete_del();
 	    update_keyboard_type();
 	    if (!xtermHasPrinter()) {
-		set_sensitivity(mw,
-				mainMenuEntries[mainMenu_print].widget,
-				False);
-		set_sensitivity(mw,
-				mainMenuEntries[mainMenu_print_redir].widget,
-				False);
+		SetItemSensitivity(mainMenuEntries[mainMenu_print].widget,
+				   False);
+		SetItemSensitivity(mainMenuEntries[mainMenu_print_redir].widget,
+				   False);
 	    }
 	    if (screen->terminal_id < 200) {
-		set_sensitivity(mw,
-				mainMenuEntries[mainMenu_8bit_ctrl].widget,
-				False);
+		SetItemSensitivity(
+				      mainMenuEntries[mainMenu_8bit_ctrl].widget,
+				      False);
 	    }
 #if !defined(SIGTSTP)
-	    set_sensitivity(mw,
-			    mainMenuEntries[mainMenu_suspend].widget, False);
+	    SetItemSensitivity(
+				  mainMenuEntries[mainMenu_suspend].widget, False);
 #endif
 #if !defined(SIGCONT)
-	    set_sensitivity(mw,
-			    mainMenuEntries[mainMenu_continue].widget, False);
+	    SetItemSensitivity(
+				  mainMenuEntries[mainMenu_continue].widget, False);
 #endif
 #ifdef ALLOWLOGGING
 	    if (screen->inhibit & I_LOG) {
-		set_sensitivity(mw,
-				mainMenuEntries[mainMenu_logging].widget, False);
+		SetItemSensitivity(
+				      mainMenuEntries[mainMenu_logging].widget, False);
 	    }
 #endif
 	    if (screen->inhibit & I_SIGNAL) {
 		int n;
 		for (n = (int) mainMenu_suspend; n <= (int) mainMenu_quit; ++n) {
-		    set_sensitivity(mw, mainMenuEntries[n].widget, False);
+		    SetItemSensitivity(mainMenuEntries[n].widget, False);
 		}
 	    }
 	}
@@ -631,9 +634,9 @@ domenu(Widget w GCC_UNUSED,
 	    update_titeInhibit();
 #ifndef NO_ACTIVE_ICON
 	    if (!screen->fnt_icon || !screen->iconVwin.window) {
-		set_sensitivity(mw,
-				vtMenuEntries[vtMenu_activeicon].widget,
-				False);
+		SetItemSensitivity(
+				      vtMenuEntries[vtMenu_activeicon].widget,
+				      False);
 	    } else
 		update_activeicon();
 #endif /* NO_ACTIVE_ICON */
@@ -641,7 +644,7 @@ domenu(Widget w GCC_UNUSED,
 	    if (screen->inhibit & I_TEK) {
 		int n;
 		for (n = (int) vtMenu_tekshow; n <= (int) vtMenu_vthide; ++n) {
-		    set_sensitivity(mw, vtMenuEntries[n].widget, False);
+		    SetItemSensitivity(vtMenuEntries[n].widget, False);
 		}
 	    }
 #endif
@@ -651,35 +654,35 @@ domenu(Widget w GCC_UNUSED,
     case fontMenu:
 	if (created) {
 	    set_menu_font(True);
-	    set_sensitivity(mw,
-			    fontMenuEntries[fontMenu_fontescape].widget,
-			    (screen->menu_font_names[fontMenu_fontescape]
-			     ? True : False));
+	    SetItemSensitivity(
+				  fontMenuEntries[fontMenu_fontescape].widget,
+				  (screen->menu_font_names[fontMenu_fontescape]
+				   ? True : False));
 #if OPT_BOX_CHARS
 	    update_font_boxchars();
-	    set_sensitivity(mw,
-			    fontMenuEntries[fontMenu_font_boxchars].widget,
-			    True);
+	    SetItemSensitivity(
+				  fontMenuEntries[fontMenu_font_boxchars].widget,
+				  True);
 #endif
 #if OPT_DEC_SOFTFONT		/* FIXME: not implemented */
 	    update_font_loadable();
-	    set_sensitivity(mw,
-			    fontMenuEntries[fontMenu_font_loadable].widget,
-			    False);
+	    SetItemSensitivity(
+				  fontMenuEntries[fontMenu_font_loadable].widget,
+				  False);
 #endif
 #if OPT_DEC_CHRSET
 	    update_font_doublesize();
 	    if (term->screen.cache_doublesize == 0)
-		set_sensitivity(mw,
-				fontMenuEntries[fontMenu_font_doublesize].widget,
-				False);
+		SetItemSensitivity(
+				      fontMenuEntries[fontMenu_font_doublesize].widget,
+				      False);
 #endif
 #if OPT_RENDERFONT
 	    update_font_renderfont();
 	    if (term->misc.face_name == 0) {
-		set_sensitivity(mw,
-				fontMenuEntries[fontMenu_render_font].widget,
-				False);
+		SetItemSensitivity(
+				      fontMenuEntries[fontMenu_render_font].widget,
+				      False);
 	    }
 #endif
 #if OPT_WIDE_CHARS
@@ -687,11 +690,11 @@ domenu(Widget w GCC_UNUSED,
 	    update_font_utf8_title();
 #endif
 	}
-	FindFontSelection(NULL, True);
-	set_sensitivity(mw,
-			fontMenuEntries[fontMenu_fontsel].widget,
-			(screen->menu_font_names[fontMenu_fontsel]
-			 ? True : False));
+	FindFontSelection(term, NULL, True);
+	SetItemSensitivity(
+			      fontMenuEntries[fontMenu_fontsel].widget,
+			      (screen->menu_font_names[fontMenu_fontsel]
+			       ? True : False));
 	break;
 
 #if OPT_TEK4014
@@ -936,7 +939,7 @@ do_delete_del(Widget gw GCC_UNUSED,
 	      XtPointer closure GCC_UNUSED,
 	      XtPointer data GCC_UNUSED)
 {
-    if (xtermDeleteIsDEL())
+    if (xtermDeleteIsDEL(term))
 	term->screen.delete_is_del = False;
     else
 	term->screen.delete_is_del = True;
@@ -948,7 +951,7 @@ do_old_fkeys(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    toggle_keyboard_type(keyboardIsLegacy);
+    toggle_keyboard_type(term, keyboardIsLegacy);
 }
 
 #if OPT_HP_FUNC_KEYS
@@ -957,7 +960,7 @@ do_hp_fkeys(Widget gw GCC_UNUSED,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    toggle_keyboard_type(keyboardIsHP);
+    toggle_keyboard_type(term, keyboardIsHP);
 }
 #endif
 
@@ -967,17 +970,19 @@ do_sco_fkeys(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    toggle_keyboard_type(keyboardIsSCO);
+    toggle_keyboard_type(term, keyboardIsSCO);
 }
 #endif
 
+#if OPT_SUN_FUNC_KEYS
 static void
 do_sun_fkeys(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    toggle_keyboard_type(keyboardIsSun);
+    toggle_keyboard_type(term, keyboardIsSun);
 }
+#endif
 
 #if OPT_SUNPC_KBD
 /*
@@ -988,7 +993,7 @@ do_sun_kbd(Widget gw GCC_UNUSED,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    toggle_keyboard_type(keyboardIsVT220);
+    toggle_keyboard_type(term, keyboardIsVT220);
 }
 #endif
 
@@ -1086,7 +1091,7 @@ do_jumpscroll(Widget gw GCC_UNUSED,
     if (term->flags & SMOOTHSCROLL) {
 	screen->jumpscroll = False;
 	if (screen->scroll_amt)
-	    FlushScroll(screen);
+	    FlushScroll(term);
     } else {
 	screen->jumpscroll = True;
     }
@@ -1266,8 +1271,7 @@ do_altscreen(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
-    ToggleAlternate(screen);
+    ToggleAlternate(term);
 }
 
 /* ARGSUSED */
@@ -1305,7 +1309,7 @@ do_softreset(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    VTReset(False, False);
+    VTReset(term, False, False);
 }
 
 static void
@@ -1313,7 +1317,7 @@ do_hardreset(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    VTReset(True, False);
+    VTReset(term, True, False);
 }
 
 static void
@@ -1321,7 +1325,7 @@ do_clearsavedlines(Widget gw GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XtPointer data GCC_UNUSED)
 {
-    VTReset(True, True);
+    VTReset(term, True, True);
 }
 
 #if OPT_TEK4014
@@ -1415,7 +1419,7 @@ do_font_renderfont(Widget gw GCC_UNUSED,
     term->misc.render_font = !term->misc.render_font;
     update_font_renderfont();
     xtermLoadFont(term, xtermFontName(name), True, fontnum);
-    ScrnRefresh(screen, 0, 0,
+    ScrnRefresh(term, 0, 0,
 		MaxRows(screen),
 		MaxCols(screen), True);
 }
@@ -1439,7 +1443,7 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
 		SetVTFont(term, screen->menu_font_number, TRUE, NULL);
 	    }
 	} else {
-	    ChangeToWide(screen);
+	    ChangeToWide(term);
 	}
     }
     switchPtyData(screen, !screen->utf8_mode);
@@ -1785,6 +1789,7 @@ HandleBackarrow(Widget w,
 		     params, *param_count, w);
 }
 
+#if OPT_SUN_FUNC_KEYS
 void
 HandleSunFunctionKeys(Widget w,
 		      XEvent * event GCC_UNUSED,
@@ -1794,6 +1799,7 @@ HandleSunFunctionKeys(Widget w,
     handle_vt_toggle(do_sun_fkeys, term->keyboard.type == keyboardIsSun,
 		     params, *param_count, w);
 }
+#endif
 
 #if OPT_NUM_LOCK
 void
@@ -2284,7 +2290,7 @@ HandleTekCopy(Widget w,
 }
 #endif /* OPT_TEK4014 */
 
-void
+static void
 UpdateMenuItem(Widget mi, XtArgVal val)
 {
     static Arg menuArgs =
@@ -2469,13 +2475,11 @@ repairSizeHints(void)
 {
     TScreen *screen = &term->screen;
 
-    XSizeHints sizehints;
-
     if (XtIsRealized((Widget) term)) {
-	bzero(&sizehints, sizeof(sizehints));
-	xtermSizeHints(term, &sizehints, ScrollbarWidth(screen));
+	bzero(&term->hints, sizeof(term->hints));
+	xtermSizeHints(term, ScrollbarWidth(screen));
 
-	XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(term)), &sizehints);
+	XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(term)), &term->hints);
     }
 }
 
@@ -2490,24 +2494,24 @@ InitWidgetMenu(Widget shell)
     TRACE(("InitWidgetMenu(%p)\n", shell));
     if (term != 0) {
 	if (shell == toplevel) {	/* vt100 */
-	    if (!term->init_vt_menu) {
+	    if (!term->init_menu) {
 		INIT_POPUP(vt_shell, mainMenu);
 		INIT_POPUP(vt_shell, vtMenu);
 		INIT_POPUP(vt_shell, fontMenu);
-		term->init_vt_menu = True;
+		term->init_menu = True;
 		TRACE(("...InitWidgetMenu(vt)\n"));
 	    }
-	    result = term->init_vt_menu;
+	    result = term->init_menu;
 	}
 #if OPT_TEK4014
 	else if (tekWidget) {	/* tek4014 */
-	    if (!term->init_tek_menu) {
+	    if (!tekWidget->init_menu) {
 		INIT_POPUP(tek_shell, mainMenu);
 		INIT_POPUP(tek_shell, tekMenu);
-		term->init_tek_menu = True;
+		tekWidget->init_menu = True;
 		TRACE(("...InitWidgetMenu(tek)\n"));
 	    }
-	    result = term->init_tek_menu;
+	    result = tekWidget->init_menu;
 	}
 #endif
     }
@@ -2639,119 +2643,107 @@ do_toolbar(Widget gw GCC_UNUSED,
 void
 update_toolbar(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_toolbar].widget,
-		     resource.toolBar);
+    UpdateMenuItem(mainMenuEntries[mainMenu_toolbar].widget,
+		   resource.toolBar);
 }
 #endif /* OPT_TOOLBAR */
 
 void
 update_securekbd(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_securekbd].widget,
-		     term->screen.grabbedKbd);
+    UpdateMenuItem(mainMenuEntries[mainMenu_securekbd].widget,
+		   term->screen.grabbedKbd);
 }
 
 void
 update_allowsends(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_allowsends].widget,
-		     term->screen.allowSendEvents);
+    UpdateMenuItem(mainMenuEntries[mainMenu_allowsends].widget,
+		   term->screen.allowSendEvents);
 }
 
 #ifdef ALLOWLOGGING
 void
 update_logging(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_logging].widget,
-		     term->screen.logging);
+    UpdateMenuItem(mainMenuEntries[mainMenu_logging].widget,
+		   term->screen.logging);
 }
 #endif
 
 void
 update_print_redir(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_print_redir].widget,
-		     term->screen.printer_controlmode);
+    UpdateMenuItem(mainMenuEntries[mainMenu_print_redir].widget,
+		   term->screen.printer_controlmode);
 }
 
 void
 update_8bit_control(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_8bit_ctrl].widget,
-		     term->screen.control_eight_bits);
+    UpdateMenuItem(mainMenuEntries[mainMenu_8bit_ctrl].widget,
+		   term->screen.control_eight_bits);
 }
 
 void
 update_decbkm(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_backarrow].widget,
-		     (term->keyboard.flags & MODE_DECBKM) != 0);
+    UpdateMenuItem(mainMenuEntries[mainMenu_backarrow].widget,
+		   (term->keyboard.flags & MODE_DECBKM) != 0);
 }
 
 #if OPT_NUM_LOCK
 void
 update_num_lock(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_num_lock].widget,
-		     term->misc.real_NumLock);
+    UpdateMenuItem(mainMenuEntries[mainMenu_num_lock].widget,
+		   term->misc.real_NumLock);
 }
 
 void
 update_alt_esc(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_alt_esc].widget,
-		     !term->screen.input_eight_bits);
+    UpdateMenuItem(mainMenuEntries[mainMenu_alt_esc].widget,
+		   !term->screen.input_eight_bits);
 }
 
 void
 update_meta_esc(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_meta_esc].widget,
-		     term->screen.meta_sends_esc);
+    UpdateMenuItem(mainMenuEntries[mainMenu_meta_esc].widget,
+		   term->screen.meta_sends_esc);
+}
+#endif
+
+#if OPT_SUN_FUNC_KEYS
+void
+update_sun_fkeys(void)
+{
+    UpdateMenuItem(mainMenuEntries[mainMenu_sun_fkeys].widget,
+		   term->keyboard.type == keyboardIsSun);
 }
 #endif
 
 void
-update_sun_fkeys(void)
-{
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_sun_fkeys].widget,
-		     term->keyboard.type == keyboardIsSun);
-}
-
-void
 update_old_fkeys(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_old_fkeys].widget,
-		     term->keyboard.type == keyboardIsLegacy);
+    UpdateMenuItem(mainMenuEntries[mainMenu_old_fkeys].widget,
+		   term->keyboard.type == keyboardIsLegacy);
 }
 
 void
 update_delete_del(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_delete_del].widget,
-		     xtermDeleteIsDEL());
+    UpdateMenuItem(mainMenuEntries[mainMenu_delete_del].widget,
+		   xtermDeleteIsDEL(term));
 }
 
 #if OPT_SUNPC_KBD
 void
 update_sun_kbd(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_sun_kbd].widget,
-		     term->keyboard.type == keyboardIsVT220);
+    UpdateMenuItem(mainMenuEntries[mainMenu_sun_kbd].widget,
+		   term->keyboard.type == keyboardIsVT220);
 }
 #endif
 
@@ -2759,9 +2751,8 @@ update_sun_kbd(void)
 void
 update_hp_fkeys(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_hp_fkeys].widget,
-		     term->keyboard.type == keyboardIsHP);
+    UpdateMenuItem(mainMenuEntries[mainMenu_hp_fkeys].widget,
+		   term->keyboard.type == keyboardIsHP);
 }
 #endif
 
@@ -2769,175 +2760,154 @@ update_hp_fkeys(void)
 void
 update_sco_fkeys(void)
 {
-    update_menu_item(term->screen.mainMenu,
-		     mainMenuEntries[mainMenu_sco_fkeys].widget,
-		     term->keyboard.type == keyboardIsSCO);
+    UpdateMenuItem(mainMenuEntries[mainMenu_sco_fkeys].widget,
+		   term->keyboard.type == keyboardIsSCO);
 }
 #endif
 
 void
 update_scrollbar(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_scrollbar].widget,
-		     ScrollbarWidth(&term->screen));
+    UpdateMenuItem(vtMenuEntries[vtMenu_scrollbar].widget,
+		   ScrollbarWidth(&term->screen));
 }
 
 void
 update_jumpscroll(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_jumpscroll].widget,
-		     term->screen.jumpscroll);
+    UpdateMenuItem(vtMenuEntries[vtMenu_jumpscroll].widget,
+		   term->screen.jumpscroll);
 }
 
 void
 update_reversevideo(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_reversevideo].widget,
-		     (term->misc.re_verse));
+    UpdateMenuItem(vtMenuEntries[vtMenu_reversevideo].widget,
+		   (term->misc.re_verse));
 }
 
 void
 update_autowrap(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_autowrap].widget,
-		     (term->flags & WRAPAROUND) != 0);
+    UpdateMenuItem(vtMenuEntries[vtMenu_autowrap].widget,
+		   (term->flags & WRAPAROUND) != 0);
 }
 
 void
 update_reversewrap(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_reversewrap].widget,
-		     (term->flags & REVERSEWRAP) != 0);
+    UpdateMenuItem(vtMenuEntries[vtMenu_reversewrap].widget,
+		   (term->flags & REVERSEWRAP) != 0);
 }
 
 void
 update_autolinefeed(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_autolinefeed].widget,
-		     (term->flags & LINEFEED) != 0);
+    UpdateMenuItem(vtMenuEntries[vtMenu_autolinefeed].widget,
+		   (term->flags & LINEFEED) != 0);
 }
 
 void
 update_appcursor(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_appcursor].widget,
-		     (term->keyboard.flags & MODE_DECCKM) != 0);
+    UpdateMenuItem(vtMenuEntries[vtMenu_appcursor].widget,
+		   (term->keyboard.flags & MODE_DECCKM) != 0);
 }
 
 void
 update_appkeypad(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_appkeypad].widget,
-		     (term->keyboard.flags & MODE_DECKPAM) != 0);
+    UpdateMenuItem(vtMenuEntries[vtMenu_appkeypad].widget,
+		   (term->keyboard.flags & MODE_DECKPAM) != 0);
 }
 
 void
 update_scrollkey(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_scrollkey].widget,
-		     term->screen.scrollkey);
+    UpdateMenuItem(vtMenuEntries[vtMenu_scrollkey].widget,
+		   term->screen.scrollkey);
 }
 
 void
 update_scrollttyoutput(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_scrollttyoutput].widget,
-		     term->screen.scrollttyoutput);
+    UpdateMenuItem(vtMenuEntries[vtMenu_scrollttyoutput].widget,
+		   term->screen.scrollttyoutput);
 }
 
 void
 update_selectToClipboard(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_selectToClipboard].widget,
-		     term->screen.selectToClipboard);
+    UpdateMenuItem(vtMenuEntries[vtMenu_selectToClipboard].widget,
+		   term->screen.selectToClipboard);
 }
 
 void
 update_allow132(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_allow132].widget,
-		     term->screen.c132);
+    UpdateMenuItem(vtMenuEntries[vtMenu_allow132].widget,
+		   term->screen.c132);
 }
 
 void
 update_cursesemul(void)
 {
 #if 0				/* 2006-2-12: no longer menu entry */
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_cursesemul].widget,
-		     term->screen.curses);
+    UpdateMenuItem(vtMenuEntries[vtMenu_cursesemul].widget,
+		   term->screen.curses);
 #endif
 }
 
 void
 update_visualbell(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_visualbell].widget,
-		     term->screen.visualbell);
+    UpdateMenuItem(vtMenuEntries[vtMenu_visualbell].widget,
+		   term->screen.visualbell);
 }
 
 void
 update_poponbell(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_poponbell].widget,
-		     term->screen.poponbell);
+    UpdateMenuItem(vtMenuEntries[vtMenu_poponbell].widget,
+		   term->screen.poponbell);
 }
 
 void
 update_marginbell(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_marginbell].widget,
-		     term->screen.marginbell);
+    UpdateMenuItem(vtMenuEntries[vtMenu_marginbell].widget,
+		   term->screen.marginbell);
 }
 
 #if OPT_BLINK_CURS
 void
 update_cursorblink(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_cursorblink].widget,
-		     term->screen.cursor_blink);
+    UpdateMenuItem(vtMenuEntries[vtMenu_cursorblink].widget,
+		   term->screen.cursor_blink);
 }
 #endif
 
 void
 update_altscreen(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_altscreen].widget,
-		     term->screen.alternate);
+    UpdateMenuItem(vtMenuEntries[vtMenu_altscreen].widget,
+		   term->screen.alternate);
 }
 
 void
 update_titeInhibit(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_titeInhibit].widget,
-		     !(term->misc.titeInhibit));
+    UpdateMenuItem(vtMenuEntries[vtMenu_titeInhibit].widget,
+		   !(term->misc.titeInhibit));
 }
 
 #ifndef NO_ACTIVE_ICON
 void
 update_activeicon(void)
 {
-    update_menu_item(term->screen.vtMenu,
-		     vtMenuEntries[vtMenu_activeicon].widget,
-		     term->misc.active_icon);
+    UpdateMenuItem(vtMenuEntries[vtMenu_activeicon].widget,
+		   term->misc.active_icon);
 }
 #endif /* NO_ACTIVE_ICON */
 
@@ -2945,9 +2915,8 @@ update_activeicon(void)
 void
 update_font_doublesize(void)
 {
-    update_menu_item(term->screen.fontMenu,
-		     fontMenuEntries[fontMenu_font_doublesize].widget,
-		     term->screen.font_doublesize);
+    UpdateMenuItem(fontMenuEntries[fontMenu_font_doublesize].widget,
+		   term->screen.font_doublesize);
 }
 #endif
 
@@ -2955,9 +2924,8 @@ update_font_doublesize(void)
 void
 update_font_boxchars(void)
 {
-    update_menu_item(term->screen.fontMenu,
-		     fontMenuEntries[fontMenu_font_boxchars].widget,
-		     term->screen.force_box_chars);
+    UpdateMenuItem(fontMenuEntries[fontMenu_font_boxchars].widget,
+		   term->screen.force_box_chars);
 }
 #endif
 
@@ -2965,9 +2933,8 @@ update_font_boxchars(void)
 void
 update_font_loadable(void)
 {
-    update_menu_item(term->screen.fontMenu,
-		     fontMenuEntries[fontMenu_font_loadable].widget,
-		     term->misc.font_loadable);
+    UpdateMenuItem(fontMenuEntries[fontMenu_font_loadable].widget,
+		   term->misc.font_loadable);
 }
 #endif
 
@@ -2975,9 +2942,8 @@ update_font_loadable(void)
 void
 update_font_renderfont(void)
 {
-    update_menu_item(term->screen.fontMenu,
-		     fontMenuEntries[fontMenu_render_font].widget,
-		     term->misc.render_font);
+    UpdateMenuItem(fontMenuEntries[fontMenu_render_font].widget,
+		   term->misc.render_font);
 }
 #endif
 
@@ -2990,8 +2956,8 @@ update_font_utf8_mode(void)
     Bool enable = (term->screen.utf8_mode != uFalse);
 
     TRACE(("update_font_utf8_mode active %d, enable %d\n", active, enable));
-    set_sensitivity(term->screen.fontMenu, iw, active);
-    update_menu_item(term->screen.fontMenu, iw, enable);
+    SetItemSensitivity(iw, active);
+    UpdateMenuItem(iw, enable);
 }
 
 void
@@ -3002,8 +2968,8 @@ update_font_utf8_title(void)
     Bool enable = (term->screen.utf8_title);
 
     TRACE(("update_font_utf8_title active %d, enable %d\n", active, enable));
-    set_sensitivity(term->screen.fontMenu, iw, active);
-    update_menu_item(term->screen.fontMenu, iw, enable);
+    SetItemSensitivity(iw, active);
+    UpdateMenuItem(iw, enable);
 }
 #endif
 
@@ -3012,9 +2978,8 @@ void
 update_tekshow(void)
 {
     if (!(term->screen.inhibit & I_TEK)) {
-	update_menu_item(term->screen.vtMenu,
-			 vtMenuEntries[vtMenu_tekshow].widget,
-			 term->screen.Tshow);
+	UpdateMenuItem(vtMenuEntries[vtMenu_tekshow].widget,
+		       term->screen.Tshow);
     }
 }
 
@@ -3022,12 +2987,10 @@ void
 update_vttekmode(void)
 {
     if (!(term->screen.inhibit & I_TEK)) {
-	update_menu_item(term->screen.vtMenu,
-			 vtMenuEntries[vtMenu_tekmode].widget,
-			 term->screen.TekEmu);
-	update_menu_item(term->screen.tekMenu,
-			 tekMenuEntries[tekMenu_vtmode].widget,
-			 !term->screen.TekEmu);
+	UpdateMenuItem(vtMenuEntries[vtMenu_tekmode].widget,
+		       term->screen.TekEmu);
+	UpdateMenuItem(tekMenuEntries[tekMenu_vtmode].widget,
+		       !term->screen.TekEmu);
     }
 }
 
@@ -3035,9 +2998,8 @@ void
 update_vtshow(void)
 {
     if (!(term->screen.inhibit & I_TEK)) {
-	update_menu_item(term->screen.tekMenu,
-			 tekMenuEntries[tekMenu_vtshow].widget,
-			 term->screen.Vshow);
+	UpdateMenuItem(tekMenuEntries[tekMenu_vtshow].widget,
+		       term->screen.Vshow);
     }
 }
 
@@ -3045,9 +3007,9 @@ void
 set_vthide_sensitivity(void)
 {
     if (!(term->screen.inhibit & I_TEK)) {
-	set_sensitivity(term->screen.vtMenu,
-			vtMenuEntries[vtMenu_vthide].widget,
-			term->screen.Tshow);
+	SetItemSensitivity(
+			      vtMenuEntries[vtMenu_vthide].widget,
+			      term->screen.Tshow);
     }
 }
 
@@ -3055,9 +3017,9 @@ void
 set_tekhide_sensitivity(void)
 {
     if (!(term->screen.inhibit & I_TEK)) {
-	set_sensitivity(term->screen.tekMenu,
-			tekMenuEntries[tekMenu_tekhide].widget,
-			term->screen.Vshow);
+	SetItemSensitivity(
+			      tekMenuEntries[tekMenu_tekhide].widget,
+			      term->screen.Vshow);
     }
 }
 
@@ -3065,9 +3027,8 @@ void
 set_tekfont_menu_item(int n, int val)
 {
     if (!(term->screen.inhibit & I_TEK)) {
-	update_menu_item(term->screen.tekMenu,
-			 tekMenuEntries[FS2MI(n)].widget,
-			 (val));
+	UpdateMenuItem(tekMenuEntries[FS2MI(n)].widget,
+		       (val));
     }
 }
 #endif /* OPT_TEK4014 */
@@ -3075,7 +3036,6 @@ set_tekfont_menu_item(int n, int val)
 void
 set_menu_font(int val)
 {
-    update_menu_item(term->screen.fontMenu,
-		     fontMenuEntries[term->screen.menu_font_number].widget,
-		     (val));
+    UpdateMenuItem(fontMenuEntries[term->screen.menu_font_number].widget,
+		   (val));
 }

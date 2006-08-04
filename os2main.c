@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.222 2006/06/19 00:36:51 tom Exp $ */
+/* $XTermId: os2main.c,v 1.227 2006/07/23 20:12:59 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -272,7 +272,6 @@ static XtResource application_resources[] =
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
-    Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
 #endif
@@ -281,6 +280,9 @@ static XtResource application_resources[] =
 #endif
 #if OPT_SCO_FUNC_KEYS
     Bres("scoFunctionKeys", "ScoFunctionKeys", scoFunctionKeys, False),
+#endif
+#if OPT_SUN_FUNC_KEYS
+    Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #endif
 #if OPT_INITIAL_ERASE
     Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, DEF_INITIAL_ERASE),
@@ -692,7 +694,7 @@ decode_keyvalue(char **ptr, int termcap)
     if (*string == '^') {
 	switch (*++string) {
 	case '?':
-	    value = A2E(127);
+	    value = A2E(DEL);
 	    break;
 	case '-':
 	    if (!termcap) {
@@ -981,7 +983,7 @@ main(int argc, char **argv ENVP_ARG)
     d_tio.c_lflag = ISIG | ICANON | ECHO | ECHOE | ECHOK;
     d_tio.c_line = 0;
     d_tio.c_cc[VINTR] = CONTROL('C');	/* '^C' */
-    d_tio.c_cc[VERASE] = 0x7f;	/* DEL  */
+    d_tio.c_cc[VERASE] = DEL;	/* DEL  */
     d_tio.c_cc[VKILL] = CONTROL('U');	/* '^U' */
     d_tio.c_cc[VQUIT] = CQUIT;	/* '^\' */
     d_tio.c_cc[VEOF] = CEOF;	/* '^D' */
@@ -1152,7 +1154,7 @@ main(int argc, char **argv ENVP_ARG)
 #endif
 						 (XtPointer) 0);
 
-    decode_keyboard_type(&resource);
+    decode_keyboard_type(term, &resource);
 
     screen = &term->screen;
 
@@ -1330,6 +1332,24 @@ main(int argc, char **argv ENVP_ARG)
 			XtWindow(toplevel),
 			winToEmbedInto, 0, 0);
     }
+#if OPT_COLOR_RES
+    TRACE(("checking resource values rv %s fg %s, bg %s\n",
+	   BtoS(term->misc.re_verse0),
+	   NonNull(term->screen.Tcolors[TEXT_FG].resource),
+	   NonNull(term->screen.Tcolors[TEXT_BG].resource)));
+
+    if ((term->misc.re_verse)
+	&& ((term->screen.Tcolors[TEXT_FG].resource
+	     && (x_strcasecmp(term->screen.Tcolors[TEXT_FG].resource,
+			      XtDefaultForeground) != 0)
+	    )
+	    || (term->screen.Tcolors[TEXT_BG].resource
+		&& (x_strcasecmp(term->screen.Tcolors[TEXT_BG].resource,
+				 XtDefaultBackground) != 0)
+	    )
+	))
+	ReverseVideo(term);
+#endif /* OPT_COLOR_RES */
 
     for (;;) {
 #if OPT_TEK4014

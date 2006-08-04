@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $XTermId: tcapquery.pl,v 1.7 2006/03/13 01:28:02 tom Exp $
+# $XTermId: tcapquery.pl,v 1.10 2006/07/20 00:37:00 tom Exp $
 # $XFree86: xc/programs/xterm/vttests/tcapquery.pl,v 1.3 2006/03/13 01:28:02 dickey Exp $
 #
 # -- Thomas Dickey (2004/3/3)
@@ -43,6 +43,7 @@ sub query_tcap($$) {
 	my $reply=get_reply("\x1bP+q" . $param1 . ";" . $param2 . "\x1b\\");
 	#my $reply=get_reply("\x1bP+q" . $param2 . "\x1b\\");
 
+	return unless defined $reply;
 	if ( $reply =~ /\x1bP1\+r[[:xdigit:]]+=[[:xdigit:]]*.*/ ) {
 		my $value = $reply;
 		my $n;
@@ -83,13 +84,36 @@ sub query_tcap($$) {
 
 # See xtermcapKeycode()
 query_tcap(	"#2",	"kHOM");
-query_tcap(	"#4",	"kLFT");
-query_tcap(	"%1",	"khlp");
-query_tcap(	"%i",	"kRIT");
-query_tcap(	"*6",	"kslt");
 query_tcap(	"*7",	"kEND");
-query_tcap(	"\@0",	"kfnd");
+query_tcap(	"#4",	"kLFT");
+query_tcap(	"%c",	"kNXT");
+query_tcap(	"%e",	"kPRV");
+query_tcap(	"%i",	"kRIT");
+
+query_tcap(	"kh",	"khome");
 query_tcap(	"\@7",	"kend");
+query_tcap(	"kl",	"kcub1");
+query_tcap(	"kd",	"kcud1");
+query_tcap(	"ku",	"kcuu1");
+query_tcap(	"kr",	"kcuf1");
+
+query_tcap(	"%1",	"khlp");
+query_tcap(	"#1",	"kHLP");
+query_tcap(	"*6",	"kslt");
+query_tcap(	"#6",	"kSLT");
+query_tcap(	"\@0",	"kfnd");
+query_tcap(	"*0",	"kFND");
+
+query_tcap(	"k1",	"kf1");
+query_tcap(	"k2",	"kf2");
+query_tcap(	"k3",	"kf3");
+query_tcap(	"k4",	"kf4");
+query_tcap(	"k5",	"kf5");
+query_tcap(	"k6",	"kf6");
+query_tcap(	"k7",	"kf7");
+query_tcap(	"k8",	"kf8");
+query_tcap(	"k9",	"kf9");
+query_tcap(	"k;",	"kf10");
 query_tcap(	"F1",	"kf11");
 query_tcap(	"F2",	"kf12");
 query_tcap(	"F3",	"kf13");
@@ -117,28 +141,45 @@ query_tcap(	"FO",	"kf34");
 query_tcap(	"FP",	"kf35");
 query_tcap(	"FQ",	"kf36");
 query_tcap(	"FR",	"kf37");
+query_tcap(	"FS",	"kf38");
+query_tcap(	"FT",	"kf39");
+query_tcap(	"FU",	"kf40");
+query_tcap(	"FV",	"kf41");
+query_tcap(	"FW",	"kf42");
+query_tcap(	"FX",	"kf43");
+query_tcap(	"FY",	"kf44");
+query_tcap(	"FZ",	"kf45");
+query_tcap(	"Fa",	"kf46");
+query_tcap(	"Fb",	"kf47");
+query_tcap(	"Fc",	"kf48");
+query_tcap(	"Fd",	"kf49");
+query_tcap(	"Fe",	"kf50");
+query_tcap(	"Ff",	"kf51");
+query_tcap(	"Fg",	"kf52");
+query_tcap(	"Fh",	"kf53");
+query_tcap(	"Fi",	"kf54");
+query_tcap(	"Fj",	"kf55");
+query_tcap(	"Fk",	"kf56");
+query_tcap(	"Fl",	"kf57");
+query_tcap(	"Fm",	"kf58");
+query_tcap(	"Fn",	"kf59");
+query_tcap(	"Fo",	"kf60");
+query_tcap(	"Fp",	"kf61");
+query_tcap(	"Fq",	"kf62");
+query_tcap(	"Fr",	"kf63");
+
 query_tcap(	"K1",	"ka1");
 query_tcap(	"K4",	"kc1");
-query_tcap(	"k1",	"kf1");
-query_tcap(	"k2",	"kf2");
-query_tcap(	"k3",	"kf3");
-query_tcap(	"k4",	"kf4");
-query_tcap(	"k5",	"kf5");
-query_tcap(	"k6",	"kf6");
-query_tcap(	"k7",	"kf7");
-query_tcap(	"k8",	"kf8");
-query_tcap(	"k9",	"kf9");
-query_tcap(	"k;",	"kf10");
+
 query_tcap(	"kB",	"kcbt");
 query_tcap(	"kC",	"kclr");
+
 query_tcap(	"kD",	"kdch1");
 query_tcap(	"kI",	"kich1");
+
 query_tcap(	"kN",	"knp");
 query_tcap(	"kP",	"kpp");
+
 query_tcap(	"kb",	"kbs");
-query_tcap(	"kd",	"kcud1");
-query_tcap(	"kh",	"khome");
-query_tcap(	"kl",	"kcub1");
-query_tcap(	"kr",	"kcuf1");
-query_tcap(	"ku",	"kcuu1");
+
 query_tcap(	"Co",	"colors");

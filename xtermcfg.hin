@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.152 2006/06/19 00:36:52 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.154 2006/07/15 12:10:03 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -54,6 +54,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
 #undef HAVE_PCREPOSIX_H		/* CF_WITH_PCRE */
+#undef HAVE_POSIX_SAVED_IDS	/* CF_POSIX_SAVED_IDS */
 #undef HAVE_PUTENV		/* AC_CHECK_FUNCS(putenv) */
 #undef HAVE_SCHED_YIELD		/* AC_CHECK_FUNCS(sched_yield) */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
@@ -113,6 +114,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_SCO_FUNC_KEYS	/* CF_ARG_ENABLE(sco-fkeys) */
 #undef OPT_SELECT_REGEX		/* CF_ARG_DISABLE(regex) */
 #undef OPT_SESSION_MGT		/* CF_ARG_DISABLE(session-mgt) */
+#undef OPT_SUN_FUNC_KEYS	/* CF_ARG_ENABLE(sun-fkeys) */
 #undef OPT_TCAP_QUERY		/* CF_ARG_ENABLE(tcap-query) */
 #undef OPT_TEK4014		/* CF_ARG_DISABLE(tek4014) */
 #undef OPT_TOOLBAR		/* CF_ARG_ENABLE(toolbar) */

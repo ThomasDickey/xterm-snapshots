@@ -326,6 +326,8 @@ CSI ? Pm h     DEC Private Mode Set (DECSET)
                  Ps = 1 0 0 3  -> Use All Motion Mouse Tracking.
                  Ps = 1 0 1 0  -> Scroll to bottom on tty output (rxvt).
                  Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).
+                 Ps = 1 0 3 4  -> Interpret "meta" key, sets eighth bit.
+               (enables the eightBitInput resource).
                  Ps = 1 0 3 5  -> Enable special modifiers for Alt and
                NumLock keys.
                  Ps = 1 0 3 6  -> Send ESC when Meta modifies a key
@@ -345,8 +347,7 @@ CSI ? Pm h     DEC Private Mode Set (DECSET)
                  Ps = 1 0 5 2  -> Set HP function-key mode.
                  Ps = 1 0 5 3  -> Set SCO function-key mode.
                  Ps = 1 0 6 0  -> Set legacy keyboard emulation (X11R6).
-                 Ps = 1 0 6 1  -> Set Sun/PC keyboard emulation of VT220
-               keyboard.
+                 Ps = 1 0 6 1  -> Set VT220 keyboard emulation.
                  Ps = 2 0 0 4  -> Set bracketed paste mode.
 CSI Pm i       Media Copy (MC)
                  Ps = 0  -> Print screen (default)
@@ -400,6 +401,8 @@ CSI ? Pm l     DEC Private Mode Reset (DECRST)
                (rxvt).
                  Ps = 1 0 1 1  -> Don't scroll to bottom on key press
                (rxvt).
+                 Ps = 1 0 3 4  -> Don't interpret "meta" key (disables
+               the eightBitInput resource).
                  Ps = 1 0 3 5  -> Disable special modifiers for Alt and
                NumLock keys.
                  Ps = 1 0 3 6  -> Don't send ESC when Meta modifies a
@@ -421,8 +424,8 @@ CSI ? Pm l     DEC Private Mode Reset (DECRST)
                  Ps = 1 0 5 3  -> Reset SCO function-key mode.
                  Ps = 1 0 6 0  -> Reset legacy keyboard emulation
                (X11R6).
-                 Ps = 1 0 6 1  -> Reset Sun/PC keyboard emulation of
-               VT220 keyboard.
+                 Ps = 1 0 6 1  -> Reset keyboard emulation to Sun/PC
+               style.
                  Ps = 2 0 0 4  -> Reset bracketed paste mode.
 CSI Pm m       Character Attributes (SGR)
                  Ps = 0  -> Normal (default)
@@ -489,10 +492,25 @@ CSI Pm m       Character Attributes (SGR)
                  Ps = 4 8  ; 5  ; Ps -> Set background color to the sec-
                ond Ps
 
+CSI > Ps; Ps m Set or reset resource-values used by xterm to decide
+               whether to construct escape sequences holding information
+               about the modifiers pressed with a given key.  The first
+               parameter identifies the resource to set/reset.  The sec-
+               ond parameter is the value to assign to the resource.  If
+               the second parameter is omitted, the resource is reset to
+               its initial value.
+                 -> 1  modifyCursorKeys
+                 -> 2  modifyFunctionKeys
+                 -> 4  modifyOtherKeys
+               If no parameters are given, all resources are reset to
+               their initial values.
 CSI Ps n       Device Status Report (DSR)
                  Ps = 5  -> Status Report CSI 0 n  (``OK'')
                  Ps = 6  -> Report Cursor Position (CPR) [row;column] as
                CSI r ; c R
+CSI > n        Set resource-value modifyFunctionKeys used by xterm to
+               allow user to construct extended-numbering function keys
+               using shift- and control-modifiers.
 CSI ? Ps n     Device Status Report (DSR, DEC-specific)
                  Ps = 6  -> Report Cursor Position (CPR) [row;column] as
                CSI ? r ; c R (assumes page is zero).
@@ -887,7 +905,6 @@ appended before the final character of the control sequence.
                     ---------------------------------
 
 For example, shift-F5 would be sent as CSI 1 5 ; 2 ~
-
 If the alwaysUseMods resource is set, the Meta modifier also is recog-
 nized, making parameters 9 through 16.
 
@@ -895,6 +912,7 @@ VT220-Style Function Keys
 However, xterm is most useful as a DEC VT102 or VT220 emulator.  Set the
 sunKeyboard resource to true to force a Sun/PC keyboard to act like a
 VT220 keyboard.
+
 The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling key-
 pad:
@@ -1021,6 +1039,7 @@ as the display, contains no additional saved lines.  When the alternate
 screen buffer is active, you cannot scroll back to view saved lines.
 Xterm provides control sequences and menu entries for switching between
 the two.
+
 Most full-screen applications use terminfo or termcap to obtain strings
 used to start/stop full-screen mode, i.e., smcup and rmcup for terminfo,
 or the corresponding ti and te for termcap.  The titeInhibit resource
@@ -1049,7 +1068,7 @@ tion on button presses.  These modes are typically used by editors and
 other full-screen applications that want to make use of the mouse.
 
 There are six mutually exclusive modes.  One is DEC Locator mode,
-enabled by the DECELR CSI Ps ; Ps  'z control sequence, and is not
+enabled by the DECELR CSI Ps ; Ps  '  z control sequence, and is not
 described here (control sequences are summarized above).  The remaining
 five modes are each enabled (or disabled) by a different parameter in
 DECSET CSI ? Pm h or DECRST CSI ? Pm l control sequence.
