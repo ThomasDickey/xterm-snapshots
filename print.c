@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.70 2006/06/19 00:36:51 tom Exp $ */
+/* $XTermId: print.c,v 1.77 2006/07/23 22:06:23 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
@@ -147,9 +147,10 @@ printLine(int row, unsigned chr)
     TRACE(("printLine(row=%d/%d, top=%d:%d, chr=%d):%s\n",
 	   row, ROW2INX(screen, row), screen->topline, screen->max_row, chr,
 	   visibleChars(PAIRED_CHARS(c,
-				     screen->utf8_mode
-				     ? SCRN_BUF_WIDEC(screen, inx)
-				     : 0), (unsigned) last)));
+				     (screen->utf8_mode
+				      ? SCRN_BUF_WIDEC(screen, inx)
+				      : 0)),
+			(unsigned) last)));
 
     if_OPT_EXT_COLORS(screen, {
 	fbf = SCRN_BUF_FGRND(screen, inx);
@@ -178,10 +179,10 @@ printLine(int row, unsigned chr)
 	    if (screen->colorMode) {
 		if (screen->print_attributes > 1) {
 		    fg = (a[col] & FG_COLOR)
-			? extract_fg(ColorOf(col), a[col])
+			? extract_fg(term, ColorOf(col), a[col])
 			: NO_COLOR;
 		    bg = (a[col] & BG_COLOR)
-			? extract_bg(ColorOf(col), a[col])
+			? extract_bg(term, ColorOf(col), a[col])
 			: NO_COLOR;
 		}
 	    }
@@ -207,12 +208,12 @@ printLine(int row, unsigned chr)
 		cs = CSET_IN;
 	    else
 #endif
-		cs = (ch >= ' ' && ch != 0x7f) ? CSET_IN : CSET_OUT;
+		cs = (ch >= ' ' && ch != DEL) ? CSET_IN : CSET_OUT;
 	    if (last_cs != cs) {
 		if (screen->print_attributes) {
-		    charToPrinter((unsigned)((cs == CSET_OUT)
-				  ? SHIFT_OUT
-				  : SHIFT_IN));
+		    charToPrinter((unsigned) ((cs == CSET_OUT)
+					      ? SHIFT_OUT
+					      : SHIFT_IN));
 		}
 		last_cs = cs;
 	    }
@@ -223,13 +224,15 @@ printLine(int row, unsigned chr)
 	     * into the CSETS array.
 	     */
 	    charToPrinter(((cs == CSET_OUT)
-				 ? (ch == 0x7f ? 0x5f : (ch + 0x5f))
-				 : ch));
+			   ? (ch == DEL ? 0x5f : (ch + 0x5f))
+			   : ch));
 	    if_OPT_WIDE_CHARS(screen, {
-		if ((ch = XTERM_CELL_C1(row, col)) != 0)
+		int off;
+		for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
+		    if ((ch = XTERM_CELLC(row, col, off)) == 0)
+			break;
 		    charToPrinter(ch);
-		if ((ch = XTERM_CELL_C2(row, col)) != 0)
-		    charToPrinter(ch);
+		}
 	    });
 	}
 	if (screen->print_attributes) {
@@ -318,6 +321,8 @@ send_CharSet(int row)
     }
     if (msg != 0)
 	stringToPrinter(msg);
+#else
+    (void) row;
 #endif /* OPT_DEC_CHRSET */
 }
 
@@ -347,6 +352,9 @@ send_SGR(unsigned attr, unsigned fg, unsigned bg)
 #endif
 	sprintf(msg + strlen(msg), ";%u", (fg < 8) ? (30 + fg) : (82 + fg));
     }
+#else
+    (void) bg;
+    (void) fg;
 #endif
     strcat(msg, "m");
     stringToPrinter(msg);

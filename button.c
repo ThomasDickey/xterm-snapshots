@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.246 2006/06/19 00:36:50 tom Exp $ */
+/* $XTermId: button.c,v 1.252 2006/07/23 18:37:20 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -134,20 +134,20 @@ static CELL lastButton3;	/* At the release time */
 static Char *SaveText(TScreen * screen, int row, int scol, int ecol,
 		      Char * lp, int *eol);
 static int Length(TScreen * screen, int row, int scol, int ecol);
-static void ComputeSelect(TScreen * screen, CELL * startc, CELL * endc, Bool extend);
-static void EditorButton(TScreen * screen, XButtonEvent * event);
+static void ComputeSelect(XtermWidget xw, CELL * startc, CELL * endc, Bool extend);
+static void EditorButton(XtermWidget xw, XButtonEvent * event);
 static void EndExtend(XtermWidget w, XEvent * event, String * params, Cardinal
 		      num_params, Bool use_cursor_loc);
-static void ExtendExtend(TScreen * screen, const CELL * cell);
+static void ExtendExtend(XtermWidget xw, const CELL * cell);
 static void PointToCELL(TScreen * screen, int y, int x, CELL * cell);
-static void ReHiliteText(TScreen * screen, CELL * first, CELL * last);
+static void ReHiliteText(XtermWidget xw, CELL * first, CELL * last);
 static void SaltTextAway(XtermWidget xw, CELL * cellc, CELL * cell,
 			 String * params, Cardinal num_params);
 static void SelectSet(XtermWidget xw, XEvent * event, String * params, Cardinal num_params);
 static void SelectionReceived PROTO_XT_SEL_CB_ARGS;
-static void StartSelect(TScreen * screen, const CELL * cell);
-static void TrackDown(TScreen * screen, XButtonEvent * event);
-static void TrackText(TScreen * screen, const CELL * first, const CELL * last);
+static void StartSelect(XtermWidget xw, const CELL * cell);
+static void TrackDown(XtermWidget xw, XButtonEvent * event);
+static void TrackText(XtermWidget xw, const CELL * first, const CELL * last);
 static void _OwnSelection(XtermWidget xw, String * selections, Cardinal count);
 static void do_select_end(XtermWidget xw, XEvent * event, String * params,
 			  Cardinal *num_params, Bool use_cursor_loc);
@@ -179,7 +179,7 @@ SendMousePosition(XtermWidget xw, XEvent * event)
 
 	if (KeyModifiers == 0) {
 	    if (event->type == ButtonPress)
-		EditorButton(screen, (XButtonEvent *) event);
+		EditorButton(xw, (XButtonEvent *) event);
 	    return True;
 	}
 	return False;
@@ -188,11 +188,11 @@ SendMousePosition(XtermWidget xw, XEvent * event)
 	if (event->type == ButtonPress &&
 	    KeyModifiers == 0 &&
 	    event->xbutton.button == Button1) {
-	    TrackDown(screen, (XButtonEvent *) event);
+	    TrackDown(xw, (XButtonEvent *) event);
 	    return True;
 	}
 	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
-	    EditorButton(screen, (XButtonEvent *) event);
+	    EditorButton(xw, (XButtonEvent *) event);
 	    return True;
 	}
 	return False;
@@ -204,7 +204,7 @@ SendMousePosition(XtermWidget xw, XEvent * event)
     case BTN_EVENT_MOUSE:
     case ANY_EVENT_MOUSE:
 	if (KeyModifiers == 0 || KeyModifiers == ControlMask) {
-	    EditorButton(screen, (XButtonEvent *) event);
+	    EditorButton(xw, (XButtonEvent *) event);
 	    return True;
 	}
 	return False;
@@ -287,7 +287,7 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
 	reply.a_param[0] = 0;	/* Event - 0 = locator unavailable */
 	reply.a_inters = '&';
 	reply.a_final = 'w';
-	unparseseq(&reply, screen->respond);
+	unparseseq(xw, &reply);
 
 	if (screen->locator_reset) {
 	    MotionOff(screen, xw);
@@ -339,7 +339,7 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     reply.a_inters = '&';
     reply.a_final = 'w';
 
-    unparseseq(&reply, screen->respond);
+    unparseseq(xw, &reply);
 
     if (screen->locator_reset) {
 	MotionOff(screen, xw);
@@ -412,7 +412,7 @@ GetLocatorPosition(XtermWidget xw)
 	reply.a_param[0] = 0;	/* Event - 0 = locator unavailable */
 	reply.a_inters = '&';
 	reply.a_final = 'w';
-	unparseseq(&reply, screen->respond);
+	unparseseq(xw, &reply);
 
 	if (screen->locator_reset) {
 	    MotionOff(screen, xw);
@@ -430,7 +430,7 @@ GetLocatorPosition(XtermWidget xw)
     reply.a_param[3] = col;
     reply.a_inters = '&';
     reply.a_final = 'w';
-    unparseseq(&reply, screen->respond);
+    unparseseq(xw, &reply);
 
     if (screen->locator_reset) {
 	MotionOff(screen, xw);
@@ -473,7 +473,7 @@ InitLocatorFilter(XtermWidget xw)
 	    reply.a_param[0] = 0;	/* Event - 0 = locator unavailable */
 	    reply.a_inters = '&';
 	    reply.a_final = 'w';
-	    unparseseq(&reply, screen->respond);
+	    unparseseq(xw, &reply);
 
 	    if (screen->locator_reset) {
 		MotionOff(screen, xw);
@@ -542,7 +542,7 @@ InitLocatorFilter(XtermWidget xw)
 	reply.a_param[3] = col;
 	reply.a_inters = '&';
 	reply.a_final = 'w';
-	unparseseq(&reply, screen->respond);
+	unparseseq(xw, &reply);
 
 	if (screen->locator_reset) {
 	    MotionOff(screen, xw);
@@ -601,7 +601,7 @@ CheckLocatorPosition(XtermWidget xw, XEvent * event)
 
 	reply.a_inters = '&';
 	reply.a_final = 'w';
-	unparseseq(&reply, screen->respond);
+	unparseseq(xw, &reply);
 
 	if (screen->locator_reset) {
 	    MotionOff(screen, xw);
@@ -944,7 +944,7 @@ HandleSelectExtend(Widget w,
 	case LEFTEXTENSION:
 	case RIGHTEXTENSION:
 	    PointToCELL(screen, event->xmotion.y, event->xmotion.x, &cell);
-	    ExtendExtend(screen, &cell);
+	    ExtendExtend(xw, &cell);
 	    break;
 
 	    /* If in motion reporting mode, send mouse position to
@@ -967,8 +967,9 @@ HandleKeyboardSelectExtend(Widget w,
 			   Cardinal *num_params GCC_UNUSED)
 {
     if (IsXtermWidget(w)) {
-	TScreen *screen = &((XtermWidget) w)->screen;
-	ExtendExtend(screen, &screen->cursorp);
+	XtermWidget xw = (XtermWidget) w;
+	TScreen *screen = &xw->screen;
+	ExtendExtend(xw, &screen->cursorp);
     }
 }
 
@@ -1246,12 +1247,13 @@ CutBuffer(unsigned code)
 
 #if OPT_PASTE64
 static void
-FinishPaste64(TScreen * screen)
+FinishPaste64(XtermWidget xw)
 {
-    TRACE(("FinishPaste64(%d)\n", screen->base64_paste));
-    if (screen->base64_paste) {
-	screen->base64_paste = 0;
-	unparseputc1(screen->base64_final, screen->respond);
+    TRACE(("FinishPaste64(%d)\n", xw->screen.base64_paste));
+    if (xw->screen.base64_paste) {
+	xw->screen.base64_paste = 0;
+	unparseputc1(xw, xw->screen.base64_final);
+	unparse_end(xw);
     }
 }
 #endif
@@ -1301,7 +1303,7 @@ xtermGetSelection(Widget w,
 	}
 #if OPT_PASTE64
 	else {
-	    FinishPaste64(&(((XtermWidget) w)->screen));
+	    FinishPaste64((XtermWidget) w);
 	}
 #endif
 	return;
@@ -1627,7 +1629,7 @@ SelectionReceived(Widget w,
 	}
 #if OPT_PASTE64
 	if (screen->base64_paste) {
-	    FinishPaste64(screen);
+	    FinishPaste64((XtermWidget) w);
 	} else
 #endif
 #if OPT_READLINE
@@ -1652,7 +1654,7 @@ SelectionReceived(Widget w,
 	XtFree((char *) client_data);
 #if OPT_PASTE64
     } else {
-	FinishPaste64(screen);
+	FinishPaste64((XtermWidget) w);
 #endif
     }
     return;
@@ -1729,7 +1731,7 @@ do_select_start(XtermWidget xw,
     lastButtonDownTime = event->xbutton.time;
 #endif
 
-    StartSelect(screen, cell);
+    StartSelect(xw, cell);
 }
 
 /* ARGSUSED */
@@ -1771,18 +1773,19 @@ HandleKeyboardSelectStart(Widget w,
 }
 
 static void
-TrackDown(TScreen * screen, XButtonEvent * event)
+TrackDown(XtermWidget xw, XButtonEvent * event)
 {
+    TScreen *screen = &(xw->screen);
     CELL cell;
 
     screen->selectUnit = EvalSelectUnit(screen, event->time, Select_CHAR);
     if (screen->numberOfClicks > 1) {
 	PointToCELL(screen, event->y, event->x, &cell);
 	screen->replyToEmacs = True;
-	StartSelect(screen, &cell);
+	StartSelect(xw, &cell);
     } else {
 	waitingForTrackInfo = True;
-	EditorButton(screen, (XButtonEvent *) event);
+	EditorButton(xw, (XButtonEvent *) event);
     }
 }
 
@@ -1792,7 +1795,7 @@ TrackDown(TScreen * screen, XButtonEvent * event)
 			    x = screen->max_row
 
 void
-TrackMouse(TScreen * screen,
+TrackMouse(XtermWidget xw,
 	   int func,
 	   CELL * start,
 	   int firstrow,
@@ -1801,6 +1804,7 @@ TrackMouse(TScreen * screen,
     if (waitingForTrackInfo) {	/* if Timed, ignore */
 	waitingForTrackInfo = False;
 	if (func != 0) {
+	    TScreen *screen = &(xw->screen);
 	    CELL first = *start;
 
 	    boundsCheck(first.row);
@@ -1809,14 +1813,16 @@ TrackMouse(TScreen * screen,
 	    screen->firstValidRow = firstrow;
 	    screen->lastValidRow = lastrow;
 	    screen->replyToEmacs = True;
-	    StartSelect(screen, &first);
+	    StartSelect(xw, &first);
 	}
     }
 }
 
 static void
-StartSelect(TScreen * screen, const CELL * cell)
+StartSelect(XtermWidget xw, const CELL * cell)
 {
+    TScreen *screen = &(xw->screen);
+
     TRACE(("StartSelect row=%d, col=%d\n", cell->row, cell->col));
     if (screen->cursor_state)
 	HideCursor();
@@ -1834,7 +1840,7 @@ StartSelect(TScreen * screen, const CELL * cell)
 	eventMode = RIGHTEXTENSION;
 	screen->endExt = *cell;
     }
-    ComputeSelect(screen, &(screen->startExt), &(screen->endExt), False);
+    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False);
 }
 
 static void
@@ -1854,7 +1860,7 @@ EndExtend(XtermWidget xw,
     } else {
 	PointToCELL(screen, event->xbutton.y, event->xbutton.x, &cell);
     }
-    ExtendExtend(screen, &cell);
+    ExtendExtend(xw, &cell);
     screen->lastButtonUpTime = event->xbutton.time;
     if (!isSameCELL(&(screen->startSel), &(screen->endSel))) {
 	if (screen->replyToEmacs) {
@@ -1882,7 +1888,7 @@ EndExtend(XtermWidget xw,
 		line[count++] = ' ' + cell.row + 1;
 	    }
 	    v_write(screen->respond, line, count);
-	    TrackText(screen, &zeroCELL, &zeroCELL);
+	    TrackText(xw, &zeroCELL, &zeroCELL);
 	}
     }
     SelectSet(xw, event, params, num_params);
@@ -1982,7 +1988,7 @@ do_start_extend(XtermWidget xw,
 	eventMode = RIGHTEXTENSION;
 	screen->endExt = cell;
     }
-    ComputeSelect(screen, &(screen->startExt), &(screen->endExt), True);
+    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), True);
 
 #if OPT_READLINE
     if (!isSameCELL(&(screen->startSel), &(screen->endSel)))
@@ -1991,8 +1997,9 @@ do_start_extend(XtermWidget xw,
 }
 
 static void
-ExtendExtend(TScreen * screen, const CELL * cell)
+ExtendExtend(XtermWidget xw, const CELL * cell)
 {
+    TScreen *screen = &(xw->screen);
     int coord = Coordinate(screen, cell);
 
     TRACE(("ExtendExtend row=%d, col=%d\n", cell->row, cell->col));
@@ -2013,7 +2020,7 @@ ExtendExtend(TScreen * screen, const CELL * cell)
     } else {
 	screen->endExt = *cell;
     }
-    ComputeSelect(screen, &(screen->startExt), &(screen->endExt), False);
+    ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False);
 
 #if OPT_READLINE
     if (!isSameCELL(&(screen->startSel), &(screen->endSel)))
@@ -2430,10 +2437,12 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 #endif
 
 		if_OPT_WIDE_CHARS(screen, {
-		    if ((data = XTERM_CELL_C1(row, col)) != 0)
+		    int off;
+		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
+			if ((data = XTERM_CELLC(row, col, off)) == 0)
+			    break;
 			next = convertToUTF8(next, data);
-		    if ((data = XTERM_CELL_C2(row, col)) != 0)
-			next = convertToUTF8(next, data);
+		    }
 		});
 
 		indexed[used] = last - result;
@@ -2585,11 +2594,12 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
  * ensuring that they have legal values
  */
 static void
-ComputeSelect(TScreen * screen,
+ComputeSelect(XtermWidget xw,
 	      CELL * startc,
 	      CELL * endc,
 	      Bool extend)
 {
+    TScreen *screen = &(xw->screen);
     int length;
     int cclass;
     CELL first = *startc;
@@ -2763,16 +2773,17 @@ ComputeSelect(TScreen * screen,
     /* check boundaries */
     ScrollSelection(screen, 0, False);
 
-    TrackText(screen, &(screen->startSel), &(screen->endSel));
+    TrackText(xw, &(screen->startSel), &(screen->endSel));
     return;
 }
 
 /* Guaranteed (first.row, first.col) <= (last.row, last.col) */
 static void
-TrackText(TScreen * screen,
+TrackText(XtermWidget xw,
 	  const CELL * firstp,
 	  const CELL * lastp)
 {
+    TScreen *screen = &(xw->screen);
     int from, to;
     CELL old_start, old_end;
     CELL first = *firstp;
@@ -2792,22 +2803,22 @@ TrackText(TScreen * screen,
     to = Coordinate(screen, &screen->endH);
     if (to <= screen->startHCoord || from > screen->endHCoord) {
 	/* No overlap whatsoever between old and new hilite */
-	ReHiliteText(screen, &old_start, &old_end);
-	ReHiliteText(screen, &first, &last);
+	ReHiliteText(xw, &old_start, &old_end);
+	ReHiliteText(xw, &first, &last);
     } else {
 	if (from < screen->startHCoord) {
 	    /* Extend left end */
-	    ReHiliteText(screen, &first, &old_start);
+	    ReHiliteText(xw, &first, &old_start);
 	} else if (from > screen->startHCoord) {
 	    /* Shorten left end */
-	    ReHiliteText(screen, &old_start, &first);
+	    ReHiliteText(xw, &old_start, &first);
 	}
 	if (to > screen->endHCoord) {
 	    /* Extend right end */
-	    ReHiliteText(screen, &old_end, &last);
+	    ReHiliteText(xw, &old_end, &last);
 	} else if (to < screen->endHCoord) {
 	    /* Shorten right end */
-	    ReHiliteText(screen, &last, &old_end);
+	    ReHiliteText(xw, &last, &old_end);
 	}
     }
     screen->startHCoord = from;
@@ -2816,10 +2827,11 @@ TrackText(TScreen * screen,
 
 /* Guaranteed that (first->row, first->col) <= (last->row, last->col) */
 static void
-ReHiliteText(TScreen * screen,
+ReHiliteText(XtermWidget xw,
 	     CELL * firstp,
 	     CELL * lastp)
 {
+    TScreen *screen = &(xw->screen);
     int i;
     CELL first = *firstp;
     CELL last = *lastp;
@@ -2843,16 +2855,16 @@ ReHiliteText(TScreen * screen,
 
     if (!isSameRow(&first, &last)) {	/* do multiple rows */
 	if ((i = screen->max_col - first.col + 1) > 0) {	/* first row */
-	    ScrnRefresh(screen, first.row, first.col, 1, i, True);
+	    ScrnRefresh(xw, first.row, first.col, 1, i, True);
 	}
 	if ((i = last.row - first.row - 1) > 0) {	/* middle rows */
-	    ScrnRefresh(screen, first.row + 1, 0, i, MaxCols(screen), True);
+	    ScrnRefresh(xw, first.row + 1, 0, i, MaxCols(screen), True);
 	}
 	if (last.col > 0 && last.row <= screen->max_row) {	/* last row */
-	    ScrnRefresh(screen, last.row, 0, 1, last.col, True);
+	    ScrnRefresh(xw, last.row, 0, 1, last.col, True);
 	}
     } else {			/* do single row */
-	ScrnRefresh(screen, first.row, first.col, 1, last.col - first.col, True);
+	ScrnRefresh(xw, first.row, first.col, 1, last.col - first.col, True);
     }
 }
 
@@ -3263,7 +3275,7 @@ LoseSelection(Widget w, Atom * selection)
     }
 
     if (screen->selection_count == 0)
-	TrackText(screen, &zeroCELL, &zeroCELL);
+	TrackText((XtermWidget) w, &zeroCELL, &zeroCELL);
 }
 
 /* ARGSUSED */
@@ -3333,7 +3345,7 @@ _OwnSelection(XtermWidget xw,
     if (!screen->replyToEmacs)
 	screen->selection_count = count;
     if (!have_selection)
-	TrackText(screen, &zeroCELL, &zeroCELL);
+	TrackText(xw, &zeroCELL, &zeroCELL);
 }
 
 static void
@@ -3376,7 +3388,7 @@ DisownSelection(XtermWidget xw)
 	CELL last = screen->endH;
 
 	ResetSelectionState(screen);
-	ReHiliteText(screen, &first, &last);
+	ReHiliteText(xw, &first, &last);
     } else {
 	ResetSelectionState(screen);
     }
@@ -3411,7 +3423,6 @@ SaveText(TScreen * screen,
     Char *result = lp;
 #if OPT_WIDE_CHARS
     int previous = 0;
-    unsigned c_1 = 0, c_2 = 0;
 #endif
 
     i = Length(screen, row, scol, ecol);
@@ -3426,11 +3437,6 @@ SaveText(TScreen * screen,
     for (i = scol; i < ecol; i++) {
 	c = E2A(XTERM_CELL(row, i));
 #if OPT_WIDE_CHARS
-	if (screen->utf8_mode != uFalse) {
-	    c_1 = E2A(XTERM_CELL_C1(row, i));
-	    c_2 = E2A(XTERM_CELL_C2(row, i));
-	}
-
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
 	 * wide character.
 	 */
@@ -3438,21 +3444,31 @@ SaveText(TScreen * screen,
 	    previous = c;
 	    /* Combining characters attached to double-width characters
 	       are in memory attached to the HIDDEN_CHAR */
-	    if (c_1) {
-		lp = convertToUTF8(lp, c_1);
-		if (c_2)
-		    lp = convertToUTF8(lp, c_2);
-	    }
+	    if_OPT_WIDE_CHARS(screen, {
+		if (screen->utf8_mode != uFalse) {
+		    int ch;
+		    int off;
+		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
+			if ((ch = XTERM_CELLC(row, i, off)) == 0)
+			    break;
+			lp = convertToUTF8(lp, ch);
+		    }
+		}
+	    });
 	    continue;
 	}
 	previous = c;
 	if (screen->utf8_mode != uFalse) {
 	    lp = convertToUTF8(lp, (c != 0) ? c : ' ');
-	    if (c_1) {
-		lp = convertToUTF8(lp, c_1);
-		if (c_2)
-		    lp = convertToUTF8(lp, c_2);
-	    }
+	    if_OPT_WIDE_CHARS(screen, {
+		int ch;
+		int off;
+		for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
+		    if ((ch = XTERM_CELLC(row, i, off)) == 0)
+			break;
+		    lp = convertToUTF8(lp, ch);
+		}
+	    });
 	} else
 #endif
 	{
@@ -3514,8 +3530,9 @@ BtnCode(XButtonEvent * event, int button)
 #define MOUSE_LIMIT (255 - 32)
 
 static void
-EditorButton(TScreen * screen, XButtonEvent * event)
+EditorButton(XtermWidget xw, XButtonEvent * event)
 {
+    TScreen *screen = &(xw->screen);
     int pty = screen->respond;
     Char line[6];
     int row, col;
@@ -3553,6 +3570,15 @@ EditorButton(TScreen * screen, XButtonEvent * event)
 	line[count++] = ESC;
 	line[count++] = '[';
     }
+#if OPT_SCO_FUNC_KEYS
+    if (xw->keyboard.type == keyboardIsSCO) {
+	/*
+	 * SCO function key F1 is \E[M, which would conflict with xterm's
+	 * normal kmous.
+	 */
+	line[count++] = '>';
+    }
+#endif
     line[count++] = 'M';
 
     /* Add event code to key sequence */

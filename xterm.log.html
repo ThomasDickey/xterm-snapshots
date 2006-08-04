@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.430 2006/06/20 00:50:00 tom Exp $
+  $XTermId: xterm.log.html,v 1.460 2006/08/03 23:58:30 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_216">Patch #216 - 2006/8/3</A>
 <LI><A HREF="#xterm_215">Patch #215 - 2006/6/19 - XFree86 4.6.99.2</A>
 <LI><A HREF="#xterm_214">Patch #214 - 2006/6/18 - XFree86 4.6.99.2</A>
 <LI><A HREF="#xterm_213">Patch #213 - 2006/4/30 - XFree86 4.5.99.905</A>
@@ -120,7 +121,7 @@ is the latest version of this file.
 <LI><A HREF="#xterm_144">Patch #144 - 2000/8/23 - XFree86 4.0.1b</A>
 <LI><A HREF="#xterm_143">Patch #143 - 2000/8/19 - XFree86 4.0.1b</A>
 <LI><A HREF="#xterm_142">Patch #142 - 2000/8/18 - XFree86 4.0.1b</A>
-<LI><A HREF="#xterm_141">Patch #141 - 2000/7/14 - XFree86 4.0.1b</A>
+<LI><A HREF="#xterm_141">Patch #141 - 2000/8/14 - XFree86 4.0.1b</A>
 <LI><A HREF="#xterm_140">Patch #140 - 2000/7/23 - XFree86 4.0.1</A>
 <LI><A HREF="#xterm_139">Patch #139 - 2000/6/17 - XFree86 4.0d</A>
 <LI><A HREF="#xterm_138">Patch #138 - 2000/6/15 - XFree86 4.0c</A>
@@ -264,7 +265,123 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_215">Patch #215 - 2006/6/18 - XFree86 4.6.99.2</A></H1>
+<H1><A NAME="xterm_216">Patch #216 - 2006/8/3</A></H1>
+<ul>
+	<li>improve handling of <code>ConfigureNotify</code> events by checking
+	    if there are further events in the queue which obsolete the current
+	    one (adapted from rxvt 2.7.5).  Only the normal normal
+	    (non-toolbar) configuration is addressed in this patch.
+
+	<li>several changes to terminfo:
+	<ul>
+	    <li>incorporate some minor changes from ncurses to help keep these
+	        synchronized:
+	    <dl>
+		<dt>2005-02-26
+		<dd>modify sgr/sgr0 in xterm-new to improve tgetent's derived "me".
+		<dt>2006-02-18
+		<dd>remove ncv flag from xterm-16color
+		<dt>2006-06-24
+		<dd>improve xterm-256color by combining the 16-color
+		setaf/setab strings with SGR 48,
+		and cancelling the setf/setb strings.
+	    </dl>
+	    <li>use extended function-key definitions for xterm-sun, xterm-sco
+	        entries.
+
+	    <li>add terminfo building-blocks corresponding to the
+	        <code>modifyFunctionKeys</code>
+	        and <code>modifyCursorKeys</code> resources.
+	</ul>
+
+	<li>ifdef'd Sun function-key feature to make it optional, like HP and
+	    SCO.
+
+	<li>extend table for termcap-query feature through F63, and updated
+	    tcapquery.pl to match.
+
+	<li>modify logic for function-key input processing to allow function
+	    key numbers which are constructed by control- and shift-modifiers
+	    to extend beyond X's hardcoded limit of 35.
+
+	<li>add control sequence to set or reset the <code>eightBitInput</code>
+	    resource.
+
+	<li>change default resource <code>modifyFunctionKeys</code> to 2
+	    to avoid sending SS3 with parameters (report by Kalle Olavi Niemitalo).
+
+	<li>add control sequences for setting and resetting the values of the
+	    <code>modifyCursorKeys</code>,
+	    <code>modifyFunctionKeys</code> and
+	    <code>modifyOtherKeys</code> resources.
+
+	<li>add <code>modifyFunctionKeys</code> resource like
+	    <code>modifyCursorKeys</code>.
+	    Setting this to zero allows one to use the control- and
+	    shift-modifiers to construct function key strings,
+	    for terminals using many function keys,
+	    e.g., for <code>xterm-sun</code> or <code>xterm-sco</code>.
+
+	<li>modify screen responses and function-key logic to reduce the
+	    number of writes made, to make it less likely that an application
+	    would read only part of a function-key in a read operation
+	    (suggested by John E Urbanczyk).
+
+	<li>add <code>combiningChars</code> resource, which allows the user to
+	    specify the maximum number of combining characters that xterm will
+	    store for each cell in wide-character mode (prompted by request by
+	    Markus Kuhn to increase the limit from 2).
+
+	<li>improve logic in <code>metaSendsEscape</code> in case the Alt-
+	    and Meta-keys are mapped to different modifiers.  That allows one
+	    to use the Alt-key for shifting in the <code>eightBitInput</code>
+	    and use a Meta-key modifier to prefix the result with an
+	    <code>&lt;ESC&gt;</code>.
+
+	<li>improve <code>modifyCursorKeys</code> logic to prevent it from
+	    modifying codes where <code>eightBitInput</code> or
+	    <code>metaSendsEscape</code> are set
+	    (request by Dan Nicolaescu).
+
+	<li>improve <code>modifyCursorKeys</code> logic to prevent it from
+	    changing the user input when other modifiers such as AltGr are used
+	    (report by Thomas Wolff).
+
+	<li>extend <code>modifyCursorKeys</code> to include the numeric keypad
+	    when in application mode.
+
+	<li>improve <code>-reverse</code> (<code>-rv</code>) option
+	    (patch by Jason Vas Dias, Redhat #189161).
+
+	<li>workaround for color resources on Fedora-5 which made the toolbar
+	    colors inconsistent.
+
+	<li>corrected calls used for <code>--disable-setuid</code> option,
+	    add debugging traces to help diagnose this area. 
+
+	<li>modify configure script to ensure that <code>USE_UTMP_SETGID</code>
+	    is defined only if the check for POSIX saved-ids succeeds, or
+	    corresponds to one of the BSD systems known to have a workable
+	    <code>setegid</code> function.
+
+	<li>extend configure check for POSIX saved-ids to include BSD systems
+
+	<li>modify CF_SYSV configure macro to work with gcc on HPUX 10.20,
+	    whose broken
+	    <code>&lt;term.h&gt;</code> relies on including
+	    <code>&lt;termios.h&gt;</code>.
+
+	<li>change order of setuid/setgid ifdef checks in Imakefile to make
+	    it simpler to produce a setgid install, allowing the latter to
+	    override the former (prompted by an XFree86 commit).
+
+	<li>adapt a fix for setgid support from subsequent XFree86 changes
+	    (patch by Emanuele Giaquinta).
+
+	<li>further improve setgid support (patches by Emanuele Giaquinta).
+</ul>
+
+<H1><A NAME="xterm_215">Patch #215 - 2006/6/19 - XFree86 4.6.99.2</A></H1>
 <ul>
 	<li>improve setgid support by exploiting the saved-ids feature on which
 	    it relies (patch by Emanuele Giaquinta).
@@ -2475,7 +2592,7 @@ is the latest version of this file.
 	  </ul>
 </ul>
 
-<H1><A NAME="xterm_164">Patch #163 - 2001/11/13 - XFree86 4.1.0</A></H1>
+<H1><A NAME="xterm_164">Patch #164 - 2001/11/13 - XFree86 4.1.0</A></H1>
 <ul>
 	<li>correct a case where <code>ptyInitialErase</code> and
 	  <code>backarrowKeyIsErase</code> resources combine to set
@@ -3566,7 +3683,7 @@ is the latest version of this file.
 	<li>modify logic for <code>deleteIsDEL</code> resource so it has
 	  internally 3 states:  unspecified, true and false.  If unspecified,
 	  the keyboard type determines whether the Delete key transmits
-	  <code>&lt;esc&gt;[3~</code> or <code>\177</code>, and the popup menu
+	  <code>&lt;ESC&gt;[3~</code> or <code>\177</code>, and the popup menu
 	  entry reflects the internal state.  Otherwise, the popup menu entry
 	  overrides the keyboard type (suggested by Dr Werner Fink, to make it
 	  simpler to set resources that imitate the legacy X11R6 xterm).
@@ -3629,8 +3746,8 @@ is the latest version of this file.
 	  Remove escape sequence.
 
 	<li>remove logic for metaSendsEscape that would allow xterm to send
-	  <code>&lt;esc&gt;[3~</code> before a function key that would begin
-	  with <code>&lt;esc&gt;[3~</code> (request by Christian Weisgerber).
+	  <code>&lt;ESC&gt;[3~</code> before a function key that would begin
+	  with <code>&lt;ESC&gt;[3~</code> (request by Christian Weisgerber).
 
 	<li>add missing action and documentation for meta-sends-escape.
 
@@ -3828,7 +3945,7 @@ is the latest version of this file.
 	  not necessarily correspond with X's notion of those keys.
 
 	<li>modify treatment of XK_Delete keysym so it transmits parameterized
-	  VT220-style <code>&lt;esc&gt;[3~</code> if modifiers (shift, control
+	  VT220-style <code>&lt;ESC&gt;[3~</code> if modifiers (shift, control
 	  alt) are given (request by Alexander V Lukyanov).
 
 	<li>corrected misspelled resource name in command-line option for
@@ -4658,7 +4775,7 @@ the Imakefile defines this).
 
 	<li>change default (with sunKeyboard resource false) behavior of
 	  the editing keypad "Delete" to send a 127, like xterm-r6.
-	  The VT220-style <code>&lt;esc&gt;[3~</code> is sent when
+	  The VT220-style <code>&lt;ESC&gt;[3~</code> is sent when
 	  sunKeyboard is true (reported by Tomas Vanhala).
 
 	<li>add parameters to function keys to indicate if shift, control
@@ -4694,7 +4811,7 @@ the Imakefile defines this).
 	<li>minor tweak to OSC responses, to use BEL if the application used
 	  that to end the request, rather than ST.  This works better with
 	  shell scripts, which may not handle an
-	  <code>&lt;esc&gt;backslash</code> very well.
+	  <code>&lt;ESC&gt;backslash</code> very well.
 
 	<li>separate menu settings for reverse video from that done under
 	  program control.

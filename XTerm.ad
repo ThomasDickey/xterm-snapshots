@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.80 2006/04/10 00:34:36 tom Exp $
+! $XTermId: XTerm.ad,v 1.81 2006/06/24 14:34:45 tom Exp $
 ! $XFree86: xc/programs/xterm/XTerm.ad,v 3.37 2006/04/10 00:34:36 dickey Exp $
 
 *saveLines: 1024
@@ -171,7 +171,7 @@
 
 ! If we wanted to eliminate the border of the popup menus, we could do this
 ! instead, since they are children of the menubar:
-!*menubar.*.borderWidth: 0
+!*menubar*borderWidth: 0
 
 ! Eliminate the border of the buttons in the menubar, so the only line around
 ! the text is for the highlighted button:

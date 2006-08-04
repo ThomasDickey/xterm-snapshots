@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.45 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.48 2006/07/23 22:06:23 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/doublechr.c,v 3.18 2006/02/13 01:14:58 dickey Exp $
@@ -85,7 +85,7 @@ repaint_line(unsigned newChrSet)
      * single-size and double-size font.  So we paint our own.
      */
     if (CSET_DOUBLE(oldChrSet) != CSET_DOUBLE(newChrSet)) {
-	ClearCurBackground(screen,
+	ClearCurBackground(term,
 			   CursorY(screen, currow),
 			   CurCursorX(screen, currow, 0),
 			   (unsigned) FontHeight(screen),
@@ -96,7 +96,7 @@ repaint_line(unsigned newChrSet)
     memset(SCRN_BUF_CSETS(screen, currow), (Char) newChrSet, len);
 
     set_cur_col(screen, 0);
-    ScrnUpdate(screen, currow, 0, 1, (int) len, True);
+    ScrnUpdate(term, currow, 0, 1, (int) len, True);
     set_cur_col(screen, curcol);
 }
 #endif
@@ -110,6 +110,8 @@ xterm_DECDHL(Bool top)
 {
 #if OPT_DEC_CHRSET
     repaint_line((unsigned) (top ? CSET_DHL_TOP : CSET_DHL_BOT));
+#else
+    (void) top;
 #endif
 }
 

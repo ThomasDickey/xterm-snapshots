@@ -1,4 +1,4 @@
-/* $XTermId: tabs.c,v 1.26 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: tabs.c,v 1.27 2006/07/23 20:27:31 tom Exp $ */
 
 /*
  *	$XFree86: xc/programs/xterm/tabs.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
@@ -110,10 +110,12 @@ TabClear(Tabs tabs, int col)
  * A tabstop at col is ignored.
  */
 static int
-TabNext(TScreen * screen, Tabs tabs, int col)
+TabNext(XtermWidget xw, Tabs tabs, int col)
 {
-    if (screen->curses && screen->do_wrap && (term->flags & WRAPAROUND)) {
-	xtermIndex(screen, 1);
+    TScreen *screen = &(xw->screen);
+
+    if (screen->curses && screen->do_wrap && (xw->flags & WRAPAROUND)) {
+	xtermIndex(xw, 1);
 	set_cur_col(screen, 0);
 	col = screen->do_wrap = 0;
     }
@@ -143,10 +145,11 @@ TabPrev(Tabs tabs, int col)
  * Tab to the next stop, returning true if the cursor moved
  */
 Bool
-TabToNextStop(TScreen * screen)
+TabToNextStop(XtermWidget xw)
 {
+    TScreen *screen = &(xw->screen);
     int saved_column = screen->cur_col;
-    int next = TabNext(screen, term->tabs, screen->cur_col);
+    int next = TabNext(xw, xw->tabs, screen->cur_col);
     int max = CurMaxCol(screen, screen->cur_row);
 
     if (next > max)
@@ -160,11 +163,12 @@ TabToNextStop(TScreen * screen)
  * Tab to the previous stop, returning true if the cursor moved
  */
 Bool
-TabToPrevStop(TScreen * screen)
+TabToPrevStop(XtermWidget xw)
 {
+    TScreen *screen = &(xw->screen);
     int saved_column = screen->cur_col;
 
-    set_cur_col(screen, TabPrev(term->tabs, screen->cur_col));
+    set_cur_col(screen, TabPrev(xw->tabs, screen->cur_col));
 
     return (screen->cur_col < saved_column);
 }

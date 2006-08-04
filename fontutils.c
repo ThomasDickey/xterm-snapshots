@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.203 2006/04/30 21:55:39 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.208 2006/07/23 20:31:30 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -933,8 +933,8 @@ xtermLoadFont(XtermWidget xw,
     mask = (GCFont | GCForeground | GCBackground | GCGraphicsExposures |
 	    GCFunction);
 
-    new_normal = getXtermForeground(xw->flags, xw->cur_foreground);
-    new_revers = getXtermBackground(xw->flags, xw->cur_background);
+    new_normal = getXtermForeground(xw, xw->flags, xw->cur_foreground);
+    new_revers = getXtermBackground(xw, xw->flags, xw->cur_background);
 
     xgcv.font = fnts[fNorm]->fid;
     xgcv.foreground = new_normal;
@@ -1058,15 +1058,14 @@ xtermLoadFont(XtermWidget xw,
 	    free(screen->MenuFontName(fontnum));
 	screen->MenuFontName(fontnum) = tmpname;
 	if (fontnum == fontMenu_fontescape) {
-	    set_sensitivity(xw->screen.fontMenu,
-			    fontMenuEntries[fontMenu_fontescape].widget,
-			    True);
+	    SetItemSensitivity(fontMenuEntries[fontMenu_fontescape].widget,
+			       True);
 	}
 #if OPT_SHIFT_FONTS
 	screen->menu_font_sizes[fontnum] = FontSize(fnts[fNorm]);
 #endif
     }
-    set_cursor_gcs(screen);
+    set_cursor_gcs(xw);
     xtermUpdateFontInfo(xw, doresize);
     return 1;
 
@@ -1262,13 +1261,14 @@ xtermLoadDefaultFonts(XtermWidget w)
 
 #if OPT_LOAD_VTFONTS
 void
-HandleLoadVTFonts(Widget w GCC_UNUSED,
+HandleLoadVTFonts(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params GCC_UNUSED,
 		  Cardinal *param_count GCC_UNUSED)
 {
     static char empty[] = "";	/* appease strict compilers */
 
+    XtermWidget xw = (XtermWidget) w;
     char buf[80];
     char *myName = (*param_count > 0) ? params[0] : empty;
     char *convert = (*param_count > 1) ? params[1] : myName;
@@ -1281,20 +1281,20 @@ HandleLoadVTFonts(Widget w GCC_UNUSED,
 	&& islower(CharOf(myClass[0])))
 	myClass[0] = toupper(CharOf(myClass[0]));
 
-    if (xtermLoadVTFonts(term, myName, myClass)) {
+    if (xtermLoadVTFonts(xw, myName, myClass)) {
 	/*
 	 * When switching fonts, try to preserve the font-menu selection, since
 	 * it is less surprising to do that (if the font-switching can be
 	 * undone) than to switch to "Default".
 	 */
-	int font_number = term->screen.menu_font_number;
+	int font_number = xw->screen.menu_font_number;
 	if (font_number > fontMenu_lastBuiltin)
 	    font_number = fontMenu_lastBuiltin;
 	for (n = 0; n < NMENUFONTS; ++n)
-	    term->screen.menu_font_sizes[n] = 0;
-	SetVTFont(term, font_number, True,
+	    xw->screen.menu_font_sizes[n] = 0;
+	SetVTFont(xw, font_number, True,
 		  ((font_number == fontMenu_fontdefault)
-		   ? &(term->misc.default_font)
+		   ? &(xw->misc.default_font)
 		   : NULL));
     }
 
@@ -1595,7 +1595,7 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
 	Redraw();
 	TRACE(("... }} xtermUpdateFontInfo\n"));
 #ifdef SCROLLBAR_RIGHT
-	updateRightScrollbar(term);
+	updateRightScrollbar(xw);
 #endif
     }
     xtermSetCursorBox(screen);
@@ -1900,8 +1900,8 @@ xtermDrawBoxChar(XtermWidget xw,
     if (ch == 2) {
 	values.tile =
 	    XmuCreateStippledPixmap(XtScreen((Widget) xw),
-				    getXtermForeground(xw->flags, xw->cur_foreground),
-				    getXtermBackground(xw->flags, xw->cur_background),
+				    getXtermForeground(xw, xw->flags, xw->cur_foreground),
+				    getXtermBackground(xw, xw->flags, xw->cur_background),
 				    xw->core.depth);
 	if (values.stipple != XtUnspecifiedPixmap) {
 	    mask |= GCBackground | GCTile | GCFillStyle;
@@ -2264,13 +2264,15 @@ HandleLargerFont(Widget w GCC_UNUSED,
 		 String * params GCC_UNUSED,
 		 Cardinal *param_count GCC_UNUSED)
 {
-    if (term->misc.shift_fonts) {
-	TScreen *screen = &term->screen;
+    XtermWidget xw = (XtermWidget) w;
+
+    if (xw->misc.shift_fonts) {
+	TScreen *screen = &xw->screen;
 	int m;
 
 	m = lookupRelativeFontSize(screen, screen->menu_font_number, 1);
 	if (m >= 0) {
-	    SetVTFont(term, m, True, NULL);
+	    SetVTFont(xw, m, True, NULL);
 	} else {
 	    Bell(XkbBI_MinorError, 0);
 	}
@@ -2284,13 +2286,15 @@ HandleSmallerFont(Widget w GCC_UNUSED,
 		  String * params GCC_UNUSED,
 		  Cardinal *param_count GCC_UNUSED)
 {
-    if (term->misc.shift_fonts) {
-	TScreen *screen = &term->screen;
+    XtermWidget xw = (XtermWidget) w;
+
+    if (xw->misc.shift_fonts) {
+	TScreen *screen = &xw->screen;
 	int m;
 
 	m = lookupRelativeFontSize(screen, screen->menu_font_number, -1);
 	if (m >= 0) {
-	    SetVTFont(term, m, True, NULL);
+	    SetVTFont(xw, m, True, NULL);
 	} else {
 	    Bell(XkbBI_MinorError, 0);
 	}
@@ -2379,7 +2383,7 @@ HandleSetFont(Widget w GCC_UNUSED,
 	}
     }
 
-    SetVTFont(term, fontnum, True, &fonts);
+    SetVTFont((XtermWidget) w, fontnum, True, &fonts);
 }
 
 void
@@ -2404,7 +2408,7 @@ SetVTFont(XtermWidget xw,
 	    myfonts = *fonts;
 
 	if (which == fontMenu_fontsel) {	/* go get the selection */
-	    FindFontSelection(myfonts.f_n, False);
+	    FindFontSelection(xw, myfonts.f_n, False);
 	    return;
 	} else {
 #define USE_CACHED(field, name) \

@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.164 2006/06/15 23:53:53 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.172 2006/08/02 21:46:34 tom Exp $
 .\"
 .\"
 .\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.60 2006/03/13 01:27:53 dickey Exp $
@@ -771,6 +771,8 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking.
   \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
+  \*(Ps = \*1\*0\*3\*4 \(-> Interpret "meta" key, sets eighth bit.
+(enables the \fBeightBitInput\fP resource).
   \*(Ps = \*1\*0\*3\*5 \(-> Enable special modifiers for Alt and NumLock keys.
   \*(Ps = \*1\*0\*3\*6 \(-> Send ESC when Meta modifies a key
 (enables the \fBmetaSendsEscape\fP resource).
@@ -788,7 +790,7 @@ Use this with terminfo-based applications rather than the \*4\*7 mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Set HP function-key mode.
   \*(Ps = \*1\*0\*5\*3 \(-> Set SCO function-key mode.
   \*(Ps = \*1\*0\*6\*0 \(-> Set legacy keyboard emulation (X11R6).
-  \*(Ps = \*1\*0\*6\*1 \(-> Set Sun/PC keyboard emulation of VT220 keyboard.
+  \*(Ps = \*1\*0\*6\*1 \(-> Set VT220 keyboard emulation.
   \*(Ps = \*2\*0\*0\*4 \(-> Set bracketed paste mode.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*i
@@ -848,6 +850,8 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*3 \(-> Don't Use All Motion Mouse Tracking
   \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
+  \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret "meta" key
+(disables the \fBeightBitInput\fP resource).
   \*(Ps = \*1\*0\*3\*5 \(-> Disable special modifiers for Alt and NumLock keys.
   \*(Ps = \*1\*0\*3\*6 \(-> Don't send ESC when Meta modifies a key
 (disables the \fBmetaSendsEscape\fP resource).
@@ -866,7 +870,7 @@ Use this with terminfo-based applications rather than the \*4\*7 mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Reset HP function-key mode.
   \*(Ps = \*1\*0\*5\*3 \(-> Reset SCO function-key mode.
   \*(Ps = \*1\*0\*6\*0 \(-> Reset legacy keyboard emulation (X11R6).
-  \*(Ps = \*1\*0\*6\*1 \(-> Reset Sun/PC keyboard emulation of VT220 keyboard.
+  \*(Ps = \*1\*0\*6\*1 \(-> Reset keyboard emulation to Sun/PC style.
   \*(Ps = \*2\*0\*0\*4 \(-> Reset bracketed paste mode.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*m
@@ -931,12 +935,30 @@ If 88- or 256-color support is compiled, the following apply.
   \*(Ps = \*4\*8 ; \*5 ; \*(Ps \(-> Set background color to the second \*(Ps
 .sp
 .
+.IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*m
+Set or reset resource-values used by \fIxterm\fP to decide whether to
+construct escape sequences holding information about the modifiers
+pressed with a given key.
+The first parameter identifies the resource to set/reset.
+The second parameter is the value to assign to the resource.
+If the second parameter is omitted, the resource is reset to its initial value.
+  \(-> \*1 modifyCursorKeys
+  \(-> \*2 modifyFunctionKeys
+  \(-> \*4 modifyOtherKeys
+.br
+If no parameters are given, all resources are reset to their initial values.
+.
 .IP \\*(Cs\\*(Ps\\*s\\*n
 Device Status Report (DSR)
   \*(Ps = \*5 \(-> Status Report \*(Cs\*0\*n (``OK'')
   \*(Ps = \*6 \(-> Report Cursor Position (CPR) [row;column] as
 .br
 \*(Cs\*(Ir\*s\*;\*(Ic\*s\*R
+.
+.IP \\*(Cs\\*>\\*n
+Set resource-value \fBmodifyFunctionKeys\fP used by \fIxterm\fP to
+allow user to construct extended-numbering function keys using
+shift- and control-modifiers.
 .
 .IP \\*(Cs\\*?\\*(Ps\\*s\\*n
 Device Status Report (DSR, DEC-specific)
@@ -1411,7 +1433,7 @@ _
 .TE
 For example, shift-F5 would be sent as
 \*(Cs\*1\*5\*;\*2\*(c~
-
+.LP
 If the \fBalwaysUseMods\fP resource is set, the Meta modifier also is
 recognized, making parameters 9 through 16.
 .SH
@@ -1420,7 +1442,7 @@ VT220-Style Function Keys
 However, \fIxterm\fP is most useful as a DEC VT102 or VT220 emulator.
 Set the \fBsunKeyboard\fP resource to true to force a Sun/PC keyboard
 to act like a VT220 keyboard.
-.LP
+
 The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling keypad:
 .TS
@@ -1570,7 +1592,7 @@ When the alternate screen buffer is active,
 you cannot scroll back to view saved lines.
 \fBXterm\fP provides control sequences and menu entries
 for switching between the two.
-.LP
+
 Most full-screen applications use terminfo or termcap to obtain
 strings used to start/stop full-screen mode,
 i.e., \fIsmcup\fP and \fIrmcup\fP for terminfo,
@@ -1612,7 +1634,7 @@ the mouse.
 
 There are six mutually exclusive modes.
 One is DEC Locator mode, enabled by the
-DECELR \*(Cs\*(Ps\*s\*;\*(Ps\*s\*s\*'\*s\*z
+DECELR \*(Cs\*(Ps\*s\*;\*(Ps\*s\*s\*(qu\*s\*z
 control sequence, and is not described here
 (control sequences are summarized above).
 The remaining five

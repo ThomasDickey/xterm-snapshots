@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.302 2006/06/19 00:36:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.314 2006/08/03 23:54:32 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -117,7 +117,7 @@
 		   (event.xcrossing.window == XtWindow(XtParent(term))))
 #endif
 
-static Bool ChangeColorsRequest(XtermWidget pTerm, int start, char
+static Bool ChangeColorsRequest(XtermWidget xw, int start, char
 				*names, int final);
 static void DoSpecialEnterNotify(XEnterWindowEvent * ev);
 static void DoSpecialLeaveNotify(XEnterWindowEvent * ev);
@@ -152,7 +152,7 @@ xevents(void)
 	Cleanup(0);
 
     if (screen->scroll_amt)
-	FlushScroll(screen);
+	FlushScroll(term);
     /*
      * process timeouts, relying on the fact that XtAppProcessEvent
      * will process the timeout and return without blockng on the
@@ -230,7 +230,7 @@ make_colored_cursor(unsigned cursorindex,	/* index into font */
     if (c == (Cursor) 0)
 	return (c);
 
-    recolor_cursor(c, fg, bg);
+    recolor_cursor(screen, c, fg, bg);
     return (c);
 }
 
@@ -241,13 +241,11 @@ HandleKeyPressed(Widget w GCC_UNUSED,
 		 String * params GCC_UNUSED,
 		 Cardinal *nparams GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
-
     TRACE(("Handle 7bit-key\n"));
 #ifdef ACTIVEWINDOWINPUTONLY
-    if (w == CURRENT_EMU(screen))
+    if (w == CURRENT_EMU(&(term->screen)))
 #endif
-	Input(&term->keyboard, screen, &event->xkey, False);
+	Input(term, &event->xkey, False);
 }
 
 /* ARGSUSED */
@@ -257,13 +255,11 @@ HandleEightBitKeyPressed(Widget w GCC_UNUSED,
 			 String * params GCC_UNUSED,
 			 Cardinal *nparams GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
-
     TRACE(("Handle 8bit-key\n"));
 #ifdef ACTIVEWINDOWINPUTONLY
-    if (w == CURRENT_EMU(screen))
+    if (w == CURRENT_EMU(&(term->screen)))
 #endif
-	Input(&term->keyboard, screen, &event->xkey, True);
+	Input(term, &event->xkey, True);
 }
 
 /* ARGSUSED */
@@ -273,10 +269,8 @@ HandleStringEvent(Widget w GCC_UNUSED,
 		  String * params,
 		  Cardinal *nparams)
 {
-    TScreen *screen = &term->screen;
-
 #ifdef ACTIVEWINDOWINPUTONLY
-    if (w != CURRENT_EMU(screen))
+    if (w != CURRENT_EMU(&(term->screen)))
 	return;
 #endif
 
@@ -299,9 +293,9 @@ HandleStringEvent(Widget w GCC_UNUSED,
 		break;
 	}
 	if (c == '\0')
-	    StringInput(screen, hexval, 1);
+	    StringInput(term, hexval, 1);
     } else {
-	StringInput(screen, (Char *) * params, strlen(*params));
+	StringInput(term, (Char *) * params, strlen(*params));
     }
 }
 
@@ -1356,23 +1350,24 @@ FlushLog(TScreen * screen)
 
 #if OPT_ISO_COLORS
 static void
-ReportAnsiColorRequest(XtermWidget pTerm, int colornum, int final)
+ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
 {
     XColor color;
-    Colormap cmap = pTerm->core.colormap;
+    Colormap cmap = xw->core.colormap;
     char buffer[80];
 
     TRACE(("ReportAnsiColorRequest %d\n", colornum));
-    color.pixel = GET_COLOR_RES(pTerm->screen.Acolors[colornum]);
-    XQueryColor(term->screen.display, cmap, &color);
+    color.pixel = GET_COLOR_RES(xw->screen.Acolors[colornum]);
+    XQueryColor(xw->screen.display, cmap, &color);
     sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
 	    colornum,
 	    color.red,
 	    color.green,
 	    color.blue);
-    unparseputc1(OSC, pTerm->screen.respond);
-    unparseputs(buffer, pTerm->screen.respond);
-    unparseputc1(final, pTerm->screen.respond);
+    unparseputc1(xw, OSC);
+    unparseputs(xw, buffer);
+    unparseputc1(xw, final);
+    unparse_end(xw);
 }
 
 /*
@@ -1466,13 +1461,13 @@ find_closest_color(Display * display, Colormap cmap, XColor * def)
 }
 
 static Bool
-AllocateAnsiColor(XtermWidget pTerm,
+AllocateAnsiColor(XtermWidget xw,
 		  ColorRes * res,
 		  char *spec)
 {
     XColor def;
-    TScreen *screen = &pTerm->screen;
-    Colormap cmap = pTerm->core.colormap;
+    TScreen *screen = &xw->screen;
+    Colormap cmap = xw->core.colormap;
 
     if (XParseColor(screen->display, cmap, spec, &def)
 	&& (XAllocColor(screen->display, cmap, &def)
@@ -1522,7 +1517,7 @@ xtermGetColorRes(ColorRes * res)
 #endif
 
 static Bool
-ChangeAnsiColorRequest(XtermWidget pTerm,
+ChangeAnsiColorRequest(XtermWidget xw,
 		       char *buf,
 		       int final)
 {
@@ -1547,10 +1542,10 @@ ChangeAnsiColorRequest(XtermWidget pTerm,
 	    buf++;
 	}
 	if (!strcmp(name, "?"))
-	    ReportAnsiColorRequest(pTerm, color, final);
+	    ReportAnsiColorRequest(xw, color, final);
 	else {
 	    TRACE(("ChangeAnsiColor for Acolors[%d]\n", color));
-	    if (!AllocateAnsiColor(pTerm, &(pTerm->screen.Acolors[color]), name))
+	    if (!AllocateAnsiColor(xw, &(xw->screen.Acolors[color]), name))
 		break;
 	    /* FIXME:  free old color somehow?  We aren't for the other color
 	     * change style (dynamic colors).
@@ -1559,7 +1554,7 @@ ChangeAnsiColorRequest(XtermWidget pTerm,
 	}
     }
     if (r)
-	ChangeAnsiColors(pTerm);
+	ChangeAnsiColors(xw);
     return (r);
 }
 #else
@@ -1568,7 +1563,7 @@ ChangeAnsiColorRequest(XtermWidget pTerm,
 
 #if OPT_PASTE64
 static void
-ManipulateSelectionData(TScreen * screen, char *buf, int final)
+ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 {
 #define PDATA(a,b) { a, #b }
     static struct {
@@ -1621,25 +1616,25 @@ ManipulateSelectionData(TScreen * screen, char *buf, int final)
 
 	if (!strcmp(buf, "?")) {
 	    TRACE(("Getting selection\n"));
-	    unparseputc1(OSC, screen->respond);
-	    unparseputs("52", screen->respond);
-	    unparseputc(';', screen->respond);
+	    unparseputc1(xw, OSC);
+	    unparseputs(xw, "52");
+	    unparseputc(xw, ';');
 
-	    unparseputs(used, screen->respond);
-	    unparseputc(';', screen->respond);
+	    unparseputs(xw, used);
+	    unparseputc(xw, ';');
 
 	    /* Tell xtermGetSelection data is base64 encoded */
 	    screen->base64_paste = n;
 	    screen->base64_final = final;
 
 	    /* terminator will be written in this call */
-	    xtermGetSelection((Widget) term, 0, select_args, n, NULL);
+	    xtermGetSelection((Widget) xw, 0, select_args, n, NULL);
 	} else {
 	    TRACE(("Setting selection with %s\n", buf));
 	    ClearSelectionBuffer(screen);
 	    while (*buf != '\0')
 		AppendToSelectionBuffer(screen, CharOf(*buf++));
-	    CompleteSelection(term, select_args, n);
+	    CompleteSelection(xw, select_args, n);
 	}
     }
 }
@@ -1648,9 +1643,9 @@ ManipulateSelectionData(TScreen * screen, char *buf, int final)
 /***====================================================================***/
 
 void
-do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
+do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 {
-    TScreen *screen = &(term->screen);
+    TScreen *screen = &(xw->screen);
     int mode;
     Char *cp;
     int state = 0;
@@ -1734,7 +1729,7 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	break;
 #if OPT_ISO_COLORS
     case 4:
-	ChangeAnsiColorRequest(term, buf, final);
+	ChangeAnsiColorRequest(xw, buf, final);
 	break;
 #endif
     case 10 + TEXT_FG:
@@ -1750,8 +1745,8 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
     case 10 + TEK_BG:
     case 10 + TEK_CURSOR:
 #endif
-	if (term->misc.dynamicColors)
-	    ChangeColorsRequest(term, mode - 10, buf, final);
+	if (xw->misc.dynamicColors)
+	    ChangeColorsRequest(xw, mode - 10, buf, final);
 	break;
 
     case 30:
@@ -1785,14 +1780,15 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	if (buf != 0 && !strcmp(buf, "?")) {
 	    int num = screen->menu_font_number;
 
-	    unparseputc1(OSC, screen->respond);
-	    unparseputs("50", screen->respond);
+	    unparseputc1(xw, OSC);
+	    unparseputs(xw, "50");
 
 	    if ((buf = screen->MenuFontName(num)) != 0) {
-		unparseputc(';', screen->respond);
-		unparseputs(buf, screen->respond);
+		unparseputc(xw, ';');
+		unparseputs(xw, buf);
 	    }
-	    unparseputc1(final, screen->respond);
+	    unparseputc1(xw, final);
+	    unparse_end(xw);
 	} else if (buf != 0) {
 	    VTFontNames fonts;
 
@@ -1839,7 +1835,7 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 		}
 	    }
 	    fonts.f_n = buf;
-	    SetVTFont(term, fontMenu_fontescape, True, &fonts);
+	    SetVTFont(xw, fontMenu_fontescape, True, &fonts);
 	}
 	break;
     case 51:
@@ -1849,7 +1845,7 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 #if OPT_PASTE64
     case 52:
 	if (screen->allowWindowOps && (buf != 0))
-	    ManipulateSelectionData(screen, buf, final);
+	    ManipulateSelectionData(xw, screen, buf, final);
 	break;
 #endif
 	/*
@@ -1857,6 +1853,7 @@ do_osc(Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	 * but that could potentially open a fairly nasty security hole.
 	 */
     }
+    unparse_end(xw);
 }
 
 #ifdef SunXK_F36
@@ -2092,9 +2089,9 @@ parse_ansi_params(ANSI * params, char **string)
 }
 
 void
-do_dcs(Char * dcsbuf, size_t dcslen)
+do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = &xw->screen;
     char reply[BUFSIZ];
     char *cp = (char *) dcsbuf;
     Bool okay;
@@ -2115,7 +2112,7 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 	    if (!strcmp(cp, "\"q")) {	/* DECSCA */
 		sprintf(reply, "%d%s",
 			(screen->protected_mode == DEC_PROTECT)
-			&& (term->flags & PROTECTED) ? 1 : 0,
+			&& (xw->flags & PROTECTED) ? 1 : 0,
 			cp);
 	    } else if (!strcmp(cp, "\"p")) {	/* DECSCL */
 		sprintf(reply, "%d%s%s",
@@ -2132,133 +2129,126 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 			screen->bot_marg + 1);
 	    } else if (!strcmp(cp, "m")) {	/* SGR */
 		strcpy(reply, "0");
-		if (term->flags & BOLD)
+		if (xw->flags & BOLD)
 		    strcat(reply, ";1");
-		if (term->flags & UNDERLINE)
+		if (xw->flags & UNDERLINE)
 		    strcat(reply, ";4");
-		if (term->flags & BLINK)
+		if (xw->flags & BLINK)
 		    strcat(reply, ";5");
-		if (term->flags & INVERSE)
+		if (xw->flags & INVERSE)
 		    strcat(reply, ";7");
-		if (term->flags & INVISIBLE)
+		if (xw->flags & INVISIBLE)
 		    strcat(reply, ";8");
 		if_OPT_EXT_COLORS(screen, {
-		    if (term->flags & FG_COLOR) {
-			if (term->cur_foreground >= 16)
+		    if (xw->flags & FG_COLOR) {
+			if (xw->cur_foreground >= 16)
 			    sprintf(reply + strlen(reply),
-				    ";38;5;%d", term->cur_foreground);
+				    ";38;5;%d", xw->cur_foreground);
 			else
 			    sprintf(reply + strlen(reply),
 				    ";%d%d",
-				    term->cur_foreground >= 8 ? 9 : 3,
-				    term->cur_foreground >= 8 ?
-				    term->cur_foreground - 8 :
-				    term->cur_foreground);
+				    xw->cur_foreground >= 8 ? 9 : 3,
+				    xw->cur_foreground >= 8 ?
+				    xw->cur_foreground - 8 :
+				    xw->cur_foreground);
 		    }
-		    if (term->flags & BG_COLOR) {
-			if (term->cur_background >= 16)
+		    if (xw->flags & BG_COLOR) {
+			if (xw->cur_background >= 16)
 			    sprintf(reply + strlen(reply),
-				    ";48;5;%d", term->cur_foreground);
+				    ";48;5;%d", xw->cur_foreground);
 			else
 			    sprintf(reply + strlen(reply),
 				    ";%d%d",
-				    term->cur_background >= 8 ? 10 : 4,
-				    term->cur_background >= 8 ?
-				    term->cur_background - 8 :
-				    term->cur_background);
+				    xw->cur_background >= 8 ? 10 : 4,
+				    xw->cur_background >= 8 ?
+				    xw->cur_background - 8 :
+				    xw->cur_background);
 		    }
 		});
 		if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-		    if (term->flags & FG_COLOR)
+		    if (xw->flags & FG_COLOR)
 			sprintf(reply + strlen(reply),
 				";%d%d",
-				term->cur_foreground >= 8 ? 9 : 3,
-				term->cur_foreground >= 8 ?
-				term->cur_foreground - 8 :
-				term->cur_foreground);
-		    if (term->flags & BG_COLOR)
+				xw->cur_foreground >= 8 ? 9 : 3,
+				xw->cur_foreground >= 8 ?
+				xw->cur_foreground - 8 :
+				xw->cur_foreground);
+		    if (xw->flags & BG_COLOR)
 			sprintf(reply + strlen(reply),
 				";%d%d",
-				term->cur_background >= 8 ? 10 : 4,
-				term->cur_background >= 8 ?
-				term->cur_background - 8 :
-				term->cur_background);
+				xw->cur_background >= 8 ? 10 : 4,
+				xw->cur_background >= 8 ?
+				xw->cur_background - 8 :
+				xw->cur_background);
 		});
 		strcat(reply, "m");
 	    } else
 		okay = False;
 
-	    unparseputc1(DCS, screen->respond);
-	    unparseputc(okay ? '1' : '0', screen->respond);
-	    unparseputc('$', screen->respond);
-	    unparseputc('r', screen->respond);
+	    unparseputc1(xw, DCS);
+	    unparseputc(xw, okay ? '1' : '0');
+	    unparseputc(xw, '$');
+	    unparseputc(xw, 'r');
 	    if (okay)
 		cp = reply;
-	    unparseputs(cp, screen->respond);
-	    unparseputc1(ST, screen->respond);
+	    unparseputs(xw, cp);
+	    unparseputc1(xw, ST);
 	} else {
-	    unparseputc(CAN, screen->respond);
+	    unparseputc(xw, CAN);
 	}
 	break;
 #if OPT_TCAP_QUERY
     case '+':
 	cp++;
 	if (*cp == 'q') {
+	    Bool fkey;
 	    unsigned state;
 	    int code;
 	    char *tmp;
 	    char *parsed = ++cp;
 
-	    unparseputc1(DCS, screen->respond);
+	    unparseputc1(xw, DCS);
 
-	    code = xtermcapKeycode(&parsed, &state);
-	    unparseputc(code >= 0 ? '1' : '0', screen->respond);
+	    code = xtermcapKeycode(xw, &parsed, &state, &fkey);
 
-	    unparseputc('+', screen->respond);
-	    unparseputc('r', screen->respond);
+	    unparseputc(xw, code >= 0 ? '1' : '0');
+
+	    unparseputc(xw, '+');
+	    unparseputc(xw, 'r');
 
 	    while (*cp != 0) {
 		if (cp == parsed)
 		    break;	/* no data found, error */
 
 		for (tmp = cp; tmp != parsed; ++tmp)
-		    unparseputc(*tmp, screen->respond);
+		    unparseputc(xw, *tmp);
 
 		if (code >= 0) {
-		    unparseputc('=', screen->respond);
-		    screen->tc_query = code;
+		    unparseputc(xw, '=');
+		    screen->tc_query_code = code;
+		    screen->tc_query_fkey = fkey;
 		    /* XK_COLORS is a fake code for the "Co" entry (maximum
 		     * number of colors) */
 		    if (code == XK_COLORS) {
-# if OPT_256_COLORS
-			unparseputc('2', screen->respond);
-			unparseputc('5', screen->respond);
-			unparseputc('6', screen->respond);
-# elif OPT_88_COLORS
-			unparseputc('8', screen->respond);
-			unparseputc('8', screen->respond);
-# else
-			unparseputc('1', screen->respond);
-			unparseputc('6', screen->respond);
-# endif
+			unparseputn(xw, NUM_ANSI_COLORS);
 		    } else {
 			XKeyEvent event;
 			event.state = state;
-			Input(&(term->keyboard), screen, &event, False);
+			Input(xw, &event, False);
 		    }
-		    screen->tc_query = -1;
+		    screen->tc_query_code = -1;
 		} else {
 		    break;	/* no match found, error */
 		}
 
 		cp = parsed;
 		if (*parsed == ';') {
-		    unparseputc(*parsed++, screen->respond);
+		    unparseputc(xw, *parsed++);
 		    cp = parsed;
-		    code = xtermcapKeycode(&parsed, &state);
+		    code = xtermcapKeycode(xw, &parsed, &state, &fkey);
 		}
 	    }
-	    unparseputc1(ST, screen->respond);
+	    unparseputc1(xw, ST);
 	}
 	break;
 #endif
@@ -2270,12 +2260,13 @@ do_dcs(Char * dcsbuf, size_t dcslen)
 		reset_decudk();
 	    parse_decudk(cp);
 	    break;
-	case '{':		/* DECDLD */
+	case '{':		/* DECDLD (no '}' case though) */
 	    parse_decdld(&params, cp);
 	    break;
 	}
 	break;
     }
+    unparse_end(xw);
 }
 
 char *
@@ -2303,6 +2294,8 @@ ChangeGroup(String attribute, char *value)
     unsigned limit = strlen(name);
 
     TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
+
+    (void) screen;
 
     /*
      * Ignore titles that are too long to be plausible requests.
@@ -2439,7 +2432,7 @@ ChangeXprop(char *buf)
 static ScrnColors *pOldColors = NULL;
 
 static Bool
-GetOldColors(XtermWidget pTerm)
+GetOldColors(XtermWidget xw)
 {
     int i;
     if (pOldColors == NULL) {
@@ -2453,7 +2446,7 @@ GetOldColors(XtermWidget pTerm)
 	    pOldColors->colors[i] = 0;
 	    pOldColors->names[i] = NULL;
 	}
-	GetColors(pTerm, pOldColors);
+	GetColors(xw, pOldColors);
     }
     return (True);
 }
@@ -2489,10 +2482,10 @@ oppositeColor(int n)
 }
 
 static void
-ReportColorRequest(XtermWidget pTerm, int ndx, int final)
+ReportColorRequest(XtermWidget xw, int ndx, int final)
 {
     XColor color;
-    Colormap cmap = pTerm->core.colormap;
+    Colormap cmap = xw->core.colormap;
     char buffer[80];
 
     /*
@@ -2500,23 +2493,24 @@ ReportColorRequest(XtermWidget pTerm, int ndx, int final)
      * reverse-video is set.  Report this as the original color index, but
      * reporting the opposite color which would be used.
      */
-    int i = (term->misc.re_verse) ? oppositeColor(ndx) : ndx;
+    int i = (xw->misc.re_verse) ? oppositeColor(ndx) : ndx;
 
-    GetOldColors(pTerm);
+    GetOldColors(xw);
     color.pixel = pOldColors->colors[ndx];
-    XQueryColor(term->screen.display, cmap, &color);
+    XQueryColor(xw->screen.display, cmap, &color);
     sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
 	    color.red,
 	    color.green,
 	    color.blue);
     TRACE(("ReportColors %d: %#lx as %s\n", ndx, pOldColors->colors[ndx], buffer));
-    unparseputc1(OSC, pTerm->screen.respond);
-    unparseputs(buffer, pTerm->screen.respond);
-    unparseputc1(final, pTerm->screen.respond);
+    unparseputc1(xw, OSC);
+    unparseputs(xw, buffer);
+    unparseputc1(xw, final);
+    unparse_end(xw);
 }
 
 static Bool
-UpdateOldColors(XtermWidget pTerm GCC_UNUSED, ScrnColors * pNew)
+UpdateOldColors(XtermWidget xw GCC_UNUSED, ScrnColors * pNew)
 {
     int i;
 
@@ -2583,14 +2577,14 @@ ReverseOldColors(void)
 }
 
 Bool
-AllocateTermColor(XtermWidget pTerm,
+AllocateTermColor(XtermWidget xw,
 		  ScrnColors * pNew,
 		  int ndx,
 		  const char *name)
 {
     XColor def;
-    TScreen *screen = &pTerm->screen;
-    Colormap cmap = pTerm->core.colormap;
+    TScreen *screen = &xw->screen;
+    Colormap cmap = xw->core.colormap;
     char *newName;
 
     if (XParseColor(screen->display, cmap, name, &def)
@@ -2609,7 +2603,7 @@ AllocateTermColor(XtermWidget pTerm,
 }
 
 static Bool
-ChangeColorsRequest(XtermWidget pTerm,
+ChangeColorsRequest(XtermWidget xw,
 		    int start,
 		    char *names,
 		    int final)
@@ -2621,7 +2615,7 @@ ChangeColorsRequest(XtermWidget pTerm,
     TRACE(("ChangeColorsRequest start=%d, names='%s'\n", start, names));
 
     if ((pOldColors == NULL)
-	&& (!GetOldColors(pTerm))) {
+	&& (!GetOldColors(xw))) {
 	return (False);
     }
     newColors.which = 0;
@@ -2629,7 +2623,7 @@ ChangeColorsRequest(XtermWidget pTerm,
 	newColors.names[i] = NULL;
     }
     for (i = start; i < NCOLORS; i++) {
-	if (term->misc.re_verse)
+	if (xw->misc.re_verse)
 	    ndx = oppositeColor(i);
 	else
 	    ndx = i;
@@ -2646,11 +2640,11 @@ ChangeColorsRequest(XtermWidget pTerm,
 		names++;
 	    }
 	    if (thisName != 0 && !strcmp(thisName, "?"))
-		ReportColorRequest(pTerm, ndx, final);
+		ReportColorRequest(xw, ndx, final);
 	    else if (!pOldColors->names[ndx]
 		     || (thisName
 			 && strcmp(thisName, pOldColors->names[ndx]))) {
-		AllocateTermColor(pTerm, &newColors, ndx, thisName);
+		AllocateTermColor(xw, &newColors, ndx, thisName);
 	    }
 	}
     }
@@ -2658,8 +2652,8 @@ ChangeColorsRequest(XtermWidget pTerm,
     if (newColors.which == 0)
 	return (True);
 
-    ChangeColors(pTerm, &newColors);
-    UpdateOldColors(pTerm, &newColors);
+    ChangeColors(xw, &newColors);
+    UpdateOldColors(xw, &newColors);
     return (True);
 }
 
@@ -3176,7 +3170,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 	sortedOptDescs(descs, numDescs);
 	free(opt_array);
 	opt_array = 0;
-    } else
+    } else if (options != 0 && descs != 0)
 #endif
     if (opt_array == 0) {
 	Cardinal opt_count, j;

@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.134 2006/06/19 00:36:50 tom Exp $
+## $XTermId: Makefile.in,v 1.135 2006/08/03 21:15:53 tom Exp $
 ##
 ## $XFree86: xc/programs/xterm/Makefile.in,v 3.56 2006/06/19 00:36:50 dickey Exp $ ##
 ##
@@ -162,18 +162,18 @@ install-full :: xterm$x resize$x $(BINDIR)
 		else \
 			$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm); \
 		fi'
-	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && rm -f @XTERM_SYMLINK@"
-	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && $(LN_S) $(binary_xterm) @XTERM_SYMLINK@"
-	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && echo '... created symbolic link:' && ls -l $(binary_xterm) @XTERM_SYMLINK@"
+	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && rm -f @XTERM_SYMLINK@) || exit 0"
+	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && $(LN_S) $(binary_xterm) @XTERM_SYMLINK@) || exit 0"
+	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(BINDIR) && echo '... created symbolic link:' && ls -l $(binary_xterm) @XTERM_SYMLINK@) || exit 0"
 
 install \
 install-man \
 install-full :: $(MANDIR)
 	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir)
 	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir)
-	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext)"
-	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext)"
-	@-$(SHELL) -c "test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext)"
+	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext)) || exit 0"
+	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext)) || exit 0"
+	@-$(SHELL) -c "(test @XTERM_SYMLINK@ != NONE && cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext)) || exit 0"
 
 @no_appsdir@install \
 @no_appsdir@install-app \

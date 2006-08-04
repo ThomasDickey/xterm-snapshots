@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.347 2006/06/20 00:42:38 tom Exp $
+.\" $XTermId: xterm.man,v 1.355 2006/07/31 23:14:27 tom Exp $
 .\"
 .\" Copyright 1996-2005,2006 by Thomas E. Dickey
 .\"
@@ -1655,6 +1655,12 @@ Note that setting \fBcolorMode\fR off
 disables all colors, including underlining.
 The default is ``false.''
 .TP 8
+.B "combiningChars (\fPclass\fB CombiningChars)"
+Specifies the number of wide-characters which can be stored in a cell
+to overstrike (combine) with the base character of the cell.
+This can be set to values in the range 0 to 4.
+The default is ``2''.
+.TP 8
 .B "ctrlFKeys (\fPclass\fB CtrlFKeys)"
 In VT220 keyboard mode (see \fBsunKeyboard\fP resource),
 specifies the amount by which to shift F1-F12 given a control modifier (CTRL).
@@ -2058,9 +2064,52 @@ Set it to 0 to use the old/obsolete behavior.
 .br
 Set it to 1 to prefix modified sequences with CSI.
 .br
-Set it to 2 to force the modifier to be the second parameter.
+Set it to 2 to force the modifier to be the second parameter if it would
+otherwise be the first.
 .br
 Set it to 3 to mark the sequence with a '>' to hint that it is private.
+.TP 8
+.B "modifyFunctionKeys (\fPclass\fB ModifyFunctionKeys\fP)"
+Tells how to handle the special case where
+Control-, Shift-, Alt- or Meta-modifiers are used to add a parameter to
+the escape sequence returned by a (numbered) function-key.
+The default is ``2''.
+The resource values are similar to \fBmodifyCursorKeys\fP:
+.IP
+Set it to -1 to permit the user to user shift- and control-modifiers
+to construct function-key strings using the normal encoding scheme.
+.br
+Set it to 0 to use the old/obsolete behavior.
+.br
+Set it to 1 to prefix modified sequences with CSI.
+.br
+Set it to 2 to force the modifier to be the second parameter if it would
+otherwise be the first.
+.br
+Set it to 3 to mark the sequence with a '>' to hint that it is private.
+.IP
+If \fBmodifyFunctionKeys\fP is zero,
+\fIxterm\fP uses Control- and Shift-modifiers to allow the user to
+construct numbered function-keys beyond the set provided by the
+keyboard:
+.RS
+.TP 5
+Control
+adds the value given by the \fBctrlFKeys\fP resource.
+.TP 5
+Shift
+adds twice the value given by the \fBctrlFKeys\fP resource.
+.TP 5
+Control/Shift
+adds three times the value given by the \fBctrlFKeys\fP resource.
+.RE
+.IP
+As a special case,
+legacy (when \fBoldFunctionKeys\fP is true)
+or vt220 (when \fBsunKeyboard\fP is true) keyboards interpret only the
+Control-modifier when constructing numbered function-keys.
+This is done to provide compatible keyboards for DEC VT220 and related
+terminals that implement user-defined keys (UDK).
 .TP 8
 .B "modifyOtherKeys (\fPclass\fB ModifyOtherKeys\fP)"
 Like \fBmodifyCursorKeys\fP, tells \fIxterm\fP to construct an
@@ -2069,13 +2118,19 @@ Control-, Alt- or Meta-modifiers.
 This feature does not apply to function keys and well-defined
 keys such as ESC or the control keys.
 The default is ``0'':
-.IP
-Set it to 0 to disable this feature.
-.br
-Set it to 1 to enable this feature for keys except Tab and some special
+.RS
+.TP 5
+0
+disables this feature.
+.TP 5
+1
+enables this feature for keys except for those with
+well-known behavior, e.g., Tab, Backarrow and some special
 control character cases, e.g., Control-Space to make a NUL.
-.br
-Set it to 1 to enable this feature for keys including the exceptions listed.
+.TP 5
+2
+enables this feature for keys including the exceptions listed.
+.RE
 .TP 8
 .B "multiClickTime (\fPclass\fB MultiClickTime)"
 Specifies the maximum time in milliseconds between multi-click select

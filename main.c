@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.503 2006/06/20 00:42:38 tom Exp $ */
+/* $XTermId: main.c,v 1.522 2006/08/03 22:20:15 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -303,14 +303,6 @@ ttyslot()
 
 #endif /* } !SYSV */
 
-#if defined(SVR4) && !defined(__CYGWIN__)
-#define HAS_SAVED_IDS_AND_SETEUID
-#endif
-
-#ifdef linux
-#define HAS_SAVED_IDS_AND_SETEUID
-#endif
-
 /* Xpoll.h and <sys/param.h> on glibc 2.1 systems have colliding NBBY's */
 #if defined(__GLIBC__) && ((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 #ifndef NOFILE
@@ -322,7 +314,6 @@ ttyslot()
 
 #if defined(BSD) && (BSD >= 199103)
 #define WTMP
-#define HAS_SAVED_IDS_AND_SETEUID
 #endif
 
 #include <stdio.h>
@@ -478,8 +469,15 @@ static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
 static Bool added_utmp_entry = False;
 
+#ifdef HAVE_POSIX_SAVED_IDS
+static uid_t save_euid;
+static gid_t save_egid;
+#endif
+
+static uid_t save_ruid;
+static gid_t save_rgid;
+
 #if defined(USE_UTMP_SETGID)
-static int utmpGid = -1;
 static int really_get_pty(int *pty, char *from);
 #endif
 
@@ -761,7 +759,6 @@ static XtResource application_resources[] =
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
-    Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
 #endif
@@ -770,6 +767,9 @@ static XtResource application_resources[] =
 #endif
 #if OPT_SCO_FUNC_KEYS
     Bres("scoFunctionKeys", "ScoFunctionKeys", scoFunctionKeys, False),
+#endif
+#if OPT_SUN_FUNC_KEYS
+    Bres("sunFunctionKeys", "SunFunctionKeys", sunFunctionKeys, False),
 #endif
 #if OPT_INITIAL_ERASE
     Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, DEF_INITIAL_ERASE),
@@ -1174,7 +1174,7 @@ decode_keyvalue(char **ptr, int termcap)
     if (*string == '^') {
 	switch (*++string) {
 	case '?':
-	    value = A2E(127);
+	    value = A2E(DEL);
 	    break;
 	case '-':
 	    if (!termcap) {
@@ -1584,14 +1584,11 @@ static void
 disableSetUid(void)
 {
     TRACE(("disableSetUid\n"));
-    if (seteuid(getuid()) == -1) {
-	fprintf(stderr, "%s: unable to reset effective uid\n", ProgramName);
-	exit(1);
-    }
-    if (setuid(getuid()) == -1) {
+    if (setuid(save_ruid) == -1) {
 	fprintf(stderr, "%s: unable to reset uid\n", ProgramName);
 	exit(1);
     }
+    TRACE_IDS;
 }
 #endif
 
@@ -1600,40 +1597,15 @@ static void
 disableSetGid(void)
 {
     TRACE(("disableSetGid\n"));
-    if (setegid(getgid()) == -1) {
+    if (setegid(save_rgid) == -1) {
 	fprintf(stderr, "%s: unable to reset effective gid\n", ProgramName);
 	exit(1);
     }
-    if (setgid(getgid()) == -1) {
-	fprintf(stderr, "%s: unable to reset gid\n", ProgramName);
-	exit(1);
-    }
-}
-
-static void
-revoke_utmp_gid(void)
-{
-    /* Switch to real gid after writing utmp entry */
-    if (getgid() != getegid()) {
-	utmpGid = getegid();
-	setegid(getgid());
-	TRACE(("switch to real gid %d after writing utmp\n", getgid()));
-    }
-}
-
-static void
-acquire_utmp_gid(void)
-{
-    if (utmpGid != -1) {
-	/* Switch back to group utmp */
-	setegid(utmpGid);
-	TRACE(("switched back to group %d (check: %d)\n",
-	       utmpGid, (int) getgid()));
-    }
+    TRACE_IDS;
 }
 #endif /* USE_UTMP_SETGID */
 
-#ifdef HAS_SAVED_IDS_AND_SETEUID
+#if defined(HAVE_POSIX_SAVED_IDS) && !defined(USE_UTEMPTER)
 static void
 setEffectiveGroup(gid_t group)
 {
@@ -1646,8 +1618,10 @@ setEffectiveGroup(gid_t group)
 			   (int) group, strerror(errno));
 	}
     }
+    TRACE_IDS;
 }
 
+#if !defined(USE_UTMP_SETGID)
 static void
 setEffectiveUser(uid_t user)
 {
@@ -1660,8 +1634,10 @@ setEffectiveUser(uid_t user)
 			   (int) user, strerror(errno));
 	}
     }
+    TRACE_IDS;
 }
-#endif /* HAS_SAVED_IDS_AND_SETEUID */
+#endif /* !USE_UTMP_SETGID */
+#endif /* HAVE_POSIX_SAVED_IDS */
 
 int
 main(int argc, char *argv[]ENVP_ARG)
@@ -1675,8 +1651,17 @@ main(int argc, char *argv[]ENVP_ARG)
 
     ProgramName = argv[0];
 
+#ifdef HAVE_POSIX_SAVED_IDS
+    save_euid = geteuid();
+    save_egid = getegid();
+#endif
+
+    save_ruid = getuid();
+    save_rgid = getgid();
+
 #ifdef DISABLE_SETUID
     disableSetUid();
+    TRACE_IDS;
 #endif
 
     /* extra length in case longer tty name like /dev/ttyq255 */
@@ -1700,9 +1685,9 @@ main(int argc, char *argv[]ENVP_ARG)
 
 #if defined(USE_UTMP_SETGID)
     get_pty(NULL, NULL);
-    utmpGid = getegid();
     disableSetUid();
     disableSetGid();
+    TRACE_IDS;
 #define get_pty(pty, from) really_get_pty(pty, from)
 #endif
 
@@ -1839,7 +1824,7 @@ main(int argc, char *argv[]ENVP_ARG)
     d_tio.c_cflag &= ~(HUPCL | PARENB);
 #endif
     d_tio.c_cc[VINTR] = CONTROL('C');	/* '^C' */
-    d_tio.c_cc[VERASE] = 0x7f;	/* DEL  */
+    d_tio.c_cc[VERASE] = DEL;	/* DEL  */
     d_tio.c_cc[VKILL] = CONTROL('U');	/* '^U' */
     d_tio.c_cc[VQUIT] = CQUIT;	/* '^\' */
     d_tio.c_cc[VEOF] = CEOF;	/* '^D' */
@@ -1975,14 +1960,10 @@ main(int argc, char *argv[]ENVP_ARG)
 
     /* Init the Toolkit. */
     {
-#ifdef HAS_SAVED_IDS_AND_SETEUID
-	uid_t euid = geteuid();
-	gid_t egid = getegid();
-	uid_t ruid = getuid();
-	gid_t rgid = getgid();
-
-	setEffectiveGroup(rgid);
-	setEffectiveUser(ruid);
+#if defined(HAVE_POSIX_SAVED_IDS) && !defined(USE_UTMP_SETGID) && !defined(USE_UTEMPTER)
+	setEffectiveGroup(save_rgid);
+	setEffectiveUser(save_ruid);
+	TRACE_IDS;
 #endif
 
 	XtSetErrorHandler(xt_error);
@@ -2007,9 +1988,10 @@ main(int argc, char *argv[]ENVP_ARG)
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
 
-#ifdef HAS_SAVED_IDS_AND_SETEUID
-	setEffectiveUser(euid);
-	setEffectiveGroup(egid);
+#if defined(HAVE_POSIX_SAVED_IDS) && !defined(USE_UTMP_SETGID) && !defined(DISABLE_SETUID)
+	setEffectiveUser(save_euid);
+	setEffectiveGroup(save_egid);
+	TRACE_IDS;
 #endif
     }
 
@@ -2107,7 +2089,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		/* Must be owner and have read/write permission.
 		   xdm cooperates to give the console the right user. */
 		if (!stat("/dev/console", &sbuf) &&
-		    (sbuf.st_uid == getuid()) &&
+		    (sbuf.st_uid == save_ruid) &&
 		    !access("/dev/console", R_OK | W_OK)) {
 		    Console = True;
 		} else
@@ -2170,7 +2152,7 @@ main(int argc, char *argv[]ENVP_ARG)
 						 XtNmenuHeight, menu_high,
 #endif
 						 (XtPointer) 0);
-    decode_keyboard_type(&resource);
+    decode_keyboard_type(term, &resource);
 
     screen = &term->screen;
     screen->inhibit = 0;
@@ -2277,7 +2259,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	int i = -1;
 	if (debug) {
 	    timestamp_filename(dbglogfile, "xterm.debug.log.");
-	    if (creat_as(getuid(), getgid(), False, dbglogfile, 0666) > 0) {
+	    if (creat_as(save_ruid, save_rgid, False, dbglogfile, 0666) > 0) {
 		i = open(dbglogfile, O_WRONLY | O_TRUNC);
 	    }
 	}
@@ -2394,6 +2376,24 @@ main(int argc, char *argv[]ENVP_ARG)
 			XtWindow(toplevel),
 			winToEmbedInto, 0, 0);
     }
+#if OPT_COLOR_RES
+    TRACE(("checking resource values rv %s fg %s, bg %s\n",
+	   BtoS(term->misc.re_verse0),
+	   NonNull(term->screen.Tcolors[TEXT_FG].resource),
+	   NonNull(term->screen.Tcolors[TEXT_BG].resource)));
+
+    if ((term->misc.re_verse)
+	&& ((term->screen.Tcolors[TEXT_FG].resource
+	     && (x_strcasecmp(term->screen.Tcolors[TEXT_FG].resource,
+			      XtDefaultForeground) != 0)
+	    )
+	    || (term->screen.Tcolors[TEXT_BG].resource
+		&& (x_strcasecmp(term->screen.Tcolors[TEXT_BG].resource,
+				 XtDefaultBackground) != 0)
+	    )
+	))
+	ReverseVideo(term);
+#endif /* OPT_COLOR_RES */
 
     for (;;) {
 #if OPT_TEK4014
@@ -2427,7 +2427,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
 
     result = ((*pty = openrpty(ttydev, ptydev,
 			       (resource.utmpInhibit ? OPTY_NOP : OPTY_LOGIN),
-			       getuid(), from)) < 0);
+			       save_ruid, from)) < 0);
 
 #elif defined(USE_OPENPTY)
 
@@ -2605,8 +2605,9 @@ get_pty(int *pty, char *from)
 	result = really_get_pty(&m_pty, from);
 
 	seteuid(0);
-	set_pty_permissions(getuid(), getgid(), 0600U);
-	seteuid(getuid());
+	set_pty_permissions(save_ruid, save_rgid, 0600U);
+	seteuid(save_ruid);
+	TRACE_IDS;
 
 #ifdef USE_OPENPTY
 	if (opened_tty >= 0) {
@@ -2846,7 +2847,7 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
     if (chown(device, uid, gid) < 0) {
 	why = errno;
 	if (why != ENOENT
-	    && getuid() == 0) {
+	    && save_ruid == 0) {
 	    fprintf(stderr, "Cannot chown %s to %ld,%ld: %s\n",
 		    device, (long) uid, (long) gid,
 		    strerror(why));
@@ -3000,8 +3001,8 @@ spawn(void)
     (void) utret;
 #endif
 
-    screen->uid = getuid();
-    screen->gid = getgid();
+    screen->uid = save_ruid;
+    screen->gid = save_rgid;
 
     termcap[0] = '\0';
     newtc[0] = '\0';
@@ -3238,7 +3239,7 @@ spawn(void)
     TRACE(("resource backarrowKeyIsErase is %sset\n",
 	   resource.backarrow_is_erase ? "" : "not "));
     if (resource.backarrow_is_erase) {	/* see input.c */
-	if (initial_erase == 127) {
+	if (initial_erase == DEL) {
 	    term->keyboard.flags &= ~MODE_DECBKM;
 	} else {
 	    term->keyboard.flags |= MODE_DECBKM;
@@ -3303,12 +3304,12 @@ spawn(void)
 	    /*
 	     * now in child process
 	     */
-	    TRACE_CHILD
 #if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__convex__) || defined(__SCO__) || defined(__QNX__)
-		int pgrp = setsid();	/* variable may not be used... */
+	    int pgrp = setsid();	/* variable may not be used... */
 #else
-		int pgrp = getpid();
+	    int pgrp = getpid();
 #endif
+	    TRACE_CHILD
 
 #ifdef USE_USG_PTYS
 #ifdef USE_ISPTS_FLAG
@@ -3990,7 +3991,8 @@ spawn(void)
 	    }
 #ifndef USE_UTEMPTER
 #ifdef USE_UTMP_SETGID
-	    acquire_utmp_gid();
+	    setEffectiveGroup(save_egid);
+	    TRACE_IDS;
 #endif
 #ifdef USE_SYSV_UTMP
 	    /* Set up our utmp entry now.  We need to do it here
@@ -4167,7 +4169,8 @@ spawn(void)
 #endif /* USE_LASTLOG */
 
 #if defined(USE_UTMP_SETGID)
-	    revoke_utmp_gid();
+	    disableSetGid();
+	    TRACE_IDS;
 #endif
 
 #if OPT_PTY_HANDSHAKE
@@ -4185,6 +4188,7 @@ spawn(void)
 #endif /* HAVE_UTMP */
 
 	    (void) setgid(screen->gid);
+	    TRACE_IDS;
 #ifdef HAS_BSD_GROUPS
 	    if (geteuid() == 0 && pw) {
 		if (initgroups(login_name, pw->pw_gid)) {
@@ -4196,6 +4200,7 @@ spawn(void)
 	    if (setuid(screen->uid)) {
 		SysError(ERROR_SETUID);
 	    }
+	    TRACE_IDS;
 #if OPT_PTY_HANDSHAKE
 	    if (resource.ptyHandshake) {
 		/* mark the pipes as close on exec */
@@ -4537,7 +4542,8 @@ Exit(int n)
 #endif /* OPT_PTY_HANDSHAKE */
 	) {
 #if defined(USE_UTMP_SETGID)
-	acquire_utmp_gid();
+	setEffectiveGroup(save_egid);
+	TRACE_IDS;
 #endif
 	init_utmp(USER_PROCESS, &utmp);
 	(void) call_setutent();
@@ -4583,17 +4589,27 @@ Exit(int n)
 	    memset(utptr, 0, sizeof(*utptr));	/* keep searching */
 	}
 	(void) call_endutent();
+#ifdef USE_UTMP_SETGID
+	disableSetGid();
+	TRACE_IDS;
+#endif
     }
 #else /* not USE_SYSV_UTMP */
     int wfd;
     struct utmp utmp;
 
     if (!resource.utmpInhibit && added_utmp_entry &&
-	(am_slave < 0 && tslot > 0 && (wfd = open(etc_utmp, O_WRONLY)) >= 0)) {
-	bzero((char *) &utmp, sizeof(utmp));
-	lseek(wfd, (long) (tslot * sizeof(utmp)), 0);
-	write(wfd, (char *) &utmp, sizeof(utmp));
-	close(wfd);
+	(am_slave < 0 && tslot > 0)) {
+#if defined(USE_UTMP_SETGID)
+	setEffectiveGroup(save_egid);
+	TRACE_IDS;
+#endif
+	if ((wfd = open(etc_utmp, O_WRONLY)) >= 0) {
+	    bzero((char *) &utmp, sizeof(utmp));
+	    lseek(wfd, (long) (tslot * sizeof(utmp)), 0);
+	    write(wfd, (char *) &utmp, sizeof(utmp));
+	    close(wfd);
+	}
 #ifdef WTMP
 	if (term->misc.login_shell &&
 	    (wfd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
@@ -4605,11 +4621,12 @@ Exit(int n)
 	    close(wfd);
 	}
 #endif /* WTMP */
+#ifdef USE_UTMP_SETGID
+	disableSetGid();
+	TRACE_IDS;
+#endif
     }
 #endif /* USE_SYSV_UTMP */
-#ifdef USE_UTMP_SETGID
-    revoke_utmp_gid();
-#endif
 #endif /* HAVE_UTMP */
 
     close(screen->respond);	/* close explicitly to avoid race with slave side */

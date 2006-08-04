@@ -1,4 +1,4 @@
-/* $XTermId: VTparse.h,v 1.40 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.42 2006/07/31 22:17:40 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/VTparse.h,v 3.24 2006/02/13 01:14:58 dickey Exp $ */
 /*
@@ -240,5 +240,7 @@ extern Const PARSE_T esc_pct_table[];
 #define CASE_DECCARA 128
 #define CASE_DECRARA 129
 #define CASE_CSI_STAR_STATE 130
+#define CASE_SET_MOD_FKEYS 131
+#define CASE_SET_MOD_FKEYS0 132
 
 #endif /* included_VTparse_h */

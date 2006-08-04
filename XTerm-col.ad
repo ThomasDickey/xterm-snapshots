@@ -1,4 +1,4 @@
-! $XTermId: XTerm-col.ad,v 1.19 2005/09/18 23:48:12 tom Exp $
+! $XTermId: XTerm-col.ad,v 1.20 2006/06/24 14:57:29 tom Exp $
 ! $XFree86: xc/programs/xterm/XTerm-col.ad,v 3.7 2005/09/18 23:48:12 dickey Exp $
 
 #include "XTerm"
@@ -103,13 +103,16 @@
 
 #if PLANES > 8
 ! Color the popup menus and the menubar to match:
-*SimpleMenu.*.background: AntiqueWhite
-*SimpleMenu.*.foreground: gray15
+*SimpleMenu*background: AntiqueWhite
+*SimpleMenu*foreground: gray15
 
 ! Color the menubar to match:
-*.Form.menubar.*.background: AntiqueWhite
-*.Form.menubar.*.foreground: gray15
-*.Form.background: AntiqueWhite
+*Form.menubar.background: AntiqueWhite
+*Form.menubar*background: AntiqueWhite
+*Form.menubar.foreground: gray15
+*Form.menubar*foreground: gray15
+*Form.background: AntiqueWhite
+*form.background: AntiqueWhite
 
 ! The following two sections take advantage of new features in version 7
 ! of the Athena widget library.  Comment them out if you have a shallow

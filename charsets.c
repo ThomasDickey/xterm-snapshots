@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.32 2005/01/14 01:50:02 tom Exp $ */
+/* $XTermId: charsets.c,v 1.33 2006/07/02 17:28:50 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/charsets.c,v 1.12 2005/01/14 01:50:02 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1998-2003,2005 by Thomas E. Dickey
+Copyright 1998-2005,2006 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -453,7 +453,7 @@ int xtermCharSetOut(IChar *buf, IChar *ptr, int leftset)
 		 * nonspacing character.  If we have DEL now, simply render
 		 * it as a blank.
 		 */
-		if (chr == 0x7f)
+		if (chr == DEL)
 		    chr = ' ';
 		*s = A2E(chr);
 	}
