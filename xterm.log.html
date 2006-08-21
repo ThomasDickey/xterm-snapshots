@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.460 2006/08/03 23:58:30 tom Exp $
+  $XTermId: xterm.log.html,v 1.467 2006/08/20 22:42:50 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_217">Patch #217 - 2006/8/20</A>
 <LI><A HREF="#xterm_216">Patch #216 - 2006/8/3</A>
 <LI><A HREF="#xterm_215">Patch #215 - 2006/6/19 - XFree86 4.6.99.2</A>
 <LI><A HREF="#xterm_214">Patch #214 - 2006/6/18 - XFree86 4.6.99.2</A>
@@ -265,6 +266,34 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_217">Patch #217 - 2006/8/20</A></H1>
+<ul>
+	<li>minor improvements to FreeType font layout and drawing.
+
+	<li>add a check in the ptyInitialErase logic to ensure that the
+	    termcap was read (Redhat Bugzilla #201246).
+
+	<li>limit changes for reverse-video from
+	    <a href="#xterm_216">patch #216</a> to cases where the
+	    reverse-video command-line option is used
+	    (report by Zdenek Sekera).
+
+	<li>correct bitmap-derived pointsizes for TrueType fonts; they should
+	    be proportional to the square root of the area of the bitmap
+	    fonts.
+
+	<li>add resources to specify pointsize of TrueType fonts (request
+	    by Reuben Thomas).
+
+	<li>improve install of terminfo by filtering out harmless messages
+	    related to extended capabilities.  At the same time, use ncurses
+	    tic to compile the extended capabilities if possible
+	    (report by Zdenek Sekera).
+
+	<li>update "xterm+pcfkeys" terminfo entry to correspond to
+	    <a href="#xterm_216">patch #216</a>.
+</ul>
+
 <H1><A NAME="xterm_216">Patch #216 - 2006/8/3</A></H1>
 <ul>
 	<li>improve handling of <code>ConfigureNotify</code> events by checking
@@ -357,7 +386,7 @@ is the latest version of this file.
 	    colors inconsistent.
 
 	<li>corrected calls used for <code>--disable-setuid</code> option,
-	    add debugging traces to help diagnose this area. 
+	    add debugging traces to help diagnose this area.
 
 	<li>modify configure script to ensure that <code>USE_UTMP_SETGID</code>
 	    is defined only if the check for POSIX saved-ids succeeds, or
@@ -435,7 +464,7 @@ is the latest version of this file.
 	<li>minor optimization to cell layout; will use that to simplify some
 	    logic and allow for more than two combining characters in another
 	    patch.
-	    
+
 	<li>add <code>utf8Latin1</code> resource to make optional the
 	    feature from <a href="#xterm_209">patch #209</a> which
 	    allowed ISO-8859-1 fonts to be used in cases
@@ -527,7 +556,7 @@ is the latest version of this file.
 	<li>add vttests/paste64.pl script to test experimental option for
 	    setting/getting selection data.
 
-	<li>add some error-checking in fontutils.c 
+	<li>add some error-checking in fontutils.c
 	    (prompted by David Dawes commit message for XFree86).
 
 	<li>change xterm manpage to show the actual color resource names
@@ -569,7 +598,7 @@ is the latest version of this file.
 	    "Select To Clipboard").
 
 	<li>add resource <code>selectToClipboard</code>,
-	    action <code>set-select</code> and a menu entry to allow 
+	    action <code>set-select</code> and a menu entry to allow
 	    users to switch between PRIMARY and CLIPBOARD for select/paste.
 
 	<li>allow cursor to have the same color as foreground (text), since it
@@ -787,7 +816,7 @@ is the latest version of this file.
 	<li>modify parsing of control sequence <code>CSI&nbsp;T</code>
 	    to allow scroll-down
 	    to be sent while mouse tracking is enabled (request by
-	    D Hugh Redelmeier). 
+	    D Hugh Redelmeier).
 
 	<li>correct termcap "me" (mode-end) string so it does not modify the
 	    alternate character set (report by Andrey Chernov).

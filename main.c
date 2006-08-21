@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.522 2006/08/03 22:20:15 tom Exp $ */
+/* $XTermId: main.c,v 1.526 2006/08/20 23:36:36 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1648,6 +1648,9 @@ main(int argc, char *argv[]ENVP_ARG)
     int mode;
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
+#if OPT_COLOR_RES
+    Bool reversed = False;
+#endif
 
     ProgramName = argv[0];
 
@@ -1713,6 +1716,14 @@ main(int argc, char *argv[]ENVP_ARG)
 		}
 		unique = 3;
 	    } else {
+#if OPT_COLOR_RES
+		if (abbrev(argv[n], "-reverse", 2)
+		    || !strcmp("-rv", argv[n])) {
+		    reversed = True;
+		} else if (!strcmp("+rv", argv[n])) {
+		    reversed = False;
+		}
+#endif
 		quit = False;
 		unique = 3;
 	    }
@@ -2382,7 +2393,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	   NonNull(term->screen.Tcolors[TEXT_FG].resource),
 	   NonNull(term->screen.Tcolors[TEXT_BG].resource)));
 
-    if ((term->misc.re_verse)
+    if ((reversed && term->misc.re_verse0)
 	&& ((term->screen.Tcolors[TEXT_FG].resource
 	     && (x_strcasecmp(term->screen.Tcolors[TEXT_FG].resource,
 			      XtDefaultForeground) != 0)
@@ -2942,6 +2953,7 @@ spawn(void)
 #endif
     int rc = 0;
     int ttyfd = -1;
+    Bool ok_termcap;
 
 #ifdef TERMIO_STRUCT
     TERMIO_STRUCT tio;
@@ -3205,13 +3217,16 @@ spawn(void)
      * the program to proceed (but not to set $TERMCAP) if the termcap
      * entry is not found.
      */
+    ok_termcap = True;
     if (!get_termcap(TermName = resource.term_name, ptr, newtc)) {
 	char *last = NULL;
 	TermName = *envnew;
+	ok_termcap = False;
 	while (*envnew != NULL) {
 	    if ((last == NULL || strcmp(last, *envnew))
 		&& get_termcap(*envnew, ptr, newtc)) {
 		TermName = *envnew;
+		ok_termcap = True;
 		break;
 	    }
 	    last = *envnew;
@@ -3226,7 +3241,7 @@ spawn(void)
 #if OPT_INITIAL_ERASE
     TRACE(("resource ptyInitialErase is %sset\n",
 	   resource.ptyInitialErase ? "" : "not "));
-    if (!resource.ptyInitialErase) {
+    if (!resource.ptyInitialErase && ok_termcap) {
 	char temp[1024], *p = temp;
 	char *s = tgetstr(TERMCAP_ERASE, &p);
 	TRACE(("...extracting initial_erase value from termcap\n"));
@@ -3309,7 +3324,7 @@ spawn(void)
 #else
 	    int pgrp = getpid();
 #endif
-	    TRACE_CHILD
+	    TRACE_CHILD;
 
 #ifdef USE_USG_PTYS
 #ifdef USE_ISPTS_FLAG

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.439 2006/07/23 16:39:41 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.440 2006/08/10 23:58:53 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1816,7 +1816,7 @@ typedef struct _Misc {
 #if OPT_RENDERFONT
     char *face_name;
     char *face_wide_name;
-    float face_size;
+    float face_size[NMENUFONTS];
     Boolean render_font;
 #endif
 } Misc;

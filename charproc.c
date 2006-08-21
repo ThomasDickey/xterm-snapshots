@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.727 2006/08/03 23:52:22 tom Exp $ */
+/* $XTermId: charproc.c,v 1.730 2006/08/14 23:36:08 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -668,7 +668,14 @@ static XtResource resources[] =
 #endif
 
 #if OPT_RENDERFONT
-    Dres(XtNfaceSize, XtCFaceSize, misc.face_size, DEFFACESIZE),
+#define RES_FACESIZE(n) Dres(XtNfaceSize #n, XtCFaceSize #n, misc.face_size[n], "0.0")
+    RES_FACESIZE(1),
+    RES_FACESIZE(2),
+    RES_FACESIZE(3),
+    RES_FACESIZE(4),
+    RES_FACESIZE(5),
+    RES_FACESIZE(6),
+    Dres(XtNfaceSize, XtCFaceSize, misc.face_size[0], DEFFACESIZE),
     Sres(XtNfaceName, XtCFaceName, misc.face_name, DEFFACENAME),
     Sres(XtNfaceNameDoublesize, XtCFaceNameDoublesize, misc.face_wide_name, DEFFACENAME),
     Bres(XtNrenderFont, XtCRenderFont, misc.render_font, True),
@@ -3736,7 +3743,8 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	TRACE(("HandleStructNotify(ReparentNotify)\n"));
 	break;
     default:
-	TRACE(("HandleStructNotify(event %d)\n", event->type));
+	TRACE(("HandleStructNotify(event %s)\n",
+	       visibleEventType(event->type)));
 	break;
     }
 }
@@ -5715,7 +5723,9 @@ VTInitialize(Widget wrequest,
 #endif
 
 #if OPT_RENDERFONT
-    init_Dres(misc.face_size);
+    for (i = 0; i <= fontMenu_lastBuiltin; ++i) {
+	init_Dres(misc.face_size[i]);
+    }
     init_Sres(misc.face_name);
     init_Sres(misc.face_wide_name);
     init_Bres(misc.render_font);
@@ -6686,6 +6696,7 @@ ShowCursor(void)
     int set_at;
     Bool in_selection;
     Bool reversed;
+    Bool filled;
     Pixel fg_pix;
     Pixel bg_pix;
     Pixel tmp;
@@ -6791,7 +6802,8 @@ ShowCursor(void)
      * whether the window has focus, since in that case we want just an
      * outline for the cursor.
      */
-    if (screen->select || screen->always_highlight) {
+    filled = (screen->select || screen->always_highlight);
+    if (filled) {
 	if (reversed) {		/* text is reverse video */
 	    if (screen->cursorGC) {
 		setGC(screen->cursorGC);
@@ -6852,8 +6864,9 @@ ShowCursor(void)
 	&& (screen->cursor_state != ON || screen->cursor_GC != set_at)) {
 
 	screen->cursor_GC = set_at;
-	TRACE(("ShowCursor calling drawXtermText cur(%d,%d)\n",
-	       screen->cur_row, screen->cur_col));
+	TRACE(("ShowCursor calling drawXtermText cur(%d,%d) %s\n",
+	       screen->cur_row, screen->cur_col,
+	       (filled ? "filled" : "outline")));
 
 	drawXtermText(xw, flags & DRAWX_MASK, currentGC,
 		      x = CurCursorX(screen, screen->cur_row, cursor_col),
@@ -6875,7 +6888,7 @@ ShowCursor(void)
 	});
 #endif
 
-	if (!screen->select && !screen->always_highlight) {
+	if (!filled) {
 	    screen->box->x = x;
 	    screen->box->y = y;
 	    XDrawLines(screen->display, VWindow(screen),

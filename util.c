@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.291 2006/07/23 22:06:00 tom Exp $ */
+/* $XTermId: util.c,v 1.296 2006/08/20 14:47:59 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1710,7 +1710,7 @@ recolor_cursor(TScreen * screen,
 
 #if OPT_RENDERFONT
 static XftColor *
-getColor(XtermWidget xw, Pixel pixel)
+getXftColor(XtermWidget xw, Pixel pixel)
 {
 #define CACHE_SIZE  4
     static struct {
@@ -1758,8 +1758,8 @@ getColor(XtermWidget xw, Pixel pixel)
  * was applied to gnome vte and gtk2 port of vim.
  * See http://bugzilla.mozilla.org/show_bug.cgi?id=196312
  */
-static void
-xtermXftDrawString(TScreen * screen,
+static int
+xtermXftDrawString(XtermWidget xw,
 		   unsigned flags GCC_UNUSED,
 		   XftColor * color,
 		   XftFont * font,
@@ -1767,85 +1767,89 @@ xtermXftDrawString(TScreen * screen,
 		   int y,
 		   PAIRED_CHARS(Char * text, Char * text2),
 		   int len,
-		   int fwidth,
-		   int *deltax)
+		   Bool really)
 {
+    TScreen *screen = &(xw->screen);
+    int fwidth = FontWidth(screen);
+    int ncells = 0;
+
+    if (len != 0) {
 #if OPT_RENDERWIDE
-    XftFont *wfont;
-    int n;
-    int ncells = 0;		/* # of 'half-width' charcells */
-    static XftCharSpec *sbuf;
-    static int slen = 0;
-    XftFont *lastFont = 0;
-    XftFont *currFont = 0;
-    int start = 0;
-    int charWidth;
-    FcChar32 wc;
-    int fontnum = screen->menu_font_number;
+	static XftCharSpec *sbuf;
+	static int slen = 0;
 
-    if (len == 0 || !(*text || *text2)) {
-	return;
-    }
+	XftFont *wfont;
+	int n;
+	XftFont *lastFont = 0;
+	XftFont *currFont = 0;
+	int start = 0;
+	int charWidth;
+	int fontnum = screen->menu_font_number;
+
 #if OPT_ISO_COLORS
-    if ((flags & UNDERLINE)
-	&& screen->italicULMode
-	&& screen->renderWideItal[fontnum]) {
-	wfont = screen->renderWideItal[fontnum];
-    } else
+	if ((flags & UNDERLINE)
+	    && screen->italicULMode
+	    && screen->renderWideItal[fontnum]) {
+	    wfont = screen->renderWideItal[fontnum];
+	} else
 #endif
-	if ((flags & BOLDATTR(screen))
-	    && screen->renderWideBold[fontnum]) {
-	wfont = screen->renderWideBold[fontnum];
-    } else {
-	wfont = screen->renderWideNorm[fontnum];
-    }
-
-    if ((int) slen < len) {
-	slen = (len + 1) * 2;
-	sbuf = (XftCharSpec *) XtRealloc((char *) sbuf,
-					 slen * sizeof(XftCharSpec));
-    }
-
-    for (n = 0; n < len; n++) {
-	if (text2)
-	    wc = *text++ | (*text2++ << 8);
-	else
-	    wc = *text++;
-	sbuf[n].ucs4 = wc;
-	sbuf[n].x = x + fwidth * ncells;
-	sbuf[n].y = y;
-	charWidth = my_wcwidth((int) wc);
-	currFont = (charWidth == 2 && wfont != 0) ? wfont : font;
-	ncells += charWidth;
-	if (lastFont != currFont) {
-	    if (lastFont != 0) {
-		XftDrawCharSpec(screen->renderDraw,
-				color,
-				lastFont,
-				sbuf + start,
-				n - start);
-	    }
-	    start = n;
-	    lastFont = currFont;
+	    if ((flags & BOLDATTR(screen))
+		&& screen->renderWideBold[fontnum]) {
+	    wfont = screen->renderWideBold[fontnum];
+	} else {
+	    wfont = screen->renderWideNorm[fontnum];
 	}
-    }
-    XftDrawCharSpec(screen->renderDraw,
-		    color,
-		    lastFont,
-		    sbuf + start,
-		    n - start);
 
-    if (deltax)
-	*deltax = ncells * fwidth;
-#else
+	if ((int) slen < len) {
+	    slen = (len + 1) * 2;
+	    sbuf = (XftCharSpec *) XtRealloc((char *) sbuf,
+					     slen * sizeof(XftCharSpec));
+	}
 
-    XftDrawString8(screen->renderDraw,
-		   color,
-		   font,
-		   x, y, (unsigned char *) text, len);
-    if (deltax)
-	*deltax = len * fwidth;
+	for (n = 0; n < len; n++) {
+	    FcChar32 wc = *text++;
+
+	    if (text2)
+		wc |= (*text2++ << 8);
+
+	    sbuf[n].ucs4 = wc;
+	    sbuf[n].x = x + fwidth * ncells;
+	    sbuf[n].y = y;
+
+	    charWidth = my_wcwidth((int) wc);
+	    currFont = (charWidth == 2 && wfont != 0) ? wfont : font;
+	    ncells += charWidth;
+
+	    if (lastFont != currFont) {
+		if ((lastFont != 0) && really) {
+		    XftDrawCharSpec(screen->renderDraw,
+				    color,
+				    lastFont,
+				    sbuf + start,
+				    n - start);
+		}
+		start = n;
+		lastFont = currFont;
+	    }
+	}
+	if ((n != start) && really) {
+	    XftDrawCharSpec(screen->renderDraw,
+			    color,
+			    lastFont,
+			    sbuf + start,
+			    n - start);
+	}
+#else /* !OPT_RENDERWIDE */
+	if (really) {
+	    XftDrawString8(screen->renderDraw,
+			   color,
+			   font,
+			   x, y, (unsigned char *) text, len);
+	}
+	ncells = len;
 #endif
+    }
+    return ncells;
 }
 #endif /* OPT_RENDERFONT */
 
@@ -2120,6 +2124,7 @@ drawXtermText(XtermWidget xw,
 	XftFont *font;
 	XGCValues values;
 	int fontnum = screen->menu_font_number;
+	int ncells;
 
 	if (!screen->renderDraw) {
 	    int scr;
@@ -2146,12 +2151,21 @@ drawXtermText(XtermWidget xw,
 	    font = screen->renderFontNorm[fontnum];
 	}
 	XGetGCValues(dpy, gc, GCForeground | GCBackground, &values);
-	if (!(flags & NOBACKGROUND))
+
+	if (!(flags & NOBACKGROUND)) {
+	    XftColor *bg_color = getXftColor(xw, values.background);
+	    ncells = xtermXftDrawString(xw, flags,
+					bg_color,
+					font, x, y,
+					PAIRED_CHARS(text, text2),
+					len,
+					False);
 	    XftDrawRect(screen->renderDraw,
-			getColor(xw, values.background),
+			bg_color,
 			x, y,
-			len * FontWidth(screen),
+			ncells * FontWidth(screen),
 			(unsigned) FontHeight(screen));
+	}
 
 	y += font->ascent;
 #if OPT_BOX_CHARS
@@ -2163,7 +2177,6 @@ drawXtermText(XtermWidget xw,
 
 	    for (last = 0; last < (int) len; last++) {
 		unsigned ch = text[last];
-		int deltax = 0;
 
 		/*
 		 * If we're reading UTF-8 from the client, we may have a
@@ -2188,15 +2201,14 @@ drawXtermText(XtermWidget xw,
 		if (xtermIsDecGraphic(ch)) {
 		    /* line drawing character time */
 		    if (last > first) {
-			xtermXftDrawString(screen, flags,
-					   getColor(xw, values.foreground),
-					   font, curX, y,
-					   PAIRED_CHARS(text + first,
-							text2 + first),
-					   last - first,
-					   FontWidth(screen),
-					   &deltax);
-			curX += deltax;
+			ncells = xtermXftDrawString(xw, flags,
+						    getXftColor(xw, values.foreground),
+						    font, curX, y,
+						    PAIRED_CHARS(text + first,
+								 text2 + first),
+						    last - first,
+						    True);
+			curX += ncells * FontWidth(screen);
 		    }
 		    old_wide = screen->fnt_wide;
 		    old_high = screen->fnt_high;
@@ -2211,21 +2223,22 @@ drawXtermText(XtermWidget xw,
 		}
 	    }
 	    if (last > first) {
-		xtermXftDrawString(screen, flags,
-				   getColor(xw, values.foreground),
+		xtermXftDrawString(xw, flags,
+				   getXftColor(xw, values.foreground),
 				   font, curX, y,
 				   PAIRED_CHARS(text + first, text2 + first),
 				   last - first,
-				   FontWidth(screen),
-				   NULL);
+				   True);
 	    }
 	} else
 #endif /* OPT_BOX_CHARS */
 	{
-	    xtermXftDrawString(screen, flags,
-			       getColor(xw, values.foreground),
-			       font, x, y, PAIRED_CHARS(text, text2),
-			       (int) len, FontWidth(screen), NULL);
+	    xtermXftDrawString(xw, flags,
+			       getXftColor(xw, values.foreground),
+			       font, x, y,
+			       PAIRED_CHARS(text, text2),
+			       (int) len,
+			       True);
 	}
 
 	if ((flags & UNDERLINE) && screen->underline && !did_ul) {

@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.355 2006/07/31 23:14:27 tom Exp $
+.\" $XTermId: xterm.man,v 1.357 2006/08/11 01:01:11 tom Exp $
 .\"
 .\" Copyright 1996-2005,2006 by Thomas E. Dickey
 .\"
@@ -1793,6 +1793,32 @@ If the application uses double-wide characters and this resource is not given,
 Specify the pointsize for fonts selected from the FreeType
 library if support for that library was compiled into \fIxterm\fR.
 The default is ``14.''
+On the \fBVT\ Fonts\fP menu, this corresponds to the \fIDefault\fP entry.
+You can specify the pointsize for TrueType fonts selected with the other
+size-related menu entries such as Medium, Huge, etc., by using one of
+the following resource values.
+If you do not specify a value,
+they default to ``0.0'',
+which causes \fIxterm\fP to use the ratio of font sizes from the bitmap
+font resources to obtain a TrueType pointsize.
+.TP 8
+.B "faceSize1 (\fPclass\fB FaceSize1)"
+Specifies the pointsize of the first alternative font.
+.TP 8
+.B "faceSize2 (\fPclass\fB FaceSize2)"
+Specifies the pointsize of the second alternative font.
+.TP 8
+.B "faceSize3 (\fPclass\fB FaceSize3)"
+Specifies the pointsize of the third alternative font.
+.TP 8
+.B "faceSize4 (\fPclass\fB FaceSize4)"
+Specifies the pointsize of the fourth alternative font.
+.TP 8
+.B "faceSize5 (\fPclass\fB FaceSize5)"
+Specifies the pointsize of the fifth alternative font.
+.TP 8
+.B "faceSize6 (\fPclass\fB FaceSize6)"
+Specifies the pointsize of the sixth alternative font.
 .TP 8
 .B "font (\fPclass\fB Font)"
 Specifies the name of the normal font.
@@ -1813,7 +1839,7 @@ xterm.vt100.font
 .IP
 and
 .RS
-xterm.vt100..utf8fonts.font
+xterm.vt100.utf8fonts.font
 .RE
 .IP
 which is probably not what you intended.
@@ -3231,7 +3257,7 @@ resource.
 .
 .TP
 Scroll to Bottom on Tty Output (scrollttyoutput)
-Enable (or disable) scrolling to the bottom of the scrolling region on output to the terminal..
+Enable (or disable) scrolling to the bottom of the scrolling region on output to the terminal.
 This corresponds to the
 .B -si
 option and the

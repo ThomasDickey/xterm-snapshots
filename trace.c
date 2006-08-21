@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.67 2006/07/15 12:00:58 tom Exp $ */
+/* $XTermId: trace.c,v 1.68 2006/08/14 23:32:26 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -206,6 +206,48 @@ visibleKeyboardType(xtermKeyboardType type)
 	CASETYPE(keyboardIsSCO);
 	CASETYPE(keyboardIsSun);
 	CASETYPE(keyboardIsVT220);
+    }
+    return result;
+}
+
+const char *
+visibleEventType(int type)
+{
+    const char *result = "?";
+    switch (type) {
+	CASETYPE(KeyPress);
+	CASETYPE(KeyRelease);
+	CASETYPE(ButtonPress);
+	CASETYPE(ButtonRelease);
+	CASETYPE(MotionNotify);
+	CASETYPE(EnterNotify);
+	CASETYPE(LeaveNotify);
+	CASETYPE(FocusIn);
+	CASETYPE(FocusOut);
+	CASETYPE(KeymapNotify);
+	CASETYPE(Expose);
+	CASETYPE(GraphicsExpose);
+	CASETYPE(NoExpose);
+	CASETYPE(VisibilityNotify);
+	CASETYPE(CreateNotify);
+	CASETYPE(DestroyNotify);
+	CASETYPE(UnmapNotify);
+	CASETYPE(MapNotify);
+	CASETYPE(MapRequest);
+	CASETYPE(ReparentNotify);
+	CASETYPE(ConfigureNotify);
+	CASETYPE(ConfigureRequest);
+	CASETYPE(GravityNotify);
+	CASETYPE(ResizeRequest);
+	CASETYPE(CirculateNotify);
+	CASETYPE(CirculateRequest);
+	CASETYPE(PropertyNotify);
+	CASETYPE(SelectionClear);
+	CASETYPE(SelectionRequest);
+	CASETYPE(SelectionNotify);
+	CASETYPE(ColormapNotify);
+	CASETYPE(ClientMessage);
+	CASETYPE(MappingNotify);
     }
     return result;
 }
