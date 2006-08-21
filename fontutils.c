@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.208 2006/07/23 20:31:30 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.213 2006/08/20 22:40:34 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -1356,6 +1356,82 @@ xtermOpenXft(Display * dpy, XftPattern * pat, const char *tag GCC_UNUSED)
 }
 #endif
 
+#if OPT_SHIFT_FONTS
+/*
+ * Don't make a dependency on the math library for a single function.
+ * (Newton Raphson).
+ */
+static float
+mySquareRoot(float value)
+{
+    float result = 0.0;
+    if (value > 0.0) {
+	int n;
+	float older = value;
+	for (n = 0; n < 10; ++n) {
+	    float delta = (older * older - value) / (2.0 * older);
+	    float newer = older - delta;
+	    older = newer;
+	    result = newer;
+	    if (delta > -0.001 && delta < 0.001)
+		break;
+	}
+    }
+    return result;
+}
+#endif
+
+#if OPT_RENDERFONT
+/*
+ * Given the Xft font metrics, determine the actual font size.  This is used
+ * for each font to ensure that normal, bold and italic fonts follow the same
+ * rule.
+ */
+static void
+setRenderFontsize(TScreen * screen, struct _vtwin *win, XftFont * font, const char *tag)
+{
+    if (font != 0) {
+	int width, height, ascent, descent;
+
+	width = font->max_advance_width;
+	height = font->height;
+	ascent = font->ascent;
+	descent = font->descent;
+	if (height < ascent + descent) {
+	    TRACE(("...increase height from %d\n", height));
+	    height = ascent + descent;
+	}
+	if (is_double_width_font_xft(screen->display, font)) {
+	    TRACE(("...reduced width from %d\n", width));
+	    width >>= 1;
+	}
+	if (tag == 0) {
+	    win->f_width = width;
+	    win->f_height = height;
+	    win->f_ascent = ascent;
+	    win->f_descent = descent;
+	    TRACE(("setRenderFontsize result %dx%d (%d+%d)\n",
+		   width, height, ascent, descent));
+	} else if (win->f_width < width ||
+		   win->f_height < height ||
+		   win->f_ascent < ascent ||
+		   win->f_descent < descent) {
+	    TRACE(("setRenderFontsize %s changed %dx%d (%d+%d) to %dx%d (%d+%d)\n",
+		   tag,
+		   win->f_width, win->f_height, win->f_ascent, win->f_descent,
+		   width, height, ascent, descent));
+
+	    win->f_width = width;
+	    win->f_height = height;
+	    win->f_ascent = ascent;
+	    win->f_descent = descent;
+	} else {
+	    TRACE(("setRenderFontsize %s unchanged\n", tag));
+	}
+    }
+}
+#endif
+
 /*
  * Compute useful values for the font/window sizes
  */
@@ -1391,29 +1467,65 @@ xtermComputeFontInfo(XtermWidget xw,
 
 	if (norm == 0 && xw->misc.face_name) {
 	    XftPattern *pat;
-	    double face_size = xw->misc.face_size;
+	    double face_size = xw->misc.face_size[fontnum];
 
 	    TRACE(("xtermComputeFontInfo norm(face %s, size %f)\n",
 		   xw->misc.face_name,
-		   xw->misc.face_size));
+		   xw->misc.face_size[fontnum]));
 
+	    if (face_size <= 0.0) {
 #if OPT_SHIFT_FONTS
-	    /*
-	     * If the user is switching font-sizes, make it follow the same
-	     * ratios to the default as the fixed fonts would, for easy
-	     * comparison.  There will be some differences since the fixed
-	     * fonts have a variety of height/width ratios, but this is simpler
-	     * than adding another resource value - and as noted above, the
-	     * data for the fixed fonts are available.
-	     */
-	    lookupOneFontSize(screen, fontnum);
-	    if (fontnum != fontMenu_fontdefault) {
-		int num = screen->menu_font_sizes[fontnum];
-		int den = screen->menu_font_sizes[0];
-		face_size = (1.0 * face_size * num) / den;
-		TRACE(("scaled using %d/%d -> %f\n", num, den, face_size));
-	    }
+		/*
+		 * If the user is switching font-sizes, make it follow by
+		 * default the same ratios to the default as the fixed fonts
+		 * would, for easy comparison.  There will be some differences
+		 * since the fixed fonts have a variety of height/width ratios,
+		 * but this is simpler than adding another resource value - and
+		 * as noted above, the data for the fixed fonts are available.
+		 */
+		lookupOneFontSize(screen, fontnum);
+		if (fontnum == fontMenu_fontdefault) {
+		    face_size = 14.0;
+		} else {
+		    float ratio;
+		    int num = screen->menu_font_sizes[fontnum];
+		    int den = screen->menu_font_sizes[0];
+
+		    if (den <= 0)
+			den = 1;
+		    ratio = mySquareRoot((1.0 * num) / den);
+
+		    face_size = (ratio * xw->misc.face_size[0]);
+		    TRACE(("scaled using %3d/%d = %.2f -> %f\n",
+			   num, den, ratio, face_size));
+		}
+#else
+		switch (fontnum) {
+		case fontMenu_font1:
+		    face_size = 8.0;
+		    break;
+		case fontMenu_font2:
+		    face_size = 10.0;
+		    break;
+		case fontMenu_font3:
+		    face_size = 12.0;
+		    break;
+		default:
+		    face_size = 14.0;
+		    break;
+		case fontMenu_font4:
+		    face_size = 16.0;
+		    break;
+		case fontMenu_font5:
+		    face_size = 18.0;
+		    break;
+		case fontMenu_font6:
+		    face_size = 20.0;
+		    break;
+		}
 #endif
+		xw->misc.face_size[fontnum] = face_size;
+	    }
 
 	    if ((pat = XftNameParse(xw->misc.face_name)) != 0) {
 		XftPatternBuild(pat,
@@ -1509,24 +1621,23 @@ xtermComputeFontInfo(XtermWidget xw,
 		CACHE_XFT(screen->renderWideBold, wbold);
 		CACHE_XFT(screen->renderWideItal, wital);
 	    }
-#endif
+#endif /* OPT_RENDERWIDE */
 	}
 	if (norm == 0) {
 	    xw->misc.render_font = False;
 	    update_font_renderfont();
+	    /* now we will fall through into the bitmap fonts */
 	} else {
-	    win->f_width = norm->max_advance_width;
-	    win->f_height = norm->height;
-	    win->f_ascent = norm->ascent;
-	    win->f_descent = norm->descent;
-	    if (win->f_height < win->f_ascent + win->f_descent)
-		win->f_height = win->f_ascent + win->f_descent;
-	    if (is_double_width_font_xft(screen->display, norm))
-		win->f_width >>= 1;
+	    setRenderFontsize(screen, win, norm, NULL);
+	    setRenderFontsize(screen, win, bold, "bold");
+	    setRenderFontsize(screen, win, ital, "ital");
 	}
     }
+    /*
+     * Are we handling a bitmap font?
+     */
     if (!xw->misc.render_font || IsIconWin(screen, win))
-#endif
+#endif /* OPT_RENDERFONT */
     {
 	if (is_double_width_font(font)) {
 	    win->f_width = (font->min_bounds.width);

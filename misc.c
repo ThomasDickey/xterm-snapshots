@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.314 2006/08/03 23:54:32 tom Exp $ */
+/* $XTermId: misc.c,v 1.317 2006/08/14 23:32:46 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -396,8 +396,8 @@ HandleFocusChange(Widget w GCC_UNUSED,
     XFocusChangeEvent *event = (XFocusChangeEvent *) ev;
     TScreen *screen = &term->screen;
 
-    TRACE(("HandleFocusChange type=%d, mode=%d, detail=%d\n",
-	   event->type,
+    TRACE(("HandleFocusChange type=%s, mode=%d, detail=%d\n",
+	   visibleEventType(event->type),
 	   event->mode,
 	   event->detail));
 
@@ -450,7 +450,6 @@ selectwindow(TScreen * screen, int flag)
 	screen->select |= flag;
 	if (!Ttoggled)
 	    TCursorToggle(TOGGLE);
-	return;
     } else
 #endif
     {
@@ -462,7 +461,6 @@ selectwindow(TScreen * screen, int flag)
 	screen->select |= flag;
 	if (screen->cursor_state)
 	    ShowCursor();
-	return;
     }
 }
 
@@ -471,26 +469,26 @@ unselectwindow(TScreen * screen, int flag)
 {
     TRACE(("unselectwindow(%d) flag=%d\n", screen->select, flag));
 
-    if (screen->always_highlight)
-	return;
-
+    if (!screen->always_highlight) {
 #if OPT_TEK4014
-    if (screen->TekEmu) {
-	if (!Ttoggled)
-	    TCursorToggle(TOGGLE);
-	screen->select &= ~flag;
-	if (!Ttoggled)
-	    TCursorToggle(TOGGLE);
-    } else
+	if (screen->TekEmu) {
+	    if (!Ttoggled)
+		TCursorToggle(TOGGLE);
+	    screen->select &= ~flag;
+	    if (!Ttoggled)
+		TCursorToggle(TOGGLE);
+	} else
 #endif
-    {
-	if (screen->xic)
-	    XUnsetICFocus(screen->xic);
-	screen->select &= ~flag;
-	if (screen->cursor_state && CursorMoved(screen))
-	    HideCursor();
-	if (screen->cursor_state)
-	    ShowCursor();
+	{
+	    if (screen->xic)
+		XUnsetICFocus(screen->xic);
+
+	    screen->select &= ~flag;
+	    if (screen->cursor_state && CursorMoved(screen))
+		HideCursor();
+	    if (screen->cursor_state)
+		ShowCursor();
+	}
     }
 }
 
@@ -1777,6 +1775,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 #endif /* ALLOWLOGGING */
 
     case 50:
+#if OPT_SHIFT_FONTS
 	if (buf != 0 && !strcmp(buf, "?")) {
 	    int num = screen->menu_font_number;
 
@@ -1837,6 +1836,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    fonts.f_n = buf;
 	    SetVTFont(xw, fontMenu_fontescape, True, &fonts);
 	}
+#endif /* OPT_SHIFT_FONTS */
 	break;
     case 51:
 	/* reserved for Emacs shell (Rob Mayoff <mayoff@dqd.com>) */
@@ -3170,8 +3170,12 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 	sortedOptDescs(descs, numDescs);
 	free(opt_array);
 	opt_array = 0;
-    } else if (options != 0 && descs != 0)
+	return 0;
+    } else if (options == 0 || descs == 0) {
+	return 0;
+    }
 #endif
+
     if (opt_array == 0) {
 	Cardinal opt_count, j;
 #if OPT_TRACE

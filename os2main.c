@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.227 2006/07/23 20:12:59 tom Exp $ */
+/* $XTermId: os2main.c,v 1.229 2006/08/13 19:34:25 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -918,6 +918,9 @@ main(int argc, char **argv ENVP_ARG)
     int mode;
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
+#if OPT_COLOR_RES
+    Bool reversed = False;
+#endif
 
     /* Do these first, since we may not be able to open the display */
     ProgramName = argv[0];
@@ -942,6 +945,14 @@ main(int argc, char **argv ENVP_ARG)
 		}
 		unique = 3;
 	    } else {
+#if OPT_COLOR_RES
+		if (abbrev(argv[n], "-reverse", 2)
+		    || !strcmp("-rv", argv[n])) {
+		    reversed = True;
+		} else if (!strcmp("+rv", argv[n])) {
+		    reversed = False;
+		}
+#endif
 		quit = False;
 		unique = 3;
 	    }
@@ -1153,11 +1164,9 @@ main(int argc, char **argv ENVP_ARG)
 						 XtNmenuHeight, menu_high,
 #endif
 						 (XtPointer) 0);
-
     decode_keyboard_type(term, &resource);
 
     screen = &term->screen;
-
     screen->inhibit = 0;
 #ifdef ALLOWLOGGING
     if (term->misc.logInhibit)
@@ -1338,7 +1347,7 @@ main(int argc, char **argv ENVP_ARG)
 	   NonNull(term->screen.Tcolors[TEXT_FG].resource),
 	   NonNull(term->screen.Tcolors[TEXT_BG].resource)));
 
-    if ((term->misc.re_verse)
+    if ((reversed && term->misc.re_verse0)
 	&& ((term->screen.Tcolors[TEXT_FG].resource
 	     && (x_strcasecmp(term->screen.Tcolors[TEXT_FG].resource,
 			      XtDefaultForeground) != 0)

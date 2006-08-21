@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-216
+MANIFEST for xterm, version xterm-217
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -66,6 +66,7 @@ ptydata.c                       functions to manipulate data read from pty
 ptyx.h                          structure-definitions for 'xterm'
 resize.c                        program to compute/modify xterm's window size
 resize.man                      manual page for 'resize'
+run-tic.sh                      run tic, filtering out harmless messages
 screen.c                        VT100 screen update functions
 scrollbar.c                     VT100 scrollbar support functions
 sinstall.sh                     install setuid if existing program was

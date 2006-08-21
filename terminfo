@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.133 2006/08/01 00:55:47 tom Exp $
+# $XTermId: terminfo,v 1.134 2006/08/05 21:16:13 tom Exp $
 #
 # $XFree86: xc/programs/xterm/terminfo,v 3.59 2006/02/13 01:14:59 dickey Exp $
 #
@@ -191,7 +191,7 @@ xterm-new|modern xterm terminal emulator,
 # an application that required it.
 #
 xterm+pcfkeys|fragment for PC-style keys,
-	use=xterm+pcf0,
+	use=xterm+pcf2,
 	use=xterm+pcc2,
 #
 # The ctrlFKeys resource is only relevant to the xterm-pcfn and xterm-pcfN

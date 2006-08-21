@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.135 2006/08/03 21:15:53 tom Exp $
+## $XTermId: Makefile.in,v 1.136 2006/08/10 21:43:51 tom Exp $
 ##
 ## $XFree86: xc/programs/xterm/Makefile.in,v 3.56 2006/06/19 00:36:50 dickey Exp $ ##
 ##
@@ -198,7 +198,7 @@ SET_TERMINFO = @SET_TERMINFO@
 
 install-full \
 install-ti :: $(TERMINFO_DIR)
-	$(SET_TERMINFO) tic $(srcdir)/terminfo
+	$(SET_TERMINFO) $(SHELL) $(srcdir)/run-tic.sh $(srcdir)/terminfo
 	@echo 'Completed installation of terminfo description.'
 
 install-full \
