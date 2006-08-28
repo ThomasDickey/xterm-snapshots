@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.68 2006/08/14 23:32:26 tom Exp $ */
+/* $XTermId: trace.c,v 1.69 2006/08/27 17:07:05 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -248,6 +248,38 @@ visibleEventType(int type)
 	CASETYPE(ColormapNotify);
 	CASETYPE(ClientMessage);
 	CASETYPE(MappingNotify);
+    }
+    return result;
+}
+
+const char *
+visibleXError(int code)
+{
+    static char temp[80];
+    const char *result = "?";
+    switch (code) {
+	CASETYPE(Success);
+	CASETYPE(BadRequest);
+	CASETYPE(BadValue);
+	CASETYPE(BadWindow);
+	CASETYPE(BadPixmap);
+	CASETYPE(BadAtom);
+	CASETYPE(BadCursor);
+	CASETYPE(BadFont);
+	CASETYPE(BadMatch);
+	CASETYPE(BadDrawable);
+	CASETYPE(BadAccess);
+	CASETYPE(BadAlloc);
+	CASETYPE(BadColor);
+	CASETYPE(BadGC);
+	CASETYPE(BadIDChoice);
+	CASETYPE(BadName);
+	CASETYPE(BadLength);
+	CASETYPE(BadImplementation);
+    default:
+	sprintf(temp, "%d", code);
+	result = temp;
+	break;
     }
     return result;
 }

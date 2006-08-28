@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.730 2006/08/14 23:36:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.731 2006/08/27 20:01:43 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -3611,7 +3611,7 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 
 	if (icon_name != NULL) {
 	    zIconBeep_flagged = True;
-	    Changename(icon_name);
+	    ChangeIconName(icon_name);
 	}
 	if (zIconBeep > 0) {
 #if defined(HAVE_XKB_BELL_EXT)
@@ -3662,7 +3662,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		    return;
 		}
 		strcpy(buf, icon_name + 4);
-		Changename(buf);
+		ChangeIconName(buf);
 		free(buf);
 	    }
 	}

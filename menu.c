@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.217 2006/07/23 20:13:22 tom Exp $ */
+/* $XTermId: menu.c,v 1.218 2006/08/25 19:41:30 tom Exp $ */
 
 /*
 
@@ -243,7 +243,7 @@ MenuEntry mainMenuEntries[] = {
     { "logging",	do_logging,	NULL },
 #endif
     { "print",		do_print,	NULL },
-    { "print-redirect",	do_print_redir,	NULL },
+    { "print-redir",	do_print_redir,	NULL },
     { "line2",		NULL,		NULL },
     { "8-bit control",	do_8bit_control,NULL },
     { "backarrow key",	do_backarrow,	NULL },

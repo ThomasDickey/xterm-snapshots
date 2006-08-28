@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.252 2006/07/23 18:37:20 tom Exp $ */
+/* $XTermId: button.c,v 1.253 2006/08/22 21:39:46 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -3062,8 +3062,9 @@ _ConvertSelectionHelper(Widget w,
 	Display *d = XtDisplay(w);
 	TScreen *screen = &((XtermWidget) w)->screen;
 	XTextProperty textprop;
+	char *the_data = (char *) screen->selection_data;
 
-	if (conversion_function(d, (char **) &screen->selection_data, 1,
+	if (conversion_function(d, &the_data, 1,
 				conversion_style,
 				&textprop) >= Success) {
 	    *value = (XtPointer) textprop.value;

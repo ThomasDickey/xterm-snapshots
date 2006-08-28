@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.415 2006/08/03 23:43:39 tom Exp $ */
+/* $XTermId: xterm.h,v 1.417 2006/08/27 19:30:51 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -809,8 +809,8 @@ extern int xioerror (Display * /* dpy */);
 extern int xtermResetIds(TScreen *  /* screen */);
 extern void Bell (Atom  /* which */, int  /* percent */);
 extern void ChangeXprop (char * /* name */);
-extern void Changename (char * /* name */);
-extern void Changetitle (char * /* name */);
+extern void ChangeIconName (char * /* name */);
+extern void ChangeTitle (char * /* name */);
 extern void Cleanup (int  /* code */);
 extern void HandleBellPropertyChange   PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleEightBitKeyPressed   PROTO_XT_ACTIONS_ARGS;
@@ -883,6 +883,7 @@ extern void xtermPrintScreen (Bool  /* use_DECPEX */);
 #define PtySelect fd_set
 #endif
 
+extern Bool decodeUtf8 (PtyData * /* data */);
 extern int readPtyData (TScreen * /* screen */, PtySelect * /* select_mask */, PtyData * /* data */);
 extern void fillPtyData (TScreen * /* screen */, PtyData * /* data */, char * /* value */, int  /* length */);
 extern void initPtyData (PtyData ** /* data */);

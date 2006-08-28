@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.317 2006/08/14 23:32:46 tom Exp $ */
+/* $XTermId: misc.c,v 1.321 2006/08/27 22:13:57 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1640,12 +1640,55 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 
 /***====================================================================***/
 
+static Bool
+xtermIsPrintable(TScreen * screen, Char ** bufp, Char * last)
+{
+    Bool result = False;
+    Char *cp = *bufp;
+    Char *next = cp;
+
+#if OPT_WIDE_CHARS
+    if (xtermEnvUTF8() && screen->utf8_title) {
+	PtyData data;
+	Boolean controls = True;
+
+	memset(&data, 0, sizeof(data));
+	data.next = cp;
+	data.last = last;
+	if (decodeUtf8(&data)) {
+	    if (data.utf_data != UCS_REPL
+		&& (data.utf_data >= 128 ||
+		    ansi_table[data.utf_data] == CASE_PRINT)) {
+		controls = False;
+		next += (data.utf_size - 1);
+		result = True;
+	    } else {
+		result = False;
+	    }
+	} else {
+	    result = False;
+	}
+    } else
+#endif
+#if OPT_C1_PRINT
+	if (screen->c1_printable
+	    && (*cp >= 128 && *cp < 160)) {
+	result = True;
+    } else
+#endif
+    if (ansi_table[*cp] == CASE_PRINT) {
+	result = True;
+    }
+    *bufp = next;
+    return result;
+}
+
 void
 do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 {
     TScreen *screen = &(xw->screen);
     int mode;
-    Char *cp;
+    Char *cp, *c2;
     int state = 0;
     char *buf = 0;
 
@@ -1683,19 +1726,13 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    state = 3;
 	    /* FALLTHRU */
 	default:
-	    if (ansi_table[CharOf(*cp)] != CASE_PRINT) {
+	    c2 = cp;
+	    if (!xtermIsPrintable(screen, &cp, oscbuf + len)) {
 		switch (mode) {
 		case 0:
 		case 1:
 		case 2:
-#if OPT_WIDE_CHARS
-		    /*
-		     * If we're running with UTF-8, it is possible for title
-		     * strings to contain "nonprinting" text.
-		     */
-		    if (xtermEnvUTF8())
-#endif
-			break;
+		    break;
 		default:
 		    TRACE(("do_osc found nonprinting char %02X offset %d\n",
 			   CharOf(*cp),
@@ -1710,16 +1747,16 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     switch (mode) {
     case 0:			/* new icon name and title */
-	Changename(buf);
-	Changetitle(buf);
+	ChangeIconName(buf);
+	ChangeTitle(buf);
 	break;
 
     case 1:			/* new icon name only */
-	Changename(buf);
+	ChangeIconName(buf);
 	break;
 
     case 2:			/* new title only */
-	Changetitle(buf);
+	ChangeTitle(buf);
 	break;
 
     case 3:			/* change X property */
@@ -2292,6 +2329,8 @@ ChangeGroup(String attribute, char *value)
     Widget w = CURRENT_EMU(screen);
     Widget top = SHELL_OF(w);
     unsigned limit = strlen(name);
+    Char *c1 = (Char *) original;
+    Char *cp;
 
     TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
 
@@ -2302,6 +2341,13 @@ ChangeGroup(String attribute, char *value)
      */
     if (limit >= 1024)
 	return;
+
+    for (cp = c1; *cp != 0; ++cp) {
+	Char *c2 = cp;
+	if (!xtermIsPrintable(screen, &cp, c1 + limit)) {
+	    memset(c2, '?', cp + 1 - c2);
+	}
+    }
 
 #if OPT_WIDE_CHARS
     /*
@@ -2348,6 +2394,7 @@ ChangeGroup(String attribute, char *value)
 #endif /* OPT_SAME_NAME */
 
     TRACE(("...updating %s\n", attribute));
+    TRACE(("...value is %s\n", name));
     XtSetArg(args[0], attribute, name);
     XtSetValues(top, args, 1);
 
@@ -2355,12 +2402,14 @@ ChangeGroup(String attribute, char *value)
     if (xtermEnvUTF8()) {
 	Display *dpy = XtDisplay(term);
 	Atom my_atom;
+
 	char *propname = (!strcmp(attribute, XtNtitle)
 			  ? "_NET_WM_NAME"
 			  : "_NET_WM_ICON_NAME");
 	if ((my_atom = XInternAtom(dpy, propname, False)) != None) {
-	    if (screen->utf8_title) {
+	    if (screen->utf8_title) {	/* FIXME - redundant? */
 		TRACE(("...updating %s\n", propname));
+		TRACE(("...value is %s\n", original));
 		XChangeProperty(dpy, VShellWindow,
 				my_atom, XA_UTF8_STRING(dpy), 8,
 				PropModeReplace,
@@ -2375,7 +2424,7 @@ ChangeGroup(String attribute, char *value)
 }
 
 void
-Changename(char *name)
+ChangeIconName(char *name)
 {
     if (name == 0)
 	name = "";
@@ -2383,7 +2432,7 @@ Changename(char *name)
     if (zIconBeep && zIconBeep_flagged) {
 	char *newname = CastMallocN(char, strlen(name) + 4);
 	if (!newname) {
-	    fprintf(stderr, "malloc failed in Changename\n");
+	    fprintf(stderr, "malloc failed in ChangeIconName\n");
 	    return;
 	}
 	strcpy(newname, "*** ");
@@ -2396,7 +2445,7 @@ Changename(char *name)
 }
 
 void
-Changetitle(char *name)
+ChangeTitle(char *name)
 {
     ChangeGroup(XtNtitle, name);
 }
