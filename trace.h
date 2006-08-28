@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.39 2006/08/14 23:32:19 tom Exp $ */
+/* $XTermId: trace.h,v 1.40 2006/08/27 17:00:36 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.h,v 3.17 2005/09/18 23:48:13 dickey Exp $
@@ -52,7 +52,8 @@ extern	void	Trace ( char *, ... )
 
 extern	char *	visibleChars (PAIRED_CHARS(Char * /* buf */, Char * /* buf2 */), unsigned /* len */);
 extern	char *	visibleIChar (IChar *, unsigned);
-extern	const char * visibleEventType(int);
+extern	const char * visibleEventType (int);
+extern	const char * visibleXError (int /* code */);
 
 extern	void	TraceArgv(const char * /* tag */, char ** /* argv */);
 #define	TRACE_ARGV(tag,argv) TraceArgv(tag,argv)

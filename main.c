@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.526 2006/08/20 23:36:36 tom Exp $ */
+/* $XTermId: main.c,v 1.527 2006/08/22 21:18:04 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -3324,11 +3324,11 @@ spawn(void)
 #else
 	    int pgrp = getpid();
 #endif
-	    TRACE_CHILD;
+	    TRACE_CHILD
 
 #ifdef USE_USG_PTYS
 #ifdef USE_ISPTS_FLAG
-	    if (IsPts) {	/* SYSV386 supports both, which did we open? */
+		if (IsPts) {	/* SYSV386 supports both, which did we open? */
 #endif
 		int ptyfd = 0;
 		char *pty_name = 0;

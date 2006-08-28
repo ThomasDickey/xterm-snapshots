@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.296 2006/08/20 14:47:59 tom Exp $ */
+/* $XTermId: util.c,v 1.297 2006/08/23 00:36:38 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1770,7 +1770,6 @@ xtermXftDrawString(XtermWidget xw,
 		   Bool really)
 {
     TScreen *screen = &(xw->screen);
-    int fwidth = FontWidth(screen);
     int ncells = 0;
 
     if (len != 0) {
@@ -1785,6 +1784,7 @@ xtermXftDrawString(XtermWidget xw,
 	int start = 0;
 	int charWidth;
 	int fontnum = screen->menu_font_number;
+	int fwidth = FontWidth(screen);
 
 #if OPT_ISO_COLORS
 	if ((flags & UNDERLINE)

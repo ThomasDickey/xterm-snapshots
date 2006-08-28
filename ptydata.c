@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.74 2006/07/11 21:53:15 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.75 2006/08/25 20:39:49 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
@@ -62,7 +62,7 @@ authorization.
  * Convert the 8-bit codes in data->buffer[] into Unicode in data->utf_data.
  * The number of bytes converted will be nonzero iff there is data.
  */
-static Bool
+Bool
 decodeUtf8(PtyData * data)
 {
     int i;
