@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.417 2006/08/27 19:30:51 tom Exp $ */
+/* $XTermId: xterm.h,v 1.421 2006/09/03 22:06:11 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -610,19 +610,22 @@ extern "C" {
 struct XTERM_RESOURCE;
 
 /* Tekproc.c */
+#if OPT_TEK4014
 extern int TekInit (void);
 extern int TekPtyData(void);
-extern void ChangeTekColors (TScreen * /* screen */, ScrnColors * /* pNew */);
-extern void TCursorToggle (int  /* toggle */);
-extern void TekCopy (void);
-extern void TekEnqMouse (int  /* c */);
+extern void ChangeTekColors (TekWidget /* tw */, TScreen * /* screen */, ScrnColors * /* pNew */);
+extern void TCursorToggle (TekWidget /* tw */, int /* toggle */);
+extern void TekCopy (TekWidget /* tw */);
+extern void TekEnqMouse (TekWidget /* tw */, int /* c */);
 extern void TekExpose (Widget  /* w */, XEvent * /* event */, Region  /* region */);
-extern void TekGINoff (void);
-extern void TekReverseVideo (TScreen * /* screen */);
+extern void TekGINoff (TekWidget /* tw */);
+extern void TekReverseVideo (TekWidget /* tw */);
 extern void TekRun (void);
-extern void TekSetFontSize (int  /* newitem */);
-extern void TekSimulatePageButton (Bool  /* reset */);
-extern void dorefresh (void);
+extern void TekSetFontSize (TekWidget /* tw */, int  /* newitem */);
+extern void TekSimulatePageButton (TekWidget /* tw */, Bool /* reset */);
+extern void TekRefresh (TekWidget /* tw */);
+extern void HandleGINInput             PROTO_XT_ACTIONS_ARGS;
+#endif
 
 /* button.c */
 #define	MotionOff( s, t ) {						\
@@ -638,7 +641,6 @@ extern void dorefresh (void);
 extern Bool SendMousePosition (XtermWidget  /* w */, XEvent*  /* event */);
 extern void DiredButton                PROTO_XT_ACTIONS_ARGS;
 extern void DisownSelection (XtermWidget  /* termw */);
-extern void HandleGINInput             PROTO_XT_ACTIONS_ARGS;
 extern void HandleInsertSelection      PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectEnd    PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectExtend PROTO_XT_ACTIONS_ARGS;

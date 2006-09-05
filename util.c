@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.297 2006/08/23 00:36:38 tom Exp $ */
+/* $XTermId: util.c,v 1.300 2006/09/03 20:57:28 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1477,7 +1477,7 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
     Bool repaint = False;
     TScreen *screen = &xw->screen;
 #if OPT_TEK4014
-    Window tek = TWindow(screen);
+    Window tek = TWindow(&(tekWidget->screen));
 #endif
 
     TRACE(("ChangeColors\n"));
@@ -1564,13 +1564,13 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 #if OPT_TEK4014
     if (COLOR_DEFINED(pNew, TEK_FG) ||
 	COLOR_DEFINED(pNew, TEK_BG)) {
-	ChangeTekColors(screen, pNew);
-	if (screen->Tshow) {
+	ChangeTekColors(tekWidget, screen, pNew);
+	if (TEK4014_SHOWN(xw)) {
 	    XClearWindow(screen->display, tek);
 	    TekExpose((Widget) NULL, (XEvent *) NULL, (Region) NULL);
 	}
     } else if (COLOR_DEFINED(pNew, TEK_CURSOR)) {
-	ChangeTekColors(screen, pNew);
+	ChangeTekColors(tekWidget, screen, pNew);
     }
 #endif
     if (repaint) {
@@ -1600,7 +1600,7 @@ ReverseVideo(XtermWidget xw)
     GC tmpGC;
     Pixel tmp;
 #if OPT_TEK4014
-    Window tek = TWindow(screen);
+    Window tek = 0;
 #endif
 
     TRACE(("ReverseVideo\n"));
@@ -1654,8 +1654,10 @@ ReverseVideo(XtermWidget xw)
 	XDefineCursor(screen->display, VWindow(screen), screen->pointer_cursor);
     }
 #if OPT_TEK4014
-    if (tek)
+    if (TEK4014_SHOWN(xw)) {
+	tek = TWindow(&(tekWidget->screen));
 	XDefineCursor(screen->display, tek, screen->arrow);
+    }
 #endif
 
     if (screen->scrollWidget)
@@ -1672,7 +1674,7 @@ ReverseVideo(XtermWidget xw)
 			     T_COLOR(screen, TEXT_BG));
     }
 #if OPT_TEK4014
-    TekReverseVideo(screen);
+    TekReverseVideo(tekWidget);
 #endif
     if (XtIsRealized((Widget) xw)) {
 	XClearWindow(screen->display, VWindow(screen));
@@ -1680,7 +1682,7 @@ ReverseVideo(XtermWidget xw)
 		    MaxCols(screen), False);
     }
 #if OPT_TEK4014
-    if (screen->Tshow) {
+    if (TEK4014_SHOWN(xw)) {
 	XClearWindow(screen->display, tek);
 	TekExpose((Widget) NULL, (XEvent *) NULL, (Region) NULL);
     }

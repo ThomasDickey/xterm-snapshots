@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.262 2006/08/03 00:08:35 tom Exp $ */
+/* $XTermId: input.c,v 1.265 2006/09/02 00:15:55 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/input.c,v 3.76 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -110,6 +110,8 @@
 #define MAP(from, to) case from: result = to; break
 
 #define KEYSYM_FMT "0x%04lX"	/* simplify matching <X11/keysymdef.h> */
+
+#define TEK4014_GIN(tw) (tw != 0 && tw->screen.TekGIN)
 
 typedef struct {
     KeySym keysym;
@@ -1123,9 +1125,9 @@ Input(XtermWidget xw,
 	int prefix = 0;
 
 #if OPT_TEK4014
-	if (screen->TekGIN) {
-	    TekEnqMouse(kd.strbuf[0]);
-	    TekGINoff();
+	if (TEK4014_GIN(tekWidget)) {
+	    TekEnqMouse(tekWidget, kd.strbuf[0]);
+	    TekGINoff(tekWidget);
 	    kd.nbytes--;
 	    for (j = 0; j < kd.nbytes; ++j) {
 		kd.strbuf[j] = kd.strbuf[j + 1];
@@ -1254,7 +1256,7 @@ Input(XtermWidget xw,
     }
     unparse_end(xw);
 
-    if (key && !TEK4014_ACTIVE(screen))
+    if (key && !TEK4014_ACTIVE(xw))
 	AdjustAfterInput(screen);
 
     return;
@@ -1269,15 +1271,15 @@ StringInput(XtermWidget xw, Char * string, size_t nbytes)
 	   visibleChars(PAIRED_CHARS(string, 0), nbytes),
 	   nbytes));
 #if OPT_TEK4014
-    if (nbytes && screen->TekGIN) {
-	TekEnqMouse(*string++);
-	TekGINoff();
+    if (nbytes && TEK4014_GIN(tekWidget)) {
+	TekEnqMouse(tekWidget, *string++);
+	TekGINoff(tekWidget);
 	nbytes--;
     }
 #endif
     while (nbytes-- != 0)
 	unparseputc(xw, *string++);
-    if (!TEK4014_ACTIVE(screen))
+    if (!TEK4014_ACTIVE(xw))
 	AdjustAfterInput(screen);
     unparse_end(xw);
 }

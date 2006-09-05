@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.470 2006/08/27 23:55:00 tom Exp $
+  $XTermId: xterm.log.html,v 1.473 2006/09/05 00:12:14 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_219">Patch #219 - 2006/9/4</A>
 <LI><A HREF="#xterm_218">Patch #218 - 2006/8/27</A>
 <LI><A HREF="#xterm_217">Patch #217 - 2006/8/20</A>
 <LI><A HREF="#xterm_216">Patch #216 - 2006/8/3</A>
@@ -266,6 +267,15 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_219">Patch #219 - 2006/9/4</A></H1>
+<ul>
+	<li>some internal restructuring to separate data for vt100 and tek4014
+	    widgets.
+
+	<li>fix a few cases where form-events would be seen by the vt100
+	    widget when built with the toolbar configuration.
+</ul>
 
 <H1><A NAME="xterm_218">Patch #218 - 2006/8/27</A></H1>
 <ul>

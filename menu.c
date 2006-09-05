@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.218 2006/08/25 19:41:30 tom Exp $ */
+/* $XTermId: menu.c,v 1.219 2006/09/01 23:12:11 tom Exp $ */
 
 /*
 
@@ -700,7 +700,7 @@ domenu(Widget w GCC_UNUSED,
 #if OPT_TEK4014
     case tekMenu:
 	if (created) {
-	    set_tekfont_menu_item(screen->cur.fontsize, True);
+	    set_tekfont_menu_item(tekWidget->screen.cur.fontsize, True);
 	    update_vtshow();
 	}
 	break;
@@ -773,7 +773,7 @@ do_securekbd(Widget gw GCC_UNUSED,
 	ReverseVideo(term);
 	screen->grabbedKbd = False;
     } else {
-	if (XGrabKeyboard(screen->display, XtWindow(CURRENT_EMU(screen)),
+	if (XGrabKeyboard(screen->display, XtWindow(CURRENT_EMU()),
 			  True, GrabModeAsync, GrabModeAsync, now)
 	    != GrabSuccess) {
 	    Bell(XkbBI_MinorError, 100);
@@ -1225,7 +1225,7 @@ handle_tekshow(Widget gw GCC_UNUSED, Bool allowswitch)
     TScreen *screen = &term->screen;
 
     TRACE(("Show tek-window\n"));
-    if (!screen->Tshow) {	/* not showing, turn on */
+    if (!TEK4014_SHOWN(term)) {	/* not showing, turn on */
 	set_tek_visibility(True);
     } else if (screen->Vshow || allowswitch) {	/* is showing, turn off */
 	set_tek_visibility(False);
@@ -1334,9 +1334,7 @@ do_tekmode(Widget gw GCC_UNUSED,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
-
-    switch_modes(screen->TekEmu);	/* switch to tek mode */
+    switch_modes(TEK4014_ACTIVE(term));		/* switch to tek mode */
 }
 
 /* ARGSUSED */
@@ -1476,7 +1474,7 @@ do_tektextlarge(Widget gw GCC_UNUSED,
 		XtPointer closure GCC_UNUSED,
 		XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(tekMenu_tektextlarge);
+    TekSetFontSize(tekWidget, tekMenu_tektextlarge);
 }
 
 static void
@@ -1484,7 +1482,7 @@ do_tektext2(Widget gw GCC_UNUSED,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(tekMenu_tektext2);
+    TekSetFontSize(tekWidget, tekMenu_tektext2);
 }
 
 static void
@@ -1492,7 +1490,7 @@ do_tektext3(Widget gw GCC_UNUSED,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(tekMenu_tektext3);
+    TekSetFontSize(tekWidget, tekMenu_tektext3);
 }
 
 static void
@@ -1500,8 +1498,7 @@ do_tektextsmall(Widget gw GCC_UNUSED,
 		XtPointer closure GCC_UNUSED,
 		XtPointer data GCC_UNUSED)
 {
-
-    TekSetFontSize(tekMenu_tektextsmall);
+    TekSetFontSize(tekWidget, tekMenu_tektextsmall);
 }
 
 static void
@@ -1509,7 +1506,7 @@ do_tekpage(Widget gw GCC_UNUSED,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    TekSimulatePageButton(False);
+    TekSimulatePageButton(tekWidget, False);
 }
 
 static void
@@ -1517,7 +1514,7 @@ do_tekreset(Widget gw GCC_UNUSED,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSimulatePageButton(True);
+    TekSimulatePageButton(tekWidget, True);
 }
 
 static void
@@ -1525,7 +1522,7 @@ do_tekcopy(Widget gw GCC_UNUSED,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    TekCopy();
+    TekCopy(tekWidget);
 }
 
 static void
@@ -1536,10 +1533,10 @@ handle_vtshow(Widget gw GCC_UNUSED, Bool allowswitch)
     TRACE(("Show vt-window\n"));
     if (!screen->Vshow) {	/* not showing, turn on */
 	set_vt_visibility(True);
-    } else if (screen->Tshow || allowswitch) {	/* is showing, turn off */
+    } else if (TEK4014_SHOWN(term) || allowswitch) {	/* is showing, turn off */
 	set_vt_visibility(False);
-	if (!screen->TekEmu && TekRefresh)
-	    dorefresh();
+	if (!TEK4014_ACTIVE(term) && tekRefreshList)
+	    TekRefresh(tekWidget);
 	end_vt_mode();		/* WARNING: this does a longjmp... */
     } else
 	Bell(XkbBI_MinorError, 0);
@@ -1566,9 +1563,7 @@ do_vtmode(Widget gw GCC_UNUSED,
 	  XtPointer closure GCC_UNUSED,
 	  XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
-
-    switch_modes(screen->TekEmu);	/* switch to vt, or from */
+    switch_modes(TEK4014_ACTIVE(term));		/* switch to vt, or from */
 }
 
 /* ARGSUSED */
@@ -2179,12 +2174,12 @@ HandleSetTerminalType(Widget w,
 	switch (params[0][0]) {
 	case 'v':
 	case 'V':
-	    if (term->screen.TekEmu)
+	    if (TEK4014_ACTIVE(term))
 		do_vtmode(w, (XtPointer) 0, (XtPointer) 0);
 	    break;
 	case 't':
 	case 'T':
-	    if (!term->screen.TekEmu)
+	    if (!TEK4014_ACTIVE(term))
 		do_tekmode(w, (XtPointer) 0, (XtPointer) 0);
 	    break;
 	default:
@@ -2210,7 +2205,7 @@ HandleVisibility(Widget w,
 	    break;
 	case 't':
 	case 'T':
-	    handle_tek_toggle(do_tekonoff, (int) term->screen.Tshow,
+	    handle_tek_toggle(do_tekonoff, (int) TEK4014_SHOWN(term),
 			      params + 1, (*param_count) - 1, w);
 	    break;
 	default:
@@ -2979,7 +2974,7 @@ update_tekshow(void)
 {
     if (!(term->screen.inhibit & I_TEK)) {
 	UpdateMenuItem(vtMenuEntries[vtMenu_tekshow].widget,
-		       term->screen.Tshow);
+		       TEK4014_SHOWN(term));
     }
 }
 
@@ -2988,9 +2983,9 @@ update_vttekmode(void)
 {
     if (!(term->screen.inhibit & I_TEK)) {
 	UpdateMenuItem(vtMenuEntries[vtMenu_tekmode].widget,
-		       term->screen.TekEmu);
+		       TEK4014_ACTIVE(term));
 	UpdateMenuItem(tekMenuEntries[tekMenu_vtmode].widget,
-		       !term->screen.TekEmu);
+		       !TEK4014_ACTIVE(term));
     }
 }
 
@@ -3009,7 +3004,7 @@ set_vthide_sensitivity(void)
     if (!(term->screen.inhibit & I_TEK)) {
 	SetItemSensitivity(
 			      vtMenuEntries[vtMenu_vthide].widget,
-			      term->screen.Tshow);
+			      TEK4014_SHOWN(term));
     }
 }
 

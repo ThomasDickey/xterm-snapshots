@@ -1,4 +1,4 @@
-/* $XTermId: data.c,v 1.79 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: data.c,v 1.80 2006/09/01 21:53:26 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.c,v 3.34 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -60,7 +60,7 @@ Widget toplevel;		/* top-most widget in xterm */
 #if OPT_TEK4014
 Char *Tpushb;
 Char *Tpushback;
-TekLink *TekRefresh;
+TekLink *tekRefreshList;
 TekWidget tekWidget;
 Widget tekshellwidget;
 int T_lastx = -1;
