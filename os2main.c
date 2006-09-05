@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.229 2006/08/13 19:34:25 tom Exp $ */
+/* $XTermId: os2main.c,v 1.232 2006/09/05 00:22:17 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -756,7 +756,7 @@ get_termcap(char *name, char *buffer, char *resized)
 		    ? "ok:termcap, we can update $TERMCAP"
 		    : "assuming this is terminfo")));
 	    if (*buffer) {
-		if (!TEK4014_ACTIVE(screen)) {
+		if (!TEK4014_ACTIVE(term)) {
 		    resize(screen, buffer, resized);
 		}
 	    }
@@ -876,7 +876,7 @@ DeleteWindow(Widget w,
 {
 #if OPT_TEK4014
     if (w == toplevel) {
-	if (term->screen.Tshow)
+	if (TEK4014_SHOWN(term))
 	    hide_vt_window();
 	else
 	    do_hangup(w, (XtPointer) 0, (XtPointer) 0);
@@ -1184,9 +1184,9 @@ main(int argc, char **argv ENVP_ARG)
      */
 #if OPT_TEK4014
     if (screen->inhibit & I_TEK)
-	screen->TekEmu = False;
+	TEK4014_ACTIVE(term) = False;
 
-    if (screen->TekEmu && !TekInit())
+    if (TEK4014_ACTIVE(term) && !TekInit())
 	exit(ERROR_INIT);
 #endif
 
@@ -1294,7 +1294,7 @@ main(int argc, char **argv ENVP_ARG)
 	char buf[80];
 
 	buf[0] = '\0';
-	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU(screen))));
+	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU())));
 	write(screen->respond, buf, strlen(buf));
     }
 
@@ -1362,7 +1362,7 @@ main(int argc, char **argv ENVP_ARG)
 
     for (;;) {
 #if OPT_TEK4014
-	if (screen->TekEmu)
+	if (TEK4014_ACTIVE(term))
 	    TekRun();
 	else
 #endif
@@ -1654,12 +1654,12 @@ spawn(void)
     }
 
     /* avoid double MapWindow requests */
-    XtSetMappedWhenManaged(SHELL_OF(CURRENT_EMU(screen)), False);
+    XtSetMappedWhenManaged(SHELL_OF(CURRENT_EMU()), False);
 
     wm_delete_window = XInternAtom(XtDisplay(toplevel), "WM_DELETE_WINDOW",
 				   False);
 
-    if (!TEK4014_ACTIVE(screen))
+    if (!TEK4014_ACTIVE(term))
 	VTInit();		/* realize now so know window size for tty driver */
 
     if (Console) {
@@ -1670,12 +1670,12 @@ spawn(void)
 	XmuGetHostname(mit_console_name + MIT_CONSOLE_LEN, 255);
 	mit_console = XInternAtom(screen->display, mit_console_name, False);
 	/* the user told us to be the console, so we can use CurrentTime */
-	XtOwnSelection(SHELL_OF(CURRENT_EMU(screen)),
+	XtOwnSelection(SHELL_OF(CURRENT_EMU()),
 		       mit_console, CurrentTime,
 		       ConvertConsoleSelection, NULL, NULL);
     }
 #if OPT_TEK4014
-    if (screen->TekEmu) {
+    if (TEK4014_ACTIVE(term)) {
 	envnew = tekterm;
 	ptr = newtc;
     } else
@@ -1707,11 +1707,11 @@ spawn(void)
 
     /* tell tty how big window is */
 #if OPT_TEK4014
-    if (TEK4014_ACTIVE(screen)) {
+    if (TEK4014_ACTIVE(term)) {
 	TTYSIZE_ROWS(ts) = 38;
 	TTYSIZE_COLS(ts) = 81;
-	ts.ws_xpixel = TFullWidth(screen);
-	ts.ws_ypixel = TFullHeight(screen);
+	ts.ws_xpixel = TFullWidth(&(tekWidget->screen));
+	ts.ws_ypixel = TFullHeight(&(tekWidget->screen));
     } else
 #endif
     {
@@ -1827,7 +1827,7 @@ opencons();*/
 		*newtc = 0;
 
 	    sprintf(buf, "%lu",
-		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU(screen)))));
+		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU()))));
 	    xtermSetenv("WINDOWID=", buf);
 
 	    /* put the display into the environment of the shell */

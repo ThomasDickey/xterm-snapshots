@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.213 2006/08/20 22:40:34 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.215 2006/09/02 00:33:51 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -1268,37 +1268,39 @@ HandleLoadVTFonts(Widget w,
 {
     static char empty[] = "";	/* appease strict compilers */
 
-    XtermWidget xw = (XtermWidget) w;
-    char buf[80];
-    char *myName = (*param_count > 0) ? params[0] : empty;
-    char *convert = (*param_count > 1) ? params[1] : myName;
-    char *myClass = (char *) MyStackAlloc(strlen(convert), buf);
-    int n;
+    if (IsXtermWidget(w)) {
+	XtermWidget xw = (XtermWidget) w;
+	char buf[80];
+	char *myName = (*param_count > 0) ? params[0] : empty;
+	char *convert = (*param_count > 1) ? params[1] : myName;
+	char *myClass = (char *) MyStackAlloc(strlen(convert), buf);
+	int n;
 
-    TRACE(("HandleLoadVTFonts(%d)\n", *param_count));
-    strcpy(myClass, convert);
-    if (*param_count == 1
-	&& islower(CharOf(myClass[0])))
-	myClass[0] = toupper(CharOf(myClass[0]));
+	TRACE(("HandleLoadVTFonts(%d)\n", *param_count));
+	strcpy(myClass, convert);
+	if (*param_count == 1
+	    && islower(CharOf(myClass[0])))
+	    myClass[0] = toupper(CharOf(myClass[0]));
 
-    if (xtermLoadVTFonts(xw, myName, myClass)) {
-	/*
-	 * When switching fonts, try to preserve the font-menu selection, since
-	 * it is less surprising to do that (if the font-switching can be
-	 * undone) than to switch to "Default".
-	 */
-	int font_number = xw->screen.menu_font_number;
-	if (font_number > fontMenu_lastBuiltin)
-	    font_number = fontMenu_lastBuiltin;
-	for (n = 0; n < NMENUFONTS; ++n)
-	    xw->screen.menu_font_sizes[n] = 0;
-	SetVTFont(xw, font_number, True,
-		  ((font_number == fontMenu_fontdefault)
-		   ? &(xw->misc.default_font)
-		   : NULL));
+	if (xtermLoadVTFonts(xw, myName, myClass)) {
+	    /*
+	     * When switching fonts, try to preserve the font-menu selection, since
+	     * it is less surprising to do that (if the font-switching can be
+	     * undone) than to switch to "Default".
+	     */
+	    int font_number = xw->screen.menu_font_number;
+	    if (font_number > fontMenu_lastBuiltin)
+		font_number = fontMenu_lastBuiltin;
+	    for (n = 0; n < NMENUFONTS; ++n)
+		xw->screen.menu_font_sizes[n] = 0;
+	    SetVTFont(xw, font_number, True,
+		      ((font_number == fontMenu_fontdefault)
+		       ? &(xw->misc.default_font)
+		       : NULL));
+	}
+
+	MyStackFree(myClass, buf);
     }
-
-    MyStackFree(myClass, buf);
 }
 #endif /* OPT_LOAD_VTFONTS */
 
@@ -1356,6 +1358,7 @@ xtermOpenXft(Display * dpy, XftPattern * pat, const char *tag GCC_UNUSED)
 }
 #endif
 
+#if OPT_RENDERFONT
 #if OPT_SHIFT_FONTS
 /*
  * Don't make a dependency on the math library for a single function.
@@ -1381,7 +1384,6 @@ mySquareRoot(float value)
 }
 #endif
 
-#if OPT_RENDERFONT
 /*
  * Given the Xft font metrics, determine the actual font size.  This is used
  * for each font to ensure that normal, bold and italic fonts follow the same
@@ -2375,17 +2377,19 @@ HandleLargerFont(Widget w GCC_UNUSED,
 		 String * params GCC_UNUSED,
 		 Cardinal *param_count GCC_UNUSED)
 {
-    XtermWidget xw = (XtermWidget) w;
+    if (IsXtermWidget(w)) {
+	XtermWidget xw = (XtermWidget) w;
 
-    if (xw->misc.shift_fonts) {
-	TScreen *screen = &xw->screen;
-	int m;
+	if (xw->misc.shift_fonts) {
+	    TScreen *screen = &xw->screen;
+	    int m;
 
-	m = lookupRelativeFontSize(screen, screen->menu_font_number, 1);
-	if (m >= 0) {
-	    SetVTFont(xw, m, True, NULL);
-	} else {
-	    Bell(XkbBI_MinorError, 0);
+	    m = lookupRelativeFontSize(screen, screen->menu_font_number, 1);
+	    if (m >= 0) {
+		SetVTFont(xw, m, True, NULL);
+	    } else {
+		Bell(XkbBI_MinorError, 0);
+	    }
 	}
     }
 }
@@ -2397,17 +2401,19 @@ HandleSmallerFont(Widget w GCC_UNUSED,
 		  String * params GCC_UNUSED,
 		  Cardinal *param_count GCC_UNUSED)
 {
-    XtermWidget xw = (XtermWidget) w;
+    if (IsXtermWidget(w)) {
+	XtermWidget xw = (XtermWidget) w;
 
-    if (xw->misc.shift_fonts) {
-	TScreen *screen = &xw->screen;
-	int m;
+	if (xw->misc.shift_fonts) {
+	    TScreen *screen = &xw->screen;
+	    int m;
 
-	m = lookupRelativeFontSize(screen, screen->menu_font_number, -1);
-	if (m >= 0) {
-	    SetVTFont(xw, m, True, NULL);
-	} else {
-	    Bell(XkbBI_MinorError, 0);
+	    m = lookupRelativeFontSize(screen, screen->menu_font_number, -1);
+	    if (m >= 0) {
+		SetVTFont(xw, m, True, NULL);
+	    } else {
+		Bell(XkbBI_MinorError, 0);
+	    }
 	}
     }
 }
@@ -2420,81 +2426,83 @@ HandleSetFont(Widget w GCC_UNUSED,
 	      String * params,
 	      Cardinal *param_count)
 {
-    int fontnum;
-    VTFontNames fonts;
+    if (IsXtermWidget(w)) {
+	int fontnum;
+	VTFontNames fonts;
 
-    memset(&fonts, 0, sizeof(fonts));
+	memset(&fonts, 0, sizeof(fonts));
 
-    if (*param_count == 0) {
-	fontnum = fontMenu_fontdefault;
-    } else {
-	Cardinal maxparams = 1;	/* total number of params allowed */
-
-	switch (params[0][0]) {
-	case 'd':
-	case 'D':
-	case '0':
+	if (*param_count == 0) {
 	    fontnum = fontMenu_fontdefault;
-	    break;
-	case '1':
-	    fontnum = fontMenu_font1;
-	    break;
-	case '2':
-	    fontnum = fontMenu_font2;
-	    break;
-	case '3':
-	    fontnum = fontMenu_font3;
-	    break;
-	case '4':
-	    fontnum = fontMenu_font4;
-	    break;
-	case '5':
-	    fontnum = fontMenu_font5;
-	    break;
-	case '6':
-	    fontnum = fontMenu_font6;
-	    break;
-	case 'e':
-	case 'E':
-	    fontnum = fontMenu_fontescape;
-#if OPT_WIDE_CHARS
-	    maxparams = 5;
-#else
-	    maxparams = 3;
-#endif
-	    break;
-	case 's':
-	case 'S':
-	    fontnum = fontMenu_fontsel;
-	    maxparams = 2;
-	    break;
-	default:
-	    Bell(XkbBI_MinorError, 0);
-	    return;
-	}
-	if (*param_count > maxparams) {		/* see if extra args given */
-	    Bell(XkbBI_MinorError, 0);
-	    return;
-	}
-	switch (*param_count) {	/* assign 'em */
-#if OPT_WIDE_CHARS
-	case 5:
-	    fonts.f_wb = params[4];
-	    /* FALLTHRU */
-	case 4:
-	    fonts.f_w = params[3];
-	    /* FALLTHRU */
-#endif
-	case 3:
-	    fonts.f_b = params[2];
-	    /* FALLTHRU */
-	case 2:
-	    fonts.f_n = params[1];
-	    break;
-	}
-    }
+	} else {
+	    Cardinal maxparams = 1;	/* total number of params allowed */
 
-    SetVTFont((XtermWidget) w, fontnum, True, &fonts);
+	    switch (params[0][0]) {
+	    case 'd':
+	    case 'D':
+	    case '0':
+		fontnum = fontMenu_fontdefault;
+		break;
+	    case '1':
+		fontnum = fontMenu_font1;
+		break;
+	    case '2':
+		fontnum = fontMenu_font2;
+		break;
+	    case '3':
+		fontnum = fontMenu_font3;
+		break;
+	    case '4':
+		fontnum = fontMenu_font4;
+		break;
+	    case '5':
+		fontnum = fontMenu_font5;
+		break;
+	    case '6':
+		fontnum = fontMenu_font6;
+		break;
+	    case 'e':
+	    case 'E':
+		fontnum = fontMenu_fontescape;
+#if OPT_WIDE_CHARS
+		maxparams = 5;
+#else
+		maxparams = 3;
+#endif
+		break;
+	    case 's':
+	    case 'S':
+		fontnum = fontMenu_fontsel;
+		maxparams = 2;
+		break;
+	    default:
+		Bell(XkbBI_MinorError, 0);
+		return;
+	    }
+	    if (*param_count > maxparams) {	/* see if extra args given */
+		Bell(XkbBI_MinorError, 0);
+		return;
+	    }
+	    switch (*param_count) {	/* assign 'em */
+#if OPT_WIDE_CHARS
+	    case 5:
+		fonts.f_wb = params[4];
+		/* FALLTHRU */
+	    case 4:
+		fonts.f_w = params[3];
+		/* FALLTHRU */
+#endif
+	    case 3:
+		fonts.f_b = params[2];
+		/* FALLTHRU */
+	    case 2:
+		fonts.f_n = params[1];
+		break;
+	    }
+	}
+
+	SetVTFont((XtermWidget) w, fontnum, True, &fonts);
+    }
 }
 
 void

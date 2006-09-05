@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.440 2006/08/10 23:58:53 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.443 2006/09/03 22:11:00 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -922,13 +922,15 @@ extern int A2E(int);
 /***====================================================================***/
 
 #if OPT_TEK4014
-#define TEK4014_ACTIVE(screen) ((screen)->TekEmu)
-#define CURRENT_EMU_VAL(screen,tek,vt) (TEK4014_ACTIVE(screen) ? tek : vt)
-#define CURRENT_EMU(screen) CURRENT_EMU_VAL(screen, (Widget)tekWidget, (Widget)term)
+#define TEK4014_ACTIVE(xw)      ((xw)->misc.TekEmu)
+#define TEK4014_SHOWN(xw)       ((xw)->misc.Tshow)
+#define CURRENT_EMU_VAL(tek,vt) (TEK4014_ACTIVE(term) ? tek : vt)
+#define CURRENT_EMU()           CURRENT_EMU_VAL((Widget)tekWidget, (Widget)term)
 #else
-#define TEK4014_ACTIVE(screen) 0
-#define CURRENT_EMU_VAL(screen,tek,vt) (vt)
-#define CURRENT_EMU(screen) ((Widget)term)
+#define TEK4014_ACTIVE(screen)  0
+#define TEK4014_SHOWN(xw)       0
+#define CURRENT_EMU_VAL(tek,vt) (vt)
+#define CURRENT_EMU()           ((Widget)term)
 #endif
 
 /***====================================================================***/
@@ -1521,31 +1523,6 @@ typedef struct {
 	Boolean		move_sgr_ok;	/* SGR is reset on move		*/
 #endif
 
-#if OPT_TEK4014
-/* Tektronix window parameters */
-	GC		TnormalGC;	/* normal painting		*/
-	GC		TcursorGC;	/* normal cursor painting	*/
-
-	Boolean		Tshow;		/* Tek window showing		*/
-	Boolean		waitrefresh;	/* postpone refresh		*/
-	struct _tekwin	fullTwin;
-#ifndef NO_ACTIVE_ICON
-	struct _tekwin	iconTwin;
-	struct _tekwin *whichTwin;
-#endif /* NO_ACTIVE_ICON */
-
-	GC		linepat[TEKNUMLINES]; /* line patterns		*/
-	Boolean		TekEmu;		/* true if Tektronix emulation	*/
-	int		cur_X;		/* current x			*/
-	int		cur_Y;		/* current y			*/
-	Tmodes		cur;		/* current tek modes		*/
-	Tmodes		page;		/* starting tek modes on page	*/
-	int		margin;		/* 0 -> margin 1, 1 -> margin 2	*/
-	int		pen;		/* current Tektronix pen 0=up, 1=dn */
-	char		*TekGIN;	/* nonzero if Tektronix GIN mode*/
-	int		gin_terminator; /* Tek strap option */
-#endif /* OPT_TEK4014 */
-
 	/*
 	 * Bell
 	 */
@@ -1647,6 +1624,29 @@ typedef struct _TekPart {
 	TbInfo		tb_info;	/* toolbar information		*/
 #endif
 } TekPart;
+
+/* Tektronix window parameters */
+typedef struct _TekScreen {
+	GC		TnormalGC;	/* normal painting		*/
+	GC		TcursorGC;	/* normal cursor painting	*/
+
+	Boolean		waitrefresh;	/* postpone refresh		*/
+	struct _tekwin	fullTwin;
+#ifndef NO_ACTIVE_ICON
+	struct _tekwin	iconTwin;
+	struct _tekwin *whichTwin;
+#endif /* NO_ACTIVE_ICON */
+
+	GC		linepat[TEKNUMLINES]; /* line patterns		*/
+	int		cur_X;		/* current x			*/
+	int		cur_Y;		/* current y			*/
+	Tmodes		cur;		/* current tek modes		*/
+	Tmodes		page;		/* starting tek modes on page	*/
+	int		margin;		/* 0 -> margin 1, 1 -> margin 2	*/
+	int		pen;		/* current Tektronix pen 0=up, 1=dn */
+	char		*TekGIN;	/* nonzero if Tektronix GIN mode*/
+	int		gin_terminator; /* Tek strap option */
+} TekScreen;
 
 #if OPT_READLINE
 #define SCREEN_FLAG(screenp,f)		(1&(screenp)->f)
@@ -1774,6 +1774,8 @@ typedef struct _Misc {
 #if OPT_TEK4014
     Boolean tekInhibit;
     Boolean tekSmall;		/* start tek window in small size */
+    Boolean TekEmu;		/* true if Tektronix emulation	*/
+    Boolean Tshow;		/* Tek window showing		*/
 #endif
     Boolean scrollbar;
 #ifdef SCROLLBAR_RIGHT
@@ -1837,6 +1839,11 @@ typedef struct _TekClassRec {
     CoreClassPart core_class;
     TekClassPart tek_class;
 } TekClassRec;
+
+extern WidgetClass tekWidgetClass;
+
+#define IsTekWidget(w) (XtClass(w) == tekWidgetClass)
+
 #endif
 
 /* define masks for keyboard.flags */
@@ -1884,6 +1891,7 @@ typedef struct _XtermWidgetRec {
 typedef struct _TekWidgetRec {
     CorePart	core;
     TekPart	tek;
+    TekScreen	screen;
     Bool	init_menu;
     XSizeHints	hints;
 } TekWidgetRec, *TekWidget;

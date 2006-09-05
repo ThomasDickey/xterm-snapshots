@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.731 2006/08/27 20:01:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.734 2006/09/05 00:13:33 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -626,7 +626,7 @@ static XtResource resources[] =
 #if OPT_TEK4014
     Bres(XtNtekInhibit, XtCTekInhibit, misc.tekInhibit, False),
     Bres(XtNtekSmall, XtCTekSmall, misc.tekSmall, False),
-    Bres(XtNtekStartup, XtCTekStartup, screen.TekEmu, False),
+    Bres(XtNtekStartup, XtCTekStartup, misc.TekEmu, False),
 #endif
 
 #if OPT_TOOLBAR
@@ -2226,7 +2226,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		dpmodes(xw, bitset);
 	    sp->parsestate = sp->groundtable;
 #if OPT_TEK4014
-	    if (screen->TekEmu)
+	    if (TEK4014_ACTIVE(xw))
 		return False;
 #endif
 	    break;
@@ -3934,7 +3934,7 @@ dpmodes(XtermWidget xw,
 #if OPT_TEK4014
 	    if (func == bitset && !(screen->inhibit & I_TEK)) {
 		FlushLog(screen);
-		screen->TekEmu = True;
+		TEK4014_ACTIVE(xw) = True;
 	    }
 #endif
 	    break;
@@ -5484,7 +5484,7 @@ VTInitialize(Widget wrequest,
 #if OPT_TEK4014
     init_Bres(misc.tekInhibit);
     init_Bres(misc.tekSmall);
-    init_Bres(screen.TekEmu);
+    init_Bres(misc.TekEmu);
 #endif
 #if OPT_TCAP_QUERY
     wnew->screen.tc_query_code = -1;
@@ -5844,9 +5844,6 @@ VTInitialize(Widget wrequest,
     }
 #ifndef NO_ACTIVE_ICON
     wnew->screen.whichVwin = &wnew->screen.fullVwin;
-#if OPT_TEK4014
-    wnew->screen.whichTwin = &wnew->screen.fullTwin;
-#endif
 #endif /* NO_ACTIVE_ICON */
 
     if (wnew->screen.savelines < 0)
@@ -7142,7 +7139,7 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 {
     TScreen *screen = &xw->screen;
 
-    if (!XtIsRealized((Widget) xw)) {
+    if (!XtIsRealized((Widget) xw) || (CURRENT_EMU() != (Widget) xw)) {
 	Bell(XkbBI_MinorError, 0);
 	return;
     }
@@ -7448,8 +7445,10 @@ HandleIgnore(Widget w,
 	     String * params GCC_UNUSED,
 	     Cardinal *param_count GCC_UNUSED)
 {
-    /* do nothing, but check for funny escape sequences */
-    (void) SendMousePosition((XtermWidget) w, event);
+    if (IsXtermWidget(w)) {
+	/* do nothing, but check for funny escape sequences */
+	(void) SendMousePosition((XtermWidget) w, event);
+    }
 }
 
 /* ARGSUSED */

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.253 2006/08/22 21:39:46 tom Exp $ */
+/* $XTermId: button.c,v 1.254 2006/09/01 21:48:34 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -3628,33 +3628,3 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
     /* Transmit key sequence to process running under xterm */
     v_write(pty, line, count);
 }
-
-/*ARGSUSED*/
-#if OPT_TEK4014
-void
-HandleGINInput(Widget w GCC_UNUSED,
-	       XEvent * event GCC_UNUSED,
-	       String * param_list,
-	       Cardinal *nparamsp)
-{
-    if (term->screen.TekGIN && *nparamsp == 1) {
-	int c = param_list[0][0];
-	switch (c) {
-	case 'l':
-	case 'm':
-	case 'r':
-	case 'L':
-	case 'M':
-	case 'R':
-	    break;
-	default:
-	    Bell(XkbBI_MinorError, 0);	/* let them know they goofed */
-	    c = 'l';		/* provide a default */
-	}
-	TekEnqMouse(c | 0x80);
-	TekGINoff();
-    } else {
-	Bell(XkbBI_MinorError, 0);
-    }
-}
-#endif /* OPT_TEK4014 */
