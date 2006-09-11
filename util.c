@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.300 2006/09/03 20:57:28 tom Exp $ */
+/* $XTermId: util.c,v 1.301 2006/09/10 15:22:06 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1567,7 +1567,7 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 	ChangeTekColors(tekWidget, screen, pNew);
 	if (TEK4014_SHOWN(xw)) {
 	    XClearWindow(screen->display, tek);
-	    TekExpose((Widget) NULL, (XEvent *) NULL, (Region) NULL);
+	    TekExpose((Widget) tekWidget, (XEvent *) NULL, (Region) NULL);
 	}
     } else if (COLOR_DEFINED(pNew, TEK_CURSOR)) {
 	ChangeTekColors(tekWidget, screen, pNew);
@@ -1684,7 +1684,7 @@ ReverseVideo(XtermWidget xw)
 #if OPT_TEK4014
     if (TEK4014_SHOWN(xw)) {
 	XClearWindow(screen->display, tek);
-	TekExpose((Widget) NULL, (XEvent *) NULL, (Region) NULL);
+	TekExpose((Widget) tekWidget, (XEvent *) NULL, (Region) NULL);
     }
 #endif
     ReverseOldColors();

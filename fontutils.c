@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.215 2006/09/02 00:33:51 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.216 2006/09/10 19:55:28 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -1394,6 +1394,8 @@ setRenderFontsize(TScreen * screen, struct _vtwin *win, XftFont * font, const ch
 {
     if (font != 0) {
 	int width, height, ascent, descent;
+
+	(void) screen;
 
 	width = font->max_advance_width;
 	height = font->height;
