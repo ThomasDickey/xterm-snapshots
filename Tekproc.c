@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.142 2006/09/02 00:38:48 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.143 2006/09/10 18:00:50 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -276,8 +276,8 @@ static void TCursorBack(TekWidget /* tw */ );
 static void TCursorDown(TekWidget /* tw */ );
 static void TCursorForward(TekWidget /* tw */ );
 static void TCursorUp(TekWidget /* tw */ );
-static void TekBackground(TekWidget /* tw */
-			  , TScreen * /* screen */ );
+static void TekBackground(TekWidget /* tw */ ,
+			  TScreen * /* screen */ );
 static void TekConfigure(Widget /* w */ );
 static void TekDraw(TekWidget /* tw */ ,
 		    int /* x */ ,
@@ -346,13 +346,27 @@ TekInit(void)
 
     if (!Tfailed
 	&& tekWidget == 0) {
+	Cardinal nargs = 0;
+	Arg myArgs[3];
+	Boolean iconic = 0;
 
 	TRACE(("TekInit\n"));
+	XtSetArg(myArgs[nargs], XtNiconic, &iconic);
+	++nargs;
+	XtGetValues(toplevel, myArgs, nargs);
+
+	nargs = 0;
+	XtSetArg(myArgs[nargs], XtNiconic, iconic);
+	++nargs;
+	XtSetArg(myArgs[nargs], XtNallowShellResize, True);
+	++nargs;
+	XtSetArg(myArgs[nargs], XtNinput, True);
+	++nargs;
+
 	/* this causes the Initialize method to be called */
 	tekshellwidget =
 	    XtCreatePopupShell("tektronix", topLevelShellWidgetClass,
-			       toplevel, ourTopLevelShellArgs,
-			       number_ourTopLevelShellArgs);
+			       toplevel, myArgs, nargs);
 
 	SetupMenus(tekshellwidget, &form_top, &menu_top, &menu_high);
 

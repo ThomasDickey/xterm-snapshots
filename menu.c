@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.219 2006/09/01 23:12:11 tom Exp $ */
+/* $XTermId: menu.c,v 1.220 2006/09/10 23:11:14 tom Exp $ */
 
 /*
 
@@ -2383,7 +2383,7 @@ void
 SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
 {
 #if OPT_TOOLBAR
-    Dimension button_height;
+    Dimension button_height = 0;
     Dimension toolbar_hSpace;
     Dimension toolbar_border;
     Arg args[10];
@@ -2521,6 +2521,8 @@ toolbar_info(Widget w)
 #if OPT_TEK4014
     if (w != (Widget) term)
 	return &(tekWidget->tek.tb_info);
+#else
+    (void) w;
 #endif
     return &(WhichVWin(&(term->screen))->tb_info);
 }
