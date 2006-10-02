@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.143 2006/09/10 18:00:50 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.145 2006/09/29 23:04:01 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -964,6 +964,15 @@ TekRefresh(TekWidget tw)
 		  (tekscr->TekGIN && GINcursor) ? GINcursor : screen->arrow);
 }
 
+void
+TekRepaint(TekWidget tw)
+{
+    TekScreen *tekscr = &tw->screen;
+
+    XClearWindow(XtDisplay(tw), TWindow(tekscr));
+    TekExpose((Widget) tw, (XEvent *) NULL, (Region) NULL);
+}
+
 static void
 TekPage(TekWidget tw)
 {
@@ -1377,6 +1386,7 @@ TekRealize(Widget gw,
     unsigned TEKgcFontMask;
 
     TRACE(("TekRealize\n"));
+    memset(tekscr, 0, sizeof(tekscr));
 
 #ifndef NO_ACTIVE_ICON
     tekscr->whichTwin = &tekscr->fullTwin;

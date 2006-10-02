@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.301 2006/09/10 15:22:06 tom Exp $ */
+/* $XTermId: util.c,v 1.303 2006/09/29 23:01:54 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1566,28 +1566,23 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 	COLOR_DEFINED(pNew, TEK_BG)) {
 	ChangeTekColors(tekWidget, screen, pNew);
 	if (TEK4014_SHOWN(xw)) {
-	    XClearWindow(screen->display, tek);
-	    TekExpose((Widget) tekWidget, (XEvent *) NULL, (Region) NULL);
+	    TekRepaint(tekWidget);
 	}
     } else if (COLOR_DEFINED(pNew, TEK_CURSOR)) {
 	ChangeTekColors(tekWidget, screen, pNew);
     }
 #endif
-    if (repaint) {
-	XClearWindow(screen->display, VWindow(screen));
-	ScrnRefresh(xw, 0, 0, MaxRows(screen),
-		    MaxCols(screen), False);
-    }
+    if (repaint)
+	xtermRepaint(xw);
 }
 
 void
-ChangeAnsiColors(XtermWidget xw)
+xtermRepaint(XtermWidget xw)
 {
     TScreen *screen = &xw->screen;
 
     XClearWindow(screen->display, VWindow(screen));
-    ScrnRefresh(xw, 0, 0,
-		MaxRows(screen),
+    ScrnRefresh(xw, 0, 0, MaxRows(screen),
 		MaxCols(screen), False);
 }
 
@@ -1677,14 +1672,11 @@ ReverseVideo(XtermWidget xw)
     TekReverseVideo(tekWidget);
 #endif
     if (XtIsRealized((Widget) xw)) {
-	XClearWindow(screen->display, VWindow(screen));
-	ScrnRefresh(xw, 0, 0, MaxRows(screen),
-		    MaxCols(screen), False);
+	xtermRepaint(xw);
     }
 #if OPT_TEK4014
     if (TEK4014_SHOWN(xw)) {
-	XClearWindow(screen->display, tek);
-	TekExpose((Widget) tekWidget, (XEvent *) NULL, (Region) NULL);
+	TekRepaint(tekWidget);
     }
 #endif
     ReverseOldColors();

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.529 2006/09/02 00:38:48 tom Exp $ */
+/* $XTermId: main.c,v 1.530 2006/09/28 00:06:41 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -269,7 +269,8 @@ static Bool IsPts = False;
 #else
 #define USE_SYSV_PGRP
 extern __inline__
-ttyslot()
+int
+ttyslot(void)
 {
     return 1;			/* yuk */
 }
@@ -3052,6 +3053,7 @@ spawn(void)
 	    ttyfd = -1;
 	    errno = ENXIO;
 	}
+	pw = NULL;
 #if OPT_INITIAL_ERASE
 	initial_erase = VAL_INITIAL_ERASE;
 #endif

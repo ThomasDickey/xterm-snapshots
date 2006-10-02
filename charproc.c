@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.734 2006/09/05 00:13:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.735 2006/09/28 00:06:28 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -5482,6 +5482,7 @@ VTInitialize(Widget wrequest,
     init_Ires(misc.ctrl_fkeys);
 #endif
 #if OPT_TEK4014
+    TEK4014_SHOWN(wnew) = False;	/* not a resource... */
     init_Bres(misc.tekInhibit);
     init_Bres(misc.tekSmall);
     init_Bres(misc.TekEmu);
