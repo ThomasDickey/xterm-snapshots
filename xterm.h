@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.421 2006/09/03 22:06:11 tom Exp $ */
+/* $XTermId: xterm.h,v 1.424 2006/09/29 23:24:21 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -614,17 +614,18 @@ struct XTERM_RESOURCE;
 extern int TekInit (void);
 extern int TekPtyData(void);
 extern void ChangeTekColors (TekWidget /* tw */, TScreen * /* screen */, ScrnColors * /* pNew */);
+extern void HandleGINInput             PROTO_XT_ACTIONS_ARGS;
 extern void TCursorToggle (TekWidget /* tw */, int /* toggle */);
 extern void TekCopy (TekWidget /* tw */);
 extern void TekEnqMouse (TekWidget /* tw */, int /* c */);
 extern void TekExpose (Widget  /* w */, XEvent * /* event */, Region  /* region */);
 extern void TekGINoff (TekWidget /* tw */);
+extern void TekRefresh (TekWidget /* tw */);
+extern void TekRepaint (TekWidget /* xw */);
 extern void TekReverseVideo (TekWidget /* tw */);
 extern void TekRun (void);
 extern void TekSetFontSize (TekWidget /* tw */, int  /* newitem */);
 extern void TekSimulatePageButton (TekWidget /* tw */, Bool /* reset */);
-extern void TekRefresh (TekWidget /* tw */);
-extern void HandleGINInput             PROTO_XT_ACTIONS_ARGS;
 #endif
 
 /* button.c */
@@ -1005,7 +1006,6 @@ extern int AddToRefresh (TScreen * /* screen */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int char2lower (int  /* ch */);
 extern int drawXtermText (XtermWidget /* xw */, unsigned  /* flags */, GC  /* gc */, int  /* x */, int  /* y */, int  /* chrset */, PAIRED_CHARS(Char * /* text */, Char * /* text2 */), Cardinal  /* len */, int  /* on_wide */);
-extern void ChangeAnsiColors (XtermWidget  /* xw */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
@@ -1028,6 +1028,7 @@ extern void scrolling_copy_area (XtermWidget /* xw */, int  /* firstline */, int
 extern void set_keyboard_type (XtermWidget /* xw */, xtermKeyboardType  /* type */, Bool  /* set */);
 extern void toggle_keyboard_type (XtermWidget /* xw */, xtermKeyboardType  /* type */);
 extern void update_keyboard_type (void);
+extern void xtermRepaint (XtermWidget /* xw */);
 extern void xtermScroll (XtermWidget /* xw */, int /* amount */);
 extern void xtermSizeHints (XtermWidget  /* xw */, int /* scrollbarWidth */);
 
@@ -1053,11 +1054,13 @@ extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* le
 #if OPT_COLOR_RES
 #define GET_COLOR_RES(res) xtermGetColorRes(&(res))
 #define SET_COLOR_RES(res,color) (res)->value = color
+#define EQL_COLOR_RES(res,color) (res)->value == color
 #define T_COLOR(v,n) (v)->Tcolors[n].value
 extern Pixel xtermGetColorRes(ColorRes *res);
 #else
 #define GET_COLOR_RES(res) res
 #define SET_COLOR_RES(res,color) *res = color
+#define EQL_COLOR_RES(res,color) *res == color
 #define T_COLOR(v,n) (v)->Tcolors[n]
 #endif
 

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.443 2006/09/03 22:11:00 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.444 2006/09/27 21:27:21 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1890,8 +1890,8 @@ typedef struct _XtermWidgetRec {
 #if OPT_TEK4014
 typedef struct _TekWidgetRec {
     CorePart	core;
-    TekPart	tek;
-    TekScreen	screen;
+    TekPart	tek;		/* contains resources */
+    TekScreen	screen;		/* contains working data (no resources) */
     Bool	init_menu;
     XSizeHints	hints;
 } TekWidgetRec, *TekWidget;

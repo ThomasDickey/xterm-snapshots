@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.254 2006/09/01 21:48:34 tom Exp $ */
+/* $XTermId: button.c,v 1.255 2006/10/01 23:39:29 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -2489,6 +2489,14 @@ columnToCell(TScreen * screen, int row, int col, CELL * cell)
 
 	/* TRACE(("last(%d) = %d, have %d\n", row, last, col)); */
 	if (col <= last) {
+	    break;
+	}
+	/*
+	 * Stop if the current row does not wrap (does not continue the current
+	 * line).
+	 */
+	if (!ScrnTstWrapped(screen, row)) {
+	    col = last + 1;
 	    break;
 	}
 	col -= (last + 1);

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.327 2006/09/03 22:15:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.329 2006/09/29 23:30:50 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1462,11 +1462,21 @@ find_closest_color(Display * display, Colormap cmap, XColor * def)
     }
 }
 
-static Bool
+/*
+ * Allocate a color for the "ANSI" colors.  That actually includes colors up
+ * to 256.
+ *
+ * Returns
+ *	-1 on error
+ *	0 on no change
+ *	1 if a new color was allocated.
+ */
+static int
 AllocateAnsiColor(XtermWidget xw,
 		  ColorRes * res,
 		  char *spec)
 {
+    int result;
     XColor def;
     TScreen *screen = &xw->screen;
     Colormap cmap = xw->core.colormap;
@@ -1474,16 +1484,28 @@ AllocateAnsiColor(XtermWidget xw,
     if (XParseColor(screen->display, cmap, spec, &def)
 	&& (XAllocColor(screen->display, cmap, &def)
 	    || find_closest_color(screen->display, cmap, &def))) {
-	SET_COLOR_RES(res, def.pixel);
-	TRACE(("AllocateAnsiColor[%d] %s (pixel %#lx)\n",
-	       (res - screen->Acolors), spec, def.pixel));
+	if (
 #if OPT_COLOR_RES
-	res->mode = True;
+	       res->mode == True &&
 #endif
-	return (True);
+	       EQL_COLOR_RES(res, def.pixel)) {
+	    result = 0;
+	} else {
+	    result = 1;
+	    SET_COLOR_RES(res, def.pixel);
+	    TRACE(("AllocateAnsiColor[%d] %s (pixel %#lx)\n",
+		   (res - screen->Acolors), spec, def.pixel));
+#if OPT_COLOR_RES
+	    if (!res->mode)
+		result = 0;
+	    res->mode = True;
+#endif
+	}
+    } else {
+	TRACE(("AllocateAnsiColor %s (failed)\n", spec));
+	result = -1;
     }
-    TRACE(("AllocateAnsiColor %s (failed)\n", spec));
-    return (False);
+    return (result);
 }
 
 #if OPT_COLOR_RES
@@ -1501,7 +1523,7 @@ xtermGetColorRes(ColorRes * res)
 	if (res >= term->screen.Acolors) {
 	    assert(res - term->screen.Acolors < MAXCOLORS);
 
-	    if (!AllocateAnsiColor(term, res, res->resource)) {
+	    if (AllocateAnsiColor(term, res, res->resource) < 0) {
 		res->value = term->screen.Tcolors[TEXT_FG].value;
 		res->mode = -True;
 		fprintf(stderr,
@@ -1525,7 +1547,8 @@ ChangeAnsiColorRequest(XtermWidget xw,
 {
     char *name;
     int color;
-    int r = False;
+    int repaint = False;
+    int code;
 
     TRACE(("ChangeAnsiColorRequest string='%s'\n", buf));
 
@@ -1547,17 +1570,22 @@ ChangeAnsiColorRequest(XtermWidget xw,
 	    ReportAnsiColorRequest(xw, color, final);
 	else {
 	    TRACE(("ChangeAnsiColor for Acolors[%d]\n", color));
-	    if (!AllocateAnsiColor(xw, &(xw->screen.Acolors[color]), name))
+	    code = AllocateAnsiColor(xw, &(xw->screen.Acolors[color]), name);
+	    if (code < 0) {
+		/* stop on any error */
 		break;
+	    } else if (code > 0) {
+		repaint = True;
+	    }
 	    /* FIXME:  free old color somehow?  We aren't for the other color
 	     * change style (dynamic colors).
 	     */
-	    r = True;
 	}
     }
-    if (r)
-	ChangeAnsiColors(xw);
-    return (r);
+    if (repaint)
+	xtermRepaint(xw);
+
+    return (repaint);
 }
 #else
 #define find_closest_color(display, cmap, def) 0
