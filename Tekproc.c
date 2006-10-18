@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.145 2006/09/29 23:04:01 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.147 2006/10/17 22:36:34 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -961,7 +961,7 @@ TekRefresh(TekWidget tw)
     if (!setjmp(Tekjump))
 	Tekparse(tw);
     XDefineCursor(XtDisplay(tw), TWindow(tekscr),
-		  (tekscr->TekGIN && GINcursor) ? GINcursor : screen->arrow);
+		  (tekscr->TekGIN && GINcursor) ? GINcursor : tekscr->arrow);
 }
 
 void
@@ -1200,10 +1200,9 @@ void
 TekGINoff(TekWidget tw)
 {
     TekScreen *tekscr = &tw->screen;
-    TScreen *screen = &term->screen;
 
     TRACE(("TekGINoff\n"));
-    XDefineCursor(XtDisplay(tw), TWindow(tekscr), screen->arrow);
+    XDefineCursor(XtDisplay(tw), TWindow(tekscr), tekscr->arrow);
     if (GINcursor)
 	XFreeCursor(XtDisplay(tw), GINcursor);
     if (tekscr->TekGIN) {
@@ -1394,6 +1393,10 @@ TekRealize(Widget gw,
 
     BorderPixel(tw) = BorderPixel(term);
 
+    tekscr->arrow = make_colored_cursor(XC_left_ptr,
+					T_COLOR(screen, MOUSE_FG),
+					T_COLOR(screen, MOUSE_BG));
+
     for (i = 0; i < TEKNUMFONTS; i++) {
 	if (!tw->tek.Tfont[i]) {
 	    tw->tek.Tfont[i] = XQueryFont(XtDisplay(tw), DefaultGCID);
@@ -1581,7 +1584,7 @@ TekRealize(Widget gw,
     tekscr->margin = MARGIN1;	/* Margin 1             */
     tekscr->TekGIN = False;	/* GIN off              */
 
-    XDefineCursor(XtDisplay(tw), TWindow(tekscr), screen->pointer_cursor);
+    XDefineCursor(XtDisplay(tw), TWindow(tekscr), tekscr->arrow);
 
     {				/* there's gotta be a better way... */
 	static Arg args[] =

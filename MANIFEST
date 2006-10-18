@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-221
+MANIFEST for xterm, version xterm-222
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -120,6 +120,7 @@ vttests/8colors.sh              test-script to illustrate 8-colors
 vttests/acolors.sh              demonstrate changing the ANSI colors
 vttests/doublechars.sh          test script to demonstrate doublesize chars
 vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
+vttests/dynamic2.sh             complete example of dynamic colors
 vttests/fonts.sh                script to demonstrate font-switching sequences
 vttests/paste64.pl              script to test base64-selection option
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed

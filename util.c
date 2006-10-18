@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.303 2006/09/29 23:01:54 tom Exp $ */
+/* $XTermId: util.c,v 1.306 2006/10/17 22:24:10 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1476,9 +1476,6 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 {
     Bool repaint = False;
     TScreen *screen = &xw->screen;
-#if OPT_TEK4014
-    Window tek = TWindow(&(tekWidget->screen));
-#endif
 
     TRACE(("ChangeColors\n"));
 
@@ -1538,20 +1535,26 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 	    TRACE(("... MOUSE_BG: %#lx\n", T_COLOR(screen, MOUSE_BG)));
 	}
 
-	recolor_cursor(screen,
-		       screen->pointer_cursor,
-		       T_COLOR(screen, MOUSE_FG),
-		       T_COLOR(screen, MOUSE_BG));
-	recolor_cursor(screen,
-		       screen->arrow,
-		       T_COLOR(screen, MOUSE_FG),
-		       T_COLOR(screen, MOUSE_BG));
-	XDefineCursor(screen->display, VWindow(screen),
-		      screen->pointer_cursor);
-
+	if (screen->Vshow) {
+	    recolor_cursor(screen,
+			   screen->pointer_cursor,
+			   T_COLOR(screen, MOUSE_FG),
+			   T_COLOR(screen, MOUSE_BG));
+	    XDefineCursor(screen->display, VWindow(screen),
+			  screen->pointer_cursor);
+	}
 #if OPT_TEK4014
-	if (tek)
-	    XDefineCursor(screen->display, tek, screen->arrow);
+	if (TEK4014_SHOWN(xw)) {
+	    TekScreen *tekscr = &(tekWidget->screen);
+	    Window tekwin = TWindow(tekscr);
+	    if (tekwin) {
+		recolor_cursor(screen,
+			       tekscr->arrow,
+			       T_COLOR(screen, MOUSE_FG),
+			       T_COLOR(screen, MOUSE_BG));
+		XDefineCursor(screen->display, tekwin, tekscr->arrow);
+	    }
+	}
 #endif
 	/* no repaint needed */
     }
@@ -1594,9 +1597,6 @@ ReverseVideo(XtermWidget xw)
     TScreen *screen = &xw->screen;
     GC tmpGC;
     Pixel tmp;
-#if OPT_TEK4014
-    Window tek = 0;
-#endif
 
     TRACE(("ReverseVideo\n"));
 
@@ -1634,24 +1634,26 @@ ReverseVideo(XtermWidget xw)
     screen->iconVwin.reverseboldGC = tmpGC;
 #endif /* NO_ACTIVE_ICON */
 
-    recolor_cursor(screen,
-		   screen->pointer_cursor,
-		   T_COLOR(screen, MOUSE_FG),
-		   T_COLOR(screen, MOUSE_BG));
-    recolor_cursor(screen,
-		   screen->arrow,
-		   T_COLOR(screen, MOUSE_FG),
-		   T_COLOR(screen, MOUSE_BG));
-
     xw->misc.re_verse = !xw->misc.re_verse;
 
     if (XtIsRealized((Widget) xw)) {
-	XDefineCursor(screen->display, VWindow(screen), screen->pointer_cursor);
+	if (screen->Vshow) {
+	    recolor_cursor(screen,
+			   screen->pointer_cursor,
+			   T_COLOR(screen, MOUSE_FG),
+			   T_COLOR(screen, MOUSE_BG));
+	    XDefineCursor(screen->display, VWindow(screen), screen->pointer_cursor);
+	}
     }
 #if OPT_TEK4014
     if (TEK4014_SHOWN(xw)) {
-	tek = TWindow(&(tekWidget->screen));
-	XDefineCursor(screen->display, tek, screen->arrow);
+	TekScreen *tekscr = &(tekWidget->screen);
+	Window tekwin = TWindow(tekscr);
+	recolor_cursor(screen,
+		       tekscr->arrow,
+		       T_COLOR(screen, MOUSE_FG),
+		       T_COLOR(screen, MOUSE_BG));
+	XDefineCursor(screen->display, tekwin, tekscr->arrow);
     }
 #endif
 

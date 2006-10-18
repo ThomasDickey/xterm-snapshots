@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.31 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: main.h,v 1.32 2006/10/17 22:16:32 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/main.h,v 3.15 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -29,15 +29,41 @@
 
 #include <xterm.h>
 
+#ifndef DEFCLASS
 #define DEFCLASS		"XTerm"
+#endif
+
+#ifndef DEFFONT
 #define DEFFONT			"fixed"
+#endif
+
+#ifndef DEFWIDEFONT
 #define DEFWIDEFONT		NULL	/* grab one which is 2x as wide */
+#endif
+
+#ifndef DEFWIDEBOLDFONT
 #define DEFWIDEBOLDFONT		NULL
+#endif
+
+#ifndef DEFXIMFONT
 #define DEFXIMFONT		"*"
+#endif
+
+#ifndef DEFBOLDFONT
 #define DEFBOLDFONT		NULL	/* no bold font uses overstriking */
+#endif
+
+#ifndef DEFBORDER
 #define DEFBORDER		2
+#endif
+
+#ifndef DEFFACENAME
 #define DEFFACENAME		NULL
+#endif
+
+#ifndef DEFFACESIZE
 #define DEFFACESIZE		"14.0"
+#endif
 
 #if OPT_BLINK_TEXT
 #define DEFBLINKASBOLD		FALSE

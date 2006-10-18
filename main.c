@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.530 2006/09/28 00:06:41 tom Exp $ */
+/* $XTermId: main.c,v 1.531 2006/10/17 21:54:54 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -464,7 +464,6 @@ static int pty_search(int *pty);
 #endif /* ! VMS */
 
 static int get_pty(int *pty, char *from);
-static void get_terminal(void);
 static void resize(TScreen * s, char *oldtc, char *newtc);
 static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
@@ -2284,9 +2283,6 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif /* DEBUG */
 
-    /* open a terminal for client */
-    get_terminal();
-
     spawn();
 
 #ifndef VMS
@@ -2697,19 +2693,6 @@ pty_search(int *pty)
     return 1;
 }
 #endif /* USE_PTY_SEARCH */
-
-/*
- * sets up X and initializes the terminal structure except for term.buf.fildes.
- */
-static void
-get_terminal(void)
-{
-    TScreen *screen = &term->screen;
-
-    screen->arrow = make_colored_cursor(XC_left_ptr,
-					T_COLOR(screen, MOUSE_FG),
-					T_COLOR(screen, MOUSE_BG));
-}
 
 /*
  * The only difference in /etc/termcap between 4014 and 4015 is that
