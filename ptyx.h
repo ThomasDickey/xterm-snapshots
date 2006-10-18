@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.444 2006/09/27 21:27:21 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.445 2006/10/17 21:06:49 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1305,7 +1305,6 @@ typedef struct {
 #endif
 	int		border;		/* inner border			*/
 	int		scrollBarBorder; /* scrollBar border		*/
-	Cursor		arrow;		/* arrow cursor			*/
 	unsigned long	event_mask;
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
@@ -1637,6 +1636,7 @@ typedef struct _TekScreen {
 	struct _tekwin *whichTwin;
 #endif /* NO_ACTIVE_ICON */
 
+	Cursor		arrow;		/* arrow cursor			*/
 	GC		linepat[TEKNUMLINES]; /* line patterns		*/
 	int		cur_X;		/* current x			*/
 	int		cur_Y;		/* current y			*/

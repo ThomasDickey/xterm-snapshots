@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.232 2006/09/05 00:22:17 tom Exp $ */
+/* $XTermId: os2main.c,v 1.233 2006/10/17 21:53:29 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -126,7 +126,6 @@ ttyname(int fd)
 
 static SIGNAL_T reapchild(int n);
 static int spawn(void);
-static void get_terminal(void);
 static void resize(TScreen * s, char *oldtc, char *newtc);
 static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
@@ -1280,9 +1279,6 @@ main(int argc, char **argv ENVP_ARG)
     }
 #endif /* DEBUG */
 
-    /* open a terminal for client */
-    get_terminal();
-
     spawn();
 
     /* Child process is out there, let's catch its termination */
@@ -1413,19 +1409,6 @@ static int
 get_pty(int *pty)
 {
     return pty_search(pty);
-}
-
-/*
- * sets up X and initializes the terminal structure except for term.buf.fildes.
- */
-static void
-get_terminal(void)
-{
-    TScreen *screen = &term->screen;
-
-    screen->arrow = make_colored_cursor(XC_left_ptr,
-					T_COLOR(screen, MOUSE_FG),
-					T_COLOR(screen, MOUSE_BG));
 }
 
 /*

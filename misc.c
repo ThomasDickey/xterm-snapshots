@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.329 2006/09/29 23:30:50 tom Exp $ */
+/* $XTermId: misc.c,v 1.330 2006/10/17 21:23:20 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -227,10 +227,9 @@ make_colored_cursor(unsigned cursorindex,	/* index into font */
     Display *dpy = screen->display;
 
     c = XCreateFontCursor(dpy, cursorindex);
-    if (c == (Cursor) 0)
-	return (c);
-
-    recolor_cursor(screen, c, fg, bg);
+    if (c != None) {
+	recolor_cursor(screen, c, fg, bg);
+    }
     return (c);
 }
 
