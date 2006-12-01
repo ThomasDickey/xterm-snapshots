@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.424 2006/09/29 23:24:21 tom Exp $ */
+/* $XTermId: xterm.h,v 1.430 2006/11/23 01:18:29 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -164,13 +164,13 @@ authorization.
 #endif
 
 #if defined(__OpenBSD__)
-#define DEFDELETE_DEL TRUE
-#define DEF_BACKARO_ERASE TRUE
-#define DEF_INITIAL_ERASE TRUE
+#define DEFDELETE_DEL True
+#define DEF_BACKARO_ERASE True
+#define DEF_INITIAL_ERASE True
 #endif
 
 #if defined(__SCO__) || defined(__UNIXWARE__)
-#define DEFDELETE_DEL TRUE
+#define DEFDELETE_DEL True
 #define OPT_SCO_FUNC_KEYS 1
 #endif
 
@@ -980,11 +980,11 @@ extern void HandleScrollBack           PROTO_XT_ACTIONS_ARGS;
 extern void HandleScrollForward        PROTO_XT_ACTIONS_ARGS;
 extern void ResizeScrollBar (XtermWidget  /* xw */);
 extern void ScrollBarDrawThumb (Widget  /* scrollWidget */);
-extern void ScrollBarOff (TScreen * /* screen */);
+extern void ScrollBarOff (XtermWidget  /* xw */);
 extern void ScrollBarOn (XtermWidget  /* xw */, int  /* init */, int  /* doalloc */);
 extern void ScrollBarReverseVideo (Widget  /* scrollWidget */);
-extern void ToggleScrollBar (XtermWidget  /* w */);
-extern void WindowScroll (TScreen * /* screen */, int  /* top */);
+extern void ToggleScrollBar (XtermWidget  /* xw */);
+extern void WindowScroll (XtermWidget /* xw */, int  /* top */);
 
 #ifdef SCROLLBAR_RIGHT
 extern void updateRightScrollbar(XtermWidget  /* xw */);
@@ -1021,6 +1021,7 @@ extern void decode_keyboard_type (XtermWidget /* xw */, struct XTERM_RESOURCE * 
 extern void decode_wcwidth (int  /* mode */);
 extern void do_erase_display (XtermWidget /* xw */, int  /* param */, int  /* mode */);
 extern void do_erase_line (XtermWidget /* xw */, int  /* param */, int  /* mode */);
+extern void getXtermSizeHints (XtermWidget /* xw */);
 extern void init_keyboard_type (XtermWidget /* xw */, xtermKeyboardType /* type */, Bool  /* set */);
 extern void recolor_cursor (TScreen * /* screen */, Cursor  /* cursor */, unsigned long  /* fg */, unsigned long  /* bg */);
 extern void resetXtermGC (XtermWidget /* xw */, unsigned  /* flags */, Bool  /* hilite */);
@@ -1028,6 +1029,7 @@ extern void scrolling_copy_area (XtermWidget /* xw */, int  /* firstline */, int
 extern void set_keyboard_type (XtermWidget /* xw */, xtermKeyboardType  /* type */, Bool  /* set */);
 extern void toggle_keyboard_type (XtermWidget /* xw */, xtermKeyboardType  /* type */);
 extern void update_keyboard_type (void);
+extern void xtermClear (XtermWidget /* xw */);
 extern void xtermRepaint (XtermWidget /* xw */);
 extern void xtermScroll (XtermWidget /* xw */, int /* amount */);
 extern void xtermSizeHints (XtermWidget  /* xw */, int /* scrollbarWidth */);
@@ -1087,9 +1089,12 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 
 #else /* !OPT_ISO_COLORS */
 
+#define ClearDFtBackground(xw, top, left, height, width) \
+	ClearCurBackground(xw, top, left, height, width)
+
 #define ClearCurBackground(xw, top, left, height, width) \
 	XClearArea (xw->screen.display, VWindow(&(xw->screen)), \
-		left, top, width, height, FALSE)
+		left, top, width, height, False)
 
 #define extract_fg(xw, color, flags) (xw)->cur_foreground
 #define extract_bg(xw, color, flags) (xw)->cur_background

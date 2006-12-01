@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.357 2006/08/11 01:01:11 tom Exp $
+.\" $XTermId: xterm.man,v 1.359 2006/11/29 00:23:57 tom Exp $
 .\"
 .\" Copyright 1996-2005,2006 by Thomas E. Dickey
 .\"
@@ -2086,6 +2086,8 @@ Control-, Shift-, Alt- or Meta-modifiers are used to add a parameter to
 the escape sequence returned by a cursor-key.
 The default is ``2'':
 .IP
+Set it to -1 to disable it.
+.br
 Set it to 0 to use the old/obsolete behavior.
 .br
 Set it to 1 to prefix modified sequences with CSI.
@@ -2102,7 +2104,7 @@ the escape sequence returned by a (numbered) function-key.
 The default is ``2''.
 The resource values are similar to \fBmodifyCursorKeys\fP:
 .IP
-Set it to -1 to permit the user to user shift- and control-modifiers
+Set it to -1 to permit the user to use shift- and control-modifiers
 to construct function-key strings using the normal encoding scheme.
 .br
 Set it to 0 to use the old/obsolete behavior.
@@ -3611,7 +3613,7 @@ will sound in warning.
 .
 .
 .SH "CHARACTER CLASSES"
-Clicking the left mouse button twice in rapid succession
+Clicking the left pointer button twice in rapid succession
 (double-clicking) causes all characters of the same class
 (e.g., letters, white space, punctuation) to be selected as a ``word''.
 Since different people have different preferences for what should
@@ -4247,25 +4249,38 @@ which is set by the \fBselectToClipboard\fP resource:
                        <BtnDown>:ignore()
 .DE
 .PP
+The default bindings for the scrollbar widget
+are separate from the VT100 widget:
+.DS
+.ta 2.5i
+                      <Btn5Down>: StartScroll(Forward) \\n\\\&
+                      <Btn1Down>: StartScroll(Forward) \\n\\\&
+                      <Btn2Down>: StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
+                      <Btn3Down>: StartScroll(Backward) \\n\\\&
+                      <Btn4Down>: StartScroll(Backward) \\n\\\&
+                      <Btn2Motion>: MoveThumb() NotifyThumb() \\n\\\&
+                      <BtnUp>:    NotifyScroll(Proportional) EndScroll()
+.DE
+.PP
 The default bindings in the Tektronix window are:
 .DS
 .ta 2.5i
-                ~Meta<KeyPress>: 	insert-seven-bit() \\n\\\&
-                 Meta<KeyPress>: 	insert-eight-bit() \\n\\\&
-               !Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\\&
-          !Lock Ctrl <Btn1Down>: 	popup-menu(mainMenu) \\n\\\&
-!Lock Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\\&
-     !Ctrl @Num_Lock <Btn1Down>:	popup-menu(mainMenu) \\n\\\&
-               !Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\\&
-          !Lock Ctrl <Btn2Down>: 	popup-menu(tekMenu) \\n\\\&
-!Lock Ctrl @Num_Lock <Btn2Down>:	popup-menu(tekMenu) \\n\\\&
-     !Ctrl @Num_Lock <Btn2Down>:	popup-menu(tekMenu) \\n\\\&
-          Shift ~Meta<Btn1Down>:	gin-press(L) \\n\\\&
-                ~Meta<Btn1Down>:	gin-press(l) \\n\\\&
-          Shift ~Meta<Btn2Down>:	gin-press(M) \\n\\\&
-                ~Meta<Btn2Down>:	gin-press(m) \\n\\\&
-          Shift ~Meta<Btn3Down>:	gin-press(R) \\n\\\&
-                ~Meta<Btn3Down>:	gin-press(r)
+                 ~Meta<KeyPress>: insert-seven-bit() \\n\\\&
+                  Meta<KeyPress>: insert-eight-bit() \\n\\\&
+                !Ctrl <Btn1Down>: popup-menu(mainMenu) \\n\\\&
+           !Lock Ctrl <Btn1Down>: popup-menu(mainMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn1Down>: popup-menu(mainMenu) \\n\\\&
+      !Ctrl @Num_Lock <Btn1Down>: popup-menu(mainMenu) \\n\\\&
+                !Ctrl <Btn2Down>: popup-menu(tekMenu) \\n\\\&
+           !Lock Ctrl <Btn2Down>: popup-menu(tekMenu) \\n\\\&
+ !Lock Ctrl @Num_Lock <Btn2Down>: popup-menu(tekMenu) \\n\\\&
+      !Ctrl @Num_Lock <Btn2Down>: popup-menu(tekMenu) \\n\\\&
+           Shift ~Meta<Btn1Down>: gin-press(L) \\n\\\&
+                 ~Meta<Btn1Down>: gin-press(l) \\n\\\&
+           Shift ~Meta<Btn2Down>: gin-press(M) \\n\\\&
+                 ~Meta<Btn2Down>: gin-press(m) \\n\\\&
+           Shift ~Meta<Btn3Down>: gin-press(R) \\n\\\&
+                 ~Meta<Btn3Down>: gin-press(r)
 .DE
 .PP
 Here is an example which uses shifted select/paste to copy to the clipboard,
@@ -4298,6 +4313,19 @@ keys for entering commonly-typed works:
 	<Key>F18:	string("step") string(0x0d) \\n\\\&
 	<Key>F19:	string("continue") string(0x0d) \\n\\\&
 	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
+.DE
+.PP
+Some people prefer using the left pointer button
+for dragging the scrollbar thumb.
+That can be setup by altering the translations resource, e.g.,
+.DS
+.ta .5i 1.5i
+*VT100.scrollbar.translations:	#override \\n\\\&
+	<Btn5Down>:	StartScroll(Forward) \\n\\\&
+	<Btn1Down>:	StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
+	<Btn4Down>:	StartScroll(Backward) \\n\\\&
+	<Btn1Motion>:	MoveThumb() NotifyThumb() \\n\\\&
+	<BtnUp>:	NotifyScroll(Proportional) EndScroll()
 .DE
 .SH "CONTROL SEQUENCES AND KEYBOARD"
 The \fIXterm Control Sequences\fP document lists the control sequences which

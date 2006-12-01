@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.136 2006/08/10 21:43:51 tom Exp $
+## $XTermId: Makefile.in,v 1.137 2006/11/30 00:03:48 tom Exp $
 ##
 ## $XFree86: xc/programs/xterm/Makefile.in,v 3.56 2006/06/19 00:36:50 dickey Exp $ ##
 ##
@@ -47,9 +47,6 @@ INSTALL_PROGRAM	= @INSTALL_PROGRAM@
 INSTALL_SCRIPT	= @INSTALL_SCRIPT@
 INSTALL_DATA	= @INSTALL_DATA@
 transform	= @program_transform_name@
-
-X_LIBS		= @X_LIBS@
-X_EXTRA_LIBS	= @X_EXTRA_LIBS@
 
 EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
@@ -124,10 +121,10 @@ $(OBJS1) : xterm.h ptyx.h xtermcfg.h
 main$o resize$o screen$o : xterm_io.h
 
 xterm$x : $(OBJS1)
-	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LOADFLAGS)
+	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize$x : $(OBJS2)
-	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(LIBS)
 
 256colres.h :
 	-rm -f $@

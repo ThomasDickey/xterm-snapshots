@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.48 2006/07/23 22:06:23 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.49 2006/11/23 01:18:29 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/doublechr.c,v 3.18 2006/02/13 01:14:58 dickey Exp $
@@ -254,7 +254,7 @@ xterm_DoubleGC(unsigned chrset, unsigned flags, GC old_gc)
 
     TRACE(("-> OK\n"));
 
-    gcv.graphics_exposures = TRUE;	/* default */
+    gcv.graphics_exposures = True;	/* default */
     gcv.font = data->fs->fid;
     gcv.foreground = T_COLOR(screen, TEXT_FG);
     gcv.background = T_COLOR(screen, TEXT_BG);

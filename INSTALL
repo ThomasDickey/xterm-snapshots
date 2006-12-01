@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.107 2006/07/15 12:10:28 tom Exp $
+-- $XTermId: INSTALL,v 1.108 2006/11/30 23:33:38 tom Exp $
 -- $XFree86: xc/programs/xterm/INSTALL,v 3.42 2006/02/13 01:14:57 dickey Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2005,2006 by Thomas E. Dickey
@@ -382,6 +382,10 @@ The options (in alphabetic order):
 	bracket the data.
 
 	(See --enable-paste64, which fits xterm's protocol better).
+
+  --enable-rectangles     enable VT420 rectangle support
+
+	Compile-in code to support VT420 rectangle control-sequences.
 
   --enable-sco-fkeys      enable support for SCO-style function keys
 

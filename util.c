@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.306 2006/10/17 22:24:10 tom Exp $ */
+/* $XTermId: util.c,v 1.313 2006/11/29 22:52:10 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1396,6 +1396,16 @@ HandleExposure(XtermWidget xw, XEvent * event)
     }
 }
 
+static void
+set_background(XtermWidget xw, int color)
+{
+    TScreen *screen = &(xw->screen);
+    Pixel c = getXtermBackground(xw, xw->flags, color);
+
+    XSetWindowBackground(screen->display, VShellWindow, c);
+    XSetWindowBackground(screen->display, VWindow(screen), c);
+}
+
 /*
  * Called by the ExposeHandler to do the actual repaint after the coordinates
  * have been translated to allow for any CopyArea in progress.
@@ -1412,6 +1422,7 @@ handle_translated_exposure(XtermWidget xw,
     int toprow, leftcol, nrows, ncols;
     int x0, x1;
     int y0, y1;
+    int result = 0;
 
     TRACE(("handle_translated_exposure at %d,%d size %dx%d\n",
 	   rect_y, rect_x, rect_height, rect_width));
@@ -1422,6 +1433,19 @@ handle_translated_exposure(XtermWidget xw,
     y0 = (rect_y - OriginY(screen));
     y1 = (y0 + rect_height);
 
+    if (getXtermBackground(xw, xw->flags, xw->cur_background) !=
+	xw->core.background_pixel &&
+	(x0 < 0 ||
+	 y0 < 0 ||
+	 x1 > Width(screen) ||
+	 y1 > Height(screen))) {
+	set_background(xw, -1);
+	XClearArea(screen->display, VWindow(screen),
+		   rect_x,
+		   rect_y,
+		   rect_width,
+		   rect_height, False);
+    }
     toprow = y0 / FontHeight(screen);
     if (toprow < 0)
 	toprow = 0;
@@ -1443,18 +1467,20 @@ handle_translated_exposure(XtermWidget xw,
 	ncols = MaxCols(screen) - leftcol;
 
     if (nrows > 0 && ncols > 0) {
-	ScrnRefresh(xw, toprow, leftcol, nrows, ncols, False);
+	ScrnRefresh(xw, toprow, leftcol, nrows, ncols, True);
 	if (waiting_for_initial_map) {
 	    first_map_occurred();
 	}
 	if (screen->cur_row >= toprow &&
 	    screen->cur_row < toprow + nrows &&
 	    screen->cur_col >= leftcol &&
-	    screen->cur_col < leftcol + ncols)
-	    return (1);
+	    screen->cur_col < leftcol + ncols) {
+	    result = 1;
+	}
 
     }
-    return (0);
+    TRACE(("...handle_translated_exposure %d\n", result));
+    return (result);
 }
 
 /***====================================================================***/
@@ -1512,8 +1538,7 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 	    XSetForeground(screen->display, ReverseGC(screen), bg);
 	    XSetBackground(screen->display, NormalBoldGC(screen), bg);
 	    XSetForeground(screen->display, ReverseBoldGC(screen), bg);
-	    XSetWindowBackground(screen->display, VWindow(screen),
-				 T_COLOR(screen, TEXT_BG));
+	    set_background(xw, -1);
 	    repaint = True;
 	}
     }
@@ -1580,13 +1605,22 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 }
 
 void
+xtermClear(XtermWidget xw)
+{
+    TScreen *screen = &xw->screen;
+
+    TRACE(("xtermClear\n"));
+    XClearWindow(screen->display, VWindow(screen));
+}
+
+void
 xtermRepaint(XtermWidget xw)
 {
     TScreen *screen = &xw->screen;
 
-    XClearWindow(screen->display, VWindow(screen));
-    ScrnRefresh(xw, 0, 0, MaxRows(screen),
-		MaxCols(screen), False);
+    TRACE(("xtermRepaint\n"));
+    xtermClear(xw);
+    ScrnRefresh(xw, 0, 0, MaxRows(screen), MaxCols(screen), True);
 }
 
 /***====================================================================***/
@@ -1661,14 +1695,7 @@ ReverseVideo(XtermWidget xw)
 	ScrollBarReverseVideo(screen->scrollWidget);
 
     if (XtIsRealized((Widget) xw)) {
-	XSetWindowBackground(screen->display, VWindow(screen),
-			     T_COLOR(screen, TEXT_BG));
-
-	/* the shell-window's background will be used in the first repainting
-	 * on resizing
-	 */
-	XSetWindowBackground(screen->display, VShellWindow,
-			     T_COLOR(screen, TEXT_BG));
+	set_background(xw, -1);
     }
 #if OPT_TEK4014
     TekReverseVideo(tekWidget);
@@ -1745,6 +1772,33 @@ getXftColor(XtermWidget xw, Pixel pixel)
 }
 
 /*
+ * The cell-width is related to, but not the same as the wide-character width.
+ * We will only get useful values from wcwidth() for codes above 255.
+ * Otherwise, interpret according to internal data.
+ */
+static int
+xtermCellWidth(XtermWidget xw, wchar_t ch)
+{
+    int result = 0;
+
+    (void) xw;
+    if (ch == 0 || ch == 127) {
+	result = 0;
+    } else if (ch < 256) {
+#if OPT_C1_PRINT
+	if (ch >= 128 && ch < 160) {
+	    result = (xw->screen.c1_printable ? 1 : 0);
+	} else
+#endif
+
+	    result = 1;		/* 1..31 are line-drawing characters */
+    } else {
+	result = my_wcwidth(ch);
+    }
+    return result;
+}
+
+/*
  * fontconfig/Xft combination prior to 2.2 has a problem with
  * CJK truetype 'double-width' (bi-width/monospace) fonts leading
  * to the 's p a c e d o u t' rendering. Consequently, we can't
@@ -1812,7 +1866,7 @@ xtermXftDrawString(XtermWidget xw,
 	    sbuf[n].x = x + fwidth * ncells;
 	    sbuf[n].y = y;
 
-	    charWidth = my_wcwidth((int) wc);
+	    charWidth = xtermCellWidth(xw, wc);
 	    currFont = (charWidth == 2 && wfont != 0) ? wfont : font;
 	    ncells += charWidth;
 
@@ -1836,6 +1890,7 @@ xtermXftDrawString(XtermWidget xw,
 			    n - start);
 	}
 #else /* !OPT_RENDERWIDE */
+	PAIRED_CHARS((void) text, (void) text2);
 	if (really) {
 	    XftDrawString8(screen->renderDraw,
 			   color,
@@ -2535,6 +2590,18 @@ xtermSizeHints(XtermWidget xw, int scrollbarWidth)
     TRACE_HINTS(&(xw->hints));
 }
 
+void
+getXtermSizeHints(XtermWidget xw)
+{
+    TScreen *screen = &xw->screen;
+    long supp;
+
+    if (!XGetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)),
+			   &xw->hints, &supp))
+	bzero(&xw->hints, sizeof(xw->hints));
+    TRACE_HINTS(&(xw->hints));
+}
+
 /*
  * Returns a GC, selected according to the font (reverse/bold/normal) that is
  * required for the current position (implied).  The GC is updated with the
@@ -2704,16 +2771,15 @@ ClearCurBackground(XtermWidget xw,
 {
     TScreen *screen = &(xw->screen);
 
-    XSetWindowBackground(screen->display,
-			 VWindow(screen),
-			 getXtermBackground(xw, xw->flags, xw->cur_background));
+    TRACE(("ClearCurBackground(%d,%d,%d,%d) %d\n",
+	   top, left, height, width, xw->cur_background));
 
-    XClearArea(screen->display, VWindow(screen),
-	       left, top, width, height, False);
+    if (VWindow(screen)) {
+	set_background(xw, xw->cur_background);
 
-    XSetWindowBackground(screen->display,
-			 VWindow(screen),
-			 getXtermBackground(xw, xw->flags, MAXCOLORS));
+	XClearArea(screen->display, VWindow(screen),
+		   left, top, width, height, False);
+    }
 }
 #endif /* OPT_ISO_COLORS */
 

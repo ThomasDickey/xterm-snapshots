@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.330 2006/10/17 21:23:20 tom Exp $ */
+/* $XTermId: misc.c,v 1.332 2006/11/30 22:25:33 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1075,8 +1075,8 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, int mode)
 #endif /* HAVE_WAITPID */
 
     TRACE(("creat_as(uid=%d/%d, gid=%d/%d, append=%d, pathname=%s, mode=%#o)\n",
-	   uid, geteuid(),
-	   gid, getegid(),
+	   (int) uid, (int) geteuid(),
+	   (int) gid, (int) getegid(),
 	   append,
 	   pathname,
 	   mode));
@@ -1224,7 +1224,7 @@ StartLog(TScreen * screen)
 			  sizeof(yyyy_mm_dd_hh_mm_ss),
 			  "%Y.%m.%d.%H.%M.%S", ltm) > 0)) {
 		(void) sprintf(log_def_name, "Xterm.log.%.255s.%.20s.%d",
-			       hostname, yyyy_mm_dd_hh_mm_ss, getpid());
+			       hostname, yyyy_mm_dd_hh_mm_ss, (int) getpid());
 	    }
 	    if ((log_default = x_strdup(log_def_name)) == NULL)
 		return;
@@ -2873,7 +2873,7 @@ Cleanup(int code)
 	}
 
 	cleaning = True;
-	need_cleanup = FALSE;
+	need_cleanup = False;
 
 	TRACE(("Cleanup %d\n", code));
 

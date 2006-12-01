@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.255 2006/10/01 23:39:29 tom Exp $ */
+/* $XTermId: button.c,v 1.257 2006/11/18 22:07:42 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -2525,7 +2525,8 @@ cellToColumn(TScreen * screen, CELL * cell)
 static void
 do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 {
-    char *expr = screen->selectExpr[screen->numberOfClicks - 1];
+    int inx = ((screen->numberOfClicks - 1) % screen->maxClicks);
+    char *expr = screen->selectExpr[inx];
     regex_t preg;
     regmatch_t match;
     char *search;

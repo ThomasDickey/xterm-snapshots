@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.220 2006/09/10 23:11:14 tom Exp $ */
+/* $XTermId: menu.c,v 1.222 2006/11/23 01:18:29 tom Exp $ */
 
 /*
 
@@ -1438,7 +1438,7 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
     if (!screen->utf8_mode) {
 	if (screen->wide_chars) {
 	    if (xtermLoadWideFonts(term, True)) {
-		SetVTFont(term, screen->menu_font_number, TRUE, NULL);
+		SetVTFont(term, screen->menu_font_number, True, NULL);
 	    }
 	} else {
 	    ChangeToWide(term);
@@ -2471,7 +2471,7 @@ repairSizeHints(void)
     TScreen *screen = &term->screen;
 
     if (XtIsRealized((Widget) term)) {
-	bzero(&term->hints, sizeof(term->hints));
+	getXtermSizeHints(term);
 	xtermSizeHints(term, ScrollbarWidth(screen));
 
 	XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(term)), &term->hints);

@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.265 2006/09/02 00:15:55 tom Exp $ */
+/* $XTermId: input.c,v 1.269 2006/11/28 23:12:47 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/input.c,v 3.76 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -171,10 +171,12 @@ ModifierName(unsigned modifier)
 #endif
 
 static void
-AdjustAfterInput(TScreen * screen)
+AdjustAfterInput(XtermWidget xw)
 {
+    TScreen *screen = &(xw->screen);
+
     if (screen->scrollkey && screen->topline != 0)
-	WindowScroll(screen, 0);
+	WindowScroll(xw, 0);
     if (screen->marginbell) {
 	int col = screen->max_col - screen->nmarginbell;
 	if (screen->bellarmed >= 0) {
@@ -303,19 +305,13 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
     Bool result = False;
 
     (void) screen;
-    if (1
-#if OPT_SUNPC_KBD || OPT_VT52
-	&& !(((IsKeypadKey(kd->keysym) && keypad_mode)
-	      || kd->is_fkey)
-	     && (0
+    if (!(IsKeypadKey(kd->keysym) && keypad_mode)
 #if OPT_SUNPC_KBD
-		 || (keyboard->type == keyboardIsVT220)
+	&& keyboard->type != keyboardIsVT220
 #endif
 #if OPT_VT52_MODE
-		 || (screen->vtXX_level == 0)
+	&& screen->vtXX_level != 0
 #endif
-	     ))
-#endif /* OPT_SUNPC_KBD || OPT_VT52 */
 	) {
 	result = True;
     }
@@ -612,10 +608,13 @@ modifyOtherKey(ANSI * reply, int input_char, int modify_parm)
 }
 
 static void
-modifyCursorKey(ANSI * reply, int modify, int modify_parm)
+modifyCursorKey(ANSI * reply, int modify, int *modify_parm)
 {
-    if (modify_parm > 1) {
-	if (modify) {
+    if (*modify_parm > 1) {
+	if (modify < 0) {
+	    *modify_parm = 0;
+	}
+	if (modify > 0) {
 	    reply->a_type = CSI;	/* SS3 should not have params */
 	}
 	if (modify > 1 && reply->a_nparam == 0) {
@@ -746,7 +745,7 @@ Input(XtermWidget xw,
     int key = False;
     ANSI reply;
     int dec_code;
-    short modify_parm = 0;
+    int modify_parm = 0;
     int keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
     unsigned evt_state = event->state;
     unsigned mod_state;
@@ -1020,7 +1019,7 @@ Input(XtermWidget xw,
 			  || IsEditFunctionKey(kd.keysym))
 			 ? keyboard->modify_now.function_keys
 			 : keyboard->modify_now.cursor_keys),
-			modify_parm);
+			&modify_parm);
 	MODIFIER_PARM;
 	unparseseq(xw, &reply);
     } else if (((kd.is_fkey
@@ -1053,7 +1052,7 @@ Input(XtermWidget xw,
 	    reply.a_final = A2E(dec_code - 11 + E2A('P'));
 	    modifyCursorKey(&reply,
 			    keyboard->modify_now.function_keys,
-			    modify_parm);
+			    &modify_parm);
 	    MODIFIER_PARM;
 	    unparseseq(xw, &reply);
 	}
@@ -1079,7 +1078,7 @@ Input(XtermWidget xw,
 		if (kd.is_fkey) {
 		    modifyCursorKey(&reply,
 				    keyboard->modify_now.function_keys,
-				    modify_parm);
+				    &modify_parm);
 		}
 		MODIFIER_PARM;
 #endif
@@ -1115,7 +1114,7 @@ Input(XtermWidget xw,
 	} else {
 	    reply.a_type = CSI;
 	}
-	modifyCursorKey(&reply, keyboard->modify_now.cursor_keys, modify_parm);
+	modifyCursorKey(&reply, keyboard->modify_now.cursor_keys, &modify_parm);
 	reply.a_final = curfinal[kd.keysym - XK_Home];
 	VT52_CURSOR_KEYS;
 	MODIFIER_PARM;
@@ -1257,7 +1256,7 @@ Input(XtermWidget xw,
     unparse_end(xw);
 
     if (key && !TEK4014_ACTIVE(xw))
-	AdjustAfterInput(screen);
+	AdjustAfterInput(xw);
 
     return;
 }
@@ -1265,8 +1264,6 @@ Input(XtermWidget xw,
 void
 StringInput(XtermWidget xw, Char * string, size_t nbytes)
 {
-    TScreen *screen = &(xw->screen);
-
     TRACE(("InputString (%s,%d)\n",
 	   visibleChars(PAIRED_CHARS(string, 0), nbytes),
 	   nbytes));
@@ -1280,7 +1277,7 @@ StringInput(XtermWidget xw, Char * string, size_t nbytes)
     while (nbytes-- != 0)
 	unparseputc(xw, *string++);
     if (!TEK4014_ACTIVE(xw))
-	AdjustAfterInput(screen);
+	AdjustAfterInput(xw);
     unparse_end(xw);
 }
 
@@ -1717,7 +1714,11 @@ VTInitModifiers(XtermWidget xw)
 			} else if (mask == LockMask
 				   && (keysym == XK_Caps_Lock)) {
 			    ;	/* ignore */
-			} else {
+			} else if (keysym == XK_Mode_switch
+#ifdef XK_ISO_Level3_Shift
+				   || keysym == XK_ISO_Level3_Shift
+#endif
+			    ) {
 			    SaveMask(other_mods);
 			}
 		    }
