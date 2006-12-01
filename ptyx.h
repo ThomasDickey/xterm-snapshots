@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.445 2006/10/17 21:06:49 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.446 2006/11/23 01:18:29 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -794,7 +794,7 @@ typedef enum {
 #define COLOR_RV	(NUM_ANSI_COLORS+3)	/* REVERSE */
 #define MAXCOLORS	(NUM_ANSI_COLORS+4)
 #ifndef DFT_COLORMODE
-#define DFT_COLORMODE TRUE	/* default colorMode resource */
+#define DFT_COLORMODE True	/* default colorMode resource */
 #endif
 
 #define ReverseOrHilite(screen,flags,hilite) \

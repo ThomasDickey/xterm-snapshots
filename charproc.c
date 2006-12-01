@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.735 2006/09/28 00:06:28 tom Exp $ */
+/* $XTermId: charproc.c,v 1.740 2006/11/28 20:45:37 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -823,12 +823,12 @@ SGR_Foreground(XtermWidget xw, int color)
     fg = getXtermForeground(xw, xw->flags, color);
     xw->cur_foreground = color;
 
+    XSetForeground(screen->display, NormalGC(screen), fg);
+    XSetBackground(screen->display, ReverseGC(screen), fg);
+
     if (NormalGC(screen) != NormalBoldGC(screen)) {
 	XSetForeground(screen->display, NormalBoldGC(screen), fg);
 	XSetBackground(screen->display, ReverseBoldGC(screen), fg);
-    } else {
-	XSetForeground(screen->display, NormalGC(screen), fg);
-	XSetBackground(screen->display, ReverseGC(screen), fg);
     }
 }
 
@@ -855,12 +855,12 @@ SGR_Background(XtermWidget xw, int color)
     bg = getXtermBackground(xw, xw->flags, color);
     xw->cur_background = color;
 
+    XSetBackground(screen->display, NormalGC(screen), bg);
+    XSetForeground(screen->display, ReverseGC(screen), bg);
+
     if (NormalGC(screen) != NormalBoldGC(screen)) {
 	XSetBackground(screen->display, NormalBoldGC(screen), bg);
 	XSetForeground(screen->display, ReverseBoldGC(screen), bg);
-    } else {
-	XSetBackground(screen->display, NormalGC(screen), bg);
-	XSetForeground(screen->display, ReverseGC(screen), bg);
     }
 }
 
@@ -2456,7 +2456,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_CNL:
-	    TRACE(("CASE_NPL - cursor next line\n"));
+	    TRACE(("CASE_CNL - cursor next line\n"));
 	    CursorNextLine(screen, param[0]);
 	    sp->parsestate = sp->groundtable;
 	    break;
@@ -3076,7 +3076,7 @@ in_put(XtermWidget xw)
 		&& screen->scrollttyoutput
 		&& screen->topline < 0)
 		/* Scroll to bottom */
-		WindowScroll(screen, 0);
+		WindowScroll(xw, 0);
 	    break;
 	}
 	if (screen->scroll_amt)
@@ -3149,7 +3149,7 @@ in_put(XtermWidget xw)
 	    if (screen->scrollWidget
 		&& screen->scrollttyoutput
 		&& screen->topline < 0)
-		WindowScroll(screen, 0);	/* Scroll to bottom */
+		WindowScroll(xw, 0);	/* Scroll to bottom */
 	    /* stop speed reading at some point to look for X stuff */
 	    TRACE(("VTbuffer uses %d/%d\n",
 		   VTbuffer->last - VTbuffer->buffer,
@@ -4795,16 +4795,13 @@ SwitchBufs(XtermWidget xw)
     if ((top = INX2ROW(screen, 0)) < rows) {
 	if (screen->scroll_amt)
 	    FlushScroll(xw);
-	if (top == 0)
-	    XClearWindow(screen->display, VWindow(screen));
-	else
-	    XClearArea(screen->display,
-		       VWindow(screen),
-		       (int) OriginX(screen),
-		       (int) top * FontHeight(screen) + screen->border,
-		       (unsigned) Width(screen),
-		       (unsigned) (rows - top) * FontHeight(screen),
-		       False);
+	XClearArea(screen->display,
+		   VWindow(screen),
+		   (int) OriginX(screen),
+		   (int) top * FontHeight(screen) + screen->border,
+		   (unsigned) Width(screen),
+		   (unsigned) (rows - top) * FontHeight(screen),
+		   False);
     }
     ScrnUpdate(xw, 0, 0, rows, MaxCols(screen), False);
 }
@@ -4930,9 +4927,6 @@ VTResize(Widget w)
 static void
 RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 {
-#ifndef nothack
-    long supp;
-#endif
     TScreen *screen = &xw->screen;
     unsigned long value;
     Dimension replyWidth, replyHeight;
@@ -4997,9 +4991,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 	    askedWidth = wide;
     }
 #ifndef nothack
-    if (!XGetWMNormalHints(screen->display, VShellWindow,
-			   &xw->hints, &supp))
-	bzero(&xw->hints, sizeof(xw->hints));
+    getXtermSizeHints(xw);
 #endif
 
     status = XtMakeResizeRequest((Widget) xw,
@@ -6086,7 +6078,7 @@ VTRealize(Widget w,
     if (xw->screen.utf8_mode) {
 	TRACE(("check if this is a wide font, if not try again\n"));
 	if (xtermLoadWideFonts(xw, False))
-	    SetVTFont(xw, screen->menu_font_number, TRUE, NULL);
+	    SetVTFont(xw, screen->menu_font_number, True, NULL);
     }
 #endif
 
@@ -6136,7 +6128,7 @@ VTRealize(Widget w,
     }
 
     /* set up size hints for window manager; min 1 char by 1 char */
-    bzero(&xw->hints, sizeof(xw->hints));
+    getXtermSizeHints(xw);
     xtermSizeHints(xw, (xw->misc.scrollbar
 			? (screen->scrollWidget->core.width
 			   + BorderWidth(screen->scrollWidget))

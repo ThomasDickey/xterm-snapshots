@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.69 2006/08/27 17:07:05 tom Exp $ */
+/* $XTermId: trace.c,v 1.71 2006/11/30 22:26:28 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -116,7 +116,7 @@ Trace(char *fmt,...)
 void
 TraceIds(const char *fname, int lnum)
 {
-    Trace("process %d ", getpid());
+    Trace("process %d ", (int) getpid());
 #ifdef HAVE_UNISTD_H
     Trace("real (%u/%u) effective (%u/%u)",
 	  (unsigned) getuid(), (unsigned) getgid(),
@@ -315,14 +315,11 @@ TraceSizeHints(XSizeHints * hints)
 void
 TraceWMSizeHints(XtermWidget xw)
 {
-    XSizeHints sizehints;
-    long supp = 0;
+    XSizeHints sizehints = xw->hints;
 
-    bzero(&sizehints, sizeof(sizehints));
-    if (!XGetWMNormalHints(xw->screen.display, XtWindow(SHELL_OF(xw)),
-			   &sizehints, &supp))
-	bzero(&sizehints, sizeof(sizehints));
-    TraceSizeHints(&sizehints);
+    getXtermSizeHints(xw);
+    TraceSizeHints(&xw->hints);
+    xw->hints = sizehints;
 }
 
 /*

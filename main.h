@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.32 2006/10/17 22:16:32 tom Exp $ */
+/* $XTermId: main.h,v 1.33 2006/11/23 01:17:09 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/main.h,v 3.15 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -66,9 +66,9 @@
 #endif
 
 #if OPT_BLINK_TEXT
-#define DEFBLINKASBOLD		FALSE
+#define DEFBLINKASBOLD		False
 #else
-#define DEFBLINKASBOLD		TRUE
+#define DEFBLINKASBOLD		True
 #endif
 
 #ifndef DEFDELETE_DEL
@@ -76,7 +76,7 @@
 #endif
 
 #ifndef DEF_BACKARO_ERASE
-#define DEF_BACKARO_ERASE	FALSE
+#define DEF_BACKARO_ERASE	False
 #endif
 
 #ifndef DEF_COLOR4
@@ -88,7 +88,7 @@
 #endif
 
 #ifndef DEF_INITIAL_ERASE
-#define DEF_INITIAL_ERASE	FALSE
+#define DEF_INITIAL_ERASE	False
 #endif
 
 #ifndef PROJECTROOT

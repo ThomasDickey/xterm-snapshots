@@ -1,4 +1,4 @@
-/* $XTermId: data.c,v 1.80 2006/09/01 21:53:26 tom Exp $ */
+/* $XTermId: data.c,v 1.81 2006/11/23 01:18:29 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.c,v 3.34 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -73,8 +73,8 @@ char *ProgramName;
 
 Arg ourTopLevelShellArgs[] =
 {
-    {XtNallowShellResize, (XtArgVal) TRUE},
-    {XtNinput, (XtArgVal) TRUE},
+    {XtNallowShellResize, (XtArgVal) True},
+    {XtNinput, (XtArgVal) True},
 };
 Cardinal number_ourTopLevelShellArgs = 2;
 
@@ -97,7 +97,7 @@ XtermWidget term;		/* master data structure for client */
 char *xterm_name;		/* argv[0] */
 
 int hold_screen;
-SIG_ATOMIC_T need_cleanup = FALSE;
+SIG_ATOMIC_T need_cleanup = False;
 
 #if OPT_ZICONBEEP
 int zIconBeep;			/* non-zero means beep; see charproc.c for details -IAN! */

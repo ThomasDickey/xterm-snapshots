@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.531 2006/10/17 21:54:54 tom Exp $ */
+/* $XTermId: main.c,v 1.532 2006/11/23 01:18:29 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -4770,7 +4770,7 @@ reapchild(int n GCC_UNUSED)
 		fputs("Exiting\n", stderr);
 #endif
 	    if (!hold_screen)
-		need_cleanup = TRUE;
+		need_cleanup = True;
 	}
     } while ((pid = nonblocking_wait()) > 0);
 

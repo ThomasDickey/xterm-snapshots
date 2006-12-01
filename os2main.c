@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.233 2006/10/17 21:53:29 tom Exp $ */
+/* $XTermId: os2main.c,v 1.234 2006/11/23 01:18:29 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -2020,7 +2020,7 @@ reapchild(int n GCC_UNUSED)
 		fputs("Exiting\n", stderr);
 #endif
 	    if (!hold_screen)
-		need_cleanup = TRUE;
+		need_cleanup = True;
 	}
     } while ((pid = nonblocking_wait()) > 0);
 

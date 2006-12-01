@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.147 2006/10/17 22:36:34 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.148 2006/11/22 22:11:47 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -881,6 +881,15 @@ Tinput(TekWidget tw)
     return (*tek->ptr++ = nextPtyData(screen, VTbuffer));
 }
 
+static void
+TekClear(TekWidget tw)
+{
+    TekScreen *tekscr = &tw->screen;
+
+    if (TWindow(tekscr))
+	XClearWindow(XtDisplay(tw), TWindow(tekscr));
+}
+
 /* this should become the Tek Widget's Resize proc */
 static void
 TekConfigure(Widget w)
@@ -892,8 +901,7 @@ TekConfigure(Widget w)
 	int border = 2 * screen->border;
 	double d;
 
-	if (TWindow(tekscr))
-	    XClearWindow(XtDisplay(tw), TWindow(tekscr));
+	TekClear(tw);
 	TWidth(tekscr) = w->core.width - border;
 	THeight(tekscr) = w->core.height - border;
 	TekScale(tekscr) = (double) TWidth(tekscr) / TEKWIDTH;
@@ -967,9 +975,7 @@ TekRefresh(TekWidget tw)
 void
 TekRepaint(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
-
-    XClearWindow(XtDisplay(tw), TWindow(tekscr));
+    TekClear(tw);
     TekExpose((Widget) tw, (XEvent *) NULL, (Region) NULL);
 }
 
@@ -979,7 +985,7 @@ TekPage(TekWidget tw)
     TekScreen *tekscr = &tw->screen;
     TekLink *tek;
 
-    XClearWindow(XtDisplay(tw), TWindow(tekscr));
+    TekClear(tw);
     tekscr->cur_X = 0;
     tekscr->cur_Y = TEKHOME;
     tekscr->margin = MARGIN1;

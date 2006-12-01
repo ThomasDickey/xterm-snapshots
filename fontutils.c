@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.216 2006/09/10 19:55:28 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.219 2006/11/29 21:57:00 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -886,6 +886,12 @@ xtermLoadFont(XtermWidget xw,
 	fnts[fBold] = fnts[fNorm];
     }
 
+    if (!screen->bold_mode && fnts[fBold] != fnts[fNorm]) {
+	TRACE(("...ignoring bold font, as per boldMode\n"));
+	xtermCloseFont(screen, fnts[fBold]);
+	fnts[fBold] = fnts[fNorm];
+    }
+
     if_OPT_WIDE_CHARS(screen, {
 	if (fnts[fWide] != 0
 	    && fnts[fWBold] != 0
@@ -1701,7 +1707,7 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
 
     if (doresize) {
 	if (VWindow(screen)) {
-	    XClearWindow(screen->display, VWindow(screen));
+	    xtermClear(xw);
 	}
 	TRACE(("xtermUpdateFontInfo {{\n"));
 	DoResizeScreen(xw);	/* set to the new natural size */
@@ -2152,9 +2158,7 @@ xtermXftMissing(XtermWidget xw, XftFont * font, unsigned wc)
     Bool result = False;
 
     if (font != 0) {
-	unsigned check = XftCharIndex(xw->screen.display, font, wc);
-
-	if (check == 0) {
+	if (!XftGlyphExists(xw->screen.display, font, wc)) {
 	    TRACE(("missingXft %d (%d)\n", wc, ucs2dec(wc)));
 	    result = True;
 	}

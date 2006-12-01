@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.232 2006/08/03 19:24:02 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.235 2006/11/30 23:08:14 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.65 2006/06/19 00:36:50 dickey Exp $
 dnl
@@ -783,7 +783,7 @@ AC_DEFUN([CF_HELP_MESSAGE],
 [AC_DIVERT_HELP([$1])dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_IMAKE_CFLAGS version: 27 updated: 2005/04/05 18:26:15
+dnl CF_IMAKE_CFLAGS version: 28 updated: 2006/10/28 14:00:40
 dnl ---------------
 dnl Use imake to obtain compiler flags.  We could, in principle, write tests to
 dnl get these, but if imake is properly configured there is no point in doing
@@ -838,8 +838,8 @@ CF_EOF
 
 	cat >> ./Imakefile <<'CF_EOF'
 findstddefs:
-	@echo IMAKE $(ALLDEFINES)ifelse($1,,,[ $1])       | sed -f fix_cflags.sed
-	@echo IMAKE $(EXTRA_LOAD_FLAGS)ifelse($2,,,[ $2]) | sed -f fix_lflags.sed
+	@echo IMAKE ${ALLDEFINES}ifelse($1,,,[ $1])       | sed -f fix_cflags.sed
+	@echo IMAKE ${EXTRA_LOAD_FLAGS}ifelse($2,,,[ $2]) | sed -f fix_lflags.sed
 CF_EOF
 
 	if ( $IMAKE $cf_imake_opts 1>/dev/null 2>&AC_FD_CC && test -f Makefile)
@@ -880,7 +880,7 @@ CF_EOF
 	cd ..
 	rm -rf conftestdir
 
-	# We use $(ALLDEFINES) rather than $(STD_DEFINES) because the former
+	# We use ${ALLDEFINES} rather than ${STD_DEFINES} because the former
 	# declares XTFUNCPROTO there.  However, some vendors (e.g., SGI) have
 	# modified it to support site.cf, adding a kludge for the /usr/include
 	# directory.  Try to filter that out, otherwise gcc won't find its
@@ -1090,13 +1090,19 @@ if test -n "$cf_path_prog" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_SYNTAX version: 10 updated: 2006/01/02 19:36:00
+dnl CF_PATH_SYNTAX version: 11 updated: 2006/09/02 08:55:46
 dnl --------------
 dnl Check the argument to see that it looks like a pathname.  Rewrite it if it
 dnl begins with one of the prefix/exec_prefix variables, and then again if the
 dnl result begins with 'NONE'.  This is necessary to work around autoconf's
 dnl delayed evaluation of those symbols.
 AC_DEFUN([CF_PATH_SYNTAX],[
+if test "x$prefix" != xNONE; then
+  cf_path_syntax="$prefix"
+else
+  cf_path_syntax="$ac_default_prefix"
+fi
+
 case ".[$]$1" in #(vi
 .\[$]\(*\)*|.\'*\'*) #(vi
   ;;
@@ -1108,12 +1114,12 @@ case ".[$]$1" in #(vi
   eval $1="[$]$1"
   case ".[$]$1" in #(vi
   .NONE/*)
-    $1=`echo [$]$1 | sed -e s%NONE%$ac_default_prefix%`
+    $1=`echo [$]$1 | sed -e s%NONE%$cf_path_syntax%`
     ;;
   esac
   ;; #(vi
 .no|.NONE/*)
-  $1=`echo [$]$1 | sed -e s%NONE%$ac_default_prefix%`
+  $1=`echo [$]$1 | sed -e s%NONE%$cf_path_syntax%`
   ;;
 *)
   ifelse($2,,[AC_ERROR([expected a pathname, not \"[$]$1\"])],$2)
@@ -1547,12 +1553,12 @@ static struct termio d_tio;
 test "$cf_cv_svr4" = yes && AC_DEFINE(SVR4)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SYSV version: 12 updated: 2006/06/21 16:52:31
+dnl CF_SYSV version: 13 updated: 2006/08/20 14:55:37
 dnl -------
 dnl Check if this is a SYSV platform, e.g., as used in <X11/Xos.h>, and whether
 dnl defining it will be helpful.  The following features are used to check:
 dnl
-dnl a) bona-fide SVSY doesn't use const for sys_errlist[].  Since this is a
+dnl a) bona-fide SVSV doesn't use const for sys_errlist[].  Since this is a
 dnl legacy (pre-ANSI) feature, const should not apply.  Modern systems only
 dnl declare strerror().  Xos.h declares the legacy form of str_errlist[], and
 dnl a compile-time error will result from trying to assign to a const array.
@@ -2422,7 +2428,7 @@ elif test "$cf_x_athena_include" != default ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA_LIBS version: 3 updated: 2003/02/16 15:24:54
+dnl CF_X_ATHENA_LIBS version: 6 updated: 2006/11/30 17:57:11
 dnl ----------------
 dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
 dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
@@ -2452,19 +2458,15 @@ do
 				LIBS="$cf_lib $LIBS"
 				AC_MSG_CHECKING(for $cf_test in $cf_lib)
 			fi
-			cf_SAVE="$LIBS"
-			LIBS="$X_PRE_LIBS $LIBS $X_EXTRA_LIBS"
 			AC_TRY_LINK([],[$cf_test()],
 				[cf_result=yes],
 				[cf_result=no])
 			AC_MSG_RESULT($cf_result)
 			if test "$cf_result" = yes ; then
 				cf_x_athena_lib="$cf_lib"
-				LIBS="$cf_SAVE"
 				break
-			else
-				LIBS="$cf_save"
 			fi
+			LIBS="$cf_save"
 		fi
 	done
 done
@@ -2478,7 +2480,7 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 15 updated: 2006/02/12 17:30:04
+dnl CF_X_FREETYPE version: 16 updated: 2006/11/29 18:04:29
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -2488,7 +2490,7 @@ dnl less randomly.  If we cannot find the config program, do not bother trying
 dnl to guess the latest variation of include/lib directories.
 dnl
 dnl If either or both of these configure-script options are not given, rely on
-dnl the output of the config program to provide the dnl cflags/libs options:
+dnl the output of the config program to provide the cflags/libs options:
 dnl	--with-freetype-cflags
 dnl	--with-freetype-libs
 AC_DEFUN([CF_X_FREETYPE],
@@ -2496,6 +2498,21 @@ AC_DEFUN([CF_X_FREETYPE],
 cf_extra_freetype_libs=
 FREETYPE_CONFIG=
 FREETYPE_PARAMS=
+
+AC_MSG_CHECKING(if you specified -D/-I options for FreeType)
+AC_ARG_WITH(freetype-cflags,
+	[  --with-freetype-cflags  -D/-I options for compiling with FreeType],
+[cf_cv_x_freetype_incs="$with_freetype_cflags"],
+[cf_cv_x_freetype_incs=no])
+AC_MSG_RESULT($cf_cv_x_freetype_incs)
+
+
+AC_MSG_CHECKING(if you specified -L/-l options for FreeType)
+AC_ARG_WITH(freetype-libs,
+	[  --with-freetype-libs    -L/-l options to link FreeType],
+[cf_cv_x_freetype_libs="$with_freetype_libs"],
+[cf_cv_x_freetype_libs=no])
+AC_MSG_RESULT($cf_cv_x_freetype_libs)
 
 AC_PATH_PROG(FREETYPE_PKG_CONFIG, pkg-config, none)
 if test "$FREETYPE_PKG_CONFIG" != none && "$FREETYPE_PKG_CONFIG" --exists xft; then
@@ -2515,27 +2532,33 @@ else
 fi
 
 if test -n "$FREETYPE_CONFIG" ; then
-withval=
-AC_ARG_WITH(freetype-cflags,
-	[  --with-freetype-cflags  -D/-I options for compiling with FreeType],
-[cf_cv_x_freetype_incs="$withval"
- CF_VERBOSE(freetype-cflags $cf_cv_x_freetype_incs)
-],[
-AC_CACHE_CHECK(for X FreeType headers,cf_cv_x_freetype_incs,[
-	cf_cv_x_freetype_incs="`$FREETYPE_CONFIG $FREETYPE_PARAMS --cflags 2>/dev/null`"
-])])
-withval=
-AC_ARG_WITH(freetype-libs,
-	[  --with-freetype-libs    -L/-l options to link FreeType],
-[cf_cv_x_freetype_libs="$withval"
- CF_VERBOSE(freetype-libs $cf_cv_x_freetype_libs)
-],[
-AC_CACHE_CHECK(for X FreeType libraries,cf_cv_x_freetype_libs,[
+
+if test "$cf_cv_x_freetype_incs" = no ; then
+AC_MSG_CHECKING(for $FREETYPE_CONFIG cflags)
+cf_cv_x_freetype_incs="`$FREETYPE_CONFIG $FREETYPE_PARAMS --cflags 2>/dev/null`"
+AC_MSG_RESULT($cf_cv_x_freetype_incs)
+fi
+
+if test "$cf_cv_x_freetype_libs" = no ; then
+AC_MSG_CHECKING(for $FREETYPE_CONFIG libs)
+cf_cv_x_freetype_libs="$cf_extra_freetype_libs `$FREETYPE_CONFIG $FREETYPE_PARAMS --libs 2>/dev/null`"
+AC_MSG_RESULT($cf_cv_x_freetype_libs)
+fi
+
+fi
+
+if test "$cf_cv_x_freetype_incs" = no ; then
+	cf_cv_x_freetype_incs=
+fi
+
+if test "$cf_cv_x_freetype_libs" = no ; then
+	cf_cv_x_freetype_libs=-lXft
+fi
+
+AC_MSG_CHECKING(if we can link with FreeType libraries)
 
 cf_save_LIBS="$LIBS"
 cf_save_INCS="$CPPFLAGS"
-
-cf_cv_x_freetype_libs="$cf_extra_freetype_libs `$FREETYPE_CONFIG $FREETYPE_PARAMS --libs 2>/dev/null`"
 
 LIBS="$cf_cv_x_freetype_libs $LIBS"
 CPPFLAGS="$cf_cv_x_freetype_incs $CPPFLAGS"
@@ -2544,23 +2567,20 @@ AC_TRY_LINK([
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
 #include <X11/Xft/Xft.h>],[
-	XftPattern  *pat = XftNameParse ("name");
-	],[],[cf_cv_x_freetype_libs=])
-	LIBS="$cf_save_LIBS"
-	CPPFLAGS="$cf_save_INCS"
-])])
+	XftPattern  *pat = XftNameParse ("name");],
+	[cf_cv_found_freetype=yes],
+	[cf_cv_found_freetype=no])
+AC_MSG_RESULT($cf_cv_found_freetype)
 
-if test -n "$cf_cv_x_freetype_libs" ; then
+LIBS="$cf_save_LIBS"
+CPPFLAGS="$cf_save_INCS"
+
+if test "$cf_cv_found_freetype" = yes ; then
 	LIBS="$cf_cv_x_freetype_libs $LIBS"
 	CF_ADD_CFLAGS($cf_cv_x_freetype_incs)
 	AC_DEFINE(XRENDERFONT)
 else
 	AC_MSG_WARN(No libraries found for FreeType)
-	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
-fi
-
-else
-	AC_MSG_WARN(Cannot find FreeType configuration program)
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`
 fi
 
@@ -2570,7 +2590,7 @@ AC_SUBST(HAVE_TYPE_FCCHAR32)
 AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_TOOLKIT version: 10 updated: 2004/04/25 15:37:17
+dnl CF_X_TOOLKIT version: 11 updated: 2006/11/29 19:05:14
 dnl ------------
 dnl Check for X Toolkit libraries
 dnl
@@ -2595,7 +2615,7 @@ AC_CHECK_FUNC(XtAppInitialize,,[
 AC_CHECK_LIB(Xt, XtAppInitialize,
 	[AC_DEFINE(HAVE_LIBXT)
 	 cf_have_X_LIBS=Xt
-	 LIBS="-lXt $X_PRE_LIBS $LIBS"],,
+	 LIBS="-lXt $X_PRE_LIBS $LIBS $X_EXTRA_LIBS"],,
 	[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])])
 
 if test $cf_have_X_LIBS = no ; then

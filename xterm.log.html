@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.481 2006/10/17 22:15:24 tom Exp $
+  $XTermId: xterm.log.html,v 1.499 2006/12/01 01:10:03 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_223">Patch #223 - 2006/11/30</A>
 <LI><A HREF="#xterm_222">Patch #222 - 2006/10/17</A>
 <LI><A HREF="#xterm_221">Patch #221 - 2006/10/1</A>
 <LI><A HREF="#xterm_220">Patch #220 - 2006/9/10</A>
@@ -270,6 +271,66 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_223">Patch #223 - 2006/11/30</A></H1>
+<ul>
+	<li>add <code>--enable-rectangles</code> configure option (request by
+	    Martin Pirker).
+
+	<li>correct default value for <code>--with-symlink</code> configure
+	    option.
+
+	<li>fixes configure script macros that use <code>$X_EXTRA_LIBS</code>.
+
+	<li>modify configure script to provide support for pre-package config
+	    versions of Xft (FreeType).
+
+	<li>add the Xaw scrollbar translations resource to the xterm manpage,
+	    add an example showing how to change the mouse button assignments
+	    (Debian #382225).
+
+	<li>amend a change from <a href="#xterm_216">patch #216</a>,
+	    which omitted modifiers for control, meta, etc., if they were
+	    mixed with any other modifiers.  The intent of the change was
+	    to avoid confusion with
+	    <code>XK_Mode_switch</code>
+            and <code>XK_ISO_Level3_Shift</code>;
+	    the check is now done explicitly (report by Daniel Jacobowitz).
+
+	<li>interpret a negative value for <code>modifyCursorKeys</code>
+	    or <code>modifyFunctionKeys</code> resources to disable the
+	    respective features (prompted by Novell #220728).
+
+	<li>amend cell-width computation for FreeType from
+	    <a href="#xterm_217">patch #217</a>, which did not work
+	    for VT100 line-drawing characters (Debian #399638, GenToo #147111).
+
+	<li>amend a change from <a href="#xterm_216">patch #216</a>,
+	    which made alt-modifier on a cursor-key send a modifier parameter
+	    (Novell #220728).
+
+	<li>correct an off-by-one that made DECCRA not work (report/patch by
+	    Martin Pirker).
+
+	<li>revert an optimization in SGR_Foreground() and SGR_Background
+	    from <a href="#xterm_209">patch #209</a> (Debian #347722,
+	    analysis by Pierre Lombard).
+
+	<li>fix for <code>boldMode</code> (Debian #347790, patch by Tim Pope).
+
+	<li>amend fix for <code>-iconic</code> in
+	    <a href="#xterm_208">patch #208</a>,
+	    which broke the positioning part of <code>-geom</code> with toolbar
+	    configuration.
+
+	<li>fix to prevent indexing error in regular expressions (patch
+	    by Dennis Schneider).
+
+	<li>fixes to make the internalBorder area not change color due to
+	    reverseVideo and/or related exposure events.  The latter was a very
+	    old bug exposed in <a href="#xterm_196">patch #196</a> (report by
+	    Neil Hoggarth, also Debian #397624).
+</ul>
 
 <H1><A NAME="xterm_222">Patch #222 - 2006/10/17</A></H1>
 <ul>

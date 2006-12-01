@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.154 2006/07/15 12:10:03 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.155 2006/11/30 23:51:54 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -96,6 +96,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_DABBREV		/* CF_ARG_ENABLE(dabbrev) */
 #undef OPT_DEC_CHRSET		/* CF_ARG_DISABLE(doublechars) */
 #undef OPT_DEC_LOCATOR		/* CF_ARG_ENABLE(dec-locator) */
+#undef OPT_DEC_RECTOPS		/* CF_ARG_ENABLE(rectangles) */
 #undef OPT_HIGHLIGHT_COLOR	/* CF_ARG_DISABLE(highlighting) */
 #undef OPT_HP_FUNC_KEYS		/* CF_ARG_ENABLE(hp-fkeys) */
 #undef OPT_I18N_SUPPORT		/* CF_ARG_DISABLE(i18n) */
@@ -182,4 +183,5 @@ extern char *my_strerror(int n);
 #define NO_XPOLL_H	/* X11R6.1 & up use Xpoll.h for select() definitions */
 #endif
 
+/* vile:cmode */
 #endif /* included_xtermcfg_h */
