@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.499 2006/12/01 01:10:03 tom Exp $
+  $XTermId: xterm.log.html,v 1.506 2007/01/18 22:10:29 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_223">Patch #223 - 2006/11/30</A>
 <LI><A HREF="#xterm_222">Patch #222 - 2006/10/17</A>
 <LI><A HREF="#xterm_221">Patch #221 - 2006/10/1</A>
@@ -271,6 +272,36 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>fix ifdef of xtermCellWidth(), which broke for a case without
+	    TrueType and without wide-character support (report by Martin
+	    Pirker).
+
+	<li>undo a comparison in <code>handle_translated_exposure</code> which
+	    did not work due to X server optimization.  That caused the
+	    inner border to be repainted with unexpected colors when handling
+	    a repaint, e.g., after switching to/from another workspace
+	    (Debian #401726, Redhat Bugzilla #223027).
+
+	<li>allow <code>-cr</code> option to override cursor color when
+	    <code>-ah</code> option is used (Debian #406502).
+
+	<li>add a note in xterm's manpage explaining that the <code>-bw</code>
+	    (or <code>-w</code>) option is only used by the window manager,
+	    if at all (Debian #405043).
+
+	<li>make <code>Selection</code> of <code>VT&nbsp;Fonts</code> work with
+	    <code>selectToClipboard</code> resource.
+
+	<li>correct length calculation for <code>Selection</code> entry of
+	    <code>VT&nbsp;Fonts</code> menu, broken since it ignored the
+	    actual selection length since X11R4.
+
+	<li>fixes for fontsize changes with <code>-fa</code> option (Redhat
+	    Bugzilla #222340).
+</ul>
 
 <H1><A NAME="xterm_223">Patch #223 - 2006/11/30</A></H1>
 <ul>

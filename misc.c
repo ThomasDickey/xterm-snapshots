@@ -1,10 +1,10 @@
-/* $XTermId: misc.c,v 1.332 2006/11/30 22:25:33 tom Exp $ */
+/* $XTermId: misc.c,v 1.336 2007/01/18 23:41:08 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
 /*
  *
- * Copyright 1999-2005,2006 by Thomas E. Dickey
+ * Copyright 1999-2006,2007 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -181,7 +181,7 @@ xevents(void)
 	 * We simply ignore all events except for those not passed down to
 	 * this function, e.g., those handled in in_put().
 	 */
-	if (waitingForTrackInfo) {
+	if (screen->waitingForTrackInfo) {
 	    Sleep(10);
 	    return;
 	}
@@ -1860,6 +1860,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    unparseputc1(xw, final);
 	    unparse_end(xw);
 	} else if (buf != 0) {
+	    int num = screen->menu_font_number;
 	    VTFontNames fonts;
 
 	    memset(&fonts, 0, sizeof(fonts));
@@ -1870,7 +1871,6 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	     * corresponding menu font entry.
 	     */
 	    if (*buf == '#') {
-		int num = screen->menu_font_number;
 		int rel = 0;
 
 		if (*++buf == '+') {
@@ -1893,19 +1893,22 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 		    num = 0;
 		}
 
-		if (rel != 0)
+		if (rel != 0) {
 		    num = lookupRelativeFontSize(screen,
 						 screen->menu_font_number, rel);
 
+		}
 		if (num < 0
 		    || num > fontMenu_lastBuiltin
 		    || (buf = screen->MenuFontName(num)) == 0) {
 		    Bell(XkbBI_MinorError, 0);
 		    break;
 		}
+	    } else {
+		num = fontMenu_fontescape;
 	    }
 	    fonts.f_n = buf;
-	    SetVTFont(xw, fontMenu_fontescape, True, &fonts);
+	    SetVTFont(xw, num, True, &fonts);
 	}
 #endif /* OPT_SHIFT_FONTS */
 	break;
@@ -2298,11 +2301,14 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		    unparseputc(xw, '=');
 		    screen->tc_query_code = code;
 		    screen->tc_query_fkey = fkey;
+#if OPT_ISO_COLORS
 		    /* XK_COLORS is a fake code for the "Co" entry (maximum
 		     * number of colors) */
 		    if (code == XK_COLORS) {
 			unparseputn(xw, NUM_ANSI_COLORS);
-		    } else {
+		    } else
+#endif
+		    {
 			XKeyEvent event;
 			event.state = state;
 			Input(xw, &event, False);
@@ -2417,7 +2423,7 @@ ChangeGroup(String attribute, char *value)
 #if OPT_SAME_NAME
     /* If the attribute isn't going to change, then don't bother... */
 
-    if (sameName) {
+    if (resource.sameName) {
 	char *buf;
 	XtSetArg(args[0], attribute, &buf);
 	XtGetValues(top, args, 1);
@@ -2463,7 +2469,7 @@ ChangeIconName(char *name)
     if (name == 0)
 	name = "";
 #if OPT_ZICONBEEP		/* If warning should be given then give it */
-    if (zIconBeep && zIconBeep_flagged) {
+    if (resource.zIconBeep && term->screen.zIconBeep_flagged) {
 	char *newname = CastMallocN(char, strlen(name) + 4);
 	if (!newname) {
 	    fprintf(stderr, "malloc failed in ChangeIconName\n");

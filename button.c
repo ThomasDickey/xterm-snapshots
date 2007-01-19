@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.257 2006/11/18 22:07:42 tom Exp $ */
+/* $XTermId: button.c,v 1.258 2007/01/18 23:24:50 tom Exp $ */
 
 /*
- * Copyright 1999-2005,2006 by Thomas E. Dickey
+ * Copyright 1999-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -939,7 +939,7 @@ HandleSelectExtend(Widget w,
 	CELL cell;
 
 	screen->selection_time = event->xmotion.time;
-	switch (eventMode) {
+	switch (screen->eventMode) {
 	    /* If not in one of the DEC mouse-reporting modes */
 	case LEFTEXTENSION:
 	case RIGHTEXTENSION:
@@ -986,7 +986,7 @@ do_select_end(XtermWidget xw,
 #endif
 
     xw->screen.selection_time = event->xbutton.time;
-    switch (eventMode) {
+    switch (screen->eventMode) {
     case NORMAL:
 	(void) SendMousePosition(xw, event);
 	break;
@@ -1784,7 +1784,7 @@ TrackDown(XtermWidget xw, XButtonEvent * event)
 	screen->replyToEmacs = True;
 	StartSelect(xw, &cell);
     } else {
-	waitingForTrackInfo = True;
+	screen->waitingForTrackInfo = True;
 	EditorButton(xw, (XButtonEvent *) event);
     }
 }
@@ -1801,10 +1801,11 @@ TrackMouse(XtermWidget xw,
 	   int firstrow,
 	   int lastrow)
 {
-    if (waitingForTrackInfo) {	/* if Timed, ignore */
-	waitingForTrackInfo = False;
-	if (func != 0) {
-	    TScreen *screen = &(xw->screen);
+    if (func != 0) {
+	TScreen *screen = &(xw->screen);
+
+	if (screen->waitingForTrackInfo) {	/* if Timed, ignore */
+	    screen->waitingForTrackInfo = False;
 	    CELL first = *start;
 
 	    boundsCheck(first.row);
@@ -1834,10 +1835,10 @@ StartSelect(XtermWidget xw, const CELL * cell)
     screen->saveStartR = screen->startExt = screen->rawPos;
     screen->saveEndR = screen->endExt = screen->rawPos;
     if (Coordinate(screen, cell) < Coordinate(screen, &(screen->rawPos))) {
-	eventMode = LEFTEXTENSION;
+	screen->eventMode = LEFTEXTENSION;
 	screen->startExt = *cell;
     } else {
-	eventMode = RIGHTEXTENSION;
+	screen->eventMode = RIGHTEXTENSION;
 	screen->endExt = *cell;
     }
     ComputeSelect(xw, &(screen->startExt), &(screen->endExt), False);
@@ -1892,7 +1893,7 @@ EndExtend(XtermWidget xw,
 	}
     }
     SelectSet(xw, event, params, num_params);
-    eventMode = NORMAL;
+    screen->eventMode = NORMAL;
 }
 
 void
@@ -1981,11 +1982,11 @@ do_start_extend(XtermWidget xw,
 	< Abs(coord - Coordinate(screen, &(screen->endSel)))
 	|| coord < Coordinate(screen, &(screen->startSel))) {
 	/* point is close to left side of selection */
-	eventMode = LEFTEXTENSION;
+	screen->eventMode = LEFTEXTENSION;
 	screen->startExt = cell;
     } else {
 	/* point is close to left side of selection */
-	eventMode = RIGHTEXTENSION;
+	screen->eventMode = RIGHTEXTENSION;
 	screen->endExt = cell;
     }
     ComputeSelect(xw, &(screen->startExt), &(screen->endExt), True);
@@ -2003,19 +2004,19 @@ ExtendExtend(XtermWidget xw, const CELL * cell)
     int coord = Coordinate(screen, cell);
 
     TRACE(("ExtendExtend row=%d, col=%d\n", cell->row, cell->col));
-    if (eventMode == LEFTEXTENSION
+    if (screen->eventMode == LEFTEXTENSION
 	&& ((coord + (screen->selectUnit != Select_CHAR))
 	    > Coordinate(screen, &(screen->endSel)))) {
 	/* Whoops, he's changed his mind.  Do RIGHTEXTENSION */
-	eventMode = RIGHTEXTENSION;
+	screen->eventMode = RIGHTEXTENSION;
 	screen->startExt = screen->saveStartR;
-    } else if (eventMode == RIGHTEXTENSION
+    } else if (screen->eventMode == RIGHTEXTENSION
 	       && coord < Coordinate(screen, &(screen->startSel))) {
 	/* Whoops, he's changed his mind.  Do LEFTEXTENSION */
-	eventMode = LEFTEXTENSION;
+	screen->eventMode = LEFTEXTENSION;
 	screen->endExt = screen->saveEndR;
     }
-    if (eventMode == LEFTEXTENSION) {
+    if (screen->eventMode == LEFTEXTENSION) {
 	screen->startExt = *cell;
     } else {
 	screen->endExt = *cell;

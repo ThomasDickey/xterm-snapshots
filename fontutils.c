@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.219 2006/11/29 21:57:00 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.221 2007/01/17 22:49:54 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1998-2005,2006 by Thomas E. Dickey
+Copyright 1998-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -1493,6 +1493,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		 * but this is simpler than adding another resource value - and
 		 * as noted above, the data for the fixed fonts are available.
 		 */
+		lookupOneFontSize(screen, 0);
 		lookupOneFontSize(screen, fontnum);
 		if (fontnum == fontMenu_fontdefault) {
 		    face_size = 14.0;
@@ -1613,6 +1614,7 @@ xtermComputeFontInfo(XtermWidget xw,
 					(void *) 0);
 			wbold = xtermOpenXft(dpy, pat, "wide-bold");
 
+#if OPT_ISO_COLORS
 			if (screen->italicULMode) {
 			    XftPatternBuild(pat,
 					    XFT_FAMILY, XftTypeString, face_name,
@@ -1623,6 +1625,7 @@ xtermComputeFontInfo(XtermWidget xw,
 					    (void *) 0);
 			    wital = xtermOpenXft(dpy, pat, "wide-italic");
 			}
+#endif
 		    }
 		    XftPatternDestroy(pat);
 		}

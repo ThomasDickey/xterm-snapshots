@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.137 2006/11/30 00:03:48 tom Exp $
+## $XTermId: Makefile.in,v 1.138 2007/01/18 22:33:09 tom Exp $
 ##
 ## $XFree86: xc/programs/xterm/Makefile.in,v 3.56 2006/06/19 00:36:50 dickey Exp $ ##
 ##
-## Copyright 2002-2005,2006 by Thomas E. Dickey
+## Copyright 2002-2006,2007 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -81,12 +81,12 @@ EXTRAHDR	= @EXTRAHDRS@
 EXTRASRC	= @EXTRASRCS@
 EXTRAOBJ	= @EXTRAOBJS@
 
-          SRCS1 = button.c charproc.c charsets.c cursor.c \
+          SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
 		  $(MAINSRC) menu.c misc.c print.c ptydata.c \
 		  screen.c scrollbar.c tabs.c util.c xstrings.c \
 		  VTPrsTbl.c $(EXTRASRC)
-          OBJS1 = button$o charproc$o charsets$o cursor$o \
+          OBJS1 = button$o cachedGCs$o charproc$o charsets$o cursor$o \
 	  	  data$o doublechr$o fontutils$o input$o \
 		  main$o menu$o misc$o print$o ptydata$o \
 		  screen$o scrollbar$o tabs$o util$o xstrings$o \

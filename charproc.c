@@ -1,10 +1,10 @@
-/* $XTermId: charproc.c,v 1.740 2006/11/28 20:45:37 tom Exp $ */
+/* $XTermId: charproc.c,v 1.745 2007/01/18 23:40:25 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
 /*
 
-Copyright 1999-2005,2006 by Thomas E. Dickey
+Copyright 1999-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -3070,7 +3070,7 @@ in_put(XtermWidget xw)
 	    repairSizeHints();
 	}
 
-	if (eventMode == NORMAL
+	if (screen->eventMode == NORMAL
 	    && readPtyData(screen, &select_mask, VTbuffer)) {
 	    if (screen->scrollWidget
 		&& screen->scrollttyoutput
@@ -3101,7 +3101,7 @@ in_put(XtermWidget xw)
 	    write_mask = ptymask();
 	    XFlush(screen->display);
 	    select_mask = Select_mask;
-	    if (eventMode != NORMAL)
+	    if (screen->eventMode != NORMAL)
 		select_mask = X_mask;
 	}
 	if (write_mask & ptymask()) {
@@ -3144,7 +3144,7 @@ in_put(XtermWidget xw)
 #endif
 
     for (;;) {
-	if (eventMode == NORMAL
+	if (screen->eventMode == NORMAL
 	    && (size = readPtyData(screen, &select_mask, VTbuffer)) != 0) {
 	    if (screen->scrollWidget
 		&& screen->scrollttyoutput
@@ -3205,7 +3205,7 @@ in_put(XtermWidget xw)
 	   wait for I/O to be possible. */
 	XFD_COPYSET(&Select_mask, &select_mask);
 	/* in selection mode xterm does not read pty */
-	if (eventMode != NORMAL)
+	if (screen->eventMode != NORMAL)
 	    FD_CLR(screen->respond, &select_mask);
 
 	if (v_bufptr > v_bufstr) {
@@ -3599,7 +3599,7 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 #if OPT_ZICONBEEP
     /* Flag icon name with "***"  on window output when iconified.
      */
-    if (zIconBeep && mapstate == IsUnmapped && !zIconBeep_flagged) {
+    if (resource.zIconBeep && mapstate == IsUnmapped && !screen->zIconBeep_flagged) {
 	static char *icon_name;
 	static Arg args[] =
 	{
@@ -3610,14 +3610,14 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	XtGetValues(toplevel, args, XtNumber(args));
 
 	if (icon_name != NULL) {
-	    zIconBeep_flagged = True;
+	    screen->zIconBeep_flagged = True;
 	    ChangeIconName(icon_name);
 	}
-	if (zIconBeep > 0) {
+	if (resource.zIconBeep > 0) {
 #if defined(HAVE_XKB_BELL_EXT)
-	    XkbBell(XtDisplay(toplevel), VShellWindow, zIconBeep, XkbBI_Info);
+	    XkbBell(XtDisplay(toplevel), VShellWindow, resource.zIconBeep, XkbBI_Info);
 #else
-	    XBell(XtDisplay(toplevel), zIconBeep);
+	    XBell(XtDisplay(toplevel), resource.zIconBeep);
 #endif
 	}
     }
@@ -3646,19 +3646,20 @@ HandleStructNotify(Widget w GCC_UNUSED,
     {
 	{XtNiconName, (XtArgVal) & icon_name}
     };
+    TScreen *screen = &term->screen;
 
     switch (event->type) {
     case MapNotify:
 	TRACE(("HandleStructNotify(MapNotify)\n"));
 #if OPT_ZICONBEEP
-	if (zIconBeep_flagged) {
-	    zIconBeep_flagged = False;
+	if (screen->zIconBeep_flagged) {
+	    screen->zIconBeep_flagged = False;
 	    icon_name = NULL;
 	    XtGetValues(toplevel, args, XtNumber(args));
 	    if (icon_name != NULL) {
 		char *buf = CastMallocN(char, strlen(icon_name));
 		if (buf == NULL) {
-		    zIconBeep_flagged = True;
+		    screen->zIconBeep_flagged = True;
 		    return;
 		}
 		strcpy(buf, icon_name + 4);
@@ -3682,7 +3683,6 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	     * vt100 (ignore the tek4014 window).
 	     */
 	    if (term->screen.Vshow) {
-		TScreen *screen = &term->screen;
 		struct _vtwin *Vwin = WhichVWin(&(term->screen));
 		TbInfo *info = &(Vwin->tb_info);
 		TbInfo save = *info;
@@ -5808,7 +5808,7 @@ VTInitialize(Widget wrequest,
     /* Flag icon name with "***"  on window output when iconified.
      * Put in a handler that will tell us when we get Map/Unmap events.
      */
-    if (zIconBeep)
+    if (resource.zIconBeep)
 #endif
 	XtAddEventHandler(my_parent, StructureNotifyMask, False,
 			  HandleStructNotify, (Opaque) 0);
@@ -6704,7 +6704,7 @@ ShowCursor(void)
     if (screen->cursor_state == BLINKED_OFF)
 	return;
 
-    if (eventMode != NORMAL)
+    if (screen->eventMode != NORMAL)
 	return;
 
     if (INX2ROW(screen, screen->cur_row) > screen->max_row)
@@ -7172,8 +7172,8 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 
 	/* reset the mouse mode */
 	screen->send_mouse_pos = MOUSE_OFF;
-	waitingForTrackInfo = False;
-	eventMode = NORMAL;
+	screen->waitingForTrackInfo = False;
+	screen->eventMode = NORMAL;
 
 	TabReset(xw->tabs);
 	xw->keyboard.flags = MODE_SRM;
@@ -7446,35 +7446,55 @@ HandleIgnore(Widget w,
 
 /* ARGSUSED */
 static void
-DoSetSelectedFont(Widget w GCC_UNUSED,
+DoSetSelectedFont(Widget w,
 		  XtPointer client_data GCC_UNUSED,
 		  Atom * selection GCC_UNUSED,
 		  Atom * type,
 		  XtPointer value,
-		  unsigned long *length GCC_UNUSED,
+		  unsigned long *length,
 		  int *format)
 {
-    char *val = (char *) value;
-    int len;
-    if (*type != XA_STRING || *format != 8) {
+    if (!IsXtermWidget(w) || *type != XA_STRING || *format != 8) {
 	Bell(XkbBI_MinorError, 0);
-	return;
-    }
-    len = strlen(val);
-    if (len > 0) {
-	if (val[len - 1] == '\n')
-	    val[len - 1] = '\0';
-	/* Do some sanity checking to avoid sending a long selection
-	   back to the server in an OpenFont that is unlikely to succeed.
-	   XLFD allows up to 255 characters and no control characters;
-	   we are a little more liberal here. */
-	if (len > 1000 || strchr(val, '\n'))
-	    return;
-	if (!xtermLoadFont(term,
-			   xtermFontName(val),
-			   True,
-			   fontMenu_fontsel))
-	    Bell(XkbBI_MinorError, 0);
+    } else {
+	XtermWidget xw = (XtermWidget) w;
+	char *save = xw->screen.MenuFontName(fontMenu_fontsel);
+	char *val = (char *) value;
+	char *test = 0;
+	char *used = 0;
+	int len = strlen(val);
+
+	if (len > (int) *length) {
+	    len = (int) *length;
+	}
+	if (len > 0) {
+	    val[len] = '\0';
+	    used = x_strtrim(val);
+	    TRACE(("DoSetSelectedFont(%s)\n", val));
+	    /* Do some sanity checking to avoid sending a long selection
+	       back to the server in an OpenFont that is unlikely to succeed.
+	       XLFD allows up to 255 characters and no control characters;
+	       we are a little more liberal here. */
+	    if (len < 1000
+		&& !strchr(val, '\n')
+		&& (test = x_strdup(val)) != 0) {
+		xw->screen.MenuFontName(fontMenu_fontsel) = test;
+		if (!xtermLoadFont(term,
+				   xtermFontName(val),
+				   True,
+				   fontMenu_fontsel)) {
+		    Bell(XkbBI_MinorError, 0);
+		    free(test);
+		    xw->screen.MenuFontName(fontMenu_fontsel) = save;
+		} else {
+		    free(save);
+		}
+	    } else {
+		Bell(XkbBI_MinorError, 0);
+	    }
+	    if (used != val)
+		free(used);
+	}
     }
 }
 
@@ -7488,7 +7508,10 @@ FindFontSelection(XtermWidget xw, char *atom_name, Bool justprobe)
     Atom target;
 
     if (!atom_name)
-	atom_name = "PRIMARY";
+	atom_name = (xw->screen.mappedSelect
+		     ? xw->screen.mappedSelect[0]
+		     : "PRIMARY");
+    TRACE(("FindFontSelection(%s)\n", atom_name));
 
     for (pAtom = atoms, a = atomCount; a; a--, pAtom++) {
 	if (strcmp(atom_name, XmuNameOfAtom(*pAtom)) == 0)
@@ -7575,8 +7598,13 @@ set_cursor_gcs(XtermWidget xw)
 		XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
 
 	    if (screen->always_highlight) {
-		new_reversecursorGC = (GC) 0;
-		new_cursoroutlineGC = (GC) 0;
+		/* both GC's use the same color */
+		xgcv.foreground = bg;
+		xgcv.background = cc;
+		new_reversecursorGC =
+		    XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
+		new_cursoroutlineGC =
+		    XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
 	    } else {
 		xgcv.foreground = bg;
 		xgcv.background = cc;
@@ -7606,8 +7634,11 @@ set_cursor_gcs(XtermWidget xw)
 	new_cursorFillGC = XtGetGC((Widget) xw, mask, &xgcv);
 
 	if (screen->always_highlight) {
-	    new_reversecursorGC = (GC) 0;
-	    new_cursoroutlineGC = (GC) 0;
+	    /* both GC's use the same color */
+	    xgcv.foreground = bg;
+	    xgcv.background = cc;
+	    new_reversecursorGC = XtGetGC((Widget) xw, mask, &xgcv);
+	    new_cursoroutlineGC = XtGetGC((Widget) xw, mask, &xgcv);
 	} else {
 	    xgcv.foreground = bg;
 	    xgcv.background = cc;

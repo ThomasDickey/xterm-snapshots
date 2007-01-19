@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.532 2006/11/23 01:18:29 tom Exp $ */
+/* $XTermId: main.c,v 1.535 2007/01/18 23:41:57 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -15,7 +15,7 @@
 
 /***********************************************************
 
-Copyright 2002-2005,2006 by Thomas E. Dickey
+Copyright 2002-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -2006,8 +2006,6 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
     }
 
-    waiting_for_initial_map = resource.wait_for_map;
-
     /*
      * ICCCM delete_window.
      */
@@ -2026,17 +2024,12 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
     }
 #if OPT_ZICONBEEP
-    zIconBeep = resource.zIconBeep;
-    zIconBeep_flagged = False;
-    if (zIconBeep > 100 || zIconBeep < -100) {
-	zIconBeep = 0;		/* was 100, but I prefer to defaulting off. */
+    if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
+	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
 	fprintf(stderr,
 		"a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
     }
 #endif /* OPT_ZICONBEEP */
-#if OPT_SAME_NAME
-    sameName = resource.sameName;
-#endif
     hold_screen = resource.hold_screen ? 1 : 0;
     xterm_name = resource.xterm_name;
     if (strcmp(xterm_name, "-") == 0)
@@ -2810,7 +2803,7 @@ first_map_occurred(void)
     write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
     close(cp_pipe[0]);
     close(pc_pipe[1]);
-    waiting_for_initial_map = False;
+    resource.wait_for_map = False;
 }
 #else
 /*
@@ -4216,7 +4209,7 @@ spawn(void)
 		(void) strcpy(handshake.buffer, ttydev);
 		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
 
-		if (waiting_for_initial_map) {
+		if (resource.wait_for_map) {
 		    i = read(pc_pipe[0], (char *) &handshake,
 			     sizeof(handshake));
 		    if (i != sizeof(handshake) ||
@@ -4452,7 +4445,7 @@ spawn(void)
 		}
 	    }
 	    /* close our sides of the pipes */
-	    if (!waiting_for_initial_map) {
+	    if (!resource.wait_for_map) {
 		close(cp_pipe[0]);
 		close(pc_pipe[1]);
 	    }

@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.234 2006/11/23 01:18:29 tom Exp $ */
+/* $XTermId: os2main.c,v 1.237 2007/01/18 23:41:56 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -1021,8 +1021,6 @@ main(int argc, char **argv ENVP_ARG)
 			      XtNumber(application_resources), NULL, 0);
     TRACE_XRES();
 
-    waiting_for_initial_map = resource.wait_for_map;
-
     /*
      * ICCCM delete_window.
      */
@@ -1041,17 +1039,12 @@ main(int argc, char **argv ENVP_ARG)
 	}
     }
 #if OPT_ZICONBEEP
-    zIconBeep = resource.zIconBeep;
-    zIconBeep_flagged = False;
-    if (zIconBeep > 100 || zIconBeep < -100) {
-	zIconBeep = 0;		/* was 100, but I prefer to defaulting off. */
+    if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
+	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
 	fprintf(stderr,
 		"a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
     }
 #endif /* OPT_ZICONBEEP */
-#if OPT_SAME_NAME
-    sameName = resource.sameName;
-#endif
     hold_screen = resource.hold_screen ? 1 : 0;
     xterm_name = resource.xterm_name;
     if (strcmp(xterm_name, "-") == 0)
@@ -1480,7 +1473,7 @@ first_map_occurred(void)
     TScreen *screen = &term->screen;
     handshake.rows = screen->max_row;
     handshake.cols = screen->max_col;
-    waiting_for_initial_map = False;
+    resource.wait_for_map = False;
 }
 
 static void

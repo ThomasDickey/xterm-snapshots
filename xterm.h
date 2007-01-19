@@ -1,10 +1,10 @@
-/* $XTermId: xterm.h,v 1.430 2006/11/23 01:18:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.431 2007/01/19 00:44:28 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
 /************************************************************
 
-Copyright 1999-2005,2006 by Thomas E. Dickey
+Copyright 1999-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -676,6 +676,13 @@ extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
 #if OPT_WIDE_CHARS
 extern Bool iswide(int  /* i */);
 #endif
+
+/* cachedCgs.c */
+extern GC getCgs(XtermWidget /*xw*/, int /*cgsId*/);
+extern void freeCgs(XtermWidget /*xw*/, int /*cgsId*/);
+extern void setCgsBackground(XtermWidget /*xw*/, int /*cgsId*/, Pixel /*bg*/);
+extern void setCgsFont(XtermWidget /*xw*/, int /*cgsId*/, XFontStruct * /*font*/);
+extern void setCgsForeground(XtermWidget /*xw*/, int /*cgsId*/, Pixel /*fg*/);
 
 /* charproc.c */
 extern int VTInit (void);

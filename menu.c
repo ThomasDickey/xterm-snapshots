@@ -1,8 +1,8 @@
-/* $XTermId: menu.c,v 1.222 2006/11/23 01:18:29 tom Exp $ */
+/* $XTermId: menu.c,v 1.223 2007/01/16 21:38:02 tom Exp $ */
 
 /*
 
-Copyright 1999-2005,2006 by Thomas E. Dickey
+Copyright 1999-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -656,7 +656,7 @@ domenu(Widget w GCC_UNUSED,
 	    set_menu_font(True);
 	    SetItemSensitivity(
 				  fontMenuEntries[fontMenu_fontescape].widget,
-				  (screen->menu_font_names[fontMenu_fontescape]
+				  (screen->menu_font_names[fontMenu_fontescape][fNorm]
 				   ? True : False));
 #if OPT_BOX_CHARS
 	    update_font_boxchars();
