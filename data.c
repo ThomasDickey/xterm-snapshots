@@ -1,9 +1,9 @@
-/* $XTermId: data.c,v 1.81 2006/11/23 01:18:29 tom Exp $ */
+/* $XTermId: data.c,v 1.84 2007/01/18 23:38:49 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.c,v 3.34 2006/02/13 01:14:58 dickey Exp $ */
 
 /*
- * Copyright 2002-2005,2006 by Thomas E. Dickey
+ * Copyright 2002-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -78,8 +78,6 @@ Arg ourTopLevelShellArgs[] =
 };
 Cardinal number_ourTopLevelShellArgs = 2;
 
-Bool waiting_for_initial_map;
-
 Atom wm_delete_window;		/* for ICCCM delete window */
 
 XTERM_RESOURCE resource;
@@ -99,18 +97,6 @@ char *xterm_name;		/* argv[0] */
 int hold_screen;
 SIG_ATOMIC_T need_cleanup = False;
 
-#if OPT_ZICONBEEP
-int zIconBeep;			/* non-zero means beep; see charproc.c for details -IAN! */
-Boolean zIconBeep_flagged;	/* True if the icon name has been changed */
-#endif /* OPT_ZICONBEEP */
-
-#if OPT_SAME_NAME
-Boolean sameName;		/* Don't change the title or icon name if it
-				   is the same.  This prevents flicker on the
-				   screen at the cost of an extra request to
-				   the server */
-#endif
-
 int am_slave = -1;		/* set to file-descriptor if we're a slave process */
 int max_plus1;
 PtySelect Select_mask;
@@ -118,6 +104,3 @@ PtySelect X_mask;
 PtySelect pty_mask;
 char *ptydev;
 char *ttydev;
-
-Boolean waitingForTrackInfo = False;
-EventMode eventMode = NORMAL;

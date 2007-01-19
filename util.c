@@ -1,9 +1,9 @@
-/* $XTermId: util.c,v 1.313 2006/11/29 22:52:10 tom Exp $ */
+/* $XTermId: util.c,v 1.316 2007/01/18 23:27:48 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
 /*
- * Copyright 1999-2005,2006 by Thomas E. Dickey
+ * Copyright 1999-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1433,9 +1433,7 @@ handle_translated_exposure(XtermWidget xw,
     y0 = (rect_y - OriginY(screen));
     y1 = (y0 + rect_height);
 
-    if (getXtermBackground(xw, xw->flags, xw->cur_background) !=
-	xw->core.background_pixel &&
-	(x0 < 0 ||
+    if ((x0 < 0 ||
 	 y0 < 0 ||
 	 x1 > Width(screen) ||
 	 y1 > Height(screen))) {
@@ -1468,7 +1466,7 @@ handle_translated_exposure(XtermWidget xw,
 
     if (nrows > 0 && ncols > 0) {
 	ScrnRefresh(xw, toprow, leftcol, nrows, ncols, True);
-	if (waiting_for_initial_map) {
+	if (resource.wait_for_map) {
 	    first_map_occurred();
 	}
 	if (screen->cur_row >= toprow &&
@@ -1776,6 +1774,7 @@ getXftColor(XtermWidget xw, Pixel pixel)
  * We will only get useful values from wcwidth() for codes above 255.
  * Otherwise, interpret according to internal data.
  */
+#if OPT_RENDERWIDE
 static int
 xtermCellWidth(XtermWidget xw, wchar_t ch)
 {
@@ -1797,6 +1796,7 @@ xtermCellWidth(XtermWidget xw, wchar_t ch)
     }
     return result;
 }
+#endif /* OPT_RENDERWIDE */
 
 /*
  * fontconfig/Xft combination prior to 2.2 has a problem with

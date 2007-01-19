@@ -1,6 +1,6 @@
-.\" $XTermId: xterm.man,v 1.359 2006/11/29 00:23:57 tom Exp $
+.\" $XTermId: xterm.man,v 1.361 2007/01/17 22:19:50 tom Exp $
 .\"
-.\" Copyright 1996-2005,2006 by Thomas E. Dickey
+.\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1064,6 +1064,14 @@ The default is ``XtDefaultBackground.''
 .TP 8
 .B -bw \fInumber\fP
 This option specifies the width in pixels of the border surrounding the window.
+.IP
+This appears to be a legacy of older X releases.
+It sets the \fBborderWidth\fP resource of the shell widget,
+and may provide advice to your window manager to set the thickness of the
+window frame.
+Most window managers do not use this information.
+See the \fB-b\fP option, which controls the inner border of the \fBxterm\fP
+window.
 .TP 8
 .B -display \fIdisplay\fP
 This option specifies the X server to contact; see \fIX(__miscmansuffix__)\fP.
@@ -1544,7 +1552,7 @@ The default is ``false.''
 .B "color6 (\fPclass\fB Color6)"
 .TP 8
 .B "color7 (\fPclass\fB Color7)"
-These specify the colors for the ISO 6429 extension.
+These specify the colors for the ISO-6429 extension.
 The defaults are,
 respectively,
 black,
@@ -1574,7 +1582,7 @@ to be used as brighter versions.
 .B "color14 (\fPclass\fB Color14)"
 .TP 8
 .B "color15 (\fPclass\fB Color15)"
-These specify the colors for the ISO 6429 extension if the bold attribute
+These specify the colors for the ISO-6429 extension if the bold attribute
 is also enabled.
 The default resource values are respectively,
 gray30,
@@ -1628,7 +1636,7 @@ Note that setting \fBcolorMode\fR off disables all colors, including this.
 The default is ``false.''
 .TP 8
 .B "colorMode (\fPclass\fB ColorMode)"
-Specifies whether or not recognition of ANSI (ISO 6429)
+Specifies whether or not recognition of ANSI (ISO-6429)
 color change escape sequences should be enabled.
 The default is ``true.''
 .TP 8
@@ -4331,7 +4339,7 @@ That can be setup by altering the translations resource, e.g.,
 The \fIXterm Control Sequences\fP document lists the control sequences which
 an application can send \fIxterm\fP to make it perform various operations.
 Most of these operations are standardized, from either the DEC or Tektronix
-terminals, or from more widely used standards such as ISO 6429.
+terminals, or from more widely used standards such as ISO-6429.
 .
 .
 .SH ENVIRONMENT

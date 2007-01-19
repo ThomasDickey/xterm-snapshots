@@ -1,9 +1,9 @@
-/* $XTermId: ptyx.h,v 1.446 2006/11/23 01:18:29 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.450 2007/01/19 00:48:50 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
 /*
- * Copyright 1999-2005,2006 by Thomas E. Dickey
+ * Copyright 1999-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -261,7 +261,7 @@
  * mouse events into the proper routines. */
 
 typedef enum {
-    NORMAL
+    NORMAL = 0
     , LEFTEXTENSION
     , RIGHTEXTENSION
 } EventMode;
@@ -707,6 +707,26 @@ typedef enum {
 #endif
     , fMAX
 } VTFontEnum;
+
+/*
+ * Indices for cachedGCs.c
+ */
+typedef enum {
+    gcNorm = fNorm
+    , gcBold = fBold
+#if OPT_WIDE_CHARS
+    , gcWide = fWide
+    , gcWBold = fWBold
+#endif
+    , gcVTcursNormal
+    , gcVTcursFilled
+    , gcVTcursReverse
+    , gcVTcursOutline
+#if OPT_TEK4014
+    , gcTKcurs
+#endif
+    , gcMAX
+} CgsEnum;
 
 /* indices for the normal terminal colors in screen.Tcolors[] */
 typedef enum {
@@ -1409,6 +1429,9 @@ typedef struct {
 	int		blink_off;	/* cursor off time (msecs)	*/
 	XtIntervalId	blink_timer;	/* timer-id for cursor-proc	*/
 #endif
+#if OPT_ZICONBEEP
+	Boolean		zIconBeep_flagged; /* True if icon name was changed */
+#endif /* OPT_ZICONBEEP */
 	int		cursor_GC;	/* see ShowCursor()		*/
 	int		cursor_set;	/* requested state		*/
 	CELL		cursorp;	/* previous cursor row/column	*/
@@ -1534,6 +1557,7 @@ typedef struct {
 	Boolean		selectToClipboard; /* primary vs clipboard */
 	String		*mappedSelect;	/* mapping for "SELECT" to "PRIMARY" */
 
+	Boolean		waitingForTrackInfo;
 	int		numberOfClicks;
 	int		maxClicks;
 	int		multiClickTime;	/* time between multiclick selects */
@@ -1552,6 +1576,7 @@ typedef struct {
 	Char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
 	int		selection_length; /* number of significant bytes */
+	EventMode	eventMode;
 	Time		selection_time;	/* latest event timestamp */
 	Time		lastButtonUpTime;
 
