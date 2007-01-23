@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.57 2006/02/13 01:14:59 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.58 2007/01/21 19:09:16 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.h,v 1.17 2006/02/13 01:14:59 dickey Exp $
@@ -52,7 +52,7 @@ extern int xtermLoadFont (XtermWidget /* xw */,
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
 extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
 extern void xtermCloseFonts(TScreen * /* screen */, XFontStruct ** /* fnts[fMAX] */);
-extern void xtermComputeFontInfo (XtermWidget /* xw */, struct _vtwin */* win */, XFontStruct */* font */, int /* sbwidth */);
+extern void xtermComputeFontInfo (XtermWidget /* xw */, VTwin */* win */, XFontStruct */* font */, int /* sbwidth */);
 extern void xtermSaveFontInfo (TScreen */* screen */, XFontStruct */* font */);
 extern void xtermSetCursorBox (TScreen */* screen */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);

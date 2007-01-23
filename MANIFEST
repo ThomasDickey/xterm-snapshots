@@ -1,4 +1,4 @@
-MANIFEST for xterm, version pre-cachedGCs
+MANIFEST for xterm, version xterm-223e
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -73,7 +73,6 @@ scrollbar.c                     VT100 scrollbar support functions
 sinstall.sh                     install setuid if existing program was
 tabs.c                          VT100 tabstop support-functions
 termcap                         termcap entries for 'xterm'
-terminfo                        terminfo entries for 'xterm'
 testxmc.c                       testing: xmc/magic-cookies
 trace.c                         debugging trace functions for 'xterm'
 trace.h                         interface of trace.c

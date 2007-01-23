@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.431 2007/01/19 00:44:28 tom Exp $ */
+/* $XTermId: xterm.h,v 1.436 2007/01/21 22:32:54 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -678,11 +678,13 @@ extern Bool iswide(int  /* i */);
 #endif
 
 /* cachedCgs.c */
-extern GC getCgs(XtermWidget /*xw*/, int /*cgsId*/);
-extern void freeCgs(XtermWidget /*xw*/, int /*cgsId*/);
-extern void setCgsBackground(XtermWidget /*xw*/, int /*cgsId*/, Pixel /*bg*/);
-extern void setCgsFont(XtermWidget /*xw*/, int /*cgsId*/, XFontStruct * /*font*/);
-extern void setCgsForeground(XtermWidget /*xw*/, int /*cgsId*/, Pixel /*fg*/);
+extern GC freeCgs(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/);
+extern GC getCgs(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/);
+extern void copyCgs(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
+extern void setCgsBack(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*bg*/);
+extern void setCgsFont(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/, XFontStruct * /*font*/);
+extern void setCgsFore(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*fg*/);
+extern void swapCgs(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
 
 /* charproc.c */
 extern int VTInit (void);
