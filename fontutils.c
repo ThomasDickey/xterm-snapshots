@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.221 2007/01/17 22:49:54 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.229 2007/01/22 23:35:55 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -734,17 +734,12 @@ xtermLoadFont(XtermWidget xw,
 	      int fontnum)
 {
     TScreen *screen = &(xw->screen);
+    VTwin *win = WhichVWin(screen);
 
     VTFontNames myfonts;
     /* FIXME: use XFreeFontInfo */
     FontNameProperties *fp;
     XFontStruct *fnts[fMAX];
-    XGCValues xgcv;
-    unsigned long mask;
-    GC new_normalGC = NULL;
-    GC new_normalboldGC = NULL;
-    GC new_reverseGC = NULL;
-    GC new_reverseboldGC = NULL;
     Pixel new_normal;
     Pixel new_revers;
     char *tmpname = NULL;
@@ -936,59 +931,30 @@ xtermLoadFont(XtermWidget xw,
     /* TODO : enforce that the width of the wide font is 2* the width
        of the narrow font */
 
-    mask = (GCFont | GCForeground | GCBackground | GCGraphicsExposures |
-	    GCFunction);
-
     new_normal = getXtermForeground(xw, xw->flags, xw->cur_foreground);
     new_revers = getXtermBackground(xw, xw->flags, xw->cur_background);
 
-    xgcv.font = fnts[fNorm]->fid;
-    xgcv.foreground = new_normal;
-    xgcv.background = new_revers;
-    xgcv.graphics_exposures = True;	/* default */
-    xgcv.function = GXcopy;
-
-    new_normalGC = XtGetGC((Widget) xw, mask, &xgcv);
-    if (!new_normalGC)
+    setCgsFore(xw, win, gcNorm, new_normal);
+    setCgsBack(xw, win, gcNorm, new_revers);
+    setCgsFont(xw, win, gcNorm, fnts[fNorm]);
+    if (!getCgs(xw, win, gcNorm))
 	goto bad;
 
-    if (fnts[fNorm] == fnts[fBold]) {	/* there is no bold font */
-	new_normalboldGC = new_normalGC;
-    } else {
-	xgcv.font = fnts[fBold]->fid;
-	new_normalboldGC = XtGetGC((Widget) xw, mask, &xgcv);
-	if (!new_normalboldGC)
-	    goto bad;
-    }
-
-    xgcv.font = fnts[fNorm]->fid;
-    xgcv.foreground = new_revers;
-    xgcv.background = new_normal;
-    new_reverseGC = XtGetGC((Widget) xw, mask, &xgcv);
-    if (!new_reverseGC)
+    copyCgs(xw, win, gcBold, gcNorm);
+    setCgsFont(xw, win, gcBold, fnts[fBold]);
+    if (!getCgs(xw, win, gcBold))
 	goto bad;
 
-    if (fnts[fNorm] == fnts[fBold]) {	/* there is no bold font */
-	new_reverseboldGC = new_reverseGC;
-    } else {
-	xgcv.font = fnts[fBold]->fid;
-	new_reverseboldGC = XtGetGC((Widget) xw, mask, &xgcv);
-	if (!new_reverseboldGC)
-	    goto bad;
-    }
+    setCgsFore(xw, win, gcNormReverse, new_revers);
+    setCgsBack(xw, win, gcNormReverse, new_normal);
+    setCgsFont(xw, win, gcNormReverse, fnts[fNorm]);
+    if (!getCgs(xw, win, gcNormReverse))
+	goto bad;
 
-    if (NormalGC(screen) != NormalBoldGC(screen))
-	XtReleaseGC((Widget) xw, NormalBoldGC(screen));
-    XtReleaseGC((Widget) xw, NormalGC(screen));
-
-    if (ReverseGC(screen) != ReverseBoldGC(screen))
-	XtReleaseGC((Widget) xw, ReverseBoldGC(screen));
-    XtReleaseGC((Widget) xw, ReverseGC(screen));
-
-    NormalGC(screen) = new_normalGC;
-    NormalBoldGC(screen) = new_normalboldGC;
-    ReverseGC(screen) = new_reverseGC;
-    ReverseBoldGC(screen) = new_reverseboldGC;
+    copyCgs(xw, win, gcBoldReverse, gcNormReverse);
+    setCgsFont(xw, win, gcBoldReverse, fnts[fBold]);
+    if (!getCgs(xw, win, gcBoldReverse))
+	goto bad;
 
     /*
      * If we're switching fonts, free the old ones.  Otherwise we'll leak
@@ -1078,14 +1044,10 @@ xtermLoadFont(XtermWidget xw,
   bad:
     if (tmpname)
 	free(tmpname);
-    if (new_normalGC)
-	XtReleaseGC((Widget) xw, new_normalGC);
-    if (new_normalboldGC && new_normalGC != new_normalboldGC)
-	XtReleaseGC((Widget) xw, new_normalboldGC);
-    if (new_reverseGC)
-	XtReleaseGC((Widget) xw, new_reverseGC);
-    if (new_reverseboldGC && new_reverseGC != new_reverseboldGC)
-	XtReleaseGC((Widget) xw, new_reverseboldGC);
+    freeCgs(xw, win, gcNorm);
+    freeCgs(xw, win, gcBold);
+    freeCgs(xw, win, gcNormReverse);
+    freeCgs(xw, win, gcBoldReverse);
 
     xtermCloseFonts(screen, fnts);
     return 0;
@@ -1396,7 +1358,7 @@ mySquareRoot(float value)
  * rule.
  */
 static void
-setRenderFontsize(TScreen * screen, struct _vtwin *win, XftFont * font, const char *tag)
+setRenderFontsize(TScreen * screen, VTwin * win, XftFont * font, const char *tag)
 {
     if (font != 0) {
 	int width, height, ascent, descent;
@@ -1447,7 +1409,7 @@ setRenderFontsize(TScreen * screen, struct _vtwin *win, XftFont * font, const ch
  */
 void
 xtermComputeFontInfo(XtermWidget xw,
-		     struct _vtwin *win,
+		     VTwin * win,
 		     XFontStruct * font,
 		     int sbwidth)
 {
@@ -1699,7 +1661,7 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
     TScreen *screen = &(xw->screen);
 
     int scrollbar_width;
-    struct _vtwin *win = &(screen->fullVwin);
+    VTwin *win = &(screen->fullVwin);
 
     scrollbar_width = (xw->misc.scrollbar
 		       ? (screen->scrollWidget->core.width +

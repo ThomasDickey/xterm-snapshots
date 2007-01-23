@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.316 2007/01/18 23:27:48 tom Exp $ */
+/* $XTermId: util.c,v 1.322 2007/01/22 23:33:56 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1275,7 +1275,7 @@ copy_area(XtermWidget xw,
 
 	XCopyArea(screen->display,
 		  VWindow(screen), VWindow(screen),
-		  NormalGC(screen),
+		  NormalGC(xw, screen),
 		  src_x, src_y, width, height, dest_x, dest_y);
     }
 }
@@ -1397,7 +1397,7 @@ HandleExposure(XtermWidget xw, XEvent * event)
 }
 
 static void
-set_background(XtermWidget xw, int color)
+set_background(XtermWidget xw, int color GCC_UNUSED)
 {
     TScreen *screen = &(xw->screen);
     Pixel c = getXtermBackground(xw, xw->flags, color);
@@ -1500,6 +1500,7 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 {
     Bool repaint = False;
     TScreen *screen = &xw->screen;
+    VTwin *win = WhichVWin(screen);
 
     TRACE(("ChangeColors\n"));
 
@@ -1519,10 +1520,10 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 	T_COLOR(screen, TEXT_FG) = fg;
 	TRACE(("... TEXT_FG: %#lx\n", T_COLOR(screen, TEXT_FG)));
 	if (screen->Vshow) {
-	    XSetForeground(screen->display, NormalGC(screen), fg);
-	    XSetBackground(screen->display, ReverseGC(screen), fg);
-	    XSetForeground(screen->display, NormalBoldGC(screen), fg);
-	    XSetBackground(screen->display, ReverseBoldGC(screen), fg);
+	    setCgsFore(xw, win, gcNorm, fg);
+	    setCgsBack(xw, win, gcNormReverse, fg);
+	    setCgsFore(xw, win, gcBold, fg);
+	    setCgsBack(xw, win, gcBoldReverse, fg);
 	    repaint = True;
 	}
     }
@@ -1532,10 +1533,10 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
 	T_COLOR(screen, TEXT_BG) = bg;
 	TRACE(("... TEXT_BG: %#lx\n", T_COLOR(screen, TEXT_BG)));
 	if (screen->Vshow) {
-	    XSetBackground(screen->display, NormalGC(screen), bg);
-	    XSetForeground(screen->display, ReverseGC(screen), bg);
-	    XSetBackground(screen->display, NormalBoldGC(screen), bg);
-	    XSetForeground(screen->display, ReverseBoldGC(screen), bg);
+	    setCgsBack(xw, win, gcNorm, bg);
+	    setCgsFore(xw, win, gcNormReverse, bg);
+	    setCgsBack(xw, win, gcBold, bg);
+	    setCgsFore(xw, win, gcBoldReverse, bg);
 	    set_background(xw, -1);
 	    repaint = True;
 	}
@@ -1623,11 +1624,17 @@ xtermRepaint(XtermWidget xw)
 
 /***====================================================================***/
 
+static void
+swapVTwinGCs(XtermWidget xw, VTwin * win)
+{
+    swapCgs(xw, win, gcNorm, gcNormReverse);
+    swapCgs(xw, win, gcBold, gcBoldReverse);
+}
+
 void
 ReverseVideo(XtermWidget xw)
 {
     TScreen *screen = &xw->screen;
-    GC tmpGC;
     Pixel tmp;
 
     TRACE(("ReverseVideo\n"));
@@ -1654,16 +1661,9 @@ ReverseVideo(XtermWidget xw)
     T_COLOR(screen, TEXT_FG) = tmp;
 
     EXCHANGE(T_COLOR(screen, MOUSE_FG), T_COLOR(screen, MOUSE_BG), tmp);
-    EXCHANGE(NormalGC(screen), ReverseGC(screen), tmpGC);
-    EXCHANGE(NormalBoldGC(screen), ReverseBoldGC(screen), tmpGC);
+    swapVTwinGCs(xw, &(screen->fullVwin));
 #ifndef NO_ACTIVE_ICON
-    tmpGC = screen->iconVwin.normalGC;
-    screen->iconVwin.normalGC = screen->iconVwin.reverseGC;
-    screen->iconVwin.reverseGC = tmpGC;
-
-    tmpGC = screen->iconVwin.normalboldGC;
-    screen->iconVwin.normalboldGC = screen->iconVwin.reverseboldGC;
-    screen->iconVwin.reverseboldGC = tmpGC;
+    swapVTwinGCs(xw, &(screen->iconVwin));
 #endif /* NO_ACTIVE_ICON */
 
     xw->misc.re_verse = !xw->misc.re_verse;
@@ -2315,6 +2315,7 @@ drawXtermText(XtermWidget xw,
 	XFontStruct *fs = ((flags & BOLDATTR(screen))
 			   ? BoldFont(screen)
 			   : NormalFont(screen));
+	VTwin *currentWin = WhichVWin(screen);
 
 #define GC_PAIRS(a,b) \
 	if (gc == a) fillGC = b; \
@@ -2327,11 +2328,11 @@ drawXtermText(XtermWidget xw,
 	 * while we've set the cursor color in the background.  So we
 	 * need a special GC for that.
 	 */
-	if (gc == screen->cursorGC
-	    || gc == screen->reversecursorGC)
-	    fillGC = screen->fillCursorGC;
-	GC_PAIRS(NormalGC(screen), ReverseGC(screen));
-	GC_PAIRS(NormalBoldGC(screen), ReverseBoldGC(screen));
+	if (gc == getCgs(xw, currentWin, gcVTcursNormal)
+	    || gc == getCgs(xw, currentWin, gcVTcursReverse))
+	    fillGC = getCgs(xw, currentWin, gcVTcursOutline);
+	GC_PAIRS(NormalGC(xw, screen), ReverseGC(xw, screen));
+	GC_PAIRS(NormalBoldGC(xw, screen), ReverseBoldGC(xw, screen));
 
 	if (!(flags & NOBACKGROUND))
 	    XFillRectangle(screen->display, VWindow(screen), fillGC,
@@ -2611,6 +2612,8 @@ GC
 updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 {
     TScreen *screen = &(xw->screen);
+    VTwin *win = WhichVWin(screen);
+    CgsEnum cgsId = gcMAX;
     int my_fg = extract_fg(xw, fg_bg, flags);
     int my_bg = extract_bg(xw, fg_bg, flags);
     Pixel fg_pix = getXtermForeground(xw, flags, my_fg);
@@ -2619,7 +2622,6 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 #if OPT_HIGHLIGHT_COLOR
     Pixel hi_pix = T_COLOR(screen, HIGHLIGHT_BG);
 #endif
-    GC gc;
 
     (void) fg_bg;
     (void) my_bg;
@@ -2628,10 +2630,11 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
     checkVeryBoldColors(flags, my_fg);
 
     if (ReverseOrHilite(screen, flags, hilite)) {
-	if (flags & BOLDATTR(screen))
-	    gc = ReverseBoldGC(screen);
-	else
-	    gc = ReverseGC(screen);
+	if (flags & BOLDATTR(screen)) {
+	    cgsId = gcBoldReverse;
+	} else {
+	    cgsId = gcNormReverse;
+	}
 
 #if OPT_HIGHLIGHT_COLOR
 	if (hi_pix != T_COLOR(screen, TEXT_FG)
@@ -2646,11 +2649,11 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 	bg_pix = fg_pix;
 	fg_pix = xx_pix;
     } else {
-	if (flags & BOLDATTR(screen))
-	    gc = NormalBoldGC(screen);
-	else
-	    gc = NormalGC(screen);
-
+	if (flags & BOLDATTR(screen)) {
+	    cgsId = gcBold;
+	} else {
+	    cgsId = gcNorm;
+	}
     }
 
 #if OPT_BLINK_TEXT
@@ -2659,9 +2662,9 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
     }
 #endif
 
-    XSetForeground(screen->display, gc, fg_pix);
-    XSetBackground(screen->display, gc, bg_pix);
-    return gc;
+    setCgsFore(xw, win, cgsId, fg_pix);
+    setCgsBack(xw, win, cgsId, bg_pix);
+    return getCgs(xw, win, cgsId);
 }
 
 /*
@@ -2673,29 +2676,32 @@ void
 resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
 {
     TScreen *screen = &(xw->screen);
+    VTwin *win = WhichVWin(screen);
+    CgsEnum cgsId = gcMAX;
     Pixel fg_pix = getXtermForeground(xw, flags, xw->cur_foreground);
     Pixel bg_pix = getXtermBackground(xw, flags, xw->cur_background);
-    GC gc;
 
     checkVeryBoldColors(flags, xw->cur_foreground);
 
     if (ReverseOrHilite(screen, flags, hilite)) {
-	if (flags & BOLDATTR(screen))
-	    gc = ReverseBoldGC(screen);
-	else
-	    gc = ReverseGC(screen);
+	if (flags & BOLDATTR(screen)) {
+	    cgsId = gcBoldReverse;
+	} else {
+	    cgsId = gcNormReverse;
+	}
 
-	XSetForeground(screen->display, gc, bg_pix);
-	XSetBackground(screen->display, gc, fg_pix);
+	setCgsFore(xw, win, cgsId, bg_pix);
+	setCgsBack(xw, win, cgsId, fg_pix);
 
     } else {
-	if (flags & BOLDATTR(screen))
-	    gc = NormalBoldGC(screen);
-	else
-	    gc = NormalGC(screen);
+	if (flags & BOLDATTR(screen)) {
+	    cgsId = gcBold;
+	} else {
+	    cgsId = gcNorm;
+	}
 
-	XSetForeground(screen->display, gc, fg_pix);
-	XSetBackground(screen->display, gc, bg_pix);
+	setCgsFore(xw, win, cgsId, fg_pix);
+	setCgsBack(xw, win, cgsId, bg_pix);
     }
 }
 

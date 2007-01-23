@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.450 2007/01/19 00:48:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.457 2007/01/22 23:04:31 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -709,14 +709,18 @@ typedef enum {
 } VTFontEnum;
 
 /*
- * Indices for cachedGCs.c
+ * Indices for cachedGCs.c (unrelated to VTFontEnum).
  */
 typedef enum {
-    gcNorm = fNorm
-    , gcBold = fBold
+    gcNorm = 0
+    , gcBold
+    , gcNormReverse
+    , gcBoldReverse
 #if OPT_WIDE_CHARS
-    , gcWide = fWide
-    , gcWBold = fWBold
+    , gcWide
+    , gcWBold
+    , gcWideReverse
+    , gcWBoldReverse
 #endif
     , gcVTcursNormal
     , gcVTcursFilled
@@ -1224,7 +1228,7 @@ typedef struct {
 #define VT100_TB_INFO(name) screen.fullVwin.tb_info.name
 #endif
 
-struct _vtwin {
+typedef struct {
 	Window		window;		/* X window id			*/
 	int		width;		/* width of columns		*/
 	int		height;		/* height of rows		*/
@@ -1235,24 +1239,20 @@ struct _vtwin {
 	int		f_ascent;	/* ascent of font in pixels	*/
 	int		f_descent;	/* descent of font in pixels	*/
 	SbInfo		sb_info;
-	GC		normalGC;	/* normal painting		*/
-	GC		reverseGC;	/* reverse painting		*/
-	GC		normalboldGC;	/* normal painting, bold font	*/
-	GC		reverseboldGC;	/* reverse painting, bold font	*/
 #if OPT_TOOLBAR
 	Boolean		active;		/* true if toolbars are used	*/
 	TbInfo		tb_info;	/* toolbar information		*/
 #endif
-};
+} VTwin;
 
-struct _tekwin {
+typedef struct {
 	Window		window;		/* X window id			*/
 	int		width;		/* width of columns		*/
 	int		height;		/* height of rows		*/
 	Dimension	fullwidth;	/* full width of window		*/
 	Dimension	fullheight;	/* full height of window	*/
 	double		tekscale;	/* scale factor Tek -> vs100	*/
-};
+} TKwin;
 
 typedef struct {
 /* These parameters apply to both windows */
@@ -1270,10 +1270,6 @@ typedef struct {
 	pid_t		pid;		/* pid of process on far side   */
 	uid_t		uid;		/* user id of actual person	*/
 	gid_t		gid;		/* group id of actual person	*/
-	GC		cursorGC;	/* normal cursor painting	*/
-	GC		fillCursorGC;	/* special cursor painting	*/
-	GC		reversecursorGC;/* reverse cursor painting	*/
-	GC		cursoroutlineGC;/* for painting lines around    */
 	ColorRes	Tcolors[NCOLORS]; /* terminal colors		*/
 #if OPT_ISO_COLORS
 	ColorRes	Acolors[MAXCOLORS]; /* ANSI color emulation	*/
@@ -1331,7 +1327,7 @@ typedef struct {
 #if OPT_PASTE64
 	int		base64_paste;	/* set to send paste in base64	*/
 	int		base64_final;	/* string-terminator for paste	*/
-	/* _qWriteSelectionData expects these to be initialized to zero. 
+	/* _qWriteSelectionData expects these to be initialized to zero.
 	 * base64_flush() is the last step of the conversion, it clears these
 	 * variables.
 	 */
@@ -1381,10 +1377,10 @@ typedef struct {
 
 /* VT window parameters */
 	Boolean		Vshow;		/* VT window showing		*/
-	struct _vtwin	fullVwin;
+	VTwin		fullVwin;
 #ifndef NO_ACTIVE_ICON
-	struct _vtwin	iconVwin;
-	struct _vtwin *	whichVwin;
+	VTwin		iconVwin;
+	VTwin		*whichVwin;
 #endif /* NO_ACTIVE_ICON */
 
 	Cursor	pointer_cursor;		/* pointer cursor in window	*/
@@ -1655,10 +1651,10 @@ typedef struct _TekScreen {
 	GC		TcursorGC;	/* normal cursor painting	*/
 
 	Boolean		waitrefresh;	/* postpone refresh		*/
-	struct _tekwin	fullTwin;
+	TKwin		fullTwin;
 #ifndef NO_ACTIVE_ICON
-	struct _tekwin	iconTwin;
-	struct _tekwin *whichTwin;
+	TKwin		iconTwin;
+	TKwin		*whichTwin;
 #endif /* NO_ACTIVE_ICON */
 
 	Cursor		arrow;		/* arrow cursor			*/
@@ -2073,10 +2069,11 @@ typedef struct _TekWidgetRec {
 #define BoldFont(screen)	WhichVFont(screen, fnts[fBold])
 
 #define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width
-#define NormalGC(screen)	WhichVWin(screen)->normalGC
-#define ReverseGC(screen)	WhichVWin(screen)->reverseGC
-#define NormalBoldGC(screen)	WhichVWin(screen)->normalboldGC
-#define ReverseBoldGC(screen)	WhichVWin(screen)->reverseboldGC
+
+#define NormalGC(w,sp)		getCgs(w, WhichVWin(sp), gcNorm)
+#define ReverseGC(w,sp)		getCgs(w, WhichVWin(sp), gcNormReverse)
+#define NormalBoldGC(w,sp)	getCgs(w, WhichVWin(sp), gcBold)
+#define ReverseBoldGC(w,sp)	getCgs(w, WhichVWin(sp), gcBoldReverse)
 
 #define TWidth(screen)		WhichTWin(screen)->width
 #define THeight(screen)		WhichTWin(screen)->height

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.258 2007/01/18 23:24:50 tom Exp $ */
+/* $XTermId: button.c,v 1.259 2007/01/22 22:59:46 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -982,10 +982,10 @@ do_select_end(XtermWidget xw,
 {
 #if OPT_READLINE
     int ldelta1, ldelta2;
-    TScreen *screen = &xw->screen;
 #endif
+    TScreen *screen = &xw->screen;
 
-    xw->screen.selection_time = event->xbutton.time;
+    screen->selection_time = event->xbutton.time;
     switch (screen->eventMode) {
     case NORMAL:
 	(void) SendMousePosition(xw, event);

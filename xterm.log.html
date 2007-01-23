@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.506 2007/01/18 22:10:29 tom Exp $
+  $XTermId: xterm.log.html,v 1.507 2007/01/22 00:37:02 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -275,6 +275,9 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>consolidate GC creation/updating into a single module to allow
+	    some optimization.
+
 	<li>fix ifdef of xtermCellWidth(), which broke for a case without
 	    TrueType and without wide-character support (report by Martin
 	    Pirker).

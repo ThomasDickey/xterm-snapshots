@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.745 2007/01/18 23:40:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.756 2007/01/22 23:16:43 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -823,12 +823,12 @@ SGR_Foreground(XtermWidget xw, int color)
     fg = getXtermForeground(xw, xw->flags, color);
     xw->cur_foreground = color;
 
-    XSetForeground(screen->display, NormalGC(screen), fg);
-    XSetBackground(screen->display, ReverseGC(screen), fg);
+    setCgsFore(xw, WhichVWin(screen), gcNorm, fg);
+    setCgsBack(xw, WhichVWin(screen), gcNormReverse, fg);
 
-    if (NormalGC(screen) != NormalBoldGC(screen)) {
-	XSetForeground(screen->display, NormalBoldGC(screen), fg);
-	XSetBackground(screen->display, ReverseBoldGC(screen), fg);
+    if (NormalGC(xw, screen) != NormalBoldGC(xw, screen)) {
+	setCgsFore(xw, WhichVWin(screen), gcBold, fg);
+	setCgsBack(xw, WhichVWin(screen), gcBoldReverse, fg);
     }
 }
 
@@ -855,12 +855,12 @@ SGR_Background(XtermWidget xw, int color)
     bg = getXtermBackground(xw, xw->flags, color);
     xw->cur_background = color;
 
-    XSetBackground(screen->display, NormalGC(screen), bg);
-    XSetForeground(screen->display, ReverseGC(screen), bg);
+    setCgsBack(xw, WhichVWin(screen), gcNorm, bg);
+    setCgsFore(xw, WhichVWin(screen), gcNormReverse, bg);
 
-    if (NormalGC(screen) != NormalBoldGC(screen)) {
-	XSetBackground(screen->display, NormalBoldGC(screen), bg);
-	XSetForeground(screen->display, ReverseBoldGC(screen), bg);
+    if (NormalGC(xw, screen) != NormalBoldGC(xw, screen)) {
+	setCgsBack(xw, WhichVWin(screen), gcBold, bg);
+	setCgsFore(xw, WhichVWin(screen), gcBoldReverse, bg);
     }
 }
 
@@ -3683,7 +3683,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	     * vt100 (ignore the tek4014 window).
 	     */
 	    if (term->screen.Vshow) {
-		struct _vtwin *Vwin = WhichVWin(&(term->screen));
+		VTwin *Vwin = WhichVWin(&(term->screen));
 		TbInfo *info = &(Vwin->tb_info);
 		TbInfo save = *info;
 
@@ -5878,73 +5878,26 @@ VTInitialize(Widget wrequest,
     return;
 }
 
+#ifdef NO_LEAKS
 static void
 releaseCursorGCs(XtermWidget xw)
 {
     TScreen *screen = &xw->screen;
-    GC cursorGC = screen->cursorGC;
-    GC fillCursorGC = screen->fillCursorGC;
-    GC reverseCursorGC = screen->reversecursorGC;
-    GC cursorOutlineGC = screen->cursoroutlineGC;
+    VTwin *win = WhichVWin(screen);
 
-#if OPT_ISO_COLORS
-    if (screen->colorMode) {
-	if (cursorGC)
-	    XFreeGC(screen->display, cursorGC);
-	screen->cursorGC = 0;
-
-	if (fillCursorGC
-	    && (fillCursorGC != cursorGC))
-	    XFreeGC(screen->display, fillCursorGC);
-	screen->fillCursorGC = 0;
-
-	if (reverseCursorGC
-	    && (reverseCursorGC != cursorGC)
-	    && (reverseCursorGC != fillCursorGC))
-	    XFreeGC(screen->display, screen->reversecursorGC);
-	screen->reversecursorGC = 0;
-
-	if (cursorOutlineGC
-	    && (cursorOutlineGC != cursorGC)
-	    && (cursorOutlineGC != fillCursorGC)
-	    && (cursorOutlineGC != reverseCursorGC))
-	    XFreeGC(screen->display, screen->cursoroutlineGC);
-	screen->cursoroutlineGC = 0;
-    } else
-#endif
-    {
-	if (cursorGC)
-	    XtReleaseGC((Widget) xw, cursorGC);
-	screen->cursorGC = 0;
-
-	if ((fillCursorGC)
-	    && (fillCursorGC != cursorGC))
-	    XtReleaseGC((Widget) xw, fillCursorGC);
-	screen->fillCursorGC = 0;
-
-	if ((reverseCursorGC)
-	    && (reverseCursorGC != cursorGC)
-	    && (reverseCursorGC != fillCursorGC))
-	    XtReleaseGC((Widget) xw, reverseCursorGC);
-	screen->reversecursorGC = 0;
-
-	if ((cursorOutlineGC)
-	    && (cursorOutlineGC != cursorGC)
-	    && (cursorOutlineGC != fillCursorGC)
-	    && (cursorOutlineGC != reverseCursorGC))
-	    XtReleaseGC((Widget) xw, cursorOutlineGC);
-	screen->cursoroutlineGC = 0;
-    }
+    freeCgs(xw, win, gcVTcursNormal);
+    freeCgs(xw, win, gcVTcursFilled);
+    freeCgs(xw, win, gcVTcursReverse);
+    freeCgs(xw, win, gcVTcursOutline);
 }
 
-#ifdef NO_LEAKS
 static void
-releaseWindowGCs(Widget w, struct _vtwin *win)
+releaseWindowGCs(XtermWidget xw, VTwin * win)
 {
-    XtReleaseGC(w, win->normalGC);
-    XtReleaseGC(w, win->reverseGC);
-    XtReleaseGC(w, win->normalboldGC);
-    XtReleaseGC(w, win->reverseboldGC);
+    freeCgs(xw, win, gcNorm);
+    freeCgs(xw, win, gcNormReverse);
+    freeCgs(xw, win, gcBold);
+    freeCgs(xw, win, gcBoldReverse);
 }
 #endif
 
@@ -5996,9 +5949,9 @@ VTDestroy(Widget w GCC_UNUSED)
     }
 #endif
     releaseCursorGCs(xw);
-    releaseWindowGCs(w, &(screen->fullVwin));
+    releaseWindowGCs(xw, &(screen->fullVwin));
 #ifndef NO_ACTIVE_ICON
-    releaseWindowGCs(w, &(screen->iconVwin));
+    releaseWindowGCs(xw, &(screen->iconVwin));
 #endif
 
     xtermCloseFonts(screen, screen->fnts);
@@ -6220,8 +6173,7 @@ VTRealize(Widget w,
     if (xw->misc.active_icon && screen->fnt_icon) {
 	int iconX = 0, iconY = 0;
 	Widget shell = SHELL_OF(xw);
-	unsigned long mask;
-	XGCValues xgcv;
+	VTwin *win = &(screen->iconVwin);
 
 	TRACE(("Initializing active-icon\n"));
 	XtVaGetValues(shell, XtNiconX, &iconX, XtNiconY, &iconY, (XtPointer) 0);
@@ -6249,25 +6201,18 @@ VTRealize(Widget w,
 		      (XtPointer) 0);
 	XtRegisterDrawable(XtDisplay(xw), screen->iconVwin.window, w);
 
-	mask = (GCFont | GCForeground | GCBackground |
-		GCGraphicsExposures | GCFunction);
+	setCgsFont(xw, win, gcNorm, screen->fnt_icon);
+	setCgsFore(xw, win, gcNorm, T_COLOR(screen, TEXT_FG));
+	setCgsBack(xw, win, gcNorm, T_COLOR(screen, TEXT_BG));
 
-	xgcv.font = screen->fnt_icon->fid;
-	xgcv.foreground = T_COLOR(screen, TEXT_FG);
-	xgcv.background = T_COLOR(screen, TEXT_BG);
-	xgcv.graphics_exposures = True;		/* default */
-	xgcv.function = GXcopy;
+	copyCgs(xw, win, gcBold, gcNorm);
 
-	screen->iconVwin.normalGC =
-	    screen->iconVwin.normalboldGC =
-	    XtGetGC(shell, mask, &xgcv);
+	setCgsFont(xw, win, gcNormReverse, screen->fnt_icon);
+	setCgsFore(xw, win, gcNormReverse, T_COLOR(screen, TEXT_BG));
+	setCgsBack(xw, win, gcNormReverse, T_COLOR(screen, TEXT_FG));
 
-	xgcv.foreground = T_COLOR(screen, TEXT_BG);
-	xgcv.background = T_COLOR(screen, TEXT_FG);
+	copyCgs(xw, win, gcBoldReverse, gcNormReverse);
 
-	screen->iconVwin.reverseGC =
-	    screen->iconVwin.reverseboldGC =
-	    XtGetGC(shell, mask, &xgcv);
 #if OPT_TOOLBAR
 	/*
 	 * Toolbar is initialized before we get here.  Enable the menu item
@@ -6660,7 +6605,7 @@ VTSetValues(Widget cur,
     return refresh_needed;
 }
 
-#define setGC(value) set_at = __LINE__, currentGC = value
+#define setGC(code) set_at = __LINE__, currentCgs = code
 
 #define OutsideSelection(screen,srow,scol)  \
 	 ((srow) > (screen)->endH.row || \
@@ -6683,6 +6628,8 @@ ShowCursor(void)
     unsigned flags;
     unsigned fg_bg = 0;
     GC currentGC;
+    CgsEnum currentCgs = gcMAX;
+    VTwin *currentWin = WhichVWin(screen);
     int set_at;
     Bool in_selection;
     Bool reversed;
@@ -6795,13 +6742,13 @@ ShowCursor(void)
     filled = (screen->select || screen->always_highlight);
     if (filled) {
 	if (reversed) {		/* text is reverse video */
-	    if (screen->cursorGC) {
-		setGC(screen->cursorGC);
+	    if (getCgs(xw, currentWin, gcVTcursNormal)) {
+		setGC(gcVTcursNormal);
 	    } else {
 		if (flags & BOLDATTR(screen)) {
-		    setGC(NormalBoldGC(screen));
+		    setGC(gcBold);
 		} else {
-		    setGC(NormalGC(screen));
+		    setGC(gcNorm);
 		}
 	    }
 #if OPT_HIGHLIGHT_COLOR
@@ -6815,20 +6762,20 @@ ShowCursor(void)
 #endif
 	    EXCHANGE(fg_pix, bg_pix, tmp);
 	} else {		/* normal video */
-	    if (screen->reversecursorGC) {
-		setGC(screen->reversecursorGC);
+	    if (getCgs(xw, currentWin, gcVTcursReverse)) {
+		setGC(gcVTcursReverse);
 	    } else {
 		if (flags & BOLDATTR(screen)) {
-		    setGC(ReverseBoldGC(screen));
+		    setGC(gcBoldReverse);
 		} else {
-		    setGC(ReverseGC(screen));
+		    setGC(gcNormReverse);
 		}
 	    }
 	}
 	if (T_COLOR(screen, TEXT_CURSOR) == xw->dft_foreground) {
-	    XSetBackground(screen->display, currentGC, fg_pix);
+	    setCgsBack(xw, currentWin, currentCgs, fg_pix);
 	}
-	XSetForeground(screen->display, currentGC, bg_pix);
+	setCgsFore(xw, currentWin, currentCgs, bg_pix);
     } else {			/* not selected */
 	if (reversed) {		/* text is reverse video */
 #if OPT_HIGHLIGHT_COLOR
@@ -6840,13 +6787,13 @@ ShowCursor(void)
 		fg_pix = hi_pix;
 	    }
 #endif
-	    setGC(ReverseGC(screen));
-	    XSetForeground(screen->display, currentGC, bg_pix);
-	    XSetBackground(screen->display, currentGC, fg_pix);
+	    setGC(gcNormReverse);
+	    setCgsFore(xw, currentWin, currentCgs, bg_pix);
+	    setCgsBack(xw, currentWin, currentCgs, fg_pix);
 	} else {		/* normal video */
-	    setGC(NormalGC(screen));
-	    XSetForeground(screen->display, currentGC, fg_pix);
-	    XSetBackground(screen->display, currentGC, bg_pix);
+	    setGC(gcNorm);
+	    setCgsFore(xw, currentWin, currentCgs, fg_pix);
+	    setCgsBack(xw, currentWin, currentCgs, bg_pix);
 	}
     }
 
@@ -6858,6 +6805,7 @@ ShowCursor(void)
 	       screen->cur_row, screen->cur_col,
 	       (filled ? "filled" : "outline")));
 
+	currentGC = getCgs(xw, currentWin, currentCgs);
 	drawXtermText(xw, flags & DRAWX_MASK, currentGC,
 		      x = CurCursorX(screen, screen->cur_row, cursor_col),
 		      y = CursorY(screen, screen->cur_row),
@@ -6882,8 +6830,10 @@ ShowCursor(void)
 	    screen->box->x = x;
 	    screen->box->y = y;
 	    XDrawLines(screen->display, VWindow(screen),
-		       screen->cursoroutlineGC ? screen->cursoroutlineGC
-		       : currentGC,
+		       getCgs(xw, currentWin,
+			      (getCgs(xw, currentWin, gcVTcursOutline)
+			       ? gcVTcursOutline
+			       : currentCgs)),
 		       screen->box, NBOX, CoordModePrevious);
 	}
     }
@@ -7539,16 +7489,11 @@ void
 set_cursor_gcs(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
+    VTwin *win = WhichVWin(screen);
 
-    XGCValues xgcv;
-    XtGCMask mask;
     Pixel cc = T_COLOR(screen, TEXT_CURSOR);
     Pixel fg = T_COLOR(screen, TEXT_FG);
     Pixel bg = T_COLOR(screen, TEXT_BG);
-    GC new_cursorGC = NULL;
-    GC new_cursorFillGC = NULL;
-    GC new_reversecursorGC = NULL;
-    GC new_cursoroutlineGC = NULL;
     Boolean changed = False;
 
     /*
@@ -7558,7 +7503,7 @@ set_cursor_gcs(XtermWidget xw)
      *     text
      *     cursorblock
      *
-     * And, there are four situation when drawing a cursor, if we decide
+     * And, there are four situations when drawing a cursor, if we decide
      * that we like have a solid block of cursor color with the letter
      * that it is highlighting shown in the background color to make it
      * stand out:
@@ -7574,89 +7519,39 @@ set_cursor_gcs(XtermWidget xw)
      */
 
     TRACE(("set_cursor_gcs cc=%#lx, fg=%#lx, bg=%#lx\n", cc, fg, bg));
-#if OPT_ISO_COLORS
-    /*
-     * If we're using ANSI colors, the functions manipulating the SGR code will
-     * use the same GC's.  To avoid having the cursor change color, we use the
-     * Xlib calls rather than the Xt calls.
-     *
-     * Use the colorMode value to determine which we'll do (the VWindow may
-     * not be set before the widget's realized, so it's tested separately).
-     */
-    if (screen->colorMode) {
-	if (VWindow(screen) != 0 && (cc != bg)) {
-	    /* we might have a colored foreground/background later */
-	    xgcv.font = screen->fnts[fNorm]->fid;
-	    mask = (GCForeground | GCBackground | GCFont);
-	    xgcv.foreground = fg;
-	    xgcv.background = cc;
-	    new_cursorGC = XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
+    if (win != 0 && (cc != bg)) {
+	/* set the fonts to the current one */
+	setCgsFont(xw, win, gcVTcursNormal, 0);
+	setCgsFont(xw, win, gcVTcursFilled, 0);
+	setCgsFont(xw, win, gcVTcursReverse, 0);
+	setCgsFont(xw, win, gcVTcursOutline, 0);
 
-	    xgcv.foreground = cc;
-	    xgcv.background = fg;
-	    new_cursorFillGC =
-		XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
-
-	    if (screen->always_highlight) {
-		/* both GC's use the same color */
-		xgcv.foreground = bg;
-		xgcv.background = cc;
-		new_reversecursorGC =
-		    XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
-		new_cursoroutlineGC =
-		    XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
-	    } else {
-		xgcv.foreground = bg;
-		xgcv.background = cc;
-		new_reversecursorGC =
-		    XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
-		xgcv.foreground = cc;
-		xgcv.background = bg;
-		new_cursoroutlineGC =
-		    XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
-	    }
-	    releaseCursorGCs(xw);
-	    changed = True;
-	}
-    } else
-#endif
-    if (VWindow(screen) != 0 && (cc != bg)) {
 	/* we have a colored cursor */
-	xgcv.font = screen->fnts[fNorm]->fid;
-	mask = (GCForeground | GCBackground | GCFont);
+	setCgsFore(xw, win, gcVTcursNormal, fg);
+	setCgsBack(xw, win, gcVTcursNormal, cc);
 
-	xgcv.foreground = fg;
-	xgcv.background = cc;
-	new_cursorGC = XtGetGC((Widget) xw, mask, &xgcv);
-
-	xgcv.foreground = cc;
-	xgcv.background = fg;
-	new_cursorFillGC = XtGetGC((Widget) xw, mask, &xgcv);
+	setCgsFore(xw, win, gcVTcursFilled, cc);
+	setCgsBack(xw, win, gcVTcursFilled, fg);
 
 	if (screen->always_highlight) {
 	    /* both GC's use the same color */
-	    xgcv.foreground = bg;
-	    xgcv.background = cc;
-	    new_reversecursorGC = XtGetGC((Widget) xw, mask, &xgcv);
-	    new_cursoroutlineGC = XtGetGC((Widget) xw, mask, &xgcv);
+	    setCgsFore(xw, win, gcVTcursReverse, bg);
+	    setCgsBack(xw, win, gcVTcursReverse, cc);
+
+	    setCgsFore(xw, win, gcVTcursOutline, bg);
+	    setCgsBack(xw, win, gcVTcursOutline, cc);
 	} else {
-	    xgcv.foreground = bg;
-	    xgcv.background = cc;
-	    new_reversecursorGC = XtGetGC((Widget) xw, mask, &xgcv);
-	    xgcv.foreground = cc;
-	    xgcv.background = bg;
-	    new_cursoroutlineGC = XtGetGC((Widget) xw, mask, &xgcv);
+	    setCgsFore(xw, win, gcVTcursReverse, bg);
+	    setCgsBack(xw, win, gcVTcursReverse, cc);
+
+	    setCgsFore(xw, win, gcVTcursOutline, cc);
+	    setCgsBack(xw, win, gcVTcursOutline, bg);
 	}
-	releaseCursorGCs(xw);
 	changed = True;
     }
 
     if (changed) {
 	TRACE(("...set_cursor_gcs - done\n"));
-	screen->cursorGC = new_cursorGC;
-	screen->fillCursorGC = new_cursorFillGC;
-	screen->reversecursorGC = new_reversecursorGC;
-	screen->cursoroutlineGC = new_cursoroutlineGC;
     }
 }
 

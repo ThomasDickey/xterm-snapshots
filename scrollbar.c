@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.129 2006/11/23 01:17:09 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.130 2007/01/21 19:09:16 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/scrollbar.c,v 3.48 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -103,7 +103,7 @@ DoResizeScreen(XtermWidget xw)
     XtGeometryResult geomreqresult;
     Dimension reqWidth, reqHeight, repWidth, repHeight;
 #ifndef NO_ACTIVE_ICON
-    struct _vtwin *saveWin = WhichVWin(screen);
+    VTwin *saveWin = WhichVWin(screen);
 
     /* all units here want to be in the normal font units */
     WhichVWin(screen) = &screen->fullVwin;

@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.2 2007/01/19 00:37:50 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.14 2007/01/22 23:32:04 tom Exp $ */
 
 /************************************************************
 
@@ -32,100 +32,239 @@ authorization.
 
 ********************************************************/
 
-#include <xterm.h>
+#include <data.h>
 
 /*
  * hide calls to
+ *	XCreateGC()
+ *	XFreeGC()
+ *	XGetGCValues()
  *	XSetBackground()
  *	XSetForeground()
- *	XCreateGC()
  *	XtGetGC()
- *	XFreeGC()
+ *	XtReleaseGC()
  * by associating an integer with each GC, maintaining a cache which
  * reflects frequency of use rather than most recent usage.
  *
- * FIXME: move the cache into XtermWidget
  * FIXME: do I need more params, e.g., for mask?
  * FIXME: I need something to reset or cache the font state
+ * FIXME: XtermFonts should hold gc, font, fs.
  */
 typedef struct {
     GC gc;
     XFontStruct *font;
     Pixel fg;
     Pixel bg;
+    XtGCMask mask;		/* changes since the last getCgs() */
 } CgsCache;
 
+/*
+ * FIXME: move the cache into XtermWidget
+ */
 static CgsCache *
-myCache(XtermWidget xw GCC_UNUSED, int cgsId)
+myCache(XtermWidget xw GCC_UNUSED, VTwin * cgsWin GCC_UNUSED, CgsEnum cgsId)
 {
-    static CgsCache my_cache[gcMAX];
+    static CgsCache main_cache[gcMAX];
+    CgsCache *my_cache = main_cache;
     CgsCache *result = 0;
 
-    if (cgsId >= 0 && cgsId < gcMAX)
+    if ((int) cgsId >= 0 && cgsId < gcMAX) {
+#ifndef NO_ACTIVE_ICON
+	static CgsCache icon_cache[gcMAX];
+	if (cgsWin == &(xw->screen.iconVwin))
+	    my_cache = icon_cache;
+#endif
 	result = my_cache + cgsId;
+    }
 
     return result;
 }
 
+static Display *
+myDisplay(XtermWidget xw)
+{
+    return xw->screen.display;
+}
+
+static Drawable
+myDrawable(XtermWidget xw, VTwin * cgsWin)
+{
+    Drawable drawable = 0;
+
+    if (cgsWin != 0 && cgsWin->window != 0)
+	drawable = cgsWin->window;
+    if (drawable == 0)
+	drawable = RootWindowOfScreen(XtScreen(xw));
+    return drawable;
+}
+
+/*
+ * Use the "setCgsXXXX()" calls to initialize parameters for a new GC.
+ */
 void
-setCgsForeground(XtermWidget xw, int cgsId, Pixel fg)
+setCgsFore(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, Pixel fg)
 {
     CgsCache *me;
-    if ((me = myCache(xw, cgsId)) != 0) {
-	me->fg = fg;
+
+    if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
+	if (me->fg != fg) {
+	    me->fg = fg;
+	    me->mask |= GCForeground;
+	}
     }
 }
 
 void
-setCgsBackground(XtermWidget xw, int cgsId, Pixel bg)
+setCgsBack(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, Pixel bg)
 {
     CgsCache *me;
-    if ((me = myCache(xw, cgsId)) != 0) {
-	me->bg = bg;
+
+    if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
+	if (me->bg != bg) {
+	    me->bg = bg;
+	    me->mask |= GCBackground;
+	}
     }
 }
 
 void
-setCgsFont(XtermWidget xw, int cgsId, XFontStruct * font)
+setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XFontStruct * font)
 {
     CgsCache *me;
-    if ((me = myCache(xw, cgsId)) != 0) {
-	me->font = font;
+
+    if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
+	if (font == 0)
+	    font = xw->screen.fnts[fNorm];
+	if (me->font != font) {
+	    me->font = font;
+	    me->mask |= GCFont;
+	}
     }
 }
 
+/*
+ * Return a GC associated with the given id, allocating if needed.
+ */
 GC
-getCgs(XtermWidget xw, int cgsId)
+getCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
 {
+    XGCValues xgcv;
+    XtGCMask mask;
     CgsCache *me;
     GC result = 0;
 
-    if ((me = myCache(xw, cgsId)) != 0) {
+    if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
 	if (me->gc == 0) {
-	    TScreen *screen = &(xw->screen);
-	    XGCValues xgcv;
-	    XtGCMask mask;
+	    if (me->font == 0) {
+		setCgsFont(xw, cgsWin, cgsId, 0);
+	    }
 
+	    memset(&xgcv, 0, sizeof(xgcv));
 	    xgcv.font = me->font->fid;
 	    mask = (GCForeground | GCBackground | GCFont);
+
+	    switch (cgsId) {
+	    case gcNorm:
+	    case gcBold:
+	    case gcNormReverse:
+	    case gcBoldReverse:
+#if OPT_WIDE_CHARS
+	    case gcWide:
+	    case gcWBold:
+	    case gcWideReverse:
+	    case gcWBoldReverse:
+#endif
+		mask |= (GCGraphicsExposures | GCFunction);
+		xgcv.graphics_exposures = True;		/* default */
+		xgcv.function = GXcopy;
+		break;
+	    case gcVTcursNormal:	/* FALLTHRU */
+	    case gcVTcursFilled:	/* FALLTHRU */
+	    case gcVTcursReverse:	/* FALLTHRU */
+	    case gcVTcursOutline:	/* FALLTHRU */
+		break;
+#if OPT_TEK4014
+	    case gcTKcurs:	/* FALLTHRU */
+		/* FIXME */
+#endif
+	    case gcMAX:	/* should not happen */
+		return 0;
+	    }
 	    xgcv.foreground = me->fg;
 	    xgcv.background = me->bg;
-	    me->gc = XCreateGC(screen->display, VWindow(screen), mask, &xgcv);
+
+	    me->gc = XCreateGC(myDisplay(xw), myDrawable(xw, cgsWin), mask, &xgcv);
+	    TRACE(("getCgs(%d) created %p\n", cgsId, me->gc));
+	} else if (me->mask != 0) {
+	    mask = me->mask;
+	    memset(&xgcv, 0, sizeof(xgcv));
+	    xgcv.font = me->font->fid;
+	    xgcv.foreground = me->fg;
+	    xgcv.background = me->bg;
+	    XChangeGC(myDisplay(xw), me->gc, mask, &xgcv);
+	    TRACE(("getCgs(%d) updated %p\n", cgsId, me->gc));
+	} else if (0) {
+	    TRACE(("getCgs(%d) reused: %p\n", cgsId, me->gc));
 	}
+	me->mask = 0;
 	result = me->gc;
     }
     return result;
 }
 
+/*
+ * Copy the parameters (except GC of course) from one cache record to another.
+ */
 void
-freeCgs(XtermWidget xw, int cgsId)
+copyCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
+{
+    if (dstCgsId != srcCgsId) {
+	CgsCache *me;
+
+	if ((me = myCache(xw, cgsWin, srcCgsId)) != 0) {
+	    freeCgs(xw, cgsWin, dstCgsId);
+	    setCgsFont(xw, cgsWin, dstCgsId, me->font);
+	    setCgsFore(xw, cgsWin, dstCgsId, me->fg);
+	    setCgsBack(xw, cgsWin, dstCgsId, me->bg);
+	}
+    }
+}
+
+/*
+ * Swap the cache records, e.g., when doing reverse-video.
+ */
+void
+swapCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
+{
+    if (dstCgsId != srcCgsId) {
+	CgsCache *dst;
+	CgsCache *src;
+
+	if ((src = myCache(xw, cgsWin, srcCgsId)) != 0) {
+	    if ((dst = myCache(xw, cgsWin, dstCgsId)) != 0) {
+		CgsCache tmp;
+		tmp = *dst;
+		*dst = *src;
+		*src = tmp;
+	    }
+	}
+    }
+}
+
+/*
+ * Free any GC associated with the given id.
+ */
+GC
+freeCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
 {
     CgsCache *me;
 
-    if ((me = myCache(xw, cgsId)) != 0) {
-	if (me->gc == 0) {
+    if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
+	if (me->gc != 0) {
+	    TRACE(("freeCgs(%d) %p\n", cgsId, me->gc));
 	    XFreeGC(xw->screen.display, me->gc);
 	    me->gc = 0;
 	}
     }
+    return 0;
 }
