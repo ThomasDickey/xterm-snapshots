@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.99 2007/01/18 23:38:57 tom Exp $ */
+/* $XTermId: data.h,v 1.100 2007/02/06 22:34:56 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -144,6 +144,8 @@ typedef struct XTERM_RESOURCE {
     Boolean utmpInhibit;
     Boolean utmpDisplayId;
     Boolean messages;
+
+    String menuLocale;
 
     String keyboardType;
 #if OPT_SUNPC_KBD

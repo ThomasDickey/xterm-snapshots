@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.436 2007/01/21 22:32:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.445 2007/02/07 23:45:38 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -662,6 +662,12 @@ extern void GetLocatorPosition (XtermWidget  /* w */);
 extern void InitLocatorFilter (XtermWidget  /* w */);
 #endif	/* OPT_DEC_LOCATOR */
 
+#if OPT_FOCUS_EVENT
+extern void SendFocusButton(XtermWidget /* xw */, XFocusChangeEvent * /* event */);
+#else
+#define SendFocusBotton(xw, event) /* nothing */
+#endif
+
 #if OPT_PASTE64
 extern void AppendToSelectionBuffer (TScreen * /* screen */, unsigned  /* c */);
 extern void ClearSelectionBuffer (TScreen * /* screen */);
@@ -678,13 +684,20 @@ extern Bool iswide(int  /* i */);
 #endif
 
 /* cachedCgs.c */
-extern GC freeCgs(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/);
-extern GC getCgs(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/);
-extern void copyCgs(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
-extern void setCgsBack(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*bg*/);
-extern void setCgsFont(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/, XFontStruct * /*font*/);
-extern void setCgsFore(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*fg*/);
-extern void swapCgs(XtermWidget /*xw*/, VTwin */*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
+extern CgsEnum getCgsId(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
+extern GC freeCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/);
+extern GC getCgsGC(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/);
+extern Pixel getCgsBack(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
+extern Pixel getCgsFore(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
+extern XFontStruct * getCgsFont(XtermWidget /*xw*/, VTwin * /*cgsWin*/, GC /*gc*/);
+extern void clrCgsFonts(XtermWidget /*xw*/, VTwin * /*cgsWin*/, XFontStruct * /*font*/);
+extern void copyCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
+extern void redoCgs(XtermWidget /*xw*/, Pixel /*fg*/, Pixel /*bg*/, CgsEnum /*cgsId*/);
+extern void setCgsBack(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*bg*/);
+extern void setCgsCSet(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, unsigned /*cset*/);
+extern void setCgsFont(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, XFontStruct * /*font*/);
+extern void setCgsFore(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*cgsId*/, Pixel /*fg*/);
+extern void swapCgs(XtermWidget /*xw*/, VTwin * /*cgsWin*/, CgsEnum /*dstCgsId*/, CgsEnum /*srcCgsId*/);
 
 /* charproc.c */
 extern int VTInit (void);
@@ -697,6 +710,8 @@ extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);
 extern void VTRun (void);
 extern void dotext (XtermWidget /* xw */, int  /* charset */, IChar * /* buf */, Cardinal  /* len */);
+extern void releaseCursorGCs(XtermWidget /*xw*/);
+extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 extern void resetCharsets (TScreen * /* screen */);
 extern void set_cursor_gcs (XtermWidget /* xw */);
 extern void set_max_col(TScreen *  /* screen */, int  /* cols */);
@@ -750,12 +765,12 @@ extern int set_cur_row(TScreen * /* screen */, int  /* value */);
 #endif
 
 /* doublechr.c */
-extern void xterm_DECDHL (Bool  /* top */);
-extern void xterm_DECSWL (void);
-extern void xterm_DECDWL (void);
+extern void xterm_DECDHL (XtermWidget /* xw */, Bool  /* top */);
+extern void xterm_DECSWL (XtermWidget /* xw */);
+extern void xterm_DECDWL (XtermWidget /* xw */);
 #if OPT_DEC_CHRSET
-extern int xterm_Double_index(unsigned  /* chrset */, unsigned  /* flags */);
-extern GC xterm_DoubleGC(unsigned  /* chrset */, unsigned  /* flags */, GC  /* old_gc */);
+extern int xterm_Double_index(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* flags */);
+extern GC xterm_DoubleGC(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* flags */, GC  /* old_gc */);
 #endif
 
 /* input.c */

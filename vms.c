@@ -148,7 +148,7 @@ void spawn (void)
   int                  status;
   static $DESCRIPTOR   (dtime, "0 00:00:00.01");
   static int           delta[2];
-  register TScreen     *screen = &term->screen;
+  register TScreen     *screen = TScreenOf(term);
   static struct IOSB   iosb;
   static unsigned int  flags;
   static unsigned int  uic;

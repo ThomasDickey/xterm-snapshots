@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.336 2007/01/18 23:41:08 tom Exp $ */
+/* $XTermId: misc.c,v 1.342 2007/02/11 14:44:45 e.giaquinta Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -117,18 +117,17 @@
 		   (event.xcrossing.window == XtWindow(XtParent(term))))
 #endif
 
-static Bool ChangeColorsRequest(XtermWidget xw, int start, char
-				*names, int final);
-static void DoSpecialEnterNotify(XEnterWindowEvent * ev);
-static void DoSpecialLeaveNotify(XEnterWindowEvent * ev);
-static void selectwindow(TScreen * screen, int flag);
-static void unselectwindow(TScreen * screen, int flag);
-static void Sleep(int msec);
+static Bool ChangeColorsRequest(XtermWidget, int, char *, int);
+static void DoSpecialEnterNotify(XtermWidget, XEnterWindowEvent *);
+static void DoSpecialLeaveNotify(XtermWidget, XEnterWindowEvent *);
+static void selectwindow(TScreen *, int);
+static void unselectwindow(TScreen *, int);
+static void Sleep(int);
 
 void
 do_xevents(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (XtAppPending(app_con)
 	||
@@ -144,15 +143,16 @@ do_xevents(void)
 void
 xevents(void)
 {
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     XEvent event;
     XtInputMask input_mask;
-    TScreen *screen = &term->screen;
 
     if (need_cleanup)
 	Cleanup(0);
 
     if (screen->scroll_amt)
-	FlushScroll(term);
+	FlushScroll(xw);
     /*
      * process timeouts, relying on the fact that XtAppProcessEvent
      * will process the timeout and return without blockng on the
@@ -192,18 +192,18 @@ xevents(void)
 	 * looking at the event ourselves we make sure that we can
 	 * do the right thing.
 	 */
-	if (OUR_EVENT(event, EnterNotify))
-	    DoSpecialEnterNotify(&event.xcrossing);
-	else if (OUR_EVENT(event, LeaveNotify))
-	    DoSpecialLeaveNotify(&event.xcrossing);
-	else if ((screen->send_mouse_pos == ANY_EVENT_MOUSE
+	if (OUR_EVENT(event, EnterNotify)) {
+	    DoSpecialEnterNotify(xw, &event.xcrossing);
+	} else if (OUR_EVENT(event, LeaveNotify)) {
+	    DoSpecialLeaveNotify(xw, &event.xcrossing);
+	} else if ((screen->send_mouse_pos == ANY_EVENT_MOUSE
 #if OPT_DEC_LOCATOR
-		  || screen->send_mouse_pos == DEC_LOCATOR
+		    || screen->send_mouse_pos == DEC_LOCATOR
 #endif /* OPT_DEC_LOCATOR */
-		 )
-		 && event.xany.type == MotionNotify
-		 && event.xcrossing.window == XtWindow(term)) {
-	    SendMousePosition(term, &event);
+		   )
+		   && event.xany.type == MotionNotify
+		   && event.xcrossing.window == XtWindow(xw)) {
+	    SendMousePosition(xw, &event);
 	    continue;
 	}
 
@@ -222,7 +222,7 @@ make_colored_cursor(unsigned cursorindex,	/* index into font */
 		    unsigned long fg,	/* pixel value */
 		    unsigned long bg)	/* pixel value */
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     Cursor c;
     Display *dpy = screen->display;
 
@@ -325,7 +325,7 @@ HandleInterpret(Widget w GCC_UNUSED,
 
 	if (have - used + need < BUF_SIZE) {
 
-	    fillPtyData(&term->screen, VTbuffer, value, (int) strlen(value));
+	    fillPtyData(TScreenOf(term), VTbuffer, value, (int) strlen(value));
 
 	    TRACE(("Interpret %s\n", value));
 	    VTbuffer->update++;
@@ -334,9 +334,9 @@ HandleInterpret(Widget w GCC_UNUSED,
 }
 
 static void
-DoSpecialEnterNotify(XEnterWindowEvent * ev)
+DoSpecialEnterNotify(XtermWidget xw, XEnterWindowEvent * ev)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("DoSpecialEnterNotify(%d)\n", screen->select));
 #ifdef ACTIVEWINDOWINPUTONLY
@@ -360,9 +360,9 @@ HandleEnterWindow(Widget w GCC_UNUSED,
 }
 
 static void
-DoSpecialLeaveNotify(XEnterWindowEvent * ev)
+DoSpecialLeaveNotify(XtermWidget xw, XEnterWindowEvent * ev)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("DoSpecialLeaveNotify(%d)\n", screen->select));
 #ifdef ACTIVEWINDOWINPUTONLY
@@ -393,7 +393,8 @@ HandleFocusChange(Widget w GCC_UNUSED,
 		  Boolean * cont GCC_UNUSED)
 {
     XFocusChangeEvent *event = (XFocusChangeEvent *) ev;
-    TScreen *screen = &term->screen;
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("HandleFocusChange type=%s, mode=%d, detail=%d\n",
 	   visibleEventType(event->type),
@@ -417,10 +418,16 @@ HandleFocusChange(Widget w GCC_UNUSED,
 		     ((event->detail == NotifyPointer)
 		      ? INWINDOW
 		      : FOCUS));
+	SendFocusButton(xw, event);
     } else {
+#if OPT_FOCUS_EVENT
+	if (event->type == FocusOut) {
+	    SendFocusButton(xw, event);
+	}
+#endif
 	/*
-	 * XGrabKeyboard() will generate FocusOut/NotifyGrab event that we want
-	 * to ignore.
+	 * XGrabKeyboard() will generate NotifyGrab event that we want to
+	 * ignore.
 	 */
 	if (event->mode != NotifyGrab) {
 	    unselectwindow(screen,
@@ -430,7 +437,7 @@ HandleFocusChange(Widget w GCC_UNUSED,
 	}
 	if (screen->grabbedKbd && (event->mode == NotifyUngrab)) {
 	    Bell(XkbBI_Info, 100);
-	    ReverseVideo(term);
+	    ReverseVideo(xw);
 	    screen->grabbedKbd = False;
 	    update_securekbd();
 	}
@@ -496,7 +503,7 @@ static long lastBellTime;	/* in milliseconds */
 void
 Bell(Atom which GCC_UNUSED, int percent)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     struct timeval curtime;
     long now_msecs;
 
@@ -562,7 +569,7 @@ flashWindow(TScreen * screen, Window window, GC visualGC, unsigned width, unsign
 void
 VisualBell(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (VB_DELAY > 0) {
 	Pixel xorPixel = (T_COLOR(screen, TEXT_FG) ^
@@ -597,7 +604,7 @@ HandleBellPropertyChange(Widget w GCC_UNUSED,
 			 XEvent * ev,
 			 Boolean * more GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (ev->xproperty.atom == XA_NOTICE) {
 	screen->bellInProgress = False;
@@ -720,7 +727,15 @@ dabbrev_expand(TScreen * screen)
     }
 
     hint_len = strlen(dabbrev_hint);
-    while ((expansion = dabbrev_prev_word(&x, &y, screen))) {
+    for (;;) {
+	if (!(expansion = dabbrev_prev_word(&x, &y, screen))) {
+	    if (strcmp(lastexpansion, dabbrev_hint)) {
+		x = screen->cur_col;
+		y = screen->cur_row + screen->savelines;
+		continue;
+	    }
+	    break;
+	}
 	if (!strncmp(dabbrev_hint, expansion, hint_len) &&	/* empty hint matches everything */
 	    strlen(expansion) > hint_len &&	/* trivial expansion disallowed */
 	    strcmp(expansion, lastexpansion))	/* different from previous */
@@ -775,7 +790,7 @@ HandleDeIconify(Widget gw,
 		Cardinal *nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
-	TScreen *screen = &((XtermWidget) gw)->screen;
+	TScreen *screen = TScreenOf((XtermWidget) gw);
 	XMapWindow(screen->display, VShellWindow);
     }
 }
@@ -788,7 +803,7 @@ HandleIconify(Widget gw,
 	      Cardinal *nparams GCC_UNUSED)
 {
     if (IsXtermWidget(gw)) {
-	TScreen *screen = &((XtermWidget) gw)->screen;
+	TScreen *screen = TScreenOf((XtermWidget) gw);
 	XIconifyWindow(screen->display,
 		       VShellWindow,
 		       DefaultScreen(screen->display));
@@ -942,7 +957,7 @@ HandleRestoreSize(Widget gw,
 void
 Redraw(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     XExposeEvent event;
 
     event.type = Expose;
@@ -1174,7 +1189,7 @@ xtermResetIds(TScreen * screen)
 static SIGNAL_T
 logpipe(int sig GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
 #ifdef SYSV
     (void) signal(SIGPIPE, SIG_IGN);
@@ -1894,7 +1909,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 		}
 
 		if (rel != 0) {
-		    num = lookupRelativeFontSize(screen,
+		    num = lookupRelativeFontSize(xw,
 						 screen->menu_font_number, rel);
 
 		}
@@ -2365,7 +2380,7 @@ ChangeGroup(String attribute, char *value)
     Arg args[1];
     char *original = (value != 0) ? value : "";
     char *name = original;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     Widget w = CURRENT_EMU();
     Widget top = SHELL_OF(w);
     unsigned limit = strlen(name);
@@ -2867,7 +2882,7 @@ void
 Cleanup(int code)
 {
     static Bool cleaning;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     /*
      * Process "-hold" and session cleanup only for a normal exit.
@@ -3063,7 +3078,7 @@ withdraw_window(Display * dpy, Window w, int scr)
 void
 set_vt_visibility(Bool on)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     TRACE(("set_vt_visibility(%d)\n", on));
     if (on) {

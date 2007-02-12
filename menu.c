@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.223 2007/01/16 21:38:02 tom Exp $ */
+/* $XTermId: menu.c,v 1.226 2007/02/06 22:37:48 tom Exp $ */
 
 /*
 
@@ -52,6 +52,9 @@ in this Software without prior written authorization from The Open Group.
 #include <data.h>
 #include <menu.h>
 #include <fontutils.h>
+#include <xstrings.h>
+
+#include <locale.h>
 
 #include <X11/Xmu/CharSet.h>
 
@@ -401,6 +404,20 @@ static MenuList vt_shell[NUM_POPUP_MENUS];
 static MenuList tek_shell[NUM_POPUP_MENUS];
 #endif
 
+static String
+setMenuLocale(Boolean before, String substitute)
+{
+    String result;
+
+    result = setlocale(LC_CTYPE, substitute);
+    if (before) {
+	result = x_strdup(result);
+    } else {
+	result = 0;
+    }
+    return result;
+}
+
 /*
  * Returns a pointer to the MenuList entry that matches the popup menu.
  */
@@ -450,12 +467,14 @@ create_menu(Widget w, XtermWidget xtw, MenuIndex num)
     static Arg arg =
     {XtNcallback, (XtArgVal) cb};
 
-    Widget m;
     TScreen *screen = &xtw->screen;
     MenuHeader *data = &menu_names[num];
     MenuList *list = select_menu(w, num);
     struct _MenuEntry *entries = data->entry_list;
     int nentries = data->entry_len;
+#if !OPT_TOOLBAR
+    String saveLocale;
+#endif
 
     if (screen->menu_item_bitmap == None) {
 	/*
@@ -474,32 +493,33 @@ create_menu(Widget w, XtermWidget xtw, MenuIndex num)
 				  RootWindowOfScreen(XtScreen(xtw)),
 				  (char *) check_bits, check_width, check_height);
     }
-#if OPT_TOOLBAR
-    m = list->w;
-    if (m == 0) {
-	return m;
-    }
-#else
-    m = XtCreatePopupShell(data->internal_name,
-			   simpleMenuWidgetClass,
-			   toplevel,
-			   NULL, 0);
-    list->w = m;
+#if !OPT_TOOLBAR
+    saveLocale = setMenuLocale(True, resource.menuLocale);
+    list->w = XtCreatePopupShell(data->internal_name,
+				 simpleMenuWidgetClass,
+				 toplevel,
+				 NULL, 0);
 #endif
-    list->entries = nentries;
+    if (list->w != 0) {
+	list->entries = nentries;
 
-    for (; nentries > 0; nentries--, entries++) {
-	cb[0].callback = (XtCallbackProc) entries->function;
-	cb[0].closure = (caddr_t) entries->name;
-	entries->widget = XtCreateManagedWidget(entries->name,
-						(entries->function ?
-						 smeBSBObjectClass :
-						 smeLineObjectClass), m,
-						&arg, (Cardinal) 1);
+	for (; nentries > 0; nentries--, entries++) {
+	    cb[0].callback = (XtCallbackProc) entries->function;
+	    cb[0].closure = (caddr_t) entries->name;
+	    entries->widget = XtCreateManagedWidget(entries->name,
+						    (entries->function
+						     ? smeBSBObjectClass
+						     : smeLineObjectClass),
+						    list->w,
+						    &arg, (Cardinal) 1);
+	}
     }
+#if !OPT_TOOLBAR
+    (void) setMenuLocale(False, saveLocale);
+#endif
 
     /* do not realize at this point */
-    return m;
+    return list->w;
 }
 
 static MenuIndex
@@ -527,18 +547,14 @@ indexOfMenu(String menuName)
     return (me);
 }
 
-/*
- * public interfaces
- */
-
 /* ARGSUSED */
 static Bool
-domenu(Widget w GCC_UNUSED,
+domenu(Widget w,
        XEvent * event GCC_UNUSED,
        String * params,		/* mainMenu, vtMenu, or tekMenu */
        Cardinal *param_count)	/* 0 or 1 */
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     MenuIndex me;
     Bool created = False;
     Widget mw;
@@ -712,6 +728,10 @@ domenu(Widget w GCC_UNUSED,
     return True;
 }
 
+/*
+ * public interfaces
+ */
+
 void
 HandleCreateMenu(Widget w,
 		 XEvent * event,
@@ -747,7 +767,7 @@ static void
 handle_send_signal(Widget gw GCC_UNUSED, int sig)
 {
 #ifndef VMS
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (hold_screen > 1)
 	hold_screen = 0;
@@ -765,7 +785,7 @@ do_securekbd(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     Time now = CurrentTime;	/* XXX - wrong */
 
     if (screen->grabbedKbd) {
@@ -810,7 +830,7 @@ do_allowsends(Widget gw GCC_UNUSED,
 	      XtPointer closure GCC_UNUSED,
 	      XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     screen->allowSendEvents = !screen->allowSendEvents;
     update_allowsends();
@@ -821,7 +841,7 @@ do_visualbell(Widget gw GCC_UNUSED,
 	      XtPointer closure GCC_UNUSED,
 	      XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     screen->visualbell = !screen->visualbell;
     update_visualbell();
@@ -832,7 +852,7 @@ do_poponbell(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     screen->poponbell = !screen->poponbell;
     update_poponbell();
@@ -844,7 +864,7 @@ do_logging(Widget gw GCC_UNUSED,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (screen->logging) {
 	CloseLog(screen);
@@ -1085,7 +1105,7 @@ do_jumpscroll(Widget gw GCC_UNUSED,
 	      XtPointer closure GCC_UNUSED,
 	      XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     term->flags ^= SMOOTHSCROLL;
     if (term->flags & SMOOTHSCROLL) {
@@ -1156,7 +1176,7 @@ do_scrollkey(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     screen->scrollkey = !screen->scrollkey;
     update_scrollkey();
@@ -1167,7 +1187,7 @@ do_scrollttyoutput(Widget gw GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     screen->scrollttyoutput = !screen->scrollttyoutput;
     update_scrollttyoutput();
@@ -1178,7 +1198,7 @@ do_selectClipboard(Widget gw GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     screen->selectToClipboard = !screen->selectToClipboard;
     update_selectToClipboard();
@@ -1189,7 +1209,7 @@ do_allow132(Widget gw GCC_UNUSED,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     screen->c132 = !screen->c132;
     update_allow132();
@@ -1200,7 +1220,7 @@ do_cursesemul(Widget gw GCC_UNUSED,
 	      XtPointer closure GCC_UNUSED,
 	      XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     screen->curses = !screen->curses;
     update_cursesemul();
@@ -1211,7 +1231,7 @@ do_marginbell(Widget gw GCC_UNUSED,
 	      XtPointer closure GCC_UNUSED,
 	      XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (!(screen->marginbell = !screen->marginbell))
 	screen->bellarmed = -1;
@@ -1222,7 +1242,7 @@ do_marginbell(Widget gw GCC_UNUSED,
 static void
 handle_tekshow(Widget gw GCC_UNUSED, Bool allowswitch)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     TRACE(("Show tek-window\n"));
     if (!TEK4014_SHOWN(term)) {	/* not showing, turn on */
@@ -1260,7 +1280,7 @@ do_cursorblink(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
 	       XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     ToggleCursorBlink(screen);
 }
 #endif
@@ -1291,7 +1311,7 @@ do_activeicon(Widget gw GCC_UNUSED,
 	      XtPointer closure GCC_UNUSED,
 	      XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (screen->iconVwin.window) {
 	Widget shell = XtParent(term);
@@ -1410,7 +1430,7 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     int fontnum = screen->menu_font_number;
     String name = term->screen.MenuFontName(fontnum);
 
@@ -1429,7 +1449,7 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
 		  XtPointer closure GCC_UNUSED,
 		  XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     /*
      * If xterm was started with -wc option, it might not have the wide fonts.
@@ -1457,7 +1477,7 @@ do_font_utf8_title(Widget gw GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     screen->utf8_title = !screen->utf8_title;
     update_font_utf8_title();
@@ -1528,7 +1548,7 @@ do_tekcopy(Widget gw GCC_UNUSED,
 static void
 handle_vtshow(Widget gw GCC_UNUSED, Bool allowswitch)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     TRACE(("Show vt-window\n"));
     if (!screen->Vshow) {	/* not showing, turn on */
@@ -2343,6 +2363,7 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
     char *external_name = 0;
     Dimension button_height;
     Dimension button_border;
+    String saveLocale = setMenuLocale(True, resource.menuLocale);
 
     shell[n].w = XtVaCreatePopupShell(menu_names[n].internal_name,
 				      simpleMenuWidgetClass,
@@ -2375,6 +2396,7 @@ SetupShell(Widget *menus, MenuList * shell, int n, int m)
 		  XtNborderWidth, &button_border,
 		  (XtPointer) 0);
 
+    (void) setMenuLocale(True, saveLocale);
     return button_height + (button_border * 2);
 }
 #endif /* OPT_TOOLBAR */
@@ -2455,7 +2477,7 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
     TRACE(("...menuHeight:%d = (%d + 2 * (%d + %d))\n",
 	   *menu_high, button_height, toolbar_hSpace, toolbar_border));
 
-#else
+#else /* !OPT_TOOLBAR */
     *forms = shell;
     *menus = shell;
 #endif
@@ -2468,7 +2490,7 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
 void
 repairSizeHints(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     if (XtIsRealized((Widget) term)) {
 	getXtermSizeHints(term);
@@ -2766,7 +2788,7 @@ void
 update_scrollbar(void)
 {
     UpdateMenuItem(vtMenuEntries[vtMenu_scrollbar].widget,
-		   ScrollbarWidth(&term->screen));
+		   ScrollbarWidth(TScreenOf(term)));
 }
 
 void

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.457 2007/01/22 23:04:31 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.467 2007/02/11 14:54:34 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -473,6 +473,10 @@ typedef struct {
 #endif
 #endif
 
+#ifndef OPT_FOCUS_EVENT
+#define OPT_FOCUS_EVENT	1 /* focus in/out events */
+#endif
+
 #ifndef OPT_HP_FUNC_KEYS
 #define OPT_HP_FUNC_KEYS 0 /* true if xterm supports HP-style function keys */
 #endif
@@ -716,6 +720,14 @@ typedef enum {
     , gcBold
     , gcNormReverse
     , gcBoldReverse
+#if OPT_BOX_CHARS
+    , gcLine
+    , gcDots
+#endif
+#if OPT_DEC_CHRSET
+    , gcCNorm
+    , gcCBold
+#endif
 #if OPT_WIDE_CHARS
     , gcWide
     , gcWBold
@@ -732,22 +744,26 @@ typedef enum {
     , gcMAX
 } CgsEnum;
 
+#define for_each_text_gc(n) for (n = gcNorm; n < gcVTcursNormal; ++n)
+#define for_each_curs_gc(n) for (n = gcVTcursNormal; n <= gcVTcursOutline; ++n)
+#define for_each_gc(n)      for (n = gcNorm; n < gcMAX; ++n)
+
 /* indices for the normal terminal colors in screen.Tcolors[] */
 typedef enum {
     TEXT_FG = 0			/* text foreground */
-    , TEXT_BG = 1		/* text background */
-    , TEXT_CURSOR = 2		/* text cursor */
-    , MOUSE_FG = 3		/* mouse foreground */
-    , MOUSE_BG = 4		/* mouse background */
+    , TEXT_BG			/* text background */
+    , TEXT_CURSOR		/* text cursor */
+    , MOUSE_FG			/* mouse foreground */
+    , MOUSE_BG			/* mouse background */
 #if OPT_TEK4014
-    , TEK_FG = 5		/* tektronix foreground */
-    , TEK_BG = 6		/* tektronix background */
+    , TEK_FG			/* tektronix foreground */
+    , TEK_BG			/* tektronix background */
 #endif
 #if OPT_HIGHLIGHT_COLOR
-    , HIGHLIGHT_BG = 7		/* highlight background */
+    , HIGHLIGHT_BG		/* highlight background */
 #endif
 #if OPT_TEK4014
-    , TEK_CURSOR = 8		/* tektronix cursor */
+    , TEK_CURSOR		/* tektronix cursor */
 #endif
     , NCOLORS			/* total number of colors */
 } TermColors;
@@ -1113,7 +1129,6 @@ typedef struct {
 	unsigned	chrset;
 	unsigned	flags;
 	XFontStruct *	fs;
-	GC		gc;
 	char *		fn;
 } XTermFonts;
 
@@ -1152,6 +1167,9 @@ typedef enum {
 	DP_X_X10MSE,
 #if OPT_BLINK_CURS
 	DP_CRS_BLINK,
+#endif
+#if OPT_FOCUS_EVENT
+	DP_X_FOCUS,
 #endif
 #if OPT_TOOLBAR
 	DP_TOOLBAR,
@@ -1324,6 +1342,7 @@ typedef struct {
 	unsigned long	event_mask;
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
+	Boolean		send_focus_pos; /* user wants focus in/out info */
 #if OPT_PASTE64
 	int		base64_paste;	/* set to send paste in base64	*/
 	int		base64_final;	/* string-terminator for paste	*/
@@ -2000,6 +2019,8 @@ typedef struct _TekWidgetRec {
 #define DEC_PROTECT 1
 #define ISO_PROTECT 2
 
+#define TScreenOf(xw)	(&(xw)->screen)
+
 #ifdef SCROLLBAR_RIGHT
 #define OriginX(screen) (((term->misc.useRight)?0:ScrollbarWidth(screen)) + screen->border)
 #else
@@ -2045,6 +2066,8 @@ typedef struct _TekWidgetRec {
 
 #endif /* NO_ACTIVE_ICON */
 
+#define okFont(font) ((font) != 0 && (font)->fid != 0)
+
 /*
  * Macro to check if we are iconified; do not use render for that case.
  */
@@ -2068,12 +2091,17 @@ typedef struct _TekWidgetRec {
 #define NormalFont(screen)	WhichVFont(screen, fnts[fNorm])
 #define BoldFont(screen)	WhichVFont(screen, fnts[fBold])
 
+#if OPT_WIDE_CHARS
+#define NormalWFont(screen)	WhichVFont(screen, fnts[fWide])
+#define BoldWFont(screen)	WhichVFont(screen, fnts[fWBold])
+#endif
+
 #define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width
 
-#define NormalGC(w,sp)		getCgs(w, WhichVWin(sp), gcNorm)
-#define ReverseGC(w,sp)		getCgs(w, WhichVWin(sp), gcNormReverse)
-#define NormalBoldGC(w,sp)	getCgs(w, WhichVWin(sp), gcBold)
-#define ReverseBoldGC(w,sp)	getCgs(w, WhichVWin(sp), gcBoldReverse)
+#define NormalGC(w,sp)		getCgsGC(w, WhichVWin(sp), gcNorm)
+#define ReverseGC(w,sp)		getCgsGC(w, WhichVWin(sp), gcNormReverse)
+#define NormalBoldGC(w,sp)	getCgsGC(w, WhichVWin(sp), gcBold)
+#define ReverseBoldGC(w,sp)	getCgsGC(w, WhichVWin(sp), gcBoldReverse)
 
 #define TWidth(screen)		WhichTWin(screen)->width
 #define THeight(screen)		WhichTWin(screen)->height

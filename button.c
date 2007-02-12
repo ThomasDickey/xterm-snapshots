@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.259 2007/01/22 22:59:46 tom Exp $ */
+/* $XTermId: button.c,v 1.263 2007/02/09 01:27:49 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1093,7 +1093,7 @@ _SelectionTargets(Widget w)
     if (!IsXtermWidget(w))
 	return NULL;
 
-    screen = &((XtermWidget) w)->screen;
+    screen = TScreenOf((XtermWidget) w);
 
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
@@ -1554,7 +1554,7 @@ SelectionReceived(Widget w,
 
     if (!IsXtermWidget(w))
 	return;
-    screen = &((XtermWidget) w)->screen;
+    screen = TScreenOf((XtermWidget) w);
     dpy = XtDisplay(w);
 
     if (*type == 0		/*XT_CONVERT_FAIL */
@@ -1805,8 +1805,8 @@ TrackMouse(XtermWidget xw,
 	TScreen *screen = &(xw->screen);
 
 	if (screen->waitingForTrackInfo) {	/* if Timed, ignore */
-	    screen->waitingForTrackInfo = False;
 	    CELL first = *start;
+	    screen->waitingForTrackInfo = False;
 
 	    boundsCheck(first.row);
 	    boundsCheck(firstrow);
@@ -3070,7 +3070,7 @@ _ConvertSelectionHelper(Widget w,
 {
     if (IsXtermWidget(w)) {
 	Display *d = XtDisplay(w);
-	TScreen *screen = &((XtermWidget) w)->screen;
+	TScreen *screen = TScreenOf((XtermWidget) w);
 	XTextProperty textprop;
 	char *the_data = (char *) screen->selection_data;
 
@@ -3103,7 +3103,7 @@ ConvertSelection(Widget w,
     if (!IsXtermWidget(w))
 	return False;
 
-    screen = &((XtermWidget) w)->screen;
+    screen = TScreenOf((XtermWidget) w);
 
     if (screen->selection_data == NULL)
 	return False;		/* can this happen? */
@@ -3262,7 +3262,7 @@ LoseSelection(Widget w, Atom * selection)
     if (!IsXtermWidget(w))
 	return;
 
-    screen = &((XtermWidget) w)->screen;
+    screen = TScreenOf((XtermWidget) w);
     for (i = 0, atomP = screen->selection_atoms;
 	 i < screen->selection_count; i++, atomP++) {
 	if (*selection == *atomP)
@@ -3549,6 +3549,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
     int row, col;
     int button;
     unsigned count = 0;
+    Boolean changed = True;
 
     /* If button event, get button # adjusted for DEC compatibility */
     button = event->button - 1;
@@ -3616,25 +3617,55 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	     * events only if character cell has changed.
 	     */
 	    if ((row == screen->mouse_row)
-		&& (col == screen->mouse_col))
-		return;
-	    line[count++] = BtnCode(event, screen->mouse_button);
+		&& (col == screen->mouse_col)) {
+		changed = False;
+	    } else {
+		line[count++] = BtnCode(event, screen->mouse_button);
+	    }
 	    break;
 	default:
-	    return;
+	    changed = False;
+	    break;
 	}
     }
 
-    screen->mouse_row = row;
-    screen->mouse_col = col;
+    if (changed) {
+	screen->mouse_row = row;
+	screen->mouse_col = col;
 
-    /* Add pointer position to key sequence */
-    line[count++] = ' ' + col + 1;
-    line[count++] = ' ' + row + 1;
+	/* Add pointer position to key sequence */
+	line[count++] = ' ' + col + 1;
+	line[count++] = ' ' + row + 1;
 
-    TRACE(("mouse at %d,%d button+mask = %#x\n", row, col,
-	   (screen->control_eight_bits) ? line[2] : line[3]));
+	TRACE(("mouse at %d,%d button+mask = %#x\n", row, col,
+	       (screen->control_eight_bits) ? line[2] : line[3]));
 
-    /* Transmit key sequence to process running under xterm */
-    v_write(pty, line, count);
+	/* Transmit key sequence to process running under xterm */
+	v_write(pty, line, count);
+    }
+    return;
 }
+
+#if OPT_FOCUS_EVENT
+void
+SendFocusButton(XtermWidget xw, XFocusChangeEvent * event)
+{
+    TScreen *screen = &(xw->screen);
+
+    if (screen->send_focus_pos) {
+	ANSI reply;
+
+	memset(&reply, 0, sizeof(reply));
+	reply.a_type = CSI;
+
+#if OPT_SCO_FUNC_KEYS
+	if (xw->keyboard.type == keyboardIsSCO) {
+	    reply.a_pintro = '>';
+	}
+#endif
+	reply.a_final = (event->type == FocusIn) ? 'I' : 'O';
+	unparseseq(xw, &reply);
+    }
+    return;
+}
+#endif /* OPT_FOCUS_EVENT */

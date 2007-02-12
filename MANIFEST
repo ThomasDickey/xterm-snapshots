@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-223e
+MANIFEST for xterm, version xterm-224
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -73,6 +73,7 @@ scrollbar.c                     VT100 scrollbar support functions
 sinstall.sh                     install setuid if existing program was
 tabs.c                          VT100 tabstop support-functions
 termcap                         termcap entries for 'xterm'
+terminfo                        terminfo entries for 'xterm'
 testxmc.c                       testing: xmc/magic-cookies
 trace.c                         debugging trace functions for 'xterm'
 trace.h                         interface of trace.c
@@ -95,3 +96,35 @@ xterm_io.h                      split-out definitions of termio/termios/sgtty an
 xtermcfg.hin                    configure script: template for xtermcfg.h
 xutf8.c                         JC's cleanup of UTF8
 xutf8.h                         JC's cleanup of UTF8
+tektests                        subdirectory
+tektests/aitest.tek             tek4014 demo: draw a globe
+tektests/dmerc.tek              tek4014 demo: draws a Mercator projection with orbit
+tektests/fotest.tek             tek4014 demo: draw a scatterplot on log scale
+tektests/imtest.tek             tek4014 demo: draw a test pattern
+tektests/imtesth.tek            tek4014 demo: draw a test pattern
+tektests/ocpred.tek             tek4014 demo: an occultation prediction
+tektests/usmap.tek              tek4014 demo: a US map
+unicode                         subdirectory
+unicode/README                  description of files in ./unicode
+unicode/convmap.pl              perl script for generating the lookup table for UTF-8 to keysym
+unicode/keysym.map              keysym mapping from UTF-8
+unicode/make-precompose.sh      make precompose.c
+unicode/precompose.c.head       header of precompose.c
+unicode/precompose.c.tail       tail of precompose.c
+vttests                         subdirectory
+vttests/16colors.sh             test-script to show 16-colors
+vttests/256colors.pl            script to illustrate 256-colors
+vttests/256colors2.pl           fancy test-script for 256-colors
+vttests/88colors.pl             sample script showing 88-colors
+vttests/88colors2.pl            sample script showing 88-colors
+vttests/8colors.sh              test-script to illustrate 8-colors
+vttests/acolors.sh              demonstrate changing the ANSI colors
+vttests/doublechars.sh          test script to demonstrate doublesize chars
+vttests/dynamic.sh              script to illustrate the dynamic colors control sequence
+vttests/dynamic2.sh             complete example of dynamic colors
+vttests/fonts.sh                script to demonstrate font-switching sequences
+vttests/paste64.pl              script to test base64-selection option
+vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
+vttests/resize.sh               script to demonstrate resizing
+vttests/tcapquery.pl            script to test tcap-query option
+vttests/title.sh                test-script to show title of xterm in action
