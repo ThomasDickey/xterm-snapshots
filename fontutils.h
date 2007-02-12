@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.58 2007/01/21 19:09:16 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.60 2007/02/11 14:49:56 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.h,v 1.17 2006/02/13 01:14:59 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1998-2005,2006 by Thomas E. Dickey
+Copyright 1998-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -41,17 +41,17 @@ authorization.
 
 #include <xterm.h>
 
-extern Bool xtermLoadDefaultFonts (XtermWidget /* w */);
-extern XFontStruct * xtermOpenFont (TScreen * /* screen */, char */* name */);
-extern XFontStruct * xtermCloseFont(TScreen * /* screen */, XFontStruct * /* fnt */);
+extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
+extern XFontStruct * xtermOpenFont (XtermWidget /* xw */, char */* name */);
+extern XFontStruct * xtermCloseFont (XtermWidget /* xw */, XFontStruct * /* fnt */);
 extern const VTFontNames * xtermFontName (char */* normal */);
-extern int lookupRelativeFontSize (TScreen * /* screen */, int /* old */, int /* relative */);
+extern int lookupRelativeFontSize (XtermWidget /* xw */, int /* old */, int /* relative */);
 extern int xtermLoadFont (XtermWidget /* xw */,
 			  const VTFontNames */* fonts */,
 			  Bool /* doresize */, int /* fontnum */);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
 extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
-extern void xtermCloseFonts(TScreen * /* screen */, XFontStruct ** /* fnts[fMAX] */);
+extern void xtermCloseFonts (XtermWidget /* xw */, XFontStruct ** /* fnts[fMAX] */);
 extern void xtermComputeFontInfo (XtermWidget /* xw */, VTwin */* win */, XFontStruct */* font */, int /* sbwidth */);
 extern void xtermSaveFontInfo (TScreen */* screen */, XFontStruct */* font */);
 extern void xtermSetCursorBox (TScreen */* screen */);

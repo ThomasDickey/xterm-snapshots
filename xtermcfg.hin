@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.155 2006/11/30 23:51:54 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.157 2007/02/06 22:15:36 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2005,2006 by Thomas E. Dickey
+Copyright 1997-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -119,7 +119,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_TCAP_QUERY		/* CF_ARG_ENABLE(tcap-query) */
 #undef OPT_TEK4014		/* CF_ARG_DISABLE(tek4014) */
 #undef OPT_TOOLBAR		/* CF_ARG_ENABLE(toolbar) */
-#undef OPT_TRACE		/* CF_ARG_ENABLE(trace) */
 #undef OPT_VT52_MODE		/* CF_ARG_DISABLE(vt52) */
 #undef OPT_WIDE_CHARS		/* CF_ARG_OPTION(wide-chars) */
 #undef OPT_XMC_GLITCH		/* CF_ARG_ENABLE(xmc-glitch) */
@@ -158,6 +157,13 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef ut_xtime			/* CF_UTMP_UT_XTIME */
 
 /*
+ * Ifdef'd to make it simple to override.
+ */
+#ifndef OPT_TRACE
+#undef OPT_TRACE		/* CF_ARG_ENABLE(trace) */
+#endif
+
+/*
  * g++ support for __attribute__() is haphazard.
  */
 #ifndef __cplusplus
@@ -183,5 +189,6 @@ extern char *my_strerror(int n);
 #define NO_XPOLL_H	/* X11R6.1 & up use Xpoll.h for select() definitions */
 #endif
 
-/* vile:cmode */
+/* vile:cmode
+ */
 #endif /* included_xtermcfg_h */

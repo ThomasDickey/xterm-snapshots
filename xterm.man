@@ -1,4 +1,4 @@
-.\" $XTermId: xterm.man,v 1.361 2007/01/17 22:19:50 tom Exp $
+.\" $XTermId: xterm.man,v 1.363 2007/02/08 00:23:05 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -1182,6 +1182,19 @@ Specifies whether write access to the terminal is allowed initially.
 See
 .BR mesg (1).
 The default is ``true''.
+.TP 9
+.B "menuLocale (\fPclass\fB MenuLocale)"
+Specify the locale used for character-set computations when loading
+the popup menus.
+Use this to improve initialization performance of the Athena popup menus,
+which may load unnecessary (and very large) fonts, e.g.,
+in a locale having UTF-8 encoding.
+The default is an empty string, which uses the current locale setting.
+.IP
+Set it to ``C'' to achieve the best performance using the default
+menu resource settings.
+If you happen to be using localized menu resources,
+set the resource accordingly.
 .TP 8
 .B "minBufSize (\fPclass\fB MinBufSize)"
 Specify the minimum size of the input buffer, i.e., the amount of data
@@ -1515,9 +1528,7 @@ used to switch between 80 and 132 columns, should be honored.
 The default is ``false.''
 .TP 8
 .B "cacheDoublesize (\fPclass\fB CacheDoublesize)"
-Specifies the maximum number of double-sized fonts which are cached by
-\fIxterm\fR.
-The default (8) may be too large for some X terminals with limited memory.
+Tells whether to cache double-sized fonts by \fIxterm\fR.
 Set this to zero to disable doublesize fonts altogether.
 .TP 8
 .B "charClass (\fPclass\fB CharClass)"
@@ -4708,4 +4719,4 @@ Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
 Jason Bacon,
 Stephen P. Wall,
 David Wexelblat, and
-Thomas Dickey (XFree86 Project).
+Thomas Dickey (invisible-island.net).

@@ -1,9 +1,9 @@
-/* $XTermId: scrollbar.c,v 1.130 2007/01/21 19:09:16 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.132 2007/02/11 14:49:56 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/scrollbar.c,v 3.48 2006/02/13 01:14:59 dickey Exp $ */
 
 /*
- * Copyright 2000-2005,2006 by Thomas E. Dickey
+ * Copyright 2000-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -663,7 +663,7 @@ AmountToScroll(Widget xw, String * params, Cardinal nparams)
 {
     if (xw != 0) {
 	if (IsXtermWidget(xw)) {
-	    TScreen *screen = &((XtermWidget) xw)->screen;
+	    TScreen *screen = TScreenOf((XtermWidget) xw);
 	    if (nparams > 2
 		&& screen->send_mouse_pos != MOUSE_OFF)
 		return 0;

@@ -1,12 +1,12 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.172 2006/08/02 21:46:34 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.173 2007/02/07 22:16:51 tom Exp $
 .\"
 .\"
 .\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.60 2006/03/13 01:27:53 dickey Exp $
 .\"
 .\"
-.\" Copyright 1996-2005,2006 by Thomas E. Dickey
+.\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -291,6 +291,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
+invisible-island.net (2006-2007)
 .AU
 .
 .am BT                  \" add page numbers after first page
@@ -709,8 +710,8 @@ where \*(Pp denotes the terminal type
   \(-> \*0 (``VT100'')
   \(-> \*1 (``VT220'')
 .br
-and \*(Pv is the firmware version (for \fIxterm\fP, this is the XFree86
-patch number, starting with 95).
+and \*(Pv is the firmware version (for \fIxterm\fP, this was originally
+the XFree86 patch number, starting with 95).
 In a DEC terminal, \*(Pc indicates the ROM cartridge
 registration number and is always zero.
 .
@@ -769,6 +770,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
   \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking.
+  \*(Ps = \*1\*0\*0\*4 \(-> Send FocusIn/FocusOut events.
   \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret "meta" key, sets eighth bit.
@@ -824,7 +826,7 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*6 \(-> Normal Cursor Mode (DECOM)
   \*(Ps = \*7 \(-> No Wraparound Mode (DECAWM)
   \*(Ps = \*8 \(-> No Auto-repeat Keys (DECARM)
-  \*(Ps = \*9 \(-> Don't Send Mouse X & Y on button press
+  \*(Ps = \*9 \(-> Don't send Mouse X & Y on button press
   \*(Ps = \*1\*0 \(-> Hide toolbar (rxvt)
   \*(Ps = \*1\*2 \(-> Stop Blinking Cursor (att610)
   \*(Ps = \*1\*8 \(-> Don't print form feed (DECPFF)
@@ -842,12 +844,13 @@ DEC Private Mode Reset (DECRST)
   \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer
   \*(Ps = \*6\*6 \(-> Numeric keypad (DECNKM)
   \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM)
-  \*(Ps = \*1\*0\*0\*0 \(-> Don't Send Mouse X & Y on button press and
+  \*(Ps = \*1\*0\*0\*0 \(-> Don't send Mouse X & Y on button press and
 release.
 See the section \fBMouse Tracking\fP.
-  \*(Ps = \*1\*0\*0\*1 \(-> Don't Use Hilite Mouse Tracking
-  \*(Ps = \*1\*0\*0\*2 \(-> Don't Use Cell Motion Mouse Tracking
-  \*(Ps = \*1\*0\*0\*3 \(-> Don't Use All Motion Mouse Tracking
+  \*(Ps = \*1\*0\*0\*1 \(-> Don't use Hilite Mouse Tracking.
+  \*(Ps = \*1\*0\*0\*2 \(-> Don't use Cell Motion Mouse Tracking.
+  \*(Ps = \*1\*0\*0\*3 \(-> Don't use All Motion Mouse Tracking.
+  \*(Ps = \*1\*0\*0\*4 \(-> Don't send FocusIn/FocusOut events.
   \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret "meta" key

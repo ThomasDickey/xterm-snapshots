@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.149 2007/01/18 23:28:04 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.150 2007/02/02 22:45:51 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -414,7 +414,7 @@ TekPtyData(void)
 static void
 Tekparse(TekWidget tw)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     TekScreen *tekscr = &(tw->screen);
     int x, y;
     IChar c = 0;
@@ -780,7 +780,7 @@ static IChar
 Tinput(TekWidget tw)
 {
     TekScreen *tekscr = &tw->screen;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     TekLink *tek;
 
     if (Tpushback > Tpushb)
@@ -897,7 +897,7 @@ TekConfigure(Widget w)
     if (IsTekWidget(w)) {
 	TekWidget tw = (TekWidget) w;
 	TekScreen *tekscr = &tw->screen;
-	TScreen *screen = &term->screen;
+	TScreen *screen = TScreenOf(term);
 	int border = 2 * screen->border;
 	double d;
 
@@ -957,7 +957,7 @@ void
 TekRefresh(TekWidget tw)
 {
     TekScreen *tekscr = &tw->screen;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     static Cursor wait_cursor = None;
 
     if (wait_cursor == None)
@@ -1150,7 +1150,7 @@ static void
 AddToDraw(TekWidget tw, int x1, int y1, int x2, int y2)
 {
     TekScreen *tekscr = &tw->screen;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     XSegment *lp;
 
     TRACE(("AddToDraw (%d,%d) (%d,%d)\n", x1, y1, x2, y2));
@@ -1221,7 +1221,7 @@ void
 TekEnqMouse(TekWidget tw, int c)	/* character pressed */
 {
     TekScreen *tekscr = &tw->screen;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     int mousex, mousey, rootx, rooty;
     unsigned int mask;		/* XQueryPointer */
     Window root, subw;
@@ -1252,7 +1252,7 @@ TekEnq(TekWidget tw,
        int y)
 {
     TekScreen *tekscr = &tw->screen;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     Char cplot[7];
     int len = 5;
     int adj = (status != 0) ? 0 : 1;
@@ -1379,7 +1379,7 @@ TekRealize(Widget gw,
 {
     TekWidget tw = (TekWidget) gw;
     TekScreen *tekscr = &tw->screen;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     int i;
     TekLink *tek;
     double d;
@@ -1715,7 +1715,7 @@ ChangeTekColors(TekWidget tw, TScreen * screen, ScrnColors * pNew)
 void
 TekReverseVideo(TekWidget tw)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     TekScreen *tekscr = &tw->screen;
     int i;
     XGCValues gcv;
@@ -1766,7 +1766,7 @@ void
 TCursorToggle(TekWidget tw, int toggle)		/* TOGGLE or CLEAR */
 {
     TekScreen *tekscr = &tw->screen;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     int c, x, y;
     unsigned int cellwidth, cellheight;
 
@@ -1826,7 +1826,7 @@ void
 TekCopy(TekWidget tw)
 {
     TekScreen *tekscr = &tw->screen;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     TekLink *Tp;
     char buf[32];

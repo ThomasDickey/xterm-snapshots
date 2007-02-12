@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.535 2007/01/18 23:41:57 tom Exp $ */
+/* $XTermId: main.c,v 1.538 2007/02/06 22:37:24 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -758,6 +758,7 @@ static XtResource application_resources[] =
     Bres("messages", "Messages", messages, True),
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
+    Sres("menuLocale", "MenuLocale", menuLocale, ""),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -1225,7 +1226,7 @@ decode_keyvalue(char **ptr, int termcap)
 static Bool
 get_termcap(char *name, char *buffer, char *resized)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     *buffer = 0;		/* initialize, in case we're using terminfo's tgetent */
 
@@ -2158,7 +2159,7 @@ main(int argc, char *argv[]ENVP_ARG)
 						 (XtPointer) 0);
     decode_keyboard_type(term, &resource);
 
-    screen = &term->screen;
+    screen = TScreenOf(term);
     screen->inhibit = 0;
 
 #ifdef ALLOWLOGGING
@@ -2795,7 +2796,7 @@ void
 first_map_occurred(void)
 {
     handshake_t handshake;
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     handshake.status = PTY_EXEC;
     handshake.rows = screen->max_row;
@@ -2920,7 +2921,7 @@ find_utmp(struct UTMP_STR *tofind)
 static int
 spawn(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 #if OPT_PTY_HANDSHAKE
     handshake_t handshake;
     int done;
@@ -3442,7 +3443,7 @@ spawn(void)
 			    /* make /dev/tty work */
 			    ioctl(ttyfd, TCSETCTTY, 0);
 #endif
-#if defined(__GNU__) && defined(TIOCSCTTY)
+#if ((defined(__GLIBC__) && defined(__FreeBSD_kernel__)) || defined(__GNU__)) && defined(TIOCSCTTY)
 			    /* make /dev/tty work */
 			    ioctl(ttyfd, TIOCSCTTY, 0);
 #endif
@@ -4509,7 +4510,7 @@ spawn(void)
 SIGNAL_T
 Exit(int n)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
 #ifdef USE_UTEMPTER
     if (!resource.utmpInhibit && added_utmp_entry)

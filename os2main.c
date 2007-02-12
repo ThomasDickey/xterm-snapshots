@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.237 2007/01/18 23:41:56 tom Exp $ */
+/* $XTermId: os2main.c,v 1.239 2007/02/06 22:37:24 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -270,6 +270,7 @@ static XtResource application_resources[] =
     Bres("messages", "Messages", messages, True),
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
+    Sres("menuLocale", "MenuLocale", menuLocale, ""),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -744,7 +745,7 @@ decode_keyvalue(char **ptr, int termcap)
 static Bool
 get_termcap(char *name, char *buffer, char *resized)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     *buffer = 0;		/* initialize, in case we're using terminfo's tgetent */
 
@@ -1158,7 +1159,7 @@ main(int argc, char **argv ENVP_ARG)
 						 (XtPointer) 0);
     decode_keyboard_type(term, &resource);
 
-    screen = &term->screen;
+    screen = TScreenOf(term);
     screen->inhibit = 0;
 #ifdef ALLOWLOGGING
     if (term->misc.logInhibit)
@@ -1470,7 +1471,7 @@ struct {
 void
 first_map_occurred(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     handshake.rows = screen->max_row;
     handshake.cols = screen->max_col;
     resource.wait_for_map = False;
@@ -1546,7 +1547,7 @@ spawn(void)
  *  If slave, the pty named in passedPty is already open for use
  */
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     int Xsocket = ConnectionNumber(screen->display);
 
     int ttyfd = -1;
@@ -1956,7 +1957,7 @@ opencons();*/
 SIGNAL_T
 Exit(int n)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     int pty = term->screen.respond;	/* file descriptor of pty */
     close(pty);			/* close explicitly to avoid race with slave side */
 #ifdef ALLOWLOGGING

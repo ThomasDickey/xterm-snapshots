@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.756 2007/01/22 23:16:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.766 2007/02/11 15:22:25 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -826,10 +826,8 @@ SGR_Foreground(XtermWidget xw, int color)
     setCgsFore(xw, WhichVWin(screen), gcNorm, fg);
     setCgsBack(xw, WhichVWin(screen), gcNormReverse, fg);
 
-    if (NormalGC(xw, screen) != NormalBoldGC(xw, screen)) {
-	setCgsFore(xw, WhichVWin(screen), gcBold, fg);
-	setCgsBack(xw, WhichVWin(screen), gcBoldReverse, fg);
-    }
+    setCgsFore(xw, WhichVWin(screen), gcBold, fg);
+    setCgsBack(xw, WhichVWin(screen), gcBoldReverse, fg);
 }
 
 void
@@ -858,10 +856,8 @@ SGR_Background(XtermWidget xw, int color)
     setCgsBack(xw, WhichVWin(screen), gcNorm, bg);
     setCgsFore(xw, WhichVWin(screen), gcNormReverse, bg);
 
-    if (NormalGC(xw, screen) != NormalBoldGC(xw, screen)) {
-	setCgsBack(xw, WhichVWin(screen), gcBold, bg);
-	setCgsFore(xw, WhichVWin(screen), gcBoldReverse, bg);
-    }
+    setCgsBack(xw, WhichVWin(screen), gcBold, bg);
+    setCgsFore(xw, WhichVWin(screen), gcBoldReverse, bg);
 }
 
 /* Invoked after updating bold/underline flags, computes the extended color
@@ -1194,8 +1190,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    prev = XTERM_CELL(screen->last_written_row,
 			      screen->last_written_col);
 	    precomposed = do_precomposition(prev, (int) c);
+#ifdef DEBUG
+	    if (debug) {
+		fprintf(stderr,
+			"do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
+			prev, my_wcwidth(prev), (int) c, my_wcwidth((int)
+			c), precomposed, my_wcwidth(precomposed));
+	    }
+#endif
 
-	    if (precomposed != -1) {
+	    /* substitute combined character with precomposed character 
+	     * only if it does not change the width of the base character
+	     */
+	    if (precomposed != -1 && my_wcwidth(precomposed) == my_wcwidth(prev)) {
 		putXtermCell(screen,
 			     screen->last_written_row,
 			     screen->last_written_col, precomposed);
@@ -1204,6 +1211,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 				  screen->last_written_row,
 				  screen->last_written_col, c);
 	    }
+
 	    if (!screen->scroll_amt)
 		ScrnUpdate(xw,
 			   screen->last_written_row,
@@ -1545,17 +1553,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECDHL:
-	    xterm_DECDHL(c == '3');
+	    xterm_DECDHL(xw, c == '3');
 	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_DECSWL:
-	    xterm_DECSWL();
+	    xterm_DECSWL(xw);
 	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_DECDWL:
-	    xterm_DECDWL();
+	    xterm_DECDWL(xw);
 	    sp->parsestate = sp->groundtable;
 	    break;
 
@@ -3282,7 +3290,7 @@ in_put(XtermWidget xw)
 static IChar
 doinput(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     while (!morePtyData(screen, VTbuffer))
 	in_put(term);
@@ -3646,7 +3654,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
     {
 	{XtNiconName, (XtArgVal) & icon_name}
     };
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     switch (event->type) {
     case MapNotify:
@@ -3803,12 +3811,20 @@ ansi_modes(XtermWidget xw,
     }
 }
 
+#define IsSM() (func == bitset)
+
+#define set_bool_mode(flag) \
+	flag = (IsSM()) ? ON : OFF
+
 #define set_mousemode(mode) \
-	screen->send_mouse_pos = (func == bitset) ? mode : MOUSE_OFF
+	screen->send_mouse_pos = IsSM() ? mode : MOUSE_OFF
+
+#if OPT_READLINE
 #define set_mouseflag(f)		\
-	((func == bitset)		\
+	(IsSM()				\
 	 ? SCREEN_FLAG_set(screen, f)	\
 	 : SCREEN_FLAG_unset(screen, f))
+#endif
 
 /*
  * process DEC private modes set, reset
@@ -3821,14 +3837,14 @@ dpmodes(XtermWidget xw,
     int i, j;
 
     for (i = 0; i < nparam; ++i) {
-	TRACE(("%s %d\n", (func == bitset) ? "DECSET" : "DECRST", param[i]));
+	TRACE(("%s %d\n", IsSM() ? "DECSET" : "DECRST", param[i]));
 	switch (param[i]) {
 	case 1:		/* DECCKM                       */
 	    (*func) (&xw->keyboard.flags, MODE_DECCKM);
 	    update_appcursor();
 	    break;
 	case 2:		/* DECANM - ANSI/VT52 mode      */
-	    if (func == bitset) {	/* ANSI (VT100) */
+	    if (IsSM()) {	/* ANSI (VT100) */
 		/*
 		 * Setting DECANM should have no effect, since this function
 		 * cannot be reached from vt52 mode.
@@ -3855,7 +3871,7 @@ dpmodes(XtermWidget xw,
 	    if (screen->c132) {
 		ClearScreen(xw);
 		CursorSet(screen, 0, 0, xw->flags);
-		if ((j = func == bitset ? 132 : 80) !=
+		if ((j = IsSM() ? 132 : 80) !=
 		    ((xw->flags & IN132COLUMNS) ? 132 : 80) ||
 		    j != MaxCols(screen))
 		    RequestResize(xw, -1, j, True);
@@ -3863,7 +3879,7 @@ dpmodes(XtermWidget xw,
 	    }
 	    break;
 	case 4:		/* DECSCLM (slow scroll)        */
-	    if (func == bitset) {
+	    if (IsSM()) {
 		screen->jumpscroll = 0;
 		if (screen->scroll_amt)
 		    FlushScroll(xw);
@@ -3901,56 +3917,53 @@ dpmodes(XtermWidget xw,
 	    break;
 #if OPT_TOOLBAR
 	case 10:		/* rxvt */
-	    ShowToolbar(func == bitset);
+	    ShowToolbar(IsSM());
 	    break;
 #endif
 #if OPT_BLINK_CURS
 	case 12:		/* att610: Start/stop blinking cursor */
-	    if (screen->cursor_blink_res) {
-		screen->cursor_blink_esc = (func == bitset) ? ON : OFF;
-		SetCursorBlink(screen, screen->cursor_blink);
-	    }
+	    SetCursorBlink(screen, IsSM());
 	    break;
 #endif
 	case 18:		/* DECPFF: print form feed */
-	    screen->printer_formfeed = (func == bitset) ? ON : OFF;
+	    set_bool_mode(screen->printer_formfeed);
 	    break;
 	case 19:		/* DECPEX: print extent */
-	    screen->printer_extent = (func == bitset) ? ON : OFF;
+	    set_bool_mode(screen->printer_extent);
 	    break;
 	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
-	    screen->cursor_set = (func == bitset) ? ON : OFF;
+	    set_bool_mode(screen->cursor_set);
 	    break;
 	case 30:		/* rxvt */
-	    if (screen->fullVwin.sb_info.width != ((func == bitset) ? ON : OFF))
+	    if (screen->fullVwin.sb_info.width != (IsSM() ? ON : OFF))
 		ToggleScrollBar(xw);
 	    break;
 #if OPT_SHIFT_FONTS
 	case 35:		/* rxvt */
-	    xw->misc.shift_fonts = (func == bitset) ? ON : OFF;
+	    set_bool_mode(xw->misc.shift_fonts);
 	    break;
 #endif
 	case 38:		/* DECTEK                       */
 #if OPT_TEK4014
-	    if (func == bitset && !(screen->inhibit & I_TEK)) {
+	    if (IsSM() && !(screen->inhibit & I_TEK)) {
 		FlushLog(screen);
 		TEK4014_ACTIVE(xw) = True;
 	    }
 #endif
 	    break;
 	case 40:		/* 132 column mode              */
-	    screen->c132 = (func == bitset);
+	    set_bool_mode(screen->c132);
 	    update_allow132();
 	    break;
 	case 41:		/* curses hack                  */
-	    screen->curses = (func == bitset);
+	    set_bool_mode(screen->curses);
 	    update_cursesemul();
 	    break;
 	case 42:		/* DECNRCM national charset (VT220) */
 	    (*func) (&xw->flags, NATIONAL);
 	    break;
 	case 44:		/* margin bell                  */
-	    screen->marginbell = (func == bitset);
+	    set_bool_mode(screen->marginbell);
 	    if (!screen->marginbell)
 		screen->bellarmed = -1;
 	    update_marginbell();
@@ -3966,7 +3979,7 @@ dpmodes(XtermWidget xw,
 	     * if this feature is enabled, logging may be
 	     * enabled and disabled via escape sequences.
 	     */
-	    if (func == bitset)
+	    if (IsSM())
 		StartLog(screen);
 	    else
 		CloseLog(screen);
@@ -3978,7 +3991,7 @@ dpmodes(XtermWidget xw,
 #endif
 	case 1049:		/* alternate buffer & cursor */
 	    if (!xw->misc.titeInhibit) {
-		if (func == bitset) {
+		if (IsSM()) {
 		    CursorSave(xw);
 		    ToAlternate(xw);
 		    ClearScreen(xw);
@@ -3987,7 +4000,7 @@ dpmodes(XtermWidget xw,
 		    CursorRestore(xw);
 		}
 	    } else if (xw->misc.tiXtraScroll) {
-		if (func == bitset) {
+		if (IsSM()) {
 		    xtermScroll(xw, screen->max_row);
 		}
 	    }
@@ -3995,7 +4008,7 @@ dpmodes(XtermWidget xw,
 	case 1047:
 	case 47:		/* alternate buffer */
 	    if (!xw->misc.titeInhibit) {
-		if (func == bitset) {
+		if (IsSM()) {
 		    ToAlternate(xw);
 		} else {
 		    if (screen->alternate
@@ -4004,7 +4017,7 @@ dpmodes(XtermWidget xw,
 		    FromAlternate(xw);
 		}
 	    } else if (xw->misc.tiXtraScroll) {
-		if (func == bitset) {
+		if (IsSM()) {
 		    xtermScroll(xw, screen->max_row);
 		}
 	    }
@@ -4040,35 +4053,40 @@ dpmodes(XtermWidget xw,
 		MotionOn(screen, xw);
 	    }
 	    break;
+#if OPT_FOCUS_EVENT
+	case SET_FOCUS_EVENT_MOUSE:
+	    set_bool_mode(screen->send_focus_pos);
+	    break;
+#endif
 	case 1010:		/* rxvt */
-	    screen->scrollttyoutput = (func == bitset) ? ON : OFF;
+	    set_bool_mode(screen->scrollttyoutput);
 	    update_scrollttyoutput();
 	    break;
 	case 1011:		/* rxvt */
-	    screen->scrollkey = (func == bitset) ? ON : OFF;
+	    set_bool_mode(screen->scrollkey);
 	    update_scrollkey();
 	    break;
 	case 1034:
-	    xw->screen.input_eight_bits = (func == bitset) ? ON : OFF;
+	    set_bool_mode(xw->screen.input_eight_bits);
 	    update_alt_esc();
 	    break;
 #if OPT_NUM_LOCK
 	case 1035:
-	    xw->misc.real_NumLock = (func == bitset) ? ON : OFF;
+	    set_bool_mode(xw->misc.real_NumLock);
 	    update_num_lock();
 	    break;
 	case 1036:
-	    screen->meta_sends_esc = (func == bitset) ? ON : OFF;
+	    set_bool_mode(screen->meta_sends_esc);
 	    update_meta_esc();
 	    break;
 #endif
 	case 1037:
-	    screen->delete_is_del = (func == bitset) ? ON : OFF;
+	    set_bool_mode(screen->delete_is_del);
 	    update_delete_del();
 	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
-		if (func == bitset)
+		if (IsSM())
 		    CursorSave(xw);
 		else
 		    CursorRestore(xw);
@@ -4076,25 +4094,25 @@ dpmodes(XtermWidget xw,
 	    break;
 #ifdef OPT_SUN_FUNC_KEYS
 	case 1051:
-	    set_keyboard_type(xw, keyboardIsSun, func == bitset);
+	    set_keyboard_type(xw, keyboardIsSun, IsSM());
 	    break;
 #endif
 #if OPT_HP_FUNC_KEYS
 	case 1052:
-	    set_keyboard_type(xw, keyboardIsHP, func == bitset);
+	    set_keyboard_type(xw, keyboardIsHP, IsSM());
 	    break;
 #endif
 #if OPT_SCO_FUNC_KEYS
 	case 1053:
-	    set_keyboard_type(xw, keyboardIsSCO, func == bitset);
+	    set_keyboard_type(xw, keyboardIsSCO, IsSM());
 	    break;
 #endif
 	case 1060:
-	    set_keyboard_type(xw, keyboardIsLegacy, func == bitset);
+	    set_keyboard_type(xw, keyboardIsLegacy, IsSM());
 	    break;
 #if OPT_SUNPC_KBD
 	case 1061:
-	    set_keyboard_type(xw, keyboardIsVT220, func == bitset);
+	    set_keyboard_type(xw, keyboardIsVT220, IsSM());
 	    break;
 #endif
 #if OPT_READLINE
@@ -4208,6 +4226,11 @@ savemodes(XtermWidget xw)
 	case SET_ANY_EVENT_MOUSE:
 	    DoSM(DP_X_MOUSE, screen->send_mouse_pos);
 	    break;
+#if OPT_FOCUS_EVENT
+	case SET_FOCUS_EVENT_MOUSE:
+	    DoSM(DP_X_FOCUS, screen->send_focus_pos);
+	    break;
+#endif
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
 		CursorSave(xw);
@@ -4371,6 +4394,11 @@ restoremodes(XtermWidget xw)
 	case SET_ANY_EVENT_MOUSE:
 	    DoRM(DP_X_MOUSE, screen->send_mouse_pos);
 	    break;
+#if OPT_FOCUS_EVENT
+	case SET_FOCUS_EVENT_MOUSE:
+	    DoRM(DP_X_FOCUS, screen->send_focus_pos);
+	    break;
+#endif
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
 		CursorRestore(xw);
@@ -4826,7 +4854,7 @@ SwitchBufPtrs(TScreen * screen)
 void
 VTRun(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
 
     TRACE(("VTRun ...\n"));
 
@@ -4878,7 +4906,7 @@ VTExpose(Widget w GCC_UNUSED,
 static void
 VTGraphicsOrNoExpose(XEvent * event)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     if (screen->incopy <= 0) {
 	screen->incopy = 1;
 	if (screen->scrolls > 0)
@@ -5040,7 +5068,7 @@ static String xterm_trans =
 int
 VTInit(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     Widget vtparent = SHELL_OF(term);
 
     XtRealizeWidget(vtparent);
@@ -5058,7 +5086,7 @@ VTInit(void)
 static void
 VTallocbuf(void)
 {
-    TScreen *screen = &term->screen;
+    TScreen *screen = TScreenOf(term);
     int nrows = MaxRows(screen);
 
     /* allocate screen buffer now, if necessary. */
@@ -5878,28 +5906,27 @@ VTInitialize(Widget wrequest,
     return;
 }
 
-#ifdef NO_LEAKS
-static void
+void
 releaseCursorGCs(XtermWidget xw)
 {
     TScreen *screen = &xw->screen;
     VTwin *win = WhichVWin(screen);
+    int n;
 
-    freeCgs(xw, win, gcVTcursNormal);
-    freeCgs(xw, win, gcVTcursFilled);
-    freeCgs(xw, win, gcVTcursReverse);
-    freeCgs(xw, win, gcVTcursOutline);
+    for_each_curs_gc(n) {
+	freeCgs(xw, win, (CgsEnum) n);
+    }
 }
 
-static void
+void
 releaseWindowGCs(XtermWidget xw, VTwin * win)
 {
-    freeCgs(xw, win, gcNorm);
-    freeCgs(xw, win, gcNormReverse);
-    freeCgs(xw, win, gcBold);
-    freeCgs(xw, win, gcBoldReverse);
+    int n;
+
+    for_each_text_gc(n) {
+	freeCgs(xw, win, (CgsEnum) n);
+    }
 }
-#endif
 
 static void
 VTDestroy(Widget w GCC_UNUSED)
@@ -5954,7 +5981,7 @@ VTDestroy(Widget w GCC_UNUSED)
     releaseWindowGCs(xw, &(screen->iconVwin));
 #endif
 
-    xtermCloseFonts(screen, screen->fnts);
+    xtermCloseFonts(xw, screen->fnts);
 
 #if 0				/* some strings may be owned by X libraries */
     for (n = 0; n <= fontMenu_lastBuiltin; ++n) {
@@ -6742,7 +6769,7 @@ ShowCursor(void)
     filled = (screen->select || screen->always_highlight);
     if (filled) {
 	if (reversed) {		/* text is reverse video */
-	    if (getCgs(xw, currentWin, gcVTcursNormal)) {
+	    if (getCgsGC(xw, currentWin, gcVTcursNormal)) {
 		setGC(gcVTcursNormal);
 	    } else {
 		if (flags & BOLDATTR(screen)) {
@@ -6762,7 +6789,7 @@ ShowCursor(void)
 #endif
 	    EXCHANGE(fg_pix, bg_pix, tmp);
 	} else {		/* normal video */
-	    if (getCgs(xw, currentWin, gcVTcursReverse)) {
+	    if (getCgsGC(xw, currentWin, gcVTcursReverse)) {
 		setGC(gcVTcursReverse);
 	    } else {
 		if (flags & BOLDATTR(screen)) {
@@ -6805,7 +6832,7 @@ ShowCursor(void)
 	       screen->cur_row, screen->cur_col,
 	       (filled ? "filled" : "outline")));
 
-	currentGC = getCgs(xw, currentWin, currentCgs);
+	currentGC = getCgsGC(xw, currentWin, currentCgs);
 	drawXtermText(xw, flags & DRAWX_MASK, currentGC,
 		      x = CurCursorX(screen, screen->cur_row, cursor_col),
 		      y = CursorY(screen, screen->cur_row),
@@ -6830,10 +6857,10 @@ ShowCursor(void)
 	    screen->box->x = x;
 	    screen->box->y = y;
 	    XDrawLines(screen->display, VWindow(screen),
-		       getCgs(xw, currentWin,
-			      (getCgs(xw, currentWin, gcVTcursOutline)
-			       ? gcVTcursOutline
-			       : currentCgs)),
+		       getCgsGC(xw, currentWin,
+				(getCgsGC(xw, currentWin, gcVTcursOutline)
+				 ? gcVTcursOutline
+				 : currentCgs)),
 		       screen->box, NBOX, CoordModePrevious);
 	}
     }
@@ -7122,6 +7149,7 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 
 	/* reset the mouse mode */
 	screen->send_mouse_pos = MOUSE_OFF;
+	screen->send_focus_pos = OFF;
 	screen->waitingForTrackInfo = False;
 	screen->eventMode = NORMAL;
 
