@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-224
+MANIFEST for xterm, version xterm-225
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -93,6 +93,8 @@ xterm.log.html                  changelog for xterm
 xterm.man                       manual page for 'xterm'
 xterm_axp.opt                   linker options file for VMS port of 'xterm'
 xterm_io.h                      split-out definitions of termio/termios/sgtty and winsize from main.c, os2main.c, screen.c and resize.c
+xtermcap.c                      termcap-related functions.
+xtermcap.h                      interface of xtermcap.c
 xtermcfg.hin                    configure script: template for xtermcfg.h
 xutf8.c                         JC's cleanup of UTF8
 xutf8.h                         JC's cleanup of UTF8

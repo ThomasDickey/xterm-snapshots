@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.342 2007/02/11 14:44:45 e.giaquinta Exp $ */
+/* $XTermId: misc.c,v 1.359 2007/03/21 22:13:32 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -88,6 +88,7 @@
 #include <fontutils.h>
 #include <xcharmouse.h>
 #include <xstrings.h>
+#include <xtermcap.h>
 #include <VTparse.h>
 
 #include <assert.h>
@@ -117,12 +118,148 @@
 		   (event.xcrossing.window == XtWindow(XtParent(term))))
 #endif
 
-static Bool ChangeColorsRequest(XtermWidget, int, char *, int);
-static void DoSpecialEnterNotify(XtermWidget, XEnterWindowEvent *);
-static void DoSpecialLeaveNotify(XtermWidget, XEnterWindowEvent *);
-static void selectwindow(TScreen *, int);
-static void unselectwindow(TScreen *, int);
-static void Sleep(int);
+#if OPT_EXEC_XTERM
+/* Like readlink(2), but returns a malloc()ed buffer, or NULL on
+   error; adapted from libc docs */
+static char *
+Readlink(const char *filename)
+{
+    char *buf = NULL;
+    int size = 100;
+    int n;
+
+    for (;;) {
+	buf = realloc(buf, size);
+	memset(buf, 0, size);
+
+	n = readlink(filename, buf, size);
+	if (n < 0) {
+	    free(buf);
+	    return NULL;
+	}
+
+	if (n < size) {
+	    return buf;
+	}
+
+	size *= 2;
+    }
+}
+#endif /* OPT_EXEC_XTERM */
+
+static void
+Sleep(int msec)
+{
+    static struct timeval select_timeout;
+
+    select_timeout.tv_sec = 0;
+    select_timeout.tv_usec = msec * 1000;
+    select(0, 0, 0, 0, &select_timeout);
+}
+
+static void
+selectwindow(TScreen * screen, int flag)
+{
+    TRACE(("selectwindow(%d) flag=%d\n", screen->select, flag));
+
+#if OPT_TEK4014
+    if (TEK4014_ACTIVE(term)) {
+	if (!Ttoggled)
+	    TCursorToggle(tekWidget, TOGGLE);
+	screen->select |= flag;
+	if (!Ttoggled)
+	    TCursorToggle(tekWidget, TOGGLE);
+    } else
+#endif
+    {
+	if (screen->xic)
+	    XSetICFocus(screen->xic);
+
+	if (screen->cursor_state && CursorMoved(screen))
+	    HideCursor();
+	screen->select |= flag;
+	if (screen->cursor_state)
+	    ShowCursor();
+    }
+}
+
+static void
+unselectwindow(TScreen * screen, int flag)
+{
+    TRACE(("unselectwindow(%d) flag=%d\n", screen->select, flag));
+
+    if (!screen->always_highlight) {
+#if OPT_TEK4014
+	if (TEK4014_ACTIVE(term)) {
+	    if (!Ttoggled)
+		TCursorToggle(tekWidget, TOGGLE);
+	    screen->select &= ~flag;
+	    if (!Ttoggled)
+		TCursorToggle(tekWidget, TOGGLE);
+	} else
+#endif
+	{
+	    if (screen->xic)
+		XUnsetICFocus(screen->xic);
+
+	    screen->select &= ~flag;
+	    if (screen->cursor_state && CursorMoved(screen))
+		HideCursor();
+	    if (screen->cursor_state)
+		ShowCursor();
+	}
+    }
+}
+
+static void
+DoSpecialEnterNotify(XtermWidget xw, XEnterWindowEvent * ev)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    TRACE(("DoSpecialEnterNotify(%d)\n", screen->select));
+#ifdef ACTIVEWINDOWINPUTONLY
+    if (ev->window == XtWindow(XtParent(CURRENT_EMU())))
+#endif
+	if (((ev->detail) != NotifyInferior) &&
+	    ev->focus &&
+	    !(screen->select & FOCUS))
+	    selectwindow(screen, INWINDOW);
+}
+
+static void
+DoSpecialLeaveNotify(XtermWidget xw, XEnterWindowEvent * ev)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    TRACE(("DoSpecialLeaveNotify(%d)\n", screen->select));
+#ifdef ACTIVEWINDOWINPUTONLY
+    if (ev->window == XtWindow(XtParent(CURRENT_EMU())))
+#endif
+	if (((ev->detail) != NotifyInferior) &&
+	    ev->focus &&
+	    !(screen->select & FOCUS))
+	    unselectwindow(screen, INWINDOW);
+}
+
+#ifndef XUrgencyHint
+#define XUrgencyHint (1L << 8)	/* X11R5 does not define */
+#endif
+
+static void
+setXUrgency(TScreen * screen, Boolean enable)
+{
+    if (screen->bellIsUrgent) {
+	XWMHints *h = XGetWMHints(screen->display, VShellWindow);
+	if (h != 0) {
+	    if (enable) {
+		h->flags |= XUrgencyHint;
+	    } else {
+		h->flags &= ~XUrgencyHint;
+	    }
+	    XSetWMHints(screen->display, VShellWindow, h);
+	}
+    }
+}
 
 void
 do_xevents(void)
@@ -298,6 +435,99 @@ HandleStringEvent(Widget w GCC_UNUSED,
     }
 }
 
+#if OPT_EXEC_XTERM
+
+#ifndef PROCFS_ROOT
+#define PROCFS_ROOT "/proc"
+#endif
+
+/* ARGSUSED */
+void
+HandleSpawnTerminal(Widget w GCC_UNUSED,
+		    XEvent * event GCC_UNUSED,
+		    String * params,
+		    Cardinal *nparams)
+{
+    TScreen *screen = &term->screen;
+    char *child_cwd = NULL;
+    char *child_exe;
+    pid_t pid;
+
+    /*
+     * Try to find the actual program which is running in the child process. 
+     * This works for Linux.  If we cannot find the program, fall back to the
+     * xterm program (which is usually adequate).  Give up if we are given only
+     * a relative path to xterm, since that would not always match $PATH.
+     */
+    child_exe = Readlink(PROCFS_ROOT "/self/exe");
+    if (!child_exe) {
+	if (strncmp(ProgramName, "./", 2)
+	    && strncmp(ProgramName, "../", 3)) {
+	    child_exe = xtermFindShell(ProgramName, True);
+	} else {
+	    fprintf(stderr, "Cannot exec-xterm given %s\n", ProgramName);
+	}
+	if (child_exe == 0)
+	    return;
+    }
+
+    /*
+     * Determine the current working directory of the child so that we can
+     * spawn a new terminal in the same directory.
+     *
+     * If we cannot get the CWD of the child, just use our own.
+     */
+    if (screen->pid) {
+	char child_cwd_link[sizeof(PROCFS_ROOT) + 80];
+	sprintf(child_cwd_link, PROCFS_ROOT "/%lu/cwd", (unsigned long) screen->pid);
+	child_cwd = Readlink(child_cwd_link);
+    }
+
+    /* The reaper will take care of cleaning up the child */
+    pid = fork();
+    if (pid == -1) {
+	fprintf(stderr, "Could not fork: %s\n", SysErrorMsg(errno));
+    } else if (!pid) {
+	/* We are the child */
+	if (child_cwd) {
+	    chdir(child_cwd);	/* We don't care if this fails */
+	}
+
+	if (setuid(screen->uid) == -1
+	    || setgid(screen->gid) == -1) {
+	    fprintf(stderr, "Cannot reset uid/gid\n");
+	} else {
+	    if (nparams != 0) {
+		int myargc = *nparams + 1;
+		char **myargv = TypeMallocN(char *, myargc + 1);
+		if (myargv != 0) {
+		    int n = 0;
+		    myargv[n++] = child_exe;
+		    while (n <= myargc) {
+			myargv[n] = params[n - 1];
+			++n;
+		    }
+		    myargv[n] = 0;
+		    execv(child_exe, myargv);
+		}
+	    } else {
+		execl(child_exe, child_exe, NULL);
+	    }
+
+	    /* If we get here, we've failed */
+	    fprintf(stderr, "exec of '%s': %s\n", child_exe, SysErrorMsg(errno));
+	}
+	_exit(0);
+    } else {
+	/* We are the parent; clean up */
+	if (child_cwd)
+	    free(child_cwd);
+	if (child_exe)
+	    free(child_exe);
+    }
+}
+#endif /* OPT_EXEC_XTERM */
+
 /*
  * Rather than sending characters to the host, put them directly into our
  * input queue.  That lets a user have access to any of the control sequences
@@ -333,21 +563,6 @@ HandleInterpret(Widget w GCC_UNUSED,
     }
 }
 
-static void
-DoSpecialEnterNotify(XtermWidget xw, XEnterWindowEvent * ev)
-{
-    TScreen *screen = TScreenOf(xw);
-
-    TRACE(("DoSpecialEnterNotify(%d)\n", screen->select));
-#ifdef ACTIVEWINDOWINPUTONLY
-    if (ev->window == XtWindow(XtParent(CURRENT_EMU())))
-#endif
-	if (((ev->detail) != NotifyInferior) &&
-	    ev->focus &&
-	    !(screen->select & FOCUS))
-	    selectwindow(screen, INWINDOW);
-}
-
 /*ARGSUSED*/
 void
 HandleEnterWindow(Widget w GCC_UNUSED,
@@ -357,21 +572,6 @@ HandleEnterWindow(Widget w GCC_UNUSED,
 {
     /* NOP since we handled it above */
     TRACE(("HandleEnterWindow ignored\n"));
-}
-
-static void
-DoSpecialLeaveNotify(XtermWidget xw, XEnterWindowEvent * ev)
-{
-    TScreen *screen = TScreenOf(xw);
-
-    TRACE(("DoSpecialLeaveNotify(%d)\n", screen->select));
-#ifdef ACTIVEWINDOWINPUTONLY
-    if (ev->window == XtWindow(XtParent(CURRENT_EMU())))
-#endif
-	if (((ev->detail) != NotifyInferior) &&
-	    ev->focus &&
-	    !(screen->select & FOCUS))
-	    unselectwindow(screen, INWINDOW);
 }
 
 /*ARGSUSED*/
@@ -402,6 +602,8 @@ HandleFocusChange(Widget w GCC_UNUSED,
 	   event->detail));
 
     if (event->type == FocusIn) {
+	setXUrgency(screen, False);
+
 	/*
 	 * NotifyNonlinear only happens (on FocusIn) if the pointer was not in
 	 * one of our windows.  Use this to reset a case where one xterm is
@@ -444,60 +646,6 @@ HandleFocusChange(Widget w GCC_UNUSED,
     }
 }
 
-static void
-selectwindow(TScreen * screen, int flag)
-{
-    TRACE(("selectwindow(%d) flag=%d\n", screen->select, flag));
-
-#if OPT_TEK4014
-    if (TEK4014_ACTIVE(term)) {
-	if (!Ttoggled)
-	    TCursorToggle(tekWidget, TOGGLE);
-	screen->select |= flag;
-	if (!Ttoggled)
-	    TCursorToggle(tekWidget, TOGGLE);
-    } else
-#endif
-    {
-	if (screen->xic)
-	    XSetICFocus(screen->xic);
-
-	if (screen->cursor_state && CursorMoved(screen))
-	    HideCursor();
-	screen->select |= flag;
-	if (screen->cursor_state)
-	    ShowCursor();
-    }
-}
-
-static void
-unselectwindow(TScreen * screen, int flag)
-{
-    TRACE(("unselectwindow(%d) flag=%d\n", screen->select, flag));
-
-    if (!screen->always_highlight) {
-#if OPT_TEK4014
-	if (TEK4014_ACTIVE(term)) {
-	    if (!Ttoggled)
-		TCursorToggle(tekWidget, TOGGLE);
-	    screen->select &= ~flag;
-	    if (!Ttoggled)
-		TCursorToggle(tekWidget, TOGGLE);
-	} else
-#endif
-	{
-	    if (screen->xic)
-		XUnsetICFocus(screen->xic);
-
-	    screen->select &= ~flag;
-	    if (screen->cursor_state && CursorMoved(screen))
-		HideCursor();
-	    if (screen->cursor_state)
-		ShowCursor();
-	}
-    }
-}
-
 static long lastBellTime;	/* in milliseconds */
 
 void
@@ -511,6 +659,8 @@ Bell(Atom which GCC_UNUSED, int percent)
     if (!XtIsRealized((Widget) term)) {
 	return;
     }
+
+    setXUrgency(screen, True);
 
     /* has enough time gone by that we are allowed to ring
        the bell again? */
@@ -700,15 +850,16 @@ dabbrev_expand(TScreen * screen)
 
     static int x, y;
     static char *dabbrev_hint = 0, *lastexpansion = 0;
+    static unsigned int expansions;
 
     char *expansion;
     Char *copybuffer;
     size_t hint_len;
-    unsigned i;
     unsigned del_cnt;
     unsigned buf_cnt;
 
     if (!screen->dabbrev_working) {	/* initialize */
+	expansions = 0;
 	x = screen->cur_col;
 	y = screen->cur_row + screen->savelines;
 
@@ -729,7 +880,8 @@ dabbrev_expand(TScreen * screen)
     hint_len = strlen(dabbrev_hint);
     for (;;) {
 	if (!(expansion = dabbrev_prev_word(&x, &y, screen))) {
-	    if (strcmp(lastexpansion, dabbrev_hint)) {
+	    if (expansions >= 2) {
+		expansions = 0;
 		x = screen->cur_col;
 		y = screen->cur_row + screen->savelines;
 		continue;
@@ -748,9 +900,7 @@ dabbrev_expand(TScreen * screen)
     buf_cnt = del_cnt + strlen(expansion) - hint_len;
     if (!(copybuffer = TypeMallocN(Char, buf_cnt)))
 	return 0;
-    for (i = 0; i < del_cnt; i++) {	/* delete previous expansion */
-	copybuffer[i] = screen->dabbrev_erase_char;
-    }
+    memset(copybuffer, screen->dabbrev_erase_char, del_cnt);	/* delete previous expansion */
     memmove(copybuffer + del_cnt,
 	    expansion + hint_len,
 	    strlen(expansion) - hint_len);
@@ -762,6 +912,7 @@ dabbrev_expand(TScreen * screen)
     lastexpansion = strdup(expansion);
     if (!lastexpansion)
 	return 0;
+    expansions++;
     return 1;
 }
 
@@ -1380,100 +1531,124 @@ ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
 	    color.red,
 	    color.green,
 	    color.blue);
-    unparseputc1(xw, OSC);
+    unparseputc1(xw, ANSI_OSC);
     unparseputs(xw, buffer);
     unparseputc1(xw, final);
     unparse_end(xw);
 }
 
-/*
-* Find closest color for "def" in "cmap".
-* Set "def" to the resulting color.
-* Based on Monish Shah's "find_closest_color()" for Vim 6.0,
-* modified with ideas from David Tong's "noflash" library.
-* Return False if not able to find or allocate a color.
-*/
 static int
-find_closest_color(Display * display, Colormap cmap, XColor * def)
+getColormapSize(Display * display)
 {
-    double tmp, distance, closestDistance;
-    int closest, numFound;
-    XColor *colortable;
+    int result;
+    int numFound;
     XVisualInfo myTemplate, *visInfoPtr;
-    char *found;
-    unsigned i;
-    unsigned cmap_size;
-    unsigned attempts;
 
     myTemplate.visualid = XVisualIDFromVisual(DefaultVisual(display,
 							    XDefaultScreen(display)));
     visInfoPtr = XGetVisualInfo(display, (long) VisualIDMask,
 				&myTemplate, &numFound);
-    if (numFound < 1) {
-	/* FindClosestColor couldn't lookup visual */
-	return False;
-    }
+    result = (numFound >= 1) ? visInfoPtr->colormap_size : 0;
 
-    cmap_size = visInfoPtr->colormap_size;
     XFree((char *) visInfoPtr);
-    colortable = TypeMallocN(XColor, cmap_size);
-    if (!colortable) {
-	return False;		/* out of memory */
-    }
-    found = TypeCallocN(char, cmap_size);
-    if (!found) {
-	free(colortable);
-	return False;		/* out of memory */
-    }
+    return result;
+}
 
-    for (i = 0; i < cmap_size; i++) {
-	colortable[i].pixel = (unsigned long) i;
-    }
-    XQueryColors(display, cmap, colortable, (int) cmap_size);
+/*
+ * Find closest color for "def" in "cmap".
+ * Set "def" to the resulting color.
+ *
+ * Based on Monish Shah's "find_closest_color()" for Vim 6.0,
+ * modified with ideas from David Tong's "noflash" library.
+ * The code from Vim in turn was derived from FindClosestColor() in Tcl/Tk.
+ *
+ * These provide some introduction:
+ *	http://en.wikipedia.org/wiki/YIQ
+ *		for an introduction to YIQ weights.
+ *	http://en.wikipedia.org/wiki/Luminance_(video)
+ *		for a discussion of luma.
+ *	http://en.wikipedia.org/wiki/YUV
+ *
+ * Return False if not able to find or allocate a color.
+ */
+static Boolean
+find_closest_color(Display * dpy, Colormap cmap, XColor * def)
+{
+    Boolean result = False;
+    XColor *colortable;
+    char *tried;
+    double diff, thisRGB, bestRGB;
+    unsigned attempts;
+    unsigned bestInx;
+    unsigned cmap_size;
+    unsigned i;
 
-    /*
-     * Find the color that best approximates the desired one, then
-     * try to allocate that color.  If that fails, it must mean that
-     * the color was read-write (so we can't use it, since its owner
-     * might change it) or else it was already freed.  Try again,
-     * over and over again, until something succeeds.
-     */
-    for (attempts = 0; attempts < cmap_size; attempts++) {
-	closestDistance = 1e30;
-	closest = 0;
-	for (i = 0; i < cmap_size; i++) {
-	    if (!found[closest]) {
-		/*
-		 * Use Euclidean distance in RGB space, weighted by Y (of YIQ)
-		 * as the objective function;  this accounts for differences
-		 * in the color sensitivity of the eye.
-		 */
-		tmp = .30 * (((int) def->red) - (int) colortable[i].red);
-		distance = tmp * tmp;
-		tmp = .61 * (((int) def->green) - (int) colortable[i].green);
-		distance += tmp * tmp;
-		tmp = .11 * (((int) def->blue) - (int) colortable[i].blue);
-		distance += tmp * tmp;
-		if (distance < closestDistance) {
-		    closest = i;
-		    closestDistance = distance;
+    cmap_size = getColormapSize(dpy);
+    if (cmap_size != 0) {
+
+	colortable = TypeMallocN(XColor, cmap_size);
+	if (colortable != 0) {
+
+	    tried = TypeCallocN(char, cmap_size);
+	    if (tried != 0) {
+
+		for (i = 0; i < cmap_size; i++) {
+		    colortable[i].pixel = (unsigned long) i;
 		}
-	    }
-	}
-	if (XAllocColor(display, cmap, &colortable[closest]) != 0) {
-	    *def = colortable[closest];
-	    break;
-	}
-	found[closest] = True;	/* Don't look at this entry again */
-    }
+		XQueryColors(dpy, cmap, colortable, (int) cmap_size);
 
-    free(colortable);
-    free(found);
-    if (attempts < cmap_size) {
-	return True;		/* Got a closest matching color */
-    } else {
-	return False;		/* Couldn't allocate a near match */
+		/*
+		 * Try (possibly each entry in the color map) to find the best
+		 * approximation to the requested color.
+		 */
+		for (attempts = 0; attempts < cmap_size; attempts++) {
+		    Boolean first = True;
+
+		    bestRGB = 0.0;
+		    bestInx = 0;
+		    for (i = 0; i < cmap_size; i++) {
+			if (!tried[bestInx]) {
+			    /*
+			     * Look for the best match based on luminance. 
+			     * Measure this by the least-squares difference of
+			     * the weighted R/G/B components from the color map
+			     * versus the requested color.  Use the Y (luma)
+			     * component of the YIQ color space model for
+			     * weights that correspond to the luminance.
+			     */
+#define AddColorWeight(weight, color) \
+			    diff = weight * (int) ((def->color) - colortable[i].color); \
+			    thisRGB = diff * diff
+
+			    AddColorWeight(0.30, red);
+			    AddColorWeight(0.61, green);
+			    AddColorWeight(0.11, blue);
+
+			    if (first || (thisRGB < bestRGB)) {
+				first = False;
+				bestInx = i;
+				bestRGB = thisRGB;
+			    }
+			}
+		    }
+		    if (XAllocColor(dpy, cmap, &colortable[bestInx]) != 0) {
+			*def = colortable[bestInx];
+			result = True;
+			break;
+		    }
+		    /*
+		     * It failed - either the color map entry was readonly, or
+		     * another client has allocated the entry.  Mark the entry
+		     * so we will ignore it
+		     */
+		    tried[bestInx] = True;
+		}
+		free(tried);
+	    }
+	    free(colortable);
+	}
     }
+    return result;
 }
 
 /*
@@ -1660,7 +1835,7 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 
 	if (!strcmp(buf, "?")) {
 	    TRACE(("Getting selection\n"));
-	    unparseputc1(xw, OSC);
+	    unparseputc1(xw, ANSI_OSC);
 	    unparseputs(xw, "52");
 	    unparseputc(xw, ';');
 
@@ -1701,10 +1876,7 @@ xtermIsPrintable(TScreen * screen, Char ** bufp, Char * last)
 	PtyData data;
 	Boolean controls = True;
 
-	memset(&data, 0, sizeof(data));
-	data.next = cp;
-	data.last = last;
-	if (decodeUtf8(&data)) {
+	if (decodeUtf8(fakePtyData(&data, cp, last))) {
 	    if (data.utf_data != UCS_REPL
 		&& (data.utf_data >= 128 ||
 		    ansi_table[data.utf_data] == CASE_PRINT)) {
@@ -1731,6 +1903,237 @@ xtermIsPrintable(TScreen * screen, Char ** bufp, Char * last)
     *bufp = next;
     return result;
 }
+
+/***====================================================================***/
+
+/*
+ * Enum corresponding to the actual OSC codes rather than the internal
+ * array indices.
+ */
+typedef enum {
+    OSC_TEXT_FG = 10
+    ,OSC_TEXT_BG
+    ,OSC_TEXT_CURSOR
+    ,OSC_MOUSE_FG
+    ,OSC_MOUSE_BG
+#if OPT_TEK4014
+    ,OSC_TEK_FG = 15
+    ,OSC_TEK_BG
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    ,OSC_HIGHLIGHT_BG = 17
+#endif
+#if OPT_TEK4014
+    ,OSC_TEK_CURSOR = 18
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    ,OSC_HIGHLIGHT_FG = 19
+#endif
+    ,OSC_NCOLORS
+} OscTextColors;
+
+static ScrnColors *pOldColors = NULL;
+
+static Bool
+GetOldColors(XtermWidget xw)
+{
+    int i;
+    if (pOldColors == NULL) {
+	pOldColors = (ScrnColors *) XtMalloc(sizeof(ScrnColors));
+	if (pOldColors == NULL) {
+	    fprintf(stderr, "allocation failure in GetOldColors\n");
+	    return (False);
+	}
+	pOldColors->which = 0;
+	for (i = 0; i < NCOLORS; i++) {
+	    pOldColors->colors[i] = 0;
+	    pOldColors->names[i] = NULL;
+	}
+	GetColors(xw, pOldColors);
+    }
+    return (True);
+}
+
+static int
+oppositeColor(int n)
+{
+    switch (n) {
+    case TEXT_FG:
+	n = TEXT_BG;
+	break;
+    case TEXT_BG:
+	n = TEXT_FG;
+	break;
+    case MOUSE_FG:
+	n = MOUSE_BG;
+	break;
+    case MOUSE_BG:
+	n = MOUSE_FG;
+	break;
+#if OPT_TEK4014
+    case TEK_FG:
+	n = TEK_BG;
+	break;
+    case TEK_BG:
+	n = TEK_FG;
+	break;
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    case HIGHLIGHT_FG:
+	n = HIGHLIGHT_BG;
+	break;
+    case HIGHLIGHT_BG:
+	n = HIGHLIGHT_FG;
+	break;
+#endif
+    default:
+	break;
+    }
+    return n;
+}
+
+static void
+ReportColorRequest(XtermWidget xw, int ndx, int final)
+{
+    XColor color;
+    Colormap cmap = xw->core.colormap;
+    char buffer[80];
+
+    /*
+     * ChangeColorsRequest() has "always" chosen the opposite color when
+     * reverse-video is set.  Report this as the original color index, but
+     * reporting the opposite color which would be used.
+     */
+    int i = (xw->misc.re_verse) ? oppositeColor(ndx) : ndx;
+
+    GetOldColors(xw);
+    color.pixel = pOldColors->colors[ndx];
+    XQueryColor(xw->screen.display, cmap, &color);
+    sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
+	    color.red,
+	    color.green,
+	    color.blue);
+    TRACE(("ReportColors %d: %#lx as %s\n", ndx, pOldColors->colors[ndx], buffer));
+    unparseputc1(xw, ANSI_OSC);
+    unparseputs(xw, buffer);
+    unparseputc1(xw, final);
+    unparse_end(xw);
+}
+
+static Bool
+UpdateOldColors(XtermWidget xw GCC_UNUSED, ScrnColors * pNew)
+{
+    int i;
+
+    /* if we were going to free old colors, this would be the place to
+     * do it.   I've decided not to (for now), because it seems likely
+     * that we'd have a small set of colors we use over and over, and that
+     * we could save some overhead this way.   The only case in which this
+     * (clearly) fails is if someone is trying a boatload of colors, in
+     * which case they can restart xterm
+     */
+    for (i = 0; i < NCOLORS; i++) {
+	if (COLOR_DEFINED(pNew, i)) {
+	    if (pOldColors->names[i] != NULL) {
+		XtFree(pOldColors->names[i]);
+		pOldColors->names[i] = NULL;
+	    }
+	    if (pNew->names[i]) {
+		pOldColors->names[i] = pNew->names[i];
+	    }
+	    pOldColors->colors[i] = pNew->colors[i];
+	}
+    }
+    return (True);
+}
+
+/*
+ * OSC codes are constant, but the indices for the color arrays depend on how
+ * xterm is compiled.
+ */
+static int
+OscToColorIndex(OscTextColors mode)
+{
+    int result = 0;
+
+#define CASE(name) case OSC_##name: result = name; break
+    switch (mode) {
+	CASE(TEXT_FG);
+	CASE(TEXT_BG);
+	CASE(TEXT_CURSOR);
+	CASE(MOUSE_FG);
+	CASE(MOUSE_BG);
+#if OPT_TEK4014
+	CASE(TEK_FG);
+	CASE(TEK_BG);
+#endif
+#if OPT_HIGHLIGHT_COLOR
+	CASE(HIGHLIGHT_BG);
+	CASE(HIGHLIGHT_FG);
+#endif
+#if OPT_TEK4014
+	CASE(TEK_CURSOR);
+#endif
+    case OSC_NCOLORS:
+	break;
+    }
+    return result;
+}
+
+static Bool
+ChangeColorsRequest(XtermWidget xw,
+		    int start,
+		    char *names,
+		    int final)
+{
+    Bool result = False;
+    char *thisName;
+    ScrnColors newColors;
+    int i, ndx;
+
+    TRACE(("ChangeColorsRequest start=%d, names='%s'\n", start, names));
+
+    if (GetOldColors(xw)) {
+	newColors.which = 0;
+	for (i = 0; i < NCOLORS; i++) {
+	    newColors.names[i] = NULL;
+	}
+	for (i = start; i < OSC_NCOLORS; i++) {
+	    ndx = OscToColorIndex((OscTextColors) i);
+	    if (xw->misc.re_verse)
+		ndx = oppositeColor(ndx);
+
+	    if ((names == NULL) || (names[0] == '\0')) {
+		newColors.names[ndx] = NULL;
+	    } else {
+		if (names[0] == ';')
+		    thisName = NULL;
+		else
+		    thisName = names;
+		names = strchr(names, ';');
+		if (names != NULL) {
+		    *names++ = '\0';
+		}
+		if (thisName != 0 && !strcmp(thisName, "?")) {
+		    ReportColorRequest(xw, ndx, final);
+		} else if (!pOldColors->names[ndx]
+			   || (thisName
+			       && strcmp(thisName, pOldColors->names[ndx]))) {
+		    AllocateTermColor(xw, &newColors, ndx, thisName);
+		}
+	    }
+	}
+
+	if (newColors.which != 0) {
+	    ChangeColors(xw, &newColors);
+	    UpdateOldColors(xw, &newColors);
+	}
+	result = True;
+    }
+    return result;
+}
+
+/***====================================================================***/
 
 void
 do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
@@ -1816,21 +2219,21 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	ChangeAnsiColorRequest(xw, buf, final);
 	break;
 #endif
-    case 10 + TEXT_FG:
-    case 10 + TEXT_BG:
-    case 10 + TEXT_CURSOR:
-    case 10 + MOUSE_FG:
-    case 10 + MOUSE_BG:
+    case OSC_TEXT_FG:
+    case OSC_TEXT_BG:
+    case OSC_TEXT_CURSOR:
+    case OSC_MOUSE_FG:
+    case OSC_MOUSE_BG:
 #if OPT_HIGHLIGHT_COLOR
-    case 10 + HIGHLIGHT_BG:
+    case OSC_HIGHLIGHT_BG:
 #endif
 #if OPT_TEK4014
-    case 10 + TEK_FG:
-    case 10 + TEK_BG:
-    case 10 + TEK_CURSOR:
+    case OSC_TEK_FG:
+    case OSC_TEK_BG:
+    case OSC_TEK_CURSOR:
 #endif
 	if (xw->misc.dynamicColors)
-	    ChangeColorsRequest(xw, mode - 10, buf, final);
+	    ChangeColorsRequest(xw, mode, buf, final);
 	break;
 
     case 30:
@@ -1865,7 +2268,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	if (buf != 0 && !strcmp(buf, "?")) {
 	    int num = screen->menu_font_number;
 
-	    unparseputc1(xw, OSC);
+	    unparseputc1(xw, ANSI_OSC);
 	    unparseputs(xw, "50");
 
 	    if ((buf = screen->MenuFontName(num)) != 0) {
@@ -2092,7 +2495,7 @@ parse_decdld(ANSI * params, char *string)
     len = 0;
     while (*string != '\0') {
 	ch = CharOf(*string++);
-	if (ch >= 0x20 && ch <= 0x2f) {
+	if (ch >= ANSI_SPA && ch <= 0x2f) {
 	    if (len < 2)
 		DscsName[len++] = ch;
 	} else if (ch >= 0x30 && ch <= 0x7e) {
@@ -2274,16 +2677,16 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	    } else
 		okay = False;
 
-	    unparseputc1(xw, DCS);
+	    unparseputc1(xw, ANSI_DCS);
 	    unparseputc(xw, okay ? '1' : '0');
 	    unparseputc(xw, '$');
 	    unparseputc(xw, 'r');
 	    if (okay)
 		cp = reply;
 	    unparseputs(xw, cp);
-	    unparseputc1(xw, ST);
+	    unparseputc1(xw, ANSI_ST);
 	} else {
-	    unparseputc(xw, CAN);
+	    unparseputc(xw, ANSI_CAN);
 	}
 	break;
 #if OPT_TCAP_QUERY
@@ -2296,7 +2699,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	    char *tmp;
 	    char *parsed = ++cp;
 
-	    unparseputc1(xw, DCS);
+	    unparseputc1(xw, ANSI_DCS);
 
 	    code = xtermcapKeycode(xw, &parsed, &state, &fkey);
 
@@ -2340,7 +2743,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		    code = xtermcapKeycode(xw, &parsed, &state, &fkey);
 		}
 	    }
-	    unparseputc1(xw, ST);
+	    unparseputc1(xw, ANSI_ST);
 	}
 	break;
 #endif
@@ -2533,113 +2936,6 @@ ChangeXprop(char *buf)
 
 /***====================================================================***/
 
-static ScrnColors *pOldColors = NULL;
-
-static Bool
-GetOldColors(XtermWidget xw)
-{
-    int i;
-    if (pOldColors == NULL) {
-	pOldColors = (ScrnColors *) XtMalloc(sizeof(ScrnColors));
-	if (pOldColors == NULL) {
-	    fprintf(stderr, "allocation failure in GetOldColors\n");
-	    return (False);
-	}
-	pOldColors->which = 0;
-	for (i = 0; i < NCOLORS; i++) {
-	    pOldColors->colors[i] = 0;
-	    pOldColors->names[i] = NULL;
-	}
-	GetColors(xw, pOldColors);
-    }
-    return (True);
-}
-
-static int
-oppositeColor(int n)
-{
-    switch (n) {
-    case TEXT_FG:
-	n = TEXT_BG;
-	break;
-    case TEXT_BG:
-	n = TEXT_FG;
-	break;
-    case MOUSE_FG:
-	n = MOUSE_BG;
-	break;
-    case MOUSE_BG:
-	n = MOUSE_FG;
-	break;
-#if OPT_TEK4014
-    case TEK_FG:
-	n = TEK_BG;
-	break;
-    case TEK_BG:
-	n = TEK_FG;
-	break;
-#endif
-    default:
-	break;
-    }
-    return n;
-}
-
-static void
-ReportColorRequest(XtermWidget xw, int ndx, int final)
-{
-    XColor color;
-    Colormap cmap = xw->core.colormap;
-    char buffer[80];
-
-    /*
-     * ChangeColorsRequest() has "always" chosen the opposite color when
-     * reverse-video is set.  Report this as the original color index, but
-     * reporting the opposite color which would be used.
-     */
-    int i = (xw->misc.re_verse) ? oppositeColor(ndx) : ndx;
-
-    GetOldColors(xw);
-    color.pixel = pOldColors->colors[ndx];
-    XQueryColor(xw->screen.display, cmap, &color);
-    sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
-	    color.red,
-	    color.green,
-	    color.blue);
-    TRACE(("ReportColors %d: %#lx as %s\n", ndx, pOldColors->colors[ndx], buffer));
-    unparseputc1(xw, OSC);
-    unparseputs(xw, buffer);
-    unparseputc1(xw, final);
-    unparse_end(xw);
-}
-
-static Bool
-UpdateOldColors(XtermWidget xw GCC_UNUSED, ScrnColors * pNew)
-{
-    int i;
-
-    /* if we were going to free old colors, this would be the place to
-     * do it.   I've decided not to (for now), because it seems likely
-     * that we'd have a small set of colors we use over and over, and that
-     * we could save some overhead this way.   The only case in which this
-     * (clearly) fails is if someone is trying a boatload of colors, in
-     * which case they can restart xterm
-     */
-    for (i = 0; i < NCOLORS; i++) {
-	if (COLOR_DEFINED(pNew, i)) {
-	    if (pOldColors->names[i] != NULL) {
-		XtFree(pOldColors->names[i]);
-		pOldColors->names[i] = NULL;
-	    }
-	    if (pNew->names[i]) {
-		pOldColors->names[i] = pNew->names[i];
-	    }
-	    pOldColors->colors[i] = pNew->colors[i];
-	}
-    }
-    return (True);
-}
-
 /*
  * This is part of ReverseVideo().  It reverses the data stored for the old
  * "dynamic" colors that might have been retrieved using OSC 10-18.
@@ -2705,67 +3001,9 @@ AllocateTermColor(XtermWidget xw,
     TRACE(("AllocateTermColor #%d: %s (failed)\n", ndx, name));
     return (False);
 }
-
-static Bool
-ChangeColorsRequest(XtermWidget xw,
-		    int start,
-		    char *names,
-		    int final)
-{
-    char *thisName;
-    ScrnColors newColors;
-    int i, ndx;
-
-    TRACE(("ChangeColorsRequest start=%d, names='%s'\n", start, names));
-
-    if ((pOldColors == NULL)
-	&& (!GetOldColors(xw))) {
-	return (False);
-    }
-    newColors.which = 0;
-    for (i = 0; i < NCOLORS; i++) {
-	newColors.names[i] = NULL;
-    }
-    for (i = start; i < NCOLORS; i++) {
-	if (xw->misc.re_verse)
-	    ndx = oppositeColor(i);
-	else
-	    ndx = i;
-	if ((names == NULL) || (names[0] == '\0')) {
-	    newColors.names[ndx] = NULL;
-	} else {
-	    if (names[0] == ';')
-		thisName = NULL;
-	    else
-		thisName = names;
-	    names = strchr(names, ';');
-	    if (names != NULL) {
-		*names = '\0';
-		names++;
-	    }
-	    if (thisName != 0 && !strcmp(thisName, "?"))
-		ReportColorRequest(xw, ndx, final);
-	    else if (!pOldColors->names[ndx]
-		     || (thisName
-			 && strcmp(thisName, pOldColors->names[ndx]))) {
-		AllocateTermColor(xw, &newColors, ndx, thisName);
-	    }
-	}
-    }
-
-    if (newColors.which == 0)
-	return (True);
-
-    ChangeColors(xw, &newColors);
-    UpdateOldColors(xw, &newColors);
-    return (True);
-}
-
 /***====================================================================***/
 
-#ifndef DEBUG
 /* ARGSUSED */
-#endif
 void
 Panic(char *s GCC_UNUSED, int a GCC_UNUSED)
 {
@@ -2863,16 +3101,6 @@ SysError(int i)
 	fprintf(stderr, "Reason: %s\n", table[i]);
     }
     Cleanup(i);
-}
-
-static void
-Sleep(int msec)
-{
-    static struct timeval select_timeout;
-
-    select_timeout.tv_sec = 0;
-    select_timeout.tv_usec = msec * 1000;
-    select(0, 0, 0, 0, &select_timeout);
 }
 
 /*

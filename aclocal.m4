@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.237 2007/02/11 14:49:56 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.242 2007/03/21 22:06:40 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.65 2006/06/19 00:36:50 dickey Exp $
 dnl
@@ -435,7 +435,7 @@ int main() {
 	fi
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 10 updated: 2005/09/18 15:26:47
+dnl CF_FUNC_TGETENT version: 11 updated: 2007/03/14 16:43:48
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -491,7 +491,7 @@ int main()
 	char buffer[1024];
 	buffer[0] = 0;
 	tgetent(buffer, "$cf_TERMVAR");
-	exit($cf_TERMTST); }],
+	${cf_cv_main_return:-return} ($cf_TERMTST); }],
 	[echo "yes, there is a termcap/tgetent in $cf_termlib" 1>&AC_FD_CC
 	 if test -n "$cf_termlib" ; then
 	 	cf_cv_lib_tgetent="-l$cf_termlib"
@@ -1205,7 +1205,7 @@ fi
 
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_POSIX_SAVED_IDS version: 6 updated: 2006/08/02 20:37:21
+dnl CF_POSIX_SAVED_IDS version: 7 updated: 2007/03/14 16:43:53
 dnl ------------------
 dnl
 dnl Check first if saved-ids are always supported.  Some systems
@@ -1245,7 +1245,7 @@ int main()
 {
 	void *p = (void *) seteuid;
 	long code = sysconf(_SC_SAVED_IDS);
-	exit ((code > 0) ? 0 : 1);
+	${cf_cv_main_return:-return}  ((code > 0) ? 0 : 1);
 }],
 	cf_cv_posix_saved_ids=yes,
 	cf_cv_posix_saved_ids=no,
@@ -1279,6 +1279,26 @@ AC_TRY_LINK([
 [cf_cv_posix_wait=no])
 ])
 test "$cf_cv_posix_wait" = yes && AC_DEFINE(USE_POSIX_WAIT)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_PROCFS_CWD version: 2 updated: 2007/03/12 20:39:04
+dnl -------------
+dnl Find /proc tree (may be in a different place) which implements the "cwd"
+dnl link.
+AC_DEFUN([CF_PROCFS_CWD],[
+AC_CACHE_CHECK(for proc tree with cwd-support,cf_cv_procfs_cwd,[
+cf_cv_procfs_cwd=no
+for cf_path in /proc /compat/linux/proc /usr/compat/linux/proc
+do
+	if test -d $cf_path && \
+	   test -d $cf_path/$$ && \
+	   ( test -d $cf_path/$$/cwd || \
+	     test -L $cf_path/$$/cwd ); then
+		cf_cv_procfs_cwd=$cf_path
+		break
+	fi
+done
+])
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_PROG_CC_U_D version: 1 updated: 2005/07/14 16:59:30
@@ -1667,7 +1687,7 @@ foo.c_ospeed = B9600;
 test "$cf_cv_termio_c_ispeed" = yes && AC_DEFINE(HAVE_TERMIO_C_ISPEED)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_TTY_GROUP version: 6 updated: 2006/01/23 19:42:39
+dnl CF_TTY_GROUP version: 7 updated: 2007/03/14 16:43:59
 dnl ------------
 dnl Check if the system has a tty-group defined.  This is used in xterm when
 dnl setting pty ownership.
@@ -1764,9 +1784,9 @@ int main()
 	 && stat(name, &sb) == 0
 	 && sb.st_gid != getgid()
 	 && sb.st_gid == ttygrp->gr_gid) {
-		exit(0);
+		${cf_cv_main_return:-return} (0);
 	}
-	exit(1);
+	${cf_cv_main_return:-return} (1);
 }
 	],
 	[cf_cv_tty_group=yes],
@@ -1947,13 +1967,13 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_UTMP_UT_HOST version: 6 updated: 2002/10/27 23:21:42
+dnl CF_UTMP_UT_HOST version: 7 updated: 2007/03/13 19:17:11
 dnl ---------------
 dnl Check if UTMP/UTMPX struct defines ut_host member
 AC_DEFUN([CF_UTMP_UT_HOST],
 [
 if test $cf_cv_have_utmp != no ; then
-AC_MSG_CHECKING(if utmp.ut_host is declared)
+AC_MSG_CHECKING(if ${cf_cv_have_utmp}.ut_host is declared)
 AC_CACHE_VAL(cf_cv_have_utmp_ut_host,[
 	AC_TRY_COMPILE([
 #include <sys/types.h>
@@ -1967,13 +1987,13 @@ test $cf_cv_have_utmp_ut_host != no && AC_DEFINE(HAVE_UTMP_UT_HOST)
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_UTMP_UT_NAME version: 3 updated: 2002/10/27 23:21:42
+dnl CF_UTMP_UT_NAME version: 4 updated: 2007/03/13 19:17:11
 dnl ---------------
 dnl Check if UTMP/UTMPX struct defines ut_name member
 AC_DEFUN([CF_UTMP_UT_NAME],
 [
 if test $cf_cv_have_utmp != no ; then
-AC_CACHE_CHECK(if utmp.ut_name is declared,cf_cv_have_utmp_ut_name,[
+AC_CACHE_CHECK(if ${cf_cv_have_utmp}.ut_name is declared,cf_cv_have_utmp_ut_name,[
 	cf_cv_have_utmp_ut_name=no
 cf_utmp_includes="
 #include <sys/types.h>
@@ -2004,13 +2024,13 @@ esac
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_UTMP_UT_SESSION version: 4 updated: 2002/10/27 23:21:42
+dnl CF_UTMP_UT_SESSION version: 5 updated: 2007/03/13 19:17:11
 dnl ------------------
 dnl Check if UTMP/UTMPX struct defines ut_session member
 AC_DEFUN([CF_UTMP_UT_SESSION],
 [
 if test $cf_cv_have_utmp != no ; then
-AC_CACHE_CHECK(if utmp.ut_session is declared, cf_cv_have_utmp_ut_session,[
+AC_CACHE_CHECK(if ${cf_cv_have_utmp}.ut_session is declared, cf_cv_have_utmp_ut_session,[
 	AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <${cf_cv_have_utmp}.h>],
@@ -2062,13 +2082,13 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_UTMP_UT_XTIME version: 6 updated: 2002/10/27 23:21:42
+dnl CF_UTMP_UT_XTIME version: 7 updated: 2007/03/13 19:17:11
 dnl ----------------
 dnl Check if UTMP/UTMPX struct defines ut_xtime member
 AC_DEFUN([CF_UTMP_UT_XTIME],
 [
 if test $cf_cv_have_utmp != no ; then
-AC_CACHE_CHECK(if utmp.ut_xtime is declared, cf_cv_have_utmp_ut_xtime,[
+AC_CACHE_CHECK(if ${cf_cv_have_utmp}.ut_xtime is declared, cf_cv_have_utmp_ut_xtime,[
 	AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <${cf_cv_have_utmp}.h>],
@@ -2480,7 +2500,7 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 16 updated: 2006/11/29 18:04:29
+dnl CF_X_FREETYPE version: 18 updated: 2007/03/21 18:06:17
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -2579,6 +2599,13 @@ if test "$cf_cv_found_freetype" = yes ; then
 	LIBS="$cf_cv_x_freetype_libs $LIBS"
 	CF_ADD_CFLAGS($cf_cv_x_freetype_incs)
 	AC_DEFINE(XRENDERFONT)
+
+AC_CHECK_FUNCS( \
+	XftDrawCharSpec \
+	XftDrawSetClip \
+	XftDrawSetClipRectangles \
+)
+
 else
 	AC_MSG_WARN(No libraries found for FreeType)
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-DXRENDERFONT//`

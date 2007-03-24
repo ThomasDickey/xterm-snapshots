@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.53 2007/02/11 14:49:56 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.54 2007/03/12 23:44:08 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/doublechr.c,v 3.18 2006/02/13 01:14:58 dickey Exp $
@@ -108,7 +108,7 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
  * we'll be using it for the top (true) or bottom (false) of the line.
  */
 void
-xterm_DECDHL(XtermWidget xw, Bool top)
+xterm_DECDHL(XtermWidget xw GCC_UNUSED, Bool top)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, (unsigned) (top ? CSET_DHL_TOP : CSET_DHL_BOT));
@@ -121,7 +121,7 @@ xterm_DECDHL(XtermWidget xw, Bool top)
  * Set the line to single-width characters (the normal state).
  */
 void
-xterm_DECSWL(XtermWidget xw)
+xterm_DECSWL(XtermWidget xw GCC_UNUSED)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, CSET_SWL);
@@ -132,7 +132,7 @@ xterm_DECSWL(XtermWidget xw)
  * Set the line to double-width characters
  */
 void
-xterm_DECDWL(XtermWidget xw)
+xterm_DECDWL(XtermWidget xw GCC_UNUSED)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, CSET_DWL);

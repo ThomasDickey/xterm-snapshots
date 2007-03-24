@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.30 2007/02/11 21:45:28 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.35 2007/03/21 23:21:50 tom Exp $ */
 
 /************************************************************
 
@@ -195,6 +195,7 @@ tracePixel(XtermWidget xw, Pixel value)
 #endif
 #if OPT_HIGHLIGHT_COLOR
 	    CASE(HIGHLIGHT_BG),
+	    CASE(HIGHLIGHT_FG),
 #endif
 #if OPT_TEK4014
 	    CASE(TEK_CURSOR),
@@ -463,7 +464,12 @@ setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XFontStruct * font)
 	if (font == 0) {
 	    if (cgsId != gcNorm)
 		(void) getCgsGC(xw, cgsWin, gcNorm);
-	    font = xw->screen.fnts[fNorm];
+#ifndef NO_ACTIVE_ICON
+	    if (cgsWin == &(xw->screen.iconVwin))
+		font = xw->screen.fnt_icon;
+	    else
+#endif
+		font = xw->screen.fnts[fNorm];
 	}
 	if (okFont(font) && !SameFont(NEXT(font), font)) {
 	    TRACE2(("...updated next font for %s to %s\n",
@@ -522,7 +528,7 @@ getCgsGC(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
     CgsCache *me;
     GC result = 0;
     int j, k;
-    unsigned used;
+    unsigned used = 0;
 
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
 	TRACE2(("getCgsGC(%s, %s)\n",

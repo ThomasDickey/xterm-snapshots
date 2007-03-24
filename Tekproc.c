@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.150 2007/02/02 22:45:51 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.155 2007/03/19 23:51:52 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -262,7 +262,7 @@ static XtResource resources[] =
     Fres("font2", XtCFont, tek.Tfont[TEK_FONT_2], "6x13"),
     Fres("font3", XtCFont, tek.Tfont[TEK_FONT_3], "8x13"),
     Fres("fontSmall", XtCFont, tek.Tfont[TEK_FONT_SMALL], DFT_FONT_SMALL),
-    Sres("initialFont", "InitialFont", tek.initial_font, "large"),
+    Sres(XtNinitialFont, XtCInitialFont, tek.initial_font, "large"),
     Sres("ginTerminator", "GinTerminator", tek.gin_terminator_str, GIN_TERM_NONE_STR),
 #if OPT_TOOLBAR
     Wres(XtNmenuBar, XtCMenuBar, tek.tb_info.menu_bar, 0),
@@ -415,7 +415,7 @@ static void
 Tekparse(TekWidget tw)
 {
     TScreen *screen = TScreenOf(term);
-    TekScreen *tekscr = &(tw->screen);
+    TekScreen *tekscr = TekScreenOf(tw);
     int x, y;
     IChar c = 0;
     IChar ch;
@@ -450,14 +450,14 @@ Tekparse(TekWidget tw)
 		    c |= 02;
 		TekEnq(tw, c, tekscr->cur_X, tekscr->cur_Y);
 	    }
-	    TekRecord->ptr[-1] = NAK;	/* remove from recording */
+	    TekRecord->ptr[-1] = ANSI_NAK;	/* remove from recording */
 	    Tparsestate = curstate;
 	    break;
 
 	case CASE_VT_MODE:
 	    TRACE(("case: special return to vt102 mode\n"));
 	    Tparsestate = curstate;
-	    TekRecord->ptr[-1] = NAK;	/* remove from recording */
+	    TekRecord->ptr[-1] = ANSI_NAK;	/* remove from recording */
 	    FlushLog(&(term->screen));
 	    return;
 
@@ -511,7 +511,7 @@ Tekparse(TekWidget tw)
 	    if (tekscr->TekGIN)
 		TekGINoff(tw);
 	    Tparsestate = curstate = Tplttable;
-	    if ((c = input()) == BEL)
+	    if ((c = input()) == ANSI_BEL)
 		tekscr->pen = PENDOWN;
 	    else {
 		unput(c);
@@ -557,7 +557,7 @@ Tekparse(TekWidget tw)
 	    if (tekscr->TekGIN)
 		TekGINoff(tw);
 	    TekCopy(tw);
-	    TekRecord->ptr[-1] = NAK;	/* remove from recording */
+	    TekRecord->ptr[-1] = ANSI_NAK;	/* remove from recording */
 	    Tparsestate = curstate;	/* clear bypass condition */
 	    break;
 
@@ -753,7 +753,7 @@ Tekparse(TekWidget tw)
 		Char buf2[512];
 		IChar c2;
 		unsigned len = 0;
-		while ((c2 = input()) != BEL) {
+		while ((c2 = input()) != ANSI_BEL) {
 		    if (!isprint(c2 & 0x7f)
 			|| len + 2 >= (int) sizeof(buf2))
 			break;
@@ -761,8 +761,8 @@ Tekparse(TekWidget tw)
 		}
 		buf2[len] = 0;
 		if (!nested++) {
-		    if (c2 == BEL)
-			do_osc(term, buf2, len, BEL);
+		    if (c2 == ANSI_BEL)
+			do_osc(term, buf2, len, ANSI_BEL);
 		}
 		--nested;
 	    }
@@ -779,7 +779,7 @@ static PtySelect Tselect_mask;
 static IChar
 Tinput(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     TScreen *screen = TScreenOf(term);
     TekLink *tek;
 
@@ -884,7 +884,7 @@ Tinput(TekWidget tw)
 static void
 TekClear(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
 
     if (TWindow(tekscr))
 	XClearWindow(XtDisplay(tw), TWindow(tekscr));
@@ -896,7 +896,7 @@ TekConfigure(Widget w)
 {
     if (IsTekWidget(w)) {
 	TekWidget tw = (TekWidget) w;
-	TekScreen *tekscr = &tw->screen;
+	TekScreen *tekscr = TekScreenOf(tw);
 	TScreen *screen = TScreenOf(term);
 	int border = 2 * screen->border;
 	double d;
@@ -921,7 +921,7 @@ TekExpose(Widget w,
 {
     if (IsTekWidget(w)) {
 	TekWidget tw = (TekWidget) w;
-	TekScreen *tekscr = &tw->screen;
+	TekScreen *tekscr = TekScreenOf(tw);
 
 	TRACE(("TekExpose\n"));
 
@@ -956,7 +956,7 @@ TekExpose(Widget w,
 void
 TekRefresh(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     TScreen *screen = TScreenOf(term);
     static Cursor wait_cursor = None;
 
@@ -982,7 +982,7 @@ TekRepaint(TekWidget tw)
 static void
 TekPage(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     TekLink *tek;
 
     TekClear(tw);
@@ -1022,7 +1022,7 @@ static int
 getpoint(TekWidget tw)
 {
     int c, x, y, e, lo_y = 0;
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
 
     x = tekscr->cur.x;
     y = tekscr->cur.y;
@@ -1066,7 +1066,7 @@ getpoint(TekWidget tw)
 static void
 TCursorBack(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     struct Tek_Char *t;
     int x, l;
 
@@ -1089,7 +1089,7 @@ TCursorBack(TekWidget tw)
 static void
 TCursorForward(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     struct Tek_Char *t;
     int l;
 
@@ -1109,7 +1109,7 @@ TCursorForward(TekWidget tw)
 static void
 TCursorUp(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     struct Tek_Char *t;
     int l;
 
@@ -1129,7 +1129,7 @@ TCursorUp(TekWidget tw)
 static void
 TCursorDown(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     struct Tek_Char *t;
     int l;
 
@@ -1149,7 +1149,7 @@ TCursorDown(TekWidget tw)
 static void
 AddToDraw(TekWidget tw, int x1, int y1, int x2, int y2)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     TScreen *screen = TScreenOf(term);
     XSegment *lp;
 
@@ -1171,7 +1171,7 @@ AddToDraw(TekWidget tw, int x1, int y1, int x2, int y2)
 static void
 TekDraw(TekWidget tw, int x, int y)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
 
     if (nplot == 0 || T_lastx != tekscr->cur_X || T_lasty != tekscr->cur_Y) {
 	/*
@@ -1190,7 +1190,7 @@ TekDraw(TekWidget tw, int x, int y)
 static void
 TekFlush(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
 
     TRACE(("TekFlush\n"));
     XDrawSegments(XtDisplay(tw), TWindow(tekscr),
@@ -1205,14 +1205,14 @@ TekFlush(TekWidget tw)
 void
 TekGINoff(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
 
     TRACE(("TekGINoff\n"));
     XDefineCursor(XtDisplay(tw), TWindow(tekscr), tekscr->arrow);
     if (GINcursor)
 	XFreeCursor(XtDisplay(tw), GINcursor);
     if (tekscr->TekGIN) {
-	*tekscr->TekGIN = CAN;	/* modify recording */
+	*tekscr->TekGIN = ANSI_CAN;	/* modify recording */
 	tekscr->TekGIN = NULL;
     }
 }
@@ -1220,7 +1220,7 @@ TekGINoff(TekWidget tw)
 void
 TekEnqMouse(TekWidget tw, int c)	/* character pressed */
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     TScreen *screen = TScreenOf(term);
     int mousex, mousey, rootx, rooty;
     unsigned int mask;		/* XQueryPointer */
@@ -1251,7 +1251,7 @@ TekEnq(TekWidget tw,
        int x,
        int y)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     TScreen *screen = TScreenOf(term);
     Char cplot[7];
     int len = 5;
@@ -1378,7 +1378,7 @@ TekRealize(Widget gw,
 	   XSetWindowAttributes * values)
 {
     TekWidget tw = (TekWidget) gw;
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     TScreen *screen = TScreenOf(term);
     int i;
     TekLink *tek;
@@ -1528,18 +1528,9 @@ TekRealize(Widget gw,
 
     tekscr->cur.fontsize = TEK_FONT_LARGE;
     if (tw->tek.initial_font) {
-	char *s = tw->tek.initial_font;
-
-	if (XmuCompareISOLatin1(s, "large") == 0)
-	    tekscr->cur.fontsize = TEK_FONT_LARGE;
-	else if (XmuCompareISOLatin1(s, "2") == 0 ||
-		 XmuCompareISOLatin1(s, "two") == 0)
-	    tekscr->cur.fontsize = TEK_FONT_2;
-	else if (XmuCompareISOLatin1(s, "3") == 0 ||
-		 XmuCompareISOLatin1(s, "three") == 0)
-	    tekscr->cur.fontsize = TEK_FONT_3;
-	else if (XmuCompareISOLatin1(s, "small") == 0)
-	    tekscr->cur.fontsize = TEK_FONT_SMALL;
+	int result = TekGetFontSize(tw->tek.initial_font);
+	if (result >= 0)
+	    tekscr->cur.fontsize = result;
     }
 #define TestGIN(s) XmuCompareISOLatin1(tw->tek.gin_terminator_str, s)
 
@@ -1630,42 +1621,69 @@ TekRealize(Widget gw,
     return;
 }
 
+int
+TekGetFontSize(const char *param)
+{
+    int result;
+
+    if (XmuCompareISOLatin1(param, "l") == 0 ||
+	XmuCompareISOLatin1(param, "large") == 0)
+	result = TEK_FONT_LARGE;
+    else if (XmuCompareISOLatin1(param, "2") == 0 ||
+	     XmuCompareISOLatin1(param, "two") == 0)
+	result = TEK_FONT_2;
+    else if (XmuCompareISOLatin1(param, "3") == 0 ||
+	     XmuCompareISOLatin1(param, "three") == 0)
+	result = TEK_FONT_3;
+    else if (XmuCompareISOLatin1(param, "s") == 0 ||
+	     XmuCompareISOLatin1(param, "small") == 0)
+	result = TEK_FONT_SMALL;
+    else
+	result = -1;
+
+    return result;
+}
+
 void
 TekSetFontSize(TekWidget tw, int newitem)
 {
-    TekScreen *tekscr = &tw->screen;
-    int oldsize = tekscr->cur.fontsize;
-    int newsize = MI2FS(newitem);
-    Font fid;
+    if (tw != 0) {
+	TekScreen *tekscr = TekScreenOf(tw);
+	int oldsize = tekscr->cur.fontsize;
+	int newsize = MI2FS(newitem);
+	Font fid;
 
-    TRACE(("TekSetFontSize(%d)\n", newitem));
+	TRACE(("TekSetFontSize(%d)\n", newitem));
+	if (newsize < 0 || newsize >= TEKNUMFONTS) {
+	    Bell(XkbBI_MinorError, 0);
+	} else if (oldsize != newsize) {
+	    if (!Ttoggled)
+		TCursorToggle(tw, TOGGLE);
+	    set_tekfont_menu_item(oldsize, False);
 
-    if (!tw || oldsize == newsize)
-	return;
-    if (!Ttoggled)
-	TCursorToggle(tw, TOGGLE);
-    set_tekfont_menu_item(oldsize, False);
+	    fid = tw->tek.Tfont[newsize]->fid;
+	    if (fid == DefaultGCID) {
+		/* we didn't succeed in opening a real font
+		   for this size.  Instead, use server default. */
+		XCopyGC(XtDisplay(tw),
+			DefaultGC(XtDisplay(tw), DefaultScreen(XtDisplay(tw))),
+			GCFont, tekscr->TnormalGC);
+	    } else {
+		XSetFont(XtDisplay(tw), tekscr->TnormalGC, fid);
+	    }
 
-    fid = tw->tek.Tfont[newsize]->fid;
-    if (fid == DefaultGCID)
-	/* we didn't succeed in opening a real font
-	   for this size.  Instead, use server default. */
-	XCopyGC(XtDisplay(tw),
-		DefaultGC(XtDisplay(tw), DefaultScreen(XtDisplay(tw))),
-		GCFont, tekscr->TnormalGC);
-    else
-	XSetFont(XtDisplay(tw), tekscr->TnormalGC, fid);
-
-    tekscr->cur.fontsize = newsize;
-    set_tekfont_menu_item(newsize, True);
-    if (!Ttoggled)
-	TCursorToggle(tw, TOGGLE);
+	    tekscr->cur.fontsize = newsize;
+	    set_tekfont_menu_item(newsize, True);
+	    if (!Ttoggled)
+		TCursorToggle(tw, TOGGLE);
+	}
+    }
 }
 
 void
 ChangeTekColors(TekWidget tw, TScreen * screen, ScrnColors * pNew)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     int i;
     XGCValues gcv;
 
@@ -1716,7 +1734,7 @@ void
 TekReverseVideo(TekWidget tw)
 {
     TScreen *screen = TScreenOf(term);
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     int i;
     XGCValues gcv;
 
@@ -1752,7 +1770,7 @@ TekReverseVideo(TekWidget tw)
 static void
 TekBackground(TekWidget tw, TScreen * screen)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
 
     if (TWindow(tekscr))
 	XSetWindowBackground(XtDisplay(tw), TWindow(tekscr),
@@ -1765,7 +1783,7 @@ TekBackground(TekWidget tw, TScreen * screen)
 void
 TCursorToggle(TekWidget tw, int toggle)		/* TOGGLE or CLEAR */
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     TScreen *screen = TScreenOf(term);
     int c, x, y;
     unsigned int cellwidth, cellheight;
@@ -1808,7 +1826,7 @@ void
 TekSimulatePageButton(TekWidget tw, Bool reset)
 {
     if (tw != 0) {
-	TekScreen *tekscr = &tw->screen;
+	TekScreen *tekscr = TekScreenOf(tw);
 
 	if (reset) {
 	    bzero((char *) &tekscr->cur, sizeof tekscr->cur);
@@ -1825,7 +1843,7 @@ TekSimulatePageButton(TekWidget tw, Bool reset)
 void
 TekCopy(TekWidget tw)
 {
-    TekScreen *tekscr = &tw->screen;
+    TekScreen *tekscr = TekScreenOf(tw);
     TScreen *screen = TScreenOf(term);
 
     TekLink *Tp;
@@ -1848,8 +1866,8 @@ TekCopy(TekWidget tw)
 
     if ((tekcopyfd = open_userfile(screen->uid, screen->gid, buf, False)) >= 0) {
 	sprintf(initbuf, "%c%c%c%c",
-		ESC, (char) (tekscr->page.fontsize + '8'),
-		ESC, (char) (tekscr->page.linetype + '`'));
+		ANSI_ESC, (char) (tekscr->page.fontsize + '8'),
+		ANSI_ESC, (char) (tekscr->page.linetype + '`'));
 	write(tekcopyfd, initbuf, 4);
 	Tp = &Tek0;
 	do {
@@ -1869,7 +1887,7 @@ HandleGINInput(Widget w,
 {
     if (IsTekWidget(w)) {
 	TekWidget tw = (TekWidget) w;
-	TekScreen *tekscr = &tw->screen;
+	TekScreen *tekscr = TekScreenOf(tw);
 
 	if (tekscr->TekGIN && *nparamsp == 1) {
 	    int c = param_list[0][0];
