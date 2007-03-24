@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.100 2007/02/06 22:34:56 tom Exp $ */
+/* $XTermId: data.h,v 1.101 2007/03/16 23:46:24 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -159,6 +159,9 @@ typedef struct XTERM_RESOURCE {
 #endif
 #if OPT_SUN_FUNC_KEYS
     Boolean sunFunctionKeys;	/* %%% should be VT100 widget resource? */
+#endif
+#if OPT_TCAP_FKEYS
+    Boolean termcapKeys;
 #endif
 
 #if OPT_INITIAL_ERASE

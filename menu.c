@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.226 2007/02/06 22:37:48 tom Exp $ */
+/* $XTermId: menu.c,v 1.232 2007/03/18 23:05:54 tom Exp $ */
 
 /*
 
@@ -124,6 +124,7 @@ static void do_appkeypad       PROTO_XT_CALLBACK_ARGS;
 static void do_autolinefeed    PROTO_XT_CALLBACK_ARGS;
 static void do_autowrap        PROTO_XT_CALLBACK_ARGS;
 static void do_backarrow       PROTO_XT_CALLBACK_ARGS;
+static void do_bellIsUrgent    PROTO_XT_CALLBACK_ARGS;
 static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS;
 static void do_continue        PROTO_XT_CALLBACK_ARGS;
 static void do_delete_del      PROTO_XT_CALLBACK_ARGS;
@@ -131,8 +132,8 @@ static void do_hardreset       PROTO_XT_CALLBACK_ARGS;
 static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
 static void do_kill            PROTO_XT_CALLBACK_ARGS;
-static void do_marginbell      PROTO_XT_CALLBACK_ARGS;
 static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
+static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
 static void do_print           PROTO_XT_CALLBACK_ARGS;
 static void do_print_redir     PROTO_XT_CALLBACK_ARGS;
 static void do_quit            PROTO_XT_CALLBACK_ARGS;
@@ -149,7 +150,6 @@ static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_terminate       PROTO_XT_CALLBACK_ARGS;
 static void do_titeInhibit     PROTO_XT_CALLBACK_ARGS;
 static void do_visualbell      PROTO_XT_CALLBACK_ARGS;
-static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
 static void do_vtfont          PROTO_XT_CALLBACK_ARGS;
 
 #ifdef ALLOWLOGGING
@@ -200,6 +200,10 @@ static void do_sun_fkeys       PROTO_XT_CALLBACK_ARGS;
 
 #if OPT_SUNPC_KBD
 static void do_sun_kbd         PROTO_XT_CALLBACK_ARGS;
+#endif
+
+#if OPT_TCAP_FKEYS
+static void do_tcap_fkeys      PROTO_XT_CALLBACK_ARGS;
 #endif
 
 #if OPT_TEK4014
@@ -257,6 +261,9 @@ MenuEntry mainMenuEntries[] = {
 #endif
     { "delete-is-del",	do_delete_del,	NULL },
     { "oldFunctionKeys",do_old_fkeys,	NULL },
+#if OPT_TCAP_FKEYS
+    { "tcapFunctionKeys",do_tcap_fkeys,	NULL },
+#endif
 #if OPT_HP_FUNC_KEYS
     { "hpFunctionKeys",	do_hp_fkeys,	NULL },
 #endif
@@ -293,8 +300,8 @@ MenuEntry vtMenuEntries[] = {
     { "allow132",	do_allow132,	NULL },
     { "selectToClipboard",do_selectClipboard, NULL },
     { "visualbell",	do_visualbell,	NULL },
+    { "bellIsUrgent",	do_bellIsUrgent, NULL },
     { "poponbell",	do_poponbell,	NULL },
-    { "marginbell",	do_marginbell,	NULL },
 #if OPT_BLINK_CURS
     { "cursorblink",	do_cursorblink,	NULL },
 #endif
@@ -593,6 +600,12 @@ domenu(Widget w,
 	    update_meta_esc();
 	    update_delete_del();
 	    update_keyboard_type();
+#if OPT_NUM_LOCK
+	    if (!screen->alt_is_not_meta) {
+		SetItemSensitivity(mainMenuEntries[mainMenu_alt_esc].widget,
+				   False);
+	    }
+#endif
 	    if (!xtermHasPrinter()) {
 		SetItemSensitivity(mainMenuEntries[mainMenu_print].widget,
 				   False);
@@ -848,6 +861,17 @@ do_visualbell(Widget gw GCC_UNUSED,
 }
 
 static void
+do_bellIsUrgent(Widget gw GCC_UNUSED,
+		XtPointer closure GCC_UNUSED,
+		XtPointer data GCC_UNUSED)
+{
+    TScreen *screen = TScreenOf(term);
+
+    screen->bellIsUrgent = !screen->bellIsUrgent;
+    update_bellIsUrgent();
+}
+
+static void
 do_poponbell(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
@@ -940,7 +964,7 @@ do_alt_esc(Widget gw GCC_UNUSED,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    term->screen.input_eight_bits = !term->screen.input_eight_bits;
+    term->screen.alt_sends_esc = !term->screen.alt_sends_esc;
     update_alt_esc();
 }
 
@@ -1014,6 +1038,16 @@ do_sun_kbd(Widget gw GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
     toggle_keyboard_type(term, keyboardIsVT220);
+}
+#endif
+
+#if OPT_TCAP_FKEYS
+static void
+do_tcap_fkeys(Widget gw GCC_UNUSED,
+	      XtPointer closure GCC_UNUSED,
+	      XtPointer data GCC_UNUSED)
+{
+    toggle_keyboard_type(term, keyboardIsTermcap);
 }
 #endif
 
@@ -2039,6 +2073,16 @@ HandleCursesEmul(Widget w,
 }
 
 void
+HandleBellIsUrgent(Widget w,
+		   XEvent * event GCC_UNUSED,
+		   String * params,
+		   Cardinal *param_count)
+{
+    handle_vt_toggle(do_bellIsUrgent, term->screen.bellIsUrgent,
+		     params, *param_count, w);
+}
+
+void
 HandleMarginBell(Widget w,
 		 XEvent * event GCC_UNUSED,
 		 String * params,
@@ -2250,19 +2294,17 @@ HandleSetTekText(Widget w,
 	proc = do_tektextlarge;
 	break;
     case 1:
-	switch (params[0][0]) {
-	case 'l':
-	case 'L':
+	switch (TekGetFontSize(params[0])) {
+	case TEK_FONT_LARGE:
 	    proc = do_tektextlarge;
 	    break;
-	case '2':
+	case TEK_FONT_2:
 	    proc = do_tektext2;
 	    break;
-	case '3':
+	case TEK_FONT_3:
 	    proc = do_tektext3;
 	    break;
-	case 's':
-	case 'S':
+	case TEK_FONT_SMALL:
 	    proc = do_tektextsmall;
 	    break;
 	}
@@ -2723,7 +2765,7 @@ void
 update_alt_esc(void)
 {
     UpdateMenuItem(mainMenuEntries[mainMenu_alt_esc].widget,
-		   !term->screen.input_eight_bits);
+		   term->screen.alt_sends_esc);
 }
 
 void
@@ -2740,6 +2782,15 @@ update_sun_fkeys(void)
 {
     UpdateMenuItem(mainMenuEntries[mainMenu_sun_fkeys].widget,
 		   term->keyboard.type == keyboardIsSun);
+}
+#endif
+
+#if OPT_TCAP_FKEYS
+void
+update_tcap_fkeys(void)
+{
+    UpdateMenuItem(mainMenuEntries[mainMenu_tcap_fkeys].widget,
+		   term->keyboard.type == keyboardIsTermcap);
 }
 #endif
 
@@ -2885,18 +2936,27 @@ update_visualbell(void)
 }
 
 void
+update_bellIsUrgent(void)
+{
+    UpdateMenuItem(vtMenuEntries[vtMenu_bellIsUrgent].widget,
+		   term->screen.bellIsUrgent);
+}
+
+void
 update_poponbell(void)
 {
     UpdateMenuItem(vtMenuEntries[vtMenu_poponbell].widget,
 		   term->screen.poponbell);
 }
 
+#ifndef update_marginbell	/* 2007-3-7: no longer menu entry */
 void
 update_marginbell(void)
 {
     UpdateMenuItem(vtMenuEntries[vtMenu_marginbell].widget,
 		   term->screen.marginbell);
 }
+#endif
 
 #if OPT_BLINK_CURS
 void

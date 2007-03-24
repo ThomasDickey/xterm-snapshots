@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.467 2007/02/11 14:54:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.484 2007/03/20 23:56:09 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -135,7 +135,7 @@
 #define USE_PTY_DEVICE 1
 #define USE_PTY_SEARCH 1
 
-#if defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#if defined(__osf__) || (defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #undef USE_PTY_DEVICE
 #undef USE_PTY_SEARCH
 #define USE_PTS_DEVICE 1
@@ -291,32 +291,23 @@ typedef struct {
 /*
  * ANSI emulation, special character codes
  */
-#define INQ	0x05
-#define BEL	0x07
-#define	FF	0x0C			/* C0, C1 control names		*/
-#define	LS1	0x0E
-#define	LS0	0x0F
-#define	NAK	0x15
-#define	CAN	0x18
-#define	SUB	0x1A
-#define	ESC	0x1B
-#define XPOUND	0x1E			/* internal mapping for '#'	*/
-#define US	0x1F
-#define	DEL	0x7F
-#define	RI	0x8D
-#define	SS2	0x8E
-#define	SS3	0x8F
-#define	DCS	0x90
-#define	SPA	0x96
-#define	EPA	0x97
-#define	SOS	0x98
-#define	OLDID	0x9A			/* ESC Z			*/
-#define	CSI	0x9B
-#define	ST	0x9C
-#define	OSC	0x9D
-#define	PM	0x9E
-#define	APC	0x9F
-#define	RDEL	0xFF
+#define ANSI_BEL	0x07
+#define	ANSI_FF		0x0C		/* C0, C1 control names		*/
+#define	ANSI_NAK	0x15
+#define	ANSI_CAN	0x18
+#define	ANSI_ESC	0x1B
+#define	ANSI_SPA	0x20
+#define XTERM_POUND	0x1E		/* internal mapping for '#'	*/
+#define	ANSI_DEL	0x7F
+#define	ANSI_SS2	0x8E
+#define	ANSI_SS3	0x8F
+#define	ANSI_DCS	0x90
+#define	ANSI_SOS	0x98
+#define	ANSI_CSI	0x9B
+#define	ANSI_ST		0x9C
+#define	ANSI_OSC	0x9D
+#define	ANSI_PM		0x9E
+#define	ANSI_APC	0x9F
 
 #define MIN_DECID  52			/* can emulate VT52 */
 #define MAX_DECID 420			/* ...through VT420 */
@@ -473,6 +464,10 @@ typedef struct {
 #endif
 #endif
 
+#ifndef OPT_EXEC_XTERM
+#define OPT_EXEC_XTERM 0 /* true if xterm can fork/exec copies of itself */
+#endif
+
 #ifndef OPT_FOCUS_EVENT
 #define OPT_FOCUS_EVENT	1 /* focus in/out events */
 #endif
@@ -607,6 +602,10 @@ typedef struct {
 
 #ifndef OPT_SUNPC_KBD
 #define OPT_SUNPC_KBD	1 /* true if xterm supports Sun/PC keyboard map */
+#endif
+
+#ifndef OPT_TCAP_FKEYS
+#define OPT_TCAP_FKEYS	0 /* true for experimental termcap function-keys */
 #endif
 
 #ifndef OPT_TCAP_QUERY
@@ -758,12 +757,11 @@ typedef enum {
 #if OPT_TEK4014
     , TEK_FG			/* tektronix foreground */
     , TEK_BG			/* tektronix background */
+    , TEK_CURSOR		/* tektronix cursor */
 #endif
 #if OPT_HIGHLIGHT_COLOR
     , HIGHLIGHT_BG		/* highlight background */
-#endif
-#if OPT_TEK4014
-    , TEK_CURSOR		/* tektronix cursor */
+    , HIGHLIGHT_FG		/* highlight foreground */
 #endif
     , NCOLORS			/* total number of colors */
 } TermColors;
@@ -845,7 +843,7 @@ typedef enum {
 
 /* Define a fake XK code, we need it for the fake color response in
  * xtermcapKeycode(). */
-#if OPT_TCAP_QUERY
+#if OPT_TCAP_QUERY && OPT_ISO_COLORS
 # define XK_COLORS 0x0003
 #endif
 
@@ -1530,12 +1528,13 @@ typedef struct {
 	int		vtXX_level;	/* 0=vt52, 1,2,3 = vt100 ... vt320 */
 	int		ansi_level;	/* levels 1,2,3			*/
 	int		protected_mode;	/* 0=off, 1=DEC, 2=ISO		*/
-	Boolean		old_fkeys;	/* true for compatible fkeys	*/
+	Boolean		always_bold_mode; /* compare normal/bold font	*/
+	Boolean		always_highlight; /* whether to highlight cursor */
+	Boolean		bold_mode;	/* use bold font or overstrike	*/
 	Boolean		delete_is_del;	/* true for compatible Delete key */
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
-	Boolean		always_highlight; /* whether to highlight cursor */
+	Boolean		old_fkeys;	/* true for compatible fkeys	*/
 	Boolean		underline;	/* whether to underline text	*/
-	Boolean		bold_mode;	/* whether to use bold font	*/
 
 #if OPT_MAXIMIZE
 	Boolean		restore_data;
@@ -1566,6 +1565,7 @@ typedef struct {
 	int		visualBellDelay; /* msecs to delay for visibleBell */
 	int		bellSuppressTime; /* msecs after Bell before another allowed */
 	Boolean		bellInProgress; /* still ringing/flashing prev bell? */
+	Boolean		bellIsUrgent;	/* set XUrgency WM hint on bell */
 	/*
 	 * Select/paste state.
 	 */
@@ -1624,15 +1624,21 @@ typedef struct {
 	Boolean		output_eight_bits; /* honor all bits or strip */
 	Boolean		control_eight_bits; /* send CSI as 8-bits */
 	Boolean		backarrow_key;		/* backspace/delete */
+	Boolean		alt_is_not_meta;	/* use both Alt- and Meta-key */
+	Boolean		alt_sends_esc;		/* Alt-key sends ESC prefix */
 	Boolean		meta_sends_esc;		/* Meta-key sends ESC prefix */
 	/*
 	 * Fonts
 	 */
 	Pixmap		menu_item_bitmap;	/* mask for checking items */
+	String		initial_font;
 	String		menu_font_names[NMENUFONTS][fMAX];
 #define MenuFontName(n) menu_font_names[n][fNorm]
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
+#if OPT_CLIP_BOLD
+	Boolean		use_clipping;
+#endif
 #if OPT_RENDERFONT
 	XftFont *	renderFontNorm[NMENUFONTS];
 	XftFont *	renderFontBold[NMENUFONTS];
@@ -1651,6 +1657,11 @@ typedef struct {
 #if OPT_DABBREV
 	int		dabbrev_working;	/* nonzero during dabbrev process */
 	unsigned char	dabbrev_erase_char;	/* used for deleting inserted completion */
+#endif
+	char		tcapbuf[TERMCAP_SIZE];
+#if OPT_TCAP_FKEYS
+	char **		tcap_fkeys;
+	char		tcap_area[TERMCAP_SIZE];
 #endif
 } TScreen;
 
@@ -1686,6 +1697,7 @@ typedef struct _TekScreen {
 	int		pen;		/* current Tektronix pen 0=up, 1=dn */
 	char		*TekGIN;	/* nonzero if Tektronix GIN mode*/
 	int		gin_terminator; /* Tek strap option */
+	char		tcapbuf[TERMCAP_SIZE];
 } TekScreen;
 
 #if OPT_READLINE
@@ -1711,6 +1723,7 @@ typedef enum {
     keyboardIsHP,
     keyboardIsSCO,
     keyboardIsSun,
+    keyboardIsTermcap,
     keyboardIsVT220
 } xtermKeyboardType;
 
@@ -1745,7 +1758,13 @@ typedef enum {			/* legal values for screen.utf8_mode */
 #define NAME_VT220_KT /*nothing*/
 #endif
 
-#define KEYBOARD_TYPES NAME_HP_KT NAME_SCO_KT NAME_SUN_KT NAME_VT220_KT
+#if OPT_TCAP_FKEYS
+#define NAME_TCAP_KT " tcap"
+#else
+#define NAME_TCAP_KT /*nothing*/
+#endif
+
+#define KEYBOARD_TYPES NAME_TCAP_KT NAME_HP_KT NAME_SCO_KT NAME_SUN_KT NAME_VT220_KT
 
 #if OPT_TRACE
 extern	const char * visibleKeyboardType(xtermKeyboardType);
@@ -2020,6 +2039,7 @@ typedef struct _TekWidgetRec {
 #define ISO_PROTECT 2
 
 #define TScreenOf(xw)	(&(xw)->screen)
+#define TekScreenOf(tw) (&(tw)->screen)
 
 #ifdef SCROLLBAR_RIGHT
 #define OriginX(screen) (((term->misc.useRight)?0:ScrollbarWidth(screen)) + screen->border)

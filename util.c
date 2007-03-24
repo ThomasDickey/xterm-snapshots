@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.336 2007/02/11 21:47:22 tom Exp $ */
+/* $XTermId: util.c,v 1.351 2007/03/21 22:04:14 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1402,6 +1402,7 @@ set_background(XtermWidget xw, int color GCC_UNUSED)
     TScreen *screen = &(xw->screen);
     Pixel c = getXtermBackground(xw, xw->flags, color);
 
+    TRACE(("set_background(%d) %#lx\n", color, c));
     XSetWindowBackground(screen->display, VShellWindow, c);
     XSetWindowBackground(screen->display, VWindow(screen), c);
 }
@@ -1545,6 +1546,11 @@ ChangeColors(XtermWidget xw, ScrnColors * pNew)
     if (COLOR_DEFINED(pNew, HIGHLIGHT_BG)) {
 	T_COLOR(screen, HIGHLIGHT_BG) = COLOR_VALUE(pNew, HIGHLIGHT_BG);
 	TRACE(("... HIGHLIGHT_BG: %#lx\n", T_COLOR(screen, HIGHLIGHT_BG)));
+	repaint = screen->Vshow;
+    }
+    if (COLOR_DEFINED(pNew, HIGHLIGHT_FG)) {
+	T_COLOR(screen, HIGHLIGHT_FG) = COLOR_VALUE(pNew, HIGHLIGHT_FG);
+	TRACE(("... HIGHLIGHT_FG: %#lx\n", T_COLOR(screen, HIGHLIGHT_FG)));
 	repaint = screen->Vshow;
     }
 #endif
@@ -1876,7 +1882,7 @@ xtermXftDrawString(XtermWidget xw,
 	static int slen = 0;
 
 	XftFont *wfont;
-	int n;
+	int src, dst;
 	XftFont *lastFont = 0;
 	XftFont *currFont = 0;
 	int start = 0;
@@ -1904,17 +1910,20 @@ xtermXftDrawString(XtermWidget xw,
 					     slen * sizeof(XftCharSpec));
 	}
 
-	for (n = 0; n < len; n++) {
+	for (src = dst = 0; src < len; src++) {
 	    FcChar32 wc = *text++;
 
 	    if (text2)
 		wc |= (*text2++ << 8);
 
-	    sbuf[n].ucs4 = wc;
-	    sbuf[n].x = x + fwidth * ncells;
-	    sbuf[n].y = y;
-
 	    charWidth = xtermCellWidth(xw, wc);
+	    if (charWidth < 0)
+		continue;
+
+	    sbuf[dst].ucs4 = wc;
+	    sbuf[dst].x = x + fwidth * ncells;
+	    sbuf[dst].y = y;
+
 	    currFont = (charWidth == 2 && wfont != 0) ? wfont : font;
 	    ncells += charWidth;
 
@@ -1924,18 +1933,19 @@ xtermXftDrawString(XtermWidget xw,
 				    color,
 				    lastFont,
 				    sbuf + start,
-				    n - start);
+				    dst - start);
 		}
-		start = n;
+		start = dst;
 		lastFont = currFont;
 	    }
+	    ++dst;
 	}
-	if ((n != start) && really) {
+	if ((dst != start) && really) {
 	    XftDrawCharSpec(screen->renderDraw,
 			    color,
 			    lastFont,
 			    sbuf + start,
-			    n - start);
+			    dst - start);
 	}
 #else /* !OPT_RENDERWIDE */
 	PAIRED_CHARS((void) text, (void) text2);
@@ -1957,6 +1967,44 @@ xtermXftDrawString(XtermWidget xw,
 
 #if OPT_WIDE_CHARS
 /*
+ * Map characters commonly "fixed" by groff back to their ASCII equivalents.
+ * Also map other useful equivalents.
+ */
+unsigned
+AsciiEquivs(unsigned ch)
+{
+    switch (ch) {
+    case 0x2010:		/* groff "-" */
+    case 0x2011:
+    case 0x2012:
+    case 0x2013:
+    case 0x2014:
+    case 0x2015:
+    case 0x2212:		/* groff "\-" */
+	ch = '-';
+	break;
+    case 0x2018:		/* groff "`" */
+	ch = '`';
+	break;
+    case 0x2019:		/* groff ' */
+	ch = '\'';
+	break;
+    case 0x201C:		/* groff lq */
+    case 0x201D:		/* groff rq */
+	ch = '"';
+	break;
+    default:
+	if (ch >= 0xff01 && ch <= 0xff5e) {
+	    /* "Fullwidth" codes (actually double-width) */
+	    ch -= 0xff00;
+	    ch += ANSI_SPA;
+	    break;
+	}
+    }
+    return ch;
+}
+
+/*
  * Actually this should be called "groff_workaround()" - for the places where
  * groff stomps on compatibility.  Still, if enough people get used to it,
  * this might someday become a quasi-standard.
@@ -1975,36 +2023,13 @@ ucs_workaround(XtermWidget xw,
     int fixed = False;
 
     if (screen->wide_chars && screen->utf8_mode && ch > 256) {
-	switch (ch) {
-	case 0x2010:		/* groff "-" */
-	case 0x2011:
-	case 0x2012:
-	case 0x2013:
-	case 0x2014:
-	case 0x2015:
-	case 0x2212:		/* groff "\-" */
-	    ch = '-';
-	    fixed = True;
-	    break;
-	case 0x2018:		/* groff "`" */
-	    ch = '`';
-	    fixed = True;
-	    break;
-	case 0x2019:		/* groff ' */
-	    ch = '\'';
-	    fixed = True;
-	    break;
-	case 0x201C:		/* groff lq */
-	case 0x201D:		/* groff rq */
-	    ch = '"';
-	    fixed = True;
-	    break;
-	}
-	if (fixed) {
+	unsigned eqv = AsciiEquivs(ch);
+
+	if (eqv != ch) {
 	    Char text[2];
 	    Char text2[2];
 
-	    text[0] = ch;
+	    text[0] = eqv;
 	    text2[0] = 0;
 	    drawXtermText(xw,
 			  flags,
@@ -2120,7 +2145,7 @@ xtermFillCells(XtermWidget xw,
  * trash in rxcurses' hanoi.cmd demo (e.g., 10x20 font).
  */
 #define beginClipping(screen,gc,pwidth,plength) \
-	    if (pwidth > 2) { \
+	    if (screen->use_clipping && (pwidth > 2)) { \
 		XRectangle clip; \
 		int clip_x = x; \
 		int clip_y = y - FontHeight(screen) + FontDescent(screen); \
@@ -2137,6 +2162,27 @@ xtermFillCells(XtermWidget xw,
 #else
 #define beginClipping(screen,gc,pwidth,plength)		/* nothing */
 #define endClipping(screen,gc)	/* nothing */
+#endif /* OPT_CLIP_BOLD */
+
+#if OPT_CLIP_BOLD && OPT_RENDERFONT && defined(HAVE_XFTDRAWSETCLIP) && defined(HAVE_XFTDRAWSETCLIPRECTANGLES)
+#define beginXftClipping(screen,px,py,plength) \
+	    if (screen->use_clipping && (FontWidth(screen) > 2)) { \
+		XRectangle clip; \
+		int clip_x = px; \
+		int clip_y = py - FontHeight(screen) + FontDescent(screen); \
+		clip.x = 0; \
+		clip.y = 0; \
+		clip.height = FontHeight(screen); \
+		clip.width = FontWidth(screen) * plength; \
+		XftDrawSetClipRectangles (screen->renderDraw, \
+					  clip_x, clip_y, \
+					  &clip, 1); \
+	    }
+#define endXftClipping(screen) \
+	    XftDrawSetClip (screen->renderDraw, 0)
+#else
+#define beginXftClipping(screen,px,py,plength)	/* nothing */
+#define endXftClipping(screen)	/* nothing */
 #endif /* OPT_CLIP_BOLD */
 
 /*
@@ -2417,22 +2463,26 @@ drawXtermText(XtermWidget xw,
 		}
 	    }
 	    if (last > first) {
+		beginXftClipping(screen, curX, y, len);
 		xtermXftDrawString(xw, flags,
 				   getXftColor(xw, values.foreground),
 				   font, curX, y,
 				   PAIRED_CHARS(text + first, text2 + first),
 				   last - first,
 				   True);
+		endXftClipping(screen);
 	    }
 	} else
 #endif /* OPT_BOX_CHARS */
 	{
+	    beginXftClipping(screen, x, y, len);
 	    xtermXftDrawString(xw, flags,
 			       getXftColor(xw, values.foreground),
 			       font, x, y,
 			       PAIRED_CHARS(text, text2),
 			       (int) len,
 			       True);
+	    endXftClipping(screen);
 	}
 
 	if ((flags & UNDERLINE) && screen->underline && !did_ul) {
@@ -2582,8 +2632,8 @@ drawXtermText(XtermWidget xw,
 	    }
 	    if (screen->unicode_font
 		&& *text2 == 0
-		&& (*text == DEL || *text < 0x20)) {
-		int ni = dec2ucs((unsigned) ((*text == DEL) ? 0 : *text));
+		&& (*text == ANSI_DEL || *text < ANSI_SPA)) {
+		int ni = dec2ucs((unsigned) ((*text == ANSI_DEL) ? 0 : *text));
 		UCS2SBUF(n, ni);
 	    }
 #endif /* OPT_MINI_LUIT */
@@ -2768,7 +2818,8 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
     Pixel bg_pix = getXtermBackground(xw, flags, my_bg);
     Pixel xx_pix;
 #if OPT_HIGHLIGHT_COLOR
-    Pixel hi_pix = T_COLOR(screen, HIGHLIGHT_BG);
+    Pixel selbg_pix = T_COLOR(screen, HIGHLIGHT_BG);
+    Pixel selfg_pix = T_COLOR(screen, HIGHLIGHT_FG);
 #endif
 
     (void) fg_bg;
@@ -2777,25 +2828,25 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 
     checkVeryBoldColors(flags, my_fg);
 
+#if OPT_HIGHLIGHT_COLOR
+    if (hilite) {
+	Bool use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
+	Bool use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
+
+	if (use_selbg)
+	    fg_pix = selbg_pix;
+	if (use_selfg)
+	    bg_pix = selfg_pix;
+    }
+#endif
+
     if (ReverseOrHilite(screen, flags, hilite)) {
 	if (flags & BOLDATTR(screen)) {
 	    cgsId = gcBoldReverse;
 	} else {
 	    cgsId = gcNormReverse;
 	}
-
-#if OPT_HIGHLIGHT_COLOR
-	if (hi_pix != T_COLOR(screen, TEXT_FG)
-	    && hi_pix != fg_pix
-	    && hi_pix != bg_pix
-	    && hi_pix != xw->dft_foreground) {
-	    bg_pix = fg_pix;
-	    fg_pix = hi_pix;
-	}
-#endif
-	xx_pix = bg_pix;
-	bg_pix = fg_pix;
-	fg_pix = xx_pix;
+	EXCHANGE(fg_pix, bg_pix, xx_pix);
     } else {
 	if (flags & BOLDATTR(screen)) {
 	    cgsId = gcBold;
@@ -2933,6 +2984,8 @@ ClearCurBackground(XtermWidget xw,
 
 	XClearArea(screen->display, VWindow(screen),
 		   left, top, width, height, False);
+
+	set_background(xw, -1);
     }
 }
 #endif /* OPT_ISO_COLORS */
@@ -3054,6 +3107,7 @@ void
 update_keyboard_type(void)
 {
     update_delete_del();
+    update_tcap_fkeys();
     update_old_fkeys();
     update_hp_fkeys();
     update_sco_fkeys();
@@ -3145,6 +3199,9 @@ decode_keyboard_type(XtermWidget xw, XTERM_RESOURCE * rp)
 #endif
 #if OPT_SUNPC_KBD
 	    DATA(NAME_VT220_KT, keyboardIsVT220, sunKeyboard),
+#endif
+#if OPT_TCAP_FKEYS
+	    DATA(NAME_TCAP_KT, keyboardIsTermcap, termcapKeys),
 #endif
     };
     Cardinal n;

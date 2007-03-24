@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.71 2006/11/30 22:26:28 tom Exp $ */
+/* $XTermId: trace.c,v 1.72 2007/03/17 15:45:12 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2005,2006 by Thomas E. Dickey
+Copyright 1997-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -205,6 +205,7 @@ visibleKeyboardType(xtermKeyboardType type)
 	CASETYPE(keyboardIsHP);
 	CASETYPE(keyboardIsSCO);
 	CASETYPE(keyboardIsSun);
+	CASETYPE(keyboardIsTermcap);
 	CASETYPE(keyboardIsVT220);
     }
     return result;

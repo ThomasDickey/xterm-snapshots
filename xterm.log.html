@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.517 2007/02/11 15:24:42 tom Exp $
+  $XTermId: xterm.log.html,v 1.545 2007/03/24 00:15:59 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_225">Patch #225 - 2007/3/24</A>
 <LI><A HREF="#xterm_224">Patch #224 - 2007/2/11</A>
 <LI><A HREF="#xterm_223">Patch #223 - 2006/11/30</A>
 <LI><A HREF="#xterm_222">Patch #222 - 2006/10/17</A>
@@ -273,6 +274,110 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_225">Patch #225 - 2007/3/24</A></H1>
+<ul>
+	<li>add <code>useClipping</code> resource to allow clipping to be
+	    disabled.
+
+	<li>use <code>XftDrawSetClipRectangles</code>
+	    to work around Xft pixel-trash (report by Reuben Thomas).
+
+	<li>add configure option <code>--enable-tcap-fkeys</code>, and
+	    resource <code>tcapFunctionKeys</code>, which can be used
+	    to tell xterm to use function-key definitions from the termcap
+	    (or terminfo) which it uses to set $TERM on startup.
+
+	<li>add resources <code>altIsNotMeta</code> and
+	    <code>altSendsEscape</code> to allow one to use Alt-keys like the
+	    meta-key even if they are bound to different keycodes (prompted by
+	    discussion with Daniel Jacobowitz).
+
+	<li>revert a change from <a href="#xterm_216">patch #216</a>
+	    that unnecessarily made the meta modifier override
+	    the <code>eightBitInput</code> resource if the alt- and
+	    meta-modifiers happened to overlap
+	    (report/patch by Daniel Jacobowitz).
+
+	<li>correct associated font for active icon for colored text
+	    (broken in <a href="#xterm_224">patch #224</a>).
+
+	<li>correct ifdef's for Darwin (patch by Emanuele Giaquinta).
+
+	<li>add <code>highlightTextColor</code> resource, and options
+	    <code>-selfg</code>, <code>-selbg</code> like <code>xwsh</code>
+	    (adapted from patch by Victor Vaile).
+
+	<li>revise <code>find_closest_color()</code> function to address
+	    concern about borrowing from <code>Tcl/Tk</code>
+	    (request by Dan McNichol).
+
+	<li>add "spawn-new-terminal" action, which can be assigned to key
+	    translation, allowing one to spawn a new copy of xterm using
+	    the current process' working directory (adapted from patch
+	    by Daniel Colascio).
+
+	<li>improve select/paste between UTF-8 and Latin1 xterms by adapting
+	    the translations from <a href="#xterm_185">patch #185</a>.
+	    Extend that to include Unicode fullwidth forms FF00-FF5E.
+	    Also modify select/paste of DEC line-drawing characters in
+	    Latin1 mode to use ASCII characters.
+
+	<li>add "Enable Bell Urgency" to VT Options menu, removed "Enable
+	    Margin Bell".
+
+	<li>add <code>bellIsUrgent</code> resource to control whether the
+	    Urgency hint is set/reset.
+
+	<li>modify to set Urgency window manager hint on bell, reset it on
+	    Focus-In event (patch by Emanuele Giaquinta).
+
+	<li>add <code>--disable-setgid</code> configure option (request by
+	    Miroslav Lichvar).
+
+	<li>fix a possible infinite loop in last change to
+	    <code>dabbrev-expand()</code> (patch by Emanuele Giaquinta).
+
+	<li>modify initialization to set the pty erase value if the
+	    <code>erase</code> is set in the <code>ttyModes</code> resource. 
+	    This overrides the <code>ptyInitialErase</code> setting (request by
+	    Llu&#237;s Batlle i Rossell).
+
+	<li>add <code>initialFont</code> resource to xterm widget, like
+	    tek-widget (Debian #299669).
+
+	<li>amend change to <code>boldMode</code> from
+	    <a href="#xterm_223">patch #223</a> for Debian #347790.
+	    As noted in Debian #412599, that made xterm
+	    no longer match the documented behavior.
+	    Add new resource <code>alwaysBoldMode</code>
+	    to allow overriding the comparison
+	    between normal/bold fonts when deciding whether to use overstriking
+	    to simulate bold fonts.
+
+	<li>restore background color in ClearCurBackground(), omitted in
+	    changes for <a href="#xterm_223">patch #223</a> (report by
+	    Miroslav Lichvar).
+
+	<li>correct logic for repainting double-width TrueType characters
+	    (prompted by test-case for Novell #246573).
+
+	<li>add a check to avoid trying to repeat a multibyte character
+	    (report by Sami Farin).
+
+	<li>modify parameter to <code>XftNameParse()</code> to select wide
+	    face-name as needed, to make <code>-fd</code> option work (patch by
+	    Mike Fabian, Novell #246573).
+
+	<li>correct logic for mouse highlight tracking's abort sequence,
+	    broken in a restructuring modification from
+	    <a href="#xterm_224">patch #224</a>
+	    (report by Thomas Wolff).
+
+	<li>revert the simplification of blinking cursor, since that broke
+	    the xor'ing introduced in <a href="#xterm_193">patch #193</a>
+	    (report by Thomas Wolff).
+</ul>
+
 <H1><A NAME="xterm_224">Patch #224 - 2007/2/11</A></H1>
 <ul>
 	<li>simplify code for set/reset mode for blinking cursor 
@@ -287,7 +392,7 @@ is the latest version of this file.
 	<li>improve startup performance of menus by adding resource setting
 	    <code>menuLocale</code> which can be set to override X's
 	    lengthy initialization of fontsets - which are seldom used
-	    for the <code>Xaw</code> popup menus (adapted by patch by
+	    for the <code>Xaw</code> popup menus (adapted from patch by
 	    Dave Coffin).
 
 	<li>modify do_precomposition() function and make-compose.sh to handle

@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.79 2007/02/11 14:49:56 tom Exp $ */
+/* $XTermId: print.c,v 1.80 2007/03/19 23:49:51 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
@@ -208,7 +208,7 @@ printLine(int row, unsigned chr)
 		cs = CSET_IN;
 	    else
 #endif
-		cs = (ch >= ' ' && ch != DEL) ? CSET_IN : CSET_OUT;
+		cs = (ch >= ' ' && ch != ANSI_DEL) ? CSET_IN : CSET_OUT;
 	    if (last_cs != cs) {
 		if (screen->print_attributes) {
 		    charToPrinter((unsigned) ((cs == CSET_OUT)
@@ -224,7 +224,7 @@ printLine(int row, unsigned chr)
 	     * into the CSETS array.
 	     */
 	    charToPrinter(((cs == CSET_OUT)
-			   ? (ch == DEL ? 0x5f : (ch + 0x5f))
+			   ? (ch == ANSI_DEL ? 0x5f : (ch + 0x5f))
 			   : ch));
 	    if_OPT_WIDE_CHARS(screen, {
 		int off;
@@ -531,10 +531,10 @@ xtermPrinterControl(int chr)
 	Char seq[5];
 	int active;
     } tbl[] = {
-	{ { CSI, '5', 'i'      }, 2 },
-	{ { CSI, '4', 'i'      }, 0 },
-	{ { ESC, LB,  '5', 'i' }, 2 },
-	{ { ESC, LB,  '4', 'i' }, 0 },
+	{ { ANSI_CSI, '5', 'i'      }, 2 },
+	{ { ANSI_CSI, '4', 'i'      }, 0 },
+	{ { ANSI_ESC, LB,  '5', 'i' }, 2 },
+	{ { ANSI_ESC, LB,  '4', 'i' }, 0 },
     };
     /* *INDENT-ON* */
 
@@ -550,8 +550,8 @@ xtermPrinterControl(int chr)
     case CTRL('S'):
 	return 0;		/* ignored by application */
 
-    case CSI:
-    case ESC:
+    case ANSI_CSI:
+    case ANSI_ESC:
     case '[':
     case '4':
     case '5':
