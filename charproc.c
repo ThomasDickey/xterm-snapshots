@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.784 2007/03/20 23:59:25 tom Exp $ */
+/* $XTermId: charproc.c,v 1.788 2007/05/24 20:51:55 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -399,6 +399,7 @@ static XtActionsRec actionsList[] = {
 static XtResource resources[] =
 {
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
+    Bres(XtNallowTitleOps, XtCAllowTitleOps, screen.allowTitleOp0, True),
     Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, True),
     Bres(XtNaltIsNotMeta, XtCAltIsNotMeta, screen.alt_is_not_meta, False),
     Bres(XtNaltSendsEscape, XtCAltSendsEscape, screen.alt_sends_esc, False),
@@ -3438,8 +3439,9 @@ dotext(XtermWidget xw,
 		lobyte = (Char *) XtRealloc((char *) lobyte, limit);
 		hibyte = (Char *) XtRealloc((char *) hibyte, limit);
 	    }
-	    for (j = offset; j < offset + chars_chomped; j++) {
-		k = j - offset;
+	    for (j = offset, k = 0; j < offset + chars_chomped; j++) {
+		if (buf[j] == HIDDEN_CHAR)
+		    continue;
 		lobyte[k] = buf[j];
 		if (buf[j] > 255) {
 		    hibyte[k] = (buf[j] >> 8);
@@ -3447,11 +3449,12 @@ dotext(XtermWidget xw,
 		} else {
 		    hibyte[k] = 0;
 		}
+		++k;
 	    }
 
 	    WriteText(xw, PAIRED_CHARS(lobyte,
 				       (both ? hibyte : 0)),
-		      chars_chomped);
+		      k);
 #ifdef NO_LEAKS
 	    if (limit != 0) {
 		limit = 0;
@@ -5569,10 +5572,12 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.meta_sends_esc);
 
     init_Bres(screen.allowSendEvent0);
+    init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
 
     /* make a copy so that editres cannot change the resource after startup */
     wnew->screen.allowSendEvents = wnew->screen.allowSendEvent0;
+    wnew->screen.allowTitleOps = wnew->screen.allowTitleOp0;
     wnew->screen.allowWindowOps = wnew->screen.allowWindowOp0;
 
 #ifndef NO_ACTIVE_ICON
@@ -7483,17 +7488,20 @@ DoSetSelectedFont(Widget w,
     if (!IsXtermWidget(w) || *type != XA_STRING || *format != 8) {
 	Bell(XkbBI_MinorError, 0);
     } else {
+	Boolean failed = False;
 	XtermWidget xw = (XtermWidget) w;
+	int oldFont = xw->screen.menu_font_number;
 	char *save = xw->screen.MenuFontName(fontMenu_fontsel);
-	char *val = (char *) value;
+	char *val;
 	char *test = 0;
 	char *used = 0;
-	int len = strlen(val);
+	int len = strlen((char *) value);
 
 	if (len > (int) *length) {
 	    len = (int) *length;
 	}
-	if (len > 0) {
+	if (len > 0 && (val = malloc(len + 1)) != 0) {
+	    memcpy(val, value, len);
 	    val[len] = '\0';
 	    used = x_strtrim(val);
 	    TRACE(("DoSetSelectedFont(%s)\n", val));
@@ -7509,17 +7517,25 @@ DoSetSelectedFont(Widget w,
 				   xtermFontName(val),
 				   True,
 				   fontMenu_fontsel)) {
-		    Bell(XkbBI_MinorError, 0);
+		    failed = True;
 		    free(test);
 		    xw->screen.MenuFontName(fontMenu_fontsel) = save;
 		} else {
 		    free(save);
 		}
 	    } else {
+		failed = True;
+	    }
+	    if (failed) {
+		(void) xtermLoadFont(term,
+				     xtermFontName(xw->screen.MenuFontName(oldFont)),
+				     True,
+				     oldFont);
 		Bell(XkbBI_MinorError, 0);
 	    }
 	    if (used != val)
 		free(used);
+	    free(val);
 	}
     }
 }

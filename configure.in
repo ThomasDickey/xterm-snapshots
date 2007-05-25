@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.226 2007/03/18 23:37:06 tom Exp $
+dnl $XTermId: configure.in,v 1.227 2007/05/24 21:16:59 Miroslav.Lichvar Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/configure.in,v 3.77 2006/06/19 00:36:51 dickey Exp $
 dnl
@@ -168,7 +168,7 @@ CF_ARG_DISABLE(setgid,
 	[disable_setgid=yes],
 	[disable_setgid=no],
 	no)
-AC_MSG_RESULT($disable_setuid)
+AC_MSG_RESULT($disable_setgid)
 
 AC_MSG_CHECKING(if you want to run xterm setuid to a given user)
 AC_ARG_WITH(setuid,

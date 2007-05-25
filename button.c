@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.272 2007/03/19 23:42:48 tom Exp $ */
+/* $XTermId: button.c,v 1.273 2007/04/26 22:56:56 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1611,7 +1611,8 @@ SelectionReceived(Widget w,
 	    GettingSelection(dpy, *type, line, *length);
 
 #if OPT_WIDE_CHARS
-	    if (*type == XA_UTF8_STRING(dpy)) {
+	    if (*type == XA_UTF8_STRING(dpy) &&
+		!(screen->wide_chars || screen->c1_printable)) {
 		rc = Xutf8TextPropertyToTextList(dpy, &text_prop,
 						 &text_list, &text_list_count);
 		if (text_list != NULL && text_list_count != 0) {
