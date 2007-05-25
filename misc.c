@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.359 2007/03/21 22:13:32 tom Exp $ */
+/* $XTermId: misc.c,v 1.361 2007/05/24 20:58:21 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -497,22 +497,18 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    || setgid(screen->gid) == -1) {
 	    fprintf(stderr, "Cannot reset uid/gid\n");
 	} else {
-	    if (nparams != 0) {
-		int myargc = *nparams + 1;
-		char **myargv = TypeMallocN(char *, myargc + 1);
-		if (myargv != 0) {
-		    int n = 0;
-		    myargv[n++] = child_exe;
-		    while (n <= myargc) {
-			myargv[n] = params[n - 1];
-			++n;
-		    }
-		    myargv[n] = 0;
-		    execv(child_exe, myargv);
-		}
-	    } else {
-		execl(child_exe, child_exe, NULL);
+	    int myargc = *nparams + 1;
+	    char **myargv = TypeMallocN(char *, myargc + 1);
+	    int n = 0;
+
+	    myargv[n++] = child_exe;
+
+	    while (n < myargc) {
+		myargv[n++] = *params++;
 	    }
+
+	    myargv[n] = 0;
+	    execv(child_exe, myargv);
 
 	    /* If we get here, we've failed */
 	    fprintf(stderr, "exec of '%s': %s\n", child_exe, SysErrorMsg(errno));
@@ -2792,7 +2788,8 @@ ChangeGroup(String attribute, char *value)
 
     TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
 
-    (void) screen;
+    if (!screen->allowTitleOps)
+	return;
 
     /*
      * Ignore titles that are too long to be plausible requests.

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.351 2007/03/21 22:04:14 tom Exp $ */
+/* $XTermId: util.c,v 1.352 2007/04/15 21:21:47 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1993,6 +1993,12 @@ AsciiEquivs(unsigned ch)
     case 0x201D:		/* groff rq */
 	ch = '"';
 	break;
+    case 0x2329:		/* groff ".URL" */
+	ch = '<';
+	break;
+    case 0x232a:		/* groff ".URL" */
+	ch = '>';
+	break;
     default:
 	if (ch >= 0xff01 && ch <= 0xff5e) {
 	    /* "Fullwidth" codes (actually double-width) */
@@ -2040,6 +2046,9 @@ ucs_workaround(XtermWidget xw,
 			  PAIRED_CHARS(text, text2),
 			  1,
 			  on_wide);
+	    fixed = True;
+	} else if (ch == HIDDEN_CHAR) {
+	    fixed = True;
 	}
     }
     return fixed;
@@ -2539,6 +2548,12 @@ drawXtermText(XtermWidget xw,
 #if OPT_WIDE_CHARS
 	    if (text2 != 0)
 		ch |= (text2[last] << 8);
+	    if (ch == HIDDEN_CHAR) {
+		if (last > first)
+		    DrawSegment(first, last);
+		first = last + 1;
+		continue;
+	    }
 	    isMissing = (ch != HIDDEN_CHAR)
 		&& (xtermMissingChar(xw, ch,
 				     ((on_wide || iswide((int) ch))

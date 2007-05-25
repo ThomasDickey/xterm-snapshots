@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.545 2007/03/24 00:15:59 tom Exp $
+  $XTermId: xterm.log.html,v 1.554 2007/05/25 01:00:55 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -46,6 +46,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_225">Patch #225 - 2007/3/24</A>
 <LI><A HREF="#xterm_224">Patch #224 - 2007/2/11</A>
 <LI><A HREF="#xterm_223">Patch #223 - 2006/11/30</A>
@@ -274,6 +275,37 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>improve CF_IMAKE_CFLAGS to work with Solaris sed (report by Peter
+	    Bray).
+
+	<li>improve guess for X's manpage section in <code>minstall.sh</code>,
+	    (prompted by comment by Miroslav Lichvar).
+
+	<li>modify <code>minstall.sh</code> to handle manpage patch with more
+	    than one dot (patch by Miroslav Lichvar).
+
+	<li>fix configure message for --disable-setgid option (patch by
+	    Miroslav Lichvar).
+
+	<li>add <code>allowTitleOps</code> resource to allow users to prevent
+	    the title- and icon-names from changing (request by John Bashinski).
+
+	<li>fix "spawn-new-terminal" action, for the case where no parameter
+	    is passed to the action (patch by Daniel Colascione).
+
+	<li>fix error-checking on internal font switching for "Selection"
+	    menu entry (Debian #421523).
+
+	<li>amend select/paste change from
+	    <a href="#xterm_225">patch #225</a>
+	    by limiting it to non-UTF-8/non-KOI8-R encoding (Debian #420974).
+
+	<li>add workaround for groff ".URL" codes which are not present in
+	    some commonly-used bitmap fonts (Debian #418324).
+</ul>
+
 <H1><A NAME="xterm_225">Patch #225 - 2007/3/24</A></H1>
 <ul>
 	<li>add <code>useClipping</code> resource to allow clipping to be
@@ -314,7 +346,7 @@ is the latest version of this file.
 	<li>add "spawn-new-terminal" action, which can be assigned to key
 	    translation, allowing one to spawn a new copy of xterm using
 	    the current process' working directory (adapted from patch
-	    by Daniel Colascio).
+	    by Daniel Colascione).
 
 	<li>improve select/paste between UTF-8 and Latin1 xterms by adapting
 	    the translations from <a href="#xterm_185">patch #185</a>.

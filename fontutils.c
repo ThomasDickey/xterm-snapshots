@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.246 2007/03/22 00:20:06 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.247 2007/04/30 21:49:25 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -2535,6 +2535,8 @@ SetVTFont(XtermWidget xw,
 	    FindFontSelection(xw, myfonts.f_n, False);
 	    return;
 	} else {
+	    int oldFont = screen->menu_font_number;
+
 #define USE_CACHED(field, name) \
 	    if (myfonts.field == 0) { \
 		myfonts.field = screen->menu_font_names[which][name]; \
@@ -2553,6 +2555,10 @@ SetVTFont(XtermWidget xw,
 			      &myfonts,
 			      doresize, which)) {
 		return;
+	    } else {
+		xtermLoadFont(xw,
+			      xtermFontName(screen->MenuFontName(oldFont)),
+			      doresize, oldFont);
 	    }
 	}
     }

@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-225
+MANIFEST for xterm, version xterm-225d
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -32,7 +32,6 @@ charproc.c                      VT100 parser functions
 charsets.c                      module to translate character-sets
 config.guess                    configure script: guess the system type
 config.sub                      configure script: validate system type
-configure                       generated
 configure.in                    template for generating configure script
 ctlseqs.ms                      documentation: Xterm Control Sequences
 ctlseqs.txt                     generated rendition of ctlseqs.ms

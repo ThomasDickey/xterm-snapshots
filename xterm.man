@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.380 2007/03/24 00:05:57 tom Exp $
+.\" $XTermId: xterm.man,v 1.383 2007/05/24 21:45:36 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -944,6 +944,14 @@ color rather than with underlining.
 This option enables the display of characters with underline attribute as
 color rather than with underlining.
 .TP 8
+.B "-ulit"
+This option disables the display of characters with underline attribute as
+italics rather than with underlining.
+.TP 8
+.B "+ulit"
+This option enables the display of characters with underline attribute as
+italics rather than with underlining.
+.TP 8
 .B -ut
 This option indicates that \fIxterm\fP should not write a record into the
 the system \fIutmp\fP log file.
@@ -1401,9 +1409,14 @@ Note that allowing
 such events creates a very large security hole.
 The default is ``false.''
 .TP
+.B "allowTitleOps (\fPclass\fB AllowTitleOps)"
+Specifies whether control sequences that modify the window title or icon name
+should be allowed.
+The default is ``true.''
+.TP
 .B "allowWindowOps (\fPclass\fB AllowWindowOps)"
 Specifies whether extended window control sequences (as used in dtterm)
-for should be allowed.
+should be allowed.
 The default is ``true.''
 .TP 8
 .B "altIsNotMeta (\fPclass\fB AltIsNotMeta\fP)"
@@ -2281,7 +2294,7 @@ bell should be rung, when enabled by the \fBmarginBell\fP resource.
 The default is 10.
 .TP 8
 .B "numLock (\fPclass\fB NumLock)"
-If ``true'', \fIxterm\fR checks if NumLock is used as a modifier (see \fIxmodmap\fP(1)).
+If ``true'', \fIxterm\fR checks if NumLock is used as a modifier (see \fIxmodmap\fP(__mansuffix__)).
 If so, this modifier is used to simplify the logic when implementing special
 NumLock for the \fBsunKeyboard\fP resource.
 Also (when \fBsunKeyboard\fP is false), similar logic is used to find the
@@ -3660,7 +3673,7 @@ run under \fIxdm\fP,
 are capable of using a ``magic cookie'' authorization
 scheme that can provide a reasonable level of security for many people.
 If your server is only using a host-based mechanism to control access to
-the server (see \fIxhost(1)\fP), then if you enable access for a host and
+the server (see \fIxhost(__mansuffix__)\fP), then if you enable access for a host and
 other users are also permitted to run clients on that same host,
 it is possible that someone can run an application which uses the
 basic services of the X protocol to snoop on your activities,
@@ -4248,7 +4261,7 @@ indicate the normal and bold fonts that have been set through escape codes
 (or specified as the second and third action arguments, respectively), and
 .HP
 \fIs\fP or \fIS\fP indicate the font selection (as made by programs such as
-\fIxfontsel(1)\fP) indicated by the second action argument.
+\fIxfontsel(__mansuffix__)\fP) indicated by the second action argument.
 .RE
 .IP
 If \fIxterm\fR is configured to support wide characters, an
@@ -4815,7 +4828,7 @@ There needs to be a dialog box to allow entry of the Tek COPY file name.
 .
 .
 .SH "SEE ALSO"
-resize(1), luit(1), X(__miscmansuffix__), pty(4), tty(4)
+resize(__mansuffix__), luit(__mansuffix__), X(__miscmansuffix__), pty(4), tty(4)
 .br
 \fIXterm Control Sequences\fP
 (this is the file ctlseqs.ms).
