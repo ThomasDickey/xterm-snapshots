@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.352 2007/04/15 21:21:47 tom Exp $ */
+/* $XTermId: util.c,v 1.353 2007/05/28 21:04:58 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -2194,6 +2194,36 @@ xtermFillCells(XtermWidget xw,
 #define endXftClipping(screen)	/* nothing */
 #endif /* OPT_CLIP_BOLD */
 
+#if OPT_RENDERFONT
+static void
+drawClippedXftString(XtermWidget xw,
+		     unsigned flags,
+		     XftFont * font,
+		     XftColor * fg_color,
+		     int x,
+		     int y,
+		     PAIRED_CHARS(Char * text, Char * text2),
+		     Cardinal len)
+{
+    int ncells = xtermXftDrawString(xw, flags,
+				    fg_color,
+				    font, x, y,
+				    PAIRED_CHARS(text, text2),
+				    len,
+				    False);
+    TScreen *screen = &(xw->screen);
+
+    beginXftClipping(screen, x, y, ncells);
+    xtermXftDrawString(xw, flags,
+		       fg_color,
+		       font, x, y,
+		       PAIRED_CHARS(text, text2),
+		       len,
+		       True);
+    endXftClipping(screen);
+}
+#endif
+
 /*
  * Draws text with the specified combination of bold/underline.  The return
  * value is the updated x position.
@@ -2472,26 +2502,26 @@ drawXtermText(XtermWidget xw,
 		}
 	    }
 	    if (last > first) {
-		beginXftClipping(screen, curX, y, len);
-		xtermXftDrawString(xw, flags,
-				   getXftColor(xw, values.foreground),
-				   font, curX, y,
-				   PAIRED_CHARS(text + first, text2 + first),
-				   last - first,
-				   True);
-		endXftClipping(screen);
+		drawClippedXftString(xw,
+				     flags,
+				     font,
+				     getXftColor(xw, values.foreground),
+				     curX,
+				     y,
+				     PAIRED_CHARS(text + first, text2 + first),
+				     last - first);
 	    }
 	} else
 #endif /* OPT_BOX_CHARS */
 	{
-	    beginXftClipping(screen, x, y, len);
-	    xtermXftDrawString(xw, flags,
-			       getXftColor(xw, values.foreground),
-			       font, x, y,
-			       PAIRED_CHARS(text, text2),
-			       (int) len,
-			       True);
-	    endXftClipping(screen);
+	    drawClippedXftString(xw,
+				 flags,
+				 font,
+				 getXftColor(xw, values.foreground),
+				 x,
+				 y,
+				 PAIRED_CHARS(text, text2),
+				 len);
 	}
 
 	if ((flags & UNDERLINE) && screen->underline && !did_ul) {

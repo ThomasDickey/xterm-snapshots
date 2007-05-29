@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.383 2007/05/24 21:45:36 tom Exp $
+.\" $XTermId: xterm.man,v 1.384 2007/05/28 20:09:10 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -451,6 +451,9 @@ This corresponds to the \fBfaceName\fP resource.
 When a CJK
 double-width font is specified, you also need to turn
 on the \fBcjkWidth\fP resource.
+See also the \fBrenderFont\fP resource,
+which combines with this to determine whether FreeType fonts are
+initially active.
 .TP 8
 .BI -fbb
 This option indicates that \fIxterm\fP should compare normal and bold fonts bounding
