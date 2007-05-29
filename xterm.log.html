@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.554 2007/05/25 01:00:55 tom Exp $
+  $XTermId: xterm.log.html,v 1.557 2007/05/28 21:07:12 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -277,6 +277,17 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>correct clipping for double-width Xft fonts
+	    (report by Shidai Liu "Leo").
+
+	<li>modify initialization for <code>italicULMode</code> to avoid
+	    <code>XftPatternBuild</code> reusing bold attributes
+	    (report by Shidai Liu "Leo").
+
+	<li>add a check in case someone tries to call the
+	    <code>popup-menu()</code> action on a menu which is not initialized
+	    (Debian #426364).
+
 	<li>improve CF_IMAKE_CFLAGS to work with Solaris sed (report by Peter
 	    Bray).
 

@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.155 2007/03/19 23:51:52 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.156 2007/05/28 19:08:33 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -956,20 +956,22 @@ TekExpose(Widget w,
 void
 TekRefresh(TekWidget tw)
 {
-    TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(term);
-    static Cursor wait_cursor = None;
+    if (tw != 0) {
+	TekScreen *tekscr = TekScreenOf(tw);
+	TScreen *screen = TScreenOf(term);
+	static Cursor wait_cursor = None;
 
-    if (wait_cursor == None)
-	wait_cursor = make_colored_cursor(XC_watch,
-					  T_COLOR(screen, MOUSE_FG),
-					  T_COLOR(screen, MOUSE_BG));
-    XDefineCursor(XtDisplay(tw), TWindow(tekscr), wait_cursor);
-    XFlush(XtDisplay(tw));
-    if (!setjmp(Tekjump))
-	Tekparse(tw);
-    XDefineCursor(XtDisplay(tw), TWindow(tekscr),
-		  (tekscr->TekGIN && GINcursor) ? GINcursor : tekscr->arrow);
+	if (wait_cursor == None)
+	    wait_cursor = make_colored_cursor(XC_watch,
+					      T_COLOR(screen, MOUSE_FG),
+					      T_COLOR(screen, MOUSE_BG));
+	XDefineCursor(XtDisplay(tw), TWindow(tekscr), wait_cursor);
+	XFlush(XtDisplay(tw));
+	if (!setjmp(Tekjump))
+	    Tekparse(tw);
+	XDefineCursor(XtDisplay(tw), TWindow(tekscr),
+		      (tekscr->TekGIN && GINcursor) ? GINcursor : tekscr->arrow);
+    }
 }
 
 void
@@ -1843,38 +1845,41 @@ TekSimulatePageButton(TekWidget tw, Bool reset)
 void
 TekCopy(TekWidget tw)
 {
-    TekScreen *tekscr = TekScreenOf(tw);
-    TScreen *screen = TScreenOf(term);
+    if (tw != 0) {
+	TekScreen *tekscr = TekScreenOf(tw);
+	TScreen *screen = TScreenOf(term);
 
-    TekLink *Tp;
-    char buf[32];
-    char initbuf[5];
-    int tekcopyfd;
+	TekLink *Tp;
+	char buf[32];
+	char initbuf[5];
+	int tekcopyfd;
 
-    timestamp_filename(buf, "COPY");
-    if (access(buf, F_OK) >= 0
-	&& access(buf, W_OK) < 0) {
-	Bell(XkbBI_MinorError, 0);
-	return;
-    }
+	timestamp_filename(buf, "COPY");
+	if (access(buf, F_OK) >= 0
+	    && access(buf, W_OK) < 0) {
+	    Bell(XkbBI_MinorError, 0);
+	    return;
+	}
 #ifndef VMS
-    if (access(".", W_OK) < 0) {	/* can't write in directory */
-	Bell(XkbBI_MinorError, 0);
-	return;
-    }
+	if (access(".", W_OK) < 0) {	/* can't write in directory */
+	    Bell(XkbBI_MinorError, 0);
+	    return;
+	}
 #endif
 
-    if ((tekcopyfd = open_userfile(screen->uid, screen->gid, buf, False)) >= 0) {
-	sprintf(initbuf, "%c%c%c%c",
-		ANSI_ESC, (char) (tekscr->page.fontsize + '8'),
-		ANSI_ESC, (char) (tekscr->page.linetype + '`'));
-	write(tekcopyfd, initbuf, 4);
-	Tp = &Tek0;
-	do {
-	    write(tekcopyfd, Tp->data, Tp->count);
-	    Tp = Tp->next;
-	} while (Tp);
-	close(tekcopyfd);
+	tekcopyfd = open_userfile(screen->uid, screen->gid, buf, False);
+	if (tekcopyfd >= 0) {
+	    sprintf(initbuf, "%c%c%c%c",
+		    ANSI_ESC, (char) (tekscr->page.fontsize + '8'),
+		    ANSI_ESC, (char) (tekscr->page.linetype + '`'));
+	    write(tekcopyfd, initbuf, 4);
+	    Tp = &Tek0;
+	    do {
+		write(tekcopyfd, Tp->data, Tp->count);
+		Tp = Tp->next;
+	    } while (Tp);
+	    close(tekcopyfd);
+	}
     }
 }
 

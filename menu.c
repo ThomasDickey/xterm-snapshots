@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.232 2007/03/18 23:05:54 tom Exp $ */
+/* $XTermId: menu.c,v 1.233 2007/05/28 19:05:36 tom Exp $ */
 
 /*
 
@@ -728,7 +728,7 @@ domenu(Widget w,
 
 #if OPT_TEK4014
     case tekMenu:
-	if (created) {
+	if (created && tekWidget) {
 	    set_tekfont_menu_item(tekWidget->screen.cur.fontsize, True);
 	    update_vtshow();
 	}
