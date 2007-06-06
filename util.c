@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.353 2007/05/28 21:04:58 tom Exp $ */
+/* $XTermId: util.c,v 1.355 2007/06/05 19:32:25 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1635,6 +1635,11 @@ typedef struct {
     Pixel bg;
 } ToSwap;
 
+/*
+ * Use this to swap the foreground/background color values in the resource
+ * data, and to build up a list of the pairs which must be swapped in the
+ * GC cache.
+ */
 static void
 swapLocally(ToSwap * list, int *count, ColorRes * fg, ColorRes * bg)
 {
@@ -1650,18 +1655,22 @@ swapLocally(ToSwap * list, int *count, ColorRes * fg, ColorRes * bg)
     Pixel bg_color = *bg;
 #endif
 
-    EXCHANGE(*fg, *bg, tmp);
-    for (n = 0; n < *count; ++n) {
-	if ((list[n].fg == fg_color && list[n].bg == bg_color)
-	    || (list[n].fg == bg_color && list[n].bg == fg_color)) {
-	    found = True;
-	    break;
+    if (fg_color != bg_color) {
+	EXCHANGE(*fg, *bg, tmp);
+	for (n = 0; n < *count; ++n) {
+	    if ((list[n].fg == fg_color && list[n].bg == bg_color)
+		|| (list[n].fg == bg_color && list[n].bg == fg_color)) {
+		found = True;
+		break;
+	    }
 	}
-    }
-    if (!found) {
-	list[*count].fg = fg_color;
-	list[*count].bg = bg_color;
-	*count = *count + 1;
+	if (!found) {
+	    list[*count].fg = fg_color;
+	    list[*count].bg = bg_color;
+	    *count = *count + 1;
+	    TRACE(("swapLocally fg %#lx, bg %#lx ->%d\n", fg_color,
+		   bg_color, *count));
+	}
     }
 }
 
@@ -1670,6 +1679,7 @@ reallySwapColors(XtermWidget xw, ToSwap * list, int count)
 {
     int j, k;
 
+    TRACE(("reallySwapColors\n"));
     for (j = 0; j < count; ++j) {
 	for_each_text_gc(k) {
 	    redoCgs(xw, list[j].fg, list[j].bg, (CgsEnum) k);
@@ -1708,6 +1718,9 @@ ReverseVideo(XtermWidget xw)
 	swapAColor(0, 7);
 	swapAColor(8, 15);
     });
+
+    if (T_COLOR(screen, TEXT_CURSOR) == T_COLOR(screen, TEXT_FG))
+	T_COLOR(screen, TEXT_CURSOR) = T_COLOR(screen, TEXT_BG);
 
 #define swapTColor(a,b) swapAnyColor(Tcolors, a, b)
     swapTColor(TEXT_FG, TEXT_BG);
@@ -2865,6 +2878,8 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 #if OPT_HIGHLIGHT_COLOR
     Pixel selbg_pix = T_COLOR(screen, HIGHLIGHT_BG);
     Pixel selfg_pix = T_COLOR(screen, HIGHLIGHT_FG);
+    Boolean use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
+    Boolean use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
 #endif
 
     (void) fg_bg;
@@ -2873,25 +2888,28 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 
     checkVeryBoldColors(flags, my_fg);
 
-#if OPT_HIGHLIGHT_COLOR
-    if (hilite) {
-	Bool use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
-	Bool use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
-
-	if (use_selbg)
-	    fg_pix = selbg_pix;
-	if (use_selfg)
-	    bg_pix = selfg_pix;
-    }
-#endif
-
     if (ReverseOrHilite(screen, flags, hilite)) {
 	if (flags & BOLDATTR(screen)) {
 	    cgsId = gcBoldReverse;
 	} else {
 	    cgsId = gcNormReverse;
 	}
+
 	EXCHANGE(fg_pix, bg_pix, xx_pix);
+#if OPT_HIGHLIGHT_COLOR
+	if (screen->hilite_reverse) {
+	    if (use_selbg) {
+		if (use_selfg)
+		    bg_pix = fg_pix;
+		else
+		    fg_pix = bg_pix;
+	    }
+	    if (use_selbg)
+		bg_pix = selbg_pix;
+	    if (use_selfg)
+		fg_pix = selfg_pix;
+	}
+#endif
     } else {
 	if (flags & BOLDATTR(screen)) {
 	    cgsId = gcBold;
@@ -2899,6 +2917,14 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 	    cgsId = gcNorm;
 	}
     }
+#if OPT_HIGHLIGHT_COLOR
+    if (hilite && !screen->hilite_reverse) {
+	if (use_selbg)
+	    bg_pix = selbg_pix;
+	if (use_selfg)
+	    fg_pix = selfg_pix;
+    }
+#endif
 
 #if OPT_BLINK_TEXT
     if ((screen->blink_state == ON) && (!screen->blink_as_bold) && (flags & BLINK)) {
