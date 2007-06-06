@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.485 2007/05/24 21:03:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.486 2007/06/03 22:12:23 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1287,6 +1287,9 @@ typedef struct {
 	uid_t		uid;		/* user id of actual person	*/
 	gid_t		gid;		/* group id of actual person	*/
 	ColorRes	Tcolors[NCOLORS]; /* terminal colors		*/
+#if OPT_HIGHLIGHT_COLOR
+	Boolean		hilite_reverse;	/* hilite overrides reverse	*/
+#endif
 #if OPT_ISO_COLORS
 	ColorRes	Acolors[MAXCOLORS]; /* ANSI color emulation	*/
 	int		veryBoldColors;	/* modifier for boldColors	*/

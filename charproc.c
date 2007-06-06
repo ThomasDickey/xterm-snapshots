@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.788 2007/05/24 20:51:55 tom Exp $ */
+/* $XTermId: charproc.c,v 1.789 2007/06/06 00:11:46 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -551,6 +551,7 @@ static XtResource resources[] =
 #if OPT_HIGHLIGHT_COLOR
     Tres(XtNhighlightColor, XtCHighlightColor, HIGHLIGHT_BG, XtDefaultForeground),
     Tres(XtNhighlightTextColor, XtCHighlightTextColor, HIGHLIGHT_FG, XtDefaultBackground),
+    Bres(XtNhighlightReverse, XtCHighlightReverse, screen.hilite_reverse, True),
 #endif				/* OPT_HIGHLIGHT_COLOR */
 
 #if OPT_INPUT_METHOD
@@ -5756,6 +5757,7 @@ VTInitialize(Widget wrequest,
 #if OPT_HIGHLIGHT_COLOR
     init_Tres(HIGHLIGHT_BG);
     init_Tres(HIGHLIGHT_FG);
+    init_Bres(screen.hilite_reverse);
 #endif
 
 #if OPT_TEK4014
@@ -6715,6 +6717,8 @@ ShowCursor(void)
 #if OPT_HIGHLIGHT_COLOR
     Pixel selbg_pix = T_COLOR(screen, HIGHLIGHT_BG);
     Pixel selfg_pix = T_COLOR(screen, HIGHLIGHT_FG);
+    Boolean use_selbg;
+    Boolean use_selfg;
 #endif
 #if OPT_WIDE_CHARS
     Char chi = 0;
@@ -6816,6 +6820,10 @@ ShowCursor(void)
      * outline for the cursor.
      */
     filled = (screen->select || screen->always_highlight);
+#if OPT_HIGHLIGHT_COLOR
+    use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
+    use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
+#endif
     if (filled) {
 	if (reversed) {		/* text is reverse video */
 	    if (getCgsGC(xw, currentWin, gcVTcursNormal)) {
@@ -6827,18 +6835,19 @@ ShowCursor(void)
 		    setGC(gcNorm);
 		}
 	    }
+	    EXCHANGE(fg_pix, bg_pix, tmp);
 #if OPT_HIGHLIGHT_COLOR
-	    {
-		Bool use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
-		Bool use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
-
+	    if (screen->hilite_reverse) {
+		if (use_selbg && !use_selfg)
+		    fg_pix = bg_pix;
+		if (use_selfg && !use_selbg)
+		    bg_pix = fg_pix;
 		if (use_selbg)
-		    fg_pix = selbg_pix;
+		    bg_pix = selbg_pix;
 		if (use_selfg)
-		    bg_pix = selfg_pix;
+		    fg_pix = selfg_pix;
 	    }
 #endif
-	    EXCHANGE(fg_pix, bg_pix, tmp);
 	} else {		/* normal video */
 	    if (getCgsGC(xw, currentWin, gcVTcursReverse)) {
 		setGC(gcVTcursReverse);
@@ -6856,25 +6865,43 @@ ShowCursor(void)
 	setCgsFore(xw, currentWin, currentCgs, bg_pix);
     } else {			/* not selected */
 	if (reversed) {		/* text is reverse video */
-#if OPT_HIGHLIGHT_COLOR
-	    {
-		Bool use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
-		Bool use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
-
-		if (use_selbg)
-		    fg_pix = selbg_pix;
-		if (use_selfg)
-		    bg_pix = selfg_pix;
-	    }
-#endif
+	    EXCHANGE(fg_pix, bg_pix, tmp);
 	    setGC(gcNormReverse);
-	    setCgsFore(xw, currentWin, currentCgs, bg_pix);
-	    setCgsBack(xw, currentWin, currentCgs, fg_pix);
 	} else {		/* normal video */
 	    setGC(gcNorm);
-	    setCgsFore(xw, currentWin, currentCgs, fg_pix);
-	    setCgsBack(xw, currentWin, currentCgs, bg_pix);
 	}
+#if OPT_HIGHLIGHT_COLOR
+	if (screen->hilite_reverse) {
+	    if (in_selection && !reversed) {
+		;		/* really INVERSE ... */
+	    } else if (in_selection || reversed) {
+		if (use_selbg) {
+		    if (use_selfg) {
+			bg_pix = fg_pix;
+		    } else {
+			fg_pix = bg_pix;
+		    }
+		}
+		if (use_selbg) {
+		    bg_pix = selbg_pix;
+		}
+		if (use_selfg) {
+		    fg_pix = selfg_pix;
+		}
+	    }
+	} else {
+	    if (in_selection) {
+		if (use_selbg) {
+		    bg_pix = selbg_pix;
+		}
+		if (use_selfg) {
+		    fg_pix = selfg_pix;
+		}
+	    }
+	}
+#endif
+	setCgsFore(xw, currentWin, currentCgs, fg_pix);
+	setCgsBack(xw, currentWin, currentCgs, bg_pix);
     }
 
     if (screen->cursor_busy == 0

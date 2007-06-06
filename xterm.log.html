@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.557 2007/05/28 21:07:12 tom Exp $
+  $XTermId: xterm.log.html,v 1.560 2007/06/06 00:20:02 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -277,6 +277,20 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add resource <code>highlightReverse</code> which controls whether
+	    xterm will allow selection highlighting to hide reverse-video
+	    or use the older behavior which inverts the foreground and
+	    background colors when selected text with reverse-video attribute
+	    (report by Adam M Costello, comments by Victor Vaile).
+
+	<li>restore a special case for cursor-color in
+	    <code>ReverseVideo()</code>
+	    lost in rewrite for <a href="#xterm_224">patch #224</a>
+	    (report by Adam Sulmicki).
+
+	<li>correct initialization for menu entry for <code>bellIsUrgent</code> 
+	    (patch by Emanuele Giaquinta).
+
 	<li>correct clipping for double-width Xft fonts
 	    (report by Shidai Liu "Leo").
 

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.462 2007/05/24 20:53:30 tom Exp $ */
+/* $XTermId: xterm.h,v 1.463 2007/06/03 22:11:07 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -389,6 +389,7 @@ extern char **environ;
 #define XtNforceBoxChars	"forceBoxChars"
 #define XtNfreeBoldBox		"freeBoldBox"
 #define XtNhighlightColor	"highlightColor"
+#define XtNhighlightReverse	"highlightReverse"
 #define XtNhighlightSelection	"highlightSelection"
 #define XtNhighlightTextColor	"highlightTextColor"
 #define XtNhpLowerleftBugCompat	"hpLowerleftBugCompat"
@@ -529,6 +530,7 @@ extern char **environ;
 #define XtCFontStyle		"FontStyle"
 #define XtCForceBoxChars	"ForceBoxChars"
 #define XtCFreeBoldBox		"FreeBoldBox"
+#define XtCHighlightReverse	"HighlightReverse"
 #define XtCHighlightSelection	"HighlightSelection"
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
 #define XtCI18nSelections	"I18nSelections"

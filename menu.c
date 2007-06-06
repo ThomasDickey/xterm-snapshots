@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.233 2007/05/28 19:05:36 tom Exp $ */
+/* $XTermId: menu.c,v 1.234 2007/05/28 21:44:40 Emanuele.Giaquinta Exp $ */
 
 /*
 
@@ -657,7 +657,7 @@ domenu(Widget w,
 	    update_selectToClipboard();
 	    update_visualbell();
 	    update_poponbell();
-	    update_marginbell();
+	    update_bellIsUrgent();
 	    update_cursorblink();
 	    update_altscreen();
 	    update_titeInhibit();
