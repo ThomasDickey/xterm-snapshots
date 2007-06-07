@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.385 2007/06/06 00:26:42 tom Exp $
+.\" $XTermId: xterm.man,v 1.386 2007/06/06 21:17:56 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -2031,7 +2031,7 @@ The default is ``XtDefaultForeground.''
 .B "highlightReverse (\fPclass\fB HighlightReverse)"
 Specifies whether \fIxterm\fP should reverse the selection foreground
 and background colors when selecting text with reverse-video attribute.
-In particular, this resource allows better customization of
+This applies only to
 the \fBhighlightColor\fP and \fBhighlightTextColor\fP resources,
 e.g., to match the color scheme of \fIxwsh\fP.
 If ``true'', \fIxterm\fP reverses the colors,

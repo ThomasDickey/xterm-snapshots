@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.355 2007/06/05 19:32:25 tom Exp $ */
+/* $XTermId: util.c,v 1.360 2007/06/06 22:46:47 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1973,6 +1973,8 @@ xtermXftDrawString(XtermWidget xw,
     }
     return ncells;
 }
+#define xtermXftWidth(xw, flags, color, font, x, y, paired_chars, len) \
+   xtermXftDrawString(xw, flags, color, font, x, y, paired_chars, len, False)
 #endif /* OPT_RENDERFONT */
 
 #define DrawX(col) x + (col * (font_width))
@@ -2208,7 +2210,7 @@ xtermFillCells(XtermWidget xw,
 #endif /* OPT_CLIP_BOLD */
 
 #if OPT_RENDERFONT
-static void
+static int
 drawClippedXftString(XtermWidget xw,
 		     unsigned flags,
 		     XftFont * font,
@@ -2218,12 +2220,11 @@ drawClippedXftString(XtermWidget xw,
 		     PAIRED_CHARS(Char * text, Char * text2),
 		     Cardinal len)
 {
-    int ncells = xtermXftDrawString(xw, flags,
-				    fg_color,
-				    font, x, y,
-				    PAIRED_CHARS(text, text2),
-				    len,
-				    False);
+    int ncells = xtermXftWidth(xw, flags,
+			       fg_color,
+			       font, x, y,
+			       PAIRED_CHARS(text, text2),
+			       len);
     TScreen *screen = &(xw->screen);
 
     beginXftClipping(screen, x, y, ncells);
@@ -2234,6 +2235,7 @@ drawClippedXftString(XtermWidget xw,
 		       len,
 		       True);
     endXftClipping(screen);
+    return ncells;
 }
 #endif
 
@@ -2254,7 +2256,7 @@ drawXtermText(XtermWidget xw,
 {
     TScreen *screen = &(xw->screen);
     int real_length = len;
-    int underline_len;
+    int underline_len = 0;
     /* Intended width of the font to draw (as opposed to the actual width of
        the X font, and the width of the default font) */
     int font_width = ((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
@@ -2446,12 +2448,11 @@ drawXtermText(XtermWidget xw,
 
 	if (!(flags & NOBACKGROUND)) {
 	    XftColor *bg_color = getXftColor(xw, values.background);
-	    ncells = xtermXftDrawString(xw, flags,
-					bg_color,
-					font, x, y,
-					PAIRED_CHARS(text, text2),
-					len,
-					False);
+	    ncells = xtermXftWidth(xw, flags,
+				   bg_color,
+				   font, x, y,
+				   PAIRED_CHARS(text, text2),
+				   len);
 	    XftDrawRect(screen->renderDraw,
 			bg_color,
 			x, y,
@@ -2493,14 +2494,17 @@ drawXtermText(XtermWidget xw,
 		if (xtermIsDecGraphic(ch)) {
 		    /* line drawing character time */
 		    if (last > first) {
-			ncells = xtermXftDrawString(xw, flags,
-						    getXftColor(xw, values.foreground),
-						    font, curX, y,
-						    PAIRED_CHARS(text + first,
-								 text2 + first),
-						    last - first,
-						    True);
-			curX += ncells * FontWidth(screen);
+			int nc = drawClippedXftString(xw,
+						      flags,
+						      font,
+						      getXftColor(xw, values.foreground),
+						      curX,
+						      y,
+						      PAIRED_CHARS(text + first,
+								   text2 + first),
+						      last - first);
+			curX += nc * FontWidth(screen);
+			underline_len += nc;
 		    }
 		    old_wide = screen->fnt_wide;
 		    old_high = screen->fnt_high;
@@ -2509,32 +2513,36 @@ drawXtermText(XtermWidget xw,
 		    xtermDrawBoxChar(xw, ch, flags, gc,
 				     curX, y - FontAscent(screen));
 		    curX += FontWidth(screen);
+		    underline_len += 1;
 		    screen->fnt_wide = old_wide;
 		    screen->fnt_high = old_high;
 		    first = last + 1;
 		}
 	    }
 	    if (last > first) {
-		drawClippedXftString(xw,
-				     flags,
-				     font,
-				     getXftColor(xw, values.foreground),
-				     curX,
-				     y,
-				     PAIRED_CHARS(text + first, text2 + first),
-				     last - first);
+		underline_len +=
+		    drawClippedXftString(xw,
+					 flags,
+					 font,
+					 getXftColor(xw, values.foreground),
+					 curX,
+					 y,
+					 PAIRED_CHARS(text + first,
+						      text2 + first),
+					 last - first);
 	    }
 	} else
 #endif /* OPT_BOX_CHARS */
 	{
-	    drawClippedXftString(xw,
-				 flags,
-				 font,
-				 getXftColor(xw, values.foreground),
-				 x,
-				 y,
-				 PAIRED_CHARS(text, text2),
-				 len);
+	    underline_len +=
+		drawClippedXftString(xw,
+				     flags,
+				     font,
+				     getXftColor(xw, values.foreground),
+				     x,
+				     y,
+				     PAIRED_CHARS(text, text2),
+				     len);
 	}
 
 	if ((flags & UNDERLINE) && screen->underline && !did_ul) {
@@ -2542,7 +2550,7 @@ drawXtermText(XtermWidget xw,
 		y++;
 	    XDrawLine(screen->display, VWindow(screen), gc,
 		      x, y,
-		      x + (int) len * FontWidth(screen) - 1,
+		      x + (int) underline_len * FontWidth(screen) - 1,
 		      y);
 	}
 	return x + len * FontWidth(screen);
