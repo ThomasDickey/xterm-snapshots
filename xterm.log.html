@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.560 2007/06/06 00:20:02 tom Exp $
+  $XTermId: xterm.log.html,v 1.563 2007/06/07 00:54:25 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -277,6 +277,19 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify logic which resets/updates the screensize on the child
+	    process side of the pseudo-terminal to do this only if a
+	    successful handshake was received, e.g., as determined by
+	    the <code>waitForMap</code> resource (prompted by reports
+	    by Emanuele Giaquinta and Bernhard R. Link, but see also
+	    <a href="#xterm_177">patch #177</a> and
+	    <a href="#xterm_159">patch #159</a>.
+
+	<li>improve permissions logic when closing pseudo-terminal
+	    (Debian #12261,
+	     patch by Nathanael Nerode,
+	     analysis by Richard Braakman).
+
 	<li>add resource <code>highlightReverse</code> which controls whether
 	    xterm will allow selection highlighting to hide reverse-video
 	    or use the older behavior which inverts the foreground and
@@ -290,6 +303,9 @@ is the latest version of this file.
 
 	<li>correct initialization for menu entry for <code>bellIsUrgent</code> 
 	    (patch by Emanuele Giaquinta).
+
+	<li>correct length of underlining for double-width Xft fonts
+	    (report by Shidai Liu "Leo").
 
 	<li>correct clipping for double-width Xft fonts
 	    (report by Shidai Liu "Leo").

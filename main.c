@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.557 2007/03/24 15:26:47 tom Exp $ */
+/* $XTermId: main.c,v 1.559 2007/06/07 00:41:47 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -560,10 +560,12 @@ static char **command_to_exec_with_luit = NULL;
 #define TERMIO_STRUCT struct termio
 #define ttySetAttr(fd, datap) ioctl(fd, TCSETA, datap)
 #define ttyGetAttr(fd, datap) ioctl(fd, TCGETA, datap)
+#define ttyFlush(fd)          ioctl(fd, TCFLSH, 1)
 #elif defined(USE_POSIX_TERMIOS)
 #define TERMIO_STRUCT struct termios
 #define ttySetAttr(fd, datap) tcsetattr(fd, TCSANOW, datap)
 #define ttyGetAttr(fd, datap) tcgetattr(fd, datap)
+#define ttyFlush(fd)          tcflush(fd, TCOFLUSH)
 #endif /* USE_ANY_SYSV_TERMIO */
 
 #ifndef VMS
@@ -2788,6 +2790,8 @@ first_map_occurred(void)
     handshake.status = PTY_EXEC;
     handshake.rows = screen->max_row;
     handshake.cols = screen->max_col;
+
+    TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
     write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
     close(cp_pipe[0]);
     close(pc_pipe[1]);
@@ -2910,6 +2914,7 @@ spawnXTerm(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
 #if OPT_PTY_HANDSHAKE
+    Bool got_handshake_size = False;
     handshake_t handshake;
     int done;
 #endif
@@ -4212,9 +4217,12 @@ spawnXTerm(XtermWidget xw)
 			exit(ERROR_PTY_EXEC);
 		    }
 		    if (handshake.rows > 0 && handshake.cols > 0) {
+			TRACE(("handshake ttysize: %dx%d\n",
+			       handshake.rows, handshake.cols));
 			set_max_row(screen, handshake.rows);
 			set_max_col(screen, handshake.cols);
 #ifdef TTYSIZE_STRUCT
+			got_handshake_size = True;
 			TTYSIZE_ROWS(ts) = MaxRows(screen);
 			TTYSIZE_COLS(ts) = MaxCols(screen);
 #if defined(USE_STRUCT_WINSIZE)
@@ -4280,7 +4288,7 @@ spawnXTerm(XtermWidget xw)
 
 	    /* need to reset after all the ioctl bashing we did above */
 #if OPT_PTY_HANDSHAKE
-	    if (resource.ptyHandshake) {
+	    if (got_handshake_size) {
 #ifdef TTYSIZE_STRUCT
 		i = SET_TTYSIZE(0, ts);
 		TRACE(("spawn SET_TTYSIZE %dx%d return %d\n",
@@ -4613,11 +4621,11 @@ Exit(int n)
 #endif /* USE_SYSV_UTMP */
 #endif /* HAVE_UTMP */
 
-    close(screen->respond);	/* close explicitly to avoid race with slave side */
-#ifdef ALLOWLOGGING
-    if (screen->logging)
-	CloseLog(screen);
-#endif
+    /*
+     * Flush pending data before releasing ownership, so nobody else can write
+     * in the middle of the data.
+     */
+    ttyFlush(screen->respond);
 
     if (am_slave < 0) {
 	/* restore ownership of tty and pty */
@@ -4626,6 +4634,17 @@ Exit(int n)
 	set_owner(ptydev, 0, 0, 0666U);
 #endif
     }
+
+    /*
+     * Close after releasing ownership to avoid race condition: other programs 
+     * grabbing it, and *then* having us release ownership....
+     */
+    close(screen->respond);	/* close explicitly to avoid race with slave side */
+#ifdef ALLOWLOGGING
+    if (screen->logging)
+	CloseLog(screen);
+#endif
+
 #ifdef NO_LEAKS
     if (n == 0) {
 	TRACE(("Freeing memory leaks\n"));
