@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.248 2007/06/07 21:40:04 tom Exp $ */
+/* $XTermId: os2main.c,v 1.249 2007/06/09 13:42:04 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -1863,11 +1863,11 @@ opencons();*/
 	    }
 
 	    /* use a layered mechanism to find a shell */
-	    ptr = getenv("X11SHELL");
+	    ptr = x_getenv("X11SHELL");
 	    if (!ptr)
-		ptr = getenv("SHELL");
+		ptr = x_getenv("SHELL");
 	    if (!ptr)
-		ptr = getenv("OS2_SHELL");
+		ptr = x_getenv("OS2_SHELL");
 	    if (!ptr)
 		ptr = "SORRY_NO_SHELL_FOUND";
 	    xtermSetenv("XTERM_SHELL", ptr);

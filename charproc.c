@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.793 2007/06/08 23:21:38 tom Exp $ */
+/* $XTermId: charproc.c,v 1.794 2007/06/09 14:48:08 Miroslav.Lichvar Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -3270,13 +3270,8 @@ in_put(XtermWidget xw)
 #endif
 #if OPT_SESSION_MGT
 	} else if (resource.sessionMgt) {
-	    /*
-	     * When session management is enabled, we should not block since
-	     * session related events can arrive any time.
-	     */
-	    select_timeout.tv_sec = 1;
-	    select_timeout.tv_usec = 0;
-	    time_select = 1;
+	    if (ice_fd >= 0)
+		FD_SET(ice_fd, &select_mask);
 #endif
 	}
 	if (need_cleanup)

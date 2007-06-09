@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.387 2007/06/08 23:43:58 tom Exp $
+.\" $XTermId: xterm.man,v 1.388 2007/06/09 13:50:49 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -4539,6 +4539,10 @@ a reference.
 .TP 5
 WINDOWID
 is set to the X window id number of the \fIxterm\fP window.
+.TP 5
+XTERM_LOCALE
+shows the locale which was used by \fIxterm\fP on startup.
+Some shell initialization scripts may set a different locale.
 .TP 5
 XTERM_SHELL
 is set to the pathname of the program which is invoked.

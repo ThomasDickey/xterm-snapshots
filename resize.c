@@ -1,9 +1,9 @@
-/* $XTermId: resize.c,v 1.101 2007/03/19 23:39:10 tom Exp $ */
+/* $XTermId: resize.c,v 1.102 2007/06/09 13:42:51 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/resize.c,v 3.62 2006/02/13 01:14:59 dickey Exp $ */
 
 /*
- * Copyright 2003-2005,2006 by Thomas E. Dickey
+ * Copyright 2003-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -279,7 +279,7 @@ main(int argc, char **argv ENVP_ARG)
 	/* Find out what kind of shell this user is running.
 	 * This is the same algorithm that xterm uses.
 	 */
-	if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
+	if (((ptr = x_getenv("SHELL")) == NULL) &&
 	    (((pw = getpwuid(getuid())) == NULL) ||
 	     *(ptr = pw->pw_shell) == 0))
 	    /* this is the same default that xterm uses */
@@ -318,7 +318,7 @@ main(int argc, char **argv ENVP_ARG)
     }
     tty = fileno(ttyfp);
 #ifdef USE_TERMCAP
-    if (!(env = getenv("TERM")) || !*env) {
+    if ((env = x_getenv("TERM")) == 0) {
 	env = DFT_TERMTYPE;
 	if (SHELL_BOURNE == shell_type)
 	    setname = "TERM=xterm;\nexport TERM;\n";
@@ -330,7 +330,7 @@ main(int argc, char **argv ENVP_ARG)
 	ok_tcap = 0;
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
-    if (!(env = getenv("TERM")) || !*env) {
+    if ((env = x_getenv("TERM")) == 0) {
 	env = DFT_TERMTYPE;
 	if (SHELL_BOURNE == shell_type)
 	    setname = "TERM=xterm;\nexport TERM;\n";
