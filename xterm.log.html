@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.563 2007/06/07 00:54:25 tom Exp $
+  $XTermId: xterm.log.html,v 1.565 2007/06/08 23:20:48 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -277,6 +277,18 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add resource settings <code>mkSampleSize</code> and
+	    <code>mkSamplePass</code>
+	    to modify the <code>mkWidth</code> added
+	    in <a href="#xterm_201">patch #201</a>.
+	    In <a href="#xterm_202">patch #202</a>,
+	    xterm would also check if the system's
+	    <code>wcwidth</code> matched its built-in tables
+	    "well enough" to be used when <code>mkWidth</code> was false,
+	    and if not would use the built-in tables anyway.
+	    These resources allow the user to customize the decision
+	    (prompted by comments by Emanuele Giaquinta)
+
 	<li>modify logic which resets/updates the screensize on the child
 	    process side of the pseudo-terminal to do this only if a
 	    successful handshake was received, e.g., as determined by

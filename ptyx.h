@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.486 2007/06/03 22:12:23 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.489 2007/06/08 00:45:13 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -89,7 +89,7 @@
 #define TypeCalloc(type)	TypeCalloc(type,1)
 
 #define TypeMallocN(type,n)	(type *)malloc(sizeof(type) * (n))
-#define TypeMalloc(type)	TypeMallocN(type,0)
+#define TypeMalloc(type)	TypeMallocN(type,1)
 
 #define TypeRealloc(type,n,p)	(type *)realloc(p, (n) * sizeof(type))
 
@@ -1644,6 +1644,10 @@ typedef struct {
 #if OPT_CLIP_BOLD
 	Boolean		use_clipping;
 #endif
+	void *		main_cgs_cache;
+#ifndef NO_ACTIVE_ICON
+	void *		icon_cgs_cache;
+#endif
 #if OPT_RENDERFONT
 	XftFont *	renderFontNorm[NMENUFONTS];
 	XftFont *	renderFontBold[NMENUFONTS];
@@ -1813,6 +1817,8 @@ typedef struct _Misc {
 #if OPT_WIDE_CHARS
     Boolean cjk_width;		/* true for built-in CJK wcwidth() */
     Boolean mk_width;		/* true for simpler built-in wcwidth() */
+    int mk_samplesize;
+    int mk_samplepass;
 #endif
 #if OPT_LUIT_PROG
     Boolean callfilter;		/* true to invoke luit */

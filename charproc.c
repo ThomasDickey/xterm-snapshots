@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.789 2007/06/06 00:11:46 tom Exp $ */
+/* $XTermId: charproc.c,v 1.793 2007/06/08 23:21:38 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -658,6 +658,8 @@ static XtResource resources[] =
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, True),
     Bres(XtNwideChars, XtCWideChars, screen.wide_chars, False),
     Ires(XtNcombiningChars, XtCCombiningChars, screen.max_combining, 2),
+    Ires(XtNmkSamplePass, XtCMkSamplePass, misc.mk_samplepass, 256),
+    Ires(XtNmkSampleSize, XtCMkSampleSize, misc.mk_samplesize, 1024),
     Ires(XtNutf8, XtCUtf8, screen.utf8_mode, uDefault),
     Sres(XtNwideBoldFont, XtCWideBoldFont, misc.default_font.f_wb, DEFWIDEBOLDFONT),
     Sres(XtNwideFont, XtCWideFont, misc.default_font.f_w, DEFWIDEFONT),
@@ -5816,6 +5818,19 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.mk_width);
     init_Bres(misc.cjk_width);
 
+    init_Ires(misc.mk_samplesize);
+    init_Ires(misc.mk_samplepass);
+
+    if (wnew->misc.mk_samplesize > 0xffff)
+	wnew->misc.mk_samplesize = 0xffff;
+    if (wnew->misc.mk_samplesize < 0)
+	wnew->misc.mk_samplesize = 0;
+
+    if (wnew->misc.mk_samplepass > wnew->misc.mk_samplesize)
+	wnew->misc.mk_samplepass = wnew->misc.mk_samplesize;
+    if (wnew->misc.mk_samplepass < 0)
+	wnew->misc.mk_samplepass = 0;
+
     if (request->screen.utf8_mode) {
 	TRACE(("setting wide_chars on\n"));
 	wnew->screen.wide_chars = True;
@@ -5841,7 +5856,9 @@ VTInitialize(Widget wrequest,
 
     decode_wcwidth((wnew->misc.cjk_width ? 2 : 0)
 		   + (wnew->misc.mk_width ? 1 : 0)
-		   + 1);
+		   + 1,
+		   wnew->misc.mk_samplesize,
+		   wnew->misc.mk_samplepass);
 #endif /* OPT_WIDE_CHARS */
 
     init_Bres(screen.always_bold_mode);
@@ -6025,6 +6042,7 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif
 
     xtermCloseFonts(xw, screen->fnts);
+    noleaks_cachedCgs(xw);
 
 #if 0				/* some strings may be owned by X libraries */
     for (n = 0; n <= fontMenu_lastBuiltin; ++n) {
