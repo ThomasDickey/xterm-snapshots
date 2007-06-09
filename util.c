@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.360 2007/06/06 22:46:47 tom Exp $ */
+/* $XTermId: util.c,v 1.361 2007/06/08 23:07:24 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -3331,13 +3331,12 @@ decode_keyboard_type(XtermWidget xw, XTERM_RESOURCE * rp)
  * old runtime configurations which yield incomplete or inaccurate data.
  */
 static Bool
-systemWcwidthOk(void)
+systemWcwidthOk(int samplesize, int samplepass)
 {
     wchar_t n;
     int oops = 0;
-    int last = 1024;
 
-    for (n = 0; n < last; ++n) {
+    for (n = 0; n < samplesize; ++n) {
 	int system_code = wcwidth(n);
 	int intern_code = mk_wcwidth(n);
 
@@ -3363,18 +3362,19 @@ systemWcwidthOk(void)
 	    ++oops;
 	}
     }
-    TRACE(("systemWcwidthOk: %d/%d mismatches\n", oops, last));
-    return (oops < (last / 4));
+    TRACE(("systemWcwidthOk: %d/%d mismatches, allowed %d\n",
+	   oops, samplesize, samplepass));
+    return (oops <= samplepass);
 }
 #endif /* HAVE_WCWIDTH */
 
 void
-decode_wcwidth(int mode)
+decode_wcwidth(int mode, int samplesize, int samplepass)
 {
     switch (mode) {
     default:
 #if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
-	if (xtermEnvUTF8() && systemWcwidthOk()) {
+	if (xtermEnvUTF8() && systemWcwidthOk(samplesize, samplepass)) {
 	    my_wcwidth = wcwidth;
 	    TRACE(("using system wcwidth() function\n"));
 	    break;

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.559 2007/06/07 00:41:47 tom Exp $ */
+/* $XTermId: main.c,v 1.561 2007/06/07 23:23:10 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2954,7 +2954,6 @@ spawnXTerm(XtermWidget xw)
     char *ptr, *shname, *shname_minus;
     int i, no_dev_tty = False;
     char **envnew;		/* new environment */
-    int envsize;		/* elements in new environment */
     char buf[64];
     char *TermName = NULL;
 #ifdef TTYSIZE_STRUCT
@@ -3850,40 +3849,20 @@ spawnXTerm(XtermWidget xw)
 	    }
 #endif
 
-	    /* copy the environment before Setenv'ing */
-	    for (i = 0; environ[i] != NULL; i++) ;
-	    /* compute number of xtermSetenv() calls below */
-	    envsize = 1;	/* (NULL terminating entry) */
-	    envsize += 5;	/* TERM, WINDOWID, DISPLAY, _SHELL, _VERSION */
-#ifdef HAVE_UTMP
-	    envsize += 1;	/* LOGNAME */
-#endif /* HAVE_UTMP */
-#ifdef USE_SYSV_ENVVARS
-	    envsize += 2;	/* COLUMNS, LINES */
-#ifdef HAVE_UTMP
-	    envsize += 2;	/* HOME, SHELL */
-#endif /* HAVE_UTMP */
-#ifdef OWN_TERMINFO_DIR
-	    envsize += 1;	/* TERMINFO */
-#endif
-#else /* USE_SYSV_ENVVARS */
-	    envsize += 1;	/* TERMCAP */
-#endif /* USE_SYSV_ENVVARS */
-	    envnew = TypeCallocN(char *, (unsigned) i + envsize);
-	    memmove((char *) envnew, (char *) environ, i * sizeof(char *));
-	    environ = envnew;
-	    xtermSetenv("TERM=", TermName);
+	    xtermCopyEnv(environ);
+
+	    xtermSetenv("TERM", TermName);
 	    if (!TermName)
 		*newtc = 0;
 
 	    sprintf(buf, "%lu",
 		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU()))));
-	    xtermSetenv("WINDOWID=", buf);
+	    xtermSetenv("WINDOWID", buf);
 
 	    /* put the display into the environment of the shell */
-	    xtermSetenv("DISPLAY=", XDisplayString(screen->display));
+	    xtermSetenv("DISPLAY", XDisplayString(screen->display));
 
-	    xtermSetenv("XTERM_VERSION=", xtermVersion());
+	    xtermSetenv("XTERM_VERSION", xtermVersion());
 
 	    signal(SIGTERM, SIG_DFL);
 
@@ -3979,7 +3958,7 @@ spawnXTerm(XtermWidget xw)
 		    login_name = x_strdup(login_name);
 	    }
 	    if (login_name != NULL) {
-		xtermSetenv("LOGNAME=", login_name);	/* for POSIX */
+		xtermSetenv("LOGNAME", login_name);	/* for POSIX */
 	    }
 #ifndef USE_UTEMPTER
 #ifdef USE_UTMP_SETGID
@@ -4239,20 +4218,20 @@ spawnXTerm(XtermWidget xw)
 	    {
 		char numbuf[12];
 		sprintf(numbuf, "%d", MaxCols(screen));
-		xtermSetenv("COLUMNS=", numbuf);
+		xtermSetenv("COLUMNS", numbuf);
 		sprintf(numbuf, "%d", MaxRows(screen));
-		xtermSetenv("LINES=", numbuf);
+		xtermSetenv("LINES", numbuf);
 	    }
 #ifdef HAVE_UTMP
 	    if (pw) {		/* SVR4 doesn't provide these */
 		if (!getenv("HOME"))
-		    xtermSetenv("HOME=", pw->pw_dir);
+		    xtermSetenv("HOME", pw->pw_dir);
 		if (!getenv("SHELL"))
-		    xtermSetenv("SHELL=", pw->pw_shell);
+		    xtermSetenv("SHELL", pw->pw_shell);
 	    }
 #endif /* HAVE_UTMP */
 #ifdef OWN_TERMINFO_DIR
-	    xtermSetenv("TERMINFO=", OWN_TERMINFO_DIR);
+	    xtermSetenv("TERMINFO", OWN_TERMINFO_DIR);
 #endif
 #else /* USE_SYSV_ENVVARS */
 	    resize_termcap(xw, newtc);
@@ -4282,7 +4261,7 @@ spawnXTerm(XtermWidget xw)
 			TERMCAP_ERASE,
 			CharOf(initial_erase));
 #endif
-		xtermSetenv("TERMCAP=", newtc);
+		xtermSetenv("TERMCAP", newtc);
 	    }
 #endif /* USE_SYSV_ENVVARS */
 
@@ -4306,9 +4285,9 @@ spawnXTerm(XtermWidget xw)
 		    ptr = "/bin/sh";
 		}
 	    } else {
-		xtermSetenv("SHELL=", explicit_shname);
+		xtermSetenv("SHELL", explicit_shname);
 	    }
-	    xtermSetenv("XTERM_SHELL=", ptr);
+	    xtermSetenv("XTERM_SHELL", ptr);
 
 	    shname = x_basename(ptr);
 	    TRACE(("shell path '%s' leaf '%s'\n", ptr, shname));
@@ -4320,7 +4299,7 @@ spawnXTerm(XtermWidget xw)
 	     * to command that the user gave anyway.
 	     */
 	    if (command_to_exec_with_luit) {
-		xtermSetenv("XTERM_SHELL=",
+		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec_with_luit, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
@@ -4332,7 +4311,7 @@ spawnXTerm(XtermWidget xw)
 	    }
 #endif
 	    if (command_to_exec) {
-		xtermSetenv("XTERM_SHELL=",
+		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvp(*command_to_exec, command_to_exec);
@@ -4661,6 +4640,7 @@ Exit(int n)
 #if OPT_WIDE_CHARS
 	    noleaks_CharacterClass();
 #endif
+	    /* XrmSetDatabase(dpy, 0); increases leaks ;-) */
 	    XtCloseDisplay(dpy);
 	    XtDestroyApplicationContext(app_con);
 	    TRACE(("closed display\n"));

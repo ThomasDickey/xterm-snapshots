@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.247 2007/03/19 23:48:32 tom Exp $ */
+/* $XTermId: os2main.c,v 1.248 2007/06/07 21:40:04 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -127,7 +127,7 @@ ttyname(int fd)
 
 static SIGNAL_T reapchild(int n);
 static int spawnXTerm(XtermWidget /* xw */ );
-static void resize_termcap(XTermWidget xw, char *oldtc, char *newtc);
+static void resize_termcap(XtermWidget xw, char *newtc);
 static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
 static Bool added_utmp_entry = False;
@@ -191,6 +191,8 @@ static struct termio d_tio;
 #ifndef CWERASE
 #define CWERASE CONTROL('W')
 #endif
+
+#define TERMIO_STRUCT struct termio
 
 /*
  * SYSV has the termio.c_cc[V] and ltchars; BSD has tchars and ltchars;
@@ -1474,26 +1476,10 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 	if (why != ENOENT
 	    && save_ruid == 0) {
 	    fprintf(stderr, "Cannot chown %s to %ld,%ld: %s\n",
-		    device, (long) uid, (long) gid, strerror(why));
+		    device, (long) uid, (long) gid,
+		    strerror(why));
 	}
     }
-#ifndef __EMX__
-/* EMX can chmod files only, not devices */
-    if (chmod(device, mode) < 0) {
-	why = errno;
-	if (why != ENOENT) {
-	    struct stat sb;
-	    if (stat(device, &sb) < 0) {
-		fprintf(stderr, "Cannot chmod %s to %03o: %s\n",
-			device, mode, strerror(why));
-	    } else {
-		fprintf(stderr,
-			"Cannot chmod %s to %03o currently %03o: %s\n",
-			device, mode, (sb.st_mode & S_IFMT), strerror(why));
-	    }
-	}
-    }
-#endif
 }
 
 #define THE_PARENT 1
@@ -1538,13 +1524,14 @@ spawnXTerm(XtermWidget xw)
     int Xsocket = ConnectionNumber(screen->display);
 
     int ttyfd = -1;
-    struct termio tio;
+    TERMIO_STRUCT tio;
     int status;
+    Bool ok_termcap;
+    char *newtc;
 
-    char newtc[TERMCAP_SIZE];
     char *TermName = NULL;
     char *ptr, *shname, buf[64];
-    int i, no_dev_tty = False, envsize;
+    int i, no_dev_tty = False;
     char *dev_tty_name = (char *) 0;
     TTYSIZE_STRUCT ts;
     int pgrp = getpid();
@@ -1641,12 +1628,12 @@ spawnXTerm(XtermWidget xw)
 #if OPT_TEK4014
     if (TEK4014_ACTIVE(xw)) {
 	envnew = tekterm;
-	ptr = TekScreenOf(tekWidget)->tcapbuf;
+	newtc = TekScreenOf(tekWidget)->tcapbuf;
     } else
 #endif
     {
 	envnew = vtterm;
-	ptr = screen->tcapbuf;
+	newtc = screen->tcapbuf;
     }
 
     /*
@@ -1656,13 +1643,13 @@ spawnXTerm(XtermWidget xw)
      * entry is not found.
      */
     ok_termcap = True;
-    if (!get_termcap(TermName = resource.term_name, ptr)) {
+    if (!get_termcap(TermName = resource.term_name, newtc)) {
 	char *last = NULL;
 	TermName = *envnew;
 	ok_termcap = False;
 	while (*envnew != NULL) {
 	    if ((last == NULL || strcmp(last, *envnew))
-		&& get_termcap(*envnew, ptr)) {
+		&& get_termcap(*envnew, newtc)) {
 		TermName = *envnew;
 		ok_termcap = True;
 		break;
@@ -1672,7 +1659,7 @@ spawnXTerm(XtermWidget xw)
 	}
     }
     if (ok_termcap) {
-	resize_termcap(xw, ptr, newtc);
+	resize_termcap(xw, newtc);
     }
 
     /* tell tty how big window is */
@@ -1754,7 +1741,7 @@ opencons();*/
 	     * not have a line discipline structure
 	     */
 	    {
-		struct termio t, t1;
+		TERMIO_STRUCT t, t1;
 		if (ptioctl(ttyfd, TCGETA, (char *) &t) < 0)
 		    t = d_tio;
 
@@ -1769,7 +1756,8 @@ opencons();*/
 		if (Console) {
 		    int on = 1;
 		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
-			fprintf(stderr, "%s: cannot open console\n", xterm_name);
+			fprintf(stderr, "%s: cannot open console: %s\n",
+				xterm_name, strerror(errno));
 		}
 	    }
 
@@ -1781,29 +1769,20 @@ opencons();*/
 	    signal(SIGQUIT, SIG_DFL);
 	    signal(SIGTERM, SIG_DFL);
 
-	    /* copy the environment before Setenv'ing */
-	    for (i = 0; gblenvp[i] != NULL; i++) ;
+	    xtermCopyEnv(gblenvp);
 
-	    /* compute number of xtermSetenv() calls below */
-	    envsize = 1;	/* (NULL terminating entry) */
-	    envsize += 5;	/* TERM, WINDOWID, DISPLAY, _SHELL, _VERSION */
-	    envsize += 2;	/* COLUMNS, LINES */
-
-	    envnew = TypeCallocN(char *, (unsigned) i + envsize);
-	    memmove((char *) envnew, (char *) gblenvp, i * sizeof(char *));
-	    gblenvp = envnew;
-	    xtermSetenv("TERM=", TermName);
+	    xtermSetenv("TERM", TermName);
 	    if (!TermName)
 		*newtc = 0;
 
 	    sprintf(buf, "%lu",
 		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU()))));
-	    xtermSetenv("WINDOWID=", buf);
+	    xtermSetenv("WINDOWID", buf);
 
 	    /* put the display into the environment of the shell */
-	    xtermSetenv("DISPLAY=", XDisplayString(screen->display));
+	    xtermSetenv("DISPLAY", XDisplayString(screen->display));
 
-	    xtermSetenv("XTERM_VERSION=", xtermVersion());
+	    xtermSetenv("XTERM_VERSION", xtermVersion());
 
 	    signal(SIGTERM, SIG_DFL);
 
@@ -1833,12 +1812,11 @@ opencons();*/
 	    }
 
 	    sprintf(numbuf, "%d", MaxCols(screen));
-	    xtermSetenv("COLUMNS=", numbuf);
+	    xtermSetenv("COLUMNS", numbuf);
 	    sprintf(numbuf, "%d", MaxRows(screen));
-	    xtermSetenv("LINES=", numbuf);
+	    xtermSetenv("LINES", numbuf);
 
-	    /* reconstruct dead environ variable */
-	    environ = gblenvp;
+	    gblenvp = environ;
 
 	    /* need to reset after all the ioctl bashing we did above */
 	    ptioctl(0, TIOCSWINSZ, (char *) &ts);
@@ -1862,7 +1840,7 @@ opencons();*/
 	     * to command that the user gave anyway.
 	     */
 	    if (command_to_exec_with_luit) {
-		xtermSetenv("XTERM_SHELL=",
+		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec_with_luit, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
@@ -1874,7 +1852,7 @@ opencons();*/
 	    }
 #endif
 	    if (command_to_exec) {
-		xtermSetenv("XTERM_SHELL=",
+		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec));
 		execvpe(*command_to_exec, command_to_exec, gblenvp);
@@ -1892,7 +1870,7 @@ opencons();*/
 		ptr = getenv("OS2_SHELL");
 	    if (!ptr)
 		ptr = "SORRY_NO_SHELL_FOUND";
-	    xtermSetenv("XTERM_SHELL=", ptr);
+	    xtermSetenv("XTERM_SHELL", ptr);
 
 	    shname = x_basename(ptr);
 	    if (command_to_exec) {
@@ -1968,7 +1946,7 @@ Exit(int n)
 
 /* ARGSUSED */
 static void
-resize_termcap(XTermWidget xw, TScreen * screen, char *oldtc, char *newtc)
+resize_termcap(XtermWidget xw, char *newtc)
 {
 }
 
@@ -2032,13 +2010,17 @@ parse_tty_modes(char *s, struct _xttymodes *modelist)
 
     TRACE(("parse_tty_modes\n"));
     while (1) {
+	size_t len;
+
 	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s)))
 	    s++;
 	if (!*s)
 	    return count;
 
+	for (len = 0; isalnum(CharOf(s[len])); ++len) ;
 	for (mp = modelist; mp->name; mp++) {
-	    if (strncmp(s, mp->name, mp->len) == 0)
+	    if (len == mp->len
+		&& strncmp(s, mp->name, mp->len) == 0)
 		break;
 	}
 	if (!mp->name)
@@ -2082,7 +2064,7 @@ ptioctl(int fd, int func, void *data)
     APIRET rc;
     ULONG len;
     struct pt_termios pt;
-    struct termio *t;
+    TERMIO_STRUCT *t;
     int i;
 
     switch (func) {
@@ -2092,7 +2074,7 @@ ptioctl(int fd, int func, void *data)
 			 (ULONG *) & pt, sizeof(struct pt_termios), &len);
 	if (rc)
 	    return -1;
-	t = (struct termio *) data;
+	t = (TERMIO_STRUCT *) data;
 	t->c_iflag = pt.c_iflag;
 	t->c_oflag = pt.c_oflag;
 	t->c_cflag = pt.c_cflag;
@@ -2103,7 +2085,7 @@ ptioctl(int fd, int func, void *data)
     case TCSETA:
     case TCSETAW:
     case TCSETAF:
-	t = (struct termio *) data;
+	t = (TERMIO_STRUCT *) data;
 	pt.c_iflag = t->c_iflag;
 	pt.c_oflag = t->c_oflag;
 	pt.c_cflag = t->c_cflag;

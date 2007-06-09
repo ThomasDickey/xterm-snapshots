@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.386 2007/06/06 21:17:56 tom Exp $
+.\" $XTermId: xterm.man,v 1.387 2007/06/08 23:43:58 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -354,7 +354,7 @@ Otherwise, they have a column width of 1.
 This may be useful for some legacy CJK text
 terminal-based programs assuming box drawings and others to have a column
 width of 2.
-It also has to be turned on when you specify a TrueType
+It also should be turned on when you specify a TrueType
 CJK double-width (bi-width/monospace) font either with \fB-fa\fP at
 the command line or \fBfaceName\fP resource.
 The default is ``false''
@@ -1640,6 +1640,8 @@ When turned on, characters with East Asian Ambiguous (A) category in UTR
 You may have to set this option to ``true''
 if you have some old East Asian terminal based programs that assume that
 line-drawing characters have a column width of 2.
+If this resource is false, the \fBmkWidth\fP resource controls the
+choice between the system's \fBwcwidth\fP and \fIxterm\fP's built-in tables.
 The default is ``false.''
 .TP 8
 .B "color0 (\fPclass\fB Color0)"
@@ -2206,10 +2208,38 @@ If ``false'', Meta characters input from the keyboard are handled according
 to the \fBeightBitInput\fP resource.
 The default is ``false.''
 .TP 8
+.B "mkSamplePass (\fPclass\fB MkSamplePass)"
+If \fBmkSampleSize\fP is nonzero,
+and \fBmkWidth\fP (and \fBcjkWidth\fP) are false,
+on startup \fIxterm\fP compares its built-in tables to the system's
+wide character width data to decide if it will use the system's data.
+It tests the first \fBmkSampleSize\fP character values,
+and allows up to \fBmkSamplePass\fP mismatches before the test fails.
+The default (for the allowed number of mismatches) is 256.
+.TP 8
+.B "mkSampleSize (\fPclass\fB MkSampleSize)"
+With \fBmkSamplePass\fP, this specifies a startup test used for
+initializing wide character width calculations.
+The default (number of characters to check) is 1024.
+.TP 8
 .B "mkWidth (\fPclass\fB MkWidth)"
 Specifies whether \fIxterm\fP should use a built-in version of the wide
 character width calculation.
+See also the \fBcjkWidth\fP resource which can override this.
 The default is ``false.''
+.IP
+Here is a summary of the resources which control the choice of
+wide character width calculation:
+.TS
+l l l
+_ _ _
+l l l.
+\fIcjkWidth\fR	\fImkWidth\fR	\fIAction\fP
+false	false	use system tables subject to \fBmkSamplePass\fP
+false	true	use built-in tables
+true	false	use built-in CJK tables
+true	true	use built-in CJK tables
+.TE
 .TP 8
 .B "modifyCursorKeys (\fPclass\fB ModifyCursorKeys\fP)"
 Tells how to handle the special case where

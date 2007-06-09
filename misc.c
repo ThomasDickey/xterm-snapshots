@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.361 2007/05/24 20:58:21 tom Exp $ */
+/* $XTermId: misc.c,v 1.363 2007/06/09 00:03:01 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -3200,6 +3200,26 @@ xtermFindShell(char *leaf, Bool warning)
 }
 #endif /* VMS */
 
+#define ENV_HUNK(n)	((((n) + 1) | 31) + 1)
+
+/*
+ * copy the environment before Setenv'ing.
+ */
+void
+xtermCopyEnv(char **oldenv)
+{
+    unsigned size;
+    char **newenv;
+
+    for (size = 0; oldenv[size] != NULL; size++) {
+	;
+    }
+
+    newenv = TypeCallocN(char *, ENV_HUNK(size));
+    memmove(newenv, oldenv, size * sizeof(char *));
+    environ = newenv;
+}
+
 /*
  * sets the value of var to be arg in the Unix 4.2 BSD environment env.
  * Var should end with '=' (bindings are of the form "var=value").
@@ -3211,28 +3231,48 @@ void
 xtermSetenv(char *var, char *value)
 {
     if (value != 0) {
+	char *test;
 	int envindex = 0;
 	size_t len = strlen(var);
+	int found = -1;
 
-	TRACE(("xtermSetenv(var=%s, value=%s)\n", var, value));
+	TRACE(("xtermSetenv(%s=%s)\n", var, value));
 
-	while (environ[envindex] != NULL) {
-	    if (strncmp(environ[envindex], var, len) == 0) {
-		/* found it */
-		environ[envindex] = CastMallocN(char, len + strlen(value));
-		strcpy(environ[envindex], var);
-		strcat(environ[envindex], value);
-		return;
+	while ((test = environ[envindex]) != NULL) {
+	    if (strncmp(test, var, len) == 0 && test[len] == '=') {
+		found = envindex;
+		break;
 	    }
 	    envindex++;
 	}
 
-	TRACE(("...expanding env to %d\n", envindex + 1));
+	if (found < 0) {
+	    unsigned need = ENV_HUNK(envindex + 1);
+	    unsigned have = ENV_HUNK(envindex);
 
-	environ[envindex] = CastMallocN(char, len + strlen(value));
-	(void) strcpy(environ[envindex], var);
-	strcat(environ[envindex], value);
-	environ[++envindex] = NULL;
+	    if (need > have) {
+		char **newenv;
+		newenv = TypeMallocN(char *, need);
+		if (newenv == 0) {
+		    fprintf(stderr, "Cannot increase environment\n");
+		    return;
+		}
+		memmove(newenv, environ, have * sizeof(*newenv));
+		free(environ);
+		environ = newenv;
+	    }
+
+	    found = envindex;
+	    environ[found + 1] = NULL;
+	    environ = environ;
+	}
+
+	environ[found] = CastMallocN(char, 1 + len + strlen(value));
+	if (environ[found] == 0) {
+	    fprintf(stderr, "Cannot allocate environment %s\n", var);
+	    return;
+	}
+	sprintf(environ[found], "%s=%s", var, value);
     }
 }
 
