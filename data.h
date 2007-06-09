@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.101 2007/03/16 23:46:24 tom Exp $ */
+/* $XTermId: data.h,v 1.102 2007/06/09 14:45:56 Miroslav.Lichvar Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -106,6 +106,8 @@ extern int debug;
 extern PtySelect Select_mask;
 extern PtySelect X_mask;
 extern PtySelect pty_mask;
+
+extern int ice_fd;
 
 extern XtermWidget term;
 

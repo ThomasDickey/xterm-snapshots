@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.363 2007/06/09 00:03:01 tom Exp $ */
+/* $XTermId: misc.c,v 1.365 2007/06/09 14:08:26 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -67,6 +67,7 @@
 
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
+#include <X11/Xlocale.h>
 
 #include <X11/Xmu/Error.h>
 #include <X11/Xmu/SysUtil.h>
@@ -1431,7 +1432,7 @@ StartLog(TScreen * screen)
 	    close(ConnectionNumber(screen->display));
 	    close(screen->respond);
 
-	    if ((((cp = getenv("SHELL")) == NULL || *cp == 0)
+	    if ((((cp = x_getenv("SHELL")) == NULL)
 		 && ((pw = getpwuid(screen->uid)) == NULL
 		     || *(cp = pw->pw_shell) == 0))
 		|| (shell = CastMallocN(char, strlen(cp))) == 0) {
@@ -3157,7 +3158,7 @@ xtermFindShell(char *leaf, Bool warning)
     TRACE(("xtermFindShell(%s)\n", leaf));
     if (*result != '\0' && strchr("+/-", *result) == 0) {
 	/* find it in $PATH */
-	if ((s = getenv("PATH")) != 0) {
+	if ((s = x_getenv("PATH")) != 0) {
 	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 1)) != 0) {
 		Bool found = False;
 		while (*s != '\0') {
@@ -3311,7 +3312,7 @@ xt_error(String message)
     /*
      * Check for the obvious - Xt does a poor job of reporting this.
      */
-    if ((ptr = getenv("DISPLAY")) == 0 || *x_strtrim(ptr) == '\0') {
+    if ((ptr = x_getenv("DISPLAY")) == 0) {
 	fprintf(stderr, "%s:  DISPLAY is not set\n", ProgramName);
     }
     exit(1);
@@ -3614,7 +3615,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 }
 
 /*
- * Report the locale that xterm was started in.
+ * Report the character-type locale that xterm was started in.
  */
 char *
 xtermEnvLocale(void)
@@ -3622,10 +3623,9 @@ xtermEnvLocale(void)
     static char *result;
 
     if (result == 0) {
-	if ((result = getenv("LC_ALL")) == 0 || *result == '\0')
-	    if ((result = getenv("LC_CTYPE")) == 0 || *result == '\0')
-		if ((result = getenv("LANG")) == 0 || *result == '\0')
-		    result = "";
+	if ((result = x_nonempty(setlocale(LC_CTYPE, 0))) == 0) {
+	    result = "C";
+	}
 	TRACE(("xtermEnvLocale ->%s\n", result));
     }
     return result;
@@ -3641,7 +3641,7 @@ xtermEnvEncoding(void)
 	result = nl_langinfo(CODESET);
 #else
 	char *locale = xtermEnvLocale();
-	if (*locale == 0 || !strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
+	if (!strcmp(locale, "C") || !strcmp(locale, "POSIX")) {
 	    result = "ASCII";
 	} else {
 	    result = "ISO-8859-1";

@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.565 2007/06/08 23:20:48 tom Exp $
+  $XTermId: xterm.log.html,v 1.567 2007/06/09 15:45:32 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -277,6 +277,15 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve session management by adding the ICE connection number
+	    to the <code>select</code> call rather than waking up once per
+	    second (patch by Miroslav Lichvar).
+	    
+	<li>add environment variable <code>$XTERM_LOCALE</code> to help
+	    with shell initialization, e.g., to set a specific locale for
+	    xterm on systems where a global locale is set in the shell
+	    startup scripts.
+
 	<li>add resource settings <code>mkSampleSize</code> and
 	    <code>mkSamplePass</code>
 	    to modify the <code>mkWidth</code> added
@@ -1422,7 +1431,8 @@ is the latest version of this file.
 	<li>rename <code>$CMD</code> variable in <code>plink.sh</code> because
 	    it is a reserved symbol in bash 3.00.16 (report by Ted Taylor).
 
-	<li>add environment variables $XTERM_SHELL and $XTERM_VERSION
+	<li>add environment variables <code>$XTERM_SHELL</code> and
+	    <code>$XTERM_VERSION</code>
 	    (request by Zdenek Sekera).
 
 	<li>corrected workaround for background color of menubar, which gave

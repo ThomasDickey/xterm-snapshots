@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.561 2007/06/07 23:23:10 tom Exp $ */
+/* $XTermId: main.c,v 1.563 2007/06/09 15:05:10 Miroslav.Lichvar Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1314,6 +1314,22 @@ save_callback(Widget w GCC_UNUSED,
     /* we have nothing to save */
     token->save_success = True;
 }
+
+static void
+icewatch(IceConn iceConn,
+	 IcePointer clientData GCC_UNUSED,
+	 Bool opening,
+	 IcePointer * watchData GCC_UNUSED)
+{
+    if (opening) {
+	ice_fd = IceConnectionNumber(iceConn);
+	TRACE(("got IceConnectionNumber %d\n", ice_fd));
+    } else {
+	ice_fd = -1;
+	TRACE(("reset IceConnectionNumber\n"));
+    }
+}
+
 #endif /* OPT_SESSION_MGT */
 
 /*
@@ -1968,6 +1984,7 @@ main(int argc, char *argv[]ENVP_ARG)
 				     &argc, argv, fallback_resources,
 				     sessionShellWidgetClass,
 				     NULL, 0);
+	IceAddConnectionWatch(icewatch, NULL);
 #else
 	toplevel = XtAppInitialize(&app_con, my_class,
 				   optionDescList,
@@ -3328,7 +3345,7 @@ spawnXTerm(XtermWidget xw)
 		    SysError(ERROR_PTEM);
 		}
 #if !defined(SVR4) && !(defined(SYSV) && defined(i386))
-		if (!getenv("CONSEM") && ioctl(ptyfd, I_PUSH, "consem") < 0) {
+		if (!x_getenv("CONSEM") && ioctl(ptyfd, I_PUSH, "consem") < 0) {
 		    SysError(ERROR_CONSEM);
 		}
 #endif /* !SVR4 */
@@ -3863,6 +3880,7 @@ spawnXTerm(XtermWidget xw)
 	    xtermSetenv("DISPLAY", XDisplayString(screen->display));
 
 	    xtermSetenv("XTERM_VERSION", xtermVersion());
+	    xtermSetenv("XTERM_LOCALE", xtermEnvLocale());
 
 	    signal(SIGTERM, SIG_DFL);
 
@@ -3938,8 +3956,8 @@ spawnXTerm(XtermWidget xw)
 		 * from the user's $LOGNAME or $USER environment variables.
 		 */
 		if (((login_name = getlogin()) != NULL
-		     || (login_name = getenv("LOGNAME")) != NULL
-		     || (login_name = getenv("USER")) != NULL)
+		     || (login_name = x_getenv("LOGNAME")) != NULL
+		     || (login_name = x_getenv("USER")) != NULL)
 		    && strcmp(login_name, pw->pw_name)) {
 		    struct passwd *pw2 = getpwnam(login_name);
 		    if (pw2 != 0) {
@@ -4224,9 +4242,9 @@ spawnXTerm(XtermWidget xw)
 	    }
 #ifdef HAVE_UTMP
 	    if (pw) {		/* SVR4 doesn't provide these */
-		if (!getenv("HOME"))
+		if (!x_getenv("HOME"))
 		    xtermSetenv("HOME", pw->pw_dir);
-		if (!getenv("SHELL"))
+		if (!x_getenv("SHELL"))
 		    xtermSetenv("SHELL", pw->pw_shell);
 	    }
 #endif /* HAVE_UTMP */
@@ -4279,7 +4297,7 @@ spawnXTerm(XtermWidget xw)
 	    signal(SIGHUP, SIG_DFL);
 
 	    if ((ptr = explicit_shname) == NULL) {
-		if (((ptr = getenv("SHELL")) == NULL || *ptr == 0) &&
+		if (((ptr = x_getenv("SHELL")) == NULL) &&
 		    ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
 		     *(ptr = pw->pw_shell) == 0)) {
 		    ptr = "/bin/sh";
