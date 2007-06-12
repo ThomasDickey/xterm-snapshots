@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.365 2007/06/09 14:08:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.367 2007/06/11 00:10:56 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1871,13 +1871,11 @@ xtermIsPrintable(TScreen * screen, Char ** bufp, Char * last)
 #if OPT_WIDE_CHARS
     if (xtermEnvUTF8() && screen->utf8_title) {
 	PtyData data;
-	Boolean controls = True;
 
 	if (decodeUtf8(fakePtyData(&data, cp, last))) {
 	    if (data.utf_data != UCS_REPL
 		&& (data.utf_data >= 128 ||
 		    ansi_table[data.utf_data] == CASE_PRINT)) {
-		controls = False;
 		next += (data.utf_size - 1);
 		result = True;
 	    } else {
@@ -2137,7 +2135,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 {
     TScreen *screen = &(xw->screen);
     int mode;
-    Char *cp, *c2;
+    Char *cp;
     int state = 0;
     char *buf = 0;
 
@@ -2175,7 +2173,6 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    state = 3;
 	    /* FALLTHRU */
 	default:
-	    c2 = cp;
 	    if (!xtermIsPrintable(screen, &cp, oscbuf + len)) {
 		switch (mode) {
 		case 0:
