@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.567 2007/06/09 15:45:32 tom Exp $
+  $XTermId: xterm.log.html,v 1.572 2007/06/12 00:42:17 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -277,6 +277,18 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>update wcwidth.c (partly based on/prompted by mailing list
+	    comment).
+
+	<li>update/improve keysym2ucs.c based on Unicode 5.0.1d3 and Xorg
+	    7.1 keysymdef.h file.
+
+	<li>improve <code>gen-pc-fkeys.pl</code>, making it show all of the
+	    building-block terminfo entries used by xterm.
+
+	<li>correct strings used for modifiers applied to F1-F4 in xterm+pcf1
+	    terminfo entry.
+
 	<li>improve session management by adding the ICE connection number
 	    to the <code>select</code> call rather than waking up once per
 	    second (patch by Miroslav Lichvar).

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.563 2007/06/09 15:05:10 Miroslav.Lichvar Exp $ */
+/* $XTermId: main.c,v 1.564 2007/06/10 00:13:44 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -3036,6 +3036,7 @@ spawnXTerm(XtermWidget xw)
 	    errno = ENXIO;
 	}
 	pw = NULL;
+	got_handshake_size = False;
 #if OPT_INITIAL_ERASE
 	initial_erase = VAL_INITIAL_ERASE;
 #endif
