@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.362 2007/06/17 10:47:48 tom Exp $ */
+/* $XTermId: util.c,v 1.363 2007/06/17 13:52:18 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -3380,8 +3380,11 @@ decode_wcwidth(int mode, int samplesize, int samplepass)
 	    break;
 	}
 	/* FALLTHRU */
-    case 2:
+#else
+	(void) samplesize;
+	(void) samplepass;
 #endif
+    case 2:
 	my_wcwidth = &mk_wcwidth;
 	TRACE(("using MK wcwidth() function\n"));
 	break;
