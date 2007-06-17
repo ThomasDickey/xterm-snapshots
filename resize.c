@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.102 2007/06/09 13:42:51 tom Exp $ */
+/* $XTermId: resize.c,v 1.103 2007/06/17 13:57:37 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/resize.c,v 3.62 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -373,8 +373,17 @@ main(int argc, char **argv ENVP_ARG)
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 
     if (argc == 2) {
-	sprintf(buf, setsize[emu], argv[0], argv[1]);
-	write(tty, buf, strlen(buf));
+	char *tmpbuf = malloc(strlen(setsize[emu]) +
+			      strlen(argv[0]) +
+			      strlen(argv[1]) +
+			      1);
+	if (tmpbuf == 0) {
+	    fprintf(stderr, "%s: Cannot query size\n", myname);
+	    onintr(0);
+	}
+	sprintf(tmpbuf, setsize[emu], argv[0], argv[1]);
+	write(tty, tmpbuf, strlen(tmpbuf));
+	free(tmpbuf);
     }
     write(tty, getsize[emu], strlen(getsize[emu]));
     readstring(ttyfp, buf, size[emu]);

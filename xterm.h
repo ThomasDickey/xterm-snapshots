@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.466 2007/06/08 23:09:14 tom Exp $ */
+/* $XTermId: xterm.h,v 1.468 2007/06/17 15:19:19 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -64,14 +64,6 @@ authorization.
 #ifdef CSRG_BASED
 /* Get definition of BSD */
 #include <sys/param.h>
-#endif
-
-#ifndef HAVE_X11_DECKEYSYM_H
-#define HAVE_X11_DECKEYSYM_H 1
-#endif
-
-#ifndef HAVE_X11_SUNKEYSYM_H
-#define HAVE_X11_SUNKEYSYM_H 1
 #endif
 
 #ifndef DFT_TERMTYPE
@@ -214,6 +206,18 @@ authorization.
 #endif
 
 #endif /* HAVE_CONFIG_H */
+
+#ifndef HAVE_X11_DECKEYSYM_H
+#define HAVE_X11_DECKEYSYM_H 1
+#endif
+
+#ifndef HAVE_X11_SUNKEYSYM_H
+#define HAVE_X11_SUNKEYSYM_H 1
+#endif
+
+#ifndef HAVE_X11_XF86KEYSYM_H
+#define HAVE_X11_XF86KEYSYM_H 0
+#endif
 
 /***====================================================================***/
 
