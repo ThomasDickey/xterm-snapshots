@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.575 2007/06/17 00:56:13 tom Exp $
+  $XTermId: xterm.log.html,v 1.576 2007/06/17 10:26:53 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -277,6 +277,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add configure check to use <code>-Wno-unknown-pragmas</code> for
+	    Solaris, and a few other new gcc warning options to address
+	    regressions in its warning options.
+
 	<li>add sample desktop and icon files, along with configure options for
 	    manipulating them.
 

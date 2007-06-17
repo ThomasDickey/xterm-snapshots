@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.273 2007/04/26 22:56:56 tom Exp $ */
+/* $XTermId: button.c,v 1.274 2007/06/17 12:55:47 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1039,8 +1039,8 @@ struct _SelectionList {
     Time time;
 };
 
-static int
-DECtoASCII(int ch)
+static unsigned
+DECtoASCII(unsigned ch)
 {
     if (ch < 32) {
 	ch = "###########+++++##-##++++|######"[ch];
@@ -1087,7 +1087,7 @@ UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
 		    if (eqv == value)
 			eqv = '#';
 		    *q++ = eqv;
-		    if (iswide(value))
+		    if (iswide((wchar_t) value))
 			*q++ = ' ';
 		}
 	    }
@@ -3493,7 +3493,7 @@ SaveText(TScreen * screen,
 	       are in memory attached to the HIDDEN_CHAR */
 	    if_OPT_WIDE_CHARS(screen, {
 		if (screen->utf8_mode != uFalse) {
-		    int ch;
+		    unsigned ch;
 		    int off;
 		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
 			if ((ch = XTERM_CELLC(row, i, off)) == 0)
@@ -3508,7 +3508,7 @@ SaveText(TScreen * screen,
 	if (screen->utf8_mode != uFalse) {
 	    lp = convertToUTF8(lp, (c != 0) ? c : ' ');
 	    if_OPT_WIDE_CHARS(screen, {
-		int ch;
+		unsigned ch;
 		int off;
 		for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
 		    if ((ch = XTERM_CELLC(row, i, off)) == 0)

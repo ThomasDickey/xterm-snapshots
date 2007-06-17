@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.231 2007/06/16 19:00:20 tom Exp $
+dnl $XTermId: configure.in,v 1.235 2007/06/17 13:45:09 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/configure.in,v 3.77 2006/06/19 00:36:51 dickey Exp $
 dnl
@@ -132,6 +132,22 @@ AC_SUBST(icondir)
 no_icondir=
 test "$icondir" = no && no_icondir="#"
 AC_SUBST(no_icondir)
+
+# Comment-out the install-desktop rule if the desktop-utils are not found.
+AC_MSG_CHECKING(if you want to install desktop files)
+CF_ARG_OPTION(desktop,
+	[  --disable-desktop       disable install of xterm desktop files],
+	[enable_desktop=$enableval],
+	[enable_desktop=$enableval],yes)
+AC_MSG_RESULT($enable_desktop)
+
+desktop_utils=
+if test "$enable_desktop" = yes ; then
+AC_CHECK_PROG(desktop_utils,desktop-file-install,yes,no)
+fi
+
+test "$desktop_utils" = yes && desktop_utils= || desktop_utils="#"
+AC_SUBST(DESKTOP_FLAGS)
 
 # inherit SINSTALL_OPTS from environment to allow packager to customize it.
 
@@ -865,7 +881,7 @@ AC_MSG_RESULT($with_warnings)
 if test "$with_warnings" = yes
 then
 	CF_GCC_ATTRIBUTES
-	CF_GCC_WARNINGS
+	CF_GCC_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum)
 fi
 fi
 
@@ -891,13 +907,6 @@ fi
 
 AC_SUBST(MAY_SETUID)
 AC_SUBST(NOT_SETUID)
-
-# Comment-out the install-desktop rule if the desktop-utils are not found.
-desktop_utils=
-AC_CHECK_PROG(desktop_utils,desktop-file-install,yes,no)
-test "$desktop_utils" = yes && desktop_utils= || desktop_utils="#"
-
-AC_SUBST(DESKTOP_FLAGS)
 
 ###	remove from CPPFLAGS the optional features we define in xtermcfg.h
 ###	or other conflicting symbols that may be defined via imake:

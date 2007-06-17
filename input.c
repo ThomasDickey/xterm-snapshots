@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.283 2007/03/19 23:58:54 tom Exp $ */
+/* $XTermId: input.c,v 1.286 2007/06/17 13:02:22 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/input.c,v 3.76 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -107,6 +107,7 @@
 	&& (keysym == XK_BackSpace))
 
 #define MAP(from, to) case from: result = to; break
+#define Masked(value,mask) ((value) & (unsigned) (~(mask)))
 
 #define KEYSYM_FMT "0x%04lX"	/* simplify matching <X11/keysymdef.h> */
 
@@ -348,7 +349,7 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 #define MODIFIER_NAME(parm, name) (((parm - UNMOD) & name) ? " "#name : "")
 
 static short
-computeModifierParm(XtermWidget xw, int state)
+computeModifierParm(XtermWidget xw, unsigned state)
 {
     short modify_parm = UNMOD;
 
@@ -382,6 +383,9 @@ computeModifierParm(XtermWidget xw, int state)
 	   MODIFIER_NAME(modify_parm, META)));
     return modify_parm;
 }
+
+#define computeMaskedModifier(xw, state, mask) \
+	computeModifierParm(xw, Masked(state, mask))
 
 #if OPT_NUM_LOCK
 static unsigned
@@ -445,7 +449,7 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
      */
     if (xw->keyboard.modify_now.other_keys <= 1) {
 	if (IsControlInput(kd)
-	    && (result & ~ControlMask) == 0) {
+	    && Masked(result, ControlMask) == 0) {
 	    /* These keys are already associated with the control-key */
 	    if (xw->keyboard.modify_now.other_keys == 0) {
 		result &= ~ControlMask;
@@ -454,7 +458,7 @@ allowedCharModifiers(XtermWidget xw, unsigned state, KEY_DATA * kd)
 	    ;
 	} else if (IsControlAlias(kd)) {
 	    /* Things like "^_" work here... */
-	    if ((result & ~(ControlMask | ShiftMask)) == 0) {
+	    if (Masked(result, (ControlMask | ShiftMask)) == 0) {
 		result = 0;
 	    }
 	} else if (!IsControlOutput(kd) && !IsPredefinedKey(kd->keysym)) {
@@ -530,7 +534,7 @@ ModifyOtherKeys(XtermWidget xw,
 		    break;
 #ifdef XK_ISO_Left_Tab
 		case XK_ISO_Left_Tab:
-		    if (computeModifierParm(xw, state & ~ShiftMask) > 1)
+		    if (computeMaskedModifier(xw, state, ShiftMask) > 1)
 			result = True;
 		    break;
 #endif
@@ -548,8 +552,7 @@ ModifyOtherKeys(XtermWidget xw,
 		    } else if (IsControlAlias(kd)) {
 			if (state == ShiftMask)
 			    result = False;
-			else if (computeModifierParm(xw,
-						     (state & ~ControlMask))
+			else if (computeMaskedModifier(xw, state, ControlMask)
 				 > 1) {
 			    result = True;
 			}
@@ -563,7 +566,7 @@ ModifyOtherKeys(XtermWidget xw,
 		switch (kd->keysym) {
 		case XK_BackSpace:
 		    /* strip ControlMask as per IsBackarrowToggle() */
-		    if (computeModifierParm(xw, state & ~ControlMask) > 1)
+		    if (computeMaskedModifier(xw, state, ControlMask) > 1)
 			result = True;
 		    break;
 		case XK_Delete:
@@ -571,7 +574,7 @@ ModifyOtherKeys(XtermWidget xw,
 		    break;
 #ifdef XK_ISO_Left_Tab
 		case XK_ISO_Left_Tab:
-		    if (computeModifierParm(xw, state & ~ShiftMask) > 1)
+		    if (computeMaskedModifier(xw, state, ShiftMask) > 1)
 			result = True;
 		    break;
 #endif
@@ -584,7 +587,7 @@ ModifyOtherKeys(XtermWidget xw,
 			result = True;
 		    } else if (state == ShiftMask) {
 			result = (kd->keysym == ' ' || kd->keysym == XK_Return);
-		    } else if (computeModifierParm(xw, state & ~ShiftMask) > 1) {
+		    } else if (computeMaskedModifier(xw, state, ShiftMask) > 1) {
 			result = True;
 		    }
 		    break;
@@ -837,7 +840,10 @@ Input(XtermWidget xw,
 	   ", %d:'%s'%s" FMT_MODIFIER_NAMES "%s%s%s%s%s%s\n",
 	   kd.keysym,
 	   kd.nbytes,
-	   visibleChars(PAIRED_CHARS((Char *) kd.strbuf, 0), kd.nbytes),
+	   visibleChars(PAIRED_CHARS((Char *) kd.strbuf, 0),
+			((kd.nbytes > 0)
+			 ? (unsigned) kd.nbytes
+			 : 0)),
 	   ARG_MODIFIER_NAMES(evt_state),
 	   eightbit ? " 8bit" : " 7bit",
 	   IsKeypadKey(kd.keysym) ? " KeypadKey" : "",
@@ -1024,7 +1030,7 @@ Input(XtermWidget xw,
 	break;
     case keyboardIsTermcap:
 #if OPT_TCAP_FKEYS
-	if (xtermcapString(xw, kd.keysym, evt_state))
+	if (xtermcapString(xw, (int) kd.keysym, evt_state))
 	    return;
 #endif
 	break;
@@ -1093,7 +1099,7 @@ Input(XtermWidget xw,
 		reply.a_final = 'Z';
 #if OPT_MOD_FKEYS
 		if (keyboard->modify_now.other_keys > 1
-		    && computeModifierParm(xw, evt_state & ~ShiftMask) > 1)
+		    && computeMaskedModifier(xw, evt_state, ShiftMask) > 1)
 		    modifyOtherKey(&reply, '\t', modify_parm);
 #endif
 	    } else

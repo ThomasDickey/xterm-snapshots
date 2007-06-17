@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.361 2007/06/08 23:07:24 tom Exp $ */
+/* $XTermId: util.c,v 1.362 2007/06/17 10:47:48 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1442,8 +1442,8 @@ handle_translated_exposure(XtermWidget xw,
 	XClearArea(screen->display, VWindow(screen),
 		   rect_x,
 		   rect_y,
-		   rect_width,
-		   rect_height, False);
+		   (unsigned) rect_width,
+		   (unsigned) rect_height, False);
     }
     toprow = y0 / FontHeight(screen);
     if (toprow < 0)
@@ -1883,7 +1883,7 @@ xtermXftDrawString(XtermWidget xw,
 		   int x,
 		   int y,
 		   PAIRED_CHARS(Char * text, Char * text2),
-		   int len,
+		   Cardinal len,
 		   Bool really)
 {
     TScreen *screen = &(xw->screen);
@@ -1892,13 +1892,13 @@ xtermXftDrawString(XtermWidget xw,
     if (len != 0) {
 #if OPT_RENDERWIDE
 	static XftCharSpec *sbuf;
-	static int slen = 0;
+	static Cardinal slen = 0;
 
 	XftFont *wfont;
-	int src, dst;
+	Cardinal src, dst;
 	XftFont *lastFont = 0;
 	XftFont *currFont = 0;
-	int start = 0;
+	Cardinal start = 0;
 	int charWidth;
 	int fontnum = screen->menu_font_number;
 	int fwidth = FontWidth(screen);
@@ -1917,7 +1917,7 @@ xtermXftDrawString(XtermWidget xw,
 	    wfont = screen->renderWideNorm[fontnum];
 	}
 
-	if ((int) slen < len) {
+	if (slen < len) {
 	    slen = (len + 1) * 2;
 	    sbuf = (XftCharSpec *) XtRealloc((char *) sbuf,
 					     slen * sizeof(XftCharSpec));
@@ -1929,7 +1929,7 @@ xtermXftDrawString(XtermWidget xw,
 	    if (text2)
 		wc |= (*text2++ << 8);
 
-	    charWidth = xtermCellWidth(xw, wc);
+	    charWidth = xtermCellWidth(xw, (wchar_t) wc);
 	    if (charWidth < 0)
 		continue;
 
@@ -1946,7 +1946,7 @@ xtermXftDrawString(XtermWidget xw,
 				    color,
 				    lastFont,
 				    sbuf + start,
-				    dst - start);
+				    (int) (dst - start));
 		}
 		start = dst;
 		lastFont = currFont;
@@ -1958,7 +1958,7 @@ xtermXftDrawString(XtermWidget xw,
 			    color,
 			    lastFont,
 			    sbuf + start,
-			    dst - start);
+			    (int) (dst - start));
 	}
 #else /* !OPT_RENDERWIDE */
 	PAIRED_CHARS((void) text, (void) text2);
@@ -2255,8 +2255,8 @@ drawXtermText(XtermWidget xw,
 	      int on_wide)
 {
     TScreen *screen = &(xw->screen);
-    int real_length = len;
-    int underline_len = 0;
+    Cardinal real_length = len;
+    Cardinal underline_len = 0;
     /* Intended width of the font to draw (as opposed to the actual width of
        the X font, and the width of the default font) */
     int font_width = ((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
@@ -2456,7 +2456,7 @@ drawXtermText(XtermWidget xw,
 	    XftDrawRect(screen->renderDraw,
 			bg_color,
 			x, y,
-			ncells * FontWidth(screen),
+			(unsigned) (ncells * FontWidth(screen)),
 			(unsigned) FontHeight(screen));
 	}
 
@@ -2502,7 +2502,7 @@ drawXtermText(XtermWidget xw,
 						      y,
 						      PAIRED_CHARS(text + first,
 								   text2 + first),
-						      last - first);
+						      (Cardinal) (last - first));
 			curX += nc * FontWidth(screen);
 			underline_len += nc;
 		    }
@@ -2529,7 +2529,7 @@ drawXtermText(XtermWidget xw,
 					 y,
 					 PAIRED_CHARS(text + first,
 						      text2 + first),
-					 last - first);
+					 (Cardinal) (last - first));
 	    }
 	} else
 #endif /* OPT_BOX_CHARS */
@@ -2815,7 +2815,7 @@ drawXtermText(XtermWidget xw,
 	if (FontDescent(screen) > 1)
 	    y++;
 	XDrawLine(screen->display, VWindow(screen), gc,
-		  x, y, x + underline_len * font_width - 1, y);
+		  x, y, (int) (x + underline_len * font_width - 1), y);
     }
 
     return x + real_length * FontWidth(screen);
