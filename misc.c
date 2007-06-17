@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.367 2007/06/11 00:10:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.368 2007/06/17 12:47:54 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -126,7 +126,7 @@ static char *
 Readlink(const char *filename)
 {
     char *buf = NULL;
-    int size = 100;
+    unsigned size = 100;
     int n;
 
     for (;;) {
@@ -139,7 +139,7 @@ Readlink(const char *filename)
 	    return NULL;
 	}
 
-	if (n < size) {
+	if ((unsigned) n < size) {
 	    return buf;
 	}
 
@@ -2798,7 +2798,7 @@ ChangeGroup(String attribute, char *value)
     for (cp = c1; *cp != 0; ++cp) {
 	Char *c2 = cp;
 	if (!xtermIsPrintable(screen, &cp, c1 + limit)) {
-	    memset(c2, '?', cp + 1 - c2);
+	    memset(c2, '?', (unsigned) (cp + 1 - c2));
 	}
     }
 

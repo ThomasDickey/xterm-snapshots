@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.72 2007/03/17 15:45:12 tom Exp $ */
+/* $XTermId: trace.c,v 1.73 2007/06/17 12:58:49 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -564,6 +564,11 @@ TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_co
 	case XrmoptionSkipLine:
 	    TRACE(("  %-28s {remainder of line}\n", res_array[j].option));
 	    break;
+	case XrmoptionIsArg:
+	case XrmoptionNoArg:
+	case XrmoptionResArg:
+	case XrmoptionSepArg:
+	case XrmoptionStickyArg:
 	default:
 	    break;
 	}

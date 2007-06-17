@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.796 2007/06/13 22:17:39 tom Exp $ */
+/* $XTermId: charproc.c,v 1.797 2007/06/17 12:52:35 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -7557,10 +7557,10 @@ DoSetSelectedFont(Widget w,
 	char *val;
 	char *test = 0;
 	char *used = 0;
-	int len = strlen((char *) value);
+	unsigned len = strlen((char *) value);
 
-	if (len > (int) *length) {
-	    len = (int) *length;
+	if (len > (unsigned) *length) {
+	    len = (unsigned) *length;
 	}
 	if (len > 0 && (val = malloc(len + 1)) != 0) {
 	    memcpy(val, value, len);

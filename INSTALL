@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.114 2007/06/16 19:00:39 tom Exp $
+-- $XTermId: INSTALL,v 1.115 2007/06/17 13:44:39 tom Exp $
 -- $XFree86: xc/programs/xterm/INSTALL,v 3.42 2006/02/13 01:14:57 dickey Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2006,2007 by Thomas E. Dickey
@@ -126,6 +126,15 @@ The options (in alphabetic order):
 
   	Do not compile-in code that sets the default value of the colorMode
 	resource to ``true''.
+
+  --disable-desktop       disable install of xterm desktop files
+
+	Do not install the xterm desktop files, used in menus.
+	These use the icons installed in the --with-icondir option.
+	Use the environment variable $DESKTOP_FLAGS to supply options
+	required by desktop-file-install.
+
+	Note: If desktop-utils is not found they will not be installed anyway.
 
   --disable-doublechars   disable support for double-size chars
 

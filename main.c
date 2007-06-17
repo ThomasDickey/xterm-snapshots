@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.564 2007/06/10 00:13:44 tom Exp $ */
+/* $XTermId: main.c,v 1.565 2007/06/17 10:27:27 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -4435,6 +4435,10 @@ spawnXTerm(XtermWidget xw)
 		    free(ttydev);
 		    ttydev = x_strdup(handshake.buffer);
 		    break;
+		case PTY_NEW:
+		case PTY_NOMORE:
+		case UTMP_TTYSLOT:
+		case PTY_EXEC:
 		default:
 		    fprintf(stderr, "%s: unexpected handshake status %d\n",
 			    xterm_name,

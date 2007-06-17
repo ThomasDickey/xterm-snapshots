@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.248 2007/05/28 19:51:55 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.249 2007/06/17 12:50:22 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -1349,16 +1349,16 @@ xtermOpenXft(Display * dpy, XftPattern * pat, const char *tag GCC_UNUSED)
  * Don't make a dependency on the math library for a single function.
  * (Newton Raphson).
  */
-static float
-mySquareRoot(float value)
+static double
+mySquareRoot(double value)
 {
-    float result = 0.0;
+    double result = 0.0;
     if (value > 0.0) {
 	int n;
-	float older = value;
+	double older = value;
 	for (n = 0; n < 10; ++n) {
-	    float delta = (older * older - value) / (2.0 * older);
-	    float newer = older - delta;
+	    double delta = (older * older - value) / (2.0 * older);
+	    double newer = older - delta;
 	    older = newer;
 	    result = newer;
 	    if (delta > -0.001 && delta < 0.001)
@@ -1477,7 +1477,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		if (fontnum == fontMenu_default) {
 		    face_size = 14.0;
 		} else {
-		    float ratio;
+		    double ratio;
 		    int num = screen->menu_font_sizes[fontnum];
 		    int den = screen->menu_font_sizes[0];
 

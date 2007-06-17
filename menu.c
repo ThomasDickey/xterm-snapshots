@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.234 2007/05/28 21:44:40 Emanuele.Giaquinta Exp $ */
+/* $XTermId: menu.c,v 1.235 2007/06/17 10:24:52 tom Exp $ */
 
 /*
 
@@ -734,6 +734,7 @@ domenu(Widget w,
 	}
 	break;
 #endif
+    case noMenu:
     default:
 	break;
     }
