@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.572 2007/06/12 00:42:17 tom Exp $
+  $XTermId: xterm.log.html,v 1.575 2007/06/17 00:56:13 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -277,6 +277,15 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add sample desktop and icon files, along with configure options for
+	    manipulating them.
+
+	<li>fix an infinite loop when showing a 2-column character in a
+	    1-column screen (Debian #426863).
+
+	<li>add <code>XF86Paste</code> and <code>SunPaste</code> to the
+	    default translations (Debian #422521, patch by Bernhard R Link).
+
 	<li>update wcwidth.c (partly based on/prompted by mailing list
 	    comment).
 
@@ -314,7 +323,7 @@ is the latest version of this file.
 	    process side of the pseudo-terminal to do this only if a
 	    successful handshake was received, e.g., as determined by
 	    the <code>waitForMap</code> resource (prompted by reports
-	    by Emanuele Giaquinta and Bernhard R. Link, but see also
+	    by Emanuele Giaquinta and Bernhard R Link, but see also
 	    <a href="#xterm_177">patch #177</a> and
 	    <a href="#xterm_159">patch #159</a>.
 

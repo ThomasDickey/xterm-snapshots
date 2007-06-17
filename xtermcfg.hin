@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.163 2007/03/21 22:05:18 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.164 2007/06/13 21:45:11 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -80,6 +80,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef HAVE_WCWIDTH		/* AC_CHECK_FUNCS(wcwidth) */
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
 #undef HAVE_X11_SUNKEYSYM_H	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
+#undef HAVE_X11_XF86KEYSYM_H	/* AC_CHECK_HEADERS(X11/XF86keysym.h) */
 #undef HAVE_X11_XPOLL_H		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
 #undef HAVE_XFTDRAWSETCLIP	/* CF_X_FREETYPE */
 #undef HAVE_XFTDRAWSETCLIPRECTANGLES /* CF_X_FREETYPE */
