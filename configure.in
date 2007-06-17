@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.227 2007/05/24 21:16:59 Miroslav.Lichvar Exp $
+dnl $XTermId: configure.in,v 1.231 2007/06/16 19:00:20 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/configure.in,v 3.77 2006/06/19 00:36:51 dickey Exp $
 dnl
@@ -121,6 +121,18 @@ no_appsdir=
 test "$appsdir" = no && no_appsdir="#"
 AC_SUBST(no_appsdir)
 
+AC_MSG_CHECKING(for directory to install icons)
+CF_WITH_PATH(icondir,
+	[  --with-icondir=DIR      directory in which to install icons],
+	[icondir],[EPREFIX/share/pixmaps],
+	['\$(exec_prefix)/share/pixmaps'])
+AC_MSG_RESULT($icondir)
+AC_SUBST(icondir)
+
+no_icondir=
+test "$icondir" = no && no_icondir="#"
+AC_SUBST(no_icondir)
+
 # inherit SINSTALL_OPTS from environment to allow packager to customize it.
 
 AC_MSG_CHECKING(for install-permissions reference)
@@ -234,6 +246,7 @@ CF_X_TOOLKIT
 AC_CHECK_HEADERS( \
 	X11/DECkeysym.h \
 	X11/Sunkeysym.h \
+	X11/XF86keysym.h \
 	X11/Xpoll.h \
 	)
 
@@ -878,6 +891,13 @@ fi
 
 AC_SUBST(MAY_SETUID)
 AC_SUBST(NOT_SETUID)
+
+# Comment-out the install-desktop rule if the desktop-utils are not found.
+desktop_utils=
+AC_CHECK_PROG(desktop_utils,desktop-file-install,yes,no)
+test "$desktop_utils" = yes && desktop_utils= || desktop_utils="#"
+
+AC_SUBST(DESKTOP_FLAGS)
 
 ###	remove from CPPFLAGS the optional features we define in xtermcfg.h
 ###	or other conflicting symbols that may be defined via imake:

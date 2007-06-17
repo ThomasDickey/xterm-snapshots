@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.794 2007/06/09 14:48:08 Miroslav.Lichvar Exp $ */
+/* $XTermId: charproc.c,v 1.796 2007/06/13 22:17:39 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -116,6 +116,14 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xlocale.h>
 #endif
 
+#if HAVE_X11_SUNKEYSYM_H
+#include <X11/Sunkeysym.h>
+#endif
+
+#if HAVE_X11_XF86KEYSYM_H
+#include <X11/XF86keysym.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 
@@ -220,6 +228,18 @@ static char defaultTranslations[] =
          Shift <KeyPress> Select:select-cursor-start() select-cursor-end(SELECT, CUT_BUFFER0) \n\
          Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \n\
 "
+#if OPT_EXTRA_PASTE
+#ifdef XF86XK_Paste
+"\
+            <KeyPress> XF86Paste:insert-selection(SELECT, CUT_BUFFER0) \n\
+"
+#endif
+#ifdef SunXK_Paste
+"\
+             <KeyPress> SunPaste:insert-selection(SELECT, CUT_BUFFER0) \n\
+"
+#endif
+#endif				/* OPT_EXTRA_PASTE */
 #if OPT_SHIFT_FONTS
 "\
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \n\
@@ -1218,7 +1238,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    }
 #endif
 
-	    /* substitute combined character with precomposed character 
+	    /* substitute combined character with precomposed character
 	     * only if it does not change the width of the base character
 	     */
 	    if (precomposed != -1 && my_wcwidth(precomposed) == my_wcwidth(prev)) {
@@ -3408,6 +3428,8 @@ dotext(XtermWidget xw,
 	}
 
 	if (width_here > width_available) {
+	    if (last_chomp > MaxCols(screen))
+		break;		/* give up - it is too big */
 	    chars_chomped--;
 	    width_here -= last_chomp;
 	    if (chars_chomped > 0 || (xw->flags & WRAPAROUND))

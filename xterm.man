@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.388 2007/06/09 13:50:49 tom Exp $
+.\" $XTermId: xterm.man,v 1.390 2007/06/13 21:19:59 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -948,11 +948,13 @@ This option enables the display of characters with underline attribute as
 color rather than with underlining.
 .TP 8
 .B "-ulit"
-This option disables the display of characters with underline attribute as
+This option, corresponding to the \fBitalicULMode\fP resource,
+disables the display of characters with underline attribute as
 italics rather than with underlining.
 .TP 8
 .B "+ulit"
-This option enables the display of characters with underline attribute as
+This option, corresponding to the \fBitalicULMode\fP resource,
+enables the display of characters with underline attribute as
 italics rather than with underlining.
 .TP 8
 .B -ut
@@ -2105,6 +2107,7 @@ The default is 2.
 .B "italicULMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the underline attribute should be displayed
 in an italic font or as underlined characters.
+It is implemented only for TrueType fonts.
 .TP 8
 .B "jumpScroll (\fPclass\fB JumpScroll)"
 Specifies whether or not jump scroll should be used.
@@ -4328,7 +4331,7 @@ Use the "cwd" process entry, e.g., /proc/12345/cwd to obtain the
 working directory of the process which is running in the current \fIxterm\fP.
 .IP
 On systems which have the "exe" process entry, e.g., /proc/12345/exe,
-use this to obtain the actual executable. 
+use this to obtain the actual executable.
 Otherwise, use the $PATH variable to find \fIxterm\fP.
 .IP
 If parameters are given in the action,
@@ -4402,6 +4405,8 @@ which is set by the \fBselectToClipboard\fP resource:
          Shift <KeyPress> Select:select-cursor-start() \\\&
                                  select-cursor-end(SELECT, CUT_BUFFER0) \\n\\\&
          Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
+            <KeyPress> XF86Paste:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
+             <KeyPress> SunPaste:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\\&
     Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\\&
     Shift <KeyPress> KP_Subtract:smaller-vt-font() \\n\\\&

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.489 2007/06/08 00:45:13 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.490 2007/06/13 21:49:29 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -466,6 +466,10 @@ typedef struct {
 
 #ifndef OPT_EXEC_XTERM
 #define OPT_EXEC_XTERM 0 /* true if xterm can fork/exec copies of itself */
+#endif
+
+#ifndef OPT_EXTRA_PASTE
+#define OPT_EXTRA_PASTE 1
 #endif
 
 #ifndef OPT_FOCUS_EVENT
