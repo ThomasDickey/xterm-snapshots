@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.797 2007/06/17 12:52:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.798 2007/06/22 00:36:54 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -7557,11 +7557,19 @@ DoSetSelectedFont(Widget w,
 	char *val;
 	char *test = 0;
 	char *used = 0;
-	unsigned len = strlen((char *) value);
+	unsigned len = *length;
+	unsigned tst;
 
-	if (len > (unsigned) *length) {
-	    len = (unsigned) *length;
+	/*
+	 * Some versions of X deliver null-terminated selections, some do not.
+	 */
+	for (tst = 0; tst < len; ++tst) {
+	    if (((char *) value)[tst] == '\0') {
+		len = tst;
+		break;
+	    }
 	}
+
 	if (len > 0 && (val = malloc(len + 1)) != 0) {
 	    memcpy(val, value, len);
 	    val[len] = '\0';
@@ -7582,8 +7590,6 @@ DoSetSelectedFont(Widget w,
 		    failed = True;
 		    free(test);
 		    xw->screen.MenuFontName(fontMenu_fontsel) = save;
-		} else {
-		    free(save);
 		}
 	    } else {
 		failed = True;
