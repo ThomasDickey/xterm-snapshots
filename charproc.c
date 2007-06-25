@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.798 2007/06/22 00:36:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.799 2007/06/24 20:44:51 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -228,18 +228,6 @@ static char defaultTranslations[] =
          Shift <KeyPress> Select:select-cursor-start() select-cursor-end(SELECT, CUT_BUFFER0) \n\
          Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \n\
 "
-#if OPT_EXTRA_PASTE
-#ifdef XF86XK_Paste
-"\
-            <KeyPress> XF86Paste:insert-selection(SELECT, CUT_BUFFER0) \n\
-"
-#endif
-#ifdef SunXK_Paste
-"\
-             <KeyPress> SunPaste:insert-selection(SELECT, CUT_BUFFER0) \n\
-"
-#endif
-#endif				/* OPT_EXTRA_PASTE */
 #if OPT_SHIFT_FONTS
 "\
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \n\
@@ -838,6 +826,11 @@ xtermAddInput(Widget w)
     XtAppAddActions(app_con, input_actions, XtNumber(input_actions));
 #endif
     XtAugmentTranslations(w, XtParseTranslationTable(defaultTranslations));
+
+#if OPT_EXTRA_PASTE
+    if (term && term->keyboard.extra_translations)
+	XtOverrideTranslations((Widget) term, XtParseTranslationTable(term->keyboard.extra_translations));
+#endif
 }
 
 #if OPT_ISO_COLORS
@@ -5116,6 +5109,8 @@ VTInit(void)
     TScreen *screen = TScreenOf(term);
     Widget vtparent = SHELL_OF(term);
 
+    TRACE(("VTInit {{\n"));
+
     XtRealizeWidget(vtparent);
     XtOverrideTranslations(vtparent, XtParseTranslationTable(xterm_trans));
     (void) XSetWMProtocols(XtDisplay(vtparent), XtWindow(vtparent),
@@ -5125,6 +5120,8 @@ VTInit(void)
 
     if (screen->allbuf == NULL)
 	VTallocbuf();
+
+    TRACE(("...}} VTInit\n"));
     return (1);
 }
 
@@ -6346,6 +6343,12 @@ VTRealize(Widget w,
 #endif
 #if OPT_NUM_LOCK
     VTInitModifiers(xw);
+#if OPT_EXTRA_PASTE
+    if (xw->keyboard.extra_translations) {
+	XtOverrideTranslations((Widget) xw,
+			       XtParseTranslationTable(xw->keyboard.extra_translations));
+    }
+#endif
 #endif
 
     set_cursor_gcs(xw);

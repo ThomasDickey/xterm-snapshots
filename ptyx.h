@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.490 2007/06/13 21:49:29 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.491 2007/06/24 19:59:19 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1795,7 +1795,10 @@ typedef struct
 typedef struct
 {
     xtermKeyboardType type;
-    unsigned	flags;
+    unsigned flags;
+    char *shell_translations;
+    char *xterm_translations;
+    char *extra_translations;
 #if OPT_INITIAL_ERASE
     int	reset_DECBKM;		/* reset should set DECBKM */
 #endif
