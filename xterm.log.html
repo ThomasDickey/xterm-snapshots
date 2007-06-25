@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.578 2007/06/22 00:36:02 tom Exp $
+  $XTermId: xterm.log.html,v 1.579 2007/06/24 20:51:57 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -278,6 +278,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify change for Debian #422521
+	    from <a href="#xterm_226">patch #226</a>
+	    to work with configurations where the X server does not
+	    recognize
+	    the <code>XF86Paste</code>
+	    or <code>SunPaste</code> keysyms (report by Paolo Pumilia).
+
 	<li>fix incorrect free in fix for "Selection" menu entry in
 	    <a href="#xterm_226">patch #226</a>.
 </ul>

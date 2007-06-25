@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.286 2007/06/17 13:02:22 tom Exp $ */
+/* $XTermId: input.c,v 1.288 2007/06/24 20:34:51 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/input.c,v 3.76 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1630,17 +1630,73 @@ sunfuncvalue(ANSI * reply, KEY_DATA * kd)
 }
 
 #if OPT_NUM_LOCK
+#define isName(c) ((c) == '_' || isalnum(CharOf(c)))
+
 /*
- * Note that this can only retrieve translations that are given as resource
- * values; the default translations in charproc.c for example are not
- * retrievable by any interface to X.
+ * Strip unneeded whitespace from a translations resource, lowercasing and
+ * returning a malloc'd copy of the result.
+ */
+static char *
+stripTranslations(const char *s)
+{
+    char *dst = 0;
+
+    if (s != 0) {
+	dst = malloc(strlen(s) + 1);
+
+	if (dst != 0) {
+	    int state = 0;
+	    int ch = 0;
+	    int prv = 0;
+	    char *d = dst;
+
+	    TRACE(("stripping:\n%s\n", s));
+	    while (*s != '\0') {
+		ch = *s++;
+		if (ch == '\n') {
+		    if (d != dst)
+			*d++ = ch;
+		    state = 0;
+		} else if (strchr(":!#", ch) != 0) {
+		    while (d != dst && isspace(d[-1]))
+			--d;
+		    state = -1;
+		} else if (state >= 0) {
+		    if (isspace(ch)) {
+			if (state == 0 || strchr("<>~ \t", prv))
+			    continue;
+		    } else if (strchr("<>~", ch)) {
+			while (d != dst && isspace(d[-1]))
+			    --d;
+		    }
+		    *d++ = char2lower(ch);
+		    ++state;
+		}
+		prv = ch;
+	    }
+	    *d = '\0';
+	    TRACE(("...result:\n%s\n", dst));
+	}
+    }
+    return dst;
+}
+
+/*
+ * Make a simple check to see if a given translations keyword appears in
+ * xterm's translations resource.  It does not attempt to parse the strings,
+ * just makes a case-independent check and ensures that the ends of the match
+ * are on token-boundaries.
+ *
+ * That this can only retrieve translations that are given as resource values;
+ * the default translations in charproc.c for example are not retrievable by
+ * any interface to X.
  *
  * Also:  We can retrieve only the most-specified translation resource.  For
  * example, if the resource file specifies both "*translations" and
  * "XTerm*translations", we see only the latter.
  */
 static Bool
-TranslationsUseKeyword(Widget w, const char *keyword)
+TranslationsUseKeyword(Widget w, char **cache, const char *keyword)
 {
     static String data;
     static XtResource key_resources[] =
@@ -1649,48 +1705,94 @@ TranslationsUseKeyword(Widget w, const char *keyword)
 	 sizeof(data), 0, XtRString, (XtPointer) NULL}
     };
     Bool result = False;
+    char *copy;
+    char *test;
 
-    XtGetSubresources(w,
-		      (XtPointer) &data,
-		      "vt100",
-		      "VT100",
-		      key_resources,
-		      XtNumber(key_resources),
-		      NULL,
-		      (Cardinal) 0);
+    if ((test = stripTranslations(keyword)) != 0) {
+	if (*cache == 0) {
+	    XtGetSubresources(w,
+			      (XtPointer) &data,
+			      "vt100",
+			      "VT100",
+			      key_resources,
+			      XtNumber(key_resources),
+			      NULL,
+			      (Cardinal) 0);
+	    if (data != 0 && (copy = stripTranslations(data)) != 0) {
+		*cache = copy;
+	    }
+	}
 
-    if (data != 0) {
-	char *p = data;
-	int state = 0;
-	int now = ' ', prv;
-	TRACE(("TranslationsUseKeyword(%p):%s\n", w, p));
-	while (*p != 0) {
-	    prv = now;
-	    now = char2lower(*p++);
-	    if (now == ':'
-		|| now == '!') {
-		state = -1;
-	    } else if (now == '\n') {
-		state = 0;
-	    } else if (state >= 0) {
-		if (isgraph(now)
-		    && now == keyword[state]) {
-		    if ((state != 0
-			 || !isalnum(prv))
-			&& ((keyword[++state] == 0)
-			    && !isalnum(CharOf(*p)))) {
-			result = True;
-			break;
-		    }
-		} else {
+	if (*cache != 0) {
+	    char *p = *cache;
+	    int state = 0;
+	    int now = ' ', prv;
+
+	    while (*p != 0) {
+		prv = now;
+		now = *p++;
+		if (now == ':'
+		    || now == '!') {
+		    state = -1;
+		} else if (now == '\n') {
 		    state = 0;
+		} else if (state >= 0) {
+		    if (now == test[state]) {
+			if ((state != 0
+			     || !isName(prv))
+			    && ((test[++state] == 0)
+				&& !isName(*p))) {
+			    result = True;
+			    break;
+			}
+		    } else {
+			state = 0;
+		    }
 		}
 	    }
 	}
+	free(test);
     }
     TRACE(("TranslationsUseKeyword(%p, %s) = %d\n", w, keyword, result));
     return result;
 }
+
+static Bool
+xtermHasTranslation(XtermWidget xw, const char *keyword)
+{
+    return (TranslationsUseKeyword(SHELL_OF(xw),
+				   &(xw->keyboard.shell_translations),
+				   keyword)
+	    || TranslationsUseKeyword((Widget) xw,
+				      &(xw->keyboard.xterm_translations),
+				      keyword));
+}
+
+#if OPT_EXTRA_PASTE
+static void
+addTranslation(XtermWidget xw, char *fromString, char *toString)
+{
+    unsigned have = (xw->keyboard.extra_translations
+		     ? strlen(xw->keyboard.extra_translations)
+		     : 0);
+    unsigned need = (((have != 0) ? (have + 4) : 0)
+		     + strlen(fromString)
+		     + strlen(toString)
+		     + 6);
+
+    if (!xtermHasTranslation(xw, fromString)) {
+	if ((xw->keyboard.extra_translations
+	     = realloc(xw->keyboard.extra_translations, need)) != 0) {
+	    TRACE(("adding %s: %s\n", fromString, toString));
+	    if (have)
+		strcat(xw->keyboard.extra_translations, " \\n\\");
+	    sprintf(xw->keyboard.extra_translations, "%s: %s",
+		    fromString, toString);
+	    TRACE(("...{%s}\n", xw->keyboard.extra_translations));
+	}
+    }
+}
+#endif
 
 #define SaveMask(name)	xw->misc.name |= mask;\
 			TRACE(("SaveMask(%s) %#lx (%#lx is%s modifier)\n", \
@@ -1708,9 +1810,10 @@ TranslationsUseKeyword(Widget w, const char *keyword)
 void
 VTInitModifiers(XtermWidget xw)
 {
-    int i, j, k;
     Display *dpy = XtDisplay(xw);
     XModifierKeymap *keymap = XGetModifierMapping(dpy);
+    int i, j, k, l;
+    KeySym keysym;
     unsigned long mask;
     int min_keycode, max_keycode, keysyms_per_keycode = 0;
 
@@ -1728,17 +1831,45 @@ VTInitModifiers(XtermWidget xw)
 				     &keysyms_per_keycode);
 
 	if (theMap != 0) {
+
+#if OPT_EXTRA_PASTE
+	    /*
+	     * Assume that if we can find the paste keysym in the X keyboard
+	     * mapping that the server allows the corresponding translations
+	     * resource.
+	     */
+	    int limit = (max_keycode - min_keycode) * keysyms_per_keycode;
+	    for (i = 0; i < limit; ++i) {
+#ifdef XF86XK_Paste
+		if (theMap[i] == XF86XK_Paste) {
+		    TRACE(("keyboard has XF86XK_Paste\n"));
+		    addTranslation(xw,
+				   "<KeyPress> XF86Paste",
+				   "insert-selection(SELECT, CUT_BUFFER0)");
+		}
+#endif
+#ifdef SunXK_Paste
+		if (theMap[i] == SunXK_Paste) {
+		    TRACE(("keyboard has SunXK_Paste\n"));
+		    addTranslation(xw,
+				   "<KeyPress> SunPaste",
+				   "insert-selection(SELECT, CUT_BUFFER0)");
+		}
+#endif
+	    }
+#endif /* OPT_EXTRA_PASTE */
+
 	    for (i = k = 0, mask = 1; i < 8; i++, mask <<= 1) {
 		for (j = 0; j < keymap->max_keypermod; j++) {
-		    KeyCode code = keymap->modifiermap[k];
-		    if (code != 0) {
-			KeySym keysym;
-			int l = 0;
-			do {
-			    keysym = XKeycodeToKeysym(dpy, code, l);
-			    l++;
-			} while (!keysym && l < keysyms_per_keycode);
-			if (keysym == XK_Num_Lock) {
+		    KeyCode code = keymap->modifiermap[k++];
+		    if (code == 0)
+			continue;
+
+		    for (l = 0; l < keysyms_per_keycode; ++l) {
+			keysym = XKeycodeToKeysym(dpy, code, l);
+			if (keysym == NoSymbol) {
+			    ;
+			} else if (keysym == XK_Num_Lock) {
 			    SaveMask(num_lock);
 			} else if (keysym == XK_Alt_L || keysym == XK_Alt_R) {
 			    SaveMask(alt_mods);
@@ -1763,7 +1894,6 @@ VTInitModifiers(XtermWidget xw)
 			    SaveMask(other_mods);
 			}
 		    }
-		    k++;
 		}
 	    }
 	    XFree(theMap);
@@ -1776,8 +1906,7 @@ VTInitModifiers(XtermWidget xw)
 	     * use it to modify function-keys when NumLock is active.
 	     */
 	    if ((xw->misc.alt_mods != 0)
-		&& (TranslationsUseKeyword(toplevel, "alt")
-		    || TranslationsUseKeyword((Widget) xw, "alt"))) {
+		&& xtermHasTranslation(xw, "alt")) {
 		TRACE(("ALT is used as a modifier in translations (ignore mask)\n"));
 		xw->misc.alt_mods = 0;
 	    }
@@ -1787,8 +1916,7 @@ VTInitModifiers(XtermWidget xw)
 	     * use it to modify function-keys.
 	     */
 	    if ((xw->misc.meta_mods != 0)
-		&& (TranslationsUseKeyword(toplevel, "meta")
-		    || TranslationsUseKeyword((Widget) xw, "meta"))) {
+		&& xtermHasTranslation(xw, "meta")) {
 		TRACE(("META is used as a modifier in translations\n"));
 		xw->misc.meta_mods = 0;
 	    }
