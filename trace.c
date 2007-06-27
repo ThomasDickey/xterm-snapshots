@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.73 2007/06/17 12:58:49 tom Exp $ */
+/* $XTermId: trace.c,v 1.74 2007/06/26 22:46:12 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -130,6 +130,34 @@ TraceIds(const char *fname, int lnum)
     }
 }
 
+static void
+formatAscii(char *dst, unsigned value)
+{
+    switch (value) {
+    case '\\':
+	sprintf(dst, "\\\\");
+	break;
+    case '\b':
+	sprintf(dst, "\\b");
+	break;
+    case '\n':
+	sprintf(dst, "\\n");
+	break;
+    case '\r':
+	sprintf(dst, "\\r");
+	break;
+    case '\t':
+	sprintf(dst, "\\t");
+	break;
+    default:
+	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
+	    sprintf(dst, "\\%03o", value);
+	else
+	    sprintf(dst, "%c", CharOf(value));
+	break;
+    }
+}
+
 char *
 visibleChars(PAIRED_CHARS(Char * buf, Char * buf2), unsigned len)
 {
@@ -155,10 +183,7 @@ visibleChars(PAIRED_CHARS(Char * buf, Char * buf2), unsigned len)
 	    sprintf(dst, "\\u+%04X", value);
 	else
 #endif
-	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
-	    sprintf(dst, "\\%03o", value);
-	else
-	    sprintf(dst, "%c", CharOf(value));
+	    formatAscii(dst, value);
 	dst += strlen(dst);
     }
     return result;
@@ -184,10 +209,7 @@ visibleIChar(IChar * buf, unsigned len)
 	    sprintf(dst, "\\u+%04X", value);
 	else
 #endif
-	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
-	    sprintf(dst, "\\%03o", value);
-	else
-	    sprintf(dst, "%c", CharOf(value));
+	    formatAscii(dst, value);
 	dst += strlen(dst);
     }
     return result;

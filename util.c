@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.363 2007/06/17 13:52:18 tom Exp $ */
+/* $XTermId: util.c,v 1.364 2007/06/26 22:11:07 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -2291,9 +2291,10 @@ drawXtermText(XtermWidget xw,
 		  ? xterm_DoubleGC(xw, (unsigned) chrset, flags, gc)
 		  : 0);
 
-	TRACE(("DRAWTEXT%c[%4d,%4d] (%d) %d:%.*s\n",
+	TRACE(("DRAWTEXT%c[%4d,%4d] (%d) %d:%s\n",
 	       screen->cursor_state == OFF ? ' ' : '*',
-	       y, x, chrset, len, (int) len, text));
+	       y, x, chrset, len,
+	       visibleChars(PAIRED_CHARS(text, text2), len)));
 
 	if (gc2 != 0) {		/* draw actual double-sized characters */
 	    /* Update the last-used cache of double-sized fonts */

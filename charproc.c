@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.799 2007/06/24 20:44:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.801 2007/06/27 00:29:49 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -114,14 +114,6 @@ in this Software without prior written authorization from The Open Group.
 
 #if OPT_INPUT_METHOD
 #include <X11/Xlocale.h>
-#endif
-
-#if HAVE_X11_SUNKEYSYM_H
-#include <X11/Sunkeysym.h>
-#endif
-
-#if HAVE_X11_XF86KEYSYM_H
-#include <X11/XF86keysym.h>
 #endif
 
 #include <stdio.h>
@@ -6002,6 +5994,19 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
     }
 }
 
+#define TRACE_FREE_LEAK(name) \
+	if (name) { \
+	    free(name); \
+	    name = 0; \
+	    TRACE(("freed " #name "\n")); \
+	}
+
+#define FREE_LEAK(name) \
+	if (name) { \
+	    free(name); \
+	    name = 0; \
+	}
+
 static void
 VTDestroy(Widget w GCC_UNUSED)
 {
@@ -6015,33 +6020,13 @@ VTDestroy(Widget w GCC_UNUSED)
     if (screen->scrollWidget)
 	XtDestroyWidget(screen->scrollWidget);
 
-    if (screen->save_ptr) {
-	free(screen->save_ptr);
-	TRACE(("freed screen->save_ptr\n"));
-    }
-
-    if (screen->sbuf_address) {
-	free(screen->sbuf_address);
-	TRACE(("freed screen->sbuf_address\n"));
-    }
-    if (screen->allbuf) {
-	free(screen->allbuf);
-	TRACE(("freed screen->allbuf\n"));
-    }
-
-    if (screen->abuf_address) {
-	free(screen->abuf_address);
-	TRACE(("freed screen->abuf_address\n"));
-    }
-    if (screen->altbuf) {
-	free(screen->altbuf);
-	TRACE(("freed screen->altbuf\n"));
-    }
+    TRACE_FREE_LEAK(screen->save_ptr);
+    TRACE_FREE_LEAK(screen->sbuf_address);
+    TRACE_FREE_LEAK(screen->allbuf);
+    TRACE_FREE_LEAK(screen->abuf_address);
+    TRACE_FREE_LEAK(screen->altbuf);
 #if OPT_WIDE_CHARS
-    if (screen->draw_buf) {
-	free(screen->draw_buf);
-	TRACE(("freed screen->draw_buf\n"));
-    }
+    TRACE_FREE_LEAK(screen->draw_buf);
 #endif
 #if OPT_INPUT_METHOD
     if (screen->xim) {
@@ -6071,13 +6056,11 @@ VTDestroy(Widget w GCC_UNUSED)
 
     /* free local copies of resource strings */
     for (n = 0; n < NCOLORS; ++n) {
-	if (screen->Tcolors[n].resource)
-	    free(screen->Tcolors[n].resource);
+	FREE_LEAK(screen->Tcolors[n].resource);
     }
 #if OPT_SELECT_REGEX
     for (n = 0; n < NSELECTUNITS; ++n) {
-	if (screen->selectExpr[n])
-	    free(screen->selectExpr[n]);
+	FREE_LEAK(screen->selectExpr[n]);
     }
 #endif
 
@@ -6085,6 +6068,10 @@ VTDestroy(Widget w GCC_UNUSED)
 	XtFree((char *) (screen->selection_atoms));
 
     XtFree((char *) (screen->selection_data));
+
+    TRACE_FREE_LEAK(xw->keyboard.extra_translations);
+    TRACE_FREE_LEAK(xw->keyboard.shell_translations);
+    TRACE_FREE_LEAK(xw->keyboard.xterm_translations);
 #endif /* defined(NO_LEAKS) */
 }
 

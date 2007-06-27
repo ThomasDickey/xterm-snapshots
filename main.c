@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.566 2007/06/17 15:57:19 tom Exp $ */
+/* $XTermId: main.c,v 1.567 2007/06/27 00:35:00 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -4668,6 +4668,9 @@ Exit(int n)
 	    /* XrmSetDatabase(dpy, 0); increases leaks ;-) */
 	    XtCloseDisplay(dpy);
 	    XtDestroyApplicationContext(app_con);
+#if OPT_SESSION_MGT
+	    IceRemoveConnectionWatch(icewatch, NULL);
+#endif
 	    TRACE(("closed display\n"));
 	}
 	TRACE((0));
