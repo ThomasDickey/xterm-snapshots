@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.288 2007/06/24 20:34:51 tom Exp $ */
+/* $XTermId: input.c,v 1.289 2007/06/26 20:33:24 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/input.c,v 3.76 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -70,6 +70,10 @@
 
 #if HAVE_X11_SUNKEYSYM_H
 #include <X11/Sunkeysym.h>
+#endif
+
+#if HAVE_X11_XF86KEYSYM_H
+#include <X11/XF86keysym.h>
 #endif
 
 #include <X11/Xutil.h>
