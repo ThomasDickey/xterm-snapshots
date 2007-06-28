@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.364 2007/06/26 22:11:07 tom Exp $ */
+/* $XTermId: util.c,v 1.365 2007/06/27 23:33:46 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -3337,7 +3337,7 @@ systemWcwidthOk(int samplesize, int samplepass)
     wchar_t n;
     int oops = 0;
 
-    for (n = 0; n < samplesize; ++n) {
+    for (n = 0; n < (wchar_t) samplesize; ++n) {
 	int system_code = wcwidth(n);
 	int intern_code = mk_wcwidth(n);
 
