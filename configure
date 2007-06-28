@@ -12043,7 +12043,7 @@ then
 echo "$as_me: checking for $CC warning options..." >&6;}
 	cf_save_CFLAGS="$CFLAGS"
 	EXTRA_CFLAGS="-Wall"
-	for cf_opt in Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum \
+	for cf_opt in \
 		wd1419 \
 		wd1682 \
 		wd1683 \

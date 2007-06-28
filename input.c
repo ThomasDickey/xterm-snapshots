@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.289 2007/06/26 20:33:24 tom Exp $ */
+/* $XTermId: input.c,v 1.290 2007/06/27 21:57:55 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/input.c,v 3.76 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1662,15 +1662,15 @@ stripTranslations(const char *s)
 			*d++ = ch;
 		    state = 0;
 		} else if (strchr(":!#", ch) != 0) {
-		    while (d != dst && isspace(d[-1]))
+		    while (d != dst && isspace(CharOf(d[-1])))
 			--d;
 		    state = -1;
 		} else if (state >= 0) {
-		    if (isspace(ch)) {
+		    if (isspace(CharOf(ch))) {
 			if (state == 0 || strchr("<>~ \t", prv))
 			    continue;
 		    } else if (strchr("<>~", ch)) {
-			while (d != dst && isspace(d[-1]))
+			while (d != dst && isspace(CharOf(d[-1])))
 			    --d;
 		    }
 		    *d++ = char2lower(ch);
