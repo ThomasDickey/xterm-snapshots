@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.801 2007/06/27 00:29:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.803 2007/07/07 12:02:37 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -1536,7 +1536,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    xtermIndex(xw, 1);
 	    if (xw->flags & LINEFEED)
 		CarriageReturn(screen);
-	    do_xevents();
+	    else
+		do_xevents();
 	    break;
 
 	case CASE_CBT:
@@ -2497,7 +2498,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_NEL\n"));
 	    xtermIndex(xw, 1);
 	    CarriageReturn(screen);
-	    do_xevents();
 	    sp->parsestate = sp->groundtable;
 	    break;
 
@@ -5415,6 +5415,11 @@ VTInitialize(Widget wrequest,
      * resource list.
      */
     bzero((char *) &wnew->screen, sizeof(wnew->screen));
+
+    /* DESCO Sys#67660
+     * Zero out the entire "keyboard" component of "wnew" widget.
+     */
+    bzero((char *) &wnew->keyboard, sizeof(wnew->keyboard));
 
     /* dummy values so that we don't try to Realize the parent shell with height
      * or width of 0, which is illegal in X.  The real size is computed in the
