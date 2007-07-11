@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.468 2007/06/17 15:19:19 tom Exp $ */
+/* $XTermId: xterm.h,v 1.471 2007/07/10 19:54:30 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -827,7 +827,12 @@ extern int main (int  /* argc */, char ** /* argv */ ENVP_ARG);
 extern int GetBytesAvailable (int  /* fd */);
 extern int kill_process_group (int  /* pid */, int  /* sig */);
 extern int nonblocking_wait (void);
+
+#if OPT_PTY_HANDSHAKE
 extern void first_map_occurred (void);
+#else
+#define first_map_occurred() /* nothing */
+#endif
 
 #ifdef SIGNAL_T
 extern SIGNAL_T Exit (int  /* n */);
@@ -986,6 +991,11 @@ extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol
 extern void ScrnDisownSelection (XtermWidget /* xw */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
+#if OPT_TRACE && OPT_TRACE_FLAGS
+extern int  ScrnTstFlag(TScreen * /* screen */, int /* row */, int /* flag */);
+extern void ScrnClrFlag(TScreen * /* screen */, int /* row */, int /* flag */);
+extern void ScrnSetFlag(TScreen * /* screen */, int /* row */, int /* flag */);
+#else
 #define ScrnClrFlag(screen, row, flag) \
 	SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) = \
 		(Char *)((long)SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) & ~ (flag))
@@ -996,6 +1006,7 @@ extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
 #define ScrnTstFlag(screen, row, flag) \
 	(ROW2INX(screen, row + screen->savelines) >= 0 && ((long)SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) & (flag)) != 0)
+#endif /* OPT_TRACE && OPT_TRACE_FLAGS */
 
 #define ScrnClrBlinked(screen, row) ScrnClrFlag(screen, row, BLINK)
 #define ScrnSetBlinked(screen, row) ScrnSetFlag(screen, row, BLINK)

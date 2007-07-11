@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.102 2007/06/09 14:45:56 Miroslav.Lichvar Exp $ */
+/* $XTermId: data.h,v 1.103 2007/07/10 19:50:15 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -170,12 +170,13 @@ typedef struct XTERM_RESOURCE {
     Boolean ptyInitialErase;	/* if true, use pty's sense of erase char */
     Boolean backarrow_is_erase;	/* override backspace/delete */
 #endif
-    Boolean wait_for_map;
     Boolean useInsertMode;
 #if OPT_ZICONBEEP
     int zIconBeep;		/* beep level when output while iconified */
 #endif
 #if OPT_PTY_HANDSHAKE
+    Boolean wait_for_map;
+    Boolean wait_for_map0;	/* ...initial value of .wait_for_map */
     Boolean ptyHandshake;	/* use pty-handshaking */
 #endif
 #if OPT_SAME_NAME

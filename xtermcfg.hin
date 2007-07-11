@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.164 2007/06/13 21:45:11 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.165 2007/07/08 22:51:43 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -169,6 +169,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #ifndef OPT_TRACE
 #undef OPT_TRACE		/* CF_ARG_ENABLE(trace) */
+#undef OPT_TRACE_FLAGS		/* ...no option */
 #endif
 
 /*

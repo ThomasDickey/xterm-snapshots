@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.567 2007/06/27 00:35:00 tom Exp $ */
+/* $XTermId: main.c,v 1.570 2007/07/10 20:33:45 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -772,13 +772,13 @@ static XtResource application_resources[] =
     Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, DEF_INITIAL_ERASE),
     Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, DEF_BACKARO_ERASE),
 #endif
-    Bres("waitForMap", "WaitForMap", wait_for_map, False),
     Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
 #if OPT_ZICONBEEP
     Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
 #endif
 #if OPT_PTY_HANDSHAKE
-    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
+    Bres("waitForMap", "WaitForMap", wait_for_map, False),
+    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, DEF_PTY_HANDSHAKE),
 #endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
@@ -1998,6 +1998,9 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
+#if OPT_PTY_HANDSHAKE
+	resource.wait_for_map0 = resource.wait_for_map;
+#endif
 
 #if defined(HAVE_POSIX_SAVED_IDS) && !defined(USE_UTMP_SETGID)
 #if !defined(DISABLE_SETUID) || !defined(DISABLE_SETGID)
@@ -2801,18 +2804,20 @@ HsSysError(int pf, int error)
 void
 first_map_occurred(void)
 {
-    handshake_t handshake;
-    TScreen *screen = TScreenOf(term);
+    if (resource.wait_for_map) {
+	handshake_t handshake;
+	TScreen *screen = TScreenOf(term);
 
-    handshake.status = PTY_EXEC;
-    handshake.rows = screen->max_row;
-    handshake.cols = screen->max_col;
+	handshake.status = PTY_EXEC;
+	handshake.rows = screen->max_row;
+	handshake.cols = screen->max_col;
 
-    TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
-    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
-    close(cp_pipe[0]);
-    close(pc_pipe[1]);
-    resource.wait_for_map = False;
+	TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
+	write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+	close(cp_pipe[0]);
+	close(pc_pipe[1]);
+	resource.wait_for_map = False;
+    }
 }
 #else
 /*
@@ -2824,12 +2829,6 @@ HsSysError(int pf GCC_UNUSED, int error)
     fprintf(stderr, "%s: fatal pty error %d (errno=%d) on tty %s\n",
 	    xterm_name, error, errno, ttydev);
     exit(error);
-}
-
-void
-first_map_occurred(void)
-{
-    return;
 }
 #endif /* OPT_PTY_HANDSHAKE else !OPT_PTY_HANDSHAKE */
 
@@ -4286,12 +4285,18 @@ spawnXTerm(XtermWidget xw)
 	    }
 #endif /* USE_SYSV_ENVVARS */
 
-	    /* need to reset after all the ioctl bashing we did above */
 #if OPT_PTY_HANDSHAKE
-	    if (got_handshake_size) {
+	    /*
+	     * Need to reset after all the ioctl bashing we did above.
+	     *
+	     * If we expect the waitForMap logic to set the handshake-size,
+	     * use that to prevent races.
+	     */
+	    if (resource.ptyHandshake
+		&& (got_handshake_size || !resource.wait_for_map0)) {
 #ifdef TTYSIZE_STRUCT
 		i = SET_TTYSIZE(0, ts);
-		TRACE(("spawn SET_TTYSIZE %dx%d return %d\n",
+		TRACE(("ptyHandshake SET_TTYSIZE %dx%d return %d\n",
 		       TTYSIZE_ROWS(ts),
 		       TTYSIZE_COLS(ts), i));
 #endif /* TTYSIZE_STRUCT */

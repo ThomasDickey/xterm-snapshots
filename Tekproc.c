@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.156 2007/05/28 19:08:33 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.157 2007/07/10 19:53:11 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -946,8 +946,7 @@ TekExpose(Widget w,
 	rcnt = tekRefreshList->count;
 	Tparsestate = curstate = Talptable;
 	TRACE(("TekExpose resets data to replay %d bytes\n", rcnt));
-	if (resource.wait_for_map)
-	    first_map_occurred();
+	first_map_occurred();
 	if (!tekscr->waitrefresh)
 	    TekRefresh(tw);
     }
