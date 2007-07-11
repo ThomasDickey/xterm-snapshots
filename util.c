@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.365 2007/06/27 23:33:46 tom Exp $ */
+/* $XTermId: util.c,v 1.366 2007/07/10 19:53:55 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1467,9 +1467,7 @@ handle_translated_exposure(XtermWidget xw,
 
     if (nrows > 0 && ncols > 0) {
 	ScrnRefresh(xw, toprow, leftcol, nrows, ncols, True);
-	if (resource.wait_for_map) {
-	    first_map_occurred();
-	}
+	first_map_occurred();
 	if (screen->cur_row >= toprow &&
 	    screen->cur_row < toprow + nrows &&
 	    screen->cur_col >= leftcol &&

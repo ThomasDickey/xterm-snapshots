@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.584 2007/07/07 15:23:27 tom Exp $
+  $XTermId: xterm.log.html,v 1.586 2007/07/10 20:50:34 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -279,12 +279,22 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>amend changes to handshake in
+	    <a href="#xterm_226">patch #226</a>
+	    to accommodate Solaris, which relies on the extra setting of
+	    the terminal size after I/O initialization.
+	    At the same time, change the default value of the resource
+	    <code>ptyHandshake</code>
+	    to false except for Solaris and other SVR4 platforms
+	    since the logic as required by Solaris would cause unpredictable
+	    terminal sizes on other platforms (report by David Wood).
+
 	<li>check for X events after cursor-left, and carriage return,
 	    consistent with indexing operations
 	    (comments by Vegard Nossum and Ingo Molnar on a mailing-list).
 
 	<li>initialize the <code>.keyboard</code> structure,
-	    needed for most platforms after
+	    needed for some platforms (such as Solaris) after
 	    <a href="#xterm_227">patch #227</a> fixes for keysyms
 	    (patch by David Wood).
 

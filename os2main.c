@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.249 2007/06/09 13:42:04 tom Exp $ */
+/* $XTermId: os2main.c,v 1.251 2007/07/10 20:22:05 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -297,13 +297,13 @@ static XtResource application_resources[] =
     Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, DEF_INITIAL_ERASE),
     Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, DEF_BACKARO_ERASE),
 #endif
-    Bres("waitForMap", "WaitForMap", wait_for_map, False),
     Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
 #if OPT_ZICONBEEP
     Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
 #endif
 #if OPT_PTY_HANDSHAKE
-    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
+    Bres("waitForMap", "WaitForMap", wait_for_map, False),
+    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, DEF_PTY_HANDSHAKE),
 #endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
@@ -1449,6 +1449,7 @@ hungtty(int i GCC_UNUSED)
     SIGNAL_RETURN;
 }
 
+#if OPT_PTY_HANDSHAKE
 struct {
     int rows;
     int cols;
@@ -1460,11 +1461,14 @@ struct {
 void
 first_map_occurred(void)
 {
-    TScreen *screen = TScreenOf(term);
-    handshake.rows = screen->max_row;
-    handshake.cols = screen->max_col;
-    resource.wait_for_map = False;
+    if (resource.wait_for_map) {
+	TScreen *screen = TScreenOf(term);
+	handshake.rows = screen->max_row;
+	handshake.cols = screen->max_col;
+	resource.wait_for_map = False;
+    }
 }
+#endif /* OPT_PTY_HANDSHAKE else !OPT_PTY_HANDSHAKE */
 
 static void
 set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)

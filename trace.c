@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.74 2007/06/26 22:46:12 tom Exp $ */
+/* $XTermId: trace.c,v 1.77 2007/07/10 19:50:02 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -43,6 +43,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #ifdef HAVE_X11_TRANSLATEI_H
 #include <X11/TranslateI.h>
@@ -307,6 +308,96 @@ visibleXError(int code)
     return result;
 }
 
+#if OPT_TRACE_FLAGS
+#define okScrnRow(screen, row) \
+	(ROW2INX(screen, row) <= screen->max_row \
+      && ROW2INX(screen, row) >= -(screen->savedlines))
+
+#define isScrnFlag(flag) ((flag) == LINEWRAPPED)
+
+#define ScrnFlag(screen, row) \
+	SCRN_BUF_FLAGS(screen, ROW2INX(screen, row))
+
+static char *
+ScrnText(TScreen * screen, int row)
+{
+    int inx = ROW2INX(screen, row);
+    Char *chars = SCRN_BUF_CHARS(screen, inx);
+    Char *widec = 0;
+
+    if_OPT_WIDE_CHARS(screen, {
+	widec = SCRN_BUF_WIDEC(screen, inx);
+    });
+    return visibleChars(PAIRED_CHARS(chars, widec), screen->max_col);
+}
+
+#if OPT_TRACE_FLAGS > 1
+#define DETAILED_FLAGS(name) \
+    Trace("TEST " #name " %d [%d..%d] top %d chars %p (%d)\n", \
+    	  ROW2INX(screen, row), \
+	  -screen->savedlines, \
+	  screen->max_row, \
+	  screen->topline, \
+	  SCRN_BUF_CHARS(screen, ROW2INX(screen, row)), \
+	  (&(ScrnFlag(screen, row)) - screen->visbuf) / MAX_PTRS)
+#else
+#define DETAILED_FLAGS(name)	/* nothing */
+#endif
+
+#define SHOW_SCRN_FLAG(name,code) \
+	Trace(#name " {%d+%d}%05d%s:%s\n", \
+	      row, screen->savedlines, \
+	      ROW2ABS(screen, row), \
+	      code ? "*" : "", \
+	      ScrnText(screen, row))
+
+void
+ScrnClrFlag(TScreen * screen, int row, int flag)
+{
+    DETAILED_FLAGS(ScrnClrFlag);
+    if (!okScrnRow(screen, row)) {
+	Trace("OOPS ScrnClrFlag row %d\n", row);
+	assert(0);
+    } else if (isScrnFlag(flag)) {
+	SHOW_SCRN_FLAG(ScrnClrFlag, 0);
+    }
+
+    ScrnFlag(screen, row) = (Char *) ((long) ScrnFlag(screen, row) & ~(flag));
+}
+
+void
+ScrnSetFlag(TScreen * screen, int row, int flag)
+{
+    DETAILED_FLAGS(ScrnSetFlag);
+    if (!okScrnRow(screen, row)) {
+	Trace("OOPS ScrnSetFlag row %d\n", row);
+	assert(0);
+    } else if (isScrnFlag(flag)) {
+	SHOW_SCRN_FLAG(ScrnSetFlag, 1);
+    }
+
+    ScrnFlag(screen, row) = (Char *) (((long) ScrnFlag(screen, row) | (flag)));
+}
+
+int
+ScrnTstFlag(TScreen * screen, int row, int flag)
+{
+    int code = 0;
+    if (ROW2INX(screen, row + screen->savelines) >= 0) {
+	code = ((long) ScrnFlag(screen, row) & (flag)) != 0;
+
+	DETAILED_FLAGS(ScrnTstFlag);
+	if (!okScrnRow(screen, row)) {
+	    Trace("OOPS ScrnTstFlag row %d\n", row);
+	    assert(0);
+	} else if (isScrnFlag(flag)) {
+	    SHOW_SCRN_FLAG(ScrnTstFlag, code);
+	}
+    }
+    return code;
+}
+#endif /* OPT_TRACE_FLAGS */
+
 void
 TraceSizeHints(XSizeHints * hints)
 {
@@ -417,12 +508,12 @@ TraceXtermResources(void)
     XRES_B(ptyInitialErase);
     XRES_B(backarrow_is_erase);
 #endif
-    XRES_B(wait_for_map);
     XRES_B(useInsertMode);
 #if OPT_ZICONBEEP
     XRES_I(zIconBeep);
 #endif
 #if OPT_PTY_HANDSHAKE
+    XRES_B(wait_for_map);
     XRES_B(ptyHandshake);
 #endif
 #if OPT_SAME_NAME

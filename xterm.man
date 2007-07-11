@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.390 2007/06/13 21:19:59 tom Exp $
+.\" $XTermId: xterm.man,v 1.391 2007/07/10 20:18:20 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -1229,7 +1229,10 @@ You cannot set this to a value less than 64.
 If ``true'', \fIxterm\fP will perform handshaking during initialization
 to ensure that the parent and child processes update the \fButmp\fP
 and \fBstty\fP state.
-The default is ``true''.
+See also \fBwaitForMap\fP which adjusts the pseudo-terminal's notion
+of the screen size.
+The default is ``true'' on Solaris and other SVR4 systems,
+``false'' otherwise.
 .TP 8
 .B "ptyInitialErase (\fPclass\fB PtyInitialErase)"
 If ``true'', \fIxterm\fP will use the pseudo-terminal's sense of the stty erase
@@ -1369,6 +1372,14 @@ The default is ``false.''
 .B "waitForMap (\fPclass\fB WaitForMap)"
 Specifies whether or not \fIxterm\fP should wait for the initial window map
 before starting the subprocess.
+This is part of the
+.B ptyHandshake
+logic.
+When \fIxterm\fP is directed to wait in this fashion,
+it passes the terminal size from the display end of the pseudo-terminal
+to the terminal I/O connection, e.g., according to the window manager.
+Otherwise, it uses the size as given in resource values or command-line
+option \fB-geom\fP.
 The default is ``false.''
 .TP 8
 .B "zIconBeep (\fPclass\fB ZIconBeep)"

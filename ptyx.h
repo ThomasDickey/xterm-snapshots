@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.491 2007/06/24 19:59:19 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.492 2007/07/08 22:32:24 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -628,6 +628,10 @@ typedef struct {
 #define OPT_TRACE       0 /* true if we're using debugging traces */
 #endif
 
+#ifndef OPT_TRACE_FLAGS
+#define OPT_TRACE_FLAGS 0 /* additional tracing used for SCRN_BUF_FLAGS */
+#endif
+
 #ifndef OPT_VT52_MODE
 #define OPT_VT52_MODE   1 /* true if xterm supports VT52 emulation */
 #endif
@@ -1102,6 +1106,8 @@ typedef enum {
 	 */
 #define ROW2INX(screen, row)	((row) + (screen)->topline)
 #define INX2ROW(screen, inx)	((inx) - (screen)->topline)
+
+#define ROW2ABS(screen, row)	((row) + (screen)->savedlines)
 
 	/* ScrnBuf-level macros */
 #define BUFFER_PTR(buf, row, off) (buf[MAX_PTRS * (row) + off])
