@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.586 2007/07/10 20:50:34 tom Exp $
+  $XTermId: xterm.log.html,v 1.588 2007/07/11 22:24:21 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -279,6 +279,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>fix missing assignment for UTF-8 parsing in widget initialization
+	    (Debian #403360).
+
+	<li>correct index expression used to set line-wrapping flag, making
+	    selection from scrollback work consistently (Debian #430121,
+	    report by Vincent Lefevre).
+
 	<li>amend changes to handshake in
 	    <a href="#xterm_226">patch #226</a>
 	    to accommodate Solaris, which relies on the extra setting of
