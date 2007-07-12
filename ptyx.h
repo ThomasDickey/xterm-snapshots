@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.492 2007/07/08 22:32:24 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.493 2007/07/11 18:50:13 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -1108,6 +1108,11 @@ typedef enum {
 #define INX2ROW(screen, inx)	((inx) - (screen)->topline)
 
 #define ROW2ABS(screen, row)	((row) + (screen)->savedlines)
+#define INX2ABS(screen, inx)	ROW2ABS(screen, INX2ROW(screen, inx))
+
+#define okScrnRow(screen, row) \
+	((row) <= (screen)->max_row \
+      && (row) >= -((screen)->savedlines))
 
 	/* ScrnBuf-level macros */
 #define BUFFER_PTR(buf, row, off) (buf[MAX_PTRS * (row) + off])

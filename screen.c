@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.210 2006/11/26 19:12:44 tom Exp $ */
+/* $XTermId: screen.c,v 1.211 2007/07/11 19:40:11 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -420,7 +420,6 @@ ScreenWrite(XtermWidget xw,
     Char *attrs;
     int avail = MaxCols(screen) - screen->cur_col;
     Char *chars;
-    int wrappedbit;
 #if OPT_WIDE_CHARS
     Char starcol1, starcol2;
 #endif
@@ -448,8 +447,6 @@ ScreenWrite(XtermWidget xw,
     if_OPT_DEC_CHRSET({
 	cb = SCRN_BUF_CSETS(screen, screen->cur_row) + screen->cur_col;
     });
-
-    wrappedbit = ScrnTstWrapped(screen, screen->cur_row);
 
 #if OPT_WIDE_CHARS
     starcol1 = *chars;
@@ -521,9 +518,7 @@ ScreenWrite(XtermWidget xw,
 	    }
 	    /* if we are overwriting the left hand half of a
 	       wide character, make the other half vanish */
-	}
-
-	else {
+	} else {
 
 	    if ((char2 = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
 		char2 += screen->cur_col;
@@ -572,11 +567,6 @@ ScreenWrite(XtermWidget xw,
     if_OPT_DEC_CHRSET({
 	memset(cb, curXtermChrSet(xw, screen->cur_row), real_width);
     });
-
-    if (wrappedbit)
-	ScrnSetWrapped(screen, screen->cur_row);
-    else
-	ScrnClrWrapped(screen, screen->cur_row);
 
     if_OPT_WIDE_CHARS(screen, {
 	screen->last_written_col = screen->cur_col + real_width - 1;
@@ -803,10 +793,11 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	}
     });
 
-    if (wrappedbit)
+    if (wrappedbit) {
 	ScrnSetWrapped(screen, row);
-    else
+    } else {
 	ScrnClrWrapped(screen, row);
+    }
 }
 
 /*

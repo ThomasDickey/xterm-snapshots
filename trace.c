@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.77 2007/07/10 19:50:02 tom Exp $ */
+/* $XTermId: trace.c,v 1.80 2007/07/11 21:17:25 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -309,44 +309,42 @@ visibleXError(int code)
 }
 
 #if OPT_TRACE_FLAGS
-#define okScrnRow(screen, row) \
-	(ROW2INX(screen, row) <= screen->max_row \
-      && ROW2INX(screen, row) >= -(screen->savedlines))
-
 #define isScrnFlag(flag) ((flag) == LINEWRAPPED)
-
-#define ScrnFlag(screen, row) \
-	SCRN_BUF_FLAGS(screen, ROW2INX(screen, row))
 
 static char *
 ScrnText(TScreen * screen, int row)
 {
-    int inx = ROW2INX(screen, row);
-    Char *chars = SCRN_BUF_CHARS(screen, inx);
+    Char *chars = SCRN_BUF_CHARS(screen, row);
+#if OPT_WIDE_CHARS
     Char *widec = 0;
+#endif
 
     if_OPT_WIDE_CHARS(screen, {
-	widec = SCRN_BUF_WIDEC(screen, inx);
+	widec = SCRN_BUF_WIDEC(screen, row);
     });
-    return visibleChars(PAIRED_CHARS(chars, widec), screen->max_col);
+    return visibleChars(PAIRED_CHARS(chars, widec), screen->max_col + 1);
 }
 
 #if OPT_TRACE_FLAGS > 1
 #define DETAILED_FLAGS(name) \
     Trace("TEST " #name " %d [%d..%d] top %d chars %p (%d)\n", \
-    	  ROW2INX(screen, row), \
+    	  row, \
 	  -screen->savedlines, \
 	  screen->max_row, \
 	  screen->topline, \
-	  SCRN_BUF_CHARS(screen, ROW2INX(screen, row)), \
-	  (&(ScrnFlag(screen, row)) - screen->visbuf) / MAX_PTRS)
+	  SCRN_BUF_CHARS(screen, row), \
+	  (&(SCRN_BUF_FLAGS(screen, row)) - screen->visbuf) / MAX_PTRS)
 #else
 #define DETAILED_FLAGS(name)	/* nothing */
 #endif
 
+#define SHOW_BAD_ROW(name, screen, row) \
+	Trace("OOPS " #name " bad row %d [%d..%d]\n", \
+	      row, -(screen->savedlines), screen->max_row)
+
 #define SHOW_SCRN_FLAG(name,code) \
-	Trace(#name " {%d+%d}%05d%s:%s\n", \
-	      row, screen->savedlines, \
+	Trace(#name " {%d, top=%d, saved=%d}%05d%s:%s\n", \
+	      row, screen->topline, screen->savedlines, \
 	      ROW2ABS(screen, row), \
 	      code ? "*" : "", \
 	      ScrnText(screen, row))
@@ -356,13 +354,14 @@ ScrnClrFlag(TScreen * screen, int row, int flag)
 {
     DETAILED_FLAGS(ScrnClrFlag);
     if (!okScrnRow(screen, row)) {
-	Trace("OOPS ScrnClrFlag row %d\n", row);
+	SHOW_BAD_ROW(ScrnClrFlag, screen, row);
 	assert(0);
     } else if (isScrnFlag(flag)) {
 	SHOW_SCRN_FLAG(ScrnClrFlag, 0);
     }
 
-    ScrnFlag(screen, row) = (Char *) ((long) ScrnFlag(screen, row) & ~(flag));
+    SCRN_BUF_FLAGS(screen, row) =
+	(Char *) ((long) SCRN_BUF_FLAGS(screen, row) & ~(flag));
 }
 
 void
@@ -370,25 +369,28 @@ ScrnSetFlag(TScreen * screen, int row, int flag)
 {
     DETAILED_FLAGS(ScrnSetFlag);
     if (!okScrnRow(screen, row)) {
-	Trace("OOPS ScrnSetFlag row %d\n", row);
+	SHOW_BAD_ROW(ScrnSetFlag, screen, row);
 	assert(0);
     } else if (isScrnFlag(flag)) {
 	SHOW_SCRN_FLAG(ScrnSetFlag, 1);
     }
 
-    ScrnFlag(screen, row) = (Char *) (((long) ScrnFlag(screen, row) | (flag)));
+    SCRN_BUF_FLAGS(screen, row) =
+	(Char *) (((long) SCRN_BUF_FLAGS(screen, row) | (flag)));
 }
 
 int
 ScrnTstFlag(TScreen * screen, int row, int flag)
 {
     int code = 0;
-    if (ROW2INX(screen, row + screen->savelines) >= 0) {
-	code = ((long) ScrnFlag(screen, row) & (flag)) != 0;
+    if (!okScrnRow(screen, row)) {
+	SHOW_BAD_ROW(ScrnTstFlag, screen, row);
+    } else {
+	code = ((long) SCRN_BUF_FLAGS(screen, row) & (flag)) != 0;
 
 	DETAILED_FLAGS(ScrnTstFlag);
 	if (!okScrnRow(screen, row)) {
-	    Trace("OOPS ScrnTstFlag row %d\n", row);
+	    SHOW_BAD_ROW(ScrnSetFlag, screen, row);
 	    assert(0);
 	} else if (isScrnFlag(flag)) {
 	    SHOW_SCRN_FLAG(ScrnTstFlag, code);

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.471 2007/07/10 19:54:30 tom Exp $ */
+/* $XTermId: xterm.h,v 1.472 2007/07/11 18:53:58 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -322,7 +322,7 @@ extern int errno;
 #define environ gblenvp		/* circumvent a bug */
 #endif
 
-#if !defined(VMS) && !(defined(linux) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__) 
+#if !defined(VMS) && !(defined(linux) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__)
 extern char **environ;
 #endif
 
@@ -997,24 +997,25 @@ extern void ScrnClrFlag(TScreen * /* screen */, int /* row */, int /* flag */);
 extern void ScrnSetFlag(TScreen * /* screen */, int /* row */, int /* flag */);
 #else
 #define ScrnClrFlag(screen, row, flag) \
-	SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) = \
-		(Char *)((long)SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) & ~ (flag))
+	SCRN_BUF_FLAGS(screen, row) = \
+		(Char *)((long)SCRN_BUF_FLAGS(screen, row) & ~ (flag))
 
 #define ScrnSetFlag(screen, row, flag) \
-	SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) = \
-		(Char *)(((long)SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) | (flag)))
+	SCRN_BUF_FLAGS(screen, row) = \
+		(Char *)(((long)SCRN_BUF_FLAGS(screen, row) | (flag)))
 
 #define ScrnTstFlag(screen, row, flag) \
-	(ROW2INX(screen, row + screen->savelines) >= 0 && ((long)SCRN_BUF_FLAGS(screen, ROW2INX(screen, row)) & (flag)) != 0)
+	(okScrnRow(screen, row) && \
+	 ((long)SCRN_BUF_FLAGS(screen, row) & (flag)) != 0)
 #endif /* OPT_TRACE && OPT_TRACE_FLAGS */
 
-#define ScrnClrBlinked(screen, row) ScrnClrFlag(screen, row, BLINK)
-#define ScrnSetBlinked(screen, row) ScrnSetFlag(screen, row, BLINK)
-#define ScrnTstBlinked(screen, row) ScrnTstFlag(screen, row, BLINK)
+#define ScrnClrBlinked(screen, row) ScrnClrFlag(screen, ROW2INX(screen, row), BLINK)
+#define ScrnSetBlinked(screen, row) ScrnSetFlag(screen, ROW2INX(screen, row), BLINK)
+#define ScrnTstBlinked(screen, row) ScrnTstFlag(screen, ROW2INX(screen, row), BLINK)
 
-#define ScrnClrWrapped(screen, row) ScrnClrFlag(screen, row, LINEWRAPPED)
-#define ScrnSetWrapped(screen, row) ScrnSetFlag(screen, row, LINEWRAPPED)
-#define ScrnTstWrapped(screen, row) ScrnTstFlag(screen, row, LINEWRAPPED)
+#define ScrnClrWrapped(screen, row) ScrnClrFlag(screen, ROW2INX(screen, row), LINEWRAPPED)
+#define ScrnSetWrapped(screen, row) ScrnSetFlag(screen, ROW2INX(screen, row), LINEWRAPPED)
+#define ScrnTstWrapped(screen, row) ScrnTstFlag(screen, ROW2INX(screen, row), LINEWRAPPED)
 
 #define ScrnHaveSelection(screen) \
 			((screen)->startH.row != (screen)->endH.row \

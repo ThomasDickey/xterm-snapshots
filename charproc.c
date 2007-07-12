@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.803 2007/07/07 12:02:37 tom Exp $ */
+/* $XTermId: charproc.c,v 1.805 2007/07/11 22:22:27 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -3341,6 +3341,18 @@ PreeditPosition(TScreen * screen)
 }
 #endif
 
+static void
+WrapLine(XtermWidget xw)
+{
+    TScreen *screen = &(xw->screen);
+
+    /* mark that we had to wrap this line */
+    ScrnSetFlag(screen, screen->cur_row, LINEWRAPPED);
+    xtermAutoPrint('\n');
+    xtermIndex(xw, 1);
+    set_cur_col(screen, 0);
+}
+
 /*
  * process a string of characters according to the character set indicated
  * by charset.  worry about end of line conditions (wraparound if selected).
@@ -3391,15 +3403,13 @@ dotext(XtermWidget xw,
 	int last_chomp = 0;
 	chars_chomped = 0;
 
-	if (screen->do_wrap && (xw->flags & WRAPAROUND)) {
-	    /* mark that we had to wrap this line */
-	    ScrnSetWrapped(screen, screen->cur_row);
-	    xtermAutoPrint('\n');
-	    xtermIndex(xw, 1);
-	    set_cur_col(screen, 0);
+	if (screen->do_wrap) {
 	    screen->do_wrap = 0;
-	    width_available = MaxCols(screen) - screen->cur_col;
-	    next_col = screen->cur_col;
+	    if ((xw->flags & WRAPAROUND)) {
+		WrapLine(xw);
+		width_available = MaxCols(screen) - screen->cur_col;
+		next_col = screen->cur_col;
+	    }
 	}
 
 	while (width_here <= width_available && chars_chomped < (len - offset)) {
@@ -3417,8 +3427,9 @@ dotext(XtermWidget xw,
 		break;		/* give up - it is too big */
 	    chars_chomped--;
 	    width_here -= last_chomp;
-	    if (chars_chomped > 0 || (xw->flags & WRAPAROUND))
+	    if (chars_chomped > 0) {
 		need_wrap = 1;
+	    }
 	} else if (width_here == width_available) {
 	    need_wrap = 1;
 	} else if (chars_chomped != (len - offset)) {
@@ -3479,16 +3490,13 @@ dotext(XtermWidget xw,
 	last_col = CurMaxCol(screen, screen->cur_row);
 	this_col = last_col - screen->cur_col + 1;
 	if (this_col <= 1) {
-	    if (screen->do_wrap && (xw->flags & WRAPAROUND)) {
-		/* mark that we had to wrap this line */
-		ScrnSetWrapped(screen, screen->cur_row);
-		xtermAutoPrint('\n');
-		xtermIndex(xw, 1);
-		set_cur_col(screen, 0);
+	    if (screen->do_wrap) {
 		screen->do_wrap = 0;
-		this_col = last_col + 1;
-	    } else
-		this_col = 1;
+		if ((xw->flags & WRAPAROUND)) {
+		    WrapLine(xw);
+		}
+	    }
+	    this_col = 1;
 	}
 	if (offset + this_col > len) {
 	    this_col = len - offset;
@@ -3500,9 +3508,9 @@ dotext(XtermWidget xw,
 		  (unsigned) this_col);
 
 	/*
-	 * the call to WriteText updates screen->cur_col.
-	 * If screen->cur_col != next_col, we must have
-	 * hit the right margin, so set the do_wrap flag.
+	 * The call to WriteText updates screen->cur_col.
+	 * If screen->cur_col is less than next_col, we must have
+	 * hit the right margin - so set the do_wrap flag.
 	 */
 	screen->do_wrap = (screen->cur_col < next_col);
     }
@@ -5814,6 +5822,7 @@ VTInitialize(Widget wrequest,
     }
 #endif
 
+    init_Ires(screen.utf8_inparse);
     init_Ires(screen.utf8_mode);
     init_Ires(screen.max_combining);
 
