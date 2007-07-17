@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.805 2007/07/11 22:22:27 tom Exp $ */
+/* $XTermId: charproc.c,v 1.809 2007/07/17 00:01:38 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -3564,7 +3564,7 @@ static void
 WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 {
     TScreen *screen = &(xw->screen);
-    ScrnPtr PAIRED_CHARS(temp_str = 0, temp_str2 = 0);
+    ScrnPtr temp_str = 0;
     unsigned test;
     unsigned flags = xw->flags;
     unsigned fg_bg = makeColorPair(xw->cur_foreground, xw->cur_background);
@@ -3582,17 +3582,29 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	ScrnDisownSelection(xw);
     }
 
+    /* if we are in insert-mode, reserve space for the new cells */
+    if (flags & INSERT) {
+	InsertChar(xw, cells);
+    }
+
     if (INX2ROW(screen, screen->cur_row) <= screen->max_row) {
 	if (screen->cursor_state)
 	    HideCursor();
 
-	if (flags & INSERT) {
-	    InsertChar(xw, cells);
-	}
 	if (!AddToRefresh(screen)) {
-
 	    if (screen->scroll_amt)
 		FlushScroll(xw);
+
+	    /*
+	     * If we overwrite part of a multi-column character, fill the rest
+	     * of it with blanks.
+	     */
+	    if_OPT_WIDE_CHARS(screen, {
+		int kl;
+		int kr;
+		if (DamagedCurCells(screen, cells, &kl, &kr))
+		    ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+	    });
 
 	    if (flags & INVISIBLE) {
 		if (cells > len) {
@@ -3600,17 +3612,11 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 		    if (str == 0)
 			return;
 		}
-		if_OPT_WIDE_CHARS(screen, {
-		    if (cells > len) {
-			str2 = temp_str2 = TypeMallocN(Char, cells);
-		    }
-		});
 		len = cells;
 
 		memset(str, ' ', len);
 		if_OPT_WIDE_CHARS(screen, {
-		    if (str2 != 0)
-			memset(str2, 0, len);
+		    str2 = 0;
 		});
 	    }
 
@@ -3665,10 +3671,6 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 #endif /* OPT_ZICONBEEP */
     if (temp_str != 0)
 	free(temp_str);
-    if_OPT_WIDE_CHARS(screen, {
-	if (temp_str2 != 0)
-	    free(temp_str2);
-    });
     return;
 }
 
@@ -6963,11 +6965,12 @@ ShowCursor(void)
 	    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
 		clo = SCREEN_PTR(screen, screen->cursorp.row, off + 0)[my_col];
 		chi = SCREEN_PTR(screen, screen->cursorp.row, off + 1)[my_col];
-		if (clo || chi)
-		    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
-				  currentGC, x, y,
-				  curXtermChrSet(xw, screen->cur_row),
-				  PAIRED_CHARS(&clo, &chi), 1, iswide(base));
+		if (!(clo || chi))
+		    break;
+		drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
+			      currentGC, x, y,
+			      curXtermChrSet(xw, screen->cur_row),
+			      PAIRED_CHARS(&clo, &chi), 1, iswide(base));
 	    }
 	});
 #endif
@@ -7080,11 +7083,12 @@ HideCursor(void)
 	for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
 	    clo = SCREEN_PTR(screen, screen->cursorp.row, off + 0)[my_col];
 	    chi = SCREEN_PTR(screen, screen->cursorp.row, off + 1)[my_col];
-	    if (clo || chi)
-		drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
-			      currentGC, x, y,
-			      curXtermChrSet(xw, screen->cur_row),
-			      PAIRED_CHARS(&clo, &chi), 1, iswide(base));
+	    if (!(clo || chi))
+		break;
+	    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
+			  currentGC, x, y,
+			  curXtermChrSet(xw, screen->cur_row),
+			  PAIRED_CHARS(&clo, &chi), 1, iswide(base));
 	}
     });
 #endif

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.472 2007/07/11 18:53:58 tom Exp $ */
+/* $XTermId: xterm.h,v 1.477 2007/07/17 00:02:41 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -1073,10 +1073,12 @@ extern void TabZonk (Tabs  /* tabs */);
 /* util.c */
 extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned  /* fg_bg */, Bool  /* hilite */);
 extern int AddToRefresh (TScreen * /* screen */);
+extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int char2lower (int  /* ch */);
 extern int drawXtermText (XtermWidget /* xw */, unsigned  /* flags */, GC  /* gc */, int  /* x */, int  /* y */, int  /* chrset */, PAIRED_CHARS(Char * /* text */, Char * /* text2 */), Cardinal  /* len */, int  /* on_wide */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
+extern void ClearCells (XtermWidget /* xw */, int /* flags */, int /* len */, int /* row */, int /* col */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
 extern void DeleteChar (XtermWidget /* xw */, unsigned /* n */);
@@ -1209,10 +1211,10 @@ extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */
 #endif
 
 #if OPT_WIDE_CHARS
+extern int DamagedCells(TScreen * /* screen */, int /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
+extern int DamagedCurCells(TScreen * /* screen */, int /* n */, int * /* klp */, int * /* krp */);
 extern unsigned AsciiEquivs(unsigned /* ch */);
 extern unsigned getXtermCellComb (TScreen * /* screen */, int  /* row */, int  /* col */, int /* off */);
-extern unsigned getXtermCellComb1 (TScreen * /* screen */, int  /* row */, int  /* col */);
-extern unsigned getXtermCellComb2 (TScreen * /* screen */, int  /* row */, int  /* col */);
 extern void addXtermCombining (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned  /* ch */);
 #endif
 
