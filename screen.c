@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.211 2007/07/11 19:40:11 tom Exp $ */
+/* $XTermId: screen.c,v 1.217 2007/07/17 00:14:15 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -558,8 +558,8 @@ ScreenWrite(XtermWidget xw,
 	}
     });
     if_OPT_EXT_COLORS(screen, {
-	memset(fbf, (Char) (cur_fg_bg >> 8), real_width);
-	memset(fbb, (Char) (cur_fg_bg & 0xff), real_width);
+	memset(fbf, ExtractForeground(cur_fg_bg), real_width);
+	memset(fbb, ExtractBackground(cur_fg_bg), real_width);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
 	memset(fb, (int) cur_fg_bg, real_width);
@@ -730,16 +730,15 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where,
 void
 ScrnInsertChar(XtermWidget xw, unsigned n)
 {
+#define Target (data + col + n)
+#define Source (data + col)
+
     TScreen *screen = &(xw->screen);
     ScrnBuf sb = screen->visbuf;
     unsigned last = MaxCols(screen);
     int row = screen->cur_row;
     unsigned col = screen->cur_col;
-    unsigned i;
-    Char *ptr = BUF_CHARS(sb, row);
-    Char *attrs = BUF_ATTRS(sb, row);
-    int wrappedbit = ScrnTstWrapped(screen, row);
-    int flags = CHARDRAWN | TERM_COLOR_FLAGS(xw);
+    Char *data;
     size_t nbytes;
 
     if (last <= (col + n)) {
@@ -754,50 +753,50 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     assert(n > 0);
     assert(last > n);
 
-    ScrnClrWrapped(screen, row);	/* make sure the bit isn't moved */
-    for (i = last - 1; i >= col + n; i--) {
-	unsigned j = i - n;
-	assert(i >= n);
-	ptr[i] = ptr[j];
-	attrs[i] = attrs[j];
-    }
+    if_OPT_WIDE_CHARS(screen, {
+	int xx = INX2ROW(screen, screen->cur_row);
+	int kl;
+	int kr = screen->cur_col;
+	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
+	    ClearCells(xw, 0, kr - kl + 1, row, kl);
+	}
+	kr = screen->max_col - n + 1;
+	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
+	    ClearCells(xw, 0, kr - kl + 1, row, kl);
+	}
+    });
 
-    for (i = col; i < col + n; i++)
-	ptr[i] = ' ';
-    for (i = col; i < col + n; i++)
-	attrs[i] = flags;
+    data = BUF_CHARS(sb, row);
+    memmove(Target, Source, nbytes);
+
+    data = BUF_ATTRS(sb, row);
+    memmove(Target, Source, nbytes);
+
     if_OPT_EXT_COLORS(screen, {
-	ptr = BUF_FGRND(sb, row);
-	memmove(ptr + col + n, ptr + col, nbytes);
-	memset(ptr + col, xw->sgr_foreground, n);
-	ptr = BUF_BGRND(sb, row);
-	memmove(ptr + col + n, ptr + col, nbytes);
-	memset(ptr + col, xw->cur_background, n);
+	data = BUF_FGRND(sb, row);
+	memmove(Target, Source, nbytes);
+	data = BUF_BGRND(sb, row);
+	memmove(Target, Source, nbytes);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	ptr = BUF_COLOR(sb, row);
-	memmove(ptr + col + n, ptr + col, nbytes);
-	memset(ptr + col, (int) xtermColorPair(xw), n);
+	data = BUF_COLOR(sb, row);
+	memmove(Target, Source, nbytes);
     });
     if_OPT_DEC_CHRSET({
-	ptr = BUF_CSETS(sb, row);
-	memmove(ptr + col + n, ptr + col, nbytes);
-	memset(ptr + col, curXtermChrSet(xw, row), n);
+	data = BUF_CSETS(sb, row);
+	memmove(Target, Source, nbytes);
     });
     if_OPT_WIDE_CHARS(screen, {
 	int off;
 	for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-	    ptr = BUFFER_PTR(sb, row, off);
-	    memmove(ptr + col + n, ptr + col, nbytes);
-	    memset(ptr + col, 0, n);
+	    data = BUFFER_PTR(sb, row, off);
+	    memmove(Target, Source, nbytes);
 	}
     });
+    ClearCells(xw, CHARDRAWN, n, row, col);
 
-    if (wrappedbit) {
-	ScrnSetWrapped(screen, row);
-    } else {
-	ScrnClrWrapped(screen, row);
-    }
+#undef Source
+#undef Target
 }
 
 /*
@@ -806,13 +805,15 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 void
 ScrnDeleteChar(XtermWidget xw, unsigned n)
 {
+#define Target (data + col)
+#define Source (data + col + n)
+
     TScreen *screen = &(xw->screen);
     ScrnBuf sb = screen->visbuf;
     unsigned last = MaxCols(screen);
     unsigned row = screen->cur_row;
     unsigned col = screen->cur_col;
-    Char *ptr = BUF_CHARS(sb, row);
-    Char *attrs = BUF_ATTRS(sb, row);
+    Char *data;
     size_t nbytes;
 
     if (last <= (col + n)) {
@@ -827,38 +828,47 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
     assert(n > 0);
     assert(last > n);
 
-    memmove(ptr + col, ptr + col + n, nbytes);
-    memmove(attrs + col, attrs + col + n, nbytes);
-    bzero(ptr + last - n, n);
-    memset(attrs + last - n, (Char) (TERM_COLOR_FLAGS(xw)), n);
+    if_OPT_WIDE_CHARS(screen, {
+	int kl;
+	int kr;
+	if (DamagedCells(screen, n, &kl, &kr,
+			 ROW2INX(screen, screen->cur_row),
+			 screen->cur_col))
+	    ClearCells(xw, 0, kr - kl + 1, row, kl);
+    });
+
+    data = BUF_CHARS(sb, row);
+    memmove(Target, Source, nbytes);
+
+    data = BUF_ATTRS(sb, row);
+    memmove(Target, Source, nbytes);
 
     if_OPT_EXT_COLORS(screen, {
-	ptr = BUF_FGRND(sb, row);
-	memmove(ptr + col, ptr + col + n, nbytes);
-	memset(ptr + last - n, xw->sgr_foreground, n);
-	ptr = BUF_BGRND(sb, row);
-	memmove(ptr + col, ptr + col + n, nbytes);
-	memset(ptr + last - n, xw->cur_background, n);
+	data = BUF_FGRND(sb, row);
+	memmove(Target, Source, nbytes);
+	data = BUF_BGRND(sb, row);
+	memmove(Target, Source, nbytes);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	ptr = BUF_COLOR(sb, row);
-	memmove(ptr + col, ptr + col + n, nbytes);
-	memset(ptr + last - n, (int) xtermColorPair(xw), n);
+	data = BUF_COLOR(sb, row);
+	memmove(Target, Source, nbytes);
     });
     if_OPT_DEC_CHRSET({
-	ptr = BUF_CSETS(sb, row);
-	memmove(ptr + col, ptr + col + n, nbytes);
-	memset(ptr + last - n, curXtermChrSet(xw, row), n);
+	data = BUF_CSETS(sb, row);
+	memmove(Target, Source, nbytes);
     });
     if_OPT_WIDE_CHARS(screen, {
 	int off;
 	for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-	    ptr = BUFFER_PTR(sb, row, off);
-	    memmove(ptr + col, ptr + col + n, nbytes);
-	    memset(ptr + last - n, 0, n);
+	    data = BUFFER_PTR(sb, row, off);
+	    memmove(Target, Source, nbytes);
 	}
     });
+    ClearCells(xw, 0, n, row, last - n);
     ScrnClrWrapped(screen, row);
+
+#undef Source
+#undef Target
 }
 
 /*
@@ -1850,6 +1860,7 @@ ScrnWipeRectangle(XtermWidget xw,
 	    for (col = left; col <= right; ++col) {
 		if (!((screen->protected_mode == DEC_PROTECT)
 		      && (SCRN_BUF_ATTRS(screen, row)[col] & PROTECTED))) {
+		    /* FIXME - use ClearCells */
 		    SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
 		    SCRN_BUF_CHARS(screen, row)[col] = ' ';
 		    if_OPT_WIDE_CHARS(screen, {

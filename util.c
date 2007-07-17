@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.366 2007/07/10 19:53:55 tom Exp $ */
+/* $XTermId: util.c,v 1.375 2007/07/17 00:03:00 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -75,7 +75,6 @@
 #include <wcwidth.h>
 #endif
 
-static int ClearInLine(XtermWidget xw, int row, int col, unsigned len);
 static int handle_translated_exposure(XtermWidget xw,
 				      int rect_x,
 				      int rect_y,
@@ -95,6 +94,85 @@ static void vertical_copy_area(XtermWidget xw,
 #if OPT_WIDE_CHARS
 int (*my_wcwidth) (wchar_t);
 #endif
+
+#if OPT_WIDE_CHARS
+/*
+ * We will modify the 'n' cells beginning at the current position.
+ * Some of those cells may be part of multi-column characters, including
+ * carryover from the left.  Find the limits of the multi-column characters
+ * that we should fill with blanks, return true if filling is needed.
+ */
+int
+DamagedCells(TScreen * screen, int n, int *klp, int *krp, int row, int col)
+{
+    int kl = col;
+    int kr = col + n;
+
+    if (XTERM_CELL(row, kl) == HIDDEN_CHAR) {
+	while (kl > 0) {
+	    if (XTERM_CELL(row, --kl) != HIDDEN_CHAR) {
+		break;
+	    }
+	}
+    } else {
+	kl = col + 1;
+    }
+    if (XTERM_CELL(row, kr) == HIDDEN_CHAR) {
+	while (kr < screen->max_col) {
+	    if (XTERM_CELL(row, ++kr) != HIDDEN_CHAR) {
+		--kr;
+		break;
+	    }
+	}
+    } else {
+	kr = col - 1;
+    }
+    if (klp)
+	*klp = kl;
+    if (krp)
+	*krp = kr;
+    return (kr >= kl);
+}
+
+int
+DamagedCurCells(TScreen * screen, int n, int *klp, int *krp)
+{
+    return DamagedCells(screen, n, klp, krp, screen->cur_row, screen->cur_col);
+}
+#endif /* OPT_WIDE_CHARS */
+
+void
+ClearCells(XtermWidget xw, int flags, int len, int row, int col)
+{
+    if (len != 0) {
+	TScreen *screen = &(xw->screen);
+	flags |= TERM_COLOR_FLAGS(xw);
+
+	memset(SCRN_BUF_CHARS(screen, row) + col, ' ', len);
+	memset(SCRN_BUF_ATTRS(screen, row) + col, flags, len);
+
+	if_OPT_EXT_COLORS(screen, {
+	    memset(SCRN_BUF_FGRND(screen, row) + col,
+		   xw->sgr_foreground, len);
+	    memset(SCRN_BUF_BGRND(screen, row) + col,
+		   xw->cur_background, len);
+	});
+	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	    memset(SCRN_BUF_COLOR(screen, row) + col,
+		   (int) xtermColorPair(xw), len);
+	});
+	if_OPT_DEC_CHRSET({
+	    memset(SCRN_BUF_CSETS(screen, row) + col,
+		   curXtermChrSet(xw, screen->cur_row), len);
+	});
+	if_OPT_WIDE_CHARS(screen, {
+	    int off;
+	    for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
+		memset(SCREEN_PTR(screen, row, off) + col, 0, len);
+	    }
+	});
+    }
+}
 
 /*
  * These routines are used for the jump scroll feature
@@ -752,6 +830,25 @@ InsertChar(XtermWidget xw, unsigned n)
 	    if (screen->scroll_amt)
 		FlushScroll(xw);
 
+	    /*
+	     * If we shift part of a multi-column character, fill the rest
+	     * of it with blanks.  Do similar repair for the text which will
+	     * be shifted into the right-margin.
+	     */
+	    if_OPT_WIDE_CHARS(screen, {
+		int kl;
+		int kr = screen->cur_col;
+		if (DamagedCurCells(screen, n, &kl, (int *) 0) && kr > kl) {
+		    ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+		}
+		kr = screen->max_col - n + 1;
+		if (DamagedCells(screen, n, &kl, (int *) 0,
+				 screen->cur_row,
+				 kr) && kr > kl) {
+		    ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+		}
+	    });
+
 #if OPT_DEC_CHRSET
 	    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
 		col = MaxCols(screen) / 2 - n;
@@ -762,10 +859,11 @@ InsertChar(XtermWidget xw, unsigned n)
 	     * if it is being appended to
 	     */
 	    if (non_blank_line(screen, screen->cur_row,
-			       screen->cur_col, MaxCols(screen)))
+			       screen->cur_col, MaxCols(screen))) {
 		horizontal_copy_area(xw, screen->cur_col,
 				     col - screen->cur_col,
 				     (int) n);
+	    }
 
 	    ClearCurBackground(xw,
 			       CursorY(screen, screen->cur_row),
@@ -812,6 +910,17 @@ DeleteChar(XtermWidget xw, unsigned n)
 	    if (screen->scroll_amt)
 		FlushScroll(xw);
 
+	    /*
+	     * If we delete part of a multi-column character, fill the rest
+	     * of it with blanks.
+	     */
+	    if_OPT_WIDE_CHARS(screen, {
+		int kl;
+		int kr;
+		if (DamagedCurCells(screen, n, &kl, &kr))
+		    ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+	    });
+
 #if OPT_DEC_CHRSET
 	    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
 		col = MaxCols(screen) / 2 - n;
@@ -829,9 +938,9 @@ DeleteChar(XtermWidget xw, unsigned n)
 			       n * CurFontWidth(screen, screen->cur_row));
 	}
     }
-    if (n > 0) {
+    if (n != 0) {
 	/* adjust screen->buf */
-	ScrnDeleteChar(xw, (unsigned) n);
+	ScrnDeleteChar(xw, n);
     }
 }
 
@@ -915,12 +1024,12 @@ ClearBelow(XtermWidget xw)
  * Clear the given row, for the given range of columns, returning 1 if no
  * protected characters were found, 0 otherwise.
  */
-static int
+int
 ClearInLine(XtermWidget xw, int row, int col, unsigned len)
 {
     TScreen *screen = &(xw->screen);
     int rc = 1;
-    int flags = TERM_COLOR_FLAGS(xw);
+    int flags = 0;
 
     TRACE(("ClearInLine(row=%d, col=%d, len=%d) vs %d..%d\n",
 	   row, col, len,
@@ -1001,29 +1110,7 @@ ClearInLine(XtermWidget xw, int row, int col, unsigned len)
     }
 
     if (len != 0) {
-	memset(SCRN_BUF_CHARS(screen, row) + col, ' ', len);
-	memset(SCRN_BUF_ATTRS(screen, row) + col, flags, len);
-
-	if_OPT_EXT_COLORS(screen, {
-	    memset(SCRN_BUF_FGRND(screen, row) + col,
-		   xw->sgr_foreground, len);
-	    memset(SCRN_BUF_BGRND(screen, row) + col,
-		   xw->cur_background, len);
-	});
-	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	    memset(SCRN_BUF_COLOR(screen, row) + col,
-		   (int) xtermColorPair(xw), len);
-	});
-	if_OPT_DEC_CHRSET({
-	    memset(SCRN_BUF_CSETS(screen, row) + col,
-		   curXtermChrSet(xw, screen->cur_row), len);
-	});
-	if_OPT_WIDE_CHARS(screen, {
-	    int off;
-	    for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-		memset(SCREEN_PTR(screen, row, off) + col, 0, len);
-	    }
-	});
+	ClearCells(xw, flags, len, row, col);
     }
 
     return rc;
@@ -2604,12 +2691,12 @@ drawXtermText(XtermWidget xw,
 		first = last + 1;
 		continue;
 	    }
-	    isMissing = (ch != HIDDEN_CHAR)
-		&& (xtermMissingChar(xw, ch,
-				     ((on_wide || iswide((int) ch))
-				      && okFont(NormalWFont(screen)))
-				     ? NormalWFont(screen)
-				     : font));
+	    isMissing =
+		xtermMissingChar(xw, ch,
+				 ((on_wide || my_wcwidth((int) ch) > 1)
+				  && okFont(NormalWFont(screen)))
+				 ? NormalWFont(screen)
+				 : font);
 #else
 	    isMissing = xtermMissingChar(xw, ch, font);
 #endif
@@ -2649,8 +2736,7 @@ drawXtermText(XtermWidget xw,
     /*
      * Behave as if the font has (maybe Unicode-replacements for) drawing
      * characters in the range 1-31 (either we were not asked to ignore them,
-     * or the caller made sure that there is none).  The only translation we do
-     * in this branch is the removal of HIDDEN_CHAR (for the wide-char case).
+     * or the caller made sure that there is none).
      */
     TRACE(("drawtext%c[%4d,%4d] (%d) %d:%s\n",
 	   screen->cursor_state == OFF ? ' ' : '*',
@@ -2660,62 +2746,66 @@ drawXtermText(XtermWidget xw,
 
 #if OPT_WIDE_CHARS
     if (screen->wide_chars || screen->unicode_font) {
+	Bool needWide = False;
 	int ascent_adjust = 0;
-	int n;
-	unsigned ch = text[0] | (text2[0] << 8);
-	int wideness = (!IsIcon(screen)
-			&& ((on_wide || iswide((int) ch) != 0)
-			    && okFont(NormalWFont(screen))));
-	unsigned char *endtext = text + len;
+	int src, dst;
+
 	if (screen->draw_len < len) {
 	    screen->draw_len = (len + 1) * 2;
 	    screen->draw_buf = (XChar2b *) XtRealloc((char *) screen->draw_buf,
 						     screen->draw_len *
 						     sizeof(*screen->draw_buf));
 	}
-	for (n = 0; n < (int) len; n++) {
-	    screen->draw_buf[n].byte2 = *text;
-	    screen->draw_buf[n].byte1 = *text2;
+
+	for (src = dst = 0; src < (int) len; src++) {
+	    unsigned ch = text[src] | (text2[src] << 8);
+
+	    if (ch == HIDDEN_CHAR)
+		continue;
+
+	    if (!needWide
+		&& !IsIcon(screen)
+		&& ((on_wide || my_wcwidth((int) ch) > 1)
+		    && okFont(NormalWFont(screen)))) {
+		needWide = True;
+	    }
+
+	    screen->draw_buf[dst].byte2 = text[src];
+	    screen->draw_buf[dst].byte1 = text2[src];
 #if OPT_MINI_LUIT
-#define UCS2SBUF(n,value)	screen->draw_buf[n].byte2 = (value & 0xff);\
-	    			screen->draw_buf[n].byte1 = (value >> 8)
-#define Map2Sbuf(n,from,to) (*text == from) { UCS2SBUF(n,to); }
-	    if (screen->latin9_mode && !screen->utf8_mode && *text2 == 0) {
+#define UCS2SBUF(value)	screen->draw_buf[dst].byte2 = (value & 0xff);\
+	    		screen->draw_buf[dst].byte1 = (value >> 8)
+
+#define Map2Sbuf(from,to) (text[src] == from) { UCS2SBUF(to); }
+
+	    if (screen->latin9_mode && !screen->utf8_mode && text2[src] == 0) {
 
 		/* see http://www.cs.tut.fi/~jkorpela/latin9.html */
 		/* *INDENT-OFF* */
-		if Map2Sbuf(n, 0xa4, 0x20ac)
-		else if Map2Sbuf(n, 0xa6, 0x0160)
-		else if Map2Sbuf(n, 0xa8, 0x0161)
-		else if Map2Sbuf(n, 0xb4, 0x017d)
-		else if Map2Sbuf(n, 0xb8, 0x017e)
-		else if Map2Sbuf(n, 0xbc, 0x0152)
-		else if Map2Sbuf(n, 0xbd, 0x0153)
-		else if Map2Sbuf(n, 0xbe, 0x0178)
+		if Map2Sbuf(0xa4, 0x20ac)
+		else if Map2Sbuf(0xa6, 0x0160)
+		else if Map2Sbuf(0xa8, 0x0161)
+		else if Map2Sbuf(0xb4, 0x017d)
+		else if Map2Sbuf(0xb8, 0x017e)
+		else if Map2Sbuf(0xbc, 0x0152)
+		else if Map2Sbuf(0xbd, 0x0153)
+		else if Map2Sbuf(0xbe, 0x0178)
 		/* *INDENT-ON* */
 
 	    }
 	    if (screen->unicode_font
-		&& *text2 == 0
-		&& (*text == ANSI_DEL || *text < ANSI_SPA)) {
-		int ni = dec2ucs((unsigned) ((*text == ANSI_DEL) ? 0 : *text));
-		UCS2SBUF(n, ni);
+		&& text2[src] == 0
+		&& (text[src] == ANSI_DEL ||
+		    text[src] < ANSI_SPA)) {
+		int ni = dec2ucs((unsigned) ((text[src] == ANSI_DEL)
+					     ? 0
+					     : text[src]));
+		UCS2SBUF(ni);
 	    }
 #endif /* OPT_MINI_LUIT */
-	    text++;
-	    text2++;
-	    if (wideness) {
-		/* filter out those pesky fake characters. */
-		while (text < endtext
-		       && *text == HIDDEN_HI
-		       && *text2 == HIDDEN_LO) {
-		    text++;
-		    text2++;
-		    len--;
-		}
-	    }
+	    ++dst;
 	}
-	/* This is probably wrong. But it works. */
+	/* FIXME This is probably wrong. But it works. */
 	underline_len = len;
 
 	/* Set the drawing font */
@@ -2726,7 +2816,7 @@ drawXtermText(XtermWidget xw,
 	    Pixel fg = getCgsFore(xw, currentWin, gc);
 	    Pixel bg = getCgsBack(xw, currentWin, gc);
 
-	    if (wideness
+	    if (needWide
 		&& (okFont(NormalWFont(screen)) || okFont(BoldWFont(screen)))) {
 		if ((flags & BOLDATTR(screen)) != 0
 		    && okFont(BoldWFont(screen))) {
@@ -2755,9 +2845,9 @@ drawXtermText(XtermWidget xw,
 				 - NormalFont(screen)->ascent);
 		if (thisFp->max_bounds.width ==
 		    NormalFont(screen)->max_bounds.width * 2) {
-		    underline_len = real_length = len * 2;
+		    underline_len = real_length = dst * 2;
 		} else if (cgsId == gcWide || cgsId == gcWBold) {
-		    underline_len = real_length = len * 2;
+		    underline_len = real_length = dst * 2;
 		    xtermFillCells(xw,
 				   flags,
 				   gc,
@@ -2772,12 +2862,12 @@ drawXtermText(XtermWidget xw,
 	    XDrawString16(screen->display,
 			  VWindow(screen), gc,
 			  x, y + ascent_adjust,
-			  screen->draw_buf, n);
+			  screen->draw_buf, dst);
 	} else {
 	    XDrawImageString16(screen->display,
 			       VWindow(screen), gc,
 			       x, y + ascent_adjust,
-			       screen->draw_buf, n);
+			       screen->draw_buf, dst);
 	}
 
 	if ((flags & BOLDATTR(screen)) && screen->enbolden) {
@@ -2785,7 +2875,7 @@ drawXtermText(XtermWidget xw,
 	    XDrawString16(screen->display, VWindow(screen), gc,
 			  x + 1,
 			  y + ascent_adjust,
-			  screen->draw_buf, n);
+			  screen->draw_buf, dst);
 	    endClipping(screen, gc);
 	}
 
