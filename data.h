@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.103 2007/07/10 19:50:15 tom Exp $ */
+/* $XTermId: data.h,v 1.104 2007/07/17 21:09:12 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -130,6 +130,19 @@ extern char *ProgramName;
 extern Arg ourTopLevelShellArgs[];
 extern Cardinal number_ourTopLevelShellArgs;
 extern Atom wm_delete_window;
+
+#if HANDLE_STRUCT_NOTIFY
+/* Flag icon name with "*** "  on window output when iconified.
+ * I'd like to do something like reverse video, but I don't
+ * know how to tell this to window managers in general.
+ *
+ * mapstate can be IsUnmapped, !IsUnmapped, or -1;
+ * -1 means no change; the other two are set by event handlers
+ * and indicate a new mapstate.  !IsMapped is done in the handler.
+ * we worry about IsUnmapped when output occurs.  -IAN!
+ */
+extern int mapstate;
+#endif /* HANDLE_STRUCT_NOTIFY */
 
 typedef struct XTERM_RESOURCE {
     char *xterm_name;

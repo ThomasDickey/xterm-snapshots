@@ -1,4 +1,4 @@
-/* $XTermId: data.c,v 1.85 2007/06/09 15:05:27 Miroslav.Lichvar Exp $ */
+/* $XTermId: data.c,v 1.86 2007/07/17 21:09:41 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.c,v 3.34 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -104,6 +104,10 @@ PtySelect X_mask;
 PtySelect pty_mask;
 char *ptydev;
 char *ttydev;
+
+#if HANDLE_STRUCT_NOTIFY
+int mapstate = -1;
+#endif /* HANDLE_STRUCT_NOTIFY */
 
 #if OPT_SESSION_MGT
 int ice_fd = -1;
