@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.217 2007/07/17 00:14:15 tom Exp $ */
+/* $XTermId: screen.c,v 1.219 2007/07/18 00:13:29 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -399,11 +399,11 @@ ScrnDisownSelection(XtermWidget xw)
  * to match flags.
  */
 void
-ScreenWrite(XtermWidget xw,
-	    PAIRED_CHARS(Char * str, Char * str2),
-	    unsigned flags,
-	    unsigned cur_fg_bg,
-	    unsigned length)
+ScrnWriteText(XtermWidget xw,
+	      PAIRED_CHARS(Char * str, Char * str2),
+	      unsigned flags,
+	      unsigned cur_fg_bg,
+	      unsigned length)
 {
     TScreen *screen = &(xw->screen);
 #if OPT_ISO_COLORS
@@ -832,7 +832,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	int kl;
 	int kr;
 	if (DamagedCells(screen, n, &kl, &kr,
-			 ROW2INX(screen, screen->cur_row),
+			 INX2ROW(screen, screen->cur_row),
 			 screen->cur_col))
 	    ClearCells(xw, 0, kr - kl + 1, row, kl);
     });

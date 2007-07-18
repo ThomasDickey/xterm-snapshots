@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.477 2007/07/17 00:02:41 tom Exp $ */
+/* $XTermId: xterm.h,v 1.478 2007/07/17 21:02:54 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -980,15 +980,15 @@ extern ScrnBuf Allocate (int  /* nrow */, int  /* ncol */, Char ** /* addr */);
 extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
-extern void ScreenWrite (XtermWidget /* xw */, PAIRED_CHARS(Char * /* str */, Char * /* str2 */), unsigned  /* flags */, unsigned  /* cur_fg_bg */, unsigned  /* length */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* n */, int  /* last */, unsigned  /* size */, unsigned  /* where */);
+extern void ScrnDisownSelection (XtermWidget /* xw */);
 extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int ,  unsigned);
 extern void ScrnInsertChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* last */, int  /* where */, unsigned  /* n */, unsigned  /* size */);
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
-extern void ScrnDisownSelection (XtermWidget /* xw */);
+extern void ScrnWriteText (XtermWidget /* xw */, PAIRED_CHARS(Char * /* str */, Char * /* str2 */), unsigned  /* flags */, unsigned  /* cur_fg_bg */, unsigned  /* length */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
 #if OPT_TRACE && OPT_TRACE_FLAGS
@@ -1089,6 +1089,7 @@ extern void InsertChar (XtermWidget /* xw */, unsigned /* n */);
 extern void InsertLine (XtermWidget /* xw */, int  /* n */);
 extern void RevScroll (XtermWidget /* xw */, int  /* amount */);
 extern void ReverseVideo (XtermWidget  /* termw */);
+extern void WriteText (XtermWidget /* xw */, PAIRED_CHARS(Char * /* str */, Char * /* str2 */), Cardinal /* len */);
 extern void decode_keyboard_type (XtermWidget /* xw */, struct XTERM_RESOURCE * /* rp */);
 extern void decode_wcwidth (int  /* mode */, int /* samplesize */, int /* samplepass */);
 extern void do_erase_display (XtermWidget /* xw */, int  /* param */, int  /* mode */);

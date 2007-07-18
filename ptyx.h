@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.493 2007/07/11 18:50:13 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.494 2007/07/17 21:08:07 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -2055,6 +2055,13 @@ typedef struct _TekWidgetRec {
 				 * around and lines that have ended naturally
 				 * with a CR at column max_col.
 				 */
+
+#if OPT_ZICONBEEP || OPT_TOOLBAR
+#define HANDLE_STRUCT_NOTIFY 1
+#else
+#define HANDLE_STRUCT_NOTIFY 0
+#endif
+
 /*
  * If we've set protected attributes with the DEC-style DECSCA, then we'll have
  * to use DECSED or DECSEL to erase preserving protected text.  (The normal ED,

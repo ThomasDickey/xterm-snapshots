@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.375 2007/07/17 00:03:00 tom Exp $ */
+/* $XTermId: util.c,v 1.376 2007/07/17 21:03:30 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -621,6 +621,124 @@ RevScroll(XtermWidget xw, int amount)
 		       (unsigned) MaxCols(screen));
     }
     screen->cursor_busy -= 1;
+    return;
+}
+
+/*
+ * write a string str of length len onto the screen at
+ * the current cursor position.  update cursor position.
+ */
+void
+WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
+{
+    TScreen *screen = &(xw->screen);
+    ScrnPtr temp_str = 0;
+    unsigned test;
+    unsigned flags = xw->flags;
+    unsigned fg_bg = makeColorPair(xw->cur_foreground, xw->cur_background);
+    unsigned cells = visual_width(PAIRED_CHARS(str, str2), len);
+    GC currentGC;
+
+    TRACE(("WriteText (%2d,%2d) (%d) %3d:%s\n",
+	   screen->cur_row,
+	   screen->cur_col,
+	   curXtermChrSet(xw, screen->cur_row),
+	   len, visibleChars(PAIRED_CHARS(str, str2), len)));
+
+    if (ScrnHaveSelection(screen)
+	&& ScrnIsLineInSelection(screen, INX2ROW(screen, screen->cur_row))) {
+	ScrnDisownSelection(xw);
+    }
+
+    /* if we are in insert-mode, reserve space for the new cells */
+    if (flags & INSERT) {
+	InsertChar(xw, cells);
+    }
+
+    if (INX2ROW(screen, screen->cur_row) <= screen->max_row) {
+	if (screen->cursor_state)
+	    HideCursor();
+
+	if (!AddToRefresh(screen)) {
+	    if (screen->scroll_amt)
+		FlushScroll(xw);
+
+	    /*
+	     * If we overwrite part of a multi-column character, fill the rest
+	     * of it with blanks.
+	     */
+	    if_OPT_WIDE_CHARS(screen, {
+		int kl;
+		int kr;
+		if (DamagedCurCells(screen, cells, &kl, &kr))
+		    ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+	    });
+
+	    if (flags & INVISIBLE) {
+		if (cells > len) {
+		    str = temp_str = TypeMallocN(Char, cells);
+		    if (str == 0)
+			return;
+		}
+		len = cells;
+
+		memset(str, ' ', len);
+		if_OPT_WIDE_CHARS(screen, {
+		    str2 = 0;
+		});
+	    }
+
+	    TRACE(("WriteText calling drawXtermText (%d,%d)\n",
+		   screen->cur_col,
+		   screen->cur_row));
+
+	    test = flags;
+	    checkVeryBoldColors(test, xw->cur_foreground);
+
+	    /* make sure that the correct GC is current */
+	    currentGC = updatedXtermGC(xw, flags, fg_bg, False);
+
+	    drawXtermText(xw, test & DRAWX_MASK, currentGC,
+			  CurCursorX(screen, screen->cur_row, screen->cur_col),
+			  CursorY(screen, screen->cur_row),
+			  curXtermChrSet(xw, screen->cur_row),
+			  PAIRED_CHARS(str, str2), len, 0);
+
+	    resetXtermGC(xw, flags, False);
+	}
+    }
+
+    ScrnWriteText(xw, PAIRED_CHARS(str, str2), flags, fg_bg, len);
+    CursorForward(screen, (int) cells);
+#if OPT_ZICONBEEP
+    /* Flag icon name with "***"  on window output when iconified.
+     */
+    if (resource.zIconBeep && mapstate == IsUnmapped && !screen->zIconBeep_flagged) {
+	static char *icon_name;
+	static Arg args[] =
+	{
+	    {XtNiconName, (XtArgVal) & icon_name}
+	};
+
+	icon_name = NULL;
+	XtGetValues(toplevel, args, XtNumber(args));
+
+	if (icon_name != NULL) {
+	    screen->zIconBeep_flagged = True;
+	    ChangeIconName(icon_name);
+	}
+	if (resource.zIconBeep > 0) {
+#if defined(HAVE_XKB_BELL_EXT)
+	    XkbBell(XtDisplay(toplevel), VShellWindow, resource.zIconBeep, XkbBI_Info);
+#else
+	    XBell(XtDisplay(toplevel), resource.zIconBeep);
+#endif
+	}
+    }
+    mapstate = -1;
+#endif /* OPT_ZICONBEEP */
+    if (temp_str != 0)
+	free(temp_str);
     return;
 }
 
