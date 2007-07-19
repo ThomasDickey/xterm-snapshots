@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.219 2007/07/18 00:13:29 tom Exp $ */
+/* $XTermId: screen.c,v 1.220 2007/07/18 20:07:02 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -1320,32 +1320,13 @@ ClearBufRows(XtermWidget xw,
 	     int last)
 {
     TScreen *screen = &(xw->screen);
-    ScrnBuf buf = screen->visbuf;
     unsigned len = MaxCols(screen);
     int row;
-    int flags = TERM_COLOR_FLAGS(xw);
 
     TRACE(("ClearBufRows %d..%d\n", first, last));
     for (row = first; row <= last; row++) {
 	ScrnClrWrapped(screen, row);
-	bzero(BUF_CHARS(buf, row), len);
-	memset(BUF_ATTRS(buf, row), flags, len);
-	if_OPT_EXT_COLORS(screen, {
-	    memset(BUF_FGRND(buf, row), xw->sgr_foreground, len);
-	    memset(BUF_BGRND(buf, row), xw->cur_background, len);
-	});
-	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	    memset(BUF_COLOR(buf, row), (int) xtermColorPair(xw), len);
-	});
-	if_OPT_DEC_CHRSET({
-	    memset(BUF_CSETS(buf, row), 0, len);
-	});
-	if_OPT_WIDE_CHARS(screen, {
-	    int off;
-	    for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-		memset(BUFFER_PTR(buf, row, off), 0, len);
-	    }
-	});
+	ClearCells(xw, 0, len, row, 0);
     }
 }
 

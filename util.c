@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.376 2007/07/17 21:03:30 tom Exp $ */
+/* $XTermId: util.c,v 1.380 2007/07/18 23:27:04 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -257,32 +257,40 @@ FlushScroll(XtermWidget xw)
     return;
 }
 
+/*
+ * Returns true if the current line is visible, so we should refresh changed
+ * parts of it on the screen.
+ */
 int
 AddToRefresh(TScreen * screen)
 {
     int amount = screen->refresh_amt;
     int row = screen->cur_row;
+    int result;
 
     if (amount == 0) {
-	return (0);
+	result = 0;
     } else if (amount > 0) {
 	int bottom;
 
 	if (row == (bottom = screen->bot_marg) - amount) {
 	    screen->refresh_amt++;
-	    return (1);
+	    result = 1;
+	} else {
+	    result = (row >= bottom - amount + 1 && row <= bottom);
 	}
-	return (row >= bottom - amount + 1 && row <= bottom);
     } else {
 	int top;
 
 	amount = -amount;
 	if (row == (top = screen->top_marg) + amount) {
 	    screen->refresh_amt--;
-	    return (1);
+	    result = 1;
+	} else {
+	    result = (row <= top + amount - 1 && row >= top);
 	}
-	return (row <= top + amount - 1 && row >= top);
     }
+    return result;
 }
 
 /*
@@ -1142,12 +1150,11 @@ ClearBelow(XtermWidget xw)
  * Clear the given row, for the given range of columns, returning 1 if no
  * protected characters were found, 0 otherwise.
  */
-int
-ClearInLine(XtermWidget xw, int row, int col, unsigned len)
+static int
+ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 {
     TScreen *screen = &(xw->screen);
     int rc = 1;
-    int flags = 0;
 
     TRACE(("ClearInLine(row=%d, col=%d, len=%d) vs %d..%d\n",
 	   row, col, len,
@@ -1159,15 +1166,7 @@ ClearInLine(XtermWidget xw, int row, int col, unsigned len)
 	ScrnDisownSelection(xw);
     }
 
-    /*
-     * If we're clearing to the end of the line, we won't count this as
-     * "drawn" characters.  We'll only do cut/paste on "drawn" characters,
-     * so this has the effect of suppressing trailing blanks from a
-     * selection.
-     */
-    if (col + (int) len < MaxCols(screen)) {
-	flags |= CHARDRAWN;
-    } else {
+    if (col + (int) len >= MaxCols(screen)) {
 	len = MaxCols(screen) - col;
     }
 
@@ -1234,6 +1233,24 @@ ClearInLine(XtermWidget xw, int row, int col, unsigned len)
     return rc;
 }
 
+int
+ClearInLine(XtermWidget xw, int row, int col, unsigned len)
+{
+    TScreen *screen = &(xw->screen);
+    int flags = 0;
+
+    /*
+     * If we're clearing to the end of the line, we won't count this as
+     * "drawn" characters.  We'll only do cut/paste on "drawn" characters,
+     * so this has the effect of suppressing trailing blanks from a
+     * selection.
+     */
+    if (col + (int) len < MaxCols(screen)) {
+	flags |= CHARDRAWN;
+    }
+    return ClearInLine2(xw, flags, row, col, len);
+}
+
 /*
  * Clear the next n characters on the cursor's line, including the cursor's
  * position.
@@ -1255,6 +1272,21 @@ ClearRight(XtermWidget xw, int n)
     if (len > (unsigned) n)
 	len = n;
 
+    if_OPT_WIDE_CHARS(screen, {
+	int kl;
+	int kr;
+	int xx;
+	if (DamagedCurCells(screen, len, &kl, &kr) && kr >= kl) {
+	    xx = screen->cur_col;
+	    if (kl < xx) {
+		ClearInLine2(xw, 0, screen->cur_row, kl, xx - kl);
+	    }
+	    xx = screen->cur_col + len - 1;
+	    if (kr > xx) {
+		ClearInLine2(xw, 0, screen->cur_row, xx + 1, kr - xx);
+	    }
+	}
+    });
     (void) ClearInLine(xw, screen->cur_row, screen->cur_col, len);
 
     /* with the right part cleared, we can't be wrapping */
@@ -1271,6 +1303,13 @@ ClearLeft(XtermWidget xw)
     unsigned len = screen->cur_col + 1;
     assert(screen->cur_col >= 0);
 
+    if_OPT_WIDE_CHARS(screen, {
+	int kl = screen->cur_row;
+	int kr;
+	if (DamagedCurCells(screen, 1, &kl, &kr) && kr >= kl) {
+	    ClearInLine2(xw, 0, screen->cur_row, kl, kr - kl + 1);
+	}
+    });
     (void) ClearInLine(xw, screen->cur_row, 0, len);
 }
 
