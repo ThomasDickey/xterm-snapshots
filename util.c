@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.380 2007/07/18 23:27:04 tom Exp $ */
+/* $XTermId: util.c,v 1.383 2007/07/19 23:12:00 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -141,39 +141,6 @@ DamagedCurCells(TScreen * screen, int n, int *klp, int *krp)
 }
 #endif /* OPT_WIDE_CHARS */
 
-void
-ClearCells(XtermWidget xw, int flags, int len, int row, int col)
-{
-    if (len != 0) {
-	TScreen *screen = &(xw->screen);
-	flags |= TERM_COLOR_FLAGS(xw);
-
-	memset(SCRN_BUF_CHARS(screen, row) + col, ' ', len);
-	memset(SCRN_BUF_ATTRS(screen, row) + col, flags, len);
-
-	if_OPT_EXT_COLORS(screen, {
-	    memset(SCRN_BUF_FGRND(screen, row) + col,
-		   xw->sgr_foreground, len);
-	    memset(SCRN_BUF_BGRND(screen, row) + col,
-		   xw->cur_background, len);
-	});
-	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	    memset(SCRN_BUF_COLOR(screen, row) + col,
-		   (int) xtermColorPair(xw), len);
-	});
-	if_OPT_DEC_CHRSET({
-	    memset(SCRN_BUF_CSETS(screen, row) + col,
-		   curXtermChrSet(xw, screen->cur_row), len);
-	});
-	if_OPT_WIDE_CHARS(screen, {
-	    int off;
-	    for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-		memset(SCREEN_PTR(screen, row, off) + col, 0, len);
-	    }
-	});
-    }
-}
-
 /*
  * These routines are used for the jump scroll feature
  */
@@ -258,12 +225,14 @@ FlushScroll(XtermWidget xw)
 }
 
 /*
- * Returns true if the current line is visible, so we should refresh changed
- * parts of it on the screen.
+ * Returns true if there are lines off-screen due to scrolling which should
+ * include the current line.  If false, the line is visible and we should
+ * paint it now rather than waiting for the line to become visible.
  */
 int
-AddToRefresh(TScreen * screen)
+AddToRefresh(XtermWidget xw)
 {
+    TScreen *screen = &(xw->screen);
     int amount = screen->refresh_amt;
     int row = screen->cur_row;
     int result;
@@ -288,6 +257,33 @@ AddToRefresh(TScreen * screen)
 	    result = 1;
 	} else {
 	    result = (row <= top + amount - 1 && row >= top);
+	}
+    }
+
+    /*
+     * If this line is visible, and there are scrolled-off lines, flush out
+     * those which are now visible.
+     */
+    if (!result && screen->scroll_amt)
+	FlushScroll(xw);
+
+    return result;
+}
+
+/*
+ * Returns true if the current row is in the visible area (it should be for
+ * screen operations) and incidentally flush the scrolled-in lines which
+ * have newly become visible.
+ */
+static Bool
+AddToVisible(XtermWidget xw)
+{
+    TScreen *screen = &(xw->screen);
+    Bool result = False;
+
+    if (INX2ROW(screen, screen->cur_row) <= screen->max_row) {
+	if (!AddToRefresh(xw)) {
+	    result = True;
 	}
     }
     return result;
@@ -663,57 +659,52 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	InsertChar(xw, cells);
     }
 
-    if (INX2ROW(screen, screen->cur_row) <= screen->max_row) {
+    if (AddToVisible(xw)) {
 	if (screen->cursor_state)
 	    HideCursor();
 
-	if (!AddToRefresh(screen)) {
-	    if (screen->scroll_amt)
-		FlushScroll(xw);
+	/*
+	 * If we overwrite part of a multi-column character, fill the rest
+	 * of it with blanks.
+	 */
+	if_OPT_WIDE_CHARS(screen, {
+	    int kl;
+	    int kr;
+	    if (DamagedCurCells(screen, cells, &kl, &kr))
+		ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+	});
 
-	    /*
-	     * If we overwrite part of a multi-column character, fill the rest
-	     * of it with blanks.
-	     */
-	    if_OPT_WIDE_CHARS(screen, {
-		int kl;
-		int kr;
-		if (DamagedCurCells(screen, cells, &kl, &kr))
-		    ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
-	    });
-
-	    if (flags & INVISIBLE) {
-		if (cells > len) {
-		    str = temp_str = TypeMallocN(Char, cells);
-		    if (str == 0)
-			return;
-		}
-		len = cells;
-
-		memset(str, ' ', len);
-		if_OPT_WIDE_CHARS(screen, {
-		    str2 = 0;
-		});
+	if (flags & INVISIBLE) {
+	    if (cells > len) {
+		str = temp_str = TypeMallocN(Char, cells);
+		if (str == 0)
+		    return;
 	    }
+	    len = cells;
 
-	    TRACE(("WriteText calling drawXtermText (%d,%d)\n",
-		   screen->cur_col,
-		   screen->cur_row));
-
-	    test = flags;
-	    checkVeryBoldColors(test, xw->cur_foreground);
-
-	    /* make sure that the correct GC is current */
-	    currentGC = updatedXtermGC(xw, flags, fg_bg, False);
-
-	    drawXtermText(xw, test & DRAWX_MASK, currentGC,
-			  CurCursorX(screen, screen->cur_row, screen->cur_col),
-			  CursorY(screen, screen->cur_row),
-			  curXtermChrSet(xw, screen->cur_row),
-			  PAIRED_CHARS(str, str2), len, 0);
-
-	    resetXtermGC(xw, flags, False);
+	    memset(str, ' ', len);
+	    if_OPT_WIDE_CHARS(screen, {
+		str2 = 0;
+	    });
 	}
+
+	TRACE(("WriteText calling drawXtermText (%d,%d)\n",
+	       screen->cur_col,
+	       screen->cur_row));
+
+	test = flags;
+	checkVeryBoldColors(test, xw->cur_foreground);
+
+	/* make sure that the correct GC is current */
+	currentGC = updatedXtermGC(xw, flags, fg_bg, False);
+
+	drawXtermText(xw, test & DRAWX_MASK, currentGC,
+		      CurCursorX(screen, screen->cur_row, screen->cur_col),
+		      CursorY(screen, screen->cur_row),
+		      curXtermChrSet(xw, screen->cur_row),
+		      PAIRED_CHARS(str, str2), len, 0);
+
+	resetXtermGC(xw, flags, False);
     }
 
     ScrnWriteText(xw, PAIRED_CHARS(str, str2), flags, fg_bg, len);
@@ -950,53 +941,49 @@ InsertChar(XtermWidget xw, unsigned n)
 	n = limit;
 
     assert(n != 0);
-    if (row <= screen->max_row) {
-	if (!AddToRefresh(screen)) {
-	    int col = MaxCols(screen) - n;
-	    if (screen->scroll_amt)
-		FlushScroll(xw);
+    if (AddToVisible(xw)) {
+	int col = MaxCols(screen) - n;
 
-	    /*
-	     * If we shift part of a multi-column character, fill the rest
-	     * of it with blanks.  Do similar repair for the text which will
-	     * be shifted into the right-margin.
-	     */
-	    if_OPT_WIDE_CHARS(screen, {
-		int kl;
-		int kr = screen->cur_col;
-		if (DamagedCurCells(screen, n, &kl, (int *) 0) && kr > kl) {
-		    ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
-		}
-		kr = screen->max_col - n + 1;
-		if (DamagedCells(screen, n, &kl, (int *) 0,
-				 screen->cur_row,
-				 kr) && kr > kl) {
-		    ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
-		}
-	    });
+	/*
+	 * If we shift part of a multi-column character, fill the rest
+	 * of it with blanks.  Do similar repair for the text which will
+	 * be shifted into the right-margin.
+	 */
+	if_OPT_WIDE_CHARS(screen, {
+	    int kl;
+	    int kr = screen->cur_col;
+	    if (DamagedCurCells(screen, n, &kl, (int *) 0) && kr > kl) {
+		ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+	    }
+	    kr = screen->max_col - n + 1;
+	    if (DamagedCells(screen, n, &kl, (int *) 0,
+			     screen->cur_row,
+			     kr) && kr > kl) {
+		ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+	    }
+	});
 
 #if OPT_DEC_CHRSET
-	    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
-		col = MaxCols(screen) / 2 - n;
-	    }
-#endif
-	    /*
-	     * prevent InsertChar from shifting the end of a line over
-	     * if it is being appended to
-	     */
-	    if (non_blank_line(screen, screen->cur_row,
-			       screen->cur_col, MaxCols(screen))) {
-		horizontal_copy_area(xw, screen->cur_col,
-				     col - screen->cur_col,
-				     (int) n);
-	    }
-
-	    ClearCurBackground(xw,
-			       CursorY(screen, screen->cur_row),
-			       CurCursorX(screen, screen->cur_row, screen->cur_col),
-			       (unsigned) FontHeight(screen),
-			       n * CurFontWidth(screen, screen->cur_row));
+	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
+	    col = MaxCols(screen) / 2 - n;
 	}
+#endif
+	/*
+	 * prevent InsertChar from shifting the end of a line over
+	 * if it is being appended to
+	 */
+	if (non_blank_line(screen, screen->cur_row,
+			   screen->cur_col, MaxCols(screen))) {
+	    horizontal_copy_area(xw, screen->cur_col,
+				 col - screen->cur_col,
+				 (int) n);
+	}
+
+	ClearCurBackground(xw,
+			   CursorY(screen, screen->cur_row),
+			   CurCursorX(screen, screen->cur_row, screen->cur_col),
+			   (unsigned) FontHeight(screen),
+			   n * CurFontWidth(screen, screen->cur_row));
     }
     /* adjust screen->buf */
     ScrnInsertChar(xw, n);
@@ -1030,39 +1017,35 @@ DeleteChar(XtermWidget xw, unsigned n)
 	n = limit;
 
     assert(n != 0);
-    if (row <= screen->max_row) {
-	if (!AddToRefresh(screen)) {
-	    int col = MaxCols(screen) - n;
-	    if (screen->scroll_amt)
-		FlushScroll(xw);
+    if (AddToVisible(xw)) {
+	int col = MaxCols(screen) - n;
 
-	    /*
-	     * If we delete part of a multi-column character, fill the rest
-	     * of it with blanks.
-	     */
-	    if_OPT_WIDE_CHARS(screen, {
-		int kl;
-		int kr;
-		if (DamagedCurCells(screen, n, &kl, &kr))
-		    ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
-	    });
+	/*
+	 * If we delete part of a multi-column character, fill the rest
+	 * of it with blanks.
+	 */
+	if_OPT_WIDE_CHARS(screen, {
+	    int kl;
+	    int kr;
+	    if (DamagedCurCells(screen, n, &kl, &kr))
+		ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+	});
 
 #if OPT_DEC_CHRSET
-	    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
-		col = MaxCols(screen) / 2 - n;
-	    }
-#endif
-	    horizontal_copy_area(xw,
-				 (int) (screen->cur_col + n),
-				 col - screen->cur_col,
-				 -((int) n));
-
-	    ClearCurBackground(xw,
-			       CursorY(screen, screen->cur_row),
-			       CurCursorX(screen, screen->cur_row, col),
-			       (unsigned) FontHeight(screen),
-			       n * CurFontWidth(screen, screen->cur_row));
+	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
+	    col = MaxCols(screen) / 2 - n;
 	}
+#endif
+	horizontal_copy_area(xw,
+			     (int) (screen->cur_col + n),
+			     col - screen->cur_col,
+			     -((int) n));
+
+	ClearCurBackground(xw,
+			   CursorY(screen, screen->cur_row),
+			   CurCursorX(screen, screen->cur_row, col),
+			   (unsigned) FontHeight(screen),
+			   n * CurFontWidth(screen, screen->cur_row));
     }
     if (n != 0) {
 	/* adjust screen->buf */
@@ -1214,16 +1197,12 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 	HideCursor();
     screen->do_wrap = 0;
 
-    if (INX2ROW(screen, row) <= screen->max_row) {
-	if (!AddToRefresh(screen)) {
-	    if (screen->scroll_amt)
-		FlushScroll(xw);
-	    ClearCurBackground(xw,
-			       CursorY(screen, row),
-			       CurCursorX(screen, row, col),
-			       (unsigned) FontHeight(screen),
-			       len * CurFontWidth(screen, row));
-	}
+    if (AddToVisible(xw)) {
+	ClearCurBackground(xw,
+			   CursorY(screen, row),
+			   CurCursorX(screen, row, col),
+			   (unsigned) FontHeight(screen),
+			   len * CurFontWidth(screen, row));
     }
 
     if (len != 0) {
@@ -1272,22 +1251,26 @@ ClearRight(XtermWidget xw, int n)
     if (len > (unsigned) n)
 	len = n;
 
-    if_OPT_WIDE_CHARS(screen, {
-	int kl;
-	int kr;
-	int xx;
-	if (DamagedCurCells(screen, len, &kl, &kr) && kr >= kl) {
-	    xx = screen->cur_col;
-	    if (kl < xx) {
-		ClearInLine2(xw, 0, screen->cur_row, kl, xx - kl);
+    if (AddToVisible(xw)) {
+	if_OPT_WIDE_CHARS(screen, {
+	    int kl;
+	    int kr;
+	    int xx;
+	    if (DamagedCurCells(screen, len, &kl, &kr) && kr >= kl) {
+		xx = screen->cur_col;
+		if (kl < xx) {
+		    ClearInLine2(xw, 0, screen->cur_row, kl, xx - kl);
+		}
+		xx = screen->cur_col + len - 1;
+		if (kr > xx) {
+		    ClearInLine2(xw, 0, screen->cur_row, xx + 1, kr - xx);
+		}
 	    }
-	    xx = screen->cur_col + len - 1;
-	    if (kr > xx) {
-		ClearInLine2(xw, 0, screen->cur_row, xx + 1, kr - xx);
-	    }
-	}
-    });
-    (void) ClearInLine(xw, screen->cur_row, screen->cur_col, len);
+	});
+	(void) ClearInLine(xw, screen->cur_row, screen->cur_col, len);
+    } else {
+	ScrnClearCells(xw, screen->cur_row, screen->cur_col, len);
+    }
 
     /* with the right part cleared, we can't be wrapping */
     ScrnClrWrapped(screen, screen->cur_row);
@@ -1303,14 +1286,18 @@ ClearLeft(XtermWidget xw)
     unsigned len = screen->cur_col + 1;
     assert(screen->cur_col >= 0);
 
-    if_OPT_WIDE_CHARS(screen, {
-	int kl = screen->cur_row;
-	int kr;
-	if (DamagedCurCells(screen, 1, &kl, &kr) && kr >= kl) {
-	    ClearInLine2(xw, 0, screen->cur_row, kl, kr - kl + 1);
-	}
-    });
-    (void) ClearInLine(xw, screen->cur_row, 0, len);
+    if (AddToVisible(xw)) {
+	if_OPT_WIDE_CHARS(screen, {
+	    int kl;
+	    int kr;
+	    if (DamagedCurCells(screen, 1, &kl, &kr) && kr >= kl) {
+		ClearInLine2(xw, 0, screen->cur_row, kl, kr - kl + 1);
+	    }
+	});
+	(void) ClearInLine(xw, screen->cur_row, 0, len);
+    } else {
+	ScrnClearCells(xw, screen->cur_row, 0, len);
+    }
 }
 
 /*

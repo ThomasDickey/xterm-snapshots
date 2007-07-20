@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.478 2007/07/17 21:02:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.480 2007/07/19 23:05:09 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -980,6 +980,8 @@ extern ScrnBuf Allocate (int  /* nrow */, int  /* ncol */, Char ** /* addr */);
 extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
+extern void ClearCells (XtermWidget /* xw */, int /* flags */, int /* len */, int /* row */, int /* col */);
+extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, int /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* n */, int  /* last */, unsigned  /* size */, unsigned  /* where */);
 extern void ScrnDisownSelection (XtermWidget /* xw */);
@@ -1072,13 +1074,12 @@ extern void TabZonk (Tabs  /* tabs */);
 
 /* util.c */
 extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned  /* fg_bg */, Bool  /* hilite */);
-extern int AddToRefresh (TScreen * /* screen */);
+extern int AddToRefresh (XtermWidget /* xw */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int char2lower (int  /* ch */);
 extern int drawXtermText (XtermWidget /* xw */, unsigned  /* flags */, GC  /* gc */, int  /* x */, int  /* y */, int  /* chrset */, PAIRED_CHARS(Char * /* text */, Char * /* text2 */), Cardinal  /* len */, int  /* on_wide */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
-extern void ClearCells (XtermWidget /* xw */, int /* flags */, int /* len */, int /* row */, int /* col */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
 extern void DeleteChar (XtermWidget /* xw */, unsigned /* n */);
