@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.165 2007/07/08 22:51:43 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.166 2007/07/19 21:43:21 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -117,6 +117,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #undef OPT_PASTE64		/* CF_ARG_ENABLE(past64) */
 #undef OPT_PC_COLORS		/* CF_ARG_DISABLE(pc-color) */
 #undef OPT_PTY_HANDSHAKE	/* CF_ARG_ENABLE(pty-handshake) */
+#undef OPT_READLINE		/* CF_ARG_ENABLE(readline-mouse) */
 #undef OPT_SAME_NAME		/* CF_ARG_DISABLE(samename) */
 #undef OPT_SCO_FUNC_KEYS	/* CF_ARG_ENABLE(sco-fkeys) */
 #undef OPT_SELECT_REGEX		/* CF_ARG_DISABLE(regex) */

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.220 2007/07/18 20:07:02 tom Exp $ */
+/* $XTermId: screen.c,v 1.221 2007/07/19 23:12:54 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -381,6 +381,63 @@ ChangeToWide(XtermWidget xw)
     TRACE(("...ChangeToWide\n"));
 }
 #endif
+
+/*
+ * Clear cells, no side-effects.
+ */
+void
+ClearCells(XtermWidget xw, int flags, int len, int row, int col)
+{
+    if (len != 0) {
+	TScreen *screen = &(xw->screen);
+	flags |= TERM_COLOR_FLAGS(xw);
+
+	memset(SCRN_BUF_CHARS(screen, row) + col, ' ', len);
+	memset(SCRN_BUF_ATTRS(screen, row) + col, flags, len);
+
+	if_OPT_EXT_COLORS(screen, {
+	    memset(SCRN_BUF_FGRND(screen, row) + col,
+		   xw->sgr_foreground, len);
+	    memset(SCRN_BUF_BGRND(screen, row) + col,
+		   xw->cur_background, len);
+	});
+	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	    memset(SCRN_BUF_COLOR(screen, row) + col,
+		   (int) xtermColorPair(xw), len);
+	});
+	if_OPT_DEC_CHRSET({
+	    memset(SCRN_BUF_CSETS(screen, row) + col,
+		   curXtermChrSet(xw, screen->cur_row), len);
+	});
+	if_OPT_WIDE_CHARS(screen, {
+	    int off;
+	    for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
+		memset(SCREEN_PTR(screen, row, off) + col, 0, len);
+	    }
+	});
+    }
+}
+
+/*
+ * Clear data in the screen-structure (no I/O).
+ * Check for wide-character damage as well, clearing the damaged cells.
+ */
+void
+ScrnClearCells(XtermWidget xw, int row, int col, int len)
+{
+    TScreen *screen = &(xw->screen);
+    int flags = 0;
+
+    if_OPT_WIDE_CHARS(screen, {
+	int kl;
+	int kr;
+	if (DamagedCells(screen, len, &kl, &kr, INX2ROW(screen, row), col)
+	    && kr >= kl) {
+	    ClearCells(xw, flags, kr - kl + 1, row, kl);
+	}
+    });
+    ClearCells(xw, flags, len, row, col);
+}
 
 /*
  * Disown the selection and repaint the area that is highlighted so it is no
