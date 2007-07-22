@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.480 2007/07/19 23:05:09 tom Exp $ */
+/* $XTermId: xterm.h,v 1.481 2007/07/22 00:29:29 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -853,16 +853,17 @@ extern void show_8bit_control  (Bool  /* value */);
 
 /* misc.c */
 extern Bool AllocateTermColor(XtermWidget, ScrnColors *, int, const char *);
-extern Cursor make_colored_cursor (unsigned  /* cursorindex */, unsigned long  /* fg */, unsigned long  /* bg */);
+extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long  /* fg */, unsigned long  /* bg */);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
-extern Window WMFrameWindow(XtermWidget  /* termw */);
+extern Window WMFrameWindow(XtermWidget /* termw */);
 extern XrmOptionDescRec * sortedOptDescs(XrmOptionDescRec *, Cardinal);
-extern char *SysErrorMsg (int  /* n */);
-extern char *udk_lookup (int  /* keycode */, int * /* len */);
+extern char *udk_lookup (int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermEnvLocale (void);
 extern char *xtermFindShell(char * /* leaf */, Bool  /* warning */);
 extern char *xtermVersion(void);
+extern const char *SysErrorMsg (int /* n */);
+extern const char *SysReasonMsg (int /* n */);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, int  /* mode */);
 extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);

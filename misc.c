@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.368 2007/06/17 12:47:54 tom Exp $ */
+/* $XTermId: misc.c,v 1.369 2007/07/22 00:31:02 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
 
@@ -3012,90 +3012,91 @@ Panic(char *s GCC_UNUSED, int a GCC_UNUSED)
 #endif /* DEBUG */
 }
 
-char *
-SysErrorMsg(int n)
+const char *
+SysErrorMsg(int code)
 {
     static char unknown[] = "unknown error";
-    char *s = strerror(n);
+    char *s = strerror(code);
     return s ? s : unknown;
 }
 
-void
-SysError(int i)
+const char *
+SysReasonMsg(int code)
 {
-    static const char *table[] =
-    {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	,"main: ioctl() failed on FIONBIO"	/* 11 */
-	,"main: ioctl() failed on F_GETFL"	/* 12 */
-	,"main: ioctl() failed on F_SETFL"	/* 13 */
-	,"spawn: open() failed on /dev/tty"	/* 14 */
-	,"spawn: ioctl() failed on TIOCGETP"	/* 15 */
-	,0
-	,"spawn: ptsname() failed"	/* 17 */
-	,"spawn: open() failed on ptsname"	/* 18 */
-	,"spawn: ioctl() failed on I_PUSH/\"ptem\""	/* 19 */
-	,"spawn: ioctl() failed on I_PUSH/\"consem\""	/* 20 */
-	,"spawn: ioctl() failed on I_PUSH/\"ldterm\""	/* 21 */
-	,"spawn: ioctl() failed on I_PUSH/\"ttcompat\""		/* 22 */
-	,"spawn: ioctl() failed on TIOCSETP"	/* 23 */
-	,"spawn: ioctl() failed on TIOCSETC"	/* 24 */
-	,"spawn: ioctl() failed on TIOCSETD"	/* 25 */
-	,"spawn: ioctl() failed on TIOCSLTC"	/* 26 */
-	,"spawn: ioctl() failed on TIOCLSET"	/* 27 */
-	,"spawn: initgroups() failed"	/* 28 */
-	,"spawn: fork() failed"	/* 29 */
-	,"spawn: exec() failed"	/* 30 */
-	,0
-	,"get_pty: not enough ptys"	/* 32 */
-	,0
-	,"waiting for initial map"	/* 34 */
-	,"spawn: setuid() failed"	/* 35 */
-	,"spawn: can't initialize window"	/* 36 */
-	,0, 0, 0, 0, 0, 0, 0, 0, 0
-	,"spawn: ioctl() failed on TIOCKSET"	/* 46 */
-	,"spawn: ioctl() failed on TIOCKSETC"	/* 47 */
-	,"spawn: realloc of ttydev failed"	/* 48 */
-	,"luit: command-line malloc failed"	/* 49 */
-	,"in_put: select() failed"	/* 50 */
-	,0, 0, 0
-	,"VTInit: can't initialize window"	/* 54 */
-	,0, 0
-	,"HandleKeymapChange: malloc failed"	/* 57 */
-	,0, 0
-	,"Tinput: select() failed"	/* 60 */
-	,0, 0, 0
-	,"TekInit: can't initialize window"	/* 64 */
-	,0, 0, 0, 0, 0, 0
-	,"SaltTextAway: malloc() failed"	/* 71 */
-	,0, 0, 0, 0, 0, 0, 0, 0
-	,"StartLog: exec() failed"	/* 80 */
-	,0, 0
-	,"xerror: XError event"	/* 83 */
-	,"xioerror: X I/O error"	/* 84 */
-	,0, 0, 0, 0, 0
-	,"Alloc: calloc() failed on base"	/* 90 */
-	,"Alloc: calloc() failed on rows"	/* 91 */
-	,"ScreenResize: realloc() failed on alt base"	/* 92 */
-	,0, 0, 0
-	,"ScreenResize: malloc() or realloc() failed"	/* 96 */
-	,0, 0, 0, 0, 0
-	,"ScrnPointers: malloc/realloc() failed"	/* 102 */
-	,0, 0, 0, 0, 0, 0, 0
-	,"ScrollBarOn: realloc() failed on base"	/* 110 */
-	,"ScrollBarOn: realloc() failed on rows"	/* 111 */
-	,0, 0, 0, 0, 0, 0, 0, 0, 0
-	,"my_memmove: malloc/realloc failed"	/* 121 */
+    /* *INDENT-OFF* */
+    static const struct {
+	int code;
+	const char *name;
+    } table[] = {
+	{ ERROR_FIONBIO,	"main:  ioctl() failed on FIONBIO" },
+	{ ERROR_F_GETFL,	"main: ioctl() failed on F_GETFL" },
+	{ ERROR_F_SETFL,	"main: ioctl() failed on F_SETFL", },
+	{ ERROR_OPDEVTTY,	"spawn: open() failed on /dev/tty", },
+	{ ERROR_TIOCGETP,	"spawn: ioctl() failed on TIOCGETP", },
+	{ ERROR_PTSNAME,	"spawn: ptsname() failed", },
+	{ ERROR_OPPTSNAME,	"spawn: open() failed on ptsname", },
+	{ ERROR_PTEM,		"spawn: ioctl() failed on I_PUSH/\"ptem\"" },
+	{ ERROR_CONSEM,		"spawn: ioctl() failed on I_PUSH/\"consem\"" },
+	{ ERROR_LDTERM,		"spawn: ioctl() failed on I_PUSH/\"ldterm\"" },
+	{ ERROR_TTCOMPAT,	"spawn: ioctl() failed on I_PUSH/\"ttcompat\"" },
+	{ ERROR_TIOCSETP,	"spawn: ioctl() failed on TIOCSETP" },
+	{ ERROR_TIOCSETC,	"spawn: ioctl() failed on TIOCSETC" },
+	{ ERROR_TIOCSETD,	"spawn: ioctl() failed on TIOCSETD" },
+	{ ERROR_TIOCSLTC,	"spawn: ioctl() failed on TIOCSLTC" },
+	{ ERROR_TIOCLSET,	"spawn: ioctl() failed on TIOCLSET" },
+	{ ERROR_INIGROUPS,	"spawn: initgroups() failed" },
+	{ ERROR_FORK,		"spawn: fork() failed" },
+	{ ERROR_EXEC,		"spawn: exec() failed" },
+	{ ERROR_PTYS,		"get_pty: not enough ptys" },
+	{ ERROR_PTY_EXEC,	"waiting for initial map" },
+	{ ERROR_SETUID,		"spawn: setuid() failed" },
+	{ ERROR_INIT,		"spawn: can't initialize window" },
+	{ ERROR_TIOCKSET,	"spawn: ioctl() failed on TIOCKSET" },
+	{ ERROR_TIOCKSETC,	"spawn: ioctl() failed on TIOCKSETC" },
+	{ ERROR_SPREALLOC,	"spawn: realloc of ttydev failed" },
+	{ ERROR_LUMALLOC,	"luit: command-line malloc failed" },
+	{ ERROR_SELECT,		"in_put: select() failed" },
+	{ ERROR_VINIT,		"VTInit: can't initialize window" },
+	{ ERROR_KMMALLOC1,	"HandleKeymapChange: malloc failed" },
+	{ ERROR_TSELECT,	"Tinput: select() failed" },
+	{ ERROR_TINIT,		"TekInit: can't initialize window" },
+	{ ERROR_BMALLOC2,	"SaltTextAway: malloc() failed" },
+	{ ERROR_LOGEXEC,	"StartLog: exec() failed" },
+	{ ERROR_XERROR,		"xerror: XError event" },
+	{ ERROR_XIOERROR,	"xioerror: X I/O error" },
+	{ ERROR_SCALLOC,	"Alloc: calloc() failed on base" },
+	{ ERROR_SCALLOC2,	"Alloc: calloc() failed on rows" },
+	{ ERROR_SREALLOC,	"ScreenResize: realloc() failed on alt base" },
+	{ ERROR_RESIZE,		"ScreenResize: malloc() or realloc() failed" },
+	{ ERROR_SAVE_PTR,	"ScrnPointers: malloc/realloc() failed" },
+	{ ERROR_SBRALLOC,	"ScrollBarOn: realloc() failed on base" },
+	{ ERROR_SBRALLOC2,	"ScrollBarOn: realloc() failed on rows" },
+	{ ERROR_MMALLOC,	"my_memmove: malloc/realloc failed" },
     };
-    int oerrno;
+    /* *INDENT-ON* */
 
-    oerrno = errno;
-    fprintf(stderr, "%s: Error %d, errno %d: ", xterm_name, i, oerrno);
-    fprintf(stderr, "%s\n", SysErrorMsg(oerrno));
-    if ((Cardinal) i < XtNumber(table) && table[i] != 0) {
-	fprintf(stderr, "Reason: %s\n", table[i]);
+    Cardinal n;
+    const char *result = "?";
+
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (code == table[n].code) {
+	    result = table[n].name;
+	    break;
+	}
     }
-    Cleanup(i);
+    return result;
+}
+
+void
+SysError(int code)
+{
+    int oerrno = errno;
+
+    fprintf(stderr, "%s: Error %d, errno %d: ", xterm_name, code, oerrno);
+    fprintf(stderr, "%s\n", SysErrorMsg(oerrno));
+    fprintf(stderr, "Reason: %s\n", SysReasonMsg(code));
+
+    Cleanup(code);
 }
 
 /*
