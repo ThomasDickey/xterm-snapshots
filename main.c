@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.570 2007/07/10 20:33:45 tom Exp $ */
+/* $XTermId: main.c,v 1.572 2007/07/22 00:31:47 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2752,13 +2752,12 @@ hungtty(int i GCC_UNUSED)
     SIGNAL_RETURN;
 }
 
-/*
- * declared outside OPT_PTY_HANDSHAKE so HsSysError() callers can use
- */
-static int cp_pipe[2];		/* this pipe is used for child to parent transfer */
-
 #if OPT_PTY_HANDSHAKE
-static int pc_pipe[2];		/* this pipe is used for parent to child transfer */
+#define NO_FDS {-1, -1}
+
+static int cp_pipe[2] = NO_FDS;	/* this pipe is used for child to parent transfer */
+static int pc_pipe[2] = NO_FDS;	/* this pipe is used for parent to child transfer */
+
 typedef enum {			/* c == child, p == parent                        */
     PTY_BAD,			/* c->p: can't open pty slave for some reason     */
     PTY_FATALERROR,		/* c->p: we had a fatal error with the pty        */
@@ -2789,7 +2788,7 @@ typedef struct {
  */
 
 static void
-HsSysError(int pf, int error)
+HsSysError(int error)
 {
     handshake_t handshake;
 
@@ -2797,7 +2796,23 @@ HsSysError(int pf, int error)
     handshake.error = errno;
     handshake.fatal_error = error;
     strcpy(handshake.buffer, ttydev);
-    write(pf, (char *) &handshake, sizeof(handshake));
+
+    if (resource.ptyHandshake && (cp_pipe[1] >= 0)) {
+	TRACE(("HsSysError errno=%d, error=%d device \"%s\"\n",
+	       handshake.error,
+	       handshake.fatal_error,
+	       handshake.buffer));
+	write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
+    } else {
+	fprintf(stderr,
+		"%s: fatal pty error errno=%d, error=%d device \"%s\"\n",
+		ProgramName,
+		handshake.error,
+		handshake.fatal_error,
+		handshake.buffer);
+	fprintf(stderr, "%s\n", SysErrorMsg(handshake.error));
+	fprintf(stderr, "Reason: %s\n", SysReasonMsg(handshake.fatal_error));
+    }
     exit(error);
 }
 
@@ -2812,10 +2827,12 @@ first_map_occurred(void)
 	handshake.rows = screen->max_row;
 	handshake.cols = screen->max_col;
 
-	TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
-	write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
-	close(cp_pipe[0]);
-	close(pc_pipe[1]);
+	if (pc_pipe[1] >= 0) {
+	    TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
+	    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+	    close(cp_pipe[0]);
+	    close(pc_pipe[1]);
+	}
 	resource.wait_for_map = False;
     }
 }
@@ -2824,10 +2841,10 @@ first_map_occurred(void)
  * temporary hack to get xterm working on att ptys
  */
 static void
-HsSysError(int pf GCC_UNUSED, int error)
+HsSysError(int error)
 {
     fprintf(stderr, "%s: fatal pty error %d (errno=%d) on tty %s\n",
-	    xterm_name, error, errno, ttydev);
+	    ProgramName, error, errno, ttydev);
     exit(error);
 }
 #endif /* OPT_PTY_HANDSHAKE else !OPT_PTY_HANDSHAKE */
@@ -3727,14 +3744,14 @@ spawnXTerm(XtermWidget xw)
 		    ltc.t_werasc = ltc.t_lnextc = _POSIX_VDISABLE;
 #endif /* __hpux */
 		if (ioctl(ttyfd, TIOCSLTC, &ltc) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETC);
+		    HsSysError(ERROR_TIOCSETC);
 #endif /* HAS_LTCHARS */
 #ifdef TIOCLSET
 		if (ioctl(ttyfd, TIOCLSET, (char *) &lmode) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCLSET);
+		    HsSysError(ERROR_TIOCLSET);
 #endif /* TIOCLSET */
 		if (ttySetAttr(ttyfd, &tio) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETP);
+		    HsSysError(ERROR_TIOCSETP);
 
 		/* ignore errors here - some platforms don't work */
 		tio.c_cflag &= ~CSIZE;
@@ -3783,20 +3800,20 @@ spawnXTerm(XtermWidget xw)
 		}
 
 		if (ioctl(ttyfd, TIOCSETP, (char *) &sg) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETP);
+		    HsSysError(ERROR_TIOCSETP);
 		if (ioctl(ttyfd, TIOCSETC, (char *) &tc) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETC);
+		    HsSysError(ERROR_TIOCSETC);
 		if (ioctl(ttyfd, TIOCSETD, (char *) &discipline) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSETD);
+		    HsSysError(ERROR_TIOCSETD);
 		if (ioctl(ttyfd, TIOCSLTC, (char *) &ltc) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCSLTC);
+		    HsSysError(ERROR_TIOCSLTC);
 		if (ioctl(ttyfd, TIOCLSET, (char *) &lmode) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCLSET);
+		    HsSysError(ERROR_TIOCLSET);
 #ifdef sony
 		if (ioctl(ttyfd, TIOCKSET, (char *) &jmode) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCKSET);
+		    HsSysError(ERROR_TIOCKSET);
 		if (ioctl(ttyfd, TIOCKSETC, (char *) &jtc) == -1)
-		    HsSysError(cp_pipe[1], ERROR_TIOCKSETC);
+		    HsSysError(ERROR_TIOCKSETC);
 #endif /* sony */
 #endif /* TERMIO_STRUCT */
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
@@ -3805,13 +3822,13 @@ spawnXTerm(XtermWidget xw)
 		    int on = 1;
 		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
 			fprintf(stderr, "%s: cannot open console: %s\n",
-				xterm_name, strerror(errno));
+				ProgramName, strerror(errno));
 #endif
 #ifdef SRIOCSREDIR
 		    int fd = open("/dev/console", O_RDWR);
 		    if (fd == -1 || ioctl(fd, SRIOCSREDIR, ttyfd) == -1)
 			fprintf(stderr, "%s: cannot open console: %s\n",
-				xterm_name, strerror(errno));
+				ProgramName, strerror(errno));
 		    (void) close(fd);
 #endif
 		}
@@ -4331,9 +4348,9 @@ spawnXTerm(XtermWidget xw)
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			xterm_name, *command_to_exec_with_luit, strerror(errno));
+			ProgramName, *command_to_exec_with_luit, strerror(errno));
 		fprintf(stderr, "%s: cannot support your locale.\n",
-			xterm_name);
+			ProgramName);
 	    }
 #endif
 	    if (command_to_exec) {
@@ -4345,7 +4362,7 @@ spawnXTerm(XtermWidget xw)
 		    execlp(ptr, shname, "-c", command_to_exec[0], (void *) 0);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			xterm_name, *command_to_exec, strerror(errno));
+			ProgramName, *command_to_exec, strerror(errno));
 	    }
 #ifdef USE_SYSV_SIGHUP
 	    /* fix pts sh hanging around */
@@ -4370,7 +4387,7 @@ spawnXTerm(XtermWidget xw)
 		   (void *) 0);
 
 	    /* Exec failed. */
-	    fprintf(stderr, "%s: Could not exec %s: %s\n", xterm_name,
+	    fprintf(stderr, "%s: Could not exec %s: %s\n", ProgramName,
 		    ptr, strerror(errno));
 	    (void) sleep(5);
 	    exit(ERROR_EXEC);
@@ -4414,7 +4431,7 @@ spawnXTerm(XtermWidget xw)
 			/* no more ptys! */
 			fprintf(stderr,
 				"%s: child process can find no available ptys: %s\n",
-				xterm_name, strerror(errno));
+				ProgramName, strerror(errno));
 			handshake.status = PTY_NOMORE;
 			write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
 			exit(ERROR_PTYS);
@@ -4448,7 +4465,7 @@ spawnXTerm(XtermWidget xw)
 		case PTY_EXEC:
 		default:
 		    fprintf(stderr, "%s: unexpected handshake status %d\n",
-			    xterm_name,
+			    ProgramName,
 			    (int) handshake.status);
 		}
 	    }
