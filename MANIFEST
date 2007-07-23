@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-227i
+MANIFEST for xterm, version xterm-228
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -127,6 +127,7 @@ unicode/precompose.c.tail       tail of precompose.c
 vttests                         subdirectory
 vttests/16colors.sh             test-script to show 16-colors
 vttests/256colors.pl            script to illustrate 256-colors
+vttests/256colors2.pl           fancy test-script for 256-colors
 vttests/88colors.pl             sample script showing 88-colors
 vttests/88colors2.pl            sample script showing 88-colors
 vttests/8colors.sh              test-script to illustrate 8-colors
