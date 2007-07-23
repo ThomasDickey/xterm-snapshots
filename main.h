@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.34 2007/07/10 20:21:23 tom Exp $ */
+/* $XTermId: main.h,v 1.35 2007/07/22 17:13:32 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/main.h,v 3.15 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -119,11 +119,11 @@
 #define DEF_INITIAL_ERASE	False
 #endif
 
-#ifndef DEF_PTY_HANDSHAKE
-#if defined(sun) || defined(SVR4)
-#define DEF_PTY_HANDSHAKE	True
+#ifndef DEF_PTY_STTY_SIZE
+#if defined(linux) || defined(__APPLE__)
+#define DEF_PTY_STTY_SIZE	False
 #else
-#define DEF_PTY_HANDSHAKE	False
+#define DEF_PTY_STTY_SIZE	True
 #endif
 #endif
 

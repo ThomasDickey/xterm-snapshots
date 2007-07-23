@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.221 2007/07/19 23:12:54 tom Exp $ */
+/* $XTermId: screen.c,v 1.223 2007/07/22 20:37:55 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -51,8 +51,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-
-/* $XFree86: xc/programs/xterm/screen.c,v 3.77 2006/06/19 00:36:51 dickey Exp $ */
 
 /* screen.c */
 
@@ -386,7 +384,7 @@ ChangeToWide(XtermWidget xw)
  * Clear cells, no side-effects.
  */
 void
-ClearCells(XtermWidget xw, int flags, int len, int row, int col)
+ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 {
     if (len != 0) {
 	TScreen *screen = &(xw->screen);
@@ -423,9 +421,11 @@ ClearCells(XtermWidget xw, int flags, int len, int row, int col)
  * Check for wide-character damage as well, clearing the damaged cells.
  */
 void
-ScrnClearCells(XtermWidget xw, int row, int col, int len)
+ScrnClearCells(XtermWidget xw, int row, int col, unsigned len)
 {
+#if OPT_WIDE_CHARS
     TScreen *screen = &(xw->screen);
+#endif
     int flags = 0;
 
     if_OPT_WIDE_CHARS(screen, {
@@ -433,7 +433,7 @@ ScrnClearCells(XtermWidget xw, int row, int col, int len)
 	int kr;
 	if (DamagedCells(screen, len, &kl, &kr, INX2ROW(screen, row), col)
 	    && kr >= kl) {
-	    ClearCells(xw, flags, kr - kl + 1, row, kl);
+	    ClearCells(xw, flags, (unsigned) (kr - kl + 1), row, kl);
 	}
     });
     ClearCells(xw, flags, len, row, col);
@@ -615,8 +615,8 @@ ScrnWriteText(XtermWidget xw,
 	}
     });
     if_OPT_EXT_COLORS(screen, {
-	memset(fbf, ExtractForeground(cur_fg_bg), real_width);
-	memset(fbb, ExtractBackground(cur_fg_bg), real_width);
+	memset(fbf, (int) ExtractForeground(cur_fg_bg), real_width);
+	memset(fbb, (int) ExtractBackground(cur_fg_bg), real_width);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
 	memset(fb, (int) cur_fg_bg, real_width);
@@ -792,13 +792,13 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 
     TScreen *screen = &(xw->screen);
     ScrnBuf sb = screen->visbuf;
-    unsigned last = MaxCols(screen);
+    int last = MaxCols(screen);
     int row = screen->cur_row;
-    unsigned col = screen->cur_col;
+    int col = screen->cur_col;
     Char *data;
     size_t nbytes;
 
-    if (last <= (col + n)) {
+    if (last <= (int) (col + n)) {
 	if (last <= col)
 	    return;
 	n = last - col;
@@ -808,18 +808,18 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
     assert(n > 0);
-    assert(last > n);
+    assert(last > (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
 	int xx = INX2ROW(screen, screen->cur_row);
 	int kl;
 	int kr = screen->cur_col;
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
-	    ClearCells(xw, 0, kr - kl + 1, row, kl);
+	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
 	kr = screen->max_col - n + 1;
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
-	    ClearCells(xw, 0, kr - kl + 1, row, kl);
+	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
     });
 
@@ -867,13 +867,13 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 
     TScreen *screen = &(xw->screen);
     ScrnBuf sb = screen->visbuf;
-    unsigned last = MaxCols(screen);
-    unsigned row = screen->cur_row;
-    unsigned col = screen->cur_col;
+    int last = MaxCols(screen);
+    int row = screen->cur_row;
+    int col = screen->cur_col;
     Char *data;
     size_t nbytes;
 
-    if (last <= (col + n)) {
+    if (last <= (int) (col + n)) {
 	if (last <= col)
 	    return;
 	n = last - col;
@@ -883,7 +883,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
     assert(n > 0);
-    assert(last > n);
+    assert(last > (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
 	int kl;
@@ -891,7 +891,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	if (DamagedCells(screen, n, &kl, &kr,
 			 INX2ROW(screen, screen->cur_row),
 			 screen->cur_col))
-	    ClearCells(xw, 0, kr - kl + 1, row, kl);
+	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
     });
 
     data = BUF_CHARS(sb, row);
@@ -921,7 +921,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    memmove(Target, Source, nbytes);
 	}
     });
-    ClearCells(xw, 0, n, row, last - n);
+    ClearCells(xw, 0, n, row, (int) (last - n));
     ScrnClrWrapped(screen, row);
 
 #undef Source

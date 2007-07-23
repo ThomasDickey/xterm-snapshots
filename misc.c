@@ -1,6 +1,4 @@
-/* $XTermId: misc.c,v 1.369 2007/07/22 00:31:02 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/misc.c,v 3.107 2006/06/19 00:36:51 dickey Exp $ */
+/* $XTermId: misc.c,v 1.370 2007/07/22 20:34:04 tom Exp $ */
 
 /*
  *
@@ -247,7 +245,7 @@ DoSpecialLeaveNotify(XtermWidget xw, XEnterWindowEvent * ev)
 #endif
 
 static void
-setXUrgency(TScreen * screen, Boolean enable)
+setXUrgency(TScreen * screen, Bool enable)
 {
     if (screen->bellIsUrgent) {
 	XWMHints *h = XGetWMHints(screen->display, VShellWindow);
@@ -3303,14 +3301,12 @@ xioerror(Display * dpy)
 void
 xt_error(String message)
 {
-    char *ptr;
-
     (void) fprintf(stderr, "%s Xt error: %s\n", ProgramName, message);
 
     /*
      * Check for the obvious - Xt does a poor job of reporting this.
      */
-    if ((ptr = x_getenv("DISPLAY")) == 0) {
+    if (x_getenv("DISPLAY") == 0) {
 	fprintf(stderr, "%s:  DISPLAY is not set\n", ProgramName);
     }
     exit(1);

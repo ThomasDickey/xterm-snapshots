@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.391 2007/07/10 20:18:20 tom Exp $
+.\" $XTermId: xterm.man,v 1.392 2007/07/22 17:14:09 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -1229,10 +1229,11 @@ You cannot set this to a value less than 64.
 If ``true'', \fIxterm\fP will perform handshaking during initialization
 to ensure that the parent and child processes update the \fButmp\fP
 and \fBstty\fP state.
-See also \fBwaitForMap\fP which adjusts the pseudo-terminal's notion
-of the screen size.
-The default is ``true'' on Solaris and other SVR4 systems,
-``false'' otherwise.
+See also \fBwaitForMap\fP which waits for the pseudo-terminal's notion
+of the screen size,
+and \fBptySttySize\fP which resets the screen size after other terminal
+initialization is complete.
+The default is ``true''.
 .TP 8
 .B "ptyInitialErase (\fPclass\fB PtyInitialErase)"
 If ``true'', \fIxterm\fP will use the pseudo-terminal's sense of the stty erase
@@ -1244,6 +1245,18 @@ In either case, the result is applied to the TERMCAP variable
 which \fIxterm\fP sets.
 See also the \fBttyModes\fP resource, which may modify this.
 The default is ``false''.
+.TP 8
+.B "ptySttySize (\fPclass\fB PtySttySize)
+If ``true'', \fIxterm\fP will reset the screen size after
+terminal initialization is complete.
+This is needed for some systems whose pseudo-terminals cannot
+propagate terminal characteristics.
+Where it is not needed, it can interfere with other methods for
+setting the intial screen size, e.g., via window manager interaction.
+See also \fBwaitForMap\fP which waits for a handshake-message
+giving the pseudo-terminal's notion of the screen size.
+The default is ``false'' on Linux and OS X systems,
+``true'' otherwise.
 .TP 8
 .B "sameName (\fPclass\fB SameName)"
 If the value of this resource is ``true'', \fIxterm\fP does not send

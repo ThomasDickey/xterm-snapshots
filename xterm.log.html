@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.593 2007/07/22 00:35:12 tom Exp $
+  $XTermId: xterm.log.html,v 1.595 2007/07/22 18:50:15 tom Exp $
   $XFree86: xc/programs/xterm/xterm.log.html,v 1.151 2006/06/20 00:42:38 dickey Exp $
   -->
 <HTML>
@@ -279,6 +279,14 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify configure script to permit combining
+	    <code>--with-utempter</code>
+	    and <code>--enable-setuid</code>, e.g., for using xterm with 
+	    the utempter library on FreeBSD (report by Andriy Gapon).
+
+	<li>modify "Quit" menu entry to override the <code>-hold</code>
+	    command-line option.
+
 	<li>add a check in the startup error-reporting to avoid writing to
 	    pipe when it has not been opened.  In that case, report errors
 	    directly to the standard error.
@@ -311,11 +319,10 @@ is the latest version of this file.
 	    <a href="#xterm_226">patch #226</a>
 	    to accommodate Solaris, which relies on the extra setting of
 	    the terminal size after I/O initialization.
-	    At the same time, change the default value of the resource
-	    <code>ptyHandshake</code>
-	    to false except for Solaris and other SVR4 platforms
-	    since the logic as required by Solaris would cause unpredictable
-	    terminal sizes on other platforms (report by David Wood).
+	    Do this by adding new resource <code>ptySttySize</code>,
+	    which is false for Linux and MacOS X, i.e., true for
+	    for Solaris and other SVR4 platforms, as well as FreeBSD
+	    (reports by David Wood, Renato Botelho).
 
 	<li>check for X events after cursor-left, and carriage return,
 	    consistent with indexing operations

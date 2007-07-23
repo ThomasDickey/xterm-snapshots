@@ -1,6 +1,4 @@
-/* $XTermId: resize.c,v 1.103 2007/06/17 13:57:37 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/resize.c,v 3.62 2006/02/13 01:14:59 dickey Exp $ */
+/* $XTermId: resize.c,v 1.104 2007/07/22 20:34:04 tom Exp $ */
 
 /*
  * Copyright 2003-2006,2007 by Thomas E. Dickey
@@ -227,7 +225,10 @@ print_termcap(const char *termcap)
 int
 main(int argc, char **argv ENVP_ARG)
 {
-    register char *ptr, *env;
+#ifdef USE_TERMCAP
+    register char *env;
+#endif
+    register char *ptr;
     register int emu = VT100;
     char *shell;
     struct passwd *pw;
@@ -321,21 +322,20 @@ main(int argc, char **argv ENVP_ARG)
     if ((env = x_getenv("TERM")) == 0) {
 	env = DFT_TERMTYPE;
 	if (SHELL_BOURNE == shell_type)
-	    setname = "TERM=xterm;\nexport TERM;\n";
+	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
 	else
-	    setname = "setenv TERM xterm;\n";
+	    setname = "setenv TERM " DFT_TERMTYPE ";\n";
     }
     termcap[0] = 0;		/* ...just in case we've accidentally gotten terminfo */
     if (tgetent(termcap, env) <= 0 || termcap[0] == 0)
 	ok_tcap = 0;
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
-    if ((env = x_getenv("TERM")) == 0) {
-	env = DFT_TERMTYPE;
+    if (x_getenv("TERM") == 0) {
 	if (SHELL_BOURNE == shell_type)
-	    setname = "TERM=xterm;\nexport TERM;\n";
+	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
 	else
-	    setname = "setenv TERM xterm;\n";
+	    setname = "setenv TERM " DFT_TERMTYPE ";\n";
     }
 #endif /* USE_TERMINFO */
 

@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.104 2007/07/17 21:09:12 tom Exp $ */
+/* $XTermId: data.h,v 1.105 2007/07/22 16:03:16 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -191,6 +191,7 @@ typedef struct XTERM_RESOURCE {
     Boolean wait_for_map;
     Boolean wait_for_map0;	/* ...initial value of .wait_for_map */
     Boolean ptyHandshake;	/* use pty-handshaking */
+    Boolean ptySttySize;	/* reset TTY size after pty handshake */
 #endif
 #if OPT_SAME_NAME
     Boolean sameName;		/* Don't change the title or icon name if it is

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.572 2007/07/22 00:31:47 tom Exp $ */
+/* $XTermId: main.c,v 1.574 2007/07/22 20:02:22 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -671,6 +671,7 @@ static struct _xttymodes {
 
 static int parse_tty_modes(char *s, struct _xttymodes *modelist);
 
+#ifndef USE_UTEMPTER
 #ifdef USE_SYSV_UTMP
 #if (defined(AIXV3) && (OSMAJORVERSION < 4)) && !(defined(getutid))
 extern struct utmp *getutid();
@@ -680,7 +681,6 @@ extern struct utmp *getutid();
 static char etc_utmp[] = UTMP_FILENAME;
 #endif /* USE_SYSV_UTMP */
 
-#ifndef USE_UTEMPTER
 #if defined(USE_LASTLOG) && defined(USE_STRUCT_LASTLOG)
 static char etc_lastlog[] = LASTLOG_FILENAME;
 #else
@@ -778,7 +778,8 @@ static XtResource application_resources[] =
 #endif
 #if OPT_PTY_HANDSHAKE
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
-    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, DEF_PTY_HANDSHAKE),
+    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
+    Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
 #endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
@@ -2597,6 +2598,7 @@ set_pty_permissions(uid_t uid, gid_t gid, mode_t mode)
     endgrent();
 #endif /* USE_TTY_GROUP */
 
+    TRACE_IDS;
     set_owner(ttydev, uid, gid, mode);
 }
 
@@ -2779,6 +2781,49 @@ typedef struct {
     char buffer[1024];
 } handshake_t;
 
+#if OPT_TRACE
+static void
+trace_handshake(const char *tag, handshake_t * data)
+{
+    const char *status = "?";
+    switch (data->status) {
+    case PTY_BAD:
+	status = "PTY_BAD";
+	break;
+    case PTY_FATALERROR:
+	status = "PTY_FATALERROR";
+	break;
+    case PTY_GOOD:
+	status = "PTY_GOOD";
+	break;
+    case PTY_NEW:
+	status = "PTY_NEW";
+	break;
+    case PTY_NOMORE:
+	status = "PTY_NOMORE";
+	break;
+    case UTMP_ADDED:
+	status = "UTMP_ADDED";
+	break;
+    case UTMP_TTYSLOT:
+	status = "UTMP_TTYSLOT";
+	break;
+    case PTY_EXEC:
+	status = "PTY_EXEC";
+	break;
+    }
+    TRACE(("handshake %s %s errno=%d, error=%d device \"%s\"\n",
+	   tag,
+	   status,
+	   data->error,
+	   data->fatal_error,
+	   data->buffer));
+}
+#define TRACE_HANDSHAKE(tag, data) trace_handshake(tag, data)
+#else
+#define TRACE_HANDSHAKE(tag, data)	/* nothing */
+#endif
+
 /* HsSysError()
  *
  * This routine does the equivalent of a SysError but it handshakes
@@ -2792,6 +2837,7 @@ HsSysError(int error)
 {
     handshake_t handshake;
 
+    memset(&handshake, 0, sizeof(handshake));
     handshake.status = PTY_FATALERROR;
     handshake.error = errno;
     handshake.fatal_error = error;
@@ -2802,6 +2848,7 @@ HsSysError(int error)
 	       handshake.error,
 	       handshake.fatal_error,
 	       handshake.buffer));
+	TRACE_HANDSHAKE("writing", &handshake);
 	write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
     } else {
 	fprintf(stderr,
@@ -2823,12 +2870,14 @@ first_map_occurred(void)
 	handshake_t handshake;
 	TScreen *screen = TScreenOf(term);
 
+	memset(&handshake, 0, sizeof(handshake));
 	handshake.status = PTY_EXEC;
 	handshake.rows = screen->max_row;
 	handshake.cols = screen->max_col;
 
 	if (pc_pipe[1] >= 0) {
 	    TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
+	    TRACE_HANDSHAKE("writing", &handshake);
 	    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
 	    close(cp_pipe[0]);
 	    close(pc_pipe[1]);
@@ -2855,6 +2904,7 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 {
     int why;
 
+    TRACE_IDS;
     TRACE(("set_owner(%s, uid=%d, gid=%d, mode=%#o\n", device, uid, gid, mode));
 
     if (chown(device, uid, gid) < 0) {
@@ -3021,6 +3071,10 @@ spawnXTerm(XtermWidget xw)
 #ifdef SIGTTOU
     /* so that TIOCSWINSZ || TIOCSIZE doesn't block */
     signal(SIGTTOU, SIG_IGN);
+#endif
+
+#if OPT_PTY_HANDSHAKE
+    memset(&handshake, 0, sizeof(handshake));
 #endif
 
     if (am_slave >= 0) {
@@ -3508,6 +3562,7 @@ spawnXTerm(XtermWidget xw)
 			handshake.status = PTY_BAD;
 			handshake.error = errno;
 			strcpy(handshake.buffer, ttydev);
+			TRACE_HANDSHAKE("writing", &handshake);
 			write(cp_pipe[1], (char *) &handshake,
 			      sizeof(handshake));
 
@@ -4189,6 +4244,7 @@ spawnXTerm(XtermWidget xw)
 		handshake.status = UTMP_ADDED;
 		handshake.error = 0;
 		strcpy(handshake.buffer, ttydev);
+		TRACE_HANDSHAKE("writing", &handshake);
 		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
 	    }
 #endif /* OPT_PTY_HANDSHAKE */
@@ -4222,6 +4278,7 @@ spawnXTerm(XtermWidget xw)
 		handshake.status = PTY_GOOD;
 		handshake.error = 0;
 		(void) strcpy(handshake.buffer, ttydev);
+		TRACE_HANDSHAKE("writing", &handshake);
 		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
 
 		if (resource.wait_for_map) {
@@ -4310,6 +4367,7 @@ spawnXTerm(XtermWidget xw)
 	     * use that to prevent races.
 	     */
 	    if (resource.ptyHandshake
+		&& resource.ptySttySize
 		&& (got_handshake_size || !resource.wait_for_map0)) {
 #ifdef TTYSIZE_STRUCT
 		i = SET_TTYSIZE(0, ts);
@@ -4414,6 +4472,7 @@ spawnXTerm(XtermWidget xw)
 		    break;
 		}
 
+		TRACE_HANDSHAKE("read", &handshake);
 		switch (handshake.status) {
 		case PTY_GOOD:
 		    /* Success!  Let's free up resources and
@@ -4433,11 +4492,13 @@ spawnXTerm(XtermWidget xw)
 				"%s: child process can find no available ptys: %s\n",
 				ProgramName, strerror(errno));
 			handshake.status = PTY_NOMORE;
+			TRACE_HANDSHAKE("writing", &handshake);
 			write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
 			exit(ERROR_PTYS);
 		    }
 		    handshake.status = PTY_NEW;
 		    (void) strcpy(handshake.buffer, ttydev);
+		    TRACE_HANDSHAKE("writing", &handshake);
 		    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
 		    break;
 
@@ -4654,6 +4715,7 @@ Exit(int n)
     ttyFlush(screen->respond);
 
     if (am_slave < 0) {
+	TRACE_IDS;
 	/* restore ownership of tty and pty */
 	set_owner(ttydev, 0, 0, 0666U);
 #if (defined(USE_PTY_DEVICE) && !defined(__sgi) && !defined(__hpux))
