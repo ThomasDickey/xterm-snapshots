@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.275 2007/06/26 22:57:19 tom Exp $ */
+/* $XTermId: button.c,v 1.277 2007/07/22 20:37:11 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -51,7 +51,6 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
-/* $XFree86: xc/programs/xterm/button.c,v 3.88 2006/06/19 00:36:50 dickey Exp $ */
 
 /*
 button.c	Handles button events in the terminal emulator.
@@ -2613,22 +2612,23 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 			}
 		    }
 		    if (best_col >= 0) {
+			int best_nxt = best_col + best_len;
 			columnToCell(screen, firstRow, best_col, startc);
-			columnToCell(screen, firstRow, best_col + best_len, endc);
+			columnToCell(screen, firstRow, best_nxt, endc);
 			TRACE(("search::%s\n", search));
 			TRACE(("indexed:%d..%d -> %d..%d\n",
-			       best_col, best_col + best_len,
+			       best_col, best_nxt,
 			       indexed[best_col],
-			       indexed[best_col + best_len]));
+			       indexed[best_nxt]));
 			TRACE(("matched:%d:%s\n",
-			       indexed[best_col + best_len] + 1 -
+			       indexed[best_nxt] + 1 -
 			       indexed[best_col],
 			       visibleChars(PAIRED_CHARS((Char *) (search +
 								   indexed[best_col]),
 							 0),
-					    indexed[best_col + best_len] +
-					    1 -
-					    indexed[best_col])));
+					    (unsigned) (indexed[best_nxt] +
+							1 -
+							indexed[best_col]))));
 		    }
 		    free(search);
 		}
@@ -2997,7 +2997,7 @@ SaltTextAway(XtermWidget xw,
     *lp = '\0';			/* make sure we have end marked */
 
     TRACE(("Salted TEXT:%d:%s\n", lp - line,
-	   visibleChars(PAIRED_CHARS(line, 0), lp - line)));
+	   visibleChars(PAIRED_CHARS(line, 0), (unsigned) (lp - line))));
 
     screen->selection_length = (lp - line);
     _OwnSelection(xw, params, num_params);

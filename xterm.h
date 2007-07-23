@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.481 2007/07/22 00:29:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.482 2007/07/22 20:14:48 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -981,8 +981,8 @@ extern ScrnBuf Allocate (int  /* nrow */, int  /* ncol */, Char ** /* addr */);
 extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
-extern void ClearCells (XtermWidget /* xw */, int /* flags */, int /* len */, int /* row */, int /* col */);
-extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, int /* len */);
+extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len */, int /* row */, int /* col */);
+extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* n */, int  /* last */, unsigned  /* size */, unsigned  /* where */);
 extern void ScrnDisownSelection (XtermWidget /* xw */);
@@ -1214,8 +1214,8 @@ extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */
 #endif
 
 #if OPT_WIDE_CHARS
-extern int DamagedCells(TScreen * /* screen */, int /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
-extern int DamagedCurCells(TScreen * /* screen */, int /* n */, int * /* klp */, int * /* krp */);
+extern int DamagedCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
+extern int DamagedCurCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */);
 extern unsigned AsciiEquivs(unsigned /* ch */);
 extern unsigned getXtermCellComb (TScreen * /* screen */, int  /* row */, int  /* col */, int /* off */);
 extern void addXtermCombining (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned  /* ch */);

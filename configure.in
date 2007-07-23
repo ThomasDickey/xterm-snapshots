@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.235 2007/06/17 13:45:09 tom Exp $
+dnl $XTermId: configure.in,v 1.236 2007/07/22 18:51:36 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/configure.in,v 3.77 2006/06/19 00:36:51 dickey Exp $
 dnl
@@ -245,7 +245,18 @@ AC_MSG_RESULT($use_utempter)
 
 if test "$use_utempter" = yes ; then
 	CF_UTEMPTER
-	test "$cf_cv_have_utempter" = yes && disable_setuid=yes
+	test "$cf_cv_have_utempter" != yes && use_utempter=no
+else
+	use_utempter=no
+fi
+
+# Some configurations permit (or require) either setuid or setgid mode.
+# Let the user decide.
+if test "$use_utempter" = yes ; then
+	if test "${enable_setuid+set}" != set ; then
+		disable_setuid=yes
+		CF_VERBOSE([No --disable-setuid option given, force to yes])
+	fi
 fi
 
 ###	checks for external data

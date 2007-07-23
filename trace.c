@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.80 2007/07/11 21:17:25 tom Exp $ */
+/* $XTermId: trace.c,v 1.81 2007/07/22 16:27:25 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
@@ -517,6 +517,7 @@ TraceXtermResources(void)
 #if OPT_PTY_HANDSHAKE
     XRES_B(wait_for_map);
     XRES_B(ptyHandshake);
+    XRES_B(ptySttySize);
 #endif
 #if OPT_SAME_NAME
     XRES_B(sameName);

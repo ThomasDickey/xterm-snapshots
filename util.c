@@ -1,6 +1,4 @@
-/* $XTermId: util.c,v 1.383 2007/07/19 23:12:00 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/util.c,v 3.98 2006/06/19 00:36:52 dickey Exp $ */
+/* $XTermId: util.c,v 1.385 2007/07/22 20:43:06 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -103,7 +101,7 @@ int (*my_wcwidth) (wchar_t);
  * that we should fill with blanks, return true if filling is needed.
  */
 int
-DamagedCells(TScreen * screen, int n, int *klp, int *krp, int row, int col)
+DamagedCells(TScreen * screen, unsigned n, int *klp, int *krp, int row, int col)
 {
     int kl = col;
     int kr = col + n;
@@ -135,7 +133,7 @@ DamagedCells(TScreen * screen, int n, int *klp, int *krp, int row, int col)
 }
 
 int
-DamagedCurCells(TScreen * screen, int n, int *klp, int *krp)
+DamagedCurCells(TScreen * screen, unsigned n, int *klp, int *krp)
 {
     return DamagedCells(screen, n, klp, krp, screen->cur_row, screen->cur_col);
 }
@@ -671,7 +669,7 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	    int kl;
 	    int kr;
 	    if (DamagedCurCells(screen, cells, &kl, &kr))
-		ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	});
 
 	if (flags & INVISIBLE) {
@@ -953,13 +951,13 @@ InsertChar(XtermWidget xw, unsigned n)
 	    int kl;
 	    int kr = screen->cur_col;
 	    if (DamagedCurCells(screen, n, &kl, (int *) 0) && kr > kl) {
-		ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	    }
 	    kr = screen->max_col - n + 1;
 	    if (DamagedCells(screen, n, &kl, (int *) 0,
 			     screen->cur_row,
 			     kr) && kr > kl) {
-		ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	    }
 	});
 
@@ -1028,7 +1026,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 	    int kl;
 	    int kr;
 	    if (DamagedCurCells(screen, n, &kl, &kr))
-		ClearInLine(xw, screen->cur_row, kl, kr - kl + 1);
+		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	});
 
 #if OPT_DEC_CHRSET
@@ -1253,17 +1251,19 @@ ClearRight(XtermWidget xw, int n)
 
     if (AddToVisible(xw)) {
 	if_OPT_WIDE_CHARS(screen, {
+	    int col = screen->cur_col;
+	    int row = screen->cur_row;
 	    int kl;
 	    int kr;
 	    int xx;
 	    if (DamagedCurCells(screen, len, &kl, &kr) && kr >= kl) {
-		xx = screen->cur_col;
+		xx = col;
 		if (kl < xx) {
-		    ClearInLine2(xw, 0, screen->cur_row, kl, xx - kl);
+		    ClearInLine2(xw, 0, row, kl, (unsigned) (xx - kl));
 		}
-		xx = screen->cur_col + len - 1;
+		xx = col + len - 1;
 		if (kr > xx) {
-		    ClearInLine2(xw, 0, screen->cur_row, xx + 1, kr - xx);
+		    ClearInLine2(xw, 0, row, xx + 1, (unsigned) (kr - xx));
 		}
 	    }
 	});
@@ -1288,10 +1288,11 @@ ClearLeft(XtermWidget xw)
 
     if (AddToVisible(xw)) {
 	if_OPT_WIDE_CHARS(screen, {
+	    int row = screen->cur_row;
 	    int kl;
 	    int kr;
 	    if (DamagedCurCells(screen, 1, &kl, &kr) && kr >= kl) {
-		ClearInLine2(xw, 0, screen->cur_row, kl, kr - kl + 1);
+		ClearInLine2(xw, 0, row, kl, (unsigned) (kr - kl + 1));
 	    }
 	});
 	(void) ClearInLine(xw, screen->cur_row, 0, len);

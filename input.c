@@ -1,6 +1,4 @@
-/* $XTermId: input.c,v 1.290 2007/06/27 21:57:55 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/input.c,v 3.76 2006/06/19 00:36:51 dickey Exp $ */
+/* $XTermId: input.c,v 1.291 2007/07/22 20:34:04 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -393,7 +391,7 @@ computeModifierParm(XtermWidget xw, unsigned state)
 
 #if OPT_NUM_LOCK
 static unsigned
-filterAltMeta(unsigned result, unsigned mask, Boolean enable, KEY_DATA * kd)
+filterAltMeta(unsigned result, unsigned mask, Bool enable, KEY_DATA * kd)
 {
     if ((result & mask) != 0) {
 	/*
