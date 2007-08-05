@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.249 2007/06/17 12:50:22 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.250 2007/08/05 00:11:55 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.c,v 1.60 2006/04/30 21:55:39 dickey Exp $
@@ -850,7 +850,6 @@ xtermLoadFont(XtermWidget xw,
 		fnts[fWBold] = xtermCloseFont(xw, fnts[fWBold]);
 	    }
 	    if (fnts[fWBold] == 0) {
-		free(myfonts.f_wb);
 		myfonts.f_wb = myfonts.f_w;
 		fnts[fWBold] = fnts[fWide];
 		TRACE(("...cannot load wide-bold, use wide %s\n", NonNull(myfonts.f_w)));
