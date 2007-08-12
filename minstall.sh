@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.sh,v 1.11 2007/05/24 22:10:42 tom Exp $
+# $XTermId: minstall.sh,v 1.12 2007/08/12 15:29:02 tom Exp $
 #
 # Install manpages, substituting a reasonable section value since XFree86 4.x
 # and derived imakes do not use constants...
@@ -11,6 +11,13 @@
 #	$4 = app-defaults directory
 #
 
+# override locale...
+LANG=C;		export LANG
+LANGUAGE=C;	export LANGUAGE
+LC_ALL=C;	export LC_ALL
+LC_CTYPE=C;	export LC_CTYPE
+
+# get parameters
 MINSTALL="$1"
 OLD_FILE="$2"
 END_FILE="$3"
