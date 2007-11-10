@@ -1,6 +1,4 @@
-/* $XTermId: ptyx.h,v 1.494 2007/07/17 21:08:07 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/ptyx.h,v 3.134 2006/06/19 00:36:51 dickey Exp $ */
+/* $XTermId: ptyx.h,v 1.496 2007/11/10 01:44:08 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1009,10 +1007,12 @@ extern int A2E(int);
 
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
+#define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
 #define PAIRED_CHARS(a,b) a,b
 typedef unsigned IChar;		/* for 8 or 16-bit characters, plus flag */
 #else
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
+#define if_WIDE_OR_NARROW(screen, wide, narrow) narrow
 #define PAIRED_CHARS(a,b) a
 typedef unsigned char IChar;	/* for 8-bit characters */
 #endif
