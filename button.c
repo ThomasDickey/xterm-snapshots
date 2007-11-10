@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.277 2007/07/22 20:37:11 tom Exp $ */
+/* $XTermId: button.c,v 1.278 2007/11/10 01:34:48 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -2466,11 +2466,13 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		/* some internal points may not be drawn */
 		if (data == 0)
 		    data = ' ';
-#if OPT_WIDE_CHARS
-		next = convertToUTF8(last, data);
-#else
-		*next++ = CharOf(data);
-#endif
+
+		if_WIDE_OR_NARROW(screen, {
+		    next = convertToUTF8(last, data);
+		}
+		, {
+		    *next++ = CharOf(data);
+		});
 
 		if_OPT_WIDE_CHARS(screen, {
 		    int off;
