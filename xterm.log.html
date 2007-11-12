@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.601 2007/11/10 01:33:19 tom Exp $
+  $XTermId: xterm.log.html,v 1.605 2007/11/10 17:22:05 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -280,6 +280,22 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>extend terminfo building blocks for modified editing keys to
+	    include all six keys.
+
+	<li>synchronize terminfo with ncurses (report by Stephane Chazelas):
+	    <ul>
+	    <li>equate <code>xterm-xfree86</code>
+	        and <code>xterm-xf86-v44</code>.
+	    <li>add ncurses extensions OTbs, AX, for termcap conversions.
+	    <li>make old/legacy entries such as
+	        <code>xterm-24</code>, <code>xterm-65</code>
+	        and aliases <code>xterms</code>, <code>vs100</code>
+		inherit from <code>xterm-old</code>.
+	    <li>make <code>xterm-r5</code> and <code>xterm-r6</code> the
+	        same, ignoring historical errors in X Consortium's version.
+	    </ul>
+
 	<li>fix an ifdef in logic for selecting regular
 	    expressions while in a narrow-character locale (Debian #449227).
 </ul>
