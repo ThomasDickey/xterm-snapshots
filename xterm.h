@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.482 2007/07/22 20:14:48 tom Exp $ */
+/* $XTermId: xterm.h,v 1.483 2007/11/26 17:45:50 Sergey.Vlasov Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -402,6 +402,7 @@ extern char **environ;
 #define XtNinternalBorder	"internalBorder"
 #define XtNitalicULMode         "italicULMode"
 #define XtNjumpScroll		"jumpScroll"
+#define XtNkeepSelection	"keepSelection"
 #define XtNkeyboardDialect	"keyboardDialect"
 #define XtNlimitResize		"limitResize"
 #define XtNlocale		"locale"
@@ -542,6 +543,7 @@ extern char **environ;
 #define XtCI18nSelections	"I18nSelections"
 #define XtCInitialFont		"InitialFont"
 #define XtCJumpScroll		"JumpScroll"
+#define XtCKeepSelection	"KeepSelection"
 #define XtCKeyboardDialect	"KeyboardDialect"
 #define XtCLimitResize		"LimitResize"
 #define XtCLocale		"Locale"
@@ -672,6 +674,7 @@ extern void TekSimulatePageButton (TekWidget /* tw */, Bool /* reset */);
 extern Bool SendMousePosition (XtermWidget  /* w */, XEvent*  /* event */);
 extern void DiredButton                PROTO_XT_ACTIONS_ARGS;
 extern void DisownSelection (XtermWidget  /* termw */);
+extern void UnhiliteSelection (XtermWidget  /* termw */);
 extern void HandleInsertSelection      PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectEnd    PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectExtend PROTO_XT_ACTIONS_ARGS;

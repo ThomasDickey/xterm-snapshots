@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.180 2007/03/15 23:47:09 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.182 2007/11/26 16:28:10 tom Exp $
 .\"
 .\"
 .\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.60 2006/03/13 01:27:53 dickey Exp $
@@ -958,10 +958,20 @@ Device Status Report (DSR)
 .br
 \*(Cs\*(Ir\*s\*;\*(Ic\*s\*R
 .
-.IP \\*(Cs\\*>\\*n
-Set resource-value \fBmodifyFunctionKeys\fP used by \fIxterm\fP to
-allow user to construct extended-numbering function keys using
-shift- and control-modifiers.
+.IP \\*(Cs\\*(Ps\\*>\\*n
+Disable modifiers which may be enabled via the
+\*(Cs\*>\*(Ps\*;\*(Ps\*s\*m
+sequence.
+This corresponds to a resource value of "-1", which cannot be set with
+the other sequence.
+The parameter identifies the resource to be disabled:
+  \(-> \*1 modifyCursorKeys
+  \(-> \*2 modifyFunctionKeys
+  \(-> \*4 modifyOtherKeys
+If the parameter is omitted, \fBmodifyFunctionKeys\fP is disabled.
+When \fBmodifyFunctionKeys\fP is disabled, \fIxterm\fP uses the
+modifier keys to make an extended sequence of functions rather
+than adding a parameter to each function key to denote the modifiers.
 .
 .IP \\*(Cs\\*?\\*(Ps\\*s\\*n
 Device Status Report (DSR, DEC-specific)

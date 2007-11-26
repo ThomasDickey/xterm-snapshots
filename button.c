@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.278 2007/11/10 01:34:48 tom Exp $ */
+/* $XTermId: button.c,v 1.279 2007/11/26 17:45:50 Sergey.Vlasov Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -3447,6 +3447,21 @@ DisownSelection(XtermWidget xw)
 	ReHiliteText(xw, &first, &last);
     } else {
 	ResetSelectionState(screen);
+    }
+}
+
+void
+UnhiliteSelection(XtermWidget xw)
+{
+    TScreen *screen = &(xw->screen);
+
+    if (ScrnHaveSelection(screen)) {
+	CELL first = screen->startH;
+	CELL last = screen->endH;
+
+	screen->startH = zeroCELL;
+	screen->endH = zeroCELL;
+	ReHiliteText(xw, &first, &last);
     }
 }
 

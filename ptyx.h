@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.496 2007/11/10 01:44:08 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.497 2007/11/26 17:45:50 Sergey.Vlasov Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1607,6 +1607,7 @@ typedef struct {
 	Boolean		trim_selection; /* controls trimming of selection */
 	Boolean		i18nSelections;
 	Boolean		brokenSelections;
+	Boolean		keepSelection;	/* do not lose selection on output */
 	Boolean		replyToEmacs;	/* Send emacs escape code when done selecting or extending? */
 	Char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */

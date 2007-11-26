@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.104 2007/07/22 20:34:04 tom Exp $ */
+/* $XTermId: resize.c,v 1.105 2007/11/26 14:04:10 tom Exp $ */
 
 /*
  * Copyright 2003-2006,2007 by Thomas E. Dickey
@@ -58,6 +58,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <xstrings.h>
+#include <xtermcap.h>
 #include <xterm_io.h>
 
 #ifdef APOLLO_SR9
@@ -190,8 +191,6 @@ static SIGNAL_T resize_timeout(int sig);
 static int checkdigits(char *str);
 static void Usage(void);
 static void readstring(FILE *fp, char *buf, char *str);
-
-#include <xtermcap.h>
 
 #ifdef USE_TERMCAP
 static void

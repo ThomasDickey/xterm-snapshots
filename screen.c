@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.223 2007/07/22 20:37:55 tom Exp $ */
+/* $XTermId: screen.c,v 1.224 2007/11/26 17:45:50 Sergey.Vlasov Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -447,7 +447,11 @@ void
 ScrnDisownSelection(XtermWidget xw)
 {
     if (ScrnHaveSelection(&(xw->screen))) {
-	DisownSelection(xw);
+	if (xw->screen.keepSelection) {
+	    UnhiliteSelection(xw);
+	} else {
+	    DisownSelection(xw);
+	}
     }
 }
 

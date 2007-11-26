@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.810 2007/07/17 21:09:48 tom Exp $ */
+/* $XTermId: charproc.c,v 1.814 2007/11/26 18:13:33 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -259,6 +259,7 @@ static XtActionsRec actionsList[] = {
     { "bell",			HandleBell },
     { "clear-saved-lines",	HandleClearSavedLines },
     { "create-menu",		HandleCreateMenu },
+    { "delete-is-del",		HandleDeleteIsDEL },
     { "dired-button",		DiredButton },
     { "hard-reset",		HandleHardReset },
     { "ignore",			HandleIgnore },
@@ -273,7 +274,6 @@ static XtActionsRec actionsList[] = {
     { "print-redir",		HandlePrintControlMode },
     { "quit",			HandleQuit },
     { "redraw",			HandleRedraw },
-    { "delete-is-del",		HandleDeleteIsDEL },
     { "scroll-back",		HandleScrollBack },
     { "scroll-forw",		HandleScrollForward },
     { "secure",			HandleSecure },
@@ -296,6 +296,7 @@ static XtActionsRec actionsList[] = {
     { "set-bellIsUrgent",	HandleBellIsUrgent },
     { "set-cursesemul",		HandleCursesEmul },
     { "set-jumpscroll",		HandleJumpscroll },
+    { "set-keep-selection",	HandleKeepSelection },
     { "set-marginbell",		HandleMarginBell },
     { "set-old-function-keys",	HandleOldFunctionKeys },
     { "set-pop-on-bell",	HandleSetPopOnBell },
@@ -421,6 +422,7 @@ static XtResource resources[] =
     Bres(XtNhpLowerleftBugCompat, XtCHpLowerleftBugCompat, screen.hp_ll_bc, False),
     Bres(XtNi18nSelections, XtCI18nSelections, screen.i18nSelections, True),
     Bres(XtNjumpScroll, XtCJumpScroll, screen.jumpscroll, True),
+    Bres(XtNkeepSelection, XtCKeepSelection, screen.keepSelection, False),
     Bres(XtNloginShell, XtCLoginShell, misc.login_shell, False),
     Bres(XtNmarginBell, XtCMarginBell, screen.marginbell, False),
     Bres(XtNmetaSendsEscape, XtCMetaSendsEscape, screen.meta_sends_esc, False),
@@ -1040,12 +1042,12 @@ set_max_row(TScreen * screen, int rows)
 
 #if OPT_MOD_FKEYS
 static void
-set_mod_fkeys(XtermWidget xw, int which, int what)
+set_mod_fkeys(XtermWidget xw, int which, int what, Bool enabled)
 {
 #define SET_MOD_FKEYS(field) \
-    xw->keyboard.modify_now.field = (what == DEFAULT) \
+    xw->keyboard.modify_now.field = ((what == DEFAULT) && enabled) \
 				     ? xw->keyboard.modify_1st.field \
-				     : param[1]; \
+				     : what; \
     TRACE(("set modify_now.%s to %d\n", #field, \
 	   xw->keyboard.modify_now.field));
 
@@ -2826,15 +2828,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_SET_MOD_FKEYS:
 	    TRACE(("CASE_SET_MOD_FKEYS\n"));
 	    if (nparam >= 1) {
-		set_mod_fkeys(xw, param[0], nparam > 1 ? param[1] : DEFAULT);
+		set_mod_fkeys(xw, param[0], nparam > 1 ? param[1] : DEFAULT, True);
 	    } else {
 		for (row = 1; row <= 5; ++row)
-		    set_mod_fkeys(xw, row, DEFAULT);
+		    set_mod_fkeys(xw, row, DEFAULT, True);
 	    }
 	    break;
 	case CASE_SET_MOD_FKEYS0:
 	    TRACE(("CASE_SET_MOD_FKEYS0\n"));
-	    xw->keyboard.modify_now.function_keys = -1;
+	    if (nparam >= 1 && param[0] != DEFAULT) {
+		set_mod_fkeys(xw, param[0], -1, False);
+	    } else {
+		xw->keyboard.modify_now.function_keys = -1;
+	    }
 	    break;
 #endif
 
@@ -5376,7 +5382,6 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.scrolllines);
     init_Bres(screen.scrollttyoutput);
     init_Bres(screen.scrollkey);
-    init_Bres(screen.selectToClipboard);
 
     init_Sres(screen.term_id);
     for (s = request->screen.term_id; *s; s++) {
@@ -5425,13 +5430,17 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.multiClickTime);
     init_Ires(screen.bellSuppressTime);
     init_Sres(screen.charClass);
+
+    init_Bres(screen.always_highlight);
+    init_Bres(screen.brokenSelections);
     init_Bres(screen.cutNewline);
     init_Bres(screen.cutToBeginningOfLine);
     init_Bres(screen.highlight_selection);
-    init_Bres(screen.trim_selection);
     init_Bres(screen.i18nSelections);
-    init_Bres(screen.brokenSelections);
-    init_Bres(screen.always_highlight);
+    init_Bres(screen.keepSelection);
+    init_Bres(screen.selectToClipboard);
+    init_Bres(screen.trim_selection);
+
     wnew->screen.pointer_cursor = request->screen.pointer_cursor;
 
     init_Sres(screen.answer_back);
