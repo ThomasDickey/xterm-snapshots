@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.237 2007/07/22 20:34:04 tom Exp $ */
+/* $XTermId: menu.c,v 1.238 2007/11/26 18:12:35 tom Exp $ */
 
 /*
 
@@ -143,6 +143,7 @@ static void do_scrollbar       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollkey       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
+static void do_keepSelection   PROTO_XT_CALLBACK_ARGS;
 static void do_selectClipboard PROTO_XT_CALLBACK_ARGS;
 static void do_softreset       PROTO_XT_CALLBACK_ARGS;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
@@ -297,6 +298,7 @@ MenuEntry vtMenuEntries[] = {
     { "scrollkey",	do_scrollkey,	NULL },
     { "scrollttyoutput",do_scrollttyoutput, NULL },
     { "allow132",	do_allow132,	NULL },
+    { "keepSelection",	do_keepSelection, NULL },
     { "selectToClipboard",do_selectClipboard, NULL },
     { "visualbell",	do_visualbell,	NULL },
     { "bellIsUrgent",	do_bellIsUrgent, NULL },
@@ -653,6 +655,7 @@ domenu(Widget w,
 	    update_scrollttyoutput();
 	    update_allow132();
 	    update_cursesemul();
+	    update_keepSelection();
 	    update_selectToClipboard();
 	    update_visualbell();
 	    update_poponbell();
@@ -1225,6 +1228,17 @@ do_scrollttyoutput(Widget gw GCC_UNUSED,
 
     screen->scrollttyoutput = !screen->scrollttyoutput;
     update_scrollttyoutput();
+}
+
+static void
+do_keepSelection(Widget gw GCC_UNUSED,
+		 XtPointer closure GCC_UNUSED,
+		 XtPointer data GCC_UNUSED)
+{
+    TScreen *screen = TScreenOf(term);
+
+    screen->keepSelection = !screen->keepSelection;
+    update_keepSelection();
 }
 
 static void
@@ -1959,6 +1973,16 @@ HandleJumpscroll(Widget w,
 		 Cardinal *param_count)
 {
     handle_vt_toggle(do_jumpscroll, term->screen.jumpscroll,
+		     params, *param_count, w);
+}
+
+void
+HandleKeepSelection(Widget w,
+		    XEvent * event GCC_UNUSED,
+		    String * params,
+		    Cardinal *param_count)
+{
+    handle_vt_toggle(do_keepSelection, term->screen.keepSelection,
 		     params, *param_count, w);
 }
 
@@ -2903,6 +2927,13 @@ update_scrollttyoutput(void)
 {
     UpdateMenuItem(vtMenuEntries[vtMenu_scrollttyoutput].widget,
 		   term->screen.scrollttyoutput);
+}
+
+void
+update_keepSelection(void)
+{
+    UpdateMenuItem(vtMenuEntries[vtMenu_keepSelection].widget,
+		   term->screen.keepSelection);
 }
 
 void

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.392 2007/07/22 17:14:09 tom Exp $
+.\" $XTermId: xterm.man,v 1.394 2007/11/26 18:39:04 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -2138,6 +2138,11 @@ Specifies whether or not jump scroll should be used.
 This corresponds to the VT102 DECSCLM private mode.
 The default is ``true.''
 .TP 8
+.B "keepSelection (\fPclass\fB KeepSelection)"
+Specifies whether \fIxterm\fR will keep the selection even after the
+selected area was touched by some output to the terminal.
+The default is ``false''.
+.TP 8
 .B "keyboardDialect (\fPclass\fB KeyboardDialect)"
 Specifies the initial keyboard dialect, as well as the default value when
 the terminal is reset.
@@ -3474,6 +3479,18 @@ option and the
 resource.
 .
 .TP
+Keep Selection (keepSelection)
+Tell \fIxterm\fP whether to disown the selection when it stops highlighting it,
+e.g., when an application modifies the display so that it no longer matches
+the text which has been highlighted.
+As long as \fIxterm\fP continues to own the selection,
+it can provide the corresponding text to other clients via cut/paste.
+This corresponds to the
+.B keepSelection
+resource.
+There is no corresponding command-line option.
+.
+.TP
 Select to Clipboard (selectToClipboard)
 Tell \fIxterm\fP whether to use the PRIMARY or CLIPBOARD
 for SELECT tokens in the \fBtranslations\fP resource which
@@ -4213,6 +4230,10 @@ This action toggles the \fBjumpscroll\fP resource and is also invoked by the
 This action toggles the \fIxterm\fR's state regarding whether the current font
 has line-drawing characters and whether it should draw them directly.
 It is also invoked by the \fBfont-linedrawing\fP entry in \fIfontMenu\fP.
+.TP 8
+.B "set-keep-selection(\fIon/off/toggle\fP)"
+This action toggles the \fBkeepSelection\fP resource and is also invoked by
+the \fBkeepSelection\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-logging()"
 This action toggles the state of the logging option.

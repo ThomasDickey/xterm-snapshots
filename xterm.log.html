@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.605 2007/11/10 17:22:05 tom Exp $
+  $XTermId: xterm.log.html,v 1.609 2007/11/26 18:51:11 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -280,6 +280,21 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add <em>Keep Selection</em> menu entry to turn the 
+	    <code>keepSelection</code> resource on/off at runtime.
+
+	<li>add <code>keepSelection</code> resource, which when enabled,
+	    tells xterm to retain the X selection even after it stops
+	    highlighting it (patch by Sergey Vlasov).
+
+	<li>extend the <code>CSI&nbsp;&gt;&nbsp;n</code> sequence to allow
+	    disabling all types of modified-keys that the
+	    <code>CSI&nbsp;&gt;&nbsp;m</code> sequence affects.
+
+	<li>move include for <code>&lt;xtermcap.h&gt;</code> in
+	    <code>resize.c</code> to avoid redefinition of <code>termios</code>
+	    structure on OpenSolaris (report by Rahul Gopinathan Nair).
+
 	<li>extend terminfo building blocks for modified editing keys to
 	    include all six keys.
 
