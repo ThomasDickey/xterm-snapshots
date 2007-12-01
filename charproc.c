@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.814 2007/11/26 18:13:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.816 2007/11/30 01:45:21 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -545,6 +545,7 @@ static XtResource resources[] =
     Tres(XtNhighlightColor, XtCHighlightColor, HIGHLIGHT_BG, XtDefaultForeground),
     Tres(XtNhighlightTextColor, XtCHighlightTextColor, HIGHLIGHT_FG, XtDefaultBackground),
     Bres(XtNhighlightReverse, XtCHighlightReverse, screen.hilite_reverse, True),
+    Bres(XtNhighlightColorMode, XtCHighlightColorMode, screen.hilite_color, Maybe),
 #endif				/* OPT_HIGHLIGHT_COLOR */
 
 #if OPT_INPUT_METHOD
@@ -5069,12 +5070,12 @@ fill_Tres(XtermWidget target, XtermWidget source, int offset)
 
     if (name == 0) {
 	target->screen.Tcolors[offset].value = target->dft_foreground;
-    } else if (!x_strcasecmp(name, XtDefaultForeground)) {
+    } else if (isDefaultForeground(name)) {
 	target->screen.Tcolors[offset].value =
 	    ((offset == TEXT_FG || offset == TEXT_BG)
 	     ? target->dft_foreground
 	     : target->screen.Tcolors[TEXT_FG].value);
-    } else if (!x_strcasecmp(name, XtDefaultBackground)) {
+    } else if (isDefaultBackground(name)) {
 	target->screen.Tcolors[offset].value =
 	    ((offset == TEXT_FG || offset == TEXT_BG)
 	     ? target->dft_background
@@ -5562,10 +5563,10 @@ VTInitialize(Widget wrequest,
 #if OPT_COLOR_RES
 	TRACE(("Acolors[%d] = %s\n", i, wnew->screen.Acolors[i].resource));
 	wnew->screen.Acolors[i].mode = False;
-	if (!x_strcasecmp(wnew->screen.Acolors[i].resource, XtDefaultForeground)) {
+	if (isDefaultForeground(wnew->screen.Acolors[i].resource)) {
 	    wnew->screen.Acolors[i].value = T_COLOR(&(wnew->screen), TEXT_FG);
 	    wnew->screen.Acolors[i].mode = True;
-	} else if (!x_strcasecmp(wnew->screen.Acolors[i].resource, XtDefaultBackground)) {
+	} else if (isDefaultBackground(wnew->screen.Acolors[i].resource)) {
 	    wnew->screen.Acolors[i].value = T_COLOR(&(wnew->screen), TEXT_BG);
 	    wnew->screen.Acolors[i].mode = True;
 	} else {
@@ -5650,6 +5651,17 @@ VTInitialize(Widget wrequest,
     init_Tres(HIGHLIGHT_BG);
     init_Tres(HIGHLIGHT_FG);
     init_Bres(screen.hilite_reverse);
+    init_Bres(screen.hilite_color);
+    if (wnew->screen.hilite_color == Maybe) {
+	wnew->screen.hilite_color = False;
+#if OPT_COLOR_RES
+	if (!isDefaultForeground(wnew->screen.Tcolors[HIGHLIGHT_BG].resource)
+	    && !isDefaultBackground(wnew->screen.Tcolors[HIGHLIGHT_FG].resource)) {
+	    TRACE(("...setting hilite_color automatically\n"));
+	    wnew->screen.hilite_color = True;
+	}
+#endif
+    }
 #endif
 
 #if OPT_TEK4014

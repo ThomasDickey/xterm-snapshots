@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.385 2007/07/22 20:43:06 tom Exp $ */
+/* $XTermId: util.c,v 1.388 2007/12/01 00:20:57 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1860,10 +1860,32 @@ xtermRepaint(XtermWidget xw)
 
 /***====================================================================***/
 
+Boolean
+isDefaultForeground(const char *name)
+{
+    return !x_strcasecmp(name, XtDefaultForeground);
+}
+
+Boolean
+isDefaultBackground(const char *name)
+{
+    return !x_strcasecmp(name, XtDefaultBackground);
+}
+
+/***====================================================================***/
+
 typedef struct {
     Pixel fg;
     Pixel bg;
 } ToSwap;
+
+#if OPT_HIGHLIGHT_COLOR
+#define hc_param ,Bool hilite_color
+#define hc_value ,screen->hilite_color
+#else
+#define hc_param /* nothing */
+#define hc_value /* nothing */
+#endif
 
 /*
  * Use this to swap the foreground/background color values in the resource
@@ -1871,7 +1893,7 @@ typedef struct {
  * GC cache.
  */
 static void
-swapLocally(ToSwap * list, int *count, ColorRes * fg, ColorRes * bg)
+swapLocally(ToSwap * list, int *count, ColorRes * fg, ColorRes * bg hc_param)
 {
     ColorRes tmp;
     int n;
@@ -1885,7 +1907,10 @@ swapLocally(ToSwap * list, int *count, ColorRes * fg, ColorRes * bg)
     Pixel bg_color = *bg;
 #endif
 
-    if (fg_color != bg_color) {
+#if OPT_HIGHLIGHT_COLOR
+    if ((fg_color != bg_color) || !hilite_color)
+#endif
+    {
 	EXCHANGE(*fg, *bg, tmp);
 	for (n = 0; n < *count; ++n) {
 	    if ((list[n].fg == fg_color && list[n].bg == bg_color)
@@ -1898,8 +1923,8 @@ swapLocally(ToSwap * list, int *count, ColorRes * fg, ColorRes * bg)
 	    list[*count].fg = fg_color;
 	    list[*count].bg = bg_color;
 	    *count = *count + 1;
-	    TRACE(("swapLocally fg %#lx, bg %#lx ->%d\n", fg_color,
-		   bg_color, *count));
+	    TRACE(("swapLocally fg %#lx, bg %#lx ->%d\n",
+		   fg_color, bg_color, *count));
 	}
     }
 }
@@ -1942,7 +1967,7 @@ ReverseVideo(XtermWidget xw)
      * We don't swap colors that happen to match the screen's foreground
      * and background because that tends to produce bizarre effects.
      */
-#define swapAnyColor(name,a,b) swapLocally(listToSwap, &numToSwap, &(screen->name[a]), &(screen->name[b]))
+#define swapAnyColor(name,a,b) swapLocally(listToSwap, &numToSwap, &(screen->name[a]), &(screen->name[b]) hc_value)
 #define swapAColor(a,b) swapAnyColor(Acolors, a, b)
     if_OPT_ISO_COLORS(screen, {
 	swapAColor(0, 7);
@@ -3137,19 +3162,32 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 	    cgsId = gcNormReverse;
 	}
 
+#if OPT_HIGHLIGHT_COLOR
+	if (!screen->hilite_color) {
+	    if (selbg_pix != T_COLOR(screen, TEXT_FG)
+		&& selbg_pix != fg_pix
+		&& selbg_pix != bg_pix
+		&& selbg_pix != xw->dft_foreground) {
+		bg_pix = fg_pix;
+		fg_pix = selbg_pix;
+	    }
+	}
+#endif
 	EXCHANGE(fg_pix, bg_pix, xx_pix);
 #if OPT_HIGHLIGHT_COLOR
-	if (screen->hilite_reverse) {
-	    if (use_selbg) {
+	if (screen->hilite_color) {
+	    if (screen->hilite_reverse) {
+		if (use_selbg) {
+		    if (use_selfg)
+			bg_pix = fg_pix;
+		    else
+			fg_pix = bg_pix;
+		}
+		if (use_selbg)
+		    bg_pix = selbg_pix;
 		if (use_selfg)
-		    bg_pix = fg_pix;
-		else
-		    fg_pix = bg_pix;
+		    fg_pix = selfg_pix;
 	    }
-	    if (use_selbg)
-		bg_pix = selbg_pix;
-	    if (use_selfg)
-		fg_pix = selfg_pix;
 	}
 #endif
     } else {
@@ -3160,11 +3198,13 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 	}
     }
 #if OPT_HIGHLIGHT_COLOR
-    if (hilite && !screen->hilite_reverse) {
-	if (use_selbg)
-	    bg_pix = selbg_pix;
-	if (use_selfg)
-	    fg_pix = selfg_pix;
+    if (!screen->hilite_color) {
+	if (hilite && !screen->hilite_reverse) {
+	    if (use_selbg)
+		bg_pix = selbg_pix;
+	    if (use_selfg)
+		fg_pix = selfg_pix;
+	}
     }
 #endif
 

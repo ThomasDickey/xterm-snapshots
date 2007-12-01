@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.497 2007/11/26 17:45:50 Sergey.Vlasov Exp $ */
+/* $XTermId: ptyx.h,v 1.498 2007/11/28 21:40:17 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1303,6 +1303,7 @@ typedef struct {
 	gid_t		gid;		/* group id of actual person	*/
 	ColorRes	Tcolors[NCOLORS]; /* terminal colors		*/
 #if OPT_HIGHLIGHT_COLOR
+	Boolean		hilite_color;	/* hilite colors override	*/
 	Boolean		hilite_reverse;	/* hilite overrides reverse	*/
 #endif
 #if OPT_ISO_COLORS
