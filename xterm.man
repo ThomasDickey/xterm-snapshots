@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.394 2007/11/26 18:39:04 tom Exp $
+.\" $XTermId: xterm.man,v 1.395 2007/11/30 01:25:39 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -526,6 +526,18 @@ It sets the \fBhpFunctionKeys\fP resource to ``true''.
 This option indicates that HP Function Key escape codes should not be generated
 for function keys.
 It sets the \fBhpFunctionKeys\fP resource to ``false''.
+.TP 8
+.BI -hm
+Tells \fIxterm\fP to use
+\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+to override the reversed foreground/background colors in a selection.
+It sets the \fBhighlightColorMode\fP resource to ``true''.
+.TP 8
+.BI +hm
+Tells \fIxterm\fP not to use
+\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+to override the reversed foreground/background colors in a selection.
+It sets the \fBhighlightColorMode\fP resource to ``false''.
 .TP 8
 .BI -hold
 Turn on the \fBhold\fP resource, i.e.,
@@ -2055,6 +2067,15 @@ There is no default for this resource.
 Specifies the color to use for the background of selected (highlighted) text.
 If not specified (i.e., matching the default foreground), reverse video is used.
 The default is ``XtDefaultForeground.''
+.TP 8
+.B "highlightColorMode (\fPclass\fB HighlightColorMode)"
+Specifies whether \fIxterm\fP should use
+\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+to override the reversed foreground/background colors in a selection.
+The default is unspecified:
+at startup, \fIxterm\fP checks if those resources are set to something
+other than the default foreground and background colors.
+Setting this resource disables the check.
 .TP 8
 .B "highlightReverse (\fPclass\fB HighlightReverse)"
 Specifies whether \fIxterm\fP should reverse the selection foreground

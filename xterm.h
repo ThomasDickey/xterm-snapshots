@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.483 2007/11/26 17:45:50 Sergey.Vlasov Exp $ */
+/* $XTermId: xterm.h,v 1.485 2007/11/29 21:15:20 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -328,6 +328,8 @@ extern char **environ;
 
 #define XK_Fn(n)	(XK_F1 + (n) - 1)
 
+#define Maybe		2
+
 /***====================================================================***/
 
 #define XtNallowC1Printable	"allowC1Printable"
@@ -393,6 +395,7 @@ extern char **environ;
 #define XtNforceBoxChars	"forceBoxChars"
 #define XtNfreeBoldBox		"freeBoldBox"
 #define XtNhighlightColor	"highlightColor"
+#define XtNhighlightColorMode	"highlightColorMode"
 #define XtNhighlightReverse	"highlightReverse"
 #define XtNhighlightSelection	"highlightSelection"
 #define XtNhighlightTextColor	"highlightTextColor"
@@ -537,6 +540,7 @@ extern char **environ;
 #define XtCFontStyle		"FontStyle"
 #define XtCForceBoxChars	"ForceBoxChars"
 #define XtCFreeBoldBox		"FreeBoldBox"
+#define XtCHighlightColorMode	"HighlightColorMode"
 #define XtCHighlightReverse	"HighlightReverse"
 #define XtCHighlightSelection	"HighlightSelection"
 #define XtCHpLowerleftBugCompat	"HpLowerleftBugCompat"
@@ -1077,6 +1081,8 @@ extern void TabSet (Tabs  /* tabs */, int  /* col */);
 extern void TabZonk (Tabs  /* tabs */);
 
 /* util.c */
+extern Boolean isDefaultBackground(const char * /* name */);
+extern Boolean isDefaultForeground(const char * /* name */);
 extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned  /* fg_bg */, Bool  /* hilite */);
 extern int AddToRefresh (XtermWidget /* xw */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
@@ -1236,7 +1242,7 @@ unsigned visual_width(PAIRED_CHARS(Char * /* str */, Char * /* str2 */), Cardina
 #define visual_width(a, b) (b)
 #endif
 
-#define BtoS(b)    ((b) ? "on" : "off")
+#define BtoS(b)    (((b) == Maybe) ? "maybe" : ((b) ? "on" : "off"))
 #define NonNull(s) ((s) ? (s) : "<null>")
 
 #ifdef __cplusplus

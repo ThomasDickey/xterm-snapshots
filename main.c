@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.574 2007/07/22 20:02:22 tom Exp $ */
+/* $XTermId: main.c,v 1.577 2007/11/30 01:24:11 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -863,6 +863,8 @@ static XrmOptionDescRec optionDescList[] = {
 #endif
 #if OPT_HIGHLIGHT_COLOR
 {"-hc",		"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
+{"-hm",		"*highlightColorMode", XrmoptionNoArg,	(caddr_t) "on"},
+{"+hm",		"*highlightColorMode", XrmoptionNoArg,	(caddr_t) "off"},
 {"-selfg",	"*highlightTextColor", XrmoptionSepArg,	(caddr_t) NULL},
 {"-selbg",	"*highlightColor", XrmoptionSepArg,	(caddr_t) NULL},
 #endif
@@ -1047,6 +1049,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+cu",                 "turn on/off curses emulation" },
 { "-/+dc",                 "turn off/on dynamic color selection" },
 #if OPT_HIGHLIGHT_COLOR
+{ "-/+hm",                 "turn on/off selection-color override" },
 { "-selbg color",          "selection background color" },
 { "-selfg color",          "selection foreground color" },
 #endif
@@ -2396,13 +2399,9 @@ main(int argc, char *argv[]ENVP_ARG)
 
     if ((reversed && term->misc.re_verse0)
 	&& ((term->screen.Tcolors[TEXT_FG].resource
-	     && (x_strcasecmp(term->screen.Tcolors[TEXT_FG].resource,
-			      XtDefaultForeground) != 0)
-	    )
+	     && !isDefaultForeground(term->screen.Tcolors[TEXT_FG].resource))
 	    || (term->screen.Tcolors[TEXT_BG].resource
-		&& (x_strcasecmp(term->screen.Tcolors[TEXT_BG].resource,
-				 XtDefaultBackground) != 0)
-	    )
+		&& !isDefaultBackground(term->screen.Tcolors[TEXT_BG].resource))
 	))
 	ReverseVideo(term);
 #endif /* OPT_COLOR_RES */
