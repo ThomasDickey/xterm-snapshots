@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
-# $XTermId: tcapquery.pl,v 1.10 2006/07/20 00:37:00 tom Exp $
-# $XFree86: xc/programs/xterm/vttests/tcapquery.pl,v 1.3 2006/03/13 01:28:02 dickey Exp $
+# $XTermId: tcapquery.pl,v 1.11 2007/12/02 20:02:04 tom Exp $
 #
 # -- Thomas Dickey (2004/3/3)
 # Test the tcap-query option of xterm.
@@ -19,6 +18,9 @@ sub get_reply($) {
 	my $reply=<TTY>;
 	close TTY;
 	system "stty $old";
+	if ( defined $reply ) {
+		die("^C received\n") if ( "$reply" eq "\003" );
+	}
 	return $reply;
 }
 
