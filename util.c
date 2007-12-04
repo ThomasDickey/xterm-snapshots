@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.388 2007/12/01 00:20:57 tom Exp $ */
+/* $XTermId: util.c,v 1.389 2007/12/04 01:23:35 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -3198,7 +3198,7 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 	}
     }
 #if OPT_HIGHLIGHT_COLOR
-    if (!screen->hilite_color) {
+    if (!screen->hilite_color || !screen->hilite_reverse) {
 	if (hilite && !screen->hilite_reverse) {
 	    if (use_selbg)
 		bg_pix = selbg_pix;

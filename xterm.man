@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.395 2007/11/30 01:25:39 tom Exp $
+.\" $XTermId: xterm.man,v 1.396 2007/12/04 00:26:43 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -2084,6 +2084,7 @@ This applies only to
 the \fBhighlightColor\fP and \fBhighlightTextColor\fP resources,
 e.g., to match the color scheme of \fIxwsh\fP.
 If ``true'', \fIxterm\fP reverses the colors,
+If ``false'', \fIxterm\fP does not reverse colors,
 The default is ``true.''
 .TP 8
 .B "highlightSelection (\fPclass\fB HighlightSelection)"
