@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.370 2007/07/22 20:34:04 tom Exp $ */
+/* $XTermId: misc.c,v 1.371 2007/12/06 00:10:14 tom Exp $ */
 
 /*
  *
@@ -2717,6 +2717,14 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		    if (code == XK_COLORS) {
 			unparseputn(xw, NUM_ANSI_COLORS);
 		    } else
+#endif
+#if OPT_TCAP_FKEYS
+			/*
+			 * First ensure that we handle the extended cursor- and
+			 * editing-keypad keys.
+			 */
+			if ((code <= XK_Fn(MAX_FKEY))
+			    || xtermcapString(xw, CodeToXkey(code), 0) == 0)
 #endif
 		    {
 			XKeyEvent event;
