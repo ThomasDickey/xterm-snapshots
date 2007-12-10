@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.611 2007/12/04 01:53:59 tom Exp $
+  $XTermId: xterm.log.html,v 1.613 2007/12/09 23:14:55 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -280,6 +280,15 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>extend configure options
+	    <code>--enable-tcap-query</code> and
+	    <code>--enable-tcap-fkeys</code> to
+	    send cursor- and editing-keypad keys modified according to the
+	    keyboard (or termcap) selection for shift, alt, control, meta.
+
+	<li>modify <code>kdch1</code> in termcap, e.g., <code>xterm-r6</code>
+	    to match the terminfo file.
+
 	<li>add <code>-hm</code> option to turn <code>highlightColorMode</code>
 	    on or off.
 

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.485 2007/11/29 21:15:20 tom Exp $ */
+/* $XTermId: xterm.h,v 1.486 2007/12/09 20:20:08 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -815,6 +815,8 @@ extern GC xterm_DoubleGC(XtermWidget /* xw */, unsigned  /* chrset */, unsigned 
 #endif
 
 /* input.c */
+extern int xtermParamToState (XtermWidget /* xw */, unsigned /* param */);
+extern int xtermStateToParam (XtermWidget /* xw */, unsigned /* state */);
 extern Bool xtermDeleteIsDEL (XtermWidget /* xw */);
 extern void Input (XtermWidget /* xw */, XKeyEvent */* event */, Bool /* eightbit */);
 extern void StringInput (XtermWidget /* xw */, Char * /* string */, size_t  /* nbytes */);

@@ -1,10 +1,10 @@
-# $XTermId: VTparse.def,v 1.29 2006/07/31 22:17:10 tom Exp $
+# $XTermId: VTparse.def,v 1.30 2007/12/04 21:14:30 tom Exp $
+#
+# vile:txtmode rs=lf
 #
 # List of symbols that need to be defined for VTparse.h.  If you need to
 # change any of the CASE_ macros, make the change here and rerun the command
 # shown in VTparse.h.
-#
-# $XFree86: xc/programs/xterm/VTparse.def,v 3.18 2006/02/13 01:14:58 dickey Exp $
 #
 
 CASE_GROUND_STATE

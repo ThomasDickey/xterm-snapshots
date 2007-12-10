@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.148 2007/06/16 18:47:51 tom Exp $
+## $XTermId: Makefile.in,v 1.150 2007/12/04 21:31:17 tom Exp $
 ##
 ## $XFree86: xc/programs/xterm/Makefile.in,v 3.56 2006/06/19 00:36:50 dickey Exp $ ##
 ##
@@ -294,6 +294,9 @@ realclean : distclean
 
 maintainer-clean : realclean
 	-$(RM) 256colres.h 88colres.h
+################################################################################
+terminfo.out : terminfo		; tic -a -I -1 terminfo >$@
+termcap.out : termcap		; tic -a -C -U termcap >$@
 ################################################################################
 ctlseqs.html : ctlseqs.ms
 ctlseqs.pdf : ctlseqs.ps
