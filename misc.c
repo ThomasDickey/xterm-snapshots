@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.371 2007/12/06 00:10:14 tom Exp $ */
+/* $XTermId: misc.c,v 1.372 2007/12/12 00:20:00 tom Exp $ */
 
 /*
  *
@@ -277,6 +277,57 @@ do_xevents(void)
 }
 
 void
+xtermDisplayCursor(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->Vshow) {
+	if (screen->hide_pointer) {
+	    XDefineCursor(screen->display, VWindow(screen), screen->hidden_cursor);
+	} else {
+	    recolor_cursor(screen,
+			   screen->pointer_cursor,
+			   T_COLOR(screen, MOUSE_FG),
+			   T_COLOR(screen, MOUSE_BG));
+	    XDefineCursor(screen->display, VWindow(screen), screen->pointer_cursor);
+	}
+    }
+}
+
+void
+xtermShowPointer(XtermWidget xw, Boolean enable)
+{
+    static int tried = -1;
+    TScreen *screen = TScreenOf(xw);
+
+    if (enable) {
+	if (screen->hide_pointer) {
+	    screen->hide_pointer = False;
+	    xtermDisplayCursor(xw);
+	    switch (screen->send_mouse_pos) {
+	    case ANY_EVENT_MOUSE:
+		break;
+	    default:
+		MotionOff(screen, xw);
+		break;
+	    }
+	}
+    } else if (!(screen->hide_pointer) && (tried <= 0)) {
+	if (screen->hidden_cursor == 0) {
+	    screen->hidden_cursor = make_hidden_cursor();
+	}
+	if (screen->hidden_cursor == 0) {
+	    tried = 1;
+	} else {
+	    tried = 0;
+	    screen->hide_pointer = True;
+	    xtermDisplayCursor(xw);
+	    MotionOn(screen, xw);
+	}
+    }
+}
+
+void
 xevents(void)
 {
     XtermWidget xw = term;
@@ -348,9 +399,30 @@ xevents(void)
 	    ((event.xany.type != KeyPress) &&
 	     (event.xany.type != KeyRelease) &&
 	     (event.xany.type != ButtonPress) &&
-	     (event.xany.type != ButtonRelease)))
+	     (event.xany.type != ButtonRelease))) {
+	    xtermShowPointer(xw, True);
 	    XtDispatchEvent(&event);
+	}
     } while ((input_mask = XtAppPending(app_con)) & XtIMXEvent);
+}
+
+Cursor
+make_hidden_cursor(void)
+{
+    TScreen *screen = TScreenOf(term);
+    Cursor c;
+    Display *dpy = screen->display;
+    Font fn = XLoadFont(dpy, "fixed");
+
+    static XColor dummy;
+
+    if (fn != 0) {
+	c = XCreateGlyphCursor(dpy, fn, fn, 'X', '.', &dummy, &dummy);
+    } else {
+	c = 0;
+    }
+    TRACE(("XCreateGlyphCursor ->%#lx\n", c));
+    return (c);
 }
 
 Cursor
