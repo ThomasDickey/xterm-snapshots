@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.498 2007/11/28 21:40:17 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.499 2007/12/11 21:51:31 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1421,7 +1421,9 @@ typedef struct {
 	VTwin		*whichVwin;
 #endif /* NO_ACTIVE_ICON */
 
-	Cursor	pointer_cursor;		/* pointer cursor in window	*/
+	Boolean 	hide_pointer;	/* true to use "hidden_cursor"  */
+	Cursor		pointer_cursor;	/* pointer cursor in window	*/
+	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
 	String	answer_back;		/* response to ENQ		*/
 	String	printer_command;	/* pipe/shell command string	*/

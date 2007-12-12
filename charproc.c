@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.816 2007/11/30 01:45:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.817 2007/12/12 01:02:29 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -3717,8 +3717,16 @@ ansi_modes(XtermWidget xw,
 #define set_bool_mode(flag) \
 	flag = (IsSM()) ? ON : OFF
 
-#define set_mousemode(mode) \
-	screen->send_mouse_pos = IsSM() ? mode : MOUSE_OFF
+static void
+really_set_mousemode(XtermWidget xw,
+		     Boolean enabled,
+		     unsigned mode)
+{
+    xw->screen.send_mouse_pos = enabled ? mode : MOUSE_OFF;
+    xtermShowPointer(xw, enabled);
+}
+
+#define set_mousemode(mode) really_set_mousemode(xw, IsSM(), mode)
 
 #if OPT_READLINE
 #define set_mouseflag(f)		\

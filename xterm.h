@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.486 2007/12/09 20:20:08 tom Exp $ */
+/* $XTermId: xterm.h,v 1.487 2007/12/12 00:09:43 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -863,6 +863,7 @@ extern void show_8bit_control  (Bool  /* value */);
 /* misc.c */
 extern Bool AllocateTermColor(XtermWidget, ScrnColors *, int, const char *);
 extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long  /* fg */, unsigned long  /* bg */);
+extern Cursor make_hidden_cursor (void);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
 extern Window WMFrameWindow(XtermWidget /* termw */);
 extern XrmOptionDescRec * sortedOptDescs(XrmOptionDescRec *, Cardinal);
@@ -913,7 +914,9 @@ extern void timestamp_filename(char * /* dst */, const char * /* src */);
 extern void xevents (void);
 extern void xt_error (String  /* message */);
 extern void xtermCopyEnv (char ** /* oldenv */);
+extern void xtermDisplayCursor (XtermWidget /* xw */);
 extern void xtermSetenv (char * /* var */, char * /* value */);
+extern void xtermShowPointer (XtermWidget /* xw */, Boolean /* enable */);
 
 #if OPT_DABBREV
 extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;

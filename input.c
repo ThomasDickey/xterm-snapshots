@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.293 2007/12/09 21:50:36 tom Exp $ */
+/* $XTermId: input.c,v 1.294 2007/12/12 00:11:16 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1335,6 +1335,7 @@ Input(XtermWidget xw,
     if (key && !TEK4014_ACTIVE(xw))
 	AdjustAfterInput(xw);
 
+    xtermShowPointer(xw, False);
     return;
 }
 
