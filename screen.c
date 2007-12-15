@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.224 2007/11/26 17:45:50 Sergey.Vlasov Exp $ */
+/* $XTermId: screen.c,v 1.226 2007/12/13 01:34:12 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -1709,19 +1709,12 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 	if (validRect(xw, &target)) {
 	    unsigned high = (source->bottom - source->top) + 1;
 	    unsigned wide = (source->right - source->left) + 1;
-	    unsigned size = (high * wide);
-	    int row, col, n;
+	    unsigned size = (high * wide * MAX_PTRS);
+	    int row, col, n, j;
 
-	    Char *attrs = TypeMallocN(Char, size);
-	    Char *chars = TypeMallocN(Char, size);
+	    Char *cells = TypeMallocN(Char, size);
 
-#if OPT_WIDE_CHARS
-	    Char *widec = TypeMallocN(Char, size);
-	    if (widec == 0)
-		return;
-#endif
-	    if (attrs == 0
-		|| chars == 0)
+	    if (cells == 0)
 		return;
 
 	    TRACE(("OK - make copy %dx%d\n", high, wide));
@@ -1730,12 +1723,10 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 
 	    for (row = source->top - 1; row < source->bottom; ++row) {
 		for (col = source->left - 1; col < source->right; ++col) {
-		    n = ((1 + row - source->top) * wide) + (1 + col - source->left);
-		    attrs[n] = SCRN_BUF_ATTRS(screen, row)[col] | CHARDRAWN;
-		    chars[n] = SCRN_BUF_CHARS(screen, row)[col];
-		    if_OPT_WIDE_CHARS(screen, {
-			widec[n] = SCRN_BUF_WIDEC(screen, row)[col];
-		    })
+		    n = (((1 + row - source->top) * wide)
+			 + (1 + col - source->left)) * MAX_PTRS;
+		    for (j = OFF_ATTRS; j < MAX_PTRS; ++j)
+			cells[n + j] = SCREEN_PTR(screen, row, j)[col];
 		}
 	    }
 	    for (row = target.top - 1; row < target.bottom; ++row) {
@@ -1744,20 +1735,15 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 			&& row <= getMaxRow(screen)
 			&& col >= getMinCol(screen)
 			&& col <= getMaxCol(screen)) {
-			n = ((1 + row - target.top) * wide) + (1 + col - target.left);
-			SCRN_BUF_ATTRS(screen, row)[col] = attrs[n];
-			SCRN_BUF_CHARS(screen, row)[col] = chars[n];
-			if_OPT_WIDE_CHARS(screen, {
-			    SCRN_BUF_WIDEC(screen, row)[col] = widec[n];
-			})
+			n = (((1 + row - target.top) * wide)
+			     + (1 + col - target.left)) * MAX_PTRS;
+			for (j = OFF_ATTRS; j < MAX_PTRS; ++j)
+			    SCREEN_PTR(screen, row, j)[col] = cells[n + j];
+			SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
 		    }
 		}
 	    }
-	    free(attrs);
-	    free(chars);
-#if OPT_WIDE_CHARS
-	    free(widec);
-#endif
+	    free(cells);
 
 	    ScrnUpdate(xw,
 		       (target.top - 1),
@@ -1879,7 +1865,7 @@ ScrnMarkRectangle(XtermWidget xw,
 
 /*
  * Resets characters to space, except where prohibited by DECSCA.  Video
- * attributes are untouched.
+ * attributes (including color) are untouched.
  */
 void
 ScrnWipeRectangle(XtermWidget xw,
@@ -1902,11 +1888,13 @@ ScrnWipeRectangle(XtermWidget xw,
 	    for (col = left; col <= right; ++col) {
 		if (!((screen->protected_mode == DEC_PROTECT)
 		      && (SCRN_BUF_ATTRS(screen, row)[col] & PROTECTED))) {
-		    /* FIXME - use ClearCells */
 		    SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
 		    SCRN_BUF_CHARS(screen, row)[col] = ' ';
 		    if_OPT_WIDE_CHARS(screen, {
-			SCRN_BUF_WIDEC(screen, row)[col] = '\0';
+			int off;
+			for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
+			    memset(SCREEN_PTR(screen, row, off) + col, 0, 1);
+			}
 		    })
 		}
 	    }

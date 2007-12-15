@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.61 2007/03/05 01:09:40 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.62 2007/12/15 15:47:26 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.h,v 1.17 2006/02/13 01:14:59 dickey Exp $
@@ -64,7 +64,7 @@ extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsig
 
 #if OPT_BOX_CHARS
 extern Bool xtermMissingChar (XtermWidget /* xw */, unsigned /* ch */, XFontStruct */* font */);
-extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */);
+extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
 #endif
 
 #if OPT_LOAD_VTFONTS
