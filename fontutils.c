@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.251 2007/08/05 00:11:55 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.252 2007/12/15 16:10:16 tom Exp $ */
 
 /************************************************************
 
@@ -1789,7 +1789,8 @@ xtermDrawBoxChar(XtermWidget xw,
 		 unsigned flags,
 		 GC gc,
 		 int x,
-		 int y)
+		 int y,
+		 int cells)
 {
     TScreen *screen = &(xw->screen);
     /* *INDENT-OFF* */
@@ -1972,6 +1973,9 @@ xtermDrawBoxChar(XtermWidget xw,
     const short *p;
     unsigned font_width = ((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
     unsigned font_height = ((flags & DOUBLEHFONT) ? 2 : 1) * screen->fnt_high;
+
+    if (cells > 1)
+	font_width *= cells;
 
 #if OPT_WIDE_CHARS
     /*

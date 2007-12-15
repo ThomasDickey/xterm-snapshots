@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.817 2007/12/12 01:02:29 tom Exp $ */
+/* $XTermId: charproc.c,v 1.818 2007/12/12 23:38:01 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -4005,6 +4005,11 @@ dpmodes(XtermWidget xw,
 		    CursorRestore(xw);
 	    }
 	    break;
+#if OPT_TCAP_FKEYS
+	case 1050:
+	    set_keyboard_type(xw, keyboardIsTermcap, IsSM());
+	    break;
+#endif
 #if OPT_SUN_FUNC_KEYS
 	case 1051:
 	    set_keyboard_type(xw, keyboardIsSun, IsSM());

@@ -743,7 +743,7 @@ Optional Features:
   --disable-rightbar      disable right-scrollbar support
   --disable-samename      disable check for redundant name-change
   --disable-session-mgt   disable support for session management
-  --enable-tcap-fkeys     compile-in termcap function-keys support
+  --enable-tcap-fkeys     disable termcap function-keys support
   --enable-tcap-query     compile-in termcap-query support
   --disable-tek4014       disable tek4014 emulation
   --enable-toolbar        compile-in toolbar for pulldown menus
@@ -753,7 +753,7 @@ Optional Features:
   --enable-wide-chars     enable wide-character support
   --enable-dabbrev        enable dynamic-abbreviation support
   --enable-dec-locator    enable DECterm Locator support
-  --enable-rectangles     enable VT420 rectangle support
+  --disable-rectangles    disable VT420 rectangle support
   --disable-ziconbeep     disable -ziconbeep option
 Testing/development Options:
   --enable-trace          test: set to enable debugging traces
@@ -11333,15 +11333,15 @@ echo $ECHO_N "checking if you want to use termcap function-keys... $ECHO_C" >&6
 # Check whether --enable-tcap-fkeys or --disable-tcap-fkeys was given.
 if test "${enable_tcap_fkeys+set}" = set; then
   enableval="$enable_tcap_fkeys"
-  test "$enableval" != yes && enableval=no
-  if test "$enableval" != "no" ; then
-    enable_tcap_fkeys=yes
-  else
+  test "$enableval" != no && enableval=yes
+  if test "$enableval" != "yes" ; then
     enable_tcap_fkeys=no
+  else
+    enable_tcap_fkeys=yes
   fi
 else
-  enableval=no
-  enable_tcap_fkeys=no
+  enableval=yes
+  enable_tcap_fkeys=yes
 
 fi;
 echo "$as_me:11347: result: $enable_tcap_fkeys" >&5
@@ -11707,15 +11707,15 @@ echo $ECHO_N "checking if you want VT420 rectangle support... $ECHO_C" >&6
 # Check whether --enable-rectangles or --disable-rectangles was given.
 if test "${enable_rectangles+set}" = set; then
   enableval="$enable_rectangles"
-  test "$enableval" != yes && enableval=no
-  if test "$enableval" != "no" ; then
-    enable_rectangles=yes
-  else
+  test "$enableval" != no && enableval=yes
+  if test "$enableval" != "yes" ; then
     enable_rectangles=no
+  else
+    enable_rectangles=yes
   fi
 else
-  enableval=no
-  enable_rectangles=no
+  enableval=yes
+  enable_rectangles=yes
 
 fi;
 echo "$as_me:11721: result: $enable_rectangles" >&5

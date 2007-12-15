@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.182 2007/11/26 16:28:10 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.183 2007/12/12 23:39:18 tom Exp $
 .\"
 .\"
 .\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.60 2006/03/13 01:27:53 dickey Exp $
@@ -788,6 +788,7 @@ and use Alternate Screen Buffer, clearing it first (unless
 disabled by the \fBtiteInhibit\fP resource).
 This combines the effects of the \*1\*0\*4\*7 and \*1\*0\*4\*8 modes.
 Use this with terminfo-based applications rather than the \*4\*7 mode.
+  \*(Ps = \*1\*0\*5\*0 \(-> Set terminfo/termcap function-key mode.
   \*(Ps = \*1\*0\*5\*1 \(-> Set Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Set HP function-key mode.
   \*(Ps = \*1\*0\*5\*3 \(-> Set SCO function-key mode.
@@ -869,6 +870,7 @@ as in DECRC (unless
 disabled by the \fBtiteInhibit\fP resource).
 This combines the effects of the \*1\*0\*4\*7 and \*1\*0\*4\*8 modes.
 Use this with terminfo-based applications rather than the \*4\*7 mode.
+  \*(Ps = \*1\*0\*5\*0 \(-> Reset terminfo/termcap function-key mode.
   \*(Ps = \*1\*0\*5\*1 \(-> Reset Sun function-key mode.
   \*(Ps = \*1\*0\*5\*2 \(-> Reset HP function-key mode.
   \*(Ps = \*1\*0\*5\*3 \(-> Reset SCO function-key mode.

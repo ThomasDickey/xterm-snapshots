@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.389 2007/12/04 01:23:35 tom Exp $ */
+/* $XTermId: util.c,v 1.390 2007/12/15 16:09:56 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1883,8 +1883,8 @@ typedef struct {
 #define hc_param ,Bool hilite_color
 #define hc_value ,screen->hilite_color
 #else
-#define hc_param /* nothing */
-#define hc_value /* nothing */
+#define hc_param		/* nothing */
+#define hc_value		/* nothing */
 #endif
 
 /*
@@ -2302,20 +2302,27 @@ ucs_workaround(XtermWidget xw,
 	unsigned eqv = AsciiEquivs(ch);
 
 	if (eqv != ch) {
+	    int width = my_wcwidth((int) ch);
 	    Char text[2];
 	    Char text2[2];
 
 	    text[0] = eqv;
 	    text2[0] = 0;
-	    drawXtermText(xw,
-			  flags,
-			  gc,
-			  x,
-			  y,
-			  chrset,
-			  PAIRED_CHARS(text, text2),
-			  1,
-			  on_wide);
+
+	    do {
+		drawXtermText(xw,
+			      flags,
+			      gc,
+			      x,
+			      y,
+			      chrset,
+			      PAIRED_CHARS(text, text2),
+			      1,
+			      on_wide);
+		x += FontWidth(screen);
+		text[0] = '?';
+	    } while (width-- > 1);
+
 	    fixed = True;
 	} else if (ch == HIDDEN_CHAR) {
 	    fixed = True;
@@ -2767,7 +2774,7 @@ drawXtermText(XtermWidget xw,
 		    screen->fnt_wide = FontWidth(screen);
 		    screen->fnt_high = FontHeight(screen);
 		    xtermDrawBoxChar(xw, ch, flags, gc,
-				     curX, y - FontAscent(screen));
+				     curX, y - FontAscent(screen), 1);
 		    curX += FontWidth(screen);
 		    underline_len += 1;
 		    screen->fnt_wide = old_wide;
@@ -2853,6 +2860,8 @@ drawXtermText(XtermWidget xw,
 	    unsigned ch = text[last];
 	    Bool isMissing;
 #if OPT_WIDE_CHARS
+	    int ch_width;
+
 	    if (text2 != 0)
 		ch |= (text2[last] << 8);
 	    if (ch == HIDDEN_CHAR) {
@@ -2861,9 +2870,10 @@ drawXtermText(XtermWidget xw,
 		first = last + 1;
 		continue;
 	    }
+	    ch_width = my_wcwidth((int) ch);
 	    isMissing =
 		xtermMissingChar(xw, ch,
-				 ((on_wide || my_wcwidth((int) ch) > 1)
+				 ((on_wide || ch_width > 1)
 				  && okFont(NormalWFont(screen)))
 				 ? NormalWFont(screen)
 				 : font);
@@ -2877,7 +2887,9 @@ drawXtermText(XtermWidget xw,
 		if (!ucs_workaround(xw, ch, flags, gc, DrawX(last), y,
 				    chrset, on_wide))
 #endif
-		    xtermDrawBoxChar(xw, ch, flags, gc, DrawX(last), y);
+		    xtermDrawBoxChar(xw, ch, flags, gc, DrawX(last), y, ch_width);
+		if (ch_width > 1)
+		    x += (ch_width - 1) * FontWidth(screen);
 		first = last + 1;
 	    }
 	}

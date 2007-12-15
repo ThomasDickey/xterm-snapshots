@@ -344,6 +344,7 @@ CSI ? Pm h
           titeInhibit resource).  This combines the effects of the 1 0 4
           7  and 1 0 4 8  modes.  Use this with terminfo-based applica-
           tions rather than the 4 7  mode.
+            Ps = 1 0 5 0  -> Set terminfo/termcap function-key mode.
             Ps = 1 0 5 1  -> Set Sun function-key mode.
             Ps = 1 0 5 2  -> Set HP function-key mode.
             Ps = 1 0 5 3  -> Set SCO function-key mode.
@@ -422,6 +423,7 @@ CSI ? Pm l
           This combines the effects of the 1 0 4 7  and 1 0 4 8  modes.
           Use this with terminfo-based applications rather than the 4 7
           mode.
+            Ps = 1 0 5 0  -> Reset terminfo/termcap function-key mode.
             Ps = 1 0 5 1  -> Reset Sun function-key mode.
             Ps = 1 0 5 2  -> Reset HP function-key mode.
             Ps = 1 0 5 3  -> Reset SCO function-key mode.
@@ -505,9 +507,17 @@ CSI Ps n  Device Status Report (DSR)
             Ps = 5  -> Status Report CSI 0 n  (``OK'')
             Ps = 6  -> Report Cursor Position (CPR) [row;column] as
           CSI r ; c R
-CSI > n   Set resource-value modifyFunctionKeys used by xterm to allow
-          user to construct extended-numbering function keys using
-          shift- and control-modifiers.
+CSI Ps> n Disable modifiers which may be enabled via the CSI > Ps; Ps m
+          sequence.  This corresponds to a resource value of "-1", which
+          cannot be set with the other sequence.  The parameter identi-
+          fies the resource to be disabled:
+            -> 1  modifyCursorKeys
+            -> 2  modifyFunctionKeys
+            -> 4  modifyOtherKeys If the parameter is omitted, modify-
+          FunctionKeys is disabled.  When modifyFunctionKeys is dis-
+          abled, xterm uses the modifier keys to make an extended
+          sequence of functions rather than adding a parameter to each
+          function key to denote the modifiers.
 CSI ? Ps n
           Device Status Report (DSR, DEC-specific)
             Ps = 6  -> Report Cursor Position (CPR) [row;column] as CSI
