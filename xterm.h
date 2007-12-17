@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.487 2007/12/12 00:09:43 tom Exp $ */
+/* $XTermId: xterm.h,v 1.488 2007/12/16 18:00:05 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/xterm.h,v 3.117 2006/06/19 00:36:52 dickey Exp $ */
 
@@ -998,7 +998,7 @@ extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, 
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* n */, int  /* last */, unsigned  /* size */, unsigned  /* where */);
 extern void ScrnDisownSelection (XtermWidget /* xw */);
-extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int ,  unsigned);
+extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int ,  unsigned /* flags */, Boolean /* keepColors */);
 extern void ScrnInsertChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* last */, int  /* where */, unsigned  /* n */, unsigned  /* size */);
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);

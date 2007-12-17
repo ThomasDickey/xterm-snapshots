@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.818 2007/12/12 23:38:01 tom Exp $ */
+/* $XTermId: charproc.c,v 1.819 2007/12/16 17:59:38 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
 
@@ -2277,7 +2277,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    set_tb_margins(screen, 0, screen->max_row);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    xtermParseRect(xw, 0, 0, &myRect);
-	    ScrnFillRectangle(xw, &myRect, 'E', 0);
+	    ScrnFillRectangle(xw, &myRect, 'E', 0, False);
 	    sp->parsestate = sp->groundtable;
 	    break;
 
@@ -2646,7 +2646,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECERA:
 	    TRACE(("CASE_DECERA - Erase rectangular area\n"));
 	    xtermParseRect(xw, nparam, param, &myRect);
-	    ScrnFillRectangle(xw, &myRect, ' ', 0);
+	    ScrnFillRectangle(xw, &myRect, ' ', 0, True);
 	    sp->parsestate = sp->groundtable;
 	    break;
 
@@ -2656,7 +2656,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		&& ((param[0] >= 32 && param[0] <= 126)
 		    || (param[0] >= 160 && param[0] <= 255))) {
 		xtermParseRect(xw, nparam - 1, param + 1, &myRect);
-		ScrnFillRectangle(xw, &myRect, param[0], xw->flags);
+		ScrnFillRectangle(xw, &myRect, param[0], xw->flags, True);
 	    }
 	    sp->parsestate = sp->groundtable;
 	    break;

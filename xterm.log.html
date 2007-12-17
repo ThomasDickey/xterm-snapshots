@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.616 2007/12/15 16:12:13 tom Exp $
+  $XTermId: xterm.log.html,v 1.618 2007/12/16 18:23:14 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -280,6 +280,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify rectangle-support functions to preserve colors when
+	    filling/erasing (request by Enzo Toscano, to match WRQ Reflection
+	    behavior).
+
+	<li>add getopt-parsing to tcapquery.pl, including feature to test the
+	    extended cursor/editing keys.
+
 	<li>make missing double-width glyphs display as double-width
 	    (Debian #456236).
 

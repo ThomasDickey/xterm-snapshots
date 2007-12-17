@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.226 2007/12/13 01:34:12 tom Exp $ */
+/* $XTermId: screen.c,v 1.230 2007/12/16 19:37:09 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -1620,10 +1620,10 @@ xtermParseRect(XtermWidget xw, int nparams, int *params, XTermRect * target)
     TScreen *screen = &(xw->screen);
 
     memset(target, 0, sizeof(*target));
-    target->top = (nparams > 0) ? params[0] : getMinRow(screen) + 1;
-    target->left = (nparams > 1) ? params[1] : getMinCol(screen) + 1;
-    target->bottom = (nparams > 2) ? params[2] : getMaxRow(screen) + 1;
-    target->right = (nparams > 3) ? params[3] : getMaxCol(screen) + 1;
+    target->top = (nparams > 0) ? params[0] : (getMinRow(screen) + 1);
+    target->left = (nparams > 1) ? params[1] : (getMinCol(screen) + 1);
+    target->bottom = (nparams > 2) ? params[2] : (getMaxRow(screen) + 1);
+    target->right = (nparams > 3) ? params[3] : (getMaxCol(screen) + 1);
     TRACE(("parsed rectangle %d,%d %d,%d\n",
 	   target->top,
 	   target->left,
@@ -1649,29 +1649,62 @@ validRect(XtermWidget xw, XTermRect * target)
 }
 
 /*
- * Fills a rectangle with the given character and video-attributes.
+ * Fills a rectangle with the given 8-bit character and video-attributes.
+ * Colors and double-size attribute are unmodified.
  */
 void
-ScrnFillRectangle(XtermWidget xw, XTermRect * target, int value, unsigned flags)
+ScrnFillRectangle(XtermWidget xw,
+		  XTermRect * target,
+		  int value,
+		  unsigned flags,
+		  Boolean keepColors)
 {
     TScreen *screen = &(xw->screen);
 
-    TRACE(("filling rectangle with '%c'\n", value));
+    TRACE(("filling rectangle with '%c' flags %#x\n", value, flags));
     if (validRect(xw, target)) {
 	unsigned left = target->left - 1;
 	unsigned size = target->right - left;
 	Char attrs = flags;
-	int row;
+	int row, col;
 
 	attrs &= ATTRIBUTES;
 	attrs |= CHARDRAWN;
 	for (row = target->bottom - 1; row >= (target->top - 1); row--) {
-	    TRACE(("filling %d [%d..%d]\n", row, left + 1, left + size));
-	    memset(SCRN_BUF_ATTRS(screen, row) + left, attrs, size);
+	    TRACE(("filling %d [%d..%d]\n", row, left, left + size));
+
+	    /*
+	     * Fill attributes, preserving "protected" flag, as well as
+	     * colors if asked.
+	     */
+	    for (col = left; col < target->right; ++col) {
+		Char temp = SCRN_BUF_ATTRS(screen, row)[col];
+		if (!keepColors) {
+		    temp &= ~(FG_COLOR | BG_COLOR);
+		}
+		temp = attrs | (temp & (FG_COLOR | BG_COLOR | PROTECTED));
+		temp |= CHARDRAWN;
+		SCRN_BUF_ATTRS(screen, row)[col] = temp;
+#if OPT_ISO_COLORS
+		if (attrs & (FG_COLOR | BG_COLOR)) {
+		    if_OPT_EXT_COLORS(screen, {
+			SCRN_BUF_FGRND(screen, row)[col] = xw->sgr_foreground;
+			SCRN_BUF_BGRND(screen, row)[col] = xw->cur_background;
+		    });
+		    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+			SCRN_BUF_COLOR(screen, row)[col] = xtermColorPair(xw);
+		    });
+		}
+#endif
+	    }
+
 	    memset(SCRN_BUF_CHARS(screen, row) + left, (Char) value, size);
 	    if_OPT_WIDE_CHARS(screen, {
-		bzero(SCRN_BUF_WIDEC(screen, row) + left, size);
-	    });
+		int off;
+		for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
+		    memset(SCREEN_PTR(screen, row, off) + left, 0, size);
+		}
+	    })
 	}
 	ScrnUpdate(xw,
 		   target->top - 1,
@@ -1756,7 +1789,13 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 }
 
 /*
- * Modifies the video-attributes only - so selection is unaffected.
+ * Modifies the video-attributes only - so selection (not a video attribute) is
+ * unaffected.  Colors and double-size flags are unaffected as well.
+ *
+ * FIXME: our representation for "invisible" does not work with this operation,
+ * since the attribute byte is fully-allocated for other flags.  The logic
+ * is shown for INVISIBLE because it's harmless, and useful in case the
+ * CHARDRAWN or PROTECTED flags are reassigned.
  */
 void
 ScrnMarkRectangle(XtermWidget xw,
@@ -1788,7 +1827,7 @@ ScrnMarkRectangle(XtermWidget xw,
 			 ? (target->right - 1)
 			 : getMaxCol(screen));
 
-	    TRACE(("marking %d [%d..%d]\n", row, left + 1, right + 1));
+	    TRACE(("marking %d [%d..%d]\n", row, left, right));
 	    for (col = left; col <= right; ++col) {
 		unsigned flags = SCRN_BUF_ATTRS(screen, row)[col];
 
@@ -1811,6 +1850,9 @@ ScrnMarkRectangle(XtermWidget xw,
 			case 7:
 			    flags ^= INVERSE;
 			    break;
+			case 8:
+			    flags ^= INVISIBLE;
+			    break;
 			}
 		    } else {
 			switch (params[n]) {
@@ -1829,6 +1871,9 @@ ScrnMarkRectangle(XtermWidget xw,
 			case 7:
 			    flags |= INVERSE;
 			    break;
+			case 8:
+			    flags |= INVISIBLE;
+			    break;
 			case 22:
 			    flags &= ~BOLD;
 			    break;
@@ -1840,6 +1885,9 @@ ScrnMarkRectangle(XtermWidget xw,
 			    break;
 			case 27:
 			    flags &= ~INVERSE;
+			    break;
+			case 28:
+			    flags &= ~INVISIBLE;
 			    break;
 			}
 		    }
@@ -1884,7 +1932,7 @@ ScrnWipeRectangle(XtermWidget xw,
 	    int left = (target->left - 1);
 	    int right = (target->right - 1);
 
-	    TRACE(("wiping %d [%d..%d]\n", row, left + 1, right + 1));
+	    TRACE(("wiping %d [%d..%d]\n", row, left, right));
 	    for (col = left; col <= right; ++col) {
 		if (!((screen->protected_mode == DEC_PROTECT)
 		      && (SCRN_BUF_ATTRS(screen, row)[col] & PROTECTED))) {
