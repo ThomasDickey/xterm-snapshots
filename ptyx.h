@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.499 2007/12/11 21:51:31 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.502 2007/12/26 18:18:45 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -285,6 +285,8 @@ typedef struct {
 #define isSameRow(a,b)		((a)->row == (b)->row)
 #define isSameCol(a,b)		((a)->col == (b)->col)
 #define isSameCELL(a,b)		(isSameRow(a,b) && isSameCol(a,b))
+
+#define xBIT(n)         (1 << (n))
 
 /*
  * ANSI emulation, special character codes
@@ -1008,12 +1010,14 @@ extern int A2E(int);
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
-#define PAIRED_CHARS(a,b) a,b
+#define PAIRED_CHARS(lo,hi)	lo,hi
+#define PACK_PAIR(lo,hi,n)	(lo[n] | (hi ? (hi[n] << 8) : 0))
 typedef unsigned IChar;		/* for 8 or 16-bit characters, plus flag */
 #else
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
 #define if_WIDE_OR_NARROW(screen, wide, narrow) narrow
-#define PAIRED_CHARS(a,b) a
+#define PAIRED_CHARS(lo,hi)	lo
+#define PACK_PAIR(lo,hi,n)	lo[n]
 typedef unsigned char IChar;	/* for 8-bit characters */
 #endif
 
@@ -1939,11 +1943,11 @@ extern WidgetClass tekWidgetClass;
 #endif
 
 /* define masks for keyboard.flags */
-#define MODE_KAM	0x01	/* keyboard action mode */
-#define MODE_DECKPAM	0x02	/* keypad application mode */
-#define MODE_DECCKM	0x04	/* cursor keys */
-#define MODE_SRM	0x08	/* send-receive mode */
-#define MODE_DECBKM	0x10	/* backarrow */
+#define MODE_KAM	xBIT(0)	/* keyboard action mode */
+#define MODE_DECKPAM	xBIT(1)	/* keypad application mode */
+#define MODE_DECCKM	xBIT(2)	/* cursor keys */
+#define MODE_SRM	xBIT(3)	/* send-receive mode */
+#define MODE_DECBKM	xBIT(4)	/* backarrow */
 
 
 #define N_MARGINBELL	10
@@ -1998,57 +2002,67 @@ typedef struct _TekWidgetRec {
  * term->flags and screen->save_modes.  This need only fit in an unsigned.
  */
 
+#define AttrBIT(n)	xBIT(n)		/* text-attributes */
+#define DrawBIT(n)	xBIT(n + 8)	/* drawXtermText flags */
+#define MiscBIT(n)	xBIT(n + 16)	/* miscellaneous state flags */
+
 /* global flags and character flags (visible character attributes) */
-#define INVERSE		0x01	/* invert the characters to be output */
-#define UNDERLINE	0x02	/* true if underlining */
-#define BOLD		0x04
-#define BLINK		0x08
+#define INVERSE		AttrBIT(0)	/* invert the characters to be output */
+#define UNDERLINE	AttrBIT(1)	/* true if underlining */
+#define BOLD		AttrBIT(2)
+#define BLINK		AttrBIT(3)
 /* global flags (also character attributes) */
-#define BG_COLOR	0x10	/* true if background set */
-#define FG_COLOR	0x20	/* true if foreground set */
+#define BG_COLOR	AttrBIT(4)	/* true if background set */
+#define FG_COLOR	AttrBIT(5)	/* true if foreground set */
 
 /* character flags (internal attributes) */
-#define PROTECTED	0x40	/* a character is drawn that cannot be erased */
-#define CHARDRAWN	0x80    /* a character has been drawn here on the
-				   screen.  Used to distinguish blanks from
-				   empty parts of the screen when selecting */
+#define PROTECTED	AttrBIT(6)	/* a character that cannot be erased */
+#define CHARDRAWN	AttrBIT(7)	/* a character has been drawn here on
+					   the screen.  Used to distinguish
+					   blanks from empty parts of the
+					   screen when selecting */
+
+/* The following attributes are used in the argument of drawXtermText()  */
+#define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
+#define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
+#define DOUBLEWFONT	DrawBIT(2)	/* The actual X-font is double-width */
+#define DOUBLEHFONT	DrawBIT(3)	/* The actual X-font is double-height */
+#define CHARBYCHAR	DrawBIT(4)	/* Draw chars one-by-one */
+
+/* The following attribute is used in the argument of xtermSpecialFont etc */
+#define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
+
+/*
+ * Other flags
+ */
+#define WRAPAROUND	MiscBIT(0)	/* true if auto wraparound mode */
+#define	REVERSEWRAP	MiscBIT(1)	/* true if reverse wraparound mode */
+#define REVERSE_VIDEO	MiscBIT(2)	/* true if screen white on black */
+#define LINEFEED	MiscBIT(3)	/* true if in auto linefeed mode */
+#define ORIGIN		MiscBIT(4)	/* true if in origin mode */
+#define INSERT		MiscBIT(5)	/* true if in insert mode */
+#define SMOOTHSCROLL	MiscBIT(6)	/* true if in smooth scroll mode */
+#define IN132COLUMNS	MiscBIT(7)	/* true if in 132 column mode */
+#define INVISIBLE	MiscBIT(8)	/* true if writing invisible text */
+#define NATIONAL        MiscBIT(9)	/* true if writing national charset */
+
+/*
+ * Groups of attributes
+ */
+			/* mask for video-attributes only */
+#define SGR_MASK	(BOLD | BLINK | UNDERLINE | INVERSE)
+
+			/* mask: user-visible attributes */
+#define	ATTRIBUTES	(SGR_MASK | BG_COLOR | FG_COLOR | INVISIBLE | PROTECTED)
+
+/* The toplevel-call to drawXtermText() should have text-attributes guarded: */
+#define DRAWX_MASK	(ATTRIBUTES | CHARDRAWN)
 
 #if OPT_BLINK_TEXT
 #define BOLDATTR(screen) (BOLD | ((screen)->blink_as_bold ? BLINK : 0))
 #else
 #define BOLDATTR(screen) (BOLD | BLINK)
 #endif
-
-/* The following attributes make sense in the argument of drawXtermText()  */
-#define NOBACKGROUND	0x100	/* Used for overstrike */
-#define NOTRANSLATION	0x200	/* No scan for chars missing in font */
-#define NATIVEENCODING	0x400	/* strings are in the font encoding */
-#define DOUBLEWFONT	0x800	/* The actual X-font is double-width */
-#define DOUBLEHFONT	0x1000	/* The actual X-font is double-height */
-#define CHARBYCHAR	0x2000	/* Draw chars one-by-one */
-
-/* The toplevel-call to drawXtermText() should have text-attributes guarded: */
-#define DRAWX_MASK	0xff	/* text flags should be bitand'ed */
-
-/* The following attribute makes sense in the argument of xtermSpecialFont etc */
-#define NORESOLUTION	0x800000	/* find the font without resolution */
-
-			/* mask: user-visible attributes */
-#define	ATTRIBUTES	(INVERSE|UNDERLINE|BOLD|BLINK|BG_COLOR|FG_COLOR|INVISIBLE|PROTECTED)
-
-			/* mask for video-attributes only */
-#define SGR_MASK	(BOLD|BLINK|UNDERLINE|INVERSE)
-
-#define WRAPAROUND	0x400	/* true if auto wraparound mode */
-#define	REVERSEWRAP	0x800	/* true if reverse wraparound mode */
-#define REVERSE_VIDEO	0x1000	/* true if screen white on black */
-#define LINEFEED	0x2000	/* true if in auto linefeed mode */
-#define ORIGIN		0x4000	/* true if in origin mode */
-#define INSERT		0x8000	/* true if in insert mode */
-#define SMOOTHSCROLL	0x10000	/* true if in smooth scroll mode */
-#define IN132COLUMNS	0x20000	/* true if in 132 column mode */
-#define INVISIBLE	0x40000	/* true if writing invisible text */
-#define NATIONAL       0x100000 /* true if writing national charset */
 
 /*
  * Per-line flags

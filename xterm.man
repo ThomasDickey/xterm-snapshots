@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.396 2007/12/04 00:26:43 tom Exp $
+.\" $XTermId: xterm.man,v 1.397 2007/12/26 00:52:45 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -2041,7 +2041,8 @@ When using an ISO-10646-1 font and the \fBwideChars\fP resource is true,
 .IP
 If ``false'', \fIxterm\fP checks for missing glyphs in the font
 and makes line-drawing characters directly as needed.
-If ``true'', \fIxterm\fP uses whatever is in the font without checking.
+If ``true'', \fIxterm\fP assumes the font does not contain the
+line-drawing characters, and draws them directly.
 The default is ``false.''
 .TP 8
 .B "foreground (\fPclass\fB Foreground)"

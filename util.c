@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.390 2007/12/15 16:09:56 tom Exp $ */
+/* $XTermId: util.c,v 1.394 2007/12/26 18:21:04 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -2725,60 +2725,105 @@ drawXtermText(XtermWidget xw,
 
 	y += font->ascent;
 #if OPT_BOX_CHARS
-	if (!screen->force_box_chars) {
+	{
 	    /* adding code to substitute simulated line-drawing characters */
 	    int last, first = 0;
 	    Dimension old_wide, old_high = 0;
 	    int curX = x;
 
 	    for (last = 0; last < (int) len; last++) {
-		unsigned ch = text[last];
+		Boolean replace = False;
+		Boolean missing = False;
+		unsigned ch = PACK_PAIR(text, text2, last);
+		int nc;
+		Char temp[2];
+#if OPT_WIDE_CHARS
+		Char temp2[2];
+#endif
+
+		if (xtermIsDecGraphic(ch)) {
+		    /*
+		     * Xft generally does not have the line-drawing characters
+		     * in cells 1-31.  Check for this, and attempt to fill in
+		     * from real line-drawing character in the font at the
+		     * Unicode position.  Failing that, use our own
+		     * box-characters.
+		     */
+		    if (xtermXftMissing(xw, font, ch)) {
+			if (screen->force_box_chars
+			    || xtermXftMissing(xw, font, dec2ucs(ch))) {
+			    missing = 1;
+			} else {
+			    ch = dec2ucs(ch);
+			    replace = True;
+			}
+		    }
+		}
+#if OPT_WIDE_CHARS
+		else if (ch > 256) {
+		    /*
+		     * If we're reading UTF-8 from the client, we may have a
+		     * line-drawing character.  Translate it back to our
+		     * box-code if Xft tells us that the glyph is missing.
+		     */
+		    if_OPT_WIDE_CHARS(screen, {
+			unsigned part = ucs2dec(ch);
+			if (xtermIsDecGraphic(part) &&
+			    (screen->force_box_chars
+			     || xtermXftMissing(xw, font, ch))) {
+			    ch = part;
+			    missing = True;
+			}
+		    });
+		}
+#endif
 
 		/*
-		 * If we're reading UTF-8 from the client, we may have a
-		 * line-drawing character.  Translate it back to our box-code
-		 * if it is really a line-drawing character (since the
-		 * fonts used by Xft generally do not have correct glyphs),
-		 * or if Xft can tell us that the glyph is really missing.
+		 * If we now have one of our box-codes, draw it directly.
 		 */
-		if_OPT_WIDE_CHARS(screen, {
-		    unsigned full = (ch | (text2[last] << 8));
-		    unsigned part = ucs2dec(full);
-		    if (xtermIsDecGraphic(part) &&
-			(xtermIsLineDrawing(part)
-			 || xtermXftMissing(xw, font, full)))
-			ch = part;
-		    else
-			ch = full;
-		});
-		/*
-		 * If we have one of our box-codes, draw it directly.
-		 */
-		if (xtermIsDecGraphic(ch)) {
+		if (missing || replace) {
 		    /* line drawing character time */
 		    if (last > first) {
-			int nc = drawClippedXftString(xw,
-						      flags,
-						      font,
-						      getXftColor(xw, values.foreground),
-						      curX,
-						      y,
-						      PAIRED_CHARS(text + first,
-								   text2 + first),
-						      (Cardinal) (last - first));
+			nc = drawClippedXftString(xw,
+						  flags,
+						  font,
+						  getXftColor(xw, values.foreground),
+						  curX,
+						  y,
+						  PAIRED_CHARS(text + first,
+							       text2 + first),
+						  (Cardinal) (last - first));
 			curX += nc * FontWidth(screen);
 			underline_len += nc;
 		    }
-		    old_wide = screen->fnt_wide;
-		    old_high = screen->fnt_high;
-		    screen->fnt_wide = FontWidth(screen);
-		    screen->fnt_high = FontHeight(screen);
-		    xtermDrawBoxChar(xw, ch, flags, gc,
-				     curX, y - FontAscent(screen), 1);
-		    curX += FontWidth(screen);
-		    underline_len += 1;
-		    screen->fnt_wide = old_wide;
-		    screen->fnt_high = old_high;
+		    if (missing) {
+			old_wide = screen->fnt_wide;
+			old_high = screen->fnt_high;
+			screen->fnt_wide = FontWidth(screen);
+			screen->fnt_high = FontHeight(screen);
+			xtermDrawBoxChar(xw, ch, flags, gc,
+					 curX, y - FontAscent(screen), 1);
+			curX += FontWidth(screen);
+			underline_len += 1;
+			screen->fnt_wide = old_wide;
+			screen->fnt_high = old_high;
+		    } else {
+			temp[0] = ch;
+#if OPT_WIDE_CHARS
+			temp2[0] = (ch >> 8);
+#endif
+			nc = drawClippedXftString(xw,
+						  flags,
+						  font,
+						  getXftColor(xw, values.foreground),
+						  curX,
+						  y,
+						  PAIRED_CHARS(temp,
+							       temp2),
+						  1);
+			curX += nc * FontWidth(screen);
+			underline_len += nc;
+		    }
 		    first = last + 1;
 		}
 	    }
@@ -2794,8 +2839,8 @@ drawXtermText(XtermWidget xw,
 						      text2 + first),
 					 (Cardinal) (last - first));
 	    }
-	} else
-#endif /* OPT_BOX_CHARS */
+	}
+#else
 	{
 	    underline_len +=
 		drawClippedXftString(xw,
@@ -2807,6 +2852,7 @@ drawXtermText(XtermWidget xw,
 				     PAIRED_CHARS(text, text2),
 				     len);
 	}
+#endif /* OPT_BOX_CHARS */
 
 	if ((flags & UNDERLINE) && screen->underline && !did_ul) {
 	    if (FontDescent(screen) > 1)
@@ -2857,13 +2903,11 @@ drawXtermText(XtermWidget xw,
 			     : NormalFont(screen));
 	int last, first = 0;
 	for (last = 0; last < (int) len; last++) {
-	    unsigned ch = text[last];
+	    unsigned ch = PACK_PAIR(text, text2, last);
 	    Bool isMissing;
 #if OPT_WIDE_CHARS
 	    int ch_width;
 
-	    if (text2 != 0)
-		ch |= (text2[last] << 8);
 	    if (ch == HIDDEN_CHAR) {
 		if (last > first)
 		    DrawSegment(first, last);
@@ -2880,6 +2924,23 @@ drawXtermText(XtermWidget xw,
 #else
 	    isMissing = xtermMissingChar(xw, ch, font);
 #endif
+	    /*
+	     * If the character is not missing, but we're in wide-character
+	     * mode and the character happens to be a wide-character that
+	     * corresponds to the line-drawing set, allow the forceBoxChars
+	     * resource (or menu entry) to force it to display using our
+	     * tables.
+	     */
+	    if_OPT_WIDE_CHARS(screen, {
+		if (!isMissing
+		    && ch > 255
+		    && ucs2dec(ch) < 32
+		    && xw->screen.force_box_chars) {
+		    ch = ucs2dec(ch);
+		    isMissing = True;
+		}
+	    });
+
 	    if (isMissing) {
 		if (last > first)
 		    DrawSegment(first, last);
@@ -2940,7 +3001,7 @@ drawXtermText(XtermWidget xw,
 	}
 
 	for (src = dst = 0; src < (int) len; src++) {
-	    unsigned ch = text[src] | (text2[src] << 8);
+	    unsigned ch = PACK_PAIR(text, text2, src);
 
 	    if (ch == HIDDEN_CHAR)
 		continue;
@@ -3361,11 +3422,9 @@ ClearCurBackground(XtermWidget xw,
 unsigned
 getXtermCell(TScreen * screen, int row, int col)
 {
-    unsigned ch = SCRN_BUF_CHARS(screen, row)[col];
-    if_OPT_WIDE_CHARS(screen, {
-	ch |= (SCRN_BUF_WIDEC(screen, row)[col] << 8);
-    });
-    return ch;
+    return PACK_PAIR(SCRN_BUF_CHARS(screen, row),
+		     SCRN_BUF_WIDEC(screen, row),
+		     col);
 }
 
 /*
@@ -3388,9 +3447,9 @@ putXtermCell(TScreen * screen, int row, int col, int ch)
 unsigned
 getXtermCellComb(TScreen * screen, int row, int col, int off)
 {
-    unsigned ch = SCREEN_PTR(screen, row, off)[col];
-    ch |= (SCREEN_PTR(screen, row, off + 1)[col] << 8);
-    return ch;
+    return PACK_PAIR(SCREEN_PTR(screen, row, off),
+		     SCREEN_PTR(screen, row, off + 1),
+		     col);
 }
 
 /*

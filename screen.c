@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.230 2007/12/16 19:37:09 tom Exp $ */
+/* $XTermId: screen.c,v 1.231 2007/12/26 18:35:24 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -539,16 +539,14 @@ ScrnWriteText(XtermWidget xw,
 	    char2 = SCRN_BUF_WIDEC(screen, screen->cur_row);
 	    char2 += screen->cur_col;
 	    if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
-		&& iswide(char1[-1] | (char2[-1] << 8))) {
+		&& iswide(PACK_PAIR(char1, char2, -1))) {
 		char1[-1] = ERROR_1;
 		char2[-1] = ERROR_2;
 	    }
 	    /* if we are overwriting the right hand half of a
 	       wide character, make the other half vanish */
 	    while (length) {
-		int ch = *str;
-		if (str2)
-		    ch |= *str2 << 8;
+		int ch = PACK_PAIR(str, str2, 0);
 
 		*char1 = *str;
 		char1++;
@@ -584,14 +582,14 @@ ScrnWriteText(XtermWidget xw,
 	    if ((char2 = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
 		char2 += screen->cur_col;
 		if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
-		    && iswide(chars[-1] | (char2[-1] << 8))) {
+		    && iswide(PACK_PAIR(chars, char2, -1))) {
 		    chars[-1] = ERROR_1;
 		    char2[-1] = ERROR_2;
 		}
 		/* if we are overwriting the right hand half of a
 		   wide character, make the other half vanish */
 		if (chars[length] == HIDDEN_LO && char2[length] == HIDDEN_HI &&
-		    iswide(starcol2 | (char2[length - 1] << 8))) {
+		    iswide(PACK_PAIR(chars, char2, length - 1))) {
 		    chars[length] = ERROR_1;
 		    char2[length] = ERROR_2;
 		}
@@ -1037,8 +1035,8 @@ ScrnRefresh(XtermWidget xw,
 		/* adjust to redraw all of a widechar if we just wanted
 		   to draw the right hand half */
 		if (leftcol > 0 &&
-		    (chars[leftcol] | (widec[leftcol] << 8)) == HIDDEN_CHAR &&
-		    iswide(chars[leftcol - 1] | (widec[leftcol - 1] << 8))) {
+		    (PACK_PAIR(chars, widec, leftcol)) == HIDDEN_CHAR &&
+		    iswide(PACK_PAIR(chars, widec, leftcol - 1))) {
 		    leftcol--;
 		    ncols++;
 		    col = leftcol;
@@ -1140,7 +1138,7 @@ ScrnRefresh(XtermWidget xw,
 	flags = attrs[col];
 #if OPT_WIDE_CHARS
 	if (widec)
-	    wideness = iswide(chars[col] | (widec[col] << 8));
+	    wideness = iswide(PACK_PAIR(chars, widec, col));
 	else
 	    wideness = 0;
 #endif
@@ -1177,8 +1175,8 @@ ScrnRefresh(XtermWidget xw,
 #endif
 #if OPT_WIDE_CHARS
 		|| (widec
-		    && ((iswide(chars[col] | (widec[col] << 8))) != wideness)
-		    && !((chars[col] | (widec[col] << 8)) == HIDDEN_CHAR))
+		    && ((iswide(PACK_PAIR(chars, widec, col))) != wideness)
+		    && !((PACK_PAIR(chars, widec, col)) == HIDDEN_CHAR))
 #endif
 #if OPT_DEC_CHRSET
 		|| (cb[col] != cs)
@@ -1213,8 +1211,8 @@ ScrnRefresh(XtermWidget xw,
 			    int my_x = CurCursorX(screen,
 						  ROW2INX(screen, row),
 						  i);
-			    int base = chars[i] | (widec[i] << 8);
-			    int combo = com_lo[i] | (com_hi[i] << 8);
+			    int base = PACK_PAIR(chars, widec, i);
+			    int combo = PACK_PAIR(com_lo, com_hi, i);
 
 			    if (iswide(base))
 				my_x = CurCursorX(screen,
@@ -1256,7 +1254,7 @@ ScrnRefresh(XtermWidget xw,
 		});
 #if OPT_WIDE_CHARS
 		if (widec)
-		    wideness = iswide(chars[col] | (widec[col] << 8));
+		    wideness = iswide(PACK_PAIR(chars, widec, col));
 #endif
 
 		gc = updatedXtermGC(xw, flags, fg_bg, hilite);
@@ -1299,8 +1297,8 @@ ScrnRefresh(XtermWidget xw,
 		    int my_x = CurCursorX(screen,
 					  ROW2INX(screen, row),
 					  i);
-		    int base = chars[i] | (widec[i] << 8);
-		    int combo = com_lo[i] | (com_hi[i] << 8);
+		    int base = PACK_PAIR(chars, widec, i);
+		    int combo = PACK_PAIR(com_lo, com_hi, i);
 
 		    if (iswide(base))
 			my_x = CurCursorX(screen,
