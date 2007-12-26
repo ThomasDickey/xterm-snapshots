@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.252 2007/12/15 16:10:16 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.254 2007/12/26 14:38:40 tom Exp $ */
 
 /************************************************************
 
@@ -1750,7 +1750,7 @@ xtermMissingChar(XtermWidget xw, unsigned ch, XFontStruct * font)
 	    return True;
 	}
     }
-    if (ch < 32
+    if (xtermIsDecGraphic(ch)
 	&& xw->screen.force_box_chars) {
 	TRACE(("xtermMissingChar %#04x (forced off)\n", ch));
 	return True;
@@ -2140,7 +2140,8 @@ xtermXftMissing(XtermWidget xw, XftFont * font, unsigned wc)
 
     if (font != 0) {
 	if (!XftGlyphExists(xw->screen.display, font, wc)) {
-	    TRACE(("missingXft %d (%d)\n", wc, ucs2dec(wc)));
+	    TRACE(("xtermXftMissing %d (dec=%#x, ucs=%#x)\n",
+		   wc, ucs2dec(wc), dec2ucs(wc)));
 	    result = True;
 	}
     }
@@ -2240,7 +2241,7 @@ unsigned
 dec2ucs(unsigned ch)
 {
     unsigned result = ch;
-    if (ch < 32) {
+    if (xtermIsDecGraphic(ch)) {
 	switch (ch) {
 	    MY_UCS(0x25ae, 0);	/* black vertical rectangle                   */
 	    MY_UCS(0x25c6, 1);	/* black diamond                              */

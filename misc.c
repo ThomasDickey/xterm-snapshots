@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.372 2007/12/12 00:20:00 tom Exp $ */
+/* $XTermId: misc.c,v 1.373 2007/12/25 22:32:43 tom Exp $ */
 
 /*
  *
@@ -1177,6 +1177,8 @@ Redraw(void)
 {
     TScreen *screen = TScreenOf(term);
     XExposeEvent event;
+
+    TRACE(("Redraw\n"));
 
     event.type = Expose;
     event.display = screen->display;

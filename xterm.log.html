@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.618 2007/12/16 18:23:14 tom Exp $
+  $XTermId: xterm.log.html,v 1.620 2007/12/26 01:17:49 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -280,6 +280,14 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify logic for <code>forceBoxChars</code> resource when using
+	    TrueType fonts to be consistent with bitmap fonts
+
+	<li>modify logic for <code>forceBoxChars</code> resource to make the
+	    "Line-Drawing Characters" menu entry use xterm's line-drawing
+	    characters even asked to draw wide line-drawing characters which
+	    are available in the font.
+
 	<li>modify rectangle-support functions to preserve colors when
 	    filling/erasing (request by Enzo Toscano, to match WRQ Reflection
 	    behavior).

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.279 2007/11/26 17:45:50 Sergey.Vlasov Exp $ */
+/* $XTermId: button.c,v 1.280 2007/12/26 01:20:53 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1041,7 +1041,7 @@ struct _SelectionList {
 static unsigned
 DECtoASCII(unsigned ch)
 {
-    if (ch < 32) {
+    if (xtermIsDecGraphic(ch)) {
 	ch = "###########+++++##-##++++|######"[ch];
 	/*    01234567890123456789012345678901 */
     }
@@ -1079,7 +1079,7 @@ UTF8toLatin1(Char * s, unsigned len, unsigned long *result)
 		*q++ = value;
 	    } else {
 		unsigned eqv = ucs2dec(value);
-		if (eqv < 32) {
+		if (xtermIsDecGraphic(eqv)) {
 		    *q++ = DECtoASCII(eqv);
 		} else {
 		    eqv = AsciiEquivs(value);
