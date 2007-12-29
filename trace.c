@@ -1,8 +1,4 @@
-/* $XTermId: trace.c,v 1.81 2007/07/22 16:27:25 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/trace.c,v 3.23 2005/09/18 23:48:13 dickey Exp $
- */
+/* $XTermId: trace.c,v 1.82 2007/12/28 18:20:43 tom Exp $ */
 
 /************************************************************
 
@@ -158,6 +154,30 @@ formatAscii(char *dst, unsigned value)
 	break;
     }
 }
+
+#if OPT_DEC_CHRSET
+
+const char *
+visibleChrsetName(int chrset)
+{
+    const char *result = "?";
+    switch (chrset) {
+    case CSET_SWL:
+	result = "CSET_SWL";
+	break;
+    case CSET_DHL_TOP:
+	result = "CSET_DHL_TOP";
+	break;
+    case CSET_DHL_BOT:
+	result = "CSET_DHL_BOT";
+	break;
+    case CSET_DWL:
+	result = "CSET_DWL";
+	break;
+    }
+    return result;
+}
+#endif
 
 char *
 visibleChars(PAIRED_CHARS(Char * buf, Char * buf2), unsigned len)

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.254 2007/12/26 14:38:40 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.257 2007/12/26 21:42:10 tom Exp $ */
 
 /************************************************************
 
@@ -1795,36 +1795,36 @@ xtermDrawBoxChar(XtermWidget xw,
     TScreen *screen = &(xw->screen);
     /* *INDENT-OFF* */
     static const short glyph_ht[] = {
-	SEG(  0,	    0,		  0,	      5*MID_HIGH/6),	/* H */
+	SEG(1*BOX_WIDE/10,  0,		1*BOX_WIDE/10,5*MID_HIGH/6),	/* H */
 	SEG(6*BOX_WIDE/10,  0,		6*BOX_WIDE/10,5*MID_HIGH/6),
-	SEG(  0,	  5*MID_HIGH/12,6*BOX_WIDE/10,5*MID_HIGH/12),
+	SEG(1*BOX_WIDE/10,5*MID_HIGH/12,6*BOX_WIDE/10,5*MID_HIGH/12),
 	SEG(2*BOX_WIDE/10,  MID_HIGH,	  CHR_WIDE,	MID_HIGH),	/* T */
 	SEG(6*BOX_WIDE/10,  MID_HIGH,	6*BOX_WIDE/10,	CHR_HIGH),
 	-1
     }, glyph_ff[] = {
-	SEG(  0,	    0,		6*BOX_WIDE/10,	0),		/* F */
-	SEG(  0,	  5*MID_HIGH/12,6*CHR_WIDE/12,5*MID_HIGH/12),
-	SEG(  0,	    0,		0*BOX_WIDE/3, 5*MID_HIGH/6),
+	SEG(1*BOX_WIDE/10,  0,		6*BOX_WIDE/10,	0),		/* F */
+	SEG(1*BOX_WIDE/10,5*MID_HIGH/12,6*CHR_WIDE/12,5*MID_HIGH/12),
+	SEG(1*BOX_WIDE/10,  0,		0*BOX_WIDE/3, 5*MID_HIGH/6),
 	SEG(1*BOX_WIDE/3,   MID_HIGH,	  CHR_WIDE,	MID_HIGH),	/* F */
 	SEG(1*BOX_WIDE/3, 8*MID_HIGH/6,10*CHR_WIDE/12,8*MID_HIGH/6),
 	SEG(1*BOX_WIDE/3,   MID_HIGH,	1*BOX_WIDE/3,	CHR_HIGH),
 	-1
     }, glyph_lf[] = {
-	SEG(  0,	    0,		  0,	      5*MID_HIGH/6),	/* L */
-	SEG(  0,	  5*MID_HIGH/6,	6*BOX_WIDE/10,5*MID_HIGH/6),
+	SEG(1*BOX_WIDE/10,  0,		1*BOX_WIDE/10,9*MID_HIGH/12),	/* L */
+	SEG(1*BOX_WIDE/10,9*MID_HIGH/12,6*BOX_WIDE/10,9*MID_HIGH/12),
 	SEG(1*BOX_WIDE/3,   MID_HIGH,	  CHR_WIDE,	MID_HIGH),	/* F */
 	SEG(1*BOX_WIDE/3, 8*MID_HIGH/6,10*CHR_WIDE/12,8*MID_HIGH/6),
 	SEG(1*BOX_WIDE/3,   MID_HIGH,	1*BOX_WIDE/3,	CHR_HIGH),
 	-1
     }, glyph_nl[] = {
-	SEG(  0,	  5*MID_HIGH/6,	  0,		0),		/* N */
-	SEG(  0,	    0,		5*BOX_WIDE/6, 5*MID_HIGH/6),
+	SEG(1*BOX_WIDE/10,5*MID_HIGH/6, 1*BOX_WIDE/10,	0),		/* N */
+	SEG(1*BOX_WIDE/10,  0,		5*BOX_WIDE/6, 5*MID_HIGH/6),
 	SEG(5*BOX_WIDE/6, 5*MID_HIGH/6, 5*BOX_WIDE/6,	0),
 	SEG(1*BOX_WIDE/3,   MID_HIGH,	1*BOX_WIDE/3,	CHR_HIGH),	/* L */
 	SEG(1*BOX_WIDE/3,   CHR_HIGH,	  CHR_WIDE,	CHR_HIGH),
 	-1
     }, glyph_vt[] = {
-	SEG(  0,	    0,		5*BOX_WIDE/12,5*MID_HIGH/6),	/* V */
+	SEG(1*BOX_WIDE/10,   0,		5*BOX_WIDE/12,5*MID_HIGH/6),	/* V */
 	SEG(5*BOX_WIDE/12,5*MID_HIGH/6, 5*BOX_WIDE/6,	0),
 	SEG(2*BOX_WIDE/10,  MID_HIGH,	  CHR_WIDE,	MID_HIGH),	/* T */
 	SEG(6*BOX_WIDE/10,  MID_HIGH,	6*BOX_WIDE/10,	CHR_HIGH),
@@ -2049,13 +2049,13 @@ xtermDrawBoxChar(XtermWidget xw,
 	points[0].x = MID_WIDE;
 	points[0].y = BOX_HIGH / 4;
 
-	points[1].x = 3 * BOX_WIDE / 4;
+	points[1].x = 8 * BOX_WIDE / 8;
 	points[1].y = MID_HIGH;
 
 	points[2].x = points[0].x;
 	points[2].y = 3 * BOX_HIGH / 4;
 
-	points[3].x = BOX_WIDE / 4;
+	points[3].x = 0 * BOX_WIDE / 8;
 	points[3].y = points[1].y;
 
 	points[4].x = points[0].x;
@@ -2095,7 +2095,7 @@ xtermDrawBoxChar(XtermWidget xw,
 	SCALE_Y(y_coord);
 	SCALE_X(width);
 
-	XFillArc(screen->display,
+	XDrawArc(screen->display,
 		 VWindow(screen), gc2,
 		 x + x_coord, y + y_coord, width, width,
 		 0,
@@ -2144,43 +2144,6 @@ xtermXftMissing(XtermWidget xw, XftFont * font, unsigned wc)
 		   wc, ucs2dec(wc), dec2ucs(wc)));
 	    result = True;
 	}
-    }
-    return result;
-}
-
-/*
- * Check if the character corresponds to one of xterm's internal codes for
- * line-drawing characters.  That is only a subset of the 1-31 codes used for
- * graphic characters.  We want to know specifically about the line-drawing
- * characters because the fonts used by Xft do not always give useful glyphs
- * for line-drawing, and there is no reliable way to detect this.
- */
-Bool
-xtermIsLineDrawing(unsigned wc)
-{
-    Bool result;
-    switch (wc) {
-    case 0x0B:			/* lower_right_corner   */
-    case 0x0C:			/* upper_right_corner   */
-    case 0x0D:			/* upper_left_corner    */
-    case 0x0E:			/* lower_left_corner    */
-    case 0x0F:			/* cross                */
-    case 0x10:			/* scan_line_1          */
-    case 0x11:			/* scan_line_3          */
-    case 0x12:			/* scan_line_7          */
-    case 0x13:			/* scan_line_9          */
-    case 0x14:			/* horizontal_line      */
-    case 0x15:			/* left_tee             */
-    case 0x16:			/* right_tee            */
-    case 0x17:			/* bottom_tee           */
-    case 0x18:			/* top_tee              */
-    case 0x19:			/* vertical_line        */
-	result = True;
-	TRACE(("xtermIsLineDrawing %d\n", wc));
-	break;
-    default:
-	result = False;
-	break;
     }
     return result;
 }

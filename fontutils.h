@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.62 2007/12/15 15:47:26 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.63 2007/12/26 21:42:26 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/fontutils.h,v 1.17 2006/02/13 01:14:59 dickey Exp $
@@ -78,7 +78,6 @@ extern Bool xtermLoadWideFonts (XtermWidget /* w */, Bool /* nullOk */);
 #define xtermIsDecGraphic(ch)	((ch) > 0 && (ch) < 32)
 
 #if OPT_RENDERFONT && OPT_WIDE_CHARS
-extern Bool xtermIsLineDrawing (unsigned /* wc */);
 extern Bool xtermXftMissing (XtermWidget /* xw */, XftFont * /* font */, unsigned /* wc */);
 #endif
 

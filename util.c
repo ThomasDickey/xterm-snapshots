@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.394 2007/12/26 18:21:04 tom Exp $ */
+/* $XTermId: util.c,v 1.398 2007/12/28 22:00:46 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -2425,6 +2425,40 @@ xtermFillCells(XtermWidget xw,
     }
 }
 
+#if OPT_TRACE
+static void
+xtermSetClipRectangles(Display * dpy,
+		       GC gc,
+		       int x,
+		       int y,
+		       XRectangle * rp,
+		       Cardinal nr,
+		       int order)
+{
+#if 0
+    TScreen *screen = &(term->screen);
+    Drawable draw = VWindow(screen);
+
+    XSetClipMask(dpy, gc, None);
+    XDrawRectangle(screen->display, draw, gc,
+		   x + rp->x - 1,
+		   y + rp->y - 1,
+		   rp->width,
+		   rp->height);
+#endif
+
+    XSetClipRectangles(dpy, gc,
+		       x, y, rp, nr, order);
+    TRACE(("clipping @(%3d,%3d) (%3d,%3d)..(%3d,%3d)\n",
+	   y, x,
+	   rp->y, rp->x, rp->height, rp->width));
+}
+
+#else
+#define xtermSetClipRectangles(dpy, gc, x, y, rp, nr, order) \
+	    XSetClipRectangles(dpy, gc, x, y, rp, nr, order)
+#endif
+
 #if OPT_CLIP_BOLD
 /*
  * This special case is a couple of percent slower, but avoids a lot of pixel
@@ -2439,9 +2473,9 @@ xtermFillCells(XtermWidget xw,
 		clip.y = 0; \
 		clip.height = FontHeight(screen); \
 		clip.width = pwidth * plength; \
-		XSetClipRectangles(screen->display, gc, \
-				   clip_x, clip_y, \
-				   &clip, 1, Unsorted); \
+		xtermSetClipRectangles(screen->display, gc, \
+				       clip_x, clip_y, \
+				       &clip, 1, Unsorted); \
 	    }
 #define endClipping(screen,gc) \
 	    XSetClipMask(screen->display, gc, None)
@@ -2549,65 +2583,58 @@ drawXtermText(XtermWidget xw,
 	 * given that the icon font is usually nil or nil2, there
 	 * doesn't seem to be much point.
 	 */
+	int inx = 0;
 	GC gc2 = ((!IsIcon(screen) && screen->font_doublesize)
-		  ? xterm_DoubleGC(xw, (unsigned) chrset, flags, gc)
+		  ? xterm_DoubleGC(xw, (unsigned) chrset, flags, gc, &inx)
 		  : 0);
 
-	TRACE(("DRAWTEXT%c[%4d,%4d] (%d) %d:%s\n",
+	TRACE(("DRAWTEXT%c[%4d,%4d] (%d)%3d:%s\n",
 	       screen->cursor_state == OFF ? ' ' : '*',
 	       y, x, chrset, len,
 	       visibleChars(PAIRED_CHARS(text, text2), len)));
 
 	if (gc2 != 0) {		/* draw actual double-sized characters */
-	    /* Update the last-used cache of double-sized fonts */
-	    int inx = xterm_Double_index(xw, (unsigned) chrset, flags);
 	    XFontStruct *fs = screen->double_fonts[inx].fs;
-	    XRectangle rect, *rp = &rect;
-	    int nr = 1;
-	    int adjust;
 
-	    font_width *= 2;
-	    flags |= DOUBLEWFONT;
+#if OPT_RENDERFONT
+	    if (!xw->misc.render_font || IsIconWin(screen, WhichVWin(screen)))
+#endif
+	    {
+		XRectangle rect, *rp = &rect;
+		int nr = 1;
 
-	    rect.x = 0;
-	    rect.y = 0;
-	    rect.width = len * font_width;
-	    rect.height = FontHeight(screen);
+		font_width *= 2;
+		flags |= DOUBLEWFONT;
 
-	    switch (chrset) {
-	    case CSET_DHL_TOP:
-		rect.y = -(rect.height / 2);
-		y -= rect.y;
-		flags |= DOUBLEHFONT;
-		break;
-	    case CSET_DHL_BOT:
-		rect.y = (rect.height / 2);
-		y -= rect.y;
-		flags |= DOUBLEHFONT;
-		break;
-	    default:
-		nr = 0;
-		break;
+		rect.x = 0;
+		rect.y = 0;
+		rect.width = len * font_width;
+		rect.height = FontHeight(screen);
+
+		TRACE(("drawing %s\n", visibleChrsetName(chrset)));
+		switch (chrset) {
+		case CSET_DHL_TOP:
+		    rect.y = -(fs->ascent / 2);
+		    y -= rect.y;
+		    flags |= DOUBLEHFONT;
+		    break;
+		case CSET_DHL_BOT:
+		    rect.y = rect.height - (fs->ascent / 2);
+		    y -= rect.y;
+		    flags |= DOUBLEHFONT;
+		    break;
+		default:
+		    nr = 0;
+		    break;
+		}
+
+		if (nr) {
+		    xtermSetClipRectangles(screen->display, gc2,
+					   x, y, rp, nr, YXBanded);
+		} else {
+		    XSetClipMask(screen->display, gc2, None);
+		}
 	    }
-
-	    /*
-	     * Though it is the right "size", a given bold font may
-	     * be shifted up by a pixel or two.  Shift it back into
-	     * the clipping rectangle.
-	     */
-	    if (nr != 0) {
-		adjust = fs->ascent
-		    + fs->descent
-		    - (2 * FontHeight(screen));
-		rect.y -= adjust;
-		y += adjust;
-	    }
-
-	    if (nr)
-		XSetClipRectangles(screen->display, gc2,
-				   x, y, rp, nr, YXBanded);
-	    else
-		XSetClipMask(screen->display, gc2, None);
 
 	    /* Call ourselves recursively with the new gc */
 
