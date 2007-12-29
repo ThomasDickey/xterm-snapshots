@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.620 2007/12/26 01:17:49 tom Exp $
+  $XTermId: xterm.log.html,v 1.622 2007/12/28 22:00:28 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -280,6 +280,16 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>fixes/improvements for double-size characters:
+	    <ul>
+	    <li>correct clipping calculation
+
+	    <li>if bold font is unavailable, fall back to normal font
+
+	    <li>adjust to "work" with Xft (which does not support double-width
+		single-height characters). 
+	    </ul>
+
 	<li>modify logic for <code>forceBoxChars</code> resource when using
 	    TrueType fonts to be consistent with bitmap fonts
 
