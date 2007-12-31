@@ -1,9 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.183 2007/12/12 23:39:18 tom Exp $
-.\"
-.\"
-.\" $XFree86: xc/doc/specs/xterm/ctlseqs.ms,v 3.60 2006/03/13 01:27:53 dickey Exp $
+.\" $XTermId: ctlseqs.ms,v 1.184 2007/12/12 23:39:18 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey

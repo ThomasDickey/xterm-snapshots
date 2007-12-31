@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.257 2007/12/26 21:42:10 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.258 2007/12/30 15:58:59 tom Exp $ */
 
 /************************************************************
 
@@ -2126,7 +2126,7 @@ xtermDrawBoxChar(XtermWidget xw,
     }
 }
 
-#if OPT_RENDERFONT && OPT_WIDE_CHARS
+#if OPT_RENDERFONT
 
 /*
  * Check if the given character has a glyph known to Xft.

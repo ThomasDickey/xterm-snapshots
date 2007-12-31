@@ -1,6 +1,4 @@
-/* $XTermId: charproc.c,v 1.819 2007/12/16 17:59:38 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/charproc.c,v 3.185 2006/06/20 00:42:38 dickey Exp $ */
+/* $XTermId: charproc.c,v 1.821 2007/12/30 19:19:42 tom Exp $ */
 
 /*
 
@@ -432,6 +430,7 @@ static XtResource resources[] =
     Bres(XtNprinterAutoClose, XtCPrinterAutoClose, screen.printer_autoclose, False),
     Bres(XtNprinterExtent, XtCPrinterExtent, screen.printer_extent, False),
     Bres(XtNprinterFormFeed, XtCPrinterFormFeed, screen.printer_formfeed, False),
+    Bres(XtNquietGrab, XtCQuietGrab, screen.quiet_grab, False),
     Bres(XtNreverseVideo, XtCReverseVideo, misc.re_verse, False),
     Bres(XtNreverseWrap, XtCReverseWrap, misc.reverseWrap, False),
     Bres(XtNscrollBar, XtCScrollBar, misc.scrollbar, False),
@@ -1199,7 +1198,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * codes at 0x242, but no zero-width characters until past 0x300.
 	 */
 	if (c >= 0x300 && screen->wide_chars
-	    && my_wcwidth((int) c) == 0) {
+	    && my_wcwidth((int) c) == 0
+	    && !isWideControl(c)) {
 	    int prev, precomposed;
 
 	    WriteNow();
@@ -1207,15 +1207,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    prev = XTERM_CELL(screen->last_written_row,
 			      screen->last_written_col);
 	    precomposed = do_precomposition(prev, (int) c);
-#ifdef DEBUG
-	    if (debug) {
-		fprintf(stderr,
-			"do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
-			prev, my_wcwidth(prev), (int) c, my_wcwidth((int)
-								    c),
-			precomposed, my_wcwidth(precomposed));
-	    }
-#endif
+	    TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
+		   prev, my_wcwidth(prev),
+		   (int) c, my_wcwidth((int) c),
+		   precomposed, my_wcwidth(precomposed)));
 
 	    /* substitute combined character with precomposed character
 	     * only if it does not change the width of the base character
@@ -5486,6 +5481,8 @@ VTInitialize(Widget wrequest,
     wnew->screen.allowSendEvents = wnew->screen.allowSendEvent0;
     wnew->screen.allowTitleOps = wnew->screen.allowTitleOp0;
     wnew->screen.allowWindowOps = wnew->screen.allowWindowOp0;
+
+    init_Bres(screen.quiet_grab);
 
 #ifndef NO_ACTIVE_ICON
     wnew->screen.fnt_icon = request->screen.fnt_icon;

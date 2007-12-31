@@ -1,6 +1,4 @@
-/* $XTermId: main.h,v 1.36 2007/11/28 22:08:27 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/main.h,v 3.15 2006/02/13 01:14:59 dickey Exp $ */
+/* $XTermId: main.h,v 1.37 2007/11/28 22:08:27 tom Exp $ */
 
 /*
  * Copyright 2000-2006,2007 by Thomas E. Dickey

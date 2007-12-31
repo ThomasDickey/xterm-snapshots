@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.373 2007/12/25 22:32:43 tom Exp $ */
+/* $XTermId: misc.c,v 1.374 2007/12/30 16:56:55 tom Exp $ */
 
 /*
  *
@@ -525,7 +525,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
     pid_t pid;
 
     /*
-     * Try to find the actual program which is running in the child process. 
+     * Try to find the actual program which is running in the child process.
      * This works for Linux.  If we cannot find the program, fall back to the
      * xterm program (which is usually adequate).  Give up if we are given only
      * a relative path to xterm, since that would not always match $PATH.
@@ -668,7 +668,10 @@ HandleFocusChange(Widget w GCC_UNUSED,
 	   event->mode,
 	   event->detail));
 
-    if (event->type == FocusIn) {
+    if (screen->quiet_grab
+	&& (event->mode == NotifyGrab || event->mode == NotifyUngrab)) {
+	;
+    } else if (event->type == FocusIn) {
 	setXUrgency(screen, False);
 
 	/*
@@ -1678,7 +1681,7 @@ find_closest_color(Display * dpy, Colormap cmap, XColor * def)
 		    for (i = 0; i < cmap_size; i++) {
 			if (!tried[bestInx]) {
 			    /*
-			     * Look for the best match based on luminance. 
+			     * Look for the best match based on luminance.
 			     * Measure this by the least-squares difference of
 			     * the weighted R/G/B components from the color map
 			     * versus the requested color.  Use the Y (luma)
