@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.399 2007/12/30 19:58:20 tom Exp $
+.\" $XTermId: xterm.man,v 1.402 2007/12/31 01:15:46 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -2075,6 +2075,60 @@ The default is unspecified:
 at startup, \fIxterm\fP checks if those resources are set to something
 other than the default foreground and background colors.
 Setting this resource disables the check.
+.IP
+The following table shows the interaction of the highlighting
+resources, abbreviated as shown to fit in this page:
+.RS
+.TP 3
+HCM
+highlightColorMode
+.TP 3
+HR
+highlightReverse
+.TP 3
+HBG
+highlightColor
+.TP 3
+HFG
+highlightTextColor
+.RE
+.IP
+.TS
+l l l l l
+_ _ _ _ _
+l l l l l.
+\fIHCM\fR	\fIHR\fR	\fIHBG\fR	\fIHFG\fR	\fIHighlight\fP
+false	false	default	default	bg/fg\"0
+false	false	default	set	bg/fg\"1
+false	false	set	default	fg/HBG\"2
+false	false	set	set	fg/HBG\"3
+=
+false	true	default	default	bg/fg\"4
+false	true	default	set	bg/fg\"5
+false	true	set	default	fg/HBG\"6
+false	true	set	set	fg/HBG\"7
+=
+true	false	default	default	bg/fg\"8
+true	false	default	set	HFG/fg\"9
+true	false	set	default	bg/HBG\"10
+true	false	set	set	HFG/HBG\"11
+=
+true	true	default	default	fg/fg (useless)\"12
+true	true	default	set	HFG/fg\"13
+true	true	set	default	fg/HBG\"14
+true	true	set	set	HFG/HBG\"15
+=
+default	false	default	default	bg/fg\"16
+default	false	default	set	bg/fg\"17
+default	false	set	default	fg/HBG\"18
+default	false	set	set	HFG/HBG\"19
+=
+default	true	default	default	bg/fg\"20
+default	true	default	set	bg/fg\"21
+default	true	set	default	fg/HBG\"22
+default	true	set	set	HFG/HBG\"23
+=
+.TE
 .TP 8
 .B "highlightReverse (\fPclass\fB HighlightReverse)"
 Specifies whether \fIxterm\fP should reverse the selection foreground
