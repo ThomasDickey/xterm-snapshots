@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.258 2007/12/30 15:58:59 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.259 2007/12/31 02:00:02 tom Exp $ */
 
 /************************************************************
 
@@ -2140,8 +2140,12 @@ xtermXftMissing(XtermWidget xw, XftFont * font, unsigned wc)
 
     if (font != 0) {
 	if (!XftGlyphExists(xw->screen.display, font, wc)) {
+#if OPT_WIDE_CHARS
 	    TRACE(("xtermXftMissing %d (dec=%#x, ucs=%#x)\n",
 		   wc, ucs2dec(wc), dec2ucs(wc)));
+#else
+	    TRACE(("xtermXftMissing %d\n", wc));
+#endif
 	    result = True;
 	}
     }

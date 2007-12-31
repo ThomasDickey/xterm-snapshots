@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.821 2007/12/30 19:19:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.822 2007/12/30 21:55:28 tom Exp $ */
 
 /*
 
@@ -5272,6 +5272,12 @@ VTInitialize(Widget wrequest,
 	     ArgList args GCC_UNUSED,
 	     Cardinal *num_args GCC_UNUSED)
 {
+#define Kolor(name) wnew->screen.name.resource
+#define TxtFg(name) !x_strcasecmp(Kolor(Tcolors[TEXT_FG]), Kolor(name))
+#define TxtBg(name) !x_strcasecmp(Kolor(Tcolors[TEXT_BG]), Kolor(name))
+#define DftFg(name) isDefaultForeground(Kolor(name))
+#define DftBg(name) isDefaultBackground(Kolor(name))
+
     XtermWidget request = (XtermWidget) wrequest;
     XtermWidget wnew = (XtermWidget) new_arg;
     Widget my_parent = SHELL_OF(wnew);
@@ -5573,10 +5579,10 @@ VTInitialize(Widget wrequest,
 #if OPT_COLOR_RES
 	TRACE(("Acolors[%d] = %s\n", i, wnew->screen.Acolors[i].resource));
 	wnew->screen.Acolors[i].mode = False;
-	if (isDefaultForeground(wnew->screen.Acolors[i].resource)) {
+	if (DftFg(Acolors[i])) {
 	    wnew->screen.Acolors[i].value = T_COLOR(&(wnew->screen), TEXT_FG);
 	    wnew->screen.Acolors[i].mode = True;
-	} else if (isDefaultBackground(wnew->screen.Acolors[i].resource)) {
+	} else if (DftBg(Acolors[i])) {
 	    wnew->screen.Acolors[i].value = T_COLOR(&(wnew->screen), TEXT_BG);
 	    wnew->screen.Acolors[i].mode = True;
 	} else {
@@ -5665,8 +5671,17 @@ VTInitialize(Widget wrequest,
     if (wnew->screen.hilite_color == Maybe) {
 	wnew->screen.hilite_color = False;
 #if OPT_COLOR_RES
-	if (!isDefaultForeground(wnew->screen.Tcolors[HIGHLIGHT_BG].resource)
-	    && !isDefaultBackground(wnew->screen.Tcolors[HIGHLIGHT_FG].resource)) {
+	/*
+	 * If the highlight text/background are both set, and if they are
+	 * not equal to either the text/background or background/text, then
+	 * set the highlightColorMode automatically.
+	 */
+	if (!DftFg(Tcolors[HIGHLIGHT_BG])
+	    && !DftBg(Tcolors[HIGHLIGHT_FG])
+	    && !TxtFg(Tcolors[HIGHLIGHT_BG])
+	    && !TxtBg(Tcolors[HIGHLIGHT_FG])
+	    && !TxtBg(Tcolors[HIGHLIGHT_BG])
+	    && !TxtFg(Tcolors[HIGHLIGHT_FG])) {
 	    TRACE(("...setting hilite_color automatically\n"));
 	    wnew->screen.hilite_color = True;
 	}

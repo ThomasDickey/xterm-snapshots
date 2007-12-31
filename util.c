@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.401 2007/12/30 18:34:01 tom Exp $ */
+/* $XTermId: util.c,v 1.402 2007/12/31 00:19:18 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -3292,8 +3292,9 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 #if OPT_HIGHLIGHT_COLOR
     Pixel selbg_pix = T_COLOR(screen, HIGHLIGHT_BG);
     Pixel selfg_pix = T_COLOR(screen, HIGHLIGHT_FG);
-    Boolean use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
-    Boolean use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
+    Boolean always = screen->hilite_color;
+    Boolean use_selbg = always || isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
+    Boolean use_selfg = always && isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
 #endif
 
     (void) fg_bg;

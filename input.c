@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.294 2007/12/12 00:11:16 tom Exp $ */
+/* $XTermId: input.c,v 1.295 2007/12/31 01:57:41 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -373,7 +373,7 @@ xtermParamToState(XtermWidget xw, unsigned param)
     }
 #else
     (void) xw;
-    (void) state;
+    (void) param;
 #endif
     TRACE(("xtermParamToState(%d) %s%s%s%s -> %#x\n", param,
 	   MODIFIER_NAME(param, SHIFT),
