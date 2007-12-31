@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.577 2007/11/30 01:24:11 tom Exp $ */
+/* $XTermId: main.c,v 1.578 2007/11/30 01:24:11 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -86,8 +86,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-
-/* $XFree86: xc/programs/xterm/main.c,v 3.212 2006/06/20 00:42:38 dickey Exp $ */
 
 /* main.c */
 

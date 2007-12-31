@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.398 2007/12/28 22:00:46 tom Exp $ */
+/* $XTermId: util.c,v 1.401 2007/12/30 18:34:01 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1872,6 +1872,34 @@ isDefaultBackground(const char *name)
     return !x_strcasecmp(name, XtDefaultBackground);
 }
 
+#if OPT_WIDE_CHARS
+/*
+ * Check for Unicode BIDI control characters, which may be miscategorized via
+ * wcwidth() and iswprint() as zero-width printable characters.
+ */
+Boolean
+isWideControl(int ch)
+{
+    Boolean result;
+
+    switch (ch) {
+    case 0x200E:
+    case 0x200F:
+    case 0x202A:
+    case 0x202B:
+    case 0x202C:
+    case 0x202D:
+    case 0x202E:
+	result = True;
+	break;
+    default:
+	result = False;
+	break;
+    }
+    return result;
+}
+#endif
+
 /***====================================================================***/
 
 typedef struct {
@@ -2766,7 +2794,6 @@ drawXtermText(XtermWidget xw,
 		Char temp[2];
 #if OPT_WIDE_CHARS
 		Char temp2[2];
-#endif
 
 		if (xtermIsDecGraphic(ch)) {
 		    /*
@@ -2785,9 +2812,7 @@ drawXtermText(XtermWidget xw,
 			    replace = True;
 			}
 		    }
-		}
-#if OPT_WIDE_CHARS
-		else if (ch > 256) {
+		} else if (ch > 256) {
 		    /*
 		     * If we're reading UTF-8 from the client, we may have a
 		     * line-drawing character.  Translate it back to our
@@ -2802,6 +2827,19 @@ drawXtermText(XtermWidget xw,
 			    missing = True;
 			}
 		    });
+		}
+#else
+		if (xtermIsDecGraphic(ch)) {
+		    /*
+		     * Xft generally does not have the line-drawing characters
+		     * in cells 1-31.  Check for this, and attempt to fill in
+		     * from real line-drawing character in the font at the
+		     * Unicode position.  Failing that, use our own
+		     * box-characters.
+		     */
+		    if (xtermXftMissing(xw, font, ch)) {
+			missing = 1;
+		    }
 		}
 #endif
 
@@ -2907,7 +2945,15 @@ drawXtermText(XtermWidget xw,
 	xtermFillCells(xw, flags, gc, x, y, len);
 
 	while (len--) {
-	    width = XTextWidth(fs, (char *) text, 1);
+	    if_WIDE_OR_NARROW(screen, {
+		XChar2b temp[1];
+		temp[0].byte2 = *text;
+		temp[0].byte1 = *text2;
+		width = XTextWidth16(fs, temp, 1);
+	    }
+	    , {
+		width = XTextWidth(fs, (char *) text, 1);
+	    });
 	    adj = (FontWidth(screen) - width) / 2;
 	    (void) drawXtermText(xw, flags | NOBACKGROUND | CHARBYCHAR,
 				 gc, x + adj, y, chrset,
@@ -2932,8 +2978,8 @@ drawXtermText(XtermWidget xw,
 	for (last = 0; last < (int) len; last++) {
 	    unsigned ch = PACK_PAIR(text, text2, last);
 	    Bool isMissing;
-#if OPT_WIDE_CHARS
 	    int ch_width;
+#if OPT_WIDE_CHARS
 
 	    if (ch == HIDDEN_CHAR) {
 		if (last > first)
@@ -2950,6 +2996,7 @@ drawXtermText(XtermWidget xw,
 				 : font);
 #else
 	    isMissing = xtermMissingChar(xw, ch, font);
+	    ch_width = 1;
 #endif
 	    /*
 	     * If the character is not missing, but we're in wide-character
@@ -3487,6 +3534,10 @@ addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 {
     if (ch != 0) {
 	int off;
+
+	TRACE(("addXtermCombining %d,%d %#x (%d)\n",
+	       row, col, ch, my_wcwidth(ch)));
+
 	for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
 	    if (!SCREEN_PTR(screen, row, off + 0)[col]
 		&& !SCREEN_PTR(screen, row, off + 1)[col]) {

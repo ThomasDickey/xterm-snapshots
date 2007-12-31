@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.397 2007/12/26 00:52:45 tom Exp $
+.\" $XTermId: xterm.man,v 1.399 2007/12/30 19:58:20 tom Exp $
 .\"
 .\" Copyright 1996-2006,2007 by Thomas E. Dickey
 .\"
@@ -53,8 +53,6 @@
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
-.\"
-.\" $XFree86: xc/programs/xterm/xterm.man,v 3.126 2006/06/20 00:42:38 dickey Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .
@@ -2516,6 +2514,12 @@ The default is ``false.''
 .B "printerFormFeed (\fPclass\fB PrinterFormFeed)"
 Controls whether a form feed is sent to the printer at the end of a print
 page function.
+The default is ``false.''
+.TP 8
+.B "quietGrab (\fPclass\fB QuietGrab)"
+Controls whether the cursor is repainted 
+when \fINotifyGrab\fP and \fINotifyUngrab\fP
+event types are received during change of focus.
 The default is ``false.''
 .TP 8
 .B "renderFont (\fPclass\fB RenderFont)"

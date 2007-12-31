@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.110 2007/11/26 18:09:53 tom Exp $ */
+/* $XTermId: menu.h,v 1.111 2007/11/26 18:09:53 tom Exp $ */
 
 /*
 
@@ -49,7 +49,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xterm/menu.h,v 3.41 2006/03/13 01:27:59 dickey Exp $ */
 
 #ifndef included_menu_h
 #define included_menu_h

@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.622 2007/12/28 22:00:28 tom Exp $
+  $XTermId: xterm.log.html,v 1.629 2007/12/30 19:55:12 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -46,7 +46,7 @@ is the latest version of this file.
 
 <UL>
 <LI><A HREF="#xterm_dev">Development</A>
-<LI><A HREF="#xterm_229">Patch #229 - 2008/8/12</A>
+<LI><A HREF="#xterm_229">Patch #229 - 2007/8/12</A>
 <LI><A HREF="#xterm_228">Patch #228 - 2007/7/22</A>
 <LI><A HREF="#xterm_227">Patch #227 - 2007/6/27</A>
 <LI><A HREF="#xterm_226">Patch #226 - 2007/6/17</A>
@@ -280,6 +280,27 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add <code>quietGrab</code> resource, which when true, suppresses
+	    cursor repainting when <code>NotifyGrab</code> and
+	    <code>NotifyUngrab</code> event types are received during
+	    change of focus (request by Nicolas George).
+
+	<li>do not treat Unicode BIDI control characters as combining
+	    characters (Debian #457634).
+
+	<li>add <code>koi8rxterm</code>, from Debian.
+
+	<li>add manpage for <code>uxterm</code>, from Debian (Ubuntu #128136,
+	    Debian #438645)
+
+	<li>remove ".xpm" suffixes from Icon filenames in desktop files since
+	    it confuses some lookups following the
+	    <a href="http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html">Icon Theme Specification</a>
+	    (report by Slava Semushin)
+
+	<li>correct width-calculation used for adjusting proportional fonts,
+	    to work with wide-characters (Debian #441354).
+
 	<li>fixes/improvements for double-size characters:
 	    <ul>
 	    <li>correct clipping calculation
@@ -365,7 +386,7 @@ is the latest version of this file.
 	    expressions while in a narrow-character locale (Debian #449227).
 </ul>
 
-<H1><A NAME="xterm_229">Patch #229 - 2008/8/12</A></H1>
+<H1><A NAME="xterm_229">Patch #229 - 2007/8/12</A></H1>
 <ul>
 	<li>override locale in minstall.sh;
 	    change in <a href="#xterm_226">patch #226</a>

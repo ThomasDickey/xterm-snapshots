@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.502 2007/12/26 18:18:45 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.503 2007/12/30 16:55:26 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1364,6 +1364,7 @@ typedef struct {
 	unsigned short	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
 	Boolean		send_focus_pos; /* user wants focus in/out info */
+	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64
 	int		base64_paste;	/* set to send paste in base64	*/
 	int		base64_final;	/* string-terminator for paste	*/

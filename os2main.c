@@ -1,10 +1,8 @@
-/* $XTermId: os2main.c,v 1.254 2007/11/30 01:25:03 tom Exp $ */
+/* $XTermId: os2main.c,v 1.255 2007/11/30 01:25:03 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
  */
-
-/* $XFree86: xc/programs/xterm/os2main.c,v 3.87 2006/06/19 00:36:51 dickey Exp $ */
 
 /***********************************************************
 
