@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.232 2007/12/31 15:41:51 tom Exp $ */
+/* $XTermId: screen.c,v 1.233 2007/12/31 22:57:32 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -405,7 +405,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	});
 	if_OPT_DEC_CHRSET({
 	    memset(SCRN_BUF_CSETS(screen, row) + col,
-		   curXtermChrSet(xw, screen->cur_row), len);
+		   curXtermChrSet(xw, row), len);
 	});
 	if_OPT_WIDE_CHARS(screen, {
 	    int off;
@@ -1384,6 +1384,10 @@ ClearBufRows(XtermWidget xw,
 
     TRACE(("ClearBufRows %d..%d\n", first, last));
     for (row = first; row <= last; row++) {
+	if_OPT_DEC_CHRSET({
+	    /* clearing the whole row resets the doublesize characters */
+	    SCRN_ROW_CSET(screen, row) = CSET_SWL;
+	});
 	ScrnClrWrapped(screen, row);
 	ClearCells(xw, 0, len, row, 0);
     }
