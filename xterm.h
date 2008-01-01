@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.491 2007/12/30 19:18:13 tom Exp $ */
+/* $XTermId: xterm.h,v 1.493 2007/12/31 21:03:41 tom Exp $ */
 
 /************************************************************
 
@@ -743,7 +743,7 @@ extern void noleaks_cachedCgs (XtermWidget /* xw */);
 /* charproc.c */
 extern int VTInit (void);
 extern int v_write (int  /* f */, Char * /* d */, unsigned  /* len */);
-extern void FindFontSelection (XtermWidget /* xw */, char * /* atom_name */, Bool  /* justprobe */);
+extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name */, Bool  /* justprobe */);
 extern void HideCursor (void);
 extern void ShowCursor (void);
 extern void SwitchBufPtrs (TScreen * /* screen */);
@@ -916,7 +916,7 @@ extern void xt_error (String  /* message */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);
 extern void xtermSetenv (char * /* var */, char * /* value */);
-extern void xtermShowPointer (XtermWidget /* xw */, Boolean /* enable */);
+extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);
 
 #if OPT_DABBREV
 extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;
@@ -998,7 +998,7 @@ extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, 
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* n */, int  /* last */, unsigned  /* size */, unsigned  /* where */);
 extern void ScrnDisownSelection (XtermWidget /* xw */);
-extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int ,  unsigned /* flags */, Boolean /* keepColors */);
+extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int ,  unsigned /* flags */, Bool /* keepColors */);
 extern void ScrnInsertChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* last */, int  /* where */, unsigned  /* n */, unsigned  /* size */);
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
@@ -1228,7 +1228,7 @@ extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */
 #endif
 
 #if OPT_WIDE_CHARS
-extern Boolean isWideControl(int /* ch */);
+extern Boolean isWideControl(unsigned /* ch */);
 extern int DamagedCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
 extern int DamagedCurCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */);
 extern unsigned AsciiEquivs(unsigned /* ch */);

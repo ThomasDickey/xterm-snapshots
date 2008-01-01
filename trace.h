@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.41 2007/12/28 18:19:54 tom Exp $ */
+/* $XTermId: trace.h,v 1.42 2007/12/31 20:58:23 tom Exp $ */
 
 /************************************************************
 
@@ -35,7 +35,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #if OPT_TRACE
 
-extern	void	Trace ( char *, ... )
+extern	void	Trace ( const char *, ... )
 #ifdef GCC_PRINTF
 	__attribute__ ((format(printf,1,2)))
 #endif

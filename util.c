@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.402 2007/12/31 00:19:18 tom Exp $ */
+/* $XTermId: util.c,v 1.403 2007/12/31 15:41:19 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1878,7 +1878,7 @@ isDefaultBackground(const char *name)
  * wcwidth() and iswprint() as zero-width printable characters.
  */
 Boolean
-isWideControl(int ch)
+isWideControl(unsigned ch)
 {
     Boolean result;
 

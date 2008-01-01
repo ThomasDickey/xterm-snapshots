@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.822 2007/12/30 21:55:28 tom Exp $ */
+/* $XTermId: charproc.c,v 1.824 2007/12/31 21:03:26 tom Exp $ */
 
 /*
 
@@ -3714,7 +3714,7 @@ ansi_modes(XtermWidget xw,
 
 static void
 really_set_mousemode(XtermWidget xw,
-		     Boolean enabled,
+		     Bool enabled,
 		     unsigned mode)
 {
     xw->screen.send_mouse_pos = enabled ? mode : MOUSE_OFF;
@@ -7484,7 +7484,7 @@ DoSetSelectedFont(Widget w,
 	    }
 	}
 
-	if (len > 0 && (val = malloc(len + 1)) != 0) {
+	if (len > 0 && (val = TypeMallocN(char, len + 1)) != 0) {
 	    memcpy(val, value, len);
 	    val[len] = '\0';
 	    used = x_strtrim(val);
@@ -7523,7 +7523,7 @@ DoSetSelectedFont(Widget w,
 }
 
 void
-FindFontSelection(XtermWidget xw, char *atom_name, Bool justprobe)
+FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 {
     static AtomPtr *atoms;
     static int atomCount = 0;
