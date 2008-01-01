@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.295 2007/12/31 01:57:41 tom Exp $ */
+/* $XTermId: input.c,v 1.296 2007/12/31 21:11:19 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1679,7 +1679,7 @@ stripTranslations(const char *s)
     char *dst = 0;
 
     if (s != 0) {
-	dst = malloc(strlen(s) + 1);
+	dst = TypeMallocN(char, strlen(s) + 1);
 
 	if (dst != 0) {
 	    int state = 0;
@@ -1818,8 +1818,9 @@ addTranslation(XtermWidget xw, char *fromString, char *toString)
 		     + 6);
 
     if (!xtermHasTranslation(xw, fromString)) {
-	if ((xw->keyboard.extra_translations
-	     = realloc(xw->keyboard.extra_translations, need)) != 0) {
+	xw->keyboard.extra_translations
+	    = TypeRealloc(char, need, xw->keyboard.extra_translations);
+	if ((xw->keyboard.extra_translations) != 0) {
 	    TRACE(("adding %s: %s\n", fromString, toString));
 	    if (have)
 		strcat(xw->keyboard.extra_translations, " \\n\\");

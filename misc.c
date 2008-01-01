@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.374 2007/12/30 16:56:55 tom Exp $ */
+/* $XTermId: misc.c,v 1.377 2007/12/31 21:11:20 tom Exp $ */
 
 /*
  *
@@ -63,6 +63,7 @@
 #include <pwd.h>
 #include <sys/wait.h>
 
+#include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 #include <X11/Xlocale.h>
@@ -128,7 +129,7 @@ Readlink(const char *filename)
     int n;
 
     for (;;) {
-	buf = realloc(buf, size);
+	buf = TypeRealloc(char, size, buf);
 	memset(buf, 0, size);
 
 	n = readlink(filename, buf, size);
@@ -295,7 +296,7 @@ xtermDisplayCursor(XtermWidget xw)
 }
 
 void
-xtermShowPointer(XtermWidget xw, Boolean enable)
+xtermShowPointer(XtermWidget xw, Bool enable)
 {
     static int tried = -1;
     TScreen *screen = TScreenOf(xw);
@@ -2857,8 +2858,10 @@ ChangeGroup(String attribute, char *value)
 #if OPT_WIDE_CHARS
     static Char *converted;	/* NO_LEAKS */
 #endif
+    static char empty[1];
+
     Arg args[1];
-    char *original = (value != 0) ? value : "";
+    char *original = (value != 0) ? value : empty;
     char *name = original;
     TScreen *screen = TScreenOf(term);
     Widget w = CURRENT_EMU();
@@ -2939,9 +2942,9 @@ ChangeGroup(String attribute, char *value)
 	Display *dpy = XtDisplay(term);
 	Atom my_atom;
 
-	char *propname = (!strcmp(attribute, XtNtitle)
-			  ? "_NET_WM_NAME"
-			  : "_NET_WM_ICON_NAME");
+	const char *propname = (!strcmp(attribute, XtNtitle)
+				? "_NET_WM_NAME"
+				: "_NET_WM_ICON_NAME");
 	if ((my_atom = XInternAtom(dpy, propname, False)) != None) {
 	    if (screen->utf8_title) {	/* FIXME - redundant? */
 		TRACE(("...updating %s\n", propname));

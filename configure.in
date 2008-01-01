@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.238 2007/12/12 01:31:12 tom Exp $
+dnl $XTermId: configure.in,v 1.239 2007/12/31 17:21:31 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -879,6 +879,9 @@ if test "$enable_xmc" = yes ; then
 	EXTRASRCS="$EXTRASRCS testxmc.c"
 	EXTRAOBJS="$EXTRAOBJS testxmc.o"
 fi
+
+dnl FIXME - extra test needed to make tcap-fkeys work on HPUX
+AC_CHECK_FUNCS(tigetstr)
 
 if test -n "$GCC" ; then
 AC_MSG_CHECKING(if you want to turn on gcc warnings)

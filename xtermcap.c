@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.11 2007/12/09 20:21:41 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.12 2007/12/31 17:27:42 tom Exp $ */
 
 /*
  * Copyright 2007 by Thomas E. Dickey
@@ -39,6 +39,14 @@
 #endif
 
 #include <xstrings.h>
+
+#ifndef HAVE_TIGETSTR
+#undef USE_TERMINFO
+#endif
+
+#ifndef USE_TERMINFO
+#define USE_TERMINFO 0
+#endif
 
 #if OPT_TCAP_QUERY || OPT_TCAP_FKEYS
 
@@ -326,13 +334,13 @@ xtermcapString(XtermWidget xw, int keycode, unsigned mask)
 	if (screen->tcap_fkeys == 0) {
 	    Cardinal want = XtNumber(table);
 	    Cardinal have;
-#if !USE_TERMINFO
+#if !(USE_TERMINFO && defined(HAVE_TIGETSTR))
 	    char *area = screen->tcap_area;
 #endif
 
 	    if ((screen->tcap_fkeys = TypeCallocN(char *, want)) != 0) {
 		for (have = 0; have < want; ++have) {
-#if USE_TERMINFO
+#if USE_TERMINFO && defined(HAVE_TIGETSTR)
 		    fkey = tigetstr(table[have].ti);
 #else
 		    fkey = tgetstr(table[have].tc, &area);

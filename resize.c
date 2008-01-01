@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.105 2007/11/26 14:04:10 tom Exp $ */
+/* $XTermId: resize.c,v 1.106 2007/12/31 21:10:07 tom Exp $ */
 
 /*
  * Copyright 2003-2006,2007 by Thomas E. Dickey
@@ -372,10 +372,11 @@ main(int argc, char **argv ENVP_ARG)
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 
     if (argc == 2) {
-	char *tmpbuf = malloc(strlen(setsize[emu]) +
-			      strlen(argv[0]) +
-			      strlen(argv[1]) +
-			      1);
+	char *tmpbuf = TypeMallocN(char,
+				   strlen(setsize[emu]) +
+				   strlen(argv[0]) +
+				   strlen(argv[1]) +
+				   1);
 	if (tmpbuf == 0) {
 	    fprintf(stderr, "%s: Cannot query size\n", myname);
 	    onintr(0);

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.82 2007/12/28 18:20:43 tom Exp $ */
+/* $XTermId: trace.c,v 1.83 2007/12/31 20:58:29 tom Exp $ */
 
 /************************************************************
 
@@ -59,7 +59,7 @@ extern "C" {
 char *trace_who = "parent";
 
 void
-Trace(char *fmt,...)
+Trace(const char *fmt,...)
 {
     static FILE *fp;
     static char *trace_out;

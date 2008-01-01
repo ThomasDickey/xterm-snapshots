@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.56 2007/12/29 01:41:41 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.57 2007/12/31 18:25:03 tom Exp $ */
 
 /************************************************************
 
@@ -232,7 +232,7 @@ xterm_DoubleGC(XtermWidget xw,
     VTwin *cgsWin = WhichVWin(screen);
     int n;
     char *name;
-    XTermFonts *data;
+    XTermFonts *data = 0;
     GC result = 0;
 
     if ((name = xtermSpecialFont(screen, flags, chrset)) != 0) {

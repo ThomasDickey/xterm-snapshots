@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.280 2007/12/26 01:20:53 tom Exp $ */
+/* $XTermId: button.c,v 1.281 2007/12/31 21:11:05 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -1198,9 +1198,9 @@ MapSelections(XtermWidget xw, String * params, Cardinal num_params)
 	    }
 	}
 	if (map) {
-	    String mapTo = (xw->screen.selectToClipboard
-			    ? "CLIPBOARD"
-			    : "PRIMARY");
+	    const char *mapTo = (xw->screen.selectToClipboard
+				 ? "CLIPBOARD"
+				 : "PRIMARY");
 
 	    UnmapSelections(xw);
 	    if ((result = TypeMallocN(String, num_params + 1)) != 0) {

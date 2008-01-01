@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.231 2007/12/26 18:35:24 tom Exp $ */
+/* $XTermId: screen.c,v 1.232 2007/12/31 15:41:51 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -1655,7 +1655,7 @@ ScrnFillRectangle(XtermWidget xw,
 		  XTermRect * target,
 		  int value,
 		  unsigned flags,
-		  Boolean keepColors)
+		  Bool keepColors)
 {
     TScreen *screen = &(xw->screen);
 
