@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.629 2007/12/30 19:55:12 tom Exp $
+  $XTermId: xterm.log.html,v 1.630 2007/12/31 23:03:01 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,7 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_dev">Development</A>
+<LI><A HREF="#xterm_230">Patch #230 - 2007/12/31</A>
 <LI><A HREF="#xterm_229">Patch #229 - 2007/8/12</A>
 <LI><A HREF="#xterm_228">Patch #228 - 2007/7/22</A>
 <LI><A HREF="#xterm_227">Patch #227 - 2007/6/27</A>
@@ -278,7 +278,7 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_dev">Development</A></H1>
+<H1><A NAME="xterm_230">Patch #230 - 2007/12/31</A></H1>
 <ul>
 	<li>add <code>quietGrab</code> resource, which when true, suppresses
 	    cursor repainting when <code>NotifyGrab</code> and
@@ -303,12 +303,16 @@ is the latest version of this file.
 
 	<li>fixes/improvements for double-size characters:
 	    <ul>
-	    <li>correct clipping calculation
+	    <li>correct old clipping calculation which used total height of
+		glyphs where ascent was needed.
 
 	    <li>if bold font is unavailable, fall back to normal font
 
 	    <li>adjust to "work" with Xft (which does not support double-width
 		single-height characters). 
+
+	    <li>restore reset of doublesize for a line when it is cleared,
+	        broken in <a href="#xterm-228">patch #228</a>.
 	    </ul>
 
 	<li>modify logic for <code>forceBoxChars</code> resource when using
