@@ -743,7 +743,7 @@ Optional Features:
   --disable-rightbar      disable right-scrollbar support
   --disable-samename      disable check for redundant name-change
   --disable-session-mgt   disable support for session management
-  --enable-tcap-fkeys     disable termcap function-keys support
+  --disable-tcap-fkeys    disable termcap function-keys support
   --enable-tcap-query     compile-in termcap-query support
   --disable-tek4014       disable tek4014 emulation
   --enable-toolbar        compile-in toolbar for pulldown menus
