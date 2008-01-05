@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.403 2007/12/31 15:41:19 tom Exp $ */
+/* $XTermId: util.c,v 1.404 2008/01/05 14:26:52 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -3497,9 +3497,11 @@ ClearCurBackground(XtermWidget xw,
 unsigned
 getXtermCell(TScreen * screen, int row, int col)
 {
-    return PACK_PAIR(SCRN_BUF_CHARS(screen, row),
-		     SCRN_BUF_WIDEC(screen, row),
-		     col);
+    unsigned ch = SCRN_BUF_CHARS(screen, row)[col];
+    if_OPT_WIDE_CHARS(screen, {
+	ch |= (SCRN_BUF_WIDEC(screen, row)[col] << 8);
+    });
+    return ch;
 }
 
 /*

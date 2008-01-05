@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.154 2007/12/30 16:39:48 tom Exp $
+## $XTermId: Makefile.in,v 1.155 2008/01/05 14:26:52 tom Exp $
 ##
 ## Copyright 2002-2006,2007 by Thomas E. Dickey
 ##
@@ -221,6 +221,9 @@ install-full :: $(MANDIR)
 @no_appsdir@	@echo installing $(APPSDIR)/UXTerm
 @no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/UXTerm.ad >XTerm.tmp
 @no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/UXTerm
+@no_appsdir@	@echo installing $(APPSDIR)/KOI8RXTerm
+@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/KOI8RXTerm.ad >XTerm.tmp
+@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/KOI8RXTerm
 @no_appsdir@	@rm -f XTerm.tmp
 @no_icondir@	@echo "... installed app-defaults"
 

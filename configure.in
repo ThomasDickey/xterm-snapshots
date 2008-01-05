@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.239 2007/12/31 17:21:31 tom Exp $
+dnl $XTermId: configure.in,v 1.240 2008/01/05 14:26:52 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -722,7 +722,7 @@ test "$enable_session_mgt" = no && AC_DEFINE(OPT_SESSION_MGT,0)
 
 AC_MSG_CHECKING(if you want to use termcap function-keys)
 CF_ARG_DISABLE(tcap-fkeys,
-	[  --enable-tcap-fkeys     disable termcap function-keys support],
+	[  --disable-tcap-fkeys    disable termcap function-keys support],
 	[enable_tcap_fkeys=no],
 	[enable_tcap_fkeys=yes])
 AC_MSG_RESULT($enable_tcap_fkeys)
