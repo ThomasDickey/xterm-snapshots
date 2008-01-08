@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.282 2008/01/06 22:33:29 tom Exp $ */
+/* $XTermId: button.c,v 1.283 2008/01/07 22:56:37 tom Exp $ */
 
 /*
  * Copyright 1999-2006,2007 by Thomas E. Dickey
@@ -3165,6 +3165,7 @@ ConvertSelection(Widget w,
 					target, type, &std_return,
 					&std_length, format)) {
 	    std_targets = (Atom *) (std_return);
+	    *length = std_length + 6;
 
 	    targetP = (Atom *) XtMalloc(sizeof(Atom) * (*length));
 	    allocP = targetP;
