@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.503 2007/12/30 16:55:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.505 2008/01/13 19:36:59 tom Exp $ */
 
 /*
- * Copyright 1999-2006,2007 by Thomas E. Dickey
+ * Copyright 1999-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1953,9 +1953,9 @@ extern WidgetClass tekWidgetClass;
 
 #define N_MARGINBELL	10
 
-#define TAB_BITS_SHIFT	5	/* 2**5 == 32 */
+#define TAB_BITS_SHIFT	5	/* FIXME: 2**5 == 32 (should derive) */
 #define TAB_BITS_WIDTH	(1 << TAB_BITS_SHIFT)
-#define TAB_ARRAY_SIZE	10	/* number of ints to provide MAX_TABS bits */
+#define TAB_ARRAY_SIZE	(1024 / TAB_BITS_WIDTH)
 #define MAX_TABS	(TAB_BITS_WIDTH * TAB_ARRAY_SIZE)
 
 typedef unsigned Tabs [TAB_ARRAY_SIZE];

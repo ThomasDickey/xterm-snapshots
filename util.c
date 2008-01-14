@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.404 2008/01/05 14:26:52 tom Exp $ */
+/* $XTermId: util.c,v 1.405 2008/01/14 00:00:14 tom Exp $ */
 
 /*
- * Copyright 1999-2006,2007 by Thomas E. Dickey
+ * Copyright 1999-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2019,13 +2019,7 @@ ReverseVideo(XtermWidget xw)
     xw->misc.re_verse = !xw->misc.re_verse;
 
     if (XtIsRealized((Widget) xw)) {
-	if (screen->Vshow) {
-	    recolor_cursor(screen,
-			   screen->pointer_cursor,
-			   T_COLOR(screen, MOUSE_FG),
-			   T_COLOR(screen, MOUSE_BG));
-	    XDefineCursor(screen->display, VWindow(screen), screen->pointer_cursor);
-	}
+	xtermDisplayCursor(xw);
     }
 #if OPT_TEK4014
     if (TEK4014_SHOWN(xw)) {

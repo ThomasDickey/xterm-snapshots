@@ -1,8 +1,8 @@
-/* $XTermId: misc.c,v 1.377 2007/12/31 21:11:20 tom Exp $ */
+/* $XTermId: misc.c,v 1.379 2008/01/13 23:35:19 tom Exp $ */
 
 /*
  *
- * Copyright 1999-2006,2007 by Thomas E. Dickey
+ * Copyright 1999-2007,2008 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -284,8 +284,10 @@ xtermDisplayCursor(XtermWidget xw)
 
     if (screen->Vshow) {
 	if (screen->hide_pointer) {
+	    TRACE(("Display hidden_cursor\n"));
 	    XDefineCursor(screen->display, VWindow(screen), screen->hidden_cursor);
 	} else {
+	    TRACE(("Display pointer_cursor\n"));
 	    recolor_cursor(screen,
 			   screen->pointer_cursor,
 			   T_COLOR(screen, MOUSE_FG),
@@ -300,6 +302,14 @@ xtermShowPointer(XtermWidget xw, Bool enable)
 {
     static int tried = -1;
     TScreen *screen = TScreenOf(xw);
+
+    /*
+     * Do not hide the pointer if the mouse-mode is active.
+     */
+    if (!enable) {
+	if (xw->screen.send_mouse_pos != MOUSE_OFF)
+	    enable = True;
+    }
 
     if (enable) {
 	if (screen->hide_pointer) {
@@ -401,7 +411,28 @@ xevents(void)
 	     (event.xany.type != KeyRelease) &&
 	     (event.xany.type != ButtonPress) &&
 	     (event.xany.type != ButtonRelease))) {
-	    xtermShowPointer(xw, True);
+
+	    /*
+	     * If the event is interesting (and not a keyboard event), turn the
+	     * mouse pointer back on.
+	     */
+	    if (screen->hide_pointer) {
+		switch (event.xany.type) {
+		case KeyPress:
+		case KeyRelease:
+		case ButtonPress:
+		case ButtonRelease:
+		    /* also these... */
+		case Expose:
+		case NoExpose:
+		case PropertyNotify:
+		    break;
+		default:
+		    xtermShowPointer(xw, True);
+		    break;
+		}
+	    }
+
 	    XtDispatchEvent(&event);
 	}
     } while ((input_mask = XtAppPending(app_con)) & XtIMXEvent);
@@ -413,12 +444,24 @@ make_hidden_cursor(void)
     TScreen *screen = TScreenOf(term);
     Cursor c;
     Display *dpy = screen->display;
-    Font fn = XLoadFont(dpy, "fixed");
+    XFontStruct *fn;
 
     static XColor dummy;
 
+    /*
+     * Prefer nil2 (which is normally available) to "fixed" (which is supposed
+     * to be "always" available), since it's a smaller glyph in case the
+     * server insists on drawing _somethng_.
+     */
+    TRACE(("Ask for nil2 font\n"));
+    if ((fn = XLoadQueryFont(dpy, "nil2")) == 0) {
+	TRACE(("...Ask for fixed font\n"));
+	fn = XLoadQueryFont(dpy, "fixed");
+    }
+
     if (fn != 0) {
-	c = XCreateGlyphCursor(dpy, fn, fn, 'X', '.', &dummy, &dummy);
+	/* a space character seems to work as a cursor (dots are not needed) */
+	c = XCreateGlyphCursor(dpy, fn->fid, fn->fid, 'X', ' ', &dummy, &dummy);
     } else {
 	c = 0;
     }

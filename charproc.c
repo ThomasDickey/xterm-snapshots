@@ -1,8 +1,8 @@
-/* $XTermId: charproc.c,v 1.824 2007/12/31 21:03:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.825 2008/01/13 23:09:42 tom Exp $ */
 
 /*
 
-Copyright 1999-2006,2007 by Thomas E. Dickey
+Copyright 1999-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -3718,7 +3718,8 @@ really_set_mousemode(XtermWidget xw,
 		     unsigned mode)
 {
     xw->screen.send_mouse_pos = enabled ? mode : MOUSE_OFF;
-    xtermShowPointer(xw, enabled);
+    if (xw->screen.send_mouse_pos != MOUSE_OFF)
+	xtermShowPointer(xw, True);
 }
 
 #define set_mousemode(mode) really_set_mousemode(xw, IsSM(), mode)
