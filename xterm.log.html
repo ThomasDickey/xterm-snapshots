@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.634 2008/01/06 23:34:28 tom Exp $
+  $XTermId: xterm.log.html,v 1.636 2008/01/13 23:08:01 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -282,6 +282,12 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve logic for hiding/displaying pointer-cursor (report by
+	    Mark Brukhartz).
+
+	<li>add limit-checks to tabs.c, increase maximum column for setting
+	    tab-stops from 320 to 1024 (report by Németh Márton).
+
 	<li>correct length, i.e., number of types of selection targets,
 	    computed by <code>ConvertSelection()</code> when not handling
 	    wide characters for the <code>XA_TARGETS()</code> case.
