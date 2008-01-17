@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.402 2007/12/31 01:15:46 tom Exp $
+.\" $XTermId: xterm.man,v 1.404 2008/01/17 00:47:36 tom Exp $
 .\"
-.\" Copyright 1996-2006,2007 by Thomas E. Dickey
+.\" Copyright 1996-2007,2008 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1102,7 +1102,7 @@ It sets the \fBborderWidth\fP resource of the shell widget,
 and may provide advice to your window manager to set the thickness of the
 window frame.
 Most window managers do not use this information.
-See the \fB-b\fP option, which controls the inner border of the \fBxterm\fP
+See the \fB-b\fP option, which controls the inner border of the \fIxterm\fP
 window.
 .TP 8
 .B -display \fIdisplay\fP
@@ -2517,6 +2517,22 @@ The default is
 Specifies the background color of the pointer.
 The default is
 ``XtDefaultBackground.''
+.TP 8
+.B "pointerMode (\fPclass\fB PointerMode)"
+Specifies when the pointer may be hidden as the user types.
+It will be redisplayed if the user moves the mouse,
+or clicks one of its buttons.
+.RS
+.TP 3
+0
+never
+.TP 3
+1
+the application running in \fIxterm\fP has not activated mouse mode.
+.TP 3
+2
+always.
+.RE
 .TP 8
 .B "pointerShape (\fPclass\fB Cursor)"
 Specifies the name of the shape of the pointer.

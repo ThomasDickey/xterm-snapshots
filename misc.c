@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.379 2008/01/13 23:35:19 tom Exp $ */
+/* $XTermId: misc.c,v 1.380 2008/01/17 00:40:06 tom Exp $ */
 
 /*
  *
@@ -304,11 +304,21 @@ xtermShowPointer(XtermWidget xw, Bool enable)
     TScreen *screen = TScreenOf(xw);
 
     /*
-     * Do not hide the pointer if the mouse-mode is active.
+     * Whether we actually hide the pointer depends on the pointer-mode and
+     * the mouse-mode:
      */
     if (!enable) {
-	if (xw->screen.send_mouse_pos != MOUSE_OFF)
+	switch (screen->pointer_mode) {
+	case pNever:
 	    enable = True;
+	    break;
+	case pNoMouse:
+	    if (screen->send_mouse_pos != MOUSE_OFF)
+		enable = True;
+	    break;
+	case pAlways:
+	    break;
+	}
     }
 
     if (enable) {

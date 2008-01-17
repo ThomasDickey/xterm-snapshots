@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.505 2008/01/13 19:36:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.506 2008/01/17 00:10:50 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1426,6 +1426,7 @@ typedef struct {
 	VTwin		*whichVwin;
 #endif /* NO_ACTIVE_ICON */
 
+	int		pointer_mode;	/* when to use hidden_cursor	*/
 	Boolean 	hide_pointer;	/* true to use "hidden_cursor"  */
 	Cursor		pointer_cursor;	/* pointer cursor in window	*/
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
@@ -1759,6 +1760,12 @@ typedef enum {
     keyboardIsTermcap,
     keyboardIsVT220
 } xtermKeyboardType;
+
+typedef enum {			/* legal values for screen.pointer_mode */
+    pNever = 0,
+    pNoMouse = 1,
+    pAlways = 2,
+} pointerModeTypes;
 
 typedef enum {			/* legal values for screen.utf8_mode */
     uFalse = 0,

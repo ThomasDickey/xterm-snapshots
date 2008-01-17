@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.825 2008/01/13 23:09:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.826 2008/01/17 00:25:55 tom Exp $ */
 
 /*
 
@@ -450,6 +450,7 @@ static XtResource resources[] =
     Ires(XtNlimitResize, XtCLimitResize, misc.limit_resize, 1),
     Ires(XtNmultiClickTime, XtCMultiClickTime, screen.multiClickTime, MULTICLICKTIME),
     Ires(XtNnMarginBell, XtCColumn, screen.nmarginbell, N_MARGINBELL),
+    Ires(XtNpointerMode, XtCPointerMode, screen.pointer_mode, pNoMouse),
     Ires(XtNprinterControlMode, XtCPrinterControlMode,
 	 screen.printer_controlmode, 0),
     Ires(XtNvisualBellDelay, XtCVisualBellDelay, screen.visualBellDelay, 100),
@@ -5458,6 +5459,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.trim_selection);
 
     wnew->screen.pointer_cursor = request->screen.pointer_cursor;
+    init_Ires(screen.pointer_mode);
 
     init_Sres(screen.answer_back);
 
