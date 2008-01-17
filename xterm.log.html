@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.640 2008/01/16 00:21:03 tom Exp $
+  $XTermId: xterm.log.html,v 1.642 2008/01/17 00:41:33 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -282,6 +282,12 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add <code>pointerMode</code> resource to control whether and
+	    when the pointer cursor is hidden as the user types.
+
+	<li>simplify initialization of ttyMode- and related characters using
+	    a table.
+
 	<li>modify initialization-logic for stty values that correspond to
 	    ltchars structure and the BSD TIOCSLTC ioctl (susp, dsusp, rprnt
 	    flush, werase, lnext).  These were reset to constants for both

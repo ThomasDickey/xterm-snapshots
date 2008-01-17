@@ -1,8 +1,8 @@
-/* $XTermId: xterm.h,v 1.493 2007/12/31 21:03:41 tom Exp $ */
+/* $XTermId: xterm.h,v 1.494 2008/01/17 00:12:49 tom Exp $ */
 
 /************************************************************
 
-Copyright 1999-2006,2007 by Thomas E. Dickey
+Copyright 1999-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -429,6 +429,7 @@ extern char **environ;
 #define XtNnMarginBell		"nMarginBell"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
+#define XtNpointerMode		"pointerMode"
 #define XtNpointerColor		"pointerColor"
 #define XtNpointerColorBackground "pointerColorBackground"
 #define XtNpointerShape		"pointerShape"
@@ -571,6 +572,7 @@ extern char **environ;
 #define XtCMultiScroll		"MultiScroll"
 #define XtCNumLock		"NumLock"
 #define XtCOldXtermFKeys	"OldXtermFKeys"
+#define XtCPointerMode		"PointerMode"
 #define XtCPopOnBell		"PopOnBell"
 #define XtCPrintAttributes	"PrintAttributes"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
