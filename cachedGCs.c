@@ -1,8 +1,8 @@
-/* $XTermId: cachedGCs.c,v 1.38 2007/06/09 00:08:39 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.43 2008/01/20 17:26:09 tom Exp $ */
 
 /************************************************************
 
-Copyright 2007 by Thomas E. Dickey
+Copyright 2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -58,7 +58,7 @@ typedef struct {
     GC gc;
     unsigned used;
     unsigned cset;
-    XFontStruct *font;
+    XTermFonts *font;
     Pixel tile;
     Pixel fg;
     Pixel bg;
@@ -160,16 +160,18 @@ traceCSet(unsigned cset)
 }
 
 static String
-traceFont(XFontStruct * font)
+traceFont(XTermFonts * font)
 {
     static char result[80];
-    if (font != 0) {
+    XFontStruct *fs = font->fs;
+
+    if (fs != 0) {
 	sprintf(result, "%p(%dx%d %d %#lx)",
-		font,
-		font->max_bounds.width,
-		font->max_bounds.ascent + font->max_bounds.descent,
-		font->max_bounds.descent,
-		(unsigned long) (font->fid));
+		fs,
+		fs->max_bounds.width,
+		fs->max_bounds.ascent + fs->max_bounds.descent,
+		fs->max_bounds.descent,
+		(unsigned long) (fs->fid));
     } else {
 	strcpy(result, "null");
     }
@@ -313,7 +315,7 @@ newCache(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, CgsCache * me)
     THIS(bg) = NEXT(bg);
 
     memset(&xgcv, 0, sizeof(xgcv));
-    xgcv.font = NEXT(font)->fid;
+    xgcv.font = NEXT(font)->fs->fid;
     mask = (GCForeground | GCBackground | GCFont);
 
     switch (cgsId) {
@@ -398,7 +400,7 @@ chgCache(XtermWidget xw, CgsEnum cgsId GCC_UNUSED, CgsCache * me)
     THIS(fg) = NEXT(fg);
     THIS(bg) = NEXT(bg);
 
-    xgcv.font = THIS(font)->fid;
+    xgcv.font = THIS(font)->fs->fid;
     xgcv.foreground = THIS(fg);
     xgcv.background = THIS(bg);
 
@@ -411,9 +413,14 @@ chgCache(XtermWidget xw, CgsEnum cgsId GCC_UNUSED, CgsCache * me)
 }
 
 static Boolean
-SameFont(XFontStruct * a, XFontStruct * b)
+SameFont(XTermFonts * a, XTermFonts * b)
 {
-    return ((a != 0) && (b != 0) && (a == b) && !memcmp(a, b, sizeof(*a)));
+    return (a != 0
+	    && b != 0
+	    && (a->fs != 0)
+	    && (b->fs != 0)
+	    && (a->fs == b->fs)
+	    && !memcmp(a->fs, b->fs, sizeof(*(a->fs))));
 }
 
 #define SameColor(a,b) ((a) == (b))
@@ -466,7 +473,7 @@ setCgsCSet(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, unsigned cset)
 #endif
 
 void
-setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XFontStruct * font)
+setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XTermFonts * font)
 {
     CgsCache *me;
 
@@ -476,12 +483,12 @@ setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XFontStruct * font)
 		(void) getCgsGC(xw, cgsWin, gcNorm);
 #ifndef NO_ACTIVE_ICON
 	    if (cgsWin == &(xw->screen.iconVwin))
-		font = xw->screen.fnt_icon;
+		font = &(xw->screen.fnt_icon);
 	    else
 #endif
-		font = xw->screen.fnts[fNorm];
+		font = &(xw->screen.fnts[fNorm]);
 	}
-	if (okFont(font) && !SameFont(NEXT(font), font)) {
+	if (okFont(font->fs) && !SameFont(NEXT(font), font)) {
 	    TRACE2(("...updated next font for %s to %s\n",
 		    traceCgsEnum(cgsId), traceFont(font)));
 	    TRACE2(("...next font was %s\n", traceFont(NEXT(font))));
@@ -499,7 +506,7 @@ setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XFontStruct * font)
  * Keep the GC's so we can simply change them rather than creating new ones.
  */
 void
-clrCgsFonts(XtermWidget xw, VTwin * cgsWin, XFontStruct * font)
+clrCgsFonts(XtermWidget xw, VTwin * cgsWin, XTermFonts * font)
 {
     CgsCache *me;
     int j, k;
@@ -643,11 +650,11 @@ getCgsId(XtermWidget xw, VTwin * cgsWin, GC gc)
 /*
  * Return the font for the given GC.
  */
-XFontStruct *
+XTermFonts *
 getCgsFont(XtermWidget xw, VTwin * cgsWin, GC gc)
 {
     int n;
-    XFontStruct *result = 0;
+    XTermFonts *result = 0;
 
     for_each_gc(n) {
 	CgsCache *me;

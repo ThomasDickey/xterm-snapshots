@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.826 2008/01/17 00:25:55 tom Exp $ */
+/* $XTermId: charproc.c,v 1.830 2008/01/20 15:27:43 tom Exp $ */
 
 /*
 
@@ -498,7 +498,7 @@ static XtResource resources[] =
 #ifndef NO_ACTIVE_ICON
     Bres("activeIcon", "ActiveIcon", misc.active_icon, False),
     Ires("iconBorderWidth", XtCBorderWidth, misc.icon_border_width, 2),
-    Fres("iconFont", "IconFont", screen.fnt_icon, XtDefaultFont),
+    Fres("iconFont", "IconFont", screen.fnt_icon.fs, XtDefaultFont),
     Cres("iconBorderColor", XtCBorderColor, misc.icon_border_pixel, XtDefaultBackground),
 #endif				/* NO_ACTIVE_ICON */
 
@@ -5494,7 +5494,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.quiet_grab);
 
 #ifndef NO_ACTIVE_ICON
-    wnew->screen.fnt_icon = request->screen.fnt_icon;
+    wnew->screen.fnt_icon.fs = request->screen.fnt_icon.fs;
     init_Bres(misc.active_icon);
     init_Ires(misc.icon_border_width);
     wnew->misc.icon_border_pixel = request->misc.icon_border_pixel;
@@ -5979,10 +5979,12 @@ VTDestroy(Widget w GCC_UNUSED)
     }
 #endif
 
+#if OPT_COLOR_RES
     /* free local copies of resource strings */
     for (n = 0; n < NCOLORS; ++n) {
 	FREE_LEAK(screen->Tcolors[n].resource);
     }
+#endif
 #if OPT_SELECT_REGEX
     for (n = 0; n < NSELECTUNITS; ++n) {
 	FREE_LEAK(screen->selectExpr[n]);
@@ -6043,7 +6045,7 @@ VTRealize(Widget w,
     }
 
     /* really screwed if we couldn't open default font */
-    if (!screen->fnts[fNorm]) {
+    if (!screen->fnts[fNorm].fs) {
 	fprintf(stderr, "%s:  unable to locate a suitable font\n",
 		xterm_name);
 	Exit(1);
@@ -6191,14 +6193,14 @@ VTRealize(Widget w,
     screen->event_mask = values->event_mask;
 
 #ifndef NO_ACTIVE_ICON
-    if (xw->misc.active_icon && screen->fnt_icon) {
+    if (xw->misc.active_icon && screen->fnt_icon.fs) {
 	int iconX = 0, iconY = 0;
 	Widget shell = SHELL_OF(xw);
 	VTwin *win = &(screen->iconVwin);
 
 	TRACE(("Initializing active-icon\n"));
 	XtVaGetValues(shell, XtNiconX, &iconX, XtNiconY, &iconY, (XtPointer) 0);
-	xtermComputeFontInfo(xw, &(screen->iconVwin), screen->fnt_icon, 0);
+	xtermComputeFontInfo(xw, &(screen->iconVwin), screen->fnt_icon.fs, 0);
 
 	/* since only one client is permitted to select for Button
 	 * events, we have to let the window manager get 'em...
@@ -6222,13 +6224,13 @@ VTRealize(Widget w,
 		      (XtPointer) 0);
 	XtRegisterDrawable(XtDisplay(xw), screen->iconVwin.window, w);
 
-	setCgsFont(xw, win, gcNorm, screen->fnt_icon);
+	setCgsFont(xw, win, gcNorm, &(screen->fnt_icon));
 	setCgsFore(xw, win, gcNorm, T_COLOR(screen, TEXT_FG));
 	setCgsBack(xw, win, gcNorm, T_COLOR(screen, TEXT_BG));
 
 	copyCgs(xw, win, gcBold, gcNorm);
 
-	setCgsFont(xw, win, gcNormReverse, screen->fnt_icon);
+	setCgsFont(xw, win, gcNormReverse, &(screen->fnt_icon));
 	setCgsFore(xw, win, gcNormReverse, T_COLOR(screen, TEXT_BG));
 	setCgsBack(xw, win, gcNormReverse, T_COLOR(screen, TEXT_FG));
 

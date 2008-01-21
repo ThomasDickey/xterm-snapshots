@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.405 2008/01/14 00:00:14 tom Exp $ */
+/* $XTermId: util.c,v 1.406 2008/01/20 14:19:15 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -3151,7 +3151,7 @@ drawXtermText(XtermWidget xw,
 	    gc = getCgsGC(xw, currentWin, cgsId);
 
 	    if (fntId != fNorm) {
-		XFontStruct *thisFp = WhichVFont(screen, fnts[fntId]);
+		XFontStruct *thisFp = WhichVFont(screen, fnts[fntId].fs);
 		ascent_adjust = (thisFp->ascent
 				 - NormalFont(screen)->ascent);
 		if (thisFp->max_bounds.width ==

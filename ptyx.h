@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.506 2008/01/17 00:10:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.509 2008/01/20 15:14:18 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1355,7 +1355,7 @@ typedef struct {
 #if OPT_BROKEN_ST
 	Boolean		brokenStringTerm; /* true to match old OSC parse */
 #endif
-#if OPT_C1_PRINT
+#if OPT_C1_PRINT || OPT_WIDE_CHARS
 	Boolean		c1_printable;	/* true if we treat C1 as print	*/
 #endif
 	int		border;		/* inner border			*/
@@ -1447,10 +1447,10 @@ typedef struct {
 #endif
 	Dimension	fnt_wide;
 	Dimension	fnt_high;
-	XFontStruct	*fnts[fMAX];	/* normal/bold/etc for terminal	*/
+	XTermFonts	fnts[fMAX];	/* normal/bold/etc for terminal	*/
 	Boolean		free_bold_box;	/* same_font_size's austerity	*/
 #ifndef NO_ACTIVE_ICON
-	XFontStruct	*fnt_icon;	/* icon font */
+	XTermFonts	fnt_icon;	/* icon font */
 #endif /* NO_ACTIVE_ICON */
 	int		enbolden;	/* overstrike for bold font	*/
 	XPoint		*box;		/* draw unselected cursor	*/
@@ -2129,11 +2129,11 @@ typedef struct _TekWidgetRec {
 #define WhichVWin(screen)	((screen)->whichVwin)
 #define WhichTWin(screen)	((screen)->whichTwin)
 
-#define WhichVFont(screen,name)	(IsIcon(screen) ? (screen)->fnt_icon \
+#define WhichVFont(screen,name)	(IsIcon(screen) ? (screen)->fnt_icon.fs \
 						: (screen)->name)
-#define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->ascent \
+#define FontAscent(screen)	(IsIcon(screen) ? (screen)->fnt_icon.fs->ascent \
 						: WhichVWin(screen)->f_ascent)
-#define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon->descent \
+#define FontDescent(screen)	(IsIcon(screen) ? (screen)->fnt_icon.fs->descent \
 						: WhichVWin(screen)->f_descent)
 #else /* NO_ACTIVE_ICON */
 
@@ -2170,12 +2170,12 @@ typedef struct _TekWidgetRec {
 #define FontWidth(screen)	WhichVWin(screen)->f_width
 #define FontHeight(screen)	WhichVWin(screen)->f_height
 
-#define NormalFont(screen)	WhichVFont(screen, fnts[fNorm])
-#define BoldFont(screen)	WhichVFont(screen, fnts[fBold])
+#define NormalFont(screen)	WhichVFont(screen, fnts[fNorm].fs)
+#define BoldFont(screen)	WhichVFont(screen, fnts[fBold].fs)
 
 #if OPT_WIDE_CHARS
-#define NormalWFont(screen)	WhichVFont(screen, fnts[fWide])
-#define BoldWFont(screen)	WhichVFont(screen, fnts[fWBold])
+#define NormalWFont(screen)	WhichVFont(screen, fnts[fWide].fs)
+#define BoldWFont(screen)	WhichVFont(screen, fnts[fWBold].fs)
 #endif
 
 #define ScrollbarWidth(screen)	WhichVWin(screen)->sb_info.width

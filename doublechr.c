@@ -1,8 +1,8 @@
-/* $XTermId: doublechr.c,v 1.57 2007/12/31 18:25:03 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.58 2008/01/20 15:52:24 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2006,2007 by Thomas E. Dickey
+Copyright 1997-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -152,7 +152,7 @@ discard_font(XtermWidget xw, int n)
 	free(data->fn);
 	data->fn = 0;
     }
-    data->fs = xtermCloseFont(xw, data->fs);
+    (void) xtermCloseFont(xw, data);
 
     screen->fonts_used -= 1;
     while (n < screen->fonts_used) {
@@ -262,12 +262,12 @@ xterm_DoubleGC(XtermWidget xw,
 	    temp.chrset = chrset;
 	    temp.flags = (flags & BOLD);
 
-	    if ((temp.fs = xtermOpenFont(xw, name)) == 0) {
+	    if (!xtermOpenFont(xw, name, &temp)) {
 		/* Retry with * in resolutions */
 		char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
 
 		if (nname != 0) {
-		    if ((temp.fs = xtermOpenFont(xw, nname)) == 0) {
+		    if (!xtermOpenFont(xw, nname, &temp)) {
 			free(nname);
 		    } else {
 			free(name);
@@ -289,7 +289,7 @@ xterm_DoubleGC(XtermWidget xw,
 
 	if (found) {
 	    setCgsCSet(xw, cgsWin, cgsId, chrset);
-	    setCgsFont(xw, cgsWin, cgsId, data->fs);
+	    setCgsFont(xw, cgsWin, cgsId, data);
 	    setCgsFore(xw, cgsWin, cgsId, getCgsFore(xw, cgsWin, old_gc));
 	    setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, old_gc));
 	    result = getCgsGC(xw, cgsWin, cgsId);
