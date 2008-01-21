@@ -1,8 +1,8 @@
-/* $XTermId: menu.c,v 1.239 2007/12/25 23:08:11 tom Exp $ */
+/* $XTermId: menu.c,v 1.240 2008/01/20 15:16:43 tom Exp $ */
 
 /*
 
-Copyright 1999-2006,2007 by Thomas E. Dickey
+Copyright 1999-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -664,7 +664,7 @@ domenu(Widget w,
 	    update_altscreen();
 	    update_titeInhibit();
 #ifndef NO_ACTIVE_ICON
-	    if (!screen->fnt_icon || !screen->iconVwin.window) {
+	    if (!screen->fnt_icon.fs || !screen->iconVwin.window) {
 		SetItemSensitivity(
 				      vtMenuEntries[vtMenu_activeicon].widget,
 				      False);
