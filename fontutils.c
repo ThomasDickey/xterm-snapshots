@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.263 2008/01/21 01:01:39 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.266 2008/01/26 01:47:11 tom Exp $ */
 
 /************************************************************
 
@@ -2289,6 +2289,8 @@ lookupOneFontSize(XtermWidget xw, int fontnum)
 
     if (screen->menu_font_sizes[fontnum] == 0) {
 	XTermFonts fnt;
+
+	memset(&fnt, 0, sizeof(fnt));
 	screen->menu_font_sizes[fontnum] = -1;
 	if (xtermOpenFont(xw, screen->MenuFontName(fontnum), &fnt)) {
 	    screen->menu_font_sizes[fontnum] = FontSize(fnt.fs);

@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.43 2008/01/20 17:26:09 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.44 2008/01/21 22:34:56 tom Exp $ */
 
 /************************************************************
 
@@ -163,9 +163,9 @@ static String
 traceFont(XTermFonts * font)
 {
     static char result[80];
-    XFontStruct *fs = font->fs;
+    XFontStruct *fs;
 
-    if (fs != 0) {
+    if (font != 0 && (fs = font->fs) != 0) {
 	sprintf(result, "%p(%dx%d %d %#lx)",
 		fs,
 		fs->max_bounds.width,
