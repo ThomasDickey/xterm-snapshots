@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.830 2008/01/20 15:27:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.831 2008/01/21 21:17:46 tom Exp $ */
 
 /*
 
@@ -5950,8 +5950,14 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(screen->allbuf);
     TRACE_FREE_LEAK(screen->abuf_address);
     TRACE_FREE_LEAK(screen->altbuf);
+    TRACE_FREE_LEAK(screen->keyboard_dialect);
+    TRACE_FREE_LEAK(screen->term_id);
 #if OPT_WIDE_CHARS
     TRACE_FREE_LEAK(screen->draw_buf);
+#if OPT_LUIT_PROG
+    TRACE_FREE_LEAK(xw->misc.locale_str);
+    TRACE_FREE_LEAK(xw->misc.localefilter);
+#endif
 #endif
 #if OPT_INPUT_METHOD
     if (screen->xim) {
