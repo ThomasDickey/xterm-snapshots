@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.647 2008/01/26 19:24:38 tom Exp $
+  $XTermId: xterm.log.html,v 1.652 2008/01/30 01:02:39 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,7 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_dev">Development</A>
+<LI><A HREF="#xterm_232">Patch #232 - 2008/01/30</A>
 <LI><A HREF="#xterm_231">Patch #231 - 2008/01/05</A>
 <LI><A HREF="#xterm_230">Patch #230 - 2007/12/31</A>
 <LI><A HREF="#xterm_229">Patch #229 - 2007/8/12</A>
@@ -280,8 +280,26 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_dev">Development</A></H1>
+<H1><A NAME="xterm_232">Patch #232 - 2008/01/30</A></H1>
 <ul>
+	<li>corrected logic in a font-cache used for reverse-video (Debian
+	    #404079).
+
+	<li>add control sequence to alter <code>pointerMode</code> at runtime.
+
+	<li>add limit-checks for rectangle operation parameters (report by
+	    Martin Pirker).
+
+	<li>modify <code>minstall.sh</code> to suppress <code>$MANPAGER</code>
+	    and <code>$PAGER</code> environment variables, which may interfere
+	    with redirecting output of <code>man</code> to a shell variable
+	    (report/patch by Zdenek Sekera).
+
+	<li>do not try to hide mouse pointer in the tek4014 window, fixes
+	    broken "-t" option at startup from
+	    <a href="#xterm_230">patch #230</a> changes
+	    (report by Robert K. Nelson).
+
 	<li>correct datatype used when drawing tek4014 data using xterm
 	    compiled for wide-characters, on big-endian machines (reports
 	    by Jeremy Huddleston, Harald Hanche-Olsen, Martin Costabel, Merle

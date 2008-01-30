@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.184 2007/12/12 23:39:18 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.186 2008/01/27 17:39:00 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2006,2007 by Thomas E. Dickey
+.\" Copyright 1996-2007,2008 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -288,7 +288,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2007)
+invisible-island.net (2006-2008)
 .AU
 .
 .am BT                  \" add page numbers after first page
@@ -957,7 +957,7 @@ Device Status Report (DSR)
 .br
 \*(Cs\*(Ir\*s\*;\*(Ic\*s\*R
 .
-.IP \\*(Cs\\*(Ps\\*>\\*n
+.IP \\*(Cs\\*>\\*(Ps\\*s\\*n
 Disable modifiers which may be enabled via the
 \*(Cs\*>\*(Ps\*;\*(Ps\*s\*m
 sequence.
@@ -995,6 +995,17 @@ The last two parameters apply to VT400 & up, and denote keyboard ready and LK01 
 \*(Cs\*?\*5\*3\*s\*n Locator available, if compiled-in, or
 .br
 \*(Cs\*?\*5\*0\*s\*n No Locator, if not.
+.
+.IP \\*(Cs\\*>\\*(Ps\\*s\\*p
+Set resource value \fIpointerMode\fP,
+used by \fIxterm\fP to decide whether to
+hide the pointer cursor as the user types.
+Valid values for the parameter:
+  \*(Ps = \*0 \(-> never hide the pointer
+  \*(Ps = \*1 \(-> hide if the mouse tracking mode is not enabled
+  \*(Ps = \*2 \(-> always hide the pointer
+If no parameter is given, \fIxterm\fP uses the default,
+which is \*1.
 .
 .IP \\*(Cs\\*!\\*p
 Soft terminal reset (DECSTR)

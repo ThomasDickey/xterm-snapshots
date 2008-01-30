@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.58 2008/01/20 15:52:24 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.60 2008/01/27 15:07:16 tom Exp $ */
 
 /************************************************************
 
@@ -245,6 +245,7 @@ xterm_DoubleGC(XtermWidget xw,
 		if (!strcmp(data->fn, name)
 		    && data->fs != 0) {
 		    found = True;
+		    free(name);
 		} else {
 		    discard_font(xw, n);
 		}
@@ -267,17 +268,13 @@ xterm_DoubleGC(XtermWidget xw,
 		char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
 
 		if (nname != 0) {
-		    if (!xtermOpenFont(xw, nname, &temp)) {
-			free(nname);
-		    } else {
-			free(name);
-			temp.fn = nname;
-			found = True;
-		    }
+		    found = xtermOpenFont(xw, nname, &temp);
+		    free(nname);
 		}
 	    } else {
 		found = True;
 	    }
+	    free(name);
 
 	    if (found) {
 		n = 0;

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.831 2008/01/21 21:17:46 tom Exp $ */
+/* $XTermId: charproc.c,v 1.834 2008/01/27 17:39:53 tom Exp $ */
 
 /*
 
@@ -450,7 +450,7 @@ static XtResource resources[] =
     Ires(XtNlimitResize, XtCLimitResize, misc.limit_resize, 1),
     Ires(XtNmultiClickTime, XtCMultiClickTime, screen.multiClickTime, MULTICLICKTIME),
     Ires(XtNnMarginBell, XtCColumn, screen.nmarginbell, N_MARGINBELL),
-    Ires(XtNpointerMode, XtCPointerMode, screen.pointer_mode, pNoMouse),
+    Ires(XtNpointerMode, XtCPointerMode, screen.pointer_mode, DEF_POINTER_MODE),
     Ires(XtNprinterControlMode, XtCPrinterControlMode,
 	 screen.printer_controlmode, 0),
     Ires(XtNvisualBellDelay, XtCVisualBellDelay, screen.visualBellDelay, 100),
@@ -2563,6 +2563,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    } else {
 		TRACE(("DECELR - Enable Locator Reports\n"));
 		screen->send_mouse_pos = DEC_LOCATOR;
+		xtermShowPointer(xw, True);
 		if (param[0] == 2) {
 		    screen->locator_reset = True;
 		} else {
@@ -2840,6 +2841,14 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    }
 	    break;
 #endif
+	case CASE_HIDE_POINTER:
+	    TRACE(("CASE_HIDE_POINTER\n"));
+	    if (nparam >= 1 && param[0] != DEFAULT) {
+		screen->pointer_mode = param[0];
+	    } else {
+		screen->pointer_mode = DEF_POINTER_MODE;
+	    }
+	    break;
 
 	case CASE_CSI_IGNORE:
 	    sp->parsestate = cigtable;
@@ -5971,6 +5980,9 @@ VTDestroy(Widget w GCC_UNUSED)
     releaseWindowGCs(xw, &(screen->iconVwin));
 #endif
 
+    if (screen->hidden_cursor)
+	XFreeCursor(screen->display, screen->hidden_cursor);
+
     xtermCloseFonts(xw, screen->fnts);
     noleaks_cachedCgs(xw);
 
@@ -7192,6 +7204,8 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 	screen->send_focus_pos = OFF;
 	screen->waitingForTrackInfo = False;
 	screen->eventMode = NORMAL;
+
+	xtermShowPointer(xw, True);
 
 	TabReset(xw->tabs);
 	xw->keyboard.flags = MODE_SRM;

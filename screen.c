@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.233 2007/12/31 22:57:32 tom Exp $ */
+/* $XTermId: screen.c,v 1.234 2008/01/27 16:43:54 tom Exp $ */
 
 /*
  * Copyright 1999-2005,2006 by Thomas E. Dickey
@@ -1613,6 +1613,44 @@ non_blank_line(TScreen * screen,
 }
 
 /*
+ * Rectangle parameters start from one.
+ */
+#define minRectRow(screen) (getMinRow(screen) + 1)
+#define minRectCol(screen) (getMinCol(screen) + 1)
+#define maxRectRow(screen) (getMaxRow(screen) + 1)
+#define maxRectCol(screen) (getMaxCol(screen) + 1)
+
+static int
+limitedParseRow(XtermWidget xw, TScreen * screen, int row)
+{
+    int min_row = minRectRow(screen);
+    int max_row = maxRectRow(screen);
+
+    if (row < min_row)
+	row = min_row;
+    else if (row > max_row)
+	row = max_row;
+    return row;
+}
+
+static int
+limitedParseCol(XtermWidget xw, TScreen * screen, int col)
+{
+    int min_col = minRectCol(screen);
+    int max_col = maxRectCol(screen);
+
+    (void) xw;
+    if (col < min_col)
+	col = min_col;
+    else if (col > max_col)
+	col = max_col;
+    return col;
+}
+
+#define LimitedParse(num, func, dft) \
+	func(xw, screen, (nparams > num) ? params[num] : dft)
+
+/*
  * Copy the rectangle boundaries into a struct, providing default values as
  * needed.
  */
@@ -1622,10 +1660,10 @@ xtermParseRect(XtermWidget xw, int nparams, int *params, XTermRect * target)
     TScreen *screen = &(xw->screen);
 
     memset(target, 0, sizeof(*target));
-    target->top = (nparams > 0) ? params[0] : (getMinRow(screen) + 1);
-    target->left = (nparams > 1) ? params[1] : (getMinCol(screen) + 1);
-    target->bottom = (nparams > 2) ? params[2] : (getMaxRow(screen) + 1);
-    target->right = (nparams > 3) ? params[3] : (getMaxCol(screen) + 1);
+    target->top = LimitedParse(0, limitedParseRow, minRectRow(screen));
+    target->left = LimitedParse(1, limitedParseCol, minRectCol(screen));
+    target->bottom = LimitedParse(2, limitedParseRow, maxRectRow(screen));
+    target->right = LimitedParse(3, limitedParseCol, maxRectCol(screen));
     TRACE(("parsed rectangle %d,%d %d,%d\n",
 	   target->top,
 	   target->left,
@@ -1639,15 +1677,15 @@ validRect(XtermWidget xw, XTermRect * target)
     TScreen *screen = &(xw->screen);
 
     TRACE(("comparing against screensize %dx%d\n",
-	   getMaxRow(screen) + 1,
-	   getMaxCol(screen) + 1));
+	   maxRectRow(screen),
+	   maxRectCol(screen)));
     return (target != 0
-	    && target->top > getMinRow(screen)
-	    && target->left > getMinCol(screen)
+	    && target->top >= minRectRow(screen)
+	    && target->left >= minRectCol(screen)
 	    && target->top <= target->bottom
 	    && target->left <= target->right
-	    && target->top <= getMaxRow(screen) + 1
-	    && target->right <= getMaxCol(screen) + 1);
+	    && target->top <= maxRectRow(screen)
+	    && target->right <= maxRectCol(screen));
 }
 
 /*

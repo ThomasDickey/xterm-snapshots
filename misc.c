@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.380 2008/01/17 00:40:06 tom Exp $ */
+/* $XTermId: misc.c,v 1.382 2008/01/27 15:37:18 tom Exp $ */
 
 /*
  *
@@ -109,14 +109,16 @@
 #if OPT_TEK4014
 #define OUR_EVENT(event,Type) \
 		(event.type == Type && \
-		  (event.xcrossing.window == XtWindow(XtParent(term)) || \
+		  (event.xcrossing.window == XtWindow(XtParent(xw)) || \
 		    (tekWidget && \
 		     event.xcrossing.window == XtWindow(XtParent(tekWidget)))))
 #else
 #define OUR_EVENT(event,Type) \
 		(event.type == Type && \
-		   (event.xcrossing.window == XtWindow(XtParent(term))))
+		   (event.xcrossing.window == XtWindow(XtParent(xw))))
 #endif
+
+static Cursor make_hidden_cursor(XtermWidget);
 
 #if OPT_EXEC_XTERM
 /* Like readlink(2), but returns a malloc()ed buffer, or NULL on
@@ -303,6 +305,11 @@ xtermShowPointer(XtermWidget xw, Bool enable)
     static int tried = -1;
     TScreen *screen = TScreenOf(xw);
 
+#if OPT_TEK4014
+    if (TEK4014_SHOWN(xw))
+	enable = True;
+#endif
+
     /*
      * Whether we actually hide the pointer depends on the pointer-mode and
      * the mouse-mode:
@@ -335,7 +342,7 @@ xtermShowPointer(XtermWidget xw, Bool enable)
 	}
     } else if (!(screen->hide_pointer) && (tried <= 0)) {
 	if (screen->hidden_cursor == 0) {
-	    screen->hidden_cursor = make_hidden_cursor();
+	    screen->hidden_cursor = make_hidden_cursor(xw);
 	}
 	if (screen->hidden_cursor == 0) {
 	    tried = 1;
@@ -448,10 +455,10 @@ xevents(void)
     } while ((input_mask = XtAppPending(app_con)) & XtIMXEvent);
 }
 
-Cursor
-make_hidden_cursor(void)
+static Cursor
+make_hidden_cursor(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
     Cursor c;
     Display *dpy = screen->display;
     XFontStruct *fn;
@@ -472,6 +479,7 @@ make_hidden_cursor(void)
     if (fn != 0) {
 	/* a space character seems to work as a cursor (dots are not needed) */
 	c = XCreateGlyphCursor(dpy, fn->fid, fn->fid, 'X', ' ', &dummy, &dummy);
+	XFreeFont(dpy, fn);
     } else {
 	c = 0;
     }

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.495 2008/01/20 15:29:58 tom Exp $ */
+/* $XTermId: xterm.h,v 1.498 2008/01/30 00:50:07 tom Exp $ */
 
 /************************************************************
 
@@ -865,7 +865,6 @@ extern void show_8bit_control  (Bool  /* value */);
 /* misc.c */
 extern Bool AllocateTermColor(XtermWidget, ScrnColors *, int, const char *);
 extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long  /* fg */, unsigned long  /* bg */);
-extern Cursor make_hidden_cursor (void);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
 extern Window WMFrameWindow(XtermWidget /* termw */);
 extern XrmOptionDescRec * sortedOptDescs(XrmOptionDescRec *, Cardinal);
