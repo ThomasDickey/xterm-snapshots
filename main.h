@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.37 2007/11/28 22:08:27 tom Exp $ */
+/* $XTermId: main.h,v 1.38 2008/01/27 17:40:31 tom Exp $ */
 
 /*
- * Copyright 2000-2006,2007 by Thomas E. Dickey
+ * Copyright 2000-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -115,6 +115,10 @@
 
 #ifndef DEF_INITIAL_ERASE
 #define DEF_INITIAL_ERASE	False
+#endif
+
+#ifndef DEF_POINTER_MODE
+#define DEF_POINTER_MODE	pNoMouse
 #endif
 
 #ifndef DEF_PTY_STTY_SIZE

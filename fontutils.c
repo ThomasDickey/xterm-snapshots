@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.266 2008/01/26 01:47:11 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.267 2008/01/27 14:44:07 tom Exp $ */
 
 /************************************************************
 
@@ -702,7 +702,7 @@ xtermOpenFont(XtermWidget xw, char *name, XTermFonts * result)
 XTermFonts *
 xtermCloseFont(XtermWidget xw, XTermFonts * fnt)
 {
-    if (fnt != 0) {
+    if (fnt != 0 && fnt->fs != 0) {
 	TScreen *screen = TScreenOf(xw);
 
 	clrCgsFonts(xw, WhichVWin(screen), fnt);
