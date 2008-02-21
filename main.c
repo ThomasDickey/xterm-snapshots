@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.582 2008/01/15 23:58:01 tom Exp $ */
+/* $XTermId: main.c,v 1.583 2008/02/20 20:32:15 Jeremy.Huddleston Exp $ */
 
 /*
  *				 W A R N I N G
@@ -536,7 +536,7 @@ static char **command_to_exec_with_luit = NULL;
 #define CINTR    CONTROL('C')
 #endif
 #ifndef CKILL
-#define CKILL	 CTRL('U')	/* was '@' */
+#define CKILL	 CONTROL('U')	/* was '@' */
 #endif
 #ifndef CLNEXT
 #define CLNEXT   CONTROL('V')

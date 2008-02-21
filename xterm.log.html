@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.652 2008/01/30 01:02:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.655 2008/02/20 23:09:55 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_232">Patch #232 - 2008/01/30</A>
 <LI><A HREF="#xterm_231">Patch #231 - 2008/01/05</A>
 <LI><A HREF="#xterm_230">Patch #230 - 2007/12/31</A>
@@ -279,6 +280,19 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>fix a case where an incorrect font was freed during initialization
+	    from <a href="#xterm_232">patch #232</a> changes (patch by
+	    Andrea Odetti).
+
+	<li>improve comparison used in <code>SameFont</code> function for
+	    GC-caching (Julien Cristau).
+
+	<li>correct macro name used for default <code>CKILL</code> definition
+	    to work with Mac OS X (report by Jeremy Huddleston).
+</ul>
 
 <H1><A NAME="xterm_232">Patch #232 - 2008/01/30</A></H1>
 <ul>

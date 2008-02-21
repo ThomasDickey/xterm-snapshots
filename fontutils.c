@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.267 2008/01/27 14:44:07 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.268 2008/02/20 22:26:23 Andrea.Odetti Exp $ */
 
 /************************************************************
 
@@ -707,6 +707,19 @@ xtermCloseFont(XtermWidget xw, XTermFonts * fnt)
 
 	clrCgsFonts(xw, WhichVWin(screen), fnt);
 	XFreeFont(screen->display, fnt->fs);
+	xtermFreeFontInfo(fnt);
+    }
+    return 0;
+}
+
+static XTermFonts *
+xtermCloseFont2(XtermWidget xw, XTermFonts * fnt)
+{
+    if (fnt != 0 && fnt->fs != 0) {
+	TScreen *screen = TScreenOf(xw);
+
+	clrCgsFonts(xw, WhichVWin(screen), fnt);
+	XFreeFont(screen->display, fnt->fs);
     }
     return 0;
 }
@@ -721,7 +734,7 @@ xtermCloseFonts(XtermWidget xw, XTermFonts * fnts)
 
     for (j = 0; j < fMAX; ++j) {
 	if (fnts[j].fs != 0) {
-	    xtermCloseFont(xw, &fnts[j]);
+	    xtermCloseFont2(xw, &fnts[j]);
 	    for (k = j + 1; k < fMAX; ++k) {
 		if (fnts[j].fs == fnts[k].fs)
 		    xtermFreeFontInfo(&fnts[k]);
