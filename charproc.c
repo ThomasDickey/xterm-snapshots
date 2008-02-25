@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.834 2008/01/27 17:39:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.835 2008/02/21 20:21:33 tom Exp $ */
 
 /*
 
@@ -3461,9 +3461,9 @@ dotext(XtermWidget xw,
 	    for (j = offset, k = 0; j < offset + chars_chomped; j++) {
 		if (buf[j] == HIDDEN_CHAR)
 		    continue;
-		lobyte[k] = buf[j];
+		lobyte[k] = LO_BYTE(buf[j]);
 		if (buf[j] > 255) {
-		    hibyte[k] = (buf[j] >> 8);
+		    hibyte[k] = HI_BYTE(buf[j]);
 		    both = True;
 		} else {
 		    hibyte[k] = 0;

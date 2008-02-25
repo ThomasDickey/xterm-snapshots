@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.583 2008/02/20 20:32:15 Jeremy.Huddleston Exp $ */
+/* $XTermId: main.c,v 1.585 2008/02/24 21:49:36 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -429,6 +429,10 @@ extern struct utmp *getutid __((struct utmp * _Id));
 #undef ECHOCTL
 #endif
 
+#if defined(HAVE_SYS_TTYDEFAULTS_H) && !defined(CEOF)
+#include <sys/ttydefaults.h>
+#endif
+
 #ifdef X_NOT_POSIX
 extern long lseek();
 #if defined(USG) || defined(SVR4)
@@ -815,6 +819,14 @@ static sigjmp_buf env;
 	    } \
 	    strncpy(dst, host, sizeof(dst)); \
 	}
+
+#ifdef HAVE_UTMP_UT_SYSLEN
+#  define SetUtmpSysLen(utmp) 			   \
+	{ \
+	    utmp.ut_host[sizeof(utmp.ut_host)-1] = '\0'; \
+	    utmp.ut_syslen = strlen(utmp.ut_host) + 1; \
+	}
+#endif
 
 /* used by VT (charproc.c) */
 
@@ -4006,6 +4018,10 @@ spawnXTerm(XtermWidget xw)
 #ifdef HAVE_UTMP_UT_HOST
 	    SetUtmpHost(utmp.ut_host, screen);
 #endif
+#ifdef HAVE_UTMP_UT_SYSLEN
+	    SetUtmpSysLen(utmp);
+#endif
+
 	    (void) strncpy(utmp.ut_name,
 			   (login_name) ? login_name : "????",
 			   sizeof(utmp.ut_name));
@@ -4067,6 +4083,10 @@ spawnXTerm(XtermWidget xw)
 #ifdef HAVE_UTMP_UT_HOST
 		    SetUtmpHost(utmp.ut_host, screen);
 #endif
+#ifdef HAVE_UTMP_UT_SYSLEN
+		    SetUtmpSysLen(utmp);
+#endif
+
 		    utmp.ut_time = time((time_t *) 0);
 		    lseek(i, (long) (tslot * sizeof(utmp)), 0);
 		    write(i, (char *) &utmp, sizeof(utmp));
