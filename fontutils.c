@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.268 2008/02/20 22:26:23 Andrea.Odetti Exp $ */
+/* $XTermId: fontutils.c,v 1.269 2008/02/21 20:21:15 tom Exp $ */
 
 /************************************************************
 
@@ -1781,7 +1781,7 @@ xtermMissingChar(XtermWidget xw, unsigned ch, XFontStruct * font)
 	}
 #if OPT_WIDE_CHARS
 	else {
-	    CI_GET_CHAR_INFO_2D(font, (ch >> 8), (ch & 0xff), tmp, pc);
+	    CI_GET_CHAR_INFO_2D(font, HI_BYTE(ch), LO_BYTE(ch), tmp, pc);
 	}
 #else
 
