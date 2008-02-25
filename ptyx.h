@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.512 2008/02/24 19:34:27 Alan.Coopersmith Exp $ */
+/* $XTermId: ptyx.h,v 1.513 2008/02/25 00:05:13 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1627,7 +1627,7 @@ typedef struct {
 	EventMode	eventMode;
 	Time		selection_time;	/* latest event timestamp */
 	Time		lastButtonUpTime;
-	int		lastButton;
+	unsigned	lastButton;
 
 	CELL		rawPos;		/* raw position for selection start */
 	CELL		startRaw;	/* area before selectUnit processing */
