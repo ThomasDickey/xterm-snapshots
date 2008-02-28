@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.585 2008/02/24 21:49:36 tom Exp $ */
+/* $XTermId: main.c,v 1.586 2008/02/28 00:28:00 Matthieu.Herrb Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1873,10 +1873,6 @@ main(int argc, char *argv[]ENVP_ARG)
 #ifndef USE_TERMIOS		/* { */
     d_tio.c_line = 0;
 #endif /* } */
-#if defined(USE_TERMIOS) || defined(USE_POSIX_TERMIOS)	/* { */
-    d_tio.c_cc[VMIN] = 1;
-    d_tio.c_cc[VTIME] = 0;
-#endif /* } */
 #ifdef HAS_LTCHARS		/* { */
     d_ltc.t_suspc = CSUSP;	/* t_suspc */
     d_ltc.t_dsuspc = CDSUSP;	/* t_dsuspc */
@@ -1939,6 +1935,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	    }
 	}
     }
+#if defined(USE_TERMIOS) || defined(USE_POSIX_TERMIOS)	/* { */
+    d_tio.c_cc[VMIN] = 1;
+    d_tio.c_cc[VTIME] = 0;
+#endif /* } */
 #ifdef HAS_LTCHARS		/* { */
     d_ltc.t_suspc = CharOf('\000');	/* t_suspc */
     d_ltc.t_dsuspc = CharOf('\000');	/* t_dsuspc */
