@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.835 2008/02/21 20:21:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.836 2008/02/29 01:55:13 tom Exp $ */
 
 /*
 
@@ -5941,6 +5941,19 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 	    name = 0; \
 	}
 
+#ifdef NO_LEAKS
+#if OPT_RENDERFONT
+static void
+xtermCloseXft(TScreen * screen, XftFont ** pub)
+{
+    if (*pub != 0) {
+	XftFontClose(screen->display, *pub);
+	*pub = 0;
+    }
+}
+#endif
+#endif
+
 static void
 VTDestroy(Widget w GCC_UNUSED)
 {
@@ -5985,6 +5998,17 @@ VTDestroy(Widget w GCC_UNUSED)
 
     xtermCloseFonts(xw, screen->fnts);
     noleaks_cachedCgs(xw);
+
+#if OPT_RENDERFONT
+    for (n = 0; n < NMENUFONTS; ++n) {
+	xtermCloseXft(screen, &(screen->renderFontNorm[n]));
+	xtermCloseXft(screen, &(screen->renderFontBold[n]));
+	xtermCloseXft(screen, &(screen->renderFontItal[n]));
+	xtermCloseXft(screen, &(screen->renderWideNorm[n]));
+	xtermCloseXft(screen, &(screen->renderWideBold[n]));
+	xtermCloseXft(screen, &(screen->renderWideItal[n]));
+    }
+#endif
 
 #if 0				/* some strings may be owned by X libraries */
     for (n = 0; n <= fontMenu_lastBuiltin; ++n) {
