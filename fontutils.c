@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.269 2008/02/21 20:21:15 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.270 2008/02/29 00:25:16 Andrea.Odetti Exp $ */
 
 /************************************************************
 
@@ -699,6 +699,9 @@ xtermOpenFont(XtermWidget xw, char *name, XTermFonts * result)
     return code;
 }
 
+/*
+ * Close the font and Free the font info
+ */
 XTermFonts *
 xtermCloseFont(XtermWidget xw, XTermFonts * fnt)
 {
@@ -712,18 +715,6 @@ xtermCloseFont(XtermWidget xw, XTermFonts * fnt)
     return 0;
 }
 
-static XTermFonts *
-xtermCloseFont2(XtermWidget xw, XTermFonts * fnt)
-{
-    if (fnt != 0 && fnt->fs != 0) {
-	TScreen *screen = TScreenOf(xw);
-
-	clrCgsFonts(xw, WhichVWin(screen), fnt);
-	XFreeFont(screen->display, fnt->fs);
-    }
-    return 0;
-}
-
 /*
  * Close the listed fonts, noting that some may use copies of the pointer.
  */
@@ -733,13 +724,16 @@ xtermCloseFonts(XtermWidget xw, XTermFonts * fnts)
     int j, k;
 
     for (j = 0; j < fMAX; ++j) {
-	if (fnts[j].fs != 0) {
-	    xtermCloseFont2(xw, &fnts[j]);
+	/*
+	 * Need to save the pointer since xtermCloseFont zeroes it
+	 */
+	XFontStruct *thisFont = fnts[j].fs;
+	if (thisFont != 0) {
+	    xtermCloseFont(xw, &fnts[j]);
 	    for (k = j + 1; k < fMAX; ++k) {
-		if (fnts[j].fs == fnts[k].fs)
+		if (thisFont == fnts[k].fs)
 		    xtermFreeFontInfo(&fnts[k]);
 	    }
-	    xtermFreeFontInfo(&fnts[j]);
 	}
     }
 }
