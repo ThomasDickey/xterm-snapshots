@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.664 2008/03/02 23:32:51 tom Exp $
+  $XTermId: xterm.log.html,v 1.667 2008/03/26 00:54:14 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_234">Patch #234 - 2008-03/02</A>
 <LI><A HREF="#xterm_233">Patch #233 - 2008/02/24</A>
 <LI><A HREF="#xterm_232">Patch #232 - 2008/01/30</A>
@@ -281,6 +282,20 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>add special check for fd_mask on Mac OS X (report by Jeremy
+	    Huddleston).
+
+	<li>add <code>dylib</code> to autoconf's suffix list used for checking
+	    the result from <code>xmkmf</code>, to work with Mac OS X (report
+	    by Jeremy Huddleston).
+
+	<li>correct initialization of bold- and wide-, wide-bold fonts which
+	    may be set via the <code>utf8Fonts</code> subresource (Debian
+	    #347790).
+</ul>
 
 <H1><A NAME="xterm_234">Patch #234 - 2008-03/02</A></H1>
 <ul>

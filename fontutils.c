@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.270 2008/02/29 00:25:16 Andrea.Odetti Exp $ */
+/* $XTermId: fontutils.c,v 1.271 2008/03/05 21:08:55 tom Exp $ */
 
 /************************************************************
 
@@ -1204,6 +1204,11 @@ xtermLoadVTFonts(XtermWidget w, char *myName, char *myClass)
 	    w->misc.default_font = subresourceRec.default_font;
 	    COPY_MENU_FONTS(subresourceRec, w->screen);
 	    w->screen.MenuFontName(fontMenu_default) = w->misc.default_font.f_n;
+	    w->screen.menu_font_names[0][fBold] = w->misc.default_font.f_b;
+#if OPT_WIDE_CHARS
+	    w->screen.menu_font_names[0][fWide] = w->misc.default_font.f_w;
+	    w->screen.menu_font_names[0][fWBold] = w->misc.default_font.f_wb;
+#endif
 	} else {
 	    TRACE(("...no resources found\n"));
 	    status = False;

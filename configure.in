@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.241 2008/02/24 21:46:37 tom Exp $
+dnl $XTermId: configure.in,v 1.244 2008/03/26 00:55:11 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -46,7 +46,7 @@ esac
 
 AC_PROG_CC
 AC_PROG_CPP
-AC_GCC_TRADITIONAL
+AC_PROG_GCC_TRADITIONAL
 AC_PROG_AWK
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -59,7 +59,7 @@ AC_ISC_POSIX
 
 ###	checks for compiler characteristics
 CF_ANSI_CC_CHECK
-AC_CONST
+AC_C_CONST
 CF_PROG_EXT
 CF_XOPEN_SOURCE
 CF_SIGWINCH
@@ -277,7 +277,7 @@ AC_CHECK_HEADERS( \
 	)
 
 CF_X_ATHENA
-CF_TYPE_FD_SET
+CF_TYPE_FD_MASK
 CF_TERMIO_C_ISPEED
 
 LIBS="$LIBS $X_EXTRA_LIBS"
