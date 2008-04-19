@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.296 2007/12/31 21:11:19 tom Exp $ */
+/* $XTermId: input.c,v 1.298 2008/04/17 23:36:11 tom Exp $ */
 
 /*
- * Copyright 1999-2006,2007 by Thomas E. Dickey
+ * Copyright 1999-2007,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -75,6 +75,7 @@
 #endif
 
 #include <X11/Xutil.h>
+#include <stdio.h>
 #include <ctype.h>
 
 #include <xutf8.h>

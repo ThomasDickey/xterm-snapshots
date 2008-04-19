@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.498 2008/01/30 00:50:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.499 2008/04/17 23:34:12 tom Exp $ */
 
 /************************************************************
 
@@ -743,6 +743,7 @@ extern void noleaks_cachedCgs (XtermWidget /* xw */);
 #endif
 
 /* charproc.c */
+extern Bool CheckBufPtrs (TScreen * /* screen */);
 extern int VTInit (void);
 extern int v_write (int  /* f */, Char * /* d */, unsigned  /* len */);
 extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name */, Bool  /* justprobe */);

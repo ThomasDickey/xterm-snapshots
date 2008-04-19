@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.134 2008/02/28 01:07:30 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.135 2008/04/17 23:23:17 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/scrollbar.c,v 3.48 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -327,29 +327,31 @@ ResizeScrollBar(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
 
-    int height = screen->fullVwin.height + screen->border * 2;
-    int width = screen->scrollWidget->core.width;
-    int ypos = -ScrollBarBorder(xw);
+    if (screen->scrollWidget != 0) {
+	int height = screen->fullVwin.height + screen->border * 2;
+	int width = screen->scrollWidget->core.width;
+	int ypos = -ScrollBarBorder(xw);
 #ifdef SCROLLBAR_RIGHT
-    int xpos = ((xw->misc.useRight)
-		? (screen->fullVwin.fullwidth -
-		   screen->scrollWidget->core.width -
-		   BorderWidth(screen->scrollWidget))
-		: -ScrollBarBorder(xw));
+	int xpos = ((xw->misc.useRight)
+		    ? (screen->fullVwin.fullwidth -
+		       screen->scrollWidget->core.width -
+		       BorderWidth(screen->scrollWidget))
+		    : -ScrollBarBorder(xw));
 #else
-    int xpos = -ScrollBarBorder(xw);
+	int xpos = -ScrollBarBorder(xw);
 #endif
 
-    TRACE(("ResizeScrollBar at %d,%d %dx%d\n", ypos, xpos, height, width));
+	TRACE(("ResizeScrollBar at %d,%d %dx%d\n", ypos, xpos, height, width));
 
-    XtConfigureWidget(
-			 screen->scrollWidget,
-			 xpos,
-			 ypos,
-			 width,
-			 height,
-			 BorderWidth(screen->scrollWidget));
-    ScrollBarDrawThumb(screen->scrollWidget);
+	XtConfigureWidget(
+			     screen->scrollWidget,
+			     xpos,
+			     ypos,
+			     width,
+			     height,
+			     BorderWidth(screen->scrollWidget));
+	ScrollBarDrawThumb(screen->scrollWidget);
+    }
 }
 
 void

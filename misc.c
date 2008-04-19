@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.382 2008/01/27 15:37:18 tom Exp $ */
+/* $XTermId: misc.c,v 1.383 2008/04/14 00:05:43 tom Exp $ */
 
 /*
  *
@@ -189,6 +189,11 @@ static void
 unselectwindow(TScreen * screen, int flag)
 {
     TRACE(("unselectwindow(%d) flag=%d\n", screen->select, flag));
+
+    if (screen->hide_pointer) {
+	screen->hide_pointer = False;
+	xtermDisplayCursor(term);
+    }
 
     if (!screen->always_highlight) {
 #if OPT_TEK4014
