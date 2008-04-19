@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.271 2008/03/05 21:08:55 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.272 2008/04/17 23:23:37 tom Exp $ */
 
 /************************************************************
 
@@ -1745,8 +1745,7 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
 	}
 	TRACE(("xtermUpdateFontInfo {{\n"));
 	DoResizeScreen(xw);	/* set to the new natural size */
-	if (screen->scrollWidget)
-	    ResizeScrollBar(xw);
+	ResizeScrollBar(xw);
 	Redraw();
 	TRACE(("... }} xtermUpdateFontInfo\n"));
 #ifdef SCROLLBAR_RIGHT
