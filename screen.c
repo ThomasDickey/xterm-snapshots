@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.239 2008/04/18 22:11:11 tom Exp $ */
+/* $XTermId: screen.c,v 1.241 2008/04/20 21:07:10 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1492,6 +1492,7 @@ ScreenResize(XtermWidget xw,
 	    screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
 	}
 
+	AdjustSavedCursor(xw, move_down_by);
 	set_max_row(screen, screen->max_row + delta_rows);
 	set_max_col(screen, cols - 1);
 
