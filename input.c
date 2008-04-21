@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.298 2008/04/17 23:36:11 tom Exp $ */
+/* $XTermId: input.c,v 1.299 2008/04/20 20:27:18 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -651,16 +651,22 @@ ModifyOtherKeys(XtermWidget xw,
  * for more information.
  */
 static Bool
-modifyOtherKey(ANSI * reply, int input_char, int modify_parm)
+modifyOtherKey(ANSI * reply, int input_char, int modify_parm, int format_keys)
 {
     Bool result = False;
 
     if (input_char >= 0) {
 	reply->a_type = ANSI_CSI;
-	APPEND_PARM(27);
-	APPEND_PARM(modify_parm);
-	APPEND_PARM(input_char);
-	reply->a_final = '~';
+	if (format_keys) {
+	    APPEND_PARM(input_char);
+	    APPEND_PARM(modify_parm);
+	    reply->a_final = 'u';
+	} else {
+	    APPEND_PARM(27);
+	    APPEND_PARM(modify_parm);
+	    APPEND_PARM(input_char);
+	    reply->a_final = '~';
+	}
 
 	result = True;
     }
@@ -1137,7 +1143,7 @@ Input(XtermWidget xw,
 #if OPT_MOD_FKEYS
 		if (keyboard->modify_now.other_keys > 1
 		    && computeMaskedModifier(xw, evt_state, ShiftMask) > 1)
-		    modifyOtherKey(&reply, '\t', modify_parm);
+		    modifyOtherKey(&reply, '\t', modify_parm, keyboard->format_keys);
 #endif
 	    } else
 #endif /* XK_ISO_Left_Tab */
@@ -1226,7 +1232,7 @@ Input(XtermWidget xw,
 			     : -1));
 
 	    TRACE(("...modifyOtherKeys %d;%d\n", modify_parm, input_char));
-	    if (modifyOtherKey(&reply, input_char, modify_parm)) {
+	    if (modifyOtherKey(&reply, input_char, modify_parm, keyboard->format_keys)) {
 		unparseseq(xw, &reply);
 	    } else {
 		Bell(XkbBI_MinorError, 0);

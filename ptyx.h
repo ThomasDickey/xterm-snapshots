@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.514 2008/04/18 20:11:23 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.515 2008/04/20 20:26:33 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1837,6 +1837,7 @@ typedef struct
 #if OPT_MOD_FKEYS
     TModify modify_now;		/* current modifier value */
     TModify modify_1st;		/* original modifier value, for resets */
+    int format_keys;		/* format of modifyOtherKeys */
 #endif
 } TKeyboard;
 

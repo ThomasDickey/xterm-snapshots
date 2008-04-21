@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.499 2008/04/17 23:34:12 tom Exp $ */
+/* $XTermId: xterm.h,v 1.501 2008/04/20 20:30:55 tom Exp $ */
 
 /************************************************************
 
@@ -391,6 +391,7 @@ extern char **environ;
 #define XtNfontDoublesize	"fontDoublesize"
 #define XtNfontStyle		"fontStyle"
 #define XtNforceBoxChars	"forceBoxChars"
+#define XtNformatOtherKeys	"formatOtherKeys"
 #define XtNfreeBoldBox		"freeBoldBox"
 #define XtNhighlightColor	"highlightColor"
 #define XtNhighlightColorMode	"highlightColorMode"
@@ -429,9 +430,9 @@ extern char **environ;
 #define XtNnMarginBell		"nMarginBell"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
-#define XtNpointerMode		"pointerMode"
 #define XtNpointerColor		"pointerColor"
 #define XtNpointerColorBackground "pointerColorBackground"
+#define XtNpointerMode		"pointerMode"
 #define XtNpointerShape		"pointerShape"
 #define XtNpopOnBell		"popOnBell"
 #define XtNprintAttributes	"printAttributes"
@@ -539,6 +540,7 @@ extern char **environ;
 #define XtCFontDoublesize	"FontDoublesize"
 #define XtCFontStyle		"FontStyle"
 #define XtCForceBoxChars	"ForceBoxChars"
+#define XtCFormatOtherKeys	"FormatOtherKeys"
 #define XtCFreeBoldBox		"FreeBoldBox"
 #define XtCHighlightColorMode	"HighlightColorMode"
 #define XtCHighlightReverse	"HighlightReverse"
@@ -787,6 +789,7 @@ extern unsigned xtermCharSetIn (unsigned  /* code */, int  /* charset */);
 extern int xtermCharSetOut (IChar * /* buf */, IChar * /* ptr */, int  /* charset */);
 
 /* cursor.c */
+extern void AdjustSavedCursor (XtermWidget /* xw */, int /* adjust */);
 extern void CarriageReturn (TScreen * /* screen */);
 extern void CursorBack (XtermWidget /* xw */, int   /* n */);
 extern void CursorDown (TScreen * /* screen */, int   /* n */);

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.839 2008/04/18 20:11:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.842 2008/04/20 22:08:42 tom Exp $ */
 
 /*
 
@@ -614,6 +614,8 @@ static XtResource resources[] =
 	 keyboard.modify_1st.other_keys, 0),
     Ires(XtNmodifyStringKeys, XtCModifyStringKeys,
 	 keyboard.modify_1st.string_keys, 0),
+    Ires(XtNformatOtherKeys, XtCFormatOtherKeys,
+	 keyboard.format_keys, 0),
 #endif
 
 #if OPT_NUM_LOCK
@@ -4001,6 +4003,28 @@ dpmodes(XtermWidget xw,
 	    set_bool_mode(screen->delete_is_del);
 	    update_delete_del();
 	    break;
+#if OPT_NUM_LOCK
+	case 1039:
+	    set_bool_mode(screen->alt_sends_esc);
+	    update_alt_esc();
+	    break;
+#endif
+	case 1040:
+	    set_bool_mode(screen->keepSelection);
+	    update_keepSelection();
+	    break;
+	case 1041:
+	    set_bool_mode(screen->selectToClipboard);
+	    update_selectToClipboard();
+	    break;
+	case 1042:
+	    set_bool_mode(screen->bellIsUrgent);
+	    update_bellIsUrgent();
+	    break;
+	case 1043:
+	    set_bool_mode(screen->poponbell);
+	    update_poponbell();
+	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM())
@@ -5901,6 +5925,7 @@ VTInitialize(Widget wrequest,
     init_Ires(keyboard.modify_1st.keypad_keys);
     init_Ires(keyboard.modify_1st.other_keys);
     init_Ires(keyboard.modify_1st.string_keys);
+    init_Ires(keyboard.format_keys);
     wnew->keyboard.modify_now = wnew->keyboard.modify_1st;
 #endif
 
