@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.188 2008/04/20 22:24:36 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.190 2008/05/26 22:24:56 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2007,2008 by Thomas E. Dickey
@@ -468,7 +468,7 @@ Designate G2 Character Set (ISO 2022)
 .IP \\*(Es\\*+\\*(Cc
 Designate G3 Character Set (ISO 2022)
 .br
-Final character \*(Cc for designating character sets
+Final character \*(Cc for designating 94-character sets
 (\*0, \*A and \*(cB apply to VT100 and up, the remainder to VT220 and up):
   \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set
   \*(Cc = \*A \(-> United Kingdom (UK)
@@ -483,6 +483,24 @@ Final character \*(Cc for designating character sets
   \*(Cc = \*Z \(-> Spanish
   \*(Cc = \*H or \*7 \(-> Swedish
   \*(Cc = \*= \(-> Swiss
+.\" VT3xx and VT5xx (see vttest) add more selections, not implemented here.
+.
+.IP \\*(Es\\*-\\*(Cc
+Designate G1 Character Set (VT300)
+.
+.IP \\*(Es\\*.\\*(Cc
+Designate G2 Character Set (VT300)
+.
+.IP \\*(Es\\*/\\*(Cc
+Designate G3 Character Set (VT300)
+.br
+These work for 96-character sets only.
+  \*(Cc = \*A \(-> ISO Latin-1 Supplemental
+.\" VT5xx would implement these:
+.\"  \*(Cc = \*F \(-> ISO Greek Supplemental
+.\"  \*(Cc = \*H \(-> ISO Hebrew Supplemental
+.\"  \*(Cc = \*M \(-> ISO Latin-5 Supplemental
+.\"  \*(Cc = \*L \(-> ISO Latin-Cyrillic
 .
 .IP \\*(Es\\*7
 Save Cursor (DECSC)

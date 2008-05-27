@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.842 2008/04/20 22:08:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.844 2008/05/26 22:34:01 tom Exp $ */
 
 /*
 
@@ -1611,6 +1611,24 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    /* enter scs state 3 */
 	    sp->scstype = 3;
 	    sp->parsestate = scstable;
+	    break;
+
+	case CASE_SCS1A_STATE:
+	    /* enter scs state 1 */
+	    sp->scstype = 1;
+	    sp->parsestate = scs96table;
+	    break;
+
+	case CASE_SCS2A_STATE:
+	    /* enter scs state 2 */
+	    sp->scstype = 2;
+	    sp->parsestate = scs96table;
+	    break;
+
+	case CASE_SCS3A_STATE:
+	    /* enter scs state 3 */
+	    sp->scstype = 3;
+	    sp->parsestate = scs96table;
 	    break;
 
 	case CASE_ESC_IGNORE:
@@ -3380,10 +3398,9 @@ dotext(XtermWidget xw,
      * for line-drawing characters.
      */
     if ((screen->utf8_mode == uFalse)
-	|| (screen->vt100_graphics && charset == '0'))
+	|| (screen->vt100_graphics))
 #endif
-
-	if (!xtermCharSetOut(buf, buf + len, charset))
+	if (!xtermCharSetOut(xw, buf, buf + len, charset))
 	    return;
 
     if_OPT_XMC_GLITCH(screen, {
