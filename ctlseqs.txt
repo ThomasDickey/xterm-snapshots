@@ -129,8 +129,8 @@ ESC ( C   Designate G0 Character Set (ISO 2022)
 ESC ) C   Designate G1 Character Set (ISO 2022)
 ESC * C   Designate G2 Character Set (ISO 2022)
 ESC + C   Designate G3 Character Set (ISO 2022)
-          Final character C for designating character sets (0 , A  and B
-          apply to VT100 and up, the remainder to VT220 and up):
+          Final character C for designating 94-character sets (0 , A
+          and B  apply to VT100 and up, the remainder to VT220 and up):
             C = 0  -> DEC Special Character and Line Drawing Set
             C = A  -> United Kingdom (UK)
             C = B  -> United States (USASCII)
@@ -144,6 +144,11 @@ ESC + C   Designate G3 Character Set (ISO 2022)
             C = Z  -> Spanish
             C = H  or 7  -> Swedish
             C = =  -> Swiss
+ESC - C   Designate G1 Character Set (VT300)
+ESC . C   Designate G2 Character Set (VT300)
+ESC / C   Designate G3 Character Set (VT300)
+          These work for 96-character sets only.
+            C = A  -> ISO Latin-1 Supplemental
 ESC 7     Save Cursor (DECSC)
 ESC 8     Restore Cursor (DECRC)
 ESC =     Application Keypad (DECPAM)

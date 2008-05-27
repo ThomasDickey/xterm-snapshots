@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.674 2008/04/20 22:31:01 tom Exp $
+  $XTermId: xterm.log.html,v 1.677 2008/05/26 22:30:18 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_235">Patch #235 - 2008/04/20</A>
 <LI><A HREF="#xterm_234">Patch #234 - 2008/03/02</A>
 <LI><A HREF="#xterm_233">Patch #233 - 2008/02/24</A>
@@ -282,6 +283,17 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>implement VT320-style SCS (select character set) for ISO Latin-1
+	    supplemental.
+
+	<li>fixes for vt100-style character sets in UTF-8 mode (Ubuntu #230919).
+
+	<li>fix to make <code>luit</code> work with xterm's <code>-ls</code>
+	    option (report/patch by Marius Tolzmann).
+</ul>
 
 <H1><A NAME="xterm_235">Patch #235 - 2008/04/20</A></H1>
 <ul>

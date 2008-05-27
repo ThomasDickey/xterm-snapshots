@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.501 2008/04/20 20:30:55 tom Exp $ */
+/* $XTermId: xterm.h,v 1.502 2008/05/26 19:23:05 tom Exp $ */
 
 /************************************************************
 
@@ -786,7 +786,7 @@ extern void noleaks_charproc (void);
 
 /* charsets.c */
 extern unsigned xtermCharSetIn (unsigned  /* code */, int  /* charset */);
-extern int xtermCharSetOut (IChar * /* buf */, IChar * /* ptr */, int  /* charset */);
+extern int xtermCharSetOut (XtermWidget /* xw */, IChar * /* buf */, IChar * /* ptr */, int  /* charset */);
 
 /* cursor.c */
 extern void AdjustSavedCursor (XtermWidget /* xw */, int /* adjust */);
