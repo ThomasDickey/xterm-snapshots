@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.677 2008/05/26 22:30:18 tom Exp $
+  $XTermId: xterm.log.html,v 1.684 2008/07/27 15:54:43 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -286,6 +286,25 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>correct memory reallocation when handling a paste of UTF-8 text
+	    from <a href="#xterm_225">patch #225</a> changes
+	    (report/patch by Max Mikhanosha)
+
+	<li>correct allocation of temporary buffer in
+	    <code>xtermFindShell</code> in case the user's <code>$PATH</code>
+	    contains no ":" (report/analysis by Victor Stinner,
+	    Freedesktop.Org Bugzilla #16790).
+
+	<li>modify CF_XOPEN_SOURCE to add case for DragonFly BSD, to fix
+	    new compile problem exposed by fix for fd_mask (patch by
+	    Hasso Tepper).
+
+	<li>add configure-check for ncurses <code>use_extended_names</code>,
+	    (report by Martin Mokrejs).
+
+	<li>correct computation for toolbar height; layout manager already
+	    takes into account <code>borderWidth</code> resource.
+
 	<li>implement VT320-style SCS (select character set) for ISO Latin-1
 	    supplemental.
 
@@ -293,6 +312,8 @@ is the latest version of this file.
 
 	<li>fix to make <code>luit</code> work with xterm's <code>-ls</code>
 	    option (report/patch by Marius Tolzmann).
+
+	<li>update config.guess, config.sub
 </ul>
 
 <H1><A NAME="xterm_235">Patch #235 - 2008/04/20</A></H1>

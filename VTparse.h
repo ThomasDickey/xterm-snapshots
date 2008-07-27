@@ -1,4 +1,4 @@
-/* $XTermId: VTparse.h,v 1.44 2008/05/26 21:30:01 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.45 2008/05/28 21:11:23 tom Exp $ */
 
 /*
  * Copyright 2002-2006,2008 by Thomas E. Dickey
@@ -75,8 +75,8 @@ extern Const PARSE_T eigtable[];
 extern Const PARSE_T esc_sp_table[];
 extern Const PARSE_T esc_table[];
 extern Const PARSE_T scrtable[];
-extern Const PARSE_T scstable[];
 extern Const PARSE_T scs96table[];
+extern Const PARSE_T scstable[];
 extern Const PARSE_T sos_table[];
 
 #if OPT_DEC_LOCATOR

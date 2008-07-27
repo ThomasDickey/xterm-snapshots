@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.515 2008/04/20 20:26:33 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.516 2008/07/27 15:20:53 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -2240,13 +2240,14 @@ typedef struct Tek_Link
 /***====================================================================***/
 
 #if OPT_TRACE
-#include <trace.h>
 #undef NDEBUG			/* turn on assert's */
 #else
 #ifndef NDEBUG
 #define NDEBUG			/* not debugging, don't do assert's */
 #endif
 #endif
+
+#include <trace.h>
 
 #ifndef TRACE
 #define TRACE(p) /*nothing*/

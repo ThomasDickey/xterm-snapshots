@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.285 2008/02/24 19:42:02 tom Exp $ */
+/* $XTermId: button.c,v 1.286 2008/07/27 15:43:44 Max.Mikhanosha Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1617,15 +1617,35 @@ SelectionReceived(Widget w,
 		if (text_list != NULL && text_list_count != 0) {
 		    int i;
 		    Char *data;
-		    unsigned long size;
+		    char **new_text_list, *tmp;
+		    unsigned long size, new_size;
+		    /* XLib StringList actually uses only two
+		     * pointers, one for the list itself, and one for
+		     * the data. Pointer to the data is the first
+		     * element of the list, the rest (if any) list
+		     * elements point to the same memory block as the
+		     * first element
+		     */
+		    new_size = 0;
 		    for (i = 0; i < text_list_count; ++i) {
 			data = (Char *) text_list[i];
-			size = strlen(text_list[i]);
+			size = strlen(text_list[i]) + 1;
 			data = UTF8toLatin1(data, size, &size);
-			XFree(text_list[i]);
-			text_list[i] = XtMalloc(size + 1);
-			memcpy(text_list[i], data, size + 1);
+			new_size += size + 1;
 		    }
+		    new_text_list =
+			(char **) XtMalloc(sizeof(char *) * text_list_count);
+		    new_text_list[0] = tmp = XtMalloc(new_size);
+		    for (i = 0; i < text_list_count; ++i) {
+			data = (Char *) text_list[i];
+			size = strlen(text_list[i]) + 1;
+			data = UTF8toLatin1(data, size, &size);
+			memcpy(tmp, data, size + 1);
+			new_text_list[i] = tmp;
+			tmp += size + 1;
+		    }
+		    XFreeStringList(text_list);
+		    text_list = new_text_list;
 		}
 	    } else
 #endif
