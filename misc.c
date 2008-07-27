@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.383 2008/04/14 00:05:43 tom Exp $ */
+/* $XTermId: misc.c,v 1.384 2008/07/27 15:38:05 tom Exp $ */
 
 /*
  *
@@ -3309,7 +3309,7 @@ xtermFindShell(char *leaf, Bool warning)
     if (*result != '\0' && strchr("+/-", *result) == 0) {
 	/* find it in $PATH */
 	if ((s = x_getenv("PATH")) != 0) {
-	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 1)) != 0) {
+	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 2)) != 0) {
 		Bool found = False;
 		while (*s != '\0') {
 		    strcpy(tmp, s);
