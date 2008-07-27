@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.516 2008/07/27 15:20:53 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.517 2008/07/27 19:38:00 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1377,7 +1377,7 @@ typedef struct {
 	 */
 	int		base64_accu;
 	int		base64_count;
-	int		base64_pad;
+	unsigned	base64_pad;
 #endif
 #if OPT_READLINE
 	unsigned	click1_moves;

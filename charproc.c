@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.847 2008/06/06 00:22:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.848 2008/07/27 19:00:21 tom Exp $ */
 
 /*
 
@@ -6064,6 +6064,12 @@ VTDestroy(Widget w GCC_UNUSED)
 #ifndef NO_ACTIVE_ICON
     releaseWindowGCs(xw, &(screen->iconVwin));
 #endif
+    XtUninstallTranslations((Widget)xw);
+    XtUninstallTranslations(screen->scrollWidget);
+#if OPT_TOOLBAR
+    XtUninstallTranslations((Widget)XtParent(xw));
+#endif
+    XtUninstallTranslations((Widget)SHELL_OF(xw));
 
     if (screen->hidden_cursor)
 	XFreeCursor(screen->display, screen->hidden_cursor);
