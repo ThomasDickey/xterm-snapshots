@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.686 2008/09/14 16:23:28 tom Exp $
+  $XTermId: xterm.log.html,v 1.687 2008/09/14 16:40:07 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -287,6 +287,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify handling of <code>altSendsEscape</code> to reset the
+	    <code>eightBitInput</code> mode, like <code>metaSendsEscape</code> 
+	    (patch by Ted Phelps).
+
 	<li>add feature to show the text-cursor as an underline rather than a
 	    box, plus command-line options <code>-uc</code> and
 	    <code>+uc</code> and resource <code>cursorUnderLine</code> to
