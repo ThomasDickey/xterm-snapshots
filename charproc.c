@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.849 2008/09/14 15:16:40 Paul.Lampert Exp $ */
+/* $XTermId: charproc.c,v 1.850 2008/09/14 18:17:44 tom Exp $ */
 
 /*
 
@@ -3636,21 +3636,12 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	if (event->xconfigure.window == XtWindow(toplevel)) {
 	    int height, width;
 
-	    /*
-	     * Some window managers modify the configuration during
-	     * initialization.  Skip notification events that we know are
-	     * obsolete because there is already another in the queue.
-	     */
-	    do {
-		height = event->xconfigure.height;
-		width = event->xconfigure.width;
-		TRACE(("HandleStructNotify(ConfigureNotify) %d,%d %dx%d\n",
-		       event->xconfigure.y, event->xconfigure.x,
-		       event->xconfigure.height, event->xconfigure.width));
+	    height = event->xconfigure.height;
+	    width = event->xconfigure.width;
+	    TRACE(("HandleStructNotify(ConfigureNotify) %d,%d %dx%d\n",
+		   event->xconfigure.y, event->xconfigure.x,
+		   event->xconfigure.height, event->xconfigure.width));
 
-	    } while (XCheckTypedWindowEvent(XtDisplay(xw),
-					    event->xconfigure.window,
-					    ConfigureNotify, event));
 #if OPT_TOOLBAR
 	    /*
 	     * The notification is for the top-level widget, but we care about
