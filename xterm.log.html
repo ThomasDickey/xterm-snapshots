@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.685 2008/07/27 23:10:10 tom Exp $
+  $XTermId: xterm.log.html,v 1.686 2008/09/14 16:23:28 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_236">Patch #236 - 2008/07/27</A>
 <LI><A HREF="#xterm_235">Patch #235 - 2008/04/20</A>
 <LI><A HREF="#xterm_234">Patch #234 - 2008/03/02</A>
@@ -284,6 +285,13 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>add feature to show the text-cursor as an underline rather than a
+	    box, plus command-line options <code>-uc</code> and
+	    <code>+uc</code> and resource <code>cursorUnderLine</code> to
+	    control the feature (patch by Paul Lampert).
+</ul>
 <H1><A NAME="xterm_236">Patch #236 - 2008/07/27</A></H1>
 <ul>
 	<li>correct memory reallocation when handling a paste of UTF-8 text

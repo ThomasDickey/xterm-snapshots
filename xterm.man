@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.408 2008/04/20 21:16:40 tom Exp $
+.\" $XTermId: xterm.man,v 1.409 2008/09/14 15:16:56 Paul.Lampert Exp $
 .\"
 .\" Copyright 1996-2007,2008 by Thomas E. Dickey
 .\"
@@ -527,13 +527,13 @@ It sets the \fBhpFunctionKeys\fP resource to ``false''.
 .TP 8
 .BI -hm
 Tells \fIxterm\fP to use
-\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+\fBhighlightTextColor\fP and \fBhighlightColor\fP
 to override the reversed foreground/background colors in a selection.
 It sets the \fBhighlightColorMode\fP resource to ``true''.
 .TP 8
 .BI +hm
 Tells \fIxterm\fP not to use
-\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+\fBhighlightTextColor\fP and \fBhighlightColor\fP
 to override the reversed foreground/background colors in a selection.
 It sets the \fBhighlightColorMode\fP resource to ``false''.
 .TP 8
@@ -948,6 +948,12 @@ when your operating system does not support locale.
 .TP 8
 .B +u8
 This option resets the \fButf8\fP resource.
+.TP 8
+.B "-uc"
+This option makes the cursor underlined instead of a box.
+.TP 8
+.B "+uc"
+This option makes the cursor a box instead of underlined.
 .TP 8
 .B "-ulc"
 This option disables the display of characters with underline attribute as
@@ -1861,6 +1867,10 @@ at the end of the line.
 If ``true'', the Newline is selected.
 The default is ``true.''
 .TP 8
+.B "cursorUnderLine (\fPclass\fB CursorUnderLine)"
+Specifies whether to make the cursor underlined or a box.
+The default is ``false.''
+.TP 8
 .B "cutToBeginningOfLine (\fPclass\fB CutToBeginningOfLine)"
 If ``false'', triple clicking to select a line selects only from the
 current word forward.
@@ -2087,7 +2097,7 @@ The default is ``XtDefaultForeground.''
 .TP 8
 .B "highlightColorMode (\fPclass\fB HighlightColorMode)"
 Specifies whether \fIxterm\fP should use
-\fBhighlightTextColor\fP and \fBhighlightColor\fP 
+\fBhighlightTextColor\fP and \fBhighlightColor\fP
 to override the reversed foreground/background colors in a selection.
 The default is unspecified:
 at startup, \fIxterm\fP checks if those resources are set to something
@@ -2606,7 +2616,7 @@ page function.
 The default is ``false.''
 .TP 8
 .B "quietGrab (\fPclass\fB QuietGrab)"
-Controls whether the cursor is repainted 
+Controls whether the cursor is repainted
 when \fINotifyGrab\fP and \fINotifyUngrab\fP
 event types are received during change of focus.
 The default is ``false.''
