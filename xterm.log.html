@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.687 2008/09/14 16:40:07 tom Exp $
+  $XTermId: xterm.log.html,v 1.688 2008/09/14 18:45:10 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -287,6 +287,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>remove an optimization of <code>ConfigureNotify</code> events
+	    which seems to interfere with passing <code>SIGWINCH</code> to 
+	    applications (GenToo #233836).
+
 	<li>modify handling of <code>altSendsEscape</code> to reset the
 	    <code>eightBitInput</code> mode, like <code>metaSendsEscape</code> 
 	    (patch by Ted Phelps).
