@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.848 2008/07/27 19:00:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.849 2008/09/14 15:16:40 Paul.Lampert Exp $ */
 
 /*
 
@@ -505,6 +505,7 @@ static XtResource resources[] =
 #if OPT_BLINK_CURS
     Bres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink, False),
 #endif
+    Bres(XtNcursorUnderline, XtCCursorUnderline, screen.cursor_underline, False),
 
 #if OPT_BLINK_TEXT
     Bres(XtNshowBlinkAsBold, XtCCursorBlink, screen.blink_as_bold, DEFBLINKASBOLD),
@@ -5456,6 +5457,7 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.blink_off);
     wnew->screen.cursor_blink_res = wnew->screen.cursor_blink;
 #endif
+    init_Bres(screen.cursor_underline);
 #if OPT_BLINK_TEXT
     init_Ires(screen.blink_as_bold);
 #endif
@@ -6064,12 +6066,12 @@ VTDestroy(Widget w GCC_UNUSED)
 #ifndef NO_ACTIVE_ICON
     releaseWindowGCs(xw, &(screen->iconVwin));
 #endif
-    XtUninstallTranslations((Widget)xw);
+    XtUninstallTranslations((Widget) xw);
     XtUninstallTranslations(screen->scrollWidget);
 #if OPT_TOOLBAR
-    XtUninstallTranslations((Widget)XtParent(xw));
+    XtUninstallTranslations((Widget) XtParent(xw));
 #endif
-    XtUninstallTranslations((Widget)SHELL_OF(xw));
+    XtUninstallTranslations((Widget) SHELL_OF(xw));
 
     if (screen->hidden_cursor)
 	XFreeCursor(screen->display, screen->hidden_cursor);
@@ -6893,7 +6895,7 @@ ShowCursor(void)
      * whether the window has focus, since in that case we want just an
      * outline for the cursor.
      */
-    filled = (screen->select || screen->always_highlight);
+    filled = (screen->select || screen->always_highlight) && !screen->cursor_underline;
 #if OPT_HIGHLIGHT_COLOR
     use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
     use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
@@ -7014,7 +7016,10 @@ ShowCursor(void)
 		outlineGC = currentGC;
 
 	    screen->box->x = x;
-	    screen->box->y = y;
+	    if (!screen->cursor_underline)
+		screen->box->y = y;
+	    else
+		screen->box->y = y + FontHeight(screen) - 2;
 	    XDrawLines(screen->display, VWindow(screen), outlineGC,
 		       screen->box, NBOX, CoordModePrevious);
 	}
