@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.850 2008/09/14 18:17:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.852 2008/09/14 21:27:54 tom Exp $ */
 
 /*
 
@@ -5111,9 +5111,9 @@ VTClassInit(void)
 #define init_Bres(name) \
 	TRACE(("init " #name " = %s\n", \
 		BtoS(wnew->name = request->name)))
-#define init_Dres(name) \
-	TRACE(("init " #name " = %f\n", \
-		wnew->name = request->name))
+#define init_Dres2(name,i) \
+	TRACE(("init " #name "[%d] = %f\n", i, \
+		wnew->name[i] = request->name[i]))
 #define init_Ires(name) \
 	TRACE(("init " #name " = %d\n", \
 		wnew->name = request->name))
@@ -5121,15 +5121,20 @@ VTClassInit(void)
 	TRACE(("init " #name " = \"%s\"\n", \
 		(wnew->name = x_strtrim(request->name)) != NULL \
 			? wnew->name : "<null>"))
+#define init_Sres2(name,i) \
+	TRACE(("init " #name "[%d] = \"%s\"\n", i, \
+		(wnew->name(i) = x_strtrim(request->name(i))) != NULL \
+			? wnew->name(i) : "<null>"))
 #define init_Tres(offset) \
 	TRACE(("init screen.Tcolors[" #offset "] = %#lx\n", \
 		fill_Tres(wnew, request, offset)))
 #else
-#define init_Bres(name) wnew->name = request->name
-#define init_Dres(name) wnew->name = request->name
-#define init_Ires(name) wnew->name = request->name
-#define init_Sres(name) wnew->name = x_strtrim(request->name)
-#define init_Tres(offset) fill_Tres(wnew, request, offset)
+#define init_Bres(name)    wnew->name = request->name
+#define init_Dres2(name,i) wnew->name[i] = request->name[i]
+#define init_Ires(name)    wnew->name = request->name
+#define init_Sres(name)    wnew->name = x_strtrim(request->name)
+#define init_Sres2(name,i) wnew->name(i) = x_strtrim(request->name(i))
+#define init_Tres(offset)  fill_Tres(wnew, request, offset)
 #endif
 
 #if OPT_COLOR_RES
@@ -5576,7 +5581,7 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.tiXtraScroll);
     init_Bres(misc.dynamicColors);
     for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
-	init_Sres(screen.MenuFontName(i));
+	init_Sres2(screen.MenuFontName, i);
     }
     wnew->screen.MenuFontName(fontMenu_default) = wnew->misc.default_font.f_n;
     wnew->screen.MenuFontName(fontMenu_fontescape) = NULL;
@@ -5792,7 +5797,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_RENDERFONT
     for (i = 0; i <= fontMenu_lastBuiltin; ++i) {
-	init_Dres(misc.face_size[i]);
+	init_Dres2(misc.face_size, i);
     }
     init_Sres(misc.face_name);
     init_Sres(misc.face_wide_name);
