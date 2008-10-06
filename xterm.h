@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.503 2008/09/14 15:18:39 Paul.Lampert Exp $ */
+/* $XTermId: xterm.h,v 1.504 2008/10/05 20:58:52 tom Exp $ */
 
 /************************************************************
 
@@ -1223,15 +1223,15 @@ extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */
 
 #if OPT_HIGHLIGHT_COLOR
 #define isNotForeground(xw, fg, bg, sel) \
-		((sel) != T_COLOR(&((xw)->screen), TEXT_FG) \
-		 && (sel) != (fg) \
-		 && (sel) != (bg) \
-		 && (sel) != (xw)->dft_foreground)
+		(Boolean) ((sel) != T_COLOR(&((xw)->screen), TEXT_FG) \
+			   && (sel) != (fg) \
+			   && (sel) != (bg) \
+			   && (sel) != (xw)->dft_foreground)
 #define isNotBackground(xw, fg, bg, sel) \
-		((sel) != T_COLOR(&((xw)->screen), TEXT_BG) \
-		 && (sel) != (fg) \
-		 && (sel) != (bg) \
-		 && (sel) != (xw)->dft_background)
+		(Boolean) ((sel) != T_COLOR(&((xw)->screen), TEXT_BG) \
+			   && (sel) != (fg) \
+			   && (sel) != (bg) \
+			   && (sel) != (xw)->dft_background)
 #endif
 
 #if OPT_WIDE_CHARS

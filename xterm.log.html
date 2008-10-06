@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.690 2008/09/14 23:43:15 tom Exp $
+  $XTermId: xterm.log.html,v 1.692 2008/10/05 20:34:16 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_238">Patch #238 - 2008/10/05</A>
 <LI><A HREF="#xterm_237">Patch #237 - 2008/09/14</A>
 <LI><A HREF="#xterm_236">Patch #236 - 2008/07/27</A>
 <LI><A HREF="#xterm_235">Patch #235 - 2008/04/20</A>
@@ -284,6 +285,17 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_238">Patch #238 - 2008/10/05</A></H1>
+<ul>
+	<li>some code cleanup based on gcc 4.x <code>-Wconversion</code>
+	    warnings in button.c and charproc.c
+
+	<li>modify <code>tcap-query</code> feature to not return data for
+	    shifted cursor-keys when the keyboard type is set to vt220,
+	    since returning the same string for shifted/unshifted keys may
+	    confuse some applications (GenToo #212546).
+</ul>
 
 <H1><A NAME="xterm_237">Patch #237 - 2008/09/14</A></H1>
 <ul>
