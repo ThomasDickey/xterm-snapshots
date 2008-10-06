@@ -1,4 +1,4 @@
-/* $XTermId: tabs.c,v 1.31 2008/02/24 17:35:03 Nemeth Exp $ */
+/* $XTermId: tabs.c,v 1.32 2008/10/05 20:12:29 tom Exp $ */
 
 /*
  *	$XFree86: xc/programs/xterm/tabs.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
@@ -116,7 +116,8 @@ TabNext(XtermWidget xw, Tabs tabs, int col)
     if (screen->curses && screen->do_wrap && (xw->flags & WRAPAROUND)) {
 	xtermIndex(xw, 1);
 	set_cur_col(screen, 0);
-	col = screen->do_wrap = 0;
+	col = 0;
+	screen->do_wrap = False;
     }
     for (++col; col < MAX_TABS; ++col)
 	if (TST_TAB(tabs, col))
