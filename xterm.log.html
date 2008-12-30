@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.698 2008/12/30 12:15:55 tom Exp $
+  $XTermId: xterm.log.html,v 1.702 2008/12/30 16:56:01 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -288,6 +288,18 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_238">Patch #238 - 2008/12/31</A></H1>
 <ul>
+	<li>update configure macro CF_XOPEN_SOURCE for AIX 6.x and Mint
+	    platforms.
+
+	<li>reset the screen wrapping-flag at the end of
+	    <code>ClearRight</code> to fix an occasional case where the last
+	    character of a scrolled and wrapped line would be cleared (patch by
+	    Joe Peterson).
+
+	<li>modify to use POSIX coding for comparing resource settings such
+	    as <code>locale</code>, to work with locales such as Turkish
+	    (report by M Vefa Bicakci).
+
 	<li>turn on configure <code>paste64</code> feature by default
 	    (request by Jean-Philippe Bernardy).
 	    It is runtime enabled/disabled with <code>allowWindowOps</code>.
@@ -299,6 +311,8 @@ is the latest version of this file.
 	<li>make <code>OSC 3</code> (change X property, from
 	    <a href="#xterm_110">patch #110</a>)
 	    subject to <code>allowWindowOps</code> resource.
+
+	<li>make VT220 <code>DSR</code> responses inactive in VT100-mode.
 
 	<li>make <code>DECUDK</code> feature inactive in VT100-mode.
 

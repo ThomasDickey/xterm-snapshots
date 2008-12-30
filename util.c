@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.408 2008/10/05 20:12:45 tom Exp $ */
+/* $XTermId: util.c,v 1.410 2008/12/30 16:43:46 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1274,6 +1274,7 @@ ClearRight(XtermWidget xw, int n)
 
     /* with the right part cleared, we can't be wrapping */
     ScrnClrWrapped(screen, screen->cur_row);
+    screen->do_wrap = False;
 }
 
 /*
@@ -3597,19 +3598,6 @@ my_strerror(int n)
 }
 #endif
 #endif
-
-int
-char2lower(int ch)
-{
-    if (isascii(ch) && isupper(ch)) {	/* lowercasify */
-#ifdef _tolower
-	ch = _tolower(ch);
-#else
-	ch = tolower(ch);
-#endif
-    }
-    return ch;
-}
 
 void
 update_keyboard_type(void)

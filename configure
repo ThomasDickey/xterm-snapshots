@@ -2820,7 +2820,7 @@ cf_XOPEN_SOURCE=500
 cf_POSIX_C_SOURCE=199506L
 
 case $host_os in #(vi
-aix[45]*) #(vi
+aix[456]*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_ALL_SOURCE"
 	;;
 freebsd*|dragonfly*) #(vi
@@ -2837,7 +2837,7 @@ hpux*) #(vi
 irix[56].*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_SGI_SOURCE"
 	;;
-linux*|gnu*|k*bsd*-gnu) #(vi
+linux*|gnu*|mint*|k*bsd*-gnu) #(vi
 
 echo "$as_me:2842: checking if we must define _GNU_SOURCE" >&5
 echo $ECHO_N "checking if we must define _GNU_SOURCE... $ECHO_C" >&6
@@ -6067,7 +6067,7 @@ else
 int
 main ()
 {
-long x = (long) errno
+int x = (int) errno
   ;
   return 0;
 }
@@ -6463,7 +6463,7 @@ else
 int
 main ()
 {
-long x = (long) sys_nerr
+int x = (int) sys_nerr
   ;
   return 0;
 }
@@ -6578,7 +6578,7 @@ else
 int
 main ()
 {
-long x = (long) sys_errlist
+int x = (int) sys_errlist
   ;
   return 0;
 }

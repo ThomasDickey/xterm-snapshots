@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.864 2008/12/30 11:15:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.865 2008/12/30 14:45:41 tom Exp $ */
 
 /*
 
@@ -7564,7 +7564,7 @@ HandleKeymapChange(Widget w,
     (void) sprintf(pmapName, "%sKeymap", params[0]);
     (void) strcpy(pmapClass, pmapName);
     if (islower(CharOf(pmapClass[0])))
-	pmapClass[0] = (char) toupper(CharOf(pmapClass[0]));
+	pmapClass[0] = x_toupper(pmapClass[0]);
     XtGetSubresources(w, (XtPointer) &keymap, pmapName, pmapClass,
 		      key_resources, (Cardinal) 1, NULL, (Cardinal) 0);
     if (keymap != NULL)

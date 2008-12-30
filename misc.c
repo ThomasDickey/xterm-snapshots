@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.389 2008/12/30 11:19:34 tom Exp $ */
+/* $XTermId: misc.c,v 1.391 2008/12/30 17:44:50 tom Exp $ */
 
 /*
  *
@@ -552,22 +552,27 @@ HandleStringEvent(Widget w GCC_UNUSED,
 	return;
 
     if ((*params)[0] == '0' && (*params)[1] == 'x' && (*params)[2] != '\0') {
+	const char *abcdef = "ABCDEF";
+	const char *xxxxxx;
 	Char c, *p;
-	Char hexval[2];
-	hexval[0] = hexval[1] = 0;
-	for (p = (Char *) (*params + 2); (c = *p); p++) {
-	    hexval[0] *= 16;
-	    if (isupper(c))
-		c = tolower(c);
+	unsigned value = 0;
+
+	for (p = (Char *) (*params + 2); (c = CharOf(x_toupper(*p))) !=
+	     '\0'; p++) {
+	    value *= 16;
 	    if (c >= '0' && c <= '9')
-		hexval[0] += c - '0';
-	    else if (c >= 'a' && c <= 'f')
-		hexval[0] += c - 'a' + 10;
+		value += (unsigned) (c - '0');
+	    else if ((xxxxxx = strchr(abcdef, c)) != 0)
+		value += (unsigned) (xxxxxx - abcdef) + 10;
 	    else
 		break;
 	}
-	if (c == '\0')
+	if (c == '\0') {
+	    Char hexval[2];
+	    hexval[0] = (Char) value;
+	    hexval[1] = 0;
 	    StringInput(term, hexval, 1);
+	}
     } else {
 	StringInput(term, (Char *) * params, strlen(*params));
     }
@@ -635,9 +640,9 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    || setgid(screen->gid) == -1) {
 	    fprintf(stderr, "Cannot reset uid/gid\n");
 	} else {
-	    int myargc = *nparams + 1;
+	    unsigned myargc = *nparams + 1;
 	    char **myargv = TypeMallocN(char *, myargc + 1);
-	    int n = 0;
+	    unsigned n = 0;
 
 	    myargv[n++] = child_exe;
 
@@ -1676,10 +1681,10 @@ ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
     unparse_end(xw);
 }
 
-static int
+static unsigned
 getColormapSize(Display * display)
 {
-    int result;
+    unsigned result;
     int numFound;
     XVisualInfo myTemplate, *visInfoPtr;
 
@@ -1687,7 +1692,7 @@ getColormapSize(Display * display)
 							    XDefaultScreen(display)));
     visInfoPtr = XGetVisualInfo(display, (long) VisualIDMask,
 				&myTemplate, &numFound);
-    result = (numFound >= 1) ? visInfoPtr->colormap_size : 0;
+    result = (numFound >= 1) ? (unsigned) visInfoPtr->colormap_size : 0;
 
     XFree((char *) visInfoPtr);
     return result;
@@ -2551,12 +2556,12 @@ parse_decudk(char *cp)
 	int len = 0;
 
 	while (isdigit(CharOf(*cp)))
-	    key = (key * 10) + (*cp++ - '0');
+	    key = (key * 10) + (unsigned) (*cp++ - '0');
 	if (*cp == '/') {
 	    cp++;
 	    while ((hi = udk_value(&cp)) >= 0
 		   && (lo = udk_value(&cp)) >= 0) {
-		str[len++] = (hi << 4) | lo;
+		str[len++] = (char) ((hi << 4) | lo);
 	    }
 	}
 	if (len > 0 && key < MAX_UDK) {
@@ -3361,7 +3366,7 @@ xtermFindShell(char *leaf, Bool warning)
 }
 #endif /* VMS */
 
-#define ENV_HUNK(n)	((((n) + 1) | 31) + 1)
+#define ENV_HUNK(n)	(unsigned) ((((n) + 1) | 31) + 1)
 
 /*
  * copy the environment before Setenv'ing.

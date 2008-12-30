@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.506 2008/12/30 11:14:30 tom Exp $ */
+/* $XTermId: xterm.h,v 1.507 2008/12/30 15:46:41 tom Exp $ */
 
 /************************************************************
 
@@ -1103,7 +1103,6 @@ extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned 
 extern int AddToRefresh (XtermWidget /* xw */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
-extern int char2lower (int  /* ch */);
 extern int drawXtermText (XtermWidget /* xw */, unsigned  /* flags */, GC  /* gc */, int  /* x */, int  /* y */, int  /* chrset */, PAIRED_CHARS(Char * /* text */, Char * /* text2 */), Cardinal  /* len */, int  /* on_wide */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);

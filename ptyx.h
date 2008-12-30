@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.535 2008/12/30 11:13:11 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.536 2008/12/30 17:22:55 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -1239,8 +1239,8 @@ typedef struct {
 	int		row;
 	int		col;
 	unsigned	flags;		/* VTxxx saves graphics rendition */
-	char		curgl;
-	char		curgr;
+	Char		curgl;
+	Char		curgr;
 	Char		gsets[4];
 #if OPT_ISO_COLORS
 	int		cur_foreground; /* current foreground color	*/
