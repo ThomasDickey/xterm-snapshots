@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.384 2008/07/27 15:38:05 tom Exp $ */
+/* $XTermId: misc.c,v 1.389 2008/12/30 11:19:34 tom Exp $ */
 
 /*
  *
@@ -2330,8 +2330,10 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    }
 	}
     }
-    if (buf == 0)
+    if (buf == 0) {
+	TRACE(("do_osc found no data\n"));
 	return;
+    }
 
     switch (mode) {
     case 0:			/* new icon name and title */
@@ -2348,7 +2350,8 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	break;
 
     case 3:			/* change X property */
-	ChangeXprop(buf);
+	if (screen->allowWindowOps)
+	    ChangeXprop(buf);
 	break;
 #if OPT_ISO_COLORS
     case 4:
@@ -2401,7 +2404,9 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     case 50:
 #if OPT_SHIFT_FONTS
-	if (buf != 0 && !strcmp(buf, "?")) {
+	if (!screen->allowFontOps && xw->misc.shift_fonts) {
+	    ;			/* disabled via resource or control-sequence */
+	} else if (buf != 0 && !strcmp(buf, "?")) {
 	    int num = screen->menu_font_number;
 
 	    unparseputc1(xw, ANSI_OSC);
@@ -2472,7 +2477,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
 #if OPT_PASTE64
     case 52:
-	if (screen->allowWindowOps && (buf != 0))
+	if (screen->allowWindowOps)
 	    ManipulateSelectionData(xw, screen, buf, final);
 	break;
 #endif
@@ -2813,14 +2818,17 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	    } else
 		okay = False;
 
-	    unparseputc1(xw, ANSI_DCS);
-	    unparseputc(xw, okay ? '1' : '0');
-	    unparseputc(xw, '$');
-	    unparseputc(xw, 'r');
-	    if (okay)
+	    if (okay) {
+		unparseputc1(xw, ANSI_DCS);
+		unparseputc(xw, okay ? '1' : '0');
+		unparseputc(xw, '$');
+		unparseputc(xw, 'r');
 		cp = reply;
-	    unparseputs(xw, cp);
-	    unparseputc1(xw, ANSI_ST);
+		unparseputs(xw, cp);
+		unparseputc1(xw, ANSI_ST);
+	    } else {
+		unparseputc(xw, ANSI_CAN);
+	    }
 	} else {
 	    unparseputc(xw, ANSI_CAN);
 	}
@@ -2828,7 +2836,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 #if OPT_TCAP_QUERY
     case '+':
 	cp++;
-	if (*cp == 'q') {
+	if ((*cp == 'q') && screen->allowTcapOps) {
 	    Bool fkey;
 	    unsigned state;
 	    int code;
@@ -2892,16 +2900,18 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	break;
 #endif
     default:
-	parse_ansi_params(&params, &cp);
-	switch (params.a_final) {
-	case '|':		/* DECUDK */
-	    if (params.a_param[0] == 0)
-		reset_decudk();
-	    parse_decudk(cp);
-	    break;
-	case '{':		/* DECDLD (no '}' case though) */
-	    parse_decdld(&params, cp);
-	    break;
+	if (screen->terminal_id >= 200) {	/* VT220 */
+	    parse_ansi_params(&params, &cp);
+	    switch (params.a_final) {
+	    case '|':		/* DECUDK */
+		if (params.a_param[0] == 0)
+		    reset_decudk();
+		parse_decudk(cp);
+		break;
+	    case '{':		/* DECDLD (no '}' case though) */
+		parse_decdld(&params, cp);
+		break;
+	    }
 	}
 	break;
     }

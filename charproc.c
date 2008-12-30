@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.861 2008/10/05 22:23:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.864 2008/12/30 11:15:47 tom Exp $ */
 
 /*
 
@@ -389,6 +389,8 @@ static XtActionsRec actionsList[] = {
 static XtResource resources[] =
 {
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
+    Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, True),
+    Bres(XtNallowTcapOps, XtCAllowTcapOps, screen.allowTcapOp0, True),
     Bres(XtNallowTitleOps, XtCAllowTitleOps, screen.allowTitleOp0, True),
     Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, True),
     Bres(XtNaltIsNotMeta, XtCAltIsNotMeta, screen.alt_is_not_meta, False),
@@ -2198,28 +2200,38 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		break;
 	    case 15:
 		/* printer status */
-		reply.a_param[count++] = 13;	/* implement printer */
+		if (screen->terminal_id >= 200) {	/* VT220 */
+		    reply.a_param[count++] = 13;	/* implement printer */
+		}
 		break;
 	    case 25:
 		/* UDK status */
-		reply.a_param[count++] = 20;	/* UDK always unlocked */
+		if (screen->terminal_id >= 200) {	/* VT220 */
+		    reply.a_param[count++] = 20;	/* UDK always unlocked */
+		}
 		break;
 	    case 26:
 		/* keyboard status */
-		reply.a_param[count++] = 27;
-		reply.a_param[count++] = 1;	/* North American */
-		if (screen->terminal_id >= 400) {
-		    reply.a_param[count++] = 0;		/* ready */
-		    reply.a_param[count++] = 0;		/* LK201 */
+		if (screen->terminal_id >= 200) {	/* VT220 */
+		    reply.a_param[count++] = 27;
+		    reply.a_param[count++] = 1;		/* North American */
+		    if (screen->terminal_id >= 400) {
+			reply.a_param[count++] = 0;	/* ready */
+			reply.a_param[count++] = 0;	/* LK201 */
+		    }
 		}
 		break;
 	    case 53:
 		/* Locator status */
+		if (screen->terminal_id >= 200) {	/* VT220 */
 #if OPT_DEC_LOCATOR
-		reply.a_param[count++] = 50;	/* locator ready */
+		    reply.a_param[count++] = 50;	/* locator ready */
 #else
-		reply.a_param[count++] = 53;	/* no locator */
+		    reply.a_param[count++] = 53;	/* no locator */
 #endif
+		}
+		break;
+	    default:
 		break;
 	    }
 
@@ -5569,11 +5581,15 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.meta_sends_esc);
 
     init_Bres(screen.allowSendEvent0);
+    init_Bres(screen.allowFontOp0);
+    init_Bres(screen.allowTcapOp0);
     init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
 
     /* make a copy so that editres cannot change the resource after startup */
     wnew->screen.allowSendEvents = wnew->screen.allowSendEvent0;
+    wnew->screen.allowFontOps = wnew->screen.allowFontOp0;
+    wnew->screen.allowTcapOps = wnew->screen.allowTcapOp0;
     wnew->screen.allowTitleOps = wnew->screen.allowTitleOp0;
     wnew->screen.allowWindowOps = wnew->screen.allowWindowOp0;
 
