@@ -1,4 +1,4 @@
-/* $XTermId: tabs.c,v 1.32 2008/10/05 20:12:29 tom Exp $ */
+/* $XTermId: tabs.c,v 1.33 2008/12/30 10:18:14 tom Exp $ */
 
 /*
  *	$XFree86: xc/programs/xterm/tabs.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
@@ -135,7 +135,7 @@ static int
 TabPrev(Tabs tabs, int col)
 {
     for (--col; col >= 0; --col)
-	if (TST_TAB(tabs, col))
+	if ((col < MAX_TABS) && TST_TAB(tabs, col))
 	    return (col);
 
     return (0);

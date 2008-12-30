@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.504 2008/10/05 20:58:52 tom Exp $ */
+/* $XTermId: xterm.h,v 1.506 2008/12/30 11:14:30 tom Exp $ */
 
 /************************************************************
 
@@ -331,7 +331,9 @@ extern char **environ;
 /***====================================================================***/
 
 #define XtNallowC1Printable	"allowC1Printable"
+#define XtNallowFontOps		"allowFontOps"
 #define XtNallowSendEvents	"allowSendEvents"
+#define XtNallowTcapOps		"allowTcapOps"
 #define XtNallowTitleOps	"allowTitleOps"
 #define XtNallowWindowOps	"allowWindowOps"
 #define XtNaltIsNotMeta		"altIsNotMeta"
@@ -486,7 +488,9 @@ extern char **environ;
 #define XtNxmcMoveSGR		"xmcMoveSGR"
 
 #define XtCAllowC1Printable	"AllowC1Printable"
+#define XtCAllowFontOps		"AllowFontOps"
 #define XtCAllowSendEvents	"AllowSendEvents"
+#define XtCAllowTcapOps		"AllowTcapOps"
 #define XtCAllowTitleOps	"AllowTitleOps"
 #define XtCAllowWindowOps	"AllowWindowOps"
 #define XtCAltIsNotMeta		"AltIsNotMeta"
