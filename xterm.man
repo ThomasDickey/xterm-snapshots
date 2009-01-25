@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.413 2008/12/30 11:23:59 tom Exp $
+.\" $XTermId: xterm.man,v 1.416 2009/01/24 16:39:46 tom Exp $
 .\"
-.\" Copyright 1996-2007,2008 by Thomas E. Dickey
+.\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -693,6 +693,18 @@ because \fIxterm\ -ls\ -e\fP does write a \fI/etc/wtmp\fP entry
 (if configured to do so),
 whereas \fIxterm\ -e\fP does not.
 .TP 8
+.B -maximized
+This option indicates that \fIxterm\fP should ask the window manager to
+maximize its layout on startup.
+This corresponds to the \fBmaximized\fP resource.
+.IP
+Maximizing is not the reverse of iconifying;
+it is possible to do both with certain window managers.
+.TP 8
+.B +maximized
+This option indicates that \fIxterm\fP should ask the window manager to
+maximize its layout on startup.
+.TP 8
 .B +ls
 This option indicates that the shell that is started should not be a login
 shell (i.e., it will be a normal ``subshell'').
@@ -1216,6 +1228,12 @@ On some systems you may want to increase one or both of the
 \fBminBufSize\fP resource values to achieve better performance
 if the operating system prefers larger buffer sizes.
 .TP 8
+.B "maximized (\fPclass\fB Maximized)"
+Specifies whether or not \fIxterm\fP should ask the window manager to
+maximize its layout on startup.
+The default is
+``false.''
+.TP 8
 .B "messages (\fPclass\fB Messages)"
 Specifies whether write access to the terminal is allowed initially.
 See
@@ -1424,8 +1442,14 @@ The default is ``false.''
 .SS VT100 Widget Resources
 .PP
 The following resources are specified as part
-of the \fIvt100\fP widget (class \fIVT100\fP):
-These are specified by patterns such as "\fBXTerm.vt100.\fP\fINAME\fP":
+of the \fIvt100\fP widget (class \fIVT100\fP).
+They are specified by patterns such as "\fBXTerm.vt100.\fP\fINAME\fP".
+.PP
+If your \fIxterm\fP is configured to support the "toolbar", then those
+patterns need an extra level for the form-widget which holds the
+toolbar and vt100 widget.  A wildcard between the top-level
+"XTerm" and the "vt100" widget makes the resource settings work for
+either, e.g., "\fBXTerm*vt100.\fP\fINAME\fP".
 .TP 8
 .B "activeIcon (\fPclass\fB ActiveIcon)"
 Specifies whether or not active icon windows are to be used when the
@@ -1462,7 +1486,25 @@ The default is ``false.''
 Specifies whether control sequences that query the terminal's
 notion of its function-key strings, as termcap or terminfo capabilities
 should be allowed.
-The default is ``true.''
+The default is ``false.''
+.IP
+A few programs, e.g,. \fIvim\fP, use this feature to get an accurate
+description of the terminal's capabilities,
+independent of the termcap/terminfo setting:
+.RS
+.TP 3
+-
+\fIxterm\fP can tell the querying program how many colors it supports.
+This is a constant, depending on how it is compiled, typically 16.
+It does not change if you alter resource settings,
+e.g., the \fBboldColors\fP resource.
+.TP 3
+-
+\fIxterm\fP can tell the querying program what strings are sent by modified
+(shift-, control-, alt-) function- and keypad-keys.
+Reporting control- and alt-modifiers is a feature that relies on the
+\fIncurses\fP extended naming.
+.RE
 .TP
 .B "allowTitleOps (\fPclass\fB AllowTitleOps)"
 Specifies whether control sequences that modify the window title or icon name

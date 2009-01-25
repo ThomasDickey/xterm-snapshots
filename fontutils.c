@@ -1,8 +1,8 @@
-/* $XTermId: fontutils.c,v 1.278 2008/12/30 17:32:06 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.280 2009/01/24 14:33:14 tom Exp $ */
 
 /************************************************************
 
-Copyright 1998-2007,2008 by Thomas E. Dickey
+Copyright 1998-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -545,12 +545,13 @@ got_bold_font(Display * dpy, XFontStruct * fs, char *requested)
 static int
 same_font_size(XtermWidget xw, XFontStruct * nfs, XFontStruct * bfs)
 {
+    TScreen *screen = TScreenOf(xw);
     TRACE(("same_font_size height %d/%d, min %d/%d max %d/%d\n",
 	   nfs->ascent + nfs->descent,
 	   bfs->ascent + bfs->descent,
 	   nfs->min_bounds.width, bfs->min_bounds.width,
 	   nfs->max_bounds.width, bfs->max_bounds.width));
-    return xw->screen.free_bold_box
+    return screen->free_bold_box
 	|| ((nfs->ascent + nfs->descent) == (bfs->ascent + bfs->descent)
 	    && (nfs->min_bounds.width == bfs->min_bounds.width
 		|| nfs->min_bounds.width == bfs->min_bounds.width + 1)
@@ -770,7 +771,7 @@ xtermLoadFont(XtermWidget xw,
 	      Bool doresize,
 	      int fontnum)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
 
     VTFontNames myfonts;
@@ -1133,7 +1134,7 @@ typedef struct {
  * correspond to the VT100 resources.
  */
 static Bool
-xtermLoadVTFonts(XtermWidget w, char *myName, char *myClass)
+xtermLoadVTFonts(XtermWidget xw, char *myName, char *myClass)
 {
     static Bool initialized = False;
     static SubResourceRec original, referenceRec, subresourceRec;
@@ -1159,26 +1160,27 @@ xtermLoadVTFonts(XtermWidget w, char *myName, char *myClass)
     };
     Cardinal n, m;
     Bool status = True;
+    TScreen *screen = TScreenOf(xw);
 
     if (!initialized) {
 
 	initialized = True;
 	TRACE(("xtermLoadVTFonts saving original\n"));
-	original.default_font = w->misc.default_font;
-	COPY_MENU_FONTS(w->screen, original);
+	original.default_font = xw->misc.default_font;
+	COPY_MENU_FONTS(xw->screen, original);
     }
 
     if (myName == 0 || *myName == 0) {
 	TRACE(("xtermLoadVTFonts restoring original\n"));
-	w->misc.default_font = original.default_font;
-	COPY_MENU_FONTS(original, w->screen);
+	xw->misc.default_font = original.default_font;
+	COPY_MENU_FONTS(original, xw->screen);
 	for (n = 0; n < XtNumber(original.menu_font_names); ++n)
-	    w->screen.MenuFontName(n) = original.MenuFontName(n);
+	    screen->MenuFontName(n) = original.MenuFontName(n);
     } else {
 	TRACE(("xtermLoadVTFonts(%s, %s)\n", myName, myClass));
 
 	memset(&subresourceRec, 0, sizeof(subresourceRec));
-	XtGetSubresources((Widget) w, (XtPointer) &subresourceRec,
+	XtGetSubresources((Widget) xw, (XtPointer) &subresourceRec,
 			  myName, myClass,
 			  font_resources,
 			  (Cardinal) XtNumber(font_resources),
@@ -1189,25 +1191,25 @@ xtermLoadVTFonts(XtermWidget w, char *myName, char *myClass)
 	    /*
 	     * If a particular resource value was not found, use the original.
 	     */
-	    MERGE_SUBFONT(w->misc, subresourceRec, default_font.f_n);
-	    MERGE_SUBFONT(w->misc, subresourceRec, default_font.f_b);
+	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_n);
+	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_b);
 #if OPT_WIDE_CHARS
-	    MERGE_SUBFONT(w->misc, subresourceRec, default_font.f_w);
-	    MERGE_SUBFONT(w->misc, subresourceRec, default_font.f_wb);
+	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_w);
+	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_wb);
 #endif
 	    for (n = fontMenu_font1; n <= fontMenu_lastBuiltin; ++n)
-		MERGE_SUBFONT(w->screen, subresourceRec, MenuFontName(n));
+		MERGE_SUBFONT(xw->screen, subresourceRec, MenuFontName(n));
 
 	    /*
 	     * Finally, copy the subresource data to the widget.
 	     */
-	    w->misc.default_font = subresourceRec.default_font;
-	    COPY_MENU_FONTS(subresourceRec, w->screen);
-	    w->screen.MenuFontName(fontMenu_default) = w->misc.default_font.f_n;
-	    w->screen.menu_font_names[0][fBold] = w->misc.default_font.f_b;
+	    xw->misc.default_font = subresourceRec.default_font;
+	    COPY_MENU_FONTS(subresourceRec, xw->screen);
+	    screen->MenuFontName(fontMenu_default) = xw->misc.default_font.f_n;
+	    screen->menu_font_names[0][fBold] = xw->misc.default_font.f_b;
 #if OPT_WIDE_CHARS
-	    w->screen.menu_font_names[0][fWide] = w->misc.default_font.f_w;
-	    w->screen.menu_font_names[0][fWBold] = w->misc.default_font.f_wb;
+	    screen->menu_font_names[0][fWide] = xw->misc.default_font.f_w;
+	    screen->menu_font_names[0][fWBold] = xw->misc.default_font.f_wb;
 #endif
 	} else {
 	    TRACE(("...no resources found\n"));
@@ -1246,7 +1248,7 @@ isWideFont(XFontStruct * fp, char *tag, Bool nullOk)
 Bool
 xtermLoadWideFonts(XtermWidget xw, Bool nullOk)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     Bool result;
 
     if (EmptyFont(screen->fnts[fWide].fs)) {
@@ -1273,10 +1275,10 @@ xtermLoadWideFonts(XtermWidget xw, Bool nullOk)
  * Restore the default fonts, i.e., if we had switched to wide-fonts.
  */
 Bool
-xtermLoadDefaultFonts(XtermWidget w)
+xtermLoadDefaultFonts(XtermWidget xw)
 {
     Bool result;
-    result = xtermLoadVTFonts(w, NULL, NULL);
+    result = xtermLoadVTFonts(xw, NULL, NULL);
     TRACE(("xtermLoadDefaultFonts:%d\n", result));
     return result;
 }
@@ -1291,8 +1293,10 @@ HandleLoadVTFonts(Widget w,
 {
     static char empty[] = "";	/* appease strict compilers */
 
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	char buf[80];
 	char *myName = (*param_count > 0) ? params[0] : empty;
 	char *convert = (*param_count > 1) ? params[1] : myName;
@@ -1310,11 +1314,11 @@ HandleLoadVTFonts(Widget w,
 	     * it is less surprising to do that (if the font-switching can be
 	     * undone) than to switch to "Default".
 	     */
-	    int font_number = xw->screen.menu_font_number;
+	    int font_number = screen->menu_font_number;
 	    if (font_number > fontMenu_lastBuiltin)
 		font_number = fontMenu_lastBuiltin;
 	    for (n = 0; n < NMENUFONTS; ++n)
-		xw->screen.menu_font_sizes[n] = 0;
+		screen->menu_font_sizes[n] = 0;
 	    SetVTFont(xw, font_number, True,
 		      ((font_number == fontMenu_default)
 		       ? &(xw->misc.default_font)
@@ -1471,7 +1475,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		     XFontStruct * font,
 		     int sbwidth)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     int i, j, width, height;
 
@@ -1731,7 +1735,7 @@ xtermSaveFontInfo(TScreen * screen, XFontStruct * font)
 void
 xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
 
     int scrollbar_width;
     VTwin *win = &(screen->fullVwin);
@@ -1767,6 +1771,8 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
 Bool
 xtermMissingChar(XtermWidget xw, unsigned ch, XFontStruct * font)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (font != 0
 	&& font->per_char != 0
 	&& !font->all_chars_exist) {
@@ -1797,7 +1803,7 @@ xtermMissingChar(XtermWidget xw, unsigned ch, XFontStruct * font)
 	}
     }
     if (xtermIsDecGraphic(ch)
-	&& xw->screen.force_box_chars) {
+	&& screen->force_box_chars) {
 	TRACE(("xtermMissingChar %#04x (forced off)\n", ch));
 	return True;
     }
@@ -1838,7 +1844,7 @@ xtermDrawBoxChar(XtermWidget xw,
 		 int y,
 		 int cells)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     /* *INDENT-OFF* */
     static const short glyph_ht[] = {
 	SEG(1*BOX_WIDE/10,  0,		1*BOX_WIDE/10,5*MID_HIGH/6),	/* H */
@@ -2186,7 +2192,8 @@ xtermXftMissing(XtermWidget xw, XftFont * font, unsigned wc)
     Bool result = False;
 
     if (font != 0) {
-	if (!XftGlyphExists(xw->screen.display, font, wc)) {
+	TScreen *screen = TScreenOf(xw);
+	if (!XftGlyphExists(screen->display, font, wc)) {
 #if OPT_WIDE_CHARS
 	    TRACE(("xtermXftMissing %d (dec=%#x, ucs=%#x)\n",
 		   wc, ucs2dec(wc), dec2ucs(wc)));
@@ -2430,11 +2437,12 @@ HandleLargerFont(Widget w GCC_UNUSED,
 		 String * params GCC_UNUSED,
 		 Cardinal *param_count GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
+    XtermWidget xw;
 
+    TRACE(("Handle larger-vt-font for %p\n", w));
+    if ((xw = getXtermWidget(w)) != 0) {
 	if (xw->misc.shift_fonts) {
-	    TScreen *screen = &xw->screen;
+	    TScreen *screen = TScreenOf(xw);
 	    int m;
 
 	    m = lookupRelativeFontSize(xw, screen->menu_font_number, 1);
@@ -2454,11 +2462,12 @@ HandleSmallerFont(Widget w GCC_UNUSED,
 		  String * params GCC_UNUSED,
 		  Cardinal *param_count GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
-	XtermWidget xw = (XtermWidget) w;
+    XtermWidget xw;
 
+    TRACE(("Handle smaller-vt-font for %p\n", w));
+    if ((xw = getXtermWidget(w)) != 0) {
 	if (xw->misc.shift_fonts) {
-	    TScreen *screen = &xw->screen;
+	    TScreen *screen = TScreenOf(xw);
 	    int m;
 
 	    m = lookupRelativeFontSize(xw, screen->menu_font_number, -1);
@@ -2523,7 +2532,9 @@ HandleSetFont(Widget w GCC_UNUSED,
 	      String * params,
 	      Cardinal *param_count)
 {
-    if (IsXtermWidget(w)) {
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
 	int fontnum;
 	VTFontNames fonts;
 
@@ -2582,7 +2593,7 @@ HandleSetFont(Widget w GCC_UNUSED,
 	    }
 	}
 
-	SetVTFont((XtermWidget) w, fontnum, True, &fonts);
+	SetVTFont(xw, fontnum, True, &fonts);
     }
 }
 
@@ -2592,7 +2603,7 @@ SetVTFont(XtermWidget xw,
 	  Bool doresize,
 	  const VTFontNames * fonts)
 {
-    TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("SetVTFont(which=%d, f_n=%s, f_b=%s)\n", which,
 	   (fonts && fonts->f_n) ? fonts->f_n : "<null>",
