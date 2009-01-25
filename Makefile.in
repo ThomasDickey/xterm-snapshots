@@ -1,6 +1,6 @@
-## $XTermId: Makefile.in,v 1.155 2008/01/05 14:26:52 tom Exp $
+## $XTermId: Makefile.in,v 1.156 2009/01/24 20:37:15 tom Exp $
 ##
-## Copyright 2002-2006,2007 by Thomas E. Dickey
+## Copyright 2002-2008,2009 by Thomas E. Dickey
 ##
 ##                         All Rights Reserved
 ##
@@ -176,6 +176,11 @@ install-full :: xterm$x resize$x $(BINDIR)
 @MAY_SETUID@	$(SHELL) $(srcdir)/sinstall.sh @SINSTALL_OPTS@ "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
 @NOT_SETUID@	$(INSTALL_PROGRAM) xterm$x $(BINDIR)/$(binary_xterm)
 	$(INSTALL_PROGRAM) -m  755 resize$x $(BINDIR)/$(binary_resize)
+
+install \
+install-bin \
+install-scripts \
+install-full ::
 	@$(SHELL) -c 'echo "... installing $(BINDIR)/$(binary_uxterm)"; \
 		if test "$(binary_xterm)" != "xterm"; then \
 			name="$(binary_xterm)"; \
@@ -259,9 +264,14 @@ uninstall-bin \
 uninstall-full ::
 	-$(RM) $(BINDIR)/$(binary_xterm)
 	-$(RM) $(BINDIR)/$(binary_resize)
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@; fi"
+
+uninstall \
+uninstall-bin \
+uninstall-scripts \
+uninstall-full ::
 	-$(RM) $(BINDIR)/$(binary_uxterm)
 	-$(RM) $(BINDIR)/$(binary_k8term)
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@; fi"
 
 uninstall \
 uninstall-man \

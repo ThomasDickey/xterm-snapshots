@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.707 2009/01/09 02:02:49 tom Exp $
+  $XTermId: xterm.log.html,v 1.711 2009/01/24 20:36:37 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,7 +45,8 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_239">Patch #239 - 2001/1/8</A>
+<LI><A HREF="#xterm_240">Patch #240 - 2009/1/22</A>
+<LI><A HREF="#xterm_239">Patch #239 - 2009/1/8</A>
 <LI><A HREF="#xterm_238">Patch #238 - 2008/12/30</A>
 <LI><A HREF="#xterm_237">Patch #237 - 2008/09/14</A>
 <LI><A HREF="#xterm_236">Patch #236 - 2008/07/27</A>
@@ -286,6 +287,26 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_240">Patch #240 - 2009/1/22</A></H1>
+<ul>
+	<li>add <code>install-scripts</code> rule to makefile, to allow
+	    roi8xterm and uxterm scripts to be altered independently of
+	    <code>install-bin</code> 
+
+	<li>add <code>-maximized</code> command-line option and corresponding
+	    resource (prompted by alt.os.linux newsgroup comment).
+
+	<li>modify translations of scrollbar widget using
+	    <code>xtermAddInput()</code>
+	    (see <a href="#xterm_181">patch #181</a>) to accept the actions
+	    that the vt100 widget accepts, such as shift-insert to perform
+	    a paste operation (request by Martin Zwickel).
+
+	<li>change default for <code>allowTcapsOps</code> resource to false,
+	    since it causes unexpected behavior for vim users with
+	    <code>AltGr</code>.
+</ul>
 
 <H1><A NAME="xterm_239">Patch #239 - 2009/1/8</A></H1>
 <ul>

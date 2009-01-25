@@ -1,8 +1,8 @@
-/* $XTermId: xterm.h,v 1.507 2008/12/30 15:46:41 tom Exp $ */
+/* $XTermId: xterm.h,v 1.509 2009/01/24 16:02:03 tom Exp $ */
 
 /************************************************************
 
-Copyright 1999-2007,2008 by Thomas E. Dickey
+Copyright 1999-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -417,6 +417,7 @@ extern char **environ;
 #define XtNlogging		"logging"
 #define XtNloginShell		"loginShell"
 #define XtNmarginBell		"marginBell"
+#define XtNmaximized            "maximized"
 #define XtNmenuBar		"menuBar"
 #define XtNmenuHeight		"menuHeight"
 #define XtNmetaSendsEscape	"metaSendsEscape"
@@ -565,6 +566,7 @@ extern char **environ;
 #define XtCLogging		"Logging"
 #define XtCLoginShell		"LoginShell"
 #define XtCMarginBell		"MarginBell"
+#define XtCMaximized            "Maximized"
 #define XtCMenuBar		"MenuBar"
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
@@ -878,6 +880,7 @@ extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long  /*
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
 extern Window WMFrameWindow(XtermWidget /* termw */);
 extern XrmOptionDescRec * sortedOptDescs(XrmOptionDescRec *, Cardinal);
+extern XtermWidget getXtermWidget(Widget /* w */);
 extern char *udk_lookup (int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermEnvLocale (void);

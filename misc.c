@@ -1,8 +1,8 @@
-/* $XTermId: misc.c,v 1.391 2008/12/30 17:44:50 tom Exp $ */
+/* $XTermId: misc.c,v 1.395 2009/01/24 15:34:20 tom Exp $ */
 
 /*
  *
- * Copyright 1999-2007,2008 by Thomas E. Dickey
+ * Copyright 1999-2008,2009 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -515,7 +515,7 @@ HandleKeyPressed(Widget w GCC_UNUSED,
 		 String * params GCC_UNUSED,
 		 Cardinal *nparams GCC_UNUSED)
 {
-    TRACE(("Handle 7bit-key\n"));
+    TRACE(("Handle insert-seven-bit for %p\n", w));
 #ifdef ACTIVEWINDOWINPUTONLY
     if (w == CURRENT_EMU())
 #endif
@@ -529,7 +529,7 @@ HandleEightBitKeyPressed(Widget w GCC_UNUSED,
 			 String * params GCC_UNUSED,
 			 Cardinal *nparams GCC_UNUSED)
 {
-    TRACE(("Handle 8bit-key\n"));
+    TRACE(("Handle insert-eight-bit for %p\n", w));
 #ifdef ACTIVEWINDOWINPUTONLY
     if (w == CURRENT_EMU())
 #endif
@@ -1060,13 +1060,15 @@ dabbrev_expand(TScreen * screen)
 
 /*ARGSUSED*/
 void
-HandleDabbrevExpand(Widget gw,
+HandleDabbrevExpand(Widget w,
 		    XEvent * event GCC_UNUSED,
 		    String * params GCC_UNUSED,
 		    Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	XtermWidget w = (XtermWidget) gw;
+    XtermWidget xw;
+
+    TRACE(("Handle dabbrev-expand for %p\n", w));
+    if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = &w->screen;
 	if (!dabbrev_expand(screen))
 	    Bell(XkbBI_TerminalBell, 0);
@@ -1077,26 +1079,30 @@ HandleDabbrevExpand(Widget gw,
 #if OPT_MAXIMIZE
 /*ARGSUSED*/
 void
-HandleDeIconify(Widget gw,
+HandleDeIconify(Widget w,
 		XEvent * event GCC_UNUSED,
 		String * params GCC_UNUSED,
 		Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	TScreen *screen = TScreenOf((XtermWidget) gw);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	XMapWindow(screen->display, VShellWindow);
     }
 }
 
 /*ARGSUSED*/
 void
-HandleIconify(Widget gw,
+HandleIconify(Widget w,
 	      XEvent * event GCC_UNUSED,
 	      String * params GCC_UNUSED,
 	      Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	TScreen *screen = TScreenOf((XtermWidget) gw);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TScreen *screen = TScreenOf(xw);
 	XIconifyWindow(screen->display,
 		       VShellWindow,
 		       DefaultScreen(screen->display));
@@ -1224,25 +1230,29 @@ RequestMaximize(XtermWidget termw, int maximize)
 
 /*ARGSUSED*/
 void
-HandleMaximize(Widget gw,
+HandleMaximize(Widget w,
 	       XEvent * event GCC_UNUSED,
 	       String * params GCC_UNUSED,
 	       Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	RequestMaximize((XtermWidget) gw, 1);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	RequestMaximize(xw, 1);
     }
 }
 
 /*ARGSUSED*/
 void
-HandleRestoreSize(Widget gw,
+HandleRestoreSize(Widget w,
 		  XEvent * event GCC_UNUSED,
 		  String * params GCC_UNUSED,
 		  Cardinal *nparams GCC_UNUSED)
 {
-    if (IsXtermWidget(gw)) {
-	RequestMaximize((XtermWidget) gw, 0);
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	RequestMaximize(xw, 0);
     }
 }
 #endif /* OPT_MAXIMIZE */
@@ -3875,4 +3885,26 @@ xtermVersion(void)
 	}
     }
     return result;
+}
+
+/*
+ * Check if the current widget, or any parent, is the VT100 "xterm" widget.
+ */
+XtermWidget
+getXtermWidget(Widget w)
+{
+    XtermWidget xw;
+
+    if (w == 0) {
+	xw = (XtermWidget) CURRENT_EMU();
+	if (!IsXtermWidget(xw)) {
+	    xw = 0;
+	}
+    } else if (IsXtermWidget(w)) {
+	xw = (XtermWidget) w;
+    } else {
+	xw = getXtermWidget(XtParent(w));
+    }
+    TRACE(("getXtermWidget %p -> %p\n", w, xw));
+    return xw;
 }

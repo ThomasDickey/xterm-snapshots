@@ -1,8 +1,8 @@
-/* $XTermId: charproc.c,v 1.865 2008/12/30 14:45:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.868 2009/01/24 15:39:08 tom Exp $ */
 
 /*
 
-Copyright 1999-2007,2008 by Thomas E. Dickey
+Copyright 1999-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -390,7 +390,7 @@ static XtResource resources[] =
 {
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
     Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, True),
-    Bres(XtNallowTcapOps, XtCAllowTcapOps, screen.allowTcapOp0, True),
+    Bres(XtNallowTcapOps, XtCAllowTcapOps, screen.allowTcapOp0, False),
     Bres(XtNallowTitleOps, XtCAllowTitleOps, screen.allowTitleOp0, True),
     Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, True),
     Bres(XtNaltIsNotMeta, XtCAltIsNotMeta, screen.alt_is_not_meta, False),
@@ -782,7 +782,6 @@ WidgetClass xtermWidgetClass = (WidgetClass) & xtermClassRec;
 void
 xtermAddInput(Widget w)
 {
-#if OPT_TOOLBAR
     /* *INDENT-OFF* */
     XtActionsRec input_actions[] = {
 	{ "insert",		    HandleKeyPressed }, /* alias */
@@ -814,9 +813,10 @@ xtermAddInput(Widget w)
     };
     /* *INDENT-ON* */
 
+    TRACE_TRANS("BEFORE", w);
     XtAppAddActions(app_con, input_actions, XtNumber(input_actions));
-#endif
     XtAugmentTranslations(w, XtParseTranslationTable(defaultTranslations));
+    TRACE_TRANS("AFTER:", w);
 
 #if OPT_EXTRA_PASTE
     if (term && term->keyboard.extra_translations)
@@ -4955,8 +4955,9 @@ VTNonMaskableEvent(Widget w GCC_UNUSED,
 static void
 VTResize(Widget w)
 {
-    if (XtIsRealized(w)) {
-	XtermWidget xw = (XtermWidget) w;
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
 	ScreenResize(xw, xw->core.width, xw->core.height, &xw->flags);
     }
 }
@@ -7603,9 +7604,12 @@ HandleIgnore(Widget w,
 	     String * params GCC_UNUSED,
 	     Cardinal *param_count GCC_UNUSED)
 {
-    if (IsXtermWidget(w)) {
+    XtermWidget xw;
+
+    TRACE(("Handle ignore for %p\n", w));
+    if ((xw = getXtermWidget(w)) != 0) {
 	/* do nothing, but check for funny escape sequences */
-	(void) SendMousePosition((XtermWidget) w, event);
+	(void) SendMousePosition(xw, event);
     }
 }
 
@@ -7619,11 +7623,12 @@ DoSetSelectedFont(Widget w,
 		  unsigned long *length,
 		  int *format)
 {
-    if (!IsXtermWidget(w) || *type != XA_STRING || *format != 8) {
+    XtermWidget xw = getXtermWidget(w);
+
+    if ((xw == 0) || *type != XA_STRING || *format != 8) {
 	Bell(XkbBI_MinorError, 0);
     } else {
 	Boolean failed = False;
-	XtermWidget xw = (XtermWidget) w;
 	int oldFont = xw->screen.menu_font_number;
 	char *save = xw->screen.MenuFontName(fontMenu_fontsel);
 	char *val;
