@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.156 2009/01/24 20:37:15 tom Exp $
+## $XTermId: Makefile.in,v 1.157 2009/01/25 16:39:24 tom Exp $
 ##
 ## Copyright 2002-2008,2009 by Thomas E. Dickey
 ##
@@ -145,7 +145,7 @@ $(OBJS1) : xterm.h ptyx.h xtermcfg.h
 main$o resize$o screen$o : xterm_io.h
 
 xterm$x : $(OBJS1)
-	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize$x : $(OBJS2)
 	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(LIBS)

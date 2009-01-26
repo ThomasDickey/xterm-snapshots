@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.711 2009/01/24 20:36:37 tom Exp $
+  $XTermId: xterm.log.html,v 1.716 2009/01/26 00:38:35 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,7 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_240">Patch #240 - 2009/1/22</A>
+<LI><A HREF="#xterm_240">Patch #240 - 2009/1/25</A>
 <LI><A HREF="#xterm_239">Patch #239 - 2009/1/8</A>
 <LI><A HREF="#xterm_238">Patch #238 - 2008/12/30</A>
 <LI><A HREF="#xterm_237">Patch #237 - 2008/09/14</A>
@@ -288,8 +288,16 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_240">Patch #240 - 2009/1/22</A></H1>
+<H1><A NAME="xterm_240">Patch #240 - 2009/1/25</A></H1>
 <ul>
+	<li>use <code>plink.sh</code> for linking xterm (suggested by Larry
+	    Doolittle).
+
+	<li>add resource descriptions for input method to xterm manpage.
+
+	<li>update configure script; consistently append to $CFLAGS rather
+	    than prepend.
+
 	<li>add <code>install-scripts</code> rule to makefile, to allow
 	    roi8xterm and uxterm scripts to be altered independently of
 	    <code>install-bin</code> 
@@ -306,6 +314,8 @@ is the latest version of this file.
 	<li>change default for <code>allowTcapsOps</code> resource to false,
 	    since it causes unexpected behavior for vim users with
 	    <code>AltGr</code>.
+
+	<li>update config.guess, config.sub
 </ul>
 
 <H1><A NAME="xterm_239">Patch #239 - 2009/1/8</A></H1>

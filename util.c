@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.410 2008/12/30 16:43:46 tom Exp $ */
+/* $XTermId: util.c,v 1.412 2009/01/25 17:48:41 tom Exp $ */
 
 /*
  * Copyright 1999-2007,2008 by Thomas E. Dickey
@@ -104,7 +104,7 @@ int
 DamagedCells(TScreen * screen, unsigned n, int *klp, int *krp, int row, int col)
 {
     int kl = col;
-    int kr = col + n;
+    int kr = col + (int) n;
 
     if (XTERM_CELL(row, kl) == HIDDEN_CHAR) {
 	while (kl > 0) {
@@ -214,7 +214,7 @@ FlushScroll(XtermWidget xw)
 	ClearCurBackground(xw,
 			   (int) refreshtop * FontHeight(screen) + screen->border,
 			   (int) OriginX(screen),
-			   (unsigned) refreshheight * FontHeight(screen),
+			   (unsigned) (refreshheight * FontHeight(screen)),
 			   (unsigned) Width(screen));
 	ScrnRefresh(xw, refreshtop, 0, refreshheight,
 		    MaxCols(screen), False);
@@ -422,9 +422,9 @@ xtermScroll(XtermWidget xw, int amount)
     int refreshheight;
     int scrolltop;
     int scrollheight;
-    Boolean scroll_all_lines = (screen->scrollWidget
-				&& !screen->alternate
-				&& screen->top_marg == 0);
+    Boolean scroll_all_lines = (Boolean) (screen->scrollWidget
+					  && !screen->alternate
+					  && screen->top_marg == 0);
 
     TRACE(("xtermScroll count=%d\n", amount));
 
@@ -505,7 +505,7 @@ xtermScroll(XtermWidget xw, int amount)
 	    ClearCurBackground(xw,
 			       (int) refreshtop * FontHeight(screen) + screen->border,
 			       (int) OriginX(screen),
-			       (unsigned) refreshheight * FontHeight(screen),
+			       (unsigned) (refreshheight * FontHeight(screen)),
 			       (unsigned) Width(screen));
 	    if (refreshheight > shift)
 		refreshheight = shift;
@@ -610,7 +610,7 @@ RevScroll(XtermWidget xw, int amount)
 	    ClearCurBackground(xw,
 			       (int) refreshtop * FontHeight(screen) + screen->border,
 			       (int) OriginX(screen),
-			       (unsigned) refreshheight * FontHeight(screen),
+			       (unsigned) (refreshheight * FontHeight(screen)),
 			       (unsigned) Width(screen));
 	}
     }
@@ -798,7 +798,7 @@ InsertLine(XtermWidget xw, int n)
 	    ClearCurBackground(xw,
 			       (int) refreshtop * FontHeight(screen) + screen->border,
 			       (int) OriginX(screen),
-			       (unsigned) refreshheight * FontHeight(screen),
+			       (unsigned) (refreshheight * FontHeight(screen)),
 			       (unsigned) Width(screen));
 	}
     }
@@ -886,7 +886,7 @@ DeleteLine(XtermWidget xw, int n)
 	    ClearCurBackground(xw,
 			       (int) refreshtop * FontHeight(screen) + screen->border,
 			       (int) OriginX(screen),
-			       (unsigned) refreshheight * FontHeight(screen),
+			       (unsigned) (refreshheight * FontHeight(screen)),
 			       (unsigned) Width(screen));
 	}
     }
@@ -940,7 +940,7 @@ InsertChar(XtermWidget xw, unsigned n)
 
     assert(n != 0);
     if (AddToVisible(xw)) {
-	int col = MaxCols(screen) - n;
+	int col = MaxCols(screen) - (int) n;
 
 	/*
 	 * If we shift part of a multi-column character, fill the rest
@@ -1864,13 +1864,13 @@ xtermRepaint(XtermWidget xw)
 Boolean
 isDefaultForeground(const char *name)
 {
-    return !x_strcasecmp(name, XtDefaultForeground);
+    return (Boolean) ! x_strcasecmp(name, XtDefaultForeground);
 }
 
 Boolean
 isDefaultBackground(const char *name)
 {
-    return !x_strcasecmp(name, XtDefaultBackground);
+    return (Boolean) ! x_strcasecmp(name, XtDefaultBackground);
 }
 
 #if OPT_WIDE_CHARS
@@ -2017,7 +2017,7 @@ ReverseVideo(XtermWidget xw)
     swapVTwinGCs(xw, &(screen->iconVwin));
 #endif /* NO_ACTIVE_ICON */
 
-    xw->misc.re_verse = !xw->misc.re_verse;
+    xw->misc.re_verse = (Boolean) ! xw->misc.re_verse;
 
     if (XtIsRealized((Widget) xw)) {
 	xtermDisplayCursor(xw);
@@ -2212,8 +2212,8 @@ xtermXftDrawString(XtermWidget xw,
 		continue;
 
 	    sbuf[dst].ucs4 = wc;
-	    sbuf[dst].x = x + fwidth * ncells;
-	    sbuf[dst].y = y;
+	    sbuf[dst].x = (short) (x + fwidth * ncells);
+	    sbuf[dst].y = (short) (y);
 
 	    currFont = (charWidth == 2 && wfont != 0) ? wfont : font;
 	    ncells += charWidth;
@@ -2329,7 +2329,7 @@ ucs_workaround(XtermWidget xw,
 	    Char text[2];
 	    Char text2[2];
 
-	    text[0] = eqv;
+	    text[0] = (Char) eqv;
 	    text2[0] = 0;
 
 	    do {
@@ -2494,8 +2494,8 @@ xtermSetClipRectangles(Display * dpy,
 		int clip_y = y - FontHeight(screen) + FontDescent(screen); \
 		clip.x = 0; \
 		clip.y = 0; \
-		clip.height = FontHeight(screen); \
-		clip.width = pwidth * plength; \
+		clip.height = (unsigned short) FontHeight(screen); \
+		clip.width = (unsigned short) (pwidth * plength); \
 		xtermSetClipRectangles(screen->display, gc, \
 				       clip_x, clip_y, \
 				       &clip, 1, Unsorted); \
@@ -2515,8 +2515,8 @@ xtermSetClipRectangles(Display * dpy,
 		int clip_y = py - FontHeight(screen) + FontDescent(screen); \
 		clip.x = 0; \
 		clip.y = 0; \
-		clip.height = FontHeight(screen); \
-		clip.width = FontWidth(screen) * plength; \
+		clip.height = (unsigned short) (FontHeight(screen)); \
+		clip.width = (unsigned short) (FontWidth(screen) * plength); \
 		XftDrawSetClipRectangles (screen->renderDraw, \
 					  clip_x, clip_y, \
 					  &clip, 1); \
@@ -2859,8 +2859,8 @@ drawXtermText(XtermWidget xw,
 		    if (missing) {
 			old_wide = screen->fnt_wide;
 			old_high = screen->fnt_high;
-			screen->fnt_wide = FontWidth(screen);
-			screen->fnt_high = FontHeight(screen);
+			screen->fnt_wide = (Dimension) FontWidth(screen);
+			screen->fnt_high = (Dimension) FontHeight(screen);
 			xtermDrawBoxChar(xw, ch, flags, gc,
 					 curX, y - FontAscent(screen), 1);
 			curX += FontWidth(screen);
@@ -3297,8 +3297,10 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
     Pixel selbg_pix = T_COLOR(screen, HIGHLIGHT_BG);
     Pixel selfg_pix = T_COLOR(screen, HIGHLIGHT_FG);
     Boolean always = screen->hilite_color;
-    Boolean use_selbg = always || isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
-    Boolean use_selfg = always && isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
+    Boolean use_selbg = (Boolean) (always ||
+				   isNotForeground(xw, fg_pix, bg_pix, selbg_pix));
+    Boolean use_selfg = (Boolean) (always &&
+				   isNotBackground(xw, fg_pix, bg_pix, selfg_pix));
 #endif
 
     (void) fg_bg;

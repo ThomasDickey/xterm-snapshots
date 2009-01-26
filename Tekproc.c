@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.160 2008/06/03 20:55:56 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.161 2009/01/26 00:19:39 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -7,7 +7,7 @@
 
 /*
 
-Copyright 2001-2007,2008 by Thomas E. Dickey
+Copyright 2001-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -146,7 +146,7 @@ in this Software without prior written authorization from The Open Group.
 
 #define	TekMove(tw,x,y)	tekscr->cur_X = x; tekscr->cur_Y = y
 #define	input()		Tinput(tw)
-#define	unput(c)	*Tpushback++ = c
+#define	unput(c)	*Tpushback++ = (Char) c
 /* *INDENT-OFF* */
 static struct Tek_Char {
     int hsize;			/* in Tek units */
@@ -708,7 +708,7 @@ Tekparse(TekWidget tw)
 	case CASE_PRINT:
 	    TRACE(("case: printable character\n"));
 	    ch = c;
-	    c = tekscr->cur.fontsize;
+	    c = (IChar) tekscr->cur.fontsize;
 	    x = (int) (tekscr->cur_X * TekScale(tekscr))
 		+ screen->border;
 	    y = (int) ((TEKHEIGHT + TEKTOPPAD - tekscr->cur_Y) * TekScale(tekscr))
@@ -760,7 +760,7 @@ Tekparse(TekWidget tw)
 		    if (!isprint(c2 & 0x7f)
 			|| len + 2 >= (int) sizeof(buf2))
 			break;
-		    buf2[len++] = c2;
+		    buf2[len++] = (Char) c2;
 		}
 		buf2[len] = 0;
 		if (!nested++) {
@@ -790,13 +790,13 @@ Tinput(TekWidget tw)
 	return (*--Tpushback);
     if (tekRefreshList) {
 	if (rcnt-- > 0)
-	    return (*rptr++);
+	    return (IChar) (*rptr++);
 	if ((tek = tekRefreshList->next) != 0) {
 	    tekRefreshList = tek;
 	    rptr = tek->data;
 	    rcnt = tek->count - 1;
 	    TekSetFontSize(tw, tek->fontsize);
-	    return (*rptr++);
+	    return (IChar) (*rptr++);
 	}
 	tekRefreshList = (TekLink *) 0;
 	longjmp(Tekjump, 1);
@@ -881,7 +881,7 @@ Tinput(TekWidget tw)
     tek->count++;
 
     (void) morePtyData(screen, VTbuffer);
-    return (*tek->ptr++ = nextPtyData(screen, VTbuffer));
+    return (IChar) (*tek->ptr++ = (char) nextPtyData(screen, VTbuffer));
 }
 
 static void
@@ -1262,12 +1262,12 @@ TekEnq(TekWidget tw,
     int adj = (status != 0) ? 0 : 1;
 
     TRACE(("TekEnq\n"));
-    cplot[0] = status;
+    cplot[0] = (Char) status;
     /* Translate x and y to Tektronix code */
-    cplot[1] = 040 | ((x >> SHIFTHI) & FIVEBITS);
-    cplot[2] = 040 | ((x >> SHIFTLO) & FIVEBITS);
-    cplot[3] = 040 | ((y >> SHIFTHI) & FIVEBITS);
-    cplot[4] = 040 | ((y >> SHIFTLO) & FIVEBITS);
+    cplot[1] = (Char) (040 | ((x >> SHIFTHI) & FIVEBITS));
+    cplot[2] = (Char) (040 | ((x >> SHIFTLO) & FIVEBITS));
+    cplot[3] = (Char) (040 | ((y >> SHIFTHI) & FIVEBITS));
+    cplot[4] = (Char) (040 | ((y >> SHIFTLO) & FIVEBITS));
 
     if (tekscr->gin_terminator != GIN_TERM_NONE)
 	cplot[len++] = '\r';
@@ -1519,8 +1519,8 @@ TekRealize(Widget gw,
 		      ((*valuemaskp) | CWBackPixel | CWWinGravity),
 		      values);
 
-    TFullWidth(tekscr) = width;
-    TFullHeight(tekscr) = height;
+    TFullWidth(tekscr) = (Dimension) width;
+    TFullHeight(tekscr) = (Dimension) height;
     TWidth(tekscr) = width - border;
     THeight(tekscr) = height - border;
     TekScale(tekscr) = (double) TWidth(tekscr) / TEKWIDTH;
@@ -1738,9 +1738,10 @@ TekReverseVideo(TekWidget tw)
     TScreen *screen = TScreenOf(term);
     TekScreen *tekscr = TekScreenOf(tw);
     int i;
+    Pixel tmp;
     XGCValues gcv;
 
-    EXCHANGE(T_COLOR(screen, TEK_FG), T_COLOR(screen, TEK_BG), i);
+    EXCHANGE(T_COLOR(screen, TEK_FG), T_COLOR(screen, TEK_BG), tmp);
 
     T_COLOR(screen, TEK_CURSOR) = T_COLOR(screen, TEK_FG);
 

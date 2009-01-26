@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.280 2009/01/24 14:33:14 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.283 2009/01/26 00:24:23 tom Exp $ */
 
 /************************************************************
 
@@ -781,7 +781,7 @@ xtermLoadFont(XtermWidget xw,
     Pixel new_revers;
     char *tmpname = NULL;
     char normal[MAX_FONTNAME];
-    Bool proportional = False;
+    Boolean proportional = False;
 
     memset(&myfonts, 0, sizeof(myfonts));
     memset(fnts, 0, sizeof(fnts));
@@ -1559,7 +1559,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		    break;
 		}
 #endif
-		xw->misc.face_size[fontnum] = face_size;
+		xw->misc.face_size[fontnum] = (float) face_size;
 	    }
 
 	    /*
@@ -1704,8 +1704,8 @@ xtermComputeFontInfo(XtermWidget xw,
     j = 2 * screen->border;
     width = MaxCols(screen) * win->f_width + i;
     height = MaxRows(screen) * win->f_height + j;
-    win->fullwidth = width;
-    win->fullheight = height;
+    win->fullwidth = (Dimension) width;
+    win->fullheight = (Dimension) height;
     win->width = width - i;
     win->height = height - j;
 
@@ -1724,8 +1724,8 @@ xtermComputeFontInfo(XtermWidget xw,
 void
 xtermSaveFontInfo(TScreen * screen, XFontStruct * font)
 {
-    screen->fnt_wide = (font->max_bounds.width);
-    screen->fnt_high = (font->ascent + font->descent);
+    screen->fnt_wide = (Dimension) (font->max_bounds.width);
+    screen->fnt_high = (Dimension) (font->ascent + font->descent);
     TRACE(("xtermSaveFontInfo %dx%d\n", screen->fnt_high, screen->fnt_wide));
 }
 
@@ -1826,8 +1826,8 @@ xtermMissingChar(XtermWidget xw, unsigned ch, XFontStruct * font)
 /*
  * ...since we'll scale the values anyway.
  */
-#define SCALE_X(n) n = (n * (font_width-1)) / (BOX_WIDE-1)
-#define SCALE_Y(n) n = (n * (font_height-1)) / (BOX_HIGH-1)
+#define SCALE_X(n) n = (n * (((int) font_width) - 1)) / (BOX_WIDE-1)
+#define SCALE_Y(n) n = (n * (((int) font_height) - 1)) / (BOX_HIGH-1)
 
 #define SEG(x0,y0,x1,y1) x0,y0, x1,y1
 
@@ -2023,11 +2023,11 @@ xtermDrawBoxChar(XtermWidget xw,
     CgsEnum cgsId = (ch == 2) ? gcDots : gcLine;
     VTwin *cgsWin = WhichVWin(screen);
     const short *p;
-    unsigned font_width = ((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
-    unsigned font_height = ((flags & DOUBLEHFONT) ? 2 : 1) * screen->fnt_high;
+    unsigned font_width = (unsigned) (((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide);
+    unsigned font_height = (unsigned) (((flags & DOUBLEHFONT) ? 2 : 1) * screen->fnt_high);
 
     if (cells > 1)
-	font_width *= cells;
+	font_width *= (unsigned) cells;
 
 #if OPT_WIDE_CHARS
     /*
@@ -2127,8 +2127,8 @@ xtermDrawBoxChar(XtermWidget xw,
 		     Convex, CoordModeOrigin);
     } else if (ch == 7) {	/* degrees */
 	unsigned width = (BOX_WIDE / 3);
-	int x_coord = MID_WIDE - (width / 2);
-	int y_coord = MID_HIGH - width;
+	int x_coord = MID_WIDE - (int) (width / 2);
+	int y_coord = MID_HIGH - (int) width;
 
 	SCALE_X(x_coord);
 	SCALE_Y(y_coord);
@@ -2141,8 +2141,8 @@ xtermDrawBoxChar(XtermWidget xw,
 		 360 * 64);
     } else if (ch == 0x1f) {	/* bullet */
 	unsigned width = 7 * BOX_WIDE / 10;
-	int x_coord = MID_WIDE - (width / 3);
-	int y_coord = MID_HIGH - (width / 3);
+	int x_coord = MID_WIDE - (int) (width / 3);
+	int y_coord = MID_HIGH - (int) (width / 3);
 
 	SCALE_X(x_coord);
 	SCALE_Y(y_coord);
@@ -2155,7 +2155,7 @@ xtermDrawBoxChar(XtermWidget xw,
 		 360 * 64);
     } else if (ch < (sizeof(lines) / sizeof(lines[0]))
 	       && (p = lines[ch]) != 0) {
-	unsigned coord[4];
+	int coord[4];
 	int n = 0;
 	while (*p >= 0) {
 	    coord[n++] = *p++;

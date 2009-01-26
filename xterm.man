@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.416 2009/01/24 16:39:46 tom Exp $
+.\" $XTermId: xterm.man,v 1.417 2009/01/25 16:48:16 tom Exp $
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
@@ -2288,6 +2288,10 @@ Specifies which of the VT100 fonts to use initially.
 Values are the same as for the \fIset-vt-font\fP action.
 The default is ``d'', i.e., "default".
 .TP 8
+.B "inputMethod (\fPclass\fB XtCInputMethod)"
+Tells \fIxterm\fP which type of input method to use.
+There is no default method.
+.TP 8
 .B "internalBorder (\fPclass\fB BorderWidth)"
 Specifies the number of pixels between the characters and the window border.
 The default is 2.
@@ -2601,6 +2605,10 @@ making those inactive.
 On startup, \fIxterm\fP determines the maximum number of clicks
 by the \fBon\fP\fIX\fP\fBClicks\fP resource values which are set.
 .TP 8
+.B "openIm (\fPclass\fB XtCOpenIm)"
+Tells \fIxterm\fP whether to open the input method at startup.
+The default is ``true''.
+.TP 8
 .B "pointerColor (\fPclass\fB PointerColor)"
 Specifies the foreground color of the pointer.
 The default is
@@ -2635,6 +2643,10 @@ The default is ``xterm.''
 .B "popOnBell (\fPclass\fB PopOnBell)"
 Specifies whether the window would be raised when Control-G is received.
 The default is ``false.''
+.TP 8
+.B "preeditType (\fPclass\fB XtCPreeditType)"
+Tells \fIxterm\fP which types of preedit (preconversion) string to display.
+The default is ``OverTheSpot,Root''.
 .TP 8
 .B "printAttributes (\fPclass\fB PrintAttributes)"
 Specifies whether to print graphic attributes along with the text.

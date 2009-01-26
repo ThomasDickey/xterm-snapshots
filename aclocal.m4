@@ -1,10 +1,10 @@
-dnl $XTermId: aclocal.m4,v 1.254 2008/12/30 17:01:41 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.257 2009/01/25 23:32:11 tom Exp $
 dnl
 dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.65 2006/06/19 00:36:50 dickey Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2007,2008 by Thomas E. Dickey
+dnl Copyright 1997-2008,2009 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -50,7 +50,7 @@ AC_DEFUN([AM_LANGINFO_CODESET],
   fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_CFLAGS version: 7 updated: 2004/04/25 17:48:30
+dnl CF_ADD_CFLAGS version: 8 updated: 2009/01/06 19:33:30
 dnl -------------
 dnl Copy non-preprocessor flags to $CFLAGS, preprocessor flags to $CPPFLAGS
 dnl The second parameter if given makes this macro verbose.
@@ -120,7 +120,7 @@ fi
 
 if test -n "$cf_new_cppflags" ; then
 	ifelse($2,,,[CF_VERBOSE(add to \$CPPFLAGS $cf_new_cppflags)])
-	CPPFLAGS="$cf_new_cppflags $CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS $cf_new_cppflags"
 fi
 
 if test -n "$cf_new_extra_cppflags" ; then
@@ -1042,7 +1042,20 @@ AC_DEFUN([CF_MSG_LOG],[
 echo "${as_me-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_PROG version: 6 updated: 2004/01/26 20:58:41
+dnl CF_PATHSEP version: 4 updated: 2009/01/11 20:30:23
+dnl ----------
+dnl Provide a value for the $PATH and similar separator
+AC_DEFUN([CF_PATHSEP],
+[
+	case $cf_cv_system_name in
+	os2*)	PATH_SEPARATOR=';'  ;;
+	*)	PATH_SEPARATOR=':'  ;;
+	esac
+ifelse($1,,,[$1=$PATH_SEPARATOR])
+	AC_SUBST(PATH_SEPARATOR)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_PATH_PROG version: 7 updated: 2009/01/11 20:34:16
 dnl ------------
 dnl Check for a given program, defining corresponding symbol.
 dnl	$1 = environment variable, which is suffixed by "_PATH" in the #define.
@@ -1055,21 +1068,13 @@ dnl
 dnl FIXME: we should allow this to be overridden by environment variables
 dnl
 AC_DEFUN([CF_PATH_PROG],[
+AC_REQUIRE([CF_PATHSEP])
 test -z "[$]$1" && $1=$2
 AC_PATH_PROGS($1,[$]$1 $2 $3,[$]$1)
 
 cf_path_prog=""
 cf_path_args=""
-IFS="${IFS= 	}"; cf_save_ifs="$IFS"
-case $host_os in #(vi
-os2*) #(vi
-	IFS="${IFS};"
-	;;
-*)
-	IFS="${IFS}:"
-	;;
-esac
-
+IFS="${IFS= 	}"; cf_save_ifs="$IFS"; IFS="${IFS}$PATH_SEPARATOR"
 for cf_temp in $ac_cv_path_$1
 do
 	if test -z "$cf_path_prog" ; then
@@ -1129,6 +1134,38 @@ case ".[$]$1" in #(vi
   ifelse($2,,[AC_MSG_ERROR([expected a pathname, not \"[$]$1\"])],$2)
   ;;
 esac
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_PKG_CONFIG version: 3 updated: 2009/01/25 10:55:09
+dnl -------------
+dnl Check for the package-config program, unless disabled by command-line.
+AC_DEFUN([CF_PKG_CONFIG],
+[
+AC_MSG_CHECKING(if you want to use pkg-config)
+AC_ARG_WITH(pkg-config,
+	[  --with-pkg-config{=path} enable/disable use of pkg-config],
+	[cf_pkg_config=$withval],
+	[cf_pkg_config=yes])
+AC_MSG_RESULT($cf_pkg_config)
+
+case $cf_pkg_config in #(vi
+no) #(vi
+	PKG_CONFIG=none
+	;;
+yes) #(vi
+	AC_PATH_PROG(PKG_CONFIG, pkg-config, none)
+	;;
+*)
+	PKG_CONFIG=$withval
+	;;
+esac
+
+test -z "$PKG_CONFIG" && PKG_CONFIG=none
+if test "$PKG_CONFIG" != none ; then
+	CF_PATH_SYNTAX(PKG_CONFIG)
+fi
+
+AC_SUBST(PKG_CONFIG)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_POSIX_C_SOURCE version: 6 updated: 2005/07/14 20:25:10
@@ -2460,7 +2497,7 @@ CF_X_ATHENA_CPPFLAGS($cf_x_athena)
 CF_X_ATHENA_LIBS($cf_x_athena)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA_CPPFLAGS version: 2 updated: 2002/10/09 20:00:37
+dnl CF_X_ATHENA_CPPFLAGS version: 3 updated: 2009/01/11 15:33:39
 dnl --------------------
 dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
 dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
@@ -2479,7 +2516,7 @@ do
 		cf_save="$CPPFLAGS"
 		cf_test=X11/$cf_x_athena_root/SimpleMenu.h
 		if test $cf_path != default ; then
-			CPPFLAGS="-I$cf_path/include $cf_save"
+			CPPFLAGS="$cf_save -I$cf_path/include"
 			AC_MSG_CHECKING(for $cf_test in $cf_path)
 		else
 			AC_MSG_CHECKING(for $cf_test)
@@ -2559,7 +2596,7 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 18 updated: 2007/03/21 18:06:17
+dnl CF_X_FREETYPE version: 21 updated: 2009/01/25 18:17:50
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -2574,28 +2611,29 @@ dnl	--with-freetype-cflags
 dnl	--with-freetype-libs
 AC_DEFUN([CF_X_FREETYPE],
 [
+AC_REQUIRE([CF_PKG_CONFIG])
+
 cf_extra_freetype_libs=
-FREETYPE_CONFIG=
+FREETYPE_CONFIG=none
 FREETYPE_PARAMS=
 
 AC_MSG_CHECKING(if you specified -D/-I options for FreeType)
 AC_ARG_WITH(freetype-cflags,
 	[  --with-freetype-cflags  -D/-I options for compiling with FreeType],
-[cf_cv_x_freetype_incs="$with_freetype_cflags"],
-[cf_cv_x_freetype_incs=no])
+	[cf_cv_x_freetype_incs="$with_freetype_cflags"],
+	[cf_cv_x_freetype_incs=no])
 AC_MSG_RESULT($cf_cv_x_freetype_incs)
 
 
 AC_MSG_CHECKING(if you specified -L/-l options for FreeType)
 AC_ARG_WITH(freetype-libs,
 	[  --with-freetype-libs    -L/-l options to link FreeType],
-[cf_cv_x_freetype_libs="$with_freetype_libs"],
-[cf_cv_x_freetype_libs=no])
+	[cf_cv_x_freetype_libs="$with_freetype_libs"],
+	[cf_cv_x_freetype_libs=no])
 AC_MSG_RESULT($cf_cv_x_freetype_libs)
 
-AC_PATH_PROG(FREETYPE_PKG_CONFIG, pkg-config, none)
-if test "$FREETYPE_PKG_CONFIG" != none && "$FREETYPE_PKG_CONFIG" --exists xft; then
-	FREETYPE_CONFIG=$FREETYPE_PKG_CONFIG
+if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists xft; then
+	FREETYPE_CONFIG=$PKG_CONFIG
 	FREETYPE_PARAMS=xft
 else
 	AC_PATH_PROG(FREETYPE_XFT_CONFIG, xft-config, none)
@@ -2609,20 +2647,22 @@ else
 		fi
 	fi
 fi
+AC_MSG_CHECKING(for FreeType config)
+AC_MSG_RESULT($FREETYPE_CONFIG $FREETYPE_PARAMS)
 
-if test -n "$FREETYPE_CONFIG" ; then
+if test "$FREETYPE_CONFIG" != none ; then
 
-if test "$cf_cv_x_freetype_incs" = no ; then
-AC_MSG_CHECKING(for $FREETYPE_CONFIG cflags)
-cf_cv_x_freetype_incs="`$FREETYPE_CONFIG $FREETYPE_PARAMS --cflags 2>/dev/null`"
-AC_MSG_RESULT($cf_cv_x_freetype_incs)
-fi
+	if test "$cf_cv_x_freetype_incs" = no ; then
+		AC_MSG_CHECKING(for $FREETYPE_CONFIG cflags)
+		cf_cv_x_freetype_incs="`$FREETYPE_CONFIG $FREETYPE_PARAMS --cflags 2>/dev/null`"
+		AC_MSG_RESULT($cf_cv_x_freetype_incs)
+	fi
 
-if test "$cf_cv_x_freetype_libs" = no ; then
-AC_MSG_CHECKING(for $FREETYPE_CONFIG libs)
-cf_cv_x_freetype_libs="$cf_extra_freetype_libs `$FREETYPE_CONFIG $FREETYPE_PARAMS --libs 2>/dev/null`"
-AC_MSG_RESULT($cf_cv_x_freetype_libs)
-fi
+	if test "$cf_cv_x_freetype_libs" = no ; then
+		AC_MSG_CHECKING(for $FREETYPE_CONFIG libs)
+		cf_cv_x_freetype_libs="$cf_extra_freetype_libs `$FREETYPE_CONFIG $FREETYPE_PARAMS --libs 2>/dev/null`"
+		AC_MSG_RESULT($cf_cv_x_freetype_libs)
+	fi
 
 fi
 
@@ -2640,7 +2680,7 @@ cf_save_LIBS="$LIBS"
 cf_save_INCS="$CPPFLAGS"
 
 LIBS="$cf_cv_x_freetype_libs $LIBS"
-CPPFLAGS="$cf_cv_x_freetype_incs $CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $cf_cv_x_freetype_incs"
 
 AC_TRY_LINK([
 #include <X11/Xlib.h>

@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.536 2008/12/30 17:22:55 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.538 2009/01/25 23:33:02 tom Exp $ */
 
 /*
- * Copyright 1999-2007,2008 by Thomas E. Dickey
+ * Copyright 1999-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
