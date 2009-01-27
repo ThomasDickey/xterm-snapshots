@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.716 2009/01/26 00:38:35 tom Exp $
+  $XTermId: xterm.log.html,v 1.718 2009/01/27 00:59:07 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_241">Patch #241 - 2009/1/26</A>
 <LI><A HREF="#xterm_240">Patch #240 - 2009/1/25</A>
 <LI><A HREF="#xterm_239">Patch #239 - 2009/1/8</A>
 <LI><A HREF="#xterm_238">Patch #238 - 2008/12/30</A>
@@ -287,6 +288,16 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_241">Patch #241 - 2009/1/26</A></H1>
+<ul>
+	<li>improve checks for missing bitmap fonts, fallback to "fixed" as
+	    needed to work around broken font-packages (report by Jacek
+	    Luczak).
+
+	<li>fix breakage from <a href="#xterm_240">patch #240</a> changes for
+	    <code>xtermAddInput()</code> (patches by Jeff Chua, Julien Cristau).
+</ul>
 
 <H1><A NAME="xterm_240">Patch #240 - 2009/1/25</A></H1>
 <ul>

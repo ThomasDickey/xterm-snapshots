@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.868 2009/01/24 15:39:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.869 2009/01/26 20:50:58 Jeff.Chua Exp $ */
 
 /*
 
@@ -4955,9 +4955,8 @@ VTNonMaskableEvent(Widget w GCC_UNUSED,
 static void
 VTResize(Widget w)
 {
-    XtermWidget xw;
-
-    if ((xw = getXtermWidget(w)) != 0) {
+    if (XtIsRealized(w)) {
+	XtermWidget xw = (XtermWidget) w;
 	ScreenResize(xw, xw->core.width, xw->core.height, &xw->flags);
     }
 }
