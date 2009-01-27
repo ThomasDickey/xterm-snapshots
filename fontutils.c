@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.283 2009/01/26 00:24:23 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.287 2009/01/27 01:57:22 tom Exp $ */
 
 /************************************************************
 
@@ -687,14 +687,21 @@ xtermOpenFont(XtermWidget xw, char *name, XTermFonts * result)
     Bool code = False;
     TScreen *screen = TScreenOf(xw);
 
-    if (name != 0
-	&& (result->fs = XLoadQueryFont(screen->display, name)) != 0) {
-	code = True;
-	if (EmptyFont(result->fs)) {
-	    result = xtermCloseFont(xw, result);
-	    code = False;
-	} else {
-	    result->fn = x_strdup(name);
+    if (name != 0) {
+	if ((result->fs = XLoadQueryFont(screen->display, name)) != 0) {
+	    code = True;
+	    if (EmptyFont(result->fs)) {
+		result = xtermCloseFont(xw, result);
+		code = False;
+	    } else {
+		result->fn = x_strdup(name);
+	    }
+	} else if (strcmp(name, DEFFONT)) {
+#if OPT_RENDERFONT
+	    if (!UsingRenderFont(xw))
+#endif
+		fprintf(stderr, "%s: cannot load font %s\n", ProgramName, name);
+	    code = xtermOpenFont(xw, DEFFONT, result);
 	}
     }
     return code;
@@ -2350,6 +2357,56 @@ useFaceSizes(XtermWidget xw)
 	    if (xw->misc.face_size[n] <= 0.0) {
 		result = False;
 		break;
+	    }
+	}
+	if (!result) {
+	    Boolean broken_fonts = True;
+	    TScreen *screen = TScreenOf(xw);
+	    int first = screen->menu_font_sizes[0];
+
+	    lookupFontSizes(xw);
+	    for (n = 0; n < NMENUFONTS; n++) {
+		if (screen->menu_font_sizes[n] > 0
+		    && screen->menu_font_sizes[n] != first) {
+		    broken_fonts = False;
+		    break;
+		}
+	    }
+
+	    /*
+	     * Workaround for breakage in font-packages - check if all of the
+	     * bitmap font sizes are the same, and if we're using TrueType
+	     * fonts. 
+	     */
+	    if (broken_fonts) {
+		float lo_value = (float) 9.0e9;
+		float hi_value = (float) 0.0;
+		float value;
+
+		TRACE(("bitmap fonts are broken - set faceSize resources\n"));
+		for (n = 0; n < NMENUFONTS; n++) {
+		    value = xw->misc.face_size[n];
+		    if (value > 0.0) {
+			if (lo_value > value)
+			    lo_value = value;
+			if (hi_value < value)
+			    hi_value = value;
+		    }
+		}
+
+		if (hi_value <= 0.0)
+		    sscanf(DEFFACESIZE, "%f", &value);
+		else
+		    value = (float) ((hi_value + lo_value) / 2.0);
+		if (value <= 0)
+		    value = (float) 14.0;
+
+		for (n = 0; n < NMENUFONTS; n++) {
+		    TRACE(("setting faceSize%d %.1f\n", n, value));
+		    xw->misc.face_size[n] = value;
+		    value = (float) (value * 1.1);
+		}
+		result = True;
 	    }
 	}
     }
