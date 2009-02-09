@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.869 2009/01/26 20:50:58 Jeff.Chua Exp $ */
+/* $XTermId: charproc.c,v 1.877 2009/02/09 01:28:50 tom Exp $ */
 
 /*
 
@@ -1224,6 +1224,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
     do {
 #if OPT_WIDE_CHARS
+	int this_is_wide = 0;
 
 	/*
 	 * Handle zero-width combining characters.  Make it faster by noting
@@ -1421,7 +1422,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * If this character is a different width than the last one, put the
 	 * previous text into the buffer and draw it now.
 	 */
-	if (iswide((int) c) != sp->last_was_wide) {
+	this_is_wide = isWide((int) c);
+	if (this_is_wide != sp->last_was_wide) {
 	    WriteNow();
 	}
 #endif
@@ -1452,7 +1454,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    print_area[print_used++] = c;
 	    sp->lastchar = thischar = (int) c;
 #if OPT_WIDE_CHARS
-	    sp->last_was_wide = iswide((int) c);
+	    sp->last_was_wide = this_is_wide;
 #endif
 	    if (morePtyData(screen, VTbuffer)) {
 		continue;
@@ -3506,41 +3508,7 @@ dotext(XtermWidget xw,
 	 * buffers (perhaps this is simpler).
 	 */
 	if (chars_chomped != 0 && next_col <= screen->max_col) {
-	    static unsigned limit;
-	    static Char *hibyte, *lobyte;
-	    Bool both = False;
-	    unsigned j, k;
-
-	    if (chars_chomped >= limit) {
-		limit = (chars_chomped + 1) * 2;
-		lobyte = (Char *) XtRealloc((char *) lobyte, limit);
-		hibyte = (Char *) XtRealloc((char *) hibyte, limit);
-	    }
-	    for (j = offset, k = 0; j < offset + chars_chomped; j++) {
-		if (buf[j] == HIDDEN_CHAR)
-		    continue;
-		lobyte[k] = LO_BYTE(buf[j]);
-		if (buf[j] > 255) {
-		    hibyte[k] = HI_BYTE(buf[j]);
-		    both = True;
-		} else {
-		    hibyte[k] = 0;
-		}
-		++k;
-	    }
-
-	    WriteText(xw, PAIRED_CHARS(lobyte,
-				       (both ? hibyte : 0)),
-		      k);
-#ifdef NO_LEAKS
-	    if (limit != 0) {
-		limit = 0;
-		XtFree((char *) lobyte);
-		XtFree((char *) hibyte);
-		lobyte = 0;
-		hibyte = 0;
-	    }
-#endif
+	    WriteText(xw, buf + offset, chars_chomped);
 	}
 	next_col += width_here;
 	screen->do_wrap = need_wrap;
@@ -3564,9 +3532,7 @@ dotext(XtermWidget xw,
 	}
 	next_col = screen->cur_col + this_col;
 
-	WriteText(xw, PAIRED_CHARS(buf + offset,
-				   buf2 ? buf2 + offset : 0),
-		  (unsigned) this_col);
+	WriteText(xw, buf + offset, (unsigned) this_col);
 
 	/*
 	 * The call to WriteText updates screen->cur_col.
@@ -3581,20 +3547,14 @@ dotext(XtermWidget xw,
 
 #if OPT_WIDE_CHARS
 unsigned
-visual_width(PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
+visual_width(IChar * str, Cardinal len)
 {
     /* returns the visual width of a string (doublewide characters count
        as 2, normalwide characters count as 1) */
     unsigned my_len = 0;
     while (len) {
-	int ch = *str;
-	if (str2)
-	    ch |= *str2 << 8;
-	if (str)
-	    str++;
-	if (str2)
-	    str2++;
-	if (iswide(ch))
+	int ch = (int) *str++;
+	if (isWide(ch))
 	    my_len += 2;
 	else
 	    my_len++;
@@ -6801,6 +6761,7 @@ ShowCursor(void)
     XtermWidget xw = term;
     TScreen *screen = &xw->screen;
     int x, y;
+    int base;
     Char clo;
     unsigned flags;
     unsigned fg_bg = 0;
@@ -6822,7 +6783,6 @@ ShowCursor(void)
 #endif
 #if OPT_WIDE_CHARS
     Char chi = 0;
-    int base;
     int off;
     int my_col = 0;
 #endif
@@ -6848,10 +6808,9 @@ ShowCursor(void)
     }
 #endif /* NO_ACTIVE_ICON */
 
-#if OPT_WIDE_CHARS
     base =
-#endif
 	clo = SCRN_BUF_CHARS(screen, screen->cursorp.row)[cursor_col];
+    flags = SCRN_BUF_ATTRS(screen, screen->cursorp.row)[cursor_col];
 
     if_OPT_WIDE_CHARS(screen, {
 	chi = SCRN_BUF_WIDEC(screen, screen->cursorp.row)[cursor_col];
@@ -6865,31 +6824,25 @@ ShowCursor(void)
 	}
 	my_col = cursor_col;
 	base = (chi << 8) | clo;
-	if (iswide(base))
+	if (base == 0)
+	    base = ' ';
+	if (isWide(base))
 	    my_col += 1;
     });
 
-    flags = SCRN_BUF_ATTRS(screen, screen->cursorp.row)[cursor_col];
-
-    if (clo == 0
-#if OPT_WIDE_CHARS
-	&& chi == 0
-#endif
-	) {
-	clo = ' ';
+    if (base == 0) {
+	base = clo = ' ';
     }
 
     /*
-     * If the cursor happens to be on blanks, and the foreground color is set
-     * but not the background, do not treat it as a colored cell.
+     * If the cursor happens to be on blanks, and we have not set both
+     * foreground and background color, do not treat it as a colored cell.
      */
 #if OPT_ISO_COLORS
-    if ((flags & TERM_COLOR_FLAGS(xw)) == BG_COLOR
-#if OPT_WIDE_CHARS
-	&& chi == 0
-#endif
-	&& clo == ' ') {
-	flags &= ~TERM_COLOR_FLAGS(xw);
+    if (((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR
+	 || (flags & (FG_COLOR | BG_COLOR)) == FG_COLOR)
+	&& base == ' ') {
+	flags &= ~(FG_COLOR | BG_COLOR);
     }
 #endif
 
@@ -7007,9 +6960,9 @@ ShowCursor(void)
 	&& (screen->cursor_state != ON || screen->cursor_GC != set_at)) {
 
 	screen->cursor_GC = set_at;
-	TRACE(("ShowCursor calling drawXtermText cur(%d,%d) %s\n",
+	TRACE(("ShowCursor calling drawXtermText cur(%d,%d) %s, set_at %d\n",
 	       screen->cur_row, screen->cur_col,
-	       (filled ? "filled" : "outline")));
+	       (filled ? "filled" : "outline"), set_at));
 
 	currentGC = getCgsGC(xw, currentWin, currentCgs);
 	drawXtermText(xw, flags & DRAWX_MASK, currentGC,
@@ -7028,7 +6981,7 @@ ShowCursor(void)
 		drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			      currentGC, x, y,
 			      curXtermChrSet(xw, screen->cur_row),
-			      PAIRED_CHARS(&clo, &chi), 1, iswide(base));
+			      PAIRED_CHARS(&clo, &chi), 1, isWide(base));
 	    }
 	});
 #endif
@@ -7059,14 +7012,14 @@ HideCursor(void)
     XtermWidget xw = term;
     TScreen *screen = &xw->screen;
     GC currentGC;
+    int x, y;
+    int base;
+    Char clo;
     unsigned flags;
     unsigned fg_bg = 0;
-    int x, y;
-    Char clo;
     Bool in_selection;
 #if OPT_WIDE_CHARS
     Char chi = 0;
-    int base;
     int off;
     int my_col = 0;
 #endif
@@ -7086,15 +7039,13 @@ HideCursor(void)
     }
 #endif /* NO_ACTIVE_ICON */
 
-#if OPT_WIDE_CHARS
     base =
-#endif
 	clo = SCRN_BUF_CHARS(screen, screen->cursorp.row)[cursor_col];
     flags = SCRN_BUF_ATTRS(screen, screen->cursorp.row)[cursor_col];
 
     if_OPT_WIDE_CHARS(screen, {
 	chi = SCRN_BUF_WIDEC(screen, screen->cursorp.row)[cursor_col];
-	if (clo == HIDDEN_LO && chi == HIDDEN_HI) {
+	if (clo == HIDDEN_LO && chi == HIDDEN_HI && cursor_col > 0) {
 	    /* if cursor points to non-initial part of wide character,
 	     * back it up
 	     */
@@ -7104,10 +7055,32 @@ HideCursor(void)
 	}
 	my_col = cursor_col;
 	base = (chi << 8) | clo;
-	if (iswide(base))
+	if (base == 0)
+	    base = ' ';
+	if (isWide(base))
 	    my_col += 1;
     });
 
+    if (base == 0) {
+	base = clo = ' ';
+    }
+
+    /*
+     * If the cursor happens to be on blanks, and we have not set both
+     * foreground and background color, do not treat it as a colored cell.
+     */
+#if OPT_ISO_COLORS
+    if (((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR
+	 || (flags & (FG_COLOR | BG_COLOR)) == FG_COLOR)
+	&& base == ' ') {
+	flags &= ~(FG_COLOR | BG_COLOR);
+    }
+#endif
+
+    /*
+     * Compare the current cell to the last set of colors used for the
+     * cursor and update the GC's if needed.
+     */
     if_OPT_EXT_COLORS(screen, {
 	fg_bg = PACK_FGBG(screen, screen->cursorp.row, cursor_col);
     });
@@ -7121,14 +7094,6 @@ HideCursor(void)
 	in_selection = True;
 
     currentGC = updatedXtermGC(xw, flags, fg_bg, in_selection);
-
-    if (clo == 0
-#if OPT_WIDE_CHARS
-	&& chi == 0
-#endif
-	) {
-	clo = ' ';
-    }
 
     TRACE(("HideCursor calling drawXtermText cur(%d,%d)\n",
 	   screen->cursorp.row, screen->cursorp.col));
@@ -7148,7 +7113,7 @@ HideCursor(void)
 	    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			  currentGC, x, y,
 			  curXtermChrSet(xw, screen->cur_row),
-			  PAIRED_CHARS(&clo, &chi), 1, iswide(base));
+			  PAIRED_CHARS(&clo, &chi), 1, isWide(base));
 	}
     });
 #endif
