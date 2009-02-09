@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.718 2009/01/27 00:59:07 tom Exp $
+  $XTermId: xterm.log.html,v 1.725 2009/02/09 00:01:13 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_242">Patch #242 - 2009/2/8</A>
 <LI><A HREF="#xterm_241">Patch #241 - 2009/1/26</A>
 <LI><A HREF="#xterm_240">Patch #240 - 2009/1/25</A>
 <LI><A HREF="#xterm_239">Patch #239 - 2009/1/8</A>
@@ -289,6 +290,34 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_242">Patch #242 - 2009/2/8</A></H1>
+<ul>
+	<li>improve warnings for unloadable fonts introduced in
+	    <a href="#xterm_240">patch #240</a>
+	    by limiting those to the cases where a font would be specified
+	    directly by a resource setting rather than a derived fontname.
+
+	<li>further amend fix for Debian #252873
+	    from <a href="#xterm_197">patch #197</a> to
+	    treat a blank cell which does not have both foreground and background
+	    colored as a non-colored cell.
+	    This improves a special case where the cursor is on a blank
+	    cell which had foreground color scrolled in
+	    (report by Miroslav Lichvar).
+	    <p>
+	    Also add the same logic when hiding cursor, so the outline matches
+	    the in-focus cursor.
+
+	<li>modify internals to reduce places PAIRED_CHARS() is used, making
+	    WriteText() and ScrnWriteText() accept IChar array, as well as
+	    providing a wrapper for drawXtermText().
+
+	<li>change default XIM font from "*" to "fixed" to improve startup
+	    time in zh_CN.UTF-8 locale (Mike Fabian, SuSE Bugzilla #464930).
+
+	<li>typo in #240 log (Slava Semushin)
+</ul>
+
 <H1><A NAME="xterm_241">Patch #241 - 2009/1/26</A></H1>
 <ul>
 	<li>improve checks for missing bitmap fonts, fallback to "fixed" as
@@ -310,7 +339,7 @@ is the latest version of this file.
 	    than prepend.
 
 	<li>add <code>install-scripts</code> rule to makefile, to allow
-	    roi8xterm and uxterm scripts to be altered independently of
+	    koi8rxterm and uxterm scripts to be altered independently of
 	    <code>install-bin</code> 
 
 	<li>add <code>-maximized</code> command-line option and corresponding

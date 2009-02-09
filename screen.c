@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.241 2008/04/20 21:07:10 tom Exp $ */
+/* $XTermId: screen.c,v 1.245 2009/02/09 01:39:03 tom Exp $ */
 
 /*
- * Copyright 1999-2007,2008 by Thomas E. Dickey
+ * Copyright 1999-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -95,8 +95,8 @@ Allocate(int nrow, int ncol, Char ** addr)
     ScrnBuf base;
     Char *tmp;
     int i, j, k;
-    size_t entries = MAX_PTRS * nrow;
-    size_t length = BUF_PTRS * nrow * ncol;
+    size_t entries = (size_t) (MAX_PTRS * nrow);
+    size_t length = (size_t) (BUF_PTRS * nrow * ncol);
 
     if ((base = TypeCallocN(ScrnPtr, entries)) == 0)
 	SysError(ERROR_SCALLOC);
@@ -137,8 +137,8 @@ Reallocate(XtermWidget xw,
     size_t mincols;
     Char *oldbuf;
     int move_down = 0, move_up = 0;
-    size_t entries = MAX_PTRS * nrow;
-    size_t length = BUF_PTRS * nrow * ncol;
+    size_t entries = (size_t) (MAX_PTRS * nrow);
+    size_t length = (size_t) (BUF_PTRS * nrow * ncol);
 
     if (sbuf == NULL || *sbuf == NULL) {
 	return 0;
@@ -168,7 +168,7 @@ Reallocate(XtermWidget xw,
 	    move_up = 0;
 	/* Overlapping memmove here! */
 	memmove(*sbuf, *sbuf + (move_up * MAX_PTRS),
-		MAX_PTRS * (oldrow - move_up) * sizeof((*sbuf)[0]));
+		(unsigned) (MAX_PTRS * (oldrow - move_up)) * sizeof((*sbuf)[0]));
     }
     *sbuf = TypeRealloc(ScrnPtr, entries, *sbuf);
     if (*sbuf == 0)
@@ -183,7 +183,7 @@ Reallocate(XtermWidget xw,
 	SysError(ERROR_SREALLOC);
     *sbufaddr = tmp;
     minrows = (oldrow < nrow) ? oldrow : nrow;
-    mincols = (oldcol < ncol) ? oldcol : ncol;
+    mincols = (size_t) ((oldcol < ncol) ? oldcol : ncol);
     if (nrow > oldrow
 	&& xw->misc.resizeGravity == SouthWestGravity) {
 	/* move data down to bottom of expanded screen */
@@ -281,10 +281,10 @@ ReallocateBufOffsets(XtermWidget xw,
 
     dump_screen("before", xw, *sbuf, *sbufaddr, nrow, ncol);
 
-    xw->num_ptrs = new_max_offsets;
+    xw->num_ptrs = (int) new_max_offsets;
 
-    entries = MAX_PTRS * nrow;
-    length = BUF_PTRS * nrow * ncol;
+    entries = ((unsigned) MAX_PTRS * nrow);
+    length = ((unsigned) BUF_PTRS * nrow * ncol);
     oldbuf = *sbufaddr;
 
     *sbuf = TypeRealloc(ScrnPtr, entries, *sbuf);
@@ -296,19 +296,19 @@ ReallocateBufOffsets(XtermWidget xw,
 	SysError(ERROR_SREALLOC);
     *sbufaddr = tmp;
 
-    for (i = k = 0; i < nrow; i++) {
+    for (i = 0, k = 0; i < nrow; i++) {
 	k += BUF_HEAD;
 	for (j = BUF_HEAD; j < old_max_ptrs; j++) {
 	    memcpy(tmp, base[k++], ncol);
 	    tmp += ncol;
 	}
-	tmp += ncol * (new_max_offsets - old_max_ptrs);
+	tmp += ncol * (new_max_offsets - (unsigned) old_max_ptrs);
     }
 
     /*
      * update the pointers in sbuf
      */
-    for (i = k = 0, tmp = *sbufaddr; i < nrow; i++) {
+    for (i = 0, k = 0, tmp = *sbufaddr; i < nrow; i++) {
 	for (j = 0; j < BUF_HEAD; j++)
 	    base[k++] = 0;
 	for (j = BUF_HEAD; j < MAX_PTRS; j++) {
@@ -331,7 +331,7 @@ void
 ChangeToWide(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
-    unsigned new_bufoffset = OFF_FINAL + (screen->max_combining * 2);
+    unsigned new_bufoffset = (unsigned) (OFF_FINAL + (screen->max_combining * 2));
     int savelines = screen->scrollWidget ? screen->savelines : 0;
 
     if (screen->wide_chars)
@@ -364,7 +364,7 @@ ChangeToWide(XtermWidget xw)
 	}
 
 	screen->wide_chars = True;
-	xw->num_ptrs = new_bufoffset;
+	xw->num_ptrs = (int) new_bufoffset;
 	screen->visbuf = &screen->allbuf[MAX_PTRS * savelines];
 
 	/*
@@ -461,7 +461,7 @@ ScrnDisownSelection(XtermWidget xw)
  */
 void
 ScrnWriteText(XtermWidget xw,
-	      PAIRED_CHARS(Char * str, Char * str2),
+	      IChar * str,
 	      unsigned flags,
 	      unsigned cur_fg_bg,
 	      unsigned length)
@@ -484,14 +484,15 @@ ScrnWriteText(XtermWidget xw,
 #if OPT_WIDE_CHARS
     Char starcol1, starcol2;
 #endif
-    unsigned real_width = visual_width(PAIRED_CHARS(str, str2), length);
+    unsigned n;
+    unsigned real_width = visual_width(str, length);
 
     (void) cur_fg_bg;
 
     if (avail <= 0)
 	return;
     if (length > (unsigned) avail)
-	length = avail;
+	length = (unsigned) avail;
     if (length == 0 || real_width == 0)
 	return;
 
@@ -515,11 +516,11 @@ ScrnWriteText(XtermWidget xw,
 #endif
 
     /* write blanks if we're writing invisible text */
-    if (flags & INVISIBLE) {
-	memset(chars, ' ', length);
-    } else {
-	memcpy(chars, str, length);	/* This can stand for the present. If it
-					   is wrong, we will scribble over it */
+    for (n = 0; n < length; ++n) {
+	if ((flags & INVISIBLE))
+	    chars[n] = ' ';
+	else
+	    chars[n] = LO_BYTE(str[n]);
     }
 
 #if OPT_BLINK_TEXT
@@ -539,28 +540,21 @@ ScrnWriteText(XtermWidget xw,
 	    char2 = SCRN_BUF_WIDEC(screen, screen->cur_row);
 	    char2 += screen->cur_col;
 	    if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
-		&& iswide(PACK_PAIR(char1, char2, -1))) {
+		&& isWide(PACK_PAIR(char1, char2, -1))) {
 		char1[-1] = ERROR_1;
 		char2[-1] = ERROR_2;
 	    }
 	    /* if we are overwriting the right hand half of a
 	       wide character, make the other half vanish */
 	    while (length) {
-		int ch = PACK_PAIR(str, str2, 0);
+		int ch = (int) str[0];
 
-		*char1 = *str;
-		char1++;
+		*char1++ = LO_BYTE(*str);
+		*char2++ = HI_BYTE(*str);
 		str++;
-
-		if (str2) {
-		    *char2 = *str2;
-		    str2++;
-		} else
-		    *char2 = 0;
-		char2++;
 		length--;
 
-		if (iswide(ch)) {
+		if (isWide(ch)) {
 		    *char1 = HIDDEN_LO;
 		    *char2 = HIDDEN_HI;
 		    char1++;
@@ -578,27 +572,28 @@ ScrnWriteText(XtermWidget xw,
 	    /* if we are overwriting the left hand half of a
 	       wide character, make the other half vanish */
 	} else {
-
 	    if ((char2 = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
 		char2 += screen->cur_col;
 		if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
-		    && iswide(PACK_PAIR(chars, char2, -1))) {
+		    && isWide(PACK_PAIR(chars, char2, -1))) {
 		    chars[-1] = ERROR_1;
 		    char2[-1] = ERROR_2;
 		}
 		/* if we are overwriting the right hand half of a
 		   wide character, make the other half vanish */
 		if (chars[length] == HIDDEN_LO && char2[length] == HIDDEN_HI &&
-		    iswide(PACK_PAIR(chars, char2, length - 1))) {
+		    isWide(PACK_PAIR(chars, char2, length - 1))) {
 		    chars[length] = ERROR_1;
 		    char2[length] = ERROR_2;
 		}
 		/* if we are overwriting the left hand half of a
 		   wide character, make the other half vanish */
-		if ((flags & INVISIBLE) || (str2 == 0))
-		    memset(char2, 0, length);
-		else
-		    memcpy(char2, str2, length);
+		for (n = 0; n < length; ++n) {
+		    if ((flags & INVISIBLE))
+			char2[n] = 0;
+		    else
+			char2[n] = HI_BYTE(str[n]);
+		}
 	    }
 	}
     });
@@ -1036,7 +1031,7 @@ ScrnRefresh(XtermWidget xw,
 		   to draw the right hand half */
 		if (leftcol > 0 &&
 		    (PACK_PAIR(chars, widec, leftcol)) == HIDDEN_CHAR &&
-		    iswide(PACK_PAIR(chars, widec, leftcol - 1))) {
+		    isWide(PACK_PAIR(chars, widec, leftcol - 1))) {
 		    leftcol--;
 		    ncols++;
 		    col = leftcol;
@@ -1138,7 +1133,7 @@ ScrnRefresh(XtermWidget xw,
 	flags = attrs[col];
 #if OPT_WIDE_CHARS
 	if (widec)
-	    wideness = iswide(PACK_PAIR(chars, widec, col));
+	    wideness = isWide(PACK_PAIR(chars, widec, col));
 	else
 	    wideness = 0;
 #endif
@@ -1175,7 +1170,7 @@ ScrnRefresh(XtermWidget xw,
 #endif
 #if OPT_WIDE_CHARS
 		|| (widec
-		    && ((iswide(PACK_PAIR(chars, widec, col))) != wideness)
+		    && ((isWide(PACK_PAIR(chars, widec, col))) != wideness)
 		    && !((PACK_PAIR(chars, widec, col)) == HIDDEN_CHAR))
 #endif
 #if OPT_DEC_CHRSET
@@ -1214,7 +1209,7 @@ ScrnRefresh(XtermWidget xw,
 			    int base = PACK_PAIR(chars, widec, i);
 			    int combo = PACK_PAIR(com_lo, com_hi, i);
 
-			    if (iswide(base))
+			    if (isWide(base))
 				my_x = CurCursorX(screen,
 						  ROW2INX(screen, row),
 						  i - 1);
@@ -1226,7 +1221,7 @@ ScrnRefresh(XtermWidget xw,
 					      gc, my_x, y, cs,
 					      PAIRED_CHARS(com_lo + i,
 							   com_hi + i),
-					      1, iswide(base));
+					      1, isWide(base));
 			}
 		    }
 		});
@@ -1254,7 +1249,7 @@ ScrnRefresh(XtermWidget xw,
 		});
 #if OPT_WIDE_CHARS
 		if (widec)
-		    wideness = iswide(PACK_PAIR(chars, widec, col));
+		    wideness = isWide(PACK_PAIR(chars, widec, col));
 #endif
 
 		gc = updatedXtermGC(xw, flags, fg_bg, hilite);
@@ -1300,7 +1295,7 @@ ScrnRefresh(XtermWidget xw,
 		    int base = PACK_PAIR(chars, widec, i);
 		    int combo = PACK_PAIR(com_lo, com_hi, i);
 
-		    if (iswide(base))
+		    if (isWide(base))
 			my_x = CurCursorX(screen,
 					  ROW2INX(screen, row),
 					  i - 1);
@@ -1312,7 +1307,7 @@ ScrnRefresh(XtermWidget xw,
 				      gc, my_x, y, cs,
 				      PAIRED_CHARS(com_lo + i,
 						   com_hi + i),
-				      1, iswide(base));
+				      1, isWide(base));
 		}
 	    }
 	});
@@ -1529,8 +1524,8 @@ ScreenResize(XtermWidget xw,
     } else if (FullHeight(screen) == height && FullWidth(screen) == width)
 	return (0);		/* nothing has changed at all */
 
-    screen->fullVwin.fullheight = height;
-    screen->fullVwin.fullwidth = width;
+    screen->fullVwin.fullheight = (Dimension) height;
+    screen->fullVwin.fullwidth = (Dimension) width;
 
     ResizeScrollBar(xw);
     ResizeSelection(screen, rows, cols);
@@ -1545,9 +1540,9 @@ ScreenResize(XtermWidget xw,
 	    MaxRows(screen) * screen->iconVwin.f_height;
 
 	changes.width = screen->iconVwin.fullwidth =
-	    screen->iconVwin.width + 2 * xw->misc.icon_border_width;
+	    (Dimension) (screen->iconVwin.width + 2 * xw->misc.icon_border_width);
 	changes.height = screen->iconVwin.fullheight =
-	    screen->iconVwin.height + 2 * xw->misc.icon_border_width;
+	    (Dimension) (screen->iconVwin.height + 2 * xw->misc.icon_border_width);
 	changes.border_width = xw->misc.icon_border_width;
 
 	TRACE(("resizing icon window %dx%d\n", changes.height, changes.width));
@@ -1710,7 +1705,7 @@ ScrnFillRectangle(XtermWidget xw,
     if (validRect(xw, target)) {
 	unsigned left = target->left - 1;
 	unsigned size = target->right - left;
-	Char attrs = flags;
+	Char attrs = (Char) flags;
 	int row, col;
 
 	attrs &= ATTRIBUTES;

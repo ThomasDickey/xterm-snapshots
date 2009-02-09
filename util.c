@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.412 2009/01/25 17:48:41 tom Exp $ */
+/* $XTermId: util.c,v 1.416 2009/02/08 23:41:50 tom Exp $ */
 
 /*
- * Copyright 1999-2007,2008 by Thomas E. Dickey
+ * Copyright 1999-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -631,21 +631,21 @@ RevScroll(XtermWidget xw, int amount)
  * the current cursor position.  update cursor position.
  */
 void
-WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
+WriteText(XtermWidget xw, IChar * str, Cardinal len)
 {
     TScreen *screen = &(xw->screen);
     ScrnPtr temp_str = 0;
     unsigned test;
     unsigned flags = xw->flags;
     unsigned fg_bg = makeColorPair(xw->cur_foreground, xw->cur_background);
-    unsigned cells = visual_width(PAIRED_CHARS(str, str2), len);
+    unsigned cells = visual_width(str, len);
     GC currentGC;
 
     TRACE(("WriteText (%2d,%2d) (%d) %3d:%s\n",
 	   screen->cur_row,
 	   screen->cur_col,
 	   curXtermChrSet(xw, screen->cur_row),
-	   len, visibleChars(PAIRED_CHARS(str, str2), len)));
+	   len, visibleIChar(str, len)));
 
     if (ScrnHaveSelection(screen)
 	&& ScrnIsLineInSelection(screen, INX2ROW(screen, screen->cur_row))) {
@@ -673,17 +673,9 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	});
 
 	if (flags & INVISIBLE) {
-	    if (cells > len) {
-		str = temp_str = TypeMallocN(Char, cells);
-		if (str == 0)
-		    return;
-	    }
-	    len = cells;
-
-	    memset(str, ' ', len);
-	    if_OPT_WIDE_CHARS(screen, {
-		str2 = 0;
-	    });
+	    Cardinal n;
+	    for (n = 0; n < cells; ++n)
+		str[n] = ' ';
 	}
 
 	TRACE(("WriteText calling drawXtermText (%d,%d)\n",
@@ -696,16 +688,16 @@ WriteText(XtermWidget xw, PAIRED_CHARS(Char * str, Char * str2), Cardinal len)
 	/* make sure that the correct GC is current */
 	currentGC = updatedXtermGC(xw, flags, fg_bg, False);
 
-	drawXtermText(xw, test & DRAWX_MASK, currentGC,
-		      CurCursorX(screen, screen->cur_row, screen->cur_col),
-		      CursorY(screen, screen->cur_row),
-		      curXtermChrSet(xw, screen->cur_row),
-		      PAIRED_CHARS(str, str2), len, 0);
+	drawXtermIChars(xw, test & DRAWX_MASK, currentGC,
+			CurCursorX(screen, screen->cur_row, screen->cur_col),
+			CursorY(screen, screen->cur_row),
+			curXtermChrSet(xw, screen->cur_row),
+			str, len, 0);
 
 	resetXtermGC(xw, flags, False);
     }
 
-    ScrnWriteText(xw, PAIRED_CHARS(str, str2), flags, fg_bg, len);
+    ScrnWriteText(xw, str, flags, fg_bg, len);
     CursorForward(screen, (int) cells);
 #if OPT_ZICONBEEP
     /* Flag icon name with "***"  on window output when iconified.
@@ -3229,6 +3221,57 @@ drawXtermText(XtermWidget xw,
     }
 
     return x + real_length * FontWidth(screen);
+}
+
+#if OPT_WIDE_CHARS
+/*
+ * Allocate buffer - workaround for wide-character interfaces.
+ */
+void
+allocXtermChars(Char ** buffer, Cardinal length)
+{
+    if (*buffer == 0) {
+	*buffer = (Char *) XtMalloc(length);
+    } else {
+	*buffer = (Char *) XtRealloc((char *) *buffer, length);
+    }
+}
+#endif
+
+int
+drawXtermIChars(XtermWidget xw,
+		unsigned flags,
+		GC gc,
+		int x,
+		int y,
+		int chrset,
+		IChar * text,
+		Cardinal len,
+		int on_wide)
+{
+    int rc = 0;
+#if OPT_WIDE_CHARS
+    static Char *text1 = 0;
+    static Char *text2 = 0;
+    static Cardinal used = 0;
+    Cardinal n;
+
+    if (text != 0) {
+	if (len >= used) {
+	    used = 1 + (2 * len);
+	    allocXtermChars(&text1, used);
+	    allocXtermChars(&text2, used);
+	}
+	for (n = 0; n < len; ++n) {
+	    text1[n] = LO_BYTE(text[n]);
+	    text2[n] = HI_BYTE(text[n]);
+	}
+	rc = drawXtermText(xw, flags, gc, x, y, chrset, text1, text2, len, on_wide);
+    }
+#else
+    rc = drawXtermText(xw, flags, gc, x, y, chrset, text, len, on_wide);
+#endif
+    return rc;
 }
 
 /* set up size hints for window manager; min 1 char by 1 char */

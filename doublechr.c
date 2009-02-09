@@ -1,8 +1,8 @@
-/* $XTermId: doublechr.c,v 1.60 2008/01/27 15:07:16 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.61 2009/02/08 23:58:41 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2007,2008 by Thomas E. Dickey
+Copyright 1997-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -263,12 +263,12 @@ xterm_DoubleGC(XtermWidget xw,
 	    temp.chrset = chrset;
 	    temp.flags = (flags & BOLD);
 
-	    if (!xtermOpenFont(xw, name, &temp)) {
+	    if (!xtermOpenFont(xw, name, &temp, False)) {
 		/* Retry with * in resolutions */
 		char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
 
 		if (nname != 0) {
-		    found = xtermOpenFont(xw, nname, &temp);
+		    found = xtermOpenFont(xw, nname, &temp, False);
 		    free(nname);
 		}
 	    } else {
