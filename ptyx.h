@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.538 2009/01/25 23:33:02 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.540 2009/02/10 00:37:55 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1772,6 +1772,12 @@ typedef struct _TekScreen {
 #define MULTICLICKTIME 250	/* milliseconds */
 
 typedef enum {
+    fwNever = 0,
+    fwResource,
+    fwAlways
+} fontWarningTypes;
+
+typedef enum {
     keyboardIsLegacy,		/* bogus vt220 codes for F1-F4, etc. */
     keyboardIsDefault,
     keyboardIsHP,
@@ -1884,6 +1890,7 @@ typedef struct _Misc {
 #if OPT_INPUT_METHOD
     char *f_x;			/* font for XIM */
 #endif
+    fontWarningTypes fontWarnings;
     int limit_resize;
 #ifdef ALLOWLOGGING
     Boolean log_on;

@@ -1,8 +1,8 @@
-/* $XTermId: fontutils.h,v 1.68 2009/02/08 23:54:20 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.69 2009/02/10 00:29:43 tom Exp $ */
 
 /************************************************************
 
-Copyright 1998-2007,2008 by Thomas E. Dickey
+Copyright 1998-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -38,14 +38,12 @@ authorization.
 #include <xterm.h>
 
 extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
-extern Bool xtermOpenFont (XtermWidget /* xw */, char */* name */, XTermFonts * /* result */, Bool /* warn */);
+extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, fontWarningTypes /* warn */);
 extern XTermFonts * xtermCloseFont (XtermWidget /* xw */, XTermFonts * /* fnt */);
 extern const VTFontNames * xtermFontName (char */* normal */);
 extern int lookupRelativeFontSize (XtermWidget /* xw */, int /* old */, int /* relative */);
 extern int xtermGetFont(const char * /* param */);
-extern int xtermLoadFont (XtermWidget /* xw */,
-			  const VTFontNames */* fonts */,
-			  Bool /* doresize */, int /* fontnum */);
+extern int xtermLoadFont (XtermWidget /* xw */, const VTFontNames */* fonts */, Bool /* doresize */, int /* fontnum */);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
 extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
 extern void xtermCloseFonts (XtermWidget /* xw */, XTermFonts * /* fnts[fMAX] */);

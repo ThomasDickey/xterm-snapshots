@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.417 2009/01/25 16:48:16 tom Exp $
+.\" $XTermId: xterm.man,v 1.418 2009/02/10 00:54:27 tom Exp $
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
@@ -2098,6 +2098,20 @@ font metrics.
 The default is ``true''.
 If disabled, \fIxterm\fP will simulate doublesize characters by drawing
 normal characters with spaces between them.
+.TP 8
+.B "fontWarnings (\fPclass\fB FontWarnings)"
+Specify whether \fIxterm\fP should report an error if it fails to load a font:
+.RS
+.TP 5
+0
+Never report an error (though the X libraries may).
+.TP 5
+1
+Report an error if the font name was given as a resource setting.
+.TP 5
+2
+Always report an error on failure to load a font.
+.RE
 .TP 8
 .B "forceBoxChars (\fPclass\fB ForceBoxChars)"
 Specifies whether \fIxterm\fP should assume the normal and bold fonts

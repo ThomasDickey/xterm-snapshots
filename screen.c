@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.245 2009/02/09 01:39:03 tom Exp $ */
+/* $XTermId: screen.c,v 1.246 2009/02/09 21:37:57 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -331,7 +331,8 @@ void
 ChangeToWide(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
-    unsigned new_bufoffset = (unsigned) (OFF_FINAL + (screen->max_combining * 2));
+    unsigned new_bufoffset = (unsigned) (OFF_FINAL
+					 + (screen->max_combining * 2));
     int savelines = screen->scrollWidget ? screen->savelines : 0;
 
     if (screen->wide_chars)
@@ -623,7 +624,7 @@ ScrnWriteText(XtermWidget xw,
     });
 
     if_OPT_WIDE_CHARS(screen, {
-	screen->last_written_col = screen->cur_col + real_width - 1;
+	screen->last_written_col = screen->cur_col + (int) real_width - 1;
 	screen->last_written_row = screen->cur_row;
     });
 
@@ -641,7 +642,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
     TScreen *screen = &(xw->screen);
     int i, j;
     size_t len = ScrnPointers(screen, n);
-    int last = (n * MAX_PTRS);
+    int last = ((int) n * MAX_PTRS);
 
     TRACE(("ScrnClearLines(where %d, n %d, size %d)\n", where, n, size));
 
@@ -655,13 +656,13 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 
     /* clear contents of old rows */
     if (TERM_COLOR_FLAGS(xw)) {
-	int flags = TERM_COLOR_FLAGS(xw);
+	unsigned flags = TERM_COLOR_FLAGS(xw);
 	for (i = 0; i < last; i += MAX_PTRS) {
 	    for (j = 0; j < MAX_PTRS; j++) {
 		if (j < BUF_HEAD)
 		    screen->save_ptr[i + j] = 0;
 		else if (j == OFF_ATTRS)
-		    memset(screen->save_ptr[i + j], flags, size);
+		    memset(screen->save_ptr[i + j], (int) flags, size);
 #if OPT_ISO_COLORS
 #if OPT_EXT_COLORS
 		else if (j == OFF_FGRND)
@@ -691,7 +692,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 size_t
 ScrnPointers(TScreen * screen, size_t len)
 {
-    len *= MAX_PTRS;
+    len *= (unsigned) MAX_PTRS;
 
     if (len > screen->save_len) {
 	if (screen->save_len)
@@ -725,7 +726,7 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where,
     assert(MAX_PTRS > 0);
 
     /* save n lines at bottom */
-    ScrnClearLines(xw, sb, (last -= n - 1), n, size);
+    ScrnClearLines(xw, sb, (last -= (int) n - 1), n, size);
 
     /*
      * WARNING, overlapping copy operation.  Move down lines (pointers).
@@ -737,9 +738,9 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where,
      *   +--------|---------|----+
      */
     assert(last >= where);
-    memmove((char *) &sb[MAX_PTRS * (where + n)],
+    memmove((char *) &sb[MAX_PTRS * (where + (int) n)],
 	    (char *) &sb[MAX_PTRS * where],
-	    MAX_PTRS * sizeof(char *) * (last - where));
+	    sizeof(char *) * (unsigned) (MAX_PTRS * (last - where)));
 
     /* reuse storage for new lines at where */
     memcpy((char *) &sb[MAX_PTRS * where],
@@ -768,13 +769,14 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where,
 
     /* move up lines */
     memmove((char *) &sb[MAX_PTRS * where],
-	    (char *) &sb[MAX_PTRS * (where + n)],
-	    MAX_PTRS * sizeof(char *) * ((last -= n - 1) - where));
+	    (char *) &sb[MAX_PTRS * (where + (int) n)],
+	    sizeof(char *) * (unsigned) (MAX_PTRS
+					 * ((last -= ((int) n - 1)) - where)));
 
     /* reuse storage for new bottom lines */
     memcpy((char *) &sb[MAX_PTRS * last],
 	   (char *) screen->save_ptr,
-	   MAX_PTRS * sizeof(char *) * n);
+	   (unsigned) MAX_PTRS * sizeof(char *) * n);
 }
 
 /*
@@ -795,12 +797,12 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     Char *data;
     size_t nbytes;
 
-    if (last <= (int) (col + n)) {
+    if (last <= (col + (int) n)) {
 	if (last <= col)
 	    return;
-	n = last - col;
+	n = (unsigned) (last - col);
     }
-    nbytes = (last - (col + n));
+    nbytes = (size_t) (last - (col + (int) n));
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
@@ -814,7 +816,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
-	kr = screen->max_col - n + 1;
+	kr = screen->max_col - (int) n + 1;
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
@@ -870,12 +872,12 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
     Char *data;
     size_t nbytes;
 
-    if (last <= (int) (col + n)) {
+    if (last <= (col + (int) n)) {
 	if (last <= col)
 	    return;
-	n = last - col;
+	n = (unsigned) (last - col);
     }
-    nbytes = (last - (col + n));
+    nbytes = (size_t) (last - (col + (int) n));
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
@@ -918,7 +920,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    memmove(Target, Source, nbytes);
 	}
     });
-    ClearCells(xw, 0, n, row, (int) (last - n));
+    ClearCells(xw, 0, n, row, (last - (int) n));
     ScrnClrWrapped(screen, row);
 
 #undef Source
@@ -946,7 +948,7 @@ ScrnRefresh(XtermWidget xw,
     int maxrow = toprow + nrows - 1;
     int scrollamt = screen->scroll_amt;
     int max = screen->max_row;
-    int gc_changes = 0;
+    unsigned gc_changes = 0;
 #ifdef __CYGWIN__
     static char first_time = 1;
 #endif
@@ -1374,7 +1376,7 @@ ClearBufRows(XtermWidget xw,
 	     int last)
 {
     TScreen *screen = &(xw->screen);
-    unsigned len = MaxCols(screen);
+    unsigned len = (unsigned) MaxCols(screen);
     int row;
 
     TRACE(("ClearBufRows %d..%d\n", first, last));
@@ -1543,7 +1545,7 @@ ScreenResize(XtermWidget xw,
 	    (Dimension) (screen->iconVwin.width + 2 * xw->misc.icon_border_width);
 	changes.height = screen->iconVwin.fullheight =
 	    (Dimension) (screen->iconVwin.height + 2 * xw->misc.icon_border_width);
-	changes.border_width = xw->misc.icon_border_width;
+	changes.border_width = (int) xw->misc.icon_border_width;
 
 	TRACE(("resizing icon window %dx%d\n", changes.height, changes.width));
 	XConfigureWindow(XtDisplay(xw), screen->iconVwin.window,
@@ -1703,9 +1705,9 @@ ScrnFillRectangle(XtermWidget xw,
 
     TRACE(("filling rectangle with '%c' flags %#x\n", value, flags));
     if (validRect(xw, target)) {
-	unsigned left = target->left - 1;
-	unsigned size = target->right - left;
-	Char attrs = (Char) flags;
+	unsigned left = (unsigned) (target->left - 1);
+	unsigned size = (unsigned) (target->right - (int) left);
+	unsigned attrs = flags;
 	int row, col;
 
 	attrs &= ATTRIBUTES;
@@ -1717,19 +1719,19 @@ ScrnFillRectangle(XtermWidget xw,
 	     * Fill attributes, preserving "protected" flag, as well as
 	     * colors if asked.
 	     */
-	    for (col = left; col < target->right; ++col) {
-		Char temp = SCRN_BUF_ATTRS(screen, row)[col];
+	    for (col = (int) left; col < target->right; ++col) {
+		unsigned temp = SCRN_BUF_ATTRS(screen, row)[col];
 		if (!keepColors) {
 		    temp &= ~(FG_COLOR | BG_COLOR);
 		}
 		temp = attrs | (temp & (FG_COLOR | BG_COLOR | PROTECTED));
 		temp |= CHARDRAWN;
-		SCRN_BUF_ATTRS(screen, row)[col] = temp;
+		SCRN_BUF_ATTRS(screen, row)[col] = (Char) temp;
 #if OPT_ISO_COLORS
 		if (attrs & (FG_COLOR | BG_COLOR)) {
 		    if_OPT_EXT_COLORS(screen, {
-			SCRN_BUF_FGRND(screen, row)[col] = xw->sgr_foreground;
-			SCRN_BUF_BGRND(screen, row)[col] = xw->cur_background;
+			SCRN_BUF_FGRND(screen, row)[col] = (Char) xw->sgr_foreground;
+			SCRN_BUF_BGRND(screen, row)[col] = (Char) xw->cur_background;
 		    });
 		    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
 			SCRN_BUF_COLOR(screen, row)[col] = xtermColorPair(xw);
@@ -1780,9 +1782,9 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 		       params,
 		       &target);
 	if (validRect(xw, &target)) {
-	    unsigned high = (source->bottom - source->top) + 1;
-	    unsigned wide = (source->right - source->left) + 1;
-	    unsigned size = (high * wide * MAX_PTRS);
+	    int high = (source->bottom - source->top) + 1;
+	    int wide = (source->right - source->left) + 1;
+	    unsigned size = (unsigned) (high * wide * MAX_PTRS);
 	    int row, col, n, j;
 
 	    Char *cells = TypeMallocN(Char, size);
@@ -1937,7 +1939,7 @@ ScrnMarkRectangle(XtermWidget xw,
 		    TRACE(("first mask-change is %#x\n",
 			   SCRN_BUF_ATTRS(screen, row)[col] ^ flags));
 #endif
-		SCRN_BUF_ATTRS(screen, row)[col] = flags;
+		SCRN_BUF_ATTRS(screen, row)[col] = (Char) flags;
 	    }
 	}
 	ScrnRefresh(xw,

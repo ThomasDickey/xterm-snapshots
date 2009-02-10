@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.516 2009/02/08 23:41:58 tom Exp $ */
+/* $XTermId: xterm.h,v 1.517 2009/02/10 00:36:30 tom Exp $ */
 
 /************************************************************
 
@@ -393,6 +393,7 @@ extern char **environ;
 #define XtNfont6		"font6"
 #define XtNfontDoublesize	"fontDoublesize"
 #define XtNfontStyle		"fontStyle"
+#define XtNfontWarnings		"fontWarnings"
 #define XtNforceBoxChars	"forceBoxChars"
 #define XtNformatOtherKeys	"formatOtherKeys"
 #define XtNfreeBoldBox		"freeBoldBox"
@@ -546,6 +547,7 @@ extern char **environ;
 #define XtCFont6		"Font6"
 #define XtCFontDoublesize	"FontDoublesize"
 #define XtCFontStyle		"FontStyle"
+#define XtCFontWarnings		"FontWarnings"
 #define XtCForceBoxChars	"ForceBoxChars"
 #define XtCFormatOtherKeys	"FormatOtherKeys"
 #define XtCFreeBoldBox		"FreeBoldBox"

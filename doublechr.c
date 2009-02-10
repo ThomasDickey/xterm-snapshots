@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.61 2009/02/08 23:58:41 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.62 2009/02/09 23:48:07 tom Exp $ */
 
 /************************************************************
 
@@ -263,12 +263,12 @@ xterm_DoubleGC(XtermWidget xw,
 	    temp.chrset = chrset;
 	    temp.flags = (flags & BOLD);
 
-	    if (!xtermOpenFont(xw, name, &temp, False)) {
+	    if (!xtermOpenFont(xw, name, &temp, fwAlways)) {
 		/* Retry with * in resolutions */
 		char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
 
 		if (nname != 0) {
-		    found = xtermOpenFont(xw, nname, &temp, False);
+		    found = xtermOpenFont(xw, nname, &temp, fwAlways);
 		    free(nname);
 		}
 	    } else {
