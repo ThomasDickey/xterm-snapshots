@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.288 2009/02/08 23:59:49 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.290 2009/02/10 00:39:12 tom Exp $ */
 
 /************************************************************
 
@@ -682,7 +682,10 @@ cache_menu_font_name(TScreen * screen, int fontnum, int which, const char *name)
  * failure.
  */
 Bool
-xtermOpenFont(XtermWidget xw, char *name, XTermFonts * result, Bool warn)
+xtermOpenFont(XtermWidget xw,
+	      const char *name,
+	      XTermFonts * result,
+	      fontWarningTypes warn)
 {
     Bool code = False;
     TScreen *screen = TScreenOf(xw);
@@ -697,13 +700,13 @@ xtermOpenFont(XtermWidget xw, char *name, XTermFonts * result, Bool warn)
 		result->fn = x_strdup(name);
 	    }
 	} else if (strcmp(name, DEFFONT)) {
-	    if (warn
+	    if (warn <= xw->misc.fontWarnings
 #if OPT_RENDERFONT
 		&& !UsingRenderFont(xw)
 #endif
 		)
 		fprintf(stderr, "%s: cannot load font %s\n", ProgramName, name);
-	    code = xtermOpenFont(xw, DEFFONT, result, True);
+	    code = xtermOpenFont(xw, DEFFONT, result, fwAlways);
 	}
     }
     return code;
@@ -825,9 +828,9 @@ xtermLoadFont(XtermWidget xw,
 	fp = get_font_name_props(screen->display, fnts[fNorm].fs, normal);
 	if (fp != 0) {
 	    myfonts.f_b = bold_font_name(fp, fp->average_width);
-	    if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], False)) {
+	    if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwNever)) {
 		myfonts.f_b = bold_font_name(fp, -1);
-		(void) xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], False);
+		(void) xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwNever);
 	    }
 	    TRACE(("...derived bold %s\n", NonNull(myfonts.f_b)));
 	}
@@ -1374,8 +1377,10 @@ xtermSetCursorBox(TScreen * screen)
 
 #if OPT_RENDERFONT
 static XftFont *
-xtermOpenXft(Display * dpy, XftPattern * pat, const char *tag GCC_UNUSED)
+xtermOpenXft(XtermWidget xw, const char *name, XftPattern * pat, const char *tag)
 {
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
     XftPattern *match;
     XftResult status;
     XftFont *result = 0;
@@ -1389,9 +1394,15 @@ xtermOpenXft(Display * dpy, XftPattern * pat, const char *tag GCC_UNUSED)
 	    } else {
 		TRACE(("...could did not open %s font\n", tag));
 		XftPatternDestroy(match);
+		if (xw->misc.fontWarnings >= fwAlways)
+		    fprintf(stderr, "%s: cannot open %s font \"%s\"\n",
+			    ProgramName, tag, name);
 	    }
 	} else {
 	    TRACE(("...did not match %s font\n", tag));
+	    if (xw->misc.fontWarnings >= fwResource)
+		fprintf(stderr, "%s: cannot match %s font \"%s\"\n",
+			ProgramName, tag, name);
 	}
     }
     return result;
@@ -1498,7 +1509,6 @@ xtermComputeFontInfo(XtermWidget xw,
      * overrides it.
      */
     if (xw->misc.render_font && !IsIconWin(screen, win)) {
-	Display *dpy = screen->display;
 	int fontnum = screen->menu_font_number;
 	XftFont *norm = screen->renderFontNorm[fontnum];
 	XftFont *bold = screen->renderFontBold[fontnum];
@@ -1591,16 +1601,17 @@ xtermComputeFontInfo(XtermWidget xw,
 	    XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width
 
 	    if ((pat = XftNameParse(xw->misc.face_name)) != 0) {
+#define OPEN_XFT(tag) xtermOpenXft(xw, xw->misc.face_name, pat, tag)
 		XftPatternBuild(pat,
 				NormXftPattern,
 				(void *) 0);
-		norm = xtermOpenXft(dpy, pat, "normal");
+		norm = OPEN_XFT("normal");
 
 		if (norm != 0) {
 		    XftPatternBuild(pat,
 				    BoldXftPattern(norm),
 				    (void *) 0);
-		    bold = xtermOpenXft(dpy, pat, "bold");
+		    bold = OPEN_XFT("bold");
 
 #if OPT_ISO_COLORS
 		    if (screen->italicULMode
@@ -1609,9 +1620,10 @@ xtermComputeFontInfo(XtermWidget xw,
 					NormXftPattern,
 					ItalXftPattern(norm),
 					(void *) 0);
-			ital = xtermOpenXft(dpy, pat, "italic");
+			ital = OPEN_XFT("italic");
 		    }
 #endif /* OPT_ISO_COLORS */
+#undef OPEN_XFT
 
 		    /*
 		     * FIXME:  just assume that the corresponding font has no
@@ -1651,18 +1663,19 @@ xtermComputeFontInfo(XtermWidget xw,
 		XFT_SPACING, XftTypeInteger, XFT_MONO
 
 		if ((pat = XftNameParse(face_name)) != 0) {
+#define OPEN_XFT(tag) xtermOpenXft(xw, face_name, pat, tag)
 		    XftPatternBuild(pat,
 				    WideXftPattern,
 				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
 				    (void *) 0);
-		    wnorm = xtermOpenXft(dpy, pat, "wide");
+		    wnorm = OPEN_XFT("wide");
 
 		    if (wnorm != 0) {
 			XftPatternBuild(pat,
 					WideXftPattern,
 					BoldXftPattern(wnorm),
 					(void *) 0);
-			wbold = xtermOpenXft(dpy, pat, "wide-bold");
+			wbold = OPEN_XFT("wide-bold");
 
 #if OPT_ISO_COLORS
 			if (screen->italicULMode
@@ -1671,9 +1684,10 @@ xtermComputeFontInfo(XtermWidget xw,
 					    WideXftPattern,
 					    ItalXftPattern(wnorm),
 					    (void *) 0);
-			    wital = xtermOpenXft(dpy, pat, "wide-italic");
+			    wital = OPEN_XFT("wide-italic");
 			}
 #endif
+#undef OPEN_XFT
 		    }
 		    XftPatternDestroy(pat);
 		}
@@ -2324,7 +2338,7 @@ lookupOneFontSize(XtermWidget xw, int fontnum)
 
 	memset(&fnt, 0, sizeof(fnt));
 	screen->menu_font_sizes[fontnum] = -1;
-	if (xtermOpenFont(xw, screen->MenuFontName(fontnum), &fnt, False)) {
+	if (xtermOpenFont(xw, screen->MenuFontName(fontnum), &fnt, fwNever)) {
 	    screen->menu_font_sizes[fontnum] = FontSize(fnt.fs);
 	    TRACE(("menu_font_sizes[%d] = %ld\n", fontnum,
 		   screen->menu_font_sizes[fontnum]));

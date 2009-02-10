@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.877 2009/02/09 01:28:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.881 2009/02/10 00:47:36 tom Exp $ */
 
 /*
 
@@ -448,6 +448,7 @@ static XtResource resources[] =
     Bres(XtNvisualBell, XtCVisualBell, screen.visualbell, False),
 
     Ires(XtNbellSuppressTime, XtCBellSuppressTime, screen.bellSuppressTime, BELLSUPPRESSMSEC),
+    Ires(XtNfontWarnings, XtCFontWarnings, misc.fontWarnings, fwResource),
     Ires(XtNinternalBorder, XtCBorderWidth, screen.border, DEFBORDER),
     Ires(XtNlimitResize, XtCLimitResize, misc.limit_resize, 1),
     Ires(XtNmultiClickTime, XtCMultiClickTime, screen.multiClickTime, MULTICLICKTIME),
@@ -850,6 +851,38 @@ SGR_Foreground(XtermWidget xw, int color)
 
     setCgsFore(xw, WhichVWin(screen), gcBold, fg);
     setCgsBack(xw, WhichVWin(screen), gcBoldReverse, fg);
+
+    /*
+     * If we've just turned off the foreground color, check for blank cells
+     * which have no background color, but do have foreground color.  This
+     * could happen due to setting the foreground color just before scrolling.
+     *
+     * Those cells look uncolored, but will confuse ShowCursor(), which looks
+     * for the colors in the current cell, and will see the foreground color. 
+     * In that case, remove the foreground color from the blank cells.
+     */
+    if (color < 0) {
+	int row, col, pass;
+	Bool isClear = True;
+
+	for (pass = 0; pass < 2; ++pass) {
+	    row = screen->cur_row;
+	    for (; isClear && (row <= screen->max_row); ++row) {
+		col = (row == screen->cur_row) ? screen->cur_col : 0;
+		for (; isClear && (col <= screen->max_col); ++col) {
+		    if (pass) {
+			SCRN_BUF_ATTRS(screen, row)[col] &= ~FG_COLOR;
+		    } else if ((SCRN_BUF_ATTRS(screen, row)[col] & BG_COLOR)) {
+			isClear = False;
+		    } else if ((SCRN_BUF_ATTRS(screen, row)[col] & FG_COLOR)) {
+			isClear = (getXtermCell(screen, row, col) != ' ');
+		    } else {
+			isClear = False;
+		    }
+		}
+	    }
+	}
+    }
 }
 
 void
@@ -5567,6 +5600,7 @@ VTInitialize(Widget wrequest,
     for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
 	init_Sres2(screen.MenuFontName, i);
     }
+    init_Ires(misc.fontWarnings);
     wnew->screen.MenuFontName(fontMenu_default) = wnew->misc.default_font.f_n;
     wnew->screen.MenuFontName(fontMenu_fontescape) = NULL;
     wnew->screen.MenuFontName(fontMenu_fontsel) = NULL;
@@ -6839,8 +6873,7 @@ ShowCursor(void)
      * foreground and background color, do not treat it as a colored cell.
      */
 #if OPT_ISO_COLORS
-    if (((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR
-	 || (flags & (FG_COLOR | BG_COLOR)) == FG_COLOR)
+    if ((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR
 	&& base == ' ') {
 	flags &= ~(FG_COLOR | BG_COLOR);
     }
@@ -7652,6 +7685,7 @@ DoSetSelectedFont(Widget w,
 void
 FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 {
+    TScreen *screen = &(xw->screen);
     static AtomPtr *atoms;
     unsigned int atomCount = 0;
     AtomPtr *pAtom;
@@ -7659,8 +7693,8 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
     Atom target;
 
     if (!atom_name)
-	atom_name = (xw->screen.mappedSelect
-		     ? xw->screen.mappedSelect[0]
+	atom_name = (screen->mappedSelect
+		     ? screen->mappedSelect[0]
 		     : "PRIMARY");
     TRACE(("FindFontSelection(%s)\n", atom_name));
 
@@ -7676,8 +7710,10 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 
     target = XmuInternAtom(XtDisplay(xw), *pAtom);
     if (justprobe) {
-	xw->screen.MenuFontName(fontMenu_fontsel) =
+	screen->MenuFontName(fontMenu_fontsel) =
 	    XGetSelectionOwner(XtDisplay(xw), target) ? _Font_Selected_ : 0;
+	TRACE(("...selected fontname '%s'\n",
+	       NonNull(screen->MenuFontName(fontMenu_fontsel))));
     } else {
 	XtGetSelectionValue((Widget) xw, target, XA_STRING,
 			    DoSetSelectedFont, NULL,
