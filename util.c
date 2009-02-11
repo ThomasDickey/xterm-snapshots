@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.416 2009/02/08 23:41:50 tom Exp $ */
+/* $XTermId: util.c,v 1.417 2009/02/10 23:32:58 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -714,7 +714,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 
 	if (icon_name != NULL) {
 	    screen->zIconBeep_flagged = True;
-	    ChangeIconName(icon_name);
+	    ChangeIconName(xw, icon_name);
 	}
 	if (resource.zIconBeep > 0) {
 #if defined(HAVE_XKB_BELL_EXT)
