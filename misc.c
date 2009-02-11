@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.401 2009/01/27 00:49:39 tom Exp $ */
+/* $XTermId: misc.c,v 1.402 2009/02/10 23:34:40 tom Exp $ */
 
 /*
  *
@@ -2355,20 +2355,20 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     switch (mode) {
     case 0:			/* new icon name and title */
-	ChangeIconName(buf);
-	ChangeTitle(buf);
+	ChangeIconName(xw, buf);
+	ChangeTitle(xw, buf);
 	break;
 
     case 1:			/* new icon name only */
-	ChangeIconName(buf);
+	ChangeIconName(xw, buf);
 	break;
 
     case 2:			/* new title only */
-	ChangeTitle(buf);
+	ChangeTitle(xw, buf);
 	break;
 
     case 3:			/* change X property */
-	if (screen->allowWindowOps)
+	if (AllowWindowOps(xw))
 	    ChangeXprop(buf);
 	break;
 #if OPT_ISO_COLORS
@@ -2422,7 +2422,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     case 50:
 #if OPT_SHIFT_FONTS
-	if (!screen->allowFontOps && xw->misc.shift_fonts) {
+	if (!AllowFontOps(xw) && xw->misc.shift_fonts) {
 	    ;			/* disabled via resource or control-sequence */
 	} else if (buf != 0 && !strcmp(buf, "?")) {
 	    int num = screen->menu_font_number;
@@ -2495,7 +2495,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
 #if OPT_PASTE64
     case 52:
-	if (screen->allowWindowOps)
+	if (AllowWindowOps(xw))
 	    ManipulateSelectionData(xw, screen, buf, final);
 	break;
 #endif
@@ -2854,7 +2854,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 #if OPT_TCAP_QUERY
     case '+':
 	cp++;
-	if ((*cp == 'q') && screen->allowTcapOps) {
+	if ((*cp == 'q') && AllowTcapOps(xw)) {
 	    Bool fkey;
 	    unsigned state;
 	    int code;
@@ -2947,7 +2947,7 @@ udk_lookup(int keycode, int *len)
 }
 
 static void
-ChangeGroup(String attribute, char *value)
+ChangeGroup(XtermWidget xw, String attribute, char *value)
 {
 #if OPT_WIDE_CHARS
     static Char *converted;	/* NO_LEAKS */
@@ -2957,7 +2957,7 @@ ChangeGroup(String attribute, char *value)
     Arg args[1];
     char *original = (value != 0) ? value : empty;
     char *name = original;
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
     Widget w = CURRENT_EMU();
     Widget top = SHELL_OF(w);
     unsigned limit = strlen(name);
@@ -2966,7 +2966,7 @@ ChangeGroup(String attribute, char *value)
 
     TRACE(("ChangeGroup(attribute=%s, value=%s)\n", attribute, name));
 
-    if (!screen->allowTitleOps)
+    if (!AllowTitleOps(xw))
 	return;
 
     /*
@@ -3033,7 +3033,7 @@ ChangeGroup(String attribute, char *value)
 
 #if OPT_WIDE_CHARS
     if (xtermEnvUTF8()) {
-	Display *dpy = XtDisplay(term);
+	Display *dpy = XtDisplay(xw);
 	Atom my_atom;
 
 	const char *propname = (!strcmp(attribute, XtNtitle)
@@ -3057,12 +3057,12 @@ ChangeGroup(String attribute, char *value)
 }
 
 void
-ChangeIconName(char *name)
+ChangeIconName(XtermWidget xw, char *name)
 {
     if (name == 0)
 	name = "";
 #if OPT_ZICONBEEP		/* If warning should be given then give it */
-    if (resource.zIconBeep && term->screen.zIconBeep_flagged) {
+    if (resource.zIconBeep && xw->screen.zIconBeep_flagged) {
 	char *newname = CastMallocN(char, strlen(name) + 4);
 	if (!newname) {
 	    fprintf(stderr, "malloc failed in ChangeIconName\n");
@@ -3070,17 +3070,17 @@ ChangeIconName(char *name)
 	}
 	strcpy(newname, "*** ");
 	strcat(newname, name);
-	ChangeGroup(XtNiconName, newname);
+	ChangeGroup(xw, XtNiconName, newname);
 	free(newname);
     } else
 #endif /* OPT_ZICONBEEP */
-	ChangeGroup(XtNiconName, name);
+	ChangeGroup(xw, XtNiconName, name);
 }
 
 void
-ChangeTitle(char *name)
+ChangeTitle(XtermWidget xw, char *name)
 {
-    ChangeGroup(XtNtitle, name);
+    ChangeGroup(xw, XtNtitle, name);
 }
 
 #define Strlen(s) strlen((char *)(s))

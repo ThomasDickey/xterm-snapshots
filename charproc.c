@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.881 2009/02/10 00:47:36 tom Exp $ */
+/* $XTermId: charproc.c,v 1.883 2009/02/10 23:32:51 tom Exp $ */
 
 /*
 
@@ -316,6 +316,12 @@ static XtActionsRec actionsList[] = {
     { "visual-bell",		HandleVisualBell },
 #ifdef ALLOWLOGGING
     { "set-logging",		HandleLogging },
+#endif
+#if OPT_ALLOW_XXX_OPS
+    { "allow-font-ops",		HandleAllowFontOps },
+    { "allow-tcap-ops",		HandleAllowTcapOps },
+    { "allow-title-ops",	HandleAllowTitleOps },
+    { "allow-window-ops",	HandleAllowWindowOps },
 #endif
 #if OPT_BLINK_CURS
     { "set-cursorblink",	HandleCursorBlink },
@@ -2887,7 +2893,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_XTERM_WINOPS:
 	    TRACE(("CASE_XTERM_WINOPS\n"));
-	    if (screen->allowWindowOps)
+	    if (AllowWindowOps(xw))
 		window_ops(xw);
 	    sp->parsestate = sp->groundtable;
 	    break;
@@ -3629,7 +3635,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		    return;
 		}
 		strcpy(buf, icon_name + 4);
-		ChangeIconName(buf);
+		ChangeIconName(xw, buf);
 		free(buf);
 	    }
 	}

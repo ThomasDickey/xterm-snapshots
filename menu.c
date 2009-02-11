@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.242 2009/01/25 17:22:10 tom Exp $ */
+/* $XTermId: menu.c,v 1.245 2009/02/10 23:16:55 tom Exp $ */
 
 /*
 
@@ -161,6 +161,14 @@ static void do_logging         PROTO_XT_CALLBACK_ARGS;
 #ifndef NO_ACTIVE_ICON
 static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
 #endif /* NO_ACTIVE_ICON */
+
+#if OPT_ALLOW_XXX_OPS
+static void enable_allow_xxx_ops (Bool);
+static void do_allowTcapOps    PROTO_XT_CALLBACK_ARGS;
+static void do_allowFontOps    PROTO_XT_CALLBACK_ARGS;
+static void do_allowTitleOps   PROTO_XT_CALLBACK_ARGS;
+static void do_allowWindowOps  PROTO_XT_CALLBACK_ARGS;
+#endif
 
 #if OPT_BLINK_CURS
 static void do_cursorblink     PROTO_XT_CALLBACK_ARGS;
@@ -361,6 +369,14 @@ MenuEntry fontMenuEntries[] = {
     { "utf8-title",	do_font_utf8_title,NULL },
 #endif
 #endif /* toggles for other font extensions */
+
+#if OPT_ALLOW_XXX_OPS
+    { "line3",		NULL,		NULL },
+    { "allow-tcap-ops",	do_allowTcapOps,NULL },
+    { "allow-font-ops",	do_allowFontOps,NULL },
+    { "allow-title-ops",do_allowTitleOps,NULL },
+    { "allow-window-ops",do_allowWindowOps,NULL },
+#endif
 
     };
 
@@ -722,6 +738,13 @@ domenu(Widget w,
 	    update_font_utf8_mode();
 	    update_font_utf8_title();
 #endif
+#if OPT_ALLOW_XXX_OPS
+	    update_menu_allowTcapOps();
+	    update_menu_allowFontOps();
+	    update_menu_allowTitleOps();
+	    update_menu_allowWindowOps();
+	    enable_allow_xxx_ops(!(screen->allowSendEvents));
+#endif
 	}
 	FindFontSelection(term, NULL, True);
 	SetItemSensitivity(
@@ -852,6 +875,9 @@ do_allowsends(Widget gw GCC_UNUSED,
 
     ToggleFlag(screen->allowSendEvents);
     update_allowsends();
+#if OPT_ALLOW_XXX_OPS
+    enable_allow_xxx_ops(!(screen->allowSendEvents));
+#endif
 }
 
 static void
@@ -3182,6 +3208,141 @@ update_font_utf8_title(void)
 		   fontMenuEntries,
 		   fontMenu_wide_title,
 		   enable);
+}
+#endif
+
+#if OPT_ALLOW_XXX_OPS
+static void
+enable_allow_xxx_ops(Bool enable)
+{
+    SetItemSensitivity(fontMenuEntries[fontMenu_allowFontOps].widget, enable);
+    SetItemSensitivity(fontMenuEntries[fontMenu_allowTcapOps].widget, enable);
+    SetItemSensitivity(fontMenuEntries[fontMenu_allowTitleOps].widget, enable);
+    SetItemSensitivity(fontMenuEntries[fontMenu_allowWindowOps].widget, enable);
+}
+
+static void
+do_allowFontOps(Widget w,
+		XtPointer closure GCC_UNUSED,
+		XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = getXtermWidget(w);
+    if (xw != 0) {
+	ToggleFlag(xw->screen.allowFontOps);
+	update_menu_allowFontOps();
+    }
+}
+
+static void
+do_allowTcapOps(Widget w,
+		XtPointer closure GCC_UNUSED,
+		XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = getXtermWidget(w);
+    if (xw != 0) {
+	ToggleFlag(xw->screen.allowTcapOps);
+	update_menu_allowTcapOps();
+    }
+}
+
+static void
+do_allowTitleOps(Widget w,
+		 XtPointer closure GCC_UNUSED,
+		 XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = getXtermWidget(w);
+    if (xw != 0) {
+	ToggleFlag(xw->screen.allowTitleOps);
+	update_menu_allowTitleOps();
+    }
+}
+
+static void
+do_allowWindowOps(Widget w,
+		  XtPointer closure GCC_UNUSED,
+		  XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = getXtermWidget(w);
+    if (xw != 0) {
+	ToggleFlag(xw->screen.allowWindowOps);
+	update_menu_allowWindowOps();
+    }
+}
+
+void
+HandleAllowFontOps(Widget w,
+		   XEvent * event GCC_UNUSED,
+		   String * params,
+		   Cardinal *param_count)
+{
+    handle_vt_toggle(do_allowFontOps, term->screen.allowFontOps,
+		     params, *param_count, w);
+}
+
+void
+HandleAllowTcapOps(Widget w,
+		   XEvent * event GCC_UNUSED,
+		   String * params,
+		   Cardinal *param_count)
+{
+    handle_vt_toggle(do_allowTcapOps, term->screen.allowTcapOps,
+		     params, *param_count, w);
+}
+
+void
+HandleAllowTitleOps(Widget w,
+		    XEvent * event GCC_UNUSED,
+		    String * params,
+		    Cardinal *param_count)
+{
+    handle_vt_toggle(do_allowTitleOps, term->screen.allowTitleOps,
+		     params, *param_count, w);
+}
+
+void
+HandleAllowWindowOps(Widget w,
+		     XEvent * event GCC_UNUSED,
+		     String * params,
+		     Cardinal *param_count)
+{
+    handle_vt_toggle(do_allowWindowOps, term->screen.allowWindowOps,
+		     params, *param_count, w);
+}
+
+void
+update_menu_allowTcapOps(void)
+{
+    UpdateCheckbox("update_menu_allowTcapOps",
+		   fontMenuEntries,
+		   fontMenu_allowTcapOps,
+		   term->screen.allowTcapOps);
+}
+
+void
+update_menu_allowFontOps(void)
+{
+    UpdateCheckbox("update_menu_allowFontOps",
+		   fontMenuEntries,
+		   fontMenu_allowFontOps,
+		   term->screen.allowFontOps);
+}
+
+void
+update_menu_allowTitleOps(void)
+{
+    UpdateCheckbox("update_menu_allowTitleOps",
+		   fontMenuEntries,
+		   fontMenu_allowTitleOps,
+		   term->screen.allowTitleOps);
+}
+
+void
+update_menu_allowWindowOps(void)
+{
+    UpdateCheckbox("update_menu_allowWindowOps",
+		   fontMenuEntries,
+		   fontMenu_allowWindowOps,
+		   term->screen.allowWindowOps);
 }
 #endif
 

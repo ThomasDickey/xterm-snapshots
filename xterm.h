@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.517 2009/02/10 00:36:30 tom Exp $ */
+/* $XTermId: xterm.h,v 1.518 2009/02/10 23:32:32 tom Exp $ */
 
 /************************************************************
 
@@ -899,8 +899,8 @@ extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
 extern int xtermResetIds(TScreen *  /* screen */);
 extern void Bell (Atom  /* which */, int  /* percent */);
-extern void ChangeIconName (char * /* name */);
-extern void ChangeTitle (char * /* name */);
+extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
+extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
 extern void ChangeXprop (char * /* name */);
 extern void Cleanup (int  /* code */);
 extern void HandleBellPropertyChange   PROTO_XT_EV_HANDLER_ARGS;
