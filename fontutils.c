@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.292 2009/02/11 01:46:10 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.298 2009/02/12 01:37:33 tom Exp $ */
 
 /************************************************************
 
@@ -251,9 +251,11 @@ get_font_name_props(Display * dpy, XFontStruct * fs, char *result)
 	XFree(last_name);
     last_name = name;
 
-    if (!check_fontname(name))
-	return 0;
-    strcpy(result, name);
+    if (result != 0) {
+	if (!check_fontname(name))
+	    return 0;
+	strcpy(result, name);
+    }
 
     /*
      * Now split it up into parts and put them in
@@ -700,7 +702,8 @@ Bool
 xtermOpenFont(XtermWidget xw,
 	      const char *name,
 	      XTermFonts * result,
-	      fontWarningTypes warn)
+	      fontWarningTypes warn,
+	      Boolean force)
 {
     Bool code = False;
     TScreen *screen = TScreenOf(xw);
@@ -719,16 +722,22 @@ xtermOpenFont(XtermWidget xw,
 #if OPT_RENDERFONT
 		&& !UsingRenderFont(xw)
 #endif
-		)
+		) {
+		TRACE(("OOPS: cannot load font %s\n", name));
 		fprintf(stderr, "%s: cannot load font %s\n", ProgramName, name);
-	    code = xtermOpenFont(xw, DEFFONT, result, fwAlways);
+	    } else {
+		TRACE(("xtermOpenFont: cannot load font %s\n", name));
+	    }
+	    if (force) {
+		code = xtermOpenFont(xw, DEFFONT, result, fwAlways, True);
+	    }
 	}
     }
     return code;
 }
 
 /*
- * Close the font and Free the font info
+ * Close the font and free the font info.
  */
 XTermFonts *
 xtermCloseFont(XtermWidget xw, XTermFonts * fnt)
@@ -850,14 +859,19 @@ xtermLoadFont(XtermWidget xw,
     TRACE(("Begin Cgs - xtermLoadFont(%s)\n", myfonts.f_n));
     releaseWindowGCs(xw, win);
 
-    TRACE(("xtermLoadFont #%d normal %s\n", fontnum, NonNull(myfonts.f_n)));
-    TRACE(("xtermLoadFont #%d bold   %s\n", fontnum, NonNull(myfonts.f_b)));
+#define DbgResource(name, field, index) \
+    TRACE(("xtermLoadFont #%d "name" %s%s\n", \
+    	   fontnum, \
+	   (warn[index] == fwResource) ? "*" : " ", \
+	   NonNull(myfonts.field)));
+    DbgResource("normal", f_n, fNorm);
+    DbgResource("bold  ", f_b, fBold);
 #if OPT_WIDE_CHARS
-    TRACE(("xtermLoadFont #%d wide   %s\n", fontnum, NonNull(myfonts.f_w)));
-    TRACE(("xtermLoadFont #%d w/bold %s\n", fontnum, NonNull(myfonts.f_wb)));
+    DbgResource("wide  ", f_w, fWide);
+    DbgResource("w/bold", f_wb, fWBold);
 #endif
 
-    if (!xtermOpenFont(xw, myfonts.f_n, &fnts[fNorm], warn[fNorm]))
+    if (!xtermOpenFont(xw, myfonts.f_n, &fnts[fNorm], warn[fNorm], True))
 	goto bad;
 
     strcpy(normal, myfonts.f_n);
@@ -866,9 +880,9 @@ xtermLoadFont(XtermWidget xw,
 	fp = get_font_name_props(screen->display, fnts[fNorm].fs, normal);
 	if (fp != 0) {
 	    myfonts.f_b = bold_font_name(fp, fp->average_width);
-	    if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwNever)) {
+	    if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwAlways, False)) {
 		myfonts.f_b = bold_font_name(fp, -1);
-		(void) xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwNever);
+		xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwAlways, False);
 	    }
 	    TRACE(("...derived bold %s\n", NonNull(myfonts.f_b)));
 	}
@@ -884,7 +898,7 @@ xtermLoadFont(XtermWidget xw,
 	    fnts[fBold] = fnts[fNorm];
 	    TRACE(("...did not get a matching bold font\n"));
 	}
-    } else if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], warn[fBold])) {
+    } else if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], warn[fBold], False)) {
 	xtermCopyFontInfo(&fnts[fBold], &fnts[fNorm]);
 	warn[fBold] = fwAlways;
 	TRACE(("...cannot load bold font %s\n", NonNull(myfonts.f_b)));
@@ -914,7 +928,7 @@ xtermLoadFont(XtermWidget xw,
 	}
 
 	if (check_fontname(myfonts.f_w)) {
-	    (void) xtermOpenFont(xw, myfonts.f_w, &fnts[fWide], warn[fWide]);
+	    (void) xtermOpenFont(xw, myfonts.f_w, &fnts[fWide], warn[fWide], False);
 	} else {
 	    xtermCopyFontInfo(&fnts[fWide], &fnts[fNorm]);
 	    warn[fWide] = fwAlways;
@@ -932,7 +946,7 @@ xtermLoadFont(XtermWidget xw,
 
 	if (check_fontname(myfonts.f_wb)) {
 
-	    (void) xtermOpenFont(xw, myfonts.f_wb, &fnts[fWBold], warn[fWBold]);
+	    xtermOpenFont(xw, myfonts.f_wb, &fnts[fWBold], warn[fWBold], False);
 
 	    if (derived
 		&& !compatibleWideCounts(fnts[fWide].fs, fnts[fWBold].fs)) {
@@ -1439,15 +1453,19 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern * pat, const char *tag
 	    } else {
 		TRACE(("...could did not open %s font\n", tag));
 		XftPatternDestroy(match);
-		if (xw->misc.fontWarnings >= fwAlways)
+		if (xw->misc.fontWarnings >= fwAlways) {
+		    TRACE(("OOPS cannot open %s font \"%s\"\n", tag, name));
 		    fprintf(stderr, "%s: cannot open %s font \"%s\"\n",
 			    ProgramName, tag, name);
+		}
 	    }
 	} else {
 	    TRACE(("...did not match %s font\n", tag));
-	    if (xw->misc.fontWarnings >= fwResource)
+	    if (xw->misc.fontWarnings >= fwResource) {
+		TRACE(("OOPS: cannot match %s font \"%s\"\n", tag, name));
 		fprintf(stderr, "%s: cannot match %s font \"%s\"\n",
 			ProgramName, tag, name);
+	    }
 	}
     }
     return result;
@@ -2383,7 +2401,7 @@ lookupOneFontSize(XtermWidget xw, int fontnum)
 
 	memset(&fnt, 0, sizeof(fnt));
 	screen->menu_font_sizes[fontnum] = -1;
-	if (xtermOpenFont(xw, screen->MenuFontName(fontnum), &fnt, fwNever)) {
+	if (xtermOpenFont(xw, screen->MenuFontName(fontnum), &fnt, fwAlways, True)) {
 	    screen->menu_font_sizes[fontnum] = FontSize(fnt.fs);
 	    TRACE(("menu_font_sizes[%d] = %ld\n", fontnum,
 		   screen->menu_font_sizes[fontnum]));

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.883 2009/02/10 23:32:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.889 2009/02/12 00:01:40 tom Exp $ */
 
 /*
 
@@ -832,6 +832,39 @@ xtermAddInput(Widget w)
 }
 
 #if OPT_ISO_COLORS
+static void
+CheckBogusForeground(TScreen * screen, const char *tag)
+{
+    int row = -1, col = -1, pass;
+    Bool isClear = True;
+
+    (void) tag;
+    for (pass = 0; pass < 2; ++pass) {
+	row = screen->cur_row;
+	for (; isClear && (row <= screen->max_row); ++row) {
+	    col = (row == screen->cur_row) ? screen->cur_col : 0;
+	    for (; isClear && (col <= screen->max_col); ++col) {
+		unsigned flags = SCRN_BUF_ATTRS(screen, row)[col];
+		if (pass) {
+		    flags &= ~FG_COLOR;
+		    SCRN_BUF_ATTRS(screen, row)[col] = (Char) flags;
+		} else if ((flags & BG_COLOR)) {
+		    isClear = False;
+		} else if ((flags & FG_COLOR)) {
+		    isClear = (getXtermCell(screen, row, col) != ' ');
+		} else {
+		    isClear = False;
+		}
+	    }
+	}
+    }
+    TRACE(("%s checked %d,%d to %d,%d %s pass %d\n",
+	   tag, screen->cur_row, screen->cur_col,
+	   row, col,
+	   isClear && pass ? "cleared" : "unchanged",
+	   pass));
+}
+
 /*
  * The terminal's foreground and background colors are set via two mechanisms:
  *	text (cur_foreground, cur_background values that are passed down to
@@ -868,26 +901,7 @@ SGR_Foreground(XtermWidget xw, int color)
      * In that case, remove the foreground color from the blank cells.
      */
     if (color < 0) {
-	int row, col, pass;
-	Bool isClear = True;
-
-	for (pass = 0; pass < 2; ++pass) {
-	    row = screen->cur_row;
-	    for (; isClear && (row <= screen->max_row); ++row) {
-		col = (row == screen->cur_row) ? screen->cur_col : 0;
-		for (; isClear && (col <= screen->max_col); ++col) {
-		    if (pass) {
-			SCRN_BUF_ATTRS(screen, row)[col] &= ~FG_COLOR;
-		    } else if ((SCRN_BUF_ATTRS(screen, row)[col] & BG_COLOR)) {
-			isClear = False;
-		    } else if ((SCRN_BUF_ATTRS(screen, row)[col] & FG_COLOR)) {
-			isClear = (getXtermCell(screen, row, col) != ' ');
-		    } else {
-			isClear = False;
-		    }
-		}
-	    }
-	}
+	CheckBogusForeground(screen, "SGR_Foreground");
     }
 }
 
@@ -5607,7 +5621,13 @@ VTInitialize(Widget wrequest,
 	init_Sres2(screen.MenuFontName, i);
     }
     init_Ires(misc.fontWarnings);
-    wnew->screen.MenuFontName(fontMenu_default) = wnew->misc.default_font.f_n;
+#define DefaultFontNames wnew->screen.menu_font_names[fontMenu_default]
+    DefaultFontNames[fNorm] = wnew->misc.default_font.f_n;
+    DefaultFontNames[fBold] = wnew->misc.default_font.f_b;
+#if OPT_WIDE_CHARS
+    DefaultFontNames[fWide] = wnew->misc.default_font.f_w;
+    DefaultFontNames[fWBold] = wnew->misc.default_font.f_wb;
+#endif
     wnew->screen.MenuFontName(fontMenu_fontescape) = NULL;
     wnew->screen.MenuFontName(fontMenu_fontsel) = NULL;
 
@@ -6879,9 +6899,14 @@ ShowCursor(void)
      * foreground and background color, do not treat it as a colored cell.
      */
 #if OPT_ISO_COLORS
-    if ((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR
-	&& base == ' ') {
-	flags &= ~(FG_COLOR | BG_COLOR);
+    if (base == ' ') {
+	if ((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR) {
+	    TRACE(("ShowCursor - do not treat as a colored cell\n"));
+	    flags &= ~(FG_COLOR | BG_COLOR);
+	} else if ((flags & (FG_COLOR | BG_COLOR)) == FG_COLOR) {
+	    TRACE(("ShowCursor - should we treat as a colored cell?\n"));
+	    CheckBogusForeground(screen, "ShowCursor");
+	}
     }
 #endif
 
@@ -7109,10 +7134,14 @@ HideCursor(void)
      * foreground and background color, do not treat it as a colored cell.
      */
 #if OPT_ISO_COLORS
-    if (((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR
-	 || (flags & (FG_COLOR | BG_COLOR)) == FG_COLOR)
-	&& base == ' ') {
-	flags &= ~(FG_COLOR | BG_COLOR);
+    if (base == ' ') {
+	if ((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR) {
+	    TRACE(("HideCursor - do not treat as a colored cell\n"));
+	    flags &= ~(FG_COLOR | BG_COLOR);
+	} else if ((flags & (FG_COLOR | BG_COLOR)) == FG_COLOR) {
+	    TRACE(("HideCursor - should we treat as a colored cell?\n"));
+	    CheckBogusForeground(screen, "HideCursor");
+	}
     }
 #endif
 

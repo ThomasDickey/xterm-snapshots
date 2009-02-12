@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.138 2009/01/23 00:10:49 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.139 2009/02/12 00:07:53 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/scrollbar.c,v 3.48 2006/02/13 01:14:59 dickey Exp $ */
 
@@ -173,8 +173,8 @@ DoResizeScreen(XtermWidget xw)
 
     XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)), &xw->hints);
 
-    reqWidth = MaxCols(screen) * FontWidth(screen) + min_wide;
-    reqHeight = MaxRows(screen) * FontHeight(screen) + min_high;
+    reqWidth = (Dimension) (MaxCols(screen) * FontWidth(screen) + min_wide);
+    reqHeight = (Dimension) (MaxRows(screen) * FontHeight(screen) + min_high);
 
     TRACE(("...requesting screensize chars %dx%d, pixels %dx%d\n",
 	   MaxRows(screen),
@@ -323,10 +323,10 @@ ResizeScrollBar(XtermWidget xw)
 
 	XtConfigureWidget(
 			     screen->scrollWidget,
-			     xpos,
-			     ypos,
-			     width,
-			     height,
+			     (Position) xpos,
+			     (Position) ypos,
+			     (Dimension) width,
+			     (Dimension) height,
 			     BorderWidth(screen->scrollWidget));
 	ScrollBarDrawThumb(screen->scrollWidget);
     }
@@ -371,7 +371,7 @@ WindowScroll(XtermWidget xw, int top)
 		  OriginX(screen),
 		  OriginY(screen) + refreshtop * FontHeight(screen),
 		  (unsigned) Width(screen),
-		  (unsigned) lines * FontHeight(screen),
+		  (unsigned) (lines * FontHeight(screen)),
 		  False);
     ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
 
@@ -428,13 +428,16 @@ ScrollBarOn(XtermWidget xw, int init, int doalloc)
 	    /* FIXME: this is not integrated well with Allocate */
 	    if ((screen->allbuf =
 		 TypeRealloc(ScrnPtr,
-			     MAX_PTRS * (screen->max_row + 2 + screen->savelines),
+			     (unsigned) (MAX_PTRS
+					 * (screen->max_row + 2
+					    + screen->savelines)),
 			     screen->visbuf)) == NULL) {
 		SysError(ERROR_SBRALLOC);
 	    }
 	    screen->visbuf = &screen->allbuf[MAX_PTRS * screen->savelines];
 	    memmove((char *) screen->visbuf, (char *) screen->allbuf,
-		    MAX_PTRS * (screen->max_row + 2) * sizeof(char *));
+		    (unsigned) (MAX_PTRS * (screen->max_row + 2))
+		    * sizeof(char *));
 	    for (i = k = 0; i < screen->savelines; i++) {
 		k += BUF_HEAD;
 		for (j = BUF_HEAD; j < MAX_PTRS; j++) {
