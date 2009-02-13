@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.889 2009/02/12 00:01:40 tom Exp $ */
+/* $XTermId: charproc.c,v 1.890 2009/02/12 23:29:20 tom Exp $ */
 
 /*
 
@@ -832,7 +832,7 @@ xtermAddInput(Widget w)
 }
 
 #if OPT_ISO_COLORS
-static void
+static Bool
 CheckBogusForeground(TScreen * screen, const char *tag)
 {
     int row = -1, col = -1, pass;
@@ -851,7 +851,8 @@ CheckBogusForeground(TScreen * screen, const char *tag)
 		} else if ((flags & BG_COLOR)) {
 		    isClear = False;
 		} else if ((flags & FG_COLOR)) {
-		    isClear = (getXtermCell(screen, row, col) != ' ');
+		    unsigned ch = getXtermCell(screen, row, col);
+		    isClear = ((ch == ' ') || (ch == 0));
 		} else {
 		    isClear = False;
 		}
@@ -863,6 +864,8 @@ CheckBogusForeground(TScreen * screen, const char *tag)
 	   row, col,
 	   isClear && pass ? "cleared" : "unchanged",
 	   pass));
+
+    return isClear;
 }
 
 /*
@@ -6905,7 +6908,9 @@ ShowCursor(void)
 	    flags &= ~(FG_COLOR | BG_COLOR);
 	} else if ((flags & (FG_COLOR | BG_COLOR)) == FG_COLOR) {
 	    TRACE(("ShowCursor - should we treat as a colored cell?\n"));
-	    CheckBogusForeground(screen, "ShowCursor");
+	    if (!(xw->flags & FG_COLOR))
+		if (CheckBogusForeground(screen, "ShowCursor"))
+		    flags &= ~(FG_COLOR | BG_COLOR);
 	}
     }
 #endif
@@ -7140,7 +7145,9 @@ HideCursor(void)
 	    flags &= ~(FG_COLOR | BG_COLOR);
 	} else if ((flags & (FG_COLOR | BG_COLOR)) == FG_COLOR) {
 	    TRACE(("HideCursor - should we treat as a colored cell?\n"));
-	    CheckBogusForeground(screen, "HideCursor");
+	    if (!(xw->flags & FG_COLOR))
+		if (CheckBogusForeground(screen, "HideCursor"))
+		    flags &= ~(FG_COLOR | BG_COLOR);
 	}
     }
 #endif

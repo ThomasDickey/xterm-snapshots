@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.728 2009/02/12 01:25:21 tom Exp $
+  $XTermId: xterm.log.html,v 1.729 2009/02/12 22:06:48 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -292,6 +292,9 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_242">Patch #242 - 2009/2/12</A></H1>
 <ul>
+	<li>fix a caching problem with double-size fonts versus reverse video
+	    that could cause core dump.
+
 	<li>repair double-size fonts from workaround
 	    used in <a href="#xterm_240">patch #240</a>.
 
