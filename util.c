@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.419 2009/02/12 00:36:07 tom Exp $ */
+/* $XTermId: util.c,v 1.420 2009/02/13 23:38:26 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -716,13 +716,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 	    screen->zIconBeep_flagged = True;
 	    ChangeIconName(xw, icon_name);
 	}
-	if (resource.zIconBeep > 0) {
-#if defined(HAVE_XKB_BELL_EXT)
-	    XkbBell(XtDisplay(toplevel), VShellWindow, resource.zIconBeep, XkbBI_Info);
-#else
-	    XBell(XtDisplay(toplevel), resource.zIconBeep);
-#endif
-	}
+	xtermBell(xw, resource.zIconBeep, XkbBI_Info);
     }
     mapstate = -1;
 #endif /* OPT_ZICONBEEP */
