@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.402 2009/02/10 23:34:40 tom Exp $ */
+/* $XTermId: misc.c,v 1.404 2009/02/13 20:58:50 tom Exp $ */
 
 /*
  *
@@ -791,15 +791,43 @@ HandleFocusChange(Widget w GCC_UNUSED,
 
 static long lastBellTime;	/* in milliseconds */
 
-void
-Bell(Atom which GCC_UNUSED, int percent)
+#if defined(HAVE_XKB_BELL_EXT)
+static Atom
+AtomBell(XtermWidget xw, int which)
 {
-    TScreen *screen = TScreenOf(term);
+#define DATA(name) { XkbBI_##name, XkbBN_##name }
+    static struct {
+	int value;
+	const char *name;
+    } table[] = {
+	DATA(Info),
+	    DATA(MarginBell),
+	    DATA(MinorError),
+	    DATA(TerminalBell)
+    };
+    Cardinal n;
+    Atom result = None;
+
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (table[n].value == which) {
+	    result = XInternAtom(XtDisplay(xw), table[n].name, True);
+	    break;
+	}
+    }
+    return result;
+}
+#endif
+
+void
+Bell(int which GCC_UNUSED, int percent)
+{
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
     struct timeval curtime;
     long now_msecs;
 
-    TRACE(("BELL %ld %d%%\n", (long) which, percent));
-    if (!XtIsRealized((Widget) term)) {
+    TRACE(("BELL %d %d%%\n", which, percent));
+    if (!XtIsRealized((Widget) xw)) {
 	return;
     }
 
@@ -827,10 +855,12 @@ Bell(Atom which GCC_UNUSED, int percent)
 	VisualBell();
     } else {
 #if defined(HAVE_XKB_BELL_EXT)
-	XkbBell(screen->display, VShellWindow, percent, which);
-#else
-	XBell(screen->display, percent);
+	Atom tony = AtomBell(xw, which);
+	if (tony != None) {
+	    XkbBell(screen->display, VShellWindow, percent, tony);
+	} else
 #endif
+	    XBell(screen->display, percent);
     }
 
     if (screen->poponbell)

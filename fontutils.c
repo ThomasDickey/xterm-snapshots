@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.298 2009/02/12 01:37:33 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.300 2009/02/13 01:45:01 tom Exp $ */
 
 /************************************************************
 
@@ -703,7 +703,7 @@ xtermOpenFont(XtermWidget xw,
 	      const char *name,
 	      XTermFonts * result,
 	      fontWarningTypes warn,
-	      Boolean force)
+	      Bool force)
 {
     Bool code = False;
     TScreen *screen = TScreenOf(xw);

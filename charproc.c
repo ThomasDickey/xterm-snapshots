@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.890 2009/02/12 23:29:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.892 2009/02/13 21:15:35 tom Exp $ */
 
 /*
 
@@ -3022,7 +3022,7 @@ v_write(int f, Char * data, unsigned len)
     unsigned c = len;
 
     if (v_bufstr == NULL && len > 0) {
-	v_buffer = (Char *) XtMalloc(len);
+	v_buffer = (Char *) XtMalloc((Cardinal) len);
 	v_bufstr = v_buffer;
 	v_bufptr = v_buffer;
 	v_bufend = v_buffer + len;
@@ -6888,7 +6888,7 @@ ShowCursor(void)
 	my_col = cursor_col;
 	base = (chi << 8) | clo;
 	if (base == 0)
-	    base = ' ';
+	    base = clo = ' ';
 	if (isWide(base))
 	    my_col += 1;
     });
@@ -7125,7 +7125,7 @@ HideCursor(void)
 	my_col = cursor_col;
 	base = (chi << 8) | clo;
 	if (base == 0)
-	    base = ' ';
+	    base = clo = ' ';
 	if (isWide(base))
 	    my_col += 1;
     });

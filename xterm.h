@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.518 2009/02/10 23:32:32 tom Exp $ */
+/* $XTermId: xterm.h,v 1.519 2009/02/13 20:30:36 tom Exp $ */
 
 /************************************************************
 
@@ -898,7 +898,7 @@ extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */,
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
 extern int xtermResetIds(TScreen *  /* screen */);
-extern void Bell (Atom  /* which */, int  /* percent */);
+extern void Bell (int  /* which */, int  /* percent */);
 extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
 extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
 extern void ChangeXprop (char * /* name */);
