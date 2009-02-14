@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.304 2009/02/08 18:49:39 tom Exp $ */
+/* $XTermId: button.c,v 1.306 2009/02/13 21:09:08 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -337,7 +337,9 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     /* update mask to "after" state */
     state ^= 1 << button;
     /* swap Button1 & Button3 */
-    state = (state & ~(4 | 1)) | ((state & 1) ? 4 : 0) | ((state & 4) ? 1 : 0);
+    state = ((state & (unsigned) ~(4 | 1))
+	     | ((state & 1) ? 4 : 0)
+	     | ((state & 4) ? 1 : 0));
 
     reply.a_param[1] = (ParmType) state;
     reply.a_param[2] = (ParmType) row;
@@ -3473,7 +3475,7 @@ _OwnSelection(XtermWidget xw,
 	    (unsigned long) (4 * XMaxRequestSize(XtDisplay((Widget) xw)) - 32);
 	    if (screen->selection_length > limit) {
 		fprintf(stderr,
-			"%s: selection too big (%ld bytes), not storing in CUT_BUFFER%d\n",
+			"%s: selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
 			xterm_name, screen->selection_length, cutbuffer);
 	    } else {
 		/* This used to just use the UTF-8 data, which was totally

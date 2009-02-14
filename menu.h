@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.112 2009/02/10 01:37:57 tom Exp $ */
+/* $XTermId: menu.h,v 1.113 2009/02/13 19:55:26 tom Exp $ */
 
 /*
 
@@ -313,7 +313,7 @@ typedef enum {
  * functions for updating menus
  */
 
-extern void SetItemSensitivity(Widget mi, XtArgVal val);
+extern void SetItemSensitivity(Widget mi, Bool val);
 
 /*
  * there should be one of each of the following for each checkable item

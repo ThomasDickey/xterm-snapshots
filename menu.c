@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.245 2009/02/10 23:16:55 tom Exp $ */
+/* $XTermId: menu.c,v 1.246 2009/02/13 19:56:04 tom Exp $ */
 
 /*
 
@@ -2406,7 +2406,7 @@ UpdateMenuItem(
 #endif
 		  MenuEntry * menu,
 		  int which,
-		  XtArgVal val)
+		  Bool val)
 {
     static Arg menuArgs =
     {XtNleftBitmap, (XtArgVal) 0};
@@ -2428,7 +2428,7 @@ UpdateMenuItem(
 #endif
 
 void
-SetItemSensitivity(Widget mi, XtArgVal val)
+SetItemSensitivity(Widget mi, Bool val)
 {
     static Arg menuArgs =
     {XtNsensitive, (XtArgVal) 0};

@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.50 2009/02/12 22:01:56 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.51 2009/02/13 00:37:46 tom Exp $ */
 
 /************************************************************
 
@@ -408,7 +408,7 @@ SameFont(XTermFonts * a, XTermFonts * b)
 #define SameCSet(a,b)  ((a) == (b))
 
 static GC
-chgCache(XtermWidget xw, CgsEnum cgsId GCC_UNUSED, CgsCache * me, Boolean both)
+chgCache(XtermWidget xw, CgsEnum cgsId GCC_UNUSED, CgsCache * me, Bool both)
 {
     XGCValues xgcv;
     XtGCMask mask = (GCForeground | GCBackground | GCFont);
