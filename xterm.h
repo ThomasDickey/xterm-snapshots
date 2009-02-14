@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.519 2009/02/13 20:30:36 tom Exp $ */
+/* $XTermId: xterm.h,v 1.520 2009/02/13 23:39:20 tom Exp $ */
 
 /************************************************************
 
@@ -931,6 +931,7 @@ extern void switch_modes (Bool  /* tovt */);
 extern void timestamp_filename(char * /* dst */, const char * /* src */);
 extern void xevents (void);
 extern void xt_error (String  /* message */);
+extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);
 extern void xtermSetenv (char * /* var */, char * /* value */);

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.404 2009/02/13 20:58:50 tom Exp $ */
+/* $XTermId: misc.c,v 1.405 2009/02/13 23:39:29 tom Exp $ */
 
 /*
  *
@@ -819,6 +819,21 @@ AtomBell(XtermWidget xw, int which)
 #endif
 
 void
+xtermBell(XtermWidget xw, int which, int percent)
+{
+    if (percent > 0) {
+	TScreen *screen = TScreenOf(xw);
+#if defined(HAVE_XKB_BELL_EXT)
+	Atom tony = AtomBell(xw, which);
+	if (tony != None) {
+	    XkbBell(screen->display, VShellWindow, percent, tony);
+	} else
+#endif
+	    XBell(screen->display, percent);
+    }
+}
+
+void
 Bell(int which GCC_UNUSED, int percent)
 {
     XtermWidget xw = term;
@@ -854,13 +869,7 @@ Bell(int which GCC_UNUSED, int percent)
     if (screen->visualbell) {
 	VisualBell();
     } else {
-#if defined(HAVE_XKB_BELL_EXT)
-	Atom tony = AtomBell(xw, which);
-	if (tony != None) {
-	    XkbBell(screen->display, VShellWindow, percent, tony);
-	} else
-#endif
-	    XBell(screen->display, percent);
+	xtermBell(xw, which, percent);
     }
 
     if (screen->poponbell)
