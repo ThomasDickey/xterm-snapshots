@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.405 2009/02/13 23:39:29 tom Exp $ */
+/* $XTermId: misc.c,v 1.406 2009/02/28 15:37:30 tom Exp $ */
 
 /*
  *
@@ -821,16 +821,14 @@ AtomBell(XtermWidget xw, int which)
 void
 xtermBell(XtermWidget xw, int which, int percent)
 {
-    if (percent > 0) {
-	TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(xw);
 #if defined(HAVE_XKB_BELL_EXT)
-	Atom tony = AtomBell(xw, which);
-	if (tony != None) {
-	    XkbBell(screen->display, VShellWindow, percent, tony);
-	} else
+    Atom tony = AtomBell(xw, which);
+    if (tony != None) {
+	XkbBell(screen->display, VShellWindow, percent, tony);
+    } else
 #endif
-	    XBell(screen->display, percent);
-    }
+	XBell(screen->display, percent);
 }
 
 void
