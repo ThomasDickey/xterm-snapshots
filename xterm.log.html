@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.732 2009/02/28 15:47:08 tom Exp $
+  $XTermId: xterm.log.html,v 1.737 2009/03/15 23:58:22 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -293,6 +293,27 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>set <code>MANPAGER</code> and <code>PAGER</code> explicitly to
+	    /bin/cat in <code>minstall.sh</code> to work around /etc/man.conf's
+	    with those variables already set
+	    (report by &#1052;&#1072;&#1088;&#1100;&#1103;&#1089;&#1080;&#1085;
+	    &#1057;&#1077;&#1084;&#1105;&#1085;).
+	<li>improve error-checking of tcap-query parser.
+
+	<li>add check for keyboard <code>tcap</code>), which ensures that
+	    terminal descriptions containing the same string for
+	    shifted/unshifted keys will be seen by tcap-query as only the
+	    unshifted key.  (This would only happen with an incorrect terminal
+	    description).
+
+	<li>fix conversion for input event-state to modifier-parameter which
+	    made tcap-query feature not work with <code>tcapFunctionKeys</code>
+	    (keyboard type <code>tcap</code>).
+
+	<li>add "DEF_ALLOW_<em>XXX</em>" definitions to main.h to allow
+	    overriding the default compiled-in values for
+	    "allow<em>xxx</em>" resources.
+
 	<li>remove check on bell-percentage added in
 	    <a href="#xterm_242">patch #242</a>,
 	    which disallowed zero/negative values (Redhat Bugzilla #487829).
