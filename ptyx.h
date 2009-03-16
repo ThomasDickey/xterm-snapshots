@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.542 2009/02/10 23:24:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.543 2009/03/16 00:32:59 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1380,7 +1380,7 @@ typedef struct {
 	Boolean		send_focus_pos; /* user wants focus in/out info */
 	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64
-	int		base64_paste;	/* set to send paste in base64	*/
+	Cardinal	base64_paste;	/* set to send paste in base64	*/
 	int		base64_final;	/* string-terminator for paste	*/
 	/* _qWriteSelectionData expects these to be initialized to zero.
 	 * base64_flush() is the last step of the conversion, it clears these

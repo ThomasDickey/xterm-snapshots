@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.406 2009/02/28 15:37:30 tom Exp $ */
+/* $XTermId: misc.c,v 1.408 2009/03/15 22:09:07 tom Exp $ */
 
 /*
  *
@@ -2898,16 +2898,16 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	    char *tmp;
 	    char *parsed = ++cp;
 
-	    unparseputc1(xw, ANSI_DCS);
-
 	    code = xtermcapKeycode(xw, &parsed, &state, &fkey);
+
+	    unparseputc1(xw, ANSI_DCS);
 
 	    unparseputc(xw, code >= 0 ? '1' : '0');
 
 	    unparseputc(xw, '+');
 	    unparseputc(xw, 'r');
 
-	    while (*cp != 0) {
+	    while (*cp != 0 && (code >= -1)) {
 		if (cp == parsed)
 		    break;	/* no data found, error */
 
@@ -2924,14 +2924,6 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		    if (code == XK_COLORS) {
 			unparseputn(xw, NUM_ANSI_COLORS);
 		    } else
-#endif
-#if OPT_TCAP_FKEYS
-			/*
-			 * First ensure that we handle the extended cursor- and
-			 * editing-keypad keys.
-			 */
-			if ((code <= XK_Fn(MAX_FKEY))
-			    || xtermcapString(xw, CodeToXkey(code), 0) == 0)
 #endif
 		    {
 			XKeyEvent event;
