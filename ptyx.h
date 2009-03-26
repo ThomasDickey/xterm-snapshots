@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.543 2009/03/16 00:32:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.546 2009/03/24 22:20:06 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1665,6 +1665,13 @@ typedef struct {
 	int		firstValidRow;	/* Valid rows for selection clipping */
 	int		lastValidRow;	/* " " */
 
+	String		default_string;
+	String		eightbit_select_types;
+	Atom*		selection_targets_8bit;
+#if OPT_WIDE_CHARS
+	String		utf8_select_types;
+	Atom*		selection_targets_utf8;
+#endif
 	Atom*		selection_atoms; /* which selections we own */
 	Cardinal	sel_atoms_size;	/*  how many atoms allocated */
 	Cardinal	selection_count; /* how many atoms in use */
