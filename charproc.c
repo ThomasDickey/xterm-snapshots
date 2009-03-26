@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.893 2009/03/15 13:08:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.895 2009/03/24 22:50:04 tom Exp $ */
 
 /*
 
@@ -474,10 +474,14 @@ static XtResource resources[] =
     Sres(XtNfont4, XtCFont4, screen.MenuFontName(fontMenu_font4), NULL),
     Sres(XtNfont5, XtCFont5, screen.MenuFontName(fontMenu_font5), NULL),
     Sres(XtNfont6, XtCFont6, screen.MenuFontName(fontMenu_font6), NULL),
+
     Sres(XtNanswerbackString, XtCAnswerbackString, screen.answer_back, ""),
     Sres(XtNboldFont, XtCBoldFont, misc.default_font.f_b, DEFBOLDFONT),
     Sres(XtNcharClass, XtCCharClass, screen.charClass, NULL),
     Sres(XtNdecTerminalID, XtCDecTerminalID, screen.term_id, DFT_DECID),
+    Sres(XtNdefaultString, XtCDefaultString, screen.default_string, "#"),
+    Sres(XtNeightBitSelectTypes, XtCEightBitSelectTypes,
+	 screen.eightbit_select_types, NULL),
     Sres(XtNfont, XtCFont, misc.default_font.f_n, DEFFONT),
     Sres(XtNgeometry, XtCGeometry, misc.geo_metry, NULL),
     Sres(XtNkeyboardDialect, XtCKeyboardDialect, screen.keyboard_dialect, DFT_KBD_DIALECT),
@@ -669,6 +673,7 @@ static XtResource resources[] =
     Ires(XtNutf8, XtCUtf8, screen.utf8_mode, uDefault),
     Sres(XtNwideBoldFont, XtCWideBoldFont, misc.default_font.f_wb, DEFWIDEBOLDFONT),
     Sres(XtNwideFont, XtCWideFont, misc.default_font.f_w, DEFWIDEFONT),
+    Sres(XtNutf8SelectTypes, XtCUtf8SelectTypes, screen.utf8_select_types, NULL),
 #endif
 
 #if OPT_LUIT_PROG
@@ -5601,6 +5606,12 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.allowTcapOp0);
     init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
+
+    init_Sres(screen.default_string);
+    init_Sres(screen.eightbit_select_types);
+#if OPT_WIDE_CHARS
+    init_Sres(screen.utf8_select_types);
+#endif
 
     /* make a copy so that editres cannot change the resource after startup */
     wnew->screen.allowSendEvents = wnew->screen.allowSendEvent0;

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.408 2009/03/15 22:09:07 tom Exp $ */
+/* $XTermId: misc.c,v 1.409 2009/03/24 19:59:07 tom Exp $ */
 
 /*
  *
@@ -3937,6 +3937,6 @@ getXtermWidget(Widget w)
     } else {
 	xw = getXtermWidget(XtParent(w));
     }
-    TRACE(("getXtermWidget %p -> %p\n", w, xw));
+    TRACE2(("getXtermWidget %p -> %p\n", w, xw));
     return xw;
 }
