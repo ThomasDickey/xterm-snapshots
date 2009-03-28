@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.41 2009/03/15 19:05:00 tom Exp $ */
+/* $XTermId: main.h,v 1.42 2009/03/28 17:39:51 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -96,7 +96,7 @@
 #endif
 
 #ifndef DEF_ALLOW_TCAP
-#define DEF_ALLOW_TCAP		False
+#define DEF_ALLOW_TCAP		True
 #endif
 
 #ifndef DEF_ALLOW_TITLE

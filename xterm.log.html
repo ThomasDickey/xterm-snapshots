@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.740 2009/03/24 22:17:18 tom Exp $
+  $XTermId: xterm.log.html,v 1.743 2009/03/28 17:40:42 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -293,6 +293,15 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>revert change to default for <code>allowTcapOps</code> (request by
+	    Bram Moolenaar).
+
+	<li>reallocate result returned by <code>xtermEnvLocale()</code> to
+	    avoid reference to freed memory after handling
+	    <code>menuLocale</code> resource.
+
+	<li>fix an old (X11R5) bug in tek4014 for switching fontsizes.
+
 	<li>add resource <code>defaultString</code> to make configurable the
 	    use of "#" when pastes of UTF-8 text fail due to limitations in
 	    the current locale settings.
