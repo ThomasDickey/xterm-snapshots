@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.409 2009/03/24 19:59:07 tom Exp $ */
+/* $XTermId: misc.c,v 1.410 2009/03/28 17:33:52 tom Exp $ */
 
 /*
  *
@@ -3831,6 +3831,7 @@ xtermEnvLocale(void)
 	if ((result = x_nonempty(setlocale(LC_CTYPE, 0))) == 0) {
 	    result = "C";
 	}
+	result = x_strdup(result);
 	TRACE(("xtermEnvLocale ->%s\n", result));
     }
     return result;

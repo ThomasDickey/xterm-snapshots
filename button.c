@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.318 2009/03/25 22:59:33 tom Exp $ */
+/* $XTermId: button.c,v 1.320 2009/03/27 00:00:56 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1292,7 +1292,7 @@ allocUtf8Targets(Widget w, TScreen * screen)
 static Atom *
 alloc8bitTargets(Widget w, TScreen * screen)
 {
-    Atom **resultp = &(screen->selection_targets_utf8);
+    Atom **resultp = &(screen->selection_targets_8bit);
 
     if (*resultp == 0) {
 	Atom *result = 0;
@@ -3187,15 +3187,14 @@ SaltTextAway(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
     int i, j = 0;
     int eol;
+    int tmp;
     Char *line;
     Char *lp;
     CELL first = *cellc;
     CELL last = *cell;
 
     if (isSameRow(&first, &last) && first.col > last.col) {
-	int tmp = first.col;
-	first.col = last.col;
-	last.col = tmp;
+	EXCHANGE(first.col, last.col, tmp);
     }
 
     --last.col;

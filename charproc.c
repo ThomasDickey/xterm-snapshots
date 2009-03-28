@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.895 2009/03/24 22:50:04 tom Exp $ */
+/* $XTermId: charproc.c,v 1.896 2009/03/28 17:54:27 tom Exp $ */
 
 /*
 
@@ -3736,7 +3736,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
 
 #if OPT_BLINK_CURS
 static void
-SetCursorBlink(TScreen * screen, Boolean enable)
+SetCursorBlink(TScreen * screen, Bool enable)
 {
     screen->cursor_blink = enable;
     if (DoStartBlinking(screen)) {
@@ -3752,7 +3752,7 @@ SetCursorBlink(TScreen * screen, Boolean enable)
 void
 ToggleCursorBlink(TScreen * screen)
 {
-    SetCursorBlink(screen, (Boolean) (!(screen->cursor_blink)));
+    SetCursorBlink(screen, (Bool) (!(screen->cursor_blink)));
 }
 #endif
 

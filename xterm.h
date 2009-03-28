@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.522 2009/03/24 22:02:31 tom Exp $ */
+/* $XTermId: xterm.h,v 1.523 2009/03/28 14:56:54 tom Exp $ */
 
 /************************************************************
 
@@ -666,6 +666,7 @@ struct XTERM_RESOURCE;
 
 /* Tekproc.c */
 #if OPT_TEK4014
+extern TekWidget getTekWidget(Widget /* w */);
 extern int TekGetFontSize (const char * /* param */);
 extern int TekInit (void);
 extern int TekPtyData(void);
