@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.896 2009/03/28 17:54:27 tom Exp $ */
+/* $XTermId: charproc.c,v 1.897 2009/03/29 00:23:12 tom Exp $ */
 
 /*
 
@@ -3738,7 +3738,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
 static void
 SetCursorBlink(TScreen * screen, Bool enable)
 {
-    screen->cursor_blink = enable;
+    screen->cursor_blink = (Boolean) enable;
     if (DoStartBlinking(screen)) {
 	StartBlinking(screen);
     } else {
