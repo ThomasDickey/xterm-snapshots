@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.320 2009/03/27 00:00:56 tom Exp $ */
+/* $XTermId: button.c,v 1.321 2009/03/29 17:04:40 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1571,7 +1571,7 @@ GettingSelection(Display * dpy, Atom type, Char * line, unsigned long len)
 
     TRACE(("Getting %s (%ld)\n", name, (long int) type));
     for (cp = line; cp < line + len; cp++) {
-	TRACE(("[%d:%lu]", cp + 1 - line, len));
+	TRACE(("[%d:%lu]", (int) (cp + 1 - line), len));
 	if (isprint(*cp)) {
 	    TRACE(("%c\n", *cp));
 	} else {
@@ -3249,7 +3249,7 @@ SaltTextAway(XtermWidget xw,
     }
     *lp = '\0';			/* make sure we have end marked */
 
-    TRACE(("Salted TEXT:%d:%s\n", lp - line,
+    TRACE(("Salted TEXT:%d:%s\n", (int) (lp - line),
 	   visibleChars(PAIRED_CHARS(line, 0), (unsigned) (lp - line))));
 
     screen->selection_length = (unsigned long) (lp - line);

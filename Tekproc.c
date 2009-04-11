@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.167 2009/03/28 17:03:35 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.168 2009/03/29 13:58:45 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -596,7 +596,7 @@ Tekparse(TekWidget tw)
 
 	case CASE_CHAR_SIZE:
 	    TRACE(("case: character size selector\n"));
-	    TekSetFontSize(tw, (int) (c & 03));
+	    TekSetFontSize(tw, False, (int) (c & 03));
 	    Tparsestate = curstate;
 	    break;
 
@@ -795,7 +795,7 @@ Tinput(TekWidget tw)
 	    tekRefreshList = tek;
 	    rptr = tek->data;
 	    rcnt = tek->count - 1;
-	    TekSetFontSize(tw, tek->fontsize);
+	    TekSetFontSize(tw, False, tek->fontsize);
 	    return (IChar) (*rptr++);
 	}
 	tekRefreshList = (TekLink *) 0;
@@ -938,7 +938,7 @@ TekExpose(Widget w,
 	tekscr->cur_X = 0;
 	tekscr->cur_Y = TEKHOME;
 	tekscr->cur = tekscr->page;
-	TekSetFontSize(tw, tekscr->cur.fontsize);
+	TekSetFontSize(tw, False, tekscr->cur.fontsize);
 	tekscr->margin = MARGIN1;
 	if (tekscr->TekGIN) {
 	    tekscr->TekGIN = NULL;
@@ -1649,7 +1649,7 @@ TekGetFontSize(const char *param)
 }
 
 void
-TekSetFontSize(TekWidget tw, int newitem)
+TekSetFontSize(TekWidget tw, Bool fromMenu, int newitem)
 {
     if (tw != 0) {
 	TekScreen *tekscr = TekScreenOf(tw);
@@ -1666,7 +1666,8 @@ TekSetFontSize(TekWidget tw, int newitem)
 	    set_tekfont_menu_item(oldsize, False);
 
 	    tekscr->cur.fontsize = newsize;
-	    tekscr->page.fontsize = newsize;
+	    if (fromMenu)
+		tekscr->page.fontsize = newsize;
 
 	    fid = tw->tek.Tfont[newsize]->fid;
 	    if (fid == DefaultGCID) {
@@ -1683,11 +1684,13 @@ TekSetFontSize(TekWidget tw, int newitem)
 	    if (!Ttoggled)
 		TCursorToggle(tw, TOGGLE);
 
-	    /* we'll get an exposure event after changing fontsize, so we
-	     * have to clear the screen to avoid painting over the previous
-	     * text.
-	     */
-	    TekClear(tw);
+	    if (fromMenu) {
+		/* we'll get an exposure event after changing fontsize, so we
+		 * have to clear the screen to avoid painting over the previous
+		 * text.
+		 */
+		TekClear(tw);
+	    }
 	}
     }
 }

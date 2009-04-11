@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.897 2009/03/29 00:23:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.898 2009/03/29 22:14:41 tom Exp $ */
 
 /*
 
@@ -398,7 +398,7 @@ static XtResource resources[] =
     Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, DEF_ALLOW_FONT),
     Bres(XtNallowTcapOps, XtCAllowTcapOps, screen.allowTcapOp0, DEF_ALLOW_TCAP),
     Bres(XtNallowTitleOps, XtCAllowTitleOps, screen.allowTitleOp0, DEF_ALLOW_TITLE),
-    Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, DEF_ALLOW_FONT),
+    Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, DEF_ALLOW_WINDOW),
     Bres(XtNaltIsNotMeta, XtCAltIsNotMeta, screen.alt_is_not_meta, False),
     Bres(XtNaltSendsEscape, XtCAltSendsEscape, screen.alt_sends_esc, False),
     Bres(XtNalwaysBoldMode, XtCAlwaysBoldMode, screen.always_bold_mode, False),
