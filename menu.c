@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.248 2009/03/28 17:27:57 tom Exp $ */
+/* $XTermId: menu.c,v 1.249 2009/03/29 13:53:49 tom Exp $ */
 
 /*
 
@@ -1570,7 +1570,7 @@ do_tektextlarge(Widget gw,
 		XtPointer closure GCC_UNUSED,
 		XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(getTekWidget(gw), tekMenu_tektextlarge);
+    TekSetFontSize(getTekWidget(gw), True, tekMenu_tektextlarge);
 }
 
 static void
@@ -1578,7 +1578,7 @@ do_tektext2(Widget gw,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(getTekWidget(gw), tekMenu_tektext2);
+    TekSetFontSize(getTekWidget(gw), True, tekMenu_tektext2);
 }
 
 static void
@@ -1586,7 +1586,7 @@ do_tektext3(Widget gw,
 	    XtPointer closure GCC_UNUSED,
 	    XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(getTekWidget(gw), tekMenu_tektext3);
+    TekSetFontSize(getTekWidget(gw), True, tekMenu_tektext3);
 }
 
 static void
@@ -1594,7 +1594,7 @@ do_tektextsmall(Widget gw,
 		XtPointer closure GCC_UNUSED,
 		XtPointer data GCC_UNUSED)
 {
-    TekSetFontSize(getTekWidget(gw), tekMenu_tektextsmall);
+    TekSetFontSize(getTekWidget(gw), True, tekMenu_tektextsmall);
 }
 
 static void

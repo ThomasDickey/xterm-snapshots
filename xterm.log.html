@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.744 2009/03/29 00:29:55 tom Exp $
+  $XTermId: xterm.log.html,v 1.748 2009/04/11 18:12:00 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_243">Patch #243 - 2009/3/28</A>
 <LI><A HREF="#xterm_242">Patch #242 - 2009/2/15</A>
 <LI><A HREF="#xterm_241">Patch #241 - 2009/1/26</A>
@@ -290,6 +291,20 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>work around groff mapping of ASCII quotes using macros (requested
+	    by Reuben Thomas based on Colin Watson advice, fixes Debian #378700).
+
+	<li>correct symbol used for default of <code>allowWindowOps</code>
+	    which was <code>DEF_ALLOW_FONT</code>
+	    rather than <code>DEF_ALLOW_WINDOW</code>
+	    (report by Matthieu Herrb).
+
+	<li>amend fix for tek4014 from <a href="#xterm_243">patch #243</a>
+	    to make it only apply to the Tek Options menu.
+</ul>
 
 <H1><A NAME="xterm_243">Patch #243 - 2009/3/28</A></H1>
 <ul>

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.523 2009/03/28 14:56:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.524 2009/03/29 13:54:54 tom Exp $ */
 
 /************************************************************
 
@@ -681,7 +681,7 @@ extern void TekRefresh (TekWidget /* tw */);
 extern void TekRepaint (TekWidget /* xw */);
 extern void TekReverseVideo (TekWidget /* tw */);
 extern void TekRun (void);
-extern void TekSetFontSize (TekWidget /* tw */, int  /* newitem */);
+extern void TekSetFontSize (TekWidget /* tw */, Bool /* fromMenu */, int  /* newitem */);
 extern void TekSimulatePageButton (TekWidget /* tw */, Bool /* reset */);
 #endif
 
