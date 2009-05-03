@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.249 2009/03/29 13:53:49 tom Exp $ */
+/* $XTermId: menu.c,v 1.251 2009/05/02 16:20:28 tom Exp $ */
 
 /*
 
@@ -136,6 +136,7 @@ static void do_kill            PROTO_XT_CALLBACK_ARGS;
 static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
 static void do_print           PROTO_XT_CALLBACK_ARGS;
+static void do_print_everything PROTO_XT_CALLBACK_ARGS;
 static void do_print_redir     PROTO_XT_CALLBACK_ARGS;
 static void do_quit            PROTO_XT_CALLBACK_ARGS;
 static void do_redraw          PROTO_XT_CALLBACK_ARGS;
@@ -625,7 +626,7 @@ domenu(Widget w,
 				   False);
 	    }
 #endif
-	    if (!xtermHasPrinter()) {
+	    if (!xtermHasPrinter(term)) {
 		SetItemSensitivity(mainMenuEntries[mainMenu_print].widget,
 				   False);
 		SetItemSensitivity(mainMenuEntries[mainMenu_print_redir].widget,
@@ -935,7 +936,15 @@ do_print(Widget gw GCC_UNUSED,
 	 XtPointer closure GCC_UNUSED,
 	 XtPointer data GCC_UNUSED)
 {
-    xtermPrintScreen(True);
+    xtermPrintScreen(term, True);
+}
+
+static void
+do_print_everything(Widget gw GCC_UNUSED,
+		    XtPointer closure GCC_UNUSED,
+		    XtPointer data GCC_UNUSED)
+{
+    xtermPrintEverything(term);
 }
 
 static void
@@ -943,7 +952,7 @@ do_print_redir(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
 	       XtPointer data GCC_UNUSED)
 {
-    setPrinterControlMode(term->screen.printer_controlmode ? 0 : 2);
+    setPrinterControlMode(term, term->screen.printer_controlmode ? 0 : 2);
 }
 
 static void
@@ -1783,6 +1792,16 @@ HandlePrintScreen(Widget w,
 		  Cardinal *param_count GCC_UNUSED)
 {
     do_print(w, (XtPointer) 0, (XtPointer) 0);
+}
+
+/* ARGSUSED */
+void
+HandlePrintEverything(Widget w,
+		      XEvent * event GCC_UNUSED,
+		      String * params GCC_UNUSED,
+		      Cardinal *param_count GCC_UNUSED)
+{
+    do_print_everything(w, (XtPointer) 0, (XtPointer) 0);
 }
 
 /* ARGSUSED */

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.246 2009/02/09 21:37:57 tom Exp $ */
+/* $XTermId: screen.c,v 1.251 2009/05/03 15:40:06 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -389,31 +389,35 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 {
     if (len != 0) {
 	TScreen *screen = &(xw->screen);
+	LineData *ld = newLineData(xw);
+
+	(void) getLineData(screen, row, ld);
+
 	flags |= TERM_COLOR_FLAGS(xw);
 
-	memset(SCRN_BUF_CHARS(screen, row) + col, ' ', len);
-	memset(SCRN_BUF_ATTRS(screen, row) + col, flags, len);
+	memset(ld->charData + col, ' ', len);
+	memset(ld->attribs + col, flags, len);
 
 	if_OPT_EXT_COLORS(screen, {
-	    memset(SCRN_BUF_FGRND(screen, row) + col,
-		   xw->sgr_foreground, len);
-	    memset(SCRN_BUF_BGRND(screen, row) + col,
-		   xw->cur_background, len);
+	    memset(ld->fgrnd + col, xw->sgr_foreground, len);
+	    memset(ld->bgrnd + col, xw->cur_background, len);
 	});
 	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	    memset(SCRN_BUF_COLOR(screen, row) + col,
-		   (int) xtermColorPair(xw), len);
+	    memset(ld->color + col, (int) xtermColorPair(xw), len);
 	});
 	if_OPT_DEC_CHRSET({
-	    memset(SCRN_BUF_CSETS(screen, row) + col,
-		   curXtermChrSet(xw, row), len);
+	    memset(ld->charSets + col, curXtermChrSet(xw, row), len);
 	});
 	if_OPT_WIDE_CHARS(screen, {
-	    int off;
-	    for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-		memset(SCREEN_PTR(screen, row, off) + col, 0, len);
+	    size_t off;
+	    memset(ld->wideData + col, 0, len);
+	    for_each_combData(off, ld) {
+		memset(lo_combData(off, ld) + col, 0, len);
+		memset(hi_combData(off, ld) + col, 0, len);
 	    }
 	});
+
+	free(ld);
     }
 }
 
@@ -468,6 +472,7 @@ ScrnWriteText(XtermWidget xw,
 	      unsigned length)
 {
     TScreen *screen = &(xw->screen);
+    LineData *ld;
 #if OPT_ISO_COLORS
 #if OPT_EXT_COLORS
     Char *fbf = 0;
@@ -497,18 +502,21 @@ ScrnWriteText(XtermWidget xw,
     if (length == 0 || real_width == 0)
 	return;
 
-    chars = SCRN_BUF_CHARS(screen, screen->cur_row) + screen->cur_col;
-    attrs = SCRN_BUF_ATTRS(screen, screen->cur_row) + screen->cur_col;
+    ld = newLineData(xw);
+    (void) getLineData(screen, screen->cur_row, ld);
+
+    chars = ld->charData + screen->cur_col;
+    attrs = ld->attribs + screen->cur_col;
 
     if_OPT_EXT_COLORS(screen, {
-	fbf = SCRN_BUF_FGRND(screen, screen->cur_row) + screen->cur_col;
-	fbb = SCRN_BUF_BGRND(screen, screen->cur_row) + screen->cur_col;
+	fbf = ld->fgrnd + screen->cur_col;
+	fbb = ld->bgrnd + screen->cur_col;
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	fb = SCRN_BUF_COLOR(screen, screen->cur_row) + screen->cur_col;
+	fb = ld->color + screen->cur_col;
     });
     if_OPT_DEC_CHRSET({
-	cb = SCRN_BUF_CSETS(screen, screen->cur_row) + screen->cur_col;
+	cb = ld->charSets + screen->cur_col;
     });
 
 #if OPT_WIDE_CHARS
@@ -538,8 +546,7 @@ ScrnWriteText(XtermWidget xw,
 
 	if (real_width != length) {
 	    Char *char1 = chars;
-	    char2 = SCRN_BUF_WIDEC(screen, screen->cur_row);
-	    char2 += screen->cur_col;
+	    char2 = ld->wideData + screen->cur_col;
 	    if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
 		&& isWide(PACK_PAIR(char1, char2, -1))) {
 		char1[-1] = ERROR_1;
@@ -573,7 +580,8 @@ ScrnWriteText(XtermWidget xw,
 	    /* if we are overwriting the left hand half of a
 	       wide character, make the other half vanish */
 	} else {
-	    if ((char2 = SCRN_BUF_WIDEC(screen, screen->cur_row)) != 0) {
+	    char2 = ld->wideData;
+	    if (char2 != 0) {
 		char2 += screen->cur_col;
 		if (screen->cur_col && starcol1 == HIDDEN_LO && *char2 == HIDDEN_HI
 		    && isWide(PACK_PAIR(chars, char2, -1))) {
@@ -604,12 +612,10 @@ ScrnWriteText(XtermWidget xw,
     memset(attrs, (Char) flags, real_width);
 
     if_OPT_WIDE_CHARS(screen, {
-	int off;
-	for (off = OFF_FINAL; off < MAX_PTRS; ++off) {
-	    memset(SCREEN_PTR(screen,
-			      screen->cur_row,
-			      off) + screen->cur_col,
-		   0, real_width);
+	size_t off;
+	for_each_combData(off, ld) {
+	    memset(lo_combData(off, ld) + screen->cur_col, 0, real_width);
+	    memset(hi_combData(off, ld) + screen->cur_col, 0, real_width);
 	}
     });
     if_OPT_EXT_COLORS(screen, {
@@ -631,6 +637,9 @@ ScrnWriteText(XtermWidget xw,
     if_OPT_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);
     });
+
+    free(ld);
+    return;
 }
 
 /*
@@ -943,6 +952,7 @@ ScrnRefresh(XtermWidget xw,
 	    Bool force)		/* ... leading/trailing spaces */
 {
     TScreen *screen = &(xw->screen);
+    LineData *ld = newLineData(xw);
     int y = toprow * FontHeight(screen) + screen->border;
     int row;
     int maxrow = toprow + nrows - 1;
@@ -1013,15 +1023,17 @@ ScrnRefresh(XtermWidget xw,
 	if (lastind < 0 || lastind > max)
 	    continue;
 
-	chars = SCRN_BUF_CHARS(screen, ROW2INX(screen, lastind));
-	attrs = SCRN_BUF_ATTRS(screen, ROW2INX(screen, lastind));
+	(void) getLineData(screen, ROW2INX(screen, lastind), ld);
+
+	chars = ld->charData;
+	attrs = ld->attribs;
 
 	if_OPT_DEC_CHRSET({
-	    cb = SCRN_BUF_CSETS(screen, ROW2INX(screen, lastind));
+	    cb = ld->charSets;
 	});
 
 	if_OPT_WIDE_CHARS(screen, {
-	    widec = SCRN_BUF_WIDEC(screen, ROW2INX(screen, lastind));
+	    widec = ld->wideData;
 	});
 
 	if_OPT_WIDE_CHARS(screen, {
@@ -1140,8 +1152,8 @@ ScrnRefresh(XtermWidget xw,
 	    wideness = 0;
 #endif
 	if_OPT_EXT_COLORS(screen, {
-	    fbf = SCRN_BUF_FGRND(screen, ROW2INX(screen, lastind));
-	    fbb = SCRN_BUF_BGRND(screen, ROW2INX(screen, lastind));
+	    fbf = ld->fgrnd;
+	    fbb = ld->bgrnd;
 	    fg_bg = ColorOf(col);
 	    /* this combines them, then splits them again.  but
 	       extract_fg does more, so seems reasonable */
@@ -1149,7 +1161,7 @@ ScrnRefresh(XtermWidget xw,
 	    bg = extract_bg(xw, fg_bg, flags);
 	});
 	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	    fb = SCRN_BUF_COLOR(screen, ROW2INX(screen, lastind));
+	    fb = ld->color;
 	    fg_bg = ColorOf(col);
 	    fg = extract_fg(xw, fg_bg, flags);
 	    bg = extract_bg(xw, fg_bg, flags);
@@ -1196,14 +1208,12 @@ ScrnRefresh(XtermWidget xw,
 
 		if_OPT_WIDE_CHARS(screen, {
 		    int i;
-		    int off;
-		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-			Char *com_lo = BUFFER_PTR(screen->visbuf,
-						  ROW2INX(screen, row),
-						  off + 0);
-			Char *com_hi = BUFFER_PTR(screen->visbuf,
-						  ROW2INX(screen, row),
-						  off + 1);
+		    size_t off;
+
+		    for_each_combData(off, ld) {
+			Char *com_lo = lo_combData(off, ld);
+			Char *com_hi = hi_combData(off, ld);
+
 			for (i = lastind; i < col; i++) {
 			    int my_x = CurCursorX(screen,
 						  ROW2INX(screen, row),
@@ -1282,14 +1292,12 @@ ScrnRefresh(XtermWidget xw,
 
 	if_OPT_WIDE_CHARS(screen, {
 	    int i;
-	    int off;
-	    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-		Char *com_lo = BUFFER_PTR(screen->visbuf,
-					  ROW2INX(screen, row),
-					  off + 0);
-		Char *com_hi = BUFFER_PTR(screen->visbuf,
-					  ROW2INX(screen, row),
-					  off + 1);
+	    size_t off;
+
+	    for_each_combData(off, ld) {
+		Char *com_lo = lo_combData(off, ld);
+		Char *com_hi = hi_combData(off, ld);
+
 		for (i = lastind; i < col; i++) {
 		    int my_x = CurCursorX(screen,
 					  ROW2INX(screen, row),
@@ -1342,6 +1350,9 @@ ScrnRefresh(XtermWidget xw,
     }
 #endif
     recurse--;
+
+    free(ld);
+    return;
 }
 
 /*
@@ -1705,6 +1716,7 @@ ScrnFillRectangle(XtermWidget xw,
 
     TRACE(("filling rectangle with '%c' flags %#x\n", value, flags));
     if (validRect(xw, target)) {
+	LineData *ld = newLineData(xw);
 	unsigned left = (unsigned) (target->left - 1);
 	unsigned size = (unsigned) (target->right - (int) left);
 	unsigned attrs = flags;
@@ -1713,6 +1725,8 @@ ScrnFillRectangle(XtermWidget xw,
 	attrs &= ATTRIBUTES;
 	attrs |= CHARDRAWN;
 	for (row = target->bottom - 1; row >= (target->top - 1); row--) {
+	    (void) getLineData(screen, row, ld);
+
 	    TRACE(("filling %d [%d..%d]\n", row, left, left + size));
 
 	    /*
@@ -1720,31 +1734,34 @@ ScrnFillRectangle(XtermWidget xw,
 	     * colors if asked.
 	     */
 	    for (col = (int) left; col < target->right; ++col) {
-		unsigned temp = SCRN_BUF_ATTRS(screen, row)[col];
+		unsigned temp = ld->attribs[col];
+
 		if (!keepColors) {
 		    temp &= ~(FG_COLOR | BG_COLOR);
 		}
 		temp = attrs | (temp & (FG_COLOR | BG_COLOR | PROTECTED));
 		temp |= CHARDRAWN;
-		SCRN_BUF_ATTRS(screen, row)[col] = (Char) temp;
+		ld->attribs[col] = (Char) temp;
 #if OPT_ISO_COLORS
 		if (attrs & (FG_COLOR | BG_COLOR)) {
 		    if_OPT_EXT_COLORS(screen, {
-			SCRN_BUF_FGRND(screen, row)[col] = (Char) xw->sgr_foreground;
-			SCRN_BUF_BGRND(screen, row)[col] = (Char) xw->cur_background;
+			ld->fgrnd[col] = (Char) xw->sgr_foreground;
+			ld->bgrnd[col] = (Char) xw->cur_background;
 		    });
 		    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-			SCRN_BUF_COLOR(screen, row)[col] = xtermColorPair(xw);
+			ld->color[col] = xtermColorPair(xw);
 		    });
 		}
 #endif
 	    }
 
-	    memset(SCRN_BUF_CHARS(screen, row) + left, (Char) value, size);
+	    memset(ld->charData + left, (Char) value, size);
 	    if_OPT_WIDE_CHARS(screen, {
-		int off;
-		for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-		    memset(SCREEN_PTR(screen, row, off) + left, 0, size);
+		size_t off;
+		memset(ld->wideData + left, 0, size);
+		for_each_combData(off, ld) {
+		    memset(lo_combData(off, ld) + left, 0, size);
+		    memset(hi_combData(off, ld) + left, 0, size);
 		}
 	    })
 	}
@@ -1754,6 +1771,8 @@ ScrnFillRectangle(XtermWidget xw,
 		   (target->bottom - target->top) + 1,
 		   (target->right - target->left) + 1,
 		   False);
+
+	free(ld);
     }
 }
 
@@ -1856,6 +1875,7 @@ ScrnMarkRectangle(XtermWidget xw,
 	    : "region")));
 
     if (validRect(xw, target)) {
+	LineData *ld = newLineData(xw);
 	int top = target->top - 1;
 	int bottom = target->bottom - 1;
 	int row, col;
@@ -1869,9 +1889,11 @@ ScrnMarkRectangle(XtermWidget xw,
 			 ? (target->right - 1)
 			 : getMaxCol(screen));
 
+	    (void) getLineData(screen, row, ld);
+
 	    TRACE(("marking %d [%d..%d]\n", row, left, right));
 	    for (col = left; col <= right; ++col) {
-		unsigned flags = SCRN_BUF_ATTRS(screen, row)[col];
+		unsigned flags = ld->attribs[col];
 
 		for (n = 0; n < nparam; ++n) {
 #if OPT_TRACE
@@ -1937,9 +1959,9 @@ ScrnMarkRectangle(XtermWidget xw,
 #if OPT_TRACE
 		if (row == top && col == left)
 		    TRACE(("first mask-change is %#x\n",
-			   SCRN_BUF_ATTRS(screen, row)[col] ^ flags));
+			   ld->attribs[col] ^ flags));
 #endif
-		SCRN_BUF_ATTRS(screen, row)[col] = (Char) flags;
+		ld->attribs[col] = (Char) flags;
 	    }
 	}
 	ScrnRefresh(xw,
@@ -1950,6 +1972,8 @@ ScrnMarkRectangle(XtermWidget xw,
 		     ? ((target->right - target->left) + 1)
 		     : (getMaxCol(screen) - getMinCol(screen) + 1)),
 		    False);
+
+	free(ld);
     }
 }
 
@@ -1966,6 +1990,7 @@ ScrnWipeRectangle(XtermWidget xw,
     TRACE(("wiping rectangle\n"));
 
     if (validRect(xw, target)) {
+	LineData *ld = newLineData(xw);
 	int top = target->top - 1;
 	int bottom = target->bottom - 1;
 	int row, col;
@@ -1975,15 +2000,19 @@ ScrnWipeRectangle(XtermWidget xw,
 	    int right = (target->right - 1);
 
 	    TRACE(("wiping %d [%d..%d]\n", row, left, right));
+
+	    (void) getLineData(screen, row, ld);
 	    for (col = left; col <= right; ++col) {
 		if (!((screen->protected_mode == DEC_PROTECT)
-		      && (SCRN_BUF_ATTRS(screen, row)[col] & PROTECTED))) {
-		    SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
-		    SCRN_BUF_CHARS(screen, row)[col] = ' ';
+		      && (ld->attribs[col] & PROTECTED))) {
+		    ld->attribs[col] |= CHARDRAWN;
+		    ld->charData[col] = ' ';
 		    if_OPT_WIDE_CHARS(screen, {
-			int off;
-			for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-			    memset(SCREEN_PTR(screen, row, off) + col, 0, 1);
+			size_t off;
+			ld->wideData[col] = '\0';
+			for_each_combData(off, ld) {
+			    lo_combData(off, ld)[col] = '\0';
+			    hi_combData(off, ld)[col] = '\0';
 			}
 		    })
 		}
@@ -1995,6 +2024,8 @@ ScrnWipeRectangle(XtermWidget xw,
 		   (target->bottom - target->top) + 1,
 		   ((target->right - target->left) + 1),
 		   False);
+
+	free(ld);
     }
 }
 #endif /* OPT_DEC_RECTOPS */

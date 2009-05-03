@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.87 2009/03/23 20:08:03 tom Exp $ */
+/* $XTermId: trace.c,v 1.88 2009/05/02 17:05:19 tom Exp $ */
 
 /************************************************************
 
@@ -357,15 +357,21 @@ visibleXError(int code)
 static char *
 ScrnText(TScreen * screen, int row)
 {
-    Char *chars = SCRN_BUF_CHARS(screen, row);
+    char *result;
+    LineData *ld = NewLineData();
 #if OPT_WIDE_CHARS
     Char *widec = 0;
 #endif
 
+    (void) getLineData(screen, row, ld);
     if_OPT_WIDE_CHARS(screen, {
-	widec = SCRN_BUF_WIDEC(screen, row);
+	widec = ld->wideData;
     });
-    return visibleChars(PAIRED_CHARS(chars, widec), screen->max_col + 1);
+    result = visibleChars(PAIRED_CHARS(ld->charData, widec), screen->max_col
+			  + 1);
+    free(ld);
+
+    return result;
 }
 
 #if OPT_TRACE_FLAGS > 1
@@ -375,8 +381,8 @@ ScrnText(TScreen * screen, int row)
 	  -screen->savedlines, \
 	  screen->max_row, \
 	  screen->topline, \
-	  SCRN_BUF_CHARS(screen, row), \
-	  (&(SCRN_BUF_FLAGS(screen, row)) - screen->visbuf) / MAX_PTRS)
+	  ld->charData, \
+	  ((ScrnBuf)(ld->bufHead) - screen->visbuf) / MAX_PTRS)
 #else
 #define DETAILED_FLAGS(name)	/* nothing */
 #endif
@@ -395,6 +401,10 @@ ScrnText(TScreen * screen, int row)
 void
 ScrnClrFlag(TScreen * screen, int row, int flag)
 {
+    LineData *ld = NewLineData();
+
+    (void) getLineData(screen, row, ld);
+
     DETAILED_FLAGS(ScrnClrFlag);
     if (!okScrnRow(screen, row)) {
 	SHOW_BAD_ROW(ScrnClrFlag, screen, row);
@@ -403,13 +413,18 @@ ScrnClrFlag(TScreen * screen, int row, int flag)
 	SHOW_SCRN_FLAG(ScrnClrFlag, 0);
     }
 
-    SCRN_BUF_FLAGS(screen, row) =
-	(Char *) ((long) SCRN_BUF_FLAGS(screen, row) & ~(flag));
+    *(ld->bufHead) &= ~flag;
+
+    free(ld);
 }
 
 void
 ScrnSetFlag(TScreen * screen, int row, int flag)
 {
+    LineData *ld = NewLineData();
+
+    (void) getLineData(screen, row, ld);
+
     DETAILED_FLAGS(ScrnSetFlag);
     if (!okScrnRow(screen, row)) {
 	SHOW_BAD_ROW(ScrnSetFlag, screen, row);
@@ -418,8 +433,9 @@ ScrnSetFlag(TScreen * screen, int row, int flag)
 	SHOW_SCRN_FLAG(ScrnSetFlag, 1);
     }
 
-    SCRN_BUF_FLAGS(screen, row) =
-	(Char *) (((long) SCRN_BUF_FLAGS(screen, row) | (flag)));
+    *(ld->bufHead) |= flag;
+
+    free(ld);
 }
 
 int
@@ -429,7 +445,11 @@ ScrnTstFlag(TScreen * screen, int row, int flag)
     if (!okScrnRow(screen, row)) {
 	SHOW_BAD_ROW(ScrnTstFlag, screen, row);
     } else {
-	code = ((long) SCRN_BUF_FLAGS(screen, row) & (flag)) != 0;
+	LineData *ld = NewLineData();
+
+	(void) getLineData(screen, row, ld);
+
+	code = *(ld->bufHead) != 0;
 
 	DETAILED_FLAGS(ScrnTstFlag);
 	if (!okScrnRow(screen, row)) {
@@ -438,6 +458,8 @@ ScrnTstFlag(TScreen * screen, int row, int flag)
 	} else if (isScrnFlag(flag)) {
 	    SHOW_SCRN_FLAG(ScrnTstFlag, code);
 	}
+
+	free(ld);
     }
     return code;
 }

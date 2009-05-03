@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.421 2009/03/16 00:37:25 tom Exp $ */
+/* $XTermId: util.c,v 1.424 2009/05/03 15:48:44 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -3540,9 +3540,10 @@ ClearCurBackground(XtermWidget xw,
 unsigned
 getXtermCell(TScreen * screen, int row, int col)
 {
-    unsigned ch = SCRN_BUF_CHARS(screen, row)[col];
+    LineData *ld = getLineData(screen, row, (LineData *) 0);
+    unsigned ch = ld->charData[col];
     if_OPT_WIDE_CHARS(screen, {
-	ch |= (SCRN_BUF_WIDEC(screen, row)[col] << 8);
+	ch |= (ld->wideData[col] << 8);
     });
     return ch;
 }
@@ -3553,12 +3554,14 @@ getXtermCell(TScreen * screen, int row, int col)
 void
 putXtermCell(TScreen * screen, int row, int col, int ch)
 {
-    SCRN_BUF_CHARS(screen, row)[col] = LO_BYTE(ch);
+    LineData *ld = getLineData(screen, row, (LineData *) 0);
+    ld->charData[col] = LO_BYTE(ch);
     if_OPT_WIDE_CHARS(screen, {
-	int off;
-	SCRN_BUF_WIDEC(screen, row)[col] = HI_BYTE(ch);
-	for (off = OFF_WIDEC + 1; off < MAX_PTRS; ++off) {
-	    SCREEN_PTR(screen, row, off)[col] = 0;
+	size_t off;
+	ld->wideData[col] = HI_BYTE(ch);
+	for_each_combData(off, ld) {
+	    lo_combData(off, ld)[col] = 0;
+	    hi_combData(off, ld)[col] = 0;
 	}
     });
 }
@@ -3567,8 +3570,9 @@ putXtermCell(TScreen * screen, int row, int col, int ch)
 unsigned
 getXtermCellComb(TScreen * screen, int row, int col, int off)
 {
-    return (unsigned) PACK_PAIR(SCREEN_PTR(screen, row, off),
-				SCREEN_PTR(screen, row, off + 1),
+    LineData *ld = getLineData(screen, row, (LineData *) 0);
+    return (unsigned) PACK_PAIR(lo_combData(off, ld),
+				hi_combData(off, ld),
 				col);
 }
 
@@ -3579,16 +3583,18 @@ void
 addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 {
     if (ch != 0) {
-	int off;
+	LineData *ld = getLineData(screen, row, (LineData *) 0);
+	size_t off;
 
 	TRACE(("addXtermCombining %d,%d %#x (%d)\n",
 	       row, col, ch, my_wcwidth(ch)));
 
-	for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-	    if (!SCREEN_PTR(screen, row, off + 0)[col]
-		&& !SCREEN_PTR(screen, row, off + 1)[col]) {
-		SCREEN_PTR(screen, row, off + 0)[col] = LO_BYTE(ch);
-		SCREEN_PTR(screen, row, off + 1)[col] = HI_BYTE(ch);
+	for_each_combData(off, ld) {
+	    Char *lo = lo_combData(off, ld);
+	    Char *hi = hi_combData(off, ld);
+	    if (!lo[col] && !hi[col]) {
+		lo[col] = LO_BYTE(ch);
+		hi[col] = HI_BYTE(ch);
 		break;
 	    }
 	}

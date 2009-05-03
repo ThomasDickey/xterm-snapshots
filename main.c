@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.589 2009/01/24 16:08:01 tom Exp $ */
+/* $XTermId: main.c,v 1.590 2009/05/02 18:04:41 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1346,9 +1346,9 @@ Syntax(char *badOption)
 	    ProgramName, badOption);
 
     fprintf(stderr, "usage:  %s", ProgramName);
-    col = 8 + strlen(ProgramName);
+    col = 8 + (int) strlen(ProgramName);
     for (opt = list; opt->opt; opt++) {
-	int len = 3 + strlen(opt->opt);		/* space [ string ] */
+	int len = 3 + (int) strlen(opt->opt);	/* space [ string ] */
 	if (col + len > 79) {
 	    fprintf(stderr, "\r\n   ");		/* 3 spaces */
 	    col = 3;
@@ -1526,7 +1526,7 @@ my_pty_id(char *device)
     char *leaf = x_basename(name);
 
     if (name == leaf) {		/* no '/' in the name */
-	int len = strlen(leaf);
+	int len = (int) strlen(leaf);
 	if (PTYCHARLEN < len)
 	    leaf = leaf + (len - PTYCHARLEN);
     }
@@ -1567,7 +1567,7 @@ ParseSccn(char *option)
 	if (leaf - option > 0
 	    && isdigit(CharOf(*leaf))
 	    && sscanf(leaf, "%d", &am_slave) == 1) {
-	    size_t len = leaf - option - 1;
+	    size_t len = (size_t) (leaf - option - 1);
 	    /*
 	     * If we have a slash, we only care about the part after the slash,
 	     * which is a file-descriptor.  The part before the slash can be
@@ -2237,10 +2237,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	    int n;
 	    char **c;
 	    for (n = 0, c = command_to_exec; *c; n++, c++) ;
-	    c = TypeMallocN(char *, n + 3 + u);
+	    c = TypeMallocN(char *, (unsigned) (n + 3 + u));
 	    if (c == NULL)
 		SysError(ERROR_LUMALLOC);
-	    memcpy(c + 2 + u, command_to_exec, (n + 1) * sizeof(char *));
+	    memcpy(c + 2 + u, command_to_exec, (unsigned) (n + 1) * sizeof(char *));
 	    c[0] = term->misc.localefilter;
 	    if (u) {
 		c[1] = "-encoding";
@@ -4751,14 +4751,14 @@ resize_termcap(XtermWidget xw, char *newtc)
 	}
 	ptr1 += 3;
 	ptr2 += 3;
-	strncpy(newtc, oldtc, i = ptr1 - oldtc);
+	strncpy(newtc, oldtc, i = (size_t) (ptr1 - oldtc));
 	temp = newtc + i;
 	sprintf(temp, "%d", (li_first
 			     ? MaxRows(screen)
 			     : MaxCols(screen)));
 	temp += strlen(temp);
 	ptr1 = strchr(ptr1, ':');
-	strncpy(temp, ptr1, i = ptr2 - ptr1);
+	strncpy(temp, ptr1, i = (size_t) (ptr2 - ptr1));
 	temp += i;
 	sprintf(temp, "%d", (li_first
 			     ? MaxCols(screen)

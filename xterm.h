@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.524 2009/03/29 13:54:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.534 2009/05/02 17:14:42 tom Exp $ */
 
 /************************************************************
 
@@ -850,6 +850,15 @@ extern void StringInput (XtermWidget /* xw */, Char * /* string */, size_t  /* n
 extern void VTInitModifiers(XtermWidget /* xw */);
 #endif
 
+/* linedata.c */
+extern LineData *getLineData(TScreen * /* xw */, int /* row */, LineData * /* work */);
+extern LineData *newLineData(XtermWidget /* xw */);
+extern void addLineData(XtermWidget /* xw */);
+extern void checkLineData(TScreen * /* screen */, int /* row */, LineData * /* work */);
+extern void initLineData(XtermWidget /* xw */);
+
+#define NewLineData() newLineData(term)
+
 /* main.c */
 #ifndef __UNIXOS2__
 #define ENVP_ARG /**/
@@ -972,12 +981,13 @@ extern void FlushLog (TScreen * /* screen */);
 #endif
 
 /* print.c */
-extern Bool xtermHasPrinter (void);
-extern int xtermPrinterControl (int  /* chr */);
-extern void setPrinterControlMode (int  /* mode */);
-extern void xtermAutoPrint (unsigned  /* chr */);
-extern void xtermMediaControl (int  /* param */, int  /* private_seq */);
-extern void xtermPrintScreen (Bool  /* use_DECPEX */);
+extern Bool xtermHasPrinter (XtermWidget /* xw */);
+extern int xtermPrinterControl (XtermWidget /* xw */, int /* chr */);
+extern void setPrinterControlMode (XtermWidget /* xw */, int /* mode */);
+extern void xtermAutoPrint (XtermWidget /* xw */, unsigned /* chr */);
+extern void xtermMediaControl (XtermWidget /* xw */, int  /* param */, int  /* private_seq */);
+extern void xtermPrintScreen (XtermWidget /* xw */, Bool  /* use_DECPEX */);
+extern void xtermPrintEverything (XtermWidget /* xw */);
 
 /* ptydata.c */
 #ifdef VMS
@@ -1037,17 +1047,19 @@ extern int  ScrnTstFlag(TScreen * /* screen */, int /* row */, int /* flag */);
 extern void ScrnClrFlag(TScreen * /* screen */, int /* row */, int /* flag */);
 extern void ScrnSetFlag(TScreen * /* screen */, int /* row */, int /* flag */);
 #else
+
+#define ScrnRowFlag(screen, row) \
+	* (RowFlags *) (&SCRN_BUF_FLAGS(screen, row))
+
 #define ScrnClrFlag(screen, row, flag) \
-	SCRN_BUF_FLAGS(screen, row) = \
-		(Char *)((long)SCRN_BUF_FLAGS(screen, row) & ~ (flag))
+	ScrnRowFlag(screen, row) &= ~ (flag)
 
 #define ScrnSetFlag(screen, row, flag) \
-	SCRN_BUF_FLAGS(screen, row) = \
-		(Char *)(((long)SCRN_BUF_FLAGS(screen, row) | (flag)))
+	ScrnRowFlag(screen, row) |= (flag)
 
 #define ScrnTstFlag(screen, row, flag) \
 	(okScrnRow(screen, row) && \
-	 ((long)SCRN_BUF_FLAGS(screen, row) & (flag)) != 0)
+	 ScrnRowFlag(screen, row) != 0)
 #endif /* OPT_TRACE && OPT_TRACE_FLAGS */
 
 #define ScrnClrBlinked(screen, row) ScrnClrFlag(screen, ROW2INX(screen, row), BLINK)
@@ -1084,6 +1096,10 @@ extern void ScrnWipeRectangle (XtermWidget /* xw */, XTermRect *);
 #if OPT_WIDE_CHARS
 extern void ChangeToWide(XtermWidget /* xw */);
 #endif
+
+/* scrollback.c */
+extern LineData *getScrollback(XtermWidget /* xw */, int /* row */);
+extern void addScrollback(XtermWidget /* xw */);
 
 /* scrollbar.c */
 extern void DoResizeScreen (XtermWidget /* xw */);

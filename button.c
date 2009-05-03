@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.321 2009/03/29 17:04:40 tom Exp $ */
+/* $XTermId: button.c,v 1.325 2009/05/03 13:12:44 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2704,9 +2704,11 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
     });
 
     if ((result = TypeCallocN(Char, need + 1)) != 0) {
+	LineData *ld = NewLineData();
 	unsigned used = 0;
 	Char *last = result;
 
+	(void) getLineData(screen, row, ld);
 	do {
 	    int col = 0;
 	    int limit = LastTextCol(screen, row);
@@ -2727,9 +2729,9 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		});
 
 		if_OPT_WIDE_CHARS(screen, {
-		    int off;
-		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-			if ((data = XTERM_CELLC(row, col, off)) == 0)
+		    size_t off;
+		    for_each_combData(off, ld) {
+			if ((data = XTERM_CELLC(row, col, (int) (off + OFF_FINAL))) == 0)
 			    break;
 			next = convertToUTF8(next, data);
 		    }
@@ -2746,6 +2748,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 	} while (used < length &&
 		 ScrnTstWrapped(screen, row) &&
 		 ++row < screen->max_row);
+	free(ld);
     }
     /* TRACE(("result:%s\n", result)); */
     return (char *) result;
@@ -3764,6 +3767,7 @@ SaveText(TScreen * screen,
 	 Char * lp,		/* pointer to where to put the text */
 	 int *eol)
 {
+    LineData *ld = NewLineData();
     int i = 0;
     unsigned c;
     Char *result = lp;
@@ -3771,6 +3775,7 @@ SaveText(TScreen * screen,
     unsigned previous = 0;
 #endif
 
+    (void) getLineData(screen, row, ld);
     i = Length(screen, row, scol, ecol);
     ecol = scol + i;
 #if OPT_DEC_CHRSET
@@ -3793,9 +3798,9 @@ SaveText(TScreen * screen,
 	    if_OPT_WIDE_CHARS(screen, {
 		if (screen->utf8_mode != uFalse) {
 		    unsigned ch;
-		    int off;
-		    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-			if ((ch = XTERM_CELLC(row, i, off)) == 0)
+		    size_t off;
+		    for_each_combData(off, ld) {
+			if ((ch = XTERM_CELLC(row, i, (int) (off + OFF_FINAL))) == 0)
 			    break;
 			lp = convertToUTF8(lp, ch);
 		    }
@@ -3808,9 +3813,9 @@ SaveText(TScreen * screen,
 	    lp = convertToUTF8(lp, (c != 0) ? c : ' ');
 	    if_OPT_WIDE_CHARS(screen, {
 		unsigned ch;
-		int off;
-		for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-		    if ((ch = XTERM_CELLC(row, i, off)) == 0)
+		size_t off;
+		for_each_combData(off, ld) {
+		    if ((ch = XTERM_CELLC(row, i, (int) (off + OFF_FINAL))) == 0)
 			break;
 		    lp = convertToUTF8(lp, ch);
 		}
@@ -3838,6 +3843,7 @@ SaveText(TScreen * screen,
     if (!*eol || !screen->trim_selection)
 	result = lp;
 
+    free(ld);
     return (result);
 }
 
