@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.546 2009/03/24 22:20:06 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.556 2009/05/03 15:19:10 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1117,6 +1117,48 @@ typedef enum {
 	, OFF_FINAL		/* first enum past fixed-offsets */
 } BufOffsets;
 
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+#define COLOR_BITS 8
+#else
+#define COLOR_BITS 4
+#endif
+typedef struct {
+    	int fg:COLOR_BITS;
+    	int bg:COLOR_BITS;
+} CellColor;
+#endif
+
+typedef int RowFlags;
+
+typedef struct {
+    	RowFlags *bufHead;	/* points to flag for wrapped lines */
+	Char *attribs;
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+	Char *fgrnd;		/* FIXME - use bitfields to help merge */
+	Char *bgrnd;
+#else
+	Char *color;		/* FIXME - merge to make color-array */
+#endif
+#endif
+#if OPT_DEC_CHRSET
+	Char *charSets;
+#endif
+	Char *charData;		/* FIXME - merge to make IChar array */
+	/* wide (16-bit) characters begin here */
+#if OPT_WIDE_CHARS
+	Char *wideData;		/* second byte of first wide-character */
+	size_t combSize;	/* number of pointers in combData[] */
+	Char *combData[];	/* array of pointers to combining chars */
+#endif
+
+} LineData;
+
+#define for_each_combData(off, ld) for (off = 0; off < ld->combSize; off += 2)
+#define lo_combData(off, ld)	ld->combData[off]
+#define hi_combData(off, ld)	ld->combData[off + 1]
+
 	/*
 	 * A "row" is the index within the visible part of the screen, and an
 	 * "inx" is the index within the whole set of scrollable lines.
@@ -1515,6 +1557,12 @@ typedef struct {
 	int		savelines;	/* number of lines off top to save */
 	int		scroll_amt;	/* amount to scroll		*/
 	int		refresh_amt;	/* amount to refresh		*/
+	/*
+	 * Working variables for getLineData().
+	 */
+	void		*lineCache;	/* pointer to last LineData 	*/
+	LineData	*lineData;	/* workspace for LineData	*/
+	size_t		lineExtra;	/* extra space for combining chars */
 	/*
 	 * Pointer to the current visible buffer, e.g., allbuf or altbuf.
 	 */

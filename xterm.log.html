@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.748 2009/04/11 18:12:00 tom Exp $
+  $XTermId: xterm.log.html,v 1.751 2009/05/02 14:41:53 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -294,6 +294,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add "print-everything" action (patch by Ovidiu Gheorghioiu).
+
+	<li>start refactoring scrollback data using new getLineData() function.
+
+	<li>demote recent change to Debian #252873 fix to experimental,
+	    ifdef'd out as <code>EXP_BOGUS_FG</code> (Debian #522141).
+
 	<li>work around groff mapping of ASCII quotes using macros (requested
 	    by Reuben Thomas based on Colin Watson advice, fixes Debian #378700).
 

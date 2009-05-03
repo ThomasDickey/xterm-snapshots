@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.898 2009/03/29 22:14:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.908 2009/05/03 15:45:26 tom Exp $ */
 
 /*
 
@@ -269,6 +269,7 @@ static XtActionsRec actionsList[] = {
     { "keymap",			HandleKeymapChange },
     { "popup-menu",		HandlePopupMenu },
     { "print",			HandlePrintScreen },
+    { "print-everything",	HandlePrintEverything },
     { "print-redir",		HandlePrintControlMode },
     { "quit",			HandleQuit },
     { "redraw",			HandleRedraw },
@@ -837,6 +838,7 @@ xtermAddInput(Widget w)
 }
 
 #if OPT_ISO_COLORS
+#ifdef EXP_BOGUS_FG
 static Bool
 CheckBogusForeground(TScreen * screen, const char *tag)
 {
@@ -872,6 +874,7 @@ CheckBogusForeground(TScreen * screen, const char *tag)
 
     return isClear;
 }
+#endif
 
 /*
  * The terminal's foreground and background colors are set via two mechanisms:
@@ -899,6 +902,7 @@ SGR_Foreground(XtermWidget xw, int color)
     setCgsFore(xw, WhichVWin(screen), gcBold, fg);
     setCgsBack(xw, WhichVWin(screen), gcBoldReverse, fg);
 
+#ifdef EXP_BOGUS_FG
     /*
      * If we've just turned off the foreground color, check for blank cells
      * which have no background color, but do have foreground color.  This
@@ -911,6 +915,7 @@ SGR_Foreground(XtermWidget xw, int color)
     if (color < 0) {
 	CheckBogusForeground(screen, "SGR_Foreground");
     }
+#endif
 }
 
 void
@@ -1331,7 +1336,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	/* Intercept characters for printer controller mode */
 	if (screen->printer_controlmode == 2) {
-	    if ((c = (unsigned) xtermPrinterControl((int) c)) == 0)
+	    if ((c = (unsigned) xtermPrinterControl(xw, (int) c)) == 0)
 		continue;
 	}
 
@@ -1630,7 +1635,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    /*
 	     * form feed, line feed, vertical tab
 	     */
-	    xtermAutoPrint(c);
+	    xtermAutoPrint(xw, c);
 	    xtermIndex(xw, 1);
 	    if (xw->flags & LINEFEED)
 		CarriageReturn(screen);
@@ -2307,13 +2312,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_MC:
 	    TRACE(("CASE_MC - media control\n"));
-	    xtermMediaControl(param[0], False);
+	    xtermMediaControl(xw, param[0], False);
 	    sp->parsestate = sp->groundtable;
 	    break;
 
 	case CASE_DEC_MC:
 	    TRACE(("CASE_DEC_MC - DEC media control\n"));
-	    xtermMediaControl(param[0], True);
+	    xtermMediaControl(xw, param[0], True);
 	    sp->parsestate = sp->groundtable;
 	    break;
 
@@ -3473,7 +3478,7 @@ WrapLine(XtermWidget xw)
 
     /* mark that we had to wrap this line */
     ScrnSetFlag(screen, screen->cur_row, LINEWRAPPED);
-    xtermAutoPrint('\n');
+    xtermAutoPrint(xw, '\n');
     xtermIndex(xw, 1);
     set_cur_col(screen, 0);
 }
@@ -5683,6 +5688,7 @@ VTInitialize(Widget wrequest,
 #if OPT_WIDE_CHARS
     wnew->num_ptrs = (OFF_CHARS + 1);	/* minimum needed for cell */
 #endif
+
 #if OPT_ISO_COLORS
     init_Ires(screen.veryBoldColors);
     init_Bres(screen.boldColors);
@@ -6031,6 +6037,8 @@ VTInitialize(Widget wrequest,
     if (wnew->misc.appkeypadDefault)
 	wnew->keyboard.flags |= MODE_DECKPAM;
 
+    /* after MAX_PTRS is known, allocate line-data working variables */
+    initLineData(wnew);
     return;
 }
 
@@ -6857,10 +6865,11 @@ ShowCursor(void)
 #endif
 #if OPT_WIDE_CHARS
     Char chi = 0;
-    int off;
+    size_t off;
     int my_col = 0;
 #endif
     int cursor_col;
+    LineData *ld = 0;
 
     if (screen->cursor_state == BLINKED_OFF)
 	return;
@@ -6882,19 +6891,25 @@ ShowCursor(void)
     }
 #endif /* NO_ACTIVE_ICON */
 
+    if ((ld = newLineData(xw)) == 0) {
+	TRACE(("BUG - ShowCursor failed to get LineData\n"));
+	return;
+    }
+    ld = getLineData(screen, screen->cur_row, ld);
+
     base =
-	clo = SCRN_BUF_CHARS(screen, screen->cursorp.row)[cursor_col];
-    flags = SCRN_BUF_ATTRS(screen, screen->cursorp.row)[cursor_col];
+	clo = ld->charData[cursor_col];
+    flags = ld->attribs[cursor_col];
 
     if_OPT_WIDE_CHARS(screen, {
-	chi = SCRN_BUF_WIDEC(screen, screen->cursorp.row)[cursor_col];
+	chi = ld->wideData[cursor_col];
 	if (clo == HIDDEN_LO && chi == HIDDEN_HI && cursor_col > 0) {
 	    /* if cursor points to non-initial part of wide character,
 	     * back it up
 	     */
 	    --cursor_col;
-	    clo = SCRN_BUF_CHARS(screen, screen->cursorp.row)[cursor_col];
-	    chi = SCRN_BUF_WIDEC(screen, screen->cursorp.row)[cursor_col];
+	    clo = ld->charData[cursor_col];
+	    chi = ld->wideData[cursor_col];
 	}
 	my_col = cursor_col;
 	base = (chi << 8) | clo;
@@ -6907,12 +6922,12 @@ ShowCursor(void)
     if (base == 0) {
 	base = clo = ' ';
     }
-
+#if OPT_ISO_COLORS
+#ifdef EXP_BOGUS_FG
     /*
      * If the cursor happens to be on blanks, and we have not set both
      * foreground and background color, do not treat it as a colored cell.
      */
-#if OPT_ISO_COLORS
     if (base == ' ') {
 	if ((flags & (FG_COLOR | BG_COLOR)) == BG_COLOR) {
 	    TRACE(("ShowCursor - do not treat as a colored cell\n"));
@@ -6924,6 +6939,19 @@ ShowCursor(void)
 		    flags &= ~(FG_COLOR | BG_COLOR);
 	}
     }
+#else /* !EXP_BOGUS_FG */
+    /*
+     * If the cursor happens to be on blanks, and the foreground color is set
+     * but not the background, do not treat it as a colored cell.
+     */
+    if ((flags & TERM_COLOR_FLAGS(xw)) == BG_COLOR
+#if OPT_WIDE_CHARS
+	&& chi == 0
+#endif
+	&& clo == ' ') {
+	flags &= ~TERM_COLOR_FLAGS(xw);
+    }
+#endif
 #endif
 
     /*
@@ -6935,7 +6963,7 @@ ShowCursor(void)
 	fg_bg = PACK_FGBG(screen, screen->cursorp.row, cursor_col);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	fg_bg = SCRN_BUF_COLOR(screen, screen->cursorp.row)[cursor_col];
+	fg_bg = ld->color[cursor_col];
     });
     fg_pix = getXtermForeground(xw, flags, extract_fg(xw, fg_bg, flags));
     bg_pix = getXtermBackground(xw, flags, extract_bg(xw, fg_bg, flags));
@@ -7053,9 +7081,9 @@ ShowCursor(void)
 
 #if OPT_WIDE_CHARS
 	if_OPT_WIDE_CHARS(screen, {
-	    for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-		clo = SCREEN_PTR(screen, screen->cursorp.row, off + 0)[my_col];
-		chi = SCREEN_PTR(screen, screen->cursorp.row, off + 1)[my_col];
+	    for_each_combData(off, ld) {
+		clo = lo_combData(off, ld)[my_col];
+		chi = hi_combData(off, ld)[my_col];
 		if (!(clo || chi))
 		    break;
 		drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
@@ -7081,6 +7109,9 @@ ShowCursor(void)
 	}
     }
     screen->cursor_state = ON;
+
+    free(ld);
+    return;
 }
 
 /*
@@ -7100,10 +7131,11 @@ HideCursor(void)
     Bool in_selection;
 #if OPT_WIDE_CHARS
     Char chi = 0;
-    int off;
+    size_t off;
     int my_col = 0;
 #endif
     int cursor_col;
+    LineData *ld = 0;
 
     if (screen->cursor_state == OFF)	/* FIXME */
 	return;
@@ -7119,19 +7151,25 @@ HideCursor(void)
     }
 #endif /* NO_ACTIVE_ICON */
 
+    if ((ld = newLineData(xw)) == 0) {
+	TRACE(("BUG - HideCursor failed to get LineData\n"));
+	return;
+    }
+    ld = getLineData(screen, screen->cursorp.row, ld);
+
     base =
-	clo = SCRN_BUF_CHARS(screen, screen->cursorp.row)[cursor_col];
-    flags = SCRN_BUF_ATTRS(screen, screen->cursorp.row)[cursor_col];
+	clo = ld->charData[cursor_col];
+    flags = ld->attribs[cursor_col];
 
     if_OPT_WIDE_CHARS(screen, {
-	chi = SCRN_BUF_WIDEC(screen, screen->cursorp.row)[cursor_col];
+	chi = ld->wideData[cursor_col];
 	if (clo == HIDDEN_LO && chi == HIDDEN_HI && cursor_col > 0) {
 	    /* if cursor points to non-initial part of wide character,
 	     * back it up
 	     */
 	    --cursor_col;
-	    clo = SCRN_BUF_CHARS(screen, screen->cursorp.row)[cursor_col];
-	    chi = SCRN_BUF_WIDEC(screen, screen->cursorp.row)[cursor_col];
+	    clo = ld->charData[cursor_col];
+	    chi = ld->wideData[cursor_col];
 	}
 	my_col = cursor_col;
 	base = (chi << 8) | clo;
@@ -7144,7 +7182,7 @@ HideCursor(void)
     if (base == 0) {
 	base = clo = ' ';
     }
-
+#ifdef EXP_BOGUS_FG
     /*
      * If the cursor happens to be on blanks, and we have not set both
      * foreground and background color, do not treat it as a colored cell.
@@ -7162,6 +7200,7 @@ HideCursor(void)
 	}
     }
 #endif
+#endif
 
     /*
      * Compare the current cell to the last set of colors used for the
@@ -7171,7 +7210,7 @@ HideCursor(void)
 	fg_bg = PACK_FGBG(screen, screen->cursorp.row, cursor_col);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	fg_bg = SCRN_BUF_COLOR(screen, screen->cursorp.row)[cursor_col];
+	fg_bg = ld->color[cursor_col];
     });
 
     if (OutsideSelection(screen, screen->cursorp.row, screen->cursorp.col))
@@ -7191,9 +7230,9 @@ HideCursor(void)
 
 #if OPT_WIDE_CHARS
     if_OPT_WIDE_CHARS(screen, {
-	for (off = OFF_FINAL; off < MAX_PTRS; off += 2) {
-	    clo = SCREEN_PTR(screen, screen->cursorp.row, off + 0)[my_col];
-	    chi = SCREEN_PTR(screen, screen->cursorp.row, off + 1)[my_col];
+	for_each_combData(off, ld) {
+	    clo = lo_combData(off, ld)[my_col];
+	    chi = hi_combData(off, ld)[my_col];
 	    if (!(clo || chi))
 		break;
 	    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
@@ -7205,6 +7244,9 @@ HideCursor(void)
 #endif
     screen->cursor_state = OFF;
     resetXtermGC(xw, flags, in_selection);
+
+    free(ld);
+    return;
 }
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT

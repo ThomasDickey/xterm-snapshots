@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.157 2009/01/25 16:39:24 tom Exp $
+## $XTermId: Makefile.in,v 1.158 2009/04/27 19:29:31 tom Exp $
 ##
 ## Copyright 2002-2008,2009 by Thomas E. Dickey
 ##
@@ -83,12 +83,14 @@ EXTRAOBJ	= @EXTRAOBJS@
 
           SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
-		  $(MAINSRC) menu.c misc.c print.c ptydata.c \
+		  linedata.c main.c menu.c misc.c \
+		  print.c ptydata.c scrollback.c \
 		  screen.c scrollbar.c tabs.c util.c xstrings.c xtermcap.c \
 		  VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button$o cachedGCs$o charproc$o charsets$o cursor$o \
 	  	  data$o doublechr$o fontutils$o input$o \
-		  main$o menu$o misc$o print$o ptydata$o \
+		  linedata$o main$o menu$o misc$o \
+		  print$o ptydata$o scrollback$o \
 		  screen$o scrollbar$o tabs$o util$o xstrings$o xtermcap$o \
 		  VTPrsTbl$o $(EXTRAOBJ)
           SRCS2 = resize.c xstrings.c
