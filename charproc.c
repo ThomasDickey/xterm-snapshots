@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.908 2009/05/03 15:45:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.909 2009/05/03 22:08:24 tom Exp $ */
 
 /*
 
@@ -3066,7 +3066,7 @@ v_write(int f, Char * data, unsigned len)
 
     if (len > 0) {
 #if OPT_DABBREV
-	term->screen.dabbrev_working = 0;	/* break dabbrev sequence */
+	term->screen.dabbrev_working = False;	/* break dabbrev sequence */
 #endif
 	if (v_bufend < v_bufptr + len) {	/* we've run out of room */
 	    if (v_bufstr != v_buffer) {

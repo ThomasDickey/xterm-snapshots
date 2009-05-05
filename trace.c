@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.88 2009/05/02 17:05:19 tom Exp $ */
+/* $XTermId: trace.c,v 1.90 2009/05/04 21:37:23 tom Exp $ */
 
 /************************************************************
 
@@ -367,9 +367,9 @@ ScrnText(TScreen * screen, int row)
     if_OPT_WIDE_CHARS(screen, {
 	widec = ld->wideData;
     });
-    result = visibleChars(PAIRED_CHARS(ld->charData, widec), screen->max_col
-			  + 1);
-    free(ld);
+    result = visibleChars(PAIRED_CHARS(ld->charData, widec),
+			  screen->max_col + 1);
+    destroyLineData(screen, ld);
 
     return result;
 }
@@ -415,7 +415,7 @@ ScrnClrFlag(TScreen * screen, int row, int flag)
 
     *(ld->bufHead) &= ~flag;
 
-    free(ld);
+    destroyLineData(screen, ld);
 }
 
 void
@@ -435,7 +435,7 @@ ScrnSetFlag(TScreen * screen, int row, int flag)
 
     *(ld->bufHead) |= flag;
 
-    free(ld);
+    destroyLineData(screen, ld);
 }
 
 int
@@ -459,7 +459,7 @@ ScrnTstFlag(TScreen * screen, int row, int flag)
 	    SHOW_SCRN_FLAG(ScrnTstFlag, code);
 	}
 
-	free(ld);
+	destroyLineData(screen, ld);
     }
     return code;
 }

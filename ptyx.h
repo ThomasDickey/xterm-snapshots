@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.556 2009/05/03 15:19:10 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.560 2009/05/04 00:00:09 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1176,26 +1176,16 @@ typedef struct {
 	/* ScrnBuf-level macros */
 #define BUFFER_PTR(buf, row, off) (buf[MAX_PTRS * (row) + off])
 
-#define BUF_FLAGS(buf, row) BUFFER_PTR(buf, row, OFF_FLAGS)
 #define BUF_CHARS(buf, row) BUFFER_PTR(buf, row, OFF_CHARS)
-#define BUF_ATTRS(buf, row) BUFFER_PTR(buf, row, OFF_ATTRS)
-#define BUF_COLOR(buf, row) BUFFER_PTR(buf, row, OFF_COLOR)
-#define BUF_FGRND(buf, row) BUFFER_PTR(buf, row, OFF_FGRND)
-#define BUF_BGRND(buf, row) BUFFER_PTR(buf, row, OFF_BGRND)
-#define BUF_CSETS(buf, row) BUFFER_PTR(buf, row, OFF_CSETS)
-#define BUF_WIDEC(buf, row) BUFFER_PTR(buf, row, OFF_WIDEC)
 
 	/* TScreen-level macros */
 #define SCREEN_PTR(screen, row, off) BUFFER_PTR(screen->visbuf, row, off)
 
 #define SCRN_BUF_FLAGS(screen, row) SCREEN_PTR(screen, row, OFF_FLAGS)
-#define SCRN_BUF_CHARS(screen, row) SCREEN_PTR(screen, row, OFF_CHARS)
 #define SCRN_BUF_ATTRS(screen, row) SCREEN_PTR(screen, row, OFF_ATTRS)
-#define SCRN_BUF_COLOR(screen, row) SCREEN_PTR(screen, row, OFF_COLOR)
 #define SCRN_BUF_FGRND(screen, row) SCREEN_PTR(screen, row, OFF_FGRND)
 #define SCRN_BUF_BGRND(screen, row) SCREEN_PTR(screen, row, OFF_BGRND)
 #define SCRN_BUF_CSETS(screen, row) SCREEN_PTR(screen, row, OFF_CSETS)
-#define SCRN_BUF_WIDEC(screen, row) SCREEN_PTR(screen, row, OFF_WIDEC)
 
 typedef struct {
 	unsigned	chrset;
@@ -1768,7 +1758,7 @@ typedef struct {
 #endif
 	XIC		xic;		/* this is used even without XIM */
 #if OPT_DABBREV
-	int		dabbrev_working;	/* nonzero during dabbrev process */
+	Boolean		dabbrev_working;	/* nonzero during dabbrev process */
 	unsigned char	dabbrev_erase_char;	/* used for deleting inserted completion */
 #endif
 	char		tcapbuf[TERMCAP_SIZE];

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.251 2009/05/03 15:40:06 tom Exp $ */
+/* $XTermId: screen.c,v 1.254 2009/05/03 23:57:07 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -795,23 +795,23 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where,
 void
 ScrnInsertChar(XtermWidget xw, unsigned n)
 {
-#define Target (data + col + n)
-#define Source (data + col)
+#define MemMove(data) \
+    	for (j = last - 1; j >= (col + nbytes); --j) \
+	    data[j] = data[j - nbytes]
 
     TScreen *screen = &(xw->screen);
-    ScrnBuf sb = screen->visbuf;
     int last = MaxCols(screen);
     int row = screen->cur_row;
     int col = screen->cur_col;
-    Char *data;
-    size_t nbytes;
+    int j, nbytes;
+    LineData *ld;
 
     if (last <= (col + (int) n)) {
 	if (last <= col)
 	    return;
 	n = (unsigned) (last - col);
     }
-    nbytes = (size_t) (last - (col + (int) n));
+    nbytes = (last - (col + (int) n));
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
@@ -831,37 +831,31 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	}
     });
 
-    data = BUF_CHARS(sb, row);
-    memmove(Target, Source, nbytes);
+    if ((ld = getLineData(screen, row, (LineData *) 0)) != 0) {
+	MemMove(ld->charData);
+	MemMove(ld->attribs);
 
-    data = BUF_ATTRS(sb, row);
-    memmove(Target, Source, nbytes);
-
-    if_OPT_EXT_COLORS(screen, {
-	data = BUF_FGRND(sb, row);
-	memmove(Target, Source, nbytes);
-	data = BUF_BGRND(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	data = BUF_COLOR(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_DEC_CHRSET({
-	data = BUF_CSETS(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_WIDE_CHARS(screen, {
-	int off;
-	for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-	    data = BUFFER_PTR(sb, row, off);
-	    memmove(Target, Source, nbytes);
-	}
-    });
+	if_OPT_EXT_COLORS(screen, {
+	    MemMove(ld->fgrnd);
+	    MemMove(ld->bgrnd);
+	});
+	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	    MemMove(ld->color);
+	});
+	if_OPT_DEC_CHRSET({
+	    MemMove(ld->charSets);
+	});
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    MemMove(ld->wideData);
+	    for_each_combData(off, ld) {
+		MemMove(ld->combData[off]);
+	    }
+	});
+    }
     ClearCells(xw, CHARDRAWN, n, row, col);
 
-#undef Source
-#undef Target
+#undef MemMove
 }
 
 /*
@@ -870,23 +864,23 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 void
 ScrnDeleteChar(XtermWidget xw, unsigned n)
 {
-#define Target (data + col)
-#define Source (data + col + n)
+#define MemMove(data) \
+    	for (j = col; j < last - nbytes; ++j) \
+	    data[j] = data[j + nbytes]
 
     TScreen *screen = &(xw->screen);
-    ScrnBuf sb = screen->visbuf;
     int last = MaxCols(screen);
     int row = screen->cur_row;
     int col = screen->cur_col;
-    Char *data;
-    size_t nbytes;
+    int j, nbytes;
+    LineData *ld;
 
     if (last <= (col + (int) n)) {
 	if (last <= col)
 	    return;
 	n = (unsigned) (last - col);
     }
-    nbytes = (size_t) (last - (col + (int) n));
+    nbytes = (last - (col + (int) n));
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
@@ -902,38 +896,32 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
     });
 
-    data = BUF_CHARS(sb, row);
-    memmove(Target, Source, nbytes);
+    if ((ld = getLineData(screen, row, (LineData *) 0)) != 0) {
+	MemMove(ld->charData);
+	MemMove(ld->attribs);
 
-    data = BUF_ATTRS(sb, row);
-    memmove(Target, Source, nbytes);
-
-    if_OPT_EXT_COLORS(screen, {
-	data = BUF_FGRND(sb, row);
-	memmove(Target, Source, nbytes);
-	data = BUF_BGRND(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
-	data = BUF_COLOR(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_DEC_CHRSET({
-	data = BUF_CSETS(sb, row);
-	memmove(Target, Source, nbytes);
-    });
-    if_OPT_WIDE_CHARS(screen, {
-	int off;
-	for (off = OFF_WIDEC; off < MAX_PTRS; ++off) {
-	    data = BUFFER_PTR(sb, row, off);
-	    memmove(Target, Source, nbytes);
-	}
-    });
+	if_OPT_EXT_COLORS(screen, {
+	    MemMove(ld->fgrnd);
+	    MemMove(ld->bgrnd);
+	});
+	if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+	    MemMove(ld->color);
+	});
+	if_OPT_DEC_CHRSET({
+	    MemMove(ld->charSets);
+	});
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    MemMove(ld->wideData);
+	    for_each_combData(off, ld) {
+		MemMove(ld->combData[off]);
+	    }
+	});
+    }
     ClearCells(xw, 0, n, row, (last - (int) n));
     ScrnClrWrapped(screen, row);
 
-#undef Source
-#undef Target
+#undef MemMove
 }
 
 /*
@@ -1604,25 +1592,32 @@ non_blank_line(TScreen * screen,
 	       int col,
 	       int len)
 {
-    ScrnBuf sb = screen->visbuf;
     int i;
-    Char *ptr = BUF_CHARS(sb, row);
+    Bool found = False;
+    LineData *ld = getLineData(screen, row, (LineData *) 0);
 
-    for (i = col; i < len; i++) {
-	if (ptr[i])
-	    return True;
-    }
-
-    if_OPT_WIDE_CHARS(screen, {
-	if ((ptr = BUF_WIDEC(sb, row)) != 0) {
-	    for (i = col; i < len; i++) {
-		if (ptr[i])
-		    return True;
+    if (ld != 0) {
+	for (i = col; i < len; i++) {
+	    if (ld->charData[i]) {
+		found = True;
+		break;
 	    }
 	}
-    });
 
-    return False;
+	if_OPT_WIDE_CHARS(screen, {
+	    if (!found) {
+		if (ld->wideData != 0) {
+		    for (i = col; i < len; i++) {
+			if (ld->wideData[i]) {
+			    found = True;
+			    break;
+			}
+		    }
+		}
+	    }
+	});
+    }
+    return found;
 }
 
 /*

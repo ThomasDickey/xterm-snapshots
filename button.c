@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.325 2009/05/03 13:12:44 tom Exp $ */
+/* $XTermId: button.c,v 1.326 2009/05/04 21:45:00 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2473,13 +2473,15 @@ LastTextCol(TScreen * screen, int row)
     int i;
     Char *ch;
 
-    if (inx + screen->savedlines >= 0) {
+    if (okScrnRow(screen, inx)) {
+	LineData *ld = getLineData(screen, inx, (LineData *) 0);
+
 	for (i = screen->max_col,
-	     ch = SCRN_BUF_ATTRS(screen, inx) + i;
+	     ch = ld->attribs + i;
 	     i >= 0 && !(*ch & CHARDRAWN);
 	     ch--, i--) ;
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, inx)[0])) {
+	if (CSET_DOUBLE(ld->charSets[0])) {
 	    i *= 2;
 	}
 #endif
