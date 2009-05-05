@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.18 2009/05/02 23:00:52 tom Exp $ */
+/* $XTermId: linedata.c,v 1.24 2009/05/04 21:29:02 tom Exp $ */
 
 /************************************************************
 
@@ -37,6 +37,10 @@ authorization.
 
 #include <assert.h>
 
+#define SCRN_BUF_CHARS(screen, row) SCREEN_PTR(screen, row, OFF_CHARS)
+#define SCRN_BUF_COLOR(screen, row) SCREEN_PTR(screen, row, OFF_COLOR)
+#define SCRN_BUF_WIDEC(screen, row) SCREEN_PTR(screen, row, OFF_WIDEC)
+
 /*
  * Given a row-number, find the corresponding data for the line in the VT100
  * widget.  Row numbers can be positive or negative.
@@ -63,7 +67,13 @@ getLineData(TScreen * screen,
 	if (work == 0) {
 	    if ((work = screen->lineData) != 0) {
 		check = &SCREEN_PTR(screen, row, 0);
-		if (check != screen->lineCache) {
+		/*
+		 * Check if the cached LineData is up to date.
+		 * The second part of the comparison is needed since xterm
+		 * implements scrolling via memory-moves.
+		 */
+		if (check != screen->lineCache
+		    || SCRN_BUF_CHARS(screen, row) != work->charData) {
 		    update = True;
 		    screen->lineCache = check;
 		}
@@ -109,11 +119,11 @@ getLineData(TScreen * screen,
 	    }
 #endif
 	}
+	checkLineData(screen, row, work);
     } else {
 	work = 0;
     }
 
-    checkLineData(screen, row, work);
     return work;
 }
 
@@ -165,6 +175,22 @@ newLineData(XtermWidget xw)
     return result;
 }
 
+void
+destroyLineData(TScreen * screen, LineData * ld)
+{
+    if (ld != 0) {
+	free(ld);
+	if (screen->lineData == ld) {
+	    screen->lineData = 0;
+	    screen->lineCache = 0;
+	} else if (screen->lineCache == ld) {
+	    screen->lineCache = 0;
+	}
+    } else if (screen->lineData != 0) {
+	destroyLineData(screen, screen->lineData);
+    }
+}
+
 /*
  * For debugging, verify that the pointers in a LineData struct match the
  * expected values for the given row.
@@ -179,7 +205,7 @@ checkLineData(TScreen * screen GCC_UNUSED,
 	      int row GCC_UNUSED,
 	      LineData * work GCC_UNUSED)
 {
-    TRACE2(("checkLineData %p\n", work));
+    TRACE2(("checkLineData %d ->%p\n", row, work));
     assert(work != 0);
     TRACE_ASSERT(charData, SCRN_BUF_CHARS(screen, row));
     TRACE_ASSERT(attribs, SCRN_BUF_ATTRS(screen, row));

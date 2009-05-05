@@ -1,4 +1,4 @@
-/* $XTermId: testxmc.c,v 1.35 2009/01/09 01:40:17 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.37 2009/05/04 20:45:00 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/testxmc.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
@@ -178,6 +178,7 @@ void
 Resolve_XMC(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
+    LineData *ld = newLineData(xw);
     Bool changed = False;
     Char start;
     Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
@@ -186,15 +187,17 @@ Resolve_XMC(XtermWidget xw)
 
     /* Find the preceding cell.
      */
+    (void) getLineData(screen, row, ld);
     if (XTERM_CELL(row, col) != XMC_GLITCH) {
 	if (col != 0) {
 	    col--;
 	} else if (!screen->xmc_inline && row != 0) {
 	    row--;
 	    col = CurMaxCol(screen, row);
+	    (void) getLineData(screen, row, ld);
 	}
     }
-    start = (SCRN_BUF_ATTRS(screen, row)[col] & my_attrs);
+    start = (ld->attribs[col] & my_attrs);
 
     /* Now propagate the starting state until we reach a cell which holds
      * a glitch.
@@ -205,13 +208,14 @@ Resolve_XMC(XtermWidget xw)
 	} else if (!screen->xmc_inline && row < screen->max_row) {
 	    row++;
 	    col = 0;
+	    (void) getLineData(screen, row, ld);
 	} else
 	    break;
 	if (XTERM_CELL(row, col) == XMC_GLITCH)
 	    break;
-	if ((SCRN_BUF_ATTRS(screen, row)[col] & my_attrs) != start) {
-	    SCRN_BUF_ATTRS(screen, row)[col] =
-		CharOf(start | (SCRN_BUF_ATTRS(screen, row)[col] & ~my_attrs));
+	if ((ld->attribs[col] & my_attrs) != start) {
+	    ld->attribs[col] =
+		CharOf(start | (ld->attribs[col] & ~my_attrs));
 	    changed = True;
 	}
     }
@@ -227,4 +231,6 @@ Resolve_XMC(XtermWidget xw)
 	ScrnUpdate(xw, screen->cur_row, 0, row + 1 - screen->cur_row,
 		   MaxCols(screen), True);
     }
+
+    destroyLineData(screen, ld);
 }

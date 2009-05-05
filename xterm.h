@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.534 2009/05/02 17:14:42 tom Exp $ */
+/* $XTermId: xterm.h,v 1.535 2009/05/04 19:56:53 tom Exp $ */
 
 /************************************************************
 
@@ -855,6 +855,7 @@ extern LineData *getLineData(TScreen * /* xw */, int /* row */, LineData * /* wo
 extern LineData *newLineData(XtermWidget /* xw */);
 extern void addLineData(XtermWidget /* xw */);
 extern void checkLineData(TScreen * /* screen */, int /* row */, LineData * /* work */);
+extern void destroyLineData(TScreen * /* xw */, LineData * /* work */);
 extern void initLineData(XtermWidget /* xw */);
 
 #define NewLineData() newLineData(term)

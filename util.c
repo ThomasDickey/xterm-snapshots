@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.424 2009/05/03 15:48:44 tom Exp $ */
+/* $XTermId: util.c,v 1.425 2009/05/04 20:50:40 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1142,7 +1142,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
      */
     if (screen->protected_mode != OFF_PROTECT) {
 	unsigned n;
-	Char *attrs = SCRN_BUF_ATTRS(screen, row) + col;
+	Char *attrs = getLineData(screen, row, (LineData *) 0)->attribs;
 	int saved_mode = screen->protected_mode;
 	Bool done;
 

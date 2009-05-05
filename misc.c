@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.410 2009/03/28 17:33:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.412 2009/05/03 23:15:22 tom Exp $ */
 
 /*
  *
@@ -979,48 +979,62 @@ WMFrameWindow(XtermWidget termw)
 #define MAXWLEN 1024		/* maximum word length as in tcsh */
 
 static int
-dabbrev_prev_char(int *xp, int *yp, TScreen * screen)
+dabbrev_prev_char(TScreen * screen, CELL * cell, LineData * ld)
 {
-    Char *linep;
+    int result = -1;
+    int firstLine = -(screen->savedlines);
 
-    while (*yp >= 0) {
-	linep = BUF_CHARS(screen->allbuf, *yp);
-	if (--*xp >= 0)
-	    return linep[*xp];
-	if (--*yp < 0)		/* go to previous line */
+    (void) getLineData(screen, cell->row, ld);
+    while (cell->row >= firstLine) {
+	if (--(cell->col) >= 0) {
+	    result = ld->charData[cell->col];
 	    break;
-	*xp = MaxCols(screen);
-	if (!((long) BUF_FLAGS(screen->allbuf, *yp) & LINEWRAPPED))
-	    return ' ';		/* treat lines as separate */
+	}
+	if (--(cell->row) < firstLine)
+	    break;		/* ...there is no previous line */
+	(void) getLineData(screen, cell->row, ld);
+	cell->col = MaxCols(screen);
+	if ((*(ld->bufHead) & LINEWRAPPED) == 0) {
+	    result = ' ';	/* treat lines as separate */
+	    break;
+	}
     }
-    return -1;
+    return result;
 }
 
 static char *
-dabbrev_prev_word(int *xp, int *yp, TScreen * screen)
+dabbrev_prev_word(TScreen * screen, CELL * cell, LineData * ld)
 {
     static char ab[MAXWLEN];
+
     char *abword;
     int c;
+    char *ab_end = (ab + MAXWLEN - 1);
+    char *result = 0;
 
-    abword = ab + MAXWLEN - 1;
+    abword = ab_end;
     *abword = '\0';		/* end of string marker */
 
-    while ((c = dabbrev_prev_char(xp, yp, screen)) >= 0 &&
-	   IS_WORD_CONSTITUENT(c))
+    while ((c = dabbrev_prev_char(screen, cell, ld)) >= 0 &&
+	   IS_WORD_CONSTITUENT(c)) {
 	if (abword > ab)	/* store only |MAXWLEN| last chars */
 	    *(--abword) = (char) c;
-    if (c < 0) {
-	if (abword < ab + MAXWLEN - 1)
-	    return abword;
-	else
-	    return 0;
     }
 
-    while ((c = dabbrev_prev_char(xp, yp, screen)) >= 0 &&
-	   !IS_WORD_CONSTITUENT(c)) ;	/* skip preceding spaces */
-    (*xp)++;			/* can be | > screen->max_col| */
-    return abword;
+    if (c >= 0) {
+	result = abword;
+    } else if (abword != ab_end) {
+	result = abword;
+    }
+
+    if (result != 0) {
+	while ((c = dabbrev_prev_char(screen, cell, ld)) >= 0 &&
+	       !IS_WORD_CONSTITUENT(c)) {
+	    ;			/* skip preceding spaces */
+	}
+	(cell->col)++;		/* can be | > screen->max_col| */
+    }
+    return result;
 }
 
 static int
@@ -1028,7 +1042,7 @@ dabbrev_expand(TScreen * screen)
 {
     int pty = screen->respond;	/* file descriptor of pty */
 
-    static int x, y;
+    static CELL cell;
     static char *dabbrev_hint = 0, *lastexpansion = 0;
     static unsigned int expansions;
 
@@ -1037,33 +1051,49 @@ dabbrev_expand(TScreen * screen)
     size_t hint_len;
     unsigned del_cnt;
     unsigned buf_cnt;
+    int result = 0;
+    LineData *ld = NewLineData();
 
     if (!screen->dabbrev_working) {	/* initialize */
 	expansions = 0;
-	x = screen->cur_col;
-	y = screen->cur_row + screen->savelines;
+	cell.col = screen->cur_col;
+	cell.row = screen->cur_row;
 
-	free(dabbrev_hint);	/* free(NULL) is OK */
-	dabbrev_hint = dabbrev_prev_word(&x, &y, screen);
-	if (!dabbrev_hint)
-	    return 0;		/* no preceding word? */
-	free(lastexpansion);
-	if (!(lastexpansion = strdup(dabbrev_hint)))	/* make own copy */
-	    return 0;
-	if (!(dabbrev_hint = strdup(dabbrev_hint))) {
-	    free(lastexpansion);
-	    return 0;
+	if (dabbrev_hint != 0)
+	    free(dabbrev_hint);
+
+	if ((dabbrev_hint = dabbrev_prev_word(screen, &cell, ld)) != 0) {
+
+	    if (lastexpansion != 0)
+		free(lastexpansion);
+
+	    if ((lastexpansion = strdup(dabbrev_hint)) != 0) {
+
+		/* make own copy */
+		if ((dabbrev_hint = strdup(dabbrev_hint)) != 0) {
+		    screen->dabbrev_working = True;
+		    /* we are in the middle of dabbrev process */
+		}
+	    }
 	}
-	screen->dabbrev_working = 1;	/* we are in the middle of dabbrev process */
+	if (!screen->dabbrev_working) {
+	    if (lastexpansion != 0) {
+		free(lastexpansion);
+		lastexpansion = 0;
+	    }
+	    free(ld);
+	    return result;
+	}
+    } else {
     }
 
     hint_len = strlen(dabbrev_hint);
     for (;;) {
-	if (!(expansion = dabbrev_prev_word(&x, &y, screen))) {
+	if ((expansion = dabbrev_prev_word(screen, &cell, ld)) == 0) {
 	    if (expansions >= 2) {
 		expansions = 0;
-		x = screen->cur_col;
-		y = screen->cur_row + screen->savelines;
+		cell.col = screen->cur_col;
+		cell.row = screen->cur_row;
 		continue;
 	    }
 	    break;
@@ -1073,27 +1103,33 @@ dabbrev_expand(TScreen * screen)
 	    strcmp(expansion, lastexpansion))	/* different from previous */
 	    break;
     }
-    if (!expansion)		/* no expansion found */
-	return 0;
 
-    del_cnt = strlen(lastexpansion) - hint_len;
-    buf_cnt = del_cnt + strlen(expansion) - hint_len;
-    if (!(copybuffer = TypeMallocN(Char, buf_cnt)))
-	return 0;
-    memset(copybuffer, screen->dabbrev_erase_char, del_cnt);	/* delete previous expansion */
-    memmove(copybuffer + del_cnt,
-	    expansion + hint_len,
-	    strlen(expansion) - hint_len);
-    v_write(pty, copybuffer, buf_cnt);
-    screen->dabbrev_working = 1;	/* v_write() just set it to 1 */
-    free(copybuffer);
+    if (expansion != 0) {
+	del_cnt = strlen(lastexpansion) - hint_len;
+	buf_cnt = del_cnt + strlen(expansion) - hint_len;
 
-    free(lastexpansion);
-    lastexpansion = strdup(expansion);
-    if (!lastexpansion)
-	return 0;
-    expansions++;
-    return 1;
+	if ((copybuffer = TypeMallocN(Char, buf_cnt)) != 0) {
+	    /* delete previous expansion */
+	    memset(copybuffer, screen->dabbrev_erase_char, del_cnt);
+	    memmove(copybuffer + del_cnt,
+		    expansion + hint_len,
+		    strlen(expansion) - hint_len);
+	    v_write(pty, copybuffer, buf_cnt);
+	    /* v_write() just reset our flag */
+	    screen->dabbrev_working = True;
+	    free(copybuffer);
+
+	    free(lastexpansion);
+
+	    if ((lastexpansion = strdup(expansion)) != 0) {
+		result = 1;
+		expansions++;
+	    }
+	}
+    }
+
+    free(ld);
+    return result;
 }
 
 /*ARGSUSED*/
