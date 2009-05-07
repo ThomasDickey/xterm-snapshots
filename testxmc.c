@@ -1,4 +1,4 @@
-/* $XTermId: testxmc.c,v 1.37 2009/05/04 20:45:00 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.38 2009/05/06 20:33:06 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/testxmc.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
@@ -178,7 +178,7 @@ void
 Resolve_XMC(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
-    LineData *ld = newLineData(xw);
+    LineData *ld = newLineData(screen);
     Bool changed = False;
     Char start;
     Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);

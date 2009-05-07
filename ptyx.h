@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.560 2009/05/04 00:00:09 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.562 2009/05/06 22:36:36 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1131,6 +1131,37 @@ typedef struct {
 
 typedef int RowFlags;
 
+/*
+ * We use CellData in a few places, when copying a cell's data to a temporary
+ * variable.
+ */
+typedef struct {
+    	RowFlags bufHead;	/* flag for wrapped lines */
+	Char attribs;
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+	Char fgrnd;		/* FIXME - use bitfields to help merge */
+	Char bgrnd;
+#else
+	Char color;		/* FIXME - merge to make color-array */
+#endif
+#endif
+#if OPT_DEC_CHRSET
+	Char charSets;
+#endif
+	Char charData;		/* FIXME - merge to make IChar array */
+	/* wide (16-bit) characters begin here */
+#if OPT_WIDE_CHARS
+	Char wideData;		/* second byte of first wide-character */
+	size_t combSize;	/* number of items in combData[] */
+	Char combData[];	/* array of combining chars */
+#endif
+
+} CellData;
+
+/*
+ * LineData points to arrays of data used to represent a row of text.
+ */
 typedef struct {
     	RowFlags *bufHead;	/* points to flag for wrapped lines */
 	Char *attribs;
@@ -1182,7 +1213,6 @@ typedef struct {
 #define SCREEN_PTR(screen, row, off) BUFFER_PTR(screen->visbuf, row, off)
 
 #define SCRN_BUF_FLAGS(screen, row) SCREEN_PTR(screen, row, OFF_FLAGS)
-#define SCRN_BUF_ATTRS(screen, row) SCREEN_PTR(screen, row, OFF_ATTRS)
 #define SCRN_BUF_FGRND(screen, row) SCREEN_PTR(screen, row, OFF_FGRND)
 #define SCRN_BUF_BGRND(screen, row) SCREEN_PTR(screen, row, OFF_BGRND)
 #define SCRN_BUF_CSETS(screen, row) SCREEN_PTR(screen, row, OFF_CSETS)

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.909 2009/05/03 22:08:24 tom Exp $ */
+/* $XTermId: charproc.c,v 1.911 2009/05/06 22:35:56 tom Exp $ */
 
 /*
 
@@ -849,12 +849,14 @@ CheckBogusForeground(TScreen * screen, const char *tag)
     for (pass = 0; pass < 2; ++pass) {
 	row = screen->cur_row;
 	for (; isClear && (row <= screen->max_row); ++row) {
+	    Char *attribs = getLineData(screen, row, (LineData *) 0);
+
 	    col = (row == screen->cur_row) ? screen->cur_col : 0;
 	    for (; isClear && (col <= screen->max_col); ++col) {
-		unsigned flags = SCRN_BUF_ATTRS(screen, row)[col];
+		unsigned flags = attribs[col];
 		if (pass) {
 		    flags &= ~FG_COLOR;
-		    SCRN_BUF_ATTRS(screen, row)[col] = (Char) flags;
+		    attribs[col] = (Char) flags;
 		} else if ((flags & BG_COLOR)) {
 		    isClear = False;
 		} else if ((flags & FG_COLOR)) {
@@ -6891,7 +6893,7 @@ ShowCursor(void)
     }
 #endif /* NO_ACTIVE_ICON */
 
-    if ((ld = newLineData(xw)) == 0) {
+    if ((ld = newLineData(screen)) == 0) {
 	TRACE(("BUG - ShowCursor failed to get LineData\n"));
 	return;
     }
@@ -7151,7 +7153,7 @@ HideCursor(void)
     }
 #endif /* NO_ACTIVE_ICON */
 
-    if ((ld = newLineData(xw)) == 0) {
+    if ((ld = newLineData(screen)) == 0) {
 	TRACE(("BUG - HideCursor failed to get LineData\n"));
 	return;
     }
@@ -7278,12 +7280,12 @@ StopBlinking(TScreen * screen)
 static Bool
 ScrnHasBlinking(TScreen * screen, int row)
 {
-    Char *attrs = SCRN_BUF_ATTRS(screen, row);
+    LineData *ld = getLineData(screen, row, (LineData *) 0);
     int col;
     Bool result = False;
 
     for (col = 0; col < MaxCols(screen); ++col) {
-	if (attrs[col] & BLINK) {
+	if (ld->attribs[col] & BLINK) {
 	    result = True;
 	    break;
 	}

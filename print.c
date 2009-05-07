@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.87 2009/05/03 13:14:45 tom Exp $ */
+/* $XTermId: print.c,v 1.89 2009/05/06 22:41:13 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
@@ -61,17 +61,19 @@ authorization.
 #define VMS_TEMP_PRINT_FILE "sys$scratch:xterm_print.txt"
 #endif
 
-static void charToPrinter(XtermWidget /* xw */
-			  , unsigned /* chr */ );
-static void printLine(XtermWidget /* xw */
-		      , int /* row */ , unsigned /* chr */ );
-static void send_CharSet(XtermWidget /* xw */
-			 , int /* row */ );
-static void send_SGR(XtermWidget /* xw */
-		     , unsigned /* attr */
-		     , unsigned /* fg */ , unsigned /* bg */ );
-static void stringToPrinter(XtermWidget /* xw */
-			    , char * /*str */ );
+static void charToPrinter(XtermWidget /* xw */ ,
+			  unsigned /* chr */ );
+static void printLine(XtermWidget /* xw */ ,
+		      int /* row */ ,
+		      unsigned /* chr */ );
+static void send_CharSet(XtermWidget /* xw */ ,
+			 int /* row */ );
+static void send_SGR(XtermWidget /* xw */ ,
+		     unsigned /* attr */ ,
+		     unsigned /* fg */ ,
+		     unsigned /* bg */ );
+static void stringToPrinter(XtermWidget /* xw */ ,
+			    char * /*str */ );
 
 static FILE *Printer;
 static pid_t Printer_pid;
@@ -129,7 +131,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 {
     TScreen *screen = TScreenOf(xw);
     int inx = ROW2INX(screen, row);
-    LineData *ld = newLineData(xw);
+    LineData *ld = newLineData(screen);
     Char attr = 0;
     unsigned ch;
     int last = MaxCols(screen);
@@ -237,7 +239,8 @@ printLine(XtermWidget xw, int row, unsigned chr)
 	    if_OPT_WIDE_CHARS(screen, {
 		size_t off;
 		for_each_combData(off, ld) {
-		    if ((ch = XTERM_CELLC(row, col, (int) (off + OFF_FINAL))) == 0)
+		    ch = XTERM_CELLC(row, col, (int) (off + OFF_FINAL));
+		    if (ch == 0)
 			break;
 		    charToPrinter(xw, ch);
 		}
@@ -316,7 +319,7 @@ send_CharSet(XtermWidget xw, int row)
     TScreen *screen = TScreenOf(xw);
     char *msg = 0;
 
-    switch (SCRN_BUF_CSETS(screen, row)[0]) {
+    switch (SCRN_ROW_CSET(screen, row)) {
     case CSET_SWL:
 	msg = "\033#5";
 	break;
