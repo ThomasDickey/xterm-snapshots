@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.254 2009/05/03 23:57:07 tom Exp $ */
+/* $XTermId: screen.c,v 1.258 2009/05/06 22:55:16 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -389,7 +389,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 {
     if (len != 0) {
 	TScreen *screen = &(xw->screen);
-	LineData *ld = newLineData(xw);
+	LineData *ld = newLineData(screen);
 
 	(void) getLineData(screen, row, ld);
 
@@ -502,7 +502,7 @@ ScrnWriteText(XtermWidget xw,
     if (length == 0 || real_width == 0)
 	return;
 
-    ld = newLineData(xw);
+    ld = newLineData(screen);
     (void) getLineData(screen, screen->cur_row, ld);
 
     chars = ld->charData + screen->cur_col;
@@ -940,7 +940,7 @@ ScrnRefresh(XtermWidget xw,
 	    Bool force)		/* ... leading/trailing spaces */
 {
     TScreen *screen = &(xw->screen);
-    LineData *ld = newLineData(xw);
+    LineData *ld = newLineData(screen);
     int y = toprow * FontHeight(screen) + screen->border;
     int row;
     int maxrow = toprow + nrows - 1;
@@ -1711,7 +1711,7 @@ ScrnFillRectangle(XtermWidget xw,
 
     TRACE(("filling rectangle with '%c' flags %#x\n", value, flags));
     if (validRect(xw, target)) {
-	LineData *ld = newLineData(xw);
+	LineData *ld = newLineData(screen);
 	unsigned left = (unsigned) (target->left - 1);
 	unsigned size = (unsigned) (target->right - (int) left);
 	unsigned attrs = flags;
@@ -1796,50 +1796,63 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 		       params,
 		       &target);
 	if (validRect(xw, &target)) {
-	    int high = (source->bottom - source->top) + 1;
-	    int wide = (source->right - source->left) + 1;
-	    unsigned size = (unsigned) (high * wide * MAX_PTRS);
-	    int row, col, n, j;
+	    Cardinal high = (Cardinal) (source->bottom - source->top) + 1;
+	    Cardinal wide = (Cardinal) (source->right - source->left) + 1;
+	    Cardinal size = (high * wide);
+	    int row, col;
+	    Cardinal j, k;
 
-	    Char *cells = TypeMallocN(Char, size);
+	    LineData *ld = newLineData(screen);
+	    if (ld != 0) {
+		CellData *cells = newCellData(xw, size);
 
-	    if (cells == 0)
-		return;
+		if (cells != 0) {
 
-	    TRACE(("OK - make copy %dx%d\n", high, wide));
-	    target.bottom = target.top + (high - 1);
-	    target.right = target.left + (wide - 1);
+		    TRACE(("OK - make copy %dx%d\n", high, wide));
+		    target.bottom = target.top + (int) (high - 1);
+		    target.right = target.left + (int) (wide - 1);
 
-	    for (row = source->top - 1; row < source->bottom; ++row) {
-		for (col = source->left - 1; col < source->right; ++col) {
-		    n = (((1 + row - source->top) * wide)
-			 + (1 + col - source->left)) * MAX_PTRS;
-		    for (j = OFF_ATTRS; j < MAX_PTRS; ++j)
-			cells[n + j] = SCREEN_PTR(screen, row, j)[col];
-		}
-	    }
-	    for (row = target.top - 1; row < target.bottom; ++row) {
-		for (col = target.left - 1; col < target.right; ++col) {
-		    if (row >= getMinRow(screen)
-			&& row <= getMaxRow(screen)
-			&& col >= getMinCol(screen)
-			&& col <= getMaxCol(screen)) {
-			n = (((1 + row - target.top) * wide)
-			     + (1 + col - target.left)) * MAX_PTRS;
-			for (j = OFF_ATTRS; j < MAX_PTRS; ++j)
-			    SCREEN_PTR(screen, row, j)[col] = cells[n + j];
-			SCRN_BUF_ATTRS(screen, row)[col] |= CHARDRAWN;
+		    for (row = source->top - 1; row < source->bottom; ++row) {
+			(void) getLineData(screen, row, ld);
+			j = (Cardinal) (row - (source->top - 1));
+			for (col = source->left - 1; col < source->right; ++col) {
+			    k = (Cardinal) (col - (source->left - 1));
+			    saveCellData(screen, cells,
+					 (j * wide) + k,
+					 ld, col);
+			}
 		    }
+		    for (row = target.top - 1; row < target.bottom; ++row) {
+			(void) getLineData(screen, row, ld);
+			j = (Cardinal) (row - (target.top - 1));
+			for (col = target.left - 1; col < target.right; ++col) {
+			    k = (Cardinal) (col - (target.left - 1));
+			    if (row >= getMinRow(screen)
+				&& row <= getMaxRow(screen)
+				&& col >= getMinCol(screen)
+				&& col <= getMaxCol(screen)) {
+				if (j < high && k < wide) {
+				    restoreCellData(screen, cells,
+						    (j * wide) + k,
+						    ld, col);
+				} else {
+				    /* FIXME - clear the target cell? */
+				}
+				ld->attribs[col] |= CHARDRAWN;
+			    }
+			}
+		    }
+		    free(cells);
+		    free(ld);
+
+		    ScrnUpdate(xw,
+			       (target.top - 1),
+			       (target.left - 1),
+			       (target.bottom - target.top) + 1,
+			       ((target.right - target.left) + 1),
+			       False);
 		}
 	    }
-	    free(cells);
-
-	    ScrnUpdate(xw,
-		       (target.top - 1),
-		       (target.left - 1),
-		       (target.bottom - target.top) + 1,
-		       ((target.right - target.left) + 1),
-		       False);
 	}
     }
 }
@@ -1870,7 +1883,7 @@ ScrnMarkRectangle(XtermWidget xw,
 	    : "region")));
 
     if (validRect(xw, target)) {
-	LineData *ld = newLineData(xw);
+	LineData *ld = newLineData(screen);
 	int top = target->top - 1;
 	int bottom = target->bottom - 1;
 	int row, col;
@@ -1985,7 +1998,7 @@ ScrnWipeRectangle(XtermWidget xw,
     TRACE(("wiping rectangle\n"));
 
     if (validRect(xw, target)) {
-	LineData *ld = newLineData(xw);
+	LineData *ld = newLineData(screen);
 	int top = target->top - 1;
 	int bottom = target->bottom - 1;
 	int row, col;

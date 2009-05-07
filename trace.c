@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.90 2009/05/04 21:37:23 tom Exp $ */
+/* $XTermId: trace.c,v 1.91 2009/05/06 20:33:57 tom Exp $ */
 
 /************************************************************
 
@@ -358,7 +358,7 @@ static char *
 ScrnText(TScreen * screen, int row)
 {
     char *result;
-    LineData *ld = NewLineData();
+    LineData *ld = newLineData(screen);
 #if OPT_WIDE_CHARS
     Char *widec = 0;
 #endif
@@ -401,7 +401,7 @@ ScrnText(TScreen * screen, int row)
 void
 ScrnClrFlag(TScreen * screen, int row, int flag)
 {
-    LineData *ld = NewLineData();
+    LineData *ld = newLineData(screen);
 
     (void) getLineData(screen, row, ld);
 
@@ -421,7 +421,7 @@ ScrnClrFlag(TScreen * screen, int row, int flag)
 void
 ScrnSetFlag(TScreen * screen, int row, int flag)
 {
-    LineData *ld = NewLineData();
+    LineData *ld = newLineData(screen);
 
     (void) getLineData(screen, row, ld);
 
@@ -445,7 +445,7 @@ ScrnTstFlag(TScreen * screen, int row, int flag)
     if (!okScrnRow(screen, row)) {
 	SHOW_BAD_ROW(ScrnTstFlag, screen, row);
     } else {
-	LineData *ld = NewLineData();
+	LineData *ld = newLineData(screen);
 
 	(void) getLineData(screen, row, ld);
 

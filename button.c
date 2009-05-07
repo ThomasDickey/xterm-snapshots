@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.326 2009/05/04 21:45:00 tom Exp $ */
+/* $XTermId: button.c,v 1.328 2009/05/06 22:43:36 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2595,7 +2595,7 @@ class_of(TScreen * screen, CELL * cell)
     int value;
 
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, ROW2INX(screen, temp.row))[0])) {
+    if (CSET_DOUBLE(SCRN_ROW_CSET(screen, ROW2INX(screen, temp.row)))) {
 	temp.col /= 2;
     }
 #endif
@@ -2706,7 +2706,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
     });
 
     if ((result = TypeCallocN(Char, need + 1)) != 0) {
-	LineData *ld = NewLineData();
+	LineData *ld = newLineData(screen);
 	unsigned used = 0;
 	Char *last = result;
 
@@ -2733,7 +2733,8 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		if_OPT_WIDE_CHARS(screen, {
 		    size_t off;
 		    for_each_combData(off, ld) {
-			if ((data = XTERM_CELLC(row, col, (int) (off + OFF_FINAL))) == 0)
+			data = XTERM_CELLC(row, col, (int) (off + OFF_FINAL));
+			if (data == 0)
 			    break;
 			next = convertToUTF8(next, data);
 		    }
@@ -3769,7 +3770,7 @@ SaveText(TScreen * screen,
 	 Char * lp,		/* pointer to where to put the text */
 	 int *eol)
 {
-    LineData *ld = NewLineData();
+    LineData *ld = newLineData(screen);
     int i = 0;
     unsigned c;
     Char *result = lp;
@@ -3781,7 +3782,7 @@ SaveText(TScreen * screen,
     i = Length(screen, row, scol, ecol);
     ecol = scol + i;
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, ROW2INX(screen, row))[0])) {
+    if (CSET_DOUBLE(SCRN_ROW_CSET(screen, ROW2INX(screen, row)))) {
 	scol = (scol + 0) / 2;
 	ecol = (ecol + 1) / 2;
     }
@@ -3802,7 +3803,8 @@ SaveText(TScreen * screen,
 		    unsigned ch;
 		    size_t off;
 		    for_each_combData(off, ld) {
-			if ((ch = XTERM_CELLC(row, i, (int) (off + OFF_FINAL))) == 0)
+			ch = XTERM_CELLC(row, i, (int) (off + OFF_FINAL));
+			if (ch == 0)
 			    break;
 			lp = convertToUTF8(lp, ch);
 		    }
@@ -3817,7 +3819,8 @@ SaveText(TScreen * screen,
 		unsigned ch;
 		size_t off;
 		for_each_combData(off, ld) {
-		    if ((ch = XTERM_CELLC(row, i, (int) (off + OFF_FINAL))) == 0)
+		    ch = XTERM_CELLC(row, i, (int) (off + OFF_FINAL));
+		    if (ch == 0)
 			break;
 		    lp = convertToUTF8(lp, ch);
 		}

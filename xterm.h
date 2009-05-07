@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.535 2009/05/04 19:56:53 tom Exp $ */
+/* $XTermId: xterm.h,v 1.537 2009/05/06 20:44:33 tom Exp $ */
 
 /************************************************************
 
@@ -851,14 +851,16 @@ extern void VTInitModifiers(XtermWidget /* xw */);
 #endif
 
 /* linedata.c */
-extern LineData *getLineData(TScreen * /* xw */, int /* row */, LineData * /* work */);
-extern LineData *newLineData(XtermWidget /* xw */);
+extern LineData *getLineData(TScreen * /* screen */, int /* row */, LineData * /* work */);
+extern LineData *newLineData(TScreen * /* screen */);
 extern void addLineData(XtermWidget /* xw */);
 extern void checkLineData(TScreen * /* screen */, int /* row */, LineData * /* work */);
 extern void destroyLineData(TScreen * /* xw */, LineData * /* work */);
 extern void initLineData(XtermWidget /* xw */);
 
-#define NewLineData() newLineData(term)
+extern CellData *newCellData(XtermWidget /* xw */, Cardinal /* count */);
+extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
+extern void restoreCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
 
 /* main.c */
 #ifndef __UNIXOS2__

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.425 2009/05/04 20:50:40 tom Exp $ */
+/* $XTermId: util.c,v 1.426 2009/05/06 22:41:27 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -948,7 +948,7 @@ InsertChar(XtermWidget xw, unsigned n)
 	});
 
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
+	if (CSET_DOUBLE(SCRN_ROW_CSET(screen, screen->cur_row))) {
 	    col = MaxCols(screen) / 2 - (int) n;
 	}
 #endif
@@ -1016,7 +1016,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 	});
 
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(SCRN_BUF_CSETS(screen, screen->cur_row)[0])) {
+	if (CSET_DOUBLE(SCRN_ROW_CSET(screen, screen->cur_row))) {
 	    col = MaxCols(screen) / 2 - (int) n;
 	}
 #endif

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.412 2009/05/03 23:15:22 tom Exp $ */
+/* $XTermId: misc.c,v 1.413 2009/05/06 20:33:57 tom Exp $ */
 
 /*
  *
@@ -1052,7 +1052,7 @@ dabbrev_expand(TScreen * screen)
     unsigned del_cnt;
     unsigned buf_cnt;
     int result = 0;
-    LineData *ld = NewLineData();
+    LineData *ld = newLineData(screen);
 
     if (!screen->dabbrev_working) {	/* initialize */
 	expansions = 0;

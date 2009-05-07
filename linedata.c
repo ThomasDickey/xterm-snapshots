@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.24 2009/05/04 21:29:02 tom Exp $ */
+/* $XTermId: linedata.c,v 1.26 2009/05/06 22:36:36 tom Exp $ */
 
 /************************************************************
 
@@ -37,6 +37,7 @@ authorization.
 
 #include <assert.h>
 
+#define SCRN_BUF_ATTRS(screen, row) SCREEN_PTR(screen, row, OFF_ATTRS)
 #define SCRN_BUF_CHARS(screen, row) SCREEN_PTR(screen, row, OFF_CHARS)
 #define SCRN_BUF_COLOR(screen, row) SCREEN_PTR(screen, row, OFF_COLOR)
 #define SCRN_BUF_WIDEC(screen, row) SCREEN_PTR(screen, row, OFF_WIDEC)
@@ -139,7 +140,7 @@ initLineData(XtermWidget xw)
     TScreen *screen = &(xw->screen);
 
     screen->lineCache = 0;
-    screen->lineData = newLineData(xw);
+    screen->lineData = newLineData(screen);
 }
 
 /*
@@ -153,23 +154,24 @@ addLineData(XtermWidget xw GCC_UNUSED)
 {
 }
 
+#if OPT_WIDE_CHARS
+#define initLineExtra(screen) \
+    screen->lineExtra = ((size_t) (screen->max_combining * 2) \
+			 * sizeof(IChar *))
+#else
+#define initLineExtra(screen) \
+    screen->lineExtra = 0
+#endif
 /*
  * Allocate a new LineData struct, which includes an array on the end to
  * address combining characters.
  */
 LineData *
-newLineData(XtermWidget xw)
+newLineData(TScreen * screen)
 {
     LineData *result;
-    TScreen *screen = &(xw->screen);
 
-#if OPT_WIDE_CHARS
-    screen->lineExtra = ((size_t) (screen->max_combining * 2)
-			 * sizeof(IChar *));
-#else
-    screen->lineExtra = 0;
-#endif
-
+    initLineExtra(screen);
     result = CastMallocN(LineData, screen->lineExtra);
 
     return result;
@@ -188,6 +190,96 @@ destroyLineData(TScreen * screen, LineData * ld)
 	}
     } else if (screen->lineData != 0) {
 	destroyLineData(screen, screen->lineData);
+    }
+}
+
+/*
+ * CellData size depends on the "combiningChars" resource.
+ * FIXME - revise this to reduce arithmetic...
+ */
+#define CellDataSize(screen) (sizeof(CellData) + screen->lineExtra)
+
+#define CellDataAddr(screen, data, cell) \
+	(CellData *)((char *)data + (cell * CellDataSize(screen)))
+
+CellData *
+newCellData(XtermWidget xw, Cardinal count)
+{
+    CellData *result;
+    TScreen *screen = &(xw->screen);
+
+    initLineExtra(screen);
+    result = (CellData *) calloc(count, CellDataSize(screen));
+    return result;
+}
+
+void
+saveCellData(TScreen * screen,
+	     CellData * data,
+	     Cardinal cell,
+	     LineData * ld,
+	     int column)
+{
+    CellData *item = CellDataAddr(screen, data, cell);
+
+    if (column < MaxCols(screen)) {
+	item->bufHead = *(ld->bufHead);
+	item->attribs = ld->attribs[column];
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+	item->fgrnd = ld->fgrnd[column];
+	item->bgrnd = ld->bgrnd[column];
+#else
+	item->color = ld->color[column];
+#endif
+#endif
+#if OPT_DEC_CHRSET
+	item->charSets = ld->charSets[column];
+#endif
+	item->charData = ld->charData[column];
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    item->wideData = ld->wideData[column];
+	    item->combSize = ld->combSize;
+	    for_each_combData(off, ld) {
+		item->combData[off] = ld->combData[off][column];
+	    }
+	})
+    }
+}
+
+void
+restoreCellData(TScreen * screen,
+		CellData * data,
+		Cardinal cell,
+		LineData * ld,
+		int column)
+{
+    CellData *item = CellDataAddr(screen, data, cell);
+
+    if (column < MaxCols(screen)) {
+	/* FIXME - *(ld->bufHead) = item->bufHead; */
+	ld->attribs[column] = item->attribs;
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+	ld->fgrnd[column] = item->fgrnd;
+	ld->bgrnd[column] = item->bgrnd;
+#else
+	ld->color[column] = item->color;
+#endif
+#endif
+#if OPT_DEC_CHRSET
+	ld->charSets[column] = item->charSets;
+#endif
+	ld->charData[column] = item->charData;
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    ld->wideData[column] = item->wideData;
+	    ld->combSize = item->combSize;
+	    for_each_combData(off, ld) {
+		ld->combData[off][column] = item->combData[off];
+	    }
+	})
     }
 }
 

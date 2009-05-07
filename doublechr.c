@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.64 2009/02/12 01:23:54 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.66 2009/05/06 23:04:59 tom Exp $ */
 
 /************************************************************
 
@@ -45,8 +45,6 @@ authorization.
  * controls apply to a whole line).  However, it's easier to maintain the
  * information for special fonts by writing to all cells.
  */
-#define curChrSet SCRN_BUF_CSETS(screen, screen->cur_row)[0]
-
 #if OPT_DEC_CHRSET
 
 static void
@@ -57,7 +55,7 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
     int currow = screen->cur_row;
     int width = MaxCols(screen);
     unsigned len = (unsigned) width;
-    unsigned oldChrSet = SCRN_BUF_CSETS(screen, currow)[0];
+    unsigned oldChrSet = SCRN_ROW_CSET(screen, currow);
 
     assert(width > 0);
 
