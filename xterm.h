@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.537 2009/05/06 20:44:33 tom Exp $ */
+/* $XTermId: xterm.h,v 1.542 2009/05/10 14:20:05 tom Exp $ */
 
 /************************************************************
 
@@ -1045,33 +1045,27 @@ extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol
 extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, unsigned  /* cur_fg_bg */, unsigned  /* length */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
+#define LineFlags(ld)         *((ld)->bufHead) 
+
 #if OPT_TRACE && OPT_TRACE_FLAGS
-extern int  ScrnTstFlag(TScreen * /* screen */, int /* row */, int /* flag */);
-extern void ScrnClrFlag(TScreen * /* screen */, int /* row */, int /* flag */);
-extern void ScrnSetFlag(TScreen * /* screen */, int /* row */, int /* flag */);
+extern int  LineTstFlag(LineData * /* ld */, int /* flag */);
+extern void LineClrFlag(LineData * /* ld */, int /* flag */);
+extern void LineSetFlag(LineData * /* ld */, int /* flag */);
 #else
 
-#define ScrnRowFlag(screen, row) \
-	* (RowFlags *) (&SCRN_BUF_FLAGS(screen, row))
+#define LineClrFlag(ld, flag) LineFlags(ld) &= ~ (flag)
+#define LineSetFlag(ld, flag) LineFlags(ld) |= (flag)
+#define LineTstFlag(ld, flag) ((LineFlags(ld) & flag) != 0)
 
-#define ScrnClrFlag(screen, row, flag) \
-	ScrnRowFlag(screen, row) &= ~ (flag)
-
-#define ScrnSetFlag(screen, row, flag) \
-	ScrnRowFlag(screen, row) |= (flag)
-
-#define ScrnTstFlag(screen, row, flag) \
-	(okScrnRow(screen, row) && \
-	 ScrnRowFlag(screen, row) != 0)
 #endif /* OPT_TRACE && OPT_TRACE_FLAGS */
 
-#define ScrnClrBlinked(screen, row) ScrnClrFlag(screen, ROW2INX(screen, row), BLINK)
-#define ScrnSetBlinked(screen, row) ScrnSetFlag(screen, ROW2INX(screen, row), BLINK)
-#define ScrnTstBlinked(screen, row) ScrnTstFlag(screen, ROW2INX(screen, row), BLINK)
+#define LineClrBlinked(ld) LineClrFlag(ld, BLINK)
+#define LineSetBlinked(ld) LineSetFlag(ld, BLINK)
+#define LineTstBlinked(ld) LineTstFlag(ld, BLINK)
 
-#define ScrnClrWrapped(screen, row) ScrnClrFlag(screen, ROW2INX(screen, row), LINEWRAPPED)
-#define ScrnSetWrapped(screen, row) ScrnSetFlag(screen, ROW2INX(screen, row), LINEWRAPPED)
-#define ScrnTstWrapped(screen, row) ScrnTstFlag(screen, ROW2INX(screen, row), LINEWRAPPED)
+#define LineClrWrapped(ld) LineClrFlag(ld, LINEWRAPPED)
+#define LineSetWrapped(ld) LineSetFlag(ld, LINEWRAPPED)
+#define LineTstWrapped(ld) LineTstFlag(ld, LINEWRAPPED)
 
 #define ScrnHaveSelection(screen) \
 			((screen)->startH.row != (screen)->endH.row \
@@ -1243,15 +1237,6 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #define checkVeryBoldColors(flags, fg) /* nothing */
 
 #endif	/* OPT_ISO_COLORS */
-
-#if OPT_DEC_CHRSET
-#define curXtermChrSet(xw, row) \
-	((CSET_DOUBLE(SCRN_ROW_CSET((&xw->screen), row))) \
-		? SCRN_ROW_CSET((&xw->screen), row) \
-		: (xw->screen).cur_chrset)
-#else
-#define curXtermChrSet(xw, row) 0
-#endif
 
 #define XTERM_CELL(row,col)    getXtermCell(screen,     ROW2INX(screen, row), col)
 #define XTERM_CELLC(row,col,n) getXtermCellComb(screen, ROW2INX(screen, row), col, n)

@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.26 2009/05/06 22:36:36 tom Exp $ */
+/* $XTermId: linedata.c,v 1.33 2009/05/10 16:06:50 tom Exp $ */
 
 /************************************************************
 
@@ -37,8 +37,18 @@ authorization.
 
 #include <assert.h>
 
+	/* ScrnBuf-level macros */
+#define BUFFER_PTR(buf, row, off) (buf[MAX_PTRS * (row) + off])
+
+	/* TScreen-level macros */
+#define SCREEN_PTR(screen, row, off) BUFFER_PTR(screen->visbuf, row, off)
+
 #define SCRN_BUF_ATTRS(screen, row) SCREEN_PTR(screen, row, OFF_ATTRS)
 #define SCRN_BUF_CHARS(screen, row) SCREEN_PTR(screen, row, OFF_CHARS)
+#define SCRN_BUF_CSETS(screen, row) SCREEN_PTR(screen, row, OFF_CSETS)
+#define SCRN_BUF_FGRND(screen, row) SCREEN_PTR(screen, row, OFF_FGRND)
+#define SCRN_BUF_FLAGS(screen, row) SCREEN_PTR(screen, row, OFF_FLAGS)
+#define SCRN_BUF_BGRND(screen, row) SCREEN_PTR(screen, row, OFF_BGRND)
 #define SCRN_BUF_COLOR(screen, row) SCREEN_PTR(screen, row, OFF_COLOR)
 #define SCRN_BUF_WIDEC(screen, row) SCREEN_PTR(screen, row, OFF_WIDEC)
 
@@ -87,8 +97,7 @@ getLineData(TScreen * screen,
 	if (update) {
 	    TRACE2(("getLineData %d:%p\n", row, check));
 
-	    /* FIXME: sizeof() + extraSize for visbuf */
-
+	    work->lineSize = (unsigned) MaxCols(screen);
 	    work->bufHead = (RowFlags *) & (SCRN_BUF_FLAGS(screen, row));
 	    work->attribs = SCRN_BUF_ATTRS(screen, row);
 #if OPT_ISO_COLORS
@@ -104,19 +113,27 @@ getLineData(TScreen * screen,
 #endif
 	    work->charData = SCRN_BUF_CHARS(screen, row);
 #if OPT_WIDE_CHARS
-	    work->wideData = SCRN_BUF_WIDEC(screen, row);
+	    if (screen->wide_chars) {
+		work->wideData = SCRN_BUF_WIDEC(screen, row);
 
-	    /*
-	     * Construct an array of pointers to combining character data. 
-	     * This is a flexible array on the end of LineData.
-	     *
-	     * The scrollback should only store combining characters for rows
-	     * that have that data.  The visbuf should store this for all rows
-	     * since they can be updated until moved to the scrollback.
-	     */
-	    work->combSize = (size_t) (screen->max_combining * 2);
-	    for (ptr = 0; ptr < work->combSize; ++ptr) {
-		work->combData[ptr] = SCREEN_PTR(screen, row, (int) ptr + OFF_FINAL);
+		/*
+		 * Construct an array of pointers to combining character data. 
+		 * This is a flexible array on the end of LineData.
+		 *
+		 * The scrollback should only store combining characters for
+		 * rows that have that data.  The visbuf should store this for
+		 * all rows since they can be updated until moved to the
+		 * scrollback.
+		 */
+		work->combSize = (size_t) (screen->max_combining * 2);
+		for (ptr = 0; ptr < work->combSize; ++ptr) {
+		    work->combData[ptr] = SCREEN_PTR(screen,
+						     row,
+						     (int) ptr + OFF_FINAL);
+		}
+	    } else {
+		work->wideData = 0;
+		work->combSize = 0;
 	    }
 #endif
 	}
@@ -174,6 +191,7 @@ newLineData(TScreen * screen)
     initLineExtra(screen);
     result = CastMallocN(LineData, screen->lineExtra);
 
+    assert(result != 0);
     return result;
 }
 

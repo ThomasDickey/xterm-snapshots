@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.66 2009/05/06 23:04:59 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.68 2009/05/10 14:35:47 tom Exp $ */
 
 /************************************************************
 
@@ -50,51 +50,56 @@ authorization.
 static void
 repaint_line(XtermWidget xw, unsigned newChrSet)
 {
-    register TScreen *screen = &xw->screen;
+    TScreen *screen = &xw->screen;
+    LineData *ld = newLineData(screen);
     int curcol = screen->cur_col;
     int currow = screen->cur_row;
     int width = MaxCols(screen);
     unsigned len = (unsigned) width;
-    unsigned oldChrSet = SCRN_ROW_CSET(screen, currow);
 
     assert(width > 0);
 
     /*
      * Ignore repetition.
      */
-    if (oldChrSet == newChrSet)
-	return;
+    if (ld != 0
+	&& getLineData(screen, currow, ld) != 0) {
+	unsigned oldChrSet = LINEDATA_CSET(ld);
 
-    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
-	   visibleChrsetName(oldChrSet),
-	   visibleChrsetName(newChrSet)));
-    HideCursor();
+	if (oldChrSet != newChrSet) {
+	    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
+		   visibleChrsetName(oldChrSet),
+		   visibleChrsetName(newChrSet)));
+	    HideCursor();
 
-    /* If switching from single-width, keep the cursor in the visible part
-     * of the line.
-     */
-    if (CSET_DOUBLE(newChrSet)) {
-	width /= 2;
-	if (curcol > width)
-	    curcol = width;
+	    /* If switching from single-width, keep the cursor in the visible part
+	     * of the line.
+	     */
+	    if (CSET_DOUBLE(newChrSet)) {
+		width /= 2;
+		if (curcol > width)
+		    curcol = width;
+	    }
+
+	    /*
+	     * ScrnRefresh won't paint blanks for us if we're switching between a
+	     * single-size and double-size font.  So we paint our own.
+	     */
+	    ClearCurBackground(xw,
+			       CursorY(screen, currow),
+			       LineCursorX(screen, ld, 0),
+			       (unsigned) FontHeight(screen),
+			       len * (unsigned) LineFontWidth(screen, ld));
+
+	    /* FIXME: do VT220 softchars allow double-sizes? */
+	    memset(ld->charSets, (Char) newChrSet, len);
+
+	    set_cur_col(screen, 0);
+	    ScrnUpdate(xw, currow, 0, 1, (int) len, True);
+	    set_cur_col(screen, curcol);
+	}
     }
-
-    /*
-     * ScrnRefresh won't paint blanks for us if we're switching between a
-     * single-size and double-size font.  So we paint our own.
-     */
-    ClearCurBackground(xw,
-		       CursorY(screen, currow),
-		       CurCursorX(screen, currow, 0),
-		       (unsigned) FontHeight(screen),
-		       len * (unsigned) CurFontWidth(screen, currow));
-
-    /* FIXME: do VT220 softchars allow double-sizes? */
-    memset(SCRN_BUF_CSETS(screen, currow), (Char) newChrSet, len);
-
-    set_cur_col(screen, 0);
-    ScrnUpdate(xw, currow, 0, 1, (int) len, True);
-    set_cur_col(screen, curcol);
+    destroyLineData(screen, ld);
 }
 #endif
 

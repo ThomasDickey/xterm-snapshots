@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.46 2008/10/05 20:12:16 tom Exp $ */
+/* $XTermId: cursor.c,v 1.47 2009/05/10 16:02:43 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/cursor.c,v 3.20 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -128,8 +128,9 @@ CursorBack(XtermWidget xw, int n)
 void
 CursorForward(TScreen * screen, int n)
 {
+    LineData *ld = getLineData(screen, screen->cur_row, NULL);
     int next = screen->cur_col + n;
-    int max = CurMaxCol(screen, screen->cur_row);
+    int max = LineMaxCol(screen, ld);
 
     if (next > max)
 	next = max;

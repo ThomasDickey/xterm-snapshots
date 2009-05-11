@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.911 2009/05/06 22:35:56 tom Exp $ */
+/* $XTermId: charproc.c,v 1.920 2009/05/10 16:00:22 tom Exp $ */
 
 /*
 
@@ -849,7 +849,7 @@ CheckBogusForeground(TScreen * screen, const char *tag)
     for (pass = 0; pass < 2; ++pass) {
 	row = screen->cur_row;
 	for (; isClear && (row <= screen->max_row); ++row) {
-	    Char *attribs = getLineData(screen, row, (LineData *) 0);
+	    Char *attribs = getLineData(screen, row, NULL)->attribs;
 
 	    col = (row == screen->cur_row) ? screen->cur_col : 0;
 	    for (; isClear && (col <= screen->max_col); ++col) {
@@ -3456,20 +3456,22 @@ doinput(void)
 static void
 PreeditPosition(TScreen * screen)
 {
+    LineData *ld;
     XPoint spot;
     XVaNestedList list;
 
-    if (!screen->xic)
-	return;
-    spot.x = (short) CurCursorX(screen, screen->cur_row, screen->cur_col);
-    spot.y = (short) (CursorY(screen, screen->cur_row) + screen->fs_ascent);
-    list = XVaCreateNestedList(0,
-			       XNSpotLocation, &spot,
-			       XNForeground, T_COLOR(screen, TEXT_FG),
-			       XNBackground, T_COLOR(screen, TEXT_BG),
-			       NULL);
-    XSetICValues(screen->xic, XNPreeditAttributes, list, NULL);
-    XFree(list);
+    if (screen->xic
+	&& (ld = getLineData(screen, screen->cur_row, NULL)) != 0) {
+	spot.x = (short) LineCursorX(screen, ld, screen->cur_col);
+	spot.y = (short) (CursorY(screen, screen->cur_row) + screen->fs_ascent);
+	list = XVaCreateNestedList(0,
+				   XNSpotLocation, &spot,
+				   XNForeground, T_COLOR(screen, TEXT_FG),
+				   XNBackground, T_COLOR(screen, TEXT_BG),
+				   NULL);
+	XSetICValues(screen->xic, XNPreeditAttributes, list, NULL);
+	XFree(list);
+    }
 }
 #endif
 
@@ -3477,12 +3479,15 @@ static void
 WrapLine(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
+    LineData *ld = getLineData(screen, screen->cur_row, NULL);
 
-    /* mark that we had to wrap this line */
-    ScrnSetFlag(screen, screen->cur_row, LINEWRAPPED);
-    xtermAutoPrint(xw, '\n');
-    xtermIndex(xw, 1);
-    set_cur_col(screen, 0);
+    if (ld != 0) {
+	/* mark that we had to wrap this line */
+	LineSetFlag(ld, LINEWRAPPED);
+	xtermAutoPrint(xw, '\n');
+	xtermIndex(xw, 1);
+	set_cur_col(screen, 0);
+    }
 }
 
 /*
@@ -3584,7 +3589,9 @@ dotext(XtermWidget xw,
 #else /* ! OPT_WIDE_CHARS */
 
     for (offset = 0; offset < len; offset += this_col) {
-	last_col = CurMaxCol(screen, screen->cur_row);
+	LineData *ld = getLineData(screen, screen->cur_row, NULL);
+
+	last_col = LineMaxCol(screen, ld);
 	this_col = last_col - screen->cur_col + 1;
 	if (this_col <= 1) {
 	    if (screen->do_wrap) {
@@ -6962,7 +6969,7 @@ ShowCursor(void)
      */
     (void) fg_bg;
     if_OPT_EXT_COLORS(screen, {
-	fg_bg = PACK_FGBG(screen, screen->cursorp.row, cursor_col);
+	fg_bg = PACK_FGBG(ld, cursor_col);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
 	fg_bg = ld->color[cursor_col];
@@ -7076,9 +7083,9 @@ ShowCursor(void)
 
 	currentGC = getCgsGC(xw, currentWin, currentCgs);
 	drawXtermText(xw, flags & DRAWX_MASK, currentGC,
-		      x = CurCursorX(screen, screen->cur_row, cursor_col),
+		      x = LineCursorX(screen, ld, cursor_col),
 		      y = CursorY(screen, screen->cur_row),
-		      curXtermChrSet(xw, screen->cur_row),
+		      LineCharSet(screen, ld),
 		      PAIRED_CHARS(&clo, &chi), 1, 0);
 
 #if OPT_WIDE_CHARS
@@ -7090,7 +7097,7 @@ ShowCursor(void)
 		    break;
 		drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			      currentGC, x, y,
-			      curXtermChrSet(xw, screen->cur_row),
+			      LineCharSet(screen, ld),
 			      PAIRED_CHARS(&clo, &chi), 1, isWide(base));
 	    }
 	});
@@ -7112,7 +7119,7 @@ ShowCursor(void)
     }
     screen->cursor_state = ON;
 
-    free(ld);
+    destroyLineData(screen, ld);
     return;
 }
 
@@ -7209,7 +7216,7 @@ HideCursor(void)
      * cursor and update the GC's if needed.
      */
     if_OPT_EXT_COLORS(screen, {
-	fg_bg = PACK_FGBG(screen, screen->cursorp.row, cursor_col);
+	fg_bg = PACK_FGBG(ld, cursor_col);
     });
     if_OPT_ISO_TRADITIONAL_COLORS(screen, {
 	fg_bg = ld->color[cursor_col];
@@ -7225,9 +7232,9 @@ HideCursor(void)
     TRACE(("HideCursor calling drawXtermText cur(%d,%d)\n",
 	   screen->cursorp.row, screen->cursorp.col));
     drawXtermText(xw, flags & DRAWX_MASK, currentGC,
-		  x = CurCursorX(screen, screen->cursorp.row, cursor_col),
+		  x = LineCursorX(screen, ld, cursor_col),
 		  y = CursorY(screen, screen->cursorp.row),
-		  curXtermChrSet(xw, screen->cursorp.row),
+		  LineCharSet(screen, ld),
 		  PAIRED_CHARS(&clo, &chi), 1, 0);
 
 #if OPT_WIDE_CHARS
@@ -7239,7 +7246,7 @@ HideCursor(void)
 		break;
 	    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			  currentGC, x, y,
-			  curXtermChrSet(xw, screen->cur_row),
+			  LineCharSet(screen, ld),
 			  PAIRED_CHARS(&clo, &chi), 1, isWide(base));
 	}
     });
@@ -7247,7 +7254,7 @@ HideCursor(void)
     screen->cursor_state = OFF;
     resetXtermGC(xw, flags, in_selection);
 
-    free(ld);
+    destroyLineData(screen, ld);
     return;
 }
 
@@ -7278,9 +7285,8 @@ StopBlinking(TScreen * screen)
 
 #if OPT_BLINK_TEXT
 static Bool
-ScrnHasBlinking(TScreen * screen, int row)
+LineHasBlinking(TScreen * screen, LineData * ld)
 {
-    LineData *ld = getLineData(screen, row, (LineData *) 0);
     int col;
     Bool result = False;
 
@@ -7338,15 +7344,16 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	int last_row = -1;
 
 	for (row = screen->max_row; row >= 0; row--) {
-	    if (ScrnTstBlinked(screen, row)) {
-		if (ScrnHasBlinking(screen, row)) {
+	    LineData *ld = getLineData(screen, ROW2INX(screen, row), NULL);
+	    if (LineTstBlinked(ld)) {
+		if (LineHasBlinking(screen, ld)) {
 		    resume = True;
 		    if (row > last_row)
 			last_row = row;
 		    if (row < first_row)
 			first_row = row;
 		} else {
-		    ScrnClrBlinked(screen, row);
+		    LineClrBlinked(ld);
 		}
 	    }
 	}
