@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.562 2009/05/06 22:36:36 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.572 2009/05/10 18:25:04 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -919,29 +919,41 @@ typedef enum {
 #define CSET_DHL_BOT    2
 #define CSET_DWL        3
 #define NUM_CHRSET      8	/* normal/bold and 4 CSET_xxx values */
+
 	/* Use remaining bits for encoding the other character-sets */
 #define CSET_NORMAL(code)  ((code) == CSET_SWL)
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
 #define CSET_EXTEND(code)  ((code) > CSET_DWL)
+
 	/* for doublesize characters, the first cell in a row holds the info */
-#define SCRN_ROW_CSET(screen,row) (SCRN_BUF_CSETS((screen), row)[0])
-#define CurMaxCol(screen, row) \
-	(CSET_DOUBLE(SCRN_ROW_CSET(screen, row)) \
-	? (screen->max_col / 2) \
-	: (screen->max_col))
-#define CurCursorX(screen, row, col) \
-	(CSET_DOUBLE(SCRN_ROW_CSET(screen, row)) \
-	? CursorX(screen, 2*(col)) \
-	: CursorX(screen, (col)))
-#define CurFontWidth(screen, row) \
-	(CSET_DOUBLE(SCRN_ROW_CSET(screen, row)) \
-	? 2*FontWidth(screen) \
-	: FontWidth(screen))
+
+#define LINEDATA_CSET(linept)     (linept->charSets[0])
+
+#define LineCharSet(screen, ld) \
+	((CSET_DOUBLE(LINEDATA_CSET(ld))) \
+		? LINEDATA_CSET(ld) \
+		: (screen)->cur_chrset)
+#define LineMaxCol(screen, ld) \
+	(CSET_DOUBLE(LINEDATA_CSET(ld)) \
+	 ? (screen->max_col / 2) \
+	 : (screen->max_col))
+#define LineCursorX(screen, ld, col) \
+	(CSET_DOUBLE(LINEDATA_CSET(ld)) \
+	 ? CursorX(screen, 2*(col)) \
+	 : CursorX(screen, (col)))
+#define LineFontWidth(screen, ld) \
+	(CSET_DOUBLE(LINEDATA_CSET(ld)) \
+	 ? 2*FontWidth(screen) \
+	 : FontWidth(screen))
 #else
+
 #define if_OPT_DEC_CHRSET(code) /*nothing*/
-#define CurMaxCol(screen, row) screen->max_col
-#define CurCursorX(screen, row, col) CursorX(screen, col)
-#define CurFontWidth(screen, row) FontWidth(screen)
+
+#define LineCharSet(screen, ld)         0
+#define LineMaxCol(screen, ld)          screen->max_col
+#define LineCursorX(screen, ld, col)    CursorX(screen, col)
+#define LineFontWidth(screen, ld)       FontWidth(screen)
+
 #endif
 
 #if OPT_LUIT_PROG && !OPT_WIDE_CHARS
@@ -1016,9 +1028,8 @@ extern int A2E(int);
 #define LO_BYTE(ch) CharOf((ch) & 0xff)
 #define HI_BYTE(ch) CharOf((ch) >> 8)
 
-#define PACK_FGBG(screen, row, col) \
-	    (unsigned) ((SCRN_BUF_FGRND(screen, row)[col] << 8) \
-		      | (SCRN_BUF_BGRND(screen, row)[col]))
+#define PACK_FGBG(ld, col) \
+	    (unsigned) ((ld->fgrnd[col] << 8) | ld->bgrnd[col])
 
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
@@ -1163,6 +1174,7 @@ typedef struct {
  * LineData points to arrays of data used to represent a row of text.
  */
 typedef struct {
+	unsigned lineSize;	/* number of columns in line */
     	RowFlags *bufHead;	/* points to flag for wrapped lines */
 	Char *attribs;
 #if OPT_ISO_COLORS
@@ -1180,7 +1192,7 @@ typedef struct {
 	/* wide (16-bit) characters begin here */
 #if OPT_WIDE_CHARS
 	Char *wideData;		/* second byte of first wide-character */
-	size_t combSize;	/* number of pointers in combData[] */
+	unsigned combSize;	/* number of pointers in combData[] */
 	Char *combData[];	/* array of pointers to combining chars */
 #endif
 
@@ -1203,19 +1215,6 @@ typedef struct {
 #define okScrnRow(screen, row) \
 	((row) <= (screen)->max_row \
       && (row) >= -((screen)->savedlines))
-
-	/* ScrnBuf-level macros */
-#define BUFFER_PTR(buf, row, off) (buf[MAX_PTRS * (row) + off])
-
-#define BUF_CHARS(buf, row) BUFFER_PTR(buf, row, OFF_CHARS)
-
-	/* TScreen-level macros */
-#define SCREEN_PTR(screen, row, off) BUFFER_PTR(screen->visbuf, row, off)
-
-#define SCRN_BUF_FLAGS(screen, row) SCREEN_PTR(screen, row, OFF_FLAGS)
-#define SCRN_BUF_FGRND(screen, row) SCREEN_PTR(screen, row, OFF_FGRND)
-#define SCRN_BUF_BGRND(screen, row) SCREEN_PTR(screen, row, OFF_BGRND)
-#define SCRN_BUF_CSETS(screen, row) SCREEN_PTR(screen, row, OFF_CSETS)
 
 typedef struct {
 	unsigned	chrset;

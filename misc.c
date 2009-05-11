@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.413 2009/05/06 20:33:57 tom Exp $ */
+/* $XTermId: misc.c,v 1.414 2009/05/08 19:02:58 tom Exp $ */
 
 /*
  *
@@ -1081,7 +1081,7 @@ dabbrev_expand(TScreen * screen)
 		free(lastexpansion);
 		lastexpansion = 0;
 	    }
-	    free(ld);
+	    destroyLineData(screen, ld);
 	    return result;
 	}
     } else {
@@ -1128,7 +1128,7 @@ dabbrev_expand(TScreen * screen)
 	}
     }
 
-    free(ld);
+    destroyLineData(screen, ld);
     return result;
 }
 

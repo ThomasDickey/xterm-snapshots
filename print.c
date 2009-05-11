@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.89 2009/05/06 22:41:13 tom Exp $ */
+/* $XTermId: print.c,v 1.94 2009/05/10 18:24:26 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
@@ -67,7 +67,7 @@ static void printLine(XtermWidget /* xw */ ,
 		      int /* row */ ,
 		      unsigned /* chr */ );
 static void send_CharSet(XtermWidget /* xw */ ,
-			 int /* row */ );
+			 LineData * /* ld */ );
 static void send_SGR(XtermWidget /* xw */ ,
 		     unsigned /* attr */ ,
 		     unsigned /* fg */ ,
@@ -140,10 +140,10 @@ printLine(XtermWidget xw, int row, unsigned chr)
 #if OPT_EXT_COLORS
     Char *fbf = 0;
     Char *fbb = 0;
-#define ColorOf(col) (unsigned)((fbf[col] << 8) | fbb[col])	/* PACK_FGBG */
+#define ColorOf(ld,col) PACK_FGBG(ld, col)
 #else
     Char *fb = 0;
-#define ColorOf(col) (fb[col])
+#define ColorOf(ld,col) (ld->color[col])
 #endif
 #endif
     unsigned fg = NO_COLOR, last_fg = NO_COLOR;
@@ -175,7 +175,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
     }
     if (last) {
 	if (screen->print_attributes) {
-	    send_CharSet(xw, row);
+	    send_CharSet(xw, ld);
 	    send_SGR(xw, 0, NO_COLOR, NO_COLOR);
 	}
 	for (col = 0; col < last; col++) {
@@ -187,10 +187,10 @@ printLine(XtermWidget xw, int row, unsigned chr)
 	    if (screen->colorMode) {
 		if (screen->print_attributes > 1) {
 		    fg = (ld->attribs[col] & FG_COLOR)
-			? extract_fg(xw, ColorOf(col), ld->attribs[col])
+			? extract_fg(xw, ColorOf(ld, col), ld->attribs[col])
 			: NO_COLOR;
 		    bg = (ld->attribs[col] & BG_COLOR)
-			? extract_bg(xw, ColorOf(col), ld->attribs[col])
+			? extract_bg(xw, ColorOf(ld, col), ld->attribs[col])
 			: NO_COLOR;
 		}
 	    }
@@ -256,7 +256,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 	charToPrinter(xw, '\r');
     charToPrinter(xw, chr);
 
-    free(ld);
+    destroyLineData(screen, ld);
     return;
 }
 
@@ -298,7 +298,7 @@ xtermPrintEverything(XtermWidget xw)
     int bot = screen->max_row;
     int was_open = initialized;
 
-    if (!screen->altbuf)
+    if (!screen->alternate)
 	top = -screen->savedlines;
 
     TRACE(("xtermPrintEverything, rows %d..%d\n", top, bot));
@@ -313,13 +313,12 @@ xtermPrintEverything(XtermWidget xw)
 }
 
 static void
-send_CharSet(XtermWidget xw, int row)
+send_CharSet(XtermWidget xw, LineData * ld)
 {
 #if OPT_DEC_CHRSET
-    TScreen *screen = TScreenOf(xw);
     char *msg = 0;
 
-    switch (SCRN_ROW_CSET(screen, row)) {
+    switch (LINEDATA_CSET(ld)) {
     case CSET_SWL:
 	msg = "\033#5";
 	break;
@@ -336,7 +335,7 @@ send_CharSet(XtermWidget xw, int row)
     if (msg != 0)
 	stringToPrinter(xw, msg);
 #else
-    (void) row;
+    (void) ld;
 #endif /* OPT_DEC_CHRSET */
 }
 

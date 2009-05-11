@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.258 2009/05/06 22:55:16 tom Exp $ */
+/* $XTermId: screen.c,v 1.269 2009/05/11 00:04:34 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -406,7 +406,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	    memset(ld->color + col, (int) xtermColorPair(xw), len);
 	});
 	if_OPT_DEC_CHRSET({
-	    memset(ld->charSets + col, curXtermChrSet(xw, row), len);
+	    memset(ld->charSets + col, LineCharSet(screen, ld), len);
 	});
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
@@ -417,7 +417,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	    }
 	});
 
-	free(ld);
+	destroyLineData(screen, ld);
     }
 }
 
@@ -534,7 +534,7 @@ ScrnWriteText(XtermWidget xw,
 
 #if OPT_BLINK_TEXT
     if ((flags & BLINK) && !(screen->blink_as_bold)) {
-	ScrnSetBlinked(screen, screen->cur_row);
+	LineSetBlinked(ld);
     }
 #endif
 
@@ -626,7 +626,7 @@ ScrnWriteText(XtermWidget xw,
 	memset(fb, (int) cur_fg_bg, real_width);
     });
     if_OPT_DEC_CHRSET({
-	memset(cb, curXtermChrSet(xw, screen->cur_row), real_width);
+	memset(cb, LineCharSet(screen, ld), real_width);
     });
 
     if_OPT_WIDE_CHARS(screen, {
@@ -638,7 +638,7 @@ ScrnWriteText(XtermWidget xw,
 	Resolve_XMC(xw);
     });
 
-    free(ld);
+    destroyLineData(screen, ld);
     return;
 }
 
@@ -796,8 +796,8 @@ void
 ScrnInsertChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = last - 1; j >= (col + nbytes); --j) \
-	    data[j] = data[j - nbytes]
+    	for (j = last - 1; j >= (col + (int) n); --j) \
+	    data[j] = data[j - (int) n]
 
     TScreen *screen = &(xw->screen);
     int last = MaxCols(screen);
@@ -831,7 +831,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	}
     });
 
-    if ((ld = getLineData(screen, row, (LineData *) 0)) != 0) {
+    if ((ld = getLineData(screen, row, NULL)) != 0) {
 	MemMove(ld->charData);
 	MemMove(ld->attribs);
 
@@ -865,8 +865,8 @@ void
 ScrnDeleteChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = col; j < last - nbytes; ++j) \
-	    data[j] = data[j + nbytes]
+    	for (j = col; j < last - (int) n; ++j) \
+	    data[j] = data[j + (int) n]
 
     TScreen *screen = &(xw->screen);
     int last = MaxCols(screen);
@@ -896,7 +896,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
     });
 
-    if ((ld = getLineData(screen, row, (LineData *) 0)) != 0) {
+    if ((ld = getLineData(screen, row, NULL)) != 0) {
 	MemMove(ld->charData);
 	MemMove(ld->attribs);
 
@@ -917,9 +917,9 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 		MemMove(ld->combData[off]);
 	    }
 	});
+	LineClrWrapped(ld);
     }
     ClearCells(xw, 0, n, row, (last - (int) n));
-    ScrnClrWrapped(screen, row);
 
 #undef MemMove
 }
@@ -1011,7 +1011,8 @@ ScrnRefresh(XtermWidget xw,
 	if (lastind < 0 || lastind > max)
 	    continue;
 
-	(void) getLineData(screen, ROW2INX(screen, lastind), ld);
+	if (getLineData(screen, ROW2INX(screen, lastind), ld) == 0)
+	    break;
 
 	chars = ld->charData;
 	attrs = ld->attribs;
@@ -1158,7 +1159,7 @@ ScrnRefresh(XtermWidget xw,
 	gc = updatedXtermGC(xw, flags, fg_bg, hilite);
 	gc_changes |= (flags & (FG_COLOR | BG_COLOR));
 
-	x = CurCursorX(screen, ROW2INX(screen, row), col);
+	x = LineCursorX(screen, ld, col);
 	lastind = col;
 
 	for (; col <= maxcol; col++) {
@@ -1203,16 +1204,12 @@ ScrnRefresh(XtermWidget xw,
 			Char *com_hi = hi_combData(off, ld);
 
 			for (i = lastind; i < col; i++) {
-			    int my_x = CurCursorX(screen,
-						  ROW2INX(screen, row),
-						  i);
+			    int my_x = LineCursorX(screen, ld, i);
 			    int base = PACK_PAIR(chars, widec, i);
 			    int combo = PACK_PAIR(com_lo, com_hi, i);
 
 			    if (isWide(base))
-				my_x = CurCursorX(screen,
-						  ROW2INX(screen, row),
-						  i - 1);
+				my_x = LineCursorX(screen, ld, i - 1);
 
 			    if (combo != 0)
 				drawXtermText(xw,
@@ -1287,16 +1284,12 @@ ScrnRefresh(XtermWidget xw,
 		Char *com_hi = hi_combData(off, ld);
 
 		for (i = lastind; i < col; i++) {
-		    int my_x = CurCursorX(screen,
-					  ROW2INX(screen, row),
-					  i);
+		    int my_x = LineCursorX(screen, ld, i);
 		    int base = PACK_PAIR(chars, widec, i);
 		    int combo = PACK_PAIR(com_lo, com_hi, i);
 
 		    if (isWide(base))
-			my_x = CurCursorX(screen,
-					  ROW2INX(screen, row),
-					  i - 1);
+			my_x = LineCursorX(screen, ld, i - 1);
 
 		    if (combo != 0)
 			drawXtermText(xw,
@@ -1339,7 +1332,7 @@ ScrnRefresh(XtermWidget xw,
 #endif
     recurse--;
 
-    free(ld);
+    destroyLineData(screen, ld);
     return;
 }
 
@@ -1380,11 +1373,12 @@ ClearBufRows(XtermWidget xw,
 
     TRACE(("ClearBufRows %d..%d\n", first, last));
     for (row = first; row <= last; row++) {
+	LineData *ld = getLineData(screen, ROW2INX(screen, row), NULL);
 	if_OPT_DEC_CHRSET({
 	    /* clearing the whole row resets the doublesize characters */
-	    SCRN_ROW_CSET(screen, row) = CSET_SWL;
+	    LINEDATA_CSET(ld) = CSET_SWL;
 	});
-	ScrnClrWrapped(screen, row);
+	LineClrWrapped(ld);
 	ClearCells(xw, 0, len, row, 0);
     }
 }
@@ -1594,7 +1588,7 @@ non_blank_line(TScreen * screen,
 {
     int i;
     Bool found = False;
-    LineData *ld = getLineData(screen, row, (LineData *) 0);
+    LineData *ld = getLineData(screen, row, NULL);
 
     if (ld != 0) {
 	for (i = col; i < len; i++) {
@@ -1767,7 +1761,7 @@ ScrnFillRectangle(XtermWidget xw,
 		   (target->right - target->left) + 1,
 		   False);
 
-	free(ld);
+	destroyLineData(screen, ld);
     }
 }
 
@@ -1843,7 +1837,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 			}
 		    }
 		    free(cells);
-		    free(ld);
+		    destroyLineData(screen, ld);
 
 		    ScrnUpdate(xw,
 			       (target.top - 1),
@@ -1981,7 +1975,7 @@ ScrnMarkRectangle(XtermWidget xw,
 		     : (getMaxCol(screen) - getMinCol(screen) + 1)),
 		    False);
 
-	free(ld);
+	destroyLineData(screen, ld);
     }
 }
 
@@ -2033,7 +2027,7 @@ ScrnWipeRectangle(XtermWidget xw,
 		   ((target->right - target->left) + 1),
 		   False);
 
-	free(ld);
+	destroyLineData(screen, ld);
     }
 }
 #endif /* OPT_DEC_RECTOPS */

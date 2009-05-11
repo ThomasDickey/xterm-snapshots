@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.91 2009/05/06 20:33:57 tom Exp $ */
+/* $XTermId: trace.c,v 1.93 2009/05/08 22:36:52 tom Exp $ */
 
 /************************************************************
 
@@ -355,111 +355,65 @@ visibleXError(int code)
 #define isScrnFlag(flag) ((flag) == LINEWRAPPED)
 
 static char *
-ScrnText(TScreen * screen, int row)
+ScrnText(LineData * ld)
 {
     char *result;
-    LineData *ld = newLineData(screen);
 #if OPT_WIDE_CHARS
-    Char *widec = 0;
+    Char *widec = ld->wideData;
 #endif
 
-    (void) getLineData(screen, row, ld);
-    if_OPT_WIDE_CHARS(screen, {
-	widec = ld->wideData;
-    });
     result = visibleChars(PAIRED_CHARS(ld->charData, widec),
-			  screen->max_col + 1);
-    destroyLineData(screen, ld);
+			  ld->lineSize);
 
     return result;
 }
 
-#if OPT_TRACE_FLAGS > 1
-#define DETAILED_FLAGS(name) \
-    Trace("TEST " #name " %d [%d..%d] top %d chars %p (%d)\n", \
-    	  row, \
-	  -screen->savedlines, \
-	  screen->max_row, \
-	  screen->topline, \
-	  ld->charData, \
-	  ((ScrnBuf)(ld->bufHead) - screen->visbuf) / MAX_PTRS)
-#else
-#define DETAILED_FLAGS(name)	/* nothing */
-#endif
-
-#define SHOW_BAD_ROW(name, screen, row) \
-	Trace("OOPS " #name " bad row %d [%d..%d]\n", \
-	      row, -(screen->savedlines), screen->max_row)
+#define SHOW_BAD_LINE(name, ld) \
+	Trace("OOPS " #name " bad row\n")
 
 #define SHOW_SCRN_FLAG(name,code) \
-	Trace(#name " {%d, top=%d, saved=%d}%05d%s:%s\n", \
-	      row, screen->topline, screen->savedlines, \
-	      ROW2ABS(screen, row), \
+	Trace(#name " %s:%s\n", \
 	      code ? "*" : "", \
-	      ScrnText(screen, row))
+	      ScrnText(ld))
 
 void
-ScrnClrFlag(TScreen * screen, int row, int flag)
+LineClrFlag(LineData * ld, int flag)
 {
-    LineData *ld = newLineData(screen);
-
-    (void) getLineData(screen, row, ld);
-
-    DETAILED_FLAGS(ScrnClrFlag);
-    if (!okScrnRow(screen, row)) {
-	SHOW_BAD_ROW(ScrnClrFlag, screen, row);
+    if (ld == 0) {
+	SHOW_BAD_LINE(LineClrFlag, ld);
 	assert(0);
     } else if (isScrnFlag(flag)) {
-	SHOW_SCRN_FLAG(ScrnClrFlag, 0);
+	SHOW_SCRN_FLAG(LineClrFlag, 0);
     }
 
-    *(ld->bufHead) &= ~flag;
-
-    destroyLineData(screen, ld);
+    LineFlags(ld) &= ~flag;
 }
 
 void
-ScrnSetFlag(TScreen * screen, int row, int flag)
+LineSetFlag(LineData * ld, int flag)
 {
-    LineData *ld = newLineData(screen);
-
-    (void) getLineData(screen, row, ld);
-
-    DETAILED_FLAGS(ScrnSetFlag);
-    if (!okScrnRow(screen, row)) {
-	SHOW_BAD_ROW(ScrnSetFlag, screen, row);
+    if (ld == 0) {
+	SHOW_BAD_LINE(LineSetFlag, ld);
 	assert(0);
     } else if (isScrnFlag(flag)) {
-	SHOW_SCRN_FLAG(ScrnSetFlag, 1);
+	SHOW_SCRN_FLAG(LineSetFlag, 1);
     }
 
-    *(ld->bufHead) |= flag;
-
-    destroyLineData(screen, ld);
+    LineFlags(ld) |= flag;
 }
 
 int
-ScrnTstFlag(TScreen * screen, int row, int flag)
+LineTstFlag(LineData * ld, int flag)
 {
     int code = 0;
-    if (!okScrnRow(screen, row)) {
-	SHOW_BAD_ROW(ScrnTstFlag, screen, row);
+    if (ld == 0) {
+	SHOW_BAD_LINE(LineTstFlag, ld);
     } else {
-	LineData *ld = newLineData(screen);
+	code = LineFlags(ld);
 
-	(void) getLineData(screen, row, ld);
-
-	code = *(ld->bufHead) != 0;
-
-	DETAILED_FLAGS(ScrnTstFlag);
-	if (!okScrnRow(screen, row)) {
-	    SHOW_BAD_ROW(ScrnSetFlag, screen, row);
-	    assert(0);
-	} else if (isScrnFlag(flag)) {
-	    SHOW_SCRN_FLAG(ScrnTstFlag, code);
+	if (isScrnFlag(flag)) {
+	    SHOW_SCRN_FLAG(LineTstFlag, code);
 	}
-
-	destroyLineData(screen, ld);
     }
     return code;
 }
