@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.542 2009/05/10 14:20:05 tom Exp $ */
+/* $XTermId: xterm.h,v 1.543 2009/05/13 00:00:42 tom Exp $ */
 
 /************************************************************
 
@@ -1262,7 +1262,7 @@ extern Boolean isWideControl(unsigned /* ch */);
 extern int DamagedCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */, int /* row */, int /* col */);
 extern int DamagedCurCells(TScreen * /* screen */, unsigned /* n */, int * /* klp */, int * /* krp */);
 extern unsigned AsciiEquivs(unsigned /* ch */);
-extern unsigned getXtermCellComb (TScreen * /* screen */, int  /* row */, int  /* col */, int /* off */);
+extern unsigned getXtermCellComb (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned /* off */);
 extern void addXtermCombining (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned  /* ch */);
 extern void allocXtermChars(Char ** /* buffer */, Cardinal /* length */);
 #endif

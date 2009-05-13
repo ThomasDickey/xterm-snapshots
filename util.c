@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.434 2009/05/10 15:18:19 tom Exp $ */
+/* $XTermId: util.c,v 1.435 2009/05/13 00:00:34 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -3597,7 +3597,7 @@ putXtermCell(TScreen * screen, int row, int col, int ch)
 
 #if OPT_WIDE_CHARS
 unsigned
-getXtermCellComb(TScreen * screen, int row, int col, int off)
+getXtermCellComb(TScreen * screen, int row, int col, unsigned off)
 {
     LineData *ld = getLineData(screen, row, NULL);
     return (unsigned) PACK_PAIR(lo_combData(off, ld),
