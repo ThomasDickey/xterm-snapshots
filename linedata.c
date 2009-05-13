@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.33 2009/05/10 16:06:50 tom Exp $ */
+/* $XTermId: linedata.c,v 1.34 2009/05/12 23:55:20 tom Exp $ */
 
 /************************************************************
 
@@ -125,7 +125,7 @@ getLineData(TScreen * screen,
 		 * all rows since they can be updated until moved to the
 		 * scrollback.
 		 */
-		work->combSize = (size_t) (screen->max_combining * 2);
+		work->combSize = (size_t) (screen->max_combining * ICharSize);
 		for (ptr = 0; ptr < work->combSize; ++ptr) {
 		    work->combData[ptr] = SCREEN_PTR(screen,
 						     row,
@@ -173,7 +173,7 @@ addLineData(XtermWidget xw GCC_UNUSED)
 
 #if OPT_WIDE_CHARS
 #define initLineExtra(screen) \
-    screen->lineExtra = ((size_t) (screen->max_combining * 2) \
+    screen->lineExtra = ((size_t) (screen->max_combining * ICharSize) \
 			 * sizeof(IChar *))
 #else
 #define initLineExtra(screen) \

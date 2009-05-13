@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.94 2009/05/10 18:24:26 tom Exp $ */
+/* $XTermId: print.c,v 1.95 2009/05/13 00:01:16 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
@@ -239,7 +239,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 	    if_OPT_WIDE_CHARS(screen, {
 		size_t off;
 		for_each_combData(off, ld) {
-		    ch = XTERM_CELLC(row, col, (int) (off + OFF_FINAL));
+		    ch = XTERM_CELLC(row, col, off);
 		    if (ch == 0)
 			break;
 		    charToPrinter(xw, ch);

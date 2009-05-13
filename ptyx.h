@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.572 2009/05/10 18:25:04 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.573 2009/05/12 23:55:03 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1198,7 +1198,9 @@ typedef struct {
 
 } LineData;
 
-#define for_each_combData(off, ld) for (off = 0; off < ld->combSize; off += 2)
+#define ICharSize 2
+
+#define for_each_combData(off, ld) for (off = 0; off < ld->combSize; off += ICharSize)
 #define lo_combData(off, ld)	ld->combData[off]
 #define hi_combData(off, ld)	ld->combData[off + 1]
 

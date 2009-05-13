@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.340 2009/05/08 20:12:47 tom Exp $ */
+/* $XTermId: button.c,v 1.341 2009/05/13 00:01:16 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2746,7 +2746,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		if_OPT_WIDE_CHARS(screen, {
 		    size_t off;
 		    for_each_combData(off, ld) {
-			data = XTERM_CELLC(row, col, (int) (off + OFF_FINAL));
+			data = XTERM_CELLC(row, col, off);
 			if (data == 0)
 			    break;
 			next = convertToUTF8(next, data);
@@ -3856,7 +3856,7 @@ SaveText(TScreen * screen,
 		    unsigned ch;
 		    size_t off;
 		    for_each_combData(off, ld) {
-			ch = XTERM_CELLC(row, i, (int) (off + OFF_FINAL));
+			ch = XTERM_CELLC(row, i, off);
 			if (ch == 0)
 			    break;
 			lp = convertToUTF8(lp, ch);
@@ -3872,7 +3872,7 @@ SaveText(TScreen * screen,
 		unsigned ch;
 		size_t off;
 		for_each_combData(off, ld) {
-		    ch = XTERM_CELLC(row, i, (int) (off + OFF_FINAL));
+		    ch = XTERM_CELLC(row, i, off);
 		    if (ch == 0)
 			break;
 		    lp = convertToUTF8(lp, ch);
