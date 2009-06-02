@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.414 2009/05/08 19:02:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.416 2009/05/31 17:54:09 tom Exp $ */
 
 /*
  *
@@ -3314,8 +3314,6 @@ SysReasonMsg(int code)
 	{ ERROR_SREALLOC,	"ScreenResize: realloc() failed on alt base" },
 	{ ERROR_RESIZE,		"ScreenResize: malloc() or realloc() failed" },
 	{ ERROR_SAVE_PTR,	"ScrnPointers: malloc/realloc() failed" },
-	{ ERROR_SBRALLOC,	"ScrollBarOn: realloc() failed on base" },
-	{ ERROR_SBRALLOC2,	"ScrollBarOn: realloc() failed on rows" },
 	{ ERROR_MMALLOC,	"my_memmove: malloc/realloc failed" },
     };
     /* *INDENT-ON* */
@@ -3590,7 +3588,7 @@ set_vt_visibility(Bool on)
     TRACE(("set_vt_visibility(%d)\n", on));
     if (on) {
 	if (!screen->Vshow && term) {
-	    VTInit();
+	    VTInit(term);
 	    XtMapWidget(XtParent(term));
 #if OPT_TOOLBAR
 	    /* we need both of these during initialization */

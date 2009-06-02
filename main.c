@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.590 2009/05/02 18:04:41 tom Exp $ */
+/* $XTermId: main.c,v 1.592 2009/05/31 17:53:51 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2411,7 +2411,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    TekRun();
 	else
 #endif
-	    VTRun();
+	    VTRun(term);
     }
 }
 
@@ -3241,7 +3241,7 @@ spawnXTerm(XtermWidget xw)
 				   False);
 
     if (!TEK4014_ACTIVE(xw))
-	VTInit();		/* realize now so know window size for tty driver */
+	VTInit(xw);		/* realize now so know window size for tty driver */
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
     if (Console) {
 	/*
@@ -4091,7 +4091,7 @@ spawnXTerm(XtermWidget xw)
 	    {
 		if (tslot > 0 && pw && !resource.utmpInhibit &&
 		    (i = open(etc_utmp, O_WRONLY)) >= 0) {
-		    bzero((char *) &utmp, sizeof(utmp));
+		    memset(&utmp, 0, sizeof(utmp));
 		    (void) strncpy(utmp.ut_line,
 				   my_pty_name(ttydev),
 				   sizeof(utmp.ut_line));
@@ -4141,7 +4141,7 @@ spawnXTerm(XtermWidget xw)
 
 #ifdef USE_LASTLOGX
 	    if (xw->misc.login_shell) {
-		bzero((char *) &lastlogx, sizeof(lastlogx));
+		memset(&lastlogx, 0, sizeof(lastlogx));
 		(void) strncpy(lastlogx.ll_line,
 			       my_pty_name(ttydev),
 			       sizeof(lastlogx.ll_line));
@@ -4157,7 +4157,7 @@ spawnXTerm(XtermWidget xw)
 		size_t size = sizeof(struct lastlog);
 		off_t offset = (screen->uid * size);
 
-		bzero((char *) &lastlog, size);
+		memset(&lastlog, 0, size);
 		(void) strncpy(lastlog.ll_line,
 			       my_pty_name(ttydev),
 			       sizeof(lastlog.ll_line));
@@ -4639,7 +4639,7 @@ Exit(int n)
 	TRACE_IDS;
 #endif
 	if ((wfd = open(etc_utmp, O_WRONLY)) >= 0) {
-	    bzero((char *) &utmp, sizeof(utmp));
+	    memset(&utmp, 0, sizeof(utmp));
 	    lseek(wfd, (long) (tslot * sizeof(utmp)), 0);
 	    write(wfd, (char *) &utmp, sizeof(utmp));
 	    close(wfd);

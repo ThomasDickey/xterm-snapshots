@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.543 2009/05/13 00:00:42 tom Exp $ */
+/* $XTermId: xterm.h,v 1.550 2009/05/31 18:44:36 tom Exp $ */
 
 /************************************************************
 
@@ -765,7 +765,7 @@ extern void noleaks_cachedCgs (XtermWidget /* xw */);
 
 /* charproc.c */
 extern Bool CheckBufPtrs (TScreen * /* screen */);
-extern int VTInit (void);
+extern int VTInit (XtermWidget /* xw */);
 extern int v_write (int  /* f */, Char * /* d */, unsigned  /* len */);
 extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name */, Bool  /* justprobe */);
 extern void HideCursor (void);
@@ -773,7 +773,7 @@ extern void ShowCursor (void);
 extern void SwitchBufPtrs (TScreen * /* screen */);
 extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);
-extern void VTRun (void);
+extern void VTRun (XtermWidget /* xw */);
 extern void dotext (XtermWidget /* xw */, int  /* charset */, IChar * /* buf */, Cardinal  /* len */);
 extern void releaseCursorGCs(XtermWidget /*xw*/);
 extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
@@ -853,10 +853,12 @@ extern void VTInitModifiers(XtermWidget /* xw */);
 /* linedata.c */
 extern LineData *getLineData(TScreen * /* screen */, int /* row */, LineData * /* work */);
 extern LineData *newLineData(TScreen * /* screen */);
-extern void addLineData(XtermWidget /* xw */);
 extern void checkLineData(TScreen * /* screen */, int /* row */, LineData * /* work */);
+extern void deleteLineData(XtermWidget /* xw */, int /* row */, int /* count */);
 extern void destroyLineData(TScreen * /* xw */, LineData * /* work */);
+extern void fillLineData(TScreen * /* screen */, ScrnPtr * /* ptr */, LineData * /* work */);
 extern void initLineData(XtermWidget /* xw */);
+extern void insertLineData(XtermWidget /* xw */, int /* row */, int /* count */);
 
 extern CellData *newCellData(XtermWidget /* xw */, Cardinal /* count */);
 extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
@@ -1028,11 +1030,12 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 
 /* screen.c */
 extern Bool non_blank_line (TScreen */* screen */, int  /* row */, int  /* col */, int  /* len */);
-extern ScrnBuf Allocate (int  /* nrow */, int  /* ncol */, Char ** /* addr */);
+extern ScrnBuf allocScrnBuf (int  /* nrow */, int  /* ncol */, ScrnPtr * /* addr */);
 extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
 extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len */, int /* row */, int /* col */);
+extern void ScrnAllocBuf(TScreen * /* screen */ );
 extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* n */, int  /* last */, unsigned  /* size */, unsigned  /* where */);
@@ -1105,7 +1108,7 @@ extern void HandleScrollForward        PROTO_XT_ACTIONS_ARGS;
 extern void ResizeScrollBar (XtermWidget  /* xw */);
 extern void ScrollBarDrawThumb (Widget  /* scrollWidget */);
 extern void ScrollBarOff (XtermWidget  /* xw */);
-extern void ScrollBarOn (XtermWidget  /* xw */, int  /* init */, int  /* doalloc */);
+extern void ScrollBarOn (XtermWidget  /* xw */, Bool /* init */);
 extern void ScrollBarReverseVideo (Widget  /* scrollWidget */);
 extern void ToggleScrollBar (XtermWidget  /* xw */);
 extern void WindowScroll (XtermWidget /* xw */, int  /* top */);
@@ -1264,7 +1267,7 @@ extern int DamagedCurCells(TScreen * /* screen */, unsigned /* n */, int * /* kl
 extern unsigned AsciiEquivs(unsigned /* ch */);
 extern unsigned getXtermCellComb (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned /* off */);
 extern void addXtermCombining (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned  /* ch */);
-extern void allocXtermChars(Char ** /* buffer */, Cardinal /* length */);
+extern void allocXtermChars(ScrnPtr * /* buffer */, Cardinal /* length */);
 #endif
 
 #if OPT_XMC_GLITCH

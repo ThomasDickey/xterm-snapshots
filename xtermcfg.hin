@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.171 2008/07/27 15:17:07 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.172 2009/05/31 14:38:22 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/xtermcfg.hin,v 3.61 2006/06/19 00:36:52 dickey Exp $
@@ -6,7 +6,7 @@
 
 /************************************************************
 
-Copyright 1997-2007,2008 by Thomas E. Dickey
+Copyright 1997-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -192,7 +192,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifdef USE_MY_MEMMOVE
 #define memmove(d,s,n) my_memmove(d,s,n)
-extern char * my_memmove(char * s1, char * s2, size_t n);
+extern void * my_memmove(void * s1, void * s2, size_t n);
 #endif
 
 #ifndef HAVE_STRERROR

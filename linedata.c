@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.34 2009/05/12 23:55:20 tom Exp $ */
+/* $XTermId: linedata.c,v 1.37 2009/05/31 18:11:19 tom Exp $ */
 
 /************************************************************
 
@@ -43,15 +43,6 @@ authorization.
 	/* TScreen-level macros */
 #define SCREEN_PTR(screen, row, off) BUFFER_PTR(screen->visbuf, row, off)
 
-#define SCRN_BUF_ATTRS(screen, row) SCREEN_PTR(screen, row, OFF_ATTRS)
-#define SCRN_BUF_CHARS(screen, row) SCREEN_PTR(screen, row, OFF_CHARS)
-#define SCRN_BUF_CSETS(screen, row) SCREEN_PTR(screen, row, OFF_CSETS)
-#define SCRN_BUF_FGRND(screen, row) SCREEN_PTR(screen, row, OFF_FGRND)
-#define SCRN_BUF_FLAGS(screen, row) SCREEN_PTR(screen, row, OFF_FLAGS)
-#define SCRN_BUF_BGRND(screen, row) SCREEN_PTR(screen, row, OFF_BGRND)
-#define SCRN_BUF_COLOR(screen, row) SCREEN_PTR(screen, row, OFF_COLOR)
-#define SCRN_BUF_WIDEC(screen, row) SCREEN_PTR(screen, row, OFF_WIDEC)
-
 /*
  * Given a row-number, find the corresponding data for the line in the VT100
  * widget.  Row numbers can be positive or negative.
@@ -67,9 +58,6 @@ getLineData(TScreen * screen,
     if (okScrnRow(screen, row)) {
 	void *check = 0;
 	Bool update = False;
-#if OPT_WIDE_CHARS
-	size_t ptr;
-#endif
 
 	/*
 	 * If caller does not pass a workspace address, use the widget's
@@ -77,14 +65,14 @@ getLineData(TScreen * screen,
 	 */
 	if (work == 0) {
 	    if ((work = screen->lineData) != 0) {
-		check = &SCREEN_PTR(screen, row, 0);
+		check = &SCREEN_PTR(screen, row, OFF_FLAGS);
 		/*
 		 * Check if the cached LineData is up to date.
 		 * The second part of the comparison is needed since xterm
 		 * implements scrolling via memory-moves.
 		 */
 		if (check != screen->lineCache
-		    || SCRN_BUF_CHARS(screen, row) != work->charData) {
+		    || SCREEN_PTR(screen, row, OFF_CHARS) != work->charData) {
 		    update = True;
 		    screen->lineCache = check;
 		}
@@ -97,45 +85,8 @@ getLineData(TScreen * screen,
 	if (update) {
 	    TRACE2(("getLineData %d:%p\n", row, check));
 
+	    fillLineData(screen, &BUFFER_PTR(screen->visbuf, row, 0), work);
 	    work->lineSize = (unsigned) MaxCols(screen);
-	    work->bufHead = (RowFlags *) & (SCRN_BUF_FLAGS(screen, row));
-	    work->attribs = SCRN_BUF_ATTRS(screen, row);
-#if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
-	    work->fgrnd = SCRN_BUF_FGRND(screen, row);
-	    work->bgrnd = SCRN_BUF_BGRND(screen, row);
-#else
-	    work->color = SCRN_BUF_COLOR(screen, row);
-#endif
-#endif
-#if OPT_DEC_CHRSET
-	    work->charSets = SCRN_BUF_CSETS(screen, row);
-#endif
-	    work->charData = SCRN_BUF_CHARS(screen, row);
-#if OPT_WIDE_CHARS
-	    if (screen->wide_chars) {
-		work->wideData = SCRN_BUF_WIDEC(screen, row);
-
-		/*
-		 * Construct an array of pointers to combining character data. 
-		 * This is a flexible array on the end of LineData.
-		 *
-		 * The scrollback should only store combining characters for
-		 * rows that have that data.  The visbuf should store this for
-		 * all rows since they can be updated until moved to the
-		 * scrollback.
-		 */
-		work->combSize = (size_t) (screen->max_combining * ICharSize);
-		for (ptr = 0; ptr < work->combSize; ++ptr) {
-		    work->combData[ptr] = SCREEN_PTR(screen,
-						     row,
-						     (int) ptr + OFF_FINAL);
-		}
-	    } else {
-		work->wideData = 0;
-		work->combSize = 0;
-	    }
-#endif
 	}
 	checkLineData(screen, row, work);
     } else {
@@ -143,6 +94,54 @@ getLineData(TScreen * screen,
     }
 
     return work;
+}
+
+void
+fillLineData(TScreen * screen, ScrnPtr * ptrs, LineData * work)
+{
+#if OPT_WIDE_CHARS
+    size_t off;
+#endif
+
+    work->lineSize = (unsigned) MaxCols(screen);
+    work->bufHead = (RowFlags *) & (BUFFER_PTR(ptrs, 0, OFF_FLAGS));
+    work->attribs = BUFFER_PTR(ptrs, 0, OFF_ATTRS);
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+    work->fgrnd = BUFFER_PTR(ptrs, 0, OFF_FGRND);
+    work->bgrnd = BUFFER_PTR(ptrs, 0, OFF_BGRND);
+#else
+    work->color = BUFFER_PTR(ptrs, 0, OFF_COLOR);
+#endif
+#endif
+#if OPT_DEC_CHRSET
+    work->charSets = BUFFER_PTR(ptrs, 0, OFF_CSETS);
+#endif
+    work->charData = BUFFER_PTR(ptrs, 0, OFF_CHARS);
+#if OPT_WIDE_CHARS
+    if (screen->wide_chars) {
+	work->wideData = BUFFER_PTR(ptrs, 0, OFF_WIDEC);
+
+	/*
+	 * Construct an array of pointers to combining character data. 
+	 * This is a flexible array on the end of LineData.
+	 *
+	 * The scrollback should only store combining characters for
+	 * rows that have that data.  The visbuf should store this for
+	 * all rows since they can be updated until moved to the
+	 * scrollback.
+	 */
+	work->combSize = (size_t) (screen->max_combining * ICharSize);
+	for (off = 0; off < work->combSize; ++off) {
+	    work->combData[off] = BUFFER_PTR(ptrs,
+					     0,
+					     (int) off + OFF_FINAL);
+	}
+    } else {
+	work->wideData = 0;
+	work->combSize = 0;
+    }
+#endif
 }
 
 /*
@@ -160,16 +159,33 @@ initLineData(XtermWidget xw)
     screen->lineData = newLineData(screen);
 }
 
+#if 0
 /*
- * Add a new row of data to the VT100 widget, scrolling the current window
- * off by one line into the scrollback area.
+ * Delete one or more rows of data in the VT100 widget, scrolling the window
+ * contents below the line up by the given count.
  *
- * TODO: implement addScrollback().
+ * The row(s) to be deleted will be either in the visible VT100 window, or
+ * starting at the beginning of the scrolled-back lines (for scrolling).
+ *
+ * TODO: store the scrolled-back lines in a FIFO, so we do not have to move
+ * the whole set of lines for each scrolling operation.
  */
 void
-addLineData(XtermWidget xw GCC_UNUSED)
+deleteLineData(XtermWidget xw, int row, int count)
 {
 }
+
+/*
+ * Insert one or more rows of data in the VT100 widget, scrolling the window
+ * contents below the line down by the given count.
+ *
+ * The row(s) to be inserted will always be in the visible VT100 window.
+ */
+void
+insertLineData(XtermWidget xw, int row, int count)
+{
+}
+#endif
 
 #if OPT_WIDE_CHARS
 #define initLineExtra(screen) \
@@ -317,8 +333,8 @@ checkLineData(TScreen * screen GCC_UNUSED,
 {
     TRACE2(("checkLineData %d ->%p\n", row, work));
     assert(work != 0);
-    TRACE_ASSERT(charData, SCRN_BUF_CHARS(screen, row));
-    TRACE_ASSERT(attribs, SCRN_BUF_ATTRS(screen, row));
+    TRACE_ASSERT(charData, SCREEN_PTR(screen, row, OFF_CHARS));
+    TRACE_ASSERT(attribs, SCREEN_PTR(screen, row, OFF_ATTRS));
 }
 
 #undef TRACE_ASSERT

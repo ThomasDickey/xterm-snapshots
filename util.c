@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.435 2009/05/13 00:00:34 tom Exp $ */
+/* $XTermId: util.c,v 1.441 2009/06/01 23:08:53 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2259,9 +2259,9 @@ xtermXftDrawString(XtermWidget xw,
 	    XftDrawString8(screen->renderDraw,
 			   color,
 			   font,
-			   x, y, (unsigned char *) text, len);
+			   x, y, (unsigned char *) text, (int) len);
 	}
-	ncells = len;
+	ncells = (int) len;
 #endif
     }
     return ncells;
@@ -3251,12 +3251,12 @@ drawXtermText(XtermWidget xw,
  * Allocate buffer - workaround for wide-character interfaces.
  */
 void
-allocXtermChars(Char ** buffer, Cardinal length)
+allocXtermChars(ScrnPtr * buffer, Cardinal length)
 {
     if (*buffer == 0) {
-	*buffer = (Char *) XtMalloc(length);
+	*buffer = (ScrnPtr) XtMalloc(length);
     } else {
-	*buffer = (Char *) XtRealloc((char *) *buffer, length);
+	*buffer = (ScrnPtr) XtRealloc((char *) *buffer, length);
     }
 }
 #endif
@@ -3339,7 +3339,7 @@ getXtermSizeHints(XtermWidget xw)
 
     if (!XGetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)),
 			   &xw->hints, &supp))
-	bzero(&xw->hints, sizeof(xw->hints));
+	memset(&xw->hints, 0, sizeof(xw->hints));
     TRACE_HINTS(&(xw->hints));
 }
 
@@ -3633,11 +3633,14 @@ addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 
 #ifdef HAVE_CONFIG_H
 #ifdef USE_MY_MEMMOVE
-char *
-my_memmove(char *s1, char *s2, size_t n)
+void *
+my_memmove(void *s1, void *s2, size_t n)
 {
     if (n != 0) {
-	if ((s1 + n > s2) && (s2 + n > s1)) {
+	char *p1 = (char *) s1;
+	char *p2 = (char *) s2;
+
+	if ((p1 + n > p2) && (p2 + n > p1)) {
 	    static char *bfr;
 	    static size_t length;
 	    size_t j;
@@ -3650,11 +3653,11 @@ my_memmove(char *s1, char *s2, size_t n)
 		    SysError(ERROR_MMALLOC);
 	    }
 	    for (j = 0; j < n; j++)
-		bfr[j] = s2[j];
-	    s2 = bfr;
+		bfr[j] = p2[j];
+	    p2 = bfr;
 	}
 	while (n-- != 0)
-	    s1[n] = s2[n];
+	    p1[n] = p2[n];
     }
     return s1;
 }
@@ -3826,6 +3829,25 @@ systemWcwidthOk(int samplesize, int samplepass)
 {
     wchar_t n;
     int oops = 0;
+
+    for (n = 21; n <= 25; ++n) {
+	int code = (int) dec2ucs((unsigned) n);
+	int system_code = wcwidth(code);
+	int intern_code = mk_wcwidth(code);
+
+	/*
+	 * Solaris 10 wcwidth() returns "2" for all of the line-drawing (page
+	 * 0x2500) and most of the geometric shapes (a few are excluded, just
+	 * to make it more difficult to use).  Do a sanity check to avoid using
+	 * it.
+	 */
+	if ((system_code < 0 && intern_code >= 1)
+	    || (system_code >= 0 && intern_code != system_code)) {
+	    TRACE(("systemWcwidthOk: broken system line-drawing wcwidth\n"));
+	    oops += (samplepass + 1);
+	    break;
+	}
+    }
 
     for (n = 0; n < (wchar_t) samplesize; ++n) {
 	int system_code = wcwidth(n);
