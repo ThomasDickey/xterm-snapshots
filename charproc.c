@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.920 2009/05/10 16:00:22 tom Exp $ */
+/* $XTermId: charproc.c,v 1.928 2009/05/31 18:10:19 tom Exp $ */
 
 /*
 
@@ -137,7 +137,6 @@ static void FromAlternate(XtermWidget /* xw */ );
 static void RequestResize(XtermWidget termw, int rows, int cols, Bool text);
 static void SwitchBufs(XtermWidget xw);
 static void ToAlternate(XtermWidget /* xw */ );
-static void VTallocbuf(void);
 static void ansi_modes(XtermWidget termw,
 		       void (*func) (unsigned *p, unsigned mask));
 static void bitclr(unsigned *p, unsigned mask);
@@ -4820,8 +4819,8 @@ ToAlternate(XtermWidget xw)
     if (!screen->alternate) {
 	TRACE(("ToAlternate\n"));
 	if (!screen->altbuf)
-	    screen->altbuf = Allocate(MaxRows(screen), MaxCols(screen),
-				      &screen->abuf_address);
+	    screen->altbuf = allocScrnBuf(MaxRows(screen), MaxCols(screen),
+					  &screen->abuf_address);
 	SwitchBufs(xw);
 	screen->alternate = True;
 	update_altscreen();
@@ -4896,9 +4895,9 @@ SwitchBufPtrs(TScreen * screen)
 }
 
 void
-VTRun(void)
+VTRun(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(term);
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("VTRun ...\n"));
 
@@ -4910,8 +4909,7 @@ VTRun(void)
     update_tekshow();
     set_vthide_sensitivity();
 
-    if (screen->allbuf == NULL)
-	VTallocbuf();
+    ScrnAllocBuf(screen);
 
     screen->cursor_state = OFF;
     screen->cursor_set = ON;
@@ -4928,7 +4926,7 @@ VTRun(void)
 #endif
     screen->is_running = True;
     if (!setjmp(VTend))
-	VTparse(term);
+	VTparse(xw);
     StopBlinking(screen);
     HideCursor();
     screen->cursor_set = OFF;
@@ -5110,10 +5108,9 @@ static String xterm_trans =
      <MappingNotify>: KeyboardMapping()\n";
 
 int
-VTInit(void)
+VTInit(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(term);
-    Widget vtparent = SHELL_OF(term);
+    Widget vtparent = SHELL_OF(xw);
 
     TRACE(("VTInit {{\n"));
 
@@ -5122,31 +5119,12 @@ VTInit(void)
     (void) XSetWMProtocols(XtDisplay(vtparent), XtWindow(vtparent),
 			   &wm_delete_window, 1);
     TRACE_TRANS("shell", vtparent);
-    TRACE_TRANS("vt100", (Widget) (term));
+    TRACE_TRANS("vt100", (Widget) (xw));
 
-    if (screen->allbuf == NULL)
-	VTallocbuf();
+    ScrnAllocBuf(TScreenOf(xw));
 
     TRACE(("...}} VTInit\n"));
     return (1);
-}
-
-static void
-VTallocbuf(void)
-{
-    TScreen *screen = TScreenOf(term);
-    int nrows = MaxRows(screen);
-
-    /* allocate screen buffer now, if necessary. */
-    if (screen->scrollWidget)
-	nrows += screen->savelines;
-    screen->allbuf = Allocate(nrows, MaxCols(screen),
-			      &screen->sbuf_address);
-    if (screen->scrollWidget)
-	screen->visbuf = &screen->allbuf[MAX_PTRS * screen->savelines];
-    else
-	screen->visbuf = screen->allbuf;
-    return;
 }
 
 static void
@@ -5439,12 +5417,12 @@ VTInitialize(Widget wrequest,
      * field-by-field assignment of "screen" fields that are named in the
      * resource list.
      */
-    bzero((char *) &wnew->screen, sizeof(wnew->screen));
+    memset(&wnew->screen, 0, sizeof(wnew->screen));
 
     /* DESCO Sys#67660
      * Zero out the entire "keyboard" component of "wnew" widget.
      */
-    bzero((char *) &wnew->keyboard, sizeof(wnew->keyboard));
+    memset(&wnew->keyboard, 0, sizeof(wnew->keyboard));
 
     /* dummy values so that we don't try to Realize the parent shell with height
      * or width of 0, which is illegal in X.  The real size is computed in the
@@ -5989,7 +5967,7 @@ VTInitialize(Widget wrequest,
     set_character_class(wnew->screen.charClass);
 
     /* create it, but don't realize it */
-    ScrollBarOn(wnew, True, False);
+    ScrollBarOn(wnew, True);
 
     /* make sure that the resize gravity acceptable */
     if (wnew->misc.resizeGravity != NorthWestGravity &&
@@ -6500,7 +6478,7 @@ VTRealize(Widget w,
      */
     if (xw->misc.scrollbar) {
 	screen->fullVwin.sb_info.width = 0;
-	ScrollBarOn(xw, False, True);
+	ScrollBarOn(xw, False);
     }
     return;
 }

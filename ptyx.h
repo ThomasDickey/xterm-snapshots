@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.573 2009/05/12 23:55:03 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.574 2009/05/31 18:41:13 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1107,7 +1107,7 @@ typedef struct {
 
 /* The order of ifdef's matches the logic for num_ptrs in VTInitialize */
 typedef enum {
-	OFF_FLAGS = 0		/* BUF_HEAD */
+	OFF_FLAGS = 0		/* row-flags */
 	, OFF_ATTRS		/* video attributes */
 #if OPT_ISO_COLORS
 #if OPT_256_COLORS || OPT_88_COLORS

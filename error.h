@@ -1,4 +1,4 @@
-/* $XTermId: error.h,v 1.18 2006/02/13 01:14:58 tom Exp $ */
+/* $XTermId: error.h,v 1.19 2009/05/31 17:29:36 tom Exp $ */
 
 
 /* $XFree86: xc/programs/xterm/error.h,v 1.10 2006/02/13 01:14:58 dickey Exp $ */
@@ -79,10 +79,6 @@
 #define	ERROR_SREALLOC	92	/* ScreenResize: realloc() failed on alt base */
 #define	ERROR_RESIZE	96	/* ScreenResize: malloc() or realloc() failed */
 #define	ERROR_SAVE_PTR	102	/* ScrnPointers: malloc/realloc() failed */
-
-/* scrollbar.c */
-#define	ERROR_SBRALLOC	110	/* ScrollBarOn: realloc() failed on base */
-#define	ERROR_SBRALLOC2	111	/* ScrollBarOn: realloc() failed on rows */
 
 /* util.c */
 #define	ERROR_MMALLOC   121     /* my_memmove: malloc/realloc failed */

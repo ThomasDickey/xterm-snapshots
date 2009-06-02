@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.168 2009/03/29 13:58:45 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.169 2009/05/31 14:01:29 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -1846,7 +1846,7 @@ TekSimulatePageButton(TekWidget tw, Bool reset)
 	TekScreen *tekscr = TekScreenOf(tw);
 
 	if (reset) {
-	    bzero((char *) &tekscr->cur, sizeof tekscr->cur);
+	    memset(&tekscr->cur, 0, sizeof tekscr->cur);
 	}
 	tekRefreshList = (TekLink *) 0;
 	TekPage(tw);
