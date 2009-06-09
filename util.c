@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.441 2009/06/01 23:08:53 tom Exp $ */
+/* $XTermId: util.c,v 1.442 2009/06/09 00:47:31 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -3033,8 +3033,6 @@ drawXtermText(XtermWidget xw,
 				    chrset, on_wide))
 #endif
 		    xtermDrawBoxChar(xw, ch, flags, gc, DrawX(last), y, ch_width);
-		if (ch_width > 1)
-		    x += (ch_width - 1) * FontWidth(screen);
 		first = last + 1;
 	    }
 	}

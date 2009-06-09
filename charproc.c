@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.928 2009/05/31 18:10:19 tom Exp $ */
+/* $XTermId: charproc.c,v 1.929 2009/06/08 23:30:27 tom Exp $ */
 
 /*
 
@@ -6024,7 +6024,6 @@ VTInitialize(Widget wrequest,
     if (wnew->misc.appkeypadDefault)
 	wnew->keyboard.flags |= MODE_DECKPAM;
 
-    /* after MAX_PTRS is known, allocate line-data working variables */
     initLineData(wnew);
     return;
 }

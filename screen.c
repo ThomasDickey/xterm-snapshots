@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.286 2009/06/01 22:53:45 tom Exp $ */
+/* $XTermId: screen.c,v 1.288 2009/06/08 22:31:02 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -74,22 +74,28 @@
 #define getMinCol(screen) 0
 #define getMaxCol(screen) ((screen)->max_col)
 
+#define ScrnHeadAddr(base,off) \
+		base + ((off) * MAX_PTRS)
+
+#define ScrnHeadSize(len) \
+		sizeof(ScrnPtr) * (unsigned) (MAX_PTRS * (len))
+
 #define MoveScrnPtrs(base, dst, src, len) \
-	memmove(base + ((dst) * MAX_PTRS), \
-		base + ((src) * MAX_PTRS), \
-		sizeof(ScrnPtr) * (unsigned) (MAX_PTRS * (len)))
+	memmove(ScrnHeadAddr(base, dst), \
+		ScrnHeadAddr(base, src), \
+		ScrnHeadSize(len))
 
 #define SaveScrnPtrs(base, src, len) \
 	memcpy (screen->save_ptr, \
-		base + ((src) * MAX_PTRS), \
-		sizeof(ScrnPtr) * (unsigned) (MAX_PTRS * (len)))
+		ScrnHeadAddr(base, src), \
+		ScrnHeadSize(len))
 
 #define RestoreScrnPtrs(base, dst, len) \
-	memcpy (base + ((dst) * MAX_PTRS), \
+	memcpy (ScrnHeadAddr(base, dst), \
 		screen->save_ptr, \
-		sizeof(ScrnPtr) * (unsigned) (MAX_PTRS * (len)))
+		ScrnHeadSize(len))
 
-#define VisBuf(screen) &screen->allbuf[MAX_PTRS * savelines]
+#define VisBuf(screen) ScrnHeadAddr(screen->allbuf, savelines)
 
 static void
 setupScrnPtrs(ScrnBuf base, ScrnPtr data, int nrow, int ncol)
@@ -160,7 +166,7 @@ Reallocate(XtermWidget xw,
     size_t mincols;
     Char *oldbuf;
     int move_down = 0, move_up = 0;
-    size_t entries = (size_t) (MAX_PTRS * nrow);
+    size_t entries = ScrnHeadSize(nrow);
     size_t length = (size_t) (BUF_PTRS * nrow * ncol);
 
     if (sbuf == NULL || *sbuf == NULL) {
@@ -198,7 +204,7 @@ Reallocate(XtermWidget xw,
 	    MoveScrnPtrs(*sbuf, 0, move_up, (oldrow - move_up));
 	}
     }
-    *sbuf = TypeRealloc(ScrnPtr, entries, *sbuf);
+    *sbuf = (ScrnPtr *) realloc(*sbuf, entries);
     if (*sbuf == 0)
 	SysError(ERROR_RESIZE);
     base = *sbuf;
@@ -269,11 +275,11 @@ ReallocateBufOffsets(XtermWidget xw,
 
     xw->num_ptrs = (int) new_max_offsets;
 
-    entries = ((unsigned) MAX_PTRS * nrow);
+    entries = ScrnHeadSize(nrow);
     length = ((unsigned) BUF_PTRS * nrow * ncol);
     oldbuf = *sbufaddr;
 
-    *sbuf = TypeRealloc(ScrnPtr, entries, *sbuf);
+    *sbuf = (ScrnPtr *) realloc(*sbuf, entries);
     if (*sbuf == 0)
 	SysError(ERROR_RESIZE);
     base = *sbuf;
@@ -707,19 +713,19 @@ ScrnAllocBuf(TScreen * screen)
 size_t
 ScrnPointers(TScreen * screen, size_t len)
 {
-    len *= (unsigned) MAX_PTRS;
+    size_t result = ScrnHeadSize(len);
 
-    if (len > screen->save_len) {
+    if (result > screen->save_len) {
 	if (screen->save_len)
-	    screen->save_ptr = TypeRealloc(ScrnPtr, len, screen->save_ptr);
+	    screen->save_ptr = (ScrnPtr *) realloc(screen->save_ptr, result);
 	else
-	    screen->save_ptr = TypeMallocN(ScrnPtr, len);
+	    screen->save_ptr = (ScrnPtr *) malloc(result);
 	screen->save_len = len;
 	if (screen->save_ptr == 0)
 	    SysError(ERROR_SAVE_PTR);
     }
     TRACE2(("ScrnPointers %ld ->%p\n", (long) len, screen->save_ptr));
-    return len * sizeof(ScrnPtr);
+    return result;
 }
 
 /*
