@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.341 2009/05/13 00:01:16 tom Exp $ */
+/* $XTermId: button.c,v 1.342 2009/06/08 23:23:51 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2715,7 +2715,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
      * string were UTF-8.
      */
     if_OPT_WIDE_CHARS(screen, {
-	need *= (unsigned) (MAX_PTRS * 6);
+	need *= ((screen->lineExtra + 1) * 6);
     });
 
     if ((result = TypeCallocN(Char, need + 1)) != 0) {
