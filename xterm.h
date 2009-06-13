@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.550 2009/05/31 18:44:36 tom Exp $ */
+/* $XTermId: xterm.h,v 1.551 2009/06/10 11:13:11 tom Exp $ */
 
 /************************************************************
 
@@ -1030,12 +1030,12 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 
 /* screen.c */
 extern Bool non_blank_line (TScreen */* screen */, int  /* row */, int  /* col */, int  /* len */);
-extern ScrnBuf allocScrnBuf (int  /* nrow */, int  /* ncol */, ScrnPtr * /* addr */);
+extern ScrnBuf allocScrnBuf (XtermWidget /* xw */, int  /* nrow */, int  /* ncol */, ScrnPtr * /* addr */);
 extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
 extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len */, int /* row */, int /* col */);
-extern void ScrnAllocBuf(TScreen * /* screen */ );
+extern void ScrnAllocBuf (XtermWidget /* xw */);
 extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* n */, int  /* last */, unsigned  /* size */, unsigned  /* where */);

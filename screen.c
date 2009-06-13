@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.288 2009/06/08 22:31:02 tom Exp $ */
+/* $XTermId: screen.c,v 1.301 2009/06/12 23:43:07 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -77,41 +77,187 @@
 #define ScrnHeadAddr(base,off) \
 		base + ((off) * MAX_PTRS)
 
-#define ScrnHeadSize(len) \
-		sizeof(ScrnPtr) * (unsigned) (MAX_PTRS * (len))
-
 #define MoveScrnPtrs(base, dst, src, len) \
 	memmove(ScrnHeadAddr(base, dst), \
 		ScrnHeadAddr(base, src), \
-		ScrnHeadSize(len))
+		scrnHeadSize(screen, len))
 
 #define SaveScrnPtrs(base, src, len) \
 	memcpy (screen->save_ptr, \
 		ScrnHeadAddr(base, src), \
-		ScrnHeadSize(len))
+		scrnHeadSize(screen, len))
 
 #define RestoreScrnPtrs(base, dst, len) \
 	memcpy (ScrnHeadAddr(base, dst), \
 		screen->save_ptr, \
-		ScrnHeadSize(len))
+		scrnHeadSize(screen, len))
 
 #define VisBuf(screen) ScrnHeadAddr(screen->allbuf, savelines)
 
-static void
-setupScrnPtrs(ScrnBuf base, ScrnPtr data, int nrow, int ncol)
-{
-    int i, j, k;
+#define SetupScrnPtr(dst,src) \
+		dst = src; \
+		src += ((unsigned) ncol * sizeof(*dst))
 
-    for (i = k = 0; i < nrow; i++) {
-	for (j = 0; j < MAX_PTRS; ++j, ++k) {
-	    if (j < BUF_HEAD) {
-		base[k] = 0;
-	    } else {
-		base[k] = data;
-		data += ncol;
+#define SizeofHeadData(n) (sizeof(ScrnPtrs) + ((n) - 1) * sizeof(ScrnPtr))
+
+#if OPT_WIDE_CHARS
+#define ExtraScrnSize(screen) ((screen)->wide_chars ? (unsigned) ((screen)->max_combining * 2) : 0)
+#else
+#define ExtraScrnSize(screen) 0
+#endif
+
+static unsigned
+scrnHeadSize(TScreen * screen, unsigned count)
+{
+    unsigned result;
+    unsigned extra = ExtraScrnSize(screen);
+
+#if OPT_WIDE_CHARS
+    if (screen->wide_chars) {
+	result = SizeofHeadData(extra + 1);
+    } else
+#endif
+	result = SizeofHeadData(extra);
+    result *= count;
+
+    return result;
+}
+
+/*
+ * Given a block of data, build index to it in the 'base' parameter.
+ */
+static void
+setupScrnPtrs(XtermWidget xw, ScrnBuf base, Char * data, int nrow, int ncol)
+{
+    TScreen *screen = TScreenOf(xw);
+    unsigned i, j;
+    unsigned offset = 0;
+    unsigned jump = scrnHeadSize(screen, 1);
+    ScrnPtrs *ptr;
+
+    for (i = 0; i < (unsigned) nrow; i++, offset += jump) {
+	ptr = (ScrnPtrs *) ((char *) base + offset);
+
+	ptr->bufHead = 0;
+	SetupScrnPtr(ptr->attribs, data);
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+	SetupScrnPtr(ptr->fgrnd, data);
+	SetupScrnPtr(ptr->bgrnd, data);
+#else
+	SetupScrnPtr(ptr->color, data);
+#endif
+#endif
+#if OPT_DEC_CHRSET
+	SetupScrnPtr(ptr->charSets, data);
+#endif
+	SetupScrnPtr(ptr->charData, data);
+#if OPT_WIDE_CHARS
+	if (screen->wide_chars) {
+	    unsigned extra = ExtraScrnSize(screen);
+
+	    SetupScrnPtr(ptr->wideData, data);
+	    for (j = 0; j < extra; ++j) {
+		SetupScrnPtr(ptr->combData[j], data);
 	    }
 	}
+#endif
     }
+}
+
+#define ExtractScrnData(name) \
+		memcpy(dstPtrs->name, \
+		       ((ScrnPtrs *) srcPtrs)->name,\
+		       (unsigned) dstCols * sizeof(dstPtrs->name[0])); \
+		nextPtr += ((unsigned) srcCols * sizeof(dstPtrs->name[0]))
+
+/*
+ * As part of reallocating the screen buffer when resizing, extract from
+ * the old copy of the screen buffer the data which will be used in the
+ * new copy of the screen buffer.
+ */
+static void
+extractScrnData(XtermWidget xw,
+		ScrnBuf srcPtrs,
+		Char * dstData,
+		int nrows,
+		int dstCols,
+		int srcCols)
+{
+    TScreen *screen = TScreenOf(xw);
+    unsigned i, j, k;
+    unsigned jump = scrnHeadSize(screen, 1);
+    Char *nextPtr = dstData;
+
+    ScrnPtrs *dstPtrs = (ScrnPtrs *) malloc(jump);
+
+    for (i = k = 0; i < (unsigned) nrows; i++) {
+	setupScrnPtrs(xw, (ScrnBuf) dstPtrs, dstData, 1, srcCols);
+
+	ExtractScrnData(attribs);
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+	ExtractScrnData(fgrnd);
+	ExtractScrnData(bgrnd);
+#else
+	ExtractScrnData(color);
+#endif
+#endif
+#if OPT_DEC_CHRSET
+	ExtractScrnData(charSets);
+#endif
+	ExtractScrnData(charData);
+#if OPT_WIDE_CHARS
+	if (screen->wide_chars) {
+	    unsigned extra = ExtraScrnSize(screen);
+
+	    ExtractScrnData(wideData);
+	    for (j = 0; j < extra; ++j) {
+		ExtractScrnData(combData[j]);
+	    }
+	}
+#endif
+
+	srcPtrs = (ScrnBuf) ((char *) srcPtrs + jump);
+	dstData = nextPtr;
+    }
+    free(dstPtrs);
+}
+
+static ScrnPtr *
+allocScrnHead(TScreen * screen, int nrow)
+{
+    ScrnPtr *result;
+
+    result = (ScrnPtr *) calloc((unsigned) nrow, scrnHeadSize(screen, 1));
+    if (result == 0)
+	SysError(ERROR_SCALLOC);
+
+    return result;
+}
+
+static ScrnPtr *
+reallocScrnHead(TScreen * screen, ScrnPtr * oldptr, unsigned nrow)
+{
+    ScrnPtr *result;
+
+    result = (ScrnPtr *) realloc(oldptr, scrnHeadSize(screen, nrow));
+    if (result == 0)
+	SysError(ERROR_RESIZE);
+
+    return result;
+}
+
+static Char *
+allocScrnData(int nrow, int ncol)
+{
+    Char *result;
+    size_t length = (size_t) (BUF_PTRS * nrow * ncol);
+
+    if ((result = (Char *) calloc(length, sizeof(Char))) == 0)
+	SysError(ERROR_SCALLOC2);
+
+    return result;
 }
 
 /*
@@ -128,19 +274,15 @@ setupScrnPtrs(ScrnBuf base, ScrnPtr data, int nrow, int ncol)
  * We store it all as pointers, because of alignment considerations.
  */
 ScrnBuf
-allocScrnBuf(int nrow, int ncol, Char ** addr)
+allocScrnBuf(XtermWidget xw, int nrow, int ncol, Char ** addr)
 {
+    TScreen *screen = TScreenOf(xw);
     ScrnBuf base;
-    size_t entries = (size_t) (MAX_PTRS * nrow);
-    size_t length = (size_t) (BUF_PTRS * nrow * ncol);
 
-    if ((base = TypeCallocN(ScrnPtr, entries)) == 0)
-	SysError(ERROR_SCALLOC);
+    base = allocScrnHead(screen, nrow);
+    *addr = allocScrnData(nrow, ncol);
 
-    if ((*addr = TypeCallocN(Char, length)) == 0)
-	SysError(ERROR_SCALLOC2);
-
-    setupScrnPtrs(base, *addr, nrow, ncol);
+    setupScrnPtrs(xw, base, *addr, nrow, ncol);
 
     TRACE(("allocScrnBuf %dx%d ->%p\n", nrow, ncol, base));
     return (base);
@@ -160,14 +302,13 @@ Reallocate(XtermWidget xw,
 	   int oldrow,
 	   int oldcol)
 {
+    TScreen *screen = TScreenOf(xw);
     ScrnBuf base;
     Char *tmp;
-    int i, j, k, minrows;
+    int minrows;
     size_t mincols;
     Char *oldbuf;
     int move_down = 0, move_up = 0;
-    size_t entries = ScrnHeadSize(nrow);
-    size_t length = (size_t) (BUF_PTRS * nrow * ncol);
 
     if (sbuf == NULL || *sbuf == NULL) {
 	return 0;
@@ -201,20 +342,17 @@ Reallocate(XtermWidget xw,
 	/* Overlapping move here! */
 	TRACE(("move_up %d\n", move_up));
 	if (move_up) {
-	    MoveScrnPtrs(*sbuf, 0, move_up, (oldrow - move_up));
+	    MoveScrnPtrs(*sbuf, 0, move_up, (unsigned) (oldrow - move_up));
 	}
     }
-    *sbuf = (ScrnPtr *) realloc(*sbuf, entries);
-    if (*sbuf == 0)
-	SysError(ERROR_RESIZE);
+    *sbuf = reallocScrnHead(screen, *sbuf, (unsigned) nrow);
     base = *sbuf;
 
     /*
      *  create the new buffer space and copy old buffer contents there
      *  line by line.
      */
-    if ((tmp = TypeCallocN(Char, length)) == 0)
-	SysError(ERROR_SREALLOC);
+    tmp = allocScrnData(nrow, ncol);
     *sbufaddr = tmp;
     minrows = (oldrow < nrow) ? oldrow : nrow;
     mincols = (size_t) ((oldcol < ncol) ? oldcol : ncol);
@@ -225,17 +363,9 @@ Reallocate(XtermWidget xw,
 	tmp += (ncol * move_down * BUF_PTRS);
     }
 
-    for (i = k = 0; i < minrows; i++) {
-	for (j = 0; j < MAX_PTRS; ++j, ++k) {
-	    if (j < BUF_HEAD) {
-	    } else {
-		memcpy(tmp, base[k], mincols);
-		tmp += ncol;
-	    }
-	}
-    }
+    extractScrnData(xw, base, tmp, minrows, (int) mincols, ncol);
 
-    setupScrnPtrs(base, *sbufaddr, nrow, ncol);
+    setupScrnPtrs(xw, base, *sbufaddr, nrow, ncol);
 
     /* Now free the old buffer */
     free(oldbuf);
@@ -257,15 +387,15 @@ ReallocateBufOffsets(XtermWidget xw,
 		     unsigned ncol,
 		     size_t new_max_offsets)
 {
+    TScreen *screen = TScreenOf(xw);
     unsigned i;
     int j, k;
     ScrnBuf base;
     Char *oldbuf, *tmp;
-    size_t entries, length;
     /*
      * As there are 2 buffers (allbuf, altbuf), we cannot change num_ptrs in
-     * this function.  However MAX_PTRS depends on num_ptrs so change it now
-     * and restore the value when done.
+     * this function.  However some of the calculations depend on num_ptrs so
+     * change it now and restore the value when done.
      */
     int old_max_ptrs = MAX_PTRS;
 
@@ -275,17 +405,12 @@ ReallocateBufOffsets(XtermWidget xw,
 
     xw->num_ptrs = (int) new_max_offsets;
 
-    entries = ScrnHeadSize(nrow);
-    length = ((unsigned) BUF_PTRS * nrow * ncol);
     oldbuf = *sbufaddr;
 
-    *sbuf = (ScrnPtr *) realloc(*sbuf, entries);
-    if (*sbuf == 0)
-	SysError(ERROR_RESIZE);
+    *sbuf = reallocScrnHead(screen, *sbuf, nrow);
     base = *sbuf;
 
-    if ((tmp = TypeCallocN(Char, length)) == 0)
-	SysError(ERROR_SREALLOC);
+    tmp = allocScrnData((int) nrow, (int) ncol);
     *sbufaddr = tmp;
 
     for (i = 0, k = 0; i < nrow; i++) {
@@ -299,7 +424,7 @@ ReallocateBufOffsets(XtermWidget xw,
 	tmp += ncol * (new_max_offsets - (unsigned) old_max_ptrs);
     }
 
-    setupScrnPtrs(base, *sbufaddr, (int) nrow, (int) ncol);
+    setupScrnPtrs(xw, base, *sbufaddr, (int) nrow, (int) ncol);
 
     /* Now free the old buffer and restore num_ptrs */
     free(oldbuf);
@@ -646,7 +771,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 
     /* save n lines at where */
     (void) ScrnPointers(screen, n);
-    SaveScrnPtrs(sb, where, (int) n);
+    SaveScrnPtrs(sb, where, n);
 
     /* clear contents of old rows */
     for (i = 0; i < last; i += MAX_PTRS) {
@@ -693,8 +818,10 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 }
 
 void
-ScrnAllocBuf(TScreen * screen)
+ScrnAllocBuf(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->allbuf == NULL) {
 	int nrows = MaxRows(screen);
 	int savelines = screen->scrollWidget ? screen->savelines : 0;
@@ -702,7 +829,8 @@ ScrnAllocBuf(TScreen * screen)
 	TRACE(("ScrnAllocBuf %dx%d (%d)\n",
 	       nrows, MaxCols(screen), screen->savelines));
 
-	screen->allbuf = allocScrnBuf(nrows + screen->savelines,
+	screen->allbuf = allocScrnBuf(xw,
+				      nrows + screen->savelines,
 				      MaxCols(screen),
 				      &screen->sbuf_address);
 	screen->visbuf = VisBuf(screen);
@@ -713,7 +841,7 @@ ScrnAllocBuf(TScreen * screen)
 size_t
 ScrnPointers(TScreen * screen, size_t len)
 {
-    size_t result = ScrnHeadSize(len);
+    size_t result = scrnHeadSize(screen, len);
 
     if (result > screen->save_len) {
 	if (screen->save_len)
@@ -747,7 +875,6 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where,
 
     assert(n != 0);
     assert(size != 0);
-    assert(MAX_PTRS > 0);
 
     /* save n lines at bottom */
     ScrnClearLines(xw, sb, (last -= (int) n - 1), n, size);
@@ -762,10 +889,10 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where,
      *   +--------|---------|----+
      */
     assert(last >= where);
-    MoveScrnPtrs(sb, (where + (int) n), where, (last - where));
+    MoveScrnPtrs(sb, (where + (int) n), where, (unsigned) (last - where));
 
     /* reuse storage for new lines at where */
-    RestoreScrnPtrs(sb, where, (int) n);
+    RestoreScrnPtrs(sb, where, n);
 }
 
 /*
@@ -786,15 +913,14 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where,
 
     assert(n != 0);
     assert(size != 0);
-    assert(MAX_PTRS > 0);
 
     ScrnClearLines(xw, sb, where, n, size);
 
     /* move up lines */
-    MoveScrnPtrs(sb, where, where + (int) n, (last -= ((int) n - 1)) - where);
+    MoveScrnPtrs(sb, where, where + (int) n, (unsigned) ((last -= ((int) n - 1)) - where));
 
     /* reuse storage for new bottom lines */
-    RestoreScrnPtrs(sb, last, (int) n);
+    RestoreScrnPtrs(sb, last, n);
 }
 
 /*

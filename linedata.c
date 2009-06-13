@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.37 2009/05/31 18:11:19 tom Exp $ */
+/* $XTermId: linedata.c,v 1.38 2009/06/12 22:24:31 tom Exp $ */
 
 /************************************************************
 
@@ -99,28 +99,29 @@ getLineData(TScreen * screen,
 void
 fillLineData(TScreen * screen, ScrnPtr * ptrs, LineData * work)
 {
+    ScrnPtrs *realPtrs = (ScrnPtrs *) ptrs;
 #if OPT_WIDE_CHARS
     size_t off;
 #endif
 
     work->lineSize = (unsigned) MaxCols(screen);
-    work->bufHead = (RowFlags *) & (BUFFER_PTR(ptrs, 0, OFF_FLAGS));
-    work->attribs = BUFFER_PTR(ptrs, 0, OFF_ATTRS);
+    work->bufHead = (RowFlags *) & (realPtrs->bufHead);
+    work->attribs = realPtrs->attribs;
 #if OPT_ISO_COLORS
 #if OPT_256_COLORS || OPT_88_COLORS
-    work->fgrnd = BUFFER_PTR(ptrs, 0, OFF_FGRND);
-    work->bgrnd = BUFFER_PTR(ptrs, 0, OFF_BGRND);
+    work->fgrnd = realPtrs->fgrnd;
+    work->bgrnd = realPtrs->bgrnd;
 #else
-    work->color = BUFFER_PTR(ptrs, 0, OFF_COLOR);
+    work->color = realPtrs->color;
 #endif
 #endif
 #if OPT_DEC_CHRSET
-    work->charSets = BUFFER_PTR(ptrs, 0, OFF_CSETS);
+    work->charSets = realPtrs->charSets;
 #endif
-    work->charData = BUFFER_PTR(ptrs, 0, OFF_CHARS);
+    work->charData = realPtrs->charData;
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
-	work->wideData = BUFFER_PTR(ptrs, 0, OFF_WIDEC);
+	work->wideData = realPtrs->wideData;
 
 	/*
 	 * Construct an array of pointers to combining character data. 
@@ -133,9 +134,7 @@ fillLineData(TScreen * screen, ScrnPtr * ptrs, LineData * work)
 	 */
 	work->combSize = (size_t) (screen->max_combining * ICharSize);
 	for (off = 0; off < work->combSize; ++off) {
-	    work->combData[off] = BUFFER_PTR(ptrs,
-					     0,
-					     (int) off + OFF_FINAL);
+	    work->combData[off] = realPtrs->combData[off];
 	}
     } else {
 	work->wideData = 0;

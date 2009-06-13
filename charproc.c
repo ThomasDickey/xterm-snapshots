@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.929 2009/06/08 23:30:27 tom Exp $ */
+/* $XTermId: charproc.c,v 1.930 2009/06/10 11:12:43 tom Exp $ */
 
 /*
 
@@ -4819,7 +4819,8 @@ ToAlternate(XtermWidget xw)
     if (!screen->alternate) {
 	TRACE(("ToAlternate\n"));
 	if (!screen->altbuf)
-	    screen->altbuf = allocScrnBuf(MaxRows(screen), MaxCols(screen),
+	    screen->altbuf = allocScrnBuf(xw,
+					  MaxRows(screen), MaxCols(screen),
 					  &screen->abuf_address);
 	SwitchBufs(xw);
 	screen->alternate = True;
@@ -4909,7 +4910,7 @@ VTRun(XtermWidget xw)
     update_tekshow();
     set_vthide_sensitivity();
 
-    ScrnAllocBuf(screen);
+    ScrnAllocBuf(xw);
 
     screen->cursor_state = OFF;
     screen->cursor_set = ON;
@@ -5121,7 +5122,7 @@ VTInit(XtermWidget xw)
     TRACE_TRANS("shell", vtparent);
     TRACE_TRANS("vt100", (Widget) (xw));
 
-    ScrnAllocBuf(TScreenOf(xw));
+    ScrnAllocBuf(xw);
 
     TRACE(("...}} VTInit\n"));
     return (1);
