@@ -1,4 +1,4 @@
-/* $XTermId: error.h,v 1.19 2009/05/31 17:29:36 tom Exp $ */
+/* $XTermId: error.h,v 1.20 2009/06/10 00:18:34 tom Exp $ */
 
 
 /* $XFree86: xc/programs/xterm/error.h,v 1.10 2006/02/13 01:14:58 dickey Exp $ */
@@ -76,7 +76,6 @@
 /* screen.c */
 #define	ERROR_SCALLOC	90	/* Alloc: calloc() failed on base */
 #define	ERROR_SCALLOC2	91	/* Alloc: calloc() failed on rows */
-#define	ERROR_SREALLOC	92	/* ScreenResize: realloc() failed on alt base */
 #define	ERROR_RESIZE	96	/* ScreenResize: malloc() or realloc() failed */
 #define	ERROR_SAVE_PTR	102	/* ScrnPointers: malloc/realloc() failed */
 

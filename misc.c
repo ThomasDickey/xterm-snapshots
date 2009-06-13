@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.416 2009/05/31 17:54:09 tom Exp $ */
+/* $XTermId: misc.c,v 1.417 2009/06/10 00:54:04 tom Exp $ */
 
 /*
  *
@@ -3311,7 +3311,6 @@ SysReasonMsg(int code)
 	{ ERROR_XIOERROR,	"xioerror: X I/O error" },
 	{ ERROR_SCALLOC,	"Alloc: calloc() failed on base" },
 	{ ERROR_SCALLOC2,	"Alloc: calloc() failed on rows" },
-	{ ERROR_SREALLOC,	"ScreenResize: realloc() failed on alt base" },
 	{ ERROR_RESIZE,		"ScreenResize: malloc() or realloc() failed" },
 	{ ERROR_SAVE_PTR,	"ScrnPointers: malloc/realloc() failed" },
 	{ ERROR_MMALLOC,	"my_memmove: malloc/realloc failed" },

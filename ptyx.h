@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.574 2009/05/31 18:41:13 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.576 2009/06/10 00:53:20 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1141,6 +1141,31 @@ typedef struct {
 #endif
 
 typedef int RowFlags;
+
+/*
+ * This is the "old" xterm scrollback (not)structure.
+ */
+typedef struct {
+	ScrnPtr bufHead;	/* OFF_FLAGS - flag for wrapped lines */
+	ScrnPtr attribs;	/* OFF_ATTRS - video attributes */
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+	ScrnPtr fgrnd;		/* OFF_FGRND - foreground color number */
+	ScrnPtr bgrnd;		/* OFF_BGRND - background color number */
+#else
+	ScrnPtr color;		/* OFF_COLOR - foreground+background color numbers */
+#endif
+#endif
+#if OPT_DEC_CHRSET
+	ScrnPtr charSets;	/* OFF_CSETS - DEC character-set */
+#endif
+	/* wide (16-bit) characters begin here */
+	ScrnPtr charData;	/* OFF_CHARS - first (or only) byte of cell's character */
+#if OPT_WIDE_CHARS
+	ScrnPtr wideData;	/* OFF_WIDEC - second byte of first wide-character */
+#endif
+	ScrnPtr combData[];	/* OFF_FINAL - first enum past fixed-offsets */
+} ScrnPtrs;
 
 /*
  * We use CellData in a few places, when copying a cell's data to a temporary
