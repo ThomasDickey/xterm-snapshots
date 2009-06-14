@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.38 2009/06/12 22:24:31 tom Exp $ */
+/* $XTermId: linedata.c,v 1.39 2009/06/13 13:21:43 tom Exp $ */
 
 /************************************************************
 
@@ -321,9 +321,10 @@ restoreCellData(TScreen * screen,
  * expected values for the given row.
  */
 #define TRACE_ASSERT(name, expression) \
- 	TRACE2(("checkLineData " #name " %p vs %p\n", \
-		work->name, expression)); \
-	assert(work->name == expression)
+ 	TRACE2(("checkLineData %10s %p vs %p\n", \
+		#name, work->name, expression)); \
+	assert(work->name == expression); \
+	assert(work->name != 0)
 
 void
 checkLineData(TScreen * screen GCC_UNUSED,
@@ -334,6 +335,9 @@ checkLineData(TScreen * screen GCC_UNUSED,
     assert(work != 0);
     TRACE_ASSERT(charData, SCREEN_PTR(screen, row, OFF_CHARS));
     TRACE_ASSERT(attribs, SCREEN_PTR(screen, row, OFF_ATTRS));
+#if OPT_DEC_CHRSET
+    TRACE_ASSERT(charSets, SCREEN_PTR(screen, row, OFF_CSETS));
+#endif
 }
 
 #undef TRACE_ASSERT

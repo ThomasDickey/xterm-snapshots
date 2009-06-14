@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.301 2009/06/12 23:43:07 tom Exp $ */
+/* $XTermId: screen.c,v 1.310 2009/06/14 01:28:51 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -74,25 +74,22 @@
 #define getMinCol(screen) 0
 #define getMaxCol(screen) ((screen)->max_col)
 
-#define ScrnHeadAddr(base,off) \
-		base + ((off) * MAX_PTRS)
-
 #define MoveScrnPtrs(base, dst, src, len) \
-	memmove(ScrnHeadAddr(base, dst), \
-		ScrnHeadAddr(base, src), \
+	memmove(scrnHeadAddr(screen, base, dst), \
+		scrnHeadAddr(screen, base, src), \
 		scrnHeadSize(screen, len))
 
 #define SaveScrnPtrs(base, src, len) \
 	memcpy (screen->save_ptr, \
-		ScrnHeadAddr(base, src), \
+		scrnHeadAddr(screen, base, src), \
 		scrnHeadSize(screen, len))
 
 #define RestoreScrnPtrs(base, dst, len) \
-	memcpy (ScrnHeadAddr(base, dst), \
+	memcpy (scrnHeadAddr(screen, base, dst), \
 		screen->save_ptr, \
 		scrnHeadSize(screen, len))
 
-#define VisBuf(screen) ScrnHeadAddr(screen->allbuf, savelines)
+#define VisBuf(screen) scrnHeadAddr(screen, screen->allbuf, (unsigned) savelines)
 
 #define SetupScrnPtr(dst,src) \
 		dst = src; \
@@ -119,6 +116,14 @@ scrnHeadSize(TScreen * screen, unsigned count)
 #endif
 	result = SizeofHeadData(extra);
     result *= count;
+
+    return result;
+}
+
+static ScrnBuf
+scrnHeadAddr(TScreen * screen, ScrnBuf base, unsigned offset)
+{
+    ScrnBuf result = (ScrnBuf) ((char *) base + scrnHeadSize(screen, offset));
 
     return result;
 }
@@ -248,11 +253,44 @@ reallocScrnHead(TScreen * screen, ScrnPtr * oldptr, unsigned nrow)
     return result;
 }
 
+/*
+ * ScrnPtr's can point to different types of data.
+ */
+#define SizeofScrnPtr(name) \
+	sizeof(*((ScrnPtrs *)0)->name)
+
+static unsigned
+sizeofScrnRow(TScreen * screen, int ncol)
+{
+    unsigned result = (SizeofScrnPtr(attribs)
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+		       + SizeofScrnPtr(fgrnd)
+		       + SizeofScrnPtr(bgrnd)
+#else
+		       + SizeofScrnPtr(color)
+#endif
+#endif
+#if OPT_DEC_CHRSET
+		       + SizeofScrnPtr(charSets)
+#endif
+		       + SizeofScrnPtr(charData));
+
+#if OPT_WIDE_CHARS
+    if (screen->wide_chars) {
+	result += (SizeofScrnPtr(wideData)
+		   + SizeofScrnPtr(combData[0] * ExtraScrnSize(screen)));
+    }
+#endif
+
+    return ((unsigned) ncol) * result;
+}
+
 static Char *
-allocScrnData(int nrow, int ncol)
+allocScrnData(TScreen * screen, int nrow, int ncol)
 {
     Char *result;
-    size_t length = (size_t) (BUF_PTRS * nrow * ncol);
+    size_t length = ((size_t) nrow * sizeofScrnRow(screen, ncol));
 
     if ((result = (Char *) calloc(length, sizeof(Char))) == 0)
 	SysError(ERROR_SCALLOC2);
@@ -280,7 +318,7 @@ allocScrnBuf(XtermWidget xw, int nrow, int ncol, Char ** addr)
     ScrnBuf base;
 
     base = allocScrnHead(screen, nrow);
-    *addr = allocScrnData(nrow, ncol);
+    *addr = allocScrnData(screen, nrow, ncol);
 
     setupScrnPtrs(xw, base, *addr, nrow, ncol);
 
@@ -307,14 +345,14 @@ Reallocate(XtermWidget xw,
     Char *tmp;
     int minrows;
     size_t mincols;
-    Char *oldbuf;
+    Char *oldBufData;
     int move_down = 0, move_up = 0;
 
     if (sbuf == NULL || *sbuf == NULL) {
 	return 0;
     }
 
-    oldbuf = *sbufaddr;
+    oldBufData = *sbufaddr;
 
     /*
      * Special case if oldcol == ncol - straight forward realloc and
@@ -342,7 +380,10 @@ Reallocate(XtermWidget xw,
 	/* Overlapping move here! */
 	TRACE(("move_up %d\n", move_up));
 	if (move_up) {
-	    MoveScrnPtrs(*sbuf, 0, move_up, (unsigned) (oldrow - move_up));
+	    MoveScrnPtrs(*sbuf,
+			 0,
+			 (unsigned) move_up,
+			 (unsigned) (oldrow - move_up));
 	}
     }
     *sbuf = reallocScrnHead(screen, *sbuf, (unsigned) nrow);
@@ -352,7 +393,7 @@ Reallocate(XtermWidget xw,
      *  create the new buffer space and copy old buffer contents there
      *  line by line.
      */
-    tmp = allocScrnData(nrow, ncol);
+    tmp = allocScrnData(screen, nrow, ncol);
     *sbufaddr = tmp;
     minrows = (oldrow < nrow) ? oldrow : nrow;
     mincols = (size_t) ((oldcol < ncol) ? oldcol : ncol);
@@ -360,7 +401,7 @@ Reallocate(XtermWidget xw,
 	&& xw->misc.resizeGravity == SouthWestGravity) {
 	/* move data down to bottom of expanded screen */
 	move_down = Min(nrow - oldrow, xw->screen.savedlines);
-	tmp += (ncol * move_down * BUF_PTRS);
+	tmp += ((unsigned) move_down) * sizeofScrnRow(screen, ncol);
     }
 
     extractScrnData(xw, base, tmp, minrows, (int) mincols, ncol);
@@ -368,7 +409,7 @@ Reallocate(XtermWidget xw,
     setupScrnPtrs(xw, base, *sbufaddr, nrow, ncol);
 
     /* Now free the old buffer */
-    free(oldbuf);
+    free(oldBufData);
 
     TRACE(("Reallocate %dx%d ->%p\n", nrow, ncol, base));
     return move_down ? move_down : -move_up;	/* convert to rows */
@@ -389,9 +430,19 @@ ReallocateBufOffsets(XtermWidget xw,
 {
     TScreen *screen = TScreenOf(xw);
     unsigned i;
-    int j, k;
-    ScrnBuf base;
-    Char *oldbuf, *tmp;
+    ScrnBuf newBufHead;
+    Char *oldBufData;
+    ScrnBuf oldBufHead;
+
+    unsigned old_jump = scrnHeadSize(screen, 1);
+    unsigned new_jump;
+    unsigned new_ptrs = 1 + (unsigned) (2 * screen->max_combining);
+    unsigned dstCols = ncol;
+    unsigned srcCols = ncol;
+    ScrnPtrs *dstPtrs;
+    ScrnPtrs *srcPtrs;
+    Char *nextPtr;
+
     /*
      * As there are 2 buffers (allbuf, altbuf), we cannot change num_ptrs in
      * this function.  However some of the calculations depend on num_ptrs so
@@ -405,33 +456,60 @@ ReallocateBufOffsets(XtermWidget xw,
 
     xw->num_ptrs = (int) new_max_offsets;
 
-    oldbuf = *sbufaddr;
+    oldBufData = *sbufaddr;
+    oldBufHead = *sbuf;
 
-    *sbuf = reallocScrnHead(screen, *sbuf, nrow);
-    base = *sbuf;
+    /*
+     * Allocate a new ScrnPtrs array, retain the old one until we've copied
+     * the data that it points to, as well as non-pointer data, e.g., bufHead.
+     *
+     * Turn on wide-chars temporarily when constructing pointers, since that is
+     * used to decide whether to address the combData[] array, which affects
+     * the length of the ScrnPtrs structure.
+     */
+    screen->wide_chars = True;
 
-    tmp = allocScrnData((int) nrow, (int) ncol);
-    *sbufaddr = tmp;
+    new_jump = scrnHeadSize(screen, 1);
+    newBufHead = allocScrnHead(screen, (int) nrow);
+    *sbufaddr = allocScrnData(screen, (int) nrow, (int) ncol);
+    setupScrnPtrs(xw, newBufHead, *sbufaddr, (int) nrow, (int) ncol);
 
-    for (i = 0, k = 0; i < nrow; i++) {
-	for (j = 0; j < old_max_ptrs; ++j, ++k) {
-	    if (j < BUF_HEAD) {
-	    } else {
-		memcpy(tmp, base[k], ncol);
-		tmp += ncol;
-	    }
-	}
-	tmp += ncol * (new_max_offsets - (unsigned) old_max_ptrs);
+    screen->wide_chars = False;
+
+    nextPtr = *sbufaddr;
+
+    srcPtrs = (ScrnPtrs *) oldBufHead;
+    dstPtrs = (ScrnPtrs *) newBufHead;
+    for (i = 0; i < nrow; i++) {
+	dstPtrs->bufHead = srcPtrs->bufHead;
+	ExtractScrnData(attribs);
+#if OPT_ISO_COLORS
+#if OPT_256_COLORS || OPT_88_COLORS
+	ExtractScrnData(fgrnd);
+	ExtractScrnData(bgrnd);
+#else
+	ExtractScrnData(color);
+#endif
+#endif
+#if OPT_DEC_CHRSET
+	ExtractScrnData(charSets);
+#endif
+	ExtractScrnData(charData);
+
+	nextPtr += ncol * new_ptrs;
+	srcPtrs = (ScrnPtrs *) ((char *) srcPtrs + old_jump);
+	dstPtrs = (ScrnPtrs *) ((char *) dstPtrs + new_jump);
     }
 
-    setupScrnPtrs(xw, base, *sbufaddr, (int) nrow, (int) ncol);
-
     /* Now free the old buffer and restore num_ptrs */
-    free(oldbuf);
+    free(oldBufData);
+    free(oldBufHead);
+
+    *sbuf = newBufHead;
 
     xw->num_ptrs = old_max_ptrs;
 
-    TRACE(("ReallocateBufOffsets %dx%d ->%p\n", nrow, ncol, base));
+    TRACE(("ReallocateBufOffsets %dx%d ->%p\n", nrow, ncol, *sbufaddr));
 }
 
 /*
@@ -759,8 +837,9 @@ static void
 ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 {
     TScreen *screen = &(xw->screen);
-    int i;
-    int last = ((int) n * MAX_PTRS);
+    ScrnPtr *base;
+    unsigned jump = scrnHeadSize(screen, 1);
+    unsigned i;
     LineData *work = newLineData(screen);
     unsigned flags = TERM_COLOR_FLAGS(xw);
 
@@ -771,11 +850,12 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 
     /* save n lines at where */
     (void) ScrnPointers(screen, n);
-    SaveScrnPtrs(sb, where, n);
+    SaveScrnPtrs(sb, (unsigned) where, n);
 
     /* clear contents of old rows */
-    for (i = 0; i < last; i += MAX_PTRS) {
-	fillLineData(screen, &(screen->save_ptr[i]), work);
+    base = screen->save_ptr;
+    for (i = 0; i < n; ++i) {
+	fillLineData(screen, base, work);
 	*(work->bufHead) = 0;
 
 	memset(work->charData, 0, size);
@@ -813,6 +893,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	    }
 	}
 #endif
+	base = (ScrnPtr *) ((char *) base + jump);
     }
     destroyLineData(screen, work);
 }
@@ -889,10 +970,13 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where,
      *   +--------|---------|----+
      */
     assert(last >= where);
-    MoveScrnPtrs(sb, (where + (int) n), where, (unsigned) (last - where));
+    MoveScrnPtrs(sb,
+		 (unsigned) (where + (int) n),
+		 (unsigned) where,
+		 (unsigned) (last - where));
 
     /* reuse storage for new lines at where */
-    RestoreScrnPtrs(sb, where, n);
+    RestoreScrnPtrs(sb, (unsigned) where, n);
 }
 
 /*
@@ -917,10 +1001,13 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where,
     ScrnClearLines(xw, sb, where, n, size);
 
     /* move up lines */
-    MoveScrnPtrs(sb, where, where + (int) n, (unsigned) ((last -= ((int) n - 1)) - where));
+    MoveScrnPtrs(sb,
+		 (unsigned) where,
+		 (unsigned) (where + (int) n),
+		 (unsigned) ((last -= ((int) n - 1)) - where));
 
     /* reuse storage for new bottom lines */
-    RestoreScrnPtrs(sb, last, n);
+    RestoreScrnPtrs(sb, (unsigned) last, n);
 }
 
 /*
@@ -1183,13 +1270,15 @@ ScrnRefresh(XtermWidget xw,
 	    (row == screen->startH.row && maxcol < screen->startH.col) ||
 	    (row == screen->endH.row && col >= screen->endH.col)) {
 #if OPT_DEC_CHRSET
-	    /*
-	     * Temporarily change dimensions to double-sized characters so
-	     * we can reuse the recursion on this function.
-	     */
-	    if (CSET_DOUBLE(*cb)) {
-		col /= 2;
-		maxcol /= 2;
+	    if (cb != 0) {
+		/*
+		 * Temporarily change dimensions to double-sized characters so
+		 * we can reuse the recursion on this function.
+		 */
+		if (CSET_DOUBLE(*cb)) {
+		    col /= 2;
+		    maxcol /= 2;
+		}
 	    }
 #endif
 	    /*
@@ -1205,9 +1294,11 @@ ScrnRefresh(XtermWidget xw,
 		    maxcol--;
 	    }
 #if OPT_DEC_CHRSET
-	    if (CSET_DOUBLE(*cb)) {
-		col *= 2;
-		maxcol *= 2;
+	    if (cb != 0) {
+		if (CSET_DOUBLE(*cb)) {
+		    col *= 2;
+		    maxcol *= 2;
+		}
 	    }
 #endif
 	    hilite = False;
@@ -1261,11 +1352,13 @@ ScrnRefresh(XtermWidget xw,
 	 * right units.
 	 */
 	if_OPT_DEC_CHRSET({
-	    if (CSET_DOUBLE(*cb)) {
-		col /= 2;
-		maxcol /= 2;
+	    if (cb != 0) {
+		if (CSET_DOUBLE(*cb)) {
+		    col /= 2;
+		    maxcol /= 2;
+		}
+		cs = cb[col];
 	    }
-	    cs = cb[col];
 	});
 
 	flags = attrs[col];
@@ -1312,7 +1405,7 @@ ScrnRefresh(XtermWidget xw,
 		    && !((PACK_PAIR(chars, widec, col)) == HIDDEN_CHAR))
 #endif
 #if OPT_DEC_CHRSET
-		|| (cb[col] != cs)
+		|| (cb != 0 && (cb[col] != cs))
 #endif
 		) {
 		assert(col >= lastind);
@@ -1377,7 +1470,9 @@ ScrnRefresh(XtermWidget xw,
 		    bg = extract_bg(xw, fg_bg, flags);
 		});
 		if_OPT_DEC_CHRSET({
-		    cs = cb[col];
+		    if (cb != 0) {
+			cs = cb[col];
+		    }
 		});
 #if OPT_WIDE_CHARS
 		if (widec)

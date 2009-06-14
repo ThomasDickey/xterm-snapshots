@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.576 2009/06/10 00:53:20 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.578 2009/06/13 15:29:55 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -84,7 +84,7 @@
 
 /* adapted from vile (vi-like-emacs) */
 #define TypeCallocN(type,n)	(type *)calloc((n), sizeof(type))
-#define TypeCalloc(type)	TypeCalloc(type,1)
+#define TypeCalloc(type)	TypeCallocN(type,1)
 
 #define TypeMallocN(type,n)	(type *)malloc(sizeof(type) * (n))
 #define TypeMalloc(type)	TypeMallocN(type,1)
@@ -966,10 +966,6 @@ typedef enum {
 #else
 #define MAX_PTRS (OFF_FINAL)
 #endif
-
-#define BUF_HEAD 1
-	/* the number that point to Char data */
-#define BUF_PTRS (MAX_PTRS - BUF_HEAD)
 
 /***====================================================================***/
 
