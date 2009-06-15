@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.39 2009/06/13 13:21:43 tom Exp $ */
+/* $XTermId: linedata.c,v 1.43 2009/06/14 23:51:25 tom Exp $ */
 
 /************************************************************
 
@@ -37,11 +37,11 @@ authorization.
 
 #include <assert.h>
 
-	/* ScrnBuf-level macros */
-#define BUFFER_PTR(buf, row, off) (buf[MAX_PTRS * (row) + off])
-
-	/* TScreen-level macros */
-#define SCREEN_PTR(screen, row, off) BUFFER_PTR(screen->visbuf, row, off)
+static ScrnPtrs *
+getScrnPtrs(TScreen * screen, unsigned row)
+{
+    return (ScrnPtrs *) scrnHeadAddr(screen, screen->visbuf, row);
+}
 
 /*
  * Given a row-number, find the corresponding data for the line in the VT100
@@ -65,14 +65,15 @@ getLineData(TScreen * screen,
 	 */
 	if (work == 0) {
 	    if ((work = screen->lineData) != 0) {
-		check = &SCREEN_PTR(screen, row, OFF_FLAGS);
+		ScrnPtrs *ptrs = getScrnPtrs(screen, (unsigned) row);
+		check = &(ptrs->bufHead);
 		/*
 		 * Check if the cached LineData is up to date.
 		 * The second part of the comparison is needed since xterm
 		 * implements scrolling via memory-moves.
 		 */
 		if (check != screen->lineCache
-		    || SCREEN_PTR(screen, row, OFF_CHARS) != work->charData) {
+		    || ptrs->charData != work->charData) {
 		    update = True;
 		    screen->lineCache = check;
 		}
@@ -85,7 +86,9 @@ getLineData(TScreen * screen,
 	if (update) {
 	    TRACE2(("getLineData %d:%p\n", row, check));
 
-	    fillLineData(screen, &BUFFER_PTR(screen->visbuf, row, 0), work);
+	    fillLineData(screen,
+			 scrnHeadAddr(screen, screen->visbuf, (unsigned) row),
+			 work);
 	    work->lineSize = (unsigned) MaxCols(screen);
 	}
 	checkLineData(screen, row, work);
@@ -108,12 +111,7 @@ fillLineData(TScreen * screen, ScrnPtr * ptrs, LineData * work)
     work->bufHead = (RowFlags *) & (realPtrs->bufHead);
     work->attribs = realPtrs->attribs;
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
-    work->fgrnd = realPtrs->fgrnd;
-    work->bgrnd = realPtrs->bgrnd;
-#else
     work->color = realPtrs->color;
-#endif
 #endif
 #if OPT_DEC_CHRSET
     work->charSets = realPtrs->charSets;
@@ -259,12 +257,7 @@ saveCellData(TScreen * screen,
 	item->bufHead = *(ld->bufHead);
 	item->attribs = ld->attribs[column];
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
-	item->fgrnd = ld->fgrnd[column];
-	item->bgrnd = ld->bgrnd[column];
-#else
 	item->color = ld->color[column];
-#endif
 #endif
 #if OPT_DEC_CHRSET
 	item->charSets = ld->charSets[column];
@@ -294,12 +287,7 @@ restoreCellData(TScreen * screen,
 	/* FIXME - *(ld->bufHead) = item->bufHead; */
 	ld->attribs[column] = item->attribs;
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
-	ld->fgrnd[column] = item->fgrnd;
-	ld->bgrnd[column] = item->bgrnd;
-#else
 	ld->color[column] = item->color;
-#endif
 #endif
 #if OPT_DEC_CHRSET
 	ld->charSets[column] = item->charSets;
@@ -331,12 +319,16 @@ checkLineData(TScreen * screen GCC_UNUSED,
 	      int row GCC_UNUSED,
 	      LineData * work GCC_UNUSED)
 {
+#if OPT_TRACE
+    ScrnPtrs *ptrs = getScrnPtrs(screen, (unsigned) row);
+#endif
+
     TRACE2(("checkLineData %d ->%p\n", row, work));
     assert(work != 0);
-    TRACE_ASSERT(charData, SCREEN_PTR(screen, row, OFF_CHARS));
-    TRACE_ASSERT(attribs, SCREEN_PTR(screen, row, OFF_ATTRS));
+    TRACE_ASSERT(charData, ptrs->charData);
+    TRACE_ASSERT(attribs, ptrs->attribs);
 #if OPT_DEC_CHRSET
-    TRACE_ASSERT(charSets, SCREEN_PTR(screen, row, OFF_CSETS));
+    TRACE_ASSERT(charSets, ptrs->charSets);
 #endif
 }
 

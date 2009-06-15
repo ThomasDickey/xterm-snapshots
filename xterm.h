@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.551 2009/06/10 11:13:11 tom Exp $ */
+/* $XTermId: xterm.h,v 1.554 2009/06/14 23:25:07 tom Exp $ */
 
 /************************************************************
 
@@ -1030,7 +1030,8 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 
 /* screen.c */
 extern Bool non_blank_line (TScreen */* screen */, int  /* row */, int  /* col */, int  /* len */);
-extern ScrnBuf allocScrnBuf (XtermWidget /* xw */, int  /* nrow */, int  /* ncol */, ScrnPtr * /* addr */);
+extern ScrnBuf allocScrnBuf (XtermWidget /* xw */, unsigned  /* nrow */, unsigned  /* ncol */, ScrnPtr * /* addr */);
+extern ScrnBuf scrnHeadAddr (TScreen * /* screen */, ScrnBuf /* base */, unsigned /* offset */);
 extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
@@ -1045,7 +1046,7 @@ extern void ScrnInsertChar (XtermWidget /* xw */, unsigned  /* n */);
 extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* last */, int  /* where */, unsigned  /* n */, unsigned  /* size */);
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
-extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, unsigned  /* cur_fg_bg */, unsigned  /* length */);
+extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, CellColor /* cur_fg_bg */, unsigned  /* length */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
 #define LineFlags(ld)         *((ld)->bufHead) 
@@ -1130,7 +1131,7 @@ extern void TabZonk (Tabs  /* tabs */);
 /* util.c */
 extern Boolean isDefaultBackground(const char * /* name */);
 extern Boolean isDefaultForeground(const char * /* name */);
-extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned  /* fg_bg */, Bool  /* hilite */);
+extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, CellColor /* fg_bg */, Bool  /* hilite */);
 extern int AddToRefresh (XtermWidget /* xw */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
@@ -1167,9 +1168,9 @@ extern void xtermSizeHints (XtermWidget  /* xw */, int /* scrollbarWidth */);
 
 #if OPT_ISO_COLORS
 
-extern unsigned extract_fg (XtermWidget /* xw */, unsigned  /* color */, unsigned  /* flags */);
-extern unsigned extract_bg (XtermWidget /* xw */, unsigned  /* color */, unsigned  /* flags */);
-extern unsigned makeColorPair (int  /* fg */, int  /* bg */);
+extern unsigned extract_fg (XtermWidget /* xw */, CellColor  /* color */, unsigned  /* flags */);
+extern unsigned extract_bg (XtermWidget /* xw */, CellColor  /* color */, unsigned  /* flags */);
+extern CellColor makeColorPair (int  /* fg */, int  /* bg */);
 extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* left */, unsigned  /* height */, unsigned  /* width */);
 
 #define xtermColorPair(xw) makeColorPair(xw->sgr_foreground, xw->sgr_background)
@@ -1197,13 +1198,8 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #define T_COLOR(v,n) (v)->Tcolors[n]
 #endif
 
-#if OPT_EXT_COLORS
-#define ExtractForeground(color) ((color >> 8) & 0xff)
-#define ExtractBackground(color) (color & 0xff)
-#else
-#define ExtractForeground(color) ((color >> 4) & 0xf)
-#define ExtractBackground(color) (color & 0xf)
-#endif
+#define ExtractForeground(color) (unsigned) (color).fg
+#define ExtractBackground(color) (unsigned) (color).bg
 
 #define checkVeryBoldAttr(flags, fg, code, attr) \
 	if ((flags & FG_COLOR) != 0 \

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.930 2009/06/10 11:12:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.933 2009/06/14 23:42:17 tom Exp $ */
 
 /*
 
@@ -4820,7 +4820,8 @@ ToAlternate(XtermWidget xw)
 	TRACE(("ToAlternate\n"));
 	if (!screen->altbuf)
 	    screen->altbuf = allocScrnBuf(xw,
-					  MaxRows(screen), MaxCols(screen),
+					  (unsigned) MaxRows(screen),
+					  (unsigned) MaxCols(screen),
 					  &screen->abuf_address);
 	SwitchBufs(xw);
 	screen->alternate = True;
@@ -5673,10 +5674,6 @@ VTInitialize(Widget wrequest,
 	   wnew->screen.cache_doublesize));
 #endif
 
-#if OPT_WIDE_CHARS
-    wnew->num_ptrs = (OFF_CHARS + 1);	/* minimum needed for cell */
-#endif
-
 #if OPT_ISO_COLORS
     init_Ires(screen.veryBoldColors);
     init_Bres(screen.boldColors);
@@ -5911,9 +5908,6 @@ VTInitialize(Widget wrequest,
     TRACE(("initialized Latin9 mode to %d\n", wnew->screen.latin9_mode));
     TRACE(("initialized unicode_font to %d\n", wnew->screen.unicode_font));
 #endif
-
-    if (wnew->screen.wide_chars != False)
-	wnew->num_ptrs = OFF_FINAL + (wnew->screen.max_combining * 2);
 
     decode_wcwidth((wnew->misc.cjk_width ? 2 : 0)
 		   + (wnew->misc.mk_width ? 1 : 0)
@@ -6833,7 +6827,9 @@ ShowCursor(void)
     int base;
     Char clo;
     unsigned flags;
-    unsigned fg_bg = 0;
+#if OPT_ISO_COLORS
+    CellColor fg_bg;
+#endif
     GC currentGC;
     CgsEnum currentCgs = gcMAX;
     VTwin *currentWin = WhichVWin(screen);
@@ -6940,16 +6936,15 @@ ShowCursor(void)
     }
 #endif
 #endif
+#if OPT_ISO_COLORS
+    fg_bg = noCellColor;
+#endif
 
     /*
      * Compare the current cell to the last set of colors used for the
      * cursor and update the GC's if needed.
      */
-    (void) fg_bg;
-    if_OPT_EXT_COLORS(screen, {
-	fg_bg = PACK_FGBG(ld, cursor_col);
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+    if_OPT_ISO_COLORS(screen, {
 	fg_bg = ld->color[cursor_col];
     });
     fg_pix = getXtermForeground(xw, flags, extract_fg(xw, fg_bg, flags));
@@ -7114,7 +7109,9 @@ HideCursor(void)
     int base;
     Char clo;
     unsigned flags;
-    unsigned fg_bg = 0;
+#if OPT_ISO_COLORS
+    CellColor fg_bg;
+#endif
     Bool in_selection;
 #if OPT_WIDE_CHARS
     Char chi = 0;
@@ -7188,15 +7185,15 @@ HideCursor(void)
     }
 #endif
 #endif
+#if OPT_ISO_COLORS
+    fg_bg = noCellColor;
+#endif
 
     /*
      * Compare the current cell to the last set of colors used for the
      * cursor and update the GC's if needed.
      */
-    if_OPT_EXT_COLORS(screen, {
-	fg_bg = PACK_FGBG(ld, cursor_col);
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+    if_OPT_ISO_COLORS(screen, {
 	fg_bg = ld->color[cursor_col];
     });
 

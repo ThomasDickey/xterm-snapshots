@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.578 2009/06/13 15:29:55 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.581 2009/06/15 00:32:31 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -806,7 +806,6 @@ typedef enum {
 /***====================================================================***/
 
 #if OPT_ISO_COLORS
-#define if_OPT_ISO_COLORS(screen, code) if(screen->colorMode) code
 #define TERM_COLOR_FLAGS(xw)	((xw)->flags & (FG_COLOR|BG_COLOR))
 #define COLOR_0		0
 #define COLOR_1		1
@@ -863,7 +862,6 @@ typedef enum {
 
 #else	/* !OPT_ISO_COLORS */
 
-#define if_OPT_ISO_COLORS(screen, code) /* nothing */
 #define TERM_COLOR_FLAGS(xw) 0
 
 #define ReverseOrHilite(screen,flags,hilite) \
@@ -878,15 +876,10 @@ typedef enum {
 #define if_OPT_AIX_COLORS(screen, code) /* nothing */
 #endif
 
-#if OPT_256_COLORS || OPT_88_COLORS
-# define if_OPT_EXT_COLORS(screen, code) if(screen->colorMode) code
-# define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /* nothing */
-#elif OPT_ISO_COLORS
-# define if_OPT_EXT_COLORS(screen, code) /* nothing */
-# define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) if(screen->colorMode) code
+#if OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
+# define if_OPT_ISO_COLORS(screen, code) if (screen->colorMode) code
 #else
-# define if_OPT_EXT_COLORS(screen, code) /* nothing */
-# define if_OPT_ISO_TRADITIONAL_COLORS(screen, code) /*nothing*/
+# define if_OPT_ISO_COLORS(screen, code) /* nothing */
 #endif
 
 #define COLOR_RES_NAME(root) "color" root
@@ -960,13 +953,6 @@ typedef enum {
 #error Luit requires the wide-chars configuration
 #endif
 
-	/* the number of pointers per row in 'ScrnBuf' */
-#if OPT_WIDE_CHARS
-#define MAX_PTRS term->num_ptrs
-#else
-#define MAX_PTRS (OFF_FINAL)
-#endif
-
 /***====================================================================***/
 
 #if OPT_EBCDIC
@@ -1023,9 +1009,6 @@ extern int A2E(int);
 
 #define LO_BYTE(ch) CharOf((ch) & 0xff)
 #define HI_BYTE(ch) CharOf((ch) >> 8)
-
-#define PACK_FGBG(ld, col) \
-	    (unsigned) ((ld->fgrnd[col] << 8) | ld->bgrnd[col])
 
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
@@ -1101,29 +1084,6 @@ typedef struct {
 
 /***====================================================================***/
 
-/* The order of ifdef's matches the logic for num_ptrs in VTInitialize */
-typedef enum {
-	OFF_FLAGS = 0		/* row-flags */
-	, OFF_ATTRS		/* video attributes */
-#if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
-	, OFF_FGRND		/* foreground color number */
-	, OFF_BGRND		/* background color number */
-#else
-	, OFF_COLOR		/* foreground+background color numbers */
-#endif
-#endif
-#if OPT_DEC_CHRSET
-	, OFF_CSETS		/* DEC character-set */
-#endif
-	/* wide (16-bit) characters begin here */
-	, OFF_CHARS		/* first (or only) byte of cell's character */
-#if OPT_WIDE_CHARS
-	, OFF_WIDEC		/* second byte of first wide-character */
-#endif
-	, OFF_FINAL		/* first enum past fixed-offsets */
-} BufOffsets;
-
 #if OPT_ISO_COLORS
 #if OPT_256_COLORS || OPT_88_COLORS
 #define COLOR_BITS 8
@@ -1131,8 +1091,8 @@ typedef enum {
 #define COLOR_BITS 4
 #endif
 typedef struct {
-    	int fg:COLOR_BITS;
-    	int bg:COLOR_BITS;
+    	unsigned fg:COLOR_BITS;
+    	unsigned bg:COLOR_BITS;
 } CellColor;
 #endif
 
@@ -1142,25 +1102,20 @@ typedef int RowFlags;
  * This is the "old" xterm scrollback (not)structure.
  */
 typedef struct {
-	ScrnPtr bufHead;	/* OFF_FLAGS - flag for wrapped lines */
-	ScrnPtr attribs;	/* OFF_ATTRS - video attributes */
+	ScrnPtr bufHead;	/* flag for wrapped lines */
+	ScrnPtr attribs;	/* video attributes */
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
-	ScrnPtr fgrnd;		/* OFF_FGRND - foreground color number */
-	ScrnPtr bgrnd;		/* OFF_BGRND - background color number */
-#else
-	ScrnPtr color;		/* OFF_COLOR - foreground+background color numbers */
-#endif
+	CellColor *color;	/* foreground+background color numbers */
 #endif
 #if OPT_DEC_CHRSET
-	ScrnPtr charSets;	/* OFF_CSETS - DEC character-set */
+	ScrnPtr charSets;	/* DEC character-set */
 #endif
 	/* wide (16-bit) characters begin here */
-	ScrnPtr charData;	/* OFF_CHARS - first (or only) byte of cell's character */
+	ScrnPtr charData;	/* first (or only) byte of cell's character */
 #if OPT_WIDE_CHARS
-	ScrnPtr wideData;	/* OFF_WIDEC - second byte of first wide-character */
+	ScrnPtr wideData;	/* second byte of first wide-character */
 #endif
-	ScrnPtr combData[];	/* OFF_FINAL - first enum past fixed-offsets */
+	ScrnPtr combData[];	/* first enum past fixed-offsets */
 } ScrnPtrs;
 
 /*
@@ -1171,12 +1126,7 @@ typedef struct {
     	RowFlags bufHead;	/* flag for wrapped lines */
 	Char attribs;
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
-	Char fgrnd;		/* FIXME - use bitfields to help merge */
-	Char bgrnd;
-#else
-	Char color;		/* FIXME - merge to make color-array */
-#endif
+	CellColor color;	/* color-array */
 #endif
 #if OPT_DEC_CHRSET
 	Char charSets;
@@ -1199,12 +1149,7 @@ typedef struct {
     	RowFlags *bufHead;	/* points to flag for wrapped lines */
 	Char *attribs;
 #if OPT_ISO_COLORS
-#if OPT_256_COLORS || OPT_88_COLORS
-	Char *fgrnd;		/* FIXME - use bitfields to help merge */
-	Char *bgrnd;
-#else
-	Char *color;		/* FIXME - merge to make color-array */
-#endif
+	CellColor *color;	/* color-array */
 #endif
 #if OPT_DEC_CHRSET
 	Char *charSets;
@@ -2111,9 +2056,6 @@ typedef struct _XtermWidgetRec {
     int		sgr_foreground; /* current SGR foreground color */
     int		sgr_background; /* current SGR background color */
     Boolean	sgr_extended;	/* SGR set with extended codes? */
-#endif
-#if OPT_ISO_COLORS || OPT_DEC_CHRSET || OPT_WIDE_CHARS
-    int		num_ptrs;	/* number of pointers per row in 'ScrnBuf' */
 #endif
     unsigned	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
