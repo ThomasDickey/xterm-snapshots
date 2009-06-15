@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.52 2009/03/26 23:59:32 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.53 2009/06/14 14:45:23 tom Exp $ */
 
 /************************************************************
 
@@ -459,10 +459,8 @@ setCgsFore(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, Pixel fg)
     CgsCache *me;
 
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
-	if (!SameColor(NEXT(fg), fg)) {
-	    NEXT(fg) = fg;
-	    me->mask |= GCForeground;
-	}
+	NEXT(fg) = fg;
+	me->mask |= GCForeground;
     }
 }
 
@@ -472,10 +470,8 @@ setCgsBack(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, Pixel bg)
     CgsCache *me;
 
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
-	if (!SameColor(NEXT(bg), bg)) {
-	    NEXT(bg) = bg;
-	    me->mask |= GCBackground;
-	}
+	NEXT(bg) = bg;
+	me->mask |= GCBackground;
     }
 }
 
@@ -486,10 +482,8 @@ setCgsCSet(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, unsigned cset)
     CgsCache *me;
 
     if ((me = myCache(xw, cgsWin, cgsId)) != 0) {
-	if (!SameCSet(NEXT(cset), cset)) {
-	    NEXT(cset) = cset;
-	    me->mask |= GC_CSet;
-	}
+	NEXT(cset) = cset;
+	me->mask |= GC_CSet;
     }
 }
 #else
@@ -512,9 +506,9 @@ setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XTermFonts * font)
 #endif
 		font = &(xw->screen.fnts[fNorm]);
 	}
-	if (HaveFont(font) && okFont(font->fs) && !SameFont(NEXT(font), font)) {
-	    TRACE2(("...updated next font for %s to %s\n",
-		    traceCgsEnum(cgsId), traceFont(font)));
+	if (HaveFont(font) && okFont(font->fs)) {
+	    TRACE2(("...updated next font in %p for %s to %s\n",
+		    me, traceCgsEnum(cgsId), traceFont(font)));
 	    TRACE2(("...next font was %s\n", traceFont(NEXT(font))));
 	    NEXT(font) = font;
 	    me->mask |= GCFont;
@@ -752,10 +746,18 @@ copyCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 	    TRACE(("copyCgs from %s to %s\n",
 		   traceCgsEnum(srcCgsId),
 		   traceCgsEnum(dstCgsId)));
-	    setCgsFont(xw, cgsWin, dstCgsId, THIS(font));
+	    TRACE2(("copyCgs from %s (me %p, fg %s, bg %s, cset %s) to %s {{\n",
+		    traceCgsEnum(srcCgsId),
+		    me,
+		    tracePixel(xw, THIS(fg)),
+		    tracePixel(xw, THIS(bg)),
+		    traceCSet(THIS(cset)),
+		    traceCgsEnum(dstCgsId)));
 	    setCgsCSet(xw, cgsWin, dstCgsId, THIS(cset));
 	    setCgsFore(xw, cgsWin, dstCgsId, THIS(fg));
 	    setCgsBack(xw, cgsWin, dstCgsId, THIS(bg));
+	    setCgsFont(xw, cgsWin, dstCgsId, THIS(font));
+	    TRACE2(("...copyCgs }}\n"));
 	}
     }
 }

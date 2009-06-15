@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.442 2009/06/09 00:47:31 tom Exp $ */
+/* $XTermId: util.c,v 1.447 2009/06/15 00:38:54 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -637,7 +637,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
     LineData *ld = 0;
     unsigned test;
     unsigned flags = xw->flags;
-    unsigned fg_bg = makeColorPair(xw->cur_foreground, xw->cur_background);
+    CellColor fg_bg = makeColorPair(xw->cur_foreground, xw->cur_background);
     unsigned cells = visual_width(str, len);
     GC currentGC;
 
@@ -2486,7 +2486,7 @@ xtermSetClipRectangles(Display * dpy,
 #endif
 
     XSetClipRectangles(dpy, gc,
-		       x, y, rp, nr, order);
+		       x, y, rp, (int) nr, order);
     TRACE(("clipping @(%3d,%3d) (%3d,%3d)..(%3d,%3d)\n",
 	   y, x,
 	   rp->y, rp->x, rp->height, rp->width));
@@ -2494,7 +2494,7 @@ xtermSetClipRectangles(Display * dpy,
 
 #else
 #define xtermSetClipRectangles(dpy, gc, x, y, rp, nr, order) \
-	    XSetClipRectangles(dpy, gc, x, y, rp, nr, order)
+	    XSetClipRectangles(dpy, gc, x, y, rp, (int) nr, order)
 #endif
 
 #if OPT_CLIP_BOLD
@@ -2639,7 +2639,7 @@ drawXtermText(XtermWidget xw,
 #endif
 	    {
 		XRectangle rect, *rp = &rect;
-		int nr = 1;
+		Cardinal nr = 1;
 
 		font_width *= 2;
 		flags |= DOUBLEWFONT;
@@ -3347,7 +3347,7 @@ getXtermSizeHints(XtermWidget xw)
  * current screen foreground and background colors.
  */
 GC
-updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
+updatedXtermGC(XtermWidget xw, unsigned flags, CellColor fg_bg, Bool hilite)
 {
     TScreen *screen = &(xw->screen);
     VTwin *win = WhichVWin(screen);
@@ -3481,7 +3481,7 @@ resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
  * BOLD or UNDERLINE color-mode active, those will be used.
  */
 unsigned
-extract_fg(XtermWidget xw, unsigned color, unsigned flags)
+extract_fg(XtermWidget xw, CellColor color, unsigned flags)
 {
     unsigned fg = ExtractForeground(color);
 
@@ -3502,7 +3502,7 @@ extract_fg(XtermWidget xw, unsigned color, unsigned flags)
  * If we've got INVERSE color-mode active, that will be used.
  */
 unsigned
-extract_bg(XtermWidget xw, unsigned color, unsigned flags)
+extract_bg(XtermWidget xw, CellColor color, unsigned flags)
 {
     unsigned bg = ExtractBackground(color);
 
@@ -3523,16 +3523,23 @@ extract_bg(XtermWidget xw, unsigned color, unsigned flags)
  * This assumes that fg/bg are equal when we override with one of the special
  * attribute colors.
  */
-unsigned
+CellColor
 makeColorPair(int fg, int bg)
 {
-    unsigned my_bg = (bg >= 0) && (bg < NUM_ANSI_COLORS) ? (unsigned) bg : 0;
-    unsigned my_fg = (fg >= 0) && (fg < NUM_ANSI_COLORS) ? (unsigned) fg : my_bg;
-#if OPT_EXT_COLORS
-    return (my_fg << 8) | my_bg;
-#else
-    return (my_fg << 4) | my_bg;
-#endif
+    CellColor result;
+
+    if (fg == -1)
+    	fg = 0;
+    if (bg == -1)
+    	bg = 0;
+
+    assert(fg >= 0 && fg < (1 << COLOR_BITS));
+    assert(bg >= 0 && bg < (1 << COLOR_BITS));
+
+    result.fg = (unsigned) fg;
+    result.bg = (unsigned) bg;
+
+    return result;
 }
 
 /*
@@ -3614,7 +3621,7 @@ addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 	size_t off;
 
 	TRACE(("addXtermCombining %d,%d %#x (%d)\n",
-	       row, col, ch, my_wcwidth(ch)));
+	       row, col, ch, my_wcwidth((wchar_t) ch)));
 
 	for_each_combData(off, ld) {
 	    Char *lo = lo_combData(off, ld);

@@ -1,4 +1,4 @@
-/* $XTermId: data.c,v 1.86 2007/07/17 21:09:41 tom Exp $ */
+/* $XTermId: data.c,v 1.87 2009/06/14 23:38:59 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/data.c,v 3.34 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -112,3 +112,5 @@ int mapstate = -1;
 #if OPT_SESSION_MGT
 int ice_fd = -1;
 #endif
+
+const CellColor noCellColor = {0, 0};

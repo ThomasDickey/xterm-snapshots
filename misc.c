@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.417 2009/06/10 00:54:04 tom Exp $ */
+/* $XTermId: misc.c,v 1.418 2009/06/14 23:11:31 tom Exp $ */
 
 /*
  *
@@ -2863,7 +2863,8 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		    strcat(reply, ";7");
 		if (xw->flags & INVISIBLE)
 		    strcat(reply, ";8");
-		if_OPT_EXT_COLORS(screen, {
+#if OPT_256_COLORS || OPT_88_COLORS
+		if_OPT_ISO_COLORS(screen, {
 		    if (xw->flags & FG_COLOR) {
 			if (xw->cur_foreground >= 16)
 			    sprintf(reply + strlen(reply),
@@ -2889,7 +2890,8 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 				    xw->cur_background);
 		    }
 		});
-		if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+#elif OPT_ISO_COLORS
+		if_OPT_ISO_COLORS(screen, {
 		    if (xw->flags & FG_COLOR)
 			sprintf(reply + strlen(reply),
 				";%d%d",
@@ -2905,6 +2907,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 				xw->cur_background - 8 :
 				xw->cur_background);
 		});
+#endif
 		strcat(reply, "m");
 	    } else
 		okay = False;

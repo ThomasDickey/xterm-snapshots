@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.95 2009/05/13 00:01:16 tom Exp $ */
+/* $XTermId: print.c,v 1.96 2009/06/14 23:06:00 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
@@ -137,14 +137,8 @@ printLine(XtermWidget xw, int row, unsigned chr)
     int last = MaxCols(screen);
     int col;
 #if OPT_ISO_COLORS && OPT_PRINT_COLORS
-#if OPT_EXT_COLORS
-    Char *fbf = 0;
-    Char *fbb = 0;
-#define ColorOf(ld,col) PACK_FGBG(ld, col)
-#else
-    Char *fb = 0;
+    CellColor *fb = 0;
 #define ColorOf(ld,col) (ld->color[col])
-#endif
 #endif
     unsigned fg = NO_COLOR, last_fg = NO_COLOR;
     unsigned bg = NO_COLOR, last_bg = NO_COLOR;
@@ -160,11 +154,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 				      : 0)),
 			(unsigned) last)));
 
-    if_OPT_EXT_COLORS(screen, {
-	fbf = ld->fgrnd;
-	fbb = ld->bgrnd;
-    });
-    if_OPT_ISO_TRADITIONAL_COLORS(screen, {
+    if_OPT_ISO_COLORS(screen, {
 	fb = ld->color;
     });
     while (last > 0) {
