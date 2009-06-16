@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.447 2009/06/15 00:38:54 tom Exp $ */
+/* $XTermId: util.c,v 1.450 2009/06/15 23:43:01 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -3244,6 +3244,45 @@ drawXtermText(XtermWidget xw,
     return x + (int) real_length *FontWidth(screen);
 }
 
+/*
+ * Workaround for drawXtermText until both combData and charData are converted
+ * to IChar arrays.
+ */
+Char *
+loByteIChars(IChar * data, unsigned length)
+{
+    static Char *result;
+    static unsigned have;
+
+    unsigned n;
+    if (have < length) {
+	have = 2 * length;
+	result = (Char *) realloc(result, have);
+    }
+    for (n = 0; n < length; ++n)
+	result[n] = LO_BYTE(data[n]);
+
+    return result;
+}
+
+Char *
+hiByteIChars(IChar * data, unsigned length)
+{
+    static Char *result;
+    static unsigned have;
+
+    unsigned n;
+
+    if (have < length) {
+	have = 2 * length;
+	result = (Char *) realloc(result, have);
+    }
+    for (n = 0; n < length; ++n)
+	result[n] = HI_BYTE(data[n]);
+
+    return result;
+}
+
 #if OPT_WIDE_CHARS
 /*
  * Allocate buffer - workaround for wide-character interfaces.
@@ -3529,15 +3568,15 @@ makeColorPair(int fg, int bg)
     CellColor result;
 
     if (fg == -1)
-    	fg = 0;
+	fg = 0;
     if (bg == -1)
-    	bg = 0;
+	bg = 0;
 
     assert(fg >= 0 && fg < (1 << COLOR_BITS));
     assert(bg >= 0 && bg < (1 << COLOR_BITS));
 
-    result.fg = (unsigned) fg;
-    result.bg = (unsigned) bg;
+    result.fg = (Char) fg;
+    result.bg = (Char) bg;
 
     return result;
 }
@@ -3594,8 +3633,7 @@ putXtermCell(TScreen * screen, int row, int col, int ch)
 	size_t off;
 	ld->wideData[col] = HI_BYTE(ch);
 	for_each_combData(off, ld) {
-	    lo_combData(off, ld)[col] = 0;
-	    hi_combData(off, ld)[col] = 0;
+	    ld->combData[off][col] = 0;
 	}
     });
 }
@@ -3605,9 +3643,7 @@ unsigned
 getXtermCellComb(TScreen * screen, int row, int col, unsigned off)
 {
     LineData *ld = getLineData(screen, row, NULL);
-    return (unsigned) PACK_PAIR(lo_combData(off, ld),
-				hi_combData(off, ld),
-				col);
+    return (unsigned) ld->combData[off][col];
 }
 
 /*
@@ -3624,11 +3660,8 @@ addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 	       row, col, ch, my_wcwidth((wchar_t) ch)));
 
 	for_each_combData(off, ld) {
-	    Char *lo = lo_combData(off, ld);
-	    Char *hi = hi_combData(off, ld);
-	    if (!lo[col] && !hi[col]) {
-		lo[col] = LO_BYTE(ch);
-		hi[col] = HI_BYTE(ch);
+	    if (!ld->combData[off][col]) {
+		ld->combData[off][col] = ch;
 		break;
 	    }
 	}

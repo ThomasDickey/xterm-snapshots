@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.321 2009/06/15 00:10:00 tom Exp $ */
+/* $XTermId: screen.c,v 1.323 2009/06/15 23:42:16 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -101,7 +101,7 @@
 #define ScrnPtrsAddr(ptrs, offset) (ScrnPtrs *) ((char *) (ptrs) + (offset))
 
 #if OPT_WIDE_CHARS
-#define ExtraScrnSize(screen) ((screen)->wide_chars ? (unsigned) ((screen)->max_combining * 2) : 0)
+#define ExtraScrnSize(screen) ((screen)->wide_chars ? (unsigned) (screen)->max_combining : 0)
 #else
 #define ExtraScrnSize(screen) 0
 #endif
@@ -161,7 +161,7 @@ setupScrnPtrs(XtermWidget xw, ScrnBuf base, Char * data, unsigned nrow, unsigned
 
 	    SetupScrnPtr(ptr->wideData, data, Char);
 	    for (j = 0; j < extra; ++j) {
-		SetupScrnPtr(ptr->combData[j], data, Char);
+		SetupScrnPtr(ptr->combData[j], data, IChar);
 	    }
 	}
 #endif
@@ -266,7 +266,7 @@ sizeofScrnRow(TScreen * screen, unsigned ncol)
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
 	result += (SizeofScrnPtr(wideData)
-		   + SizeofScrnPtr(combData[0] * ExtraScrnSize(screen)));
+		   + SizeofScrnPtr(combData[0]) * ExtraScrnSize(screen));
     }
 #endif
 
@@ -469,7 +469,7 @@ ReallocateBufOffsets(XtermWidget xw,
 
     unsigned old_jump = scrnHeadSize(screen, 1);
     unsigned new_jump;
-    unsigned new_ptrs = 1 + (unsigned) (2 * screen->max_combining);
+    unsigned new_ptrs = 1 + (unsigned) (screen->max_combining);
     unsigned dstCols = ncol;
     unsigned srcCols = ncol;
     ScrnPtrs *dstPtrs;
@@ -611,8 +611,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	    size_t off;
 	    memset(ld->wideData + col, 0, len);
 	    for_each_combData(off, ld) {
-		memset(lo_combData(off, ld) + col, 0, len);
-		memset(hi_combData(off, ld) + col, 0, len);
+		memset(ld->combData[off] + col, 0, len * sizeof(IChar));
 	    }
 	});
 
@@ -804,8 +803,9 @@ ScrnWriteText(XtermWidget xw,
     if_OPT_WIDE_CHARS(screen, {
 	size_t off;
 	for_each_combData(off, ld) {
-	    memset(lo_combData(off, ld) + screen->cur_col, 0, real_width);
-	    memset(hi_combData(off, ld) + screen->cur_col, 0, real_width);
+	    memset(ld->combData[off] + screen->cur_col,
+		   0,
+		   real_width * sizeof(IChar));
 	}
     });
     if_OPT_ISO_COLORS(screen, {
@@ -1401,24 +1401,27 @@ ScrnRefresh(XtermWidget xw,
 		    size_t off;
 
 		    for_each_combData(off, ld) {
-			Char *com_lo = lo_combData(off, ld);
-			Char *com_hi = hi_combData(off, ld);
+			IChar *com_off = ld->combData[off];
 
 			for (i = lastind; i < col; i++) {
 			    int my_x = LineCursorX(screen, ld, i);
 			    int base = PACK_PAIR(chars, widec, i);
-			    int combo = PACK_PAIR(com_lo, com_hi, i);
 
 			    if (isWide(base))
 				my_x = LineCursorX(screen, ld, i - 1);
 
-			    if (combo != 0)
+			    if (com_off[i] != 0)
 				drawXtermText(xw,
 					      (test & DRAWX_MASK)
 					      | NOBACKGROUND,
 					      gc, my_x, y, cs,
-					      PAIRED_CHARS(com_lo + i,
-							   com_hi + i),
+					      PAIRED_CHARS(
+							      loByteIChars(com_off
+									   +
+									   i, 1),
+							      hiByteIChars(com_off
+									   +
+									   i, 1)),
 					      1, isWide(base));
 			}
 		    }
@@ -1478,24 +1481,25 @@ ScrnRefresh(XtermWidget xw,
 	    size_t off;
 
 	    for_each_combData(off, ld) {
-		Char *com_lo = lo_combData(off, ld);
-		Char *com_hi = hi_combData(off, ld);
+		IChar *com_off = ld->combData[off];
 
 		for (i = lastind; i < col; i++) {
 		    int my_x = LineCursorX(screen, ld, i);
 		    int base = PACK_PAIR(chars, widec, i);
-		    int combo = PACK_PAIR(com_lo, com_hi, i);
 
 		    if (isWide(base))
 			my_x = LineCursorX(screen, ld, i - 1);
 
-		    if (combo != 0)
+		    if (com_off[i] != 0)
 			drawXtermText(xw,
 				      (test & DRAWX_MASK)
 				      | NOBACKGROUND,
 				      gc, my_x, y, cs,
-				      PAIRED_CHARS(com_lo + i,
-						   com_hi + i),
+				      PAIRED_CHARS(
+						      loByteIChars(com_off +
+								   i, 1),
+						      hiByteIChars(com_off +
+								   i, 1)),
 				      1, isWide(base));
 		}
 	    }
@@ -1946,8 +1950,7 @@ ScrnFillRectangle(XtermWidget xw,
 		size_t off;
 		memset(ld->wideData + left, 0, size);
 		for_each_combData(off, ld) {
-		    memset(lo_combData(off, ld) + left, 0, size);
-		    memset(hi_combData(off, ld) + left, 0, size);
+		    memset(ld->combData[off] + left, 0, size * sizeof(IChar));
 		}
 	    })
 	}
@@ -2210,8 +2213,7 @@ ScrnWipeRectangle(XtermWidget xw,
 			size_t off;
 			ld->wideData[col] = '\0';
 			for_each_combData(off, ld) {
-			    lo_combData(off, ld)[col] = '\0';
-			    hi_combData(off, ld)[col] = '\0';
+			    ld->combData[off][col] = '\0';
 			}
 		    })
 		}

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.554 2009/06/14 23:25:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.555 2009/06/15 09:11:43 tom Exp $ */
 
 /************************************************************
 
@@ -1165,6 +1165,9 @@ extern void xtermClear (XtermWidget /* xw */);
 extern void xtermRepaint (XtermWidget /* xw */);
 extern void xtermScroll (XtermWidget /* xw */, int /* amount */);
 extern void xtermSizeHints (XtermWidget  /* xw */, int /* scrollbarWidth */);
+
+extern Char * loByteIChars(IChar * /*data*/, unsigned /*length*/);
+extern Char * hiByteIChars(IChar * /*data*/, unsigned /*length*/);
 
 #if OPT_ISO_COLORS
 

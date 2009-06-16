@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.43 2009/06/14 23:51:25 tom Exp $ */
+/* $XTermId: linedata.c,v 1.46 2009/06/15 23:43:39 tom Exp $ */
 
 /************************************************************
 
@@ -76,6 +76,7 @@ getLineData(TScreen * screen,
 		    || ptrs->charData != work->charData) {
 		    update = True;
 		    screen->lineCache = check;
+		    assert(check != 0);
 		}
 	    }
 	} else {
@@ -130,7 +131,7 @@ fillLineData(TScreen * screen, ScrnPtr * ptrs, LineData * work)
 	 * all rows since they can be updated until moved to the
 	 * scrollback.
 	 */
-	work->combSize = (size_t) (screen->max_combining * ICharSize);
+	work->combSize = (Char) screen->max_combining;
 	for (off = 0; off < work->combSize; ++off) {
 	    work->combData[off] = realPtrs->combData[off];
 	}
@@ -186,8 +187,7 @@ insertLineData(XtermWidget xw, int row, int count)
 
 #if OPT_WIDE_CHARS
 #define initLineExtra(screen) \
-    screen->lineExtra = ((size_t) (screen->max_combining * ICharSize) \
-			 * sizeof(IChar *))
+    screen->lineExtra = ((size_t) (screen->max_combining) * sizeof(IChar *))
 #else
 #define initLineExtra(screen) \
     screen->lineExtra = 0

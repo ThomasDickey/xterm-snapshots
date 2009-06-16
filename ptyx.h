@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.581 2009/06/15 00:32:31 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.582 2009/06/15 09:20:36 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1115,7 +1115,7 @@ typedef struct {
 #if OPT_WIDE_CHARS
 	ScrnPtr wideData;	/* second byte of first wide-character */
 #endif
-	ScrnPtr combData[];	/* first enum past fixed-offsets */
+	IChar *combData[];	/* first enum past fixed-offsets */
 } ScrnPtrs;
 
 /*
@@ -1135,8 +1135,8 @@ typedef struct {
 	/* wide (16-bit) characters begin here */
 #if OPT_WIDE_CHARS
 	Char wideData;		/* second byte of first wide-character */
-	size_t combSize;	/* number of items in combData[] */
-	Char combData[];	/* array of combining chars */
+	Char combSize;		/* number of items in combData[] */
+	IChar combData[];	/* array of combining chars */
 #endif
 
 } CellData;
@@ -1158,17 +1158,13 @@ typedef struct {
 	/* wide (16-bit) characters begin here */
 #if OPT_WIDE_CHARS
 	Char *wideData;		/* second byte of first wide-character */
-	unsigned combSize;	/* number of pointers in combData[] */
-	Char *combData[];	/* array of pointers to combining chars */
+	Char combSize;		/* number of pointers in combData[] */
+	IChar *combData[];	/* array of pointers to combining chars */
 #endif
 
 } LineData;
 
-#define ICharSize 2
-
-#define for_each_combData(off, ld) for (off = 0; off < ld->combSize; off += ICharSize)
-#define lo_combData(off, ld)	ld->combData[off]
-#define hi_combData(off, ld)	ld->combData[off + 1]
+#define for_each_combData(off, ld) for (off = 0; off < ld->combSize; ++off)
 
 	/*
 	 * A "row" is the index within the visible part of the screen, and an
