@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.933 2009/06/14 23:42:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.934 2009/06/15 09:23:17 tom Exp $ */
 
 /*
 
@@ -7064,14 +7064,17 @@ ShowCursor(void)
 #if OPT_WIDE_CHARS
 	if_OPT_WIDE_CHARS(screen, {
 	    for_each_combData(off, ld) {
-		clo = lo_combData(off, ld)[my_col];
-		chi = hi_combData(off, ld)[my_col];
-		if (!(clo || chi))
+		if (!(ld->combData[off][my_col]))
 		    break;
 		drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			      currentGC, x, y,
 			      LineCharSet(screen, ld),
-			      PAIRED_CHARS(&clo, &chi), 1, isWide(base));
+			      PAIRED_CHARS(
+					      loByteIChars(ld->combData[off]
+							   + my_col, 1),
+					      hiByteIChars(ld->combData[off]
+							   + my_col, 1)),
+			      1, isWide(base));
 	    }
 	});
 #endif
@@ -7215,14 +7218,17 @@ HideCursor(void)
 #if OPT_WIDE_CHARS
     if_OPT_WIDE_CHARS(screen, {
 	for_each_combData(off, ld) {
-	    clo = lo_combData(off, ld)[my_col];
-	    chi = hi_combData(off, ld)[my_col];
-	    if (!(clo || chi))
+	    if (!(ld->combData[off][my_col]))
 		break;
 	    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			  currentGC, x, y,
 			  LineCharSet(screen, ld),
-			  PAIRED_CHARS(&clo, &chi), 1, isWide(base));
+			  PAIRED_CHARS(
+					  loByteIChars(ld->combData[off] +
+						       my_col, 1),
+					  hiByteIChars(ld->combData[off] +
+						       my_col, 1)),
+			  1, isWide(base));
 	}
     });
 #endif
