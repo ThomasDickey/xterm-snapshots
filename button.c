@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.342 2009/06/08 23:23:51 tom Exp $ */
+/* $XTermId: button.c,v 1.343 2009/06/16 00:39:04 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2900,9 +2900,7 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 			TRACE(("matched:%d:%s\n",
 			       indexed[best_nxt] + 1 -
 			       indexed[best_col],
-			       visibleChars(PAIRED_CHARS((Char *) (search +
-								   indexed[best_col]),
-							 0),
+			       visibleChars((Char *) (search + indexed[best_col]),
 					    (unsigned) (indexed[best_nxt] +
 							1 -
 							indexed[best_col]))));
@@ -3308,7 +3306,7 @@ SaltTextAway(XtermWidget xw,
     *lp = '\0';			/* make sure we have end marked */
 
     TRACE(("Salted TEXT:%d:%s\n", (int) (lp - line),
-	   visibleChars(PAIRED_CHARS(line, 0), (unsigned) (lp - line))));
+	   visibleChars(line, (unsigned) (lp - line))));
 
     screen->selection_length = (unsigned long) (lp - line);
     _OwnSelection(xw, params, num_params);

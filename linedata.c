@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.46 2009/06/15 23:43:39 tom Exp $ */
+/* $XTermId: linedata.c,v 1.47 2009/06/16 00:05:45 tom Exp $ */
 
 /************************************************************
 
@@ -120,8 +120,6 @@ fillLineData(TScreen * screen, ScrnPtr * ptrs, LineData * work)
     work->charData = realPtrs->charData;
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
-	work->wideData = realPtrs->wideData;
-
 	/*
 	 * Construct an array of pointers to combining character data. 
 	 * This is a flexible array on the end of LineData.
@@ -136,7 +134,6 @@ fillLineData(TScreen * screen, ScrnPtr * ptrs, LineData * work)
 	    work->combData[off] = realPtrs->combData[off];
 	}
     } else {
-	work->wideData = 0;
 	work->combSize = 0;
     }
 #endif
@@ -265,7 +262,6 @@ saveCellData(TScreen * screen,
 	item->charData = ld->charData[column];
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
-	    item->wideData = ld->wideData[column];
 	    item->combSize = ld->combSize;
 	    for_each_combData(off, ld) {
 		item->combData[off] = ld->combData[off][column];
@@ -295,7 +291,6 @@ restoreCellData(TScreen * screen,
 	ld->charData[column] = item->charData;
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
-	    ld->wideData[column] = item->wideData;
 	    ld->combSize = item->combSize;
 	    for_each_combData(off, ld) {
 		ld->combData[off][column] = item->combData[off];

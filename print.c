@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.96 2009/06/14 23:06:00 tom Exp $ */
+/* $XTermId: print.c,v 1.97 2009/06/16 00:39:44 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
@@ -148,11 +148,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
     (void) getLineData(screen, inx, ld);
     TRACE(("printLine(row=%d/%d, top=%d:%d, chr=%d):%s\n",
 	   row, ROW2INX(screen, row), screen->topline, screen->max_row, chr,
-	   visibleChars(PAIRED_CHARS(ld->charData,
-				     (screen->utf8_mode
-				      ? ld->wideData
-				      : 0)),
-			(unsigned) last)));
+	   visibleIChars(ld->charData, (unsigned) last)));
 
     if_OPT_ISO_COLORS(screen, {
 	fb = ld->color;

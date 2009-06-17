@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.81 2009/01/26 00:22:33 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.82 2009/06/16 00:31:15 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
@@ -447,7 +447,7 @@ writePtyData(int f, IChar * d, unsigned len)
 	VTbuffer->write_buf[n] = (Char) d[n];
 
     TRACE(("writePtyData %d:%s\n", n,
-	   visibleChars(PAIRED_CHARS(VTbuffer->write_buf, 0), n)));
+	   visibleChars(VTbuffer->write_buf, n)));
     v_write(f, VTbuffer->write_buf, n);
 }
 #endif /* OPT_WIDE_CHARS */

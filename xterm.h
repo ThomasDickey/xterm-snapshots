@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.555 2009/06/15 09:11:43 tom Exp $ */
+/* $XTermId: xterm.h,v 1.556 2009/06/16 22:30:37 tom Exp $ */
 
 /************************************************************
 
@@ -268,8 +268,6 @@ extern int errno;
 #endif
 
 #if OPT_WIDE_CHARS
-#define HIDDEN_HI 0xff
-#define HIDDEN_LO 0xff
 #define HIDDEN_CHAR 0xffff
 #endif
 
@@ -740,7 +738,7 @@ extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
 #if OPT_WIDE_CHARS
 extern Bool iswide(int  /* i */);
 #define FIRST_WIDECHAR 256
-#define isWide(n) ((n) >= FIRST_WIDECHAR && iswide(n))
+#define isWide(n) ((int) (n) >= FIRST_WIDECHAR && iswide(n))
 #endif
 
 /* cachedCgs.c */
