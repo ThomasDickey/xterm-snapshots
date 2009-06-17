@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.94 2009/06/12 23:43:42 tom Exp $ */
+/* $XTermId: trace.c,v 1.95 2009/06/16 22:50:38 tom Exp $ */
 
 /************************************************************
 
@@ -183,7 +183,29 @@ visibleChrsetName(int chrset)
 #endif
 
 char *
-visibleChars(PAIRED_CHARS(Char * buf, Char * buf2), unsigned len)
+visibleChars(Char * buf, unsigned len)
+{
+    static char *result;
+    static unsigned used;
+    unsigned limit = ((len + 1) * 8) + 1;
+    char *dst;
+
+    if (limit > used) {
+	used = limit;
+	result = XtRealloc(result, used);
+    }
+    dst = result;
+    *dst = '\0';
+    while (len--) {
+	unsigned value = *buf++;
+	formatAscii(dst, value);
+	dst += strlen(dst);
+    }
+    return result;
+}
+
+char *
+visibleIChars(IChar * buf, unsigned len)
 {
     static char *result;
     static unsigned used;
@@ -199,10 +221,6 @@ visibleChars(PAIRED_CHARS(Char * buf, Char * buf2), unsigned len)
     while (len--) {
 	unsigned value = *buf++;
 #if OPT_WIDE_CHARS
-	if (buf2 != 0) {
-	    value |= (*buf2 << 8);
-	    buf2++;
-	}
 	if (value > 255)
 	    sprintf(dst, "\\u+%04X", value);
 	else
@@ -357,15 +375,7 @@ visibleXError(int code)
 static char *
 ScrnText(LineData * ld)
 {
-    char *result;
-#if OPT_WIDE_CHARS
-    Char *widec = ld->wideData;
-#endif
-
-    result = visibleChars(PAIRED_CHARS(ld->charData, widec),
-			  ld->lineSize);
-
-    return result;
+    return visibleIChars(ld->charData, ld->lineSize);
 }
 
 #define SHOW_BAD_LINE(name, ld) \

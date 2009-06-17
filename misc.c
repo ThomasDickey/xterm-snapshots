@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.418 2009/06/14 23:11:31 tom Exp $ */
+/* $XTermId: misc.c,v 1.419 2009/06/17 00:17:17 tom Exp $ */
 
 /*
  *
@@ -987,7 +987,7 @@ dabbrev_prev_char(TScreen * screen, CELL * cell, LineData * ld)
     (void) getLineData(screen, cell->row, ld);
     while (cell->row >= firstLine) {
 	if (--(cell->col) >= 0) {
-	    result = ld->charData[cell->col];
+	    result = (int) ld->charData[cell->col];
 	    break;
 	}
 	if (--(cell->row) < firstLine)

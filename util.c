@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.450 2009/06/15 23:43:01 tom Exp $ */
+/* $XTermId: util.c,v 1.452 2009/06/17 00:00:56 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2629,7 +2629,7 @@ drawXtermText(XtermWidget xw,
 	TRACE(("DRAWTEXT%c[%4d,%4d] (%d)%3d:%s\n",
 	       screen->cursor_state == OFF ? ' ' : '*',
 	       y, x, chrset, len,
-	       visibleChars(PAIRED_CHARS(text, text2), len)));
+	       visibleChars(text, len)));
 
 	if (gc2 != 0) {		/* draw actual double-sized characters */
 	    XFontStruct *fs = screen->double_fonts[inx].fs;
@@ -3066,7 +3066,7 @@ drawXtermText(XtermWidget xw,
     TRACE(("drawtext%c[%4d,%4d] (%d) %d:%s\n",
 	   screen->cursor_state == OFF ? ' ' : '*',
 	   y, x, chrset, len,
-	   visibleChars(PAIRED_CHARS(text, text2), len)));
+	   visibleChars(text, len)));
     y += FontAscent(screen);
 
 #if OPT_WIDE_CHARS
@@ -3614,11 +3614,7 @@ unsigned
 getXtermCell(TScreen * screen, int row, int col)
 {
     LineData *ld = getLineData(screen, row, NULL);
-    unsigned ch = ld->charData[col];
-    if_OPT_WIDE_CHARS(screen, {
-	ch |= (ld->wideData[col] << 8);
-    });
-    return ch;
+    return ld->charData[col];
 }
 
 /*
@@ -3628,10 +3624,9 @@ void
 putXtermCell(TScreen * screen, int row, int col, int ch)
 {
     LineData *ld = getLineData(screen, row, NULL);
-    ld->charData[col] = LO_BYTE(ch);
+    ld->charData[col] = (CharData) ch;
     if_OPT_WIDE_CHARS(screen, {
 	size_t off;
-	ld->wideData[col] = HI_BYTE(ch);
 	for_each_combData(off, ld) {
 	    ld->combData[off][col] = 0;
 	}

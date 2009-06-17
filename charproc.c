@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.934 2009/06/15 09:23:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.936 2009/06/17 00:10:35 tom Exp $ */
 
 /*
 
@@ -6824,8 +6824,7 @@ ShowCursor(void)
     XtermWidget xw = term;
     TScreen *screen = &xw->screen;
     int x, y;
-    int base;
-    Char clo;
+    IChar base;
     unsigned flags;
 #if OPT_ISO_COLORS
     CellColor fg_bg;
@@ -6847,7 +6846,6 @@ ShowCursor(void)
     Boolean use_selfg;
 #endif
 #if OPT_WIDE_CHARS
-    Char chi = 0;
     size_t off;
     int my_col = 0;
 #endif
@@ -6880,30 +6878,26 @@ ShowCursor(void)
     }
     ld = getLineData(screen, screen->cur_row, ld);
 
-    base =
-	clo = ld->charData[cursor_col];
+    base = ld->charData[cursor_col];
     flags = ld->attribs[cursor_col];
 
     if_OPT_WIDE_CHARS(screen, {
-	chi = ld->wideData[cursor_col];
-	if (clo == HIDDEN_LO && chi == HIDDEN_HI && cursor_col > 0) {
+	if (base == HIDDEN_CHAR && cursor_col > 0) {
 	    /* if cursor points to non-initial part of wide character,
 	     * back it up
 	     */
 	    --cursor_col;
-	    clo = ld->charData[cursor_col];
-	    chi = ld->wideData[cursor_col];
+	    base = ld->charData[cursor_col];
 	}
 	my_col = cursor_col;
-	base = (chi << 8) | clo;
 	if (base == 0)
-	    base = clo = ' ';
-	if (isWide(base))
+	    base = ' ';
+	if (isWide((int) base))
 	    my_col += 1;
     });
 
     if (base == 0) {
-	base = clo = ' ';
+	base = ' ';
     }
 #if OPT_ISO_COLORS
 #ifdef EXP_BOGUS_FG
@@ -6928,10 +6922,7 @@ ShowCursor(void)
      * but not the background, do not treat it as a colored cell.
      */
     if ((flags & TERM_COLOR_FLAGS(xw)) == BG_COLOR
-#if OPT_WIDE_CHARS
-	&& chi == 0
-#endif
-	&& clo == ' ') {
+	&& base == ' ') {
 	flags &= ~TERM_COLOR_FLAGS(xw);
     }
 #endif
@@ -7059,7 +7050,10 @@ ShowCursor(void)
 		      x = LineCursorX(screen, ld, cursor_col),
 		      y = CursorY(screen, screen->cur_row),
 		      LineCharSet(screen, ld),
-		      PAIRED_CHARS(&clo, &chi), 1, 0);
+		      PAIRED_CHARS(
+				      loByteIChars(&base, 1),
+				      hiByteIChars(&base, 1)),
+		      1, 0);
 
 #if OPT_WIDE_CHARS
 	if_OPT_WIDE_CHARS(screen, {
@@ -7074,7 +7068,7 @@ ShowCursor(void)
 							   + my_col, 1),
 					      hiByteIChars(ld->combData[off]
 							   + my_col, 1)),
-			      1, isWide(base));
+			      1, isWide((int) base));
 	    }
 	});
 #endif
@@ -7109,15 +7103,13 @@ HideCursor(void)
     TScreen *screen = &xw->screen;
     GC currentGC;
     int x, y;
-    int base;
-    Char clo;
+    IChar base;
     unsigned flags;
 #if OPT_ISO_COLORS
     CellColor fg_bg;
 #endif
     Bool in_selection;
 #if OPT_WIDE_CHARS
-    Char chi = 0;
     size_t off;
     int my_col = 0;
 #endif
@@ -7144,30 +7136,26 @@ HideCursor(void)
     }
     ld = getLineData(screen, screen->cursorp.row, ld);
 
-    base =
-	clo = ld->charData[cursor_col];
+    base = ld->charData[cursor_col];
     flags = ld->attribs[cursor_col];
 
     if_OPT_WIDE_CHARS(screen, {
-	chi = ld->wideData[cursor_col];
-	if (clo == HIDDEN_LO && chi == HIDDEN_HI && cursor_col > 0) {
+	if (base == HIDDEN_CHAR && cursor_col > 0) {
 	    /* if cursor points to non-initial part of wide character,
 	     * back it up
 	     */
 	    --cursor_col;
-	    clo = ld->charData[cursor_col];
-	    chi = ld->wideData[cursor_col];
+	    base = ld->charData[cursor_col];
 	}
 	my_col = cursor_col;
-	base = (chi << 8) | clo;
 	if (base == 0)
-	    base = clo = ' ';
-	if (isWide(base))
+	    base = ' ';
+	if (isWide((int) base))
 	    my_col += 1;
     });
 
     if (base == 0) {
-	base = clo = ' ';
+	base = ' ';
     }
 #ifdef EXP_BOGUS_FG
     /*
@@ -7213,7 +7201,10 @@ HideCursor(void)
 		  x = LineCursorX(screen, ld, cursor_col),
 		  y = CursorY(screen, screen->cursorp.row),
 		  LineCharSet(screen, ld),
-		  PAIRED_CHARS(&clo, &chi), 1, 0);
+		  PAIRED_CHARS(
+				  loByteIChars(&base, 1),
+				  hiByteIChars(&base, 1)),
+		  1, 0);
 
 #if OPT_WIDE_CHARS
     if_OPT_WIDE_CHARS(screen, {
@@ -7228,7 +7219,7 @@ HideCursor(void)
 						       my_col, 1),
 					  hiByteIChars(ld->combData[off] +
 						       my_col, 1)),
-			  1, isWide(base));
+			  1, isWide((int) base));
 	}
     });
 #endif

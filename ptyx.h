@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.582 2009/06/15 09:20:36 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.584 2009/06/17 00:00:07 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1098,6 +1098,8 @@ typedef struct {
 
 typedef int RowFlags;
 
+typedef IChar CharData;
+
 /*
  * This is the "old" xterm scrollback (not)structure.
  */
@@ -1110,12 +1112,8 @@ typedef struct {
 #if OPT_DEC_CHRSET
 	ScrnPtr charSets;	/* DEC character-set */
 #endif
-	/* wide (16-bit) characters begin here */
-	ScrnPtr charData;	/* first (or only) byte of cell's character */
-#if OPT_WIDE_CHARS
-	ScrnPtr wideData;	/* second byte of first wide-character */
-#endif
-	IChar *combData[];	/* first enum past fixed-offsets */
+	CharData *charData;	/* cell's base character */
+	CharData *combData[];	/* first enum past fixed-offsets */
 } ScrnPtrs;
 
 /*
@@ -1131,12 +1129,10 @@ typedef struct {
 #if OPT_DEC_CHRSET
 	Char charSets;
 #endif
-	Char charData;		/* FIXME - merge to make IChar array */
-	/* wide (16-bit) characters begin here */
+	CharData charData;	/* cell's base character */
 #if OPT_WIDE_CHARS
-	Char wideData;		/* second byte of first wide-character */
 	Char combSize;		/* number of items in combData[] */
-	IChar combData[];	/* array of combining chars */
+	CharData combData[];	/* array of combining chars */
 #endif
 
 } CellData;
@@ -1154,12 +1150,10 @@ typedef struct {
 #if OPT_DEC_CHRSET
 	Char *charSets;
 #endif
-	Char *charData;		/* FIXME - merge to make IChar array */
-	/* wide (16-bit) characters begin here */
+	CharData *charData;	/* cell's base character */
 #if OPT_WIDE_CHARS
-	Char *wideData;		/* second byte of first wide-character */
 	Char combSize;		/* number of pointers in combData[] */
-	IChar *combData[];	/* array of pointers to combining chars */
+	CharData *combData[];	/* array of pointers to combining chars */
 #endif
 
 } LineData;
