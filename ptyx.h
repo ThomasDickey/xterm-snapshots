@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.584 2009/06/17 00:00:07 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.587 2009/06/18 00:23:36 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -94,6 +94,22 @@
 /* use these to allocate partly-structured data */
 #define CastMallocN(type,n)	(type *)malloc(sizeof(type) + (n))
 #define CastMalloc(type)	CastMallocN(type,0)
+
+#define BumpBuffer(type, buffer, size, want) \
+	if (want >= size) { \
+	    size = 1 + (want * 2); \
+	    buffer = TypeRealloc(type, size, buffer); \
+	}
+
+#define BfBuf(type) screen->bf_buf_##type
+#define BfLen(type) screen->bf_len_##type
+
+#define TypedBuffer(type) \
+	type		*bf_buf_##type; \
+	Cardinal	bf_len_##type
+
+#define BumpTypedBuffer(type, want) \
+	BumpBuffer(type, BfBuf(type), BfLen(type), want)
 
 /*
 ** System V definitions
@@ -1013,14 +1029,10 @@ extern int A2E(int);
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
-#define PAIRED_CHARS(lo,hi)	lo,hi
-#define PACK_PAIR(lo,hi,n)	(lo[n] | (hi ? (hi[n] << 8) : 0))
 typedef unsigned IChar;		/* for 8 or 16-bit characters, plus flag */
 #else
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
 #define if_WIDE_OR_NARROW(screen, wide, narrow) narrow
-#define PAIRED_CHARS(lo,hi)	lo
-#define PACK_PAIR(lo,hi,n)	lo[n]
 typedef unsigned char IChar;	/* for 8-bit characters */
 #endif
 
@@ -1094,6 +1106,8 @@ typedef struct {
     	unsigned fg:COLOR_BITS;
     	unsigned bg:COLOR_BITS;
 } CellColor;
+#else
+typedef int CellColor;
 #endif
 
 typedef int RowFlags;
@@ -1236,7 +1250,9 @@ typedef enum {
 	mainMenu,
 	vtMenu,
 	fontMenu,
+#if OPT_TEK4014
 	tekMenu
+#endif
 } MenuIndex;
 
 #define NUM_POPUP_MENUS 4
@@ -1379,8 +1395,8 @@ typedef struct {
 	IChar		utf_char;	/* in-progress character	*/
 	int		last_written_col;
 	int		last_written_row;
-	XChar2b		*draw_buf;	/* drawXtermText() data		*/
-	Cardinal	draw_len;	/* " " "			*/
+	TypedBuffer(XChar2b);
+	TypedBuffer(char);
 #endif
 #if OPT_BROKEN_OSC
 	Boolean		brokenLinuxOSC; /* true to ignore Linux palette ctls */
@@ -1737,6 +1753,11 @@ typedef struct {
 	XftFont *	renderWideBold[NMENUFONTS];
 	XftFont *	renderWideItal[NMENUFONTS];
 	XftDraw *	renderDraw;
+#if OPT_RENDERWIDE
+	TypedBuffer(XftCharSpec);
+#else
+	TypedBuffer(XftChar8);
+#endif
 #endif
 #if OPT_INPUT_METHOD
 	XIM		xim;

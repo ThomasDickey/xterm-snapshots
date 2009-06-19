@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.936 2009/06/17 00:10:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.939 2009/06/18 00:25:57 tom Exp $ */
 
 /*
 
@@ -1245,6 +1245,8 @@ static struct ParseState myState;
 static void
 init_groundtable(TScreen * screen, struct ParseState *sp)
 {
+    (void) screen;
+
 #if OPT_VT52_MODE
     if (!(screen->vtXX_level)) {
 	sp->groundtable = vt52_table;
@@ -6826,9 +6828,7 @@ ShowCursor(void)
     int x, y;
     IChar base;
     unsigned flags;
-#if OPT_ISO_COLORS
     CellColor fg_bg;
-#endif
     GC currentGC;
     CgsEnum currentCgs = gcMAX;
     VTwin *currentWin = WhichVWin(screen);
@@ -7050,10 +7050,7 @@ ShowCursor(void)
 		      x = LineCursorX(screen, ld, cursor_col),
 		      y = CursorY(screen, screen->cur_row),
 		      LineCharSet(screen, ld),
-		      PAIRED_CHARS(
-				      loByteIChars(&base, 1),
-				      hiByteIChars(&base, 1)),
-		      1, 0);
+		      &base, 1, 0);
 
 #if OPT_WIDE_CHARS
 	if_OPT_WIDE_CHARS(screen, {
@@ -7063,11 +7060,7 @@ ShowCursor(void)
 		drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			      currentGC, x, y,
 			      LineCharSet(screen, ld),
-			      PAIRED_CHARS(
-					      loByteIChars(ld->combData[off]
-							   + my_col, 1),
-					      hiByteIChars(ld->combData[off]
-							   + my_col, 1)),
+			      ld->combData[off] + my_col,
 			      1, isWide((int) base));
 	    }
 	});
@@ -7105,9 +7098,7 @@ HideCursor(void)
     int x, y;
     IChar base;
     unsigned flags;
-#if OPT_ISO_COLORS
     CellColor fg_bg;
-#endif
     Bool in_selection;
 #if OPT_WIDE_CHARS
     size_t off;
@@ -7129,6 +7120,10 @@ HideCursor(void)
 	return;
     }
 #endif /* NO_ACTIVE_ICON */
+
+#if !OPT_ISO_COLORS
+    fg_bg = 0;
+#endif
 
     if ((ld = newLineData(screen)) == 0) {
 	TRACE(("BUG - HideCursor failed to get LineData\n"));
@@ -7201,10 +7196,7 @@ HideCursor(void)
 		  x = LineCursorX(screen, ld, cursor_col),
 		  y = CursorY(screen, screen->cursorp.row),
 		  LineCharSet(screen, ld),
-		  PAIRED_CHARS(
-				  loByteIChars(&base, 1),
-				  hiByteIChars(&base, 1)),
-		  1, 0);
+		  &base, 1, 0);
 
 #if OPT_WIDE_CHARS
     if_OPT_WIDE_CHARS(screen, {
@@ -7214,11 +7206,7 @@ HideCursor(void)
 	    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
 			  currentGC, x, y,
 			  LineCharSet(screen, ld),
-			  PAIRED_CHARS(
-					  loByteIChars(ld->combData[off] +
-						       my_col, 1),
-					  hiByteIChars(ld->combData[off] +
-						       my_col, 1)),
+			  ld->combData[off] + my_col,
 			  1, isWide((int) base));
 	}
     });

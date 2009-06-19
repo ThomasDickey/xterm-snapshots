@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.556 2009/06/16 22:30:37 tom Exp $ */
+/* $XTermId: xterm.h,v 1.557 2009/06/17 00:57:52 tom Exp $ */
 
 /************************************************************
 
@@ -1133,8 +1133,7 @@ extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, CellColor
 extern int AddToRefresh (XtermWidget /* xw */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
-extern int drawXtermIChars(XtermWidget /* xw */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
-extern int drawXtermText (XtermWidget /* xw */, unsigned  /* flags */, GC  /* gc */, int  /* x */, int  /* y */, int  /* chrset */, PAIRED_CHARS(Char * /* text */, Char * /* text2 */), Cardinal  /* len */, int  /* on_wide */);
+extern int drawXtermText (XtermWidget /* xw */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
@@ -1163,9 +1162,6 @@ extern void xtermClear (XtermWidget /* xw */);
 extern void xtermRepaint (XtermWidget /* xw */);
 extern void xtermScroll (XtermWidget /* xw */, int /* amount */);
 extern void xtermSizeHints (XtermWidget  /* xw */, int /* scrollbarWidth */);
-
-extern Char * loByteIChars(IChar * /*data*/, unsigned /*length*/);
-extern Char * hiByteIChars(IChar * /*data*/, unsigned /*length*/);
 
 #if OPT_ISO_COLORS
 

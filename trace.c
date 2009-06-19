@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.95 2009/06/16 22:50:38 tom Exp $ */
+/* $XTermId: trace.c,v 1.96 2009/06/17 09:24:10 tom Exp $ */
 
 /************************************************************
 
@@ -161,7 +161,7 @@ formatAscii(char *dst, unsigned value)
 #if OPT_DEC_CHRSET
 
 const char *
-visibleChrsetName(int chrset)
+visibleChrsetName(unsigned chrset)
 {
     const char *result = "?";
     switch (chrset) {
