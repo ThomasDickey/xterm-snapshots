@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.754 2009/06/15 08:43:17 tom Exp $
+  $XTermId: xterm.log.html,v 1.756 2009/06/19 08:25:19 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -294,6 +294,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>remove a limit-check in ptydata.c, allowing Unicode values past
+	    64k to be displayed using TrueType fonts (Debian #458432).
+
+	<li>remove a vt52-specific ifdef to allow mapping F1-F4 to PF1-PF4
+	    when vt52 support is not compiled (report by Olaf 'Rhialto'
+	    Seibert).
+
 	<li>save/restore line-wrapping flags when converting from ISL-8859-1
 	    encoding to UTF-8 encoding, as well as when resizing screen.
 

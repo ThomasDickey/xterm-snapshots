@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.327 2009/06/17 00:09:07 tom Exp $ */
+/* $XTermId: screen.c,v 1.331 2009/06/18 23:52:41 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -112,6 +112,8 @@ scrnHeadSize(TScreen * screen, unsigned count)
     unsigned result;
     unsigned extra = ExtraScrnSize(screen);
 
+    (void) screen;
+
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
 	result = SizeofHeadData(extra + 1);
@@ -138,10 +140,13 @@ static void
 setupScrnPtrs(XtermWidget xw, ScrnBuf base, Char * data, unsigned nrow, unsigned ncol)
 {
     TScreen *screen = TScreenOf(xw);
-    unsigned i, j;
+    unsigned i;
     unsigned offset = 0;
     unsigned jump = scrnHeadSize(screen, 1);
     ScrnPtrs *ptr;
+#if OPT_WIDE_CHARS
+    unsigned j;
+#endif
 
     for (i = 0; i < nrow; i++, offset += jump) {
 	ptr = ScrnPtrsAddr(base, offset);
@@ -187,9 +192,12 @@ extractScrnData(XtermWidget xw,
 		unsigned srcCols)
 {
     TScreen *screen = TScreenOf(xw);
-    unsigned i, j;
+    unsigned i;
     unsigned jump = scrnHeadSize(screen, 1);
     Char *nextPtr = dstData;
+#if OPT_WIDE_CHARS
+    unsigned j;
+#endif
 
     ScrnPtrs *dstPtrs = (ScrnPtrs *) malloc(jump);
 
@@ -260,6 +268,8 @@ sizeofScrnRow(TScreen * screen, unsigned ncol)
 		       + SizeofScrnPtr(charSets)
 #endif
 		       + SizeofScrnPtr(charData));
+
+    (void) screen;
 
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
@@ -810,9 +820,12 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
     TScreen *screen = &(xw->screen);
     ScrnPtr *base;
     unsigned jump = scrnHeadSize(screen, 1);
-    unsigned i, j;
+    unsigned i;
     LineData *work = newLineData(screen);
     unsigned flags = TERM_COLOR_FLAGS(xw);
+#if OPT_ISO_COLORS
+    unsigned j;
+#endif
 
     TRACE(("ScrnClearLines(where %d, n %d, size %d)\n", where, n, size));
 
@@ -1169,6 +1182,9 @@ ScrnRefresh(XtermWidget xw,
 
 	(void) fg;
 	(void) bg;
+#if !OPT_ISO_COLORS
+	fg_bg = 0;
+#endif
 
 	if (row < screen->top_marg || row > screen->bot_marg)
 	    lastind = row;
@@ -1332,8 +1348,8 @@ ScrnRefresh(XtermWidget xw,
 		    && (extract_bg(xw, ColorOf(col), attrs[col]) != bg))
 #endif
 #if OPT_WIDE_CHARS
-		|| (isWide((int) chars[col] != wideness)
-		    && !(chars[col] == HIDDEN_CHAR))
+		|| (isWide((int) chars[col]) != wideness
+		    && chars[col] != HIDDEN_CHAR)
 #endif
 #if OPT_DEC_CHRSET
 		|| (cb != 0 && (cb[col] != cs))
@@ -1350,8 +1366,7 @@ ScrnRefresh(XtermWidget xw,
 
 		x = drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
 				  cs,
-				  PAIRED_CHARS(loByteIChars(&chars[lastind], (unsigned) (col - lastind)),
-					       hiByteIChars(&chars[lastind], (unsigned) (col - lastind))),
+				  &chars[lastind],
 				  (unsigned) (col - lastind), 0);
 
 		if_OPT_WIDE_CHARS(screen, {
@@ -1373,13 +1388,7 @@ ScrnRefresh(XtermWidget xw,
 					      (test & DRAWX_MASK)
 					      | NOBACKGROUND,
 					      gc, my_x, y, cs,
-					      PAIRED_CHARS(
-							      loByteIChars(com_off
-									   +
-									   i, 1),
-							      hiByteIChars(com_off
-									   +
-									   i, 1)),
+					      com_off + i,
 					      1, isWide((int) base));
 			}
 		    }
@@ -1426,8 +1435,7 @@ ScrnRefresh(XtermWidget xw,
 
 	drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
 		      cs,
-		      PAIRED_CHARS(loByteIChars(&chars[lastind], (unsigned) (col - lastind)),
-				   hiByteIChars(&chars[lastind], (unsigned) (col - lastind))),
+		      &chars[lastind],
 		      (unsigned) (col - lastind), 0);
 
 	if_OPT_WIDE_CHARS(screen, {
@@ -1449,11 +1457,7 @@ ScrnRefresh(XtermWidget xw,
 				      (test & DRAWX_MASK)
 				      | NOBACKGROUND,
 				      gc, my_x, y, cs,
-				      PAIRED_CHARS(
-						      loByteIChars(com_off +
-								   i, 1),
-						      hiByteIChars(com_off +
-								   i, 1)),
+				      com_off + i,
 				      1, isWide(base));
 		}
 	    }
@@ -1856,6 +1860,8 @@ ScrnFillRectangle(XtermWidget xw,
 	unsigned size = (unsigned) (target->right - (int) left);
 	unsigned attrs = flags;
 	int row, col;
+
+	(void) size;
 
 	attrs &= ATTRIBUTES;
 	attrs |= CHARDRAWN;

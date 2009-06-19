@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.452 2009/06/17 00:00:56 tom Exp $ */
+/* $XTermId: util.c,v 1.456 2009/06/18 00:27:43 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -690,11 +690,11 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 	/* make sure that the correct GC is current */
 	currentGC = updatedXtermGC(xw, flags, fg_bg, False);
 
-	drawXtermIChars(xw, test & DRAWX_MASK, currentGC,
-			LineCursorX(screen, ld, screen->cur_col),
-			CursorY(screen, screen->cur_row),
-			LineCharSet(screen, ld),
-			str, len, 0);
+	drawXtermText(xw, test & DRAWX_MASK, currentGC,
+		      LineCursorX(screen, ld, screen->cur_col),
+		      CursorY(screen, screen->cur_row),
+		      LineCharSet(screen, ld),
+		      str, len, 0);
 
 	resetXtermGC(xw, flags, False);
 
@@ -2175,7 +2175,7 @@ xtermXftDrawString(XtermWidget xw,
 		   XftFont * font,
 		   int x,
 		   int y,
-		   PAIRED_CHARS(Char * text, Char * text2),
+		   IChar * text,
 		   Cardinal len,
 		   Bool really)
 {
@@ -2184,9 +2184,7 @@ xtermXftDrawString(XtermWidget xw,
 
     if (len != 0) {
 #if OPT_RENDERWIDE
-	static XftCharSpec *sbuf;
-	static Cardinal slen = 0;
-
+	XftCharSpec *sbuf;
 	XftFont *wfont;
 	Cardinal src, dst;
 	XftFont *lastFont = 0;
@@ -2210,17 +2208,11 @@ xtermXftDrawString(XtermWidget xw,
 	    wfont = screen->renderWideNorm[fontnum];
 	}
 
-	if (slen < len) {
-	    slen = (len + 1) * 2;
-	    sbuf = (XftCharSpec *) XtRealloc((char *) sbuf,
-					     slen * sizeof(XftCharSpec));
-	}
+	BumpTypedBuffer(XftCharSpec, len);
+	sbuf = BfBuf(XftCharSpec);
 
 	for (src = dst = 0; src < len; src++) {
 	    FcChar32 wc = *text++;
-
-	    if (text2)
-		wc |= (*text2++ << 8);
 
 	    charWidth = xtermCellWidth(xw, (wchar_t) wc);
 	    if (charWidth < 0)
@@ -2254,24 +2246,35 @@ xtermXftDrawString(XtermWidget xw,
 			    (int) (dst - start));
 	}
 #else /* !OPT_RENDERWIDE */
-	PAIRED_CHARS((void) text, (void) text2);
 	if (really) {
+#if OPT_WIDE_CHARS
+	    XftChar8 *buffer;
+	    int dst;
+
+	    BumpTypedBuffer(XftChar8, len);
+	    buffer = BfBuf(XftChar8);
+
+	    for (dst = 0; dst < (int) len; ++dst)
+		buffer[dst] = CharOf(text[dst]);
+#else
+	    char *buffer = (char *) text;
+#endif
 	    XftDrawString8(screen->renderDraw,
 			   color,
 			   font,
-			   x, y, (unsigned char *) text, (int) len);
+			   x, y, buffer, (int) len);
 	}
 	ncells = (int) len;
 #endif
     }
     return ncells;
 }
-#define xtermXftWidth(xw, flags, color, font, x, y, paired_chars, len) \
-   xtermXftDrawString(xw, flags, color, font, x, y, paired_chars, len, False)
+#define xtermXftWidth(xw, flags, color, font, x, y, chars, len) \
+   xtermXftDrawString(xw, flags, color, font, x, y, chars, len, False)
 #endif /* OPT_RENDERFONT */
 
 #define DrawX(col) x + (col * (font_width))
-#define DrawSegment(first,last) (void)drawXtermText(xw, flags|NOTRANSLATION, gc, DrawX(first), y, chrset, PAIRED_CHARS(text+first, text2+first), (unsigned)(last - first), on_wide)
+#define DrawSegment(first,last) (void)drawXtermText(xw, flags|NOTRANSLATION, gc, DrawX(first), y, chrset, text+first, (unsigned)(last - first), on_wide)
 
 #if OPT_WIDE_CHARS
 /*
@@ -2337,15 +2340,10 @@ ucs_workaround(XtermWidget xw,
     int fixed = False;
 
     if (screen->wide_chars && screen->utf8_mode && ch > 256) {
-	unsigned eqv = AsciiEquivs(ch);
+	IChar eqv = AsciiEquivs(ch);
 
-	if (eqv != ch) {
+	if (eqv != (IChar) ch) {
 	    int width = my_wcwidth((int) ch);
-	    Char text[2];
-	    Char text2[2];
-
-	    text[0] = (Char) eqv;
-	    text2[0] = 0;
 
 	    do {
 		drawXtermText(xw,
@@ -2354,11 +2352,11 @@ ucs_workaround(XtermWidget xw,
 			      x,
 			      y,
 			      chrset,
-			      PAIRED_CHARS(text, text2),
+			      &eqv,
 			      1,
 			      on_wide);
 		x += FontWidth(screen);
-		text[0] = '?';
+		eqv = '?';
 	    } while (width-- > 1);
 
 	    fixed = True;
@@ -2551,13 +2549,13 @@ drawClippedXftString(XtermWidget xw,
 		     XftColor * fg_color,
 		     int x,
 		     int y,
-		     PAIRED_CHARS(Char * text, Char * text2),
+		     IChar * text,
 		     Cardinal len)
 {
     int ncells = xtermXftWidth(xw, flags,
 			       fg_color,
 			       font, x, y,
-			       PAIRED_CHARS(text, text2),
+			       text,
 			       len);
     TScreen *screen = &(xw->screen);
 
@@ -2565,7 +2563,7 @@ drawClippedXftString(XtermWidget xw,
     xtermXftDrawString(xw, flags,
 		       fg_color,
 		       font, x, y,
-		       PAIRED_CHARS(text, text2),
+		       text,
 		       len,
 		       True);
     endXftClipping(screen);
@@ -2584,7 +2582,7 @@ drawXtermText(XtermWidget xw,
 	      int x,
 	      int y,
 	      int chrset,
-	      PAIRED_CHARS(Char * text, Char * text2),
+	      IChar * text,
 	      Cardinal len,
 	      int on_wide)
 {
@@ -2599,21 +2597,6 @@ drawXtermText(XtermWidget xw,
 #if OPT_WIDE_CHARS
     if (text == 0)
 	return 0;
-    /*
-     * It's simpler to pass in a null pointer for text2 in places where
-     * we only use codes through 255.  Fix text2 here so we can increment
-     * it, etc.
-     */
-    if (text2 == 0) {
-	static Char *dbuf;
-	static unsigned dlen;
-	if (dlen <= len) {
-	    dlen = (len + 1) * 2;
-	    dbuf = (Char *) XtRealloc((char *) dbuf, dlen);
-	    memset(dbuf, 0, dlen);
-	}
-	text2 = dbuf;
-    }
 #endif
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(chrset)) {
@@ -2629,7 +2612,7 @@ drawXtermText(XtermWidget xw,
 	TRACE(("DRAWTEXT%c[%4d,%4d] (%d)%3d:%s\n",
 	       screen->cursor_state == OFF ? ' ' : '*',
 	       y, x, chrset, len,
-	       visibleChars(text, len)));
+	       visibleIChars(text, len)));
 
 	if (gc2 != 0) {		/* draw actual double-sized characters */
 	    XFontStruct *fs = screen->double_fonts[inx].fs;
@@ -2649,7 +2632,7 @@ drawXtermText(XtermWidget xw,
 		rect.width = (unsigned short) ((int) len * font_width);
 		rect.height = (unsigned short) (FontHeight(screen));
 
-		TRACE(("drawing %s\n", visibleChrsetName(chrset)));
+		TRACE(("drawing %s\n", visibleChrsetName((unsigned) chrset)));
 		switch (chrset) {
 		case CSET_DHL_TOP:
 		    rect.y = (short) -(fs->ascent / 2);
@@ -2691,34 +2674,25 @@ drawXtermText(XtermWidget xw,
 		while (len--) {
 		    x = drawXtermText(xw, flags, gc2,
 				      x, y, 0,
-				      PAIRED_CHARS(text++, text2++),
+				      text++,
 				      1, on_wide);
 		    x += FontWidth(screen);
 		}
 	    } else {
 		x = drawXtermText(xw, flags, gc2,
 				  x, y, 0,
-				  PAIRED_CHARS(text, text2),
+				  text,
 				  len, on_wide);
 		x += (int) len *FontWidth(screen);
 	    }
 
 	    TRACE(("drawtext [%4d,%4d]\n", y, x));
 	} else {		/* simulate double-sized characters */
-#if OPT_WIDE_CHARS
-	    Char *wide = 0;
-#endif
 	    unsigned need = 2 * len;
-	    Char *temp = TypeMallocN(Char, need);
+	    IChar *temp = TypeMallocN(IChar, need);
 	    unsigned n = 0;
-	    if_OPT_WIDE_CHARS(screen, {
-		wide = TypeMallocN(Char, need);
-	    });
+
 	    while (len--) {
-		if_OPT_WIDE_CHARS(screen, {
-		    wide[n] = *text2++;
-		    wide[n + 1] = 0;
-		});
 		temp[n++] = *text++;
 		temp[n++] = ' ';
 	    }
@@ -2727,13 +2701,10 @@ drawXtermText(XtermWidget xw,
 			      gc,
 			      x, y,
 			      0,
-			      PAIRED_CHARS(temp, wide),
+			      temp,
 			      n,
 			      on_wide);
 	    free(temp);
-	    if_OPT_WIDE_CHARS(screen, {
-		free(wide);
-	    });
 	}
 	return x;
     }
@@ -2779,7 +2750,7 @@ drawXtermText(XtermWidget xw,
 	    ncells = xtermXftWidth(xw, flags,
 				   bg_color,
 				   font, x, y,
-				   PAIRED_CHARS(text, text2),
+				   text,
 				   len);
 	    XftDrawRect(screen->renderDraw,
 			bg_color,
@@ -2799,11 +2770,9 @@ drawXtermText(XtermWidget xw,
 	    for (last = 0; last < (int) len; last++) {
 		Boolean replace = False;
 		Boolean missing = False;
-		unsigned ch = (unsigned) PACK_PAIR(text, text2, last);
+		unsigned ch = (unsigned) text[last];
 		int nc;
-		Char temp[2];
 #if OPT_WIDE_CHARS
-		Char temp2[2];
 
 		if (xtermIsDecGraphic(ch)) {
 		    /*
@@ -2865,8 +2834,7 @@ drawXtermText(XtermWidget xw,
 						  getXftColor(xw, values.foreground),
 						  curX,
 						  y,
-						  PAIRED_CHARS(text + first,
-							       text2 + first),
+						  text + first,
 						  (Cardinal) (last - first));
 			curX += nc * FontWidth(screen);
 			underline_len += (Cardinal) nc;
@@ -2883,18 +2851,13 @@ drawXtermText(XtermWidget xw,
 			screen->fnt_wide = old_wide;
 			screen->fnt_high = old_high;
 		    } else {
-			temp[0] = LO_BYTE(ch);
-#if OPT_WIDE_CHARS
-			temp2[0] = HI_BYTE(ch);
-#endif
 			nc = drawClippedXftString(xw,
 						  flags,
 						  font,
 						  getXftColor(xw, values.foreground),
 						  curX,
 						  y,
-						  PAIRED_CHARS(temp,
-							       temp2),
+						  &ch,
 						  1);
 			curX += nc * FontWidth(screen);
 			underline_len += (Cardinal) nc;
@@ -2910,8 +2873,7 @@ drawXtermText(XtermWidget xw,
 					 getXftColor(xw, values.foreground),
 					 curX,
 					 y,
-					 PAIRED_CHARS(text + first,
-						      text2 + first),
+					 text + first,
 					 (Cardinal) (last - first));
 	    }
 	}
@@ -2924,7 +2886,7 @@ drawXtermText(XtermWidget xw,
 				     getXftColor(xw, values.foreground),
 				     x,
 				     y,
-				     PAIRED_CHARS(text, text2),
+				     text,
 				     len);
 	}
 #endif /* OPT_BOX_CHARS */
@@ -2957,17 +2919,19 @@ drawXtermText(XtermWidget xw,
 	while (len--) {
 	    if_WIDE_OR_NARROW(screen, {
 		XChar2b temp[1];
-		temp[0].byte2 = *text;
-		temp[0].byte1 = *text2;
+		temp[0].byte2 = LO_BYTE(*text);
+		temp[0].byte1 = HI_BYTE(*text);
 		width = XTextWidth16(fs, temp, 1);
 	    }
 	    , {
-		width = XTextWidth(fs, (char *) text, 1);
+		char temp[1];
+		temp[0] = (char) LO_BYTE(*text);
+		width = XTextWidth(fs, temp, 1);
 	    });
 	    adj = (FontWidth(screen) - width) / 2;
 	    (void) drawXtermText(xw, flags | NOBACKGROUND | CHARBYCHAR,
 				 gc, x + adj, y, chrset,
-				 PAIRED_CHARS(text++, text2++), 1, on_wide);
+				 text++, 1, on_wide);
 	    x += FontWidth(screen);
 	}
 	return x;
@@ -2986,7 +2950,7 @@ drawXtermText(XtermWidget xw,
 			     : NormalFont(screen));
 	int last, first = 0;
 	for (last = 0; last < (int) len; last++) {
-	    unsigned ch = (unsigned) PACK_PAIR(text, text2, last);
+	    unsigned ch = (unsigned) text[last];
 	    Bool isMissing;
 	    int ch_width;
 #if OPT_WIDE_CHARS
@@ -3040,9 +3004,6 @@ drawXtermText(XtermWidget xw,
 	    return x + (int) real_length *FontWidth(screen);
 	}
 	text += first;
-#if OPT_WIDE_CHARS
-	text2 += first;
-#endif
 	len = (Cardinal) (last - first);
 	flags |= NOTRANSLATION;
 	if (DrawX(first) != x) {
@@ -3052,7 +3013,7 @@ drawXtermText(XtermWidget xw,
 				 DrawX(first),
 				 y,
 				 chrset,
-				 PAIRED_CHARS(text, text2),
+				 text,
 				 len,
 				 on_wide);
 	}
@@ -3066,24 +3027,22 @@ drawXtermText(XtermWidget xw,
     TRACE(("drawtext%c[%4d,%4d] (%d) %d:%s\n",
 	   screen->cursor_state == OFF ? ' ' : '*',
 	   y, x, chrset, len,
-	   visibleChars(text, len)));
+	   visibleIChars(text, len)));
     y += FontAscent(screen);
 
 #if OPT_WIDE_CHARS
+
     if (screen->wide_chars || screen->unicode_font) {
+	XChar2b *buffer;
 	Bool needWide = False;
 	int ascent_adjust = 0;
 	int src, dst;
 
-	if (screen->draw_len < len) {
-	    screen->draw_len = (len + 1) * 2;
-	    screen->draw_buf = (XChar2b *) XtRealloc((char *) screen->draw_buf,
-						     screen->draw_len *
-						     sizeof(*screen->draw_buf));
-	}
+	BumpTypedBuffer(XChar2b, len);
+	buffer = BfBuf(XChar2b);
 
 	for (src = dst = 0; src < (int) len; src++) {
-	    unsigned ch = (unsigned) PACK_PAIR(text, text2, src);
+	    IChar ch = text[src];
 
 	    if (ch == HIDDEN_CHAR)
 		continue;
@@ -3100,19 +3059,19 @@ drawXtermText(XtermWidget xw,
 	     */
 	    if (ch > 0xffff) {
 		ch = UCS_REPL;
-		screen->draw_buf[dst].byte2 = LO_BYTE(ch);
-		screen->draw_buf[dst].byte1 = HI_BYTE(ch);
+		buffer[dst].byte2 = LO_BYTE(ch);
+		buffer[dst].byte1 = HI_BYTE(ch);
 	    } else {
-		screen->draw_buf[dst].byte2 = text[src];
-		screen->draw_buf[dst].byte1 = text2[src];
+		buffer[dst].byte2 = LO_BYTE(text[src]);
+		buffer[dst].byte1 = HI_BYTE(text[src]);
 	    }
 #if OPT_MINI_LUIT
-#define UCS2SBUF(value)	screen->draw_buf[dst].byte2 = LO_BYTE(value);\
-	    		screen->draw_buf[dst].byte1 = HI_BYTE(value)
+#define UCS2SBUF(value)	buffer[dst].byte2 = LO_BYTE(value);\
+	    		buffer[dst].byte1 = HI_BYTE(value)
 
 #define Map2Sbuf(from,to) (text[src] == from) { UCS2SBUF(to); }
 
-	    if (screen->latin9_mode && !screen->utf8_mode && text2[src] == 0) {
+	    if (screen->latin9_mode && !screen->utf8_mode && text[src] < 256) {
 
 		/* see http://www.cs.tut.fi/~jkorpela/latin9.html */
 		/* *INDENT-OFF* */
@@ -3128,7 +3087,6 @@ drawXtermText(XtermWidget xw,
 
 	    }
 	    if (screen->unicode_font
-		&& text2[src] == 0
 		&& (text[src] == ANSI_DEL ||
 		    text[src] < ANSI_SPA)) {
 		unsigned ni = dec2ucs((unsigned) ((text[src] == ANSI_DEL)
@@ -3196,12 +3154,12 @@ drawXtermText(XtermWidget xw,
 	    XDrawString16(screen->display,
 			  VWindow(screen), gc,
 			  x, y + ascent_adjust,
-			  screen->draw_buf, dst);
+			  buffer, dst);
 	} else {
 	    XDrawImageString16(screen->display,
 			       VWindow(screen), gc,
 			       x, y + ascent_adjust,
-			       screen->draw_buf, dst);
+			       buffer, dst);
 	}
 
 	if ((flags & BOLDATTR(screen)) && screen->enbolden) {
@@ -3209,7 +3167,7 @@ drawXtermText(XtermWidget xw,
 	    XDrawString16(screen->display, VWindow(screen), gc,
 			  x + 1,
 			  y + ascent_adjust,
-			  screen->draw_buf, dst);
+			  buffer, dst);
 	    endClipping(screen, gc);
 	}
 
@@ -3217,19 +3175,31 @@ drawXtermText(XtermWidget xw,
 #endif /* OPT_WIDE_CHARS */
     {
 	int length = (int) len;	/* X should have used unsigned */
+#if OPT_WIDE_CHARS
+	char *buffer;
+	int dst;
+
+	BumpTypedBuffer(char, len);
+	buffer = BfBuf(char);
+
+	for (dst = 0; dst < length; ++dst)
+	    buffer[dst] = (char) LO_BYTE(text[dst]);
+#else
+	char *buffer = (char *) text;
+#endif
 
 	if (flags & NOBACKGROUND) {
 	    XDrawString(screen->display, VWindow(screen), gc,
-			x, y, (char *) text, length);
+			x, y, buffer, length);
 	} else {
 	    XDrawImageString(screen->display, VWindow(screen), gc,
-			     x, y, (char *) text, length);
+			     x, y, buffer, length);
 	}
 	underline_len = (Cardinal) length;
 	if ((flags & BOLDATTR(screen)) && screen->enbolden) {
 	    beginClipping(screen, gc, font_width, length);
 	    XDrawString(screen->display, VWindow(screen), gc,
-			x + 1, y, (char *) text, length);
+			x + 1, y, buffer, length);
 	    endClipping(screen, gc);
 	}
     }
@@ -3242,45 +3212,6 @@ drawXtermText(XtermWidget xw,
     }
 
     return x + (int) real_length *FontWidth(screen);
-}
-
-/*
- * Workaround for drawXtermText until both combData and charData are converted
- * to IChar arrays.
- */
-Char *
-loByteIChars(IChar * data, unsigned length)
-{
-    static Char *result;
-    static unsigned have;
-
-    unsigned n;
-    if (have < length) {
-	have = 2 * length;
-	result = (Char *) realloc(result, have);
-    }
-    for (n = 0; n < length; ++n)
-	result[n] = LO_BYTE(data[n]);
-
-    return result;
-}
-
-Char *
-hiByteIChars(IChar * data, unsigned length)
-{
-    static Char *result;
-    static unsigned have;
-
-    unsigned n;
-
-    if (have < length) {
-	have = 2 * length;
-	result = (Char *) realloc(result, have);
-    }
-    for (n = 0; n < length; ++n)
-	result[n] = HI_BYTE(data[n]);
-
-    return result;
 }
 
 #if OPT_WIDE_CHARS
@@ -3297,42 +3228,6 @@ allocXtermChars(ScrnPtr * buffer, Cardinal length)
     }
 }
 #endif
-
-int
-drawXtermIChars(XtermWidget xw,
-		unsigned flags,
-		GC gc,
-		int x,
-		int y,
-		int chrset,
-		IChar * text,
-		Cardinal len,
-		int on_wide)
-{
-    int rc = 0;
-#if OPT_WIDE_CHARS
-    static Char *text1 = 0;
-    static Char *text2 = 0;
-    static Cardinal used = 0;
-    Cardinal n;
-
-    if (text != 0) {
-	if (len >= used) {
-	    used = 1 + (2 * len);
-	    allocXtermChars(&text1, used);
-	    allocXtermChars(&text2, used);
-	}
-	for (n = 0; n < len; ++n) {
-	    text1[n] = LO_BYTE(text[n]);
-	    text2[n] = HI_BYTE(text[n]);
-	}
-	rc = drawXtermText(xw, flags, gc, x, y, chrset, text1, text2, len, on_wide);
-    }
-#else
-    rc = drawXtermText(xw, flags, gc, x, y, chrset, text, len, on_wide);
-#endif
-    return rc;
-}
 
 /* set up size hints for window manager; min 1 char by 1 char */
 void

@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.82 2009/06/16 00:31:15 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.83 2009/06/19 08:25:19 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
@@ -120,11 +120,6 @@ decodeUtf8(PtyData * data)
 		}
 		utf_count--;
 		if (utf_count == 0) {
-		    /* characters outside UCS-2 become UCS_REPL */
-		    if (utf_char > 0xffff) {
-			TRACE(("using replacement for %#x\n", utf_char));
-			utf_char = UCS_REPL;
-		    }
 		    data->utf_data = utf_char;
 		    data->utf_size = (i + 1);
 		    break;
