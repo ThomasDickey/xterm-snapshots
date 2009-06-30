@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.419 2009/06/17 00:17:17 tom Exp $ */
+/* $XTermId: misc.c,v 1.422 2009/06/21 17:21:27 tom Exp $ */
 
 /*
  *
@@ -979,22 +979,22 @@ WMFrameWindow(XtermWidget termw)
 #define MAXWLEN 1024		/* maximum word length as in tcsh */
 
 static int
-dabbrev_prev_char(TScreen * screen, CELL * cell, LineData * ld)
+dabbrev_prev_char(TScreen * screen, CELL * cell, LineData ** ld)
 {
     int result = -1;
     int firstLine = -(screen->savedlines);
 
-    (void) getLineData(screen, cell->row, ld);
+    *ld = getLineData(screen, cell->row);
     while (cell->row >= firstLine) {
 	if (--(cell->col) >= 0) {
-	    result = (int) ld->charData[cell->col];
+	    result = (int) (*ld)->charData[cell->col];
 	    break;
 	}
 	if (--(cell->row) < firstLine)
 	    break;		/* ...there is no previous line */
-	(void) getLineData(screen, cell->row, ld);
+	*ld = getLineData(screen, cell->row);
 	cell->col = MaxCols(screen);
-	if ((*(ld->bufHead) & LINEWRAPPED) == 0) {
+	if (!LineTstWrapped(*ld)) {
 	    result = ' ';	/* treat lines as separate */
 	    break;
 	}
@@ -1003,7 +1003,7 @@ dabbrev_prev_char(TScreen * screen, CELL * cell, LineData * ld)
 }
 
 static char *
-dabbrev_prev_word(TScreen * screen, CELL * cell, LineData * ld)
+dabbrev_prev_word(TScreen * screen, CELL * cell, LineData ** ld)
 {
     static char ab[MAXWLEN];
 
@@ -1052,7 +1052,7 @@ dabbrev_expand(TScreen * screen)
     unsigned del_cnt;
     unsigned buf_cnt;
     int result = 0;
-    LineData *ld = newLineData(screen);
+    LineData *ld;
 
     if (!screen->dabbrev_working) {	/* initialize */
 	expansions = 0;
@@ -1062,7 +1062,7 @@ dabbrev_expand(TScreen * screen)
 	if (dabbrev_hint != 0)
 	    free(dabbrev_hint);
 
-	if ((dabbrev_hint = dabbrev_prev_word(screen, &cell, ld)) != 0) {
+	if ((dabbrev_hint = dabbrev_prev_word(screen, &cell, &ld)) != 0) {
 
 	    if (lastexpansion != 0)
 		free(lastexpansion);
@@ -1081,7 +1081,6 @@ dabbrev_expand(TScreen * screen)
 		free(lastexpansion);
 		lastexpansion = 0;
 	    }
-	    destroyLineData(screen, ld);
 	    return result;
 	}
     } else {
@@ -1089,7 +1088,7 @@ dabbrev_expand(TScreen * screen)
 
     hint_len = strlen(dabbrev_hint);
     for (;;) {
-	if ((expansion = dabbrev_prev_word(screen, &cell, ld)) == 0) {
+	if ((expansion = dabbrev_prev_word(screen, &cell, &ld)) == 0) {
 	    if (expansions >= 2) {
 		expansions = 0;
 		cell.col = screen->cur_col;
@@ -1128,7 +1127,6 @@ dabbrev_expand(TScreen * screen)
 	}
     }
 
-    destroyLineData(screen, ld);
     return result;
 }
 
@@ -2729,9 +2727,9 @@ parse_decdld(ANSI * params, char *string)
 	ch = CharOf(*string++);
 	if (ch >= ANSI_SPA && ch <= 0x2f) {
 	    if (len < 2)
-		DscsName[len++] = ch;
+		DscsName[len++] = (char) ch;
 	} else if (ch >= 0x30 && ch <= 0x7e) {
-	    DscsName[len++] = ch;
+	    DscsName[len++] = (char) ch;
 	    break;
 	}
     }
