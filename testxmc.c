@@ -1,8 +1,4 @@
-/* $XTermId: testxmc.c,v 1.39 2009/05/10 16:09:03 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/testxmc.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
- */
+/* $XTermId: testxmc.c,v 1.44 2009/06/21 15:37:04 tom Exp $ */
 
 /************************************************************
 
@@ -165,8 +161,8 @@ Jump_XMC(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
     if (!screen->move_sgr_ok
-	&& screen->cur_col <= LineMaxCol(screen, getLineData(screen,
-							     screen->cur_row, NULL))) {
+	&& screen->cur_col <= LineMaxCol(screen,
+					 getLineData(screen, screen->cur_row))) {
 	Mark_XMC(xw, -1);
     }
 }
@@ -179,7 +175,7 @@ void
 Resolve_XMC(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
-    LineData *ld = newLineData(screen);
+    LineData *ld;
     Bool changed = False;
     Char start;
     Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
@@ -188,12 +184,12 @@ Resolve_XMC(XtermWidget xw)
 
     /* Find the preceding cell.
      */
-    (void) getLineData(screen, row, ld);
+    ld = getLineData(screen, row);
     if (XTERM_CELL(row, col) != XMC_GLITCH) {
 	if (col != 0) {
 	    col--;
 	} else if (!screen->xmc_inline && row != 0) {
-	    (void) getLineData(screen, --row, ld);
+	    ld = getLineData(screen, --row);
 	    col = LineMaxCol(screen, ld);
 	}
     }
@@ -207,7 +203,7 @@ Resolve_XMC(XtermWidget xw)
 	    col++;
 	} else if (!screen->xmc_inline && row < screen->max_row) {
 	    col = 0;
-	    (void) getLineData(screen, ++row, ld);
+	    ld = getLineData(screen, ++row);
 	} else
 	    break;
 	if (XTERM_CELL(row, col) == XMC_GLITCH)
@@ -230,6 +226,4 @@ Resolve_XMC(XtermWidget xw)
 	ScrnUpdate(xw, screen->cur_row, 0, row + 1 - screen->cur_row,
 		   MaxCols(screen), True);
     }
-
-    destroyLineData(screen, ld);
 }

@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.68 2009/05/10 14:35:47 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.71 2009/06/21 16:50:05 tom Exp $ */
 
 /************************************************************
 
@@ -51,7 +51,7 @@ static void
 repaint_line(XtermWidget xw, unsigned newChrSet)
 {
     TScreen *screen = &xw->screen;
-    LineData *ld = newLineData(screen);
+    LineData *ld;
     int curcol = screen->cur_col;
     int currow = screen->cur_row;
     int width = MaxCols(screen);
@@ -62,9 +62,8 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
     /*
      * Ignore repetition.
      */
-    if (ld != 0
-	&& getLineData(screen, currow, ld) != 0) {
-	unsigned oldChrSet = LINEDATA_CSET(ld);
+    if ((ld = getLineData(screen, currow)) != 0) {
+	unsigned oldChrSet = LineDblCS(ld);
 
 	if (oldChrSet != newChrSet) {
 	    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
@@ -91,15 +90,13 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
 			       (unsigned) FontHeight(screen),
 			       len * (unsigned) LineFontWidth(screen, ld));
 
-	    /* FIXME: do VT220 softchars allow double-sizes? */
-	    memset(ld->charSets, (Char) newChrSet, len);
+	    LineDblCS(ld) = newChrSet;
 
 	    set_cur_col(screen, 0);
 	    ScrnUpdate(xw, currow, 0, 1, (int) len, True);
 	    set_cur_col(screen, curcol);
 	}
     }
-    destroyLineData(screen, ld);
 }
 #endif
 

@@ -1,8 +1,4 @@
-/* $XTermId: print.c,v 1.97 2009/06/16 00:39:44 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/print.c,v 1.24 2006/06/19 00:36:51 dickey Exp $
- */
+/* $XTermId: print.c,v 1.102 2009/06/21 16:50:05 tom Exp $ */
 
 /************************************************************
 
@@ -131,7 +127,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
 {
     TScreen *screen = TScreenOf(xw);
     int inx = ROW2INX(screen, row);
-    LineData *ld = newLineData(screen);
+    LineData *ld;
     Char attr = 0;
     unsigned ch;
     int last = MaxCols(screen);
@@ -145,7 +141,7 @@ printLine(XtermWidget xw, int row, unsigned chr)
     int cs = CSET_IN;
     int last_cs = CSET_IN;
 
-    (void) getLineData(screen, inx, ld);
+    ld = getLineData(screen, inx);
     TRACE(("printLine(row=%d/%d, top=%d:%d, chr=%d):%s\n",
 	   row, ROW2INX(screen, row), screen->topline, screen->max_row, chr,
 	   visibleIChars(ld->charData, (unsigned) last)));
@@ -242,7 +238,6 @@ printLine(XtermWidget xw, int row, unsigned chr)
 	charToPrinter(xw, '\r');
     charToPrinter(xw, chr);
 
-    destroyLineData(screen, ld);
     return;
 }
 
@@ -304,7 +299,7 @@ send_CharSet(XtermWidget xw, LineData * ld)
 #if OPT_DEC_CHRSET
     char *msg = 0;
 
-    switch (LINEDATA_CSET(ld)) {
+    switch (LineDblCS(ld)) {
     case CSET_SWL:
 	msg = "\033#5";
 	break;

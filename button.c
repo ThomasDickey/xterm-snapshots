@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.343 2009/06/16 00:39:04 tom Exp $ */
+/* $XTermId: button.c,v 1.346 2009/06/21 16:49:49 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -101,8 +101,8 @@ button.c	Handles button events in the terminal emulator.
      * Note that ROW2INX() is safe to use with auto increment/decrement for
      * the row expression since that is evaluated once.
      */
-#define GET_LINEDATA(screen, ld, row) \
-	getLineData(screen, ROW2INX(screen, row), ld)
+#define GET_LINEDATA(screen, row) \
+	getLineData(screen, ROW2INX(screen, row))
 
     /*
      * We reserve shift modifier for cut/paste operations.  In principle we
@@ -753,7 +753,7 @@ rowOnCurrentLine(TScreen * screen,
 	    l2 = line, l1 = screen->cur_row;
 	l1--;
 	while (++l1 < l2) {
-	    LineData *ld = GET_LINEDATA(screen, 0, l1);
+	    LineData *ld = GET_LINEDATA(screen, l1);
 	    if (!LineTstWrapped(ld)) {
 		result = 0;
 		break;
@@ -2484,7 +2484,7 @@ LastTextCol(TScreen * screen, LineData * ld, int row)
 	    ;
 	}
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(LINEDATA_CSET(ld))) {
+	if (CSET_DOUBLE(LineDblCS(ld))) {
 	    i *= 2;
 	}
 #endif
@@ -2598,7 +2598,7 @@ class_of(TScreen * screen, LineData * ld, CELL * cell)
     int value;
 
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(LINEDATA_CSET(ld))) {
+    if (CSET_DOUBLE(LineDblCS(ld))) {
 	temp.col /= 2;
     }
 #endif
@@ -2623,12 +2623,12 @@ class_of(TScreen * screen, LineData * ld, CELL * cell)
  */
 static Boolean
 okPosition(TScreen * screen,
-	   LineData * ld,
+	   LineData ** ld,
 	   CELL * cell)
 {
-    if (cell->col > (LastTextCol(screen, ld, cell->row) + 1)) {
+    if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
 	cell->col = 0;
-	(void) GET_LINEDATA(screen, ld, ++cell->row);
+	*ld = GET_LINEDATA(screen, ++cell->row);
 	return False;
     }
     return True;
@@ -2636,14 +2636,14 @@ okPosition(TScreen * screen,
 
 static void
 trimLastLine(TScreen * screen,
-	     LineData * ld,
+	     LineData ** ld,
 	     CELL * last)
 {
     if (screen->cutNewline) {
 	last->col = 0;
-	(void) GET_LINEDATA(screen, ld, ++last->row);
+	*ld = GET_LINEDATA(screen, ++last->row);
     } else {
-	last->col = LastTextCol(screen, ld, last->row) + 1;
+	last->col = LastTextCol(screen, *ld, last->row) + 1;
     }
 }
 
@@ -2658,7 +2658,7 @@ firstRowOfLine(TScreen * screen, int row, Bool visible)
     int limit = visible ? 0 : -screen->savedlines;
 
     while (row > limit &&
-	   (ld = GET_LINEDATA(screen, 0, row - 1)) != 0 &&
+	   (ld = GET_LINEDATA(screen, row - 1)) != 0 &&
 	   LineTstWrapped(ld)) {
 	--row;
     }
@@ -2674,7 +2674,7 @@ lastRowOfLine(TScreen * screen, int row)
     LineData *ld;
 
     while (row < screen->max_row &&
-	   (ld = GET_LINEDATA(screen, 0, row)) != 0 &&
+	   (ld = GET_LINEDATA(screen, row)) != 0 &&
 	   LineTstWrapped(ld)) {
 	++row;
     }
@@ -2691,7 +2691,7 @@ lengthOfLines(TScreen * screen, int firstRow, int lastRow)
     int n;
 
     for (n = firstRow; n <= lastRow; ++n) {
-	LineData *ld = GET_LINEDATA(screen, 0, n);
+	LineData *ld = GET_LINEDATA(screen, n);
 	int value = LastTextCol(screen, ld, n);
 	if (value >= 0)
 	    length += (unsigned) (value + 1);
@@ -2719,11 +2719,10 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
     });
 
     if ((result = TypeCallocN(Char, need + 1)) != 0) {
-	LineData *ld = newLineData(screen);
+	LineData *ld = GET_LINEDATA(screen, row);
 	unsigned used = 0;
 	Char *last = result;
 
-	(void) GET_LINEDATA(screen, ld, row);
 	do {
 	    int col = 0;
 	    int limit = LastTextCol(screen, ld, row);
@@ -2763,9 +2762,8 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 	    }
 	} while (used < length &&
 		 LineTstWrapped(ld) &&
-		 GET_LINEDATA(screen, ld, ++row) != 0 &&
+		 (ld = GET_LINEDATA(screen, ++row)) != 0 &&
 		 row < screen->max_row);
-	destroyLineData(screen, ld);
     }
     /* TRACE(("result:%s\n", result)); */
     return (char *) result;
@@ -2795,7 +2793,7 @@ static void
 columnToCell(TScreen * screen, int row, int col, CELL * cell)
 {
     while (row < screen->max_row) {
-	LineData *ld = GET_LINEDATA(screen, 0, row);
+	LineData *ld = GET_LINEDATA(screen, row);
 	int last = LastTextCol(screen, ld, row);
 
 	/* TRACE(("last(%d) = %d, have %d\n", row, last, col)); */
@@ -2828,7 +2826,7 @@ cellToColumn(TScreen * screen, CELL * cell)
     int col = cell->col;
     int row = firstRowOfLine(screen, cell->row, False);
     while (row < cell->row) {
-	LineData *ld = GET_LINEDATA(screen, 0, row);
+	LineData *ld = GET_LINEDATA(screen, row);
 	col += LastTextCol(screen, ld, row++);
     }
     return col;
@@ -2837,7 +2835,7 @@ cellToColumn(TScreen * screen, CELL * cell)
 static void
 do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 {
-    LineData *ld = GET_LINEDATA(screen, 0, startc->row);
+    LineData *ld = GET_LINEDATA(screen, startc->row);
     int inx = ((screen->numberOfClicks - 1) % screen->maxClicks);
     char *expr = screen->selectExpr[inx];
     regex_t preg;
@@ -2846,7 +2844,7 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
     int *indexed;
 
     TRACE(("Select_REGEX:%s\n", NonNull(expr)));
-    if (okPosition(screen, ld, startc) && expr != 0) {
+    if (okPosition(screen, &ld, startc) && expr != 0) {
 	if (regcomp(&preg, expr, REG_EXTENDED) == 0) {
 	    int firstRow = firstRowOfLine(screen, startc->row, True);
 	    int lastRow = lastRowOfLine(screen, firstRow);
@@ -2916,17 +2914,17 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 #endif /* OPT_SELECT_REGEX */
 
 #define InitRow(name) \
-	(void) GET_LINEDATA(screen, ld.name, screen->name.row)
+	ld.name = GET_LINEDATA(screen, screen->name.row)
 
 #define NextRow(name) \
-	(void) GET_LINEDATA(screen, ld.name, ++screen->name.row)
+	ld.name = GET_LINEDATA(screen, ++screen->name.row)
 
 #define PrevRow(name) \
-	(void) GET_LINEDATA(screen, ld.name, --screen->name.row)
+	ld.name = GET_LINEDATA(screen, --screen->name.row)
 
 #define isPrevWrapped(name) \
 	(screen->name.row > 0 \
-	   && (ltmp = GET_LINEDATA(screen, 0, screen->name.row - 1)) != 0 \
+	   && (ltmp = GET_LINEDATA(screen, screen->name.row - 1)) != 0 \
 	   && LineTstWrapped(ltmp))
 
 /*
@@ -2952,12 +2950,6 @@ ComputeSelect(XtermWidget xw,
 	LineData *endSel;
     } ld;
     LineData *ltmp;
-
-    if ((ld.startSel = newLineData(screen)) == 0
-	|| (ld.endSel = newLineData(screen)) == 0) {
-	TRACE(("BUG - ComputeSelect cannot get LineData\n"));
-	return;
-    }
 
     TRACE(("ComputeSelect(startRow=%d, startCol=%d, endRow=%d, endCol=%d, %sextend)\n",
 	   first.row, first.col,
@@ -2994,13 +2986,13 @@ ComputeSelect(XtermWidget xw,
 
     switch (screen->selectUnit) {
     case Select_CHAR:
-	(void) okPosition(screen, ld.startSel, &(screen->startSel));
-	(void) okPosition(screen, ld.endSel, &(screen->endSel));
+	(void) okPosition(screen, &(ld.startSel), &(screen->startSel));
+	(void) okPosition(screen, &(ld.endSel), &(screen->endSel));
 	break;
 
     case Select_WORD:
 	TRACE(("Select_WORD\n"));
-	if (okPosition(screen, ld.startSel, &(screen->startSel))) {
+	if (okPosition(screen, &(ld.startSel), &(screen->startSel))) {
 	    cclass = CClassOf(startSel);
 	    do {
 		--screen->startSel.col;
@@ -3020,7 +3012,7 @@ ComputeSelect(XtermWidget xw,
 	    screen->startSel.col++;
 #endif
 
-	if (okPosition(screen, ld.endSel, &(screen->endSel))) {
+	if (okPosition(screen, &(ld.endSel), &(screen->endSel))) {
 	    length = LastTextCol(screen, ld.endSel, screen->endSel.row);
 	    cclass = CClassOf(endSel);
 	    do {
@@ -3075,12 +3067,12 @@ ComputeSelect(XtermWidget xw,
 		screen->startSel = screen->saveStartW;
 	    }
 	}
-	trimLastLine(screen, ld.endSel, &(screen->endSel));
+	trimLastLine(screen, &(ld.endSel), &(screen->endSel));
 	break;
 
     case Select_GROUP:		/* paragraph */
 	TRACE(("Select_GROUP\n"));
-	if (okPosition(screen, ld.startSel, &(screen->startSel))) {
+	if (okPosition(screen, &(ld.startSel), &(screen->startSel))) {
 	    /* scan backward for beginning of group */
 	    while (screen->startSel.row > 0 &&
 		   (LastTextCol(screen, ld.startSel, screen->startSel.row -
@@ -3096,7 +3088,7 @@ ComputeSelect(XtermWidget xw,
 		    LineTstWrapped(ld.endSel))) {
 		NextRow(endSel);
 	    }
-	    trimLastLine(screen, ld.endSel, &(screen->endSel));
+	    trimLastLine(screen, &(ld.endSel), &(screen->endSel));
 	}
 	break;
 
@@ -3133,8 +3125,6 @@ ComputeSelect(XtermWidget xw,
 	TrackText(xw, &(screen->startSel), &(screen->endSel));
     }
 
-    free(ld.startSel);
-    free(ld.endSel);
     return;
 }
 
@@ -3804,7 +3794,7 @@ Length(TScreen * screen,
        int scol,
        int ecol)
 {
-    LineData *ld = GET_LINEDATA(screen, 0, row);
+    LineData *ld = GET_LINEDATA(screen, row);
     int lastcol = LastTextCol(screen, ld, row);
 
     if (ecol > lastcol)
@@ -3821,7 +3811,7 @@ SaveText(TScreen * screen,
 	 Char * lp,		/* pointer to where to put the text */
 	 int *eol)
 {
-    LineData *ld = newLineData(screen);
+    LineData *ld;
     int i = 0;
     unsigned c;
     Char *result = lp;
@@ -3829,11 +3819,11 @@ SaveText(TScreen * screen,
     unsigned previous = 0;
 #endif
 
-    (void) GET_LINEDATA(screen, ld, row);
+    ld = GET_LINEDATA(screen, row);
     i = Length(screen, row, scol, ecol);
     ecol = scol + i;
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(LINEDATA_CSET(ld))) {
+    if (CSET_DOUBLE(LineDblCS(ld))) {
 	scol = (scol + 0) / 2;
 	ecol = (ecol + 1) / 2;
     }
@@ -3899,7 +3889,6 @@ SaveText(TScreen * screen,
     if (!*eol || !screen->trim_selection)
 	result = lp;
 
-    destroyLineData(screen, ld);
     return (result);
 }
 

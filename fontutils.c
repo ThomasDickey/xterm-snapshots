@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.300 2009/02/13 01:45:01 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.303 2009/06/21 15:27:35 tom Exp $ */
 
 /************************************************************
 
@@ -1424,17 +1424,43 @@ xtermSetCursorBox(TScreen * screen)
 }
 
 #define CACHE_XFT(dst,src) if (src != 0) {\
-	    dst[fontnum] = src;\
-	    TRACE(("%s[%d] = %d (%d,%d) by %d\n",\
+	    checkXft(xw, &(dst[fontnum]), src);\
+	    TRACE(("Xft metrics %s[%d] = %d (%d,%d) advance %d, actual %d%s\n",\
 		#dst,\
 	    	fontnum,\
 		src->height,\
 		src->ascent,\
 		src->descent,\
-		src->max_advance_width));\
+		src->max_advance_width,\
+		dst[fontnum].map.min_width,\
+		dst[fontnum].map.mixed ? " mixed" : ""));\
 	}
 
 #if OPT_RENDERFONT
+
+static void
+checkXft(XtermWidget xw, XTermXftFonts * data, XftFont * xft)
+{
+    FcChar32 c;
+    Dimension width = 0;
+
+    data->font = xft;
+    data->map.min_width = 0;
+    data->map.max_width = (Dimension) xft->max_advance_width;
+
+    for (c = 32; c < 256; ++c) {
+	if (FcCharSetHasChar(xft->charset, c)) {
+	    XGlyphInfo extents;
+
+	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
+	    if (width < extents.width)
+		width = extents.width;
+	}
+    }
+    data->map.min_width = width;
+    data->map.mixed = (data->map.max_width >= (data->map.min_width + 1));
+}
+
 static XftFont *
 xtermOpenXft(XtermWidget xw, const char *name, XftPattern * pat, const char *tag)
 {
@@ -1573,13 +1599,13 @@ xtermComputeFontInfo(XtermWidget xw,
      */
     if (xw->misc.render_font && !IsIconWin(screen, win)) {
 	int fontnum = screen->menu_font_number;
-	XftFont *norm = screen->renderFontNorm[fontnum];
-	XftFont *bold = screen->renderFontBold[fontnum];
-	XftFont *ital = screen->renderFontItal[fontnum];
+	XftFont *norm = screen->renderFontNorm[fontnum].font;
+	XftFont *bold = screen->renderFontBold[fontnum].font;
+	XftFont *ital = screen->renderFontItal[fontnum].font;
 #if OPT_RENDERWIDE
-	XftFont *wnorm = screen->renderWideNorm[fontnum];
-	XftFont *wbold = screen->renderWideBold[fontnum];
-	XftFont *wital = screen->renderWideItal[fontnum];
+	XftFont *wnorm = screen->renderWideNorm[fontnum].font;
+	XftFont *wbold = screen->renderWideBold[fontnum].font;
+	XftFont *wital = screen->renderWideItal[fontnum].font;
 #endif
 
 	if (norm == 0 && xw->misc.face_name) {
@@ -1715,6 +1741,12 @@ xtermComputeFontInfo(XtermWidget xw,
 				   ? xw->misc.face_wide_name
 				   : xw->misc.face_name);
 		int char_width = norm->max_advance_width * 2;
+#ifdef FC_ASPECT
+		double aspect = ((xw->misc.face_wide_name
+				  || screen->renderFontNorm[fontnum].map.mixed)
+				 ? 1.0
+				 : 2.0);
+#endif
 
 		TRACE(("xtermComputeFontInfo wide(face %s, char_width %d)\n",
 		       face_name,
@@ -1730,6 +1762,9 @@ xtermComputeFontInfo(XtermWidget xw,
 		    XftPatternBuild(pat,
 				    WideXftPattern,
 				    XFT_CHAR_WIDTH, XftTypeInteger, char_width,
+#ifdef FC_ASPECT
+				    FC_ASPECT, XftTypeDouble, aspect,
+#endif
 				    (void *) 0);
 		    wnorm = OPEN_XFT("wide");
 

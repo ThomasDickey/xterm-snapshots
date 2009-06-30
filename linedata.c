@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.47 2009/06/16 00:05:45 tom Exp $ */
+/* $XTermId: linedata.c,v 1.58 2009/06/30 00:26:46 tom Exp $ */
 
 /************************************************************
 
@@ -37,121 +37,44 @@ authorization.
 
 #include <assert.h>
 
-static ScrnPtrs *
-getScrnPtrs(TScreen * screen, unsigned row)
-{
-    return (ScrnPtrs *) scrnHeadAddr(screen, screen->visbuf, row);
-}
-
 /*
  * Given a row-number, find the corresponding data for the line in the VT100
  * widget.  Row numbers can be positive or negative.
  *
  * TODO: if the data comes from the scrollback, defer that to getScrollback().
- * TODO: the calculation can be cached, e.g., if we save a pointer to the data.
  */
 LineData *
-getLineData(TScreen * screen,
-	    int row,
-	    LineData * work)
+getLineData(TScreen * screen, int row)
 {
-    if (okScrnRow(screen, row)) {
-	void *check = 0;
-	Bool update = False;
+    LineData *result = 0;
+    ScrnBuf buffer;
 
+    if (row >= 0) {
+	buffer = screen->visbuf;
+    } else {
+	buffer = screen->allbuf;
+	row += screen->savelines;
+    }
+    if (row >= 0) {
 	/*
-	 * If caller does not pass a workspace address, use the widget's
-	 * cached workspace.
+	 * FIXME - the references to allbuf should be in scrollback.c
 	 */
-	if (work == 0) {
-	    if ((work = screen->lineData) != 0) {
-		ScrnPtrs *ptrs = getScrnPtrs(screen, (unsigned) row);
-		check = &(ptrs->bufHead);
-		/*
-		 * Check if the cached LineData is up to date.
-		 * The second part of the comparison is needed since xterm
-		 * implements scrolling via memory-moves.
-		 */
-		if (check != screen->lineCache
-		    || ptrs->charData != work->charData) {
-		    update = True;
-		    screen->lineCache = check;
-		    assert(check != 0);
-		}
+	result = (LineData *) scrnHeadAddr(screen, buffer, (unsigned) row);
+	if (result != 0) {
+#if 1				/* FIXME - these should be done in setupLineData, etc. */
+	    result->lineSize = (Dimension) MaxCols(screen);
+#if OPT_WIDE_CHARS
+	    if (screen->wide_chars) {
+		result->combSize = (Char) screen->max_combining;
+	    } else {
+		result->combSize = 0;
 	    }
-	} else {
-	    /* just update - caller's struct is on the stack */
-	    update = True;
+#endif
+#endif /* FIXME */
 	}
-
-	if (update) {
-	    TRACE2(("getLineData %d:%p\n", row, check));
-
-	    fillLineData(screen,
-			 scrnHeadAddr(screen, screen->visbuf, (unsigned) row),
-			 work);
-	    work->lineSize = (unsigned) MaxCols(screen);
-	}
-	checkLineData(screen, row, work);
-    } else {
-	work = 0;
     }
 
-    return work;
-}
-
-void
-fillLineData(TScreen * screen, ScrnPtr * ptrs, LineData * work)
-{
-    ScrnPtrs *realPtrs = (ScrnPtrs *) ptrs;
-#if OPT_WIDE_CHARS
-    size_t off;
-#endif
-
-    work->lineSize = (unsigned) MaxCols(screen);
-    work->bufHead = (RowFlags *) & (realPtrs->bufHead);
-    work->attribs = realPtrs->attribs;
-#if OPT_ISO_COLORS
-    work->color = realPtrs->color;
-#endif
-#if OPT_DEC_CHRSET
-    work->charSets = realPtrs->charSets;
-#endif
-    work->charData = realPtrs->charData;
-#if OPT_WIDE_CHARS
-    if (screen->wide_chars) {
-	/*
-	 * Construct an array of pointers to combining character data. 
-	 * This is a flexible array on the end of LineData.
-	 *
-	 * The scrollback should only store combining characters for
-	 * rows that have that data.  The visbuf should store this for
-	 * all rows since they can be updated until moved to the
-	 * scrollback.
-	 */
-	work->combSize = (Char) screen->max_combining;
-	for (off = 0; off < work->combSize; ++off) {
-	    work->combData[off] = realPtrs->combData[off];
-	}
-    } else {
-	work->combSize = 0;
-    }
-#endif
-}
-
-/*
- * Allocate a new LineData struct, for working memory used in getLineData
- * calls.  The size of the struct depends on compile-time configure options for
- * normal/wide characters and the maximum number of colors, as well as the
- * runtime maximum number of combining characters.
- */
-void
-initLineData(XtermWidget xw)
-{
-    TScreen *screen = &(xw->screen);
-
-    screen->lineCache = 0;
-    screen->lineData = newLineData(screen);
+    return result;
 }
 
 #if 0
@@ -189,36 +112,13 @@ insertLineData(XtermWidget xw, int row, int count)
 #define initLineExtra(screen) \
     screen->lineExtra = 0
 #endif
-/*
- * Allocate a new LineData struct, which includes an array on the end to
- * address combining characters.
- */
-LineData *
-newLineData(TScreen * screen)
-{
-    LineData *result;
-
-    initLineExtra(screen);
-    result = CastMallocN(LineData, screen->lineExtra);
-
-    assert(result != 0);
-    return result;
-}
 
 void
-destroyLineData(TScreen * screen, LineData * ld)
+initLineData(XtermWidget xw)
 {
-    if (ld != 0) {
-	free(ld);
-	if (screen->lineData == ld) {
-	    screen->lineData = 0;
-	    screen->lineCache = 0;
-	} else if (screen->lineCache == ld) {
-	    screen->lineCache = 0;
-	}
-    } else if (screen->lineData != 0) {
-	destroyLineData(screen, screen->lineData);
-    }
+    TScreen *screen = &(xw->screen);
+
+    initLineExtra(screen);
 }
 
 /*
@@ -251,13 +151,9 @@ saveCellData(TScreen * screen,
     CellData *item = CellDataAddr(screen, data, cell);
 
     if (column < MaxCols(screen)) {
-	item->bufHead = *(ld->bufHead);
 	item->attribs = ld->attribs[column];
 #if OPT_ISO_COLORS
 	item->color = ld->color[column];
-#endif
-#if OPT_DEC_CHRSET
-	item->charSets = ld->charSets[column];
 #endif
 	item->charData = ld->charData[column];
 	if_OPT_WIDE_CHARS(screen, {
@@ -280,13 +176,9 @@ restoreCellData(TScreen * screen,
     CellData *item = CellDataAddr(screen, data, cell);
 
     if (column < MaxCols(screen)) {
-	/* FIXME - *(ld->bufHead) = item->bufHead; */
 	ld->attribs[column] = item->attribs;
 #if OPT_ISO_COLORS
 	ld->color[column] = item->color;
-#endif
-#if OPT_DEC_CHRSET
-	ld->charSets[column] = item->charSets;
 #endif
 	ld->charData[column] = item->charData;
 	if_OPT_WIDE_CHARS(screen, {
@@ -298,33 +190,3 @@ restoreCellData(TScreen * screen,
 	})
     }
 }
-
-/*
- * For debugging, verify that the pointers in a LineData struct match the
- * expected values for the given row.
- */
-#define TRACE_ASSERT(name, expression) \
- 	TRACE2(("checkLineData %10s %p vs %p\n", \
-		#name, work->name, expression)); \
-	assert(work->name == expression); \
-	assert(work->name != 0)
-
-void
-checkLineData(TScreen * screen GCC_UNUSED,
-	      int row GCC_UNUSED,
-	      LineData * work GCC_UNUSED)
-{
-#if OPT_TRACE
-    ScrnPtrs *ptrs = getScrnPtrs(screen, (unsigned) row);
-#endif
-
-    TRACE2(("checkLineData %d ->%p\n", row, work));
-    assert(work != 0);
-    TRACE_ASSERT(charData, ptrs->charData);
-    TRACE_ASSERT(attribs, ptrs->attribs);
-#if OPT_DEC_CHRSET
-    TRACE_ASSERT(charSets, ptrs->charSets);
-#endif
-}
-
-#undef TRACE_ASSERT

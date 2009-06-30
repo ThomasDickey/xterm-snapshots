@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.456 2009/06/18 00:27:43 tom Exp $ */
+/* $XTermId: util.c,v 1.464 2009/06/21 20:25:35 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -518,15 +518,13 @@ xtermScroll(XtermWidget xw, int amount)
 			   screen->allbuf,
 			   screen->bot_marg + screen->savelines,
 			   0,
-			   (unsigned) amount,
-			   (unsigned) MaxCols(screen));
+			   (unsigned) amount);
 	} else {
 	    ScrnDeleteLine(xw,
 			   screen->visbuf,
 			   screen->bot_marg,
 			   screen->top_marg,
-			   (unsigned) amount,
-			   (unsigned) MaxCols(screen));
+			   (unsigned) amount);
 	}
     }
 
@@ -619,8 +617,7 @@ RevScroll(XtermWidget xw, int amount)
 		       screen->visbuf,
 		       screen->bot_marg,
 		       screen->top_marg,
-		       (unsigned) amount,
-		       (unsigned) MaxCols(screen));
+		       (unsigned) amount);
     }
     screen->cursor_busy -= 1;
     return;
@@ -657,8 +654,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
     }
 
     if (AddToVisible(xw)
-	&& (ld = newLineData(screen)) != 0
-	&& getLineData(screen, screen->cur_row, ld) != 0) {
+	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
 	if (screen->cursor_state)
 	    HideCursor();
 
@@ -697,8 +693,6 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 		      str, len, 0);
 
 	resetXtermGC(xw, flags, False);
-
-	destroyLineData(screen, ld);
     }
 
     ScrnWriteText(xw, str, flags, fg_bg, len);
@@ -795,8 +789,7 @@ InsertLine(XtermWidget xw, int n)
 		       screen->visbuf,
 		       screen->bot_marg,
 		       screen->cur_row,
-		       (unsigned) n,
-		       (unsigned) MaxCols(screen));
+		       (unsigned) n);
     }
 }
 
@@ -815,6 +808,9 @@ DeleteLine(XtermWidget xw, int n)
     int refreshheight;
     int scrolltop;
     int scrollheight;
+    Boolean scroll_all_lines = (Boolean) (screen->scrollWidget
+					  && !screen->alternate
+					  && screen->cur_row == 0);
 
     if (!ScrnIsLineInMargins(screen, INX2ROW(screen, screen->cur_row)))
 	return;
@@ -850,7 +846,7 @@ DeleteLine(XtermWidget xw, int n)
 	if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
 	    (i = screen->max_row - refreshheight + 1))
 	    refreshtop = i;
-	if (screen->scrollWidget && !screen->alternate && screen->cur_row == 0) {
+	if (scroll_all_lines) {
 	    scrolltop = 0;
 	    if ((scrollheight += shift) > i)
 		scrollheight = i;
@@ -880,22 +876,18 @@ DeleteLine(XtermWidget xw, int n)
     }
     /* adjust screen->buf */
     if (n > 0) {
-	if (screen->scrollWidget
-	    && !screen->alternate
-	    && screen->cur_row == 0)
+	if (scroll_all_lines)
 	    ScrnDeleteLine(xw,
 			   screen->allbuf,
 			   screen->bot_marg + screen->savelines,
 			   0,
-			   (unsigned) n,
-			   (unsigned) MaxCols(screen));
+			   (unsigned) n);
 	else
 	    ScrnDeleteLine(xw,
 			   screen->visbuf,
 			   screen->bot_marg,
 			   screen->cur_row,
-			   (unsigned) n,
-			   (unsigned) MaxCols(screen));
+			   (unsigned) n);
     }
 }
 
@@ -929,8 +921,7 @@ InsertChar(XtermWidget xw, unsigned n)
 
     assert(n != 0);
     if (AddToVisible(xw)
-	&& (ld = newLineData(screen)) != 0
-	&& getLineData(screen, screen->cur_row, ld) != 0) {
+	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
 	int col = MaxCols(screen) - (int) n;
 
 	/*
@@ -953,7 +944,7 @@ InsertChar(XtermWidget xw, unsigned n)
 	});
 
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(LINEDATA_CSET(ld))) {
+	if (CSET_DOUBLE(LineDblCS(ld))) {
 	    col = MaxCols(screen) / 2 - (int) n;
 	}
 #endif
@@ -973,8 +964,6 @@ InsertChar(XtermWidget xw, unsigned n)
 			   LineCursorX(screen, ld, screen->cur_col),
 			   (unsigned) FontHeight(screen),
 			   n * (unsigned) LineFontWidth(screen, ld));
-
-	destroyLineData(screen, ld);
     }
     /* adjust screen->buf */
     ScrnInsertChar(xw, n);
@@ -1010,8 +999,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 
     assert(n != 0);
     if (AddToVisible(xw)
-	&& (ld = newLineData(screen)) != 0
-	&& getLineData(screen, screen->cur_row, ld) != 0) {
+	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
 	int col = MaxCols(screen) - (int) n;
 
 	/*
@@ -1026,7 +1014,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 	});
 
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(LINEDATA_CSET(ld))) {
+	if (CSET_DOUBLE(LineDblCS(ld))) {
 	    col = MaxCols(screen) / 2 - (int) n;
 	}
 #endif
@@ -1040,8 +1028,6 @@ DeleteChar(XtermWidget xw, unsigned n)
 			   LineCursorX(screen, ld, col),
 			   (unsigned) FontHeight(screen),
 			   n * (unsigned) LineFontWidth(screen, ld));
-
-	destroyLineData(screen, ld);
     }
     if (n != 0) {
 	/* adjust screen->buf */
@@ -1155,7 +1141,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
      */
     if (screen->protected_mode != OFF_PROTECT) {
 	unsigned n;
-	Char *attrs = getLineData(screen, row, NULL)->attribs;
+	Char *attrs = getLineData(screen, row)->attribs;
 	int saved_mode = screen->protected_mode;
 	Bool done;
 
@@ -1195,16 +1181,13 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
     screen->do_wrap = False;
 
     if (AddToVisible(xw)
-	&& (ld = newLineData(screen)) != 0
-	&& getLineData(screen, row, ld) != 0) {
+	&& (ld = getLineData(screen, row)) != 0) {
 
 	ClearCurBackground(xw,
 			   CursorY(screen, row),
 			   LineCursorX(screen, ld, col),
 			   (unsigned) FontHeight(screen),
 			   len * (unsigned) LineFontWidth(screen, ld));
-
-	destroyLineData(screen, ld);
     }
 
     if (len != 0) {
@@ -1240,7 +1223,7 @@ void
 ClearRight(XtermWidget xw, int n)
 {
     TScreen *screen = &(xw->screen);
-    LineData *ld = newLineData(screen);
+    LineData *ld;
     unsigned len = (unsigned) (MaxCols(screen) - screen->cur_col);
 
     assert(screen->max_col >= 0);
@@ -1254,7 +1237,7 @@ ClearRight(XtermWidget xw, int n)
     if (len > (unsigned) n)
 	len = (unsigned) n;
 
-    (void) getLineData(screen, screen->cur_row, ld);
+    ld = getLineData(screen, screen->cur_row);
     if (AddToVisible(xw)) {
 	if_OPT_WIDE_CHARS(screen, {
 	    int col = screen->cur_col;
@@ -1281,8 +1264,6 @@ ClearRight(XtermWidget xw, int n)
     /* with the right part cleared, we can't be wrapping */
     LineClrWrapped(ld);
     screen->do_wrap = False;
-
-    destroyLineData(screen, ld);
 }
 
 /*
@@ -1531,10 +1512,9 @@ horizontal_copy_area(XtermWidget xw,
 		     int amount)	/* number of characters to move right */
 {
     TScreen *screen = &(xw->screen);
-    LineData *ld = newLineData(screen);
+    LineData *ld;
 
-    if (ld != 0
-	&& getLineData(screen, screen->cur_row, ld) != 0) {
+    if ((ld = getLineData(screen, screen->cur_row)) != 0) {
 	int src_x = LineCursorX(screen, ld, firstchar);
 	int src_y = CursorY(screen, screen->cur_row);
 
@@ -1542,8 +1522,6 @@ horizontal_copy_area(XtermWidget xw,
 		  (unsigned) (nchars * LineFontWidth(screen, ld)),
 		  (unsigned) FontHeight(screen),
 		  src_x + amount * LineFontWidth(screen, ld), src_y);
-
-	destroyLineData(screen, ld);
     }
 }
 
@@ -2158,6 +2136,8 @@ xtermCellWidth(XtermWidget xw, wchar_t ch)
 }
 #endif /* OPT_RENDERWIDE */
 
+#define XFT_FONT(name) screen->name.font
+
 /*
  * fontconfig/Xft combination prior to 2.2 has a problem with
  * CJK truetype 'double-width' (bi-width/monospace) fonts leading
@@ -2197,15 +2177,15 @@ xtermXftDrawString(XtermWidget xw,
 #if OPT_ISO_COLORS
 	if ((flags & UNDERLINE)
 	    && screen->italicULMode
-	    && screen->renderWideItal[fontnum]) {
-	    wfont = screen->renderWideItal[fontnum];
+	    && XFT_FONT(renderWideItal[fontnum])) {
+	    wfont = XFT_FONT(renderWideItal[fontnum]);
 	} else
 #endif
 	    if ((flags & BOLDATTR(screen))
-		&& screen->renderWideBold[fontnum]) {
-	    wfont = screen->renderWideBold[fontnum];
+		&& XFT_FONT(renderWideBold[fontnum])) {
+	    wfont = XFT_FONT(renderWideBold[fontnum]);
 	} else {
-	    wfont = screen->renderWideNorm[fontnum];
+	    wfont = XFT_FONT(renderWideNorm[fontnum]);
 	}
 
 	BumpTypedBuffer(XftCharSpec, len);
@@ -2731,16 +2711,16 @@ drawXtermText(XtermWidget xw,
 #if OPT_ISO_COLORS
 	if ((flags & UNDERLINE)
 	    && screen->italicULMode
-	    && screen->renderFontItal[fontnum]) {
-	    font = screen->renderFontItal[fontnum];
+	    && XFT_FONT(renderFontItal[fontnum])) {
+	    font = XFT_FONT(renderFontItal[fontnum]);
 	    did_ul = True;
 	} else
 #endif
 	    if ((flags & BOLDATTR(screen))
-		&& screen->renderFontBold[fontnum]) {
-	    font = screen->renderFontBold[fontnum];
+		&& XFT_FONT(renderFontBold[fontnum])) {
+	    font = XFT_FONT(renderFontBold[fontnum]);
 	} else {
-	    font = screen->renderFontNorm[fontnum];
+	    font = XFT_FONT(renderFontNorm[fontnum]);
 	}
 	values.foreground = getCgsFore(xw, currentWin, gc);
 	values.background = getCgsBack(xw, currentWin, gc);
@@ -2866,7 +2846,7 @@ drawXtermText(XtermWidget xw,
 		}
 	    }
 	    if (last > first) {
-		underline_len +=
+		underline_len += (Cardinal)
 		    drawClippedXftString(xw,
 					 flags,
 					 font,
@@ -2879,7 +2859,7 @@ drawXtermText(XtermWidget xw,
 	}
 #else
 	{
-	    underline_len +=
+	    underline_len += (Cardinal)
 		drawClippedXftString(xw,
 				     flags,
 				     font,
@@ -3508,7 +3488,8 @@ ClearCurBackground(XtermWidget xw,
 unsigned
 getXtermCell(TScreen * screen, int row, int col)
 {
-    LineData *ld = getLineData(screen, row, NULL);
+    LineData *ld = getLineData(screen, row);
+
     return ld->charData[col];
 }
 
@@ -3518,7 +3499,8 @@ getXtermCell(TScreen * screen, int row, int col)
 void
 putXtermCell(TScreen * screen, int row, int col, int ch)
 {
-    LineData *ld = getLineData(screen, row, NULL);
+    LineData *ld = getLineData(screen, row);
+
     ld->charData[col] = (CharData) ch;
     if_OPT_WIDE_CHARS(screen, {
 	size_t off;
@@ -3532,7 +3514,8 @@ putXtermCell(TScreen * screen, int row, int col, int ch)
 unsigned
 getXtermCellComb(TScreen * screen, int row, int col, unsigned off)
 {
-    LineData *ld = getLineData(screen, row, NULL);
+    LineData *ld = getLineData(screen, row);
+
     return (unsigned) ld->combData[off][col];
 }
 
@@ -3543,7 +3526,7 @@ void
 addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 {
     if (ch != 0) {
-	LineData *ld = getLineData(screen, row, NULL);
+	LineData *ld = getLineData(screen, row);
 	size_t off;
 
 	TRACE(("addXtermCombining %d,%d %#x (%d)\n",

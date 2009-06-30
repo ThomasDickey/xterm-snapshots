@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.939 2009/06/18 00:25:57 tom Exp $ */
+/* $XTermId: charproc.c,v 1.946 2009/06/21 14:43:47 tom Exp $ */
 
 /*
 
@@ -848,7 +848,7 @@ CheckBogusForeground(TScreen * screen, const char *tag)
     for (pass = 0; pass < 2; ++pass) {
 	row = screen->cur_row;
 	for (; isClear && (row <= screen->max_row); ++row) {
-	    Char *attribs = getLineData(screen, row, NULL)->attribs;
+	    Char *attribs = getLineData(screen, row)->attribs;
 
 	    col = (row == screen->cur_row) ? screen->cur_col : 0;
 	    for (; isClear && (col <= screen->max_col); ++col) {
@@ -3462,7 +3462,7 @@ PreeditPosition(TScreen * screen)
     XVaNestedList list;
 
     if (screen->xic
-	&& (ld = getLineData(screen, screen->cur_row, NULL)) != 0) {
+	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
 	spot.x = (short) LineCursorX(screen, ld, screen->cur_col);
 	spot.y = (short) (CursorY(screen, screen->cur_row) + screen->fs_ascent);
 	list = XVaCreateNestedList(0,
@@ -3480,7 +3480,7 @@ static void
 WrapLine(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
-    LineData *ld = getLineData(screen, screen->cur_row, NULL);
+    LineData *ld = getLineData(screen, screen->cur_row);
 
     if (ld != 0) {
 	/* mark that we had to wrap this line */
@@ -3590,7 +3590,7 @@ dotext(XtermWidget xw,
 #else /* ! OPT_WIDE_CHARS */
 
     for (offset = 0; offset < len; offset += this_col) {
-	LineData *ld = getLineData(screen, screen->cur_row, NULL);
+	LineData *ld = getLineData(screen, screen->cur_row);
 
 	last_col = LineMaxCol(screen, ld);
 	this_col = last_col - screen->cur_col + 1;
@@ -6063,11 +6063,11 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 #ifdef NO_LEAKS
 #if OPT_RENDERFONT
 static void
-xtermCloseXft(TScreen * screen, XftFont ** pub)
+xtermCloseXft(TScreen * screen, XTermXftFonts * pub)
 {
-    if (*pub != 0) {
-	XftFontClose(screen->display, *pub);
-	*pub = 0;
+    if (pub->font != 0) {
+	XftFontClose(screen->display, pub->font);
+	pub->font = 0;
     }
 }
 #endif
@@ -6096,7 +6096,6 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(screen->keyboard_dialect);
     TRACE_FREE_LEAK(screen->term_id);
 #if OPT_WIDE_CHARS
-    TRACE_FREE_LEAK(screen->draw_buf);
 #if OPT_LUIT_PROG
     TRACE_FREE_LEAK(xw->misc.locale_str);
     TRACE_FREE_LEAK(xw->misc.localefilter);
@@ -6130,9 +6129,11 @@ VTDestroy(Widget w GCC_UNUSED)
 	xtermCloseXft(screen, &(screen->renderFontNorm[n]));
 	xtermCloseXft(screen, &(screen->renderFontBold[n]));
 	xtermCloseXft(screen, &(screen->renderFontItal[n]));
+#if OPT_RENDERWIDE
 	xtermCloseXft(screen, &(screen->renderWideNorm[n]));
 	xtermCloseXft(screen, &(screen->renderWideBold[n]));
 	xtermCloseXft(screen, &(screen->renderWideItal[n]));
+#endif
     }
 #endif
 
@@ -6872,11 +6873,7 @@ ShowCursor(void)
     }
 #endif /* NO_ACTIVE_ICON */
 
-    if ((ld = newLineData(screen)) == 0) {
-	TRACE(("BUG - ShowCursor failed to get LineData\n"));
-	return;
-    }
-    ld = getLineData(screen, screen->cur_row, ld);
+    ld = getLineData(screen, screen->cur_row);
 
     base = ld->charData[cursor_col];
     flags = ld->attribs[cursor_col];
@@ -7082,7 +7079,6 @@ ShowCursor(void)
     }
     screen->cursor_state = ON;
 
-    destroyLineData(screen, ld);
     return;
 }
 
@@ -7125,11 +7121,7 @@ HideCursor(void)
     fg_bg = 0;
 #endif
 
-    if ((ld = newLineData(screen)) == 0) {
-	TRACE(("BUG - HideCursor failed to get LineData\n"));
-	return;
-    }
-    ld = getLineData(screen, screen->cursorp.row, ld);
+    ld = getLineData(screen, screen->cursorp.row);
 
     base = ld->charData[cursor_col];
     flags = ld->attribs[cursor_col];
@@ -7214,7 +7206,6 @@ HideCursor(void)
     screen->cursor_state = OFF;
     resetXtermGC(xw, flags, in_selection);
 
-    destroyLineData(screen, ld);
     return;
 }
 
@@ -7304,7 +7295,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	int last_row = -1;
 
 	for (row = screen->max_row; row >= 0; row--) {
-	    LineData *ld = getLineData(screen, ROW2INX(screen, row), NULL);
+	    LineData *ld = getLineData(screen, ROW2INX(screen, row));
 	    if (LineTstBlinked(ld)) {
 		if (LineHasBlinking(screen, ld)) {
 		    resume = True;

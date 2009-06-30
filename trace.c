@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.96 2009/06/17 09:24:10 tom Exp $ */
+/* $XTermId: trace.c,v 1.101 2009/06/21 14:44:22 tom Exp $ */
 
 /************************************************************
 
@@ -413,7 +413,7 @@ LineSetFlag(LineData * ld, int flag)
 }
 
 int
-LineTstFlag(LineData * ld, int flag)
+LineTstFlag(LineData ld, int flag)
 {
     int code = 0;
     if (ld == 0) {

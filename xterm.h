@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.557 2009/06/17 00:57:52 tom Exp $ */
+/* $XTermId: xterm.h,v 1.570 2009/06/21 20:17:42 tom Exp $ */
 
 /************************************************************
 
@@ -849,12 +849,8 @@ extern void VTInitModifiers(XtermWidget /* xw */);
 #endif
 
 /* linedata.c */
-extern LineData *getLineData(TScreen * /* screen */, int /* row */, LineData * /* work */);
-extern LineData *newLineData(TScreen * /* screen */);
-extern void checkLineData(TScreen * /* screen */, int /* row */, LineData * /* work */);
+extern LineData *getLineData(TScreen * /* screen */, int /* row */);
 extern void deleteLineData(XtermWidget /* xw */, int /* row */, int /* count */);
-extern void destroyLineData(TScreen * /* xw */, LineData * /* work */);
-extern void fillLineData(TScreen * /* screen */, ScrnPtr * /* ptr */, LineData * /* work */);
 extern void initLineData(XtermWidget /* xw */);
 extern void insertLineData(XtermWidget /* xw */, int /* row */, int /* count */);
 
@@ -1037,22 +1033,20 @@ extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len *
 extern void ScrnAllocBuf (XtermWidget /* xw */);
 extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
-extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* n */, int  /* last */, unsigned  /* size */, unsigned  /* where */);
+extern void ScrnDeleteLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* n */, int  /* last */, unsigned /* where */);
 extern void ScrnDisownSelection (XtermWidget /* xw */);
 extern void ScrnFillRectangle (XtermWidget /* xw */, XTermRect *,  int ,  unsigned /* flags */, Bool /* keepColors */);
 extern void ScrnInsertChar (XtermWidget /* xw */, unsigned  /* n */);
-extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf  /* sb */, int  /* last */, int  /* where */, unsigned  /* n */, unsigned  /* size */);
+extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf /* sb */, int  /* last */, int  /* where */, unsigned  /* n */);
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, CellColor /* cur_fg_bg */, unsigned  /* length */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
-#define LineFlags(ld)         *((ld)->bufHead) 
-
 #if OPT_TRACE && OPT_TRACE_FLAGS
-extern int  LineTstFlag(LineData * /* ld */, int /* flag */);
-extern void LineClrFlag(LineData * /* ld */, int /* flag */);
-extern void LineSetFlag(LineData * /* ld */, int /* flag */);
+extern int  LineTstFlag(LineData /* ld */, int /* flag */);
+extern void LineClrFlag(LineData /* ld */, int /* flag */);
+extern void LineSetFlag(LineData /* ld */, int /* flag */);
 #else
 
 #define LineClrFlag(ld, flag) LineFlags(ld) &= ~ (flag)
@@ -1061,9 +1055,9 @@ extern void LineSetFlag(LineData * /* ld */, int /* flag */);
 
 #endif /* OPT_TRACE && OPT_TRACE_FLAGS */
 
-#define LineClrBlinked(ld) LineClrFlag(ld, BLINK)
-#define LineSetBlinked(ld) LineSetFlag(ld, BLINK)
-#define LineTstBlinked(ld) LineTstFlag(ld, BLINK)
+#define LineClrBlinked(ld) LineClrFlag(ld, LINEBLINKED)
+#define LineSetBlinked(ld) LineSetFlag(ld, LINEBLINKED)
+#define LineTstBlinked(ld) LineTstFlag(ld, LINEBLINKED)
 
 #define LineClrWrapped(ld) LineClrFlag(ld, LINEWRAPPED)
 #define LineSetWrapped(ld) LineSetFlag(ld, LINEWRAPPED)

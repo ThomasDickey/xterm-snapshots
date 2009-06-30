@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.587 2009/06/18 00:23:36 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.601 2009/06/29 23:59:05 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -934,24 +934,23 @@ typedef enum {
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
 #define CSET_EXTEND(code)  ((code) > CSET_DWL)
 
-	/* for doublesize characters, the first cell in a row holds the info */
-
-#define LINEDATA_CSET(linept)     (linept->charSets[0])
+#define LineFlags(ld)         ((ld)->bufHead.flags) 
+#define LineDblCS(ld)         ((ld)->bufHead.dblCS) 
 
 #define LineCharSet(screen, ld) \
-	((CSET_DOUBLE(LINEDATA_CSET(ld))) \
-		? LINEDATA_CSET(ld) \
+	((CSET_DOUBLE(LineDblCS(ld))) \
+		? LineDblCS(ld) \
 		: (screen)->cur_chrset)
 #define LineMaxCol(screen, ld) \
-	(CSET_DOUBLE(LINEDATA_CSET(ld)) \
+	(CSET_DOUBLE(LineDblCS(ld)) \
 	 ? (screen->max_col / 2) \
 	 : (screen->max_col))
 #define LineCursorX(screen, ld, col) \
-	(CSET_DOUBLE(LINEDATA_CSET(ld)) \
+	(CSET_DOUBLE(LineDblCS(ld)) \
 	 ? CursorX(screen, 2*(col)) \
 	 : CursorX(screen, (col)))
 #define LineFontWidth(screen, ld) \
-	(CSET_DOUBLE(LINEDATA_CSET(ld)) \
+	(CSET_DOUBLE(LineDblCS(ld)) \
 	 ? 2*FontWidth(screen) \
 	 : FontWidth(screen))
 #else
@@ -1103,74 +1102,56 @@ typedef struct {
 #define COLOR_BITS 4
 #endif
 typedef struct {
-    	unsigned fg:COLOR_BITS;
-    	unsigned bg:COLOR_BITS;
+    	Char fg:COLOR_BITS;
+    	Char bg:COLOR_BITS;
 } CellColor;
 #else
 typedef int CellColor;
 #endif
 
-typedef int RowFlags;
+typedef struct {
+	Char flags:4;		/* LINEWRAPPED and BLINK */
+#if OPT_DEC_CHRSET
+	Char dblCS:4;		/* DEC single-double character-sets */
+#endif
+} RowData;
 
 typedef IChar CharData;
 
 /*
- * This is the "old" xterm scrollback (not)structure.
+ * This is the xterm line-data/scrollback structure.
  */
 typedef struct {
-	ScrnPtr bufHead;	/* flag for wrapped lines */
-	ScrnPtr attribs;	/* video attributes */
+	Dimension lineSize;	/* number of columns in this row */
+	RowData bufHead;	/* flag for wrapped lines */
+#if OPT_WIDE_CHARS
+	Char combSize;		/* number of items in combData[] */
+#endif
+	Char *attribs;		/* video attributes */
 #if OPT_ISO_COLORS
 	CellColor *color;	/* foreground+background color numbers */
 #endif
-#if OPT_DEC_CHRSET
-	ScrnPtr charSets;	/* DEC character-set */
-#endif
 	CharData *charData;	/* cell's base character */
 	CharData *combData[];	/* first enum past fixed-offsets */
-} ScrnPtrs;
+} LineData;
 
 /*
  * We use CellData in a few places, when copying a cell's data to a temporary
  * variable.
  */
 typedef struct {
-    	RowFlags bufHead;	/* flag for wrapped lines */
 	Char attribs;
+#if OPT_WIDE_CHARS
+	Char combSize;		/* number of items in combData[] */
+#endif
 #if OPT_ISO_COLORS
 	CellColor color;	/* color-array */
 #endif
-#if OPT_DEC_CHRSET
-	Char charSets;
-#endif
 	CharData charData;	/* cell's base character */
 #if OPT_WIDE_CHARS
-	Char combSize;		/* number of items in combData[] */
 	CharData combData[];	/* array of combining chars */
 #endif
-
 } CellData;
-
-/*
- * LineData points to arrays of data used to represent a row of text.
- */
-typedef struct {
-	unsigned lineSize;	/* number of columns in line */
-    	RowFlags *bufHead;	/* points to flag for wrapped lines */
-	Char *attribs;
-#if OPT_ISO_COLORS
-	CellColor *color;	/* color-array */
-#endif
-#if OPT_DEC_CHRSET
-	Char *charSets;
-#endif
-	CharData *charData;	/* cell's base character */
-#if OPT_WIDE_CHARS
-	Char combSize;		/* number of pointers in combData[] */
-	CharData *combData[];	/* array of pointers to combining chars */
-#endif
-
-} LineData;
 
 #define for_each_combData(off, ld) for (off = 0; off < ld->combSize; ++off)
 
@@ -1188,12 +1169,30 @@ typedef struct {
 	((row) <= (screen)->max_row \
       && (row) >= -((screen)->savedlines))
 
+	/*
+	 * Cache data for "proportional" and other fonts containing a mixture
+	 * of widths.
+	 */
+typedef struct {
+    	Bool		mixed;
+	Dimension	min_width;	/* nominal cell width for 0..255 */
+	Dimension	max_width;	/* maximum cell width */
+} FontMap;
+
 typedef struct {
 	unsigned	chrset;
 	unsigned	flags;
 	XFontStruct *	fs;
 	char *		fn;
+	FontMap		map;
 } XTermFonts;
+
+#if OPT_RENDERFONT
+typedef struct {
+	XftFont *	font;
+	FontMap		map;
+} XTermXftFonts;
+#endif
 
 typedef struct {
 	int		top;
@@ -1553,8 +1552,6 @@ typedef struct {
 	/*
 	 * Working variables for getLineData().
 	 */
-	void		*lineCache;	/* pointer to last LineData 	*/
-	LineData	*lineData;	/* workspace for LineData	*/
 	size_t		lineExtra;	/* extra space for combining chars */
 	/*
 	 * Pointer to the current visible buffer, e.g., allbuf or altbuf.
@@ -1746,18 +1743,18 @@ typedef struct {
 	void *		icon_cgs_cache;
 #endif
 #if OPT_RENDERFONT
-	XftFont *	renderFontNorm[NMENUFONTS];
-	XftFont *	renderFontBold[NMENUFONTS];
-	XftFont *	renderFontItal[NMENUFONTS];
-	XftFont *	renderWideNorm[NMENUFONTS];
-	XftFont *	renderWideBold[NMENUFONTS];
-	XftFont *	renderWideItal[NMENUFONTS];
-	XftDraw *	renderDraw;
+	XTermXftFonts	renderFontNorm[NMENUFONTS];
+	XTermXftFonts	renderFontBold[NMENUFONTS];
+	XTermXftFonts	renderFontItal[NMENUFONTS];
 #if OPT_RENDERWIDE
+	XTermXftFonts	renderWideNorm[NMENUFONTS];
+	XTermXftFonts	renderWideBold[NMENUFONTS];
+	XTermXftFonts	renderWideItal[NMENUFONTS];
 	TypedBuffer(XftCharSpec);
 #else
 	TypedBuffer(XftChar8);
 #endif
+	XftDraw *	renderDraw;
 #endif
 #if OPT_INPUT_METHOD
 	XIM		xim;
@@ -2157,12 +2154,14 @@ typedef struct _TekWidgetRec {
 /*
  * Per-line flags
  */
-#define LINEWRAPPED	0x01	/* used once per line to indicate that it wraps
-				 * onto the next line so we can tell the
-				 * difference between lines that have wrapped
-				 * around and lines that have ended naturally
-				 * with a CR at column max_col.
-				 */
+#define LINEWRAPPED	AttrBIT(0)
+/* used once per line to indicate that it wraps onto the next line so we can
+ * tell the difference between lines that have wrapped around and lines that
+ * have ended naturally with a CR at column max_col.
+ */
+#define LINEBLINKED	AttrBIT(1)
+/* set when the line contains blinking text.
+ */
 
 #if OPT_ZICONBEEP || OPT_TOOLBAR
 #define HANDLE_STRUCT_NOTIFY 1
