@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.101 2009/06/21 14:44:22 tom Exp $ */
+/* $XTermId: trace.c,v 1.102 2009/07/03 13:57:08 tom Exp $ */
 
 /************************************************************
 
@@ -109,6 +109,9 @@ Trace(const char *fmt,...)
 	(void) fclose(fp);
 	(void) fflush(stdout);
 	(void) fflush(stderr);
+	(void) visibleChars(NULL, 0);
+	(void) visibleIChars(NULL, 0);
+	(void) visibleIChar(NULL, 0);
     }
     va_end(ap);
 }
@@ -187,19 +190,26 @@ visibleChars(Char * buf, unsigned len)
 {
     static char *result;
     static unsigned used;
-    unsigned limit = ((len + 1) * 8) + 1;
-    char *dst;
 
-    if (limit > used) {
-	used = limit;
-	result = XtRealloc(result, used);
-    }
-    dst = result;
-    *dst = '\0';
-    while (len--) {
-	unsigned value = *buf++;
-	formatAscii(dst, value);
-	dst += strlen(dst);
+    if (buf != 0) {
+	unsigned limit = ((len + 1) * 8) + 1;
+	char *dst;
+
+	if (limit > used) {
+	    used = limit;
+	    result = XtRealloc(result, used);
+	}
+	dst = result;
+	*dst = '\0';
+	while (len--) {
+	    unsigned value = *buf++;
+	    formatAscii(dst, value);
+	    dst += strlen(dst);
+	}
+    } else if (result != 0) {
+	free(result);
+	result = 0;
+	used = 0;
     }
     return result;
 }
@@ -209,24 +219,31 @@ visibleIChars(IChar * buf, unsigned len)
 {
     static char *result;
     static unsigned used;
-    unsigned limit = ((len + 1) * 8) + 1;
-    char *dst;
 
-    if (limit > used) {
-	used = limit;
-	result = XtRealloc(result, used);
-    }
-    dst = result;
-    *dst = '\0';
-    while (len--) {
-	unsigned value = *buf++;
+    if (buf != 0) {
+	unsigned limit = ((len + 1) * 8) + 1;
+	char *dst;
+
+	if (limit > used) {
+	    used = limit;
+	    result = XtRealloc(result, used);
+	}
+	dst = result;
+	*dst = '\0';
+	while (len--) {
+	    unsigned value = *buf++;
 #if OPT_WIDE_CHARS
-	if (value > 255)
-	    sprintf(dst, "\\u+%04X", value);
-	else
+	    if (value > 255)
+		sprintf(dst, "\\u+%04X", value);
+	    else
 #endif
-	    formatAscii(dst, value);
-	dst += strlen(dst);
+		formatAscii(dst, value);
+	    dst += strlen(dst);
+	}
+    } else if (result != 0) {
+	free(result);
+	result = 0;
+	used = 0;
     }
     return result;
 }
@@ -236,23 +253,30 @@ visibleIChar(IChar * buf, unsigned len)
 {
     static char *result;
     static unsigned used;
-    unsigned limit = ((len + 1) * 6) + 1;
-    char *dst;
 
-    if (limit > used) {
-	used = limit;
-	result = XtRealloc(result, used);
-    }
-    dst = result;
-    while (len--) {
-	unsigned value = *buf++;
+    if (buf != 0) {
+	unsigned limit = ((len + 1) * 6) + 1;
+	char *dst;
+
+	if (limit > used) {
+	    used = limit;
+	    result = XtRealloc(result, used);
+	}
+	dst = result;
+	while (len--) {
+	    unsigned value = *buf++;
 #if OPT_WIDE_CHARS
-	if (value > 255)
-	    sprintf(dst, "\\u+%04X", value);
-	else
+	    if (value > 255)
+		sprintf(dst, "\\u+%04X", value);
+	    else
 #endif
-	    formatAscii(dst, value);
-	dst += strlen(dst);
+		formatAscii(dst, value);
+	    dst += strlen(dst);
+	}
+    } else if (result != 0) {
+	free(result);
+	result = 0;
+	used = 0;
     }
     return result;
 }

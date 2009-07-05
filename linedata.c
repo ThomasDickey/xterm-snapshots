@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.58 2009/06/30 00:26:46 tom Exp $ */
+/* $XTermId: linedata.c,v 1.63 2009/07/04 12:17:40 tom Exp $ */
 
 /************************************************************
 
@@ -52,12 +52,12 @@ getLineData(TScreen * screen, int row)
     if (row >= 0) {
 	buffer = screen->visbuf;
     } else {
-	buffer = screen->allbuf;
+	buffer = screen->saveBuf_index;
 	row += screen->savelines;
     }
     if (row >= 0) {
 	/*
-	 * FIXME - the references to allbuf should be in scrollback.c
+	 * FIXME - the references to saveBuf_index should be in scrollback.c
 	 */
 	result = (LineData *) scrnHeadAddr(screen, buffer, (unsigned) row);
 	if (result != 0) {
@@ -75,6 +75,52 @@ getLineData(TScreen * screen, int row)
     }
 
     return result;
+}
+
+/*
+ * Copy line's data, e.g., from one screen buffer to another, given the preset
+ * pointers for the destination.
+ *
+ * TODO: optionally prune unused combining character data from the result.
+ */
+void
+copyLineData(LineData * dst, LineData * src)
+{
+    Dimension col;
+#if OPT_WIDE_CHARS
+    Char comb;
+#endif
+
+    dst->bufHead = src->bufHead;
+
+#if OPT_WIDE_CHARS
+    dst->combSize = src->combSize;
+#endif
+    for (col = 0; col < dst->lineSize; ++col) {
+	if (col >= src->lineSize) {
+	    dst->attribs[col] = 0;
+#if OPT_ISO_COLORS
+	    dst->color[col] = noCellColor;
+#endif
+	    dst->charData[col] = 0;
+#if OPT_WIDE_CHARS
+	    for (comb = 0; comb < dst->combSize; ++comb) {
+		dst->combData[comb][col] = 0;
+	    }
+#endif
+	} else {
+	    dst->attribs[col] = src->attribs[col];
+#if OPT_ISO_COLORS
+	    dst->color[col] = src->color[col];
+#endif
+	    dst->charData[col] = src->charData[col];
+#if OPT_WIDE_CHARS
+	    for (comb = 0; comb < dst->combSize; ++comb) {
+		dst->combData[comb][col] = src->combData[comb][col];
+	    }
+#endif
+	}
+    }
 }
 
 #if 0
@@ -119,6 +165,24 @@ initLineData(XtermWidget xw)
     TScreen *screen = &(xw->screen);
 
     initLineExtra(screen);
+
+    TRACE(("initLineData %d\n", screen->lineExtra));
+    TRACE(("...sizeof(LineData)  %d\n", sizeof(LineData)));
+#if OPT_ISO_COLORS
+    TRACE(("...sizeof(CellColor) %d\n", sizeof(CellColor)));
+#endif
+    TRACE(("...sizeof(RowData)   %d\n", sizeof(RowData)));
+    TRACE(("...offset(lineSize)  %d\n", offsetof(LineData, lineSize)));
+    TRACE(("...offset(bufHead)   %d\n", offsetof(LineData, bufHead)));
+#if OPT_WIDE_CHARS
+    TRACE(("...offset(combSize)  %d\n", offsetof(LineData, combSize)));
+#endif
+    TRACE(("...offset(attribs)   %d\n", offsetof(LineData, attribs)));
+#if OPT_ISO_COLORS
+    TRACE(("...offset(color)     %d\n", offsetof(LineData, color)));
+#endif
+    TRACE(("...offset(charData)  %d\n", offsetof(LineData, charData)));
+    TRACE(("...offset(combData)  %d\n", offsetof(LineData, combData)));
 }
 
 /*

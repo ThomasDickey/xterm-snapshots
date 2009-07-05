@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.601 2009/06/29 23:59:05 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.608 2009/07/03 19:07:46 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -110,6 +110,13 @@
 
 #define BumpTypedBuffer(type, want) \
 	BumpBuffer(type, BfBuf(type), BfLen(type), want)
+
+#define FreeTypedBuffer(type) \
+	if (BfBuf(type) != 0) { \
+	    free(BfBuf(type)); \
+	    BfBuf(type) = 0; \
+	} \
+	BfLen(type) = 0
 
 /*
 ** System V definitions
@@ -602,6 +609,10 @@ typedef struct {
 #define OPT_SAME_NAME   1 /* suppress redundant updates of title, icon, etc. */
 #endif
 
+#ifndef OPT_SAVE_LINES
+#define OPT_SAVE_LINES 0 /* optimize save-lines feature */
+#endif
+
 #ifndef OPT_SCO_FUNC_KEYS
 #define OPT_SCO_FUNC_KEYS 0 /* true if xterm supports SCO-style function keys */
 #endif
@@ -934,7 +945,6 @@ typedef enum {
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
 #define CSET_EXTEND(code)  ((code) > CSET_DWL)
 
-#define LineFlags(ld)         ((ld)->bufHead.flags) 
 #define LineDblCS(ld)         ((ld)->bufHead.dblCS) 
 
 #define LineCharSet(screen, ld) \
@@ -956,6 +966,8 @@ typedef enum {
 #else
 
 #define if_OPT_DEC_CHRSET(code) /*nothing*/
+
+#define LineDblCS(ld)         0
 
 #define LineCharSet(screen, ld)         0
 #define LineMaxCol(screen, ld)          screen->max_col
@@ -1554,23 +1566,22 @@ typedef struct {
 	 */
 	size_t		lineExtra;	/* extra space for combining chars */
 	/*
-	 * Pointer to the current visible buffer, e.g., allbuf or altbuf.
+	 * Pointer to the current visible buffer.
 	 */
 	ScrnBuf		visbuf;		/* ptr to visible screen buf (main) */
 	/*
 	 * Data for the normal buffer, which may have saved lines to which
 	 * the user can scroll.
 	 */
-	ScrnBuf		allbuf;		/* screen buffer (may include
-					   lines scrolled off top)	*/
-	Char		*sbuf_address;	/* main screen memory address   */
-	Boolean		is_running;	/* true when buffers are legal	*/
+	ScrnBuf		saveBuf_index;
+	Char		*saveBuf_data;
 	/*
-	 * Data for the alternate buffer.
+	 * Data for visible and alternate buffer.
 	 */
-	ScrnBuf		altbuf;		/* alternate screen buffer	*/
-	Char		*abuf_address;	/* alternate screen memory address */
-	Boolean		alternate;	/* true if using alternate buf	*/
+	ScrnBuf		editBuf_index[2];
+	Char		*editBuf_data[2];
+	int		whichBuf;	/* 0/1 for normal/alternate buf */
+	Boolean		is_running;	/* true when buffers are legal	*/
 	/*
 	 * Workspace used for screen operations.
 	 */
@@ -1924,6 +1935,9 @@ typedef struct {
     char *f_wb;			/* the bold wide font */
 #endif
 } VTFontNames;
+
+#define GravityIsNorthWest(w) ((w)->misc.resizeGravity == NorthWestGravity)
+#define GravityIsSouthWest(w) ((w)->misc.resizeGravity == SouthWestGravity)
 
 typedef struct _Misc {
     VTFontNames default_font;

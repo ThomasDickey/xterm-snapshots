@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.570 2009/06/21 20:17:42 tom Exp $ */
+/* $XTermId: xterm.h,v 1.572 2009/07/02 00:06:42 tom Exp $ */
 
 /************************************************************
 
@@ -850,6 +850,7 @@ extern void VTInitModifiers(XtermWidget /* xw */);
 
 /* linedata.c */
 extern LineData *getLineData(TScreen * /* screen */, int /* row */);
+extern void copyLineData(LineData * /* dst */, LineData * /* src */);
 extern void deleteLineData(XtermWidget /* xw */, int /* row */, int /* count */);
 extern void initLineData(XtermWidget /* xw */);
 extern void insertLineData(XtermWidget /* xw */, int /* row */, int /* count */);
@@ -1048,6 +1049,8 @@ extern int  LineTstFlag(LineData /* ld */, int /* flag */);
 extern void LineClrFlag(LineData /* ld */, int /* flag */);
 extern void LineSetFlag(LineData /* ld */, int /* flag */);
 #else
+
+#define LineFlags(ld)         ((ld)->bufHead.flags) 
 
 #define LineClrFlag(ld, flag) LineFlags(ld) &= ~ (flag)
 #define LineSetFlag(ld, flag) LineFlags(ld) |= (flag)

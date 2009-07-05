@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.251 2009/05/02 16:20:28 tom Exp $ */
+/* $XTermId: menu.c,v 1.252 2009/07/03 15:01:14 tom Exp $ */
 
 /*
 
@@ -2183,7 +2183,7 @@ HandleAltScreen(Widget w,
 		Cardinal *param_count)
 {
     /* eventually want to see if sensitive or not */
-    handle_vt_toggle(do_altscreen, term->screen.alternate,
+    handle_vt_toggle(do_altscreen, term->screen.whichBuf,
 		     params, *param_count, w);
 }
 
@@ -3133,7 +3133,7 @@ update_altscreen(void)
     UpdateCheckbox("update_altscreen",
 		   vtMenuEntries,
 		   vtMenu_altscreen,
-		   term->screen.alternate);
+		   term->screen.whichBuf);
 }
 
 void

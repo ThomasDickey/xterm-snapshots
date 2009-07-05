@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.946 2009/06/21 14:43:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.959 2009/07/05 01:18:44 tom Exp $ */
 
 /*
 
@@ -3590,7 +3590,9 @@ dotext(XtermWidget xw,
 #else /* ! OPT_WIDE_CHARS */
 
     for (offset = 0; offset < len; offset += this_col) {
+#if OPT_DEC_CHRSET
 	LineData *ld = getLineData(screen, screen->cur_row);
+#endif
 
 	last_col = LineMaxCol(screen, ld);
 	this_col = last_col - screen->cur_col + 1;
@@ -4016,7 +4018,7 @@ dpmodes(XtermWidget xw,
 		if (IsSM()) {
 		    ToAlternate(xw);
 		} else {
-		    if (screen->alternate
+		    if (screen->whichBuf
 			&& (param[i] == 1047))
 			ClearScreen(xw);
 		    FromAlternate(xw);
@@ -4252,7 +4254,7 @@ savemodes(XtermWidget xw)
 	case 1047:		/* alternate buffer             */
 	    /* FALLTHRU */
 	case 47:		/* alternate buffer             */
-	    DoSM(DP_X_ALTSCRN, screen->alternate);
+	    DoSM(DP_X_ALTSCRN, screen->whichBuf);
 	    break;
 	case SET_VT200_MOUSE:	/* mouse bogus sequence         */
 	case SET_VT200_HIGHLIGHT_MOUSE:
@@ -4807,7 +4809,7 @@ unparse_end(XtermWidget xw)
 void
 ToggleAlternate(XtermWidget xw)
 {
-    if (xw->screen.alternate)
+    if (xw->screen.whichBuf)
 	FromAlternate(xw);
     else
 	ToAlternate(xw);
@@ -4818,15 +4820,18 @@ ToAlternate(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
 
-    if (!screen->alternate) {
+    if (screen->whichBuf == 0) {
 	TRACE(("ToAlternate\n"));
-	if (!screen->altbuf)
-	    screen->altbuf = allocScrnBuf(xw,
-					  (unsigned) MaxRows(screen),
-					  (unsigned) MaxCols(screen),
-					  &screen->abuf_address);
+	if (!screen->editBuf_index[1])
+	    screen->editBuf_index[1] = allocScrnBuf(xw,
+						    (unsigned) MaxRows(screen),
+						    (unsigned) MaxCols(screen),
+						    &screen->editBuf_data[1]);
 	SwitchBufs(xw);
-	screen->alternate = True;
+	screen->whichBuf = 1;
+#if OPT_SAVE_LINES
+	screen->visbuf = screen->editBuf_index[screen->whichBuf];
+#endif
 	update_altscreen();
     }
 }
@@ -4836,12 +4841,15 @@ FromAlternate(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
 
-    if (screen->alternate) {
+    if (screen->whichBuf != 0) {
 	TRACE(("FromAlternate\n"));
 	if (screen->scroll_amt)
 	    FlushScroll(xw);
-	screen->alternate = False;
+	screen->whichBuf = 0;
 	SwitchBufs(xw);
+#if OPT_SAVE_LINES
+	screen->visbuf = screen->editBuf_index[screen->whichBuf];
+#endif
 	update_altscreen();
     }
 }
@@ -4876,25 +4884,28 @@ Bool
 CheckBufPtrs(TScreen * screen)
 {
     return (screen->visbuf != 0
-	    && screen->altbuf != 0);
+#if OPT_SAVE_LINES
+	    && screen->editBuf_index[0] != 0
+#endif
+	    && screen->editBuf_index[1] != 0);
 }
 
 /*
  * Swap buffer line pointers between alternate and regular screens.
- * visbuf contains pointers from allbuf or altbuf for the visible screen,
- * and pointers from allbuf for the saved lines.  That makes it simple to
- * scroll back over the saved lines without juggling pointers for the
- * regular and alternate screens.
  */
 void
 SwitchBufPtrs(TScreen * screen)
 {
     if (CheckBufPtrs(screen)) {
+#if OPT_SAVE_LINES
+	screen->visbuf = screen->editBuf_index[screen->whichBuf];
+#else
 	size_t len = ScrnPointers(screen, (unsigned) MaxRows(screen));
 
-	memcpy((char *) screen->save_ptr, (char *) screen->visbuf, len);
-	memcpy((char *) screen->visbuf, (char *) screen->altbuf, len);
-	memcpy((char *) screen->altbuf, (char *) screen->save_ptr, len);
+	memcpy(screen->save_ptr, screen->visbuf, len);
+	memcpy(screen->visbuf, screen->editBuf_index[1], len);
+	memcpy(screen->editBuf_index[1], screen->save_ptr, len);
+#endif
     }
 }
 
@@ -5967,8 +5978,8 @@ VTInitialize(Widget wrequest,
     ScrollBarOn(wnew, True);
 
     /* make sure that the resize gravity acceptable */
-    if (wnew->misc.resizeGravity != NorthWestGravity &&
-	wnew->misc.resizeGravity != SouthWestGravity) {
+    if (!GravityIsNorthWest(wnew) &&
+	!GravityIsSouthWest(wnew)) {
 	char value[80];
 	char *temp[2];
 	Cardinal nparams = 1;
@@ -6089,10 +6100,12 @@ VTDestroy(Widget w GCC_UNUSED)
     }
 
     TRACE_FREE_LEAK(screen->save_ptr);
-    TRACE_FREE_LEAK(screen->sbuf_address);
-    TRACE_FREE_LEAK(screen->allbuf);
-    TRACE_FREE_LEAK(screen->abuf_address);
-    TRACE_FREE_LEAK(screen->altbuf);
+    TRACE_FREE_LEAK(screen->saveBuf_data);
+    TRACE_FREE_LEAK(screen->saveBuf_index);
+    for (n = 0; n < 2; ++n) {
+	TRACE_FREE_LEAK(screen->editBuf_data[n]);
+	TRACE_FREE_LEAK(screen->editBuf_index[n]);
+    }
     TRACE_FREE_LEAK(screen->keyboard_dialect);
     TRACE_FREE_LEAK(screen->term_id);
 #if OPT_WIDE_CHARS
@@ -6168,6 +6181,15 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->keyboard.extra_translations);
     TRACE_FREE_LEAK(xw->keyboard.shell_translations);
     TRACE_FREE_LEAK(xw->keyboard.xterm_translations);
+
+    FreeTypedBuffer(XChar2b);
+    FreeTypedBuffer(char);
+#if OPT_RENDERWIDE
+    FreeTypedBuffer(XftCharSpec);
+#else
+    FreeTypedBuffer(XftChar8);
+#endif
+
 #endif /* defined(NO_LEAKS) */
 }
 
@@ -6349,7 +6371,7 @@ VTRealize(Widget w,
 
     /* use ForgetGravity instead of SouthWestGravity because translating
        the Expose events for ConfigureNotifys is too hard */
-    values->bit_gravity = ((xw->misc.resizeGravity == NorthWestGravity)
+    values->bit_gravity = (GravityIsNorthWest(xw)
 			   ? NorthWestGravity
 			   : ForgetGravity);
     xw->screen.fullVwin.window = XtWindow(xw) =
@@ -6457,7 +6479,10 @@ VTRealize(Widget w,
 #if OPT_TEK4014
     if (!tekWidget)		/* if not called after fork */
 #endif
-	screen->visbuf = screen->allbuf = NULL;
+    {
+	screen->visbuf = NULL;
+	screen->saveBuf_index = NULL;
+    }
 
     screen->do_wrap = False;
     screen->scrolls = screen->incopy = 0;
@@ -6466,7 +6491,7 @@ VTRealize(Widget w,
     screen->savedlines = 0;
 
     for (i = 0; i < 2; ++i) {
-	screen->alternate = (Boolean) (!screen->alternate);
+	screen->whichBuf = !screen->whichBuf;
 	CursorSave(xw);
     }
 
@@ -6924,8 +6949,8 @@ ShowCursor(void)
     }
 #endif
 #endif
-#if OPT_ISO_COLORS
-    fg_bg = noCellColor;
+#if !OPT_ISO_COLORS
+    fg_bg = 0;
 #endif
 
     /*
@@ -7465,8 +7490,8 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 	update_reversewrap();
 
 	CursorSave(xw);
-	screen->sc[screen->alternate != False].row =
-	    screen->sc[screen->alternate != False].col = 0;
+	screen->sc[screen->whichBuf].row =
+	    screen->sc[screen->whichBuf].col = 0;
     }
     longjmp(vtjmpbuf, 1);	/* force ground state in parser */
 }
