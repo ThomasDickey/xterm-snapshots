@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.102 2009/06/21 16:50:05 tom Exp $ */
+/* $XTermId: print.c,v 1.104 2009/07/03 15:01:27 tom Exp $ */
 
 /************************************************************
 
@@ -279,7 +279,7 @@ xtermPrintEverything(XtermWidget xw)
     int bot = screen->max_row;
     int was_open = initialized;
 
-    if (!screen->alternate)
+    if (!screen->whichBuf)
 	top = -screen->savedlines;
 
     TRACE(("xtermPrintEverything, rows %d..%d\n", top, bot));
@@ -316,6 +316,7 @@ send_CharSet(XtermWidget xw, LineData * ld)
     if (msg != 0)
 	stringToPrinter(xw, msg);
 #else
+    (void) xw;
     (void) ld;
 #endif /* OPT_DEC_CHRSET */
 }

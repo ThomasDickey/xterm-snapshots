@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.49 2009/06/21 14:14:09 tom Exp $ */
+/* $XTermId: cursor.c,v 1.52 2009/07/04 14:58:53 tom Exp $ */
 
 /* $XFree86: xc/programs/xterm/cursor.c,v 3.20 2006/02/13 01:14:58 dickey Exp $ */
 
@@ -128,7 +128,9 @@ CursorBack(XtermWidget xw, int n)
 void
 CursorForward(TScreen * screen, int n)
 {
+#if OPT_DEC_CHRSET
     LineData *ld = getLineData(screen, screen->cur_row);
+#endif
     int next = screen->cur_col + n;
     int max = LineMaxCol(screen, ld);
 
@@ -251,8 +253,8 @@ AdjustSavedCursor(XtermWidget xw, int adjust)
 {
     TScreen *screen = &xw->screen;
 
-    if (screen->alternate) {
-	SavedCursor *sc = &screen->sc[screen->alternate == False];
+    if (screen->whichBuf) {
+	SavedCursor *sc = &screen->sc[0];
 
 	if (adjust > 0) {
 	    TRACE(("AdjustSavedCursor %d -> %d\n", sc->row, sc->row - adjust));
@@ -268,7 +270,7 @@ void
 CursorSave(XtermWidget xw)
 {
     TScreen *screen = &xw->screen;
-    SavedCursor *sc = &screen->sc[screen->alternate != False];
+    SavedCursor *sc = &screen->sc[screen->whichBuf];
 
     sc->saved = True;
     sc->row = screen->cur_row;
@@ -297,7 +299,7 @@ void
 CursorRestore(XtermWidget xw)
 {
     TScreen *screen = &xw->screen;
-    SavedCursor *sc = &screen->sc[screen->alternate != False];
+    SavedCursor *sc = &screen->sc[screen->whichBuf];
 
     /* Restore the character sets, unless we never did a save-cursor op.
      * In that case, we'll reset the character sets.
@@ -352,6 +354,8 @@ CursorPrevLine(TScreen * screen, int count)
 int
 set_cur_row(TScreen * screen, int value)
 {
+    TRACE(("set_cur_row %d vs %d\n", value, screen ? screen->max_row : -1));
+
     assert(screen != 0);
     assert(value >= 0);
     assert(value <= screen->max_row);
@@ -362,6 +366,8 @@ set_cur_row(TScreen * screen, int value)
 int
 set_cur_col(TScreen * screen, int value)
 {
+    TRACE(("set_cur_col %d vs %d\n", value, screen ? screen->max_col : -1));
+
     assert(screen != 0);
     assert(value >= 0);
     assert(value <= screen->max_col);

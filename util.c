@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.464 2009/06/21 20:25:35 tom Exp $ */
+/* $XTermId: util.c,v 1.468 2009/07/03 15:05:33 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -163,7 +163,8 @@ FlushScroll(XtermWidget xw)
 	if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
 	    (i = screen->max_row - screen->scroll_amt + 1))
 	    refreshtop = i;
-	if (screen->scrollWidget && !screen->alternate
+	if (screen->scrollWidget
+	    && !screen->whichBuf
 	    && screen->top_marg == 0) {
 	    scrolltop = 0;
 	    if ((scrollheight += shift) > i)
@@ -302,7 +303,7 @@ adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
     int hi_row = screen->bot_marg;
 
     TRACE2(("adjustSelection FWD %s by %d (%s)\n",
-	    screen->alternate ? "alternate" : "normal",
+	    screen->whichBuf ? "alternate" : "normal",
 	    amount,
 	    all_lines ? "all" : "visible"));
     TRACE2(("  before highlite %d.%d .. %d.%d\n",
@@ -360,7 +361,7 @@ adjustHiliteOnBakScroll(XtermWidget xw, int amount)
     int hi_row = screen->bot_marg;
 
     TRACE2(("adjustSelection BAK %s by %d (%s)\n",
-	    screen->alternate ? "alternate" : "normal",
+	    screen->whichBuf ? "alternate" : "normal",
 	    amount,
 	    "visible"));
     TRACE2(("  before highlite %d.%d .. %d.%d\n",
@@ -423,7 +424,7 @@ xtermScroll(XtermWidget xw, int amount)
     int scrolltop;
     int scrollheight;
     Boolean scroll_all_lines = (Boolean) (screen->scrollWidget
-					  && !screen->alternate
+					  && !screen->whichBuf
 					  && screen->top_marg == 0);
 
     TRACE(("xtermScroll count=%d\n", amount));
@@ -515,7 +516,7 @@ xtermScroll(XtermWidget xw, int amount)
     if (amount > 0) {
 	if (scroll_all_lines) {
 	    ScrnDeleteLine(xw,
-			   screen->allbuf,
+			   screen->saveBuf_index,
 			   screen->bot_marg + screen->savelines,
 			   0,
 			   (unsigned) amount);
@@ -809,7 +810,7 @@ DeleteLine(XtermWidget xw, int n)
     int scrolltop;
     int scrollheight;
     Boolean scroll_all_lines = (Boolean) (screen->scrollWidget
-					  && !screen->alternate
+					  && !screen->whichBuf
 					  && screen->cur_row == 0);
 
     if (!ScrnIsLineInMargins(screen, INX2ROW(screen, screen->cur_row)))
@@ -878,7 +879,7 @@ DeleteLine(XtermWidget xw, int n)
     if (n > 0) {
 	if (scroll_all_lines)
 	    ScrnDeleteLine(xw,
-			   screen->allbuf,
+			   screen->saveBuf_index,
 			   screen->bot_marg + screen->savelines,
 			   0,
 			   (unsigned) n);
@@ -2227,7 +2228,6 @@ xtermXftDrawString(XtermWidget xw,
 	}
 #else /* !OPT_RENDERWIDE */
 	if (really) {
-#if OPT_WIDE_CHARS
 	    XftChar8 *buffer;
 	    int dst;
 
@@ -2236,9 +2236,7 @@ xtermXftDrawString(XtermWidget xw,
 
 	    for (dst = 0; dst < (int) len; ++dst)
 		buffer[dst] = CharOf(text[dst]);
-#else
-	    char *buffer = (char *) text;
-#endif
+
 	    XftDrawString8(screen->renderDraw,
 			   color,
 			   font,
@@ -2831,13 +2829,14 @@ drawXtermText(XtermWidget xw,
 			screen->fnt_wide = old_wide;
 			screen->fnt_high = old_high;
 		    } else {
+			IChar ch2 = ch;
 			nc = drawClippedXftString(xw,
 						  flags,
 						  font,
 						  getXftColor(xw, values.foreground),
 						  curX,
 						  y,
-						  &ch,
+						  &ch2,
 						  1);
 			curX += nc * FontWidth(screen);
 			underline_len += (Cardinal) nc;
