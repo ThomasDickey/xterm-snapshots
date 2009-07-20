@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.366 2009/07/05 01:01:21 tom Exp $ */
+/* $XTermId: screen.c,v 1.369 2009/07/19 21:59:35 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -137,7 +137,7 @@ traceScrnBuf(const char *tag, TScreen * screen, ScrnBuf sb, unsigned len)
 static unsigned
 scrnHeadSize(TScreen * screen, unsigned count)
 {
-    unsigned result = sizeof(LineData);
+    unsigned result = SizeOfLineData;
 
     (void) screen;
 
@@ -477,7 +477,7 @@ Reallocate(XtermWidget xw,
 #if OPT_SAVE_LINES
 		    0
 #else
-		    move_down
+		    (unsigned) move_down
 #endif
 	);
     free(oldBufHead);
@@ -1697,7 +1697,9 @@ ScreenResize(XtermWidget xw,
 			 ? screen->savelines
 			 : 0);
 	int delta_rows = rows - MaxRows(screen);
+#if OPT_TRACE
 	int delta_cols = cols - MaxCols(screen);
+#endif
 
 	TRACE(("...ScreenResize chars %dx%d delta %dx%d\n",
 	       rows, cols, delta_rows, delta_cols));

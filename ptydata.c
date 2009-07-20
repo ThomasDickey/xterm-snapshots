@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.83 2009/06/19 08:25:19 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.86 2009/07/19 22:20:44 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
@@ -68,7 +68,7 @@ decodeUtf8(PtyData * data)
     int i;
     int length = data->last - data->next;
     int utf_count = 0;
-    IChar utf_char = 0;
+    unsigned utf_char = 0;
 
     data->utf_size = 0;
     for (i = 0; i < length; i++) {
@@ -81,7 +81,7 @@ decodeUtf8(PtyData * data)
 		data->utf_data = UCS_REPL;	/* prev. sequence incomplete */
 		data->utf_size = (i + 1);
 	    } else {
-		data->utf_data = c;
+		data->utf_data = (IChar) c;
 		data->utf_size = 1;
 	    }
 	    break;
@@ -120,7 +120,14 @@ decodeUtf8(PtyData * data)
 		}
 		utf_count--;
 		if (utf_count == 0) {
-		    data->utf_data = utf_char;
+#if !OPT_WIDER_ICHAR
+		    /* characters outside UCS-2 become UCS_REPL */
+		    if (utf_char > 0xffff) {
+			TRACE(("using replacement for %#x\n", utf_char));
+			utf_char = UCS_REPL;
+		    }
+#endif
+		    data->utf_data = (IChar) utf_char;
 		    data->utf_size = (i + 1);
 		    break;
 		}
@@ -269,8 +276,9 @@ nextPtyData(TScreen * screen, PtyData * data)
 	result = skipPtyData(data);
     } else {
 	result = *((data)->next++);
-	if (!screen->output_eight_bits)
-	    result &= 0x7f;
+	if (!screen->output_eight_bits) {
+	    result = (IChar) (result & 0x7f);
+	}
     }
     TRACE2(("nextPtyData returns %#x\n", result));
     return result;

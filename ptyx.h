@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.608 2009/07/03 19:07:46 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.611 2009/07/19 20:31:50 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -673,6 +673,10 @@ typedef struct {
 #define OPT_WIDE_CHARS  0 /* true if xterm supports 16-bit characters */
 #endif
 
+#ifndef OPT_WIDER_ICHAR
+#define OPT_WIDER_ICHAR 1 /* true if xterm uses 32-bits for wide-chars */
+#endif
+
 #ifndef OPT_XMC_GLITCH
 #define OPT_XMC_GLITCH	0 /* true if xterm supports xmc (magic cookie glitch) */
 #endif
@@ -945,7 +949,7 @@ typedef enum {
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
 #define CSET_EXTEND(code)  ((code) > CSET_DWL)
 
-#define LineDblCS(ld)         ((ld)->bufHead.dblCS) 
+#define LineDblCS(ld)         ((ld)->bufHead.dblCS)
 
 #define LineCharSet(screen, ld) \
 	((CSET_DOUBLE(LineDblCS(ld))) \
@@ -1040,7 +1044,11 @@ extern int A2E(int);
 #if OPT_WIDE_CHARS
 #define if_OPT_WIDE_CHARS(screen, code) if(screen->wide_chars) code
 #define if_WIDE_OR_NARROW(screen, wide, narrow) if(screen->wide_chars) wide else narrow
-typedef unsigned IChar;		/* for 8 or 16-bit characters, plus flag */
+#if OPT_WIDER_ICHAR
+typedef unsigned IChar;		/* for 8-21 bit characters */
+#else
+typedef unsigned short IChar;	/* for 8-16 bit characters */
+#endif
 #else
 #define if_OPT_WIDE_CHARS(screen, code) /* nothing */
 #define if_WIDE_OR_NARROW(screen, wide, narrow) narrow
@@ -1144,7 +1152,7 @@ typedef struct {
 	CellColor *color;	/* foreground+background color numbers */
 #endif
 	CharData *charData;	/* cell's base character */
-	CharData *combData[];	/* first enum past fixed-offsets */
+	CharData *combData[1];	/* first enum past fixed-offsets */
 } LineData;
 
 /*
@@ -1160,12 +1168,16 @@ typedef struct {
 	CellColor color;	/* color-array */
 #endif
 	CharData charData;	/* cell's base character */
-#if OPT_WIDE_CHARS
-	CharData combData[];	/* array of combining chars */
-#endif
+	CharData combData[1];	/* array of combining chars */
 } CellData;
 
 #define for_each_combData(off, ld) for (off = 0; off < ld->combSize; ++off)
+
+/*
+ * Accommodate older compilers by not using variable-length arrays.
+ */
+#define SizeOfLineData  offsetof(LineData, combData)
+#define SizeOfCellData  offsetof(CellData, combData)
 
 	/*
 	 * A "row" is the index within the visible part of the screen, and an
@@ -1955,9 +1967,6 @@ typedef struct _Misc {
     char *locale_str;		/* "locale" resource */
     char *localefilter;		/* path for luit */
 #endif
-#if OPT_INPUT_METHOD
-    char *f_x;			/* font for XIM */
-#endif
     fontWarningTypes fontWarnings;
     int limit_resize;
 #ifdef ALLOWLOGGING
@@ -1986,10 +1995,12 @@ typedef struct _Misc {
     Boolean appcursorDefault;
     Boolean appkeypadDefault;
 #if OPT_INPUT_METHOD
+    char* f_x;			/* font for XIM */
     char* input_method;
     char* preedit_type;
-    Boolean open_im;
+    Boolean open_im;		/* true if input-method is opened */
     Boolean cannot_im;		/* true if we cannot use input-method */
+    int retry_im;
 #endif
     Boolean dynamicColors;
     Boolean shared_ic;

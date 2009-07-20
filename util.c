@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.468 2009/07/03 15:05:33 tom Exp $ */
+/* $XTermId: util.c,v 1.473 2009/07/19 22:53:51 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2251,9 +2251,6 @@ xtermXftDrawString(XtermWidget xw,
    xtermXftDrawString(xw, flags, color, font, x, y, chars, len, False)
 #endif /* OPT_RENDERFONT */
 
-#define DrawX(col) x + (col * (font_width))
-#define DrawSegment(first,last) (void)drawXtermText(xw, flags|NOTRANSLATION, gc, DrawX(first), y, chrset, text+first, (unsigned)(last - first), on_wide)
-
 #if OPT_WIDE_CHARS
 /*
  * Map characters commonly "fixed" by groff back to their ASCII equivalents.
@@ -2318,7 +2315,7 @@ ucs_workaround(XtermWidget xw,
     int fixed = False;
 
     if (screen->wide_chars && screen->utf8_mode && ch > 256) {
-	IChar eqv = AsciiEquivs(ch);
+	IChar eqv = (IChar) AsciiEquivs(ch);
 
 	if (eqv != (IChar) ch) {
 	    int width = my_wcwidth((int) ch);
@@ -2829,7 +2826,7 @@ drawXtermText(XtermWidget xw,
 			screen->fnt_wide = old_wide;
 			screen->fnt_high = old_high;
 		    } else {
-			IChar ch2 = ch;
+			IChar ch2 = (IChar) ch;
 			nc = drawClippedXftString(xw,
 						  flags,
 						  font,
@@ -2896,22 +2893,28 @@ drawXtermText(XtermWidget xw,
 	xtermFillCells(xw, flags, gc, x, y, len);
 
 	while (len--) {
-	    if_WIDE_OR_NARROW(screen, {
-		XChar2b temp[1];
-		temp[0].byte2 = LO_BYTE(*text);
-		temp[0].byte1 = HI_BYTE(*text);
-		width = XTextWidth16(fs, temp, 1);
+	    if (xtermMissingChar(xw, *text, fs)) {
+
+		width = my_wcwidth((wchar_t) (*text)) * FontWidth(screen);
+		adj = 0;
+	    } else {
+		if_WIDE_OR_NARROW(screen, {
+		    XChar2b temp[1];
+		    temp[0].byte2 = LO_BYTE(*text);
+		    temp[0].byte1 = HI_BYTE(*text);
+		    width = XTextWidth16(fs, temp, 1);
+		}
+		, {
+		    char temp[1];
+		    temp[0] = (char) LO_BYTE(*text);
+		    width = XTextWidth(fs, temp, 1);
+		});
+		adj = (FontWidth(screen) - width) / 2;
 	    }
-	    , {
-		char temp[1];
-		temp[0] = (char) LO_BYTE(*text);
-		width = XTextWidth(fs, temp, 1);
-	    });
-	    adj = (FontWidth(screen) - width) / 2;
-	    (void) drawXtermText(xw, flags | NOBACKGROUND | CHARBYCHAR,
-				 gc, x + adj, y, chrset,
-				 text++, 1, on_wide);
-	    x += FontWidth(screen);
+	    x = drawXtermText(xw,
+			      flags | NOBACKGROUND | CHARBYCHAR,
+			      gc, x + adj, y, chrset,
+			      text++, 1, on_wide) - adj;
 	}
 	return x;
     }
@@ -2928,6 +2931,8 @@ drawXtermText(XtermWidget xw,
 			     ? BoldFont(screen)
 			     : NormalFont(screen));
 	int last, first = 0;
+	Bool drewBoxes = False;
+
 	for (last = 0; last < (int) len; last++) {
 	    unsigned ch = (unsigned) text[last];
 	    Bool isMissing;
@@ -2935,9 +2940,14 @@ drawXtermText(XtermWidget xw,
 #if OPT_WIDE_CHARS
 
 	    if (ch == HIDDEN_CHAR) {
-		if (last > first)
-		    DrawSegment(first, last);
+		if (last > first) {
+		    x = drawXtermText(xw, flags | NOTRANSLATION, gc,
+				      x, y,
+				      chrset, text + first,
+				      (unsigned) (last - first), on_wide);
+		}
 		first = last + 1;
+		drewBoxes = True;
 		continue;
 	    }
 	    ch_width = my_wcwidth((int) ch);
@@ -2969,27 +2979,38 @@ drawXtermText(XtermWidget xw,
 	    });
 
 	    if (isMissing) {
-		if (last > first)
-		    DrawSegment(first, last);
+		if (last > first) {
+		    x = drawXtermText(xw, flags | NOTRANSLATION, gc,
+				      x, y,
+				      chrset, text + first,
+				      (unsigned) (last - first), on_wide);
+		}
 #if OPT_WIDE_CHARS
-		if (!ucs_workaround(xw, ch, flags, gc, DrawX(last), y,
+		if (!ucs_workaround(xw, ch, flags, gc,
+				    x, y,
 				    chrset, on_wide))
 #endif
-		    xtermDrawBoxChar(xw, ch, flags, gc, DrawX(last), y, ch_width);
+		{
+		    xtermDrawBoxChar(xw, ch, flags, gc,
+				     x, y,
+				     ch_width);
+		}
+		x += (ch_width * FontWidth(screen));
 		first = last + 1;
+		drewBoxes = True;
 	    }
 	}
 	if (last <= first) {
-	    return x + (int) real_length *FontWidth(screen);
+	    return x;
 	}
 	text += first;
 	len = (Cardinal) (last - first);
 	flags |= NOTRANSLATION;
-	if (DrawX(first) != x) {
+	if (drewBoxes) {
 	    return drawXtermText(xw,
 				 flags,
 				 gc,
-				 DrawX(first),
+				 x,
 				 y,
 				 chrset,
 				 text,
@@ -3036,14 +3057,13 @@ drawXtermText(XtermWidget xw,
 	    /*
 	     * bitmap-fonts are limited to 16-bits.
 	     */
+#if OPT_WIDER_ICHAR
 	    if (ch > 0xffff) {
 		ch = UCS_REPL;
-		buffer[dst].byte2 = LO_BYTE(ch);
-		buffer[dst].byte1 = HI_BYTE(ch);
-	    } else {
-		buffer[dst].byte2 = LO_BYTE(text[src]);
-		buffer[dst].byte1 = HI_BYTE(text[src]);
 	    }
+#endif
+	    buffer[dst].byte2 = LO_BYTE(ch);
+	    buffer[dst].byte1 = HI_BYTE(ch);
 #if OPT_MINI_LUIT
 #define UCS2SBUF(value)	buffer[dst].byte2 = LO_BYTE(value);\
 	    		buffer[dst].byte1 = HI_BYTE(value)
@@ -3482,7 +3502,7 @@ ClearCurBackground(XtermWidget xw,
 #endif /* OPT_ISO_COLORS */
 
 /*
- * Returns a single 8/16-bit number for the given cell
+ * Returns a single base character for the given cell.
  */
 unsigned
 getXtermCell(TScreen * screen, int row, int col)
@@ -3493,7 +3513,7 @@ getXtermCell(TScreen * screen, int row, int col)
 }
 
 /*
- * Sets a single 8/16-bit number for the given cell
+ * Sets a single base character for the given cell.
  */
 void
 putXtermCell(TScreen * screen, int row, int col, int ch)
@@ -3533,7 +3553,7 @@ addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 
 	for_each_combData(off, ld) {
 	    if (!ld->combData[off][col]) {
-		ld->combData[off][col] = ch;
+		ld->combData[off][col] = (CharData) ch;
 		break;
 	    }
 	}

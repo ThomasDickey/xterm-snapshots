@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.423 2009/07/04 12:58:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.424 2009/07/19 15:49:56 tom Exp $ */
 
 /*
  *
@@ -2758,9 +2758,9 @@ parse_decdld(ANSI * params, char *string)
 	if (ch >= 0x3f && ch <= 0x7e) {
 	    int n;
 
-	    ch -= 0x3f;
+	    ch = CharOf(ch - 0x3f);
 	    for (n = 0; n < 6; ++n) {
-		bits[row + n][col] = (ch & (1 << n)) ? '*' : '.';
+		bits[row + n][col] = CharOf((ch & (1 << n)) ? '*' : '.');
 	    }
 	    col += 1;
 	    prior = True;
@@ -2793,8 +2793,9 @@ parse_ansi_params(ANSI * params, char **string)
 
 	if (isdigit(ch)) {
 	    if (nparam < NPARAM) {
-		params->a_param[nparam] *= 10;
-		params->a_param[nparam] += (ch - '0');
+		params->a_param[nparam] =
+		    (ParmType) ((params->a_param[nparam] * 10)
+				+ (ch - '0'));
 	    }
 	} else if (ch == ';') {
 	    if (++nparam < NPARAM)
