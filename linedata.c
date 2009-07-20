@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.63 2009/07/04 12:17:40 tom Exp $ */
+/* $XTermId: linedata.c,v 1.64 2009/07/19 15:59:58 tom Exp $ */
 
 /************************************************************
 
@@ -189,7 +189,7 @@ initLineData(XtermWidget xw)
  * CellData size depends on the "combiningChars" resource.
  * FIXME - revise this to reduce arithmetic...
  */
-#define CellDataSize(screen) (sizeof(CellData) + screen->lineExtra)
+#define CellDataSize(screen) (SizeOfCellData + screen->lineExtra)
 
 #define CellDataAddr(screen, data, cell) \
 	(CellData *)((char *)data + (cell * CellDataSize(screen)))

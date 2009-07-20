@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.572 2009/07/02 00:06:42 tom Exp $ */
+/* $XTermId: xterm.h,v 1.573 2009/07/19 20:30:21 tom Exp $ */
 
 /************************************************************
 
@@ -449,6 +449,7 @@ extern char **environ;
 #define XtNquietGrab		"quietGrab"
 #define XtNrenderFont		"renderFont"
 #define XtNresizeGravity	"resizeGravity"
+#define XtNretryInputMethod     "retryInputMethod"
 #define XtNreverseWrap		"reverseWrap"
 #define XtNrightScrollBar	"rightScrollBar"
 #define XtNsaveLines		"saveLines"
@@ -598,6 +599,7 @@ extern char **environ;
 #define XtCQuietGrab		"QuietGrab"
 #define XtCRenderFont		"RenderFont"
 #define XtCResizeGravity	"ResizeGravity"
+#define XtCRetryInputMethod     "RetryInputMethod"
 #define XtCReverseWrap		"ReverseWrap"
 #define XtCRightScrollBar	"RightScrollBar"
 #define XtCSaveLines		"SaveLines"

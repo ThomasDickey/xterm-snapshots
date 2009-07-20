@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.756 2009/06/19 08:25:19 tom Exp $
+  $XTermId: xterm.log.html,v 1.765 2009/07/19 23:09:34 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -294,6 +294,29 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add configure option <code>--enable-16bit-chars</code> to
+	    provide wide-characters with 16-bits (rather than the default
+	    32-bits).
+
+	<li>add <code>retryInputMethod</code> resource to allow configuring
+	    out the retries xterm uses to connect to non-responsive XIM
+	    server, to work around defective X configurations as noted in
+	    <a href="http://mail-index.netbsd.org/tech-x11/2009/06/07/msg000511.html">NetBSD mailing list</a>.
+
+	<li>make regular-expression selection work for VT100 double-sized
+	    characters.
+
+	<li>improve layout when drawing missing characters in a proportional
+	    font, e.g., as boxes, to take into account whether they are
+	    double-width (report by Guilbert Stabilo on comp.unix.shell).
+
+	<li>add capability for keypad-center (kb2/KA2) to termcap entry for
+	    xterm-new, as well as xterm-8bit, xterm-sun and xterm-vt220
+	    (FreeBSD conf/136336).
+
+	<li>change default for <code>keepSelection</code> resource to true
+	    (prompted by discussion with David Muir Sharnoff).
+
 	<li>remove a limit-check in ptydata.c, allowing Unicode values past
 	    64k to be displayed using TrueType fonts (Debian #458432).
 

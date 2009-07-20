@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.169 2009/05/31 14:01:29 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.170 2009/07/19 15:44:00 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -1392,9 +1392,10 @@ TekRealize(Widget gw,
     int border = 2 * screen->border;
     int pr;
     XGCValues gcv;
-    int winX, winY, width, height;
+    int winX, winY;
+    unsigned width, height;
     char Tdefault[32];
-    unsigned TEKgcFontMask;
+    unsigned long TEKgcFontMask;
 
     TRACE(("TekRealize\n"));
     memset(tekscr, 0, sizeof(tekscr));
@@ -1440,22 +1441,22 @@ TekRealize(Widget gw,
 
     winX = 1;
     winY = 1;
-    width = TEKDEFWIDTH + border;
-    height = TEKDEFHEIGHT + border;
+    width = (unsigned) (TEKDEFWIDTH + border);
+    height = (unsigned) (TEKDEFHEIGHT + border);
 
     TRACE(("parsing T_geometry %s\n", NonNull(term->misc.T_geometry)));
     pr = XParseGeometry(term->misc.T_geometry,
 			&winX,
 			&winY,
-			(unsigned int *) &width,
-			(unsigned int *) &height);
+			&width,
+			&height);
     TRACE(("... position %d,%d size %dx%d\n", winY, winX, height, width));
     if ((pr & XValue) && (pr & XNegative))
 	winX += DisplayWidth(XtDisplay(tw), DefaultScreen(XtDisplay(tw)))
-	    - width - (BorderWidth(SHELL_OF(term)) * 2);
+	    - (int) width - (BorderWidth(SHELL_OF(term)) * 2);
     if ((pr & YValue) && (pr & YNegative))
 	winY += DisplayHeight(XtDisplay(tw), DefaultScreen(XtDisplay(tw)))
-	    - height - (BorderWidth(SHELL_OF(term)) * 2);
+	    - (int) height - (BorderWidth(SHELL_OF(term)) * 2);
 
     /* set up size hints */
     tw->hints.min_width = TEKMINWIDTH + border;
@@ -1486,15 +1487,15 @@ TekRealize(Widget gw,
 	/* set a default size, but do *not* set position */
 	tw->hints.flags |= PSize;
     }
-    tw->hints.width = width;
-    tw->hints.height = height;
+    tw->hints.width = (int) width;
+    tw->hints.height = (int) height;
     if ((WidthValue & pr) || (HeightValue & pr))
 	tw->hints.flags |= USSize;
     else
 	tw->hints.flags |= PSize;
 
     (void) REQ_RESIZE((Widget) tw,
-		      width, height,
+		      (Dimension) width, (Dimension) height,
 		      &tw->core.width, &tw->core.height);
 
     /* XXX This is bogus.  We are parsing geometries too late.  This
@@ -1523,8 +1524,8 @@ TekRealize(Widget gw,
 
     TFullWidth(tekscr) = (Dimension) width;
     TFullHeight(tekscr) = (Dimension) height;
-    TWidth(tekscr) = width - border;
-    THeight(tekscr) = height - border;
+    TWidth(tekscr) = (int) width - border;
+    THeight(tekscr) = (int) height - border;
     TekScale(tekscr) = (double) TWidth(tekscr) / TEKWIDTH;
     if ((d = (double) THeight(tekscr) / (TEKHEIGHT + TEKTOPPAD +
 					 TEKBOTTOMPAD)) < TekScale(tekscr))
@@ -1556,7 +1557,7 @@ TekRealize(Widget gw,
     /* if font wasn't successfully opened, then gcv.font will contain
        the Default GC's ID, meaning that we must use the server default font.
      */
-    TEKgcFontMask = (gcv.font == DefaultGCID) ? 0 : GCFont;
+    TEKgcFontMask = (unsigned long) ((gcv.font == DefaultGCID) ? 0 : GCFont);
     tekscr->TnormalGC = XCreateGC(XtDisplay(tw), TWindow(tekscr),
 				  (TEKgcFontMask | GCGraphicsExposures |
 				   GCForeground | GCBackground),

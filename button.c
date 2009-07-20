@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.346 2009/06/21 16:49:49 tom Exp $ */
+/* $XTermId: button.c,v 1.347 2009/07/19 18:45:57 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2823,12 +2823,19 @@ columnToCell(TScreen * screen, int row, int col, CELL * cell)
 static int
 cellToColumn(TScreen * screen, CELL * cell)
 {
+    LineData *ld = 0;
     int col = cell->col;
     int row = firstRowOfLine(screen, cell->row, False);
     while (row < cell->row) {
-	LineData *ld = GET_LINEDATA(screen, row);
+	ld = GET_LINEDATA(screen, row);
 	col += LastTextCol(screen, ld, row++);
     }
+#if OPT_DEC_CHRSET
+    if (ld == 0)
+	ld = GET_LINEDATA(screen, row);
+    if (CSET_DOUBLE(LineDblCS(ld)))
+	col /= 2;
+#endif
     return col;
 }
 
@@ -2906,6 +2913,16 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 		    free(search);
 		}
 		free(indexed);
+#if OPT_DEC_CHRSET
+		if ((ld = GET_LINEDATA(screen, startc->row)) != 0) {
+		    if (CSET_DOUBLE(LineDblCS(ld)))
+			startc->col *= 2;
+		}
+		if ((ld = GET_LINEDATA(screen, endc->row)) != 0) {
+		    if (CSET_DOUBLE(LineDblCS(ld)))
+			endc->col *= 2;
+		}
+#endif
 	    }
 	    regfree(&preg);
 	}

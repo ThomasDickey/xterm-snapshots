@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.959 2009/07/05 01:18:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.963 2009/07/19 22:21:26 tom Exp $ */
 
 /*
 
@@ -428,7 +428,7 @@ static XtResource resources[] =
     Bres(XtNhpLowerleftBugCompat, XtCHpLowerleftBugCompat, screen.hp_ll_bc, False),
     Bres(XtNi18nSelections, XtCI18nSelections, screen.i18nSelections, True),
     Bres(XtNjumpScroll, XtCJumpScroll, screen.jumpscroll, True),
-    Bres(XtNkeepSelection, XtCKeepSelection, screen.keepSelection, False),
+    Bres(XtNkeepSelection, XtCKeepSelection, screen.keepSelection, True),
     Bres(XtNloginShell, XtCLoginShell, misc.login_shell, False),
     Bres(XtNmarginBell, XtCMarginBell, screen.marginbell, False),
     Bres(XtNmetaSendsEscape, XtCMetaSendsEscape, screen.meta_sends_esc, False),
@@ -567,6 +567,7 @@ static XtResource resources[] =
     Sres(XtNinputMethod, XtCInputMethod, misc.input_method, NULL),
     Sres(XtNpreeditType, XtCPreeditType, misc.preedit_type,
 	 "OverTheSpot,Root"),
+    Ires(XtNretryInputMethod, XtCRetryInputMethod, misc.retry_im, 3),
 #endif
 
 #if OPT_ISO_COLORS
@@ -723,7 +724,7 @@ static void VTRealize(Widget w, XtValueMask * valuemask,
 static void VTResize(Widget w);
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
-static void VTInitI18N(void);
+static void VTInitI18N(XtermWidget);
 #endif
 
 #ifdef VMS
@@ -1520,7 +1521,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #endif
 	    print_area = new_string;
 	    print_size = new_length;
-	    print_area[print_used++] = c;
+	    print_area[print_used++] = (IChar) c;
 	    sp->lastchar = thischar = (int) c;
 #if OPT_WIDE_CHARS
 	    sp->last_was_wide = this_is_wide;
@@ -6084,6 +6085,18 @@ xtermCloseXft(TScreen * screen, XTermXftFonts * pub)
 #endif
 #endif
 
+#if OPT_INPUT_METHOD
+static void
+cleanupInputMethod(TScreen * screen)
+{
+    if (screen->xim) {
+	XCloseIM(screen->xim);
+	screen->xim = 0;
+	TRACE(("freed screen->xim\n"));
+    }
+}
+#endif
+
 static void
 VTDestroy(Widget w GCC_UNUSED)
 {
@@ -6115,10 +6128,7 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif
 #endif
 #if OPT_INPUT_METHOD
-    if (screen->xim) {
-	XCloseIM(screen->xim);
-	TRACE(("freed screen->xim\n"));
-    }
+    cleanupInputMethod(screen);
 #endif
     releaseCursorGCs(xw);
     releaseWindowGCs(xw, &(screen->fullVwin));
@@ -6442,7 +6452,7 @@ VTRealize(Widget w,
 #endif /* NO_ACTIVE_ICON */
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
-    VTInitI18N();
+    VTInitI18N(xw);
 #else
     xw->screen.xic = NULL;
 #endif
@@ -6519,7 +6529,7 @@ xim_instantiate_cb(Display * display,
     if (display != XtDisplay(term))
 	return;
 
-    VTInitI18N();
+    VTInitI18N(term);
 }
 
 static void
@@ -6535,8 +6545,9 @@ xim_destroy_cb(XIM im GCC_UNUSED,
 #endif /* X11R6+ */
 
 static void
-xim_real_init(void)
+xim_real_init(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
     unsigned i, j;
     char *p, *s, *t, *ns, *end, buf[32];
     XIMStyles *xim_styles;
@@ -6557,17 +6568,17 @@ xim_real_init(void)
 	},
     };
 
-    term->screen.xic = NULL;
+    screen->xic = NULL;
 
-    if (term->misc.cannot_im) {
+    if (xw->misc.cannot_im) {
 	return;
     }
 
-    if (!term->misc.input_method || !*term->misc.input_method) {
+    if (!xw->misc.input_method || !*xw->misc.input_method) {
 	if ((p = XSetLocaleModifiers("")) != NULL && *p)
-	    term->screen.xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL);
+	    screen->xim = XOpenIM(XtDisplay(xw), NULL, NULL, NULL);
     } else {
-	s = term->misc.input_method;
+	s = xw->misc.input_method;
 	i = 5 + strlen(s);
 	t = (char *) MyStackAlloc(i, buf);
 	if (t == NULL)
@@ -6588,10 +6599,10 @@ xim_real_init(void)
 		strncat(t, s, (unsigned) (end - s));
 
 		if ((p = XSetLocaleModifiers(t)) != 0 && *p
-		    && (term->screen.xim = XOpenIM(XtDisplay(term),
-						   NULL,
-						   NULL,
-						   NULL)) != 0)
+		    && (screen->xim = XOpenIM(XtDisplay(xw),
+					      NULL,
+					      NULL,
+					      NULL)) != 0)
 		    break;
 
 	    }
@@ -6600,29 +6611,29 @@ xim_real_init(void)
 	MyStackFree(t, buf);
     }
 
-    if (term->screen.xim == NULL
+    if (screen->xim == NULL
 	&& (p = XSetLocaleModifiers("@im=none")) != NULL
 	&& *p) {
-	term->screen.xim = XOpenIM(XtDisplay(term), NULL, NULL, NULL);
+	screen->xim = XOpenIM(XtDisplay(xw), NULL, NULL, NULL);
     }
 
-    if (!term->screen.xim) {
+    if (!screen->xim) {
 	fprintf(stderr, "Failed to open input method\n");
 	return;
     }
     TRACE(("VTInitI18N opened input method\n"));
 
-    if (XGetIMValues(term->screen.xim, XNQueryInputStyle, &xim_styles, NULL)
+    if (XGetIMValues(screen->xim, XNQueryInputStyle, &xim_styles, NULL)
 	|| !xim_styles
 	|| !xim_styles->count_styles) {
 	fprintf(stderr, "input method doesn't support any style\n");
-	XCloseIM(term->screen.xim);
-	term->misc.cannot_im = True;
+	cleanupInputMethod(screen);
+	xw->misc.cannot_im = True;
 	return;
     }
 
     found = False;
-    for (s = term->misc.preedit_type; s && !found;) {
+    for (s = xw->misc.preedit_type; s && !found;) {
 	while (*s && isspace(CharOf(*s)))
 	    s++;
 	if (!*s)
@@ -6659,9 +6670,9 @@ xim_real_init(void)
     if (!found) {
 	fprintf(stderr,
 		"input method doesn't support my preedit type (%s)\n",
-		term->misc.preedit_type);
-	XCloseIM(term->screen.xim);
-	term->misc.cannot_im = True;
+		xw->misc.preedit_type);
+	cleanupInputMethod(screen);
+	xw->misc.cannot_im = True;
 	return;
     }
 
@@ -6672,8 +6683,8 @@ xim_real_init(void)
     if (input_style == (XIMPreeditArea | XIMStatusArea)) {
 	fprintf(stderr,
 		"This program doesn't support the 'OffTheSpot' preedit type\n");
-	XCloseIM(term->screen.xim);
-	term->misc.cannot_im = True;
+	cleanupInputMethod(screen);
+	xw->misc.cannot_im = True;
 	return;
     }
 
@@ -6694,53 +6705,53 @@ xim_real_init(void)
 	XFontStruct **fonts;
 	char **font_name_list;
 
-	term->screen.fs = XCreateFontSet(XtDisplay(term),
-					 term->misc.f_x,
-					 &missing_charset_list,
-					 &missing_charset_count,
-					 &def_string);
-	if (term->screen.fs == NULL) {
+	screen->fs = XCreateFontSet(XtDisplay(xw),
+				    xw->misc.f_x,
+				    &missing_charset_list,
+				    &missing_charset_count,
+				    &def_string);
+	if (screen->fs == NULL) {
 	    fprintf(stderr, "Preparation of font set "
-		    "\"%s\" for XIM failed.\n", term->misc.f_x);
-	    term->screen.fs = XCreateFontSet(XtDisplay(term),
-					     DEFXIMFONT,
-					     &missing_charset_list,
-					     &missing_charset_count,
-					     &def_string);
+		    "\"%s\" for XIM failed.\n", xw->misc.f_x);
+	    screen->fs = XCreateFontSet(XtDisplay(xw),
+					DEFXIMFONT,
+					&missing_charset_list,
+					&missing_charset_count,
+					&def_string);
 	}
-	if (term->screen.fs == NULL) {
+	if (screen->fs == NULL) {
 	    fprintf(stderr, "Preparation of default font set "
 		    "\"%s\" for XIM failed.\n", DEFXIMFONT);
-	    XCloseIM(term->screen.xim);
-	    term->misc.cannot_im = True;
+	    cleanupInputMethod(screen);
+	    xw->misc.cannot_im = True;
 	    return;
 	}
-	(void) XExtentsOfFontSet(term->screen.fs);
-	j = (unsigned) XFontsOfFontSet(term->screen.fs, &fonts, &font_name_list);
-	for (i = 0, term->screen.fs_ascent = 0; i < j; i++) {
-	    if (term->screen.fs_ascent < (*fonts)->ascent)
-		term->screen.fs_ascent = (*fonts)->ascent;
+	(void) XExtentsOfFontSet(screen->fs);
+	j = (unsigned) XFontsOfFontSet(screen->fs, &fonts, &font_name_list);
+	for (i = 0, screen->fs_ascent = 0; i < j; i++) {
+	    if (screen->fs_ascent < (*fonts)->ascent)
+		screen->fs_ascent = (*fonts)->ascent;
 	}
 	p_list = XVaCreateNestedList(0,
 				     XNSpotLocation, &spot,
-				     XNFontSet, term->screen.fs,
+				     XNFontSet, screen->fs,
 				     NULL);
-	term->screen.xic = XCreateIC(term->screen.xim,
-				     XNInputStyle, input_style,
-				     XNClientWindow, XtWindow(term),
-				     XNFocusWindow, XtWindow(term),
-				     XNPreeditAttributes, p_list,
-				     NULL);
+	screen->xic = XCreateIC(screen->xim,
+				XNInputStyle, input_style,
+				XNClientWindow, XtWindow(xw),
+				XNFocusWindow, XtWindow(xw),
+				XNPreeditAttributes, p_list,
+				NULL);
     } else {
-	term->screen.xic = XCreateIC(term->screen.xim, XNInputStyle, input_style,
-				     XNClientWindow, XtWindow(term),
-				     XNFocusWindow, XtWindow(term),
-				     NULL);
+	screen->xic = XCreateIC(screen->xim, XNInputStyle, input_style,
+				XNClientWindow, XtWindow(xw),
+				XNFocusWindow, XtWindow(xw),
+				NULL);
     }
 
-    if (!term->screen.xic) {
+    if (!screen->xic) {
 	fprintf(stderr, "Failed to create input context\n");
-	XCloseIM(term->screen.xim);
+	cleanupInputMethod(screen);
     }
 #if defined(USE_XIM_INSTANTIATE_CB)
     else {
@@ -6748,7 +6759,7 @@ xim_real_init(void)
 
 	destroy_cb.callback = xim_destroy_cb;
 	destroy_cb.client_data = NULL;
-	if (XSetIMValues(term->screen.xim, XNDestroyCallback, &destroy_cb, NULL))
+	if (XSetIMValues(screen->xim, XNDestroyCallback, &destroy_cb, NULL))
 	    fprintf(stderr, "Could not set destroy callback to IM\n");
     }
 #endif
@@ -6757,15 +6768,17 @@ xim_real_init(void)
 }
 
 static void
-VTInitI18N(void)
+VTInitI18N(XtermWidget xw)
 {
-    if (term->misc.open_im) {
-	xim_real_init();
+    if (xw->misc.open_im) {
+	xim_real_init(xw);
 
 #if defined(USE_XIM_INSTANTIATE_CB)
-	if (term->screen.xic == NULL && !term->misc.cannot_im) {
+	if (xw->screen.xic == NULL
+	    && !xw->misc.cannot_im
+	    && xw->misc.retry_im-- > 0) {
 	    sleep(3);
-	    XRegisterIMInstantiateCallback(XtDisplay(term), NULL, NULL, NULL,
+	    XRegisterIMInstantiateCallback(XtDisplay(xw), NULL, NULL, NULL,
 					   xim_instantiate_cb, NULL);
 	}
 #endif
