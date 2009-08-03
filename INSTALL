@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.119 2009/07/19 21:49:13 tom Exp $
+-- $XTermId: INSTALL,v 1.120 2009/08/02 21:59:34 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2007,2008 by Thomas E. Dickey
 --
@@ -365,6 +365,11 @@ The options (in alphabetic order):
 	allows you to define a key translation that runs a new xterm
 	using the same working directory as the current process within
 	xterm.
+
+  --enable-fifo-lines     enable FIFO-storage for saved-lines
+
+	Store saved-lines in a FIFO, which improves performance when the
+	number of saved lines is large.
 
   --enable-hp-fkeys       enable support for HP-style function keys
 

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.303 2009/06/21 15:27:35 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.306 2009/08/02 23:48:42 tom Exp $ */
 
 /************************************************************
 
@@ -1120,12 +1120,12 @@ xtermLoadFont(XtermWidget xw,
 		    continue;
 	    }
 #endif
-	    if (xtermMissingChar(xw, n, fnts[fNorm].fs)) {
+	    if (IsXtermMissingChar(screen, n, &fnts[fNorm])) {
 		TRACE(("missing normal char #%d\n", n));
 		screen->fnt_boxes = False;
 		break;
 	    }
-	    if (xtermMissingChar(xw, n, fnts[fBold].fs)) {
+	    if (IsXtermMissingChar(screen, n, &fnts[fBold])) {
 		TRACE(("missing bold char #%d\n", n));
 		screen->fnt_boxes = False;
 		break;
@@ -1891,45 +1891,39 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
  * Returns true if the given character is missing from the specified font.
  */
 Bool
-xtermMissingChar(XtermWidget xw, unsigned ch, XFontStruct * font)
+xtermMissingChar(unsigned ch, XTermFonts * font)
 {
-    TScreen *screen = TScreenOf(xw);
+    Bool result = False;
+    XFontStruct *fs = font->fs;
+    static XCharStruct dft, *tmp = &dft, *pc = 0;
 
-    if (font != 0
-	&& font->per_char != 0
-	&& !font->all_chars_exist) {
-	static XCharStruct dft, *tmp = &dft, *pc = 0;
-
-	if (font->max_byte1 == 0) {
+    if (fs->max_byte1 == 0) {
 #if OPT_WIDE_CHARS
-	    if (ch > 255) {
-		TRACE(("xtermMissingChar %#04x (row)\n", ch));
-		return True;
-	    }
-#endif
-	    CI_GET_CHAR_INFO_1D(font, E2A(ch), tmp, pc);
-	}
-#if OPT_WIDE_CHARS
-	else {
-	    CI_GET_CHAR_INFO_2D(font, HI_BYTE(ch), LO_BYTE(ch), tmp, pc);
-	}
-#else
-
-	if (!pc)
-	    return False;	/* Urgh! */
-#endif
-
-	if (CI_NONEXISTCHAR(pc)) {
-	    TRACE(("xtermMissingChar %#04x (!exists)\n", ch));
+	if (ch > 255) {
+	    TRACE(("xtermMissingChar %#04x (row)\n", ch));
 	    return True;
 	}
+#endif
+	CI_GET_CHAR_INFO_1D(fs, E2A(ch), tmp, pc);
     }
-    if (xtermIsDecGraphic(ch)
-	&& screen->force_box_chars) {
-	TRACE(("xtermMissingChar %#04x (forced off)\n", ch));
-	return True;
+#if OPT_WIDE_CHARS
+    else {
+	CI_GET_CHAR_INFO_2D(fs, HI_BYTE(ch), LO_BYTE(ch), tmp, pc);
     }
-    return False;
+#else
+
+    if (!pc)
+	return False;		/* Urgh! */
+#endif
+
+    if (CI_NONEXISTCHAR(pc)) {
+	TRACE(("xtermMissingChar %#04x (!exists)\n", ch));
+	result = True;
+    }
+    if (ch < 256) {
+	font->known_missing[ch] = (Char) (result ? 2 : 1);
+    }
+    return result;
 }
 
 /*
@@ -2165,10 +2159,10 @@ xtermDrawBoxChar(XtermWidget xw,
 	unsigned n;
 	for (n = 1; n < 32; n++) {
 	    if (dec2ucs(n) == ch
-		&& !xtermMissingChar(xw, n,
-				     ((flags & BOLD)
-				      ? screen->fnts[fBold].fs
-				      : screen->fnts[fNorm].fs))) {
+		&& !IsXtermMissingChar(screen, n,
+				       ((flags & BOLD)
+					? &screen->fnts[fBold]
+					: &screen->fnts[fNorm]))) {
 		TRACE(("...use xterm-style linedrawing\n"));
 		ch = n;
 		break;

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.611 2009/07/19 20:31:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.617 2009/08/02 23:24:57 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -501,6 +501,10 @@ typedef struct {
 #define OPT_EXTRA_PASTE 1
 #endif
 
+#ifndef OPT_FIFO_LINES
+#define OPT_FIFO_LINES 0 /* optimize save-lines feature using FIFO */
+#endif
+
 #ifndef OPT_FOCUS_EVENT
 #define OPT_FOCUS_EVENT	1 /* focus in/out events */
 #endif
@@ -610,7 +614,7 @@ typedef struct {
 #endif
 
 #ifndef OPT_SAVE_LINES
-#define OPT_SAVE_LINES 0 /* optimize save-lines feature */
+#define OPT_SAVE_LINES OPT_FIFO_LINES /* optimize save-lines feature */
 #endif
 
 #ifndef OPT_SCO_FUNC_KEYS
@@ -1209,6 +1213,7 @@ typedef struct {
 	XFontStruct *	fs;
 	char *		fn;
 	FontMap		map;
+	Char		known_missing[256];
 } XTermFonts;
 
 #if OPT_RENDERFONT
@@ -1569,6 +1574,7 @@ typedef struct {
 	 * the saved lines, taking scrolling into account.
 	 */
 	int		topline;	/* line number of top, <= 0	*/
+	long		saved_fifo;     /* number of lines that've been saved */
 	int		savedlines;     /* number of lines that've been saved */
 	int		savelines;	/* number of lines off top to save */
 	int		scroll_amt;	/* amount to scroll		*/

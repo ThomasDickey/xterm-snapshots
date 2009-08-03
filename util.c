@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.473 2009/07/19 22:53:51 tom Exp $ */
+/* $XTermId: util.c,v 1.478 2009/08/03 00:24:35 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2114,27 +2114,25 @@ getXftColor(XtermWidget xw, Pixel pixel)
  * Otherwise, interpret according to internal data.
  */
 #if OPT_RENDERWIDE
-static int
-xtermCellWidth(XtermWidget xw, wchar_t ch)
-{
-    int result = 0;
 
-    (void) xw;
-    if (ch == 0 || ch == 127) {
-	result = 0;
-    } else if (ch < 256) {
 #if OPT_C1_PRINT
-	if (ch >= 128 && ch < 160) {
-	    result = (xw->screen.c1_printable ? 1 : 0);
-	} else
+#define XtermCellWidth(xw, ch) \
+	(((ch) == 0 || (ch) == 127) \
+	  ? 0 \
+	  : (((ch) < 256) \
+	      ? (((ch) >= 128 && (ch) < 160) \
+	          ? ((xw)->screen.c1_printable ? 1 : 0) \
+	          : 1) \
+	      : my_wcwidth(ch)))
+#else
+#define XtermCellWidth(xw, ch) \
+	(((ch) == 0 || (ch) == 127) \
+	  ? 0 \
+	  : (((ch) < 256) \
+	      ? 1 \
+	      : my_wcwidth(ch)))
 #endif
 
-	    result = 1;		/* 1..31 are line-drawing characters */
-    } else {
-	result = my_wcwidth(ch);
-    }
-    return result;
-}
 #endif /* OPT_RENDERWIDE */
 
 #define XFT_FONT(name) screen->name.font
@@ -2195,7 +2193,7 @@ xtermXftDrawString(XtermWidget xw,
 	for (src = dst = 0; src < len; src++) {
 	    FcChar32 wc = *text++;
 
-	    charWidth = xtermCellWidth(xw, (wchar_t) wc);
+	    charWidth = XtermCellWidth(xw, (wchar_t) wc);
 	    if (charWidth < 0)
 		continue;
 
@@ -2546,6 +2544,9 @@ drawClippedXftString(XtermWidget xw,
 }
 #endif
 
+#define WhichVFontData(screen,name) \
+		(IsIcon(screen) ? &((screen)->fnt_icon) \
+				: &((screen)->name))
 /*
  * Draws text with the specified combination of bold/underline.  The return
  * value is the updated x position.
@@ -2886,28 +2887,31 @@ drawXtermText(XtermWidget xw,
      */
     if (!IsIcon(screen) && !(flags & CHARBYCHAR) && screen->fnt_prop) {
 	int adj, width;
-	XFontStruct *fs = ((flags & BOLDATTR(screen))
-			   ? BoldFont(screen)
-			   : NormalFont(screen));
+	XTermFonts *font = ((flags & BOLDATTR(screen))
+			    ? WhichVFontData(screen, fnts[fBold])
+			    : WhichVFontData(screen, fnts[fNorm]));
 
 	xtermFillCells(xw, flags, gc, x, y, len);
 
 	while (len--) {
-	    if (xtermMissingChar(xw, *text, fs)) {
+	    if (IsXtermMissingChar(screen, *text, font)) {
 
-		width = my_wcwidth((wchar_t) (*text)) * FontWidth(screen);
+		width = 1;
+		if_OPT_WIDE_CHARS(screen, {
+		    width = my_wcwidth((wchar_t) (*text)) * FontWidth(screen);
+		});
 		adj = 0;
 	    } else {
 		if_WIDE_OR_NARROW(screen, {
 		    XChar2b temp[1];
 		    temp[0].byte2 = LO_BYTE(*text);
 		    temp[0].byte1 = HI_BYTE(*text);
-		    width = XTextWidth16(fs, temp, 1);
+		    width = XTextWidth16(font->fs, temp, 1);
 		}
 		, {
 		    char temp[1];
 		    temp[0] = (char) LO_BYTE(*text);
-		    width = XTextWidth(fs, temp, 1);
+		    width = XTextWidth(font->fs, temp, 1);
 		});
 		adj = (FontWidth(screen) - width) / 2;
 	    }
@@ -2927,9 +2931,9 @@ drawXtermText(XtermWidget xw,
 	   Find regions without missing characters, and draw
 	   them calling ourselves recursively.  Draw missing
 	   characters via xtermDrawBoxChar(). */
-	XFontStruct *font = ((flags & BOLD)
-			     ? BoldFont(screen)
-			     : NormalFont(screen));
+	XTermFonts *font = ((flags & BOLDATTR(screen))
+			    ? WhichVFontData(screen, fnts[fBold])
+			    : WhichVFontData(screen, fnts[fNorm]));
 	int last, first = 0;
 	Bool drewBoxes = False;
 
@@ -2952,13 +2956,13 @@ drawXtermText(XtermWidget xw,
 	    }
 	    ch_width = my_wcwidth((int) ch);
 	    isMissing =
-		xtermMissingChar(xw, ch,
-				 ((on_wide || ch_width > 1)
-				  && okFont(NormalWFont(screen)))
-				 ? NormalWFont(screen)
-				 : font);
+		IsXtermMissingChar(screen, ch,
+				   ((on_wide || ch_width > 1)
+				    && okFont(NormalWFont(screen)))
+				   ? WhichVFontData(screen, fnts[fWide])
+				   : font);
 #else
-	    isMissing = xtermMissingChar(xw, ch, font);
+	    isMissing = IsXtermMissingChar(screen, ch, font);
 	    ch_width = 1;
 #endif
 	    /*
