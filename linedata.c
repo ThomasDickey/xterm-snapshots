@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.64 2009/07/19 15:59:58 tom Exp $ */
+/* $XTermId: linedata.c,v 1.67 2009/08/02 18:24:22 tom Exp $ */
 
 /************************************************************
 
@@ -41,7 +41,7 @@ authorization.
  * Given a row-number, find the corresponding data for the line in the VT100
  * widget.  Row numbers can be positive or negative.
  *
- * TODO: if the data comes from the scrollback, defer that to getScrollback().
+ * If the data comes from the scrollback, defer that to getScrollback().
  */
 LineData *
 getLineData(TScreen * screen, int row)
@@ -52,13 +52,14 @@ getLineData(TScreen * screen, int row)
     if (row >= 0) {
 	buffer = screen->visbuf;
     } else {
+#if OPT_FIFO_LINES
+	result = getScrollback(screen, row);
+#else
 	buffer = screen->saveBuf_index;
 	row += screen->savelines;
+#endif
     }
     if (row >= 0) {
-	/*
-	 * FIXME - the references to saveBuf_index should be in scrollback.c
-	 */
 	result = (LineData *) scrnHeadAddr(screen, buffer, (unsigned) row);
 	if (result != 0) {
 #if 1				/* FIXME - these should be done in setupLineData, etc. */
@@ -122,34 +123,6 @@ copyLineData(LineData * dst, LineData * src)
 	}
     }
 }
-
-#if 0
-/*
- * Delete one or more rows of data in the VT100 widget, scrolling the window
- * contents below the line up by the given count.
- *
- * The row(s) to be deleted will be either in the visible VT100 window, or
- * starting at the beginning of the scrolled-back lines (for scrolling).
- *
- * TODO: store the scrolled-back lines in a FIFO, so we do not have to move
- * the whole set of lines for each scrolling operation.
- */
-void
-deleteLineData(XtermWidget xw, int row, int count)
-{
-}
-
-/*
- * Insert one or more rows of data in the VT100 widget, scrolling the window
- * contents below the line down by the given count.
- *
- * The row(s) to be inserted will always be in the visible VT100 window.
- */
-void
-insertLineData(XtermWidget xw, int row, int count)
-{
-}
-#endif
 
 #if OPT_WIDE_CHARS
 #define initLineExtra(screen) \

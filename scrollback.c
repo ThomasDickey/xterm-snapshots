@@ -1,4 +1,4 @@
-/* $XTermId: scrollback.c,v 1.5 2009/06/21 14:44:15 tom Exp $ */
+/* $XTermId: scrollback.c,v 1.9 2009/08/02 20:42:27 tom Exp $ */
 
 /************************************************************
 
@@ -34,14 +34,81 @@ authorization.
 
 #include <xterm.h>
 
+#define ROW2FIFO(screen, row) \
+	(unsigned) (((row) + 1 + (screen)->saved_fifo) % (screen)->savelines)
+
+/*
+ * Given a row-number, find the corresponding data for the line in the VT100
+ * widget's saved-line FIFO.  The row-number (from getLineData) is negative.
+ * So we just count backwards from the last saved line.
+ */
 LineData *
-getScrollback(XtermWidget xw GCC_UNUSED,
-	      int row GCC_UNUSED)
+getScrollback(TScreen * screen, int row)
 {
-    return 0;
+    unsigned which = ROW2FIFO(screen, row);
+    ScrnBuf where = scrnHeadAddr(screen, screen->saveBuf_index, which);
+
+    TRACE(("getScrollback %d -> %d -> %p\n", row, which, where));
+    return (LineData *) where;
+}
+
+/*
+ * Allocate a new row in the scrollback FIFO, returning a pointer to it.
+ */
+LineData *
+addScrollback(TScreen * screen)
+{
+    unsigned which;
+    unsigned ncols = (unsigned) MaxCols(screen);
+    ScrnBuf where;
+    Char *block;
+
+    screen->saved_fifo++;
+    TRACE(("addScrollback %lu\n", screen->saved_fifo));
+
+    /* first, see which index we'll use */
+    which = (unsigned) (screen->saved_fifo % screen->savelines);
+    where = scrnHeadAddr(screen, screen->saveBuf_index, which);
+
+    /* discard any obsolete index data */
+    if (screen->saved_fifo > screen->savelines) {
+	LineData *prior = (LineData *) where;
+	/*
+	 * setupLineData uses the attribs as the first address used from the
+	 * data block.
+	 */
+	if (prior->attribs != 0) {
+	    TRACE(("...freeing prior FIFO data in slot %d: %p\n",
+		   which, prior->attribs));
+	    free(prior->attribs);
+	}
+    }
+
+    /* allocate the new data */
+    block = allocScrnData(screen, 1, ncols);
+
+    /* record the new data in the index */
+    setupLineData(screen, where, (Char *) block, 1, ncols);
+
+    TRACE(("...storing new FIFO data in slot %d: %p->%p\n",
+	   which, where, block));
+
+    return (LineData *) where;
 }
 
 void
-addScrollback(XtermWidget xw GCC_UNUSED)
+deleteScrollback(TScreen *screen, int row)
 {
+    unsigned which = ROW2FIFO(screen, row);
+    ScrnBuf where = scrnHeadAddr(screen, screen->saveBuf_index, which);
+    LineData *prior = (LineData *) where;
+    /*
+     * setupLineData uses the attribs as the first address used from the
+     * data block.
+     */
+    if (prior->attribs != 0) {
+	TRACE(("...freeing prior FIFO data in slot %d: %p\n",
+	       which, prior->attribs));
+	free(prior->attribs);
+    }
 }

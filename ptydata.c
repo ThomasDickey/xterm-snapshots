@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.86 2009/07/19 22:20:44 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.88 2009/07/29 09:22:30 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
@@ -193,32 +193,40 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
     }
 #else /* !VMS */
     if (FD_ISSET(screen->respond, select_mask)) {
+	int save_err;
 	trimPtyData(screen, data);
 
 	size = read(screen->respond, (char *) data->last, (unsigned) FRG_SIZE);
-	if (size <= 0) {
-	    /*
-	     * Yes, I know this is a majorly f*ugly hack, however it seems to
-	     * be necessary for Solaris x86.  DWH 11/15/94
-	     * Dunno why though..
-	     * (and now CYGWIN, alanh@xfree86.org 08/15/01
-	     */
+	save_err = errno;
 #if (defined(i386) && defined(SVR4) && defined(sun)) || defined(__CYGWIN__)
-	    if (errno == EIO || errno == 0)
-#else
-	    if (errno == EIO)
-#endif
+	/*
+	 * Yes, I know this is a majorly f*ugly hack, however it seems to
+	 * be necessary for Solaris x86.  DWH 11/15/94
+	 * Dunno why though..
+	 * (and now CYGWIN, alanh@xfree86.org 08/15/01
+	 */
+	if (size <= 0) {
+	    if (save_err == EIO || save_err == 0)
 		Cleanup(0);
-	    else if (!E_TEST(errno))
-		Panic("input: read returned unexpected error (%d)\n", errno);
+	    else if (!E_TEST(save_err))
+		Panic("input: read returned unexpected error (%d)\n", save_err);
+	    size = 0;
+	}
+#else /* !f*ugly */
+	if (size < 0) {
+	    if (save_err == EIO)
+		Cleanup(0);
+	    else if (!E_TEST(save_err))
+		Panic("input: read returned unexpected error (%d)\n", save_err);
 	    size = 0;
 	} else if (size == 0) {
-#if defined(__UNIXOS2__)
+#if defined(__UNIXOS2__) || defined(__FreeBSD__)
 	    Cleanup(0);
 #else
 	    Panic("input: read returned zero\n", 0);
 #endif
 	}
+#endif /* f*ugly */
     }
 #endif /* VMS */
 

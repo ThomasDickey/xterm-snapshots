@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.573 2009/07/19 20:30:21 tom Exp $ */
+/* $XTermId: xterm.h,v 1.577 2009/08/02 20:43:53 tom Exp $ */
 
 /************************************************************
 
@@ -853,9 +853,7 @@ extern void VTInitModifiers(XtermWidget /* xw */);
 /* linedata.c */
 extern LineData *getLineData(TScreen * /* screen */, int /* row */);
 extern void copyLineData(LineData * /* dst */, LineData * /* src */);
-extern void deleteLineData(XtermWidget /* xw */, int /* row */, int /* count */);
 extern void initLineData(XtermWidget /* xw */);
-extern void insertLineData(XtermWidget /* xw */, int /* row */, int /* count */);
 
 extern CellData *newCellData(XtermWidget /* xw */, Cardinal /* count */);
 extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
@@ -1027,6 +1025,7 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 
 /* screen.c */
 extern Bool non_blank_line (TScreen */* screen */, int  /* row */, int  /* col */, int  /* len */);
+extern Char * allocScrnData(TScreen * /* screen */, unsigned /* nrow */, unsigned /* ncol */);
 extern ScrnBuf allocScrnBuf (XtermWidget /* xw */, unsigned  /* nrow */, unsigned  /* ncol */, ScrnPtr * /* addr */);
 extern ScrnBuf scrnHeadAddr (TScreen * /* screen */, ScrnBuf /* base */, unsigned /* offset */);
 extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
@@ -1044,6 +1043,7 @@ extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf /* sb */, int  /* last
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, CellColor /* cur_fg_bg */, unsigned  /* length */);
+extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
 #if OPT_TRACE && OPT_TRACE_FLAGS
@@ -1096,8 +1096,9 @@ extern void ChangeToWide(XtermWidget /* xw */);
 #endif
 
 /* scrollback.c */
-extern LineData *getScrollback(XtermWidget /* xw */, int /* row */);
-extern void addScrollback(XtermWidget /* xw */);
+extern LineData *getScrollback (TScreen * /* screen */, int /* row */);
+extern LineData *addScrollback (TScreen * /* screen */);
+extern void deleteScrollback (TScreen * /* screen */, int /* row */);
 
 /* scrollbar.c */
 extern void DoResizeScreen (XtermWidget /* xw */);

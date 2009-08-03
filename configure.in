@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.248 2009/07/19 21:56:36 tom Exp $
+dnl $XTermId: configure.in,v 1.250 2009/08/03 00:04:29 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -563,6 +563,16 @@ CF_ARG_DISABLE(sun-fkeys,
 AC_MSG_RESULT($enable_sun_fkeys)
 if test "$enable_sun_fkeys" = no ; then
 	AC_DEFINE(OPT_SUN_FUNC_KEYS,0)
+fi
+
+AC_MSG_CHECKING(if you want saved-lines stored as a FIFO)
+CF_ARG_ENABLE(fifo-lines,
+	[  --enable-fifo-lines     enable FIFO-storage for saved-lines],
+	[enable_fifo_lines=yes],
+	[enable_fifo_lines=no])
+AC_MSG_RESULT($enable_fifo_lines)
+if test "$enable_fifo_lines" = yes ; then
+	AC_DEFINE(OPT_FIFO_LINES,1)
 fi
 
 AC_MSG_CHECKING(if you want support for internationalization)
