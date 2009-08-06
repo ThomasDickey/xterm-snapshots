@@ -728,7 +728,7 @@ Optional Features:
   --enable-hp-fkeys       enable support for HP-style function keys
   --enable-sco-fkeys      enable support for SCO-style function keys
   --disable-sun-fkeys     disable support for Sun-style function keys
-  --enable-fifo-lines     enable FIFO-storage for saved-lines
+  --enable-fifo-lines     disable FIFO-storage for saved-lines
   --disable-i18n          disable internationalization
   --disable-initial-erase disable setup for stty erase
   --disable-input-method  disable input-method
@@ -10842,15 +10842,15 @@ echo $ECHO_N "checking if you want saved-lines stored as a FIFO... $ECHO_C" >&6
 # Check whether --enable-fifo-lines or --disable-fifo-lines was given.
 if test "${enable_fifo_lines+set}" = set; then
   enableval="$enable_fifo_lines"
-  test "$enableval" != yes && enableval=no
-  if test "$enableval" != "no" ; then
-    enable_fifo_lines=yes
-  else
+  test "$enableval" != no && enableval=yes
+  if test "$enableval" != "yes" ; then
     enable_fifo_lines=no
+  else
+    enable_fifo_lines=yes
   fi
 else
-  enableval=no
-  enable_fifo_lines=no
+  enableval=yes
+  enable_fifo_lines=yes
 
 fi;
 echo "$as_me:10856: result: $enable_fifo_lines" >&5

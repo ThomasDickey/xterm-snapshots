@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.120 2009/08/02 21:59:34 tom Exp $
+-- $XTermId: INSTALL,v 1.121 2009/08/06 00:39:09 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2007,2008 by Thomas E. Dickey
 --
@@ -145,6 +145,12 @@ The options (in alphabetic order):
   	Modify the generated Makefile so that most compiler options are
 	not shown.  This makes it simpler to read a build log and see the
 	actual warning messages.
+
+  --disable-fifo-lines    enable FIFO-storage for saved-lines
+
+	With patch #244, xterm by default stores saved-lines in a FIFO
+	(circular buffer), which improves performance when the number of saved
+	lines is large.  Disable this option to revert to the pre-244 layout.
 
   --disable-freetype      disable freetype library-support
 
@@ -365,11 +371,6 @@ The options (in alphabetic order):
 	allows you to define a key translation that runs a new xterm
 	using the same working directory as the current process within
 	xterm.
-
-  --enable-fifo-lines     enable FIFO-storage for saved-lines
-
-	Store saved-lines in a FIFO, which improves performance when the
-	number of saved lines is large.
 
   --enable-hp-fkeys       enable support for HP-style function keys
 
