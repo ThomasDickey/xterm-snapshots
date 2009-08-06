@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.963 2009/07/19 22:21:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.964 2009/08/05 23:35:06 tom Exp $ */
 
 /*
 
@@ -6111,7 +6111,11 @@ VTDestroy(Widget w GCC_UNUSED)
 	XtUninstallTranslations(screen->scrollWidget);
 	XtDestroyWidget(screen->scrollWidget);
     }
-
+#if OPT_FIFO_LINES
+    while (screen->saved_fifo-- > 0) {
+	deleteScrollback(screen, 0);
+    }
+#endif
     TRACE_FREE_LEAK(screen->save_ptr);
     TRACE_FREE_LEAK(screen->saveBuf_data);
     TRACE_FREE_LEAK(screen->saveBuf_index);
