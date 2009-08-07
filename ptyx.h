@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.617 2009/08/02 23:24:57 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.622 2009/08/07 08:21:45 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -953,29 +953,33 @@ typedef enum {
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
 #define CSET_EXTEND(code)  ((code) > CSET_DWL)
 
-#define LineDblCS(ld)         ((ld)->bufHead.dblCS)
+#define DBLCS_BITS            4
+#define DBLCS_MASK            BITS2MASK(DBLCS_BITS)
+
+#define GetLineDblCS(ld)      (((ld)->bufHead >> LINEFLAG_BITS) & DBLCS_MASK)
+#define SetLineDblCS(ld,cs)   (ld)->bufHead = (RowData) ((ld->bufHead & LINEFLAG_MASK) | (cs << LINEFLAG_BITS))
 
 #define LineCharSet(screen, ld) \
-	((CSET_DOUBLE(LineDblCS(ld))) \
-		? LineDblCS(ld) \
+	((CSET_DOUBLE(GetLineDblCS(ld))) \
+		? GetLineDblCS(ld) \
 		: (screen)->cur_chrset)
 #define LineMaxCol(screen, ld) \
-	(CSET_DOUBLE(LineDblCS(ld)) \
+	(CSET_DOUBLE(GetLineDblCS(ld)) \
 	 ? (screen->max_col / 2) \
 	 : (screen->max_col))
 #define LineCursorX(screen, ld, col) \
-	(CSET_DOUBLE(LineDblCS(ld)) \
+	(CSET_DOUBLE(GetLineDblCS(ld)) \
 	 ? CursorX(screen, 2*(col)) \
 	 : CursorX(screen, (col)))
 #define LineFontWidth(screen, ld) \
-	(CSET_DOUBLE(LineDblCS(ld)) \
+	(CSET_DOUBLE(GetLineDblCS(ld)) \
 	 ? 2*FontWidth(screen) \
 	 : FontWidth(screen))
 #else
 
 #define if_OPT_DEC_CHRSET(code) /*nothing*/
 
-#define LineDblCS(ld)         0
+#define GetLineDblCS(ld)       0
 
 #define LineCharSet(screen, ld)         0
 #define LineMaxCol(screen, ld)          screen->max_col
@@ -1122,23 +1126,29 @@ typedef struct {
 #if OPT_ISO_COLORS
 #if OPT_256_COLORS || OPT_88_COLORS
 #define COLOR_BITS 8
+typedef unsigned CellColor;
 #else
 #define COLOR_BITS 4
+typedef Char CellColor;
 #endif
-typedef struct {
-    	Char fg:COLOR_BITS;
-    	Char bg:COLOR_BITS;
-} CellColor;
 #else
 typedef int CellColor;
 #endif
 
-typedef struct {
-	Char flags:4;		/* LINEWRAPPED and BLINK */
-#if OPT_DEC_CHRSET
-	Char dblCS:4;		/* DEC single-double character-sets */
-#endif
-} RowData;
+#define BITS2MASK(b)          ((1 << b) - 1)
+
+#define COLOR_MASK            BITS2MASK(COLOR_BITS)
+
+#define GetCellColorFG(src)   ((src) & COLOR_MASK)
+#define GetCellColorBG(src)   (((src) >> COLOR_BITS) & COLOR_MASK)
+
+typedef Char RowData;		/* wrap/blink, and DEC single-double chars */
+
+#define LINEFLAG_BITS         4
+#define LINEFLAG_MASK         BITS2MASK(LINEFLAG_BITS)
+
+#define GetLineFlags(ld)      ((ld)->bufHead & LINEFLAG_MASK)
+#define SetLineFlags(ld,xx)   (ld)->bufHead |= (RowData) (xx & LINEFLAG_MASK)
 
 typedef IChar CharData;
 

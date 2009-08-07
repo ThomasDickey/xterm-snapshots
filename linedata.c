@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.67 2009/08/02 18:24:22 tom Exp $ */
+/* $XTermId: linedata.c,v 1.68 2009/08/07 00:44:22 tom Exp $ */
 
 /************************************************************
 
@@ -101,7 +101,7 @@ copyLineData(LineData * dst, LineData * src)
 	if (col >= src->lineSize) {
 	    dst->attribs[col] = 0;
 #if OPT_ISO_COLORS
-	    dst->color[col] = noCellColor;
+	    dst->color[col] = 0;
 #endif
 	    dst->charData[col] = 0;
 #if OPT_WIDE_CHARS

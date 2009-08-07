@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.964 2009/08/05 23:35:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.965 2009/08/07 00:46:50 tom Exp $ */
 
 /*
 
@@ -6871,7 +6871,7 @@ ShowCursor(void)
     int x, y;
     IChar base;
     unsigned flags;
-    CellColor fg_bg;
+    CellColor fg_bg = 0;
     GC currentGC;
     CgsEnum currentCgs = gcMAX;
     VTwin *currentWin = WhichVWin(screen);
@@ -6965,9 +6965,6 @@ ShowCursor(void)
 	flags &= ~TERM_COLOR_FLAGS(xw);
     }
 #endif
-#endif
-#if !OPT_ISO_COLORS
-    fg_bg = 0;
 #endif
 
     /*
@@ -7136,7 +7133,7 @@ HideCursor(void)
     int x, y;
     IChar base;
     unsigned flags;
-    CellColor fg_bg;
+    CellColor fg_bg = 0;
     Bool in_selection;
 #if OPT_WIDE_CHARS
     size_t off;
@@ -7158,10 +7155,6 @@ HideCursor(void)
 	return;
     }
 #endif /* NO_ACTIVE_ICON */
-
-#if !OPT_ISO_COLORS
-    fg_bg = 0;
-#endif
 
     ld = getLineData(screen, screen->cursorp.row);
 
@@ -7206,7 +7199,7 @@ HideCursor(void)
 #endif
 #endif
 #if OPT_ISO_COLORS
-    fg_bg = noCellColor;
+    fg_bg = 0;
 #endif
 
     /*
