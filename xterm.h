@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.577 2009/08/02 20:43:53 tom Exp $ */
+/* $XTermId: xterm.h,v 1.579 2009/08/07 00:41:52 tom Exp $ */
 
 /************************************************************
 
@@ -1052,11 +1052,11 @@ extern void LineClrFlag(LineData /* ld */, int /* flag */);
 extern void LineSetFlag(LineData /* ld */, int /* flag */);
 #else
 
-#define LineFlags(ld)         ((ld)->bufHead.flags) 
+#define LineFlags(ld)         GetLineFlags(ld)
 
-#define LineClrFlag(ld, flag) LineFlags(ld) &= ~ (flag)
-#define LineSetFlag(ld, flag) LineFlags(ld) |= (flag)
-#define LineTstFlag(ld, flag) ((LineFlags(ld) & flag) != 0)
+#define LineClrFlag(ld, flag) SetLineFlags(ld, (GetLineFlags(ld) & ~ (flag)))
+#define LineSetFlag(ld, flag) SetLineFlags(ld, (GetLineFlags(ld) | (flag)))
+#define LineTstFlag(ld, flag) ((GetLineFlags(ld) & flag) != 0)
 
 #endif /* OPT_TRACE && OPT_TRACE_FLAGS */
 
@@ -1195,8 +1195,8 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #define T_COLOR(v,n) (v)->Tcolors[n]
 #endif
 
-#define ExtractForeground(color) (unsigned) (color).fg
-#define ExtractBackground(color) (unsigned) (color).bg
+#define ExtractForeground(color) (unsigned) GetCellColorFG(color)
+#define ExtractBackground(color) (unsigned) GetCellColorBG(color)
 
 #define checkVeryBoldAttr(flags, fg, code, attr) \
 	if ((flags & FG_COLOR) != 0 \

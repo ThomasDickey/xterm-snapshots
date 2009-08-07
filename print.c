@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.104 2009/07/03 15:01:27 tom Exp $ */
+/* $XTermId: print.c,v 1.105 2009/08/07 00:25:10 tom Exp $ */
 
 /************************************************************
 
@@ -299,7 +299,7 @@ send_CharSet(XtermWidget xw, LineData * ld)
 #if OPT_DEC_CHRSET
     char *msg = 0;
 
-    switch (LineDblCS(ld)) {
+    switch (GetLineDblCS(ld)) {
     case CSET_SWL:
 	msg = "\033#5";
 	break;

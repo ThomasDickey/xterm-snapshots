@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.478 2009/08/03 00:24:35 tom Exp $ */
+/* $XTermId: util.c,v 1.481 2009/08/07 00:53:12 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -945,7 +945,7 @@ InsertChar(XtermWidget xw, unsigned n)
 	});
 
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(LineDblCS(ld))) {
+	if (CSET_DOUBLE(GetLineDblCS(ld))) {
 	    col = MaxCols(screen) / 2 - (int) n;
 	}
 #endif
@@ -1015,7 +1015,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 	});
 
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(LineDblCS(ld))) {
+	if (CSET_DOUBLE(GetLineDblCS(ld))) {
 	    col = MaxCols(screen) / 2 - (int) n;
 	}
 #endif
@@ -3463,8 +3463,6 @@ extract_bg(XtermWidget xw, CellColor color, unsigned flags)
 CellColor
 makeColorPair(int fg, int bg)
 {
-    CellColor result;
-
     if (fg == -1)
 	fg = 0;
     if (bg == -1)
@@ -3473,10 +3471,7 @@ makeColorPair(int fg, int bg)
     assert(fg >= 0 && fg < (1 << COLOR_BITS));
     assert(bg >= 0 && bg < (1 << COLOR_BITS));
 
-    result.fg = (Char) fg;
-    result.bg = (Char) bg;
-
-    return result;
+    return (CellColor) (fg | (bg << COLOR_BITS));
 }
 
 /*

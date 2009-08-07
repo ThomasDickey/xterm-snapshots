@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.384 2009/08/06 08:45:09 tom Exp $ */
+/* $XTermId: screen.c,v 1.386 2009/08/07 00:41:36 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -180,9 +180,9 @@ setupLineData(TScreen * screen, ScrnBuf base, Char * data, unsigned nrow, unsign
 	ptr = LineDataAddr(base, offset);
 
 	ptr->lineSize = (Dimension) ncol;
-	ptr->bufHead.flags = 0;
+	ptr->bufHead = 0;
 #if OPT_DEC_CHRSET
-	LineDblCS(ptr) = 0;
+	SetLineDblCS(ptr, 0);
 #endif
 	SetupScrnPtr(ptr->attribs, data, Char);
 #if OPT_ISO_COLORS
@@ -425,7 +425,7 @@ Reallocate(XtermWidget xw,
 	ptrs = (LineData *) (*sbuf);
 	for (j = 0; j < (int) oldrow; ++j) {
 	    RowData thisFlag = ptrs->bufHead;
-	    if (thisFlag.flags != 0) {
+	    if (GetLineFlags(ptrs) != 0) {
 		if (saveFlagLo < 0)
 		    saveFlagLo = j;
 		saveFlagHi = j;
@@ -911,9 +911,9 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
     base = screen->save_ptr;
     for (i = 0; i < n; ++i) {
 	work = (LineData *) base;
-	work->bufHead.flags = 0;
+	work->bufHead = 0;
 #if OPT_DEC_CHRSET
-	LineDblCS(work) = 0;
+	SetLineDblCS(work, 0);
 #endif
 
 	memset(work->charData, 0, size * sizeof(IChar));
@@ -1320,7 +1320,7 @@ ScrnRefresh(XtermWidget xw,
 	int lastind;
 	unsigned flags;
 	unsigned test;
-	CellColor fg_bg;
+	CellColor fg_bg = 0;
 	unsigned fg = 0, bg = 0;
 	int x;
 	GC gc;
@@ -1374,7 +1374,7 @@ ScrnRefresh(XtermWidget xw,
 	     * Temporarily change dimensions to double-sized characters so
 	     * we can reuse the recursion on this function.
 	     */
-	    if (CSET_DOUBLE(LineDblCS(ld))) {
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 		col /= 2;
 		maxcol /= 2;
 	    }
@@ -1392,7 +1392,7 @@ ScrnRefresh(XtermWidget xw,
 		    maxcol--;
 	    }
 #if OPT_DEC_CHRSET
-	    if (CSET_DOUBLE(LineDblCS(ld))) {
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 		col *= 2;
 		maxcol *= 2;
 	    }
@@ -1448,7 +1448,7 @@ ScrnRefresh(XtermWidget xw,
 	 * right units.
 	 */
 	if_OPT_DEC_CHRSET({
-	    if (CSET_DOUBLE(LineDblCS(ld))) {
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 		col /= 2;
 		maxcol /= 2;
 	    }
@@ -1497,7 +1497,7 @@ ScrnRefresh(XtermWidget xw,
 		checkVeryBoldColors(test, fg);
 
 		x = drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
-				  LineDblCS(ld),
+				  GetLineDblCS(ld),
 				  &chars[lastind],
 				  (unsigned) (col - lastind), 0);
 
@@ -1520,7 +1520,7 @@ ScrnRefresh(XtermWidget xw,
 					      (test & DRAWX_MASK)
 					      | NOBACKGROUND,
 					      gc, my_x, y,
-					      LineDblCS(ld),
+					      GetLineDblCS(ld),
 					      com_off + i,
 					      1, isWide((int) base));
 			}
@@ -1562,7 +1562,7 @@ ScrnRefresh(XtermWidget xw,
 	checkVeryBoldColors(test, fg);
 
 	drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
-		      LineDblCS(ld),
+		      GetLineDblCS(ld),
 		      &chars[lastind],
 		      (unsigned) (col - lastind), 0);
 
@@ -1585,7 +1585,7 @@ ScrnRefresh(XtermWidget xw,
 				      (test & DRAWX_MASK)
 				      | NOBACKGROUND,
 				      gc, my_x, y,
-				      LineDblCS(ld),
+				      GetLineDblCS(ld),
 				      com_off + i,
 				      1, isWide(base));
 		}
@@ -1665,7 +1665,7 @@ ClearBufRows(XtermWidget xw,
 	LineData *ld = getLineData(screen, ROW2INX(screen, row));
 	if_OPT_DEC_CHRSET({
 	    /* clearing the whole row resets the doublesize characters */
-	    LineDblCS(ld) = CSET_SWL;
+	    SetLineDblCS(ld, CSET_SWL);
 	});
 	LineClrWrapped(ld);
 	ClearCells(xw, 0, len, row, 0);

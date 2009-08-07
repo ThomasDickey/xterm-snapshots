@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.347 2009/07/19 18:45:57 tom Exp $ */
+/* $XTermId: button.c,v 1.348 2009/08/07 00:24:54 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2484,7 +2484,7 @@ LastTextCol(TScreen * screen, LineData * ld, int row)
 	    ;
 	}
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(LineDblCS(ld))) {
+	if (CSET_DOUBLE(GetLineDblCS(ld))) {
 	    i *= 2;
 	}
 #endif
@@ -2598,7 +2598,7 @@ class_of(TScreen * screen, LineData * ld, CELL * cell)
     int value;
 
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(LineDblCS(ld))) {
+    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 	temp.col /= 2;
     }
 #endif
@@ -2833,7 +2833,7 @@ cellToColumn(TScreen * screen, CELL * cell)
 #if OPT_DEC_CHRSET
     if (ld == 0)
 	ld = GET_LINEDATA(screen, row);
-    if (CSET_DOUBLE(LineDblCS(ld)))
+    if (CSET_DOUBLE(GetLineDblCS(ld)))
 	col /= 2;
 #endif
     return col;
@@ -2915,11 +2915,11 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 		free(indexed);
 #if OPT_DEC_CHRSET
 		if ((ld = GET_LINEDATA(screen, startc->row)) != 0) {
-		    if (CSET_DOUBLE(LineDblCS(ld)))
+		    if (CSET_DOUBLE(GetLineDblCS(ld)))
 			startc->col *= 2;
 		}
 		if ((ld = GET_LINEDATA(screen, endc->row)) != 0) {
-		    if (CSET_DOUBLE(LineDblCS(ld)))
+		    if (CSET_DOUBLE(GetLineDblCS(ld)))
 			endc->col *= 2;
 		}
 #endif
@@ -3840,7 +3840,7 @@ SaveText(TScreen * screen,
     i = Length(screen, row, scol, ecol);
     ecol = scol + i;
 #if OPT_DEC_CHRSET
-    if (CSET_DOUBLE(LineDblCS(ld))) {
+    if (CSET_DOUBLE(GetLineDblCS(ld))) {
 	scol = (scol + 0) / 2;
 	ecol = (ecol + 1) / 2;
     }

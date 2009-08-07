@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.71 2009/06/21 16:50:05 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.72 2009/08/07 00:25:02 tom Exp $ */
 
 /************************************************************
 
@@ -63,7 +63,7 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
      * Ignore repetition.
      */
     if ((ld = getLineData(screen, currow)) != 0) {
-	unsigned oldChrSet = LineDblCS(ld);
+	unsigned oldChrSet = GetLineDblCS(ld);
 
 	if (oldChrSet != newChrSet) {
 	    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
@@ -90,7 +90,7 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
 			       (unsigned) FontHeight(screen),
 			       len * (unsigned) LineFontWidth(screen, ld));
 
-	    LineDblCS(ld) = newChrSet;
+	    SetLineDblCS(ld, newChrSet);
 
 	    set_cur_col(screen, 0);
 	    ScrnUpdate(xw, currow, 0, 1, (int) len, True);

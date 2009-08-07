@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.53 2009/06/14 14:45:23 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.54 2009/08/07 00:06:33 tom Exp $ */
 
 /************************************************************
 
@@ -84,10 +84,10 @@ typedef struct {
 
 #if OPT_TRACE
 #define CASE(name) case gc##name: result = #name; break
-static String
+static const char *
 traceCgsEnum(CgsEnum value)
 {
-    String result = "?";
+    const char *result = "?";
     switch (value) {
 	CASE(Norm);
 	CASE(Bold);
@@ -121,10 +121,10 @@ traceCgsEnum(CgsEnum value)
 
 #undef CASE
 
-static String
+static const char *
 traceVTwin(XtermWidget xw, VTwin * value)
 {
-    String result = "?";
+    const char *result = "?";
     if (value == 0)
 	result = "null";
     else if (value == &(xw->screen.fullVwin))
@@ -254,7 +254,7 @@ allocCache(void **cache_pointer)
 {
     if (*cache_pointer == 0) {
 	*cache_pointer = TypeCallocN(CgsCache, gcMAX);
-	TRACE(("allocCache %p\n", cache_pointer));
+	TRACE(("allocCache %p\n", *cache_pointer));
     }
     return *((CgsCache **) cache_pointer);
 }
@@ -389,7 +389,7 @@ newCache(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, CgsCache * me)
 
     THIS(gc) = XCreateGC(myDisplay(xw), myDrawable(xw, cgsWin), mask, &xgcv);
     TRACE(("getCgsGC(%s) created gc %p(%d)\n",
-	   traceCgsEnum(cgsId), THIS(gc), ITEM()));
+	   traceCgsEnum(cgsId), (void *) THIS(gc), ITEM()));
 
     THIS(used) = 0;
     return THIS(gc);
@@ -837,7 +837,7 @@ freeCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
 	    if (LIST(j).gc != 0) {
 		TRACE(("freeCgs(%s, %s) gc %p(%d)\n",
 		       traceVTwin(xw, cgsWin),
-		       traceCgsEnum(cgsId), LIST(j).gc, j));
+		       traceCgsEnum(cgsId), (void *) LIST(j).gc, j));
 		clrCgsFonts(xw, cgsWin, LIST(j).font);
 #if OPT_BOX_CHARS
 		if (cgsId == gcDots) {
