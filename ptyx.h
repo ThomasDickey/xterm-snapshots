@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.622 2009/08/07 08:21:45 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.623 2009/08/08 14:24:27 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1662,6 +1662,7 @@ typedef struct {
 	Boolean		bold_mode;	/* use bold font or overstrike	*/
 	Boolean		delete_is_del;	/* true for compatible Delete key */
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
+	Boolean		fastscroll;	/* whether we should fastscroll */
 	Boolean		old_fkeys;	/* true for compatible fkeys	*/
 	Boolean		underline;	/* whether to underline text	*/
 

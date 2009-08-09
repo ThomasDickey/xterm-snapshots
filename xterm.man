@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.430 2009/07/19 20:38:47 tom Exp $
+.\" $XTermId: xterm.man,v 1.431 2009/08/08 14:14:50 tom Exp $
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
@@ -2114,6 +2114,12 @@ xterm.vt100.utf8fonts.font
 .RE
 .IP
 which is probably not what you intended.
+.B "fastScroll (\fPclass\fB FastScroll)"
+Modifies the effect of jump scroll (\fBjumpScroll\fP)
+by suppressing screen refreshes
+for the special case when output to the screen has completely shifted
+the contents off-screen.
+For instance, \fIcat\fP'ing a large file to the screen does this.
 .TP 8
 .B "font1 (\fPclass\fB Font1)"
 Specifies the name of the first alternative font.
@@ -2362,6 +2368,7 @@ It is implemented only for TrueType fonts.
 Specifies whether or not jump scroll should be used.
 This corresponds to the VT102 DECSCLM private mode.
 The default is \*(``true.\*(''
+See \fBfastScroll\fP for a variation.
 .TP 8
 .B "keepSelection (\fPclass\fB KeepSelection)"
 Specifies whether \fIxterm\fR will keep the selection even after the

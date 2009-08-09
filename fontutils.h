@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.73 2009/08/02 23:27:06 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.75 2009/08/07 22:46:12 tom Exp $ */
 
 /************************************************************
 
@@ -69,8 +69,13 @@ extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsig
 	(xtermIsDecGraphic(ch) \
 	 && (screen)->force_box_chars)
 
+#if OPT_WIDE_CHARS
 #define CharKnownMissing(font, ch) \
 	 ((ch) < 256 && (font)->known_missing[(Char)(ch)])
+#else
+#define CharKnownMissing(font, ch) \
+	 ((font)->known_missing[(Char)(ch)])
+#endif
 
 #define IsXtermMissingChar(screen, ch, font) \
 	 (CharKnownMissing(font, ch) \
@@ -80,6 +85,8 @@ extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsig
 
 extern Bool xtermMissingChar (unsigned /* ch */, XTermFonts */* font */);
 extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
+#else
+#define IsXtermMissingChar(screen, ch, font) False
 #endif
 
 #if OPT_LOAD_VTFONTS

@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.68 2009/08/07 00:44:22 tom Exp $ */
+/* $XTermId: linedata.c,v 1.71 2009/08/09 00:34:16 tom Exp $ */
 
 /************************************************************
 
@@ -53,6 +53,7 @@ getLineData(TScreen * screen, int row)
 	buffer = screen->visbuf;
     } else {
 #if OPT_FIFO_LINES
+	buffer = 0;
 	result = getScrollback(screen, row);
 #else
 	buffer = screen->saveBuf_index;
@@ -87,29 +88,38 @@ getLineData(TScreen * screen, int row)
 void
 copyLineData(LineData * dst, LineData * src)
 {
-    Dimension col;
-#if OPT_WIDE_CHARS
-    Char comb;
-#endif
-
     dst->bufHead = src->bufHead;
 
 #if OPT_WIDE_CHARS
     dst->combSize = src->combSize;
 #endif
-    for (col = 0; col < dst->lineSize; ++col) {
-	if (col >= src->lineSize) {
-	    dst->attribs[col] = 0;
+
+    /*
+     * Usually we're copying the same-sized line; a memcpy is faster than
+     * several loops.
+     */
+    if (dst->lineSize == src->lineSize) {
+	size_t size = (sizeof(dst->attribs[0])
 #if OPT_ISO_COLORS
-	    dst->color[col] = 0;
+		       + sizeof(dst->color[0])
 #endif
-	    dst->charData[col] = 0;
+		       + sizeof(dst->charData[0])
 #if OPT_WIDE_CHARS
-	    for (comb = 0; comb < dst->combSize; ++comb) {
-		dst->combData[comb][col] = 0;
-	    }
+		       + sizeof(dst->combData[0][0]) * dst->combSize
 #endif
-	} else {
+	);
+
+	memcpy(dst->attribs, src->attribs, size * dst->lineSize);
+    } else {
+	Dimension col;
+	Dimension limit = ((dst->lineSize < src->lineSize)
+			   ? dst->lineSize
+			   : src->lineSize);
+#if OPT_WIDE_CHARS
+	Char comb;
+#endif
+
+	for (col = 0; col < limit; ++col) {
 	    dst->attribs[col] = src->attribs[col];
 #if OPT_ISO_COLORS
 	    dst->color[col] = src->color[col];
@@ -118,6 +128,18 @@ copyLineData(LineData * dst, LineData * src)
 #if OPT_WIDE_CHARS
 	    for (comb = 0; comb < dst->combSize; ++comb) {
 		dst->combData[comb][col] = src->combData[comb][col];
+	    }
+#endif
+	}
+	for (col = limit; col < dst->lineSize; ++col) {
+	    dst->attribs[col] = 0;
+#if OPT_ISO_COLORS
+	    dst->color[col] = 0;
+#endif
+	    dst->charData[col] = 0;
+#if OPT_WIDE_CHARS
+	    for (comb = 0; comb < dst->combSize; ++comb) {
+		dst->combData[comb][col] = 0;
 	    }
 #endif
 	}
@@ -174,7 +196,7 @@ newCellData(XtermWidget xw, Cardinal count)
     TScreen *screen = &(xw->screen);
 
     initLineExtra(screen);
-    result = (CellData *) calloc(count, CellDataSize(screen));
+    result = (CellData *) calloc((size_t) count, (size_t) CellDataSize(screen));
     return result;
 }
 

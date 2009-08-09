@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.592 2009/05/31 17:53:51 tom Exp $ */
+/* $XTermId: main.c,v 1.593 2009/08/07 23:14:47 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1808,7 +1808,7 @@ main(int argc, char *argv[]ENVP_ARG)
     TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
 	int n;
-	unsigned unique = 2;
+	size_t unique = 2;
 	Bool quit = True;
 
 	for (n = 1; n < argc; n++) {

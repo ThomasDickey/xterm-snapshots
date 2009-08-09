@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.965 2009/08/07 00:46:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.971 2009/08/09 13:59:06 tom Exp $ */
 
 /*
 
@@ -427,6 +427,7 @@ static XtResource resources[] =
 	 screen.highlight_selection, False),
     Bres(XtNhpLowerleftBugCompat, XtCHpLowerleftBugCompat, screen.hp_ll_bc, False),
     Bres(XtNi18nSelections, XtCI18nSelections, screen.i18nSelections, True),
+    Bres(XtNfastScroll, XtCFastScroll, screen.fastscroll, False),
     Bres(XtNjumpScroll, XtCJumpScroll, screen.jumpscroll, True),
     Bres(XtNkeepSelection, XtCKeepSelection, screen.keepSelection, True),
     Bres(XtNloginShell, XtCLoginShell, misc.login_shell, False),
@@ -1211,17 +1212,18 @@ which_table(Const PARSE_T * table)
 	    if (screen->curss) {				\
 		dotext(xw,					\
 		       screen->gsets[(int) (screen->curss)],	\
-		       print_area, 1);				\
+		       sp->print_area,				\
+		       (Cardinal) 1);				\
 		screen->curss = 0;				\
 		single++;					\
 	    }							\
-	    if (print_used > single) {				\
+	    if (sp->print_used > single) {			\
 		dotext(xw,					\
 		       screen->gsets[(int) (screen->curgl)],	\
-		       print_area + single,			\
-		       print_used - single);			\
+		       sp->print_area + single,			\
+		       (Cardinal) (sp->print_used - single));	\
 	    }							\
-	    print_used = 0;					\
+	    sp->print_used = 0;					\
 	}							\
 
 struct ParseState {
@@ -1239,6 +1241,14 @@ struct ParseState {
 #if OPT_WIDE_CHARS
     int last_was_wide;
 #endif
+    /* Buffer for processing printable text */
+    IChar *print_area;
+    size_t print_size;
+    size_t print_used;
+    /* Buffer for processing strings (e.g., OSC ... ST) */
+    Char *string_area;
+    size_t string_size;
+    size_t string_used;
 };
 
 static struct ParseState myState;
@@ -1274,14 +1284,6 @@ select_charset(struct ParseState *sp, int type, int size)
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
-    /* Buffer for processing printable text */
-    static IChar *print_area;
-    static size_t print_size, print_used;
-
-    /* Buffer for processing strings (e.g., OSC ... ST) */
-    static Char *string_area;
-    static size_t string_size, string_used;
-
     TScreen *screen = &xw->screen;
     int row;
     int col;
@@ -1412,10 +1414,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 	if (screen->brokenLinuxOSC
 	    && sp->parsestate == sos_table) {
-	    if (string_used) {
-		switch (string_area[0]) {
+	    if (sp->string_used) {
+		switch (sp->string_area[0]) {
 		case 'P':
-		    if (string_used <= 7)
+		    if (sp->string_used <= 7)
 			break;
 		    /* FALLTHRU */
 		case 'R':
@@ -1503,7 +1505,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * characters.
 	 */
 	if (sp->nextstate == CASE_PRINT) {
-	    SafeAlloc(IChar, print_area, print_used, print_size);
+	    SafeAlloc(IChar, sp->print_area, sp->print_used, sp->print_size);
 	    if (new_string == 0) {
 		fprintf(stderr,
 			"Cannot allocate %u bytes for printable text\n",
@@ -1519,9 +1521,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (screen->vtXX_level < 1)
 		c &= 0x7f;
 #endif
-	    print_area = new_string;
-	    print_size = new_length;
-	    print_area[print_used++] = (IChar) c;
+	    sp->print_area = new_string;
+	    sp->print_size = new_length;
+	    sp->print_area[sp->print_used++] = (IChar) c;
 	    sp->lastchar = thischar = (int) c;
 #if OPT_WIDE_CHARS
 	    sp->last_was_wide = this_is_wide;
@@ -1532,7 +1534,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	}
 
 	if (sp->nextstate == CASE_PRINT
-	    || (laststate == CASE_PRINT && print_used)) {
+	    || (laststate == CASE_PRINT && sp->print_used)) {
 	    WriteNow();
 	}
 
@@ -1541,7 +1543,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * This should always be 8-bit characters.
 	 */
 	if (sp->parsestate == sos_table) {
-	    SafeAlloc(Char, string_area, string_used, string_size);
+	    SafeAlloc(Char, sp->string_area, sp->string_used, sp->string_size);
 	    if (new_string == 0) {
 		fprintf(stderr,
 			"Cannot allocate %u bytes for string mode %d\n",
@@ -1559,13 +1561,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		c = '?';
 	    }
 #endif
-	    string_area = new_string;
-	    string_size = new_length;
-	    string_area[string_used++] = CharOf(c);
+	    sp->string_area = new_string;
+	    sp->string_size = new_length;
+	    sp->string_area[(sp->string_used)++] = CharOf(c);
 	} else if (sp->parsestate != esc_table) {
 	    /* if we were accumulating, we're not any more */
 	    sp->string_mode = 0;
-	    string_used = 0;
+	    sp->string_used = 0;
 	}
 
 	TRACE(("parse %04X -> %d %s\n", c, sp->nextstate, which_table(sp->parsestate)));
@@ -1594,9 +1596,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_BELL:
 	    TRACE(("CASE_BELL - bell\n"));
 	    if (sp->string_mode == ANSI_OSC) {
-		if (string_used)
-		    string_area[--string_used] = '\0';
-		do_osc(xw, string_area, string_used, (int) c);
+		if (sp->string_used)
+		    sp->string_area[--(sp->string_used)] = '\0';
+		do_osc(xw, sp->string_area, sp->string_used, (int) c);
 		sp->parsestate = sp->groundtable;
 	    } else {
 		/* bell */
@@ -2531,20 +2533,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_ST:
-	    TRACE(("CASE_ST: End of String (%d bytes)\n", string_used));
+	    TRACE(("CASE_ST: End of String (%d bytes)\n", sp->string_used));
 	    sp->parsestate = sp->groundtable;
-	    if (!string_used)
+	    if (!sp->string_used)
 		break;
-	    string_area[--string_used] = '\0';
+	    sp->string_area[--(sp->string_used)] = '\0';
 	    switch (sp->string_mode) {
 	    case ANSI_APC:
 		/* ignored */
 		break;
 	    case ANSI_DCS:
-		do_dcs(xw, string_area, string_used);
+		do_dcs(xw, sp->string_area, sp->string_used);
 		break;
 	    case ANSI_OSC:
-		do_osc(xw, string_area, string_used, ANSI_ST);
+		do_osc(xw, sp->string_area, sp->string_used, ANSI_ST);
 		break;
 	    case ANSI_PM:
 		/* ignored */
@@ -4522,17 +4524,20 @@ window_ops(XtermWidget xw)
     TRACE(("window_ops %d\n", param[0]));
     switch (param[0]) {
     case 1:			/* Restore (de-iconify) window */
+	TRACE(("...de-iconify window\n"));
 	XMapWindow(screen->display,
 		   VShellWindow);
 	break;
 
     case 2:			/* Minimize (iconify) window */
+	TRACE(("...iconify window\n"));
 	XIconifyWindow(screen->display,
 		       VShellWindow,
 		       DefaultScreen(screen->display));
 	break;
 
     case 3:			/* Move the window to the given position */
+	TRACE(("...move window to %d,%d\n", param[1], param[2]));
 	values.x = param[1];
 	values.y = param[2];
 	value_mask = (CWX | CWY);
@@ -4548,14 +4553,17 @@ window_ops(XtermWidget xw)
 	break;
 
     case 5:			/* Raise the window to the front of the stack */
+	TRACE(("...raise window\n"));
 	XRaiseWindow(screen->display, VShellWindow);
 	break;
 
     case 6:			/* Lower the window to the bottom of the stack */
+	TRACE(("...lower window\n"));
 	XLowerWindow(screen->display, VShellWindow);
 	break;
 
     case 7:			/* Refresh the window */
+	TRACE(("...redraw window\n"));
 	Redraw();
 	break;
 
@@ -4570,6 +4578,7 @@ window_ops(XtermWidget xw)
 #endif
 
     case 11:			/* Report the window's state */
+	TRACE(("...get window attributes\n"));
 	XGetWindowAttributes(screen->display,
 			     VWindow(screen),
 			     &win_attrs);
@@ -4585,6 +4594,7 @@ window_ops(XtermWidget xw)
 	break;
 
     case 13:			/* Report the window's position */
+	TRACE(("...get window position\n"));
 	XGetWindowAttributes(screen->display,
 			     WMFrameWindow(xw),
 			     &win_attrs);
@@ -4600,6 +4610,7 @@ window_ops(XtermWidget xw)
 	break;
 
     case 14:			/* Report the window's size in pixels */
+	TRACE(("...get window size in pixels\n"));
 	XGetWindowAttributes(screen->display,
 			     VWindow(screen),
 			     &win_attrs);
@@ -4619,6 +4630,7 @@ window_ops(XtermWidget xw)
 	break;
 
     case 18:			/* Report the text's size in characters */
+	TRACE(("...get window size in characters\n"));
 	reply.a_type = ANSI_CSI;
 	reply.a_pintro = 0;
 	reply.a_nparam = 3;
@@ -5084,6 +5096,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     getXtermSizeHints(xw);
 #endif
 
+    TRACE(("...requesting resize %dx%d\n", askedHeight, askedWidth));
     status = REQ_RESIZE((Widget) xw,
 			askedWidth, askedHeight,
 			&replyWidth, &replyHeight);
@@ -5508,6 +5521,7 @@ VTInitialize(Widget wrequest,
 #endif
     init_Ires(screen.border);
     init_Bres(screen.jumpscroll);
+    init_Bres(screen.fastscroll);
     init_Bres(screen.old_fkeys);
     init_Bres(screen.delete_is_del);
     wnew->keyboard.type = wnew->screen.old_fkeys
@@ -6196,13 +6210,21 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->keyboard.shell_translations);
     TRACE_FREE_LEAK(xw->keyboard.xterm_translations);
 
+#if OPT_WIDE_CHARS
     FreeTypedBuffer(XChar2b);
     FreeTypedBuffer(char);
+#endif
+#if OPT_RENDERFONT
 #if OPT_RENDERWIDE
     FreeTypedBuffer(XftCharSpec);
 #else
     FreeTypedBuffer(XftChar8);
 #endif
+#endif
+
+    TRACE_FREE_LEAK(myState.print_area);
+    TRACE_FREE_LEAK(myState.string_area);
+    memset(&myState, 0, sizeof(myState));
 
 #endif /* defined(NO_LEAKS) */
 }

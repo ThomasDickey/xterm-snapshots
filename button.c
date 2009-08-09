@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.348 2009/08/07 00:24:54 tom Exp $ */
+/* $XTermId: button.c,v 1.349 2009/08/07 23:24:10 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1268,7 +1268,7 @@ allocUtf8Targets(Widget w, TScreen * screen)
 	Atom *result;
 
 	if (!overrideTargets(w, screen->utf8_select_types, &result)) {
-	    result = (Atom *) XtMalloc(5 * sizeof(Atom));
+	    result = (Atom *) XtMalloc((Cardinal) (5 * sizeof(Atom)));
 	    if (result == NULL) {
 		TRACE(("Couldn't allocate utf-8 selection targets\n"));
 	    } else {
@@ -1302,7 +1302,7 @@ alloc8bitTargets(Widget w, TScreen * screen)
 	Atom *result = 0;
 
 	if (!overrideTargets(w, screen->eightbit_select_types, &result)) {
-	    result = (Atom *) XtMalloc(5 * sizeof(Atom));
+	    result = (Atom *) XtMalloc((Cardinal) (5 * sizeof(Atom)));
 	    if (result == NULL) {
 		TRACE(("Couldn't allocate 8bit selection targets\n"));
 	    } else {
@@ -3515,7 +3515,7 @@ ConvertSelection(Widget w,
 	    std_targets = (Atom *) (std_return);
 	    *length = std_length + 6;
 
-	    targetP = (Atom *) XtMalloc(sizeof(Atom) * (*length));
+	    targetP = (Atom *) XtMalloc((Cardinal) (sizeof(Atom) * (*length)));
 	    allocP = targetP;
 
 	    *value = (XtPointer) targetP;
@@ -3698,7 +3698,7 @@ _OwnSelection(XtermWidget xw,
 
     if (count > screen->sel_atoms_size) {
 	XtFree((char *) atoms);
-	atoms = (Atom *) XtMalloc(count * sizeof(Atom));
+	atoms = (Atom *) XtMalloc((Cardinal) (count * sizeof(Atom)));
 	screen->selection_atoms = atoms;
 	screen->sel_atoms_size = count;
     }

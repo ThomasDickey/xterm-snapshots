@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.386 2009/08/07 00:41:36 tom Exp $ */
+/* $XTermId: screen.c,v 1.388 2009/08/07 23:20:07 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -461,9 +461,9 @@ Reallocate(XtermWidget xw,
 		unsigned len = (unsigned) ((int) oldrow - move_up);
 
 		TRACE_SCRNBUF("before move_up", screen, dst, oldrow);
-		SaveLineData(dst, 0, (unsigned) move_up);
-		MoveLineData(dst, 0, (unsigned) move_up, len);
-		RestoreLineData(dst, len, (unsigned) move_up);
+		SaveLineData(dst, 0, (size_t) move_up);
+		MoveLineData(dst, 0, (size_t) move_up, len);
+		RestoreLineData(dst, len, (size_t) move_up);
 		TRACE_SCRNBUF("after move_up", screen, dst, oldrow);
 	    }
 	}
@@ -905,7 +905,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
     assert(size != 0);
 
     /* save n lines at where */
-    SaveLineData(sb, (unsigned) where, n);
+    SaveLineData(sb, (unsigned) where, (size_t) n);
 
     /* clear contents of old rows */
     base = screen->save_ptr;
@@ -1138,7 +1138,7 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
     MoveLineData(sb,
 		 (unsigned) where,
 		 (unsigned) (where + (int) n),
-		 (unsigned) (last - where));
+		 (size_t) (last - where));
 
     /* reuse storage for new bottom lines */
     RestoreLineData(sb, (unsigned) last, n);
@@ -1881,7 +1881,7 @@ ScreenResize(XtermWidget xw,
 			   move_down));
 		    if (amount > 0) {
 			/* shift lines in visible-buffer to make room */
-			SaveLineData(dst, (unsigned) amount, move_down);
+			SaveLineData(dst, (unsigned) amount, (size_t) move_down);
 
 			MoveLineData(dst,
 				     move_down,
@@ -1906,7 +1906,7 @@ ScreenResize(XtermWidget xw,
 
 		    /* free up storage in fifo from the copied lines */
 		    while (unsave_fifo-- > 0) {
-			deleteScrollback(screen, 0);
+			deleteScrollback(screen, -1);
 			screen->saved_fifo--;
 		    }
 #else
