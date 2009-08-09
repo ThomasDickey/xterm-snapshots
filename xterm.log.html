@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.767 2009/08/03 00:11:57 tom Exp $
+  $XTermId: xterm.log.html,v 1.768 2009/08/08 14:18:18 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -297,7 +297,11 @@ is the latest version of this file.
 	<li>refactored storage of saved-lines, providing a configure option
 	    to manage them as a FIFO (actually a circular buffer).
 	    Added configure option <code>--enable-fifo-lines</code> to
-	    enable the new feature.
+	    enable/disable the new feature (it is enabled by default).
+
+	<li>added <code>fastScroll</code> resource, to amuse
+	    people who measure terminal emulator performance by
+	    <code>cat</code>'ing large files to the screen.
 
 	<li>modify check in <code>readPtyData</code> from return values
 	    to provide exit on zero-bytes read from pty for FreeBSD, or

@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.88 2009/07/29 09:22:30 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.89 2009/08/08 13:42:46 tom Exp $ */
 
 /*
  * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
@@ -250,25 +250,6 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
 
     return (size);
 }
-
-/*
- * Check if there is more data in the input buffer which can be returned by
- * nextPtyData().  If there is insufficient data to return a completed UTF-8
- * value, return false anyway.
- */
-#if OPT_WIDE_CHARS
-Bool
-morePtyData(TScreen * screen, PtyData * data)
-{
-    Bool result = (data->last > data->next);
-    if (result && screen->utf8_inparse) {
-	if (!data->utf_size)
-	    result = decodeUtf8(data);
-    }
-    TRACE2(("morePtyData returns %d\n", result));
-    return result;
-}
-#endif
 
 /*
  * Return the next value from the input buffer.  Note that morePtyData() is

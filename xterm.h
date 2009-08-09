@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.579 2009/08/07 00:41:52 tom Exp $ */
+/* $XTermId: xterm.h,v 1.581 2009/08/08 14:04:16 tom Exp $ */
 
 /************************************************************
 
@@ -385,6 +385,7 @@ extern char **environ;
 #define XtNfaceName		"faceName"
 #define XtNfaceNameDoublesize	"faceNameDoublesize"
 #define XtNfaceSize		"faceSize"
+#define XtNfastScroll		"fastScroll"
 #define XtNfont1		"font1"
 #define XtNfont2		"font2"
 #define XtNfont3		"font3"
@@ -543,6 +544,7 @@ extern char **environ;
 #define XtCFaceName		"FaceName"
 #define XtCFaceNameDoublesize	"FaceNameDoublesize"
 #define XtCFaceSize		"FaceSize"
+#define XtCFastScroll		"FastScroll"
 #define XtCFont1		"Font1"
 #define XtCFont2		"Font2"
 #define XtCFont3		"Font3"
@@ -1007,13 +1009,19 @@ extern void noleaks_ptydata ( void );
 #endif
 
 #if OPT_WIDE_CHARS
-extern Bool morePtyData (TScreen * /* screen */, PtyData * /* data */);
 extern Char *convertToUTF8 (Char * /* lp */, unsigned  /* c */);
 extern IChar nextPtyData (TScreen * /* screen */, PtyData * /* data */);
 extern IChar skipPtyData (PtyData * /* data */);
 extern PtyData * fakePtyData(PtyData * /* result */, Char * /* next */, Char * /* last */);
 extern void switchPtyData (TScreen * /* screen */, int  /* f */);
 extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
+
+#define morePtyData(screen,data) \
+	(((data)->last > (data)->next) \
+	 ? (((screen)->utf8_inparse && !(data)->utf_size) \
+	    ? decodeUtf8(data) \
+	    : True) \
+	 : False)
 #else
 #define morePtyData(screen, data) ((data)->last > (data)->next)
 #define nextPtyData(screen, data) (*((data)->next++) & \

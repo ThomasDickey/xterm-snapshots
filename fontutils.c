@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.306 2009/08/02 23:48:42 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.307 2009/08/07 23:22:32 tom Exp $ */
 
 /************************************************************
 
@@ -324,11 +324,11 @@ get_font_name_props(Display * dpy, XFontStruct * fs, char *result)
 #define ALLOCHUNK(n) ((n | 127) + 1)
 
 static void
-alloca_fontname(char **result, unsigned next)
+alloca_fontname(char **result, size_t next)
 {
-    unsigned last = (*result != 0) ? strlen(*result) : 0;
-    unsigned have = (*result != 0) ? ALLOCHUNK(last) : 0;
-    unsigned want = last + next + 2;
+    size_t last = (*result != 0) ? strlen(*result) : 0;
+    size_t have = (*result != 0) ? ALLOCHUNK(last) : 0;
+    size_t want = last + next + 2;
 
     if (want >= have) {
 	want = ALLOCHUNK(want);

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.424 2009/07/19 15:49:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.425 2009/08/07 23:18:31 tom Exp $ */
 
 /*
  *
@@ -572,7 +572,7 @@ HandleStringEvent(Widget w GCC_UNUSED,
 	    Char hexval[2];
 	    hexval[0] = (Char) value;
 	    hexval[1] = 0;
-	    StringInput(term, hexval, 1);
+	    StringInput(term, hexval, (size_t) 1);
 	}
     } else {
 	StringInput(term, (Char *) * params, strlen(*params));
@@ -1814,10 +1814,10 @@ find_closest_color(Display * dpy, Colormap cmap, XColor * def)
     cmap_size = getColormapSize(dpy);
     if (cmap_size != 0) {
 
-	colortable = TypeMallocN(XColor, cmap_size);
+	colortable = TypeMallocN(XColor, (size_t) cmap_size);
 	if (colortable != 0) {
 
-	    tried = TypeCallocN(char, cmap_size);
+	    tried = TypeCallocN(char, (size_t) cmap_size);
 	    if (tried != 0) {
 
 		for (i = 0; i < cmap_size; i++) {
@@ -3045,7 +3045,7 @@ ChangeGroup(XtermWidget xw, String attribute, char *value)
     for (cp = c1; *cp != 0; ++cp) {
 	Char *c2 = cp;
 	if (!xtermIsPrintable(screen, &cp, c1 + limit)) {
-	    memset(c2, '?', (unsigned) (cp + 1 - c2));
+	    memset(c2, '?', (size_t) (cp + 1 - c2));
 	}
     }
 

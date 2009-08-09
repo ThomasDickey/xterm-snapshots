@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.170 2009/07/19 15:44:00 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.171 2009/08/07 23:20:42 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -1888,10 +1888,10 @@ TekCopy(TekWidget tw)
 	    sprintf(initbuf, "%c%c%c%c",
 		    ANSI_ESC, (char) (tekscr->page.fontsize + '8'),
 		    ANSI_ESC, (char) (tekscr->page.linetype + '`'));
-	    write(tekcopyfd, initbuf, 4);
+	    write(tekcopyfd, initbuf, (size_t) 4);
 	    Tp = &Tek0;
 	    do {
-		write(tekcopyfd, Tp->data, Tp->count);
+		write(tekcopyfd, Tp->data, (size_t) Tp->count);
 		Tp = Tp->next;
 	    } while (Tp);
 	    close(tekcopyfd);

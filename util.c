@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.481 2009/08/07 00:53:12 tom Exp $ */
+/* $XTermId: util.c,v 1.485 2009/08/09 12:30:47 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -443,13 +443,17 @@ xtermScroll(XtermWidget xw, int amount)
 
     if (screen->jumpscroll) {
 	if (screen->scroll_amt > 0) {
-	    if (screen->refresh_amt + amount > i)
-		FlushScroll(xw);
+	    if (!screen->fastscroll) {
+		if (screen->refresh_amt + amount > i)
+		    FlushScroll(xw);
+	    }
 	    screen->scroll_amt += amount;
 	    screen->refresh_amt += amount;
 	} else {
-	    if (screen->scroll_amt < 0)
-		FlushScroll(xw);
+	    if (!screen->fastscroll) {
+		if (screen->scroll_amt < 0)
+		    FlushScroll(xw);
+	    }
 	    screen->scroll_amt = amount;
 	    screen->refresh_amt = amount;
 	}
@@ -762,8 +766,10 @@ InsertLine(XtermWidget xw, int n)
 		FlushScroll(xw);
 	    screen->scroll_amt -= n;
 	    screen->refresh_amt -= n;
-	} else if (screen->scroll_amt)
-	    FlushScroll(xw);
+	} else {
+	    if (screen->scroll_amt)
+		FlushScroll(xw);
+	}
     }
     if (!screen->scroll_amt) {
 	shift = INX2ROW(screen, 0);
@@ -835,8 +841,10 @@ DeleteLine(XtermWidget xw, int n)
 		FlushScroll(xw);
 	    screen->scroll_amt += n;
 	    screen->refresh_amt += n;
-	} else if (screen->scroll_amt)
-	    FlushScroll(xw);
+	} else {
+	    if (screen->scroll_amt)
+		FlushScroll(xw);
+	}
     }
     if (!screen->scroll_amt) {
 
@@ -1142,7 +1150,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
      */
     if (screen->protected_mode != OFF_PROTECT) {
 	unsigned n;
-	Char *attrs = getLineData(screen, row)->attribs;
+	Char *attrs = getLineData(screen, row)->attribs + col;
 	int saved_mode = screen->protected_mode;
 	Bool done;
 
@@ -1154,11 +1162,13 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 	    for (n = 0; n < len; n++) {
 		if (attrs[n] & PROTECTED) {
 		    rc = 0;	/* found a protected segment */
-		    if (n != 0)
+		    if (n != 0) {
 			ClearInLine(xw, row, col, n);
+		    }
 		    while ((n < len)
-			   && (attrs[n] & PROTECTED))
+			   && (attrs[n] & PROTECTED)) {
 			n++;
+		    }
 		    done = False;
 		    break;
 		}
@@ -1341,8 +1351,9 @@ do_erase_line(XtermWidget xw, int param, int mode)
     int saved_mode = screen->protected_mode;
 
     if (saved_mode == DEC_PROTECT
-	&& saved_mode != mode)
+	&& saved_mode != mode) {
 	screen->protected_mode = OFF_PROTECT;
+    }
 
     switch (param) {
     case -1:			/* DEFAULT */
@@ -2544,9 +2555,15 @@ drawClippedXftString(XtermWidget xw,
 }
 #endif
 
+#ifndef NO_ACTIVE_ICON
 #define WhichVFontData(screen,name) \
 		(IsIcon(screen) ? &((screen)->fnt_icon) \
 				: &((screen)->name))
+#else
+#define WhichVFontData(screen,name) \
+				(&((screen)->name))
+#endif
+
 /*
  * Draws text with the specified combination of bold/underline.  The return
  * value is the updated x position.
@@ -2894,6 +2911,7 @@ drawXtermText(XtermWidget xw,
 	xtermFillCells(xw, flags, gc, x, y, len);
 
 	while (len--) {
+#if OPT_BOX_CHARS
 	    if (IsXtermMissingChar(screen, *text, font)) {
 
 		width = 1;
@@ -2901,7 +2919,9 @@ drawXtermText(XtermWidget xw,
 		    width = my_wcwidth((wchar_t) (*text)) * FontWidth(screen);
 		});
 		adj = 0;
-	    } else {
+	    } else
+#endif
+	    {
 		if_WIDE_OR_NARROW(screen, {
 		    XChar2b temp[1];
 		    temp[0].byte2 = LO_BYTE(*text);
