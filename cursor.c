@@ -1,6 +1,4 @@
-/* $XTermId: cursor.c,v 1.52 2009/07/04 14:58:53 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/cursor.c,v 3.20 2006/02/13 01:14:58 dickey Exp $ */
+/* $XTermId: cursor.c,v 1.53 2009/08/09 17:23:25 tom Exp $ */
 
 /*
  * Copyright 2002-2008,2009 by Thomas E. Dickey
