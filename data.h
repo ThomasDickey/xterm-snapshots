@@ -1,6 +1,4 @@
-/* $XTermId: data.h,v 1.108 2009/08/07 00:44:28 tom Exp $ */
-
-/* $XFree86: xc/programs/xterm/data.h,v 3.39 2006/02/13 01:14:58 dickey Exp $ */
+/* $XTermId: data.h,v 1.109 2009/08/09 17:23:01 tom Exp $ */
 
 /*
  * Copyright 2002-2007,2009 by Thomas E. Dickey

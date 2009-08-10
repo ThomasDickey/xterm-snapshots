@@ -1,9 +1,8 @@
-/* $XTermId: Tekproc.c,v 1.171 2009/08/07 23:20:42 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.172 2009/08/09 17:22:34 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
  */
-/* $XFree86: xc/programs/xterm/Tekproc.c,v 3.57 2006/02/13 01:14:57 dickey Exp $ */
 
 /*
 

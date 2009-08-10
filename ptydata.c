@@ -1,8 +1,4 @@
-/* $XTermId: ptydata.c,v 1.89 2009/08/08 13:42:46 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
- */
+/* $XTermId: ptydata.c,v 1.90 2009/08/09 17:22:05 tom Exp $ */
 
 /************************************************************
 

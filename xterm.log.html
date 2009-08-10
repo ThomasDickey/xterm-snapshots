@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.768 2009/08/08 14:18:18 tom Exp $
+  $XTermId: xterm.log.html,v 1.770 2009/08/09 20:50:21 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,7 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_dev">Development</A>
+<LI><A HREF="#xterm_244">Patch #244 - 2009/8/9</A>
 <LI><A HREF="#xterm_243">Patch #243 - 2009/3/28</A>
 <LI><A HREF="#xterm_242">Patch #242 - 2009/2/15</A>
 <LI><A HREF="#xterm_241">Patch #241 - 2009/1/26</A>
@@ -292,10 +292,11 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_dev">Development</A></H1>
+<H1><A NAME="xterm_244">Patch #244 - 2009/8/9</A></H1>
 <ul>
 	<li>refactored storage of saved-lines, providing a configure option
-	    to manage them as a FIFO (actually a circular buffer).
+	    to manage them as a FIFO (actually a circular buffer), improving
+	    performance.
 	    Added configure option <code>--enable-fifo-lines</code> to
 	    enable/disable the new feature (it is enabled by default).
 
