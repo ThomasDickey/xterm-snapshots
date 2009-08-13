@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.388 2009/08/07 23:20:07 tom Exp $ */
+/* $XTermId: screen.c,v 1.389 2009/08/13 00:30:01 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1787,8 +1787,17 @@ ScreenResize(XtermWidget xw,
 		    ScrnBuf dst = screen->saveBuf_index;
 
 #if OPT_FIFO_LINES
-		    /* move line-data from visible-buffer to save-buffer */
-		    saveEditBufLines(screen, dst, move_up);
+		    int amount = ((MaxRows(screen) - (int) move_up - 1)
+				  - screen->cur_row);
+
+		    if (amount < 0) {
+			/* move line-data from visible-buffer to save-buffer */
+			saveEditBufLines(screen, dst, -amount);
+			move_up = -amount;
+			move_down_by = amount;
+		    } else {
+			move_down_by = 0;
+		    }
 #else /* !OPT_FIFO_LINES */
 		    int amount = screen->savelines - (int) move_up;
 
@@ -1898,6 +1907,7 @@ ScreenResize(XtermWidget xw,
 
 		    /* copy line-data from save-buffer to visible-buffer */
 		    unsaveEditBufLines(screen, dst, move_down);
+		    TRACE_SCRNBUF("copied", screen, dst, rows);
 
 #if OPT_FIFO_LINES
 		    unsave_fifo = (long) move_down;

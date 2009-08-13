@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.770 2009/08/09 20:50:21 tom Exp $
+  $XTermId: xterm.log.html,v 1.772 2009/08/13 01:23:33 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_245">Patch #245 - 2009/8/12</A>
 <LI><A HREF="#xterm_244">Patch #244 - 2009/8/9</A>
 <LI><A HREF="#xterm_243">Patch #243 - 2009/3/28</A>
 <LI><A HREF="#xterm_242">Patch #242 - 2009/2/15</A>
@@ -291,6 +292,23 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_245">Patch #245 - 2009/8/12</A></H1>
+<ul>
+	<li>correct a special case in saving FIFO-lines from
+	    <a href="#xterm_244">patch #244</a>.
+	    If the screen was shrunk, xterm used the wrong amount for copying
+	    to FIFO-lines, and then used this amount to adjust the current
+	    row on the screen.  That was both a visible defect (Debian #541109)
+	    as well as a potential addressing error (Debian #541132, #541160,
+	    and #541236).
+
+	<li>add clarification in xterm manual about the
+	    various <code>allow<em>XXX</em>Ops</code> resources, which
+	    are disabled when the 
+	    <code>allowSendEvents</code> resource is active (patch by
+	    Julien Cristau, Debian #531597).
+</ul>
 
 <H1><A NAME="xterm_244">Patch #244 - 2009/8/9</A></H1>
 <ul>
