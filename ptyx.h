@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.623 2009/08/08 14:24:27 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.624 2009/08/13 22:22:14 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1126,7 +1126,7 @@ typedef struct {
 #if OPT_ISO_COLORS
 #if OPT_256_COLORS || OPT_88_COLORS
 #define COLOR_BITS 8
-typedef unsigned CellColor;
+typedef unsigned short CellColor;
 #else
 #define COLOR_BITS 4
 typedef Char CellColor;

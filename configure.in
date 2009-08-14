@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.251 2009/08/06 00:37:38 tom Exp $
+dnl $XTermId: configure.in,v 1.252 2009/08/13 19:41:01 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -812,7 +812,7 @@ AC_MSG_CHECKING(if you want only 16-bit character support)
 CF_ARG_ENABLE(16bit-chars,
 	[  --enable-16bit-chars    enable 16-bit character support],
 	[enable_16bit_chars=yes],
-	[enable_16bit_chars=$no])
+	[enable_16bit_chars=no])
 AC_MSG_RESULT($enable_16bit_chars)
 
 if test "$enable_16bit_chars" = yes ; then

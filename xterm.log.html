@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.772 2009/08/13 01:23:33 tom Exp $
+  $XTermId: xterm.log.html,v 1.776 2009/08/14 08:52:14 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_245">Patch #245 - 2009/8/12</A>
 <LI><A HREF="#xterm_244">Patch #244 - 2009/8/9</A>
 <LI><A HREF="#xterm_243">Patch #243 - 2009/3/28</A>
@@ -292,6 +293,30 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>modify initialization of screen buffers to ensure that pointers
+	    align to int-boundaries.
+	    This fixes a problem introduced in
+	    <a href="#xterm_244">patch #244</a>
+	    where the color- and character-arrays
+	    (stored after the video-attributes in each row)
+	    might be misaligned (report by Rajeev V Pillai).
+
+	<li>add limit-check in <code>ScrnRefresh</code> for handling
+	    saved-lines from the circular buffer which are repainted on a
+	    screen whose width has increased.  To improve performance, circular
+	    buffer entries are not resized (report by Rajeev V Pillai).
+
+	<li>correct type for <code>CellColor</code> (a late change in
+	    <a href="#xterm_244">patch #244</a>
+	    to avoid gcc-specifc enums made that unsigned
+	    rather than unsigned short, for the 256-color option).
+
+	<li>fix typo in configure option --enable-16bit-chars (report by
+	    Rajeev V. Pillai).
+</ul>
 
 <H1><A NAME="xterm_245">Patch #245 - 2009/8/12</A></H1>
 <ul>

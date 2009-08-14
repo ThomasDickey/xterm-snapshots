@@ -11948,11 +11948,11 @@ if test "${enable_16bit_chars+set}" = set; then
   if test "$enableval" != "no" ; then
     enable_16bit_chars=yes
   else
-    enable_16bit_chars=$no
+    enable_16bit_chars=no
   fi
 else
   enableval=no
-  enable_16bit_chars=$no
+  enable_16bit_chars=no
 
 fi;
 echo "$as_me:11958: result: $enable_16bit_chars" >&5

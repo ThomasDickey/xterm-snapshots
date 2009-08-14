@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.389 2009/08/13 00:30:01 tom Exp $ */
+/* $XTermId: screen.c,v 1.393 2009/08/14 09:31:27 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -100,18 +100,31 @@
 #define VisBuf(screen) scrnHeadAddr(screen, screen->saveBuf_index, (unsigned) savelines)
 #endif
 
+/*
+ * ScrnPtr's can point to different types of data.
+ */
+#define SizeofScrnPtr(name) \
+	sizeof(*((LineData *)0)->name)
+
+/*
+ * The pointers in LineData point into a block of text allocated as a single
+ * chunk for the given number of rows.  Ensure that these pointers are aligned
+ * at least to int-boundaries.
+ */
+#define AlignMask()      (sizeof(int) - 1)
+#define IsAligned(value) (((unsigned long) (value) & AlignMask()) == 0)
+
+#define AlignValue(value) \
+		if (!IsAligned(value)) \
+		    value = (value | AlignMask()) + 1
+
 #define SetupScrnPtr(dst,src,type) \
 		dst = (type *) src; \
-		src += ((unsigned) ncol * sizeof(*dst))
+		assert(IsAligned(dst)); \
+		src += skipNcol##type
 
 #define ScrnBufAddr(ptrs, offset)  (ScrnBuf)    ((char *) (ptrs) + (offset))
 #define LineDataAddr(ptrs, offset) (LineData *) ((char *) (ptrs) + (offset))
-
-#if OPT_WIDE_CHARS
-#define ExtraScrnSize(screen) ((screen)->wide_chars ? (unsigned) (screen)->max_combining : 0)
-#else
-#define ExtraScrnSize(screen) 0
-#endif
 
 #if OPT_TRACE > 1
 static void
@@ -175,6 +188,18 @@ setupLineData(TScreen * screen, ScrnBuf base, Char * data, unsigned nrow, unsign
 #if OPT_WIDE_CHARS
     unsigned j;
 #endif
+    /* these names are based on types */
+    unsigned skipNcolChar = (ncol * SizeofScrnPtr(attribs));
+    unsigned skipNcolCharData = (ncol * SizeofScrnPtr(charData));
+#if OPT_ISO_COLORS
+    unsigned skipNcolCellColor = (ncol * SizeofScrnPtr(color));
+#endif
+
+    AlignValue(skipNcolChar);
+#if OPT_ISO_COLORS
+    AlignValue(skipNcolCellColor);
+#endif
+    AlignValue(skipNcolCharData);
 
     for (i = 0; i < nrow; i++, offset += jump) {
 	ptr = LineDataAddr(base, offset);
@@ -188,13 +213,14 @@ setupLineData(TScreen * screen, ScrnBuf base, Char * data, unsigned nrow, unsign
 #if OPT_ISO_COLORS
 	SetupScrnPtr(ptr->color, data, CellColor);
 #endif
-	SetupScrnPtr(ptr->charData, data, IChar);
+	SetupScrnPtr(ptr->charData, data, CharData);
 #if OPT_WIDE_CHARS
 	if (screen->wide_chars) {
-	    unsigned extra = ExtraScrnSize(screen);
+	    unsigned extra = (unsigned) screen->max_combining;
 
+	    ptr->combSize = (Char) extra;
 	    for (j = 0; j < extra; ++j) {
-		SetupScrnPtr(ptr->combData[j], data, IChar);
+		SetupScrnPtr(ptr->combData[j], data, CharData);
 	    }
 	}
 #endif
@@ -250,32 +276,38 @@ allocScrnHead(TScreen * screen, unsigned nrow)
 }
 
 /*
- * ScrnPtr's can point to different types of data.
- */
-#define SizeofScrnPtr(name) \
-	sizeof(*((LineData *)0)->name)
-
-/*
  * Return the size of a line's data.
  */
 static unsigned
 sizeofScrnRow(TScreen * screen, unsigned ncol)
 {
-    unsigned result = (SizeofScrnPtr(attribs)
+    unsigned result = 1;
+    unsigned sizeAttribs;
 #if OPT_ISO_COLORS
-		       + SizeofScrnPtr(color)
+    unsigned sizeColors;
 #endif
-		       + SizeofScrnPtr(charData));
 
     (void) screen;
 
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
-	result += (SizeofScrnPtr(combData[0]) * ExtraScrnSize(screen));
+	result += (unsigned) screen->max_combining;
     }
 #endif
+    result = (ncol * result * sizeof(CharData));
+    AlignValue(result);
 
-    return ncol * result;
+    sizeAttribs = (ncol * SizeofScrnPtr(attribs));
+    AlignValue(sizeAttribs);
+    result += sizeAttribs;
+
+#if OPT_ISO_COLORS
+    sizeColors = (ncol * SizeofScrnPtr(color));
+    AlignValue(sizeColors);
+    result += sizeColors;
+#endif
+
+    return result;
 }
 
 Char *
@@ -1343,6 +1375,10 @@ ScrnRefresh(XtermWidget xw,
 
 	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0)
 	    break;
+	if (maxcol >= ld->lineSize) {
+	    maxcol = ld->lineSize - 1;
+	    hi_col = maxcol;
+	}
 
 	chars = ld->charData;
 	attrs = ld->attribs;
