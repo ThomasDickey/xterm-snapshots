@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.778 2009/08/15 00:44:11 tom Exp $
+  $XTermId: xterm.log.html,v 1.779 2009/08/15 15:58:24 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -296,6 +296,9 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify comments in app-defaults files to avoid problem with
+	    C preprocessor used by <code>xrdb</code> (Debian #541603).
+
 	<li>restore special case in <code>makeColorPair</code>,
 	    needed for <code>colorBDMode</code> resource (Debian #541089).
 
