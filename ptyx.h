@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.624 2009/08/13 22:22:14 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.625 2009/08/14 23:14:26 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1148,7 +1148,12 @@ typedef Char RowData;		/* wrap/blink, and DEC single-double chars */
 #define LINEFLAG_MASK         BITS2MASK(LINEFLAG_BITS)
 
 #define GetLineFlags(ld)      ((ld)->bufHead & LINEFLAG_MASK)
-#define SetLineFlags(ld,xx)   (ld)->bufHead |= (RowData) (xx & LINEFLAG_MASK)
+
+#if OPT_DEC_CHRSET
+#define SetLineFlags(ld,xx)   (ld)->bufHead = (RowData) ((ld->bufHead & (DBLCS_MASK << LINEFLAG_BITS)) | (xx & LINEFLAG_MASK))
+#else
+#define SetLineFlags(ld,xx)   (ld)->bufHead = (RowData) (xx & LINEFLAG_MASK)
+#endif
 
 typedef IChar CharData;
 
