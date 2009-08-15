@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.776 2009/08/14 08:52:14 tom Exp $
+  $XTermId: xterm.log.html,v 1.778 2009/08/15 00:44:11 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -296,6 +296,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>restore special case in <code>makeColorPair</code>,
+	    needed for <code>colorBDMode</code> resource (Debian #541089).
+
+	<li>correct <code>SetLineFlags()</code> macro, broken in
+	    <a href="#xterm_244">patch #244</a>
+	    when recoding to avoid gcc-specific bitfields (Debian #541236).
+
 	<li>modify initialization of screen buffers to ensure that pointers
 	    align to int-boundaries.
 	    This fixes a problem introduced in

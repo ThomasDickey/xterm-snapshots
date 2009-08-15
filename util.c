@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.485 2009/08/09 12:30:47 tom Exp $ */
+/* $XTermId: util.c,v 1.486 2009/08/15 00:40:38 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -3483,15 +3483,10 @@ extract_bg(XtermWidget xw, CellColor color, unsigned flags)
 CellColor
 makeColorPair(int fg, int bg)
 {
-    if (fg == -1)
-	fg = 0;
-    if (bg == -1)
-	bg = 0;
+    unsigned my_bg = (bg >= 0) && (bg < NUM_ANSI_COLORS) ? (unsigned) bg : 0;
+    unsigned my_fg = (fg >= 0) && (fg < NUM_ANSI_COLORS) ? (unsigned) fg : my_bg;
 
-    assert(fg >= 0 && fg < (1 << COLOR_BITS));
-    assert(bg >= 0 && bg < (1 << COLOR_BITS));
-
-    return (CellColor) (fg | (bg << COLOR_BITS));
+    return (CellColor) (my_fg | (my_bg << COLOR_BITS));
 }
 
 /*
