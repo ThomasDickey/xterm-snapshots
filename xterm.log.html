@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.779 2009/08/15 15:58:24 tom Exp $
+  $XTermId: xterm.log.html,v 1.781 2009/08/16 22:51:21 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,7 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_dev">Development</A>
+<LI><A HREF="#xterm_246">Patch #246 - 2009/8/16</A>
 <LI><A HREF="#xterm_245">Patch #245 - 2009/8/12</A>
 <LI><A HREF="#xterm_244">Patch #244 - 2009/8/9</A>
 <LI><A HREF="#xterm_243">Patch #243 - 2009/3/28</A>
@@ -294,8 +294,12 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_dev">Development</A></H1>
+<H1><A NAME="xterm_246">Patch #246 - 2009/8/16</A></H1>
 <ul>
+	<li>remove obsolete logic for saving/restoring wrapping flags, which
+	    did not work on 64-bit platform.  Wrapping flags (stored in the
+	    line-index) are now copied with line-data (Debian #541160).
+
 	<li>modify comments in app-defaults files to avoid problem with
 	    C preprocessor used by <code>xrdb</code> (Debian #541603).
 
@@ -394,7 +398,7 @@ is the latest version of this file.
 	    when vt52 support is not compiled (report by Olaf 'Rhialto'
 	    Seibert).
 
-	<li>save/restore line-wrapping flags when converting from ISL-8859-1
+	<li>save/restore line-wrapping flags when converting from ISO-8859-1
 	    encoding to UTF-8 encoding, as well as when resizing screen.
 
 	<li>remove extra adjustment of position in fix for Debian #418324.
