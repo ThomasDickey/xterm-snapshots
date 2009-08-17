@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.393 2009/08/14 09:31:27 tom Exp $ */
+/* $XTermId: screen.c,v 1.394 2009/08/16 18:16:45 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -424,7 +424,6 @@ Reallocate(XtermWidget xw,
 	   unsigned oldcol)
 {
     TScreen *screen = TScreenOf(xw);
-    LineData *ptrs;
     ScrnBuf oldBufHead;
     ScrnBuf newBufHead;
     Char *newBufData;
@@ -433,12 +432,6 @@ Reallocate(XtermWidget xw,
     Char *oldBufData;
     int move_down = 0, move_up = 0;
 
-    /* save/restore row-flags */
-    RowData *saveFlags;
-    int saveFlagLo = -1;
-    int saveFlagHi = -1;
-    unsigned jump = scrnHeadSize(screen, 1);
-
     if (sbuf == NULL || *sbuf == NULL) {
 	return 0;
     }
@@ -446,30 +439,6 @@ Reallocate(XtermWidget xw,
     oldBufData = *sbufaddr;
 
     TRACE(("Reallocate %dx%d -> %dx%d\n", oldrow, oldcol, nrow, ncol));
-
-    /*
-     * Save the row flags, to reapply after calling setupLineData.
-     */
-    saveFlags = TypeCallocN(RowData, nrow + oldrow);
-    if (saveFlags != NULL) {
-	int j;
-
-	ptrs = (LineData *) (*sbuf);
-	for (j = 0; j < (int) oldrow; ++j) {
-	    RowData thisFlag = ptrs->bufHead;
-	    if (GetLineFlags(ptrs) != 0) {
-		if (saveFlagLo < 0)
-		    saveFlagLo = j;
-		saveFlagHi = j;
-		saveFlags[j] = thisFlag;
-	    }
-	    ptrs = LineDataAddr(ptrs, jump);
-	}
-	if (saveFlagHi < 0) {
-	    free(saveFlags);
-	    saveFlags = 0;
-	}
-    }
 
     /*
      * realloc sbuf, the pointers to all the lines.
@@ -529,27 +498,6 @@ Reallocate(XtermWidget xw,
 #endif
 	);
     free(oldBufHead);
-
-    if (saveFlags != NULL) {
-	int j, k;
-	int adjust = 0;
-
-	if (move_down) {
-	    adjust = move_down;
-	} else if (move_up) {
-	    adjust = -move_up;
-	}
-
-	ptrs = LineDataAddr(newBufHead, jump * (unsigned) (saveFlagLo + adjust));
-	for (j = saveFlagLo; j <= saveFlagHi; ++j) {
-	    k = j + adjust;
-	    if (k >= 0 && k < (int) nrow) {
-		ptrs->bufHead = saveFlags[j];
-	    }
-	    ptrs = LineDataAddr(ptrs, jump);
-	}
-	free(saveFlags);
-    }
 
     /* Now free the old data */
     free(oldBufData);
