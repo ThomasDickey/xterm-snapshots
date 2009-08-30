@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.782 2009/08/28 10:50:57 tom Exp $
+  $XTermId: xterm.log.html,v 1.783 2009/08/29 23:51:26 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -297,6 +297,11 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A>
 <ul>
+	<li>correct calculation for size of line's data block, which was
+	    sometimes off-by-one when configured
+	    using <code>--enable-16bit-chars</code>
+	    (report by H Merijn Brand).
+
 	<li>fix indexing error in print-everything feature from
 	    <a href="#xterm_246">patch #246</a> (patch by Ovidiu Gheorghioiu).
 </ul>
