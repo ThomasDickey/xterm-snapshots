@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.106 2009/08/28 10:48:42 Ovidiu.Gheorghioiu Exp $ */
+/* $XTermId: print.c,v 1.107 2009/08/31 00:37:04 tom Exp $ */
 
 /************************************************************
 
@@ -279,8 +279,10 @@ xtermPrintEverything(XtermWidget xw)
     int bot = screen->max_row;
     int was_open = initialized;
 
-    if (!screen->whichBuf)
+    if (!screen->whichBuf) {
 	top = -screen->savedlines - screen->topline;
+	bot -= screen->topline;
+    }
 
     TRACE(("xtermPrintEverything, rows %d..%d\n", top, bot));
     while (top <= bot)

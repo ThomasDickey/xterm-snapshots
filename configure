@@ -9000,7 +9000,7 @@ LIBS="$LIBS $X_EXTRA_LIBS"
 # Check for openpty() in -lutil if the UNIX98-style pty functions are not
 # available. E.g. for GNU libc 2.0.
 case $host_os in #(vi
-freebsd*|netbsd*)	# 2004/8/15 - revisit this if/when grantpt is known to work.
+freebsd*|netbsd*|dragonfly*) # 2004/8/15 - revisit this if/when grantpt is known to work.
 
 echo "$as_me:9005: checking for openpty in -lutil" >&5
 echo $ECHO_N "checking for openpty in -lutil... $ECHO_C" >&6
