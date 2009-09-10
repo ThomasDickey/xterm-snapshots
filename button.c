@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.349 2009/08/07 23:24:10 tom Exp $ */
+/* $XTermId: button.c,v 1.350 2009/09/10 08:53:49 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2729,7 +2729,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 
 	    while (col <= limit) {
 		Char *next = last;
-		unsigned data = XTERM_CELL(row, col);
+		unsigned data = ld->charData[col];
 
 		/* some internal points may not be drawn */
 		if (data == 0)
@@ -2745,7 +2745,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		if_OPT_WIDE_CHARS(screen, {
 		    size_t off;
 		    for_each_combData(off, ld) {
-			data = XTERM_CELLC(row, col, off);
+			data = ld->combData[off][col];
 			if (data == 0)
 			    break;
 			next = convertToUTF8(next, data);
@@ -3847,7 +3847,7 @@ SaveText(TScreen * screen,
 #endif
     *eol = !LineTstWrapped(ld);
     for (i = scol; i < ecol; i++) {
-	c = E2A(XTERM_CELL(row, i));
+	c = E2A(ld->charData[i]);
 #if OPT_WIDE_CHARS
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
 	 * wide character.
@@ -3861,7 +3861,7 @@ SaveText(TScreen * screen,
 		    unsigned ch;
 		    size_t off;
 		    for_each_combData(off, ld) {
-			ch = XTERM_CELLC(row, i, off);
+			ch = ld->combData[off][i];
 			if (ch == 0)
 			    break;
 			lp = convertToUTF8(lp, ch);
@@ -3877,7 +3877,7 @@ SaveText(TScreen * screen,
 		unsigned ch;
 		size_t off;
 		for_each_combData(off, ld) {
-		    ch = XTERM_CELLC(row, i, off);
+		    ch = ld->combData[off][i];
 		    if (ch == 0)
 			break;
 		    lp = convertToUTF8(lp, ch);
