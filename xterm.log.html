@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.786 2009/09/09 23:58:52 tom Exp $
+  $XTermId: xterm.log.html,v 1.788 2009/09/10 08:59:37 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -298,6 +298,14 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>eliminate uses of <code>XTERM_CELL</code> and
+	    <code>XTERM_CELLC</code> where an appropriate <code>LineData</code>
+	    pointer is available.
+
+	<li>correct expression in <code>okScrnRow</code> macro, making
+	    selections give the length of lines below the visible screen
+	    (report by Stuart Henderson).
+
 	<li>correct logic used to improve performance of missing-glyph check,
 	    which did not handle line-drawing characters (Debian #545220).
 </ul>
