@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.785 2009/08/30 23:59:11 tom Exp $
+  $XTermId: xterm.log.html,v 1.786 2009/09/09 23:58:52 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_247">Patch #247 - 2009/8/30</A>
 <LI><A HREF="#xterm_246">Patch #246 - 2009/8/16</A>
 <LI><A HREF="#xterm_245">Patch #245 - 2009/8/12</A>
@@ -294,6 +295,12 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>correct logic used to improve performance of missing-glyph check,
+	    which did not handle line-drawing characters (Debian #545220).
+</ul>
 
 <H1><A NAME="xterm_247">Patch #247 - 2009/8/30</A></H1>
 <ul>
