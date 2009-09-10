@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.486 2009/08/15 00:40:38 tom Exp $ */
+/* $XTermId: util.c,v 1.487 2009/09/09 23:55:08 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -3010,11 +3010,20 @@ drawXtermText(XtermWidget xw,
 				      (unsigned) (last - first), on_wide);
 		}
 #if OPT_WIDE_CHARS
-		if (!ucs_workaround(xw, ch, flags, gc,
-				    x, y,
-				    chrset, on_wide))
+		if (ucs_workaround(xw, ch, flags, gc,
+				   x, y,
+				   chrset, on_wide)) {
+		    /*
+		     * if true, we drew at least one cell whether or not it is
+		     * printable
+		     */
+		    if (ch_width <= 0)
+			ch_width = 1;
+		} else
 #endif
 		{
+		    if (ch_width <= 0)
+			ch_width = 1;
 		    xtermDrawBoxChar(xw, ch, flags, gc,
 				     x, y,
 				     ch_width);
