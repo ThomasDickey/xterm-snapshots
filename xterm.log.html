@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.788 2009/09/10 08:59:37 tom Exp $
+  $XTermId: xterm.log.html,v 1.789 2009/09/11 08:59:51 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -298,6 +298,9 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>fix an overlooked adjustment for selecting double-width characters
+	    in the narrow-character configuration.
+
 	<li>eliminate uses of <code>XTERM_CELL</code> and
 	    <code>XTERM_CELLC</code> where an appropriate <code>LineData</code>
 	    pointer is available.

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.350 2009/09/10 08:53:49 tom Exp $ */
+/* $XTermId: button.c,v 1.352 2009/09/11 09:13:53 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2590,12 +2590,10 @@ SetCharacterClassRange(int low,	/* in range of [0..255] */
 }
 #endif
 
-#if OPT_WIDE_CHARS
 static int
-class_of(TScreen * screen, LineData * ld, CELL * cell)
+class_of(LineData * ld, CELL * cell)
 {
     CELL temp = *cell;
-    int value;
 
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(GetLineDblCS(ld))) {
@@ -2603,19 +2601,19 @@ class_of(TScreen * screen, LineData * ld, CELL * cell)
     }
 #endif
 
-    value = (int) XTERM_CELL(temp.row, temp.col);
-    return CharacterClass(value);
+    return CharacterClass((int) (ld->charData[temp.col]));
 }
+
+#if OPT_WIDE_CHARS
 #define CClassSelects(name, cclass) \
 	 (CClassOf(name) == cclass \
 	 || XTERM_CELL(screen->name.row, screen->name.col) == HIDDEN_CHAR)
 #else
-#define class_of(screen, ld, cell) charClass[XTERM_CELL((cell)->row, (cell)->col)]
 #define CClassSelects(name, cclass) \
-	 (class_of(screen, ld.name, &((screen->name))) == cclass)
+	 (class_of(ld.name, &((screen->name))) == cclass)
 #endif
 
-#define CClassOf(name) class_of(screen, ld.name, &((screen->name)))
+#define CClassOf(name) class_of(ld.name, &((screen->name)))
 
 /*
  * If the given column is past the end of text on the given row, bump to the
