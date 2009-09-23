@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.396 2009/08/30 00:06:07 tom Exp $ */
+/* $XTermId: screen.c,v 1.397 2009/09/23 09:54:06 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -704,7 +704,8 @@ ScrnClearCells(XtermWidget xw, int row, int col, unsigned len)
     if_OPT_WIDE_CHARS(screen, {
 	int kl;
 	int kr;
-	if (DamagedCells(screen, len, &kl, &kr, INX2ROW(screen, row), col)
+
+	if (DamagedCells(screen, len, &kl, &kr, row, col)
 	    && kr >= kl) {
 	    ClearCells(xw, flags, (unsigned) (kr - kl + 1), row, kl);
 	}
