@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.489 2009/09/10 09:22:43 tom Exp $ */
+/* $XTermId: util.c,v 1.490 2009/09/23 09:57:11 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1069,7 +1069,7 @@ ClearAbove(XtermWidget xw)
 	    if (screen->scroll_amt)
 		FlushScroll(xw);
 	    if ((height = screen->cur_row + top) > screen->max_row)
-		height = screen->max_row;
+		height = screen->max_row + 1;
 	    if ((height -= top) > 0) {
 		ClearCurBackground(xw,
 				   top * FontHeight(screen) + screen->border,
