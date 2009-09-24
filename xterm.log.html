@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.791 2009/09/23 09:11:42 tom Exp $
+  $XTermId: xterm.log.html,v 1.793 2009/09/24 08:39:31 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -299,6 +299,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Develop</A></H1>
 <ul>
+	<li>fix an (old) flaw in the delete-line operation where the text which
+	    is scrolled into view while the display is scrolled up was not
+	    repainted.
+
+	<li>improve delete-line and insert-line operations, retaining selection
+	    when the selection does not intersect the deleted/inserted lines.
+
 	<li>fix an (old) off-by-one error when an application cleared above the
 	    cursor position while the display was scrolled up, that would leave
 	    an extra line of text uncleared.

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.490 2009/09/23 09:57:11 tom Exp $ */
+/* $XTermId: util.c,v 1.496 2009/09/24 10:51:19 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -744,7 +744,7 @@ InsertLine(XtermWidget xw, int n)
     int scrolltop;
     int scrollheight;
 
-    if (!ScrnIsLineInMargins(screen, INX2ROW(screen, screen->cur_row)))
+    if (!ScrnIsLineInMargins(screen, screen->cur_row))
 	return;
 
     TRACE(("InsertLine count=%d\n", n));
@@ -753,7 +753,12 @@ InsertLine(XtermWidget xw, int n)
 	HideCursor();
 
     if (ScrnHaveSelection(screen)
-	&& ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg)) {
+	&& ScrnAreLinesInSelection(screen,
+				   INX2ROW(screen, screen->top_marg),
+				   INX2ROW(screen, screen->cur_row - 1))
+	&& ScrnAreLinesInSelection(screen,
+				   INX2ROW(screen, screen->cur_row),
+				   INX2ROW(screen, screen->bot_marg))) {
 	ScrnDisownSelection(xw);
     }
 
@@ -820,7 +825,7 @@ DeleteLine(XtermWidget xw, int n)
 					  && !screen->whichBuf
 					  && screen->cur_row == 0);
 
-    if (!ScrnIsLineInMargins(screen, INX2ROW(screen, screen->cur_row)))
+    if (!ScrnIsLineInMargins(screen, screen->cur_row))
 	return;
 
     TRACE(("DeleteLine count=%d\n", n));
@@ -828,14 +833,17 @@ DeleteLine(XtermWidget xw, int n)
     if (screen->cursor_state)
 	HideCursor();
 
+    if (n > (i = screen->bot_marg - screen->cur_row + 1)) {
+	n = i;
+    }
     if (ScrnHaveSelection(screen)
-	&& ScrnAreLinesInSelection(screen, screen->top_marg, screen->bot_marg)) {
+	&& ScrnAreLinesInSelection(screen,
+				   INX2ROW(screen, screen->cur_row),
+				   INX2ROW(screen, screen->cur_row + n - 1))) {
 	ScrnDisownSelection(xw);
     }
 
     screen->do_wrap = False;
-    if (n > (i = screen->bot_marg - screen->cur_row + 1))
-	n = i;
     if (screen->jumpscroll) {
 	if (screen->scroll_amt >= 0 && screen->cur_row == screen->top_marg) {
 	    if (screen->refresh_amt + n > MaxRows(screen))
@@ -847,8 +855,25 @@ DeleteLine(XtermWidget xw, int n)
 		FlushScroll(xw);
 	}
     }
-    if (!screen->scroll_amt) {
 
+    /* adjust screen->buf */
+    if (n > 0) {
+	if (scroll_all_lines)
+	    ScrnDeleteLine(xw,
+			   screen->saveBuf_index,
+			   screen->bot_marg + screen->savelines,
+			   0,
+			   (unsigned) n);
+	else
+	    ScrnDeleteLine(xw,
+			   screen->visbuf,
+			   screen->bot_marg,
+			   screen->cur_row,
+			   (unsigned) n);
+    }
+
+    /* repaint the screen, as needed */
+    if (!screen->scroll_amt) {
 	shift = INX2ROW(screen, 0);
 	bot = screen->max_row - shift;
 	scrollheight = i - n;
@@ -876,6 +901,14 @@ DeleteLine(XtermWidget xw, int n)
 	    }
 	}
 	vertical_copy_area(xw, scrolltop + n, scrollheight, n);
+	if (shift > 0 && refreshheight > 0) {
+	    int rows = refreshheight;
+	    if (rows > shift)
+		rows = shift;
+	    ScrnUpdate(xw, refreshtop, 0, rows, MaxCols(screen), True);
+	    refreshtop += shift;
+	    refreshheight -= shift;
+	}
 	if (refreshheight > 0) {
 	    ClearCurBackground(xw,
 			       (int) refreshtop * FontHeight(screen) + screen->border,
@@ -883,21 +916,6 @@ DeleteLine(XtermWidget xw, int n)
 			       (unsigned) (refreshheight * FontHeight(screen)),
 			       (unsigned) Width(screen));
 	}
-    }
-    /* adjust screen->buf */
-    if (n > 0) {
-	if (scroll_all_lines)
-	    ScrnDeleteLine(xw,
-			   screen->saveBuf_index,
-			   screen->bot_marg + screen->savelines,
-			   0,
-			   (unsigned) n);
-	else
-	    ScrnDeleteLine(xw,
-			   screen->visbuf,
-			   screen->bot_marg,
-			   screen->cur_row,
-			   (unsigned) n);
     }
 }
 
@@ -1081,8 +1099,7 @@ ClearAbove(XtermWidget xw)
 	ClearBufRows(xw, 0, screen->cur_row - 1);
     }
 
-    if (INX2ROW(screen, screen->cur_row) <= screen->max_row)
-	ClearLeft(xw);
+    ClearLeft(xw);
 }
 
 /*
