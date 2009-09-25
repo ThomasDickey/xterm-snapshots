@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.397 2009/09/23 09:54:06 tom Exp $ */
+/* $XTermId: screen.c,v 1.399 2009/09/25 00:08:26 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1157,7 +1157,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     assert(last > (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
-	int xx = INX2ROW(screen, screen->cur_row);
+	int xx = screen->cur_row;
 	int kl;
 	int kr = screen->cur_col;
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
@@ -1221,7 +1221,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	int kl;
 	int kr;
 	if (DamagedCells(screen, n, &kl, &kr,
-			 INX2ROW(screen, screen->cur_row),
+			 screen->cur_row,
 			 screen->cur_col))
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
     });
