@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.972 2009/09/10 09:03:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.974 2009/09/27 22:37:54 tom Exp $ */
 
 /*
 
@@ -328,6 +328,7 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_BOX_CHARS
     { "set-font-linedrawing",	HandleFontBoxChars },
+    { "set-font-packed",	HandleFontPacked },
 #endif
 #if OPT_DABBREV
     { "dabbrev-expand",		HandleDabbrevExpand },
@@ -532,6 +533,7 @@ static XtResource resources[] =
 
 #if OPT_BOX_CHARS
     Bres(XtNforceBoxChars, XtCForceBoxChars, screen.force_box_chars, False),
+    Bres(XtNforcePackedFont, XtCForcePackedFont, screen.force_packed, True),
     Bres(XtNshowMissingGlyphs, XtCShowMissingGlyphs, screen.force_all_chars, False),
 #endif
 
@@ -5497,6 +5499,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_BOX_CHARS
     init_Bres(screen.force_box_chars);
+    init_Bres(screen.force_packed);
     init_Bres(screen.force_all_chars);
 #endif
     init_Bres(screen.free_bold_box);
@@ -7388,6 +7391,39 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 	StartBlinking(screen);
 }
 #endif /* OPT_BLINK_CURS || OPT_BLINK_TEXT */
+
+void
+RestartBlinking(TScreen * screen GCC_UNUSED)
+{
+#if OPT_BLINK_CURS || OPT_BLINK_TEXT
+    if (screen->blink_timer == 0) {
+	Bool resume = False;
+
+#if OPT_BLINK_CURS
+	if (DoStartBlinking(screen)) {
+	    resume = True;
+	}
+#endif
+#if OPT_BLINK_TEXT
+	if (!resume) {
+	    int row;
+
+	    for (row = screen->max_row; row >= 0; row--) {
+		LineData *ld = getLineData(screen, ROW2INX(screen, row));
+		if (LineTstBlinked(ld)) {
+		    if (LineHasBlinking(screen, ld)) {
+			resume = True;
+			break;
+		    }
+		}
+	    }
+	}
+#endif
+	if (resume)
+	    StartBlinking(screen);
+    }
+#endif
+}
 
 /*
  * Implement soft or hard (full) reset of the VTxxx emulation.  There are a

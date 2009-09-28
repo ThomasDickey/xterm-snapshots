@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.582 2009/09/10 09:01:22 tom Exp $ */
+/* $XTermId: xterm.h,v 1.584 2009/09/27 20:50:21 tom Exp $ */
 
 /************************************************************
 
@@ -396,6 +396,7 @@ extern char **environ;
 #define XtNfontStyle		"fontStyle"
 #define XtNfontWarnings		"fontWarnings"
 #define XtNforceBoxChars	"forceBoxChars"
+#define XtNforcePackedFont	"forcePackedFont"
 #define XtNformatOtherKeys	"formatOtherKeys"
 #define XtNfreeBoldBox		"freeBoldBox"
 #define XtNhighlightColor	"highlightColor"
@@ -555,6 +556,7 @@ extern char **environ;
 #define XtCFontStyle		"FontStyle"
 #define XtCFontWarnings		"FontWarnings"
 #define XtCForceBoxChars	"ForceBoxChars"
+#define XtCForcePackedFont	"ForcePackedFont"
 #define XtCFormatOtherKeys	"FormatOtherKeys"
 #define XtCFreeBoldBox		"FreeBoldBox"
 #define XtCHighlightColorMode	"HighlightColorMode"
@@ -771,6 +773,7 @@ extern int VTInit (XtermWidget /* xw */);
 extern int v_write (int  /* f */, Char * /* d */, unsigned  /* len */);
 extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name */, Bool  /* justprobe */);
 extern void HideCursor (void);
+extern void RestartBlinking(TScreen * /* screen */);
 extern void ShowCursor (void);
 extern void SwitchBufPtrs (TScreen * /* screen */);
 extern void ToggleAlternate (XtermWidget /* xw */);

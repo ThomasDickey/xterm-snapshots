@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.627 2009/09/10 08:50:02 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.628 2009/09/27 21:58:33 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1542,7 +1542,8 @@ typedef struct {
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
 #if OPT_BOX_CHARS
 	Boolean		force_box_chars;/* true if we assume that	*/
-	Boolean		force_all_chars;/* true to outline missing chars*/
+	Boolean		force_all_chars;/* true to outline missing chars */
+	Boolean		force_packed;	/* true to override proportional */
 #endif
 	Dimension	fnt_wide;
 	Dimension	fnt_high;

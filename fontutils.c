@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.307 2009/08/07 23:22:32 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.309 2009/09/27 23:29:54 tom Exp $ */
 
 /************************************************************
 
@@ -1090,7 +1090,9 @@ xtermLoadFont(XtermWidget xw,
 	}
     });
 
-    screen->fnt_prop = proportional;
+    SetItemSensitivity(fontMenuEntries[fontMenu_font_packedfont].widget,
+		       proportional);
+    screen->fnt_prop = (Boolean) (proportional && !(screen->force_packed));
     screen->fnt_boxes = True;
 
 #if OPT_BOX_CHARS
@@ -1813,7 +1815,7 @@ xtermComputeFontInfo(XtermWidget xw,
     if (!xw->misc.render_font || IsIconWin(screen, win))
 #endif /* OPT_RENDERFONT */
     {
-	if (is_double_width_font(font)) {
+	if (is_double_width_font(font) && !(screen->fnt_prop)) {
 	    win->f_width = (font->min_bounds.width);
 	} else {
 	    win->f_width = (font->max_bounds.width);
