@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.102 2009/07/03 13:57:08 tom Exp $ */
+/* $XTermId: trace.c,v 1.103 2009/09/28 09:09:41 tom Exp $ */
 
 /************************************************************
 
@@ -255,7 +255,7 @@ visibleIChar(IChar * buf, unsigned len)
     static unsigned used;
 
     if (buf != 0) {
-	unsigned limit = ((len + 1) * 6) + 1;
+	unsigned limit = ((len + 1) * 8) + 1;
 	char *dst;
 
 	if (limit > used) {
