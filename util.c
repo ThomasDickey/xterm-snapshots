@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.497 2009/09/27 22:58:36 tom Exp $ */
+/* $XTermId: util.c,v 1.500 2009/09/28 10:40:36 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2926,16 +2926,13 @@ drawXtermText(XtermWidget xw,
 			    ? WhichVFontData(screen, fnts[fBold])
 			    : WhichVFontData(screen, fnts[fNorm]));
 
-	xtermFillCells(xw, flags, gc, x, y, len);
-
 	while (len--) {
+	    int cells = (*text >= 0x300) ? my_wcwidth((wchar_t) (*text)) : 1;
 #if OPT_BOX_CHARS
-	    if (IsXtermMissingChar(screen, *text, font)) {
-
-		width = 1;
-		if_OPT_WIDE_CHARS(screen, {
-		    width = my_wcwidth((wchar_t) (*text)) * FontWidth(screen);
-		});
+	    if (*text == HIDDEN_CHAR) {
+		++text;
+		continue;
+	    } else if (IsXtermMissingChar(screen, *text, font)) {
 		adj = 0;
 	    } else
 #endif
@@ -2955,6 +2952,7 @@ drawXtermText(XtermWidget xw,
 		if (adj < 0)
 		    adj = 0;
 	    }
+	    xtermFillCells(xw, flags, gc, x, y, (Cardinal) cells);
 	    x = drawXtermText(xw,
 			      flags | NOBACKGROUND | CHARBYCHAR,
 			      gc, x + adj, y, chrset,
