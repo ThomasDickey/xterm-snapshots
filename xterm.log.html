@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.793 2009/09/24 08:39:31 tom Exp $
+  $XTermId: xterm.log.html,v 1.796 2009/09/27 23:04:39 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -299,6 +299,17 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Develop</A></H1>
 <ul>
+	<li>add new resource forcePackedFont and menu entry "Packed Font" to
+	    control whether to use the font's minimum (default) or maximum
+	    width when those differ.  The workaround which xterm uses to
+	    accommodate proportional fonts is not necessary with certain
+	    fonts such as unifont which happen to store a mixture of
+	    multicolumn glyphs (report by Chris Jones).
+
+	<li>fix an (old) bug which did not restart the timer for blinking text
+	    if the only blinking text was temporarily scrolled out of view,
+	    e.g., using the scrollbar.
+
 	<li>fix an (old) flaw in the delete-line operation where the text which
 	    is scrolled into view while the display is scrolled up was not
 	    repainted.
@@ -309,6 +320,9 @@ is the latest version of this file.
 	<li>fix an (old) off-by-one error when an application cleared above the
 	    cursor position while the display was scrolled up, that would leave
 	    an extra line of text uncleared.
+
+	<li>fix a similar problem where the double-size attribute would not be
+	    reset when clearing the screen while the display was scrolled up.
 
 	<li>fix an indexing error which would occur if an application cleared
 	    a line while the display was scrolled up and was also in UTF-8 mode

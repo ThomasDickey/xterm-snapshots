@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.399 2009/09/25 00:08:26 tom Exp $ */
+/* $XTermId: screen.c,v 1.401 2009/09/26 15:20:53 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1648,13 +1648,15 @@ ClearBufRows(XtermWidget xw,
 
     TRACE(("ClearBufRows %d..%d\n", first, last));
     for (row = first; row <= last; row++) {
-	LineData *ld = getLineData(screen, ROW2INX(screen, row));
-	if_OPT_DEC_CHRSET({
-	    /* clearing the whole row resets the doublesize characters */
-	    SetLineDblCS(ld, CSET_SWL);
-	});
-	LineClrWrapped(ld);
-	ClearCells(xw, 0, len, row, 0);
+	LineData *ld = getLineData(screen, row);
+	if (ld != 0) {
+	    if_OPT_DEC_CHRSET({
+		/* clearing the whole row resets the doublesize characters */
+		SetLineDblCS(ld, CSET_SWL);
+	    });
+	    LineClrWrapped(ld);
+	    ClearCells(xw, 0, len, row, 0);
+	}
     }
 }
 
@@ -1778,8 +1780,8 @@ ScreenResize(XtermWidget xw,
 
 		    if (amount < 0) {
 			/* move line-data from visible-buffer to save-buffer */
-			saveEditBufLines(screen, dst, -amount);
-			move_up = -amount;
+			saveEditBufLines(screen, dst, (unsigned) -amount);
+			move_up = (unsigned) -amount;
 			move_down_by = amount;
 		    } else {
 			move_down_by = 0;
