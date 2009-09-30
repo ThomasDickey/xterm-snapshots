@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.352 2009/09/11 09:13:53 tom Exp $ */
+/* $XTermId: button.c,v 1.354 2009/09/29 08:41:41 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2624,12 +2624,16 @@ okPosition(TScreen * screen,
 	   LineData ** ld,
 	   CELL * cell)
 {
-    if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
+    Boolean result = True;
+
+    if (cell->row >= screen->max_row) {
+	result = False;
+    } else if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
 	cell->col = 0;
 	*ld = GET_LINEDATA(screen, ++cell->row);
-	return False;
+	result = False;
     }
-    return True;
+    return result;
 }
 
 static void
@@ -2637,7 +2641,7 @@ trimLastLine(TScreen * screen,
 	     LineData ** ld,
 	     CELL * last)
 {
-    if (screen->cutNewline) {
+    if (screen->cutNewline && last->row < screen->max_row) {
 	last->col = 0;
 	*ld = GET_LINEDATA(screen, ++last->row);
     } else {

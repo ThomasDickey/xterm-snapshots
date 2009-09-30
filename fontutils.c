@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.309 2009/09/27 23:29:54 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.312 2009/09/30 00:56:58 tom Exp $ */
 
 /************************************************************
 
@@ -157,6 +157,37 @@ compatibleWideCounts(XFontStruct * wfs, XFontStruct * wbfs)
     return True;
 }
 #endif /* OPT_WIDE_CHARS */
+
+#if OPT_BOX_CHARS
+static void
+setupPackedFonts(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Bool value = False;
+
+#if OPT_RENDERFONT
+#define MIXED(name) screen->name[fontnum].map.mixed
+    if (xw->misc.render_font) {
+	int fontnum = screen->menu_font_number;
+
+	screen->allow_packing = (Boolean) (MIXED(renderFontNorm)
+					   || MIXED(renderFontBold)
+					   || MIXED(renderFontItal)
+#if OPT_RENDERWIDE
+					   || MIXED(renderWideNorm)
+					   || MIXED(renderWideBold)
+					   || MIXED(renderWideItal)
+#endif
+	    );
+#undef MIXED
+    }
+#endif /* OPT_RENDERFONT */
+
+    value = screen->allow_packing;
+
+    SetItemSensitivity(fontMenuEntries[fontMenu_font_packedfont].widget, value);
+}
+#endif
 
 /*
  * Returns the fields from start to stop in a dash- separated string.  This
@@ -1090,8 +1121,10 @@ xtermLoadFont(XtermWidget xw,
 	}
     });
 
-    SetItemSensitivity(fontMenuEntries[fontMenu_font_packedfont].widget,
-		       proportional);
+#if OPT_BOX_CHARS
+    screen->allow_packing = proportional;
+    setupPackedFonts(xw);
+#endif
     screen->fnt_prop = (Boolean) (proportional && !(screen->force_packed));
     screen->fnt_boxes = True;
 
@@ -1451,6 +1484,8 @@ checkXft(XtermWidget xw, XTermXftFonts * data, XftFont * xft)
     data->map.max_width = (Dimension) xft->max_advance_width;
 
     for (c = 32; c < 256; ++c) {
+	if (c >= 128 && c < 159)
+	    continue;
 	if (FcCharSetHasChar(xft->charset, c)) {
 	    XGlyphInfo extents;
 
@@ -1807,6 +1842,18 @@ xtermComputeFontInfo(XtermWidget xw,
 	    setRenderFontsize(screen, win, norm, NULL);
 	    setRenderFontsize(screen, win, bold, "bold");
 	    setRenderFontsize(screen, win, ital, "ital");
+#if OPT_BOX_CHARS
+	    setupPackedFonts(xw);
+
+	    if (screen->force_packed) {
+		XTermXftFonts *use = &(screen->renderFontNorm[fontnum]);
+		win->f_height = use->font->ascent + use->font->descent;
+		win->f_width = use->map.min_width;
+		TRACE(("...packed TrueType font %dx%d\n",
+		       win->f_height,
+		       win->f_width));
+	    }
+#endif
 	}
     }
     /*
