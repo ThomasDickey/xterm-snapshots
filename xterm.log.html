@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.798 2009/09/29 08:54:43 tom Exp $
+  $XTermId: xterm.log.html,v 1.800 2009/10/01 00:29:31 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -299,6 +299,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Develop</A></H1>
 <ul>
+	<li>add limit-checks for result of visual_width() function,
+	    needed from <a href="#xterm_242">patch #242</a> and
+	    exposed by #244 changes (Debian #548321).
+
 	<li>improve limit-checks in select/paste.
 
 	<li>fix a remaining bug from 

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.500 2009/09/28 10:40:36 tom Exp $ */
+/* $XTermId: util.c,v 1.502 2009/10/01 00:30:00 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -648,6 +648,10 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 	   screen->cur_row,
 	   screen->cur_col,
 	   len, visibleIChar(str, len)));
+
+    if (cells + (unsigned) screen->cur_col > (unsigned) MaxCols(screen)) {
+	cells = (unsigned) (MaxCols(screen) - screen->cur_col);
+    }
 
     if (ScrnHaveSelection(screen)
 	&& ScrnIsLineInSelection(screen, INX2ROW(screen, screen->cur_row))) {

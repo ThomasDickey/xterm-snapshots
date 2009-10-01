@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.312 2009/09/30 00:56:58 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.314 2009/09/30 09:37:45 tom Exp $ */
 
 /************************************************************
 
@@ -1473,6 +1473,87 @@ xtermSetCursorBox(TScreen * screen)
 
 #if OPT_RENDERFONT
 
+#if OPT_TRACE > 1
+static FcChar32
+xtermXftFirstChar(XftFont * xft)
+{
+    FcChar32 map[FC_CHARSET_MAP_SIZE];
+    FcChar32 next;
+    FcChar32 first;
+    int i;
+
+    first = FcCharSetFirstPage(xft->charset, map, &next);
+    for (i = 0; i < FC_CHARSET_MAP_SIZE; i++)
+	if (map[i]) {
+	    FcChar32 bits = map[i];
+	    first += i * 32;
+	    while (!(bits & 0x1)) {
+		bits >>= 1;
+		first++;
+	    }
+	    break;
+	}
+    return first;
+}
+
+static FcChar32
+xtermXftLastChar(XftFont * xft)
+{
+    FcChar32 this, last, next;
+    FcChar32 map[FC_CHARSET_MAP_SIZE];
+    int i;
+    last = FcCharSetFirstPage(xft->charset, map, &next);
+    while ((this = FcCharSetNextPage(xft->charset, map, &next)) != FC_CHARSET_DONE)
+	last = this;
+    last &= ~0xff;
+    for (i = FC_CHARSET_MAP_SIZE - 1; i >= 0; i--)
+	if (map[i]) {
+	    FcChar32 bits = map[i];
+	    last += i * 32 + 31;
+	    while (!(bits & 0x80000000)) {
+		last--;
+		bits <<= 1;
+	    }
+	    break;
+	}
+    return (long) last;
+}
+
+static void
+dumpXft(XtermWidget xw, XTermXftFonts * data)
+{
+    XftFont *xft = data->font;
+    TScreen *screen = TScreenOf(xw);
+    VTwin *win = WhichVWin(screen);
+
+    FcChar32 c;
+    FcChar32 first = xtermXftFirstChar(xft);
+    FcChar32 last = xtermXftLastChar(xft);
+    unsigned count = 0;
+    unsigned outside = 0;
+
+    TRACE(("dumpXft {{\n"));
+    TRACE(("   data range %#6x..%#6x\n", first, last));
+    for (c = first; c <= last; ++c) {
+	if (FcCharSetHasChar(xft->charset, c)) {
+	    int width = my_wcwidth((int) c);
+	    XGlyphInfo extents;
+
+	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
+	    TRACE(("%#6x  %2d  %.1f\n", c, width,
+		   ((double) extents.width) / win->f_width));
+	    if (extents.width > win->f_width)
+		++outside;
+	    ++count;
+	}
+    }
+    TRACE(("}} %u total, %u outside\n", count, outside));
+}
+#define DUMP_XFT(xw, data) dumpXft(xw, data)
+#else
+#define DUMP_XFT(xw, data)	/* nothing */
+#endif
+
 static void
 checkXft(XtermWidget xw, XTermXftFonts * data, XftFont * xft)
 {
@@ -1854,6 +1935,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		       win->f_width));
 	    }
 #endif
+	    DUMP_XFT(xw, &(screen->renderFontNorm[fontnum]));
 	}
     }
     /*
