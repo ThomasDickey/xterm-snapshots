@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.401 2009/09/26 15:20:53 tom Exp $ */
+/* $XTermId: screen.c,v 1.403 2009/10/01 00:30:19 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -755,6 +755,10 @@ ScrnWriteText(XtermWidget xw,
     unsigned real_width = visual_width(str, length);
 
     (void) cur_fg_bg;
+
+    if (real_width + (unsigned) screen->cur_col > (unsigned) MaxCols(screen)) {
+	real_width = (unsigned) (MaxCols(screen) - screen->cur_col);
+    }
 
     if (avail <= 0)
 	return;
