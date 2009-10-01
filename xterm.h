@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.584 2009/09/27 20:50:21 tom Exp $ */
+/* $XTermId: xterm.h,v 1.585 2009/10/01 09:04:48 tom Exp $ */
 
 /************************************************************
 
@@ -744,7 +744,10 @@ extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
 #if OPT_WIDE_CHARS
 extern Bool iswide(int  /* i */);
 #define FIRST_WIDECHAR 256
-#define isWide(n) ((int) (n) >= FIRST_WIDECHAR && iswide(n))
+#define WideCells(n) (((IChar)(n) >= FIRST_WIDECHAR) ? my_wcwidth((wchar_t) (n)) : 1)
+#define isWide(n)    (((IChar)(n) >= FIRST_WIDECHAR) && iswide(n))
+#else
+#define WideCells(n) 1
 #endif
 
 /* cachedCgs.c */

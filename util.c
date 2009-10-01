@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.502 2009/10/01 00:30:00 tom Exp $ */
+/* $XTermId: util.c,v 1.503 2009/10/01 09:01:21 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2931,12 +2931,15 @@ drawXtermText(XtermWidget xw,
 			    : WhichVFontData(screen, fnts[fNorm]));
 
 	while (len--) {
-	    int cells = (*text >= 0x300) ? my_wcwidth((wchar_t) (*text)) : 1;
+	    int cells = WideCells(*text);
 #if OPT_BOX_CHARS
+#if OPT_WIDE_CHARS
 	    if (*text == HIDDEN_CHAR) {
 		++text;
 		continue;
-	    } else if (IsXtermMissingChar(screen, *text, font)) {
+	    } else
+#endif
+	    if (IsXtermMissingChar(screen, *text, font)) {
 		adj = 0;
 	    } else
 #endif

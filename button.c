@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.354 2009/09/29 08:41:41 tom Exp $ */
+/* $XTermId: button.c,v 1.355 2009/10/01 09:06:20 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2427,7 +2427,7 @@ ResizeSelection(TScreen * screen GCC_UNUSED, int rows, int cols)
 Bool
 iswide(int i)
 {
-    return (i == HIDDEN_CHAR) || ((i >= FIRST_WIDECHAR) && my_wcwidth(i) == 2);
+    return (i == HIDDEN_CHAR) || (WideCells(i) == 2);
 }
 
 #define isWideCell(row, col) iswide((int)XTERM_CELL(row, col))
