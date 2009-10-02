@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.42 2009/03/28 17:39:51 tom Exp $ */
+/* $XTermId: main.h,v 1.43 2009/10/02 00:02:26 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -104,7 +104,7 @@
 #endif
 
 #ifndef DEF_ALLOW_WINDOW
-#define DEF_ALLOW_WINDOW	True
+#define DEF_ALLOW_WINDOW	False
 #endif
 
 #if OPT_BLINK_TEXT
