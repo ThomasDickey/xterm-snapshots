@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.974 2009/09/27 22:37:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.978 2009/10/10 12:37:18 tom Exp $ */
 
 /*
 
@@ -116,6 +116,7 @@ in this Software without prior written authorization from The Open Group.
 
 #include <stdio.h>
 #include <ctype.h>
+#include <assert.h>
 
 #if defined(HAVE_SCHED_YIELD)
 #include <sched.h>
@@ -393,7 +394,7 @@ static XtActionsRec actionsList[] = {
 };
 /* *INDENT-ON* */
 
-static XtResource resources[] =
+static XtResource xterm_resources[] =
 {
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
     Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, DEF_ALLOW_FONT),
@@ -741,8 +742,8 @@ static
 WidgetClassRec xtermClassRec =
 {
     {
-/* core_class fields */
-	(WidgetClass) & widgetClassRec,		/* superclass     */
+	/* core_class fields */
+	(WidgetClass) & widgetClassRec,		/* superclass   */
 	"VT100",		/* class_name                   */
 	sizeof(XtermWidgetRec),	/* widget_size                  */
 	VTClassInit,		/* class_initialize             */
@@ -753,8 +754,8 @@ WidgetClassRec xtermClassRec =
 	VTRealize,		/* realize                      */
 	actionsList,		/* actions                      */
 	XtNumber(actionsList),	/* num_actions                  */
-	resources,		/* resources                    */
-	XtNumber(resources),	/* num_resources                */
+	xterm_resources,	/* resources                    */
+	XtNumber(xterm_resources),	/* num_resources        */
 	NULLQUARK,		/* xrm_class                    */
 	True,			/* compress_motion              */
 	False,			/* compress_exposure            */
@@ -5432,7 +5433,7 @@ VTInitialize(Widget wrequest,
     Bool color_ok;
 #endif
 
-#if OPT_COLOR_RES2 && (MAXCOLORS > MIN_ANSI_COLORS)
+#if OPT_COLOR_RES2
     static XtResource fake_resources[] =
     {
 #if OPT_256_COLORS
@@ -5443,7 +5444,8 @@ VTInitialize(Widget wrequest,
     };
 #endif /* OPT_COLOR_RES2 */
 
-    TRACE(("VTInitialize\n"));
+    TRACE(("VTInitialize %d / %d\n", XtNumber(xterm_resources), MAXRESOURCES));
+    assert(XtNumber(xterm_resources) < MAXRESOURCES);
 
     /* Zero out the entire "screen" component of "wnew" widget, then do
      * field-by-field assignment of "screen" fields that are named in the
@@ -5717,9 +5719,14 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.italicULMode);
     init_Bres(screen.colorRVMode);
 
+#if OPT_COLOR_RES2
+    TRACE(("...will fake resources for color%d to color%d\n",
+	   MIN_ANSI_COLORS,
+	   NUM_ANSI_COLORS - 1));
+#endif
     for (i = 0, color_ok = False; i < MAXCOLORS; i++) {
 
-#if OPT_COLOR_RES2 && (MAXCOLORS > MIN_ANSI_COLORS)
+#if OPT_COLOR_RES2
 	/*
 	 * Xt has a hardcoded limit on the maximum number of resources that can
 	 * be used in a widget.  If we configure both luit (which implies
