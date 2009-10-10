@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.802 2009/10/02 00:16:00 tom Exp $
+  $XTermId: xterm.log.html,v 1.805 2009/10/10 14:48:16 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -45,6 +45,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_249">Patch #249 - 2009/10/1</A>
 <LI><A HREF="#xterm_248">Patch #248 - 2009/9/11</A>
 <LI><A HREF="#xterm_247">Patch #247 - 2009/8/30</A>
@@ -296,6 +297,21 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>add <code>-q</code> option to
+	    <code>vttest/256colors2.pl</code> and
+	    <code>vttest/88colors2.pl</code>
+	    to demonstrate bulk initialization of color palette.
+
+	<li>improve the workaround from patch #188 by enabling resources for
+	    the 88-color model.
+
+	<li>document in xterm manpage the limited availability of resources
+	    <code>color16</code> to <code>color255<code> as noted in
+	    <a href="#xterm_188">patch #188</a> (Ubuntu #438850).
+</ul>
 
 <H1><A NAME="xterm_249">Patch #249 - 2009/10/1</A></H1>
 <ul>

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.629 2009/09/29 23:55:23 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.632 2009/10/10 13:02:16 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -458,11 +458,6 @@ typedef struct {
 
 #ifndef OPT_COLOR_RES
 #define OPT_COLOR_RES   1 /* true if xterm delays color-resource evaluation */
-#undef  OPT_COLOR_RES2
-#endif
-
-#ifndef OPT_COLOR_RES2
-#define OPT_COLOR_RES2 OPT_COLOR_RES /* true to avoid using extra resources */
 #endif
 
 #ifndef OPT_DABBREV
@@ -703,9 +698,12 @@ typedef struct {
 #define OPT_COLOR_RES 0
 #endif
 
-#if OPT_COLOR_RES2 && !(OPT_256_COLORS || OPT_88_COLORS)
-/* You must have 88/256 colors to need fake-resource logic */
-#undef  OPT_COLOR_RES2
+#if OPT_256_COLORS && (OPT_WIDE_CHARS || OPT_RENDERFONT || OPT_XMC_GLITCH)
+/* It's actually more complicated than that - but by trimming options you can
+ * have 256 color resources though.
+ */
+#define OPT_COLOR_RES2 1
+#else
 #define OPT_COLOR_RES2 0
 #endif
 
