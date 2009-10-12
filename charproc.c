@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.978 2009/10/10 12:37:18 tom Exp $ */
+/* $XTermId: charproc.c,v 1.980 2009/10/11 23:48:30 tom Exp $ */
 
 /*
 
@@ -1152,10 +1152,10 @@ set_mod_fkeys(XtermWidget xw, int which, int what, Bool enabled)
 
 #if OPT_TRACE
 #define WHICH_TABLE(name) if (table == name) result = #name
-static char *
+static const char *
 which_table(Const PARSE_T * table)
 {
-    char *result = "?";
+    const char *result = "?";
     /* *INDENT-OFF* */
     WHICH_TABLE (ansi_table);
     else WHICH_TABLE (cigtable);
@@ -4767,7 +4767,7 @@ unparseputn(XtermWidget xw, unsigned int n)
 }
 
 void
-unparseputs(XtermWidget xw, char *s)
+unparseputs(XtermWidget xw, const char *s)
 {
     while (*s)
 	unparseputc(xw, *s++);
@@ -5376,7 +5376,7 @@ ParseOnClicks(XtermWidget wnew, XtermWidget wreq, Cardinal item)
 {
     /* *INDENT-OFF* */
     static struct {
-	const String	name;
+	const char *	name;
 	SelectUnit	code;
     } table[] = {
     	{ "char",	Select_CHAR },
@@ -6271,14 +6271,15 @@ VTRealize(Widget w,
 		       False,
 		       screen->menu_font_number)) {
 	if (XmuCompareISOLatin1(myfont->f_n, DEFFONT) != 0) {
+	    char *use_font = x_strdup(DEFFONT);
 	    fprintf(stderr,
 		    "%s:  unable to open font \"%s\", trying \"%s\"....\n",
-		    xterm_name, myfont->f_n, DEFFONT);
+		    xterm_name, myfont->f_n, use_font);
 	    (void) xtermLoadFont(xw,
-				 xtermFontName(DEFFONT),
+				 xtermFontName(use_font),
 				 False,
 				 screen->menu_font_number);
-	    screen->MenuFontName(screen->menu_font_number) = DEFFONT;
+	    screen->MenuFontName(screen->menu_font_number) = use_font;
 	}
     }
 
@@ -6591,7 +6592,7 @@ xim_real_init(XtermWidget xw)
     XIMStyle input_style = 0;
     Bool found;
     static struct {
-	char *name;
+	const char *name;
 	unsigned long code;
     } known_style[] = {
 	{

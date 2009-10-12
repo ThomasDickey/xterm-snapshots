@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.503 2009/10/01 09:01:21 tom Exp $ */
+/* $XTermId: util.c,v 1.504 2009/10/11 20:23:19 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2792,21 +2792,19 @@ drawXtermText(XtermWidget xw,
 		if (xtermIsDecGraphic(ch)) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
-		     * in cells 1-31.  Check for this, and attempt to fill in
-		     * from real line-drawing character in the font at the
-		     * Unicode position.  Failing that, use our own
-		     * box-characters.
+		     * in cells 1-31.  Assume this (we cannot inspect the
+		     * picture easily...), and attempt to fill in from real
+		     * line-drawing character in the font at the Unicode
+		     * position.  Failing that, use our own box-characters.
 		     */
-		    if (xtermXftMissing(xw, font, ch)) {
-			if (screen->force_box_chars
-			    || xtermXftMissing(xw, font, dec2ucs(ch))) {
-			    missing = 1;
-			} else {
-			    ch = dec2ucs(ch);
-			    replace = True;
-			}
+		    if (screen->force_box_chars
+			|| xtermXftMissing(xw, font, dec2ucs(ch))) {
+			missing = 1;
+		    } else {
+			ch = dec2ucs(ch);
+			replace = True;
 		    }
-		} else if (ch > 256) {
+		} else if (ch >= 256) {
 		    /*
 		     * If we're reading UTF-8 from the client, we may have a
 		     * line-drawing character.  Translate it back to our

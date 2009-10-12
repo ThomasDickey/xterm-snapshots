@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.585 2009/10/01 09:04:48 tom Exp $ */
+/* $XTermId: xterm.h,v 1.589 2009/10/12 00:34:48 tom Exp $ */
 
 /************************************************************
 
@@ -52,6 +52,13 @@ authorization.
 #ifndef GCC_NORETURN
 #define GCC_NORETURN		/* nothing */
 #endif
+
+#if defined(__GNUC__) && defined(_FORTIFY_SOURCE)
+#define USE_IGNORE_RC
+#define IGNORE_RC(func) ignore_unused = func
+#else
+#define IGNORE_RC(func) (void) func
+#endif /* gcc workarounds */
 
 #include <X11/Xos.h>
 
@@ -794,7 +801,7 @@ extern void unparse_end (XtermWidget /* xw */);
 extern void unparseputc (XtermWidget /* xw */, int  /* c */);
 extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
 extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
-extern void unparseputs (XtermWidget /* xw */, char * /* s */);
+extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
 extern void xtermAddInput(Widget  /* w */);
 
@@ -936,7 +943,7 @@ extern void HandleKeyPressed           PROTO_XT_ACTIONS_ARGS;
 extern void HandleLeaveWindow          PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleSpawnTerminal        PROTO_XT_ACTIONS_ARGS;
 extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
-extern void Panic (char * /* s */, int  /* a */);
+extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
 extern void ReverseOldColors (void);
 extern void SysError (int  /* i */) GCC_NORETURN;
@@ -958,7 +965,7 @@ extern void xt_error (String  /* message */);
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);
-extern void xtermSetenv (char * /* var */, char * /* value */);
+extern void xtermSetenv (const char * /* var */, const char * /* value */);
 extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);
 
 #if OPT_DABBREV

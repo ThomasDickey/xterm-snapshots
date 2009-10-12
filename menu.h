@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.116 2009/09/27 22:33:36 tom Exp $ */
+/* $XTermId: menu.h,v 1.117 2009/10/11 22:45:22 tom Exp $ */
 
 /*
 
@@ -56,7 +56,7 @@ from The Open Group.
 #include <xterm.h>
 
 typedef struct _MenuEntry {
-    char *name;
+    const char *name;
     void (*function) PROTO_XT_CALLBACK_ARGS;
     Widget widget;
 } MenuEntry;
