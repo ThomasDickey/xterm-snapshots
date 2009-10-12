@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.314 2009/09/30 09:37:45 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.318 2009/10/11 23:23:26 tom Exp $ */
 
 /************************************************************
 
@@ -373,7 +373,7 @@ alloca_fontname(char **result, size_t next)
 }
 
 static void
-append_fontname_str(char **result, char *value)
+append_fontname_str(char **result, const char *value)
 {
     if (value == 0)
 	value = "*";
@@ -405,9 +405,9 @@ append_fontname_num(char **result, int value)
  */
 static char *
 derive_font_name(FontNameProperties * props,
-		 char *use_weight,
+		 const char *use_weight,
 		 int use_average_width,
-		 char *use_encoding)
+		 const char *use_encoding)
 {
     char *result = 0;
 
@@ -467,7 +467,7 @@ xtermSpecialFont(TScreen * screen, unsigned atts, unsigned chrset)
 #endif
     FontNameProperties *props;
     char *result = 0;
-    char *weight;
+    const char *weight;
     int pixel_size;
     int res_x;
     int res_y;
@@ -1241,7 +1241,7 @@ typedef struct {
  * correspond to the VT100 resources.
  */
 static Bool
-xtermLoadVTFonts(XtermWidget xw, char *myName, char *myClass)
+xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 {
     static Bool initialized = False;
     static SubResourceRec original, referenceRec, subresourceRec;
@@ -1328,7 +1328,7 @@ xtermLoadVTFonts(XtermWidget xw, char *myName, char *myClass)
 
 #if OPT_WIDE_CHARS
 static Bool
-isWideFont(XFontStruct * fp, char *tag, Bool nullOk)
+isWideFont(XFontStruct * fp, const char *tag, Bool nullOk)
 {
     Bool result = False;
 
@@ -1564,15 +1564,23 @@ checkXft(XtermWidget xw, XTermXftFonts * data, XftFont * xft)
     data->map.min_width = 0;
     data->map.max_width = (Dimension) xft->max_advance_width;
 
+    /*
+     * For each ASCII or ISO-8859-1 printable code, ask what its width is.
+     * Given the maximum width for those, we have a reasonable estimate of
+     * the single-column width.
+     *
+     * Ignore control characters - their extent information is misleading.
+     */
     for (c = 32; c < 256; ++c) {
-	if (c >= 128 && c < 159)
+	if (c >= 127 && c <= 159)
 	    continue;
 	if (FcCharSetHasChar(xft->charset, c)) {
 	    XGlyphInfo extents;
 
 	    XftTextExtents32(XtDisplay(xw), xft, &c, 1, &extents);
-	    if (width < extents.width)
+	    if (width < extents.width && extents.width <= data->map.max_width) {
 		width = extents.width;
+	    }
 	}
     }
     data->map.min_width = width;
@@ -1693,6 +1701,15 @@ setRenderFontsize(TScreen * screen, VTwin * win, XftFont * font, const char *tag
     }
 }
 #endif
+
+static void
+checkFontInfo(int value, const char *tag)
+{
+    if (value == 0) {
+	fprintf(stderr, "Selected font %s is zero\n", tag);
+	exit(1);
+    }
+}
 
 /*
  * Compute useful values for the font/window sizes
@@ -1930,9 +1947,10 @@ xtermComputeFontInfo(XtermWidget xw,
 		XTermXftFonts *use = &(screen->renderFontNorm[fontnum]);
 		win->f_height = use->font->ascent + use->font->descent;
 		win->f_width = use->map.min_width;
-		TRACE(("...packed TrueType font %dx%d\n",
+		TRACE(("...packed TrueType font %dx%d vs %d\n",
 		       win->f_height,
-		       win->f_width));
+		       win->f_width,
+		       use->map.max_width));
 	    }
 #endif
 	    DUMP_XFT(xw, &(screen->renderFontNorm[fontnum]));
@@ -1971,6 +1989,9 @@ xtermComputeFontInfo(XtermWidget xw,
 	   win->f_width,
 	   win->f_ascent,
 	   win->f_descent));
+
+    checkFontInfo(win->f_height, "height");
+    checkFontInfo(win->f_width, "width");
 }
 
 /* save this information as a side-effect for double-sized characters */

@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.21 2009/03/16 00:31:06 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.22 2009/10/11 22:43:41 tom Exp $ */
 
 /*
  * Copyright 2007-2008,2009 by Thomas E. Dickey
@@ -61,8 +61,8 @@
 #define NO_STRING (char *)(-1)
 
 typedef struct {
-    char *tc;
-    char *ti;
+    const char *tc;
+    const char *ti;
     int code;
     unsigned param;		/* see xtermStateToParam() */
 } TCAPINFO;

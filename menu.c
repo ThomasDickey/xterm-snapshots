@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.253 2009/09/27 22:36:07 tom Exp $ */
+/* $XTermId: menu.c,v 1.254 2009/10/11 22:46:44 tom Exp $ */
 
 /*
 
@@ -1849,7 +1849,7 @@ HandleSendSignal(Widget w,
 {
     /* *INDENT-OFF* */
     static struct sigtab {
-	char *name;
+	const char *name;
 	int sig;
     } signals[] = {
 #ifdef SIGTSTP
