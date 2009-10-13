@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.596 2009/10/12 00:51:39 tom Exp $ */
+/* $XTermId: main.c,v 1.597 2009/10/12 21:58:27 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -3318,8 +3318,9 @@ spawnXTerm(XtermWidget xw)
     } else if (resource.ptyInitialErase) {
 	;
     } else if (ok_termcap) {
+	static char name[] = TERMCAP_ERASE;
 	char temp[1024], *p = temp;
-	char *s = tgetstr(TERMCAP_ERASE, &p);
+	char *s = tgetstr(name, &p);
 	TRACE(("...extracting initial_erase value from termcap\n"));
 	if (s != 0) {
 	    initial_erase = decode_keyvalue(&s, True);

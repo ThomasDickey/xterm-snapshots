@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.29 2009/10/11 23:01:22 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.30 2009/10/12 22:25:54 tom Exp $ */
 
 /************************************************************
 
@@ -97,7 +97,7 @@ x_skip_nonblanks(char *s)
 int
 x_strcasecmp(const char *s1, const char *s2)
 {
-    unsigned len = strlen(s1);
+    size_t len = strlen(s1);
 
     if (len != strlen(s2))
 	return 1;

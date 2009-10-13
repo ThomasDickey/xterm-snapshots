@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.144 2009/09/26 14:56:42 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.145 2009/10/12 21:56:35 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -556,7 +556,7 @@ ScrollTextUpDownBy(
  * assume that b is alphabetic and allow plural
  */
 static int
-CompareWidths(char *a, char *b, int *modifier)
+CompareWidths(const char *a, const char *b, int *modifier)
 {
     int result;
     char ca, cb;

@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.844 2009/10/12 00:53:03 tom Exp $
+  $XTermId: xterm.log.html,v 1.845 2009/10/12 22:31:14 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -300,6 +300,9 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add check and error-message for fonts that have no printable
+	    values in the ISO-8859-1 range (Debian #542434).
+
 	<li>some compiler-warning cleanup, in particular workaround for
 	    defective implementation of gcc's attribute warn_unused_result
 	    (report by Bram Moolenaar).
