@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.318 2009/10/11 23:23:26 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.319 2009/10/12 22:29:42 tom Exp $ */
 
 /************************************************************
 
@@ -1706,7 +1706,7 @@ static void
 checkFontInfo(int value, const char *tag)
 {
     if (value == 0) {
-	fprintf(stderr, "Selected font %s is zero\n", tag);
+	fprintf(stderr, "Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
 	exit(1);
     }
 }
