@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.356 2009/10/10 23:37:27 tom Exp $ */
+/* $XTermId: button.c,v 1.358 2009/10/25 23:24:07 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2629,9 +2629,11 @@ okPosition(TScreen * screen,
     if (cell->row > screen->max_row) {
 	result = False;
     } else if (cell->col > (LastTextCol(screen, *ld, cell->row) + 1)) {
-	cell->col = 0;
-	*ld = GET_LINEDATA(screen, ++cell->row);
-	result = False;
+	if (cell->row < screen->max_row) {
+	    cell->col = 0;
+	    *ld = GET_LINEDATA(screen, ++cell->row);
+	    result = False;
+	}
     }
     return result;
 }
@@ -2941,6 +2943,9 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 #define PrevRow(name) \
 	ld.name = GET_LINEDATA(screen, --screen->name.row)
 
+#define MoreRows(name) \
+	screen->name.row < screen->max_row
+
 #define isPrevWrapped(name) \
 	(screen->name.row > 0 \
 	   && (ltmp = GET_LINEDATA(screen, screen->name.row - 1)) != 0 \
@@ -3038,6 +3043,8 @@ ComputeSelect(XtermWidget xw,
 		++screen->endSel.col;
 		if (screen->endSel.col > length
 		    && LineTstWrapped(ld.endSel)) {
+		    if (!MoreRows(endSel))
+			break;
 		    screen->endSel.col = 0;
 		    NextRow(endSel);
 		    length = LastTextCol(screen, ld.endSel, screen->endSel.row);
@@ -3048,7 +3055,8 @@ ComputeSelect(XtermWidget xw,
 	     * especially note that it includes the last character in a word.
 	     * So we do no --endSel.col and do special eol handling.
 	     */
-	    if (screen->endSel.col > length + 1) {
+	    if (screen->endSel.col > length + 1
+		&& MoreRows(endSel)) {
 		screen->endSel.col = 0;
 		NextRow(endSel);
 	    }
@@ -3065,7 +3073,8 @@ ComputeSelect(XtermWidget xw,
 
     case Select_LINE:
 	TRACE(("Select_LINE\n"));
-	while (LineTstWrapped(ld.endSel)) {
+	while (LineTstWrapped(ld.endSel)
+	       && MoreRows(endSel)) {
 	    NextRow(endSel);
 	}
 	if (screen->cutToBeginningOfLine
@@ -3101,7 +3110,7 @@ ComputeSelect(XtermWidget xw,
 	    }
 	    screen->startSel.col = 0;
 	    /* scan forward for end of group */
-	    while (screen->endSel.row < screen->max_row &&
+	    while (MoreRows(endSel) &&
 		   (LastTextCol(screen, ld.endSel, screen->endSel.row + 1) >
 		    0 ||
 		    LineTstWrapped(ld.endSel))) {
@@ -3115,7 +3124,7 @@ ComputeSelect(XtermWidget xw,
 	TRACE(("Select_PAGE\n"));
 	screen->startSel.row = 0;
 	screen->startSel.col = 0;
-	screen->endSel.row = screen->max_row + 1;
+	screen->endSel.row = MaxRows(screen);
 	screen->endSel.col = 0;
 	break;
 
@@ -3123,7 +3132,7 @@ ComputeSelect(XtermWidget xw,
 	TRACE(("Select_ALL\n"));
 	screen->startSel.row = -screen->savedlines;
 	screen->startSel.col = 0;
-	screen->endSel.row = screen->max_row + 1;
+	screen->endSel.row = MaxRows(screen);
 	screen->endSel.col = 0;
 	break;
 

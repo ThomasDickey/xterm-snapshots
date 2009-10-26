@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.437 2009/10/10 12:15:41 tom Exp $
+.\" $XTermId: xterm.man,v 1.438 2009/10/25 23:57:49 tom Exp $
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
@@ -2669,7 +2669,8 @@ Select a line (counting wrapping).
 .TP
 group
 Select a group of adjacent lines (counting wrapping).
-The selection stops on a blank line.
+The selection stops on a blank line,
+and does not extend outside the current page.
 .TP
 page
 Select all visible lines, i.e., the page.

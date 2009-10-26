@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.980 2009/10/11 23:48:30 tom Exp $ */
+/* $XTermId: charproc.c,v 1.981 2009/10/25 23:30:01 tom Exp $ */
 
 /*
 
@@ -3041,6 +3041,7 @@ v_write(int f, Char * data, unsigned len)
     int riten;
     unsigned c = len;
 
+    TRACE2(("v_write(%d:%s)\n", len, visibleChars(data, len)));
     if (v_bufstr == NULL && len > 0) {
 	v_buffer = (Char *) XtMalloc((Cardinal) len);
 	v_bufstr = v_buffer;
