@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.358 2009/10/25 23:24:07 tom Exp $ */
+/* $XTermId: button.c,v 1.359 2009/10/28 23:50:23 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -62,6 +62,7 @@ button.c	Handles button events in the terminal emulator.
 #include <xterm.h>
 
 #include <stdio.h>
+#include <assert.h>
 
 #include <X11/Xatom.h>
 #include <X11/Xmu/Atoms.h>
@@ -2601,6 +2602,7 @@ class_of(LineData * ld, CELL * cell)
     }
 #endif
 
+    assert(temp.col < ld->lineSize);
     return CharacterClass((int) (ld->charData[temp.col]));
 }
 
@@ -2735,6 +2737,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		Char *next = last;
 		unsigned data = ld->charData[col];
 
+		assert(col < ld->lineSize);
 		/* some internal points may not be drawn */
 		if (data == 0)
 		    data = ' ';
@@ -2984,7 +2987,7 @@ ComputeSelect(XtermWidget xw,
     if (first.col > 1
 	&& isWideCell(first.row, first.col - 1)
 	&& XTERM_CELL(first.row, first.col - 0) == HIDDEN_CHAR) {
-	fprintf(stderr, "Adjusting start. Changing downwards from %i.\n", first.col);
+	TRACE(("Adjusting start. Changing downwards from %i.\n", first.col));
 	first.col -= 1;
 	if (last.col == (first.col + 1))
 	    last.col--;
@@ -3720,6 +3723,8 @@ _OwnSelection(XtermWidget xw,
 	    unsigned long limit =
 	    (unsigned long) (4 * XMaxRequestSize(XtDisplay((Widget) xw)) - 32);
 	    if (screen->selection_length > limit) {
+		TRACE(("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
+		       screen->selection_length, cutbuffer));
 		fprintf(stderr,
 			"%s: selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
 			xterm_name, screen->selection_length, cutbuffer);
@@ -3858,6 +3863,7 @@ SaveText(TScreen * screen,
 #endif
     *eol = !LineTstWrapped(ld);
     for (i = scol; i < ecol; i++) {
+	assert(i < ld->lineSize);
 	c = E2A(ld->charData[i]);
 #if OPT_WIDE_CHARS
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
