@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.158 2009/04/27 19:29:31 tom Exp $
+## $XTermId: Makefile.in,v 1.161 2009/11/05 23:06:36 tom Exp $
 ##
 ## Copyright 2002-2008,2009 by Thomas E. Dickey
 ##
@@ -117,7 +117,7 @@ all :	$(PROGRAMS)
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
 .man.$(manext) :
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man $@ $(appsdir)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $< $@ $(appsdir)
 
 .$(manext).html :
 	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Thtml -man" >$@
@@ -316,6 +316,7 @@ distclean : clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
 	-$(RM) *.ps *.pdf *.png
 	-$(RM) xterm.html xterm.$(manext) xterm.txt
+	-$(RM) resize.html resize.$(manext) resize.txt
 	-$(RM) ctlseqs.html ctlseqs.$(manext)
 
 realclean : distclean
@@ -331,6 +332,11 @@ ctlseqs.html : ctlseqs.ms
 ctlseqs.pdf : ctlseqs.ps
 ctlseqs.ps : ctlseqs.ms
 ctlseqs.txt : ctlseqs.ms
+################################################################################
+resize.html : resize.$(manext)
+resize.pdf : resize.ps
+resize.ps : resize.$(manext)
+resize.txt : resize.$(manext)
 ################################################################################
 xterm.html : xterm.$(manext)
 xterm.pdf : xterm.ps

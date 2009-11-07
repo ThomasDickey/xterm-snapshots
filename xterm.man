@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.438 2009/10/25 23:57:49 tom Exp $
+.\" $XTermId: xterm.man,v 1.439 2009/11/07 00:58:01 tom Exp $
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
@@ -1542,6 +1542,7 @@ position, as well as reporting these values and the title or icon name.
 Each of these can be abused in a script;
 curiously enough most terminal emulators that implement these
 restrict only a small part of the repertoire.
+For fine-tuning, see \fBdisallowWindowOps\fP.
 The default is \*(``false.\*(''
 .TP 8
 .B "altIsNotMeta (\fPclass\fB AltIsNotMeta\fP)"
@@ -1996,6 +1997,81 @@ the same layout on the screen as the original text.
 Specifies whether the Delete key on the editing keypad should send DEL (127)
 or the VT220-style Remove escape sequence.
 The default is \*(``false,\*('' for the latter.
+.TP 8
+.B "disallowWindowOps (\fPclass\fB DisallowWindowOps)"
+Specify which features will be disabled if \fBallowWindowOps\fP is false.
+This is a comma-separated list of names, or (for the controls adapted
+from \fIdtterm\fP the operation number).
+The default value is
+.RS
+20,21,SetXprop,SetSelection
+.RE
+.IP
+The names are listed below.  \fIxterm\fP ignores capitalization, but
+they are shown in mixed-case for clarity.  Where a number can be used
+as an alternative, it is given in parentheses after the name.
+.RS
+.TP 5
+GetIconTitle (20)
+Report xterm window's icon label as a string.
+.TP 5
+GetScreenSizeChars (19)
+Report the size of the screen in characters as numbers.
+.TP 5
+GetSelection
+Report selection data as a base64 string.
+.TP 5
+GetWinPosition (13)
+Report xterm window position as numbers.
+.TP 5
+GetWinSizeChars (18)
+Report the size of the text area in characters as numbers.
+.TP 5
+GetWinSizePixels (14)
+Report xterm window in pixels as numbers.
+.TP 5
+GetWinState (11)
+Report xterm window state as a number.
+.TP 5
+GetWinTitle (21)
+Report xterm window's title as a string.
+.TP 5
+LowerWin (6)
+Lower the xterm window to the bottom of the stacking order.
+.TP 5
+MaximizeWin (9)
+Maximize window (i.e., resize to screen size).
+.TP 5
+MinimizeWin (2)
+Iconify window.
+.TP 5
+RaiseWin (5)
+Raise the xterm window to the front of the stacking order.
+.TP 5
+RefreshWin (7)
+Refresh the xterm window.
+.TP 5
+RestoreWin (1)
+De-iconify window.
+.TP 5
+SetSelection
+Set selection data.
+.TP 5
+SetWinLines
+Resize to a given number of lines, at least 24.
+.TP 5
+SetWinPosition (3)
+Move window to given coordinates.
+.TP 5
+SetWinSizeChars (8)
+Resize the text area to given size in characters.
+.TP 5
+SetWinSizePixels (4)
+Resize the xterm window to given size in pixels.
+.TP 5
+SetXprop
+Set X property on top-level window.
+.RE
 .TP 8
 .B "dynamicColors (\fPclass\fB DynamicColors)"
 Specifies whether or not escape sequences to change colors assigned to

@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.191 2009/08/03 21:16:54 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.193 2009/11/07 01:41:45 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2007,2008 by Thomas E. Dickey
+.\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1105,7 +1105,7 @@ Valid values for the first (and any additional parameters) are:
 If the \fIxterm\fP window is open (non-iconified), it returns \*(Cs\*1\*t.
 If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps = \*1\*3 \(-> Report \fIxterm\fP window position as
-\*(Cs\*3\*;\*(Ix\*;\*(Iy\*t
+\*(Cs\*3\*;\*(Ix\*s\*;\*(Iy\*s\*t
   \*(Ps = \*1\*4 \(-> Report \fIxterm\fP window in pixels as
 \*(Cs\*s\*4\*s\*;\*s\fIheight\fP\*s\*;\*s\fIwidth\fP\*s\*t
   \*(Ps = \*1\*8 \(-> Report the size of the text area in characters as

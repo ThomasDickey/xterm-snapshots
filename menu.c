@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.254 2009/10/11 22:46:44 tom Exp $ */
+/* $XTermId: menu.c,v 1.255 2009/11/05 23:41:09 tom Exp $ */
 
 /*
 
@@ -2659,7 +2659,7 @@ InitWidgetMenu(Widget shell)
 {
     Bool result = False;
 
-    TRACE(("InitWidgetMenu(%p)\n", shell));
+    TRACE(("InitWidgetMenu(%p)\n", (void *) shell));
     if (term != 0) {
 	if (shell == toplevel) {	/* vt100 */
 	    if (!term->init_menu) {

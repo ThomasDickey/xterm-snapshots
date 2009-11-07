@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.44 2009/10/10 09:38:25 tom Exp $ */
+/* $XTermId: main.h,v 1.45 2009/11/06 01:34:46 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -105,6 +105,10 @@
 
 #ifndef DEF_ALLOW_WINDOW
 #define DEF_ALLOW_WINDOW	False
+#endif
+
+#ifndef DEF_DISALLOWED_WINDOW
+#define DEF_DISALLOWED_WINDOW	"20,21,SetXprop,SetSelection"
 #endif
 
 #if OPT_BLINK_TEXT

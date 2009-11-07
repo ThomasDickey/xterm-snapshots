@@ -621,7 +621,7 @@ CSI Ps ; Ps ; Ps t
             Ps = 1 1  -> Report xterm window state.  If the xterm window
           is open (non-iconified), it returns CSI 1 t .  If the xterm
           window is iconified, it returns CSI 2 t .
-            Ps = 1 3  -> Report xterm window position as CSI 3 ; x; yt
+            Ps = 1 3  -> Report xterm window position as CSI 3 ; x ; y t
             Ps = 1 4  -> Report xterm window in pixels as CSI  4  ;
           height ;  width t
             Ps = 1 8  -> Report the size of the text area in characters
