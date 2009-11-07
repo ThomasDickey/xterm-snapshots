@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.981 2009/10/25 23:30:01 tom Exp $ */
+/* $XTermId: charproc.c,v 1.984 2009/11/06 11:56:42 tom Exp $ */
 
 /*
 
@@ -132,8 +132,13 @@ in this Software without prior written authorization from The Open Group.
 #include <charclass.h>
 #include <xstrings.h>
 
+typedef struct {
+    const char *name;
+    int code;
+} FlagList;
+
 static IChar doinput(void);
-static int set_character_class(char *s);
+static int set_character_class(char * /*s */ );
 static void FromAlternate(XtermWidget /* xw */ );
 static void RequestResize(XtermWidget termw, int rows, int cols, Bool text);
 static void SwitchBufs(XtermWidget xw);
@@ -483,6 +488,8 @@ static XtResource xterm_resources[] =
     Sres(XtNcharClass, XtCCharClass, screen.charClass, NULL),
     Sres(XtNdecTerminalID, XtCDecTerminalID, screen.term_id, DFT_DECID),
     Sres(XtNdefaultString, XtCDefaultString, screen.default_string, "#"),
+    Sres(XtNdisallowedWindowOps, XtCDisallowedWindowOps,
+	 screen.disallowedWinOps, DEF_DISALLOWED_WINDOW),
     Sres(XtNeightBitSelectTypes, XtCEightBitSelectTypes,
 	 screen.eightbit_select_types, NULL),
     Sres(XtNfont, XtCFont, misc.default_font.f_n, DEFFONT),
@@ -2930,8 +2937,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_XTERM_WINOPS:
 	    TRACE(("CASE_XTERM_WINOPS\n"));
-	    if (AllowWindowOps(xw))
-		window_ops(xw);
+	    window_ops(xw);
 	    sp->parsestate = sp->groundtable;
 	    break;
 #if OPT_WIDE_CHARS
@@ -4528,156 +4534,190 @@ window_ops(XtermWidget xw)
 
     TRACE(("window_ops %d\n", param[0]));
     switch (param[0]) {
-    case 1:			/* Restore (de-iconify) window */
-	TRACE(("...de-iconify window\n"));
-	XMapWindow(screen->display,
-		   VShellWindow);
-	break;
-
-    case 2:			/* Minimize (iconify) window */
-	TRACE(("...iconify window\n"));
-	XIconifyWindow(screen->display,
-		       VShellWindow,
-		       DefaultScreen(screen->display));
-	break;
-
-    case 3:			/* Move the window to the given position */
-	TRACE(("...move window to %d,%d\n", param[1], param[2]));
-	values.x = param[1];
-	values.y = param[2];
-	value_mask = (CWX | CWY);
-	XReconfigureWMWindow(screen->display,
-			     VShellWindow,
-			     DefaultScreen(screen->display),
-			     value_mask,
-			     &values);
-	break;
-
-    case 4:			/* Resize the window to given size in pixels */
-	RequestResize(xw, param[1], param[2], False);
-	break;
-
-    case 5:			/* Raise the window to the front of the stack */
-	TRACE(("...raise window\n"));
-	XRaiseWindow(screen->display, VShellWindow);
-	break;
-
-    case 6:			/* Lower the window to the bottom of the stack */
-	TRACE(("...lower window\n"));
-	XLowerWindow(screen->display, VShellWindow);
-	break;
-
-    case 7:			/* Refresh the window */
-	TRACE(("...redraw window\n"));
-	Redraw();
-	break;
-
-    case 8:			/* Resize the text-area, in characters */
-	RequestResize(xw, param[1], param[2], True);
-	break;
-
-#if OPT_MAXIMIZE
-    case 9:			/* Maximize or restore */
-	RequestMaximize(xw, param[1]);
-	break;
-#endif
-
-    case 11:			/* Report the window's state */
-	TRACE(("...get window attributes\n"));
-	XGetWindowAttributes(screen->display,
-			     VWindow(screen),
-			     &win_attrs);
-	reply.a_type = ANSI_CSI;
-	reply.a_pintro = 0;
-	reply.a_nparam = 1;
-	reply.a_param[0] = (ParmType) ((win_attrs.map_state == IsViewable)
-				       ? 1
-				       : 2);
-	reply.a_inters = 0;
-	reply.a_final = 't';
-	unparseseq(xw, &reply);
-	break;
-
-    case 13:			/* Report the window's position */
-	TRACE(("...get window position\n"));
-	XGetWindowAttributes(screen->display,
-			     WMFrameWindow(xw),
-			     &win_attrs);
-	reply.a_type = ANSI_CSI;
-	reply.a_pintro = 0;
-	reply.a_nparam = 3;
-	reply.a_param[0] = 3;
-	reply.a_param[1] = (ParmType) win_attrs.x;
-	reply.a_param[2] = (ParmType) win_attrs.y;
-	reply.a_inters = 0;
-	reply.a_final = 't';
-	unparseseq(xw, &reply);
-	break;
-
-    case 14:			/* Report the window's size in pixels */
-	TRACE(("...get window size in pixels\n"));
-	XGetWindowAttributes(screen->display,
-			     VWindow(screen),
-			     &win_attrs);
-	reply.a_type = ANSI_CSI;
-	reply.a_pintro = 0;
-	reply.a_nparam = 3;
-	reply.a_param[0] = 4;
-	/*FIXME: find if dtterm uses
-	 *    win_attrs.height or Height
-	 *      win_attrs.width  or Width
-	 */
-	reply.a_param[1] = (ParmType) Height(screen);
-	reply.a_param[2] = (ParmType) Width(screen);
-	reply.a_inters = 0;
-	reply.a_final = 't';
-	unparseseq(xw, &reply);
-	break;
-
-    case 18:			/* Report the text's size in characters */
-	TRACE(("...get window size in characters\n"));
-	reply.a_type = ANSI_CSI;
-	reply.a_pintro = 0;
-	reply.a_nparam = 3;
-	reply.a_param[0] = 8;
-	reply.a_param[1] = (ParmType) MaxRows(screen);
-	reply.a_param[2] = (ParmType) MaxCols(screen);
-	reply.a_inters = 0;
-	reply.a_final = 't';
-	unparseseq(xw, &reply);
-	break;
-
-#if OPT_MAXIMIZE
-    case 19:			/* Report the screen's size, in characters */
-	if (!QueryMaximize(xw, &root_height, &root_width)) {
-	    root_height = 0;
-	    root_width = 0;
+    case ewRestoreWin:		/* Restore (de-iconify) window */
+	if (AllowWindowOps(xw, ewRestoreWin)) {
+	    TRACE(("...de-iconify window\n"));
+	    XMapWindow(screen->display,
+		       VShellWindow);
 	}
-	reply.a_type = ANSI_CSI;
-	reply.a_pintro = 0;
-	reply.a_nparam = 3;
-	reply.a_param[0] = 9;
-	reply.a_param[1] = (ParmType) (root_height / FontHeight(screen));
-	reply.a_param[2] = (ParmType) (root_width / FontWidth(screen));
-	reply.a_inters = 0;
-	reply.a_final = 't';
-	unparseseq(xw, &reply);
+	break;
+
+    case ewMinimizeWin:	/* Minimize (iconify) window */
+	if (AllowWindowOps(xw, ewMinimizeWin)) {
+	    TRACE(("...iconify window\n"));
+	    XIconifyWindow(screen->display,
+			   VShellWindow,
+			   DefaultScreen(screen->display));
+	}
+	break;
+
+    case ewSetWinPosition:	/* Move the window to the given position */
+	if (AllowWindowOps(xw, ewSetWinPosition)) {
+	    TRACE(("...move window to %d,%d\n", param[1], param[2]));
+	    values.x = param[1];
+	    values.y = param[2];
+	    value_mask = (CWX | CWY);
+	    XReconfigureWMWindow(screen->display,
+				 VShellWindow,
+				 DefaultScreen(screen->display),
+				 value_mask,
+				 &values);
+	}
+	break;
+
+    case ewSetWinSizePixels:	/* Resize the window to given size in pixels */
+	if (AllowWindowOps(xw, ewSetWinSizePixels)) {
+	    RequestResize(xw, param[1], param[2], False);
+	}
+	break;
+
+    case ewRaiseWin:		/* Raise the window to the front of the stack */
+	if (AllowWindowOps(xw, ewRaiseWin)) {
+	    TRACE(("...raise window\n"));
+	    XRaiseWindow(screen->display, VShellWindow);
+	}
+	break;
+
+    case ewLowerWin:		/* Lower the window to the bottom of the stack */
+	if (AllowWindowOps(xw, ewLowerWin)) {
+	    TRACE(("...lower window\n"));
+	    XLowerWindow(screen->display, VShellWindow);
+	}
+	break;
+
+    case ewRefreshWin:		/* Refresh the window */
+	if (AllowWindowOps(xw, ewRefreshWin)) {
+	    TRACE(("...redraw window\n"));
+	    Redraw();
+	}
+	break;
+
+    case ewSetWinSizeChars:	/* Resize the text-area, in characters */
+	if (AllowWindowOps(xw, ewSetWinSizeChars)) {
+	    RequestResize(xw, param[1], param[2], True);
+	}
+	break;
+
+#if OPT_MAXIMIZE
+    case ewMaximizeWin:	/* Maximize or restore */
+	if (AllowWindowOps(xw, ewMaximizeWin)) {
+	    RequestMaximize(xw, param[1]);
+	}
 	break;
 #endif
 
-    case 20:			/* Report the icon's label */
-	report_win_label(xw, 'L', &text,
-			 XGetWMIconName(screen->display, VShellWindow, &text));
+    case ewGetWinState:	/* Report the window's state */
+	if (AllowWindowOps(xw, ewGetWinState)) {
+	    TRACE(("...get window attributes\n"));
+	    XGetWindowAttributes(screen->display,
+				 VWindow(screen),
+				 &win_attrs);
+	    reply.a_type = ANSI_CSI;
+	    reply.a_pintro = 0;
+	    reply.a_nparam = 1;
+	    reply.a_param[0] = (ParmType) ((win_attrs.map_state == IsViewable)
+					   ? 1
+					   : 2);
+	    reply.a_inters = 0;
+	    reply.a_final = 't';
+	    unparseseq(xw, &reply);
+	}
 	break;
 
-    case 21:			/* Report the window's title */
-	report_win_label(xw, 'l', &text,
-			 XGetWMName(screen->display, VShellWindow, &text));
+    case ewGetWinPosition:	/* Report the window's position */
+	if (AllowWindowOps(xw, ewGetWinPosition)) {
+	    TRACE(("...get window position\n"));
+	    XGetWindowAttributes(screen->display,
+				 WMFrameWindow(xw),
+				 &win_attrs);
+	    reply.a_type = ANSI_CSI;
+	    reply.a_pintro = 0;
+	    reply.a_nparam = 3;
+	    reply.a_param[0] = 3;
+	    reply.a_param[1] = (ParmType) win_attrs.x;
+	    reply.a_param[2] = (ParmType) win_attrs.y;
+	    reply.a_inters = 0;
+	    reply.a_final = 't';
+	    unparseseq(xw, &reply);
+	}
+	break;
+
+    case ewGetWinSizePixels:	/* Report the window's size in pixels */
+	if (AllowWindowOps(xw, ewGetWinSizePixels)) {
+	    TRACE(("...get window size in pixels\n"));
+	    XGetWindowAttributes(screen->display,
+				 VWindow(screen),
+				 &win_attrs);
+	    reply.a_type = ANSI_CSI;
+	    reply.a_pintro = 0;
+	    reply.a_nparam = 3;
+	    reply.a_param[0] = 4;
+	    /*FIXME: find if dtterm uses
+	     *    win_attrs.height or Height
+	     *      win_attrs.width  or Width
+	     */
+	    reply.a_param[1] = (ParmType) Height(screen);
+	    reply.a_param[2] = (ParmType) Width(screen);
+	    reply.a_inters = 0;
+	    reply.a_final = 't';
+	    unparseseq(xw, &reply);
+	}
+	break;
+
+    case ewGetWinSizeChars:	/* Report the text's size in characters */
+	if (AllowWindowOps(xw, ewGetWinSizeChars)) {
+	    TRACE(("...get window size in characters\n"));
+	    reply.a_type = ANSI_CSI;
+	    reply.a_pintro = 0;
+	    reply.a_nparam = 3;
+	    reply.a_param[0] = 8;
+	    reply.a_param[1] = (ParmType) MaxRows(screen);
+	    reply.a_param[2] = (ParmType) MaxCols(screen);
+	    reply.a_inters = 0;
+	    reply.a_final = 't';
+	    unparseseq(xw, &reply);
+	}
+	break;
+
+#if OPT_MAXIMIZE
+    case ewGetScreenSizeChars:	/* Report the screen's size, in characters */
+	if (AllowWindowOps(xw, ewGetScreenSizeChars)) {
+	    if (!QueryMaximize(xw, &root_height, &root_width)) {
+		root_height = 0;
+		root_width = 0;
+	    }
+	    reply.a_type = ANSI_CSI;
+	    reply.a_pintro = 0;
+	    reply.a_nparam = 3;
+	    reply.a_param[0] = 9;
+	    reply.a_param[1] = (ParmType) (root_height / FontHeight(screen));
+	    reply.a_param[2] = (ParmType) (root_width / FontWidth(screen));
+	    reply.a_inters = 0;
+	    reply.a_final = 't';
+	    unparseseq(xw, &reply);
+	}
+	break;
+#endif
+
+    case ewGetIconTitle:	/* Report the icon's label */
+	if (AllowWindowOps(xw, ewGetIconTitle)) {
+	    report_win_label(xw, 'L', &text,
+			     XGetWMIconName(screen->display, VShellWindow, &text));
+	}
+	break;
+
+    case ewGetWinTitle:	/* Report the window's title */
+	if (AllowWindowOps(xw, ewGetWinTitle)) {
+	    report_win_label(xw, 'l', &text,
+			     XGetWMName(screen->display, VShellWindow, &text));
+	}
 	break;
 
     default:			/* DECSLPP (24, 25, 36, 48, 72, 144) */
-	if (param[0] >= 24)
-	    RequestResize(xw, param[0], -1, True);
+	if (AllowWindowOps(xw, ewSetWinLines)) {
+	    if (param[0] >= 24)
+		RequestResize(xw, param[0], -1, True);
+	}
 	break;
     }
 }
@@ -5411,6 +5451,87 @@ ParseOnClicks(XtermWidget wnew, XtermWidget wreq, Cardinal item)
     }
 }
 
+/*
+ * Parse a comma-separated list, returning a string which the caller must
+ * free, and updating the source pointer.
+ */
+static char *
+ParseList(const char **source)
+{
+    const char *base = *source;
+    const char *next;
+    unsigned size;
+    char *value = 0;
+
+    /* ignore empty values */
+    while (*base == ',')
+	++base;
+    if (*base != '\0') {
+	next = base;
+	while (*next != '\0' && *next != ',')
+	    ++next;
+	size = (unsigned) (1 + next - base);
+	value = malloc(size);
+	if (value != 0) {
+	    memcpy(value, base, size);
+	    value[size - 1] = '\0';
+	}
+	*source = next;
+    } else {
+	*source = base;
+    }
+    return x_strtrim(value);
+}
+
+static void
+set_flags_from_list(char *target,
+		    const char *source,
+		    FlagList * list,
+		    Cardinal limit)
+{
+    Cardinal n;
+    int value;
+
+    while (*source != '\0') {
+	char *next = ParseList(&source);
+	Boolean found = False;
+
+	if (next == 0)
+	    break;
+	if (isdigit(CharOf(*next))) {
+	    char *temp;
+
+	    value = (int) strtol(next, &temp, 0);
+	    if (temp != 0 && *temp != '\0') {
+		fprintf(stderr, "Expected a number: %s\n", next);
+	    } else {
+		for (n = 0; n < limit; ++n) {
+		    if (list[n].code == value) {
+			target[value] = 1;
+			found = True;
+			break;
+		    }
+		}
+	    }
+	} else {
+	    for (n = 0; n < limit; ++n) {
+		if (!x_strcasecmp(next, list[n].name)) {
+		    value = list[n].code;
+		    target[value] = 1;
+		    found = True;
+		    break;
+		}
+	    }
+	}
+	if (!found) {
+	    fprintf(stderr, "Unrecognized keyword: %s\n", next);
+	} else {
+	    TRACE(("...found %s (%d)\n", next, value));
+	}
+	free(next);
+    }
+}
+
 /* ARGSUSED */
 static void
 VTInitialize(Widget wrequest,
@@ -5423,6 +5544,36 @@ VTInitialize(Widget wrequest,
 #define TxtBg(name) !x_strcasecmp(Kolor(Tcolors[TEXT_BG]), Kolor(name))
 #define DftFg(name) isDefaultForeground(Kolor(name))
 #define DftBg(name) isDefaultBackground(Kolor(name))
+
+#define DATA(name) { #name, ew##name }
+    static FlagList tblWindowOps[] =
+    {
+	DATA(RestoreWin)
+	,DATA(MinimizeWin)
+	,DATA(SetWinPosition)
+	,DATA(SetWinSizePixels)
+	,DATA(RaiseWin)
+	,DATA(LowerWin)
+	,DATA(RefreshWin)
+	,DATA(SetWinSizeChars)
+#if OPT_MAXIMIZE
+	,DATA(MaximizeWin)
+#endif
+	,DATA(GetWinState)
+	,DATA(GetWinPosition)
+	,DATA(GetWinSizePixels)
+	,DATA(GetWinSizeChars)
+#if OPT_MAXIMIZE
+	,DATA(GetScreenSizeChars)
+#endif
+	,DATA(GetIconTitle)
+	,DATA(GetWinTitle)
+	,DATA(SetWinLines)
+	,DATA(SetXprop)
+	,DATA(GetSelection)
+	,DATA(SetSelection)
+    };
+#undef DATA
 
     XtermWidget request = (XtermWidget) wrequest;
     XtermWidget wnew = (XtermWidget) new_arg;
@@ -5635,6 +5786,13 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.allowTcapOp0);
     init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
+
+    init_Sres(screen.disallowedWinOps);
+
+    set_flags_from_list(wnew->screen.disallow_win_ops,
+			wnew->screen.disallowedWinOps,
+			tblWindowOps,
+			ewLAST);
 
     init_Sres(screen.default_string);
     init_Sres(screen.eightbit_select_types);
@@ -7761,7 +7919,7 @@ HandleIgnore(Widget w,
 {
     XtermWidget xw;
 
-    TRACE(("Handle ignore for %p\n", w));
+    TRACE(("Handle ignore for %p\n", (void *) w));
     if ((xw = getXtermWidget(w)) != 0) {
 	/* do nothing, but check for funny escape sequences */
 	(void) SendMousePosition(xw, event);

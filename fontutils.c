@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.319 2009/10/12 22:29:42 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.320 2009/11/05 23:45:11 tom Exp $ */
 
 /************************************************************
 
@@ -1706,7 +1706,8 @@ static void
 checkFontInfo(int value, const char *tag)
 {
     if (value == 0) {
-	fprintf(stderr, "Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
+	fprintf(stderr,
+		"Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
 	exit(1);
     }
 }
@@ -2757,7 +2758,7 @@ HandleLargerFont(Widget w GCC_UNUSED,
 {
     XtermWidget xw;
 
-    TRACE(("Handle larger-vt-font for %p\n", w));
+    TRACE(("Handle larger-vt-font for %p\n", (void *) w));
     if ((xw = getXtermWidget(w)) != 0) {
 	if (xw->misc.shift_fonts) {
 	    TScreen *screen = TScreenOf(xw);
@@ -2782,7 +2783,7 @@ HandleSmallerFont(Widget w GCC_UNUSED,
 {
     XtermWidget xw;
 
-    TRACE(("Handle smaller-vt-font for %p\n", w));
+    TRACE(("Handle smaller-vt-font for %p\n", (void *) w));
     if ((xw = getXtermWidget(w)) != 0) {
 	if (xw->misc.shift_fonts) {
 	    TScreen *screen = TScreenOf(xw);

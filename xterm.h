@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.589 2009/10/12 00:34:48 tom Exp $ */
+/* $XTermId: xterm.h,v 1.590 2009/11/05 23:36:02 tom Exp $ */
 
 /************************************************************
 
@@ -384,6 +384,7 @@ extern char **environ;
 #define XtNdecTerminalID	"decTerminalID"
 #define XtNdefaultString	"defaultString"
 #define XtNdeleteIsDEL		"deleteIsDEL"
+#define XtNdisallowedWindowOps	"disallowedWindowOps"
 #define XtNdynamicColors	"dynamicColors"
 #define XtNeightBitControl	"eightBitControl"
 #define XtNeightBitInput	"eightBitInput"
@@ -544,6 +545,7 @@ extern char **environ;
 #define XtCDecTerminalID	"DecTerminalID"
 #define XtCDefaultString	"DefaultString"
 #define XtCDeleteIsDEL		"DeleteIsDEL"
+#define XtCDisallowedWindowOps	"DisallowedWindowOps"
 #define XtCDynamicColors	"DynamicColors"
 #define XtCEightBitControl	"EightBitControl"
 #define XtCEightBitInput	"EightBitInput"

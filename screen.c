@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.403 2009/10/01 00:30:19 tom Exp $ */
+/* $XTermId: screen.c,v 1.404 2009/11/05 23:41:37 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -270,7 +270,7 @@ allocScrnHead(TScreen * screen, unsigned nrow)
 	SysError(ERROR_SCALLOC);
 
     TRACE(("allocScrnHead %d -> %d -> %p..%p\n", nrow, nrow * size,
-	   result,
+	   (void *) result,
 	   (char *) result + (nrow * size) - 1));
     return result;
 }
@@ -351,7 +351,7 @@ allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char ** addr)
 	setupLineData(screen, base, *addr, nrow, ncol);
     }
 
-    TRACE(("allocScrnBuf %dx%d ->%p\n", nrow, ncol, base));
+    TRACE(("allocScrnBuf %dx%d ->%p\n", nrow, ncol, (void *) base));
     return (base);
 }
 
@@ -503,7 +503,7 @@ Reallocate(XtermWidget xw,
     /* Now free the old data */
     free(oldBufData);
 
-    TRACE(("...Reallocate %dx%d ->%p\n", nrow, ncol, newBufHead));
+    TRACE(("...Reallocate %dx%d ->%p\n", nrow, ncol, (void *) newBufHead));
     return move_down ? move_down : -move_up;	/* convert to rows */
 }
 
