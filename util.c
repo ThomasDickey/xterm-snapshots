@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.508 2009/10/29 10:55:34 tom Exp $ */
+/* $XTermId: util.c,v 1.509 2009/11/08 22:46:05 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -104,38 +104,53 @@ int
 DamagedCells(TScreen * screen, unsigned n, int *klp, int *krp, int row, int col)
 {
     LineData *ld = getLineData(screen, row);
-    int kl = col;
-    int kr = col + (int) n;
+    int result = False;
 
-    assert(kl < ld->lineSize);
-    if (ld->charData[kl] == HIDDEN_CHAR) {
-	while (kl > 0) {
-	    if (ld->charData[--kl] != HIDDEN_CHAR) {
-		break;
-	    }
+    assert(ld);
+    if (col < ld->lineSize) {
+	int nn = (int) n;
+	int kl = col;
+	int kr = col + nn;
+
+	if (kr >= ld->lineSize) {
+	    nn = (ld->lineSize - col - 1);
+	    kr = col + nn;
 	}
-    } else {
-	kl = col + 1;
+
+	if (nn > 0) {
+	    assert(kl < ld->lineSize);
+	    if (ld->charData[kl] == HIDDEN_CHAR) {
+		while (kl > 0) {
+		    if (ld->charData[--kl] != HIDDEN_CHAR) {
+			break;
+		    }
+		}
+	    } else {
+		kl = col + 1;
+	    }
+
+	    assert(kr < (int) ld->lineSize);
+	    if (ld->charData[kr] == HIDDEN_CHAR) {
+		while (kr < screen->max_col) {
+		    assert((kr + 1) < (int) ld->lineSize);
+		    if (ld->charData[++kr] != HIDDEN_CHAR) {
+			--kr;
+			break;
+		    }
+		}
+	    } else {
+		kr = col - 1;
+	    }
+
+	    if (klp)
+		*klp = kl;
+	    if (krp)
+		*krp = kr;
+	    result = (kr >= kl);
+	}
     }
 
-    assert(ld && (kr < (int) ld->lineSize));
-    if (ld->charData[kr] == HIDDEN_CHAR) {
-	while (kr < screen->max_col) {
-	    assert((kr + 1) < (int) ld->lineSize);
-	    if (ld->charData[++kr] != HIDDEN_CHAR) {
-		--kr;
-		break;
-	    }
-	}
-    } else {
-	kr = col - 1;
-    }
-
-    if (klp)
-	*klp = kl;
-    if (krp)
-	*krp = kr;
-    return (kr >= kl);
+    return result;
 }
 
 int
