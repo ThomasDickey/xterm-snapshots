@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.193 2009/11/07 01:41:45 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.194 2009/11/10 01:15:53 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
@@ -288,7 +288,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2008)
+invisible-island.net (2006-2009)
 .AU
 .
 .am BT                  \" add page numbers after first page
@@ -1093,14 +1093,14 @@ These controls may be disabled using the \fIallowWindowOps\fP resource.
 Valid values for the first (and any additional parameters) are:
   \*(Ps = \*1 \(-> De-iconify window.
   \*(Ps = \*2 \(-> Iconify window.
-  \*(Ps = \*3 ; \fIx ; y\fP \(-> Move window to [x, y].
-  \*(Ps = \*4 ; \fIheight ; width\fP \(-> Resize the \fIxterm\fP window to height and width in pixels.
+  \*(Ps = \*3\*s\*;\*s\fIx\*s\*;\*sy\fP \(-> Move window to [x, y].
+  \*(Ps = \*4\*s\*;\*s\fIheight\*s\*;\*swidth\fP \(-> Resize the \fIxterm\fP window to height and width in pixels.
   \*(Ps = \*5 \(-> Raise the \fIxterm\fP window to the front of the stacking order.
   \*(Ps = \*6 \(-> Lower the \fIxterm\fP window to the bottom of the stacking order.
   \*(Ps = \*7 \(-> Refresh the \fIxterm\fP window.
-  \*(Ps = \*8 ; \fIheight ; width\fP \(-> Resize the text area to [height;width] in characters.
-  \*(Ps = \*9 ; \*0 \(-> Restore maximized window.
-  \*(Ps = \*9 ; \*1 \(-> Maximize window (i.e., resize to screen size).
+  \*(Ps = \*8\*s\*;\*s\fIheight\*s\*;\*swidth\fP \(-> Resize the text area to [height;width] in characters.
+  \*(Ps = \*9\*s\*;\*s\*0 \(-> Restore maximized window.
+  \*(Ps = \*9\*s\*;\*s\*1 \(-> Maximize window (i.e., resize to screen size).
   \*(Ps = \*1\*1 \(-> Report \fIxterm\fP window state.
 If the \fIxterm\fP window is open (non-iconified), it returns \*(Cs\*1\*t.
 If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
@@ -1115,7 +1115,13 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps = \*2\*0 \(-> Report \fIxterm\fP window's icon label as
 \*(Os\*s\*L\*s\fIlabel\fP\*s\*(ST
   \*(Ps = \*2\*1 \(-> Report \fIxterm\fP window's title as
-\*(Os\*s\*l\*s\fItitle\fP\*s\*(ST
+\*(Os\*s\*L\*s\fIlabel\fP\*s\*(ST
+  \*(Ps = \*2\*2\*s\*;\*s\*0 \(-> Save \fIxterm\fP icon and window title on stack.
+  \*(Ps = \*2\*2\*s\*;\*s\*1 \(-> Save \fIxterm\fP icon title on stack.
+  \*(Ps = \*2\*2\*s\*;\*s\*2 \(-> Save \fIxterm\fP window title on stack.
+  \*(Ps = \*2\*3\*s\*;\*s\*0 \(-> Restore \fIxterm\fP icon and window title from stack.
+  \*(Ps = \*2\*3\*s\*;\*s\*1 \(-> Restore \fIxterm\fP icon title from stack.
+  \*(Ps = \*2\*3\*s\*;\*s\*2 \(-> Restore \fIxterm\fP window title from stack.
   \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP)
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Ps\\*$\\*t

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.404 2009/11/05 23:41:37 tom Exp $ */
+/* $XTermId: screen.c,v 1.405 2009/11/09 10:01:13 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1329,7 +1329,7 @@ ScrnRefresh(XtermWidget xw,
 
 	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0)
 	    break;
-	if (maxcol >= ld->lineSize) {
+	if (maxcol >= (int) ld->lineSize) {
 	    maxcol = ld->lineSize - 1;
 	    hi_col = maxcol;
 	}
@@ -1705,13 +1705,13 @@ ScreenResize(XtermWidget xw,
     if (screen->is_running) {
 	/* clear the right and bottom internal border because of NorthWest
 	   gravity might have left junk on the right and bottom edges */
-	if (width >= FullWidth(screen)) {
+	if (width >= (int) FullWidth(screen)) {
 	    XClearArea(screen->display, tw,
 		       FullWidth(screen), 0,	/* right edge */
 		       0, (unsigned) height,	/* from top to bottom */
 		       False);
 	}
-	if (height >= FullHeight(screen)) {
+	if (height >= (int) FullHeight(screen)) {
 	    XClearArea(screen->display, tw,
 		       0, FullHeight(screen),	/* bottom */
 		       (unsigned) width, 0,	/* all across the bottom */
