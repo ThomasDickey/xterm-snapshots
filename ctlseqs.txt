@@ -9,6 +9,7 @@
 
                         Xterm Control Sequences
 
+
                                Edward Moy
                    University of California, Berkeley
 
@@ -19,7 +20,7 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2008)
+                    invisible-island.net (2006-2009)
 
 
 
@@ -194,8 +195,8 @@ DCS $ q Pt ST
           r Pt ST for invalid requests.
 DCS + q Pt ST
           Request Termcap/Terminfo String (xterm, experimental).  The
-          string following the "q" is a list of names encoded in hex-
-          adecimal (2 digits per character) separated by ; which corre-
+          string following the "q" is a list of names encoded in hexa-
+          decimal (2 digits per character) separated by ; which corre-
           spond to termcap or terminfo key names.
           xterm responds with DCS 1 + r Pt ST for valid requests, adding
           to Pt an = , and the value of the corresponding string that
@@ -605,18 +606,18 @@ CSI Ps ; Ps ; Ps t
           parameters) are:
             Ps = 1  -> De-iconify window.
             Ps = 2  -> Iconify window.
-            Ps = 3  ; x ; y -> Move window to [x, y].
-            Ps = 4  ; height ; width -> Resize the xterm window to
+            Ps = 3  ;  x ;  y -> Move window to [x, y].
+            Ps = 4  ;  height ;  width -> Resize the xterm window to
           height and width in pixels.
             Ps = 5  -> Raise the xterm window to the front of the stack-
           ing order.
             Ps = 6  -> Lower the xterm window to the bottom of the
           stacking order.
             Ps = 7  -> Refresh the xterm window.
-            Ps = 8  ; height ; width -> Resize the text area to
+            Ps = 8  ;  height ;  width -> Resize the text area to
           [height;width] in characters.
-            Ps = 9  ; 0  -> Restore maximized window.
-            Ps = 9  ; 1  -> Maximize window (i.e., resize to screen
+            Ps = 9  ;  0  -> Restore maximized window.
+            Ps = 9  ;  1  -> Maximize window (i.e., resize to screen
           size).
             Ps = 1 1  -> Report xterm window state.  If the xterm window
           is open (non-iconified), it returns CSI 1 t .  If the xterm
@@ -630,7 +631,15 @@ CSI Ps ; Ps ; Ps t
           CSI  9  ;  height ;  width t
             Ps = 2 0  -> Report xterm window's icon label as OSC  L
           label ST
-            Ps = 2 1  -> Report xterm window's title as OSC  l  title ST
+            Ps = 2 1  -> Report xterm window's title as OSC  L  label ST
+            Ps = 2 2  ;  0  -> Save xterm icon and window title on
+          stack.
+            Ps = 2 2  ;  1  -> Save xterm icon title on stack.
+            Ps = 2 2  ;  2  -> Save xterm window title on stack.
+            Ps = 2 3  ;  0  -> Restore xterm icon and window title from
+          stack.
+            Ps = 2 3  ;  1  -> Restore xterm icon title from stack.
+            Ps = 2 3  ;  2  -> Restore xterm window title from stack.
             Ps >= 2 4  -> Resize to Ps lines (DECSLPP)
 CSI Pt; Pl; Pb; Pr; Ps$ t
           Reverse Attributes in Rectangular Area (DECRARA).

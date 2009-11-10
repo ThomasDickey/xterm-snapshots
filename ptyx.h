@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.635 2009/11/06 23:39:31 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.637 2009/11/10 00:06:24 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -849,6 +849,8 @@ typedef enum {
 #endif
     , ewGetIconTitle = 20
     , ewGetWinTitle = 21
+    , ewPushTitle = 22
+    , ewPopTitle = 23
     /* these do not fit into that scheme, which is why we use an array */
     , ewSetWinLines
     , ewSetXprop
@@ -980,7 +982,7 @@ typedef enum {
 	/* Use remaining bits for encoding the other character-sets */
 #define CSET_NORMAL(code)  ((code) == CSET_SWL)
 #define CSET_DOUBLE(code)  (!CSET_NORMAL(code) && !CSET_EXTEND(code))
-#define CSET_EXTEND(code)  ((code) > CSET_DWL)
+#define CSET_EXTEND(code)  ((int)(code) > CSET_DWL)
 
 #define DBLCS_BITS            4
 #define DBLCS_MASK            BITS2MASK(DBLCS_BITS)
@@ -1362,6 +1364,12 @@ typedef struct {
 #endif
 } SavedCursor;
 
+typedef struct _SaveTitle {
+    	struct _SaveTitle *next;
+	char		*iconName;
+	char		*windowName;
+} SaveTitle;
+
 #define SAVED_CURSORS 2
 
 typedef struct {
@@ -1684,6 +1692,8 @@ typedef struct {
 					    used only with multiscroll	*/
 	SavedCursor	sc[SAVED_CURSORS]; /* data for restore cursor	*/
 	unsigned 	save_modes[DP_LAST]; /* save dec/xterm private modes */
+
+	SaveTitle	*save_title;
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/

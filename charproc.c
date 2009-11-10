@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.984 2009/11/06 11:56:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.989 2009/11/10 11:41:38 tom Exp $ */
 
 /*
 
@@ -4479,35 +4479,86 @@ restoremodes(XtermWidget xw)
 }
 
 /*
+ * Convert an XTextProperty to a string.
+ *
+ * This frees the data owned by the XTextProperty, and returns in its place the
+ * string, which must be freed by the caller.
+ */
+static char *
+property_to_string(XTextProperty * text)
+{
+    char *result = 0;
+    char **list;
+    int length = 0;
+
+    if (XTextPropertyToStringList(text, &list, &length)) {
+	int n, c, pass;
+	size_t need = 0;
+
+	for (pass = 0; pass < 2; ++pass) {
+	    for (n = 0, need = 0; n < length; n++) {
+		char *s = list[n];
+		while ((c = *s++) != '\0') {
+		    if (pass)
+			result[need] = (char) c;
+		    ++need;
+		}
+	    }
+	    if (pass)
+		result[need] = '\0';
+	    else
+		result = malloc(need + 1);
+	    if (result == 0)
+		break;
+	}
+	XFreeStringList(list);
+    }
+    if (text->value != 0)
+	XFree(text->value);
+
+    return result;
+}
+
+static char *
+get_icon_label(XtermWidget xw)
+{
+    XTextProperty text;
+    char *result = 0;
+
+    if (XGetWMIconName(TScreenOf(xw)->display, VShellWindow, &text)) {
+	result = property_to_string(&text);
+    }
+    return result;
+}
+
+static char *
+get_window_label(XtermWidget xw)
+{
+    XTextProperty text;
+    char *result = 0;
+
+    if (XGetWMName(TScreenOf(xw)->display, VShellWindow, &text)) {
+	result = property_to_string(&text);
+    }
+    return result;
+}
+
+/*
  * Report window label (icon or title) in dtterm protocol
  * ESC ] code label ESC backslash
  */
 static void
 report_win_label(XtermWidget xw,
 		 int code,
-		 XTextProperty * text,
-		 Status ok)
+		 char *text)
 {
-    char **list;
-    int length = 0;
-
     reply.a_type = ANSI_ESC;
     unparseputc(xw, ANSI_ESC);
     unparseputc(xw, ']');
     unparseputc(xw, code);
 
-    if (ok) {
-	if (XTextPropertyToStringList(text, &list, &length)) {
-	    int n, c;
-	    for (n = 0; n < length; n++) {
-		char *s = list[n];
-		while ((c = *s++) != '\0')
-		    unparseputc(xw, c);
-	    }
-	    XFreeStringList(list);
-	}
-	if (text->value != 0)
-	    XFree(text->value);
+    if (text != 0) {
+	unparseputs(xw, text);
     }
 
     unparseputc(xw, ANSI_ESC);
@@ -4525,7 +4576,6 @@ window_ops(XtermWidget xw)
     TScreen *screen = &xw->screen;
     XWindowChanges values;
     XWindowAttributes win_attrs;
-    XTextProperty text;
     unsigned value_mask;
 #if OPT_MAXIMIZE
     unsigned root_width;
@@ -4701,15 +4751,74 @@ window_ops(XtermWidget xw)
 
     case ewGetIconTitle:	/* Report the icon's label */
 	if (AllowWindowOps(xw, ewGetIconTitle)) {
-	    report_win_label(xw, 'L', &text,
-			     XGetWMIconName(screen->display, VShellWindow, &text));
+	    report_win_label(xw, 'L', get_icon_label(xw));
 	}
 	break;
 
     case ewGetWinTitle:	/* Report the window's title */
 	if (AllowWindowOps(xw, ewGetWinTitle)) {
-	    report_win_label(xw, 'l', &text,
-			     XGetWMName(screen->display, VShellWindow, &text));
+	    report_win_label(xw, 'l', get_window_label(xw));
+	}
+	break;
+
+    case ewPushTitle:		/* save the window's title(s) on stack */
+	if (AllowWindowOps(xw, ewPushTitle)) {
+	    SaveTitle *last = screen->save_title;
+	    SaveTitle *item = TypeCalloc(SaveTitle);
+
+	    if (item != 0) {
+		switch (param[1]) {
+		case 0:
+		case DEFAULT:
+		    item->iconName = get_icon_label(xw);
+		    item->windowName = get_window_label(xw);
+		    break;
+		case 1:
+		    item->iconName = get_icon_label(xw);
+		    break;
+		case 2:
+		    item->windowName = get_window_label(xw);
+		    break;
+		}
+		item->next = last;
+		if (item->iconName == 0) {
+		    item->iconName = ((last == 0)
+				      ? get_icon_label(xw)
+				      : x_strdup(last->iconName));
+		}
+		if (item->windowName == 0) {
+		    item->windowName = ((last == 0)
+					? get_window_label(xw)
+					: x_strdup(last->windowName));
+		}
+		screen->save_title = item;
+	    }
+	}
+	break;
+
+    case ewPopTitle:		/* restore the window's title(s) from stack */
+	if (AllowWindowOps(xw, ewPopTitle)) {
+	    SaveTitle *item = screen->save_title;
+
+	    if (item != 0) {
+		switch (param[1]) {
+		case 0:
+		case DEFAULT:
+		    ChangeIconName(xw, item->iconName);
+		    ChangeTitle(xw, item->windowName);
+		    break;
+		case 1:
+		    ChangeIconName(xw, item->iconName);
+		    break;
+		case 2:
+		    ChangeTitle(xw, item->windowName);
+		    break;
+		}
+		screen->save_title = item->next;
+		free(item->iconName);
+		free(item->windowName);
+		free(item);
+	    }
 	}
 	break;
 
@@ -5082,8 +5191,8 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 
     TRACE(("RequestResize(rows=%d, cols=%d, text=%d)\n", rows, cols, text));
 
-    if ((askedWidth = (Dimension) cols) < cols
-	|| (askedHeight = (Dimension) rows) < rows)
+    if ((int) (askedWidth = (Dimension) cols) < cols
+	|| (int) (askedHeight = (Dimension) rows) < rows)
 	return;
 
     if (askedHeight == 0
@@ -5128,11 +5237,11 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     if (xw->misc.limit_resize > 0) {
 	Dimension high = (Dimension) (xw->misc.limit_resize * attrs.height);
 	Dimension wide = (Dimension) (xw->misc.limit_resize * attrs.width);
-	if (high < attrs.height)
+	if ((int) high < attrs.height)
 	    high = (Dimension) attrs.height;
 	if (askedHeight > high)
 	    askedHeight = high;
-	if (wide < attrs.width)
+	if ((int) wide < attrs.width)
 	    wide = (Dimension) attrs.width;
 	if (askedWidth > wide)
 	    askedWidth = wide;
@@ -5568,6 +5677,8 @@ VTInitialize(Widget wrequest,
 #endif
 	,DATA(GetIconTitle)
 	,DATA(GetWinTitle)
+	,DATA(PushTitle)
+	,DATA(PopTitle)
 	,DATA(SetWinLines)
 	,DATA(SetXprop)
 	,DATA(GetSelection)
@@ -6300,6 +6411,13 @@ VTDestroy(Widget w GCC_UNUSED)
 	deleteScrollback(screen, 0);
     }
 #endif
+    while (screen->save_title != 0) {
+	SaveTitle *last = screen->save_title;
+	screen->save_title = last->next;
+	free(last->iconName);
+	free(last->windowName);
+	free(last);
+    }
     TRACE_FREE_LEAK(screen->save_ptr);
     TRACE_FREE_LEAK(screen->saveBuf_data);
     TRACE_FREE_LEAK(screen->saveBuf_index);
