@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.989 2009/11/10 11:41:38 tom Exp $ */
+/* $XTermId: charproc.c,v 1.990 2009/11/11 00:34:11 tom Exp $ */
 
 /*
 
@@ -1292,6 +1292,24 @@ select_charset(struct ParseState *sp, int type, int size)
     }
 }
 
+static int
+zero_if_default(int which)
+{
+    int result = (nparam > which) ? param[which] : 0;
+    if (result <= 0)
+	result = 0;
+    return result;
+}
+
+static int
+one_if_default(int which)
+{
+    int result = (nparam > which) ? param[which] : 0;
+    if (result <= 0)
+	result = 1;
+    return result;
+}
+
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
@@ -1759,13 +1777,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_ESC_DIGIT:
 	    /* digit in csi or dec mode */
-	    if ((row = param[nparam - 1]) == DEFAULT)
-		row = 0;
-	    param[nparam - 1] = (10 * row) + ((int) c - '0');
-	    if (param[nparam - 1] > 65535)
-		param[nparam - 1] = 65535;
-	    if (sp->parsestate == csi_table)
-		sp->parsestate = csi2_table;
+	    if (nparam > 0) {
+		if ((row = param[nparam - 1]) == DEFAULT)
+		    row = 0;
+		param[nparam - 1] = (10 * row) + ((int) c - '0');
+		if (param[nparam - 1] > 65535)
+		    param[nparam - 1] = 65535;
+		if (sp->parsestate == csi_table)
+		    sp->parsestate = csi2_table;
+	    }
 	    break;
 
 	case CASE_ESC_SEMI:
@@ -1926,7 +1946,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		/* Track mouse as long as in window and between
 		 * specified rows
 		 */
-		start.row = param[2] - 1;
+		start.row = one_if_default(2) - 1;
 		start.col = param[1] - 1;
 		TrackMouse(xw,
 			   param[0],
@@ -2512,10 +2532,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		VTReset(xw, False, False);
 		screen->vtXX_level = param[0] - 60;
 		if (param[0] > 61) {
-		    if (param[1] == 1)
+		    switch (zero_if_default(1)) {
+		    case 1:
 			show_8bit_control(False);
-		    else if (param[1] == 0 || param[1] == 2)
+			break;
+		    case 0:
+		    case 2:
 			show_8bit_control(True);
+			break;
+		    }
 		}
 	    }
 	    sp->parsestate = sp->groundtable;
@@ -4603,9 +4628,9 @@ window_ops(XtermWidget xw)
 
     case ewSetWinPosition:	/* Move the window to the given position */
 	if (AllowWindowOps(xw, ewSetWinPosition)) {
-	    TRACE(("...move window to %d,%d\n", param[1], param[2]));
-	    values.x = param[1];
-	    values.y = param[2];
+	    values.x = zero_if_default(1);
+	    values.y = zero_if_default(2);
+	    TRACE(("...move window to %d,%d\n", values.x, values.y));
 	    value_mask = (CWX | CWY);
 	    XReconfigureWMWindow(screen->display,
 				 VShellWindow,
@@ -4617,7 +4642,7 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizePixels:	/* Resize the window to given size in pixels */
 	if (AllowWindowOps(xw, ewSetWinSizePixels)) {
-	    RequestResize(xw, param[1], param[2], False);
+	    RequestResize(xw, zero_if_default(1), zero_if_default(2), False);
 	}
 	break;
 
@@ -4644,14 +4669,14 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizeChars:	/* Resize the text-area, in characters */
 	if (AllowWindowOps(xw, ewSetWinSizeChars)) {
-	    RequestResize(xw, param[1], param[2], True);
+	    RequestResize(xw, zero_if_default(1), zero_if_default(2), True);
 	}
 	break;
 
 #if OPT_MAXIMIZE
     case ewMaximizeWin:	/* Maximize or restore */
 	if (AllowWindowOps(xw, ewMaximizeWin)) {
-	    RequestMaximize(xw, param[1]);
+	    RequestMaximize(xw, zero_if_default(1));
 	}
 	break;
 #endif
@@ -4732,6 +4757,7 @@ window_ops(XtermWidget xw)
 #if OPT_MAXIMIZE
     case ewGetScreenSizeChars:	/* Report the screen's size, in characters */
 	if (AllowWindowOps(xw, ewGetScreenSizeChars)) {
+	    TRACE(("...get screen size in characters\n"));
 	    if (!QueryMaximize(xw, &root_height, &root_width)) {
 		root_height = 0;
 		root_width = 0;
@@ -4751,12 +4777,14 @@ window_ops(XtermWidget xw)
 
     case ewGetIconTitle:	/* Report the icon's label */
 	if (AllowWindowOps(xw, ewGetIconTitle)) {
+	    TRACE(("...get icon's label\n"));
 	    report_win_label(xw, 'L', get_icon_label(xw));
 	}
 	break;
 
     case ewGetWinTitle:	/* Report the window's title */
 	if (AllowWindowOps(xw, ewGetWinTitle)) {
+	    TRACE(("...get window's label\n"));
 	    report_win_label(xw, 'l', get_window_label(xw));
 	}
 	break;
@@ -4766,10 +4794,10 @@ window_ops(XtermWidget xw)
 	    SaveTitle *last = screen->save_title;
 	    SaveTitle *item = TypeCalloc(SaveTitle);
 
+	    TRACE(("...push title onto stack\n"));
 	    if (item != 0) {
-		switch (param[1]) {
+		switch (zero_if_default(1)) {
 		case 0:
-		case DEFAULT:
 		    item->iconName = get_icon_label(xw);
 		    item->windowName = get_window_label(xw);
 		    break;
@@ -4800,10 +4828,10 @@ window_ops(XtermWidget xw)
 	if (AllowWindowOps(xw, ewPopTitle)) {
 	    SaveTitle *item = screen->save_title;
 
+	    TRACE(("...pop title off stack\n"));
 	    if (item != 0) {
-		switch (param[1]) {
+		switch (zero_if_default(1)) {
 		case 0:
-		case DEFAULT:
 		    ChangeIconName(xw, item->iconName);
 		    ChangeTitle(xw, item->windowName);
 		    break;

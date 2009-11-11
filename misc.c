@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.430 2009/11/06 22:08:04 tom Exp $ */
+/* $XTermId: misc.c,v 1.431 2009/11/11 00:25:16 tom Exp $ */
 
 /*
  *
@@ -1239,6 +1239,8 @@ RequestMaximize(XtermWidget termw, int maximize)
     TScreen *screen = &termw->screen;
     XWindowAttributes wm_attrs, vshell_attrs;
     unsigned root_width, root_height;
+
+    TRACE(("RequestMaximize %s\n", maximize ? "maximize" : "restore"));
 
     if (maximize) {
 
