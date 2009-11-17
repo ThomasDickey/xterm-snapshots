@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.590 2009/11/05 23:36:02 tom Exp $ */
+/* $XTermId: xterm.h,v 1.591 2009/11/17 00:46:20 tom Exp $ */
 
 /************************************************************
 
@@ -1221,18 +1221,17 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #define ExtractForeground(color) (unsigned) GetCellColorFG(color)
 #define ExtractBackground(color) (unsigned) GetCellColorBG(color)
 
-#define checkVeryBoldAttr(flags, fg, code, attr) \
+#define checkVeryBoldAttr(flags, attr) \
 	if ((flags & FG_COLOR) != 0 \
 	 && (screen->veryBoldColors & attr) == 0 \
-	 && (flags & attr) != 0 \
-	 && (fg == code)) \
+	 && (flags & attr) != 0) \
 		 flags &= ~(attr)
 
-#define checkVeryBoldColors(flags, fg) \
-	checkVeryBoldAttr(flags, fg, COLOR_RV, INVERSE); \
-	checkVeryBoldAttr(flags, fg, COLOR_UL, UNDERLINE); \
-	checkVeryBoldAttr(flags, fg, COLOR_BD, BOLD); \
-	checkVeryBoldAttr(flags, fg, COLOR_BL, BLINK)
+#define checkVeryBoldColors(flags) \
+	checkVeryBoldAttr(flags, INVERSE); \
+	checkVeryBoldAttr(flags, UNDERLINE); \
+	checkVeryBoldAttr(flags, BOLD); \
+	checkVeryBoldAttr(flags, BLINK)
 
 #else /* !OPT_ISO_COLORS */
 
@@ -1253,7 +1252,7 @@ extern Pixel xtermGetColorRes(ColorRes *res);
 #define makeColorPair(fg, bg) 0
 #define xtermColorPair(xw) 0
 
-#define checkVeryBoldColors(flags, fg) /* nothing */
+#define checkVeryBoldColors(flags) /* nothing */
 
 #endif	/* OPT_ISO_COLORS */
 

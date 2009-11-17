@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.510 2009/11/09 10:09:58 tom Exp $ */
+/* $XTermId: util.c,v 1.512 2009/11/17 00:47:41 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -711,7 +711,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 	       screen->cur_row));
 
 	test = flags;
-	checkVeryBoldColors(test, xw->cur_foreground);
+	checkVeryBoldColors(test);
 
 	/* make sure that the correct GC is current */
 	currentGC = updatedXtermGC(xw, flags, fg_bg, False);
@@ -2228,12 +2228,14 @@ xtermXftDrawString(XtermWidget xw,
 
 #if OPT_ISO_COLORS
 	if ((flags & UNDERLINE)
+	    && !screen->colorULMode
 	    && screen->italicULMode
 	    && XFT_FONT(renderWideItal[fontnum])) {
 	    wfont = XFT_FONT(renderWideItal[fontnum]);
 	} else
 #endif
 	    if ((flags & BOLDATTR(screen))
+		&& !screen->colorBDMode
 		&& XFT_FONT(renderWideBold[fontnum])) {
 	    wfont = XFT_FONT(renderWideBold[fontnum]);
 	} else {
@@ -2765,6 +2767,7 @@ drawXtermText(XtermWidget xw,
 	}
 #if OPT_ISO_COLORS
 	if ((flags & UNDERLINE)
+	    && !screen->colorULMode
 	    && screen->italicULMode
 	    && XFT_FONT(renderFontItal[fontnum])) {
 	    font = XFT_FONT(renderFontItal[fontnum]);
@@ -2772,6 +2775,7 @@ drawXtermText(XtermWidget xw,
 	} else
 #endif
 	    if ((flags & BOLDATTR(screen))
+		&& !screen->colorBDMode
 		&& XFT_FONT(renderFontBold[fontnum])) {
 	    font = XFT_FONT(renderFontBold[fontnum]);
 	} else {
@@ -3380,7 +3384,7 @@ updatedXtermGC(XtermWidget xw, unsigned flags, CellColor fg_bg, Bool hilite)
     (void) my_bg;
     (void) my_fg;
 
-    checkVeryBoldColors(flags, my_fg);
+    checkVeryBoldColors(flags);
 
     if (ReverseOrHilite(screen, flags, hilite)) {
 	if (flags & BOLDATTR(screen)) {
@@ -3460,7 +3464,7 @@ resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
     Pixel fg_pix = getXtermForeground(xw, flags, xw->cur_foreground);
     Pixel bg_pix = getXtermBackground(xw, flags, xw->cur_background);
 
-    checkVeryBoldColors(flags, xw->cur_foreground);
+    checkVeryBoldColors(flags);
 
     if (ReverseOrHilite(screen, flags, hilite)) {
 	if (flags & BOLDATTR(screen)) {

@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.54 2009/08/07 00:06:33 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.55 2009/11/17 00:47:26 tom Exp $ */
 
 /************************************************************
 
@@ -629,7 +629,7 @@ getCgsGC(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
 		    }
 		}
 		LINK(k);
-		TRACE(("...getCgsGC least-used(%d) was %d\n", k, THIS(used)));
+		TRACE2(("...getCgsGC least-used(%d) was %d\n", k, THIS(used)));
 		result = chgCache(xw, cgsId, me, True);
 	    }
 	    me->next = *(me->data);

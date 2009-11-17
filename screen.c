@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.405 2009/11/09 10:01:13 tom Exp $ */
+/* $XTermId: screen.c,v 1.406 2009/11/17 00:46:20 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1484,7 +1484,7 @@ ScrnRefresh(XtermWidget xw,
 				     (unsigned) (col - lastind))));
 
 		test = flags;
-		checkVeryBoldColors(test, fg);
+		checkVeryBoldColors(test);
 
 		x = drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
 				  GetLineDblCS(ld),
@@ -1549,7 +1549,7 @@ ScrnRefresh(XtermWidget xw,
 	       visibleIChars(&chars[lastind], (unsigned) (col - lastind))));
 
 	test = flags;
-	checkVeryBoldColors(test, fg);
+	checkVeryBoldColors(test);
 
 	drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
 		      GetLineDblCS(ld),
