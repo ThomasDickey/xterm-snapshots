@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.512 2009/11/17 00:47:41 tom Exp $ */
+/* $XTermId: util.c,v 1.516 2009/11/17 23:26:07 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -658,6 +658,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 {
     TScreen *screen = &(xw->screen);
     LineData *ld = 0;
+    int fg;
     unsigned test;
     unsigned flags = xw->flags;
     CellColor fg_bg = makeColorPair(xw->cur_foreground, xw->cur_background);
@@ -711,7 +712,8 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 	       screen->cur_row));
 
 	test = flags;
-	checkVeryBoldColors(test);
+	fg = MapToColorMode(xw->cur_foreground, screen, flags);
+	checkVeryBoldColors(test, fg);
 
 	/* make sure that the correct GC is current */
 	currentGC = updatedXtermGC(xw, flags, fg_bg, False);
@@ -3384,7 +3386,10 @@ updatedXtermGC(XtermWidget xw, unsigned flags, CellColor fg_bg, Bool hilite)
     (void) my_bg;
     (void) my_fg;
 
-    checkVeryBoldColors(flags);
+    /*
+     * Discard video attributes overridden by colorXXXMode's.
+     */
+    checkVeryBoldColors(flags, my_fg);
 
     if (ReverseOrHilite(screen, flags, hilite)) {
 	if (flags & BOLDATTR(screen)) {
@@ -3464,7 +3469,7 @@ resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
     Pixel fg_pix = getXtermForeground(xw, flags, xw->cur_foreground);
     Pixel bg_pix = getXtermBackground(xw, flags, xw->cur_background);
 
-    checkVeryBoldColors(flags);
+    checkVeryBoldColors(flags, xw->cur_foreground);
 
     if (ReverseOrHilite(screen, flags, hilite)) {
 	if (flags & BOLDATTR(screen)) {
@@ -3500,12 +3505,7 @@ extract_fg(XtermWidget xw, CellColor color, unsigned flags)
 
     if (xw->screen.colorAttrMode
 	|| (fg == ExtractBackground(color))) {
-	if (xw->screen.colorULMode && (flags & UNDERLINE))
-	    fg = COLOR_UL;
-	if (xw->screen.colorBDMode && (flags & BOLD))
-	    fg = COLOR_BD;
-	if (xw->screen.colorBLMode && (flags & BLINK))
-	    fg = COLOR_BL;
+	fg = MapToColorMode(fg, TScreenOf(xw), flags);
     }
     return fg;
 }

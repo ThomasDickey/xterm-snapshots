@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.990 2009/11/11 00:34:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.991 2009/11/17 22:28:07 tom Exp $ */
 
 /*
 
@@ -972,12 +972,7 @@ setExtendedFG(XtermWidget xw)
 
     if (xw->screen.colorAttrMode
 	|| (fg < 0)) {
-	if (xw->screen.colorULMode && (xw->flags & UNDERLINE))
-	    fg = COLOR_UL;
-	if (xw->screen.colorBDMode && (xw->flags & BOLD))
-	    fg = COLOR_BD;
-	if (xw->screen.colorBLMode && (xw->flags & BLINK))
-	    fg = COLOR_BL;
+	fg = MapToColorMode(fg, TScreenOf(xw), xw->flags);
     }
 
     /* This implements the IBM PC-style convention of 8-colors, with one
