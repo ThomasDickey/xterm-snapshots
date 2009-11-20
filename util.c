@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.516 2009/11/17 23:26:07 tom Exp $ */
+/* $XTermId: util.c,v 1.517 2009/11/20 00:55:11 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1097,6 +1097,8 @@ ClearAbove(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
 
+    screen->in_clear++;
+
     if (screen->protected_mode != OFF_PROTECT) {
 	int row;
 	unsigned len = (unsigned) MaxCols(screen);
@@ -1126,6 +1128,8 @@ ClearAbove(XtermWidget xw)
     }
 
     ClearLeft(xw);
+
+    screen->in_clear--;
 }
 
 /*
@@ -1135,6 +1139,8 @@ static void
 ClearBelow(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
+
+    screen->in_clear++;
 
     ClearRight(xw, -1);
 
@@ -1162,6 +1168,8 @@ ClearBelow(XtermWidget xw)
 	}
 	ClearBufRows(xw, screen->cur_row + 1, screen->max_row);
     }
+
+    screen->in_clear--;
 }
 
 /*
@@ -1179,6 +1187,8 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 	   row, col, len,
 	   screen->startH.row,
 	   screen->startH.col));
+
+    screen->in_clear++;
 
     if (ScrnHaveSelection(screen)
 	&& ScrnIsLineInSelection(screen, row)) {
@@ -1226,8 +1236,10 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 	} while (!done);
 
 	screen->protected_mode = saved_mode;
-	if (len <= 0)
+	if (len <= 0) {
+	    screen->in_clear--;
 	    return 0;
+	}
     }
     /* fall through to the final non-protected segment */
 
@@ -1248,6 +1260,8 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
     if (len != 0) {
 	ClearCells(xw, flags, len, row, col);
     }
+
+    screen->in_clear--;
 
     return rc;
 }
@@ -1284,6 +1298,8 @@ ClearRight(XtermWidget xw, int n)
     assert(screen->max_col >= 0);
     assert(screen->max_col >= screen->cur_col);
 
+    screen->in_clear++;
+
     if (n < 0)			/* the remainder of the line */
 	n = MaxCols(screen);
     if (n == 0)			/* default for 'ECH' */
@@ -1319,6 +1335,8 @@ ClearRight(XtermWidget xw, int n)
     /* with the right part cleared, we can't be wrapping */
     LineClrWrapped(ld);
     screen->do_wrap = False;
+
+    screen->in_clear--;
 }
 
 /*
@@ -1329,6 +1347,8 @@ ClearLeft(XtermWidget xw)
 {
     TScreen *screen = &(xw->screen);
     unsigned len = (unsigned) screen->cur_col + 1;
+
+    screen->in_clear++;
 
     assert(screen->cur_col >= 0);
     if (AddToVisible(xw)) {
@@ -1344,6 +1364,8 @@ ClearLeft(XtermWidget xw)
     } else {
 	ScrnClearCells(xw, screen->cur_row, 0, len);
     }
+
+    screen->in_clear--;
 }
 
 /*
@@ -1365,6 +1387,8 @@ ClearScreen(XtermWidget xw)
     TScreen *screen = &(xw->screen);
     int top;
 
+    screen->in_clear++;
+
     if (screen->cursor_state)
 	HideCursor();
 
@@ -1381,6 +1405,8 @@ ClearScreen(XtermWidget xw)
 			   (unsigned) Width(screen));
     }
     ClearBufRows(xw, 0, screen->max_row);
+
+    screen->in_clear--;
 }
 
 /*
