@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.855 2009/11/17 01:36:01 tom Exp $
+  $XTermId: xterm.log.html,v 1.856 2009/11/20 01:09:32 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -302,6 +302,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve checks in ShowCursor/HideCursor to get the background
+	    color, particularly when <code>highlightReverse</code> resource
+	    is used (report by Jan Engelhardt).
+
 	<li>correct <code>checkVeryBoldAttr</code> to omit comparison of
 	    foreground color to special color values used for
 	    <code>color<XX></code> resources (report by Jan Engelhardt).

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.991 2009/11/17 22:28:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.992 2009/11/20 01:02:21 tom Exp $ */
 
 /*
 
@@ -923,7 +923,7 @@ SGR_Foreground(XtermWidget xw, int color)
      * could happen due to setting the foreground color just before scrolling.
      *
      * Those cells look uncolored, but will confuse ShowCursor(), which looks
-     * for the colors in the current cell, and will see the foreground color. 
+     * for the colors in the current cell, and will see the foreground color.
      * In that case, remove the foreground color from the blank cells.
      */
     if (color < 0) {
@@ -7307,7 +7307,14 @@ ShowCursor(void)
      */
     if_OPT_ISO_COLORS(screen, {
 	fg_bg = ld->color[cursor_col];
+	if (screen->in_clear
+	    && (xw->sgr_foreground >= 0 || xw->sgr_background >= 0)) {
+	    flags |= (FG_COLOR | BG_COLOR);
+	} else if (fg_bg) {
+	    flags |= (FG_COLOR | BG_COLOR);
+	}
     });
+
     fg_pix = getXtermForeground(xw, flags, extract_fg(xw, fg_bg, flags));
     bg_pix = getXtermBackground(xw, flags, extract_bg(xw, fg_bg, flags));
 
@@ -7542,6 +7549,12 @@ HideCursor(void)
      */
     if_OPT_ISO_COLORS(screen, {
 	fg_bg = ld->color[cursor_col];
+	if (screen->in_clear
+	    && (xw->sgr_foreground >= 0 || xw->sgr_background >= 0)) {
+	    flags |= (FG_COLOR | BG_COLOR);
+	} else if (fg_bg) {
+	    flags |= (FG_COLOR | BG_COLOR);
+	}
     });
 
     if (OutsideSelection(screen, screen->cursorp.row, screen->cursorp.col))
