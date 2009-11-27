@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.992 2009/11/20 01:02:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.993 2009/11/26 21:31:58 tom Exp $ */
 
 /*
 
@@ -6420,7 +6420,7 @@ VTDestroy(Widget w GCC_UNUSED)
 {
 #ifdef NO_LEAKS
     XtermWidget xw = (XtermWidget) w;
-    TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
     Cardinal n;
 
     StopBlinking(screen);
@@ -7483,7 +7483,7 @@ HideCursor(void)
     int cursor_col;
     LineData *ld = 0;
 
-    if (screen->cursor_state == OFF)	/* FIXME */
+    if (screen->cursor_state == OFF)
 	return;
     if (INX2ROW(screen, screen->cursorp.row) > screen->max_row)
 	return;
@@ -7549,12 +7549,6 @@ HideCursor(void)
      */
     if_OPT_ISO_COLORS(screen, {
 	fg_bg = ld->color[cursor_col];
-	if (screen->in_clear
-	    && (xw->sgr_foreground >= 0 || xw->sgr_background >= 0)) {
-	    flags |= (FG_COLOR | BG_COLOR);
-	} else if (fg_bg) {
-	    flags |= (FG_COLOR | BG_COLOR);
-	}
     });
 
     if (OutsideSelection(screen, screen->cursorp.row, screen->cursorp.col))
