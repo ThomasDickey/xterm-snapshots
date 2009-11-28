@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.431 2009/11/11 00:25:16 tom Exp $ */
+/* $XTermId: misc.c,v 1.432 2009/11/27 18:40:18 tom Exp $ */
 
 /*
  *
@@ -225,13 +225,11 @@ DoSpecialEnterNotify(XtermWidget xw, XEnterWindowEvent * ev)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("DoSpecialEnterNotify(%d)\n", screen->select));
-#ifdef ACTIVEWINDOWINPUTONLY
-    if (ev->window == XtWindow(XtParent(CURRENT_EMU())))
-#endif
-	if (((ev->detail) != NotifyInferior) &&
-	    ev->focus &&
-	    !(screen->select & FOCUS))
-	    selectwindow(screen, INWINDOW);
+    TRACE_FOCUS(xw, ev);
+    if (((ev->detail) != NotifyInferior) &&
+	ev->focus &&
+	!(screen->select & FOCUS))
+	selectwindow(screen, INWINDOW);
 }
 
 static void
@@ -240,13 +238,11 @@ DoSpecialLeaveNotify(XtermWidget xw, XEnterWindowEvent * ev)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("DoSpecialLeaveNotify(%d)\n", screen->select));
-#ifdef ACTIVEWINDOWINPUTONLY
-    if (ev->window == XtWindow(XtParent(CURRENT_EMU())))
-#endif
-	if (((ev->detail) != NotifyInferior) &&
-	    ev->focus &&
-	    !(screen->select & FOCUS))
-	    unselectwindow(screen, INWINDOW);
+    TRACE_FOCUS(xw, ev);
+    if (((ev->detail) != NotifyInferior) &&
+	ev->focus &&
+	!(screen->select & FOCUS))
+	unselectwindow(screen, INWINDOW);
 }
 
 #ifndef XUrgencyHint
@@ -517,10 +513,7 @@ HandleKeyPressed(Widget w GCC_UNUSED,
 		 Cardinal *nparams GCC_UNUSED)
 {
     TRACE(("Handle insert-seven-bit for %p\n", (void *) w));
-#ifdef ACTIVEWINDOWINPUTONLY
-    if (w == CURRENT_EMU())
-#endif
-	Input(term, &event->xkey, False);
+    Input(term, &event->xkey, False);
 }
 
 /* ARGSUSED */
@@ -531,10 +524,7 @@ HandleEightBitKeyPressed(Widget w GCC_UNUSED,
 			 Cardinal *nparams GCC_UNUSED)
 {
     TRACE(("Handle insert-eight-bit for %p\n", (void *) w));
-#ifdef ACTIVEWINDOWINPUTONLY
-    if (w == CURRENT_EMU())
-#endif
-	Input(term, &event->xkey, True);
+    Input(term, &event->xkey, True);
 }
 
 /* ARGSUSED */
@@ -544,10 +534,6 @@ HandleStringEvent(Widget w GCC_UNUSED,
 		  String * params,
 		  Cardinal *nparams)
 {
-#ifdef ACTIVEWINDOWINPUTONLY
-    if (w != CURRENT_EMU())
-	return;
-#endif
 
     if (*nparams != 1)
 	return;
@@ -712,6 +698,7 @@ HandleEnterWindow(Widget w GCC_UNUSED,
 {
     /* NOP since we handled it above */
     TRACE(("HandleEnterWindow ignored\n"));
+    TRACE_FOCUS(w, event);
 }
 
 /*ARGSUSED*/
@@ -723,6 +710,7 @@ HandleLeaveWindow(Widget w GCC_UNUSED,
 {
     /* NOP since we handled it above */
     TRACE(("HandleLeaveWindow ignored\n"));
+    TRACE_FOCUS(w, event);
 }
 
 /*ARGSUSED*/
@@ -740,6 +728,7 @@ HandleFocusChange(Widget w GCC_UNUSED,
 	   visibleEventType(event->type),
 	   event->mode,
 	   event->detail));
+    TRACE_FOCUS(xw, event);
 
     if (screen->quiet_grab
 	&& (event->mode == NotifyGrab || event->mode == NotifyUngrab)) {

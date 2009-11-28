@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.320 2009/11/05 23:45:11 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.322 2009/11/28 00:39:00 tom Exp $ */
 
 /************************************************************
 
@@ -42,6 +42,7 @@ authorization.
 
 #include <fontutils.h>
 #include <X11/Xmu/Drawing.h>
+#include <X11/Xmu/CharSet.h>
 
 #include <main.h>
 #include <data.h>
@@ -748,7 +749,7 @@ xtermOpenFont(XtermWidget xw,
 	    } else {
 		result->fn = x_strdup(name);
 	    }
-	} else if (strcmp(name, DEFFONT)) {
+	} else if (XmuCompareISOLatin1(name, DEFFONT) != 0) {
 	    if (warn <= xw->misc.fontWarnings
 #if OPT_RENDERFONT
 		&& !UsingRenderFont(xw)
