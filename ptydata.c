@@ -1,8 +1,12 @@
-/* $XTermId: ptydata.c,v 1.90 2009/08/09 17:22:05 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.80 2008/04/20 22:41:25 tom Exp $ */
+
+/*
+ * $XFree86: xc/programs/xterm/ptydata.c,v 1.25 2006/02/13 01:14:59 dickey Exp $
+ */
 
 /************************************************************
 
-Copyright 1999-2008,2009 by Thomas E. Dickey
+Copyright 1999-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -64,7 +68,7 @@ decodeUtf8(PtyData * data)
     int i;
     int length = data->last - data->next;
     int utf_count = 0;
-    unsigned utf_char = 0;
+    IChar utf_char = 0;
 
     data->utf_size = 0;
     for (i = 0; i < length; i++) {
@@ -77,7 +81,7 @@ decodeUtf8(PtyData * data)
 		data->utf_data = UCS_REPL;	/* prev. sequence incomplete */
 		data->utf_size = (i + 1);
 	    } else {
-		data->utf_data = (IChar) c;
+		data->utf_data = c;
 		data->utf_size = 1;
 	    }
 	    break;
@@ -116,14 +120,12 @@ decodeUtf8(PtyData * data)
 		}
 		utf_count--;
 		if (utf_count == 0) {
-#if !OPT_WIDER_ICHAR
 		    /* characters outside UCS-2 become UCS_REPL */
 		    if (utf_char > 0xffff) {
 			TRACE(("using replacement for %#x\n", utf_char));
 			utf_char = UCS_REPL;
 		    }
-#endif
-		    data->utf_data = (IChar) utf_char;
+		    data->utf_data = utf_char;
 		    data->utf_size = (i + 1);
 		    break;
 		}
@@ -189,40 +191,32 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
     }
 #else /* !VMS */
     if (FD_ISSET(screen->respond, select_mask)) {
-	int save_err;
 	trimPtyData(screen, data);
 
 	size = read(screen->respond, (char *) data->last, (unsigned) FRG_SIZE);
-	save_err = errno;
-#if (defined(i386) && defined(SVR4) && defined(sun)) || defined(__CYGWIN__)
-	/*
-	 * Yes, I know this is a majorly f*ugly hack, however it seems to
-	 * be necessary for Solaris x86.  DWH 11/15/94
-	 * Dunno why though..
-	 * (and now CYGWIN, alanh@xfree86.org 08/15/01
-	 */
 	if (size <= 0) {
-	    if (save_err == EIO || save_err == 0)
+	    /*
+	     * Yes, I know this is a majorly f*ugly hack, however it seems to
+	     * be necessary for Solaris x86.  DWH 11/15/94
+	     * Dunno why though..
+	     * (and now CYGWIN, alanh@xfree86.org 08/15/01
+	     */
+#if (defined(i386) && defined(SVR4) && defined(sun)) || defined(__CYGWIN__)
+	    if (errno == EIO || errno == 0)
+#else
+	    if (errno == EIO)
+#endif
 		Cleanup(0);
-	    else if (!E_TEST(save_err))
-		Panic("input: read returned unexpected error (%d)\n", save_err);
-	    size = 0;
-	}
-#else /* !f*ugly */
-	if (size < 0) {
-	    if (save_err == EIO)
-		Cleanup(0);
-	    else if (!E_TEST(save_err))
-		Panic("input: read returned unexpected error (%d)\n", save_err);
+	    else if (!E_TEST(errno))
+		Panic("input: read returned unexpected error (%d)\n", errno);
 	    size = 0;
 	} else if (size == 0) {
-#if defined(__UNIXOS2__) || defined(__FreeBSD__)
+#if defined(__UNIXOS2__)
 	    Cleanup(0);
 #else
 	    Panic("input: read returned zero\n", 0);
 #endif
 	}
-#endif /* f*ugly */
     }
 #endif /* VMS */
 
@@ -248,6 +242,25 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
 }
 
 /*
+ * Check if there is more data in the input buffer which can be returned by
+ * nextPtyData().  If there is insufficient data to return a completed UTF-8
+ * value, return false anyway.
+ */
+#if OPT_WIDE_CHARS
+Bool
+morePtyData(TScreen * screen, PtyData * data)
+{
+    Bool result = (data->last > data->next);
+    if (result && screen->utf8_inparse) {
+	if (!data->utf_size)
+	    result = decodeUtf8(data);
+    }
+    TRACE2(("morePtyData returns %d\n", result));
+    return result;
+}
+#endif
+
+/*
  * Return the next value from the input buffer.  Note that morePtyData() is
  * always called before this function, so we can do the UTF-8 input conversion
  * in that function and simply return the result here.
@@ -261,9 +274,8 @@ nextPtyData(TScreen * screen, PtyData * data)
 	result = skipPtyData(data);
     } else {
 	result = *((data)->next++);
-	if (!screen->output_eight_bits) {
-	    result = (IChar) (result & 0x7f);
-	}
+	if (!screen->output_eight_bits)
+	    result &= 0x7f;
     }
     TRACE2(("nextPtyData returns %#x\n", result));
     return result;
@@ -293,7 +305,7 @@ switchPtyData(TScreen * screen, int flag)
 {
     if (screen->utf8_mode != flag) {
 	screen->utf8_mode = flag;
-	screen->utf8_inparse = (Boolean) (flag != 0);
+	screen->utf8_inparse = (flag != 0);
 
 	TRACE(("turning UTF-8 mode %s\n", BtoS(flag)));
 	update_font_utf8_mode();
@@ -322,7 +334,7 @@ initPtyData(PtyData ** result)
     TRACE(("initPtyData using minBufSize %d, maxBufSize %d\n",
 	   FRG_SIZE, BUF_SIZE));
 
-    data = (PtyData *) XtMalloc(sizeof(*data) + (unsigned) (BUF_SIZE + FRG_SIZE));
+    data = (PtyData *) XtMalloc(sizeof(*data) + BUF_SIZE + FRG_SIZE);
 
     memset(data, 0, sizeof(*data));
     data->next = data->buffer;
@@ -401,14 +413,14 @@ Char *
 convertToUTF8(Char * lp, unsigned c)
 {
     if (c < 0x80) {		/*  0*******  */
-	*lp++ = (Char) (c);
+	*lp++ = (c);
     } else if (c < 0x800) {	/*  110***** 10******  */
-	*lp++ = (Char) (0xc0 | (c >> 6));
-	*lp++ = (Char) (0x80 | (c & 0x3f));
+	*lp++ = (0xc0 | (c >> 6));
+	*lp++ = (0x80 | (c & 0x3f));
     } else {			/*  1110**** 10****** 10******  */
-	*lp++ = (Char) (0xe0 | (c >> 12));
-	*lp++ = (Char) (0x80 | ((c >> 6) & 0x3f));
-	*lp++ = (Char) (0x80 | (c & 0x3f));
+	*lp++ = (0xe0 | (c >> 12));
+	*lp++ = (0x80 | ((c >> 6) & 0x3f));
+	*lp++ = (0x80 | (c & 0x3f));
     }
     /*
      * UTF-8 is defined for words of up to 31 bits, but we need only 16
@@ -432,10 +444,10 @@ writePtyData(int f, IChar * d, unsigned len)
     }
 
     for (n = 0; n < len; n++)
-	VTbuffer->write_buf[n] = (Char) d[n];
+	VTbuffer->write_buf[n] = d[n];
 
     TRACE(("writePtyData %d:%s\n", n,
-	   visibleChars(VTbuffer->write_buf, n)));
+	   visibleChars(PAIRED_CHARS(VTbuffer->write_buf, 0), n)));
     v_write(f, VTbuffer->write_buf, n);
 }
 #endif /* OPT_WIDE_CHARS */

@@ -1,8 +1,10 @@
-/* $XTermId: xstrings.c,v 1.30 2009/10/12 22:25:54 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.26 2007/06/09 13:43:00 tom Exp $ */
+
+/* $XFree86: xc/programs/xterm/xstrings.c,v 1.10 2006/02/13 01:14:59 dickey Exp $ */
 
 /************************************************************
 
-Copyright 2000-2008,2009 by Thomas E. Dickey
+Copyright 2000-2006,2007 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -97,7 +99,7 @@ x_skip_nonblanks(char *s)
 int
 x_strcasecmp(const char *s1, const char *s2)
 {
-    size_t len = strlen(s1);
+    unsigned len = strlen(s1);
 
     if (len != strlen(s2))
 	return 1;
@@ -109,8 +111,8 @@ int
 x_strncasecmp(const char *s1, const char *s2, unsigned n)
 {
     while (n-- != 0) {
-	char c1 = x_toupper(*s1);
-	char c2 = x_toupper(*s2);
+	int c1 = toupper(CharOf(*s1));
+	int c2 = toupper(CharOf(*s2));
 	if (c1 != c2)
 	    return 1;
 	if (c1 == 0)
@@ -144,7 +146,7 @@ x_strdup(const char *s)
  * or NULL if there are none.
  */
 char *
-x_strindex(char *s1, const char *s2)
+x_strindex(char *s1, char *s2)
 {
     char *s3;
     size_t s2len = strlen(s2);
@@ -183,30 +185,4 @@ x_strtrim(char *s)
 	base = t;
     }
     return base;
-}
-
-/*
- * Avoid using system locale for upper/lowercase conversion, since there are
- * a few locales where toupper(tolower(c)) != c.
- */
-char
-x_toupper(int ch)
-{
-    static char table[256];
-    char result = table[CharOf(ch)];
-
-    if (result == '\0') {
-	unsigned n;
-	const char *s = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-	for (n = 0; n < sizeof(table); ++n) {
-	    table[n] = (char) n;
-	}
-	for (n = 0; s[n] != '\0'; ++n) {
-	    table[CharOf(s[n])] = s[n % 26];
-	}
-	result = table[CharOf(ch)];
-    }
-
-    return result;
 }

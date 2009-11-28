@@ -1,8 +1,8 @@
-/* $XTermId: fontutils.h,v 1.76 2009/09/09 23:31:55 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.67 2008/01/20 15:39:56 tom Exp $ */
 
 /************************************************************
 
-Copyright 1998-2008,2009 by Thomas E. Dickey
+Copyright 1998-2007,2008 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -38,12 +38,14 @@ authorization.
 #include <xterm.h>
 
 extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
-extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, fontWarningTypes /* warn */, Bool /* force */);
+extern Bool xtermOpenFont (XtermWidget /* xw */, char */* name */, XTermFonts * /* result */);
 extern XTermFonts * xtermCloseFont (XtermWidget /* xw */, XTermFonts * /* fnt */);
 extern const VTFontNames * xtermFontName (char */* normal */);
 extern int lookupRelativeFontSize (XtermWidget /* xw */, int /* old */, int /* relative */);
 extern int xtermGetFont(const char * /* param */);
-extern int xtermLoadFont (XtermWidget /* xw */, const VTFontNames */* fonts */, Bool /* doresize */, int /* fontnum */);
+extern int xtermLoadFont (XtermWidget /* xw */,
+			  const VTFontNames */* fonts */,
+			  Bool /* doresize */, int /* fontnum */);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
 extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
 extern void xtermCloseFonts (XtermWidget /* xw */, XTermFonts * /* fnts[fMAX] */);
@@ -59,34 +61,8 @@ extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsig
 #endif
 
 #if OPT_BOX_CHARS
-
-#define FontIsIncomplete(font) \
-	((font)->fs != 0 \
-	 && (font)->fs->per_char != 0 \
-	 && !(font)->fs->all_chars_exist)
-
-#define ForceBoxChars(screen,ch) \
-	(xtermIsDecGraphic(ch) \
-	 && (screen)->force_box_chars)
-
-#if OPT_WIDE_CHARS
-#define CharKnownMissing(font, ch) \
-	 (((ch) < 256) && ((font)->known_missing[(Char)(ch)] > 1))
-#else
-#define CharKnownMissing(font, ch) \
-	 ((font)->known_missing[(Char)(ch)] > 1)
-#endif
-
-#define IsXtermMissingChar(screen, ch, font) \
-	 (CharKnownMissing(font, ch) \
-	  ? ((font)->known_missing[(Char)(ch)] > 1) \
-	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
-	   || ForceBoxChars(screen, ch)))
-
-extern Bool xtermMissingChar (unsigned /* ch */, XTermFonts */* font */);
+extern Bool xtermMissingChar (XtermWidget /* xw */, unsigned /* ch */, XFontStruct */* font */);
 extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
-#else
-#define IsXtermMissingChar(screen, ch, font) False
 #endif
 
 #if OPT_LOAD_VTFONTS
