@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.258 2009/05/31 17:53:05 tom Exp $ */
+/* $XTermId: os2main.c,v 1.255 2007/11/30 01:25:03 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -198,13 +198,13 @@ static struct termio d_tio;
  * POSIX termios has termios.c_cc, which is similar to SVR4.
  */
 #define TTYMODE(name) { name, sizeof(name)-1, 0, 0 }
-static Boolean override_tty_modes = False;
+static int override_tty_modes = 0;
 /* *INDENT-OFF* */
 static struct _xttymodes {
     char *name;
     size_t len;
     int set;
-    int value;
+    Char value;
 } ttymodelist[] = {
     TTYMODE("intr"),		/* tchars.t_intrc ; VINTR */
 #define XTTYMODE_intr	0
@@ -301,8 +301,7 @@ static XtResource application_resources[] =
 #endif
 #if OPT_PTY_HANDSHAKE
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
-    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
-    Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
+    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, DEF_PTY_HANDSHAKE),
 #endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
@@ -312,9 +311,6 @@ static XtResource application_resources[] =
 #endif
 #if OPT_TOOLBAR
     Bres(XtNtoolBar, XtCToolBar, toolBar, True),
-#endif
-#if OPT_MAXIMIZE
-    Bres(XtNmaximized, XtCMaximized, maximized, False),
 #endif
 };
 
@@ -469,8 +465,6 @@ static XrmOptionDescRec optionDescList[] = {
 {"-lcc",	"*localeFilter",XrmoptionSepArg,	(caddr_t) NULL},
 {"-en",		"*locale",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
-{"-uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "on"},
-{"+uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "off"},
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ulit",       "*italicULMode", XrmoptionNoArg,        (caddr_t) "off"},
@@ -507,10 +501,6 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_TOOLBAR
 {"-tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "on"},
 {"+tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "off"},
-#endif
-#if OPT_MAXIMIZE
-{"-maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "on"},
-{"+maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
@@ -645,7 +635,6 @@ static OptionHelp xtermOptions[] = {
 { "-/+lc",                 "turn on/off locale mode using luit" },
 { "-lcc path",             "filename of locale converter (" DEFLOCALEFILTER ")" },
 #endif
-{ "-/+uc",                 "turn on/off underline cursor" },
 { "-/+ulc",                "turn off/on display of underline as color" },
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 { "-/+ulit",               "turn off/on display of underline as italics" },
@@ -676,38 +665,24 @@ static OptionHelp xtermOptions[] = {
 #if OPT_SESSION_MGT
 { "-/+sm",                 "turn on/off the session-management support" },
 #endif
-#if OPT_MAXIMIZE
-{"-/+maximized",           "turn on/off maxmize on startup" },
-#endif
 { NULL, NULL }};
 /* *INDENT-ON* */
 
-#ifdef DBG_CONSOLE
-FILE *confd;
-
-static void
-closecons(void)
+/*debug FILE *confd;*/
+/*static void opencons()
 {
-    if (confs != 0) {
+        if ((confd=fopen("/dev/console$","w")) < 0) {
+                fputs("!!! Cannot open console device.\n",
+                        stderr);
+                exit(1);
+        }
+}
+
+static void closecons(void)
+{
 	fclose(confd);
-	confd = 0;
-    }
 }
-static void
-opencons(void)
-{
-    closecons();
-    if ((confd = fopen("/dev/console$", "w")) < 0) {
-	fputs("!!! Cannot open console device.\n",
-	      stderr);
-	exit(1);
-    }
-}
-#else
-#define opencons()		/* nothing */
-#define closecons()		/* nothing */
-#endif
-
+*/
 static char *message[] =
 {
     "Fonts should be fixed width and, if both normal and bold are specified, should",
@@ -870,22 +845,6 @@ save_callback(Widget w GCC_UNUSED,
     /* we have nothing to save */
     token->save_success = True;
 }
-
-static void
-icewatch(IceConn iceConn,
-	 IcePointer clientData GCC_UNUSED,
-	 Bool opening,
-	 IcePointer * watchData GCC_UNUSED)
-{
-    if (opening) {
-	ice_fd = IceConnectionNumber(iceConn);
-	TRACE(("got IceConnectionNumber %d\n", ice_fd));
-    } else {
-	ice_fd = -1;
-	TRACE(("reset IceConnectionNumber\n"));
-    }
-}
-
 #endif /* OPT_SESSION_MGT */
 
 /*
@@ -998,7 +957,7 @@ main(int argc, char **argv ENVP_ARG)
     setlocale(LC_ALL, NULL);
 #endif
 
-    opencons();
+/*debug	opencons();*/
 
     ttydev = TypeMallocN(char, PTMS_BUFSZ);
     ptydev = TypeMallocN(char, PTMS_BUFSZ);
@@ -1036,7 +995,6 @@ main(int argc, char **argv ENVP_ARG)
 				 &argc, argv, fallback_resources,
 				 sessionShellWidgetClass,
 				 NULL, 0);
-    IceAddConnectionWatch(icewatch, NULL);
 #else
     toplevel = XtAppInitialize(&app_con, my_class,
 			       optionDescList,
@@ -1065,7 +1023,7 @@ main(int argc, char **argv ENVP_ARG)
 	    fprintf(stderr, "%s:  bad tty modes \"%s\"\n",
 		    ProgramName, resource.tty_modes);
 	} else if (n > 0) {
-	    override_tty_modes = True;
+	    override_tty_modes = 1;
 	}
     }
 #if OPT_ZICONBEEP
@@ -1190,7 +1148,6 @@ main(int argc, char **argv ENVP_ARG)
 
     screen = TScreenOf(term);
     screen->inhibit = 0;
-
 #ifdef ALLOWLOGGING
     if (term->misc.logInhibit)
 	screen->inhibit |= I_LOG;
@@ -1210,7 +1167,7 @@ main(int argc, char **argv ENVP_ARG)
 	TEK4014_ACTIVE(term) = False;
 
     if (TEK4014_ACTIVE(term) && !TekInit())
-	SysError(ERROR_INIT);
+	exit(ERROR_INIT);
 #endif
 
     /*
@@ -1271,7 +1228,7 @@ main(int argc, char **argv ENVP_ARG)
 	    c[1 + u] = "--";
 	    command_to_exec_with_luit = c;
 	} else {
-	    static char *luit[6];
+	    static char *luit[4];
 	    luit[0] = term->misc.localefilter;
 	    if (u) {
 		luit[1] = "-encoding";
@@ -1379,17 +1336,13 @@ main(int argc, char **argv ENVP_ARG)
 	ReverseVideo(term);
 #endif /* OPT_COLOR_RES */
 
-#if OPT_MAXIMIZE
-    if (resource.maximized)
-	RequestMaximize(term, True);
-#endif
     for (;;) {
 #if OPT_TEK4014
 	if (TEK4014_ACTIVE(term))
 	    TekRun();
 	else
 #endif
-	    VTRun(term);
+	    VTRun();
     }
     return 0;
 }
@@ -1659,7 +1612,7 @@ spawnXTerm(XtermWidget xw)
 				   False);
 
     if (!TEK4014_ACTIVE(xw))
-	VTInit(xw);		/* realize now so know window size for tty driver */
+	VTInit();		/* realize now so know window size for tty driver */
 
     if (Console) {
 	/*
@@ -1748,7 +1701,8 @@ spawnXTerm(XtermWidget xw)
 	case 0:		/* child */
 	    whoami = THE_CHILD;
 
-	    opencons();
+/*debug fclose(confd);
+opencons();*/
 	    /* we don't need the socket, or the pty master anymore */
 	    close(ConnectionNumber(screen->display));
 	    close(screen->respond);
@@ -1804,7 +1758,7 @@ spawnXTerm(XtermWidget xw)
 		    int on = 1;
 		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
 			fprintf(stderr, "%s: cannot open console: %s\n",
-				ProgramName, strerror(errno));
+				xterm_name, strerror(errno));
 		}
 	    }
 
@@ -1830,7 +1784,6 @@ spawnXTerm(XtermWidget xw)
 	    xtermSetenv("DISPLAY", XDisplayString(screen->display));
 
 	    xtermSetenv("XTERM_VERSION", xtermVersion());
-	    xtermSetenv("XTERM_LOCALE", xtermEnvLocale());
 
 	    signal(SIGTERM, SIG_DFL);
 
@@ -1851,8 +1804,6 @@ spawnXTerm(XtermWidget xw)
 	    (void) xtermResetIds(screen);
 
 	    if (handshake.rows > 0 && handshake.cols > 0) {
-		TRACE(("handshake ttysize: %dx%d\n",
-		       handshake.rows, handshake.cols));
 		set_max_row(screen, handshake.rows);
 		set_max_col(screen, handshake.cols);
 		TTYSIZE_ROWS(ts) = MaxRows(screen);
@@ -1896,9 +1847,9 @@ spawnXTerm(XtermWidget xw)
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			ProgramName, *command_to_exec_with_luit, strerror(errno));
+			xterm_name, *command_to_exec_with_luit, strerror(errno));
 		fprintf(stderr, "%s: cannot support your locale.\n",
-			ProgramName);
+			xterm_name);
 	    }
 #endif
 	    if (command_to_exec) {
@@ -1909,7 +1860,7 @@ spawnXTerm(XtermWidget xw)
 
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s\n",
-			ProgramName, *command_to_exec);
+			xterm_name, *command_to_exec);
 	    }
 
 	    /* use a layered mechanism to find a shell */
@@ -1940,13 +1891,13 @@ spawnXTerm(XtermWidget xw)
 
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s\n",
-			ProgramName, *command_to_exec);
+			xterm_name, *command_to_exec);
 	    } else {
 		execlpe(ptr, shname, 0, gblenvp);
 
 		/* Exec failed. */
 		fprintf(stderr, "%s: Could not exec %s!\n",
-			ProgramName, ptr);
+			xterm_name, ptr);
 	    }
 	    sleep(5);
 
@@ -1990,45 +1941,6 @@ Exit(int n)
 	set_owner(ttydev, 0, 0, 0666U);
 	set_owner(ptydev, 0, 0, 0666U);
     }
-
-    /*
-     * Close after releasing ownership to avoid race condition: other programs 
-     * grabbing it, and *then* having us release ownership....
-     */
-    close(screen->respond);	/* close explicitly to avoid race with slave side */
-#ifdef ALLOWLOGGING
-    if (screen->logging)
-	CloseLog(screen);
-#endif
-
-#ifdef NO_LEAKS
-    if (n == 0) {
-	TRACE(("Freeing memory leaks\n"));
-	if (term != 0) {
-	    Display *dpy = term->screen.display;
-
-	    if (toplevel) {
-		XtDestroyWidget(toplevel);
-		TRACE(("destroyed top-level widget\n"));
-	    }
-	    sortedOpts(0, 0, 0);
-	    noleaks_charproc();
-	    noleaks_ptydata();
-#if OPT_WIDE_CHARS
-	    noleaks_CharacterClass();
-#endif
-	    /* XrmSetDatabase(dpy, 0); increases leaks ;-) */
-	    XtCloseDisplay(dpy);
-	    XtDestroyApplicationContext(app_con);
-#if OPT_SESSION_MGT
-	    IceRemoveConnectionWatch(icewatch, NULL);
-#endif
-	    TRACE(("closed display\n"));
-	}
-	TRACE((0));
-    }
-#endif
-
     exit(n);
     SIGNAL_RETURN;
 }

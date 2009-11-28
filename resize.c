@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.109 2009/10/12 00:41:33 tom Exp $ */
+/* $XTermId: resize.c,v 1.106 2007/12/31 21:10:07 tom Exp $ */
 
 /*
- * Copyright 2003-2008,2009 by Thomas E. Dickey
+ * Copyright 2003-2006,2007 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -86,15 +86,15 @@
 #include <signal.h>
 #include <pwd.h>
 
-#ifdef USE_IGNORE_RC
-int ignore_unused;
-#endif
-
 #ifdef X_NOT_POSIX
 #if !defined(SYSV) && !defined(i386)
 extern struct passwd *getpwuid();	/* does ANYBODY need this? */
 #endif /* SYSV && i386 */
 #endif /* X_NOT_POSIX */
+
+#ifndef bzero
+#define	bzero(s, n)	memset(s, 0, n)
+#endif
 
 #ifdef __MVS__
 #define ESCAPE(string) "\047" string
@@ -113,7 +113,7 @@ extern struct passwd *getpwuid();	/* does ANYBODY need this? */
 #define	SHELL_BOURNE	2
 /* *INDENT-OFF* */
 static struct {
-    const char *name;
+    char *name;
     int type;
 } shell_list[] = {
     { "csh",	SHELL_C },	/* vanilla cshell */
@@ -128,33 +128,33 @@ static struct {
 };
 /* *INDENT-ON* */
 
-static const char *emuname[EMULATIONS] =
+static char *emuname[EMULATIONS] =
 {
     "VT100",
     "Sun",
 };
 static char *myname;
 static int shell_type = SHELL_UNKNOWN;
-static const char *getsize[EMULATIONS] =
+static char *getsize[EMULATIONS] =
 {
     ESCAPE("7") ESCAPE("[r") ESCAPE("[999;999H") ESCAPE("[6n"),
     ESCAPE("[18t"),
 };
 #if defined(USE_STRUCT_TTYSIZE)
 #elif defined(USE_STRUCT_WINSIZE)
-static const char *getwsize[EMULATIONS] =
+static char *getwsize[EMULATIONS] =
 {				/* size in pixels */
     0,
     ESCAPE("[14t"),
 };
 #endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
-static const char *restore[EMULATIONS] =
+static char *restore[EMULATIONS] =
 {
     ESCAPE("8"),
     0,
 };
-static const char *setname = "";
-static const char *setsize[EMULATIONS] =
+static char *setname = "";
+static char *setsize[EMULATIONS] =
 {
     0,
     ESCAPE("[8;%s;%st"),
@@ -168,7 +168,7 @@ static struct termios tioorig;
 static struct sgttyb sgorig;
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 
-static const char *size[EMULATIONS] =
+static char *size[EMULATIONS] =
 {
     ESCAPE("[%d;%dR"),
     ESCAPE("[8;%d;%dt"),
@@ -179,7 +179,7 @@ static FILE *ttyfp;
 
 #if defined(USE_STRUCT_TTYSIZE)
 #elif defined(USE_STRUCT_WINSIZE)
-static const char *wsize[EMULATIONS] =
+static char *wsize[EMULATIONS] =
 {
     0,
     ESCAPE("[4;%hd;%hdt"),
@@ -190,7 +190,7 @@ static SIGNAL_T onintr(int sig);
 static SIGNAL_T resize_timeout(int sig);
 static int checkdigits(char *str);
 static void Usage(void);
-static void readstring(FILE *fp, char *buf, const char *str);
+static void readstring(FILE *fp, char *buf, char *str);
 
 #ifdef USE_TERMCAP
 static void
@@ -225,10 +225,10 @@ int
 main(int argc, char **argv ENVP_ARG)
 {
 #ifdef USE_TERMCAP
-    char *env;
+    register char *env;
 #endif
-    char *ptr;
-    int emu = VT100;
+    register char *ptr;
+    register int emu = VT100;
     char *shell;
     struct passwd *pw;
     int i;
@@ -283,7 +283,7 @@ main(int argc, char **argv ENVP_ARG)
 	    (((pw = getpwuid(getuid())) == NULL) ||
 	     *(ptr = pw->pw_shell) == 0))
 	    /* this is the same default that xterm uses */
-	    ptr = x_strdup("/bin/sh");
+	    ptr = "/bin/sh";
 
 	shell = x_basename(ptr);
 
@@ -309,7 +309,7 @@ main(int argc, char **argv ENVP_ARG)
 #ifdef CANT_OPEN_DEV_TTY
     if ((name_of_tty = ttyname(fileno(stderr))) == NULL)
 #endif
-	name_of_tty = x_strdup("/dev/tty");
+	name_of_tty = "/dev/tty";
 
     if ((ttyfp = fopen(name_of_tty, "r+")) == NULL) {
 	fprintf(stderr, "%s:  can't open terminal %s\n",
@@ -382,17 +382,17 @@ main(int argc, char **argv ENVP_ARG)
 	    onintr(0);
 	}
 	sprintf(tmpbuf, setsize[emu], argv[0], argv[1]);
-	IGNORE_RC(write(tty, tmpbuf, strlen(tmpbuf)));
+	write(tty, tmpbuf, strlen(tmpbuf));
 	free(tmpbuf);
     }
-    IGNORE_RC(write(tty, getsize[emu], strlen(getsize[emu])));
+    write(tty, getsize[emu], strlen(getsize[emu]));
     readstring(ttyfp, buf, size[emu]);
     if (sscanf(buf, size[emu], &rows, &cols) != 2) {
 	fprintf(stderr, "%s: Can't get rows and columns\r\n", myname);
 	onintr(0);
     }
     if (restore[emu])
-	IGNORE_RC(write(tty, restore[emu], strlen(restore[emu])));
+	write(tty, restore[emu], strlen(restore[emu]));
 #if defined(USE_STRUCT_TTYSIZE)
     /* finally, set the tty's window size */
     if (ioctl(tty, TIOCGSIZE, &ts) != -1) {
@@ -404,7 +404,7 @@ main(int argc, char **argv ENVP_ARG)
     /* finally, set the tty's window size */
     if (getwsize[emu]) {
 	/* get the window size in pixels */
-	IGNORE_RC(write(tty, getwsize[emu], strlen(getwsize[emu])));
+	write(tty, getwsize[emu], strlen(getwsize[emu]));
 	readstring(ttyfp, buf, wsize[emu]);
 	if (sscanf(buf, wsize[emu], &ts.ws_xpixel, &ts.ws_ypixel) != 2) {
 	    fprintf(stderr, "%s: Can't get window size\r\n", myname);
@@ -500,7 +500,7 @@ main(int argc, char **argv ENVP_ARG)
 }
 
 static int
-checkdigits(char *str)
+checkdigits(register char *str)
 {
     while (*str) {
 	if (!isdigit(CharOf(*str)))
@@ -511,9 +511,9 @@ checkdigits(char *str)
 }
 
 static void
-readstring(FILE *fp, char *buf, const char *str)
+readstring(register FILE *fp, register char *buf, char *str)
 {
-    int last, c;
+    register int last, c;
 #if !defined(USG) && !defined(__UNIXOS2__)
     /* What is the advantage of setitimer() over alarm()? */
     struct itimerval it;
@@ -523,29 +523,26 @@ readstring(FILE *fp, char *buf, const char *str)
 #if defined(USG) || defined(__UNIXOS2__)
     alarm(TIMEOUT);
 #else
-    memset((char *) &it, 0, sizeof(struct itimerval));
+    bzero((char *) &it, sizeof(struct itimerval));
     it.it_value.tv_sec = TIMEOUT;
     setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
 #endif
     if ((c = getc(fp)) == 0233) {	/* meta-escape, CSI */
-	c = ESCAPE("")[0];
-	*buf++ = (char) c;
+	*buf++ = c = ESCAPE("")[0];
 	*buf++ = '[';
     } else {
-	*buf++ = (char) c;
+	*buf++ = c;
     }
     if (c != *str) {
 	fprintf(stderr, "%s: unknown character, exiting.\r\n", myname);
 	onintr(0);
     }
     last = str[strlen(str) - 1];
-    while ((*buf++ = (char) getc(fp)) != last) {
-	;
-    }
+    while ((*buf++ = getc(fp)) != last) ;
 #if defined(USG) || defined(__UNIXOS2__)
     alarm(0);
 #else
-    memset((char *) &it, 0, sizeof(struct itimerval));
+    bzero((char *) &it, sizeof(struct itimerval));
     setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
 #endif
     *buf = 0;

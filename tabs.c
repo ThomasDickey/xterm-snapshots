@@ -1,7 +1,11 @@
-/* $XTermId: tabs.c,v 1.36 2009/06/21 14:34:17 tom Exp $ */
+/* $XTermId: tabs.c,v 1.31 2008/02/24 17:35:03 Nemeth Exp $ */
 
 /*
- * Copyright 2000-2008,2009 by Thomas E. Dickey
+ *	$XFree86: xc/programs/xterm/tabs.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
+ */
+
+/*
+ * Copyright 2000-2006,2008 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -112,8 +116,7 @@ TabNext(XtermWidget xw, Tabs tabs, int col)
     if (screen->curses && screen->do_wrap && (xw->flags & WRAPAROUND)) {
 	xtermIndex(xw, 1);
 	set_cur_col(screen, 0);
-	col = 0;
-	screen->do_wrap = False;
+	col = screen->do_wrap = 0;
     }
     for (++col; col < MAX_TABS; ++col)
 	if (TST_TAB(tabs, col))
@@ -131,7 +134,7 @@ static int
 TabPrev(Tabs tabs, int col)
 {
     for (--col; col >= 0; --col)
-	if ((col < MAX_TABS) && TST_TAB(tabs, col))
+	if (TST_TAB(tabs, col))
 	    return (col);
 
     return (0);
@@ -146,7 +149,7 @@ TabToNextStop(XtermWidget xw)
     TScreen *screen = &(xw->screen);
     int saved_column = screen->cur_col;
     int next = TabNext(xw, xw->tabs, screen->cur_col);
-    int max = LineMaxCol(screen, getLineData(screen, screen->cur_row));
+    int max = CurMaxCol(screen, screen->cur_row);
 
     if (next > max)
 	next = max;
