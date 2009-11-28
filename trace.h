@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.48 2009/10/12 00:08:18 tom Exp $ */
+/* $XTermId: trace.h,v 1.50 2009/11/27 18:31:16 tom Exp $ */
 
 /************************************************************
 
@@ -50,10 +50,11 @@ extern	void	Trace ( const char *, ... )
 extern	char *	visibleChars (Char * /* buf */, unsigned /* len */);
 extern	char *	visibleIChar (IChar *, unsigned);
 extern	char *	visibleIChars (IChar * /* buf */, unsigned /* len */);
+extern	const char * visibleChrsetName(unsigned /* chrset */);
 extern	const char * visibleEventType (int);
+extern	const char * visibleNotifyDetail(int /* code */);
 extern	const char * visibleSelectionTarget(Display * /* d */, Atom /* a */);
 extern	const char * visibleXError (int /* code */);
-extern  const char * visibleChrsetName(unsigned /* chrset */);
 
 extern	void	TraceArgv(const char * /* tag */, char ** /* argv */);
 #undef  TRACE_ARGV
@@ -62,6 +63,10 @@ extern	void	TraceArgv(const char * /* tag */, char ** /* argv */);
 extern	const	char *trace_who;
 #undef  TRACE_CHILD
 #define TRACE_CHILD int tracing_child = (trace_who = "child") != 0; (void) tracing_child;
+
+extern	void	TraceFocus(Widget, XEvent *);
+#undef  TRACE_FOCUS
+#define	TRACE_FOCUS(w,e) TraceFocus((Widget)w, (XEvent *)e)
 
 extern	void	TraceSizeHints(XSizeHints *);
 #undef  TRACE_HINTS

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.104 2009/10/12 00:08:00 tom Exp $ */
+/* $XTermId: trace.c,v 1.106 2009/11/27 18:33:13 tom Exp $ */
 
 /************************************************************
 
@@ -342,6 +342,23 @@ visibleEventType(int type)
 }
 
 const char *
+visibleNotifyDetail(int code)
+{
+    const char *result = "?";
+    switch (code) {
+	CASETYPE(NotifyAncestor);
+	CASETYPE(NotifyVirtual);
+	CASETYPE(NotifyInferior);
+	CASETYPE(NotifyNonlinear);
+	CASETYPE(NotifyNonlinearVirtual);
+	CASETYPE(NotifyPointer);
+	CASETYPE(NotifyPointerRoot);
+	CASETYPE(NotifyDetailNone);
+    }
+    return result;
+}
+
+const char *
 visibleSelectionTarget(Display * d, Atom a)
 {
     const char *result = "?";
@@ -452,6 +469,39 @@ LineTstFlag(LineData ld, int flag)
     return code;
 }
 #endif /* OPT_TRACE_FLAGS */
+
+void
+TraceFocus(Widget w, XEvent * ev)
+{
+    TRACE(("trace_focus event type %d:%s\n",
+	   ev->type, visibleEventType(ev->type)));
+    switch (ev->type) {
+    case FocusIn:
+    case FocusOut:
+	{
+	    XFocusChangeEvent *event = (XFocusChangeEvent *) ev;
+	    TRACE(("\tdetail: %s\n", visibleNotifyDetail(event->detail)));
+	    TRACE(("\tmode:   %d\n", event->mode));
+	    TRACE(("\twindow: %#lx\n", event->window));
+	}
+	break;
+    case EnterNotify:
+    case LeaveNotify:
+	{
+	    XCrossingEvent *event = (XCrossingEvent *) ev;
+	    TRACE(("\tdetail:    %s\n", visibleNotifyDetail(event->detail)));
+	    TRACE(("\tmode:      %d\n", event->mode));
+	    TRACE(("\twindow:    %#lx\n", event->window));
+	    TRACE(("\troot:      %#lx\n", event->root));
+	    TRACE(("\tsubwindow: %#lx\n", event->subwindow));
+	}
+	break;
+    }
+    while (w != 0) {
+	TRACE(("w %p -> %#lx\n", w, XtWindow(w)));
+	w = XtParent(w);
+    }
+}
 
 void
 TraceSizeHints(XSizeHints * hints)

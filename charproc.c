@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.993 2009/11/26 21:31:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.996 2009/11/27 23:38:05 tom Exp $ */
 
 /*
 
@@ -5730,7 +5730,8 @@ VTInitialize(Widget wrequest,
     };
 #endif /* OPT_COLOR_RES2 */
 
-    TRACE(("VTInitialize %d / %d\n", XtNumber(xterm_resources), MAXRESOURCES));
+    TRACE(("VTInitialize wnew %p, %d / %d resources\n",
+	   wnew, XtNumber(xterm_resources), MAXRESOURCES));
     assert(XtNumber(xterm_resources) < MAXRESOURCES);
 
     /* Zero out the entire "screen" component of "wnew" widget, then do
@@ -6264,6 +6265,7 @@ VTInitialize(Widget wrequest,
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
      */
+    TRACE(("adding event handlers for my_parent %p\n", my_parent));
     XtAddEventHandler(my_parent, EnterWindowMask, False,
 		      HandleEnterWindow, (Opaque) NULL);
     XtAddEventHandler(my_parent, LeaveWindowMask, False,
@@ -7207,6 +7209,7 @@ ShowCursor(void)
     unsigned flags;
     CellColor fg_bg = 0;
     GC currentGC;
+    GC outlineGC;
     CgsEnum currentCgs = gcMAX;
     VTwin *currentWin = WhichVWin(screen);
     int set_at;
@@ -7307,12 +7310,6 @@ ShowCursor(void)
      */
     if_OPT_ISO_COLORS(screen, {
 	fg_bg = ld->color[cursor_col];
-	if (screen->in_clear
-	    && (xw->sgr_foreground >= 0 || xw->sgr_background >= 0)) {
-	    flags |= (FG_COLOR | BG_COLOR);
-	} else if (fg_bg) {
-	    flags |= (FG_COLOR | BG_COLOR);
-	}
     });
 
     fg_pix = getXtermForeground(xw, flags, extract_fg(xw, fg_bg, flags));
@@ -7423,38 +7420,74 @@ ShowCursor(void)
 	       (filled ? "filled" : "outline"), set_at));
 
 	currentGC = getCgsGC(xw, currentWin, currentCgs);
-	drawXtermText(xw, flags & DRAWX_MASK, currentGC,
-		      x = LineCursorX(screen, ld, cursor_col),
-		      y = CursorY(screen, screen->cur_row),
-		      LineCharSet(screen, ld),
-		      &base, 1, 0);
+	x = LineCursorX(screen, ld, cursor_col);
+	y = CursorY(screen, screen->cur_row);
 
-#if OPT_WIDE_CHARS
-	if_OPT_WIDE_CHARS(screen, {
-	    for_each_combData(off, ld) {
-		if (!(ld->combData[off][my_col]))
-		    break;
-		drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
-			      currentGC, x, y,
-			      LineCharSet(screen, ld),
-			      ld->combData[off] + my_col,
-			      1, isWide((int) base));
+	if (screen->cursor_underline) {
+
+	    /*
+	     * Overriding the combination of filled, reversed, in_selection
+	     * is too complicated since the underline and the text-cell use
+	     * different rules.  Just redraw the text-cell, and draw the
+	     * underline on top of it.
+	     */
+	    HideCursor();
+
+	    /*
+	     * Our current-GC is likely to have been modified in HideCursor().
+	     * Setup a new request.
+	     */
+	    if (filled) {
+		if (T_COLOR(screen, TEXT_CURSOR) == xw->dft_foreground) {
+		    setCgsBack(xw, currentWin, currentCgs, fg_pix);
+		}
+		setCgsFore(xw, currentWin, currentCgs, bg_pix);
+	    } else {
+		setCgsFore(xw, currentWin, currentCgs, fg_pix);
+		setCgsBack(xw, currentWin, currentCgs, bg_pix);
 	    }
-	});
-#endif
 
-	if (!filled) {
-	    GC outlineGC = getCgsGC(xw, currentWin, gcVTcursOutline);
+	    outlineGC = getCgsGC(xw, currentWin, gcVTcursOutline);
 	    if (outlineGC == 0)
 		outlineGC = currentGC;
 
+	    /*
+	     * Finally, draw the underline.
+	     */
 	    screen->box->x = (short) x;
-	    if (!screen->cursor_underline)
-		screen->box->y = (short) y;
-	    else
-		screen->box->y = (short) (y + FontHeight(screen) - 2);
+	    screen->box->y = (short) (y + FontHeight(screen) - 2);
 	    XDrawLines(screen->display, VWindow(screen), outlineGC,
 		       screen->box, NBOX, CoordModePrevious);
+	} else {
+	    outlineGC = getCgsGC(xw, currentWin, gcVTcursOutline);
+	    if (outlineGC == 0)
+		outlineGC = currentGC;
+
+	    drawXtermText(xw, flags & DRAWX_MASK,
+			  currentGC, x, y,
+			  LineCharSet(screen, ld),
+			  &base, 1, 0);
+
+#if OPT_WIDE_CHARS
+	    if_OPT_WIDE_CHARS(screen, {
+		for_each_combData(off, ld) {
+		    if (!(ld->combData[off][my_col]))
+			break;
+		    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
+				  currentGC, x, y,
+				  LineCharSet(screen, ld),
+				  ld->combData[off] + my_col,
+				  1, isWide((int) base));
+		}
+	    });
+#endif
+
+	    if (!filled) {
+		screen->box->x = (short) x;
+		screen->box->y = (short) y;
+		XDrawLines(screen->display, VWindow(screen), outlineGC,
+			   screen->box, NBOX, CoordModePrevious);
+	    }
 	}
     }
     screen->cursor_state = ON;

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.638 2009/11/20 00:12:18 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.640 2009/11/27 23:23:24 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1671,8 +1671,6 @@ typedef struct {
 	Boolean		do_wrap;	/* true if cursor in last column
 					    and character just output    */
 
-	int		in_clear;	/* flag for ShowCursor/HideCursor */
-
 	int		incopy;		/* 0 idle; 1 XCopyArea issued;
 					    -1 first GraphicsExpose seen,
 					    but last not seen		*/
@@ -2436,6 +2434,10 @@ typedef struct Tek_Link
 
 #ifndef TRACE_CHILD
 #define TRACE_CHILD /*nothing*/
+#endif
+
+#ifndef TRACE_FOCUS
+#define TRACE_FOCUS(w,e) /*nothing*/
 #endif
 
 #ifndef TRACE_HINTS
