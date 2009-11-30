@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.587 2008/05/26 18:25:54 Marius.Tolzmann Exp $ */
+/* $XTermId: main.c,v 1.598 2009/11/28 13:38:39 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -15,7 +15,7 @@
 
 /***********************************************************
 
-Copyright 2002-2007,2008 by Thomas E. Dickey
+Copyright 2002-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -380,7 +380,7 @@ extern struct utmp *getutid __((struct utmp * _Id));
 #include <util.h>		/* openpty() */
 #endif
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__DragonFly__)
 #include <libutil.h>		/* openpty() */
 #endif
 
@@ -448,11 +448,11 @@ extern char *ptsname(int);
 #endif
 
 #ifndef VMS
-static SIGNAL_T reapchild(int n);
+static SIGNAL_T reapchild(int /* n */ );
 static int spawnXTerm(XtermWidget /* xw */ );
-static void remove_termcap_entry(char *buf, char *str);
+static void remove_termcap_entry(char *, const char *);
 #ifdef USE_PTY_SEARCH
-static int pty_search(int *pty);
+static int pty_search(int * /* pty */ );
 #endif
 #endif /* ! VMS */
 
@@ -640,7 +640,7 @@ static struct jtchars d_jtc =
 static Boolean override_tty_modes = False;
 /* *INDENT-OFF* */
 static struct _xttymodes {
-    char *name;
+    const char *name;
     size_t len;
     int set;
     int value;
@@ -883,6 +883,9 @@ static XtResource application_resources[] =
 #if OPT_TOOLBAR
     Bres(XtNtoolBar, XtCToolBar, toolBar, True),
 #endif
+#if OPT_MAXIMIZE
+    Bres(XtNmaximized, XtCMaximized, maximized, False),
+#endif
 };
 
 static char *fallback_resources[] =
@@ -1036,6 +1039,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-lcc",	"*localeFilter",XrmoptionSepArg,	(caddr_t) NULL},
 {"-en",		"*locale",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
+{"-uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "on"},
+{"+uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "off"},
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ulit",       "*italicULMode", XrmoptionNoArg,        (caddr_t) "off"},
@@ -1072,6 +1077,10 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_TOOLBAR
 {"-tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "on"},
 {"+tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
+#if OPT_MAXIMIZE
+{"-maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
@@ -1206,6 +1215,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+lc",                 "turn on/off locale mode using luit" },
 { "-lcc path",             "filename of locale converter (" DEFLOCALEFILTER ")" },
 #endif
+{ "-/+uc",                 "turn on/off underline cursor" },
 { "-/+ulc",                "turn off/on display of underline as color" },
 { "-/+ulit",               "turn off/on display of underline as italics" },
 #ifdef HAVE_UTMP
@@ -1243,6 +1253,9 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_SESSION_MGT
 { "-/+sm",                 "turn on/off the session-management support" },
+#endif
+#if OPT_MAXIMIZE
+{"-/+maximized",           "turn on/off maxmize on startup" },
 #endif
 { NULL, NULL }};
 /* *INDENT-ON* */
@@ -1316,7 +1329,7 @@ decode_keyvalue(char **ptr, int termcap)
 }
 
 static int
-abbrev(char *tst, char *cmp, size_t need)
+abbrev(const char *tst, const char *cmp, size_t need)
 {
     size_t len = strlen(tst);
     return ((len >= need) && (!strncmp(tst, cmp, len)));
@@ -1333,9 +1346,9 @@ Syntax(char *badOption)
 	    ProgramName, badOption);
 
     fprintf(stderr, "usage:  %s", ProgramName);
-    col = 8 + strlen(ProgramName);
+    col = 8 + (int) strlen(ProgramName);
     for (opt = list; opt->opt; opt++) {
-	int len = 3 + strlen(opt->opt);		/* space [ string ] */
+	int len = 3 + (int) strlen(opt->opt);	/* space [ string ] */
 	if (col + len > 79) {
 	    fprintf(stderr, "\r\n   ");		/* 3 spaces */
 	    col = 3;
@@ -1445,7 +1458,7 @@ DeleteWindow(Widget w,
 	    hide_vt_window();
 	else
 	    do_hangup(w, (XtPointer) 0, (XtPointer) 0);
-    } else if (term->screen.Vshow)
+    } else if (TScreenOf(term)->Vshow)
 	hide_tek_window();
     else
 #endif
@@ -1513,7 +1526,7 @@ my_pty_id(char *device)
     char *leaf = x_basename(name);
 
     if (name == leaf) {		/* no '/' in the name */
-	int len = strlen(leaf);
+	int len = (int) strlen(leaf);
 	if (PTYCHARLEN < len)
 	    leaf = leaf + (len - PTYCHARLEN);
     }
@@ -1554,7 +1567,7 @@ ParseSccn(char *option)
 	if (leaf - option > 0
 	    && isdigit(CharOf(*leaf))
 	    && sscanf(leaf, "%d", &am_slave) == 1) {
-	    size_t len = leaf - option - 1;
+	    size_t len = (size_t) (leaf - option - 1);
 	    /*
 	     * If we have a slash, we only care about the part after the slash,
 	     * which is a file-descriptor.  The part before the slash can be
@@ -1795,7 +1808,7 @@ main(int argc, char *argv[]ENVP_ARG)
     TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
 	int n;
-	unsigned unique = 2;
+	size_t unique = 2;
 	Bool quit = True;
 
 	for (n = 1; n < argc; n++) {
@@ -2224,10 +2237,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	    int n;
 	    char **c;
 	    for (n = 0, c = command_to_exec; *c; n++, c++) ;
-	    c = TypeMallocN(char *, n + 3 + u);
+	    c = TypeMallocN(char *, (unsigned) (n + 3 + u));
 	    if (c == NULL)
 		SysError(ERROR_LUMALLOC);
-	    memcpy(c + 2 + u, command_to_exec, (n + 1) * sizeof(char *));
+	    memcpy(c + 2 + u, command_to_exec, (unsigned) (n + 1) * sizeof(char *));
 	    c[0] = term->misc.localefilter;
 	    if (u) {
 		c[1] = "-encoding";
@@ -2288,7 +2301,7 @@ main(int argc, char *argv[]ENVP_ARG)
 
 	buf[0] = '\0';
 	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU())));
-	write(screen->respond, buf, strlen(buf));
+	IGNORE_RC(write(screen->respond, buf, strlen(buf)));
     }
 #ifdef AIXV3
 #if (OSMAJORVERSION < 4)
@@ -2376,29 +2389,33 @@ main(int argc, char *argv[]ENVP_ARG)
 #if OPT_COLOR_RES
     TRACE(("checking resource values rv %s fg %s, bg %s\n",
 	   BtoS(term->misc.re_verse0),
-	   NonNull(term->screen.Tcolors[TEXT_FG].resource),
-	   NonNull(term->screen.Tcolors[TEXT_BG].resource)));
+	   NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
+	   NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
 
     if ((reversed && term->misc.re_verse0)
-	&& ((term->screen.Tcolors[TEXT_FG].resource
-	     && !isDefaultForeground(term->screen.Tcolors[TEXT_FG].resource))
-	    || (term->screen.Tcolors[TEXT_BG].resource
-		&& !isDefaultBackground(term->screen.Tcolors[TEXT_BG].resource))
+	&& ((TScreenOf(term)->Tcolors[TEXT_FG].resource
+	     && !isDefaultForeground(TScreenOf(term)->Tcolors[TEXT_FG].resource))
+	    || (TScreenOf(term)->Tcolors[TEXT_BG].resource
+		&& !isDefaultBackground(TScreenOf(term)->Tcolors[TEXT_BG].resource))
 	))
 	ReverseVideo(term);
 #endif /* OPT_COLOR_RES */
 
+#if OPT_MAXIMIZE
+    if (resource.maximized)
+	RequestMaximize(term, True);
+#endif
     for (;;) {
 #if OPT_TEK4014
 	if (TEK4014_ACTIVE(term))
 	    TekRun();
 	else
 #endif
-	    VTRun();
+	    VTRun(term);
     }
 }
 
-#if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS)) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
+#if defined(__osf__) || (defined(__GLIBC__) && !defined(USE_USG_PTYS)) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #define USE_OPENPTY 1
 static int opened_tty = -1;
 #endif
@@ -2694,7 +2711,7 @@ pty_search(int *pty)
  */
 
 #if OPT_TEK4014
-static char *tekterm[] =
+static const char *tekterm[] =
 {
     "tek4014",
     "tek4015",			/* 4014 with APL character set support */
@@ -2713,7 +2730,7 @@ static char *tekterm[] =
  * The VT420 has up to 48 lines on the screen.
  */
 
-static char *vtterm[] =
+static const char *vtterm[] =
 {
 #ifdef USE_X11TERM
     "x11term",			/* for people who want special term name */
@@ -2830,7 +2847,9 @@ HsSysError(int error)
 	       handshake.fatal_error,
 	       handshake.buffer));
 	TRACE_HANDSHAKE("writing", &handshake);
-	write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
+	IGNORE_RC(write(cp_pipe[1],
+			(const char *) &handshake,
+			sizeof(handshake)));
     } else {
 	fprintf(stderr,
 		"%s: fatal pty error errno=%d, error=%d device \"%s\"\n",
@@ -2859,7 +2878,9 @@ first_map_occurred(void)
 	if (pc_pipe[1] >= 0) {
 	    TRACE(("first_map_occurred: %dx%d\n", handshake.rows, handshake.cols));
 	    TRACE_HANDSHAKE("writing", &handshake);
-	    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+	    IGNORE_RC(write(pc_pipe[1],
+			    (const char *) &handshake,
+			    sizeof(handshake)));
 	    close(cp_pipe[0]);
 	    close(pc_pipe[1]);
 	}
@@ -3018,7 +3039,7 @@ spawnXTerm(XtermWidget xw)
 
     char *ptr, *shname, *shname_minus;
     int i, no_dev_tty = False;
-    char **envnew;		/* new environment */
+    const char **envnew;	/* new environment */
     char buf[64];
     char *TermName = NULL;
 #ifdef TTYSIZE_STRUCT
@@ -3224,7 +3245,7 @@ spawnXTerm(XtermWidget xw)
 				   False);
 
     if (!TEK4014_ACTIVE(xw))
-	VTInit();		/* realize now so know window size for tty driver */
+	VTInit(xw);		/* realize now so know window size for tty driver */
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
     if (Console) {
 	/*
@@ -3258,15 +3279,22 @@ spawnXTerm(XtermWidget xw)
      */
     ok_termcap = True;
     if (!get_termcap(TermName = resource.term_name, newtc)) {
-	char *last = NULL;
-	TermName = *envnew;
+	const char *last = NULL;
+	char *next;
+
+	TermName = x_strdup(*envnew);
 	ok_termcap = False;
 	while (*envnew != NULL) {
-	    if ((last == NULL || strcmp(last, *envnew))
-		&& get_termcap(*envnew, newtc)) {
-		TermName = *envnew;
-		ok_termcap = True;
-		break;
+	    if (last == NULL || strcmp(last, *envnew)) {
+		next = x_strdup(*envnew);
+		if (get_termcap(next, newtc)) {
+		    free(TermName);
+		    TermName = next;
+		    ok_termcap = True;
+		    break;
+		} else {
+		    free(next);
+		}
 	    }
 	    last = *envnew;
 	    envnew++;
@@ -3290,8 +3318,9 @@ spawnXTerm(XtermWidget xw)
     } else if (resource.ptyInitialErase) {
 	;
     } else if (ok_termcap) {
+	static char name[] = TERMCAP_ERASE;
 	char temp[1024], *p = temp;
-	char *s = tgetstr(TERMCAP_ERASE, &p);
+	char *s = tgetstr(name, &p);
 	TRACE(("...extracting initial_erase value from termcap\n"));
 	if (s != 0) {
 	    initial_erase = decode_keyvalue(&s, True);
@@ -3323,8 +3352,8 @@ spawnXTerm(XtermWidget xw)
 	TTYSIZE_ROWS(ts) = 38;
 	TTYSIZE_COLS(ts) = 81;
 #if defined(USE_STRUCT_WINSIZE)
-	ts.ws_xpixel = TFullWidth(&(tekWidget->screen));
-	ts.ws_ypixel = TFullHeight(&(tekWidget->screen));
+	ts.ws_xpixel = TFullWidth(TekScreenOf(tekWidget));
+	ts.ws_ypixel = TFullHeight(TekScreenOf(tekWidget));
 #endif
     } else
 #endif
@@ -3425,8 +3454,8 @@ spawnXTerm(XtermWidget xw)
 		    TTYSIZE_ROWS(ts) = 24;
 		    TTYSIZE_COLS(ts) = 80;
 #ifdef USE_STRUCT_WINSIZE
-		    ts.ws_xpixel = TFullWidth(&(tekWidget->screen));
-		    ts.ws_ypixel = TFullHeight(&(tekWidget->screen));
+		    ts.ws_xpixel = TFullWidth(TekScreenOf(tekWidget));
+		    ts.ws_ypixel = TFullHeight(TekScreenOf(tekWidget));
 #endif
 		} else
 #endif /* OPT_TEK4014 */
@@ -3545,8 +3574,9 @@ spawnXTerm(XtermWidget xw)
 			handshake.error = errno;
 			strcpy(handshake.buffer, ttydev);
 			TRACE_HANDSHAKE("writing", &handshake);
-			write(cp_pipe[1], (char *) &handshake,
-			      sizeof(handshake));
+			IGNORE_RC(write(cp_pipe[1],
+					(const char *) &handshake,
+					sizeof(handshake)));
 
 			/* get reply from parent */
 			i = read(pc_pipe[0], (char *) &handshake,
@@ -3892,7 +3922,7 @@ spawnXTerm(XtermWidget xw)
 		for (i = 0; i <= 2; i++)
 		    if (i != ttyfd) {
 			(void) close(i);
-			(void) dup(ttyfd);
+			IGNORE_RC(dup(ttyfd));
 		    }
 #ifndef ATT
 		/* and close the tty */
@@ -4074,7 +4104,7 @@ spawnXTerm(XtermWidget xw)
 	    {
 		if (tslot > 0 && pw && !resource.utmpInhibit &&
 		    (i = open(etc_utmp, O_WRONLY)) >= 0) {
-		    bzero((char *) &utmp, sizeof(utmp));
+		    memset(&utmp, 0, sizeof(utmp));
 		    (void) strncpy(utmp.ut_line,
 				   my_pty_name(ttydev),
 				   sizeof(utmp.ut_line));
@@ -4124,7 +4154,7 @@ spawnXTerm(XtermWidget xw)
 
 #ifdef USE_LASTLOGX
 	    if (xw->misc.login_shell) {
-		bzero((char *) &lastlogx, sizeof(lastlogx));
+		memset(&lastlogx, 0, sizeof(lastlogx));
 		(void) strncpy(lastlogx.ll_line,
 			       my_pty_name(ttydev),
 			       sizeof(lastlogx.ll_line));
@@ -4140,7 +4170,7 @@ spawnXTerm(XtermWidget xw)
 		size_t size = sizeof(struct lastlog);
 		off_t offset = (screen->uid * size);
 
-		bzero((char *) &lastlog, size);
+		memset(&lastlog, 0, size);
 		(void) strncpy(lastlog.ll_line,
 			       my_pty_name(ttydev),
 			       sizeof(lastlog.ll_line));
@@ -4201,7 +4231,9 @@ spawnXTerm(XtermWidget xw)
 		handshake.error = 0;
 		(void) strcpy(handshake.buffer, ttydev);
 		TRACE_HANDSHAKE("writing", &handshake);
-		(void) write(cp_pipe[1], (char *) &handshake, sizeof(handshake));
+		IGNORE_RC(write(cp_pipe[1],
+				(const char *) &handshake,
+				sizeof(handshake)));
 
 		if (resource.wait_for_map) {
 		    i = read(pc_pipe[0], (char *) &handshake,
@@ -4305,7 +4337,7 @@ spawnXTerm(XtermWidget xw)
 		if (((ptr = x_getenv("SHELL")) == NULL) &&
 		    ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
 		     *(ptr = pw->pw_shell) == 0)) {
-		    ptr = "/bin/sh";
+		    ptr = x_strdup("/bin/sh");
 		}
 	    } else {
 		xtermSetenv("SHELL", explicit_shname);
@@ -4368,7 +4400,7 @@ spawnXTerm(XtermWidget xw)
 		if (xw->misc.login_shell) {
 		    int u;
 		    u = (term->misc.use_encoding ? 2 : 0);
-		    command_to_exec_with_luit[u + 1] = "-argv0";
+		    command_to_exec_with_luit[u + 1] = x_strdup("-argv0");
 		    command_to_exec_with_luit[u + 2] = shname_minus;
 		    command_to_exec_with_luit[u + 3] = NULL;
 		}
@@ -4431,13 +4463,17 @@ spawnXTerm(XtermWidget xw)
 				ProgramName, strerror(errno));
 			handshake.status = PTY_NOMORE;
 			TRACE_HANDSHAKE("writing", &handshake);
-			write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+			IGNORE_RC(write(pc_pipe[1],
+					(const char *) &handshake,
+					sizeof(handshake)));
 			exit(ERROR_PTYS);
 		    }
 		    handshake.status = PTY_NEW;
 		    (void) strcpy(handshake.buffer, ttydev);
 		    TRACE_HANDSHAKE("writing", &handshake);
-		    write(pc_pipe[1], (char *) &handshake, sizeof(handshake));
+		    IGNORE_RC(write(pc_pipe[1],
+				    (const char *) &handshake,
+				    sizeof(handshake)));
 		    break;
 
 		case PTY_FATALERROR:
@@ -4622,7 +4658,7 @@ Exit(int n)
 	TRACE_IDS;
 #endif
 	if ((wfd = open(etc_utmp, O_WRONLY)) >= 0) {
-	    bzero((char *) &utmp, sizeof(utmp));
+	    memset(&utmp, 0, sizeof(utmp));
 	    lseek(wfd, (long) (tslot * sizeof(utmp)), 0);
 	    write(wfd, (char *) &utmp, sizeof(utmp));
 	    close(wfd);
@@ -4675,7 +4711,7 @@ Exit(int n)
     if (n == 0) {
 	TRACE(("Freeing memory leaks\n"));
 	if (term != 0) {
-	    Display *dpy = term->screen.display;
+	    Display *dpy = TScreenOf(term)->display;
 
 	    if (toplevel) {
 		XtDestroyWidget(toplevel);
@@ -4734,14 +4770,14 @@ resize_termcap(XtermWidget xw, char *newtc)
 	}
 	ptr1 += 3;
 	ptr2 += 3;
-	strncpy(newtc, oldtc, i = ptr1 - oldtc);
+	strncpy(newtc, oldtc, i = (size_t) (ptr1 - oldtc));
 	temp = newtc + i;
 	sprintf(temp, "%d", (li_first
 			     ? MaxRows(screen)
 			     : MaxCols(screen)));
 	temp += strlen(temp);
 	ptr1 = strchr(ptr1, ':');
-	strncpy(temp, ptr1, i = ptr2 - ptr1);
+	strncpy(temp, ptr1, i = (size_t) (ptr2 - ptr1));
 	temp += i;
 	sprintf(temp, "%d", (li_first
 			     ? MaxCols(screen)
@@ -4803,7 +4839,7 @@ reapchild(int n GCC_UNUSED)
 #endif
 
     do {
-	if (pid == term->screen.pid) {
+	if (pid == TScreenOf(term)->pid) {
 #ifdef DEBUG
 	    if (debug)
 		fputs("Exiting\n", stderr);
@@ -4819,7 +4855,7 @@ reapchild(int n GCC_UNUSED)
 #endif /* !VMS */
 
 static void
-remove_termcap_entry(char *buf, char *str)
+remove_termcap_entry(char *buf, const char *str)
 {
     char *base = buf;
     char *first = base;

@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.255 2007/11/30 01:25:03 tom Exp $ */
+/* $XTermId: os2main.c,v 1.260 2009/11/28 13:55:19 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -198,13 +198,13 @@ static struct termio d_tio;
  * POSIX termios has termios.c_cc, which is similar to SVR4.
  */
 #define TTYMODE(name) { name, sizeof(name)-1, 0, 0 }
-static int override_tty_modes = 0;
+static Boolean override_tty_modes = False;
 /* *INDENT-OFF* */
 static struct _xttymodes {
-    char *name;
+    const char *name;
     size_t len;
     int set;
-    Char value;
+    int value;
 } ttymodelist[] = {
     TTYMODE("intr"),		/* tchars.t_intrc ; VINTR */
 #define XTTYMODE_intr	0
@@ -301,7 +301,8 @@ static XtResource application_resources[] =
 #endif
 #if OPT_PTY_HANDSHAKE
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
-    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, DEF_PTY_HANDSHAKE),
+    Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
+    Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
 #endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
@@ -311,6 +312,9 @@ static XtResource application_resources[] =
 #endif
 #if OPT_TOOLBAR
     Bres(XtNtoolBar, XtCToolBar, toolBar, True),
+#endif
+#if OPT_MAXIMIZE
+    Bres(XtNmaximized, XtCMaximized, maximized, False),
 #endif
 };
 
@@ -465,6 +469,8 @@ static XrmOptionDescRec optionDescList[] = {
 {"-lcc",	"*localeFilter",XrmoptionSepArg,	(caddr_t) NULL},
 {"-en",		"*locale",	XrmoptionSepArg,	(caddr_t) NULL},
 #endif
+{"-uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "on"},
+{"+uc",		"*cursorUnderLine", XrmoptionNoArg,	(caddr_t) "off"},
 {"-ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "off"},
 {"+ulc",	"*colorULMode",	XrmoptionNoArg,		(caddr_t) "on"},
 {"-ulit",       "*italicULMode", XrmoptionNoArg,        (caddr_t) "off"},
@@ -501,6 +507,10 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_TOOLBAR
 {"-tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "on"},
 {"+tb",		"*"XtNtoolBar,	XrmoptionNoArg,		(caddr_t) "off"},
+#endif
+#if OPT_MAXIMIZE
+{"-maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "on"},
+{"+maximized",	"*maximized",	XrmoptionNoArg,		(caddr_t) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(caddr_t) NULL},
@@ -635,6 +645,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+lc",                 "turn on/off locale mode using luit" },
 { "-lcc path",             "filename of locale converter (" DEFLOCALEFILTER ")" },
 #endif
+{ "-/+uc",                 "turn on/off underline cursor" },
 { "-/+ulc",                "turn off/on display of underline as color" },
 { "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 { "-/+ulit",               "turn off/on display of underline as italics" },
@@ -665,24 +676,38 @@ static OptionHelp xtermOptions[] = {
 #if OPT_SESSION_MGT
 { "-/+sm",                 "turn on/off the session-management support" },
 #endif
+#if OPT_MAXIMIZE
+{"-/+maximized",           "turn on/off maxmize on startup" },
+#endif
 { NULL, NULL }};
 /* *INDENT-ON* */
 
-/*debug FILE *confd;*/
-/*static void opencons()
-{
-        if ((confd=fopen("/dev/console$","w")) < 0) {
-                fputs("!!! Cannot open console device.\n",
-                        stderr);
-                exit(1);
-        }
-}
+#ifdef DBG_CONSOLE
+FILE *confd;
 
-static void closecons(void)
+static void
+closecons(void)
 {
+    if (confs != 0) {
 	fclose(confd);
+	confd = 0;
+    }
 }
-*/
+static void
+opencons(void)
+{
+    closecons();
+    if ((confd = fopen("/dev/console$", "w")) < 0) {
+	fputs("!!! Cannot open console device.\n",
+	      stderr);
+	exit(1);
+    }
+}
+#else
+#define opencons()		/* nothing */
+#define closecons()		/* nothing */
+#endif
+
 static char *message[] =
 {
     "Fonts should be fixed width and, if both normal and bold are specified, should",
@@ -752,7 +777,7 @@ decode_keyvalue(char **ptr, int termcap)
 }
 
 static int
-abbrev(char *tst, char *cmp, size_t need)
+abbrev(const char *tst, const char *cmp, size_t need)
 {
     size_t len = strlen(tst);
     return ((len >= need) && (!strncmp(tst, cmp, len)));
@@ -769,9 +794,9 @@ Syntax(char *badOption)
 	    ProgramName, badOption);
 
     fprintf(stderr, "usage:  %s", ProgramName);
-    col = 8 + strlen(ProgramName);
+    col = 8 + (int) strlen(ProgramName);
     for (opt = list; opt->opt; opt++) {
-	int len = 3 + strlen(opt->opt);		/* space [ string ] */
+	int len = 3 + (int) strlen(opt->opt);	/* space [ string ] */
 	if (col + len > 79) {
 	    fprintf(stderr, "\r\n   ");		/* 3 spaces */
 	    col = 3;
@@ -845,6 +870,22 @@ save_callback(Widget w GCC_UNUSED,
     /* we have nothing to save */
     token->save_success = True;
 }
+
+static void
+icewatch(IceConn iceConn,
+	 IcePointer clientData GCC_UNUSED,
+	 Bool opening,
+	 IcePointer * watchData GCC_UNUSED)
+{
+    if (opening) {
+	ice_fd = IceConnectionNumber(iceConn);
+	TRACE(("got IceConnectionNumber %d\n", ice_fd));
+    } else {
+	ice_fd = -1;
+	TRACE(("reset IceConnectionNumber\n"));
+    }
+}
+
 #endif /* OPT_SESSION_MGT */
 
 /*
@@ -863,7 +904,7 @@ DeleteWindow(Widget w,
 	    hide_vt_window();
 	else
 	    do_hangup(w, (XtPointer) 0, (XtPointer) 0);
-    } else if (term->screen.Vshow)
+    } else if (TScreenOf(term)->Vshow)
 	hide_tek_window();
     else
 #endif
@@ -957,7 +998,7 @@ main(int argc, char **argv ENVP_ARG)
     setlocale(LC_ALL, NULL);
 #endif
 
-/*debug	opencons();*/
+    opencons();
 
     ttydev = TypeMallocN(char, PTMS_BUFSZ);
     ptydev = TypeMallocN(char, PTMS_BUFSZ);
@@ -995,6 +1036,7 @@ main(int argc, char **argv ENVP_ARG)
 				 &argc, argv, fallback_resources,
 				 sessionShellWidgetClass,
 				 NULL, 0);
+    IceAddConnectionWatch(icewatch, NULL);
 #else
     toplevel = XtAppInitialize(&app_con, my_class,
 			       optionDescList,
@@ -1023,7 +1065,7 @@ main(int argc, char **argv ENVP_ARG)
 	    fprintf(stderr, "%s:  bad tty modes \"%s\"\n",
 		    ProgramName, resource.tty_modes);
 	} else if (n > 0) {
-	    override_tty_modes = 1;
+	    override_tty_modes = True;
 	}
     }
 #if OPT_ZICONBEEP
@@ -1148,6 +1190,7 @@ main(int argc, char **argv ENVP_ARG)
 
     screen = TScreenOf(term);
     screen->inhibit = 0;
+
 #ifdef ALLOWLOGGING
     if (term->misc.logInhibit)
 	screen->inhibit |= I_LOG;
@@ -1167,7 +1210,7 @@ main(int argc, char **argv ENVP_ARG)
 	TEK4014_ACTIVE(term) = False;
 
     if (TEK4014_ACTIVE(term) && !TekInit())
-	exit(ERROR_INIT);
+	SysError(ERROR_INIT);
 #endif
 
     /*
@@ -1228,7 +1271,7 @@ main(int argc, char **argv ENVP_ARG)
 	    c[1 + u] = "--";
 	    command_to_exec_with_luit = c;
 	} else {
-	    static char *luit[4];
+	    static char *luit[6];
 	    luit[0] = term->misc.localefilter;
 	    if (u) {
 		luit[1] = "-encoding";
@@ -1275,7 +1318,7 @@ main(int argc, char **argv ENVP_ARG)
 
 	buf[0] = '\0';
 	sprintf(buf, "%lx\n", XtWindow(SHELL_OF(CURRENT_EMU())));
-	write(screen->respond, buf, strlen(buf));
+	IGNORE_RC(write(screen->respond, buf, strlen(buf)));
     }
 
     if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
@@ -1324,25 +1367,29 @@ main(int argc, char **argv ENVP_ARG)
 #if OPT_COLOR_RES
     TRACE(("checking resource values rv %s fg %s, bg %s\n",
 	   BtoS(term->misc.re_verse0),
-	   NonNull(term->screen.Tcolors[TEXT_FG].resource),
-	   NonNull(term->screen.Tcolors[TEXT_BG].resource)));
+	   NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
+	   NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
 
     if ((reversed && term->misc.re_verse0)
-	&& ((term->screen.Tcolors[TEXT_FG].resource
-	     && !isDefaultForeground(term->screen.Tcolors[TEXT_FG].resource))
-	    || (term->screen.Tcolors[TEXT_BG].resource
-		&& !isDefaultBackground(term->screen.Tcolors[TEXT_BG].resource))
+	&& ((TScreenOf(term)->Tcolors[TEXT_FG].resource
+	     && !isDefaultForeground(TScreenOf(term)->Tcolors[TEXT_FG].resource))
+	    || (TScreenOf(term)->Tcolors[TEXT_BG].resource
+		&& !isDefaultBackground(TScreenOf(term)->Tcolors[TEXT_BG].resource))
 	))
 	ReverseVideo(term);
 #endif /* OPT_COLOR_RES */
 
+#if OPT_MAXIMIZE
+    if (resource.maximized)
+	RequestMaximize(term, True);
+#endif
     for (;;) {
 #if OPT_TEK4014
 	if (TEK4014_ACTIVE(term))
 	    TekRun();
 	else
 #endif
-	    VTRun();
+	    VTRun(term);
     }
     return 0;
 }
@@ -1612,7 +1659,7 @@ spawnXTerm(XtermWidget xw)
 				   False);
 
     if (!TEK4014_ACTIVE(xw))
-	VTInit();		/* realize now so know window size for tty driver */
+	VTInit(xw);		/* realize now so know window size for tty driver */
 
     if (Console) {
 	/*
@@ -1668,8 +1715,8 @@ spawnXTerm(XtermWidget xw)
     if (TEK4014_ACTIVE(xw)) {
 	TTYSIZE_ROWS(ts) = 38;
 	TTYSIZE_COLS(ts) = 81;
-	ts.ws_xpixel = TFullWidth(&(tekWidget->screen));
-	ts.ws_ypixel = TFullHeight(&(tekWidget->screen));
+	ts.ws_xpixel = TFullWidth(TekScreenOf(tekWidget));
+	ts.ws_ypixel = TFullHeight(TekScreenOf(tekWidget));
     } else
 #endif
     {
@@ -1701,8 +1748,7 @@ spawnXTerm(XtermWidget xw)
 	case 0:		/* child */
 	    whoami = THE_CHILD;
 
-/*debug fclose(confd);
-opencons();*/
+	    opencons();
 	    /* we don't need the socket, or the pty master anymore */
 	    close(ConnectionNumber(screen->display));
 	    close(screen->respond);
@@ -1758,7 +1804,7 @@ opencons();*/
 		    int on = 1;
 		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
 			fprintf(stderr, "%s: cannot open console: %s\n",
-				xterm_name, strerror(errno));
+				ProgramName, strerror(errno));
 		}
 	    }
 
@@ -1784,6 +1830,7 @@ opencons();*/
 	    xtermSetenv("DISPLAY", XDisplayString(screen->display));
 
 	    xtermSetenv("XTERM_VERSION", xtermVersion());
+	    xtermSetenv("XTERM_LOCALE", xtermEnvLocale());
 
 	    signal(SIGTERM, SIG_DFL);
 
@@ -1793,7 +1840,7 @@ opencons();*/
 	    for (i = 0; i <= 2; i++)
 		if (i != ttyfd) {
 		    (void) close(i);
-		    (void) dup(ttyfd);
+		    IGNORE_RC(dup(ttyfd));
 		}
 
 	    /* and close the tty */
@@ -1804,6 +1851,8 @@ opencons();*/
 	    (void) xtermResetIds(screen);
 
 	    if (handshake.rows > 0 && handshake.cols > 0) {
+		TRACE(("handshake ttysize: %dx%d\n",
+		       handshake.rows, handshake.cols));
 		set_max_row(screen, handshake.rows);
 		set_max_col(screen, handshake.cols);
 		TTYSIZE_ROWS(ts) = MaxRows(screen);
@@ -1847,9 +1896,9 @@ opencons();*/
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			xterm_name, *command_to_exec_with_luit, strerror(errno));
+			ProgramName, *command_to_exec_with_luit, strerror(errno));
 		fprintf(stderr, "%s: cannot support your locale.\n",
-			xterm_name);
+			ProgramName);
 	    }
 #endif
 	    if (command_to_exec) {
@@ -1860,7 +1909,7 @@ opencons();*/
 
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s\n",
-			xterm_name, *command_to_exec);
+			ProgramName, *command_to_exec);
 	    }
 
 	    /* use a layered mechanism to find a shell */
@@ -1891,13 +1940,13 @@ opencons();*/
 
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s\n",
-			xterm_name, *command_to_exec);
+			ProgramName, *command_to_exec);
 	    } else {
 		execlpe(ptr, shname, 0, gblenvp);
 
 		/* Exec failed. */
 		fprintf(stderr, "%s: Could not exec %s!\n",
-			xterm_name, ptr);
+			ProgramName, ptr);
 	    }
 	    sleep(5);
 
@@ -1930,7 +1979,7 @@ SIGNAL_T
 Exit(int n)
 {
     TScreen *screen = TScreenOf(term);
-    int pty = term->screen.respond;	/* file descriptor of pty */
+    int pty = TScreenOf(term)->respond;
     close(pty);			/* close explicitly to avoid race with slave side */
 #ifdef ALLOWLOGGING
     if (screen->logging)
@@ -1941,6 +1990,45 @@ Exit(int n)
 	set_owner(ttydev, 0, 0, 0666U);
 	set_owner(ptydev, 0, 0, 0666U);
     }
+
+    /*
+     * Close after releasing ownership to avoid race condition: other programs 
+     * grabbing it, and *then* having us release ownership....
+     */
+    close(screen->respond);	/* close explicitly to avoid race with slave side */
+#ifdef ALLOWLOGGING
+    if (screen->logging)
+	CloseLog(screen);
+#endif
+
+#ifdef NO_LEAKS
+    if (n == 0) {
+	TRACE(("Freeing memory leaks\n"));
+	if (term != 0) {
+	    Display *dpy = TScreenOf(term)->display;
+
+	    if (toplevel) {
+		XtDestroyWidget(toplevel);
+		TRACE(("destroyed top-level widget\n"));
+	    }
+	    sortedOpts(0, 0, 0);
+	    noleaks_charproc();
+	    noleaks_ptydata();
+#if OPT_WIDE_CHARS
+	    noleaks_CharacterClass();
+#endif
+	    /* XrmSetDatabase(dpy, 0); increases leaks ;-) */
+	    XtCloseDisplay(dpy);
+	    XtDestroyApplicationContext(app_con);
+#if OPT_SESSION_MGT
+	    IceRemoveConnectionWatch(icewatch, NULL);
+#endif
+	    TRACE(("closed display\n"));
+	}
+	TRACE((0));
+    }
+#endif
+
     exit(n);
     SIGNAL_RETURN;
 }
@@ -1980,7 +2068,7 @@ reapchild(int n GCC_UNUSED)
     (void) signal(SIGCHLD, reapchild);
 
     do {
-	if (pid == term->screen.pid) {
+	if (pid == TScreenOf(term)->pid) {
 #ifdef DEBUG
 	    if (debug)
 		fputs("Exiting\n", stderr);

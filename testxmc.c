@@ -1,12 +1,8 @@
-/* $XTermId: testxmc.c,v 1.34 2006/07/23 18:53:12 tom Exp $ */
-
-/*
- * $XFree86: xc/programs/xterm/testxmc.c,v 3.14 2006/02/13 01:14:59 dickey Exp $
- */
+/* $XTermId: testxmc.c,v 1.46 2009/11/28 14:15:24 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2005,2006 by Thomas E. Dickey
+Copyright 1997-2006,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -92,17 +88,17 @@ authorization.
 #include <xterm.h>
 #include <data.h>
 
-#define MARK_ON(a)  (my_attrs & a) != 0 && (xw->flags & (whichone = a)) == 0
-#define MARK_OFF(a) (my_attrs & a) != 0 && (xw->flags & (whichone = a)) != 0
+#define MARK_ON(a)  (my_attrs & a) != 0 && (xw->flags & (whichone = CharOf(a))) == 0
+#define MARK_OFF(a) (my_attrs & a) != 0 && (xw->flags & (whichone = CharOf(a))) != 0
 
 void
 Mark_XMC(XtermWidget xw, int param)
 {
     static IChar *glitch;
 
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     Bool found = False;
-    Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
+    Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
     Char whichone = 0;
 
     if (glitch == 0) {
@@ -163,9 +159,10 @@ Mark_XMC(XtermWidget xw, int param)
 void
 Jump_XMC(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     if (!screen->move_sgr_ok
-	&& screen->cur_col <= CurMaxCol(screen, screen->cur_row)) {
+	&& screen->cur_col <= LineMaxCol(screen,
+					 getLineData(screen, screen->cur_row))) {
 	Mark_XMC(xw, -1);
     }
 }
@@ -177,41 +174,43 @@ Jump_XMC(XtermWidget xw)
 void
 Resolve_XMC(XtermWidget xw)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
+    LineData *ld;
     Bool changed = False;
     Char start;
-    Char my_attrs = (screen->xmc_attributes & XMC_FLAGS);
+    Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
     int row = screen->cur_row;
     int col = screen->cur_col;
 
     /* Find the preceding cell.
      */
-    if (XTERM_CELL(row, col) != XMC_GLITCH) {
+    ld = getLineData(screen, row);
+    if (ld->charData[col] != XMC_GLITCH) {
 	if (col != 0) {
 	    col--;
 	} else if (!screen->xmc_inline && row != 0) {
-	    row--;
-	    col = CurMaxCol(screen, row);
+	    ld = getLineData(screen, --row);
+	    col = LineMaxCol(screen, ld);
 	}
     }
-    start = (SCRN_BUF_ATTRS(screen, row)[col] & my_attrs);
+    start = (ld->attribs[col] & my_attrs);
 
     /* Now propagate the starting state until we reach a cell which holds
      * a glitch.
      */
     for (;;) {
-	if (col < CurMaxCol(screen, row)) {
+	if (col < LineMaxCol(screen, ld)) {
 	    col++;
 	} else if (!screen->xmc_inline && row < screen->max_row) {
-	    row++;
 	    col = 0;
+	    ld = getLineData(screen, ++row);
 	} else
 	    break;
-	if (XTERM_CELL(row, col) == XMC_GLITCH)
+	if (ld->charData[col] == XMC_GLITCH)
 	    break;
-	if ((SCRN_BUF_ATTRS(screen, row)[col] & my_attrs) != start) {
-	    SCRN_BUF_ATTRS(screen, row)[col] = start |
-		(SCRN_BUF_ATTRS(screen, row)[col] & ~my_attrs);
+	if ((ld->attribs[col] & my_attrs) != start) {
+	    ld->attribs[col] =
+		CharOf(start | (ld->attribs[col] & ~my_attrs));
 	    changed = True;
 	}
     }

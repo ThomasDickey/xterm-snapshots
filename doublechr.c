@@ -1,8 +1,8 @@
-/* $XTermId: doublechr.c,v 1.60 2008/01/27 15:07:16 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.73 2009/11/28 13:28:03 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2007,2008 by Thomas E. Dickey
+Copyright 1997-2008,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -45,58 +45,58 @@ authorization.
  * controls apply to a whole line).  However, it's easier to maintain the
  * information for special fonts by writing to all cells.
  */
-#define curChrSet SCRN_BUF_CSETS(screen, screen->cur_row)[0]
-
 #if OPT_DEC_CHRSET
 
 static void
 repaint_line(XtermWidget xw, unsigned newChrSet)
 {
-    register TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
+    LineData *ld;
     int curcol = screen->cur_col;
     int currow = screen->cur_row;
-    unsigned len = MaxCols(screen);
-    int width = len;
-    unsigned oldChrSet = SCRN_BUF_CSETS(screen, currow)[0];
+    int width = MaxCols(screen);
+    unsigned len = (unsigned) width;
 
     assert(width > 0);
 
     /*
      * Ignore repetition.
      */
-    if (oldChrSet == newChrSet)
-	return;
+    if ((ld = getLineData(screen, currow)) != 0) {
+	unsigned oldChrSet = GetLineDblCS(ld);
 
-    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
-	   visibleChrsetName(oldChrSet),
-	   visibleChrsetName(newChrSet)));
-    HideCursor();
+	if (oldChrSet != newChrSet) {
+	    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
+		   visibleChrsetName(oldChrSet),
+		   visibleChrsetName(newChrSet)));
+	    HideCursor();
 
-    /* If switching from single-width, keep the cursor in the visible part
-     * of the line.
-     */
-    if (CSET_DOUBLE(newChrSet)) {
-	width /= 2;
-	if (curcol > width)
-	    curcol = width;
+	    /* If switching from single-width, keep the cursor in the visible part
+	     * of the line.
+	     */
+	    if (CSET_DOUBLE(newChrSet)) {
+		width /= 2;
+		if (curcol > width)
+		    curcol = width;
+	    }
+
+	    /*
+	     * ScrnRefresh won't paint blanks for us if we're switching between a
+	     * single-size and double-size font.  So we paint our own.
+	     */
+	    ClearCurBackground(xw,
+			       CursorY(screen, currow),
+			       LineCursorX(screen, ld, 0),
+			       (unsigned) FontHeight(screen),
+			       len * (unsigned) LineFontWidth(screen, ld));
+
+	    SetLineDblCS(ld, newChrSet);
+
+	    set_cur_col(screen, 0);
+	    ScrnUpdate(xw, currow, 0, 1, (int) len, True);
+	    set_cur_col(screen, curcol);
+	}
     }
-
-    /*
-     * ScrnRefresh won't paint blanks for us if we're switching between a
-     * single-size and double-size font.  So we paint our own.
-     */
-    ClearCurBackground(xw,
-		       CursorY(screen, currow),
-		       CurCursorX(screen, currow, 0),
-		       (unsigned) FontHeight(screen),
-		       len * CurFontWidth(screen, currow));
-
-    /* FIXME: do VT220 softchars allow double-sizes? */
-    memset(SCRN_BUF_CSETS(screen, currow), (Char) newChrSet, len);
-
-    set_cur_col(screen, 0);
-    ScrnUpdate(xw, currow, 0, 1, (int) len, True);
-    set_cur_col(screen, curcol);
 }
 #endif
 
@@ -140,7 +140,7 @@ xterm_DECDWL(XtermWidget xw GCC_UNUSED)
 static void
 discard_font(XtermWidget xw, int n)
 {
-    TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
     XTermFonts *data = &(screen->double_fonts[n]);
 
     TRACE(("discard_font chrset=%d %s\n", data->chrset,
@@ -165,7 +165,7 @@ discard_font(XtermWidget xw, int n)
 static XTermFonts *
 pushback_font(XtermWidget xw, XTermFonts * source)
 {
-    TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
     XTermFonts *data = screen->double_fonts;
     int n;
 
@@ -190,7 +190,7 @@ xterm_Double_index(XtermWidget xw, unsigned chrset, unsigned flags)
 {
     int n;
     int result = -1;
-    TScreen *screen = &xw->screen;
+    TScreen *screen = TScreenOf(xw);
     XTermFonts *data = screen->double_fonts;
 
     flags &= BOLD;
@@ -228,7 +228,7 @@ xterm_DoubleGC(XtermWidget xw,
 	       GC old_gc,
 	       int *inxp)
 {
-    TScreen *screen = &(xw->screen);
+    TScreen *screen = TScreenOf(xw);
     VTwin *cgsWin = WhichVWin(screen);
     int n;
     char *name;
@@ -263,12 +263,13 @@ xterm_DoubleGC(XtermWidget xw,
 	    temp.chrset = chrset;
 	    temp.flags = (flags & BOLD);
 
-	    if (!xtermOpenFont(xw, name, &temp)) {
+	    if (!xtermOpenFont(xw, name, &temp, fwAlways, False)) {
 		/* Retry with * in resolutions */
 		char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
 
 		if (nname != 0) {
-		    found = xtermOpenFont(xw, nname, &temp);
+		    found = (Boolean) xtermOpenFont(xw, nname, &temp,
+						    fwAlways, False);
 		    free(nname);
 		}
 	    } else {

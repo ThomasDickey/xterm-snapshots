@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.85 2007/11/26 18:42:37 tom Exp $
+! $XTermId: XTerm.ad,v 1.90 2009/09/27 22:02:30 tom Exp $
 
 *saveLines: 1024
 
@@ -88,9 +88,15 @@
 *fontMenu*font-linedrawing*Label: Line-Drawing Characters
 *fontMenu*font-doublesize*Label: Doublesized Characters
 *fontMenu*font-loadable*Label:	VT220 Soft Fonts
+*fontMenu*font-packed*Label:	Packed Font
 *fontMenu*render-font*Label:	TrueType Fonts
 *fontMenu*utf8-mode*Label:	UTF-8
 *fontMenu*utf8-title*Label:	UTF-8 Titles
+
+*fontMenu*allow-tcap-ops*Label:	Allow Termcap Ops
+*fontMenu*allow-font-ops*Label:	Allow Font Ops
+*fontMenu*allow-title-ops*Label:	Allow Title Ops
+*fontMenu*allow-window-ops*Label:	Allow Window Ops
 
 *VT100.utf8Fonts.font2:	-misc-fixed-medium-r-normal--8-80-75-75-c-50-iso10646-1
 *VT100.utf8Fonts.font:	-misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1
@@ -143,7 +149,7 @@
 !			vt100/VT100
 !			tektronix/TopLevelShell
 !				shellext/VendorShellExt
-!					tek4014/Tek4014 
+!					tek4014/Tek4014
 !
 ! If built without a toolbar, the widget hierarchy is simpler, because there
 ! is no form, and the popup menu widgets are created only when they are first
@@ -158,7 +164,7 @@
 !		vt100/VT100
 !		tektronix/TopLevelShell
 !			shellext/VendorShellExt
-!				tek4014/Tek4014 
+!				tek4014/Tek4014
 !
 ! A more complete list of the widget/class names can be obtained using editres
 ! to dump a file.  Some widget names are not available until the corresponding
@@ -187,3 +193,21 @@
 !
 ! Alternatively,
 !*on2Clicks: regex [[:alpha:]]+://([[:alnum:]!#+,./=?@_~-]|(%[[:xdigit:]][[:xdigit:]]))+
+
+! VT100s and similar terminals recognize escape sequences and control
+! characters to which they reply to the host with other escape sequences,
+! to provide information.  The "resize" program uses this feature.
+!
+! In addition, xterm recognizes several escape sequences which can be used to
+! set fonts, window properties, return settings via escape sequences.  Some
+! find these useful; others are concerned with the possibility of unexpected
+! inputs.
+!
+! All of these features can be enabled or disabled via menus.
+!
+! Depending on your environment, you may wish to disable those by default by
+! uncommenting one or more of the resource settings below:
+!*allowFontOps: false
+!*allowTcapOps: false
+!*allowTitleOps: false
+!*allowWindowOps: false
