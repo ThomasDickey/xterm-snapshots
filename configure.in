@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.244 2008/03/26 00:55:11 tom Exp $
+dnl $XTermId: configure.in,v 1.253 2009/08/30 21:46:21 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -285,7 +285,7 @@ LIBS="$LIBS $X_EXTRA_LIBS"
 # Check for openpty() in -lutil if the UNIX98-style pty functions are not
 # available. E.g. for GNU libc 2.0.
 case $host_os in #(vi
-freebsd*|netbsd*)	# 2004/8/15 - revisit this if/when grantpt is known to work.
+freebsd*|netbsd*|dragonfly*) # 2004/8/15 - revisit this if/when grantpt is known to work.
 	AC_CHECK_LIB(util,openpty)
 	;;
 *)
@@ -565,6 +565,16 @@ if test "$enable_sun_fkeys" = no ; then
 	AC_DEFINE(OPT_SUN_FUNC_KEYS,0)
 fi
 
+AC_MSG_CHECKING(if you want saved-lines stored as a FIFO)
+CF_ARG_DISABLE(fifo-lines,
+	[  --enable-fifo-lines     disable FIFO-storage for saved-lines],
+	[enable_fifo_lines=no],
+	[enable_fifo_lines=yes])
+AC_MSG_RESULT($enable_fifo_lines)
+if test "$enable_fifo_lines" = yes ; then
+	AC_DEFINE(OPT_FIFO_LINES,1)
+fi
+
 AC_MSG_CHECKING(if you want support for internationalization)
 CF_ARG_DISABLE(i18n,
 	[  --disable-i18n          disable internationalization],
@@ -644,10 +654,10 @@ test "$enable_numlock" = no && AC_DEFINE(OPT_NUM_LOCK,0)
 
 AC_MSG_CHECKING(if you want support for get/set of base64 selection data)
 
-CF_ARG_ENABLE(paste64,
-	[  --enable-paste64        enable get/set base64 selection data],
-	[enable_paste64=yes],
-	[enable_paste64=no])
+CF_ARG_DISABLE(paste64,
+	[  --disable-paste64       disable get/set base64 selection data],
+	[enable_paste64=no],
+	[enable_paste64=yes])
 AC_MSG_RESULT($enable_paste64)
 if test "$enable_paste64" = yes ; then
 	AC_DEFINE(OPT_PASTE64,1)
@@ -730,10 +740,10 @@ AC_MSG_RESULT($enable_tcap_fkeys)
 test "$enable_tcap_fkeys" = yes && AC_DEFINE(OPT_TCAP_FKEYS,1)
 
 AC_MSG_CHECKING(if you want to use termcap-query/report)
-CF_ARG_ENABLE(tcap-query,
-	[  --enable-tcap-query     compile-in termcap-query support],
-	[enable_tcap_query=yes],
-	[enable_tcap_query=no])
+CF_ARG_DISABLE(tcap-query,
+	[  --disable-tcap-query    disable compiled-in termcap-query support],
+	[enable_tcap_query=no],
+	[enable_tcap_query=yes])
 AC_MSG_RESULT($enable_tcap_query)
 test "$enable_tcap_query" = yes && AC_DEFINE(OPT_TCAP_QUERY,1)
 
@@ -797,6 +807,19 @@ CF_ARG_OPTION(wide-chars,
 	[enable_wchar=$enable_luit],
 	[$enable_luit])
 AC_MSG_RESULT($enable_wchar)
+
+AC_MSG_CHECKING(if you want only 16-bit character support)
+CF_ARG_ENABLE(16bit-chars,
+	[  --enable-16bit-chars    enable 16-bit character support],
+	[enable_16bit_chars=yes],
+	[enable_16bit_chars=no])
+AC_MSG_RESULT($enable_16bit_chars)
+
+if test "$enable_16bit_chars" = yes ; then
+	AC_DEFINE(OPT_WIDER_ICHAR,0)
+	enable_wchar=yes
+fi
+
 if test "$enable_wchar" = yes ; then
 	AC_DEFINE(OPT_WIDE_CHARS,1)
 	EXTRAHDRS="$EXTRAHDRS charclass.h precompose.h wcwidth.h"
@@ -883,6 +906,11 @@ fi
 
 dnl FIXME - extra test needed to make tcap-fkeys work on HPUX
 AC_CHECK_FUNCS(tigetstr)
+
+dnl only check for ncurses' use_extended_names if really not using termcap
+if test -n "$cf_cv_lib_part_tgetent"; then
+    AC_CHECK_FUNCS(use_extended_names)
+fi
 
 if test -n "$GCC" ; then
 AC_MSG_CHECKING(if you want to turn on gcc warnings)

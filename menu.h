@@ -1,8 +1,8 @@
-/* $XTermId: menu.h,v 1.111 2007/11/26 18:09:53 tom Exp $ */
+/* $XTermId: menu.h,v 1.117 2009/10/11 22:45:22 tom Exp $ */
 
 /*
 
-Copyright 1999-2006,2007 by Thomas E. Dickey
+Copyright 1999-2007,2009 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -56,7 +56,7 @@ from The Open Group.
 #include <xterm.h>
 
 typedef struct _MenuEntry {
-    char *name;
+    const char *name;
     void (*function) PROTO_XT_CALLBACK_ARGS;
     Widget widget;
 } MenuEntry;
@@ -69,7 +69,11 @@ extern MenuEntry tekMenuEntries[];
 
 extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
+extern void HandleAllowFontOps     PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
+extern void HandleAllowTcapOps     PROTO_XT_ACTIONS_ARGS;
+extern void HandleAllowTitleOps    PROTO_XT_ACTIONS_ARGS;
+extern void HandleAllowWindowOps   PROTO_XT_ACTIONS_ARGS;
 extern void HandleAltEsc           PROTO_XT_ACTIONS_ARGS;
 extern void HandleAltScreen        PROTO_XT_ACTIONS_ARGS;
 extern void HandleAppCursor        PROTO_XT_ACTIONS_ARGS;
@@ -86,9 +90,11 @@ extern void HandleDeleteIsDEL      PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontBoxChars     PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
+extern void HandleFontPacked       PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
+extern void HandleKeepSelection    PROTO_XT_ACTIONS_ARGS;
 extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
 extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
 extern void HandleMetaEsc          PROTO_XT_ACTIONS_ARGS;
@@ -97,6 +103,7 @@ extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintControlMode PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintEverything  PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
 extern void HandleRenderFont       PROTO_XT_ACTIONS_ARGS;
@@ -109,7 +116,6 @@ extern void HandleScrollbar        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSecure           PROTO_XT_ACTIONS_ARGS;
 extern void HandleSendSignal       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetPopOnBell     PROTO_XT_ACTIONS_ARGS;
-extern void HandleKeepSelection    PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetSelect        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTekText       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
@@ -252,6 +258,7 @@ typedef enum {
     fontMenu_line1,
 #if OPT_BOX_CHARS
     fontMenu_font_boxchars,
+    fontMenu_font_packedfont,
 #endif
 #if OPT_DEC_CHRSET
     fontMenu_font_doublesize,
@@ -270,6 +277,13 @@ typedef enum {
     fontMenu_wide_chars,
     fontMenu_wide_title,
 #endif
+#endif
+#if OPT_ALLOW_XXX_OPS
+    fontMenu_line3,
+    fontMenu_allowTcapOps,
+    fontMenu_allowFontOps,
+    fontMenu_allowTitleOps,
+    fontMenu_allowWindowOps,
 #endif
 
     fontMenu_LAST
@@ -302,7 +316,7 @@ typedef enum {
  * functions for updating menus
  */
 
-extern void SetItemSensitivity(Widget mi, XtArgVal val);
+extern void SetItemSensitivity(Widget mi, Bool val);
 
 /*
  * there should be one of each of the following for each checkable item
@@ -387,6 +401,13 @@ extern void update_poponbell(void);
 
 #define update_marginbell() /* nothing */
 
+#if OPT_ALLOW_XXX_OPS
+extern void update_menu_allowTcapOps(void);
+extern void update_menu_allowFontOps(void);
+extern void update_menu_allowTitleOps(void);
+extern void update_menu_allowWindowOps(void);
+#endif
+
 #if OPT_BLINK_CURS
 extern void update_cursorblink(void);
 #else
@@ -408,8 +429,10 @@ extern void update_font_doublesize(void);
 
 #if OPT_BOX_CHARS
 extern void update_font_boxchars(void);
+extern void update_font_packed(void);
 #else
 #define update_font_boxchars() /* nothing */
+#define update_font_packed() /* nothing */
 #endif
 
 #if OPT_DEC_SOFTFONT
