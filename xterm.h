@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.597 2009/11/29 22:53:56 tom Exp $ */
+/* $XTermId: xterm.h,v 1.598 2009/11/30 09:42:50 tom Exp $ */
 
 /************************************************************
 
@@ -1200,22 +1200,22 @@ extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* le
 
 #define getXtermForeground(xw, flags, color) \
 	(((flags) & FG_COLOR) && ((int)(color) >= 0 && (color) < MAXCOLORS) \
-			? GET_COLOR_RES(TScreenOf(xw)->Acolors[color]) \
+			? GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]) \
 			: T_COLOR(TScreenOf(xw), TEXT_FG))
 
 #define getXtermBackground(xw, flags, color) \
 	(((flags) & BG_COLOR) && ((int)(color) >= 0 && (color) < MAXCOLORS) \
-			? GET_COLOR_RES(TScreenOf(xw)->Acolors[color]) \
+			? GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]) \
 			: T_COLOR(TScreenOf(xw), TEXT_BG))
 
 #if OPT_COLOR_RES
-#define GET_COLOR_RES(res) xtermGetColorRes(&(res))
+#define GET_COLOR_RES(xw, res) xtermGetColorRes(xw, &(res))
 #define SET_COLOR_RES(res,color) (res)->value = color
 #define EQL_COLOR_RES(res,color) (res)->value == color
 #define T_COLOR(v,n) (v)->Tcolors[n].value
-extern Pixel xtermGetColorRes(ColorRes *res);
+extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 #else
-#define GET_COLOR_RES(res) res
+#define GET_COLOR_RES(xw, res) res
 #define SET_COLOR_RES(res,color) *res = color
 #define EQL_COLOR_RES(res,color) *res == color
 #define T_COLOR(v,n) (v)->Tcolors[n]

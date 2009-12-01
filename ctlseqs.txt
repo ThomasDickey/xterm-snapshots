@@ -579,6 +579,13 @@ CSI Ps ; Ps " p
             Ps = 0  -> 8-bit controls
             Ps = 1  -> 7-bit controls (always set for VT100)
             Ps = 2  -> 8-bit controls
+CSI Ps SP "q
+          Set cursor style (DECSCUSR, VT520)
+            Ps = 0  -> blinking block
+            Ps = 1  -> blinking block (default)
+            Ps = 2  -> steady block
+            Ps = 3  -> blinking underline
+            Ps = 4  -> steady underline
 CSI Ps " q
           Select character protection attribute (DECSCA).  Valid values
           for the parameter:

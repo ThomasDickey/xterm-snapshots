@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.860 2009/11/30 01:18:21 tom Exp $
+  $XTermId: xterm.log.html,v 1.862 2009/12/01 01:19:51 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -302,6 +302,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add <code>DECSCUSR</code> (discussion with Andy Koppe).
+
+	<li>add check/warning on failure to load font, to see if the name looks
+	    like an Xft pattern rather than XLFD.  This can happen if someone
+	    happens to modify their X resource settings for programs that read
+	    data from xterm's namespace.
+
 	<li>modify handling of <code>print</code> and
 	    <code>print-everything</code>
 	    actions to allow the various printer flags to be overridden  by

@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.194 2009/11/10 01:15:53 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.195 2009/12/01 01:17:28 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
@@ -1061,6 +1061,14 @@ Valid values for the second parameter:
   \*(Ps = \*0 \(-> 8-bit controls
   \*(Ps = \*1 \(-> 7-bit controls (always set for VT100)
   \*(Ps = \*2 \(-> 8-bit controls
+.
+.IP \\*(Cs\\*(Ps\\*s\\*(Sp"\\*q
+Set cursor style (DECSCUSR, VT520)
+  \*(Ps = \*0 \(-> blinking block
+  \*(Ps = \*1 \(-> blinking block (default)
+  \*(Ps = \*2 \(-> steady block
+  \*(Ps = \*3 \(-> blinking underline
+  \*(Ps = \*4 \(-> steady underline
 .
 .IP \\*(Cs\\*(Ps\\*s\\*(c"\\*q
 Select character protection attribute (DECSCA).
