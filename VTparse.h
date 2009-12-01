@@ -1,7 +1,7 @@
-/* $XTermId: VTparse.h,v 1.45 2008/05/28 21:11:23 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.46 2009/11/30 10:31:36 tom Exp $ */
 
 /*
- * Copyright 2002-2006,2008 by Thomas E. Dickey
+ * Copyright 2002-2008,2009 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -67,6 +67,7 @@ extern Const PARSE_T cigtable[];
 extern Const PARSE_T csi2_table[];
 extern Const PARSE_T csi_ex_table[];
 extern Const PARSE_T csi_quo_table[];
+extern Const PARSE_T csi_sp_table[];
 extern Const PARSE_T csi_table[];
 extern Const PARSE_T dec2_table[];
 extern Const PARSE_T dec3_table[];
@@ -246,5 +247,7 @@ extern Const PARSE_T esc_pct_table[];
 #define CASE_SCS1A_STATE 134
 #define CASE_SCS2A_STATE 135
 #define CASE_SCS3A_STATE 136
+#define CASE_CSI_SPACE_STATE 137
+#define CASE_DECSCUSR 138
 
 #endif /* included_VTparse_h */

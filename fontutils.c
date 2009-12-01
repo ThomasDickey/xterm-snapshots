@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.322 2009/11/28 00:39:00 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.323 2009/11/30 10:07:00 tom Exp $ */
 
 /************************************************************
 
@@ -757,6 +757,17 @@ xtermOpenFont(XtermWidget xw,
 		) {
 		TRACE(("OOPS: cannot load font %s\n", name));
 		fprintf(stderr, "%s: cannot load font %s\n", ProgramName, name);
+#if OPT_RENDERFONT
+		/*
+		 * Do a sanity check in case someone's mixed up xterm with
+		 * one of those programs that read their resource data from
+		 * xterm's namespace.
+		 */
+		if (strchr(name, ':') != 0 || strchr(name, '=') != 0) {
+		    fprintf(stderr,
+			    "Use the \"-fa\" option for the Xft fonts\n");
+		}
+#endif
 	    } else {
 		TRACE(("xtermOpenFont: cannot load font %s\n", name));
 	    }

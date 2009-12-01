@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.998 2009/11/29 22:24:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1004 2009/12/01 01:01:14 tom Exp $ */
 
 /*
 
@@ -140,7 +140,10 @@ typedef struct {
 static IChar doinput(void);
 static int set_character_class(char * /*s */ );
 static void FromAlternate(XtermWidget /* xw */ );
-static void RequestResize(XtermWidget termw, int rows, int cols, Bool text);
+static void RequestResize(XtermWidget /* xw */,
+			  int /* rows */,
+			  int /* cols */,
+			  Bool /* text */);
 static void SwitchBufs(XtermWidget xw);
 static void ToAlternate(XtermWidget /* xw */ );
 static void ansi_modes(XtermWidget termw,
@@ -149,16 +152,19 @@ static void bitclr(unsigned *p, unsigned mask);
 static void bitcpy(unsigned *p, unsigned q, unsigned mask);
 static void bitset(unsigned *p, unsigned mask);
 static void dpmodes(XtermWidget termw, void (*func) (unsigned *p, unsigned mask));
-static void restoremodes(XtermWidget termw);
-static void savemodes(XtermWidget termw);
-static void window_ops(XtermWidget termw);
+static void restoremodes(XtermWidget /* xw */);
+static void savemodes(XtermWidget /* xw */);
+static void window_ops(XtermWidget /* xw */);
 
 #define DoStartBlinking(s) ((s)->cursor_blink ^ (s)->cursor_blink_esc)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
-static void HandleBlinking(XtPointer closure, XtIntervalId * id);
-static void StartBlinking(TScreen * screen);
-static void StopBlinking(TScreen * screen);
+static void SetCursorBlink(TScreen * /* screen */,
+			   Bool /* enable */);
+static void HandleBlinking(XtPointer /* closure */,
+			   XtIntervalId * /* id */);
+static void StartBlinking(TScreen * /* screen */);
+static void StopBlinking(TScreen * /* screen */);
 #else
 #define StartBlinking(screen)	/* nothing */
 #define StopBlinking(screen)	/* nothing */
@@ -1176,6 +1182,9 @@ which_table(Const PARSE_T * table)
     else WHICH_TABLE (scs96table);
     else WHICH_TABLE (scstable);
     else WHICH_TABLE (sos_table);
+#if OPT_BLINK_CURS
+    else WHICH_TABLE (csi_sp_table);
+#endif
 #if OPT_DEC_LOCATOR
     else WHICH_TABLE (csi_tick_table);
 #endif
@@ -2480,6 +2489,56 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_CSI_QUOTE_STATE:
 	    sp->parsestate = csi_quo_table;
 	    break;
+
+#if OPT_BLINK_CURS
+	case CASE_CSI_SPACE_STATE:
+	    sp->parsestate = csi_sp_table;
+	    break;
+
+	case CASE_DECSCUSR:
+	    TRACE(("CASE_DECSCUSR\n"));
+	    {
+		Boolean change = True;
+		Boolean blinks = screen->cursor_blink;
+
+		HideCursor();
+
+		switch (param[0]) {
+		case 0:
+		case 1:
+		case DEFAULT:
+		    /* blinking block */
+		    screen->cursor_underline = False;
+		    blinks = True;
+		    break;
+		case 2:
+		    /* steady block */
+		    screen->cursor_underline = False;
+		    blinks = False;
+		    break;
+		case 3:
+		    /* blinking underline */
+		    screen->cursor_underline = True;
+		    blinks = True;
+		    break;
+		case 4:
+		    /* steady underline */
+		    screen->cursor_underline = True;
+		    blinks = False;
+		    break;
+		default:
+		    change = False;
+		    break;
+		}
+
+		if (change) {
+		    xtermSetCursorBox(screen);
+		    SetCursorBlink(screen, blinks);
+		}
+	    }
+	    sp->parsestate = sp->groundtable;
+	    break;
+#endif
 
 #if OPT_VT52_MODE
 	case CASE_VT52_FINISH:
@@ -7420,9 +7479,11 @@ ShowCursor(void)
 	&& (screen->cursor_state != ON || screen->cursor_GC != set_at)) {
 
 	screen->cursor_GC = set_at;
-	TRACE(("ShowCursor calling drawXtermText cur(%d,%d) %s, set_at %d\n",
+	TRACE(("ShowCursor calling drawXtermText cur(%d,%d) %s-%s, set_at %d\n",
 	       screen->cur_row, screen->cur_col,
-	       (filled ? "filled" : "outline"), set_at));
+	       (filled ? "filled" : "outline"),
+	       (screen->cursor_underline ? "underline" : "box"),
+	       set_at));
 
 	currentGC = getCgsGC(xw, currentWin, currentCgs);
 	x = LineCursorX(screen, ld, cursor_col);

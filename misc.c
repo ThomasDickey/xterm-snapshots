@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.433 2009/11/28 14:08:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.434 2009/11/30 09:37:52 tom Exp $ */
 
 /*
  *
@@ -1744,7 +1744,7 @@ ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
     char buffer[80];
 
     TRACE(("ReportAnsiColorRequest %d\n", colornum));
-    color.pixel = GET_COLOR_RES(TScreenOf(xw)->Acolors[colornum]);
+    color.pixel = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[colornum]);
     XQueryColor(TScreenOf(xw)->display, cmap, &color);
     sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
 	    colornum,
@@ -1919,7 +1919,7 @@ AllocateAnsiColor(XtermWidget xw,
 
 #if OPT_COLOR_RES
 Pixel
-xtermGetColorRes(ColorRes * res)
+xtermGetColorRes(XtermWidget xw, ColorRes * res)
 {
     Pixel result = 0;
 
@@ -1927,13 +1927,13 @@ xtermGetColorRes(ColorRes * res)
 	result = res->value;
     } else {
 	TRACE(("xtermGetColorRes for Acolors[%d]\n",
-	       res - TScreenOf(term)->Acolors));
+	       res - TScreenOf(xw)->Acolors));
 
-	if (res >= TScreenOf(term)->Acolors) {
-	    assert(res - TScreenOf(term)->Acolors < MAXCOLORS);
+	if (res >= TScreenOf(xw)->Acolors) {
+	    assert(res - TScreenOf(xw)->Acolors < MAXCOLORS);
 
-	    if (AllocateAnsiColor(term, res, res->resource) < 0) {
-		res->value = TScreenOf(term)->Tcolors[TEXT_FG].value;
+	    if (AllocateAnsiColor(xw, res, res->resource) < 0) {
+		res->value = TScreenOf(xw)->Tcolors[TEXT_FG].value;
 		res->mode = -True;
 		fprintf(stderr,
 			"%s: Cannot allocate color %s\n",

@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.113 2009/11/30 00:45:23 tom Exp $ */
+/* $XTermId: print.c,v 1.114 2009/12/01 01:42:44 tom Exp $ */
 
 /************************************************************
 
@@ -144,6 +144,9 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
     int last_cs = CSET_IN;
 
     ld = getLineData(screen, inx);
+    if (ld == 0)
+	return;
+
     TRACE(("printLine(row=%d/%d, top=%d:%d, chr=%d):%s\n",
 	   row, ROW2INX(screen, row), screen->topline, screen->max_row, chr,
 	   visibleIChars(ld->charData, (unsigned) last)));
@@ -233,8 +236,16 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
 		charToPrinter(xw, SHIFT_IN);
 	}
     }
+
+    /* finish line (protocol for attributes needs a CR */
     if (p->print_attributes)
 	charToPrinter(xw, '\r');
+
+    if (chr && !(p->printer_newline)) {
+	if (LineTstWrapped(ld))
+	    chr = '\0';
+    }
+
     if (chr)
 	charToPrinter(xw, chr);
 
