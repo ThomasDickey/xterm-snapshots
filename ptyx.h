@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.643 2009/11/29 23:15:13 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.644 2009/12/02 11:59:54 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1335,7 +1335,7 @@ typedef enum {
 typedef struct {
 	String		resource;
 	Pixel		value;
-	int		mode;
+	int		mode;		/* -1=invalid, 0=unset, 1=set   */
 } ColorRes;
 #else
 #define ColorRes Pixel

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.598 2009/11/30 09:42:50 tom Exp $ */
+/* $XTermId: xterm.h,v 1.601 2009/12/03 10:12:23 tom Exp $ */
 
 /************************************************************
 
@@ -927,6 +927,7 @@ extern char *xtermFindShell(char * /* leaf */, Bool  /* warning */);
 extern char *xtermVersion(void);
 extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
+extern int ResetAnsiColorRequest(XtermWidget, char *);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, int  /* mode */);
 extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);

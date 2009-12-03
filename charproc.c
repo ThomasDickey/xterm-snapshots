@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1004 2009/12/01 01:01:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1007 2009/12/03 10:12:09 tom Exp $ */
 
 /*
 
@@ -140,10 +140,10 @@ typedef struct {
 static IChar doinput(void);
 static int set_character_class(char * /*s */ );
 static void FromAlternate(XtermWidget /* xw */ );
-static void RequestResize(XtermWidget /* xw */,
-			  int /* rows */,
-			  int /* cols */,
-			  Bool /* text */);
+static void RequestResize(XtermWidget /* xw */ ,
+			  int /* rows */ ,
+			  int /* cols */ ,
+			  Bool /* text */ );
 static void SwitchBufs(XtermWidget xw);
 static void ToAlternate(XtermWidget /* xw */ );
 static void ansi_modes(XtermWidget termw,
@@ -152,19 +152,19 @@ static void bitclr(unsigned *p, unsigned mask);
 static void bitcpy(unsigned *p, unsigned q, unsigned mask);
 static void bitset(unsigned *p, unsigned mask);
 static void dpmodes(XtermWidget termw, void (*func) (unsigned *p, unsigned mask));
-static void restoremodes(XtermWidget /* xw */);
-static void savemodes(XtermWidget /* xw */);
-static void window_ops(XtermWidget /* xw */);
+static void restoremodes(XtermWidget /* xw */ );
+static void savemodes(XtermWidget /* xw */ );
+static void window_ops(XtermWidget /* xw */ );
 
 #define DoStartBlinking(s) ((s)->cursor_blink ^ (s)->cursor_blink_esc)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
-static void SetCursorBlink(TScreen * /* screen */,
-			   Bool /* enable */);
-static void HandleBlinking(XtPointer /* closure */,
-			   XtIntervalId * /* id */);
-static void StartBlinking(TScreen * /* screen */);
-static void StopBlinking(TScreen * /* screen */);
+static void SetCursorBlink(TScreen * /* screen */ ,
+			   Bool /* enable */ );
+static void HandleBlinking(XtPointer /* closure */ ,
+			   XtIntervalId * /* id */ );
+static void StartBlinking(TScreen * /* screen */ );
+static void StopBlinking(TScreen * /* screen */ );
 #else
 #define StartBlinking(screen)	/* nothing */
 #define StopBlinking(screen)	/* nothing */
@@ -7874,6 +7874,8 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 
     if_OPT_ISO_COLORS(screen, {
 	reset_SGR_Colors(xw);
+	if (ResetAnsiColorRequest(xw, ""))
+	    xtermRepaint(xw);
     });
 
     /* Reset character-sets to initial state */

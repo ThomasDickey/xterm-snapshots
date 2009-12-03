@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.195 2009/12/01 01:17:28 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.196 2009/12/03 01:42:01 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
@@ -1294,7 +1294,15 @@ to set the corresponding color.
 Because more than one pair of color number and specification can
 be given in one control sequence, \fBxterm\fR can make more than one reply.
 .sp
-The 8 colors which may be set using \*1\*0 through \*1\*7 are
+  \*(Ps = \*5 ; \fIc\fP \(-> Reset Color Number \fIc\fP to
+the color specified by the corresponding X resource.
+Any number of \fIc\fP parameters may be given.
+These parameters correspond to the ANSI colors 0-7,
+their bright versions 8-15,
+and if supported, the remainder of the 88-color or 256-color table.
+If no parameters are given, the entire table will be reset.
+.sp
+The 8 colors (below) which may be set using \*1\*0 through \*1\*7 are
 denoted \fIdynamic colors\fR, since the corresponding control sequences
 were the first means for setting \fBxterm\fR's colors dynamically,
 i.e., after it was started.

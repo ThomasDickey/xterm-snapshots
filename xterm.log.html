@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.862 2009/12/01 01:19:51 tom Exp $
+  $XTermId: xterm.log.html,v 1.865 2009/12/03 01:46:57 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -302,6 +302,14 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add <code>OSC 5</code>, for resetting ANSI/16/88/256 colors to
+	    default.
+
+	<li>reset ANSI/16/88/256 colors to default in soft/hard reset functions.
+
+	<li>strip "xft:" prefix from <code>faceName</code> and
+	    <code>faceNameDoublesize</code> resource values,
+
 	<li>add <code>DECSCUSR</code> (discussion with Andy Koppe).
 
 	<li>add check/warning on failure to load font, to see if the name looks
@@ -1059,7 +1067,7 @@ is the latest version of this file.
 		single-height characters). 
 
 	    <li>restore reset of doublesize for a line when it is cleared,
-	        broken in <a href="#xterm-228">patch #228</a>.
+	        broken in <a href="#xterm_228">patch #228</a>.
 	    </ul>
 
 	<li>modify logic for <code>forceBoxChars</code> resource when using
