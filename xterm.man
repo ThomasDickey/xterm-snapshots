@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.442 2009/11/30 00:21:00 tom Exp $
+.\" $XTermId: xterm.man,v 1.443 2009/12/01 10:00:12 tom Exp $
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
 .\"
@@ -4624,11 +4624,13 @@ a form feed will be sent at the end of the last line printed
 (i.e., \fBprinterFormFeed\fP is ``true'').
 .TP 5
 noNewLine
-no newline will be sent at the end of the last line printed
+no newline will be sent at the end of the last line printed,
+and wrapped lines will be combined into long lines
 (i.e., \fBprinterNewLine\fP is ``false'').
 .TP 5
 NewLine
-a newline will be sent at the end of the last line printed
+a newline will be sent at the end of the last line printed,
+and each line will be limited (by adding a newline) to the screen width
 (i.e., \fBprinterNewLine\fP is ``true'').
 .TP 5
 noAttrs
