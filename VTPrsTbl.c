@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.52 2009/11/30 11:52:18 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.53 2009/12/05 00:58:25 tom Exp $ */
 
 /*
  *
@@ -3476,7 +3476,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	t		u		v		w	*/
-CASE_GROUND_STATE,
+CASE_TITLE_MODES,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -3627,16 +3627,16 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      igrave          iacute          icircumflex     idiaeresis      */
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_SET_MOD_FKEYS,
+CASE_SET_MOD_FKEYS0,
 CASE_GROUND_STATE,
 /*      eth             ntilde          ograve          oacute          */
-CASE_GROUND_STATE,
+CASE_HIDE_POINTER,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      ocircumflex     otilde          odiaeresis      division        */
-CASE_GROUND_STATE,
+CASE_TITLE_MODES,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,

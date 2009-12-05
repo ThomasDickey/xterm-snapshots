@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.45 2009/11/06 01:34:46 tom Exp $ */
+/* $XTermId: main.h,v 1.46 2009/12/05 01:10:11 tom Exp $ */
 
 /*
  * Copyright 2000-2008,2009 by Thomas E. Dickey
@@ -147,6 +147,10 @@
 #else
 #define DEF_PTY_STTY_SIZE	True
 #endif
+#endif
+
+#ifndef DEF_TITLE_MODES
+#define DEF_TITLE_MODES		0
 #endif
 
 #ifndef PROJECTROOT

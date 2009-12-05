@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.196 2009/12/03 01:42:01 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.200 2009/12/05 00:26:30 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
@@ -1294,13 +1294,17 @@ to set the corresponding color.
 Because more than one pair of color number and specification can
 be given in one control sequence, \fBxterm\fR can make more than one reply.
 .sp
-  \*(Ps = \*5 ; \fIc\fP \(-> Reset Color Number \fIc\fP to
-the color specified by the corresponding X resource.
-Any number of \fIc\fP parameters may be given.
-These parameters correspond to the ANSI colors 0-7,
-their bright versions 8-15,
-and if supported, the remainder of the 88-color or 256-color table.
-If no parameters are given, the entire table will be reset.
+  \*(Ps = \*5 ; \fIc ; spec\fP \(-> Change Special Color Number \fIc\fP to
+the color specified by \fIspec\fP,
+i.e., a name or RGB specification as per \fIXParseColor\fP.
+Any number of \fIc name\fP pairs may be given.
+The special colors can also be set by adding the maximum number of colors
+to these codes in an \*(Os\*4 control:
+.sp
+  \*(Pc = 0 \(-> resource \fBcolorBD\fP (BOLD)
+  \*(Pc = 1 \(-> resource \fBcolorUL\fP (UNDERLINE)
+  \*(Pc = 2 \(-> resource \fBcolorBL\fP (BLINK)
+  \*(Pc = 3 \(-> resource \fBcolorRV\fP (REVERSE)
 .sp
 The 8 colors (below) which may be set using \*1\*0 through \*1\*7 are
 denoted \fIdynamic colors\fR, since the corresponding control sequences
@@ -1365,6 +1369,32 @@ If the second parameter is a \*?,
 \fIxterm\fP replies to the host with the selection
 data encoded using the same protocol.
 .Ed
+.sp
+  \*(Ps = \*1\*0\*4 ; \fIc\fP \(-> Reset Color Number \fIc\fP to
+the color specified by the corresponding X resource.
+Any number of \fIc\fP parameters may be given.
+These parameters correspond to the ANSI colors 0-7,
+their bright versions 8-15,
+and if supported, the remainder of the 88-color or 256-color table.
+If no parameters are given, the entire table will be reset.
+.sp
+  \*(Ps = \*1\*0\*5 ; \fIc\fP \(-> Reset Special Color Number \fIc\fP to
+the color specified by the corresponding X resource.
+Any number of \fIc\fP parameters may be given.
+These parameters correspond to the special colors which can be set
+using an \*(Os\*5 control (or by adding the maximum number of colors
+using an \*(Os\*4 control).
+.sp
+The \fIdynamic colors\fR can also be reset to their default (resource) values:
+  \*(Ps = \*1\*1\*0 \(-> Reset VT100 text foreground color.
+  \*(Ps = \*1\*1\*1 \(-> Reset VT100 text background color.
+  \*(Ps = \*1\*1\*2 \(-> Reset text cursor color.
+  \*(Ps = \*1\*1\*3 \(-> Reset mouse foreground color.
+  \*(Ps = \*1\*1\*4 \(-> Reset mouse background color.
+  \*(Ps = \*1\*1\*5 \(-> Reset Tektronix foreground color.
+  \*(Ps = \*1\*1\*6 \(-> Reset Tektronix background color.
+  \*(Ps = \*1\*1\*7 \(-> Reset highlight color.
+  \*(Ps = \*1\*1\*8 \(-> Reset Tektronix cursor color.
 .
 .St
 .LP
