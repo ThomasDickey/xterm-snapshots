@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.601 2009/12/03 10:12:23 tom Exp $ */
+/* $XTermId: xterm.h,v 1.603 2009/12/05 01:12:39 tom Exp $ */
 
 /************************************************************
 
@@ -481,6 +481,7 @@ extern char **environ;
 #define XtNtekStartup		"tekStartup"
 #define XtNtiXtraScroll		"tiXtraScroll"
 #define XtNtiteInhibit		"titeInhibit"
+#define XtNtitleModes		"titleModes"
 #define XtNtoolBar		"toolBar"
 #define XtNtrimSelection	"trimSelection"
 #define XtNunderLine		"underLine"
@@ -633,6 +634,7 @@ extern char **environ;
 #define XtCTekStartup		"TekStartup"
 #define XtCTiXtraScroll		"TiXtraScroll"
 #define XtCTiteInhibit		"TiteInhibit"
+#define XtCTitleModes		"TitleModes"
 #define XtCToolBar		"ToolBar"
 #define XtCTrimSelection	"TrimSelection"
 #define XtCUnderLine		"UnderLine"
@@ -927,7 +929,7 @@ extern char *xtermFindShell(char * /* leaf */, Bool  /* warning */);
 extern char *xtermVersion(void);
 extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
-extern int ResetAnsiColorRequest(XtermWidget, char *);
+extern int ResetAnsiColorRequest(XtermWidget, char *, int);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, int  /* mode */);
 extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);

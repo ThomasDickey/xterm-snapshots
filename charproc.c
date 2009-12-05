@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1007 2009/12/03 10:12:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1012 2009/12/05 01:36:02 tom Exp $ */
 
 /*
 
@@ -477,6 +477,7 @@ static XtResource xterm_resources[] =
     Ires(XtNpointerMode, XtCPointerMode, screen.pointer_mode, DEF_POINTER_MODE),
     Ires(XtNprinterControlMode, XtCPrinterControlMode,
 	 screen.printer_controlmode, 0),
+    Ires(XtNtitleModes, XtCTitleModes, screen.title_modes, DEF_TITLE_MODES),
     Ires(XtNvisualBellDelay, XtCVisualBellDelay, screen.visualBellDelay, 100),
     Ires(XtNsaveLines, XtCSaveLines, screen.savelines, SAVELINES),
     Ires(XtNscrollBarBorder, XtCScrollBarBorder, screen.scrollBarBorder, 1),
@@ -621,11 +622,6 @@ static XtResource xterm_resources[] =
     COLOR_RES("UL", screen.Acolors[COLOR_UL], DFT_COLOR(XtDefaultForeground)),
     COLOR_RES("RV", screen.Acolors[COLOR_RV], DFT_COLOR(XtDefaultForeground)),
 
-    CLICK_RES("2", screen.onClick[1], "word"),
-    CLICK_RES("3", screen.onClick[2], "line"),
-    CLICK_RES("4", screen.onClick[3], 0),
-    CLICK_RES("5", screen.onClick[4], 0),
-
 #if !OPT_COLOR_RES2
 #if OPT_256_COLORS
 # include <256colres.h>
@@ -635,6 +631,11 @@ static XtResource xterm_resources[] =
 #endif				/* !OPT_COLOR_RES2 */
 
 #endif				/* OPT_ISO_COLORS */
+
+    CLICK_RES("2", screen.onClick[1], "word"),
+    CLICK_RES("3", screen.onClick[2], "line"),
+    CLICK_RES("4", screen.onClick[3], 0),
+    CLICK_RES("5", screen.onClick[4], 0),
 
 #if OPT_MOD_FKEYS
     Ires(XtNmodifyCursorKeys, XtCModifyCursorKeys,
@@ -3074,6 +3075,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		screen->pointer_mode = param[0];
 	    } else {
 		screen->pointer_mode = DEF_POINTER_MODE;
+	    }
+	    break;
+
+	case CASE_TITLE_MODES:
+	    TRACE(("CASE_TITLE_MODES\n"));
+	    if (nparam >= 1 && param[0] != DEFAULT) {
+		screen->title_modes = param[0];
+	    } else {
+		screen->title_modes = DEF_TITLE_MODES;
 	    }
 	    break;
 
@@ -5912,10 +5922,13 @@ VTInitialize(Widget wrequest,
 	   TScreenOf(wnew)->terminal_id));
 
     TScreenOf(wnew)->vtXX_level = (TScreenOf(wnew)->terminal_id / 100);
+
+    init_Ires(screen.title_modes);
     init_Bres(screen.visualbell);
     init_Ires(screen.visualBellDelay);
     init_Bres(screen.poponbell);
     init_Ires(misc.limit_resize);
+
 #if OPT_NUM_LOCK
     init_Bres(misc.real_NumLock);
     init_Bres(misc.alwaysUseMods);
@@ -5924,6 +5937,7 @@ VTInitialize(Widget wrequest,
     wnew->misc.meta_mods = 0;
     wnew->misc.other_mods = 0;
 #endif
+
 #if OPT_SHIFT_FONTS
     init_Bres(misc.shift_fonts);
 #endif
@@ -6224,9 +6238,9 @@ VTInitialize(Widget wrequest,
      * set its dynamic colors and get consistent behavior whether or not the
      * window is displayed.
      */
-    T_COLOR(TScreenOf(wnew), TEK_BG) = T_COLOR(TScreenOf(wnew), TEXT_BG);
-    T_COLOR(TScreenOf(wnew), TEK_FG) = T_COLOR(TScreenOf(wnew), TEXT_FG);
-    T_COLOR(TScreenOf(wnew), TEK_CURSOR) = T_COLOR(TScreenOf(wnew), TEXT_CURSOR);
+    TScreenOf(wnew)->Tcolors[TEK_BG] = TScreenOf(wnew)->Tcolors[TEXT_BG];
+    TScreenOf(wnew)->Tcolors[TEK_FG] = TScreenOf(wnew)->Tcolors[TEXT_FG];
+    TScreenOf(wnew)->Tcolors[TEK_CURSOR] = TScreenOf(wnew)->Tcolors[TEXT_CURSOR];
 #endif
 
 #if OPT_WIDE_CHARS
@@ -7874,7 +7888,7 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 
     if_OPT_ISO_COLORS(screen, {
 	reset_SGR_Colors(xw);
-	if (ResetAnsiColorRequest(xw, ""))
+	if (ResetAnsiColorRequest(xw, "", 0))
 	    xtermRepaint(xw);
     });
 

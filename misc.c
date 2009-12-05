@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.437 2009/12/03 10:20:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.446 2009/12/05 00:14:35 tom Exp $ */
 
 /*
  *
@@ -1954,7 +1954,7 @@ ChangeOneAnsiColor(XtermWidget xw, int color, char *name)
 {
     int code;
 
-    if (color < 0 || color >= NUM_ANSI_COLORS) {
+    if (color < 0 || color >= MAXCOLORS) {
 	code = -1;
     } else {
 	ColorRes *res = &(TScreenOf(xw)->Acolors[color]);
@@ -1965,15 +1965,29 @@ ChangeOneAnsiColor(XtermWidget xw, int color, char *name)
     return code;
 }
 
+/*
+ * Set or query entries in the Acolors[] array by parsing pairs of color/name
+ * values from the given buffer.
+ *
+ * The color can be any legal index into Acolors[], which consists of the
+ * 16/88/256 "ANSI" colors, followed by special color values for the various
+ * colorXX resources.  The indices for the special color values are not
+ * simple to work with, so an alternative is to use the calls which pass in
+ * 'first' set to the beginning of those indices.
+ *
+ * If the name is "?", report to the host the current value for the color.
+ */
 static Bool
 ChangeAnsiColorRequest(XtermWidget xw,
 		       char *buf,
+		       int first,
 		       int final)
 {
     char *name;
     int color;
     int repaint = False;
     int code;
+    int last = (MAXCOLORS - first);
 
     TRACE(("ChangeAnsiColorRequest string='%s'\n", buf));
 
@@ -1984,17 +1998,17 @@ ChangeAnsiColorRequest(XtermWidget xw,
 	*name = '\0';
 	name++;
 	color = atoi(buf);
-	if (color < 0 || color >= NUM_ANSI_COLORS)
-	    break;
+	if (color < 0 || color >= last)
+	    break;		/* quit on any error */
 	buf = strchr(name, ';');
 	if (buf) {
 	    *buf = '\0';
 	    buf++;
 	}
 	if (!strcmp(name, "?")) {
-	    ReportAnsiColorRequest(xw, color, final);
+	    ReportAnsiColorRequest(xw, color + first, final);
 	} else {
-	    code = ChangeOneAnsiColor(xw, color, name);
+	    code = ChangeOneAnsiColor(xw, color + first, name);
 	    if (code < 0) {
 		/* stop on any error */
 		break;
@@ -2011,16 +2025,17 @@ ChangeAnsiColorRequest(XtermWidget xw,
 }
 
 static Bool
-ResetOneAnsiColor(XtermWidget xw, int color)
+ResetOneAnsiColor(XtermWidget xw, int color, int start)
 {
     Bool repaint = False;
+    int last = MAXCOLORS - start;
 
-    if (color >= 0 && color < NUM_ANSI_COLORS) {
-	ColorRes *res = &(TScreenOf(xw)->Acolors[color]);
+    if (color >= 0 && color < last) {
+	ColorRes *res = &(TScreenOf(xw)->Acolors[color + start]);
 
 	if (res->mode) {
 	    /* a color has been allocated for this slot - test further... */
-	    if (ChangeOneAnsiColor(xw, color, res->resource) > 0) {
+	    if (ChangeOneAnsiColor(xw, color + start, res->resource) > 0) {
 		repaint = True;
 	    }
 	}
@@ -2029,7 +2044,7 @@ ResetOneAnsiColor(XtermWidget xw, int color)
 }
 
 int
-ResetAnsiColorRequest(XtermWidget xw, char *buf)
+ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 {
     int repaint = 0;
     int color;
@@ -2044,19 +2059,20 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf)
 	    if (next == buf)
 		break;		/* no number at all */
 	    if (next != 0) {
-		if (*next++ != ';')
+		if (strchr(";", *next) == 0)
 		    break;	/* unexpected delimiter */
+		++next;
 	    }
 
-	    if (ResetOneAnsiColor(xw, color)) {
+	    if (ResetOneAnsiColor(xw, color, start)) {
 		++repaint;
 	    }
 	    buf = next;
 	}
     } else {
-	TRACE(("...resetting all %d colors\n", NUM_ANSI_COLORS));
-	for (color = 0; color < NUM_ANSI_COLORS; ++color) {
-	    if (ResetOneAnsiColor(xw, color)) {
+	TRACE(("...resetting all %d colors\n", MAXCOLORS));
+	for (color = 0; color < MAXCOLORS; ++color) {
+	    if (ResetOneAnsiColor(xw, color, start)) {
 		++repaint;
 	    }
 	}
@@ -2198,7 +2214,7 @@ xtermIsPrintable(TScreen * screen, Char ** bufp, Char * last)
 
 /*
  * Enum corresponding to the actual OSC codes rather than the internal
- * array indices.
+ * array indices.  Compare with TermColors.
  */
 typedef enum {
     OSC_TEXT_FG = 10
@@ -2221,6 +2237,12 @@ typedef enum {
 #endif
     ,OSC_NCOLORS
 } OscTextColors;
+
+/*
+ * Map codes to OSC controls that can reset colors.
+ */
+#define OSC_RESET 100
+#define OSC_Reset(code) (code) + OSC_RESET
 
 static ScrnColors *pOldColors = NULL;
 
@@ -2423,6 +2445,42 @@ ChangeColorsRequest(XtermWidget xw,
     return result;
 }
 
+static Bool
+ResetColorsRequest(XtermWidget xw,
+		   int code)
+{
+    Bool result = False;
+    char *thisName;
+    ScrnColors newColors;
+    int ndx;
+
+    TRACE(("ResetColorsRequest code=%d\n", code));
+
+    if (GetOldColors(xw)) {
+	ndx = OscToColorIndex((OscTextColors) (code - OSC_RESET));
+	if (xw->misc.re_verse)
+	    ndx = oppositeColor(ndx);
+
+	thisName = xw->screen.Tcolors[ndx].resource;
+
+	newColors.which = 0;
+	newColors.names[ndx] = NULL;
+
+	if (thisName != 0
+	    && pOldColors->names[ndx] != 0
+	    && strcmp(thisName, pOldColors->names[ndx])) {
+	    AllocateTermColor(xw, &newColors, ndx, thisName);
+
+	    if (newColors.which != 0) {
+		ChangeColors(xw, &newColors);
+		UpdateOldColors(xw, &newColors);
+	    }
+	}
+	result = True;
+    }
+    return result;
+}
+
 /***====================================================================***/
 
 void
@@ -2434,6 +2492,10 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
     int state = 0;
     char *buf = 0;
     char temp[2];
+#if OPT_ISO_COLORS
+    int ansi_colors = 0;
+#endif
+    Bool need_data = True;
 
     TRACE(("do_osc %s\n", oscbuf));
 
@@ -2486,20 +2548,47 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
     }
 
     /*
-     * Most OSC controls require data.  Handle the others as a special case.
+     * Most OSC controls other than resets require data.  Handle the others as
+     * a special case.
+     */
+    switch (mode) {
+#if OPT_ISO_COLORS
+    case OSC_Reset(4):
+    case OSC_Reset(5):
+    case OSC_Reset(OSC_TEXT_FG):
+    case OSC_Reset(OSC_TEXT_BG):
+    case OSC_Reset(OSC_TEXT_CURSOR):
+    case OSC_Reset(OSC_MOUSE_FG):
+    case OSC_Reset(OSC_MOUSE_BG):
+#if OPT_HIGHLIGHT_COLOR
+    case OSC_Reset(OSC_HIGHLIGHT_BG):
+    case OSC_Reset(OSC_HIGHLIGHT_FG):
+#endif
+#if OPT_TEK4014
+    case OSC_Reset(OSC_TEK_FG):
+    case OSC_Reset(OSC_TEK_BG):
+    case OSC_Reset(OSC_TEK_CURSOR):
+#endif
+	need_data = False;
+	break;
+#endif
+    default:
+	break;
+    }
+
+    /*
+     * Check if we have data when we want, and not when we do not want it.
      */
     if (buf == 0) {
-	TRACE(("do_osc found no data\n"));
-	switch (mode) {
-#if OPT_ISO_COLORS
-	case 5:
-	    temp[0] = '\0';
-	    buf = temp;
-	    break;
-#endif
-	default:
+	if (need_data) {
+	    TRACE(("do_osc found no data\n"));
 	    return;
 	}
+	temp[0] = '\0';
+	buf = temp;
+    } else if (!need_data) {
+	TRACE(("do_osc found found unwanted data\n"));
+	return;
     }
 
     switch (mode) {
@@ -2521,12 +2610,18 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    ChangeXprop(buf);
 	break;
 #if OPT_ISO_COLORS
+    case 5:
+	ansi_colors = NUM_ANSI_COLORS;
+	/* FALLTHRU */
     case 4:
-	if (ChangeAnsiColorRequest(xw, buf, final))
+	if (ChangeAnsiColorRequest(xw, buf, ansi_colors, final))
 	    xtermRepaint(xw);
 	break;
-    case 5:
-	if (ResetAnsiColorRequest(xw, buf))
+    case OSC_Reset(5):
+	ansi_colors = NUM_ANSI_COLORS;
+	/* FALLTHRU */
+    case OSC_Reset(4):
+	if (ResetAnsiColorRequest(xw, buf, ansi_colors))
 	    xtermRepaint(xw);
 	break;
 #endif
@@ -2537,14 +2632,34 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
     case OSC_MOUSE_BG:
 #if OPT_HIGHLIGHT_COLOR
     case OSC_HIGHLIGHT_BG:
+    case OSC_HIGHLIGHT_FG:
 #endif
 #if OPT_TEK4014
     case OSC_TEK_FG:
     case OSC_TEK_BG:
     case OSC_TEK_CURSOR:
 #endif
-	if (xw->misc.dynamicColors)
+	if (xw->misc.dynamicColors) {
 	    ChangeColorsRequest(xw, mode, buf, final);
+	}
+	break;
+    case OSC_Reset(OSC_TEXT_FG):
+    case OSC_Reset(OSC_TEXT_BG):
+    case OSC_Reset(OSC_TEXT_CURSOR):
+    case OSC_Reset(OSC_MOUSE_FG):
+    case OSC_Reset(OSC_MOUSE_BG):
+#if OPT_HIGHLIGHT_COLOR
+    case OSC_Reset(OSC_HIGHLIGHT_BG):
+    case OSC_Reset(OSC_HIGHLIGHT_FG):
+#endif
+#if OPT_TEK4014
+    case OSC_Reset(OSC_TEK_FG):
+    case OSC_Reset(OSC_TEK_BG):
+    case OSC_Reset(OSC_TEK_CURSOR):
+#endif
+	if (xw->misc.dynamicColors) {
+	    ResetColorsRequest(xw, mode);
+	}
 	break;
 
     case 30:
@@ -2656,6 +2771,9 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	 * One could write code to send back the display and host names,
 	 * but that could potentially open a fairly nasty security hole.
 	 */
+    default:
+	TRACE(("do_osc - unrecognized code\n"));
+	break;
     }
     unparse_end(xw);
 }

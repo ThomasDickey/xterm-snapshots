@@ -785,8 +785,19 @@ OSC Ps ; Pt BEL
           one pair of color number and specification can be given in one
           control sequence, xterm can make more than one reply.
 
-          The 8 colors which may be set using 1 0  through 1 7  are
-          denoted dynamic colors, since the corresponding control
+            Ps = 5  ; c ; spec -> Change Special Color Number c to the
+          color specified by spec, i.e., a name or RGB specification as
+          per XParseColor.  Any number of c name pairs may be given.
+          The special colors can also be set by adding the maximum num-
+          ber of colors to these codes in an OSC 4  control:
+
+            Pc = 0 -> resource colorBD (BOLD)
+            Pc = 1 -> resource colorUL (UNDERLINE)
+            Pc = 2 -> resource colorBL (BLINK)
+            Pc = 3 -> resource colorRV (REVERSE)
+
+          The 8 colors (below) which may be set using 1 0  through 1 7
+          are denoted dynamic colors, since the corresponding control
           sequences were the first means for setting xterm's colors
           dynamically, i.e., after it was started.  They are not the
           same as the ANSI colors.  One or more parameters is expected
@@ -839,6 +850,19 @@ OSC Ps ; Pt BEL
           cations.
           If the second parameter is a ? , xterm replies to the host
           with the selection data encoded using the same protocol.
+
+            Ps = 1 0 4  ; c -> Reset Color Number c to the color speci-
+          fied by the corresponding X resource.  Any number of c parame-
+          ters may be given.  These parameters correspond to the ANSI
+          colors 0-7, their bright versions 8-15, and if supported, the
+          remainder of the 88-color or 256-color table.  If no parame-
+          ters are given, the entire table will be reset.
+
+            Ps = 1 0 5  ; c -> Reset Special Color Number c to the color
+          specified by the corresponding X resource.  Any number of c
+          parameters may be given.  These parameters correspond to the
+          special colors which can be set using an OSC 5  control (or by
+          adding the maximum number of colors using an OSC 4  control).
 
 Privacy Message
 PM Pt ST  xterm implements no PM  functions; Pt is ignored.  Pt need not

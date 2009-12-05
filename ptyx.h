@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.644 2009/12/02 11:59:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.646 2009/12/05 01:20:37 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -794,7 +794,10 @@ typedef enum {
 #define for_each_curs_gc(n) for (n = gcVTcursNormal; n <= gcVTcursOutline; ++n)
 #define for_each_gc(n)      for (n = gcNorm; n < gcMAX; ++n)
 
-/* indices for the normal terminal colors in screen.Tcolors[] */
+/*
+ * Indices for the normal terminal colors in screen.Tcolors[].
+ * See also OscTextColors, which has corresponding values.
+ */
 typedef enum {
     TEXT_FG = 0			/* text foreground */
     , TEXT_BG			/* text background */
@@ -812,6 +815,16 @@ typedef enum {
 #endif
     , NCOLORS			/* total number of colors */
 } TermColors;
+
+/*
+ * Constants for titleModes resource
+ */
+typedef enum {
+    tmSetUtf8 = 1
+    , tmGetUtf8 = 2
+    , tmSetBase16 = 4
+    , tmGetBase16 = 8
+} TitleModes;
 
 /* indices for mapping multiple clicks to selection types */
 typedef enum {
@@ -1704,6 +1717,7 @@ typedef struct {
 	SavedCursor	sc[SAVED_CURSORS]; /* data for restore cursor	*/
 	unsigned 	save_modes[DP_LAST]; /* save dec/xterm private modes */
 
+	int		title_modes;	/* control set/get of titles	*/
 	SaveTitle	*save_title;
 
 	/* Improved VT100 emulation stuff.				*/

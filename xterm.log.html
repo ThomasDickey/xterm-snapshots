@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.865 2009/12/03 01:46:57 tom Exp $
+  $XTermId: xterm.log.html,v 1.869 2009/12/05 00:27:57 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -302,7 +302,19 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
-	<li>add <code>OSC 5</code>, for resetting ANSI/16/88/256 colors to
+	<li>add control sequences for resetting the "dynamic" colors to
+	    their default values.
+
+	<li>add control sequences for resetting the "special" colors to
+	    their default values.
+
+	<li>add control sequences for setting the "special" colors such as
+	    <code>colorBD</code> (bold).
+
+	<li>add overlooked case for setting highlight foreground color with
+	    the dynamic-colors control.
+
+	<li>add <code>OSC 104</code>, for resetting ANSI/16/88/256 colors to
 	    default.
 
 	<li>reset ANSI/16/88/256 colors to default in soft/hard reset functions.
