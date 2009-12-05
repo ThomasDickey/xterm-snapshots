@@ -20,7 +20,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF   *
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.869 2009/12/05 00:27:57 tom Exp $
+  $XTermId: xterm.log.html,v 1.872 2009/12/05 16:04:21 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -302,6 +302,15 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>use <code>mkdir&nbsp;-p</code> rather than <code>mkdirs.sh</code>
+	    (prompted by discussion of mawk by Aleksey Cheusov).
+
+	<li>add appropriate copyright/license notices to the bulk of files
+	    lacking same.  The main exceptions are the files contributed by
+	    Markus Kuhn, who appears to prefer public domain distribution,
+	    noting that I have modified/improved several of these without
+	    changing the terms of distribution (request by Jari Aalto).
+
 	<li>add control sequences for resetting the "dynamic" colors to
 	    their default values.
 

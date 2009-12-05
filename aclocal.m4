@@ -1,6 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.258 2009/02/13 21:04:32 tom Exp $
-dnl
-dnl $XFree86: xc/programs/xterm/aclocal.m4,v 3.65 2006/06/19 00:36:50 dickey Exp $
+dnl $XTermId: aclocal.m4,v 1.259 2009/02/13 21:04:32 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -8,22 +6,29 @@ dnl Copyright 1997-2008,2009 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
-dnl Permission to use, copy, modify, and distribute this software and its
-dnl documentation for any purpose and without fee is hereby granted,
-dnl provided that the above copyright notice appear in all copies and that
-dnl both that copyright notice and this permission notice appear in
-dnl supporting documentation, and that the name of the above listed
-dnl copyright holder(s) not be used in advertising or publicity pertaining
-dnl to distribution of the software without specific, written prior
-dnl permission.
-dnl
-dnl THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
-dnl TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-dnl AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
-dnl LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-dnl WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-dnl ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-dnl OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+dnl Permission is hereby granted, free of charge, to any person obtaining a
+dnl copy of this software and associated documentation files (the
+dnl "Software"), to deal in the Software without restriction, including
+dnl without limitation the rights to use, copy, modify, merge, publish,
+dnl distribute, sublicense, and/or sell copies of the Software, and to
+dnl permit persons to whom the Software is furnished to do so, subject to
+dnl the following conditions:
+dnl 
+dnl The above copyright notice and this permission notice shall be included
+dnl in all copies or substantial portions of the Software.
+dnl 
+dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+dnl IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+dnl CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+dnl TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+dnl SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+dnl 
+dnl Except as contained in this notice, the name(s) of the above copyright
+dnl holders shall not be used in advertising or otherwise to promote the
+dnl sale, use or other dealings in this Software without prior written
+dnl authorization.
 dnl
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------

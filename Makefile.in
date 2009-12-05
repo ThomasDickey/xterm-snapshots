@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.161 2009/11/05 23:06:36 tom Exp $
+## $XTermId: Makefile.in,v 1.162 2009/12/05 15:49:56 tom Exp $
 ##
 ## Copyright 2002-2008,2009 by Thomas E. Dickey
 ##
@@ -354,7 +354,7 @@ TAGS :
 	etags $(SRCS) $(HDRS)
 
 $(TERMINFO_DIR) $(INSTALL_DIRS) :
-	$(SHELL) ${srcdir}/mkdirs.sh $@
+	mkdir -p $@
 
 ALWAYS :
 
