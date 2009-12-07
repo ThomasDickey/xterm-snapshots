@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.874 2009/12/06 12:19:25 tom Exp $
+  $XTermId: xterm.log.html,v 1.875 2009/12/07 09:11:18 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -313,6 +313,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify title-querying logic to support retrieval of titles encoded
+	    using UTF-8.
+
+	<li>add new "title-modes" control sequence for controlling whether
+	    window/icon titles can be set or queried using UTF-8, optionally
+	    encoded in a hexadecimal string.
+
 	<li>use <code>mkdir&nbsp;-p</code> rather than <code>mkdirs.sh</code>
 	    (prompted by discussion of mawk by Aleksey Cheusov).
 

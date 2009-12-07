@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.453 2009/12/06 18:37:55 tom Exp $ */
+/* $XTermId: misc.c,v 1.455 2009/12/07 10:46:02 tom Exp $ */
 
 /*
  *
@@ -3242,9 +3242,17 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	value = empty;
     if (IsTitleMode(xw, tmSetBase16)) {
 	const char *temp;
+	char *test;
+
 	value = x_decode_hex(value, &temp);
 	if (*temp != '\0')
 	    return;
+	for (test = value; *test != '\0'; ++test) {
+	    if (CharOf(*test) < 32) {
+		*test = '\0';
+		break;
+	    }
+	}
     }
 
     c1 = (Char *) value;
@@ -3257,7 +3265,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
     /*
      * Ignore titles that are too long to be plausible requests.
      */
-    if (limit < 1024) {
+    if (limit > 0 && limit < 1024) {
 
 	/*
 	 * After all decoding, overwrite nonprintable characters with '?'.

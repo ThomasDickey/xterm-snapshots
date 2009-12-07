@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.200 2009/12/05 00:26:30 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.201 2009/12/07 09:59:49 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
@@ -682,6 +682,17 @@ Initiate highlight mouse tracking.
 Parameters are [func;startx;starty;firstrow;lastrow].
 See the section \fBMouse Tracking\fP.
 .
+.IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*T
+Reset one or more features of the title modes to the default value.
+Normally, "reset" disables the feature.
+It is possible to disable the ability to reset features
+by compiling a different default for the title modes into \fIxterm\fP.
+  \*(Ps = \*0 \(-> Do not set window/icon labels using hexadecimal
+  \*(Ps = \*1 \(-> Do not query window/icon labels using hexadecimal
+  \*(Ps = \*2 \(-> Do not set window/icon labels using UTF-8
+  \*(Ps = \*3 \(-> Do not query window/icon labels using UTF-8
+(See discussion of "Title Modes")
+.
 .IP \\*(Cs\\*(Ps\\*s\\*(XX
 Erase \*(Ps Character(s) (default = 1) (ECH)
 .
@@ -1136,6 +1147,15 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
 Reverse Attributes in Rectangular Area (DECRARA).
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
   \*(Ps denotes the attributes to reverse. 1, 4, 5, 7
+.
+.IP \\*(Cs\\*>\\*(Ps\\*;\\*(Ps\\*s\\*t
+Set one or more features of the title modes.
+Each parameter enables a single feature.
+  \*(Ps = \*0 \(-> Set window/icon labels using hexadecimal
+  \*(Ps = \*1 \(-> Query window/icon labels using hexadecimal
+  \*(Ps = \*2 \(-> Set window/icon labels using UTF-8
+  \*(Ps = \*3 \(-> Query window/icon labels using UTF-8
+(See discussion of "Title Modes")
 .
 .IP \\*(Cs\\*u
 Restore cursor (ANSI.SYS)
@@ -1787,6 +1807,7 @@ and alternate screen buffers simply disable the switching.
 They add other features such as clearing the display for the same reason:
 to make the details of switching independent of the application that
 requests the switch.
+.
 .SH
 Bracketed Paste Mode
 .ds RH Bracketed Paste Mode
@@ -1797,6 +1818,44 @@ so that the program can differentiate pasted text from typed-in text.
 When bracketed paste mode is set,
 the program will receive: ESC [ 200 ~,
 followed by the pasted text, followed by ESC [ 201 ~.
+.
+.SH
+Title Modes
+.ds RH Title Modes
+.LP
+The window- and icon-labels can be set or queried using control sequences.
+As a VT220-emulator, \fIxterm\fP "should" limit the character encoding for
+the corresponding strings to ISO-8859-1.
+Indeed, it used to be the case (and was documented) that
+window titles had to be ISO-8859-1.
+This is no longer the case.
+However, there are many applications which still assume that titles are
+set using ISO-8859-1.
+So that is the default behavior.
+.LP
+If \fIxterm\fP is running with UTF-8 encoding,
+it is possible to use window- and icon-labels encoded using UTF-8.
+That is because the underlying X libraries (and many, but not all)
+window managers support this feature.
+.LP
+The \fButf8Title\fP X resource setting tells \fIxterm\fP to disable
+a reconversion of the title string back to ISO-8859-1,
+allowing the title strings to be interpreted as UTF-8.
+The same feature can be enabled using the title mode control sequence
+described in this summary. 
+.LP
+Separate from the ability to set the titles,
+\fIxterm\fP provides the ability to query the titles,
+returning them either in ISO-8859-1 or UTF-8.
+This choice is available only while \fIxterm\fP is using UTF-8 encoding.
+.LP
+Finally, the characters sent to, or returned by a title control
+are less constrained than the rest of the control sequences.
+To make them more manageable (and constrained), for use in shell scripts,
+\fIxterm\fP has an optional feature which decodes the string from hexadecimal
+(for setting titles) or for encoding the title into hexadecimal when querying
+the value.
+.
 .SH
 Mouse Tracking
 .ds RH Mouse Tracking
