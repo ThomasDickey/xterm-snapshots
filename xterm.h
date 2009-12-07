@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.603 2009/12/05 01:12:39 tom Exp $ */
+/* $XTermId: xterm.h,v 1.604 2009/12/07 01:20:20 tom Exp $ */
 
 /************************************************************
 
@@ -729,8 +729,10 @@ extern void HandleSelectStart          PROTO_XT_ACTIONS_ARGS;
 extern void HandleStartExtend          PROTO_XT_ACTIONS_ARGS;
 extern void ResizeSelection (TScreen * /* screen */, int  /* rows */, int  /* cols */);
 extern void ScrollSelection (TScreen * /* screen */, int  /* amount */,  Bool /* always */);
-extern void TrackMouse (XtermWidget /* xw */, int /* func */, CELL *  /* start */, int  /* firstrow */, int  /* lastrow */);
+extern void TrackMouse (XtermWidget /* xw */, int /* func */, CELL * /* start */, int /* firstrow */, int /* lastrow */);
 extern void ViButton                   PROTO_XT_ACTIONS_ARGS;
+
+extern int xtermUtf8ToTextList(XtermWidget /* xw */, XTextProperty * /* text_prop */, char *** /* text_list */, int * /* text_list_count */);
 
 #if OPT_DEC_LOCATOR
 extern void GetLocatorPosition (XtermWidget  /* w */);

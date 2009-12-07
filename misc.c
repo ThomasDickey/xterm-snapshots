@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.446 2009/12/05 00:14:35 tom Exp $ */
+/* $XTermId: misc.c,v 1.453 2009/12/06 18:37:55 tom Exp $ */
 
 /*
  *
@@ -541,10 +541,11 @@ HandleStringEvent(Widget w GCC_UNUSED,
     if ((*params)[0] == '0' && (*params)[1] == 'x' && (*params)[2] != '\0') {
 	const char *abcdef = "ABCDEF";
 	const char *xxxxxx;
-	Char c, *p;
+	Char c;
+	UString p;
 	unsigned value = 0;
 
-	for (p = (Char *) (*params + 2); (c = CharOf(x_toupper(*p))) !=
+	for (p = (UString) (*params + 2); (c = CharOf(x_toupper(*p))) !=
 	     '\0'; p++) {
 	    value *= 16;
 	    if (c >= '0' && c <= '9')
@@ -2091,7 +2092,7 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 #define PDATA(a,b) { a, #b }
     static struct {
 	char given;
-	char *result;
+	String result;
     } table[] = {
 	PDATA('s', SELECT),
 	    PDATA('p', PRIMARY),
@@ -2109,7 +2110,7 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
     const char *base = buf;
     char *used = x_strdup(base);
     Cardinal j, n = 0;
-    char **select_args = 0;
+    String *select_args = 0;
 
     TRACE(("Manipulate selection data\n"));
 
@@ -2169,9 +2170,12 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 
 /***====================================================================***/
 
+#define IsSetUtf8Title(xw) (IsTitleMode(xw, tmSetUtf8) || (xw->screen.utf8_title))
+
 static Bool
-xtermIsPrintable(TScreen * screen, Char ** bufp, Char * last)
+xtermIsPrintable(XtermWidget xw, Char ** bufp, Char * last)
 {
+    TScreen *screen = TScreenOf(xw);
     Bool result = False;
     Char *cp = *bufp;
     Char *next = cp;
@@ -2180,7 +2184,7 @@ xtermIsPrintable(TScreen * screen, Char ** bufp, Char * last)
     (void) last;
 
 #if OPT_WIDE_CHARS
-    if (xtermEnvUTF8() && screen->utf8_title) {
+    if (xtermEnvUTF8() && IsSetUtf8Title(xw)) {
 	PtyData data;
 
 	if (decodeUtf8(fakePtyData(&data, cp, last))) {
@@ -2531,7 +2535,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    state = 3;
 	    /* FALLTHRU */
 	default:
-	    if (!xtermIsPrintable(screen, &cp, oscbuf + len)) {
+	    if (!xtermIsPrintable(xw, &cp, oscbuf + len)) {
 		switch (mode) {
 		case 0:
 		case 1:
@@ -2795,22 +2799,21 @@ static struct {
  * "real" terminals accept commas in the string definitions).
  */
 static int
-udk_value(char **cp)
+udk_value(const char **cp)
 {
+    int result = -1;
     int c;
 
     for (;;) {
 	if ((c = **cp) != '\0')
 	    *cp = *cp + 1;
 	if (c == ';' || c == '\0')
-	    return -1;
-	if (c >= '0' && c <= '9')
-	    return c - '0';
-	if (c >= 'A' && c <= 'F')
-	    return c - 'A' + 10;
-	if (c >= 'a' && c <= 'f')
-	    return c - 'a' + 10;
+	    break;
+	if ((result = x_hex2int(c)) >= 0)
+	    break;
     }
+
+    return result;
 }
 
 void
@@ -2830,10 +2833,10 @@ reset_decudk(void)
  * Parse the data for DECUDK (user-defined keys).
  */
 static void
-parse_decudk(char *cp)
+parse_decudk(const char *cp)
 {
     while (*cp) {
-	char *base = cp;
+	const char *base = cp;
 	char *str = CastMallocN(char, strlen(cp) + 1);
 	unsigned key = 0;
 	int lo, hi;
@@ -2868,7 +2871,7 @@ parse_decudk(char *cp)
 #define SOFT_HIGH 20
 
 static void
-parse_decdld(ANSI * params, char *string)
+parse_decdld(ANSI * params, const char *string)
 {
     char DscsName[8];
     int len;
@@ -2982,9 +2985,9 @@ parse_decdld(ANSI * params, char *string)
  * interspersing with control characters, but have the string already.
  */
 static void
-parse_ansi_params(ANSI * params, char **string)
+parse_ansi_params(ANSI * params, const char **string)
 {
-    char *cp = *string;
+    const char *cp = *string;
     ParmType nparam = 0;
 
     memset(params, 0, sizeof(*params));
@@ -3016,7 +3019,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 {
     TScreen *screen = TScreenOf(xw);
     char reply[BUFSIZ];
-    char *cp = (char *) dcsbuf;
+    const char *cp = (const char *) dcsbuf;
     Bool okay;
     ANSI params;
 
@@ -3133,8 +3136,8 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	    Bool fkey;
 	    unsigned state;
 	    int code;
-	    char *tmp;
-	    char *parsed = ++cp;
+	    const char *tmp;
+	    const char *parsed = ++cp;
 
 	    code = xtermcapKeycode(xw, &parsed, &state, &fkey);
 
@@ -3222,107 +3225,133 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
     static char empty[1];
 
     Arg args[1];
-    char *my_attr = x_strdup(attribute);
-    char *original = (value != 0) ? value : empty;
-    char *name = original;
-    TScreen *screen = TScreenOf(xw);
+    Boolean changed = True;
     Widget w = CURRENT_EMU();
     Widget top = SHELL_OF(w);
-    unsigned limit = strlen(name);
-    Char *c1 = (Char *) original;
-    Char *cp;
 
-    TRACE(("ChangeGroup(attribute=%s, value=%s)\n", my_attr, name));
+    char *my_attr;
+    char *name;
+    unsigned limit;
+    Char *c1;
+    Char *cp;
 
     if (!AllowTitleOps(xw))
 	return;
 
+    if (value == 0)
+	value = empty;
+    if (IsTitleMode(xw, tmSetBase16)) {
+	const char *temp;
+	value = x_decode_hex(value, &temp);
+	if (*temp != '\0')
+	    return;
+    }
+
+    c1 = (Char *) value;
+    name = value;
+    limit = strlen(name);
+    my_attr = x_strdup(attribute);
+
+    TRACE(("ChangeGroup(attribute=%s, value=%s)\n", my_attr, name));
+
     /*
      * Ignore titles that are too long to be plausible requests.
      */
-    if (limit >= 1024)
-	return;
+    if (limit < 1024) {
 
-    for (cp = c1; *cp != 0; ++cp) {
-	Char *c2 = cp;
-	if (!xtermIsPrintable(screen, &cp, c1 + limit)) {
-	    memset(c2, '?', (size_t) (cp + 1 - c2));
-	}
-    }
-
-#if OPT_WIDE_CHARS
-    /*
-     * Title strings are limited to ISO-8859-1, which is consistent with the
-     * printable data in sos_table.  However, if we're running in UTF-8 mode,
-     * it is likely that non-ASCII text in the string will be rejected because
-     * it is not printable in the current locale.  So we convert it to UTF-8,
-     * allowing the X library to convert it back.
-     */
-    if (xtermEnvUTF8() && !screen->utf8_title) {
-	int n;
-
-	for (n = 0; name[n] != '\0'; ++n) {
-	    if (CharOf(name[n]) > 127) {
-		if (converted != 0)
-		    free(converted);
-		if ((converted = TypeMallocN(Char, 1 + (5 * limit))) != 0) {
-		    Char *temp = converted;
-		    while (*name != 0) {
-			temp = convertToUTF8(temp, CharOf(*name));
-			++name;
-		    }
-		    *temp = 0;
-		    name = (char *) converted;
-		    TRACE(("...converted{%s}\n", name));
-		}
-		break;
+	/*
+	 * After all decoding, overwrite nonprintable characters with '?'.
+	 */
+	for (cp = c1; *cp != 0; ++cp) {
+	    Char *c2 = cp;
+	    if (!xtermIsPrintable(xw, &cp, c1 + limit)) {
+		memset(c2, '?', (size_t) (cp + 1 - c2));
 	    }
 	}
-    }
+
+#if OPT_WIDE_CHARS
+	/*
+	 * If we're running in UTF-8 mode, and have not been told that the
+	 * title string is in UTF-8, it is likely that non-ASCII text in the
+	 * string will be rejected because it is not printable in the current
+	 * locale.  So we convert it to UTF-8, allowing the X library to
+	 * convert it back.
+	 */
+	if (xtermEnvUTF8() && !IsSetUtf8Title(xw)) {
+	    int n;
+
+	    for (n = 0; name[n] != '\0'; ++n) {
+		if (CharOf(name[n]) > 127) {
+		    if (converted != 0)
+			free(converted);
+		    if ((converted = TypeMallocN(Char, 1 + (5 * limit))) != 0) {
+			Char *temp = converted;
+			while (*name != 0) {
+			    temp = convertToUTF8(temp, CharOf(*name));
+			    ++name;
+			}
+			*temp = 0;
+			name = (char *) converted;
+			TRACE(("...converted{%s}\n", name));
+		    }
+		    break;
+		}
+	    }
+	}
 #endif
 
 #if OPT_SAME_NAME
-    /* If the attribute isn't going to change, then don't bother... */
+	/* If the attribute isn't going to change, then don't bother... */
 
-    if (resource.sameName) {
-	char *buf;
-	XtSetArg(args[0], my_attr, &buf);
-	XtGetValues(top, args, 1);
-	TRACE(("...comparing{%s}\n", buf));
-	if (strcmp(name, buf) == 0)
-	    return;
-    }
+	if (resource.sameName) {
+	    char *buf;
+	    XtSetArg(args[0], my_attr, &buf);
+	    XtGetValues(top, args, 1);
+	    TRACE(("...comparing{%s}\n", buf));
+	    if (strcmp(name, buf) == 0)
+		changed = False;
+	}
 #endif /* OPT_SAME_NAME */
 
-    TRACE(("...updating %s\n", my_attr));
-    TRACE(("...value is %s\n", name));
-    XtSetArg(args[0], my_attr, name);
-    XtSetValues(top, args, 1);
+	if (changed) {
+	    TRACE(("...updating %s\n", my_attr));
+	    TRACE(("...value is %s\n", name));
+	    XtSetArg(args[0], my_attr, name);
+	    XtSetValues(top, args, 1);
 
 #if OPT_WIDE_CHARS
-    if (xtermEnvUTF8()) {
-	Display *dpy = XtDisplay(xw);
-	Atom my_atom;
+	    if (xtermEnvUTF8()) {
+		Display *dpy = XtDisplay(xw);
+		Atom my_atom;
 
-	const char *propname = (!strcmp(my_attr, XtNtitle)
-				? "_NET_WM_NAME"
-				: "_NET_WM_ICON_NAME");
-	if ((my_atom = XInternAtom(dpy, propname, False)) != None) {
-	    if (screen->utf8_title) {	/* FIXME - redundant? */
-		TRACE(("...updating %s\n", propname));
-		TRACE(("...value is %s\n", original));
-		XChangeProperty(dpy, VShellWindow,
-				my_atom, XA_UTF8_STRING(dpy), 8,
-				PropModeReplace,
-				(Char *) original, (int) strlen(original));
-	    } else {
-		TRACE(("...deleting %s\n", propname));
-		XDeleteProperty(dpy, VShellWindow, my_atom);
+		const char *propname = (!strcmp(my_attr, XtNtitle)
+					? "_NET_WM_NAME"
+					: "_NET_WM_ICON_NAME");
+		if ((my_atom = XInternAtom(dpy, propname, False)) != None) {
+		    if (IsSetUtf8Title(xw)) {
+			TRACE(("...updating %s\n", propname));
+			TRACE(("...value is %s\n", value));
+			XChangeProperty(dpy, VShellWindow, my_atom,
+					XA_UTF8_STRING(dpy), 8,
+					PropModeReplace,
+					(Char *) value,
+					(int) strlen(value));
+		    } else {
+			TRACE(("...deleting %s\n", propname));
+			XDeleteProperty(dpy, VShellWindow, my_atom);
+		    }
+		}
 	    }
-	}
-    }
 #endif
-    free(my_attr);
+	}
+
+	free(my_attr);
+
+	if (IsTitleMode(xw, tmSetBase16))
+	    free(value);
+
+    }
+    return;
 }
 
 void

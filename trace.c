@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.107 2009/11/27 18:33:13 tom Exp $ */
+/* $XTermId: trace.c,v 1.109 2009/12/06 15:18:12 tom Exp $ */
 
 /*
  * 
@@ -505,7 +505,7 @@ TraceFocus(Widget w, XEvent * ev)
 	break;
     }
     while (w != 0) {
-	TRACE(("w %p -> %#lx\n", w, XtWindow(w)));
+	TRACE(("w %p -> %#lx\n", (void *) w, XtWindow(w)));
 	w = XtParent(w);
     }
 }
@@ -579,7 +579,7 @@ TraceTranslations(const char *name, Widget w)
 	result = _XtPrintXlations(w, xlations, xcelerat, True);
 	TRACE(("%s\n", result != 0 ? result : "(null)"));
 	if (result)
-	    XFree(result);
+	    XFree((char *) result);
     } else {
 	TRACE(("none (widget is null)\n"));
     }
@@ -669,7 +669,7 @@ TraceArgv(const char *tag, char **argv)
 }
 
 static char *
-parse_option(char *dst, char *src, int first)
+parse_option(char *dst, String src, int first)
 {
     char *s;
 
@@ -698,7 +698,7 @@ same_option(OptionHelp * opt, XrmOptionDescRec * res)
 }
 
 static Bool
-standard_option(char *opt)
+standard_option(String opt)
 {
     static const char *table[] =
     {
