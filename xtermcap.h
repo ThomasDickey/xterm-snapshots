@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.h,v 1.7 2009/03/15 18:18:11 tom Exp $ */
+/* $XTermId: xtermcap.h,v 1.8 2009/12/06 14:02:42 tom Exp $ */
 
 /************************************************************
 
@@ -85,7 +85,7 @@ extern int xtermcapString(XtermWidget /* xw */, int /* keycode */, unsigned /* m
 #endif
 
 #if OPT_TCAP_QUERY
-extern int xtermcapKeycode(XtermWidget /* xw */, char ** /* params */, unsigned * /* state */, Bool * /* fkey */);
+extern int xtermcapKeycode(XtermWidget /* xw */, const char ** /* params */, unsigned * /* state */, Bool * /* fkey */);
 #endif
 
 #ifdef __cplusplus

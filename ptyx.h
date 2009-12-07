@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.646 2009/12/05 01:20:37 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.649 2009/12/06 18:21:13 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -298,6 +298,15 @@ typedef unsigned char Char;		/* to support 8 bit chars */
 typedef Char *ScrnPtr;
 typedef ScrnPtr *ScrnBuf;
 
+/*
+ * Declare an X String, but for unsigned chars.
+ */
+#ifdef _CONST_X_STRING
+typedef const Char *UString;
+#else
+typedef Char *UString;
+#endif
+
 #define CharOf(n) ((unsigned char)(n))
 
 typedef struct {
@@ -355,8 +364,8 @@ typedef struct {
 #define	NPARAM	30			/* Max. parameters		*/
 
 typedef struct {
-	char *opt;
-	char *desc;
+	String opt;
+	String desc;
 } OptionHelp;
 
 typedef short ParmType;
@@ -820,11 +829,15 @@ typedef enum {
  * Constants for titleModes resource
  */
 typedef enum {
-    tmSetUtf8 = 1
-    , tmGetUtf8 = 2
-    , tmSetBase16 = 4
-    , tmGetBase16 = 8
+    tmSetBase16 = 1		/* set title using hex-string */
+    , tmGetBase16 = 2		/* get title using hex-string */
+#if OPT_WIDE_CHARS
+    , tmSetUtf8 = 4		/* like utf8Title, but controllable */
+    , tmGetUtf8 = 8		/* retrieve title encoded as UTF-8 */
+#endif
 } TitleModes;
+
+#define IsTitleMode(xw,mode) (((xw)->screen.title_modes & mode) != 0)
 
 /* indices for mapping multiple clicks to selection types */
 typedef enum {

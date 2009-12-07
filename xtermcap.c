@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.23 2009/10/12 21:17:24 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.25 2009/12/06 14:02:32 tom Exp $ */
 
 /*
  * Copyright 2007-2008,2009 by Thomas E. Dickey
@@ -239,18 +239,6 @@ loadTermcapStrings(TScreen * screen)
 #endif
 
 #if OPT_TCAP_QUERY
-static int
-hex2int(int c)
-{
-    if (c >= '0' && c <= '9')
-	return c - '0';
-    if (c >= 'a' && c <= 'f')
-	return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F')
-	return c - 'A' + 10;
-    return -1;
-}
-
 static Boolean
 keyIsDistinct(XtermWidget xw, int which)
 {
@@ -345,31 +333,24 @@ lookupTcapByName(const char *name)
  * and bypass the lookup of keysym altogether.
  */
 int
-xtermcapKeycode(XtermWidget xw, char **params, unsigned *state, Bool * fkey)
+xtermcapKeycode(XtermWidget xw, const char **params, unsigned *state, Bool * fkey)
 {
     TCAPINFO *data;
-    unsigned len = 0;
     int which;
     int code = -1;
-#define MAX_TNAME_LEN 6
-    char name[MAX_TNAME_LEN + 1];
-    char *p;
+    char *name;
+    const char *p;
 
     TRACE(("xtermcapKeycode(%s)\n", *params));
 
     /* Convert hex encoded name to ascii */
-    for (p = *params; hex2int(p[0]) >= 0 && hex2int(p[1]) >= 0; p += 2) {
-	if (len >= MAX_TNAME_LEN)
-	    break;
-	name[len++] = (char) ((hex2int(p[0]) << 4) + hex2int(p[1]));
-    }
-    name[len] = 0;
+    name = x_decode_hex(*params, &p);
     *params = p;
 
     *state = 0;
     *fkey = False;
 
-    if (len && (*p == 0 || *p == ';')) {
+    if ((name != 0 && *name != '\0') && (*p == 0 || *p == ';')) {
 	if ((which = lookupTcapByName(name)) >= 0) {
 	    if (keyIsDistinct(xw, which)) {
 		data = table + which;
@@ -419,6 +400,7 @@ xtermcapKeycode(XtermWidget xw, char **params, unsigned *state, Bool * fkey)
 
     TRACE(("... xtermcapKeycode(%s, %u, %d) -> %#06x\n",
 	   name, *state, *fkey, code));
+    free(name);
     return code;
 }
 #endif /* OPT_TCAP_QUERY */

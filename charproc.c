@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1012 2009/12/05 01:36:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1019 2009/12/07 01:43:09 tom Exp $ */
 
 /*
 
@@ -3078,13 +3078,32 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    }
 	    break;
 
-	case CASE_TITLE_MODES:
-	    TRACE(("CASE_TITLE_MODES\n"));
-	    if (nparam >= 1 && param[0] != DEFAULT) {
-		screen->title_modes = param[0];
+	case CASE_SM_TITLE:
+	    TRACE(("CASE_SM_TITLE\n"));
+	    if (nparam >= 1) {
+		int n;
+		for (n = 0; n < nparam; ++n) {
+		    if (param[n] != DEFAULT)
+			screen->title_modes |= (1 << param[n]);
+		}
 	    } else {
 		screen->title_modes = DEF_TITLE_MODES;
 	    }
+	    TRACE(("...title_modes %#x\n", screen->title_modes));
+	    break;
+
+	case CASE_RM_TITLE:
+	    TRACE(("CASE_RM_TITLE\n"));
+	    if (nparam >= 1) {
+		int n;
+		for (n = 0; n < nparam; ++n) {
+		    if (param[n] != DEFAULT)
+			screen->title_modes &= ~(1 << param[n]);
+		}
+	    } else {
+		screen->title_modes = DEF_TITLE_MODES;
+	    }
+	    TRACE(("...title_modes %#x\n", screen->title_modes));
 	    break;
 
 	case CASE_CSI_IGNORE:
@@ -4575,13 +4594,35 @@ restoremodes(XtermWidget xw)
  * string, which must be freed by the caller.
  */
 static char *
-property_to_string(XTextProperty * text)
+property_to_string(XtermWidget xw, XTextProperty * text)
 {
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
     char *result = 0;
     char **list;
     int length = 0;
+    int rc;
 
-    if (XTextPropertyToStringList(text, &list, &length)) {
+    TRACE(("property_to_string value %p, encoding %s, format %d, nitems %ld\n",
+	   text->value,
+	   XGetAtomName(dpy, text->encoding),
+	   text->format,
+	   text->nitems));
+
+#if OPT_WIDE_CHARS
+    /*
+     * We will use the XmbTextPropertyToTextList call to extract UTF-8 data.
+     * The xtermUtf8ToTextList() call is used to convert UTF-8 explicitly to
+     * ISO-8859-1.
+     */
+    if ((text->format != 8)
+	|| IsTitleMode(xw, tmGetUtf8)
+	|| (rc = xtermUtf8ToTextList(xw, text, &list, &length)) < 0)
+#endif
+	if ((rc = XmbTextPropertyToTextList(dpy, text, &list, &length)) < 0)
+	    rc = XTextPropertyToStringList(text, &list, &length);
+
+    if (rc >= 0) {
 	int n, c, pass;
 	size_t need = 0;
 
@@ -4616,7 +4657,7 @@ get_icon_label(XtermWidget xw)
     char *result = 0;
 
     if (XGetWMIconName(TScreenOf(xw)->display, VShellWindow, &text)) {
-	result = property_to_string(&text);
+	result = property_to_string(xw, &text);
     }
     return result;
 }
@@ -4628,7 +4669,7 @@ get_window_label(XtermWidget xw)
     char *result = 0;
 
     if (XGetWMName(TScreenOf(xw)->display, VShellWindow, &text)) {
-	result = property_to_string(&text);
+	result = property_to_string(xw, &text);
     }
     return result;
 }
@@ -4648,7 +4689,14 @@ report_win_label(XtermWidget xw,
     unparseputc(xw, code);
 
     if (text != 0) {
+	int copy = IsTitleMode(xw, tmGetBase16);
+	if (copy) {
+	    TRACE(("Encoding hex:%s\n", text));
+	    text = x_encode_hex(text);
+	}
 	unparseputs(xw, text);
+	if (copy)
+	    free(text);
     }
 
     unparseputc(xw, ANSI_ESC);
@@ -5012,8 +5060,10 @@ unparseputn(XtermWidget xw, unsigned int n)
 void
 unparseputs(XtermWidget xw, const char *s)
 {
-    while (*s)
-	unparseputc(xw, *s++);
+    if (s != 0) {
+	while (*s)
+	    unparseputc(xw, *s++);
+    }
 }
 
 void
@@ -5804,7 +5854,7 @@ VTInitialize(Widget wrequest,
 #endif /* OPT_COLOR_RES2 */
 
     TRACE(("VTInitialize wnew %p, %d / %d resources\n",
-	   wnew, XtNumber(xterm_resources), MAXRESOURCES));
+	   (void *) wnew, XtNumber(xterm_resources), MAXRESOURCES));
     assert(XtNumber(xterm_resources) < MAXRESOURCES);
 
     /* Zero out the entire "screen" component of "wnew" widget, then do
@@ -6343,7 +6393,7 @@ VTInitialize(Widget wrequest,
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
      */
-    TRACE(("adding event handlers for my_parent %p\n", my_parent));
+    TRACE(("adding event handlers for my_parent %p\n", (void *) my_parent));
     XtAddEventHandler(my_parent, EnterWindowMask, False,
 		      HandleEnterWindow, (Opaque) NULL);
     XtAddEventHandler(my_parent, LeaveWindowMask, False,
