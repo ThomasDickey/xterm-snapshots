@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.35 2009/12/06 15:51:03 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.36 2009/12/07 09:16:23 tom Exp $ */
 
 /************************************************************
 
@@ -35,6 +35,7 @@ authorization.
 #include <xterm.h>
 
 #include <sys/types.h>
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
