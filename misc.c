@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.455 2009/12/07 10:46:02 tom Exp $ */
+/* $XTermId: misc.c,v 1.456 2009/12/08 00:49:07 tom Exp $ */
 
 /*
  *
@@ -2460,6 +2460,7 @@ ResetColorsRequest(XtermWidget xw,
 
     TRACE(("ResetColorsRequest code=%d\n", code));
 
+#if OPT_COLOR_RES
     if (GetOldColors(xw)) {
 	ndx = OscToColorIndex((OscTextColors) (code - OSC_RESET));
 	if (xw->misc.re_verse)
@@ -2482,6 +2483,7 @@ ResetColorsRequest(XtermWidget xw,
 	}
 	result = True;
     }
+#endif
     return result;
 }
 
