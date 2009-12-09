@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.361 2009/12/07 01:19:51 tom Exp $ */
+/* $XTermId: button.c,v 1.362 2009/12/09 10:19:43 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -2969,7 +2969,7 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 	ld.name = GET_LINEDATA(screen, --screen->name.row)
 
 #define MoreRows(name) \
-	screen->name.row < screen->max_row
+	(screen->name.row < screen->max_row)
 
 #define isPrevWrapped(name) \
 	(screen->name.row > 0 \
