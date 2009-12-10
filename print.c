@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.114 2009/12/01 01:42:44 tom Exp $ */
+/* $XTermId: print.c,v 1.115 2009/12/10 09:44:39 tom Exp $ */
 
 /************************************************************
 
@@ -659,14 +659,14 @@ getPrinterFlags(XtermWidget xw, String * params, Cardinal *param_count)
     TScreen *screen = TScreenOf(xw);
     PrinterFlags *result = &(screen->printer_flags);
 
-    TRACE(("getPrinterFlags %d params\n", *param_count));
+    TRACE(("getPrinterFlags %d params\n", param_count ? *param_count : 0));
 
     result->printer_extent = screen->printer_extent;
     result->printer_formfeed = screen->printer_formfeed;
     result->printer_newline = screen->printer_newline;
     result->print_attributes = screen->print_attributes;
 
-    if (*param_count != 0) {
+    if (param_count != 0 && *param_count != 0) {
 	Cardinal j;
 	unsigned k;
 	for (j = 0; j < *param_count; ++j) {
