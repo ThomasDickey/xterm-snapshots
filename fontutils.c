@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.325 2009/12/02 10:17:52 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.327 2009/12/10 09:35:41 tom Exp $ */
 
 /************************************************************
 
@@ -1917,7 +1917,7 @@ xtermComputeFontInfo(XtermWidget xw,
 
 		face_name = getFaceName(xw, xw->misc.face_wide_name);
 		TRACE(("xtermComputeFontInfo wide(face %s, char_width %d)\n",
-		       face_name,
+		       NonNull(face_name),
 		       char_width));
 
 #define WideXftPattern \
@@ -1925,7 +1925,7 @@ xtermComputeFontInfo(XtermWidget xw,
 		XFT_SIZE, XftTypeDouble, face_size, \
 		XFT_SPACING, XftTypeInteger, XFT_MONO
 
-		if ((pat = XftNameParse(face_name)) != 0) {
+		if (face_name && (pat = XftNameParse(face_name)) != 0) {
 #define OPEN_XFT(tag) xtermOpenXft(xw, face_name, pat, tag)
 		    XftPatternBuild(pat,
 				    WideXftPattern,

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.109 2009/12/06 15:18:12 tom Exp $ */
+/* $XTermId: trace.c,v 1.110 2009/12/10 09:36:28 tom Exp $ */
 
 /*
  * 
@@ -577,7 +577,7 @@ TraceTranslations(const char *name, Widget w)
 	TRACE(("... xlations %#08lx\n", (long) xlations));
 	TRACE(("... xcelerat %#08lx\n", (long) xcelerat));
 	result = _XtPrintXlations(w, xlations, xcelerat, True);
-	TRACE(("%s\n", result != 0 ? result : "(null)"));
+	TRACE(("%s\n", NonNull(result)));
 	if (result)
 	    XFree((char *) result);
     } else {
