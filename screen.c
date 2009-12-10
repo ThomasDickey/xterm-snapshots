@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.408 2009/11/28 12:38:26 tom Exp $ */
+/* $XTermId: screen.c,v 1.409 2009/12/09 23:31:18 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -683,7 +683,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
 	    for_each_combData(off, ld) {
-		memset(ld->combData[off] + col, 0, len * sizeof(IChar));
+		memset(ld->combData[off] + col, 0, len * sizeof(CharData));
 	    }
 	});
     }
@@ -846,7 +846,7 @@ ScrnWriteText(XtermWidget xw,
 	for_each_combData(off, ld) {
 	    memset(ld->combData[off] + screen->cur_col,
 		   0,
-		   real_width * sizeof(IChar));
+		   real_width * sizeof(CharData));
 	}
     });
     if_OPT_ISO_COLORS(screen, {
@@ -902,7 +902,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	SetLineDblCS(work, 0);
 #endif
 
-	memset(work->charData, 0, size * sizeof(IChar));
+	memset(work->charData, 0, size * sizeof(CharData));
 	if (TERM_COLOR_FLAGS(xw)) {
 	    memset(work->attribs, (int) flags, size);
 #if OPT_ISO_COLORS
@@ -924,7 +924,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	    size_t off;
 
 	    for (off = 0; off < work->combSize; ++off) {
-		memset(work->combData[off], 0, size * sizeof(IChar));
+		memset(work->combData[off], 0, size * sizeof(CharData));
 	    }
 	}
 #endif
@@ -2233,7 +2233,7 @@ ScrnFillRectangle(XtermWidget xw,
 	    if_OPT_WIDE_CHARS(screen, {
 		size_t off;
 		for_each_combData(off, ld) {
-		    memset(ld->combData[off] + left, 0, size * sizeof(IChar));
+		    memset(ld->combData[off] + left, 0, size * sizeof(CharData));
 		}
 	    })
 	}

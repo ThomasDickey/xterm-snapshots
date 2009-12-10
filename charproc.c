@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1019 2009/12/07 01:43:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1020 2009/12/10 09:24:04 tom Exp $ */
 
 /*
 
@@ -6630,12 +6630,6 @@ VTDestroy(Widget w GCC_UNUSED)
     }
 #endif
 
-#if OPT_COLOR_RES
-    /* free local copies of resource strings */
-    for (n = 0; n < NCOLORS; ++n) {
-	FREE_LEAK(screen->Tcolors[n].resource);
-    }
-#endif
 #if OPT_SELECT_REGEX
     for (n = 0; n < NSELECTUNITS; ++n) {
 	FREE_LEAK(screen->selectExpr[n]);
