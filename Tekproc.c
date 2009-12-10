@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.174 2009/11/28 14:20:28 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.175 2009/12/09 23:25:34 Jochen.Voss Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -1400,7 +1400,7 @@ TekRealize(Widget gw,
     unsigned long TEKgcFontMask;
 
     TRACE(("TekRealize\n"));
-    memset(tekscr, 0, sizeof(tekscr));
+    memset(tekscr, 0, sizeof(*tekscr));
 
 #ifndef NO_ACTIVE_ICON
     tekscr->whichTwin = &tekscr->fullTwin;
