@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.327 2009/12/10 09:35:41 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.328 2009/12/12 17:17:32 Michael.Riepe Exp $ */
 
 /************************************************************
 
@@ -1739,7 +1739,7 @@ getFaceName(XtermWidget xw, char *wideName GCC_UNUSED)
 #else
     char *result = xw->misc.face_name;
 #endif
-    if (!strncmp(result, "xft:", 4))
+    if (result && !strncmp(result, "xft:", 4))
 	result += 4;
     return x_nonempty(result);
 }

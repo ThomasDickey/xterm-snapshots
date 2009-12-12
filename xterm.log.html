@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.882 2009/12/10 10:38:19 tom Exp $
+  $XTermId: xterm.log.html,v 1.883 2009/12/12 17:21:40 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_253">Patch #253 - 2009/12/10</A>
 <LI><A HREF="#xterm_252">Patch #252 - 2009/12/7</A>
 <LI><A HREF="#xterm_251">Patch #251 - 2009/11/11</A>
@@ -311,6 +312,15 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>add a null-pointer check for the case where <code>renderFont</code>
+	    resource is true, but <code>faceName</code> resource is unset,
+	    used in logic to strip "xft:" prefix from
+	    <a href="#xterm_251">patch #251</a> changes
+	    (patch by Michael Riepe).
+</ul>
 
 <H1><A NAME="xterm_253">Patch #253 - 2009/12/10</A></H1>
 <ul>
