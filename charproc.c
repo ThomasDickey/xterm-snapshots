@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1020 2009/12/10 09:24:04 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1021 2009/12/30 00:37:54 tom Exp $ */
 
 /*
 
@@ -3109,6 +3109,52 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_CSI_IGNORE:
 	    sp->parsestate = cigtable;
 	    break;
+
+	case CASE_DECSWBV:
+	    TRACE(("CASE_DECSWBV\n"));
+	    switch ((nparam >= 1) ? param[0] : DEFAULT) {
+	    case 2:
+	    case 3:
+	    case 4:
+		screen->warningVolume = bvLow;
+		break;
+	    case 5:
+	    case 6:
+	    case 7:
+	    case 8:
+		screen->warningVolume = bvHigh;
+		break;
+	    default:
+		screen->warningVolume = bvOff;
+		break;
+	    }
+	    TRACE(("...warningVolume %d\n", screen->warningVolume));
+	    sp->parsestate = sp->groundtable;
+	    break;
+
+	case CASE_DECSMBV:
+	    TRACE(("CASE_DECSMBV\n"));
+	    switch ((nparam >= 1) ? param[0] : DEFAULT) {
+	    case 2:
+	    case 3:
+	    case 4:
+		screen->marginVolume = bvLow;
+		break;
+	    case 0:
+	    case DEFAULT:
+	    case 5:
+	    case 6:
+	    case 7:
+	    case 8:
+		screen->marginVolume = bvHigh;
+		break;
+	    default:
+		screen->marginVolume = bvOff;
+		break;
+	    }
+	    TRACE(("...marginVolume %d\n", screen->marginVolume));
+	    sp->parsestate = sp->groundtable;
+	    break;
 	}
 	if (sp->parsestate == sp->groundtable)
 	    sp->lastchar = thischar;
@@ -4094,7 +4140,7 @@ dpmodes(XtermWidget xw,
 	case 44:		/* margin bell                  */
 	    set_bool_mode(screen->marginbell);
 	    if (!screen->marginbell)
-		screen->bellarmed = -1;
+		screen->bellArmed = -1;
 	    update_marginbell();
 	    break;
 	case 45:		/* reverse wraparound   */
@@ -4514,7 +4560,7 @@ restoremodes(XtermWidget xw)
 	    break;
 	case 44:		/* margin bell                  */
 	    if ((DoRM(DP_X_MARGIN, screen->marginbell)) == 0)
-		screen->bellarmed = -1;
+		screen->bellArmed = -1;
 	    update_marginbell();
 	    break;
 	case 45:		/* reverse wraparound   */

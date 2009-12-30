@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.259 2009/02/13 21:04:32 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.261 2009/12/30 13:33:50 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -338,7 +338,7 @@ fi
 
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_DISABLE_ECHO version: 10 updated: 2003/04/17 22:27:11
+dnl CF_DISABLE_ECHO version: 11 updated: 2009/12/13 13:16:57
 dnl ---------------
 dnl You can always use "make -n" to see the actual options, but it's hard to
 dnl pick out/analyze warning messages when the compile-line is long.
@@ -357,14 +357,14 @@ CF_ARG_DISABLE(echo,
 	[
     ECHO_LT='--silent'
     ECHO_LD='@echo linking [$]@;'
-    RULE_CC='	@echo compiling [$]<'
-    SHOW_CC='	@echo compiling [$]@'
+    RULE_CC='@echo compiling [$]<'
+    SHOW_CC='@echo compiling [$]@'
     ECHO_CC='@'
 ],[
     ECHO_LT=''
     ECHO_LD=''
-    RULE_CC='# compiling'
-    SHOW_CC='# compiling'
+    RULE_CC=''
+    SHOW_CC=''
     ECHO_CC=''
 ])
 AC_MSG_RESULT($enableval)
@@ -552,7 +552,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_ATTRIBUTES version: 11 updated: 2007/07/29 09:55:12
+dnl CF_GCC_ATTRIBUTES version: 13 updated: 2009/08/11 20:19:56
 dnl -----------------
 dnl Test for availability of useful gcc __attribute__ directives to quiet
 dnl compiler warnings.  Though useful, not all are supported -- and contrary
@@ -598,26 +598,61 @@ extern void oops(char *,...) GCC_PRINTFLIKE(1,2) GCC_NORETURN;
 extern void foo(void) GCC_NORETURN;
 int main(int argc GCC_UNUSED, char *argv[[]] GCC_UNUSED) { return 0; }
 EOF
+	cf_printf_attribute=no
+	cf_scanf_attribute=no
 	for cf_attribute in scanf printf unused noreturn
 	do
 		CF_UPPER(cf_ATTRIBUTE,$cf_attribute)
 		cf_directive="__attribute__(($cf_attribute))"
 		echo "checking for $CC $cf_directive" 1>&AC_FD_CC
-		case $cf_attribute in
-		scanf|printf)
-		cat >conftest.h <<EOF
+
+		case $cf_attribute in #(vi
+		printf) #(vi
+			cf_printf_attribute=yes
+			cat >conftest.h <<EOF
 #define GCC_$cf_ATTRIBUTE 1
 EOF
 			;;
-		*)
-		cat >conftest.h <<EOF
+		scanf) #(vi
+			cf_scanf_attribute=yes
+			cat >conftest.h <<EOF
+#define GCC_$cf_ATTRIBUTE 1
+EOF
+			;;
+		*) #(vi
+			cat >conftest.h <<EOF
 #define GCC_$cf_ATTRIBUTE $cf_directive
 EOF
 			;;
 		esac
+
 		if AC_TRY_EVAL(ac_compile); then
 			test -n "$verbose" && AC_MSG_RESULT(... $cf_attribute)
 			cat conftest.h >>confdefs.h
+			case $cf_attribute in #(vi
+			printf) #(vi
+				if test "$cf_printf_attribute" = no ; then
+					cat >>confdefs.h <<EOF
+#define GCC_PRINTFLIKE(fmt,var) /* nothing */
+EOF
+				else
+					cat >>confdefs.h <<EOF
+#define GCC_PRINTFLIKE(fmt,var) __attribute__((format(printf,fmt,var)))
+EOF
+				fi
+				;;
+			scanf) #(vi
+				if test "$cf_scanf_attribute" = no ; then
+					cat >>confdefs.h <<EOF
+#define GCC_SCANFLIKE(fmt,var) /* nothing */
+EOF
+				else
+					cat >>confdefs.h <<EOF
+#define GCC_SCANFLIKE(fmt,var)  __attribute__((format(scanf,fmt,var)))
+EOF
+				fi
+				;;
+			esac
 		fi
 	done
 else
@@ -1395,37 +1430,49 @@ AC_SUBST(PROG_EXT)
 test -n "$PROG_EXT" && AC_DEFINE_UNQUOTED(PROG_EXT,"$PROG_EXT")
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_REGEX version: 3 updated: 1997/11/01 14:26:01
+dnl CF_REGEX version: 5 updated: 2009/12/19 13:18:53
 dnl --------
 dnl Attempt to determine if we've got one of the flavors of regular-expression
 dnl code that we can support.
 AC_DEFUN([CF_REGEX],
 [
-AC_MSG_CHECKING([for regular-expression headers])
-AC_CACHE_VAL(cf_cv_regex,[
+
+AC_CHECK_FUNC(regcomp,,[
+	AC_CHECK_LIB(regex,regcomp,[LIBS="-lregex $LIBS"],[
+		AC_CHECK_LIB(re,regcomp,[LIBS="-lre $LIBS"],[
+			AC_CHECK_FUNC(compile,,[
+				AC_CHECK_LIB(gen,compile,[LIBS="-lgen $LIBS"],[
+					AC_MSG_WARN(cannot find regular expression library)
+				])
+			])
+		])
+	])
+])
+
+AC_CACHE_CHECK(for regular-expression headers,cf_cv_regex_hdrs,[
+cf_cv_regex_hdrs=no
 AC_TRY_LINK([#include <sys/types.h>
 #include <regex.h>],[
 	regex_t *p;
 	int x = regcomp(p, "", 0);
 	int y = regexec(p, "", 0, 0, 0);
 	regfree(p);
-	],[cf_cv_regex="regex.h"],[
+	],[cf_cv_regex_hdrs="regex.h"],[
 	AC_TRY_LINK([#include <regexp.h>],[
 		char *p = compile("", "", "", 0);
 		int x = step("", "");
-	],[cf_cv_regex="regexp.h"],[
-		cf_save_LIBS="$LIBS"
-		LIBS="-lgen $LIBS"
+	],[cf_cv_regex_hdrs="regexp.h"],[
 		AC_TRY_LINK([#include <regexpr.h>],[
 			char *p = compile("", "", "");
 			int x = step("", "");
-		],[cf_cv_regex="regexpr.h"],[LIBS="$cf_save_LIBS"])])])
+		],[cf_cv_regex_hdrs="regexpr.h"])])])
 ])
-AC_MSG_RESULT($cf_cv_regex)
-case $cf_cv_regex in
-	regex.h)   AC_DEFINE(HAVE_REGEX_H_FUNCS) ;;
-	regexp.h)  AC_DEFINE(HAVE_REGEXP_H_FUNCS) ;;
-	regexpr.h) AC_DEFINE(HAVE_REGEXPR_H_FUNCS) ;;
+
+case $cf_cv_regex_hdrs in #(vi
+    no)	       AC_MSG_WARN(no regular expression header found) ;; #(vi
+    regex.h)   AC_DEFINE(HAVE_REGEX_H_FUNCS) ;; #(vi
+    regexp.h)  AC_DEFINE(HAVE_REGEXP_H_FUNCS) ;; #(vi
+    regexpr.h) AC_DEFINE(HAVE_REGEXPR_H_FUNCS) ;;
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -2359,7 +2406,7 @@ AC_TRY_LINK([
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 28 updated: 2008/12/27 12:30:03
+dnl CF_XOPEN_SOURCE version: 30 updated: 2009/12/30 08:32:55
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -2378,6 +2425,12 @@ cf_POSIX_C_SOURCE=ifelse($2,,199506L,$2)
 case $host_os in #(vi
 aix[[456]]*) #(vi
 	CPPFLAGS="$CPPFLAGS -D_ALL_SOURCE"
+	;;
+darwin[[0-8]].*) #(vi
+	CPPFLAGS="$CPPFLAGS -D_APPLE_C_SOURCE"
+	;;
+darwin*) #(vi
+	CPPFLAGS="$CPPFLAGS -D_DARWIN_C_SOURCE"
 	;;
 freebsd*|dragonfly*) #(vi
 	# 5.x headers associate

@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.54 2009/12/06 16:34:05 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.55 2009/12/29 22:01:11 tom Exp $ */
 
 /*
  *
@@ -1851,8 +1851,8 @@ CASE_DECSCUSR,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	t		u		v		w	*/
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECSWBV,
+CASE_DECSMBV,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	x		y		z		{	*/
@@ -2011,8 +2011,8 @@ CASE_DECSCUSR,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      ocircumflex     otilde          odiaeresis      division        */
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECSWBV,
+CASE_DECSMBV,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      oslash          ugrave          uacute          ucircumflex     */

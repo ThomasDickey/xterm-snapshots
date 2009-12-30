@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.883 2009/12/12 17:21:40 tom Exp $
+  $XTermId: xterm.log.html,v 1.887 2009/12/30 13:04:40 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -315,11 +315,27 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>implement VT520-style controls <code>DECSMBV</code> and
+	    <code>DECSWBV</code> for setting the margin- and warning-bell
+	    volume.
+
+	<li>fix a minor error from <a href="#xterm_243">patch #243</a> which
+	    made the zIconBeep feature use a minor-error tone rather than an
+	    informational tone.
+
 	<li>add a null-pointer check for the case where <code>renderFont</code>
 	    resource is true, but <code>faceName</code> resource is unset,
 	    used in logic to strip "xft:" prefix from
 	    <a href="#xterm_251">patch #251</a> changes
 	    (patch by Michael Riepe).
+
+	<li>add special case to configure CF_XOPEN_SOURCE macro to use extensions
+	    on Darwin (patch by Dennis Preiser).
+
+	<li>improve configure checks for regular expressions header and
+	    library
+
+	<li>update config.guess, config.sub
 </ul>
 
 <H1><A NAME="xterm_253">Patch #253 - 2009/12/10</A></H1>

@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.311 2009/11/28 13:32:38 tom Exp $ */
+/* $XTermId: input.c,v 1.312 2009/12/29 23:45:29 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -184,17 +184,18 @@ AdjustAfterInput(XtermWidget xw)
 	WindowScroll(xw, 0);
     if (screen->marginbell) {
 	int col = screen->max_col - screen->nmarginbell;
-	if (screen->bellarmed >= 0) {
-	    if (screen->bellarmed == screen->cur_row) {
+	if (screen->bellArmed >= 0) {
+	    if (screen->bellArmed == screen->cur_row) {
 		if (screen->cur_col >= col) {
 		    Bell(XkbBI_MarginBell, 0);
-		    screen->bellarmed = -1;
+		    screen->bellArmed = -1;
 		}
-	    } else
-		screen->bellarmed =
+	    } else {
+		screen->bellArmed =
 		    screen->cur_col < col ? screen->cur_row : -1;
+	    }
 	} else if (screen->cur_col < col)
-	    screen->bellarmed = screen->cur_row;
+	    screen->bellArmed = screen->cur_row;
     }
 }
 
