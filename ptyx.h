@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.649 2009/12/06 18:21:13 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.650 2009/12/30 00:33:42 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1355,6 +1355,12 @@ typedef enum {
 #endif
 } MenuIndex;
 
+typedef enum {
+	bvOff = -1,
+	bvLow = 0,
+	bvHigh
+} BellVolume;
+
 #define NUM_POPUP_MENUS 4
 
 #if OPT_COLOR_RES
@@ -1723,7 +1729,9 @@ typedef struct {
 	Boolean		hp_ll_bc;	/* kludge HP-style ll for xdb	*/
 	Boolean		marginbell;	/* true if margin bell on	*/
 	int		nmarginbell;	/* columns from right margin	*/
-	int		bellarmed;	/* cursor below bell margin	*/
+	int		bellArmed;	/* cursor below bell margin	*/
+	BellVolume	marginVolume;	/* margin-bell volume           */
+	BellVolume	warningVolume;	/* warning-bell volume          */
 	Boolean		multiscroll;	/* true if multi-scroll		*/
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/

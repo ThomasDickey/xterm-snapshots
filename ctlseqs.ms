@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.201 2009/12/07 09:59:49 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.202 2009/12/30 02:05:20 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
@@ -1073,7 +1073,7 @@ Valid values for the second parameter:
   \*(Ps = \*1 \(-> 7-bit controls (always set for VT100)
   \*(Ps = \*2 \(-> 8-bit controls
 .
-.IP \\*(Cs\\*(Ps\\*s\\*(Sp"\\*q
+.IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*q
 Set cursor style (DECSCUSR, VT520)
   \*(Ps = \*0 \(-> blinking block
   \*(Ps = \*1 \(-> blinking block (default)
@@ -1157,8 +1157,20 @@ Each parameter enables a single feature.
   \*(Ps = \*3 \(-> Query window/icon labels using UTF-8
 (See discussion of "Title Modes")
 .
+.IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*t
+Set warning-bell volume (DECSWBV, VT520)
+  \*(Ps = \*0 or \*1 \(-> off
+  \*(Ps = \*2, \*3 or \*4 \(-> low
+  \*(Ps = \*5, \*6, \*7, or \*8 \(-> high
+.
 .IP \\*(Cs\\*u
 Restore cursor (ANSI.SYS)
+.
+.IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*u
+Set margin-bell volume (DECSMBV, VT520)
+  \*(Ps = \*1 \(-> off
+  \*(Ps = \*2, \*3 or \*4 \(-> low
+  \*(Ps = \*0, \*5, \*6, \*7, or \*8 \(-> high
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Pp\\*;\\*(Pt\\*;\\*(Pl\\*;\\*(Pp\\*$\\*v
 Copy Rectangular Area (DECCRA)

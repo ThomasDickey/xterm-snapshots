@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.163 2009/12/05 15:49:56 tom Exp $
+## $XTermId: Makefile.in,v 1.164 2009/12/30 13:16:26 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -116,11 +116,11 @@ all :	$(PROGRAMS)
 .SUFFIXES : .i .def .hin .html .$(manext) .ms .man .ps .pdf .txt
 
 .c$o :
-@RULE_CC@
+	@RULE_CC@
 	@ECHO_CC@$(CC) $(CPPFLAGS) $(CFLAGS) -c $(srcdir)/$*.c
 
 .c.i :
-@RULE_CC@
+	@RULE_CC@
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
 
 .def.hin :

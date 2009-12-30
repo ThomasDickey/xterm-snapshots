@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.456 2009/12/08 00:49:07 tom Exp $ */
+/* $XTermId: misc.c,v 1.458 2009/12/30 01:33:45 tom Exp $ */
 
 /*
  *
@@ -814,6 +814,41 @@ xtermBell(XtermWidget xw, int which, int percent)
     TScreen *screen = TScreenOf(xw);
 #if defined(HAVE_XKB_BELL_EXT)
     Atom tony = AtomBell(xw, which);
+#endif
+
+    switch (which) {
+    case XkbBI_Info:
+    case XkbBI_MinorError:
+    case XkbBI_MajorError:
+    case XkbBI_TerminalBell:
+	switch (screen->warningVolume) {
+	case bvOff:
+	    percent = -100;
+	    break;
+	case bvLow:
+	    break;
+	case bvHigh:
+	    percent = 100;
+	    break;
+	}
+	break;
+    case XkbBI_MarginBell:
+	switch (screen->marginVolume) {
+	case bvOff:
+	    percent = -100;
+	    break;
+	case bvLow:
+	    break;
+	case bvHigh:
+	    percent = 100;
+	    break;
+	}
+	break;
+    default:
+	break;
+    }
+
+#if defined(HAVE_XKB_BELL_EXT)
     if (tony != None) {
 	XkbBell(screen->display, VShellWindow, percent, tony);
     } else
@@ -822,7 +857,7 @@ xtermBell(XtermWidget xw, int which, int percent)
 }
 
 void
-Bell(int which GCC_UNUSED, int percent)
+Bell(int which, int percent)
 {
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);

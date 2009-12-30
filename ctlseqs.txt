@@ -589,7 +589,7 @@ CSI Ps ; Ps " p
             Ps = 0  -> 8-bit controls
             Ps = 1  -> 7-bit controls (always set for VT100)
             Ps = 2  -> 8-bit controls
-CSI Ps SP "q
+CSI Ps SP q
           Set cursor style (DECSCUSR, VT520)
             Ps = 0  -> blinking block
             Ps = 1  -> blinking block (default)
@@ -670,7 +670,17 @@ CSI > Ps; Ps t
             Ps = 2  -> Set window/icon labels using UTF-8
             Ps = 3  -> Query window/icon labels using UTF-8 (See discus-
           sion of "Title Modes")
+CSI Ps SP t
+          Set warning-bell volume (DECSWBV, VT520)
+            Ps = 0  or 1  -> off
+            Ps = 2 , 3  or 4  -> low
+            Ps = 5 , 6 , 7 , or 8  -> high
 CSI u     Restore cursor (ANSI.SYS)
+CSI Ps SP u
+          Set margin-bell volume (DECSMBV, VT520)
+            Ps = 1  -> off
+            Ps = 2 , 3  or 4  -> low
+            Ps = 0 , 5 , 6 , 7 , or 8  -> high
 CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
           Copy Rectangular Area (DECCRA)
             Pt; Pl; Pb; Pr denotes the rectangle.
