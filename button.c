@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.362 2009/12/09 10:19:43 tom Exp $ */
+/* $XTermId: button.c,v 1.363 2009/12/30 21:14:37 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -1252,7 +1252,7 @@ overrideTargets(Widget w, String value, Atom ** resultp)
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
 
-	if (value != 0 && *value != '\0') {
+	if (!IsEmpty(value)) {
 	    String copied = x_strdup(value);
 	    if (copied != 0) {
 		Atom *result = 0;

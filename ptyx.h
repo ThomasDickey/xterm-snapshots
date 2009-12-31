@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.650 2009/12/30 00:33:42 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.653 2009/12/30 22:34:27 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -306,6 +306,8 @@ typedef const Char *UString;
 #else
 typedef Char *UString;
 #endif
+
+#define IsEmpty(s) ((s) == 0 || *(s) == '\0')
 
 #define CharOf(n) ((unsigned char)(n))
 
@@ -852,6 +854,24 @@ typedef enum {
 #endif
     ,NSELECTUNITS
 } SelectUnit;
+
+typedef enum {
+    ecSetColor = 1
+    , ecGetColor
+    , ecLAST
+} ColorOps;
+
+typedef enum {
+    efSetFont = 1
+    , efGetFont
+    , efLAST
+} FontOps;
+
+typedef enum {
+    etSetTcap = 1
+    , etGetTcap
+    , etLAST
+} TcapOps;
 
 typedef enum {
     /* 1-21 are chosen to be the same as the control-sequence coding */
@@ -1572,17 +1592,28 @@ typedef struct {
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		poponbell;	/* pop on bell mode		*/
 
+	Boolean		allowColorOps;	/* ColorOps mode		*/
 	Boolean		allowFontOps;	/* FontOps mode			*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
 	Boolean		allowTcapOps;	/* TcapOps mode			*/
 	Boolean		allowTitleOps;	/* TitleOps mode		*/
 	Boolean		allowWindowOps;	/* WindowOps mode		*/
 
+	Boolean		allowColorOp0;	/* initial ColorOps mode	*/
 	Boolean		allowFontOp0;	/* initial FontOps mode		*/
 	Boolean		allowSendEvent0;/* initial SendEvent mode	*/
 	Boolean		allowTcapOp0;	/* initial TcapOps mode		*/
 	Boolean		allowTitleOp0;	/* initial TitleOps mode	*/
 	Boolean		allowWindowOp0;	/* initial WindowOps mode	*/
+
+	String		disallowedColorOps;
+	char		disallow_color_ops[ecLAST];
+
+	String		disallowedFontOps;
+	char		disallow_font_ops[efLAST];
+
+	String		disallowedTcapOps;
+	char		disallow_tcap_ops[etLAST];
 
 	String		disallowedWinOps;
 	char		disallow_win_ops[ewLAST];
@@ -2414,8 +2445,15 @@ typedef struct _TekWidgetRec {
 
 #define AllowXtermOps(w,name)	(TScreenOf(w)->name && !TScreenOf(w)->allowSendEvents)
 
-#define AllowFontOps(w)		AllowXtermOps(w, allowFontOps)
-#define AllowTcapOps(w)		AllowXtermOps(w, allowTcapOps)
+#define AllowColorOps(w,name)	(AllowXtermOps(w, allowColorOps) || \
+				 !TScreenOf(w)->disallow_color_ops[name])
+
+#define AllowFontOps(w,name)	(AllowXtermOps(w, allowFontOps) || \
+				 !TScreenOf(w)->disallow_font_ops[name])
+
+#define AllowTcapOps(w,name)	(AllowXtermOps(w, allowTcapOps) || \
+				 !TScreenOf(w)->disallow_tcap_ops[name])
+
 #define AllowTitleOps(w)	AllowXtermOps(w, allowTitleOps)
 
 #define AllowWindowOps(w,name)	(AllowXtermOps(w, allowWindowOps) || \

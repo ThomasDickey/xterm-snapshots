@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.458 2009/12/30 01:33:45 tom Exp $ */
+/* $XTermId: misc.c,v 1.469 2009/12/31 13:47:49 tom Exp $ */
 
 /*
  *
@@ -2088,7 +2088,7 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
     TRACE(("ResetAnsiColorRequest(%s)\n", buf));
     if (*buf != '\0') {
 	/* reset specific colors */
-	while ((buf != 0) && (*buf != '\0')) {
+	while (!IsEmpty(buf)) {
 	    char *next;
 
 	    color = strtol(buf, &next, 10);
@@ -2346,29 +2346,32 @@ oppositeColor(int n)
 static void
 ReportColorRequest(XtermWidget xw, int ndx, int final)
 {
-    XColor color;
-    Colormap cmap = xw->core.colormap;
-    char buffer[80];
+    if (AllowColorOps(xw, ecGetColor)) {
+	XColor color;
+	Colormap cmap = xw->core.colormap;
+	char buffer[80];
 
-    /*
-     * ChangeColorsRequest() has "always" chosen the opposite color when
-     * reverse-video is set.  Report this as the original color index, but
-     * reporting the opposite color which would be used.
-     */
-    int i = (xw->misc.re_verse) ? oppositeColor(ndx) : ndx;
+	/*
+	 * ChangeColorsRequest() has "always" chosen the opposite color when
+	 * reverse-video is set.  Report this as the original color index, but
+	 * reporting the opposite color which would be used.
+	 */
+	int i = (xw->misc.re_verse) ? oppositeColor(ndx) : ndx;
 
-    GetOldColors(xw);
-    color.pixel = pOldColors->colors[ndx];
-    XQueryColor(TScreenOf(xw)->display, cmap, &color);
-    sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
-	    color.red,
-	    color.green,
-	    color.blue);
-    TRACE(("ReportColors %d: %#lx as %s\n", ndx, pOldColors->colors[ndx], buffer));
-    unparseputc1(xw, ANSI_OSC);
-    unparseputs(xw, buffer);
-    unparseputc1(xw, final);
-    unparse_end(xw);
+	GetOldColors(xw);
+	color.pixel = pOldColors->colors[ndx];
+	XQueryColor(TScreenOf(xw)->display, cmap, &color);
+	sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
+		color.red,
+		color.green,
+		color.blue);
+	TRACE(("ReportColors %d: %#lx as %s\n",
+	       ndx, pOldColors->colors[ndx], buffer));
+	unparseputc1(xw, ANSI_OSC);
+	unparseputs(xw, buffer);
+	unparseputc1(xw, final);
+	unparse_end(xw);
+    }
 }
 
 static Bool
@@ -2454,7 +2457,7 @@ ChangeColorsRequest(XtermWidget xw,
 	    if (xw->misc.re_verse)
 		ndx = oppositeColor(ndx);
 
-	    if ((names == NULL) || (names[0] == '\0')) {
+	    if (IsEmpty(names)) {
 		newColors.names[ndx] = NULL;
 	    } else {
 		if (names[0] == ';')
@@ -2521,6 +2524,150 @@ ResetColorsRequest(XtermWidget xw,
 #endif
     return result;
 }
+
+#if OPT_SHIFT_FONTS
+/*
+ * Initially, 'source' points to '#' or '?'.
+ *
+ * Look for an optional sign and optional number.  If those are found, lookup
+ * the corresponding menu font entry.
+ */
+static int
+ParseShiftedFont(XtermWidget xw, char *source, char **target)
+{
+    TScreen *screen = TScreenOf(xw);
+    int num = screen->menu_font_number;
+    int rel = 0;
+
+    if (*++source == '+') {
+	rel = 1;
+	source++;
+    } else if (*source == '-') {
+	rel = -1;
+	source++;
+    }
+
+    if (isdigit(CharOf(*source))) {
+	int val = atoi(source);
+	if (rel > 0)
+	    rel = val;
+	else if (rel < 0)
+	    rel = -val;
+	else
+	    num = val;
+    } else if (rel == 0) {
+	num = 0;
+    }
+
+    if (rel != 0) {
+	num = lookupRelativeFontSize(xw,
+				     screen->menu_font_number, rel);
+
+    }
+    TRACE(("ParseShiftedFont(%s) ->%d (%s)\n", *target, num, source));
+    *target = source;
+    return num;
+}
+
+static void
+QueryFontRequest(XtermWidget xw, char *buf, int final)
+{
+    if (AllowFontOps(xw, efGetFont)) {
+	TScreen *screen = TScreenOf(xw);
+	Bool success = True;
+	int num;
+	char *base = buf + 1;
+	char *name;
+
+	num = ParseShiftedFont(xw, buf, &buf);
+	if (num < 0
+	    || num > fontMenu_lastBuiltin) {
+	    Bell(XkbBI_MinorError, 0);
+	    success = False;
+	} else {
+#if OPT_RENDERFONT
+	    if (UsingRenderFont(xw)) {
+		name = getFaceName(xw, False);
+	    } else
+#endif
+	    if ((name = screen->MenuFontName(num)) == 0) {
+		success = False;
+	    }
+	}
+
+	unparseputc1(xw, ANSI_OSC);
+	unparseputs(xw, "50");
+
+	if (success) {
+	    unparseputc(xw, ';');
+	    if (buf > base) {
+		/* if this was a relative query, pass back that info */
+		unparseputc(xw, '#');
+		while (buf > base)
+		    unparseputc(xw, *base++);
+	    }
+	    unparseputs(xw, name);
+	}
+
+	unparseputc1(xw, final);
+	unparse_end(xw);
+    }
+}
+
+static void
+ChangeFontRequest(XtermWidget xw, char *buf)
+{
+    if (AllowFontOps(xw, efSetFont)) {
+	TScreen *screen = TScreenOf(xw);
+	Bool success = True;
+	int num;
+	VTFontNames fonts;
+	char *name;
+
+	/*
+	 * If the font specification is a "#", followed by an optional sign and
+	 * optional number, lookup the corresponding menu font entry.
+	 */
+	if (*buf == '#') {
+	    num = ParseShiftedFont(xw, buf, &buf);
+
+	    if (num < 0
+		|| num > fontMenu_lastBuiltin) {
+		Bell(XkbBI_MinorError, 0);
+		success = False;
+	    } else {
+#if OPT_RENDERFONT
+		if (UsingRenderFont(xw)) {
+		    ;
+		} else
+#endif
+		if ((buf = screen->MenuFontName(num)) == 0) {
+		    success = False;
+		}
+	    }
+	} else {
+	    num = fontMenu_fontescape;
+	}
+	name = x_strtrim(buf);
+	if (success && !IsEmpty(name)) {
+#if OPT_RENDERFONT
+	    if (UsingRenderFont(xw)) {
+		setFaceName(xw, name);
+		xtermUpdateFontInfo(xw, True);
+	    } else
+#endif
+	    {
+		memset(&fonts, 0, sizeof(fonts));
+		fonts.f_n = name;
+		SetVTFont(xw, num, True, &fonts);
+	    }
+	} else {
+	    Bell(XkbBI_MinorError, 0);
+	}
+	free(name);
+    }
+}
+#endif /* OPT_SHIFT_FONTS */
 
 /***====================================================================***/
 
@@ -2619,8 +2766,9 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     /*
      * Check if we have data when we want, and not when we do not want it.
+     * Either way, that is a malformed control sequence, and will be ignored.
      */
-    if (buf == 0) {
+    if (IsEmpty(buf)) {
 	if (need_data) {
 	    TRACE(("do_osc found no data\n"));
 	    return;
@@ -2715,8 +2863,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	 * Warning, enabling this feature allows people to overwrite
 	 * arbitrary files accessible to the person running xterm.
 	 */
-	if (buf != 0
-	    && strcmp(buf, "?")
+	if (strcmp(buf, "?")
 	    && (cp = CastMallocN(char, strlen(buf)) != NULL)) {
 	    strcpy(cp, buf);
 	    if (screen->logfile)
@@ -2732,70 +2879,10 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     case 50:
 #if OPT_SHIFT_FONTS
-	if (!AllowFontOps(xw) && xw->misc.shift_fonts) {
-	    ;			/* disabled via resource or control-sequence */
-	} else if (buf != 0 && !strcmp(buf, "?")) {
-	    int num = screen->menu_font_number;
-
-	    unparseputc1(xw, ANSI_OSC);
-	    unparseputs(xw, "50");
-
-	    if ((buf = screen->MenuFontName(num)) != 0) {
-		unparseputc(xw, ';');
-		unparseputs(xw, buf);
-	    }
-	    unparseputc1(xw, final);
-	    unparse_end(xw);
-	} else if (buf != 0) {
-	    int num = screen->menu_font_number;
-	    VTFontNames fonts;
-
-	    memset(&fonts, 0, sizeof(fonts));
-
-	    /*
-	     * If the font specification is a "#", followed by an
-	     * optional sign and optional number, lookup the
-	     * corresponding menu font entry.
-	     */
-	    if (*buf == '#') {
-		int rel = 0;
-
-		if (*++buf == '+') {
-		    rel = 1;
-		    buf++;
-		} else if (*buf == '-') {
-		    rel = -1;
-		    buf++;
-		}
-
-		if (isdigit(CharOf(*buf))) {
-		    int val = atoi(buf);
-		    if (rel > 0)
-			rel = val;
-		    else if (rel < 0)
-			rel = -val;
-		    else
-			num = val;
-		} else if (rel == 0) {
-		    num = 0;
-		}
-
-		if (rel != 0) {
-		    num = lookupRelativeFontSize(xw,
-						 screen->menu_font_number, rel);
-
-		}
-		if (num < 0
-		    || num > fontMenu_lastBuiltin
-		    || (buf = screen->MenuFontName(num)) == 0) {
-		    Bell(XkbBI_MinorError, 0);
-		    break;
-		}
-	    } else {
-		num = fontMenu_fontescape;
-	    }
-	    fonts.f_n = buf;
-	    SetVTFont(xw, num, True, &fonts);
+	if (!strcmp(buf, "?")) {
+	    QueryFontRequest(xw, buf, final);
+	} else if (xw->misc.shift_fonts) {
+	    ChangeFontRequest(xw, buf);
 	}
 #endif /* OPT_SHIFT_FONTS */
 	break;
@@ -3169,7 +3256,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 #if OPT_TCAP_QUERY
     case '+':
 	cp++;
-	if ((*cp == 'q') && AllowTcapOps(xw)) {
+	if ((*cp == 'q') && AllowTcapOps(xw, etGetTcap)) {
 	    Bool fkey;
 	    unsigned state;
 	    int code;
@@ -3502,24 +3589,29 @@ AllocateTermColor(XtermWidget xw,
 		  int ndx,
 		  const char *name)
 {
-    XColor def;
-    TScreen *screen = TScreenOf(xw);
-    Colormap cmap = xw->core.colormap;
-    char *newName;
+    Bool result = False;
 
-    if (XParseColor(screen->display, cmap, name, &def)
-	&& (XAllocColor(screen->display, cmap, &def)
-	    || find_closest_color(screen->display, cmap, &def))
-	&& (newName = x_strdup(name)) != 0) {
-	if (COLOR_DEFINED(pNew, ndx))
-	    free(pNew->names[ndx]);
-	SET_COLOR_VALUE(pNew, ndx, def.pixel);
-	SET_COLOR_NAME(pNew, ndx, newName);
-	TRACE(("AllocateTermColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel));
-	return (True);
+    if (AllowColorOps(xw, ecSetColor)) {
+	XColor def;
+	TScreen *screen = TScreenOf(xw);
+	Colormap cmap = xw->core.colormap;
+	char *newName;
+
+	if (XParseColor(screen->display, cmap, name, &def)
+	    && (XAllocColor(screen->display, cmap, &def)
+		|| find_closest_color(screen->display, cmap, &def))
+	    && (newName = x_strdup(name)) != 0) {
+	    if (COLOR_DEFINED(pNew, ndx))
+		free(pNew->names[ndx]);
+	    SET_COLOR_VALUE(pNew, ndx, def.pixel);
+	    SET_COLOR_NAME(pNew, ndx, newName);
+	    TRACE(("AllocateTermColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel));
+	    result = True;
+	} else {
+	    TRACE(("AllocateTermColor #%d: %s (failed)\n", ndx, name));
+	}
     }
-    TRACE(("AllocateTermColor #%d: %s (failed)\n", ndx, name));
-    return (False);
+    return result;
 }
 /***====================================================================***/
 

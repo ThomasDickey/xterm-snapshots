@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.887 2009/12/30 13:04:40 tom Exp $
+  $XTermId: xterm.log.html,v 1.891 2009/12/31 13:49:11 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -315,6 +315,26 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve font-setting/querying control (<code>OSC&nbsp;50</code>):
+	    <ul>
+	    <li>when TrueType font is selected, the TrueType
+		<code>faceName</code> will be set, rather than the bitmap font.
+	    <li>when TrueType font is selected, querying returns the name of
+	        the TrueType font.
+	    <li>querying a font recognizes the relative-font convention that
+	        setting a font could use.
+	    </ul>
+
+	<li>add new resources for fine-tuning menu entries:
+	    <code>allowColorOps</code>,
+	    <code>disallowedColorOps</code>,
+	    <code>disallowedFontOps</code> and
+	    <code>disallowedTcapOps</code>.
+
+	<li>correct logic for disabling the "TrueType Fonts" menu item; it was
+	    not ensuring that the <code>faceName</code> resource value was
+	    non-empty.
+
 	<li>implement VT520-style controls <code>DECSMBV</code> and
 	    <code>DECSWBV</code> for setting the margin- and warning-bell
 	    volume.

@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.259 2009/12/29 23:36:41 tom Exp $ */
+/* $XTermId: menu.c,v 1.260 2009/12/30 17:31:49 tom Exp $ */
 
 /*
  *
@@ -741,11 +741,6 @@ domenu(Widget w,
 #endif
 #if OPT_RENDERFONT
 	    update_font_renderfont();
-	    if (term->misc.face_name == 0) {
-		SetItemSensitivity(
-				      fontMenuEntries[fontMenu_render_font].widget,
-				      False);
-	    }
 #endif
 #if OPT_WIDE_CHARS
 	    update_font_utf8_mode();
@@ -3230,6 +3225,8 @@ update_font_renderfont(void)
 		   fontMenuEntries,
 		   fontMenu_render_font,
 		   term->misc.render_font);
+    SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
+		       !IsEmpty(term->misc.face_name));
 }
 #endif
 
