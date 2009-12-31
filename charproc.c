@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1021 2009/12/30 00:37:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1026 2009/12/31 13:31:16 tom Exp $ */
 
 /*
 
@@ -408,6 +408,7 @@ static XtActionsRec actionsList[] = {
 static XtResource xterm_resources[] =
 {
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
+    Bres(XtNallowColorOps, XtCAllowColorOps, screen.allowColorOp0, DEF_ALLOW_COLOR),
     Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, DEF_ALLOW_FONT),
     Bres(XtNallowTcapOps, XtCAllowTcapOps, screen.allowTcapOp0, DEF_ALLOW_TCAP),
     Bres(XtNallowTitleOps, XtCAllowTitleOps, screen.allowTitleOp0, DEF_ALLOW_TITLE),
@@ -496,6 +497,12 @@ static XtResource xterm_resources[] =
     Sres(XtNcharClass, XtCCharClass, screen.charClass, NULL),
     Sres(XtNdecTerminalID, XtCDecTerminalID, screen.term_id, DFT_DECID),
     Sres(XtNdefaultString, XtCDefaultString, screen.default_string, "#"),
+    Sres(XtNdisallowedColorOps, XtCDisallowedColorOps,
+	 screen.disallowedColorOps, DEF_DISALLOWED_COLOR),
+    Sres(XtNdisallowedFontOps, XtCDisallowedFontOps,
+	 screen.disallowedFontOps, DEF_DISALLOWED_FONT),
+    Sres(XtNdisallowedTcapOps, XtCDisallowedTcapOps,
+	 screen.disallowedTcapOps, DEF_DISALLOWED_TCAP),
     Sres(XtNdisallowedWindowOps, XtCDisallowedWindowOps,
 	 screen.disallowedWinOps, DEF_DISALLOWED_WINDOW),
     Sres(XtNeightBitSelectTypes, XtCEightBitSelectTypes,
@@ -5803,7 +5810,7 @@ set_flags_from_list(char *target,
 	    char *temp;
 
 	    value = (int) strtol(next, &temp, 0);
-	    if (temp != 0 && *temp != '\0') {
+	    if (!IsEmpty(temp)) {
 		fprintf(stderr, "Expected a number: %s\n", next);
 	    } else {
 		for (n = 0; n < limit; ++n) {
@@ -5845,6 +5852,30 @@ VTInitialize(Widget wrequest,
 #define TxtBg(name) !x_strcasecmp(Kolor(Tcolors[TEXT_BG]), Kolor(name))
 #define DftFg(name) isDefaultForeground(Kolor(name))
 #define DftBg(name) isDefaultBackground(Kolor(name))
+
+#define DATA(name) { #name, ec##name }
+    static FlagList tblColorOps[] =
+    {
+	DATA(SetColor)
+	,DATA(GetColor)
+    };
+#undef DATA
+
+#define DATA(name) { #name, ef##name }
+    static FlagList tblFontOps[] =
+    {
+	DATA(SetFont)
+	,DATA(GetFont)
+    };
+#undef DATA
+
+#define DATA(name) { #name, et##name }
+    static FlagList tblTcapOps[] =
+    {
+	DATA(SetTcap)
+	,DATA(GetTcap)
+    };
+#undef DATA
 
 #define DATA(name) { #name, ew##name }
     static FlagList tblWindowOps[] =
@@ -6091,10 +6122,32 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.meta_sends_esc);
 
     init_Bres(screen.allowSendEvent0);
+    init_Bres(screen.allowColorOp0);
     init_Bres(screen.allowFontOp0);
     init_Bres(screen.allowTcapOp0);
     init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
+
+    init_Sres(screen.disallowedColorOps);
+
+    set_flags_from_list(TScreenOf(wnew)->disallow_color_ops,
+			TScreenOf(wnew)->disallowedColorOps,
+			tblColorOps,
+			ecLAST);
+
+    init_Sres(screen.disallowedFontOps);
+
+    set_flags_from_list(TScreenOf(wnew)->disallow_font_ops,
+			TScreenOf(wnew)->disallowedFontOps,
+			tblFontOps,
+			efLAST);
+
+    init_Sres(screen.disallowedTcapOps);
+
+    set_flags_from_list(TScreenOf(wnew)->disallow_tcap_ops,
+			TScreenOf(wnew)->disallowedTcapOps,
+			tblTcapOps,
+			etLAST);
 
     init_Sres(screen.disallowedWinOps);
 
@@ -6111,6 +6164,7 @@ VTInitialize(Widget wrequest,
 
     /* make a copy so that editres cannot change the resource after startup */
     TScreenOf(wnew)->allowSendEvents = TScreenOf(wnew)->allowSendEvent0;
+    TScreenOf(wnew)->allowColorOps = TScreenOf(wnew)->allowColorOp0;
     TScreenOf(wnew)->allowFontOps = TScreenOf(wnew)->allowFontOp0;
     TScreenOf(wnew)->allowTcapOps = TScreenOf(wnew)->allowTcapOp0;
     TScreenOf(wnew)->allowTitleOps = TScreenOf(wnew)->allowTitleOp0;
@@ -6360,7 +6414,7 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.render_font);
     /* minor tweak to make debug traces consistent: */
     if (wnew->misc.render_font) {
-	if (wnew->misc.face_name == 0) {
+	if (IsEmpty(wnew->misc.face_name)) {
 	    wnew->misc.render_font = False;
 	    TRACE(("reset render_font since there is no face_name\n"));
 	}
@@ -6565,19 +6619,6 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 	    free(name); \
 	    name = 0; \
 	}
-
-#ifdef NO_LEAKS
-#if OPT_RENDERFONT
-static void
-xtermCloseXft(TScreen * screen, XTermXftFonts * pub)
-{
-    if (pub->font != 0) {
-	XftFontClose(screen->display, pub->font);
-	pub->font = 0;
-    }
-}
-#endif
-#endif
 
 #if OPT_INPUT_METHOD
 static void

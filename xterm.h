@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.604 2009/12/07 01:20:20 tom Exp $ */
+/* $XTermId: xterm.h,v 1.606 2009/12/30 22:35:21 tom Exp $ */
 
 /************************************************************
 
@@ -336,6 +336,7 @@ extern char **environ;
 /***====================================================================***/
 
 #define XtNallowC1Printable	"allowC1Printable"
+#define XtNallowColorOps	"allowColorOps"
 #define XtNallowFontOps		"allowFontOps"
 #define XtNallowSendEvents	"allowSendEvents"
 #define XtNallowTcapOps		"allowTcapOps"
@@ -384,6 +385,9 @@ extern char **environ;
 #define XtNdecTerminalID	"decTerminalID"
 #define XtNdefaultString	"defaultString"
 #define XtNdeleteIsDEL		"deleteIsDEL"
+#define XtNdisallowedColorOps	"disallowedColorOps"
+#define XtNdisallowedFontOps	"disallowedFontOps"
+#define XtNdisallowedTcapOps	"disallowedTcapOps"
 #define XtNdisallowedWindowOps	"disallowedWindowOps"
 #define XtNdynamicColors	"dynamicColors"
 #define XtNeightBitControl	"eightBitControl"
@@ -504,6 +508,7 @@ extern char **environ;
 #define XtNxmcMoveSGR		"xmcMoveSGR"
 
 #define XtCAllowC1Printable	"AllowC1Printable"
+#define XtCAllowColorOps	"AllowColorOps"
 #define XtCAllowFontOps		"AllowFontOps"
 #define XtCAllowSendEvents	"AllowSendEvents"
 #define XtCAllowTcapOps		"AllowTcapOps"
@@ -547,6 +552,9 @@ extern char **environ;
 #define XtCDecTerminalID	"DecTerminalID"
 #define XtCDefaultString	"DefaultString"
 #define XtCDeleteIsDEL		"DeleteIsDEL"
+#define XtCDisallowedColorOps	"DisallowedColorOps"
+#define XtCDisallowedFontOps	"DisallowedFontOps"
+#define XtCDisallowedTcapOps	"DisallowedTcapOps"
 #define XtCDisallowedWindowOps	"DisallowedWindowOps"
 #define XtCDynamicColors	"DynamicColors"
 #define XtCEightBitControl	"EightBitControl"

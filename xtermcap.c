@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.25 2009/12/06 14:02:32 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.26 2009/12/30 21:17:03 tom Exp $ */
 
 /*
  * Copyright 2007-2008,2009 by Thomas E. Dickey
@@ -301,7 +301,7 @@ lookupTcapByName(const char *name)
     int result = -2;
     Cardinal j;
 
-    if (name != 0 && *name != '\0') {
+    if (!IsEmpty(name)) {
 	for (j = 0; j < XtNumber(table); j++) {
 	    if (!strcmp(table[j].ti, name) || !strcmp(table[j].tc, name)) {
 		result = (int) j;
@@ -350,7 +350,7 @@ xtermcapKeycode(XtermWidget xw, const char **params, unsigned *state, Bool * fke
     *state = 0;
     *fkey = False;
 
-    if ((name != 0 && *name != '\0') && (*p == 0 || *p == ';')) {
+    if (!IsEmpty(name) && (*p == 0 || *p == ';')) {
 	if ((which = lookupTcapByName(name)) >= 0) {
 	    if (keyIsDistinct(xw, which)) {
 		data = table + which;

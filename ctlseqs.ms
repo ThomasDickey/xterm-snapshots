@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.202 2009/12/30 02:05:20 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.206 2009/12/31 13:57:25 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2008,2009 by Thomas E. Dickey
@@ -1338,12 +1338,14 @@ to these codes in an \*(Os\*4 control:
   \*(Pc = 2 \(-> resource \fBcolorBL\fP (BLINK)
   \*(Pc = 3 \(-> resource \fBcolorRV\fP (REVERSE)
 .sp
-The 8 colors (below) which may be set using \*1\*0 through \*1\*7 are
+The 8 colors (below) which may be set or queried
+using \*1\*0 through \*1\*7 are
 denoted \fIdynamic colors\fR, since the corresponding control sequences
 were the first means for setting \fBxterm\fR's colors dynamically,
 i.e., after it was started.
 They are not the same as the ANSI colors.
-One or more parameters is expected for \*(Pt.
+These controls may be disabled using the \fIallowColorOps\fP resource.
+At least one parameter is expected for \*(Pt.
 Each successive parameter changes the next color in the list.
 The value of \*(Ps tells the starting point in the list.
 The colors are specified by name or RGB specification as per \fIXParseColor\fP.
@@ -1368,10 +1370,17 @@ be given in one control sequence, \fBxterm\fR can make more than one reply.
 compile-time option)
 .sp
   \*(Ps = \*5\*0 \(-> Set Font to \*(Pt
+These controls may be disabled using the \fIallowFontOps\fP resource.
 If \*(Pt begins with a "#", index in the font menu, relative (if the
 next character is a plus or minus sign) or absolute.  A number is
 expected but not required after the sign (the default is the current
 entry for relative, zero for absolute indexing).
+.br
+The same rule (plus or minus sign, optional number) is used when
+querying the font.  The remainder of \*(Pt is ignored.
+.br
+If the "TrueType Fonts" menu entry is set (the \fBrenderFont\fP resource),
+then this control sets/queries the \fBfaceName\fP resource.
 .sp
   \*(Ps = \*5\*1 (reserved for Emacs shell)
 .sp

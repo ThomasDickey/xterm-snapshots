@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.328 2009/12/12 17:17:32 Michael.Riepe Exp $ */
+/* $XTermId: fontutils.c,v 1.332 2009/12/31 13:54:02 tom Exp $ */
 
 /************************************************************
 
@@ -1725,23 +1725,56 @@ checkFontInfo(int value, const char *tag)
 }
 
 #if OPT_RENDERFONT
+void
+xtermCloseXft(TScreen * screen, XTermXftFonts * pub)
+{
+    if (pub->font != 0) {
+	XftFontClose(screen->display, pub->font);
+	pub->font = 0;
+    }
+}
+
 /*
  * Get the faceName/faceDoublesize resource setting.  Strip off "xft:", which
  * is not recognized by XftParseName().
  */
-static char *
-getFaceName(XtermWidget xw, char *wideName GCC_UNUSED)
+char *
+getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
 {
 #if OPT_RENDERWIDE
-    char *result = ((wideName != NULL)
+    char *result = (wideName
 		    ? xw->misc.face_wide_name
 		    : xw->misc.face_name);
 #else
     char *result = xw->misc.face_name;
 #endif
-    if (result && !strncmp(result, "xft:", 4))
+    if (!IsEmpty(result) && !strncmp(result, "xft:", 4))
 	result += 4;
     return x_nonempty(result);
+}
+
+/*
+ * If we change the faceName, we'll have to re-acquire all of the fonts that
+ * are derived from it.
+ */
+void
+setFaceName(XtermWidget xw, const char *value)
+{
+    TScreen *screen = TScreenOf(xw);
+    int n;
+
+    xw->misc.face_name = x_strdup(value);
+    for (n = 0; n < NMENUFONTS; ++n) {
+	xw->misc.face_size[n] = -1.0;
+	xtermCloseXft(screen, &(screen->renderFontNorm[n]));
+	xtermCloseXft(screen, &(screen->renderFontBold[n]));
+	xtermCloseXft(screen, &(screen->renderFontBold[n]));
+#if OPT_RENDERWIDE
+	xtermCloseXft(screen, &(screen->renderWideNorm[n]));
+	xtermCloseXft(screen, &(screen->renderWideBold[n]));
+	xtermCloseXft(screen, &(screen->renderWideItal[n]));
+#endif
+    }
 }
 #endif
 
@@ -1767,7 +1800,7 @@ xtermComputeFontInfo(XtermWidget xw,
      * overrides it.
      */
     if (xw->misc.render_font && !IsIconWin(screen, win)) {
-	char *face_name = getFaceName(xw, NULL);
+	char *face_name = getFaceName(xw, False);
 	int fontnum = screen->menu_font_number;
 	XftFont *norm = screen->renderFontNorm[fontnum].font;
 	XftFont *bold = screen->renderFontBold[fontnum].font;
@@ -1915,7 +1948,7 @@ xtermComputeFontInfo(XtermWidget xw,
 				 : 2.0);
 #endif
 
-		face_name = getFaceName(xw, xw->misc.face_wide_name);
+		face_name = getFaceName(xw, True);
 		TRACE(("xtermComputeFontInfo wide(face %s, char_width %d)\n",
 		       NonNull(face_name),
 		       char_width));
