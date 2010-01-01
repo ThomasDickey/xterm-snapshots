@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.469 2009/12/31 13:47:49 tom Exp $ */
+/* $XTermId: misc.c,v 1.475 2010/01/01 13:53:15 tom Exp $ */
 
 /*
  *
@@ -2555,8 +2555,6 @@ ParseShiftedFont(XtermWidget xw, char *source, char **target)
 	    rel = -val;
 	else
 	    num = val;
-    } else if (rel == 0) {
-	num = 0;
     }
 
     if (rel != 0) {
@@ -2578,6 +2576,7 @@ QueryFontRequest(XtermWidget xw, char *buf, int final)
 	int num;
 	char *base = buf + 1;
 	char *name;
+	char temp[10];
 
 	num = ParseShiftedFont(xw, buf, &buf);
 	if (num < 0
@@ -2600,11 +2599,15 @@ QueryFontRequest(XtermWidget xw, char *buf, int final)
 
 	if (success) {
 	    unparseputc(xw, ';');
-	    if (buf > base) {
-		/* if this was a relative query, pass back that info */
-		unparseputc(xw, '#');
-		while (buf > base)
-		    unparseputc(xw, *base++);
+	    if (buf >= base) {
+		/* identify the font-entry, unless it is the current one */
+		if (*buf != '\0') {
+		    unparseputc(xw, '#');
+		    sprintf(temp, "%d", num);
+		    unparseputs(xw, temp);
+		    if (*name != '\0')
+			unparseputc(xw, ' ');
+		}
 	    }
 	    unparseputs(xw, name);
 	}
@@ -2627,6 +2630,9 @@ ChangeFontRequest(XtermWidget xw, char *buf)
 	/*
 	 * If the font specification is a "#", followed by an optional sign and
 	 * optional number, lookup the corresponding menu font entry.
+	 *
+	 * Further, if the "#", etc., is followed by a font name, use that
+	 * to load the font entry.
 	 */
 	if (*buf == '#') {
 	    num = ParseShiftedFont(xw, buf, &buf);
@@ -2636,17 +2642,35 @@ ChangeFontRequest(XtermWidget xw, char *buf)
 		Bell(XkbBI_MinorError, 0);
 		success = False;
 	    } else {
+		/*
+		 * Skip past the optional number, and any whitespace to look
+		 * for a font specification within the control.
+		 */
+		while (isdigit(CharOf(*buf))) {
+		    ++buf;
+		}
+		while (isspace(CharOf(*buf))) {
+		    ++buf;
+		}
 #if OPT_RENDERFONT
 		if (UsingRenderFont(xw)) {
-		    ;
+		    ;		/* there is only one font entry to load */
 		} else
 #endif
-		if ((buf = screen->MenuFontName(num)) == 0) {
-		    success = False;
+		{
+		    /*
+		     * Normally there is no font specified in the control.
+		     * But if there is, simply overwrite the font entry.
+		     */
+		    if (*buf == '\0') {
+			if ((buf = screen->MenuFontName(num)) == 0) {
+			    success = False;
+			}
+		    }
 		}
 	    }
 	} else {
-	    num = fontMenu_fontescape;
+	    num = screen->menu_font_number;
 	}
 	name = x_strtrim(buf);
 	if (success && !IsEmpty(name)) {
@@ -2879,7 +2903,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 
     case 50:
 #if OPT_SHIFT_FONTS
-	if (!strcmp(buf, "?")) {
+	if (*buf == '?') {
 	    QueryFontRequest(xw, buf, final);
 	} else if (xw->misc.shift_fonts) {
 	    ChangeFontRequest(xw, buf);
