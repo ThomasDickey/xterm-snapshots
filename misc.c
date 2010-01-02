@@ -1,8 +1,8 @@
-/* $XTermId: misc.c,v 1.475 2010/01/01 13:53:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.478 2010/01/01 23:34:11 tom Exp $ */
 
 /*
  *
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                        All Rights Reserved
  *
@@ -1775,22 +1775,24 @@ FlushLog(TScreen * screen)
 static void
 ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
 {
-    XColor color;
-    Colormap cmap = xw->core.colormap;
-    char buffer[80];
+    if (AllowColorOps(xw, ecGetAnsiColor)) {
+	XColor color;
+	Colormap cmap = xw->core.colormap;
+	char buffer[80];
 
-    TRACE(("ReportAnsiColorRequest %d\n", colornum));
-    color.pixel = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[colornum]);
-    XQueryColor(TScreenOf(xw)->display, cmap, &color);
-    sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
-	    colornum,
-	    color.red,
-	    color.green,
-	    color.blue);
-    unparseputc1(xw, ANSI_OSC);
-    unparseputs(xw, buffer);
-    unparseputc1(xw, final);
-    unparse_end(xw);
+	TRACE(("ReportAnsiColorRequest %d\n", colornum));
+	color.pixel = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[colornum]);
+	XQueryColor(TScreenOf(xw)->display, cmap, &color);
+	sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
+		colornum,
+		color.red,
+		color.green,
+		color.blue);
+	unparseputc1(xw, ANSI_OSC);
+	unparseputs(xw, buffer);
+	unparseputc1(xw, final);
+	unparse_end(xw);
+    }
 }
 
 static unsigned
@@ -3280,6 +3282,9 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 #if OPT_TCAP_QUERY
     case '+':
 	cp++;
+	if ((*cp == 'p') && AllowTcapOps(xw, etSetTcap)) {
+	    set_termcap(xw, cp + 1);
+	}
 	if ((*cp == 'q') && AllowTcapOps(xw, etGetTcap)) {
 	    Bool fkey;
 	    unsigned state;

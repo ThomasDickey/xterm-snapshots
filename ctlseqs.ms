@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.206 2009/12/31 13:57:25 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.210 2010/01/02 01:47:46 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2008,2009 by Thomas E. Dickey
+.\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -288,7 +288,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2009)
+invisible-island.net (2006-2010)
 .AU
 .
 .am BT                  \" add page numbers after first page
@@ -586,6 +586,13 @@ or
 \*(Dc\*0\*$\*r\*(Pt\*s\*(ST
 for invalid requests.
 .
+.IP \\*(Dc\\*+\\*p\\*(Pt\\*s\\*(ST
+Set Termcap/Terminfo Data (xterm, experimental).
+The string following the "p" is a name to use for retrieving data from 
+the terminal database.  The data will be used for the "tcap" keyboard
+configuration's function- and special-keys, as well as by the
+Request Termcap/Terminfo String control.
+
 .IP \\*(Dc\\*+\\*q\\*(Pt\\*s\\*(ST
 Request Termcap/Terminfo String (xterm, experimental).
 The string following the "q" is a list of names
@@ -1378,6 +1385,9 @@ entry for relative, zero for absolute indexing).
 .br
 The same rule (plus or minus sign, optional number) is used when
 querying the font.  The remainder of \*(Pt is ignored.
+.br
+A font can be specified after a "#" index expression,
+by adding a space and then the font specifier.
 .br
 If the "TrueType Fonts" menu entry is set (the \fBrenderFont\fP resource),
 then this control sets/queries the \fBfaceName\fP resource.

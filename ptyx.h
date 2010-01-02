@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.653 2009/12/30 22:34:27 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.655 2010/01/01 19:53:42 tom Exp $ */
 
 /*
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -858,6 +858,7 @@ typedef enum {
 typedef enum {
     ecSetColor = 1
     , ecGetColor
+    , ecGetAnsiColor
     , ecLAST
 } ColorOps;
 

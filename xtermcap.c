@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.26 2009/12/30 21:17:03 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.33 2010/01/02 01:50:29 tom Exp $ */
 
 /*
- * Copyright 2007-2008,2009 by Thomas E. Dickey
+ * Copyright 2007-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -31,6 +31,7 @@
  */
 
 #include <xtermcap.h>
+#include <data.h>
 
 #include <X11/keysym.h>
 
@@ -40,18 +41,16 @@
 
 #include <xstrings.h>
 
-#ifndef HAVE_TIGETSTR
-#undef USE_TERMINFO
-#endif
-
-#ifndef USE_TERMINFO
-#define USE_TERMINFO 0
-#endif
-
 #if USE_TERMINFO && defined(NCURSES_VERSION) && defined(HAVE_USE_EXTENDED_NAMES)
 #define USE_EXTENDED_NAMES 1
 #else
 #define USE_EXTENDED_NAMES 0
+#endif
+
+#if USE_TERMINFO
+#define TcapInit(buffer, name) (setupterm(name, fileno(stdout), &ignored) == OK)
+#else
+#define TcapInit(buffer, name) (tgetent(buffer, name) == 1)
 #endif
 
 #if OPT_TCAP_QUERY || OPT_TCAP_FKEYS
@@ -89,8 +88,8 @@ static TCAPINFO table[] = {
 
 	DATA(	"#4",	"kLFT",		XK_Left,	SHIFT	),
 	DATA(	"%i",	"kRIT",		XK_Right,	SHIFT	),
-	DATA(	"%e",	"kPRV",		XK_Up,		SHIFT	),
-	DATA(	"%c",	"kNXT",		XK_Down,	SHIFT	),
+	DATA(	"kF",	"kind",		XK_Up,		SHIFT	),
+	DATA(	"kR",	"kri",		XK_Down,	SHIFT	),
 
 	DATA(	"k1",	"kf1",		XK_Fn(1),	0	),
 	DATA(	"k2",	"kf2",		XK_Fn(2),	0	),
@@ -169,8 +168,12 @@ static TCAPINFO table[] = {
 	DATA(	"kC",	"kclr",		XK_Clear,	0	),
 	DATA(	"kD",	"kdch1",	XK_Delete,	0	),
 	DATA(	"kI",	"kich1",	XK_Insert,	0	),
+
 	DATA(	"kN",	"knp",		XK_Next,	0	),
 	DATA(	"kP",	"kpp",		XK_Prior,	0	),
+	DATA(	"%c",	"kNXT",		XK_Next,	SHIFT	),
+	DATA(	"%e",	"kPRV",		XK_Prior,	SHIFT	),
+
 	DATA(	"&8",	"kund",		XK_Undo,	0	),
 	DATA(	"kb",	"kbs",		XK_BackSpace,	0	),
 # if OPT_TCAP_QUERY && OPT_ISO_COLORS
@@ -190,6 +193,11 @@ static TCAPINFO table[] = {
 	DMOD(name, 6, code), \
 	DMOD(name, 7, code), \
 	DMOD(name, 8, code)
+
+	/* the terminfo codes here are ncurses extensions */
+	/* ignore the termcap names, which are empty */
+	DATA(	"",	"kUP",		XK_Up,		SHIFT	),
+	DATA(	"",	"kDN",		XK_Up,		SHIFT	),
 
 	DGRP(DN,   XK_Down),
 	DGRP(LFT,  XK_Left),
@@ -216,13 +224,13 @@ loadTermcapStrings(TScreen * screen)
 	Cardinal have;
 	char *fkey;
 
-#if !(USE_TERMINFO && defined(HAVE_TIGETSTR))
+#ifndef HAVE_TIGETSTR
 	char *area = screen->tcap_area;
 #endif
 
 	if ((screen->tcap_fkeys = TypeCallocN(char *, want)) != 0) {
 	    for (have = 0; have < want; ++have) {
-#if USE_TERMINFO && defined(HAVE_TIGETSTR)
+#ifdef HAVE_TIGETSTR
 		fkey = tigetstr(strcpy(name, table[have].ti));
 #else
 		fkey = tgetstr(strcpy(name, table[have].tc), &area);
@@ -406,42 +414,50 @@ xtermcapKeycode(XtermWidget xw, const char **params, unsigned *state, Bool * fke
 #endif /* OPT_TCAP_QUERY */
 
 #if OPT_TCAP_FKEYS
-static TCAPINFO *
-lookupTcapByCode(int code, unsigned param)
+static int
+nextTcapByCode(int code, unsigned param, int last)
 {
-    TCAPINFO *result = 0;
-    Cardinal n;
+    int result = -1;
+    int n;
 
     TRACE(("lookupTcapByCode %#x:%#x\n", code, param));
-    for (n = 0; n < XtNumber(table); n++) {
+    for (n = last + 1; n < (int) XtNumber(table); n++) {
 	if (table[n].code == code &&
 	    table[n].param == param) {
 	    TRACE(("->lookupTcapByCode %d:%s\n", n, table[n].ti));
-	    result = table + n;
+	    result = n;
 	    break;
 	}
     }
     return result;
 }
 
+static int
+firstTcapByCode(int code, unsigned param)
+{
+    return nextTcapByCode(code, param, -1);
+}
+
 int
 xtermcapString(XtermWidget xw, int keycode, unsigned mask)
 {
     int result = 0;
-    TCAPINFO *data;
     unsigned param = xtermStateToParam(xw, mask);
+    int which;
 
-    if ((data = lookupTcapByCode(keycode, param)) != 0) {
+    if ((which = firstTcapByCode(keycode, param)) >= 0) {
 	TScreen *screen = TScreenOf(xw);
-	Cardinal which = (Cardinal) (data - table);
 	char *fkey;
 
 	loadTermcapStrings(screen);
 	if (screen->tcap_fkeys != 0) {
-	    if ((fkey = screen->tcap_fkeys[which]) != NO_STRING) {
-		StringInput(xw, (Char *) fkey, strlen(fkey));
-		result = 1;
-	    }
+	    do {
+		if ((fkey = screen->tcap_fkeys[which]) != NO_STRING) {
+		    StringInput(xw, (Char *) fkey, strlen(fkey));
+		    result = 1;
+		    break;
+		}
+	    } while ((which = nextTcapByCode(keycode, param, which)) >= 0);
 	}
     }
 
@@ -453,20 +469,26 @@ xtermcapString(XtermWidget xw, int keycode, unsigned mask)
 #endif /* OPT_TCAP_FKEYS */
 
 #endif /* OPT_TCAP_QUERY || OPT_TCAP_FKEYS */
+
 /*
  * If we're linked to terminfo, tgetent() will return an empty buffer.  We
  * cannot use that to adjust the $TERMCAP variable.
  */
 Bool
-get_termcap(char *name, char *buffer)
+get_termcap(XtermWidget xw, char *name)
 {
+#if USE_TERMINFO
+    int ignored = 0;
+#endif
+    char *buffer = get_tcap_buffer(xw);
+
     *buffer = 0;		/* initialize, in case we're using terminfo's tgetent */
 
 #if USE_EXTENDED_NAMES
     use_extended_names(TRUE);
 #endif
-    if (name != 0) {
-	if (tgetent(buffer, name) == 1) {
+    if (!IsEmpty(name)) {
+	if (TcapInit(buffer, name)) {
 	    TRACE(("get_termcap(%s) succeeded (%s)\n", name,
 		   (*buffer
 		    ? "ok:termcap, we can update $TERMCAP"
@@ -477,4 +499,91 @@ get_termcap(char *name, char *buffer)
 	}
     }
     return False;
+}
+
+/*
+ * Retrieve the termcap-buffer.
+ */
+char *
+get_tcap_buffer(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    char *buffer;
+
+#if OPT_TEK4014
+    if (TEK4014_ACTIVE(xw)) {
+	buffer = TekScreenOf(tekWidget)->tcapbuf;
+    } else
+#endif
+    {
+	buffer = screen->tcapbuf;
+    }
+    return buffer;
+}
+
+/*
+ * Retrieve the erase-key, for initialization in main program.
+ */
+char *
+get_tcap_erase(XtermWidget xw GCC_UNUSED)
+{
+#ifndef HAVE_TIGETSTR
+    char *area = TScreenOf(xw)->tcap_area;
+#endif
+    char *fkey;
+
+#ifdef HAVE_TIGETSTR
+    fkey = tigetstr("kbs");
+#else
+    fkey = tgetstr("kb", &area);
+#endif
+
+    if (fkey == NO_STRING)
+	fkey = 0;
+    if (fkey != 0)
+	fkey = x_strdup(fkey);
+    return fkey;
+}
+
+void
+set_termcap(XtermWidget xw, const char *name)
+{
+#if USE_TERMINFO
+    int ignored = 0;
+#else
+    TScreen *screen = TScreenOf(xw);
+    char buffer[sizeof(screen->tcapbuf)];
+#endif
+
+    TRACE(("set_termcap(%s)\n", NonNull(name)));
+    if (!IsEmpty(name)
+	&& TcapInit(buffer, name)) {
+#if !USE_TERMINFO
+	memcpy(screen->tcapbuf, buffer, sizeof(buffer));
+#endif
+	free_termcap(xw);
+    } else {
+	Bell(XkbBI_MinorError, 0);
+    }
+}
+
+void
+free_termcap(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->tcap_fkeys != 0) {
+	Cardinal want = XtNumber(table);
+	Cardinal have;
+	char *fkey;
+
+	for (have = 0; have < want; ++have) {
+	    fkey = screen->tcap_fkeys[have];
+	    if (fkey != 0 && fkey != NO_STRING) {
+		free(fkey);
+	    }
+	}
+	free(screen->tcap_fkeys);
+	screen->tcap_fkeys = 0;
+    }
 }
