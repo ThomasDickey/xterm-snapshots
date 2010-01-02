@@ -1,8 +1,8 @@
-/* $XTermId: xtermcap.h,v 1.8 2009/12/06 14:02:42 tom Exp $ */
+/* $XTermId: xtermcap.h,v 1.12 2010/01/01 23:35:46 tom Exp $ */
 
 /************************************************************
 
-Copyright 2007,2009 by Thomas E. Dickey
+Copyright 2007-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -42,6 +42,22 @@ authorization.
 
 #include <ptyx.h>
 
+#ifndef HAVE_TIGETSTR
+#undef USE_TERMINFO
+#endif
+
+#ifndef USE_TERMINFO
+#define USE_TERMINFO 0
+#endif
+
+#if !USE_TERMINFO
+#undef HAVE_TIGETSTR
+#endif
+
+#undef ERR			/* workaround for glibc 2.1.3 */
+
+#include <curses.h>
+
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
 #if defined(NCURSES_VERSION)
@@ -50,17 +66,21 @@ authorization.
 	 * Instead, just use terminfo.
 	 */
 #undef USE_TERMCAP
-#include <curses.h>
 #endif
-#else
-#undef ERR			/* workaround for glibc 2.1.3 */
-#include <curses.h>
+#endif
+
+#ifndef USE_TERMCAP
 #ifdef HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #elif defined(HAVE_TERM_H)
 #include <term.h>		/* tgetent() */
-#endif /*CYGWIN */
-#endif /* HAVE_TERMCAP_H  */
+#endif
+#endif /* USE_TERMCAP */
+
+/*
+ * Get rid of conflicting symbols from term.h
+ */
+#undef bell
 
 /***====================================================================***/
 
@@ -78,7 +98,12 @@ extern "C" {
 	(((parm > MOD_NONE) && ((parm - MOD_NONE) & name)) ? " "#name : "")
 
 /* xtermcap.c */
-extern Bool get_termcap(char * /* name */, char * /* buffer */);
+extern Bool get_termcap(XtermWidget /* xw */, char * /* name */);
+extern void set_termcap(XtermWidget /* xw */, const char * /* name */);
+extern void free_termcap(XtermWidget /* xw */);
+
+extern char *get_tcap_buffer(XtermWidget /* xw */);
+extern char *get_tcap_erase(XtermWidget /* xw */);
 
 #if OPT_TCAP_FKEYS
 extern int xtermcapString(XtermWidget /* xw */, int /* keycode */, unsigned /* mask */);

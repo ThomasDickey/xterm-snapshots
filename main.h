@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.49 2009/12/30 22:33:44 tom Exp $ */
+/* $XTermId: main.h,v 1.51 2010/01/01 19:53:42 tom Exp $ */
 
 /*
- * Copyright 2000-2008,2009 by Thomas E. Dickey
+ * Copyright 2000-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -112,7 +112,7 @@
 #endif
 
 #ifndef DEF_DISALLOWED_COLOR
-#define DEF_DISALLOWED_COLOR	"SetColor,GetColor"
+#define DEF_DISALLOWED_COLOR	"SetColor,GetColor,GetAnsiColor"
 #endif
 
 #ifndef DEF_DISALLOWED_FONT

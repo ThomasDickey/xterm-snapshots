@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.262 2009/12/06 16:07:57 tom Exp $ */
+/* $XTermId: os2main.c,v 1.263 2010/01/01 22:26:10 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -125,7 +125,7 @@ ttyname(int fd)
 
 static SIGNAL_T reapchild(int n);
 static int spawnXTerm(XtermWidget /* xw */ );
-static void resize_termcap(XtermWidget xw, char *newtc);
+static void resize_termcap(XtermWidget xw);
 static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
 static Bool added_utmp_entry = False;
@@ -1575,7 +1575,6 @@ spawnXTerm(XtermWidget xw)
     TERMIO_STRUCT tio;
     int status;
     Bool ok_termcap;
-    char *newtc;
 
     char *TermName = NULL;
     char *ptr, *shname, buf[64];
@@ -1676,12 +1675,10 @@ spawnXTerm(XtermWidget xw)
 #if OPT_TEK4014
     if (TEK4014_ACTIVE(xw)) {
 	envnew = tekterm;
-	newtc = TekScreenOf(tekWidget)->tcapbuf;
     } else
 #endif
     {
 	envnew = vtterm;
-	newtc = screen->tcapbuf;
     }
 
     /*
@@ -1691,13 +1688,13 @@ spawnXTerm(XtermWidget xw)
      * entry is not found.
      */
     ok_termcap = True;
-    if (!get_termcap(TermName = resource.term_name, newtc)) {
+    if (!get_termcap(TermName = resource.term_name)) {
 	char *last = NULL;
 	TermName = *envnew;
 	ok_termcap = False;
 	while (*envnew != NULL) {
 	    if ((last == NULL || strcmp(last, *envnew))
-		&& get_termcap(*envnew, newtc)) {
+		&& get_termcap(*envnew)) {
 		TermName = *envnew;
 		ok_termcap = True;
 		break;
@@ -1707,7 +1704,7 @@ spawnXTerm(XtermWidget xw)
 	}
     }
     if (ok_termcap) {
-	resize_termcap(xw, newtc);
+	resize_termcap(xw);
     }
 
     /* tell tty how big window is */
@@ -1820,7 +1817,7 @@ spawnXTerm(XtermWidget xw)
 
 	    xtermSetenv("TERM", TermName);
 	    if (!TermName)
-		*newtc = 0;
+		*get_tcap_buffer(xw) = 0;
 
 	    sprintf(buf, "%lu",
 		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU()))));
@@ -2035,7 +2032,7 @@ Exit(int n)
 
 /* ARGSUSED */
 static void
-resize_termcap(XtermWidget xw, char *newtc)
+resize_termcap(XtermWidget xw)
 {
 }
 

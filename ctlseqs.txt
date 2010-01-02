@@ -20,7 +20,7 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2009)
+                    invisible-island.net (2006-2010)
 
 
 
@@ -193,6 +193,13 @@ DCS $ q Pt ST
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
           r Pt ST for invalid requests.
+DCS + p Pt ST
+          Set Termcap/Terminfo Data (xterm, experimental).  The string
+          following the "p" is a name to use for retrieving data from
+          the terminal database.  The data will be used for the "tcap"
+          keyboard configuration's function- and special-keys, as well
+          as by the Request Termcap/Terminfo String control.
+
 DCS + q Pt ST
           Request Termcap/Terminfo String (xterm, experimental).  The
           string following the "q" is a list of names encoded in hexa-
@@ -863,6 +870,8 @@ OSC Ps ; Pt BEL
           relative, zero for absolute indexing).
           The same rule (plus or minus sign, optional number) is used
           when querying the font.  The remainder of Pt is ignored.
+          A font can be specified after a "#" index expression, by
+          adding a space and then the font specifier.
           If the "TrueType Fonts" menu entry is set (the renderFont
           resource), then this control sets/queries the faceName
           resource.

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.599 2009/12/06 15:23:05 tom Exp $ */
+/* $XTermId: main.c,v 1.601 2010/01/01 22:52:24 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -15,7 +15,7 @@
 
 /***********************************************************
 
-Copyright 2002-2008,2009 by Thomas E. Dickey
+Copyright 2002-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -457,7 +457,7 @@ static int pty_search(int * /* pty */ );
 #endif /* ! VMS */
 
 static int get_pty(int *pty, char *from);
-static void resize_termcap(XtermWidget xw, char *newtc);
+static void resize_termcap(XtermWidget xw);
 static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
 
 static Bool added_utmp_entry = False;
@@ -1280,7 +1280,7 @@ decode_keyvalue(char **ptr, int termcap)
     char *string = *ptr;
     int value = -1;
 
-    TRACE(("...decode '%s'\n", string));
+    TRACE(("decode_keyvalue '%s'\n", string));
     if (*string == '^') {
 	switch (*++string) {
 	case '?':
@@ -1325,6 +1325,7 @@ decode_keyvalue(char **ptr, int termcap)
 	++string;
     }
     *ptr = string;
+    TRACE(("...decode_keyvalue %#x\n", value));
     return value;
 }
 
@@ -3263,12 +3264,10 @@ spawnXTerm(XtermWidget xw)
 #if OPT_TEK4014
     if (TEK4014_ACTIVE(xw)) {
 	envnew = tekterm;
-	newtc = TekScreenOf(tekWidget)->tcapbuf;
     } else
 #endif
     {
 	envnew = vtterm;
-	newtc = screen->tcapbuf;
     }
 
     /*
@@ -3278,7 +3277,7 @@ spawnXTerm(XtermWidget xw)
      * entry is not found.
      */
     ok_termcap = True;
-    if (!get_termcap(TermName = resource.term_name, newtc)) {
+    if (!get_termcap(xw, TermName = resource.term_name)) {
 	const char *last = NULL;
 	char *next;
 
@@ -3287,7 +3286,7 @@ spawnXTerm(XtermWidget xw)
 	while (*envnew != NULL) {
 	    if (last == NULL || strcmp(last, *envnew)) {
 		next = x_strdup(*envnew);
-		if (get_termcap(next, newtc)) {
+		if (get_termcap(xw, next)) {
 		    free(TermName);
 		    TermName = next;
 		    ok_termcap = True;
@@ -3301,7 +3300,7 @@ spawnXTerm(XtermWidget xw)
 	}
     }
     if (ok_termcap) {
-	resize_termcap(xw, newtc);
+	resize_termcap(xw);
     }
 
     /*
@@ -3318,13 +3317,13 @@ spawnXTerm(XtermWidget xw)
     } else if (resource.ptyInitialErase) {
 	;
     } else if (ok_termcap) {
-	static char name[] = TERMCAP_ERASE;
-	char temp[1024], *p = temp;
-	char *s = tgetstr(name, &p);
+	char *s = get_tcap_erase(xw);
 	TRACE(("...extracting initial_erase value from termcap\n"));
 	if (s != 0) {
+	    char *save = s;
 	    initial_erase = decode_keyvalue(&s, True);
 	    setInitialErase = True;
+	    free(save);
 	}
     }
     TRACE(("...initial_erase:%d\n", initial_erase));
@@ -3888,7 +3887,7 @@ spawnXTerm(XtermWidget xw)
 
 	    xtermSetenv("TERM", TermName);
 	    if (!TermName)
-		*newtc = 0;
+		*get_tcap_buffer(xw) = 0;
 
 	    sprintf(buf, "%lu",
 		    ((unsigned long) XtWindow(SHELL_OF(CURRENT_EMU()))));
@@ -4282,34 +4281,36 @@ spawnXTerm(XtermWidget xw)
 	    xtermSetenv("TERMINFO", OWN_TERMINFO_DIR);
 #endif
 #else /* USE_SYSV_ENVVARS */
-	    resize_termcap(xw, newtc);
-	    if (xw->misc.titeInhibit && !xw->misc.tiXtraScroll) {
-		remove_termcap_entry(newtc, "ti=");
-		remove_termcap_entry(newtc, "te=");
-	    }
-	    /*
-	     * work around broken termcap entries */
-	    if (resource.useInsertMode) {
-		remove_termcap_entry(newtc, "ic=");
-		/* don't get duplicates */
-		remove_termcap_entry(newtc, "im=");
-		remove_termcap_entry(newtc, "ei=");
-		remove_termcap_entry(newtc, "mi");
-		if (*newtc)
-		    strcat(newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
-	    }
-	    if (*newtc) {
+	    if (*(newtc = get_tcap_buffer(xw)) != '\0') {
+		resize_termcap(xw);
+		if (xw->misc.titeInhibit && !xw->misc.tiXtraScroll) {
+		    remove_termcap_entry(newtc, "ti=");
+		    remove_termcap_entry(newtc, "te=");
+		}
+		/*
+		 * work around broken termcap entries */
+		if (resource.useInsertMode) {
+		    remove_termcap_entry(newtc, "ic=");
+		    /* don't get duplicates */
+		    remove_termcap_entry(newtc, "im=");
+		    remove_termcap_entry(newtc, "ei=");
+		    remove_termcap_entry(newtc, "mi");
+		    if (*newtc)
+			strcat(newtc, ":im=\\E[4h:ei=\\E[4l:mi:");
+		}
+		if (*newtc) {
 #if OPT_INITIAL_ERASE
-		unsigned len;
-		remove_termcap_entry(newtc, TERMCAP_ERASE "=");
-		len = strlen(newtc);
-		if (len != 0 && newtc[len - 1] == ':')
-		    len--;
-		sprintf(newtc + len, ":%s=\\%03o:",
-			TERMCAP_ERASE,
-			CharOf(initial_erase));
+		    unsigned len;
+		    remove_termcap_entry(newtc, TERMCAP_ERASE "=");
+		    len = strlen(newtc);
+		    if (len != 0 && newtc[len - 1] == ':')
+			len--;
+		    sprintf(newtc + len, ":%s=\\%03o:",
+			    TERMCAP_ERASE,
+			    CharOf(initial_erase));
 #endif
-		xtermSetenv("TERMCAP", newtc);
+		    xtermSetenv("TERMCAP", newtc);
+		}
 	    }
 #endif /* USE_SYSV_ENVVARS */
 
@@ -4741,8 +4742,10 @@ Exit(int n)
 
 /* ARGSUSED */
 static void
-resize_termcap(XtermWidget xw, char *newtc)
+resize_termcap(XtermWidget xw)
 {
+    char *newtc = get_tcap_buffer(xw);
+
 #ifndef USE_SYSV_ENVVARS
     if (!TEK4014_ACTIVE(xw) && *newtc) {
 	TScreen *screen = TScreenOf(xw);
