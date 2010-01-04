@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.210 2010/01/02 01:47:46 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.211 2010/01/04 09:12:55 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
@@ -599,6 +599,11 @@ The string following the "q" is a list of names
 encoded in hexadecimal (2 digits per character)
 separated by \*;
 which correspond to termcap or terminfo key names.
+.br
+Two special features are also recognized, which are not key names:
+\fICo\fP for termcap colors (or \fIcolors\fP for terminfo colors),
+and
+\fITN\fP for termcap name (or \fIname\fP for terminfo name).
 .br
 \fIxterm\fP responds with
 \*(Dc\*1\*+\*r\*(Pt\*s\*(ST

@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $XTermId: tcapquery.pl,v 1.16 2010/01/02 18:55:46 tom Exp $
+# $XTermId: tcapquery.pl,v 1.18 2010/01/04 09:43:46 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -38,8 +38,8 @@ use strict;
 use Getopt::Std;
 use IO::Handle;
 
-our ($opt_a, $opt_b, $opt_c, $opt_e, $opt_f, $opt_i, $opt_k, $opt_m, $opt_t, $opt_x);
-&getopts('abcefikmt:x:') || die("Usage: $0 [options]\n
+our ($opt_a, $opt_b, $opt_c, $opt_e, $opt_f, $opt_i, $opt_k, $opt_m, $opt_t, $opt_x, $opt_X);
+&getopts('abcefikmt:x:X') || die("Usage: $0 [options]\n
 Options:\n
   -a      (same as -c -e -f -k -m)
   -b      use both terminfo and termcap (default is termcap)
@@ -51,6 +51,7 @@ Options:\n
   -m      miscellaneous (none of -c, -e, -f, -k)
   -t NAME use given NAME for \$TERM, set that in xterm's tcap keyboard
   -x KEY  extended cursor/editing key (terminfo only)
+  -X      test all extended cursor- and/or editing-keys (terminfo)
 ");
 
 if ( not ( defined($opt_c)
@@ -60,6 +61,17 @@ if ( not ( defined($opt_c)
 	or defined($opt_m)
 	or defined($opt_x) ) ) {
 	$opt_a=1;
+}
+
+sub no_reply($) {
+	open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
+	autoflush TTY 1;
+	my $old=`stty -g`;
+	system "stty raw -echo min 0 time 5";
+
+	print TTY @_;
+	close TTY;
+	system "stty $old";
 }
 
 sub get_reply($) {
@@ -87,6 +99,12 @@ sub hexified($) {
 		$result .= sprintf("%02X", ord substr($value,$n,1));
 	}
 	return $result;
+}
+
+sub modify_tcap($) {
+	my $name = $_[0];
+	my $param = hexified($name);
+	no_reply("\x1bP+p" . $param . "\x1b\\");
 }
 
 sub query_tcap($$) {
@@ -144,6 +162,7 @@ sub query_tcap($$) {
 	}
 }
 
+# extended-keys are a feature of ncurses 5.0 and later
 sub query_extended($) {
 	my $name = $_[0];
 	my $n;
@@ -157,8 +176,10 @@ sub query_extended($) {
 	}
 }
 
+query_tcap(	"TN",	"name");
 if ( defined($opt_t) ) {
 	printf "Setting TERM=%s\n", $opt_t;
+	modify_tcap($opt_t);
 }
 
 # See xtermcapKeycode()
@@ -283,4 +304,21 @@ query_tcap(	"Co",	"colors");
 
 if ( defined ($opt_x) ) {
 	query_extended($opt_x);
+}
+
+if ( defined ($opt_X) ) {
+	if ( defined($opt_c) ) {
+		query_extended("DN");
+		query_extended("UP");
+		query_extended("LFT");
+		query_extended("RIT");
+	}
+	if ( defined($opt_e) ) {
+		query_extended("DC");
+		query_extended("END");
+		query_extended("HOM");
+		query_extended("IC");
+		query_extended("NXT");
+		query_extended("PRV");
+	}
 }
