@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.33 2010/01/02 01:50:29 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.35 2010/01/03 23:57:43 tom Exp $ */
 
 /*
  * Copyright 2007-2009,2010 by Thomas E. Dickey
@@ -34,6 +34,7 @@
 #include <data.h>
 
 #include <X11/keysym.h>
+#include <ctype.h>
 
 #ifdef VMS
 #include <X11/keysymdef.h>
@@ -545,9 +546,38 @@ get_tcap_erase(XtermWidget xw GCC_UNUSED)
     return fkey;
 }
 
+/*
+ * A legal termcap (or terminfo) name consists solely of graphic characters,
+ * excluding the punctuation used to delimit fields of the source description.
+ */
+static Bool
+isLegalTcapName(const char *name)
+{
+    Bool result = False;
+
+    if (*name != '\0') {
+	result = True;
+	while (*name != '\0') {
+	    if (isgraph(CharOf(*name))) {
+		if (strchr("\\|,:'\"", *name) != 0) {
+		    result = False;
+		    break;
+		}
+	    } else {
+		result = False;
+		break;
+	    }
+	}
+	++name;
+    }
+
+    return result;
+}
+
 void
 set_termcap(XtermWidget xw, const char *name)
 {
+    Boolean success = False;
 #if USE_TERMINFO
     int ignored = 0;
 #else
@@ -556,15 +586,27 @@ set_termcap(XtermWidget xw, const char *name)
 #endif
 
     TRACE(("set_termcap(%s)\n", NonNull(name)));
-    if (!IsEmpty(name)
-	&& TcapInit(buffer, name)) {
-#if !USE_TERMINFO
-	memcpy(screen->tcapbuf, buffer, sizeof(buffer));
-#endif
-	free_termcap(xw);
-    } else {
+    if (IsEmpty(name)) {
 	Bell(XkbBI_MinorError, 0);
+    } else {
+	const char *temp;
+	char *value;
+
+	if ((value = x_decode_hex(name, &temp)) != 0) {
+	    if (*temp == '\0' && isLegalTcapName(value)) {
+		if (TcapInit(buffer, name)) {
+#if !USE_TERMINFO
+		    memcpy(screen->tcapbuf, buffer, sizeof(buffer));
+#endif
+		    free_termcap(xw);
+		    success = True;
+		}
+	    }
+	    free(value);
+	}
     }
+    if (!success)
+	Bell(XkbBI_MinorError, 0);
 }
 
 void

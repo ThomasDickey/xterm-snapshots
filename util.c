@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.521 2009/12/29 20:51:40 tom Exp $ */
+/* $XTermId: util.c,v 1.523 2010/01/03 23:56:24 tom Exp $ */
 
 /*
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -712,7 +712,11 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 	       screen->cur_row));
 
 	test = flags;
-	fg = MapToColorMode(xw->cur_foreground, screen, flags);
+	if (screen->colorAttrMode) {
+	    fg = MapToColorMode(xw->cur_foreground, screen, flags);
+	} else {
+	    fg = xw->cur_foreground;
+	}
 	checkVeryBoldColors(test, fg);
 
 	/* make sure that the correct GC is current */
