@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
-# $XTermId: tcapquery.pl,v 1.14 2008/10/05 16:20:14 tom Exp $
+# $XTermId: tcapquery.pl,v 1.16 2010/01/02 18:55:46 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2004-2007,2008 by Thomas E. Dickey
+# Copyright 2004-2008,2010 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -38,18 +38,19 @@ use strict;
 use Getopt::Std;
 use IO::Handle;
 
-our ($opt_a, $opt_b, $opt_c, $opt_e, $opt_f, $opt_i, $opt_k, $opt_m, $opt_x);
-&getopts('abcefikmx:') || die("Usage: $0 [options]\n
+our ($opt_a, $opt_b, $opt_c, $opt_e, $opt_f, $opt_i, $opt_k, $opt_m, $opt_t, $opt_x);
+&getopts('abcefikmt:x:') || die("Usage: $0 [options]\n
 Options:\n
-  -a     (same as -c -e -f -k -m)
-  -b     use both terminfo and termcap (default is termcap)
-  -c     cursor-keys
-  -e     editing keypad-keys
-  -f     function-keys
-  -i     use terminfo rather than termcap names
-  -k     numeric keypad-keys
-  -m     miscellaneous (none of -c, -e, -f, -k)
-  -x KEY extended cursor/editing key (terminfo only)
+  -a      (same as -c -e -f -k -m)
+  -b      use both terminfo and termcap (default is termcap)
+  -c      cursor-keys
+  -e      editing keypad-keys
+  -f      function-keys
+  -i      use terminfo rather than termcap names
+  -k      numeric keypad-keys
+  -m      miscellaneous (none of -c, -e, -f, -k)
+  -t NAME use given NAME for \$TERM, set that in xterm's tcap keyboard
+  -x KEY  extended cursor/editing key (terminfo only)
 ");
 
 if ( not ( defined($opt_c)
@@ -156,18 +157,21 @@ sub query_extended($) {
 	}
 }
 
+if ( defined($opt_t) ) {
+	printf "Setting TERM=%s\n", $opt_t;
+}
+
 # See xtermcapKeycode()
 if ( defined($opt_a) || defined($opt_c) ) {
-query_tcap(	"kl",	"kcub1");
-query_tcap(	"kd",	"kcud1");
 query_tcap(	"ku",	"kcuu1");
+query_tcap(	"kd",	"kcud1");
 query_tcap(	"kr",	"kcuf1");
+query_tcap(	"kl",	"kcub1");
 
-query_tcap(	"#4",	"kLFT");
-query_tcap(	"%c",	"kNXT");
-query_tcap(	"%e",	"kPRV");
+query_tcap(	"kF",	"kind");
+query_tcap(	"kR",	"kri");
 query_tcap(	"%i",	"kRIT");
-
+query_tcap(	"#4",	"kLFT");
 }
 
 if ( defined($opt_a) || defined($opt_e) ) {
@@ -186,6 +190,9 @@ query_tcap(	"*0",	"kFND");
 
 query_tcap(	"kN",	"knp");
 query_tcap(	"kP",	"kpp");
+
+query_tcap(	"%c",	"kNXT");
+query_tcap(	"%e",	"kPRV");
 }
 
 if ( defined($opt_a) || defined($opt_f) ) {

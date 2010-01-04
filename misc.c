@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.478 2010/01/01 23:34:11 tom Exp $ */
+/* $XTermId: misc.c,v 1.479 2010/01/02 17:22:22 tom Exp $ */
 
 /*
  *
@@ -3282,61 +3282,67 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 #if OPT_TCAP_QUERY
     case '+':
 	cp++;
-	if ((*cp == 'p') && AllowTcapOps(xw, etSetTcap)) {
-	    set_termcap(xw, cp + 1);
-	}
-	if ((*cp == 'q') && AllowTcapOps(xw, etGetTcap)) {
-	    Bool fkey;
-	    unsigned state;
-	    int code;
-	    const char *tmp;
-	    const char *parsed = ++cp;
-
-	    code = xtermcapKeycode(xw, &parsed, &state, &fkey);
-
-	    unparseputc1(xw, ANSI_DCS);
-
-	    unparseputc(xw, code >= 0 ? '1' : '0');
-
-	    unparseputc(xw, '+');
-	    unparseputc(xw, 'r');
-
-	    while (*cp != 0 && (code >= -1)) {
-		if (cp == parsed)
-		    break;	/* no data found, error */
-
-		for (tmp = cp; tmp != parsed; ++tmp)
-		    unparseputc(xw, *tmp);
-
-		if (code >= 0) {
-		    unparseputc(xw, '=');
-		    screen->tc_query_code = code;
-		    screen->tc_query_fkey = fkey;
-#if OPT_ISO_COLORS
-		    /* XK_COLORS is a fake code for the "Co" entry (maximum
-		     * number of colors) */
-		    if (code == XK_COLORS) {
-			unparseputn(xw, NUM_ANSI_COLORS);
-		    } else
-#endif
-		    {
-			XKeyEvent event;
-			event.state = state;
-			Input(xw, &event, False);
-		    }
-		    screen->tc_query_code = -1;
-		} else {
-		    break;	/* no match found, error */
-		}
-
-		cp = parsed;
-		if (*parsed == ';') {
-		    unparseputc(xw, *parsed++);
-		    cp = parsed;
-		    code = xtermcapKeycode(xw, &parsed, &state, &fkey);
-		}
+	switch (*cp) {
+	case 'p':
+	    if (AllowTcapOps(xw, etSetTcap)) {
+		set_termcap(xw, cp + 1);
 	    }
-	    unparseputc1(xw, ANSI_ST);
+	    break;
+	case 'q':
+	    if (AllowTcapOps(xw, etGetTcap)) {
+		Bool fkey;
+		unsigned state;
+		int code;
+		const char *tmp;
+		const char *parsed = ++cp;
+
+		code = xtermcapKeycode(xw, &parsed, &state, &fkey);
+
+		unparseputc1(xw, ANSI_DCS);
+
+		unparseputc(xw, code >= 0 ? '1' : '0');
+
+		unparseputc(xw, '+');
+		unparseputc(xw, 'r');
+
+		while (*cp != 0 && (code >= -1)) {
+		    if (cp == parsed)
+			break;	/* no data found, error */
+
+		    for (tmp = cp; tmp != parsed; ++tmp)
+			unparseputc(xw, *tmp);
+
+		    if (code >= 0) {
+			unparseputc(xw, '=');
+			screen->tc_query_code = code;
+			screen->tc_query_fkey = fkey;
+#if OPT_ISO_COLORS
+			/* XK_COLORS is a fake code for the "Co" entry (maximum
+			 * number of colors) */
+			if (code == XK_COLORS) {
+			    unparseputn(xw, NUM_ANSI_COLORS);
+			} else
+#endif
+			{
+			    XKeyEvent event;
+			    event.state = state;
+			    Input(xw, &event, False);
+			}
+			screen->tc_query_code = -1;
+		    } else {
+			break;	/* no match found, error */
+		    }
+
+		    cp = parsed;
+		    if (*parsed == ';') {
+			unparseputc(xw, *parsed++);
+			cp = parsed;
+			code = xtermcapKeycode(xw, &parsed, &state, &fkey);
+		    }
+		}
+		unparseputc1(xw, ANSI_ST);
+	    }
+	    break;
 	}
 	break;
 #endif

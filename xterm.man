@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.447 2010/01/01 19:53:42 tom Exp $
+.\" $XTermId: xterm.man,v 1.448 2010/01/02 15:49:50 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -3098,6 +3098,30 @@ sequences (also known as private modes) 1047, 1048 and 1049 which have the same
 effect as the original 47 control sequence.
 The default for this resource is \*(``false.\*(''
 .TP 8
+.B "titleModes (\fPclass\fB TitleModes)"
+Tells \fIxterm\fP whether to accept or return
+window- and icon-labels in ISO-8859-1
+(the default) or UTF-8.
+Either can be encoded in hexadecimal.
+The default for this resource is \*(``0.\*(''
+.IP
+Each bit (bit "0" is 1, bit "1" is 2, etc) corresponds to one of the
+parameters set by the title modes control sequence:
+.RS
+.TP 5
+0
+Set window/icon labels using hexadecimal
+.TP 5
+1
+Query window/icon labels using hexadecimal
+.TP 5
+2
+Set window/icon labels using UTF-8 (overrides \fButf8Titles\fP resource).
+.TP 5
+3
+Query window/icon labels using UTF-8
+.RE
+.TP 8
 .B "translations (\fPclass\fB Translations)"
 Specifies the key and button bindings for menus, selections, \*(``programmed
 strings,\*('' etc.
@@ -3197,6 +3221,8 @@ This feature is available as a menu entry, since it is related to
 the particular applications you are running within \fIxterm\fP.
 You can also use a control sequence (see the discussion of "Title Modes"
 in the control sequences document), to set an equivalent flag.
+The \fBtitleModes\fP resource sets the same value,
+which overrides this resource.
 .IP
 The default is \*(``false.\*(''
 .TP 8
