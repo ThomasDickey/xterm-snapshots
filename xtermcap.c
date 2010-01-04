@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.35 2010/01/03 23:57:43 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.39 2010/01/04 10:19:02 tom Exp $ */
 
 /*
  * Copyright 2007-2009,2010 by Thomas E. Dickey
@@ -181,6 +181,7 @@ static TCAPINFO table[] = {
 	/* XK_COLORS is a fake code. */
 	DATA(	"Co",	"colors",	XK_COLORS,	0	),
 # endif
+	DATA(	"TN",	"name",		XK_TCAPNAME,	0	),
 #if USE_EXTENDED_NAMES
 #define DEXT(name, parm, code) DATA("", name, code, parm)
 #define D1ST(name, parm, code) DEXT("k" #name, parm, code)
@@ -225,6 +226,7 @@ loadTermcapStrings(TScreen * screen)
 	Cardinal have;
 	char *fkey;
 
+	TRACE(("loadTermcapStrings\n"));
 #ifndef HAVE_TIGETSTR
 	char *area = screen->tcap_area;
 #endif
@@ -567,8 +569,8 @@ isLegalTcapName(const char *name)
 		result = False;
 		break;
 	    }
+	    ++name;
 	}
-	++name;
     }
 
     return result;
@@ -594,7 +596,7 @@ set_termcap(XtermWidget xw, const char *name)
 
 	if ((value = x_decode_hex(name, &temp)) != 0) {
 	    if (*temp == '\0' && isLegalTcapName(value)) {
-		if (TcapInit(buffer, name)) {
+		if (TcapInit(buffer, value)) {
 #if !USE_TERMINFO
 		    memcpy(screen->tcapbuf, buffer, sizeof(buffer));
 #endif

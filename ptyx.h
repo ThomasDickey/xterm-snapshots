@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.655 2010/01/01 19:53:42 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.656 2010/01/04 09:09:29 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -972,6 +972,8 @@ typedef enum {
 #if OPT_TCAP_QUERY && OPT_ISO_COLORS
 # define XK_COLORS 0x0003
 #endif
+
+# define XK_TCAPNAME 0x0004
 
 #else	/* !OPT_ISO_COLORS */
 

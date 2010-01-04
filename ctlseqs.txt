@@ -205,6 +205,9 @@ DCS + q Pt ST
           string following the "q" is a list of names encoded in hexa-
           decimal (2 digits per character) separated by ; which corre-
           spond to termcap or terminfo key names.
+          Two special features are also recognized, which are not key
+          names: Co for termcap colors (or colors for terminfo colors),
+          and TN for termcap name (or name for terminfo name).
           xterm responds with DCS 1 + r Pt ST for valid requests, adding
           to Pt an = , and the value of the corresponding string that
           xterm would send, or DCS 0 + r Pt ST for invalid requests.

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.479 2010/01/02 17:22:22 tom Exp $ */
+/* $XTermId: misc.c,v 1.481 2010/01/04 11:50:35 tom Exp $ */
 
 /*
  *
@@ -2577,7 +2577,7 @@ QueryFontRequest(XtermWidget xw, char *buf, int final)
 	Bool success = True;
 	int num;
 	char *base = buf + 1;
-	char *name;
+	char *name = 0;
 	char temp[10];
 
 	num = ParseShiftedFont(xw, buf, &buf);
@@ -3323,7 +3323,9 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 			    unparseputn(xw, NUM_ANSI_COLORS);
 			} else
 #endif
-			{
+			if (code == XK_TCAPNAME) {
+			    unparseputs(xw, xterm_name);
+			} else {
 			    XKeyEvent event;
 			    event.state = state;
 			    Input(xw, &event, False);
