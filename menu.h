@@ -1,8 +1,8 @@
-/* $XTermId: menu.h,v 1.118 2009/10/11 22:45:22 tom Exp $ */
+/* $XTermId: menu.h,v 1.119 2010/01/04 22:16:06 tom Exp $ */
 
 /*
  *
- * Copyright 1999-2007,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -75,6 +75,7 @@ extern MenuEntry tekMenuEntries[];
 
 extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
+extern void HandleAllowColorOps    PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowFontOps     PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowTcapOps     PROTO_XT_ACTIONS_ARGS;
@@ -286,8 +287,9 @@ typedef enum {
 #endif
 #if OPT_ALLOW_XXX_OPS
     fontMenu_line3,
-    fontMenu_allowTcapOps,
+    fontMenu_allowColorOps,
     fontMenu_allowFontOps,
+    fontMenu_allowTcapOps,
     fontMenu_allowTitleOps,
     fontMenu_allowWindowOps,
 #endif
@@ -408,8 +410,9 @@ extern void update_poponbell(void);
 #define update_marginbell() /* nothing */
 
 #if OPT_ALLOW_XXX_OPS
-extern void update_menu_allowTcapOps(void);
+extern void update_menu_allowColorOps(void);
 extern void update_menu_allowFontOps(void);
+extern void update_menu_allowTcapOps(void);
 extern void update_menu_allowTitleOps(void);
 extern void update_menu_allowWindowOps(void);
 #endif

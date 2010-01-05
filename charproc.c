@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1029 2010/01/01 19:53:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1031 2010/01/04 23:12:06 tom Exp $ */
 
 /*
 
@@ -330,6 +330,7 @@ static XtActionsRec actionsList[] = {
     { "set-logging",		HandleLogging },
 #endif
 #if OPT_ALLOW_XXX_OPS
+    { "allow-color-ops",	HandleAllowColorOps },
     { "allow-font-ops",		HandleAllowFontOps },
     { "allow-tcap-ops",		HandleAllowTcapOps },
     { "allow-title-ops",	HandleAllowTitleOps },
@@ -6534,10 +6535,11 @@ VTInitialize(Widget wrequest,
     if (!GravityIsNorthWest(wnew) &&
 	!GravityIsSouthWest(wnew)) {
 	char value[80];
-	char *temp[2];
+	String temp[2];
 	Cardinal nparams = 1;
 
-	sprintf(temp[0] = value, "%d", wnew->misc.resizeGravity);
+	sprintf(value, "%d", wnew->misc.resizeGravity);
+	temp[0] = value;
 	temp[1] = 0;
 	XtAppWarningMsg(app_con, "rangeError", "resizeGravity", "XTermError",
 			"unsupported resizeGravity resource value (%s)",
@@ -8001,6 +8003,8 @@ RestartBlinking(TScreen * screen GCC_UNUSED)
 void
 VTReset(XtermWidget xw, Bool full, Bool saved)
 {
+    static char empty[1];
+
     TScreen *screen = TScreenOf(xw);
 
     if (!XtIsRealized((Widget) xw) || (CURRENT_EMU() != (Widget) xw)) {
@@ -8023,7 +8027,7 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 
     if_OPT_ISO_COLORS(screen, {
 	reset_SGR_Colors(xw);
-	if (ResetAnsiColorRequest(xw, "", 0))
+	if (ResetAnsiColorRequest(xw, empty, 0))
 	    xtermRepaint(xw);
     });
 
@@ -8147,7 +8151,7 @@ set_character_class(char *s)
     int base;			/* 8, 10, 16 (octal, decimal, hex) */
     int numbers;		/* count of numbers per range */
     int digits;			/* count of digits in a number */
-    static char *errfmt = "%s:  %s in range string \"%s\" (position %d)\n";
+    static const char *errfmt = "%s:  %s in range string \"%s\" (position %d)\n";
 
     if (!s || !s[0])
 	return -1;
@@ -8341,7 +8345,7 @@ DoSetSelectedFont(Widget w,
     } else {
 	Boolean failed = False;
 	int oldFont = TScreenOf(xw)->menu_font_number;
-	char *save = TScreenOf(xw)->MenuFontName(fontMenu_fontsel);
+	String save = TScreenOf(xw)->MenuFontName(fontMenu_fontsel);
 	char *val;
 	char *test = 0;
 	char *used = 0;

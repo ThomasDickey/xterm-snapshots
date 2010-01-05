@@ -1,8 +1,8 @@
-! $XTermId: XTerm.ad,v 1.91 2009/09/27 22:02:30 tom Exp $
+! $XTermId: XTerm.ad,v 1.92 2010/01/04 22:16:17 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
-! Copyright 1996-2007,2009 by Thomas E. Dickey
+! Copyright 1996-2009,2010 by Thomas E. Dickey
 ! 
 !                         All Rights Reserved
 ! 
@@ -124,8 +124,9 @@
 *fontMenu*utf8-mode*Label:	UTF-8
 *fontMenu*utf8-title*Label:	UTF-8 Titles
 
-*fontMenu*allow-tcap-ops*Label:	Allow Termcap Ops
+*fontMenu*allow-color-ops*Label:	Allow Color Ops
 *fontMenu*allow-font-ops*Label:	Allow Font Ops
+*fontMenu*allow-tcap-ops*Label:	Allow Termcap Ops
 *fontMenu*allow-title-ops*Label:	Allow Title Ops
 *fontMenu*allow-window-ops*Label:	Allow Window Ops
 

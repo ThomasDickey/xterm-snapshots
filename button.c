@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.363 2009/12/30 21:14:37 tom Exp $ */
+/* $XTermId: button.c,v 1.364 2010/01/04 23:13:01 tom Exp $ */
 
 /*
  * Copyright 1999-2008,2009 by Thomas E. Dickey
@@ -3443,7 +3443,7 @@ AppendToSelectionBuffer(TScreen * screen, unsigned c)
 }
 
 void
-CompleteSelection(XtermWidget xw, char **args, Cardinal len)
+CompleteSelection(XtermWidget xw, String * args, Cardinal len)
 {
     TScreen *screen = TScreenOf(xw);
 

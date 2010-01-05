@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.897 2010/01/03 23:39:33 tom Exp $
+  $XTermId: xterm.log.html,v 1.899 2010/01/04 22:01:30 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -315,6 +315,11 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add a configure-check to eliminate <code>install-ti</code>
+	    rule from Makefile when the system has no tic (terminfo compiler)
+	    program.  This lets one use the <code>install-full</code>
+	    rule more consistently.
+
 	<li>amend change to WriteText() function in 
 	    <a href="#xterm_252">patch #252</a> to take into account the
 	    <code>colorAttrMode</code> resource
@@ -344,6 +349,8 @@ is the latest version of this file.
 	    <li>querying a font recognizes the relative-font convention that
 	        setting a font could use.
 	    </ul>
+
+	<li>add menu-entry for allowColorOps.
 
 	<li>add new resources for fine-tuning menu entries:
 	    <code>allowColorOps</code>,

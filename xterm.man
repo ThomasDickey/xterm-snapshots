@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.448 2010/01/02 15:49:50 tom Exp $
+.\" $XTermId: xterm.man,v 1.450 2010/01/04 22:58:41 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -4299,6 +4299,10 @@ which can be controlled by writing escape sequences to the terminal.
 These are disabled if the SendEvents feature is enabled:
 .RS
 .TP
+Allow Color Ops (allow-font-ops)
+This corresponds to the \fBallowColorOps\fP resource.
+Enable or disable control sequences that set/query the colors.
+.TP
 Allow Font Ops (allow-font-ops)
 This corresponds to the \fBallowFontOps\fP resource.
 Enable or disable control sequences that set/query the font.
@@ -4541,6 +4545,10 @@ and will cause unpredictable behavior.
 The following
 actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
+.TP 8
+.B "allow-color-ops(\fIon/off/toggle\fP)"
+This action set or toggles the \fBallowColorOps\fP resource and is also
+invoked by the \fBallow-color-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "allow-font-ops(\fIon/off/toggle\fP)"
 This action set or toggles the \fBallowFontOps\fP resource and is also
