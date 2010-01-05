@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.261 2009/12/30 13:33:50 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.262 2010/01/05 00:48:45 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -441,7 +441,7 @@ int main() {
 	fi
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 11 updated: 2007/03/14 16:43:48
+dnl CF_FUNC_TGETENT version: 12 updated: 2010/01/04 19:48:45
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -518,11 +518,15 @@ LIBS="$cf_save_LIBS"
 if test "$cf_cv_lib_tgetent" != no ; then
 	test "$cf_cv_lib_tgetent" != yes && LIBS="$LIBS $cf_cv_lib_tgetent"
 	AC_DEFINE(USE_TERMCAP)
-	AC_TRY_COMPILE([
+	if test "$cf_full_tgetent" = no ; then
+		AC_TRY_COMPILE([
 #include <termcap.h>],[
 #ifdef NCURSES_VERSION
 make an error
 #endif],[AC_DEFINE(HAVE_TERMCAP_H)])
+	else
+		AC_CHECK_HEADERS(termcap.h)
+	fi
 else
         # If we didn't find a tgetent() that supports the buffer
         # argument, look again to see whether we can find even
