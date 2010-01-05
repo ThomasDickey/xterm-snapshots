@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.255 2009/12/30 13:15:01 tom Exp $
+dnl $XTermId: configure.in,v 1.256 2010/01/04 21:41:10 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2008,2009 by Thomas E. Dickey
+dnl Copyright 1997-2009,2010 by Thomas E. Dickey
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -331,32 +331,41 @@ AC_ARG_WITH(terminal-type,
 AC_MSG_RESULT($default_TERM)
 AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM")
 
-AC_MSG_CHECKING(for private terminfo-directory)
-AC_ARG_WITH(own-terminfo,
-	[  --with-own-terminfo=P   set default $TERMINFO (default: from environment)],
-	[TERMINFO_DIR=$withval],
-	[TERMINFO_DIR=${TERMINFO-none}])
-AC_MSG_RESULT($TERMINFO_DIR)
-if test "$TERMINFO_DIR" = yes ; then
-	AC_MSG_WARN(no value given)
-elif test "$TERMINFO_DIR" != none ; then
-	if test -d $TERMINFO_DIR ; then
-		AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$TERMINFO_DIR")
+AC_CHECK_PROG(cf_tic_prog,tic,yes,no)
+if test "$cf_tic_prog" = yes ; then
+	AC_MSG_CHECKING(for private terminfo-directory)
+	AC_ARG_WITH(own-terminfo,
+		[  --with-own-terminfo=P   set default $TERMINFO (default: from environment)],
+		[TERMINFO_DIR=$withval],
+		[TERMINFO_DIR=${TERMINFO-none}])
+	AC_MSG_RESULT($TERMINFO_DIR)
+	if test "$TERMINFO_DIR" = yes ; then
+		AC_MSG_WARN(no value given)
+	elif test "$TERMINFO_DIR" != none ; then
+		if test -d $TERMINFO_DIR ; then
+			AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$TERMINFO_DIR")
+		else
+			AC_MSG_WARN(not a directory)
+		fi
+	elif test "$prefix" != NONE ; then
+		TERMINFO_DIR='${prefix}/lib/terminfo'
+	elif test -d /usr/lib/terminfo ; then
+		TERMINFO_DIR=/usr/lib/terminfo
 	else
-		AC_MSG_WARN(not a directory)
+		TERMINFO_DIR=
 	fi
-elif test "$prefix" != NONE ; then
-	TERMINFO_DIR='${prefix}/lib/terminfo'
-elif test -d /usr/lib/terminfo ; then
-	TERMINFO_DIR=/usr/lib/terminfo
+	SET_TERMINFO=
+	if test -n "$TERMINFO_DIR" ; then
+		TERMINFO_DIR='$(DESTDIR)'$TERMINFO_DIR
+		SET_TERMINFO='TERMINFO=$(TERMINFO_DIR)'
+	fi
+	no_ticprog=
 else
+	no_ticprog="#"
 	TERMINFO_DIR=
+	SET_TERMINFO=
 fi
-SET_TERMINFO=
-if test -n "$TERMINFO_DIR" ; then
-	TERMINFO_DIR='$(DESTDIR)'$TERMINFO_DIR
-	SET_TERMINFO='TERMINFO=$(TERMINFO_DIR)'
-fi
+AC_SUBST(no_ticprog)
 AC_SUBST(TERMINFO_DIR)
 AC_SUBST(SET_TERMINFO)
 

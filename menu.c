@@ -1,8 +1,8 @@
-/* $XTermId: menu.c,v 1.260 2009/12/30 17:31:49 tom Exp $ */
+/* $XTermId: menu.c,v 1.261 2010/01/04 22:16:06 tom Exp $ */
 
 /*
  *
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -171,8 +171,9 @@ static void do_activeicon      PROTO_XT_CALLBACK_ARGS;
 
 #if OPT_ALLOW_XXX_OPS
 static void enable_allow_xxx_ops (Bool);
-static void do_allowTcapOps    PROTO_XT_CALLBACK_ARGS;
+static void do_allowColorOps   PROTO_XT_CALLBACK_ARGS;
 static void do_allowFontOps    PROTO_XT_CALLBACK_ARGS;
+static void do_allowTcapOps    PROTO_XT_CALLBACK_ARGS;
 static void do_allowTitleOps   PROTO_XT_CALLBACK_ARGS;
 static void do_allowWindowOps  PROTO_XT_CALLBACK_ARGS;
 #endif
@@ -381,8 +382,9 @@ MenuEntry fontMenuEntries[] = {
 
 #if OPT_ALLOW_XXX_OPS
     { "line3",		NULL,		NULL },
-    { "allow-tcap-ops",	do_allowTcapOps,NULL },
+    { "allow-color-ops",do_allowColorOps,NULL },
     { "allow-font-ops",	do_allowFontOps,NULL },
+    { "allow-tcap-ops",	do_allowTcapOps,NULL },
     { "allow-title-ops",do_allowTitleOps,NULL },
     { "allow-window-ops",do_allowWindowOps,NULL },
 #endif
@@ -747,8 +749,9 @@ domenu(Widget w,
 	    update_font_utf8_title();
 #endif
 #if OPT_ALLOW_XXX_OPS
-	    update_menu_allowTcapOps();
+	    update_menu_allowColorOps();
 	    update_menu_allowFontOps();
+	    update_menu_allowTcapOps();
 	    update_menu_allowTitleOps();
 	    update_menu_allowWindowOps();
 	    enable_allow_xxx_ops(!(screen->allowSendEvents));
@@ -1748,6 +1751,9 @@ handle_toggle(void (*proc) PROTO_XT_CALLBACK_ARGS,
 #define handle_vt_toggle(proc, var, params, nparams, w) \
 	handle_toggle(proc, (int) (var), params, nparams, w, (XtPointer)0, (XtPointer)0)
 
+#define HANDLE_VT_TOGGLE(name) \
+	handle_vt_toggle(do_##name, TScreenOf(term)->name, params, *param_count, w)
+
 #define handle_tek_toggle(proc, var, params, nparams, w) \
 	handle_toggle(proc, (int) (var), params, nparams, w, (XtPointer)0, (XtPointer)0)
 
@@ -1767,8 +1773,7 @@ HandleSetVisualBell(Widget w,
 		    String * params,
 		    Cardinal *param_count)
 {
-    handle_vt_toggle(do_visualbell, TScreenOf(term)->visualbell,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(visualbell);
 }
 
 void
@@ -1777,8 +1782,7 @@ HandleSetPopOnBell(Widget w,
 		   String * params,
 		   Cardinal *param_count)
 {
-    handle_vt_toggle(do_poponbell, TScreenOf(term)->poponbell,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(poponbell);
 }
 
 #ifdef ALLOWLOGGING
@@ -1788,8 +1792,7 @@ HandleLogging(Widget w,
 	      String * params,
 	      Cardinal *param_count)
 {
-    handle_vt_toggle(do_logging, TScreenOf(term)->logging,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(logging);
 }
 #endif
 
@@ -2028,8 +2031,7 @@ HandleJumpscroll(Widget w,
 		 String * params,
 		 Cardinal *param_count)
 {
-    handle_vt_toggle(do_jumpscroll, TScreenOf(term)->jumpscroll,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(jumpscroll);
 }
 
 void
@@ -2038,8 +2040,7 @@ HandleKeepSelection(Widget w,
 		    String * params,
 		    Cardinal *param_count)
 {
-    handle_vt_toggle(do_keepSelection, TScreenOf(term)->keepSelection,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(keepSelection);
 }
 
 void
@@ -2118,8 +2119,7 @@ HandleScrollKey(Widget w,
 		String * params,
 		Cardinal *param_count)
 {
-    handle_vt_toggle(do_scrollkey, TScreenOf(term)->scrollkey,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(scrollkey);
 }
 
 void
@@ -2128,8 +2128,7 @@ HandleScrollTtyOutput(Widget w,
 		      String * params,
 		      Cardinal *param_count)
 {
-    handle_vt_toggle(do_scrollttyoutput, TScreenOf(term)->scrollttyoutput,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(scrollttyoutput);
 }
 
 void
@@ -2158,8 +2157,7 @@ HandleBellIsUrgent(Widget w,
 		   String * params,
 		   Cardinal *param_count)
 {
-    handle_vt_toggle(do_bellIsUrgent, TScreenOf(term)->bellIsUrgent,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(bellIsUrgent);
 }
 
 void
@@ -2168,8 +2166,7 @@ HandleMarginBell(Widget w,
 		 String * params,
 		 Cardinal *param_count)
 {
-    handle_vt_toggle(do_marginbell, TScreenOf(term)->marginbell,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(marginbell);
 }
 
 #if OPT_BLINK_CURS
@@ -2244,8 +2241,7 @@ HandleFontDoublesize(Widget w,
 		     String * params,
 		     Cardinal *param_count)
 {
-    handle_vt_toggle(do_font_doublesize, TScreenOf(term)->font_doublesize,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(font_doublesize);
 }
 #endif
 
@@ -3271,6 +3267,18 @@ enable_allow_xxx_ops(Bool enable)
 }
 
 static void
+do_allowColorOps(Widget w,
+		 XtPointer closure GCC_UNUSED,
+		 XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = getXtermWidget(w);
+    if (xw != 0) {
+	ToggleFlag(TScreenOf(xw)->allowColorOps);
+	update_menu_allowColorOps();
+    }
+}
+
+static void
 do_allowFontOps(Widget w,
 		XtPointer closure GCC_UNUSED,
 		XtPointer data GCC_UNUSED)
@@ -3319,13 +3327,21 @@ do_allowWindowOps(Widget w,
 }
 
 void
+HandleAllowColorOps(Widget w,
+		    XEvent * event GCC_UNUSED,
+		    String * params,
+		    Cardinal *param_count)
+{
+    HANDLE_VT_TOGGLE(allowColorOps);
+}
+
+void
 HandleAllowFontOps(Widget w,
 		   XEvent * event GCC_UNUSED,
 		   String * params,
 		   Cardinal *param_count)
 {
-    handle_vt_toggle(do_allowFontOps, TScreenOf(term)->allowFontOps,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(allowFontOps);
 }
 
 void
@@ -3334,8 +3350,7 @@ HandleAllowTcapOps(Widget w,
 		   String * params,
 		   Cardinal *param_count)
 {
-    handle_vt_toggle(do_allowTcapOps, TScreenOf(term)->allowTcapOps,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(allowTcapOps);
 }
 
 void
@@ -3344,8 +3359,7 @@ HandleAllowTitleOps(Widget w,
 		    String * params,
 		    Cardinal *param_count)
 {
-    handle_vt_toggle(do_allowTitleOps, TScreenOf(term)->allowTitleOps,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(allowTitleOps);
 }
 
 void
@@ -3354,17 +3368,16 @@ HandleAllowWindowOps(Widget w,
 		     String * params,
 		     Cardinal *param_count)
 {
-    handle_vt_toggle(do_allowWindowOps, TScreenOf(term)->allowWindowOps,
-		     params, *param_count, w);
+    HANDLE_VT_TOGGLE(allowWindowOps);
 }
 
 void
-update_menu_allowTcapOps(void)
+update_menu_allowColorOps(void)
 {
-    UpdateCheckbox("update_menu_allowTcapOps",
+    UpdateCheckbox("update_menu_allowColorOps",
 		   fontMenuEntries,
-		   fontMenu_allowTcapOps,
-		   TScreenOf(term)->allowTcapOps);
+		   fontMenu_allowColorOps,
+		   TScreenOf(term)->allowColorOps);
 }
 
 void
@@ -3374,6 +3387,15 @@ update_menu_allowFontOps(void)
 		   fontMenuEntries,
 		   fontMenu_allowFontOps,
 		   TScreenOf(term)->allowFontOps);
+}
+
+void
+update_menu_allowTcapOps(void)
+{
+    UpdateCheckbox("update_menu_allowTcapOps",
+		   fontMenuEntries,
+		   fontMenu_allowTcapOps,
+		   TScreenOf(term)->allowTcapOps);
 }
 
 void

@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.39 2010/01/04 10:19:02 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.40 2010/01/04 21:56:12 tom Exp $ */
 
 /*
  * Copyright 2007-2009,2010 by Thomas E. Dickey
@@ -225,12 +225,11 @@ loadTermcapStrings(TScreen * screen)
 	Cardinal want = XtNumber(table);
 	Cardinal have;
 	char *fkey;
-
-	TRACE(("loadTermcapStrings\n"));
 #ifndef HAVE_TIGETSTR
 	char *area = screen->tcap_area;
 #endif
 
+	TRACE(("loadTermcapStrings\n"));
 	if ((screen->tcap_fkeys = TypeCallocN(char *, want)) != 0) {
 	    for (have = 0; have < want; ++have) {
 #ifdef HAVE_TIGETSTR

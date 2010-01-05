@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.164 2009/12/30 13:16:26 tom Exp $
+## $XTermId: Makefile.in,v 1.165 2010/01/04 21:40:47 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2008,2009 by Thomas E. Dickey
+# Copyright 1997-2009,2010 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -260,10 +260,10 @@ install ::
 TERMINFO_DIR = @TERMINFO_DIR@
 SET_TERMINFO = @SET_TERMINFO@
 
-install-full \
-install-ti :: $(TERMINFO_DIR)
-	@$(SHELL) -c "$(SET_TERMINFO) $(srcdir)/run-tic.sh $(srcdir)/terminfo"
-	@echo 'Completed installation of terminfo description.'
+@no_ticprog@install-full \
+@no_ticprog@install-ti :: $(TERMINFO_DIR)
+@no_ticprog@	@$(SHELL) -c "$(SET_TERMINFO) $(srcdir)/run-tic.sh $(srcdir)/terminfo"
+@no_ticprog@	@echo 'Completed installation of terminfo description.'
 
 install-full \
 install-tc ::
