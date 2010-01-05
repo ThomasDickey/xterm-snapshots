@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.h,v 1.12 2010/01/01 23:35:46 tom Exp $ */
+/* $XTermId: xtermcap.h,v 1.13 2010/01/05 00:47:30 tom Exp $ */
 
 /************************************************************
 
@@ -60,13 +60,6 @@ authorization.
 
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
-#if defined(NCURSES_VERSION)
-	/* The tgetent emulation function in SVr4-style curses implementations
-	 * (e.g., ncurses) ignores the buffer, so TERMCAP can't be set from it.
-	 * Instead, just use terminfo.
-	 */
-#undef USE_TERMCAP
-#endif
 #endif
 
 #ifndef USE_TERMCAP
