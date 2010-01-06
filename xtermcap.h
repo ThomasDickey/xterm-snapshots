@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.h,v 1.13 2010/01/05 00:47:30 tom Exp $ */
+/* $XTermId: xtermcap.h,v 1.15 2010/01/06 01:07:59 tom Exp $ */
 
 /************************************************************
 
@@ -52,6 +52,9 @@ authorization.
 
 #if !USE_TERMINFO
 #undef HAVE_TIGETSTR
+#ifndef USE_TERMCAP
+#define USE_TERMCAP 1
+#endif
 #endif
 
 #undef ERR			/* workaround for glibc 2.1.3 */
@@ -62,13 +65,11 @@ authorization.
 #include <termcap.h>
 #endif
 
-#ifndef USE_TERMCAP
 #ifdef HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #elif defined(HAVE_TERM_H)
 #include <term.h>		/* tgetent() */
 #endif
-#endif /* USE_TERMCAP */
 
 /*
  * Get rid of conflicting symbols from term.h
