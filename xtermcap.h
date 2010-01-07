@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.h,v 1.15 2010/01/06 01:07:59 tom Exp $ */
+/* $XTermId: xtermcap.h,v 1.16 2010/01/06 21:20:40 tom Exp $ */
 
 /************************************************************
 
@@ -61,8 +61,10 @@ authorization.
 
 #include <curses.h>
 
+#ifndef NCURSES_VERSION
 #ifdef HAVE_TERMCAP_H
 #include <termcap.h>
+#endif
 #endif
 
 #ifdef HAVE_NCURSES_TERM_H
