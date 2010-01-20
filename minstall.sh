@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: minstall.sh,v 1.15 2009/03/15 23:06:08 tom Exp $
+# $XTermId: minstall.sh,v 1.19 2010/01/20 10:55:42 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2008,2009 by Thomas E. Dickey
+# Copyright 2001-2009,2010 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -70,6 +70,40 @@ NEW_FILE=temp$$
 
 MY_MANSECT=$suffix
 
+# utmp and wtmp have different pathnames on different systems, but there
+# are only a few common choices.  Note that they may not necessarily appear
+# in the same directories.  Prefer utmpx/wtmpx to utmp/wtmp, since that's
+# the way the configure script is designed.
+UTMP_NAME=utmp22
+UTMP_PATH=/etc
+for name in /etc /var/adm /var/log
+do
+	if test -f $name/utmpx ; then
+		UTMP_NAME=utmpx
+		UTMP_PATH=$name
+		break
+	elif test -f $name/utmp ; then
+		UTMP_PATH=$name
+		break
+	fi
+done
+UTMP_PATH=$UTMP_PATH/$UTMP_NAME
+
+WTMP_NAME=wtmp
+WTMP_PATH=/etc
+for name in /etc /var/adm /var/log
+do
+	if test -f $name/wtmpx ; then
+		WTMP_NAME=wtmpx
+		WTMP_PATH=$name
+		break
+	elif test -f $name/wtmp ; then
+		WTMP_PATH=$name
+		break
+	fi
+done
+WTMP_PATH=$WTMP_PATH/$WTMP_NAME
+
 # "X" is usually in the miscellaneous section, along with "undocumented".
 # Use that to guess an appropriate section.
 X_MANSECT=`man X 2>&1 | tr '\012' '\020' | sed -e 's/^[^0123456789]*\([^) ][^) ]*\).*/\1/'`
@@ -79,6 +113,10 @@ sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e s%__apploaddir__%$APPS_DIR% \
 	-e s%__mansuffix__%$MY_MANSECT%g \
 	-e s%__miscmansuffix__%$X_MANSECT%g \
+	-e s%fIutmp'\\%fI'$UTMP_NAME'\\%g' \
+	-e s%/etc/utmp%$UTMP_PATH%g \
+	-e s%fIwtmp'\\%fI'$WTMP_NAME'\\%g' \
+	-e s%/etc/wtmp%$WTMP_PATH%g \
 	$OLD_FILE >$NEW_FILE
 
 echo "$MINSTALL $OLD_FILE $END_FILE"

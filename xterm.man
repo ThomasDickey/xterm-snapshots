@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.450 2010/01/04 22:58:41 tom Exp $
+.\" $XTermId: xterm.man,v 1.451 2010/01/20 10:55:58 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -1283,8 +1283,8 @@ You cannot set this to a value less than 64.
 .TP 8
 .B "ptyHandshake (\fPclass\fB PtyHandshake)
 If \*(``true\*('', \fIxterm\fP will perform handshaking during initialization
-to ensure that the parent and child processes update the \fButmp\fP
-and \fBstty\fP state.
+to ensure that the parent and child processes update the \fIutmp\fP
+and \fIstty\fP state.
 See also \fBwaitForMap\fP which waits for the pseudo-terminal's notion
 of the screen size,
 and \fBptySttySize\fP which resets the screen size after other terminal
@@ -5275,7 +5275,7 @@ Some shell initialization scripts may set a different locale.
 .TP 5
 XTERM_SHELL
 is set to the pathname of the program which is invoked.
-Usually that is a shell program, e.g., \fB/bin/sh\fP.
+Usually that is a shell program, e.g., \fI/bin/sh\fP.
 Since it is not necessarily a shell program however,
 it is distinct from \*(``SHELL\*(''.
 .TP 5
