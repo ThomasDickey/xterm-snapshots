@@ -1,8 +1,8 @@
-/* $XTermId: xterm.h,v 1.607 2010/01/04 23:02:40 tom Exp $ */
+/* $XTermId: xterm.h,v 1.608 2010/01/20 01:36:37 tom Exp $ */
 
 /************************************************************
 
-Copyright 1999-2008,2009 by Thomas E. Dickey
+Copyright 1999-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -801,7 +801,7 @@ extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name *
 extern void HideCursor (void);
 extern void RestartBlinking(TScreen * /* screen */);
 extern void ShowCursor (void);
-extern void SwitchBufPtrs (TScreen * /* screen */);
+extern void SwitchBufPtrs (TScreen * /* screen */, int /* toBuf */);
 extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);
 extern void VTRun (XtermWidget /* xw */);

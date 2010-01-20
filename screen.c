@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.409 2009/12/09 23:31:18 tom Exp $ */
+/* $XTermId: screen.c,v 1.410 2010/01/20 01:38:46 tom Exp $ */
 
 /*
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -597,6 +597,8 @@ ChangeToWide(XtermWidget xw)
 
     TRACE(("ChangeToWide\n"));
     if (xtermLoadWideFonts(xw, True)) {
+	int whichBuf = screen->whichBuf;
+
 	if (savelines < 0)
 	    savelines = 0;
 
@@ -606,7 +608,7 @@ ChangeToWide(XtermWidget xw)
 	 * data in the alternate buffer.
 	 */
 	if (screen->whichBuf)
-	    SwitchBufPtrs(screen);
+	    SwitchBufPtrs(screen, 0);
 
 #if OPT_SAVE_LINES
 #if !OPT_FIFO_LINES
@@ -644,8 +646,8 @@ ChangeToWide(XtermWidget xw)
 	/*
 	 * Switch the pointers back before we start painting on the screen.
 	 */
-	if (screen->whichBuf)
-	    SwitchBufPtrs(screen);
+	if (whichBuf)
+	    SwitchBufPtrs(screen, whichBuf);
 
 	update_font_utf8_mode();
 	SetVTFont(xw, screen->menu_font_number, True, NULL);
@@ -1732,6 +1734,7 @@ ScreenResize(XtermWidget xw,
 
     /* update buffers if the screen has changed size */
     if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
+	int whichBuf = 0;
 	int delta_rows = rows - MaxRows(screen);
 #if OPT_TRACE
 	int delta_cols = cols - MaxCols(screen);
@@ -1958,9 +1961,13 @@ ScreenResize(XtermWidget xw,
 	    }
 #else /* !OPT_SAVE_LINES */
 	    if (screen->whichBuf
-		&& GravityIsSouthWest(xw))
+		&& GravityIsSouthWest(xw)) {
 		/* swap buffer pointers back to make this work */
-		SwitchBufPtrs(screen);
+		whichBuf = screen->whichBuf;
+		SwitchBufPtrs(screen, 0);
+	    } else {
+		whichBuf = 0;
+	    }
 	    if (screen->editBuf_index[1])
 		(void) Reallocate(xw,
 				  &screen->editBuf_index[1],
@@ -1997,8 +2004,8 @@ ScreenResize(XtermWidget xw,
 		screen->cursorp.row += move_down_by;
 		ScrollSelection(screen, move_down_by, True);
 
-		if (screen->whichBuf)
-		    SwitchBufPtrs(screen);	/* put the pointers back */
+		if (whichBuf)
+		    SwitchBufPtrs(screen, whichBuf);	/* put the pointers back */
 	    }
 	}
 
