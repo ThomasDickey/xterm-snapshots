@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1031 2010/01/04 23:12:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1033 2010/01/20 01:59:19 tom Exp $ */
 
 /*
 
@@ -137,6 +137,9 @@ typedef struct {
     int code;
 } FlagList;
 
+typedef void (*BitFunc) (unsigned * /* p */ ,
+			 unsigned /* mask */ );
+
 static IChar doinput(void);
 static int set_character_class(char * /*s */ );
 static void FromAlternate(XtermWidget /* xw */ );
@@ -144,14 +147,16 @@ static void RequestResize(XtermWidget /* xw */ ,
 			  int /* rows */ ,
 			  int /* cols */ ,
 			  Bool /* text */ );
-static void SwitchBufs(XtermWidget xw);
+static void SwitchBufs(XtermWidget /* xw */ ,
+		       int /* toBuf */ );
 static void ToAlternate(XtermWidget /* xw */ );
 static void ansi_modes(XtermWidget termw,
-		       void (*func) (unsigned *p, unsigned mask));
+		       BitFunc /* func */ );
 static void bitclr(unsigned *p, unsigned mask);
 static void bitcpy(unsigned *p, unsigned q, unsigned mask);
 static void bitset(unsigned *p, unsigned mask);
-static void dpmodes(XtermWidget termw, void (*func) (unsigned *p, unsigned mask));
+static void dpmodes(XtermWidget /* xw */ ,
+		    BitFunc /* func */ );
 static void restoremodes(XtermWidget /* xw */ );
 static void savemodes(XtermWidget /* xw */ );
 static void window_ops(XtermWidget /* xw */ );
@@ -3954,8 +3959,7 @@ ToggleCursorBlink(TScreen * screen)
  * process ANSI modes set, reset
  */
 static void
-ansi_modes(XtermWidget xw,
-	   void (*func) (unsigned *p, unsigned mask))
+ansi_modes(XtermWidget xw, BitFunc func)
 {
     int i;
 
@@ -4009,8 +4013,7 @@ really_set_mousemode(XtermWidget xw,
  * process DEC private modes set, reset
  */
 static void
-dpmodes(XtermWidget xw,
-	void (*func) (unsigned *p, unsigned mask))
+dpmodes(XtermWidget xw, BitFunc func)
 {
     TScreen *screen = TScreenOf(xw);
     int i, j;
@@ -5193,7 +5196,7 @@ ToAlternate(XtermWidget xw)
 						    (unsigned) MaxRows(screen),
 						    (unsigned) MaxCols(screen),
 						    &screen->editBuf_data[1]);
-	SwitchBufs(xw);
+	SwitchBufs(xw, 1);
 	screen->whichBuf = 1;
 #if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
@@ -5212,7 +5215,7 @@ FromAlternate(XtermWidget xw)
 	if (screen->scroll_amt)
 	    FlushScroll(xw);
 	screen->whichBuf = 0;
-	SwitchBufs(xw);
+	SwitchBufs(xw, 0);
 #if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
 #endif
@@ -5221,7 +5224,7 @@ FromAlternate(XtermWidget xw)
 }
 
 static void
-SwitchBufs(XtermWidget xw)
+SwitchBufs(XtermWidget xw, int toBuf)
 {
     TScreen *screen = TScreenOf(xw);
     int rows, top;
@@ -5230,11 +5233,12 @@ SwitchBufs(XtermWidget xw)
 	HideCursor();
 
     rows = MaxRows(screen);
-    SwitchBufPtrs(screen);
+    SwitchBufPtrs(screen, toBuf);
 
     if ((top = INX2ROW(screen, 0)) < rows) {
-	if (screen->scroll_amt)
+	if (screen->scroll_amt) {
 	    FlushScroll(xw);
+	}
 	XClearArea(screen->display,
 		   VWindow(screen),
 		   (int) OriginX(screen),
@@ -5260,11 +5264,11 @@ CheckBufPtrs(TScreen * screen)
  * Swap buffer line pointers between alternate and regular screens.
  */
 void
-SwitchBufPtrs(TScreen * screen)
+SwitchBufPtrs(TScreen * screen, int toBuf GCC_UNUSED)
 {
     if (CheckBufPtrs(screen)) {
 #if OPT_SAVE_LINES
-	screen->visbuf = screen->editBuf_index[screen->whichBuf];
+	screen->visbuf = screen->editBuf_index[toBuf];
 #else
 	size_t len = ScrnPointers(screen, (unsigned) MaxRows(screen));
 
