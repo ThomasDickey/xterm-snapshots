@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.601 2010/01/01 22:52:24 tom Exp $ */
+/* $XTermId: main.c,v 1.602 2010/01/20 22:07:23 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -4952,12 +4952,12 @@ GetBytesAvailable(int fd)
     return (int) arg;
 #elif defined(__CYGWIN__)
     fd_set set;
-    struct timeval timeout =
+    struct timeval select_timeout =
     {0, 0};
 
     FD_ZERO(&set);
     FD_SET(fd, &set);
-    if (Select(fd + 1, &set, NULL, NULL, &timeout) > 0)
+    if (Select(fd + 1, &set, NULL, NULL, &select_timeout) > 0)
 	return 1;
     else
 	return 0;

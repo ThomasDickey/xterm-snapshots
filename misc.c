@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.481 2010/01/04 11:50:35 tom Exp $ */
+/* $XTermId: misc.c,v 1.482 2010/01/21 09:34:58 tom Exp $ */
 
 /*
  *
@@ -3453,7 +3453,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 		if (CharOf(name[n]) > 127) {
 		    if (converted != 0)
 			free(converted);
-		    if ((converted = TypeMallocN(Char, 1 + (5 * limit))) != 0) {
+		    if ((converted = TypeMallocN(Char, 1 + (6 * limit))) != 0) {
 			Char *temp = converted;
 			while (*name != 0) {
 			    temp = convertToUTF8(temp, CharOf(*name));
