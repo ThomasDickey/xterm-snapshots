@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.482 2010/01/21 09:34:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.483 2010/03/03 22:32:26 Chris.Adams Exp $ */
 
 /*
  *
@@ -800,7 +800,7 @@ AtomBell(XtermWidget xw, int which)
 
     for (n = 0; n < XtNumber(table); ++n) {
 	if (table[n].value == which) {
-	    result = XInternAtom(XtDisplay(xw), table[n].name, True);
+	    result = XInternAtom(XtDisplay(xw), table[n].name, False);
 	    break;
 	}
     }
