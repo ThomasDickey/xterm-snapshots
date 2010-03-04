@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.907 2010/03/03 23:25:46 tom Exp $
+  $XTermId: xterm.log.html,v 1.910 2010/03/04 01:30:31 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -317,6 +317,23 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>change app-defaults organization, installing UXTerm-color
+	    and KOI8XTerm-color for consistent behavior regarding
+	    <code>customization:&nbsp;color</code> (prompted by discussion
+	    in Ubuntu #421261).
+
+	<li>fix typo in <code>minstall.sh</code> from
+	    <a href="#xterm_255">patch #255</a> changes,
+	    and add case for
+	    <code>/var/run</code> needed for full path of utmp
+	    (report by Julien Cristau).
+
+	<li>minor fix to xterm manpage, remove a comment stating that margin
+	    bell can be changed via the VT Options menu.  That was replaced in 
+	    <a href="#xterm_225">patch #225</a>
+
+	<li>add a "docs" rule to makefile.
+
 	<li>fix initialization of Atom used for <code>XkbBell</code> feature
 	    from <a href="#xterm_243">patch 243</a> changes.
 	    Unlike the other calls to <code>XInternAtom()</code>,
