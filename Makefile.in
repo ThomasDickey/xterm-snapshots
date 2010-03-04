@@ -1,11 +1,11 @@
-## $XTermId: Makefile.in,v 1.165 2010/01/04 21:40:47 tom Exp $
+## $XTermId: Makefile.in,v 1.170 2010/03/04 02:03:33 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
 # Copyright 1997-2009,2010 by Thomas E. Dickey
-# 
+#
 #                         All Rights Reserved
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
 # "Software"), to deal in the Software without restriction, including
@@ -13,10 +13,10 @@
 # distribute, sublicense, and/or sell copies of the Software, and to
 # permit persons to whom the Software is furnished to do so, subject to
 # the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 # MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -24,7 +24,7 @@
 # CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# 
+#
 # Except as contained in this notice, the name(s) of the above copyright
 # holders shall not be used in advertising or otherwise to promote the
 # sale, use or other dealings in this Software without prior written
@@ -226,21 +226,22 @@ install-full :: $(MANDIR)
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 
+APP_NAMES = XTerm UXTerm KOI8RXTerm
+
 @no_appsdir@install \
 @no_appsdir@install-app \
 @no_appsdir@install-full :: $(APPSDIR)
-@no_appsdir@	@echo installing $(APPSDIR)/$(CLASS)
-@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm.ad >XTerm.tmp
-@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)
-@no_appsdir@	@echo installing $(APPSDIR)/$(CLASS)-color
-@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm-col.ad >XTerm.tmp
-@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)-color
-@no_appsdir@	@echo installing $(APPSDIR)/UXTerm
-@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/UXTerm.ad >XTerm.tmp
-@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/UXTerm
-@no_appsdir@	@echo installing $(APPSDIR)/KOI8RXTerm
-@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/KOI8RXTerm.ad >XTerm.tmp
-@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/KOI8RXTerm
+@no_appsdir@	@-$(SHELL) -c 'for s in $(APP_NAMES); \
+@no_appsdir@	do \
+@no_appsdir@		echo "** $$s"; \
+@no_appsdir@		d=`echo $$s | sed -e s/XTerm/$(CLASS)/`; \
+@no_appsdir@		echo installing $(APPSDIR)/$$d; \
+@no_appsdir@		sed -e s/XTerm/$(CLASS)/ $(srcdir)/$$s.ad >XTerm.tmp; \
+@no_appsdir@		$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$$d; \
+@no_appsdir@		echo installing $(APPSDIR)/$$d-color; \
+@no_appsdir@		sed -e s/XTerm/$$d/ $(srcdir)/XTerm-col.ad >XTerm.tmp; \
+@no_appsdir@		$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$$d-color; \
+@no_appsdir@	done'
 @no_appsdir@	@rm -f XTerm.tmp
 @no_icondir@	@echo "... installed app-defaults"
 
@@ -297,9 +298,15 @@ uninstall-full ::
 @no_appsdir@uninstall \
 @no_appsdir@uninstall-app \
 @no_appsdir@uninstall-full ::
-@no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)
-@no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)-color
-@no_appsdir@	-$(RM) $(APPSDIR)/UXTerm
+@no_appsdir@	@-$(SHELL) -c 'for s in $(APP_NAMES); \
+@no_appsdir@	do \
+@no_appsdir@		echo "** $$s"; \
+@no_appsdir@		d=`echo $$s | sed -e s/XTerm/$(CLASS)/`; \
+@no_appsdir@		echo uninstalling $(APPSDIR)/$$d; \
+@no_appsdir@		$(RM) $(APPSDIR)/$$d; \
+@no_appsdir@		echo uninstalling $(APPSDIR)/$$d-color; \
+@no_appsdir@		$(RM) $(APPSDIR)/$$d-color; \
+@no_appsdir@	done'
 
 @no_icondir@uninstall \
 @no_icondir@uninstall-icon \
@@ -325,8 +332,10 @@ clean : mostlyclean
 distclean : clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
 	-$(RM) *.ps *.pdf *.png
-	-$(RM) xterm.html xterm.$(manext) xterm.txt
-	-$(RM) resize.html resize.$(manext) resize.txt
+	-$(SHELL) -c 'for p in xterm resize uxterm koi8rxterm; \
+	do \
+		$(RM) $$p.html $$p.$(manext) $$p.txt; \
+	done'
 	-$(RM) ctlseqs.html ctlseqs.$(manext)
 
 realclean : distclean
@@ -338,20 +347,50 @@ maintainer-clean : realclean
 terminfo.out : terminfo		; tic -a -I -1 terminfo >$@
 termcap.out : termcap		; tic -a -C -U termcap >$@
 ################################################################################
+docs :: ctlseqs.html \
+	ctlseqs.pdf \
+	ctlseqs.ps \
+	ctlseqs.txt
 ctlseqs.html : ctlseqs.ms
 ctlseqs.pdf : ctlseqs.ps
 ctlseqs.ps : ctlseqs.ms
 ctlseqs.txt : ctlseqs.ms
 ################################################################################
+docs :: resize.html \
+	resize.pdf \
+	resize.ps \
+	resize.txt
 resize.html : resize.$(manext)
 resize.pdf : resize.ps
 resize.ps : resize.$(manext)
 resize.txt : resize.$(manext)
 ################################################################################
+docs :: xterm.html \
+	xterm.pdf \
+	xterm.ps \
+	xterm.txt
 xterm.html : xterm.$(manext)
 xterm.pdf : xterm.ps
 xterm.ps : xterm.$(manext)
 xterm.txt : xterm.$(manext)
+################################################################################
+docs :: uxterm.html \
+	uxterm.pdf \
+	uxterm.ps \
+	uxterm.txt
+uxterm.html : uxterm.$(manext)
+uxterm.pdf : uxterm.ps
+uxterm.ps : uxterm.$(manext)
+uxterm.txt : uxterm.$(manext)
+################################################################################
+docs :: koi8rxterm.html \
+	koi8rxterm.pdf \
+	koi8rxterm.ps \
+	koi8rxterm.txt
+koi8rxterm.html : koi8rxterm.$(manext)
+koi8rxterm.pdf : koi8rxterm.ps
+koi8rxterm.ps : koi8rxterm.$(manext)
+koi8rxterm.txt : koi8rxterm.$(manext)
 ################################################################################
 lint :
 	$(LINT) $(CPPFLAGS) $(SRCS1)
