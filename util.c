@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.523 2010/01/03 23:56:24 tom Exp $ */
+/* $XTermId: util.c,v 1.524 2010/03/12 00:56:58 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -712,9 +712,12 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 	       screen->cur_row));
 
 	test = flags;
+#if OPT_ISO_COLORS
 	if (screen->colorAttrMode) {
 	    fg = MapToColorMode(xw->cur_foreground, screen, flags);
-	} else {
+	} else
+#endif
+	{
 	    fg = xw->cur_foreground;
 	}
 	checkVeryBoldColors(test, fg);

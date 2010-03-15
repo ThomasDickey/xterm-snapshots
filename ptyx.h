@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.656 2010/01/04 09:09:29 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.657 2010/03/12 00:55:48 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -973,8 +973,6 @@ typedef enum {
 # define XK_COLORS 0x0003
 #endif
 
-# define XK_TCAPNAME 0x0004
-
 #else	/* !OPT_ISO_COLORS */
 
 #define TERM_COLOR_FLAGS(xw) 0
@@ -984,6 +982,8 @@ typedef enum {
 		       (!(flags & INVERSE) &&  hilite))
 
 #endif	/* OPT_ISO_COLORS */
+
+# define XK_TCAPNAME 0x0004
 
 #if OPT_AIX_COLORS
 #define if_OPT_AIX_COLORS(screen, code) if(screen->colorMode) code
