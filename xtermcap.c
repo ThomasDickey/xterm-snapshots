@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.41 2010/01/05 00:46:56 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.42 2010/03/12 00:53:05 Matthieu.Herrb Exp $ */
 
 /*
  * Copyright 2007-2009,2010 by Thomas E. Dickey
@@ -54,11 +54,11 @@
 #define TcapInit(buffer, name) (tgetent(buffer, name) == 1)
 #endif
 
+#define NO_STRING (char *)(-1)
+
 #if OPT_TCAP_QUERY || OPT_TCAP_FKEYS
 
 #define SHIFT (MOD_NONE + MOD_SHIFT)
-
-#define NO_STRING (char *)(-1)
 
 typedef struct {
     const char *tc;
