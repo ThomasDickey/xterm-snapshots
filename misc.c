@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.483 2010/03/03 22:32:26 Chris.Adams Exp $ */
+/* $XTermId: misc.c,v 1.484 2010/03/15 00:06:28 tom Exp $ */
 
 /*
  *
@@ -1941,7 +1941,7 @@ AllocateAnsiColor(XtermWidget xw,
 	    result = 1;
 	    SET_COLOR_RES(res, def.pixel);
 	    TRACE(("AllocateAnsiColor[%d] %s (pixel %#lx)\n",
-		   (res - screen->Acolors), spec, def.pixel));
+		   (int) (res - screen->Acolors), spec, def.pixel));
 #if OPT_COLOR_RES
 	    if (!res->mode)
 		result = 0;
@@ -1965,7 +1965,7 @@ xtermGetColorRes(XtermWidget xw, ColorRes * res)
 	result = res->value;
     } else {
 	TRACE(("xtermGetColorRes for Acolors[%d]\n",
-	       res - TScreenOf(xw)->Acolors));
+	       (int) (res - TScreenOf(xw)->Acolors)));
 
 	if (res >= TScreenOf(xw)->Acolors) {
 	    assert(res - TScreenOf(xw)->Acolors < MAXCOLORS);
@@ -2735,7 +2735,8 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 	    /* FALLTHRU */
 	case 1:
 	    if (*cp != ';') {
-		TRACE(("do_osc did not find semicolon offset %d\n", cp - oscbuf));
+		TRACE(("do_osc did not find semicolon offset %d\n",
+		       (int) (cp - oscbuf)));
 		return;
 	    }
 	    state = 2;
@@ -2754,7 +2755,7 @@ do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
 		default:
 		    TRACE(("do_osc found nonprinting char %02X offset %d\n",
 			   CharOf(*cp),
-			   cp - oscbuf));
+			   (int) (cp - oscbuf)));
 		    return;
 		}
 	    }
@@ -3173,7 +3174,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
     Bool okay;
     ANSI params;
 
-    TRACE(("do_dcs(%s:%d)\n", (char *) dcsbuf, dcslen));
+    TRACE(("do_dcs(%s:%lu)\n", (char *) dcsbuf, (unsigned long) dcslen));
 
     if (dcslen != strlen(cp))
 	/* shouldn't have nulls in the string */

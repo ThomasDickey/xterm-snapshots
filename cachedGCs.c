@@ -1,8 +1,8 @@
-/* $XTermId: cachedGCs.c,v 1.56 2009/11/28 13:24:07 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.57 2010/03/15 00:07:11 tom Exp $ */
 
 /************************************************************
 
-Copyright 2007-2008,2009 by Thomas E. Dickey
+Copyright 2007-2009,2010 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -388,8 +388,8 @@ newCache(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, CgsCache * me)
     xgcv.background = NEXT(bg);
 
     THIS(gc) = XCreateGC(myDisplay(xw), myDrawable(xw, cgsWin), mask, &xgcv);
-    TRACE(("getCgsGC(%s) created gc %p(%d)\n",
-	   traceCgsEnum(cgsId), (void *) THIS(gc), ITEM()));
+    TRACE(("getCgsGC(%s) created gc %p(%ld)\n",
+	   traceCgsEnum(cgsId), (void *) THIS(gc), (long) ITEM()));
 
     THIS(used) = 0;
     return THIS(gc);

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.452 2010/03/03 22:30:35 tom Exp $
+.\" $XTermId: xterm.man,v 1.453 2010/03/14 23:59:33 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -1040,7 +1040,7 @@ This option indicates that \fIxterm\fP should not wait before starting the
 subprocess.
 .TP 8
 .B -ziconbeep \fIpercent\fP
-Same as zIconBeep resource.
+Same as \fBzIconBeep\fP resource.
 If percent is non-zero, xterms that produce output while iconified
 will cause an XBell sound at the given volume
 and have "***" prepended to their icon titles.
@@ -2880,6 +2880,10 @@ The default is \*(``xterm.\*(''
 .B "popOnBell (\fPclass\fB PopOnBell)"
 Specifies whether the window would be raised when Control-G is received.
 The default is \*(``false.\*(''
+.IP
+If the window is iconified, this has no effect.
+However, the \fBzIconBeep\fP resource provides you with the ability to
+see which iconified windows have sounded a bell.
 .TP 8
 .B "preeditType (\fPclass\fB XtCPreeditType)"
 Tells \fIxterm\fP which types of preedit (preconversion) string to display.
