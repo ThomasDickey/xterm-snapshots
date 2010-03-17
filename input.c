@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.312 2009/12/29 23:45:29 tom Exp $ */
+/* $XTermId: input.c,v 1.313 2010/03/15 00:07:11 tom Exp $ */
 
 /*
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1340,9 +1340,9 @@ Input(XtermWidget xw,
 void
 StringInput(XtermWidget xw, Char * string, size_t nbytes)
 {
-    TRACE(("InputString (%s,%d)\n",
+    TRACE(("InputString (%s,%lu)\n",
 	   visibleChars(string, nbytes),
-	   nbytes));
+	   (unsigned long) nbytes));
 #if OPT_TEK4014
     if (nbytes && TEK4014_GIN(tekWidget)) {
 	TekEnqMouse(tekWidget, *string++);

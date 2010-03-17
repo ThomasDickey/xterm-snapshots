@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.364 2010/01/04 23:13:01 tom Exp $ */
+/* $XTermId: button.c,v 1.365 2010/03/17 09:49:04 tom Exp $ */
 
 /*
- * Copyright 1999-2008,2009 by Thomas E. Dickey
+ * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1544,6 +1544,8 @@ xtermGetSelection(Widget w,
 
     XtermWidget xw;
 
+    if (num_params == 0)
+	return;
     if ((xw = getXtermWidget(w)) == 0)
 	return;
 
@@ -3726,6 +3728,8 @@ _OwnSelection(XtermWidget xw,
     Cardinal i;
     Bool have_selection = False;
 
+    if (count == 0)
+	return;
     if (screen->selection_length == 0)
 	return;
 

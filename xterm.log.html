@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.915 2010/03/14 22:00:30 tom Exp $
+  $XTermId: xterm.log.html,v 1.916 2010/03/17 09:52:49 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -318,10 +318,14 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>fix to avoid calling <code>XmuInternStrings()</code> with zero
+	    count (report by Johan Bockg&#229;rd).
+
 	<li>fix build when --disable-ansi-color configure option is used.
 
 	<li>fix build when neither OPT_TCAP_QUERY or OPT_TCAP_FKEYS is defined
 	    (patch by Matthieu Herrb)
+</ul>
 
 <H1><A NAME="xterm_256">Patch #256 - 2010/3/6</A></H1>
 <ul>

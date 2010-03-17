@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.410 2010/01/20 01:38:46 tom Exp $ */
+/* $XTermId: screen.c,v 1.411 2010/03/14 23:51:05 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -320,8 +320,8 @@ allocScrnData(TScreen * screen, unsigned nrow, unsigned ncol)
     if ((result = (Char *) calloc(length, sizeof(Char))) == 0)
 	SysError(ERROR_SCALLOC2);
 
-    TRACE(("allocScrnData %dx%d -> %d -> %p..%p\n",
-	   nrow, ncol, length, result, result + length - 1));
+    TRACE(("allocScrnData %ux%u -> %lu -> %p..%p\n",
+	   nrow, ncol, (unsigned long) length, result, result + length - 1));
     return result;
 }
 

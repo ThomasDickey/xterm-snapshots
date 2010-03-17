@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1033 2010/01/20 01:59:19 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1034 2010/03/14 23:47:54 tom Exp $ */
 
 /*
 
@@ -2638,7 +2638,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_ST:
-	    TRACE(("CASE_ST: End of String (%d bytes)\n", sp->string_used));
+	    TRACE(("CASE_ST: End of String (%lu bytes)\n", (unsigned long) sp->string_used));
 	    sp->parsestate = sp->groundtable;
 	    if (!sp->string_used)
 		break;
@@ -3499,8 +3499,8 @@ in_put(XtermWidget xw)
 		&& screen->topline < 0)
 		WindowScroll(xw, 0);	/* Scroll to bottom */
 	    /* stop speed reading at some point to look for X stuff */
-	    TRACE(("VTbuffer uses %d/%d\n",
-		   VTbuffer->last - VTbuffer->buffer,
+	    TRACE(("VTbuffer uses %ld/%d\n",
+		   (long) (VTbuffer->last - VTbuffer->buffer),
 		   BUF_SIZE));
 	    if ((VTbuffer->last - VTbuffer->buffer) > BUF_SIZE) {
 		FD_CLR(screen->respond, &select_mask);
@@ -7205,7 +7205,7 @@ xim_real_init(XtermWidget xw)
 	    end--;
 
 	if (end != s) {		/* just in case we have a spurious comma */
-	    TRACE(("looking for style '%.*s'\n", end - s, s));
+	    TRACE(("looking for style '%.*s'\n", (int) (end - s), s));
 	    for (i = 0; i < XtNumber(known_style); i++) {
 		if ((int) strlen(known_style[i].name) == (end - s)
 		    && !strncmp(s, known_style[i].name, (unsigned) (end - s))) {
