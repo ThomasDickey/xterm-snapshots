@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1034 2010/03/14 23:47:54 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1035 2010/03/19 11:00:17 tom Exp $ */
 
 /*
 
@@ -3044,12 +3044,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * command-line, allow it to be enabled/disabled by
 	     * control sequence.
 	     */
-	    if (!screen->wide_chars) {
-		WriteNow();
-		ChangeToWide(xw);
-	    }
 	    if (screen->wide_chars
 		&& screen->utf8_mode != uAlways) {
+		if (!screen->wide_chars) {
+		    WriteNow();
+		    ChangeToWide(xw);
+		}
 		switchPtyData(screen, c == 'G');
 		TRACE(("UTF8 mode %s\n",
 		       BtoS(screen->utf8_mode)));
