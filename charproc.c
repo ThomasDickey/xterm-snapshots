@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1035 2010/03/19 11:00:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1036 2010/03/21 21:38:23 tom Exp $ */
 
 /*
 
@@ -5588,7 +5588,7 @@ fill_Tres(XtermWidget target, XtermWidget source, int offset)
 	     : TScreenOf(target)->Tcolors[TEXT_BG].value);
     } else {
 	memset(&temp, 0, sizeof(temp));
-	if (AllocateTermColor(target, &temp, offset, name)) {
+	if (AllocateTermColor(target, &temp, offset, name, True)) {
 	    if (COLOR_DEFINED(&(temp), offset))
 		free(temp.names[offset]);
 	    TScreenOf(target)->Tcolors[offset].value = temp.colors[offset];

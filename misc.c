@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.484 2010/03/15 00:06:28 tom Exp $ */
+/* $XTermId: misc.c,v 1.485 2010/03/21 21:38:23 tom Exp $ */
 
 /*
  *
@@ -2475,7 +2475,7 @@ ChangeColorsRequest(XtermWidget xw,
 		} else if (!pOldColors->names[ndx]
 			   || (thisName
 			       && strcmp(thisName, pOldColors->names[ndx]))) {
-		    AllocateTermColor(xw, &newColors, ndx, thisName);
+		    AllocateTermColor(xw, &newColors, ndx, thisName, False);
 		}
 	    }
 	}
@@ -2514,7 +2514,7 @@ ResetColorsRequest(XtermWidget xw,
 	if (thisName != 0
 	    && pOldColors->names[ndx] != 0
 	    && strcmp(thisName, pOldColors->names[ndx])) {
-	    AllocateTermColor(xw, &newColors, ndx, thisName);
+	    AllocateTermColor(xw, &newColors, ndx, thisName, False);
 
 	    if (newColors.which != 0) {
 		ChangeColors(xw, &newColors);
@@ -3625,11 +3625,12 @@ Bool
 AllocateTermColor(XtermWidget xw,
 		  ScrnColors * pNew,
 		  int ndx,
-		  const char *name)
+		  const char *name,
+		  Boolean always)
 {
     Bool result = False;
 
-    if (AllowColorOps(xw, ecSetColor)) {
+    if (always || AllowColorOps(xw, ecSetColor)) {
 	XColor def;
 	TScreen *screen = TScreenOf(xw);
 	Colormap cmap = xw->core.colormap;
