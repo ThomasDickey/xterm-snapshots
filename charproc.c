@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1036 2010/03/21 21:38:23 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1037 2010/04/05 10:51:12 tom Exp $ */
 
 /*
 
@@ -6479,11 +6479,7 @@ VTInitialize(Widget wrequest,
     TRACE(("initialized unicode_font to %d\n", TScreenOf(wnew)->unicode_font));
 #endif
 
-    decode_wcwidth((wnew->misc.cjk_width ? 2 : 0)
-		   + (wnew->misc.mk_width ? 1 : 0)
-		   + 1,
-		   wnew->misc.mk_samplesize,
-		   wnew->misc.mk_samplepass);
+    decode_wcwidth(wnew);
 #endif /* OPT_WIDE_CHARS */
 
     init_Bres(screen.always_bold_mode);

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.524 2010/03/12 00:56:58 tom Exp $ */
+/* $XTermId: util.c,v 1.525 2010/04/05 10:53:10 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -90,6 +90,7 @@ static void vertical_copy_area(XtermWidget xw,
 			       int amount);
 
 #if OPT_WIDE_CHARS
+unsigned first_widechar;
 int (*my_wcwidth) (wchar_t);
 #endif
 
@@ -3890,20 +3891,22 @@ systemWcwidthOk(int samplesize, int samplepass)
 #endif /* HAVE_WCWIDTH */
 
 void
-decode_wcwidth(int mode, int samplesize, int samplepass)
+decode_wcwidth(XtermWidget xw)
 {
+    int mode = ((xw->misc.cjk_width ? 2 : 0)
+		+ (xw->misc.mk_width ? 1 : 0)
+		+ 1);
+
     switch (mode) {
     default:
 #if defined(HAVE_WCHAR_H) && defined(HAVE_WCWIDTH)
-	if (xtermEnvUTF8() && systemWcwidthOk(samplesize, samplepass)) {
+	if (xtermEnvUTF8() &&
+	    systemWcwidthOk(xw->misc.mk_samplesize, xw->misc.mk_samplepass)) {
 	    my_wcwidth = wcwidth;
 	    TRACE(("using system wcwidth() function\n"));
 	    break;
 	}
 	/* FALLTHRU */
-#else
-	(void) samplesize;
-	(void) samplepass;
 #endif
     case 2:
 	my_wcwidth = &mk_wcwidth;
@@ -3914,6 +3917,13 @@ decode_wcwidth(int mode, int samplesize, int samplepass)
 	my_wcwidth = &mk_wcwidth_cjk;
 	TRACE(("using MK-CJK wcwidth() function\n"));
 	break;
+    }
+
+    for (first_widechar = 128; first_widechar < 4500; ++first_widechar) {
+	if (my_wcwidth(first_widechar) > 1) {
+	    TRACE(("first_widechar %#x\n", first_widechar));
+	    break;
+	}
     }
 }
 #endif
