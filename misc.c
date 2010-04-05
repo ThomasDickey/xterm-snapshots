@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.485 2010/03/21 21:38:23 tom Exp $ */
+/* $XTermId: misc.c,v 1.486 2010/04/04 23:56:52 tom Exp $ */
 
 /*
  *
@@ -3626,7 +3626,7 @@ AllocateTermColor(XtermWidget xw,
 		  ScrnColors * pNew,
 		  int ndx,
 		  const char *name,
-		  Boolean always)
+		  Bool always)
 {
     Bool result = False;
 
