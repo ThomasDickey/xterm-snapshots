@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.170 2010/03/04 02:03:33 tom Exp $
+## $XTermId: Makefile.in,v 1.171 2010/04/04 22:41:32 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -45,6 +45,9 @@ CC		= @CC@
 CPP		= @CPP@
 AWK		= @AWK@
 LINK		= $(CC) $(CFLAGS)
+
+CTAGS		= @CTAGS@
+ETAGS		= @ETAGS@
 
 LN_S		= @LN_S@
 RM              = rm -f
@@ -397,10 +400,10 @@ lint :
 	$(LINT) $(CPPFLAGS) $(SRCS2)
 
 tags :
-	ctags $(SRCS) $(HDRS)
+	$(CTAGS) $(SRCS) $(HDRS)
 
 TAGS :
-	etags $(SRCS) $(HDRS)
+	$(ETAGS) $(SRCS) $(HDRS)
 
 $(TERMINFO_DIR) $(INSTALL_DIRS) :
 	mkdir -p $@

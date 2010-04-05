@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.256 2010/01/04 21:41:10 tom Exp $
+dnl $XTermId: configure.in,v 1.258 2010/04/04 22:41:15 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -980,6 +980,9 @@ for cf_def in \
 do
 	CPPFLAGS=`echo "$CPPFLAGS" | sed -e s/-D$cf_def//`
 done
+
+CF_MAKE_TAGS
+CF_RPATH_HACK
 
 ###	output Makefile and xtermcfg.h
 AC_OUTPUT(Makefile)
