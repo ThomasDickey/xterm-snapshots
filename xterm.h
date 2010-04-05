@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.610 2010/04/04 23:56:40 tom Exp $ */
+/* $XTermId: xterm.h,v 1.612 2010/04/05 10:51:07 tom Exp $ */
 
 /************************************************************
 
@@ -766,9 +766,8 @@ extern void ReadLineButton             PROTO_XT_ACTIONS_ARGS;
 
 #if OPT_WIDE_CHARS
 extern Bool iswide(int  /* i */);
-#define FIRST_WIDECHAR 256
-#define WideCells(n) (((IChar)(n) >= FIRST_WIDECHAR) ? my_wcwidth((wchar_t) (n)) : 1)
-#define isWide(n)    (((IChar)(n) >= FIRST_WIDECHAR) && iswide(n))
+#define WideCells(n) (((IChar)(n) >= first_widechar) ? my_wcwidth((wchar_t) (n)) : 1)
+#define isWide(n)    (((IChar)(n) >= first_widechar) && iswide(n))
 #else
 #define WideCells(n) 1
 #endif
@@ -917,6 +916,7 @@ extern SIGNAL_T Exit (int  /* n */);
 #endif
 
 #if OPT_WIDE_CHARS
+extern unsigned first_widechar;
 extern int (*my_wcwidth)(wchar_t);
 #endif
 
@@ -1186,7 +1186,7 @@ extern void RevScroll (XtermWidget /* xw */, int  /* amount */);
 extern void ReverseVideo (XtermWidget  /* termw */);
 extern void WriteText (XtermWidget /* xw */, IChar * /* str */, Cardinal /* len */);
 extern void decode_keyboard_type (XtermWidget /* xw */, struct XTERM_RESOURCE * /* rp */);
-extern void decode_wcwidth (int  /* mode */, int /* samplesize */, int /* samplepass */);
+extern void decode_wcwidth (XtermWidget  /* xw */);
 extern void do_erase_display (XtermWidget /* xw */, int  /* param */, int  /* mode */);
 extern void do_erase_line (XtermWidget /* xw */, int  /* param */, int  /* mode */);
 extern void getXtermSizeHints (XtermWidget /* xw */);
