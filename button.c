@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.365 2010/03/17 09:49:04 tom Exp $ */
+/* $XTermId: button.c,v 1.367 2010/04/06 09:18:18 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1075,28 +1075,38 @@ DECtoASCII(unsigned ch)
     }
     return ch;
 }
+
+#if OPT_WIDE_CHARS
+static Cardinal
+addXtermChar(Char ** buffer, Cardinal *used, Cardinal offset, Char value)
+{
+    if (offset + 1 >= *used) {
+	*used = 1 + (2 * (offset + 1));
+	allocXtermChars(buffer, *used);
+    }
+    (*buffer)[offset++] = value;
+    return offset;
+}
+#define AddChar(buffer, used, offset, value) \
+	offset = addXtermChar(buffer, used, offset, (Char) value)
+
 /*
  * Convert a UTF-8 string to Latin-1, replacing non Latin-1 characters by `#',
  * or ASCII/Latin-1 equivalents for special cases.
  */
-#if OPT_WIDE_CHARS
 static Char *
 UTF8toLatin1(TScreen * screen, Char * s, unsigned len, unsigned long *result)
 {
     static Char *buffer;
     static Cardinal used;
 
-    Char *p, *q;
+    Cardinal offset = 0;
 
-    if (len > used) {
-	used = 1 + (2 * len);
-	allocXtermChars(&buffer, used);
-    }
+    Char *p;
 
-    if (buffer != 0) {
+    if (len != 0) {
 	PtyData data;
 
-	q = buffer;
 	fakePtyData(&data, s, s + len);
 	while (decodeUtf8(&data)) {
 	    Bool fails = False;
@@ -1105,17 +1115,17 @@ UTF8toLatin1(TScreen * screen, Char * s, unsigned len, unsigned long *result)
 	    if (value == UCS_REPL) {
 		fails = True;
 	    } else if (value < 256) {
-		*q++ = CharOf(value);
+		AddChar(&buffer, &used, offset, CharOf(value));
 	    } else {
 		unsigned eqv = ucs2dec(value);
 		if (xtermIsDecGraphic(eqv)) {
-		    *q++ = (Char) DECtoASCII(eqv);
+		    AddChar(&buffer, &used, offset, DECtoASCII(eqv));
 		} else {
 		    eqv = AsciiEquivs(value);
 		    if (eqv == value) {
 			fails = True;
 		    } else {
-			*q++ = (Char) eqv;
+			AddChar(&buffer, &used, offset, eqv);
 		    }
 		    if (isWide((wchar_t) value))
 			extra = True;
@@ -1129,19 +1139,14 @@ UTF8toLatin1(TScreen * screen, Char * s, unsigned len, unsigned long *result)
 	     */
 	    if (fails) {
 		for (p = (Char *) screen->default_string; *p != '\0'; ++p) {
-		    len = (unsigned) (3 + q - buffer);
-		    if (len >= used) {
-			used = 1 + (2 * len);
-			allocXtermChars(&buffer, used);
-		    }
-		    *q++ = *p;
+		    AddChar(&buffer, &used, offset, *p);
 		}
 	    }
 	    if (extra)
-		*q++ = ' ';
+		AddChar(&buffer, &used, offset, ' ');
 	}
-	*q = 0;
-	*result = (unsigned long) (q - buffer);
+	AddChar(&buffer, &used, offset, '\0');
+	*result = (unsigned long) (offset - 1);
     } else {
 	*result = 0;
     }
