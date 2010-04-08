@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.486 2010/04/04 23:56:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.487 2010/04/08 00:30:11 tom Exp $ */
 
 /*
  *
@@ -184,6 +184,7 @@ selectwindow(TScreen * screen, int flag)
 	if (screen->cursor_state)
 	    ShowCursor();
     }
+    ShowScrollLock(screen, screen->scroll_lock);
 }
 
 static void
@@ -191,6 +192,7 @@ unselectwindow(TScreen * screen, int flag)
 {
     TRACE(("unselectwindow(%d) flag=%d\n", screen->select, flag));
 
+    ShowScrollLock(screen, False);
     if (screen->hide_pointer) {
 	screen->hide_pointer = False;
 	xtermDisplayCursor(term);
@@ -3759,6 +3761,8 @@ Cleanup(int code)
 {
     static Bool cleaning;
     TScreen *screen = TScreenOf(term);
+
+    SetScrollLock(screen, False);
 
     /*
      * Process "-hold" and session cleanup only for a normal exit.

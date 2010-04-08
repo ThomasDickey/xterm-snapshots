@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.657 2010/03/12 00:55:48 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.658 2010/04/07 23:10:47 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -629,6 +629,10 @@ typedef struct {
 
 #ifndef OPT_SUN_FUNC_KEYS
 #define OPT_SUN_FUNC_KEYS 1 /* true if xterm supports Sun-style function keys */
+#endif
+
+#ifndef OPT_SCROLL_LOCK
+#define OPT_SCROLL_LOCK 1 /* true if xterm interprets fontsize-shifting */
 #endif
 
 #ifndef OPT_SELECT_REGEX
@@ -1801,6 +1805,10 @@ typedef struct {
 	int		restore_y;
 	unsigned	restore_width;
 	unsigned	restore_height;
+#endif
+
+#if OPT_SCROLL_LOCK
+	Boolean		scroll_lock;	/* true to keep buffer in view	*/
 #endif
 
 #if OPT_VT52_MODE

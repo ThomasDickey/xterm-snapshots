@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.313 2010/03/15 00:07:11 tom Exp $ */
+/* $XTermId: input.c,v 1.314 2010/04/08 09:04:47 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -181,7 +181,7 @@ AdjustAfterInput(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     if (screen->scrollkey && screen->topline != 0)
-	WindowScroll(xw, 0);
+	WindowScroll(xw, 0, False);
     if (screen->marginbell) {
 	int col = screen->max_col - screen->nmarginbell;
 	if (screen->bellArmed >= 0) {

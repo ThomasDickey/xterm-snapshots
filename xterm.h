@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.612 2010/04/05 10:51:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.616 2010/04/08 09:04:43 tom Exp $ */
 
 /************************************************************
 
@@ -998,6 +998,15 @@ extern void HandleRestoreSize          PROTO_XT_ACTIONS_ARGS;
 extern void RequestMaximize (XtermWidget  /* termw */, int  /* maximize */);
 #endif
 
+#if OPT_SCROLL_LOCK
+extern void ShowScrollLock (TScreen * /* screen */, Bool /* enable */);
+extern void SetScrollLock (TScreen * /* screen */, Bool /* enable */);
+extern void HandleScrollLock           PROTO_XT_ACTIONS_ARGS;
+#else
+#define ShowScrollLock(screen, enable) /* nothing */
+#define SetScrollLock(screen, enable) /* nothing */
+#endif
+
 #if OPT_WIDE_CHARS
 extern Bool xtermEnvUTF8(void);
 #else
@@ -1149,7 +1158,7 @@ extern void ScrollBarOff (XtermWidget  /* xw */);
 extern void ScrollBarOn (XtermWidget  /* xw */, Bool /* init */);
 extern void ScrollBarReverseVideo (Widget  /* scrollWidget */);
 extern void ToggleScrollBar (XtermWidget  /* xw */);
-extern void WindowScroll (XtermWidget /* xw */, int  /* top */);
+extern void WindowScroll (XtermWidget /* xw */, int  /* top */, Bool /* always */);
 
 #ifdef SCROLLBAR_RIGHT
 extern void updateRightScrollbar(XtermWidget  /* xw */);
