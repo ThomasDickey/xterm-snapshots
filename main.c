@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.604 2010/04/05 00:11:46 tom Exp $ */
+/* $XTermId: main.c,v 1.605 2010/04/08 00:32:05 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -4683,6 +4683,7 @@ Exit(int n)
     }
 #endif /* USE_SYSV_UTMP */
 #endif /* HAVE_UTMP */
+    ShowScrollLock(screen, False);
 
     /*
      * Flush pending data before releasing ownership, so nobody else can write

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.525 2010/04/05 10:53:10 tom Exp $ */
+/* $XTermId: util.c,v 1.528 2010/04/08 09:25:07 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -460,82 +460,90 @@ xtermScroll(XtermWidget xw, int amount)
     if (amount > i)
 	amount = i;
 
-    if (ScrnHaveSelection(screen))
-	adjustHiliteOnFwdScroll(xw, amount, scroll_all_lines);
-
-    if (screen->jumpscroll) {
-	if (screen->scroll_amt > 0) {
-	    if (!screen->fastscroll) {
-		if (screen->refresh_amt + amount > i)
-		    FlushScroll(xw);
-	    }
-	    screen->scroll_amt += amount;
-	    screen->refresh_amt += amount;
-	} else {
-	    if (!screen->fastscroll) {
-		if (screen->scroll_amt < 0)
-		    FlushScroll(xw);
-	    }
-	    screen->scroll_amt = amount;
-	    screen->refresh_amt = amount;
-	}
+    if (screen->scroll_lock) {
 	refreshheight = 0;
+	screen->scroll_amt = 0;
+	screen->refresh_amt = 0;
+	screen->topline--;
+	screen->savedlines++;
     } else {
-	ScrollSelection(screen, -(amount), False);
-	if (amount == i) {
-	    ClearScreen(xw);
-	    screen->cursor_busy -= 1;
-	    return;
-	}
+	if (ScrnHaveSelection(screen))
+	    adjustHiliteOnFwdScroll(xw, amount, scroll_all_lines);
 
-	shift = INX2ROW(screen, 0);
-	bot = screen->max_row - shift;
-	scrollheight = i - amount;
-	refreshheight = amount;
-
-	if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
-	    (i = screen->max_row - refreshheight + 1))
-	    refreshtop = i;
-
-	if (scroll_all_lines) {
-	    scrolltop = 0;
-	    if ((scrollheight += shift) > i)
-		scrollheight = i;
-	    if ((i = screen->savedlines) < screen->savelines) {
-		if ((i += amount) > screen->savelines)
-		    i = screen->savelines;
-		screen->savedlines = i;
-		ScrollBarDrawThumb(screen->scrollWidget);
+	if (screen->jumpscroll) {
+	    if (screen->scroll_amt > 0) {
+		if (!screen->fastscroll) {
+		    if (screen->refresh_amt + amount > i)
+			FlushScroll(xw);
+		}
+		screen->scroll_amt += amount;
+		screen->refresh_amt += amount;
+	    } else {
+		if (!screen->fastscroll) {
+		    if (screen->scroll_amt < 0)
+			FlushScroll(xw);
+		}
+		screen->scroll_amt = amount;
+		screen->refresh_amt = amount;
 	    }
+	    refreshheight = 0;
 	} else {
-	    scrolltop = screen->top_marg + shift;
-	    if ((i = screen->bot_marg - bot) > 0) {
-		scrollheight -= i;
-		if ((i = screen->top_marg + amount - 1 - bot) >= 0) {
-		    refreshtop += i;
-		    refreshheight -= i;
+	    ScrollSelection(screen, -(amount), False);
+	    if (amount == i) {
+		ClearScreen(xw);
+		screen->cursor_busy -= 1;
+		return;
+	    }
+
+	    shift = INX2ROW(screen, 0);
+	    bot = screen->max_row - shift;
+	    scrollheight = i - amount;
+	    refreshheight = amount;
+
+	    if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
+		(i = screen->max_row - refreshheight + 1))
+		refreshtop = i;
+
+	    if (scroll_all_lines) {
+		scrolltop = 0;
+		if ((scrollheight += shift) > i)
+		    scrollheight = i;
+		if ((i = screen->savedlines) < screen->savelines) {
+		    if ((i += amount) > screen->savelines)
+			i = screen->savelines;
+		    screen->savedlines = i;
+		    ScrollBarDrawThumb(screen->scrollWidget);
+		}
+	    } else {
+		scrolltop = screen->top_marg + shift;
+		if ((i = screen->bot_marg - bot) > 0) {
+		    scrollheight -= i;
+		    if ((i = screen->top_marg + amount - 1 - bot) >= 0) {
+			refreshtop += i;
+			refreshheight -= i;
+		    }
 		}
 	    }
-	}
 
-	if (screen->multiscroll && amount == 1 &&
-	    screen->topline == 0 && screen->top_marg == 0 &&
-	    screen->bot_marg == screen->max_row) {
-	    if (screen->incopy < 0 && screen->scrolls == 0)
-		CopyWait(xw);
-	    screen->scrolls++;
-	}
+	    if (screen->multiscroll && amount == 1 &&
+		screen->topline == 0 && screen->top_marg == 0 &&
+		screen->bot_marg == screen->max_row) {
+		if (screen->incopy < 0 && screen->scrolls == 0)
+		    CopyWait(xw);
+		screen->scrolls++;
+	    }
 
-	scrolling_copy_area(xw, scrolltop + amount, scrollheight, amount);
+	    scrolling_copy_area(xw, scrolltop + amount, scrollheight, amount);
 
-	if (refreshheight > 0) {
-	    ClearCurBackground(xw,
-			       (int) refreshtop * FontHeight(screen) + screen->border,
-			       (int) OriginX(screen),
-			       (unsigned) (refreshheight * FontHeight(screen)),
-			       (unsigned) Width(screen));
-	    if (refreshheight > shift)
-		refreshheight = shift;
+	    if (refreshheight > 0) {
+		ClearCurBackground(xw,
+				   (int) refreshtop * FontHeight(screen) + screen->border,
+				   (int) OriginX(screen),
+				   (unsigned) (refreshheight * FontHeight(screen)),
+				   (unsigned) Width(screen));
+		if (refreshheight > shift)
+		    refreshheight = shift;
+	    }
 	}
     }
 
@@ -666,7 +674,8 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
     unsigned cells = visual_width(str, len);
     GC currentGC;
 
-    TRACE(("WriteText (%2d,%2d) %3d:%s\n",
+    TRACE(("WriteText %d (%2d,%2d) %3d:%s\n",
+	   screen->topline,
 	   screen->cur_row,
 	   screen->cur_col,
 	   len, visibleIChar(str, len)));
@@ -2246,7 +2255,9 @@ xtermXftDrawString(XtermWidget xw,
 	} else
 #endif
 	    if ((flags & BOLDATTR(screen))
+#if OPT_ISO_COLORS
 		&& !screen->colorBDMode
+#endif
 		&& XFT_FONT(renderWideBold[fontnum])) {
 	    wfont = XFT_FONT(renderWideBold[fontnum]);
 	} else {
@@ -3920,7 +3931,7 @@ decode_wcwidth(XtermWidget xw)
     }
 
     for (first_widechar = 128; first_widechar < 4500; ++first_widechar) {
-	if (my_wcwidth(first_widechar) > 1) {
+	if (my_wcwidth((int) first_widechar) > 1) {
 	    TRACE(("first_widechar %#x\n", first_widechar));
 	    break;
 	}

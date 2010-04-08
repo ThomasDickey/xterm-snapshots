@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1037 2010/04/05 10:51:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1040 2010/04/08 09:04:47 tom Exp $ */
 
 /*
 
@@ -225,6 +225,11 @@ static char defaultTranslations[] =
          Shift <KeyPress> Select:select-cursor-start() select-cursor-end(SELECT, CUT_BUFFER0) \n\
          Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \n\
 "
+#if OPT_SCROLL_LOCK
+"\
+        <KeyRelease> Scroll_Lock:scroll-lock() \n\
+"
+#endif
 #if OPT_SHIFT_FONTS
 "\
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \n\
@@ -385,6 +390,9 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_SCO_FUNC_KEYS
     { "set-sco-function-keys",	HandleScoFunctionKeys },
+#endif
+#if OPT_SCROLL_LOCK
+    { "scroll-lock",		HandleScrollLock },
 #endif
 #if OPT_SHIFT_FONTS
     { "larger-vt-font",		HandleLargerFont },
@@ -850,6 +858,9 @@ xtermAddInput(Widget w)
 	{ "ignore",		    HandleIgnore },
 #if OPT_DABBREV
 	{ "dabbrev-expand",	    HandleDabbrevExpand },
+#endif
+#if OPT_SCROLL_LOCK
+	{ "scroll-lock",	    HandleScrollLock },
 #endif
 #if OPT_SHIFT_FONTS
 	{ "larger-vt-font",	    HandleLargerFont },
@@ -3424,7 +3435,7 @@ in_put(XtermWidget xw)
 		&& screen->scrollttyoutput
 		&& screen->topline < 0)
 		/* Scroll to bottom */
-		WindowScroll(xw, 0);
+		WindowScroll(xw, 0, False);
 	    break;
 	}
 	if (screen->scroll_amt)
@@ -3497,7 +3508,7 @@ in_put(XtermWidget xw)
 	    if (screen->scrollWidget
 		&& screen->scrollttyoutput
 		&& screen->topline < 0)
-		WindowScroll(xw, 0);	/* Scroll to bottom */
+		WindowScroll(xw, 0, False);	/* Scroll to bottom */
 	    /* stop speed reading at some point to look for X stuff */
 	    TRACE(("VTbuffer uses %ld/%d\n",
 		   (long) (VTbuffer->last - VTbuffer->buffer),
@@ -6775,6 +6786,7 @@ VTRealize(Widget w,
     TRACE(("VTRealize\n"));
 
     TabReset(xw->tabs);
+    SetScrollLock(screen, False);
 
     if (screen->menu_font_number == fontMenu_default) {
 	myfont = &(xw->misc.default_font);

@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.258 2010/04/04 22:41:15 tom Exp $
+dnl $XTermId: configure.in,v 1.259 2010/04/08 08:46:28 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -300,7 +300,10 @@ freebsd*|netbsd*|dragonfly*) # 2004/8/15 - revisit this if/when grantpt is known
 	;;
 esac
 
+AC_CHECK_FUNCS(XkbQueryExtension)
+
 CF_XKB_BELL_EXT
+
 AC_CHECK_FUNCS(Xutf8LookupString, [],[
 	EXTRAHDRS="$EXTRAHDRS xutf8.h"
 	EXTRASRCS="$EXTRASRCS xutf8.c"
