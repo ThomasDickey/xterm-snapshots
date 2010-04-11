@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.616 2010/04/08 09:04:43 tom Exp $ */
+/* $XTermId: xterm.h,v 1.619 2010/04/10 20:31:14 tom Exp $ */
 
 /************************************************************
 
@@ -795,7 +795,6 @@ extern void noleaks_cachedCgs (XtermWidget /* xw */);
 /* charproc.c */
 extern Bool CheckBufPtrs (TScreen * /* screen */);
 extern int VTInit (XtermWidget /* xw */);
-extern int v_write (int  /* f */, Char * /* d */, unsigned  /* len */);
 extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name */, Bool  /* justprobe */);
 extern void HideCursor (void);
 extern void RestartBlinking(TScreen * /* screen */);
@@ -818,6 +817,7 @@ extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
 extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
 extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
+extern void v_write (int  /* f */, Char * /* d */, unsigned  /* len */);
 extern void xtermAddInput(Widget  /* w */);
 
 #if OPT_BLINK_CURS
@@ -966,7 +966,7 @@ extern void ReverseOldColors (void);
 extern void SysError (int  /* i */) GCC_NORETURN;
 extern void VisualBell (void);
 extern void do_dcs (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */);
-extern void do_osc (XtermWidget /* xw */, Char * /* buf */, unsigned  /* len */, int  /* final */);
+extern void do_osc (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */, int  /* final */);
 extern void do_xevents (void);
 extern void end_tek_mode (void);
 extern void end_vt_mode (void);
@@ -999,9 +999,11 @@ extern void RequestMaximize (XtermWidget  /* termw */, int  /* maximize */);
 #endif
 
 #if OPT_SCROLL_LOCK
+extern void HandleScrollLock           PROTO_XT_ACTIONS_ARGS;
 extern void ShowScrollLock (TScreen * /* screen */, Bool /* enable */);
 extern void SetScrollLock (TScreen * /* screen */, Bool /* enable */);
-extern void HandleScrollLock           PROTO_XT_ACTIONS_ARGS;
+extern void xtermShowLED (TScreen * /* screen */, Cardinal /* led_number */, Bool /* enable */);
+extern void xtermClearLEDs (TScreen * /* screen */);
 #else
 #define ShowScrollLock(screen, enable) /* nothing */
 #define SetScrollLock(screen, enable) /* nothing */

@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.152 2010/04/08 09:35:02 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.162 2010/04/11 00:35:02 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -545,7 +545,7 @@ ScrollTextUpDownBy(
 	TScreen *screen = TScreenOf(xw);
 	int rowOnScreen, newTopLine;
 
-	rowOnScreen = pixels / FontHeight(screen);
+	rowOnScreen = (int) (pixels / FontHeight(screen));
 	if (rowOnScreen == 0) {
 	    if (pixels < 0)
 		rowOnScreen = -1;
@@ -684,23 +684,68 @@ HandleScrollBack(
 
 #ifdef HAVE_XKBQUERYEXTENSION
 /*
+ * Check for Xkb on client and server.
+ */
+static int
+have_xkb(Display * dpy)
+{
+    static int initialized = -1;
+
+    if (initialized < 0) {
+	int xkbmajor = XkbMajorVersion;
+	int xkbminor = XkbMinorVersion;
+	int xkbopcode, xkbevent, xkberror;
+
+	initialized = 0;
+	if (XkbLibraryVersion(&xkbmajor, &xkbminor)
+	    && XkbQueryExtension(dpy,
+				 &xkbopcode,
+				 &xkbevent,
+				 &xkberror,
+				 &xkbmajor,
+				 &xkbminor)) {
+	    TRACE(("we have Xkb\n"));
+	    initialized = 1;
+#if OPT_TRACE
+	    {
+		XkbDescPtr xkb;
+		unsigned int mask;
+		int n;
+		char *modStr;
+
+		xkb = XkbGetKeyboard(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
+		if (xkb != NULL) {
+
+		    TRACE(("XkbGetKeyboard ok\n"));
+		    for (n = 0; n < XkbNumVirtualMods; ++n) {
+			if (xkb->names->vmods[n] != 0) {
+			    modStr = XGetAtomName(xkb->dpy,
+						  xkb->names->vmods[n]);
+			    if (modStr != 0) {
+				XkbVirtualModsToReal(xkb, 1 << n, &mask);
+				TRACE(("  name[%d] %s (%#x)\n", n, modStr, mask));
+			    }
+			}
+		    }
+		    XkbFreeKeyboard(xkb, 0, True);
+		}
+	    }
+#endif
+	}
+    }
+    return initialized;
+}
+
+/*
  * Use Xkb if we have it (still unreliable, but slightly better than hardcoded).
  */
 static Boolean
 showXkbLED(Display * dpy, const char *name, Bool enable)
 {
-    int xkbmajor = XkbMajorVersion;
-    int xkbminor = XkbMinorVersion;
-    int xkbopcode, xkbevent, xkberror;
     Atom my_atom;
     Boolean result = False;
 
-    if (XkbQueryExtension(dpy,
-			  &xkbopcode,
-			  &xkbevent,
-			  &xkberror,
-			  &xkbmajor,
-			  &xkbminor)) {
+    if (have_xkb(dpy)) {
 	my_atom = XInternAtom(dpy, name, True);
 	if ((my_atom != None) &&
 	    XkbGetNamedIndicator(dpy, my_atom, NULL, NULL, NULL, NULL) &&
@@ -714,44 +759,70 @@ showXkbLED(Display * dpy, const char *name, Bool enable)
 #endif
 
 /*
- * Showing the LED with xkb is problematic, but preferable to not doing it at
- * all.
+ * Display the given LED, preferably independent of keyboard state.
  */
+void
+xtermShowLED(TScreen * screen, Cardinal led_number, Bool enable)
+{
+    static const char *table[] =
+    {
+	"Num Lock",
+	"Caps Lock",
+	"Scroll Lock"
+    };
+
+    TRACE(("xtermShowLED %d:%s\n", led_number, BtoS(enable)));
+    if ((led_number >= 1) && (led_number <= XtNumber(table))) {
+	Display *dpy = screen->display;
+
+#ifdef HAVE_XKBQUERYEXTENSION
+	if (!showXkbLED(dpy, table[led_number - 1], enable))
+#endif
+	{
+	    XKeyboardState state;
+	    XKeyboardControl values;
+	    unsigned long use_mask;
+	    unsigned long my_bit = (unsigned long) (1 << (led_number - 1));
+
+	    XGetKeyboardControl(dpy, &state);
+	    use_mask = state.led_mask;
+	    if (enable) {
+		use_mask |= my_bit;
+	    } else {
+		use_mask &= ~my_bit;
+	    }
+
+	    if (state.led_mask != use_mask) {
+		values.led = (int) led_number;
+		values.led_mode = enable;
+		XChangeKeyboardControl(dpy, KBLed | KBLedMode, &values);
+	    }
+	}
+    }
+}
+
+void
+xtermClearLEDs(TScreen * screen)
+{
+    Display *dpy = screen->display;
+    XKeyboardControl values;
+
+    TRACE(("xtermClearLEDs\n"));
+    memset(&values, 0, sizeof(values));
+    XChangeKeyboardControl(dpy, KBLedMode, &values);
+}
+
 void
 ShowScrollLock(TScreen * screen, Bool enable)
 {
-    Display *dpy = screen->display;
-
-#ifdef HAVE_XKBQUERYEXTENSION
-    if (!showXkbLED(dpy, "Scroll Lock", enable))
-#endif
-    {
-	XKeyboardState state;
-	XKeyboardControl values;
-	unsigned use_mask;
-	unsigned my_bit = (1 << (SCROLL_LOCK_LED - 1));
-
-	XGetKeyboardControl(dpy, &state);
-	use_mask = state.led_mask;
-	if (enable) {
-	    use_mask |= my_bit;
-	} else {
-	    use_mask &= ~my_bit;
-	}
-
-	if (state.led_mask != use_mask) {
-	    values.led = SCROLL_LOCK_LED;
-	    values.led_mode = enable;
-	    XChangeKeyboardControl(dpy, KBLed | KBLedMode, &values);
-	}
-    }
+    xtermShowLED(screen, SCROLL_LOCK_LED, enable);
 }
 
 void
 SetScrollLock(TScreen * screen, Bool enable)
 {
     if (screen->scroll_lock != enable) {
-	screen->scroll_lock = enable;
+	screen->scroll_lock = (Boolean) enable;
 	ShowScrollLock(screen, enable);
     }
 }

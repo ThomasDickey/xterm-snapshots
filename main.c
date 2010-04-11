@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.605 2010/04/08 00:32:05 tom Exp $ */
+/* $XTermId: main.c,v 1.606 2010/04/10 15:44:25 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -3502,7 +3502,8 @@ spawnXTerm(XtermWidget xw)
 		    /* we don't need the socket, or the pty master anymore */
 		    close(ConnectionNumber(screen->display));
 #ifndef __MVS__
-		    close(screen->respond);
+		    if (screen->respond >= 0)
+			close(screen->respond);
 #endif /* __MVS__ */
 
 		    /* Now is the time to set up our process group and

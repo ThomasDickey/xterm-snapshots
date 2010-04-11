@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.658 2010/04/07 23:10:47 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.659 2010/04/09 09:43:31 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -327,6 +327,8 @@ typedef struct {
  */
 #define ANSI_BEL	0x07
 #define	ANSI_FF		0x0C		/* C0, C1 control names		*/
+#define	ANSI_XON	0x11		/* DC1 */
+#define	ANSI_XOFF	0x13		/* DC3 */
 #define	ANSI_NAK	0x15
 #define	ANSI_CAN	0x18
 #define	ANSI_ESC	0x1B

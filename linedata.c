@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.75 2010/03/17 09:37:09 tom Exp $ */
+/* $XTermId: linedata.c,v 1.76 2010/04/10 20:27:57 tom Exp $ */
 
 /************************************************************
 
@@ -61,7 +61,9 @@ getLineData(TScreen * screen, int row)
 #endif
     }
     if (row >= 0) {
+#if OPT_FIFO_LINES
 	assert(row <= screen->max_row);
+#endif
 	result = (LineData *) scrnHeadAddr(screen, buffer, (unsigned) row);
 	if (result != 0) {
 #if 1				/* FIXME - these should be done in setupLineData, etc. */
@@ -75,6 +77,7 @@ getLineData(TScreen * screen, int row)
 #endif
 #endif /* FIXME */
 	}
+	assert(result != 0);
     }
 
     return result;

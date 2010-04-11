@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.487 2010/04/08 00:30:11 tom Exp $ */
+/* $XTermId: misc.c,v 1.488 2010/04/10 18:33:42 tom Exp $ */
 
 /*
  *
@@ -2700,7 +2700,7 @@ ChangeFontRequest(XtermWidget xw, char *buf)
 /***====================================================================***/
 
 void
-do_osc(XtermWidget xw, Char * oscbuf, unsigned len GCC_UNUSED, int final)
+do_osc(XtermWidget xw, Char * oscbuf, size_t len, int final)
 {
     TScreen *screen = TScreenOf(xw);
     int mode;
