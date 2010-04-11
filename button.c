@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.367 2010/04/06 09:18:18 tom Exp $ */
+/* $XTermId: button.c,v 1.369 2010/04/11 00:32:45 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1095,7 +1095,7 @@ addXtermChar(Char ** buffer, Cardinal *used, Cardinal offset, Char value)
  * or ASCII/Latin-1 equivalents for special cases.
  */
 static Char *
-UTF8toLatin1(TScreen * screen, Char * s, unsigned len, unsigned long *result)
+UTF8toLatin1(TScreen * screen, Char * s, unsigned long len, unsigned long *result)
 {
     static Char *buffer;
     static Cardinal used;
@@ -1189,8 +1189,8 @@ xtermUtf8ToTextList(XtermWidget xw,
 		new_size += size + 1;
 	    }
 	    new_text_list =
-		(char **) XtMalloc(sizeof(char *) * (unsigned) *text_list_count);
-	    new_text_list[0] = tmp = XtMalloc(new_size);
+		(char **) XtMalloc((Cardinal) sizeof(char *) * (unsigned) *text_list_count);
+	    new_text_list[0] = tmp = XtMalloc((Cardinal) new_size);
 	    for (i = 0; i < (*text_list_count); ++i) {
 		data = (Char *) (*text_list)[i];
 		size = strlen((*text_list)[i]) + 1;
@@ -1269,7 +1269,8 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 		    if (copied[n] == ',')
 			++count;
 		}
-		result = (Atom *) XtMalloc(((2 * count) + 1) * sizeof(Atom));
+		result = (Atom *) XtMalloc(((2 * count) + 1)
+					   * (Cardinal) sizeof(Atom));
 		if (result == NULL) {
 		    TRACE(("Couldn't allocate selection types\n"));
 		} else {
@@ -1483,10 +1484,10 @@ MapSelections(XtermWidget xw, String * params, Cardinal num_params)
  * If it is not a cut-buffer, it is the primary selection (-1).
  */
 static int
-CutBuffer(unsigned code)
+CutBuffer(Atom code)
 {
     int cutbuffer;
-    switch (code) {
+    switch ((unsigned) code) {
     case XA_CUT_BUFFER0:
 	cutbuffer = 0;
 	break;
@@ -1746,7 +1747,7 @@ _qWriteSelectionData(TScreen * screen, Char * lag, unsigned length)
 }
 
 static void
-_WriteSelectionData(TScreen * screen, Char * line, unsigned length)
+_WriteSelectionData(TScreen * screen, Char * line, size_t length)
 {
     /* Write data to pty a line at a time. */
     /* Doing this one line at a time may no longer be necessary
@@ -1799,7 +1800,7 @@ _WriteKey(TScreen * screen, Char * in)
 {
     Char line[16];
     unsigned count = 0;
-    unsigned length = strlen((char *) in);
+    size_t length = strlen((char *) in);
 
     if (screen->control_eight_bits) {
 	line[count++] = ANSI_CSI;
@@ -1919,7 +1920,7 @@ SelectionReceived(Widget w,
 	}
 #endif
 	for (i = 0; i < text_list_count; i++) {
-	    unsigned len = strlen(text_list[i]);
+	    size_t len = strlen(text_list[i]);
 	    _WriteSelectionData(screen, (Char *) text_list[i], len);
 	}
 #if OPT_PASTE64
@@ -2503,23 +2504,23 @@ PointToCELL(TScreen * screen,
 static int
 LastTextCol(TScreen * screen, LineData * ld, int row)
 {
-    int i;
+    int i = -1;
     Char *ch;
 
-    if (okScrnRow(screen, row)) {
-	for (i = screen->max_col,
-	     ch = ld->attribs + i;
-	     i >= 0 && !(*ch & CHARDRAWN);
-	     ch--, i--) {
-	    ;
-	}
+    if (ld != 0) {
+	if (okScrnRow(screen, row)) {
+	    for (i = screen->max_col,
+		 ch = ld->attribs + i;
+		 i >= 0 && !(*ch & CHARDRAWN);
+		 ch--, i--) {
+		;
+	    }
 #if OPT_DEC_CHRSET
-	if (CSET_DOUBLE(GetLineDblCS(ld))) {
-	    i *= 2;
-	}
+	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
+		i *= 2;
+	    }
 #endif
-    } else {
-	i = -1;
+	}
     }
     return (i);
 }
@@ -2743,7 +2744,7 @@ static char *
 make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 {
     Char *result = 0;
-    unsigned need = (length + 1);
+    size_t need = (length + 1);
 
     /*
      * Get a quick upper bound to the number of bytes needed, if the whole
@@ -2788,13 +2789,13 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		    }
 		});
 
-		indexed[used] = last - result;
+		indexed[used] = (int) (last - result);
 		*next = 0;
 		/* TRACE(("index[%d.%d] %d:%s\n", row, used, indexed[used], last)); */
 		last = next;
 		++used;
 		++col;
-		indexed[used] = next - result;
+		indexed[used] = (int) (next - result);
 	    }
 	} while (used < length &&
 		 LineTstWrapped(ld) &&
@@ -3504,7 +3505,7 @@ SaveConvertedLength(XtPointer *target, unsigned long source)
 	if (sizeof(unsigned long) == 4) {
 	    *(unsigned long *) *target = source;
 	} else if (sizeof(unsigned) == 4) {
-	    *(unsigned *) *target = source;
+	    *(unsigned *) *target = (unsigned) source;
 	} else if (sizeof(unsigned short) == 4) {
 	    *(unsigned short *) *target = (unsigned short) source;
 	} else {

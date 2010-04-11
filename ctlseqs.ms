@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.211 2010/01/04 09:12:55 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.212 2010/04/09 10:50:28 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
@@ -1084,6 +1084,16 @@ Valid values for the second parameter:
   \*(Ps = \*0 \(-> 8-bit controls
   \*(Ps = \*1 \(-> 7-bit controls (always set for VT100)
   \*(Ps = \*2 \(-> 8-bit controls
+.
+.IP \\*(Cs\\*(Ps\\*s\\*q
+Load LEDs (DECLL)
+  \*(Ps = \*0 \(-> Clear all LEDS (default)
+  \*(Ps = \*1 \(-> Light Num Lock
+  \*(Ps = \*2 \(-> Light Caps Lock
+  \*(Ps = \*3 \(-> Light Scroll Lock
+  \*(Ps = \*2 \*1 \(-> Extinguish Num Lock
+  \*(Ps = \*2 \*2 \(-> Extinguish Caps Lock
+  \*(Ps = \*2 \*3 \(-> Extinguish Scroll Lock
 .
 .IP \\*(Cs\\*(Ps\\*s\\*(Sp\\*q
 Set cursor style (DECSCUSR, VT520)

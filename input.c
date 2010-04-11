@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.314 2010/04/08 09:04:47 tom Exp $ */
+/* $XTermId: input.c,v 1.315 2010/04/09 09:44:06 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1326,7 +1326,7 @@ Input(XtermWidget xw,
 	    for (j = 0; j < kd.nbytes; ++j)
 		unparseputc(xw, CharOf(kd.strbuf[j]));
 	}
-	key = True;
+	key = ((kd.keysym != ANSI_XOFF) && (kd.keysym != ANSI_XON));
     }
     unparse_end(xw);
 

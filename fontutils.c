@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.336 2010/01/01 15:02:26 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.337 2010/04/10 20:44:15 tom Exp $ */
 
 /************************************************************
 
@@ -1835,15 +1835,15 @@ xtermComputeFontInfo(XtermWidget xw,
 		    face_size = 14.0;
 		} else {
 		    double ratio;
-		    int num = screen->menu_font_sizes[fontnum];
-		    int den = screen->menu_font_sizes[0];
+		    long num = screen->menu_font_sizes[fontnum];
+		    long den = screen->menu_font_sizes[0];
 
 		    if (den <= 0)
 			den = 1;
-		    ratio = mySquareRoot((1.0 * num) / den);
+		    ratio = mySquareRoot((double) num / (double) den);
 
 		    face_size = (ratio * xw->misc.face_size[0]);
-		    TRACE(("scaled using %3d/%d = %.2f -> %f\n",
+		    TRACE(("scaled using %3ld/%ld = %.2f -> %f\n",
 			   num, den, ratio, face_size));
 		}
 #else

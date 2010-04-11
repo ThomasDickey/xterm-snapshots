@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.57 2010/03/15 00:07:11 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.58 2010/04/10 20:42:00 tom Exp $ */
 
 /************************************************************
 
@@ -65,7 +65,7 @@ typedef struct {
 } CgsCacheData;
 
 #define DEPTH 8
-#define ITEM()      (me->data - me->list)
+#define ITEM()      (int) (me->data - me->list)
 #define LIST(item)  me->list[item]
 #define LINK(item)  me->data = (me->list + (item))
 #define THIS(field) me->data->field
@@ -388,8 +388,8 @@ newCache(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, CgsCache * me)
     xgcv.background = NEXT(bg);
 
     THIS(gc) = XCreateGC(myDisplay(xw), myDrawable(xw, cgsWin), mask, &xgcv);
-    TRACE(("getCgsGC(%s) created gc %p(%ld)\n",
-	   traceCgsEnum(cgsId), (void *) THIS(gc), (long) ITEM()));
+    TRACE(("getCgsGC(%s) created gc %p(%d)\n",
+	   traceCgsEnum(cgsId), (void *) THIS(gc), ITEM()));
 
     THIS(used) = 0;
     return THIS(gc);
