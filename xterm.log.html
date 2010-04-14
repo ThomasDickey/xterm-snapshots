@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.925 2010/04/09 09:59:18 tom Exp $
+  $XTermId: xterm.log.html,v 1.928 2010/04/14 10:46:42 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -318,6 +318,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>change default value of <code>menuLocale</code> resource to "C",
+	    to work around
+	    longstanding <a href="http://invisible-island.net/xterm/xterm.faq.html#slow_menus">Xorg bug</a>.
+
 	<li>modify handling of <code>scrollKey</code> feature to ignore
 	    XON/XOFF keys.
 
@@ -338,6 +342,9 @@ is the latest version of this file.
 	    <li>corrected check for <code>_XOPEN_SOURCE</code> for OpenSolaris.
 
 	    <li>when possible, add rpath option for libraries in unusual places
+
+	    <li>add configure option <code>--disable-rpath-hack</code> to
+	        control whether the rpath option can be added.
 	</ul>
 
 	<li>modify <code>AllocateTermColor()</code> to separate initialization

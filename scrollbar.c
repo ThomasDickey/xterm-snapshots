@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.163 2010/04/14 00:23:30 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.165 2010/04/14 10:24:31 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -331,7 +331,7 @@ ResizeScrollBar(XtermWidget xw)
 }
 
 void
-WindowScroll(XtermWidget xw, int top, Bool always)
+WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 {
     TScreen *screen = TScreenOf(xw);
     int i, lines;
@@ -740,6 +740,25 @@ have_xkb(Display * dpy)
     return initialized;
 }
 
+static Boolean
+getXkbLED(Display * dpy, const char *name, Boolean * result)
+{
+    Atom my_atom;
+    Boolean success = False;
+    Bool state;
+
+    if (have_xkb(dpy)) {
+	my_atom = XInternAtom(dpy, name, True);
+	if ((my_atom != None) &&
+	    XkbGetNamedIndicator(dpy, my_atom, NULL, &state, NULL, NULL)) {
+	    *result = (Boolean) state;
+	    success = True;
+	}
+    }
+
+    return success;
+}
+
 /*
  * Use Xkb if we have it (still unreliable, but slightly better than hardcoded).
  */
@@ -762,25 +781,47 @@ showXkbLED(Display * dpy, const char *name, Bool enable)
 }
 #endif
 
+static const char *led_table[] =
+{
+    "Num Lock",
+    "Caps Lock",
+    "Scroll Lock"
+};
+
+static Boolean
+xtermGetLED(TScreen * screen, Cardinal led_number)
+{
+    Display *dpy = screen->display;
+    Boolean result = False;
+
+#ifdef HAVE_XKBQUERYEXTENSION
+    if (!getXkbLED(dpy, led_table[led_number - 1], &result))
+#endif
+    {
+	XKeyboardState state;
+	unsigned long my_bit = (unsigned long) (1 << (led_number - 1));
+
+	XGetKeyboardControl(dpy, &state);
+
+	result = (Boolean) ((state.led_mask & my_bit) != 0);
+    }
+
+    TRACE(("xtermGetLED %d:%s\n", led_number, BtoS(result)));
+    return result;
+}
+
 /*
  * Display the given LED, preferably independent of keyboard state.
  */
 void
 xtermShowLED(TScreen * screen, Cardinal led_number, Bool enable)
 {
-    static const char *table[] =
-    {
-	"Num Lock",
-	"Caps Lock",
-	"Scroll Lock"
-    };
-
     TRACE(("xtermShowLED %d:%s\n", led_number, BtoS(enable)));
-    if ((led_number >= 1) && (led_number <= XtNumber(table))) {
+    if ((led_number >= 1) && (led_number <= XtNumber(led_table))) {
 	Display *dpy = screen->display;
 
 #ifdef HAVE_XKBQUERYEXTENSION
-	if (!showXkbLED(dpy, table[led_number - 1], enable))
+	if (!showXkbLED(dpy, led_table[led_number - 1], enable))
 #endif
 	{
 	    XKeyboardState state;
@@ -820,6 +861,12 @@ void
 ShowScrollLock(TScreen * screen, Bool enable)
 {
     xtermShowLED(screen, SCROLL_LOCK_LED, enable);
+}
+
+void
+GetScrollLock(TScreen * screen)
+{
+    screen->scroll_lock = xtermGetLED(screen, SCROLL_LOCK_LED);
 }
 
 void

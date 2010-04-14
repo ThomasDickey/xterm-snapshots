@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.606 2010/04/10 15:44:25 tom Exp $ */
+/* $XTermId: main.c,v 1.609 2010/04/14 09:51:12 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -844,7 +844,7 @@ static XtResource application_resources[] =
     Bres("messages", "Messages", messages, True),
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
-    Sres("menuLocale", "MenuLocale", menuLocale, ""),
+    Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -4684,7 +4684,6 @@ Exit(int n)
     }
 #endif /* USE_SYSV_UTMP */
 #endif /* HAVE_UTMP */
-    ShowScrollLock(screen, False);
 
     /*
      * Flush pending data before releasing ownership, so nobody else can write
