@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.259 2010/04/08 08:46:28 tom Exp $
+dnl $XTermId: configure.in,v 1.261 2010/04/14 10:52:14 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -586,7 +586,7 @@ fi
 
 AC_MSG_CHECKING(if you want saved-lines stored as a FIFO)
 CF_ARG_DISABLE(fifo-lines,
-	[  --enable-fifo-lines     disable FIFO-storage for saved-lines],
+	[  --disable-fifo-lines    disable FIFO-storage for saved-lines],
 	[enable_fifo_lines=no],
 	[enable_fifo_lines=yes])
 AC_MSG_RESULT($enable_fifo_lines)
@@ -985,7 +985,7 @@ do
 done
 
 CF_MAKE_TAGS
-CF_RPATH_HACK
+CF_DISABLE_RPATH_HACK
 
 ###	output Makefile and xtermcfg.h
 AC_OUTPUT(Makefile)

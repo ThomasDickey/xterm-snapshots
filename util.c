@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.529 2010/04/14 00:03:28 tom Exp $ */
+/* $XTermId: util.c,v 1.530 2010/04/14 08:55:20 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -460,6 +460,7 @@ xtermScroll(XtermWidget xw, int amount)
     if (amount > i)
 	amount = i;
 
+#if OPT_SCROLL_LOCK
     if (screen->scroll_lock) {
 	refreshheight = 0;
 	screen->scroll_amt = 0;
@@ -470,7 +471,9 @@ xtermScroll(XtermWidget xw, int amount)
 	if (++(screen->savedlines) > screen->savelines) {
 	    screen->savedlines = screen->savelines;
 	}
-    } else {
+    } else
+#endif
+    {
 	if (ScrnHaveSelection(screen))
 	    adjustHiliteOnFwdScroll(xw, amount, scroll_all_lines);
 

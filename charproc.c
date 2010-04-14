@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1045 2010/04/11 00:07:16 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1046 2010/04/14 08:49:19 tom Exp $ */
 
 /*
 
@@ -6821,7 +6821,6 @@ VTRealize(Widget w,
     TRACE(("VTRealize\n"));
 
     TabReset(xw->tabs);
-    SetScrollLock(screen, False);
 
     if (screen->menu_font_number == fontMenu_default) {
 	myfont = &(xw->misc.default_font);

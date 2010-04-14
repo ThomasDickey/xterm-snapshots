@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.619 2010/04/10 20:31:14 tom Exp $ */
+/* $XTermId: xterm.h,v 1.620 2010/04/14 09:00:06 tom Exp $ */
 
 /************************************************************
 
@@ -999,6 +999,7 @@ extern void RequestMaximize (XtermWidget  /* termw */, int  /* maximize */);
 #endif
 
 #if OPT_SCROLL_LOCK
+extern void GetScrollLock (TScreen * /* screen */);
 extern void HandleScrollLock           PROTO_XT_ACTIONS_ARGS;
 extern void ShowScrollLock (TScreen * /* screen */, Bool /* enable */);
 extern void SetScrollLock (TScreen * /* screen */, Bool /* enable */);
@@ -1007,6 +1008,7 @@ extern void xtermClearLEDs (TScreen * /* screen */);
 #else
 #define ShowScrollLock(screen, enable) /* nothing */
 #define SetScrollLock(screen, enable) /* nothing */
+#define GetScrollLock(screen) /* nothing */
 #endif
 
 #if OPT_WIDE_CHARS

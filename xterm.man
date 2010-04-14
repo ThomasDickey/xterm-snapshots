@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.453 2010/03/14 23:59:33 tom Exp $
+.\" $XTermId: xterm.man,v 1.454 2010/04/14 09:54:23 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -1266,12 +1266,11 @@ the popup menus.
 Use this to improve initialization performance of the Athena popup menus,
 which may load unnecessary (and very large) fonts, e.g.,
 in a locale having UTF-8 encoding.
-The default is an empty string, which uses the current locale setting.
+The default is the "C" (POSIX).
 .IP
-Set it to \*(``C\*('' to achieve the best performance using the default
-menu resource settings.
-If you happen to be using localized menu resources,
-set the resource accordingly.
+To use the current locale
+(only useful if you have localized the resource settings for the menu entries),
+set the resource to an empty string.
 .TP 8
 .B "minBufSize (\fPclass\fB MinBufSize)"
 Specify the minimum size of the input buffer, i.e., the amount of data
