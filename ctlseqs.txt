@@ -599,6 +599,14 @@ CSI Ps ; Ps " p
             Ps = 0  -> 8-bit controls
             Ps = 1  -> 7-bit controls (always set for VT100)
             Ps = 2  -> 8-bit controls
+CSI Ps q  Load LEDs (DECLL)
+            Ps = 0  -> Clear all LEDS (default)
+            Ps = 1  -> Light Num Lock
+            Ps = 2  -> Light Caps Lock
+            Ps = 3  -> Light Scroll Lock
+            Ps = 2  1  -> Extinguish Num Lock
+            Ps = 2  2  -> Extinguish Caps Lock
+            Ps = 2  3  -> Extinguish Scroll Lock
 CSI Ps SP q
           Set cursor style (DECSCUSR, VT520)
             Ps = 0  -> blinking block

@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.162 2010/04/11 00:35:02 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.163 2010/04/14 00:23:30 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -338,7 +338,11 @@ WindowScroll(XtermWidget xw, int top, Bool always)
     int scrolltop, scrollheight, refreshtop;
 
 #if OPT_SCROLL_LOCK
-    if (!screen->scroll_lock || always)
+    if (screen->scroll_lock && !always) {
+	if (screen->topline == -screen->savedlines) {
+	    ScrnRefresh(xw, 0, 0, MaxRows(screen), MaxCols(screen), False);
+	}
+    } else
 #endif
     {
 	if (top < -screen->savedlines) {

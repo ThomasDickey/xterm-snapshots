@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.411 2010/03/14 23:51:05 tom Exp $ */
+/* $XTermId: screen.c,v 1.412 2010/04/13 23:12:27 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1273,15 +1273,14 @@ ScrnRefresh(XtermWidget xw,
     int row;
     int maxrow = toprow + nrows - 1;
     int scrollamt = screen->scroll_amt;
-    int max = screen->max_row;
     unsigned gc_changes = 0;
 #ifdef __CYGWIN__
     static char first_time = 1;
 #endif
     static int recurse = 0;
 
-    TRACE(("ScrnRefresh (%d,%d) - (%d,%d)%s {{\n",
-	   toprow, leftcol,
+    TRACE(("ScrnRefresh top %d (%d,%d) - (%d,%d)%s {{\n",
+	   screen->topline, toprow, leftcol,
 	   nrows, ncols,
 	   force ? " force" : ""));
 
@@ -1325,12 +1324,12 @@ ScrnRefresh(XtermWidget xw,
 	else
 	    lastind = row - scrollamt;
 
-	TRACE2(("ScrnRefresh row=%d lastind=%d/%d\n", row, lastind, max));
-	if (lastind < 0 || lastind > max)
-	    continue;
+	TRACE2(("ScrnRefresh row=%d lastind=%d ->%d\n",
+		row, lastind, ROW2INX(screen, lastind)));
 
-	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0)
-	    break;
+	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0) {
+	    continue;
+	}
 	if (maxcol >= (int) ld->lineSize) {
 	    maxcol = ld->lineSize - 1;
 	    hi_col = maxcol;
@@ -1338,6 +1337,8 @@ ScrnRefresh(XtermWidget xw,
 
 	chars = ld->charData;
 	attrs = ld->attribs;
+	assert(chars != 0);
+	assert(attrs != 0);
 
 	if_OPT_WIDE_CHARS(screen, {
 	    /* This fixes an infinite recursion bug, that leads
