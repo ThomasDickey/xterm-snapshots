@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.77 2010/04/13 22:35:30 tom Exp $ */
+/* $XTermId: linedata.c,v 1.78 2010/04/14 23:41:10 tom Exp $ */
 
 /************************************************************
 
@@ -48,6 +48,7 @@ getLineData(TScreen * screen, int row)
 {
     LineData *result = 0;
     ScrnBuf buffer;
+    int max_row = screen->max_row;
 
     if (row >= 0) {
 	buffer = screen->visbuf;
@@ -58,9 +59,10 @@ getLineData(TScreen * screen, int row)
 #else
 	buffer = screen->saveBuf_index;
 	row += screen->savelines;
+	max_row += screen->savelines;
 #endif
     }
-    if (row >= 0 && row <= screen->max_row) {
+    if (row >= 0 && row <= max_row) {
 	result = (LineData *) scrnHeadAddr(screen, buffer, (unsigned) row);
 	if (result != 0) {
 #if 1				/* FIXME - these should be done in setupLineData, etc. */

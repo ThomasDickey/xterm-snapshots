@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.58 2010/04/10 20:42:00 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.59 2010/04/15 00:00:17 tom Exp $ */
 
 /************************************************************
 
@@ -549,7 +549,7 @@ clrCgsFonts(XtermWidget xw, VTwin * cgsWin, XTermFonts * font)
 			    traceFont(font)));
 		    NEXT(font) = 0;
 		    NEXT(cset) = 0;
-		    me->mask &= ~(GCFont | GC_CSet);
+		    me->mask &= (unsigned) ~(GCFont | GC_CSet);
 		}
 	    }
 	}

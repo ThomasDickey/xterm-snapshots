@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.659 2010/04/09 09:43:31 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.660 2010/04/14 22:54:27 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1811,6 +1811,7 @@ typedef struct {
 
 #if OPT_SCROLL_LOCK
 	Boolean		scroll_lock;	/* true to keep buffer in view	*/
+	Boolean		scroll_dirty;	/* scrolling makes screen dirty	*/
 #endif
 
 #if OPT_VT52_MODE
