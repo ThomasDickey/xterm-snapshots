@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.369 2010/04/11 00:32:45 tom Exp $ */
+/* $XTermId: button.c,v 1.370 2010/04/14 23:58:30 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -346,7 +346,7 @@ SendLocatorPosition(XtermWidget xw, XEvent * event)
     state = (event->xbutton.state
 	     & (Button1Mask | Button2Mask | Button3Mask | Button4Mask)) >> 8;
     /* update mask to "after" state */
-    state ^= 1 << button;
+    state ^= ((unsigned) (1 << button));
     /* swap Button1 & Button3 */
     state = ((state & (unsigned) ~(4 | 1))
 	     | ((state & 1) ? 4 : 0)
@@ -836,10 +836,10 @@ DiredButton(Widget w,
 	if ((event->type == ButtonPress || event->type == ButtonRelease)
 	    && (event->xbutton.y >= screen->border)
 	    && (event->xbutton.x >= OriginX(screen))) {
-	    line = ((unsigned) (event->xbutton.y - screen->border)
-		    / FontHeight(screen));
-	    col = ((unsigned) (event->xbutton.x - OriginX(screen))
-		   / FontWidth(screen));
+	    line = (unsigned) ((event->xbutton.y - screen->border)
+			       / FontHeight(screen));
+	    col = (unsigned) ((event->xbutton.x - OriginX(screen))
+			      / FontWidth(screen));
 	    Line[0] = CONTROL('X');
 	    Line[1] = ANSI_ESC;
 	    Line[2] = 'G';

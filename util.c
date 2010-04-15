@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.530 2010/04/14 08:55:20 tom Exp $ */
+/* $XTermId: util.c,v 1.531 2010/04/14 22:51:42 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -467,6 +467,7 @@ xtermScroll(XtermWidget xw, int amount)
 	screen->refresh_amt = 0;
 	if (--(screen->topline) < -screen->savelines) {
 	    screen->topline = -screen->savelines;
+	    screen->scroll_dirty = True;
 	}
 	if (++(screen->savedlines) > screen->savelines) {
 	    screen->savedlines = screen->savelines;
