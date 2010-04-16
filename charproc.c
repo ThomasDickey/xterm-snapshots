@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1046 2010/04/14 08:49:19 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1047 2010/04/15 08:46:24 tom Exp $ */
 
 /*
 
@@ -724,6 +724,10 @@ static XtResource xterm_resources[] =
 
 #if OPT_INPUT_METHOD
     Sres(XtNximFont, XtCXimFont, misc.f_x, DEFXIMFONT),
+#endif
+
+#if OPT_SCROLL_LOCK
+    Bres(XtNallowScrollLock, XtCAllowScrollLock, screen.allowScrollLock0, True),
 #endif
 
 #if OPT_XMC_GLITCH
@@ -6183,6 +6187,10 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.allowTitleOp0);
     init_Bres(screen.allowWindowOp0);
 
+#if OPT_SCROLL_LOCK
+    init_Bres(screen.allowScrollLock0);
+#endif
+
     init_Sres(screen.disallowedColorOps);
 
     set_flags_from_list(TScreenOf(wnew)->disallow_color_ops,
@@ -6224,6 +6232,10 @@ VTInitialize(Widget wrequest,
     TScreenOf(wnew)->allowTcapOps = TScreenOf(wnew)->allowTcapOp0;
     TScreenOf(wnew)->allowTitleOps = TScreenOf(wnew)->allowTitleOp0;
     TScreenOf(wnew)->allowWindowOps = TScreenOf(wnew)->allowWindowOp0;
+
+#if OPT_SCROLL_LOCK
+    TScreenOf(wnew)->allowScrollLock = TScreenOf(wnew)->allowScrollLock0;
+#endif
 
     init_Bres(screen.quiet_grab);
 
