@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.412 2010/04/13 23:12:27 tom Exp $ */
+/* $XTermId: screen.c,v 1.413 2010/04/16 09:07:41 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -79,20 +79,20 @@
 #define getMaxCol(screen) ((screen)->max_col)
 
 #define MoveLineData(base, dst, src, len) \
-	memmove(scrnHeadAddr(screen, base, dst), \
-		scrnHeadAddr(screen, base, src), \
-		scrnHeadSize(screen, len))
+	memmove(scrnHeadAddr(screen, base, (unsigned) (dst)), \
+		scrnHeadAddr(screen, base, (unsigned) (src)), \
+		scrnHeadSize(screen, (unsigned) (len)))
 
 #define SaveLineData(base, src, len) \
 	(void) ScrnPointers(screen, len); \
 	memcpy (screen->save_ptr, \
 		scrnHeadAddr(screen, base, src), \
-		scrnHeadSize(screen, len))
+		scrnHeadSize(screen, (unsigned) (len)))
 
 #define RestoreLineData(base, dst, len) \
 	memcpy (scrnHeadAddr(screen, base, dst), \
 		screen->save_ptr, \
-		scrnHeadSize(screen, len))
+		scrnHeadSize(screen, (unsigned) (len)))
 
 #if OPT_SAVE_LINES
 #define VisBuf(screen) screen->editBuf_index[screen->whichBuf]
@@ -104,7 +104,7 @@
  * ScrnPtr's can point to different types of data.
  */
 #define SizeofScrnPtr(name) \
-	sizeof(*((LineData *)0)->name)
+	(unsigned) sizeof(*((LineData *)0)->name)
 
 /*
  * The pointers in LineData point into a block of text allocated as a single
@@ -116,7 +116,7 @@
 
 #define AlignValue(value) \
 		if (!IsAligned(value)) \
-		    value = (value | AlignMask()) + 1
+		    value = (value | (unsigned) AlignMask()) + 1
 
 #define SetupScrnPtr(dst,src,type) \
 		dst = (type *) src; \
@@ -156,7 +156,7 @@ scrnHeadSize(TScreen * screen, unsigned count)
 
 #if OPT_WIDE_CHARS
     if (screen->wide_chars) {
-	result += screen->lineExtra;
+	result += (unsigned) screen->lineExtra;
     }
 #endif
     result *= count;
@@ -289,7 +289,7 @@ sizeofScrnRow(TScreen * screen, unsigned ncol)
 
     (void) screen;
 
-    result = (ncol * sizeof(CharData));
+    result = (ncol * (unsigned) sizeof(CharData));
     AlignValue(result);
 
 #if OPT_WIDE_CHARS
@@ -669,7 +669,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 
 	ld = getLineData(screen, row);
 
-	flags |= TERM_COLOR_FLAGS(xw);
+	UIntSet(flags, TERM_COLOR_FLAGS(xw));
 
 	for (n = 0; n < len; ++n)
 	    ld->charData[(unsigned) col + n] = (CharData) ' ';
@@ -991,7 +991,7 @@ ScrnAllocBuf(XtermWidget xw)
 size_t
 ScrnPointers(TScreen * screen, size_t len)
 {
-    size_t result = scrnHeadSize(screen, len);
+    size_t result = scrnHeadSize(screen, (unsigned) len);
 
     if (result > screen->save_len) {
 	if (screen->save_len)
@@ -2012,7 +2012,7 @@ ScreenResize(XtermWidget xw,
 
 	/* adjust scrolling region */
 	set_tb_margins(screen, 0, screen->max_row);
-	*flags &= ~ORIGIN;
+	UIntClr(*flags, ORIGIN);
 
 	if (screen->cur_row > screen->max_row)
 	    set_cur_row(screen, screen->max_row);
@@ -2221,7 +2221,7 @@ ScrnFillRectangle(XtermWidget xw,
 		unsigned temp = ld->attribs[col];
 
 		if (!keepColors) {
-		    temp &= ~(FG_COLOR | BG_COLOR);
+		    UIntClr(temp, (FG_COLOR | BG_COLOR));
 		}
 		temp = attrs | (temp & (FG_COLOR | BG_COLOR | PROTECTED));
 		temp |= CHARDRAWN;
@@ -2409,7 +2409,7 @@ ScrnMarkRectangle(XtermWidget xw,
 		    } else {
 			switch (params[n]) {
 			case 0:
-			    flags &= ~SGR_MASK;
+			    UIntClr(flags, SGR_MASK);
 			    break;
 			case 1:
 			    flags |= BOLD;
@@ -2427,19 +2427,19 @@ ScrnMarkRectangle(XtermWidget xw,
 			    flags |= INVISIBLE;
 			    break;
 			case 22:
-			    flags &= ~BOLD;
+			    UIntClr(flags, BOLD);
 			    break;
 			case 24:
-			    flags &= ~UNDERLINE;
+			    UIntClr(flags, UNDERLINE);
 			    break;
 			case 25:
-			    flags &= ~BLINK;
+			    UIntClr(flags, BLINK);
 			    break;
 			case 27:
-			    flags &= ~INVERSE;
+			    UIntClr(flags, INVERSE);
 			    break;
 			case 28:
-			    flags &= ~INVISIBLE;
+			    UIntClr(flags, INVISIBLE);
 			    break;
 			}
 		    }

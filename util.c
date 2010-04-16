@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.531 2010/04/14 22:51:42 tom Exp $ */
+/* $XTermId: util.c,v 1.532 2010/04/15 08:49:37 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -461,7 +461,7 @@ xtermScroll(XtermWidget xw, int amount)
 	amount = i;
 
 #if OPT_SCROLL_LOCK
-    if (screen->scroll_lock) {
+    if (screen->allowScrollLock && screen->scroll_lock) {
 	refreshheight = 0;
 	screen->scroll_amt = 0;
 	screen->refresh_amt = 0;

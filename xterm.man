@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.454 2010/04/14 09:54:23 tom Exp $
+.\" $XTermId: xterm.man,v 1.456 2010/04/16 08:25:08 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -1498,6 +1498,12 @@ The default is \*(``true.\*(''
 Specifies whether control sequences that set/query the font should be allowed.
 The default is \*(``true.\*(''
 .TP 8
+.B "allowScrollLock (\fPclass\fB AllowScrollLock)"
+Specifies whether control sequences that set/query
+the Scroll Lock key should be allowed,
+as well as whether the Scroll Lock key responds to user's keypress.
+The default is \*(``true.\*(''
+.TP 8
 .B "allowSendEvents (\fPclass\fB AllowSendEvents)"
 Specifies whether or not synthetic key and button events (generated using
 the X protocol SendEvent request) should be interpreted or discarded.
@@ -1604,6 +1610,9 @@ The default is \*(``false.\*(''
 Override the \fBnumLock\fP resource, telling \fIxterm\fR to use the Alt and Meta
 modifiers to construct parameters for function key sequences even if
 those modifiers appear in the translations resource.
+Normally \fIxterm\fP checks if Alt or Meta is used in a translation that
+would conflict with function key modifiers, and will ignore these modifiers
+in that special case.
 The default is \*(``false.\*(''
 .TP 8
 .B "answerbackString (\fPclass\fB AnswerbackString)"

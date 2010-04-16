@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.660 2010/04/14 22:54:27 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.662 2010/04/16 09:15:59 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -915,7 +915,7 @@ typedef enum {
 
 #define	COLOR_DEFINED(s,w)	((s)->which & (1<<(w)))
 #define	COLOR_VALUE(s,w)	((s)->colors[w])
-#define	SET_COLOR_VALUE(s,w,v)	(((s)->colors[w] = (v)), ((s)->which |= (1<<(w))))
+#define	SET_COLOR_VALUE(s,w,v)	(((s)->colors[w] = (v)), UIntSet((s)->which, (1<<(w))))
 
 #define	COLOR_NAME(s,w)		((s)->names[w])
 #define	SET_COLOR_NAME(s,w,v)	(((s)->names[w] = (v)), ((s)->which |= (1<<(w))))
@@ -1810,6 +1810,8 @@ typedef struct {
 #endif
 
 #if OPT_SCROLL_LOCK
+	Boolean		allowScrollLock;/* ScrollLock mode		*/
+	Boolean		allowScrollLock0;/* initial ScrollLock mode	*/
 	Boolean		scroll_lock;	/* true to keep buffer in view	*/
 	Boolean		scroll_dirty;	/* scrolling makes screen dirty	*/
 #endif

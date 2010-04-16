@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.620 2010/04/14 09:00:06 tom Exp $ */
+/* $XTermId: xterm.h,v 1.622 2010/04/16 08:58:07 tom Exp $ */
 
 /************************************************************
 
@@ -338,6 +338,7 @@ extern char **environ;
 #define XtNallowC1Printable	"allowC1Printable"
 #define XtNallowColorOps	"allowColorOps"
 #define XtNallowFontOps		"allowFontOps"
+#define XtNallowScrollLock	"allowScrollLock"
 #define XtNallowSendEvents	"allowSendEvents"
 #define XtNallowTcapOps		"allowTcapOps"
 #define XtNallowTitleOps	"allowTitleOps"
@@ -510,6 +511,7 @@ extern char **environ;
 #define XtCAllowC1Printable	"AllowC1Printable"
 #define XtCAllowColorOps	"AllowColorOps"
 #define XtCAllowFontOps		"AllowFontOps"
+#define XtCAllowScrollLock	"AllowScrollLock"
 #define XtCAllowSendEvents	"AllowSendEvents"
 #define XtCAllowTcapOps		"AllowTcapOps"
 #define XtCAllowTitleOps	"AllowTitleOps"
@@ -1264,7 +1266,7 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 	 && (screen->veryBoldColors & attr) == 0 \
 	 && (flags & attr) != 0 \
 	 && (fg == code)) \
-		 flags &= ~(attr)
+		 UIntClr(flags, attr)
 
 #define checkVeryBoldColors(flags, fg) \
 	checkVeryBoldAttr(flags, fg, COLOR_RV, INVERSE); \
@@ -1338,6 +1340,9 @@ unsigned visual_width(IChar * /* str */, Cardinal  /* len */);
 
 #define BtoS(b)    (((b) == Maybe) ? "maybe" : ((b) ? "on" : "off"))
 #define NonNull(s) ((s) ? (s) : "<null>")
+
+#define UIntSet(dst,bits) dst = dst | (unsigned) (bits)
+#define UIntClr(dst,bits) dst = dst & (unsigned) ~(bits)
 
 #ifdef __cplusplus
 	}

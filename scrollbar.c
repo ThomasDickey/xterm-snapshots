@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.166 2010/04/14 22:54:14 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.167 2010/04/15 08:49:15 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -338,7 +338,7 @@ WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
     int scrolltop, scrollheight, refreshtop;
 
 #if OPT_SCROLL_LOCK
-    if (screen->scroll_lock && !always) {
+    if (screen->allowScrollLock && (screen->scroll_lock && !always)) {
 	if (screen->scroll_dirty) {
 	    screen->scroll_dirty = False;
 	    ScrnRefresh(xw, 0, 0, MaxRows(screen), MaxCols(screen), False);
@@ -867,15 +867,18 @@ ShowScrollLock(TScreen * screen, Bool enable)
 void
 GetScrollLock(TScreen * screen)
 {
-    screen->scroll_lock = xtermGetLED(screen, SCROLL_LOCK_LED);
+    if (screen->allowScrollLock)
+	screen->scroll_lock = xtermGetLED(screen, SCROLL_LOCK_LED);
 }
 
 void
 SetScrollLock(TScreen * screen, Bool enable)
 {
-    if (screen->scroll_lock != enable) {
-	screen->scroll_lock = (Boolean) enable;
-	ShowScrollLock(screen, enable);
+    if (screen->allowScrollLock) {
+	if (screen->scroll_lock != enable) {
+	    screen->scroll_lock = (Boolean) enable;
+	    ShowScrollLock(screen, enable);
+	}
     }
 }
 
@@ -890,19 +893,21 @@ HandleScrollLock(Widget w,
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
 
-	/*
-	 * The default action (used with KeyRelease event) is to cycle the
-	 * state on/off.
-	 */
-	if (*param_count == 0) {
-	    SetScrollLock(screen, !screen->scroll_lock);
-	    TRACE(("HandleScrollLock ->%d\n",
-		   screen->scroll_lock));
-	} else {
-	    SetScrollLock(screen, atoi(params[0]));
-	    TRACE(("HandleScrollLock(%s) ->%d\n",
-		   params[0],
-		   screen->scroll_lock));
+	if (screen->allowScrollLock) {
+	    /*
+	     * The default action (used with KeyRelease event) is to cycle the
+	     * state on/off.
+	     */
+	    if (*param_count == 0) {
+		SetScrollLock(screen, !screen->scroll_lock);
+		TRACE(("HandleScrollLock ->%d\n",
+		       screen->scroll_lock));
+	    } else {
+		SetScrollLock(screen, atoi(params[0]));
+		TRACE(("HandleScrollLock(%s) ->%d\n",
+		       params[0],
+		       screen->scroll_lock));
+	    }
 	}
     }
 }
