@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.370 2010/04/14 23:58:30 tom Exp $ */
+/* $XTermId: button.c,v 1.371 2010/04/17 16:48:12 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1275,7 +1275,7 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 		    TRACE(("Couldn't allocate selection types\n"));
 		} else {
 		    char nextc = '?';
-		    char *listp = copied;
+		    char *listp = (char *) copied;
 		    count = 0;
 		    do {
 			char *nextp = parseItem(listp, &nextc);
@@ -1424,7 +1424,7 @@ UnmapSelections(XtermWidget xw)
 
     if (screen->mappedSelect) {
 	for (n = 0; screen->mappedSelect[n] != 0; ++n)
-	    free(screen->mappedSelect[n]);
+	    free((void *) screen->mappedSelect[n]);
 	free(screen->mappedSelect);
 	screen->mappedSelect = 0;
     }

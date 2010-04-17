@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.662 2010/04/16 09:15:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.664 2010/04/17 17:00:31 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -913,12 +913,12 @@ typedef enum {
     , ewLAST
 } WindowOps;
 
-#define	COLOR_DEFINED(s,w)	((s)->which & (1<<(w)))
+#define	COLOR_DEFINED(s,w)	((s)->which & (unsigned) (1<<(w)))
 #define	COLOR_VALUE(s,w)	((s)->colors[w])
 #define	SET_COLOR_VALUE(s,w,v)	(((s)->colors[w] = (v)), UIntSet((s)->which, (1<<(w))))
 
 #define	COLOR_NAME(s,w)		((s)->names[w])
-#define	SET_COLOR_NAME(s,w,v)	(((s)->names[w] = (v)), ((s)->which |= (1<<(w))))
+#define	SET_COLOR_NAME(s,w,v)	(((s)->names[w] = (v)), ((s)->which |= (unsigned) (1<<(w))))
 
 #define	UNDEFINE_COLOR(s,w)	((s)->which &= (~((w)<<1)))
 
@@ -1993,7 +1993,7 @@ typedef struct _TekScreen {
 #if OPT_READLINE
 #define SCREEN_FLAG(screenp,f)		(1&(screenp)->f)
 #define SCREEN_FLAG_set(screenp,f)	((screenp)->f |= 1)
-#define SCREEN_FLAG_unset(screenp,f)	((screenp)->f &= ~1L)
+#define SCREEN_FLAG_unset(screenp,f)	((screenp)->f &= (unsigned) ~1L)
 #define SCREEN_FLAG_save(screenp,f)	\
 	((screenp)->f = (((screenp)->f)<<1) | SCREEN_FLAG(screenp,f))
 #define SCREEN_FLAG_restore(screenp,f)	((screenp)->f = (((screenp)->f)>>1))
@@ -2180,10 +2180,10 @@ typedef struct _Misc {
 #if OPT_NUM_LOCK
     Boolean real_NumLock;	/* true if we treat NumLock key specially */
     Boolean alwaysUseMods;	/* true if we always want f-key modifiers */
-    unsigned long num_lock;	/* modifier for Num_Lock */
-    unsigned long alt_mods;	/* modifier for Alt_L or Alt_R */
-    unsigned long meta_mods;	/* modifier for Meta_L or Meta_R */
-    unsigned long other_mods;	/* conflicting modifiers, e.g., Mode_Switch */
+    unsigned num_lock;		/* modifier for Num_Lock */
+    unsigned alt_mods;		/* modifier for Alt_L or Alt_R */
+    unsigned meta_mods;		/* modifier for Meta_L or Meta_R */
+    unsigned other_mods;	/* conflicting modifiers, e.g., Mode_Switch */
 #endif
 #if OPT_RENDERFONT
     char *face_name;

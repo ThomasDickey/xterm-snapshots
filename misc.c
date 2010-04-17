@@ -1,10 +1,9 @@
-/* $XTermId: misc.c,v 1.489 2010/04/14 09:22:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.490 2010/04/17 17:12:26 tom Exp $ */
 
 /*
- *
  * Copyright 1999-2009,2010 by Thomas E. Dickey
  *
- *                        All Rights Reserved
+ *                         All Rights Reserved
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -135,7 +134,7 @@ Readlink(const char *filename)
 	buf = TypeRealloc(char, size, buf);
 	memset(buf, 0, size);
 
-	n = readlink(filename, buf, size);
+	n = (int) readlink(filename, buf, size);
 	if (n < 0) {
 	    free(buf);
 	    return NULL;
@@ -678,8 +677,8 @@ HandleInterpret(Widget w GCC_UNUSED,
     if (*param_count == 1) {
 	char *value = params[0];
 	int need = (int) strlen(value);
-	int used = VTbuffer->next - VTbuffer->buffer;
-	int have = VTbuffer->last - VTbuffer->buffer;
+	int used = (int) (VTbuffer->next - VTbuffer->buffer);
+	int have = (int) (VTbuffer->last - VTbuffer->buffer);
 
 	if (have - used + need < BUF_SIZE) {
 
@@ -1075,8 +1074,8 @@ dabbrev_expand(TScreen * screen)
     char *expansion;
     Char *copybuffer;
     size_t hint_len;
-    unsigned del_cnt;
-    unsigned buf_cnt;
+    size_t del_cnt;
+    size_t buf_cnt;
     int result = 0;
     LineData *ld;
 
@@ -1139,7 +1138,7 @@ dabbrev_expand(TScreen * screen)
 	    memmove(copybuffer + del_cnt,
 		    expansion + hint_len,
 		    strlen(expansion) - hint_len);
-	    v_write(pty, copybuffer, buf_cnt);
+	    v_write(pty, copybuffer, (unsigned) buf_cnt);
 	    /* v_write() just reset our flag */
 	    screen->dabbrev_working = True;
 	    free(copybuffer);
@@ -1761,7 +1760,7 @@ FlushLog(TScreen * screen)
 #endif /* VMS */
 	cp = VTbuffer->next;
 	if (screen->logstart != 0
-	    && (i = cp - screen->logstart) > 0) {
+	    && (i = (int) (cp - screen->logstart)) > 0) {
 	    IGNORE_RC(write(screen->logfd, screen->logstart, (unsigned) i));
 	}
 	screen->logstart = VTbuffer->next;
@@ -2094,8 +2093,8 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 	while (!IsEmpty(buf)) {
 	    char *next;
 
-	    color = strtol(buf, &next, 10);
-	    if (next == buf)
+	    color = (int) strtol(buf, &next, 10);
+	    if ((next == buf) || (color < 0))
 		break;		/* no number at all */
 	    if (next != 0) {
 		if (strchr(";", *next) == 0)
@@ -3394,7 +3393,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 
     char *my_attr;
     char *name;
-    unsigned limit;
+    size_t limit;
     Char *c1;
     Char *cp;
 
