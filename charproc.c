@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1047 2010/04/15 08:46:24 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1048 2010/04/16 23:40:04 tom Exp $ */
 
 /*
 
@@ -942,9 +942,9 @@ SGR_Foreground(XtermWidget xw, int color)
     Pixel fg;
 
     if (color >= 0) {
-	xw->flags |= FG_COLOR;
+	UIntSet(xw->flags, FG_COLOR);
     } else {
-	xw->flags &= ~FG_COLOR;
+	UIntClr(xw->flags, FG_COLOR);
     }
     fg = getXtermForeground(xw, xw->flags, color);
     xw->cur_foreground = color;
@@ -987,9 +987,9 @@ SGR_Background(XtermWidget xw, int color)
 	FlushScroll(xw);
 
     if (color >= 0) {
-	xw->flags |= BG_COLOR;
+	UIntSet(xw->flags, BG_COLOR);
     } else {
-	xw->flags &= ~BG_COLOR;
+	UIntClr(xw->flags, BG_COLOR);
     }
     bg = getXtermBackground(xw, xw->flags, color);
     xw->cur_background = color;
@@ -2133,8 +2133,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		switch (param[row]) {
 		case DEFAULT:
 		case 0:
-		    xw->flags &=
-			~(INVERSE | BOLD | BLINK | UNDERLINE | INVISIBLE);
+		    UIntClr(xw->flags,
+			    (INVERSE | BOLD | BLINK | UNDERLINE | INVISIBLE));
 		    if_OPT_ISO_COLORS(screen, {
 			reset_SGR_Colors(xw);
 		    });
@@ -2168,31 +2168,31 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    xw->flags |= INVISIBLE;
 		    break;
 		case 22:	/* reset 'bold' */
-		    xw->flags &= ~BOLD;
+		    UIntClr(xw->flags, BOLD);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
 		    break;
 		case 24:
-		    xw->flags &= ~UNDERLINE;
+		    UIntClr(xw->flags, UNDERLINE);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
 		    break;
 		case 25:	/* reset 'blink' */
-		    xw->flags &= ~BLINK;
+		    UIntClr(xw->flags, BLINK);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
 		    break;
 		case 27:
-		    xw->flags &= ~INVERSE;
+		    UIntClr(xw->flags, INVERSE);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedBG(xw);
 		    });
 		    break;
 		case 28:
-		    xw->flags &= ~INVISIBLE;
+		    UIntClr(xw->flags, INVISIBLE);
 		    break;
 		case 30:
 		case 31:
@@ -2513,7 +2513,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECKPNM:
 	    TRACE(("CASE_DECKPNM\n"));
-	    xw->keyboard.flags &= ~MODE_DECKPAM;
+	    UIntClr(xw->keyboard.flags, MODE_DECKPAM);
 	    update_appkeypad();
 	    sp->parsestate = sp->groundtable;
 	    break;
@@ -2666,7 +2666,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECSCA\n"));
 	    screen->protected_mode = DEC_PROTECT;
 	    if (param[0] <= 0 || param[0] == 2)
-		xw->flags &= ~PROTECTED;
+		UIntClr(xw->flags, PROTECTED);
 	    else if (param[0] == 1)
 		xw->flags |= PROTECTED;
 	    sp->parsestate = sp->groundtable;
@@ -2742,7 +2742,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_EPA:
 	    TRACE(("CASE_EPA - end protected area\n"));
-	    xw->flags &= ~PROTECTED;
+	    UIntClr(xw->flags, PROTECTED);
 	    sp->parsestate = sp->groundtable;
 	    break;
 
@@ -2882,13 +2882,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    screen->locator_events |= LOC_BTNS_DN;
 		    break;
 		case 2:
-		    screen->locator_events &= ~LOC_BTNS_DN;
+		    UIntClr(screen->locator_events, LOC_BTNS_DN);
 		    break;
 		case 3:
 		    screen->locator_events |= LOC_BTNS_UP;
 		    break;
 		case 4:
-		    screen->locator_events &= ~LOC_BTNS_UP;
+		    UIntClr(screen->locator_events, LOC_BTNS_UP);
 		    break;
 		}
 	    }
@@ -8177,7 +8177,7 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 	 * We reset autowrap to the resource values rather than turning
 	 * it off.
 	 */
-	xw->keyboard.flags &= ~(MODE_DECCKM | MODE_KAM | MODE_DECKPAM);
+	UIntClr(xw->keyboard.flags, (MODE_DECCKM | MODE_KAM | MODE_DECKPAM));
 	bitcpy(&xw->flags, xw->initflags, WRAPAROUND | REVERSEWRAP);
 	bitclr(&xw->flags, INSERT | INVERSE | BOLD | BLINK | UNDERLINE | INVISIBLE);
 	if_OPT_ISO_COLORS(screen, {

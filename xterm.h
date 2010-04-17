@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.622 2010/04/16 08:58:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.623 2010/04/17 16:11:49 tom Exp $ */
 
 /************************************************************
 
@@ -55,7 +55,7 @@ authorization.
 
 #if defined(__GNUC__) && defined(_FORTIFY_SOURCE)
 #define USE_IGNORE_RC
-#define IGNORE_RC(func) ignore_unused = func
+#define IGNORE_RC(func) ignore_unused = (int) func
 #else
 #define IGNORE_RC(func) (void) func
 #endif /* gcc workarounds */

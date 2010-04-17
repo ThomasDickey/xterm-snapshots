@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.322 2010/04/16 09:36:12 tom Exp $ */
+/* $XTermId: input.c,v 1.323 2010/04/17 17:10:44 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1341,7 +1341,7 @@ void
 StringInput(XtermWidget xw, Char * string, size_t nbytes)
 {
     TRACE(("InputString (%s,%lu)\n",
-	   visibleChars(string, nbytes),
+	   visibleChars(string, (unsigned) nbytes),
 	   (unsigned long) nbytes));
 #if OPT_TEK4014
     if (nbytes && TEK4014_GIN(tekWidget)) {
@@ -1703,7 +1703,7 @@ keyCanInsert(const char *parse)
 	} else if (ch == '\\') {
 	    escape = True;
 	} else if (ch == '"') {
-	    quoted = (Boolean) !quoted;
+	    quoted = (Boolean) ! quoted;
 	} else if (!quoted && isName(ch)) {
 	    const char *next = skipName(--parse);
 	    size_t need = (size_t) (next - parse);
@@ -1892,13 +1892,13 @@ xtermHasTranslation(XtermWidget xw, const char *keyword, Bool onlyInsert)
 static void
 addTranslation(XtermWidget xw, const char *fromString, const char *toString)
 {
-    unsigned have = (xw->keyboard.extra_translations
-		     ? strlen(xw->keyboard.extra_translations)
-		     : 0);
-    unsigned need = (((have != 0) ? (have + 4) : 0)
-		     + strlen(fromString)
-		     + strlen(toString)
-		     + 6);
+    size_t have = (xw->keyboard.extra_translations
+		   ? strlen(xw->keyboard.extra_translations)
+		   : 0);
+    size_t need = (((have != 0) ? (have + 4) : 0)
+		   + strlen(fromString)
+		   + strlen(toString)
+		   + 6);
 
     if (!xtermHasTranslation(xw, fromString, False)) {
 	xw->keyboard.extra_translations
@@ -1915,10 +1915,10 @@ addTranslation(XtermWidget xw, const char *fromString, const char *toString)
 }
 #endif
 
-#define SaveMask(name)	xw->misc.name |= mask;\
-			TRACE(("SaveMask(%s) %#lx (%#lx is%s modifier)\n", \
+#define SaveMask(name)	xw->misc.name |= (unsigned) mask;\
+			TRACE(("SaveMask(%s) %#x (%#x is%s modifier)\n", \
 				#name, \
-				xw->misc.name, mask, \
+				xw->misc.name, (unsigned) mask, \
 				ModifierName((unsigned) mask)));
 /*
  * Determine which modifier mask (if any) applies to the Num_Lock keysym.

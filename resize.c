@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.109 2009/10/12 00:41:33 tom Exp $ */
+/* $XTermId: resize.c,v 1.110 2010/04/17 17:11:23 tom Exp $ */
 
 /*
- * Copyright 2003-2008,2009 by Thomas E. Dickey
+ * Copyright 2003-2009,2010 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -341,16 +341,16 @@ main(int argc, char **argv ENVP_ARG)
 #ifdef USE_ANY_SYSV_TERMIO
     ioctl(tty, TCGETA, &tioorig);
     tio = tioorig;
-    tio.c_iflag &= ~(ICRNL | IUCLC);
-    tio.c_lflag &= ~(ICANON | ECHO);
+    UIntClr(tio.c_iflag, (ICRNL | IUCLC));
+    UIntClr(tio.c_lflag, (ICANON | ECHO));
     tio.c_cflag |= CS8;
     tio.c_cc[VMIN] = 6;
     tio.c_cc[VTIME] = 1;
 #elif defined(USE_TERMIOS)
     tcgetattr(tty, &tioorig);
     tio = tioorig;
-    tio.c_iflag &= ~ICRNL;
-    tio.c_lflag &= ~(ICANON | ECHO);
+    UIntClr(tio.c_iflag, ICRNL);
+    UIntClr(tio.c_lflag, (ICANON | ECHO));
     tio.c_cflag |= CS8;
     tio.c_cc[VMIN] = 6;
     tio.c_cc[VTIME] = 1;
@@ -358,7 +358,7 @@ main(int argc, char **argv ENVP_ARG)
     ioctl(tty, TIOCGETP, &sgorig);
     sg = sgorig;
     sg.sg_flags |= RAW;
-    sg.sg_flags &= ~ECHO;
+    UIntClr(sg.sg_flags, ECHO);
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
     signal(SIGINT, onintr);
     signal(SIGQUIT, onintr);
