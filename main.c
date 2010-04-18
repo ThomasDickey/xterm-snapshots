@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.609 2010/04/14 09:51:12 tom Exp $ */
+/* $XTermId: main.c,v 1.610 2010/04/18 17:09:13 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1818,7 +1818,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		Version();
 	    } else if (abbrev(argv[n], "-help", unique)) {
 		Help();
-	    } else if (abbrev(argv[n], "-class", 3)) {
+	    } else if (abbrev(argv[n], "-class", (size_t) 3)) {
 		if ((my_class = argv[++n]) == 0) {
 		    Help();
 		} else {
@@ -1827,7 +1827,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		unique = 3;
 	    } else {
 #if OPT_COLOR_RES
-		if (abbrev(argv[n], "-reverse", 2)
+		if (abbrev(argv[n], "-reverse", (size_t) 2)
 		    || !strcmp("-rv", argv[n])) {
 		    reversed = True;
 		} else if (!strcmp("+rv", argv[n])) {

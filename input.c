@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.323 2010/04/17 17:10:44 tom Exp $ */
+/* $XTermId: input.c,v 1.324 2010/04/18 17:50:52 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -836,13 +836,13 @@ Input(XtermWidget xw,
 #if OPT_WIDE_CHARS
 	    if (screen->utf8_mode) {
 		kd.nbytes = Xutf8LookupString(screen->xic, event,
-					      kd.strbuf, sizeof(kd.strbuf),
+					      kd.strbuf, (int) sizeof(kd.strbuf),
 					      &kd.keysym, &status_return);
 	    } else
 #endif
 	    {
 		kd.nbytes = XmbLookupString(screen->xic, event,
-					    kd.strbuf, sizeof(kd.strbuf),
+					    kd.strbuf, (int) sizeof(kd.strbuf),
 					    &kd.keysym, &status_return);
 	    }
 #if OPT_MOD_FKEYS
@@ -863,7 +863,7 @@ Input(XtermWidget xw,
 	{
 	    static XComposeStatus compose_status =
 	    {NULL, 0};
-	    kd.nbytes = XLookupString(event, kd.strbuf, sizeof(kd.strbuf),
+	    kd.nbytes = XLookupString(event, kd.strbuf, (int) sizeof(kd.strbuf),
 				      &kd.keysym, &compose_status);
 	}
 	kd.is_fkey = IsFunctionKey(kd.keysym);

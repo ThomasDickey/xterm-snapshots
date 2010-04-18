@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.212 2010/04/09 10:50:28 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.213 2010/04/18 14:52:50 Emanuele.Giaquinta Exp $
 .\"
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
@@ -1385,8 +1385,9 @@ be given in one control sequence, \fBxterm\fR can make more than one reply.
   \*(Ps = \*1\*4 \(-> Change mouse background color to \*(Pt
   \*(Ps = \*1\*5 \(-> Change Tektronix foreground color to \*(Pt
   \*(Ps = \*1\*6 \(-> Change Tektronix background color to \*(Pt
-  \*(Ps = \*1\*7 \(-> Change highlight color to \*(Pt
+  \*(Ps = \*1\*7 \(-> Change highlight background color to \*(Pt
   \*(Ps = \*1\*8 \(-> Change Tektronix cursor color to \*(Pt
+  \*(Ps = \*1\*9 \(-> Change highlight foreground color to \*(Pt
 .sp
   \*(Ps = \*4\*6 \(-> Change Log File to \*(Pt (normally disabled by a
 compile-time option)

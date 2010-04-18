@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.413 2010/04/16 09:07:41 tom Exp $ */
+/* $XTermId: screen.c,v 1.417 2010/04/18 18:14:10 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -81,18 +81,18 @@
 #define MoveLineData(base, dst, src, len) \
 	memmove(scrnHeadAddr(screen, base, (unsigned) (dst)), \
 		scrnHeadAddr(screen, base, (unsigned) (src)), \
-		scrnHeadSize(screen, (unsigned) (len)))
+		(size_t) scrnHeadSize(screen, (unsigned) (len)))
 
 #define SaveLineData(base, src, len) \
 	(void) ScrnPointers(screen, len); \
 	memcpy (screen->save_ptr, \
 		scrnHeadAddr(screen, base, src), \
-		scrnHeadSize(screen, (unsigned) (len)))
+		(size_t) scrnHeadSize(screen, (unsigned) (len)))
 
 #define RestoreLineData(base, dst, len) \
 	memcpy (scrnHeadAddr(screen, base, dst), \
 		screen->save_ptr, \
-		scrnHeadSize(screen, (unsigned) (len)))
+		(size_t) scrnHeadSize(screen, (unsigned) (len)))
 
 #if OPT_SAVE_LINES
 #define VisBuf(screen) screen->editBuf_index[screen->whichBuf]
@@ -265,7 +265,7 @@ allocScrnHead(TScreen * screen, unsigned nrow)
     ScrnPtr *result;
     unsigned size = scrnHeadSize(screen, 1);
 
-    result = (ScrnPtr *) calloc(nrow, size);
+    result = (ScrnPtr *) calloc((size_t) nrow, (size_t) size);
     if (result == 0)
 	SysError(ERROR_SCALLOC);
 
@@ -674,7 +674,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	for (n = 0; n < len; ++n)
 	    ld->charData[(unsigned) col + n] = (CharData) ' ';
 
-	memset(ld->attribs + col, flags, len);
+	memset(ld->attribs + col, flags, (size_t) len);
 
 	if_OPT_ISO_COLORS(screen, {
 	    CellColor p = xtermColorPair(xw);
@@ -685,7 +685,7 @@ ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
 	    for_each_combData(off, ld) {
-		memset(ld->combData[off] + col, 0, len * sizeof(CharData));
+		memset(ld->combData[off] + col, 0, (size_t) len * sizeof(CharData));
 	    }
 	});
     }
@@ -739,7 +739,7 @@ void
 ScrnWriteText(XtermWidget xw,
 	      IChar * str,
 	      unsigned flags,
-	      CellColor cur_fg_bg,
+	      unsigned cur_fg_bg,
 	      unsigned length)
 {
     TScreen *screen = TScreenOf(xw);
@@ -841,7 +841,7 @@ ScrnWriteText(XtermWidget xw,
 
     flags &= ATTRIBUTES;
     flags |= CHARDRAWN;
-    memset(attrs, (Char) flags, real_width);
+    memset(attrs, (Char) flags, (size_t) real_width);
 
     if_OPT_WIDE_CHARS(screen, {
 	size_t off;
@@ -854,7 +854,7 @@ ScrnWriteText(XtermWidget xw,
     if_OPT_ISO_COLORS(screen, {
 	unsigned j;
 	for (j = 0; j < real_width; ++j)
-	    fb[j] = cur_fg_bg;
+	    fb[j] = (CellColor) cur_fg_bg;
     });
 
     if_OPT_WIDE_CHARS(screen, {
@@ -906,7 +906,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 
 	memset(work->charData, 0, size * sizeof(CharData));
 	if (TERM_COLOR_FLAGS(xw)) {
-	    memset(work->attribs, (int) flags, size);
+	    memset(work->attribs, (int) flags, (size_t) size);
 #if OPT_ISO_COLORS
 	    {
 		CellColor p = xtermColorPair(xw);
@@ -916,7 +916,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	    }
 #endif
 	} else {
-	    memset(work->attribs, 0, size);
+	    memset(work->attribs, 0, (size_t) size);
 #if OPT_ISO_COLORS
 	    memset(work->color, 0, size * sizeof(work->color[0]));
 #endif
