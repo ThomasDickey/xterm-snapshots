@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.532 2010/04/15 08:49:37 tom Exp $ */
+/* $XTermId: util.c,v 1.534 2010/04/18 17:06:44 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -3392,7 +3392,7 @@ getXtermSizeHints(XtermWidget xw)
  * current screen foreground and background colors.
  */
 GC
-updatedXtermGC(XtermWidget xw, unsigned flags, CellColor fg_bg, Bool hilite)
+updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 {
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
@@ -3529,7 +3529,7 @@ resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
  * BOLD or UNDERLINE color-mode active, those will be used.
  */
 unsigned
-extract_fg(XtermWidget xw, CellColor color, unsigned flags)
+extract_fg(XtermWidget xw, unsigned color, unsigned flags)
 {
     unsigned fg = ExtractForeground(color);
 
@@ -3545,7 +3545,7 @@ extract_fg(XtermWidget xw, CellColor color, unsigned flags)
  * If we've got INVERSE color-mode active, that will be used.
  */
 unsigned
-extract_bg(XtermWidget xw, CellColor color, unsigned flags)
+extract_bg(XtermWidget xw, unsigned color, unsigned flags)
 {
     unsigned bg = ExtractBackground(color);
 

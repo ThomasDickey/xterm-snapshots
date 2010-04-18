@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.490 2010/04/17 17:12:26 tom Exp $ */
+/* $XTermId: misc.c,v 1.493 2010/04/18 17:51:44 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1761,7 +1761,7 @@ FlushLog(TScreen * screen)
 	cp = VTbuffer->next;
 	if (screen->logstart != 0
 	    && (i = (int) (cp - screen->logstart)) > 0) {
-	    IGNORE_RC(write(screen->logfd, screen->logstart, (unsigned) i));
+	    IGNORE_RC(write(screen->logfd, screen->logstart, (size_t) i));
 	}
 	screen->logstart = VTbuffer->next;
     }
@@ -2292,7 +2292,7 @@ GetOldColors(XtermWidget xw)
 {
     int i;
     if (pOldColors == NULL) {
-	pOldColors = (ScrnColors *) XtMalloc(sizeof(ScrnColors));
+	pOldColors = (ScrnColors *) XtMalloc((Cardinal) sizeof(ScrnColors));
 	if (pOldColors == NULL) {
 	    fprintf(stderr, "allocation failure in GetOldColors\n");
 	    return (False);
@@ -4158,7 +4158,7 @@ sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
 	res_array = TypeCallocN(XrmOptionDescRec, res_count);
 	for (j = 0; j < res_count; j++)
 	    res_array[j] = descs[j];
-	qsort(res_array, res_count, sizeof(*res_array), cmp_resources);
+	qsort(res_array, (size_t) res_count, sizeof(*res_array), cmp_resources);
     }
     return res_array;
 }
@@ -4186,7 +4186,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 #endif
 
     if (opt_array == 0) {
-	Cardinal opt_count, j;
+	size_t opt_count, j;
 #if OPT_TRACE
 	Cardinal k;
 	XrmOptionDescRec *res_array = sortedOptDescs(descs, numDescs);
@@ -4347,7 +4347,7 @@ xtermVersion(void)
 	else {
 	    /* some vendors leave trash in this string */
 	    for (;;) {
-		if (!strncmp(vendor, "Version ", 8))
+		if (!strncmp(vendor, "Version ", (size_t) 8))
 		    vendor += 8;
 		else if (isspace(CharOf(*vendor)))
 		    ++vendor;

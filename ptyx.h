@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.664 2010/04/17 17:00:31 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.666 2010/04/18 16:50:09 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -77,22 +77,22 @@
 #define MyStackAlloc(size, stack_cache_array)     \
     ((size) <= sizeof(stack_cache_array)	  \
     ?  (XtPointer)(stack_cache_array)		  \
-    :  (XtPointer)malloc((unsigned)(size)))
+    :  (XtPointer)malloc((size_t)(size)))
 
 #define MyStackFree(pointer, stack_cache_array) \
     if ((pointer) != ((char *)(stack_cache_array))) free(pointer)
 
 /* adapted from vile (vi-like-emacs) */
-#define TypeCallocN(type,n)	(type *)calloc((n), sizeof(type))
-#define TypeCalloc(type)	TypeCallocN(type,1)
+#define TypeCallocN(type,n)	(type *)calloc((size_t) (n), sizeof(type))
+#define TypeCalloc(type)	TypeCallocN(type, 1)
 
-#define TypeMallocN(type,n)	(type *)malloc(sizeof(type) * (n))
-#define TypeMalloc(type)	TypeMallocN(type,1)
+#define TypeMallocN(type,n)	(type *)malloc(sizeof(type) * (size_t) (n))
+#define TypeMalloc(type)	TypeMallocN(type, 1)
 
 #define TypeRealloc(type,n,p)	(type *)realloc(p, (n) * sizeof(type))
 
 /* use these to allocate partly-structured data */
-#define CastMallocN(type,n)	(type *)malloc(sizeof(type) + (n))
+#define CastMallocN(type,n)	(type *)malloc(sizeof(type) + (size_t) (n))
 #define CastMalloc(type)	CastMallocN(type,0)
 
 #define BumpBuffer(type, buffer, size, want) \

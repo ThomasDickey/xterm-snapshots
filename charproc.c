@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1048 2010/04/16 23:40:04 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1055 2010/04/18 17:48:58 tom Exp $ */
 
 /*
 
@@ -3286,7 +3286,7 @@ v_write(int f, Char * data, unsigned len)
     }
 #else /* VMS */
     if (!FD_ISSET(f, &pty_mask)) {
-	IGNORE_RC(write(f, (char *) data, len));
+	IGNORE_RC(write(f, (char *) data, (size_t) len));
 	return;
     }
 #endif /* VMS */
@@ -3313,7 +3313,7 @@ v_write(int f, Char * data, unsigned len)
 		    fprintf(stderr, "moving data down %d\n",
 			    v_bufstr - v_buffer);
 #endif
-		memmove(v_buffer, v_bufstr, (unsigned) (v_bufptr - v_bufstr));
+		memmove(v_buffer, v_bufstr, (size_t) (v_bufptr - v_bufstr));
 		v_bufptr -= v_bufstr - v_buffer;
 		v_bufstr = v_buffer;
 	    }
@@ -3342,7 +3342,7 @@ v_write(int f, Char * data, unsigned len)
 	}
 	if (v_bufend >= v_bufptr + len) {
 	    /* new stuff will fit */
-	    memmove(v_bufptr, data, len);
+	    memmove(v_bufptr, data, (size_t) len);
 	    v_bufptr += len;
 	}
     }
@@ -5320,7 +5320,7 @@ SwitchBufPtrs(TScreen * screen, int toBuf GCC_UNUSED)
 #if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[toBuf];
 #else
-	size_t len = ScrnPointers(screen, (unsigned) MaxRows(screen));
+	size_t len = ScrnPointers(screen, (size_t) MaxRows(screen));
 
 	memcpy(screen->save_ptr, screen->visbuf, len);
 	memcpy(screen->visbuf, screen->editBuf_index[1], len);
@@ -5739,12 +5739,12 @@ VTInitialize_locale(XtermWidget xw)
 #ifdef MB_CUR_MAX
 		      MB_CUR_MAX > 1 ||
 #else
-		      !strncmp(xtermEnvLocale(), "ja", 2) ||
-		      !strncmp(xtermEnvLocale(), "ko", 2) ||
-		      !strncmp(xtermEnvLocale(), "zh", 2) ||
+		      !strncmp(xtermEnvLocale(), "ja", (size_t) 2) ||
+		      !strncmp(xtermEnvLocale(), "ko", (size_t) 2) ||
+		      !strncmp(xtermEnvLocale(), "zh", (size_t) 2) ||
 #endif
-		      !strncmp(xtermEnvLocale(), "th", 2) ||
-		      !strncmp(xtermEnvLocale(), "vi", 2)) {
+		      !strncmp(xtermEnvLocale(), "th", (size_t) 2) ||
+		      !strncmp(xtermEnvLocale(), "vi", (size_t) 2)) {
 	    xw->misc.callfilter = 1;
 	    screen->utf8_mode = uAlways;
 	} else {
@@ -5823,7 +5823,7 @@ ParseList(const char **source)
 {
     const char *base = *source;
     const char *next;
-    unsigned size;
+    size_t size;
     char *value = 0;
     char *result;
 
@@ -5834,7 +5834,7 @@ ParseList(const char **source)
 	next = base;
 	while (*next != '\0' && *next != ',')
 	    ++next;
-	size = (unsigned) (1 + next - base);
+	size = (size_t) (1 + next - base);
 	value = malloc(size);
 	if (value != 0) {
 	    memcpy(value, base, size);
@@ -6770,15 +6770,37 @@ VTDestroy(Widget w GCC_UNUSED)
     }
 #endif
 
-#if 0				/* some strings may be owned by X libraries */
-    for (n = 0; n <= fontMenu_lastBuiltin; ++n) {
-	int k;
-	for (k = 0; k < fMAX; ++k) {
-	    char *s = screen->menu_font_names[n][k];
-	    if (s != 0)
-		free(s);
-	}
+    /* free things allocated via init_Sres or Init_Sres2 */
+#ifdef ALLOWLOGGING
+    TRACE_FREE_LEAK(screen->logfile);
+#endif
+    TRACE_FREE_LEAK(screen->term_id);
+    TRACE_FREE_LEAK(screen->charClass);
+    TRACE_FREE_LEAK(screen->answer_back);
+    TRACE_FREE_LEAK(screen->printer_command);
+    TRACE_FREE_LEAK(screen->keyboard_dialect);
+    TRACE_FREE_LEAK(screen->disallowedColorOps);
+    TRACE_FREE_LEAK(screen->disallowedFontOps);
+    TRACE_FREE_LEAK(screen->disallowedTcapOps);
+    TRACE_FREE_LEAK(screen->disallowedWinOps);
+    TRACE_FREE_LEAK(screen->default_string);
+    TRACE_FREE_LEAK(screen->eightbit_select_types);
+#if OPT_WIDE_CHARS
+    TRACE_FREE_LEAK(screen->utf8_select_types);
+#endif
+#if 0
+    for (n = fontMenu_font1; n <= fontMenu_lastBuiltin; n++) {
+	TRACE_FREE_LEAK(screen->MenuFontName(n));
     }
+#endif
+    TRACE_FREE_LEAK(screen->initial_font);
+#if OPT_LUIT_PROG
+    TRACE_FREE_LEAK(xw->misc.locale_str);
+    TRACE_FREE_LEAK(xw->misc.localefilter);
+#endif
+#if OPT_RENDERFONT
+    TRACE_FREE_LEAK(xw->misc.face_name);
+    TRACE_FREE_LEAK(xw->misc.face_wide_name);
 #endif
 
 #if OPT_SELECT_REGEX
@@ -7209,7 +7231,7 @@ xim_real_init(XtermWidget xw)
 
 	    if (end != s) {
 		strcpy(t, "@im=");
-		strncat(t, s, (unsigned) (end - s));
+		strncat(t, s, (size_t) (end - s));
 
 		if ((p = XSetLocaleModifiers(t)) != 0 && *p
 		    && (screen->xim = XOpenIM(XtDisplay(xw),
@@ -7262,7 +7284,7 @@ xim_real_init(XtermWidget xw)
 	    TRACE(("looking for style '%.*s'\n", (int) (end - s), s));
 	    for (i = 0; i < XtNumber(known_style); i++) {
 		if ((int) strlen(known_style[i].name) == (end - s)
-		    && !strncmp(s, known_style[i].name, (unsigned) (end - s))) {
+		    && !strncmp(s, known_style[i].name, (size_t) (end - s))) {
 		    input_style = known_style[i].code;
 		    for (j = 0; j < xim_styles->count_styles; j++) {
 			if (input_style == xim_styles->supported_styles[j]) {
@@ -8423,7 +8445,7 @@ DoSetSelectedFont(Widget w,
 	}
 
 	if (len > 0 && (val = TypeMallocN(char, len + 1)) != 0) {
-	    memcpy(val, value, len);
+	    memcpy(val, value, (size_t) len);
 	    val[len] = '\0';
 	    used = x_strtrim(val);
 	    TRACE(("DoSetSelectedFont(%s)\n", val));

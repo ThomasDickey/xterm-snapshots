@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.371 2010/04/17 16:48:12 tom Exp $ */
+/* $XTermId: button.c,v 1.375 2010/04/18 17:48:58 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1078,17 +1078,17 @@ DECtoASCII(unsigned ch)
 
 #if OPT_WIDE_CHARS
 static Cardinal
-addXtermChar(Char ** buffer, Cardinal *used, Cardinal offset, Char value)
+addXtermChar(Char ** buffer, Cardinal *used, Cardinal offset, unsigned value)
 {
     if (offset + 1 >= *used) {
 	*used = 1 + (2 * (offset + 1));
 	allocXtermChars(buffer, *used);
     }
-    (*buffer)[offset++] = value;
+    (*buffer)[offset++] = (Char) value;
     return offset;
 }
 #define AddChar(buffer, used, offset, value) \
-	offset = addXtermChar(buffer, used, offset, (Char) value)
+	offset = addXtermChar(buffer, used, offset, (unsigned) value)
 
 /*
  * Convert a UTF-8 string to Latin-1, replacing non Latin-1 characters by `#',
@@ -2911,7 +2911,7 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
 		    for (col = 0; indexed[col] < len; ++col) {
 			if (regexec(&preg,
 				    search + indexed[col],
-				    1, &match, 0) == 0) {
+				    (size_t) 1, &match, 0) == 0) {
 			    int start_inx = match.rm_so + indexed[col];
 			    int finis_inx = match.rm_eo + indexed[col];
 			    int start_col = indexToCol(indexed, len, start_inx);
@@ -3325,7 +3325,7 @@ SaltTextAway(XtermWidget xw,
     /* now get some memory to save it in */
 
     if (screen->selection_size <= j) {
-	if ((line = (Char *) malloc((unsigned) j + 1)) == 0)
+	if ((line = (Char *) malloc((size_t) j + 1)) == 0)
 	    SysError(ERROR_BMALLOC2);
 	XtFree((char *) screen->selection_data);
 	screen->selection_data = line;
@@ -3372,7 +3372,7 @@ ClearSelectionBuffer(TScreen * screen)
 }
 
 static void
-AppendStrToSelectionBuffer(TScreen * screen, Char * text, unsigned len)
+AppendStrToSelectionBuffer(TScreen * screen, Char * text, size_t len)
 {
     if (len != 0) {
 	int j = (int) (screen->selection_length + len);		/* New length */
@@ -3381,7 +3381,7 @@ AppendStrToSelectionBuffer(TScreen * screen, Char * text, unsigned len)
 	    if (!screen->selection_length) {
 		/* New buffer */
 		Char *line;
-		if ((line = (Char *) malloc((unsigned) k)) == 0)
+		if ((line = (Char *) malloc((size_t) k)) == 0)
 		    SysError(ERROR_BMALLOC2);
 		XtFree((char *) screen->selection_data);
 		screen->selection_data = line;
@@ -3389,7 +3389,7 @@ AppendStrToSelectionBuffer(TScreen * screen, Char * text, unsigned len)
 		/* Realloc buffer */
 		screen->selection_data = (Char *)
 		    realloc(screen->selection_data,
-			    (unsigned) k);
+			    (size_t) k);
 		if (screen->selection_data == 0)
 		    SysError(ERROR_BMALLOC2);
 	    }
@@ -3431,21 +3431,21 @@ AppendToSelectionBuffer(TScreen * screen, unsigned c)
     case 2:
 	ch = CharOf((screen->base64_accu << 6) + six);
 	screen->base64_count = 0;
-	AppendStrToSelectionBuffer(screen, &ch, 1);
+	AppendStrToSelectionBuffer(screen, &ch, (size_t) 1);
 	break;
 
     case 4:
 	ch = CharOf((screen->base64_accu << 4) + (six >> 2));
 	screen->base64_accu = (six & 0x3);
 	screen->base64_count = 2;
-	AppendStrToSelectionBuffer(screen, &ch, 1);
+	AppendStrToSelectionBuffer(screen, &ch, (size_t) 1);
 	break;
 
     case 6:
 	ch = CharOf((screen->base64_accu << 2) + (six >> 4));
 	screen->base64_accu = (six & 0xF);
 	screen->base64_count = 4;
-	AppendStrToSelectionBuffer(screen, &ch, 1);
+	AppendStrToSelectionBuffer(screen, &ch, (size_t) 1);
 	break;
     }
 }
@@ -3511,7 +3511,9 @@ SaveConvertedLength(XtPointer *target, unsigned long source)
 	} else {
 	    /* FIXME - does this depend on byte-order? */
 	    unsigned long temp = source;
-	    memcpy((char *) *target, ((char *) &temp) + sizeof(temp) - 4, 4);
+	    memcpy((char *) *target,
+		   ((char *) &temp) + sizeof(temp) - 4,
+		   (size_t) 4);
 	}
     }
     return result;
@@ -3652,7 +3654,7 @@ ConvertSelection(Widget w,
     }
 #endif
     else if (*target == XA_LIST_LENGTH(dpy)) {
-	result = SaveConvertedLength(value, 1);
+	result = SaveConvertedLength(value, (unsigned long) 1);
 	*type = XA_INTEGER;
 	*length = 1;
 	*format = 32;

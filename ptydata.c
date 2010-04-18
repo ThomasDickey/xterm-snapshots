@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.95 2010/04/17 17:10:44 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.96 2010/04/18 17:51:56 tom Exp $ */
 
 /************************************************************
 
@@ -192,7 +192,7 @@ readPtyData(TScreen * screen, PtySelect * select_mask, PtyData * data)
 	int save_err;
 	trimPtyData(screen, data);
 
-	size = (int) read(screen->respond, (char *) data->last, (unsigned) FRG_SIZE);
+	size = (int) read(screen->respond, (char *) data->last, (size_t) FRG_SIZE);
 	save_err = errno;
 #if (defined(i386) && defined(SVR4) && defined(sun)) || defined(__CYGWIN__)
 	/*

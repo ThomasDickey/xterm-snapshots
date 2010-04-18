@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.267 2010/04/14 10:45:38 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.269 2010/04/17 20:32:28 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1665,7 +1665,7 @@ $1=`echo "$2" | \
 		-e 's/-[[UD]]'"$3"'\(=[[^ 	]]*\)\?[$]//g'`
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_RPATH_HACK version: 7 updated: 2010/04/02 20:27:47
+dnl CF_RPATH_HACK version: 8 updated: 2010/04/17 15:38:58
 dnl -------------
 AC_DEFUN([CF_RPATH_HACK],
 [
@@ -1673,6 +1673,15 @@ AC_REQUIRE([CF_LD_RPATH_OPT])
 AC_MSG_CHECKING(for updated LDFLAGS)
 if test -n "$LD_RPATH_OPT" ; then
 	AC_MSG_RESULT(maybe)
+
+	AC_CHECK_PROGS(cf_ldd_prog,ldd,no)
+	cf_rpath_list="/usr/lib /lib"
+	if test "$cf_ldd_prog" != no
+	then
+AC_TRY_LINK([#include <stdio.h>],
+		[printf("Hello");],
+		[cf_rpath_list=`$cf_ldd_prog conftest$ac_exeext | fgrep / | sed -e 's%^.*[[ 	]]/%/%' -e 's%/[[^/]][[^/]]*$%%' |sort -u`])
+	fi
 
 	CF_VERBOSE(...checking EXTRA_LDFLAGS $EXTRA_LDFLAGS)
 
@@ -1684,10 +1693,12 @@ fi
 AC_SUBST(EXTRA_LDFLAGS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_RPATH_HACK_2 version: 4 updated: 2010/04/05 20:03:50
+dnl CF_RPATH_HACK_2 version: 6 updated: 2010/04/17 16:31:24
 dnl ---------------
 dnl Do one set of substitutions for CF_RPATH_HACK, adding an rpath option to
 dnl EXTRA_LDFLAGS for each -L option found.
+dnl
+dnl $cf_rpath_list contains a list of directories to ignore.
 dnl
 dnl $1 = variable name to update.  The LDFLAGS variable should be the only one,
 dnl      but LIBS often has misplaced -L options.
@@ -1700,13 +1711,38 @@ for cf_rpath_src in [$]$1
 do
 	case $cf_rpath_src in #(vi
 	-L*) #(vi
-		if test "$LD_RPATH_OPT" = "-R " ; then
-			cf_rpath_tmp=`echo "$cf_rpath_src" |sed -e "s%-L%-R %"`
-		else
-			cf_rpath_tmp=`echo "$cf_rpath_src" |sed -e "s%-L%$LD_RPATH_OPT%"`
+
+		# check if this refers to a directory which we will ignore
+		cf_rpath_skip=no
+		if test -n "$cf_rpath_list"
+		then
+			for cf_rpath_item in $cf_rpath_list
+			do
+				if test "x$cf_rpath_src" = "x-L$cf_rpath_item"
+				then
+					cf_rpath_skip=yes
+					break
+				fi
+			done
 		fi
-		CF_VERBOSE(...Filter $cf_rpath_src ->$cf_rpath_tmp)
-		EXTRA_LDFLAGS="$cf_rpath_tmp $EXTRA_LDFLAGS"
+
+		if test "$cf_rpath_skip" = no
+		then
+			# transform the option
+			if test "$LD_RPATH_OPT" = "-R " ; then
+				cf_rpath_tmp=`echo "$cf_rpath_src" |sed -e "s%-L%-R %"`
+			else
+				cf_rpath_tmp=`echo "$cf_rpath_src" |sed -e "s%-L%$LD_RPATH_OPT%"`
+			fi
+
+			# if we have not already added this, add it now
+			cf_rpath_tst=`echo "$EXTRA_LDFLAGS" | sed -e "s%$cf_rpath_tmp %%"`
+			if test "x$cf_rpath_tst" = "x$EXTRA_LDFLAGS"
+			then
+				CF_VERBOSE(...Filter $cf_rpath_src ->$cf_rpath_tmp)
+				EXTRA_LDFLAGS="$cf_rpath_tmp $EXTRA_LDFLAGS"
+			fi
+		fi
 		;;
 	esac
 	cf_rpath_dst="$cf_rpath_dst $cf_rpath_src"
