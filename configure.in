@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.261 2010/04/14 10:52:14 tom Exp $
+dnl $XTermId: configure.in,v 1.262 2010/04/21 00:16:24 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -280,7 +280,9 @@ AC_CHECK_HEADERS( \
 	X11/DECkeysym.h \
 	X11/Sunkeysym.h \
 	X11/XF86keysym.h \
+	X11/XKBlib.h \
 	X11/Xpoll.h \
+	X11/extensions/XKB.h \
 	)
 
 CF_X_ATHENA
