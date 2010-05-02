@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.932 2010/04/22 08:18:56 tom Exp $
+  $XTermId: xterm.log.html,v 1.933 2010/05/02 01:07:19 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_258">Patch #258 - 2010/5/1</A>
 <LI><A HREF="#xterm_257">Patch #257 - 2010/4/22</A>
 <LI><A HREF="#xterm_256">Patch #256 - 2010/3/6</A>
 <LI><A HREF="#xterm_255">Patch #255 - 2010/1/21</A>
@@ -315,6 +316,13 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_258">Patch #258 - 2010/5/1</A></H1>
+<ul>
+	<li>add pointer-checks in <code>ScrnRefresh</code> to fix a case in
+	    rapid scrolling where an empty record is fetched from the
+	    scrollback FIFO.
+</ul>
 
 <H1><A NAME="xterm_257">Patch #257 - 2010/4/22</A></H1>
 <ul>
