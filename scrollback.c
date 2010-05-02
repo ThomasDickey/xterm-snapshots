@@ -1,4 +1,4 @@
-/* $XTermId: scrollback.c,v 1.13 2010/04/18 14:41:29 tom Exp $ */
+/* $XTermId: scrollback.c,v 1.14 2010/04/28 21:47:09 tom Exp $ */
 
 /************************************************************
 
@@ -48,7 +48,7 @@ getScrollback(TScreen * screen, int row)
 {
     LineData *result = 0;
 
-    if (REAL_ROW(screen, row) >= 0) {
+    if (screen->saved_fifo > 0 && REAL_ROW(screen, row) >= 0) {
 	unsigned which = ROW2FIFO(screen, row);
 	ScrnBuf where = scrnHeadAddr(screen, screen->saveBuf_index, which);
 	result = (LineData *) where;

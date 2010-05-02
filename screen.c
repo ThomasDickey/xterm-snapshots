@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.417 2010/04/18 18:14:10 tom Exp $ */
+/* $XTermId: screen.c,v 1.418 2010/04/28 23:49:28 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1327,7 +1327,9 @@ ScrnRefresh(XtermWidget xw,
 	TRACE2(("ScrnRefresh row=%d lastind=%d ->%d\n",
 		row, lastind, ROW2INX(screen, lastind)));
 
-	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0) {
+	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0
+	    || ld->charData == 0
+	    || ld->attribs == 0) {
 	    continue;
 	}
 	if (maxcol >= (int) ld->lineSize) {
