@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1055 2010/04/18 17:48:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1056 2010/05/18 00:47:51 tom Exp $ */
 
 /*
 
@@ -727,7 +727,7 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_SCROLL_LOCK
-    Bres(XtNallowScrollLock, XtCAllowScrollLock, screen.allowScrollLock0, True),
+    Bres(XtNallowScrollLock, XtCAllowScrollLock, screen.allowScrollLock0, False),
 #endif
 
 #if OPT_XMC_GLITCH

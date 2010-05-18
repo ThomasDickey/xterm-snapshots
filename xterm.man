@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.456 2010/04/16 08:25:08 tom Exp $
+.\" $XTermId: xterm.man,v 1.457 2010/05/18 00:47:31 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -1502,7 +1502,7 @@ The default is \*(``true.\*(''
 Specifies whether control sequences that set/query
 the Scroll Lock key should be allowed,
 as well as whether the Scroll Lock key responds to user's keypress.
-The default is \*(``true.\*(''
+The default is \*(``false.\*(''
 .TP 8
 .B "allowSendEvents (\fPclass\fB AllowSendEvents)"
 Specifies whether or not synthetic key and button events (generated using
