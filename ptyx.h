@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.666 2010/04/18 16:50:09 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.667 2010/05/21 09:48:24 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -2526,6 +2526,10 @@ typedef struct Tek_Link
 
 #ifndef TRACE
 #define TRACE(p) /*nothing*/
+#endif
+
+#ifndef TRACE_CLOSE
+#define TRACE_CLOSE() /*nothing*/
 #endif
 
 #ifndef TRACE_ARGV

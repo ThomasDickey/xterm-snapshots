@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.169 2010/04/21 00:19:04 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.170 2010/05/21 22:51:19 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -300,8 +300,8 @@ ScrollBarDrawThumb(Widget scrollWidget)
 	totalHeight = thumbHeight + screen->savedlines;
 
 	XawScrollbarSetThumb(scrollWidget,
-			     ((float) thumbTop) / totalHeight,
-			     ((float) thumbHeight) / totalHeight);
+			     ((float) thumbTop) / (float) totalHeight,
+			     ((float) thumbHeight) / (float) totalHeight);
     }
 }
 
@@ -536,7 +536,8 @@ ScrollTextTo(
 	 * screen->savedlines : Number of offscreen text lines,
 	 * MaxRows(screen)    : Number of onscreen  text lines,
 	 */
-	thumbTop = (int) (*topPercent * (screen->savedlines + MaxRows(screen)));
+	thumbTop = (int) (*topPercent
+			  * (float) (screen->savedlines + MaxRows(screen)));
 	newTopLine = thumbTop - screen->savedlines;
 	WindowScroll(xw, newTopLine, True);
     }
@@ -734,7 +735,9 @@ have_xkb(Display * dpy)
 			    modStr = XGetAtomName(xkb->dpy,
 						  xkb->names->vmods[n]);
 			    if (modStr != 0) {
-				XkbVirtualModsToReal(xkb, 1 << n, &mask);
+				XkbVirtualModsToReal(xkb,
+						     (unsigned) (1 << n),
+						     &mask);
 				TRACE(("  name[%d] %s (%#x)\n", n, modStr, mask));
 			    }
 			}

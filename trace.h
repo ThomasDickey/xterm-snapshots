@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.52 2010/04/05 00:11:01 tom Exp $ */
+/* $XTermId: trace.h,v 1.53 2010/05/21 09:23:08 tom Exp $ */
 
 /*
  * 
@@ -49,6 +49,11 @@ extern	void	Trace ( const char *, ... )
 	;
 #undef  TRACE
 #define TRACE(p) Trace p
+
+extern	void	TraceClose (void);
+
+#undef  TRACE_CLOSE
+#define TRACE_CLOSE TraceClose
 
 #if OPT_TRACE > 1
 #define TRACE2(p) Trace p

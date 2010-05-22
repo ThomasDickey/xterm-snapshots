@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.457 2010/05/18 00:47:31 tom Exp $
+.\" $XTermId: xterm.man,v 1.458 2010/05/21 21:03:43 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -5487,11 +5487,6 @@ spawn: ioctl() failed on TIOCKSET
 ERROR_TIOCKSETC
 .br
 spawn: ioctl() failed on TIOCKSETC
-.TP
-48
-ERROR_SPREALLOC
-.br
-spawn: realloc of ttydev failed
 .TP
 49
 ERROR_LUMALLOC

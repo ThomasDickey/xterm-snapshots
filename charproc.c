@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1056 2010/05/18 00:47:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1059 2010/05/21 22:51:35 tom Exp $ */
 
 /*
 
@@ -3260,7 +3260,6 @@ void
 v_write(int f, Char * data, unsigned len)
 {
     int riten;
-    unsigned c = len;
 
     TRACE2(("v_write(%d:%s)\n", len, visibleChars(data, len)));
     if (v_bufstr == NULL && len > 0) {
@@ -3336,7 +3335,6 @@ v_write(int f, Char * data, unsigned len)
 		    fprintf(stderr, "%s: cannot allocate buffer space\n",
 			    xterm_name);
 		    v_buffer = v_bufstr;	/* restore clobbered pointer */
-		    c = 0;
 		}
 	    }
 	}
@@ -3919,10 +3917,12 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	break;
     case ConfigureNotify:
 	if (event->xconfigure.window == XtWindow(toplevel)) {
+#if !OPT_TOOLBAR
 	    int height, width;
 
 	    height = event->xconfigure.height;
 	    width = event->xconfigure.width;
+#endif
 	    TRACE(("HandleStructNotify(ConfigureNotify) %d,%d %dx%d\n",
 		   event->xconfigure.y, event->xconfigure.x,
 		   event->xconfigure.height, event->xconfigure.width));
@@ -4986,8 +4986,10 @@ window_ops(XtermWidget xw)
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 9;
-	    reply.a_param[1] = (ParmType) (root_height / FontHeight(screen));
-	    reply.a_param[2] = (ParmType) (root_width / FontWidth(screen));
+	    reply.a_param[1] = (ParmType) (root_height
+					   / (unsigned) FontHeight(screen));
+	    reply.a_param[2] = (ParmType) (root_width
+					   / (unsigned) FontWidth(screen));
 	    reply.a_inters = 0;
 	    reply.a_final = 't';
 	    unparseseq(xw, &reply);
@@ -7215,35 +7217,38 @@ xim_real_init(XtermWidget xw)
     } else {
 	s = xw->misc.input_method;
 	i = 5 + (unsigned) strlen(s);
+
 	t = (char *) MyStackAlloc(i, buf);
-	if (t == NULL)
+	if (t == NULL) {
 	    SysError(ERROR_VINIT);
+	} else {
 
-	for (ns = s; ns && *s;) {
-	    while (*s && isspace(CharOf(*s)))
-		s++;
-	    if (!*s)
-		break;
-	    if ((ns = end = strchr(s, ',')) == 0)
-		end = s + strlen(s);
-	    while ((end != s) && isspace(CharOf(end[-1])))
-		end--;
-
-	    if (end != s) {
-		strcpy(t, "@im=");
-		strncat(t, s, (size_t) (end - s));
-
-		if ((p = XSetLocaleModifiers(t)) != 0 && *p
-		    && (screen->xim = XOpenIM(XtDisplay(xw),
-					      NULL,
-					      NULL,
-					      NULL)) != 0)
+	    for (ns = s; ns && *s;) {
+		while (*s && isspace(CharOf(*s)))
+		    s++;
+		if (!*s)
 		    break;
+		if ((ns = end = strchr(s, ',')) == 0)
+		    end = s + strlen(s);
+		while ((end != s) && isspace(CharOf(end[-1])))
+		    end--;
 
+		if (end != s) {
+		    strcpy(t, "@im=");
+		    strncat(t, s, (size_t) (end - s));
+
+		    if ((p = XSetLocaleModifiers(t)) != 0 && *p
+			&& (screen->xim = XOpenIM(XtDisplay(xw),
+						  NULL,
+						  NULL,
+						  NULL)) != 0)
+			break;
+
+		}
+		s = ns + 1;
 	    }
-	    s = ns + 1;
+	    MyStackFree(t, buf);
 	}
-	MyStackFree(t, buf);
     }
 
     if (screen->xim == NULL
@@ -8356,20 +8361,22 @@ HandleKeymapChange(Widget w,
     pmapName = (char *) MyStackAlloc(len, mapName);
     pmapClass = (char *) MyStackAlloc(len, mapClass);
     if (pmapName == NULL
-	|| pmapClass == NULL)
+	|| pmapClass == NULL) {
 	SysError(ERROR_KMMALLOC1);
+    } else {
 
-    (void) sprintf(pmapName, "%sKeymap", params[0]);
-    (void) strcpy(pmapClass, pmapName);
-    if (islower(CharOf(pmapClass[0])))
-	pmapClass[0] = x_toupper(pmapClass[0]);
-    XtGetSubresources(w, (XtPointer) &keymap, pmapName, pmapClass,
-		      key_resources, (Cardinal) 1, NULL, (Cardinal) 0);
-    if (keymap != NULL)
-	XtOverrideTranslations(w, keymap);
+	(void) sprintf(pmapName, "%sKeymap", params[0]);
+	(void) strcpy(pmapClass, pmapName);
+	if (islower(CharOf(pmapClass[0])))
+	    pmapClass[0] = x_toupper(pmapClass[0]);
+	XtGetSubresources(w, (XtPointer) &keymap, pmapName, pmapClass,
+			  key_resources, (Cardinal) 1, NULL, (Cardinal) 0);
+	if (keymap != NULL)
+	    XtOverrideTranslations(w, keymap);
 
-    MyStackFree(pmapName, mapName);
-    MyStackFree(pmapClass, mapClass);
+	MyStackFree(pmapName, mapName);
+	MyStackFree(pmapClass, mapClass);
+    }
 }
 
 /* ARGSUSED */
@@ -8506,7 +8513,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 	atoms = (AtomPtr *) XtRealloc((char *) atoms,
 				      (Cardinal) sizeof(AtomPtr)
 				      * (atomCount + 1));
-	*(pAtom = &atoms[atomCount++]) = XmuMakeAtom(atom_name);
+	*(pAtom = &atoms[atomCount]) = XmuMakeAtom(atom_name);
     }
 
     target = XmuInternAtom(XtDisplay(xw), *pAtom);

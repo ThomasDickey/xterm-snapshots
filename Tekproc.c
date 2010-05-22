@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.176 2010/04/18 16:22:54 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.177 2010/05/21 08:53:16 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -707,7 +707,6 @@ Tekparse(TekWidget tw)
 	case CASE_PRINT:
 	    TRACE(("case: printable character\n"));
 	    ch = c;
-	    c = (IChar) tekscr->cur.fontsize;
 	    x = (int) (tekscr->cur_X * TekScale(tekscr))
 		+ screen->border;
 	    y = (int) ((TEKHEIGHT + TEKTOPPAD - tekscr->cur_Y) * TekScale(tekscr))

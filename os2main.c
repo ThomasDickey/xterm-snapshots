@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.263 2010/01/01 22:26:10 tom Exp $ */
+/* $XTermId: os2main.c,v 1.264 2010/05/21 21:03:27 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -1764,12 +1764,7 @@ spawnXTerm(XtermWidget xw)
 	     */
 #ifdef EMXNOTBOGUS
 	    if ((ptr = ttyname(ttyfd)) != 0) {
-		/* it may be bigger */
-		ttydev = TypeRealloc(char, strlen(ptr) + 1, ttydev);
-		if (ttydev == NULL) {
-		    SysError(ERROR_SPREALLOC);
-		}
-		(void) strcpy(ttydev, ptr);
+		ttydev = x_strdup(ptr);
 	    }
 #else
 	    ptr = ttydev;

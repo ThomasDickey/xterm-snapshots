@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.116 2010/04/05 00:11:13 tom Exp $ */
+/* $XTermId: print.c,v 1.117 2010/05/21 09:13:11 tom Exp $ */
 
 /************************************************************
 
@@ -405,7 +405,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 	    SysError(ERROR_FORK);
 
 	if (Printer_pid == 0) {
-	    TRACE(((char *) 0));
+	    TRACE_CLOSE();
 	    close(my_pipe[1]);	/* printer is silent */
 	    close(screen->respond);
 

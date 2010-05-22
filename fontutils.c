@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.340 2010/04/18 16:48:46 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.341 2010/05/21 08:46:02 tom Exp $ */
 
 /************************************************************
 
@@ -749,7 +749,7 @@ xtermOpenFont(XtermWidget xw,
 	if ((result->fs = XLoadQueryFont(screen->display, name)) != 0) {
 	    code = True;
 	    if (EmptyFont(result->fs)) {
-		result = xtermCloseFont(xw, result);
+		(void) xtermCloseFont(xw, result);
 		code = False;
 	    } else {
 		result->fn = x_strdup(name);
