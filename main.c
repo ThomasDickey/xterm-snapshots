@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.610 2010/04/18 17:09:13 tom Exp $ */
+/* $XTermId: main.c,v 1.614 2010/05/21 22:35:14 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1294,7 +1294,7 @@ decode_keyvalue(char **ptr, int termcap)
 #endif
 #if defined(_PC_VDISABLE)
 		if (value == -1) {
-		    value = fpathconf(0, _PC_VDISABLE);
+		    value = (int) fpathconf(0, _PC_VDISABLE);
 		    if (value == -1) {
 			if (errno != 0)
 			    break;	/* skip this (error) */
@@ -1315,7 +1315,7 @@ decode_keyvalue(char **ptr, int termcap)
 	++string;
     } else if (termcap && (*string == '\\')) {
 	char *d;
-	int temp = strtol(string + 1, &d, 8);
+	int temp = (int) strtol(string + 1, &d, 8);
 	if (temp > 0 && d != string) {
 	    value = temp;
 	    string = d;
@@ -2991,6 +2991,12 @@ find_utmp(struct UTMP_STR *tofind)
 
 #define close_fd(fd) close(fd), fd = -1
 
+#if defined(TIOCNOTTY) && (!defined(__GLIBC__) || (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ < 1)))
+#define USE_NO_DEV_TTY 1
+#else
+#define USE_NO_DEV_TTY 0
+#endif
+
 /*
  *  Inits pty and tty and forks a login process.
  *  Does not close fd Xsocket.
@@ -3040,7 +3046,10 @@ spawnXTerm(XtermWidget xw)
 #endif /* TERMIO_STRUCT */
 
     char *ptr, *shname, *shname_minus;
-    int i, no_dev_tty = False;
+    int i;
+#if USE_NO_DEV_TTY
+    no_dev_tty = False;
+#endif
     const char **envnew;	/* new environment */
     char buf[64];
     char *TermName = NULL;
@@ -3126,7 +3135,9 @@ spawnXTerm(XtermWidget xw)
 	 * seem to return EIO.  Solaris 2.3 is said to return EINVAL.
 	 * Cygwin returns ENOENT.
 	 */
+#if USE_NO_DEV_TTY
 	no_dev_tty = False;
+#endif
 	if (ttyfd < 0) {
 	    if (tty_got_hung || errno == ENXIO || errno == EIO ||
 #ifdef ENODEV
@@ -3136,7 +3147,9 @@ spawnXTerm(XtermWidget xw)
 		errno == ENOENT ||
 #endif
 		errno == EINVAL || errno == ENOTTY || errno == EACCES) {
+#if USE_NO_DEV_TTY
 		no_dev_tty = True;
+#endif
 #ifdef HAS_LTCHARS
 		ltc = d_ltc;
 #endif /* HAS_LTCHARS */
@@ -3333,7 +3346,7 @@ spawnXTerm(XtermWidget xw)
 	   resource.backarrow_is_erase ? "" : "not "));
     if (resource.backarrow_is_erase) {	/* see input.c */
 	if (initial_erase == ANSI_DEL) {
-	    xw->keyboard.flags &= ~MODE_DECBKM;
+	    UIntClr(xw->keyboard.flags, MODE_DECBKM);
 	} else {
 	    xw->keyboard.flags |= MODE_DECBKM;
 	    xw->keyboard.reset_DECBKM = 1;
@@ -3358,11 +3371,11 @@ spawnXTerm(XtermWidget xw)
     } else
 #endif
     {
-	TTYSIZE_ROWS(ts) = MaxRows(screen);
-	TTYSIZE_COLS(ts) = MaxCols(screen);
+	TTYSIZE_ROWS(ts) = (TTYSIZE_T) MaxRows(screen);
+	TTYSIZE_COLS(ts) = (TTYSIZE_T) MaxCols(screen);
 #if defined(USE_STRUCT_WINSIZE)
-	ts.ws_xpixel = FullWidth(screen);
-	ts.ws_ypixel = FullHeight(screen);
+	ts.ws_xpixel = (TTYSIZE_T) FullWidth(screen);
+	ts.ws_ypixel = (TTYSIZE_T) FullHeight(screen);
 #endif
     }
     i = SET_TTYSIZE(screen->respond, ts);
@@ -3395,7 +3408,7 @@ spawnXTerm(XtermWidget xw)
 
 	if (screen->pid == 0) {
 #ifdef USE_USG_PTYS
-	    int ptyfd;
+	    int ptyfd = -1;
 	    char *pty_name;
 #endif
 	    /*
@@ -3412,32 +3425,29 @@ spawnXTerm(XtermWidget xw)
 #ifdef USE_ISPTS_FLAG
 		if (IsPts) {	/* SYSV386 supports both, which did we open? */
 #endif
-		ptyfd = 0;
-		pty_name = 0;
-
 		setpgrp();
 		grantpt(screen->respond);
 		unlockpt(screen->respond);
 		if ((pty_name = ptsname(screen->respond)) == 0) {
 		    SysError(ERROR_PTSNAME);
-		}
-		if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
+		} else if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
 		    SysError(ERROR_OPPTSNAME);
 		}
 #ifdef I_PUSH
-		if (ioctl(ptyfd, I_PUSH, "ptem") < 0) {
+		else if (ioctl(ptyfd, I_PUSH, "ptem") < 0) {
 		    SysError(ERROR_PTEM);
 		}
 #if !defined(SVR4) && !(defined(SYSV) && defined(i386))
-		if (!x_getenv("CONSEM") && ioctl(ptyfd, I_PUSH, "consem") < 0) {
+		else if (!x_getenv("CONSEM")
+			 && ioctl(ptyfd, I_PUSH, "consem") < 0) {
 		    SysError(ERROR_CONSEM);
 		}
 #endif /* !SVR4 */
-		if (ioctl(ptyfd, I_PUSH, "ldterm") < 0) {
+		else if (ioctl(ptyfd, I_PUSH, "ldterm") < 0) {
 		    SysError(ERROR_LDTERM);
 		}
 #ifdef SVR4			/* from Sony */
-		if (ioctl(ptyfd, I_PUSH, "ttcompat") < 0) {
+		else if (ioctl(ptyfd, I_PUSH, "ttcompat") < 0) {
 		    SysError(ERROR_TTCOMPAT);
 		}
 #endif /* SVR4 */
@@ -3460,11 +3470,11 @@ spawnXTerm(XtermWidget xw)
 		} else
 #endif /* OPT_TEK4014 */
 		{
-		    TTYSIZE_ROWS(ts) = MaxRows(screen);
-		    TTYSIZE_COLS(ts) = MaxCols(screen);
+		    TTYSIZE_ROWS(ts) = (TTYSIZE_T) MaxRows(screen);
+		    TTYSIZE_COLS(ts) = (TTYSIZE_T) MaxCols(screen);
 #ifdef USE_STRUCT_WINSIZE
-		    ts.ws_xpixel = FullWidth(screen);
-		    ts.ws_ypixel = FullHeight(screen);
+		    ts.ws_xpixel = (TTYSIZE_T) FullWidth(screen);
+		    ts.ws_ypixel = (TTYSIZE_T) FullHeight(screen);
 #endif
 		}
 #endif /* TTYSIZE_STRUCT */
@@ -3532,13 +3542,13 @@ spawnXTerm(XtermWidget xw)
 		    }
 
 		    while (1) {
-#if defined(TIOCNOTTY) && (!defined(__GLIBC__) || (__GLIBC__ < 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ < 1)))
+#if USE_NO_DEV_TTY
 			if (!no_dev_tty
 			    && (ttyfd = open("/dev/tty", O_RDWR)) >= 0) {
 			    ioctl(ttyfd, TIOCNOTTY, (char *) NULL);
 			    close_fd(ttyfd);
 			}
-#endif /* TIOCNOTTY && !glibc >= 2.1 */
+#endif /* USE_NO_DEV_TTY */
 #ifdef CSRG_BASED
 			IGNORE_RC(revoke(ttydev));
 #endif
@@ -3580,8 +3590,8 @@ spawnXTerm(XtermWidget xw)
 					sizeof(handshake)));
 
 			/* get reply from parent */
-			i = read(pc_pipe[0], (char *) &handshake,
-				 sizeof(handshake));
+			i = (int) read(pc_pipe[0], (char *) &handshake,
+				       sizeof(handshake));
 			if (i <= 0) {
 			    /* parent terminated */
 			    exit(1);
@@ -3594,23 +3604,15 @@ spawnXTerm(XtermWidget xw)
 
 			/* We have a new pty to try */
 			free(ttydev);
-			ttydev = CastMallocN(char, strlen(handshake.buffer));
-			if (ttydev == NULL) {
-			    SysError(ERROR_SPREALLOC);
-			}
-			strcpy(ttydev, handshake.buffer);
+			ttydev = x_strdup(handshake.buffer);
 		    }
 
 		    /* use the same tty name that everyone else will use
 		     * (from ttyname)
 		     */
 		    if ((ptr = ttyname(ttyfd)) != 0) {
-			/* it may be bigger */
-			ttydev = TypeRealloc(char, strlen(ptr) + 1, ttydev);
-			if (ttydev == NULL) {
-			    SysError(ERROR_SPREALLOC);
-			}
-			(void) strcpy(ttydev, ptr);
+			free(ttydev);
+			ttydev = x_strdup(ptr);
 		    }
 		}
 #endif /* OPT_PTY_HANDSHAKE -- from near fork */
@@ -3643,7 +3645,7 @@ spawnXTerm(XtermWidget xw)
 		 * child pty.
 		 */
 		/* input: nl->nl, don't ignore cr, cr->nl */
-		tio.c_iflag &= ~(INLCR | IGNCR);
+		UIntClr(tio.c_iflag, (INLCR | IGNCR));
 		tio.c_iflag |= ICRNL;
 #if OPT_WIDE_CHARS && defined(linux) && defined(IUTF8)
 #if OPT_LUIT_PROG
@@ -3654,15 +3656,15 @@ spawnXTerm(XtermWidget xw)
 #endif
 		/* ouput: cr->cr, nl is not return, no delays, ln->cr/nl */
 #ifndef USE_POSIX_TERMIOS
-		tio.c_oflag &=
-		    ~(OCRNL
-		      | ONLRET
-		      | NLDLY
-		      | CRDLY
-		      | TABDLY
-		      | BSDLY
-		      | VTDLY
-		      | FFDLY);
+		UIntClr(tio.c_oflag,
+			(OCRNL
+			 | ONLRET
+			 | NLDLY
+			 | CRDLY
+			 | TABDLY
+			 | BSDLY
+			 | VTDLY
+			 | FFDLY));
 #endif /* USE_POSIX_TERMIOS */
 #ifdef ONLCR
 		tio.c_oflag |= ONLCR;
@@ -3674,7 +3676,7 @@ spawnXTerm(XtermWidget xw)
 # if defined(Lynx) && !defined(CBAUD)
 #  define CBAUD V_CBAUD
 # endif
-		tio.c_cflag &= ~(CBAUD);
+		UIntClr(tio.c_cflag, CBAUD);
 #ifdef BAUD_0
 		/* baud rate is 0 (don't care) */
 #elif defined(HAVE_TERMIO_C_ISPEED)
@@ -3754,7 +3756,7 @@ spawnXTerm(XtermWidget xw)
 		    HsSysError(ERROR_TIOCSETP);
 
 		/* ignore errors here - some platforms don't work */
-		tio.c_cflag &= ~CSIZE;
+		UIntClr(tio.c_cflag, CSIZE);
 		if (screen->input_eight_bits)
 		    tio.c_cflag |= CS8;
 		else
@@ -4237,8 +4239,8 @@ spawnXTerm(XtermWidget xw)
 				sizeof(handshake)));
 
 		if (resource.wait_for_map) {
-		    i = read(pc_pipe[0], (char *) &handshake,
-			     sizeof(handshake));
+		    i = (int) read(pc_pipe[0], (char *) &handshake,
+				   sizeof(handshake));
 		    if (i != sizeof(handshake) ||
 			handshake.status != PTY_EXEC) {
 			/* some very bad problem occurred */
@@ -4251,11 +4253,11 @@ spawnXTerm(XtermWidget xw)
 			set_max_col(screen, handshake.cols);
 #ifdef TTYSIZE_STRUCT
 			got_handshake_size = True;
-			TTYSIZE_ROWS(ts) = MaxRows(screen);
-			TTYSIZE_COLS(ts) = MaxCols(screen);
+			TTYSIZE_ROWS(ts) = (TTYSIZE_T) MaxRows(screen);
+			TTYSIZE_COLS(ts) = (TTYSIZE_T) MaxCols(screen);
 #if defined(USE_STRUCT_WINSIZE)
-			ts.ws_xpixel = FullWidth(screen);
-			ts.ws_ypixel = FullHeight(screen);
+			ts.ws_xpixel = (TTYSIZE_T) FullWidth(screen);
+			ts.ws_ypixel = (TTYSIZE_T) FullHeight(screen);
 #endif
 #endif /* TTYSIZE_STRUCT */
 		    }
@@ -4304,7 +4306,7 @@ spawnXTerm(XtermWidget xw)
 #if OPT_INITIAL_ERASE
 		    unsigned len;
 		    remove_termcap_entry(newtc, TERMCAP_ERASE "=");
-		    len = strlen(newtc);
+		    len = (unsigned) strlen(newtc);
 		    if (len != 0 && newtc[len - 1] == ':')
 			len--;
 		    sprintf(newtc + len, ":%s=\\%03o:",
@@ -4734,7 +4736,7 @@ Exit(int n)
 #endif
 	    TRACE(("closed display\n"));
 	}
-	TRACE((0));
+	TRACE_CLOSE();
     }
 #endif
 

@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.42 2010/03/12 00:53:05 Matthieu.Herrb Exp $ */
+/* $XTermId: xtermcap.c,v 1.43 2010/05/21 08:54:16 tom Exp $ */
 
 /*
  * Copyright 2007-2009,2010 by Thomas E. Dickey
@@ -263,7 +263,7 @@ keyIsDistinct(XtermWidget xw, int which)
 	    char *fkey;
 
 	    loadTermcapStrings(screen);
-	    if ((fkey = screen->tcap_fkeys[which]) != NO_STRING) {
+	    if (screen->tcap_fkeys[which] != NO_STRING) {
 		for (k = 0; k < XtNumber(table); k++) {
 		    if (table[k].code == table[which].code
 			&& table[k].param == 0) {

@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.262 2010/04/17 15:52:49 tom Exp $ */
+/* $XTermId: menu.c,v 1.263 2010/05/21 08:47:19 tom Exp $ */
 
 /*
  *
@@ -2610,7 +2610,7 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
     }
 #if OPT_TEK4014
     else {			/* tek4014 */
-	button_height = SetupShell(menus, tek_shell, mainMenu, -1);
+	(void) SetupShell(menus, tek_shell, mainMenu, -1);
 	button_height = SetupShell(menus, tek_shell, tekMenu, mainMenu);
     }
 #endif
