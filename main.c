@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.614 2010/05/21 22:35:14 tom Exp $ */
+/* $XTermId: main.c,v 1.615 2010/05/23 16:04:32 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -3371,11 +3371,11 @@ spawnXTerm(XtermWidget xw)
     } else
 #endif
     {
-	TTYSIZE_ROWS(ts) = (TTYSIZE_T) MaxRows(screen);
-	TTYSIZE_COLS(ts) = (TTYSIZE_T) MaxCols(screen);
+	TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
+	TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
 #if defined(USE_STRUCT_WINSIZE)
-	ts.ws_xpixel = (TTYSIZE_T) FullWidth(screen);
-	ts.ws_ypixel = (TTYSIZE_T) FullHeight(screen);
+	ts.ws_xpixel = (ttySize_t) FullWidth(screen);
+	ts.ws_ypixel = (ttySize_t) FullHeight(screen);
 #endif
     }
     i = SET_TTYSIZE(screen->respond, ts);
@@ -3470,11 +3470,11 @@ spawnXTerm(XtermWidget xw)
 		} else
 #endif /* OPT_TEK4014 */
 		{
-		    TTYSIZE_ROWS(ts) = (TTYSIZE_T) MaxRows(screen);
-		    TTYSIZE_COLS(ts) = (TTYSIZE_T) MaxCols(screen);
+		    TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
+		    TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
 #ifdef USE_STRUCT_WINSIZE
-		    ts.ws_xpixel = (TTYSIZE_T) FullWidth(screen);
-		    ts.ws_ypixel = (TTYSIZE_T) FullHeight(screen);
+		    ts.ws_xpixel = (ttySize_t) FullWidth(screen);
+		    ts.ws_ypixel = (ttySize_t) FullHeight(screen);
 #endif
 		}
 #endif /* TTYSIZE_STRUCT */
@@ -4253,11 +4253,11 @@ spawnXTerm(XtermWidget xw)
 			set_max_col(screen, handshake.cols);
 #ifdef TTYSIZE_STRUCT
 			got_handshake_size = True;
-			TTYSIZE_ROWS(ts) = (TTYSIZE_T) MaxRows(screen);
-			TTYSIZE_COLS(ts) = (TTYSIZE_T) MaxCols(screen);
+			TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
+			TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
 #if defined(USE_STRUCT_WINSIZE)
-			ts.ws_xpixel = (TTYSIZE_T) FullWidth(screen);
-			ts.ws_ypixel = (TTYSIZE_T) FullHeight(screen);
+			ts.ws_xpixel = (ttySize_t) FullWidth(screen);
+			ts.ws_ypixel = (ttySize_t) FullHeight(screen);
 #endif
 #endif /* TTYSIZE_STRUCT */
 		    }
