@@ -1,4 +1,4 @@
-/* $XTermId: xterm_io.h,v 1.49 2010/05/21 22:52:21 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.50 2010/05/23 16:04:32 tom Exp $ */
 
 /*
  * Copyright 2000-2006,2010 by Thomas E. Dickey
@@ -304,6 +304,6 @@ extern int ptioctl(int fd, int func, void* data);
 #define TTYSIZE_ROWS(data) data.ws_row
 #endif
 
-typedef unsigned short TTYSIZE_T;
+typedef unsigned short ttySize_t;
 
 #endif	/* included_xterm_io_h */

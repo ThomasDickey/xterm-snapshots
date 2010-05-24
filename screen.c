@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.421 2010/05/21 22:34:50 tom Exp $ */
+/* $XTermId: screen.c,v 1.422 2010/05/23 16:04:32 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -2040,11 +2040,11 @@ ScreenResize(XtermWidget xw,
 
 #ifdef TTYSIZE_STRUCT
     /* Set tty's idea of window size */
-    TTYSIZE_ROWS(ts) = (TTYSIZE_T) rows;
-    TTYSIZE_COLS(ts) = (TTYSIZE_T) cols;
+    TTYSIZE_ROWS(ts) = (ttySize_t) rows;
+    TTYSIZE_COLS(ts) = (ttySize_t) cols;
 #ifdef USE_STRUCT_WINSIZE
-    ts.ws_xpixel = (TTYSIZE_T) width;
-    ts.ws_ypixel = (TTYSIZE_T) height;
+    ts.ws_xpixel = (ttySize_t) width;
+    ts.ws_ypixel = (ttySize_t) height;
 #endif
     code = SET_TTYSIZE(screen->respond, ts);
     TRACE(("return %d from SET_TTYSIZE %dx%d\n", code, rows, cols));
