@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $XTermId: query-fonts.pl,v 1.4 2010/05/24 00:26:32 tom Exp $
+# $XTermId: query-fonts.pl,v 1.5 2010/05/24 09:01:30 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -46,14 +46,17 @@ use strict;
 use Getopt::Std;
 use IO::Handle;
 
-our ( $opt_a, $opt_r );
-&getopts('ar') || die(
+our ( $opt_a, $opt_r, $opt_s );
+&getopts('ars') || die(
     "Usage: $0 [options]\n
 Options:\n
   -a      test using absolute numbers
   -r      test using relative numbers
+  -s      use ^G rather than ST
 "
 );
+
+our $ST = $opt_s ? "\007" : "\x1b\\";
 
 sub no_reply($) {
     open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
@@ -86,18 +89,21 @@ sub query_font($) {
     my $param = $_[0];
     my $reply;
     my $n;
+    my $st    = $opt_s ? qr/\007/ : qr/\x1b\\/;
+    my $osc   = qr/\x1b]50/;
+    my $match = qr/${osc}.*${st}/;
 
-    $reply = get_reply( "\x1b]50;?" . $param . "\x1b\\" );
+    $reply = get_reply( "\x1b]50;?" . $param . $ST );
 
     printf "query{%s}%*s", $param, 3 - length($param), " ";
 
     if ( defined $reply ) {
         printf "%2d ", length($reply);
-        if ( $reply =~ /\x1b]50.*\x1b\\/ ) {
+        if ( $reply =~ /${match}/ ) {
 
-            $reply =~ s/^\x1b]50//;
+            $reply =~ s/^${osc}//;
             $reply =~ s/^;//;
-            $reply =~ s/\x1b\\$//;
+            $reply =~ s/${st}$//;
         }
         else {
             printf "? ";
@@ -155,6 +161,6 @@ if ($opt_a) {
         query_font( sprintf "%d", $n );
     }
 }
-if (not $opt_a and not $opt_r) {
+if ( not $opt_a and not $opt_r ) {
     query_font("");
 }
