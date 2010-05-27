@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.459 2010/05/23 18:51:35 tom Exp $
+.\" $XTermId: xterm.man,v 1.460 2010/05/26 10:57:24 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -1128,10 +1128,12 @@ with \fIxterm\fP:
 .TP 8
 .B -bd \fIcolor\fP
 This option specifies the color to use for the border of the window.
+The corresponding resource name is \fIborderColor\fP.
 \fIxterm\fP uses the X Toolkit default, which is \*(``XtDefaultForeground\*(''.
 .TP 8
 .B -bg \fIcolor\fP
 This option specifies the color to use for the background of the window.
+The corresponding resource name is \fIbackground\fP.
 The default is \*(``XtDefaultBackground.\*(''
 .TP 8
 .B -bw \fInumber\fP
@@ -1150,13 +1152,14 @@ This option specifies the X server to contact; see \fIX(__miscmansuffix__)\fP.
 .TP 8
 .B -fg \fIcolor\fP
 This option specifies the color to use for displaying text.
+The corresponding resource name is \fIforeground\fP.
 The default is
 \*(``XtDefaultForeground.\*(''
 .TP 8
 .B -fn \fIfont\fP
 This option specifies the font to be used for displaying normal text.
-The
-default is \fIfixed\fP.
+The corresponding resource name is \fIfont\fP.
+The resource value default is \fIfixed\fP.
 .TP 8
 .B -font \fIfont\fP
 This is the same as \fB-fn\fP.
@@ -1168,6 +1171,7 @@ see \fIX(__miscmansuffix__)\fP.
 .B -iconic
 This option indicates that \fIxterm\fP should ask the window manager to
 start it as an icon rather than as the normal window.
+The corresponding resource name is \fIiconic\fP.
 .TP 8
 .B -name \fIname\fP
 This option specifies the application name under which resources are to be
@@ -1177,6 +1181,7 @@ obtained, rather than the default executable file name.
 .B -rv
 This option indicates that reverse video should be simulated by swapping
 the foreground and background colors.
+The corresponding resource name is \fIreverseVideo\fP.
 .TP 8
 .B +rv
 Disable the simulation of reverse video by swapping foreground and background
