@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.615 2010/05/23 16:04:32 tom Exp $ */
+/* $XTermId: main.c,v 1.616 2010/05/26 08:32:52 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -3048,7 +3048,7 @@ spawnXTerm(XtermWidget xw)
     char *ptr, *shname, *shname_minus;
     int i;
 #if USE_NO_DEV_TTY
-    no_dev_tty = False;
+    int no_dev_tty = False;
 #endif
     const char **envnew;	/* new environment */
     char buf[64];

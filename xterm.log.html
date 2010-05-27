@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.939 2010/05/25 22:30:39 tom Exp $
+  $XTermId: xterm.log.html,v 1.942 2010/05/26 10:58:59 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -320,6 +320,12 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve description of <code>-bd</code> option in manpage
+	    (report by Guy Daniel Clotilde).
+
+	<li>modify configure checks for PCRE and other libraries to use
+	    <code>pkg-config</code>, if available.
+
 	<li>amend change from <a href="#xterm_252">patch #252</a>, to take
 	    <code>veryColorColors</code> resource into account when checking
 	    <code>colorBDMode</code> resource for TrueType fonts.
