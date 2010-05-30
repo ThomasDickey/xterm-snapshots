@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.495 2010/05/21 21:03:27 tom Exp $ */
+/* $XTermId: misc.c,v 1.496 2010/05/30 09:37:56 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -449,6 +449,7 @@ xevents(void)
 		case Expose:
 		case NoExpose:
 		case PropertyNotify:
+		case ClientMessage:
 		    break;
 		default:
 		    xtermShowPointer(xw, True);
