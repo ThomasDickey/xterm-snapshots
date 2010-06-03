@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.277 2010/05/26 23:26:35 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.280 2010/06/02 22:57:24 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -142,6 +142,22 @@ fi
 AC_SUBST(EXTRA_CPPFLAGS)
 
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_ADD_LIB version: 2 updated: 2010/06/02 05:03:05
+dnl ----------
+dnl Add a library, used to enforce consistency.
+dnl
+dnl $1 = library to add, without the "-l"
+dnl $2 = variable to update (default $LIBS)
+AC_DEFUN([CF_ADD_LIB],[CF_ADD_LIBS(-l$1,ifelse($2,,LIBS,[$2]))])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_ADD_LIBS version: 1 updated: 2010/06/02 05:03:05
+dnl -----------
+dnl Add one or more libraries, used to enforce consistency.
+dnl
+dnl $1 = libraries to add, with the "-l", etc.
+dnl $2 = variable to update (default $LIBS)
+AC_DEFUN([CF_ADD_LIBS],[ifelse($2,,LIBS,[$2])="$1 [$]ifelse($2,,LIBS,[$2])"])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ANSI_CC_CHECK version: 9 updated: 2001/12/30 17:53:34
 dnl ----------------
@@ -466,7 +482,7 @@ int main() {
 	fi
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 12 updated: 2010/01/04 19:48:45
+dnl CF_FUNC_TGETENT version: 14 updated: 2010/06/02 17:26:28
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -511,7 +527,7 @@ else
 fi
 for cf_termlib in '' $cf_TERMLIB ; do
 	LIBS="$cf_save_LIBS"
-	test -n "$cf_termlib" && LIBS="$LIBS -l$cf_termlib"
+	test -n "$cf_termlib" && CF_ADD_LIB($cf_termlib)
 	AC_TRY_RUN([
 /* terminfo implementations ignore the buffer argument, making it useless for
  * the xterm application, which uses this information to make a new TERMCAP
@@ -541,7 +557,7 @@ LIBS="$cf_save_LIBS"
 # not have side effects other than setting the cache variable, because
 # they are not executed when a cached value exists.)
 if test "$cf_cv_lib_tgetent" != no ; then
-	test "$cf_cv_lib_tgetent" != yes && LIBS="$LIBS $cf_cv_lib_tgetent"
+	test "$cf_cv_lib_tgetent" != yes && CF_ADD_LIBS($cf_cv_lib_tgetent)
 	AC_DEFINE(USE_TERMCAP)
 	if test "$cf_full_tgetent" = no ; then
 		AC_TRY_COMPILE([
@@ -561,7 +577,7 @@ else
 	AC_CACHE_CHECK(for partial tgetent function,cf_cv_lib_part_tgetent,[
 	cf_cv_lib_part_tgetent=no
 	for cf_termlib in $cf_TERMLIB ; do
-		LIBS="$cf_save_LIBS -l$cf_termlib"
+		CF_ADD_LIB($cf_termlib)
 		AC_TRY_LINK([],[tgetent(0, "$cf_TERMVAR")],
 			[echo "there is a terminfo/tgetent in $cf_termlib" 1>&AC_FD_CC
 			 cf_cv_lib_part_tgetent="-l$cf_termlib"
@@ -571,7 +587,7 @@ else
 	])
 
 	if test "$cf_cv_lib_part_tgetent" != no ; then
-		LIBS="$LIBS $cf_cv_lib_part_tgetent"
+		CF_ADD_LIBS($cf_cv_lib_part_tgetent)
 		AC_CHECK_HEADERS(termcap.h)
 
                 # If this is linking against ncurses, we'll trigger the
@@ -1101,7 +1117,7 @@ AC_TRY_COMPILE([
 test $cf_cv_path_lastlog != no && AC_DEFINE(USE_LASTLOG)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_LD_RPATH_OPT version: 2 updated: 2010/03/27 19:27:54
+dnl CF_LD_RPATH_OPT version: 3 updated: 2010/06/02 05:03:05
 dnl ---------------
 dnl For the given system and compiler, find the compiler flags to pass to the
 dnl loader to use the "rpath" feature.
@@ -1146,7 +1162,7 @@ case "x$LD_RPATH_OPT" in #(vi
 x-R*)
 	AC_MSG_CHECKING(if we need a space after rpath option)
 	cf_save_LIBS="$LIBS"
-	LIBS="${LD_RPATH_OPT}$libdir $LIBS"
+	CF_ADD_LIBS(${LD_RPATH_OPT}$libdir)
 	AC_TRY_LINK(, , cf_rpath_space=no, cf_rpath_space=yes)
 	LIBS="$cf_save_LIBS"
 	AC_MSG_RESULT($cf_rpath_space)
@@ -1575,7 +1591,7 @@ AC_SUBST(PROG_EXT)
 test -n "$PROG_EXT" && AC_DEFINE_UNQUOTED(PROG_EXT,"$PROG_EXT")
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_REGEX version: 6 updated: 2010/03/27 13:41:56
+dnl CF_REGEX version: 7 updated: 2010/05/29 16:31:02
 dnl --------
 dnl Attempt to determine if we've got one of the flavors of regular-expression
 dnl code that we can support.
@@ -1588,7 +1604,7 @@ AC_CHECK_FUNC(regcomp,[cf_regex_func=regcomp],[
 	for cf_regex_lib in regex re
 	do
 		AC_CHECK_LIB($cf_regex_lib,regcomp,[
-				LIBS="-l$cf_regex_lib $LIBS"
+				CF_ADD_LIB($cf_regex_lib)
 				cf_regex_func=regcomp
 				break])
 	done
@@ -1597,7 +1613,7 @@ AC_CHECK_FUNC(regcomp,[cf_regex_func=regcomp],[
 if test "$cf_regex_func" = no ; then
 	AC_CHECK_FUNC(compile,[cf_regex_func=compile],[
 		AC_CHECK_LIB(gen,compile,[
-				LIBS="-lgen $LIBS"
+				CF_ADD_LIB(gen)
 				cf_regex_func=compile])])
 fi
 
@@ -2037,7 +2053,7 @@ foo.c_ospeed = B9600;
 test "$cf_cv_termio_c_ispeed" = yes && AC_DEFINE(HAVE_TERMIO_C_ISPEED)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_TRY_PKG_CONFIG version: 2 updated: 2010/05/26 05:38:42
+dnl CF_TRY_PKG_CONFIG version: 3 updated: 2010/06/02 05:03:05
 dnl -----------------
 dnl This is a simple wrapper to use for pkg-config, for libraries which may be
 dnl available in that form.
@@ -2053,7 +2069,7 @@ if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists $1; then
 	cf_pkgconfig_incs="`$PKG_CONFIG --cflags $1 2>/dev/null`"
 	cf_pkgconfig_libs="`$PKG_CONFIG --libs   $1 2>/dev/null`"
 	CF_ADD_CFLAGS($cf_pkgconfig_incs)
-	LIBS="$cf_pkgconfig_libs $LIBS"
+	CF_ADD_LIBS($cf_pkgconfig_libs)
 	ifelse([$2],,:,[$2])
 else
 	ifelse([$3],,:,[$3])
@@ -2252,14 +2268,14 @@ AC_DEFUN([CF_UPPER],
 $1=`echo "$2" | sed y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%`
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_UTEMPTER version: 2 updated: 2000/01/22 22:50:59
+dnl CF_UTEMPTER version: 3 updated: 2010/06/02 05:03:05
 dnl -----------
 dnl Try to link with utempter library
 AC_DEFUN([CF_UTEMPTER],
 [
 AC_CACHE_CHECK(if we can link with utempter library,cf_cv_have_utempter,[
 cf_save_LIBS="$LIBS"
-LIBS="-lutempter $LIBS"
+CF_ADD_LIB(utempter)
 AC_TRY_LINK([
 #include <utempter.h>
 ],[
@@ -2272,7 +2288,7 @@ LIBS="$cf_save_LIBS"
 ])
 if test "$cf_cv_have_utempter" = yes ; then
 	AC_DEFINE(USE_UTEMPTER)
-	LIBS="-lutempter $LIBS"
+	CF_ADD_LIB(utempter)
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -2641,7 +2657,7 @@ $3="$withval"
 AC_SUBST($3)dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_PCRE version: 5 updated: 2010/05/25 20:13:58
+dnl CF_WITH_PCRE version: 6 updated: 2010/06/02 05:03:05
 dnl ------------
 dnl Add PCRE (Perl-compatible regular expressions) to the build if it is
 dnl available and the user requests it.  Assume the application will otherwise
@@ -2669,7 +2685,7 @@ if test "$with_pcre" != no ; then
 				[AC_CHECK_LIB(pcreposix,pcre_compile,
 					[AC_DEFINE(HAVE_LIB_PCRE)
 					 AC_DEFINE(HAVE_PCREPOSIX_H)
-					 LIBS="-lpcreposix -lpcre $LIBS"],
+					 CF_ADD_LIBS(-lpcreposix -lpcre)],
 					AC_MSG_ERROR(Cannot find PCRE POSIX library),
 					"-lpcre")],
 				AC_MSG_ERROR(Cannot find PCRE POSIX header))],
@@ -2797,7 +2813,7 @@ if test -n "$cf_xopen_source" ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA version: 14 updated: 2010/05/26 19:19:58
+dnl CF_X_ATHENA version: 15 updated: 2010/06/02 05:03:05
 dnl -----------
 dnl Check for Xaw (Athena) libraries
 dnl
@@ -2856,7 +2872,7 @@ if test "$PKG_CONFIG" != none ; then
 			cf_x_athena_inc="`$PKG_CONFIG --cflags $cf_athena_pkg 2>/dev/null`"
 			cf_x_athena_lib="`$PKG_CONFIG --libs   $cf_athena_pkg 2>/dev/null`"
 			CF_ADD_CFLAGS($cf_x_athena_inc)
-			LIBS="$cf_x_athena_lib $LIBS"
+			CF_ADD_LIBS($cf_x_athena_lib)
 
 			CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 			AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
@@ -2920,7 +2936,7 @@ elif test "$cf_x_athena_inc" != default ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA_LIBS version: 8 updated: 2010/05/26 05:38:42
+dnl CF_X_ATHENA_LIBS version: 9 updated: 2010/06/02 05:03:05
 dnl ----------------
 dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
 dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
@@ -2944,10 +2960,10 @@ do
 			cf_save="$LIBS"
 			cf_test=XawSimpleMenuAddGlobalActions
 			if test $cf_path != default ; then
-				LIBS="-L$cf_path/lib $cf_lib $LIBS"
+				CF_ADD_LIBS(-L$cf_path/lib $cf_lib)
 				AC_MSG_CHECKING(for $cf_lib in $cf_path)
 			else
-				LIBS="$cf_lib $LIBS"
+				CF_ADD_LIBS($cf_lib)
 				AC_MSG_CHECKING(for $cf_test in $cf_lib)
 			fi
 			AC_TRY_LINK([],[$cf_test()],
@@ -2972,15 +2988,15 @@ CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_EXT version: 2 updated: 2010/05/26 05:38:42
+dnl CF_X_EXT version: 3 updated: 2010/06/02 05:03:05
 dnl --------
 AC_DEFUN([CF_X_EXT],[
 CF_TRY_PKG_CONFIG(Xext,,[
 	AC_CHECK_LIB(Xext,XextCreateExtension,
-		[LIBS="-lXext $LIBS"])])
+		[CF_ADD_LIB(Xext)])])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 21 updated: 2009/01/25 18:17:50
+dnl CF_X_FREETYPE version: 22 updated: 2010/06/02 05:03:05
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -3063,7 +3079,7 @@ AC_MSG_CHECKING(if we can link with FreeType libraries)
 cf_save_LIBS="$LIBS"
 cf_save_INCS="$CPPFLAGS"
 
-LIBS="$cf_cv_x_freetype_libs $LIBS"
+CF_ADD_LIBS($cf_cv_x_freetype_libs)
 CPPFLAGS="$CPPFLAGS $cf_cv_x_freetype_incs"
 
 AC_TRY_LINK([
@@ -3079,7 +3095,7 @@ LIBS="$cf_save_LIBS"
 CPPFLAGS="$cf_save_INCS"
 
 if test "$cf_cv_found_freetype" = yes ; then
-	LIBS="$cf_cv_x_freetype_libs $LIBS"
+	CF_ADD_LIBS($cf_cv_x_freetype_libs)
 	CF_ADD_CFLAGS($cf_cv_x_freetype_incs)
 	AC_DEFINE(XRENDERFONT)
 
@@ -3100,7 +3116,7 @@ AC_SUBST(HAVE_TYPE_FCCHAR32)
 AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_TOOLKIT version: 13 updated: 2010/05/26 05:45:44
+dnl CF_X_TOOLKIT version: 14 updated: 2010/06/02 05:03:05
 dnl ------------
 dnl Check for X Toolkit libraries
 dnl
@@ -3120,7 +3136,7 @@ CF_TRY_PKG_CONFIG(xt,[
 
 	AC_CHECK_FUNC(XOpenDisplay,,[
 	AC_CHECK_LIB(X11,XOpenDisplay,
-		[LIBS="-lX11 $LIBS"],,
+		[CF_ADD_LIB(X11)],,
 		[$X_PRE_LIBS $LIBS $X_EXTRA_LIBS])])
 
 	AC_CHECK_FUNC(XtAppInitialize,,[
