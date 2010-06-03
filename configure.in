@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.262 2010/04/21 00:16:24 tom Exp $
+dnl $XTermId: configure.in,v 1.263 2010/06/02 23:10:05 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -818,7 +818,7 @@ CF_ARG_ENABLE(luit,
 AC_MSG_RESULT($enable_luit)
 if test "$enable_luit" = yes ; then
 	AC_DEFINE(OPT_LUIT_PROG,1)
-	CF_PATH_PROG(LUIT,luit)
+	CF_PATH_PROG(LUIT,xterm-filter,bluit luit)
 fi
 
 AC_MSG_CHECKING(if you want wide-character support)
