@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.616 2010/05/26 08:32:52 tom Exp $ */
+/* $XTermId: main.c,v 1.617 2010/06/04 09:45:06 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -3187,10 +3187,12 @@ spawnXTerm(XtermWidget xw)
 		lmode = d_lmode;
 #endif /* TIOCLSET */
 #ifdef TERMIO_STRUCT
-	    if ((rc = ttyGetAttr(ttyfd, &tio)) == -1)
+	    rc = ttyGetAttr(ttyfd, &tio);
+	    if (rc == -1)
 		tio = d_tio;
 #else /* !TERMIO_STRUCT */
-	    if ((rc = ioctl(ttyfd, TIOCGETP, (char *) &sg)) == -1)
+	    rc = ioctl(ttyfd, TIOCGETP, (char *) &sg);
+	    if (rc == -1)
 		sg = d_sg;
 	    if (ioctl(ttyfd, TIOCGETC, (char *) &tc) == -1)
 		tc = d_tc;
@@ -3239,11 +3241,13 @@ spawnXTerm(XtermWidget xw)
 	if (resource.ptyInitialErase) {
 #ifdef TERMIO_STRUCT
 	    TERMIO_STRUCT my_tio;
-	    if ((rc = ttyGetAttr(screen->respond, &my_tio)) == 0)
+	    rc = ttyGetAttr(screen->respond, &my_tio);
+	    if (rc == 0)
 		initial_erase = my_tio.c_cc[VERASE];
 #else /* !TERMIO_STRUCT */
 	    struct sgttyb my_sg;
-	    if ((rc = ioctl(screen->respond, TIOCGETP, (char *) &my_sg)) == 0)
+	    rc = ioctl(screen->respond, TIOCGETP, (char *) &my_sg);
+	    if (rc == 0)
 		initial_erase = my_sg.sg_erase;
 #endif /* TERMIO_STRUCT */
 	    TRACE(("%s initial_erase:%d (from pty)\n",
@@ -3378,7 +3382,7 @@ spawnXTerm(XtermWidget xw)
 	ts.ws_ypixel = (ttySize_t) FullHeight(screen);
 #endif
     }
-    i = SET_TTYSIZE(screen->respond, ts);
+    TRACE_RC(i, SET_TTYSIZE(screen->respond, ts));
     TRACE(("spawn SET_TTYSIZE %dx%d return %d\n",
 	   TTYSIZE_ROWS(ts),
 	   TTYSIZE_COLS(ts), i));
@@ -3872,7 +3876,7 @@ spawnXTerm(XtermWidget xw)
 		old_erase = tio.c_cc[VERASE];
 #endif
 		tio.c_cc[VERASE] = initial_erase;
-		rc = ttySetAttr(ttyfd, &tio);
+		TRACE_RC(rc, ttySetAttr(ttyfd, &tio));
 #else /* !TERMIO_STRUCT */
 		if (ioctl(ttyfd, TIOCGETP, (char *) &sg) == -1)
 		    sg = d_sg;
@@ -4019,10 +4023,12 @@ spawnXTerm(XtermWidget xw)
 
 	    /* position to entry in utmp file */
 	    /* Test return value: beware of entries left behind: PSz 9 Mar 00 */
-	    if (!(utret = find_utmp(&utmp))) {
+	    utret = find_utmp(&utmp);
+	    if (utret == 0) {
 		(void) call_setutent();
 		init_utmp(USER_PROCESS, &utmp);
-		if (!(utret = find_utmp(&utmp))) {
+		utret = find_utmp(&utmp);
+		if (utret == 0) {
 		    (void) call_setutent();
 		}
 	    }
@@ -4329,7 +4335,7 @@ spawnXTerm(XtermWidget xw)
 		&& resource.ptySttySize
 		&& (got_handshake_size || !resource.wait_for_map0)) {
 #ifdef TTYSIZE_STRUCT
-		i = SET_TTYSIZE(0, ts);
+		TRACE_RC(i, SET_TTYSIZE(0, ts));
 		TRACE(("ptyHandshake SET_TTYSIZE %dx%d return %d\n",
 		       TTYSIZE_ROWS(ts),
 		       TTYSIZE_COLS(ts), i));

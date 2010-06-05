@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.535 2010/05/25 22:11:00 tom Exp $ */
+/* $XTermId: util.c,v 1.537 2010/06/04 23:02:49 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -703,7 +703,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
     }
 
     if (AddToVisible(xw)
-	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
+	&& ((ld = getLineData(screen, screen->cur_row))) != 0) {
 	if (screen->cursor_state)
 	    HideCursor();
 
@@ -733,12 +733,11 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 #if OPT_ISO_COLORS
 	if (screen->colorAttrMode) {
 	    fg = MapToColorMode(xw->cur_foreground, screen, flags);
-	} else
-#endif
-	{
+	} else {
 	    fg = xw->cur_foreground;
 	}
 	checkVeryBoldColors(test, fg);
+#endif
 
 	/* make sure that the correct GC is current */
 	currentGC = updatedXtermGC(xw, flags, fg_bg, False);

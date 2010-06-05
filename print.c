@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.117 2010/05/21 09:13:11 tom Exp $ */
+/* $XTermId: print.c,v 1.118 2010/06/04 09:45:23 tom Exp $ */
 
 /************************************************************
 
@@ -186,8 +186,10 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
 		)
 		&& ch) {
 		attr = CharOf(ld->attribs[col] & SGR_MASK);
+#if OPT_PRINT_COLORS
 		last_fg = fg;
 		last_bg = bg;
+#endif
 		if (p->print_attributes)
 		    send_SGR(xw, attr, fg, bg);
 	    }

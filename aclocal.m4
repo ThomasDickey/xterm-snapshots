@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.280 2010/06/02 22:57:24 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.284 2010/06/05 15:31:37 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -482,7 +482,7 @@ int main() {
 	fi
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 14 updated: 2010/06/02 17:26:28
+dnl CF_FUNC_TGETENT version: 15 updated: 2010/06/04 20:54:56
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -577,7 +577,7 @@ else
 	AC_CACHE_CHECK(for partial tgetent function,cf_cv_lib_part_tgetent,[
 	cf_cv_lib_part_tgetent=no
 	for cf_termlib in $cf_TERMLIB ; do
-		CF_ADD_LIB($cf_termlib)
+		LIBS="$cf_save_LIBS -l$cf_termlib"
 		AC_TRY_LINK([],[tgetent(0, "$cf_TERMVAR")],
 			[echo "there is a terminfo/tgetent in $cf_termlib" 1>&AC_FD_CC
 			 cf_cv_lib_part_tgetent="-l$cf_termlib"
@@ -2657,7 +2657,7 @@ $3="$withval"
 AC_SUBST($3)dnl
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_PCRE version: 6 updated: 2010/06/02 05:03:05
+dnl CF_WITH_PCRE version: 8 updated: 2010/06/05 11:30:21
 dnl ------------
 dnl Add PCRE (Perl-compatible regular expressions) to the build if it is
 dnl available and the user requests it.  Assume the application will otherwise
@@ -2675,21 +2675,25 @@ test -z "$with_pcre" && with_pcre=no
 AC_MSG_RESULT($with_pcre)
 
 if test "$with_pcre" != no ; then
-	CF_TRY_PKG_CONFIG(libpcre,[
-		AC_CHECK_HEADER(pcreposix.h,[
-			AC_DEFINE(HAVE_LIB_PCRE)
-			AC_DEFINE(HAVE_PCREPOSIX_H)],[
-			AC_MSG_ERROR(Cannot find PCRE POSIX header)])],[
-		AC_CHECK_LIB(pcre,pcre_compile,
-			[AC_CHECK_HEADER(pcreposix.h,
-				[AC_CHECK_LIB(pcreposix,pcre_compile,
-					[AC_DEFINE(HAVE_LIB_PCRE)
-					 AC_DEFINE(HAVE_PCREPOSIX_H)
-					 CF_ADD_LIBS(-lpcreposix -lpcre)],
-					AC_MSG_ERROR(Cannot find PCRE POSIX library),
-					"-lpcre")],
-				AC_MSG_ERROR(Cannot find PCRE POSIX header))],
+	CF_TRY_PKG_CONFIG(libpcre,,[
+		AC_CHECK_LIB(pcre,pcre_compile,,
 			AC_MSG_ERROR(Cannot find PCRE library))])
+
+		AC_DEFINE(HAVE_LIB_PCRE)
+
+		case $LIBS in #(vi
+		*pcreposix*) #(vi
+			;;
+		*)
+			AC_CHECK_LIB(pcreposix,pcreposix_regcomp,
+				[AC_DEFINE(HAVE_PCREPOSIX_H)
+				 CF_ADD_LIB(pcreposix)],
+				[AC_CHECK_LIB(pcreposix,regcomp,[
+					AC_DEFINE(HAVE_PCREPOSIX_H)
+					CF_ADD_LIB(pcreposix)],
+					AC_MSG_ERROR(Cannot find PCRE POSIX library)]))
+			;;
+		esac
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------

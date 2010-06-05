@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.667 2010/05/21 09:48:24 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.668 2010/06/04 09:41:40 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -2067,6 +2067,12 @@ typedef enum {			/* legal values for screen.utf8_mode */
 #endif
 
 #define KEYBOARD_TYPES NAME_TCAP_KT NAME_HP_KT NAME_SCO_KT NAME_SUN_KT NAME_VT220_KT
+
+#if OPT_TRACE
+#define TRACE_RC(code,func) code = func
+#else
+#define TRACE_RC(code,func) func
+#endif
 
 #if OPT_TRACE
 extern	const char * visibleKeyboardType(xtermKeyboardType);

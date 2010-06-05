@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.170 2010/05/21 22:51:19 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.171 2010/06/03 22:53:18 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -759,7 +759,7 @@ getXkbLED(Display * dpy, const char *name, Boolean * result)
     Bool state;
 
     if (have_xkb(dpy)) {
-	my_atom = XInternAtom(dpy, name, True);
+	my_atom = XInternAtom(dpy, name, False);
 	if ((my_atom != None) &&
 	    XkbGetNamedIndicator(dpy, my_atom, NULL, &state, NULL, NULL)) {
 	    *result = (Boolean) state;
@@ -780,7 +780,7 @@ showXkbLED(Display * dpy, const char *name, Bool enable)
     Boolean result = False;
 
     if (have_xkb(dpy)) {
-	my_atom = XInternAtom(dpy, name, True);
+	my_atom = XInternAtom(dpy, name, False);
 	if ((my_atom != None) &&
 	    XkbGetNamedIndicator(dpy, my_atom, NULL, NULL, NULL, NULL) &&
 	    XkbSetNamedIndicator(dpy, my_atom, True, enable, False, NULL)) {
@@ -792,6 +792,11 @@ showXkbLED(Display * dpy, const char *name, Bool enable)
 }
 #endif
 
+/*
+ * xlsatoms agrees with this list.  However Num/Caps lock are generally
+ * unusable due to special treatment in X.  They are used here for
+ * completeness.
+ */
 static const char *led_table[] =
 {
     "Num Lock",
@@ -864,6 +869,9 @@ xtermClearLEDs(TScreen * screen)
     XKeyboardControl values;
 
     TRACE(("xtermClearLEDs\n"));
+#ifdef HAVE_XKBQUERYEXTENSION
+    ShowScrollLock(screen, False);
+#endif
     memset(&values, 0, sizeof(values));
     XChangeKeyboardControl(dpy, KBLedMode, &values);
 }
