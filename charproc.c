@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1059 2010/05/21 22:51:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1061 2010/06/04 09:29:09 tom Exp $ */
 
 /*
 
@@ -5858,7 +5858,7 @@ set_flags_from_list(char *target,
 		    Cardinal limit)
 {
     Cardinal n;
-    int value;
+    int value = -1;
 
     while (*source != '\0') {
 	char *next = ParseList(&source);
@@ -7895,9 +7895,12 @@ HideCursor(void)
 
     TRACE(("HideCursor calling drawXtermText cur(%d,%d)\n",
 	   screen->cursorp.row, screen->cursorp.col));
-    drawXtermText(xw, flags & DRAWX_MASK, currentGC,
-		  x = LineCursorX(screen, ld, cursor_col),
-		  y = CursorY(screen, screen->cursorp.row),
+
+    x = LineCursorX(screen, ld, cursor_col);
+    y = CursorY(screen, screen->cursorp.row);
+
+    drawXtermText(xw, flags & DRAWX_MASK,
+		  currentGC, x, y,
 		  LineCharSet(screen, ld),
 		  &base, 1, 0);
 

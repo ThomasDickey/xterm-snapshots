@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.376 2010/05/21 08:46:02 tom Exp $ */
+/* $XTermId: button.c,v 1.377 2010/06/04 09:27:07 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -3395,9 +3395,11 @@ AppendStrToSelectionBuffer(TScreen * screen, Char * text, size_t len)
 	    }
 	    screen->selection_size = k;
 	}
-	memcpy(screen->selection_data + screen->selection_length, text, len);
-	screen->selection_length += len;
-	screen->selection_data[screen->selection_length] = 0;
+	if (screen->selection_data != 0) {
+	    memcpy(screen->selection_data + screen->selection_length, text, len);
+	    screen->selection_length += len;
+	    screen->selection_data[screen->selection_length] = 0;
+	}
     }
 }
 

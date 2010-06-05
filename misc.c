@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.496 2010/05/30 09:37:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.499 2010/06/04 01:02:08 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -127,7 +127,7 @@ static char *
 Readlink(const char *filename)
 {
     char *buf = NULL;
-    unsigned size = 100;
+    size_t size = 100;
     int n;
 
     for (;;) {
@@ -378,14 +378,14 @@ xevents(void)
      */
     while ((input_mask = XtAppPending(app_con)) != 0) {
 	if (input_mask & XtIMTimer)
-	    XtAppProcessEvent(app_con, XtIMTimer);
+	    XtAppProcessEvent(app_con, (XtInputMask) XtIMTimer);
 #if OPT_SESSION_MGT
 	/*
 	 * Session management events are alternative input events. Deal with
 	 * them in the same way.
 	 */
 	else if (input_mask & XtIMAlternateInput)
-	    XtAppProcessEvent(app_con, XtIMAlternateInput);
+	    XtAppProcessEvent(app_con, (XtInputMask) XtIMAlternateInput);
 #endif
 	else
 	    break;
@@ -597,8 +597,8 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
      */
     child_exe = Readlink(PROCFS_ROOT "/self/exe");
     if (!child_exe) {
-	if (strncmp(ProgramName, "./", 2)
-	    && strncmp(ProgramName, "../", 3)) {
+	if (strncmp(ProgramName, "./", (size_t) 2)
+	    && strncmp(ProgramName, "../", (size_t) 3)) {
 	    child_exe = xtermFindShell(ProgramName, True);
 	} else {
 	    fprintf(stderr, "Cannot exec-xterm given %s\n", ProgramName);
@@ -2201,7 +2201,7 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 		screen->base64_final = final;
 
 		/* terminator will be written in this call */
-		xtermGetSelection((Widget) xw, 0, select_args, n, NULL);
+		xtermGetSelection((Widget) xw, (Time) 0, select_args, n, NULL);
 	    }
 	} else {
 	    if (AllowWindowOps(xw, ewSetSelection)) {

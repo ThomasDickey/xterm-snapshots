@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.177 2010/05/21 08:53:16 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.178 2010/06/04 09:39:15 tom Exp $ */
 
 /*
  * Warning, there be crufty dragons here.
@@ -868,13 +868,15 @@ Tinput(TekWidget tw)
     tek = TekRecord;
     if (tek->count >= TEK_LINK_BLOCK_SIZE
 	|| tek->fontsize != tekscr->cur.fontsize) {
-	if ((TekRecord = tek->next = CastMalloc(TekLink)) == 0)
+	if ((TekRecord = tek->next = CastMalloc(TekLink)) == 0) {
 	    Panic("Tinput: malloc error (%d)\n", errno);
-	tek = tek->next;
-	tek->next = (TekLink *) 0;
-	tek->fontsize = (unsigned short) tekscr->cur.fontsize;
-	tek->count = 0;
-	tek->ptr = tek->data;
+	} else {
+	    tek = tek->next;
+	    tek->next = (TekLink *) 0;
+	    tek->fontsize = (unsigned short) tekscr->cur.fontsize;
+	    tek->count = 0;
+	    tek->ptr = tek->data;
+	}
     }
     tek->count++;
 
