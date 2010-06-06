@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.263 2010/06/02 23:10:05 tom Exp $
+dnl $XTermId: configure.in,v 1.264 2010/06/05 19:47:23 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -717,6 +717,10 @@ CF_ARG_DISABLE(regex,
 AC_MSG_RESULT($enable_regex)
 if test "$enable_regex" = yes ; then
 	CF_WITH_PCRE
+	if test "x$ac_cv_lib_pcreposix_regcomp" = xyes ; then
+		# 2010/6/5 - workaround - plink.sh would remove the library
+		AC_MSG_ERROR(This version of PCRE will not link properly with xterm)
+	fi
 	if test "$with_pcre" = no ; then
 		CF_REGEX
 		if test "X$cf_cv_regex_hdrs" != "Xregex.h" ; then
