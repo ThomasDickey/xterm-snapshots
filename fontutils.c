@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.342 2010/06/04 22:43:49 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.343 2010/06/13 17:45:08 tom Exp $ */
 
 /************************************************************
 
@@ -2837,7 +2837,7 @@ HandleLargerFont(Widget w GCC_UNUSED,
 	    if (m >= 0) {
 		SetVTFont(xw, m, True, NULL);
 	    } else {
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	}
     }
@@ -2862,7 +2862,7 @@ HandleSmallerFont(Widget w GCC_UNUSED,
 	    if (m >= 0) {
 		SetVTFont(xw, m, True, NULL);
 	    } else {
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	}
     }
@@ -2954,13 +2954,13 @@ HandleSetFont(Widget w GCC_UNUSED,
 		maxparams = 2;
 		break;
 	    default:
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 		return;
 	    }
 	    fontnum = result;
 
 	    if (*param_count > maxparams) {	/* see if extra args given */
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 		return;
 	    }
 	    switch (*param_count) {	/* assign 'em */
@@ -2998,7 +2998,7 @@ SetVTFont(XtermWidget xw,
 	   (fonts && fonts->f_b) ? fonts->f_b : "<null>"));
 
     if (IsIcon(screen)) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     } else if (which >= 0 && which < NMENUFONTS) {
 	VTFontNames myfonts;
 
@@ -3052,11 +3052,11 @@ SetVTFont(XtermWidget xw,
 		xtermLoadFont(xw,
 			      xtermFontName(screen->MenuFontName(oldFont)),
 			      doresize, oldFont);
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	}
     } else {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     }
     return;
 }

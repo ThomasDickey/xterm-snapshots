@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1061 2010/06/04 09:29:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1063 2010/06/13 17:47:04 tom Exp $ */
 
 /*
 
@@ -1347,6 +1347,18 @@ one_if_default(int which)
     return result;
 }
 
+#define ParseSOS(screen) ((screen)->c1_printable == 0)
+
+#define ResetState(sp) (sp)->parsestate = (sp)->groundtable
+
+static void
+illegal_parse(XtermWidget xw, unsigned c, struct ParseState *sp)
+{
+    ResetState(sp);
+    sp->nextstate = sp->parsestate[E2A(c)];
+    Bell(xw, XkbBI_MinorError, 0);
+}
+
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
@@ -1487,8 +1499,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			break;
 		    /* FALLTHRU */
 		case 'R':
-		    sp->parsestate = sp->groundtable;
-		    sp->nextstate = sp->parsestate[E2A(c)];
+		    illegal_parse(xw, c, sp);
 		    TRACE(("Reset to ground state (brokenLinuxOSC)\n"));
 		    break;
 		}
@@ -1507,7 +1518,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    && sp->parsestate == sos_table
 	    && c < 32) {
 	    switch (c) {
-	    case 5:		/* FALLTHRU */
+	    case 4:		/* FALLTHRU */
 	    case 8:		/* FALLTHRU */
 	    case 9:		/* FALLTHRU */
 	    case 10:		/* FALLTHRU */
@@ -1516,9 +1527,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    case 13:		/* FALLTHRU */
 	    case 14:		/* FALLTHRU */
 	    case 15:		/* FALLTHRU */
+	    case 17:		/* FALLTHRU */
 	    case 24:
-		sp->parsestate = sp->groundtable;
-		sp->nextstate = sp->parsestate[E2A(c)];
+		illegal_parse(xw, c, sp);
 		TRACE(("Reset to ground state (brokenStringTerm)\n"));
 		break;
 	    }
@@ -1645,7 +1656,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GROUND_STATE:
 	    TRACE(("CASE_GROUND_STATE - exit ignore mode\n"));
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_IGNORE:
@@ -1665,10 +1676,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if (sp->string_used)
 		    sp->string_area[--(sp->string_used)] = '\0';
 		do_osc(xw, sp->string_area, sp->string_used, (int) c);
-		sp->parsestate = sp->groundtable;
+		ResetState(sp);
 	    } else {
 		/* bell */
-		Bell(XkbBI_TerminalBell, 0);
+		Bell(xw, XkbBI_TerminalBell, 0);
 	    }
 	    break;
 
@@ -1721,7 +1732,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		count = 1;
 	    while ((count-- > 0)
 		   && (TabToPrevStop(xw))) ;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CHT:
@@ -1730,7 +1741,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		count = 1;
 	    while ((count-- > 0)
 		   && (TabToNextStop(xw))) ;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_TAB:
@@ -1741,30 +1752,30 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_SI:
 	    screen->curgl = 0;
 	    if_OPT_VT52_MODE(screen, {
-		sp->parsestate = sp->groundtable;
+		ResetState(sp);
 	    });
 	    break;
 
 	case CASE_SO:
 	    screen->curgl = 1;
 	    if_OPT_VT52_MODE(screen, {
-		sp->parsestate = sp->groundtable;
+		ResetState(sp);
 	    });
 	    break;
 
 	case CASE_DECDHL:
 	    xterm_DECDHL(xw, c == '3');
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSWL:
 	    xterm_DECSWL(xw);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECDWL:
 	    xterm_DECDWL(xw);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_SCR_STATE:
@@ -1853,7 +1864,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((row = param[0]) < 1)
 		row = 1;
 	    InsertChar(xw, (unsigned) row);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CUU:
@@ -1861,7 +1872,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((row = param[0]) < 1)
 		row = 1;
 	    CursorUp(screen, row);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CUD:
@@ -1869,7 +1880,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((row = param[0]) < 1)
 		row = 1;
 	    CursorDown(screen, row);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CUF:
@@ -1877,7 +1888,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((col = param[0]) < 1)
 		col = 1;
 	    CursorForward(screen, col);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CUB:
@@ -1885,7 +1896,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((col = param[0]) < 1)
 		col = 1;
 	    CursorBack(xw, col);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CUP:
@@ -1898,7 +1909,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (nparam < 2 || (col = param[1]) < 1)
 		col = 1;
 	    CursorSet(screen, row - 1, col - 1, xw->flags);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_VPA:
@@ -1906,7 +1917,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((row = param[0]) < 1)
 		row = 1;
 	    CursorSet(screen, row - 1, screen->cur_col, xw->flags);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_HPA:
@@ -1914,7 +1925,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((col = param[0]) < 1)
 		col = 1;
 	    CursorSet(screen, screen->cur_row, col - 1, xw->flags);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_HP_BUGGY_LL:
@@ -1924,26 +1935,26 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	       the screen, regardless of what terminfo says. */
 	    if (screen->hp_ll_bc)
 		CursorSet(screen, screen->max_row, 0, xw->flags);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_ED:
 	    TRACE(("CASE_ED - erase display\n"));
 	    do_erase_display(xw, param[0], OFF_PROTECT);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_EL:
 	    TRACE(("CASE_EL - erase line\n"));
 	    do_erase_line(xw, param[0], OFF_PROTECT);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_ECH:
 	    TRACE(("CASE_ECH - erase char\n"));
 	    /* ECH */
 	    ClearRight(xw, param[0] < 1 ? 1 : param[0]);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_IL:
@@ -1951,7 +1962,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((row = param[0]) < 1)
 		row = 1;
 	    InsertLine(xw, row);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DL:
@@ -1959,7 +1970,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((row = param[0]) < 1)
 		row = 1;
 	    DeleteLine(xw, row);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DCH:
@@ -1967,7 +1978,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((row = param[0]) < 1)
 		row = 1;
 	    DeleteChar(xw, (unsigned) row);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_TRACK_MOUSE:
@@ -1997,7 +2008,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		RevScroll(xw, count);
 		do_xevents();
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECID:
@@ -2007,7 +2018,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		unparseputc(xw, '/');
 		unparseputc(xw, 'Z');
 		unparse_end(xw);
-		sp->parsestate = sp->groundtable;
+		ResetState(sp);
 		break;
 	    });
 	    param[0] = DEFAULT;	/* Default ID parameter */
@@ -2065,7 +2076,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		reply.a_final = 'c';
 		unparseseq(xw, &reply);
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DA2:
@@ -2086,7 +2097,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		reply.a_final = 'c';
 		unparseseq(xw, &reply);
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECRPTUI:
@@ -2100,7 +2111,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		unparseputc1(xw, ANSI_ST);
 		unparse_end(xw);
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_TBC:
@@ -2109,19 +2120,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		TabClear(xw->tabs, screen->cur_col);
 	    else if (row == 3)
 		TabZonk(xw->tabs);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_SET:
 	    TRACE(("CASE_SET - set mode\n"));
 	    ansi_modes(xw, bitset);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_RST:
 	    TRACE(("CASE_RST - reset mode\n"));
 	    ansi_modes(xw, bitclr);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_SGR:
@@ -2312,7 +2323,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    break;
 		}
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	    /* DSR (except for the '?') is a superset of CPR */
@@ -2380,20 +2391,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((reply.a_nparam = (ParmType) count) != 0)
 		unparseseq(xw, &reply);
 
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    sp->private_function = False;
 	    break;
 
 	case CASE_MC:
 	    TRACE(("CASE_MC - media control\n"));
 	    xtermMediaControl(xw, param[0], False);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DEC_MC:
 	    TRACE(("CASE_DEC_MC - DEC media control\n"));
 	    xtermMediaControl(xw, param[0], True);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_HP_MEM_LOCK:
@@ -2407,7 +2418,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		set_tb_margins(screen, screen->cur_row, screen->bot_marg);
 	    else
 		set_tb_margins(screen, 0, screen->bot_marg);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSTBM:
@@ -2424,7 +2435,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		set_tb_margins(screen, top - 1, bot - 1);
 		CursorSet(screen, 0, 0, xw->flags);
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECREQTPARM:
@@ -2448,7 +2459,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    unparseseq(xw, &reply);
 		}
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSET:
@@ -2457,7 +2468,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (screen->vtXX_level != 0)
 #endif
 		dpmodes(xw, bitset);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 #if OPT_TEK4014
 	    if (TEK4014_ACTIVE(xw))
 		return False;
@@ -2468,7 +2479,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    /* DECRST */
 	    dpmodes(xw, bitclr);
 	    init_groundtable(screen, sp);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECALN:
@@ -2479,20 +2490,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    CursorSet(screen, 0, 0, xw->flags);
 	    xtermParseRect(xw, 0, 0, &myRect);
 	    ScrnFillRectangle(xw, &myRect, 'E', 0, False);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_GSETS:
 	    TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
 	    if (screen->vtXX_level != 0)
 		screen->gsets[sp->scstype] = CharOf(c);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSC:
 	    TRACE(("CASE_DECSC - save cursor\n"));
 	    CursorSave(xw);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECRC:
@@ -2501,21 +2512,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if_OPT_ISO_COLORS(screen, {
 		setExtendedFG(xw);
 	    });
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECKPAM:
 	    TRACE(("CASE_DECKPAM\n"));
 	    xw->keyboard.flags |= MODE_DECKPAM;
 	    update_appkeypad();
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECKPNM:
 	    TRACE(("CASE_DECKPNM\n"));
 	    UIntClr(xw->keyboard.flags, MODE_DECKPAM);
 	    update_appkeypad();
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CSI_QUOTE_STATE:
@@ -2568,7 +2579,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    SetCursorBlink(screen, blinks);
 		}
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 #endif
 
@@ -2597,7 +2608,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    } else {
 		xtermClearLEDs(screen);
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 #endif
 
@@ -2622,19 +2633,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_ANSI_LEVEL_1:
 	    TRACE(("CASE_ANSI_LEVEL_1\n"));
 	    set_ansi_conformance(screen, 1);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_ANSI_LEVEL_2:
 	    TRACE(("CASE_ANSI_LEVEL_2\n"));
 	    set_ansi_conformance(screen, 2);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_ANSI_LEVEL_3:
 	    TRACE(("CASE_ANSI_LEVEL_3\n"));
 	    set_ansi_conformance(screen, 3);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSCL:
@@ -2659,7 +2670,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    }
 		}
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSCA:
@@ -2669,24 +2680,24 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		UIntClr(xw->flags, PROTECTED);
 	    else if (param[0] == 1)
 		xw->flags |= PROTECTED;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSED:
 	    TRACE(("CASE_DECSED\n"));
 	    do_erase_display(xw, param[0], DEC_PROTECT);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSEL:
 	    TRACE(("CASE_DECSEL\n"));
 	    do_erase_line(xw, param[0], DEC_PROTECT);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_ST:
 	    TRACE(("CASE_ST: End of String (%lu bytes)\n", (unsigned long) sp->string_used));
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    if (!sp->string_used)
 		break;
 	    sp->string_area[--(sp->string_used)] = '\0';
@@ -2711,14 +2722,22 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_SOS:
 	    TRACE(("CASE_SOS: Start of String\n"));
-	    sp->string_mode = ANSI_SOS;
-	    sp->parsestate = sos_table;
+	    if (ParseSOS(screen)) {
+		sp->string_mode = ANSI_SOS;
+		sp->parsestate = sos_table;
+	    } else {
+		illegal_parse(xw, c, sp);
+	    }
 	    break;
 
 	case CASE_PM:
 	    TRACE(("CASE_PM: Privacy Message\n"));
-	    sp->string_mode = ANSI_PM;
-	    sp->parsestate = sos_table;
+	    if (ParseSOS(screen)) {
+		sp->string_mode = ANSI_PM;
+		sp->parsestate = sos_table;
+	    } else {
+		illegal_parse(xw, c, sp);
+	    }
 	    break;
 
 	case CASE_DCS:
@@ -2729,21 +2748,25 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_APC:
 	    TRACE(("CASE_APC: Application Program Command\n"));
-	    sp->string_mode = ANSI_APC;
-	    sp->parsestate = sos_table;
+	    if (ParseSOS(screen)) {
+		sp->string_mode = ANSI_APC;
+		sp->parsestate = sos_table;
+	    } else {
+		illegal_parse(xw, c, sp);
+	    }
 	    break;
 
 	case CASE_SPA:
 	    TRACE(("CASE_SPA - start protected area\n"));
 	    screen->protected_mode = ISO_PROTECT;
 	    xw->flags |= PROTECTED;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_EPA:
 	    TRACE(("CASE_EPA - end protected area\n"));
 	    UIntClr(xw->flags, PROTECTED);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_SU:
@@ -2751,57 +2774,57 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((count = param[0]) < 1)
 		count = 1;
 	    xtermScroll(xw, count);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_IND:
 	    TRACE(("CASE_IND - index\n"));
 	    xtermIndex(xw, 1);
 	    do_xevents();
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CPL:
 	    TRACE(("CASE_CPL - cursor prev line\n"));
 	    CursorPrevLine(screen, param[0]);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CNL:
 	    TRACE(("CASE_CNL - cursor next line\n"));
 	    CursorNextLine(screen, param[0]);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_NEL:
 	    TRACE(("CASE_NEL\n"));
 	    xtermIndex(xw, 1);
 	    CarriageReturn(screen);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_HTS:
 	    TRACE(("CASE_HTS - horizontal tab set\n"));
 	    TabSet(xw->tabs, screen->cur_col);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_RI:
 	    TRACE(("CASE_RI - reverse index\n"));
 	    RevIndex(xw, 1);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_SS2:
 	    TRACE(("CASE_SS2\n"));
 	    screen->curss = 2;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_SS3:
 	    TRACE(("CASE_SS3\n"));
 	    screen->curss = 3;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_CSI_STATE:
@@ -2841,7 +2864,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    screen->loc_filter_right = LOC_FILTER_POS;
 		InitLocatorFilter(xw);
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECELR:
@@ -2865,7 +2888,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		}
 		screen->loc_filter = False;
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSLE:
@@ -2892,7 +2915,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    break;
 		}
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECRQLP:
@@ -2901,7 +2924,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		/* Issue DECLRP Locator Position Report */
 		GetLocatorPosition(xw);
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 #endif /* OPT_DEC_LOCATOR */
 
@@ -2926,14 +2949,14 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECCRA - Copy rectangular area\n"));
 	    xtermParseRect(xw, nparam, param, &myRect);
 	    ScrnCopyRectangle(xw, &myRect, nparam - 5, param + 5);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECERA:
 	    TRACE(("CASE_DECERA - Erase rectangular area\n"));
 	    xtermParseRect(xw, nparam, param, &myRect);
 	    ScrnFillRectangle(xw, &myRect, ' ', 0, True);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECFRA:
@@ -2944,34 +2967,34 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		xtermParseRect(xw, nparam - 1, param + 1, &myRect);
 		ScrnFillRectangle(xw, &myRect, param[0], xw->flags, True);
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSERA:
 	    TRACE(("CASE_DECSERA - Selective erase rectangular area\n"));
 	    xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
 	    ScrnWipeRectangle(xw, &myRect);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSACE:
 	    TRACE(("CASE_DECSACE - Select attribute change extent\n"));
 	    screen->cur_decsace = param[0];
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECCARA:
 	    TRACE(("CASE_DECCARA - Change attributes in rectangular area\n"));
 	    xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
 	    ScrnMarkRectangle(xw, &myRect, False, nparam - 4, param + 4);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECRARA:
 	    TRACE(("CASE_DECRARA - Reverse attributes in rectangular area\n"));
 	    xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
 	    ScrnMarkRectangle(xw, &myRect, True, nparam - 4, param + 4);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 #else
 	case CASE_CSI_DOLLAR_STATE:
@@ -2988,7 +3011,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_S7C1T:
 	    TRACE(("CASE_S7C1T\n"));
 	    show_8bit_control(False);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_S8C1T:
@@ -2998,7 +3021,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		break;
 #endif
 	    show_8bit_control(True);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_OSC:
@@ -3010,13 +3033,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_RIS:
 	    TRACE(("CASE_RIS\n"));
 	    VTReset(xw, True, True);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSTR:
 	    TRACE(("CASE_DECSTR\n"));
 	    VTReset(xw, False, False);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_REP:
@@ -3033,53 +3056,53 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			   repeated, 1);
 		}
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_LS2:
 	    TRACE(("CASE_LS2\n"));
 	    screen->curgl = 2;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_LS3:
 	    TRACE(("CASE_LS3\n"));
 	    screen->curgl = 3;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_LS3R:
 	    TRACE(("CASE_LS3R\n"));
 	    screen->curgr = 3;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_LS2R:
 	    TRACE(("CASE_LS2R\n"));
 	    screen->curgr = 2;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_LS1R:
 	    TRACE(("CASE_LS1R\n"));
 	    screen->curgr = 1;
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_XTERM_SAVE:
 	    savemodes(xw);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_XTERM_RESTORE:
 	    restoremodes(xw);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_XTERM_WINOPS:
 	    TRACE(("CASE_XTERM_WINOPS\n"));
 	    window_ops(xw);
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 #if OPT_WIDE_CHARS
 	case CASE_ESC_PERCENT:
@@ -3107,7 +3130,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		       ? "UTF-8 mode set from command-line"
 		       : "wideChars resource was not set"));
 	    }
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 #endif
 #if OPT_MOD_FKEYS
@@ -3189,7 +3212,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		break;
 	    }
 	    TRACE(("...warningVolume %d\n", screen->warningVolume));
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECSMBV:
@@ -3213,7 +3236,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		break;
 	    }
 	    TRACE(("...marginVolume %d\n", screen->marginVolume));
-	    sp->parsestate = sp->groundtable;
+	    ResetState(sp);
 	    break;
 	}
 	if (sp->parsestate == sp->groundtable)
@@ -4220,8 +4243,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    else
 		CloseLog(screen);
 #else
-	    Bell(XkbBI_Info, 0);
-	    Bell(XkbBI_Info, 0);
+	    Bell(xw, XkbBI_Info, 0);
+	    Bell(xw, XkbBI_Info, 0);
 #endif /* ALLOWLOGFILEONOFF */
 	    break;
 #endif
@@ -8098,7 +8121,7 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
     TScreen *screen = TScreenOf(xw);
 
     if (!XtIsRealized((Widget) xw) || (CURRENT_EMU() != (Widget) xw)) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
 	return;
     }
 
@@ -8135,7 +8158,7 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 
     if (full) {			/* RIS */
 	if (screen->bellOnReset)
-	    Bell(XkbBI_TerminalBell, 0);
+	    Bell(xw, XkbBI_TerminalBell, 0);
 
 	/* reset the mouse mode */
 	screen->send_mouse_pos = MOUSE_OFF;
@@ -8391,7 +8414,7 @@ HandleBell(Widget w GCC_UNUSED,
 {
     int percent = (*param_count) ? atoi(params[0]) : 0;
 
-    Bell(XkbBI_TerminalBell, percent);
+    Bell(term, XkbBI_TerminalBell, percent);
 }
 
 /* ARGSUSED */
@@ -8433,7 +8456,7 @@ DoSetSelectedFont(Widget w,
     XtermWidget xw = getXtermWidget(w);
 
     if ((xw == 0) || *type != XA_STRING || *format != 8) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	Boolean failed = False;
 	int oldFont = TScreenOf(xw)->menu_font_number;
@@ -8483,7 +8506,7 @@ DoSetSelectedFont(Widget w,
 				     xtermFontName(TScreenOf(xw)->MenuFontName(oldFont)),
 				     True,
 				     oldFont);
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	    if (used != val)
 		free(used);

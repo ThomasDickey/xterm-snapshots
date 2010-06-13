@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.499 2010/06/04 01:02:08 tom Exp $ */
+/* $XTermId: misc.c,v 1.500 2010/06/13 17:46:27 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -776,7 +776,7 @@ HandleFocusChange(Widget w GCC_UNUSED,
 			    : FOCUS));
 	}
 	if (screen->grabbedKbd && (event->mode == NotifyUngrab)) {
-	    Bell(XkbBI_Info, 100);
+	    Bell(xw, XkbBI_Info, 100);
 	    ReverseVideo(xw);
 	    screen->grabbedKbd = False;
 	    update_securekbd();
@@ -862,9 +862,8 @@ xtermBell(XtermWidget xw, int which, int percent)
 }
 
 void
-Bell(int which, int percent)
+Bell(XtermWidget xw, int which, int percent)
 {
-    XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
     struct timeval curtime;
     long now_msecs;
@@ -1179,7 +1178,7 @@ HandleDabbrevExpand(Widget w,
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
 	if (!dabbrev_expand(screen))
-	    Bell(XkbBI_TerminalBell, 0);
+	    Bell(xw, XkbBI_TerminalBell, 0);
     }
 }
 #endif /* OPT_DABBREV */
@@ -1728,8 +1727,8 @@ StartLog(TScreen * screen)
 	screen->logfd = p[1];
 	signal(SIGPIPE, logpipe);
 #else
-	Bell(XkbBI_Info, 0);
-	Bell(XkbBI_Info, 0);
+	Bell(xw, XkbBI_Info, 0);
+	Bell(xw, XkbBI_Info, 0);
 	return;
 #endif
     } else {
@@ -2594,7 +2593,7 @@ QueryFontRequest(XtermWidget xw, char *buf, int final)
 	num = ParseShiftedFont(xw, buf, &buf);
 	if (num < 0
 	    || num > fontMenu_lastBuiltin) {
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	    success = False;
 	} else {
 #if OPT_RENDERFONT
@@ -2652,7 +2651,7 @@ ChangeFontRequest(XtermWidget xw, char *buf)
 
 	    if (num < 0
 		|| num > fontMenu_lastBuiltin) {
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 		success = False;
 	    } else {
 		/*
@@ -2699,7 +2698,7 @@ ChangeFontRequest(XtermWidget xw, char *buf)
 		SetVTFont(xw, num, True, &fonts);
 	    }
 	} else {
-	    Bell(XkbBI_MinorError, 0);
+	    Bell(xw, XkbBI_MinorError, 0);
 	}
 	free(name);
     }
@@ -2910,8 +2909,8 @@ do_osc(XtermWidget xw, Char * oscbuf, size_t len, int final)
 	    break;
 	}
 #endif
-	Bell(XkbBI_Info, 0);
-	Bell(XkbBI_Info, 0);
+	Bell(xw, XkbBI_Info, 0);
+	Bell(xw, XkbBI_Info, 0);
 	break;
 #endif /* ALLOWLOGGING */
 
