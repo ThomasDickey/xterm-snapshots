@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.118 2010/06/04 09:45:23 tom Exp $ */
+/* $XTermId: print.c,v 1.119 2010/06/13 17:46:27 tom Exp $ */
 
 /************************************************************
 
@@ -279,7 +279,7 @@ xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags * p)
 	    closePrinter(xw);
 	}
     } else {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     }
 }
 

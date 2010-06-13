@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.460 2010/05/26 10:57:24 tom Exp $
+.\" $XTermId: xterm.man,v 1.462 2010/06/13 16:56:35 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -1791,6 +1791,56 @@ provides a work-around for some ISDN routers which start an application
 control string without completing it.
 Set this to \*(``true\*('' if \fIxterm\fP appears to freeze when connecting.
 The default is \*(``false.\*(''
+.IP
+\fIXterm\fP's state parser recognizes
+several types of control strings which can contain text, e.g.,
+.sp
+.RS
+\fBAPC\fP (Application Program Command),
+.br
+\fBDCS\fP (Device Control String),
+.br
+\fBOSC\fP (Operating System Command),
+.br
+\fBPM\fP (Privacy Message), and
+.br
+\fBSOS\fP (Start of String),
+.RE
+.IP
+Each should end with a string-terminator (a special character which
+cannot appear in these strings).
+Ordinary control characters found within the string are not ignored;
+they are processed without interfering with the process of accumulating
+the control string's content.
+\fIXterm\fP recognizes these controls in all modes,
+although some of the functions may be suppressed after parsing the control.
+.IP
+When enabled, this feature allows the user to exit from an unterminated
+control string when any of these ordinary control characters are found:
+.sp
+.RS
+control/D (used as an end of file in many shells),
+.br
+control/H (backspace),
+.br
+control/I (tab-feed),
+.br
+control/J (line feed aka newline),
+.br
+control/K (vertical tab),
+.br
+control/L (form feed),
+.br
+control/M (carriage return),
+.br
+control/N (shift-out),
+.br
+control/O (shift-in),
+.br
+control/Q (XOFF),
+.br
+control/X (cancel)
+.RE
 .TP 8
 .B "c132 (\fPclass\fB C132)"
 Specifies whether or not the VT102 DECCOLM escape sequence,

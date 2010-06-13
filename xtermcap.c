@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.43 2010/05/21 08:54:16 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.44 2010/06/13 17:46:27 tom Exp $ */
 
 /*
  * Copyright 2007-2009,2010 by Thomas E. Dickey
@@ -588,7 +588,7 @@ set_termcap(XtermWidget xw, const char *name)
 
     TRACE(("set_termcap(%s)\n", NonNull(name)));
     if (IsEmpty(name)) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	const char *temp;
 	char *value;
@@ -607,7 +607,7 @@ set_termcap(XtermWidget xw, const char *name)
 	}
     }
     if (!success)
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
 }
 
 void

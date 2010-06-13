@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.171 2010/06/03 22:53:18 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.172 2010/06/13 17:46:27 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -433,12 +433,12 @@ ScrollBarOn(XtermWidget xw, Bool init)
 						   -ScrollBarBorder(xw),
 						   5);
 	    if (screen->scrollWidget == NULL) {
-		Bell(XkbBI_MinorError, 0);
+		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	}
     } else if (!screen->scrollWidget || !XtIsRealized((Widget) xw)) {
-	Bell(XkbBI_MinorError, 0);
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 
 	ResizeScrollBar(xw);
@@ -491,7 +491,7 @@ ScrollBarOff(XtermWidget xw)
 	    Redraw();
 	}
     } else {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     }
 }
 
@@ -504,7 +504,7 @@ ToggleScrollBar(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     if (IsIcon(screen)) {
-	Bell(XkbBI_MinorError, 0);
+	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	TRACE(("ToggleScrollBar{{\n"));
 	if (screen->fullVwin.sb_info.width) {
