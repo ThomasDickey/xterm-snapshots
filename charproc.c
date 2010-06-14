@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1063 2010/06/13 17:47:04 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1064 2010/06/14 08:14:09 tom Exp $ */
 
 /*
 
@@ -1518,17 +1518,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    && sp->parsestate == sos_table
 	    && c < 32) {
 	    switch (c) {
-	    case 4:		/* FALLTHRU */
-	    case 8:		/* FALLTHRU */
-	    case 9:		/* FALLTHRU */
-	    case 10:		/* FALLTHRU */
-	    case 11:		/* FALLTHRU */
-	    case 12:		/* FALLTHRU */
-	    case 13:		/* FALLTHRU */
-	    case 14:		/* FALLTHRU */
-	    case 15:		/* FALLTHRU */
-	    case 17:		/* FALLTHRU */
-	    case 24:
+	    case ANSI_EOT:	/* FALLTHRU */
+	    case ANSI_BS:	/* FALLTHRU */
+	    case ANSI_HT:	/* FALLTHRU */
+	    case ANSI_LF:	/* FALLTHRU */
+	    case ANSI_VT:	/* FALLTHRU */
+	    case ANSI_FF:	/* FALLTHRU */
+	    case ANSI_CR:	/* FALLTHRU */
+	    case ANSI_SO:	/* FALLTHRU */
+	    case ANSI_SI:	/* FALLTHRU */
+	    case ANSI_XON:	/* FALLTHRU */
+	    case ANSI_CAN:
 		illegal_parse(xw, c, sp);
 		TRACE(("Reset to ground state (brokenStringTerm)\n"));
 		break;

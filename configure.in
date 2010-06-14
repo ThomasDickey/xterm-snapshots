@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.264 2010/06/05 19:47:23 tom Exp $
+dnl $XTermId: configure.in,v 1.265 2010/06/14 08:50:42 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -462,9 +462,9 @@ fi
 
 AC_MSG_CHECKING(if you want to allow broken string-terminators)
 CF_ARG_ENABLE(broken-st,
-	[  --enable-broken-st      allow broken string-terminators],
-	[enable_broken_st=yes],
-	[enable_broken_st=no])
+	[  --disable-broken-st     disallow broken string-terminators],
+	[enable_broken_st=no],
+	[enable_broken_st=yes])
 AC_MSG_RESULT($enable_broken_st)
 test "$enable_broken_st" = no && AC_DEFINE(OPT_BROKEN_ST,0)
 

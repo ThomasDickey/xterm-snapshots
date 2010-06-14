@@ -713,7 +713,7 @@ Optional Features:
   --enable-88-color       enable 88-color support
   --disable-blink-cursor  disable support for blinking cursor
   --enable-broken-osc     allow broken Linux OSC-strings
-  --enable-broken-st      allow broken string-terminators
+  --disable-broken-st     disallow broken string-terminators
   --disable-c1-print      disallow -k8 option for printable 128-159
   --disable-bold-color    disable PC-style mapping of bold colors
   --disable-color-class   disable separate color class resources
@@ -11319,13 +11319,13 @@ if test "${enable_broken_st+set}" = set; then
   enableval="$enable_broken_st"
   test "$enableval" != yes && enableval=no
   if test "$enableval" != "no" ; then
-    enable_broken_st=yes
-  else
     enable_broken_st=no
+  else
+    enable_broken_st=yes
   fi
 else
   enableval=no
-  enable_broken_st=no
+  enable_broken_st=yes
 
 fi;
 echo "$as_me:11331: result: $enable_broken_st" >&5

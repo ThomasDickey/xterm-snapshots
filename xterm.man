@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.462 2010/06/13 16:56:35 tom Exp $
+.\" $XTermId: xterm.man,v 1.464 2010/06/14 08:41:51 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -4870,6 +4870,12 @@ This action sends a SIGHUP to the subprogram and exits.
 It is also invoked
 by the \fBquit\fP entry in \fImainMenu\fP.
 .TP 8
+.B "readline-button()"
+Supports the optional readline feature by echoing repeated cursor forward
+or backward control sequences on button release event,
+to request that the host application update its notion of the cursor's
+position to match the button event.
+.TP 8
 .B "redraw()"
 This action redraws the window and is also invoked by the
 \fIredraw\fP entry in \fImainMenu\fP.
@@ -4900,6 +4906,11 @@ in the other direction.
 This action toggles the \fISecure Keyboard\fP mode described in the
 section named \fBSECURITY\fP, and is invoked from the \fBsecurekbd\fP
 entry in \fImainMenu\fP.
+.TP 8
+.B "scroll-lock(\fIon/off/toggle\fP)"
+This action toggles internal state which tells
+\fIxterm\fP whether Scroll Lock is active,
+subject to the \fBallowScrollLock\fP resource.
 .TP 8
 .B "select-cursor-end(\fIdestname\fP [, ...])"
 This action is similar to \fBselect-end\fP except that it should be used
@@ -4949,6 +4960,10 @@ as \fItstp\fP), \fIcont\fP
 (if supported by the operating system), \fIint\fP, \fIhup\fP, \fIterm\fP,
 \fIquit\fP,
 \fIalrm\fP, \fIalarm\fP (same as \fIalrm\fP) and \fIkill\fP.
+.TP 8
+.B "set-8-bit-control(\fIon/off/toggle\fP)"
+This action toggles the \fBeightBitControl\fP resource and is also invoked from the
+\fB8-bit-control\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-allow132(\fIon/off/toggle\fP)"
 This action toggles the \fBc132\fP resource and is also invoked from the
@@ -5005,10 +5020,16 @@ This action toggles the \fBjumpscroll\fP resource and is also invoked by the
 This action toggles the \fIxterm\fR's state regarding whether the current font
 has line-drawing characters and whether it should draw them directly.
 It is also invoked by the \fBfont-linedrawing\fP entry in \fIfontMenu\fP.
+.\" .\" not implemented
+.\" .TP 8
+.\" .B "set-font-loading(\fIon/off/toggle\fP)"
+.\" This action toggles the TBD resource
+.\" which controls the ability to load VT220 soft fonts.
+.\" It is also invoked by the \fBfont-loadable\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-font-packed(\fIon/off/toggle\fP)"
 This action toggles the \fIforcePackedFont\fR's resource
-which controls to use the font's minimum or maximum glyph width.
+which controls use of the font's minimum or maximum glyph width.
 It is also invoked by the \fBfont-packed\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-keep-selection(\fIon/off/toggle\fP)"
@@ -5230,8 +5251,7 @@ which is set by the \fBselectToClipboard\fP resource:
          Shift <KeyPress> Select:select-cursor-start() \\\&
                                  select-cursor-end(SELECT, CUT_BUFFER0) \\n\\\&
          Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
-            <KeyPress> XF86Paste:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
-             <KeyPress> SunPaste:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
+        <KeyRelease> Scroll_Lock:scroll-lock() \\n\\\&
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\\&
     Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\\&
     Shift <KeyPress> KP_Subtract:smaller-vt-font() \\n\\\&
