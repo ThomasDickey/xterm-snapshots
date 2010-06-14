@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.947 2010/06/13 17:15:03 tom Exp $
+  $XTermId: xterm.log.html,v 1.948 2010/06/14 00:05:57 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -321,6 +321,11 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>undo a change to limit-check in <code>ScrnRefresh</code>
+	    in <a href="#xterm_257">patch #257</a>,
+	    which broke <code>fastScroll</code> feature
+	    (Debian #584841).
+
 	<li>modify handling of
 	    <code>brokenLinuxOSC</code> and
 	    <code>brokenStringTerm</code>
