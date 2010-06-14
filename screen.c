@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.422 2010/05/23 16:04:32 tom Exp $ */
+/* $XTermId: screen.c,v 1.423 2010/06/14 00:00:58 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1315,13 +1315,16 @@ ScrnRefresh(XtermWidget xw,
 	else
 	    lastind = row - scrollamt;
 
+	if (lastind < 0 || lastind > screen->max_row)
+	    continue;
+
 	TRACE2(("ScrnRefresh row=%d lastind=%d ->%d\n",
 		row, lastind, ROW2INX(screen, lastind)));
 
 	if ((ld = getLineData(screen, ROW2INX(screen, lastind))) == 0
 	    || ld->charData == 0
 	    || ld->attribs == 0) {
-	    continue;
+	    break;
 	}
 	if (maxcol >= (int) ld->lineSize) {
 	    maxcol = ld->lineSize - 1;
@@ -1330,8 +1333,6 @@ ScrnRefresh(XtermWidget xw,
 
 	chars = ld->charData;
 	attrs = ld->attribs;
-	assert(chars != 0);
-	assert(attrs != 0);
 
 	if_OPT_WIDE_CHARS(screen, {
 	    /* This fixes an infinite recursion bug, that leads
