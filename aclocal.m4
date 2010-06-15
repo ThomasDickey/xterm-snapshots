@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.284 2010/06/05 15:31:37 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.285 2010/06/14 21:44:02 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -30,6 +30,9 @@ dnl holders shall not be used in advertising or otherwise to promote the
 dnl sale, use or other dealings in this Software without prior written
 dnl authorization.
 dnl
+dnl ---------------------------------------------------------------------------
+dnl See
+dnl		http://invisible-island.net/autoconf/autoconf.html
 dnl ---------------------------------------------------------------------------
 dnl ---------------------------------------------------------------------------
 dnl AM_LANGINFO_CODESET version: 3 updated: 2002/10/27 23:21:42
@@ -2053,7 +2056,7 @@ foo.c_ospeed = B9600;
 test "$cf_cv_termio_c_ispeed" = yes && AC_DEFINE(HAVE_TERMIO_C_ISPEED)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_TRY_PKG_CONFIG version: 3 updated: 2010/06/02 05:03:05
+dnl CF_TRY_PKG_CONFIG version: 4 updated: 2010/06/14 17:42:30
 dnl -----------------
 dnl This is a simple wrapper to use for pkg-config, for libraries which may be
 dnl available in that form.
@@ -2068,6 +2071,8 @@ if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists $1; then
 	CF_VERBOSE(found package $1)
 	cf_pkgconfig_incs="`$PKG_CONFIG --cflags $1 2>/dev/null`"
 	cf_pkgconfig_libs="`$PKG_CONFIG --libs   $1 2>/dev/null`"
+	CF_VERBOSE(package $1 CFLAGS: $cf_pkgconfig_incs)
+	CF_VERBOSE(package $1 LIBS: $cf_pkgconfig_libs)
 	CF_ADD_CFLAGS($cf_pkgconfig_incs)
 	CF_ADD_LIBS($cf_pkgconfig_libs)
 	ifelse([$2],,:,[$2])
@@ -2817,7 +2822,7 @@ if test -n "$cf_xopen_source" ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA version: 15 updated: 2010/06/02 05:03:05
+dnl CF_X_ATHENA version: 16 updated: 2010/06/14 17:42:30
 dnl -----------
 dnl Check for Xaw (Athena) libraries
 dnl
@@ -2871,17 +2876,11 @@ if test "$PKG_CONFIG" != none ; then
 		lib${cf_x_athena} \
 		lib${cf_x_athena}-devel
 	do
-		if "$PKG_CONFIG" --exists $cf_athena_pkg; then
-			CF_VERBOSE(found package $cf_athena_pkg)
-			cf_x_athena_inc="`$PKG_CONFIG --cflags $cf_athena_pkg 2>/dev/null`"
-			cf_x_athena_lib="`$PKG_CONFIG --libs   $cf_athena_pkg 2>/dev/null`"
-			CF_ADD_CFLAGS($cf_x_athena_inc)
-			CF_ADD_LIBS($cf_x_athena_lib)
-
+		CF_TRY_PKG_CONFIG($cf_athena_pkg,[
+			cf_x_athena_lib="$cf_pkgconfig_libs"
 			CF_UPPER(cf_x_athena_LIBS,HAVE_LIB_$cf_x_athena)
 			AC_DEFINE_UNQUOTED($cf_x_athena_LIBS)
-			break
-		fi
+			break])
 	done
 fi
 
@@ -3120,7 +3119,7 @@ AC_SUBST(HAVE_TYPE_FCCHAR32)
 AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_TOOLKIT version: 14 updated: 2010/06/02 05:03:05
+dnl CF_X_TOOLKIT version: 15 updated: 2010/06/14 17:42:30
 dnl ------------
 dnl Check for X Toolkit libraries
 dnl
@@ -3132,6 +3131,23 @@ AC_REQUIRE([CF_CHECK_CACHE])
 cf_have_X_LIBS=no
 
 CF_TRY_PKG_CONFIG(xt,[
+
+	# workaround for broken ".pc" files used for X Toolkit.
+	case "x$X_PRE_LIBS" in #(vi
+	*-lICE*)
+		case "x$LIBS" in #(vi
+		*-lICE*) #(vi
+			;;
+		*)
+			CF_VERBOSE(work around broken package)
+			CF_VERBOSE(...before $LIBS)
+			LIBS=`echo "$LIBS" | sed -e "s/[[ 	]][[ 	]]*/ /g" -e "s,-lXt ,-lXt $X_PRE_LIBS ," -e 's/  / /g'`
+			CF_VERBOSE(...after  $LIBS)
+			;;
+		esac
+		;;
+	esac
+
 	cf_have_X_LIBS=yes
 ],[
 
