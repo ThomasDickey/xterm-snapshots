@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.343 2010/06/13 17:45:08 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.344 2010/06/15 08:18:58 tom Exp $ */
 
 /************************************************************
 
@@ -168,7 +168,7 @@ setupPackedFonts(XtermWidget xw)
 
 #if OPT_RENDERFONT
 #define MIXED(name) screen->name[fontnum].map.mixed
-    if (xw->misc.render_font) {
+    if (xw->misc.render_font == True) {
 	int fontnum = screen->menu_font_number;
 
 	screen->allow_packing = (Boolean) (MIXED(renderFontNorm)
@@ -1804,7 +1804,7 @@ xtermComputeFontInfo(XtermWidget xw,
      * font-loading for fixed-fonts still goes on whether or not this chunk
      * overrides it.
      */
-    if (xw->misc.render_font && !IsIconWin(screen, win)) {
+    if (UsingRenderFont(xw)) {
 	char *face_name = getFaceName(xw, False);
 	int fontnum = screen->menu_font_number;
 	XftFont *norm = screen->renderFontNorm[fontnum].font;
@@ -2030,7 +2030,7 @@ xtermComputeFontInfo(XtermWidget xw,
     /*
      * Are we handling a bitmap font?
      */
-    if (!xw->misc.render_font || IsIconWin(screen, win))
+    if (!UsingRenderFont(xw))
 #endif /* OPT_RENDERFONT */
     {
 	if (is_double_width_font(font) && !(screen->fnt_prop)) {

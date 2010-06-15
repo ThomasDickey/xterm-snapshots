@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.669 2010/06/14 08:14:09 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.670 2010/06/15 08:34:38 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1326,6 +1326,17 @@ typedef struct {
 } XTermFonts;
 
 #if OPT_RENDERFONT
+typedef enum {
+	erFalse = 0
+	, erTrue
+	, erDefault
+	, erLast
+} RenderFont;
+
+#define DefaultRenderFont(xw) \
+	if ((xw)->misc.render_font == erDefault) \
+	    (xw)->misc.render_font = erFalse
+
 typedef struct {
 	XftFont *	font;
 	FontMap		map;
@@ -2203,6 +2214,7 @@ typedef struct _Misc {
     char *face_name;
     char *face_wide_name;
     float face_size[NMENUFONTS];
+    char *render_font_s;
     Boolean render_font;
 #endif
 } Misc;
@@ -2432,7 +2444,7 @@ typedef struct _TekWidgetRec {
 /*
  * Macro to check if we are iconified; do not use render for that case.
  */
-#define UsingRenderFont(xw)	((xw)->misc.render_font && !IsIcon(TScreenOf(xw)))
+#define UsingRenderFont(xw)	(((xw)->misc.render_font == True) && !IsIcon(TScreenOf(xw)))
 
 /*
  * These definitions do not depend on whether xterm supports active-icon.

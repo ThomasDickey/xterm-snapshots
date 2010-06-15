@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.265 2010/06/13 18:19:39 tom Exp $ */
+/* $XTermId: menu.c,v 1.266 2010/06/15 08:38:59 tom Exp $ */
 
 /*
  *
@@ -1539,13 +1539,15 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = (XtermWidget) term;
+    TScreen *screen = TScreenOf(xw);
     int fontnum = screen->menu_font_number;
-    String name = TScreenOf(term)->MenuFontName(fontnum);
+    String name = TScreenOf(xw)->MenuFontName(fontnum);
 
-    ToggleFlag(term->misc.render_font);
+    DefaultRenderFont(xw);
+    ToggleFlag(xw->misc.render_font);
     update_font_renderfont();
-    xtermLoadFont(term, xtermFontName(name), True, fontnum);
+    xtermLoadFont(xw, xtermFontName(name), True, fontnum);
     ScrnRefresh(term, 0, 0,
 		MaxRows(screen),
 		MaxCols(screen), True);
@@ -2302,7 +2304,11 @@ HandleRenderFont(Widget w,
 		 String * params,
 		 Cardinal *param_count)
 {
-    handle_vt_toggle(do_font_renderfont, term->misc.render_font,
+    XtermWidget xw = (XtermWidget) term;
+
+    DefaultRenderFont(xw);
+
+    handle_vt_toggle(do_font_renderfont, xw->misc.render_font,
 		     params, *param_count, w);
 }
 #endif
@@ -3247,7 +3253,7 @@ update_font_renderfont(void)
     UpdateCheckbox("update_font_renderfont",
 		   fontMenuEntries,
 		   fontMenu_render_font,
-		   term->misc.render_font);
+		   (term->misc.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
 		       !IsEmpty(term->misc.face_name));
 }
