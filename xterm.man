@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.464 2010/06/14 08:41:51 tom Exp $
+.\" $XTermId: xterm.man,v 1.465 2010/06/15 09:38:48 tom Exp $
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
 .\"
@@ -2301,7 +2301,8 @@ The default is an empty string, which does not override anything.
 .B "faceName (\fPclass\fB FaceName)"
 Specify the pattern for fonts selected from the FreeType
 library if support for that library was compiled into \fIxterm\fR.
-There is no default.
+There is no default value.
+.IP
 If not specified,
 or if there is no match for both normal and bold fonts,
 \fIxterm\fR uses the \fBfont\fP and related resources.
@@ -2309,15 +2310,25 @@ or if there is no match for both normal and bold fonts,
 .B "faceNameDoublesize (\fPclass\fB FaceNameDoublesize)"
 Specify an double-width font for cases where an application requires
 this, e.g., in CJK applications.
-There is no default.
+There is no default value.
+.IP
 If the application uses double-wide characters and this resource is not given,
-\fIxterm\fP  will use a scaled version of the font given by \fBfaceName\fP.
+\fIxterm\fP will use a scaled version of the font given by \fBfaceName\fP.
 .TP 8
 .B "faceSize (\fPclass\fB FaceSize)"
 Specify the pointsize for fonts selected from the FreeType
 library if support for that library was compiled into \fIxterm\fR.
 The default is \*(``14.\*(''
 On the \fBVT\ Fonts\fP menu, this corresponds to the \fIDefault\fP entry.
+.IP
+Although the default is \*(``14.\*('',
+this may not be the same as the pointsize for the default bitmap font,
+i.e., that assigned with the \fB\-fn\fP option,
+or the \fBfont\fP resource.
+For example, the "fixed" font usually has a pointsize of \*(``8.\*(''.
+If you set \fBfaceSize\fP to match the size of the bitmap font,
+then switching between bitmap and TrueType fonts via the font menu
+will give comparable sizes for the window.
 .IP
 You can specify the pointsize for TrueType fonts selected with the other
 size-related menu entries such as Medium, Huge, etc., by using one of
@@ -3044,7 +3055,37 @@ The default is \*(``false.\*(''
 .B "renderFont (\fPclass\fB RenderFont)"
 If \fIxterm\fR is built with the Xft library,
 this controls whether the \fBfaceName\fR resource is used.
-The default is \*(``true.\*(''
+The default is \*(``default.\*(''
+.IP
+The resource values are strings, evaluated as booleans after startup.
+.RS
+.TP 5
+false
+.br
+disable the feature and use the normal (bitmap) font.
+.TP 5
+true
+.br
+startup using the TrueType font specified by the \fBfaceName\fP and
+\fBfaceSize\fP resource settings.
+If there is no value for \fBfaceName\fP, disable the feature and use
+the normal (bitmap) font.
+.IP
+After startup, you can still switch to/from the bitmap font using the
+\*(``TrueType Fonts\*('' menu entry.
+.TP 5
+default
+.br
+startup using the normal (bitmap) font,
+but enable the \*(``TrueType Fonts\*(''
+menu entry to allow runtime switching to/from TrueType fonts.
+.IP
+If there is no \fBfaceName\fP resource set,
+then runtime switching to TrueType fonts is disabled.
+\fIXterm\fP has a separate  compiled-in value for \fBfaceName\fP
+for the special case where \fBrenderFont\fP is \*(``default\*(''.
+That is normally \*(``mono\*(''.
+.RE
 .TP 8
 .B "resizeGravity (\fPclass\fB ResizeGravity)"
 Affects the behavior when the window is resized to be taller or

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.537 2010/06/04 23:02:49 tom Exp $ */
+/* $XTermId: util.c,v 1.538 2010/06/15 08:17:36 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -2687,7 +2687,7 @@ drawXtermText(XtermWidget xw,
 	    XFontStruct *fs = screen->double_fonts[inx].fs;
 
 #if OPT_RENDERFONT
-	    if (!xw->misc.render_font || IsIconWin(screen, WhichVWin(screen)))
+	    if (!UsingRenderFont(xw))
 #endif
 	    {
 		XRectangle rect, *rp = &rect;

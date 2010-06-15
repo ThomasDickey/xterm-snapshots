@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1064 2010/06/14 08:14:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1066 2010/06/15 09:58:23 tom Exp $ */
 
 /*
 
@@ -752,7 +752,7 @@ static XtResource xterm_resources[] =
     Dres(XtNfaceSize, XtCFaceSize, misc.face_size[0], DEFFACESIZE),
     Sres(XtNfaceName, XtCFaceName, misc.face_name, DEFFACENAME),
     Sres(XtNfaceNameDoublesize, XtCFaceNameDoublesize, misc.face_wide_name, DEFFACENAME),
-    Bres(XtNrenderFont, XtCRenderFont, misc.render_font, True),
+    Sres(XtNrenderFont, XtCRenderFont, misc.render_font_s, "default"),
 #endif
 };
 
@@ -5923,6 +5923,44 @@ set_flags_from_list(char *target,
     }
 }
 
+/*
+ * Extend a (normally) boolean resource value by checking for additional values
+ * which will be mapped into true/false.
+ */
+#if OPT_RENDERFONT
+static int
+extendedBoolean(const char *value, FlagList * table, Cardinal limit)
+{
+    int result = -1;
+    long check;
+    char *next;
+    Cardinal n;
+
+    if ((x_strcasecmp(value, "true") == 0)
+	|| (x_strcasecmp(value, "yes") == 0)
+	|| (x_strcasecmp(value, "on") == 0)) {
+	result = True;
+    } else if ((x_strcasecmp(value, "false") == 0)
+	       || (x_strcasecmp(value, "no") == 0)
+	       || (x_strcasecmp(value, "off") == 0)) {
+	result = False;
+    } else if ((check = strtol(value, &next, 0)) >= 0 && *next == '\0') {
+	if (check >= (long) limit)
+	    check = True;
+	result = (int) check;
+    } else {
+	for (n = 0; n < limit; ++n) {
+	    if (x_strcasecmp(value, table[n].name) == 0) {
+		result = table[n].code;
+		break;
+	    }
+	}
+    }
+
+    return result;
+}
+#endif /* OPT_RENDERFONT */
+
 /* ARGSUSED */
 static void
 VTInitialize(Widget wrequest,
@@ -5990,6 +6028,13 @@ VTInitialize(Widget wrequest,
 	,DATA(SetXprop)
 	,DATA(GetSelection)
 	,DATA(SetSelection)
+    };
+#undef DATA
+
+#define DATA(name) { #name, er##name }
+    static FlagList tblRenderFont[] =
+    {
+	DATA(Default)
     };
 #undef DATA
 
@@ -6503,7 +6548,15 @@ VTInitialize(Widget wrequest,
     }
     init_Sres(misc.face_name);
     init_Sres(misc.face_wide_name);
-    init_Bres(misc.render_font);
+    init_Sres(misc.render_font_s);
+    wnew->misc.render_font =
+	(Boolean) extendedBoolean(wnew->misc.render_font_s,
+				  tblRenderFont, erLast);
+    if (wnew->misc.render_font == erDefault && IsEmpty(wnew->misc.face_name)) {
+	wnew->misc.face_name = x_strdup(DEFFACENAME_AUTO);
+	TRACE(("will allow runtime switch to render_font using \"%s\"\n",
+	       wnew->misc.face_name));
+    }
     /* minor tweak to make debug traces consistent: */
     if (wnew->misc.render_font) {
 	if (IsEmpty(wnew->misc.face_name)) {
