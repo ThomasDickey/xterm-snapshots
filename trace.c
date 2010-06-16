@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.114 2010/05/21 20:41:14 tom Exp $ */
+/* $XTermId: trace.c,v 1.115 2010/06/15 22:40:28 tom Exp $ */
 
 /*
  * 
@@ -199,7 +199,7 @@ visibleChrsetName(unsigned chrset)
 #endif
 
 char *
-visibleChars(Char * buf, unsigned len)
+visibleChars(const Char * buf, unsigned len)
 {
     static char *result;
     static unsigned used;

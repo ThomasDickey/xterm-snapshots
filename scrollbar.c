@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.172 2010/06/13 17:46:27 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.173 2010/06/15 22:47:34 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2010 by Thomas E. Dickey
@@ -618,7 +618,7 @@ static long
 params_to_pixels(TScreen * screen, String * params, Cardinal n)
 {
     int mult = 1;
-    char *s;
+    const char *s;
     int modifier;
 
     switch (n > 2 ? 2 : n) {

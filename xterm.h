@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.626 2010/06/13 17:43:12 tom Exp $ */
+/* $XTermId: xterm.h,v 1.627 2010/06/15 22:46:13 tom Exp $ */
 
 /************************************************************
 
@@ -876,7 +876,7 @@ extern unsigned xtermParamToState (XtermWidget /* xw */, unsigned /* param */);
 extern unsigned xtermStateToParam (XtermWidget /* xw */, unsigned /* state */);
 extern Bool xtermDeleteIsDEL (XtermWidget /* xw */);
 extern void Input (XtermWidget /* xw */, XKeyEvent */* event */, Bool /* eightbit */);
-extern void StringInput (XtermWidget /* xw */, Char * /* string */, size_t  /* nbytes */);
+extern void StringInput (XtermWidget /* xw */, const Char * /* string */, size_t  /* nbytes */);
 
 #if OPT_NUM_LOCK
 extern void VTInitModifiers(XtermWidget /* xw */);
@@ -1046,7 +1046,7 @@ extern void xtermPrintEverything (XtermWidget /* xw */, PrinterFlags * /* p */);
 
 extern Bool decodeUtf8 (PtyData * /* data */);
 extern int readPtyData (TScreen * /* screen */, PtySelect * /* select_mask */, PtyData * /* data */);
-extern void fillPtyData (TScreen * /* screen */, PtyData * /* data */, char * /* value */, int  /* length */);
+extern void fillPtyData (TScreen * /* screen */, PtyData * /* data */, const char * /* value */, int  /* length */);
 extern void initPtyData (PtyData ** /* data */);
 extern void trimPtyData (TScreen * /* screen */, PtyData * /* data */);
 

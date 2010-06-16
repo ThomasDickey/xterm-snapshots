@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.265 2010/06/14 08:50:42 tom Exp $
+dnl $XTermId: configure.in,v 1.266 2010/06/15 22:30:01 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -717,10 +717,6 @@ CF_ARG_DISABLE(regex,
 AC_MSG_RESULT($enable_regex)
 if test "$enable_regex" = yes ; then
 	CF_WITH_PCRE
-	if test "x$ac_cv_lib_pcreposix_regcomp" = xyes ; then
-		# 2010/6/5 - workaround - plink.sh would remove the library
-		AC_MSG_ERROR(This version of PCRE will not link properly with xterm)
-	fi
 	if test "$with_pcre" = no ; then
 		CF_REGEX
 		if test "X$cf_cv_regex_hdrs" != "Xregex.h" ; then
@@ -992,6 +988,13 @@ done
 
 CF_MAKE_TAGS
 CF_DISABLE_RPATH_HACK
+
+# Force plink.sh to not trim pcre's libraries, which have the same symbol
+# names as the system regexp.
+if test "$with_pcre" != no
+then
+	LIBS=`echo "$LIBS" | sed -e 's/-lpcre/-kpcre/g'`
+fi
 
 ###	output Makefile and xtermcfg.h
 AC_OUTPUT(Makefile)

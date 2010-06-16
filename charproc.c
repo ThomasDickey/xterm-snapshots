@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1066 2010/06/15 09:58:23 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1068 2010/06/15 22:19:21 tom Exp $ */
 
 /*
 
@@ -216,7 +216,7 @@ static void HandleStructNotify PROTO_XT_EV_HANDLER_ARGS;
 #endif
 #endif
 
-static char *_Font_Selected_ = "yes";	/* string is arbitrary */
+static String _Font_Selected_ = "yes";	/* string is arbitrary */
 
 static char defaultTranslations[] =
 "\
@@ -5957,6 +5957,11 @@ extendedBoolean(const char *value, FlagList * table, Cardinal limit)
 	}
     }
 
+    if (result < 0) {
+	fprintf(stderr, "Unrecognized keyword: %s\n", value);
+	result = False;
+    }
+
     return result;
 }
 #endif /* OPT_RENDERFONT */
@@ -6751,14 +6756,14 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 
 #define TRACE_FREE_LEAK(name) \
 	if (name) { \
-	    free(name); \
+	    free((void *) name); \
 	    name = 0; \
 	    TRACE(("freed " #name "\n")); \
 	}
 
 #define FREE_LEAK(name) \
 	if (name) { \
-	    free(name); \
+	    free((void *) name); \
 	    name = 0; \
 	}
 
