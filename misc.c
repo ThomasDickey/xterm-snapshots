@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.500 2010/06/13 17:46:27 tom Exp $ */
+/* $XTermId: misc.c,v 1.502 2010/06/16 00:02:07 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -567,7 +567,7 @@ HandleStringEvent(Widget w GCC_UNUSED,
 	    StringInput(term, hexval, (size_t) 1);
 	}
     } else {
-	StringInput(term, (Char *) * params, strlen(*params));
+	StringInput(term, (const Char *) *params, strlen(*params));
     }
 }
 
@@ -680,7 +680,7 @@ HandleInterpret(Widget w GCC_UNUSED,
 		Cardinal *param_count)
 {
     if (*param_count == 1) {
-	char *value = params[0];
+	const char *value = params[0];
 	int need = (int) strlen(value);
 	int used = (int) (VTbuffer->next - VTbuffer->buffer);
 	int have = (int) (VTbuffer->last - VTbuffer->buffer);
@@ -1931,7 +1931,7 @@ find_closest_color(Display * dpy, Colormap cmap, XColor * def)
 static int
 AllocateAnsiColor(XtermWidget xw,
 		  ColorRes * res,
-		  char *spec)
+		  const char *spec)
 {
     int result;
     XColor def;
@@ -1998,7 +1998,7 @@ xtermGetColorRes(XtermWidget xw, ColorRes * res)
 #endif
 
 static int
-ChangeOneAnsiColor(XtermWidget xw, int color, char *name)
+ChangeOneAnsiColor(XtermWidget xw, int color, const char *name)
 {
     int code;
 
@@ -2504,7 +2504,7 @@ ResetColorsRequest(XtermWidget xw,
 		   int code)
 {
     Bool result = False;
-    char *thisName;
+    const char *thisName;
     ScrnColors newColors;
     int ndx;
 
@@ -2587,7 +2587,7 @@ QueryFontRequest(XtermWidget xw, char *buf, int final)
 	Bool success = True;
 	int num;
 	char *base = buf + 1;
-	char *name = 0;
+	const char *name = 0;
 	char temp[10];
 
 	num = ParseShiftedFont(xw, buf, &buf);
@@ -4160,9 +4160,11 @@ sortedOptDescs(XrmOptionDescRec * descs, Cardinal res_count)
     static XrmOptionDescRec *res_array = 0;
 
 #ifdef NO_LEAKS
-    if (descs == 0 && res_array != 0) {
-	free(res_array);
-	res_array = 0;
+    if (descs == 0) {
+	if (res_array != 0) {
+	    free(res_array);
+	    res_array = 0;
+	}
     } else
 #endif
     if (res_array == 0) {
@@ -4226,9 +4228,9 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 #if OPT_TRACE
 	for (j = 0; j < opt_count; j++) {
 	    if (!strncmp(opt_array[j].opt, "-/+", 3)) {
-		char *name = opt_array[j].opt + 3;
+		const char *name = opt_array[j].opt + 3;
 		for (k = 0; k < numDescs; ++k) {
-		    char *value = res_array[k].value;
+		    const char *value = res_array[k].value;
 		    if (res_array[k].option[0] == '-') {
 			code = -1;
 		    } else if (res_array[k].option[0] == '+') {
@@ -4351,9 +4353,11 @@ xtermEnvUTF8(void)
 char *
 xtermVersion(void)
 {
+    static char vendor_version[] = __vendorversion__;
     static char *result;
+
     if (result == 0) {
-	char *vendor = __vendorversion__;
+	char *vendor = vendor_version;
 	char first[BUFSIZ];
 	char second[BUFSIZ];
 

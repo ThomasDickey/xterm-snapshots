@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.325 2010/06/13 17:45:08 tom Exp $ */
+/* $XTermId: input.c,v 1.326 2010/06/15 22:41:09 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1338,7 +1338,7 @@ Input(XtermWidget xw,
 }
 
 void
-StringInput(XtermWidget xw, Char * string, size_t nbytes)
+StringInput(XtermWidget xw, const Char * string, size_t nbytes)
 {
     TRACE(("InputString (%s,%lu)\n",
 	   visibleChars(string, (unsigned) nbytes),

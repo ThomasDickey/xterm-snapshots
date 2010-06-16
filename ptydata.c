@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.96 2010/04/18 17:51:56 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.97 2010/06/15 22:46:00 tom Exp $ */
 
 /************************************************************
 
@@ -377,7 +377,7 @@ trimPtyData(TScreen * screen GCC_UNUSED, PtyData * data)
  * and nextPtyData() will return that.
  */
 void
-fillPtyData(TScreen * screen, PtyData * data, char *value, int length)
+fillPtyData(TScreen * screen, PtyData * data, const char *value, int length)
 {
     int size;
     int n;
