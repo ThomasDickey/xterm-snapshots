@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.502 2010/06/16 00:02:07 tom Exp $ */
+/* $XTermId: misc.c,v 1.503 2010/06/20 21:33:49 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -687,7 +687,7 @@ HandleInterpret(Widget w GCC_UNUSED,
 
 	if (have - used + need < BUF_SIZE) {
 
-	    fillPtyData(TScreenOf(term), VTbuffer, value, (int) strlen(value));
+	    fillPtyData(term, VTbuffer, value, (int) strlen(value));
 
 	    TRACE(("Interpret %s\n", value));
 	    VTbuffer->update++;
@@ -1605,23 +1605,25 @@ xtermResetIds(TScreen * screen)
 static SIGNAL_T
 logpipe(int sig GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
 #ifdef SYSV
     (void) signal(SIGPIPE, SIG_IGN);
 #endif /* SYSV */
     if (screen->logging)
-	CloseLog(screen);
+	CloseLog(xw);
 }
 #endif /* ALLOWLOGFILEEXEC */
 
 void
-StartLog(TScreen * screen)
+StartLog(XtermWidget xw)
 {
     static char *log_default;
 #ifdef ALLOWLOGFILEEXEC
     char *cp;
 #endif /* ALLOWLOGFILEEXEC */
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->logging || (screen->inhibit & I_LOG))
 	return;
@@ -1745,19 +1747,23 @@ StartLog(TScreen * screen)
 }
 
 void
-CloseLog(TScreen * screen)
+CloseLog(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (!screen->logging || (screen->inhibit & I_LOG))
 	return;
-    FlushLog(screen);
+    FlushLog(xw);
     close(screen->logfd);
     screen->logging = False;
     update_logging();
 }
 
 void
-FlushLog(TScreen * screen)
+FlushLog(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->logging && !(screen->inhibit & I_LOG)) {
 	Char *cp;
 	int i;
@@ -4082,8 +4088,10 @@ set_tek_visibility(Bool on)
 void
 end_tek_mode(void)
 {
-    if (TEK4014_ACTIVE(term)) {
-	FlushLog(TScreenOf(term));
+    XtermWidget xw = term;
+
+    if (TEK4014_ACTIVE(xw)) {
+	FlushLog(xw);
 	longjmp(Tekend, 1);
     }
     return;
@@ -4092,9 +4100,11 @@ end_tek_mode(void)
 void
 end_vt_mode(void)
 {
-    if (!TEK4014_ACTIVE(term)) {
-	FlushLog(TScreenOf(term));
-	TEK4014_ACTIVE(term) = True;
+    XtermWidget xw = term;
+
+    if (!TEK4014_ACTIVE(xw)) {
+	FlushLog(xw);
+	TEK4014_ACTIVE(xw) = True;
 	longjmp(VTend, 1);
     }
     return;

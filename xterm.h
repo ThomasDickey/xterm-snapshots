@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.627 2010/06/15 22:46:13 tom Exp $ */
+/* $XTermId: xterm.h,v 1.628 2010/06/20 21:34:48 tom Exp $ */
 
 /************************************************************
 
@@ -1020,11 +1020,11 @@ extern Bool xtermEnvUTF8(void);
 #endif
 
 #ifdef ALLOWLOGGING
-extern void StartLog (TScreen * /* screen */);
-extern void CloseLog (TScreen * /* screen */);
-extern void FlushLog (TScreen * /* screen */);
+extern void StartLog (XtermWidget /* xw */);
+extern void CloseLog (XtermWidget /* xw */);
+extern void FlushLog (XtermWidget /* xw */);
 #else
-#define FlushLog(screen) /*nothing*/
+#define FlushLog(xw) /*nothing*/
 #endif
 
 /* print.c */
@@ -1045,10 +1045,10 @@ extern void xtermPrintEverything (XtermWidget /* xw */, PrinterFlags * /* p */);
 #endif
 
 extern Bool decodeUtf8 (PtyData * /* data */);
-extern int readPtyData (TScreen * /* screen */, PtySelect * /* select_mask */, PtyData * /* data */);
-extern void fillPtyData (TScreen * /* screen */, PtyData * /* data */, const char * /* value */, int  /* length */);
+extern int readPtyData (XtermWidget /* xw */, PtySelect * /* select_mask */, PtyData * /* data */);
+extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, int  /* length */);
 extern void initPtyData (PtyData ** /* data */);
-extern void trimPtyData (TScreen * /* screen */, PtyData * /* data */);
+extern void trimPtyData (XtermWidget /* xw */, PtyData * /* data */);
 
 #ifdef NO_LEAKS
 extern void noleaks_ptydata ( void );

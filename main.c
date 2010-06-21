@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.617 2010/06/04 09:45:06 tom Exp $ */
+/* $XTermId: main.c,v 1.618 2010/06/20 21:11:51 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2372,7 +2372,7 @@ main(int argc, char *argv[]ENVP_ARG)
     initPtyData(&VTbuffer);
 #ifdef ALLOWLOGGING
     if (term->misc.log_on) {
-	StartLog(screen);
+	StartLog(term);
     }
 #endif
 
@@ -4580,7 +4580,8 @@ spawnXTerm(XtermWidget xw)
 SIGNAL_T
 Exit(int n)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
 #ifdef USE_UTEMPTER
     if (!resource.utmpInhibit && added_utmp_entry)
@@ -4631,15 +4632,15 @@ Exit(int n)
 		(void) call_pututline(utptr);
 #ifdef WTMP
 #if defined(WTMPX_FILE) && (defined(SVR4) || defined(__SCO__))
-		if (term->misc.login_shell)
+		if (xw->misc.login_shell)
 		    updwtmpx(WTMPX_FILE, utptr);
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
 		strncpy(utmp.ut_line, utptr->ut_line, sizeof(utmp.ut_line));
-		if (term->misc.login_shell)
+		if (xw->misc.login_shell)
 		    call_updwtmp(etc_wtmp, utptr);
 #else
 		/* set wtmp entry if wtmp file exists */
-		if (term->misc.login_shell) {
+		if (xw->misc.login_shell) {
 		    int fd;
 		    if ((fd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
 			write(fd, utptr, sizeof(*utptr));
@@ -4675,7 +4676,7 @@ Exit(int n)
 	    close(wfd);
 	}
 #ifdef WTMP
-	if (term->misc.login_shell &&
+	if (xw->misc.login_shell &&
 	    (wfd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
 	    (void) strncpy(utmp.ut_line,
 			   my_pty_name(ttydev),
@@ -4715,14 +4716,14 @@ Exit(int n)
     close(screen->respond);	/* close explicitly to avoid race with slave side */
 #ifdef ALLOWLOGGING
     if (screen->logging)
-	CloseLog(screen);
+	CloseLog(xw);
 #endif
 
 #ifdef NO_LEAKS
     if (n == 0) {
 	TRACE(("Freeing memory leaks\n"));
-	if (term != 0) {
-	    Display *dpy = TScreenOf(term)->display;
+	if (xw != 0) {
+	    Display *dpy = TScreenOf(xw)->display;
 
 	    if (toplevel) {
 		XtDestroyWidget(toplevel);

@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.181 2010/06/13 18:28:22 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.182 2010/06/20 21:34:37 tom Exp $ */
 
 /*
  *
@@ -455,7 +455,7 @@ Tekparse(TekWidget tw)
 	    TRACE(("case: special return to vt102 mode\n"));
 	    Tparsestate = curstate;
 	    TekRecord->ptr[-1] = ANSI_NAK;	/* remove from recording */
-	    FlushLog(TScreenOf(xw));
+	    FlushLog(xw);
 	    return;
 
 	case CASE_SPT_STATE:
@@ -818,7 +818,7 @@ Tinput(TekWidget tw)
 			  &Tselect_mask, NULL, NULL,
 			  &crocktimeout);
 #endif
-	    if (readPtyData(screen, &Tselect_mask, VTbuffer)) {
+	    if (readPtyData(xw, &Tselect_mask, VTbuffer)) {
 		break;
 	    }
 	    if (Ttoggled && curstate == Talptable) {

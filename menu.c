@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.266 2010/06/15 08:38:59 tom Exp $ */
+/* $XTermId: menu.c,v 1.267 2010/06/20 21:09:10 tom Exp $ */
 
 /*
  *
@@ -938,12 +938,13 @@ do_logging(Widget gw GCC_UNUSED,
 	   XtPointer closure GCC_UNUSED,
 	   XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->logging) {
-	CloseLog(screen);
+	CloseLog(xw);
     } else {
-	StartLog(screen);
+	StartLog(xw);
     }
     /* update_logging done by CloseLog and StartLog */
 }

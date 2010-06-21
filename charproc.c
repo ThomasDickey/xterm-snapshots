@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1068 2010/06/15 22:19:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1070 2010/06/20 21:39:59 tom Exp $ */
 
 /*
 
@@ -1347,7 +1347,11 @@ one_if_default(int which)
     return result;
 }
 
+#if OPT_C1_PRINT || OPT_WIDE_CHARS
 #define ParseSOS(screen) ((screen)->c1_printable == 0)
+#else
+#define ParseSOS(screen) 0
+#endif
 
 #define ResetState(sp) (sp)->parsestate = (sp)->groundtable
 
@@ -3490,7 +3494,7 @@ in_put(XtermWidget xw)
 	}
 
 	if (screen->eventMode == NORMAL
-	    && readPtyData(screen, &select_mask, VTbuffer)) {
+	    && readPtyData(xw, &select_mask, VTbuffer)) {
 	    if (screen->scrollWidget
 		&& screen->scrollttyoutput
 		&& screen->topline < 0)
@@ -3564,7 +3568,7 @@ in_put(XtermWidget xw)
 
     for (;;) {
 	if (screen->eventMode == NORMAL
-	    && (size = readPtyData(screen, &select_mask, VTbuffer)) != 0) {
+	    && (size = readPtyData(xw, &select_mask, VTbuffer)) != 0) {
 	    if (screen->scrollWidget
 		&& screen->scrollttyoutput
 		&& screen->topline < 0)
@@ -4205,7 +4209,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case 38:		/* DECTEK                       */
 #if OPT_TEK4014
 	    if (IsSM() && !(screen->inhibit & I_TEK)) {
-		FlushLog(screen);
+		FlushLog(xw);
 		TEK4014_ACTIVE(xw) = True;
 	    }
 #endif
@@ -4239,9 +4243,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	     * enabled and disabled via escape sequences.
 	     */
 	    if (IsSM())
-		StartLog(screen);
+		StartLog(xw);
 	    else
-		CloseLog(screen);
+		CloseLog(xw);
 #else
 	    Bell(xw, XkbBI_Info, 0);
 	    Bell(xw, XkbBI_Info, 0);
@@ -4655,9 +4659,9 @@ restoremodes(XtermWidget xw)
 	case 46:		/* logging              */
 #ifdef ALLOWLOGFILEONOFF
 	    if (screen->save_modes[DP_X_LOGGING])
-		StartLog(screen);
+		StartLog(xw);
 	    else
-		CloseLog(screen);
+		CloseLog(xw);
 #endif /* ALLOWLOGFILEONOFF */
 	    /* update_logging done by StartLog and CloseLog */
 	    break;
@@ -5380,7 +5384,7 @@ VTRun(XtermWidget xw)
 
 #if OPT_TEK4014
     if (Tpushb > Tpushback) {
-	fillPtyData(screen, VTbuffer, (char *) Tpushback, (int) (Tpushb - Tpushback));
+	fillPtyData(xw, VTbuffer, (char *) Tpushback, (int) (Tpushb - Tpushback));
 	Tpushb = Tpushback;
     }
 #endif
@@ -6036,12 +6040,14 @@ VTInitialize(Widget wrequest,
     };
 #undef DATA
 
+#if OPT_RENDERFONT
 #define DATA(name) { #name, er##name }
     static FlagList tblRenderFont[] =
     {
 	DATA(Default)
     };
 #undef DATA
+#endif
 
     XtermWidget request = (XtermWidget) wrequest;
     XtermWidget wnew = (XtermWidget) new_arg;
@@ -6535,18 +6541,6 @@ VTInitialize(Widget wrequest,
     TScreenOf(wnew)->Tcolors[TEK_CURSOR] = TScreenOf(wnew)->Tcolors[TEXT_CURSOR];
 #endif
 
-#if OPT_WIDE_CHARS
-    VTInitialize_locale(request);
-    init_Bres(screen.utf8_latin1);
-    init_Bres(screen.utf8_title);
-
-#if OPT_LUIT_PROG
-    init_Bres(misc.callfilter);
-    init_Bres(misc.use_encoding);
-    init_Sres(misc.locale_str);
-    init_Sres(misc.localefilter);
-#endif
-
 #if OPT_RENDERFONT
     for (i = 0; i <= fontMenu_lastBuiltin; ++i) {
 	init_Dres2(misc.face_size, i);
@@ -6569,6 +6563,18 @@ VTInitialize(Widget wrequest,
 	    TRACE(("reset render_font since there is no face_name\n"));
 	}
     }
+#endif
+
+#if OPT_WIDE_CHARS
+    VTInitialize_locale(request);
+    init_Bres(screen.utf8_latin1);
+    init_Bres(screen.utf8_title);
+
+#if OPT_LUIT_PROG
+    init_Bres(misc.callfilter);
+    init_Bres(misc.use_encoding);
+    init_Sres(misc.locale_str);
+    init_Sres(misc.localefilter);
 #endif
 
     init_Ires(screen.utf8_inparse);
