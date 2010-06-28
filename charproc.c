@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1070 2010/06/20 21:39:59 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1071 2010/06/28 09:03:42 tom Exp $ */
 
 /*
 
@@ -6551,10 +6551,15 @@ VTInitialize(Widget wrequest,
     wnew->misc.render_font =
 	(Boolean) extendedBoolean(wnew->misc.render_font_s,
 				  tblRenderFont, erLast);
-    if (wnew->misc.render_font == erDefault && IsEmpty(wnew->misc.face_name)) {
-	wnew->misc.face_name = x_strdup(DEFFACENAME_AUTO);
-	TRACE(("will allow runtime switch to render_font using \"%s\"\n",
-	       wnew->misc.face_name));
+    if (wnew->misc.render_font == erDefault) {
+	if (IsEmpty(wnew->misc.face_name)) {
+	    wnew->misc.face_name = x_strdup(DEFFACENAME_AUTO);
+	    TRACE(("will allow runtime switch to render_font using \"%s\"\n",
+		   wnew->misc.face_name));
+	} else {
+	    wnew->misc.render_font = erTrue;
+	    TRACE(("initially using TrueType font\n"));
+	}
     }
     /* minor tweak to make debug traces consistent: */
     if (wnew->misc.render_font) {
