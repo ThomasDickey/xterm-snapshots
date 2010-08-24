@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.216 2010/08/19 09:51:01 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.219 2010/08/23 23:39:16 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
@@ -78,6 +78,13 @@
 .de Ed
 .nr PD .3v
 .nr VS 12
+..
+.de bP
+.IP \(bu 4
+..
+.de lP
+.sp
+.LP
 ..
 .ds CH \" as nothing
 .ds LH Xterm Control Sequences
@@ -596,7 +603,7 @@ the terminal database.
 The data will be used for the "tcap" keyboard
 configuration's function- and special-keys, as well as by the
 Request Termcap/Terminfo String control.
-
+.
 .IP \\*(Dc\\*+\\*q\\*(Pt\\*s\\*(ST
 Request Termcap/Terminfo String (xterm, experimental).
 The string following the "q" is a list of names
@@ -1164,7 +1171,7 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps = \*2\*0 \(-> Report \fIxterm\fP window's icon label as
 \*(Os\*s\*L\*s\fIlabel\fP\*s\*(ST
   \*(Ps = \*2\*1 \(-> Report \fIxterm\fP window's title as
-\*(Os\*s\*L\*s\fIlabel\fP\*s\*(ST
+\*(Os\*s\*l\*s\fIlabel\fP\*s\*(ST
   \*(Ps = \*2\*2\*s\*;\*s\*0 \(-> Save \fIxterm\fP icon and window title on stack.
   \*(Ps = \*2\*2\*s\*;\*s\*1 \(-> Save \fIxterm\fP icon title on stack.
   \*(Ps = \*2\*2\*s\*;\*s\*2 \(-> Save \fIxterm\fP window title on stack.
@@ -1476,7 +1483,7 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*8 \(-> Reset Tektronix cursor color.
 .
 .St
-.LP
+.lP
 .B
 Privacy Message
 .IP \\*(PM\\*(Pt\\*s\\*(ST
@@ -1503,7 +1510,7 @@ keycode 115 = Meta_L
 clear mod3
 add mod3 = Meta_L
 .DE
-.LP
+.lP
 The \fBmetaSendsEscape\fP resource
 (and \fBaltSendsEscape\fP if \fBaltIsNotMeta\fP is set)
 can be used to control the way the \fIMeta\fP modifier applies to ordinary
@@ -1514,7 +1521,7 @@ prefix a key with the \*(Es character.
 .IP
 -
 shift the key from codes 0-127 to 128-255 by adding 128.
-.LP
+.lP
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes \fBaltIsNotMeta\fP is set:
@@ -1552,13 +1559,13 @@ with a PC-style keyboard, so PC-style function keys result.
 Sun keyboards are similar to PC keyboards.
 Both have cursor and scrolling operations printed on the keypad,
 which duplicate the smaller cursor and scrolling keypads.
-.LP
+.lP
 X does not predefine NumLock (used for VT220 keyboards) or Alt (used as
 an extension for the Sun/PC keyboards) as modifiers.
 These keys are recognized as modifiers when enabled
 by the \fBnumLock\fP resource,
 or by the DECSET \*1\*0\*3\*5 control sequence.
-.LP
+.lP
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the \fBDECCKM\fP escape sequence.
 .TS
@@ -1587,11 +1594,11 @@ Home	\*(Cs\*H	\*(S3\*H
 End	\*(Cs\*F	\*(S3\*F
 _
 .TE
-.LP
+.lP
 The application keypad transmits the following escape sequences depending on the
 mode specified via the \fBDECPNM\fP and \fBDECPAM\fP escape sequences.
 Use the NumLock key to override the application mode.
-.LP
+.lP
 Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are supported by
 the program.
 .TS
@@ -1647,7 +1654,7 @@ F11	\*(Cs\*2\*3\*(c~
 F12	\*(Cs\*2\*4\*(c~
 _
 .TE
-.LP
+.lP
 Older versions of \fIxterm\fP implement different escape sequences for F1 through F4.
 These can be activated by setting the \fBoldXtermFKeys\fP resource.
 However, since they do not correspond to any hardware terminal, they have been deprecated.
@@ -1686,7 +1693,7 @@ _
 .TE
 For example, shift-F5 would be sent as
 \*(Cs\*1\*5\*;\*2\*(c~
-.LP
+.lP
 If the \fBalwaysUseMods\fP resource is set, the Meta modifier also is
 recognized, making parameters 9 through 16.
 .SH
@@ -1695,7 +1702,7 @@ VT220-Style Function Keys
 However, \fIxterm\fP is most useful as a DEC VT102 or VT220 emulator.
 Set the \fBsunKeyboard\fP resource to true to force a Sun/PC keyboard
 to act like a VT220 keyboard.
-
+.lP
 The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling keypad:
 .TS
@@ -1825,7 +1832,7 @@ a menu toggle that causes it to send Sun-style function key codes rather than VT
 Note, however, that the \fIsun\fP and \fIVT100\fP emulations are not really
 compatible.
 For example, their wrap-margin behavior differs.
-.LP
+.lP
 Only function keys are altered; keypad and cursor keys are the same.
 The emulation responds identically.
 See the xterm-sun terminfo entry for details.
@@ -1846,7 +1853,7 @@ When the alternate screen buffer is active,
 you cannot scroll back to view saved lines.
 \fBXterm\fP provides control sequences and menu entries
 for switching between the two.
-
+.lP
 Most full-screen applications use terminfo or termcap to obtain
 strings used to start/stop full-screen mode,
 i.e., \fIsmcup\fP and \fIrmcup\fP for terminfo,
@@ -1892,23 +1899,23 @@ This is no longer the case.
 However, there are many applications which still assume that titles are
 set using ISO-8859-1.
 So that is the default behavior.
-.LP
+.lP
 If \fIxterm\fP is running with UTF-8 encoding,
 it is possible to use window- and icon-labels encoded using UTF-8.
 That is because the underlying X libraries (and many, but not all)
 window managers support this feature.
-.LP
+.lP
 The \fButf8Title\fP X resource setting tells \fIxterm\fP to disable
 a reconversion of the title string back to ISO-8859-1,
 allowing the title strings to be interpreted as UTF-8.
 The same feature can be enabled using the title mode control sequence
 described in this summary.
-.LP
+.lP
 Separate from the ability to set the titles,
 \fIxterm\fP provides the ability to query the titles,
 returning them either in ISO-8859-1 or UTF-8.
 This choice is available only while \fIxterm\fP is using UTF-8 encoding.
-.LP
+.lP
 Finally, the characters sent to, or returned by a title control
 are less constrained than the rest of the control sequences.
 To make them more manageable (and constrained), for use in shell scripts,
@@ -1925,7 +1932,7 @@ information on button presses.
 These modes are typically used by
 editors and other full-screen applications that want to make use of
 the mouse.
-
+.lP
 There are six mutually exclusive modes.
 One is DEC Locator mode, enabled by the
 DECELR \*(Cs\*(Ps\*s\*;\*(Ps\*s\*s\*(qu\*s\*z
@@ -1937,7 +1944,7 @@ DECSET \*(Cs\*?\*(Pm\*s\*h
 or
 DECRST \*(Cs\*?\*(Pm\*s\*l
 control sequence.
-
+.lP
 Manifest constants for the parameter values
 are defined in \fBxcharmouse.h\fP as follows:
 .
@@ -1956,31 +1963,35 @@ are defined in \fBxcharmouse.h\fP as follows:
 The motion reporting modes are strictly \fIxterm\fP extensions, and are not
 part of any standard, though they are analogous to the DEC VT200 DECELR
 locator reports.
-
+.lP
 Parameters (such as pointer position and button number) for all mouse
 tracking escape sequences generated by \fIxterm\fP
 encode numeric parameters in a single character as
 \fIvalue\fP+32.
 For example, \*! specifies the value 1.
 The upper left character position on the terminal is denoted as 1,1.
-
+.lP
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.
 It is enabled by specifying parameter 9 to DECSET.
 On button press, \fIxterm\fP sends
 \*(Cs\*M\*(Cb\*(Cx\*(Cy (6 characters).
+.bP
 \*(Cb is button\-1.
+.bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse when the
 button was pressed.
-
+.lP
 Normal tracking mode sends an escape sequence on both button press and
 release.
 Modifier key (shift, ctrl, meta) information is also sent.
 It is enabled by specifying parameter 1000 to DECSET.
 On button press or release, \fIxterm\fP sends
 \*(Cs\*M\*(Cb\*(Cx\*(Cy.
+.bP
 The low two bits of \*(Cb encode button information:
 0=MB1 pressed, 1=MB2 pressed, 2=MB3 pressed, 3=release.
+.bP
 The next three bits encode the modifiers which were down when the button was
 pressed and are added together:  4=Shift, 8=Meta, 16=Control.
 Note however that the shift and control bits are normally unavailable
@@ -1988,15 +1999,16 @@ because \fIxterm\fP uses the control modifier with mouse for popup menus,
 and the shift modifier is used in the default translations for button events.
 The \fIMeta\fP modifier recognized by \fIxterm\fP is the \fImod1\fP mask,
 and is not necessarily the "Meta" key (see \fIxmodmap\fP).
+.bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse event, encoded as
 in X10 mode.
-
+.lP
 Wheel mice may return buttons 4 and 5.
 Those buttons are represented by the same event codes
 as buttons 1 and 2 respectively,
 except that 64 is added to the event code.
 Release events for the wheel buttons are not reported.
-
+.lP
 Mouse highlight tracking notifies a program of a button press, receives a
 range of lines from the program, highlights the region covered by
 the mouse within that range until button release, and then sends the
@@ -2004,8 +2016,10 @@ program the release coordinates.
 It is enabled by specifying parameter 1001 to DECSET.
 Highlighting is performed only for button 1, though other button events
 can be received.
+.sp
 \fBWarning:\fP use of this mode requires a cooperating program or it will
 hang \fIxterm.\fP
+.sp
 On button press, the same information as for normal tracking is
 generated; \fIxterm\fP then waits for the program to send mouse
 tracking information.
@@ -2021,18 +2035,27 @@ will never be above row \fIfirstrow\fP and will always be above row
 \fIlastrow.\fP
 (The top of the screen is row 1.)
 When the button is released, \fIxterm\fP reports the ending position
-one of two ways: if the start and end coordinates are valid text
-locations: \*(Cs\*t\*(Cx\*(Cy.
-If either coordinate is past
-the end of the line:
+one of two ways:
+.bP
+if the start and end coordinates are the same locations:
+.br
+\*(Cs\*t\*(Cx\*(Cy.
+.bP
+otherwise:
+.br
 \*(Cs\*T\*(Cx\*(Cy\*(Cx\*(Cy\*(Cx\*(Cy.
+.br
 The parameters are \fIstartx, starty, endx, endy, mousex,\fP and \fImousey.\fP
+.RS
+.IP \- 5
 \fIstartx, starty, endx, \fPand\fI endy\fP give the starting and
 ending character positions of the region.
+.IP \- 5
 \fImousex\fP and \fImousey\fP
 give the location of the mouse at button up, which may not be over a
 character.
-
+.RE
+.lP
 Button-event tracking is essentially the same as normal tracking, but
 \fIxterm\fP also reports button-motion events.
 Motion events
@@ -2041,8 +2064,10 @@ cell.
 It is enabled by specifying parameter 1002 to DECSET.
 On button press or release, \fIxterm\fP sends the same codes used by normal
 tracking mode.
+.bP
 On button-motion events, \fIxterm\fP adds 32 to the event code
 (the third character, \*(Cb).
+.bP
 The other bits of the event code specify button and modifier keys as in normal mode.
 For example, motion into cell x,y with button 1
 down is reported as \*(Cs\*M\*@\*(Cx\*(Cy.
@@ -2050,30 +2075,29 @@ down is reported as \*(Cs\*M\*@\*(Cx\*(Cy.
 Similarly, motion with button 3
 down is reported as \*(Cs\*M\*(cB\*(Cx\*(Cy.
 ( \*(cB = 32 + 2 (button 3) + 32 (motion indicator) ).
-
+.lP
 Any-event mode is the same as button-event mode, except that all motion
 events are reported, even if no mouse button is down.
 It is enabled by specifying 1003 to DECSET.
-
+.lP
 FocusIn/FocusOut can be combined with any of the mouse events since
 it uses a different protocol.
 When set, it causes \fIxterm\fP to send
 \*(Cs\*I when the terminal gains focus, and
 \*(Cs\*O when it loses focus.
-
+.lP
 Extended mouse mode enables UTF-8 encoding for \*(Cx and \*(Cy under
 all tracking modes, expanding the maximum encodable position from 223 to 2015.
 For positions less than 95, the resulting output is identical under both modes.
 Under extended mouse mode, positions greater than 95
 generate "extra" bytes which will confuse applications which do not treat
 their input as a UTF-8 stream.
-
+.lP
 NOTE: Under normal mouse mode, positions outside (160,94) result in
 byte pairs which can be interpreted as a single UTF-8 character;
 applications
 which do treat their input as UTF-8 will almost certainly be confused
 unless extended mouse mode is active.
-
 .
 .br
 .ds RH Tektronix 4014 Mode
