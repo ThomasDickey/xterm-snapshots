@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.628 2010/06/20 21:34:48 tom Exp $ */
+/* $XTermId: xterm.h,v 1.629 2010/08/24 10:48:28 tom Exp $ */
 
 /************************************************************
 
@@ -968,7 +968,9 @@ extern void ReverseOldColors (void);
 extern void SysError (int  /* i */) GCC_NORETURN;
 extern void VisualBell (void);
 extern void do_dcs (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */);
+extern void do_decrpm (XtermWidget /* xw */, int /* nparam */, int *  /* params */);
 extern void do_osc (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */, int  /* final */);
+extern void do_rpm (XtermWidget /* xw */, int /* nparam */, int *  /* params */);
 extern void do_xevents (void);
 extern void end_tek_mode (void);
 extern void end_vt_mode (void);

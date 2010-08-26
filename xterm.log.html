@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.961 2010/08/23 22:28:06 tom Exp $
+  $XTermId: xterm.log.html,v 1.963 2010/08/25 00:33:12 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -323,6 +323,11 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>implement ANSI and DEC request-mode control sequences.  The
+	    latter includes the xterm-specific private modes such as the
+	    mouse mode.  The feature is ifdef'd with the rectangle operations
+	    since its decoding overlaps that feature.
+
 	<li>correct typo in ctlseqs.ms for response of OSC 21 (patch by
 	    Kevin Schoedel).
 

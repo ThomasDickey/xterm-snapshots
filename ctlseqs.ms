@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.219 2010/08/23 23:39:16 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.221 2010/08/26 08:26:09 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
@@ -1086,6 +1086,30 @@ which is \*1.
 .IP \\*(Cs\\*!\\*p
 Soft terminal reset (DECSTR)
 .
+.IP \\*(Cs\\*(Ps\\*$\\*p
+Request ANSI mode (DECRQM).
+For VT300 and up, reply is
+.br
+  \*(Cs\*(Ps\*;\*(Pm\*$\*p
+.br
+where \*(Ps is the mode number as in RM,
+and \*(Pm is the mode value:
+.br
+  0 - not recognized
+  1 - set
+  2 - reset
+  3 - permanently set
+  4 - permanently reset
+.
+.IP \\*(Cs\\*?\\*(Ps\\*$\\*p
+Request DEC private mode (DECRQM).
+For VT300 and up, reply is
+.br
+  \*(Cs\*?\*(Ps\*;\*(Pm\*$\*p
+.br
+where \*(Ps is the mode number as in DECSET,
+\*(Pm is the mode value as in the ANSI DECRQM.
+.
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*(c"\\*p
 Set conformance level (DECSCL)
 Valid values for the first parameter:
@@ -1132,7 +1156,7 @@ The value of \*(Ps previously saved is restored.
 \*(Ps values are the same as for DECSET.
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Ps\\*$\\*r
-Change Attributes in Rectangular Area (DECCARA).
+Change Attributes in Rectangular Area (DECCARA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
   \*(Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7
 .
@@ -1181,7 +1205,7 @@ If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.
   \*(Ps >= \*2\*4 \(-> Resize to \*(Ps lines (DECSLPP)
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Ps\\*$\\*t
-Reverse Attributes in Rectangular Area (DECRARA).
+Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
   \*(Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7
 .
@@ -1210,14 +1234,14 @@ Set margin-bell volume (DECSMBV, VT520)
   \*(Ps = \*0, \*5, \*6, \*7, or \*8 \(-> high
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*;\\*(Pp\\*;\\*(Pt\\*;\\*(Pl\\*;\\*(Pp\\*$\\*v
-Copy Rectangular Area (DECCRA)
+Copy Rectangular Area (DECCRA, VT400 and up)
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
   \*(Pp denotes the source page.
   \*(Pt\*;\*(Pl denotes the target location.
   \*(Pp denotes the target page.
 .
 .IP \\*(Cs\\*(Pt\\*s\\*;\\*(Pl\\*s\\*;\\*(Pb\\*s\\*;\\*(Pr\\*s\\*(qu\\*w
-Enable Filter Rectangle (DECEFR)
+Enable Filter Rectangle (DECEFR), VT420 and up.
 .br
 Parameters are [top;left;bottom;right].
 .br
@@ -1250,7 +1274,7 @@ Select Attribute Change Extent (DECSACE).
   \*(Ps = \*2 \(-> rectangle (exact).
 .
 .IP \\*(Cs\\*(Pc\\*;\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*$\\*x
-Fill Rectangular Area (DECFRA).
+Fill Rectangular Area (DECFRA), VT420 and up.
   \*(Pc is the character to use.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
 .
@@ -1270,7 +1294,7 @@ Valid values for the second parameter:
   \*(Pu = \*2 \(-> character cells
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*$\\*z
-Erase Rectangular Area (DECERA).
+Erase Rectangular Area (DECERA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*(qu\\*{
@@ -1285,7 +1309,7 @@ Valid values for the first (and any additional parameters) are:
   \*(Ps = \*4 \(-> do not report button up transitions
 .
 .IP \\*(Cs\\*(Pt\\*;\\*(Pl\\*;\\*(Pb\\*;\\*(Pr\\*$\\*{
-Selective Erase Rectangular Area (DECSERA).
+Selective Erase Rectangular Area (DECSERA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
 .
 .IP \\*(Cs\\*(Ps\\*s\\*(qu\\*|

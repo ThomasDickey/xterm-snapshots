@@ -590,6 +590,20 @@ CSI > Ps p
             Ps = 2  -> always hide the pointer If no parameter is given,
           xterm uses the default, which is 1 .
 CSI ! p   Soft terminal reset (DECSTR)
+CSI Ps$ p Request ANSI mode (DECRQM).  For VT300 and up, reply is
+            CSI Ps; Pm$ p
+          where Ps is the mode number as in RM, and Pm is the mode
+          value:
+            0 - not recognized
+            1 - set
+            2 - reset
+            3 - permanently set
+            4 - permanently reset
+CSI ? Ps$ p
+          Request DEC private mode (DECRQM).  For VT300 and up, reply is
+            CSI ? Ps; Pm$ p
+          where Ps is the mode number as in DECSET, Pm is the mode value
+          as in the ANSI DECRQM.
 CSI Ps ; Ps " p
           Set conformance level (DECSCL) Valid values for the first
           parameter:
@@ -628,7 +642,7 @@ CSI ? Pm r
           Restore DEC Private Mode Values.  The value of Ps previously
           saved is restored.  Ps values are the same as for DECSET.
 CSI Pt; Pl; Pb; Pr; Ps$ r
-          Change Attributes in Rectangular Area (DECCARA).
+          Change Attributes in Rectangular Area (DECCARA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
             Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7
 CSI s     Save cursor (ANSI.SYS)
@@ -678,7 +692,8 @@ CSI Ps ; Ps ; Ps t
             Ps = 2 3  ;  2  -> Restore xterm window title from stack.
             Ps >= 2 4  -> Resize to Ps lines (DECSLPP)
 CSI Pt; Pl; Pb; Pr; Ps$ t
-          Reverse Attributes in Rectangular Area (DECRARA).
+          Reverse Attributes in Rectangular Area (DECRARA), VT400 and
+          up.
             Pt; Pl; Pb; Pr denotes the rectangle.
             Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7
 CSI > Ps; Ps t
@@ -701,13 +716,13 @@ CSI Ps SP u
             Ps = 2 , 3  or 4  -> low
             Ps = 0 , 5 , 6 , 7 , or 8  -> high
 CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
-          Copy Rectangular Area (DECCRA)
+          Copy Rectangular Area (DECCRA, VT400 and up)
             Pt; Pl; Pb; Pr denotes the rectangle.
             Pp denotes the source page.
             Pt; Pl denotes the target location.
             Pp denotes the target page.
 CSI Pt ; Pl ; Pb ; Pr ' w
-          Enable Filter Rectangle (DECEFR)
+          Enable Filter Rectangle (DECEFR), VT420 and up.
           Parameters are [top;left;bottom;right].
           Defines the coordinates of a filter rectangle and activates
           it.  Anytime the locator is detected outside of the filter
@@ -733,7 +748,7 @@ CSI Ps x  Select Attribute Change Extent (DECSACE).
             Ps = 1  -> from start to end position, wrapped
             Ps = 2  -> rectangle (exact).
 CSI Pc; Pt; Pl; Pb; Pr$ x
-          Fill Rectangular Area (DECFRA).
+          Fill Rectangular Area (DECFRA), VT420 and up.
             Pc is the character to use.
             Pt; Pl; Pb; Pr denotes the rectangle.
 CSI Ps ; Pu ' z
@@ -749,7 +764,7 @@ CSI Ps ; Pu ' z
             Pu = 1  -> device physical pixels
             Pu = 2  -> character cells
 CSI Pt; Pl; Pb; Pr$ z
-          Erase Rectangular Area (DECERA).
+          Erase Rectangular Area (DECERA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
 CSI Pm ' {
           Select Locator Events (DECSLE)
@@ -762,7 +777,7 @@ CSI Pm ' {
             Ps = 3  -> report button up transitions
             Ps = 4  -> do not report button up transitions
 CSI Pt; Pl; Pb; Pr$ {
-          Selective Erase Rectangular Area (DECSERA).
+          Selective Erase Rectangular Area (DECSERA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
 CSI Ps ' |
           Request Locator Position (DECRQLP)
