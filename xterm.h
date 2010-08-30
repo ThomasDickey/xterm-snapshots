@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.629 2010/08/24 10:48:28 tom Exp $ */
+/* $XTermId: xterm.h,v 1.630 2010/08/29 22:42:57 tom Exp $ */
 
 /************************************************************
 
@@ -796,6 +796,7 @@ extern void noleaks_cachedCgs (XtermWidget /* xw */);
 
 /* charproc.c */
 extern Bool CheckBufPtrs (TScreen * /* screen */);
+extern Bool set_cursor_gcs (XtermWidget /* xw */);
 extern int VTInit (XtermWidget /* xw */);
 extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name */, Bool  /* justprobe */);
 extern void HideCursor (void);
@@ -809,7 +810,6 @@ extern void dotext (XtermWidget /* xw */, int  /* charset */, IChar * /* buf */,
 extern void releaseCursorGCs(XtermWidget /*xw*/);
 extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 extern void resetCharsets (TScreen * /* screen */);
-extern void set_cursor_gcs (XtermWidget /* xw */);
 extern void set_max_col(TScreen *  /* screen */, int  /* cols */);
 extern void set_max_row(TScreen *  /* screen */, int  /* rows */);
 extern void set_tb_margins (TScreen * /* screen */, int  /* top */, int  /* bottom */);
