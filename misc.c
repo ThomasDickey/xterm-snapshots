@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.504 2010/08/24 23:18:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.506 2010/08/28 16:58:00 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -3500,6 +3500,9 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 	case 8:		/* DECARM                       */
 	    result = mdAlwaysReset;
+	    break;
+	case SET_X10_MOUSE:	/* X10 mouse                    */
+	    result = MdBool(screen->send_mouse_pos == X10_MOUSE);
 	    break;
 #if OPT_TOOLBAR
 	case 10:		/* rxvt */

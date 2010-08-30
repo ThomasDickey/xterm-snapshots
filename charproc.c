@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1075 2010/08/25 00:31:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1076 2010/08/29 22:51:09 tom Exp $ */
 
 /*
 
@@ -7599,8 +7599,8 @@ VTSetValues(Widget cur,
     if (!fonts_redone
 	&& (T_COLOR(TScreenOf(curvt), TEXT_CURSOR) !=
 	    T_COLOR(TScreenOf(newvt), TEXT_CURSOR))) {
-	set_cursor_gcs(newvt);
-	refresh_needed = True;
+	if (set_cursor_gcs(newvt))
+	    refresh_needed = True;
     }
     if (curvt->misc.re_verse != newvt->misc.re_verse) {
 	newvt->flags ^= REVERSE_VIDEO;
@@ -8674,7 +8674,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
     return;
 }
 
-void
+Bool
 set_cursor_gcs(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
@@ -8683,7 +8683,7 @@ set_cursor_gcs(XtermWidget xw)
     Pixel cc = T_COLOR(screen, TEXT_CURSOR);
     Pixel fg = T_COLOR(screen, TEXT_FG);
     Pixel bg = T_COLOR(screen, TEXT_BG);
-    Boolean changed = False;
+    Bool changed = False;
 
     /*
      * Let's see, there are three things that have "color":
@@ -8742,6 +8742,7 @@ set_cursor_gcs(XtermWidget xw)
     if (changed) {
 	TRACE(("...set_cursor_gcs - done\n"));
     }
+    return changed;
 }
 
 #ifdef NO_LEAKS
