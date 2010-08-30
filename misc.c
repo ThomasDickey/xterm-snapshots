@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.506 2010/08/28 16:58:00 tom Exp $ */
+/* $XTermId: misc.c,v 1.507 2010/08/30 08:26:45 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -3390,7 +3390,7 @@ enum {
     mdMaybeSet = 1,
     mdMaybeReset = 2,
     mdAlwaysSet = 3,
-    mdAlwaysReset = 4,
+    mdAlwaysReset = 4
 };
 
 #define MdBool(bool)      ((bool) ? mdMaybeSet : mdMaybeReset)
