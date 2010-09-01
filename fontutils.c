@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.344 2010/06/15 08:18:58 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.345 2010/08/31 22:50:53 tom Exp $ */
 
 /************************************************************
 
@@ -1795,6 +1795,9 @@ xtermComputeFontInfo(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
 
     int i, j, width, height;
+#if OPT_RENDERFONT
+    int fontnum = screen->menu_font_number;
+#endif
 
 #if OPT_RENDERFONT
     /*
@@ -1804,9 +1807,8 @@ xtermComputeFontInfo(XtermWidget xw,
      * font-loading for fixed-fonts still goes on whether or not this chunk
      * overrides it.
      */
-    if (UsingRenderFont(xw)) {
+    if (UsingRenderFont(xw) && fontnum >= 0) {
 	char *face_name = getFaceName(xw, False);
-	int fontnum = screen->menu_font_number;
 	XftFont *norm = screen->renderFontNorm[fontnum].font;
 	XftFont *bold = screen->renderFontBold[fontnum].font;
 	XftFont *ital = screen->renderFontItal[fontnum].font;
@@ -1820,8 +1822,8 @@ xtermComputeFontInfo(XtermWidget xw,
 	    XftPattern *pat;
 	    double face_size = xw->misc.face_size[fontnum];
 
-	    TRACE(("xtermComputeFontInfo norm(face %s, size %f)\n",
-		   face_name,
+	    TRACE(("xtermComputeFontInfo font %d: norm(face %s, size %f)\n",
+		   fontnum, face_name,
 		   xw->misc.face_size[fontnum]));
 
 	    if (face_size <= 0.0) {
@@ -2030,7 +2032,7 @@ xtermComputeFontInfo(XtermWidget xw,
     /*
      * Are we handling a bitmap font?
      */
-    if (!UsingRenderFont(xw))
+    else
 #endif /* OPT_RENDERFONT */
     {
 	if (is_double_width_font(font) && !(screen->fnt_prop)) {

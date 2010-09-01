@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1076 2010/08/29 22:51:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1078 2010/08/31 23:03:49 tom Exp $ */
 
 /*
 
@@ -550,7 +550,7 @@ static XtResource xterm_resources[] =
 #ifndef NO_ACTIVE_ICON
     Bres("activeIcon", "ActiveIcon", misc.active_icon, False),
     Ires("iconBorderWidth", XtCBorderWidth, misc.icon_border_width, 2),
-    Fres("iconFont", "IconFont", screen.fnt_icon.fs, XtDefaultFont),
+    Sres("iconFont", "IconFont", screen.icon_fontname, "nil2"),
     Cres("iconBorderColor", XtCBorderColor, misc.icon_border_pixel, XtDefaultBackground),
 #endif				/* NO_ACTIVE_ICON */
 
@@ -6369,11 +6369,17 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.quiet_grab);
 
 #ifndef NO_ACTIVE_ICON
-    TScreenOf(wnew)->fnt_icon.fs = TScreenOf(request)->fnt_icon.fs;
+    init_Sres(screen.icon_fontname);
+    TScreenOf(wnew)->fnt_icon.fs = XLoadQueryFont(TScreenOf(wnew)->display,
+						  TScreenOf(wnew)->icon_fontname);
+    TRACE(("iconFont '%s' %sloaded successfully\n",
+	   TScreenOf(wnew)->icon_fontname,
+	   TScreenOf(wnew)->fnt_icon.fs ? "" : "NOT "));
     init_Bres(misc.active_icon);
     init_Ires(misc.icon_border_width);
     wnew->misc.icon_border_pixel = request->misc.icon_border_pixel;
 #endif /* NO_ACTIVE_ICON */
+
     init_Bres(misc.titeInhibit);
     init_Bres(misc.tiXtraScroll);
     init_Bres(misc.dynamicColors);
@@ -7171,14 +7177,49 @@ VTRealize(Widget w,
     screen->event_mask = values->event_mask;
 
 #ifndef NO_ACTIVE_ICON
+    /*
+     * Normally, the font-number for icon fonts does not correspond with any of
+     * the menu-selectable fonts.  If we cannot load the font given for the
+     * iconFont resource, try with font1 aka "Unreadable".
+     */
+    screen->icon_fontnum = -1;
+    if (screen->fnt_icon.fs == 0) {
+	screen->fnt_icon.fs = XLoadQueryFont(screen->display,
+					     screen->MenuFontName(fontMenu_font1));
+	TRACE(("%susing font1 '%s' as iconFont\n",
+	       (screen->fnt_icon.fs
+		? ""
+		: "NOT "),
+	       screen->MenuFontName(fontMenu_font1)));
+    }
+#if OPT_RENDERFONT
+    /*
+     * If we still have no result from iconFont resource (perhaps because fonts
+     * are missing) but are using Xft, try to use that instead.  We prefer
+     * bitmap fonts in any case, since scaled fonts are usually less readable,
+     * particularly at small sizes.
+     */
+    if (UsingRenderFont(xw)
+	&& screen->fnt_icon.fs == 0) {
+	screen->icon_fontnum = fontMenu_default;
+	screen->fnt_icon.fs = screen->fnts[0].fs;	/* need for next-if */
+	TRACE(("using TrueType font as iconFont\n"));
+    }
+#endif
     if (xw->misc.active_icon && screen->fnt_icon.fs) {
 	int iconX = 0, iconY = 0;
 	Widget shell = SHELL_OF(xw);
 	VTwin *win = &(screen->iconVwin);
+	int save_fontnum = screen->menu_font_number;
 
-	TRACE(("Initializing active-icon\n"));
-	XtVaGetValues(shell, XtNiconX, &iconX, XtNiconY, &iconY, (XtPointer) 0);
+	TRACE(("Initializing active-icon %d\n", screen->icon_fontnum));
+	screen->menu_font_number = screen->icon_fontnum;
+	XtVaGetValues(shell,
+		      XtNiconX, &iconX,
+		      XtNiconY, &iconY,
+		      (XtPointer) 0);
 	xtermComputeFontInfo(xw, &(screen->iconVwin), screen->fnt_icon.fs, 0);
+	screen->menu_font_number = save_fontnum;
 
 	/* since only one client is permitted to select for Button
 	 * events, we have to let the window manager get 'em...

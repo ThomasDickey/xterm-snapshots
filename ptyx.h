@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.671 2010/08/19 09:30:01 Ryan.Johnson Exp $ */
+/* $XTermId: ptyx.h,v 1.673 2010/09/01 00:16:50 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1581,7 +1581,7 @@ typedef struct {
 	long		event_mask;
 	unsigned	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
-	unsigned	ext_mode_mouse; /* support large terminals      */
+	Boolean		ext_mode_mouse; /* support large terminals      */
 	Boolean		send_focus_pos; /* user wants focus in/out info */
 	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64
@@ -1695,7 +1695,9 @@ typedef struct {
 	XTermFonts	fnts[fMAX];	/* normal/bold/etc for terminal	*/
 	Boolean		free_bold_box;	/* same_font_size's austerity	*/
 #ifndef NO_ACTIVE_ICON
-	XTermFonts	fnt_icon;	/* icon font */
+	XTermFonts	fnt_icon;	/* icon font			*/
+	String		icon_fontname;	/* name of icon font		*/
+	int		icon_fontnum;	/* number to use for icon font	*/
 #endif /* NO_ACTIVE_ICON */
 	int		enbolden;	/* overstrike for bold font	*/
 	XPoint		*box;		/* draw unselected cursor	*/
