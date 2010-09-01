@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.508 2010/09/01 00:19:06 tom Exp $ */
+/* $XTermId: misc.c,v 1.509 2010/09/01 10:49:30 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -425,7 +425,30 @@ xevents(void)
 		   && event.xany.type == MotionNotify
 		   && event.xcrossing.window == XtWindow(xw)) {
 	    SendMousePosition(xw, &event);
+	    xtermShowPointer(xw, True);
 	    continue;
+	}
+
+	/*
+	 * If the event is interesting (and not a keyboard event), turn the
+	 * mouse pointer back on.
+	 */
+	if (screen->hide_pointer) {
+	    switch (event.xany.type) {
+	    case KeyPress:
+	    case KeyRelease:
+	    case ButtonPress:
+	    case ButtonRelease:
+		/* also these... */
+	    case Expose:
+	    case NoExpose:
+	    case PropertyNotify:
+	    case ClientMessage:
+		break;
+	    default:
+		xtermShowPointer(xw, True);
+		break;
+	    }
 	}
 
 	if (!event.xany.send_event ||
@@ -434,28 +457,6 @@ xevents(void)
 	     (event.xany.type != KeyRelease) &&
 	     (event.xany.type != ButtonPress) &&
 	     (event.xany.type != ButtonRelease))) {
-
-	    /*
-	     * If the event is interesting (and not a keyboard event), turn the
-	     * mouse pointer back on.
-	     */
-	    if (screen->hide_pointer) {
-		switch (event.xany.type) {
-		case KeyPress:
-		case KeyRelease:
-		case ButtonPress:
-		case ButtonRelease:
-		    /* also these... */
-		case Expose:
-		case NoExpose:
-		case PropertyNotify:
-		case ClientMessage:
-		    break;
-		default:
-		    xtermShowPointer(xw, True);
-		    break;
-		}
-	    }
 
 	    XtDispatchEvent(&event);
 	}

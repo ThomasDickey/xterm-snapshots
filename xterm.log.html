@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.966 2010/08/31 23:16:32 tom Exp $
+  $XTermId: xterm.log.html,v 1.967 2010/09/01 09:56:21 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -324,6 +324,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve <code>pointerMode</code> by continuing to watch for motion
+	    events after mouse tracking is disabled if the pointer is hidden
+	    (Debian #594856).
+
 	<li>further extend initialization for active-icon font to check if
 	    the font was not loaded succesfully,
 	    to retry with <code>font1</code>,

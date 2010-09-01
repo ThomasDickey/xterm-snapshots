@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.630 2010/08/29 22:42:57 tom Exp $ */
+/* $XTermId: xterm.h,v 1.631 2010/09/01 10:47:44 tom Exp $ */
 
 /************************************************************
 
@@ -713,7 +713,7 @@ extern void TekSimulatePageButton (TekWidget /* tw */, Bool /* reset */);
 #endif
 
 /* button.c */
-#define	MotionOff( s, t ) {						\
+#define	MotionOff( s, t ) if (!(screen->hide_pointer)) {		\
 	    (s)->event_mask |= ButtonMotionMask;			\
 	    (s)->event_mask &= ~PointerMotionMask;			\
 	    XSelectInput(XtDisplay((t)), XtWindow((t)), (long) (s)->event_mask); }
