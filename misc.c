@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.507 2010/08/30 08:26:45 tom Exp $ */
+/* $XTermId: misc.c,v 1.508 2010/09/01 00:19:06 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -3450,11 +3450,11 @@ do_rpm(XtermWidget xw, int nparams, int *params)
 	    result = MdFlag(xw->flags, LINEFEED);
 	    break;
 	}
-	reply.a_param[count++] = params[0];
-	reply.a_param[count++] = result;
+	reply.a_param[count++] = (ParmType) params[0];
+	reply.a_param[count++] = (ParmType) result;
     }
     reply.a_type = ANSI_CSI;
-    reply.a_nparam = count;
+    reply.a_nparam = (ParmType) count;
     reply.a_inters = '$';
     reply.a_final = 'y';
     unparseseq(xw, &reply);
@@ -3680,12 +3680,12 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif /* OPT_READLINE */
 	}
-	reply.a_param[count++] = params[0];
-	reply.a_param[count++] = result;
+	reply.a_param[count++] = (ParmType) params[0];
+	reply.a_param[count++] = (ParmType) result;
     }
     reply.a_type = ANSI_CSI;
     reply.a_pintro = '?';
-    reply.a_nparam = count;
+    reply.a_nparam = (ParmType) count;
     reply.a_inters = '$';
     reply.a_final = 'y';
     unparseseq(xw, &reply);
