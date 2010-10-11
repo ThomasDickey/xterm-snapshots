@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.509 2010/09/01 10:49:30 tom Exp $ */
+/* $XTermId: misc.c,v 1.510 2010/10/11 08:33:33 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -2552,7 +2552,7 @@ ResetColorsRequest(XtermWidget xw,
  * the corresponding menu font entry.
  */
 static int
-ParseShiftedFont(XtermWidget xw, char *source, char **target)
+ParseShiftedFont(XtermWidget xw, String source, String * target)
 {
     TScreen *screen = TScreenOf(xw);
     int num = screen->menu_font_number;
@@ -2587,13 +2587,13 @@ ParseShiftedFont(XtermWidget xw, char *source, char **target)
 }
 
 static void
-QueryFontRequest(XtermWidget xw, char *buf, int final)
+QueryFontRequest(XtermWidget xw, String buf, int final)
 {
     if (AllowFontOps(xw, efGetFont)) {
 	TScreen *screen = TScreenOf(xw);
 	Bool success = True;
 	int num;
-	char *base = buf + 1;
+	String base = buf + 1;
 	const char *name = 0;
 	char temp[10];
 
@@ -2637,7 +2637,7 @@ QueryFontRequest(XtermWidget xw, char *buf, int final)
 }
 
 static void
-ChangeFontRequest(XtermWidget xw, char *buf)
+ChangeFontRequest(XtermWidget xw, String buf)
 {
     if (AllowFontOps(xw, efSetFont)) {
 	TScreen *screen = TScreenOf(xw);

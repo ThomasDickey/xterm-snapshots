@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.381 2010/08/23 23:25:57 tom Exp $ */
+/* $XTermId: button.c,v 1.382 2010/10/11 08:08:26 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -848,7 +848,7 @@ ReadLineDelete(TScreen * screen, CELL * cell1, CELL * cell2)
     if (del <= 0)		/* Just in case... */
 	return 0;
     while (del--)
-	v_write(screen->respond, (Char *) "\177", 1);
+	v_write(screen->respond, (const Char *) "\177", 1);
     return 1;
 }
 #endif /* OPT_READLINE */
@@ -1136,7 +1136,7 @@ UTF8toLatin1(TScreen * screen, Char * s, unsigned long len, unsigned long *resul
 
     Cardinal offset = 0;
 
-    Char *p;
+    const Char *p;
 
     if (len != 0) {
 	PtyData data;
@@ -1172,7 +1172,7 @@ UTF8toLatin1(TScreen * screen, Char * s, unsigned long len, unsigned long *resul
 	     * whatever the user wants).
 	     */
 	    if (fails) {
-		for (p = (Char *) screen->default_string; *p != '\0'; ++p) {
+		for (p = (const Char *) screen->default_string; *p != '\0'; ++p) {
 		    AddChar(&buffer, &used, offset, *p);
 		}
 	    }
@@ -1292,7 +1292,7 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 	TScreen *screen = TScreenOf(xw);
 
 	if (!IsEmpty(value)) {
-	    String copied = x_strdup(value);
+	    char *copied = x_strdup(value);
 	    if (copied != 0) {
 		Atom *result = 0;
 		Cardinal count = 1;
@@ -1715,7 +1715,7 @@ base64_flush(TScreen * screen)
     }
     if (screen->base64_pad & 3)
 	tty_vwrite(screen->respond,
-		   (Char *) "===",
+		   (const Char *) "===",
 		   (unsigned) (4 - (screen->base64_pad & 3)));
     screen->base64_count = 0;
     screen->base64_accu = 0;
@@ -1772,7 +1772,7 @@ _qWriteSelectionData(TScreen * screen, Char * lag, unsigned length)
 #if OPT_READLINE
     if (SCREEN_FLAG(screen, paste_quotes)) {
 	while (length--) {
-	    tty_vwrite(screen->respond, (Char *) "\026", 1);	/* Control-V */
+	    tty_vwrite(screen->respond, (const Char *) "\026", 1);	/* Control-V */
 	    tty_vwrite(screen->respond, lag++, 1);
 	}
     } else
@@ -1830,11 +1830,11 @@ _WriteSelectionData(TScreen * screen, Char * line, size_t length)
 
 #if OPT_READLINE
 static void
-_WriteKey(TScreen * screen, Char * in)
+_WriteKey(TScreen * screen, const Char * in)
 {
     Char line[16];
     unsigned count = 0;
-    size_t length = strlen((char *) in);
+    size_t length = strlen((const char *) in);
 
     if (screen->control_eight_bits) {
 	line[count++] = ANSI_CSI;
@@ -1950,7 +1950,7 @@ SelectionReceived(Widget w,
 #endif
 #if OPT_READLINE
 	if (SCREEN_FLAG(screen, paste_brackets)) {
-	    _WriteKey(screen, (Char *) "200");
+	    _WriteKey(screen, (const Char *) "200");
 	}
 #endif
 	for (i = 0; i < text_list_count; i++) {
@@ -1964,7 +1964,7 @@ SelectionReceived(Widget w,
 #endif
 #if OPT_READLINE
 	if (SCREEN_FLAG(screen, paste_brackets)) {
-	    _WriteKey(screen, (Char *) "201");
+	    _WriteKey(screen, (const Char *) "201");
 	}
 #endif
 	XFreeStringList(text_list);

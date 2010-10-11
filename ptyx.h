@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.673 2010/09/01 00:16:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.675 2010/10/11 08:25:53 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -1879,6 +1879,7 @@ typedef struct {
 	Boolean		cutNewline;	/* whether or not line cut has \n */
 	Boolean		cutToBeginningOfLine;  /* line cuts to BOL? */
 	Boolean		highlight_selection; /* controls appearance of selection */
+	Boolean		show_wrap_marks; /* show lines which are wrapped */
 	Boolean		trim_selection; /* controls trimming of selection */
 	Boolean		i18nSelections;
 	Boolean		brokenSelections;
@@ -2128,11 +2129,11 @@ typedef struct
 } TKeyboard;
 
 typedef struct {
-    char *f_n;			/* the normal font */
-    char *f_b;			/* the bold font */
+    String f_n;			/* the normal font */
+    String f_b;			/* the bold font */
 #if OPT_WIDE_CHARS
-    char *f_w;			/* the normal wide font */
-    char *f_wb;			/* the bold wide font */
+    String f_w;			/* the normal wide font */
+    String f_wb;		/* the bold wide font */
 #endif
 } VTFontNames;
 
