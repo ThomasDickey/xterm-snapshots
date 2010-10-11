@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.345 2010/08/31 22:50:53 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.348 2010/10/11 08:26:24 tom Exp $ */
 
 /************************************************************
 
@@ -537,7 +537,7 @@ xtermSpecialFont(TScreen * screen, unsigned atts, unsigned chrset)
  * to use it).
  */
 static Bool
-same_font_name(char *pattern, char *match)
+same_font_name(const char *pattern, const char *match)
 {
     Bool result = False;
 
@@ -577,7 +577,7 @@ same_font_name(char *pattern, char *match)
  * offset.
  */
 static int
-got_bold_font(Display * dpy, XFontStruct * fs, char *requested)
+got_bold_font(Display * dpy, XFontStruct * fs, String requested)
 {
     char actual[MAX_FONTNAME];
     int got;
@@ -707,7 +707,7 @@ xtermFontName(const char *normal)
 {
     static VTFontNames data;
     if (data.f_n)
-	free(data.f_n);
+	free((void *) data.f_n);
     memset(&data, 0, sizeof(data));
     data.f_n = x_strdup(normal);
     return &data;
@@ -717,7 +717,7 @@ static void
 cache_menu_font_name(TScreen * screen, int fontnum, int which, const char *name)
 {
     if (name != 0) {
-	char *last = screen->menu_font_names[fontnum][which];
+	char *last = (char *) screen->menu_font_names[fontnum][which];
 	if (last != 0) {
 	    if (strcmp(last, name)) {
 		free(last);
@@ -1234,7 +1234,7 @@ xtermLoadFont(XtermWidget xw,
  */
 typedef struct {
     VTFontNames default_font;
-    char *menu_font_names[fontMenu_lastBuiltin + 1][fMAX];
+    String menu_font_names[fontMenu_lastBuiltin + 1][fMAX];
 } SubResourceRec;
 
 #define MERGE_SUBFONT(src,dst,name) \
@@ -1421,13 +1421,16 @@ HandleLoadVTFonts(Widget w,
 
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
-	char buf[80];
-	char *myName = (char *) ((*param_count > 0) ? params[0] : empty);
-	char *convert = (char *) ((*param_count > 1) ? params[1] : myName);
-	char *myClass = (char *) MyStackAlloc(strlen(convert), buf);
+	char name_buf[80];
+	char class_buf[80];
+	String name = (String) ((*param_count > 0) ? params[0] : empty);
+	char *myName = (char *) MyStackAlloc(strlen(name), name_buf);
+	String convert = (String) ((*param_count > 1) ? params[1] : myName);
+	char *myClass = (char *) MyStackAlloc(strlen(convert), class_buf);
 	int n;
 
 	TRACE(("HandleLoadVTFonts(%d)\n", *param_count));
+	strcpy(myName, name);
 	strcpy(myClass, convert);
 	if (*param_count == 1)
 	    myClass[0] = x_toupper(myClass[0]);
@@ -1449,7 +1452,8 @@ HandleLoadVTFonts(Widget w,
 		       : NULL));
 	}
 
-	MyStackFree(myClass, buf);
+	MyStackFree(myName, name_buf);
+	MyStackFree(myClass, class_buf);
     }
 }
 #endif /* OPT_LOAD_VTFONTS */
@@ -1743,15 +1747,15 @@ xtermCloseXft(TScreen * screen, XTermXftFonts * pub)
  * Get the faceName/faceDoublesize resource setting.  Strip off "xft:", which
  * is not recognized by XftParseName().
  */
-char *
+String
 getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
 {
 #if OPT_RENDERWIDE
-    char *result = (wideName
-		    ? xw->misc.face_wide_name
-		    : xw->misc.face_name);
+    String result = (wideName
+		     ? xw->misc.face_wide_name
+		     : xw->misc.face_name);
 #else
-    char *result = xw->misc.face_name;
+    String result = xw->misc.face_name;
 #endif
     if (!IsEmpty(result) && !strncmp(result, "xft:", (size_t) 4))
 	result += 4;
@@ -1808,7 +1812,7 @@ xtermComputeFontInfo(XtermWidget xw,
      * overrides it.
      */
     if (UsingRenderFont(xw) && fontnum >= 0) {
-	char *face_name = getFaceName(xw, False);
+	String face_name = getFaceName(xw, False);
 	XftFont *norm = screen->renderFontNorm[fontnum].font;
 	XftFont *bold = screen->renderFontBold[fontnum].font;
 	XftFont *ital = screen->renderFontItal[fontnum].font;

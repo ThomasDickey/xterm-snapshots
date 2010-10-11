@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.631 2010/09/01 10:47:44 tom Exp $ */
+/* $XTermId: xterm.h,v 1.634 2010/10/11 00:43:34 tom Exp $ */
 
 /************************************************************
 
@@ -479,6 +479,7 @@ extern char **environ;
 #define XtNshiftFonts		"shiftFonts"
 #define XtNshowBlinkAsBold	"showBlinkAsBold"
 #define XtNshowMissingGlyphs	"showMissingGlyphs"
+#define XtNshowWrapMarks	"showWrapMarks"
 #define XtNsignalInhibit	"signalInhibit"
 #define XtNtekGeometry		"tekGeometry"
 #define XtNtekInhibit		"tekInhibit"
@@ -638,6 +639,7 @@ extern char **environ;
 #define XtCShiftFonts		"ShiftFonts"
 #define XtCShowBlinkAsBold	"ShowBlinkAsBold"
 #define XtCShowMissingGlyphs	"ShowMissingGlyphs"
+#define XtCShowWrapMarks	"ShowWrapMarks"
 #define XtCSignalInhibit	"SignalInhibit"
 #define XtCTekInhibit		"TekInhibit"
 #define XtCTekSmall		"TekSmall"
@@ -819,7 +821,7 @@ extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
 extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
 extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
-extern void v_write (int  /* f */, Char * /* d */, unsigned  /* len */);
+extern void v_write (int  /* f */, const Char * /* d */, unsigned  /* len */);
 extern void xtermAddInput(Widget  /* w */);
 
 #if OPT_BLINK_CURS
@@ -1099,6 +1101,7 @@ extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf /* sb */, int  /* last
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, unsigned /* cur_fg_bg */, unsigned  /* length */);
+extern void ShowWrapMarks (XtermWidget /* xw */, int /* row */, LineData * /* ld */);
 extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
