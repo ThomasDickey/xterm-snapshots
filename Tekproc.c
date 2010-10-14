@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.183 2010/10/13 22:36:12 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.184 2010/10/14 08:07:03 tom Exp $ */
 
 /*
  *
@@ -1396,9 +1396,10 @@ TekInitialize(Widget wrequest,
 
     init_Sres(tek.initial_font);
     init_Sres(tek.gin_terminator_str);
+#if OPT_TOOLBAR
     init_Ires(tek.tb_info.menu_height);
-
     wnew->tek.tb_info.menu_bar = request->tek.tb_info.menu_bar;
+#endif
 }
 
 static void

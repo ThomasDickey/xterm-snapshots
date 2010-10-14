@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.348 2010/10/11 08:26:24 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.350 2010/10/14 09:27:25 tom Exp $ */
 
 /************************************************************
 
@@ -745,7 +745,7 @@ xtermOpenFont(XtermWidget xw,
     Bool code = False;
     TScreen *screen = TScreenOf(xw);
 
-    if (name != 0) {
+    if (!IsEmpty(name)) {
 	if ((result->fs = XLoadQueryFont(screen->display, name)) != 0) {
 	    code = True;
 	    if (EmptyFont(result->fs)) {
@@ -761,7 +761,7 @@ xtermOpenFont(XtermWidget xw,
 #endif
 		) {
 		TRACE(("OOPS: cannot load font %s\n", name));
-		fprintf(stderr, "%s: cannot load font %s\n", ProgramName, name);
+		fprintf(stderr, "%s: cannot load font '%s'\n", ProgramName, name);
 #if OPT_RENDERFONT
 		/*
 		 * Do a sanity check in case someone's mixed up xterm with
@@ -774,7 +774,7 @@ xtermOpenFont(XtermWidget xw,
 		}
 #endif
 	    } else {
-		TRACE(("xtermOpenFont: cannot load font %s\n", name));
+		TRACE(("xtermOpenFont: cannot load font '%s'\n", name));
 	    }
 	    if (force) {
 		code = xtermOpenFont(xw, DEFFONT, result, fwAlways, True);
@@ -932,7 +932,7 @@ xtermLoadFont(XtermWidget xw,
 		myfonts.f_b = bold_font_name(fp, -1);
 		xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwAlways, False);
 	    }
-	    TRACE(("...derived bold %s\n", NonNull(myfonts.f_b)));
+	    TRACE(("...derived bold '%s'\n", NonNull(myfonts.f_b)));
 	}
 	if (fp == 0 || fnts[fBold].fs == 0) {
 	    xtermCopyFontInfo(&fnts[fBold], &fnts[fNorm]);
@@ -949,7 +949,7 @@ xtermLoadFont(XtermWidget xw,
     } else if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], warn[fBold], False)) {
 	xtermCopyFontInfo(&fnts[fBold], &fnts[fNorm]);
 	warn[fBold] = fwAlways;
-	TRACE(("...cannot load bold font %s\n", NonNull(myfonts.f_b)));
+	TRACE(("...cannot load bold font '%s'\n", NonNull(myfonts.f_b)));
     } else {
 	cache_menu_font_name(screen, fontnum, fBold, myfonts.f_b);
     }
