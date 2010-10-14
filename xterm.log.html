@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.972 2010/10/14 00:56:43 tom Exp $
+  $XTermId: xterm.log.html,v 1.977 2010/10/14 08:53:32 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_264">Patch #264 - 2010/10/14</A>
 <LI><A HREF="#xterm_263">Patch #263 - 2010/10/13</A>
 <LI><A HREF="#xterm_262">Patch #262 - 2010/8/30</A>
 <LI><A HREF="#xterm_261">Patch #261 - 2010/6/28</A>
@@ -321,6 +322,20 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_264">Patch #264 - 2010/10/14</A></H1>
+<ul>
+	<li>replace a null-pointer check with check for empty string in
+	    <code>xtermOpenFont</code>,
+	    to eliminate a warning message from
+	    <a href="#xterm_263">patch #263</a> changes.
+
+	<li>build-fix for <a href="#xterm_263">patch #263</a> when toolbar
+	    is not configured
+	    (patch by Chris Clayton)
+	    (reports by Robby Workman,
+	    David Wood).
+</ul>
 
 <H1><A NAME="xterm_263">Patch #263 - 2010/10/13</A></H1>
 <ul>
