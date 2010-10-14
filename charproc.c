@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1082 2010/10/11 08:31:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1086 2010/10/13 23:04:01 tom Exp $ */
 
 /*
 
@@ -300,10 +300,16 @@ static XtActionsRec actionsList[] = {
     { "select-cursor-end",	HandleKeyboardSelectEnd },
     { "select-cursor-extend",   HandleKeyboardSelectExtend },
     { "select-cursor-start",	HandleKeyboardSelectStart },
+#if 0
+    { "select-cursor-stop",	HandleKeyboardSelectStop },
+#endif
     { "select-end",		HandleSelectEnd },
     { "select-extend",		HandleSelectExtend },
     { "select-set",		HandleSelectSet },
     { "select-start",		HandleSelectStart },
+#if 0
+    { "select-stop",		HandleSelectStop },
+#endif
     { "send-signal",		HandleSendSignal },
     { "set-8-bit-control",	Handle8BitControl },
     { "set-allow132",		HandleAllow132 },
@@ -5651,42 +5657,6 @@ VTClassInit(void)
 		   (XtConvertArgList) NULL, (Cardinal) 0);
 }
 
-/*
- * The whole wnew->screen struct is zeroed in VTInitialize.  Use these macros
- * where applicable for copying the pieces from the request widget into the
- * new widget.  We do not have to use them for wnew->misc, but the associated
- * traces are very useful for debugging.
- */
-#if OPT_TRACE
-#define init_Bres(name) \
-	TRACE(("init " #name " = %s\n", \
-		BtoS(wnew->name = request->name)))
-#define init_Dres2(name,i) \
-	TRACE(("init " #name "[%d] = %f\n", i, \
-		wnew->name[i] = request->name[i]))
-#define init_Ires(name) \
-	TRACE(("init " #name " = %d\n", \
-		wnew->name = request->name))
-#define init_Sres(name) \
-	TRACE(("init " #name " = \"%s\"\n", \
-		(wnew->name = x_strtrim(request->name)) != NULL \
-			? wnew->name : "<null>"))
-#define init_Sres2(name,i) \
-	TRACE(("init " #name "[%d] = \"%s\"\n", i, \
-		(wnew->name(i) = x_strtrim(request->name(i))) != NULL \
-			? wnew->name(i) : "<null>"))
-#define init_Tres(offset) \
-	TRACE(("init screen.Tcolors[" #offset "] = %#lx\n", \
-		fill_Tres(wnew, request, offset)))
-#else
-#define init_Bres(name)    wnew->name = request->name
-#define init_Dres2(name,i) wnew->name[i] = request->name[i]
-#define init_Ires(name)    wnew->name = request->name
-#define init_Sres(name)    wnew->name = x_strtrim(request->name)
-#define init_Sres2(name,i) wnew->name(i) = x_strtrim(request->name(i))
-#define init_Tres(offset)  fill_Tres(wnew, request, offset)
-#endif
-
 #if OPT_COLOR_RES
 /*
  * Override the use of XtDefaultForeground/XtDefaultBackground to make some
@@ -6213,6 +6183,8 @@ VTInitialize(Widget wrequest,
 	? keyboardIsLegacy
 	: keyboardIsDefault;
 #ifdef ALLOWLOGGING
+    init_Bres(misc.logInhibit);
+    init_Bres(misc.log_on);
     init_Sres(screen.logfile);
 #endif
     init_Bres(screen.bellIsUrgent);
@@ -6225,6 +6197,13 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.scrolllines);
     init_Bres(screen.scrollttyoutput);
     init_Bres(screen.scrollkey);
+
+    init_Bres(misc.autoWrap);
+    init_Bres(misc.login_shell);
+    init_Bres(misc.reverseWrap);
+    init_Bres(misc.scrollbar);
+    init_Sres(misc.geo_metry);
+    init_Sres(misc.T_geometry);
 
     init_Sres(screen.term_id);
     for (s = TScreenOf(request)->term_id; *s; s++) {
@@ -6255,6 +6234,14 @@ VTInitialize(Widget wrequest,
     wnew->misc.alt_mods = 0;
     wnew->misc.meta_mods = 0;
     wnew->misc.other_mods = 0;
+#endif
+
+#if OPT_INPUT_METHOD
+    init_Bres(misc.open_im);
+    init_Ires(misc.retry_im);
+    init_Sres(misc.f_x);
+    init_Sres(misc.input_method);
+    init_Sres(misc.preedit_type);
 #endif
 
 #if OPT_SHIFT_FONTS
@@ -6385,6 +6372,7 @@ VTInitialize(Widget wrequest,
     wnew->misc.icon_border_pixel = request->misc.icon_border_pixel;
 #endif /* NO_ACTIVE_ICON */
 
+    init_Bres(misc.signalInhibit);
     init_Bres(misc.titeInhibit);
     init_Bres(misc.tiXtraScroll);
     init_Bres(misc.dynamicColors);
@@ -6393,9 +6381,13 @@ VTInitialize(Widget wrequest,
     }
     init_Ires(misc.fontWarnings);
 #define DefaultFontNames TScreenOf(wnew)->menu_font_names[fontMenu_default]
+    init_Sres(misc.default_font.f_n);
+    init_Sres(misc.default_font.f_b);
     DefaultFontNames[fNorm] = wnew->misc.default_font.f_n;
     DefaultFontNames[fBold] = wnew->misc.default_font.f_b;
 #if OPT_WIDE_CHARS
+    init_Sres(misc.default_font.f_w);
+    init_Sres(misc.default_font.f_wb);
     DefaultFontNames[fWide] = wnew->misc.default_font.f_w;
     DefaultFontNames[fWBold] = wnew->misc.default_font.f_wb;
 #endif
@@ -6598,6 +6590,10 @@ VTInitialize(Widget wrequest,
     TScreenOf(wnew)->Tcolors[TEK_BG] = TScreenOf(wnew)->Tcolors[TEXT_BG];
     TScreenOf(wnew)->Tcolors[TEK_FG] = TScreenOf(wnew)->Tcolors[TEXT_FG];
     TScreenOf(wnew)->Tcolors[TEK_CURSOR] = TScreenOf(wnew)->Tcolors[TEXT_CURSOR];
+#endif
+
+#ifdef SCROLLBAR_RIGHT
+    init_Bres(misc.useRight);
 #endif
 
 #if OPT_RENDERFONT
