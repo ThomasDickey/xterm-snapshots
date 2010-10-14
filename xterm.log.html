@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.969 2010/10/10 23:18:28 tom Exp $
+  $XTermId: xterm.log.html,v 1.971 2010/10/13 22:40:56 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -324,6 +324,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>corrected initialization of "misc" resource values, to ensure that
+	    xterm has allocated a copy of strings which may not have been
+	    malloc'd by the X library (Debian #600129).
+
+	<li>modify handling of any-event/any-button mouse protocol; it
+	    now is active with any combination of key-modifiers.
+
 	<li>add debugging feature <code>showWrapMarks</code>, which marks
 	    lines which xterm knows are wrapped, showing where a double-click
 	    will select past the end of a line.

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.634 2010/10/11 00:43:34 tom Exp $ */
+/* $XTermId: xterm.h,v 1.635 2010/10/12 08:55:47 tom Exp $ */
 
 /************************************************************
 
@@ -733,11 +733,13 @@ extern void HandleInsertSelection      PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectEnd    PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectExtend PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardSelectStart  PROTO_XT_ACTIONS_ARGS;
+extern void HandleKeyboardSelectStop   PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeyboardStartExtend  PROTO_XT_ACTIONS_ARGS;
 extern void HandleSelectEnd            PROTO_XT_ACTIONS_ARGS;
 extern void HandleSelectExtend         PROTO_XT_ACTIONS_ARGS;
 extern void HandleSelectSet            PROTO_XT_ACTIONS_ARGS;
 extern void HandleSelectStart          PROTO_XT_ACTIONS_ARGS;
+extern void HandleSelectStop           PROTO_XT_ACTIONS_ARGS;
 extern void HandleStartExtend          PROTO_XT_ACTIONS_ARGS;
 extern void ResizeSelection (TScreen * /* screen */, int  /* rows */, int  /* cols */);
 extern void ScrollSelection (TScreen * /* screen */, int  /* amount */,  Bool /* always */);
