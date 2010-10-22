@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.350 2010/10/14 09:27:25 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.351 2010/10/22 09:02:10 tom Exp $ */
 
 /************************************************************
 
@@ -235,7 +235,7 @@ check_fontname(const char *name)
 {
     Boolean result = True;
 
-    if (name == 0) {
+    if (IsEmpty(name)) {
 	TRACE(("fontname missing\n"));
 	result = False;
     } else if (strlen(name) >= MAX_FONTNAME - 1) {
@@ -1238,7 +1238,7 @@ typedef struct {
 } SubResourceRec;
 
 #define MERGE_SUBFONT(src,dst,name) \
-	if (dst.name == 0) { \
+	if (IsEmpty(dst.name)) { \
 	    TRACE(("MERGE_SUBFONT " #dst "." #name " merge %s\n", NonNull(src.name))); \
 	    dst.name = src.name; \
 	} else { \
@@ -1294,7 +1294,7 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	COPY_MENU_FONTS(xw->screen, original);
     }
 
-    if (myName == 0 || *myName == 0) {
+    if (IsEmpty(myName)) {
 	TRACE(("xtermLoadVTFonts restoring original\n"));
 	xw->misc.default_font = original.default_font;
 	COPY_MENU_FONTS(original, xw->screen);
