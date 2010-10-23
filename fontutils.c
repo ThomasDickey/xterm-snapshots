@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.351 2010/10/22 09:02:10 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.353 2010/10/23 00:27:22 tom Exp $ */
 
 /************************************************************
 
@@ -911,7 +911,7 @@ xtermLoadFont(XtermWidget xw,
     TRACE(("xtermLoadFont #%d "name" %s%s\n", \
     	   fontnum, \
 	   (warn[index] == fwResource) ? "*" : " ", \
-	   NonNull(myfonts.field)));
+	   NonNull(myfonts.field)))
     DbgResource("normal", f_n, fNorm);
     DbgResource("bold  ", f_b, fBold);
 #if OPT_WIDE_CHARS
@@ -1249,7 +1249,7 @@ typedef struct {
 	TRACE(("COPY_MENU_FONTS " #src " to " #dst "\n")); \
 	for (n = fontMenu_default; n <= fontMenu_lastBuiltin; ++n) { \
 	    for (m = 0; m < fMAX; ++m) { \
-		dst.menu_font_names[n][m] = src.menu_font_names[n][m]; \
+		dst.menu_font_names[n][m] = x_strdup(src.menu_font_names[n][m]); \
 	    } \
 	}
 
@@ -1329,11 +1329,11 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	     */
 	    xw->misc.default_font = subresourceRec.default_font;
 	    COPY_MENU_FONTS(subresourceRec, xw->screen);
-	    screen->MenuFontName(fontMenu_default) = xw->misc.default_font.f_n;
-	    screen->menu_font_names[0][fBold] = xw->misc.default_font.f_b;
+	    screen->MenuFontName(fontMenu_default) = x_strdup(xw->misc.default_font.f_n);
+	    screen->menu_font_names[0][fBold] = x_strdup(xw->misc.default_font.f_b);
 #if OPT_WIDE_CHARS
-	    screen->menu_font_names[0][fWide] = xw->misc.default_font.f_w;
-	    screen->menu_font_names[0][fWBold] = xw->misc.default_font.f_wb;
+	    screen->menu_font_names[0][fWide] = x_strdup(xw->misc.default_font.f_w);
+	    screen->menu_font_names[0][fWBold] = x_strdup(xw->misc.default_font.f_wb);
 #endif
 	} else {
 	    TRACE(("...no resources found\n"));
@@ -3019,7 +3019,7 @@ SetVTFont(XtermWidget xw,
 
 #define USE_CACHED(field, name) \
 	    if (myfonts.field == 0) { \
-		myfonts.field = screen->menu_font_names[which][name]; \
+		myfonts.field = x_strdup(screen->menu_font_names[which][name]); \
 		TRACE(("set myfonts." #field " from menu_font_names[%d][" #name "] %s\n", \
 		       which, NonNull(myfonts.field))); \
 	    } else { \

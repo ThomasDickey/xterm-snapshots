@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1086 2010/10/13 23:04:01 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1087 2010/10/22 23:04:58 tom Exp $ */
 
 /*
 
@@ -6383,13 +6383,13 @@ VTInitialize(Widget wrequest,
 #define DefaultFontNames TScreenOf(wnew)->menu_font_names[fontMenu_default]
     init_Sres(misc.default_font.f_n);
     init_Sres(misc.default_font.f_b);
-    DefaultFontNames[fNorm] = wnew->misc.default_font.f_n;
-    DefaultFontNames[fBold] = wnew->misc.default_font.f_b;
+    DefaultFontNames[fNorm] = x_strdup(wnew->misc.default_font.f_n);
+    DefaultFontNames[fBold] = x_strdup(wnew->misc.default_font.f_b);
 #if OPT_WIDE_CHARS
     init_Sres(misc.default_font.f_w);
     init_Sres(misc.default_font.f_wb);
-    DefaultFontNames[fWide] = wnew->misc.default_font.f_w;
-    DefaultFontNames[fWBold] = wnew->misc.default_font.f_wb;
+    DefaultFontNames[fWide] = x_strdup(wnew->misc.default_font.f_w);
+    DefaultFontNames[fWBold] = x_strdup(wnew->misc.default_font.f_wb);
 #endif
     TScreenOf(wnew)->MenuFontName(fontMenu_fontescape) = NULL;
     TScreenOf(wnew)->MenuFontName(fontMenu_fontsel) = NULL;
