@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.171 2010/04/04 22:41:32 tom Exp $
+## $XTermId: Makefile.in,v 1.172 2010/10/23 18:15:25 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -196,27 +196,34 @@ install \
 install-bin \
 install-scripts \
 install-full ::
-	@$(SHELL) -c 'echo "... installing $(BINDIR)/$(binary_uxterm)"; \
-		if test "$(binary_xterm)" != "xterm"; then \
-			name="$(binary_xterm)"; \
-			sed -e "s,=xterm,=$$name," $(srcdir)/uxterm >uxterm.tmp; \
-			$(INSTALL_SCRIPT) -m  755 uxterm.tmp $(BINDIR)/$(binary_uxterm); \
+	@$(SHELL) -c "name=\"$(binary_xterm)\"; \
+		dest=\"$(binary_uxterm)\"; \
+		echo \"... installing $(BINDIR)/\$$dest\"; \
+		if test \"\$$name\" != \"xterm\"; then \
+			sed -e \"s,=xterm,=\$$name,\" $(srcdir)/uxterm >uxterm.tmp; \
+			$(INSTALL_SCRIPT) -m  755 uxterm.tmp $(BINDIR)/\$$dest; \
 			rm -f uxterm.tmp; \
 		else \
-			$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm); \
-		fi'
-	@$(SHELL) -c 'echo "... installing $(BINDIR)/$(binary_k8term)"; \
-		if test "$(binary_xterm)" != "xterm"; then \
-			name="$(binary_xterm)"; \
-			sed -e "s,=xterm,=$$name," $(srcdir)/koi8rxterm >k8term.tmp; \
-			$(INSTALL_SCRIPT) -m  755 k8term.tmp $(BINDIR)/$(binary_k8term); \
+			$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/\$$dest; \
+		fi"
+	@$(SHELL) -c "name=\"$(binary_xterm)\"; \
+		dest=\"$(binary_k8term)\"; \
+		echo \"... installing $(BINDIR)/\$$dest\"; \
+		if test \"\$$name\" != \"xterm\"; then \
+			sed -e \"s,=xterm,=\$$name,\" $(srcdir)/koi8rxterm >k8term.tmp; \
+			$(INSTALL_SCRIPT) -m  755 k8term.tmp $(BINDIR)/\$$dest; \
 			rm -f k8term.tmp; \
 		else \
-			$(INSTALL_SCRIPT) -m  755 $(srcdir)/koi8rxterm $(BINDIR)/$(binary_k8term); \
-		fi'
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@ ; fi"
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && $(LN_S) $(binary_xterm) @XTERM_SYMLINK@ ; fi"
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && echo '... created symbolic link:' && ls -l $(binary_xterm) @XTERM_SYMLINK@ ; fi"
+			$(INSTALL_SCRIPT) -m  755 $(srcdir)/koi8rxterm $(BINDIR)/\$$dest; \
+		fi"
+	@-$(SHELL) -c "name=\"$(binary_xterm)\"; \
+		if test @XTERM_SYMLINK@ != NONE ; then \
+		cd $(BINDIR) && ( \
+			rm -f @XTERM_SYMLINK@ ; \
+			$(LN_S) \$$name @XTERM_SYMLINK@ ; \
+			echo \"... created symbolic link:\" ; \
+			ls -l \$$name @XTERM_SYMLINK@ ) ; \
+		fi"
 
 install \
 install-man \

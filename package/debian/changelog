@@ -1,0 +1,5 @@
+xterm-dev (266) unstable; urgency=low
+
+  * add build-script for testing, adapted from Debian xterm package.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Fri, 22 Oct 2010 17:15:59 -0400
