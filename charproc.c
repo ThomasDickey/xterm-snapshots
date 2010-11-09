@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1087 2010/10/22 23:04:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1088 2010/11/08 10:47:43 tom Exp $ */
 
 /*
 
@@ -8424,7 +8424,7 @@ set_character_class(char *s)
     int base;			/* 8, 10, 16 (octal, decimal, hex) */
     int numbers;		/* count of numbers per range */
     int digits;			/* count of digits in a number */
-    static const char *errfmt = "%s:  %s in range string \"%s\" (position %d)\n";
+    static const char errfmt[] = "%s:  %s in range string \"%s\" (position %d)\n";
 
     if (!s || !s[0])
 	return -1;
