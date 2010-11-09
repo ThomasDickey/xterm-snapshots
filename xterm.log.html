@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.984 2010/10/25 00:33:56 tom Exp $
+  $XTermId: xterm.log.html,v 1.989 2010/11/09 01:41:07 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_266">Patch #266 - 2010/10/24</A>
 <LI><A HREF="#xterm_265">Patch #265 - 2010/10/22</A>
 <LI><A HREF="#xterm_264">Patch #264 - 2010/10/14</A>
@@ -324,6 +325,25 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>configure script improvements:
+	<ul>
+	<li>add workaround for removal of fontconfig dependency from Xft's
+	    package file (report by Jeremy Huddleston).
+
+	<li>add workaround for removal of Xmu dependency from Xaw's package
+	    file (report by Jeremy Huddleston).
+
+	<li>improve workaround in <code>CF_X_TOOLKIT</code> macro,
+	    checking for other
+	    possible packages where Xt's dependencies may be given.
+
+	<li>prefer <code>${name:=value}</code> to <code>${name-value}</code>,
+	    since recent bash changes break legacy support for that feature.
+	</ul>
+</ul>
 
 <H1><A NAME="xterm_266">Patch #266 - 2010/10/24</A></H1>
 <ul>
