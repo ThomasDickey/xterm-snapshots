@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1090 2010/11/10 01:37:10 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1091 2010/11/11 11:41:26 tom Exp $ */
 
 /*
 
@@ -277,6 +277,7 @@ static XtActionsRec actionsList[] = {
     { "allow-send-events",	HandleAllowSends },
     { "bell",			HandleBell },
     { "clear-saved-lines",	HandleClearSavedLines },
+    { "copy-selection",		HandleCopySelection },
     { "create-menu",		HandleCreateMenu },
     { "delete-is-del",		HandleDeleteIsDEL },
     { "dired-button",		DiredButton },
@@ -300,16 +301,10 @@ static XtActionsRec actionsList[] = {
     { "select-cursor-end",	HandleKeyboardSelectEnd },
     { "select-cursor-extend",   HandleKeyboardSelectExtend },
     { "select-cursor-start",	HandleKeyboardSelectStart },
-#if 0
-    { "select-cursor-stop",	HandleKeyboardSelectStop },
-#endif
     { "select-end",		HandleSelectEnd },
     { "select-extend",		HandleSelectExtend },
     { "select-set",		HandleSelectSet },
     { "select-start",		HandleSelectStart },
-#if 0
-    { "select-stop",		HandleSelectStop },
-#endif
     { "send-signal",		HandleSendSignal },
     { "set-8-bit-control",	Handle8BitControl },
     { "set-allow132",		HandleAllow132 },
