@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.181 2010/10/24 20:16:36 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.182 2010/11/11 01:14:49 tom Exp $ */
 
 /************************************************************
 
@@ -191,6 +191,7 @@ authorization.
  */
 #ifndef __cplusplus
 #undef GCC_PRINTF
+#undef GCC_PRINTFLIKE
 #undef GCC_UNUSED
 #endif
 
