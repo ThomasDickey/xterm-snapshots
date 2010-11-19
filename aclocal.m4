@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.292 2010/11/09 10:19:12 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.293 2010/11/19 10:44:13 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3191,7 +3191,7 @@ AC_SUBST(HAVE_TYPE_FCCHAR32)
 AC_SUBST(HAVE_TYPE_XFTCHARSPEC)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_TOOLKIT version: 19 updated: 2010/11/09 05:18:02
+dnl CF_X_TOOLKIT version: 20 updated: 2010/11/19 05:43:04
 dnl ------------
 dnl Check for X Toolkit libraries
 dnl
@@ -3204,13 +3204,36 @@ cf_have_X_LIBS=no
 
 CF_TRY_PKG_CONFIG(xt,[
 
-AC_CACHE_CHECK(for usable X Toolkit package,cf_cv_xt_compat,[
+	case "x$LIBS" in #(vi
+	*-lX11*) #(vi
+		;;
+	*)
+# we have an "xt" package, but it may omit Xt's dependency on X11
+AC_CACHE_CHECK(for usable X dependency,cf_cv_xt_x11_compat,[
+AC_TRY_LINK([
+#include <X11/Xlib.h>
+],[
+	int rc1 = XDrawLine((Display*) 0, (Drawable) 0, (GC) 0, 0, 0, 0, 0);
+	int rc2 = XClearWindow((Display*) 0, (Window) 0);
+	int rc3 = XMoveWindow((Display*) 0, (Window) 0, 0, 0);
+	int rc4 = XMoveResizeWindow((Display*)0, (Window)0, 0, 0, 0, 0);
+],[cf_cv_xt_x11_compat=yes],[cf_cv_xt_x11_compat=no])])
+		if test "$cf_cv_xt_x11_compat" = no
+		then
+			CF_VERBOSE(work around broken X11 dependency)
+			# 2010/11/19 - good enough until a working Xt on Xcb is delivered.
+			CF_TRY_PKG_CONFIG(x11,,[CF_ADD_LIB_AFTER(-lXt,-lX11)])
+		fi
+		;;
+	esac
+
+AC_CACHE_CHECK(for usable X Toolkit package,cf_cv_xt_ice_compat,[
 AC_TRY_LINK([
 #include <X11/Shell.h>
 ],[int num = IceConnectionNumber(0)
-],[cf_cv_xt_compat=no],[cf_cv_xt_compat=no])])
+],[cf_cv_xt_ice_compat=yes],[cf_cv_xt_ice_compat=no])])
 
-	if test "$cf_cv_xt_compat" = no
+	if test "$cf_cv_xt_ice_compat" = no
 	then
 		# workaround for broken ".pc" files used for X Toolkit.
 		case "x$X_PRE_LIBS" in #(vi
@@ -3219,7 +3242,7 @@ AC_TRY_LINK([
 			*-lICE*) #(vi
 				;;
 			*)
-				CF_VERBOSE(work around broken package)
+				CF_VERBOSE(work around broken ICE dependency)
 				CF_TRY_PKG_CONFIG(ice,
 					[CF_TRY_PKG_CONFIG(sm)],
 					[CF_ADD_LIB_AFTER(-lXt,$X_PRE_LIBS)])
