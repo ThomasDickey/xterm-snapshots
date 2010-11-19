@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.172 2010/10/23 18:15:25 tom Exp $
+## $XTermId: Makefile.in,v 1.173 2010/11/13 12:52:34 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -339,8 +339,11 @@ mostlyclean :
 clean : mostlyclean
 	-$(RM) $(PROGRAMS)
 
-distclean : clean
+distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
+
+distclean \
+docs-clean ::
 	-$(RM) *.ps *.pdf *.png
 	-$(SHELL) -c 'for p in xterm resize uxterm koi8rxterm; \
 	do \
