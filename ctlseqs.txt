@@ -607,7 +607,7 @@ CSI > Ps p
 CSI ! p   Soft terminal reset (DECSTR).
 CSI Ps$ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply is
-            CSI Ps; Pm$ p
+            CSI Ps; Pm$ y
           where Ps is the mode number as in RM, and Pm is the mode
           value:
             0 - not recognized

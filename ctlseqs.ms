@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.235 2010/11/19 00:51:33 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.236 2010/11/24 11:00:27 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2009,2010 by Thomas E. Dickey
@@ -1117,7 +1117,7 @@ Soft terminal reset (DECSTR).
 Request ANSI mode (DECRQM).
 For VT300 and up, reply is
 .br
-  \*(Cs\*(Ps\*;\*(Pm\*$\*p
+  \*(Cs\*(Ps\*;\*(Pm\*$\*y
 .br
 where \*(Ps is the mode number as in RM,
 and \*(Pm is the mode value:

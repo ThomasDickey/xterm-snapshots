@@ -1,3 +1,9 @@
+xterm-dev (268) unstable; urgency=low
+
+  * build-fixes, etc.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 24 Nov 2010 06:17:16 -0500
+
 xterm-dev (267) unstable; urgency=low
 
   * build-fixes, etc.
