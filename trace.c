@@ -1,8 +1,8 @@
-/* $XTermId: trace.c,v 1.115 2010/06/15 22:40:28 tom Exp $ */
+/* $XTermId: trace.c,v 1.116 2011/01/12 01:22:33 tom Exp $ */
 
 /*
  * 
- * Copyright 1997-2009,2010 by Thomas E. Dickey
+ * Copyright 1997-2010,2011 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -37,6 +37,9 @@
  */
 
 #include <xterm.h>		/* for definition of GCC_UNUSED */
+
+#if OPT_TRACE
+
 #include <data.h>
 #include <trace.h>
 
@@ -833,3 +836,10 @@ TraceOptions(OptionHelp * options, XrmOptionDescRec * resources, Cardinal res_co
 	}
     }
 }
+#else
+extern void empty_trace(void);
+void
+empty_trace(void)
+{
+}
+#endif
