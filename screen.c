@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.426 2010/10/11 00:46:05 tom Exp $ */
+/* $XTermId: screen.c,v 1.429 2011/01/12 01:45:20 tom Exp $ */
 
 /*
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -123,8 +123,8 @@
 		assert(IsAligned(dst)); \
 		src += skipNcol##type
 
-#define ScrnBufAddr(ptrs, offset)  (ScrnBuf)    ((char *) (ptrs) + (offset))
-#define LineDataAddr(ptrs, offset) (LineData *) ((char *) (ptrs) + (offset))
+#define ScrnBufAddr(ptrs, offset)  (ScrnBuf)    ((void *) ((char *) (ptrs) + (offset)))
+#define LineDataAddr(ptrs, offset) (LineData *) ((void *) ((char *) (ptrs) + (offset)))
 
 #if OPT_TRACE > 1
 static void
@@ -580,6 +580,43 @@ ReallocateBufOffsets(XtermWidget xw,
     TRACE(("ReallocateBufOffsets %dx%d ->%p\n", nrow, ncol, *sbufaddr));
 }
 
+#if OPT_FIFO_LINES
+/*
+ * Allocate a new FIFO index.
+ */
+static void
+ReallocateFifoIndex(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->savelines > 0 && screen->saveBuf_index != 0) {
+	ScrnBuf newBufHead;
+	LineData *dstPtrs;
+	LineData *srcPtrs;
+	unsigned i;
+	unsigned old_jump = scrnHeadSize(screen, 1);
+	unsigned new_jump;
+
+	screen->wide_chars = True;
+	newBufHead = allocScrnHead(screen, (unsigned) screen->savelines);
+	new_jump = scrnHeadSize(screen, 1);
+
+	srcPtrs = (LineData *) screen->saveBuf_index;
+	dstPtrs = (LineData *) newBufHead;
+
+	for (i = 0; i < (unsigned) screen->savelines; ++i) {
+	    memcpy(dstPtrs, srcPtrs, SizeOfLineData);
+	    srcPtrs = LineDataAddr(srcPtrs, old_jump);
+	    dstPtrs = LineDataAddr(dstPtrs, new_jump);
+	}
+
+	screen->wide_chars = False;
+	free(screen->saveBuf_index);
+	screen->saveBuf_index = newBufHead;
+    }
+}
+#endif
+
 /*
  * This function dynamically adds support for wide-characters.
  */
@@ -611,7 +648,9 @@ ChangeToWide(XtermWidget xw)
 	    SwitchBufPtrs(screen, 0);
 
 #if OPT_SAVE_LINES
-#if !OPT_FIFO_LINES
+#if OPT_FIFO_LINES
+	ReallocateFifoIndex(xw);
+#else
 	ReallocateBufOffsets(xw,
 			     &screen->saveBuf_index,
 			     &screen->saveBuf_data,
