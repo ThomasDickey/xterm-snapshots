@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.184 2010/10/14 08:07:03 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.185 2011/01/20 10:50:19 tom Exp $ */
 
 /*
  *
@@ -1538,7 +1538,7 @@ TekRealize(Widget gw,
 
     XtWindow(tw) = TWindow(tekscr) =
 	XCreateWindow(XtDisplay(tw),
-		      XtWindow(SHELL_OF(tw)),
+		      VShellWindow(tw),
 		      tw->core.x, tw->core.y,
 		      tw->core.width, tw->core.height,
 		      BorderWidth(tw),

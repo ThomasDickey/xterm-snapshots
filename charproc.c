@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1093 2011/01/19 23:26:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1096 2011/01/20 11:50:26 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -220,12 +220,16 @@ static String _Font_Selected_ = "yes";	/* string is arbitrary */
 
 static char defaultTranslations[] =
 "\
-          Alt <Key>Return: fullscreen()\n\
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \n\
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \n\
          Shift <KeyPress> Select:select-cursor-start() select-cursor-end(SELECT, CUT_BUFFER0) \n\
          Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \n\
 "
+#if OPT_MAXIMIZE
+"\
+                 Alt <Key>Return:fullscreen()\n\
+"
+#endif
 #if OPT_SCROLL_LOCK
 "\
         <KeyRelease> Scroll_Lock:scroll-lock() \n\
@@ -275,7 +279,6 @@ static char defaultTranslations[] =
 ";				/* PROCURA added "Meta <Btn2Down>:clear-saved-lines()" */
 /* *INDENT-OFF* */
 static XtActionsRec actionsList[] = {
-    { "fullscreen",		HandleFullscreen },
     { "allow-send-events",	HandleAllowSends },
     { "bell",			HandleBell },
     { "clear-saved-lines",	HandleClearSavedLines },
@@ -376,6 +379,7 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_MAXIMIZE
     { "deiconify",		HandleDeIconify },
+    { "fullscreen",		HandleFullscreen },
     { "iconify",		HandleIconify },
     { "maximize",		HandleMaximize },
     { "restore",		HandleRestoreSize },
@@ -4844,7 +4848,7 @@ get_icon_label(XtermWidget xw)
     XTextProperty text;
     char *result = 0;
 
-    if (XGetWMIconName(TScreenOf(xw)->display, VShellWindow, &text)) {
+    if (XGetWMIconName(TScreenOf(xw)->display, VShellWindow(xw), &text)) {
 	result = property_to_string(xw, &text);
     }
     return result;
@@ -4856,7 +4860,7 @@ get_window_label(XtermWidget xw)
     XTextProperty text;
     char *result = 0;
 
-    if (XGetWMName(TScreenOf(xw)->display, VShellWindow, &text)) {
+    if (XGetWMName(TScreenOf(xw)->display, VShellWindow(xw), &text)) {
 	result = property_to_string(xw, &text);
     }
     return result;
@@ -4914,7 +4918,7 @@ window_ops(XtermWidget xw)
 	if (AllowWindowOps(xw, ewRestoreWin)) {
 	    TRACE(("...de-iconify window\n"));
 	    XMapWindow(screen->display,
-		       VShellWindow);
+		       VShellWindow(xw));
 	}
 	break;
 
@@ -4922,7 +4926,7 @@ window_ops(XtermWidget xw)
 	if (AllowWindowOps(xw, ewMinimizeWin)) {
 	    TRACE(("...iconify window\n"));
 	    XIconifyWindow(screen->display,
-			   VShellWindow,
+			   VShellWindow(xw),
 			   DefaultScreen(screen->display));
 	}
 	break;
@@ -4934,7 +4938,7 @@ window_ops(XtermWidget xw)
 	    TRACE(("...move window to %d,%d\n", values.x, values.y));
 	    value_mask = (CWX | CWY);
 	    XReconfigureWMWindow(screen->display,
-				 VShellWindow,
+				 VShellWindow(xw),
 				 DefaultScreen(screen->display),
 				 value_mask,
 				 &values);
@@ -4950,14 +4954,14 @@ window_ops(XtermWidget xw)
     case ewRaiseWin:		/* Raise the window to the front of the stack */
 	if (AllowWindowOps(xw, ewRaiseWin)) {
 	    TRACE(("...raise window\n"));
-	    XRaiseWindow(screen->display, VShellWindow);
+	    XRaiseWindow(screen->display, VShellWindow(xw));
 	}
 	break;
 
     case ewLowerWin:		/* Lower the window to the bottom of the stack */
 	if (AllowWindowOps(xw, ewLowerWin)) {
 	    TRACE(("...lower window\n"));
-	    XLowerWindow(screen->display, VShellWindow);
+	    XLowerWindow(screen->display, VShellWindow(xw));
 	}
 	break;
 
@@ -5610,7 +5614,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 
 	TRACE(("%s@%d -- ", __FILE__, __LINE__));
 	TRACE_HINTS(&xw->hints);
-	XSetWMNormalHints(screen->display, VShellWindow, &xw->hints);
+	XSetWMNormalHints(screen->display, VShellWindow(xw), &xw->hints);
 	TRACE(("%s@%d -- ", __FILE__, __LINE__));
 	TRACE_WM_HINTS(xw);
     }
@@ -7100,11 +7104,13 @@ VTRealize(Widget w,
 
     xw->hints.x = xpos;
     xw->hints.y = ypos;
+#if OPT_MAXIMIZE
     /* assure single-increment resize for fullscreen */
     if (term->screen.fullscreen) {
 	xw->hints.width_inc = 1;
 	xw->hints.height_inc = 1;
     }
+#endif
     if ((XValue & pr) || (YValue & pr)) {
 	xw->hints.flags |= USSize | USPosition;
 	xw->hints.flags |= PWinGravity;
@@ -7149,12 +7155,12 @@ VTRealize(Widget w,
      * realized, so that it can do the right thing.
      */
     if (xw->hints.flags & USPosition)
-	XMoveWindow(XtDisplay(xw), XtWindow(SHELL_OF(xw)),
+	XMoveWindow(XtDisplay(xw), VShellWindow(xw),
 		    xw->hints.x, xw->hints.y);
 
     TRACE(("%s@%d -- ", __FILE__, __LINE__));
     TRACE_HINTS(&xw->hints);
-    XSetWMNormalHints(XtDisplay(xw), XtWindow(SHELL_OF(xw)), &xw->hints);
+    XSetWMNormalHints(XtDisplay(xw), VShellWindow(xw), &xw->hints);
     TRACE(("%s@%d -- ", __FILE__, __LINE__));
     TRACE_WM_HINTS(xw);
 
@@ -7162,7 +7168,7 @@ VTRealize(Widget w,
 	/* XChangeProperty format 32 really is "long" */
 	unsigned long pid_l = (unsigned long) getpid();
 	TRACE(("Setting _NET_WM_PID property to %lu\n", pid_l));
-	XChangeProperty(XtDisplay(xw), VShellWindow,
+	XChangeProperty(XtDisplay(xw), VShellWindow(xw),
 			pid_atom, XA_CARDINAL, 32, PropModeReplace,
 			(unsigned char *) &pid_l, 1);
     }
@@ -7297,7 +7303,7 @@ VTRealize(Widget w,
 
     resetCharsets(screen);
 
-    XDefineCursor(screen->display, VShellWindow, screen->pointer_cursor);
+    XDefineCursor(screen->display, VShellWindow(xw), screen->pointer_cursor);
 
     set_cur_col(screen, 0);
     set_cur_row(screen, 0);
