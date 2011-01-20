@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-267b
+MANIFEST for xterm, version xterm-267c
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -62,6 +62,7 @@ menu.h                          interface of menu.c
 minstall.sh                     script for installing manpages
 misc.c                          miscellaneous utility functions for 'xterm'
 os2main.c                       main program for OS/2 EMX port of 'xterm'
+plink.sh                        script to prune unneeded libraries from link
 precompose.c                    table of precompose sequences
 precompose.h                    interface of precompose.c
 print.c                         VT100+ print support functions

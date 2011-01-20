@@ -1,8 +1,7 @@
-/* $XTermId: menu.c,v 1.267 2010/06/20 21:09:10 tom Exp $ */
+/* $XTermId: menu.c,v 1.273 2011/01/20 02:01:11 tom Exp $ */
 
 /*
- *
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -30,6 +29,7 @@
  * sale, use or other dealings in this Software without prior written
  * authorization.
  *
+ *
  * Copyright 1989  The Open Group
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -51,7 +51,6 @@
  * Except as contained in this notice, the name of The Open Group shall not be
  * used in advertising or otherwise to promote the sale, use or other dealings
  * in this Software without prior written authorization from The Open Group.
- *
  */
 
 #include <xterm.h>
@@ -160,6 +159,7 @@ static void do_terminate       PROTO_XT_CALLBACK_ARGS;
 static void do_titeInhibit     PROTO_XT_CALLBACK_ARGS;
 static void do_visualbell      PROTO_XT_CALLBACK_ARGS;
 static void do_vtfont          PROTO_XT_CALLBACK_ARGS;
+static void do_fullscreen      PROTO_XT_CALLBACK_ARGS;
 
 #ifdef ALLOWLOGGING
 static void do_logging         PROTO_XT_CALLBACK_ARGS;
@@ -261,6 +261,7 @@ MenuEntry mainMenuEntries[] = {
 #if OPT_TOOLBAR
     { "toolbar",	do_toolbar,	NULL },
 #endif
+    { "fullscreen",	do_fullscreen,	NULL },
     { "securekbd",	do_securekbd,	NULL },
     { "allowsends",	do_allowsends,	NULL },
     { "redraw",		do_redraw,	NULL },
@@ -626,6 +627,7 @@ domenu(Widget w,
     case mainMenu:
 	if (created) {
 	    update_toolbar();
+	    update_fullscreen();
 	    update_securekbd();
 	    update_allowsends();
 	    update_logging();
@@ -838,6 +840,188 @@ handle_send_signal(Widget gw GCC_UNUSED, int sig)
 /*
  * action routines
  */
+
+/********************************************************************/
+/* BEGIN: Simmons Fullscreen Hack                                   */
+/********************************************************************/
+
+#include <X11/Xatom.h>
+#include <X11/Xmd.h>
+
+static void
+set_resize_increments(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    int min_width = (2 * screen->border) + screen->fullVwin.sb_info.width;
+    int min_height = (2 * screen->border);
+    XSizeHints sizehints;
+
+    memset(&sizehints, 0, sizeof(XSizeHints));
+    sizehints.width_inc = FontWidth(screen);
+    sizehints.height_inc = FontHeight(screen);
+    sizehints.flags = PResizeInc;
+    XSetWMNormalHints(screen->display, XtWindow(XtParent(xw)), &sizehints);
+
+    XtVaSetValues(XtParent(xw),
+		  XtNbaseWidth, min_width,
+		  XtNbaseHeight, min_height,
+		  XtNminWidth, min_width + FontWidth(screen),
+		  XtNminHeight, min_height + FontHeight(screen),
+		  XtNwidthInc, FontWidth(screen),
+		  XtNheightInc, FontHeight(screen),
+		  (XtPointer) 0);
+
+    XFlush(XtDisplay(xw));
+}
+
+static void
+unset_resize_increments(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    XSizeHints sizehints;
+
+    memset(&sizehints, 0, sizeof(XSizeHints));
+    sizehints.width_inc = 1;
+    sizehints.height_inc = 1;
+    sizehints.flags = PResizeInc;
+    XSetWMNormalHints(screen->display, XtWindow(XtParent(xw)), &sizehints);
+
+    XtVaSetValues(XtParent(xw),
+		  XtNwidthInc, 1,
+		  XtNheightInc, 1,
+		  (XtPointer) 0);
+
+    XFlush(XtDisplay(xw));
+}
+
+static void
+netwm_fullscreen(XtermWidget xw, int operation)
+{
+    TScreen *screen = TScreenOf(xw);
+    XEvent e;
+    Display *dpy = screen->display;
+    Window window = XtWindow(XtParent(xw));
+    Atom atom_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+    Atom atom_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+
+    memset(&e, 0, sizeof(e));
+    e.xclient.type = ClientMessage;
+    e.xclient.message_type = atom_state;
+    e.xclient.display = dpy;
+    e.xclient.window = window;
+    e.xclient.format = 32;
+    e.xclient.data.l[0] = operation;
+    e.xclient.data.l[1] = atom_fullscreen;
+
+    XSendEvent(dpy, DefaultRootWindow(dpy), False,
+	       SubstructureRedirectMask, &e);
+}
+
+static Boolean
+probe_netwm_fullscreen_capability(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    Atom atom_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+    Atom atom_supported = XInternAtom(dpy, "_NET_SUPPORTED", False);
+    Atom actual_type;
+    int actual_format;
+    long long_offset = 0;
+    long long_length = 128;	/* number of items to ask for at a time */
+    unsigned int i;
+    unsigned long nitems, bytes_after;
+    unsigned char *args;
+    CARD32 *ldata;
+    Boolean netwm_fullscreen_capability = False;
+    int rc;
+
+    while (!netwm_fullscreen_capability) {
+	rc = XGetWindowProperty(dpy,
+				DefaultRootWindow(dpy),
+				atom_supported,
+				long_offset,
+				long_length,
+				False,	/* do not delete */
+				AnyPropertyType,	/* req_type */
+				&actual_type,	/* actual_type_return */
+				&actual_format,		/* actual_format_return */
+				&nitems,	/* nitems_return */
+				&bytes_after,	/* bytes_after_return */
+				&args	/* prop_return */
+	    );
+	if (rc != Success
+	    || actual_type != XA_ATOM) {
+	    break;
+	}
+
+	ldata = (CARD32 *) args;
+	for (i = 0; i < nitems; i++) {
+	    if (ldata[i] == atom_fullscreen) {
+		netwm_fullscreen_capability = True;
+		break;
+	    }
+	}
+	XFree(ldata);
+
+	if (!netwm_fullscreen_capability) {
+	    if (bytes_after != 0) {
+		long remaining = (long) (bytes_after / sizeof(CARD32));
+		if (long_length > remaining)
+		    long_length = remaining;
+		long_offset += nitems;
+	    } else {
+		break;
+	    }
+	}
+    }
+
+    return netwm_fullscreen_capability;
+}
+
+static void
+do_fullscreen(Widget gw GCC_UNUSED,
+	      XtPointer closure GCC_UNUSED,
+	      XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
+
+    static Boolean initialized = False;
+    static Boolean netwm_fullscreen_capability = False;
+
+    if (!initialized) {
+	initialized = True;
+	netwm_fullscreen_capability = probe_netwm_fullscreen_capability(xw);
+    }
+
+    if (netwm_fullscreen_capability) {
+	if (screen->fullscreen) {
+	    set_resize_increments(xw);
+	    netwm_fullscreen(xw, 0);
+	} else {
+	    unset_resize_increments(xw);
+	    netwm_fullscreen(xw, 1);
+	}
+	screen->fullscreen = !screen->fullscreen;
+	update_fullscreen();
+    } else {
+	Bell(xw, XkbBI_MinorError, 100);
+    }
+}
+
+/* ARGSUSED */
+void
+HandleFullscreen(Widget w,
+		 XEvent * event GCC_UNUSED,
+		 String * params GCC_UNUSED,
+		 Cardinal *param_count GCC_UNUSED)
+{
+    do_fullscreen(w, (XtPointer) 0, (XtPointer) 0);
+}
+
+/********************************************************************/
+/* END: Simmons Fullscreen Hack                                     */
+/********************************************************************/
 
 static void
 do_securekbd(Widget gw GCC_UNUSED,
@@ -2842,6 +3026,15 @@ update_toolbar(void)
 		   resource.toolBar);
 }
 #endif /* OPT_TOOLBAR */
+
+void
+update_fullscreen(void)
+{
+    UpdateCheckbox("update_fullscreen",
+		   mainMenuEntries,
+		   mainMenu_fullscreen,
+		   TScreenOf(term)->fullscreen);
+}
 
 void
 update_securekbd(void)

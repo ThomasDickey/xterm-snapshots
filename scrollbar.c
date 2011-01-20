@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.173 2010/06/15 22:47:34 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.175 2011/01/19 23:26:17 tom Exp $ */
 
 /*
- * Copyright 2000-2009,2010 by Thomas E. Dickey
+ * Copyright 2000-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -174,12 +174,25 @@ DoResizeScreen(XtermWidget xw)
     /* These are obsolete, but old clients may use them */
     xw->hints.width = MaxCols(screen) * FontWidth(screen) + xw->hints.min_width;
     xw->hints.height = MaxRows(screen) * FontHeight(screen) + xw->hints.min_height;
+    /* assure single-increment resize for fullscreen */
+    if (term->screen.fullscreen) {
+	xw->hints.width_inc = 1;
+	xw->hints.height_inc = 1;
+    }
 #endif
 
     XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)), &xw->hints);
 
     reqWidth = (Dimension) (MaxCols(screen) * FontWidth(screen) + min_wide);
     reqHeight = (Dimension) (MaxRows(screen) * FontHeight(screen) + min_high);
+
+    /* compensate for fullscreen mode */
+    if (screen->fullscreen) {
+	Screen *xscreen = DefaultScreenOfDisplay(term->screen.display);
+	reqWidth = WidthOfScreen(xscreen);
+	reqHeight = HeightOfScreen(xscreen);
+	ScreenResize(xw, reqWidth, reqHeight, &term->flags);
+    }
 
     TRACE(("...requesting screensize chars %dx%d, pixels %dx%d\n",
 	   MaxRows(screen),
