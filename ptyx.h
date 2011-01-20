@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.677 2011/01/19 23:27:11 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.680 2011/01/20 10:54:04 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1651,7 +1651,9 @@ typedef struct {
 
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
-	Boolean		fullscreen;	/* terminal is fullscreen	*/
+#if OPT_MAXIMIZE
+	Boolean		fullscreen;	/* window is fullscreen		*/
+#endif
 #ifdef ALLOWLOGGING
 	int		logging;	/* logging mode			*/
 	int		logfd;		/* file descriptor of log	*/
@@ -2457,7 +2459,7 @@ typedef struct _TekWidgetRec {
  * These definitions do not depend on whether xterm supports active-icon.
  */
 #define VWindow(screen)		WhichVWin(screen)->window
-#define VShellWindow		XtWindow(SHELL_OF(term))
+#define VShellWindow(xw)	XtWindow(SHELL_OF(xw))
 #define TWindow(screen)		WhichTWin(screen)->window
 #define TShellWindow		XtWindow(SHELL_OF(tekWidget))
 
@@ -2510,8 +2512,8 @@ typedef struct _TekWidgetRec {
 
 #if OPT_TOOLBAR
 #define ToolbarHeight(w)	((resource.toolBar) \
-				 ? (term->VT100_TB_INFO(menu_height) \
-				  + term->VT100_TB_INFO(menu_border) * 2) \
+				 ? ((w)->VT100_TB_INFO(menu_height) \
+				  + (w)->VT100_TB_INFO(menu_border) * 2) \
 				 : 0)
 #else
 #define ToolbarHeight(w) 0

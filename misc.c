@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.511 2010/11/10 00:56:29 tom Exp $ */
+/* $XTermId: misc.c,v 1.512 2011/01/20 10:46:32 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -250,17 +250,19 @@ DoSpecialLeaveNotify(XtermWidget xw, XEnterWindowEvent * ev)
 #endif
 
 static void
-setXUrgency(TScreen * screen, Bool enable)
+setXUrgency(XtermWidget xw, Bool enable)
 {
+    TScreen *screen = TScreenOf(xw);
+
     if (screen->bellIsUrgent) {
-	XWMHints *h = XGetWMHints(screen->display, VShellWindow);
+	XWMHints *h = XGetWMHints(screen->display, VShellWindow(xw));
 	if (h != 0) {
 	    if (enable) {
 		h->flags |= XUrgencyHint;
 	    } else {
 		h->flags &= ~XUrgencyHint;
 	    }
-	    XSetWMHints(screen->display, VShellWindow, h);
+	    XSetWMHints(screen->display, VShellWindow(xw), h);
 	}
     }
 }
@@ -741,7 +743,7 @@ HandleFocusChange(Widget w GCC_UNUSED,
 	&& (event->mode == NotifyGrab || event->mode == NotifyUngrab)) {
 	;
     } else if (event->type == FocusIn) {
-	setXUrgency(screen, False);
+	setXUrgency(xw, False);
 
 	/*
 	 * NotifyNonlinear only happens (on FocusIn) if the pointer was not in
@@ -856,7 +858,7 @@ xtermBell(XtermWidget xw, int which, int percent)
 
 #if defined(HAVE_XKB_BELL_EXT)
     if (tony != None) {
-	XkbBell(screen->display, VShellWindow, percent, tony);
+	XkbBell(screen->display, VShellWindow(xw), percent, tony);
     } else
 #endif
 	XBell(screen->display, percent);
@@ -874,7 +876,7 @@ Bell(XtermWidget xw, int which, int percent)
 	return;
     }
 
-    setXUrgency(screen, True);
+    setXUrgency(xw, True);
 
     /* has enough time gone by that we are allowed to ring
        the bell again? */
@@ -901,7 +903,7 @@ Bell(XtermWidget xw, int which, int percent)
     }
 
     if (screen->poponbell)
-	XRaiseWindow(screen->display, VShellWindow);
+	XRaiseWindow(screen->display, VShellWindow(xw));
 
     if (screen->bellSuppressTime) {
 	/* now we change a property and wait for the notify event to come
@@ -972,19 +974,19 @@ HandleBellPropertyChange(Widget w GCC_UNUSED,
 }
 
 Window
-WMFrameWindow(XtermWidget termw)
+WMFrameWindow(XtermWidget xw)
 {
     Window win_root, win_current, *children;
     Window win_parent = 0;
     unsigned int nchildren;
 
-    win_current = XtWindow(termw);
+    win_current = XtWindow(xw);
 
     /* find the parent which is child of root */
     do {
 	if (win_parent)
 	    win_current = win_parent;
-	XQueryTree(TScreenOf(termw)->display,
+	XQueryTree(TScreenOf(xw)->display,
 		   win_current,
 		   &win_root,
 		   &win_parent,
@@ -1196,7 +1198,7 @@ HandleDeIconify(Widget w,
 
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
-	XMapWindow(screen->display, VShellWindow);
+	XMapWindow(screen->display, VShellWindow(xw));
     }
 }
 
@@ -1212,15 +1214,15 @@ HandleIconify(Widget w,
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
 	XIconifyWindow(screen->display,
-		       VShellWindow,
+		       VShellWindow(xw),
 		       DefaultScreen(screen->display));
     }
 }
 
 int
-QueryMaximize(XtermWidget termw, unsigned *width, unsigned *height)
+QueryMaximize(XtermWidget xw, unsigned *width, unsigned *height)
 {
-    TScreen *screen = TScreenOf(termw);
+    TScreen *screen = TScreenOf(xw);
     XSizeHints hints;
     long supp = 0;
     Window root_win;
@@ -1230,7 +1232,7 @@ QueryMaximize(XtermWidget termw, unsigned *width, unsigned *height)
     unsigned root_depth;
 
     if (XGetGeometry(screen->display,
-		     RootWindowOfScreen(XtScreen(termw)),
+		     RootWindowOfScreen(XtScreen(xw)),
 		     &root_win,
 		     &root_x,
 		     &root_y,
@@ -1250,7 +1252,7 @@ QueryMaximize(XtermWidget termw, unsigned *width, unsigned *height)
 
 	hints.flags = PMaxSize;
 	if (XGetWMNormalHints(screen->display,
-			      VShellWindow,
+			      VShellWindow(xw),
 			      &hints,
 			      &supp)
 	    && (hints.flags & PMaxSize) != 0) {
@@ -1270,9 +1272,9 @@ QueryMaximize(XtermWidget termw, unsigned *width, unsigned *height)
 }
 
 void
-RequestMaximize(XtermWidget termw, int maximize)
+RequestMaximize(XtermWidget xw, int maximize)
 {
-    TScreen *screen = TScreenOf(termw);
+    TScreen *screen = TScreenOf(xw);
     XWindowAttributes wm_attrs, vshell_attrs;
     unsigned root_width, root_height;
 
@@ -1280,14 +1282,14 @@ RequestMaximize(XtermWidget termw, int maximize)
 
     if (maximize) {
 
-	if (QueryMaximize(termw, &root_width, &root_height)) {
+	if (QueryMaximize(xw, &root_width, &root_height)) {
 
 	    if (XGetWindowAttributes(screen->display,
-				     WMFrameWindow(termw),
+				     WMFrameWindow(xw),
 				     &wm_attrs)) {
 
 		if (XGetWindowAttributes(screen->display,
-					 VShellWindow,
+					 VShellWindow(xw),
 					 &vshell_attrs)) {
 
 		    if (screen->restore_data != True
@@ -1313,7 +1315,7 @@ RequestMaximize(XtermWidget termw, int maximize)
 			(unsigned) ((wm_attrs.height - vshell_attrs.height)
 				    + (wm_attrs.border_width * 2));
 
-		    XMoveResizeWindow(screen->display, VShellWindow,
+		    XMoveResizeWindow(screen->display, VShellWindow(xw),
 				      0 + wm_attrs.border_width,	/* x */
 				      0 + wm_attrs.border_width,	/* y */
 				      root_width,
@@ -1331,7 +1333,7 @@ RequestMaximize(XtermWidget termw, int maximize)
 	    screen->restore_data = False;
 
 	    XMoveResizeWindow(screen->display,
-			      VShellWindow,
+			      VShellWindow(xw),
 			      screen->restore_x,
 			      screen->restore_y,
 			      screen->restore_width,
@@ -3826,14 +3828,14 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 		    if (IsSetUtf8Title(xw)) {
 			TRACE(("...updating %s\n", propname));
 			TRACE(("...value is %s\n", value));
-			XChangeProperty(dpy, VShellWindow, my_atom,
+			XChangeProperty(dpy, VShellWindow(xw), my_atom,
 					XA_UTF8_STRING(dpy), 8,
 					PropModeReplace,
 					(Char *) value,
 					(int) strlen(value));
 		    } else {
 			TRACE(("...deleting %s\n", propname));
-			XDeleteProperty(dpy, VShellWindow, my_atom);
+			XDeleteProperty(dpy, VShellWindow(xw), my_atom);
 		    }
 		}
 	    }
@@ -4316,16 +4318,17 @@ withdraw_window(Display * dpy, Window w, int scr)
 void
 set_vt_visibility(Bool on)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
     TRACE(("set_vt_visibility(%d)\n", on));
     if (on) {
-	if (!screen->Vshow && term) {
-	    VTInit(term);
-	    XtMapWidget(XtParent(term));
+	if (!screen->Vshow && xw) {
+	    VTInit(xw);
+	    XtMapWidget(XtParent(xw));
 #if OPT_TOOLBAR
 	    /* we need both of these during initialization */
-	    XtMapWidget(SHELL_OF(term));
+	    XtMapWidget(SHELL_OF(xw));
 	    ShowToolbar(resource.toolBar);
 #endif
 	    screen->Vshow = True;
@@ -4333,10 +4336,10 @@ set_vt_visibility(Bool on)
     }
 #if OPT_TEK4014
     else {
-	if (screen->Vshow && term) {
-	    withdraw_window(XtDisplay(term),
-			    VShellWindow,
-			    XScreenNumberOfScreen(XtScreen(term)));
+	if (screen->Vshow && xw) {
+	    withdraw_window(XtDisplay(xw),
+			    VShellWindow(xw),
+			    XScreenNumberOfScreen(XtScreen(xw)));
 	    screen->Vshow = False;
 	}
     }

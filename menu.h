@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.121 2011/01/19 23:28:52 tom Exp $ */
+/* $XTermId: menu.h,v 1.122 2011/01/20 09:42:50 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -74,7 +74,6 @@ extern MenuEntry fontMenuEntries[];
 extern MenuEntry tekMenuEntries[];
 #endif
 
-extern void HandleFullscreen       PROTO_XT_ACTIONS_ARGS;
 extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowColorOps    PROTO_XT_ACTIONS_ARGS;
@@ -100,6 +99,7 @@ extern void HandleFontBoxChars     PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontDoublesize   PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontLoading      PROTO_XT_ACTIONS_ARGS;
 extern void HandleFontPacked       PROTO_XT_ACTIONS_ARGS;
+extern void HandleFullscreen       PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
@@ -111,8 +111,8 @@ extern void HandleNumLock          PROTO_XT_ACTIONS_ARGS;
 extern void HandleOldFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandlePopupMenu        PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintControlMode PROTO_XT_ACTIONS_ARGS;
-extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
 extern void HandlePrintEverything  PROTO_XT_ACTIONS_ARGS;
+extern void HandlePrintScreen      PROTO_XT_ACTIONS_ARGS;
 extern void HandleQuit             PROTO_XT_ACTIONS_ARGS;
 extern void HandleRedraw           PROTO_XT_ACTIONS_ARGS;
 extern void HandleRenderFont       PROTO_XT_ACTIONS_ARGS;
@@ -159,7 +159,9 @@ typedef enum {
 #if OPT_TOOLBAR
     mainMenu_toolbar,
 #endif
+#if OPT_MAXIMIZE
     mainMenu_fullscreen,
+#endif
     mainMenu_securekbd,
     mainMenu_allowsends,
     mainMenu_redraw,
@@ -337,7 +339,12 @@ extern void update_toolbar(void);
 #define update_toolbar() /* nothing */
 #endif
 
+#if OPT_MAXIMIZE
 extern void update_fullscreen(void);
+#else
+#define update_fullscreen() /* nothing */
+#endif
+
 extern void update_securekbd(void);
 extern void update_allowsends(void);
 

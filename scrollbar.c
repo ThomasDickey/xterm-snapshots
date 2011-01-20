@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.175 2011/01/19 23:26:17 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.178 2011/01/20 11:44:27 tom Exp $ */
 
 /*
  * Copyright 2000-2010,2011 by Thomas E. Dickey
@@ -174,25 +174,29 @@ DoResizeScreen(XtermWidget xw)
     /* These are obsolete, but old clients may use them */
     xw->hints.width = MaxCols(screen) * FontWidth(screen) + xw->hints.min_width;
     xw->hints.height = MaxRows(screen) * FontHeight(screen) + xw->hints.min_height;
+#if OPT_MAXIMIZE
     /* assure single-increment resize for fullscreen */
-    if (term->screen.fullscreen) {
+    if (xw->screen.fullscreen) {
 	xw->hints.width_inc = 1;
 	xw->hints.height_inc = 1;
     }
+#endif /* OPT_MAXIMIZE */
 #endif
 
-    XSetWMNormalHints(screen->display, XtWindow(SHELL_OF(xw)), &xw->hints);
+    XSetWMNormalHints(screen->display, VShellWindow(xw), &xw->hints);
 
     reqWidth = (Dimension) (MaxCols(screen) * FontWidth(screen) + min_wide);
     reqHeight = (Dimension) (MaxRows(screen) * FontHeight(screen) + min_high);
 
+#if OPT_MAXIMIZE
     /* compensate for fullscreen mode */
     if (screen->fullscreen) {
-	Screen *xscreen = DefaultScreenOfDisplay(term->screen.display);
-	reqWidth = WidthOfScreen(xscreen);
-	reqHeight = HeightOfScreen(xscreen);
-	ScreenResize(xw, reqWidth, reqHeight, &term->flags);
+	Screen *xscreen = DefaultScreenOfDisplay(xw->screen.display);
+	reqWidth = (Dimension) WidthOfScreen(xscreen);
+	reqHeight = (Dimension) HeightOfScreen(xscreen);
+	ScreenResize(xw, reqWidth, reqHeight, &xw->flags);
     }
+#endif /* OPT_MAXIMIZE */
 
     TRACE(("...requesting screensize chars %dx%d, pixels %dx%d\n",
 	   MaxRows(screen),
@@ -226,7 +230,7 @@ DoResizeScreen(XtermWidget xw)
 	xw->hints.height = repHeight;
 	xw->hints.width = repWidth;
 	TRACE_HINTS(&xw->hints);
-	XSetWMNormalHints(screen->display, VShellWindow, &xw->hints);
+	XSetWMNormalHints(screen->display, VShellWindow(xw), &xw->hints);
     }
 #endif
     XSync(screen->display, False);	/* synchronize */
