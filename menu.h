@@ -1,8 +1,7 @@
-/* $XTermId: menu.h,v 1.119 2010/01/04 22:16:06 tom Exp $ */
+/* $XTermId: menu.h,v 1.121 2011/01/19 23:28:52 tom Exp $ */
 
 /*
- *
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -29,6 +28,7 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
+ *
  *
  * Copyright 1989  The Open Group
  *
@@ -58,6 +58,7 @@
 
 #ifndef included_menu_h
 #define included_menu_h
+/* *INDENT-OFF* */
 
 #include <xterm.h>
 
@@ -73,6 +74,7 @@ extern MenuEntry fontMenuEntries[];
 extern MenuEntry tekMenuEntries[];
 #endif
 
+extern void HandleFullscreen       PROTO_XT_ACTIONS_ARGS;
 extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowColorOps    PROTO_XT_ACTIONS_ARGS;
@@ -157,6 +159,7 @@ typedef enum {
 #if OPT_TOOLBAR
     mainMenu_toolbar,
 #endif
+    mainMenu_fullscreen,
     mainMenu_securekbd,
     mainMenu_allowsends,
     mainMenu_redraw,
@@ -297,7 +300,6 @@ typedef enum {
     fontMenu_LAST
 } fontMenuIndices;
 
-
 /*
  * items in tek4014 mode menu
  */
@@ -335,6 +337,7 @@ extern void update_toolbar(void);
 #define update_toolbar() /* nothing */
 #endif
 
+extern void update_fullscreen(void);
 extern void update_securekbd(void);
 extern void update_allowsends(void);
 
@@ -492,4 +495,6 @@ extern void set_tekfont_menu_item(int n,int val);
 
 extern void set_menu_font(int val);
 
-#endif	/*included_menu_h*/
+/* *INDENT-ON* */
+
+#endif /* included_menu_h */

@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.675 2010/10/11 08:25:53 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.677 2011/01/19 23:27:11 tom Exp $ */
 
 /*
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -60,6 +60,7 @@
 #endif
 
 /* ptyx.h */
+/* *INDENT-OFF* */
 /* @(#)ptyx.h	X10/6.6	11/10/86 */
 
 #include <X11/IntrinsicP.h>
@@ -1650,6 +1651,7 @@ typedef struct {
 
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
+	Boolean		fullscreen;	/* terminal is fullscreen	*/
 #ifdef ALLOWLOGGING
 	int		logging;	/* logging mode			*/
 	int		logfd;		/* file descriptor of log	*/
@@ -2602,5 +2604,7 @@ typedef struct Tek_Link
 #ifndef TRACE2
 #define TRACE2(p) /*nothing*/
 #endif
+
+/* *INDENT-ON* */
 
 #endif /* included_ptyx_h */
