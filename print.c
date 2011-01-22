@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.119 2010/06/13 17:46:27 tom Exp $ */
+/* $XTermId: print.c,v 1.120 2011/01/20 23:53:18 tom Exp $ */
 
 /************************************************************
 
@@ -675,7 +675,7 @@ getPrinterFlags(XtermWidget xw, String * params, Cardinal *param_count)
 	    TRACE(("param%d:%s\n", j, params[j]));
 	    for (k = 0; k < XtNumber(table); ++k) {
 		if (!x_strcasecmp(params[j], table[k].name)) {
-		    int *ptr = (int *) ((char *) result + table[k].offset);
+		    int *ptr = (int *) (void *) ((char *) result + table[k].offset);
 		    TRACE(("...PrinterFlags(%s) %d->%d\n",
 			   table[k].name,
 			   *ptr,

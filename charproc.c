@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1096 2011/01/20 11:50:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1098 2011/01/22 13:03:21 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -7620,6 +7620,29 @@ VTInitI18N(XtermWidget xw)
 }
 #endif /* OPT_I18N_SUPPORT && OPT_INPUT_METHOD */
 
+static void
+set_cursor_outline_gc(XtermWidget xw,
+		      Boolean filled,
+		      Pixel fg,
+		      Pixel bg,
+		      Pixel cc)
+{
+    TScreen *screen = TScreenOf(xw);
+    VTwin *win = WhichVWin(screen);
+    CgsEnum cgsId = gcVTcursOutline;
+
+    if (cc == bg)
+	cc = fg;
+
+    if (filled) {
+	setCgsFore(xw, win, cgsId, bg);
+	setCgsBack(xw, win, cgsId, cc);
+    } else {
+	setCgsFore(xw, win, cgsId, cc);
+	setCgsBack(xw, win, cgsId, bg);
+    }
+}
+
 static Boolean
 VTSetValues(Widget cur,
 	    Widget request GCC_UNUSED,
@@ -7920,10 +7943,9 @@ ShowCursor(void)
 	y = CursorY(screen, screen->cur_row);
 
 	if (screen->cursor_underline) {
-
 	    /*
-	     * Overriding the combination of filled, reversed, in_selection
-	     * is too complicated since the underline and the text-cell use
+	     * Overriding the combination of filled, reversed, in_selection is
+	     * too complicated since the underline and the text-cell use
 	     * different rules.  Just redraw the text-cell, and draw the
 	     * underline on top of it.
 	     */
@@ -7931,7 +7953,7 @@ ShowCursor(void)
 
 	    /*
 	     * Our current-GC is likely to have been modified in HideCursor().
-	     * Setup a new request.
+	     * Set up a new request.
 	     */
 	    if (filled) {
 		if (T_COLOR(screen, TEXT_CURSOR) == xw->dft_foreground) {
@@ -7942,10 +7964,23 @@ ShowCursor(void)
 		setCgsFore(xw, currentWin, currentCgs, fg_pix);
 		setCgsBack(xw, currentWin, currentCgs, bg_pix);
 	    }
+	}
 
-	    outlineGC = getCgsGC(xw, currentWin, gcVTcursOutline);
-	    if (outlineGC == 0)
-		outlineGC = currentGC;
+	/*
+	 * Update the outline-gc, to keep the cursor color distinct from the
+	 * background color.
+	 */
+	set_cursor_outline_gc(xw,
+			      filled,
+			      fg_pix,
+			      bg_pix,
+			      T_COLOR(screen, TEXT_CURSOR));
+
+	outlineGC = getCgsGC(xw, currentWin, gcVTcursOutline);
+	if (outlineGC == 0)
+	    outlineGC = currentGC;
+
+	if (screen->cursor_underline) {
 
 	    /*
 	     * Finally, draw the underline.
@@ -7955,9 +7990,6 @@ ShowCursor(void)
 	    XDrawLines(screen->display, VWindow(screen), outlineGC,
 		       screen->box, NBOX, CoordModePrevious);
 	} else {
-	    outlineGC = getCgsGC(xw, currentWin, gcVTcursOutline);
-	    if (outlineGC == 0)
-		outlineGC = currentGC;
 
 	    drawXtermText(xw, flags & DRAWX_MASK,
 			  currentGC, x, y,
@@ -8707,9 +8739,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 	    break;
     }
     if (!a) {
-	atoms = (AtomPtr *) XtRealloc((char *) atoms,
-				      (Cardinal) sizeof(AtomPtr)
-				      * (atomCount + 1));
+	atoms = TypeXtReallocN(AtomPtr, atoms, atomCount + 1);
 	*(pAtom = &atoms[atomCount]) = XmuMakeAtom(atom_name);
     }
 
@@ -8779,16 +8809,11 @@ set_cursor_gcs(XtermWidget xw)
 	    /* both GC's use the same color */
 	    setCgsFore(xw, win, gcVTcursReverse, bg);
 	    setCgsBack(xw, win, gcVTcursReverse, cc);
-
-	    setCgsFore(xw, win, gcVTcursOutline, bg);
-	    setCgsBack(xw, win, gcVTcursOutline, cc);
 	} else {
 	    setCgsFore(xw, win, gcVTcursReverse, bg);
 	    setCgsBack(xw, win, gcVTcursReverse, cc);
-
-	    setCgsFore(xw, win, gcVTcursOutline, cc);
-	    setCgsBack(xw, win, gcVTcursOutline, bg);
 	}
+	set_cursor_outline_gc(xw, screen->always_highlight, fg, bg, cc);
 	changed = True;
     }
 

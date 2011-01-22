@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.2 2010/10/24 17:46:47 tom Exp $
+-- $XTermId: THANKS,v 1.3 2011/01/22 13:22:37 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -40,6 +40,7 @@ Chuck Blake
 D Roland Walker
 Daniel Colascione
 Daniel Jacobowitz
+Dave Simmons
 David Dawes
 David Krause
 David Madore

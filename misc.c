@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.512 2011/01/20 10:46:32 tom Exp $ */
+/* $XTermId: misc.c,v 1.514 2011/01/21 00:51:17 tom Exp $ */
 
 /*
  * Copyright 1999-2009,2010 by Thomas E. Dickey
@@ -2311,7 +2311,7 @@ GetOldColors(XtermWidget xw)
 {
     int i;
     if (pOldColors == NULL) {
-	pOldColors = (ScrnColors *) XtMalloc((Cardinal) sizeof(ScrnColors));
+	pOldColors = TypeXtMalloc(ScrnColors);
 	if (pOldColors == NULL) {
 	    fprintf(stderr, "allocation failure in GetOldColors\n");
 	    return (False);
@@ -4550,6 +4550,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 #if OPT_TRACE
 	for (j = 0; j < opt_count; j++) {
 	    if (!strncmp(opt_array[j].opt, "-/+", 3)) {
+		char temp[80];
 		const char *name = opt_array[j].opt + 3;
 		for (k = 0; k < numDescs; ++k) {
 		    const char *value = res_array[k].value;
@@ -4560,7 +4561,8 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 		    } else {
 			code = 0;
 		    }
-		    if (x_strindex(opt_array[j].desc, "inhibit") != 0)
+		    strcpy(temp, opt_array[j].desc);
+		    if (x_strindex(temp, "inhibit") != 0)
 			code = -code;
 		    if (code != 0
 			&& res_array[k].value != 0

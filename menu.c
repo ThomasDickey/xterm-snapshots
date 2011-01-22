@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.277 2011/01/20 11:44:02 tom Exp $ */
+/* $XTermId: menu.c,v 1.278 2011/01/20 23:52:42 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -999,7 +999,7 @@ probe_netwm_fullscreen_capability(XtermWidget xw)
 	    break;
 	}
 
-	ldata = (CARD32 *) args;
+	ldata = (CARD32 *) (void *) args;
 	for (i = 0; i < nitems; i++) {
 	    if (ldata[i] == atom_fullscreen) {
 		netwm_fullscreen_capability = True;
