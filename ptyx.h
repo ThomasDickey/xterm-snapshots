@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.680 2011/01/20 10:54:04 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.682 2011/01/21 00:41:45 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -91,6 +91,12 @@
 #define TypeMalloc(type)	TypeMallocN(type, 1)
 
 #define TypeRealloc(type,n,p)	(type *)realloc(p, (n) * sizeof(type))
+
+#define TypeXtReallocN(t,p,n)	(t *)(void *)XtRealloc((char *)(p), (Cardinal)(sizeof(t) * (size_t) (n)))
+
+#define TypeXtMallocX(type,n)	(type *)(void *)XtMalloc((Cardinal)(sizeof(type) + (size_t) (n)))
+#define TypeXtMallocN(type,n)	(type *)(void *)XtMalloc((Cardinal)(sizeof(type) * (size_t) (n)))
+#define TypeXtMalloc(type)	TypeXtMallocN(type, 1)
 
 /* use these to allocate partly-structured data */
 #define CastMallocN(type,n)	(type *)malloc(sizeof(type) + (size_t) (n))

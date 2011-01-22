@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.429 2011/01/12 01:45:20 tom Exp $ */
+/* $XTermId: screen.c,v 1.430 2011/01/20 23:53:43 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -119,7 +119,7 @@
 		    value = (value | (unsigned) AlignMask()) + 1
 
 #define SetupScrnPtr(dst,src,type) \
-		dst = (type *) src; \
+		dst = (type *) (void *) src; \
 		assert(IsAligned(dst)); \
 		src += skipNcol##type
 

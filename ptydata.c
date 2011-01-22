@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.98 2010/06/20 21:41:15 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.99 2011/01/21 00:03:47 tom Exp $ */
 
 /************************************************************
 
@@ -323,8 +323,7 @@ initPtyData(PtyData ** result)
     TRACE(("initPtyData using minBufSize %d, maxBufSize %d\n",
 	   FRG_SIZE, BUF_SIZE));
 
-    data = (PtyData *) XtMalloc((Cardinal) (sizeof(*data)
-					    + (unsigned) (BUF_SIZE + FRG_SIZE)));
+    data = TypeXtMallocX(PtyData, (BUF_SIZE + FRG_SIZE));
 
     memset(data, 0, sizeof(*data));
     data->next = data->buffer;
