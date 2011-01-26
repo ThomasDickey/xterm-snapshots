@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.392 2011/01/21 00:07:45 tom Exp $ */
+/* $XTermId: button.c,v 1.394 2011/01/26 10:03:54 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4044,8 +4044,7 @@ SaveText(TScreen * screen,
 */
 
 /* Position: 32 - 255. */
-
-static Char
+static int
 BtnCode(XButtonEvent * event, int button)
 {
     int result = (int) (32 + (KeyState(event->state) << 2));
@@ -4059,7 +4058,21 @@ BtnCode(XButtonEvent * event, int button)
 	    result += 32;
 	result += button;
     }
-    return CharOf(result);
+    return result;
+}
+
+static unsigned
+EmitButtonCode(TScreen * screen, Char * line, unsigned count, XButtonEvent * event)
+{
+    int value = BtnCode(event, screen->mouse_button);
+
+    if (!screen->ext_mode_mouse || value < 128) {
+	line[count++] = CharOf(value);
+    } else {
+	line[count++] = CharOf(0xC0 + (value >> 6));
+	line[count++] = CharOf(0x80 + (value & 0x3F));
+    }
+    return count;
 }
 
 static void
@@ -4125,7 +4138,8 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	/* Button-Motion events */
 	switch (event->type) {
 	case ButtonPress:
-	    line[count++] = BtnCode(event, screen->mouse_button = button);
+	    screen->mouse_button = button;
+	    count = EmitButtonCode(screen, line, count, event);
 	    break;
 	case ButtonRelease:
 	    /*
@@ -4135,7 +4149,8 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	     */
 	    if (button < 3)
 		button = -1;
-	    line[count++] = BtnCode(event, screen->mouse_button = button);
+	    screen->mouse_button = button;
+	    count = EmitButtonCode(screen, line, count, event);
 	    break;
 	case MotionNotify:
 	    /* BTN_EVENT_MOUSE and ANY_EVENT_MOUSE modes send motion
@@ -4145,7 +4160,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 		&& (col == screen->mouse_col)) {
 		changed = False;
 	    } else {
-		line[count++] = BtnCode(event, screen->mouse_button);
+		count = EmitButtonCode(screen, line, count, event);
 	    }
 	    break;
 	default:

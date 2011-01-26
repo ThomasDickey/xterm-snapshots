@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1098 2011/01/22 13:03:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1099 2011/01/26 00:01:21 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -227,7 +227,7 @@ static char defaultTranslations[] =
 "
 #if OPT_MAXIMIZE
 "\
-                 Alt <Key>Return:fullscreen()\n\
+                 Alt <Key>Return:fullscreen() \n\
 "
 #endif
 #if OPT_SCROLL_LOCK
@@ -870,6 +870,9 @@ xtermAddInput(Widget w)
 	{ "ignore",		    HandleIgnore },
 #if OPT_DABBREV
 	{ "dabbrev-expand",	    HandleDabbrevExpand },
+#endif
+#if OPT_MAXIMIZE
+	{ "fullscreen",		    HandleFullscreen },
 #endif
 #if OPT_SCROLL_LOCK
 	{ "scroll-lock",	    HandleScrollLock },
