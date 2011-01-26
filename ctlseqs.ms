@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.236 2010/11/24 11:00:27 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.237 2011/01/26 09:54:31 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2009,2010 by Thomas E. Dickey
+.\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -2139,6 +2139,8 @@ For positions less than 95, the resulting output is identical under both modes.
 Under extended mouse mode, positions greater than 95
 generate "extra" bytes which will confuse applications which do not treat
 their input as a UTF-8 stream.
+Likewise, \*(Cb will be UTF-8 encoded,
+to reduce confusion with wheel mouse events.
 .lP
 NOTE: Under normal mouse mode, positions outside (160,94) result in
 byte pairs which can be interpreted as a single UTF-8 character;

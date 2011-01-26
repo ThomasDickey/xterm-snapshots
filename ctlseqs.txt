@@ -1449,7 +1449,8 @@ tracking modes, expanding the maximum encodable position from 223 to
 2015.  For positions less than 95, the resulting output is identical
 under both modes.  Under extended mouse mode, positions greater than 95
 generate "extra" bytes which will confuse applications which do not
-treat their input as a UTF-8 stream.
+treat their input as a UTF-8 stream.  Likewise, Cb will be UTF-8
+encoded, to reduce confusion with wheel mouse events.
 
 NOTE: Under normal mouse mode, positions outside (160,94) result in byte
 pairs which can be interpreted as a single UTF-8 character; applications
