@@ -1,8 +1,8 @@
-/* $XTermId: ptydata.c,v 1.99 2011/01/21 00:03:47 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.100 2011/02/02 01:45:14 tom Exp $ */
 
 /************************************************************
 
-Copyright 1999-2009,2010 by Thomas E. Dickey
+Copyright 1999-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -75,7 +75,7 @@ decodeUtf8(PtyData * data)
 	    /* We received an ASCII character */
 	    if (utf_count > 0) {
 		data->utf_data = UCS_REPL;	/* prev. sequence incomplete */
-		data->utf_size = (i + 1);
+		data->utf_size = i;
 	    } else {
 		data->utf_data = (IChar) c;
 		data->utf_size = 1;
@@ -138,8 +138,9 @@ decodeUtf8(PtyData * data)
 	    if (c < 0xe0) {
 		utf_count = 1;
 		utf_char = (c & 0x1f);
-		if (!(c & 0x1e))
+		if (!(c & 0x1e)) {
 		    utf_char = UCS_REPL;	/* overlong sequence */
+		}
 	    } else if (c < 0xf0) {
 		utf_count = 2;
 		utf_char = (c & 0x0f);

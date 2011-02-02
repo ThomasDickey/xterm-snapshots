@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.514 2011/01/21 00:51:17 tom Exp $ */
+/* $XTermId: misc.c,v 1.516 2011/01/31 10:35:23 tom Exp $ */
 
 /*
- * Copyright 1999-2009,2010 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -257,7 +257,7 @@ setXUrgency(XtermWidget xw, Bool enable)
     if (screen->bellIsUrgent) {
 	XWMHints *h = XGetWMHints(screen->display, VShellWindow(xw));
 	if (h != 0) {
-	    if (enable) {
+	    if (enable && !(screen->select & FOCUS)) {
 		h->flags |= XUrgencyHint;
 	    } else {
 		h->flags &= ~XUrgencyHint;
