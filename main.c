@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.618 2010/06/20 21:11:51 tom Exp $ */
+/* $XTermId: main.c,v 1.619 2011/02/07 09:22:07 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1753,9 +1753,6 @@ main(int argc, char *argv[]ENVP_ARG)
     int mode;
     char *my_class = DEFCLASS;
     Window winToEmbedInto = None;
-#if OPT_COLOR_RES
-    Bool reversed = False;
-#endif
 
     ProgramName = argv[0];
 
@@ -1826,14 +1823,6 @@ main(int argc, char *argv[]ENVP_ARG)
 		}
 		unique = 3;
 	    } else {
-#if OPT_COLOR_RES
-		if (abbrev(argv[n], "-reverse", (size_t) 2)
-		    || !strcmp("-rv", argv[n])) {
-		    reversed = True;
-		} else if (!strcmp("+rv", argv[n])) {
-		    reversed = False;
-		}
-#endif
 		quit = False;
 		unique = 3;
 	    }
@@ -2388,18 +2377,26 @@ main(int argc, char *argv[]ENVP_ARG)
 			winToEmbedInto, 0, 0);
     }
 #if OPT_COLOR_RES
-    TRACE(("checking resource values rv %s fg %s, bg %s\n",
-	   BtoS(term->misc.re_verse0),
+    TRACE(("checking reverseVideo before rv %s fg %s, bg %s\n",
+	   term->misc.re_verse0 ? "reverse" : "normal",
 	   NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
 	   NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
 
-    if ((reversed && term->misc.re_verse0)
-	&& ((TScreenOf(term)->Tcolors[TEXT_FG].resource
-	     && !isDefaultForeground(TScreenOf(term)->Tcolors[TEXT_FG].resource))
-	    || (TScreenOf(term)->Tcolors[TEXT_BG].resource
-		&& !isDefaultBackground(TScreenOf(term)->Tcolors[TEXT_BG].resource))
-	))
-	ReverseVideo(term);
+    if (term->misc.re_verse0) {
+	if (isDefaultForeground(TScreenOf(term)->Tcolors[TEXT_FG].resource)
+	    && isDefaultBackground(TScreenOf(term)->Tcolors[TEXT_BG].resource)) {
+	    TScreenOf(term)->Tcolors[TEXT_FG].resource = x_strdup(XtDefaultBackground);
+	    TScreenOf(term)->Tcolors[TEXT_BG].resource = x_strdup(XtDefaultForeground);
+	} else {
+	    ReverseVideo(term);
+	}
+	term->misc.re_verse = True;
+	update_reversevideo();
+	TRACE(("updated  reverseVideo after  rv %s fg %s, bg %s\n",
+	       term->misc.re_verse ? "reverse" : "normal",
+	       NonNull(TScreenOf(term)->Tcolors[TEXT_FG].resource),
+	       NonNull(TScreenOf(term)->Tcolors[TEXT_BG].resource)));
+    }
 #endif /* OPT_COLOR_RES */
 
 #if OPT_MAXIMIZE
