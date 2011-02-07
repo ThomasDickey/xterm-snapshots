@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.471 2011/01/20 11:50:17 tom Exp $
+.\" $XTermId: xterm.man,v 1.475 2011/02/04 11:55:41 tom Exp $
 .\"
-.\" Copyright 1996-2009,2010 by Thomas E. Dickey
+.\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -55,7 +55,11 @@
 .\" from The Open Group.
 .\"
 .\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
-.
+.\"
+.\" Bulleted paragraph
+.de bP
+.IP \(bu 4
+..
 .\" these would be fallbacks for DS/DE,
 .\" but groff changed the meaning of the macros.
 .de NS
@@ -3121,6 +3125,46 @@ The default is ``3''.
 Specifies whether or not reverse video should be simulated.
 The default is
 \*(``false.\*(''
+.IP
+There are several aspects to reverse video in \fIxterm\fP:
+.RS
+.bP
+The command-line \fB\-rv\fP option tells the X libraries to reverse
+the foreground and background colors.
+\fIXterm\fP's command-line options set resource values.
+.IP
+If the user has also used command-line options \fB\-fg\fP or \fB\-bg\fP 
+to set the foreground and background colors,
+\fIxterm\fP does not see these options directly.
+Instead,
+it examines the resource values to reconstruct the command-line options,
+and determine which of the colors is the user's intended foreground, etc.
+Their actual values are irrelevant to the reverse video function;
+some users prefer the X defaults (black text on a white background),
+others prefer white text on a black background.
+.bP
+After startup,
+the user can toggle the "Enable Reverse Video" menu entry.
+This exchanges the current foreground and background colors,
+and repaints the screen.
+.RE
+.IP
+Programs running in an \fIxterm\fP can also use control sequences
+to enable the VT100 reverse video mode.
+These are independent of the \fIreverseVideo\fP resource and the menu entry.
+\fIXterm\fP exchanges the current foreground and background colors
+when drawing text affected by these control sequences.
+.IP
+Other control sequences can alter the foreground and background colors
+which are used:
+.RS
+.bP
+Programs can also use the ANSI color control sequences to set the
+foreground and background colors.
+.bP
+Using other control sequences (the "\fIdynamic colors\fR" feature),
+a program can change the foreground and background colors.
+.RE
 .TP 8
 .B "reverseWrap (\fPclass\fB ReverseWrap)"
 Specifies whether or not reverse-wraparound should be enabled.
@@ -3363,6 +3407,8 @@ it translates the ISO-8859-1 string to UTF-8 to work with the X libraries
 which assume the string is UTF-8.
 .IP
 However, some users may wish to write a title string encoded in UTF-8.
+The window manager is responsible for drawing window titles.
+Some window managers (not all) support UTF-8 encoding of window titles.
 Set this resource to \*(``true\*('' to allow UTF-8 encoded title strings.
 That cancels the translation to UTF-8,
 allowing UTF-8 strings to be displayed as is.

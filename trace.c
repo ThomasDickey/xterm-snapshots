@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.117 2011/01/12 01:22:33 tom Exp $ */
+/* $XTermId: trace.c,v 1.118 2011/02/02 09:46:57 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -688,7 +688,7 @@ parse_option(char *dst, String src, int first)
 {
     char *s;
 
-    if (!strncmp(src, "-/+", 3)) {
+    if (!strncmp(src, "-/+", (size_t) 3)) {
 	dst[0] = (char) first;
 	strcpy(dst + 1, src + 3);
     } else {
