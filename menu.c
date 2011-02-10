@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.278 2011/01/20 23:52:42 tom Exp $ */
+/* $XTermId: menu.c,v 1.279 2011/02/09 10:00:58 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1565,7 +1565,7 @@ do_marginbell(Widget gw GCC_UNUSED,
 {
     TScreen *screen = TScreenOf(term);
 
-    if (!(ToggleFlag(screen->marginbell)))
+    if ((ToggleFlag(screen->marginbell)) == 0)
 	screen->bellArmed = -1;
     update_marginbell();
 }

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.619 2011/02/07 09:22:07 tom Exp $ */
+/* $XTermId: main.c,v 1.620 2011/02/09 10:13:32 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -15,7 +15,7 @@
 
 /***********************************************************
 
-Copyright 2002-2009,2010 by Thomas E. Dickey
+Copyright 2002-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -3330,7 +3330,7 @@ spawnXTerm(XtermWidget xw)
 	initial_erase = ttymodelist[XTTYMODE_erase].value;
 	setInitialErase = True;
     } else if (resource.ptyInitialErase) {
-	;
+	/* EMPTY */ ;
     } else if (ok_termcap) {
 	char *s = get_tcap_erase(xw);
 	TRACE(("...extracting initial_erase value from termcap\n"));
@@ -3542,7 +3542,7 @@ spawnXTerm(XtermWidget xw)
 #endif /* __MVS__ */
 		    }
 
-		    while (1) {
+		    for (;;) {
 #if USE_NO_DEV_TTY
 			if (!no_dev_tty
 			    && (ttyfd = open("/dev/tty", O_RDWR)) >= 0) {
@@ -4918,7 +4918,7 @@ parse_tty_modes(char *s, struct _xttymodes *modelist)
     int count = 0;
 
     TRACE(("parse_tty_modes\n"));
-    while (1) {
+    for (;;) {
 	size_t len;
 
 	while (*s && isascii(CharOf(*s)) && isspace(CharOf(*s)))

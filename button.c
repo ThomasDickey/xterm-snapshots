@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.394 2011/01/26 10:03:54 tom Exp $ */
+/* $XTermId: button.c,v 1.395 2011/02/09 10:15:46 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1353,7 +1353,7 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 			size_t len = strlen(listp);
 
 			if (len == 0) {
-			    ;
+			    /* EMPTY */ ;
 			}
 #if OPT_WIDE_CHARS
 			else if (sameItem(listp, "UTF8")) {
@@ -1982,7 +1982,7 @@ SelectionReceived(Widget w,
 
 #if OPT_PASTE64
 	if (screen->base64_paste) {
-	    ;
+	    /* EMPTY */ ;
 	} else
 #endif
 #if OPT_READLINE

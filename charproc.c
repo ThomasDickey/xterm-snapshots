@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1099 2011/01/26 00:01:21 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1100 2011/02/09 10:15:36 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4070,6 +4070,7 @@ SetCursorBlink(TScreen * screen, Bool enable)
     if (DoStartBlinking(screen)) {
 	StartBlinking(screen);
     } else {
+	/* EMPTY */
 #if !OPT_BLINK_TEXT
 	StopBlinking(screen);
 #endif
@@ -4161,7 +4162,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		 * Setting DECANM should have no effect, since this function
 		 * cannot be reached from vt52 mode.
 		 */
-		;
+		/* EMPTY */ ;
 	    }
 #if OPT_VT52_MODE
 	    else if (screen->terminal_id >= 100) {	/* VT52 */
@@ -7900,7 +7901,9 @@ ShowCursor(void)
 #if OPT_HIGHLIGHT_COLOR
 	if (screen->hilite_reverse) {
 	    if (in_selection && !reversed) {
-		;		/* really INVERSE ... */
+		/* EMPTY */
+		/* really INVERSE ... */
+		;
 	    } else if (in_selection || reversed) {
 		if (use_selbg) {
 		    if (use_selfg) {
