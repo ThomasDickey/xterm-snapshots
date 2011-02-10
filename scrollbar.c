@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.178 2011/01/20 11:44:27 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.179 2011/02/09 10:05:19 tom Exp $ */
 
 /*
  * Copyright 2000-2010,2011 by Thomas E. Dickey
@@ -600,7 +600,7 @@ CompareWidths(const char *a, const char *b, int *modifier)
     if (!a || !b)
 	return 0;
 
-    while (1) {
+    for (;;) {
 	ca = x_toupper(*a);
 	cb = x_toupper(*b);
 	if (ca != cb || ca == '\0')
@@ -917,6 +917,7 @@ SetScrollLock(TScreen * screen, Bool enable)
     }
 }
 
+/* ARGSUSED */
 void
 HandleScrollLock(Widget w,
 		 XEvent * event GCC_UNUSED,

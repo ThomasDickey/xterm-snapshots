@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.430 2011/01/20 23:53:43 tom Exp $ */
+/* $XTermId: screen.c,v 1.431 2011/02/09 09:57:05 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2378,6 +2378,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 						(j * wide) + k,
 						ld, col);
 			    } else {
+				/* EMPTY */
 				/* FIXME - clear the target cell? */
 			    }
 			    ld->attribs[col] |= CHARDRAWN;

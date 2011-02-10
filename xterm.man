@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.475 2011/02/04 11:55:41 tom Exp $
+.\" $XTermId: xterm.man,v 1.476 2011/02/08 21:46:33 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -3132,7 +3132,9 @@ There are several aspects to reverse video in \fIxterm\fP:
 The command-line \fB\-rv\fP option tells the X libraries to reverse
 the foreground and background colors.
 \fIXterm\fP's command-line options set resource values.
-.IP
+In particular, the X Toolkit sets the \fBreverseVideo\fP resource
+when the \fB\-rv\fP option is used.
+.bP
 If the user has also used command-line options \fB\-fg\fP or \fB\-bg\fP 
 to set the foreground and background colors,
 \fIxterm\fP does not see these options directly.
@@ -3145,8 +3147,11 @@ others prefer white text on a black background.
 .bP
 After startup,
 the user can toggle the "Enable Reverse Video" menu entry.
-This exchanges the current foreground and background colors,
+This exchanges the current foreground and background colors
+of the VT100 widget,
 and repaints the screen.
+Because of the X resource hierarchy,
+the \fBreverseVideo\fP resource applies to more than the VT100 widget.
 .RE
 .IP
 Programs running in an \fIxterm\fP can also use control sequences
@@ -3161,6 +3166,9 @@ which are used:
 .bP
 Programs can also use the ANSI color control sequences to set the
 foreground and background colors.
+.bP
+Extensions to the ANSI color controls (such as 16-, 88- or 256-colors)
+are treated similarly to the ANSI control.
 .bP
 Using other control sequences (the "\fIdynamic colors\fR" feature),
 a program can change the foreground and background colors.

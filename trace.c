@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.118 2011/02/02 09:46:57 tom Exp $ */
+/* $XTermId: trace.c,v 1.119 2011/02/09 10:04:50 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -302,7 +302,7 @@ visibleIChar(IChar * buf, unsigned len)
     return result;
 }
 
-#define CASETYPE(name) case name: result = #name; break;
+#define CASETYPE(name) case name: result = #name; break
 
 const char *
 visibleKeyboardType(xtermKeyboardType type)
@@ -568,6 +568,7 @@ TraceWMSizeHints(XtermWidget xw)
  * Some calls to XGetAtom() will fail, and we don't want to stop.  So we use
  * our own error-handler.
  */
+/* ARGSUSED */
 static int
 no_error(Display * dpy GCC_UNUSED, XErrorEvent * event GCC_UNUSED)
 {

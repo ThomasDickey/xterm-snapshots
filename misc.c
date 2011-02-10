@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.516 2011/01/31 10:35:23 tom Exp $ */
+/* $XTermId: misc.c,v 1.517 2011/02/09 10:14:20 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -741,7 +741,7 @@ HandleFocusChange(Widget w GCC_UNUSED,
 
     if (screen->quiet_grab
 	&& (event->mode == NotifyGrab || event->mode == NotifyUngrab)) {
-	;
+	/* EMPTY */ ;
     } else if (event->type == FocusIn) {
 	setXUrgency(xw, False);
 
@@ -2675,7 +2675,9 @@ ChangeFontRequest(XtermWidget xw, String buf)
 		}
 #if OPT_RENDERFONT
 		if (UsingRenderFont(xw)) {
-		    ;		/* there is only one font entry to load */
+		    /* EMPTY */
+		    /* there is only one font entry to load */
+		    ;
 		} else
 #endif
 		{
@@ -3174,7 +3176,7 @@ parse_ansi_params(ANSI * params, const char **string)
 	    if (++nparam < NPARAM)
 		params->a_nparam = nparam;
 	} else if (ch < 32) {
-	    ;
+	    /* EMPTY */ ;
 	} else {
 	    /* should be 0x30 to 0x7e */
 	    params->a_final = ch;

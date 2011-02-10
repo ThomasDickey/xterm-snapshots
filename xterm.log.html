@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1007 2011/02/07 09:53:35 tom Exp $
+  $XTermId: xterm.log.html,v 1.1009 2011/02/10 09:36:17 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,7 +56,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
-<LI><A HREF="#xterm_dev">Development</A>
+<LI><A HREF="#xterm_268">Patch #268 - 2011/02/10</A>
 <LI><A HREF="#xterm_267">Patch #267 - 2010/11/20</A>
 <LI><A HREF="#xterm_266">Patch #266 - 2010/10/24</A>
 <LI><A HREF="#xterm_265">Patch #265 - 2010/10/22</A>
@@ -327,10 +327,14 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
-<H1><A NAME="xterm_dev">Development</A></H1>
+<H1><A NAME="xterm_268">Patch #268 - 2011/02/10</A></H1>
 <ul>
 	<li>fix an inconsistency of the "Enable Reverse Video" checkbox in
-	    the VT Options menu (Debian #603808).
+	    the VT Options menu.
+	    This also removes a special case
+	    added in <a href="#xterm_217">patch #217</a>
+	    which limited the effect of the <code>reverseVideo</code> resource
+	    (Debian #603808).
 
 	<li>amend decoding of misformed UTF-8 sequences to avoid absorbing
 	    valid characters as documented in Unicode 6.0 section 3.9

@@ -1,8 +1,8 @@
-/* $XTermId: xterm.h,v 1.637 2010/11/11 11:41:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.638 2011/02/09 10:13:20 tom Exp $ */
 
 /************************************************************
 
-Copyright 1999-2009,2010 by Thomas E. Dickey
+Copyright 1999-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -40,9 +40,14 @@ authorization.
  */
 #ifndef included_xterm_h
 #define included_xterm_h
+/* *INDENT-OFF* */
 
 #ifdef HAVE_CONFIG_H
 #include <xtermcfg.h>
+#endif
+
+#ifndef GCC_PRINTFLIKE
+#define GCC_PRINTFLIKE(f,n)	/* nothing */
 #endif
 
 #ifndef GCC_UNUSED
@@ -968,7 +973,7 @@ extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
 extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
 extern void ReverseOldColors (void);
-extern void SysError (int  /* i */) GCC_NORETURN;
+extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
 extern void do_dcs (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */);
 extern void do_decrpm (XtermWidget /* xw */, int /* nparam */, int *  /* params */);
@@ -1353,5 +1358,6 @@ unsigned visual_width(IChar * /* str */, Cardinal  /* len */);
 #ifdef __cplusplus
 	}
 #endif
+/* *INDENT-ON* */
 
-#endif	/* included_xterm_h */
+#endif /* included_xterm_h */
