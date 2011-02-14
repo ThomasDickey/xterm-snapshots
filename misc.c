@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.517 2011/02/09 10:14:20 tom Exp $ */
+/* $XTermId: misc.c,v 1.520 2011/02/13 21:03:21 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1442,7 +1442,7 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
     if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0) {
 	int the_error = errno;
 	fprintf(stderr, "%s: cannot open %s: %d:%s\n",
-		xterm_name,
+		ProgramName,
 		path,
 		the_error,
 		SysErrorMsg(the_error));
@@ -1455,7 +1455,7 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
 	|| ((fd = open(path, O_WRONLY | O_APPEND)) < 0)) {
 	int the_error = errno;
 	fprintf(stderr, "%s: cannot open %s: %d:%s\n",
-		xterm_name,
+		ProgramName,
 		path,
 		the_error,
 		SysErrorMsg(the_error));
@@ -1470,7 +1470,7 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
     if (fstat(fd, &sb) < 0
 	|| sb.st_uid != uid
 	|| (sb.st_mode & 022) != 0) {
-	fprintf(stderr, "%s: you do not own %s\n", xterm_name, path);
+	fprintf(stderr, "%s: you do not own %s\n", ProgramName, path);
 	close(fd);
 	return -1;
     }
@@ -1724,7 +1724,8 @@ StartLog(XtermWidget xw)
 
 	    execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
 
-	    fprintf(stderr, "%s: Can't exec `%s'\n", xterm_name,
+	    fprintf(stderr, "%s: Can't exec `%s'\n",
+		    ProgramName,
 		    &screen->logfile[1]);
 	    exit(ERROR_LOGEXEC);
 	}
@@ -1994,7 +1995,7 @@ xtermGetColorRes(XtermWidget xw, ColorRes * res)
 		res->mode = -True;
 		fprintf(stderr,
 			"%s: Cannot allocate color \"%s\"\n",
-			xterm_name,
+			ProgramName,
 			NonNull(res->resource));
 	    }
 	    result = res->value;
@@ -3346,7 +3347,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 			} else
 #endif
 			if (code == XK_TCAPNAME) {
-			    unparseputs(xw, xterm_name);
+			    unparseputs(xw, resource.term_name);
 			} else {
 			    XKeyEvent event;
 			    event.state = state;
@@ -3989,7 +3990,7 @@ Panic(const char *s GCC_UNUSED, int a GCC_UNUSED)
 {
 #ifdef DEBUG
     if (debug) {
-	fprintf(stderr, "%s: PANIC!\t", xterm_name);
+	fprintf(stderr, "%s: PANIC!\t", ProgramName);
 	fprintf(stderr, s, a);
 	fputs("\r\n", stderr);
 	fflush(stderr);
@@ -4072,7 +4073,7 @@ SysError(int code)
 {
     int oerrno = errno;
 
-    fprintf(stderr, "%s: Error %d, errno %d: ", xterm_name, code, oerrno);
+    fprintf(stderr, "%s: Error %d, errno %d: ", ProgramName, code, oerrno);
     fprintf(stderr, "%s\n", SysErrorMsg(oerrno));
     fprintf(stderr, "Reason: %s\n", SysReasonMsg(code));
 
@@ -4259,7 +4260,7 @@ xtermSetenv(const char *var, const char *value)
 int
 xerror(Display * d, XErrorEvent * ev)
 {
-    fprintf(stderr, "%s:  warning, error event received:\n", xterm_name);
+    fprintf(stderr, "%s:  warning, error event received:\n", ProgramName);
     (void) XmuPrintDefaultErrorMessage(d, ev, stderr);
     Exit(ERROR_XERROR);
     return 0;			/* appease the compiler */
@@ -4273,7 +4274,7 @@ xioerror(Display * dpy)
 
     (void) fprintf(stderr,
 		   "%s:  fatal IO error %d (%s) or KillClient on X server \"%s\"\r\n",
-		   xterm_name, the_error, SysErrorMsg(the_error),
+		   ProgramName, the_error, SysErrorMsg(the_error),
 		   DisplayString(dpy));
 
     Exit(ERROR_XIOERROR);

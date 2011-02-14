@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.119 2011/02/09 10:04:50 tom Exp $ */
+/* $XTermId: trace.c,v 1.120 2011/02/13 21:03:21 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -630,7 +630,6 @@ TraceXtermResources(void)
     XTERM_RESOURCE *resp = &resource;
 
     Trace("XTERM_RESOURCE settings:\n");
-    XRES_S(xterm_name);
     XRES_S(icon_geometry);
     XRES_S(title);
     XRES_S(icon_name);

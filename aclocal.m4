@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.293 2010/11/19 10:44:13 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.294 2011/02/13 18:40:24 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2009,2010 by Thomas E. Dickey
+dnl Copyright 1997-2010,2010 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -413,7 +413,7 @@ AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_DISABLE_RPATH_HACK version: 1 updated: 2010/04/11 10:54:00
+dnl CF_DISABLE_RPATH_HACK version: 2 updated: 2011/02/13 13:31:33
 dnl ---------------------
 dnl The rpath-hack makes it simpler to build programs, particularly with the
 dnl *BSD ports which may have essential libraries in unusual places.  But it
@@ -421,7 +421,7 @@ dnl can interfere with building an executable for the base system.  Use this
 dnl option in that case.
 AC_DEFUN([CF_DISABLE_RPATH_HACK],
 [
-AC_MSG_CHECKING(if rpath should be not be set)
+AC_MSG_CHECKING(if rpath-hack should be disabled)
 CF_ARG_DISABLE(rpath-hack,
 	[  --disable-rpath-hack    don't add rpath options for additional libraries],
 	[cf_disable_rpath_hack=yes],
@@ -1704,7 +1704,7 @@ $1=`echo "$2" | \
 		-e 's/-[[UD]]'"$3"'\(=[[^ 	]]*\)\?[$]//g'`
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_RPATH_HACK version: 8 updated: 2010/04/17 15:38:58
+dnl CF_RPATH_HACK version: 9 updated: 2011/02/13 13:31:33
 dnl -------------
 AC_DEFUN([CF_RPATH_HACK],
 [
@@ -1717,9 +1717,36 @@ if test -n "$LD_RPATH_OPT" ; then
 	cf_rpath_list="/usr/lib /lib"
 	if test "$cf_ldd_prog" != no
 	then
+		cf_rpath_oops=
+
 AC_TRY_LINK([#include <stdio.h>],
 		[printf("Hello");],
-		[cf_rpath_list=`$cf_ldd_prog conftest$ac_exeext | fgrep / | sed -e 's%^.*[[ 	]]/%/%' -e 's%/[[^/]][[^/]]*$%%' |sort -u`])
+		[cf_rpath_oops=`$cf_ldd_prog conftest$ac_exeext | fgrep ' not found' | sed -e 's% =>.*$%%' |sort -u`
+		 cf_rpath_list=`$cf_ldd_prog conftest$ac_exeext | fgrep / | sed -e 's%^.*[[ 	]]/%/%' -e 's%/[[^/]][[^/]]*$%%' |sort -u`])
+
+		# If we passed the link-test, but get a "not found" on a given library,
+		# this could be due to inept reconfiguration of gcc to make it only
+		# partly honor /usr/local/lib (or whatever).  Sometimes this behavior
+		# is intentional, e.g., installing gcc in /usr/bin and suppressing the
+		# /usr/local libraries.
+		if test -n "$cf_rpath_oops"
+		then
+			for cf_rpath_src in $cf_rpath_oops
+			do
+				for cf_rpath_dir in \
+					/usr/local \
+					/usr/pkg \
+					/opt/sfw
+				do
+					if test -f $cf_rpath_dir/lib/$cf_rpath_src
+					then
+						CF_VERBOSE(...adding -L$cf_rpath_dir/lib to LDFLAGS for $cf_rpath_src)
+						LDFLAGS="$LDFLAGS -L$cf_rpath_dir/lib"
+						break
+					fi
+				done
+			done
+		fi
 	fi
 
 	CF_VERBOSE(...checking EXTRA_LDFLAGS $EXTRA_LDFLAGS)
@@ -2980,7 +3007,7 @@ elif test "$cf_x_athena_inc" != default ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA_LIBS version: 9 updated: 2010/06/02 05:03:05
+dnl CF_X_ATHENA_LIBS version: 10 updated: 2011/02/13 13:31:33
 dnl ----------------
 dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
 dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
@@ -3010,7 +3037,11 @@ do
 				CF_ADD_LIBS($cf_lib)
 				AC_MSG_CHECKING(for $cf_test in $cf_lib)
 			fi
-			AC_TRY_LINK([],[$cf_test()],
+			AC_TRY_LINK([
+#include <X11/Intrinsic.h>
+#include <X11/$cf_x_athena_root/SimpleMenu.h>
+],[
+$cf_test((XtAppContext) 0)],
 				[cf_result=yes],
 				[cf_result=no])
 			AC_MSG_RESULT($cf_result)

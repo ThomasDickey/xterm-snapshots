@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.395 2011/02/09 10:15:46 tom Exp $ */
+/* $XTermId: button.c,v 1.397 2011/02/13 20:09:31 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3834,7 +3834,7 @@ _OwnSelection(XtermWidget xw,
 		       screen->selection_length, cutbuffer));
 		fprintf(stderr,
 			"%s: selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
-			xterm_name, screen->selection_length, cutbuffer);
+			ProgramName, screen->selection_length, cutbuffer);
 	    } else {
 		/* This used to just use the UTF-8 data, which was totally
 		 * broken as not even the corresponding paste code in Xterm
