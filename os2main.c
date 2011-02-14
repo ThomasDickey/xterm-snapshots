@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.265 2010/06/20 21:27:07 tom Exp $ */
+/* $XTermId: os2main.c,v 1.267 2011/02/13 21:03:21 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -262,7 +262,6 @@ static jmp_buf env;
 
 static XtResource application_resources[] =
 {
-    Sres("name", "Name", xterm_name, DFT_TERMTYPE),
     Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
     Sres(XtNtitle, XtCTitle, title, NULL),
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
@@ -1076,9 +1075,6 @@ main(int argc, char **argv ENVP_ARG)
     }
 #endif /* OPT_ZICONBEEP */
     hold_screen = resource.hold_screen ? 1 : 0;
-    xterm_name = resource.xterm_name;
-    if (strcmp(xterm_name, "-") == 0)
-	xterm_name = DFT_TERMTYPE;
     if (resource.icon_geometry != NULL) {
 	int scr, junk;
 	int ix, iy;
@@ -1704,6 +1700,7 @@ spawnXTerm(XtermWidget xw)
 	}
     }
     if (ok_termcap) {
+	resource.term_name = TermName;
 	resize_termcap(xw);
     }
 

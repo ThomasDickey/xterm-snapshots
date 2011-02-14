@@ -1,8 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.185 2011/01/20 10:50:19 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.187 2011/02/13 20:21:47 tom Exp $ */
 
 /*
- *
- * Copyright 2001-2009,2010 by Thomas E. Dickey
+ * Copyright 2001-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -398,7 +397,7 @@ TekPtyData(void)
     if (Tpushb == 0) {
 	if ((Tpushb = TypeMallocN(Char, 10)) == NULL
 	    || (Tline = TypeMallocN(XSegment, MAX_VTX)) == NULL) {
-	    fprintf(stderr, "%s: Not enough core for Tek mode\n", xterm_name);
+	    fprintf(stderr, "%s: Not enough core for Tek mode\n", ProgramName);
 	    if (Tpushb)
 		free(Tpushb);
 	    Tfailed = True;
@@ -1572,7 +1571,7 @@ TekRealize(Widget gw,
 	tekscr->gin_terminator = GIN_TERM_EOT;
     else
 	fprintf(stderr, "%s: illegal GIN terminator setting \"%s\"\n",
-		xterm_name, tw->tek.gin_terminator_str);
+		ProgramName, tw->tek.gin_terminator_str);
 
     gcv.graphics_exposures = True;	/* default */
     gcv.font = tw->tek.Tfont[tekscr->cur.fontsize]->fid;

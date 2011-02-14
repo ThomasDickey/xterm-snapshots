@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.620 2011/02/09 10:13:32 tom Exp $ */
+/* $XTermId: main.c,v 1.622 2011/02/13 21:03:21 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -832,7 +832,6 @@ static sigjmp_buf env;
 
 static XtResource application_resources[] =
 {
-    Sres("name", "Name", xterm_name, DFT_TERMTYPE),
     Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
     Sres(XtNtitle, XtCTitle, title, NULL),
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
@@ -2029,9 +2028,6 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif /* OPT_ZICONBEEP */
     hold_screen = resource.hold_screen ? 1 : 0;
-    xterm_name = resource.xterm_name;
-    if (strcmp(xterm_name, "-") == 0)
-	xterm_name = DFT_TERMTYPE;
     if (resource.icon_geometry != NULL) {
 	int scr, junk;
 	int ix, iy;
@@ -3315,6 +3311,7 @@ spawnXTerm(XtermWidget xw)
 	}
     }
     if (ok_termcap) {
+	resource.term_name = TermName;
 	resize_termcap(xw);
     }
 
@@ -3890,8 +3887,8 @@ spawnXTerm(XtermWidget xw)
 
 	    xtermCopyEnv(environ);
 
-	    xtermSetenv("TERM", TermName);
-	    if (!TermName)
+	    xtermSetenv("TERM", resource.term_name);
+	    if (!resource.term_name)
 		*get_tcap_buffer(xw) = 0;
 
 	    sprintf(buf, "%lu",

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1100 2011/02/09 10:15:36 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1102 2011/02/13 20:09:31 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3409,7 +3409,7 @@ v_write(int f, const Char * data, unsigned len)
 		} else {
 		    /* no memory: ignore entire write request */
 		    fprintf(stderr, "%s: cannot allocate buffer space\n",
-			    xterm_name);
+			    ProgramName);
 		    v_buffer = v_bufstr;	/* restore clobbered pointer */
 		}
 	    }
@@ -7029,7 +7029,7 @@ VTRealize(Widget w,
 	    char *use_font = x_strdup(DEFFONT);
 	    fprintf(stderr,
 		    "%s:  unable to open font \"%s\", trying \"%s\"....\n",
-		    xterm_name, myfont->f_n, use_font);
+		    ProgramName, myfont->f_n, use_font);
 	    (void) xtermLoadFont(xw,
 				 xtermFontName(use_font),
 				 False,
@@ -7041,7 +7041,7 @@ VTRealize(Widget w,
     /* really screwed if we couldn't open default font */
     if (!screen->fnts[fNorm].fs) {
 	fprintf(stderr, "%s:  unable to locate a suitable font\n",
-		xterm_name);
+		ProgramName);
 	Exit(1);
     }
 #if OPT_WIDE_CHARS

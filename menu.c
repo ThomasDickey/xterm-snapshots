@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.279 2011/02/09 10:00:58 tom Exp $ */
+/* $XTermId: menu.c,v 1.280 2011/02/11 10:02:32 H.Merijn.Brand Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -61,6 +61,7 @@
 
 #include <locale.h>
 
+#include <X11/Xatom.h>
 #include <X11/Xmu/CharSet.h>
 
 #define app_con Xaw_app_con	/* quiet a warning from SimpleMenu.h */
@@ -73,7 +74,6 @@
 #include <X11/Xaw/SmeLine.h>
 
 #if OPT_MAXIMIZE
-#include <X11/Xatom.h>
 #include <X11/Xmd.h>
 #endif
 
