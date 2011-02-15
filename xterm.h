@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.638 2011/02/09 10:13:20 tom Exp $ */
+/* $XTermId: xterm.h,v 1.639 2011/02/15 09:52:13 tom Exp $ */
 
 /************************************************************
 
@@ -1096,6 +1096,7 @@ extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height 
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
 extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len */, int /* row */, int /* col */);
+extern void FullScreen(XtermWidget /* xw */, Bool /* enabled */);
 extern void ScrnAllocBuf (XtermWidget /* xw */);
 extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
