@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.280 2011/02/11 10:02:32 H.Merijn.Brand Exp $ */
+/* $XTermId: menu.c,v 1.283 2011/02/15 09:53:01 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -61,7 +61,6 @@
 
 #include <locale.h>
 
-#include <X11/Xatom.h>
 #include <X11/Xmu/CharSet.h>
 
 #define app_con Xaw_app_con	/* quiet a warning from SimpleMenu.h */
@@ -72,10 +71,6 @@
 #include <X11/Xaw/Box.h>
 #include <X11/Xaw/SmeBSB.h>
 #include <X11/Xaw/SmeLine.h>
-
-#if OPT_MAXIMIZE
-#include <X11/Xmd.h>
-#endif
 
 #if OPT_TOOLBAR
 #include <X11/Xaw/MenuButton.h>
@@ -892,137 +887,6 @@ SetItemSensitivity(Widget mi, Bool val)
  */
 
 #if OPT_MAXIMIZE
-
-static void
-set_resize_increments(XtermWidget xw)
-{
-    TScreen *screen = TScreenOf(xw);
-    int min_width = (2 * screen->border) + screen->fullVwin.sb_info.width;
-    int min_height = (2 * screen->border);
-    XSizeHints sizehints;
-
-    memset(&sizehints, 0, sizeof(XSizeHints));
-    sizehints.width_inc = FontWidth(screen);
-    sizehints.height_inc = FontHeight(screen);
-    sizehints.flags = PResizeInc;
-    XSetWMNormalHints(screen->display, VShellWindow(xw), &sizehints);
-
-    XtVaSetValues(SHELL_OF(xw),
-		  XtNbaseWidth, min_width,
-		  XtNbaseHeight, min_height,
-		  XtNminWidth, min_width + FontWidth(screen),
-		  XtNminHeight, min_height + FontHeight(screen),
-		  XtNwidthInc, FontWidth(screen),
-		  XtNheightInc, FontHeight(screen),
-		  (XtPointer) 0);
-
-    XFlush(XtDisplay(xw));
-}
-
-static void
-unset_resize_increments(XtermWidget xw)
-{
-    TScreen *screen = TScreenOf(xw);
-    XSizeHints sizehints;
-
-    memset(&sizehints, 0, sizeof(XSizeHints));
-    sizehints.width_inc = 1;
-    sizehints.height_inc = 1;
-    sizehints.flags = PResizeInc;
-    XSetWMNormalHints(screen->display, VShellWindow(xw), &sizehints);
-
-    XtVaSetValues(SHELL_OF(xw),
-		  XtNwidthInc, 1,
-		  XtNheightInc, 1,
-		  (XtPointer) 0);
-
-    XFlush(XtDisplay(xw));
-}
-
-static void
-netwm_fullscreen(XtermWidget xw, int operation)
-{
-    TScreen *screen = TScreenOf(xw);
-    XEvent e;
-    Display *dpy = screen->display;
-    Window window = VShellWindow(xw);
-    Atom atom_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
-    Atom atom_state = XInternAtom(dpy, "_NET_WM_STATE", False);
-
-    memset(&e, 0, sizeof(e));
-    e.xclient.type = ClientMessage;
-    e.xclient.message_type = atom_state;
-    e.xclient.display = dpy;
-    e.xclient.window = window;
-    e.xclient.format = 32;
-    e.xclient.data.l[0] = operation;
-    e.xclient.data.l[1] = (long) atom_fullscreen;
-
-    XSendEvent(dpy, DefaultRootWindow(dpy), False,
-	       SubstructureRedirectMask, &e);
-}
-
-static Boolean
-probe_netwm_fullscreen_capability(XtermWidget xw)
-{
-    TScreen *screen = TScreenOf(xw);
-    Display *dpy = screen->display;
-    Atom atom_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
-    Atom atom_supported = XInternAtom(dpy, "_NET_SUPPORTED", False);
-    Atom actual_type;
-    int actual_format;
-    long long_offset = 0;
-    long long_length = 128;	/* number of items to ask for at a time */
-    unsigned int i;
-    unsigned long nitems, bytes_after;
-    unsigned char *args;
-    CARD32 *ldata;
-    Boolean netwm_fullscreen_capability = False;
-    int rc;
-
-    while (!netwm_fullscreen_capability) {
-	rc = XGetWindowProperty(dpy,
-				DefaultRootWindow(dpy),
-				atom_supported,
-				long_offset,
-				long_length,
-				False,	/* do not delete */
-				AnyPropertyType,	/* req_type */
-				&actual_type,	/* actual_type_return */
-				&actual_format,		/* actual_format_return */
-				&nitems,	/* nitems_return */
-				&bytes_after,	/* bytes_after_return */
-				&args	/* prop_return */
-	    );
-	if (rc != Success
-	    || actual_type != XA_ATOM) {
-	    break;
-	}
-
-	ldata = (CARD32 *) (void *) args;
-	for (i = 0; i < nitems; i++) {
-	    if (ldata[i] == atom_fullscreen) {
-		netwm_fullscreen_capability = True;
-		break;
-	    }
-	}
-	XFree(ldata);
-
-	if (!netwm_fullscreen_capability) {
-	    if (bytes_after != 0) {
-		long remaining = (long) (bytes_after / sizeof(CARD32));
-		if (long_length > remaining)
-		    long_length = remaining;
-		long_offset += (long) nitems;
-	    } else {
-		break;
-	    }
-	}
-    }
-
-    return netwm_fullscreen_capability;
-}
-
 static void
 do_fullscreen(Widget gw GCC_UNUSED,
 	      XtPointer closure GCC_UNUSED,
@@ -1031,27 +895,7 @@ do_fullscreen(Widget gw GCC_UNUSED,
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
 
-    static Boolean initialized = False;
-    static Boolean netwm_fullscreen_capability = False;
-
-    if (!initialized) {
-	initialized = True;
-	netwm_fullscreen_capability = probe_netwm_fullscreen_capability(xw);
-    }
-
-    if (netwm_fullscreen_capability) {
-	if (screen->fullscreen) {
-	    set_resize_increments(xw);
-	    netwm_fullscreen(xw, 0);
-	} else {
-	    unset_resize_increments(xw);
-	    netwm_fullscreen(xw, 1);
-	}
-	screen->fullscreen = !screen->fullscreen;
-	update_fullscreen();
-    } else {
-	Bell(xw, XkbBI_MinorError, 100);
-    }
+    FullScreen(xw, !screen->fullscreen);
 }
 
 /* ARGSUSED */
