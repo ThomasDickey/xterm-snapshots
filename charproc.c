@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1102 2011/02/13 20:09:31 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1105 2011/02/17 00:49:22 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -131,11 +131,6 @@
 #include <xcharmouse.h>
 #include <charclass.h>
 #include <xstrings.h>
-
-typedef struct {
-    const char *name;
-    int code;
-} FlagList;
 
 typedef void (*BitFunc) (unsigned * /* p */ ,
 			 unsigned /* mask */ );
@@ -4988,6 +4983,11 @@ window_ops(XtermWidget xw)
 	    RequestMaximize(xw, zero_if_default(1));
 	}
 	break;
+    case ewFullscreenWin:	/* Fullscreen or restore */
+	if (AllowWindowOps(xw, ewFullscreenWin)) {
+	    FullScreen(xw, zero_if_default(1));
+	}
+	break;
 #endif
 
     case ewGetWinState:	/* Report the window's state */
@@ -5452,6 +5452,10 @@ VTRun(XtermWidget xw)
     }
 #endif
     screen->is_running = True;
+#if OPT_MAXIMIZE
+    if (resource.fullscreen == esTrue || resource.fullscreen == esAlways)
+	FullScreen(term, True);
+#endif
     if (!setjmp(VTend))
 	VTparse(xw);
     StopBlinking(screen);
@@ -5953,49 +5957,6 @@ set_flags_from_list(char *target,
 	free(next);
     }
 }
-
-/*
- * Extend a (normally) boolean resource value by checking for additional values
- * which will be mapped into true/false.
- */
-#if OPT_RENDERFONT
-static int
-extendedBoolean(const char *value, FlagList * table, Cardinal limit)
-{
-    int result = -1;
-    long check;
-    char *next;
-    Cardinal n;
-
-    if ((x_strcasecmp(value, "true") == 0)
-	|| (x_strcasecmp(value, "yes") == 0)
-	|| (x_strcasecmp(value, "on") == 0)) {
-	result = True;
-    } else if ((x_strcasecmp(value, "false") == 0)
-	       || (x_strcasecmp(value, "no") == 0)
-	       || (x_strcasecmp(value, "off") == 0)) {
-	result = False;
-    } else if ((check = strtol(value, &next, 0)) >= 0 && *next == '\0') {
-	if (check >= (long) limit)
-	    check = True;
-	result = (int) check;
-    } else {
-	for (n = 0; n < limit; ++n) {
-	    if (x_strcasecmp(value, table[n].name) == 0) {
-		result = table[n].code;
-		break;
-	    }
-	}
-    }
-
-    if (result < 0) {
-	fprintf(stderr, "Unrecognized keyword: %s\n", value);
-	result = False;
-    }
-
-    return result;
-}
-#endif /* OPT_RENDERFONT */
 
 /* ARGSUSED */
 static void
@@ -7347,6 +7308,7 @@ VTRealize(Widget w,
 	screen->fullVwin.sb_info.width = 0;
 	ScrollBarOn(xw, False);
     }
+
     return;
 }
 

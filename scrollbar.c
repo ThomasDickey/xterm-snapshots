@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.179 2011/02/09 10:05:19 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.180 2011/02/17 00:50:23 tom Exp $ */
 
 /*
  * Copyright 2000-2010,2011 by Thomas E. Dickey
@@ -176,7 +176,7 @@ DoResizeScreen(XtermWidget xw)
     xw->hints.height = MaxRows(screen) * FontHeight(screen) + xw->hints.min_height;
 #if OPT_MAXIMIZE
     /* assure single-increment resize for fullscreen */
-    if (xw->screen.fullscreen) {
+    if (screen->fullscreen) {
 	xw->hints.width_inc = 1;
 	xw->hints.height_inc = 1;
     }

@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.112 2011/02/13 21:03:21 tom Exp $ */
+/* $XTermId: data.h,v 1.114 2011/02/17 00:03:37 tom Exp $ */
 
 /*
  * Copyright 2002-2009,2011 by Thomas E. Dickey
@@ -159,9 +159,6 @@ typedef struct XTERM_RESOURCE {
     String menuLocale;
 
     String keyboardType;
-#if OPT_MAXIMIZE
-    Boolean fullscreen;
-#endif
 #if OPT_SUNPC_KBD
     Boolean sunKeyboard;
 #endif
@@ -207,6 +204,8 @@ typedef struct XTERM_RESOURCE {
 #endif
 #if OPT_MAXIMIZE
     Boolean maximized;
+    String fullscreen_s;	/* resource for "fullscreen" */
+    int fullscreen;		/* derived from fullscreen_s */
 #endif
 } XTERM_RESOURCE;
 

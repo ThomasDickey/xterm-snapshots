@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.432 2011/02/15 09:53:01 tom Exp $ */
+/* $XTermId: screen.c,v 1.434 2011/02/17 00:47:44 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2728,7 +2728,12 @@ FullScreen(XtermWidget xw, Bool enabled)
     static Boolean initialized = False;
     static Boolean netwm_fullscreen_capability = False;
 
-    if (!initialized) {
+    TRACE(("FullScreen %s\n", BtoS(enabled)));
+
+    if (resource.fullscreen == esNever) {
+	initialized = True;
+	netwm_fullscreen_capability = False;
+    } else if (!initialized) {
 	initialized = True;
 	netwm_fullscreen_capability = probe_netwm_fullscreen_capability(xw);
     }

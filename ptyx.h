@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.682 2011/01/21 00:41:45 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.684 2011/02/17 00:13:06 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -890,6 +890,13 @@ typedef enum {
 } FontOps;
 
 typedef enum {
+    esFalse = 0
+    , esTrue
+    , esAlways
+    , esNever
+} FullscreenOps;
+
+typedef enum {
     etSetTcap = 1
     , etGetTcap
     , etLAST
@@ -907,6 +914,7 @@ typedef enum {
     , ewSetWinSizeChars = 8
 #if OPT_MAXIMIZE
     , ewMaximizeWin = 9
+    , ewFullscreenWin = 10
 #endif
     , ewGetWinState = 11
     , ewGetWinPosition = 13
@@ -2040,6 +2048,11 @@ typedef struct _TekScreen {
 #define	FOCUS		02	/* one of the windows is the focus window */
 
 #define MULTICLICKTIME 250	/* milliseconds */
+
+typedef struct {
+    const char *name;
+    int code;
+} FlagList;
 
 typedef enum {
     fwNever = 0,
