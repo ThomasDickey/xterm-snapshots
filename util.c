@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.543 2011/02/09 10:11:44 tom Exp $ */
+/* $XTermId: util.c,v 1.545 2011/02/17 00:28:45 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3969,3 +3969,45 @@ decode_wcwidth(XtermWidget xw)
     }
 }
 #endif
+
+/*
+ * Extend a (normally) boolean resource value by checking for additional values
+ * which will be mapped into true/false.
+ */
+int
+extendedBoolean(const char *value, FlagList * table, Cardinal limit)
+{
+    int result = -1;
+    long check;
+    char *next;
+    Cardinal n;
+
+    if ((x_strcasecmp(value, "true") == 0)
+	|| (x_strcasecmp(value, "yes") == 0)
+	|| (x_strcasecmp(value, "on") == 0)) {
+	result = True;
+    } else if ((x_strcasecmp(value, "false") == 0)
+	       || (x_strcasecmp(value, "no") == 0)
+	       || (x_strcasecmp(value, "off") == 0)) {
+	result = False;
+    } else if ((check = strtol(value, &next, 0)) >= 0 && *next == '\0') {
+	if (check >= (long) limit)
+	    check = True;
+	result = (int) check;
+    } else {
+	for (n = 0; n < limit; ++n) {
+	    if (x_strcasecmp(value, table[n].name) == 0) {
+		result = table[n].code;
+		break;
+	    }
+	}
+    }
+
+    if (result < 0) {
+	fprintf(stderr, "Unrecognized keyword: %s\n", value);
+	result = False;
+    }
+
+    TRACE(("extendedBoolean(%s) = %d\n", value, result));
+    return result;
+}

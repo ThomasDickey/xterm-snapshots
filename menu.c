@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.283 2011/02/15 09:53:01 tom Exp $ */
+/* $XTermId: menu.c,v 1.284 2011/02/17 00:46:18 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -895,7 +895,8 @@ do_fullscreen(Widget gw GCC_UNUSED,
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
 
-    FullScreen(xw, !screen->fullscreen);
+    if (resource.fullscreen != esNever)
+	FullScreen(xw, !screen->fullscreen);
 }
 
 /* ARGSUSED */
@@ -911,10 +912,15 @@ HandleFullscreen(Widget w,
 void
 update_fullscreen(void)
 {
-    UpdateCheckbox("update_fullscreen",
-		   mainMenuEntries,
-		   mainMenu_fullscreen,
-		   TScreenOf(term)->fullscreen);
+    if (resource.fullscreen <= 1) {
+	UpdateCheckbox("update_fullscreen",
+		       mainMenuEntries,
+		       mainMenu_fullscreen,
+		       TScreenOf(term)->fullscreen);
+    } else {
+	SetItemSensitivity(mainMenuEntries[mainMenu_fullscreen].widget,
+			   False);
+    }
 }
 
 #endif /* OPT_MAXIMIZE */

@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.237 2011/01/26 09:54:31 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.238 2011/02/16 11:57:19 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
@@ -1208,6 +1208,8 @@ Valid values for the first (and any additional parameters) are:
   \*(Ps = \*8\*s\*;\*s\fIheight\*s\*;\*swidth\fP \(-> Resize the text area to [height;width] in characters.
   \*(Ps = \*9\*s\*;\*s\*0 \(-> Restore maximized window.
   \*(Ps = \*9\*s\*;\*s\*1 \(-> Maximize window (i.e., resize to screen size).
+  \*(Ps = \*1\*0\*s\*;\*s\*0 \(-> Undo full-screen mode.
+  \*(Ps = \*1\*0\*s\*;\*s\*1 \(-> Change to full-screen.
   \*(Ps = \*1\*1 \(-> Report \fIxterm\fP window state.
 If the \fIxterm\fP window is open (non-iconified), it returns \*(Cs\*1\*t.
 If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.

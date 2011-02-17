@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.476 2011/02/08 21:46:33 tom Exp $
+.\" $XTermId: xterm.man,v 1.478 2011/02/17 01:05:31 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -1218,6 +1218,33 @@ together by setting the DECBKM state according to whether the initial value of
 stty erase is a backspace (8) or delete (127) character.
 The default is \*(``false\*('', which disables this feature.
 .TP 8
+.B "fullscreen (\fPclass\fB Fullscreen)"
+Specifies whether or not \fIxterm\fP should ask the window manager to
+use a fullscreen layout on startup.
+\fIXterm\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP 3
+false (0)
+Fullscreen layout is not used initially,
+but may be later via menu-selection or control sequence.
+.TP 3
+true (1)
+Fullscreen layout is used initially,
+but may be disabled later via menu-selection or control sequence.
+.TP 3
+always (2)
+Fullscreen layout is used initially,
+and cannot be disabled later via menu-selection or control sequence.
+.TP 3
+never (3)
+Fullscreen layout is not used,
+and cannot be enabled later via menu-selection or control sequence.
+.RE
+.IP
+The default is
+\*(``false.\*(''
+.TP 8
 .B "hold (\fPclass\fB Hold)"
 If true,
 \fIxterm\fP will not immediately destroy its window when the shell command completes.
@@ -2210,6 +2237,9 @@ Lower the xterm window to the bottom of the stacking order.
 .TP 5
 MaximizeWin (9)
 Maximize window (i.e., resize to screen size).
+.TP 5
+FullscreenWin (10)
+Use full screen (i.e., resize to screen size, without window decorations).
 .TP 5
 MinimizeWin (2)
 Iconify window.

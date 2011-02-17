@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.120 2011/02/13 21:03:21 tom Exp $ */
+/* $XTermId: trace.c,v 1.121 2011/02/17 00:34:47 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -669,6 +669,13 @@ TraceXtermResources(void)
 #endif
 #if OPT_SESSION_MGT
     XRES_B(sessionMgt);
+#endif
+#if OPT_TOOLBAR
+    XRES_B(toolBar);
+#endif
+#if OPT_MAXIMIZE
+    XRES_B(maximized);
+    XRES_S(fullscreen_s);
 #endif
 }
 

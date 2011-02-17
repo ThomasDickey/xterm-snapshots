@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.622 2011/02/13 21:03:21 tom Exp $ */
+/* $XTermId: main.c,v 1.624 2011/02/17 00:37:41 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -884,6 +884,7 @@ static XtResource application_resources[] =
 #endif
 #if OPT_MAXIMIZE
     Bres(XtNmaximized, XtCMaximized, maximized, False),
+    Sres(XtNfullscreen, XtCFullscreen, fullscreen_s, "off"),
 #endif
 };
 
@@ -1080,6 +1081,8 @@ static XrmOptionDescRec optionDescList[] = {
 #if OPT_MAXIMIZE
 {"-maximized",	"*maximized",	XrmoptionNoArg,		(XPointer) "on"},
 {"+maximized",	"*maximized",	XrmoptionNoArg,		(XPointer) "off"},
+{"-fullscreen",	"*fullscreen",	XrmoptionNoArg,		(XPointer) "on"},
+{"+fullscreen",	"*fullscreen",	XrmoptionNoArg,		(XPointer) "off"},
 #endif
 /* options that we process ourselves */
 {"-help",	NULL,		XrmoptionSkipNArgs,	(XPointer) NULL},
@@ -1255,6 +1258,7 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_MAXIMIZE
 {"-/+maximized",           "turn on/off maxmize on startup" },
+{"-/+fullscreen",          "turn on/off fullscreen on startup" },
 #endif
 { NULL, NULL }};
 /* *INDENT-ON* */
@@ -1746,6 +1750,16 @@ setEffectiveUser(uid_t user)
 int
 main(int argc, char *argv[]ENVP_ARG)
 {
+#if OPT_MAXIMIZE
+#define DATA(name) { #name, es##name }
+    static FlagList tblFullscreen[] =
+    {
+	DATA(Always),
+	DATA(Never)
+    };
+#undef DATA
+#endif
+
     Widget form_top, menu_top;
     Dimension menu_high;
     TScreen *screen;
@@ -1986,6 +2000,11 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
+#if OPT_MAXIMIZE
+	resource.fullscreen = extendedBoolean(resource.fullscreen_s,
+					      tblFullscreen,
+					      XtNumber(tblFullscreen));
+#endif
 #if OPT_PTY_HANDSHAKE
 	resource.wait_for_map0 = resource.wait_for_map;
 #endif

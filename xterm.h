@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.639 2011/02/15 09:52:13 tom Exp $ */
+/* $XTermId: xterm.h,v 1.641 2011/02/17 00:07:24 tom Exp $ */
 
 /************************************************************
 
@@ -417,6 +417,7 @@ extern char **environ;
 #define XtNforcePackedFont	"forcePackedFont"
 #define XtNformatOtherKeys	"formatOtherKeys"
 #define XtNfreeBoldBox		"freeBoldBox"
+#define XtNfullscreen		"fullscreen"
 #define XtNhighlightColor	"highlightColor"
 #define XtNhighlightColorMode	"highlightColorMode"
 #define XtNhighlightReverse	"highlightReverse"
@@ -586,6 +587,7 @@ extern char **environ;
 #define XtCForcePackedFont	"ForcePackedFont"
 #define XtCFormatOtherKeys	"FormatOtherKeys"
 #define XtCFreeBoldBox		"FreeBoldBox"
+#define XtCFullscreen		"Fullscreen"
 #define XtCHighlightColorMode	"HighlightColorMode"
 #define XtCHighlightReverse	"HighlightReverse"
 #define XtCHighlightSelection	"HighlightSelection"
@@ -1200,6 +1202,7 @@ extern int AddToRefresh (XtermWidget /* xw */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int drawXtermText (XtermWidget /* xw */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
+extern int extendedBoolean(const char * /* value */, FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
