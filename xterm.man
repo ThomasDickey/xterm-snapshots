@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.478 2011/02/17 01:05:31 tom Exp $
+.\" $XTermId: xterm.man,v 1.481 2011/02/18 10:48:14 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -509,6 +509,17 @@ See also the discussion of the \fBiconFont\fP resource.
 This option sets the pointsize for fonts selected from the FreeType
 library if support for that library was compiled into \fIxterm\fP.
 This corresponds to the \fBfaceSize\fP resource.
+.TP 8
+.BI \-fullscreen
+This option indicates that \fIxterm\fP should ask the window manager to
+let it use the full-screen for display,
+e.g., without window decorations.
+It sets the \fBfullscreen\fP resource to \*(``true\*(''.
+.TP 8
+.BI +fullscreen
+This option indicates that \fIxterm\fP should not ask the window manager to
+let it use the full-screen for display.
+It sets the \fBfullscreen\fP resource to \*(``false\*(''.
 .TP 8
 .B \-fw \fIfont\fP
 This option specifies the font to be used for displaying wide text.
@@ -1324,6 +1335,19 @@ Specify the minimum size of the input buffer, i.e., the amount of data
 that \fIxterm\fR requests on each read.
 The default is 4096.
 You cannot set this to a value less than 64.
+.TP 8
+.B "omitTranslation (\fPclass\fB OmitTranslation)"
+Selectively omit one or more parts of \fIxterm\fP's default translations
+at startup.
+The resource value is a comma-separated list of keywords,
+which may be abbreviated:
+\*(``fullscreen\*('',
+\*(``scroll-lock\*('',
+\*(``shift-fonts\*('' or
+\*(``wheel-mouse\*(''.
+\fIXterm\fP also recognizes \*(``default\*('',
+but omitting that will make the program unusable
+unless you provide a similar definition in your resource settings.
 .TP 8
 .B "ptyHandshake (\fPclass\fB PtyHandshake)
 If \*(``true\*('', \fIxterm\fP will perform handshaking during initialization
@@ -5397,7 +5421,7 @@ which is set by the \fBselectToClipboard\fP resource:
          Shift <KeyPress> Select:select-cursor-start() \\\&
                                  select-cursor-end(SELECT, CUT_BUFFER0) \\n\\\&
          Shift <KeyPress> Insert:insert-selection(SELECT, CUT_BUFFER0) \\n\\\&
-                 Alt <Key>Return:fullscreen()\n\
+                 Alt <Key>Return:fullscreen() \\n\\\&
         <KeyRelease> Scroll_Lock:scroll-lock() \\n\\\&
     Shift~Ctrl <KeyPress> KP_Add:larger-vt-font() \\n\\\&
     Shift Ctrl <KeyPress> KP_Add:smaller-vt-font() \\n\\\&

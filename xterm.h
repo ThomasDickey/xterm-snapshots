@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.641 2011/02/17 00:07:24 tom Exp $ */
+/* $XTermId: xterm.h,v 1.642 2011/02/18 01:25:50 tom Exp $ */
 
 /************************************************************
 
@@ -814,6 +814,7 @@ extern void RestartBlinking(TScreen * /* screen */);
 extern void ShowCursor (void);
 extern void SwitchBufPtrs (TScreen * /* screen */, int /* toBuf */);
 extern void ToggleAlternate (XtermWidget /* xw */);
+extern void VTInitTranslations (void);
 extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);
 extern void VTRun (XtermWidget /* xw */);
 extern void dotext (XtermWidget /* xw */, int  /* charset */, IChar * /* buf */, Cardinal  /* len */);

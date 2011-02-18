@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.434 2011/02/17 00:47:44 tom Exp $ */
+/* $XTermId: screen.c,v 1.435 2011/02/17 10:29:01 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2746,7 +2746,7 @@ FullScreen(XtermWidget xw, Bool enabled)
 	    set_resize_increments(xw);
 	    netwm_fullscreen(xw, 0);
 	}
-	screen->fullscreen = enabled;
+	screen->fullscreen = (Boolean) enabled;
 	update_fullscreen();
     } else {
 	Bell(xw, XkbBI_MinorError, 100);
