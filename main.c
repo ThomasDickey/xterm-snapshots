@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.624 2011/02/17 00:37:41 tom Exp $ */
+/* $XTermId: main.c,v 1.625 2011/02/18 01:24:50 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -844,6 +844,7 @@ static XtResource application_resources[] =
     Ires("minBufSize", "MinBufSize", minBufSize, 4096),
     Ires("maxBufSize", "MaxBufSize", maxBufSize, 32768),
     Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
+    Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
@@ -2000,6 +2001,7 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
+	VTInitTranslations();
 #if OPT_MAXIMIZE
 	resource.fullscreen = extendedBoolean(resource.fullscreen_s,
 					      tblFullscreen,

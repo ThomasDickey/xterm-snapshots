@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.114 2011/02/17 00:03:37 tom Exp $ */
+/* $XTermId: data.h,v 1.115 2011/02/18 01:23:22 tom Exp $ */
 
 /*
  * Copyright 2002-2009,2011 by Thomas E. Dickey
@@ -157,6 +157,7 @@ typedef struct XTERM_RESOURCE {
     Boolean messages;
 
     String menuLocale;
+    String omitTranslation;
 
     String keyboardType;
 #if OPT_SUNPC_KBD

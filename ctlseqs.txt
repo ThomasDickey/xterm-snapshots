@@ -685,6 +685,8 @@ CSI Ps ; Ps ; Ps t
             Ps = 9  ;  0  -> Restore maximized window.
             Ps = 9  ;  1  -> Maximize window (i.e., resize to screen
           size).
+            Ps = 1 0  ;  0  -> Undo full-screen mode.
+            Ps = 1 0  ;  1  -> Change to full-screen.
             Ps = 1 1  -> Report xterm window state.  If the xterm window
           is open (non-iconified), it returns CSI 1 t .  If the xterm
           window is iconified, it returns CSI 2 t .
