@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1111 2011/02/18 11:44:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1112 2011/02/20 00:50:46 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3835,7 +3835,7 @@ dotext(XtermWidget xw,
     }
 #else /* ! OPT_WIDE_CHARS */
 
-    for (offset = 0; offset < len; offset += this_col) {
+    for (offset = 0; offset < len; offset += (Cardinal) this_col) {
 #if OPT_DEC_CHRSET
 	LineData *ld = getLineData(screen, screen->cur_row);
 #endif
@@ -3851,8 +3851,8 @@ dotext(XtermWidget xw,
 	    }
 	    this_col = 1;
 	}
-	if (offset + this_col > len) {
-	    this_col = len - offset;
+	if (offset + (Cardinal) this_col > len) {
+	    this_col = (int) (len - offset);
 	}
 	next_col = screen->cur_col + this_col;
 
@@ -3863,7 +3863,7 @@ dotext(XtermWidget xw,
 	 * If screen->cur_col is less than next_col, we must have
 	 * hit the right margin - so set the do_wrap flag.
 	 */
-	screen->do_wrap = (screen->cur_col < next_col);
+	screen->do_wrap = (Boolean) (screen->cur_col < next_col);
     }
 
 #endif /* OPT_WIDE_CHARS */

@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.187 2011/02/13 20:21:47 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.188 2011/02/20 00:55:33 tom Exp $ */
 
 /*
  * Copyright 2001-2010,2011 by Thomas E. Dickey
@@ -600,7 +600,8 @@ Tekparse(TekWidget tw)
 	case CASE_BEAM_VEC:
 	    TRACE(("case: beam and vector selector\n"));
 	    /* only line types */
-	    if ((c &= LINEMASK) != tekscr->cur.linetype) {
+	    c = (IChar) (c & LINEMASK);
+	    if (c != tekscr->cur.linetype) {
 		if (nplot > 0)
 		    TekFlush(tw);
 		if (c <= TEKNUMLINES)
