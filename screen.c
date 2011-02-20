@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.435 2011/02/17 10:29:01 tom Exp $ */
+/* $XTermId: screen.c,v 1.436 2011/02/20 00:48:23 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -65,8 +65,9 @@
 
 #if OPT_WIDE_CHARS
 #include <fontutils.h>
-#include <menu.h>
 #endif
+
+#include <menu.h>
 
 #include <assert.h>
 #include <signal.h>
@@ -1295,7 +1296,7 @@ void
 ShowWrapMarks(XtermWidget xw, int row, LineData * ld)
 {
     TScreen *screen = TScreenOf(xw);
-    Boolean set = LineTstWrapped(ld);
+    Boolean set = (Boolean) LineTstWrapped(ld);
     CgsEnum cgsId = set ? gcVTcursFilled : gcVTcursReverse;
     VTwin *currentWin = WhichVWin(screen);
     int y = row * FontHeight(screen) + screen->border;

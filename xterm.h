@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.643 2011/02/19 01:07:27 tom Exp $ */
+/* $XTermId: xterm.h,v 1.644 2011/02/20 00:49:16 tom Exp $ */
 
 /************************************************************
 
@@ -1083,10 +1083,10 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 	 : False)
 #else
 #define morePtyData(screen, data) ((data)->last > (data)->next)
-#define nextPtyData(screen, data) (*((data)->next++) & \
-					(screen->output_eight_bits \
-					? 0xff \
-					: 0x7f))
+#define nextPtyData(screen, data) (IChar) (*((data)->next++) & \
+					   (screen->output_eight_bits \
+					    ? 0xff \
+					    : 0x7f))
 #define writePtyData(f,d,len) v_write(f,d,len)
 #endif
 
