@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.294 2011/02/13 18:40:24 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.295 2011/02/19 01:30:06 Thierry.Reding Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2010,2010 by Thomas E. Dickey
+dnl Copyright 1997-2010,2011 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -1356,7 +1356,7 @@ case ".[$]$1" in #(vi
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PKG_CONFIG version: 3 updated: 2009/01/25 10:55:09
+dnl CF_PKG_CONFIG version: 4 updated: 2011/02/18 20:26:24
 dnl -------------
 dnl Check for the package-config program, unless disabled by command-line.
 AC_DEFUN([CF_PKG_CONFIG],
@@ -1373,7 +1373,7 @@ no) #(vi
 	PKG_CONFIG=none
 	;;
 yes) #(vi
-	AC_PATH_PROG(PKG_CONFIG, pkg-config, none)
+	AC_PATH_TOOL(PKG_CONFIG, pkg-config, none)
 	;;
 *)
 	PKG_CONFIG=$withval

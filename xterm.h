@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.642 2011/02/18 01:25:50 tom Exp $ */
+/* $XTermId: xterm.h,v 1.643 2011/02/19 01:07:27 tom Exp $ */
 
 /************************************************************
 
@@ -545,7 +545,7 @@ extern char **environ;
 #define XtCC132			"C132"
 #define XtCCacheDoublesize	"CacheDoublesize"
 #define XtCCharClass		"CharClass"
-#define XtCCjkWidth 		"CjkWidth"
+#define XtCCjkWidth		"CjkWidth"
 #define XtCColorAttrMode	"ColorAttrMode"
 #define XtCColorMode		"ColorMode"
 #define XtCColumn		"Column"
@@ -611,7 +611,7 @@ extern char **environ;
 #define XtCMetaSendsEscape	"MetaSendsEscape"
 #define XtCMkSamplePass 	"MkSamplePass"
 #define XtCMkSampleSize 	"MkSampleSize"
-#define XtCMkWidth 		"MkWidth"
+#define XtCMkWidth		"MkWidth"
 #define XtCModifyCursorKeys	"ModifyCursorKeys"
 #define XtCModifyFunctionKeys	"ModifyFunctionKeys"
 #define XtCModifyKeypadKeys	"ModifyKeypadKeys"
@@ -1271,10 +1271,10 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 #define MapToColorMode(fg, screen, flags) \
 	(((screen)->colorBLMode && ((flags) & BLINK)) \
 	 ? COLOR_BL \
-	 : (((screen)->colorULMode && ((flags) & UNDERLINE)) \
-	    ? COLOR_UL \
-	    : (((screen)->colorBDMode && ((flags) & BOLD)) \
-	       ? COLOR_BD \
+	 : (((screen)->colorBDMode && ((flags) & BOLD)) \
+	    ? COLOR_BD \
+	    : (((screen)->colorULMode && ((flags) & UNDERLINE)) \
+	       ? COLOR_UL \
 	       : fg)))
 
 #define checkVeryBoldAttr(flags, fg, code, attr) \
