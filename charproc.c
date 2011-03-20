@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1112 2011/02/20 00:50:46 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1113 2011/03/19 14:31:41 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -8860,8 +8860,10 @@ VTInitTranslations(void)
      */
     if (resource.fullscreen == esNever) {
 	for (item = 0; item < XtNumber(table); ++item) {
-	    if (!strcmp(table[item].name, "fullscreen"))
+	    if (!strcmp(table[item].name, "fullscreen")) {
 		table[item].wanted = False;
+		TRACE(("omit(%s):\n%s\n", table[item].name, table[item].value));
+	    }
 	}
     }
 #endif
