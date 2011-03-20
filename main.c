@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.625 2011/02/18 01:24:50 tom Exp $ */
+/* $XTermId: main.c,v 1.626 2011/03/19 14:31:41 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2001,12 +2001,12 @@ main(int argc, char *argv[]ENVP_ARG)
 				  application_resources,
 				  XtNumber(application_resources), NULL, 0);
 	TRACE_XRES();
-	VTInitTranslations();
 #if OPT_MAXIMIZE
 	resource.fullscreen = extendedBoolean(resource.fullscreen_s,
 					      tblFullscreen,
 					      XtNumber(tblFullscreen));
 #endif
+	VTInitTranslations();
 #if OPT_PTY_HANDSHAKE
 	resource.wait_for_map0 = resource.wait_for_map;
 #endif
