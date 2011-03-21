@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1113 2011/03/19 14:31:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1114 2011/03/20 22:19:07 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1276,6 +1276,15 @@ select_charset(struct ParseState *sp, int type, int size)
     } else {
 	sp->parsestate = scs96table;
     }
+}
+
+static int
+minus_if_default(int which)
+{
+    int result = (nparam > which) ? param[which] : -1;
+    if (result <= 0)
+	result = -1;
+    return result;
 }
 
 static int
@@ -4888,7 +4897,7 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizePixels:	/* Resize the window to given size in pixels */
 	if (AllowWindowOps(xw, ewSetWinSizePixels)) {
-	    RequestResize(xw, zero_if_default(1), zero_if_default(2), False);
+	    RequestResize(xw, minus_if_default(1), minus_if_default(2), False);
 	}
 	break;
 
@@ -4915,7 +4924,7 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizeChars:	/* Resize the text-area, in characters */
 	if (AllowWindowOps(xw, ewSetWinSizeChars)) {
-	    RequestResize(xw, zero_if_default(1), zero_if_default(2), True);
+	    RequestResize(xw, minus_if_default(1), minus_if_default(2), True);
 	}
 	break;
 
