@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.482 2011/04/17 18:56:47 tom Exp $
+.\" $XTermId: xterm.man,v 1.483 2011/04/19 01:02:42 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -3068,6 +3068,27 @@ A \*(``1\*('' prints the normal set of attributes (bold, underline, inverse and 
 as VT100-style control sequences.
 A \*(``2\*('' prints ANSI color attributes as well.
 The default is \*(``1.\*(''
+.TP 8
+.B "printFileOnXError (\fPPrintFileOnXError)"
+If \fIxterm\fP exits with an X error,
+e.g. your connection is broken when the server crashes,
+it can be told to write the contents of the screen to a file.
+To enable the feature, set this resource to the name of the file.
+The default is an empty string,
+which disables this feature.
+.IP
+These error codes are handled:
+ERROR_XERROR,
+ERROR_XIOERROR and
+ERROR_ICEERROR.
+.TP 8
+.B "printModeOnXError (\fPPrintModeOnXError)"
+\fIXterm\fP implements the \fBprintFileOnXError\fP feature using
+the printer feature, although the output is written directly to a file.
+You can use the \fBprintModeOnXError\fP resource to tell it to
+use escape sequences to reconstruct the video attributes and colors.
+This uses the same values as the \fBprintAttributes\fP resource.
+The default is \*(``0.\*(''
 .TP 8
 .B "printerAutoClose (\fPclass\fB PrinterAutoClose)"
 If \*(``true\*('', \fIxterm\fR will close the printer (a pipe) when the application switches
