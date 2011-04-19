@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.684 2011/02/17 00:13:06 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.686 2011/04/17 19:15:45 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -602,6 +602,10 @@ typedef struct {
 
 #ifndef OPT_PC_COLORS
 #define OPT_PC_COLORS   1 /* true if xterm supports PC-style (bold) colors */
+#endif
+
+#ifndef OPT_PRINT_ON_EXIT
+#define OPT_PRINT_ON_EXIT 1 /* true allows xterm to dump screen on X error */
 #endif
 
 #ifndef OPT_PTY_HANDSHAKE
@@ -1690,6 +1694,8 @@ typedef struct {
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
 
 	String	answer_back;		/* response to ENQ		*/
+
+	Boolean printToFile;		/* false, except for X-errors	*/
 	String	printer_command;	/* pipe/shell command string	*/
 	Boolean printer_autoclose;	/* close printer when offline	*/
 	Boolean printer_extent;		/* print complete page		*/
