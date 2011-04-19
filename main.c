@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.626 2011/03/19 14:31:41 tom Exp $ */
+/* $XTermId: main.c,v 1.628 2011/04/17 19:21:11 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -259,7 +259,7 @@ static Bool IsPts = False;
 #include <sys/strredir.h>
 #endif
 
-#else	/* } !SYSV { */	/* BSD systems */
+#else /* } !SYSV { */ /* BSD systems */
 
 #ifdef __QNX__
 
@@ -846,6 +846,10 @@ static XtResource application_resources[] =
     Sres("menuLocale", "MenuLocale", menuLocale, DEF_MENU_LOCALE),
     Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
+#if OPT_PRINT_ON_EXIT
+    Ires("printModeOnXError", "PrintModeOnXError", printModeOnXError, 0),
+    Sres("printFileOnXError", "PrintFileOnXError", printFileOnXError, NULL),
+#endif
 #if OPT_SUNPC_KBD
     Bres("sunKeyboard", "SunKeyboard", sunKeyboard, False),
 #endif
@@ -2374,6 +2378,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif /* DEBUG */
     XSetErrorHandler(xerror);
     XSetIOErrorHandler(xioerror);
+    IceSetIOErrorHandler(ice_error);
 
     initPtyData(&VTbuffer);
 #ifdef ALLOWLOGGING
@@ -3086,6 +3091,10 @@ spawnXTerm(XtermWidget xw)
 #endif /* USE_LASTLOG */
 #endif /* HAVE_UTMP */
 #endif /* !USE_UTEMPTER */
+
+#if OPT_TRACE
+    unsigned long xterm_parent = (unsigned long) getpid();
+#endif
 
     /* Noisy compilers (suppress some unused-variable warnings) */
     (void) rc;
@@ -3922,6 +3931,18 @@ spawnXTerm(XtermWidget xw)
 	    xtermSetenv("XTERM_VERSION", xtermVersion());
 	    xtermSetenv("XTERM_LOCALE", xtermEnvLocale());
 
+	    /*
+	     * For debugging only, add environment variables that can be used
+	     * in scripts to selectively kill xterm's parent or child
+	     * processes.
+	     */
+#if OPT_TRACE
+	    sprintf(buf, "%lu", (unsigned long) xterm_parent);
+	    xtermSetenv("XTERM_PARENT", buf);
+	    sprintf(buf, "%lu", (unsigned long) getpid());
+	    xtermSetenv("XTERM_CHILD", buf);
+#endif
+
 	    signal(SIGTERM, SIG_DFL);
 
 	    /* this is the time to go and set up stdin, out, and err
@@ -4732,6 +4753,31 @@ Exit(int n)
 #ifdef ALLOWLOGGING
     if (screen->logging)
 	CloseLog(xw);
+#endif
+
+#if OPT_PRINT_ON_EXIT
+    /*
+     * The user may have requested that the contents of the screen will be
+     * written to a file if an X error occurs.
+     */
+    if (!IsEmpty(resource.printFileOnXError)) {
+	switch (n) {
+	case ERROR_XERROR:
+	    /* FALLTHRU */
+	case ERROR_XIOERROR:
+	    /* FALLTHRU */
+	case ERROR_ICEERROR:
+	    closePrinter(xw);
+	    screen->printToFile = True;
+	    screen->printer_command = resource.printFileOnXError;
+	    screen->printer_autoclose = True;
+	    screen->printer_formfeed = False;
+	    screen->printer_newline = True;
+	    screen->print_attributes = resource.printModeOnXError;
+	    xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
+	    break;
+	}
+    }
 #endif
 
 #ifdef NO_LEAKS

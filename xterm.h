@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.644 2011/02/20 00:49:16 tom Exp $ */
+/* $XTermId: xterm.h,v 1.645 2011/04/17 18:39:34 tom Exp $ */
 
 /************************************************************
 
@@ -921,7 +921,7 @@ extern void first_map_occurred (void);
 #endif
 
 #ifdef SIGNAL_T
-extern SIGNAL_T Exit (int  /* n */);
+extern SIGNAL_T Exit (int  /* n */) GCC_NORETURN;
 #endif
 
 #ifndef SIG_ATOMIC_T
@@ -975,6 +975,7 @@ extern void HandleSpawnTerminal        PROTO_XT_ACTIONS_ARGS;
 extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
 extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
+extern void ice_error (IceConn /* iceConn */);
 extern void ReverseOldColors (void);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
@@ -1042,8 +1043,9 @@ extern void FlushLog (XtermWidget /* xw */);
 
 /* print.c */
 extern Bool xtermHasPrinter (XtermWidget /* xw */);
-extern PrinterFlags *getPrinterFlags(XtermWidget /* xw */, String * /* params */, Cardinal * /* param_count */);
+extern PrinterFlags *getPrinterFlags (XtermWidget /* xw */, String * /* params */, Cardinal * /* param_count */);
 extern int xtermPrinterControl (XtermWidget /* xw */, int /* chr */);
+extern void closePrinter (XtermWidget /* xw */);
 extern void setPrinterControlMode (XtermWidget /* xw */, int /* mode */);
 extern void xtermAutoPrint (XtermWidget /* xw */, unsigned /* chr */);
 extern void xtermMediaControl (XtermWidget /* xw */, int  /* param */, int  /* private_seq */);
