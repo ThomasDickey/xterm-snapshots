@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.436 2011/02/20 00:48:23 tom Exp $ */
+/* $XTermId: screen.c,v 1.437 2011/04/19 09:56:53 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2127,7 +2127,7 @@ ScreenResize(XtermWidget xw,
     TRACE(("return %d from SET_TTYSIZE %dx%d\n", code, rows, cols));
     (void) code;
 
-#if defined(SIGWINCH) && defined(USE_STRUCT_TTYSIZE)
+#if defined(SIGWINCH) && defined(TIOCGPGRP)
     if (screen->pid > 1) {
 	int pgrp;
 
