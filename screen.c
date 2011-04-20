@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.437 2011/04/19 09:56:53 tom Exp $ */
+/* $XTermId: screen.c,v 1.438 2011/04/19 23:57:07 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -192,17 +192,19 @@ setupLineData(TScreen * screen, ScrnBuf base, Char * data, unsigned nrow, unsign
     unsigned j;
 #endif
     /* these names are based on types */
-    unsigned skipNcolChar = (ncol * SizeofScrnPtr(attribs));
-    unsigned skipNcolCharData = (ncol * SizeofScrnPtr(charData));
+    unsigned skipNcolChar;
+    unsigned skipNcolCharData;
 #if OPT_ISO_COLORS
-    unsigned skipNcolCellColor = (ncol * SizeofScrnPtr(color));
+    unsigned skipNcolCellColor;
 #endif
 
-    AlignValue(skipNcolChar);
+    AlignValue(ncol);
+
+    skipNcolChar = (ncol * SizeofScrnPtr(attribs));
+    skipNcolCharData = (ncol * SizeofScrnPtr(charData));
 #if OPT_ISO_COLORS
-    AlignValue(skipNcolCellColor);
+    skipNcolCellColor = (ncol * SizeofScrnPtr(color));
 #endif
-    AlignValue(skipNcolCharData);
 
     for (i = 0; i < nrow; i++, offset += jump) {
 	ptr = LineDataAddr(base, offset);
