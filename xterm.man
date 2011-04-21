@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.483 2011/04/19 01:02:42 tom Exp $
+.\" $XTermId: xterm.man,v 1.484 2011/04/21 00:18:42 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -1559,6 +1559,11 @@ Some window managers
 will allow you to enter keystrokes into the active icon window.
 The default is \*(``false.\*(''
 .TP 8
+.B "allowBoldFonts (\fPclass\fB AllowBoldFonts)"
+When set to \*(``false.\*('', \fIxterm\fP will not use bold fonts.
+This overrides both the \fBalwaysBoldMode\fP and the \fBboldMode\fP resources.
+.B "alwaysBoldMode (\fPclass\fB AlwaysBoldMode)"
+.TP 8
 .B "allowC1Printable (\fPclass\fB AllowC1Printable)"
 If true, overrides the mapping of C1 controls
 (codes 128-159) to make them be treated
@@ -1689,6 +1694,9 @@ true	false	same	overstrike
 true	false	different	use font
 true	true	ignored	overstrike
 .TE
+.IP
+As an alternative, setting the \fBallowBoldFonts\fP resource to false
+overrides both the \fBalwaysBoldMode\fP and the \fBboldMode\fP resources.
 .TP 8
 .B "alwaysHighlight (\fPclass\fB AlwaysHighlight)"
 Specifies whether or not \fIxterm\fP should always display a highlighted
@@ -4543,6 +4551,11 @@ the current selection as a font name (if the PRIMARY selection is owned).
 The second section allows you to modify the way it is displayed:
 .RS
 .TP
+Bold Fonts
+This is normally checked (enabled).
+When unchecked, \fIxterm\fP will not use bold fonts.
+The setting corresponds to the \fBallowBoldFonts\fP resource.
+.TP
 Line-Drawing Characters (font-linedrawing)
 When set, tells \fIxterm\fP to draw its own line-drawing characters.
 Otherwise it relies on the font containing these.
@@ -4573,6 +4586,10 @@ UTF-8 (utf8-mode)
 This controls whether \fIxterm\fP uses UTF-8 encoding of input/output.
 It is useful for temporarily switching \fIxterm\fP to display
 text from an application which does not follow the locale settings.
+.TP
+UTF-8 Titles (utf8-mode)
+This controls whether \fIxterm\fP accepts UTF-8 encoding for
+title control sequences.
 .RE
 .PP
 The fourth section allows you to enable or disable special operations

@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.122 2011/01/20 09:42:50 tom Exp $ */
+/* $XTermId: menu.h,v 1.123 2011/04/20 08:51:43 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -76,6 +76,7 @@ extern MenuEntry tekMenuEntries[];
 
 extern void Handle8BitControl      PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllow132         PROTO_XT_ACTIONS_ARGS;
+extern void HandleAllowBoldFonts   PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowColorOps    PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowFontOps     PROTO_XT_ACTIONS_ARGS;
 extern void HandleAllowSends       PROTO_XT_ACTIONS_ARGS;
@@ -268,6 +269,7 @@ typedef enum {
 
 #if OPT_DEC_CHRSET || OPT_BOX_CHARS || OPT_DEC_SOFTFONT
     fontMenu_line1,
+    fontMenu_allowBoldFonts,
 #if OPT_BOX_CHARS
     fontMenu_font_boxchars,
     fontMenu_font_packedfont,
@@ -418,6 +420,8 @@ extern void update_bellIsUrgent(void);
 extern void update_poponbell(void);
 
 #define update_marginbell() /* nothing */
+
+extern void update_menu_allowBoldFonts(void);
 
 #if OPT_ALLOW_XXX_OPS
 extern void update_menu_allowColorOps(void);

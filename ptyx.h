@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.686 2011/04/17 19:15:45 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.688 2011/04/20 22:56:41 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1718,6 +1718,7 @@ typedef struct {
 	Dimension	fnt_high;
 	XTermFonts	fnts[fMAX];	/* normal/bold/etc for terminal	*/
 	Boolean		free_bold_box;	/* same_font_size's austerity	*/
+	Boolean		allowBoldFonts;	/* do we use bold fonts at all? */
 #ifndef NO_ACTIVE_ICON
 	XTermFonts	fnt_icon;	/* icon font			*/
 	String		icon_fontname;	/* name of icon font		*/
@@ -2389,10 +2390,17 @@ typedef struct _TekWidgetRec {
 /* The toplevel-call to drawXtermText() should have text-attributes guarded: */
 #define DRAWX_MASK	(ATTRIBUTES | CHARDRAWN)
 
+/*
+ * BOLDATTR is not only nonzero when we will use bold font, but uses the bits
+ * for BOLD/BLINK to match against the video attributes which were originally
+ * requested.
+ */
+#define USE_BOLD(screen) ((screen)->allowBoldFonts)
+
 #if OPT_BLINK_TEXT
-#define BOLDATTR(screen) (BOLD | ((screen)->blink_as_bold ? BLINK : 0))
+#define BOLDATTR(screen) (USE_BOLD(screen) ? (BOLD | ((screen)->blink_as_bold ? BLINK : 0)) : 0)
 #else
-#define BOLDATTR(screen) (BOLD | BLINK)
+#define BOLDATTR(screen) (USE_BOLD(screen) ? (BOLD | BLINK) : 0)
 #endif
 
 /*

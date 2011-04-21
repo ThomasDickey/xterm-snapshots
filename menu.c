@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.284 2011/02/17 00:46:18 tom Exp $ */
+/* $XTermId: menu.c,v 1.286 2011/04/20 09:23:18 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -130,6 +130,7 @@
 /* *INDENT-OFF* */
 static void do_8bit_control    PROTO_XT_CALLBACK_ARGS;
 static void do_allow132        PROTO_XT_CALLBACK_ARGS;
+static void do_allowBoldFonts  PROTO_XT_CALLBACK_ARGS;
 static void do_allowsends      PROTO_XT_CALLBACK_ARGS;
 static void do_altscreen       PROTO_XT_CALLBACK_ARGS;
 static void do_appcursor       PROTO_XT_CALLBACK_ARGS;
@@ -144,6 +145,7 @@ static void do_delete_del      PROTO_XT_CALLBACK_ARGS;
 static void do_hardreset       PROTO_XT_CALLBACK_ARGS;
 static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
+static void do_keepSelection   PROTO_XT_CALLBACK_ARGS;
 static void do_kill            PROTO_XT_CALLBACK_ARGS;
 static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
@@ -157,7 +159,6 @@ static void do_scrollbar       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollkey       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
-static void do_keepSelection   PROTO_XT_CALLBACK_ARGS;
 static void do_selectClipboard PROTO_XT_CALLBACK_ARGS;
 static void do_softreset       PROTO_XT_CALLBACK_ARGS;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
@@ -369,6 +370,7 @@ MenuEntry fontMenuEntries[] = {
 
 #if OPT_DEC_CHRSET || OPT_BOX_CHARS || OPT_DEC_SOFTFONT
     { "line1",		NULL,		NULL },
+    { "allow-bold-fonts", do_allowBoldFonts, NULL },
 #if OPT_BOX_CHARS
     { "font-linedrawing",do_font_boxchars,NULL },
     { "font-packed",	do_font_packed,NULL },
@@ -738,6 +740,7 @@ domenu(Widget w,
 				  fontMenuEntries[fontMenu_fontescape].widget,
 				  (screen->menu_font_names[fontMenu_fontescape][fNorm]
 				   ? True : False));
+	    update_menu_allowBoldFonts();
 #if OPT_BOX_CHARS
 	    update_font_boxchars();
 	    SetItemSensitivity(
@@ -2339,6 +2342,15 @@ HandleClearSavedLines(Widget w,
     do_clearsavedlines(w, (XtPointer) 0, (XtPointer) 0);
 }
 
+void
+HandleAllowBoldFonts(Widget w,
+		     XEvent * event GCC_UNUSED,
+		     String * params,
+		     Cardinal *param_count)
+{
+    HANDLE_VT_TOGGLE(allowBoldFonts);
+}
+
 #if OPT_DEC_CHRSET
 void
 HandleFontDoublesize(Widget w,
@@ -3252,6 +3264,19 @@ update_activeicon(void)
 }
 #endif /* NO_ACTIVE_ICON */
 
+static void
+do_allowBoldFonts(Widget w,
+		XtPointer closure GCC_UNUSED,
+		XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = getXtermWidget(w);
+    if (xw != 0) {
+	ToggleFlag(TScreenOf(xw)->allowBoldFonts);
+	update_menu_allowBoldFonts();
+	Redraw();
+    }
+}
+
 #if OPT_DEC_CHRSET
 void
 update_font_doublesize(void)
@@ -3336,6 +3361,15 @@ update_font_utf8_title(void)
 		   enable);
 }
 #endif
+
+void
+update_menu_allowBoldFonts(void)
+{
+    UpdateCheckbox("update_menu_allowBoldFonts",
+		   fontMenuEntries,
+		   fontMenu_allowBoldFonts,
+		   TScreenOf(term)->allowBoldFonts);
+}
 
 #if OPT_ALLOW_XXX_OPS
 static void

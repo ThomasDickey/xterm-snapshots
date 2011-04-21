@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.645 2011/04/17 18:39:34 tom Exp $ */
+/* $XTermId: xterm.h,v 1.646 2011/04/20 08:48:24 tom Exp $ */
 
 /************************************************************
 
@@ -340,6 +340,7 @@ extern char **environ;
 
 /***====================================================================***/
 
+#define XtNallowBoldFonts	"allowBoldFonts"
 #define XtNallowC1Printable	"allowC1Printable"
 #define XtNallowColorOps	"allowColorOps"
 #define XtNallowFontOps		"allowFontOps"
@@ -515,6 +516,7 @@ extern char **environ;
 #define XtNxmcInline		"xmcInline"
 #define XtNxmcMoveSGR		"xmcMoveSGR"
 
+#define XtCAllowBoldFonts	"AllowBoldFonts"
 #define XtCAllowC1Printable	"AllowC1Printable"
 #define XtCAllowColorOps	"AllowColorOps"
 #define XtCAllowFontOps		"AllowFontOps"
