@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1114 2011/03/20 22:19:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1116 2011/04/20 21:15:59 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -373,6 +373,7 @@ static XtResource xterm_resources[] =
     Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, DEF_ALLOW_WINDOW),
     Bres(XtNaltIsNotMeta, XtCAltIsNotMeta, screen.alt_is_not_meta, False),
     Bres(XtNaltSendsEscape, XtCAltSendsEscape, screen.alt_sends_esc, False),
+    Bres(XtNallowBoldFonts, XtCAllowBoldFonts, screen.allowBoldFonts, True),
     Bres(XtNalwaysBoldMode, XtCAlwaysBoldMode, screen.always_bold_mode, False),
     Bres(XtNalwaysHighlight, XtCAlwaysHighlight, screen.always_highlight, False),
     Bres(XtNappcursorDefault, XtCAppcursorDefault, misc.appcursorDefault, False),
@@ -6072,6 +6073,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.force_all_chars);
 #endif
     init_Bres(screen.free_bold_box);
+    init_Bres(screen.allowBoldFonts);
 
     init_Bres(screen.c132);
     init_Bres(screen.curses);
