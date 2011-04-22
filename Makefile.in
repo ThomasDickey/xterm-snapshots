@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.175 2011/02/13 18:17:55 tom Exp $
+## $XTermId: Makefile.in,v 1.177 2011/04/22 08:51:33 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2009,2010 by Thomas E. Dickey
+# Copyright 1997-2010,2011 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -330,8 +330,8 @@ uninstall-full ::
 @desktop_utils@DESKTOP_FLAGS = @DESKTOP_FLAGS@
 @desktop_utils@install-desktop \
 @desktop_utils@install-full ::
-@desktop_utils@	desktop-file-install $(DESKTOP_FLAGS) xterm.desktop
-@desktop_utils@	desktop-file-install $(DESKTOP_FLAGS) uxterm.desktop
+@desktop_utils@	$(SHELL) df-install $(DESKTOP_FLAGS) $(srcdir)/xterm.desktop
+@desktop_utils@	$(SHELL) df-install $(DESKTOP_FLAGS) $(srcdir)/uxterm.desktop
 ################################################################################
 mostlyclean :
 	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
@@ -341,6 +341,7 @@ clean : mostlyclean
 
 distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
+@desktop_utils@	-$(RM) df-install
 
 distclean \
 docs-clean ::
