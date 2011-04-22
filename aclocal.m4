@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.295 2011/02/19 01:30:06 Thierry.Reding Exp $
+dnl $XTermId: aclocal.m4,v 1.301 2011/04/22 09:18:49 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -375,6 +375,36 @@ if test "$cf_cv_have_$1" = yes ; then
 fi
 
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_DISABLE_DESKTOP version: 2 updated: 2011/04/22 05:17:37
+dnl ------------------
+dnl Handle a configure option "--disable-desktop", which sets a shell
+dnl variable $desktop_utils to a "#" if the feature is not wanted, or to an
+dnl empty string if enabled.  The variable is used to substitute in front of
+dnl corresponding makefile-rules.
+dnl
+dnl It also tells the configure script to substitute the environment variable
+dnl $DESKTOP_FLAGS, which can be used by external scripts to customize the
+dnl invocation of desktop-file-util.
+dnl
+dnl $1 = program name
+AC_DEFUN([CF_DISABLE_DESKTOP],[
+# Comment-out the install-desktop rule if the desktop-utils are not found.
+AC_MSG_CHECKING(if you want to install desktop files)
+CF_ARG_OPTION(desktop,
+	[  --disable-desktop       disable install of $1 desktop files],
+	[enable_desktop=$enableval],
+	[enable_desktop=$enableval],yes)
+AC_MSG_RESULT($enable_desktop)
+
+desktop_utils=
+if test "$enable_desktop" = yes ; then
+AC_CHECK_PROG(desktop_utils,desktop-file-install,yes,no)
+fi
+
+test "$desktop_utils" = yes && desktop_utils= || desktop_utils="#"
+AC_SUBST(DESKTOP_FLAGS)
+])
 dnl ---------------------------------------------------------------------------
 dnl CF_DISABLE_ECHO version: 11 updated: 2009/12/13 13:16:57
 dnl ---------------
@@ -1356,7 +1386,7 @@ case ".[$]$1" in #(vi
 esac
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PKG_CONFIG version: 4 updated: 2011/02/18 20:26:24
+dnl CF_PKG_CONFIG version: 6 updated: 2011/04/17 06:36:21
 dnl -------------
 dnl Check for the package-config program, unless disabled by command-line.
 AC_DEFUN([CF_PKG_CONFIG],
@@ -2612,6 +2642,125 @@ AC_DEFUN([CF_VERBOSE],
 CF_MSG_LOG([$1])
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITH_APP_DEFAULTS version: 1 updated: 2011/04/21 18:12:37
+dnl --------------------
+dnl Handle configure option "--with-app-defaults", setting these shell
+dnl variables:
+dnl $appsdir is the option value, used for installing app-defaults files.
+dnl $no_appsdir is a "#" (comment) if "--without-app-defaults" is given.
+AC_DEFUN(CF_WITH_APP_DEFAULTS,[
+AC_MSG_CHECKING(for directory to install resource files)
+CF_WITH_PATH(app-defaults,
+	[  --with-app-defaults=DIR directory in which to install resource files],
+	[appsdir],[EPREFIX/lib/X11/app-defaults],
+	['\$(exec_prefix)/lib/X11/app-defaults'])
+AC_MSG_RESULT($appsdir)
+AC_SUBST(appsdir)
+
+no_appsdir=
+test "$appsdir" = no && no_appsdir="#"
+AC_SUBST(no_appsdir)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_DESKTOP_CATEGORY version: 1 updated: 2011/04/22 05:17:37
+dnl ------------------------
+dnl Taking into account the absence of standardization of desktop categories
+dnl take a look to see whether other applications on the current system are
+dnl assigned any/all of a set of suggested categories.
+dnl
+dnl $1 = program name
+dnl $2 = case-pattern to match comparable desktop files to obtain category
+dnl      This pattern may contain wildcards.
+dnl $3 = suggested categories, also a case-pattern but without wildcards,
+dnl      since it doubles as a default value.
+dnl
+dnl The macro tells the configure script to substitute the $DESKTOP_CATEGORY
+dnl value.
+AC_DEFUN([CF_WITH_DESKTOP_CATEGORY],[
+AC_REQUIRE([CF_DISABLE_DESKTOP])
+
+if test -z "$desktop_utils"
+then
+	AC_MSG_CHECKING(for requested desktop-category)
+	AC_ARG_WITH(desktop-category,
+		[  --with-desktop-category=XXX  one or more desktop catgories or auto],
+		[cf_desktop_want=$withval],
+		[cf_desktop_want=auto])
+	AC_MSG_RESULT($cf_desktop_want)
+
+	if test "$cf_desktop_want" = auto
+	then
+		rm -rf conftest*
+		cf_desktop_also=
+		for cf_desktop_dir in  \
+			/usr/share/app-install \
+			/usr/share/applications
+		do
+			if test -d $cf_desktop_dir
+			then
+				find $cf_desktop_dir -name '*.desktop' | \
+				while true
+				do
+					read cf_desktop_path
+					test -z "$cf_desktop_path" && break
+					cf_desktop_name=`basename $cf_desktop_path .desktop`
+					case $cf_desktop_name in #(vi
+					$1|*-$1|$2)
+						CF_VERBOSE(inspect $cf_desktop_path)
+						egrep '^Categories=' $cf_desktop_path | \
+							tr ';' '\n' | \
+							sed -e 's%^.*=%%' -e '/^$/d' >>conftest.1
+						;;
+					esac
+				done
+			fi
+		done
+		if test -s conftest.1
+		then
+			cf_desktop_last=
+			sort conftest.1 | \
+			while true
+			do
+				read cf_desktop_this
+				test -z "$cf_desktop_this" && break
+				case $cf_desktop_this in #(vi
+				Qt|GTK|KDE|GNOME) #(vi
+					;;
+				$3)
+					test "x$cf_desktop_last" != "x$cf_desktop_this" && echo $cf_desktop_this >>conftest.2
+					;;
+				esac
+				cf_desktop_last=$cf_desktop_this
+			done
+			cf_desktop_want=`cat conftest.2 | tr '\n' ';'`
+		fi
+	fi
+	DESKTOP_CATEGORY=`echo "$cf_desktop_want" | sed -e 's/[[ ,]]/;/g'`
+	CF_VERBOSE(resulting category=$DESKTOP_CATEGORY)
+	AC_SUBST(DESKTOP_CATEGORY)
+fi
+])
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_ICONDIR version: 1 updated: 2011/04/21 18:12:37
+dnl ---------------
+dnl Handle configure option "--with-icondir", setting these shell
+dnl variables:
+dnl $icondir is the option value, used for installing icon/pixmap files.
+dnl $no_icondir is a "#" (comment) if "--without-icondir" is given.
+AC_DEFUN([CF_WITH_ICONDIR],[
+AC_MSG_CHECKING(for directory to install icons)
+CF_WITH_PATH(icondir,
+	[  --with-icondir=DIR      directory in which to install icons],
+	[icondir],[EPREFIX/share/pixmaps],
+	['\$(exec_prefix)/share/pixmaps'])
+AC_MSG_RESULT($icondir)
+AC_SUBST(icondir)
+
+no_icondir=
+test "$icondir" = no && no_icondir="#"
+AC_SUBST(no_icondir)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_WITH_IMAKE_CFLAGS version: 9 updated: 2010/05/26 05:38:42
 dnl --------------------
 dnl xterm and similar programs build more readily when propped up with imake's
@@ -2767,7 +2916,7 @@ AC_TRY_LINK([
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 34 updated: 2010/05/26 05:38:42
+dnl CF_XOPEN_SOURCE version: 35 updated: 2011/02/20 20:37:37
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -2785,6 +2934,9 @@ cf_xopen_source=
 case $host_os in #(vi
 aix[[456]]*) #(vi
 	cf_xopen_source="-D_ALL_SOURCE"
+	;;
+cygwin) #(vi
+	cf_XOPEN_SOURCE=600
 	;;
 darwin[[0-8]].*) #(vi
 	cf_xopen_source="-D_APPLE_C_SOURCE"
