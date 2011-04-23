@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.628 2011/04/17 19:21:11 tom Exp $ */
+/* $XTermId: main.c,v 1.629 2011/04/22 23:09:15 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -895,6 +895,9 @@ static XtResource application_resources[] =
 
 static String fallback_resources[] =
 {
+#if OPT_TOOLBAR
+    "*toolBar: false",
+#endif
     "*SimpleMenu*menuLabel.vertSpace: 100",
     "*SimpleMenu*HorizontalMargins: 16",
     "*SimpleMenu*Sme.height: 16",

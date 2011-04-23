@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: df-install.in,v 1.2 2011/04/22 09:10:54 tom Exp $
+# $XTermId: df-install.in,v 1.4 2011/04/22 20:43:06 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -38,8 +38,11 @@
 # Parameters are passed to the desktop-file-install program.  The last
 # parameter is the name of the ".desktop" file to install.
 CATEGORY="@DESKTOP_CATEGORY@"
-NEW_FILE=temp$$.desktop
 OPTS=
+
+CDPATH=:
+export CDPATH
+
 while test $# != 0
 do
 	case .$1 in #(vi
@@ -57,7 +60,24 @@ do
 	esac
 	shift 1
 done
-sed -e '/^Category=/s%=.*%@DESKTOP_CATEGORY@%' $OLD_FILE >$NEW_FILE
+
+MY_TEMP=tempdir$$
+rm -rf $MY_TEMP
+
+if test -z "$OLD_FILE"
+then
+	echo "? not found: $OLD_FILE"
+	exit 1
+elif ! mkdir $MY_TEMP
+then
+	echo "? cannot mkdir: $MY_TEMP"
+	exit 1
+fi
+
+NEW_FILE=`basename $OLD_FILE`
+sed -e '/^Category=/s%=.*%@DESKTOP_CATEGORY@%' $OLD_FILE >$MY_TEMP/$NEW_FILE
+cd $MY_TEMP
+
 if ! cmp -s $OLD_FILE $NEW_FILE
 then
 	echo "** customizing desktop category"
@@ -65,6 +85,7 @@ then
 fi
 desktop-file-install $OPTS $NEW_FILE
 
-rm -f $NEW_FILE
+cd ..
+rm -rf $MY_TEMP
 
 # vi:ts=4 sw=4
