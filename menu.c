@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.286 2011/04/20 09:23:18 tom Exp $ */
+/* $XTermId: menu.c,v 1.287 2011/04/22 23:45:41 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -735,7 +735,13 @@ domenu(Widget w,
 
     case fontMenu:
 	if (created) {
+	    int n;
+
 	    set_menu_font(True);
+	    for (n = fontMenu_font1; n <= fontMenu_font6; ++n) {
+		if (IsEmpty(screen->menu_font_names[n][fNorm]))
+		    SetItemSensitivity(fontMenuEntries[n].widget, False);
+	    }
 	    SetItemSensitivity(
 				  fontMenuEntries[fontMenu_fontescape].widget,
 				  (screen->menu_font_names[fontMenu_fontescape][fNorm]
@@ -3266,8 +3272,8 @@ update_activeicon(void)
 
 static void
 do_allowBoldFonts(Widget w,
-		XtPointer closure GCC_UNUSED,
-		XtPointer data GCC_UNUSED)
+		  XtPointer closure GCC_UNUSED,
+		  XtPointer data GCC_UNUSED)
 {
     XtermWidget xw = getXtermWidget(w);
     if (xw != 0) {

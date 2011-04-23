@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.353 2010/10/23 00:27:22 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.354 2011/04/23 00:34:12 tom Exp $ */
 
 /************************************************************
 
@@ -919,8 +919,19 @@ xtermLoadFont(XtermWidget xw,
     DbgResource("w/bold", f_wb, fWBold);
 #endif
 
-    if (!xtermOpenFont(xw, myfonts.f_n, &fnts[fNorm], warn[fNorm], True))
+    /*
+     * If we are opening the default font, and it happens to be missing, force
+     * that to the compiled-in default font, e.g., "fixed".  If we cannot open
+     * the font, disable it from the menu.
+     */
+    if (!xtermOpenFont(xw,
+		       myfonts.f_n,
+		       &fnts[fNorm],
+		       warn[fNorm],
+		       (fontnum == fontMenu_default))) {
+	SetItemSensitivity(fontMenuEntries[fontnum].widget, False);
 	goto bad;
+    }
 
     strcpy(normal, myfonts.f_n);
     if (!check_fontname(myfonts.f_b)) {

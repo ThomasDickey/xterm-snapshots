@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.95 2011/04/20 09:15:53 tom Exp $
+! $XTermId: XTerm.ad,v 1.96 2011/04/22 22:48:00 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
@@ -123,7 +123,8 @@
 *fontMenu*font-loadable*Label:	VT220 Soft Fonts
 *fontMenu*font-packed*Label:	Packed Font
 *fontMenu*render-font*Label:	TrueType Fonts
-*fontMenu*utf8-mode*Label:	UTF-8
+*fontMenu*utf8-mode*Label:	UTF-8 Encoding
+*fontMenu*utf8-fonts*Label:	UTF-8 Fonts
 *fontMenu*utf8-title*Label:	UTF-8 Titles
 
 *fontMenu*allow-color-ops*Label:	Allow Color Ops
