@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.688 2011/04/20 22:56:41 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.691 2011/04/24 22:36:59 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1527,6 +1527,20 @@ typedef struct {
 } TKwin;
 
 typedef struct {
+    String f_n;			/* the normal font */
+    String f_b;			/* the bold font */
+#if OPT_WIDE_CHARS
+    String f_w;			/* the normal wide font */
+    String f_wb;		/* the bold wide font */
+#endif
+} VTFontNames;
+
+typedef struct {
+    VTFontNames default_font;
+    String menu_font_names[NMENUFONTS][fMAX];
+} SubResourceRec;
+
+typedef struct {
 /* These parameters apply to both windows */
 	Display		*display;	/* X display for screen		*/
 	int		respond;	/* socket for responses
@@ -1573,7 +1587,10 @@ typedef struct {
 	Boolean		wide_chars;	/* true when 16-bit chars	*/
 	Boolean		vt100_graphics;	/* true to allow vt100-graphics	*/
 	Boolean		utf8_inparse;	/* true to enable UTF-8 parser	*/
+	char *		utf8_mode_s;	/* use UTF-8 decode/encode	*/
+	char *		utf8_fonts_s;	/* use UTF-8 decode/encode	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
+	int		utf8_fonts;	/* use UTF-8 decode/encode: 0-2	*/
 	int		max_combining;	/* maximum # of combining chars	*/
 	Boolean		utf8_latin1;	/* use UTF-8 with Latin-1 bias	*/
 	Boolean		utf8_title;	/* use UTF-8 titles		*/
@@ -1966,6 +1983,11 @@ typedef struct {
 #define MenuFontName(n) menu_font_names[n][fNorm]
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
+#if OPT_WIDE_CHARS
+	Boolean		savedVTFonts;
+	Boolean		mergedVTFonts;
+	SubResourceRec	cacheVTFonts;
+#endif
 #if OPT_CLIP_BOLD
 	Boolean		use_clipping;
 #endif
@@ -2084,10 +2106,11 @@ typedef enum {			/* legal values for screen.pointer_mode */
 } pointerModeTypes;
 
 typedef enum {			/* legal values for screen.utf8_mode */
-    uFalse = 0,
-    uTrue = 1,
-    uAlways = 2,
-    uDefault = 3
+    uFalse = 0
+    , uTrue = 1
+    , uAlways = 2
+    , uDefault = 3
+    , uLast
 } utf8ModeTypes;
 
 #if OPT_HP_FUNC_KEYS
@@ -2157,15 +2180,6 @@ typedef struct
     int format_keys;		/* format of modifyOtherKeys */
 #endif
 } TKeyboard;
-
-typedef struct {
-    String f_n;			/* the normal font */
-    String f_b;			/* the bold font */
-#if OPT_WIDE_CHARS
-    String f_w;			/* the normal wide font */
-    String f_wb;		/* the bold wide font */
-#endif
-} VTFontNames;
 
 #define GravityIsNorthWest(w) ((w)->misc.resizeGravity == NorthWestGravity)
 #define GravityIsSouthWest(w) ((w)->misc.resizeGravity == SouthWestGravity)

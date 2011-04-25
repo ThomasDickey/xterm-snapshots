@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.287 2011/04/22 23:45:41 tom Exp $ */
+/* $XTermId: menu.c,v 1.289 2011/04/24 18:18:30 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -261,6 +261,7 @@ static void do_toolbar         PROTO_XT_CALLBACK_ARGS;
 
 #if OPT_WIDE_CHARS
 static void do_font_utf8_mode  PROTO_XT_CALLBACK_ARGS;
+static void do_font_utf8_fonts PROTO_XT_CALLBACK_ARGS;
 static void do_font_utf8_title PROTO_XT_CALLBACK_ARGS;
 #endif
 
@@ -390,6 +391,7 @@ MenuEntry fontMenuEntries[] = {
 #endif
 #if OPT_WIDE_CHARS
     { "utf8-mode",	do_font_utf8_mode,NULL },
+    { "utf8-fonts",	do_font_utf8_fonts,NULL },
     { "utf8-title",	do_font_utf8_title,NULL },
 #endif
 #endif /* toggles for other font extensions */
@@ -775,6 +777,7 @@ domenu(Widget w,
 #endif
 #if OPT_WIDE_CHARS
 	    update_font_utf8_mode();
+	    update_font_utf8_fonts();
 	    update_font_utf8_title();
 #endif
 #if OPT_ALLOW_XXX_OPS
@@ -1652,24 +1655,43 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 
 #if OPT_WIDE_CHARS
 static void
+setup_wide_fonts(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->wide_chars) {
+	if (xtermLoadWideFonts(xw, True)) {
+	    SetVTFont(xw, screen->menu_font_number, True, NULL);
+	}
+    } else {
+	ChangeToWide(xw);
+    }
+}
+
+static void
+setup_narrow_fonts(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (xtermLoadDefaultFonts(xw)) {
+	SetVTFont(xw, screen->menu_font_number, True, NULL);
+    }
+}
+
+static void
 do_font_utf8_mode(Widget gw GCC_UNUSED,
 		  XtPointer closure GCC_UNUSED,
 		  XtPointer data GCC_UNUSED)
 {
-    TScreen *screen = TScreenOf(term);
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
 
     /*
      * If xterm was started with -wc option, it might not have the wide fonts.
      * If xterm was not started with -wc, it might not have wide cells.
      */
     if (!screen->utf8_mode) {
-	if (screen->wide_chars) {
-	    if (xtermLoadWideFonts(term, True)) {
-		SetVTFont(term, screen->menu_font_number, True, NULL);
-	    }
-	} else {
-	    ChangeToWide(term);
-	}
+	setup_wide_fonts(xw);
     }
     switchPtyData(screen, !screen->utf8_mode);
     /*
@@ -1677,6 +1699,24 @@ do_font_utf8_mode(Widget gw GCC_UNUSED,
      * on - the Latin-1 codes should paint as-is.  When switching off, that's
      * hard to do properly.
      */
+}
+
+static void
+do_font_utf8_fonts(Widget gw GCC_UNUSED,
+		   XtPointer closure GCC_UNUSED,
+		   XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = term;
+    TScreen *screen = TScreenOf(xw);
+
+    ToggleFlag(screen->utf8_fonts);
+    update_font_utf8_fonts();
+
+    if (screen->utf8_fonts) {
+	setup_wide_fonts(xw);
+    } else {
+	setup_narrow_fonts(xw);
+    }
 }
 
 static void
@@ -2426,6 +2466,16 @@ HandleUTF8Mode(Widget w,
 	       Cardinal *param_count)
 {
     handle_vt_toggle(do_font_utf8_mode, TScreenOf(term)->utf8_mode,
+		     params, *param_count, w);
+}
+
+void
+HandleUTF8Fonts(Widget w,
+		XEvent * event GCC_UNUSED,
+		String * params,
+		Cardinal *param_count)
+{
+    handle_vt_toggle(do_font_utf8_fonts, TScreenOf(term)->utf8_fonts,
 		     params, *param_count, w);
 }
 
@@ -3346,10 +3396,24 @@ update_font_utf8_mode(void)
     Bool enable = (TScreenOf(term)->utf8_mode != uFalse);
 
     TRACE(("update_font_utf8_mode active %d, enable %d\n", active, enable));
-    SetItemSensitivity(fontMenuEntries[fontMenu_wide_chars].widget, active);
+    SetItemSensitivity(fontMenuEntries[fontMenu_utf8_mode].widget, active);
     UpdateCheckbox("update_font_utf8_mode",
 		   fontMenuEntries,
-		   fontMenu_wide_chars,
+		   fontMenu_utf8_mode,
+		   enable);
+}
+
+void
+update_font_utf8_fonts(void)
+{
+    Bool active = (TScreenOf(term)->utf8_fonts != uAlways);
+    Bool enable = (TScreenOf(term)->utf8_fonts != uFalse);
+
+    TRACE(("update_font_utf8_fonts active %d, enable %d\n", active, enable));
+    SetItemSensitivity(fontMenuEntries[fontMenu_utf8_fonts].widget, active);
+    UpdateCheckbox("update_font_utf8_fonts",
+		   fontMenuEntries,
+		   fontMenu_utf8_fonts,
 		   enable);
 }
 
@@ -3360,10 +3424,10 @@ update_font_utf8_title(void)
     Bool enable = (TScreenOf(term)->utf8_title);
 
     TRACE(("update_font_utf8_title active %d, enable %d\n", active, enable));
-    SetItemSensitivity(fontMenuEntries[fontMenu_wide_title].widget, active);
+    SetItemSensitivity(fontMenuEntries[fontMenu_utf8_title].widget, active);
     UpdateCheckbox("update_font_utf8_title",
 		   fontMenuEntries,
-		   fontMenu_wide_title,
+		   fontMenu_utf8_title,
 		   enable);
 }
 #endif

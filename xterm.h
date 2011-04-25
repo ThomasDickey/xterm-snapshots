@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.646 2011/04/20 08:48:24 tom Exp $ */
+/* $XTermId: xterm.h,v 1.647 2011/04/23 12:15:04 tom Exp $ */
 
 /************************************************************
 
@@ -500,6 +500,7 @@ extern char **environ;
 #define XtNunderLine		"underLine"
 #define XtNuseClipping		"useClipping"
 #define XtNutf8			"utf8"
+#define XtNutf8Fonts		"utf8Fonts"
 #define XtNutf8Latin1		"utf8Latin1"
 #define XtNutf8SelectTypes	"utf8SelectTypes"
 #define XtNutf8Title		"utf8Title"
@@ -661,6 +662,7 @@ extern char **environ;
 #define XtCUnderLine		"UnderLine"
 #define XtCUseClipping		"UseClipping"
 #define XtCUtf8			"Utf8"
+#define XtCUtf8Fonts		"Utf8Fonts"
 #define XtCUtf8Latin1		"Utf8Latin1"
 #define XtCUtf8SelectTypes	"Utf8SelectTypes"
 #define XtCUtf8Title		"Utf8Title"
