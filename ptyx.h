@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.691 2011/04/24 22:36:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.692 2011/04/25 08:33:57 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2020,9 +2020,9 @@ typedef struct {
 	unsigned char	dabbrev_erase_char;	/* used for deleting inserted completion */
 #endif
 	char		tcapbuf[TERMCAP_SIZE];
+	char		tcap_area[TERMCAP_SIZE];
 #if OPT_TCAP_FKEYS
 	char **		tcap_fkeys;
-	char		tcap_area[TERMCAP_SIZE];
 #endif
 } TScreen;
 
