@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.289 2011/04/24 18:18:30 tom Exp $ */
+/* $XTermId: menu.c,v 1.290 2011/04/30 00:22:23 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -834,10 +834,29 @@ HandlePopupMenu(Widget w,
 {
     TRACE(("HandlePopupMenu\n"));
     if (domenu(w, event, params, param_count)) {
+	XtermWidget xw = term;
+	TScreen *screen = TScreenOf(xw);
+
 #if OPT_TOOLBAR
 	w = select_menu(w, mainMenu)->w;
 #endif
-	XtCallActionProc(w, "XawPositionSimpleMenu", event, params, 1);
+	/*
+	 * The action procedure in SimpleMenu.c, PositionMenu does not expect a
+	 * key translation event when we are popping up a menu.  In particular,
+	 * if the pointer is outside the menu, then the action procedure will
+	 * fail in its attempt to determine the location of the pointer within
+	 * the menu.  Anticipate that by warping the pointer into the menu when
+	 * a key event is detected.
+	 */
+	switch (event->type) {
+	case KeyPress:
+	case KeyRelease:
+	    XWarpPointer(screen->display, None, XtWindow(w), 0, 0, 0, 0, 0, 0);
+	    break;
+	default:
+	    XtCallActionProc(w, "XawPositionSimpleMenu", event, params, 1);
+	    break;
+	}
 	XtCallActionProc(w, "MenuPopup", event, params, 1);
     }
 }
