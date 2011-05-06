@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1038 2011/04/30 00:33:53 tom Exp $
+  $XTermId: xterm.log.html,v 1.1039 2011/05/06 01:02:09 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify AllocateTermColor() to handle
+	    <code>XtDefaultForeground</code> and
+	    <code>XtDefaultBackground</code>,
+	    which are not recognized by <code>XParseColor</code>.
+	    For example, this fixes the use of OSC&nbsp;112
+	    when no explicit cursor color was set (report by Ailin Nemui).
+
 	<li>handle special-case of <code>KeyPress</code> translated to
 	    <code>popup-menu</code> action (Ubuntu #756273).
 </ul>

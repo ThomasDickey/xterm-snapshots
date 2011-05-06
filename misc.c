@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.521 2011/04/17 19:04:06 tom Exp $ */
+/* $XTermId: misc.c,v 1.522 2011/05/06 00:22:13 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3966,18 +3966,29 @@ AllocateTermColor(XtermWidget xw,
 	Colormap cmap = xw->core.colormap;
 	char *newName;
 
-	if (XParseColor(screen->display, cmap, name, &def)
-	    && (XAllocColor(screen->display, cmap, &def)
-		|| find_closest_color(screen->display, cmap, &def))
+	result = True;
+	if (!x_strcasecmp(name, XtDefaultForeground)) {
+	    def.pixel = xw->dft_foreground;
+	} else if (!x_strcasecmp(name, XtDefaultBackground)) {
+	    def.pixel = xw->dft_background;
+	} else if (XParseColor(screen->display, cmap, name, &def)
+		   && (XAllocColor(screen->display, cmap, &def)
+		       || find_closest_color(screen->display, cmap, &def))) {
+	    ;			/*empty */
+	} else {
+	    result = False;
+	}
+
+	if (result
 	    && (newName = x_strdup(name)) != 0) {
 	    if (COLOR_DEFINED(pNew, ndx))
 		free(pNew->names[ndx]);
 	    SET_COLOR_VALUE(pNew, ndx, def.pixel);
 	    SET_COLOR_NAME(pNew, ndx, newName);
 	    TRACE(("AllocateTermColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel));
-	    result = True;
 	} else {
 	    TRACE(("AllocateTermColor #%d: %s (failed)\n", ndx, name));
+	    result = False;
 	}
     }
     return result;
