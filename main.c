@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.629 2011/04/22 23:09:15 tom Exp $ */
+/* $XTermId: main.c,v 1.630 2011/06/05 23:41:29 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1828,24 +1828,21 @@ main(int argc, char *argv[]ENVP_ARG)
     if (argc > 1) {
 	int n;
 	size_t unique = 2;
-	Bool quit = True;
+	Bool quit = False;
 
 	for (n = 1; n < argc; n++) {
 	    TRACE(("parsing %s\n", argv[n]));
 	    if (abbrev(argv[n], "-version", unique)) {
 		Version();
+		quit = True;
 	    } else if (abbrev(argv[n], "-help", unique)) {
 		Help();
+		quit = True;
 	    } else if (abbrev(argv[n], "-class", (size_t) 3)) {
 		if ((my_class = argv[++n]) == 0) {
 		    Help();
-		} else {
-		    quit = False;
+		    quit = True;
 		}
-		unique = 3;
-	    } else {
-		quit = False;
-		unique = 3;
 	    }
 	}
 	if (quit)
@@ -2102,10 +2099,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	switch (argv[0][1]) {
 	case 'h':		/* -help */
 	    Help();
-	    continue;
+	    exit(0);
 	case 'v':		/* -version */
 	    Version();
-	    continue;
+	    exit(0);
 	case 'C':
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 #ifndef __sgi

@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1039 2011/05/06 01:02:09 tom Exp $
+  $XTermId: xterm.log.html,v 1.1041 2011/07/01 08:35:14 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>amend change for Debian #110226 so that "-h" or "-v" options cause
+	    an exit, rather than simply printing to stdout while the window is
+	    displayed (Debian #629358).
+
+	<li>add response for <code>DECRQSS</code> which gives the setting
+	    for <code>DECSCUSR</code>.
+
 	<li>modify AllocateTermColor() to handle
 	    <code>XtDefaultForeground</code> and
 	    <code>XtDefaultBackground</code>,

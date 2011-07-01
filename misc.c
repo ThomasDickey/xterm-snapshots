@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.522 2011/05/06 00:22:13 tom Exp $ */
+/* $XTermId: misc.c,v 1.524 2011/05/16 10:53:01 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3284,6 +3284,13 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		});
 #endif
 		strcat(reply, "m");
+	    } else if (!strcmp(cp, " q")) {	/* DECSCUSR */
+		int code = 0;
+		if (screen->cursor_underline)
+		    code |= 2;
+		if (screen->cursor_blink)
+		    code |= 1;
+		sprintf(reply, "%d%s", code + 1, cp);
 	    } else
 		okay = False;
 

@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.269 2011/04/23 00:02:03 tom Exp $ */
+/* $XTermId: os2main.c,v 1.270 2011/07/01 08:40:00 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -968,24 +968,21 @@ main(int argc, char **argv ENVP_ARG)
     if (argc > 1) {
 	int n;
 	size_t unique = 2;
-	Bool quit = True;
+	Bool quit = False;
 
 	for (n = 1; n < argc; n++) {
 	    TRACE(("parsing %s\n", argv[n]));
 	    if (abbrev(argv[n], "-version", unique)) {
 		Version();
+		quit = True;
 	    } else if (abbrev(argv[n], "-help", unique)) {
 		Help();
+		quit = True;
 	    } else if (abbrev(argv[n], "-class", (size_t) 3)) {
 		if ((my_class = argv[++n]) == 0) {
 		    Help();
-		} else {
-		    quit = False;
+		    quit = True;
 		}
-		unique = 3;
-	    } else {
-		quit = False;
-		unique = 3;
 	    }
 	}
 	if (quit)
@@ -1120,10 +1117,10 @@ main(int argc, char **argv ENVP_ARG)
 	switch (argv[0][1]) {
 	case 'h':		/* -help */
 	    Help();
-	    continue;
+	    exit(0);
 	case 'v':		/* -version */
 	    Version();
-	    continue;
+	    exit(0);
 	case 'C':
 	    {
 		struct stat sbuf;
