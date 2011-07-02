@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1041 2011/07/01 08:35:14 tom Exp $
+  $XTermId: xterm.log.html,v 1.1044 2011/07/02 14:27:18 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,16 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve filtering of desktop category scanning, to exclude XFCE.
+
+	<li>modify configure script to work with systems that have both
+	    ncurses (or other terminfo) as well as a real termcap library,
+	    e.g., Slackware (report by Alan Watts).
+
+	<li>modify configure script to work around special case where user's
+	    environment adds compiler flags to the <code>CC</code> variable
+	    (prompted by report by Paul Lampert).
+
 	<li>amend change for Debian #110226 so that "-h" or "-v" options cause
 	    an exit, rather than simply printing to stdout while the window is
 	    displayed (Debian #629358).
