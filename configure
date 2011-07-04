@@ -2895,7 +2895,7 @@ cf_POSIX_C_SOURCE=199506L
 cf_xopen_source=
 
 case $host_os in #(vi
-aix[456]*) #(vi
+aix[4-7]*) #(vi
 	cf_xopen_source="-D_ALL_SOURCE"
 	;;
 cygwin) #(vi

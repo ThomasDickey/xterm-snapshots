@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.c,v 1.45 2011/02/19 20:28:13 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.46 2011/07/03 23:23:11 Gertjan.Halkes Exp $ */
 
 /*
  * Copyright 2007-2010,2011 by Thomas E. Dickey
@@ -89,8 +89,8 @@ static TCAPINFO table[] = {
 
 	DATA(	"#4",	"kLFT",		XK_Left,	SHIFT	),
 	DATA(	"%i",	"kRIT",		XK_Right,	SHIFT	),
-	DATA(	"kF",	"kind",		XK_Up,		SHIFT	),
-	DATA(	"kR",	"kri",		XK_Down,	SHIFT	),
+	DATA(	"kF",	"kind",		XK_Down,	SHIFT	),
+	DATA(	"kR",	"kri",		XK_Up,		SHIFT	),
 
 	DATA(	"k1",	"kf1",		XK_Fn(1),	0	),
 	DATA(	"k2",	"kf2",		XK_Fn(2),	0	),

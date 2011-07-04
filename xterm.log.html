@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1044 2011/07/02 14:27:18 tom Exp $
+  $XTermId: xterm.log.html,v 1.1048 2011/07/04 01:09:11 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,21 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve discussion of <code>faceName</code> resource in manpage
+	    (adapted from suggestions by Jens Schweikhardt).
+
+	<li>correct mapping of shifted up/down cursor-keys in termcap
+	    function-keys mode, i.e., resource <code>tcapFunctionKeys</code>
+	    (patch by Gertjan Halkes).
+
+	<li>update AIX case in <code>CF_XOPEN_SOURCE</code> configure macro to
+	    add release 7.x.
+
+	<li>modify ifdef's in <code>xterm_io.h</code> for <code>__hpux</code>
+	    to force that to use the hacked SYSV support in that file.
+	    This fixes a problem with a non-blocking socket call (patch
+	    by Paul Lampert).
+
 	<li>improve filtering of desktop category scanning, to exclude XFCE.
 
 	<li>modify configure script to work with systems that have both
