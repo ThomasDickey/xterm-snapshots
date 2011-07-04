@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.497 2011/07/04 01:16:58 tom Exp $
+.\" $XTermId: xterm.man,v 1.498 2011/07/04 10:05:13 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -2400,9 +2400,9 @@ or if there is no match for both normal and bold fonts,
 .IP
 It is possible to select suitable bitmap fonts using a script such as this:
 .NS
-\ #!/bin/sh
-\ FONT=`xfontsel -print`
-\ test -n "$FONT" && xfd -fn "$FONT"
+\&#!/bin/sh
+\&FONT=`xfontsel -print`
+\&test -n "$FONT" && xfd -fn "$FONT"
 .NE
 However (even though \fIxfd\fP accepts a \*(``\fB\-fa\fP\*('' option
 to denote FreeType fonts),
