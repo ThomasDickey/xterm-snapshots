@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.304 2011/07/02 14:22:51 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.305 2011/07/03 21:52:06 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2977,7 +2977,7 @@ AC_TRY_LINK([
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 35 updated: 2011/02/20 20:37:37
+dnl CF_XOPEN_SOURCE version: 36 updated: 2011/07/02 15:36:04
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -2993,7 +2993,7 @@ cf_POSIX_C_SOURCE=ifelse([$2],,199506L,[$2])
 cf_xopen_source=
 
 case $host_os in #(vi
-aix[[456]]*) #(vi
+aix[[4-7]]*) #(vi
 	cf_xopen_source="-D_ALL_SOURCE"
 	;;
 cygwin) #(vi
