@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1121 2011/04/24 22:57:13 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1122 2011/07/05 09:24:39 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -6084,14 +6084,20 @@ VTInitialize(Widget wrequest,
 	wnew->dft_foreground = MyBlackPixel(TScreenOf(wnew)->display);
 	wnew->dft_background = MyWhitePixel(TScreenOf(wnew)->display);
     }
+
     init_Tres(TEXT_FG);
     init_Tres(TEXT_BG);
 
+    wnew->old_foreground = T_COLOR(TScreenOf(wnew), TEXT_FG);
+    wnew->old_background = T_COLOR(TScreenOf(wnew), TEXT_BG);
+
     TRACE(("Color resource initialization:\n"));
-    TRACE(("   Default foreground %#lx\n", wnew->dft_foreground));
-    TRACE(("   Default background %#lx\n", wnew->dft_background));
-    TRACE(("   Screen foreground  %#lx\n", T_COLOR(TScreenOf(wnew), TEXT_FG)));
-    TRACE(("   Screen background  %#lx\n", T_COLOR(TScreenOf(wnew), TEXT_BG)));
+    TRACE(("   Default foreground 0x%06lx\n", wnew->dft_foreground));
+    TRACE(("   Default background 0x%06lx\n", wnew->dft_background));
+    TRACE(("   Screen foreground  0x%06lx\n", T_COLOR(TScreenOf(wnew), TEXT_FG)));
+    TRACE(("   Screen background  0x%06lx\n", T_COLOR(TScreenOf(wnew), TEXT_BG)));
+    TRACE(("   Actual  foreground 0x%06lx\n", wnew->old_foreground));
+    TRACE(("   Actual  background 0x%06lx\n", wnew->old_background));
 
     TScreenOf(wnew)->mouse_button = -1;
     TScreenOf(wnew)->mouse_row = -1;

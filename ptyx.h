@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.692 2011/04/25 08:33:57 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.693 2011/07/05 00:54:20 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2319,6 +2319,8 @@ typedef struct _XtermWidgetRec {
     int		cur_background; /* current background color	*/
     Pixel	dft_foreground; /* default foreground color	*/
     Pixel	dft_background; /* default background color	*/
+    Pixel	old_foreground; /* original foreground color	*/
+    Pixel	old_background; /* original background color	*/
 #if OPT_ISO_COLORS
     int		sgr_foreground; /* current SGR foreground color */
     int		sgr_background; /* current SGR background color */
