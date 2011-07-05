@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1049 2011/07/04 11:14:51 tom Exp $
+  $XTermId: xterm.log.html,v 1.1052 2011/07/05 00:59:12 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,15 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add vttests/dynamic.pl
+
+	<li>add runtime check for locale not supported by X libraries, and
+	    fallback to XA_STRING in this case (request by Bryan Henderson).
+
+	<li>fix a special case in configure script after no FreeType libraries
+	    are found.  The script was proceeding to check for a usable
+	    configuration.
+
 	<li>add <code>xterm+tmux</code> building block to terminfo (adapted
 	    from changes proposed by Ailin Nemui and Nicholas Marriott).
 

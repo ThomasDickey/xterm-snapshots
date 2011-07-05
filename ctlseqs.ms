@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.241 2011/07/04 12:49:31 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.242 2011/07/04 22:56:23 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
@@ -1429,8 +1429,8 @@ to these codes in an \*(Os\*4 control:
   \*(Pc = \*2 \(<- resource \fBcolorBL\fP (BLINK).
   \*(Pc = \*3 \(<- resource \fBcolorRV\fP (REVERSE).
 .sP
-The 8 colors (below) which may be set or queried
-using \*1\*0 through \*1\*7 are
+The 10 colors (below) which may be set or queried
+using \*1\*0 through \*1\*9 are
 denoted \fIdynamic colors\fR, since the corresponding control sequences
 were the first means for setting \fBxterm\fR's colors dynamically,
 i.e., after it was started.
