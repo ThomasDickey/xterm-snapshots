@@ -879,8 +879,8 @@ OSC Ps ; Pt BEL
             Pc = 2  <- resource colorBL (BLINK).
             Pc = 3  <- resource colorRV (REVERSE).
 
-          The 8 colors (below) which may be set or queried using 1 0
-          through 1 7  are denoted dynamic colors, since the correspond-
+          The 10 colors (below) which may be set or queried using 1 0
+          through 1 9  are denoted dynamic colors, since the correspond-
           ing control sequences were the first means for setting xterm's
           colors dynamically, i.e., after it was started.  They are not
           the same as the ANSI colors.  These controls may be disabled

@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.305 2011/07/03 21:52:06 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.306 2011/07/04 14:02:53 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3284,13 +3284,14 @@ CF_TRY_PKG_CONFIG(Xext,,[
 		[CF_ADD_LIB(Xext)])])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FONTCONFIG version: 3 updated: 2010/11/09 05:18:02
+dnl CF_X_FONTCONFIG version: 4 updated: 2011/07/04 10:01:31
 dnl ---------------
 dnl Check for fontconfig library, a dependency of the X FreeType library.
 AC_DEFUN([CF_X_FONTCONFIG],
 [
 AC_REQUIRE([CF_X_FREETYPE])
 
+if test "$cf_cv_found_freetype" = yes ; then
 AC_CACHE_CHECK(for usable Xft/fontconfig package,cf_cv_xft_compat,[
 AC_TRY_LINK([
 #include <X11/Xft/Xft.h>
@@ -3313,6 +3314,7 @@ then
 		CF_TRY_PKG_CONFIG(fontconfig,,[CF_ADD_LIB_AFTER(-lXft,-lfontconfig)])
 		;;
 	esac
+fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
