@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# $XTermId: dynamic.pl,v 1.1 2011/07/04 23:35:34 tom Exp $
+# $XTermId: dynamic.pl,v 1.2 2011/07/05 09:32:53 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -32,6 +32,7 @@
 # authorization.
 # -----------------------------------------------------------------------------
 # Test the dynamic-color query option of xterm.
+# The programs xtermcontrol and xtermset provide more options.
 
 use strict;
 

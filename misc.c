@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.524 2011/05/16 10:53:01 tom Exp $ */
+/* $XTermId: misc.c,v 1.525 2011/07/05 09:14:07 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1960,7 +1960,7 @@ AllocateAnsiColor(XtermWidget xw,
 	} else {
 	    result = 1;
 	    SET_COLOR_RES(res, def.pixel);
-	    TRACE(("AllocateAnsiColor[%d] %s (pixel %#lx)\n",
+	    TRACE(("AllocateAnsiColor[%d] %s (pixel 0x%06lx)\n",
 		   (int) (res - screen->Acolors), spec, def.pixel));
 #if OPT_COLOR_RES
 	    if (!res->mode)
@@ -2387,7 +2387,7 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 		color.red,
 		color.green,
 		color.blue);
-	TRACE(("ReportColors %d: %#lx as %s\n",
+	TRACE(("ReportColorRequest #%d: 0x%06lx as %s\n",
 	       ndx, pOldColors->colors[ndx], buffer));
 	unparseputc1(xw, ANSI_OSC);
 	unparseputs(xw, buffer);
@@ -3975,9 +3975,9 @@ AllocateTermColor(XtermWidget xw,
 
 	result = True;
 	if (!x_strcasecmp(name, XtDefaultForeground)) {
-	    def.pixel = xw->dft_foreground;
+	    def.pixel = xw->old_foreground;
 	} else if (!x_strcasecmp(name, XtDefaultBackground)) {
-	    def.pixel = xw->dft_background;
+	    def.pixel = xw->old_background;
 	} else if (XParseColor(screen->display, cmap, name, &def)
 		   && (XAllocColor(screen->display, cmap, &def)
 		       || find_closest_color(screen->display, cmap, &def))) {
@@ -3988,11 +3988,13 @@ AllocateTermColor(XtermWidget xw,
 
 	if (result
 	    && (newName = x_strdup(name)) != 0) {
-	    if (COLOR_DEFINED(pNew, ndx))
+	    if (COLOR_DEFINED(pNew, ndx)) {
 		free(pNew->names[ndx]);
+	    }
 	    SET_COLOR_VALUE(pNew, ndx, def.pixel);
 	    SET_COLOR_NAME(pNew, ndx, newName);
-	    TRACE(("AllocateTermColor #%d: %s (pixel %#lx)\n", ndx, newName, def.pixel));
+	    TRACE(("AllocateTermColor #%d: %s (pixel 0x%06lx)\n",
+		   ndx, newName, def.pixel));
 	} else {
 	    TRACE(("AllocateTermColor #%d: %s (failed)\n", ndx, name));
 	    result = False;
