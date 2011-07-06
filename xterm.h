@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.647 2011/04/23 12:15:04 tom Exp $ */
+/* $XTermId: xterm.h,v 1.648 2011/07/05 23:47:46 tom Exp $ */
 
 /************************************************************
 
@@ -819,7 +819,7 @@ extern void ShowCursor (void);
 extern void SwitchBufPtrs (TScreen * /* screen */, int /* toBuf */);
 extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTInitTranslations (void);
-extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);
+extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */) GCC_NORETURN;
 extern void VTRun (XtermWidget /* xw */);
 extern void dotext (XtermWidget /* xw */, int  /* charset */, IChar * /* buf */, Cardinal  /* len */);
 extern void releaseCursorGCs(XtermWidget /*xw*/);

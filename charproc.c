@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1122 2011/07/05 09:24:39 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1124 2011/07/06 00:07:02 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -138,6 +138,9 @@ typedef void (*BitFunc) (unsigned * /* p */ ,
 static IChar doinput(void);
 static int set_character_class(char * /*s */ );
 static void FromAlternate(XtermWidget /* xw */ );
+static void ReallyReset(XtermWidget /* xw */ ,
+			Bool /* full */ ,
+			Bool /* saved */ );
 static void RequestResize(XtermWidget /* xw */ ,
 			  int /* rows */ ,
 			  int /* cols */ ,
@@ -526,7 +529,7 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_BROKEN_ST
-    Bres(XtNbrokenStringTerm, XtCBrokenStringTerm, screen.brokenStringTerm, True),
+    Bres(XtNbrokenStringTerm, XtCBrokenStringTerm, screen.brokenStringTerm, False),
 #endif
 
 #if OPT_C1_PRINT
@@ -1322,6 +1325,20 @@ illegal_parse(XtermWidget xw, unsigned c, struct ParseState *sp)
     ResetState(sp);
     sp->nextstate = sp->parsestate[E2A(c)];
     Bell(xw, XkbBI_MinorError, 0);
+}
+
+static void
+init_parser(XtermWidget xw, struct ParseState *sp)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    memset(sp, 0, sizeof(*sp));
+    sp->scssize = 94;		/* number of printable/nonspace ASCII */
+    sp->lastchar = -1;		/* not a legal IChar */
+    sp->nextstate = -1;		/* not a legal state */
+
+    init_groundtable(screen, sp);
+    ResetState(sp);
 }
 
 static Boolean
@@ -2621,7 +2638,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * reset (RIS).  VT220 manual states that it is a soft reset.
 		 * Perhaps both are right (unlikely).  Kermit says it's soft.
 		 */
-		VTReset(xw, False, False);
+		ReallyReset(xw, False, False);
+		init_parser(xw, sp);
 		screen->vtXX_level = param[0] - 60;
 		if (param[0] > 61) {
 		    switch (zero_if_default(1)) {
@@ -3256,18 +3274,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 static void
 VTparse(XtermWidget xw)
 {
-    TScreen *screen;
-
     /* We longjmp back to this point in VTReset() */
     (void) setjmp(vtjmpbuf);
-    screen = TScreenOf(xw);
-    memset(&myState, 0, sizeof(myState));
-    myState.scssize = 94;	/* number of printable/nonspace ASCII */
-    myState.lastchar = -1;	/* not a legal IChar */
-    myState.nextstate = -1;	/* not a legal state */
-
-    init_groundtable(screen, &myState);
-    myState.parsestate = myState.groundtable;
+    init_parser(xw, &myState);
 
     do {
     } while (doparsing(xw, doinput(), &myState));
@@ -8288,8 +8297,8 @@ RestartBlinking(TScreen * screen GCC_UNUSED)
  *	+ the popup menu offers a choice of resetting the savedLines, or not.
  *	  (but the control sequence does this anyway).
  */
-void
-VTReset(XtermWidget xw, Bool full, Bool saved)
+static void
+ReallyReset(XtermWidget xw, Bool full, Bool saved)
 {
     static char empty[1];
 
@@ -8420,6 +8429,12 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 	screen->sc[screen->whichBuf].row =
 	    screen->sc[screen->whichBuf].col = 0;
     }
+}
+
+void
+VTReset(XtermWidget xw, Bool full, Bool saved)
+{
+    ReallyReset(xw, full, saved);
     longjmp(vtjmpbuf, 1);	/* force ground state in parser */
 }
 
