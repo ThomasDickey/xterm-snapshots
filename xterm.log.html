@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1052 2011/07/05 00:59:12 tom Exp $
+  $XTermId: xterm.log.html,v 1.1054 2011/07/06 00:10:42 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>corrected logic flow for DECSCL, which prevented the updated
+	    operating level from being reported via DECRQSS (report by
+	    Ailin Nemui).
+
+	<li>corrected default for <code>brokenStringTerm</code> resource to
+	    match manpage.
+
 	<li>add vttests/dynamic.pl
 
 	<li>add runtime check for locale not supported by X libraries, and
