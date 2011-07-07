@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.358 2011/04/24 22:58:56 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.359 2011/07/06 22:26:03 tom Exp $ */
 
 /************************************************************
 
@@ -2227,8 +2227,10 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 /*
  * ...since we'll scale the values anyway.
  */
-#define SCALE_X(n) n = (n * (((int) font_width) - 1)) / (BOX_WIDE-1)
-#define SCALE_Y(n) n = (n * (((int) font_height) - 1)) / (BOX_HIGH-1)
+#define SCALED_X(n) ((int)(n) * (((int) font_width) - 1)) / (BOX_WIDE-1)
+#define SCALED_Y(n) ((int)(n) * (((int) font_height) - 1)) / (BOX_HIGH-1)
+#define SCALE_X(n) n = SCALED_X(n)
+#define SCALE_Y(n) n = SCALED_Y(n)
 
 #define SEG(x0,y0,x1,y1) x0,y0, x1,y1
 
@@ -2515,10 +2517,10 @@ xtermDrawBoxChar(XtermWidget xw,
 	points[4].y = points[0].y;
 
 	for (n = 0; n < npoints; ++n) {
-	    SCALE_X(points[n].x);
-	    SCALE_Y(points[n].y);
-	    points[n].x += x;
-	    points[n].y += y;
+	    points[n].x = (short) SCALED_X(points[n].x);
+	    points[n].y = (short) SCALED_Y(points[n].y);
+	    points[n].x = (short) (points[n].x + x);
+	    points[n].y = (short) (points[n].y + y);
 	}
 
 	XFillPolygon(screen->display,
@@ -2532,7 +2534,7 @@ xtermDrawBoxChar(XtermWidget xw,
 
 	SCALE_X(x_coord);
 	SCALE_Y(y_coord);
-	SCALE_X(width);
+	width = (unsigned) SCALED_X(width);
 
 	XDrawArc(screen->display,
 		 VWindow(screen), gc2,
@@ -2546,7 +2548,7 @@ xtermDrawBoxChar(XtermWidget xw,
 
 	SCALE_X(x_coord);
 	SCALE_Y(y_coord);
-	SCALE_X(width);
+	width = (unsigned) SCALED_X(width);
 
 	XDrawArc(screen->display,
 		 VWindow(screen), gc2,

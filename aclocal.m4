@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.306 2011/07/04 14:02:53 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.307 2011/07/07 00:22:19 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2701,6 +2701,35 @@ dnl Use AC_VERBOSE w/o the warnings
 AC_DEFUN([CF_VERBOSE],
 [test -n "$verbose" && echo "	$1" 1>&AC_FD_MSG
 CF_MSG_LOG([$1])
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl Handle configure option "--with-app-class", setting the $APP_CLASS
+dnl variable, used for X resources.
+dnl
+dnl $1 = default value.
+AC_DEFUN(CF_WITH_APP_CLASS,[
+AC_MSG_CHECKING(for X applications class)
+AC_ARG_WITH(app-class,
+	[  --with-app-class=XXX    override X applications class (default $1)],
+	[APP_CLASS=$withval],
+	[APP_CLASS=$1])
+
+case x$APP_CLASS in #(vi
+*[[/@,%]]*) #(vi
+	AC_MSG_WARN(X applications class cannot contain punctuation)
+	APP_CLASS=$1
+	;;
+x[[A-Z]]*) #(vi
+	;;
+*)
+	AC_MSG_WARN([X applications class must start with capital, ignoring $APP_CLASS])
+	APP_CLASS=$1
+	;;
+esac
+
+AC_MSG_RESULT($APP_CLASS)
+
+AC_SUBST(APP_CLASS)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_APP_DEFAULTS version: 1 updated: 2011/04/21 18:12:37
