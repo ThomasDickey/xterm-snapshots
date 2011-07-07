@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.525 2011/07/05 09:14:07 tom Exp $ */
+/* $XTermId: misc.c,v 1.526 2011/07/06 09:50:38 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2734,6 +2734,8 @@ do_osc(XtermWidget xw, Char * oscbuf, size_t len, int final)
     Bool need_data = True;
 
     TRACE(("do_osc %s\n", oscbuf));
+
+    (void) screen;
 
     /*
      * Lines should be of the form <OSC> number ; string <ST>, however

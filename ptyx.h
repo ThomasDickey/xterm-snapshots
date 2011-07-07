@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.693 2011/07/05 00:54:20 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.694 2011/07/06 09:51:17 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2414,9 +2414,9 @@ typedef struct _TekWidgetRec {
 #define USE_BOLD(screen) ((screen)->allowBoldFonts)
 
 #if OPT_BLINK_TEXT
-#define BOLDATTR(screen) (USE_BOLD(screen) ? (BOLD | ((screen)->blink_as_bold ? BLINK : 0)) : 0)
+#define BOLDATTR(screen) (unsigned) (USE_BOLD(screen) ? (BOLD | ((screen)->blink_as_bold ? BLINK : 0)) : 0)
 #else
-#define BOLDATTR(screen) (USE_BOLD(screen) ? (BOLD | BLINK) : 0)
+#define BOLDATTR(screen) (unsigned) (USE_BOLD(screen) ? (BOLD | BLINK) : 0)
 #endif
 
 /*
