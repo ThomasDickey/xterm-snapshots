@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.179 2011/07/07 08:51:13 tom Exp $
+## $XTermId: Makefile.in,v 1.180 2011/07/08 09:44:00 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -192,6 +192,8 @@ install-full :: xterm$x resize$x $(BINDIR)
 @NOT_SETUID@	$(INSTALL_PROGRAM) xterm$x $(BINDIR)/$(binary_xterm)
 	$(INSTALL_PROGRAM) -m  755 resize$x $(BINDIR)/$(binary_resize)
 
+EDIT_SCRIPT = sed -e s,=xterm,=\$$name, -e s,XTerm,$(CLASS),
+
 install \
 install-bin \
 install-scripts \
@@ -199,23 +201,15 @@ install-full ::
 	@$(SHELL) -c "name=\"$(binary_xterm)\"; \
 		dest=\"$(binary_uxterm)\"; \
 		echo \"... installing $(BINDIR)/\$$dest\"; \
-		if test \"\$$name\" != \"xterm\"; then \
-			sed -e \"s,=xterm,=\$$name,\" $(srcdir)/uxterm >uxterm.tmp; \
-			$(INSTALL_SCRIPT) -m  755 uxterm.tmp $(BINDIR)/\$$dest; \
-			rm -f uxterm.tmp; \
-		else \
-			$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/\$$dest; \
-		fi"
+		$(EDIT_SCRIPT) $(srcdir)/uxterm >uxterm.tmp; \
+		$(INSTALL_SCRIPT) -m  755 uxterm.tmp $(BINDIR)/\$$dest; \
+		rm -f uxterm.tmp"
 	@$(SHELL) -c "name=\"$(binary_xterm)\"; \
 		dest=\"$(binary_k8term)\"; \
 		echo \"... installing $(BINDIR)/\$$dest\"; \
-		if test \"\$$name\" != \"xterm\"; then \
-			sed -e \"s,=xterm,=\$$name,\" $(srcdir)/koi8rxterm >k8term.tmp; \
-			$(INSTALL_SCRIPT) -m  755 k8term.tmp $(BINDIR)/\$$dest; \
-			rm -f k8term.tmp; \
-		else \
-			$(INSTALL_SCRIPT) -m  755 $(srcdir)/koi8rxterm $(BINDIR)/\$$dest; \
-		fi"
+		$(EDIT_SCRIPT) $(srcdir)/koi8rxterm >k8term.tmp; \
+		$(INSTALL_SCRIPT) -m  755 k8term.tmp $(BINDIR)/\$$dest; \
+		rm -f k8term.tmp"
 	@-$(SHELL) -c "name=\"$(binary_xterm)\"; \
 		if test @XTERM_SYMLINK@ != NONE ; then \
 		cd $(BINDIR) && ( \

@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.307 2011/07/07 00:22:19 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.308 2011/07/08 08:55:35 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2703,6 +2703,8 @@ AC_DEFUN([CF_VERBOSE],
 CF_MSG_LOG([$1])
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITH_APP_CLASS version: 1 updated: 2011/07/08 04:54:40
+dnl -----------------
 dnl Handle configure option "--with-app-class", setting the $APP_CLASS
 dnl variable, used for X resources.
 dnl

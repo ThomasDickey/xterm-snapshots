@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.122 2011/04/17 19:21:11 tom Exp $ */
+/* $XTermId: trace.c,v 1.123 2011/07/08 10:50:55 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -604,14 +604,14 @@ TraceTranslations(const char *name, Widget w)
 
 int
 TraceResizeRequest(const char *fn, int ln, Widget w,
-		   Dimension reqwide,
-		   Dimension reqhigh,
+		   unsigned reqwide,
+		   unsigned reqhigh,
 		   Dimension * gotwide,
 		   Dimension * gothigh)
 {
     int rc;
 
-    TRACE(("%s@%d ResizeRequest %dx%d\n", fn, ln, reqhigh, reqwide));
+    TRACE(("%s@%d ResizeRequest %ux%u\n", fn, ln, reqhigh, reqwide));
     rc = XtMakeResizeRequest((Widget) w, reqwide, reqhigh, gotwide, gothigh);
     TRACE(("... ResizeRequest -> "));
     if (gothigh && gotwide)
