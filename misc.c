@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.526 2011/07/06 09:50:38 tom Exp $ */
+/* $XTermId: misc.c,v 1.527 2011/07/08 10:48:42 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4586,7 +4586,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 	/* supply the "turn on/off" strings if needed */
 #if OPT_TRACE
 	for (j = 0; j < opt_count; j++) {
-	    if (!strncmp(opt_array[j].opt, "-/+", 3)) {
+	    if (!strncmp(opt_array[j].opt, "-/+", (size_t) 3)) {
 		char temp[80];
 		const char *name = opt_array[j].opt + 3;
 		for (k = 0; k < numDescs; ++k) {
@@ -4612,7 +4612,7 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 			    mesg = "turn off/on";
 			}
 			if (strncmp(mesg, opt_array[j].desc, strlen(mesg))) {
-			    if (strncmp(opt_array[j].desc, "turn ", 5)) {
+			    if (strncmp(opt_array[j].desc, "turn ", (size_t) 5)) {
 				char *s = CastMallocN(char,
 						      strlen(mesg)
 						      + 1
