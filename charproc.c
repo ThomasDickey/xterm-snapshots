@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1124 2011/07/06 00:07:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1125 2011/07/09 00:21:39 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3455,6 +3455,28 @@ v_write(int f, const Char * data, unsigned len)
     }
 }
 
+static void
+updateCursor(TScreen * screen)
+{
+    if (screen->cursor_set != screen->cursor_state) {
+	if (screen->cursor_set)
+	    ShowCursor();
+	else
+	    HideCursor();
+    }
+}
+
+static void
+reallyStopBlinking(TScreen * screen)
+{
+    if (screen->cursor_state == BLINKED_OFF) {
+	/* force cursor to display if it is enabled */
+	screen->cursor_state = !screen->cursor_set;
+	updateCursor(screen);
+	xevents();
+    }
+}
+
 #ifdef VMS
 #define	ptymask()	(v_bufptr > v_bufstr ? pty_mask : 0)
 
@@ -3518,11 +3540,8 @@ in_put(XtermWidget xw)
 #if OPT_INPUT_METHOD
 	    PreeditPosition(screen);
 #endif
-	} else if (screen->cursor_set != screen->cursor_state) {
-	    if (screen->cursor_set)
-		ShowCursor();
-	    else
-		HideCursor();
+	} else {
+	    updateCursor(screen);
 	}
 
 	if (QLength(screen->display)) {
@@ -3622,11 +3641,8 @@ in_put(XtermWidget xw)
 #if OPT_INPUT_METHOD
 	    PreeditPosition(screen);
 #endif
-	} else if (screen->cursor_set != screen->cursor_state) {
-	    if (screen->cursor_set)
-		ShowCursor();
-	    else
-		HideCursor();
+	} else {
+	    updateCursor(screen);
 	}
 
 	XFlush(screen->display);	/* always flush writes before waiting */
@@ -4029,7 +4045,9 @@ SetCursorBlink(TScreen * screen, Bool enable)
 	StartBlinking(screen);
     } else {
 	/* EMPTY */
-#if !OPT_BLINK_TEXT
+#if OPT_BLINK_TEXT
+	reallyStopBlinking(screen);
+#else
 	StopBlinking(screen);
 #endif
     }
@@ -8150,9 +8168,13 @@ StartBlinking(TScreen * screen)
 static void
 StopBlinking(TScreen * screen)
 {
-    if (screen->blink_timer)
+    if (screen->blink_timer) {
 	XtRemoveTimeOut(screen->blink_timer);
-    screen->blink_timer = 0;
+	screen->blink_timer = 0;
+	reallyStopBlinking(screen);
+    } else {
+	screen->blink_timer = 0;
+    }
 }
 
 #if OPT_BLINK_TEXT
