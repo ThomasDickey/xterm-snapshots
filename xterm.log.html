@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1055 2011/07/07 08:35:19 tom Exp $
+  $XTermId: xterm.log.html,v 1.1056 2011/07/09 00:44:37 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add a check when cancelling cursor-blinking, in case the cursor
+	    is blinked off. Fix so that the cursor is repainted without
+	    waiting for other events, e.g., keypress (report by Ailin Nemui).
+
 	<li>add configure <code>--with-app-class</code> option, to simplify
 	    building "xterm-dev" packages with filenames that do not conflict
 	    with conventional "xterm" packages.
