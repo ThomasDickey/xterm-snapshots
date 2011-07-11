@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.630 2011/06/05 23:41:29 tom Exp $ */
+/* $XTermId: main.c,v 1.633 2011/07/10 22:34:16 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2278,11 +2278,11 @@ main(int argc, char *argv[]ENVP_ARG)
 	/* Set up stderr properly.  Opening this log file cannot be
 	   done securely by a privileged xterm process (although we try),
 	   so the debug feature is disabled by default. */
-	char dbglogfile[45];
+	char dbglogfile[TIMESTAMP_LEN + 20];
 	int i = -1;
 	if (debug) {
 	    timestamp_filename(dbglogfile, "xterm.debug.log.");
-	    if (creat_as(save_ruid, save_rgid, False, dbglogfile, 0666) > 0) {
+	    if (creat_as(save_ruid, save_rgid, False, dbglogfile, 0600) > 0) {
 		i = open(dbglogfile, O_WRONLY | O_TRUNC);
 	    }
 	}
@@ -2387,6 +2387,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif
 
+    TRACE(("checking winToEmbedInto %#lx\n", winToEmbedInto));
     if (winToEmbedInto != None) {
 	XtRealizeWidget(toplevel);
 	/*
@@ -2394,6 +2395,9 @@ main(int argc, char *argv[]ENVP_ARG)
 	 * winToEmbedInto in order to verify that it exists, but I'm still not
 	 * certain what is the best way to do it -GPS
 	 */
+	TRACE(("...reparenting toplevel %#lx into %#lx\n",
+	       XtWindow(toplevel),
+	       winToEmbedInto));
 	XReparentWindow(XtDisplay(toplevel),
 			XtWindow(toplevel),
 			winToEmbedInto, 0, 0);
@@ -4755,30 +4759,7 @@ Exit(int n)
 	CloseLog(xw);
 #endif
 
-#if OPT_PRINT_ON_EXIT
-    /*
-     * The user may have requested that the contents of the screen will be
-     * written to a file if an X error occurs.
-     */
-    if (!IsEmpty(resource.printFileOnXError)) {
-	switch (n) {
-	case ERROR_XERROR:
-	    /* FALLTHRU */
-	case ERROR_XIOERROR:
-	    /* FALLTHRU */
-	case ERROR_ICEERROR:
-	    closePrinter(xw);
-	    screen->printToFile = True;
-	    screen->printer_command = resource.printFileOnXError;
-	    screen->printer_autoclose = True;
-	    screen->printer_formfeed = False;
-	    screen->printer_newline = True;
-	    screen->print_attributes = resource.printModeOnXError;
-	    xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
-	    break;
-	}
-    }
-#endif
+    xtermPrintOnXError(xw, n);
 
 #ifdef NO_LEAKS
     if (n == 0) {

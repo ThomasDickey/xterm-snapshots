@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1056 2011/07/09 00:44:37 tom Exp $
+  $XTermId: xterm.log.html,v 1.1057 2011/07/11 00:40:47 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,11 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>append a timestamp to filename used in
+	    <code>printFileOnXError</code> feature,
+	    and restrict its permissions
+	    (request by Vincent Lefevre).
+
 	<li>add a check when cancelling cursor-blinking, in case the cursor
 	    is blinked off. Fix so that the cursor is repainted without
 	    waiting for other events, e.g., keypress (report by Ailin Nemui).

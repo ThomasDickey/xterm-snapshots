@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.498 2011/07/04 10:05:13 tom Exp $
+.\" $XTermId: xterm.man,v 1.499 2011/07/11 00:42:35 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -3120,7 +3120,8 @@ The default is \*(``1\*(''.
 If \fIxterm\fP exits with an X error,
 e.g., your connection is broken when the server crashes,
 it can be told to write the contents of the screen to a file.
-To enable the feature, set this resource to the name of the file.
+To enable the feature, set this resource to the prefix of the filename
+(a timestamp will be appended to the actual name).
 The default is an empty string, i.e., \*(``\*('',
 which disables this feature.
 .IP

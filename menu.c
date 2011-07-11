@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.290 2011/04/30 00:22:23 tom Exp $ */
+/* $XTermId: menu.c,v 1.291 2011/07/10 23:10:03 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1080,7 +1080,10 @@ do_print_redir(Widget gw GCC_UNUSED,
 	       XtPointer closure GCC_UNUSED,
 	       XtPointer data GCC_UNUSED)
 {
-    setPrinterControlMode(term, TScreenOf(term)->printer_controlmode ? 0 : 2);
+    setPrinterControlMode(term,
+			  (PrinterOf(TScreenOf(term)).printer_controlmode
+			   ? 0
+			   : 2));
 }
 
 static void
@@ -3012,7 +3015,7 @@ update_print_redir(void)
     UpdateCheckbox("update_print_redir",
 		   mainMenuEntries,
 		   mainMenu_print_redir,
-		   TScreenOf(term)->printer_controlmode);
+		   PrinterOf(TScreenOf(term)).printer_controlmode);
 }
 
 void
