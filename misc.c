@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.527 2011/07/08 10:48:42 tom Exp $ */
+/* $XTermId: misc.c,v 1.530 2011/07/11 00:16:41 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1495,7 +1495,7 @@ open_userfile(uid_t uid, gid_t gid, char *path, Bool append)
  *	 0 otherwise.
  */
 int
-creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, int mode)
+creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
 {
     int fd;
     pid_t pid;
@@ -3530,10 +3530,10 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif
 	case 18:		/* DECPFF: print form feed */
-	    result = MdBool(screen->printer_formfeed);
+	    result = MdBool(PrinterOf(screen).printer_formfeed);
 	    break;
 	case 19:		/* DECPEX: print extent */
-	    result = MdBool(screen->printer_extent);
+	    result = MdBool(PrinterOf(screen).printer_extent);
 	    break;
 	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
 	    result = MdBool(screen->cursor_set);
@@ -3892,7 +3892,7 @@ ChangeTitle(XtermWidget xw, char *name)
     ChangeGroup(xw, XtNtitle, name);
 }
 
-#define Strlen(s) strlen((char *)(s))
+#define Strlen(s) strlen((const char *)(s))
 
 void
 ChangeXprop(char *buf)

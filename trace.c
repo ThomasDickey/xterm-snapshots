@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.123 2011/07/08 10:50:55 tom Exp $ */
+/* $XTermId: trace.c,v 1.124 2011/07/10 00:02:09 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -513,6 +513,7 @@ TraceFocus(Widget w, XEvent * ev)
 	    TRACE(("\tdetail:    %s\n", visibleNotifyDetail(event->detail)));
 	    TRACE(("\tmode:      %d\n", event->mode));
 	    TRACE(("\twindow:    %#lx\n", event->window));
+	    TRACE(("\tfocus:     %d\n", event->focus));
 	    TRACE(("\troot:      %#lx\n", event->root));
 	    TRACE(("\tsubwindow: %#lx\n", event->subwindow));
 	}

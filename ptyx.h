@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.694 2011/07/06 09:51:17 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.698 2011/07/11 00:44:36 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -73,6 +73,8 @@
 #ifdef XRENDERFONT
 #include <X11/Xft/Xft.h>
 #endif
+
+#include <stdio.h>
 
 /* adapted from IntrinsicI.h */
 #define MyStackAlloc(size, stack_cache_array)     \
@@ -1450,6 +1452,19 @@ typedef struct {
 } PrinterFlags;
 
 typedef struct {
+	FILE *	fp;			/* output file/pipe used	*/
+	Boolean isOpen;			/* output was opened/tried	*/
+	Boolean toFile;			/* true when directly to file	*/
+	String	printer_command;	/* pipe/shell command string	*/
+	Boolean printer_autoclose;	/* close printer when offline	*/
+	Boolean printer_extent;		/* print complete page		*/
+	Boolean printer_formfeed;	/* print formfeed per function	*/
+	Boolean printer_newline;	/* print newline per function	*/
+	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
+	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
+} PrinterState;
+
+typedef struct {
 	unsigned	which;		/* must have NCOLORS bits */
 	Pixel		colors[NCOLORS];
 	char		*names[NCOLORS];
@@ -1712,15 +1727,7 @@ typedef struct {
 
 	String	answer_back;		/* response to ENQ		*/
 
-	Boolean printToFile;		/* false, except for X-errors	*/
-	String	printer_command;	/* pipe/shell command string	*/
-	Boolean printer_autoclose;	/* close printer when offline	*/
-	Boolean printer_extent;		/* print complete page		*/
-	Boolean printer_formfeed;	/* print formfeed per function	*/
-	Boolean printer_newline;	/* print newline per function	*/
-	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
-	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
-
+	PrinterState	printer_state;	/* actual printer state		*/
 	PrinterFlags	printer_flags;	/* working copy of printer flags */
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
@@ -2451,6 +2458,8 @@ typedef struct _TekWidgetRec {
 
 #define TScreenOf(xw)	(&(xw)->screen)
 #define TekScreenOf(tw) (&(tw)->screen)
+
+#define PrinterOf(screen) (screen)->printer_state
 
 #ifdef SCROLLBAR_RIGHT
 #define OriginX(screen) (((term->misc.useRight)?0:ScrollbarWidth(screen)) + screen->border)
