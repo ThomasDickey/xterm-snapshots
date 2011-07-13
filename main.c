@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.633 2011/07/10 22:34:16 tom Exp $ */
+/* $XTermId: main.c,v 1.637 2011/07/12 10:41:23 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -847,7 +847,11 @@ static XtResource application_resources[] =
     Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_PRINT_ON_EXIT
+    Ires("printModeImmediate", "PrintModeImmediate", printModeNow, 0),
+    Ires("printOptsImmediate", "PrintOptsImmediate", printOptsNow, 9),
+    Sres("printFileImmediate", "PrintFileImmediate", printFileNow, NULL),
     Ires("printModeOnXError", "PrintModeOnXError", printModeOnXError, 0),
+    Ires("printOptsOnXError", "PrintOptsOnXError", printOptsOnXError, 9),
     Sres("printFileOnXError", "PrintFileOnXError", printFileOnXError, NULL),
 #endif
 #if OPT_SUNPC_KBD
