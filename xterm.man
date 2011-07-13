@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.499 2011/07/11 00:42:35 tom Exp $
+.\" $XTermId: xterm.man,v 1.500 2011/07/12 22:38:17 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -3110,11 +3110,27 @@ The default is \*(``OverTheSpot,Root\*(''.
 Specifies whether to print graphic attributes along with the text.
 A real DEC VTxxx terminal will print the underline, highlighting codes
 but your printer may not handle these.
-A \*(``0\*('' disables the attributes.
-A \*(``1\*('' prints the normal set of attributes (bold, underline, inverse and blink)
+.RS
+.bP
+\*(``0\*('' disables the attributes.
+.bP
+\*(``1\*('' prints the normal set of attributes (bold, underline, inverse and blink)
 as VT100-style control sequences.
-A \*(``2\*('' prints ANSI color attributes as well.
+.bP
+\*(``2\*('' prints ANSI color attributes as well.
+.RE
+.IP
 The default is \*(``1\*(''.
+.TP 8
+.B "printFileImmediate (\fPPrintFileImmediate)"
+When the \fBprint-immediate\fP action is invoked,
+\fIxterm\fP prints the screen contents directly to a file.
+Set this resource to the prefix of the filename
+(a timestamp will be appended to the actual name).
+.IP
+The default is an empty string, i.e., \*(``\*('',
+However, when the \fBprint-immediate\fP action is invoked,
+if the string is empty, then \*(``XTerm\*('' is used.
 .TP 8
 .B "printFileOnXError (\fPPrintFileOnXError)"
 If \fIxterm\fP exits with an X error,
@@ -3122,13 +3138,24 @@ e.g., your connection is broken when the server crashes,
 it can be told to write the contents of the screen to a file.
 To enable the feature, set this resource to the prefix of the filename
 (a timestamp will be appended to the actual name).
+.IP
 The default is an empty string, i.e., \*(``\*('',
 which disables this feature.
+However, when the \fBprint-on-error\fP action is invoked,
+if the string is empty, then \*(``XTermError\*('' is used.
 .IP
 These error codes are handled:
 ERROR_XERROR,
 ERROR_XIOERROR and
 ERROR_ICEERROR.
+.TP 8
+.B "printModeImmediate (\fPPrintModeImmediate)"
+When the \fBprint-immediate\fP action is invoked,
+\fIxterm\fP prints the screen contents directly to a file.
+You can use the \fBprintModeImmediate\fP resource to tell it to
+use escape sequences to reconstruct the video attributes and colors.
+This uses the same values as the \fBprintAttributes\fP resource.
+The default is \*(``0\*(''.
 .TP 8
 .B "printModeOnXError (\fPPrintModeOnXError)"
 \fIXterm\fP implements the \fBprintFileOnXError\fP feature using
@@ -3137,6 +3164,46 @@ You can use the \fBprintModeOnXError\fP resource to tell it to
 use escape sequences to reconstruct the video attributes and colors.
 This uses the same values as the \fBprintAttributes\fP resource.
 The default is \*(``0\*(''.
+.TP 8
+.B "printOptsImmediate (\fPPrintOptsImmediate)"
+Specify the range of text which is printed to a file when
+the \fBprint-immediately\fP action is invoked.
+.RS
+.bP
+If zero (0), then this selects the current (visible screen) plus the
+saved lines, except if the alternate screen is being used.
+In that case, only the alternate screen is selectd.
+.bP
+If nonzero,
+the bits of this resource value (checked in descending order)
+select the range:
+.RS
+.TP 3
+8 
+selects the saved lines.
+.TP 3
+4
+selects the alternate screen.
+.TP 3
+2
+selects the normal screen.
+.TP 3
+1
+selects the current screen,
+which can be either the normal or alternate screen.
+.RE
+.RE
+.IP
+The default is \*(``9\*('', which selects the current visible screen
+plus saved lines, with no special case for the alternated screen.
+.TP 8
+.B "printOptsOnXError (\fPPrintOptsOnXError)"
+Specify the range of text which is printed to a file when
+the \fBprint-on-error\fP action is invoked.
+The resource value is interpreted the same as in \fBprintOptsImmediate\fP.
+.IP
+The default is \*(``9\*('', which selects the current visible screen
+plus saved lines, with no special case for the alternated screen.
 .TP 8
 .B "printerAutoClose (\fPclass\fB PrinterAutoClose)"
 If \*(``true\*('', \fIxterm\fR will close the printer (a pipe) when the application switches
@@ -3718,6 +3785,12 @@ This entry invokes the \fBredraw()\fP action.
 .B "logging (\fPclass\fB SmeBSB)"
 This entry invokes the \fBlogging(toggle)\fP action.
 .TP 8
+.B "print-immediate (\fPclass\fB SmeBSB)"
+This entry invokes the \fBprint-immediate()\fP action.
+.TP 8
+.B "print-on-error (\fPclass\fB SmeBSB)"
+This entry invokes the \fBprint-on-error()\fP action.
+.TP 8
 .B "print (\fPclass\fB SmeBSB)"
 This entry invokes the \fBprint()\fP action.
 .TP 8
@@ -4220,6 +4293,25 @@ Commands for capturing output:
 Log to File (logging)
 Captures text sent to the screen in a logfile,
 as in the \fB\-l\fP logging option.
+.TP
+Print-All Immediately
+Invokes the \fBprint-immediate\fP action,
+sending the text of the current window directly to a file,
+as specified by the
+\fBprintFileImmediate\fP,
+\fBprintModeImmediate\fP and
+\fBprintOptsImmediate\fP
+resources.
+.TP
+Print-All on Error
+Invokes the \fBprint-on-error\fP action,
+which toggles a flag telling \fIxterm\fP that if it exits with an X error,
+to send the text of the current window directly to a file,
+as specified by the
+\fBprintFileXError\fP,
+\fBprintModeXError\fP and
+\fBprintOptsXError\fP
+resources.
 .TP
 Print Window (print)
 Sends the text of the current window to the program given in the
@@ -5160,6 +5252,23 @@ currently visible, to the program given in the \fBprinterCommand\fP resource.
 It allows the same optional parameters as the \fBprint\fP action.
 With a suitable printer command, the action can be used to load the text
 history in an editor.
+.TP 8
+.B "print-immediate()"
+Sends the text of the current window directly to a file,
+as specified by the
+\fBprintFileImmediate\fP,
+\fBprintModeImmediate\fP and
+\fBprintOptsImmediate\fP
+resources.
+.TP 8
+.B "print-on-error()"
+Toggles a flag telling \fIxterm\fP that if it exits with an X error,
+to send the text of the current window directly to a file,
+as specified by the
+\fBprintFileXError\fP,
+\fBprintModeXError\fP and
+\fBprintOptsXError\fP
+resources.
 .TP 8
 .B "print-redir()"
 This action toggles the \fBprinterControlMode\fR between 0 and 2.

@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.132 2011/07/11 00:38:53 tom Exp $ */
+/* $XTermId: print.c,v 1.137 2011/07/12 09:56:17 tom Exp $ */
 
 /************************************************************
 
@@ -249,22 +249,28 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
 
 #define PrintNewLine() (unsigned) (((top < bot) || p->printer_newline) ? '\n' : '\0')
 
+static void
+printLines(XtermWidget xw, int top, int bot, PrinterFlags * p)
+{
+    TRACE(("printLines, rows %d..%d\n", top, bot));
+    while (top <= bot) {
+	printLine(xw, top, PrintNewLine(), p);
+	++top;
+    }
+}
+
 void
 xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags * p)
 {
     if (XtIsRealized((Widget) xw)) {
 	TScreen *screen = TScreenOf(xw);
 	Bool extent = (use_DECPEX && p->printer_extent);
-	int top = extent ? 0 : screen->top_marg;
-	int bot = extent ? screen->max_row : screen->bot_marg;
 	Boolean was_open = SPS.isOpen;
 
-	TRACE(("xtermPrintScreen, rows %d..%d\n", top, bot));
-
-	while (top <= bot) {
-	    printLine(xw, top, PrintNewLine(), p);
-	    ++top;
-	}
+	printLines(xw,
+		   extent ? 0 : screen->top_marg,
+		   extent ? screen->max_row : screen->bot_marg,
+		   p);
 	if (p->printer_formfeed)
 	    charToPrinter(xw, '\f');
 
@@ -277,27 +283,54 @@ xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags * p)
 }
 
 /*
+ * If p->print_everything is zero, use this behavior:
  * If the alternate screen is active, we'll print only that.  Otherwise, print
  * the normal screen plus all scrolled-back lines.  The distinction is made
  * because the normal screen's buffer is part of the overall scrollback buffer.
+ *
+ * Otherwise, decode bits:
+ *	1 = current screen
+ *	2 = normal screen
+ *	4 = alternate screen
+ *	8 = saved lines
  */
 void
 xtermPrintEverything(XtermWidget xw, PrinterFlags * p)
 {
     TScreen *screen = TScreenOf(xw);
-    int top = 0;
-    int bot = screen->max_row;
     Boolean was_open = SPS.isOpen;
+    int save_which = screen->whichBuf;
+    int done_which = 0;
 
-    if (!screen->whichBuf) {
-	top = -screen->savedlines - screen->topline;
-	bot -= screen->topline;
-    }
-
-    TRACE(("xtermPrintEverything, rows %d..%d\n", top, bot));
-    while (top <= bot) {
-	printLine(xw, top, PrintNewLine(), p);
-	++top;
+    if (p->print_everything) {
+	if (p->print_everything & 8) {
+	    printLines(xw, -screen->savedlines, -(screen->topline + 1), p);
+	}
+	if (p->print_everything & 4) {
+	    screen->whichBuf = 1;
+	    done_which |= 2;
+	    printLines(xw, 0, screen->max_row, p);
+	    screen->whichBuf = save_which;
+	}
+	if (p->print_everything & 2) {
+	    screen->whichBuf = 0;
+	    done_which |= 1;
+	    printLines(xw, 0, screen->max_row, p);
+	    screen->whichBuf = save_which;
+	}
+	if (p->print_everything & 1) {
+	    if (!(done_which & (1 << screen->whichBuf))) {
+		printLines(xw, 0, screen->max_row, p);
+	    }
+	}
+    } else {
+	int top = 0;
+	int bot = screen->max_row;
+	if (!screen->whichBuf) {
+	    top = -screen->savedlines - screen->topline;
+	    bot -= screen->topline;
+	}
+	printLines(xw, top, bot, p);
     }
     if (p->printer_formfeed)
 	charToPrinter(xw, '\f');
@@ -440,6 +473,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 #endif
 	    break;
 	case True:
+	    TRACE(("opening \"%s\" as printer output\n", SPS.printer_command));
 	    SPS.fp = fopen(SPS.printer_command, "w");
 	    break;
 	}
@@ -671,6 +705,7 @@ getPrinterFlags(XtermWidget xw, String * params, Cardinal *param_count)
     result->printer_formfeed = SPS.printer_formfeed;
     result->printer_newline = SPS.printer_newline;
     result->print_attributes = SPS.print_attributes;
+    result->print_everything = SPS.print_everything;
 
     if (param_count != 0 && *param_count != 0) {
 	Cardinal j;
@@ -698,14 +733,14 @@ getPrinterFlags(XtermWidget xw, String * params, Cardinal *param_count)
  * Print a timestamped copy of everything.
  */
 void
-xtermPrintImmediately(XtermWidget xw, String filename, int attributes)
+xtermPrintImmediately(XtermWidget xw, String filename, int opts, int attrs)
 {
     TScreen *screen = TScreenOf(xw);
     PrinterState save_state = screen->printer_state;
     char *my_filename = malloc(TIMESTAMP_LEN + strlen(filename));
 
     if (my_filename != 0) {
-	unsigned save_umask = umask(0600);
+	unsigned save_umask = umask(0177);
 
 	timestamp_filename(my_filename, filename);
 	SPS.fp = 0;
@@ -715,7 +750,8 @@ xtermPrintImmediately(XtermWidget xw, String filename, int attributes)
 	SPS.printer_autoclose = True;
 	SPS.printer_formfeed = False;
 	SPS.printer_newline = True;
-	SPS.print_attributes = attributes;
+	SPS.print_attributes = attrs;
+	SPS.print_everything = opts;
 	xtermPrintEverything(xw, getPrinterFlags(xw, NULL, 0));
 
 	umask(save_umask);
@@ -731,7 +767,7 @@ xtermPrintOnXError(XtermWidget xw, int n)
      * The user may have requested that the contents of the screen will be
      * written to a file if an X error occurs.
      */
-    if (!IsEmpty(resource.printFileOnXError)) {
+    if (TScreenOf(xw)->write_error && !IsEmpty(resource.printFileOnXError)) {
 	Boolean printIt = False;
 
 	switch (n) {
@@ -747,6 +783,7 @@ xtermPrintOnXError(XtermWidget xw, int n)
 	if (printIt) {
 	    xtermPrintImmediately(xw,
 				  resource.printFileOnXError,
+				  resource.printOptsOnXError,
 				  resource.printModeOnXError);
 	}
     }

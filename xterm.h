@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.653 2011/07/11 00:27:00 tom Exp $ */
+/* $XTermId: xterm.h,v 1.654 2011/07/12 08:39:49 tom Exp $ */
 
 /************************************************************
 
@@ -1058,7 +1058,7 @@ extern void xtermAutoPrint (XtermWidget /* xw */, unsigned /* chr */);
 extern void xtermMediaControl (XtermWidget /* xw */, int  /* param */, int  /* private_seq */);
 extern void xtermPrintScreen (XtermWidget /* xw */, Bool  /* use_DECPEX */, PrinterFlags * /* p */);
 extern void xtermPrintEverything (XtermWidget /* xw */, PrinterFlags * /* p */);
-extern void xtermPrintImmediately (XtermWidget /* xw */, String /* filename */, int /* attributes */);
+extern void xtermPrintImmediately (XtermWidget /* xw */, String /* filename */, int /* opts */, int /* attributes */);
 extern void xtermPrintOnXError (XtermWidget /* xw */, int /* n */);
 
 /* ptydata.c */

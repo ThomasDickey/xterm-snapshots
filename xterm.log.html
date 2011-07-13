@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1057 2011/07/11 00:40:47 tom Exp $
+  $XTermId: xterm.log.html,v 1.1059 2011/07/12 00:24:47 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,15 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify menu-creation to suppress entries which will never be used
+	    in the current configuration, rather than simply disabling them.
+
+	<li>add resource <code>printModeImmediate</code> and menu item to
+	    allow print of screen plus saved lines to a file.
+
+	<li>add menu item to allow runtime enable/disable of the
+	    <code>printFileOnXError</code> feature.
+
 	<li>append a timestamp to filename used in
 	    <code>printFileOnXError</code> feature,
 	    and restrict its permissions

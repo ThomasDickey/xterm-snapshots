@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.698 2011/07/11 00:44:36 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.700 2011/07/12 08:33:58 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1449,6 +1449,7 @@ typedef struct {
 	int	printer_formfeed;	/* print formfeed per function	*/
 	int	printer_newline;	/* print newline per function	*/
 	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
+	int	print_everything;	/* 0=all, 1=dft, 2=alt, 3=saved */
 } PrinterFlags;
 
 typedef struct {
@@ -1462,6 +1463,7 @@ typedef struct {
 	Boolean printer_newline;	/* print newline per function	*/
 	int	printer_controlmode;	/* 0=off, 1=auto, 2=controller	*/
 	int	print_attributes;	/* 0=off, 1=normal, 2=color	*/
+	int	print_everything;	/* 0=all, 1=dft, 2=alt, 3=saved */
 } PrinterState;
 
 typedef struct {
@@ -1729,6 +1731,9 @@ typedef struct {
 
 	PrinterState	printer_state;	/* actual printer state		*/
 	PrinterFlags	printer_flags;	/* working copy of printer flags */
+#if OPT_PRINT_ON_EXIT
+	Boolean		write_error;
+#endif
 
 	Boolean		fnt_prop;	/* true if proportional fonts	*/
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
