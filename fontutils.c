@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.359 2011/07/06 22:26:03 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.360 2011/07/13 09:54:49 tom Exp $ */
 
 /************************************************************
 
@@ -976,7 +976,7 @@ xtermLoadFont(XtermWidget xw,
 
 	if (check_fontname(myfonts.f_w)) {
 	    cache_menu_font_name(screen, fontnum, fWide, myfonts.f_w);
-	} else if (!is_double_width_font(fnts[fNorm].fs)) {
+	} else if (screen->utf8_fonts && !is_double_width_font(fnts[fNorm].fs)) {
 	    fp = get_font_name_props(screen->display, fnts[fNorm].fs, normal);
 	    if (fp != 0) {
 		myfonts.f_w = wide_font_name(fp);
@@ -1005,17 +1005,32 @@ xtermLoadFont(XtermWidget xw,
 
 	if (check_fontname(myfonts.f_wb)) {
 
-	    xtermOpenFont(xw, myfonts.f_wb, &fnts[fWBold], warn[fWBold], False);
+	    xtermOpenFont(xw,
+			  myfonts.f_wb,
+			  &fnts[fWBold],
+			  (screen->utf8_fonts
+			   ? warn[fWBold]
+			   : (xw->misc.fontWarnings + 1)),
+			  False);
 
 	    if (derived
 		&& !compatibleWideCounts(fnts[fWide].fs, fnts[fWBold].fs)) {
 		xtermCloseFont(xw, &fnts[fWBold]);
 	    }
 	    if (fnts[fWBold].fs == 0) {
-		myfonts.f_wb = myfonts.f_w;
-		warn[fWBold] = fwAlways;
-		xtermCopyFontInfo(&fnts[fWBold], &fnts[fWide]);
-		TRACE(("...cannot load wide-bold, use wide %s\n", NonNull(myfonts.f_w)));
+		if (IsEmpty(myfonts.f_w)) {
+		    myfonts.f_wb = myfonts.f_b;
+		    warn[fWBold] = fwAlways;
+		    xtermCopyFontInfo(&fnts[fWBold], &fnts[fBold]);
+		    TRACE(("...cannot load wide-bold, use bold %s\n",
+			   NonNull(myfonts.f_b)));
+		} else {
+		    myfonts.f_wb = myfonts.f_w;
+		    warn[fWBold] = fwAlways;
+		    xtermCopyFontInfo(&fnts[fWBold], &fnts[fWide]);
+		    TRACE(("...cannot load wide-bold, use wide %s\n",
+			   NonNull(myfonts.f_w)));
+		}
 	    } else {
 		TRACE(("...%s wide/bold %s\n",
 		       derived ? "derived" : "given",
@@ -1251,6 +1266,14 @@ xtermLoadFont(XtermWidget xw,
 	    TRACE(("MERGE_SUBFONT " #dst "." #name " found %s\n", NonNull(dst.name))); \
 	}
 
+#define INFER_SUBFONT(src,dst,name) \
+	if (IsEmpty(dst.name)) { \
+	    TRACE(("INFER_SUBFONT " #dst "." #name " will infer\n")); \
+	    dst.name = x_strdup(""); \
+	} else { \
+	    TRACE(("INFER_SUBFONT " #dst "." #name " found %s\n", NonNull(dst.name))); \
+	}
+
 #define COPY_MENU_FONTS(src,dst) \
 	TRACE(("COPY_MENU_FONTS " #src " to " #dst "\n")); \
 	for (n = fontMenu_default; n <= fontMenu_lastBuiltin; ++n) { \
@@ -1372,10 +1395,10 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	     * If a particular resource value was not found, use the original.
 	     */
 	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_n);
-	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_b);
+	    INFER_SUBFONT(xw->misc, subresourceRec, default_font.f_b);
 #if OPT_WIDE_CHARS
-	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_w);
-	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_wb);
+	    INFER_SUBFONT(xw->misc, subresourceRec, default_font.f_w);
+	    INFER_SUBFONT(xw->misc, subresourceRec, default_font.f_wb);
 #endif
 	    for (n = fontMenu_font1; n <= fontMenu_lastBuiltin; ++n)
 		MERGE_SUBFONT(xw->screen, subresourceRec, MenuFontName(n));

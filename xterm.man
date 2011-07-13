@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.500 2011/07/12 22:38:17 tom Exp $
+.\" $XTermId: xterm.man,v 1.501 2011/07/13 08:59:37 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -4757,7 +4757,13 @@ It is useful for temporarily switching \fIxterm\fP to display
 text from an application which does not follow the locale settings.
 It corresponds to the \fButf8\fP resource.
 .TP
-UTF-8 Titles (utf8-mode)
+UTF-8 Fonts (utf8-fonts)
+This controls whether \fIxterm\fP uses UTF-8 fonts for display.
+It is useful for temporarily switching \fIxterm\fP to display
+text from an application which does not follow the locale settings.
+It combines the \fButf8\fP and \fButf8Fonts\fP resources.
+.TP
+UTF-8 Titles (utf8-titles)
 This controls whether \fIxterm\fP accepts UTF-8 encoding for
 title control sequences.
 It corresponds to the \fButf8Fonts\fP resource.

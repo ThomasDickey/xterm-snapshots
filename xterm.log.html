@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1059 2011/07/12 00:24:47 tom Exp $
+  $XTermId: xterm.log.html,v 1.1061 2011/07/13 10:57:39 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -332,6 +332,12 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify logic for switching fonts between UTF-8 and non-UTF-8
+	    encoding to not merge the derivable bold-, wide- and widebold
+	    values from the VT100 fonts.  Also suppress warning when not
+	    using UTF-8 fonts if wide- and widebold-fonts cannot be derived
+	    or otherwise loaded (report by Werner Scheinast).
+
 	<li>modify menu-creation to suppress entries which will never be used
 	    in the current configuration, rather than simply disabling them.
 
@@ -426,7 +432,8 @@ is the latest version of this file.
 	<li>mention default for <code>fontWarnings</code> in manpage
 	    (report by Werner Scheinast).
 
-	<li>split "UTF-8" menu entry into "UTF-8 Encoding" and "UTF-8 Fonts".
+	<li>split "UTF-8" menu entry into "UTF-8 Encoding" and "UTF-8 Fonts"
+	    (prompted by discussion with Werner Scheinast).
 
 	<li>gray-out font-menu entries when a font fails to load, e.g.,
 	    a bitmap font is not installed.
