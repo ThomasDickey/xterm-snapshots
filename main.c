@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.637 2011/07/12 10:41:23 tom Exp $ */
+/* $XTermId: main.c,v 1.638 2011/07/14 00:18:58 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2947,8 +2947,7 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 		    strerror(why));
 	}
 	TRACE(("...chown failed: %s\n", strerror(why)));
-    }
-    if (chmod(device, mode) < 0) {
+    } else if (chmod(device, mode) < 0) {
 	why = errno;
 	if (why != ENOENT) {
 	    struct stat sb;
@@ -4744,6 +4743,7 @@ Exit(int n)
      */
     ttyFlush(screen->respond);
 
+#ifdef USE_PTY_SEARCH
     if (am_slave < 0) {
 	TRACE_IDS;
 	/* restore ownership of tty and pty */
@@ -4752,6 +4752,7 @@ Exit(int n)
 	set_owner(ptydev, 0, 0, 0666U);
 #endif
     }
+#endif
 
     /*
      * Close after releasing ownership to avoid race condition: other programs 
