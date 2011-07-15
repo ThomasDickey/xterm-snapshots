@@ -1,11 +1,11 @@
-# $XTermId: xterm.spec,v 1.12 2011/07/07 09:49:14 tom Exp $
+# $XTermId: xterm.spec,v 1.13 2011/07/14 22:15:37 tom Exp $
 Summary: A text-based Web browser
-Name: xterm
-Version: dev
-Release: 271
+Name: xterm-dev
+Version: 271
+Release: 1
 License: X11
 Group: Applications/Internet
-Source: xterm-%{release}.tgz
+Source: xterm-%{version}.tgz
 # URL: http://invisible-island.net/xterm/
 Provides: x-terminal-emulator
 
@@ -56,7 +56,7 @@ and its resource class, to avoid conflict with other packages.
 %define _pixmapsdir %{_datadir}/pixmaps
 %define my_docdir   %{_datadir}/doc/xterm%{my_suffix}
 
-%setup -q -n xterm-%{release}
+%setup -q -n xterm-%{version}
 
 %build
 CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \

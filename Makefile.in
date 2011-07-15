@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.180 2011/07/08 09:44:00 tom Exp $
+## $XTermId: Makefile.in,v 1.181 2011/07/14 22:13:45 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -335,7 +335,7 @@ clean : mostlyclean
 
 distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
-@desktop_utils@	-$(RM) df-install
+	-$(RM) df-install
 
 distclean \
 docs-clean ::

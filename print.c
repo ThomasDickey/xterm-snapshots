@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.137 2011/07/12 09:56:17 tom Exp $ */
+/* $XTermId: print.c,v 1.138 2011/07/14 23:49:10 tom Exp $ */
 
 /************************************************************
 
@@ -39,6 +39,7 @@ authorization.
 #include <xstrings.h>
 
 #include <stdio.h>
+#include <sys/stat.h>
 
 #undef  CTRL
 #define	CTRL(c)	((c) & 0x1f)
