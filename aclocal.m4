@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.308 2011/07/08 08:55:35 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.309 2011/07/14 23:36:54 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -574,7 +574,7 @@ int main() {
 	fi
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 16 updated: 2011/07/02 09:27:51
+dnl CF_FUNC_TGETENT version: 17 updated: 2011/07/14 19:34:47
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -591,7 +591,17 @@ AC_DEFUN([CF_FUNC_TGETENT],
 # necessarily in /etc/termcap - unsetenv is not portable, so we cannot simply
 # discard $TERMCAP.
 cf_TERMVAR=vt100
-test -n "$TERMCAP" && cf_TERMVAR="$TERM"
+if test -n "$TERMCAP"
+then
+	cf_TERMCAP=`echo "$TERMCAP" | tr '\n' ' ' | sed -e 's/^..|//' -e 's/|.*//'`
+	case "$cf_TERMCAP" in #(vi
+	screen*.*) #(vi
+		;;
+	*)
+		cf_TERMVAR="$cf_TERMCAP"
+		;;
+	esac
+fi
 test -z "$cf_TERMVAR" && cf_TERMVAR=vt100
 
 AC_MSG_CHECKING(if we want full tgetent function)
