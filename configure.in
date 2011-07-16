@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.274 2011/07/07 00:06:11 tom Exp $
+dnl $XTermId: configure.in,v 1.275 2011/07/16 00:37:57 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -282,7 +282,7 @@ CF_WITH_IMAKE_CFLAGS($(MAIN_DEFINES) $(VENDORMANDEFS))
 # If we have already established that there is a full termcap implementation,
 # suppress the definitions for terminfo that we make have imported from the
 # imake-file.
-if test "x$cf_cv_lib_tgetent" != xno ; then
+if test "x$cf_cv_lib_tgetent" != xno || test "x$cf_cv_lib_part_tgetent" != xno ; then
 	case "$IMAKE_CFLAGS" in
 	*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
 		CF_UNDO_CFLAGS(IMAKE_CFLAGS,terminfo,[-DUSE_TERMINFO[[ 	]]*-DHAVE_TIGETSTR[[ 	]]*])

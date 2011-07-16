@@ -12360,7 +12360,7 @@ fi
 # If we have already established that there is a full termcap implementation,
 # suppress the definitions for terminfo that we make have imported from the
 # imake-file.
-if test "x$cf_cv_lib_tgetent" != xno ; then
+if test "x$cf_cv_lib_tgetent" != xno || test "x$cf_cv_lib_part_tgetent" != xno ; then
 	case "$IMAKE_CFLAGS" in
 	*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
 
