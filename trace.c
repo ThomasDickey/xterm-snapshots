@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.125 2011/07/12 09:31:05 tom Exp $ */
+/* $XTermId: trace.c,v 1.126 2011/07/17 22:22:35 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -603,14 +603,14 @@ TraceTranslations(const char *name, Widget w)
     XSetErrorHandler(save);
 }
 
-int
+XtGeometryResult
 TraceResizeRequest(const char *fn, int ln, Widget w,
 		   unsigned reqwide,
 		   unsigned reqhigh,
 		   Dimension * gotwide,
 		   Dimension * gothigh)
 {
-    int rc;
+    XtGeometryResult rc;
 
     TRACE(("%s@%d ResizeRequest %ux%u\n", fn, ln, reqhigh, reqwide));
     rc = XtMakeResizeRequest((Widget) w, reqwide, reqhigh, gotwide, gothigh);
