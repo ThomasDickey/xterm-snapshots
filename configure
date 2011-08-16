@@ -16325,7 +16325,7 @@ then
 fi
 
 ###	output xtermcfg.h, etc
-ac_config_files="$ac_config_files Makefile df-install"
+ac_config_files="$ac_config_files Makefile df-install minstall.sh:minstall.in"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -16634,8 +16634,9 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "df-install" ) CONFIG_FILES="$CONFIG_FILES df-install" ;;
+  "minstall.sh" ) CONFIG_FILES="$CONFIG_FILES minstall.sh:minstall.in" ;;
   "xtermcfg.h" ) CONFIG_HEADERS="$CONFIG_HEADERS xtermcfg.h:xtermcfg.hin" ;;
-  *) { { echo "$as_me:16638: error: invalid argument: $ac_config_target" >&5
+  *) { { echo "$as_me:16639: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
   esac
@@ -16760,6 +16761,8 @@ s,@ac_pt_PKG_CONFIG@,$ac_pt_PKG_CONFIG,;t t
 s,@IMAKE@,$IMAKE,;t t
 s,@IMAKE_CFLAGS@,$IMAKE_CFLAGS,;t t
 s,@IMAKE_LOADFLAGS@,$IMAKE_LOADFLAGS,;t t
+s,@default_termid@,$default_termid,;t t
+s,@default_TERM@,$default_TERM,;t t
 s,@cf_tic_prog@,$cf_tic_prog,;t t
 s,@no_ticprog@,$no_ticprog,;t t
 s,@TERMINFO_DIR@,$TERMINFO_DIR,;t t
@@ -16901,7 +16904,7 @@ done; }
   esac
 
   if test x"$ac_file" != x-; then
-    { echo "$as_me:16904: creating $ac_file" >&5
+    { echo "$as_me:16907: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
     rm -f "$ac_file"
   fi
@@ -16919,7 +16922,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:16922: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:16925: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -16932,7 +16935,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:16935: error: cannot find input file: $f" >&5
+           { { echo "$as_me:16938: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
@@ -16998,7 +17001,7 @@ for ac_file in : $CONFIG_HEADERS; do test "x$ac_file" = x: && continue
   * )   ac_file_in=$ac_file.in ;;
   esac
 
-  test x"$ac_file" != x- && { echo "$as_me:17001: creating $ac_file" >&5
+  test x"$ac_file" != x- && { echo "$as_me:17004: creating $ac_file" >&5
 echo "$as_me: creating $ac_file" >&6;}
 
   # First look for the input files in the build tree, otherwise in the
@@ -17009,7 +17012,7 @@ echo "$as_me: creating $ac_file" >&6;}
       -) echo $tmp/stdin ;;
       [\\/$]*)
          # Absolute (can't be DOS-style, as IFS=:)
-         test -f "$f" || { { echo "$as_me:17012: error: cannot find input file: $f" >&5
+         test -f "$f" || { { echo "$as_me:17015: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          echo $f;;
@@ -17022,7 +17025,7 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
            echo $srcdir/$f
          else
            # /dev/null tree
-           { { echo "$as_me:17025: error: cannot find input file: $f" >&5
+           { { echo "$as_me:17028: error: cannot find input file: $f" >&5
 echo "$as_me: error: cannot find input file: $f" >&2;}
    { (exit 1); exit 1; }; }
          fi;;
@@ -17140,7 +17143,7 @@ cat >>$CONFIG_STATUS <<\EOF
   rm -f $tmp/in
   if test x"$ac_file" != x-; then
     if cmp -s $ac_file $tmp/config.h 2>/dev/null; then
-      { echo "$as_me:17143: $ac_file is unchanged" >&5
+      { echo "$as_me:17146: $ac_file is unchanged" >&5
 echo "$as_me: $ac_file is unchanged" >&6;}
     else
       ac_dir=`$as_expr X"$ac_file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
