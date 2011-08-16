@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.275 2011/07/16 00:37:57 tom Exp $
+dnl $XTermId: configure.in,v 1.276 2011/08/16 09:27:42 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -304,6 +304,7 @@ vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
 	;;
 esac
 AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid")
+AC_SUBST(default_termid)
 
 AC_MSG_CHECKING(for default terminal-type)
 AC_ARG_WITH(terminal-type,
@@ -312,6 +313,7 @@ AC_ARG_WITH(terminal-type,
 	[default_TERM=xterm])
 AC_MSG_RESULT($default_TERM)
 AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM")
+AC_SUBST(default_TERM)
 
 AC_CHECK_PROG(cf_tic_prog,tic,yes,no)
 if test "$cf_tic_prog" = yes ; then
@@ -974,4 +976,4 @@ then
 fi
 
 ###	output xtermcfg.h, etc
-AC_OUTPUT(Makefile df-install)
+AC_OUTPUT(Makefile df-install minstall.sh:minstall.in)

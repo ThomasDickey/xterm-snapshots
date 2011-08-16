@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.181 2011/07/14 22:13:45 tom Exp $
+## $XTermId: Makefile.in,v 1.183 2011/08/16 09:43:33 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -130,7 +130,7 @@ all :	$(PROGRAMS)
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
 .man.$(manext) :
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $< $@ $(appsdir)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS)
 
 .$(manext).html :
 	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Thtml -man" >$@
@@ -222,10 +222,10 @@ install-full ::
 install \
 install-man \
 install-full :: $(MANDIR)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/uxterm.man   $(MANDIR)/$(actual_uxterm).$(manext) $(appsdir)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(appsdir)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir) $(CLASS)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir) $(CLASS)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/uxterm.man   $(MANDIR)/$(actual_uxterm).$(manext) $(appsdir) $(CLASS)
+	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(appsdir) $(CLASS)
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
@@ -335,7 +335,7 @@ clean : mostlyclean
 
 distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
-	-$(RM) df-install
+	-$(RM) df-install minstall.sh
 
 distclean \
 docs-clean ::
