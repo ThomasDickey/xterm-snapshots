@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1070 2011/08/16 23:53:18 tom Exp $
+  $XTermId: xterm.log.html,v 1.1072 2011/08/17 23:22:54 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -333,6 +333,17 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve command-line parsing to make abbreviate options work
+	    consistently across xterm-specific versus standard X toolkit
+	    options, and report cases where an abbreviated option happens
+	    to be ambiguous.  In particular, <code>-d</code> now works as
+	    an abbreviation for <code>-display</code>.
+
+	<li>fix regression in command-line parsing introduced in
+	    <a href="#xterm_271">patch #271</a> changes
+	    for Debian #629358,
+	    (Debian #637910).
+
 	<li>split-out new termcap/terminfo building block
 	    <code>xterm+kbs</code> for configurability.
 
