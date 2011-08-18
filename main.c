@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.638 2011/07/14 00:18:58 tom Exp $ */
+/* $XTermId: main.c,v 1.641 2011/08/17 23:37:05 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1345,10 +1345,174 @@ decode_keyvalue(char **ptr, int termcap)
 }
 
 static int
-abbrev(const char *tst, const char *cmp, size_t need)
+matchArg(XrmOptionDescRec * table, const char *param)
 {
-    size_t len = strlen(tst);
-    return ((len >= need) && (!strncmp(tst, cmp, len)));
+    int result = -1;
+    int n;
+    int ch;
+
+    for (n = 0; (ch = table->option[n]) != '\0'; ++n) {
+	if (param[n] == ch) {
+	    result = n;
+	} else {
+	    if (param[n] != '\0')
+		result = -1;
+	    break;
+	}
+    }
+
+    return result;
+}
+
+/* return the number of argv[] entries which constitute arguments of option */
+static int
+countArg(XrmOptionDescRec * item)
+{
+    int result = 0;
+
+    switch (item->argKind) {
+    case XrmoptionNoArg:
+	/* FALLTHRU */
+    case XrmoptionIsArg:
+	/* FALLTHRU */
+    case XrmoptionStickyArg:
+	break;
+    case XrmoptionSepArg:
+	/* FALLTHRU */
+    case XrmoptionResArg:
+	/* FALLTHRU */
+    case XrmoptionSkipArg:
+	result = 1;
+	break;
+    case XrmoptionSkipLine:
+	break;
+    case XrmoptionSkipNArgs:
+	result = (int) (item->value);
+	break;
+    }
+    return result;
+}
+
+/*
+ * Parse the argument list, more/less as XtInitialize, etc., would do, so we
+ * can find our own "-help" and "-version" options reliably.  Improve on just
+ * doing that, by reporting ambiguous options (things that happen to match the
+ * abbreviated option we are examining), and making it smart enough to handle
+ * "-d" as an abbreviation for "-display".  Doing this requires checking the
+ * standard table (something that the X libraries should do).
+ */
+static XrmOptionDescRec *
+parseArg(int *num, char **argv, char **valuep)
+{
+    /* table adapted from XtInitialize, used here to improve abbreviations */
+    /* *INDENT-OFF* */
+#define DATA(option,kind) { option, NULL, kind, (XtPointer) NULL }
+    static XrmOptionDescRec opTable[] = {
+	DATA("+rv",		   XrmoptionNoArg),
+	DATA("+synchronous",	   XrmoptionNoArg),
+	DATA("-background",	   XrmoptionSepArg),
+	DATA("-bd",		   XrmoptionSepArg),
+	DATA("-bg",		   XrmoptionSepArg),
+	DATA("-bordercolor",	   XrmoptionSepArg),
+	DATA("-borderwidth",	   XrmoptionSepArg),
+	DATA("-bw",		   XrmoptionSepArg),
+	DATA("-display",	   XrmoptionSepArg),
+	DATA("-fg",		   XrmoptionSepArg),
+	DATA("-fn",		   XrmoptionSepArg),
+	DATA("-font",		   XrmoptionSepArg),
+	DATA("-foreground",	   XrmoptionSepArg),
+	DATA("-geometry",	   XrmoptionSepArg),
+	DATA("-iconic",		   XrmoptionNoArg),
+	DATA("-name",		   XrmoptionSepArg),
+	DATA("-reverse",	   XrmoptionNoArg),
+	DATA("-rv",		   XrmoptionNoArg),
+	DATA("-selectionTimeout",  XrmoptionSepArg),
+	DATA("-synchronous",	   XrmoptionNoArg),
+	DATA("-title",		   XrmoptionSepArg),
+	DATA("-xnllanguage",	   XrmoptionSepArg),
+	DATA("-xrm",		   XrmoptionResArg),
+	DATA("-xtsessionID",	   XrmoptionSepArg),
+    };
+#undef DATA
+    /* *INDENT-ON* */
+
+    XrmOptionDescRec *result = 0;
+    Cardinal inlist;
+    Cardinal limit = XtNumber(optionDescList) + XtNumber(opTable);
+    int atbest = -1;
+    int best = -1;
+    int test;
+
+#define ITEM(n) ((Cardinal)(n) < XtNumber(optionDescList) \
+		 ? &optionDescList[n] \
+		 : &opTable[(Cardinal)(n) - XtNumber(optionDescList)])
+
+    if (argv[*num] != 0) {
+	Boolean need_value;
+	Boolean have_value = False;
+
+	if (argv[(*num) + 1] != 0) {
+	    char *value = argv[(*num) + 1];
+	    have_value = (Boolean) ((*value != '-') && (*value != '+'));
+	}
+	for (inlist = 0; inlist < limit; ++inlist) {
+	    XrmOptionDescRec *check = ITEM(inlist);
+
+	    test = matchArg(check, argv[*num]);
+	    if (test < 0)
+		continue;
+
+	    /* check for exact match */
+	    if ((test + 1) == (int) strlen(check->option)) {
+		atbest = (int) inlist;
+		break;
+	    }
+
+	    need_value = (Boolean) (test > 0 && countArg(check) > 0);
+
+	    if (need_value ^ have_value)
+		continue;
+
+	    /* special-case for our own options - always allow abbreviation */
+	    if (test > 0
+		&& ITEM(inlist)->argKind >= XrmoptionSkipArg) {
+		atbest = (int) inlist;
+		break;
+	    }
+	    if (test > best) {
+		best = test;
+		atbest = (int) inlist;
+	    } else if (test == best) {
+		if (atbest >= 0) {
+		    if (atbest > 0) {
+			fprintf(stderr,
+				"%s:  ambiguous option \"%s\" vs \"%s\"\n",
+				ProgramName, check->option,
+				ITEM(atbest)->option);
+		    }
+		    atbest = -1;
+		}
+	    }
+	}
+    }
+
+    *valuep = 0;
+    if (atbest >= 0) {
+	result = ITEM(atbest);
+	/* expand abbreviations */
+	if (result->argKind != XrmoptionStickyArg
+	    && strcmp(argv[*num], x_strdup(result->option))) {
+	    argv[*num] = x_strdup(result->option);
+	}
+
+	/* adjust (*num) to skip option value */
+	(*num) += countArg(result);
+	if (result->argKind == XrmoptionSkipArg) {
+	    *valuep = argv[*num];
+	}
+    }
+#undef ITEM
+    return result;
 }
 
 static void
@@ -1830,20 +1994,26 @@ main(int argc, char *argv[]ENVP_ARG)
     TRACE_OPTS(xtermOptions, optionDescList, XtNumber(optionDescList));
     TRACE_ARGV("Before XtOpenApplication", argv);
     if (argc > 1) {
+	XrmOptionDescRec *option_ptr;
+	char *option_value;
 	int n;
-	size_t unique = 2;
 	Bool quit = False;
 
 	for (n = 1; n < argc; n++) {
 	    TRACE(("parsing %s\n", argv[n]));
-	    if (abbrev(argv[n], "-version", unique)) {
+	    if ((option_ptr = parseArg(&n, argv, &option_value)) == 0) {
+		break;
+	    }
+	    if (!strcmp(option_ptr->option, "-e")) {
+		break;
+	    } else if (!strcmp(option_ptr->option, "-version")) {
 		Version();
 		quit = True;
-	    } else if (abbrev(argv[n], "-help", unique)) {
+	    } else if (!strcmp(option_ptr->option, "-help")) {
 		Help();
 		quit = True;
-	    } else if (abbrev(argv[n], "-class", (size_t) 3)) {
-		if ((my_class = argv[++n]) == 0) {
+	    } else if (!strcmp(option_ptr->option, "-class")) {
+		if ((my_class = option_value) == 0) {
 		    Help();
 		    quit = True;
 		}
