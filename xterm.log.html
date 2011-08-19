@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1072 2011/08/17 23:22:54 tom Exp $
+  $XTermId: xterm.log.html,v 1.1073 2011/08/19 09:26:34 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -333,6 +333,11 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve <code>keepSelection</code>, adding the case where the
+	    highlighting is cleared,
+	    overlooked in <a href="#xterm_230">patch #230</a>
+	    (patch by Marco Peereboom).
+
 	<li>improve command-line parsing to make abbreviate options work
 	    consistently across xterm-specific versus standard X toolkit
 	    options, and report cases where an abbreviated option happens
