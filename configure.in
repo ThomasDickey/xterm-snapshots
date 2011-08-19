@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.276 2011/08/16 09:27:42 tom Exp $
+dnl $XTermId: configure.in,v 1.277 2011/08/19 09:13:07 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -976,4 +976,4 @@ then
 fi
 
 ###	output xtermcfg.h, etc
-AC_OUTPUT(Makefile df-install minstall.sh:minstall.in)
+AC_OUTPUT(Makefile df-install minstall:minstall.in)

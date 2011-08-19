@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.503 2011/08/16 09:39:40 tom Exp $
+.\" $XTermId: xterm.man,v 1.504 2011/08/18 00:30:39 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -1824,7 +1824,7 @@ the font server may not cooperate.
 Since X11R6, bitmap fonts have been scaled.
 The font server claims to provide the bold font that \fIxterm\fP requests,
 but the result is not always readable.
-XFree86 provides a feature which can be used to suppress the scaling.
+XFree86 introduced a feature which can be used to suppress the scaling.
 In the X server's configuration file (e.g., \*(``/etc/X11/XFree86\*(''), you
 can add \*(``:unscaled\*('' to the end of the directory specification for the
 \*(``misc\*('' fonts,
