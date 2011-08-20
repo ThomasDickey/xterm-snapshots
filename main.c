@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.641 2011/08/17 23:37:05 tom Exp $ */
+/* $XTermId: main.c,v 1.646 2011/08/20 13:51:34 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -134,6 +134,9 @@ SOFTWARE.
 #ifdef __sgi
 #include <grp.h>		/* initgroups() */
 #endif
+
+static void Syntax(char *) GCC_NORETURN;
+static void HsSysError(int) GCC_NORETURN;
 
 #ifdef USE_ISPTS_FLAG
 static Bool IsPts = False;
@@ -1586,42 +1589,6 @@ ConvertConsoleSelection(Widget w GCC_UNUSED,
 }
 #endif /* TIOCCONS */
 
-#if OPT_SESSION_MGT
-static void
-die_callback(Widget w GCC_UNUSED,
-	     XtPointer client_data GCC_UNUSED,
-	     XtPointer call_data GCC_UNUSED)
-{
-    Cleanup(0);
-}
-
-static void
-save_callback(Widget w GCC_UNUSED,
-	      XtPointer client_data GCC_UNUSED,
-	      XtPointer call_data)
-{
-    XtCheckpointToken token = (XtCheckpointToken) call_data;
-    /* we have nothing to save */
-    token->save_success = True;
-}
-
-static void
-icewatch(IceConn iceConn,
-	 IcePointer clientData GCC_UNUSED,
-	 Bool opening,
-	 IcePointer * watchData GCC_UNUSED)
-{
-    if (opening) {
-	ice_fd = IceConnectionNumber(iceConn);
-	TRACE(("got IceConnectionNumber %d\n", ice_fd));
-    } else {
-	ice_fd = -1;
-	TRACE(("reset IceConnectionNumber\n"));
-    }
-}
-
-#endif /* OPT_SESSION_MGT */
-
 /*
  * DeleteWindow(): Action proc to implement ICCCM delete_window.
  */
@@ -2005,6 +1972,9 @@ main(int argc, char *argv[]ENVP_ARG)
 		break;
 	    }
 	    if (!strcmp(option_ptr->option, "-e")) {
+		command_to_exec = argv + n + 1;
+		if (!command_to_exec[0])
+		    Syntax(argv[n]);
 		break;
 	    } else if (!strcmp(option_ptr->option, "-version")) {
 		Version();
@@ -2017,6 +1987,9 @@ main(int argc, char *argv[]ENVP_ARG)
 		    Help();
 		    quit = True;
 		}
+	    } else if (!strcmp(option_ptr->option, "-into")) {
+		char *endPtr;
+		winToEmbedInto = (Window) strtol(option_value, &endPtr, 0);
 	    }
 	}
 	if (quit)
@@ -2157,23 +2130,14 @@ main(int argc, char *argv[]ENVP_ARG)
 	TRACE_IDS;
 #endif
 
-	XtSetErrorHandler(xt_error);
-#if OPT_SESSION_MGT
-	toplevel = XtOpenApplication(&app_con, my_class,
-				     optionDescList,
-				     XtNumber(optionDescList),
-				     &argc, argv, fallback_resources,
-				     sessionShellWidgetClass,
-				     NULL, 0);
-	IceAddConnectionWatch(icewatch, NULL);
-#else
-	toplevel = XtAppInitialize(&app_con, my_class,
-				   optionDescList,
-				   XtNumber(optionDescList),
-				   &argc, argv, fallback_resources,
-				   NULL, 0);
-#endif /* OPT_SESSION_MGT */
-	XtSetErrorHandler((XtErrorHandler) 0);
+	toplevel = xtermOpenApplication(&app_con,
+					my_class,
+					optionDescList,
+					XtNumber(optionDescList),
+					&argc, argv,
+					fallback_resources,
+					sessionShellWidgetClass,
+					NULL, 0);
 
 	XtGetApplicationResources(toplevel, (XtPointer) &resource,
 				  application_resources,
@@ -2271,12 +2235,6 @@ main(int argc, char *argv[]ENVP_ARG)
 
 	TRACE(("parsing %s\n", argv[0]));
 	switch (argv[0][1]) {
-	case 'h':		/* -help */
-	    Help();
-	    exit(0);
-	case 'v':		/* -version */
-	    Version();
-	    exit(0);
 	case 'C':
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 #ifndef __sgi
@@ -2306,26 +2264,19 @@ main(int argc, char *argv[]ENVP_ARG)
 	    debug = True;
 	    continue;
 #endif /* DEBUG */
-	case 'c':		/* -class param */
-	    if (strcmp(argv[0] + 1, "class") == 0)
-		argc--, argv++;
-	    else
+	case 'c':
+	    if (strcmp(argv[0], "-class"))
 		Syntax(*argv);
+	    argc--, argv++;
 	    continue;
 	case 'e':
-	    if (argc <= 1)
+	    if (strcmp(argv[0], "-e"))
 		Syntax(*argv);
-	    command_to_exec = ++argv;
 	    break;
 	case 'i':
-	    if (argc <= 1) {
+	    if (strcmp(argv[0], "-into"))
 		Syntax(*argv);
-	    } else {
-		char *endPtr;
-		--argc;
-		++argv;
-		winToEmbedInto = (Window) strtol(argv[0], &endPtr, 10);
-	    }
+	    argc--, argv++;
 	    continue;
 
 	default:
@@ -2383,13 +2334,7 @@ main(int argc, char *argv[]ENVP_ARG)
     ShowToolbar(resource.toolBar);
 #endif
 
-#if OPT_SESSION_MGT
-    if (resource.sessionMgt) {
-	TRACE(("Enabling session-management callbacks\n"));
-	XtAddCallback(toplevel, XtNdieCallback, die_callback, NULL);
-	XtAddCallback(toplevel, XtNsaveCallback, save_callback, NULL);
-    }
-#endif
+    xtermOpenSession();
 
     /*
      * Set title and icon name if not specified
@@ -2561,21 +2506,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif
 
-    TRACE(("checking winToEmbedInto %#lx\n", winToEmbedInto));
-    if (winToEmbedInto != None) {
-	XtRealizeWidget(toplevel);
-	/*
-	 * This should probably query the tree or check the attributes of
-	 * winToEmbedInto in order to verify that it exists, but I'm still not
-	 * certain what is the best way to do it -GPS
-	 */
-	TRACE(("...reparenting toplevel %#lx into %#lx\n",
-	       XtWindow(toplevel),
-	       winToEmbedInto));
-	XReparentWindow(XtDisplay(toplevel),
-			XtWindow(toplevel),
-			winToEmbedInto, 0, 0);
-    }
+    xtermEmbedWindow(winToEmbedInto);
 #if OPT_COLOR_RES
     TRACE(("checking reverseVideo before rv %s fg %s, bg %s\n",
 	   term->misc.re_verse0 ? "reverse" : "normal",
@@ -4955,9 +4886,7 @@ Exit(int n)
 	    /* XrmSetDatabase(dpy, 0); increases leaks ;-) */
 	    XtCloseDisplay(dpy);
 	    XtDestroyApplicationContext(app_con);
-#if OPT_SESSION_MGT
-	    IceRemoveConnectionWatch(icewatch, NULL);
-#endif
+	    xtermCloseSession();
 	    TRACE(("closed display\n"));
 	}
 	TRACE_CLOSE();
