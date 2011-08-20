@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.504 2011/08/18 00:30:39 tom Exp $
+.\" $XTermId: xterm.man,v 1.505 2011/08/20 14:05:23 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -601,7 +601,8 @@ environment variable.
 Turn off the \fBuseInsertMode\fP resource.
 .TP 8
 .BI \-into " windowId"
-Given an X window identifier (a decimal integer),
+Given an X window identifier (an integer, which can be hexadecimal,
+octal or decimal according to whether it begins with "0x", "0" or neither),
 \fIxterm\fP will reparent its top-level shell widget to that window.
 This is used to embed \fIxterm\fP within other applications.
 .TP 8

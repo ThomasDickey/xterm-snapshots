@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.654 2011/07/12 08:39:49 tom Exp $ */
+/* $XTermId: xterm.h,v 1.656 2011/08/20 00:20:20 tom Exp $ */
 
 /************************************************************
 
@@ -949,6 +949,7 @@ extern void show_8bit_control  (Bool  /* value */);
 extern Bool AllocateTermColor(XtermWidget, ScrnColors *, int, const char *, Bool);
 extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long  /* fg */, unsigned long  /* bg */);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
+extern Widget xtermOpenApplication(XtAppContext * /* app_context_return */, String /* application_class */, XrmOptionDescRec */* options */, Cardinal /* num_options */, int * /* argc_in_out */, String */* argv_in_out */, String * /* fallback_resources */, WidgetClass /* widget_class */, ArgList /* args */, Cardinal /* num_args */);
 extern Window WMFrameWindow(XtermWidget /* termw */);
 extern XrmOptionDescRec * sortedOptDescs(XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget(Widget /* w */);
@@ -1005,6 +1006,7 @@ extern void xt_error (String  /* message */);
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);
+extern void xtermEmbedWindow(Window /* winToEmbedInfo */);
 extern void xtermSetenv (const char * /* var */, const char * /* value */);
 extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);
 
@@ -1032,6 +1034,14 @@ extern void xtermClearLEDs (TScreen * /* screen */);
 #define ShowScrollLock(screen, enable) /* nothing */
 #define SetScrollLock(screen, enable) /* nothing */
 #define GetScrollLock(screen) /* nothing */
+#endif
+
+#if OPT_SESSION_MGT
+extern void xtermCloseSession (void);
+extern void xtermOpenSession (void);
+#else
+#define xtermCloseSession() /* nothing */
+#define xtermOpenSession() /* nothing */
 #endif
 
 #if OPT_WIDE_CHARS
