@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.646 2011/08/20 13:51:34 tom Exp $ */
+/* $XTermId: main.c,v 1.647 2011/08/20 22:07:16 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1467,8 +1467,15 @@ parseArg(int *num, char **argv, char **valuep)
 
 	    /* check for exact match */
 	    if ((test + 1) == (int) strlen(check->option)) {
-		atbest = (int) inlist;
-		break;
+		if (check->argKind == XrmoptionStickyArg) {
+		    if (strlen(argv[*num]) > strlen(check->option)) {
+			atbest = (int) inlist;
+			break;
+		    }
+		} else if ((test + 1) == (int) strlen(argv[*num])) {
+		    atbest = (int) inlist;
+		    break;
+		}
 	    }
 
 	    need_value = (Boolean) (test > 0 && countArg(check) > 0);
