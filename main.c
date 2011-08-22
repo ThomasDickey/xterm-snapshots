@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.647 2011/08/20 22:07:16 tom Exp $ */
+/* $XTermId: main.c,v 1.653 2011/08/21 22:23:14 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -494,6 +494,7 @@ static char **command_to_exec = NULL;
 
 #if OPT_LUIT_PROG
 static char **command_to_exec_with_luit = NULL;
+static unsigned command_length_with_luit = 0;
 #endif
 
 #define TERMCAP_ERASE "kb"
@@ -996,7 +997,6 @@ static XrmOptionDescRec optionDescList[] = {
 {"+k8",		"*allowC1Printable", XrmoptionNoArg,	(XPointer) "off"},
 #endif
 {"-kt",		"*keyboardType", XrmoptionSepArg,	(XPointer) NULL},
-{"+kt",		"*keyboardType", XrmoptionSepArg,	(XPointer) NULL},
 /* parse logging options anyway for compatibility */
 {"-l",		"*logging",	XrmoptionNoArg,		(XPointer) "on"},
 {"+l",		"*logging",	XrmoptionNoArg,		(XPointer) "off"},
@@ -1171,6 +1171,7 @@ static OptionHelp xtermOptions[] = {
 { "-/+hm",                 "turn on/off selection-color override" },
 { "-selbg color",          "selection background color" },
 { "-selfg color",          "selection foreground color" },
+/* -hc is deprecated, not shown in help message */
 #endif
 #if OPT_HP_FUNC_KEYS
 { "-/+hf",                 "turn on/off HP Function Key escape codes" },
@@ -1231,6 +1232,7 @@ static OptionHelp xtermOptions[] = {
 #if OPT_LUIT_PROG
 { "-/+lc",                 "turn on/off locale mode using luit" },
 { "-lcc path",             "filename of locale converter (" DEFLOCALEFILTER ")" },
+/* -en is deprecated, not shown in help message */
 #endif
 { "-/+uc",                 "turn on/off underline cursor" },
 { "-/+ulc",                "turn off/on display of underline as color" },
@@ -1396,10 +1398,12 @@ countArg(XrmOptionDescRec * item)
     return result;
 }
 
+#define isOption(string) ((string)[0] == '-' || (string)[0] == '+')
+
 /*
  * Parse the argument list, more/less as XtInitialize, etc., would do, so we
  * can find our own "-help" and "-version" options reliably.  Improve on just
- * doing that, by reporting ambiguous options (things that happen to match the
+ * doing that, by detecting ambiguous options (things that happen to match the
  * abbreviated option we are examining), and making it smart enough to handle
  * "-d" as an abbreviation for "-display".  Doing this requires checking the
  * standard table (something that the X libraries should do).
@@ -1454,9 +1458,10 @@ parseArg(int *num, char **argv, char **valuep)
 	Boolean need_value;
 	Boolean have_value = False;
 
+	TRACE(("parseArg %s\n", argv[*num]));
 	if (argv[(*num) + 1] != 0) {
 	    char *value = argv[(*num) + 1];
-	    have_value = (Boolean) ((*value != '-') && (*value != '+'));
+	    have_value = (Boolean) ! isOption(value);
 	}
 	for (inlist = 0; inlist < limit; ++inlist) {
 	    XrmOptionDescRec *check = ITEM(inlist);
@@ -1480,8 +1485,10 @@ parseArg(int *num, char **argv, char **valuep)
 
 	    need_value = (Boolean) (test > 0 && countArg(check) > 0);
 
-	    if (need_value ^ have_value)
+	    if (need_value ^ have_value) {
+		TRACE(("...skipping, need %d vs have %d\n", need_value, have_value));
 		continue;
+	    }
 
 	    /* special-case for our own options - always allow abbreviation */
 	    if (test > 0
@@ -1509,6 +1516,7 @@ parseArg(int *num, char **argv, char **valuep)
     *valuep = 0;
     if (atbest >= 0) {
 	result = ITEM(atbest);
+	TRACE(("...result %s\n", result->option));
 	/* expand abbreviations */
 	if (result->argKind != XrmoptionStickyArg
 	    && strcmp(argv[*num], x_strdup(result->option))) {
@@ -1517,8 +1525,10 @@ parseArg(int *num, char **argv, char **valuep)
 
 	/* adjust (*num) to skip option value */
 	(*num) += countArg(result);
+	TRACE(("...next %s\n", NonNull(argv[*num])));
 	if (result->argKind == XrmoptionSkipArg) {
 	    *valuep = argv[*num];
+	    TRACE(("...parameter %s\n", NonNull(*valuep)));
 	}
     }
 #undef ITEM
@@ -1532,6 +1542,7 @@ Syntax(char *badOption)
     OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     int col;
 
+    TRACE(("Syntax error at %s\n", badOption));
     fprintf(stderr, "%s:  bad command line option \"%s\"\r\n\n",
 	    ProgramName, badOption);
 
@@ -1974,12 +1985,19 @@ main(int argc, char *argv[]ENVP_ARG)
 	Bool quit = False;
 
 	for (n = 1; n < argc; n++) {
-	    TRACE(("parsing %s\n", argv[n]));
 	    if ((option_ptr = parseArg(&n, argv, &option_value)) == 0) {
-		break;
-	    }
-	    if (!strcmp(option_ptr->option, "-e")) {
-		command_to_exec = argv + n + 1;
+		if (isOption(argv[n])) {
+		    Syntax(argv[n]);
+		} else if (explicit_shname != 0) {
+		    fprintf(stderr, "Explicit shell already was %s\n", explicit_shname);
+		    Syntax(argv[n]);
+		}
+		explicit_shname = xtermFindShell(argv[n], True);
+		if (explicit_shname == 0)
+		    exit(0);
+		TRACE(("...explicit shell %s\n", explicit_shname));
+	    } else if (!strcmp(option_ptr->option, "-e")) {
+		command_to_exec = (argv + n + 1);
 		if (!command_to_exec[0])
 		    Syntax(argv[n]);
 		break;
@@ -2001,9 +2019,16 @@ main(int argc, char *argv[]ENVP_ARG)
 	}
 	if (quit)
 	    exit(0);
+	/*
+	 * If there is anything left unparsed, and we're not using "-e",
+	 * then give up.
+	 */
+	if (n < argc && !command_to_exec) {
+	    Syntax(argv[n]);
+	}
     }
 
-    /* This dumps core on HP-UX 9.05 with X11R5 */
+    /* This dumped core on HP-UX 9.05 with X11R5 */
 #if OPT_I18N_SUPPORT
     XtSetLanguageProc(NULL, NULL, NULL);
 #endif
@@ -2227,18 +2252,15 @@ main(int argc, char *argv[]ENVP_ARG)
     /* Parse the rest of the command line */
     TRACE_ARGV("After XtOpenApplication", argv);
     for (argc--, argv++; argc > 0; argc--, argv++) {
+	if (!isOption(*argv)) {
 #ifdef VMS
-	if (**argv != '-')
 	    Syntax(*argv);
 #else
-	if (**argv != '-') {
 	    if (argc > 1)
 		Syntax(*argv);
-	    if (command_to_exec == 0)	/* if no "-e" option */
-		explicit_shname = xtermFindShell(*argv, True);
 	    continue;
-	}
 #endif
+	}
 
 	TRACE(("parsing %s\n", argv[0]));
 	switch (argv[0][1]) {
@@ -2369,33 +2391,36 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #if OPT_LUIT_PROG
     if (term->misc.callfilter) {
-	int u = (term->misc.use_encoding ? 2 : 0);
-	if (command_to_exec) {
-	    int n;
-	    char **c;
-	    for (n = 0, c = command_to_exec; *c; n++, c++) ;
-	    c = TypeMallocN(char *, (unsigned) (n + 3 + u));
-	    if (c == NULL)
-		SysError(ERROR_LUMALLOC);
-	    memcpy(c + 2 + u, command_to_exec, (unsigned) (n + 1) * sizeof(char *));
-	    c[0] = term->misc.localefilter;
-	    if (u) {
-		c[1] = "-encoding";
-		c[2] = term->misc.locale_str;
-	    }
-	    c[1 + u] = "--";
-	    command_to_exec_with_luit = c;
-	} else {
-	    static char *luit[6];
-	    luit[0] = term->misc.localefilter;
-	    if (u) {
-		luit[1] = "-encoding";
-		luit[2] = term->misc.locale_str;
-		luit[3] = NULL;
-	    } else
-		luit[1] = NULL;
-	    command_to_exec_with_luit = luit;
+	char **split_filter = x_splitargs(term->misc.localefilter);
+	unsigned count_split = x_countargv(split_filter);
+	unsigned count_exec = x_countargv(command_to_exec);
+	unsigned count_using = (term->misc.use_encoding ? 2 : 0);
+
+	command_to_exec_with_luit = TypeCallocN(char *,
+						  (count_split
+						   + count_exec
+						   + count_using
+						   + 8));
+	if (command_to_exec_with_luit == NULL)
+	    SysError(ERROR_LUMALLOC);
+
+	x_appendargv(command_to_exec_with_luit, split_filter);
+	if (count_using) {
+	    char *encoding_opt[4];
+	    encoding_opt[0] = "-encoding";
+	    encoding_opt[1] = term->misc.locale_str;
+	    encoding_opt[2] = 0;
+	    x_appendargv(command_to_exec_with_luit, encoding_opt);
 	}
+	command_length_with_luit = x_countargv(command_to_exec_with_luit);
+	if (count_exec) {
+	    char *delimiter[2];
+	    delimiter[0] = "--";
+	    delimiter[1] = 0;
+	    x_appendargv(command_to_exec_with_luit, delimiter);
+	    x_appendargv(command_to_exec_with_luit, command_to_exec);
+	}
+	TRACE_ARGV("luit command", command_to_exec_with_luit);
     }
 #endif
 
@@ -4495,11 +4520,23 @@ spawnXTerm(XtermWidget xw)
 #endif /* OPT_PTY_HANDSHAKE */
 	    signal(SIGHUP, SIG_DFL);
 
+	    /*
+	     * If we have an explicit program to run, make that set $SHELL.
+	     * Otherwise, if $SHELL is not set, determine it from the user's
+	     * password information, if possible.
+	     *
+	     * Incidentally, our setting of $SHELL tells luit to use that
+	     * program rather than choosing between $SHELL and "/bin/sh".
+	     */
+	    unsetenv("SHELL");
 	    if ((ptr = explicit_shname) == NULL) {
-		if (((ptr = x_getenv("SHELL")) == NULL) &&
-		    ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL) ||
-		     *(ptr = pw->pw_shell) == 0)) {
-		    ptr = x_strdup("/bin/sh");
+		if ((ptr = x_getenv("SHELL")) == NULL) {
+		    if ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL)
+			|| *(ptr = pw->pw_shell) == 0) {
+			ptr = x_strdup("/bin/sh");
+		    } else if (ptr != 0) {
+			xtermSetenv("SHELL", ptr);
+		    }
 		}
 	    } else {
 		xtermSetenv("SHELL", explicit_shname);
@@ -4518,7 +4555,7 @@ spawnXTerm(XtermWidget xw)
 	    if (command_to_exec_with_luit && command_to_exec) {
 		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec_with_luit, False));
-		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
+		TRACE_ARGV("spawning luit command", command_to_exec_with_luit);
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* print error message on screen */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n",
@@ -4530,7 +4567,7 @@ spawnXTerm(XtermWidget xw)
 	    if (command_to_exec) {
 		xtermSetenv("XTERM_SHELL",
 			    xtermFindShell(*command_to_exec, False));
-		TRACE(("spawning command \"%s\"\n", *command_to_exec));
+		TRACE_ARGV("spawning command", command_to_exec);
 		execvp(*command_to_exec, command_to_exec);
 		if (command_to_exec[1] == 0)
 		    execlp(ptr, shname, "-c", command_to_exec[0], (void *) 0);
@@ -4547,8 +4584,9 @@ spawnXTerm(XtermWidget xw)
 	    (void) strcpy(shname_minus, "-");
 	    (void) strcat(shname_minus, shname);
 #ifndef TERMIO_STRUCT
-	    ldisc = XStrCmp("csh", shname + strlen(shname) - 3) == 0 ?
-		NTTYDISC : 0;
+	    ldisc = (!XStrCmp("csh", shname + strlen(shname) - 3)
+		     ? NTTYDISC
+		     : 0);
 	    ioctl(0, TIOCSETD, (char *) &ldisc);
 #endif /* !TERMIO_STRUCT */
 
@@ -4560,12 +4598,15 @@ spawnXTerm(XtermWidget xw)
 #if OPT_LUIT_PROG
 	    if (command_to_exec_with_luit) {
 		if (xw->misc.login_shell) {
-		    int u;
-		    u = (term->misc.use_encoding ? 2 : 0);
-		    command_to_exec_with_luit[u + 1] = x_strdup("-argv0");
-		    command_to_exec_with_luit[u + 2] = shname_minus;
-		    command_to_exec_with_luit[u + 3] = NULL;
+		    char *params[4];
+		    params[0] = x_strdup("-argv0");
+		    params[1] = shname_minus;
+		    params[2] = NULL;
+		    x_appendargv(command_to_exec_with_luit
+				 + command_length_with_luit,
+				 params);
 		}
+		TRACE_ARGV("final luit command", command_to_exec_with_luit);
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* Exec failed. */
 		fprintf(stderr, "%s: Can't execvp %s: %s\n", ProgramName,

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.505 2011/08/20 14:05:23 tom Exp $
+.\" $XTermId: xterm.man,v 1.506 2011/08/21 18:07:21 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -253,10 +253,9 @@ or a \*(``\fB+\fR\fIoption\fP\*('' turns the feature on or off,
 since some features historically have been one or the other.
 \fIXterm\fP generates a concise help message (multiple options per line)
 when an unknown option is used, e.g.,
-.RS
-	\fBxterm \-z\fP
-.RE
-.IP
+.NS
+\fBxterm \-z\fP
+.NE
 If the logic for a particular option such as logging is not compiled
 into \fIxterm\fP, the help text for that option also is not displayed
 by the \fB\-help\fP option.
@@ -722,10 +721,9 @@ result of ~/.profile might interfere with that.
 .IP
 If you do want the effect of \fB\-ls\fP and \fB\-e\fP simultaneously, you
 may get away with something like
-.RS 15
+.NS 15
 xterm \-e /bin/bash \-l \-c "my command here"
-.RE
-.IP
+.NE
 Finally, \fB\-ls\fP is not completely ignored,
 because \fIxterm\ \-ls\ \-e\fP does write a \fI/etc/wtmp\fP entry
 (if configured to do so),
@@ -1098,15 +1096,11 @@ the pseudo-terminal name, the remainder is the file descriptor.
 Examples
 (the first two are equivalent
 since the descriptor follows the last \*(``/\*(''):
-.sp
-.nf
-.RS 15
+.NS 15
 -S/dev/pts/123/45
 -S123/45
 -Sab34
-.RE
-.fi
-.IP
+.NE
 Note that \fIxterm\fP does not close any file descriptor
 which it did not open for its own use.
 It is possible (though probably not portable) to have an application
@@ -1831,15 +1825,13 @@ can add \*(``:unscaled\*('' to the end of the directory specification for the
 \*(``misc\*('' fonts,
 which comprise the fixed-pitch fonts that are used by \fIxterm\fP.
 For example
-.RS
-	FontPath	"/usr/lib/X11/fonts/misc/"
-.RE
-.IP
+.NS
+FontPath	"/usr/lib/X11/fonts/misc/"
+.NE
 would become
-.RS
-	FontPath	"/usr/lib/X11/fonts/misc/:unscaled"
-.RE
-.IP
+.NS
+FontPath	"/usr/lib/X11/fonts/misc/:unscaled"
+.NE
 Depending on your configuration, the font server may have its own configuration
 file.
 The same \*(``:unscaled\*('' can be added to its configuration file at the
@@ -2480,20 +2472,17 @@ See the discussion of the \fBlocale\fP resource,
 which describes how this font may be overridden.
 .IP
 NOTE: some resource files use patterns such as
-.RS
+.NS
 *font: fixed
-.RE
-.IP
+.NE
 which are overly broad, affecting both
-.RS
+.NS
 xterm.vt100.font
-.RE
-.IP
+.NE
 and
-.RS
+.NS
 xterm.vt100.utf8Fonts.font
-.RE
-.IP
+.NE
 which is probably not what you intended.
 .TP 8
 .B "fastScroll (\fPclass\fB FastScroll)"
@@ -2842,7 +2831,12 @@ The help message shown by \*(``xterm \-help\*('' lists the default value,
 which depends on your system configuration.
 .IP
 If the encoding converter requires command-line parameters,
-you should put those within a shell script to execute the converter,
+you can add those after the command, e.g.,
+.NS
+*localeFilter: xterm-filter -p
+.NE
+Alternatively,
+you may put those parameter within a shell script to execute the converter,
 and set this resource to point to the shell script.
 .TP 8
 .B "loginShell (\fPclass\fB LoginShell)"
@@ -4784,7 +4778,6 @@ and ISO-8859-1 encoded fonts:
 uxterm -class __default_class__
 .NE
 .RE
-.PP
 The fourth section allows you to enable or disable special operations
 which can be controlled by writing escape sequences to the terminal.
 These are disabled if the SendEvents feature is enabled:
@@ -5711,7 +5704,6 @@ which is set by the \fBselectToClipboard\fP resource:
                          <BtnUp>:select-end(SELECT, CUT_BUFFER0) \\n\\\&
                        <BtnDown>:ignore()
 .NE
-.PP
 The default bindings for the scrollbar widget
 are separate from the VT100 widget:
 .NS
@@ -5724,7 +5716,6 @@ are separate from the VT100 widget:
                       <Btn2Motion>: MoveThumb() NotifyThumb() \\n\\\&
                       <BtnUp>:    NotifyScroll(Proportional) EndScroll()
 .NE
-.PP
 The default bindings in the Tektronix window are:
 .NS
 .ta 2.5i
@@ -5745,7 +5736,6 @@ The default bindings in the Tektronix window are:
            Shift ~Meta<Btn3Down>: gin-press(R) \\n\\\&
                  ~Meta<Btn3Down>: gin-press(r)
 .NE
-.PP
 Here is an example which uses shifted select/paste to copy to the clipboard,
 and unshifted select/paste for the primary selection.
 In each case, a (different) cut buffer is
@@ -5764,8 +5754,7 @@ But you can still paste from the corresponding cut buffer.
     ~Shift<BtnUp>:       select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift<BtnUp>:        select-end(CLIPBOARD, CUT_BUFFER1)
 .NE
-.PP
-Below is a sample how of the \fBkeymap()\fP action is used to add special
+Below is a sample of how the \fBkeymap()\fP action is used to add special
 keys for entering commonly-typed works:
 .NS
 .ta .5i 1.5i
@@ -5777,7 +5766,6 @@ keys for entering commonly-typed works:
 	<Key>F19:	string("continue") string(0x0d) \\n\\\&
 	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
 .NE
-.PP
 Some people prefer using the left pointer button
 for dragging the scrollbar thumb.
 That can be setup by altering the translations resource, e.g.,
