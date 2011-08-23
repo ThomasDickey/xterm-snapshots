@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.127 2011/08/17 23:38:34 tom Exp $ */
+/* $XTermId: trace.c,v 1.129 2011/08/22 09:56:16 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -553,6 +553,83 @@ TraceSizeHints(XSizeHints * hints)
 	TRACE(("   base       %d,%d\n", hints->base_height, hints->base_width));
     if (hints->flags & PWinGravity)
 	TRACE(("   gravity    %d\n", hints->win_gravity));
+}
+
+static void
+TraceEventMask(const char *tag, long mask)
+{
+#define DATA(name) { name##Mask, #name }
+    /* *INDENT-OFF* */
+    static struct {
+	long mask;
+	const char *name;
+    } table[] = {
+	DATA(KeyPress),
+	DATA(KeyRelease),
+	DATA(ButtonPress),
+	DATA(ButtonRelease),
+	DATA(EnterWindow),
+	DATA(LeaveWindow),
+	DATA(PointerMotion),
+	DATA(PointerMotionHint),
+	DATA(Button1Motion),
+	DATA(Button2Motion),
+	DATA(Button3Motion),
+	DATA(Button4Motion),
+	DATA(Button5Motion),
+	DATA(ButtonMotion),
+	DATA(KeymapState),
+	DATA(Exposure),
+	DATA(VisibilityChange),
+	DATA(StructureNotify),
+	DATA(ResizeRedirect),
+	DATA(SubstructureNotify),
+	DATA(SubstructureRedirect),
+	DATA(FocusChange),
+	DATA(PropertyChange),
+	DATA(ColormapChange),
+	DATA(OwnerGrabButton),
+    };
+#undef DATA
+    Cardinal n;
+    /* *INDENT-ON* */
+
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (table[n].mask & mask) {
+	    TRACE(("%s %s\n", tag, table[n].name));
+	}
+    }
+}
+
+void
+TraceWindowAttributes(XWindowAttributes * attrs)
+{
+    TRACE(("window attributes:\n"));
+    TRACE(("   position     %d,%d\n", attrs->y, attrs->x));
+    TRACE(("   size         %dx%d\n", attrs->height, attrs->width));
+    TRACE(("   border       %d\n", attrs->border_width));
+    TRACE(("   depth        %d\n", attrs->depth));
+    TRACE(("   bit_gravity  %d\n", attrs->bit_gravity));
+    TRACE(("   win_gravity  %d\n", attrs->win_gravity));
+    TRACE(("   root         %#lx\n", (long) attrs->root));
+    TRACE(("   class        %s\n", ((attrs->class == InputOutput)
+				    ? "InputOutput"
+				    : ((attrs->class == InputOnly)
+				       ? "InputOnly"
+				       : "unknown"))));
+    TRACE(("   map_state    %s\n", ((attrs->map_state == IsUnmapped)
+				    ? "IsUnmapped"
+				    : ((attrs->map_state == IsUnviewable)
+				       ? "IsUnviewable"
+				       : ((attrs->map_state == IsViewable)
+					  ? "IsViewable"
+					  : "unknown")))));
+    TRACE(("   all_events\n"));
+    TraceEventMask("        ", attrs->all_event_masks);
+    TRACE(("   your_events\n"));
+    TraceEventMask("        ", attrs->your_event_mask);
+    TRACE(("   no_propagate\n"));
+    TraceEventMask("        ", attrs->do_not_propagate_mask);
 }
 
 void

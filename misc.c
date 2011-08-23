@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.535 2011/08/20 14:11:09 tom Exp $ */
+/* $XTermId: misc.c,v 1.539 2011/08/23 01:03:18 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4871,19 +4871,20 @@ catch_x11_error(Display * display, XErrorEvent * error_event)
 }
 
 static Boolean
-validWindow(Display * dpy, Window win)
+validWindow(Display * dpy, Window win, XWindowAttributes * attrs)
 {
     Boolean result = False;
-    XWindowAttributes attrs;
     Status code;
 
     if (win != None) {
 	XErrorHandler save = XSetErrorHandler(catch_x11_error);
 	x11_errors = 0;
-	code = XGetWindowAttributes(dpy, win, &attrs);
+	code = XGetWindowAttributes(dpy, win, attrs);
 	XSetErrorHandler(save);
 	result = (Boolean) ((code != 0) && !x11_errors);
-	if (!result) {
+	if (result) {
+	    TRACE_WIN_ATTRS(attrs);
+	} else {
 	    fprintf(stderr, "%s: invalid window-id %ld\n",
 		    ProgramName, (long) win);
 	}
@@ -4895,15 +4896,23 @@ void
 xtermEmbedWindow(Window winToEmbedInto)
 {
     Display *dpy = XtDisplay(toplevel);
+    XWindowAttributes attrs;
 
     TRACE(("checking winToEmbedInto %#lx\n", winToEmbedInto));
-    if (validWindow(dpy, winToEmbedInto)) {
+    if (validWindow(dpy, winToEmbedInto, &attrs)) {
+	XtermWidget xw = term;
+	TScreen *screen = TScreenOf(xw);
+
 	XtRealizeWidget(toplevel);
+
 	TRACE(("...reparenting toplevel %#lx into %#lx\n",
 	       XtWindow(toplevel),
 	       winToEmbedInto));
 	XReparentWindow(dpy,
 			XtWindow(toplevel),
 			winToEmbedInto, 0, 0);
+
+	screen->embed_high = (Dimension) attrs.height;
+	screen->embed_wide = (Dimension) attrs.width;
     }
 }

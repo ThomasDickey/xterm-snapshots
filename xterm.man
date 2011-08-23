@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.506 2011/08/21 18:07:21 tom Exp $
+.\" $XTermId: xterm.man,v 1.507 2011/08/23 00:50:07 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -604,6 +604,11 @@ Given an X window identifier (an integer, which can be hexadecimal,
 octal or decimal according to whether it begins with "0x", "0" or neither),
 \fIxterm\fP will reparent its top-level shell widget to that window.
 This is used to embed \fIxterm\fP within other applications.
+.PP
+For instance, there are scripts for Tcl/Tk and Gtk which can be used
+to demonstrate the feature.
+When using Gtk, there is a limitation of that toolkit which requires
+that \fIxterm\fP's \fBallowSendEvents\fP resource is enabled.
 .TP 8
 .B \-j
 This option indicates that \fIxterm\fP should do jump scrolling.
