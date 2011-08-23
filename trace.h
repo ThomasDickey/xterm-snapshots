@@ -1,8 +1,8 @@
-/* $XTermId: trace.h,v 1.58 2011/07/17 22:22:14 tom Exp $ */
+/* $XTermId: trace.h,v 1.60 2011/08/21 23:44:01 tom Exp $ */
 
 /*
  *
- * Copyright 1997-2009,2010 by Thomas E. Dickey
+ * Copyright 1997-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -37,6 +37,7 @@
  */
 #ifndef	included_trace_h
 #define	included_trace_h
+/* *INDENT-OFF* */
 
 #include <xterm.h>
 
@@ -92,6 +93,10 @@ extern	void	TraceOptions(OptionHelp * /* options */, XrmOptionDescRec * /* resou
 extern	void	TraceTranslations(const char *, Widget);
 #undef  TRACE_TRANS
 #define	TRACE_TRANS(name,w) TraceTranslations(name,w)
+
+extern	void	TraceWindowAttributes(XWindowAttributes *);
+#undef  TRACE_WIN_ATTRS
+#define	TRACE_WIN_ATTRS(a) TraceWindowAttributes(a)
 
 extern	void	TraceWMSizeHints(XtermWidget);
 #undef  TRACE_WM_HINTS
@@ -153,5 +158,6 @@ extern	XtGeometryResult TraceResizeRequest(const char * /* fn */, int  /* ln */,
 #define init_Tres(offset)  fill_Tres(wnew, request, offset)
 #endif
 
+/* *INDENT-ON* */
 
 #endif	/* included_trace_h */
