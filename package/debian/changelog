@@ -1,3 +1,9 @@
+xterm-dev (273) unstable; urgency=low
+
+  * Build-fixes/regressions from #272.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Thu, 25 Aug 2011 05:42:58 -0400
+
 xterm-dev (272) unstable; urgency=low
 
   * Build-fix for termcap systems.
