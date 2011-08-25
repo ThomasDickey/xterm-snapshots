@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.39 2011/08/21 17:27:33 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.40 2011/08/25 08:55:55 tom Exp $ */
 
 /************************************************************
 
@@ -269,7 +269,7 @@ x_strdup(const char *s)
     char *result = 0;
 
     if (s != 0) {
-	char *t = CastMallocN(char, strlen(s));
+	char *t = CastMallocN(char, strlen(s) + 1);
 	if (t != 0) {
 	    strcpy(t, s);
 	}

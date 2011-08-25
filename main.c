@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.655 2011/08/24 22:59:53 tom Exp $ */
+/* $XTermId: main.c,v 1.656 2011/08/25 08:55:31 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2014,7 +2014,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		Help();
 		quit = True;
 	    } else if (!strcmp(option_ptr->option, "-class")) {
-		if ((my_class = option_value) == 0) {
+		if ((my_class = x_strdup(option_value)) == 0) {
 		    Help();
 		    quit = True;
 		}
@@ -2307,6 +2307,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	case 'e':
 	    if (strcmp(argv[0], "-e"))
 		Syntax(*argv);
+	    command_to_exec = (argv + 1);
 	    break;
 	case 'i':
 	    if (strcmp(argv[0], "-into"))

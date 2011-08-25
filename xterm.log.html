@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1078 2011/08/24 10:52:09 tom Exp $
+  $XTermId: xterm.log.html,v 1.1081 2011/08/25 09:29:41 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -56,6 +56,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_273">Patch #273 - 2011/08/25</A>
 <LI><A HREF="#xterm_272">Patch #272 - 2011/08/24</A>
 <LI><A HREF="#xterm_271">Patch #271 - 2011/07/14</A>
 <LI><A HREF="#xterm_270">Patch #270 - 2011/04/26</A>
@@ -330,6 +331,24 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_273">Patch #273 - 2011/08/25</A></H1>
+<ul>
+	<li>build-fix for out-of-tree "make docs" rule.
+
+	<li>correct a typo in <code>x_strdup</code>, from
+	    <a href="#xterm_198">patch #198</a>
+	    changes.
+
+	<li>correct initialization for <code>-e</code> option, broken in
+	    <a href="#xterm_272">patch #272</a>
+	    changes (report by Gabriele Balducci).
+
+	<li>build-fix for out-of-tree builds to address <code>minstall</code>
+	    script changes in
+	    <a href="#xterm_272">patch #272</a>
+	    (patch by Thierry Reding).
+</ul>
 
 <H1><A NAME="xterm_272">Patch #272 - 2011/08/24</A></H1>
 <ul>

@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.184 2011/08/19 09:08:05 tom Exp $
+## $XTermId: Makefile.in,v 1.186 2011/08/25 09:25:51 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -130,7 +130,7 @@ all :	$(PROGRAMS)
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
 .man.$(manext) :
-	$(SHELL) $(srcdir)/minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS)
 
 .$(manext).html :
 	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Thtml -man" >$@
@@ -142,13 +142,13 @@ all :	$(PROGRAMS)
 	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | nroff -Tascii -man | col -bx" >$@
 
 .ms.html :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.ms | groff -Thtml -ms" >$@
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -Thtml -ms" >$@
 
 .ms.ps :
-	$(SHELL) -c "tbl $*.ms | groff -ms" >$@
+	$(SHELL) -c "tbl $< | groff -ms" >$@
 
 .ms.txt :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.ms | nroff -Tascii -ms | col -bx" >$@
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | nroff -Tascii -ms | col -bx" >$@
 
 .ps.pdf :
 	ps2pdf $*.ps
@@ -222,10 +222,10 @@ install-full ::
 install \
 install-man \
 install-full :: $(MANDIR)
-	$(SHELL) $(srcdir)/minstall "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir) $(CLASS)
-	$(SHELL) $(srcdir)/minstall "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir) $(CLASS)
-	$(SHELL) $(srcdir)/minstall "$(INSTALL_DATA)" $(srcdir)/uxterm.man   $(MANDIR)/$(actual_uxterm).$(manext) $(appsdir) $(CLASS)
-	$(SHELL) $(srcdir)/minstall "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(appsdir) $(CLASS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir) $(CLASS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir) $(CLASS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/uxterm.man   $(MANDIR)/$(actual_uxterm).$(manext) $(appsdir) $(CLASS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(appsdir) $(CLASS)
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
@@ -252,10 +252,10 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_icondir@install \
 @no_icondir@install-icon \
 @no_icondir@install-full :: $(ICONDIR)
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_32x32.xpm $(ICONDIR)/$(actual_xterm)-color_32x32.xpm 
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_48x48.xpm $(ICONDIR)/$(actual_xterm)-color_48x48.xpm 
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_32x32.xpm $(ICONDIR)/$(actual_xterm)_32x32.xpm 
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_48x48.xpm $(ICONDIR)/$(actual_xterm)_48x48.xpm 
+@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_32x32.xpm $(ICONDIR)/$(actual_xterm)-color_32x32.xpm
+@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_48x48.xpm $(ICONDIR)/$(actual_xterm)-color_48x48.xpm
+@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_32x32.xpm $(ICONDIR)/$(actual_xterm)_32x32.xpm
+@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_48x48.xpm $(ICONDIR)/$(actual_xterm)_48x48.xpm
 @no_icondir@	@echo "... installed icons"
 
 install ::
@@ -359,11 +359,11 @@ docs-ctlseqs \
 docs :: ctlseqs.html \
 	ctlseqs.pdf \
 	ctlseqs.ps \
-	ctlseqs.txt
-ctlseqs.html : ctlseqs.ms
+	$(srcdir)/ctlseqs.txt
+ctlseqs.html : $(srcdir)/ctlseqs.ms
 ctlseqs.pdf : ctlseqs.ps
-ctlseqs.ps : ctlseqs.ms
-ctlseqs.txt : ctlseqs.ms
+ctlseqs.ps : $(srcdir)/ctlseqs.ms
+ctlseqs.txt : $(srcdir)/ctlseqs.ms
 ################################################################################
 docs-resize \
 docs :: resize.html \
