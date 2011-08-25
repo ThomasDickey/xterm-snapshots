@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.653 2011/08/21 22:23:14 tom Exp $ */
+/* $XTermId: main.c,v 1.655 2011/08/24 22:59:53 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1392,7 +1392,7 @@ countArg(XrmOptionDescRec * item)
     case XrmoptionSkipLine:
 	break;
     case XrmoptionSkipNArgs:
-	result = (int) (item->value);
+	result = (int) (long) (item->value);
 	break;
     }
     return result;
@@ -1439,6 +1439,12 @@ parseArg(int *num, char **argv, char **valuep)
 	DATA("-xnllanguage",	   XrmoptionSepArg),
 	DATA("-xrm",		   XrmoptionResArg),
 	DATA("-xtsessionID",	   XrmoptionSepArg),
+	/* These xterm options are processed after XtOpenApplication */
+#if defined(TIOCCONS) || defined(SRIOCSREDIR)
+	DATA("-C",		   XrmoptionNoArg),
+#endif /* TIOCCONS */
+	DATA("-S",		   XrmoptionStickyArg),
+	DATA("-D",		   XrmoptionNoArg),
     };
 #undef DATA
     /* *INDENT-ON* */
