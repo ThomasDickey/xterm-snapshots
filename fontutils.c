@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.361 2011/07/17 22:26:05 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.362 2011/08/28 23:58:34 tom Exp $ */
 
 /************************************************************
 
@@ -1309,8 +1309,11 @@ sameSubResources(SubResourceRec * a, SubResourceRec * b)
 
     if (!SAME_MEMBER(default_font.f_n)
 	|| !SAME_MEMBER(default_font.f_b)
+#if OPT_WIDE_CHARS
 	|| !SAME_MEMBER(default_font.f_w)
-	|| !SAME_MEMBER(default_font.f_wb)) {
+	|| !SAME_MEMBER(default_font.f_wb)
+#endif
+	) {
 	TRACE(("sameSubResources: default_font differs\n"));
 	result = False;
     } else {

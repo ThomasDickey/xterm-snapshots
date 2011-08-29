@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.539 2011/08/23 01:03:18 tom Exp $ */
+/* $XTermId: misc.c,v 1.540 2011/08/28 21:14:14 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3290,8 +3290,10 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		int code = 0;
 		if (screen->cursor_underline)
 		    code |= 2;
+#if OPT_BLINK_CURS
 		if (screen->cursor_blink)
 		    code |= 1;
+#endif
 		sprintf(reply, "%d%s", code + 1, cp);
 	    } else
 		okay = False;
@@ -4846,11 +4848,12 @@ xtermOpenApplication(XtAppContext * app_context_return,
 			       num_args);
     IceAddConnectionWatch(icewatch, NULL);
 #else
-    result = XtAppInitialize(app_conp,
+    result = XtAppInitialize(app_context_return,
 			     my_class,
-			     optionDescList,
-			     XtNumber(optionDescList),
-			     &argc, argv,
+			     options,
+			     num_options,
+			     argc_in_out,
+			     argv_in_out,
 			     fallback_resources,
 			     NULL, 0);
 #endif /* OPT_SESSION_MGT */

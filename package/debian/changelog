@@ -1,3 +1,9 @@
+xterm-dev (274) unstable; urgency=low
+
+  * Various build-fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sun, 28 Aug 2011 20:07:29 -0400
+
 xterm-dev (273) unstable; urgency=low
 
   * Build-fixes/regressions from #272.
