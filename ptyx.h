@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.702 2011/08/23 01:02:53 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.703 2011/08/28 23:56:07 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1998,7 +1998,7 @@ typedef struct {
 #define MenuFontName(n) menu_font_names[n][fNorm]
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
-#if OPT_WIDE_CHARS
+#if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
 	Boolean		savedVTFonts;
 	Boolean		mergedVTFonts;
 	SubResourceRec	cacheVTFonts;

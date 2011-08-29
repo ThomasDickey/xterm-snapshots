@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1127 2011/08/22 23:36:42 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1128 2011/08/28 21:22:44 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3468,6 +3468,7 @@ updateCursor(TScreen * screen)
     }
 }
 
+#if OPT_BLINK_CURS || OPT_BLINK_TEXT
 static void
 reallyStopBlinking(TScreen * screen)
 {
@@ -3478,6 +3479,7 @@ reallyStopBlinking(TScreen * screen)
 	xevents();
     }
 }
+#endif
 
 #ifdef VMS
 #define	ptymask()	(v_bufptr > v_bufstr ? pty_mask : 0)
