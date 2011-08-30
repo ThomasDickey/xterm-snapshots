@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.362 2011/08/28 23:58:34 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.363 2011/08/29 23:32:15 tom Exp $ */
 
 /************************************************************
 
@@ -1563,12 +1563,13 @@ xtermSetCursorBox(TScreen * screen)
 
 #define CACHE_XFT(dst,src) if (src != 0) {\
 	    checkXft(xw, &(dst[fontnum]), src);\
-	    TRACE(("Xft metrics %s[%d] = %d (%d,%d) advance %d, actual %d%s\n",\
+	    TRACE(("Xft metrics %s[%d] = %d (%d,%d)%s advance %d, actual %d%s\n",\
 		#dst,\
 	    	fontnum,\
 		src->height,\
 		src->ascent,\
 		src->descent,\
+		((src->ascent + src->descent) > src->height ? "*" : ""),\
 		src->max_advance_width,\
 		dst[fontnum].map.min_width,\
 		dst[fontnum].map.mixed ? " mixed" : ""));\

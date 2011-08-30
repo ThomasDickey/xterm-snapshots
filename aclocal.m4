@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.310 2011/07/17 19:28:03 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.312 2011/08/29 09:46:02 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -574,7 +574,7 @@ int main() {
 	fi
 ])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_TGETENT version: 17 updated: 2011/07/14 19:34:47
+dnl CF_FUNC_TGETENT version: 18 updated: 2011/08/09 21:06:37
 dnl ---------------
 dnl Check for tgetent function in termcap library.  If we cannot find this,
 dnl we'll use the $LINES and $COLUMNS environment variables to pass screen
@@ -621,7 +621,7 @@ AC_CACHE_CHECK(for $cf_test_message function,cf_cv_lib_tgetent,[
 cf_save_LIBS="$LIBS"
 cf_cv_lib_tgetent=no
 if test "$cf_full_tgetent" = yes ; then
-	cf_TERMLIB="termcap termlib ncurses curses"
+	cf_TERMLIB="otermcap termcap termlib ncurses curses"
 	cf_TERMTST="buffer[[0]] == 0"
 else
 	cf_TERMLIB="termlib ncurses curses"
@@ -3018,7 +3018,7 @@ AC_TRY_LINK([
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 36 updated: 2011/07/02 15:36:04
+dnl CF_XOPEN_SOURCE version: 37 updated: 2011/08/06 20:32:05
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -3070,7 +3070,7 @@ mirbsd*) #(vi
 	# setting _XOPEN_SOURCE or _POSIX_SOURCE breaks <arpa/inet.h>
 	;;
 netbsd*) #(vi
-	# setting _XOPEN_SOURCE breaks IPv6 for lynx on NetBSD 1.6, breaks xterm, is not needed for ncursesw
+	cf_xopen_source="-D_NETBSD_SOURCE" # setting _XOPEN_SOURCE breaks IPv6 for lynx on NetBSD 1.6, breaks xterm, is not needed for ncursesw
 	;;
 openbsd*) #(vi
 	# setting _XOPEN_SOURCE breaks xterm on OpenBSD 2.8, is not needed for ncursesw
@@ -3261,7 +3261,7 @@ elif test "$cf_x_athena_inc" != default ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_X_ATHENA_LIBS version: 11 updated: 2011/07/17 15:25:45
+dnl CF_X_ATHENA_LIBS version: 12 updated: 2011/07/17 19:55:02
 dnl ----------------
 dnl Normally invoked by CF_X_ATHENA, with $1 set to the appropriate flavor of
 dnl the Athena widgets, e.g., Xaw, Xaw3d, neXtaw.
@@ -3311,6 +3311,7 @@ $cf_test((XtAppContext) 0)],
 			LIBS="$cf_save"
 		fi
 	done # cf_libs
+		test -n "$cf_x_athena_lib" && break
 	done # cf_lib
 done
 
@@ -3365,7 +3366,7 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 23 updated: 2010/11/08 20:19:21
+dnl CF_X_FREETYPE version: 24 updated: 2011/08/29 05:46:02
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -3382,44 +3383,75 @@ AC_DEFUN([CF_X_FREETYPE],
 [
 AC_REQUIRE([CF_PKG_CONFIG])
 
+cf_cv_x_freetype_incs=no
+cf_cv_x_freetype_libs=no
 cf_extra_freetype_libs=
 FREETYPE_CONFIG=none
 FREETYPE_PARAMS=
 
-AC_MSG_CHECKING(if you specified -D/-I options for FreeType)
-AC_ARG_WITH(freetype-cflags,
-	[  --with-freetype-cflags  -D/-I options for compiling with FreeType],
-	[cf_cv_x_freetype_incs="$with_freetype_cflags"],
-	[cf_cv_x_freetype_incs=no])
-AC_MSG_RESULT($cf_cv_x_freetype_incs)
+AC_MSG_CHECKING(for FreeType configuration script)
+AC_ARG_WITH(freetype-config,
+	[  --with-freetype-config  configure script to use for FreeType],
+	[cf_cv_x_freetype_cfgs="$withval"],
+	[cf_cv_x_freetype_cfgs=auto])
+test -z $cf_cv_x_freetype_cfgs && cf_cv_x_freetype_cfgs=auto
+test $cf_cv_x_freetype_cfgs = no && cf_cv_x_freetype_cfgs=none
+AC_MSG_RESULT($cf_cv_x_freetype_cfgs)
 
+case $cf_cv_x_freetype_cfgs in
+none) #(vi
+	AC_MSG_CHECKING(if you specified -D/-I options for FreeType)
+	AC_ARG_WITH(freetype-cflags,
+		[  --with-freetype-cflags  -D/-I options for compiling with FreeType],
+		[cf_cv_x_freetype_incs="$with_freetype_cflags"],
+		[cf_cv_x_freetype_incs=no])
+	AC_MSG_RESULT($cf_cv_x_freetype_incs)
 
-AC_MSG_CHECKING(if you specified -L/-l options for FreeType)
-AC_ARG_WITH(freetype-libs,
-	[  --with-freetype-libs    -L/-l options to link FreeType],
-	[cf_cv_x_freetype_libs="$with_freetype_libs"],
-	[cf_cv_x_freetype_libs=no])
-AC_MSG_RESULT($cf_cv_x_freetype_libs)
-
-if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists xft; then
-	FREETYPE_CONFIG=$PKG_CONFIG
-	FREETYPE_PARAMS=xft
-else
-	AC_PATH_PROG(FREETYPE_XFT_CONFIG, xft-config, none)
+	AC_MSG_CHECKING(if you specified -L/-l options for FreeType)
+	AC_ARG_WITH(freetype-libs,
+		[  --with-freetype-libs    -L/-l options to link FreeType],
+		[cf_cv_x_freetype_libs="$with_freetype_libs"],
+		[cf_cv_x_freetype_libs=no])
+	AC_MSG_RESULT($cf_cv_x_freetype_libs)
+	;;
+auto) #(vi
+	if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists xft; then
+		FREETYPE_CONFIG=$PKG_CONFIG
+		FREETYPE_PARAMS=xft
+	else
+		AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, none)
+		if test "$FREETYPE_CONFIG" != none; then
+			FREETYPE_CONFIG=$FREETYPE_CONFIG
+			cf_extra_freetype_libs="-lXft"
+		else
+			AC_PATH_PROG(FREETYPE_OLD_CONFIG, xft-config, none)
+			if test "$FREETYPE_OLD_CONFIG" != none; then
+				FREETYPE_CONFIG=$FREETYPE_OLD_CONFIG
+			fi
+		fi
+	fi
+	;;
+pkg*) #(vi
+	if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists xft; then
+		FREETYPE_CONFIG=$cf_cv_x_freetype_cfgs 
+		FREETYPE_PARAMS=xft
+	else
+		AC_MSG_WARN(cannot find pkg-config for Xft)
+	fi
+	;;
+*) #(vi
+	AC_PATH_PROG(FREETYPE_XFT_CONFIG, $cf_cv_x_freetype_cfgs, none)
 	if test "$FREETYPE_XFT_CONFIG" != none; then
 		FREETYPE_CONFIG=$FREETYPE_XFT_CONFIG
 	else
-		cf_extra_freetype_libs="-lXft"
-		AC_PATH_PROG(FREETYPE_OLD_CONFIG, freetype-config, none)
-		if test "$FREETYPE_OLD_CONFIG" != none; then
-			FREETYPE_CONFIG=$FREETYPE_OLD_CONFIG
-		fi
+		AC_MSG_WARN(cannot find config script for Xft)
 	fi
-fi
-AC_MSG_CHECKING(for FreeType config)
-AC_MSG_RESULT($FREETYPE_CONFIG $FREETYPE_PARAMS)
+	;;
+esac
 
 if test "$FREETYPE_CONFIG" != none ; then
+	AC_MSG_CHECKING(for FreeType config)
+	AC_MSG_RESULT($FREETYPE_CONFIG $FREETYPE_PARAMS)
 
 	if test "$cf_cv_x_freetype_incs" = no ; then
 		AC_MSG_CHECKING(for $FREETYPE_CONFIG cflags)
@@ -3432,7 +3464,6 @@ if test "$FREETYPE_CONFIG" != none ; then
 		cf_cv_x_freetype_libs="$cf_extra_freetype_libs `$FREETYPE_CONFIG $FREETYPE_PARAMS --libs 2>/dev/null`"
 		AC_MSG_RESULT($cf_cv_x_freetype_libs)
 	fi
-
 fi
 
 if test "$cf_cv_x_freetype_incs" = no ; then
