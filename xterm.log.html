@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1083 2011/08/28 23:58:10 tom Exp $
+  $XTermId: xterm.log.html,v 1.1085 2011/08/30 10:53:13 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -335,6 +335,15 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>portability fixes for some configure macros:
+	    <code>CF_FUNC_TGETENT</code>,
+	    <code>CF_XOPEN_SOURCE</code>,
+	    <code>CF_X_ATHENA_LIBS</code>.
+
+	<li>add configure option <code>--with-freetype-config</code> to
+	    improve selection over the plethora of configuration options
+	    which freetype has so far provided.
+
 	<li>build-fix for configure <code>--enable-load-vt-fonts</code> when
 	    <code>--enable-widec</code> is not specified.
 
