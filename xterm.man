@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.507 2011/08/23 00:50:07 tom Exp $
+.\" $XTermId: xterm.man,v 1.509 2011/08/30 23:21:17 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -881,6 +881,10 @@ for function keys.
 This option indicates that the standard escape codes should be generated for
 function keys.
 .TP 8
+.BI \-sh " number"
+scale line-height values by the given number.
+See the discussion of the \fBscaleHeight\fP resource.
+.TP 8
 .B \-si
 This option indicates that output to a window should not automatically
 reposition the screen to the bottom of the scrolling region.
@@ -1121,7 +1125,7 @@ Toolkit provides standard options that accomplish the same task.
 This option specifies the preferred size and position of the Tektronix window.
 It is shorthand for specifying the \*(``\fI*tekGeometry\fP\*('' resource.
 .TP 8
-.B \ #\fIgeom\fP
+.B "#\fIgeom\fP"
 This option specifies the preferred position of the icon window.
 It is shorthand for specifying the \*(``\fI*iconGeometry\fP\*('' resource.
 .TP 8
@@ -1404,8 +1408,13 @@ In practice
 this should never be a problem.
 The default is \*(``true\*(''.
 .TP 8
+.B "scaleHeight (\fPclass\fB ScaleHeight)"
+Scale line-height values by the resource value,
+which is limited to \*(``0.9\*'' to \*(``1.5\*''.
+The default value is \*(``1.0\*('',
+.TP 8
 .B "scoFunctionKeys (\fPclass\fB ScoFunctionKeys)"
-Specifies whether or not SCP Function Key escape codes should be generated for
+Specifies whether or not SCO Function Key escape codes should be generated for
 function keys instead of standard escape sequences.
 .IP
 See also the \fBkeyboardType\fP resource.

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1128 2011/08/28 21:22:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1130 2011/08/31 01:02:52 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -434,6 +434,8 @@ static XtResource xterm_resources[] =
     Bres(XtNtrimSelection, XtCTrimSelection, screen.trim_selection, False),
     Bres(XtNunderLine, XtCUnderLine, screen.underline, True),
     Bres(XtNvisualBell, XtCVisualBell, screen.visualbell, False),
+
+    Dres(XtNscaleHeight, XtCScaleHeight, screen.scale_height, "1.0"),
 
     Ires(XtNbellSuppressTime, XtCBellSuppressTime, screen.bellSuppressTime, BELLSUPPRESSMSEC),
     Ires(XtNfontWarnings, XtCFontWarnings, misc.fontWarnings, fwResource),
@@ -6187,6 +6189,12 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.scrolllines);
     init_Bres(screen.scrollttyoutput);
     init_Bres(screen.scrollkey);
+
+    init_Dres(screen.scale_height);
+    if (TScreenOf(wnew)->scale_height < 0.9)
+	TScreenOf(wnew)->scale_height = (float) 0.9;
+    if (TScreenOf(wnew)->scale_height > 1.5)
+	TScreenOf(wnew)->scale_height = (float) 1.5;
 
     init_Bres(misc.autoWrap);
     init_Bres(misc.login_shell);

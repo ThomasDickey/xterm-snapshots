@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1085 2011/08/30 10:53:13 tom Exp $
+  $XTermId: xterm.log.html,v 1.1088 2011/08/31 00:57:08 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -335,6 +335,21 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>fix an unneeded warning message when <code>-r</code> option
+	    is given.
+
+	<li>remove a few redundant entries from table used for helping
+	    abbreviation-checking of command-line options, makes
+	    <code>-geom</code> work again after
+	    <a href="#xterm_272">patch #272</a> changes
+	    as an abbreviation of
+	    <code>-geometry</code>.
+
+	<li>add <code>scaleHeight</code> resource and
+	    command-line option <code>-sh</code>
+	    as workaround for some font-configurations broken by
+	    changes in FreeType 2.4.6 (report by Miroslav Hodak).
+
 	<li>portability fixes for some configure macros:
 	    <code>CF_FUNC_TGETENT</code>,
 	    <code>CF_XOPEN_SOURCE</code>,
