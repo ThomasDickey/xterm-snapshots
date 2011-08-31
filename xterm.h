@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.656 2011/08/20 00:20:20 tom Exp $ */
+/* $XTermId: xterm.h,v 1.657 2011/08/30 22:37:34 tom Exp $ */
 
 /************************************************************
 
@@ -476,6 +476,7 @@ extern char **environ;
 #define XtNreverseWrap		"reverseWrap"
 #define XtNrightScrollBar	"rightScrollBar"
 #define XtNsaveLines		"saveLines"
+#define XtNscaleHeight		"scaleHeight"
 #define XtNscrollBar		"scrollBar"
 #define XtNscrollBarBorder	"scrollBarBorder"
 #define XtNscrollKey		"scrollKey"
@@ -640,6 +641,7 @@ extern char **environ;
 #define XtCReverseWrap		"ReverseWrap"
 #define XtCRightScrollBar	"RightScrollBar"
 #define XtCSaveLines		"SaveLines"
+#define XtCScaleHeight		"ScaleHeight"
 #define XtCScrollBar		"ScrollBar"
 #define XtCScrollBarBorder	"ScrollBarBorder"
 #define XtCScrollCond		"ScrollCond"

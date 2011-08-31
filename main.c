@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.656 2011/08/25 08:55:31 tom Exp $ */
+/* $XTermId: main.c,v 1.660 2011/08/31 01:07:32 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -1028,6 +1028,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"+rvc",	"*colorRVMode",	XrmoptionNoArg,		(XPointer) "on"},
 {"-sf",		"*sunFunctionKeys", XrmoptionNoArg,	(XPointer) "on"},
 {"+sf",		"*sunFunctionKeys", XrmoptionNoArg,	(XPointer) "off"},
+{"-sh",		"*scaleHeight", XrmoptionSepArg,	(XPointer) NULL},
 {"-si",		"*scrollTtyOutput", XrmoptionNoArg,	(XPointer) "off"},
 {"+si",		"*scrollTtyOutput", XrmoptionNoArg,	(XPointer) "on"},
 {"-sk",		"*scrollKey",	XrmoptionNoArg,		(XPointer) "on"},
@@ -1415,7 +1416,6 @@ parseArg(int *num, char **argv, char **valuep)
     /* *INDENT-OFF* */
 #define DATA(option,kind) { option, NULL, kind, (XtPointer) NULL }
     static XrmOptionDescRec opTable[] = {
-	DATA("+rv",		   XrmoptionNoArg),
 	DATA("+synchronous",	   XrmoptionNoArg),
 	DATA("-background",	   XrmoptionSepArg),
 	DATA("-bd",		   XrmoptionSepArg),
@@ -1428,11 +1428,9 @@ parseArg(int *num, char **argv, char **valuep)
 	DATA("-fn",		   XrmoptionSepArg),
 	DATA("-font",		   XrmoptionSepArg),
 	DATA("-foreground",	   XrmoptionSepArg),
-	DATA("-geometry",	   XrmoptionSepArg),
 	DATA("-iconic",		   XrmoptionNoArg),
 	DATA("-name",		   XrmoptionSepArg),
 	DATA("-reverse",	   XrmoptionNoArg),
-	DATA("-rv",		   XrmoptionNoArg),
 	DATA("-selectionTimeout",  XrmoptionSepArg),
 	DATA("-synchronous",	   XrmoptionNoArg),
 	DATA("-title",		   XrmoptionSepArg),
@@ -1455,6 +1453,9 @@ parseArg(int *num, char **argv, char **valuep)
     int atbest = -1;
     int best = -1;
     int test;
+    Boolean exact = False;
+    int ambiguous1 = -1;
+    int ambiguous2 = -1;
 
 #define ITEM(n) ((Cardinal)(n) < XtNumber(optionDescList) \
 		 ? &optionDescList[n] \
@@ -1480,10 +1481,12 @@ parseArg(int *num, char **argv, char **valuep)
 	    if ((test + 1) == (int) strlen(check->option)) {
 		if (check->argKind == XrmoptionStickyArg) {
 		    if (strlen(argv[*num]) > strlen(check->option)) {
+			exact = True;
 			atbest = (int) inlist;
 			break;
 		    }
 		} else if ((test + 1) == (int) strlen(argv[*num])) {
+		    exact = True;
 		    atbest = (int) inlist;
 		    break;
 		}
@@ -1508,10 +1511,8 @@ parseArg(int *num, char **argv, char **valuep)
 	    } else if (test == best) {
 		if (atbest >= 0) {
 		    if (atbest > 0) {
-			fprintf(stderr,
-				"%s:  ambiguous option \"%s\" vs \"%s\"\n",
-				ProgramName, check->option,
-				ITEM(atbest)->option);
+			ambiguous1 = (int) inlist;
+			ambiguous2 = (int) atbest;
 		    }
 		    atbest = -1;
 		}
@@ -1521,6 +1522,13 @@ parseArg(int *num, char **argv, char **valuep)
 
     *valuep = 0;
     if (atbest >= 0) {
+	if (!exact && ambiguous1 >= 0 && ambiguous2 >= 0) {
+	    fprintf(stderr,
+		    "%s:  ambiguous option \"%s\" vs \"%s\"\n",
+		    ProgramName,
+		    ITEM(ambiguous1)->option,
+		    ITEM(ambiguous2)->option);
+	}
 	result = ITEM(atbest);
 	TRACE(("...result %s\n", result->option));
 	/* expand abbreviations */

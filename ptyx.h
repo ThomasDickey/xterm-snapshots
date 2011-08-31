@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.703 2011/08/28 23:56:07 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.704 2011/08/30 22:39:45 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1745,6 +1745,7 @@ typedef struct {
 #endif
 	Dimension	fnt_wide;
 	Dimension	fnt_high;
+	float		scale_height;	/* scaling for font-height	*/
 	XTermFonts	fnts[fMAX];	/* normal/bold/etc for terminal	*/
 	Boolean		free_bold_box;	/* same_font_size's austerity	*/
 	Boolean		allowBoldFonts;	/* do we use bold fonts at all? */
