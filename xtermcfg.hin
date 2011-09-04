@@ -1,8 +1,8 @@
-/* $XTermId: xtermcfg.hin,v 1.182 2010/11/11 01:14:49 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.183 2011/09/04 17:05:41 tom Exp $ */
 
 /************************************************************
 
-Copyright 1997-2009,2010 by Thomas E. Dickey
+Copyright 1997-2010,2011 by Thomas E. Dickey
 
                         All Rights Reserved
 
@@ -76,6 +76,7 @@ authorization.
 #undef HAVE_TIGETSTR		/* AC_CHECK_FUNCS(tigetstr) */
 #undef HAVE_UNISTD_H		/* AC_CHECK_HEADERS(unistd.h) */
 #undef HAVE_USE_EXTENDED_NAMES	/* AC_CHECK_FUNCS(use_extended_names) */
+#undef HAVE_UNSETENV		/* AC_CHECK_FUNCS(unsetenv) */
 #undef HAVE_UTMP		/* CF_UTMP */
 #undef HAVE_UTMP_UT_HOST	/* CF_UTMP_UT_HOST */
 #undef HAVE_UTMP_UT_SESSION	/* CF_UTMP_UT_SESSION */

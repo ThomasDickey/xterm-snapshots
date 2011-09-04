@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.540 2011/08/28 21:14:14 tom Exp $ */
+/* $XTermId: misc.c,v 1.544 2011/09/04 18:50:30 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -272,7 +272,7 @@ do_xevents(void)
 {
     TScreen *screen = TScreenOf(term);
 
-    if (XtAppPending(app_con)
+    if (xtermAppPending()
 	||
 #if defined(VMS) || defined(__VMS)
 	screen->display->qlen > 0
@@ -359,6 +359,172 @@ xtermShowPointer(XtermWidget xw, Bool enable)
     }
 }
 
+#if OPT_TRACE
+static void
+TraceExposeEvent(XEvent * arg)
+{
+    XExposeEvent *event = (XExposeEvent *) arg;
+
+    TRACE(("pending Expose %ld %d: %d,%d %dx%d %#lx\n",
+	   event->serial,
+	   event->count,
+	   event->y,
+	   event->x,
+	   event->height,
+	   event->width,
+	   event->window));
+}
+
+#else
+#define TraceExposeEvent(event)	/* nothing */
+#endif
+
+/* true if p contains q */
+#define ExposeContains(p,q) \
+	    ((p)->y <= (q)->y \
+	  && (p)->x <= (q)->x \
+	  && (p)->height >= (q)->height \
+	  && (p)->width >= (q)->width)
+
+static XtInputMask
+mergeExposeEvents(XEvent * target)
+{
+    XEvent next_event;
+    XExposeEvent *p, *q;
+
+    TRACE(("pending Expose...?\n"));
+    TraceExposeEvent(target);
+    XtAppNextEvent(app_con, target);
+    p = (XExposeEvent *) target;
+
+    while (XtAppPending(app_con)
+	   && XtAppPeekEvent(app_con, &next_event)
+	   && next_event.type == Expose) {
+	Boolean merge_this = False;
+
+	TraceExposeEvent(&next_event);
+	q = (XExposeEvent *) (&next_event);
+	XtAppNextEvent(app_con, &next_event);
+
+	/*
+	 * If either window is contained within the other, merge the events.
+	 * The traces show that there are also cases where a full repaint of
+	 * a window is broken into 3 or more rectangles, which do not arrive
+	 * in the same instant.  We could merge those if xterm were modified
+	 * to skim several events ahead.
+	 */
+	if (p->window == q->window) {
+	    if (ExposeContains(p, q)) {
+		TRACE(("pending Expose...merged forward\n"));
+		merge_this = True;
+		next_event = *target;
+	    } else if (ExposeContains(q, p)) {
+		TRACE(("pending Expose...merged backward\n"));
+		merge_this = True;
+	    }
+	}
+	if (!merge_this) {
+	    XtDispatchEvent(target);
+	}
+	*target = next_event;
+    }
+    XtDispatchEvent(target);
+    return XtAppPending(app_con);
+}
+
+#if OPT_TRACE
+static void
+TraceConfigureEvent(XEvent * arg)
+{
+    XConfigureEvent *event = (XConfigureEvent *) arg;
+
+    TRACE(("pending Configure %ld %d,%d %dx%d %#lx\n",
+	   event->serial,
+	   event->y,
+	   event->x,
+	   event->height,
+	   event->width,
+	   event->window));
+}
+
+#else
+#define TraceConfigureEvent(event)	/* nothing */
+#endif
+
+/*
+ * On entry, we have peeked at the event queue and see a configure-notify
+ * event.  Remove that from the queue so we can look further.
+ *
+ * Then, as long as there is a configure-notify event in the queue, remove
+ * that.  If the adjacent events are for different windows, process the older
+ * event and update the event used for comparing windows.  If they are for the
+ * same window, only the newer event is of interest.
+ *
+ * Finally, process the (remaining) configure-notify event.
+ */
+static XtInputMask
+mergeConfigureEvents(XEvent * target)
+{
+    XEvent next_event;
+    XConfigureEvent *p, *q;
+
+    XtAppNextEvent(app_con, target);
+    p = (XConfigureEvent *) target;
+
+    TRACE(("pending Configure...?%s\n", XtAppPending(app_con) ? "yes" : "no"));
+    TraceConfigureEvent(target);
+
+    if (XtAppPending(app_con)
+	&& XtAppPeekEvent(app_con, &next_event)
+	&& next_event.type == ConfigureNotify) {
+	Boolean merge_this = False;
+
+	TraceConfigureEvent(&next_event);
+	XtAppNextEvent(app_con, &next_event);
+	q = (XConfigureEvent *) (&next_event);
+
+	if (p->window == q->window) {
+	    TRACE(("pending Configure...merged\n"));
+	    merge_this = True;
+	}
+	if (!merge_this) {
+	    TRACE(("pending Configure...skipped\n"));
+	    XtDispatchEvent(target);
+	}
+	*target = next_event;
+    }
+    XtDispatchEvent(target);
+    return XtAppPending(app_con);
+}
+
+/*
+ * Filter redundant Expose- and ConfigureNotify-events.  This is limited to
+ * adjacent events because there could be other event-loop processing.  Absent
+ * that limitation, it might be possible to scan ahead to find when the screen
+ * would be completely updated, skipping unnecessary re-repainting before that
+ * point.
+ *
+ * Note: all cases should allow doing XtAppNextEvent if result is true.
+ */
+XtInputMask
+xtermAppPending(void)
+{
+    XtInputMask result = XtAppPending(app_con);
+    XEvent this_event;
+
+    while (result && XtAppPeekEvent(app_con, &this_event)) {
+	if (this_event.type == Expose) {
+	    result = mergeExposeEvents(&this_event);
+	} else if (this_event.type == ConfigureNotify) {
+	    result = mergeConfigureEvents(&this_event);
+	} else {
+	    TRACE(("pending %s\n", visibleEventType(this_event.type)));
+	    break;
+	}
+    }
+    return result;
+}
+
 void
 xevents(void)
 {
@@ -378,7 +544,7 @@ xevents(void)
      * XEvent queue.  Other sources i.e., the pty are handled elsewhere
      * with select().
      */
-    while ((input_mask = XtAppPending(app_con)) != 0) {
+    while ((input_mask = xtermAppPending()) != 0) {
 	if (input_mask & XtIMTimer)
 	    XtAppProcessEvent(app_con, (XtInputMask) XtIMTimer);
 #if OPT_SESSION_MGT
@@ -462,7 +628,7 @@ xevents(void)
 
 	    XtDispatchEvent(&event);
 	}
-    } while (XtAppPending(app_con) & XtIMXEvent);
+    } while (xtermAppPending() & XtIMXEvent);
 }
 
 static Cursor
@@ -4212,6 +4378,9 @@ xtermFindShell(char *leaf, Bool warning)
 void
 xtermCopyEnv(char **oldenv)
 {
+#ifdef HAVE_PUTENV
+    (void) oldenv;
+#else
     unsigned size;
     char **newenv;
 
@@ -4222,7 +4391,31 @@ xtermCopyEnv(char **oldenv)
     newenv = TypeCallocN(char *, ENV_HUNK(size));
     memmove(newenv, oldenv, size * sizeof(char *));
     environ = newenv;
+#endif
 }
+
+#if !defined(HAVE_PUTENV) || !defined(HAVE_UNSETENV)
+static int
+findEnv(const char *var, int *lengthp)
+{
+    char *test;
+    int envindex = 0;
+    size_t len = strlen(var);
+    int found = -1;
+
+    TRACE(("findEnv(%s=..)\n", var));
+
+    while ((test = environ[envindex]) != NULL) {
+	if (strncmp(test, var, len) == 0 && test[len] == '=') {
+	    found = envindex;
+	    break;
+	}
+	envindex++;
+    }
+    *lengthp = envindex;
+    return found;
+}
+#endif
 
 /*
  * sets the value of var to be arg in the Unix 4.2 BSD environment env.
@@ -4235,20 +4428,19 @@ void
 xtermSetenv(const char *var, const char *value)
 {
     if (value != 0) {
-	char *test;
-	int envindex = 0;
+#ifdef HAVE_PUTENV
+	char *both = malloc(2 + strlen(var) + strlen(value));
+	TRACE(("xtermSetenv(%s=%s)\n", var, value));
+	if (both) {
+	    sprintf(both, "%s=%s", var, value);
+	    putenv(both);
+	}
+#else
 	size_t len = strlen(var);
-	int found = -1;
+	int envindex;
+	int found = findEnv(var, &envindex);
 
 	TRACE(("xtermSetenv(%s=%s)\n", var, value));
-
-	while ((test = environ[envindex]) != NULL) {
-	    if (strncmp(test, var, len) == 0 && test[len] == '=') {
-		found = envindex;
-		break;
-	    }
-	    envindex++;
-	}
 
 	if (found < 0) {
 	    unsigned need = ENV_HUNK(envindex + 1);
@@ -4277,7 +4469,24 @@ xtermSetenv(const char *var, const char *value)
 	    return;
 	}
 	sprintf(environ[found], "%s=%s", var, value);
+#endif
     }
+}
+
+void
+xtermUnsetenv(const char *var)
+{
+#ifdef HAVE_UNSETENV
+    unsetenv(var);
+#else
+    int ignore;
+    int item = findEnv(var, &ignore);
+    if (item >= 0) {
+	while ((environ[item] = environ[item + 1]) != 0) {
+	    ++item;
+	}
+    }
+#endif
 }
 
 /*ARGSUSED*/

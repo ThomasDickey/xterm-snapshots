@@ -4388,7 +4388,7 @@ for ac_func in \
 	gethostname \
 	getlogin \
 	memmove \
-	putenv \
+	putenv unsetenv \
 	sched_yield \
 	strerror \
 	strftime \

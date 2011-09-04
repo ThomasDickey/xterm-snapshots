@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1130 2011/08/31 01:02:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1132 2011/09/04 18:18:16 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3675,7 +3675,7 @@ in_put(XtermWidget xw)
 	 * The blocking is optional, because it tends to increase the load
 	 * on the host.
 	 */
-	if (XtAppPending(app_con)) {
+	if (xtermAppPending()) {
 	    select_timeout.tv_usec = 0;
 	    time_select = 1;
 	} else if (screen->awaitInput) {
@@ -3715,7 +3715,7 @@ in_put(XtermWidget xw)
 
 	/* if there are X events already in our queue, it
 	   counts as being readable */
-	if (XtAppPending(app_con) ||
+	if (xtermAppPending() ||
 	    FD_ISSET(ConnectionNumber(screen->display), &select_mask)) {
 	    xevents();
 	    if (VTbuffer->update != update)	/* HandleInterpret */
@@ -5619,7 +5619,7 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
 #endif
 
     XSync(screen->display, False);	/* synchronize */
-    if (XtAppPending(app_con))
+    if (xtermAppPending())
 	xevents();
 
     TRACE(("...RequestResize done\n"));
@@ -6936,7 +6936,7 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(screen->term_id);
     TRACE_FREE_LEAK(screen->charClass);
     TRACE_FREE_LEAK(screen->answer_back);
-    TRACE_FREE_LEAK(screen->printer_command);
+    TRACE_FREE_LEAK(screen->printer_state.printer_command);
     TRACE_FREE_LEAK(screen->keyboard_dialect);
     TRACE_FREE_LEAK(screen->disallowedColorOps);
     TRACE_FREE_LEAK(screen->disallowedFontOps);
@@ -8440,7 +8440,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 		       &replyWidth, &replyHeight);
 	    repairSizeHints();
 	    XSync(screen->display, False);	/* synchronize */
-	    if (XtAppPending(app_con))
+	    if (xtermAppPending())
 		xevents();
 	}
 

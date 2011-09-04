@@ -1,7 +1,6 @@
-/* $XTermId: trace.h,v 1.61 2011/08/30 22:36:45 tom Exp $ */
+/* $XTermId: trace.h,v 1.63 2011/09/04 13:51:10 tom Exp $ */
 
 /*
- *
  * Copyright 1997-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
@@ -85,6 +84,10 @@ extern	void	TraceSizeHints(XSizeHints *);
 extern	void	TraceIds(const char * /* fname */, int  /* lnum */);
 #undef  TRACE_IDS
 #define	TRACE_IDS TraceIds(__FILE__, __LINE__)
+
+extern	void	TraceTime(const char * /* fname */, int  /* lnum */);
+#undef  TRACE_TIME
+#define	TRACE_TIME TraceTime(__FILE__, __LINE__)
 
 extern	void	TraceOptions(OptionHelp * /* options */, XrmOptionDescRec * /* resources */, Cardinal  /* count */);
 #undef  TRACE_OPTS

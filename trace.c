@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.129 2011/08/22 09:56:16 tom Exp $ */
+/* $XTermId: trace.c,v 1.130 2011/09/04 13:50:11 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -146,6 +146,17 @@ TraceIds(const char *fname, int lnum)
 	time_t now = time((time_t *) 0);
 	Trace("-- %s", ctime(&now));
     }
+}
+
+void
+TraceTime(const char *fname, int lnum)
+{
+    time_t now;
+    if (fname != 0) {
+	Trace("datetime (%s@%d) ", fname, lnum);
+    }
+    now = time((time_t *) 0);
+    Trace("-- %s", ctime(&now));
 }
 
 static void
