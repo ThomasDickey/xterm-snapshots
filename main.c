@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.660 2011/08/31 01:07:32 tom Exp $ */
+/* $XTermId: main.c,v 1.662 2011/09/04 18:04:33 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2409,7 +2409,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	char **split_filter = x_splitargs(term->misc.localefilter);
 	unsigned count_split = x_countargv(split_filter);
 	unsigned count_exec = x_countargv(command_to_exec);
-	unsigned count_using = (term->misc.use_encoding ? 2 : 0);
+	unsigned count_using = (unsigned) (term->misc.use_encoding ? 2 : 0);
 
 	command_to_exec_with_luit = TypeCallocN(char *,
 						  (count_split
@@ -4543,7 +4543,7 @@ spawnXTerm(XtermWidget xw)
 	     * Incidentally, our setting of $SHELL tells luit to use that
 	     * program rather than choosing between $SHELL and "/bin/sh".
 	     */
-	    unsetenv("SHELL");
+	    xtermUnsetenv("SHELL");
 	    if ((ptr = explicit_shname) == NULL) {
 		if ((ptr = x_getenv("SHELL")) == NULL) {
 		    if ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL)
