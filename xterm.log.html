@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1089 2011/09/04 17:59:21 tom Exp $
+  $XTermId: xterm.log.html,v 1.1090 2011/09/04 23:04:07 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -335,6 +335,9 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>portability fixes for cygwin: do not define <code>SVR4</code>,
+	    and work around nonstandard header location.
+
 	<li>ifdef'd use of <code>unsetenv</code>
 	    from <a href="#xterm_273">patch #273</a>
 	    changes to work with Solaris 9

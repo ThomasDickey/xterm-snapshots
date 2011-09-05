@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.183 2011/09/04 17:05:41 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.184 2011/09/04 21:14:13 tom Exp $ */
 
 /************************************************************
 
@@ -56,6 +56,7 @@ authorization.
 #undef HAVE_LIB_XAW		/* CF_X_ATHENA */
 #undef HAVE_LIB_XAW3D		/* CF_X_ATHENA(--with-Xaw3d) */
 #undef HAVE_LIB_XAWPLUS		/* CF_X_ATHENA(--with-XawPlus) */
+#undef HAVE_NCURSES_CURSES_H	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
 #undef HAVE_PCREPOSIX_H		/* CF_WITH_PCRE */

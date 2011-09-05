@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.h,v 1.16 2010/01/06 21:20:40 tom Exp $ */
+/* $XTermId: xtermcap.h,v 1.17 2011/09/04 21:09:49 tom Exp $ */
 
 /************************************************************
 
@@ -59,7 +59,11 @@ authorization.
 
 #undef ERR			/* workaround for glibc 2.1.3 */
 
+#ifdef HAVE_NCURSES_CURSES_H
+#include <ncurses/curses.h>
+#else
 #include <curses.h>
+#endif
 
 #ifndef NCURSES_VERSION
 #ifdef HAVE_TERMCAP_H
