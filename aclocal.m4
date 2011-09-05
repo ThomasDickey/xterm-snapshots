@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.312 2011/08/29 09:46:02 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.313 2011/09/04 21:20:20 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2048,7 +2048,7 @@ cf_cv_struct_lastlog=unknown])])
 test $cf_cv_struct_lastlog != no && AC_DEFINE(USE_STRUCT_LASTLOG)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SVR4 version: 3 updated: 2000/05/31 10:16:52
+dnl CF_SVR4 version: 4 updated: 2011/09/04 17:17:53
 dnl -------
 dnl Check if this is an SVR4 system.  We need the definition for xterm
 AC_DEFUN([CF_SVR4],
@@ -2056,6 +2056,9 @@ AC_DEFUN([CF_SVR4],
 AC_CHECK_LIB(elf, elf_begin,[
 AC_CACHE_CHECK(if this is an SVR4 system, cf_cv_svr4,[
 AC_TRY_COMPILE([
+#if defined(__CYGWIN__)
+make an error
+#endif
 #include <elf.h>
 #include <sys/termio.h>
 ],[

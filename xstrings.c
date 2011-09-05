@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.40 2011/08/25 08:55:55 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.41 2011/09/04 20:48:50 tom Exp $ */
 
 /************************************************************
 
@@ -204,7 +204,7 @@ x_splitargs(const char *command)
 	    for (n = count = 0, state = 0; command[n] != '\0'; ++n) {
 		switch (state) {
 		case 0:
-		    if (!isspace(command[n])) {
+		    if (!isspace(CharOf(command[n]))) {
 			state = 1;
 			if (pass)
 			    result[count] = blob + n;
@@ -214,7 +214,7 @@ x_splitargs(const char *command)
 		    }
 		    break;
 		case 1:
-		    if (isspace(command[n])) {
+		    if (isspace(CharOf(command[n]))) {
 			blob[n] = '\0';
 			state = 0;
 		    }

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.509 2011/08/30 23:21:17 tom Exp $
+.\" $XTermId: xterm.man,v 1.510 2011/09/04 23:54:12 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -4863,6 +4863,7 @@ Hide Tek Window (tekhide)
 .
 .PP
 X environments differ in their security consciousness.
+.bP
 Most servers,
 run under \fIxdm\fP,
 are capable of using a \*(``magic cookie\*('' authorization
@@ -4873,6 +4874,7 @@ other users are also permitted to run clients on that same host,
 it is possible that someone can run an application which uses the
 basic services of the X protocol to snoop on your activities,
 potentially capturing a transcript of everything you type at the keyboard.
+.bP
 Any process which has access to your X display can manipulate it
 in ways that you might not anticipate,
 even redirecting your keyboard to itself
@@ -4882,13 +4884,19 @@ While the \fBallowSendEvents\fP provides some protection against
 rogue applications tampering with your programs,
 guarding against a snooper is harder.
 .
-.PP
+.bP
+The X input extension for instance allows an application to bypass
+all of the other (limited) authorization and security features,
+including the GrabKeyboard protocol.
+.
+.bP
 The possibility of an application spying on your keystrokes
 is of particular concern when you want to type in a password
 or other sensitive data.
 The best solution to this problem is to use a better
 authorization mechanism than is provided by X.
-Given all of these caveats,
+.PP
+Subject to all of these caveats,
 a simple mechanism exists for protecting keyboard input in \fIxterm\fP.
 .
 .PP
@@ -4900,7 +4908,9 @@ When an application prompts you for a password
 (or other sensitive data), you can enable \fBSecure Keyboard\fP using the
 menu, type in the data, and then disable \fBSecure Keyboard\fP using
 the menu again.
+.bP
 This ensures that you know which window is accepting your keystrokes.
+.bP
 It cannot ensure that there are no processes which have access to your
 X display that might be observing the keystrokes as well.
 .

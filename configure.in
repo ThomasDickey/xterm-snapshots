@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.278 2011/09/04 17:04:51 tom Exp $
+dnl $XTermId: configure.in,v 1.279 2011/09/04 21:27:24 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -73,6 +73,7 @@ CF_SIGWINCH
 
 ###	checks for header files
 AC_CHECK_HEADERS( \
+ncurses/curses.h \
 ncurses/term.h \
 stdlib.h \
 sys/ttydefaults.h \
@@ -99,7 +100,8 @@ AC_CHECK_FUNCS( \
 	gethostname \
 	getlogin \
 	memmove \
-	putenv unsetenv \
+	putenv \
+	unsetenv \
 	sched_yield \
 	strerror \
 	strftime \
