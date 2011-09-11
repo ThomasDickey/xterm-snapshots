@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.63 2011/09/04 13:51:10 tom Exp $ */
+/* $XTermId: trace.h,v 1.64 2011/09/11 14:56:42 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -28,7 +28,6 @@
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- *
  */
 
 /*
