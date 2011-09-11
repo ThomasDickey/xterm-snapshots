@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.659 2011/09/04 16:40:28 tom Exp $ */
+/* $XTermId: xterm.h,v 1.660 2011/09/11 13:03:19 tom Exp $ */
 
 /************************************************************
 
@@ -951,6 +951,7 @@ extern void show_8bit_control  (Bool  /* value */);
 extern Bool AllocateTermColor(XtermWidget, ScrnColors *, int, const char *, Bool);
 extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long  /* fg */, unsigned long  /* bg */);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
+extern String xtermEnvLocale (void);
 extern Widget xtermOpenApplication(XtAppContext * /* app_context_return */, String /* application_class */, XrmOptionDescRec */* options */, Cardinal /* num_options */, int * /* argc_in_out */, String */* argv_in_out */, String * /* fallback_resources */, WidgetClass /* widget_class */, ArgList /* args */, Cardinal /* num_args */);
 extern Window WMFrameWindow(XtermWidget /* termw */);
 extern XtInputMask xtermAppPending (void);
@@ -958,7 +959,6 @@ extern XrmOptionDescRec * sortedOptDescs(XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget(Widget /* w */);
 extern char *udk_lookup (int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
-extern char *xtermEnvLocale (void);
 extern char *xtermFindShell(char * /* leaf */, Bool  /* warning */);
 extern char *xtermVersion(void);
 extern const char *SysErrorMsg (int /* n */);
