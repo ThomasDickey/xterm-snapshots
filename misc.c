@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.546 2011/09/11 13:11:22 tom Exp $ */
+/* $XTermId: misc.c,v 1.547 2011/09/11 14:35:55 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4373,6 +4373,22 @@ xtermFindShell(char *leaf, Bool warning)
 #define ENV_HUNK(n)	(unsigned) ((((n) + 1) | 31) + 1)
 
 /*
+ * If we do not have unsetenv(), make consistent updates for environ[].
+ * This could happen on some older machines due to the uneven standardization
+ * process for the two functions.
+ *
+ * That is, putenv() makes a copy of environ, and some implementations do not
+ * update the environ pointer, so the fallback when unsetenv() is missing would
+ * not work as intended.  Likewise, the reverse could be true, i.e., unsetenv
+ * could copy environ.
+ */
+#if defined(HAVE_PUTENV) && !defined(HAVE_UNSETENV)
+#undef HAVE_PUTENV
+#elif !defined(HAVE_PUTENV) && defined(HAVE_UNSETENV)
+#undef HAVE_UNSETENV
+#endif
+
+/*
  * copy the environment before Setenv'ing.
  */
 void
@@ -4476,14 +4492,17 @@ xtermSetenv(const char *var, const char *value)
 void
 xtermUnsetenv(const char *var)
 {
+    TRACE(("xtermUnsetenv(%s)\n", var));
 #ifdef HAVE_UNSETENV
     unsetenv(var);
 #else
-    int ignore;
-    int item = findEnv(var, &ignore);
-    if (item >= 0) {
-	while ((environ[item] = environ[item + 1]) != 0) {
-	    ++item;
+    {
+	int ignore;
+	int item = findEnv(var, &ignore);
+	if (item >= 0) {
+	    while ((environ[item] = environ[item + 1]) != 0) {
+		++item;
+	    }
 	}
     }
 #endif
