@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.544 2011/09/04 18:50:30 tom Exp $ */
+/* $XTermId: misc.c,v 1.546 2011/09/11 13:11:22 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -383,8 +383,8 @@ TraceExposeEvent(XEvent * arg)
 #define ExposeContains(p,q) \
 	    ((p)->y <= (q)->y \
 	  && (p)->x <= (q)->x \
-	  && (p)->height >= (q)->height \
-	  && (p)->width >= (q)->width)
+	  && ((p)->y + (p)->height) >= ((q)->y + (q)->height) \
+	  && ((p)->x + (p)->width) >= ((q)->x + (q)->width))
 
 static XtInputMask
 mergeExposeEvents(XEvent * target)
@@ -4855,10 +4855,10 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 /*
  * Report the character-type locale that xterm was started in.
  */
-char *
+String
 xtermEnvLocale(void)
 {
-    static char *result;
+    static String result;
 
     if (result == 0) {
 	if ((result = x_nonempty(setlocale(LC_CTYPE, 0))) == 0) {

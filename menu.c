@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.296 2011/08/28 21:12:52 tom Exp $ */
+/* $XTermId: menu.c,v 1.297 2011/09/11 13:15:18 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -657,7 +657,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 	for (n = 0; n < nentries; ++n) {
 	    if (!unused[n]) {
 		cb[0].callback = (XtCallbackProc) entries[n].function;
-		cb[0].closure = (caddr_t) entries[n].name;
+		cb[0].closure = (XtPointer) entries[n].name;
 		entries[n].widget = XtCreateManagedWidget(entries[n].name,
 							  (entries[n].function
 							   ? smeBSBObjectClass

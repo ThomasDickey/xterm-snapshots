@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.662 2011/09/04 18:04:33 tom Exp $ */
+/* $XTermId: main.c,v 1.663 2011/09/11 13:25:42 tom Exp $ */
 
 /*
  *				 W A R N I N G
@@ -2422,7 +2422,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	x_appendargv(command_to_exec_with_luit, split_filter);
 	if (count_using) {
 	    char *encoding_opt[4];
-	    encoding_opt[0] = "-encoding";
+	    encoding_opt[0] = x_strdup("-encoding");
 	    encoding_opt[1] = term->misc.locale_str;
 	    encoding_opt[2] = 0;
 	    x_appendargv(command_to_exec_with_luit, encoding_opt);
@@ -2430,7 +2430,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	command_length_with_luit = x_countargv(command_to_exec_with_luit);
 	if (count_exec) {
 	    char *delimiter[2];
-	    delimiter[0] = "--";
+	    delimiter[0] = x_strdup("--");
 	    delimiter[1] = 0;
 	    x_appendargv(command_to_exec_with_luit, delimiter);
 	    x_appendargv(command_to_exec_with_luit, command_to_exec);
