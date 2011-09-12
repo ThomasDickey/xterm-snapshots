@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1095 2011/09/11 15:04:08 tom Exp $
+  $XTermId: xterm.log.html,v 1.1100 2011/09/11 21:06:03 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -338,6 +338,31 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add <code>ash</code>, <code>zsh</code> to known shells for
+	    <code>resize</code>.
+
+	<li>modify <code>resize</code>
+	    to reuse the logic from <code>xterm</code>
+	    which determines the actual logon-user's shell
+	    if <code>$SHELL</code> is not set.
+
+	<li>revert the <code>unsetenv("SHELL")</code> added in
+	    <a href="#xterm_272">patch #272</a>.
+
+	<li>an <code>unsetenv("SHELL")</code> added in
+	    <a href="#xterm_272">patch #272</a> to help ensure that
+	    <code>luit</code> would get the user's shell consistently
+	    did not work as expected for cases where multiple
+	    names are in the password-file for a given uid.
+	    That was because changes in <a href="#xterm_157">patch #157</a>
+	    to handle this situation
+	    did not take into account that repeated calls to
+	    <code>getpwnam</code> and <code>getpwuid</code>
+	    return a pointer to the same static buffer.
+	    Fixed the older logic to work as intended,
+	    by ensuring that the passwd-data from each call is stored
+	    separately (report by Paul Keusemann).
+
 	<li>adjust ifdef's for <code>putenv</code> and <code>unsetenv</code>
 	    in case only one of those is provided on a given platform.
 

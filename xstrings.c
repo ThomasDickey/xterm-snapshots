@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.42 2011/09/11 14:49:29 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.47 2011/09/11 20:20:12 tom Exp $ */
 
 /*
  * Copyright 2000-2010,2011 by Thomas E. Dickey
@@ -38,6 +38,16 @@
 #include <ctype.h>
 
 #include <xstrings.h>
+
+static void
+alloc_pw(struct passwd *target, struct passwd *source)
+{
+    *target = *source;
+    /* we care only about these strings */
+    target->pw_dir = x_strdup(source->pw_dir);
+    target->pw_name = x_strdup(source->pw_name);
+    target->pw_shell = x_strdup(source->pw_shell);
+}
 
 void
 x_appendargv(char **target, char **source)
@@ -135,8 +145,109 @@ x_getenv(const char *name)
 }
 
 /*
+ * Call this with in_out pointing to data filled in by x_getpwnam() or by
+ * x_getpwnam().  It finds the user's logon name, if possible.  As a side
+ * effect, it updates in_out to fill in possibly more-relevant data, i.e.,
+ * in case there is more than one alias for the same uid.
+ */
+char *
+x_getlogin(uid_t uid, struct passwd *in_out)
+{
+    char *login_name = NULL;
+
+#ifdef HAVE_GETLOGIN
+    login_name = getlogin();
+#endif
+
+    /*
+     * Of course getlogin() will fail if we're started from a window-manager,
+     * since there's no controlling terminal to fuss with.  In that case, try
+     * to get something useful from the user's $LOGNAME or $USER environment
+     * variables.
+     */
+    if (login_name == NULL) {
+	login_name = x_getenv("LOGNAME");
+	if (login_name == NULL)
+	    login_name = x_getenv("USER");
+    }
+
+    /*
+     * If the logon-name differs from the value we get by looking in the
+     * password file, check if it does correspond to the same uid.  If so,
+     * allow that as an alias for the uid.
+     */
+    if (login_name != NULL
+	&& strcmp(login_name, in_out->pw_name)) {
+	struct passwd pw2;
+
+	if (x_getpwnam(login_name, &pw2)) {
+	    uid_t uid2 = pw2.pw_uid;
+	    struct passwd pw3;
+
+	    if (!x_getpwuid(uid, &pw3)
+		|| (uid_t) pw3.pw_uid != uid2) {
+		login_name = NULL;
+	    } else {
+		/* use the other passwd-data including shell */
+		alloc_pw(in_out, &pw2);
+	    }
+	} else {
+	    (void) x_getpwuid(uid, in_out);
+	}
+    }
+
+    if (login_name == NULL)
+	login_name = in_out->pw_name;
+    if (login_name != NULL)
+	login_name = x_strdup(login_name);
+
+    return login_name;
+}
+
+/*
+ * Simpler than getpwnam_r, retrieves the passwd result by name and stores the
+ * result via the given pointer.  On failure, wipes the data to prevent use.
+ */
+Boolean
+x_getpwnam(const char *name, struct passwd * result)
+{
+    struct passwd *ptr = getpwnam(name);
+    Boolean code;
+
+    if (OkPasswd(ptr)) {
+	code = True;
+	alloc_pw(result, ptr);
+    } else {
+	code = False;
+	memset(result, 0, sizeof(*result));
+    }
+    return code;
+}
+
+/*
+ * Simpler than getpwuid_r, retrieves the passwd result by uid and stores the
+ * result via the given pointer.  On failure, wipes the data to prevent use.
+ */
+Boolean
+x_getpwuid(uid_t uid, struct passwd * result)
+{
+    struct passwd *ptr = getpwuid((uid_t) uid);
+    Boolean code;
+
+    if (OkPasswd(ptr)) {
+	code = True;
+	alloc_pw(result, ptr);
+    } else {
+	code = False;
+	memset(result, 0, sizeof(*result));
+    }
+    return code;
+}
+
+/*
  * Decode a single hex "nibble", returning the nibble as 0-15, or -1 on error.
- */ int
+ */
+int
 x_hex2int(int c)
 {
     if (c >= '0' && c <= '9')
