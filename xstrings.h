@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.h,v 1.22 2011/09/11 14:59:35 tom Exp $ */
+/* $XTermId: xstrings.h,v 1.25 2011/09/11 20:20:22 tom Exp $ */
 
 /*
  * Copyright 2000-2009,2011 by Thomas E. Dickey
@@ -35,7 +35,12 @@
 /* *INDENT-OFF* */
 
 #include <X11/Intrinsic.h>
+#include <pwd.h>
 
+#define OkPasswd(p) ((p)->pw_name != 0 && (p)->pw_name[0] != 0)
+
+extern Boolean x_getpwnam(const char * /* name */, struct passwd * /* result */);
+extern Boolean x_getpwuid(uid_t /* uid */, struct passwd * /* result */);
 extern String x_nonempty(String /* s */);
 extern String x_skip_blanks(String /* s */);
 extern String x_skip_nonblanks(String /* s */);
@@ -44,6 +49,7 @@ extern char *x_basename(char * /* name */);
 extern char *x_decode_hex(const char * /* source */, const char ** /* next */);
 extern char *x_encode_hex(const char * /* source */);
 extern char *x_getenv(const char * /* name */);
+extern char *x_getlogin(uid_t /* uid */, struct passwd * /* in_out */);
 extern char *x_strdup(const char * /* s */);
 extern char *x_strindex(char * /* s1 */, const char * /* s2 */);
 extern char *x_strtrim(const char * /* s */);

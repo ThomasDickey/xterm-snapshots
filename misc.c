@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.547 2011/09/11 14:35:55 tom Exp $ */
+/* $XTermId: misc.c,v 1.548 2011/09/11 20:18:45 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1789,9 +1789,6 @@ void
 StartLog(XtermWidget xw)
 {
     static char *log_default;
-#ifdef ALLOWLOGFILEEXEC
-    char *cp;
-#endif /* ALLOWLOGFILEEXEC */
     TScreen *screen = TScreenOf(xw);
 
     if (screen->logging || (screen->inhibit & I_LOG))
@@ -1851,7 +1848,7 @@ StartLog(XtermWidget xw)
 	int pid;
 	int p[2];
 	static char *shell;
-	struct passwd *pw;
+	struct passwd pw;
 
 	if (pipe(p) < 0 || (pid = fork()) < 0)
 	    return;
@@ -1871,14 +1868,19 @@ StartLog(XtermWidget xw)
 	    close(ConnectionNumber(screen->display));
 	    close(screen->respond);
 
-	    if ((((cp = x_getenv("SHELL")) == NULL)
-		 && ((pw = getpwuid(screen->uid)) == NULL
-		     || *(cp = pw->pw_shell) == 0))
-		|| (shell = CastMallocN(char, strlen(cp))) == 0) {
+	    if ((shell = x_getenv("SHELL")) == NULL) {
+
+		if (x_getpwuid(screen->uid, &pw)) {
+		    x_getlogin(screen->uid, &pw);
+		    if (*(pw.pw_shell)) {
+			shell = pw.pw_shell;
+		    }
+		}
+	    }
+
+	    if (shell == 0) {
 		static char dummy[] = "/bin/sh";
 		shell = dummy;
-	    } else {
-		strcpy(shell, cp);
 	    }
 
 	    signal(SIGHUP, SIG_DFL);

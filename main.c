@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.664 2011/09/11 14:58:42 tom Exp $ */
+/* $XTermId: main.c,v 1.667 2011/09/11 21:02:37 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2011 by Thomas E. Dickey
@@ -3228,7 +3228,7 @@ spawnXTerm(XtermWidget xw)
 #ifdef TTYSIZE_STRUCT
     TTYSIZE_STRUCT ts;
 #endif
-    struct passwd *pw = NULL;
+    struct passwd pw;
     char *login_name = NULL;
 #ifndef USE_UTEMPTER
 #ifdef HAVE_UTMP
@@ -3295,7 +3295,7 @@ spawnXTerm(XtermWidget xw)
 	    ttyfd = -1;
 	    errno = ENXIO;
 	}
-	pw = NULL;
+	memset(&pw, 0, sizeof(pw));
 #if OPT_PTY_HANDSHAKE
 	got_handshake_size = False;
 #endif /* OPT_PTY_HANDSHAKE */
@@ -4154,40 +4154,9 @@ spawnXTerm(XtermWidget xw)
 #endif
 
 #ifdef HAVE_UTMP
-	    pw = getpwuid(screen->uid);
 	    login_name = NULL;
-	    if (pw && pw->pw_name) {
-#ifdef HAVE_GETLOGIN
-		/*
-		 * If the value from getlogin() differs from the value we
-		 * get by looking in the password file, check if it does
-		 * correspond to the same uid.  If so, allow that as an
-		 * alias for the uid.
-		 *
-		 * Of course getlogin() will fail if we're started from
-		 * a window-manager, since there's no controlling terminal
-		 * to fuss with.  In that case, try to get something useful
-		 * from the user's $LOGNAME or $USER environment variables.
-		 */
-		if (((login_name = getlogin()) != NULL
-		     || (login_name = x_getenv("LOGNAME")) != NULL
-		     || (login_name = x_getenv("USER")) != NULL)
-		    && strcmp(login_name, pw->pw_name)) {
-		    struct passwd *pw2 = getpwnam(login_name);
-		    if (pw2 != 0) {
-			uid_t uid2 = pw2->pw_uid;
-			pw = getpwuid(screen->uid);
-			if ((uid_t) pw->pw_uid != uid2)
-			    login_name = NULL;
-		    } else {
-			pw = getpwuid(screen->uid);
-		    }
-		}
-#endif
-		if (login_name == NULL)
-		    login_name = pw->pw_name;
-		if (login_name != NULL)
-		    login_name = x_strdup(login_name);
+	    if (x_getpwuid(screen->uid, &pw)) {
+		login_name = x_getlogin(screen->uid, &pw);
 	    }
 	    if (login_name != NULL) {
 		xtermSetenv("LOGNAME", login_name);	/* for POSIX */
@@ -4300,7 +4269,7 @@ spawnXTerm(XtermWidget xw)
 	    tslot = ttyslot();
 	    added_utmp_entry = False;
 	    {
-		if (tslot > 0 && pw && !resource.utmpInhibit &&
+		if (tslot > 0 && OkPasswd(&pw) && !resource.utmpInhibit &&
 		    (i = open(etc_utmp, O_WRONLY)) >= 0) {
 		    memset(&utmp, 0, sizeof(utmp));
 		    (void) strncpy(utmp.ut_line,
@@ -4404,8 +4373,8 @@ spawnXTerm(XtermWidget xw)
 	    IGNORE_RC(setgid(screen->gid));
 	    TRACE_IDS;
 #ifdef HAS_BSD_GROUPS
-	    if (geteuid() == 0 && pw) {
-		if (initgroups(login_name, pw->pw_gid)) {
+	    if (geteuid() == 0 && OkPasswd(&pw)) {
+		if (initgroups(login_name, pw.pw_gid)) {
 		    perror("initgroups failed");
 		    SysError(ERROR_INIGROUPS);
 		}
@@ -4469,11 +4438,11 @@ spawnXTerm(XtermWidget xw)
 		xtermSetenv("LINES", numbuf);
 	    }
 #ifdef HAVE_UTMP
-	    if (pw) {		/* SVR4 doesn't provide these */
+	    if (OkPasswd(&pw)) {	/* SVR4 doesn't provide these */
 		if (!x_getenv("HOME"))
-		    xtermSetenv("HOME", pw->pw_dir);
+		    xtermSetenv("HOME", pw.pw_dir);
 		if (!x_getenv("SHELL"))
-		    xtermSetenv("SHELL", pw->pw_shell);
+		    xtermSetenv("SHELL", pw.pw_shell);
 	    }
 #endif /* HAVE_UTMP */
 #ifdef OWN_TERMINFO_DIR
@@ -4541,11 +4510,10 @@ spawnXTerm(XtermWidget xw)
 	     * Incidentally, our setting of $SHELL tells luit to use that
 	     * program rather than choosing between $SHELL and "/bin/sh".
 	     */
-	    xtermUnsetenv("SHELL");
 	    if ((ptr = explicit_shname) == NULL) {
 		if ((ptr = x_getenv("SHELL")) == NULL) {
-		    if ((pw == NULL && (pw = getpwuid(screen->uid)) == NULL)
-			|| *(ptr = pw->pw_shell) == 0) {
+		    if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
+			|| *(ptr = pw.pw_shell) == 0) {
 			ptr = x_strdup("/bin/sh");
 		    } else if (ptr != 0) {
 			xtermSetenv("SHELL", ptr);
@@ -4604,7 +4572,7 @@ spawnXTerm(XtermWidget xw)
 #endif /* !TERMIO_STRUCT */
 
 #ifdef USE_LOGIN_DASH_P
-	    if (xw->misc.login_shell && pw && added_utmp_entry)
+	    if (xw->misc.login_shell && OkPasswd(&pw) && added_utmp_entry)
 		execl(bin_login, "login", "-p", "-f", login_name, (void *) 0);
 #endif
 
