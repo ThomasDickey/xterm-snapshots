@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.548 2011/09/11 20:18:45 tom Exp $ */
+/* $XTermId: misc.c,v 1.549 2011/10/03 09:55:10 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4327,7 +4327,21 @@ xtermFindShell(char *leaf, Bool warning)
     char *result = leaf;
 
     TRACE(("xtermFindShell(%s)\n", leaf));
-    if (*result != '\0' && strchr("+/-", *result) == 0) {
+
+    if (!strncmp("./", result, (size_t) 2)
+	|| !strncmp("../", result, (size_t) 3)) {
+	size_t need = PATH_MAX;
+	size_t used = strlen(result) + 2;
+	char *buffer = malloc(used + need);
+	if (buffer != 0) {
+	    if (getcwd(buffer, need) != 0) {
+		sprintf(buffer + strlen(buffer), "/%s", result);
+		result = buffer;
+	    } else {
+		free(buffer);
+	    }
+	}
+    } else if (*result != '\0' && strchr("+/-", *result) == 0) {
 	/* find it in $PATH */
 	if ((s = x_getenv("PATH")) != 0) {
 	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 2)) != 0) {
