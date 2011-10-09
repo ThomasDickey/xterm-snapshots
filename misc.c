@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.549 2011/10/03 09:55:10 tom Exp $ */
+/* $XTermId: misc.c,v 1.550 2011/10/09 14:13:41 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4318,6 +4318,9 @@ Cleanup(int code)
 }
 
 #ifndef VMS
+#ifndef PATH_MAX
+#define PATH_MAX 512		/* ... is not defined consistently in Xos.h */
+#endif
 char *
 xtermFindShell(char *leaf, Bool warning)
 {

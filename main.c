@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.668 2011/09/28 21:19:02 tom Exp $ */
+/* $XTermId: main.c,v 1.669 2011/10/09 14:14:51 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2011 by Thomas E. Dickey
@@ -1467,7 +1467,7 @@ parseArg(int *num, char **argv, char **valuep)
 
 	TRACE(("parseArg %s\n", option));
 	if ((value = argv[(*num) + 1]) != 0) {
-	    have_value = !isOption(value);
+	    have_value = (Boolean) ! isOption(value);
 	}
 	for (inlist = 0; inlist < limit; ++inlist) {
 	    XrmOptionDescRec *check = ITEM(inlist);
