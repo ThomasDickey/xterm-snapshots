@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.376 2011/10/09 13:52:58 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.377 2011/10/09 22:04:09 tom Exp $ */
 
 /*
  * Copyright 1998-2010,2011 by Thomas E. Dickey
@@ -52,7 +52,7 @@
 #include <ctype.h>
 
 #define SetFontWidth(screen,dst,src)  (dst)->f_width = (src)
-#define SetFontHeight(screen,dst,src) (dst)->f_height = (int)((screen)->scale_height * (float) (src))
+#define SetFontHeight(screen,dst,src) (dst)->f_height = dimRound((screen)->scale_height * (float) (src))
 
 /* from X11/Xlibint.h - not all vendors install this file */
 #define CI_NONEXISTCHAR(cs) (((cs)->width == 0) && \
@@ -1767,7 +1767,7 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern * pat, const char *tag
  * (Newton Raphson).
  */
 static double
-mySquareRoot(double value)
+dimSquareRoot(double value)
 {
     double result = 0.0;
     if (value > 0.0) {
@@ -2780,7 +2780,7 @@ fillInFaceSize(XtermWidget xw, int fontnum)
 
 	    if (den <= 0)
 		den = 1;
-	    ratio = mySquareRoot((double) num / (double) den);
+	    ratio = dimSquareRoot((double) num / (double) den);
 
 	    face_size = (ratio * xw->misc.face_size[0]);
 	    TRACE(("scaled[%d] using %3ld/%ld = %.2f -> %f\n",
