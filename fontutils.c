@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.377 2011/10/09 22:04:09 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.378 2011/10/10 23:46:00 tom Exp $ */
 
 /*
  * Copyright 1998-2010,2011 by Thomas E. Dickey
@@ -1886,18 +1886,22 @@ setFaceName(XtermWidget xw, const char *value)
 {
     TScreen *screen = TScreenOf(xw);
     int n;
+    Boolean changed = ((xw->misc.face_name == 0)
+		       || strcmp(xw->misc.face_name, value));
 
-    xw->misc.face_name = x_strdup(value);
-    for (n = 0; n < NMENUFONTS; ++n) {
-	xw->misc.face_size[n] = -1.0;
-	xtermCloseXft(screen, &(screen->renderFontNorm[n]));
-	xtermCloseXft(screen, &(screen->renderFontBold[n]));
-	xtermCloseXft(screen, &(screen->renderFontBold[n]));
+    if (changed) {
+	xw->misc.face_name = x_strdup(value);
+	for (n = 0; n < NMENUFONTS; ++n) {
+	    xw->misc.face_size[n] = -1.0;
+	    xtermCloseXft(screen, &(screen->renderFontNorm[n]));
+	    xtermCloseXft(screen, &(screen->renderFontBold[n]));
+	    xtermCloseXft(screen, &(screen->renderFontBold[n]));
 #if OPT_RENDERWIDE
-	xtermCloseXft(screen, &(screen->renderWideNorm[n]));
-	xtermCloseXft(screen, &(screen->renderWideBold[n]));
-	xtermCloseXft(screen, &(screen->renderWideItal[n]));
+	    xtermCloseXft(screen, &(screen->renderWideNorm[n]));
+	    xtermCloseXft(screen, &(screen->renderWideBold[n]));
+	    xtermCloseXft(screen, &(screen->renderWideItal[n]));
 #endif
+	}
     }
 }
 #endif
@@ -2723,7 +2727,13 @@ lookupOneFontSize(XtermWidget xw, int fontnum)
 
 	memset(&fnt, 0, sizeof(fnt));
 	screen->menu_font_sizes[fontnum] = -1;
-	if (xtermOpenFont(xw, screen->MenuFontName(fontnum), &fnt, fwAlways, True)) {
+	if (xtermOpenFont(xw,
+			  screen->MenuFontName(fontnum),
+			  &fnt,
+			  ((fontnum <= fontMenu_lastBuiltin)
+			   ? fwAlways
+			   : fwResource),
+			  True)) {
 	    if (fontnum <= fontMenu_lastBuiltin
 		|| strcmp(fnt.fn, DEFFONT)) {
 		screen->menu_font_sizes[fontnum] = FontSize(fnt.fs);
@@ -2890,6 +2900,7 @@ lookupRelativeFontSize(XtermWidget xw, int old, int relative)
 	    TRACE(("...using FaceSize\n"));
 	    if (relative != 0) {
 		for (n = 0; n < NMENU_RENDERFONTS; ++n) {
+		    fillInFaceSize(xw, n);
 		    if (xw->misc.face_size[n] > 0 &&
 			xw->misc.face_size[n] != xw->misc.face_size[old]) {
 			int cmp_0 = ((xw->misc.face_size[n] >
