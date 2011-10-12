@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.327 2011/02/09 10:15:07 tom Exp $ */
+/* $XTermId: input.c,v 1.328 2011/10/11 23:59:10 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -957,6 +957,13 @@ Input(XtermWidget xw,
 	    kd.strbuf[0] = '\t';
 	}
     }
+#ifdef XK_ISO_Left_Tab
+    else if (IsTabKey(kd.keysym)
+	     && kd.nbytes <= 1
+	     && modify_parm == (MOD_NONE + MOD_SHIFT)) {
+	kd.keysym = XK_ISO_Left_Tab;
+    }
+#endif
 #endif /* OPT_MOD_FKEYS */
 
     /* VT300 & up: backarrow toggle */
@@ -1046,8 +1053,9 @@ Input(XtermWidget xw,
 	 * Reevaluate the modifier parameter, stripping off the modifiers
 	 * that we just used.
 	 */
-	if (modify_parm)
+	if (modify_parm) {
 	    modify_parm = xtermStateToParam(xw, evt_state);
+	}
 #endif /* OPT_MOD_FKEYS */
     }
 
