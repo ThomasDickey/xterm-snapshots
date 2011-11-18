@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1108 2011/10/12 00:09:51 tom Exp $
+  $XTermId: xterm.log.html,v 1.1109 2011/11/18 10:43:49 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -340,6 +340,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify special errno handling case in ptydata.c from
+	    <a href="#xterm_158">patch #158</a>
+	    to allow for the possibility that any platform may have
+	    special cases where "/dev/tty" is absent.
+	    For example, this can happen in a FreeBSD jail
+	    (patch by David Wolfskill).
+
 	<li>add keyboard logic to map shift-tab into XK_ISO_Left_Tab, which is
 	    usually, not always, done by the X keyboard configuration.
 </ul>
