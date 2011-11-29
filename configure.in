@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.279 2011/09/04 21:27:24 tom Exp $
+dnl $XTermId: configure.in,v 1.280 2011/11/29 00:19:57 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -258,17 +258,7 @@ CF_TERMIO_C_ISPEED
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 
-# Check for openpty() in -lutil if the UNIX98-style pty functions are not
-# available. E.g. for GNU libc 2.0.
-case $host_os in #(vi
-freebsd*|netbsd*|dragonfly*) # 2004/8/15 - revisit this if/when grantpt is known to work.
-	AC_CHECK_LIB(util,openpty)
-	;;
-*)
-	AC_CHECK_FUNCS(grantpt, [], AC_CHECK_LIB(util,openpty))
-	;;
-esac
-
+CF_FUNC_GRANTPT
 AC_CHECK_FUNCS(XkbQueryExtension)
 
 CF_XKB_BELL_EXT

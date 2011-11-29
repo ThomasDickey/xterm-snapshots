@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.378 2011/10/10 23:46:00 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.379 2011/11/29 01:42:46 tom Exp $ */
 
 /*
  * Copyright 1998-2010,2011 by Thomas E. Dickey
@@ -1886,8 +1886,8 @@ setFaceName(XtermWidget xw, const char *value)
 {
     TScreen *screen = TScreenOf(xw);
     int n;
-    Boolean changed = ((xw->misc.face_name == 0)
-		       || strcmp(xw->misc.face_name, value));
+    Boolean changed = (Boolean) ((xw->misc.face_name == 0)
+				 || strcmp(xw->misc.face_name, value));
 
     if (changed) {
 	xw->misc.face_name = x_strdup(value);
