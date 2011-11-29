@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.670 2011/11/18 10:35:12 David.Wolfskill Exp $ */
+/* $XTermId: main.c,v 1.672 2011/11/29 01:47:04 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2011 by Thomas E. Dickey
@@ -2610,7 +2610,20 @@ get_pty(int *pty, char *from GCC_UNUSED)
 {
     int result = 1;
 
-#if defined(PUCC_PTYD)
+#if defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME)
+    if ((*pty = posix_openpt(O_RDWR)) >= 0) {
+	char *name = ptsname(*pty);
+	if (name != 0) {
+	    strcpy(ttydev, name);
+	    result = 0;
+	}
+    }
+#ifdef USE_PTY_SEARCH
+    if (result) {
+	result = pty_search(pty);
+    }
+#endif
+#elif defined(PUCC_PTYD)
 
     result = ((*pty = openrpty(ttydev, ptydev,
 			       (resource.utmpInhibit ? OPTY_NOP : OPTY_LOGIN),
@@ -4337,7 +4350,7 @@ spawnXTerm(XtermWidget xw)
 	    if (xw->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		size_t size = sizeof(struct lastlog);
-		off_t offset = (screen->uid * size);
+		off_t offset = (off_t) (screen->uid * size);
 
 		memset(&lastlog, 0, size);
 		(void) strncpy(lastlog.ll_line,
