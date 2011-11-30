@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1132 2011/09/04 18:18:16 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1133 2011/11/29 10:53:35 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3755,8 +3755,8 @@ PreeditPosition(TScreen * screen)
 				   XNSpotLocation, &spot,
 				   XNForeground, T_COLOR(screen, TEXT_FG),
 				   XNBackground, T_COLOR(screen, TEXT_BG),
-				   NULL);
-	XSetICValues(screen->xic, XNPreeditAttributes, list, NULL);
+				   (void *) 0);
+	XSetICValues(screen->xic, XNPreeditAttributes, list, (void *) 0);
 	XFree(list);
     }
 }
@@ -7469,7 +7469,7 @@ xim_real_init(XtermWidget xw)
     }
     TRACE(("VTInitI18N opened input method\n"));
 
-    if (XGetIMValues(screen->xim, XNQueryInputStyle, &xim_styles, NULL)
+    if (XGetIMValues(screen->xim, XNQueryInputStyle, &xim_styles, (void *) 0)
 	|| !xim_styles
 	|| !xim_styles->count_styles) {
 	fprintf(stderr, "input method doesn't support any style\n");
@@ -7581,18 +7581,18 @@ xim_real_init(XtermWidget xw)
 	p_list = XVaCreateNestedList(0,
 				     XNSpotLocation, &spot,
 				     XNFontSet, screen->fs,
-				     NULL);
+				     (void *) 0);
 	screen->xic = XCreateIC(screen->xim,
 				XNInputStyle, input_style,
 				XNClientWindow, XtWindow(xw),
 				XNFocusWindow, XtWindow(xw),
 				XNPreeditAttributes, p_list,
-				NULL);
+				(void *) 0);
     } else {
 	screen->xic = XCreateIC(screen->xim, XNInputStyle, input_style,
 				XNClientWindow, XtWindow(xw),
 				XNFocusWindow, XtWindow(xw),
-				NULL);
+				(void *) 0);
     }
 
     if (!screen->xic) {
@@ -7605,8 +7605,12 @@ xim_real_init(XtermWidget xw)
 
 	destroy_cb.callback = xim_destroy_cb;
 	destroy_cb.client_data = NULL;
-	if (XSetIMValues(screen->xim, XNDestroyCallback, &destroy_cb, NULL))
+	if (XSetIMValues(screen->xim,
+			 XNDestroyCallback,
+			 &destroy_cb,
+			 (void *) 0)) {
 	    fprintf(stderr, "Could not set destroy callback to IM\n");
+	}
     }
 #endif
 
