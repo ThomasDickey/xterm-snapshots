@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.705 2011/11/29 00:50:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.706 2011/11/29 09:52:15 Thorsten.Glaser Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -176,6 +176,9 @@
 #undef USE_PTY_SEARCH
 #elif (defined(sun) && defined(SVR4)) || defined(_ALL_SOURCE) || defined(__CYGWIN__)
 #undef USE_PTY_SEARCH
+#elif defined(__OpenBSD__)
+#undef USE_PTY_SEARCH
+#undef USE_PTY_DEVICE
 #endif
 
 #if defined(SYSV) && defined(i386) && !defined(SVR4)

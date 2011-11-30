@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.550 2011/10/09 14:13:41 tom Exp $ */
+/* $XTermId: misc.c,v 1.551 2011/11/29 10:54:08 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1590,7 +1590,7 @@ timestamp_filename(char *dst, const char *src)
     tstruct = localtime(&tstamp);
     sprintf(dst, TIMESTAMP_FMT,
 	    src,
-	    tstruct->tm_year + 1900,
+	    (int) tstruct->tm_year + 1900,
 	    tstruct->tm_mon + 1,
 	    tstruct->tm_mday,
 	    tstruct->tm_hour,
@@ -4306,7 +4306,7 @@ Cleanup(int code)
 	if (resource.sessionMgt) {
 	    XtVaSetValues(toplevel,
 			  XtNjoinSession, False,
-			  NULL);
+			  (void *) 0);
 	}
 #endif
     }
