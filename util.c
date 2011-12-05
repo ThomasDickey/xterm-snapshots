@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.548 2011/10/09 22:10:45 tom Exp $ */
+/* $XTermId: util.c,v 1.551 2011/12/04 21:03:27 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -578,6 +578,70 @@ xtermScroll(XtermWidget xw, int amount)
 
     screen->cursor_busy -= 1;
     return;
+}
+
+/*
+ * This is from ISO 6429, not found in any of DEC's terminals.
+ */
+void
+xtermScrollLR(XtermWidget xw, int amount, Bool toLeft)
+{
+    if (amount > 0) {
+	xtermColScroll(xw, amount, toLeft, 0);
+    }
+}
+
+/*
+ * Implement DECBI/DECFI (back/forward column index)
+ */
+void
+xtermColIndex(XtermWidget xw, Bool toLeft)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (toLeft) {
+	if (screen->cur_col) {
+	    CursorBack(xw, 1);
+	} else {
+	    xtermColScroll(xw, 1, False, 0);
+	}
+    } else {
+	if (screen->cur_col < screen->max_col) {
+	    CursorForward(screen, 1);
+	} else {
+	    xtermColScroll(xw, 1, True, 0);
+	}
+    }
+}
+
+/*
+ * Implement DECDC/DECIC (delete/insert column)
+ */
+void
+xtermColScroll(XtermWidget xw, int amount, Bool toLeft, int at_col)
+{
+    if (amount > 0) {
+	TScreen *screen = TScreenOf(xw);
+	int save_row = screen->cur_row;
+	int save_col = screen->cur_col;
+	int row;
+
+	screen->cur_col = at_col;
+	if (toLeft) {
+	    for (row = 0; row <= screen->max_row; row++) {
+		screen->cur_row = row;
+		ScrnDeleteChar(xw, amount);
+	    }
+	} else {
+	    for (row = 0; row <= screen->max_row; row++) {
+		screen->cur_row = row;
+		ScrnInsertChar(xw, amount);
+	    }
+	}
+	screen->cur_row = save_row;
+	screen->cur_col = save_col;
+	xtermRepaint(xw);
+    }
 }
 
 /*
