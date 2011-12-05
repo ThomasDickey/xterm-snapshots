@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1133 2011/11/29 10:53:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1136 2011/12/04 21:01:00 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2761,6 +2761,58 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if ((count = param[0]) < 1)
 		count = 1;
 	    xtermScroll(xw, count);
+	    ResetState(sp);
+	    break;
+
+	case CASE_SL:		/* ISO 6429, non-DEC */
+	    TRACE(("CASE_SL - scroll left\n"));
+	    if ((count = param[0]) < 1)
+		count = 1;
+	    xtermScrollLR(xw, count, True);
+	    ResetState(sp);
+	    break;
+
+	case CASE_SR:		/* ISO 6429, non-DEC */
+	    TRACE(("CASE_SR - scroll right\n"));
+	    if ((count = param[0]) < 1)
+		count = 1;
+	    xtermScrollLR(xw, count, False);
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECDC:
+	    TRACE(("CASE_DC - delete column\n"));
+	    if (screen->terminal_id >= 400) {
+		if ((count = param[0]) < 1)
+		    count = 1;
+		xtermColScroll(xw, count, True, screen->cur_col);
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECIC:
+	    TRACE(("CASE_IC - insert column\n"));
+	    if (screen->terminal_id >= 400) {
+		if ((count = param[0]) < 1)
+		    count = 1;
+		xtermColScroll(xw, count, False, screen->cur_col);
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECBI:
+	    TRACE(("CASE_BI - back index\n"));
+	    if (screen->terminal_id >= 400) {
+		xtermColIndex(xw, True);
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECFI:
+	    TRACE(("CASE_FI - forward index\n"));
+	    if (screen->terminal_id >= 400) {
+		xtermColIndex(xw, False);
+	    }
 	    ResetState(sp);
 	    break;
 

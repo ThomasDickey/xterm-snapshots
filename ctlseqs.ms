@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.244 2011/09/04 18:14:33 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.247 2011/12/04 19:38:07 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
@@ -238,6 +238,7 @@
 .[] ]] ]
 .[] bS \\e
 .[] { {
+.[] ~ ~
 .[] ] ]
 .[] & &
 .[] ^ ^
@@ -538,11 +539,17 @@ These work for 96-character sets only.
 .\"  \*(Cc = \*M \(-> ISO Latin-5 Supplemental
 .\"  \*(Cc = \*L \(-> ISO Latin-Cyrillic
 .
+.IP \\*(Es\\*6
+Back Index (DECBI), VT420 and up.
+.
 .IP \\*(Es\\*7
 Save Cursor (DECSC).
 .
 .IP \\*(Es\\*8
 Restore Cursor (DECRC).
+.
+.IP \\*(Es\\*9
+Forward Index (DECFI), VT420 and up.
 .
 .IP \\*(Es\\*=
 Application Keypad (DECPAM).
@@ -1382,6 +1389,12 @@ Valid values for the event:
 position in the xterm window, encoded as ASCII decimal.
 .br
 The ``page'' parameter is not used by xterm, and will be omitted.
+.
+.IP \\*(Cs\\*(Pm\\*s\\*(Sp\\*}
+Insert \*(Ps Column(s) (default = 1) (DECIC), VT420 and up.
+.
+.IP \\*(Cs\\*(Pm\\*s\\*(Sp\\*~
+Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .
 .Ed
 .

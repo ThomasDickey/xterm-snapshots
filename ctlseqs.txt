@@ -155,8 +155,10 @@ ESC . C   Designate G2 Character Set (VT300).
 ESC / C   Designate G3 Character Set (VT300).
           These work for 96-character sets only.
             C = A  -> ISO Latin-1 Supplemental.
+ESC 6     Back Index (DECBI), VT420 and up.
 ESC 7     Save Cursor (DECSC).
 ESC 8     Restore Cursor (DECRC).
+ESC 9     Forward Index (DECFI), VT420 and up.
 ESC =     Application Keypad (DECPAM).
 ESC >     Normal Keypad (DECPNM).
 ESC F     Cursor to lower left corner of screen.  This is enabled by the
@@ -839,6 +841,10 @@ CSI Ps ' |
           mal.
           The ``page'' parameter is not used by xterm, and will be omit-
           ted.
+CSI Pm SP }
+          Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
+CSI Pm SP ~
+          Delete Ps Column(s) (default = 1) (DECDC), VT420 and up.
 
 Operating System Controls
 OSC Ps ; Pt ST
