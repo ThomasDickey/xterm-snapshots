@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1136 2011/12/04 21:01:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1137 2011/12/07 09:16:43 Egmont.Koblinger Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4412,6 +4412,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case SET_EXT_MODE_MOUSE:
 	    set_bool_mode(screen->ext_mode_mouse);
 	    break;
+	case SET_URXVT_EXT_MODE_MOUSE:
+	    set_bool_mode(screen->urxvt_ext_mode_mouse);
+	    break;
 	case 1010:		/* rxvt */
 	    set_bool_mode(screen->scrollttyoutput);
 	    update_scrollttyoutput();
@@ -4617,6 +4620,9 @@ savemodes(XtermWidget xw)
 	case SET_EXT_MODE_MOUSE:
 	    DoSM(DP_X_EXT_MOUSE, screen->ext_mode_mouse);
 	    break;
+	case SET_URXVT_EXT_MODE_MOUSE:
+	    DoSM(DP_X_EXT_MOUSE, screen->urxvt_ext_mode_mouse);
+	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
 		CursorSave(xw);
@@ -4787,6 +4793,9 @@ restoremodes(XtermWidget xw)
 #endif
 	case SET_EXT_MODE_MOUSE:
 	    DoRM(DP_X_EXT_MOUSE, screen->ext_mode_mouse);
+	    break;
+	case SET_URXVT_EXT_MODE_MOUSE:
+	    DoRM(DP_X_EXT_MOUSE, screen->urxvt_ext_mode_mouse);
 	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
@@ -8441,6 +8450,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	screen->send_mouse_pos = MOUSE_OFF;
 	screen->send_focus_pos = OFF;
 	screen->ext_mode_mouse = OFF;
+	screen->urxvt_ext_mode_mouse = OFF;
 	screen->waitingForTrackInfo = False;
 	screen->eventMode = NORMAL;
 
