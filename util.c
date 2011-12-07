@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.551 2011/12/04 21:03:27 tom Exp $ */
+/* $XTermId: util.c,v 1.552 2011/12/07 09:35:27 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -630,12 +630,12 @@ xtermColScroll(XtermWidget xw, int amount, Bool toLeft, int at_col)
 	if (toLeft) {
 	    for (row = 0; row <= screen->max_row; row++) {
 		screen->cur_row = row;
-		ScrnDeleteChar(xw, amount);
+		ScrnDeleteChar(xw, (unsigned) amount);
 	    }
 	} else {
 	    for (row = 0; row <= screen->max_row; row++) {
 		screen->cur_row = row;
-		ScrnInsertChar(xw, amount);
+		ScrnInsertChar(xw, (unsigned) amount);
 	    }
 	}
 	screen->cur_row = save_row;

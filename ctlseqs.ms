@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.247 2011/12/04 19:38:07 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.249 2011/12/07 09:57:36 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
@@ -2023,6 +2023,8 @@ are defined in \fBxcharmouse.h\fP as follows:
 #define SET_FOCUS_EVENT_MOUSE       1004
 
 #define SET_EXT_MODE_MOUSE          1005
+
+#define SET_URXVT_EXT_MODE_MOUSE    1015
 .DE
 .br
 The motion reporting modes are strictly \fIxterm\fP extensions, and are not
@@ -2151,7 +2153,11 @@ When set, it causes \fIxterm\fP to send
 \*(Cs\*I when the terminal gains focus, and
 \*(Cs\*O when it loses focus.
 .lP
-Extended mouse mode enables UTF-8 encoding for \*(Cx and \*(Cy under
+The original X10 mouse protocol limits the \*(Cx and \*(Cy ordinates
+to 223 (=255\ -\ 32).
+\fIXterm\fP supports more than one scheme for extending this range:
+.IP "UTF-8 (1005)"
+This enables UTF-8 encoding for \*(Cx and \*(Cy under
 all tracking modes, expanding the maximum encodable position from 223 to 2015.
 For positions less than 95, the resulting output is identical under both modes.
 Under extended mouse mode, positions greater than 95
@@ -2159,12 +2165,20 @@ generate "extra" bytes which will confuse applications which do not treat
 their input as a UTF-8 stream.
 Likewise, \*(Cb will be UTF-8 encoded,
 to reduce confusion with wheel mouse events.
-.lP
-NOTE: Under normal mouse mode, positions outside (160,94) result in
+.IP
+Under normal mouse mode, positions outside (160,94) result in
 byte pairs which can be interpreted as a single UTF-8 character;
 applications
 which do treat their input as UTF-8 will almost certainly be confused
 unless extended mouse mode is active.
+.IP
+This scheme has the drawback that the encoded coordinates will not
+pass through \fIluit\fP unchanged, e.g., for locales using non-UTF-8 encoding.
+.IP "URXVT (1015)"
+The normal mouse response is altered to use \*(Cs
+followed by semicolon-separated
+encoded button value,
+the \*(Cx and \*(Cy ordinates and final character \*M.
 .
 .Sh "Tektronix 4014 Mode"
 .LP
