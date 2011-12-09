@@ -1,4 +1,4 @@
-/* $XTermId: xcharmouse.h,v 1.14 2011/12/07 09:27:34 tom Exp $ */
+/* $XTermId: xcharmouse.h,v 1.15 2011/12/08 21:54:12 tom Exp $ */
 
 /************************************************************
 
@@ -49,6 +49,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 /* Extend mouse tracking for terminals wider(taller) than 223 cols(rows) */
 #define SET_EXT_MODE_MOUSE          1005 /* compatible with above */
+#define SET_SGR_EXT_MODE_MOUSE      1006
 #define SET_URXVT_EXT_MODE_MOUSE    1015
 
 #define SET_BUTTON1_MOVE_POINT      2001 /* click1 emit Esc seq to move point*/

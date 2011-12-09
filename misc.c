@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.552 2011/12/07 09:16:43 Egmont.Koblinger Exp $ */
+/* $XTermId: misc.c,v 1.553 2011/12/08 22:45:09 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3774,10 +3774,11 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 #endif
 	case SET_EXT_MODE_MOUSE:
-	    result = MdBool(screen->ext_mode_mouse);
-	    break;
+	    /* FALLTHRU */
+	case SET_SGR_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
 	case SET_URXVT_EXT_MODE_MOUSE:
-	    result = MdBool(screen->urxvt_ext_mode_mouse);
+	    result = MdBool(screen->extend_coords == params[0]);
 	    break;
 	case 1010:		/* rxvt */
 	    result = MdBool(screen->scrollttyoutput);

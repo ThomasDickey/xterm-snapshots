@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.249 2011/12/07 09:57:36 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.250 2011/12/09 10:22:07 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
@@ -2023,7 +2023,7 @@ are defined in \fBxcharmouse.h\fP as follows:
 #define SET_FOCUS_EVENT_MOUSE       1004
 
 #define SET_EXT_MODE_MOUSE          1005
-
+#define SET_SGR_EXT_MODE_MOUSE      1006
 #define SET_URXVT_EXT_MODE_MOUSE    1015
 .DE
 .br
@@ -2174,11 +2174,27 @@ unless extended mouse mode is active.
 .IP
 This scheme has the drawback that the encoded coordinates will not
 pass through \fIluit\fP unchanged, e.g., for locales using non-UTF-8 encoding.
+.IP "SGR (1006)"
+The normal mouse response is altered to use \*(Cs\*<
+followed by semicolon-separated
+encoded button value,
+the \*(Cx and \*(Cy ordinates and a final character which
+is \*M for button press
+and \*t for button release.
+.IP
+The highlight tracking responses are also modified to an SGR-like format,
+using the same scheme.
 .IP "URXVT (1015)"
 The normal mouse response is altered to use \*(Cs
 followed by semicolon-separated
 encoded button value,
 the \*(Cx and \*(Cy ordinates and final character \*M.
+.IP
+However, \*(Cs\*M can be mistaken for DL (delete lines),
+while the highlight tracking \*(Cs\*T can be mistaken for SD (scroll down),
+and the Window manipulation controls.
+For these reasons, the 1015 control is not recommended;
+it is not an improvement over 1005.
 .
 .Sh "Tektronix 4014 Mode"
 .LP

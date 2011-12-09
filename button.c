@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.402 2011/12/07 09:34:22 tom Exp $ */
+/* $XTermId: button.c,v 1.406 2011/12/09 10:09:36 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -173,14 +173,30 @@ static void do_select_end(XtermWidget xw, XEvent * event, String * params,
 #define EXT_MOUSE_LIMIT (2047 - 32)
 #define EXT_MOUSE_START (127 - 32)
 
+static int
+MouseLimit(TScreen * screen)
+{
+    int mouse_limit;
+
+    switch (screen->extend_coords) {
+    default:
+	mouse_limit = MOUSE_LIMIT;
+	break;
+    case SET_EXT_MODE_MOUSE:
+	mouse_limit = EXT_MOUSE_LIMIT;
+	break;
+    case SET_SGR_EXT_MODE_MOUSE:
+    case SET_URXVT_EXT_MODE_MOUSE:
+	mouse_limit = -1;
+	break;
+    }
+    return mouse_limit;
+}
+
 static unsigned
 EmitMousePosition(TScreen * screen, Char line[], unsigned count, int value)
 {
-    int mouse_limit = (screen->urxvt_ext_mode_mouse
-		       ? -1
-		       : screen->ext_mode_mouse
-		       ? EXT_MOUSE_LIMIT
-		       : MOUSE_LIMIT);
+    int mouse_limit = MouseLimit(screen);
 
     /*
      * Add pointer position to key sequence
@@ -192,16 +208,30 @@ EmitMousePosition(TScreen * screen, Char line[], unsigned count, int value)
      * it's also somewhat useful as a past-end marker. We preserve
      * this behavior for both normal and extended mouse modes.
      */
-    if (value == mouse_limit) {
-	line[count++] = CharOf(0);
-    } else if (screen->urxvt_ext_mode_mouse) {
+    switch (screen->extend_coords) {
+    default:
+	if (value == mouse_limit) {
+	    line[count++] = CharOf(0);
+	} else {
+	    line[count++] = CharOf(' ' + value + 1);
+	}
+	break;
+    case SET_EXT_MODE_MOUSE:
+	if (value == mouse_limit) {
+	    line[count++] = CharOf(0);
+	} else if (value < EXT_MOUSE_START) {
+	    line[count++] = CharOf(' ' + value + 1);
+	} else {
+	    value += ' ' + 1;
+	    line[count++] = CharOf(0xC0 + (value >> 6));
+	    line[count++] = CharOf(0x80 + (value & 0x3F));
+	}
+	break;
+    case SET_SGR_EXT_MODE_MOUSE:
+	/* FALLTHRU */
+    case SET_URXVT_EXT_MODE_MOUSE:
 	count += (unsigned) sprintf((char *) line + count, "%u", value + 1);
-    } else if (!screen->ext_mode_mouse || value < EXT_MOUSE_START) {
-	line[count++] = CharOf(' ' + value + 1);
-    } else {
-	value += ' ' + 1;
-	line[count++] = CharOf(0xC0 + (value >> 6));
-	line[count++] = CharOf(0x80 + (value & 0x3F));
+	break;
     }
     return count;
 }
@@ -209,8 +239,11 @@ EmitMousePosition(TScreen * screen, Char line[], unsigned count, int value)
 static unsigned
 EmitMousePositionSeparator(TScreen * screen, Char line[], unsigned count)
 {
-    if (screen->urxvt_ext_mode_mouse) {
+    switch (screen->extend_coords) {
+    case SET_SGR_EXT_MODE_MOUSE:
+    case SET_URXVT_EXT_MODE_MOUSE:
 	line[count++] = ';';
+	break;
     }
     return count;
 }
@@ -2277,20 +2310,40 @@ EndExtend(XtermWidget xw,
 	    if (isSameCELL(&(screen->rawPos), &(screen->startSel))
 		&& isSameCELL(&cell, &(screen->endSel))) {
 		/* Use short-form emacs select */
-		if (!screen->urxvt_ext_mode_mouse) {
+
+		switch (screen->extend_coords) {
+		case 0:
+		case SET_EXT_MODE_MOUSE:
 		    line[count++] = 't';
+		    break;
+		case SET_SGR_EXT_MODE_MOUSE:
+		    line[count++] = '<';
+		    break;
 		}
+
 		count = EmitMousePosition(screen, line, count, screen->endSel.col);
 		count = EmitMousePositionSeparator(screen, line, count);
 		count = EmitMousePosition(screen, line, count, screen->endSel.row);
-		if (screen->urxvt_ext_mode_mouse) {
+
+		switch (screen->extend_coords) {
+		case SET_SGR_EXT_MODE_MOUSE:
+		case SET_URXVT_EXT_MODE_MOUSE:
 		    line[count++] = 't';
+		    break;
 		}
 	    } else {
 		/* long-form, specify everything */
-		if (!screen->urxvt_ext_mode_mouse) {
+
+		switch (screen->extend_coords) {
+		case 0:
+		case SET_EXT_MODE_MOUSE:
 		    line[count++] = 'T';
+		    break;
+		case SET_SGR_EXT_MODE_MOUSE:
+		    line[count++] = '<';
+		    break;
 		}
+
 		count = EmitMousePosition(screen, line, count, screen->startSel.col);
 		count = EmitMousePositionSeparator(screen, line, count);
 		count = EmitMousePosition(screen, line, count, screen->startSel.row);
@@ -2302,8 +2355,12 @@ EndExtend(XtermWidget xw,
 		count = EmitMousePosition(screen, line, count, cell.col);
 		count = EmitMousePositionSeparator(screen, line, count);
 		count = EmitMousePosition(screen, line, count, cell.row);
-		if (screen->urxvt_ext_mode_mouse) {
+
+		switch (screen->extend_coords) {
+		case SET_SGR_EXT_MODE_MOUSE:
+		case SET_URXVT_EXT_MODE_MOUSE:
 		    line[count++] = 'T';
+		    break;
 		}
 	    }
 	    v_write(screen->respond, line, count);
@@ -4095,30 +4152,52 @@ BtnCode(XButtonEvent * event, int button)
 }
 
 static unsigned
-EmitButtonCode(TScreen * screen, Char * line, unsigned count, int value)
+EmitButtonCode(TScreen * screen,
+	       Char * line,
+	       unsigned count,
+	       XButtonEvent * event,
+	       int button)
 {
-    if (screen->urxvt_ext_mode_mouse) {
-	count += (unsigned) sprintf((char *) line + count, "%u", value);
-    } else if (!screen->ext_mode_mouse || value < 128) {
-	line[count++] = CharOf(value);
+    int value;
+
+    if (screen->send_mouse_pos == X10_MOUSE) {
+	value = CharOf(' ' + button);
     } else {
-	line[count++] = CharOf(0xC0 + (value >> 6));
-	line[count++] = CharOf(0x80 + (value & 0x3F));
+	value = BtnCode(event, button);
+    }
+
+    switch (screen->extend_coords) {
+    default:
+	line[count++] = CharOf(value);
+	break;
+    case SET_SGR_EXT_MODE_MOUSE:
+	value -= 32;		/* encoding starts at zero */
+	/* FALLTHRU */
+    case SET_URXVT_EXT_MODE_MOUSE:
+	count += (unsigned) sprintf((char *) line + count, "%u", value);
+	break;
+    case SET_EXT_MODE_MOUSE:
+	if (value < 128) {
+	    line[count++] = CharOf(value);
+	} else {
+	    line[count++] = CharOf(0xC0 + (value >> 6));
+	    line[count++] = CharOf(0x80 + (value & 0x3F));
+	}
+	break;
     }
     return count;
 }
+
+#define EMIT_BUTTON(button) EmitButtonCode(screen, line, count, event, button)
 
 static void
 EditorButton(XtermWidget xw, XButtonEvent * event)
 {
     TScreen *screen = TScreenOf(xw);
     int pty = screen->respond;
-    int mouse_limit = (screen->urxvt_ext_mode_mouse
-		       ? -1
-		       : (screen->ext_mode_mouse
-			  ? EXT_MOUSE_LIMIT
-			  : MOUSE_LIMIT));
+    int mouse_limit = MouseLimit(screen);
     Char line[32];
+    Char final = 'M';
     int row, col;
     int button;
     unsigned count = 0;
@@ -4159,39 +4238,54 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	line[count++] = ANSI_ESC;
 	line[count++] = '[';
     }
+    switch (screen->extend_coords) {
+    case 0:
+    case SET_EXT_MODE_MOUSE:
 #if OPT_SCO_FUNC_KEYS
-    if (xw->keyboard.type == keyboardIsSCO) {
-	/*
-	 * SCO function key F1 is \E[M, which would conflict with xterm's
-	 * normal kmous.
-	 */
-	line[count++] = '>';
-    }
+	if (xw->keyboard.type == keyboardIsSCO) {
+	    /*
+	     * SCO function key F1 is \E[M, which would conflict with xterm's
+	     * normal kmous.
+	     */
+	    line[count++] = '>';
+	}
 #endif
-    if (!screen->urxvt_ext_mode_mouse) {
-	line[count++] = 'M';
+	line[count++] = final;
+	break;
+    case SET_SGR_EXT_MODE_MOUSE:
+	line[count++] = '<';
+	break;
     }
 
     /* Add event code to key sequence */
     if (screen->send_mouse_pos == X10_MOUSE) {
-	count = EmitButtonCode(screen, line, count, CharOf(' ' + button));
+	count = EMIT_BUTTON(button);
     } else {
 	/* Button-Motion events */
 	switch (event->type) {
 	case ButtonPress:
 	    screen->mouse_button = button;
-	    count = EmitButtonCode(screen, line, count, BtnCode(event, button));
+	    count = EMIT_BUTTON(button);
 	    break;
 	case ButtonRelease:
 	    /*
 	     * Wheel mouse interface generates release-events for buttons
 	     * 4 and 5, coded here as 3 and 4 respectively.  We change the
-	     * release for buttons 1..3 to a -1.
+	     * release for buttons 1..3 to a -1, which will be later mapped
+	     * into a "0" (some button was released).
 	     */
-	    if (button < 3)
-		button = -1;
+	    if (button < 3) {
+		switch (screen->extend_coords) {
+		case SET_SGR_EXT_MODE_MOUSE:
+		    final = 'm';
+		    break;
+		default:
+		    button = -1;
+		    break;
+		}
+	    }
 	    screen->mouse_button = button;
-	    count = EmitButtonCode(screen, line, count, BtnCode(event, button));
+	    count = EMIT_BUTTON(button);
 	    break;
 	case MotionNotify:
 	    /* BTN_EVENT_MOUSE and ANY_EVENT_MOUSE modes send motion
@@ -4201,7 +4295,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 		&& (col == screen->mouse_col)) {
 		changed = False;
 	    } else {
-		count = EmitButtonCode(screen, line, count, BtnCode(event, screen->mouse_button));
+		count = EMIT_BUTTON(screen->mouse_button);
 	    }
 	    break;
 	default:
@@ -4222,8 +4316,11 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	count = EmitMousePositionSeparator(screen, line, count);
 	count = EmitMousePosition(screen, line, count, row);
 
-	if (screen->urxvt_ext_mode_mouse) {
-	    line[count++] = 'M';
+	switch (screen->extend_coords) {
+	case SET_SGR_EXT_MODE_MOUSE:
+	case SET_URXVT_EXT_MODE_MOUSE:
+	    line[count++] = final;
+	    break;
 	}
 
 	/* Transmit key sequence to process running under xterm */

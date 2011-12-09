@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1137 2011/12/07 09:16:43 Egmont.Koblinger Exp $ */
+/* $XTermId: charproc.c,v 1.1139 2011/12/09 01:38:15 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4410,10 +4410,20 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 #endif
 	case SET_EXT_MODE_MOUSE:
-	    set_bool_mode(screen->ext_mode_mouse);
-	    break;
+	    /* FALLTHRU */
+	case SET_SGR_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
 	case SET_URXVT_EXT_MODE_MOUSE:
-	    set_bool_mode(screen->urxvt_ext_mode_mouse);
+	    /*
+	     * Rather than choose an arbitrary precedence among the coordinate
+	     * modes, they are mutually exclusive.  For consistency, a reset is
+	     * only effective against the matching mode.
+	     */
+	    if (IsSM()) {
+		screen->extend_coords = param[i];
+	    } else if (screen->extend_coords == param[i]) {
+		screen->extend_coords = 0;
+	    }
 	    break;
 	case 1010:		/* rxvt */
 	    set_bool_mode(screen->scrollttyoutput);
@@ -4618,10 +4628,11 @@ savemodes(XtermWidget xw)
 	    break;
 #endif
 	case SET_EXT_MODE_MOUSE:
-	    DoSM(DP_X_EXT_MOUSE, screen->ext_mode_mouse);
-	    break;
+	    /* FALLTHRU */
+	case SET_SGR_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
 	case SET_URXVT_EXT_MODE_MOUSE:
-	    DoSM(DP_X_EXT_MOUSE, screen->urxvt_ext_mode_mouse);
+	    DoSM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
@@ -4792,10 +4803,11 @@ restoremodes(XtermWidget xw)
 	    break;
 #endif
 	case SET_EXT_MODE_MOUSE:
-	    DoRM(DP_X_EXT_MOUSE, screen->ext_mode_mouse);
-	    break;
+	    /* FALLTHRU */
+	case SET_SGR_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
 	case SET_URXVT_EXT_MODE_MOUSE:
-	    DoRM(DP_X_EXT_MOUSE, screen->urxvt_ext_mode_mouse);
+	    DoRM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
@@ -8449,8 +8461,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	/* reset the mouse mode */
 	screen->send_mouse_pos = MOUSE_OFF;
 	screen->send_focus_pos = OFF;
-	screen->ext_mode_mouse = OFF;
-	screen->urxvt_ext_mode_mouse = OFF;
+	screen->extend_coords = 0;
 	screen->waitingForTrackInfo = False;
 	screen->eventMode = NORMAL;
 

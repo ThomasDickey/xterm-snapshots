@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.707 2011/12/07 09:16:43 Egmont.Koblinger Exp $ */
+/* $XTermId: ptyx.h,v 1.708 2011/12/08 23:56:01 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1640,8 +1640,7 @@ typedef struct {
 	long		event_mask;
 	unsigned	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
-	Boolean		ext_mode_mouse; /* support large terminals      */
-	Boolean		urxvt_ext_mode_mouse; /* support large terminals */
+	int		extend_coords;	/* support large terminals	*/
 	Boolean		send_focus_pos; /* user wants focus in/out info */
 	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64
