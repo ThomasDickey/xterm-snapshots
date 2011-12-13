@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.315 2011/11/30 11:53:40 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.317 2011/12/13 01:55:34 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2403,6 +2403,30 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_TYPE_CC_T version: 1 updated: 2011/12/12 20:54:48
+dnl ------------
+dnl	Check for cc_t type, used in termio.
+AC_DEFUN([CF_TYPE_CC_T],
+[
+AC_MSG_CHECKING(for cc_t in <termios.h> or <termio.h>)
+AC_CACHE_VAL(cf_cv_type_cc_t,[
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#if defined(HAVE_TERMIOS_H)
+#include <termios.h>
+#else
+#include <termio.h>
+#include <sys/ioctl.h>
+#endif
+],
+		[cc_t x],
+		[cf_cv_type_cc_t=yes],
+		[cf_cv_type_cc_t=no])
+	])
+AC_MSG_RESULT($cf_cv_type_cc_t)
+test $cf_cv_type_cc_t = no && AC_DEFINE(cc_t, unsigned char)
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_TYPE_FD_MASK version: 2 updated: 2008/03/25 20:59:57
 dnl ---------------
 dnl Check for the declaration of fd_mask, which is like fd_set, associated
@@ -3086,7 +3110,7 @@ AC_TRY_LINK([
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 40 updated: 2011/11/12 21:08:44
+dnl CF_XOPEN_SOURCE version: 41 updated: 2011/12/10 18:58:47
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -3130,6 +3154,7 @@ hpux*) #(vi
 	;;
 irix[[56]].*) #(vi
 	cf_xopen_source="-D_SGI_SOURCE"
+	cf_XOPEN_SOURCE=
 	;;
 linux*|gnu*|mint*|k*bsd*-gnu) #(vi
 	CF_GNU_SOURCE

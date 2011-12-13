@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: dynamic2.sh,v 1.2 2006/10/17 20:37:21 tom Exp $
+# $XTermId: dynamic2.sh,v 1.3 2011/12/11 16:21:22 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006 by Thomas E. Dickey
+# Copyright 2006,2011 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -35,7 +35,7 @@
 # successively to different values.
 
 ESC=""
-CMD='echo'
+CMD='/bin/echo'
 OPT='-n'
 SUF=''
 TMP=/tmp/xterm$$

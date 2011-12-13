@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.553 2011/12/08 22:45:09 tom Exp $ */
+/* $XTermId: misc.c,v 1.563 2011/12/13 01:59:43 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -118,6 +118,7 @@
 		   (event.xcrossing.window == XtWindow(XtParent(xw))))
 #endif
 
+static Boolean xtermAllocColor(XtermWidget, XColor *, const char *);
 static Cursor make_hidden_cursor(XtermWidget);
 
 #if OPT_EXEC_XTERM
@@ -1983,10 +1984,9 @@ ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
     }
 }
 
-static unsigned
-getColormapSize(Display * display)
+static void
+getColormapInfo(Display * display, unsigned *typep, unsigned *sizep)
 {
-    unsigned result;
     int numFound;
     XVisualInfo myTemplate, *visInfoPtr;
 
@@ -1994,9 +1994,44 @@ getColormapSize(Display * display)
 							    XDefaultScreen(display)));
     visInfoPtr = XGetVisualInfo(display, (long) VisualIDMask,
 				&myTemplate, &numFound);
-    result = (numFound >= 1) ? (unsigned) visInfoPtr->colormap_size : 0;
+    *typep = (numFound >= 1) ? (unsigned) visInfoPtr->class : 0;
+    *sizep = (numFound >= 1) ? (unsigned) visInfoPtr->colormap_size : 0;
 
     XFree((char *) visInfoPtr);
+
+    TRACE(("getColormapInfo type %d (%s), size %d\n",
+	   *typep, ((*typep & 1) ? "dynamic" : "static"), *sizep));
+}
+
+#define MAX_COLORTABLE 4096
+
+/*
+ * Make only one call to XQueryColors(), since it can be slow.
+ */
+static Boolean
+loadColorTable(XtermWidget xw, unsigned length)
+{
+    Colormap cmap = xw->core.colormap;
+    TScreen *screen = TScreenOf(xw);
+    unsigned i;
+    Boolean result = False;
+
+    if (screen->cmap_data == 0
+	&& length != 0
+	&& length < MAX_COLORTABLE) {
+	screen->cmap_data = TypeMallocN(XColor, (size_t) length);
+	if (screen->cmap_data != 0) {
+	    screen->cmap_size = length;
+
+	    for (i = 0; i < screen->cmap_size; i++) {
+		screen->cmap_data[i].pixel = (unsigned long) i;
+	    }
+	    result = (Boolean) (XQueryColors(screen->display,
+					     cmap,
+					     screen->cmap_data,
+					     (int) screen->cmap_size) != 0);
+	}
+    }
     return result;
 }
 
@@ -2018,30 +2053,26 @@ getColormapSize(Display * display)
  * Return False if not able to find or allocate a color.
  */
 static Boolean
-find_closest_color(Display * dpy, Colormap cmap, XColor * def)
+allocateClosestRGB(XtermWidget xw, Colormap cmap, XColor * def)
 {
+    TScreen *screen = TScreenOf(xw);
     Boolean result = False;
-    XColor *colortable;
     char *tried;
     double diff, thisRGB, bestRGB;
     unsigned attempts;
     unsigned bestInx;
+    unsigned cmap_type;
     unsigned cmap_size;
     unsigned i;
 
-    cmap_size = getColormapSize(dpy);
-    if (cmap_size != 0) {
+    getColormapInfo(screen->display, &cmap_type, &cmap_size);
 
-	colortable = TypeMallocN(XColor, (size_t) cmap_size);
-	if (colortable != 0) {
+    if ((cmap_type & 1) != 0) {
+
+	if (loadColorTable(xw, cmap_size)) {
 
 	    tried = TypeCallocN(char, (size_t) cmap_size);
 	    if (tried != 0) {
-
-		for (i = 0; i < cmap_size; i++) {
-		    colortable[i].pixel = (unsigned long) i;
-		}
-		XQueryColors(dpy, cmap, colortable, (int) cmap_size);
 
 		/*
 		 * Try (possibly each entry in the color map) to find the best
@@ -2063,7 +2094,7 @@ find_closest_color(Display * dpy, Colormap cmap, XColor * def)
 			     * weights that correspond to the luminance.
 			     */
 #define AddColorWeight(weight, color) \
-			    diff = weight * (int) ((def->color) - colortable[i].color); \
+			    diff = weight * (int) ((def->color) - screen->cmap_data[i].color); \
 			    thisRGB = diff * diff
 
 			    AddColorWeight(0.30, red);
@@ -2077,8 +2108,11 @@ find_closest_color(Display * dpy, Colormap cmap, XColor * def)
 			    }
 			}
 		    }
-		    if (XAllocColor(dpy, cmap, &colortable[bestInx]) != 0) {
-			*def = colortable[bestInx];
+		    if (XAllocColor(screen->display, cmap,
+				    &screen->cmap_data[bestInx]) != 0) {
+			*def = screen->cmap_data[bestInx];
+			TRACE(("...closest %x/%x/%x\n", def->red,
+			       def->green, def->blue));
 			result = True;
 			break;
 		    }
@@ -2091,9 +2125,108 @@ find_closest_color(Display * dpy, Colormap cmap, XColor * def)
 		}
 		free(tried);
 	    }
-	    free(colortable);
 	}
     }
+    return result;
+}
+
+static unsigned short
+searchColortable(XColor * colortable, unsigned length, unsigned color)
+{
+    unsigned result = 0;
+    unsigned n;
+    unsigned long best = ULONG_MAX;
+    unsigned long diff;
+
+    for (n = 0; n < length; ++n) {
+	diff = (color - colortable[n].blue);
+	diff *= diff;
+	if (diff < best) {
+#if 0
+	    TRACE(("...%d:looking for %x, found %x/%x/%x (%lx)\n",
+		   n, color,
+		   colortable[n].red,
+		   colortable[n].green,
+		   colortable[n].blue,
+		   diff));
+#endif
+	    result = n;
+	    best = diff;
+	}
+    }
+    return colortable[result].blue;
+}
+
+/*
+ * This is a workaround for a longstanding defect in the X libraries.
+ *
+ * According to
+ * http://www.unix.com/man-page/all/3x/XAllocColoA/
+ *
+ *     XAllocColor() acts differently on static and dynamic visuals.  On Pseu-
+ *     doColor, DirectColor, and GrayScale  visuals,  XAllocColor()  fails  if
+ *     there  are  no  unallocated  colorcells and no allocated read-only cell
+ *     exactly matches the requested RGB values.  On  StaticColor,  TrueColor,
+ *     and  StaticGray  visuals,  XAllocColor() returns the closest RGB values
+ *     available in the colormap.  The colorcell_in_out structure returns  the
+ *     actual RGB values allocated.
+ *
+ * That is, XAllocColor() should suffice unless the color map is full.  In that
+ * case, allocateClosesRGB() is useful for the dynamic display classes such as
+ * PseudoColor.  It is not useful for TrueColor, since XQueryColors() does not
+ * return regular RGB triples (unless a different scheme was used for
+ * specifying the pixel values); only the blue value is filled in.  However, it
+ * is filled in with the colors that the server supports.
+ *
+ * Also (the reason for this function), XAllocColor() does not really work as
+ * described.  For some TrueColor configurations it merely returns a close
+ * approximation, but not the closest.
+ */
+static Boolean
+allocateExactRGB(XtermWidget xw, Colormap cmap, XColor * def)
+{
+    XColor save = *def;
+    TScreen *screen = TScreenOf(xw);
+    Boolean result = (Boolean) (XAllocColor(screen->display, cmap, def) != 0);
+
+    /*
+     * If this is a statically allocated display, e.g., TrueColor, see if we
+     * can improve on the result by using the color values actually supported
+     * by the server.
+     */
+    if (result) {
+	unsigned cmap_type;
+	unsigned cmap_size;
+
+	getColormapInfo(screen->display, &cmap_type, &cmap_size);
+
+	if ((cmap_type & 1) == 0) {
+	    XColor temp = *def;
+
+	    if (loadColorTable(xw, cmap_size)) {
+		/*
+		 * Note: the query will return only a value in the ".blue"
+		 * member, leaving ".red" and ".green" as zeros.
+		 */
+		temp.red = searchColortable(screen->cmap_data, cmap_size, save.red);
+		temp.green = searchColortable(screen->cmap_data, cmap_size, save.green);
+		temp.blue = searchColortable(screen->cmap_data, cmap_size, save.blue);
+		if (XAllocColor(screen->display, cmap, &temp) != 0) {
+#if OPT_TRACE
+		    if (temp.red != save.red
+			|| temp.green != save.green
+			|| temp.blue != save.blue) {
+			TRACE(("...improved %x/%x/%x ->%x/%x/%x\n",
+			       save.red, save.green, save.blue,
+			       temp.red, temp.green, temp.blue));
+		    }
+#endif
+		    *def = temp;
+		}
+	    }
+	}
+    }
+
     return result;
 }
 
@@ -2114,11 +2247,8 @@ AllocateAnsiColor(XtermWidget xw,
     int result;
     XColor def;
     TScreen *screen = TScreenOf(xw);
-    Colormap cmap = xw->core.colormap;
 
-    if (XParseColor(screen->display, cmap, spec, &def)
-	&& (XAllocColor(screen->display, cmap, &def)
-	    || find_closest_color(screen->display, cmap, &def))) {
+    if (xtermAllocColor(xw, &def, spec)) {
 	if (
 #if OPT_COLOR_RES
 	       res->mode == True &&
@@ -2307,8 +2437,26 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
     return repaint;
 }
 #else
-#define find_closest_color(display, cmap, def) 0
+#define allocateClosestRGB(xw, cmap, def) 0
+#define allocateExactRGB(xw, cmap, def) XAllocColor(TScreenOf(xw)->display, cmap, def)
 #endif /* OPT_ISO_COLORS */
+
+static Boolean
+xtermAllocColor(XtermWidget xw, XColor * def, const char *spec)
+{
+    Boolean result = False;
+    TScreen *screen = TScreenOf(xw);
+    Colormap cmap = xw->core.colormap;
+
+    if (XParseColor(screen->display, cmap, spec, def)
+	&& (allocateExactRGB(xw, cmap, def)
+	    || allocateClosestRGB(xw, cmap, def))) {
+	TRACE(("xtermAllocColor -> %x/%x/%x\n",
+	       def->red, def->green, def->blue));
+	result = True;
+    }
+    return result;
+}
 
 #if OPT_PASTE64
 static void
@@ -4145,8 +4293,6 @@ AllocateTermColor(XtermWidget xw,
 
     if (always || AllowColorOps(xw, ecSetColor)) {
 	XColor def;
-	TScreen *screen = TScreenOf(xw);
-	Colormap cmap = xw->core.colormap;
 	char *newName;
 
 	result = True;
@@ -4154,11 +4300,7 @@ AllocateTermColor(XtermWidget xw,
 	    def.pixel = xw->old_foreground;
 	} else if (!x_strcasecmp(name, XtDefaultBackground)) {
 	    def.pixel = xw->old_background;
-	} else if (XParseColor(screen->display, cmap, name, &def)
-		   && (XAllocColor(screen->display, cmap, &def)
-		       || find_closest_color(screen->display, cmap, &def))) {
-	    ;			/*empty */
-	} else {
+	} else if (!xtermAllocColor(xw, &def, name)) {
 	    result = False;
 	}
 
