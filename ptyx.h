@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.708 2011/12/08 23:56:01 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.709 2011/12/12 23:42:58 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1585,6 +1585,8 @@ typedef struct {
 	Boolean		hilite_reverse;	/* hilite overrides reverse	*/
 #endif
 #if OPT_ISO_COLORS
+	XColor *	cmap_data;	/* color table			*/
+	unsigned	cmap_size;
 	ColorRes	Acolors[MAXCOLORS]; /* ANSI color emulation	*/
 	int		veryBoldColors;	/* modifier for boldColors	*/
 	Boolean		boldColors;	/* can we make bold colors?	*/

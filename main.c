@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.672 2011/11/29 01:47:04 tom Exp $ */
+/* $XTermId: main.c,v 1.673 2011/12/11 18:33:19 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2011 by Thomas E. Dickey
@@ -754,7 +754,7 @@ static const struct {
 };
 /* *INDENT-ON* */
 
-#define TMODE(ind,var) if (ttymodelist[ind].set) var = ttymodelist[ind].value
+#define TMODE(ind,var) if (ttymodelist[ind].set) var = (cc_t) ttymodelist[ind].value
 
 static int parse_tty_modes(char *s, struct _xttymodes *modelist);
 
@@ -2072,7 +2072,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
 	    if (validTtyChar(d_tio, nn)) {
 		d_tio.c_cc[known_ttyChars[nn].sysMode] =
-		    known_ttyChars[nn].myDefault;
+		    (cc_t) known_ttyChars[nn].myDefault;
 	    }
 	}
     }
@@ -3913,7 +3913,7 @@ spawnXTerm(XtermWidget xw)
 			    }
 			}
 #endif
-			tio.c_cc[sysMode] = known_ttyChars[nn].myDefault;
+			tio.c_cc[sysMode] = (cc_t) known_ttyChars[nn].myDefault;
 		    }
 		}
 
@@ -4067,7 +4067,7 @@ spawnXTerm(XtermWidget xw)
 #if OPT_TRACE
 		old_erase = tio.c_cc[VERASE];
 #endif
-		tio.c_cc[VERASE] = initial_erase;
+		tio.c_cc[VERASE] = (cc_t) initial_erase;
 		TRACE_RC(rc, ttySetAttr(ttyfd, &tio));
 #else /* !TERMIO_STRUCT */
 		if (ioctl(ttyfd, TIOCGETP, (char *) &sg) == -1)

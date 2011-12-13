@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: acolors.sh,v 1.6 2003/05/19 00:52:30 tom Exp $
+# $XTermId: acolors.sh,v 1.7 2011/12/11 16:21:22 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2002,2003 by Thomas E. Dickey
+# Copyright 2002-2003,2011 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -34,7 +34,7 @@
 # Demonstrate the use of the control sequence for changing ANSI colors.
 
 ESC=""
-CMD='echo'
+CMD='/bin/echo'
 OPT='-n'
 SUF=''
 TMP=/tmp/xterm$$

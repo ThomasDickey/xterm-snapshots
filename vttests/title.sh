@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: title.sh,v 1.17 2003/05/19 00:52:30 tom Exp $
+# $XTermId: title.sh,v 1.18 2011/12/11 16:21:22 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2002,2003 by Thomas E. Dickey
+# Copyright 1999-2003,2011 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -35,7 +35,7 @@
 # until this script is interrupted, then restore the title.
 
 ESC=""
-CMD='echo'
+CMD='/bin/echo'
 OPT='-n'
 SUF=''
 TMP=/tmp/xterm$$
