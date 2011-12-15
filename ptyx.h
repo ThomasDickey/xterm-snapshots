@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.709 2011/12/12 23:42:58 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.711 2011/12/14 22:11:15 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1983,7 +1983,7 @@ typedef struct {
 	Atom*		selection_targets_utf8;
 #endif
 	Atom*		selection_atoms; /* which selections we own */
-	Cardinal	sel_atoms_size;	/*  how many atoms allocated */
+	Cardinal	sel_atoms_size;	 /* how many atoms allocated */
 	Cardinal	selection_count; /* how many atoms in use */
 #if OPT_SELECT_REGEX
 	char *		selectExpr[NSELECTUNITS];
@@ -1991,9 +1991,11 @@ typedef struct {
 	/*
 	 * Input/output state.
 	 */
-	Boolean		input_eight_bits;/* use 8th bit instead of ESC prefix */
-	Boolean		output_eight_bits; /* honor all bits or strip */
-	Boolean		control_eight_bits; /* send CSI as 8-bits */
+	Boolean		input_eight_bits;	/* do not send ESC when meta pressed */
+	int		eight_bit_meta;		/* use 8th bit when meta pressed */
+	char *		eight_bit_meta_s;	/* ...resource eightBitMeta */
+	Boolean		output_eight_bits;	/* honor all bits or strip */
+	Boolean		control_eight_bits;	/* send CSI as 8-bits */
 	Boolean		backarrow_key;		/* backspace/delete */
 	Boolean		alt_is_not_meta;	/* use both Alt- and Meta-key */
 	Boolean		alt_sends_esc;		/* Alt-key sends ESC prefix */
@@ -2136,6 +2138,14 @@ typedef enum {			/* legal values for screen.utf8_mode */
     , uDefault = 3
     , uLast
 } utf8ModeTypes;
+
+typedef enum {			/* legal values for screen.eight_bit_meta */
+    ebFalse = 0
+    , ebTrue = 1
+    , ebNever = 2
+    , ebLocale = 3
+    , ebLast
+} ebMetaModeTypes;
 
 #if OPT_HP_FUNC_KEYS
 #define NAME_HP_KT " hp"

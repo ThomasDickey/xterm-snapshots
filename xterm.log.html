@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1118 2011/12/12 23:35:20 tom Exp $
+  $XTermId: xterm.log.html,v 1.1120 2011/12/14 10:19:52 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -340,6 +340,17 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add <code>eightBitMeta</code> resource to control the features
+	    which modify or interpret the eighth bit of a key when the
+	    meta modifier key is pressed (prompted by Debian #326200).
+
+	<li>improve discussion of <code>eightBitInput</code> in the manpage
+	    (prompted by Debian #326200).
+	    
+	<li>correct logic for <code>alt-sends-escape</code> action,
+	    overlooked when implementing <code>altSendsEscape</code> resource,
+	    which still used <code>eightBitInput</code> resource value.
+
 	<li>add a workaround for <code>XAllocColor()</code>, which does not
 	    actually allocate "a read-only colormap entry corresponding to the
 	    closest RGB value supported by the hardware", but rather a rough

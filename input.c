@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.328 2011/10/11 23:59:10 tom Exp $ */
+/* $XTermId: input.c,v 1.330 2011/12/14 22:26:03 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1283,7 +1283,7 @@ Input(XtermWidget xw,
 	     */
 	    if (eightbit && (kd.nbytes == 1) && screen->input_eight_bits) {
 		IChar ch = CharOf(kd.strbuf[0]);
-		if (ch < 128) {
+		if ((ch < 128) && (screen->eight_bit_meta == ebTrue)) {
 		    kd.strbuf[0] |= (char) 0x80;
 		    TRACE(("...input shift from %d to %d (%#x to %#x)\n",
 			   ch, CharOf(kd.strbuf[0]),
