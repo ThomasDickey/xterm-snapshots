@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1140 2011/12/11 17:01:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1143 2011/12/15 00:42:09 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -473,6 +473,7 @@ static XtResource xterm_resources[] =
 	 screen.disallowedTcapOps, DEF_DISALLOWED_TCAP),
     Sres(XtNdisallowedWindowOps, XtCDisallowedWindowOps,
 	 screen.disallowedWinOps, DEF_DISALLOWED_WINDOW),
+    Sres(XtNeightBitMeta, XtCEightBitMeta, screen.eight_bit_meta_s, DEF_8BIT_META),
     Sres(XtNeightBitSelectTypes, XtCEightBitSelectTypes,
 	 screen.eightbit_select_types, NULL),
     Sres(XtNfont, XtCFont, misc.default_font.f_n, DEFFONT),
@@ -4425,8 +4426,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    update_scrollkey();
 	    break;
 	case 1034:
-	    set_bool_mode(screen->input_eight_bits);
-	    update_alt_esc();
+	    if (screen->eight_bit_meta != ebNever) {
+		set_bool_mode(screen->eight_bit_meta);
+	    }
 	    break;
 #if OPT_NUM_LOCK
 	case 1035:
@@ -6120,6 +6122,14 @@ VTInitialize(Widget wrequest,
 #undef DATA
 #endif
 
+#define DATA(name) { #name, eb##name }
+    static FlagList tbl8BitMeta[] =
+    {
+	DATA(Never)
+	,DATA(Locale)
+    };
+#undef DATA
+
     XtermWidget request = (XtermWidget) wrequest;
     XtermWidget wnew = (XtermWidget) new_arg;
     Widget my_parent = SHELL_OF(wnew);
@@ -6762,6 +6772,18 @@ VTInitialize(Widget wrequest,
     decode_wcwidth(wnew);
     xtermSaveVTFonts(wnew);
 #endif /* OPT_WIDE_CHARS */
+
+    init_Sres(screen.eight_bit_meta_s);
+    request->screen.eight_bit_meta =
+	extendedBoolean(request->screen.eight_bit_meta_s, tbl8BitMeta, uLast);
+    if (request->screen.eight_bit_meta == ebLocale) {
+#if OPT_WIDE_CHARS
+	if (xtermEnvUTF8()) {
+	    request->screen.eight_bit_meta = ebFalse;
+	} else
+#endif /* OPT_WIDE_CHARS */
+	    request->screen.eight_bit_meta = ebTrue;
+    }
 
     init_Bres(screen.always_bold_mode);
     init_Bres(screen.bold_mode);

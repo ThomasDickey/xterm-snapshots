@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.666 2011/12/04 21:01:00 tom Exp $ */
+/* $XTermId: xterm.h,v 1.667 2011/12/14 09:59:29 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -397,6 +397,7 @@ extern char **environ;
 #define XtNdynamicColors	"dynamicColors"
 #define XtNeightBitControl	"eightBitControl"
 #define XtNeightBitInput	"eightBitInput"
+#define XtNeightBitMeta		"eightBitMeta"
 #define XtNeightBitOutput	"eightBitOutput"
 #define XtNeightBitSelectTypes	"eightBitSelectTypes"
 #define XtNfaceName		"faceName"
@@ -570,6 +571,7 @@ extern char **environ;
 #define XtCDynamicColors	"DynamicColors"
 #define XtCEightBitControl	"EightBitControl"
 #define XtCEightBitInput	"EightBitInput"
+#define XtCEightBitMeta		"EightBitMeta"
 #define XtCEightBitOutput	"EightBitOutput"
 #define XtCEightBitSelectTypes	"EightBitSelectTypes"
 #define XtCFaceName		"FaceName"

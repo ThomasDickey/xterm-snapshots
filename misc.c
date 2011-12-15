@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.563 2011/12/13 01:59:43 tom Exp $ */
+/* $XTermId: misc.c,v 1.564 2011/12/14 10:15:28 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3935,7 +3935,7 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->scrollkey);
 	    break;
 	case 1034:
-	    result = MdBool(screen->input_eight_bits);
+	    result = MdBool(screen->eight_bit_meta);
 	    break;
 #if OPT_NUM_LOCK
 	case 1035:

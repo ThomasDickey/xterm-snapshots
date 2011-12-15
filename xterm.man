@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.511 2011/10/03 22:23:26 tom Exp $
+.\" $XTermId: xterm.man,v 1.514 2011/12/14 11:57:04 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -1684,18 +1684,23 @@ The default is \*(``false.\*(''
 This is an additional keyboard operation that may be processed
 after the logic for \fBmetaSendsEscape\fP.
 It is only available if the \fBaltIsNotMeta\fP resource is set.
-.IP
+.RS
+.bP
 If \*(``true\*('', Alt characters
 (a character combined with the modifier associated with left/right Alt-keys)
 are converted into a two-character
 sequence with the character itself preceded by ESC.
 This applies as well to function key control sequences, unless \fIxterm\fP
 sees that \fBAlt\fP is used in your key translations.
+.bP
 If \*(``false\*('', Alt characters input from the keyboard cause a shift to
 8-bit characters (just like \fBmetaSendsEscape\fP).
 By combining the Alt- and Meta-modifiers, you can create corresponding
 combinations of ESC-prefix and 8-bit characters.
 The default is \*(``false.\*(''
+.RE
+.IP
+\fIXterm\fP provides a menu option for toggling this resource.
 .TP 8
 .B "alwaysBoldMode (\fPclass\fB AlwaysBoldMode)"
 Specifies whether \fIxterm\fP should check if the normal and bold
@@ -2350,14 +2355,13 @@ The default is \*(``false.\*(''
 If \*(``true\*('', Meta characters
 (a single-byte character combined with the \fIMeta\fP modifier key)
 input from the keyboard are presented as a
-single character with the eighth bit turned on.
-The terminal is put into 8-bit mode.
+single character, modified according to the \fBeightBitMeta\fP resource.
 If \*(``false\*('', Meta characters are converted into a two-character
 sequence with the character itself preceded by ESC.
-On startup, \fIxterm\fP tries to put the terminal into 7-bit mode.
-The \fBmetaSendsEscape\fP and \fBaltSendsEscape\fP resources may override this.
 The default is \*(``true.\*(''
 .IP
+The \fBmetaSendsEscape\fP
+and \fBaltSendsEscape\fP resources may override this feature.
 Generally keyboards do not have a key labeled \*(``Meta\*('',
 but \*(``Alt\*('' keys are common,
 and they are conventionally used for \*(``Meta\*(''.
@@ -2384,6 +2388,63 @@ before Meta-keys.
 NumLock is tested first.
 It is important to keep these keys distinct;
 otherwise some of \fIxterm\fP's functionality is not available.
+.IP
+The \fBeightBitInput\fP resource is tested at startup time.
+If \*(``true\*('',
+the \fIxterm\fP tries to put the terminal into 8-bit mode.
+If \*(``false\*('',
+on startup, \fIxterm\fP tries to put the terminal into 7-bit mode.
+For some configurations this is unsuccessful; failure is ignored.
+After startup, \fIxterm\fP does not
+change the terminal between 8-bit and 7-bit mode.
+.IP
+As originally implemented in X11,
+the resource value did not change after startup.
+However
+(since patch #216 in 2006)
+\fIxterm\fP can modify \fBeightBitInput\fP after startup
+via a control sequence.
+The corresponding terminfo capabilities \fBsmm\fP (set meta mode)
+and \fBrmm\fP (reset meta mode)
+have been recognized by \fIbash\fP for some time.
+Interestingly enough, \fIbash\fP's notion of "meta mode"
+differs from the standard definition (in the \fIterminfo\fP manual),
+which describes the change to the eighth bit of a character.
+It happens that \fIbash\fP views "meta mode"
+as the ESC character that \fIxterm\fP puts before a character when a
+special meta key is pressed.
+\fIbash\fP's early documentation talks about the ESC character
+and ignores the eighth bit.
+.TP 8
+.B "eightBitMeta (\fPclass\fB EightBitMeta\fP)"
+This controls the way \fIxterm\fP modifies the eighth bit of a single-byte
+key when the \fBeightBitInput\fP resource is set.
+The default is \*(``locale.\*(''
+.IP
+The resource value is a string, evaluated as a boolean after startup.
+.RS
+.TP 5
+false
+The key is sent unmodified.
+.TP 5
+locale
+The key is modified only if the locale uses eight-bit encoding.
+.TP 5
+true
+The key is sent modified.
+.TP 5
+never
+The key is always sent unmodified.
+.RE
+.IP
+Except for the \fBnever\fP choice, \fIxterm\fP honors the
+terminfo capabilities \fBsmm\fP (set meta mode)
+and \fBrmm\fP (reset meta mode),
+allowing the feature to be turned on or off dynamically.
+.IP
+If \fBeightBitMeta\fP is enabled when the locale uses UTF-8,
+\fIxterm\fP encodes the value as UTF-8
+(since patch #183 in 2003).
 .TP 8
 .B "eightBitOutput (\fPclass\fB EightBitOutput\fP)"
 Specifies whether or not eight-bit characters sent from the host should be
@@ -5080,7 +5141,7 @@ This action set or toggles the \fBallowWindowOps\fP resource and is also
 invoked by the \fBallow-window-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "alt-sends-escape()"
-This action toggles the state of the \fBeightBitInput\fP resource.
+This action toggles the state of the \fBaltSendsEscape\fP resource.
 .TP 8
 .B "bell([\fIpercent\fP])"
 This action rings the keyboard bell at the specified percentage
@@ -5162,18 +5223,28 @@ the key that was pressed.
 .B "insert-eight-bit()"
 This action inserts an eight-bit (Meta) version of the character or string
 associated with the key that was pressed.
-This only applies to single-byte values.
+Only single-byte values are treated specially.
 The exact action depends on the value of
+the \fBaltSendsEscape\fP and
 the \fBmetaSendsEscape\fP and
 the \fBeightBitInput\fP resources.
 The \fBmetaSendsEscape\fP resource is tested first.
+See the \fBeightBitInput\fP resource for a full discussion.
 .IP
 The term \*(``eight-bit\*('' is misleading:
-\fIxterm\fP checks if the key's value is less than 128.
-If so, \fIxterm\fP adds 128 to the value, setting its eighth bit.
-Otherwise \fIxterm\fP sends an ESC byte before the key.
-In other applications' documentation,
-that is referred to as a \*(``meta key\*(''.
+\fIxterm\fP checks if the key is in the range 128 to 255
+(the eighth bit is set).
+If the value is in that range,
+depending on the resource values,
+\fIxterm\fP may then do one of the following:
+.RS
+.bP
+add 128 to the value, setting its eighth bit,
+.bP
+send an ESC byte before the key, or
+.bP
+send the key unaltered.
+.RE
 .TP 8
 .B "insert-selection(\fIsourcename\fP [, ...])"
 This action inserts the string found in the selection or cutbuffer indicated
