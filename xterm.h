@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.667 2011/12/14 09:59:29 tom Exp $ */
+/* $XTermId: xterm.h,v 1.668 2011/12/16 21:39:40 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -507,6 +507,7 @@ extern char **environ;
 #define XtNveryBoldColors	"veryBoldColors"
 #define XtNvisualBell		"visualBell"
 #define XtNvisualBellDelay	"visualBellDelay"
+#define XtNvisualBellLine	"visualBellLine"
 #define XtNvt100Graphics	"vt100Graphics"
 #define XtNwideBoldFont		"wideBoldFont"
 #define XtNwideChars		"wideChars"
@@ -672,6 +673,7 @@ extern char **environ;
 #define XtCVeryBoldColors	"VeryBoldColors"
 #define XtCVisualBell		"VisualBell"
 #define XtCVisualBellDelay	"VisualBellDelay"
+#define XtCVisualBellLine	"VisualBellLine"
 #define XtCWideBoldFont		"WideBoldFont"
 #define XtCWideChars		"WideChars"
 #define XtCWideFont		"WideFont"
