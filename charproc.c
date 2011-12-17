@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1143 2011/12/15 00:42:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1145 2011/12/16 21:39:52 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -434,6 +434,7 @@ static XtResource xterm_resources[] =
     Bres(XtNtrimSelection, XtCTrimSelection, screen.trim_selection, False),
     Bres(XtNunderLine, XtCUnderLine, screen.underline, True),
     Bres(XtNvisualBell, XtCVisualBell, screen.visualbell, False),
+    Bres(XtNvisualBellLine, XtCVisualBellLine, screen.flash_line, False),
 
     Dres(XtNscaleHeight, XtCScaleHeight, screen.scale_height, "1.0"),
 
@@ -6295,6 +6296,7 @@ VTInitialize(Widget wrequest,
 
     init_Ires(screen.title_modes);
     init_Bres(screen.visualbell);
+    init_Bres(screen.flash_line);
     init_Ires(screen.visualBellDelay);
     init_Bres(screen.poponbell);
     init_Ires(misc.limit_resize);
@@ -7455,10 +7457,11 @@ xim_instantiate_cb(Display * display,
 		   XPointer client_data GCC_UNUSED,
 		   XPointer call_data GCC_UNUSED)
 {
-    if (display != XtDisplay(term))
-	return;
+    TRACE(("xim_instantiate_cb client=%p, call=%p\n", client_data, call_data));
 
-    VTInitI18N(term);
+    if (display == XtDisplay(term)) {
+	VTInitI18N(term);
+    }
 }
 
 static void
@@ -7466,8 +7469,10 @@ xim_destroy_cb(XIM im GCC_UNUSED,
 	       XPointer client_data GCC_UNUSED,
 	       XPointer call_data GCC_UNUSED)
 {
-    TScreenOf(term)->xic = NULL;
+    TRACE(("xim_destroy_cb im=%lx, client=%p, call=%p\n",
+	   (long) im, client_data, call_data));
 
+    TScreenOf(term)->xic = NULL;
     XRegisterIMInstantiateCallback(XtDisplay(term), NULL, NULL, NULL,
 				   xim_instantiate_cb, NULL);
 }
@@ -7502,6 +7507,8 @@ xim_real_init(XtermWidget xw)
     if (xw->misc.cannot_im) {
 	return;
     }
+
+    TRACE(("xim_real_init\n"));
 
     if (!xw->misc.input_method || !*xw->misc.input_method) {
 	if ((p = XSetLocaleModifiers("")) != NULL && *p)

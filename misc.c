@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.564 2011/12/14 10:15:28 tom Exp $ */
+/* $XTermId: misc.c,v 1.565 2011/12/16 21:48:40 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1089,10 +1089,17 @@ Bell(XtermWidget xw, int which, int percent)
 static void
 flashWindow(TScreen * screen, Window window, GC visualGC, unsigned width, unsigned height)
 {
-    XFillRectangle(screen->display, window, visualGC, 0, 0, width, height);
+    int y = 0;
+    int x = 0;
+
+    if (screen->flash_line) {
+	y = CursorY(screen, screen->cur_row);
+	height = FontHeight(screen);
+    }
+    XFillRectangle(screen->display, window, visualGC, x, y, width, height);
     XFlush(screen->display);
     Sleep(VB_DELAY);
-    XFillRectangle(screen->display, window, visualGC, 0, 0, width, height);
+    XFillRectangle(screen->display, window, visualGC, x, y, width, height);
 }
 
 void

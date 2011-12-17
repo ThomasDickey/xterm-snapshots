@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.711 2011/12/14 22:11:15 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.712 2011/12/16 19:48:33 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1927,6 +1927,7 @@ typedef struct {
 	int		bellSuppressTime; /* msecs after Bell before another allowed */
 	Boolean		bellInProgress; /* still ringing/flashing prev bell? */
 	Boolean		bellIsUrgent;	/* set XUrgency WM hint on bell */
+	Boolean		flash_line;	/* show visualBell as current line */
 	/*
 	 * Select/paste state.
 	 */

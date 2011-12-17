@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1120 2011/12/14 10:19:52 tom Exp $
+  $XTermId: xterm.log.html,v 1.1122 2011/12/16 21:43:37 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -340,6 +340,10 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add <code>visualBellLine</code> resource to allow
+	    <code>visualBell</code> to flash only the current line (prompted by
+	    patch by Gertjan Halkes).
+
 	<li>add <code>eightBitMeta</code> resource to control the features
 	    which modify or interpret the eighth bit of a key when the
 	    meta modifier key is pressed (prompted by Debian #326200).
@@ -374,7 +378,7 @@ is the latest version of this file.
 	        add an unnecessary 32 because the integer parameter does not
 		have to be represented as a printable character.
 	    <li>the control responses for pressing and releasing a mouse
-	        button, allowing an application to tell which button was
+		button differ, allowing an application to tell which button was
 		released.
 	    </ul>
 	    <p>
