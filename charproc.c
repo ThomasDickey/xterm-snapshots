@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1145 2011/12/16 21:39:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1147 2011/12/18 01:23:43 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -340,6 +340,12 @@ static XtActionsRec actionsList[] = {
 #endif
 #if OPT_SCROLL_LOCK
     { "scroll-lock",		HandleScrollLock },
+#endif
+#if OPT_SELECTION_OPS
+    { "exec-formatted",		HandleExecFormatted },
+    { "exec-selectable",	HandleExecSelectable },
+    { "insert-formatted",	HandleInsertFormatted },
+    { "insert-selectable",	HandleInsertSelectable },
 #endif
 #if OPT_SHIFT_FONTS
     { "larger-vt-font",		HandleLargerFont },
@@ -5910,8 +5916,8 @@ VTInitialize_locale(XtermWidget xw)
 }
 #endif
 
-static void
-ParseOnClicks(XtermWidget wnew, XtermWidget wreq, Cardinal item)
+void
+lookupSelectUnit(XtermWidget xw, Cardinal item, String value)
 {
     /* *INDENT-OFF* */
     static struct {
@@ -5930,23 +5936,29 @@ ParseOnClicks(XtermWidget wnew, XtermWidget wreq, Cardinal item)
     };
     /* *INDENT-ON* */
 
-    String res = TScreenOf(wreq)->onClick[item];
-    String next = x_skip_nonblanks(res);
+    TScreen *screen = TScreenOf(xw);
+    String next = x_skip_nonblanks(value);
     Cardinal n;
 
-    TScreenOf(wnew)->selectMap[item] = NSELECTUNITS;
+    screen->selectMap[item] = NSELECTUNITS;
     for (n = 0; n < XtNumber(table); ++n) {
-	if (!x_strncasecmp(table[n].name, res, (unsigned) (next - res))) {
-	    TScreenOf(wnew)->selectMap[item] = table[n].code;
+	if (!x_strncasecmp(table[n].name, value, (unsigned) (next - value))) {
+	    screen->selectMap[item] = table[n].code;
 #if OPT_SELECT_REGEX
 	    if (table[n].code == Select_REGEX) {
-		TScreenOf(wnew)->selectExpr[item] = x_strtrim(next);
-		TRACE(("Parsed regex \"%s\"\n", TScreenOf(wnew)->selectExpr[item]));
+		screen->selectExpr[item] = x_strtrim(next);
+		TRACE(("Parsed regex \"%s\"\n", screen->selectExpr[item]));
 	    }
 #endif
 	    break;
 	}
     }
+}
+
+static void
+ParseOnClicks(XtermWidget wnew, XtermWidget wreq, Cardinal item)
+{
+    lookupSelectUnit(wnew, item, TScreenOf(wreq)->onClick[item]);
 }
 
 /*

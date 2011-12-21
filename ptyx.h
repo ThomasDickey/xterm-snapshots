@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.712 2011/12/16 19:48:33 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.714 2011/12/17 01:52:04 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -666,6 +666,10 @@ typedef struct {
 
 #ifndef OPT_SELECT_REGEX
 #define OPT_SELECT_REGEX 0 /* true if xterm supports regular-expression selects */
+#endif
+
+#ifndef OPT_SELECTION_OPS
+#define OPT_SELECTION_OPS 1 /* true if xterm supports operations on selection */
 #endif
 
 #ifndef OPT_SESSION_MGT
@@ -1975,6 +1979,9 @@ typedef struct {
 	int		startHCoord, endHCoord;
 	int		firstValidRow;	/* Valid rows for selection clipping */
 	int		lastValidRow;	/* " " */
+
+	Boolean		selectToBuffer;	/* copy selection to buffer	*/
+	String		internal_select;
 
 	String		default_string;
 	String		eightbit_select_types;
