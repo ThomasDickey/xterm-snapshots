@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.515 2011/12/16 21:36:01 tom Exp $
+.\" $XTermId: xterm.man,v 1.517 2011/12/20 23:59:54 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -5251,6 +5251,66 @@ send an ESC byte before the key, or
 .bP
 send the key unaltered.
 .RE
+.TP 8
+.B "exec-formatted(\fIformat\fP, \fIsourcename\fP [, ...])"
+Execute an external command,
+using the current selection for part of the command's parameters.
+The first parameter, \fIformat\fP gives the basic command.
+Succeeding parameters specify the selection source as in \fBinsert-selection\fP.
+.IP
+The \fIformat\fP parameter allows these substitutions:
+.RS
+.TP 5
+%%
+inserts a "%".
+.TP 5
+%S
+the length of the string that \*(``%s\*('' would insert.
+.TP 5
+%s
+the content of the selection, unmodified.
+.TP 5
+%T
+the length of the string that \*(``%t\*('' would insert.
+.TP 5
+%t
+the selection, trimmed of leading/trailing whitespace, and newlines
+changed to single spaces.
+.TP 5
+%V
+the video attributes at the beginning of the highlighted region,
+as a semicolon-separated list of integers using the
+values that the SGR control sequence would use.
+.TP 5
+%v
+the video attributes at the end of the highlighted region,
+using the same convention as \*(``%V\*(''.
+.RE
+.IP
+After constructing the command-string,
+\fIxterm\fP forks a subprocess and executes the command,
+which completes independently of xterm.
+.TP 8
+.B "exec-selectable(\fIformat\fP, \fIonClicks\fP)"
+Execute an external command,
+using data copied from the screen for part of the command's parameters.
+The first parameter, \fIformat\fP gives
+the basic command as in \fBexec-formatted\fP.
+The second parameter specifies the method for copying
+the data as in the \fBonClicks\fP resource.
+.TP 8
+.B "insert-formatted(\fIformat\fP, \fIsourcename\fP [, ...])"
+Insert the current selection or data related to it, formatted.
+The first parameter, \fIformat\fP gives the template for the data
+as in \fBexec-formatted\fP.
+Succeeding parameters specify the selection source as in \fBinsert-selection\fP.
+.TP 8
+.B "insert-selectable(\fIformat\fP, \fIonClicks\fP)"
+Insert data copied from the screen, formatted.
+The first parameter, \fIformat\fP gives the template for the data
+as in \fBexec-formatted\fP.
+The second parameter specifies the method for copying
+the data as in the \fBonClicks\fP resource.
 .TP 8
 .B "insert-selection(\fIsourcename\fP [, ...])"
 This action inserts the string found in the selection or cutbuffer indicated

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.406 2011/12/09 10:09:36 tom Exp $ */
+/* $XTermId: button.c,v 1.417 2011/12/21 02:03:45 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -119,6 +119,7 @@ button.c	Handles button events in the terminal emulator.
 #define KeyModifiers(event) (event->xbutton.state & OurModifiers)
 
 #define IsBtnEvent(event) ((event)->type == ButtonPress || (event)->type == ButtonRelease)
+#define IsKeyEvent(event) ((event)->type == KeyPress    || (event)->type == KeyRelease)
 
 #define KeyState(x) (((int) ((x) & (ShiftMask|ControlMask))) \
 			  + (((x) & Mod1Mask) ? 2 : 0))
@@ -156,8 +157,7 @@ static void EndExtend(XtermWidget w, XEvent * event, String * params, Cardinal
 static void ExtendExtend(XtermWidget xw, const CELL * cell);
 static void PointToCELL(TScreen * screen, int y, int x, CELL * cell);
 static void ReHiliteText(XtermWidget xw, CELL * first, CELL * last);
-static void SaltTextAway(XtermWidget xw, CELL * cellc, CELL * cell,
-			 String * params, Cardinal num_params);
+static void SaltTextAway(XtermWidget xw, CELL * cellc, CELL * cell);
 static void SelectSet(XtermWidget xw, XEvent * event, String * params, Cardinal num_params);
 static void SelectionReceived PROTO_XT_SEL_CB_ARGS;
 static void StartSelect(XtermWidget xw, const CELL * cell);
@@ -1076,6 +1076,8 @@ HandleSelectExtend(Widget w,
 	TScreen *screen = TScreenOf(xw);
 	CELL cell;
 
+	TRACE(("HandleSelectExtend\n"));
+
 	screen->selection_time = event->xmotion.time;
 	switch (screen->eventMode) {
 	    /* If not in one of the DEC mouse-reporting modes */
@@ -1108,6 +1110,8 @@ HandleKeyboardSelectExtend(Widget w,
 
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
+
+	TRACE(("HandleKeyboardSelectExtend\n"));
 	ExtendExtend(xw, &screen->cursorp);
     }
 }
@@ -1145,6 +1149,7 @@ HandleSelectEnd(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleSelectEnd\n"));
 	do_select_end(xw, event, params, num_params, False);
     }
 }
@@ -1158,6 +1163,7 @@ HandleKeyboardSelectEnd(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleKeyboardSelectEnd\n"));
 	do_select_end(xw, event, params, num_params, True);
     }
 }
@@ -1174,6 +1180,7 @@ HandleCopySelection(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleCopySelection\n"));
 	SelectSet(xw, event, params, *num_params);
     }
 }
@@ -2042,7 +2049,19 @@ SelectionReceived(Widget w,
 #endif
 	for (i = 0; i < text_list_count; i++) {
 	    size_t len = strlen(text_list[i]);
-	    _WriteSelectionData(screen, (Char *) text_list[i], len);
+	    if (screen->selectToBuffer) {
+		size_t have = (screen->internal_select
+			       ? strlen(screen->internal_select)
+			       : 0);
+		size_t need = have + len + 1;
+		char *buffer = realloc(screen->internal_select, need);
+		if (buffer != 0) {
+		    strcpy(buffer + have, text_list[i]);
+		    screen->internal_select = buffer;
+		}
+	    } else {
+		_WriteSelectionData(screen, (Char *) text_list[i], len);
+	    }
 	}
 #if OPT_PASTE64
 	if (screen->base64_paste) {
@@ -2088,6 +2107,7 @@ HandleInsertSelection(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleInsertSelection\n"));
 	if (!SendMousePosition(xw, event)) {
 #if OPT_READLINE
 	    int ldelta;
@@ -2175,6 +2195,7 @@ HandleSelectStart(Widget w,
 	TScreen *screen = TScreenOf(xw);
 	CELL cell;
 
+	TRACE(("HandleSelectStart\n"));
 	screen->firstValidRow = 0;
 	screen->lastValidRow = screen->max_row;
 	PointToCELL(screen, event->xbutton.y, event->xbutton.x, &cell);
@@ -2198,6 +2219,8 @@ HandleKeyboardSelectStart(Widget w,
 
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
+
+	TRACE(("HandleKeyboardSelectStart\n"));
 	do_select_start(xw, event, &screen->cursorp);
     }
 }
@@ -2380,6 +2403,7 @@ HandleSelectSet(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleSelectSet\n"));
 	SelectSet(xw, event, params, *num_params);
     }
 }
@@ -2396,7 +2420,8 @@ SelectSet(XtermWidget xw,
     TRACE(("SelectSet\n"));
     /* Only do select stuff if non-null select */
     if (!isSameCELL(&(screen->startSel), &(screen->endSel))) {
-	SaltTextAway(xw, &(screen->startSel), &(screen->endSel), params, num_params);
+	SaltTextAway(xw, &(screen->startSel), &(screen->endSel));
+	_OwnSelection(xw, params, num_params);
     } else {
 	ScrnDisownSelection(xw);
     }
@@ -2515,6 +2540,7 @@ HandleStartExtend(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleStartExtend\n"));
 	do_start_extend(xw, event, params, num_params, False);
     }
 }
@@ -2528,6 +2554,7 @@ HandleKeyboardStartExtend(Widget w,
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleKeyboardStartExtend\n"));
 	do_start_extend(xw, event, params, num_params, True);
     }
 }
@@ -3367,9 +3394,14 @@ TrackText(XtermWidget xw,
 
     old_start = screen->startH;
     old_end = screen->endH;
+    TRACE(("...previous(first=%d,%d, last=%d,%d)\n",
+	   old_start.row, old_start.col,
+	   old_end.row, old_end.col));
     if (isSameCELL(&first, &old_start) &&
-	isSameCELL(&last, &old_end))
+	isSameCELL(&last, &old_end)) {
 	return;
+    }
+
     screen->startH = first;
     screen->endH = last;
     from = Coordinate(screen, &screen->startH);
@@ -3448,9 +3480,7 @@ ReHiliteText(XtermWidget xw,
 static void
 SaltTextAway(XtermWidget xw,
 	     CELL * cellc,
-	     CELL * cell,
-	     String * params,	/* selections */
-	     Cardinal num_params)
+	     CELL * cell)
 {
     TScreen *screen = TScreenOf(xw);
     int i, j = 0;
@@ -3521,7 +3551,6 @@ SaltTextAway(XtermWidget xw,
 	   visibleChars(line, (unsigned) (lp - line))));
 
     screen->selection_length = (unsigned long) (lp - line);
-    _OwnSelection(xw, params, num_params);
 }
 
 #if OPT_PASTE64
@@ -4352,3 +4381,503 @@ SendFocusButton(XtermWidget xw, XFocusChangeEvent * event)
     return;
 }
 #endif /* OPT_FOCUS_EVENT */
+
+#if OPT_SELECTION_OPS
+/*
+ * Get the event-time, needed to process selections.
+ */
+static Time
+getEventTime(XEvent * event)
+{
+    Time result;
+
+    if (IsBtnEvent(event)) {
+	result = ((XButtonEvent *) event)->time;
+    } else if (IsKeyEvent(event)) {
+	result = ((XKeyEvent *) event)->time;
+    } else {
+	result = 0;
+    }
+
+    return result;
+}
+
+/* obtain the selection string, passing the endpoints to caller's parameters */
+static char *
+getSelectionString(XtermWidget xw,
+		   Widget w,
+		   XEvent * event,
+		   String * params,
+		   Cardinal *num_params,
+		   CELL * start, CELL * finish)
+{
+    TScreen *screen = TScreenOf(xw);
+#if OPT_PASTE64
+    int base64_paste = screen->base64_paste;
+#endif
+#if OPT_READLINE
+    int paste_brackets = SCREEN_FLAG(screen, paste_brackets);
+#endif
+
+    /* override flags so that SelectionReceived only updates a buffer */
+#if OPT_PASTE64
+    screen->base64_paste = 0;
+#endif
+#if OPT_READLINE
+    SCREEN_FLAG_unset(screen, paste_brackets);
+#endif
+
+    screen->selectToBuffer = True;
+    screen->internal_select = 0;
+    xtermGetSelection(w, getEventTime(event), params + 1, *num_params - 1, NULL);
+    screen->selectToBuffer = False;
+
+    if (screen->internal_select != 0) {
+	TRACE(("getSelectionString %d:%s\n",
+	       strlen(screen->internal_select),
+	       screen->internal_select));
+	*start = screen->startSel;
+	*finish = screen->endSel;
+    } else {
+	memset(start, 0, sizeof(*start));
+	memset(finish, 0, sizeof(*finish));
+    }
+#if OPT_PASTE64
+    screen->base64_paste = base64_paste;
+#endif
+#if OPT_READLINE
+    if (paste_brackets)
+	SCREEN_FLAG_set(screen, paste_brackets);
+#endif
+    return screen->internal_select;
+}
+
+/* obtain data from the screen, passing the endpoints to caller's parameters */
+static char *
+getDataFromScreen(XtermWidget xw, char *method, CELL * start, CELL * finish)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    CELL save_old_start = screen->startH;
+    CELL save_old_end = screen->endH;
+
+    CELL save_startSel = screen->startSel;
+    CELL save_startRaw = screen->startRaw;
+    CELL save_finishSel = screen->endSel;
+    CELL save_finishRaw = screen->endRaw;
+
+    int save_firstValidRow = screen->firstValidRow;
+    int save_lastValidRow = screen->lastValidRow;
+
+    SelectUnit saveUnits = screen->selectUnit;
+    SelectUnit saveMap = screen->selectMap[0];
+#if OPT_SELECT_REGEX
+    char *saveExpr = screen->selectExpr[0];
+#endif
+
+    Char *save_selection_data = screen->selection_data;
+    int save_selection_size = screen->selection_size;
+    unsigned long save_selection_length = screen->selection_length;
+
+    char *result = 0;
+
+    TRACE(("getDataFromScreen %s\n", method));
+
+    screen->selection_data = 0;
+    screen->selection_size = 0;
+    screen->selection_length = 0;
+
+    lookupSelectUnit(xw, 0, method);
+    screen->selectUnit = screen->selectMap[0];
+
+    start->row = screen->cur_row;
+    start->col = screen->cur_col;
+    *finish = *start;
+
+    ComputeSelect(xw, start, finish, False);
+    SaltTextAway(xw, &(screen->startSel), &(screen->endSel));
+
+    if (screen->selection_length && screen->selection_data) {
+	TRACE(("...getDataFromScreen selection_data %.*s\n",
+	       (int) screen->selection_length,
+	       screen->selection_data));
+	result = malloc(screen->selection_length + 1);
+	if (result) {
+	    memcpy(result, screen->selection_data, screen->selection_length);
+	    result[screen->selection_length] = 0;
+	}
+    }
+
+    TRACE(("...getDataFromScreen restoring previous selection\n"));
+
+    screen->startSel = save_startSel;
+    screen->startRaw = save_startRaw;
+    screen->endSel = save_finishSel;
+    screen->endRaw = save_finishRaw;
+
+    screen->firstValidRow = save_firstValidRow;
+    screen->lastValidRow = save_lastValidRow;
+
+    screen->selectUnit = saveUnits;
+    screen->selectMap[0] = saveMap;
+#if OPT_SELECT_REGEX
+    screen->selectExpr[0] = saveExpr;
+#endif
+
+    screen->selection_data = save_selection_data;
+    screen->selection_size = save_selection_size;
+    screen->selection_length = save_selection_length;
+
+    TrackText(xw, &save_old_start, &save_old_end);
+
+    TRACE(("...getDataFromScreen done\n"));
+    return result;
+}
+
+/*
+ * Split-up the format before substituting data, to avoid quoting issues.
+ * The resource mechanism has a limited ability to handle escapes.  We take
+ * the result as if it were an sh-type string and parse it into a regular
+ * argv array.
+ */
+static char **
+tokenizeFormat(String format)
+{
+    char **result = 0;
+    int pass;
+    int argc;
+    int n;
+
+    format = x_skip_blanks(format);
+    if (*format != '\0') {
+	char *blob = x_strdup(format);
+
+	for (pass = 0; pass < 2; ++pass) {
+	    int used = 0;
+	    int first = 1;
+	    int escaped = 0;
+	    int squoted = 0;
+	    int dquoted = 0;
+
+	    argc = 0;
+	    for (n = 0; format[n] != '\0'; ++n) {
+		if (escaped) {
+		    blob[used++] = format[n];
+		    escaped = 0;
+		} else if (format[n] == '"') {
+		    if (!squoted) {
+			if (!dquoted)
+			    blob[used++] = format[n];
+			dquoted = !dquoted;
+		    }
+		} else if (format[n] == '\'') {
+		    if (!dquoted) {
+			if (!squoted)
+			    blob[used++] = format[n];
+			squoted = !squoted;
+		    }
+		} else if (format[n] == '\\') {
+		    blob[used++] = format[n];
+		    escaped = 1;
+		} else {
+		    if (first) {
+			first = 0;
+			if (pass) {
+			    result[argc] = &blob[n];
+			}
+			++argc;
+		    }
+		    if (isspace((Char) format[n])) {
+			first = !isspace((Char) format[n + 1]);
+			if (squoted || dquoted) {
+			    blob[used++] = format[n];
+			} else if (first) {
+			    blob[used++] = '\0';
+			}
+		    } else {
+			blob[used++] = format[n];
+		    }
+		}
+	    }
+	    blob[used] = '\0';
+	    assert(strlen(blob) <= strlen(format));
+	    if (!pass) {
+		result = TypeCallocN(char *, argc + 1);
+		if (result == 0) {
+		    break;
+		}
+	    }
+	}
+    }
+#if OPT_TRACE
+    if (result) {
+	TRACE(("tokenizeFormat %s\n", format));
+	for (argc = 0; result[argc]; ++argc) {
+	    TRACE(("argv[%d] = %s\n", argc, result[argc]));
+	}
+    }
+#endif
+
+    return result;
+}
+
+static void
+formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
+{
+    TScreen *screen = TScreenOf(xw);
+    LineData *ld = GET_LINEDATA(screen, cell->row);
+
+    *buffer = '\0';
+    if (ld != 0 && cell->col < ld->lineSize) {
+	Char attribs = ld->attribs[cell->col];
+	char *delim = "";
+
+	if (attribs & INVERSE) {
+	    buffer += sprintf(buffer, "7");
+	    delim = ";";
+	}
+	if (attribs & UNDERLINE) {
+	    buffer += sprintf(buffer, "%s4", delim);
+	    delim = ";";
+	}
+	if (attribs & BOLD) {
+	    buffer += sprintf(buffer, "%s1", delim);
+	    delim = ";";
+	}
+	if (attribs & BLINK) {
+	    buffer += sprintf(buffer, "%s5", delim);
+	    delim = ";";
+	}
+#if OPT_ISO_COLORS
+	if (attribs & FG_COLOR) {
+	    int fg = extract_fg(xw, ld->color[cell->col], attribs);
+	    if (fg < 8) {
+		fg += 30;
+	    } else if (fg < 16) {
+		fg += 90;
+	    }
+	    buffer += sprintf(buffer, "%s%d", delim, fg);
+	    delim = ";";
+	}
+	if (attribs & BG_COLOR) {
+	    int bg = extract_fg(xw, ld->color[cell->col], attribs);
+	    if (bg < 8) {
+		bg += 40;
+	    } else if (bg < 16) {
+		bg += 100;
+	    }
+	    buffer += sprintf(buffer, "%s%d", delim, bg);
+	    delim = ";";
+	}
+#endif
+    }
+}
+
+/* substitute data into format, reallocating the result */
+static char *
+expandFormat(XtermWidget xw,
+	     const char *format,
+	     char *data,
+	     CELL * start,
+	     CELL * finish)
+{
+    char *result = 0;
+    if (!IsEmpty(format)) {
+	static char empty[1];
+	int pass;
+	int n;
+	char numbers[80];
+
+	if (data == 0)
+	    data = empty;
+
+	for (pass = 0; pass < 2; ++pass) {
+	    size_t need = 0;
+
+	    for (n = 0; format[n] != '\0'; ++n) {
+		char *value = 0;
+
+		if (format[n] == '%') {
+		    switch (format[++n]) {
+		    case '%':
+			if (pass) {
+			    result[need] = format[n];
+			}
+			++need;
+			break;
+		    case 'S':
+			sprintf(numbers, "%u", (unsigned) strlen(data));
+			value = numbers;
+			break;
+		    case 's':
+			value = data;
+			break;
+		    case 'T':
+			if ((value = x_strtrim(data)) != 0) {
+			    sprintf(numbers, "%u", (unsigned) strlen(value));
+			    free(value);
+			} else {
+			    strcpy(numbers, "0");
+			}
+			value = numbers;
+			break;
+		    case 't':
+			value = x_strtrim(data);
+			break;
+		    case 'V':
+			formatVideoAttrs(xw, numbers, start);
+			value = numbers;
+			break;
+		    case 'v':
+			formatVideoAttrs(xw, numbers, finish);
+			value = numbers;
+			break;
+		    default:
+			if (pass) {
+			    result[need] = format[n];
+			}
+			--n;
+			++need;
+			break;
+		    }
+		    if (value != 0) {
+			if (pass) {
+			    strcpy(result + need, value);
+			}
+			need += strlen(value);
+			if (value != numbers && value != data) {
+			    free(value);
+			}
+		    }
+		} else {
+		    if (pass) {
+			result[need] = format[n];
+		    }
+		    ++need;
+		}
+	    }
+	    if (pass) {
+		result[need] = '\0';
+	    } else {
+		++need;
+		result = malloc(need);
+		if (result == 0) {
+		    break;
+		}
+	    }
+	}
+    }
+    TRACE(("expandFormat(%s) = %s\n", NonNull(format), NonNull(result)));
+    return result;
+}
+
+/* execute the command after forking.  The main process frees its data */
+static void
+executeCommand(char **argv)
+{
+    if (fork() == 0) {
+	execvp(argv[0], argv);
+	exit(EXIT_FAILURE);
+    }
+}
+
+void
+HandleExecFormatted(Widget w,
+		    XEvent * event GCC_UNUSED,
+		    String * params,	/* selections */
+		    Cardinal *num_params)
+{
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleExecFormatted(%d)\n", *num_params));
+
+	if (*num_params > 1) {
+	    CELL start, finish;
+	    char *data;
+	    char **argv;
+	    int argc;
+
+	    data = getSelectionString(xw, w, event, params, num_params,
+				      &start, &finish);
+	    argv = tokenizeFormat(params[0]);
+	    for (argc = 0; argv[argc] != 0; ++argc) {
+		argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
+	    }
+	    executeCommand(argv);
+	}
+    }
+}
+
+void
+HandleExecSelectable(Widget w,
+		     XEvent * event GCC_UNUSED,
+		     String * params,	/* selections */
+		     Cardinal *num_params)
+{
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleExecSelectable(%d)\n", *num_params));
+
+	if (*num_params == 2) {
+	    CELL start, finish;
+	    char *data;
+	    char **argv;
+	    int argc;
+
+	    data = getDataFromScreen(xw, params[1], &start, &finish);
+	    argv = tokenizeFormat(params[0]);
+	    for (argc = 0; argv[argc] != 0; ++argc) {
+		argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
+	    }
+	    executeCommand(argv);
+	}
+    }
+}
+
+void
+HandleInsertFormatted(Widget w,
+		      XEvent * event GCC_UNUSED,
+		      String * params,	/* selections */
+		      Cardinal *num_params)
+{
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleInsertFormatted(%d)\n", *num_params));
+
+	if (*num_params > 1) {
+	    CELL start, finish;
+	    char *data;
+	    char *temp = x_strdup(params[0]);
+
+	    data = getSelectionString(xw, w, event, params, num_params,
+				      &start, &finish);
+	    temp = expandFormat(xw, temp, data, &start, &finish);
+	}
+    }
+}
+
+void
+HandleInsertSelectable(Widget w,
+		       XEvent * event GCC_UNUSED,
+		       String * params,		/* selections */
+		       Cardinal *num_params)
+{
+    XtermWidget xw;
+
+    if ((xw = getXtermWidget(w)) != 0) {
+	TRACE(("HandleInsertSelectable(%d)\n", *num_params));
+
+	if (*num_params == 2) {
+	    CELL start, finish;
+	    char *data;
+	    char *temp = x_strdup(params[0]);
+
+	    data = getDataFromScreen(xw, params[1], &start, &finish);
+	    temp = expandFormat(xw, temp, data, &start, &finish);
+	}
+    }
+}
+#endif

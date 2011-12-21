@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.668 2011/12/16 21:39:40 tom Exp $ */
+/* $XTermId: xterm.h,v 1.670 2011/12/18 01:24:27 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -826,6 +826,7 @@ extern void VTInitTranslations (void);
 extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */) GCC_NORETURN;
 extern void VTRun (XtermWidget /* xw */);
 extern void dotext (XtermWidget /* xw */, int  /* charset */, IChar * /* buf */, Cardinal  /* len */);
+extern void lookupSelectUnit(XtermWidget /* xw */, Cardinal /* item */, String /* value */);
 extern void releaseCursorGCs(XtermWidget /*xw*/);
 extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 extern void resetCharsets (TScreen * /* screen */);
@@ -1040,6 +1041,13 @@ extern void xtermClearLEDs (TScreen * /* screen */);
 #define ShowScrollLock(screen, enable) /* nothing */
 #define SetScrollLock(screen, enable) /* nothing */
 #define GetScrollLock(screen) /* nothing */
+#endif
+
+#if OPT_SELECTION_OPS
+extern void HandleExecFormatted        PROTO_XT_ACTIONS_ARGS;
+extern void HandleExecSelectable       PROTO_XT_ACTIONS_ARGS;
+extern void HandleInsertFormatted      PROTO_XT_ACTIONS_ARGS;
+extern void HandleInsertSelectable     PROTO_XT_ACTIONS_ARGS;
 #endif
 
 #if OPT_SESSION_MGT
