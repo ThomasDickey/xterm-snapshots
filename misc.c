@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.565 2011/12/16 21:48:40 tom Exp $ */
+/* $XTermId: misc.c,v 1.566 2011/12/22 10:52:29 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1094,7 +1094,7 @@ flashWindow(TScreen * screen, Window window, GC visualGC, unsigned width, unsign
 
     if (screen->flash_line) {
 	y = CursorY(screen, screen->cur_row);
-	height = FontHeight(screen);
+	height = (unsigned) FontHeight(screen);
     }
     XFillRectangle(screen->display, window, visualGC, x, y, width, height);
     XFlush(screen->display);

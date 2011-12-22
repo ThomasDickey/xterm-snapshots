@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.421 2011/12/22 01:56:50 tom Exp $ */
+/* $XTermId: button.c,v 1.424 2011/12/22 10:52:29 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4413,10 +4413,10 @@ getSelectionString(XtermWidget xw,
 {
     TScreen *screen = TScreenOf(xw);
 #if OPT_PASTE64
-    int base64_paste = screen->base64_paste;
+    int base64_paste = (int) screen->base64_paste;
 #endif
 #if OPT_READLINE
-    int paste_brackets = SCREEN_FLAG(screen, paste_brackets);
+    int paste_brackets = (int) SCREEN_FLAG(screen, paste_brackets);
 #endif
 
     /* override flags so that SelectionReceived only updates a buffer */
@@ -4443,7 +4443,7 @@ getSelectionString(XtermWidget xw,
 	memset(finish, 0, sizeof(*finish));
     }
 #if OPT_PASTE64
-    screen->base64_paste = base64_paste;
+    screen->base64_paste = (Cardinal) base64_paste;
 #endif
 #if OPT_READLINE
     if (paste_brackets)
@@ -4506,6 +4506,7 @@ getDataFromScreen(XtermWidget xw, char *method, CELL * start, CELL * finish)
 	    memcpy(result, screen->selection_data, screen->selection_length);
 	    result[screen->selection_length] = 0;
 	}
+	free(screen->selection_data);
     }
 
     TRACE(("...getDataFromScreen restoring previous selection\n"));
@@ -4650,7 +4651,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
 	}
 #if OPT_ISO_COLORS
 	if (attribs & FG_COLOR) {
-	    int fg = extract_fg(xw, ld->color[cell->col], attribs);
+	    unsigned fg = extract_fg(xw, ld->color[cell->col], attribs);
 	    if (fg < 8) {
 		fg += 30;
 	    } else if (fg < 16) {
@@ -4663,7 +4664,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
 	    delim = ";";
 	}
 	if (attribs & BG_COLOR) {
-	    int bg = extract_bg(xw, ld->color[cell->col], attribs);
+	    unsigned bg = extract_bg(xw, ld->color[cell->col], attribs);
 	    if (bg < 8) {
 		bg += 40;
 	    } else if (bg < 16) {
@@ -4799,6 +4800,21 @@ executeCommand(char **argv)
     }
 }
 
+static void
+freeArgv(char *blob, char **argv)
+{
+    int n;
+
+    if (blob) {
+	free(blob);
+	if (argv) {
+	    for (n = 0; argv[n]; ++n)
+		free(argv[n]);
+	    free(argv);
+	}
+    }
+}
+
 void
 HandleExecFormatted(Widget w,
 		    XEvent * event GCC_UNUSED,
@@ -4814,15 +4830,18 @@ HandleExecFormatted(Widget w,
 	    CELL start, finish;
 	    char *data;
 	    char **argv;
+	    char *blob;
 	    int argc;
 
 	    data = getSelectionString(xw, w, event, params, num_params,
 				      &start, &finish);
 	    argv = tokenizeFormat(params[0]);
+	    blob = argv[0];
 	    for (argc = 0; argv[argc] != 0; ++argc) {
 		argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
 	    }
 	    executeCommand(argv);
+	    freeArgv(blob, argv);
 	}
     }
 }
@@ -4842,14 +4861,18 @@ HandleExecSelectable(Widget w,
 	    CELL start, finish;
 	    char *data;
 	    char **argv;
+	    char *blob;
 	    int argc;
 
 	    data = getDataFromScreen(xw, params[1], &start, &finish);
 	    argv = tokenizeFormat(params[0]);
+	    blob = argv[0];
 	    for (argc = 0; argv[argc] != 0; ++argc) {
 		argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
 	    }
 	    executeCommand(argv);
+	    freeArgv(blob, argv);
+	    free(data);
 	}
     }
 }
