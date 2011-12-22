@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1148 2011/12/22 00:07:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1150 2011/12/22 10:46:45 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -6981,6 +6981,12 @@ VTDestroy(Widget w GCC_UNUSED)
 	free(last->windowName);
 	free(last);
     }
+#if OPT_ISO_COLORS
+    TRACE_FREE_LEAK(screen->cmap_data);
+    for (n = 0; n < MAXCOLORS; n++) {
+	TRACE_FREE_LEAK(screen->Acolors[n].resource);
+    }
+#endif
     TRACE_FREE_LEAK(screen->save_ptr);
     TRACE_FREE_LEAK(screen->saveBuf_data);
     TRACE_FREE_LEAK(screen->saveBuf_index);
@@ -6996,6 +7002,9 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.localefilter);
 #endif
 #endif
+    TRACE_FREE_LEAK(xw->misc.T_geometry);
+    TRACE_FREE_LEAK(xw->misc.geo_metry);
+    TRACE_FREE_LEAK(xw->screen.term_id);
 #if OPT_INPUT_METHOD
     cleanupInputMethod(screen);
 #endif
@@ -7015,6 +7024,15 @@ VTDestroy(Widget w GCC_UNUSED)
 
     xtermCloseFonts(xw, screen->fnts);
     noleaks_cachedCgs(xw);
+
+    TRACE_FREE_LEAK(screen->selection_targets_8bit);
+#if OPT_SELECT_REGEX
+    for (n = 0; n < NSELECTUNITS; ++n) {
+	if (screen->selectMap[n] == Select_REGEX) {
+	    TRACE_FREE_LEAK(screen->selectExpr[n]);
+	}
+    }
+#endif
 
 #if OPT_RENDERFONT
     for (n = 0; n < NMENUFONTS; ++n) {
@@ -7060,6 +7078,7 @@ VTDestroy(Widget w GCC_UNUSED)
 #if OPT_RENDERFONT
     TRACE_FREE_LEAK(xw->misc.face_name);
     TRACE_FREE_LEAK(xw->misc.face_wide_name);
+    TRACE_FREE_LEAK(xw->misc.render_font_s);
 #endif
 
 #if OPT_SELECT_REGEX
