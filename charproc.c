@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1147 2011/12/18 01:23:43 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1148 2011/12/22 00:07:07 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -8773,7 +8773,8 @@ HandleIgnore(Widget w,
 {
     XtermWidget xw;
 
-    TRACE(("Handle ignore for %p\n", (void *) w));
+    TRACE(("Handle ignore for %p %s\n",
+	   (void *) w, visibleEventType(event->type)));
     if ((xw = getXtermWidget(w)) != 0) {
 	/* do nothing, but check for funny escape sequences */
 	(void) SendMousePosition(xw, event);

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.417 2011/12/21 02:03:45 tom Exp $ */
+/* $XTermId: button.c,v 1.421 2011/12/22 01:56:50 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -4655,16 +4655,22 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
 		fg += 30;
 	    } else if (fg < 16) {
 		fg += 90;
+	    } else {
+		buffer += sprintf(buffer, "%s38;5", delim);
+		delim = ";";
 	    }
 	    buffer += sprintf(buffer, "%s%d", delim, fg);
 	    delim = ";";
 	}
 	if (attribs & BG_COLOR) {
-	    int bg = extract_fg(xw, ld->color[cell->col], attribs);
+	    int bg = extract_bg(xw, ld->color[cell->col], attribs);
 	    if (bg < 8) {
 		bg += 40;
 	    } else if (bg < 16) {
 		bg += 100;
+	    } else {
+		buffer += sprintf(buffer, "%s48;5", delim);
+		delim = ";";
 	    }
 	    buffer += sprintf(buffer, "%s%d", delim, bg);
 	    delim = ";";
@@ -4704,6 +4710,18 @@ expandFormat(XtermWidget xw,
 			    result[need] = format[n];
 			}
 			++need;
+			break;
+		    case 'P':
+			sprintf(numbers, "%d;%d",
+				TScreenOf(xw)->topline + start->row + 1,
+				start->col + 1);
+			value = numbers;
+			break;
+		    case 'p':
+			sprintf(numbers, "%d;%d",
+				TScreenOf(xw)->topline + finish->row + 1,
+				finish->col + 1);
+			value = numbers;
 			break;
 		    case 'S':
 			sprintf(numbers, "%u", (unsigned) strlen(data));
@@ -4855,6 +4873,9 @@ HandleInsertFormatted(Widget w,
 	    data = getSelectionString(xw, w, event, params, num_params,
 				      &start, &finish);
 	    temp = expandFormat(xw, temp, data, &start, &finish);
+	    unparseputs(xw, temp);
+	    free(data);
+	    free(temp);
 	}
     }
 }
@@ -4877,7 +4898,10 @@ HandleInsertSelectable(Widget w,
 
 	    data = getDataFromScreen(xw, params[1], &start, &finish);
 	    temp = expandFormat(xw, temp, data, &start, &finish);
+	    unparseputs(xw, temp);
+	    free(data);
+	    free(temp);
 	}
     }
 }
-#endif
+#endif /* OPT_SELECTION_OPS */

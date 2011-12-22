@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.282 2011/12/13 01:49:48 tom Exp $
+dnl $XTermId: configure.in,v 1.283 2011/12/22 02:01:56 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -715,6 +715,14 @@ CF_ARG_DISABLE(samename,
 	[enable_samename=yes])
 AC_MSG_RESULT($enable_samename)
 test "$enable_samename" = no && AC_DEFINE(OPT_SAME_NAME,0)
+
+AC_MSG_CHECKING(if you want support for selection-actions)
+CF_ARG_DISABLE(selection-ops,
+	[  --disable-selection-ops disable selection-action operations],
+	[enable_selection_ops=no],
+	[enable_selection_ops=yes])
+AC_MSG_RESULT($enable_selection_ops)
+test "$enable_selection_ops" = no && AC_DEFINE(OPT_SELECTION_OPS,0)
 
 AC_MSG_CHECKING(if you want support for session management)
 CF_ARG_DISABLE(session-mgt,

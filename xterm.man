@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.517 2011/12/20 23:59:54 tom Exp $
+.\" $XTermId: xterm.man,v 1.518 2011/12/22 01:13:41 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -5264,6 +5264,15 @@ The \fIformat\fP parameter allows these substitutions:
 %%
 inserts a "%".
 .TP 5
+%P
+the screen-position at the beginning of the highlighted region,
+as a semicolon-separated pair of integers using the
+values that the CUP control sequence would use.
+.TP 5
+%p
+the screen-position after the beginning of the highlighted region,
+using the same convention as \*(``%P\*(''.
+.TP 5
 %S
 the length of the string that \*(``%s\*('' would insert.
 .TP 5
@@ -5283,7 +5292,7 @@ as a semicolon-separated list of integers using the
 values that the SGR control sequence would use.
 .TP 5
 %v
-the video attributes at the end of the highlighted region,
+the video attributes after the end of the highlighted region,
 using the same convention as \*(``%V\*(''.
 .RE
 .IP
