@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.670 2011/12/18 01:24:27 tom Exp $ */
+/* $XTermId: xterm.h,v 1.673 2011/12/27 09:51:07 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -846,6 +846,10 @@ extern void xtermAddInput(Widget  /* w */);
 extern void ToggleCursorBlink(TScreen * /* screen */);
 #endif
 
+#if OPT_INPUT_METHOD
+extern TInput *lookupTInput (XtermWidget /* xw */, Widget /* w */);
+#endif
+
 #if OPT_ISO_COLORS
 extern void SGR_Background (XtermWidget /* xw */, int  /* color */);
 extern void SGR_Foreground (XtermWidget /* xw */, int  /* color */);
@@ -1013,9 +1017,11 @@ extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);
 extern void xtermEmbedWindow(Window /* winToEmbedInfo */);
+extern void xtermPerror (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 extern void xtermSetenv (const char * /* var */, const char * /* value */);
 extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);
 extern void xtermUnsetenv (const char * /* var */);
+extern void xtermWarning (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 
 #if OPT_DABBREV
 extern void HandleDabbrevExpand        PROTO_XT_ACTIONS_ARGS;

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.673 2011/12/11 18:33:19 tom Exp $ */
+/* $XTermId: main.c,v 1.675 2011/12/27 10:37:29 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2011 by Thomas E. Dickey
@@ -1524,11 +1524,10 @@ parseArg(int *num, char **argv, char **valuep)
     *valuep = 0;
     if (atbest >= 0) {
 	if (!exact && ambiguous1 >= 0 && ambiguous2 >= 0) {
-	    fprintf(stderr,
-		    "%s:  ambiguous option \"%s\" vs \"%s\"\n",
-		    ProgramName,
-		    ITEM(ambiguous1)->option,
-		    ITEM(ambiguous2)->option);
+	    xtermWarning(
+			    "ambiguous option \"%s\" vs \"%s\"\n",
+			    ITEM(ambiguous1)->option,
+			    ITEM(ambiguous2)->option);
 	}
 	result = ITEM(atbest);
 	TRACE(("...result %s\n", result->option));
@@ -1558,8 +1557,7 @@ Syntax(char *badOption)
     int col;
 
     TRACE(("Syntax error at %s\n", badOption));
-    fprintf(stderr, "%s:  bad command line option \"%s\"\r\n\n",
-	    ProgramName, badOption);
+    xtermWarning("bad command line option \"%s\"\r\n\n", badOption);
 
     fprintf(stderr, "usage:  %s", ProgramName);
     col = 8 + (int) strlen(ProgramName);
@@ -1861,7 +1859,7 @@ disableSetUid(void)
 {
     TRACE(("process %d disableSetUid\n", (int) getpid()));
     if (setuid(save_ruid) == -1) {
-	fprintf(stderr, "%s: unable to reset uid\n", ProgramName);
+	xtermWarning("unable to reset uid\n");
 	exit(1);
     }
     TRACE_IDS;
@@ -1876,7 +1874,7 @@ disableSetGid(void)
 {
     TRACE(("process %d disableSetGid\n", (int) getpid()));
     if (setegid(save_rgid) == -1) {
-	fprintf(stderr, "%s: unable to reset effective gid\n", ProgramName);
+	xtermWarning("unable to reset effective gid\n");
 	exit(1);
     }
     TRACE_IDS;
@@ -1896,8 +1894,7 @@ setEffectiveGroup(gid_t group)
 	if (!(errno == EMVSERR))	/* could happen if _BPX_SHAREAS=REUSE */
 #endif
 	{
-	    (void) fprintf(stderr, "setegid(%d): %s\n",
-			   (int) group, strerror(errno));
+	    xtermPerror("setegid(%d)", (int) group);
 	}
     }
     TRACE_IDS;
@@ -1914,8 +1911,7 @@ setEffectiveUser(uid_t user)
 	if (!(errno == EMVSERR))
 #endif
 	{
-	    (void) fprintf(stderr, "seteuid(%d): %s\n",
-			   (int) user, strerror(errno));
+	    xtermPerror("seteuid(%d)", (int) user);
 	}
     }
     TRACE_IDS;
@@ -1972,9 +1968,7 @@ main(int argc, char *argv[]ENVP_ARG)
     if (!ttydev)
 #endif
     {
-	fprintf(stderr,
-		"%s: unable to allocate memory for ttydev or ptydev\n",
-		ProgramName);
+	xtermWarning("unable to allocate memory for ttydev or ptydev\n");
 	exit(1);
     }
     strcpy(ttydev, TTYDEV);
@@ -2004,7 +1998,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		if (isOption(argv[n])) {
 		    Syntax(argv[n]);
 		} else if (explicit_shname != 0) {
-		    fprintf(stderr, "Explicit shell already was %s\n", explicit_shname);
+		    xtermWarning("Explicit shell already was %s\n", explicit_shname);
 		    Syntax(argv[n]);
 		}
 		explicit_shname = xtermFindShell(argv[n], True);
@@ -2224,8 +2218,7 @@ main(int argc, char *argv[]ENVP_ARG)
     if (resource.tty_modes) {
 	int n = parse_tty_modes(resource.tty_modes, ttymodelist);
 	if (n < 0) {
-	    fprintf(stderr, "%s:  bad tty modes \"%s\"\n",
-		    ProgramName, resource.tty_modes);
+	    xtermWarning("bad tty modes \"%s\"\n", resource.tty_modes);
 	} else if (n > 0) {
 	    override_tty_modes = True;
 	}
@@ -2233,8 +2226,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #if OPT_ZICONBEEP
     if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
 	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
-	fprintf(stderr,
-		"a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
+	xtermWarning("a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
     }
 #endif /* OPT_ZICONBEEP */
     hold_screen = resource.hold_screen ? 1 : 0;
@@ -3041,12 +3033,10 @@ HsSysError(int error)
 			(const char *) &handshake,
 			sizeof(handshake)));
     } else {
-	fprintf(stderr,
-		"%s: fatal pty error errno=%d, error=%d device \"%s\"\n",
-		ProgramName,
-		handshake.error,
-		handshake.fatal_error,
-		handshake.buffer);
+	xtermWarning("fatal pty error errno=%d, error=%d device \"%s\"\n",
+		     handshake.error,
+		     handshake.fatal_error,
+		     handshake.buffer);
 	fprintf(stderr, "%s\n", SysErrorMsg(handshake.error));
 	fprintf(stderr, "Reason: %s\n", SysReasonMsg(handshake.fatal_error));
     }
@@ -3084,8 +3074,8 @@ first_map_occurred(void)
 static void
 HsSysError(int error)
 {
-    fprintf(stderr, "%s: fatal pty error %d (errno=%d) on tty %s\n",
-	    ProgramName, error, errno, ttydev);
+    xtermWarning("fatal pty error %d (errno=%d) on tty %s\n",
+		 error, errno, ttydev);
     exit(error);
 }
 #endif /* OPT_PTY_HANDSHAKE else !OPT_PTY_HANDSHAKE */
@@ -3104,9 +3094,8 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 	why = errno;
 	if (why != ENOENT
 	    && save_ruid == 0) {
-	    fprintf(stderr, "Cannot chown %s to %ld,%ld: %s\n",
-		    device, (long) uid, (long) gid,
-		    strerror(why));
+	    xtermPerror("Cannot chown %s to %ld,%ld",
+			device, (long) uid, (long) gid);
 	}
 	TRACE(("...chown failed: %s\n", strerror(why)));
     } else if (chmod(device, mode) < 0) {
@@ -3114,16 +3103,13 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 	if (why != ENOENT) {
 	    struct stat sb;
 	    if (stat(device, &sb) < 0) {
-		fprintf(stderr, "Cannot chmod %s to %03o: %s\n",
-			device, (unsigned) mode,
-			strerror(why));
+		xtermPerror("Cannot chmod %s to %03o",
+			    device, (unsigned) mode);
 	    } else if (mode != (sb.st_mode & 0777U)) {
-		fprintf(stderr,
-			"Cannot chmod %s to %03lo currently %03lo: %s\n",
-			device,
-			(unsigned long) mode,
-			(unsigned long) (sb.st_mode & 0777U),
-			strerror(why));
+		xtermPerror("Cannot chmod %s to %03lo currently %03lo",
+			    device,
+			    (unsigned long) mode,
+			    (unsigned long) (sb.st_mode & 0777U));
 		TRACE(("...stat uid=%d, gid=%d, mode=%#o\n",
 		       sb.st_uid, sb.st_gid, (unsigned) sb.st_mode));
 	    }
@@ -4019,14 +4005,12 @@ spawnXTerm(XtermWidget xw)
 #ifdef TIOCCONS
 		    int on = 1;
 		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
-			fprintf(stderr, "%s: cannot open console: %s\n",
-				ProgramName, strerror(errno));
+			xtermPerror("cannot open console");
 #endif
 #ifdef SRIOCSREDIR
 		    int fd = open("/dev/console", O_RDWR);
 		    if (fd == -1 || ioctl(fd, SRIOCSREDIR, ttyfd) == -1)
-			fprintf(stderr, "%s: cannot open console: %s\n",
-				ProgramName, strerror(errno));
+			xtermPerror("cannot open console");
 		    IGNORE_RC(close(fd));
 #endif
 		}
@@ -4553,11 +4537,8 @@ spawnXTerm(XtermWidget xw)
 			    xtermFindShell(*command_to_exec_with_luit, False));
 		TRACE_ARGV("spawning luit command", command_to_exec_with_luit);
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
-		/* print error message on screen */
-		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			ProgramName, *command_to_exec_with_luit, strerror(errno));
-		fprintf(stderr, "%s: cannot support your locale.\n",
-			ProgramName);
+		xtermPerror("Can't execvp %s", *command_to_exec_with_luit);
+		xtermWarning("cannot support your locale.\n");
 	    }
 #endif
 	    if (command_to_exec) {
@@ -4567,9 +4548,7 @@ spawnXTerm(XtermWidget xw)
 		execvp(*command_to_exec, command_to_exec);
 		if (command_to_exec[1] == 0)
 		    execlp(ptr, shname, "-c", command_to_exec[0], (void *) 0);
-		/* print error message on screen */
-		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			ProgramName, *command_to_exec, strerror(errno));
+		xtermPerror("Can't execvp %s", *command_to_exec);
 	    }
 #ifdef USE_SYSV_SIGHUP
 	    /* fix pts sh hanging around */
@@ -4605,8 +4584,7 @@ spawnXTerm(XtermWidget xw)
 		TRACE_ARGV("final luit command", command_to_exec_with_luit);
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* Exec failed. */
-		fprintf(stderr, "%s: Can't execvp %s: %s\n", ProgramName,
-			*command_to_exec_with_luit, strerror(errno));
+		xtermPerror("Can't execvp %s", *command_to_exec_with_luit);
 	    }
 #endif
 	    execlp(ptr,
@@ -4614,8 +4592,7 @@ spawnXTerm(XtermWidget xw)
 		   (void *) 0);
 
 	    /* Exec failed. */
-	    fprintf(stderr, "%s: Could not exec %s: %s\n", ProgramName,
-		    ptr, strerror(errno));
+	    xtermPerror("Could not exec %s", ptr);
 	    IGNORE_RC(sleep(5));
 	    exit(ERROR_EXEC);
 	}
@@ -4657,9 +4634,7 @@ spawnXTerm(XtermWidget xw)
 		    IGNORE_RC(close(screen->respond));
 		    if (get_pty(&screen->respond, XDisplayString(screen->display))) {
 			/* no more ptys! */
-			fprintf(stderr,
-				"%s: child process can find no available ptys: %s\n",
-				ProgramName, strerror(errno));
+			xtermPerror("child process can find no available ptys");
 			handshake.status = PTY_NOMORE;
 			TRACE_HANDSHAKE("writing", &handshake);
 			IGNORE_RC(write(pc_pipe[1],
@@ -4698,9 +4673,8 @@ spawnXTerm(XtermWidget xw)
 		case UTMP_TTYSLOT:
 		case PTY_EXEC:
 		default:
-		    fprintf(stderr, "%s: unexpected handshake status %d\n",
-			    ProgramName,
-			    (int) handshake.status);
+		    xtermWarning("unexpected handshake status %d\n",
+				 (int) handshake.status);
 		}
 	    }
 	    /* close our sides of the pipes */

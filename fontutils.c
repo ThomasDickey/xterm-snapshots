@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.379 2011/11/29 01:42:46 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.380 2011/12/27 10:20:50 tom Exp $ */
 
 /*
  * Copyright 1998-2010,2011 by Thomas E. Dickey
@@ -774,7 +774,7 @@ xtermOpenFont(XtermWidget xw,
 #endif
 		) {
 		TRACE(("OOPS: cannot load font %s\n", name));
-		fprintf(stderr, "%s: cannot load font '%s'\n", ProgramName, name);
+		xtermWarning("cannot load font '%s'\n", name);
 #if OPT_RENDERFONT
 		/*
 		 * Do a sanity check in case someone's mixed up xterm with
@@ -782,8 +782,7 @@ xtermOpenFont(XtermWidget xw,
 		 * xterm's namespace.
 		 */
 		if (strchr(name, ':') != 0 || strchr(name, '=') != 0) {
-		    fprintf(stderr,
-			    "Use the \"-fa\" option for the Xft fonts\n");
+		    xtermWarning("Use the \"-fa\" option for the Xft fonts\n");
 		}
 #endif
 	    } else {
@@ -1743,16 +1742,14 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern * pat, const char *tag
 		XftPatternDestroy(match);
 		if (xw->misc.fontWarnings >= fwAlways) {
 		    TRACE(("OOPS cannot open %s font \"%s\"\n", tag, name));
-		    fprintf(stderr, "%s: cannot open %s font \"%s\"\n",
-			    ProgramName, tag, name);
+		    xtermWarning("cannot open %s font \"%s\"\n", tag, name);
 		}
 	    }
 	} else {
 	    TRACE(("...did not match %s font\n", tag));
 	    if (xw->misc.fontWarnings >= fwResource) {
 		TRACE(("OOPS: cannot match %s font \"%s\"\n", tag, name));
-		fprintf(stderr, "%s: cannot match %s font \"%s\"\n",
-			ProgramName, tag, name);
+		xtermWarning("cannot match %s font \"%s\"\n", tag, name);
 	    }
 	}
     }
@@ -1842,8 +1839,7 @@ static void
 checkFontInfo(int value, const char *tag)
 {
     if (value == 0) {
-	fprintf(stderr,
-		"Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
+	xtermWarning("Selected font has no non-zero %s for ISO-8859-1 encoding\n", tag);
 	exit(1);
     }
 }

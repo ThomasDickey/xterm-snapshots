@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.330 2011/12/14 22:26:03 tom Exp $ */
+/* $XTermId: input.c,v 1.332 2011/12/23 00:43:41 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -831,17 +831,18 @@ Input(XtermWidget xw,
 #endif
     {
 #if OPT_I18N_SUPPORT
-	if (screen->xic) {
+	TInput *input = lookupTInput(xw, (Widget) xw);
+	if (input->xic) {
 	    Status status_return;
 #if OPT_WIDE_CHARS
 	    if (screen->utf8_mode) {
-		kd.nbytes = Xutf8LookupString(screen->xic, event,
+		kd.nbytes = Xutf8LookupString(input->xic, event,
 					      kd.strbuf, (int) sizeof(kd.strbuf),
 					      &kd.keysym, &status_return);
 	    } else
 #endif
 	    {
-		kd.nbytes = XmbLookupString(screen->xic, event,
+		kd.nbytes = XmbLookupString(input->xic, event,
 					    kd.strbuf, (int) sizeof(kd.strbuf),
 					    &kd.keysym, &status_return);
 	    }
