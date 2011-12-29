@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.424 2011/12/22 10:52:29 tom Exp $ */
+/* $XTermId: button.c,v 1.426 2011/12/28 00:32:08 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3951,9 +3951,8 @@ _OwnSelection(XtermWidget xw,
 	    if (screen->selection_length > limit) {
 		TRACE(("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
 		       screen->selection_length, cutbuffer));
-		fprintf(stderr,
-			"%s: selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
-			ProgramName, screen->selection_length, cutbuffer);
+		xtermWarning("selection too big (%lu bytes), not storing in CUT_BUFFER%d\n",
+			     screen->selection_length, cutbuffer);
 	    } else {
 		/* This used to just use the UTF-8 data, which was totally
 		 * broken as not even the corresponding paste code in Xterm
@@ -4434,7 +4433,7 @@ getSelectionString(XtermWidget xw,
 
     if (screen->internal_select != 0) {
 	TRACE(("getSelectionString %d:%s\n",
-	       strlen(screen->internal_select),
+	       (int) strlen(screen->internal_select),
 	       screen->internal_select));
 	*start = screen->startSel;
 	*finish = screen->endSel;

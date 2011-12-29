@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.552 2011/12/07 09:35:27 tom Exp $ */
+/* $XTermId: util.c,v 1.553 2011/12/27 10:22:02 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -3859,8 +3859,8 @@ init_keyboard_type(XtermWidget xw, xtermKeyboardType type, Bool set)
 	   visibleKeyboardType(xw->keyboard.type)));
     if (set) {
 	if (wasSet) {
-	    fprintf(stderr, "Conflicting keyboard type option (%u/%u)\n",
-		    xw->keyboard.type, type);
+	    xtermWarning("Conflicting keyboard type option (%u/%u)\n",
+			 xw->keyboard.type, type);
 	}
 	xw->keyboard.type = type;
 	wasSet = True;
@@ -3930,9 +3930,8 @@ decode_keyboard_type(XtermWidget xw, XTERM_RESOURCE * rp)
 	    init_keyboard_type(xw, table[n].type, FLAG(n));
 	}
 	if (!found) {
-	    fprintf(stderr,
-		    "KeyboardType resource \"%s\" not found\n",
-		    rp->keyboardType);
+	    xtermWarning("KeyboardType resource \"%s\" not found\n",
+			 rp->keyboardType);
 	}
     }
 #undef DATA
@@ -4074,7 +4073,7 @@ extendedBoolean(const char *value, FlagList * table, Cardinal limit)
     }
 
     if (result < 0) {
-	fprintf(stderr, "Unrecognized keyword: %s\n", value);
+	xtermWarning("Unrecognized keyword: %s\n", value);
 	result = False;
     }
 

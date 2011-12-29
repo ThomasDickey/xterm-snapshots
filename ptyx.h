@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.714 2011/12/17 01:52:04 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.717 2011/12/23 00:55:54 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1567,6 +1567,15 @@ typedef struct {
     String menu_font_names[NMENUFONTS][fMAX];
 } SubResourceRec;
 
+#if OPT_INPUT_METHOD
+#define NINPUTWIDGETS	3
+typedef struct {
+	Widget		w;
+	XIM		xim;		/* input method attached to 'w' */
+	XIC		xic;		/* input context attached to 'xim' */
+} TInput;
+#endif
+
 typedef struct {
 /* These parameters apply to both windows */
 	Display		*display;	/* X display for screen		*/
@@ -2043,12 +2052,6 @@ typedef struct {
 #endif
 	XftDraw *	renderDraw;
 #endif
-#if OPT_INPUT_METHOD
-	XIM		xim;
-	XFontSet	fs;		/* fontset for XIM preedit */
-	int		fs_ascent;	/* ascent of fs */
-#endif
-	XIC		xic;		/* this is used even without XIM */
 #if OPT_DABBREV
 	Boolean		dabbrev_working;	/* nonzero during dabbrev process */
 	unsigned char	dabbrev_erase_char;	/* used for deleting inserted completion */
@@ -2276,6 +2279,9 @@ typedef struct _Misc {
     Boolean open_im;		/* true if input-method is opened */
     Boolean cannot_im;		/* true if we cannot use input-method */
     int retry_im;
+    XFontSet xim_fs;		/* fontset for XIM preedit */
+    int xim_fs_ascent;		/* ascent of fs */
+    TInput inputs[NINPUTWIDGETS];
 #endif
     Boolean dynamicColors;
     Boolean shared_ic;
