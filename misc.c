@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.574 2011/12/27 10:31:41 tom Exp $ */
+/* $XTermId: misc.c,v 1.575 2011/12/30 10:14:12 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -58,6 +58,7 @@
 
 #include <sys/stat.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <signal.h>
 #include <ctype.h>
 #include <pwd.h>

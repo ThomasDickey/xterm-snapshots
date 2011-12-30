@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.717 2011/12/23 00:55:54 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.718 2011/12/30 10:45:06 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1990,7 +1990,7 @@ typedef struct {
 	int		lastValidRow;	/* " " */
 
 	Boolean		selectToBuffer;	/* copy selection to buffer	*/
-	String		internal_select;
+	char *		internal_select;
 
 	String		default_string;
 	String		eightbit_select_types;

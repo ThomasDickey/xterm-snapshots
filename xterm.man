@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.519 2011/12/29 00:58:19 tom Exp $
+.\" $XTermId: xterm.man,v 1.521 2011/12/30 09:57:57 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -1413,6 +1413,17 @@ The default is \*(``true\*(''.
 Scale line-height values by the resource value,
 which is limited to \*(``0.9\*('' to \*(``1.5\*(''.
 The default value is \*(``1.0\*('',
+.IP
+While this resource applies to either bitmap or TrueType fonts,
+its main purpose is to
+help work around incompatible changes in the Xft library's font metrics.
+\fIXterm\fP checks the font metrics to find what the library claims are
+the bounding boxes for each glyph (character).
+However, some of Xft's features (such as the autohinter) can cause the
+glyphs to be scaled larger than the bounding boxes, and be partly overwritten
+by the next row.
+.IP
+See \fBuseClipping\fP for a related resource.
 .TP 8
 .B "scoFunctionKeys (\fPclass\fB ScoFunctionKeys)"
 Specifies whether or not SCO Function Key escape codes should be generated for

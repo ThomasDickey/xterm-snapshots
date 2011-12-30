@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.426 2011/12/28 00:32:08 tom Exp $ */
+/* $XTermId: button.c,v 1.428 2011/12/30 11:47:47 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -230,7 +230,7 @@ EmitMousePosition(TScreen * screen, Char line[], unsigned count, int value)
     case SET_SGR_EXT_MODE_MOUSE:
 	/* FALLTHRU */
     case SET_URXVT_EXT_MODE_MOUSE:
-	count += (unsigned) sprintf((char *) line + count, "%u", value + 1);
+	count += (unsigned) sprintf((char *) line + count, "%d", value + 1);
 	break;
     }
     return count;
@@ -4202,7 +4202,7 @@ EmitButtonCode(TScreen * screen,
 	value -= 32;		/* encoding starts at zero */
 	/* FALLTHRU */
     case SET_URXVT_EXT_MODE_MOUSE:
-	count += (unsigned) sprintf((char *) line + count, "%u", value);
+	count += (unsigned) sprintf((char *) line + count, "%d", value);
 	break;
     case SET_EXT_MODE_MOUSE:
 	if (value < 128) {
@@ -4453,7 +4453,7 @@ getSelectionString(XtermWidget xw,
 
 /* obtain data from the screen, passing the endpoints to caller's parameters */
 static char *
-getDataFromScreen(XtermWidget xw, char *method, CELL * start, CELL * finish)
+getDataFromScreen(XtermWidget xw, String method, CELL * start, CELL * finish)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -4630,7 +4630,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
     *buffer = '\0';
     if (ld != 0 && cell->col < ld->lineSize) {
 	Char attribs = ld->attribs[cell->col];
-	char *delim = "";
+	const char *delim = "";
 
 	if (attribs & INVERSE) {
 	    buffer += sprintf(buffer, "7");
@@ -4659,7 +4659,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
 		buffer += sprintf(buffer, "%s38;5", delim);
 		delim = ";";
 	    }
-	    buffer += sprintf(buffer, "%s%d", delim, fg);
+	    buffer += sprintf(buffer, "%s%u", delim, fg);
 	    delim = ";";
 	}
 	if (attribs & BG_COLOR) {
@@ -4672,7 +4672,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
 		buffer += sprintf(buffer, "%s48;5", delim);
 		delim = ";";
 	    }
-	    buffer += sprintf(buffer, "%s%d", delim, bg);
+	    buffer += sprintf(buffer, "%s%u", delim, bg);
 	    delim = ";";
 	}
 #endif
