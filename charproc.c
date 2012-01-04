@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1157 2011/12/28 10:50:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1158 2012/01/02 15:12:17 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -7559,7 +7559,7 @@ xim_create_xic(XtermWidget xw, Widget theInput)
     Display *myDisplay = XtDisplay(theInput);
     Window myWindow = XtWindow(theInput);
     unsigned i, j;
-    char *p, *s, *t, *ns, *end, buf[32];
+    char *p = NULL, *s, *t, *ns, *end, buf[32];
     XIMStyles *xim_styles;
     XIMStyle input_style = 0;
     Bool found;

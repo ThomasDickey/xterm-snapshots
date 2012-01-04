@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.283 2011/12/22 02:01:56 tom Exp $
+dnl $XTermId: configure.in,v 1.284 2011/12/30 22:45:24 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -76,7 +76,7 @@ AC_CHECK_HEADERS( \
 ncurses/curses.h \
 ncurses/term.h \
 stdlib.h \
-sys/ttydefaults.h \
+sys/ptem.h sys/ttydefaults.h \
 term.h \
 termios.h \
 unistd.h \

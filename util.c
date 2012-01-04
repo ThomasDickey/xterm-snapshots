@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.553 2011/12/27 10:22:02 tom Exp $ */
+/* $XTermId: util.c,v 1.554 2011/12/30 21:56:42 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -113,13 +113,13 @@ DamagedCells(TScreen * screen, unsigned n, int *klp, int *krp, int row, int col)
 	int kl = col;
 	int kr = col + nn;
 
-	if (kr >= ld->lineSize) {
+	if (kr >= (int) ld->lineSize) {
 	    nn = (ld->lineSize - col - 1);
 	    kr = col + nn;
 	}
 
 	if (nn > 0) {
-	    assert(kl < ld->lineSize);
+	    assert(kl < (int) ld->lineSize);
 	    if (ld->charData[kl] == HIDDEN_CHAR) {
 		while (kl > 0) {
 		    if (ld->charData[--kl] != HIDDEN_CHAR) {
