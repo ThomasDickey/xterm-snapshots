@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.428 2011/12/30 11:47:47 tom Exp $ */
+/* $XTermId: button.c,v 1.429 2011/12/30 21:55:06 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2820,7 +2820,7 @@ class_of(LineData * ld, CELL * cell)
     }
 #endif
 
-    assert(temp.col < ld->lineSize);
+    assert(temp.col < (int) ld->lineSize);
     return CharacterClass((int) (ld->charData[temp.col]));
 }
 
@@ -2955,7 +2955,7 @@ make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
 		Char *next = last;
 		unsigned data = ld->charData[col];
 
-		assert(col < ld->lineSize);
+		assert(col < (int) ld->lineSize);
 		/* some internal points may not be drawn */
 		if (data == 0)
 		    data = ' ';
@@ -4088,7 +4088,7 @@ SaveText(TScreen * screen,
 #endif
     *eol = !LineTstWrapped(ld);
     for (i = scol; i < ecol; i++) {
-	assert(i < ld->lineSize);
+	assert(i < (int) ld->lineSize);
 	c = E2A(ld->charData[i]);
 #if OPT_WIDE_CHARS
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
@@ -4628,7 +4628,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
     LineData *ld = GET_LINEDATA(screen, cell->row);
 
     *buffer = '\0';
-    if (ld != 0 && cell->col < ld->lineSize) {
+    if (ld != 0 && cell->col < (int) ld->lineSize) {
 	Char attribs = ld->attribs[cell->col];
 	const char *delim = "";
 

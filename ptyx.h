@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.718 2011/12/30 10:45:06 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.719 2012/01/04 10:59:24 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -179,12 +179,6 @@
 #elif defined(__OpenBSD__)
 #undef USE_PTY_SEARCH
 #undef USE_PTY_DEVICE
-#endif
-
-#if defined(SYSV) && defined(i386) && !defined(SVR4)
-#define ATT
-#define USE_HANDSHAKE 1
-#define USE_ISPTS_FLAG 1
 #endif
 
 #if (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
