@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.676 2012/01/04 12:01:32 tom Exp $ */
+/* $XTermId: main.c,v 1.678 2012/01/06 22:04:40 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2011 by Thomas E. Dickey
@@ -3525,12 +3525,15 @@ spawnXTerm(XtermWidget xw)
 	   TTYSIZE_COLS(ts), i));
 #endif /* TTYSIZE_STRUCT */
 
-#ifdef USE_USG_PTYS
+#if defined(USE_USG_PTYS) || defined(HAVE_POSIX_OPENPT)
     /*
      * utempter checks the ownership of the device; some implementations
      * set ownership in grantpt - do this first.
      */
     grantpt(screen->respond);
+#endif
+#if !defined(USE_USG_PTYS) && defined(HAVE_POSIX_OPENPT)
+    unlockpt(screen->respond);
 #endif
 
     added_utmp_entry = False;
@@ -3573,7 +3576,11 @@ spawnXTerm(XtermWidget xw)
 	    TRACE_CHILD
 
 #ifdef USE_USG_PTYS
+#ifdef HAVE_SETPGID
+		setpgid(0, 0);
+#else
 		setpgrp();
+#endif
 	    unlockpt(screen->respond);
 	    if ((pty_name = ptsname(screen->respond)) == 0) {
 		SysError(ERROR_PTSNAME);

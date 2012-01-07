@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.719 2012/01/04 10:59:24 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.720 2012/01/05 23:58:19 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -185,9 +185,7 @@
 #define USE_HANDSHAKE 0	/* "recent" Linux systems do not require handshaking */
 #endif
 
-#if defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME)
-#define USE_USG_PTYS
-#elif (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
+#if (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 #define USE_USG_PTYS
 #elif (defined(ATT) && !defined(__sgi)) || defined(__MVS__) || (defined(SYSV) && defined(i386))
 #define USE_USG_PTYS
