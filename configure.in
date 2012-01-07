@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.284 2011/12/30 22:45:24 tom Exp $
+dnl $XTermId: configure.in,v 1.285 2012/01/05 10:27:54 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -104,6 +104,7 @@ AC_CHECK_FUNCS( \
 	putenv \
 	unsetenv \
 	sched_yield \
+	setpgid \
 	strerror \
 	strftime \
 	tcgetattr \

@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.317 2011/12/13 01:55:34 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.318 2012/01/06 10:07:15 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3137,6 +3137,7 @@ darwin[[0-8]].*) #(vi
 	;;
 darwin*) #(vi
 	cf_xopen_source="-D_DARWIN_C_SOURCE"
+	cf_XOPEN_SOURCE=
 	;;
 freebsd*|dragonfly*) #(vi
 	# 5.x headers associate

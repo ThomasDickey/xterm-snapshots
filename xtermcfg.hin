@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.187 2011/12/22 01:57:28 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.188 2012/01/05 10:28:29 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -64,6 +64,7 @@
 #undef HAVE_PTSNAME		/* CF_FUNC_GRANTPT */
 #undef HAVE_PUTENV		/* AC_CHECK_FUNCS(putenv) */
 #undef HAVE_SCHED_YIELD		/* AC_CHECK_FUNCS(sched_yield) */
+#undef HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
 #undef HAVE_STRERROR		/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_STRFTIME		/* AC_CHECK_FUNCS(strftime) */

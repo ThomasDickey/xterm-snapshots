@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.429 2011/12/30 21:55:06 tom Exp $ */
+/* $XTermId: button.c,v 1.430 2012/01/07 02:00:35 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -62,6 +62,7 @@ button.c	Handles button events in the terminal emulator.
 #include <xterm.h>
 
 #include <stdio.h>
+#include <ctype.h>
 #include <assert.h>
 
 #include <X11/Xatom.h>

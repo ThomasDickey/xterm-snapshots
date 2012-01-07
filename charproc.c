@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1158 2012/01/02 15:12:17 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1159 2012/01/07 01:59:02 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -173,7 +173,7 @@ static void StopBlinking(TScreen * /* screen */ );
 #define StopBlinking(screen)	/* nothing */
 #endif
 
-#if OPT_INPUT_METHOD
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 static void PreeditPosition(XtermWidget /* xw */ );
 #endif
 
@@ -3591,7 +3591,7 @@ in_put(XtermWidget xw)
 	    if (screen->cursor_state)
 		HideCursor();
 	    ShowCursor();
-#if OPT_INPUT_METHOD
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 	    PreeditPosition(xw);
 #endif
 	} else {
@@ -3692,7 +3692,7 @@ in_put(XtermWidget xw)
 	    if (screen->cursor_state)
 		HideCursor();
 	    ShowCursor();
-#if OPT_INPUT_METHOD
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 	    PreeditPosition(xw);
 #endif
 	} else {
@@ -3784,7 +3784,7 @@ doinput(void)
     return nextPtyData(screen, VTbuffer);
 }
 
-#if OPT_INPUT_METHOD
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 /*
  *  For OverTheSpot, client has to inform the position for XIM preedit.
  */
@@ -6942,7 +6942,7 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 	    name = 0; \
 	}
 
-#if OPT_INPUT_METHOD
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 static void
 cleanupInputMethod(XtermWidget xw)
 {
@@ -7413,8 +7413,6 @@ VTRealize(Widget w,
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
     VTInitI18N(xw);
-#else
-    input->xic = NULL;
 #endif
 #if OPT_NUM_LOCK
     VTInitModifiers(xw);

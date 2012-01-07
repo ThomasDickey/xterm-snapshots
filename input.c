@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.332 2011/12/23 00:43:41 tom Exp $ */
+/* $XTermId: input.c,v 1.333 2012/01/07 02:01:05 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -830,7 +830,7 @@ Input(XtermWidget xw,
     } else
 #endif
     {
-#if OPT_I18N_SUPPORT
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 	TInput *input = lookupTInput(xw, (Widget) xw);
 	if (input->xic) {
 	    Status status_return;
