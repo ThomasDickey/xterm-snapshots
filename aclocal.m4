@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.318 2012/01/06 10:07:15 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.319 2012/01/07 13:29:08 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3110,7 +3110,7 @@ AC_TRY_LINK([
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 41 updated: 2011/12/10 18:58:47
+dnl CF_XOPEN_SOURCE version: 42 updated: 2012/01/07 08:26:49
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -3170,6 +3170,7 @@ netbsd*) #(vi
 	;;
 openbsd[[4-9]]*) #(vi
 	# setting _XOPEN_SOURCE lower than 500 breaks g++ compile with wchar.h, needed for ncursesw
+	cf_xopen_source="-D_BSD_SOURCE"
 	cf_XOPEN_SOURCE=600
 	;;
 openbsd*) #(vi
