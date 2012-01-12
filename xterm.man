@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.521 2011/12/30 09:57:57 tom Exp $
+.\" $XTermId: xterm.man,v 1.522 2012/01/08 18:21:15 tom Exp $
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
 .\"
@@ -1721,6 +1721,7 @@ If this resource is true,
 \fIxterm\fP does not make the check for
 distinct fonts when deciding how to handle the \fBboldMode\fP resource.
 The default is \*(``false\*(''.
+.ne 9
 .TS
 l l l l
 _ _ _ _
@@ -2711,6 +2712,7 @@ HFG
 highlightTextColor
 .RE
 .IP
+.ne 34
 .TS
 l l l l l
 _ _ _ _ _
@@ -2969,6 +2971,7 @@ The default is \*(``false\*(''.
 .IP
 Here is a summary of the resources which control the choice of
 wide character width calculation:
+.ne 8
 .TS
 l l l
 _ _ _
