@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.319 2012/01/07 13:29:08 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.321 2012/01/12 13:09:35 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -543,17 +543,22 @@ AC_DEFUN([CF_ERRNO],
 CF_CHECK_ERRNO(errno)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 2 updated: 2011/11/28 20:14:06
+dnl CF_FUNC_GRANTPT version: 3 updated: 2012/01/12 08:07:51
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
 AC_DEFUN([CF_FUNC_GRANTPT],[
 
-AC_CHECK_FUNCS(\
-grantpt \
-posix_openpt \
-ptsname \
-)
+cf_func_grantpt="grantpt ptsname"
+case $host_os in #(vi
+darwin[[0-9]].*) #(vi
+	;;
+*)
+	cf_func_grantpt="$cf_func_grantpt posix_openpt"
+	;;
+esac
+
+AC_CHECK_FUNCS($cf_func_grantpt)
 
 if test "x$ac_cv_func_grantpt" != "xyes" ; then
 	AC_CHECK_LIB(util, openpty, [cf_have_openpty=yes],[cf_have_openpty=no])

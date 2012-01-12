@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.252 2011/12/11 18:58:30 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.253 2011/12/11 19:18:48 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
@@ -1595,7 +1595,7 @@ shift the key from codes 0-127 to 128-255 by adding 128.
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes \fBaltIsNotMeta\fP is set:
-.ne 18
+.ne 23
 .TS
 center;
 lf3	lf3	lf3	lf3
@@ -1637,6 +1637,7 @@ or by the "DECSET \*1\*0\*3\*5" control sequence.
 .lP
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the \fBDECCKM\fP escape sequence.
+.ne 10
 .TS
 center;
 cf3	cf3	cf3
@@ -1653,6 +1654,7 @@ The home- and end-keys
 (unlike PageUp and other keys also on the 6-key editing keypad)
 are considered "cursor keys" by \fIxterm\fP.
 Their mode is also controlled by the \fBDECCKM\fP escape sequence:
+.ne 8
 .TS
 center;
 cf3	cf3	cf3
@@ -1705,7 +1707,7 @@ _
 .TE
 .br
 They also provide 12 function keys, as well as a few other special-purpose keys:
-.ne 16
+.ne 18
 .TS
 center;
 cf3	cf3
@@ -1731,7 +1733,7 @@ Older versions of \fIxterm\fP implement different escape sequences for F1 throug
 These can be activated by setting the \fBoldXtermFKeys\fP resource.
 However, since they do not correspond to any hardware terminal, they have been deprecated.
 (The DEC VT220 reserves F1 through F5 for local functions such as \fBSetup\fP).
-.ne 6
+.ne 10
 .TS
 center;
 cf3	cf3
@@ -1749,6 +1751,7 @@ when the \fBsunKeyboard\fP resource is false,
 \fIxterm\fP recognizes function key modifiers
 which are parameters appended before the final character
 of the control sequence.
+.ne 13
 .TS
 center;
 cf3	lf3
@@ -1777,7 +1780,7 @@ to act like a VT220 keyboard.
 .lP
 The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling keypad:
-.ne 31
+.ne 32
 .TS
 center;
 cf3	cf3	cf3
@@ -1813,7 +1816,7 @@ _
 The VT220 provides a 6-key editing keypad,
 which is analogous to that on the PC keyboard.
 It is not affected by \fBDECCKM\fP or \fBDECPNM\fP/\fBDECPAM\fP:
-.ne 10
+.ne 12
 .TS
 center;
 cf3	cf3	cf3
@@ -1853,7 +1856,7 @@ _
 A VT52 does not have function keys, but it does have a numeric keypad and cursor keys.
 They differ from the other emulations by the prefix.
 Also, the cursor keys do not change:
-.ne 10
+.ne 13
 .TS
 center;
 cf3	cf3
@@ -1867,6 +1870,7 @@ Cursor Left	\*(Es\*D
 _
 .TE
 The keypad is similar:
+.ne 33
 .TS
 center;
 cf3	cf3	cf3
