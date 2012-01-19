@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1159 2012/01/07 01:59:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1161 2012/01/19 00:22:08 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -6787,15 +6787,19 @@ VTInitialize(Widget wrequest,
 #endif /* OPT_WIDE_CHARS */
 
     init_Sres(screen.eight_bit_meta_s);
-    request->screen.eight_bit_meta =
+    wnew->screen.eight_bit_meta =
 	extendedBoolean(request->screen.eight_bit_meta_s, tbl8BitMeta, uLast);
-    if (request->screen.eight_bit_meta == ebLocale) {
+    if (wnew->screen.eight_bit_meta == ebLocale) {
 #if OPT_WIDE_CHARS
 	if (xtermEnvUTF8()) {
-	    request->screen.eight_bit_meta = ebFalse;
+	    wnew->screen.eight_bit_meta = ebFalse;
+	    TRACE(("...eightBitMeta is false due to locale\n"));
 	} else
 #endif /* OPT_WIDE_CHARS */
-	    request->screen.eight_bit_meta = ebTrue;
+	{
+	    wnew->screen.eight_bit_meta = ebTrue;
+	    TRACE(("...eightBitMeta is true due to locale\n"));
+	}
     }
 
     init_Bres(screen.always_bold_mode);
