@@ -1,5 +1,6 @@
 xterm-dev (278) unstable; urgency=low
 
+  * Fix regression in eightBitInput logic.
   * Fix regression in Darwin 9.x
 
  -- Thomas E. Dickey <dickey@invisible-island.net>  Thu, 12 Jan 2012 08:10:50 -0500
