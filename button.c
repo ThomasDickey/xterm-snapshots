@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.430 2012/01/07 02:00:35 tom Exp $ */
+/* $XTermId: button.c,v 1.431 2012/03/15 00:01:30 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
