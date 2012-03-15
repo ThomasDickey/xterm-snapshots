@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.678 2012/01/06 22:04:40 tom Exp $ */
+/* $XTermId: main.c,v 1.679 2012/03/15 00:01:30 tom Exp $ */
 
 /*
- * Copyright 2002-2010,2011 by Thomas E. Dickey
+ * Copyright 2002-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

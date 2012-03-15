@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.720 2012/01/05 23:58:19 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.721 2012/03/14 23:52:03 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1884,7 +1884,7 @@ typedef struct {
 	String		term_id;	/* resource for terminal_id	*/
 	int		terminal_id;	/* 100=vt100, 220=vt220, etc.	*/
 	int		vtXX_level;	/* 0=vt52, 1,2,3 = vt100 ... vt320 */
-	int		ansi_level;	/* levels 1,2,3			*/
+	int		ansi_level;	/* dpANSI levels 1,2,3		*/
 	int		protected_mode;	/* 0=off, 1=DEC, 2=ISO		*/
 	Boolean		always_bold_mode; /* compare normal/bold font	*/
 	Boolean		always_highlight; /* whether to highlight cursor */

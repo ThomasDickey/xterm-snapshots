@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.1161 2012/01/19 00:22:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1163 2012/03/14 22:53:03 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1065,8 +1065,9 @@ resetCharsets(TScreen * screen)
 static void
 set_ansi_conformance(TScreen * screen, int level)
 {
-    TRACE(("set_ansi_conformance(%d) terminal_id %d, ansi_level %d\n",
+    TRACE(("set_ansi_conformance(%d) dec_level %d:%d, ansi_level %d\n",
 	   level,
+	   screen->vtXX_level * 100,
 	   screen->terminal_id,
 	   screen->ansi_level));
     if (screen->vtXX_level >= 3) {
@@ -2779,7 +2780,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECDC:
 	    TRACE(("CASE_DC - delete column\n"));
-	    if (screen->terminal_id >= 400) {
+	    if (screen->vtXX_level >= 4) {
 		if ((count = param[0]) < 1)
 		    count = 1;
 		xtermColScroll(xw, count, True, screen->cur_col);
@@ -2789,7 +2790,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECIC:
 	    TRACE(("CASE_IC - insert column\n"));
-	    if (screen->terminal_id >= 400) {
+	    if (screen->vtXX_level >= 4) {
 		if ((count = param[0]) < 1)
 		    count = 1;
 		xtermColScroll(xw, count, False, screen->cur_col);
@@ -2799,7 +2800,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECBI:
 	    TRACE(("CASE_BI - back index\n"));
-	    if (screen->terminal_id >= 400) {
+	    if (screen->vtXX_level >= 4) {
 		xtermColIndex(xw, True);
 	    }
 	    ResetState(sp);
@@ -2807,7 +2808,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECFI:
 	    TRACE(("CASE_FI - forward index\n"));
-	    if (screen->terminal_id >= 400) {
+	    if (screen->vtXX_level >= 4) {
 		xtermColIndex(xw, False);
 	    }
 	    ResetState(sp);

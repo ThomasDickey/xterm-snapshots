@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.576 2012/01/07 01:57:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.577 2012/03/15 00:01:30 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
