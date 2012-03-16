@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.679 2012/03/15 00:01:30 tom Exp $ */
+/* $XTermId: main.c,v 1.680 2012/03/16 09:48:56 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -3373,6 +3373,7 @@ spawnXTerm(XtermWidget xw)
 	if (get_pty(&screen->respond, XDisplayString(screen->display))) {
 	    SysError(ERROR_PTYS);
 	}
+	TRACE_TTYSIZE(screen->respond, "after get_pty");
 #if OPT_INITIAL_ERASE
 	if (resource.ptyInitialErase) {
 #ifdef TERMIO_STRUCT
@@ -3534,6 +3535,7 @@ spawnXTerm(XtermWidget xw)
 #endif
 #if !defined(USE_USG_PTYS) && defined(HAVE_POSIX_OPENPT)
     unlockpt(screen->respond);
+    TRACE_TTYSIZE(screen->respond, "after unlockpt");
 #endif
 
     added_utmp_entry = False;
@@ -3582,6 +3584,7 @@ spawnXTerm(XtermWidget xw)
 		setpgrp();
 #endif
 	    unlockpt(screen->respond);
+	    TRACE_TTYSIZE(screen->respond, "after unlockpt");
 	    if ((pty_name = ptsname(screen->respond)) == 0) {
 		SysError(ERROR_PTSNAME);
 	    } else if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
@@ -3704,6 +3707,9 @@ spawnXTerm(XtermWidget xw)
 		    IGNORE_RC(revoke(ttydev));
 #endif
 		    if ((ttyfd = open(ttydev, O_RDWR)) >= 0) {
+			TRACE_TTYSIZE(ttyfd, "after open");
+			TRACE_RC(i, SET_TTYSIZE(ttyfd, ts));
+			TRACE_TTYSIZE(ttyfd, "after fixup");
 #if defined(CRAY) && defined(TCSETCTTY)
 			/* make /dev/tty work */
 			ioctl(ttyfd, TCSETCTTY, 0);
