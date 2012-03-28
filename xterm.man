@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.523 2012/03/15 00:01:30 tom Exp $
+.\" $XTermId: xterm.man,v 1.525 2012/03/27 23:28:50 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1561,11 +1561,20 @@ The default is \*(``false\*(''.
 Same as \-ziconbeep command line argument.
 If the value of this resource is non-zero, xterms that produce output
 while iconified will cause an XBell sound at the given volume
-and have \*(``***\*('' prepended to their icon titles.
+and have \*(``***\ \*('' prepended to their icon titles.
 Most window managers will detect this change immediately, showing you
 which window has the output.
 (A similar feature was in x10 \fIxterm\fR.)
 The default is \*(``false\*(''.
+.TP 8
+.B "zIconTitleFormat (\fPclass\fB ZIconTitleFormat)"
+Allow customization of the string used in the \fBzIconBeep\fP feature.
+The default value is \*(``***\ %s\*(''.
+.IP
+If the resource value contains a \*(``%s\*('',
+then \fIxterm\fP inserts the icon title at that point rather
+than prepending the string to the icon title.
+(Only the first \*(``%s\*('' is used).
 .\"
 .SS VT100 Widget Resources
 .PP
@@ -2137,6 +2146,11 @@ The default is \*(``false\*(''.
 .B "cursorBlink (\fPclass\fB CursorBlink)"
 Specifies whether to make the cursor blink.
 The default is \*(``false\*(''.
+.IP
+\fIXterm\fP uses two variables to determine whether the cursor blinks.
+One is set by this resource.
+The other is set by control sequences (private mode 12 and DECSCUSR).
+\fIXterm\fP tests the XOR of the two variables.
 .TP 8
 .B "cursorColor (\fPclass\fB CursorColor)"
 Specifies the color to use for the text cursor.

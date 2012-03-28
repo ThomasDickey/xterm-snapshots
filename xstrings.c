@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.47 2011/09/11 20:20:12 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.48 2012/03/25 23:31:07 tom Exp $ */
 
 /*
- * Copyright 2000-2010,2011 by Thomas E. Dickey
+ * Copyright 2000-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -214,7 +214,7 @@ x_getpwnam(const char *name, struct passwd * result)
     struct passwd *ptr = getpwnam(name);
     Boolean code;
 
-    if (OkPasswd(ptr)) {
+    if (ptr != 0 && OkPasswd(ptr)) {
 	code = True;
 	alloc_pw(result, ptr);
     } else {
@@ -234,7 +234,7 @@ x_getpwuid(uid_t uid, struct passwd * result)
     struct passwd *ptr = getpwuid((uid_t) uid);
     Boolean code;
 
-    if (OkPasswd(ptr)) {
+    if (ptr != 0 && OkPasswd(ptr)) {
 	code = True;
 	alloc_pw(result, ptr);
     } else {

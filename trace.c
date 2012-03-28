@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.133 2011/12/27 10:10:53 tom Exp $ */
+/* $XTermId: trace.c,v 1.134 2012/03/27 22:23:09 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -764,6 +764,7 @@ TraceXtermResources(void)
     XRES_B(useInsertMode);
 #if OPT_ZICONBEEP
     XRES_I(zIconBeep);
+    XRES_S(zIconFormat);
 #endif
 #if OPT_PTY_HANDSHAKE
     XRES_B(wait_for_map);

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1163 2012/03/14 22:53:03 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1165 2012/03/26 21:23:16 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -162,6 +162,7 @@ static void window_ops(XtermWidget /* xw */ );
 #define DoStartBlinking(s) ((s)->cursor_blink ^ (s)->cursor_blink_esc)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
+#define UpdateCursorBlink(screen) SetCursorBlink(screen, screen->cursor_blink)
 static void SetCursorBlink(TScreen * /* screen */ ,
 			   Bool /* enable */ );
 static void HandleBlinking(XtPointer /* closure */ ,
@@ -2526,7 +2527,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECSCUSR\n"));
 	    {
 		Boolean change = True;
-		Boolean blinks = screen->cursor_blink;
+		Boolean blinks = screen->cursor_blink_esc;
 
 		HideCursor();
 
@@ -2560,7 +2561,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 		if (change) {
 		    xtermSetCursorBox(screen);
-		    SetCursorBlink(screen, blinks);
+		    screen->cursor_blink_esc = blinks;
+		    UpdateCursorBlink(screen);
 		}
 	    }
 	    ResetState(sp);
@@ -3991,34 +3993,13 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		   XEvent * event,
 		   Boolean * cont GCC_UNUSED)
 {
-    static char *icon_name;
-    static Arg args[] =
-    {
-	{XtNiconName, (XtArgVal) & icon_name}
-    };
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
 
     switch (event->type) {
     case MapNotify:
 	TRACE(("HandleStructNotify(MapNotify)\n"));
-#if OPT_ZICONBEEP
-	if (screen->zIconBeep_flagged) {
-	    screen->zIconBeep_flagged = False;
-	    icon_name = NULL;
-	    XtGetValues(toplevel, args, XtNumber(args));
-	    if (icon_name != NULL) {
-		char *buf = CastMallocN(char, strlen(icon_name));
-		if (buf == NULL) {
-		    screen->zIconBeep_flagged = True;
-		    return;
-		}
-		strcpy(buf, icon_name + 4);
-		ChangeIconName(xw, buf);
-		free(buf);
-	    }
-	}
-#endif /* OPT_ZICONBEEP */
+	resetZIconBeep(xw);
 	mapstate = !IsUnmapped;
 	break;
     case UnmapNotify:
@@ -4270,7 +4251,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case 12:		/* att610: Start/stop blinking cursor */
 	    if (screen->cursor_blink_res) {
 		set_bool_mode(screen->cursor_blink_esc);
-		SetCursorBlink(screen, screen->cursor_blink);
+		UpdateCursorBlink(screen);
 	    }
 	    break;
 #endif
@@ -4735,7 +4716,7 @@ restoremodes(XtermWidget xw)
 	case 12:		/* att610: Start/stop blinking cursor */
 	    if (screen->cursor_blink_res) {
 		DoRM(DP_CRS_BLINK, screen->cursor_blink_esc);
-		SetCursorBlink(screen, screen->cursor_blink);
+		UpdateCursorBlink(screen);
 	    }
 	    break;
 #endif

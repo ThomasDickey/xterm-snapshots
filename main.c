@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.680 2012/03/16 09:48:56 tom Exp $ */
+/* $XTermId: main.c,v 1.682 2012/03/27 23:09:07 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -874,6 +874,7 @@ static XtResource application_resources[] =
     Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
 #if OPT_ZICONBEEP
     Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
+    Sres("zIconTitleFormat", "ZIconTitleFormat", zIconFormat, "*** %s"),
 #endif
 #if OPT_PTY_HANDSHAKE
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
@@ -2219,12 +2220,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    override_tty_modes = True;
 	}
     }
-#if OPT_ZICONBEEP
-    if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
-	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
-	xtermWarning("a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
-    }
-#endif /* OPT_ZICONBEEP */
+    initZIconBeep();
     hold_screen = resource.hold_screen ? 1 : 0;
     if (resource.icon_geometry != NULL) {
 	int scr, junk;

@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.673 2011/12/27 09:51:07 tom Exp $ */
+/* $XTermId: xterm.h,v 1.674 2012/03/26 21:47:30 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -978,6 +978,7 @@ extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
 extern int xtermResetIds(TScreen *  /* screen */);
 extern void Bell (XtermWidget /* xw */, int  /* which */, int  /* percent */);
+extern void ChangeGroup(XtermWidget /* xw */, const char * /* attribute */, char * /* value */);
 extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
 extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
 extern void ChangeXprop (char * /* name */);
@@ -1361,6 +1362,15 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 #define checkVeryBoldColors(flags, fg) /* nothing */
 
 #endif	/* OPT_ISO_COLORS */
+
+#if OPT_ZICONBEEP
+extern void initZIconBeep(void);
+extern void resetZIconBeep(XtermWidget /* xw */);
+extern Boolean showZIconBeep(XtermWidget /* xw */, char * /* name */);
+#else
+#define initZIconBeep() /* nothing */
+#define showZIconBeep(xw, name) False
+#endif
 
 #define XTERM_CELL(row,col)    getXtermCell(screen,     ROW2INX(screen, row), col)
 

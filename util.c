@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.554 2011/12/30 21:56:42 tom Exp $ */
+/* $XTermId: util.c,v 1.557 2012/03/27 23:21:02 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -730,6 +730,134 @@ RevScroll(XtermWidget xw, int amount)
     return;
 }
 
+#if OPT_ZICONBEEP
+void
+initZIconBeep(void)
+{
+    if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
+	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
+	xtermWarning("a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
+    }
+}
+
+static void
+setZIconBeep(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    /* Flag icon name with "***"  on window output when iconified.
+     */
+    if (resource.zIconBeep && mapstate == IsUnmapped && !screen->zIconBeep_flagged) {
+	static char *icon_name;
+	static Arg args[] =
+	{
+	    {XtNiconName, (XtArgVal) & icon_name}
+	};
+
+	icon_name = NULL;
+	XtGetValues(toplevel, args, XtNumber(args));
+
+	if (icon_name != NULL) {
+	    screen->zIconBeep_flagged = True;
+	    ChangeIconName(xw, icon_name);
+	}
+	xtermBell(xw, XkbBI_Info, 0);
+    }
+    mapstate = -1;
+}
+
+/*
+ * If warning should be given then give it
+ */
+Boolean
+showZIconBeep(XtermWidget xw, char *name)
+{
+    Boolean code = False;
+
+    if (resource.zIconBeep && TScreenOf(xw)->zIconBeep_flagged) {
+	char *format = resource.zIconFormat;
+	char *newname = CastMallocN(char, strlen(name) + strlen(format) + 1);
+	if (!newname) {
+	    xtermWarning("malloc failed in showZIconBeep\n");
+	} else {
+	    char *marker = strstr(format, "%s");
+	    char *result = newname;
+	    if (marker != 0) {
+		size_t skip = (size_t) (marker - format);
+		if (skip) {
+		    strncpy(result, format, skip);
+		    result += skip;
+		}
+		strcpy(result, name);
+		strcat(result, marker + 2);
+	    } else {
+		strcpy(result, format);
+		strcat(result, name);
+	    }
+	    ChangeGroup(xw, XtNiconName, newname);
+	    free(newname);
+	}
+	code = True;
+    }
+    return code;
+}
+
+/*
+ * Restore the icon name, resetting the state for zIconBeep.
+ */
+void
+resetZIconBeep(XtermWidget xw)
+{
+    static char *icon_name;
+    static Arg args[] =
+    {
+	{XtNiconName, (XtArgVal) & icon_name}
+    };
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->zIconBeep_flagged) {
+	screen->zIconBeep_flagged = False;
+	icon_name = NULL;
+	XtGetValues(toplevel, args, XtNumber(args));
+	if (icon_name != NULL) {
+	    char *buf = CastMallocN(char, strlen(icon_name));
+	    if (buf == NULL) {
+		screen->zIconBeep_flagged = True;
+	    } else {
+		char *format = resource.zIconFormat;
+		char *marker = strstr(format, "%s");
+		Boolean found = False;
+
+		if (marker != 0) {
+		    if (marker == format
+			|| !strncmp(icon_name, format, marker - format)) {
+			found = True;
+			strcpy(buf, icon_name + (marker - format));
+			marker += 2;
+			if (*marker != '\0') {
+			    size_t len_m = strlen(marker);
+			    size_t len_b = strlen(buf);
+			    if (len_m < len_b
+				&& !strcmp(buf + len_b - len_m, marker)) {
+				buf[len_b - len_m] = '\0';
+			    }
+			}
+		    }
+		} else if (!strncmp(icon_name, format, strlen(format))) {
+		    strcpy(buf, icon_name + strlen(format));
+		    found = True;
+		}
+		if (found)
+		    ChangeIconName(xw, buf);
+		free(buf);
+	    }
+	}
+    }
+}
+#else
+#define setZIconBeep(xw)	/* nothing */
+#endif /* OPT_ZICONBEEP */
+
 /*
  * write a string str of length len onto the screen at
  * the current cursor position.  update cursor position.
@@ -817,27 +945,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
 
     ScrnWriteText(xw, str, flags, fg_bg, len);
     CursorForward(screen, (int) cells);
-#if OPT_ZICONBEEP
-    /* Flag icon name with "***"  on window output when iconified.
-     */
-    if (resource.zIconBeep && mapstate == IsUnmapped && !screen->zIconBeep_flagged) {
-	static char *icon_name;
-	static Arg args[] =
-	{
-	    {XtNiconName, (XtArgVal) & icon_name}
-	};
-
-	icon_name = NULL;
-	XtGetValues(toplevel, args, XtNumber(args));
-
-	if (icon_name != NULL) {
-	    screen->zIconBeep_flagged = True;
-	    ChangeIconName(xw, icon_name);
-	}
-	xtermBell(xw, XkbBI_Info, 0);
-    }
-    mapstate = -1;
-#endif /* OPT_ZICONBEEP */
+    setZIconBeep(xw);
     return;
 }
 
