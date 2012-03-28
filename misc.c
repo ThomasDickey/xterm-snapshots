@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.577 2012/03/15 00:01:30 tom Exp $ */
+/* $XTermId: misc.c,v 1.580 2012/03/26 21:30:43 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -3647,10 +3647,10 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		strcat(reply, "m");
 	    } else if (!strcmp(cp, " q")) {	/* DECSCUSR */
 		int code = 0;
-		if (screen->cursor_underline)
+		if (screen->cursor_underline != 0)
 		    code |= 2;
 #if OPT_BLINK_CURS
-		if (screen->cursor_blink)
+		if (screen->cursor_blink_esc == 0)
 		    code |= 1;
 #endif
 		sprintf(reply, "%d%s", code + 1, cp);
@@ -4082,7 +4082,7 @@ udk_lookup(int keycode, int *len)
     return 0;
 }
 
-static void
+void
 ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 {
 #if OPT_WIDE_CHARS
@@ -4235,19 +4235,7 @@ ChangeIconName(XtermWidget xw, char *name)
 	static char dummy[] = "";
 	name = dummy;
     }
-#if OPT_ZICONBEEP		/* If warning should be given then give it */
-    if (resource.zIconBeep && TScreenOf(xw)->zIconBeep_flagged) {
-	char *newname = CastMallocN(char, strlen(name) + 4);
-	if (!newname) {
-	    xtermWarning("malloc failed in ChangeIconName\n");
-	    return;
-	}
-	strcpy(newname, "*** ");
-	strcat(newname, name);
-	ChangeGroup(xw, XtNiconName, newname);
-	free(newname);
-    } else
-#endif /* OPT_ZICONBEEP */
+    if (!showZIconBeep(xw, name))
 	ChangeGroup(xw, XtNiconName, name);
 }
 
