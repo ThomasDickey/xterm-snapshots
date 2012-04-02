@@ -197,6 +197,7 @@ DCS $ q Pt ST
             " p     -> DECSCL
             r       -> DECSTBM
             m       -> SGR
+            SP q    -> DECSCUSR
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
           r Pt ST for invalid requests.

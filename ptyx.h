@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.721 2012/03/14 23:52:03 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.722 2012/03/31 00:59:49 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1393,8 +1393,10 @@ typedef enum {
 	DP_PRN_FORMFEED,
 	DP_X_ALTSCRN,
 	DP_X_DECCOLM,
+	DP_X_LRMM,
 	DP_X_LOGGING,
 	DP_X_MARGIN,
+	DP_X_NCSM,
 	DP_X_MORE,
 	DP_X_MOUSE,
 	DP_X_EXT_MOUSE,
@@ -1799,6 +1801,8 @@ typedef struct {
 	int		max_row;	/* bottom row			*/
 	int		top_marg;	/* top line of scrolling region */
 	int		bot_marg;	/* bottom line of  "	    "	*/
+	int		lft_marg;	/* left column of "	    "	*/
+	int		rgt_marg;	/* right column of "	    "	*/
 	Widget		scrollWidget;	/* pointer to scrollbar struct	*/
 	/*
 	 * Indices used to keep track of the top of the vt100 window and
@@ -2433,6 +2437,8 @@ typedef struct _TekWidgetRec {
 #define IN132COLUMNS	MiscBIT(7)	/* true if in 132 column mode */
 #define INVISIBLE	MiscBIT(8)	/* true if writing invisible text */
 #define NATIONAL        MiscBIT(9)	/* true if writing national charset */
+#define LEFT_RIGHT      MiscBIT(10)	/* true if left/right margin mode */
+#define NOCLEAR_COLM    MiscBIT(11)	/* true if no clear on DECCOLM change */
 
 /*
  * Groups of attributes

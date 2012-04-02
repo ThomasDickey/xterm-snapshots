@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.557 2012/03/27 23:21:02 tom Exp $ */
+/* $XTermId: util.c,v 1.559 2012/04/02 00:37:05 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -620,27 +620,44 @@ xtermColIndex(XtermWidget xw, Bool toLeft)
 void
 xtermColScroll(XtermWidget xw, int amount, Bool toLeft, int at_col)
 {
-    if (amount > 0) {
-	TScreen *screen = TScreenOf(xw);
-	int save_row = screen->cur_row;
-	int save_col = screen->cur_col;
-	int row;
+    TScreen *screen = TScreenOf(xw);
 
-	screen->cur_col = at_col;
-	if (toLeft) {
-	    for (row = 0; row <= screen->max_row; row++) {
-		screen->cur_row = row;
-		ScrnDeleteChar(xw, (unsigned) amount);
-	    }
+    if (amount > 0
+	&& ((xw->flags & LEFT_RIGHT) != 0)) {
+	int min_row = 0;
+	int max_row = screen->max_row;
+
+	if (ScrnHaveRowMargins(screen)) {
+	    min_row = screen->top_marg;
+	    max_row = screen->bot_marg;
 	} else {
-	    for (row = 0; row <= screen->max_row; row++) {
-		screen->cur_row = row;
-		ScrnInsertChar(xw, (unsigned) amount);
-	    }
+	    min_row = 0;
+	    max_row = screen->max_row;
 	}
-	screen->cur_row = save_row;
-	screen->cur_col = save_col;
-	xtermRepaint(xw);
+
+	if ((screen->cur_row >= min_row && screen->cur_row <= max_row)
+	    && (ScrnIsColInMargins(screen, screen->cur_col)
+	     || !ScrnHaveColMargins(screen))) {
+	    int save_row = screen->cur_row;
+	    int save_col = screen->cur_col;
+	    int row;
+
+	    screen->cur_col = at_col;
+	    if (toLeft) {
+		for (row = min_row; row <= max_row; row++) {
+		    screen->cur_row = row;
+		    ScrnDeleteChar(xw, (unsigned) amount);
+		}
+	    } else {
+		for (row = min_row; row <= max_row; row++) {
+		    screen->cur_row = row;
+		    ScrnInsertChar(xw, (unsigned) amount);
+		}
+	    }
+	    screen->cur_row = save_row;
+	    screen->cur_col = save_col;
+	    xtermRepaint(xw);
+	}
     }
 }
 
@@ -830,7 +847,7 @@ resetZIconBeep(XtermWidget xw)
 
 		if (marker != 0) {
 		    if (marker == format
-			|| !strncmp(icon_name, format, marker - format)) {
+			|| !strncmp(icon_name, format, (size_t) (marker - format))) {
 			found = True;
 			strcpy(buf, icon_name + (marker - format));
 			marker += 2;
@@ -885,7 +902,7 @@ WriteText(XtermWidget xw, IChar * str, Cardinal len)
     }
 
     if (ScrnHaveSelection(screen)
-	&& ScrnIsLineInSelection(screen, INX2ROW(screen, screen->cur_row))) {
+	&& ScrnIsRowInSelection(screen, INX2ROW(screen, screen->cur_row))) {
 	ScrnDisownSelection(xw);
     }
 
@@ -966,7 +983,7 @@ InsertLine(XtermWidget xw, int n)
     int scrolltop;
     int scrollheight;
 
-    if (!ScrnIsLineInMargins(screen, screen->cur_row))
+    if (!ScrnIsRowInMargins(screen, screen->cur_row))
 	return;
 
     TRACE(("InsertLine count=%d\n", n));
@@ -975,10 +992,10 @@ InsertLine(XtermWidget xw, int n)
 	HideCursor();
 
     if (ScrnHaveSelection(screen)
-	&& ScrnAreLinesInSelection(screen,
+	&& ScrnAreRowsInSelection(screen,
 				   INX2ROW(screen, screen->top_marg),
 				   INX2ROW(screen, screen->cur_row - 1))
-	&& ScrnAreLinesInSelection(screen,
+	&& ScrnAreRowsInSelection(screen,
 				   INX2ROW(screen, screen->cur_row),
 				   INX2ROW(screen, screen->bot_marg))) {
 	ScrnDisownSelection(xw);
@@ -1047,7 +1064,7 @@ DeleteLine(XtermWidget xw, int n)
 					  && !screen->whichBuf
 					  && screen->cur_row == 0);
 
-    if (!ScrnIsLineInMargins(screen, screen->cur_row))
+    if (!ScrnIsRowInMargins(screen, screen->cur_row))
 	return;
 
     TRACE(("DeleteLine count=%d\n", n));
@@ -1059,7 +1076,7 @@ DeleteLine(XtermWidget xw, int n)
 	n = i;
     }
     if (ScrnHaveSelection(screen)
-	&& ScrnAreLinesInSelection(screen,
+	&& ScrnAreRowsInSelection(screen,
 				   INX2ROW(screen, screen->cur_row),
 				   INX2ROW(screen, screen->cur_row + n - 1))) {
 	ScrnDisownSelection(xw);
@@ -1158,7 +1175,7 @@ InsertChar(XtermWidget xw, unsigned n)
     TRACE(("InsertChar count=%d\n", n));
 
     if (ScrnHaveSelection(screen)
-	&& ScrnIsLineInSelection(screen, row)) {
+	&& ScrnIsRowInSelection(screen, row)) {
 	ScrnDisownSelection(xw);
     }
     screen->do_wrap = False;
@@ -1236,7 +1253,7 @@ DeleteChar(XtermWidget xw, unsigned n)
     TRACE(("DeleteChar count=%d\n", n));
 
     if (ScrnHaveSelection(screen)
-	&& ScrnIsLineInSelection(screen, row)) {
+	&& ScrnIsRowInSelection(screen, row)) {
 	ScrnDisownSelection(xw);
     }
     screen->do_wrap = False;
@@ -1377,7 +1394,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 	   screen->startH.col));
 
     if (ScrnHaveSelection(screen)
-	&& ScrnIsLineInSelection(screen, row)) {
+	&& ScrnIsRowInSelection(screen, row)) {
 	ScrnDisownSelection(xw);
     }
 

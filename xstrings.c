@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.48 2012/03/25 23:31:07 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.50 2012/03/30 10:54:12 tom Exp $ */
 
 /*
  * Copyright 2000-2011,2012 by Thomas E. Dickey
@@ -141,7 +141,38 @@ x_encode_hex(const char *source)
 char *
 x_getenv(const char *name)
 {
-    return x_strdup(x_nonempty(getenv(name)));
+    char *result;
+    result = x_strdup(x_nonempty(getenv(name)));
+    TRACE2(("getenv(%s) %s\n", name, result));
+    return result;
+}
+
+static char *
+login_alias(char *login_name, uid_t uid, struct passwd *in_out)
+{
+    /*
+     * If the logon-name differs from the value we get by looking in the
+     * password file, check if it does correspond to the same uid.  If so,
+     * allow that as an alias for the uid.
+     */
+    if (!IsEmpty(login_name)
+	&& strcmp(login_name, in_out->pw_name)) {
+	struct passwd pw2;
+
+	if (x_getpwnam(login_name, &pw2)) {
+	    uid_t uid2 = pw2.pw_uid;
+	    struct passwd pw3;
+
+	    if (x_getpwuid(uid, &pw3)
+		&& ((uid_t) pw3.pw_uid == uid2)) {
+		/* use the other passwd-data including shell */
+		alloc_pw(in_out, &pw2);
+	    } else {
+		login_name = NULL;
+	    }
+	}
+    }
+    return login_name;
 }
 
 /*
@@ -155,52 +186,29 @@ x_getlogin(uid_t uid, struct passwd *in_out)
 {
     char *login_name = NULL;
 
+    login_name = login_alias(x_getenv("LOGNAME"), uid, in_out);
+    if (IsEmpty(login_name)) {
+	login_name = login_alias(x_getenv("USER"), uid, in_out);
+    }
 #ifdef HAVE_GETLOGIN
-    login_name = getlogin();
-#endif
-
     /*
      * Of course getlogin() will fail if we're started from a window-manager,
-     * since there's no controlling terminal to fuss with.  In that case, try
-     * to get something useful from the user's $LOGNAME or $USER environment
-     * variables.
+     * since there's no controlling terminal to fuss with.  For that reason, we
+     * tried first to get something useful from the user's $LOGNAME or $USER
+     * environment variables.
      */
-    if (login_name == NULL) {
-	login_name = x_getenv("LOGNAME");
-	if (login_name == NULL)
-	    login_name = x_getenv("USER");
+    if (IsEmpty(login_name)) {
+	TRACE2(("...try getlogin\n"));
+	login_name = login_alias(getlogin(), uid, in_out);
     }
+#endif
 
-    /*
-     * If the logon-name differs from the value we get by looking in the
-     * password file, check if it does correspond to the same uid.  If so,
-     * allow that as an alias for the uid.
-     */
-    if (login_name != NULL
-	&& strcmp(login_name, in_out->pw_name)) {
-	struct passwd pw2;
-
-	if (x_getpwnam(login_name, &pw2)) {
-	    uid_t uid2 = pw2.pw_uid;
-	    struct passwd pw3;
-
-	    if (!x_getpwuid(uid, &pw3)
-		|| (uid_t) pw3.pw_uid != uid2) {
-		login_name = NULL;
-	    } else {
-		/* use the other passwd-data including shell */
-		alloc_pw(in_out, &pw2);
-	    }
-	} else {
-	    (void) x_getpwuid(uid, in_out);
-	}
-    }
-
-    if (login_name == NULL)
+    if (IsEmpty(login_name))
 	login_name = in_out->pw_name;
-    if (login_name != NULL)
+    if (!IsEmpty(login_name))
 	login_name = x_strdup(login_name);
 
+    TRACE2(("x_getloginid ->%s\n", NonNull(login_name)));
     return login_name;
 }
 
@@ -241,6 +249,7 @@ x_getpwuid(uid_t uid, struct passwd * result)
 	code = False;
 	memset(result, 0, sizeof(*result));
     }
+    TRACE2(("x_getpwuid(%d) %d\n", (int) uid, (int) code));
     return code;
 }
 

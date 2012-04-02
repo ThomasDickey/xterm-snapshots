@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.55 2010/04/17 17:12:01 tom Exp $ */
+/* $XTermId: cursor.c,v 1.56 2012/03/31 01:02:11 tom Exp $ */
 
 /*
- * Copyright 2002-2009,2010 by Thomas E. Dickey
+ * Copyright 2002-2010,2012 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 
@@ -68,23 +68,32 @@ void
 CursorSet(TScreen * screen, int row, int col, unsigned flags)
 {
     int use_row = row;
-    int max_row;
+    int use_col = col;
+    int max_col = screen->max_col;
+    int max_row = screen->max_row;
 
-    col = (col < 0 ? 0 : col);
-    set_cur_col(screen, (col <= screen->max_col ? col : screen->max_col));
-    max_row = screen->max_row;
+    if (flags & LEFT_RIGHT) {
+	use_col += screen->lft_marg;
+	max_col = screen->rgt_marg;
+    }
+    use_col = (use_col < 0 ? 0 : use_col);
+    set_cur_col(screen, (use_col <= max_col ? use_col : max_col));
+
     if (flags & ORIGIN) {
 	use_row += screen->top_marg;
 	max_row = screen->bot_marg;
     }
     use_row = (use_row < 0 ? 0 : use_row);
     set_cur_row(screen, (use_row <= max_row ? use_row : max_row));
+
     screen->do_wrap = False;
 
-    TRACE(("CursorSet(%d,%d) margins [%d..%d] -> %d,%d %s\n",
+    TRACE(("CursorSet(%d,%d) margins V[%d..%d] H[%d..%d] -> %d,%d %s\n",
 	   row, col,
 	   screen->top_marg,
 	   screen->bot_marg,
+	   screen->lft_marg,
+	   screen->rgt_marg,
 	   screen->cur_row,
 	   screen->cur_col,
 	   (flags & ORIGIN ? "origin" : "normal")));
