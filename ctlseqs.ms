@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.253 2011/12/11 19:18:48 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.255 2012/03/31 12:15:15 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2010,2011 by Thomas E. Dickey
+.\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -385,7 +385,8 @@ These control characters are used in the vtXXX emulation.
 .Sh "VT100 Mode"
 .LP
 Most of these control sequences are standard VT102 control sequences,
-but there is support for later DEC VT terminals (i.e., VT220, VT320, VT420),
+but there is support for later DEC VT terminals
+(i.e., VT220, VT320, VT420, VT510),
 as well as ISO 6429 and \fIaixterm\fP color controls.
 The only VT102 feature not supported is auto-repeat,
 since the only way X provides for this will affect all windows.
@@ -619,6 +620,7 @@ The string following the "q" is one of the following:
   \*(c"\*p	\(-> DECSCL
   \*r		\(-> DECSTBM
   \*m		\(-> SGR
+  \*(Sp\*q	\(-> DECSCUSR
 .br
 \fIxterm\fP responds with
 \*(Dc\*1\*$\*r\*(Pt\*s\*(ST
@@ -845,6 +847,8 @@ This is normally disabled by a compile-time option.
 disabled by the \fBtiteInhibit\fP resource).
   \*(Ps = \*6\*6 \(-> Application keypad (DECNKM).
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM).
+  \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
+  \*(Ps = \*9\*5 \(-> Do not clear screen when DECCOLM is set/reset (DECNCSM), VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
 See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*1 \(-> Use Hilite Mouse Tracking.
@@ -937,6 +941,8 @@ DEC Private Mode Reset (DECRST).
   \*(Ps = \*4\*7 \(-> Use Normal Screen Buffer.
   \*(Ps = \*6\*6 \(-> Numeric keypad (DECNKM).
   \*(Ps = \*6\*7 \(-> Backarrow key sends delete (DECBKM).
+  \*(Ps = \*6\*9 \(-> Disable left and right margin mode (DECLRMM), VT420 and up.
+  \*(Ps = \*9\*5 \(-> Clear screen when DECCOLM is set/reset (DECNCSM), VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Don't send Mouse X & Y on button press and
 release.
 See the section \fBMouse Tracking\fP.
@@ -1194,8 +1200,11 @@ Change Attributes in Rectangular Area (DECCARA), VT400 and up.
   \*(Pt\*;\*(Pl\*;\*(Pb\*;\*(Pr denotes the rectangle.
   \*(Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
 .
+.IP \\*(Cs\\*s\\*(Pl\\*s\\*;\\*(Pr\\*s\\*(cs
+Set left and right margins (DECSLRM), available only when DECLRMM is enabled (VT420 and up).
+.
 .IP \\*(Cs\\*(cs
-Save cursor (ANSI.SYS).
+Save cursor (ANSI.SYS), available only when DECLRMM is disabled.
 .
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*(cs
 Save DEC Private Mode Values.

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1165 2012/03/26 21:23:16 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1167 2012/03/31 00:50:47 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1111,6 +1111,23 @@ set_tb_margins(TScreen * screen, int top, int bottom)
 }
 
 void
+set_lr_margins(TScreen * screen, int left, int right)
+{
+    TRACE(("set_lr_margins %d..%d, prior %d..%d\n",
+	   left, right,
+	   screen->lft_marg,
+	   screen->rgt_marg));
+    if (right > left) {
+	screen->lft_marg = left;
+	screen->rgt_marg = right;
+    }
+    if (screen->lft_marg > screen->max_col)
+	screen->lft_marg = screen->max_col;
+    if (screen->rgt_marg > screen->max_col)
+	screen->rgt_marg = screen->max_col;
+}
+
+void
 set_max_col(TScreen * screen, int cols)
 {
     TRACE(("set_max_col %d, prior %d\n", cols, screen->max_col));
@@ -1352,8 +1369,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
     TScreen *screen = TScreenOf(xw);
     int row;
     int col;
-    int top;
-    int bot;
     int count;
     int laststate;
     int thischar = -1;
@@ -2408,19 +2423,23 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECSTBM:
 	    TRACE(("CASE_DECSTBM - set scrolling region\n"));
-	    if ((top = param[0]) < 1)
-		top = 1;
-	    if (nparam < 2 || (bot = param[1]) == DEFAULT
-		|| bot > MaxRows(screen)
-		|| bot == 0)
-		bot = MaxRows(screen);
-	    if (bot > top) {
-		if (screen->scroll_amt)
-		    FlushScroll(xw);
-		set_tb_margins(screen, top - 1, bot - 1);
-		CursorSet(screen, 0, 0, xw->flags);
+	    {
+		int top;
+		int bot;
+		if ((top = param[0]) < 1)
+		    top = 1;
+		if (nparam < 2 || (bot = param[1]) == DEFAULT
+		    || bot > MaxRows(screen)
+		    || bot == 0)
+		    bot = MaxRows(screen);
+		if (bot > top) {
+		    if (screen->scroll_amt)
+			FlushScroll(xw);
+		    set_tb_margins(screen, top - 1, bot - 1);
+		    CursorSet(screen, 0, 0, xw->flags);
+		}
+		ResetState(sp);
 	    }
-	    ResetState(sp);
 	    break;
 
 	case CASE_DECREQTPARM:
@@ -2486,9 +2505,26 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECSC:
-	    TRACE(("CASE_DECSC - save cursor\n"));
-	    CursorSave(xw);
-	    ResetState(sp);
+	    if ((xw->flags & LEFT_RIGHT) != 0) {
+		int left;
+		int right;
+
+		TRACE(("CASE_DECSLRM - set left and right margin\n"));
+		if ((left = param[0]) < 1)
+		    left = 1;
+		if (nparam < 2 || (right = param[1]) == DEFAULT
+		    || right > MaxCols(screen)
+		    || right == 0)
+		    right = MaxCols(screen);
+		if (right > left) {
+		    set_lr_margins(screen, left - 1, right - 1);
+		    CursorSet(screen, 0, 0, xw->flags);
+		}
+	    } else {
+		TRACE(("CASE_DECSC - save cursor\n"));
+		CursorSave(xw);
+		ResetState(sp);
+	    }
 	    break;
 
 	case CASE_DECRC:
@@ -3994,7 +4030,6 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		   Boolean * cont GCC_UNUSED)
 {
     XtermWidget xw = term;
-    TScreen *screen = TScreenOf(xw);
 
     switch (event->type) {
     case MapNotify:
@@ -4048,10 +4083,10 @@ HandleStructNotify(Widget w GCC_UNUSED,
 			 * Try to fool it.
 			 */
 			REQ_RESIZE((Widget) xw,
-				   screen->fullVwin.fullwidth,
+				   TScreenOf(xw)->fullVwin.fullwidth,
 				   (Dimension) (info->menu_height
 						- save.menu_height
-						+ screen->fullVwin.fullheight),
+						+ TScreenOf(xw)->fullVwin.fullheight),
 				   NULL, NULL);
 			repairSizeHints();
 		    }
@@ -4203,6 +4238,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 		    j != MaxCols(screen))
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
+		if (xw->flags & IN132COLUMNS)
+		    xw->flags &= ~LEFT_RIGHT;
 	    }
 	    break;
 	case 4:		/* DECSCLM (slow scroll)        */
@@ -4319,6 +4356,19 @@ dpmodes(XtermWidget xw, BitFunc func)
 #endif /* ALLOWLOGFILEONOFF */
 	    break;
 #endif
+	case 69:		/* DECLRMM                      */
+	    if (screen->terminal_id >= 400) {	/* VT420 */
+		(*func) (&xw->flags, LEFT_RIGHT);
+		CursorSet(screen, 0, 0, xw->flags);
+	    }
+	    break;
+
+	case 95:		/* DECNCSM                      */
+	    if (screen->terminal_id >= 500) {	/* VT510 */
+		(*func) (&xw->flags, NOCLEAR_COLM);
+	    }
+	    break;
+
 	case 1049:		/* alternate buffer & cursor */
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM()) {
@@ -4597,6 +4647,12 @@ savemodes(XtermWidget xw)
 	case 47:		/* alternate buffer             */
 	    DoSM(DP_X_ALTSCRN, screen->whichBuf);
 	    break;
+	case 69:		/* left-right */
+	    DoSM(DP_X_LRMM, LEFT_RIGHT);
+	    break;
+	case 95:		/* noclear */
+	    DoSM(DP_X_NCSM, NOCLEAR_COLM);
+	    break;
 	case SET_VT200_MOUSE:	/* mouse bogus sequence         */
 	case SET_VT200_HIGHLIGHT_MOUSE:
 	case SET_BTN_EVENT_MOUSE:
@@ -4663,7 +4719,8 @@ restoremodes(XtermWidget xw)
 	    break;
 	case 3:		/* DECCOLM                      */
 	    if (screen->c132) {
-		ClearScreen(xw);
+		if (!(xw->flags & NOCLEAR_COLM))
+		    ClearScreen(xw);
 		CursorSet(screen, 0, 0, xw->flags);
 		if ((j = (screen->save_modes[DP_DECCOLM] & IN132COLUMNS)
 		     ? 132 : 80) != ((xw->flags & IN132COLUMNS)
@@ -4771,6 +4828,12 @@ restoremodes(XtermWidget xw)
 		    xtermScroll(xw, screen->max_row);
 		}
 	    }
+	    break;
+	case 69:		/* left-right */
+	    bitcpy(&xw->flags, screen->save_modes[DP_X_LRMM], LEFT_RIGHT);
+	    break;
+	case 95:		/* noclear */
+	    bitcpy(&xw->flags, screen->save_modes[DP_X_NCSM], NOCLEAR_COLM);
 	    break;
 	case SET_VT200_MOUSE:	/* mouse bogus sequence         */
 	case SET_VT200_HIGHLIGHT_MOUSE:

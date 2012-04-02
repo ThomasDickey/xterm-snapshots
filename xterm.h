@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.674 2012/03/26 21:47:30 tom Exp $ */
+/* $XTermId: xterm.h,v 1.676 2012/04/02 00:26:15 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -832,6 +832,7 @@ extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
 extern void resetCharsets (TScreen * /* screen */);
 extern void set_max_col(TScreen *  /* screen */, int  /* cols */);
 extern void set_max_row(TScreen *  /* screen */, int  /* rows */);
+extern void set_lr_margins (TScreen * /* screen */, int  /* left */, int  /* right */);
 extern void set_tb_margins (TScreen * /* screen */, int  /* top */, int  /* bottom */);
 extern void unparse_end (XtermWidget /* xw */);
 extern void unparseputc (XtermWidget /* xw */, int  /* c */);
@@ -1185,18 +1186,25 @@ extern void LineSetFlag(LineData /* ld */, int /* flag */);
 			((screen)->startH.row != (screen)->endH.row \
 			|| (screen)->startH.col != (screen)->endH.col)
 
-#define ScrnAreLinesInSelection(screen, first, last) \
+#define ScrnAreRowsInSelection(screen, first, last) \
 	((last) >= (screen)->startH.row && (first) <= (screen)->endH.row)
 
-#define ScrnIsLineInSelection(screen, line) \
+#define ScrnIsRowInSelection(screen, line) \
 	((line) >= (screen)->startH.row && (line) <= (screen)->endH.row)
 
-#define ScrnHaveLineMargins(screen) \
+#define ScrnHaveRowMargins(screen) \
 			((screen)->top_marg != 0 \
 			|| ((screen)->bot_marg != screen->max_row))
 
-#define ScrnIsLineInMargins(screen, line) \
+#define ScrnIsRowInMargins(screen, line) \
 	((line) >= (screen)->top_marg && (line) <= (screen)->bot_marg)
+
+#define ScrnHaveColMargins(screen) \
+			((screen)->lft_marg != 0 \
+			|| ((screen)->rgt_marg != screen->max_col))
+
+#define ScrnIsColInMargins(screen, col) \
+	((col) >= (screen)->lft_marg && (col) <= (screen)->rgt_marg)
 
 #if OPT_DEC_RECTOPS
 extern void ScrnCopyRectangle (XtermWidget /* xw */, XTermRect *, int, int *);

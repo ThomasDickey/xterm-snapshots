@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.76 2011/09/11 14:59:40 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.77 2012/03/31 11:51:01 tom Exp $ */
 
 /*
- * Copyright 1997-2010,2011 by Thomas E. Dickey
+ * Copyright 1997-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -60,7 +60,8 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
     /*
      * Ignore repetition.
      */
-    if ((ld = getLineData(screen, currow)) != 0) {
+    if (!(xw->flags & LEFT_RIGHT)
+	&& (ld = getLineData(screen, currow)) != 0) {
 	unsigned oldChrSet = GetLineDblCS(ld);
 
 	if (oldChrSet != newChrSet) {
