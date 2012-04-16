@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.56 2012/03/31 01:02:11 tom Exp $ */
+/* $XTermId: cursor.c,v 1.61 2012/04/12 00:47:30 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2012 by Thomas E. Dickey
@@ -72,10 +72,6 @@ CursorSet(TScreen * screen, int row, int col, unsigned flags)
     int max_col = screen->max_col;
     int max_row = screen->max_row;
 
-    if (flags & LEFT_RIGHT) {
-	use_col += screen->lft_marg;
-	max_col = screen->rgt_marg;
-    }
     use_col = (use_col < 0 ? 0 : use_col);
     set_cur_col(screen, (use_col <= max_col ? use_col : max_col));
 
@@ -105,25 +101,28 @@ CursorSet(TScreen * screen, int row, int col, unsigned flags)
 void
 CursorBack(XtermWidget xw, int n)
 {
+#define WRAP_MASK (REVERSEWRAP | WRAPAROUND)
     TScreen *screen = TScreenOf(xw);
-    int i, j, k, rev;
+    int offset, in_row, length, rev;
+    int left = ScrnLeftMargin(xw);
 
-    if ((rev = (xw->flags & (REVERSEWRAP | WRAPAROUND)) ==
-	 (REVERSEWRAP | WRAPAROUND)) != 0
-	&& screen->do_wrap)
+    if ((rev = (xw->flags & WRAP_MASK) == WRAP_MASK) != 0
+	&& screen->do_wrap) {
 	n--;
-    if ((screen->cur_col -= n) < 0) {
+    }
+    if ((screen->cur_col -= n) < left) {
 	if (rev) {
-	    if ((i = ((j = MaxCols(screen))
-		      * screen->cur_row) + screen->cur_col) < 0) {
-		k = j * MaxRows(screen);
-		i += ((-i) / k + 1) * k;
+	    in_row = ScrnRightMargin(xw) - left + 1;
+	    offset = (in_row * screen->cur_row) + screen->cur_col - left;
+	    if (offset < 0) {
+		length = in_row * MaxRows(screen);
+		offset += ((-offset) / length + 1) * length;
 	    }
-	    set_cur_row(screen, i / j);
-	    set_cur_col(screen, i % j);
+	    set_cur_row(screen, (offset / in_row));
+	    set_cur_col(screen, (offset % in_row) + left);
 	    do_xevents();
 	} else {
-	    set_cur_col(screen, 0);
+	    set_cur_col(screen, left);
 	}
     }
     screen->do_wrap = False;
@@ -206,13 +205,14 @@ xtermIndex(XtermWidget xw, int amount)
      * if cursor high enough, no scrolling necessary.
      */
     if (screen->cur_row > screen->bot_marg
-	|| screen->cur_row + amount <= screen->bot_marg) {
+	|| screen->cur_row + amount <= screen->bot_marg
+	|| (IsLeftRightMode(xw)
+	    && !ScrnIsColInMargins(screen, screen->cur_col))) {
 	CursorDown(screen, amount);
-	return;
+    } else {
+	CursorDown(screen, j = screen->bot_marg - screen->cur_row);
+	xtermScroll(xw, amount - j);
     }
-
-    CursorDown(screen, j = screen->bot_marg - screen->cur_row);
-    xtermScroll(xw, amount - j);
 }
 
 /*
@@ -229,13 +229,14 @@ RevIndex(XtermWidget xw, int amount)
      * if cursor low enough, no reverse indexing needed
      */
     if (screen->cur_row < screen->top_marg
-	|| screen->cur_row - amount >= screen->top_marg) {
+	|| screen->cur_row - amount >= screen->top_marg
+	|| (IsLeftRightMode(xw)
+	    && !ScrnIsColInMargins(screen, screen->cur_col))) {
 	CursorUp(screen, amount);
-	return;
+    } else {
+	RevScroll(xw, amount - (screen->cur_row - screen->top_marg));
+	CursorUp(screen, screen->cur_row - screen->top_marg);
     }
-
-    RevScroll(xw, amount - (screen->cur_row - screen->top_marg));
-    CursorUp(screen, screen->cur_row - screen->top_marg);
 }
 
 /*
@@ -243,9 +244,9 @@ RevIndex(XtermWidget xw, int amount)
  * (Note: xterm doesn't implement SLH, SLL which would affect use of this)
  */
 void
-CarriageReturn(TScreen * screen)
+CarriageReturn(TScreen * screen, int col)
 {
-    set_cur_col(screen, 0);
+    set_cur_col(screen, col);
     screen->do_wrap = False;
     do_xevents();
 }
@@ -342,7 +343,7 @@ void
 CursorNextLine(TScreen * screen, int count)
 {
     CursorDown(screen, count < 1 ? 1 : count);
-    CarriageReturn(screen);
+    CarriageReturn(screen, 0);
     do_xevents();
 }
 
@@ -353,7 +354,7 @@ void
 CursorPrevLine(TScreen * screen, int count)
 {
     CursorUp(screen, count < 1 ? 1 : count);
-    CarriageReturn(screen);
+    CarriageReturn(screen, 0);
     do_xevents();
 }
 

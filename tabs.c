@@ -1,4 +1,4 @@
-/* $XTermId: tabs.c,v 1.39 2011/09/11 15:00:38 tom Exp $ */
+/* $XTermId: tabs.c,v 1.40 2012/04/09 09:01:39 tom Exp $ */
 
 /*
  * Copyright 2000-2010,2011 by Thomas E. Dickey
@@ -149,6 +149,8 @@ TabToNextStop(XtermWidget xw)
     int next = TabNext(xw, xw->tabs, screen->cur_col);
     int max = LineMaxCol(screen, getLineData(screen, screen->cur_row));
 
+    if (IsLeftRightMode(xw))
+	max = TScreenOf(xw)->rgt_marg;
     if (next > max)
 	next = max;
     set_cur_col(screen, next);

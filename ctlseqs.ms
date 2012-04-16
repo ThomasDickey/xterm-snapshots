@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.255 2012/03/31 12:15:15 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.256 2012/04/04 08:40:20 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -318,7 +318,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2011)
+invisible-island.net (2006-2012)
 .AU
 .
 .am BT                  \" add page numbers after first page

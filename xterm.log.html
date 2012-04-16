@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1147 2012/03/31 12:12:38 tom Exp $
+  $XTermId: xterm.log.html,v 1.1151 2012/04/15 16:00:39 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -342,11 +342,26 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>fixes to improve vttest vt52 screen when running as a VT420:
+	    <ul>
+	    <li>add checks for some VT2xx and up controls for consistency:
+	        DECSCL, S1C8T, S1C7T.
+	    <li>modify DECRQSS return for DECSCL to only return that when
+	        running as VT2xx and up.
+	    <li>when exiting from VT52-mode, resume in VT100 level rather
+	        than the level before starting VT52-mode.
+	    </ul>
+
 	<li>implement DECLRMM, DECSLRMM and DECNCSM (prompted by discussions
-	    with Ailin Nemui and Paul LeoNerd Evans).
+	    with Ailin Nemui and Paul LeoNerd Evans).  This modifies several
+	    controls to obey top/bottom and left/right margins.
+
+	<li>correct macro definition used for testing modes used in ANSI/DEC
+	    request-mode controls introduced
+	    in <a href="#xterm_262">patch #262</a>.
 
 	<li>modify <code>x_getlogin</code> to check $LOGNAME and $USER before
-	    fallback to <code>getlogin<code>, so that user's choice for these
+	    fallback to <code>getlogin</code>, so that user's choice for these
 	    variables can be carried forward to the xterm process
 	    (Debian #611487).
 

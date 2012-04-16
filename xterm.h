@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.676 2012/04/02 00:26:15 tom Exp $ */
+/* $XTermId: xterm.h,v 1.686 2012/04/15 22:02:44 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -866,7 +866,7 @@ extern int xtermCharSetOut (XtermWidget /* xw */, IChar * /* buf */, IChar * /* 
 
 /* cursor.c */
 extern void AdjustSavedCursor (XtermWidget /* xw */, int /* adjust */);
-extern void CarriageReturn (TScreen * /* screen */);
+extern void CarriageReturn (TScreen * /* screen */, int /* col */);
 extern void CursorBack (XtermWidget /* xw */, int   /* n */);
 extern void CursorDown (TScreen * /* screen */, int   /* n */);
 extern void CursorForward (TScreen * /* screen */, int   /* n */);
@@ -891,6 +891,7 @@ extern int set_cur_row(TScreen * /* screen */, int  /* value */);
 extern void xterm_DECDHL (XtermWidget /* xw */, Bool  /* top */);
 extern void xterm_DECSWL (XtermWidget /* xw */);
 extern void xterm_DECDWL (XtermWidget /* xw */);
+extern void xterm_ResetDouble(XtermWidget /* xw */);
 #if OPT_DEC_CHRSET
 extern int xterm_Double_index(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* flags */);
 extern GC xterm_DoubleGC(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* flags */, GC  /* old_gc */, int * /* inxp */);
@@ -1135,14 +1136,15 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 
 /* screen.c */
 extern Bool non_blank_line (TScreen */* screen */, int  /* row */, int  /* col */, int  /* len */);
-extern Char * allocScrnData(TScreen * /* screen */, unsigned /* nrow */, unsigned /* ncol */);
+extern Char * allocScrnData (TScreen * /* screen */, unsigned /* nrow */, unsigned /* ncol */);
 extern ScrnBuf allocScrnBuf (XtermWidget /* xw */, unsigned  /* nrow */, unsigned  /* ncol */, ScrnPtr * /* addr */);
 extern ScrnBuf scrnHeadAddr (TScreen * /* screen */, ScrnBuf /* base */, unsigned /* offset */);
 extern int ScreenResize (XtermWidget /* xw */, int  /* width */, int  /* height */, unsigned * /* flags */);
 extern size_t ScrnPointers (TScreen * /* screen */, size_t  /* len */);
 extern void ClearBufRows (XtermWidget /* xw */, int  /* first */, int  /* last */);
 extern void ClearCells (XtermWidget /* xw */, int /* flags */, unsigned /* len */, int /* row */, int /* col */);
-extern void FullScreen(XtermWidget /* xw */, Bool /* enabled */);
+extern void CopyCells (TScreen * /* screen */, LineData * /* src */, LineData * /* dst */, int /* col */, int /* len */);
+extern void FullScreen (XtermWidget /* xw */, Bool /* enabled */);
 extern void ScrnAllocBuf (XtermWidget /* xw */);
 extern void ScrnClearCells (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern void ScrnDeleteChar (XtermWidget /* xw */, unsigned  /* n */);
@@ -1200,11 +1202,18 @@ extern void LineSetFlag(LineData /* ld */, int /* flag */);
 	((line) >= (screen)->top_marg && (line) <= (screen)->bot_marg)
 
 #define ScrnHaveColMargins(screen) \
-			((screen)->lft_marg != 0 \
-			|| ((screen)->rgt_marg != screen->max_col))
+			((screen)->rgt_marg > (screen)->max_col)
 
 #define ScrnIsColInMargins(screen, col) \
 	((col) >= (screen)->lft_marg && (col) <= (screen)->rgt_marg)
+
+#define IsLeftRightMode(xw) ((xw)->flags & LEFT_RIGHT)
+#define ScrnLeftMargin(xw)  (IsLeftRightMode(xw) \
+			     ? TScreenOf(xw)->lft_marg \
+			     : 0)
+#define ScrnRightMargin(xw) (IsLeftRightMode(xw) \
+			     ? TScreenOf(xw)->rgt_marg \
+			     : MaxCols(TScreenOf(xw)) - 1)
 
 #if OPT_DEC_RECTOPS
 extern void ScrnCopyRectangle (XtermWidget /* xw */, XTermRect *, int, int *);
@@ -1251,7 +1260,6 @@ extern void TabZonk (Tabs  /* tabs */);
 extern Boolean isDefaultBackground(const char * /* name */);
 extern Boolean isDefaultForeground(const char * /* name */);
 extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned /* fg_bg */, Bool  /* hilite */);
-extern int AddToRefresh (XtermWidget /* xw */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
@@ -1294,7 +1302,7 @@ extern void xtermSizeHints (XtermWidget  /* xw */, int /* scrollbarWidth */);
 extern unsigned extract_fg (XtermWidget /* xw */, unsigned  /* color */, unsigned  /* flags */);
 extern unsigned extract_bg (XtermWidget /* xw */, unsigned  /* color */, unsigned  /* flags */);
 extern CellColor makeColorPair (int  /* fg */, int  /* bg */);
-extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* left */, unsigned  /* height */, unsigned  /* width */);
+extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* left */, unsigned  /* height */, unsigned  /* width */, unsigned /* fw */);
 
 #define xtermColorPair(xw) makeColorPair(xw->sgr_foreground, xw->sgr_background)
 
@@ -1350,12 +1358,14 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 
 #define MapToColorMode(fg, screen, flags) fg
 
-#define ClearDFtBackground(xw, top, left, height, width) \
-	ClearCurBackground(xw, top, left, height, width)
-
-#define ClearCurBackground(xw, top, left, height, width) \
-	XClearArea (TScreenOf(xw)->display, VWindow(TScreenOf(xw)), \
-		left, top, width, height, False)
+#define ClearCurBackground(xw, top, left, height, width, fw) \
+	XClearArea (TScreenOf(xw)->display, \
+		    VWindow(TScreenOf(xw)), \
+		    CursorX2(TScreenOf(xw), left, fw),
+		    CursorY(TScreenOf(xw), top), \
+		    width * fw, \
+		    height * FontHeight(TScreenOf(xw)), \
+		    False)
 
 #define extract_fg(xw, color, flags) (xw)->cur_foreground
 #define extract_bg(xw, color, flags) (xw)->cur_background

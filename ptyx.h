@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.722 2012/03/31 00:59:49 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.725 2012/04/15 23:45:48 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1915,7 +1915,6 @@ typedef struct {
 #endif
 
 #if OPT_VT52_MODE
-	int		vt52_save_level; /* save-area for DECANM	*/
 	Char		vt52_save_curgl;
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
@@ -2513,9 +2512,10 @@ typedef struct _TekWidgetRec {
 		    ((screen)->cursorp.col != (screen)->cur_col || \
 		     (screen)->cursorp.row != (screen)->cur_row))
 
-#define CursorX(screen,col) ((col) * FontWidth(screen) + OriginX(screen))
-#define CursorY(screen,row) ((INX2ROW(screen, row) * FontHeight(screen)) \
-			+ screen->border)
+#define CursorX2(screen,col,fw) ((col) * (int)(fw) + OriginX(screen))
+#define CursorX(screen,col)     CursorX2(screen, col, FontWidth(screen))
+#define CursorY(screen,row)     ((INX2ROW(screen, row) * FontHeight(screen)) \
+				  + screen->border)
 
 /*
  * These definitions depend on whether xterm supports active-icon.
