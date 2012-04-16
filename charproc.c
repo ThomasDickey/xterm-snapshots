@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1167 2012/03/31 00:50:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1181 2012/04/15 20:07:09 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1127,6 +1127,16 @@ set_lr_margins(TScreen * screen, int left, int right)
 	screen->rgt_marg = screen->max_col;
 }
 
+#define reset_tb_margins(screen) set_tb_margins(screen, 0, screen->max_row)
+#define reset_lr_margins(screen) set_lr_margins(screen, 0, screen->max_col)
+
+static void
+reset_margins(TScreen * screen)
+{
+    reset_tb_margins(screen);
+    reset_lr_margins(screen);
+}
+
 void
 set_max_col(TScreen * screen, int cols)
 {
@@ -1690,7 +1700,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_CR:
 	    /* CR */
-	    CarriageReturn(screen);
+	    CarriageReturn(screen, ScrnLeftMargin(xw));
 	    break;
 
 	case CASE_ESC:
@@ -1721,7 +1731,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    xtermAutoPrint(xw, c);
 	    xtermIndex(xw, 1);
 	    if (xw->flags & LINEFEED)
-		CarriageReturn(screen);
+		CarriageReturn(screen, 0);
 	    else
 		do_xevents();
 	    break;
@@ -2490,7 +2500,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECALN - alignment test\n"));
 	    if (screen->cursor_state)
 		HideCursor();
-	    set_tb_margins(screen, 0, screen->max_row);
+	    reset_margins(screen);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    xtermParseRect(xw, 0, 0, &myRect);
 	    ScrnFillRectangle(xw, &myRect, 'E', 0, False);
@@ -2505,7 +2515,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECSC:
-	    if ((xw->flags & LEFT_RIGHT) != 0) {
+	    if (IsLeftRightMode(xw)) {
 		int left;
 		int right;
 
@@ -2643,7 +2653,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		&& screen->vtXX_level == 0) {
 		sp->groundtable =
 		    sp->parsestate = ansi_table;
-		screen->vtXX_level = screen->vt52_save_level;
+		/*
+		 * On restore, the terminal does not recognize DECRQSS for
+		 * DECSCL (per vttest).
+		 */
+		screen->vtXX_level = 1;
 		screen->curgl = screen->vt52_save_curgl;
 		screen->curgr = screen->vt52_save_curgr;
 		screen->curss = screen->vt52_save_curss;
@@ -2672,24 +2686,27 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECSCL:
 	    TRACE(("CASE_DECSCL(%d,%d)\n", param[0], param[1]));
-	    if (param[0] >= 61 && param[0] <= 65) {
-		/*
-		 * VT300, VT420, VT520 manuals claim that DECSCL does a hard
-		 * reset (RIS).  VT220 manual states that it is a soft reset.
-		 * Perhaps both are right (unlikely).  Kermit says it's soft.
-		 */
-		ReallyReset(xw, False, False);
-		init_parser(xw, sp);
-		screen->vtXX_level = param[0] - 60;
-		if (param[0] > 61) {
-		    switch (zero_if_default(1)) {
-		    case 1:
-			show_8bit_control(False);
-			break;
-		    case 0:
-		    case 2:
-			show_8bit_control(True);
-			break;
+	    if (screen->terminal_id >= 200) {
+		if (param[0] >= 61 && param[0] <= 65) {
+		    /*
+		     * VT300, VT420, VT520 manuals claim that DECSCL does a
+		     * hard reset (RIS).  VT220 manual states that it is a soft
+		     * reset.  Perhaps both are right (unlikely).  Kermit says
+		     * it's soft.
+		     */
+		    ReallyReset(xw, False, False);
+		    init_parser(xw, sp);
+		    screen->vtXX_level = param[0] - 60;
+		    if (param[0] > 61) {
+			switch (zero_if_default(1)) {
+			case 1:
+			    show_8bit_control(False);
+			    break;
+			case 0:
+			case 2:
+			    show_8bit_control(True);
+			    break;
+			}
 		    }
 		}
 	    }
@@ -2818,7 +2835,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECDC:
 	    TRACE(("CASE_DC - delete column\n"));
-	    if (screen->vtXX_level >= 4) {
+	    if (screen->vtXX_level >= 4
+		&& IsLeftRightMode(xw)) {
 		if ((count = param[0]) < 1)
 		    count = 1;
 		xtermColScroll(xw, count, True, screen->cur_col);
@@ -2828,7 +2846,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECIC:
 	    TRACE(("CASE_IC - insert column\n"));
-	    if (screen->vtXX_level >= 4) {
+	    if (screen->vtXX_level >= 4
+		&& IsLeftRightMode(xw)) {
 		if ((count = param[0]) < 1)
 		    count = 1;
 		xtermColScroll(xw, count, False, screen->cur_col);
@@ -2874,7 +2893,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_NEL:
 	    TRACE(("CASE_NEL\n"));
 	    xtermIndex(xw, 1);
-	    CarriageReturn(screen);
+	    CarriageReturn(screen, 0);
 	    ResetState(sp);
 	    break;
 
@@ -3122,18 +3141,22 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_S7C1T:
 	    TRACE(("CASE_S7C1T\n"));
-	    show_8bit_control(False);
-	    ResetState(sp);
+	    if (screen->terminal_id >= 200) {
+		show_8bit_control(False);
+		ResetState(sp);
+	    }
 	    break;
 
 	case CASE_S8C1T:
 	    TRACE(("CASE_S8C1T\n"));
+	    if (screen->terminal_id >= 200) {
 #if OPT_VT52_MODE
-	    if (screen->vtXX_level <= 1)
-		break;
+		if (screen->vtXX_level <= 1)
+		    break;
 #endif
-	    show_8bit_control(True);
-	    ResetState(sp);
+		show_8bit_control(True);
+		ResetState(sp);
+	    }
 	    break;
 
 	case CASE_OSC:
@@ -3865,7 +3888,7 @@ WrapLine(XtermWidget xw)
 	}
 	xtermAutoPrint(xw, '\n');
 	xtermIndex(xw, 1);
-	set_cur_col(screen, 0);
+	set_cur_col(screen, ScrnLeftMargin(xw));
     }
 }
 
@@ -3887,6 +3910,15 @@ dotext(XtermWidget xw,
     int next_col, last_col, this_col;	/* must be signed */
 #endif
     Cardinal offset;
+    int right = ScrnRightMargin(xw);
+
+    /*
+     * It is possible to use CUP, etc., to move outside margins.  In that
+     * case, the right-margin is ineffective.
+     */
+    if (screen->cur_col > right) {
+    	right = screen->max_col;
+    }
 
 #if OPT_WIDE_CHARS
     /* don't translate if we use UTF-8, and are not handling legacy support
@@ -3912,7 +3944,7 @@ dotext(XtermWidget xw,
     for (offset = 0;
 	 offset < len && (chars_chomped > 0 || screen->do_wrap);
 	 offset += chars_chomped) {
-	int width_available = MaxCols(screen) - screen->cur_col;
+	int width_available = right + 1 - screen->cur_col;
 	int width_here = 0;
 	Boolean need_wrap = False;
 	int last_chomp = 0;
@@ -3922,10 +3954,16 @@ dotext(XtermWidget xw,
 	    screen->do_wrap = False;
 	    if ((xw->flags & WRAPAROUND)) {
 		WrapLine(xw);
-		width_available = MaxCols(screen) - screen->cur_col;
+		width_available = right + 1 - screen->cur_col;
 		next_col = screen->cur_col;
 	    }
 	}
+
+	/*
+	 * This can happen with left/right margins...
+	 */
+	if (width_available <= 0)
+	    break;
 
 	while (width_here <= width_available && chars_chomped < (len - offset)) {
 	    if (!screen->utf8_mode
@@ -3938,9 +3976,12 @@ dotext(XtermWidget xw,
 	}
 
 	if (width_here > width_available) {
-	    if (last_chomp > MaxCols(screen))
+	    if (last_chomp > right + 1)
 		break;		/* give up - it is too big */
-	    chars_chomped--;
+	    if (chars_chomped-- == 0) {
+		/* This can happen with left/right margins... */
+		break;
+	    }
 	    width_here -= last_chomp;
 	    if (chars_chomped > 0) {
 		need_wrap = True;
@@ -3973,6 +4014,8 @@ dotext(XtermWidget xw,
 #endif
 
 	last_col = LineMaxCol(screen, ld);
+	if (last_col > (right + 1))
+	    last_col = right + 1;
 	this_col = last_col - screen->cur_col + 1;
 	if (this_col <= 1) {
 	    if (screen->do_wrap) {
@@ -4218,7 +4261,6 @@ dpmodes(XtermWidget xw, BitFunc func)
 		TRACE(("DECANM terminal_id %d, vtXX_level %d\n",
 		       screen->terminal_id,
 		       screen->vtXX_level));
-		screen->vt52_save_level = screen->vtXX_level;
 		screen->vtXX_level = 0;
 		screen->vt52_save_curgl = screen->curgl;
 		screen->vt52_save_curgr = screen->curgr;
@@ -4238,8 +4280,10 @@ dpmodes(XtermWidget xw, BitFunc func)
 		    j != MaxCols(screen))
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
-		if (xw->flags & IN132COLUMNS)
+		if (xw->flags & IN132COLUMNS) {
 		    xw->flags &= ~LEFT_RIGHT;
+		    reset_lr_margins(screen);
+		}
 	    }
 	    break;
 	case 4:		/* DECSCLM (slow scroll)        */
@@ -4356,19 +4400,6 @@ dpmodes(XtermWidget xw, BitFunc func)
 #endif /* ALLOWLOGFILEONOFF */
 	    break;
 #endif
-	case 69:		/* DECLRMM                      */
-	    if (screen->terminal_id >= 400) {	/* VT420 */
-		(*func) (&xw->flags, LEFT_RIGHT);
-		CursorSet(screen, 0, 0, xw->flags);
-	    }
-	    break;
-
-	case 95:		/* DECNCSM                      */
-	    if (screen->terminal_id >= 500) {	/* VT510 */
-		(*func) (&xw->flags, NOCLEAR_COLM);
-	    }
-	    break;
-
 	case 1049:		/* alternate buffer & cursor */
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM()) {
@@ -4413,6 +4444,22 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    TRACE(("DECSET DECBKM %s\n",
 		   BtoS(xw->keyboard.flags & MODE_DECBKM)));
 	    update_decbkm();
+	    break;
+	case 69:		/* DECLRMM                      */
+	    if (screen->terminal_id >= 400) {	/* VT420 */
+		(*func) (&xw->flags, LEFT_RIGHT);
+		if (IsLeftRightMode(xw)) {
+		    xterm_ResetDouble(xw);
+		} else {
+		    reset_lr_margins(screen);
+		}
+		CursorSet(screen, 0, 0, xw->flags);
+	    }
+	    break;
+	case 95:		/* DECNCSM                      */
+	    if (screen->terminal_id >= 500) {	/* VT510 */
+		(*func) (&xw->flags, NOCLEAR_COLM);
+	    }
 	    break;
 	case SET_VT200_MOUSE:	/* xterm bogus sequence         */
 	    MotionOff(screen, xw);
@@ -6742,6 +6789,7 @@ VTInitialize(Widget wrequest,
 				  tblRenderFont, erLast);
     if (wnew->misc.render_font == erDefault) {
 	if (IsEmpty(wnew->misc.face_name)) {
+	    free(wnew->misc.face_name);
 	    wnew->misc.face_name = x_strdup(DEFFACENAME_AUTO);
 	    TRACE(("will allow runtime switch to render_font using \"%s\"\n",
 		   wnew->misc.face_name));
@@ -6981,8 +7029,8 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 #define TRACE_FREE_LEAK(name) \
 	if (name) { \
 	    free((void *) name); \
+	    TRACE(("freed " #name ": %p\n", name)); \
 	    name = 0; \
-	    TRACE(("freed " #name "\n")); \
 	}
 
 #define FREE_LEAK(name) \
@@ -7037,6 +7085,21 @@ VTDestroy(Widget w GCC_UNUSED)
 	TRACE_FREE_LEAK(screen->Acolors[n].resource);
     }
 #endif
+#if OPT_COLOR_RES
+    for (n = 0; n < NCOLORS; n++) {
+	switch (n) {
+#if OPT_TEK4014
+	case TEK_BG:
+	case TEK_FG:
+	case TEK_CURSOR:
+	    break;
+#endif
+	default:
+	    TRACE_FREE_LEAK(screen->Tcolors[n].resource);
+	    break;
+	}
+    }
+#endif
     TRACE_FREE_LEAK(screen->save_ptr);
     TRACE_FREE_LEAK(screen->saveBuf_data);
     TRACE_FREE_LEAK(screen->saveBuf_index);
@@ -7057,6 +7120,9 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->screen.term_id);
 #if OPT_INPUT_METHOD
     cleanupInputMethod(xw);
+    TRACE_FREE_LEAK(xw->misc.f_x);
+    TRACE_FREE_LEAK(xw->misc.input_method);
+    TRACE_FREE_LEAK(xw->misc.preedit_type);
 #endif
     releaseCursorGCs(xw);
     releaseWindowGCs(xw, &(screen->fullVwin));
@@ -7098,9 +7164,13 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif
 
     /* free things allocated via init_Sres or Init_Sres2 */
+#ifndef NO_ACTIVE_ICON
+    TRACE_FREE_LEAK(screen->icon_fontname);
+#endif
 #ifdef ALLOWLOGGING
     TRACE_FREE_LEAK(screen->logfile);
 #endif
+    TRACE_FREE_LEAK(screen->eight_bit_meta_s);
     TRACE_FREE_LEAK(screen->term_id);
     TRACE_FREE_LEAK(screen->charClass);
     TRACE_FREE_LEAK(screen->answer_back);
@@ -7142,6 +7212,7 @@ VTDestroy(Widget w GCC_UNUSED)
 
     XtFree((char *) (screen->selection_data));
 
+    TRACE_FREE_LEAK(xtermClassRec.core_class.tm_table);
     TRACE_FREE_LEAK(xw->keyboard.extra_translations);
     TRACE_FREE_LEAK(xw->keyboard.shell_translations);
     TRACE_FREE_LEAK(xw->keyboard.xterm_translations);
@@ -7485,7 +7556,7 @@ VTRealize(Widget w,
     set_cur_row(screen, 0);
     set_max_col(screen, Width(screen) / screen->fullVwin.f_width - 1);
     set_max_row(screen, Height(screen) / screen->fullVwin.f_height - 1);
-    set_tb_margins(screen, 0, screen->max_row);
+    reset_margins(screen);
 
     memset(screen->sc, 0, sizeof(screen->sc));
 
@@ -8581,7 +8652,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     screen->cursor_set = ON;
 
     /* reset scrolling region */
-    set_tb_margins(screen, 0, screen->max_row);
+    reset_margins(screen);
 
     bitclr(&xw->flags, ORIGIN);
 

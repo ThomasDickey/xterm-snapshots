@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.580 2012/03/26 21:30:43 tom Exp $ */
+/* $XTermId: misc.c,v 1.586 2012/04/15 16:00:56 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -3575,6 +3575,10 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 			&& (xw->flags & PROTECTED) ? 1 : 0,
 			cp);
 	    } else if (!strcmp(cp, "\"p")) {	/* DECSCL */
+		if (screen->vtXX_level < 2) {
+		    /* actually none of DECRQSS is valid for vt100's */
+		    break;
+		}
 		sprintf(reply, "%d%s%s",
 			(screen->vtXX_level ?
 			 screen->vtXX_level : 1) + 60,
@@ -3587,6 +3591,12 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		sprintf(reply, "%d;%dr",
 			screen->top_marg + 1,
 			screen->bot_marg + 1);
+	    } else if (!strcmp(cp, "s")) {	/* DECSLRM */
+		if (screen->terminal_id >= 400) {	/* VT420 */
+		    sprintf(reply, "%d;%ds",
+			    screen->lft_marg + 1,
+			    screen->rgt_marg + 1);
+		}
 	    } else if (!strcmp(cp, "m")) {	/* SGR */
 		strcpy(reply, "0");
 		if (xw->flags & BOLD)
@@ -3770,7 +3780,7 @@ enum {
 };
 
 #define MdBool(bool)      ((bool) ? mdMaybeSet : mdMaybeReset)
-#define MdFlag(mode,flag) MdBool(xw->keyboard.flags & MODE_KAM)
+#define MdFlag(mode,flag) MdBool((mode) & (flag))
 
 /*
  * Reply is the same format as the query, with pair of mode/value:
@@ -3946,6 +3956,12 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 	case 67:		/* DECBKM */
 	    result = MdFlag(xw->keyboard.flags, MODE_DECBKM);
+	    break;
+	case 69:		/* DECLRMM */
+	    result = MdFlag(xw->flags, LEFT_RIGHT);
+	    break;
+	case 95:		/* DECNCSM */
+	    result = MdFlag(xw->flags, NOCLEAR_COLM);
 	    break;
 	case SET_VT200_MOUSE:	/* xterm bogus sequence         */
 	    result = MdBool(screen->send_mouse_pos == VT200_MOUSE);

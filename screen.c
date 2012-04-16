@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.440 2011/12/27 10:10:53 tom Exp $ */
+/* $XTermId: screen.c,v 1.443 2012/04/15 22:05:28 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -706,6 +706,35 @@ ChangeToWide(XtermWidget xw)
  * Clear cells, no side-effects.
  */
 void
+CopyCells(TScreen * screen, LineData * src, LineData * dst, int col, int len)
+{
+    if (len > 0) {
+	int n;
+	int last = col + len;
+
+	for (n = col; n < last; ++n) {
+	    dst->charData[n] = src->charData[n];
+	    dst->attribs[n] = src->attribs[n];
+	}
+
+	if_OPT_ISO_COLORS(screen, {
+	    for (n = 0; n < len; ++n) {
+		dst->color[n] = src->color[n];
+	    }
+	});
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    for_each_combData(off, src) {
+		dst->combData[off][n] = src->combData[off][n];
+	    }
+	});
+    }
+}
+
+/*
+ * Clear cells, no side-effects.
+ */
+void
 ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 {
     if (len != 0) {
@@ -1179,19 +1208,21 @@ void
 ScrnInsertChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = last - 1; j >= (col + (int) n); --j) \
+    	for (j = last; j >= (col + (int) n); --j) \
 	    data[j] = data[j - (int) n]
 
     TScreen *screen = TScreenOf(xw);
-    int last = MaxCols(screen);
+    int first = ScrnLeftMargin(xw);
+    int last = ScrnRightMargin(xw);
     int row = screen->cur_row;
     int col = screen->cur_col;
     int j;
     LineData *ld;
 
-    if (last <= (col + (int) n)) {
-	if (last <= col)
-	    return;
+    if (col < first || col > last) {
+	TRACE(("ScrnInsertChar - col %d outside [%d..%d]\n", col, first, last));
+	return;
+    } else if (last <= (col + (int) n)) {
 	n = (unsigned) (last - col);
     }
 
@@ -1207,7 +1238,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
-	kr = screen->max_col - (int) n + 1;
+	kr = last - (int) n + 1;
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
@@ -1239,19 +1270,21 @@ void
 ScrnDeleteChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = col; j < last - (int) n; ++j) \
+    	for (j = col; j <= last - (int) n; ++j) \
 	    data[j] = data[j + (int) n]
 
     TScreen *screen = TScreenOf(xw);
-    int last = MaxCols(screen);
+    int first = ScrnLeftMargin(xw);
+    int last = ScrnRightMargin(xw);
     int row = screen->cur_row;
     int col = screen->cur_col;
     int j;
     LineData *ld;
 
-    if (last <= (col + (int) n)) {
-	if (last <= col)
-	    return;
+    if (col < first || col > last) {
+	TRACE(("ScrnDeleteChar - col %d outside [%d..%d]\n", col, first, last));
+	return;
+    } else if (last <= (col + (int) n)) {
 	n = (unsigned) (last - col);
     }
 
@@ -2075,6 +2108,7 @@ ScreenResize(XtermWidget xw,
 
 	/* adjust scrolling region */
 	set_tb_margins(screen, 0, screen->max_row);
+	set_lr_margins(screen, 0, screen->max_col);
 	UIntClr(*flags, ORIGIN);
 
 	if (screen->cur_row > screen->max_row)
