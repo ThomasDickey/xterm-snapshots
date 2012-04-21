@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1181 2012/04/15 20:07:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1182 2012/04/21 00:37:02 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1897,7 +1897,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_CUF - cursor forward\n"));
 	    if ((col = param[0]) < 1)
 		col = 1;
-	    CursorForward(screen, col);
+	    CursorForward(xw, col);
 	    ResetState(sp);
 	    break;
 

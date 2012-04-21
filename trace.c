@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.135 2012/04/04 21:27:29 tom Exp $ */
+/* $XTermId: trace.c,v 1.137 2012/04/19 00:01:22 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -502,6 +502,58 @@ LineTstFlag(LineData ld, int flag)
     return code;
 }
 #endif /* OPT_TRACE_FLAGS */
+
+/*
+ * Trace the normal or alternate screen, showing color values up to 16, e.g.,
+ * for debugging with vttest.
+ */
+void
+TraceScreen(XtermWidget xw, int whichBuf)
+{
+    TScreen *screen = TScreenOf(xw);
+    int row, col;
+
+    if (screen->editBuf_index[whichBuf]) {
+	TRACE(("TraceScreen %d:\n", whichBuf));
+	for (row = 0; row <= screen->max_row; ++row) {
+	    LineData *ld = getLineData(screen, row);
+	    TRACE((" %3d:", row));
+	    if (ld != 0) {
+		for (col = 0; col < ld->lineSize; ++col) {
+		    int ch = ld->charData[col];
+		    if (ch < ' ')
+			ch = ' ';
+		    if (ch >= 127)
+			ch = '#';
+		    TRACE(("%c", ch));
+		}
+		TRACE((":\n"));
+
+		TRACE(("  fg:"));
+		for (col = 0; col < ld->lineSize; ++col) {
+		    int fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
+		    if (fg > 15)
+			fg = 15;
+		    TRACE(("%1x", fg));
+		}
+		TRACE((":\n"));
+
+		TRACE(("  bg:"));
+		for (col = 0; col < ld->lineSize; ++col) {
+		    int bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
+		    if (bg > 15)
+			bg = 15;
+		    TRACE(("%1x", bg));
+		}
+		TRACE((":\n"));
+	    } else {
+		TRACE(("null lineData\n"));
+	    }
+	}
+    } else {
+	TRACE(("TraceScreen %d is nil\n", whichBuf));
+    }
+}
 
 void
 TraceFocus(Widget w, XEvent * ev)
