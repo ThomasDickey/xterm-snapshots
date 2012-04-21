@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.61 2012/04/12 00:47:30 tom Exp $ */
+/* $XTermId: cursor.c,v 1.62 2012/04/21 00:49:59 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2012 by Thomas E. Dickey
@@ -132,13 +132,22 @@ CursorBack(XtermWidget xw, int n)
  * moves the cursor forward n, no wraparound
  */
 void
-CursorForward(TScreen * screen, int n)
+CursorForward(XtermWidget xw, int n)
 {
+    TScreen *screen = TScreenOf(xw);
 #if OPT_DEC_CHRSET
     LineData *ld = getLineData(screen, screen->cur_row);
 #endif
     int next = screen->cur_col + n;
-    int max = LineMaxCol(screen, ld);
+    int max;
+
+    if (IsLeftRightMode(xw)) {
+	max = screen->rgt_marg;
+	if (screen->cur_col > max)
+	    max = screen->max_col;
+    } else {
+	max = LineMaxCol(screen, ld);
+    }
 
     if (next > max)
 	next = max;

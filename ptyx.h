@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.725 2012/04/15 23:45:48 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.726 2012/04/20 23:16:52 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -361,7 +361,7 @@ typedef struct {
 #define	ANSI_APC	0x9F
 
 #define MIN_DECID  52			/* can emulate VT52 */
-#define MAX_DECID 420			/* ...through VT420 */
+#define MAX_DECID 525			/* ...through VT525 */
 
 #ifndef DFT_DECID
 #define DFT_DECID "vt100"		/* default VT100 */

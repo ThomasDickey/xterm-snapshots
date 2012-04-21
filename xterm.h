@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.686 2012/04/15 22:02:44 tom Exp $ */
+/* $XTermId: xterm.h,v 1.687 2012/04/21 00:37:25 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -869,7 +869,7 @@ extern void AdjustSavedCursor (XtermWidget /* xw */, int /* adjust */);
 extern void CarriageReturn (TScreen * /* screen */, int /* col */);
 extern void CursorBack (XtermWidget /* xw */, int   /* n */);
 extern void CursorDown (TScreen * /* screen */, int   /* n */);
-extern void CursorForward (TScreen * /* screen */, int   /* n */);
+extern void CursorForward (XtermWidget /* xw */, int   /* n */);
 extern void CursorNextLine (TScreen * /* screen */, int  /* count */);
 extern void CursorPrevLine (TScreen * /* screen */, int  /* count */);
 extern void CursorRestore (XtermWidget  /* xw */);

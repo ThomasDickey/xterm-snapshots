@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.443 2012/04/15 22:05:28 tom Exp $ */
+/* $XTermId: screen.c,v 1.446 2012/04/20 09:53:28 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -718,14 +718,16 @@ CopyCells(TScreen * screen, LineData * src, LineData * dst, int col, int len)
 	}
 
 	if_OPT_ISO_COLORS(screen, {
-	    for (n = 0; n < len; ++n) {
+	    for (n = col; n < last; ++n) {
 		dst->color[n] = src->color[n];
 	    }
 	});
 	if_OPT_WIDE_CHARS(screen, {
 	    size_t off;
-	    for_each_combData(off, src) {
-		dst->combData[off][n] = src->combData[off][n];
+	    for (n = col; n < last; ++n) {
+		for_each_combData(off, src) {
+		    dst->combData[off][n] = src->combData[off][n];
+		}
 	    }
 	});
     }
@@ -1229,7 +1231,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
     assert(n > 0);
-    assert(last > (int) n);
+    assert(last >= (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
 	int xx = screen->cur_row;
@@ -1275,7 +1277,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 
     TScreen *screen = TScreenOf(xw);
     int first = ScrnLeftMargin(xw);
-    int last = ScrnRightMargin(xw);
+    int last = ScrnRightMargin(xw) + 1;
     int row = screen->cur_row;
     int col = screen->cur_col;
     int j;
