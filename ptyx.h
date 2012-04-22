@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.726 2012/04/20 23:16:52 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.727 2012/04/21 14:10:26 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -392,10 +392,12 @@ typedef short ParmType;
 typedef struct {
 	Char		a_type;		/* CSI, etc., see unparseq()	*/
 	Char		a_pintro;	/* private-mode char, if any	*/
+	char *		a_delim;	/* between parameters (;)	*/
 	Char		a_inters;	/* special (before final-char)	*/
 	Char		a_final;	/* final-char			*/
 	ParmType	a_nparam;	/* # of parameters		*/
 	ParmType	a_param[NPARAM]; /* Parameters			*/
+	Char		a_radix[NPARAM]; /* Parameters			*/
 } ANSI;
 
 #define TEK_FONT_LARGE 0

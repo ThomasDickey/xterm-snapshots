@@ -593,19 +593,28 @@ CSI > Ps n
           fiers.
 CSI ? Ps n
           Device Status Report (DSR, DEC-specific).
-            Ps = 6  -> Report Cursor Position (CPR) [row;column] as CSI
-          ? r ; c R (assumes page is zero).
-            Ps = 1 5  -> Report Printer status as CSI ? 1 0  n  (ready).
-          or CSI ? 1 1  n  (not ready).
-            Ps = 2 5  -> Report UDK status as CSI ? 2 0  n  (unlocked)
-          or CSI ? 2 1  n  (locked).
+            Ps = 6  -> Report Cursor Position (DECXCPR) [row;column] as
+          CSI ? r ; c R (assumes the default page, i.e., "1").
+            Ps = 1 5  -> Report Printer status as CSI ? 1 0 n  (ready).
+          or CSI ? 1 1 n  (not ready).
+            Ps = 2 5  -> Report UDK status as CSI ? 2 0 n  (unlocked) or
+          CSI ? 2 1 n  (locked).
             Ps = 2 6  -> Report Keyboard status as
-          CSI ? 2 7  ;  1  ;  0  ;  0  n  (North American).
+          CSI ? 2 7 ; 1 ; 0 ; 0 n  (North American).
           The last two parameters apply to VT400 & up, and denote key-
           board ready and LK01 respectively.
-            Ps = 5 3  -> Report Locator status as
-          CSI ? 5 3  n  Locator available, if compiled-in, or
-          CSI ? 5 0  n  No Locator, if not.
+            Ps = 5 3  -> Report Locator status as CSI ? 5 3 n  Locator
+          available, if compiled-in, or CSI ? 5 0 n  No Locator, if not.
+            Ps = 6 2  -> Report macro space (DECMSR) as CSI Pn \* {
+            Ps = 6 3  -> Report memory checksum (DECCKSR) as DCS Pt ! x
+          x x x ST
+              Pt is the request id (from an optional parameter to the
+          request).
+              The x's are hexadecimal digits 0-9 and A-F.
+            Ps = 7 5  -> Report data integrity as CSI ? 7 0 n  (ready,
+          no errors)
+            Ps = 8 5  -> Report multi-session configuration as CSI ? 8 3
+          n  (not configured for multiple-session operation).
 CSI > Ps p
           Set resource value pointerMode.  This is used by xterm to
           decide whether to hide the pointer cursor as the user types.
@@ -615,7 +624,7 @@ CSI > Ps p
             Ps = 2  -> always hide the pointer.  If no parameter is
           given, xterm uses the default, which is 1 .
 CSI ! p   Soft terminal reset (DECSTR).
-CSI Ps$ p
+CSI Ps $ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply is
             CSI Ps; Pm$ y
           where Ps is the mode number as in RM, and Pm is the mode
@@ -781,11 +790,20 @@ CSI Ps x  Request Terminal Parameters (DECREQTPARM).
             Pn = 1  <- 2  8  receive 38.4k baud.
             Pn = 1  <- clock multiplier.
             Pn = 0  <- STP flags.
-CSI Ps x  Select Attribute Change Extent (DECSACE).
+CSI Ps * x
+          Select Attribute Change Extent (DECSACE).
             Ps = 0  -> from start to end position, wrapped.
             Ps = 1  -> from start to end position, wrapped.
             Ps = 2  -> rectangle (exact).
-CSI Pc; Pt; Pl; Pb; Pr$ x
+CSI Pi ; Pg ; Pt; Pl; Pb; Pr * y
+          Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
+          Response is
+          DCS Pt ! x x x x ST
+            Pi is the request id.
+            Pg is the page number.
+            Pt; Pl; Pb; Pr denotes the rectangle.
+            The x's are hexadecimal digits 0-9 and A-F.
+CSI Pc ; Pt ; Pl ; Pb ; Pr $ x
           Fill Rectangular Area (DECFRA), VT420 and up.
             Pc is the character to use.
             Pt; Pl; Pb; Pr denotes the rectangle.
@@ -810,12 +828,12 @@ CSI Pm ' {
           are:
             Ps = 0  -> only respond to explicit host requests (DECRQLP).
                        (This is default).  It also cancels any filter
-          rectangle.
+                       rectangle.
             Ps = 1  -> report button down transitions.
             Ps = 2  -> do not report button down transitions.
             Ps = 3  -> report button up transitions.
             Ps = 4  -> do not report button up transitions.
-CSI Pt; Pl; Pb; Pr$ {
+CSI Pt; Pl; Pb; Pr $ {
           Selective Erase Rectangular Area (DECSERA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
 CSI Ps ' |

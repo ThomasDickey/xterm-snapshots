@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.432 2012/04/02 00:25:05 tom Exp $ */
+/* $XTermId: button.c,v 1.433 2012/04/22 16:32:41 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2730,7 +2730,7 @@ static int charClass[256] =
 {
 /* NUL  SOH  STX  ETX  EOT  ENQ  ACK  BEL */
     32,  1,    1,   1,   1,   1,   1,   1,
-/*  BS   HT   NL   VT   NP   CR   SO   SI */
+/*  BS   HT   NL   VT   FF   CR   SO   SI */
      1,  32,   1,   1,   1,   1,   1,   1,
 /* DLE  DC1  DC2  DC3  DC4  NAK  SYN  ETB */
      1,   1,   1,   1,   1,   1,   1,   1,
