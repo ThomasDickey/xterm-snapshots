@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.446 2012/04/20 09:53:28 tom Exp $ */
+/* $XTermId: screen.c,v 1.447 2012/04/22 00:05:26 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2612,6 +2612,50 @@ ScrnWipeRectangle(XtermWidget xw,
 		   (target->bottom - target->top) + 1,
 		   ((target->right - target->left) + 1),
 		   False);
+    }
+}
+
+/*
+ * Compute a checksum, ignoring the page number (since we have only one page).
+ */
+void
+xtermCheckRect(XtermWidget xw,
+	       int nparam,
+	       int *params,
+	       int *result)
+{
+    TScreen *screen = TScreenOf(xw);
+    XTermRect target;
+    LineData *ld;
+
+    *result = 0;
+    if (nparam > 2) {
+	nparam -= 2;
+	params += 2;
+    }
+    xtermParseRect(xw, nparam, params, &target);
+    if (validRect(xw, &target)) {
+	int top = target.top - 1;
+	int bottom = target.bottom - 1;
+	int row, col;
+
+	for (row = top; row <= bottom; ++row) {
+	    int left = (target.left - 1);
+	    int right = (target.right - 1);
+
+	    ld = getLineData(screen, row);
+	    for (col = left; col <= right; ++col) {
+		if (ld->attribs[col] & CHARDRAWN) {
+		    *result += ld->charData[col];
+		    if_OPT_WIDE_CHARS(screen, {
+			size_t off;
+			for_each_combData(off, ld) {
+			    *result += ld->combData[off][col];
+			}
+		    })
+		}
+	    }
+	}
     }
 }
 #endif /* OPT_DEC_RECTOPS */

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.687 2012/04/21 00:37:25 tom Exp $ */
+/* $XTermId: xterm.h,v 1.688 2012/04/21 23:32:09 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1219,6 +1219,7 @@ extern void LineSetFlag(LineData /* ld */, int /* flag */);
 extern void ScrnCopyRectangle (XtermWidget /* xw */, XTermRect *, int, int *);
 extern void ScrnMarkRectangle (XtermWidget /* xw */, XTermRect *, Bool, int, int *);
 extern void ScrnWipeRectangle (XtermWidget /* xw */, XTermRect *);
+extern void xtermCheckRect(XtermWidget /* xw */, int /* nparam */, int */* params */, int * /* result */);
 #endif
 
 #if OPT_WIDE_CHARS

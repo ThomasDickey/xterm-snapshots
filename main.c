@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.682 2012/03/27 23:09:07 tom Exp $ */
+/* $XTermId: main.c,v 1.683 2012/04/22 10:57:57 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -3796,7 +3796,7 @@ spawnXTerm(XtermWidget xw)
 		/* input: nl->nl, don't ignore cr, cr->nl */
 		UIntClr(tio.c_iflag, (INLCR | IGNCR));
 		tio.c_iflag |= ICRNL;
-#if OPT_WIDE_CHARS && defined(linux) && defined(IUTF8)
+#if OPT_WIDE_CHARS && defined(IUTF8)
 #if OPT_LUIT_PROG
 		if (command_to_exec_with_luit == 0)
 #endif

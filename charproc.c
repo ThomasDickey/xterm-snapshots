@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1182 2012/04/21 00:37:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1186 2012/04/21 23:55:47 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1373,6 +1373,13 @@ init_parser(XtermWidget xw, struct ParseState *sp)
     ResetState(sp);
 }
 
+static void
+init_reply(unsigned type)
+{
+    memset(&reply, 0, sizeof(reply));
+    reply.a_type = type;
+}
+
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
@@ -2037,7 +2044,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DA1\n"));
 	    if (param[0] <= 0) {	/* less than means DEFAULT */
 		count = 0;
-		reply.a_type = ANSI_CSI;
+		init_reply(ANSI_CSI);
 		reply.a_pintro = '?';
 
 		/* The first param corresponds to the highest
@@ -2093,7 +2100,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DA2\n"));
 	    if (param[0] <= 0) {	/* less than means DEFAULT */
 		count = 0;
-		reply.a_type = ANSI_CSI;
+		init_reply(ANSI_CSI);
 		reply.a_pintro = '>';
 
 		if (screen->terminal_id >= 200)
@@ -2342,56 +2349,106 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	    /* FALLTHRU */
 	case CASE_CPR:
-	    TRACE(("CASE_CPR - cursor position\n"));
+	    TRACE(("CASE_DSR - device status report\n"));
 	    count = 0;
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = CharOf(sp->private_function ? '?' : 0);
 	    reply.a_inters = 0;
 	    reply.a_final = 'n';
 
 	    switch (param[0]) {
 	    case 5:
+		TRACE(("...request operating status\n"));
 		/* operating status */
 		reply.a_param[count++] = 0;	/* (no malfunction ;-) */
 		break;
 	    case 6:
+		TRACE(("...request %s\n",
+		       (sp->private_function
+			? "DECXCPR"
+			: "CPR")));
 		/* CPR */
-		/* DECXCPR (with page=0) */
+		/* DECXCPR (with page=1) */
 		reply.a_param[count++] = (ParmType) (screen->cur_row + 1);
 		reply.a_param[count++] = (ParmType) (screen->cur_col + 1);
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    reply.a_param[count++] = 1;
+		}
 		reply.a_final = 'R';
 		break;
 	    case 15:
-		/* printer status */
-		if (screen->terminal_id >= 200) {	/* VT220 */
+		TRACE(("...request printer status\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 2) {	/* VT220 */
 		    reply.a_param[count++] = 13;	/* implement printer */
 		}
 		break;
 	    case 25:
-		/* UDK status */
-		if (screen->terminal_id >= 200) {	/* VT220 */
+		TRACE(("...request UDK status\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 2) {	/* VT220 */
 		    reply.a_param[count++] = 20;	/* UDK always unlocked */
 		}
 		break;
 	    case 26:
-		/* keyboard status */
-		if (screen->terminal_id >= 200) {	/* VT220 */
+		TRACE(("...request keyboard status\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 2) {	/* VT220 */
 		    reply.a_param[count++] = 27;
 		    reply.a_param[count++] = 1;		/* North American */
-		    if (screen->terminal_id >= 400) {
+		    if (screen->vtXX_level >= 4) {	/* VT420 */
 			reply.a_param[count++] = 0;	/* ready */
 			reply.a_param[count++] = 0;	/* LK201 */
 		    }
 		}
 		break;
 	    case 53:
-		/* Locator status */
-		if (screen->terminal_id >= 200) {	/* VT220 */
+		TRACE(("...request locator status\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 2) {	/* VT220 */
 #if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 50;	/* locator ready */
 #else
 		    reply.a_param[count++] = 53;	/* no locator */
 #endif
+		}
+		break;
+	    case 62:
+		TRACE(("...request DECMSR - macro space\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    reply.a_pintro = 0;
+		    reply.a_radix[count] = 16;	/* no data */
+		    reply.a_param[count++] = 0;		/* no space for macros */
+		    reply.a_inters = '*';
+		    reply.a_final = '{';
+		}
+		break;
+	    case 63:
+		TRACE(("...request DECCKSR - memory checksum\n"));
+		/* DECCKSR - Memory checksum */
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    init_reply(ANSI_DCS);
+		    reply.a_param[count++] = param[1];	/* PID */
+		    reply.a_delim = "!~";	/* delimiter */
+		    reply.a_radix[count] = 16;	/* use hex */
+		    reply.a_param[count++] = 0;		/* no data */
+		}
+		break;
+	    case 75:
+		TRACE(("...request data integrity\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    reply.a_param[count++] = 70;	/* no errors */
+		}
+		break;
+	    case 85:
+		TRACE(("...request multi-session configuration\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    reply.a_param[count++] = 83;	/* not configured */
 		}
 		break;
 	    default:
@@ -2458,7 +2515,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if ((row = param[0]) == DEFAULT)
 		    row = 0;
 		if (row == 0 || row == 1) {
-		    reply.a_type = ANSI_CSI;
+		    init_reply(ANSI_CSI);
 		    reply.a_pintro = 0;
 		    reply.a_nparam = 7;
 		    reply.a_param[0] = (ParmType) (row + 2);
@@ -3039,6 +3096,24 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		sp->parsestate = csi_star_table;
 	    else
 		sp->parsestate = eigtable;
+	    break;
+
+	case CASE_DECRQCRA:
+	    if (screen->vtXX_level >= 4) {
+		int checksum;
+
+		TRACE(("CASE_DECRQCRA - Request checksum of rectangular area\n"));
+		xtermCheckRect(xw, nparam, param, &checksum);
+		init_reply(ANSI_DCS);
+		count = 0;
+		reply.a_param[count++] = param[1];	/* PID */
+		reply.a_delim = "!~";	/* delimiter */
+		reply.a_radix[count] = 16;
+		reply.a_param[count++] = checksum;
+		reply.a_nparam = count;
+		unparseseq(xw, &reply);
+	    }
+	    ResetState(sp);
 	    break;
 
 	case CASE_DECCRA:
@@ -3917,9 +3992,8 @@ dotext(XtermWidget xw,
      * case, the right-margin is ineffective.
      */
     if (screen->cur_col > right) {
-    	right = screen->max_col;
+	right = screen->max_col;
     }
-
 #if OPT_WIDE_CHARS
     /* don't translate if we use UTF-8, and are not handling legacy support
      * for line-drawing characters.
@@ -5025,7 +5099,6 @@ report_win_label(XtermWidget xw,
 		 int code,
 		 char *text)
 {
-    reply.a_type = ANSI_ESC;
     unparseputc(xw, ANSI_ESC);
     unparseputc(xw, ']');
     unparseputc(xw, code);
@@ -5147,7 +5220,7 @@ window_ops(XtermWidget xw)
 	    XGetWindowAttributes(screen->display,
 				 VWindow(screen),
 				 &win_attrs);
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 1;
 	    reply.a_param[0] = (ParmType) ((win_attrs.map_state == IsViewable)
@@ -5165,7 +5238,7 @@ window_ops(XtermWidget xw)
 	    XGetWindowAttributes(screen->display,
 				 WMFrameWindow(xw),
 				 &win_attrs);
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 3;
@@ -5183,7 +5256,7 @@ window_ops(XtermWidget xw)
 	    XGetWindowAttributes(screen->display,
 				 VWindow(screen),
 				 &win_attrs);
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 4;
@@ -5202,7 +5275,7 @@ window_ops(XtermWidget xw)
     case ewGetWinSizeChars:	/* Report the text's size in characters */
 	if (AllowWindowOps(xw, ewGetWinSizeChars)) {
 	    TRACE(("...get window size in characters\n"));
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 8;
@@ -5222,7 +5295,7 @@ window_ops(XtermWidget xw)
 		root_height = 0;
 		root_width = 0;
 	    }
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 9;
@@ -5379,9 +5452,20 @@ unparseseq(XtermWidget xw, ANSI * ap)
 	if (ap->a_pintro != 0)
 	    unparseputc(xw, ap->a_pintro);
 	for (i = 0; i < ap->a_nparam; ++i) {
-	    if (i != 0)
-		unparseputc(xw, ';');
-	    unparseputn(xw, (unsigned int) ap->a_param[i]);
+	    if (i != 0) {
+		if (ap->a_delim) {
+		    unparseputs(xw, ap->a_delim);
+		} else {
+		    unparseputc(xw, ';');
+		}
+	    }
+	    if (ap->a_radix[i]) {
+		char temp[8];
+		sprintf(temp, "%04X", ap->a_param[i] & 0xffff);
+		unparseputs(xw, temp);
+	    } else {
+		unparseputn(xw, (unsigned int) ap->a_param[i]);
+	    }
 	}
 	if ((inters = ap->a_inters) != 0) {
 	    for (i = 3; i >= 0; --i) {
@@ -5390,7 +5474,17 @@ unparseseq(XtermWidget xw, ANSI * ap)
 		    unparseputc(xw, c);
 	    }
 	}
-	unparseputc(xw, (char) ap->a_final);
+	switch (ap->a_type) {
+	case ANSI_DCS:
+	case ANSI_OSC:
+	case ANSI_PM:
+	case ANSI_APC:
+	    unparseputc1(xw, ANSI_ST);
+	    break;
+	default:
+	    unparseputc(xw, (char) ap->a_final);
+	    break;
+	}
     }
     unparse_end(xw);
 }

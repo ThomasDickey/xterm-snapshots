@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.62 2012/04/21 00:49:59 tom Exp $ */
+/* $XTermId: cursor.c,v 1.63 2012/04/22 19:44:02 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2012 by Thomas E. Dickey
@@ -72,6 +72,10 @@ CursorSet(TScreen * screen, int row, int col, unsigned flags)
     int max_col = screen->max_col;
     int max_row = screen->max_row;
 
+    if (flags & ORIGIN) {
+	use_col += screen->lft_marg;
+	max_col = screen->rgt_marg;
+    }
     use_col = (use_col < 0 ? 0 : use_col);
     set_cur_col(screen, (use_col <= max_col ? use_col : max_col));
 
