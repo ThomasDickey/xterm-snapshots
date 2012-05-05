@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.262 2012/04/22 00:44:10 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.263 2012/04/26 08:54:29 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -115,7 +115,7 @@
 .ds T \s\nsTAB\s0
 .ds X \s\nsETX\s0
 .ds N \s\nsENQ\s0
-.ds e \s\nsETB\s0
+.ds ET \s\nsETB\s0
 .ds C \s\nsCAN\s0
 .ds S \s\nsSUB\s0
 .\" space between chars
@@ -130,7 +130,7 @@
 .if \nw>\n([W .nr [W \nw
 .nr w \w'\*N'u
 .if \nw>\n([W .nr [W \nw
-.nr w \w'\*e'u
+.nr w \w'\*(ET'u
 .if \nw>\n([W .nr [W \nw
 .nr w \w'\*C'u
 .if \nw>\n([W .nr [W \nw
@@ -172,7 +172,7 @@
 .[] So \v'-1p'\s\nsSO\s0\v'1p'
 .[] Sp \v'-1p'\s\nsSP\s0\v'1p'
 .[] Si \v'-1p'\s\nsSI\s0\v'1p'
-.[] Eb \v'-1p'\*e\v'1p'
+.[] Eb \v'-1p'\*(ET\v'1p'
 .[] Ca \v'-1p'\*C\v'1p'
 .[] Su \v'-1p'\*S\v'1p'
 .[] Es \v'-1p'\*E\v'1p'
@@ -249,6 +249,7 @@
 .[] b b
 .[] c c
 .[] d d
+.[] e e
 .[] f f
 .[] g g
 .[] h h
@@ -760,6 +761,9 @@ Cursor Backward Tabulation \*(Ps tab stops (default = 1) (CBT).
 .IP \\*(Cs\\*(Pm\\*s\\*`
 Character Position Absolute  [column] (default = [row,1]) (HPA).
 .
+.IP \\*(Cs\\*(Pm\\*s\\*a
+Character Position Relative  [columns] (default = [row,col+1]) (HPR).
+.
 .IP \\*(Cs\\*(Ps\\*s\\*b
 Repeat the preceding graphic character \*(Ps times (REP).
 .
@@ -801,6 +805,9 @@ registration number and is always zero.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*d
 Line Position Absolute  [row] (default = [1,column]) (VPA).
+.
+.IP \\*(Cs\\*(Pm\\*s\\*e
+Line Position Relative  [rows] (default = [row+1,column]) (VPR).
 .
 .IP \\*(Cs\\*(Ps\\*s\\*;\\*(Ps\\*s\\*f
 Horizontal and Vertical Position [row;column] (default = [1,1]) (HVP).

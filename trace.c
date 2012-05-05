@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.137 2012/04/19 00:01:22 tom Exp $ */
+/* $XTermId: trace.c,v 1.139 2012/05/05 15:07:11 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -520,7 +520,7 @@ TraceScreen(XtermWidget xw, int whichBuf)
 	    TRACE((" %3d:", row));
 	    if (ld != 0) {
 		for (col = 0; col < ld->lineSize; ++col) {
-		    int ch = ld->charData[col];
+		    int ch = (int) ld->charData[col];
 		    if (ch < ' ')
 			ch = ' ';
 		    if (ch >= 127)
@@ -529,9 +529,25 @@ TraceScreen(XtermWidget xw, int whichBuf)
 		}
 		TRACE((":\n"));
 
+		TRACE(("  xx:"));
+		for (col = 0; col < ld->lineSize; ++col) {
+		    unsigned attrs = ld->attribs[col];
+		    char ch;
+		    if (attrs & PROTECTED) {
+			ch = '*';
+		    } else if (attrs & CHARDRAWN) {
+			ch = '+';
+		    } else {
+			ch = ' ';
+		    }
+		    TRACE(("%c", ch));
+		}
+		TRACE((":\n"));
+
+#if 0
 		TRACE(("  fg:"));
 		for (col = 0; col < ld->lineSize; ++col) {
-		    int fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
+		    unsigned fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
 		    if (fg > 15)
 			fg = 15;
 		    TRACE(("%1x", fg));
@@ -540,12 +556,13 @@ TraceScreen(XtermWidget xw, int whichBuf)
 
 		TRACE(("  bg:"));
 		for (col = 0; col < ld->lineSize; ++col) {
-		    int bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
+		    unsigned bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
 		    if (bg > 15)
 			bg = 15;
 		    TRACE(("%1x", bg));
 		}
 		TRACE((":\n"));
+#endif
 	    } else {
 		TRACE(("null lineData\n"));
 	    }

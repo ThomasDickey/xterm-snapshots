@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.65 2012/04/22 16:32:51 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.66 2012/04/26 09:04:37 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -530,12 +530,12 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	`		a		b		c	*/
 CASE_HPA,
-CASE_GROUND_STATE,
+CASE_HPR,
 CASE_REP,
 CASE_DA1,
 /*	d		e		f		g	*/
 CASE_VPA,
-CASE_GROUND_STATE,
+CASE_VPR,
 CASE_CUP,
 CASE_TBC,
 /*	h		i		j		k	*/
@@ -690,12 +690,12 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      agrave          aacute          acircumflex     atilde          */
 CASE_HPA,
-CASE_GROUND_STATE,
+CASE_HPR,
 CASE_REP,
 CASE_DA1,
 /*      adiaeresis      aring           ae              ccedilla        */
 CASE_VPA,
-CASE_GROUND_STATE,
+CASE_VPR,
 CASE_CUP,
 CASE_TBC,
 /*      egrave          eacute          ecircumflex     ediaeresis      */
@@ -854,12 +854,12 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	`		a		b		c	*/
 CASE_HPA,
-CASE_GROUND_STATE,
+CASE_HPR,
 CASE_REP,
 CASE_DA1,
 /*	d		e		f		g	*/
 CASE_VPA,
-CASE_GROUND_STATE,
+CASE_VPR,
 CASE_CUP,
 CASE_TBC,
 /*	h		i		j		k	*/
@@ -1014,12 +1014,12 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      agrave          aacute          acircumflex     atilde          */
 CASE_HPA,
-CASE_GROUND_STATE,
+CASE_HPR,
 CASE_REP,
 CASE_DA1,
 /*      adiaeresis      aring           ae              ccedilla        */
 CASE_VPA,
-CASE_GROUND_STATE,
+CASE_VPR,
 CASE_CUP,
 CASE_TBC,
 /*      egrave          eacute          ecircumflex     ediaeresis      */

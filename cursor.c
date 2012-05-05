@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.63 2012/04/22 19:44:02 tom Exp $ */
+/* $XTermId: cursor.c,v 1.66 2012/05/02 13:36:51 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2012 by Thomas E. Dickey
@@ -109,11 +109,17 @@ CursorBack(XtermWidget xw, int n)
     TScreen *screen = TScreenOf(xw);
     int offset, in_row, length, rev;
     int left = ScrnLeftMargin(xw);
+    int before = screen->cur_col;
 
     if ((rev = (xw->flags & WRAP_MASK) == WRAP_MASK) != 0
 	&& screen->do_wrap) {
 	n--;
     }
+
+    /* if the cursor is already before the left-margin, we have to let it go */
+    if (before < left)
+	left = 0;
+
     if ((screen->cur_col -= n) < left) {
 	if (rev) {
 	    in_row = ScrnRightMargin(xw) - left + 1;
@@ -257,8 +263,25 @@ RevIndex(XtermWidget xw, int amount)
  * (Note: xterm doesn't implement SLH, SLL which would affect use of this)
  */
 void
-CarriageReturn(TScreen * screen, int col)
+CarriageReturn(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
+    int left = ScrnLeftMargin(xw);
+    int col;
+
+    if (xw->flags & ORIGIN) {
+	col = left;
+    } else if (screen->cur_col > left) {
+	col = left;
+    } else {
+	/*
+	 * If origin-mode is not active, it is possible to use cursor
+	 * addressing outside the margins.  In that case we will go to the
+	 * first column rather than following the margin.
+	 */
+	col = 0;
+    }
+
     set_cur_col(screen, col);
     screen->do_wrap = False;
     do_xevents();
@@ -353,10 +376,12 @@ CursorRestore(XtermWidget xw)
  * Move the cursor to the first column of the n-th next line.
  */
 void
-CursorNextLine(TScreen * screen, int count)
+CursorNextLine(XtermWidget xw, int count)
 {
+    TScreen *screen = TScreenOf(xw);
+
     CursorDown(screen, count < 1 ? 1 : count);
-    CarriageReturn(screen, 0);
+    CarriageReturn(xw);
     do_xevents();
 }
 
@@ -364,11 +389,43 @@ CursorNextLine(TScreen * screen, int count)
  * Move the cursor to the first column of the n-th previous line.
  */
 void
-CursorPrevLine(TScreen * screen, int count)
+CursorPrevLine(XtermWidget xw, int count)
 {
+    TScreen *screen = TScreenOf(xw);
+
     CursorUp(screen, count < 1 ? 1 : count);
-    CarriageReturn(screen, 0);
+    CarriageReturn(xw);
     do_xevents();
+}
+
+/*
+ * Return col/row values which can be passed to CursorSet() preserving the
+ * current col/row, e.g., accounting for DECOM.
+ */
+int
+CursorCol(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    int result = screen->cur_col;
+    if (xw->flags & ORIGIN) {
+	result -= ScrnLeftMargin(xw);
+	if (result < 0)
+	    result = 0;
+    }
+    return result;
+}
+
+int
+CursorRow(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    int result = screen->cur_row;
+    if (xw->flags & ORIGIN) {
+	result -= screen->top_marg;
+	if (result < 0)
+	    result = 0;
+    }
+    return result;
 }
 
 #if OPT_TRACE

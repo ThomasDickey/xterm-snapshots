@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1155 2012/04/22 11:00:07 tom Exp $
+  $XTermId: xterm.log.html,v 1.1159 2012/05/05 15:24:36 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -342,6 +342,19 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>modify DECSERA to use the current protected state rather than
+	    preserving it.
+
+	<li>add <code>precomose</code> resource to allow storing character
+	    data in Normalized Form D as described in
+	    <a href="http://unicode.org/reports/tr15/">http://unicode.org/reports/tr15/</a>
+	    (report/discussion with Andries E Brouwer).
+
+	<li>modify CBT, other ISO-6429 controls which are used by VT520 to
+	    work with DECOM.
+
+	<li>add HPR and VPR controls, ISO 6429 cursor movement used in VT520.
+
 	<li>remove "linux" restriction for IUTF8 ifdef in main.c (prompted by
 	    Matthew Dempsky posting on mailing.openbsd.tech).
 
