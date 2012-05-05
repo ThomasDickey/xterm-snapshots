@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1186 2012/04/21 23:55:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1195 2012/05/05 14:28:53 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -667,6 +667,7 @@ static XtResource xterm_resources[] =
 #if OPT_WIDE_CHARS
     Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
     Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
+    Bres(XtNprecompose, XtCPrecompose, screen.normalized_c, True),
     Bres(XtNutf8Latin1, XtCUtf8Latin1, screen.utf8_latin1, False),
     Bres(XtNutf8Title, XtCUtf8Title, screen.utf8_title, False),
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, True),
@@ -1377,7 +1378,7 @@ static void
 init_reply(unsigned type)
 {
     memset(&reply, 0, sizeof(reply));
-    reply.a_type = type;
+    reply.a_type = (Char) type;
 }
 
 static Boolean
@@ -1408,13 +1409,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	    WriteNow();
 
-	    prev = (int) XTERM_CELL(screen->last_written_row,
-				    screen->last_written_col);
-	    precomposed = do_precomposition(prev, (int) c);
-	    TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
-		   prev, my_wcwidth(prev),
-		   (int) c, my_wcwidth((int) c),
-		   precomposed, my_wcwidth(precomposed)));
+	    if (screen->normalized_c) {
+		prev = (int) XTERM_CELL(screen->last_written_row,
+					screen->last_written_col);
+		precomposed = do_precomposition(prev, (int) c);
+		TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
+		       prev, my_wcwidth(prev),
+		       (int) c, my_wcwidth((int) c),
+		       precomposed, my_wcwidth(precomposed)));
+	    } else {
+		precomposed = -1;
+	    }
 
 	    /* substitute combined character with precomposed character
 	     * only if it does not change the width of the base character
@@ -1706,8 +1711,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_CR:
-	    /* CR */
-	    CarriageReturn(screen, ScrnLeftMargin(xw));
+	    TRACE(("CASE_CR\n"));
+	    CarriageReturn(xw);
 	    break;
 
 	case CASE_ESC:
@@ -1732,18 +1737,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #endif
 
 	case CASE_VMOT:
+	    TRACE(("CASE_VMOT\n"));
 	    /*
 	     * form feed, line feed, vertical tab
 	     */
 	    xtermAutoPrint(xw, c);
 	    xtermIndex(xw, 1);
 	    if (xw->flags & LINEFEED)
-		CarriageReturn(screen, 0);
+		CarriageReturn(xw);
 	    else
 		do_xevents();
 	    break;
 
 	case CASE_CBT:
+	    TRACE(("CASE_CBT\n"));
 	    /* cursor backward tabulation */
 	    if ((count = param[0]) == DEFAULT)
 		count = 1;
@@ -1753,6 +1760,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_CHT:
+	    TRACE(("CASE_CHT\n"));
 	    /* cursor forward tabulation */
 	    if ((count = param[0]) == DEFAULT)
 		count = 1;
@@ -1930,18 +1938,34 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_VPA:
-	    TRACE(("CASE_VPA - vertical position\n"));
+	    TRACE(("CASE_VPA - vertical position absolute\n"));
 	    if ((row = param[0]) < 1)
 		row = 1;
-	    CursorSet(screen, row - 1, screen->cur_col, xw->flags);
+	    CursorSet(screen, row - 1, CursorCol(xw), xw->flags);
 	    ResetState(sp);
 	    break;
 
 	case CASE_HPA:
-	    TRACE(("CASE_HPA - horizontal position\n"));
+	    TRACE(("CASE_HPA - horizontal position absolute\n"));
 	    if ((col = param[0]) < 1)
 		col = 1;
-	    CursorSet(screen, screen->cur_row, col - 1, xw->flags);
+	    CursorSet(screen, CursorRow(xw), col - 1, xw->flags);
+	    ResetState(sp);
+	    break;
+
+	case CASE_VPR:
+	    TRACE(("CASE_VPR - vertical position relative\n"));
+	    if ((row = param[0]) < 1)
+		row = 1;
+	    CursorSet(screen, CursorRow(xw) + row, CursorCol(xw), xw->flags);
+	    ResetState(sp);
+	    break;
+
+	case CASE_HPR:
+	    TRACE(("CASE_HPR - horizontal position relative\n"));
+	    if ((col = param[0]) < 1)
+		col = 1;
+	    CursorSet(screen, CursorRow(xw), CursorCol(xw) + col, xw->flags);
 	    ResetState(sp);
 	    break;
 
@@ -2431,7 +2455,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if (sp->private_function
 		    && screen->vtXX_level >= 4) {	/* VT420 */
 		    init_reply(ANSI_DCS);
-		    reply.a_param[count++] = param[1];	/* PID */
+		    reply.a_param[count++] = (ParmType) param[1];	/* PID */
 		    reply.a_delim = "!~";	/* delimiter */
 		    reply.a_radix[count] = 16;	/* use hex */
 		    reply.a_param[count++] = 0;		/* no data */
@@ -2773,10 +2797,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSCA:
 	    TRACE(("CASE_DECSCA\n"));
 	    screen->protected_mode = DEC_PROTECT;
-	    if (param[0] <= 0 || param[0] == 2)
+	    if (param[0] <= 0 || param[0] == 2) {
 		UIntClr(xw->flags, PROTECTED);
-	    else if (param[0] == 1)
+		TRACE(("...clear PROTECTED\n"));
+	    } else if (param[0] == 1) {
 		xw->flags |= PROTECTED;
+		TRACE(("...set PROTECTED\n"));
+	    }
 	    ResetState(sp);
 	    break;
 
@@ -2937,20 +2964,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_CPL:
 	    TRACE(("CASE_CPL - cursor prev line\n"));
-	    CursorPrevLine(screen, param[0]);
+	    CursorPrevLine(xw, param[0]);
 	    ResetState(sp);
 	    break;
 
 	case CASE_CNL:
 	    TRACE(("CASE_CNL - cursor next line\n"));
-	    CursorNextLine(screen, param[0]);
+	    CursorNextLine(xw, param[0]);
 	    ResetState(sp);
 	    break;
 
 	case CASE_NEL:
 	    TRACE(("CASE_NEL\n"));
 	    xtermIndex(xw, 1);
-	    CarriageReturn(screen, 0);
+	    CarriageReturn(xw);
 	    ResetState(sp);
 	    break;
 
@@ -3106,11 +3133,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		xtermCheckRect(xw, nparam, param, &checksum);
 		init_reply(ANSI_DCS);
 		count = 0;
-		reply.a_param[count++] = param[1];	/* PID */
+		reply.a_param[count++] = (ParmType) param[1];	/* PID */
 		reply.a_delim = "!~";	/* delimiter */
 		reply.a_radix[count] = 16;
-		reply.a_param[count++] = checksum;
-		reply.a_nparam = count;
+		reply.a_param[count++] = (ParmType) checksum;
+		reply.a_nparam = (ParmType) count;
 		unparseseq(xw, &reply);
 	    }
 	    ResetState(sp);
@@ -4347,7 +4374,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 	case 3:		/* DECCOLM                      */
 	    if (screen->c132) {
-		ClearScreen(xw);
+		if (!(xw->flags & NOCLEAR_COLM))
+		    ClearScreen(xw);
 		CursorSet(screen, 0, 0, xw->flags);
 		if ((j = IsSM()? 132 : 80) !=
 		    ((xw->flags & IN132COLUMNS) ? 132 : 80) ||

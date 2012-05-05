@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.525 2012/03/27 23:28:50 tom Exp $
+.\" $XTermId: xterm.man,v 1.527 2012/05/02 13:09:14 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -89,9 +89,10 @@ xterm \- terminal emulator for X
 [\-\fItoolkitoption\fP ...] [\-\fIoption\fP ...] [\fIshell\fP]
 .SH DESCRIPTION
 The \fIxterm\fP program is a terminal emulator for the X Window System.
-It provides DEC VT102/VT220 (VTxxx) and Tektronix 4014
-compatible terminals for programs that cannot
-use the window system directly.
+It provides DEC VT102/VT220 and selected features from higher-level
+terminals such as VT320/VT420/VT520 (VTxxx).
+It also provides Tektronix 4014 emulation
+for programs that cannot use the window system directly.
 If the underlying operating system supports
 terminal resizing capabilities (for example, the SIGWINCH signal in systems
 derived from 4.3bsd), \fIxterm\fP will use the facilities to notify programs
@@ -3200,6 +3201,12 @@ The default is \*(``false\*(''.
 If the window is iconified, this has no effect.
 However, the \fBzIconBeep\fP resource provides you with the ability to
 see which iconified windows have sounded a bell.
+.TP 8
+.B "precompose (\fPclass\fB XtCPrecompose)"
+Tells \fIxterm\fP whether to precompose UTF-8 data into Normalization Form C,
+which combines commonly-used accents onto base characters.
+If it does not do this, accents are left as separatate characters.
+The default is \*(``true\*(''.
 .TP 8
 .B "preeditType (\fPclass\fB XtCPreeditType)"
 Tells \fIxterm\fP which types of preedit (preconversion) string to display.

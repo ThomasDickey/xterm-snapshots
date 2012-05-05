@@ -276,6 +276,8 @@ CSI Ps X  Erase Ps Character(s) (default = 1) (ECH).
 CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
 CSI Pm `  Character Position Absolute  [column] (default = [row,1])
           (HPA).
+CSI Pm a  Character Position Relative  [columns] (default = [row,col+1])
+          (HPR).
 CSI Ps b  Repeat the preceding graphic character Ps times (REP).
 CSI Ps c  Send Device Attributes (Primary DA).
             Ps = 0  or omitted -> request attributes from terminal.  The
@@ -310,6 +312,8 @@ CSI > Ps c
           nal, Pc indicates the ROM cartridge registration number and is
           always zero.
 CSI Pm d  Line Position Absolute  [row] (default = [1,column]) (VPA).
+CSI Pm e  Line Position Relative  [rows] (default = [row+1,column])
+          (VPR).
 CSI Ps ; Ps f
           Horizontal and Vertical Position [row;column] (default =
           [1,1]) (HVP).

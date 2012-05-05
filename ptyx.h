@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.727 2012/04/21 14:10:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.728 2012/05/02 12:46:23 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1621,6 +1621,7 @@ typedef struct {
 	Boolean		wide_chars;	/* true when 16-bit chars	*/
 	Boolean		vt100_graphics;	/* true to allow vt100-graphics	*/
 	Boolean		utf8_inparse;	/* true to enable UTF-8 parser	*/
+	Boolean		normalized_c;	/* true to precompose to Form C */
 	char *		utf8_mode_s;	/* use UTF-8 decode/encode	*/
 	char *		utf8_fonts_s;	/* use UTF-8 decode/encode	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/

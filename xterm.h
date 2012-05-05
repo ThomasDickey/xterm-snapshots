@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.688 2012/04/21 23:32:09 tom Exp $ */
+/* $XTermId: xterm.h,v 1.691 2012/05/02 13:34:46 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -461,6 +461,7 @@ extern char **environ;
 #define XtNpointerMode		"pointerMode"
 #define XtNpointerShape		"pointerShape"
 #define XtNpopOnBell		"popOnBell"
+#define XtNprecompose		"precompose"
 #define XtNprintAttributes	"printAttributes"
 #define XtNprinterAutoClose	"printerAutoClose"
 #define XtNprinterCommand	"printerCommand"
@@ -471,7 +472,7 @@ extern char **environ;
 #define XtNquietGrab		"quietGrab"
 #define XtNrenderFont		"renderFont"
 #define XtNresizeGravity	"resizeGravity"
-#define XtNretryInputMethod     "retryInputMethod"
+#define XtNretryInputMethod	"retryInputMethod"
 #define XtNreverseWrap		"reverseWrap"
 #define XtNrightScrollBar	"rightScrollBar"
 #define XtNsaveLines		"saveLines"
@@ -628,6 +629,7 @@ extern char **environ;
 #define XtCOldXtermFKeys	"OldXtermFKeys"
 #define XtCPointerMode		"PointerMode"
 #define XtCPopOnBell		"PopOnBell"
+#define XtCPrecompose		"Precompose"
 #define XtCPrintAttributes	"PrintAttributes"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
 #define XtCPrinterCommand	"PrinterCommand"
@@ -638,7 +640,7 @@ extern char **environ;
 #define XtCQuietGrab		"QuietGrab"
 #define XtCRenderFont		"RenderFont"
 #define XtCResizeGravity	"ResizeGravity"
-#define XtCRetryInputMethod     "RetryInputMethod"
+#define XtCRetryInputMethod	"RetryInputMethod"
 #define XtCReverseWrap		"ReverseWrap"
 #define XtCRightScrollBar	"RightScrollBar"
 #define XtCSaveLines		"SaveLines"
@@ -865,13 +867,15 @@ extern unsigned xtermCharSetIn (unsigned  /* code */, int  /* charset */);
 extern int xtermCharSetOut (XtermWidget /* xw */, IChar * /* buf */, IChar * /* ptr */, int  /* charset */);
 
 /* cursor.c */
+extern int CursorCol (XtermWidget /* xw */);
+extern int CursorRow (XtermWidget /* xw */);
 extern void AdjustSavedCursor (XtermWidget /* xw */, int /* adjust */);
-extern void CarriageReturn (TScreen * /* screen */, int /* col */);
-extern void CursorBack (XtermWidget /* xw */, int   /* n */);
-extern void CursorDown (TScreen * /* screen */, int   /* n */);
-extern void CursorForward (XtermWidget /* xw */, int   /* n */);
-extern void CursorNextLine (TScreen * /* screen */, int  /* count */);
-extern void CursorPrevLine (TScreen * /* screen */, int  /* count */);
+extern void CarriageReturn (XtermWidget /* xw */);
+extern void CursorBack (XtermWidget /* xw */, int /* n */);
+extern void CursorDown (TScreen * /* screen */, int /* n */);
+extern void CursorForward (XtermWidget /* xw */, int /* n */);
+extern void CursorNextLine (XtermWidget /* xw */, int /* count */);
+extern void CursorPrevLine (XtermWidget /* xw */, int /* count */);
 extern void CursorRestore (XtermWidget  /* xw */);
 extern void CursorSave (XtermWidget  /* xw */);
 extern void CursorSet (TScreen * /* screen */, int  /* row */, int  /* col */, unsigned  /* flags */);

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.447 2012/04/22 00:05:26 tom Exp $ */
+/* $XTermId: screen.c,v 1.449 2012/05/05 15:22:57 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2317,8 +2317,7 @@ ScrnFillRectangle(XtermWidget xw,
 	    TRACE(("filling %d [%d..%d]\n", row, left, left + size));
 
 	    /*
-	     * Fill attributes, preserving "protected" flag, as well as
-	     * colors if asked.
+	     * Fill attributes, preserving colors.
 	     */
 	    for (col = (int) left; col < target->right; ++col) {
 		unsigned temp = ld->attribs[col];
@@ -2326,8 +2325,7 @@ ScrnFillRectangle(XtermWidget xw,
 		if (!keepColors) {
 		    UIntClr(temp, (FG_COLOR | BG_COLOR));
 		}
-		temp = attrs | (temp & (FG_COLOR | BG_COLOR | PROTECTED));
-		temp |= CHARDRAWN;
+		temp = attrs | (temp & (FG_COLOR | BG_COLOR)) | CHARDRAWN;
 		ld->attribs[col] = (Char) temp;
 #if OPT_ISO_COLORS
 		if (attrs & (FG_COLOR | BG_COLOR)) {
@@ -2646,11 +2644,11 @@ xtermCheckRect(XtermWidget xw,
 	    ld = getLineData(screen, row);
 	    for (col = left; col <= right; ++col) {
 		if (ld->attribs[col] & CHARDRAWN) {
-		    *result += ld->charData[col];
+		    *result += (int) ld->charData[col];
 		    if_OPT_WIDE_CHARS(screen, {
 			size_t off;
 			for_each_combData(off, ld) {
-			    *result += ld->combData[off][col];
+			    *result += (int) ld->combData[off][col];
 			}
 		    })
 		}
