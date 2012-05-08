@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.683 2012/04/22 10:57:57 tom Exp $ */
+/* $XTermId: main.c,v 1.684 2012/05/07 23:30:42 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -2594,7 +2594,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
 {
     int result = 1;
 
-#if defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME)
+#if defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME) && defined(HAVE_GRANTPT_PTY_ISATTY)
     if ((*pty = posix_openpt(O_RDWR)) >= 0) {
 	char *name = ptsname(*pty);
 	if (name != 0) {

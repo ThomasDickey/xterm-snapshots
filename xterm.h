@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.691 2012/05/02 13:34:46 tom Exp $ */
+/* $XTermId: xterm.h,v 1.692 2012/05/06 18:17:21 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -847,6 +847,10 @@ extern void xtermAddInput(Widget  /* w */);
 
 #if OPT_BLINK_CURS
 extern void ToggleCursorBlink(TScreen * /* screen */);
+#endif
+
+#if OPT_BLINK_TEXT
+extern Bool LineHasBlinking(TScreen * /* screen */, LineData * /* ld */);
 #endif
 
 #if OPT_INPUT_METHOD

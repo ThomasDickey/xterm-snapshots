@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.263 2012/04/26 08:54:29 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.264 2012/05/06 20:12:51 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -864,8 +864,10 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*2 \(-> Use Cell Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*3 \(-> Use All Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*4 \(-> Send FocusIn/FocusOut events.
-  \*(Ps = \*1\*0\*0\*5 \(-> Enable Extended Mouse Mode.
+  \*(Ps = \*1\*0\*0\*5 \(-> Enable UTF-8 Mouse Mode.
+  \*(Ps = \*1\*0\*0\*6 \(-> Enable SGR Mouse Mode.
   \*(Ps = \*1\*0\*1\*0 \(-> Scroll to bottom on tty output (rxvt).
+  \*(Ps = \*1\*0\*1\*5 \(-> Enable urxvt Mouse Mode.
   \*(Ps = \*1\*0\*1\*1 \(-> Scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*4 \(-> Interpret "meta" key, sets eighth bit.
 (enables the \fBeightBitInput\fP resource).
@@ -959,8 +961,10 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*1\*0\*0\*2 \(-> Don't use Cell Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*3 \(-> Don't use All Motion Mouse Tracking.
   \*(Ps = \*1\*0\*0\*4 \(-> Don't send FocusIn/FocusOut events.
-  \*(Ps = \*1\*0\*0\*5 \(-> Disable Extended Mouse Mode.
+  \*(Ps = \*1\*0\*0\*5 \(-> Disable UTF-8 Mouse Mode.
+  \*(Ps = \*1\*0\*0\*6 \(-> Disable SGR Mouse Mode.
   \*(Ps = \*1\*0\*1\*0 \(-> Don't scroll to bottom on tty output (rxvt).
+  \*(Ps = \*1\*0\*1\*5 \(-> Disable urxvt Mouse Mode.
   \*(Ps = \*1\*0\*1\*1 \(-> Don't scroll to bottom on key press (rxvt).
   \*(Ps = \*1\*0\*3\*4 \(-> Don't interpret "meta" key.
 (This disables the \fBeightBitInput\fP resource).

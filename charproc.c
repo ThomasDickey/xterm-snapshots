@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1195 2012/05/05 14:28:53 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1196 2012/05/06 18:16:35 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -8612,7 +8612,7 @@ StopBlinking(TScreen * screen)
 }
 
 #if OPT_BLINK_TEXT
-static Bool
+Bool
 LineHasBlinking(TScreen * screen, LineData * ld)
 {
     int col;

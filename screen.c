@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.449 2012/05/05 15:22:57 tom Exp $ */
+/* $XTermId: screen.c,v 1.451 2012/05/06 18:19:16 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -78,8 +78,8 @@
 
 #define getMinRow(screen) ((xw->flags & ORIGIN) ? (screen)->top_marg : 0)
 #define getMaxRow(screen) ((xw->flags & ORIGIN) ? (screen)->bot_marg : (screen)->max_row)
-#define getMinCol(screen) 0
-#define getMaxCol(screen) ((screen)->max_col)
+#define getMinCol(screen) ((xw->flags & ORIGIN) ? (screen)->lft_marg : 0)
+#define getMaxCol(screen) ((xw->flags & ORIGIN) ? (screen)->rgt_marg : (screen)->max_col)
 
 #define MoveLineData(base, dst, src, len) \
 	memmove(scrnHeadAddr(screen, base, (unsigned) (dst)), \
@@ -2211,7 +2211,7 @@ non_blank_line(TScreen * screen,
 }
 
 /*
- * Rectangle parameters start from one.
+ * Limit/map rectangle parameters.
  */
 #define minRectRow(screen) (getMinRow(screen) + 1)
 #define minRectCol(screen) (getMinCol(screen) + 1)
@@ -2219,34 +2219,43 @@ non_blank_line(TScreen * screen,
 #define maxRectCol(screen) (getMaxCol(screen) + 1)
 
 static int
-limitedParseRow(XtermWidget xw, TScreen * screen, int row)
+limitedParseRow(XtermWidget xw, int row)
 {
+    TScreen *screen = TScreenOf(xw);
     int min_row = minRectRow(screen);
     int max_row = maxRectRow(screen);
+
+    if (xw->flags & ORIGIN)
+	row += screen->top_marg;
 
     if (row < min_row)
 	row = min_row;
     else if (row > max_row)
 	row = max_row;
+
     return row;
 }
 
 static int
-limitedParseCol(XtermWidget xw, TScreen * screen, int col)
+limitedParseCol(XtermWidget xw, int col)
 {
+    TScreen *screen = TScreenOf(xw);
     int min_col = minRectCol(screen);
     int max_col = maxRectCol(screen);
 
-    (void) xw;
+    if (xw->flags & ORIGIN)
+	col += screen->lft_marg;
+
     if (col < min_col)
 	col = min_col;
     else if (col > max_col)
 	col = max_col;
+
     return col;
 }
 
 #define LimitedParse(num, func, dft) \
-	func(xw, screen, (nparams > num) ? params[num] : dft)
+	func(xw, (nparams > num) ? params[num] : dft)
 
 /*
  * Copy the rectangle boundaries into a struct, providing default values as
@@ -2425,6 +2434,13 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 			    ld->attribs[col] |= CHARDRAWN;
 			}
 		    }
+#if OPT_BLINK_TEXT
+		    if (LineHasBlinking(screen, ld)) {
+			LineSetBlinked(ld);
+		    } else {
+			LineClrBlinked(ld);
+		    }
+#endif
 		}
 		free(cells);
 
