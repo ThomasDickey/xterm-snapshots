@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.139 2012/05/05 15:07:11 tom Exp $ */
+/* $XTermId: trace.c,v 1.140 2012/05/06 18:01:58 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -535,6 +535,8 @@ TraceScreen(XtermWidget xw, int whichBuf)
 		    char ch;
 		    if (attrs & PROTECTED) {
 			ch = '*';
+		    } else if (attrs & BLINK) {
+			ch = 'B';
 		    } else if (attrs & CHARDRAWN) {
 			ch = '+';
 		    } else {

@@ -9,6 +9,7 @@
 
                         Xterm Control Sequences
 
+
                                Edward Moy
                    University of California, Berkeley
 
@@ -209,8 +210,8 @@ DCS + p Pt ST
           as by the Request Termcap/Terminfo String control.
 DCS + q Pt ST
           Request Termcap/Terminfo String (xterm, experimental).  The
-          string following the "q" is a list of names encoded in hex-
-          adecimal (2 digits per character) separated by ; which corre-
+          string following the "q" is a list of names encoded in hexa-
+          decimal (2 digits per character) separated by ; which corre-
           spond to termcap or terminfo key names.
           Two special features are also recognized, which are not key
           names: Co for termcap colors (or colors for terminfo colors),
@@ -368,8 +369,10 @@ CSI ? Pm h
             Ps = 1 0 0 2  -> Use Cell Motion Mouse Tracking.
             Ps = 1 0 0 3  -> Use All Motion Mouse Tracking.
             Ps = 1 0 0 4  -> Send FocusIn/FocusOut events.
-            Ps = 1 0 0 5  -> Enable Extended Mouse Mode.
+            Ps = 1 0 0 5  -> Enable UTF-8 Mouse Mode.
+            Ps = 1 0 0 6  -> Enable SGR Mouse Mode.
             Ps = 1 0 1 0  -> Scroll to bottom on tty output (rxvt).
+            Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).
             Ps = 1 0 3 4  -> Interpret "meta" key, sets eighth bit.
           (enables the eightBitInput resource).
@@ -461,9 +464,11 @@ CSI ? Pm l
             Ps = 1 0 0 2  -> Don't use Cell Motion Mouse Tracking.
             Ps = 1 0 0 3  -> Don't use All Motion Mouse Tracking.
             Ps = 1 0 0 4  -> Don't send FocusIn/FocusOut events.
-            Ps = 1 0 0 5  -> Disable Extended Mouse Mode.
+            Ps = 1 0 0 5  -> Disable UTF-8 Mouse Mode.
+            Ps = 1 0 0 6  -> Disable SGR Mouse Mode.
             Ps = 1 0 1 0  -> Don't scroll to bottom on tty output
           (rxvt).
+            Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Don't scroll to bottom on key press (rxvt).
             Ps = 1 0 3 4  -> Don't interpret "meta" key.  (This disables
           the eightBitInput resource).

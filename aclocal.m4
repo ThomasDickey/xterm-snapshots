@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.322 2012/03/15 00:03:02 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.323 2012/05/07 23:58:20 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -543,7 +543,7 @@ AC_DEFUN([CF_ERRNO],
 CF_CHECK_ERRNO(errno)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 6 updated: 2012/01/29 17:13:14
+dnl CF_FUNC_GRANTPT version: 7 updated: 2012/05/07 19:39:45
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
@@ -592,7 +592,7 @@ dnl if we have no stropts.h, skip the checks for streams modules
 			fi
 
 			cf_pty_defines=
-			while test $cf_pty_this != 5
+			while test $cf_pty_this != 6
 			do
 
 				cf_pty_feature=
@@ -618,10 +618,13 @@ CF__GRANTPT_BODY
 					cf_pty_feature=ttcompat
 					;;
 				4) #(vi
-					cf_pty_feature=isatty
+					cf_pty_feature=pty_isatty
 					;;
 				5) #(vi
-					cf_pty_feature=tcsetattr
+					cf_pty_feature=pty_tcsetattr
+					;;
+				6) #(vi
+					cf_pty_feature=tty_tcsetattr
 					;;
 				esac
 ],[
@@ -964,7 +967,7 @@ if test "$GCC" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 27 updated: 2010/10/23 15:52:32
+dnl CF_GCC_WARNINGS version: 28 updated: 2012/03/31 20:10:46
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -1058,6 +1061,13 @@ then
 			Winline) #(vi
 				case $GCC_VERSION in
 				[[34]].*)
+					CF_VERBOSE(feature is broken in gcc $GCC_VERSION)
+					continue;;
+				esac
+				;;
+			Wpointer-arith) #(vi
+				case $GCC_VERSION in
+				[[12]].*)
 					CF_VERBOSE(feature is broken in gcc $GCC_VERSION)
 					continue;;
 				esac
@@ -3823,7 +3833,7 @@ to makefile.])
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF__GRANTPT_BODY version: 3 updated: 2012/01/29 17:13:14
+dnl CF__GRANTPT_BODY version: 4 updated: 2012/05/07 19:39:45
 dnl ----------------
 dnl Body for workability check of grantpt.
 define([CF__GRANTPT_BODY],[
@@ -3846,6 +3856,19 @@ define([CF__GRANTPT_BODY],[
 		failed(3);
 	else if ((slave = ptsname(pty)) == 0)
 		failed(4);
+#if (CONFTEST == 3) || defined(CONFTEST_isatty)
+	else if (!isatty(pty))
+		failed(4);
+#endif
+#if CONFTEST >= 4
+    else if ((rc = tcgetattr(pty, &tio)) < 0)
+		failed(20);
+    else if ((rc = tcsetattr(pty, TCSAFLUSH, &tio)) < 0)
+		failed(21);
+#endif
+	/* BSD posix_openpt does not treat pty as a terminal until slave is opened.
+	 * Linux does treat it that way.
+	 */
 	else if ((tty = open(slave, O_RDWR)) < 0)
 		failed(5);
 #ifdef CONFTEST
@@ -3863,15 +3886,11 @@ define([CF__GRANTPT_BODY],[
 		failed(12);
 #endif
 #endif /* I_PUSH */
-#if (CONFTEST == 3) || defined(CONFTEST_isatty)
-	else if (!isatty(pty))
-		failed(4);
-#endif
-#if CONFTEST >= 4
-    else if ((rc = tcgetattr(pty, &tio)) < 0)
-		failed(20);
-    else if ((rc = tcsetattr(pty, TCSAFLUSH, &tio)) < 0)
-		failed(21);
+#if CONFTEST >= 5
+    else if ((rc = tcgetattr(tty, &tio)) < 0)
+		failed(30);
+    else if ((rc = tcsetattr(tty, TCSAFLUSH, &tio)) < 0)
+		failed(31);
 #endif
 #endif /* CONFTEST */
 

@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1159 2012/05/05 15:24:36 tom Exp $
+  $XTermId: xterm.log.html,v 1.1163 2012/05/08 00:07:15 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -342,6 +342,20 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>improve workability check for posix_openpt(), to take into account
+	    BSD systems which do not complete initialization until both sides
+	    of the pseudoterminal are opened (report by Christian Weisgerber).
+
+	<li>amend fix for Debian #650291 in
+	    <a href="#xterm_277">patch #277</a> changes to account for
+	    different data returned by vnc4server
+	    (Debian #670638).
+
+	<li>add check in DECCRA operation to make copies of blinking text also
+	    blink by updating a line-level flag.
+
+	<li>modify rectangle operations to work with DECOM.
+
 	<li>modify DECSERA to use the current protected state rather than
 	    preserving it.
 
