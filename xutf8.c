@@ -1,4 +1,4 @@
-/* $XTermId: xutf8.c,v 1.11 2011/09/11 14:59:37 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.12 2012/05/08 08:48:37 tom Exp $ */
 
 /*
  * Copyright (c) 2001 by Juliusz Chroboczek
@@ -68,7 +68,7 @@ utf8countBytes(int c)
 }
 
 static void
-utf8insert(char *dest, int c, int *len_return)
+utf8insert(char *dest, int c, size_t *len_return)
 {
     if (c < 0)
 	return;
@@ -95,10 +95,10 @@ utf8insert(char *dest, int c, int *len_return)
 }
 
 static int
-l1countUtf8Bytes(char *s, int len)
+l1countUtf8Bytes(char *s, size_t len)
 {
     int l = 0;
-    while (len > 0) {
+    while (len != 0) {
 	if ((*s & 0x80) == 0)
 	    l++;
 	else
@@ -110,10 +110,10 @@ l1countUtf8Bytes(char *s, int len)
 }
 
 static void
-l1utf8copy(char *d, char *s, int len)
+l1utf8copy(char *d, char *s, size_t len)
 {
     int l;
-    while (len > 0) {
+    while (len != 0) {
 	utf8insert(d, (*s) & 0xFF, &l);
 	d += l;
 	s++;

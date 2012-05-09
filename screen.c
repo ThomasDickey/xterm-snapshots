@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.451 2012/05/06 18:19:16 tom Exp $ */
+/* $XTermId: screen.c,v 1.452 2012/05/08 08:36:43 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -927,10 +927,10 @@ ScrnWriteText(XtermWidget xw,
 	    ld->color[screen->cur_col + (int) j] = (CellColor) cur_fg_bg;
     });
 
-    if_OPT_WIDE_CHARS(screen, {
-	screen->last_written_col = screen->cur_col + (int) real_width - 1;
-	screen->last_written_row = screen->cur_row;
-    });
+#if OPT_WIDE_CHARS
+    screen->last_written_col = screen->cur_col + (int) real_width - 1;
+    screen->last_written_row = screen->cur_row;
+#endif
 
     if_OPT_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);

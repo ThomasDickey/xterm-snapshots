@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1196 2012/05/06 18:16:35 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1202 2012/05/09 00:08:36 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1405,29 +1405,38 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	if (c >= 0x300 && screen->wide_chars
 	    && my_wcwidth((int) c) == 0
 	    && !isWideControl(c)) {
-	    int prev, precomposed;
+	    int prev, test;
 
 	    WriteNow();
 
-	    if (screen->normalized_c) {
+	    /*
+	     * Check if the latest data can be added to the base character.
+	     * If there is already a combining character stored for the cell,
+	     * we cannot, since that would change the order.
+	     */
+	    if (screen->normalized_c
+		&& !IsCellCombined(screen,
+				   screen->last_written_row,
+				   screen->last_written_col)) {
 		prev = (int) XTERM_CELL(screen->last_written_row,
 					screen->last_written_col);
-		precomposed = do_precomposition(prev, (int) c);
+		test = do_precomposition(prev, (int) c);
 		TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
 		       prev, my_wcwidth(prev),
 		       (int) c, my_wcwidth((int) c),
-		       precomposed, my_wcwidth(precomposed)));
+		       test, my_wcwidth(test)));
 	    } else {
-		precomposed = -1;
+		prev = -1;
+		test = -1;
 	    }
 
 	    /* substitute combined character with precomposed character
 	     * only if it does not change the width of the base character
 	     */
-	    if (precomposed != -1 && my_wcwidth(precomposed) == my_wcwidth(prev)) {
+	    if (test != -1 && my_wcwidth(test) == my_wcwidth(prev)) {
 		putXtermCell(screen,
 			     screen->last_written_row,
-			     screen->last_written_col, precomposed);
+			     screen->last_written_col, test);
 	    } else {
 		addXtermCombining(screen,
 				  screen->last_written_row,
@@ -4333,6 +4342,103 @@ really_set_mousemode(XtermWidget xw,
 #endif
 
 /*
+ * Use this enumerated type to check consistency among dpmodes(), savemodes()
+ * and restoremodes().
+ */
+typedef enum {
+    srm_DECCKM = 1
+    ,srm_DECANM = 2
+    ,srm_DECCOLM = 3
+    ,srm_DECSCLM = 4
+    ,srm_DECSCNM = 5
+    ,srm_DECOM = 6
+    ,srm_DECAWM = 7
+    ,srm_DECARM = 8
+    ,srm_X10_MOUSE = SET_X10_MOUSE
+#if OPT_TOOLBAR
+    ,srm_RXVT_TOOLBAR = 10
+#endif
+#if OPT_BLINK_CURS
+    ,srm_ATT610_BLINK = 12
+#endif
+    ,srm_DECPFF = 18
+    ,srm_DECPEX = 19
+    ,srm_DECTCEM = 25
+    ,srm_RXVT_SCROLLBAR = 30
+#if OPT_SHIFT_FONTS
+    ,srm_RXVT_FONTSIZE = 35
+#endif
+#if OPT_TEK4014
+    ,srm_DECTEK = 38
+#endif
+    ,srm_132COLS = 40
+    ,srm_CURSES_HACK = 41
+    ,srm_DECNRCM = 42
+    ,srm_MARGIN_BELL = 44
+    ,srm_REVERSEWRAP = 45
+#ifdef ALLOWLOGGING
+    ,srm_ALLOWLOGGING = 46
+#endif
+    ,srm_OPT_ALTBUF_CURSOR = 1049
+    ,srm_OPT_ALTBUF = 1047
+    ,srm_ALTBUF = 47
+    ,srm_DECNKM = 66
+    ,srm_DECBKM = 67
+    ,srm_DECLRMM = 69
+    ,srm_DECNCSM = 95
+    ,srm_VT200_MOUSE = SET_VT200_MOUSE
+    ,srm_VT200_HIGHLIGHT_MOUSE = SET_VT200_HIGHLIGHT_MOUSE
+    ,srm_BTN_EVENT_MOUSE = SET_BTN_EVENT_MOUSE
+    ,srm_ANY_EVENT_MOUSE = SET_ANY_EVENT_MOUSE
+#if OPT_FOCUS_EVENT
+    ,srm_FOCUS_EVENT_MOUSE = SET_FOCUS_EVENT_MOUSE
+#endif
+    ,srm_EXT_MODE_MOUSE = SET_EXT_MODE_MOUSE
+    ,srm_SGR_EXT_MODE_MOUSE = SET_SGR_EXT_MODE_MOUSE
+    ,srm_URXVT_EXT_MODE_MOUSE = SET_URXVT_EXT_MODE_MOUSE
+    ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
+    ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
+    ,srm_EIGHT_BIT_META = 1034
+#if OPT_NUM_LOCK
+    ,srm_REAL_NUMLOCK = 1035
+    ,srm_META_SENDS_ESC = 1036
+#endif
+    ,srm_DELETE_IS_DEL = 1037
+#if OPT_NUM_LOCK
+    ,srm_ALT_SENDS_ESC = 1039
+#endif
+    ,srm_KEEP_SELECTION = 1040
+    ,srm_SELECT_TO_CLIPBOARD = 1041
+    ,srm_BELL_IS_URGENT = 1042
+    ,srm_POP_ON_BELL = 1043
+    ,srm_TITE_INHIBIT = 1048
+#if OPT_TCAP_FKEYS
+    ,srm_TCAP_FKEYS = 1050
+#endif
+#if OPT_SUN_FUNC_KEYS
+    ,srm_SUN_FKEYS = 1051
+#endif
+#if OPT_HP_FUNC_KEYS
+    ,srm_HP_FKEYS = 1052
+#endif
+#if OPT_SCO_FUNC_KEYS
+    ,srm_SCO_FKEYS = 1053
+#endif
+    ,srm_LEGACY_FKEYS = 1060
+#if OPT_SUNPC_KBD
+    ,srm_VT220_FKEYS = 1061
+#endif
+#if OPT_READLINE
+    ,srm_BUTTON1_MOVE_POINT = SET_BUTTON1_MOVE_POINT
+    ,srm_BUTTON2_MOVE_POINT = SET_BUTTON2_MOVE_POINT
+    ,srm_DBUTTON3_DELETE = SET_DBUTTON3_DELETE
+    ,srm_PASTE_IN_BRACKET = SET_PASTE_IN_BRACKET
+    ,srm_PASTE_QUOTE = SET_PASTE_QUOTE
+    ,srm_PASTE_LITERAL_NL = SET_PASTE_LITERAL_NL
+#endif				/* OPT_READLINE */
+} DECSET_codes;
+
+/*
  * process DEC private modes set, reset
  */
 static void
@@ -4344,12 +4450,12 @@ dpmodes(XtermWidget xw, BitFunc func)
 
     for (i = 0; i < nparam; ++i) {
 	TRACE(("%s %d\n", IsSM()? "DECSET" : "DECRST", param[i]));
-	switch (param[i]) {
-	case 1:		/* DECCKM                       */
+	switch ((DECSET_codes) param[i]) {
+	case srm_DECCKM:
 	    (*func) (&xw->keyboard.flags, MODE_DECCKM);
 	    update_appcursor();
 	    break;
-	case 2:		/* DECANM - ANSI/VT52 mode      */
+	case srm_DECANM:	/* ANSI/VT52 mode      */
 	    if (IsSM()) {	/* ANSI (VT100) */
 		/*
 		 * Setting DECANM should have no effect, since this function
@@ -4372,7 +4478,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 #endif
 	    break;
-	case 3:		/* DECCOLM                      */
+	case srm_DECCOLM:
 	    if (screen->c132) {
 		if (!(xw->flags & NOCLEAR_COLM))
 		    ClearScreen(xw);
@@ -4388,7 +4494,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		}
 	    }
 	    break;
-	case 4:		/* DECSCLM (slow scroll)        */
+	case srm_DECSCLM:	/* (slow scroll)        */
 	    if (IsSM()) {
 		screen->jumpscroll = 0;
 		if (screen->scroll_amt)
@@ -4398,7 +4504,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    (*func) (&xw->flags, SMOOTHSCROLL);
 	    update_jumpscroll();
 	    break;
-	case 5:		/* DECSCNM                      */
+	case srm_DECSCNM:
 	    myflags = xw->flags;
 	    (*func) (&xw->flags, REVERSE_VIDEO);
 	    if ((xw->flags ^ myflags) & REVERSE_VIDEO)
@@ -4406,87 +4512,87 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    /* update_reversevideo done in RevVid */
 	    break;
 
-	case 6:		/* DECOM                        */
+	case srm_DECOM:
 	    (*func) (&xw->flags, ORIGIN);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    break;
 
-	case 7:		/* DECAWM                       */
+	case srm_DECAWM:
 	    (*func) (&xw->flags, WRAPAROUND);
 	    update_autowrap();
 	    break;
-	case 8:		/* DECARM                       */
+	case srm_DECARM:
 	    /* ignore autorepeat
 	     * XAutoRepeatOn() and XAutoRepeatOff() can do this, but only
 	     * for the whole display - not limited to a given window.
 	     */
 	    break;
-	case SET_X10_MOUSE:	/* MIT bogus sequence           */
+	case srm_X10_MOUSE:	/* MIT bogus sequence           */
 	    MotionOff(screen, xw);
 	    set_mousemode(X10_MOUSE);
 	    break;
 #if OPT_TOOLBAR
-	case 10:		/* rxvt */
+	case srm_RXVT_TOOLBAR:
 	    ShowToolbar(IsSM());
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case 12:		/* att610: Start/stop blinking cursor */
+	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
 	    if (screen->cursor_blink_res) {
 		set_bool_mode(screen->cursor_blink_esc);
 		UpdateCursorBlink(screen);
 	    }
 	    break;
 #endif
-	case 18:		/* DECPFF: print form feed */
+	case srm_DECPFF:	/* print form feed */
 	    set_bool_mode(PrinterOf(screen).printer_formfeed);
 	    break;
-	case 19:		/* DECPEX: print extent */
+	case srm_DECPEX:	/* print extent */
 	    set_bool_mode(PrinterOf(screen).printer_extent);
 	    break;
-	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
+	case srm_DECTCEM:	/* Show/hide cursor (VT200) */
 	    set_bool_mode(screen->cursor_set);
 	    break;
-	case 30:		/* rxvt */
+	case srm_RXVT_SCROLLBAR:
 	    if (screen->fullVwin.sb_info.width != (IsSM()? ON : OFF))
 		ToggleScrollBar(xw);
 	    break;
 #if OPT_SHIFT_FONTS
-	case 35:		/* rxvt */
+	case srm_RXVT_FONTSIZE:
 	    set_bool_mode(xw->misc.shift_fonts);
 	    break;
 #endif
-	case 38:		/* DECTEK                       */
 #if OPT_TEK4014
+	case srm_DECTEK:
 	    if (IsSM() && !(screen->inhibit & I_TEK)) {
 		FlushLog(xw);
 		TEK4014_ACTIVE(xw) = True;
 	    }
-#endif
 	    break;
-	case 40:		/* 132 column mode              */
+#endif
+	case srm_132COLS:	/* 132 column mode              */
 	    set_bool_mode(screen->c132);
 	    update_allow132();
 	    break;
-	case 41:		/* curses hack                  */
+	case srm_CURSES_HACK:
 	    set_bool_mode(screen->curses);
 	    update_cursesemul();
 	    break;
-	case 42:		/* DECNRCM national charset (VT220) */
+	case srm_DECNRCM:	/* national charset (VT220) */
 	    (*func) (&xw->flags, NATIONAL);
 	    break;
-	case 44:		/* margin bell                  */
+	case srm_MARGIN_BELL:	/* margin bell                  */
 	    set_bool_mode(screen->marginbell);
 	    if (!screen->marginbell)
 		screen->bellArmed = -1;
 	    update_marginbell();
 	    break;
-	case 45:		/* reverse wraparound   */
+	case srm_REVERSEWRAP:	/* reverse wraparound   */
 	    (*func) (&xw->flags, REVERSEWRAP);
 	    update_reversewrap();
 	    break;
 #ifdef ALLOWLOGGING
-	case 46:		/* logging              */
+	case srm_ALLOWLOGGING:	/* logging              */
 #ifdef ALLOWLOGFILEONOFF
 	    /*
 	     * if this feature is enabled, logging may be
@@ -4502,7 +4608,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 #endif /* ALLOWLOGFILEONOFF */
 	    break;
 #endif
-	case 1049:		/* alternate buffer & cursor */
+	case srm_OPT_ALTBUF_CURSOR:	/* alternate buffer & cursor */
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM()) {
 		    CursorSave(xw);
@@ -4518,9 +4624,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 		}
 	    }
 	    break;
-	case 1047:
+	case srm_OPT_ALTBUF:
 	    /* FALLTHRU */
-	case 47:		/* alternate buffer */
+	case srm_ALTBUF:	/* alternate buffer */
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM()) {
 		    ToAlternate(xw);
@@ -4536,18 +4642,18 @@ dpmodes(XtermWidget xw, BitFunc func)
 		}
 	    }
 	    break;
-	case 66:		/* DECNKM */
+	case srm_DECNKM:
 	    (*func) (&xw->keyboard.flags, MODE_DECKPAM);
 	    update_appkeypad();
 	    break;
-	case 67:		/* DECBKM */
+	case srm_DECBKM:
 	    /* back-arrow mapped to backspace or delete(D) */
 	    (*func) (&xw->keyboard.flags, MODE_DECBKM);
 	    TRACE(("DECSET DECBKM %s\n",
 		   BtoS(xw->keyboard.flags & MODE_DECBKM)));
 	    update_decbkm();
 	    break;
-	case 69:		/* DECLRMM                      */
+	case srm_DECLRMM:
 	    if (screen->terminal_id >= 400) {	/* VT420 */
 		(*func) (&xw->flags, LEFT_RIGHT);
 		if (IsLeftRightMode(xw)) {
@@ -4558,24 +4664,24 @@ dpmodes(XtermWidget xw, BitFunc func)
 		CursorSet(screen, 0, 0, xw->flags);
 	    }
 	    break;
-	case 95:		/* DECNCSM                      */
+	case srm_DECNCSM:
 	    if (screen->terminal_id >= 500) {	/* VT510 */
 		(*func) (&xw->flags, NOCLEAR_COLM);
 	    }
 	    break;
-	case SET_VT200_MOUSE:	/* xterm bogus sequence         */
+	case srm_VT200_MOUSE:	/* xterm bogus sequence         */
 	    MotionOff(screen, xw);
 	    set_mousemode(VT200_MOUSE);
 	    break;
-	case SET_VT200_HIGHLIGHT_MOUSE:	/* xterm sequence w/hilite tracking */
+	case srm_VT200_HIGHLIGHT_MOUSE:	/* xterm sequence w/hilite tracking */
 	    MotionOff(screen, xw);
 	    set_mousemode(VT200_HIGHLIGHT_MOUSE);
 	    break;
-	case SET_BTN_EVENT_MOUSE:
+	case srm_BTN_EVENT_MOUSE:
 	    MotionOff(screen, xw);
 	    set_mousemode(BTN_EVENT_MOUSE);
 	    break;
-	case SET_ANY_EVENT_MOUSE:
+	case srm_ANY_EVENT_MOUSE:
 	    set_mousemode(ANY_EVENT_MOUSE);
 	    if (screen->send_mouse_pos == MOUSE_OFF) {
 		MotionOff(screen, xw);
@@ -4584,15 +4690,15 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #if OPT_FOCUS_EVENT
-	case SET_FOCUS_EVENT_MOUSE:
+	case srm_FOCUS_EVENT_MOUSE:
 	    set_bool_mode(screen->send_focus_pos);
 	    break;
 #endif
-	case SET_EXT_MODE_MOUSE:
+	case srm_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_SGR_EXT_MODE_MOUSE:
+	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_URXVT_EXT_MODE_MOUSE:
+	case srm_URXVT_EXT_MODE_MOUSE:
 	    /*
 	     * Rather than choose an arbitrary precedence among the coordinate
 	     * modes, they are mutually exclusive.  For consistency, a reset is
@@ -4604,56 +4710,56 @@ dpmodes(XtermWidget xw, BitFunc func)
 		screen->extend_coords = 0;
 	    }
 	    break;
-	case 1010:		/* rxvt */
+	case srm_RXVT_SCROLL_TTY_OUTPUT:
 	    set_bool_mode(screen->scrollttyoutput);
 	    update_scrollttyoutput();
 	    break;
-	case 1011:		/* rxvt */
+	case srm_RXVT_SCROLL_TTY_KEYPRESS:
 	    set_bool_mode(screen->scrollkey);
 	    update_scrollkey();
 	    break;
-	case 1034:
+	case srm_EIGHT_BIT_META:
 	    if (screen->eight_bit_meta != ebNever) {
 		set_bool_mode(screen->eight_bit_meta);
 	    }
 	    break;
 #if OPT_NUM_LOCK
-	case 1035:
+	case srm_REAL_NUMLOCK:
 	    set_bool_mode(xw->misc.real_NumLock);
 	    update_num_lock();
 	    break;
-	case 1036:
+	case srm_META_SENDS_ESC:
 	    set_bool_mode(screen->meta_sends_esc);
 	    update_meta_esc();
 	    break;
 #endif
-	case 1037:
+	case srm_DELETE_IS_DEL:
 	    set_bool_mode(screen->delete_is_del);
 	    update_delete_del();
 	    break;
 #if OPT_NUM_LOCK
-	case 1039:
+	case srm_ALT_SENDS_ESC:
 	    set_bool_mode(screen->alt_sends_esc);
 	    update_alt_esc();
 	    break;
 #endif
-	case 1040:
+	case srm_KEEP_SELECTION:
 	    set_bool_mode(screen->keepSelection);
 	    update_keepSelection();
 	    break;
-	case 1041:
+	case srm_SELECT_TO_CLIPBOARD:
 	    set_bool_mode(screen->selectToClipboard);
 	    update_selectToClipboard();
 	    break;
-	case 1042:
+	case srm_BELL_IS_URGENT:
 	    set_bool_mode(screen->bellIsUrgent);
 	    update_bellIsUrgent();
 	    break;
-	case 1043:
+	case srm_POP_ON_BELL:
 	    set_bool_mode(screen->poponbell);
 	    update_poponbell();
 	    break;
-	case 1048:
+	case srm_TITE_INHIBIT:
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM())
 		    CursorSave(xw);
@@ -4662,50 +4768,50 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #if OPT_TCAP_FKEYS
-	case 1050:
+	case srm_TCAP_FKEYS:
 	    set_keyboard_type(xw, keyboardIsTermcap, IsSM());
 	    break;
 #endif
 #if OPT_SUN_FUNC_KEYS
-	case 1051:
+	case srm_SUN_FKEYS:
 	    set_keyboard_type(xw, keyboardIsSun, IsSM());
 	    break;
 #endif
 #if OPT_HP_FUNC_KEYS
-	case 1052:
+	case srm_HP_FKEYS:
 	    set_keyboard_type(xw, keyboardIsHP, IsSM());
 	    break;
 #endif
 #if OPT_SCO_FUNC_KEYS
-	case 1053:
+	case srm_SCO_FKEYS:
 	    set_keyboard_type(xw, keyboardIsSCO, IsSM());
 	    break;
 #endif
-	case 1060:
+	case srm_LEGACY_FKEYS:
 	    set_keyboard_type(xw, keyboardIsLegacy, IsSM());
 	    break;
 #if OPT_SUNPC_KBD
-	case 1061:
+	case srm_VT220_FKEYS:
 	    set_keyboard_type(xw, keyboardIsVT220, IsSM());
 	    break;
 #endif
 #if OPT_READLINE
-	case SET_BUTTON1_MOVE_POINT:
+	case srm_BUTTON1_MOVE_POINT:
 	    set_mouseflag(click1_moves);
 	    break;
-	case SET_BUTTON2_MOVE_POINT:
+	case srm_BUTTON2_MOVE_POINT:
 	    set_mouseflag(paste_moves);
 	    break;
-	case SET_DBUTTON3_DELETE:
+	case srm_DBUTTON3_DELETE:
 	    set_mouseflag(dclick3_deletes);
 	    break;
-	case SET_PASTE_IN_BRACKET:
+	case srm_PASTE_IN_BRACKET:
 	    set_mouseflag(paste_brackets);
 	    break;
-	case SET_PASTE_QUOTE:
+	case srm_PASTE_QUOTE:
 	    set_mouseflag(paste_quotes);
 	    break;
-	case SET_PASTE_LITERAL_NL:
+	case srm_PASTE_LITERAL_NL:
 	    set_mouseflag(paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
@@ -4724,124 +4830,208 @@ savemodes(XtermWidget xw)
 
     for (i = 0; i < nparam; i++) {
 	TRACE(("savemodes %d\n", param[i]));
-	switch (param[i]) {
-	case 1:		/* DECCKM                       */
+	switch ((DECSET_codes) param[i]) {
+	case srm_DECCKM:
 	    DoSM(DP_DECCKM, xw->keyboard.flags & MODE_DECCKM);
 	    break;
-	case 3:		/* DECCOLM                      */
+	case srm_DECANM:	/* ANSI/VT52 mode      */
+	    /* no effect */
+	    break;
+	case srm_DECCOLM:
 	    if (screen->c132)
 		DoSM(DP_DECCOLM, xw->flags & IN132COLUMNS);
 	    break;
-	case 4:		/* DECSCLM (slow scroll)        */
+	case srm_DECSCLM:	/* (slow scroll)        */
 	    DoSM(DP_DECSCLM, xw->flags & SMOOTHSCROLL);
 	    break;
-	case 5:		/* DECSCNM                      */
+	case srm_DECSCNM:
 	    DoSM(DP_DECSCNM, xw->flags & REVERSE_VIDEO);
 	    break;
-	case 6:		/* DECOM                        */
+	case srm_DECOM:
 	    DoSM(DP_DECOM, xw->flags & ORIGIN);
 	    break;
-	case 7:		/* DECAWM                       */
+	case srm_DECAWM:
 	    DoSM(DP_DECAWM, xw->flags & WRAPAROUND);
 	    break;
-	case 8:		/* DECARM                       */
+	case srm_DECARM:
 	    /* ignore autorepeat */
 	    break;
-	case SET_X10_MOUSE:	/* mouse bogus sequence */
+	case srm_X10_MOUSE:	/* mouse bogus sequence */
 	    DoSM(DP_X_X10MSE, screen->send_mouse_pos);
 	    break;
 #if OPT_TOOLBAR
-	case 10:		/* rxvt */
+	case srm_RXVT_TOOLBAR:
 	    DoSM(DP_TOOLBAR, resource.toolBar);
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case 12:		/* att610: Start/stop blinking cursor */
+	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
 	    if (screen->cursor_blink_res) {
 		DoSM(DP_CRS_BLINK, screen->cursor_blink_esc);
 	    }
 	    break;
 #endif
-	case 18:		/* DECPFF: print form feed */
+	case srm_DECPFF:	/* print form feed */
 	    DoSM(DP_PRN_FORMFEED, PrinterOf(screen).printer_formfeed);
 	    break;
-	case 19:		/* DECPEX: print extent */
+	case srm_DECPEX:	/* print extent */
 	    DoSM(DP_PRN_EXTENT, PrinterOf(screen).printer_extent);
 	    break;
-	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
+	case srm_DECTCEM:	/* Show/hide cursor (VT200) */
 	    DoSM(DP_CRS_VISIBLE, screen->cursor_set);
 	    break;
-	case 40:		/* 132 column mode              */
+	case srm_RXVT_SCROLLBAR:
+	    DoSM(DP_RXVT_SCROLLBAR, (screen->fullVwin.sb_info.width != 0));
+	    break;
+#if OPT_SHIFT_FONTS
+	case srm_RXVT_FONTSIZE:
+	    DoSM(DP_RXVT_FONTSIZE, xw->misc.shift_fonts);
+	    break;
+#endif
+#if OPT_TEK4014
+	case srm_DECTEK:
+	    DoSM(DP_DECTEK, TEK4014_ACTIVE(xw));
+	    break;
+#endif
+	case srm_132COLS:	/* 132 column mode              */
 	    DoSM(DP_X_DECCOLM, screen->c132);
 	    break;
-	case 41:		/* curses hack                  */
+	case srm_CURSES_HACK:	/* curses hack                  */
 	    DoSM(DP_X_MORE, screen->curses);
 	    break;
-	case 42:		/* DECNRCM national charset (VT220) */
-	    /* do nothing */
+	case srm_DECNRCM:	/* national charset (VT220) */
+	    DoSM(DP_DECNRCM, xw->flags & NATIONAL);
 	    break;
-	case 44:		/* margin bell                  */
+	case srm_MARGIN_BELL:	/* margin bell                  */
 	    DoSM(DP_X_MARGIN, screen->marginbell);
 	    break;
-	case 45:		/* reverse wraparound   */
+	case srm_REVERSEWRAP:	/* reverse wraparound   */
 	    DoSM(DP_X_REVWRAP, xw->flags & REVERSEWRAP);
 	    break;
 #ifdef ALLOWLOGGING
-	case 46:		/* logging              */
+	case srm_ALLOWLOGGING:	/* logging              */
 	    DoSM(DP_X_LOGGING, screen->logging);
 	    break;
 #endif
-	case 1047:		/* alternate buffer             */
+	case srm_OPT_ALTBUF_CURSOR:
 	    /* FALLTHRU */
-	case 47:		/* alternate buffer             */
+	case srm_OPT_ALTBUF:
+	    /* FALLTHRU */
+	case srm_ALTBUF:	/* alternate buffer             */
 	    DoSM(DP_X_ALTSCRN, screen->whichBuf);
 	    break;
-	case 69:		/* left-right */
+	case srm_DECNKM:
+	    DoSM(DP_DECKPAM, xw->keyboard.flags & MODE_DECKPAM);
+	    break;
+	case srm_DECBKM:
+	    DoSM(DP_DECBKM, xw->keyboard.flags & MODE_DECBKM);
+	    break;
+	case srm_DECLRMM:	/* left-right */
 	    DoSM(DP_X_LRMM, LEFT_RIGHT);
 	    break;
-	case 95:		/* noclear */
+	case srm_DECNCSM:	/* noclear */
 	    DoSM(DP_X_NCSM, NOCLEAR_COLM);
 	    break;
-	case SET_VT200_MOUSE:	/* mouse bogus sequence         */
-	case SET_VT200_HIGHLIGHT_MOUSE:
-	case SET_BTN_EVENT_MOUSE:
-	case SET_ANY_EVENT_MOUSE:
+	case srm_VT200_MOUSE:	/* mouse bogus sequence         */
+	case srm_VT200_HIGHLIGHT_MOUSE:
+	case srm_BTN_EVENT_MOUSE:
+	case srm_ANY_EVENT_MOUSE:
 	    DoSM(DP_X_MOUSE, screen->send_mouse_pos);
 	    break;
 #if OPT_FOCUS_EVENT
-	case SET_FOCUS_EVENT_MOUSE:
+	case srm_FOCUS_EVENT_MOUSE:
 	    DoSM(DP_X_FOCUS, screen->send_focus_pos);
 	    break;
 #endif
-	case SET_EXT_MODE_MOUSE:
+	case srm_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_SGR_EXT_MODE_MOUSE:
+	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_URXVT_EXT_MODE_MOUSE:
+	case srm_URXVT_EXT_MODE_MOUSE:
 	    DoSM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
-	case 1048:
+	case srm_RXVT_SCROLL_TTY_OUTPUT:
+	    DoSM(DP_RXVT_SCROLL_TTY_OUTPUT, screen->scrollttyoutput);
+	    break;
+	case srm_RXVT_SCROLL_TTY_KEYPRESS:
+	    DoSM(DP_RXVT_SCROLL_TTY_KEYPRESS, screen->scrollkey);
+	    break;
+	case srm_EIGHT_BIT_META:
+	    DoSM(DP_EIGHT_BIT_META, screen->eight_bit_meta);
+	    break;
+#if OPT_NUM_LOCK
+	case srm_REAL_NUMLOCK:
+	    DoSM(DP_REAL_NUMLOCK, xw->misc.real_NumLock);
+	    break;
+	case srm_META_SENDS_ESC:
+	    DoSM(DP_META_SENDS_ESC, screen->meta_sends_esc);
+	    break;
+#endif
+	case srm_DELETE_IS_DEL:
+	    DoSM(DP_DELETE_IS_DEL, screen->delete_is_del);
+	    break;
+#if OPT_NUM_LOCK
+	case srm_ALT_SENDS_ESC:
+	    DoSM(DP_ALT_SENDS_ESC, screen->alt_sends_esc);
+	    break;
+#endif
+	case srm_KEEP_SELECTION:
+	    DoSM(DP_KEEP_SELECTION, screen->keepSelection);
+	    break;
+	case srm_SELECT_TO_CLIPBOARD:
+	    DoSM(DP_SELECT_TO_CLIPBOARD, screen->selectToClipboard);
+	    break;
+	case srm_BELL_IS_URGENT:
+	    DoSM(DP_BELL_IS_URGENT, screen->bellIsUrgent);
+	    break;
+	case srm_POP_ON_BELL:
+	    DoSM(DP_POP_ON_BELL, screen->poponbell);
+	    break;
+#if OPT_TCAP_FKEYS
+	case srm_TCAP_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SUN_FUNC_KEYS
+	case srm_SUN_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_HP_FUNC_KEYS
+	case srm_HP_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SCO_FUNC_KEYS
+	case srm_SCO_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SUNPC_KBD
+	case srm_VT220_FKEYS:
+	    /* FALLTHRU */
+#endif
+	case srm_LEGACY_FKEYS:
+	    DoSM(DP_KEYBOARD_TYPE, xw->keyboard.type);
+	    break;
+	case srm_TITE_INHIBIT:
 	    if (!xw->misc.titeInhibit) {
 		CursorSave(xw);
 	    }
 	    break;
 #if OPT_READLINE
-	case SET_BUTTON1_MOVE_POINT:
+	case srm_BUTTON1_MOVE_POINT:
 	    SCREEN_FLAG_save(screen, click1_moves);
 	    break;
-	case SET_BUTTON2_MOVE_POINT:
+	case srm_BUTTON2_MOVE_POINT:
 	    SCREEN_FLAG_save(screen, paste_moves);
 	    break;
-	case SET_DBUTTON3_DELETE:
+	case srm_DBUTTON3_DELETE:
 	    SCREEN_FLAG_save(screen, dclick3_deletes);
 	    break;
-	case SET_PASTE_IN_BRACKET:
+	case srm_PASTE_IN_BRACKET:
 	    SCREEN_FLAG_save(screen, paste_brackets);
 	    break;
-	case SET_PASTE_QUOTE:
+	case srm_PASTE_QUOTE:
 	    SCREEN_FLAG_save(screen, paste_quotes);
 	    break;
-	case SET_PASTE_LITERAL_NL:
+	case srm_PASTE_LITERAL_NL:
 	    SCREEN_FLAG_save(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
@@ -4860,13 +5050,16 @@ restoremodes(XtermWidget xw)
 
     for (i = 0; i < nparam; i++) {
 	TRACE(("restoremodes %d\n", param[i]));
-	switch (param[i]) {
-	case 1:		/* DECCKM                       */
+	switch ((DECSET_codes) param[i]) {
+	case srm_DECCKM:
 	    bitcpy(&xw->keyboard.flags,
 		   screen->save_modes[DP_DECCKM], MODE_DECCKM);
 	    update_appcursor();
 	    break;
-	case 3:		/* DECCOLM                      */
+	case srm_DECANM:	/* ANSI/VT52 mode      */
+	    /* no effect */
+	    break;
+	case srm_DECCOLM:
 	    if (screen->c132) {
 		if (!(xw->flags & NOCLEAR_COLM))
 		    ClearScreen(xw);
@@ -4880,7 +5073,7 @@ restoremodes(XtermWidget xw)
 		       IN132COLUMNS);
 	    }
 	    break;
-	case 4:		/* DECSCLM (slow scroll)        */
+	case srm_DECSCLM:	/* (slow scroll)        */
 	    if (screen->save_modes[DP_DECSCLM] & SMOOTHSCROLL) {
 		screen->jumpscroll = 0;
 		if (screen->scroll_amt)
@@ -4890,70 +5083,93 @@ restoremodes(XtermWidget xw)
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECSCLM], SMOOTHSCROLL);
 	    update_jumpscroll();
 	    break;
-	case 5:		/* DECSCNM                      */
+	case srm_DECSCNM:
 	    if ((screen->save_modes[DP_DECSCNM] ^ xw->flags) & REVERSE_VIDEO) {
 		bitcpy(&xw->flags, screen->save_modes[DP_DECSCNM], REVERSE_VIDEO);
 		ReverseVideo(xw);
 		/* update_reversevideo done in RevVid */
 	    }
 	    break;
-	case 6:		/* DECOM                        */
+	case srm_DECOM:
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECOM], ORIGIN);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    break;
 
-	case 7:		/* DECAWM                       */
+	case srm_DECAWM:
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECAWM], WRAPAROUND);
 	    update_autowrap();
 	    break;
-	case 8:		/* DECARM                       */
+	case srm_DECARM:
 	    /* ignore autorepeat */
 	    break;
-	case SET_X10_MOUSE:	/* MIT bogus sequence           */
+	case srm_X10_MOUSE:	/* MIT bogus sequence           */
 	    DoRM0(DP_X_X10MSE, screen->send_mouse_pos);
 	    break;
 #if OPT_TOOLBAR
-	case 10:		/* rxvt */
+	case srm_RXVT_TOOLBAR:
 	    DoRM(DP_TOOLBAR, resource.toolBar);
 	    ShowToolbar(resource.toolBar);
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case 12:		/* att610: Start/stop blinking cursor */
+	case srm_ATT610_BLINK:	/* Start/stop blinking cursor */
 	    if (screen->cursor_blink_res) {
 		DoRM(DP_CRS_BLINK, screen->cursor_blink_esc);
 		UpdateCursorBlink(screen);
 	    }
 	    break;
 #endif
-	case 18:		/* DECPFF: print form feed */
+	case srm_DECPFF:	/* print form feed */
 	    DoRM(DP_PRN_FORMFEED, PrinterOf(screen).printer_formfeed);
 	    break;
-	case 19:		/* DECPEX: print extent */
+	case srm_DECPEX:	/* print extent */
 	    DoRM(DP_PRN_EXTENT, PrinterOf(screen).printer_extent);
 	    break;
-	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
+	case srm_DECTCEM:	/* Show/hide cursor (VT200) */
 	    DoRM(DP_CRS_VISIBLE, screen->cursor_set);
 	    break;
-	case 40:		/* 132 column mode              */
+	case srm_RXVT_SCROLLBAR:
+	    if ((screen->fullVwin.sb_info.width != 0) !=
+		screen->save_modes[DP_RXVT_SCROLLBAR]) {
+		ToggleScrollBar(xw);
+	    }
+	    break;
+#if OPT_SHIFT_FONTS
+	case srm_RXVT_FONTSIZE:
+	    DoRM(DP_RXVT_FONTSIZE, xw->misc.shift_fonts);
+	    break;
+#endif
+#if OPT_TEK4014
+	case srm_DECTEK:
+	    if (!(screen->inhibit & I_TEK) &&
+		(TEK4014_ACTIVE(xw) != (Boolean) screen->save_modes[DP_DECTEK])) {
+		FlushLog(xw);
+		TEK4014_ACTIVE(xw) = False;
+	    }
+	    break;
+#endif
+	case srm_132COLS:	/* 132 column mode              */
 	    DoRM(DP_X_DECCOLM, screen->c132);
 	    update_allow132();
 	    break;
-	case 41:		/* curses hack                  */
+	case srm_CURSES_HACK:	/* curses hack                  */
 	    DoRM(DP_X_MORE, screen->curses);
 	    update_cursesemul();
 	    break;
-	case 44:		/* margin bell                  */
+	case srm_DECNRCM:	/* national charset (VT220) */
+	    bitcpy(&xw->flags, screen->save_modes[DP_DECNRCM], NATIONAL);
+	    break;
+	case srm_MARGIN_BELL:	/* margin bell                  */
 	    if ((DoRM(DP_X_MARGIN, screen->marginbell)) == 0)
 		screen->bellArmed = -1;
 	    update_marginbell();
 	    break;
-	case 45:		/* reverse wraparound   */
+	case srm_REVERSEWRAP:	/* reverse wraparound   */
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_REVWRAP], REVERSEWRAP);
 	    update_reversewrap();
 	    break;
 #ifdef ALLOWLOGGING
-	case 46:		/* logging              */
+	case srm_ALLOWLOGGING:	/* logging              */
 #ifdef ALLOWLOGFILEONOFF
 	    if (screen->save_modes[DP_X_LOGGING])
 		StartLog(xw);
@@ -4963,9 +5179,11 @@ restoremodes(XtermWidget xw)
 	    /* update_logging done by StartLog and CloseLog */
 	    break;
 #endif
-	case 1047:		/* alternate buffer */
+	case srm_OPT_ALTBUF_CURSOR:	/* alternate buffer & cursor */
 	    /* FALLTHRU */
-	case 47:		/* alternate buffer */
+	case srm_OPT_ALTBUF:
+	    /* FALLTHRU */
+	case srm_ALTBUF:	/* alternate buffer */
 	    if (!xw->misc.titeInhibit) {
 		if (screen->save_modes[DP_X_ALTSCRN])
 		    ToAlternate(xw);
@@ -4978,52 +5196,118 @@ restoremodes(XtermWidget xw)
 		}
 	    }
 	    break;
-	case 69:		/* left-right */
+	case srm_DECNKM:
+	    bitcpy(&xw->flags, screen->save_modes[DP_DECKPAM], MODE_DECKPAM);
+	    break;
+	case srm_DECBKM:
+	    bitcpy(&xw->flags, screen->save_modes[DP_DECBKM], MODE_DECBKM);
+	    break;
+	case srm_DECLRMM:	/* left-right */
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_LRMM], LEFT_RIGHT);
 	    break;
-	case 95:		/* noclear */
+	case srm_DECNCSM:	/* noclear */
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_NCSM], NOCLEAR_COLM);
 	    break;
-	case SET_VT200_MOUSE:	/* mouse bogus sequence         */
-	case SET_VT200_HIGHLIGHT_MOUSE:
-	case SET_BTN_EVENT_MOUSE:
-	case SET_ANY_EVENT_MOUSE:
+	case srm_VT200_MOUSE:	/* mouse bogus sequence         */
+	case srm_VT200_HIGHLIGHT_MOUSE:
+	case srm_BTN_EVENT_MOUSE:
+	case srm_ANY_EVENT_MOUSE:
 	    DoRM0(DP_X_MOUSE, screen->send_mouse_pos);
 	    break;
 #if OPT_FOCUS_EVENT
-	case SET_FOCUS_EVENT_MOUSE:
+	case srm_FOCUS_EVENT_MOUSE:
 	    DoRM(DP_X_FOCUS, screen->send_focus_pos);
 	    break;
 #endif
-	case SET_EXT_MODE_MOUSE:
+	case srm_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_SGR_EXT_MODE_MOUSE:
+	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_URXVT_EXT_MODE_MOUSE:
+	case srm_URXVT_EXT_MODE_MOUSE:
 	    DoRM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
-	case 1048:
+	case srm_TITE_INHIBIT:
 	    if (!xw->misc.titeInhibit) {
 		CursorRestore(xw);
 	    }
 	    break;
+	case srm_RXVT_SCROLL_TTY_OUTPUT:
+	    DoRM(DP_RXVT_SCROLL_TTY_OUTPUT, screen->scrollttyoutput);
+	    break;
+	case srm_RXVT_SCROLL_TTY_KEYPRESS:
+	    DoRM(DP_RXVT_SCROLL_TTY_KEYPRESS, screen->scrollkey);
+	    break;
+	case srm_EIGHT_BIT_META:
+	    DoRM(DP_EIGHT_BIT_META, screen->eight_bit_meta);
+	    break;
+#if OPT_NUM_LOCK
+	case srm_REAL_NUMLOCK:
+	    DoRM(DP_REAL_NUMLOCK, xw->misc.real_NumLock);
+	    break;
+	case srm_META_SENDS_ESC:
+	    DoRM(DP_META_SENDS_ESC, screen->meta_sends_esc);
+	    break;
+#endif
+	case srm_DELETE_IS_DEL:
+	    DoRM(DP_DELETE_IS_DEL, screen->delete_is_del);
+	    break;
+#if OPT_NUM_LOCK
+	case srm_ALT_SENDS_ESC:
+	    DoRM(DP_ALT_SENDS_ESC, screen->alt_sends_esc);
+	    break;
+#endif
+	case srm_KEEP_SELECTION:
+	    DoRM(DP_KEEP_SELECTION, screen->keepSelection);
+	    break;
+	case srm_SELECT_TO_CLIPBOARD:
+	    DoRM(DP_SELECT_TO_CLIPBOARD, screen->selectToClipboard);
+	    break;
+	case srm_BELL_IS_URGENT:
+	    DoRM(DP_BELL_IS_URGENT, screen->bellIsUrgent);
+	    break;
+	case srm_POP_ON_BELL:
+	    DoRM(DP_POP_ON_BELL, screen->poponbell);
+	    break;
+#if OPT_TCAP_FKEYS
+	case srm_TCAP_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SUN_FUNC_KEYS
+	case srm_SUN_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_HP_FUNC_KEYS
+	case srm_HP_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SCO_FUNC_KEYS
+	case srm_SCO_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SUNPC_KBD
+	case srm_VT220_FKEYS:
+	    /* FALLTHRU */
+#endif
+	case srm_LEGACY_FKEYS:
+	    DoRM(DP_KEYBOARD_TYPE, xw->keyboard.type);
+	    break;
 #if OPT_READLINE
-	case SET_BUTTON1_MOVE_POINT:
+	case srm_BUTTON1_MOVE_POINT:
 	    SCREEN_FLAG_restore(screen, click1_moves);
 	    break;
-	case SET_BUTTON2_MOVE_POINT:
+	case srm_BUTTON2_MOVE_POINT:
 	    SCREEN_FLAG_restore(screen, paste_moves);
 	    break;
-	case SET_DBUTTON3_DELETE:
+	case srm_DBUTTON3_DELETE:
 	    SCREEN_FLAG_restore(screen, dclick3_deletes);
 	    break;
-	case SET_PASTE_IN_BRACKET:
+	case srm_PASTE_IN_BRACKET:
 	    SCREEN_FLAG_restore(screen, paste_brackets);
 	    break;
-	case SET_PASTE_QUOTE:
+	case srm_PASTE_QUOTE:
 	    SCREEN_FLAG_restore(screen, paste_quotes);
 	    break;
-	case SET_PASTE_LITERAL_NL:
+	case srm_PASTE_LITERAL_NL:
 	    SCREEN_FLAG_restore(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */

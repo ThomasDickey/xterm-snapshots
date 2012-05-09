@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.585 2012/04/21 00:37:12 tom Exp $ */
+/* $XTermId: util.c,v 1.586 2012/05/08 08:43:23 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4045,6 +4045,13 @@ addXtermCombining(TScreen * screen, int row, int col, unsigned ch)
 	    }
 	}
     }
+}
+
+unsigned
+getXtermCombining(TScreen * screen, int row, int col, int off)
+{
+    LineData *ld = getLineData(screen, row);
+    return ld->combData[off][col];
 }
 #endif
 

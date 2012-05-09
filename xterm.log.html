@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1163 2012/05/08 00:07:15 tom Exp $
+  $XTermId: xterm.log.html,v 1.1166 2012/05/09 00:12:54 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -342,6 +342,12 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>fill in missing cases in the save/restore modes feature
+	    (report by Thomas Wolff).
+
+	<li>add check to ensure that combining characters are precomposed in
+	    the order given (report/analysis by Andries E Brouwer).
+
 	<li>improve workability check for posix_openpt(), to take into account
 	    BSD systems which do not complete initialization until both sides
 	    of the pseudoterminal are opened (report by Christian Weisgerber).
@@ -359,7 +365,7 @@ is the latest version of this file.
 	<li>modify DECSERA to use the current protected state rather than
 	    preserving it.
 
-	<li>add <code>precomose</code> resource to allow storing character
+	<li>add <code>precompose</code> resource to allow storing character
 	    data in Normalized Form D as described in
 	    <a href="http://unicode.org/reports/tr15/">http://unicode.org/reports/tr15/</a>
 	    (report/discussion with Andries E Brouwer).
@@ -800,7 +806,7 @@ is the latest version of this file.
 
 	<li>modify configure script to work with systems that have both
 	    ncurses (or other terminfo) as well as a real termcap library,
-	    e.g., Slackware (report by Alan Watts).
+	    e.g., Slackware (report by Andrew Watts).
 
 	<li>modify configure script to work around special case where user's
 	    environment adds compiler flags to the <code>CC</code> variable
