@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.692 2012/05/06 18:17:21 tom Exp $ */
+/* $XTermId: xterm.h,v 1.693 2012/05/08 08:50:30 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1402,7 +1402,10 @@ extern Boolean showZIconBeep(XtermWidget /* xw */, char * /* name */);
 #define XTERM_CELL(row,col)    getXtermCell(screen,     ROW2INX(screen, row), col)
 
 extern unsigned getXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */);
+extern unsigned getXtermCombining(TScreen * /* screen */, int /* row */, int /* col */, int /* off */);
 extern void putXtermCell (TScreen * /* screen */, int  /* row */, int  /* col */, int  /* ch */);
+
+#define IsCellCombined(screen, row, col) (getXtermCombining(screen, row, col, 0) != 0)
 
 #if OPT_HIGHLIGHT_COLOR
 #define isNotForeground(xw, fg, bg, sel) \
