@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.586 2012/05/08 08:43:23 tom Exp $ */
+/* $XTermId: util.c,v 1.587 2012/05/10 11:06:37 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -744,8 +744,8 @@ xtermColScroll(XtermWidget xw, int amount, Bool toLeft, int at_col)
     TScreen *screen = TScreenOf(xw);
 
     if (amount > 0) {
-	int min_row = 0;
-	int max_row = screen->max_row;
+	int min_row;
+	int max_row;
 
 	if (ScrnHaveRowMargins(screen)) {
 	    min_row = screen->top_marg;

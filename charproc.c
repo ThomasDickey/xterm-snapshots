@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1202 2012/05/09 00:08:36 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1205 2012/05/10 10:51:37 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -5104,6 +5104,8 @@ restoremodes(XtermWidget xw)
 	    break;
 	case srm_X10_MOUSE:	/* MIT bogus sequence           */
 	    DoRM0(DP_X_X10MSE, screen->send_mouse_pos);
+	    really_set_mousemode(xw, screen->send_mouse_pos,
+				 screen->send_mouse_pos != MOUSE_OFF);
 	    break;
 #if OPT_TOOLBAR
 	case srm_RXVT_TOOLBAR:
@@ -5144,7 +5146,7 @@ restoremodes(XtermWidget xw)
 	    if (!(screen->inhibit & I_TEK) &&
 		(TEK4014_ACTIVE(xw) != (Boolean) screen->save_modes[DP_DECTEK])) {
 		FlushLog(xw);
-		TEK4014_ACTIVE(xw) = False;
+		TEK4014_ACTIVE(xw) = screen->save_modes[DP_DECTEK];
 	    }
 	    break;
 #endif
@@ -5198,12 +5200,20 @@ restoremodes(XtermWidget xw)
 	    break;
 	case srm_DECNKM:
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECKPAM], MODE_DECKPAM);
+	    update_appkeypad();
 	    break;
 	case srm_DECBKM:
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECBKM], MODE_DECBKM);
+	    update_decbkm();
 	    break;
 	case srm_DECLRMM:	/* left-right */
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_LRMM], LEFT_RIGHT);
+	    if (IsLeftRightMode(xw)) {
+		xterm_ResetDouble(xw);
+	    } else {
+		reset_lr_margins(screen);
+	    }
+	    CursorSet(screen, 0, 0, xw->flags);
 	    break;
 	case srm_DECNCSM:	/* noclear */
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_NCSM], NOCLEAR_COLM);
@@ -5213,6 +5223,8 @@ restoremodes(XtermWidget xw)
 	case srm_BTN_EVENT_MOUSE:
 	case srm_ANY_EVENT_MOUSE:
 	    DoRM0(DP_X_MOUSE, screen->send_mouse_pos);
+	    really_set_mousemode(xw, screen->send_mouse_pos,
+				 screen->send_mouse_pos != MOUSE_OFF);
 	    break;
 #if OPT_FOCUS_EVENT
 	case srm_FOCUS_EVENT_MOUSE:
@@ -5233,9 +5245,11 @@ restoremodes(XtermWidget xw)
 	    break;
 	case srm_RXVT_SCROLL_TTY_OUTPUT:
 	    DoRM(DP_RXVT_SCROLL_TTY_OUTPUT, screen->scrollttyoutput);
+	    update_scrollttyoutput();
 	    break;
 	case srm_RXVT_SCROLL_TTY_KEYPRESS:
 	    DoRM(DP_RXVT_SCROLL_TTY_KEYPRESS, screen->scrollkey);
+	    update_scrollkey();
 	    break;
 	case srm_EIGHT_BIT_META:
 	    DoRM(DP_EIGHT_BIT_META, screen->eight_bit_meta);
@@ -5243,30 +5257,38 @@ restoremodes(XtermWidget xw)
 #if OPT_NUM_LOCK
 	case srm_REAL_NUMLOCK:
 	    DoRM(DP_REAL_NUMLOCK, xw->misc.real_NumLock);
+	    update_num_lock();
 	    break;
 	case srm_META_SENDS_ESC:
 	    DoRM(DP_META_SENDS_ESC, screen->meta_sends_esc);
+	    update_meta_esc();
 	    break;
 #endif
 	case srm_DELETE_IS_DEL:
 	    DoRM(DP_DELETE_IS_DEL, screen->delete_is_del);
+	    update_delete_del();
 	    break;
 #if OPT_NUM_LOCK
 	case srm_ALT_SENDS_ESC:
 	    DoRM(DP_ALT_SENDS_ESC, screen->alt_sends_esc);
+	    update_alt_esc();
 	    break;
 #endif
 	case srm_KEEP_SELECTION:
 	    DoRM(DP_KEEP_SELECTION, screen->keepSelection);
+	    update_keepSelection();
 	    break;
 	case srm_SELECT_TO_CLIPBOARD:
 	    DoRM(DP_SELECT_TO_CLIPBOARD, screen->selectToClipboard);
+	    update_selectToClipboard();
 	    break;
 	case srm_BELL_IS_URGENT:
 	    DoRM(DP_BELL_IS_URGENT, screen->bellIsUrgent);
+	    update_bellIsUrgent();
 	    break;
 	case srm_POP_ON_BELL:
 	    DoRM(DP_POP_ON_BELL, screen->poponbell);
+	    update_poponbell();
 	    break;
 #if OPT_TCAP_FKEYS
 	case srm_TCAP_FKEYS:
@@ -5289,7 +5311,7 @@ restoremodes(XtermWidget xw)
 	    /* FALLTHRU */
 #endif
 	case srm_LEGACY_FKEYS:
-	    DoRM(DP_KEYBOARD_TYPE, xw->keyboard.type);
+	    xw->keyboard.type = (xtermKeyboardType) screen->save_modes[DP_KEYBOARD_TYPE];
 	    break;
 #if OPT_READLINE
 	case srm_BUTTON1_MOVE_POINT:
@@ -7221,6 +7243,7 @@ VTInitialize(Widget wrequest,
 	extendedBoolean(request->screen.utf8_fonts_s, tblUtf8Mode, uLast);
 
     VTInitialize_locale(request);
+    init_Bres(screen.normalized_c);
     init_Bres(screen.utf8_latin1);
     init_Bres(screen.utf8_title);
 

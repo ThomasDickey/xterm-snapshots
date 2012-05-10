@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.527 2012/05/02 13:09:14 tom Exp $
+.\" $XTermId: xterm.man,v 1.528 2012/05/10 13:35:30 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1662,14 +1662,12 @@ A few programs, e.g., \fIvim\fP, use this feature to get an accurate
 description of the terminal's capabilities,
 independent of the termcap/terminfo setting:
 .RS
-.TP 3
--
+.bP
 \fIxterm\fP can tell the querying program how many colors it supports.
 This is a constant, depending on how it is compiled, typically 16.
 It does not change if you alter resource settings,
 e.g., the \fBboldColors\fP resource.
-.TP 3
--
+.bP
 \fIxterm\fP can tell the querying program what strings are sent by modified
 (shift-, control-, alt-) function- and keypad-keys.
 Reporting control- and alt-modifiers is a feature that relies on the
@@ -2642,13 +2640,11 @@ The default is \*(``1\*(''.
 Specifies whether \fIxterm\fP should assume the normal and bold fonts
 have VT100 line-drawing characters:
 .RS
-.TP 5
--
+.bP
 The fixed-pitch ISO-8859-*-encoded fonts used by \fIxterm\fP
 normally have the VT100 line-drawing glyphs in cells 1-31.
 Other fixed-pitch fonts may be more attractive, but lack these glyphs.
-.TP
--
+.bP
 When using an ISO-10646-1 font and the \fBwideChars\fP resource is true,
 \fIxterm\fP uses the Unicode glyphs which match the VT100 line-drawing glyphs.
 .RE
@@ -4169,15 +4165,12 @@ The selected text is highlighted and is saved in the global cut buffer
 and made the PRIMARY selection when the button is released.
 Normally (but see the discussion of \fBon2Clicks\fP, etc):
 .RS
-.TP 3
--
+.bP
 Double-clicking selects by words.
-.TP
--
+.bP
 Triple-clicking
 selects by lines.
-.TP
--
+.bP
 Quadruple-clicking goes back to characters, etc.
 .RE
 .PP

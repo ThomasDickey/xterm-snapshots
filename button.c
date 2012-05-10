@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.433 2012/04/22 16:32:41 tom Exp $ */
+/* $XTermId: button.c,v 1.434 2012/05/10 11:06:10 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4673,8 +4673,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
 		buffer += sprintf(buffer, "%s48;5", delim);
 		delim = ";";
 	    }
-	    buffer += sprintf(buffer, "%s%u", delim, bg);
-	    delim = ";";
+	    (void) sprintf(buffer, "%s%u", delim, bg);
 	}
 #endif
     }
