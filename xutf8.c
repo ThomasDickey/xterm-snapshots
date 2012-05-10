@@ -1,4 +1,4 @@
-/* $XTermId: xutf8.c,v 1.12 2012/05/08 08:48:37 tom Exp $ */
+/* $XTermId: xutf8.c,v 1.13 2012/05/09 20:56:09 tom Exp $ */
 
 /*
  * Copyright (c) 2001 by Juliusz Chroboczek
@@ -112,10 +112,10 @@ l1countUtf8Bytes(char *s, size_t len)
 static void
 l1utf8copy(char *d, char *s, size_t len)
 {
-    int l;
+    size_t l;
     while (len != 0) {
 	utf8insert(d, (*s) & 0xFF, &l);
-	d += l;
+	d += (int) l;
 	s++;
 	len--;
     }
@@ -334,7 +334,7 @@ Xutf8LookupString(XIC ic GCC_UNUSED,
     int rc;
     KeySym keysym;
     int codepoint;
-    int len;
+    size_t len;
 
     rc = XLookupString(ev, buffer, nbytes, &keysym, NULL);
 
@@ -367,7 +367,7 @@ Xutf8LookupString(XIC ic GCC_UNUSED,
     } else {
 	*status_return = XLookupChars;
     }
-    return len;
+    return (int) len;
 }
 #else /* X_HAVE_UTF8_STRING */
 /* Silence the compiler */

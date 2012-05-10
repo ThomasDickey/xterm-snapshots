@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.693 2012/05/08 08:50:30 tom Exp $ */
+/* $XTermId: xterm.h,v 1.694 2012/05/09 10:47:22 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1370,7 +1370,7 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 #define ClearCurBackground(xw, top, left, height, width, fw) \
 	XClearArea (TScreenOf(xw)->display, \
 		    VWindow(TScreenOf(xw)), \
-		    CursorX2(TScreenOf(xw), left, fw),
+		    CursorX2(TScreenOf(xw), left, fw), \
 		    CursorY(TScreenOf(xw), top), \
 		    width * fw, \
 		    height * FontHeight(TScreenOf(xw)), \
