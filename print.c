@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.139 2011/09/11 14:59:36 tom Exp $ */
+/* $XTermId: print.c,v 1.140 2012/05/25 08:26:58 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -74,7 +74,7 @@ static void send_SGR(XtermWidget /* xw */ ,
 static void stringToPrinter(XtermWidget /* xw */ ,
 			    const char * /*str */ );
 
-void
+static void
 closePrinter(XtermWidget xw GCC_UNUSED)
 {
     if (xtermHasPrinter(xw) != 0) {
@@ -87,16 +87,15 @@ closePrinter(XtermWidget xw GCC_UNUSED)
 #endif
 
 	if (SPS.fp != 0) {
-	    fclose(SPS.fp);
+	    pclose(SPS.fp);
 	    TRACE(("closed printer, waiting...\n"));
 #ifdef VMS			/* This is a quick hack, really should use
 				   spawn and check status or system services
 				   and go straight to the queue */
 	    (void) system(pcommand);
 #else /* VMS */
-	    while (nonblocking_wait() > 0)
+	    while (nonblocking_wait() > 0) ;
 #endif /* VMS */
-		;
 	    SPS.fp = 0;
 	    SPS.isOpen = False;
 	    TRACE(("closed printer\n"));
@@ -438,6 +437,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 
 		if (my_pid == 0) {
 		    TRACE_CLOSE();
+		    (void) signal(SIGCHLD, SIG_DFL);	/* no reapchild! */
 		    close(my_pipe[1]);	/* printer is silent */
 		    close(screen->respond);
 
@@ -455,7 +455,10 @@ charToPrinter(XtermWidget xw, unsigned chr)
 
 		    SPS.fp = popen(SPS.printer_command, "w");
 		    input = fdopen(my_pipe[0], "r");
-		    while ((c = fgetc(input)) != EOF) {
+		    clearerr(input);
+		    while (!ferror(input) && !feof(input)) {
+			if ((c = fgetc(input)) == EOF)
+			    break;
 			fputc(c, SPS.fp);
 			if (isForm(c))
 			    fflush(SPS.fp);

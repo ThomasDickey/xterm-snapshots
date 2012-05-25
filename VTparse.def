@@ -1,4 +1,4 @@
-# $XTermId: VTparse.def,v 1.44 2012/04/26 01:01:03 tom Exp $
+# $XTermId: VTparse.def,v 1.45 2012/05/25 08:44:06 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
@@ -194,3 +194,5 @@ CASE_DECFI
 CASE_DECRQCRA
 CASE_HPR
 CASE_VPR
+CASE_ANSI_SC
+CASE_ANSI_RC

@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1167 2012/05/09 21:21:44 tom Exp $
+  $XTermId: xterm.log.html,v 1.1173 2012/05/25 09:06:46 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -58,6 +58,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_dev">Development</A>
 <LI><A HREF="#xterm_279">Patch #279 - 2012/05/10</A>
 <LI><A HREF="#xterm_278">Patch #278 - 2012/01/18</A>
 <LI><A HREF="#xterm_277">Patch #277 - 2012/01/07</A>
@@ -339,6 +340,32 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_dev">Development</A></H1>
+<ul>
+	<li>separate state-table entries for DECSC/DECRC from the ANSI.SYS
+	    save/restore cursor, since the latter conflicts with DECSLRM
+	    when DECLRMM is enabled
+	    since <a href="#xterm_279">patch #279</a>
+	    (report by Ailin Nemui).
+
+	<li>fixes to avoid using <code>SIGCHLD</code> handler of main program
+	    in printer's subprocess (report by Joe Julian).
+
+	<li>correct restore-parameter for mouse-modes from
+	    <a href="#xterm_279">patch #279</a>
+	    changes.
+
+	<li>add null-pointer checks to input-method caching added in
+	    <a href="#xterm_277">patch #277</a>
+	    to fix a problem in the exposure code,
+	    when deselecting a window
+	    (report by Kriston Rehberg).
+
+	<li>unset <code>DESKTOP_STARTUP_ID</code> environment variable to
+	    lessen confusion on the part of GTK applications which use the
+	    variable without checking it (report by John Little).
+</ul>
 
 <H1><A NAME="xterm_279">Patch #279 - 2012/05/10</A></H1>
 <ul>

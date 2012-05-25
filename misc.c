@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.588 2012/05/07 23:35:34 tom Exp $ */
+/* $XTermId: misc.c,v 1.589 2012/05/24 18:02:25 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -180,7 +180,7 @@ selectwindow(XtermWidget xw, int flag)
     {
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 	TInput *input = lookupTInput(xw, (Widget) xw);
-	if (input->xic)
+	if (input && input->xic)
 	    XSetICFocus(input->xic);
 #endif
 
@@ -218,7 +218,7 @@ unselectwindow(XtermWidget xw, int flag)
 	{
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 	    TInput *input = lookupTInput(xw, (Widget) xw);
-	    if (input->xic)
+	    if (input && input->xic)
 		XUnsetICFocus(input->xic);
 #endif
 

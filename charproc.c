@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1205 2012/05/10 10:51:37 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1209 2012/05/25 08:52:47 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2627,8 +2627,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    }
 	    break;
 
+	case CASE_ANSI_SC:
+	    TRACE(("CASE_ANSI_SC - save cursor\n"));
+	    CursorSave(xw);
+	    ResetState(sp);
+	    break;
+
+	case CASE_ANSI_RC:
 	case CASE_DECRC:
-	    TRACE(("CASE_DECRC - restore cursor\n"));
+	    TRACE(("CASE_%sRC - restore cursor\n",
+		   (sp->nextstate == CASE_DECRC) ? "DEC" : "ANSI_"));
 	    CursorRestore(xw);
 	    if_OPT_ISO_COLORS(screen, {
 		setExtendedFG(xw);
@@ -3970,7 +3978,7 @@ PreeditPosition(XtermWidget xw)
     XPoint spot;
     XVaNestedList list;
 
-    if (input->xic
+    if (input && input->xic
 	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
 	spot.x = (short) LineCursorX(screen, ld, screen->cur_col);
 	spot.y = (short) (CursorY(screen, screen->cur_row) + xw->misc.xim_fs_ascent);
@@ -4489,7 +4497,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
 		if (xw->flags & IN132COLUMNS) {
-		    xw->flags &= ~LEFT_RIGHT;
+		    UIntClr(xw->flags, LEFT_RIGHT);
 		    reset_lr_margins(screen);
 		}
 	    }
@@ -5104,8 +5112,9 @@ restoremodes(XtermWidget xw)
 	    break;
 	case srm_X10_MOUSE:	/* MIT bogus sequence           */
 	    DoRM0(DP_X_X10MSE, screen->send_mouse_pos);
-	    really_set_mousemode(xw, screen->send_mouse_pos,
-				 screen->send_mouse_pos != MOUSE_OFF);
+	    really_set_mousemode(xw,
+				 screen->send_mouse_pos != MOUSE_OFF,
+				 screen->send_mouse_pos);
 	    break;
 #if OPT_TOOLBAR
 	case srm_RXVT_TOOLBAR:
@@ -5146,7 +5155,7 @@ restoremodes(XtermWidget xw)
 	    if (!(screen->inhibit & I_TEK) &&
 		(TEK4014_ACTIVE(xw) != (Boolean) screen->save_modes[DP_DECTEK])) {
 		FlushLog(xw);
-		TEK4014_ACTIVE(xw) = screen->save_modes[DP_DECTEK];
+		TEK4014_ACTIVE(xw) = (Boolean) screen->save_modes[DP_DECTEK];
 	    }
 	    break;
 #endif
@@ -5223,8 +5232,9 @@ restoremodes(XtermWidget xw)
 	case srm_BTN_EVENT_MOUSE:
 	case srm_ANY_EVENT_MOUSE:
 	    DoRM0(DP_X_MOUSE, screen->send_mouse_pos);
-	    really_set_mousemode(xw, screen->send_mouse_pos,
-				 screen->send_mouse_pos != MOUSE_OFF);
+	    really_set_mousemode(xw,
+				 screen->send_mouse_pos != MOUSE_OFF,
+				 screen->send_mouse_pos);
 	    break;
 #if OPT_FOCUS_EVENT
 	case srm_FOCUS_EVENT_MOUSE:
@@ -7458,7 +7468,7 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 #define TRACE_FREE_LEAK(name) \
 	if (name) { \
 	    free((void *) name); \
-	    TRACE(("freed " #name ": %p\n", name)); \
+	    TRACE(("freed " #name ": %p\n", (const void *) name)); \
 	    name = 0; \
 	}
 
@@ -7474,7 +7484,7 @@ cleanupInputMethod(XtermWidget xw)
 {
     TInput *input = lookupTInput(xw, (Widget) xw);
 
-    if (input->xim) {
+    if (input && input->xim) {
 	XCloseIM(input->xim);
 	input->xim = 0;
 	TRACE(("freed screen->xim\n"));
@@ -8051,8 +8061,8 @@ xim_destroy_cb(XIM im GCC_UNUSED,
 
     TRACE(("xim_destroy_cb im=%lx, client=%p, call=%p\n",
 	   (long) im, client_data, call_data));
-
-    input->xic = NULL;
+    if (input)
+	input->xic = NULL;
     XRegisterIMInstantiateCallback(XtDisplay(xw), NULL, NULL, NULL,
 				   xim_instantiate_cb, NULL);
 }

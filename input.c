@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.334 2012/03/15 00:01:30 tom Exp $ */
+/* $XTermId: input.c,v 1.335 2012/05/24 18:02:25 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -832,7 +832,7 @@ Input(XtermWidget xw,
     {
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 	TInput *input = lookupTInput(xw, (Widget) xw);
-	if (input->xic) {
+	if (input && input->xic) {
 	    Status status_return;
 #if OPT_WIDE_CHARS
 	    if (screen->utf8_mode) {
