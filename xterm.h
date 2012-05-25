@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.694 2012/05/09 10:47:22 tom Exp $ */
+/* $XTermId: xterm.h,v 1.695 2012/05/25 00:02:00 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1093,7 +1093,6 @@ extern void FlushLog (XtermWidget /* xw */);
 extern Bool xtermHasPrinter (XtermWidget /* xw */);
 extern PrinterFlags *getPrinterFlags (XtermWidget /* xw */, String * /* params */, Cardinal * /* param_count */);
 extern int xtermPrinterControl (XtermWidget /* xw */, int /* chr */);
-extern void closePrinter (XtermWidget /* xw */);
 extern void setPrinterControlMode (XtermWidget /* xw */, int /* mode */);
 extern void xtermAutoPrint (XtermWidget /* xw */, unsigned /* chr */);
 extern void xtermMediaControl (XtermWidget /* xw */, int  /* param */, int  /* private_seq */);

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.684 2012/05/07 23:30:42 tom Exp $ */
+/* $XTermId: main.c,v 1.686 2012/05/25 08:25:05 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -1848,7 +1848,7 @@ posix_signal(int signo, sigfunc func)
     return (oact.sa_handler);
 }
 
-#endif /* linux && _POSIX_SOURCE */
+#endif /* USE_POSIX_SIGNALS */
 
 #if defined(DISABLE_SETUID) || defined(USE_UTMP_SETGID)
 static void
@@ -4035,6 +4035,14 @@ spawnXTerm(XtermWidget xw)
 #endif
 
 	    xtermCopyEnv(environ);
+
+	    /*
+	     * standards.freedesktop.org/startup-notification-spec/
+	     * notes that this variable is used when a "reliable" mechanism is
+	     * not available; in practice it must be unset to avoid confusing
+	     * GTK applications.
+	     */
+	    xtermUnsetenv("DESKTOP_STARTUP_ID");
 
 	    xtermSetenv("TERM", resource.term_name);
 	    if (!resource.term_name)

@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.66 2012/04/26 09:04:37 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.67 2012/05/25 08:45:59 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -552,10 +552,10 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_DECLL,
 CASE_DECSTBM,
-CASE_DECSC,
+CASE_ANSI_SC,
 /*	t		u		v		w	*/
 CASE_XTERM_WINOPS,
-CASE_DECRC,
+CASE_ANSI_RC,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	x		y		z		{	*/
@@ -712,10 +712,10 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_DECLL,
 CASE_DECSTBM,
-CASE_DECSC,
+CASE_ANSI_SC,
 /*      ocircumflex     otilde          odiaeresis      division        */
 CASE_XTERM_WINOPS,
-CASE_DECRC,
+CASE_ANSI_RC,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      oslash          ugrave          uacute          ucircumflex     */
@@ -876,10 +876,10 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_DECLL,
 CASE_DECSTBM,
-CASE_DECSC,
+CASE_ANSI_SC,
 /*	t		u		v		w	*/
 CASE_XTERM_WINOPS,
-CASE_DECRC,
+CASE_ANSI_RC,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	x		y		z		{	*/
@@ -1036,10 +1036,10 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_DECLL,
 CASE_DECSTBM,
-CASE_DECSC,
+CASE_ANSI_SC,
 /*      ocircumflex     otilde          odiaeresis      division        */
 CASE_XTERM_WINOPS,
-CASE_DECRC,
+CASE_ANSI_RC,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      oslash          ugrave          uacute          ucircumflex     */
