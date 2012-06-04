@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.731 2012/05/24 18:27:50 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.732 2012/06/03 20:02:35 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1655,6 +1655,7 @@ typedef struct {
 	int		unicode_font;	/* font uses unicode encoding	*/
 	int		utf_count;	/* state of utf_char		*/
 	IChar		utf_char;	/* in-progress character	*/
+	Boolean		char_was_written;
 	int		last_written_col;
 	int		last_written_row;
 	TypedBuffer(XChar2b);
@@ -2127,6 +2128,20 @@ typedef struct _TekScreen {
 #define SCREEN_FLAG_restore(screenp,f)	((screenp)->f = (((screenp)->f)>>1))
 #else
 #define SCREEN_FLAG(screenp,f)		(0)
+#endif
+
+/*
+ * After screen-updates, reset the flag that tells us we should do wrapping.
+ * Likewise, reset (in wide-character mode) the flag that tells us where the
+ * "previous" character was written.
+ */
+#if OPT_WIDE_CHARS
+#define ResetWrap(screen) \
+    (screen)->do_wrap = \
+    (screen)->char_was_written = False
+#else
+#define ResetWrap(screen) \
+    (screen)->do_wrap = False
 #endif
 
 /* meaning of bits in screen.select flag */

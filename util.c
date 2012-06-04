@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.587 2012/05/10 11:06:37 tom Exp $ */
+/* $XTermId: util.c,v 1.588 2012/06/03 18:45:04 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1137,7 +1137,7 @@ InsertLine(XtermWidget xw, int n)
 	ScrnDisownSelection(xw);
     }
 
-    screen->do_wrap = False;
+    ResetWrap(screen);
     if (n > (i = screen->bot_marg - screen->cur_row + 1))
 	n = i;
     if (screen->jumpscroll) {
@@ -1227,7 +1227,7 @@ DeleteLine(XtermWidget xw, int n)
 	ScrnDisownSelection(xw);
     }
 
-    screen->do_wrap = False;
+    ResetWrap(screen);
     if (screen->jumpscroll) {
 	if (screen->scroll_amt >= 0 && screen->cur_row == screen->top_marg) {
 	    if (screen->refresh_amt + n > MaxRows(screen))
@@ -1329,7 +1329,7 @@ InsertChar(XtermWidget xw, unsigned n)
 	&& ScrnIsRowInSelection(screen, row)) {
 	ScrnDisownSelection(xw);
     }
-    screen->do_wrap = False;
+    ResetWrap(screen);
 
     limit = (unsigned) (right + 1 - screen->cur_col);
 
@@ -1412,7 +1412,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 	&& ScrnIsRowInSelection(screen, row)) {
 	ScrnDisownSelection(xw);
     }
-    screen->do_wrap = False;
+    ResetWrap(screen);
 
     limit = (unsigned) (right + 1 - screen->cur_col);
 
@@ -1605,7 +1605,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 
     if (screen->cursor_state)
 	HideCursor();
-    screen->do_wrap = False;
+    ResetWrap(screen);
 
     if (AddToVisible(xw)
 	&& (ld = getLineData(screen, row)) != 0) {
@@ -1694,7 +1694,7 @@ ClearRight(XtermWidget xw, int n)
     if (screen->show_wrap_marks) {
 	ShowWrapMarks(xw, screen->cur_row, ld);
     }
-    screen->do_wrap = False;
+    ResetWrap(screen);
 }
 
 /*
@@ -1745,7 +1745,7 @@ ClearScreen(XtermWidget xw)
 	HideCursor();
 
     ScrnDisownSelection(xw);
-    screen->do_wrap = False;
+    ResetWrap(screen);
     if ((top = INX2ROW(screen, 0)) <= screen->max_row) {
 	if (screen->scroll_amt)
 	    FlushScroll(xw);
