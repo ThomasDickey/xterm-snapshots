@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1209 2012/05/25 08:52:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1212 2012/06/03 22:10:32 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1402,12 +1402,22 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 * character sets do not use this feature.  There are some unassigned
 	 * codes at 0x242, but no zero-width characters until past 0x300.
 	 */
-	if (c >= 0x300 && screen->wide_chars
+	if (c >= 0x300
+	    && screen->wide_chars
 	    && my_wcwidth((int) c) == 0
 	    && !isWideControl(c)) {
 	    int prev, test;
+	    Boolean used = True;
+	    int use_row;
+	    int use_col;
 
 	    WriteNow();
+	    use_row = (screen->char_was_written
+		       ? screen->last_written_row
+		       : screen->cur_row);
+	    use_col = (screen->char_was_written
+		       ? screen->last_written_col
+		       : screen->cur_col);
 
 	    /*
 	     * Check if the latest data can be added to the base character.
@@ -1415,11 +1425,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * we cannot, since that would change the order.
 	     */
 	    if (screen->normalized_c
-		&& !IsCellCombined(screen,
-				   screen->last_written_row,
-				   screen->last_written_col)) {
-		prev = (int) XTERM_CELL(screen->last_written_row,
-					screen->last_written_col);
+		&& !IsCellCombined(screen, use_row, use_col)) {
+		prev = (int) XTERM_CELL(use_row, use_col);
 		test = do_precomposition(prev, (int) c);
 		TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
 		       prev, my_wcwidth(prev),
@@ -1434,20 +1441,23 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * only if it does not change the width of the base character
 	     */
 	    if (test != -1 && my_wcwidth(test) == my_wcwidth(prev)) {
-		putXtermCell(screen,
-			     screen->last_written_row,
-			     screen->last_written_col, test);
+		putXtermCell(screen, use_row, use_col, test);
+	    } else if (screen->char_was_written
+		       || getXtermCell(screen, use_row, use_col) > ' ') {
+		addXtermCombining(screen, use_row, use_col, c);
 	    } else {
-		addXtermCombining(screen,
-				  screen->last_written_row,
-				  screen->last_written_col, c);
+		/*
+		 * none of the above... we will add the combining character as
+		 * a base character.
+		 */
+		used = False;
 	    }
 
-	    if (!screen->scroll_amt)
-		ScrnUpdate(xw,
-			   screen->last_written_row,
-			   screen->last_written_col, 1, 1, 1);
-	    continue;
+	    if (used) {
+		if (!screen->scroll_amt)
+		    ScrnUpdate(xw, use_row, use_col, 1, 1, 1);
+		continue;
+	    }
 	}
 #endif
 
@@ -2011,6 +2021,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_IL - insert line\n"));
 	    if ((row = param[0]) < 1)
 		row = 1;
+	    CursorSet(screen, screen->cur_row, 0, xw->flags);
 	    InsertLine(xw, row);
 	    ResetState(sp);
 	    break;
@@ -2019,6 +2030,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DL - delete line\n"));
 	    if ((row = param[0]) < 1)
 		row = 1;
+	    CursorSet(screen, screen->cur_row, 0, xw->flags);
 	    DeleteLine(xw, row);
 	    ResetState(sp);
 	    break;
@@ -4124,6 +4136,14 @@ dotext(XtermWidget xw,
 	next_col += width_here;
 	screen->do_wrap = need_wrap;
     }
+
+    /*
+     * Remember that we wrote something to the screen, for use as a base of
+     * combining characters.  The logic above may have called cursor-forward
+     * or carriage-return operations which resets this flag, so we set it at
+     * the very end.
+     */
+    screen->char_was_written = True;
 #else /* ! OPT_WIDE_CHARS */
 
     for (offset = 0; offset < len; offset += (Cardinal) this_col) {
@@ -4240,7 +4260,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
 			       save.menu_border));
 
 			/*
-			 * Window manager still may be using the old values. 
+			 * Window manager still may be using the old values.
 			 * Try to fool it.
 			 */
 			REQ_RESIZE((Widget) xw,
@@ -8011,7 +8031,7 @@ VTRealize(Widget w,
 	screen->saveBuf_index = NULL;
     }
 
-    screen->do_wrap = False;
+    ResetWrap(screen);
     screen->scrolls = screen->incopy = 0;
     xtermSetCursorBox(screen);
 
