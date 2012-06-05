@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1176 2012/06/03 22:23:50 tom Exp $
+  $XTermId: xterm.log.html,v 1.1178 2012/06/05 00:52:49 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -343,6 +343,21 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add configure options to predefine the most commonly customized
+	    resources for terminal-settings, use those to substitute into the
+	    manpage the corresponding compiled-in values: 
+	    <code>altSendsEscape</code>, <code>backarrowKey</code>,
+	    <code>backarrowKeyIsErase</code>, <code>deleteIsDEL</code>,
+	    <code>metaSendsEscape</code> (Redhat #819588).
+
+	<li>change default emulation level to VT420 (discussion with
+	    Ailin Nemui).
+
+	<li>improve logic for DECSCL;
+	    <a href="#xterm_279">patch 279</a>
+	    partly enforced limitation of this to higher-level emulations.
+	    This patch finishes that change.
+
 	<li>improve check for base of combining characters,
 	    preventing combination when cursor movement has intervened.
 	    Mosh's webpage gives two different examples of this,

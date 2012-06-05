@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1212 2012/06/03 22:10:32 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1214 2012/06/05 00:42:40 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -385,7 +385,7 @@ static XtResource xterm_resources[] =
     Bres(XtNallowTitleOps, XtCAllowTitleOps, screen.allowTitleOp0, DEF_ALLOW_TITLE),
     Bres(XtNallowWindowOps, XtCAllowWindowOps, screen.allowWindowOp0, DEF_ALLOW_WINDOW),
     Bres(XtNaltIsNotMeta, XtCAltIsNotMeta, screen.alt_is_not_meta, False),
-    Bres(XtNaltSendsEscape, XtCAltSendsEscape, screen.alt_sends_esc, False),
+    Bres(XtNaltSendsEscape, XtCAltSendsEscape, screen.alt_sends_esc, DEF_ALT_SENDS_ESC),
     Bres(XtNallowBoldFonts, XtCAllowBoldFonts, screen.allowBoldFonts, True),
     Bres(XtNalwaysBoldMode, XtCAlwaysBoldMode, screen.always_bold_mode, False),
     Bres(XtNalwaysHighlight, XtCAlwaysHighlight, screen.always_highlight, False),
@@ -394,7 +394,7 @@ static XtResource xterm_resources[] =
     Bres(XtNautoWrap, XtCAutoWrap, misc.autoWrap, True),
     Bres(XtNawaitInput, XtCAwaitInput, screen.awaitInput, False),
     Bres(XtNfreeBoldBox, XtCFreeBoldBox, screen.free_bold_box, False),
-    Bres(XtNbackarrowKey, XtCBackarrowKey, screen.backarrow_key, True),
+    Bres(XtNbackarrowKey, XtCBackarrowKey, screen.backarrow_key, DEF_BACKARO_DEL),
     Bres(XtNbellIsUrgent, XtCBellIsUrgent, screen.bellIsUrgent, False),
     Bres(XtNbellOnReset, XtCBellOnReset, screen.bellOnReset, True),
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, True),
@@ -419,7 +419,7 @@ static XtResource xterm_resources[] =
     Bres(XtNkeepSelection, XtCKeepSelection, screen.keepSelection, True),
     Bres(XtNloginShell, XtCLoginShell, misc.login_shell, False),
     Bres(XtNmarginBell, XtCMarginBell, screen.marginbell, False),
-    Bres(XtNmetaSendsEscape, XtCMetaSendsEscape, screen.meta_sends_esc, False),
+    Bres(XtNmetaSendsEscape, XtCMetaSendsEscape, screen.meta_sends_esc, DEF_META_SENDS_ESC),
     Bres(XtNmultiScroll, XtCMultiScroll, screen.multiscroll, False),
     Bres(XtNoldXtermFKeys, XtCOldXtermFKeys, screen.old_fkeys, False),
     Bres(XtNpopOnBell, XtCPopOnBell, screen.poponbell, False),
@@ -2164,7 +2164,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECRPTUI:
 	    TRACE(("CASE_DECRPTUI\n"));
-	    if ((screen->terminal_id >= 400)
+	    if ((screen->vtXX_level >= 400)
 		&& (param[0] <= 0)) {	/* less than means DEFAULT */
 		unparseputc1(xw, ANSI_DCS);
 		unparseputc(xw, '!');
@@ -2796,8 +2796,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECSCL:
 	    TRACE(("CASE_DECSCL(%d,%d)\n", param[0], param[1]));
+	    /*
+	     * This changes the emulation level, and is not recognized by
+	     * VT100s.
+	     */
 	    if (screen->terminal_id >= 200) {
-		if (param[0] >= 61 && param[0] <= 65) {
+		/*
+		 * Disallow unrecognized parameters, as well as attempts to set
+		 * the operating level higher than the given terminal-id.
+		 */
+		if (param[0] >= 61
+		    && param[0] <= 60 + (screen->terminal_id / 100)) {
 		    /*
 		     * VT300, VT420, VT520 manuals claim that DECSCL does a
 		     * hard reset (RIS).  VT220 manual states that it is a soft
@@ -3272,7 +3281,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_S7C1T:
 	    TRACE(("CASE_S7C1T\n"));
-	    if (screen->terminal_id >= 200) {
+	    if (screen->vtXX_level >= 200) {
 		show_8bit_control(False);
 		ResetState(sp);
 	    }
@@ -3280,7 +3289,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_S8C1T:
 	    TRACE(("CASE_S8C1T\n"));
-	    if (screen->terminal_id >= 200) {
+	    if (screen->vtXX_level >= 200) {
 #if OPT_VT52_MODE
 		if (screen->vtXX_level <= 1)
 		    break;
@@ -4682,7 +4691,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    update_decbkm();
 	    break;
 	case srm_DECLRMM:
-	    if (screen->terminal_id >= 400) {	/* VT420 */
+	    if (screen->vtXX_level >= 400) {	/* VT420 */
 		(*func) (&xw->flags, LEFT_RIGHT);
 		if (IsLeftRightMode(xw)) {
 		    xterm_ResetDouble(xw);
@@ -4693,7 +4702,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 	case srm_DECNCSM:
-	    if (screen->terminal_id >= 500) {	/* VT510 */
+	    if (screen->vtXX_level >= 500) {	/* VT510 */
 		(*func) (&xw->flags, NOCLEAR_COLM);
 	    }
 	    break;

@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.190 2012/05/07 23:28:24 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.191 2012/06/04 21:52:28 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -40,6 +40,11 @@
 #undef CC_HAS_PROTOS		/* CF_ANSI_CC */
 #undef CSRG_BASED		/* CF_TYPE_FD_MASK */
 #undef DECL_ERRNO		/* CF_ERRNO */
+#undef DEFDELETE_DEL		/* AC_ARG_ENABLE(delete-is-del) */
+#undef DEF_ALT_SENDS_ESC	/* CF_ARG_ENABLE(alt-sends-esc) */
+#undef DEF_BACKARO_DEL		/* CF_ARG_DISABLE(backarrow-is-del) */
+#undef DEF_BACKARO_ERASE	/* CF_ARG_ENABLE(backarrow-is-erase) */
+#undef DEF_META_SENDS_ESC	/* CF_ARG_ENABLE(meta-sends-esc) */
 #undef DFT_COLORMODE		/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID		/* AC_ARG_WITH(default-terminal-id) */
 #undef DFT_TERMTYPE		/* AC_ARG_WITH(default-term-type) */

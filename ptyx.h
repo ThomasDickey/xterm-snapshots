@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.732 2012/06/03 20:02:35 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.733 2012/06/04 08:48:24 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -364,7 +364,7 @@ typedef struct {
 #define MAX_DECID 525			/* ...through VT525 */
 
 #ifndef DFT_DECID
-#define DFT_DECID "vt100"		/* default VT100 */
+#define DFT_DECID "vt420"		/* default VT420 */
 #endif
 
 #ifndef DFT_KBD_DIALECT

@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.127 2011/12/22 01:59:16 tom Exp $
+-- $XTermId: INSTALL,v 1.128 2012/06/05 00:59:04 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2010,2011 by Thomas E. Dickey
+-- Copyright 1997-2011,2012 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -355,6 +355,18 @@ The options (in alphabetic order):
 
 	Compile-in code that interprets SGR 38 and 48 for 88-colors.
 
+  --enable-alt-sends-esc  set default altSendsEscape resource (default: no)
+
+	This sets the default resource value, which is shown in the manpage.
+
+  --enable-backarrow-is-del  set default backarrowKey resource (default: true)
+
+	This sets the default resource value, which is shown in the manpage.
+
+  --enable-backarrow-is-erase set default backarrowKeyIsErase resource (default: false)
+
+	This sets the default resource value, which is shown in the manpage.
+
   --enable-broken-osc     allow broken Linux OSC-strings],
 
 	Compile-in code to accommodate scripts that write Linux's malformed
@@ -377,6 +389,10 @@ The options (in alphabetic order):
 
 	This allows the xterm mouse to be used with applications that use the
 	DEC Locator sequences, such as VAX Tpu, or SMG$ based applications.
+
+  --enable-delete-is-del  set default deleteIsDEL resource (default: maybe)
+
+	This sets the default resource value, which is shown in the manpage.
 
   --enable-exec-xterm     enable "spawn-new-terminal" action
 
@@ -414,6 +430,10 @@ The options (in alphabetic order):
 	into the locale's encoding.
 
 	This sets "--enable-wide-chars" as a side-effect.
+
+  --enable-meta-sends-esc set default metaSendsEscape resource (default: no)
+
+	This sets the default resource value, which is shown in the manpage.
 
   --enable-mini-luit      enable support for poor man's luit filter (Latin-9)
 
