@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.323 2012/05/07 23:58:20 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.324 2012/06/05 00:38:55 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3216,6 +3216,32 @@ if test "$with_pcre" != no ; then
 		esac
 fi
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_XBOOL_RESULT version: 1 updated: 2012/06/04 20:23:25
+dnl ---------------
+dnl Translate an autoconf boolean yes/no into X11's booleans, e.g., True/False.
+dnl Allow for more than two values, e.g., "maybe", still using the same leading
+dnl capital convention.
+dnl
+dnl $1 = symbol to define
+dnl $2 = symbol holding value
+define([CF_XBOOL_RESULT],[
+AC_MSG_RESULT([$]$2)
+case [$]$2 in #(vi
+yes) #(vi
+	$2=true
+	;;
+no) #(vi
+	$2=false
+	;;
+esac
+cf_xbool1=`echo "[$]$2"|sed -e 's/^\(.\).*/\1/'`
+CF_UPPER(cf_xbool1,$cf_xbool1)
+cf_xbool2=`echo "[$]$2"|sed -e 's/^.//'`
+$2=${cf_xbool1}${cf_xbool2}
+AC_DEFINE_UNQUOTED($1,[$]$2)
+AC_SUBST($2)
+])
 dnl ---------------------------------------------------------------------------
 dnl CF_XKB_BELL_EXT version: 3 updated: 2009/02/13 16:00:39
 dnl ---------------

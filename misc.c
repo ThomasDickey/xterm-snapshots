@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.589 2012/05/24 18:02:25 tom Exp $ */
+/* $XTermId: misc.c,v 1.590 2012/06/04 00:30:48 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -3658,7 +3658,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 			screen->top_marg + 1,
 			screen->bot_marg + 1);
 	    } else if (!strcmp(cp, "s")) {	/* DECSLRM */
-		if (screen->terminal_id >= 400) {	/* VT420 */
+		if (screen->vtXX_level >= 400) {	/* VT420 */
 		    sprintf(reply, "%d;%ds",
 			    screen->lft_marg + 1,
 			    screen->rgt_marg + 1);
@@ -3818,7 +3818,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	break;
 #endif
     default:
-	if (screen->terminal_id >= 200) {	/* VT220 */
+	if (screen->vtXX_level >= 200) {	/* VT220 */
 	    parse_ansi_params(&params, &cp);
 	    switch (params.a_final) {
 	    case '|':		/* DECUDK */
@@ -3930,7 +3930,7 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 	case 2:		/* DECANM - ANSI/VT52 mode      */
 #if OPT_VT52_MODE
-	    result = MdBool(screen->terminal_id >= 100);
+	    result = MdBool(screen->vtXX_level >= 100);
 #else
 	    result = mdMaybeSet;
 #endif
