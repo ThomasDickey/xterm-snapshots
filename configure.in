@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.288 2012/06/05 00:25:08 tom Exp $
+dnl $XTermId: configure.in,v 1.289 2012/06/07 00:00:55 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -261,7 +261,7 @@ CF_TERMIO_C_ISPEED
 LIBS="$LIBS $X_EXTRA_LIBS"
 
 CF_FUNC_GRANTPT
-AC_CHECK_FUNCS(XkbQueryExtension)
+AC_CHECK_FUNCS(XkbQueryExtension XkbKeycodeToKeysym)
 
 CF_XKB_BELL_EXT
 

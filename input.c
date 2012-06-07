@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.335 2012/05/24 18:02:25 tom Exp $ */
+/* $XTermId: input.c,v 1.336 2012/06/07 00:06:41 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -72,6 +72,10 @@
 
 #if HAVE_X11_XF86KEYSYM_H
 #include <X11/XF86keysym.h>
+#endif
+
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+#include <X11/XKBlib.h>
 #endif
 
 #include <X11/Xutil.h>
@@ -1996,7 +2000,11 @@ VTInitModifiers(XtermWidget xw)
 			continue;
 
 		    for (l = 0; l < keysyms_per_keycode; ++l) {
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+			keysym = XkbKeycodeToKeysym(dpy, code, 0, l);
+#else
 			keysym = XKeycodeToKeysym(dpy, code, l);
+#endif
 			if (keysym == NoSymbol) {
 			    /* EMPTY */ ;
 			} else if (keysym == XK_Num_Lock) {

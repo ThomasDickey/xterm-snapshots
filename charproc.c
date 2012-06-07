@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1214 2012/06/05 00:42:40 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1217 2012/06/06 20:35:29 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2021,7 +2021,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_IL - insert line\n"));
 	    if ((row = param[0]) < 1)
 		row = 1;
-	    CursorSet(screen, screen->cur_row, 0, xw->flags);
+	    set_cur_col(screen, 0);
 	    InsertLine(xw, row);
 	    ResetState(sp);
 	    break;
@@ -2030,7 +2030,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DL - delete line\n"));
 	    if ((row = param[0]) < 1)
 		row = 1;
-	    CursorSet(screen, screen->cur_row, 0, xw->flags);
+	    set_cur_col(screen, 0);
 	    DeleteLine(xw, row);
 	    ResetState(sp);
 	    break;
@@ -2164,7 +2164,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECRPTUI:
 	    TRACE(("CASE_DECRPTUI\n"));
-	    if ((screen->vtXX_level >= 400)
+	    if ((screen->vtXX_level >= 4)
 		&& (param[0] <= 0)) {	/* less than means DEFAULT */
 		unparseputc1(xw, ANSI_DCS);
 		unparseputc(xw, '!');
@@ -2616,7 +2616,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
-	case CASE_DECSC:
+	case CASE_ANSI_SC:
 	    if (IsLeftRightMode(xw)) {
 		int left;
 		int right;
@@ -2633,14 +2633,14 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    CursorSet(screen, 0, 0, xw->flags);
 		}
 	    } else {
-		TRACE(("CASE_DECSC - save cursor\n"));
+		TRACE(("CASE_ANSI_SC - save cursor\n"));
 		CursorSave(xw);
-		ResetState(sp);
 	    }
+	    ResetState(sp);
 	    break;
 
-	case CASE_ANSI_SC:
-	    TRACE(("CASE_ANSI_SC - save cursor\n"));
+	case CASE_DECSC:
+	    TRACE(("CASE_DECSC - save cursor\n"));
 	    CursorSave(xw);
 	    ResetState(sp);
 	    break;
@@ -3281,7 +3281,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_S7C1T:
 	    TRACE(("CASE_S7C1T\n"));
-	    if (screen->vtXX_level >= 200) {
+	    if (screen->vtXX_level >= 2) {
 		show_8bit_control(False);
 		ResetState(sp);
 	    }
@@ -3289,7 +3289,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_S8C1T:
 	    TRACE(("CASE_S8C1T\n"));
-	    if (screen->vtXX_level >= 200) {
+	    if (screen->vtXX_level >= 2) {
 #if OPT_VT52_MODE
 		if (screen->vtXX_level <= 1)
 		    break;
@@ -4691,7 +4691,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    update_decbkm();
 	    break;
 	case srm_DECLRMM:
-	    if (screen->vtXX_level >= 400) {	/* VT420 */
+	    if (screen->vtXX_level >= 4) {	/* VT420 */
 		(*func) (&xw->flags, LEFT_RIGHT);
 		if (IsLeftRightMode(xw)) {
 		    xterm_ResetDouble(xw);
@@ -4702,7 +4702,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 	case srm_DECNCSM:
-	    if (screen->vtXX_level >= 500) {	/* VT510 */
+	    if (screen->vtXX_level >= 5) {	/* VT510 */
 		(*func) (&xw->flags, NOCLEAR_COLM);
 	    }
 	    break;
