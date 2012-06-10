@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.140 2012/05/25 08:26:58 tom Exp $ */
+/* $XTermId: print.c,v 1.141 2012/06/10 16:53:59 tom Exp $ */
 
 /*
- * Copyright 1997-2010,2011 by Thomas E. Dickey
+ * Copyright 1997-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

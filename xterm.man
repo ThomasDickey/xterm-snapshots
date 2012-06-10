@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.529 2012/06/04 21:06:27 tom Exp $
+.\" $XTermId: xterm.man,v 1.530 2012/06/07 23:51:01 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -3002,17 +3002,24 @@ Tells how to handle the special case where
 Control-, Shift-, Alt- or Meta-modifiers are used to add a parameter to
 the escape sequence returned by a cursor-key.
 The default is \*(``2\*('':
-.IP
-Set it to \-1 to disable it.
-.br
-Set it to 0 to use the old/obsolete behavior.
-.br
-Set it to 1 to prefix modified sequences with CSI.
-.br
-Set it to 2 to force the modifier to be the second parameter if it would
+.RS
+.TP 5
+\-1
+disables the feature.
+.TP 5
+0
+uses the old/obsolete behavior.
+.TP 5
+1
+prefixes modified sequences with CSI.
+.TP 5
+2
+forces the modifier to be the second parameter if it would
 otherwise be the first.
-.br
-Set it to 3 to mark the sequence with a \*(``>\*('' to hint that it is private.
+.TP 5
+3
+marks the sequence with a \*(``>\*('' to hint that it is private.
+.RE
 .TP 8
 .B "modifyFunctionKeys (\fPclass\fB ModifyFunctionKeys\fP)"
 Tells how to handle the special case where
@@ -3020,18 +3027,25 @@ Control-, Shift-, Alt- or Meta-modifiers are used to add a parameter to
 the escape sequence returned by a (numbered) function-key.
 The default is \*(``2\*(''.
 The resource values are similar to \fBmodifyCursorKeys\fP:
-.IP
-Set it to \-1 to permit the user to use shift- and control-modifiers
+.RS
+.TP 5
+\-1
+permits the user to use shift- and control-modifiers
 to construct function-key strings using the normal encoding scheme.
-.br
-Set it to 0 to use the old/obsolete behavior.
-.br
-Set it to 1 to prefix modified sequences with CSI.
-.br
-Set it to 2 to force the modifier to be the second parameter if it would
+.TP 5
+0
+uses the old/obsolete behavior.
+.TP 5
+1
+prefixes modified sequences with CSI.
+.TP 5
+2
+forces the modifier to be the second parameter if it would
 otherwise be the first.
-.br
-Set it to 3 to mark the sequence with a \*(``>\*('' to hint that it is private.
+.TP 5
+3
+marks the sequence with a \*(``>\*('' to hint that it is private.
+.RE
 .IP
 If \fBmodifyFunctionKeys\fP is zero,
 \fIxterm\fP uses Control- and Shift-modifiers to allow the user to

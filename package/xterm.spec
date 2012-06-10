@@ -1,10 +1,10 @@
-# $XTermId: xterm.spec,v 1.22 2012/05/25 09:36:18 tom Exp $
-Summary: A text-based Web browser
+# $XTermId: xterm.spec,v 1.24 2012/06/08 13:48:42 tom Exp $
+Summary: X terminal emulator (development version)
 Name: xterm-dev
 Version: 280
 Release: 1
 License: X11
-Group: Applications/Internet
+Group: User Interface/X
 Source: xterm-%{version}.tgz
 # URL: http://invisible-island.net/xterm/
 Provides: x-terminal-emulator

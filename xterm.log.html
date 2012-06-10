@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1179 2012/06/06 08:28:34 tom Exp $
+  $XTermId: xterm.log.html,v 1.1180 2012/06/10 15:58:18 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -343,6 +343,13 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>add back-tab key <code>kB</code> to termcap entries to match
+	    the terminfo.
+
+	<li>update terminfo to match corresponding entries in ncurses,
+	    e.g., add <code>XT</code> and adjust <code>sgr</code> string
+	    for xterm-bold entry.
+
 	<li>add configure options to predefine the most commonly customized
 	    resources for terminal-settings, use those to substitute into the
 	    manpage the corresponding compiled-in values: 

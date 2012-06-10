@@ -1,7 +1,7 @@
-/* $XTermId: tabs.c,v 1.42 2012/06/03 18:45:04 tom Exp $ */
+/* $XTermId: tabs.c,v 1.43 2012/06/10 16:53:59 tom Exp $ */
 
 /*
- * Copyright 2000-2010,2011 by Thomas E. Dickey
+ * Copyright 2000-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

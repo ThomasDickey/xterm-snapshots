@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.336 2012/06/07 00:06:41 tom Exp $ */
+/* $XTermId: input.c,v 1.337 2012/06/07 22:49:33 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -207,19 +207,58 @@ AdjustAfterInput(XtermWidget xw)
  * Return true if the key is on the editing keypad.  This overlaps with
  * IsCursorKey() and IsKeypadKey() and must be tested before those macro to
  * distinguish it from them.
+ *
+ * VT220  emulation  uses  the  VT100  numeric  keypad as well as a 6-key
+ * editing keypad. Here's a picture of the VT220 editing keypad:
+ *      +--------+--------+--------+
+ *      | Find   | Insert | Remove |
+ *      +--------+--------+--------+
+ *      | Select | Prev   | Next   |
+ *      +--------+--------+--------+
+ *
+ * and the similar Sun and PC keypads:
+ *      +--------+--------+--------+
+ *      | Insert | Home   | PageUp |
+ *      +--------+--------+--------+
+ *      | Delete | End    | PageDn |
+ *      +--------+--------+--------+
+ */
+static Bool
+IsEditKeypad(KeySym keysym)
+{
+    Bool result;
+
+    switch (keysym) {
+    case XK_Home:
+    case XK_End:
+    case XK_Prior:
+    case XK_Next:
+    case XK_Insert:
+    case XK_Delete:
+    case XK_Find:
+    case XK_Select:
+#ifdef DXK_Remove
+    case DXK_Remove:
+#endif
+	result = True;
+	break;
+    default:
+	result = False;
+	break;
+    }
+    return result;
+}
+
+/*
+ * Editing-keypad, plus other editing keys which are not included in the
+ * other macros.
  */
 static Bool
 IsEditFunctionKey(KeySym keysym)
 {
+    Bool result;
+
     switch (keysym) {
-    case XK_Prior:		/* editing keypad */
-    case XK_Next:		/* editing keypad */
-    case XK_Insert:		/* editing keypad */
-    case XK_Find:		/* editing keypad */
-    case XK_Select:		/* editing keypad */
-#ifdef DXK_Remove
-    case DXK_Remove:		/* editing keypad */
-#endif
 #ifdef XK_KP_Delete
     case XK_KP_Delete:		/* editing key on numeric keypad */
     case XK_KP_Insert:		/* editing key on numeric keypad */
@@ -227,10 +266,13 @@ IsEditFunctionKey(KeySym keysym)
 #ifdef XK_ISO_Left_Tab
     case XK_ISO_Left_Tab:
 #endif
-	return True;
+	result = True;
+	break;
     default:
-	return False;
+	result = IsEditKeypad(keysym);
+	break;
     }
+    return result;
 }
 
 #if OPT_MOD_FKEYS

@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.264 2012/05/06 20:12:51 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.265 2012/06/07 19:31:04 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -556,10 +556,10 @@ Restore Cursor (DECRC).
 Forward Index (DECFI), VT420 and up.
 .
 .IP \\*(Es\\*=
-Application Keypad (DECPAM).
+Application Keypad (DECKPAM).
 .
 .IP \\*(Es\\*>
-Normal Keypad (DECPNM).
+Normal Keypad (DECKPNM).
 .
 .IP \\*(Es\\*F
 Cursor to lower left corner of screen.  This is
@@ -1710,7 +1710,7 @@ _
 .TE
 .lP
 The application keypad transmits the following escape sequences depending on the
-mode specified via the \fBDECPNM\fP and \fBDECPAM\fP escape sequences.
+mode specified via the \fBDECKPNM\fP and \fBDECKPAM\fP escape sequences.
 Use the NumLock key to override the application mode.
 .lP
 Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are supported by
@@ -1858,7 +1858,7 @@ _
 .TE
 The VT220 provides a 6-key editing keypad,
 which is analogous to that on the PC keyboard.
-It is not affected by \fBDECCKM\fP or \fBDECPNM\fP/\fBDECPAM\fP:
+It is not affected by \fBDECCKM\fP or \fBDECKPNM\fP/\fBDECKPAM\fP:
 .ne 12
 .TS
 center;

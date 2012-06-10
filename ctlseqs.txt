@@ -9,7 +9,6 @@
 
                         Xterm Control Sequences
 
-
                                Edward Moy
                    University of California, Berkeley
 
@@ -160,8 +159,8 @@ ESC 6     Back Index (DECBI), VT420 and up.
 ESC 7     Save Cursor (DECSC).
 ESC 8     Restore Cursor (DECRC).
 ESC 9     Forward Index (DECFI), VT420 and up.
-ESC =     Application Keypad (DECPAM).
-ESC >     Normal Keypad (DECPNM).
+ESC =     Application Keypad (DECKPAM).
+ESC >     Normal Keypad (DECKPNM).
 ESC F     Cursor to lower left corner of screen.  This is enabled by the
           hpLowerleftBugCompat resource.
 ESC c     Full Reset (RIS).
@@ -210,8 +209,8 @@ DCS + p Pt ST
           as by the Request Termcap/Terminfo String control.
 DCS + q Pt ST
           Request Termcap/Terminfo String (xterm, experimental).  The
-          string following the "q" is a list of names encoded in hexa-
-          decimal (2 digits per character) separated by ; which corre-
+          string following the "q" is a list of names encoded in hex-
+          adecimal (2 digits per character) separated by ; which corre-
           spond to termcap or terminfo key names.
           Two special features are also recognized, which are not key
           names: Co for termcap colors (or colors for terminfo colors),
@@ -1108,7 +1107,7 @@ also controlled by the DECCKM escape sequence:
 
 
 The application keypad transmits the following escape sequences depend-
-ing on the mode specified via the DECPNM and DECPAM escape sequences.
+ing on the mode specified via the DECKPNM and DECKPAM escape sequences.
 Use the NumLock key to override the application mode.
 
 Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are
@@ -1234,7 +1233,7 @@ pad:
                   --------------------------------------
 
 The VT220 provides a 6-key editing keypad, which is analogous to that on
-the PC keyboard.  It is not affected by DECCKM or DECPNM/DECPAM:
+the PC keyboard.  It is not affected by DECCKM or DECKPNM/DECKPAM:
 
                      Key       Normal    Application
                    ----------------------------------
