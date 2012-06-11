@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.265 2012/06/07 19:31:04 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.267 2012/06/11 09:10:57 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -784,6 +784,8 @@ VT220 parameters do, telling the host what features the terminal supports:
   \*(Ps = \*8 \(-> User-defined keys.
   \*(Ps = \*9 \(-> National replacement character sets.
   \*(Ps = \*1\*5 \(-> Technical characters.
+  \*(Ps = \*1\*8 \(-> User windows.
+  \*(Ps = \*2\*1 \(-> Horizontal scrolling.
   \*(Ps = \*2\*2 \(-> ANSI color, e.g., VT525.
   \*(Ps = \*2\*9 \(-> ANSI text locator (i.e., DEC Locator mode).
 .
@@ -797,6 +799,14 @@ It should apply only to VT220 and up, but \fIxterm\fP extends this to VT100.
 where \*(Pp denotes the terminal type
   \*(Pp = \*0 \(-> ``VT100''.
   \*(Pp = \*1 \(-> ``VT220''.
+  \*(Pp = \*2 \(-> ``VT240''.
+  \*(Pp = \*18 \(-> ``VT330''.
+  \*(Pp = \*19 \(-> ``VT340''.
+  \*(Pp = \*24 \(-> ``VT320''.
+  \*(Pp = \*41 \(-> ``VT420''.
+  \*(Pp = \*61 \(-> ``VT510''.
+  \*(Pp = \*64 \(-> ``VT520''.
+  \*(Pp = \*65 \(-> ``VT525''.
 .br
 and \*(Pv is the firmware version (for \fIxterm\fP, this was originally
 the XFree86 patch number, starting with 95).
@@ -1069,6 +1079,7 @@ pressed with a given key.
 The first parameter identifies the resource to set/reset.
 The second parameter is the value to assign to the resource.
 If the second parameter is omitted, the resource is reset to its initial value.
+  \*(Ps = \*0 \(-> modifyKeyboard.
   \*(Ps = \*1 \(-> modifyCursorKeys.
   \*(Ps = \*2 \(-> modifyFunctionKeys.
   \*(Ps = \*4 \(-> modifyOtherKeys.
@@ -1091,6 +1102,7 @@ sequence.
 This corresponds to a resource value of "-1", which cannot be set with
 the other sequence.
 The parameter identifies the resource to be disabled:
+  \*(Ps = \*0 \(-> modifyKeyboard.
   \*(Ps = \*1 \(-> modifyCursorKeys.
   \*(Ps = \*2 \(-> modifyFunctionKeys.
   \*(Ps = \*4 \(-> modifyOtherKeys.

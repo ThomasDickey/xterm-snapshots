@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1218 2012/06/10 15:59:30 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1220 2012/06/11 08:57:49 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -622,6 +622,8 @@ static XtResource xterm_resources[] =
     CLICK_RES("5", screen.onClick[4], 0),
 
 #if OPT_MOD_FKEYS
+    Ires(XtNmodifyKeyboard, XtCModifyKeyboard,
+	 keyboard.modify_1st.allow_keys, 0),
     Ires(XtNmodifyCursorKeys, XtCModifyCursorKeys,
 	 keyboard.modify_1st.cursor_keys, 2),
     Ires(XtNmodifyFunctionKeys, XtCModifyFunctionKeys,
@@ -1168,6 +1170,9 @@ set_mod_fkeys(XtermWidget xw, int which, int what, Bool enabled)
 	   xw->keyboard.modify_now.field));
 
     switch (which) {
+    case 0:
+	SET_MOD_FKEYS(allow_keys);
+	break;
     case 1:
 	SET_MOD_FKEYS(cursor_keys);
 	break;
@@ -2126,6 +2131,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			reply.a_param[count++] = 8;	/* user-defined-keys */
 		    reply.a_param[count++] = 9;		/* national replacement charsets */
 		    reply.a_param[count++] = 15;	/* technical characters */
+		    if (screen->terminal_id >= 400) {
+			reply.a_param[count++] = 18;	/* windowing capability */
+			reply.a_param[count++] = 21;	/* horizontal scrolling */
+		    }
 		    if_OPT_ISO_COLORS(screen, {
 			reply.a_param[count++] = 22;	/* ANSI color, VT525 */
 		    });
@@ -2148,10 +2157,43 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		init_reply(ANSI_CSI);
 		reply.a_pintro = '>';
 
-		if (screen->terminal_id >= 200)
-		    reply.a_param[count++] = 1;		/* VT220 */
-		else
+		if (screen->terminal_id >= 200) {
+		    switch (screen->terminal_id) {
+		    case 220:
+		    default:
+			reply.a_param[count++] = 1;	/* VT220 */
+			break;
+		    case 240:
+			/* http://www.decuslib.com/DECUS/vax87a/gendyn/vt200_kind.lis */
+			reply.a_param[count++] = 2;	/* VT240 */
+			break;
+		    case 320:
+			/* http://www.vt100.net/docs/vt320-uu/appendixe.html */
+			reply.a_param[count++] = 24;	/* VT320 */
+			break;
+		    case 330:
+			reply.a_param[count++] = 18;	/* VT330 */
+			break;
+		    case 340:
+			reply.a_param[count++] = 19;	/* VT340 */
+			break;
+		    case 420:
+			reply.a_param[count++] = 41;	/* VT420 */
+			break;
+		    case 510:
+			/* http://www.vt100.net/docs/vt510-rm/DA2 */
+			reply.a_param[count++] = 61;	/* VT510 */
+			break;
+		    case 520:
+			reply.a_param[count++] = 64;	/* VT520 */
+			break;
+		    case 525:
+			reply.a_param[count++] = 65;	/* VT525 */
+			break;
+		    }
+		} else {
 		    reply.a_param[count++] = 0;		/* VT100 (nonstandard) */
+		}
 		reply.a_param[count++] = XTERM_PATCH;	/* Version */
 		reply.a_param[count++] = 0;	/* options (none) */
 		reply.a_nparam = (ParmType) count;
@@ -7451,6 +7493,7 @@ VTInitialize(Widget wrequest,
     wnew->initflags = wnew->flags;
 
 #if OPT_MOD_FKEYS
+    init_Ires(keyboard.modify_1st.allow_keys);
     init_Ires(keyboard.modify_1st.cursor_keys);
     init_Ires(keyboard.modify_1st.function_keys);
     init_Ires(keyboard.modify_1st.keypad_keys);
