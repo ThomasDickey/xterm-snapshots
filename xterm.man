@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.530 2012/06/07 23:51:01 tom Exp $
+.\" $XTermId: xterm.man,v 1.531 2012/06/08 00:49:36 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -3063,12 +3063,37 @@ Control/Shift
 adds three times the value given by the \fBctrlFKeys\fP resource.
 .RE
 .IP
-As a special case,
-legacy (when \fBoldFunctionKeys\fP is true)
-or vt220 (when \fBsunKeyboard\fP is true) keyboards interpret only the
-Control-modifier when constructing numbered function-keys.
+.TP 8
+.B "modifyKeyboard (\fPclass\fB ModifyKeyboard\fP)"
+Normally \fIxterm\fP makes a special case regarding
+modifiers (shift, control, etc.)
+to handle special keyboard layouts (\fBlegacy\fP and \fBvt220\fP).
 This is done to provide compatible keyboards for DEC VT220 and related
 terminals that implement user-defined keys (UDK).
+.IP
+The bits of the resource value selectively enable
+modification of the given category when these keyboards are selected.
+The default is \*(``0\*('':
+.RS
+.TP 5
+0
+The legacy/vt220 keyboards interpret only the
+Control-modifier when constructing numbered function-keys.
+Other special keys are not modified.
+.TP 5
+1
+allows modification of the numeric keypad
+.TP 5
+2
+allows modification of the editing keypad
+.TP 5
+4
+allows modification of function-keys,
+overrides use of Shift-modifier for UDK.
+.TP 5
+8
+allows modification of other special keys
+.RE
 .TP 8
 .B "modifyOtherKeys (\fPclass\fB ModifyOtherKeys\fP)"
 Like \fBmodifyCursorKeys\fP, tells \fIxterm\fP to construct an

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.733 2012/06/04 08:48:24 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.734 2012/06/10 23:41:39 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2237,6 +2237,7 @@ extern	const char * visibleKeyboardType(xtermKeyboardType);
 
 typedef struct
 {
+    int allow_keys;		/* how to handle legacy/vt220 keyboard */
     int cursor_keys;		/* how to handle cursor-key modifiers */
     int function_keys;		/* how to handle function-key modifiers */
     int keypad_keys;		/* how to handle keypad key-modifiers */

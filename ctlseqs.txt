@@ -295,6 +295,8 @@ CSI Ps c  Send Device Attributes (Primary DA).
             Ps = 8  -> User-defined keys.
             Ps = 9  -> National replacement character sets.
             Ps = 1 5  -> Technical characters.
+            Ps = 1 8  -> User windows.
+            Ps = 2 1  -> Horizontal scrolling.
             Ps = 2 2  -> ANSI color, e.g., VT525.
             Ps = 2 9  -> ANSI text locator (i.e., DEC Locator mode).
 CSI > Ps c
@@ -307,6 +309,14 @@ CSI > Ps c
           where Pp denotes the terminal type
             Pp = 0  -> ``VT100''.
             Pp = 1  -> ``VT220''.
+            Pp = 2  -> ``VT240''.
+            Pp = 1 8 -> ``VT330''.
+            Pp = 1 9 -> ``VT340''.
+            Pp = 2 4 -> ``VT320''.
+            Pp = 4 1 -> ``VT420''.
+            Pp = 6 1 -> ``VT510''.
+            Pp = 6 4 -> ``VT520''.
+            Pp = 6 5 -> ``VT525''.
           and Pv is the firmware version (for xterm, this was originally
           the XFree86 patch number, starting with 95).  In a DEC termi-
           nal, Pc indicates the ROM cartridge registration number and is
@@ -575,6 +585,7 @@ CSI > Ps; Ps m
           tifies the resource to set/reset.  The second parameter is the
           value to assign to the resource.  If the second parameter is
           omitted, the resource is reset to its initial value.
+            Ps = 0  -> modifyKeyboard.
             Ps = 1  -> modifyCursorKeys.
             Ps = 2  -> modifyFunctionKeys.
             Ps = 4  -> modifyOtherKeys.
@@ -591,6 +602,7 @@ CSI > Ps n
           sequence.  This corresponds to a resource value of "-1", which
           cannot be set with the other sequence.  The parameter identi-
           fies the resource to be disabled:
+            Ps = 0  -> modifyKeyboard.
             Ps = 1  -> modifyCursorKeys.
             Ps = 2  -> modifyFunctionKeys.
             Ps = 4  -> modifyOtherKeys.

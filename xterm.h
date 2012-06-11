@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.695 2012/05/25 00:02:00 tom Exp $ */
+/* $XTermId: xterm.h,v 1.696 2012/06/10 23:49:31 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -448,6 +448,7 @@ extern char **environ;
 #define XtNmkWidth		"mkWidth"
 #define XtNmodifyCursorKeys	"modifyCursorKeys"
 #define XtNmodifyFunctionKeys	"modifyFunctionKeys"
+#define XtNmodifyKeyboard	"modifyKeyboard"
 #define XtNmodifyKeypadKeys	"modifyKeypadKeys"
 #define XtNmodifyOtherKeys	"modifyOtherKeys"
 #define XtNmodifyStringKeys	"modifyStringKeys"
@@ -620,6 +621,7 @@ extern char **environ;
 #define XtCMkWidth		"MkWidth"
 #define XtCModifyCursorKeys	"ModifyCursorKeys"
 #define XtCModifyFunctionKeys	"ModifyFunctionKeys"
+#define XtCModifyKeyboard	"ModifyKeyboard"
 #define XtCModifyKeypadKeys	"ModifyKeypadKeys"
 #define XtCModifyOtherKeys	"ModifyOtherKeys"
 #define XtCModifyStringKeys	"ModifyStringKeys"

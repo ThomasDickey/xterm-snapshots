@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.337 2012/06/07 22:49:33 tom Exp $ */
+/* $XTermId: input.c,v 1.338 2012/06/11 00:08:38 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -347,25 +347,42 @@ IsControlAlias(KEY_DATA * kd)
  * would be Home (XK_KP_Home).  The other modifiers work, subject to the
  * usual window-manager assignments.
  */
+#if OPT_SUNPC_KBD
+#define LegacyAllows(code) (!is_legacy || (code & xw->keyboard.modify_now.allow_keys) != 0)
+#else
+#define LegacyAllows(code) True
+#endif
+
 static Bool
 allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 {
     TKeyboard *keyboard = &(xw->keyboard);
     TScreen *screen = TScreenOf(xw);
     int keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
-
+    int is_legacy = (keyboard->type == keyboardIsLegacy);
     Bool result = False;
 
-    (void) screen;
-    if (!(IsKeypadKey(kd->keysym) && keypad_mode)
 #if OPT_SUNPC_KBD
-	&& keyboard->type != keyboardIsVT220
+    if (keyboard->type == keyboardIsVT220)
+	is_legacy = True;
 #endif
+
+    (void) screen;
 #if OPT_VT52_MODE
-	&& screen->vtXX_level != 0
+    if (screen->vtXX_level != 0)
 #endif
-	) {
-	result = True;
+    {
+	if (IsCursorKey(kd->keysym) || IsEditFunctionKey(kd->keysym)) {
+	    result = LegacyAllows(2);
+	} else if (IsKeypadKey(kd->keysym)) {
+	    if (keypad_mode) {
+		result = LegacyAllows(1);
+	    }
+	} else if (IsFunctionKey(kd->keysym)) {
+	    result = LegacyAllows(4);
+	} else if (IsMiscFunctionKey(kd->keysym)) {
+	    result = LegacyAllows(8);
+	}
     }
     return result;
 }
