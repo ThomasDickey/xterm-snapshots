@@ -77,8 +77,10 @@ configure-stamp:
 		--enable-wide-chars \
 		--enable-xmc-glitch \
 		--with-app-defaults=$(PKG_APPDEFAULTS) \
-		--with-icondir=\$${prefix}/share/pixmaps \
+		--with-icondir=\$${prefix}/share/icons \
+		--with-pixmapdir=\$${prefix}/share/pixmaps \
 		--with-own-terminfo=\$${prefix}/share/terminfo \
+		--with-icon-theme \
 		--with-terminal-type=xterm-new \
 		--with-utempter \
 		${DEBOP}

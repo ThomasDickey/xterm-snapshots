@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.324 2012/06/05 00:38:55 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.341 2012/06/22 01:04:31 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -13,10 +13,10 @@ dnl without limitation the rights to use, copy, modify, merge, publish,
 dnl distribute, sublicense, and/or sell copies of the Software, and to
 dnl permit persons to whom the Software is furnished to do so, subject to
 dnl the following conditions:
-dnl 
+dnl
 dnl The above copyright notice and this permission notice shall be included
 dnl in all copies or substantial portions of the Software.
-dnl 
+dnl
 dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 dnl OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 dnl MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -24,7 +24,7 @@ dnl IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
 dnl CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 dnl TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 dnl SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-dnl 
+dnl
 dnl Except as contained in this notice, the name(s) of the above copyright
 dnl holders shall not be used in advertising or otherwise to promote the
 dnl sale, use or other dealings in this Software without prior written
@@ -422,6 +422,39 @@ fi
 
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_CLANG_COMPILER version: 1 updated: 2012/06/16 14:55:39
+dnl -----------------
+dnl Check if the given compiler is really clang.  clang's C driver defines
+dnl __GNUC__ (fooling the configure script into setting $GCC to yes) but does
+dnl not ignore some gcc options.
+dnl
+dnl This macro should be run "soon" after AC_PROG_CC or AC_PROG_CPLUSPLUS, to
+dnl ensure that it is not mistaken for gcc/g++.  It is normally invoked from
+dnl the wrappers for gcc and g++ warnings.
+dnl
+dnl $1 = GCC (default) or GXX
+dnl $2 = INTEL_COMPILER (default) or INTEL_CPLUSPLUS
+dnl $3 = CFLAGS (default) or CXXFLAGS
+AC_DEFUN([CF_CLANG_COMPILER],[
+ifelse([$2],,CLANG_COMPILER,[$2])=no
+
+if test "$ifelse([$1],,[$1],GCC)" = yes ; then
+	AC_MSG_CHECKING(if this is really Clang ifelse([$1],GXX,C++,C) compiler)
+	cf_save_CFLAGS="$ifelse([$3],,CFLAGS,[$3])"
+	ifelse([$3],,CFLAGS,[$3])="$ifelse([$3],,CFLAGS,[$3]) -Qunused-arguments"
+	AC_TRY_COMPILE([],[
+#ifdef __clang__
+#else
+make an error
+#endif
+],[ifelse([$2],,CLANG_COMPILER,[$2])=yes
+cf_save_CFLAGS="$cf_save_CFLAGS -Qunused-arguments"
+],[])
+	ifelse([$3],,CFLAGS,[$3])="$cf_save_CFLAGS"
+	AC_MSG_RESULT($ifelse([$2],,CLANG_COMPILER,[$2]))
+fi
+])
+dnl ---------------------------------------------------------------------------
 dnl CF_DISABLE_DESKTOP version: 2 updated: 2011/04/22 05:17:37
 dnl ------------------
 dnl Handle a configure option "--disable-desktop", which sets a shell
@@ -543,15 +576,15 @@ AC_DEFUN([CF_ERRNO],
 CF_CHECK_ERRNO(errno)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 7 updated: 2012/05/07 19:39:45
+dnl CF_FUNC_GRANTPT version: 8 updated: 2012/06/11 17:37:05
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
 AC_DEFUN([CF_FUNC_GRANTPT],[
 
-AC_CHECK_HEADERS( \ 
+AC_CHECK_HEADERS( \
 stropts.h \
-) 
+)
 
 cf_func_grantpt="grantpt ptsname"
 case $host_os in #(vi
@@ -663,7 +696,7 @@ if test "x$ac_cv_func_grantpt" != "xyes" || test -z "$cf_grantpt_opts" ; then
 		ac_cv_func_grantpt=no
 		LIBS="-lutil $LIBS"
 		AC_DEFINE(HAVE_OPENPTY)
-		AC_CHECK_HEADERS( \ 
+		AC_CHECK_HEADERS( \
 			util.h \
 			libutil.h \
 			pty.h \
@@ -967,7 +1000,7 @@ if test "$GCC" = yes ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_WARNINGS version: 28 updated: 2012/03/31 20:10:46
+dnl CF_GCC_WARNINGS version: 29 updated: 2012/06/16 14:55:39
 dnl ---------------
 dnl Check if the compiler supports useful warning options.  There's a few that
 dnl we don't use, simply because they're too noisy:
@@ -990,6 +1023,7 @@ AC_DEFUN([CF_GCC_WARNINGS],
 [
 AC_REQUIRE([CF_GCC_VERSION])
 CF_INTEL_COMPILER(GCC,INTEL_COMPILER,CFLAGS)
+CF_CLANG_COMPILER(GCC,CLANG_COMPILER,CFLAGS)
 
 cat > conftest.$ac_ext <<EOF
 #line __oline__ "${as_me:-configure}"
@@ -1556,7 +1590,7 @@ if test -n "$cf_path_prog" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_PATH_SYNTAX version: 13 updated: 2010/05/26 05:38:42
+dnl CF_PATH_SYNTAX version: 14 updated: 2012/06/19 20:58:54
 dnl --------------
 dnl Check the argument to see that it looks like a pathname.  Rewrite it if it
 dnl begins with one of the prefix/exec_prefix variables, and then again if the
@@ -1576,7 +1610,7 @@ case ".[$]$1" in #(vi
   ;;
 .[[a-zA-Z]]:[[\\/]]*) #(vi OS/2 EMX
   ;;
-.\[$]{*prefix}*) #(vi
+.\[$]{*prefix}*|.\[$]{*dir}*) #(vi
   eval $1="[$]$1"
   case ".[$]$1" in #(vi
   .NONE/*)
@@ -2231,7 +2265,7 @@ static struct termio d_tio;
 test "$cf_cv_svr4" = yes && AC_DEFINE(SVR4)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_SYSV version: 13 updated: 2006/08/20 14:55:37
+dnl CF_SYSV version: 14 updated: 2012/06/11 17:37:05
 dnl -------
 dnl Check if this is a SYSV platform, e.g., as used in <X11/Xos.h>, and whether
 dnl defining it will be helpful.  The following features are used to check:
@@ -2264,12 +2298,12 @@ AC_TRY_COMPILE([
 #ifdef HAVE_X11_INTRINSIC_H
 #include <X11/Intrinsic.h>	/* Intrinsic.h has other traps... */
 #endif
-#ifdef HAVE_TERMIOS_H		/* needed for HPUX 10.20 */ 
-#include <termios.h> 
-#define STRUCT_TERMIOS struct termios 
-#else 
-#define STRUCT_TERMIOS struct termio 
-#endif 
+#ifdef HAVE_TERMIOS_H		/* needed for HPUX 10.20 */
+#include <termios.h>
+#define STRUCT_TERMIOS struct termios
+#else
+#define STRUCT_TERMIOS struct termio
+#endif
 #include <curses.h>
 #include <term.h>		/* eliminate most BSD hacks */
 #include <errno.h>		/* declare sys_errlist on older systems */
@@ -2961,23 +2995,80 @@ AC_MSG_RESULT($APP_CLASS)
 AC_SUBST(APP_CLASS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_APP_DEFAULTS version: 1 updated: 2011/04/21 18:12:37
+dnl CF_WITH_APP_DEFAULTS version: 3 updated: 2012/06/19 20:58:54
 dnl --------------------
 dnl Handle configure option "--with-app-defaults", setting these shell
 dnl variables:
-dnl $appsdir is the option value, used for installing app-defaults files.
+dnl
+dnl $APPSDIR is the option value, used for installing app-defaults files.
 dnl $no_appsdir is a "#" (comment) if "--without-app-defaults" is given.
+dnl
+dnl Most Linux's use this:
+dnl 	/usr/share/X11/app-defaults
+dnl Debian uses this:
+dnl 	/etc/X11/app-defaults
+dnl DragonFlyBSD ports uses this:
+dnl 	/usr/pkg/lib/X11/app-defaults
+dnl FreeBSD ports use these:
+dnl 	/usr/local/lib/X11/app-defaults
+dnl 	/usr/local/share/X11/app-defaults
+dnl Mandriva has these:
+dnl 	/usr/lib/X11/app-defaults
+dnl 	/usr/lib64/X11/app-defaults
+dnl NetBSD has these
+dnl 	/usr/X11R7/lib/X11/app-defaults
+dnl OpenSolaris uses
+dnl 	32-bit:
+dnl 	/usr/X11/etc/X11/app-defaults
+dnl 	/usr/X11/share/X11/app-defaults
+dnl 	/usr/X11/lib/X11/app-defaults
+dnl	64-bit:
+dnl 	/usr/X11/etc/X11/app-defaults
+dnl 	/usr/X11/share/X11/app-defaults (I mkdir'd this)
+dnl 	/usr/X11/lib/amd64/X11/app-defaults
+dnl Solaris10 uses (in this order):
+dnl 	/usr/openwin/lib/X11/app-defaults
+dnl 	/usr/X11/lib/X11/app-defaults
 AC_DEFUN(CF_WITH_APP_DEFAULTS,[
 AC_MSG_CHECKING(for directory to install resource files)
-CF_WITH_PATH(app-defaults,
-	[  --with-app-defaults=DIR directory in which to install resource files],
-	[appsdir],[EPREFIX/lib/X11/app-defaults],
-	['\$(exec_prefix)/lib/X11/app-defaults'])
-AC_MSG_RESULT($appsdir)
-AC_SUBST(appsdir)
+AC_ARG_WITH(app-defaults,
+	[  --with-app-defaults=DIR directory in which to install resource files (EPREFIX/lib/X11/app-defaults)],
+	[APPSDIR=$withval],
+	[APPSDIR='${exec_prefix}/lib/X11/app-defaults'])
+
+if test "x[$]APPSDIR" = xauto
+then
+	APPSDIR='${exec_prefix}/lib/X11/app-defaults'
+	for cf_path in \
+		/usr/share/X11/app-defaults \
+		/usr/X11/share/X11/app-defaults \
+		/usr/X11/lib/X11/app-defaults \
+		/usr/lib/X11/app-defaults \
+		/etc/X11/app-defaults \
+		/usr/pkg/lib/X11/app-defaults \
+		/usr/X11R7/lib/X11/app-defaults \
+		/usr/X11R6/lib/X11/app-defaults \
+		/usr/X11R5/lib/X11/app-defaults \
+		/usr/X11R4/lib/X11/app-defaults \
+		/usr/local/lib/X11/app-defaults \
+		/usr/local/share/X11/app-defaults \
+		/usr/lib64/X11/app-defaults
+	do
+		if test -d "$cf_path" ; then
+			APPSDIR="$cf_path"
+			break
+		fi
+	done
+else
+	cf_path=$APPSDIR
+	CF_PATH_SYNTAX(cf_path)
+fi
+
+AC_MSG_RESULT($APPSDIR)
+AC_SUBST(APPSDIR)
 
 no_appsdir=
-test "$appsdir" = no && no_appsdir="#"
+test "$APPSDIR" = no && no_appsdir="#"
 AC_SUBST(no_appsdir)
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -3060,24 +3151,189 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICONDIR version: 1 updated: 2011/04/21 18:12:37
+dnl CF_WITH_ICONDIR version: 4 updated: 2012/06/21 21:03:13
 dnl ---------------
-dnl Handle configure option "--with-icondir", setting these shell
-dnl variables:
-dnl $icondir is the option value, used for installing icon/pixmap files.
+dnl Handle configure option "--with-icondir", setting these shell variables:
+dnl
+dnl $ICONDIR is the option value, used for installing icon files.
 dnl $no_icondir is a "#" (comment) if "--without-icondir" is given.
 AC_DEFUN([CF_WITH_ICONDIR],[
 AC_MSG_CHECKING(for directory to install icons)
-CF_WITH_PATH(icondir,
-	[  --with-icondir=DIR      directory in which to install icons],
-	[icondir],[EPREFIX/share/pixmaps],
-	['\$(exec_prefix)/share/pixmaps'])
-AC_MSG_RESULT($icondir)
-AC_SUBST(icondir)
+AC_ARG_WITH(icondir,
+	[  --with-icondir=DIR      directory in which to install icons for desktop],
+	[ICONDIR=$withval],
+	[test -z "$ICONDIR" && ICONDIR=no])
+
+if test "x[$]ICONDIR" = xauto
+then
+	ICONDIR='${datadir}/icons'
+	for cf_path in \
+		/usr/share/icons \
+		/usr/X11R6/share/icons
+	do
+		if test -d "$cf_path" ; then
+			ICONDIR="$cf_path"
+			break
+		fi
+	done
+else
+	cf_path=$ICONDIR
+	CF_PATH_SYNTAX(cf_path)
+fi
+AC_MSG_RESULT($ICONDIR)
+AC_SUBST(ICONDIR)
 
 no_icondir=
-test "$icondir" = no && no_icondir="#"
+test "$ICONDIR" = no && no_icondir="#"
 AC_SUBST(no_icondir)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_ICON_THEME version: 4 updated: 2012/06/21 21:03:13
+dnl ------------------
+dnl If asked, check for prerequisites and setup symbols to permit installing
+dnl one or more application icons in the Red Hat icon-theme directory
+dnl hierarchy. 
+dnl
+dnl If the prerequisites are missing, give a warning and revert to the long-
+dnl standing pixmaps directory.
+dnl
+dnl Parameters:
+dnl
+dnl $1 = application icon.  This can be a list, and is not optional.
+dnl $2 = default theme (defaults to hicolor)
+dnl $3 = formats (defaults to list [.svg .png .xpm])
+dnl $4 = alternate icon if no theme is used (defaults to $1).
+dnl
+dnl Result:
+dnl ICON_NAME = basename of first item in $1
+dnl ICON_LIST = reprocessed $1
+dnl ICON_THEME = reprocessed $2
+dnl ICON_FORMAT = reprocessed $3
+AC_DEFUN([CF_WITH_ICON_THEME],
+[
+ifelse([$1],,[
+	AC_MSG_ERROR([macro [CF_WITH_ICON_THEME] requires application-icon name])
+],[
+
+CF_WITH_PIXMAPDIR
+CF_WITH_ICONDIR
+
+AC_MSG_CHECKING(if icon theme should be used)
+AC_ARG_WITH(icon-theme,
+	[  --with-icon-theme=XXX   install icons into desktop theme (hicolor)],
+	[ICON_THEME=$withval],
+	[ICON_THEME=no])
+
+case "x$ICON_THEME" in #(vi
+xno) #(vi
+	;;
+x|xyes)
+	ICON_THEME=ifelse([$2],,hicolor,$2)
+	;;
+esac
+AC_MSG_RESULT($ICON_THEME)
+
+if test "x$ICON_THEME" = xno
+then
+	if test "x$ICONDIR" != xno
+	then
+		AC_MSG_WARN(ignoring icondir without theme)
+		no_icondir="#"
+	fi
+else
+	if test "x$ICONDIR" = xno
+	then
+		AC_MSG_ERROR(icondir must be set for icon theme)
+	fi
+fi
+
+: ${ICON_FORMAT:=ifelse([$3],,[.svg .png .xpm],[$3])}
+
+ICON_NAME=
+ICON_LIST=
+
+ifelse([$4],,[cf_icon_list=$1],[
+if test "x$ICON_THEME" != xno
+then
+	cf_icon_list=$1
+else
+	cf_icon_list=$4
+fi
+])
+
+AC_MSG_CHECKING([for icon(s) to install])
+for cf_name in $cf_icon_list
+do
+	for cf_suffix in $ICON_FORMAT
+	do
+		cf_icon="${cf_name}${cf_suffix}"
+		cf_left=`echo "$cf_icon" | sed -e 's/:.*//'`
+		if test ! -f "${cf_left}"
+		then
+			if test "x$srcdir" != "x."
+			then
+				cf_icon="${srcdir}/${cf_left}${cf_suffix}"
+				cf_left=`echo "$cf_icon" | sed -e 's/:.*//'`
+				if test ! -f "${cf_left}"
+				then
+					continue
+				fi
+			else
+				continue
+			fi
+		fi
+		if test "x$ICON_THEME" != xno
+		then
+			cf_base=`basename $cf_left`
+			case "x${cf_icon}" in #(vi
+			*:*) #(vi
+				# user-defined mapping
+				;;
+			*_[[0-9]][[0-9]]*x[[0-9]][[0-9]]*.*) #(vi
+				cf_size=`echo "$cf_left"|sed -e 's/^.*_\([[0-9]][[0-9]]*x[[0-9]][[0-9]]*\)\..*$/\1/'`
+				cf_left=`echo "$cf_left"|sed -e 's/^\(.*\)_\([[0-9]][[0-9]]*x[[0-9]][[0-9]]*\)\(\..*\)$/\1\3/'`
+				cf_icon="${cf_icon}:$cf_size/apps/$cf_base"
+				;;
+			*.png) #(vi
+				cf_size=`file "$cf_left"|sed -e 's/^[[^:]]*://' -e 's/^.*[[^0-9]]\([[0-9]][[0-9]]* x [[0-9]][[0-9]]*\)[[^0-9]].*$/\1/' -e 's/ //g'`
+				if test -z "$cf_size"
+				then
+					AC_MSG_WARN(cannot determine size of $cf_left)
+					continue
+				fi
+				cf_icon="${cf_icon}:$cf_size/apps/$cf_base"
+				;;
+			*.svg) #(vi
+				cf_icon="${cf_icon}:scalable/apps/`basename $cf_icon`"
+				;;
+			*.xpm)
+				AC_MSG_WARN(ignored XPM file in icon theme)
+				continue
+				;;
+			esac
+		fi
+		test -n "$ICON_LIST" && ICON_LIST="$ICON_LIST "
+		ICON_LIST="$ICON_LIST${cf_icon}"
+		if test -z "$ICON_NAME"
+		then
+			ICON_NAME=`basename $cf_icon | sed -e 's/[[.:]].*//'`
+		fi
+	done
+done
+AC_MSG_RESULT($ICON_LIST)
+if test -z "$ICON_LIST"
+then
+	AC_MSG_ERROR(no icons found)
+fi
+])
+
+AC_MSG_CHECKING(for icon name)
+AC_MSG_RESULT($ICON_NAME)
+
+AC_SUBST(ICON_FORMAT)
+AC_SUBST(ICON_THEME)
+AC_SUBST(ICON_LIST)
+AC_SUBST(ICON_NAME)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_IMAKE_CFLAGS version: 9 updated: 2010/05/26 05:38:42
@@ -3215,6 +3471,43 @@ if test "$with_pcre" != no ; then
 			;;
 		esac
 fi
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_PIXMAPDIR version: 2 updated: 2012/06/21 21:03:13
+dnl -----------------
+dnl Handle configure option "--with-pixmapdir", setting these shell variables:
+dnl
+dnl $PIXMAPDIR is the option value, used for installing pixmap files.
+dnl $no_pixmapdir is a "#" (comment) if "--without-pixmapdir" is given.
+AC_DEFUN([CF_WITH_PIXMAPDIR],[
+AC_MSG_CHECKING(for directory to install pixmaps)
+AC_ARG_WITH(pixmapdir,
+	[  --with-pixmapdir=DIR    directory in which to install pixmaps (DATADIR/pixmaps)],
+	[PIXMAPDIR=$withval],
+	[test -z "$PIXMAPDIR" && PIXMAPDIR='${datadir}/pixmaps'])
+
+if test "x[$]PIXMAPDIR" = xauto
+then
+	PIXMAPDIR='${datadir}/pixmaps'
+	for cf_path in \
+		/usr/share/pixmaps \
+		/usr/X11R6/share/pixmaps
+	do
+		if test -d "$cf_path" ; then
+			PIXMAPDIR="$cf_path"
+			break
+		fi
+	done
+else
+	cf_path=$PIXMAPDIR
+	CF_PATH_SYNTAX(cf_path)
+fi
+AC_MSG_RESULT($PIXMAPDIR)
+AC_SUBST(PIXMAPDIR)
+
+no_pixmapdir=
+test "$PIXMAPDIR" = no && no_pixmapdir="#"
+AC_SUBST(no_pixmapdir)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_XBOOL_RESULT version: 1 updated: 2012/06/04 20:23:25
@@ -3622,7 +3915,7 @@ fi
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_X_FREETYPE version: 24 updated: 2011/08/29 05:46:02
+dnl CF_X_FREETYPE version: 25 updated: 2012/06/11 17:37:05
 dnl -------------
 dnl Check for X FreeType headers and libraries (XFree86 4.x, etc).
 dnl
@@ -3689,7 +3982,7 @@ auto) #(vi
 	;;
 pkg*) #(vi
 	if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists xft; then
-		FREETYPE_CONFIG=$cf_cv_x_freetype_cfgs 
+		FREETYPE_CONFIG=$cf_cv_x_freetype_cfgs
 		FREETYPE_PARAMS=xft
 	else
 		AC_MSG_WARN(cannot find pkg-config for Xft)

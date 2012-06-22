@@ -1,8 +1,8 @@
-# $XTermId: xterm.desktop,v 1.10 2010/06/15 10:58:13 tom Exp $
+# $XTermId: xterm.desktop,v 1.11 2012/06/20 09:53:55 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006-2007,2010 by Thomas E. Dickey
+# Copyright 2006-2010,2012 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -36,6 +36,5 @@ Comment=standard terminal emulator for the X window system
 Exec=xterm
 Terminal=false
 Type=Application
-Encoding=UTF-8
 Icon=xterm-color_48x48
 Categories=System;TerminalEmulator;

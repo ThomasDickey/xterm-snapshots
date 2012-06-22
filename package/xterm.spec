@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.24 2012/06/08 13:48:42 tom Exp $
+# $XTermId: xterm.spec,v 1.28 2012/06/22 00:28:29 tom Exp $
 Summary: X terminal emulator (development version)
 Name: xterm-dev
 Version: 280
@@ -42,6 +42,7 @@ and its resource class, to avoid conflict with other packages.
 
 %define desktop_vendor  dickey
 %define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo "yes" ; fi)
+%define icon_theme      %(if which gtk-update-icon-cache 2>&1 >/dev/null ; then echo "yes" ; fi)
 
 %define apps_shared %(test -d /usr/share/X11/app-defaults && echo 1 || echo 0)
 %define apps_syscnf %(test -d /etc/X11/app-defaults && echo 1 || echo 0)
@@ -70,6 +71,10 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--program-suffix=%{my_suffix} \
 	--without-xterm-symlink \
 %endif
+%if "%{icon_theme}" == "yes"
+	--with-icon-theme \
+	--with-icondir=%{_iconsdir} \
+%endif
 	--with-app-class=%{my_class} \
 	--enable-256-color \
 	--enable-88-color \
@@ -82,7 +87,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-logging \
 	--enable-mini-luit \
 	--enable-paste64 \
-	--enable-rectangles \
 	--enable-sco-fkeys \
 	--enable-tcap-fkeys \
 	--enable-tcap-query \
@@ -90,7 +94,8 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-wide-chars \
 	--enable-xmc-glitch \
 	--with-app-defaults=%{_xresdir} \
-	--with-icondir=%{_pixmapsdir} \
+	--with-pixmapdir=%{_pixmapsdir} \
+	--with-icontheme \
 	--with-own-terminfo=%{_datadir}/terminfo \
 	--with-terminal-type=xterm-new \
 	--with-utempter
@@ -142,6 +147,22 @@ test -n "%{my_suffix}" && \
 )
 %endif
 
+%post
+%if "%{icon_theme}" == "yes"
+touch --no-create %{_iconsdir}/hicolor
+if [ -x %{_bindir}/gtk-update-icon-cache ]; then
+  %{_bindir}/gtk-update-icon-cache --quiet %{_iconsdir}/hicolor || :
+fi
+%endif
+
+%postun
+%if "%{icon_theme}" == "yes"
+touch --no-create %{_iconsdir}/hicolor
+if [ -x %{_bindir}/gtk-update-icon-cache ]; then
+  %{_bindir}/gtk-update-icon-cache --quiet %{_iconsdir}/hicolor || :
+fi
+%endif
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -153,7 +174,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/resize%{my_suffix}
 %{_mandir}/*/*
 %{my_docdir}/*
-%{_pixmapsdir}/xterm*.xpm
 %{_xresdir}/*XTerm*
 
 %if "%{install_ti}" == "yes"
@@ -165,7 +185,16 @@ rm -rf $RPM_BUILD_ROOT
 %config(missingok) %{_datadir}/applications/%{desktop_vendor}-uxterm%{my_suffix}.desktop
 %endif
 
+%if "%{icon_theme}" == "yes"
+%{_iconsdir}/hicolor/48x48/apps/xterm*.png
+%{_iconsdir}/hicolor/scalable/apps/xterm*.svg
+%endif
+%{_pixmapsdir}/xterm*.xpm
+
 %changelog
+
+* Fri Jun 15 2012 Thomas E. Dickey
+- modify to support icon theme
 
 * Fri Oct 22 2010 Thomas E. Dickey
 - initial version.
