@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.128 2012/06/05 00:59:04 tom Exp $
+-- $XTermId: INSTALL,v 1.132 2012/06/22 00:33:42 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2011,2012 by Thomas E. Dickey
 --
@@ -551,6 +551,9 @@ The options (in alphabetic order):
 	/usr/local, you should use this option to customize the location to
 	match your system configuration.
 
+	Use --with-app-defaults=auto to ask the configure script to look in
+	a list of well-known locations for an existing directory.
+
 	Use --without-app-defaults or --with-app-defaults=no to disable the
 	feature.
 
@@ -587,7 +590,7 @@ The options (in alphabetic order):
 
 	Override options provided by xft-config or freetype-config.
 
-  --with-icondir=DIR directory in which to install icon files (default: EPREFIX/share/pixmaps)
+  --with-icondir=DIR directory in which to install icon files (default: no)
 
 	The X libraries may automatically search these locations:
 
@@ -595,10 +598,18 @@ The options (in alphabetic order):
 	$XDG_DATA_DIRS/icons
 	/usr/share/pixmaps
 
+	Alternatively, the last may be actually
+	/usr/X11R6/share/pixmaps
+
+	Use --with-icondir=auto to tell the configure script to search for
+	an existing directory from its list of well-known system locations.
+
 	See also
 	http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
+	http://www.freedesktop.org/software/icon-theme/
 
-	Use --without-icondir or --with-icondir=no to disable the feature.
+	By default, the option is disabled; it is useful only for the
+	--with-icon-theme option.
 
   --with-neXtaw           link with neXT Athena library
 

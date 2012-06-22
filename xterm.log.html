@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1183 2012/06/11 09:16:34 tom Exp $
+  $XTermId: xterm.log.html,v 1.1188 2012/06/21 23:00:44 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -52,7 +52,7 @@ from the notes that I add when submitting a patch.
 <P>
 You should note that other changes have been made as well, by other people,
 to fix bugs and correct ifdef's for portability.
-Most of these are summarized in the XFree86 CHANGELOG
+Until mid-2006, most of these were summarized in the XFree86 CHANGELOG
 (found in the unbundled tree, xc/programs/Xserver/hw/xfree86).
 <a href="http://invisible-island.net/xterm/xterm.log.html">Here</a>
 is the latest version of this file.
@@ -343,6 +343,27 @@ is the latest version of this file.
 
 <H1><A NAME="xterm_dev">Development</A></H1>
 <ul>
+	<li>drop "Encoding" from desktop file to eliminate spurious warning
+	    from desktop-file-validate.
+
+	<li>add configure option
+	    <code>--with-icon-theme</code> to
+	    tell xterm whether to install into an icon theme,
+	    defaulting to "hicolor".
+
+	<li>change
+	    <code>--with-icondir</code>
+	    to look for "icons" directory rather than "pixmaps" by default.
+	    Add new option
+	    <code>--with-pixmapdir</code>
+	    to allow these two uses to be installed concurrently.
+
+	<li>modify configure options
+	    <code>--with-app-defaults</code> and
+	    <code>--with-icondir</code>
+	    to accept "auto" as value to look for existing directory
+	    from well-known locations.
+
 	<li>add missing codes for secondary DA response which tell the type
 	    of terminal as in the primary DA response.
 

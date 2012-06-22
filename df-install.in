@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: df-install.in,v 1.5 2011/07/07 09:41:14 tom Exp $
+# $XTermId: df-install.in,v 1.10 2012/06/22 01:02:42 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2011 by Thomas E. Dickey
+# Copyright 2011,2012 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -81,9 +81,10 @@ fi
 
 NEW_FILE=`basename $OLD_FILE`
 sed \
+	-e '/^[^#]*Icon=/s%=.*%=@ICON_NAME@%' \
+	-e '/^[^#]*Categories=/s%=.*%=@DESKTOP_CATEGORY@%' \
 	-e '/^[^#]/s%xterm%'$APP_NAME'%g' \
 	-e '/^[^#]/s%XTerm%@APP_CLASS@%g' \
-	-e '/^Category=/s%=.*%@DESKTOP_CATEGORY@%' \
 	$OLD_FILE >$MY_TEMP/$NEW_FILE
 cd $MY_TEMP
 

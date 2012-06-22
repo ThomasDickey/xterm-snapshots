@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.186 2011/08/25 09:25:51 tom Exp $
+## $XTermId: Makefile.in,v 1.197 2012/06/21 23:27:37 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2010,2011 by Thomas E. Dickey
+# Copyright 1997-2011,2012 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -75,8 +75,10 @@ manext		= 1
 bindir		= @bindir@
 libdir		= @libdir@
 mandir		= @mandir@/man$(manext)
-appsdir		= @appsdir@
-icondir		= @icondir@
+datadir		= @datadir@
+appsdir		= @APPSDIR@
+icondir		= @ICONDIR@
+pixmapdir	= @PIXMAPDIR@
 
 #### End of system configuration section. ####
 
@@ -85,9 +87,10 @@ BINDIR		= $(DESTDIR)$(bindir)
 LIBDIR		= $(DESTDIR)$(libdir)
 MANDIR		= $(DESTDIR)$(mandir)
 APPSDIR		= $(DESTDIR)$(appsdir)
-ICONDIR		= $(DESTDIR)$(icondir)
+@no_icondir@ICONDIR		= $(DESTDIR)$(icondir)
+@no_pixmapdir@PIXMAPDIR	= $(DESTDIR)$(pixmapdir)
 
-INSTALL_DIRS    = $(BINDIR) $(APPSDIR) $(ICONDIR) $(MANDIR)
+INSTALL_DIRS    = $(BINDIR) $(APPSDIR) $(ICONDIR) $(PIXMAPDIR) $(MANDIR)
 
 CLASS		= @APP_CLASS@
 EXTRAHDR	= @EXTRAHDRS@
@@ -249,14 +252,34 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_appsdir@	@rm -f XTerm.tmp
 @no_icondir@	@echo "... installed app-defaults"
 
+@no_icondir@ICON_LIST = @ICON_LIST@
+@no_icondir@ICON_THEME = @ICON_THEME@
 @no_icondir@install \
 @no_icondir@install-icon \
 @no_icondir@install-full :: $(ICONDIR)
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_32x32.xpm $(ICONDIR)/$(actual_xterm)-color_32x32.xpm
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_48x48.xpm $(ICONDIR)/$(actual_xterm)-color_48x48.xpm
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_32x32.xpm $(ICONDIR)/$(actual_xterm)_32x32.xpm
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_48x48.xpm $(ICONDIR)/$(actual_xterm)_48x48.xpm
+@no_icondir@	ACTUAL_XTERM=$(actual_xterm) \
+@no_icondir@	$(SHELL) -c 'for n in $(ICON_LIST); \
+@no_icondir@		do \
+@no_icondir@		x=$$ACTUAL_XTERM; \
+@no_icondir@		l=`echo "$$n" | cut -f1 -d:`; \
+@no_icondir@		r=`echo "$$n" | cut -f2 -d: |sed -e s,xterm,$$x,`; \
+@no_icondir@		test -z "$$r" && continue; \
+@no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
+@no_icondir@		d=$$h/`echo "$$r" | sed -e "s,/[^/]*$$,,"`; \
+@no_icondir@		test -d "$$d" || mkdir -p "$$d"; \
+@no_icondir@		echo installing $$h/$$r; \
+@no_icondir@		$(INSTALL_DATA) $(srcdir)/$$l $$h/$$r; \
+@no_icondir@		done'
 @no_icondir@	@echo "... installed icons"
+
+@no_pixmapdir@install \
+@no_pixmapdir@install-icon \
+@no_pixmapdir@install-full :: $(PIXMAPDIR)
+@no_pixmapdir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_32x32.xpm $(PIXMAPDIR)/$(actual_xterm)-color_32x32.xpm
+@no_pixmapdir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_48x48.xpm $(PIXMAPDIR)/$(actual_xterm)-color_48x48.xpm
+@no_pixmapdir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_32x32.xpm $(PIXMAPDIR)/$(actual_xterm)_32x32.xpm
+@no_pixmapdir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_48x48.xpm $(PIXMAPDIR)/$(actual_xterm)_48x48.xpm
+@no_pixmapdir@	@echo "... installed icons"
 
 install ::
 	@echo 'Completed installation of executables and documentation.'
@@ -315,17 +338,34 @@ uninstall-full ::
 @no_icondir@uninstall \
 @no_icondir@uninstall-icon \
 @no_icondir@uninstall-full ::
-@no_icondir@	-$(RM) $(ICONDIR)/$(actual_xterm)-color_32x32.xpm
-@no_icondir@	-$(RM) $(ICONDIR)/$(actual_xterm)_32x32.xpm
-@no_icondir@	-$(RM) $(ICONDIR)/$(actual_xterm)-color_48x48.xpm
-@no_icondir@	-$(RM) $(ICONDIR)/$(actual_xterm)_48x48.xpm
+@no_icondir@	-@$(SHELL) -c 'for n in $(ICON_LIST); \
+@no_icondir@		do \
+@no_icondir@		x=$(actual_xterm); \
+@no_icondir@		r=`echo "$$n" | sed -e s,\^.\*:,, -e s,xterm,$$x,`; \
+@no_icondir@		test -z "$$r" && continue; \
+@no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
+@no_icondir@		echo removing $$h/$$r; \
+@no_icondir@		$(RM) $$h/$$r; \
+@no_icondir@		done'
+@no_icondir@	@echo "... removed icons"
+
+@no_pixmapdir@uninstall \
+@no_pixmapdir@uninstall-icon \
+@no_pixmapdir@uninstall-full ::
+@no_pixmapdir@	-$(RM) $(PIXMAPDIR)/$(actual_xterm)-color_32x32.xpm
+@no_pixmapdir@	-$(RM) $(PIXMAPDIR)/$(actual_xterm)_32x32.xpm
+@no_pixmapdir@	-$(RM) $(PIXMAPDIR)/$(actual_xterm)-color_48x48.xpm
+@no_pixmapdir@	-$(RM) $(PIXMAPDIR)/$(actual_xterm)_48x48.xpm
 ################################################################################
 # Desktop-utils does not provide an uninstall, and is not uniformly available.
+@desktop_utils@DESKTOP_FILES = $(srcdir)/xterm.desktop $(srcdir)/uxterm.desktop
 @desktop_utils@DESKTOP_FLAGS = @DESKTOP_FLAGS@
 @desktop_utils@install-desktop \
 @desktop_utils@install-full ::
-@desktop_utils@	$(SHELL) df-install $(actual_xterm) $(DESKTOP_FLAGS) $(srcdir)/xterm.desktop
-@desktop_utils@	$(SHELL) df-install $(actual_xterm) $(DESKTOP_FLAGS) $(srcdir)/uxterm.desktop
+@desktop_utils@	ACTUAL_XTERM=$(actual_xterm) \
+@desktop_utils@	$(SHELL) -c 'for n in $(DESKTOP_FILES); \
+@desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(DESKTOP_FLAGS) $$n; \
+@desktop_utils@		done'
 ################################################################################
 mostlyclean :
 	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
