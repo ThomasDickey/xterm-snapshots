@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: df-install.in,v 1.10 2012/06/22 01:02:42 tom Exp $
+# $XTermId: df-install.in,v 1.12 2012/06/24 17:48:32 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -79,9 +79,20 @@ then
 	exit 1
 fi
 
+# The newer dfi whines about deprecation of encoding, but no release provides
+# --version or equivalent.  really.
+if desktop-file-install --help-all >/dev/null 2>&1
+then
+	NO_ENCODING="#Encoding"
+else
+	NO_ENCODING="Encoding"
+fi
+
 NEW_FILE=`basename $OLD_FILE`
 sed \
+	-e '/^Encoding=/s%Encoding%'$NO_ENCODING'%' \
 	-e '/^[^#]*Icon=/s%=.*%=@ICON_NAME@%' \
+	-e '/^[^#]*Category=/s%=.*%=@DESKTOP_CATEGORY@%' \
 	-e '/^[^#]*Categories=/s%=.*%=@DESKTOP_CATEGORY@%' \
 	-e '/^[^#]/s%xterm%'$APP_NAME'%g' \
 	-e '/^[^#]/s%XTerm%@APP_CLASS@%g' \

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.696 2012/06/10 23:49:31 tom Exp $ */
+/* $XTermId: xterm.h,v 1.697 2012/06/24 18:33:27 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -63,6 +63,7 @@
 #define IGNORE_RC(func) (void) func
 #endif /* gcc workarounds */
 
+#undef bcopy
 #include <X11/Xos.h>
 
 #ifndef HAVE_CONFIG_H

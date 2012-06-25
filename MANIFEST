@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-279g
+MANIFEST for xterm, version xterm-280
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -135,6 +135,7 @@ package/debian/source/format    build-script
 package/debian                  subdirectory
 package/debian/watch            build-script
 package/debian/xterm-dev.docs   build-script
+package/debian/xterm-dev.menu   Debian menu-file for xterm-dev package.
 package/debian/xterm-xres.sed   build-script
 package                         subdirectory
 package/xterm.spec              build-script

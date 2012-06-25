@@ -1,5 +1,7 @@
 xterm-dev (280) unstable; urgency=low
 
+  * Add Debian menu-file.
+  * modify to support icon-theme
   * Miscellaneous fixes.
 
  -- Thomas E. Dickey <dickey@invisible-island.net>  Fri, 25 May 2012 05:36:50 -0400
