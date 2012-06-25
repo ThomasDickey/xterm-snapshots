@@ -1,4 +1,4 @@
-# $XTermId: uxterm.desktop,v 1.10 2012/06/20 09:53:42 tom Exp $
+# $XTermId: uxterm.desktop,v 1.13 2012/06/24 22:20:29 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -32,9 +32,11 @@
 # -----------------------------------------------------------------------------
 [Desktop Entry]
 Name=UXTerm
+#GenericName=Terminal
 Comment=standard terminal emulator for the X window system
 Exec=uxterm
 Terminal=false
 Type=Application
+Encoding=UTF-8
 Icon=xterm-color_48x48
 Categories=System;TerminalEmulator;

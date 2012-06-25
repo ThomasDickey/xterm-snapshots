@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.28 2012/06/22 00:28:29 tom Exp $
+# $XTermId: xterm.spec,v 1.29 2012/06/24 17:01:00 tom Exp $
 Summary: X terminal emulator (development version)
 Name: xterm-dev
 Version: 280
@@ -41,9 +41,9 @@ and its resource class, to avoid conflict with other packages.
 %define my_class XTermDev
 
 %define desktop_vendor  dickey
-%define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo "yes" ; fi)
-%define icon_theme      %(if which gtk-update-icon-cache 2>&1 >/dev/null ; then echo "yes" ; fi)
 
+%define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo 1 || echo 0 ; fi)
+%define icon_theme  %(test -d /usr/share/icons/hicolor && echo 1 || echo 0)
 %define apps_shared %(test -d /usr/share/X11/app-defaults && echo 1 || echo 0)
 %define apps_syscnf %(test -d /etc/X11/app-defaults && echo 1 || echo 0)
 
@@ -71,7 +71,7 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--program-suffix=%{my_suffix} \
 	--without-xterm-symlink \
 %endif
-%if "%{icon_theme}" == "yes"
+%if "%{icon_theme}"
 	--with-icon-theme \
 	--with-icondir=%{_iconsdir} \
 %endif
@@ -95,10 +95,10 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-xmc-glitch \
 	--with-app-defaults=%{_xresdir} \
 	--with-pixmapdir=%{_pixmapsdir} \
-	--with-icontheme \
 	--with-own-terminfo=%{_datadir}/terminfo \
 	--with-terminal-type=xterm-new \
 	--with-utempter
+	copy config.status /tmp/
 make
 
 chmod u+w XTerm.ad
@@ -134,7 +134,7 @@ make install-bin install-man install-app install-icon \
 	# know that they do not depend on Perl packages.
 	chmod 644 $RPM_BUILD_ROOT%{my_docdir}/vttests/*
 
-%if "%{desktop_utils}" == "yes"
+%if "%{desktop_utils}"
 make install-desktop \
 	DESKTOP_FLAGS="--vendor='%{desktop_vendor}' --dir $RPM_BUILD_ROOT%{_datadir}/applications"
 
@@ -148,18 +148,18 @@ test -n "%{my_suffix}" && \
 %endif
 
 %post
-%if "%{icon_theme}" == "yes"
+%if "%{icon_theme}"
 touch --no-create %{_iconsdir}/hicolor
 if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-  %{_bindir}/gtk-update-icon-cache --quiet %{_iconsdir}/hicolor || :
+  %{_bindir}/gtk-update-icon-cache %{_iconsdir}/hicolor || :
 fi
 %endif
 
 %postun
-%if "%{icon_theme}" == "yes"
+%if "%{icon_theme}"
 touch --no-create %{_iconsdir}/hicolor
 if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-  %{_bindir}/gtk-update-icon-cache --quiet %{_iconsdir}/hicolor || :
+  %{_bindir}/gtk-update-icon-cache %{_iconsdir}/hicolor || :
 fi
 %endif
 
@@ -180,12 +180,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/terminfo/*
 %endif
 
-%if "%{desktop_utils}" == "yes"
+%if "%{desktop_utils}"
 %config(missingok) %{_datadir}/applications/%{desktop_vendor}-xterm%{my_suffix}.desktop
 %config(missingok) %{_datadir}/applications/%{desktop_vendor}-uxterm%{my_suffix}.desktop
 %endif
 
-%if "%{icon_theme}" == "yes"
+%if "%{icon_theme}"
 %{_iconsdir}/hicolor/48x48/apps/xterm*.png
 %{_iconsdir}/hicolor/scalable/apps/xterm*.svg
 %endif

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.734 2012/06/10 23:41:39 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.735 2012/06/24 18:45:38 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -67,7 +67,11 @@
 #include <X11/Shell.h>		/* for XtNdieCallback, etc. */
 #include <X11/StringDefs.h>	/* for standard resource names */
 #include <X11/Xmu/Misc.h>	/* For Max() and Min(). */
+
+#undef bcopy
+#undef bzero
 #include <X11/Xfuncs.h>
+
 #include <X11/Xosdefs.h>
 #include <X11/Xmu/Converters.h>
 #ifdef XRENDERFONT
