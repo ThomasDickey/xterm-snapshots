@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.338 2012/06/11 00:08:38 tom Exp $ */
+/* $XTermId: input.c,v 1.339 2012/06/26 09:11:01 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -205,7 +205,7 @@ AdjustAfterInput(XtermWidget xw)
 
 /*
  * Return true if the key is on the editing keypad.  This overlaps with
- * IsCursorKey() and IsKeypadKey() and must be tested before those macro to
+ * IsCursorKey() and IsKeypadKey() and must be tested before those macros to
  * distinguish it from them.
  *
  * VT220  emulation  uses  the  VT100  numeric  keypad as well as a 6-key
@@ -229,8 +229,6 @@ IsEditKeypad(KeySym keysym)
     Bool result;
 
     switch (keysym) {
-    case XK_Home:
-    case XK_End:
     case XK_Prior:
     case XK_Next:
     case XK_Insert:

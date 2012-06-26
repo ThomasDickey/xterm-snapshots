@@ -6751,7 +6751,7 @@ do
 		then
 			if test "x$srcdir" != "x."
 			then
-				cf_icon="${srcdir}/${cf_left}${cf_suffix}"
+				cf_icon="${srcdir}/${cf_left}"
 				cf_left=`echo "$cf_icon" | sed -e 's/:.*//'`
 				if test ! -f "${cf_left}"
 				then

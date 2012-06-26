@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.341 2012/06/22 01:04:31 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.342 2012/06/26 09:57:45 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3188,7 +3188,7 @@ test "$ICONDIR" = no && no_icondir="#"
 AC_SUBST(no_icondir)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICON_THEME version: 4 updated: 2012/06/21 21:03:13
+dnl CF_WITH_ICON_THEME version: 5 updated: 2012/06/26 05:55:35
 dnl ------------------
 dnl If asked, check for prerequisites and setup symbols to permit installing
 dnl one or more application icons in the Red Hat icon-theme directory
@@ -3272,7 +3272,7 @@ do
 		then
 			if test "x$srcdir" != "x."
 			then
-				cf_icon="${srcdir}/${cf_left}${cf_suffix}"
+				cf_icon="${srcdir}/${cf_left}"
 				cf_left=`echo "$cf_icon" | sed -e 's/:.*//'`
 				if test ! -f "${cf_left}"
 				then
