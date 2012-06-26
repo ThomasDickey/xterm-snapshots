@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1191 2012/06/24 22:21:33 tom Exp $
+  $XTermId: xterm.log.html,v 1.1195 2012/06/26 09:59:22 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -58,6 +58,7 @@ Until mid-2006, most of these were summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_281">Patch #281 - 2012/06/26</A>
 <LI><A HREF="#xterm_280">Patch #280 - 2012/06/24</A>
 <LI><A HREF="#xterm_279">Patch #279 - 2012/05/10</A>
 <LI><A HREF="#xterm_278">Patch #278 - 2012/01/18</A>
@@ -341,6 +342,21 @@ is the latest version of this file.
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
 
+<H1><A NAME="xterm_281">Patch #281 - 2012/06/26</A></H1>
+<ul>
+	<li>remove "$(srcdir)/" from install-icon rule to fix builds when
+	    --srcdir configuration option is used.
+
+	<li>fix for configure script's search for icon file when it is not
+	    found in the current directory, e.g., when building out of tree
+	    (patch by Thierry Reding).
+
+	<li>undo the XK_Home / XK_End change from
+	    <a href="#xterm_280">patch #280</a>
+	    which broke the non-VT220 keyboard for those keys
+	    (report by H Merijn Brand).
+</ul>
+
 <H1><A NAME="xterm_280">Patch #280 - 2012/06/24</A></H1>
 <ul>
 	<li>add configure check to work around warning from
@@ -374,8 +390,9 @@ is the latest version of this file.
 	    and horizontal scrolling.
 
 	<li>add <code>modifyKeyboard</code> resource to support
-	    keypad-modifier changes per request by Thomas Wolff
-	    add XK_Home / XK_End to editing-keypad checks
+	    keypad-modifier changes per request by Thomas Wolff.
+
+	<li>add XK_Home / XK_End to editing-keypad checks
  
 	<li>add back-tab key <code>kB</code> to termcap entries to match
 	    the terminfo.
