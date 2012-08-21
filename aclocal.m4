@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.342 2012/06/26 09:57:45 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.343 2012/08/20 22:07:07 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -2995,7 +2995,7 @@ AC_MSG_RESULT($APP_CLASS)
 AC_SUBST(APP_CLASS)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_APP_DEFAULTS version: 3 updated: 2012/06/19 20:58:54
+dnl CF_WITH_APP_DEFAULTS version: 4 updated: 2012/07/25 19:35:53
 dnl --------------------
 dnl Handle configure option "--with-app-defaults", setting these shell
 dnl variables:
@@ -3068,7 +3068,12 @@ AC_MSG_RESULT($APPSDIR)
 AC_SUBST(APPSDIR)
 
 no_appsdir=
-test "$APPSDIR" = no && no_appsdir="#"
+if test "$APPSDIR" = no
+then
+	no_appsdir="#"
+else
+	EXTRA_INSTALL_DIRS="$EXTRA_INSTALL_DIRS \$(APPSDIR)"
+fi
 AC_SUBST(no_appsdir)
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -3151,7 +3156,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICONDIR version: 4 updated: 2012/06/21 21:03:13
+dnl CF_WITH_ICONDIR version: 5 updated: 2012/07/22 09:18:02
 dnl ---------------
 dnl Handle configure option "--with-icondir", setting these shell variables:
 dnl
@@ -3184,11 +3189,16 @@ AC_MSG_RESULT($ICONDIR)
 AC_SUBST(ICONDIR)
 
 no_icondir=
-test "$ICONDIR" = no && no_icondir="#"
+if test "$ICONDIR" = no
+then
+	no_icondir="#"
+else
+	EXTRA_INSTALL_DIRS="$EXTRA_INSTALL_DIRS \$(ICONDIR)"
+fi
 AC_SUBST(no_icondir)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICON_THEME version: 5 updated: 2012/06/26 05:55:35
+dnl CF_WITH_ICON_THEME version: 8 updated: 2012/08/07 20:14:58
 dnl ------------------
 dnl If asked, check for prerequisites and setup symbols to permit installing
 dnl one or more application icons in the Red Hat icon-theme directory
@@ -3247,23 +3257,24 @@ else
 	fi
 fi
 
-: ${ICON_FORMAT:=ifelse([$3],,[.svg .png .xpm],[$3])}
+: ${ICON_FORMAT:=ifelse([$3],,[".svg .png .xpm"],[$3])}
 
-ICON_NAME=
+# ICON_NAME=
 ICON_LIST=
 
 ifelse([$4],,[cf_icon_list=$1],[
 if test "x$ICON_THEME" != xno
 then
-	cf_icon_list=$1
+	cf_icon_list="$1"
 else
-	cf_icon_list=$4
+	cf_icon_list="$4"
 fi
 ])
 
 AC_MSG_CHECKING([for icon(s) to install])
 for cf_name in $cf_icon_list
 do
+	CF_VERBOSE(using $ICON_FORMAT)
 	for cf_suffix in $ICON_FORMAT
 	do
 		cf_icon="${cf_name}${cf_suffix}"
@@ -3285,14 +3296,11 @@ do
 		if test "x$ICON_THEME" != xno
 		then
 			cf_base=`basename $cf_left`
-			case "x${cf_icon}" in #(vi
+			cf_trim=`echo "$cf_base" | sed -e 's/_[[0-9]][[0-9]]x[[0-9]][[0-9]]\././'`
+			case "x${cf_base}" in #(vi
 			*:*) #(vi
+				cf_next=$cf_base
 				# user-defined mapping
-				;;
-			*_[[0-9]][[0-9]]*x[[0-9]][[0-9]]*.*) #(vi
-				cf_size=`echo "$cf_left"|sed -e 's/^.*_\([[0-9]][[0-9]]*x[[0-9]][[0-9]]*\)\..*$/\1/'`
-				cf_left=`echo "$cf_left"|sed -e 's/^\(.*\)_\([[0-9]][[0-9]]*x[[0-9]][[0-9]]*\)\(\..*\)$/\1\3/'`
-				cf_icon="${cf_icon}:$cf_size/apps/$cf_base"
 				;;
 			*.png) #(vi
 				cf_size=`file "$cf_left"|sed -e 's/^[[^:]]*://' -e 's/^.*[[^0-9]]\([[0-9]][[0-9]]* x [[0-9]][[0-9]]*\)[[^0-9]].*$/\1/' -e 's/ //g'`
@@ -3301,16 +3309,23 @@ do
 					AC_MSG_WARN(cannot determine size of $cf_left)
 					continue
 				fi
-				cf_icon="${cf_icon}:$cf_size/apps/$cf_base"
+				cf_next="$cf_size/apps/$cf_trim"
 				;;
 			*.svg) #(vi
-				cf_icon="${cf_icon}:scalable/apps/`basename $cf_icon`"
+				cf_next="scalable/apps/$cf_trim"
 				;;
 			*.xpm)
-				AC_MSG_WARN(ignored XPM file in icon theme)
+				CF_VERBOSE(ignored XPM file in icon theme)
 				continue
 				;;
+			*_[[0-9]][[0-9]]*x[[0-9]][[0-9]]*.*) #(vi
+				cf_size=`echo "$cf_left"|sed -e 's/^.*_\([[0-9]][[0-9]]*x[[0-9]][[0-9]]*\)\..*$/\1/'`
+				cf_left=`echo "$cf_left"|sed -e 's/^\(.*\)_\([[0-9]][[0-9]]*x[[0-9]][[0-9]]*\)\(\..*\)$/\1\3/'`
+				cf_next="$cf_size/apps/$cf_base"
+				;;
 			esac
+			CF_VERBOSE(adding $cf_next)
+			cf_icon="${cf_icon}:${cf_next}"
 		fi
 		test -n "$ICON_LIST" && ICON_LIST="$ICON_LIST "
 		ICON_LIST="$ICON_LIST${cf_icon}"
@@ -3320,7 +3335,13 @@ do
 		fi
 	done
 done
+
+if test -n "$verbose"
+then
+	AC_MSG_CHECKING(result)
+fi
 AC_MSG_RESULT($ICON_LIST)
+
 if test -z "$ICON_LIST"
 then
 	AC_MSG_ERROR(no icons found)
@@ -3473,7 +3494,7 @@ if test "$with_pcre" != no ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_PIXMAPDIR version: 2 updated: 2012/06/21 21:03:13
+dnl CF_WITH_PIXMAPDIR version: 3 updated: 2012/07/22 09:18:02
 dnl -----------------
 dnl Handle configure option "--with-pixmapdir", setting these shell variables:
 dnl
@@ -3506,7 +3527,12 @@ AC_MSG_RESULT($PIXMAPDIR)
 AC_SUBST(PIXMAPDIR)
 
 no_pixmapdir=
-test "$PIXMAPDIR" = no && no_pixmapdir="#"
+if test "$PIXMAPDIR" = no
+then
+	no_pixmapdir="#"
+else
+	EXTRA_INSTALL_DIRS="$EXTRA_INSTALL_DIRS \$(PIXMAPDIR)"
+fi
 AC_SUBST(no_pixmapdir)
 ])dnl
 dnl ---------------------------------------------------------------------------
