@@ -83,6 +83,7 @@ configure-stamp:
 		--with-icon-theme \
 		--with-terminal-type=xterm-new \
 		--with-utempter \
+		--with-xpm \
 		${DEBOP}
 
 	touch configure-stamp

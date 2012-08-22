@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.697 2012/06/24 18:33:27 tom Exp $ */
+/* $XTermId: xterm.h,v 1.698 2012/08/21 09:50:36 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1030,7 +1030,8 @@ extern void xt_error (String  /* message */);
 extern void xtermBell(XtermWidget /* xw */, int /* which */, int /* percent */);
 extern void xtermCopyEnv (char ** /* oldenv */);
 extern void xtermDisplayCursor (XtermWidget /* xw */);
-extern void xtermEmbedWindow(Window /* winToEmbedInfo */);
+extern void xtermEmbedWindow (Window /* winToEmbedInfo */);
+extern void xtermLoadIcon (XtermWidget /* xw */);
 extern void xtermPerror (const char * /*fmt*/,...) GCC_PRINTFLIKE(1,2);
 extern void xtermSetenv (const char * /* var */, const char * /* value */);
 extern void xtermShowPointer (XtermWidget /* xw */, Bool /* enable */);

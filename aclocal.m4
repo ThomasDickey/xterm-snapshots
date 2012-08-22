@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.343 2012/08/20 22:07:07 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.344 2012/08/20 23:25:49 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3534,6 +3534,44 @@ else
 	EXTRA_INSTALL_DIRS="$EXTRA_INSTALL_DIRS \$(PIXMAPDIR)"
 fi
 AC_SUBST(no_pixmapdir)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_XPM version: 1 updated: 2012/07/22 09:18:02
+dnl -----------
+dnl Test for Xpm library, update compiler/loader flags if it is wanted and
+dnl found.
+dnl
+dnl Also sets ICON_SUFFIX
+AC_DEFUN([CF_WITH_XPM],
+[
+ICON_SUFFIX=.xbm
+
+cf_save_cppflags="${CPPFLAGS}"
+cf_save_ldflags="${LDFLAGS}"
+
+AC_MSG_CHECKING(if you want to use the Xpm library for colored icon)
+AC_ARG_WITH(xpm,
+[  --with-xpm=DIR          use Xpm library for colored icon, may specify path],
+	[cf_Xpm_library="$withval"],
+	[cf_Xpm_library=no])
+AC_MSG_RESULT($cf_Xpm_library)
+
+if test "$cf_Xpm_library" != no ; then
+    if test "$cf_Xpm_library" != yes ; then
+	CPPFLAGS="$CPPFLAGS -I$withval/include"
+	LDFLAGS="$LDFLAGS -L$withval/lib"
+    fi
+    AC_CHECK_HEADER(X11/xpm.h,[
+	AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData,[
+	    AC_DEFINE(HAVE_LIBXPM)
+	    ICON_SUFFIX=.xpm
+	    LIBS="-lXpm $LIBS"],
+	    [CPPFLAGS="${cf_save_cppflags}" LDFLAGS="${cf_save_ldflags}"],
+	    [-lX11 $X_LIBS])],
+	[CPPFLAGS="${cf_save_cppflags}" LDFLAGS="${cf_save_ldflags}"])
+fi
+
+AC_SUBST(ICON_SUFFIX)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_XBOOL_RESULT version: 1 updated: 2012/06/04 20:23:25

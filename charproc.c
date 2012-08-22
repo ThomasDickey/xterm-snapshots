@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1220 2012/06/11 08:57:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1221 2012/08/21 09:51:06 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -8093,6 +8093,11 @@ VTRealize(Widget w,
 	screen->whichBuf = !screen->whichBuf;
 	CursorSave(xw);
     }
+
+#ifndef NO_ACTIVE_ICON
+    if (!xw->misc.active_icon)
+#endif
+	xtermLoadIcon(xw);
 
     /*
      * Do this last, since it may change the layout via a resize.

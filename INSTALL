@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.133 2012/06/24 14:18:21 tom Exp $
+-- $XTermId: INSTALL,v 1.134 2012/08/21 00:04:47 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2011,2012 by Thomas E. Dickey
 --
@@ -684,6 +684,11 @@ The options (in alphabetic order):
 
 	If xterm is not installed setuid'd to root, this option is not needed,
 	since it cannot change the tty device's ownership.
+
+  --with-xpm=DIR          use Xpm library for colored icon, may specify path
+
+ 	Use Xpm library to show colored icon in window decoration, e.g.,
+	title area.
 
   --with-xterm-symlink=XXX  make symbolic link to installed xterm
 
