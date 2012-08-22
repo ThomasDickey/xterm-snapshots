@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.591 2012/06/06 08:32:19 tom Exp $ */
+/* $XTermId: misc.c,v 1.593 2012/08/21 21:41:47 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -75,6 +75,10 @@
 #include <X11/Xmu/Xmu.h>
 #if HAVE_X11_SUNKEYSYM_H
 #include <X11/Sunkeysym.h>
+#endif
+
+#ifdef HAVE_LIBXPM
+#include <X11/xpm.h>
 #endif
 
 #ifdef HAVE_LANGINFO_CODESET
@@ -4162,6 +4166,123 @@ udk_lookup(int keycode, int *len)
 	return user_keys[keycode].str;
     }
     return 0;
+}
+
+#ifndef PIXMAP_ROOTDIR
+#define PIXMAP_ROOTDIR "/usr/share/pixmaps/"
+#endif
+
+static char *
+x_find_icon(char **work, int *state, const char *suffix)
+{
+    const char *filename = resource.icon_name;
+    const char *prefix = "";
+    char *result = 0;
+    size_t length;
+
+    switch (*state) {
+    case 0:
+	suffix = "";
+	break;
+    case 1:
+	break;
+    case 2:
+	if (!strncmp(filename, "/", 1) ||
+	    !strncmp(filename, "./", 2) ||
+	    !strncmp(filename, "../", 3))
+	    goto giveup;
+	prefix = PIXMAP_ROOTDIR;
+	suffix = "";
+	break;
+    case 3:
+	prefix = PIXMAP_ROOTDIR;
+	break;
+      giveup:
+    default:
+	*state = -1;
+	break;
+    }
+    if (*state >= 0) {
+	if (*work) {
+	    free(*work);
+	    *work = 0;
+	}
+	length = 3 + strlen(prefix) + strlen(filename) + strlen(suffix);
+	if ((result = malloc(length)) != 0) {
+	    sprintf(result, "%s%s%s", prefix, filename, suffix);
+	    *work = result;
+	}
+	*state += 1;
+	TRACE(("x_find_icon %d:%s\n", *state, result));
+    }
+    return result;
+}
+
+/*
+ * WM_ICON_SIZE should be honored if possible.
+ */
+void
+xtermLoadIcon(XtermWidget xw)
+{
+#ifdef HAVE_LIBXPM
+    Display *dpy = XtDisplay(xw);
+    Pixmap myIcon = 0;
+    char *workname = 0;
+
+    TRACE(("xtermLoadIcon %p:%s\n", xw, NonNull(resource.icon_name)));
+    /*
+     * Use the compiled-in icon as a resource default.
+     */
+    {
+#  include <icons/mini.xterm.xpm>
+	if (XpmCreatePixmapFromData(dpy,
+				    DefaultRootWindow(dpy),
+				    mini_xterm_48x48_xpm, &myIcon, 0, 0) != 0) {
+	    myIcon = 0;
+	}
+    }
+
+    if (!IsEmpty(resource.icon_name)) {
+	int state = 0;
+	while (x_find_icon(&workname, &state, ".xpm") != 0) {
+	    Pixmap resIcon = 0;
+	    Pixmap shapemask = 0;
+	    XpmAttributes attributes;
+
+	    attributes.depth = 1;
+	    attributes.valuemask = XpmDepth;
+
+	    if (XpmReadFileToPixmap(dpy,
+				    DefaultRootWindow(dpy),
+				    workname,
+				    &resIcon,
+				    &shapemask,
+				    &attributes) == XpmSuccess) {
+		myIcon = resIcon;
+		TRACE(("...success\n"));
+		break;
+	    }
+	}
+    }
+
+    if (myIcon != 0) {
+	XWMHints *hints = XGetWMHints(dpy, VShellWindow(xw));
+	if (!hints)
+	    hints = XAllocWMHints();
+
+	if (hints) {
+	    hints->flags = IconPixmapHint;
+	    hints->icon_pixmap = myIcon;
+
+	    XSetWMHints(dpy, VShellWindow(xw), hints);
+	    XFree(hints);
+	}
+    }
+
+    if (workname != 0)
+	free(workname);
+
+#endif
 }
 
 void

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.531 2012/06/08 00:49:36 tom Exp $
+.\" $XTermId: xterm.man,v 1.532 2012/08/22 09:24:31 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1140,6 +1140,8 @@ This option specifies the icon name for \fIxterm\fP's windows.
 It is shorthand for specifying the \*(``\fI*iconName\fP\*('' resource.
 Note that this is not the same as the toolkit option \fB\-name\fP (see below).
 The default icon name is the application name.
+.IP
+If no suitable icon is found, \fIxterm\fP provides a compiled-in pixmap.
 .TP 8
 .B \-r
 This option indicates that reverse video should be simulated by swapping
