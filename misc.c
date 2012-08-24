@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.593 2012/08/21 21:41:47 tom Exp $ */
+/* $XTermId: misc.c,v 1.595 2012/08/24 11:32:15 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -825,7 +825,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    myargv[n++] = child_exe;
 
 	    while (n < myargc) {
-		myargv[n++] = *params++;
+		myargv[n++] = (char *) *params++;
 	    }
 
 	    myargv[n] = 0;
@@ -4229,15 +4229,16 @@ xtermLoadIcon(XtermWidget xw)
     Pixmap myIcon = 0;
     char *workname = 0;
 
-    TRACE(("xtermLoadIcon %p:%s\n", xw, NonNull(resource.icon_name)));
+    TRACE(("xtermLoadIcon %p:%s\n", (void *) xw, NonNull(resource.icon_name)));
     /*
      * Use the compiled-in icon as a resource default.
      */
     {
-#  include <icons/mini.xterm.xpm>
+#  include <icons/mini.xterm.xpms>
 	if (XpmCreatePixmapFromData(dpy,
 				    DefaultRootWindow(dpy),
-				    mini_xterm_48x48_xpm, &myIcon, 0, 0) != 0) {
+				    (char **) mini_xterm_48x48_xpm,
+				    &myIcon, 0, 0) != 0) {
 	    myIcon = 0;
 	}
     }
@@ -4276,6 +4277,7 @@ xtermLoadIcon(XtermWidget xw)
 
 	    XSetWMHints(dpy, VShellWindow(xw), hints);
 	    XFree(hints);
+	    TRACE(("...loaded icon\n"));
 	}
     }
 

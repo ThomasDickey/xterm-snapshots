@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.686 2012/05/25 08:25:05 tom Exp $ */
+/* $XTermId: main.c,v 1.687 2012/08/24 15:28:59 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -5029,7 +5029,9 @@ remove_termcap_entry(char *buf, const char *str)
 		if (*buf != 0)
 		    buf++;
 	    }
-	    while ((*first++ = *buf++) != 0) ;
+	    while ((*first++ = *buf++) != 0) {
+		;
+	    }
 	    TRACE(("...removed_termcap_entry('%s', '%s')\n", str, base));
 	    return;
 	} else if (*buf == '\\') {

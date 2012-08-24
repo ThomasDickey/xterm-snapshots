@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.532 2012/08/22 09:24:31 tom Exp $
+.\" $XTermId: xterm.man,v 1.533 2012/08/24 10:13:11 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1598,11 +1598,29 @@ Specifies whether or not active icon windows are to be used when the
 \fIxterm\fP window is iconified, if this feature is compiled into \fIxterm\fR.
 The active icon is a miniature representation of the content of the
 window and will update as the content changes.
-Not all window managers
-necessarily support application icon windows.
+Not all window managers necessarily support application icon windows.
 Some window managers
 will allow you to enter keystrokes into the active icon window.
-The default is \*(``false\*(''.
+The default is \*(``default\*(''.
+.IP
+\fIXterm\fP accepts either a keyword (ignoring case)
+or the number shown in parentheses:
+.RS
+.TP
+false (0)
+No active icon is shown.
+.TP
+true (1)
+The active icon is shown.
+If you are using \fItwm\fP, use this setting to enable active-icons.
+.TP
+default (2)
+\fIxterm\fP checks at startup, and shows an active icon only for window
+managers which it can identify and which are known to support the feature.
+These are \fIfvwm\fP (full support), and \fIwindow maker\fP (limited).
+A few other windows managers (such as \fItwm\fP), support active icons,
+but do not support the extensions which allow \fIxterm\fP
+to identify the window manager.
 .TP 8
 .B "allowBoldFonts (\fPclass\fB AllowBoldFonts)"
 When set to \*(``false\*('', \fIxterm\fP will not use bold fonts.
@@ -3325,7 +3343,7 @@ the bits of this resource value (checked in descending order)
 select the range:
 .RS
 .TP 3
-8 
+8
 selects the saved lines.
 .TP 3
 4
@@ -3471,7 +3489,7 @@ the foreground and background colors.
 In particular, the X Toolkit sets the \fBreverseVideo\fP resource
 when the \fB\-rv\fP option is used.
 .bP
-If the user has also used command-line options \fB\-fg\fP or \fB\-bg\fP 
+If the user has also used command-line options \fB\-fg\fP or \fB\-bg\fP
 to set the foreground and background colors,
 \fIxterm\fP does not see these options directly.
 Instead,
@@ -3735,7 +3753,7 @@ escape sequences for turning UTF-8 mode on/off are allowed.
 .B "utf8Fonts (\fPclass\fB Utf8Fonts)"
 See the discussion of the \fBlocale\fP resource.
 This specifies whether \fIxterm\fP will use UTF-8 fonts specified via
-resource patterns such as \*(``\fB*vt100.utf8Fonts.font\fP\*('' 
+resource patterns such as \*(``\fB*vt100.utf8Fonts.font\fP\*(''
 or normal (ISO-8859-1) fonts via patterns such as \*(``\fB*vt100.font\fP\*(''.
 The resource can be set via the menu entry \*(``UTF-8 Fonts\*(''.
 The default is \*(``default\*(''.
