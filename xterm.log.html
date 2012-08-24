@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1200 2012/08/22 09:25:05 tom Exp $
+  $XTermId: xterm.log.html,v 1.1202 2012/08/24 12:34:04 tom Exp $
   -->
 
 <html>
@@ -850,6 +850,16 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>extend <code>activeIcon</code> resource to provide
+    <code>default</code> value which tells xterm to determine the
+    window manager's name and automatically enable the feature for
+    fvwm and window maker. The explicit true/false values can be
+    used to override this behavior.</li>
+
+    <li>add "mini" xterm icon, which scales better than the
+    standard xterm icon, e.g., for the gnome/kde "panel"
+    feature.</li>
+
     <li>extend <code>iconName</code> resource to search for icon
     named according to resource value and use that if found. If not
     found, use compiled-in pixmap. Both set the WM_ICON_NAME

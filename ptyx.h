@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.735 2012/06/24 18:45:38 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.736 2012/08/23 23:16:01 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -909,6 +909,15 @@ typedef enum {
     , esAlways
     , esNever
 } FullscreenOps;
+
+#ifndef NO_ACTIVE_ICON
+typedef enum {
+    eiFalse = 0
+    , eiTrue
+    , eiDefault
+    , eiLAST
+} AIconOps;
+#endif
 
 typedef enum {
     etSetTcap = 1
@@ -2326,7 +2335,8 @@ typedef struct _Misc {
     Boolean dynamicColors;
     Boolean shared_ic;
 #ifndef NO_ACTIVE_ICON
-    Boolean active_icon;	/* use application icon window  */
+    int active_icon;		/* use application icon window  */
+    char *active_icon_s;	/* use application icon window  */
     unsigned icon_border_width;
     Pixel icon_border_pixel;
 #endif /* NO_ACTIVE_ICON */

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1221 2012/08/21 09:51:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1225 2012/08/24 15:30:47 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -511,7 +511,7 @@ static XtResource xterm_resources[] =
 #endif
 
 #ifndef NO_ACTIVE_ICON
-    Bres("activeIcon", "ActiveIcon", misc.active_icon, False),
+    Sres("activeIcon", "ActiveIcon", misc.active_icon_s, "default"),
     Ires("iconBorderWidth", XtCBorderWidth, misc.icon_border_width, 2),
     Sres("iconFont", "IconFont", screen.icon_fontname, "nil2"),
     Cres("iconBorderColor", XtCBorderColor, misc.icon_border_pixel, XtDefaultBackground),
@@ -6735,6 +6735,15 @@ VTInitialize(Widget wrequest,
 #undef DATA
 #endif
 
+#ifndef NO_ACTIVE_ICON
+#define DATA(name) { #name, ei##name }
+    static FlagList tblAIconOps[] =
+    {
+	DATA(Default)
+    };
+#undef DATA
+#endif
+
 #define DATA(name) { #name, eb##name }
     static FlagList tbl8BitMeta[] =
     {
@@ -7053,7 +7062,10 @@ VTInitialize(Widget wrequest,
     TRACE(("iconFont '%s' %sloaded successfully\n",
 	   TScreenOf(wnew)->icon_fontname,
 	   TScreenOf(wnew)->fnt_icon.fs ? "" : "NOT "));
-    init_Bres(misc.active_icon);
+    init_Sres(misc.active_icon_s);
+    wnew->misc.active_icon =
+	(Boolean) extendedBoolean(wnew->misc.active_icon_s,
+				  tblAIconOps, eiLAST);
     init_Ires(misc.icon_border_width);
     wnew->misc.icon_border_pixel = request->misc.icon_border_pixel;
 #endif /* NO_ACTIVE_ICON */
@@ -7747,6 +7759,122 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif /* defined(NO_LEAKS) */
 }
 
+static void *
+getProperty(Display * dpy,
+	    Window w,
+	    Atom req_type,
+	    char *prop_name)
+{
+    Atom property;
+    Atom actual_return_type;
+    int actual_format_return = 0;
+    unsigned long nitems_return = 0;
+    unsigned long bytes_after_return = 0;
+    unsigned char *prop_return = 0;
+    long long_length = 1024;
+    size_t limit;
+    char *result = 0;
+
+    TRACE(("getProperty %s(%s)\n", prop_name,
+	   req_type ? XGetAtomName(dpy, req_type) : "?"));
+    property = XInternAtom(dpy, prop_name, False);
+
+    if (XGetWindowProperty(dpy,
+			   w,
+			   property,
+			   0,
+			   long_length,
+			   False,
+			   req_type,
+			   &actual_return_type,
+			   &actual_format_return,
+			   &nitems_return,
+			   &bytes_after_return,
+			   &prop_return) != Success) {
+	TRACE((".. Cannot get %s property.\n", prop_name));
+    } else if (prop_return != 0) {
+
+	if (nitems_return != 0 &&
+	    actual_format_return != 0 &&
+	    actual_return_type == req_type) {
+	    /*
+	     * Null-terminate the result to make string handling easier.
+	     * The format==8 corresponds to strings, and the number of items
+	     * is the number of characters.
+	     */
+	    if (actual_format_return == 8) {
+		limit = nitems_return;
+	    } else {
+		/* manpage is misleading - X really uses 'long', not 32-bits */
+		limit = sizeof(long) * nitems_return;
+	    }
+	    if ((result = malloc(limit + 1)) != 0) {
+		memcpy(result, prop_return, limit);
+		result[limit] = '\0';
+	    }
+	    TRACE(("... result %s\n", result ? ("ok") : "null"));
+	}
+	XFree(prop_return);
+    } else {
+	TRACE((".. no property returned\n"));
+    }
+    return (void *) result;
+}
+
+/*
+ * Active icons are supported by fvwm.  This feature is not supported by
+ * metacity (gnome) or kwin (kde).  Both metacity and kwin support (in
+ * incompatible ways, e.g., one uses the icon theme as a fallback for window
+ * decorations but the other does not, etc, ...) an icon as part of the window
+ * decoration (usually on the upper-left of the window).
+ *
+ * In either case, xterm's icon will only be shown in the window decorations if
+ * xterm does not use the active icon feature.
+ *
+ * This function (tries to) determine the window manager's name, so that we can
+ * provide a useful automatic default for active icons.  It is based on reading
+ * wmctrl, which covers most of EWMH and ICCM.
+ */
+static char *
+getWindowManagerName(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    Window *sup_window = NULL;
+    char *result = 0;
+
+    TRACE(("getWindowManagerName\n"));
+#define getWinProp(type, name) \
+    (Window *)getProperty(dpy, DefaultRootWindow(dpy), type, name)
+    if ((sup_window = getWinProp(XA_WINDOW, "_NET_SUPPORTING_WM_CHECK")) == 0) {
+	sup_window = getWinProp(XA_CARDINAL, "_WIN_SUPPORTING_WM_CHECK");
+    }
+
+    /*
+     * If we found the supporting window, get the property containing the
+     * window manager's name.  EWMH defines _NET_WM_NAME, while ICCM defines
+     * WM_CLASS.  There is no standard for the names stored there;
+     * conventionally it is mixed case.  In practice, the former is more often
+     * set; the latter is not given (or is a lowercased version of the former).
+     */
+    if (sup_window != 0) {
+#define getStringProp(type,name) \
+	(char *)getProperty(dpy, *sup_window, type, name)
+	if ((result = getStringProp(XA_UTF8_STRING(dpy), "_NET_WM_NAME")) == 0
+	    && (result = getStringProp(XA_STRING, "_NET_WM_NAME")) == 0
+	    && (result = getStringProp(XA_STRING, "WM_CLASS")) == 0) {
+	    TRACE(("... window manager does not tell its name\n"));
+	}
+	free(sup_window);
+    } else {
+	TRACE(("... Cannot get window manager info properties\n"));
+    }
+    if (result == 0)
+	result = x_strdup("unknown");
+    TRACE(("... window manager name is %s\n", result));
+    return result;
+}
+
 /*ARGSUSED*/
 static void
 VTRealize(Widget w,
@@ -7979,6 +8107,13 @@ VTRealize(Widget w,
 	TRACE(("using TrueType font as iconFont\n"));
     }
 #endif
+    if ((xw->misc.active_icon == eiDefault) && screen->fnt_icon.fs) {
+	char *wm_name = getWindowManagerName(xw);
+	if (x_strncasecmp(wm_name, "fvwm", 4) &&
+	    x_strncasecmp(wm_name, "window maker", 12))
+	    xw->misc.active_icon = eiFalse;
+	free(wm_name);
+    }
     if (xw->misc.active_icon && screen->fnt_icon.fs) {
 	int iconX = 0, iconY = 0;
 	Widget shell = SHELL_OF(xw);
@@ -8038,7 +8173,7 @@ VTRealize(Widget w,
 #endif
     } else {
 	TRACE(("Disabled active-icon\n"));
-	xw->misc.active_icon = False;
+	xw->misc.active_icon = eiFalse;
     }
 #endif /* NO_ACTIVE_ICON */
 
