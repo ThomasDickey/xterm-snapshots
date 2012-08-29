@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.293 2012/08/20 23:37:49 tom Exp $
+dnl $XTermId: configure.in,v 1.294 2012/08/25 23:00:40 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -121,7 +121,8 @@ CF_FUNC_TGETENT
 
 CF_WITH_APP_CLASS(XTerm)
 CF_WITH_APP_DEFAULTS
-CF_WITH_ICON_THEME(icons/xterm-color,,,icons/xterm-color_48x48)
+CF_WITH_ICON_NAME(xterm-color)
+CF_WITH_ICON_THEME([icons/$ICON_NAME icons/${ICON_NAME}_48x48],,,icons/${ICON_NAME}_48x48)
 CF_DISABLE_DESKTOP(xterm)
 CF_WITH_DESKTOP_CATEGORY(xterm,[*rxvt*|konsole|*-terminal],[System|TerminalEmulator|Utility|*])
 
