@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-281c
+MANIFEST for xterm, version xterm-281d
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -113,15 +113,11 @@ icons/mini.xterm.svg            svg format for mini-icon
 icons/mini.xterm.xcf            gimp-format for mini-icon
 icons/mini.xterm.xpms           collection of mini-icons
 icons/mini.xterm_16x16.png      mini-icon 16x16 png
-icons/mini.xterm_16x16.xcf      mini-icon 16x16 gimp
 icons/mini.xterm_16x16.xpm      mini-icon 16x16 pixmap
 icons/mini.xterm_256x256.png    mini-icon 256x256 png
-icons/mini.xterm_256x256.xcf    mini-icon 256x256 gimp
 icons/mini.xterm_32x32.png      mini-icon 32x32 png
-icons/mini.xterm_32x32.xcf      mini-icon 32x32 gimp
 icons/mini.xterm_32x32.xpm      mini-icon 32x32 pixmap
 icons/mini.xterm_48x48.png      mini-icon 48x48 png
-icons/mini.xterm_48x48.xcf      mini-icon 48x48 gimp
 icons/mini.xterm_48x48.xpm      mini-icon 48x48 pixmap
 icons/terminal_48x48.svg        svg-format of "terminal"
 icons/terminal_48x48.xcf        gimp-format of "terminal"

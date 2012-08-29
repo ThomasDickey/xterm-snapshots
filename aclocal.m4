@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.344 2012/08/20 23:25:49 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.345 2012/08/25 23:05:32 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3196,6 +3196,24 @@ else
 	EXTRA_INSTALL_DIRS="$EXTRA_INSTALL_DIRS \$(ICONDIR)"
 fi
 AC_SUBST(no_icondir)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_ICON_NAME version: 1 updated: 2012/08/25 19:05:08
+dnl -----------------
+dnl Allow a default icon-name to be overridden.
+dnl $1 = default icon name
+AC_DEFUN([CF_WITH_ICON_NAME],[
+AC_MSG_CHECKING(for the icon name)
+AC_ARG_WITH(icon-name,
+	[  --with-icon-name=XXXX   override icon name (default: $1)],
+	[ICON_NAME="$withval"],
+	[ICON_NAME=$1])
+case "x$ICON_NAME" in
+xyes|xno|x)
+	ICON_NAME=$1
+	;;
+esac
+AC_MSG_RESULT($ICON_NAME)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_ICON_THEME version: 8 updated: 2012/08/07 20:14:58

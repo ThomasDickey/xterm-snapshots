@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.199 2012/08/20 22:13:21 tom Exp $
+## $XTermId: Makefile.in,v 1.200 2012/08/27 01:11:07 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -263,12 +263,12 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_icondir@		do \
 @no_icondir@		x=$$ACTUAL_XTERM; \
 @no_icondir@		l=`echo "$$n" | cut -f1 -d:`; \
-@no_icondir@		r=`echo "$$n" | cut -f2 -d: |sed -e s,xterm,$$x,`; \
+@no_icondir@		r=`echo "$$n" | cut -f2 -d: |sed -e s,@ICON_NAME@,$$x-color,`; \
 @no_icondir@		test -z "$$r" && continue; \
 @no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
 @no_icondir@		d=$$h/`echo "$$r" | sed -e "s,/[^/]*$$,,"`; \
 @no_icondir@		test -d "$$d" || mkdir -p "$$d"; \
-@no_icondir@		echo installing $$h/$$r; \
+@no_icondir@		echo installing icon $$h/$$r; \
 @no_icondir@		$(INSTALL_DATA) $$l $$h/$$r; \
 @no_icondir@		done'
 @no_icondir@	@echo "... installed icons"

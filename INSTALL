@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.134 2012/08/21 00:04:47 tom Exp $
+-- $XTermId: INSTALL,v 1.135 2012/08/28 22:52:22 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2011,2012 by Thomas E. Dickey
 --
@@ -589,6 +589,17 @@ The options (in alphabetic order):
   --with-freetype-libs    -L/-l options for linking with FreeType library
 
 	Override options provided by xft-config or freetype-config.
+
+  --with-icon-name=NAME override icon name (default: xterm-color)
+
+	xterm comes with a choice of icons:
+
+	xterm-color: depicts a conventional terminal image, and is the default
+		icon used for icon-themes.
+
+	mini.xterm: a more iconic choice which is readily identifiable at
+		small sizes.  This is used for window decoration, e.g., the
+		icon at the upper left corner in many window managers.
 
   --with-icondir=DIR directory in which to install icon files (default: no)
 
