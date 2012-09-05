@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.588 2012/06/03 18:45:04 tom Exp $ */
+/* $XTermId: util.c,v 1.589 2012/09/04 23:43:36 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1378,7 +1378,7 @@ InsertChar(XtermWidget xw, unsigned n)
 	}
 
 	ClearCurBackground(xw,
-			   screen->cur_row,
+			   INX2ROW(screen, screen->cur_row),
 			   screen->cur_col,
 			   1,
 			   n,
@@ -1447,7 +1447,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 			     -((int) n));
 
 	ClearCurBackground(xw,
-			   screen->cur_row,
+			   INX2ROW(screen, screen->cur_row),
 			   col,
 			   1,
 			   n,
@@ -1611,7 +1611,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 	&& (ld = getLineData(screen, row)) != 0) {
 
 	ClearCurBackground(xw,
-			   row,
+			   INX2ROW(screen, row),
 			   col,
 			   1,
 			   len,
@@ -3980,7 +3980,7 @@ ClearCurBackground(XtermWidget xw,
 
 	XClearArea(screen->display, VWindow(screen),
 		   CursorX2(screen, left, fw),
-		   CursorY(screen, top),
+		   CursorY2(screen, top),
 		   (width * fw),
 		   (height * (unsigned) FontHeight(screen)),
 		   False);

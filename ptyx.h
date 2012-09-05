@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.736 2012/08/23 23:16:01 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.737 2012/09/04 23:34:34 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2569,8 +2569,8 @@ typedef struct _TekWidgetRec {
 
 #define CursorX2(screen,col,fw) ((col) * (int)(fw) + OriginX(screen))
 #define CursorX(screen,col)     CursorX2(screen, col, FontWidth(screen))
-#define CursorY(screen,row)     ((INX2ROW(screen, row) * FontHeight(screen)) \
-				  + screen->border)
+#define CursorY2(screen,row)    (((row) * FontHeight(screen)) + screen->border)
+#define CursorY(screen,row)     CursorY2(screen, INX2ROW(screen, row))
 
 /*
  * These definitions depend on whether xterm supports active-icon.

@@ -10494,7 +10494,7 @@ if test "${with_xpm+set}" = set; then
   withval="$with_xpm"
   cf_Xpm_library="$withval"
 else
-  cf_Xpm_library=no
+  cf_Xpm_library=yes
 fi;
 echo "$as_me:10499: result: $cf_Xpm_library" >&5
 echo "${ECHO_T}$cf_Xpm_library" >&6

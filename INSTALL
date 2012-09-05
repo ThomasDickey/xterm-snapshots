@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.135 2012/08/28 22:52:22 tom Exp $
+-- $XTermId: INSTALL,v 1.136 2012/09/03 17:22:59 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2011,2012 by Thomas E. Dickey
 --
@@ -700,6 +700,8 @@ The options (in alphabetic order):
 
  	Use Xpm library to show colored icon in window decoration, e.g.,
 	title area.
+
+	Use --without-xpm to suppress this feature.
 
   --with-xterm-symlink=XXX  make symbolic link to installed xterm
 
