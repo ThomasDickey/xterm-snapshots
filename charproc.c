@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1225 2012/08/24 15:30:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1226 2012/09/05 09:44:00 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4127,65 +4127,74 @@ dotext(XtermWidget xw,
 	 offset += chars_chomped) {
 	int width_available = right + 1 - screen->cur_col;
 	int width_here = 0;
-	Boolean need_wrap = False;
+	Boolean force_wrap;
+	Boolean need_wrap;
+	Boolean did_wrap;
 	int last_chomp = 0;
 	chars_chomped = 0;
 
-	if (screen->do_wrap) {
-	    screen->do_wrap = False;
-	    if ((xw->flags & WRAPAROUND)) {
-		WrapLine(xw);
-		width_available = right + 1 - screen->cur_col;
-		next_col = screen->cur_col;
+	do {
+	    force_wrap = False;
+	    need_wrap = False;
+	    did_wrap = False;
+
+	    if (screen->do_wrap) {
+		screen->do_wrap = False;
+		if ((xw->flags & WRAPAROUND)) {
+		    WrapLine(xw);
+		    width_available = right + 1 - screen->cur_col;
+		    next_col = screen->cur_col;
+		    did_wrap = True;
+		}
 	    }
-	}
 
-	/*
-	 * This can happen with left/right margins...
-	 */
-	if (width_available <= 0)
-	    break;
-
-	while (width_here <= width_available && chars_chomped < (len - offset)) {
-	    if (!screen->utf8_mode
-		|| (screen->vt100_graphics && charset == '0'))
-		last_chomp = 1;
-	    else
-		last_chomp = my_wcwidth((int) buf[chars_chomped + offset]);
-	    width_here += last_chomp;
-	    chars_chomped++;
-	}
-
-	if (width_here > width_available) {
-	    if (last_chomp > right + 1)
-		break;		/* give up - it is too big */
-	    if (chars_chomped-- == 0) {
-		/* This can happen with left/right margins... */
+	    /*
+	     * This can happen with left/right margins...
+	     */
+	    if (width_available <= 0) {
 		break;
 	    }
-	    width_here -= last_chomp;
-	    if (chars_chomped > 0) {
+
+	    while (width_here <= width_available
+		   && chars_chomped < (len - offset)) {
+		if (!screen->utf8_mode
+		    || (screen->vt100_graphics && charset == '0')) {
+		    last_chomp = 1;
+		} else {
+		    last_chomp = my_wcwidth((int) buf[chars_chomped + offset]);
+		}
+		width_here += last_chomp;
+		chars_chomped++;
+	    }
+
+	    if (width_here > width_available) {
+		if (last_chomp > right + 1) {
+		    break;	/* give up - it is too big */
+		} else if (chars_chomped-- == 0) {
+		    /* This can happen with left/right margins... */
+		    break;
+		}
+		width_here -= last_chomp;
+		if (chars_chomped > 0) {
+		    need_wrap = True;
+		}
+	    } else if (width_here == width_available) {
+		need_wrap = True;
+	    } else if (chars_chomped != (len - offset)) {
 		need_wrap = True;
 	    }
-	} else if (width_here == width_available) {
-	    need_wrap = True;
-	} else if (chars_chomped != (len - offset)) {
-	    need_wrap = True;
-	}
 
-	/*
-	 * Split the wide characters back into separate arrays of 8-bit
-	 * characters so we can use the existing interface.
-	 *
-	 * FIXME:  If we rewrote this interface, it would involve
-	 * rewriting all of the memory-management for the screen
-	 * buffers (perhaps this is simpler).
-	 */
-	if (chars_chomped != 0 && next_col <= screen->max_col) {
-	    WriteText(xw, buf + offset, chars_chomped);
-	}
-	next_col += width_here;
-	screen->do_wrap = need_wrap;
+	    if (chars_chomped != 0 && next_col <= screen->max_col) {
+		WriteText(xw, buf + offset, chars_chomped);
+	    } else if (!did_wrap
+		       && (xw->flags & WRAPAROUND)
+		       && screen->cur_col > ScrnLeftMargin(xw)) {
+		force_wrap = True;
+		need_wrap = True;
+	    }
+	    next_col += width_here;
+	    screen->do_wrap = need_wrap;
+	} while (force_wrap);
     }
 
     /*
