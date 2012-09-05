@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.534 2012/08/28 23:46:08 tom Exp $
+.\" $XTermId: xterm.man,v 1.535 2012/09/03 18:09:36 Paul.Maier Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -746,7 +746,7 @@ it is possible to do both with certain window managers.
 .TP 8
 .B +maximized
 This option indicates that \fIxterm\fP should ask the window manager to
-maximize its layout on startup.
+not maximize its layout on startup.
 .TP 8
 .B +ls
 This option indicates that the shell that is started should not be a login

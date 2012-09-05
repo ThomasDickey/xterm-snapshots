@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.345 2012/08/25 23:05:32 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.346 2012/09/03 17:21:43 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3554,7 +3554,7 @@ fi
 AC_SUBST(no_pixmapdir)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_XPM version: 1 updated: 2012/07/22 09:18:02
+dnl CF_WITH_XPM version: 2 updated: 2012/09/03 05:42:04
 dnl -----------
 dnl Test for Xpm library, update compiler/loader flags if it is wanted and
 dnl found.
@@ -3571,7 +3571,7 @@ AC_MSG_CHECKING(if you want to use the Xpm library for colored icon)
 AC_ARG_WITH(xpm,
 [  --with-xpm=DIR          use Xpm library for colored icon, may specify path],
 	[cf_Xpm_library="$withval"],
-	[cf_Xpm_library=no])
+	[cf_Xpm_library=yes])
 AC_MSG_RESULT($cf_Xpm_library)
 
 if test "$cf_Xpm_library" != no ; then
