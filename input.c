@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.339 2012/06/26 09:11:01 tom Exp $ */
+/* $XTermId: input.c,v 1.340 2012/09/06 23:48:43 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -224,15 +224,17 @@ AdjustAfterInput(XtermWidget xw)
  *      +--------+--------+--------+
  */
 static Bool
-IsEditKeypad(KeySym keysym)
+IsEditKeypad(XtermWidget xw, KeySym keysym)
 {
     Bool result;
 
     switch (keysym) {
+    case XK_Delete:
+	result = !xtermDeleteIsDEL(xw);
+	break;
     case XK_Prior:
     case XK_Next:
     case XK_Insert:
-    case XK_Delete:
     case XK_Find:
     case XK_Select:
 #ifdef DXK_Remove
@@ -252,7 +254,7 @@ IsEditKeypad(KeySym keysym)
  * other macros.
  */
 static Bool
-IsEditFunctionKey(KeySym keysym)
+IsEditFunctionKey(XtermWidget xw, KeySym keysym)
 {
     Bool result;
 
@@ -267,7 +269,7 @@ IsEditFunctionKey(KeySym keysym)
 	result = True;
 	break;
     default:
-	result = IsEditKeypad(keysym);
+	result = IsEditKeypad(xw, keysym);
 	break;
     }
     return result;
@@ -370,7 +372,7 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
     if (screen->vtXX_level != 0)
 #endif
     {
-	if (IsCursorKey(kd->keysym) || IsEditFunctionKey(kd->keysym)) {
+	if (IsCursorKey(kd->keysym) || IsEditFunctionKey(xw, kd->keysym)) {
 	    result = LegacyAllows(2);
 	} else if (IsKeypadKey(kd->keysym)) {
 	    if (keypad_mode) {
@@ -595,7 +597,7 @@ ModifyOtherKeys(XtermWidget xw,
      * Exclude the keys already covered by a modifier.
      */
     if (kd->is_fkey
-	|| IsEditFunctionKey(kd->keysym)
+	|| IsEditFunctionKey(xw, kd->keysym)
 	|| IsKeypadKey(kd->keysym)
 	|| IsCursorKey(kd->keysym)
 	|| IsPFKey(kd->keysym)
@@ -949,7 +951,7 @@ Input(XtermWidget xw,
 	   IsPFKey(kd.keysym) ? " PFKey" : "",
 	   kd.is_fkey ? " FKey" : "",
 	   IsMiscFunctionKey(kd.keysym) ? " MiscFKey" : "",
-	   IsEditFunctionKey(kd.keysym) ? " EditFkey" : ""));
+	   IsEditFunctionKey(xw, kd.keysym) ? " EditFkey" : ""));
 
 #if OPT_SUNPC_KBD
     /*
@@ -1154,7 +1156,7 @@ Input(XtermWidget xw,
 	modifyCursorKey(&reply,
 			((kd.is_fkey
 			  || IsMiscFunctionKey(kd.keysym)
-			  || IsEditFunctionKey(kd.keysym))
+			  || IsEditFunctionKey(xw, kd.keysym))
 			 ? keyboard->modify_now.function_keys
 			 : keyboard->modify_now.cursor_keys),
 			&modify_parm);
@@ -1162,7 +1164,7 @@ Input(XtermWidget xw,
 	unparseseq(xw, &reply);
     } else if (((kd.is_fkey
 		 || IsMiscFunctionKey(kd.keysym)
-		 || IsEditFunctionKey(kd.keysym))
+		 || IsEditFunctionKey(xw, kd.keysym))
 #if OPT_MOD_FKEYS
 		&& !ModifyOtherKeys(xw, evt_state, &kd, modify_parm)
 #endif
