@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1226 2012/09/05 09:44:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1232 2012/09/09 21:39:11 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4655,6 +4655,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    if (IsSM() && !(screen->inhibit & I_TEK)) {
 		FlushLog(xw);
 		TEK4014_ACTIVE(xw) = True;
+		update_vttekmode();
 	    }
 	    break;
 #endif
@@ -5236,6 +5237,7 @@ restoremodes(XtermWidget xw)
 		(TEK4014_ACTIVE(xw) != (Boolean) screen->save_modes[DP_DECTEK])) {
 		FlushLog(xw);
 		TEK4014_ACTIVE(xw) = (Boolean) screen->save_modes[DP_DECTEK];
+		update_vttekmode();
 	    }
 	    break;
 #endif
@@ -5715,10 +5717,7 @@ window_ops(XtermWidget xw)
     case ewGetScreenSizeChars:	/* Report the screen's size, in characters */
 	if (AllowWindowOps(xw, ewGetScreenSizeChars)) {
 	    TRACE(("...get screen size in characters\n"));
-	    if (!QueryMaximize(xw, &root_height, &root_width)) {
-		root_height = 0;
-		root_width = 0;
-	    }
+	    (void) QueryMaximize(xw, &root_height, &root_width);
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
@@ -6797,6 +6796,11 @@ VTInitialize(Widget wrequest,
      */
     memset(&wnew->keyboard, 0, sizeof(wnew->keyboard));
 
+    /*
+     * The workspace has no resources - clear it.
+     */
+    memset(&wnew->work, 0, sizeof(wnew->work));
+
     /* dummy values so that we don't try to Realize the parent shell with height
      * or width of 0, which is illegal in X.  The real size is computed in the
      * xtermWidget's Realize proc, but the shell's Realize proc is called first,
@@ -6934,10 +6938,6 @@ VTInitialize(Widget wrequest,
 #if OPT_NUM_LOCK
     init_Bres(misc.real_NumLock);
     init_Bres(misc.alwaysUseMods);
-    wnew->misc.num_lock = 0;
-    wnew->misc.alt_mods = 0;
-    wnew->misc.meta_mods = 0;
-    wnew->misc.other_mods = 0;
 #endif
 
 #if OPT_INPUT_METHOD
@@ -7072,7 +7072,7 @@ VTInitialize(Widget wrequest,
 	   TScreenOf(wnew)->icon_fontname,
 	   TScreenOf(wnew)->fnt_icon.fs ? "" : "NOT "));
     init_Sres(misc.active_icon_s);
-    wnew->misc.active_icon =
+    wnew->work.active_icon =
 	(Boolean) extendedBoolean(wnew->misc.active_icon_s,
 				  tblAIconOps, eiLAST);
     init_Ires(misc.icon_border_width);
@@ -7314,24 +7314,24 @@ VTInitialize(Widget wrequest,
     init_Sres(misc.face_name);
     init_Sres(misc.face_wide_name);
     init_Sres(misc.render_font_s);
-    wnew->misc.render_font =
+    wnew->work.render_font =
 	(Boolean) extendedBoolean(wnew->misc.render_font_s,
 				  tblRenderFont, erLast);
-    if (wnew->misc.render_font == erDefault) {
+    if (wnew->work.render_font == erDefault) {
 	if (IsEmpty(wnew->misc.face_name)) {
 	    free(wnew->misc.face_name);
 	    wnew->misc.face_name = x_strdup(DEFFACENAME_AUTO);
 	    TRACE(("will allow runtime switch to render_font using \"%s\"\n",
 		   wnew->misc.face_name));
 	} else {
-	    wnew->misc.render_font = erTrue;
+	    wnew->work.render_font = erTrue;
 	    TRACE(("initially using TrueType font\n"));
 	}
     }
     /* minor tweak to make debug traces consistent: */
-    if (wnew->misc.render_font) {
+    if (wnew->work.render_font) {
 	if (IsEmpty(wnew->misc.face_name)) {
-	    wnew->misc.render_font = False;
+	    wnew->work.render_font = False;
 	    TRACE(("reset render_font since there is no face_name\n"));
 	}
     }
@@ -8003,7 +8003,7 @@ VTRealize(Widget w,
     xw->hints.y = ypos;
 #if OPT_MAXIMIZE
     /* assure single-increment resize for fullscreen */
-    if (term->screen.fullscreen) {
+    if (term->work.ewmh[0].mode) {
 	xw->hints.width_inc = 1;
 	xw->hints.height_inc = 1;
     }
@@ -8116,14 +8116,14 @@ VTRealize(Widget w,
 	TRACE(("using TrueType font as iconFont\n"));
     }
 #endif
-    if ((xw->misc.active_icon == eiDefault) && screen->fnt_icon.fs) {
+    if ((xw->work.active_icon == eiDefault) && screen->fnt_icon.fs) {
 	char *wm_name = getWindowManagerName(xw);
 	if (x_strncasecmp(wm_name, "fvwm", 4) &&
 	    x_strncasecmp(wm_name, "window maker", 12))
-	    xw->misc.active_icon = eiFalse;
+	    xw->work.active_icon = eiFalse;
 	free(wm_name);
     }
-    if (xw->misc.active_icon && screen->fnt_icon.fs) {
+    if (xw->work.active_icon && screen->fnt_icon.fs) {
 	int iconX = 0, iconY = 0;
 	Widget shell = SHELL_OF(xw);
 	VTwin *win = &(screen->iconVwin);
@@ -8182,7 +8182,7 @@ VTRealize(Widget w,
 #endif
     } else {
 	TRACE(("Disabled active-icon\n"));
-	xw->misc.active_icon = eiFalse;
+	xw->work.active_icon = eiFalse;
     }
 #endif /* NO_ACTIVE_ICON */
 
@@ -8239,7 +8239,7 @@ VTRealize(Widget w,
     }
 
 #ifndef NO_ACTIVE_ICON
-    if (!xw->misc.active_icon)
+    if (!xw->work.active_icon)
 #endif
 	xtermLoadIcon(xw);
 

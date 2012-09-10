@@ -9,6 +9,7 @@
 
                         Xterm Control Sequences
 
+
                                Edward Moy
                    University of California, Berkeley
 
@@ -209,8 +210,8 @@ DCS + p Pt ST
           as by the Request Termcap/Terminfo String control.
 DCS + q Pt ST
           Request Termcap/Terminfo String (xterm, experimental).  The
-          string following the "q" is a list of names encoded in hex-
-          adecimal (2 digits per character) separated by ; which corre-
+          string following the "q" is a list of names encoded in hexa-
+          decimal (2 digits per character) separated by ; which corre-
           spond to termcap or terminfo key names.
           Two special features are also recognized, which are not key
           names: Co for termcap colors (or colors for terminfo colors),
@@ -732,8 +733,11 @@ CSI Ps ; Ps ; Ps t
             Ps = 9  ;  0  -> Restore maximized window.
             Ps = 9  ;  1  -> Maximize window (i.e., resize to screen
           size).
+            Ps = 9  ;  2  -> Maximize window vertically.
+            Ps = 9  ;  3  -> Maximize window horizontally.
             Ps = 1 0  ;  0  -> Undo full-screen mode.
             Ps = 1 0  ;  1  -> Change to full-screen.
+            Ps = 1 0  ;  2  -> Toggle full-screen.
             Ps = 1 1  -> Report xterm window state.  If the xterm window
           is open (non-iconified), it returns CSI 1 t .  If the xterm
           window is iconified, it returns CSI 2 t .

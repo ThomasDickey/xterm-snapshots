@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.452 2012/05/08 08:36:43 tom Exp $ */
+/* $XTermId: screen.c,v 1.463 2012/09/09 21:25:01 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2676,6 +2676,27 @@ xtermCheckRect(XtermWidget xw,
 
 #if OPT_MAXIMIZE
 
+static _Xconst char *
+ewmhProperty(int mode)
+{
+    _Xconst char *result;
+    switch (mode) {
+    default:
+	result = 0;
+	break;
+    case 1:
+	result = "_NET_WM_STATE_FULLSCREEN";
+	break;
+    case 2:
+	result = "_NET_WM_STATE_MAXIMIZED_VERT";
+	break;
+    case 3:
+	result = "_NET_WM_STATE_MAXIMIZED_HORZ";
+	break;
+    }
+    return result;
+}
+
 static void
 set_resize_increments(XtermWidget xw)
 {
@@ -2723,13 +2744,10 @@ unset_resize_increments(XtermWidget xw)
 }
 
 static void
-netwm_fullscreen(XtermWidget xw, int operation)
+set_ewmh_hint(Display * dpy, Window window, int operation, _Xconst char *prop)
 {
-    TScreen *screen = TScreenOf(xw);
     XEvent e;
-    Display *dpy = screen->display;
-    Window window = VShellWindow(xw);
-    Atom atom_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+    Atom atom_fullscreen = XInternAtom(dpy, prop, False);
     Atom atom_state = XInternAtom(dpy, "_NET_WM_STATE", False);
 
     memset(&e, 0, sizeof(e));
@@ -2746,7 +2764,8 @@ netwm_fullscreen(XtermWidget xw, int operation)
 }
 
 /*
- * Check if the "fullscreen" property is supported on the root window.
+ * Check if the given property is supported on the root window.
+ *
  * The XGetWindowProperty function returns a list of Atom's which corresponds
  * to the output of xprop.  The actual list (ignore the manpage, which refers
  * to an array of 32-bit values) is constructed by _XRead32, which uses long
@@ -2756,11 +2775,9 @@ netwm_fullscreen(XtermWidget xw, int operation)
  * window.
  */
 static Boolean
-probe_netwm_fullscreen_capability(XtermWidget xw)
+probe_netwm(Display * dpy, _Xconst char *propname)
 {
-    TScreen *screen = TScreenOf(xw);
-    Display *dpy = screen->display;
-    Atom atom_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+    Atom atom_fullscreen = XInternAtom(dpy, propname, False);
     Atom atom_supported = XInternAtom(dpy, "_NET_SUPPORTED", False);
     Atom actual_type;
     int actual_format;
@@ -2770,10 +2787,10 @@ probe_netwm_fullscreen_capability(XtermWidget xw)
     unsigned long nitems, bytes_after;
     unsigned char *args;
     long *ldata;
-    Boolean netwm_fullscreen_capability = False;
+    Boolean has_capability = False;
     int rc;
 
-    while (!netwm_fullscreen_capability) {
+    while (!has_capability) {
 	rc = XGetWindowProperty(dpy,
 				DefaultRootWindow(dpy),
 				atom_supported,
@@ -2794,13 +2811,13 @@ probe_netwm_fullscreen_capability(XtermWidget xw)
 	ldata = (long *) (void *) args;
 	for (i = 0; i < nitems; i++) {
 	    if ((Atom) ldata[i] == atom_fullscreen) {
-		netwm_fullscreen_capability = True;
+		has_capability = True;
 		break;
 	    }
 	}
 	XFree(ldata);
 
-	if (!netwm_fullscreen_capability) {
+	if (!has_capability) {
 	    if (bytes_after != 0) {
 		long remaining = (long) (bytes_after / sizeof(long));
 		if (long_length > remaining)
@@ -2812,40 +2829,61 @@ probe_netwm_fullscreen_capability(XtermWidget xw)
 	}
     }
 
-    return netwm_fullscreen_capability;
+    TRACE(("probe_netwm(%s) ->%d\n", propname, has_capability));
+    return has_capability;
 }
 
 /*
- * Enable/disable fullscreen mode for the xterm widget, if the window manager
- * supports that feature.
+ * Alter fullscreen mode for the xterm widget, if the window manager supports
+ * that feature.
  */
 void
-FullScreen(XtermWidget xw, Bool enabled)
+FullScreen(XtermWidget xw, int new_ewmh_mode)
 {
     TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    _Xconst char *oldprop = ewmhProperty(xw->work.ewmh[0].mode);
+    _Xconst char *newprop = ewmhProperty(new_ewmh_mode);
 
-    static Boolean initialized = False;
-    static Boolean netwm_fullscreen_capability = False;
+    int which = 0;
+    Window window;
 
-    TRACE(("FullScreen %s\n", BtoS(enabled)));
+#if OPT_TEK4014
+    if (TEK4014_ACTIVE(xw)) {
+	which = 1;
+	window = TShellWindow;
+    } else
+#endif
+	window = VShellWindow(xw);
 
-    if (resource.fullscreen == esNever) {
-	initialized = True;
-	netwm_fullscreen_capability = False;
-    } else if (!initialized) {
-	initialized = True;
-	netwm_fullscreen_capability = probe_netwm_fullscreen_capability(xw);
+    TRACE(("FullScreen %d:%s\n", new_ewmh_mode, BtoS(new_ewmh_mode)));
+
+    if (new_ewmh_mode < 0 || new_ewmh_mode > MAX_EWMH_MODE) {
+	TRACE(("BUG: FullScreen %d\n", new_ewmh_mode));
+	return;
+    } else if (new_ewmh_mode == 0) {
+	xw->work.ewmh[which].checked[new_ewmh_mode] = True;
+	xw->work.ewmh[which].allowed[new_ewmh_mode] = True;
+    } else if (resource.fullscreen == esNever) {
+	xw->work.ewmh[which].checked[new_ewmh_mode] = True;
+	xw->work.ewmh[which].allowed[new_ewmh_mode] = False;
+    } else if (!xw->work.ewmh[which].checked[new_ewmh_mode]) {
+	xw->work.ewmh[which].checked[new_ewmh_mode] = True;
+	xw->work.ewmh[which].allowed[new_ewmh_mode] = probe_netwm(dpy, newprop);
     }
 
-    if (netwm_fullscreen_capability) {
-	if (enabled) {
+    if (xw->work.ewmh[which].allowed[new_ewmh_mode]) {
+	if (new_ewmh_mode && !xw->work.ewmh[which].mode) {
 	    unset_resize_increments(xw);
-	    netwm_fullscreen(xw, 1);
-	} else {
+	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
+	} else if (xw->work.ewmh[which].mode && !new_ewmh_mode) {
 	    set_resize_increments(xw);
-	    netwm_fullscreen(xw, 0);
+	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
+	} else {
+	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
+	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
 	}
-	screen->fullscreen = (Boolean) enabled;
+	xw->work.ewmh[which].mode = new_ewmh_mode;
 	update_fullscreen();
     } else {
 	Bell(xw, XkbBI_MinorError, 100);

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.737 2012/09/04 23:34:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.744 2012/09/09 21:14:47 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -926,7 +926,7 @@ typedef enum {
 } TcapOps;
 
 typedef enum {
-    /* 1-21 are chosen to be the same as the control-sequence coding */
+    /* 1-23 are chosen to be the same as the control-sequence coding */
     ewRestoreWin = 1
     , ewMinimizeWin = 2
     , ewSetWinPosition = 3
@@ -1372,8 +1372,8 @@ typedef enum {
 } RenderFont;
 
 #define DefaultRenderFont(xw) \
-	if ((xw)->misc.render_font == erDefault) \
-	    (xw)->misc.render_font = erFalse
+	if ((xw)->work.render_font == erDefault) \
+	    (xw)->work.render_font = erFalse
 
 typedef struct {
 	XftFont *	font;
@@ -1757,9 +1757,6 @@ typedef struct {
 
 	Boolean		awaitInput;	/* select-timeout mode		*/
 	Boolean		grabbedKbd;	/* keyboard is grabbed		*/
-#if OPT_MAXIMIZE
-	Boolean		fullscreen;	/* window is fullscreen		*/
-#endif
 #ifdef ALLOWLOGGING
 	int		logging;	/* logging mode			*/
 	int		logfd;		/* file descriptor of log	*/
@@ -2333,9 +2330,7 @@ typedef struct _Misc {
     TInput inputs[NINPUTWIDGETS];
 #endif
     Boolean dynamicColors;
-    Boolean shared_ic;
 #ifndef NO_ACTIVE_ICON
-    int active_icon;		/* use application icon window  */
     char *active_icon_s;	/* use application icon window  */
     unsigned icon_border_width;
     Pixel icon_border_pixel;
@@ -2352,19 +2347,39 @@ typedef struct _Misc {
 #if OPT_NUM_LOCK
     Boolean real_NumLock;	/* true if we treat NumLock key specially */
     Boolean alwaysUseMods;	/* true if we always want f-key modifiers */
-    unsigned num_lock;		/* modifier for Num_Lock */
-    unsigned alt_mods;		/* modifier for Alt_L or Alt_R */
-    unsigned meta_mods;		/* modifier for Meta_L or Meta_R */
-    unsigned other_mods;	/* conflicting modifiers, e.g., Mode_Switch */
 #endif
 #if OPT_RENDERFONT
     char *face_name;
     char *face_wide_name;
     float face_size[NMENUFONTS];
     char *render_font_s;
-    Boolean render_font;
 #endif
 } Misc;
+
+typedef struct _Work {
+    int dummy;
+#ifndef NO_ACTIVE_ICON
+    int active_icon;		/* use application icon window  */
+#endif /* NO_ACTIVE_ICON */
+#if OPT_MAXIMIZE
+#define MAX_EWMH_MODE 3
+#define MAX_EWMH_DATA (1 + OPT_TEK4014)
+    struct {
+	int mode;		/* fullscreen, etc.		*/
+	Boolean checked[MAX_EWMH_MODE];
+	Boolean allowed[MAX_EWMH_MODE];
+    } ewmh[MAX_EWMH_DATA];
+#endif
+#if OPT_NUM_LOCK
+    unsigned num_lock;		/* modifier for Num_Lock */
+    unsigned alt_mods;		/* modifier for Alt_L or Alt_R */
+    unsigned meta_mods;		/* modifier for Meta_L or Meta_R */
+    unsigned other_mods;	/* conflicting modifiers, e.g., Mode_Switch */
+#endif
+#if OPT_RENDERFONT
+    Boolean render_font;
+#endif
+} Work;
 
 typedef struct {int foo;} XtermClassPart, TekClassPart;
 
@@ -2427,6 +2442,7 @@ typedef struct _XtermWidgetRec {
     unsigned	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
     Misc	misc;		/* miscellaneous parameters	*/
+    Work	work;		/* workspace (no resources)	*/
 } XtermWidgetRec, *XtermWidget;
 
 #if OPT_TEK4014
@@ -2605,7 +2621,7 @@ typedef struct _TekWidgetRec {
 /*
  * Macro to check if we are iconified; do not use render for that case.
  */
-#define UsingRenderFont(xw)	(((xw)->misc.render_font == True) && !IsIcon(TScreenOf(xw)))
+#define UsingRenderFont(xw)	(((xw)->work.render_font == True) && !IsIcon(TScreenOf(xw)))
 
 /*
  * These definitions do not depend on whether xterm supports active-icon.

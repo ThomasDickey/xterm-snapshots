@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.301 2011/12/14 01:21:57 tom Exp $ */
+/* $XTermId: menu.c,v 1.307 2012/09/09 21:37:54 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -967,45 +967,6 @@ SetItemSensitivity(Widget mi, Bool val)
  * action routines
  */
 
-#if OPT_MAXIMIZE
-static void
-do_fullscreen(Widget gw GCC_UNUSED,
-	      XtPointer closure GCC_UNUSED,
-	      XtPointer data GCC_UNUSED)
-{
-    XtermWidget xw = term;
-    TScreen *screen = TScreenOf(xw);
-
-    if (resource.fullscreen != esNever)
-	FullScreen(xw, !screen->fullscreen);
-}
-
-/* ARGSUSED */
-void
-HandleFullscreen(Widget w,
-		 XEvent * event GCC_UNUSED,
-		 String * params GCC_UNUSED,
-		 Cardinal *param_count GCC_UNUSED)
-{
-    do_fullscreen(w, (XtPointer) 0, (XtPointer) 0);
-}
-
-void
-update_fullscreen(void)
-{
-    if (resource.fullscreen <= 1) {
-	UpdateCheckbox("update_fullscreen",
-		       mainMenuEntries,
-		       mainMenu_fullscreen,
-		       TScreenOf(term)->fullscreen);
-    } else {
-	SetItemSensitivity(mainMenuEntries[mainMenu_fullscreen].widget,
-			   False);
-    }
-}
-
-#endif /* OPT_MAXIMIZE */
-
 static void
 do_securekbd(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
@@ -1613,9 +1574,9 @@ do_activeicon(Widget gw GCC_UNUSED,
 
     if (screen->iconVwin.window) {
 	Widget shell = XtParent(term);
-	ToggleFlag(term->misc.active_icon);
+	ToggleFlag(term->work.active_icon);
 	XtVaSetValues(shell, XtNiconWindow,
-		      term->misc.active_icon ? screen->iconVwin.window : None,
+		      term->work.active_icon ? screen->iconVwin.window : None,
 		      (XtPointer) 0);
 	update_activeicon();
     }
@@ -1747,7 +1708,7 @@ do_font_renderfont(Widget gw GCC_UNUSED,
     String name = TScreenOf(xw)->MenuFontName(fontnum);
 
     DefaultRenderFont(xw);
-    ToggleFlag(xw->misc.render_font);
+    ToggleFlag(xw->work.render_font);
     update_font_renderfont();
     xtermLoadFont(xw, xtermFontName(name), True, fontnum);
     ScrnRefresh(term, 0, 0,
@@ -2186,6 +2147,56 @@ HandleBackarrow(Widget w,
 		     params, *param_count, w);
 }
 
+#if OPT_MAXIMIZE
+#if OPT_TEK4014
+#define WhichEWMH (TEK4014_ACTIVE(xw) != 0)
+#else
+#define WhichEWMH 0
+#endif
+static void
+do_fullscreen(Widget gw GCC_UNUSED,
+	      XtPointer closure GCC_UNUSED,
+	      XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = term;
+
+    if (resource.fullscreen != esNever)
+	FullScreen(xw, !xw->work.ewmh[WhichEWMH].mode);
+}
+
+/* ARGSUSED */
+void
+HandleFullscreen(Widget w,
+		 XEvent * event GCC_UNUSED,
+		 String * params GCC_UNUSED,
+		 Cardinal *param_count GCC_UNUSED)
+{
+    XtermWidget xw = term;
+
+    if (resource.fullscreen != esNever) {
+	handle_vt_toggle(do_fullscreen, xw->work.ewmh[WhichEWMH].mode,
+			 params, *param_count, w);
+    }
+}
+
+void
+update_fullscreen(void)
+{
+    XtermWidget xw = term;
+
+    if (resource.fullscreen <= 1) {
+	UpdateCheckbox("update_fullscreen",
+		       mainMenuEntries,
+		       mainMenu_fullscreen,
+		       xw->work.ewmh[WhichEWMH].mode);
+    } else {
+	SetItemSensitivity(mainMenuEntries[mainMenu_fullscreen].widget,
+			   False);
+    }
+}
+
+#endif /* OPT_MAXIMIZE */
+
 #if OPT_SUN_FUNC_KEYS
 void
 HandleSunFunctionKeys(Widget w,
@@ -2573,7 +2584,7 @@ update_fontmenu(XtermWidget xw)
     int n;
 
     for (n = 0; n <= fontMenu_lastBuiltin; ++n) {
-	Boolean active = (Boolean) (xw->misc.render_font ||
+	Boolean active = (Boolean) (xw->work.render_font ||
 				    (screen->menu_font_sizes[n] >= 0));
 	SetItemSensitivity(fontMenuEntries[n].widget, active);
     }
@@ -2589,7 +2600,7 @@ HandleRenderFont(Widget w,
 
     DefaultRenderFont(xw);
 
-    handle_vt_toggle(do_font_renderfont, xw->misc.render_font,
+    handle_vt_toggle(do_font_renderfont, xw->work.render_font,
 		     params, *param_count, w);
 
     update_fontmenu(xw);
@@ -3465,7 +3476,7 @@ update_activeicon(void)
     UpdateCheckbox("update_activeicon",
 		   vtMenuEntries,
 		   vtMenu_activeicon,
-		   term->misc.active_icon);
+		   term->work.active_icon);
 }
 #endif /* NO_ACTIVE_ICON */
 
@@ -3531,7 +3542,7 @@ update_font_renderfont(void)
     UpdateCheckbox("update_font_renderfont",
 		   fontMenuEntries,
 		   fontMenu_render_font,
-		   (term->misc.render_font == True));
+		   (term->work.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
 		       !IsEmpty(term->misc.face_name));
     update_fontmenu(term);
@@ -3769,15 +3780,18 @@ update_tekshow(void)
 void
 update_vttekmode(void)
 {
-    if (!(TScreenOf(term)->inhibit & I_TEK)) {
+    XtermWidget xw = term;
+
+    if (!(TScreenOf(xw)->inhibit & I_TEK)) {
 	UpdateCheckbox("update_vtmode",
 		       vtMenuEntries,
 		       vtMenu_tekmode,
-		       TEK4014_ACTIVE(term));
+		       TEK4014_ACTIVE(xw));
 	UpdateCheckbox("update_tekmode",
 		       tekMenuEntries,
 		       tekMenu_vtmode,
-		       !TEK4014_ACTIVE(term));
+		       !TEK4014_ACTIVE(xw));
+	update_fullscreen();
     }
 }
 
