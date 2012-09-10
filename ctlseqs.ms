@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.267 2012/06/11 09:10:57 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.268 2012/09/09 21:47:14 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -1262,8 +1262,11 @@ Omitted parameters reuse the current height or width.
 Zero parameters use the display's height or width.
   \*(Ps = \*9\*s\*;\*s\*0 \(-> Restore maximized window.
   \*(Ps = \*9\*s\*;\*s\*1 \(-> Maximize window (i.e., resize to screen size).
+  \*(Ps = \*9\*s\*;\*s\*2 \(-> Maximize window vertically.
+  \*(Ps = \*9\*s\*;\*s\*3 \(-> Maximize window horizontally.
   \*(Ps = \*1\*0\*s\*;\*s\*0 \(-> Undo full-screen mode.
   \*(Ps = \*1\*0\*s\*;\*s\*1 \(-> Change to full-screen.
+  \*(Ps = \*1\*0\*s\*;\*s\*2 \(-> Toggle full-screen.
   \*(Ps = \*1\*1 \(-> Report \fIxterm\fP window state.
 If the \fIxterm\fP window is open (non-iconified), it returns \*(Cs\*1\*t.
 If the \fIxterm\fP window is iconified, it returns \*(Cs\*2\*t.

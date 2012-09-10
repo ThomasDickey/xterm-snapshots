@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.535 2012/09/03 18:09:36 Paul.Maier Exp $
+.\" $XTermId: xterm.man,v 1.536 2012/09/10 00:08:03 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -5221,27 +5221,27 @@ actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
 .TP 8
 .B "allow-color-ops(\fIon/off/toggle\fP)"
-This action set or toggles the \fBallowColorOps\fP resource and is also
+This action sets, unsets or toggles the \fBallowColorOps\fP resource and is also
 invoked by the \fBallow-color-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "allow-font-ops(\fIon/off/toggle\fP)"
-This action set or toggles the \fBallowFontOps\fP resource and is also
+This action sets, unsets or toggles the \fBallowFontOps\fP resource and is also
 invoked by the \fBallow-font-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "allow-send-events(\fIon/off/toggle\fP)"
-This action set or toggles the \fBallowSendEvents\fP resource and is also
+This action sets, unsets or toggles the \fBallowSendEvents\fP resource and is also
 invoked by the \fBallowsends\fP entry in \fImainMenu\fP.
 .TP 8
 .B "allow-tcap-ops(\fIon/off/toggle\fP)"
-This action set or toggles the \fBallowTcapOps\fP resource and is also
+This action sets, unsets or toggles the \fBallowTcapOps\fP resource and is also
 invoked by the \fBallow-tcap-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "allow-title-ops(\fIon/off/toggle\fP)"
-This action set or toggles the \fBallowTitleOps\fP resource and is also
+This action sets, unsets or toggles the \fBallowTitleOps\fP resource and is also
 invoked by the \fBallow-title-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "allow-window-ops(\fIon/off/toggle\fP)"
-This action set or toggles the \fBallowWindowOps\fP resource and is also
+This action sets, unsets or toggles the \fBallowWindowOps\fP resource and is also
 invoked by the \fBallow-window-ops\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "alt-sends-escape()"
@@ -5304,8 +5304,8 @@ by echoing the event's position
 ^X ESC G <line+\*(`` \*(''> <col+\*(`` \*(''>
 .in -8
 .TP 8
-.B "fullscreen()"
-Asks the window manager to change the window to full-screen.
+.B "fullscreen(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBfullscreen\fP resource.
 .TP 8
 .B "iconify()"
 Iconifies the window.
@@ -5476,8 +5476,8 @@ significant) include:  \fImainMenu\fP, \fIvtMenu\fP, \fIfontMenu\fP,
 and \fItekMenu\fP.
 .TP 8
 .B "print(\fIprinter-flags\fP)"
-This action prints the window and is also invoked by the
-\fIprint\fP entry in \fImainMenu\fP.
+This action prints the window.
+It is also invoked by the \fIprint\fP entry in \fImainMenu\fP.
 .IP
 The action accepts optional parameters, which temporarily override
 resource settings.
@@ -5557,8 +5557,8 @@ to request that the host application update its notion of the cursor's
 position to match the button event.
 .TP 8
 .B "redraw()"
-This action redraws the window and is also invoked by the
-\fIredraw\fP entry in \fImainMenu\fP.
+This action redraws the window.
+It is also invoked by the \fIredraw\fP entry in \fImainMenu\fP.
 .TP 8
 .B "restore()"
 Restores the window to the size before it was last maximized.
@@ -5589,7 +5589,7 @@ section named \fBSECURITY\fP, and is invoked from the \fBsecurekbd\fP
 entry in \fImainMenu\fP.
 .TP 8
 .B "scroll-lock(\fIon/off/toggle\fP)"
-This action toggles internal state which tells
+This action sets, unsets or toggles internal state which tells
 \fIxterm\fP whether Scroll Lock is active,
 subject to the \fBallowScrollLock\fP resource.
 .TP 8
@@ -5627,7 +5627,8 @@ the section on \fBPOINTER USAGE\fP for information on making selections.
 .B "send-signal(\fIsigname\fP)"
 This action sends the signal named by \fIsigname\fP
 to the \fIxterm\fP subprocess (the shell or program specified with
-the \fI\-e\fP command line option) and is also invoked by the
+the \fI\-e\fP command line option).
+It is also invoked by the
 .BR suspend ,
 .BR continue ,
 .BR interrupt ,
@@ -5645,136 +5646,136 @@ as \fItstp\fP), \fIcont\fP
 \fIalrm\fP, \fIalarm\fP (same as \fIalrm\fP) and \fIkill\fP.
 .TP 8
 .B "set-8-bit-control(\fIon/off/toggle\fP)"
-This action toggles the \fBeightBitControl\fP resource and is also invoked from the
-\fB8-bit-control\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBeightBitControl\fP resource.
+It is also invoked from the \fB8-bit-control\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-allow132(\fIon/off/toggle\fP)"
-This action toggles the \fBc132\fP resource and is also invoked from the
-\fBallow132\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBc132\fP resource.
+It is also invoked from the \fBallow132\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-altscreen(\fIon/off/toggle\fP)"
-This action toggles between the alternate and current screens.
+This action sets, unsets or toggles between the alternate and current screens.
 .TP 8
 .B "set-appcursor(\fIon/off/toggle\fP)"
-This action toggles the handling Application Cursor Key mode
+This action sets, unsets or toggles the handling Application Cursor Key mode
 and is also invoked by the \fBappcursor\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-appkeypad(\fIon/off/toggle\fP)"
-This action toggles the handling of Application Keypad mode and is also
+This action sets, unsets or toggles the handling of Application Keypad mode and is also
 invoked by the \fBappkeypad\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-autolinefeed(\fIon/off/toggle\fP)"
-This action toggles automatic insertion of linefeeds and is also invoked by
-the \fBautolinefeed\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles automatic insertion of linefeeds.
+It is also invoked by the \fBautolinefeed\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-autowrap(\fIon/off/toggle\fP)"
-This action toggles automatic wrapping of long lines and is also invoked by
-the \fBautowrap\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles automatic wrapping of long lines.
+It is also invoked by the \fBautowrap\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-backarrow(\fIon/off/toggle\fP)"
-This action toggles the \fBbackarrowKey\fP resource and is also invoked from the
-\fBbackarrow key\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBbackarrowKey\fP resource.
+It is also invoked from the \fBbackarrow key\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-bellIsUrgent(\fIon/off/toggle\fP)"
-This action toggles the \fBbellIsUrgent\fP resource and is also invoked
-by the \fBbellIsUrgent\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBbellIsUrgent\fP resource.
+It is also invoked by the \fBbellIsUrgent\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-cursorblink(\fIon/off/toggle\fP)"
-This action toggles the \fBcursorBlink\fP resource and is also invoked from the
-\fBcursorblink\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBcursorBlink\fP resource.
+It is also invoked from the \fBcursorblink\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-cursesemul(\fIon/off/toggle\fP)"
-This action toggles the \fBcurses\fP resource and is also invoked from the
-\fBcursesemul\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBcurses\fP resource.
+It is also invoked from the \fBcursesemul\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-font-doublesize(\fIon/off/toggle\fP)"
-This action toggles the \fBfontDoublesize\fP resource and is also invoked by
-the \fBfont-doublesize\fP entry in \fIfontMenu\fP.
+This action sets, unsets or toggles the \fBfontDoublesize\fP resource.
+It is also invoked by the \fBfont-doublesize\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-hp-function-keys(\fIon/off/toggle\fP)"
-This action toggles the \fBhpFunctionKeys\fP resource and is also invoked by
-the \fBhpFunctionKeys\fP entry in \fImainMenu\fP.
+This action sets, unsets or toggles the \fBhpFunctionKeys\fP resource.
+It is also invoked by the \fBhpFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-jumpscroll(\fIon/off/toggle\fP)"
-This action toggles the \fBjumpscroll\fP resource and is also invoked by the
-\fBjumpscroll\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBjumpscroll\fP resource.
+It is also invoked by the \fBjumpscroll\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-font-linedrawing(\fIon/off/toggle\fP)"
-This action toggles the \fIxterm\fR's state regarding whether the current font
+This action sets, unsets or toggles the \fIxterm\fR's state regarding whether the current font
 has line-drawing characters and whether it should draw them directly.
 It is also invoked by the \fBfont-linedrawing\fP entry in \fIfontMenu\fP.
 .\" .\" not implemented
 .\" .TP 8
 .\" .B "set-font-loading(\fIon/off/toggle\fP)"
-.\" This action toggles the TBD resource
+.\" This action sets, unsets or toggles the TBD resource
 .\" which controls the ability to load VT220 soft fonts.
 .\" It is also invoked by the \fBfont-loadable\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-font-packed(\fIon/off/toggle\fP)"
-This action toggles the \fIforcePackedFont\fR's resource
+This action sets, unsets or toggles the \fIforcePackedFont\fR's resource
 which controls use of the font's minimum or maximum glyph width.
 It is also invoked by the \fBfont-packed\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-keep-selection(\fIon/off/toggle\fP)"
-This action toggles the \fBkeepSelection\fP resource and is also invoked by
-the \fBkeepSelection\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBkeepSelection\fP resource.
+It is also invoked by the \fBkeepSelection\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-logging()"
-This action toggles the state of the logging option.
+.B "set-logging(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the state of the logging option.
 .TP 8
 .B "set-old-function-keys(\fIon/off/toggle\fP)"
-This action toggles the state of legacy function keys and is also invoked by
-the \fBoldFunctionKeys\fP entry in \fImainMenu\fP.
+This action sets, unsets or toggles the state of legacy function keys.
+It is also invoked by the \fBoldFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-marginbell(\fIon/off/toggle\fP)"
-This action toggles the \fBmarginBell\fP resource.
+This action sets, unsets or toggles the \fBmarginBell\fP resource.
 .TP 8
-.B "set-num-lock()"
+.B "set-num-lock(\fIon/off/toggle\fP)"
 This action toggles the state of the \fBnumLock\fP resource.
 .TP 8
 .B "set-pop-on-bell(\fIon/off/toggle\fP)"
-This action toggles the \fBpopOnBell\fP resource and is also invoked
-by the \fBpoponbell\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBpopOnBell\fP resource.
+It is also invoked by the \fBpoponbell\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-render-font(\fIon/off/toggle\fP)"
-This action toggles the \fBrenderFont\fP resource and is also invoked by
-the \fBrender-font\fP entry in \fIfontMenu\fP.
+This action sets, unsets or toggles the \fBrenderFont\fP resource.
+It is also invoked by the \fBrender-font\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-reverse-video(\fIon/off/toggle\fP)"
-This action toggles the \fBreverseVideo\fP resource and is also invoked by
-the \fBreversevideo\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBreverseVideo\fP resource.
+It is also invoked by the \fBreversevideo\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-reversewrap(\fIon/off/toggle\fP)"
-This action toggles the \fBreverseWrap\fP resource and is also invoked by
-the \fBreversewrap\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBreverseWrap\fP resource.
+It is also invoked by the \fBreversewrap\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-scroll-on-key(\fIon/off/toggle\fP)"
-This action toggles the \fBscrollKey\fP resource and is also invoked from
-the \fBscrollkey\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBscrollKey\fP resource.
+It is also invoked from the \fBscrollkey\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-scroll-on-tty-output(\fIon/off/toggle\fP)"
-This action toggles the \fBscrollTtyOutput\fP resource and is also invoked
-from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBscrollTtyOutput\fP resource.
+It is also invoked from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-scrollbar(\fIon/off/toggle\fP)"
-This action toggles the \fBscrollbar\fP resource and is also invoked by
-the \fBscrollbar\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBscrollbar\fP resource.
+It is also invoked by the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-select(\fIon/off/toggle\fP)"
-This action toggles the \fBselectToClipboard\fP resource and is also invoked by
-the \fBselectToClipboard\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBselectToClipboard\fP resource.
+It is also invoked by the \fBselectToClipboard\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-sco-function-keys(\fIon/off/toggle\fP)"
-This action toggles the \fBscoFunctionKeys\fP resource and is also invoked by
-the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
+This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
+It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-sun-function-keys(\fIon/off/toggle\fP)"
-This action toggles the \fBsunFunctionKeys\fP resource and is also invoked by
-the \fBsunFunctionKeys\fP entry in \fImainMenu\fP.
+This action sets, unsets or toggles the \fBsunFunctionKeys\fP resource.
+It is also invoked by the \fBsunFunctionKeys\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-sun-keyboard(\fIon/off/toggle\fP)"
-This action toggles the \fBsunKeyboard\fP resource and is also invoked by
-the \fBsunKeyboard\fP entry in \fImainMenu\fP.
+This action sets, unsets or toggles the \fBsunKeyboard\fP resource.
+It is also invoked by the \fBsunKeyboard\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-tek-text(\fIlarge/2/3/small\fP)"
 This action sets font used in the Tektronix window to the value of the
@@ -5791,31 +5792,31 @@ It is also invoked by the
 \fItekMenu\fP.
 .TP 8
 .B "set-titeInhibit(\fIon/off/toggle\fP)"
-This action toggles the \fBtiteInhibit\fP resource,
+This action sets, unsets or toggles the \fBtiteInhibit\fP resource,
 which controls switching between the alternate and current screens.
 .TP 8
 .B "set-toolbar(\fIon/off/toggle\fP)"
-This action toggles the toolbar feature and is also invoked by
-the \fBtoolbar\fP entry in \fImainMenu\fP.
+This action sets, unsets or toggles the toolbar feature.
+It is also invoked by the \fBtoolbar\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-utf8-mode(\fIon/off/toggle\fP)"
-This action toggles the \fButf8\fP resource and is also invoked by
-the \fButf8-mode\fP entry in \fIfontMenu\fP.
+This action sets, unsets or toggles the \fButf8\fP resource.
+It is also invoked by the \fButf8-mode\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-utf8-title(\fIon/off/toggle\fP)"
-This action toggles the \fButf8Title\fP resource and is also invoked by
-the \fButf8-title\fP entry in \fIfontMenu\fP.
+This action sets, unsets or toggles the \fButf8Title\fP resource.
+It is also invoked by the \fButf8-title\fP entry in \fIfontMenu\fP.
 .TP 8
 .B "set-visibility(\fIvt/tek\fP,\fIon/off/toggle\fP)"
-This action controls whether or not the \fIvt\fP or \fItek\fP windows are
+This action sets, unsets or toggles whether or not the \fIvt\fP or \fItek\fP windows are
 visible.
 It is also invoked from the \fBtekshow\fP and \fBvthide\fP entries
 in \fIvtMenu\fP and the \fBvtshow\fP and \fBtekhide\fP entries in
 \fItekMenu\fP.
 .TP 8
 .B "set-visual-bell(\fIon/off/toggle\fP)"
-This action toggles the \fBvisualBell\fP resource and is also invoked
-by the \fBvisualbell\fP entry in \fIvtMenu\fP.
+This action sets, unsets or toggles the \fBvisualBell\fP resource.
+It is also invoked by the \fBvisualbell\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-vt-font(\fId/1/2/3/4/5/6/e/s\fP [,\fInormalfont\fP [, \fIboldfont\fP]])"
 This action sets the font or fonts currently being used in the VT102 window.
@@ -5847,8 +5848,8 @@ Set the font to the next smaller one, based on the font dimensions.
 See also \fBset-vt-font()\fP.
 .TP 8
 .B "soft-reset()"
-This action resets the scrolling region and is also invoked from the
-\fBsoftreset\fP entry in \fIvtMenu\fP.
+This action resets the scrolling region.
+It is also invoked from the \fBsoftreset\fP entry in \fIvtMenu\fP.
 The effect is identical to a soft reset (DECSTR) control sequence.
 .TP 8
 .B "spawn-new-terminal(params)"
@@ -5888,12 +5889,12 @@ contents to a file in the current directory beginning with the name COPY.
 It is also invoked from the \fItekcopy\fP entry in \fItekMenu\fP.
 .TP 8
 .B "tek-page()"
-This action clears the Tektronix window and is also invoked by the
-\fBtekpage\fP entry in \fItekMenu\fP.
+This action clears the Tektronix window.
+It is also invoked by the \fBtekpage\fP entry in \fItekMenu\fP.
 .TP 8
 .B "tek-reset()"
-This action resets the Tektronix window and is also invoked by the
-\fItekreset\fP entry in \fItekMenu\fP.
+This action resets the Tektronix window.
+It is also invoked by the \fItekreset\fP entry in \fItekMenu\fP.
 .TP 8
 .B "vi-button()"
 Handles a button event (other than press and release)

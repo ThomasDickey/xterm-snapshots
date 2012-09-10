@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.182 2011/09/03 12:13:42 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.186 2012/09/09 21:16:15 tom Exp $ */
 
 /*
- * Copyright 2000-2010,2011 by Thomas E. Dickey
+ * Copyright 2000-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -176,7 +176,7 @@ DoResizeScreen(XtermWidget xw)
     xw->hints.height = MaxRows(screen) * FontHeight(screen) + xw->hints.min_height;
 #if OPT_MAXIMIZE
     /* assure single-increment resize for fullscreen */
-    if (screen->fullscreen) {
+    if (xw->work.ewmh[0].mode) {
 	xw->hints.width_inc = 1;
 	xw->hints.height_inc = 1;
     }
@@ -190,7 +190,7 @@ DoResizeScreen(XtermWidget xw)
 
 #if OPT_MAXIMIZE
     /* compensate for fullscreen mode */
-    if (screen->fullscreen) {
+    if (xw->work.ewmh[0].mode) {
 	Screen *xscreen = DefaultScreenOfDisplay(xw->screen.display);
 	reqWidth = (Dimension) WidthOfScreen(xscreen);
 	reqHeight = (Dimension) HeightOfScreen(xscreen);

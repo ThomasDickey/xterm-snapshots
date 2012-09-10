@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.380 2011/12/27 10:20:50 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.381 2012/09/07 23:09:38 tom Exp $ */
 
 /*
- * Copyright 1998-2010,2011 by Thomas E. Dickey
+ * Copyright 1998-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -173,7 +173,7 @@ setupPackedFonts(XtermWidget xw)
 
 #if OPT_RENDERFONT
 #define MIXED(name) screen->name[fontnum].map.mixed
-    if (xw->misc.render_font == True) {
+    if (xw->work.render_font == True) {
 	int fontnum = screen->menu_font_number;
 
 	screen->allow_packing = (Boolean) (MIXED(renderFontNorm)
@@ -2073,7 +2073,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	}
 	if (norm == 0) {
 	    TRACE(("...no TrueType font found for number %d, disable menu entry\n", fontnum));
-	    xw->misc.render_font = False;
+	    xw->work.render_font = False;
 	    update_font_renderfont();
 	    /* now we will fall through into the bitmap fonts */
 	} else {
