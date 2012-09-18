@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.68 2012/06/10 16:53:59 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.69 2012/09/10 23:28:14 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -481,7 +481,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -641,7 +641,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,
@@ -805,7 +805,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -965,7 +965,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,
@@ -3079,7 +3079,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -3239,7 +3239,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,
@@ -3729,7 +3729,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -3889,7 +3889,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,
@@ -4053,7 +4053,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -4213,7 +4213,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,

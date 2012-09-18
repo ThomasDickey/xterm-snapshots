@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.744 2012/09/09 21:14:47 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.745 2012/09/10 21:06:27 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -390,6 +390,13 @@ typedef struct {
 	String opt;
 	String desc;
 } OptionHelp;
+
+typedef	struct {
+    	int	count;			/* number of values in params[]	*/
+    	int	has_subparams;		/* true if there are any sub's	*/
+	int	is_sub[NPARAM];		/* true for subparam		*/
+	int	params[NPARAM];		/* parameter value		*/
+} PARAMS;
 
 typedef short ParmType;
 

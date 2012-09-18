@@ -573,9 +573,21 @@ CSI Pm m  Character Attributes (SGR).
             Ps = 1 0 0  -> Set foreground and background color to
           default.
 
-          If 88- or 256-color support is compiled, the following apply.
+          Xterm maintains a color palette whose entries are identified
+          by an index beginning with zero.  If 88- or 256-color support
+          is compiled, the following apply:
+          o   All parameters are decimal integers.
+          o   ISO-8613-3 can be interpreted in more than one way; xterm
+              allows the semicolons in this control to be replaced by
+              colons (but after the first colon, colons must be used).
+
+          These ISO-8613-3 controls are supported:
+            Ps = 3 8  ; 2  ; Pr ; Pg ; Pb -> Set foreground color to the
+          closest match in xterm's palette for the given RGB Pr/Pg/Pb.
             Ps = 3 8  ; 5  ; Ps -> Set foreground color to the second
           Ps.
+            Ps = 4 8  ; 2  ; Pr ; Pg ; Pb -> Set background color to the
+          closest match in xterm's palette for the given RGB Pr/Pg/Pb.
             Ps = 4 8  ; 5  ; Ps -> Set background color to the second
           Ps.
 

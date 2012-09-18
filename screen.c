@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.463 2012/09/09 21:25:01 tom Exp $ */
+/* $XTermId: screen.c,v 1.464 2012/09/10 23:10:55 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2381,6 +2381,9 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("copying rectangle\n"));
+
+    if (nparam > 4)
+	nparam = 4;
 
     if (validRect(xw, source)) {
 	XTermRect target;

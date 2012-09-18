@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1232 2012/09/09 21:39:11 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1250 2012/09/18 08:50:19 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -181,9 +181,16 @@ static void PreeditPosition(XtermWidget /* xw */ );
 #define	DEFAULT		-1
 #define BELLSUPPRESSMSEC 200
 
-static int nparam;
 static ANSI reply;
-static int param[NPARAM];
+static PARAMS parms;
+
+#define nparam parms.count
+
+#define InitParams()  parms.count = parms.is_sub[0] = parms.has_subparams = 0
+#define GetParam(n)   parms.params[(n)]
+#define SetParam(n,v) parms.params[(n)] = v
+#define ParamPair(n)  nparam - (n), parms.params + (n)
+#define ParamsDone()  InitParams()
 
 static jmp_buf vtjmpbuf;
 
@@ -1240,6 +1247,24 @@ which_table(Const PARSE_T * table)
 }
 #endif
 
+#if OPT_TRACE > 0
+static void
+dump_params(void)
+{
+    int n;
+    int arg;
+    TRACE(("params %d (%d)\n", nparam, parms.has_subparams));
+    for (arg = 1, n = 0; n < nparam; ++n) {
+	TRACE(("%3d.%d %d\n", arg, parms.is_sub[n], parms.params[n]));
+	if (!parms.is_sub[n])
+	    ++arg;
+    }
+}
+#define DumpParams() dump_params()
+#else
+#define DumpParams()		/* nothing */
+#endif
+
 	/* allocate larger buffer if needed/possible */
 #define SafeAlloc(type, area, used, size) \
 		type *new_string = area; \
@@ -1331,10 +1356,228 @@ select_charset(struct ParseState *sp, int type, int size)
     }
 }
 
+/*
+ * Given a parameter number, and subparameter (starting in each case from zero)
+ * return the corresponding index into the parameter array.  If the combination
+ * is not found, return -1.
+ */
+static int
+subparam_index(int p, int s)
+{
+    int result = -1;
+    int j, p2, s2;
+
+    for (j = p2 = 0; j < nparam; ++j, ++p2) {
+	if (parms.is_sub[j]) {
+	    s2 = 0;
+
+	    do {
+		if ((p == p2) && (s == s2)) {
+		    result = j;
+		    break;
+		}
+		++s2;
+	    } while ((++j < nparam) && (parms.is_sub[j - 1] < parms.is_sub[j]));
+
+	    if (result >= 0)
+		break;
+
+	    --j;		/* undo the last "while" */
+	} else if (p == p2) {
+	    if (s == 0) {
+		result = j;
+	    }
+	    break;
+	}
+    }
+    TRACE2(("...subparam_index %d.%d = %d\n", p + 1, s + 1, result));
+    return result;
+}
+
+/*
+ * Given an index into the parameter array, return the corresponding parameter
+ * number (starting from zero).
+ */
+static int
+param_number(int item)
+{
+    int result = -1;
+    int j, p;
+
+    for (j = p = 0; j < nparam; ++j, ++p) {
+	if (p >= item) {
+	    result = j;
+	    break;
+	}
+	if (parms.is_sub[j]) {
+	    while ((++j < nparam) && (parms.is_sub[j - 1] < parms.is_sub[j])) {
+		/* EMPTY */
+	    }
+	    --j;
+	}
+    }
+
+    TRACE2(("...param_number(%d) = %d\n", item, result));
+    return result;
+}
+
+static int
+get_subparam(int p, int s)
+{
+    int item = subparam_index(p, s);
+    int result = (item >= 0) ? parms.params[item] : DEFAULT;
+    TRACE(("...get_subparam[%d] = %d\n", item, result));
+    return result;
+}
+
+/*
+ * Check if the given item in the parameter array has subparameters.
+ * If so, return the number of subparameters to use as a loop limit, etc.
+ */
+static int
+param_has_subparams(int item)
+{
+    int result = 0;
+    if (parms.has_subparams) {
+	int n = subparam_index(item, 0);
+	if (n >= 0 && parms.is_sub[n]) {
+	    while (n++ < nparam && parms.is_sub[n - 1] < parms.is_sub[n]) {
+		result++;
+	    }
+	}
+    }
+    TRACE(("...param_has_subparams(%d) ->%d\n", item, result));
+    return result;
+}
+
+#if OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
+/*
+ * Some background -
+ *
+ * Todd Larason provided the initial changes to support 256-colors in July 1999.
+ * I pointed out that the description of SGR 38/48 in ECMA-48 was vague, and
+ * was unsure if there would be some standard using those codes.  His response
+ * was that this was documented (it turns out, in equally vague terms) in ITU
+ * T.416
+ *
+ * Discussing this with Todd Larason in mid-1999, my point was that given the
+ * high cost of obtaining ITU T.416 (ISO-8613-6), the standard was not going
+ * to be effective (more than $100 then, more than $200 in 2012)
+ *
+ * We overlooked the detail about ":" as a subparameter delimiter (documented
+ * in 5.4.t2 in ECMA-48).  Some discussion in KDE in mid-2006 led Lars Doelle
+ * to discuss the issue with me.  Lars' initial concern dealt with the fact
+ * that a sequence such as
+ *	CSI 38 ; 5 ; 1 m
+ * violated the principle that SGR parameters could be used in any order.
+ * Further discussion (see KDE #107487) resolved that the standard expected
+ * that the sequence would look like
+ *	CSI 38 ; 5 : 1 m
+ * which still violates that principle, since the "5:1" parameter has to
+ * follow the "38" to be useful.
+ *
+ * This function accepts either format (per request by Paul Leonerd Evans).
+ * It also accepts
+ *	CSI 38 : 5 : 1 m
+ * according to Lars' original assumption.
+ *
+ * By the way - all of the parameters are decimal integers.
+ */
+#define extended_colors_limit(n) ((n) == 5 ? 1 : ((n) == 2 ? 3 : 0))
+static Boolean
+parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
+{
+    Boolean result = False;
+    int item = *itemp;
+    int next = item;
+    int base = param_number(item);
+    int code = -1;
+    int values[3];		/* maximum number of subparameters */
+    int need = 0;		/* number of subparameters needed */
+    int have;
+    int n;
+    char buffer[80];
+
+    /*
+     * On entry, 'item' points to the 38/48 code in the parameter array.
+     * If that has subparameters, we will expect all of the values to
+     * be subparameters of that item.
+     */
+    if ((have = param_has_subparams(item)) != 0) {
+	/* accept CSI 38 : 5 : 1 m */
+	/* accept CSI 38 : 2 : 1 : 2 : 3 m */
+	code = get_subparam(base, 1);
+	need = extended_colors_limit(code);
+	next = item + have;
+	for (n = 0; n < need && n < 3; ++n) {
+	    values[n] = get_subparam(base, 2 + n);
+	}
+    } else if (++item < nparam) {
+	++base;
+	if ((have = param_has_subparams(item)) != 0) {
+	    /* accept CSI 38 ; 5 : 1 m */
+	    /* accept CSI 38 ; 2 : 1 : 2 : 3 m */
+	    code = get_subparam(base, 0);
+	    need = extended_colors_limit(code);
+	    next = base + have;
+	    for (n = 0; n < need && n < 3; ++n) {
+		values[n] = get_subparam(base, 1 + n);
+	    }
+	} else {
+	    /* accept CSI 38 ; 5 ; 1 m */
+	    /* accept CSI 38 ; 2 ; 1 ; 2 ; 3 m */
+	    code = GetParam(item);
+	    need = extended_colors_limit(code);
+	    next = item + need;
+	    for (n = 0; n < need && n < 3; ++n) {
+		values[n] = GetParam(item + 1 + n);
+	    }
+	}
+    }
+    item = next;
+
+    switch (code) {
+    case 2:
+	/* direct color in rgb space */
+	if ((values[0] >= 0 && values[0] < 256) &&
+	    (values[1] >= 0 && values[1] < 256) &&
+	    (values[2] >= 0 && values[2] < 256)) {
+	    sprintf(buffer, "rgb:%02x/%02x/%02x",
+		    values[0], values[1], values[2]);
+	    *colorp = xtermClosestColor(xw, buffer);
+	} else {
+	    *colorp = -1;
+	}
+	break;
+    case 5:
+	/* indexed color */
+	*colorp = values[0];
+	break;
+    default:
+	*colorp = -1;
+	break;
+    }
+
+    result = (*colorp >= 0 && *colorp < NUM_ANSI_COLORS);
+    TRACE(("...resulting color %d/%d %s\n",
+	   *colorp, NUM_ANSI_COLORS,
+	   result ? "OK" : "ERR"));
+
+    *itemp = item;
+    return result;
+}
+#endif /* ...extended_colors */
+
+static int
+optional_param(int which)
+{
+    return (nparam > which) ? GetParam(which) : DEFAULT;
+}
+
 static int
 zero_if_default(int which)
 {
-    int result = (nparam > which) ? param[which] : 0;
+    int result = (nparam > which) ? GetParam(which) : 0;
     if (result <= 0)
 	result = 0;
     return result;
@@ -1343,7 +1586,7 @@ zero_if_default(int which)
 static int
 one_if_default(int which)
 {
-    int result = (nparam > which) ? param[which] : 0;
+    int result = (nparam > which) ? GetParam(which) : 0;
     if (result <= 0)
 	result = 1;
     return result;
@@ -1355,7 +1598,7 @@ one_if_default(int which)
 #define ParseSOS(screen) 0
 #endif
 
-#define ResetState(sp) (sp)->parsestate = (sp)->groundtable
+#define ResetState(sp) ParamsDone(), (sp)->parsestate = (sp)->groundtable
 
 static void
 illegal_parse(XtermWidget xw, unsigned c, struct ParseState *sp)
@@ -1390,9 +1633,9 @@ static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
     TScreen *screen = TScreenOf(xw);
-    int row;
-    int col;
+    int item;
     int count;
+    int value;
     int laststate;
     int thischar = -1;
     XTermRect myRect;
@@ -1479,19 +1722,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 #if OPT_VT52_MODE
 	if (sp->vt52_cup) {
-	    if (nparam < NPARAM)
-		param[nparam++] = (int) (c & 0x7f) - 32;
+	    if (nparam < NPARAM) {
+		SetParam(nparam++, (int) (c & 0x7f) - 32);
+		parms.is_sub[nparam] = 0;
+	    }
 	    if (nparam < 2)
 		continue;
 	    sp->vt52_cup = False;
-	    if ((row = param[0]) < 0)
-		row = 0;
-	    if ((col = param[1]) < 0)
-		col = 0;
-	    CursorSet(screen, row, col, xw->flags);
+	    CursorSet(screen, zero_if_default(0), zero_if_default(1), xw->flags);
 	    sp->parsestate = vt52_table;
-	    param[0] = 0;
-	    param[1] = 0;
+	    SetParam(0, 0);
+	    SetParam(1, 0);
 	    continue;
 	}
 #endif
@@ -1693,7 +1934,54 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->string_used = 0;
 	}
 
+	DumpParams();
 	TRACE(("parse %04X -> %d %s\n", c, sp->nextstate, which_table(sp->parsestate)));
+
+	/*
+	 * If the parameter list has subparameters (tokens separated by ":")
+	 * reject any controls that do not accept subparameters.
+	 */
+	if (parms.has_subparams) {
+	    switch (sp->nextstate) {
+	    case CASE_GROUND_STATE:
+	    case CASE_CSI_IGNORE:
+		/* FALLTHRU */
+
+	    case CASE_ESC_DIGIT:
+	    case CASE_ESC_SEMI:
+	    case CASE_ESC_COLON:
+		/* these states are required to parse parameter lists */
+		break;
+
+	    case CASE_SGR:
+		TRACE(("...possible subparam usage\n"));
+		break;
+
+	    case CASE_CSI_DEC_DOLLAR_STATE:
+	    case CASE_CSI_DOLLAR_STATE:
+	    case CASE_CSI_EX_STATE:
+	    case CASE_CSI_QUOTE_STATE:
+	    case CASE_CSI_SPACE_STATE:
+	    case CASE_CSI_STAR_STATE:
+	    case CASE_CSI_TICK_STATE:
+	    case CASE_DEC2_STATE:
+	    case CASE_DEC3_STATE:
+	    case CASE_DEC_STATE:
+		/* use this branch when we do not yet have the final character */
+		TRACE(("...unexpected subparam usage\n"));
+		ParamsDone();
+		sp->nextstate = CASE_CSI_IGNORE;
+		break;
+
+	    default:
+		/* use this branch for cases where we have the final character
+		 * in the table that processed the parameter list.
+		 */
+		TRACE(("...unexpected subparam usage\n"));
+		ResetState(sp);
+		continue;
+	    }
+	}
 
 	switch (sp->nextstate) {
 	case CASE_PRINT:
@@ -1751,7 +2039,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_VT52_CUP:
 	    TRACE(("CASE_VT52_CUP - VT52 cursor addressing\n"));
 	    sp->vt52_cup = True;
-	    nparam = 0;
+	    InitParams();
 	    break;
 
 	case CASE_VT52_IGNORE:
@@ -1776,8 +2064,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_CBT:
 	    TRACE(("CASE_CBT\n"));
 	    /* cursor backward tabulation */
-	    if ((count = param[0]) == DEFAULT)
-		count = 1;
+	    count = one_if_default(0);
 	    while ((count-- > 0)
 		   && (TabToPrevStop(xw))) ;
 	    ResetState(sp);
@@ -1786,8 +2073,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_CHT:
 	    TRACE(("CASE_CHT\n"));
 	    /* cursor forward tabulation */
-	    if ((count = param[0]) == DEFAULT)
-		count = 1;
+	    count = one_if_default(0);
 	    while ((count-- > 0)
 		   && (TabToNextStop(xw))) ;
 	    ResetState(sp);
@@ -1875,11 +2161,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_ESC_DIGIT:
 	    /* digit in csi or dec mode */
 	    if (nparam > 0) {
-		if ((row = param[nparam - 1]) == DEFAULT)
-		    row = 0;
-		param[nparam - 1] = (10 * row) + ((int) c - '0');
-		if (param[nparam - 1] > 65535)
-		    param[nparam - 1] = 65535;
+		value = zero_if_default(nparam - 1);
+		SetParam(nparam - 1, (10 * value) + ((int) c - '0'));
+		if (GetParam(nparam - 1) > 65535)
+		    SetParam(nparam - 1, 65535);
 		if (sp->parsestate == csi_table)
 		    sp->parsestate = csi2_table;
 	    }
@@ -1887,10 +2172,36 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_ESC_SEMI:
 	    /* semicolon in csi or dec mode */
-	    if (nparam < NPARAM)
-		param[nparam++] = DEFAULT;
+	    if (nparam < NPARAM) {
+		parms.is_sub[nparam] = 0;
+		SetParam(nparam++, DEFAULT);
+	    }
 	    if (sp->parsestate == csi_table)
 		sp->parsestate = csi2_table;
+	    break;
+
+	    /*
+	     * A _few_ commands accept colon-separated subparameters.
+	     * Mark the parameter list so that we can exclude (most) bogus
+	     * commands with simple/fast checks.
+	     */
+	case CASE_ESC_COLON:
+	    if (nparam < NPARAM) {
+		parms.has_subparams = 1;
+		if (nparam == 0) {
+		    parms.is_sub[nparam] = 1;
+		    SetParam(nparam++, DEFAULT);
+		} else if (parms.is_sub[nparam - 1] == 0) {
+		    parms.is_sub[nparam - 1] = 1;
+		    parms.is_sub[nparam] = 2;
+		    parms.params[nparam] = 0;
+		    ++nparam;
+		} else {
+		    parms.is_sub[nparam] = 1 + parms.is_sub[nparam - 1];
+		    parms.params[nparam] = 0;
+		    ++nparam;
+		}
+	    }
 	    break;
 
 	case CASE_DEC_STATE:
@@ -1910,41 +2221,31 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_ICH:
 	    TRACE(("CASE_ICH - insert char\n"));
-	    if ((row = param[0]) < 1)
-		row = 1;
-	    InsertChar(xw, (unsigned) row);
+	    InsertChar(xw, (unsigned) one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_CUU:
 	    TRACE(("CASE_CUU - cursor up\n"));
-	    if ((row = param[0]) < 1)
-		row = 1;
-	    CursorUp(screen, row);
+	    CursorUp(screen, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_CUD:
 	    TRACE(("CASE_CUD - cursor down\n"));
-	    if ((row = param[0]) < 1)
-		row = 1;
-	    CursorDown(screen, row);
+	    CursorDown(screen, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_CUF:
 	    TRACE(("CASE_CUF - cursor forward\n"));
-	    if ((col = param[0]) < 1)
-		col = 1;
-	    CursorForward(xw, col);
+	    CursorForward(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_CUB:
 	    TRACE(("CASE_CUB - cursor backward\n"));
-	    if ((col = param[0]) < 1)
-		col = 1;
-	    CursorBack(xw, col);
+	    CursorBack(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
@@ -1953,43 +2254,37 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if_OPT_XMC_GLITCH(screen, {
 		Jump_XMC(xw);
 	    });
-	    if ((row = param[0]) < 1)
-		row = 1;
-	    if (nparam < 2 || (col = param[1]) < 1)
-		col = 1;
-	    CursorSet(screen, row - 1, col - 1, xw->flags);
+	    CursorSet(screen, one_if_default(0) - 1, one_if_default(1) - 1, xw->flags);
 	    ResetState(sp);
 	    break;
 
 	case CASE_VPA:
 	    TRACE(("CASE_VPA - vertical position absolute\n"));
-	    if ((row = param[0]) < 1)
-		row = 1;
-	    CursorSet(screen, row - 1, CursorCol(xw), xw->flags);
+	    CursorSet(screen, one_if_default(0) - 1, CursorCol(xw), xw->flags);
 	    ResetState(sp);
 	    break;
 
 	case CASE_HPA:
 	    TRACE(("CASE_HPA - horizontal position absolute\n"));
-	    if ((col = param[0]) < 1)
-		col = 1;
-	    CursorSet(screen, CursorRow(xw), col - 1, xw->flags);
+	    CursorSet(screen, CursorRow(xw), one_if_default(0) - 1, xw->flags);
 	    ResetState(sp);
 	    break;
 
 	case CASE_VPR:
 	    TRACE(("CASE_VPR - vertical position relative\n"));
-	    if ((row = param[0]) < 1)
-		row = 1;
-	    CursorSet(screen, CursorRow(xw) + row, CursorCol(xw), xw->flags);
+	    CursorSet(screen,
+		      CursorRow(xw) + one_if_default(0),
+		      CursorCol(xw),
+		      xw->flags);
 	    ResetState(sp);
 	    break;
 
 	case CASE_HPR:
 	    TRACE(("CASE_HPR - horizontal position relative\n"));
-	    if ((col = param[0]) < 1)
-		col = 1;
-	    CursorSet(screen, CursorRow(xw), CursorCol(xw) + col, xw->flags);
+	    CursorSet(screen,
+		      CursorRow(xw),
+		      CursorCol(xw) + one_if_default(0),
+		      xw->flags);
 	    ResetState(sp);
 	    break;
 
@@ -2005,46 +2300,40 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_ED:
 	    TRACE(("CASE_ED - erase display\n"));
-	    do_erase_display(xw, param[0], OFF_PROTECT);
+	    do_erase_display(xw, zero_if_default(0), OFF_PROTECT);
 	    ResetState(sp);
 	    break;
 
 	case CASE_EL:
 	    TRACE(("CASE_EL - erase line\n"));
-	    do_erase_line(xw, param[0], OFF_PROTECT);
+	    do_erase_line(xw, zero_if_default(0), OFF_PROTECT);
 	    ResetState(sp);
 	    break;
 
 	case CASE_ECH:
 	    TRACE(("CASE_ECH - erase char\n"));
 	    /* ECH */
-	    ClearRight(xw, param[0] < 1 ? 1 : param[0]);
+	    ClearRight(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_IL:
 	    TRACE(("CASE_IL - insert line\n"));
-	    if ((row = param[0]) < 1)
-		row = 1;
 	    set_cur_col(screen, ScrnLeftMargin(xw));
-	    InsertLine(xw, row);
+	    InsertLine(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_DL:
 	    TRACE(("CASE_DL - delete line\n"));
-	    if ((row = param[0]) < 1)
-		row = 1;
 	    set_cur_col(screen, ScrnLeftMargin(xw));
-	    DeleteLine(xw, row);
+	    DeleteLine(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_DCH:
 	    TRACE(("CASE_DCH - delete char\n"));
-	    if ((row = param[0]) < 1)
-		row = 1;
-	    DeleteChar(xw, (unsigned) row);
+	    DeleteChar(xw, (unsigned) one_if_default(0));
 	    ResetState(sp);
 	    break;
 
@@ -2054,7 +2343,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	     * A zero-parameter is used to reset the mouse mode, and is
 	     * not useful for scrolling anyway.
 	     */
-	    if (nparam > 1 || param[0] == 0) {
+	    if (nparam > 1 || GetParam(0) == 0) {
 		CELL start;
 
 		TRACE(("CASE_TRACK_MOUSE\n"));
@@ -2062,17 +2351,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * specified rows
 		 */
 		start.row = one_if_default(2) - 1;
-		start.col = param[1] - 1;
+		start.col = GetParam(1) - 1;
 		TrackMouse(xw,
-			   param[0],
+			   GetParam(0),
 			   &start,
-			   param[3] - 1, param[4] - 2);
+			   GetParam(3) - 1, GetParam(4) - 2);
 	    } else {
 		TRACE(("CASE_SD - scroll down\n"));
 		/* SD */
-		if ((count = param[0]) < 1)
-		    count = 1;
-		RevScroll(xw, count);
+		RevScroll(xw, one_if_default(0));
 		do_xevents();
 	    }
 	    ResetState(sp);
@@ -2088,21 +2375,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		ResetState(sp);
 		break;
 	    });
-	    param[0] = DEFAULT;	/* Default ID parameter */
+	    SetParam(0, DEFAULT);	/* Default ID parameter */
 	    /* FALLTHRU */
 	case CASE_DA1:
 	    TRACE(("CASE_DA1\n"));
-	    if (param[0] <= 0) {	/* less than means DEFAULT */
+	    if (GetParam(0) <= 0) {	/* less than means DEFAULT */
 		count = 0;
 		init_reply(ANSI_CSI);
 		reply.a_pintro = '?';
 
-		/* The first param corresponds to the highest
-		 * operating level (i.e., service level) of the
-		 * emulation.  A DEC terminal can be setup to
-		 * respond with a different DA response, but
-		 * there's no control sequence that modifies this.
-		 * We set it via a resource.
+		/*
+		 * The first parameter corresponds to the highest operating
+		 * level (i.e., service level) of the emulation.  A DEC
+		 * terminal can be setup to respond with a different DA
+		 * response, but there's no control sequence that modifies
+		 * this.  We set it via a resource.
 		 */
 		if (screen->terminal_id < 200) {
 		    switch (screen->terminal_id) {
@@ -2152,7 +2439,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DA2:
 	    TRACE(("CASE_DA2\n"));
-	    if (param[0] <= 0) {	/* less than means DEFAULT */
+	    if (GetParam(0) <= 0) {	/* less than means DEFAULT */
 		count = 0;
 		init_reply(ANSI_CSI);
 		reply.a_pintro = '>';
@@ -2207,7 +2494,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECRPTUI:
 	    TRACE(("CASE_DECRPTUI\n"));
 	    if ((screen->vtXX_level >= 4)
-		&& (param[0] <= 0)) {	/* less than means DEFAULT */
+		&& (GetParam(0) <= 0)) {	/* less than means DEFAULT */
 		unparseputc1(xw, ANSI_DCS);
 		unparseputc(xw, '!');
 		unparseputc(xw, '|');
@@ -2220,9 +2507,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_TBC:
 	    TRACE(("CASE_TBC - tab clear\n"));
-	    if ((row = param[0]) <= 0)	/* less than means default */
+	    if ((value = GetParam(0)) <= 0)	/* less than means default */
 		TabClear(xw->tabs, screen->cur_col);
-	    else if (row == 3)
+	    else if (value == 3)
 		TabZonk(xw->tabs);
 	    ResetState(sp);
 	    break;
@@ -2240,12 +2527,34 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_SGR:
-	    for (row = 0; row < nparam; ++row) {
+	    for (item = 0; item < nparam; ++item) {
+		int op = GetParam(item);
+
 		if_OPT_XMC_GLITCH(screen, {
-		    Mark_XMC(xw, param[row]);
+		    Mark_XMC(xw, op);
 		});
-		TRACE(("CASE_SGR %d\n", param[row]));
-		switch (param[row]) {
+		TRACE(("CASE_SGR %d\n", op));
+
+		/*
+		 * Only SGR 38/48 accept subparameters, and in those cases
+		 * the values will not be seen at this point.
+		 */
+		if (param_has_subparams(item)) {
+		    switch (op) {
+		    case 38:
+		    case 48:
+			if_OPT_ISO_COLORS(screen, {
+			    break;
+			});
+		    default:
+			TRACE(("...unexpected subparameter in SGR\n"));
+			op = 9999;
+			ResetState(sp);
+			break;
+		    }
+		}
+
+		switch (op) {
 		case DEFAULT:
 		case 0:
 		    UIntClr(xw->flags,
@@ -2318,33 +2627,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 36:
 		case 37:
 		    if_OPT_ISO_COLORS(screen, {
-			xw->sgr_foreground = (param[row] - 30);
+			xw->sgr_foreground = (op - 30);
 			xw->sgr_extended = False;
 			setExtendedFG(xw);
 		    });
 		    break;
 		case 38:
-		    /* This is more complicated than I'd
-		       like, but it should properly eat all
-		       the parameters for unsupported modes
+		    /* This is more complicated than I'd like, but it should
+		     * properly eat all the parameters for unsupported modes.
 		     */
 		    if_OPT_ISO_COLORS(screen, {
-			row++;
-			if (row < nparam) {
-			    switch (param[row]) {
-			    case 5:
-				row++;
-				if (row < nparam &&
-				    param[row] < NUM_ANSI_COLORS) {
-				    xw->sgr_foreground = param[row];
-				    xw->sgr_extended = True;
-				    setExtendedFG(xw);
-				}
-				break;
-			    default:
-				row += 7;
-				break;
-			    }
+			if (parse_extended_colors(xw, &value, &item)) {
+			    xw->sgr_foreground = value;
+			    xw->sgr_extended = True;
+			    setExtendedFG(xw);
 			}
 		    });
 		    break;
@@ -2362,27 +2658,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 46:
 		case 47:
 		    if_OPT_ISO_COLORS(screen, {
-			xw->sgr_background = (param[row] - 40);
+			xw->sgr_background = (op - 40);
 			setExtendedBG(xw);
 		    });
 		    break;
 		case 48:
 		    if_OPT_ISO_COLORS(screen, {
-			row++;
-			if (row < nparam) {
-			    switch (param[row]) {
-			    case 5:
-				row++;
-				if (row < nparam &&
-				    param[row] < NUM_ANSI_COLORS) {
-				    xw->sgr_background = param[row];
-				    setExtendedBG(xw);
-				}
-				break;
-			    default:
-				row += 7;
-				break;
-			    }
+			if (parse_extended_colors(xw, &value, &item)) {
+			    xw->sgr_background = value;
+			    setExtendedBG(xw);
 			}
 		    });
 		    break;
@@ -2400,7 +2684,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 96:
 		case 97:
 		    if_OPT_AIX_COLORS(screen, {
-			xw->sgr_foreground = (param[row] - 90 + 8);
+			xw->sgr_foreground = (op - 90 + 8);
 			xw->sgr_extended = False;
 			setExtendedFG(xw);
 		    });
@@ -2421,7 +2705,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 106:
 		case 107:
 		    if_OPT_AIX_COLORS(screen, {
-			xw->sgr_background = (param[row] - 100 + 8);
+			xw->sgr_background = (op - 100 + 8);
 			setExtendedBG(xw);
 		    });
 		    break;
@@ -2443,7 +2727,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    reply.a_inters = 0;
 	    reply.a_final = 'n';
 
-	    switch (param[0]) {
+	    switch (GetParam(0)) {
 	    case 5:
 		TRACE(("...request operating status\n"));
 		/* operating status */
@@ -2518,7 +2802,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if (sp->private_function
 		    && screen->vtXX_level >= 4) {	/* VT420 */
 		    init_reply(ANSI_DCS);
-		    reply.a_param[count++] = (ParmType) param[1];	/* PID */
+		    reply.a_param[count++] = (ParmType) GetParam(1);	/* PID */
 		    reply.a_delim = "!~";	/* delimiter */
 		    reply.a_radix[count] = 16;	/* use hex */
 		    reply.a_param[count++] = 0;		/* no data */
@@ -2551,13 +2835,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_MC:
 	    TRACE(("CASE_MC - media control\n"));
-	    xtermMediaControl(xw, param[0], False);
+	    xtermMediaControl(xw, GetParam(0), False);
 	    ResetState(sp);
 	    break;
 
 	case CASE_DEC_MC:
 	    TRACE(("CASE_DEC_MC - DEC media control\n"));
-	    xtermMediaControl(xw, param[0], True);
+	    xtermMediaControl(xw, GetParam(0), True);
 	    ResetState(sp);
 	    break;
 
@@ -2580,9 +2864,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    {
 		int top;
 		int bot;
-		if ((top = param[0]) < 1)
-		    top = 1;
-		if (nparam < 2 || (bot = param[1]) == DEFAULT
+		top = one_if_default(0);
+		if (nparam < 2 || (bot = GetParam(1)) == DEFAULT
 		    || bot > MaxRows(screen)
 		    || bot == 0)
 		    bot = MaxRows(screen);
@@ -2599,13 +2882,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECREQTPARM:
 	    TRACE(("CASE_DECREQTPARM\n"));
 	    if (screen->terminal_id < 200) {	/* VT102 */
-		if ((row = param[0]) == DEFAULT)
-		    row = 0;
-		if (row == 0 || row == 1) {
+		value = zero_if_default(0);
+		if (value == 0 || value == 1) {
 		    init_reply(ANSI_CSI);
 		    reply.a_pintro = 0;
 		    reply.a_nparam = 7;
-		    reply.a_param[0] = (ParmType) (row + 2);
+		    reply.a_param[0] = (ParmType) (value + 2);
 		    reply.a_param[1] = 1;	/* no parity */
 		    reply.a_param[2] = 1;	/* eight bits */
 		    reply.a_param[3] = 128;	/* transmit 38.4k baud */
@@ -2664,9 +2946,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		int right;
 
 		TRACE(("CASE_DECSLRM - set left and right margin\n"));
-		if ((left = param[0]) < 1)
-		    left = 1;
-		if (nparam < 2 || (right = param[1]) == DEFAULT
+		left = one_if_default(0);
+		if (nparam < 2 || (right = GetParam(1)) == DEFAULT
 		    || right > MaxCols(screen)
 		    || right == 0)
 		    right = MaxCols(screen);
@@ -2729,7 +3010,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 		HideCursor();
 
-		switch (param[0]) {
+		switch (GetParam(0)) {
 		case 0:
 		case 1:
 		case DEFAULT:
@@ -2772,7 +3053,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECLL\n"));
 	    if (nparam > 0) {
 		for (count = 0; count < nparam; ++count) {
-		    switch (param[count]) {
+		    int op = zero_if_default(count);
+		    switch (op) {
 		    case 0:
 		    case DEFAULT:
 			xtermClearLEDs(screen);
@@ -2780,12 +3062,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    case 1:
 		    case 2:
 		    case 3:
-			xtermShowLED(screen, (Cardinal) param[count], True);
+			xtermShowLED(screen,
+				     (Cardinal) op,
+				     True);
 			break;
 		    case 21:
 		    case 22:
 		    case 23:
-			xtermShowLED(screen, (Cardinal) (param[count] - 20), True);
+			xtermShowLED(screen,
+				     (Cardinal) (op - 20),
+				     True);
 			break;
 		    }
 		}
@@ -2837,7 +3123,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECSCL:
-	    TRACE(("CASE_DECSCL(%d,%d)\n", param[0], param[1]));
+	    TRACE(("CASE_DECSCL(%d,%d)\n", GetParam(0), GetParam(1)));
 	    /*
 	     * This changes the emulation level, and is not recognized by
 	     * VT100s.
@@ -2847,8 +3133,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 * Disallow unrecognized parameters, as well as attempts to set
 		 * the operating level higher than the given terminal-id.
 		 */
-		if (param[0] >= 61
-		    && param[0] <= 60 + (screen->terminal_id / 100)) {
+		if (GetParam(0) >= 61
+		    && GetParam(0) <= 60 + (screen->terminal_id / 100)) {
 		    /*
 		     * VT300, VT420, VT520 manuals claim that DECSCL does a
 		     * hard reset (RIS).  VT220 manual states that it is a soft
@@ -2857,8 +3143,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		     */
 		    ReallyReset(xw, False, False);
 		    init_parser(xw, sp);
-		    screen->vtXX_level = param[0] - 60;
-		    if (param[0] > 61) {
+		    screen->vtXX_level = GetParam(0) - 60;
+		    if (GetParam(0) > 61) {
 			switch (zero_if_default(1)) {
 			case 1:
 			    show_8bit_control(False);
@@ -2877,10 +3163,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSCA:
 	    TRACE(("CASE_DECSCA\n"));
 	    screen->protected_mode = DEC_PROTECT;
-	    if (param[0] <= 0 || param[0] == 2) {
+	    if (GetParam(0) <= 0 || GetParam(0) == 2) {
 		UIntClr(xw->flags, PROTECTED);
 		TRACE(("...clear PROTECTED\n"));
-	    } else if (param[0] == 1) {
+	    } else if (GetParam(0) == 1) {
 		xw->flags |= PROTECTED;
 		TRACE(("...set PROTECTED\n"));
 	    }
@@ -2889,13 +3175,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECSED:
 	    TRACE(("CASE_DECSED\n"));
-	    do_erase_display(xw, param[0], DEC_PROTECT);
+	    do_erase_display(xw, zero_if_default(0), DEC_PROTECT);
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECSEL:
 	    TRACE(("CASE_DECSEL\n"));
-	    do_erase_line(xw, param[0], DEC_PROTECT);
+	    do_erase_line(xw, zero_if_default(0), DEC_PROTECT);
 	    ResetState(sp);
 	    break;
 
@@ -2975,25 +3261,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_SU:
 	    TRACE(("CASE_SU - scroll up\n"));
-	    if ((count = param[0]) < 1)
-		count = 1;
-	    xtermScroll(xw, count);
+	    xtermScroll(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_SL:		/* ISO 6429, non-DEC */
 	    TRACE(("CASE_SL - scroll left\n"));
-	    if ((count = param[0]) < 1)
-		count = 1;
-	    xtermScrollLR(xw, count, True);
+	    xtermScrollLR(xw, one_if_default(0), True);
 	    ResetState(sp);
 	    break;
 
 	case CASE_SR:		/* ISO 6429, non-DEC */
 	    TRACE(("CASE_SR - scroll right\n"));
-	    if ((count = param[0]) < 1)
-		count = 1;
-	    xtermScrollLR(xw, count, False);
+	    xtermScrollLR(xw, one_if_default(0), False);
 	    ResetState(sp);
 	    break;
 
@@ -3001,9 +3281,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DC - delete column\n"));
 	    if (screen->vtXX_level >= 4
 		&& IsLeftRightMode(xw)) {
-		if ((count = param[0]) < 1)
-		    count = 1;
-		xtermColScroll(xw, count, True, screen->cur_col);
+		xtermColScroll(xw, one_if_default(0), True, screen->cur_col);
 	    }
 	    ResetState(sp);
 	    break;
@@ -3012,9 +3290,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_IC - insert column\n"));
 	    if (screen->vtXX_level >= 4
 		&& IsLeftRightMode(xw)) {
-		if ((count = param[0]) < 1)
-		    count = 1;
-		xtermColScroll(xw, count, False, screen->cur_col);
+		xtermColScroll(xw, one_if_default(0), False, screen->cur_col);
 	    }
 	    ResetState(sp);
 	    break;
@@ -3044,13 +3320,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_CPL:
 	    TRACE(("CASE_CPL - cursor prev line\n"));
-	    CursorPrevLine(xw, param[0]);
+	    CursorPrevLine(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_CNL:
 	    TRACE(("CASE_CNL - cursor next line\n"));
-	    CursorNextLine(xw, param[0]);
+	    CursorNextLine(xw, one_if_default(0));
 	    ResetState(sp);
 	    break;
 
@@ -3087,8 +3363,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_CSI_STATE:
 	    /* enter csi state */
-	    nparam = 1;
-	    param[0] = DEFAULT;
+	    InitParams();
+	    SetParam(nparam++, DEFAULT);
 	    sp->parsestate = csi_table;
 	    break;
 
@@ -3112,13 +3388,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECEFR - Enable Filter Rectangle\n"));
 	    if (screen->send_mouse_pos == DEC_LOCATOR) {
 		MotionOff(screen, xw);
-		if ((screen->loc_filter_top = param[0]) < 1)
+		if ((screen->loc_filter_top = GetParam(0)) < 1)
 		    screen->loc_filter_top = LOC_FILTER_POS;
-		if (nparam < 2 || (screen->loc_filter_left = param[1]) < 1)
+		if (nparam < 2
+		    || (screen->loc_filter_left = GetParam(1)) < 1)
 		    screen->loc_filter_left = LOC_FILTER_POS;
-		if (nparam < 3 || (screen->loc_filter_bottom = param[2]) < 1)
+		if (nparam < 3
+		    || (screen->loc_filter_bottom = GetParam(2)) < 1)
 		    screen->loc_filter_bottom = LOC_FILTER_POS;
-		if (nparam < 4 || (screen->loc_filter_right = param[3]) < 1)
+		if (nparam < 4
+		    || (screen->loc_filter_right = GetParam(3)) < 1)
 		    screen->loc_filter_right = LOC_FILTER_POS;
 		InitLocatorFilter(xw);
 	    }
@@ -3127,19 +3406,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECELR:
 	    MotionOff(screen, xw);
-	    if (param[0] <= 0 || param[0] > 2) {
+	    if (GetParam(0) <= 0 || GetParam(0) > 2) {
 		screen->send_mouse_pos = MOUSE_OFF;
 		TRACE(("DECELR - Disable Locator Reports\n"));
 	    } else {
 		TRACE(("DECELR - Enable Locator Reports\n"));
 		screen->send_mouse_pos = DEC_LOCATOR;
 		xtermShowPointer(xw, True);
-		if (param[0] == 2) {
+		if (GetParam(0) == 2) {
 		    screen->locator_reset = True;
 		} else {
 		    screen->locator_reset = False;
 		}
-		if (nparam < 2 || param[1] != 1) {
+		if (nparam < 2 || GetParam(1) != 1) {
 		    screen->locator_pixels = False;
 		} else {
 		    screen->locator_pixels = True;
@@ -3152,8 +3431,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSLE:
 	    TRACE(("DECSLE - Select Locator Events\n"));
 	    for (count = 0; count < nparam; ++count) {
-		switch (param[count]) {
-		case DEFAULT:
+		switch (zero_if_default(count)) {
 		case 0:
 		    MotionOff(screen, xw);
 		    screen->loc_filter = False;
@@ -3178,7 +3456,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECRQLP:
 	    TRACE(("DECRQLP - Request Locator Position\n"));
-	    if (param[0] < 2) {
+	    if (GetParam(0) < 2) {
 		/* Issue DECLRP Locator Position Report */
 		GetLocatorPosition(xw);
 	    }
@@ -3210,10 +3488,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		int checksum;
 
 		TRACE(("CASE_DECRQCRA - Request checksum of rectangular area\n"));
-		xtermCheckRect(xw, nparam, param, &checksum);
+		xtermCheckRect(xw, ParamPair(0), &checksum);
 		init_reply(ANSI_DCS);
 		count = 0;
-		reply.a_param[count++] = (ParmType) param[1];	/* PID */
+		reply.a_param[count++] = (ParmType) GetParam(1);	/* PID */
 		reply.a_delim = "!~";	/* delimiter */
 		reply.a_radix[count] = 16;
 		reply.a_param[count++] = (ParmType) checksum;
@@ -3226,8 +3504,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECCRA:
 	    if (screen->vtXX_level >= 4) {
 		TRACE(("CASE_DECCRA - Copy rectangular area\n"));
-		xtermParseRect(xw, nparam, param, &myRect);
-		ScrnCopyRectangle(xw, &myRect, nparam - 5, param + 5);
+		xtermParseRect(xw, ParamPair(0), &myRect);
+		ScrnCopyRectangle(xw, &myRect, ParamPair(5));
 	    }
 	    ResetState(sp);
 	    break;
@@ -3235,7 +3513,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECERA:
 	    if (screen->vtXX_level >= 4) {
 		TRACE(("CASE_DECERA - Erase rectangular area\n"));
-		xtermParseRect(xw, nparam, param, &myRect);
+		xtermParseRect(xw, ParamPair(0), &myRect);
 		ScrnFillRectangle(xw, &myRect, ' ', 0, True);
 	    }
 	    ResetState(sp);
@@ -3243,12 +3521,14 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECFRA:
 	    if (screen->vtXX_level >= 4) {
+		value = zero_if_default(0);
+
 		TRACE(("CASE_DECFRA - Fill rectangular area\n"));
 		if (nparam > 0
-		    && ((param[0] >= 32 && param[0] <= 126)
-			|| (param[0] >= 160 && param[0] <= 255))) {
-		    xtermParseRect(xw, nparam - 1, param + 1, &myRect);
-		    ScrnFillRectangle(xw, &myRect, param[0], xw->flags, True);
+		    && ((value >= 32 && value <= 126)
+			|| (value >= 160 && value <= 255))) {
+		    xtermParseRect(xw, ParamPair(1), &myRect);
+		    ScrnFillRectangle(xw, &myRect, value, xw->flags, True);
 		}
 	    }
 	    ResetState(sp);
@@ -3257,7 +3537,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSERA:
 	    if (screen->vtXX_level >= 4) {
 		TRACE(("CASE_DECSERA - Selective erase rectangular area\n"));
-		xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
+		xtermParseRect(xw, ParamPair(0), &myRect);
 		ScrnWipeRectangle(xw, &myRect);
 	    }
 	    ResetState(sp);
@@ -3265,15 +3545,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECSACE:
 	    TRACE(("CASE_DECSACE - Select attribute change extent\n"));
-	    screen->cur_decsace = param[0];
+	    screen->cur_decsace = zero_if_default(0);
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECCARA:
 	    if (screen->vtXX_level >= 4) {
 		TRACE(("CASE_DECCARA - Change attributes in rectangular area\n"));
-		xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
-		ScrnMarkRectangle(xw, &myRect, False, nparam - 4, param + 4);
+		xtermParseRect(xw, ParamPair(0), &myRect);
+		ScrnMarkRectangle(xw, &myRect, False, ParamPair(4));
 	    }
 	    ResetState(sp);
 	    break;
@@ -3281,21 +3561,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECRARA:
 	    if (screen->vtXX_level >= 4) {
 		TRACE(("CASE_DECRARA - Reverse attributes in rectangular area\n"));
-		xtermParseRect(xw, nparam > 4 ? 4 : nparam, param, &myRect);
-		ScrnMarkRectangle(xw, &myRect, True, nparam - 4, param + 4);
+		xtermParseRect(xw, ParamPair(0), &myRect);
+		ScrnMarkRectangle(xw, &myRect, True, ParamPair(4));
 	    }
 	    ResetState(sp);
 	    break;
 
 	case CASE_RQM:
 	    TRACE(("CASE_RQM\n"));
-	    do_rpm(xw, nparam, param);
+	    do_rpm(xw, ParamPair(0));
 	    ResetState(sp);
 	    break;
 
 	case CASE_DECRQM:
 	    TRACE(("CASE_DECRQM\n"));
-	    do_decrpm(xw, nparam, param);
+	    do_decrpm(xw, ParamPair(0));
 	    ResetState(sp);
 	    break;
 
@@ -3365,7 +3645,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		sp->lastchar < 256 &&
 		sp->groundtable[E2A(sp->lastchar)] == CASE_PRINT) {
 		IChar repeated[2];
-		count = (param[0] < 1) ? 1 : param[0];
+		count = one_if_default(0);
 		repeated[0] = (IChar) sp->lastchar;
 		while (count-- > 0) {
 		    dotext(xw,
@@ -3454,16 +3734,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_SET_MOD_FKEYS:
 	    TRACE(("CASE_SET_MOD_FKEYS\n"));
 	    if (nparam >= 1) {
-		set_mod_fkeys(xw, param[0], nparam > 1 ? param[1] : DEFAULT, True);
+		set_mod_fkeys(xw,
+			      GetParam(0),
+			      ((nparam > 1)
+			       ? GetParam(1)
+			       : DEFAULT),
+			      True);
 	    } else {
-		for (row = 1; row <= 5; ++row)
-		    set_mod_fkeys(xw, row, DEFAULT, True);
+		for (value = 1; value <= 5; ++value)
+		    set_mod_fkeys(xw, value, DEFAULT, True);
 	    }
 	    break;
 	case CASE_SET_MOD_FKEYS0:
 	    TRACE(("CASE_SET_MOD_FKEYS0\n"));
-	    if (nparam >= 1 && param[0] != DEFAULT) {
-		set_mod_fkeys(xw, param[0], -1, False);
+	    if (nparam >= 1 && GetParam(0) != DEFAULT) {
+		set_mod_fkeys(xw, GetParam(0), -1, False);
 	    } else {
 		xw->keyboard.modify_now.function_keys = -1;
 	    }
@@ -3471,8 +3756,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #endif
 	case CASE_HIDE_POINTER:
 	    TRACE(("CASE_HIDE_POINTER\n"));
-	    if (nparam >= 1 && param[0] != DEFAULT) {
-		screen->pointer_mode = param[0];
+	    if (nparam >= 1 && GetParam(0) != DEFAULT) {
+		screen->pointer_mode = GetParam(0);
 	    } else {
 		screen->pointer_mode = DEF_POINTER_MODE;
 	    }
@@ -3483,8 +3768,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (nparam >= 1) {
 		int n;
 		for (n = 0; n < nparam; ++n) {
-		    if (param[n] != DEFAULT)
-			screen->title_modes |= (1 << param[n]);
+		    if (GetParam(n) != DEFAULT)
+			screen->title_modes |= (1 << GetParam(n));
 		}
 	    } else {
 		screen->title_modes = DEF_TITLE_MODES;
@@ -3497,8 +3782,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    if (nparam >= 1) {
 		int n;
 		for (n = 0; n < nparam; ++n) {
-		    if (param[n] != DEFAULT)
-			screen->title_modes &= ~(1 << param[n]);
+		    if (GetParam(n) != DEFAULT)
+			screen->title_modes &= ~(1 << GetParam(n));
 		}
 	    } else {
 		screen->title_modes = DEF_TITLE_MODES;
@@ -3512,7 +3797,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECSWBV:
 	    TRACE(("CASE_DECSWBV\n"));
-	    switch ((nparam >= 1) ? param[0] : DEFAULT) {
+	    switch (zero_if_default(0)) {
 	    case 2:
 	    case 3:
 	    case 4:
@@ -3534,14 +3819,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECSMBV:
 	    TRACE(("CASE_DECSMBV\n"));
-	    switch ((nparam >= 1) ? param[0] : DEFAULT) {
+	    switch (zero_if_default(0)) {
 	    case 2:
 	    case 3:
 	    case 4:
 		screen->marginVolume = bvLow;
 		break;
 	    case 0:
-	    case DEFAULT:
 	    case 5:
 	    case 6:
 	    case 7:
@@ -4384,7 +4668,7 @@ ansi_modes(XtermWidget xw, BitFunc func)
     int i;
 
     for (i = 0; i < nparam; ++i) {
-	switch (param[i]) {
+	switch (GetParam(i)) {
 	case 2:		/* KAM (if set, keyboard locked */
 	    (*func) (&xw->keyboard.flags, MODE_KAM);
 	    break;
@@ -4537,8 +4821,10 @@ dpmodes(XtermWidget xw, BitFunc func)
     unsigned myflags;
 
     for (i = 0; i < nparam; ++i) {
-	TRACE(("%s %d\n", IsSM()? "DECSET" : "DECRST", param[i]));
-	switch ((DECSET_codes) param[i]) {
+	int code = GetParam(i);
+
+	TRACE(("%s %d\n", IsSM()? "DECSET" : "DECRST", code));
+	switch ((DECSET_codes) code) {
 	case srm_DECCKM:
 	    (*func) (&xw->keyboard.flags, MODE_DECCKM);
 	    update_appcursor();
@@ -4562,7 +4848,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		screen->vt52_save_curss = screen->curss;
 		memmove(screen->vt52_save_gsets, screen->gsets, sizeof(screen->gsets));
 		resetCharsets(screen);
-		nparam = 0;	/* ignore the remaining params, if any */
+		InitParams();	/* ignore the remaining params, if any */
 	    }
 #endif
 	    break;
@@ -4721,7 +5007,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		    ToAlternate(xw);
 		} else {
 		    if (screen->whichBuf
-			&& (param[i] == 1047))
+			&& (code == 1047))
 			ClearScreen(xw);
 		    FromAlternate(xw);
 		}
@@ -4794,8 +5080,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 	     * only effective against the matching mode.
 	     */
 	    if (IsSM()) {
-		screen->extend_coords = param[i];
-	    } else if (screen->extend_coords == param[i]) {
+		screen->extend_coords = code;
+	    } else if (screen->extend_coords == code) {
 		screen->extend_coords = 0;
 	    }
 	    break;
@@ -4918,8 +5204,10 @@ savemodes(XtermWidget xw)
     int i;
 
     for (i = 0; i < nparam; i++) {
-	TRACE(("savemodes %d\n", param[i]));
-	switch ((DECSET_codes) param[i]) {
+	int code = GetParam(i);
+
+	TRACE(("savemodes %d\n", code));
+	switch ((DECSET_codes) code) {
 	case srm_DECCKM:
 	    DoSM(DP_DECCKM, xw->keyboard.flags & MODE_DECCKM);
 	    break;
@@ -5138,8 +5426,10 @@ restoremodes(XtermWidget xw)
     int i, j;
 
     for (i = 0; i < nparam; i++) {
-	TRACE(("restoremodes %d\n", param[i]));
-	switch ((DECSET_codes) param[i]) {
+	int code = GetParam(i);
+
+	TRACE(("restoremodes %d\n", code));
+	switch ((DECSET_codes) code) {
 	case srm_DECCKM:
 	    bitcpy(&xw->keyboard.flags,
 		   screen->save_modes[DP_DECCKM], MODE_DECCKM);
@@ -5560,9 +5850,10 @@ window_ops(XtermWidget xw)
     unsigned root_width;
     unsigned root_height;
 #endif
+    int code = zero_if_default(0);
 
-    TRACE(("window_ops %d\n", param[0]));
-    switch (param[0]) {
+    TRACE(("window_ops %d\n", code));
+    switch (code) {
     case ewRestoreWin:		/* Restore (de-iconify) window */
 	if (AllowWindowOps(xw, ewRestoreWin)) {
 	    TRACE(("...de-iconify window\n"));
@@ -5596,7 +5887,7 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizePixels:	/* Resize the window to given size in pixels */
 	if (AllowWindowOps(xw, ewSetWinSizePixels)) {
-	    RequestResize(xw, param[1], param[2], False);
+	    RequestResize(xw, optional_param(1), optional_param(2), False);
 	}
 	break;
 
@@ -5623,7 +5914,7 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizeChars:	/* Resize the text-area, in characters */
 	if (AllowWindowOps(xw, ewSetWinSizeChars)) {
-	    RequestResize(xw, param[1], param[2], True);
+	    RequestResize(xw, optional_param(1), optional_param(2), True);
 	}
 	break;
 
@@ -5810,8 +6101,8 @@ window_ops(XtermWidget xw)
 
     default:			/* DECSLPP (24, 25, 36, 48, 72, 144) */
 	if (AllowWindowOps(xw, ewSetWinLines)) {
-	    if (param[0] >= 24)
-		RequestResize(xw, param[0], -1, True);
+	    if (code >= 24)
+		RequestResize(xw, code, -1, True);
 	}
 	break;
     }
@@ -7772,7 +8063,7 @@ static void *
 getProperty(Display * dpy,
 	    Window w,
 	    Atom req_type,
-	    char *prop_name)
+	    const char *prop_name)
 {
     Atom property;
     Atom actual_return_type;
