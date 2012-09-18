@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.599 2012/09/08 14:05:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.601 2012/09/18 09:57:37 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2594,6 +2594,69 @@ xtermAllocColor(XtermWidget xw, XColor * def, const char *spec)
 	       def->red, def->green, def->blue));
 	result = True;
     }
+    return result;
+}
+
+/*
+ * This provides an approximation (the closest color from xterm's palette)
+ * rather than the "exact" color (whatever the display could provide, actually)
+ * because of the context in which it is used.
+ */
+int
+xtermClosestColor(XtermWidget xw, const char *spec)
+{
+    int result = -1;
+#if OPT_COLOR_RES && OPT_ISO_COLORS
+    TScreen *screen = TScreenOf(xw);
+    Colormap cmap = xw->core.colormap;
+    XColor find, look;
+    int n;
+
+    TRACE(("xtermClosestColor(%s)\n", spec));
+
+    if (XParseColor(screen->display, cmap, spec, &find)) {
+	int best_index = -1;
+	unsigned long best_value = 0;
+	unsigned long this_value;
+	int diff_red, diff_green, diff_blue;
+
+	TRACE2(("...parsed -> %x/%x/%x\n",
+		find.red, find.green, find.blue));
+
+	for (n = 0; n < NUM_ANSI_COLORS; ++n) {
+	    ColorRes *res = &(TScreenOf(xw)->Acolors[n]);
+
+	    /* ensure that we have a value for each of the colors */
+	    if (!res->mode) {
+		(void) AllocateAnsiColor(xw, res, res->resource);
+	    }
+
+	    /* find the closest match */
+	    if (res->mode == True) {
+		memset(&look, 0, sizeof(look));
+		look.pixel = res->value;
+		XQueryColor(screen->display, cmap, &look);
+		TRACE2(("...lookup %lx -> %x/%x/%x\n",
+			res->value, look.red, look.green, look.blue));
+		diff_red = ((int) look.red - (int) find.red);
+		diff_green = ((int) look.green - (int) find.green);
+		diff_blue = ((int) look.blue - (int) find.blue);
+		this_value = (unsigned long) ((diff_red * diff_red)
+					      + (diff_green * diff_green)
+					      + (diff_blue * diff_blue));
+		if (best_index < 0 || this_value < best_value) {
+		    best_index = n;
+		    best_value = this_value;
+		}
+	    }
+	}
+	TRACE(("...best match at %d with diff %lx\n", best_index, best_value));
+	result = best_index;
+    }
+#else
+    (void) xw;
+    (void) spec;
+#endif
     return result;
 }
 

@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.268 2012/09/09 21:47:14 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.269 2012/09/18 11:01:03 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -1067,8 +1067,21 @@ If \fIxterm\fP is compiled with the 16-color support disabled, it supports
 the following, from \fIrxvt\fP:
   \*(Ps = \*1\*0\*0 \(-> Set foreground and background color to default.
 .sP
-If 88- or 256-color support is compiled, the following apply.
+\fIXterm\fP maintains a color palette whose entries are identified by an index beginning with zero.
+If 88- or 256-color support is compiled, the following apply:
+.RS
+.bP
+All parameters are decimal integers.
+.bP
+ISO-8613-3 can be interpreted in more than one way;
+\fIxterm\fP allows the semicolons in this control to be replaced by colons
+(but after the first colon, colons must be used).
+.RE
+.sP
+These ISO-8613-3 controls are supported:
+  \*(Ps = \*3\*8 ; \*2 ; \*(Pr ; \*(Pg ; \*(Pb \(-> Set foreground color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
   \*(Ps = \*3\*8 ; \*5 ; \*(Ps \(-> Set foreground color to the second \*(Ps.
+  \*(Ps = \*4\*8 ; \*2 ; \*(Pr ; \*(Pg ; \*(Pb \(-> Set background color to the closest match in \fIxterm\fP's palette for the given RGB \*(Pr/\*(Pg/\*(Pb.
   \*(Ps = \*4\*8 ; \*5 ; \*(Ps \(-> Set background color to the second \*(Ps.
 .sp
 .
