@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.601 2012/09/18 09:57:37 tom Exp $ */
+/* $XTermId: misc.c,v 1.606 2012/09/19 09:41:53 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2399,8 +2399,15 @@ AllocateAnsiColor(XtermWidget xw,
 	} else {
 	    result = 1;
 	    SET_COLOR_RES(res, def.pixel);
-	    TRACE(("AllocateAnsiColor[%d] %s (pixel 0x%06lx)\n",
-		   (int) (res - TScreenOf(xw)->Acolors), spec, def.pixel));
+	    res->red = def.red;
+	    res->green = def.green;
+	    res->blue = def.blue;
+	    TRACE(("AllocateAnsiColor[%d] %s (rgb:%04x/%04x/%04x, pixel 0x%06lx)\n",
+		   (int) (res - TScreenOf(xw)->Acolors), spec,
+		   def.red,
+		   def.green,
+		   def.blue,
+		   def.pixel));
 #if OPT_COLOR_RES
 	    if (!res->mode)
 		result = 0;
@@ -2602,57 +2609,46 @@ xtermAllocColor(XtermWidget xw, XColor * def, const char *spec)
  * rather than the "exact" color (whatever the display could provide, actually)
  * because of the context in which it is used.
  */
+#define ColorDiff(given,cache) ((long) ((cache) >> 8) - (long) (given))
 int
-xtermClosestColor(XtermWidget xw, const char *spec)
+xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
 {
     int result = -1;
 #if OPT_COLOR_RES && OPT_ISO_COLORS
-    TScreen *screen = TScreenOf(xw);
-    Colormap cmap = xw->core.colormap;
-    XColor find, look;
     int n;
+    int best_index = -1;
+    unsigned long best_value = 0;
+    unsigned long this_value;
+    long diff_red, diff_green, diff_blue;
 
-    TRACE(("xtermClosestColor(%s)\n", spec));
+    TRACE(("xtermClosestColor(%x/%x/%x)\n", find_red, find_green, find_blue));
 
-    if (XParseColor(screen->display, cmap, spec, &find)) {
-	int best_index = -1;
-	unsigned long best_value = 0;
-	unsigned long this_value;
-	int diff_red, diff_green, diff_blue;
+    for (n = NUM_ANSI_COLORS - 1; n >= 0; --n) {
+	ColorRes *res = &(TScreenOf(xw)->Acolors[n]);
 
-	TRACE2(("...parsed -> %x/%x/%x\n",
-		find.red, find.green, find.blue));
+	/* ensure that we have a value for each of the colors */
+	if (!res->mode) {
+	    (void) AllocateAnsiColor(xw, res, res->resource);
+	}
 
-	for (n = 0; n < NUM_ANSI_COLORS; ++n) {
-	    ColorRes *res = &(TScreenOf(xw)->Acolors[n]);
-
-	    /* ensure that we have a value for each of the colors */
-	    if (!res->mode) {
-		(void) AllocateAnsiColor(xw, res, res->resource);
-	    }
-
-	    /* find the closest match */
-	    if (res->mode == True) {
-		memset(&look, 0, sizeof(look));
-		look.pixel = res->value;
-		XQueryColor(screen->display, cmap, &look);
-		TRACE2(("...lookup %lx -> %x/%x/%x\n",
-			res->value, look.red, look.green, look.blue));
-		diff_red = ((int) look.red - (int) find.red);
-		diff_green = ((int) look.green - (int) find.green);
-		diff_blue = ((int) look.blue - (int) find.blue);
-		this_value = (unsigned long) ((diff_red * diff_red)
-					      + (diff_green * diff_green)
-					      + (diff_blue * diff_blue));
-		if (best_index < 0 || this_value < best_value) {
-		    best_index = n;
-		    best_value = this_value;
-		}
+	/* find the closest match */
+	if (res->mode == True) {
+	    TRACE2(("...lookup %lx -> %x/%x/%x\n",
+		    res->value, res->red, res->green, res->blue));
+	    diff_red = ColorDiff(find_red, res->red);
+	    diff_green = ColorDiff(find_green, res->green);
+	    diff_blue = ColorDiff(find_blue, res->blue);
+	    this_value = (unsigned long) ((diff_red * diff_red)
+					  + (diff_green * diff_green)
+					  + (diff_blue * diff_blue));
+	    if (best_index < 0 || this_value < best_value) {
+		best_index = n;
+		best_value = this_value;
 	    }
 	}
-	TRACE(("...best match at %d with diff %lx\n", best_index, best_value));
-	result = best_index;
     }
+    TRACE(("...best match at %d with diff %lx\n", best_index, best_value));
+    result = best_index;
 #else
     (void) xw;
     (void) spec;
@@ -3305,6 +3301,27 @@ do_osc(XtermWidget xw, Char * oscbuf, size_t len, int final)
     }
 
     /*
+     * Check if the palette changed and there are no more immediate changes
+     * that could be deferred to the next repaint.
+     */
+    if (xw->misc.palette_changed) {
+	switch (mode) {
+	case 3:		/* change X property */
+	case 30:		/* Konsole (unused) */
+	case 31:		/* Konsole (unused) */
+	case 50:		/* font operations */
+	case 51:		/* Emacs (unused) */
+#if OPT_PASTE64
+	case 52:		/* selection data */
+#endif
+	    TRACE(("forced repaint after palette changed\n"));
+	    xw->misc.palette_changed = False;
+	    xtermRepaint(xw);
+	    break;
+	}
+    }
+
+    /*
      * Most OSC controls other than resets require data.  Handle the others as
      * a special case.
      */
@@ -3373,14 +3390,14 @@ do_osc(XtermWidget xw, Char * oscbuf, size_t len, int final)
 	/* FALLTHRU */
     case 4:
 	if (ChangeAnsiColorRequest(xw, buf, ansi_colors, final))
-	    xtermRepaint(xw);
+	    xw->misc.palette_changed = True;
 	break;
     case OSC_Reset(5):
 	ansi_colors = NUM_ANSI_COLORS;
 	/* FALLTHRU */
     case OSC_Reset(4):
 	if (ResetAnsiColorRequest(xw, buf, ansi_colors))
-	    xtermRepaint(xw);
+	    xw->misc.palette_changed = True;
 	break;
 #endif
     case OSC_TEXT_FG:

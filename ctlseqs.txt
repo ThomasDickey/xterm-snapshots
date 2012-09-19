@@ -577,6 +577,7 @@ CSI Pm m  Character Attributes (SGR).
           by an index beginning with zero.  If 88- or 256-color support
           is compiled, the following apply:
           o   All parameters are decimal integers.
+          o   RGB values range from zero (0) to 255.
           o   ISO-8613-3 can be interpreted in more than one way; xterm
               allows the semicolons in this control to be replaced by
               colons (but after the first colon, colons must be used).

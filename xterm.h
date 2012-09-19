@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.701 2012/09/18 08:49:02 tom Exp $ */
+/* $XTermId: xterm.h,v 1.702 2012/09/19 00:49:25 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -989,7 +989,7 @@ extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, cha
 extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
-extern int xtermClosestColor (XtermWidget /* xw */, const char * /* spec */);
+extern int xtermClosestColor (XtermWidget /* xw */, int /* red */, int /* green */, int /* blue */);
 extern int xtermResetIds (TScreen *  /* screen */);
 extern void Bell (XtermWidget /* xw */, int  /* which */, int  /* percent */);
 extern void ChangeGroup(XtermWidget /* xw */, const char * /* attribute */, char * /* value */);

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1250 2012/09/18 08:50:19 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1253 2012/09/19 08:56:12 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1496,7 +1496,6 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
     int need = 0;		/* number of subparameters needed */
     int have;
     int n;
-    char buffer[80];
 
     /*
      * On entry, 'item' points to the 38/48 code in the parameter array.
@@ -1542,9 +1541,7 @@ parse_extended_colors(XtermWidget xw, int *colorp, int *itemp)
 	if ((values[0] >= 0 && values[0] < 256) &&
 	    (values[1] >= 0 && values[1] < 256) &&
 	    (values[2] >= 0 && values[2] < 256)) {
-	    sprintf(buffer, "rgb:%02x/%02x/%02x",
-		    values[0], values[1], values[2]);
-	    *colorp = xtermClosestColor(xw, buffer);
+	    *colorp = xtermClosestColor(xw, values[0], values[1], values[2]);
 	} else {
 	    *colorp = -1;
 	}
@@ -1590,6 +1587,47 @@ one_if_default(int which)
     if (result <= 0)
 	result = 1;
     return result;
+}
+
+/*
+ * Color palette changes using the OSC controls require a repaint of the
+ * screen - but not immediately.  Do the repaint as soon as we detect a
+ * state which will not lead to another color palette change.
+ */
+static void
+repaintWhenPaletteChanged(XtermWidget xw, struct ParseState *sp)
+{
+    Boolean ignore = False;
+
+    switch (sp->nextstate) {
+    case CASE_ESC:
+	ignore = ((sp->parsestate == ansi_table) ||
+		  (sp->parsestate == sos_table));
+	break;
+    case CASE_OSC:
+	ignore = ((sp->parsestate == ansi_table) ||
+		  (sp->parsestate == esc_table));
+	break;
+    case CASE_IGNORE:
+	ignore = (sp->parsestate == sos_table);
+	break;
+    case CASE_ST:
+	ignore = ((sp->parsestate == esc_table) ||
+		  (sp->parsestate == sos_table));
+	break;
+    case CASE_ESC_DIGIT:
+	ignore = (sp->parsestate == csi_table);
+	break;
+    case CASE_ESC_SEMI:
+	ignore = (sp->parsestate == csi2_table);
+	break;
+    }
+
+    if (!ignore) {
+	TRACE(("repaintWhenPaletteChanged\n"));
+	xw->misc.palette_changed = False;
+	xtermRepaint(xw);
+    }
 }
 
 #if OPT_C1_PRINT || OPT_WIDE_CHARS
@@ -1981,6 +2019,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		ResetState(sp);
 		continue;
 	    }
+	}
+
+	if (xw->misc.palette_changed) {
+	    repaintWhenPaletteChanged(xw, sp);
 	}
 
 	switch (sp->nextstate) {

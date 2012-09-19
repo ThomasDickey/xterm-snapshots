@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.269 2012/09/18 11:01:03 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.270 2012/09/19 10:43:19 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -1072,6 +1072,8 @@ If 88- or 256-color support is compiled, the following apply:
 .RS
 .bP
 All parameters are decimal integers.
+.bP
+RGB values range from zero (0) to 255.
 .bP
 ISO-8613-3 can be interpreted in more than one way;
 \fIxterm\fP allows the semicolons in this control to be replaced by colons

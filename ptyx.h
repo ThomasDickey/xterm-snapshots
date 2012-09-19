@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.745 2012/09/10 21:06:27 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.747 2012/09/19 00:58:21 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1485,6 +1485,7 @@ typedef enum {
 typedef struct {
 	String		resource;
 	Pixel		value;
+	unsigned short red, green, blue;
 	int		mode;		/* -1=invalid, 0=unset, 1=set   */
 } ColorRes;
 #else
@@ -2304,6 +2305,7 @@ typedef struct _Misc {
     Boolean log_on;
 #endif
     Boolean login_shell;
+    Boolean palette_changed;
     Boolean re_verse;
     Boolean re_verse0;		/* initial value of "-rv" */
     XtGravity resizeGravity;
