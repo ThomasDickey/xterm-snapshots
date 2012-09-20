@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.270 2012/09/19 10:43:19 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.271 2012/09/20 09:20:11 Paul.Bolle Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -1225,9 +1225,11 @@ Load LEDs (DECLL).
 Set cursor style (DECSCUSR, VT520).
   \*(Ps = \*0 \(-> blinking block.
   \*(Ps = \*1 \(-> blinking block (default).
-  \*(Ps = \*2 \(-> steady block.
-  \*(Ps = \*3 \(-> blinking underline.
-  \*(Ps = \*4 \(-> steady underline.
+  \*(Ps = \*2 \(-> steady block.
+  \*(Ps = \*3 \(-> blinking underline.
+  \*(Ps = \*4 \(-> steady underline.
+  \*(Ps = \*5 \(-> blinking bar (xterm).
+  \*(Ps = \*6 \(-> steady bar (xterm).
 .
 .IP \\*(Cs\\*(Ps\\*s\\*(c"\\*q
 Select character protection attribute (DECSCA).

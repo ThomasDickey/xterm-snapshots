@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1253 2012/09/19 08:56:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1254 2012/09/20 09:15:20 Paul.Bolle Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -3053,27 +3053,31 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		HideCursor();
 
 		switch (GetParam(0)) {
-		case 0:
-		case 1:
 		case DEFAULT:
-		    /* blinking block */
-		    screen->cursor_underline = False;
+		case DEFAULT_STYLE:
+		case BLINK_BLOCK:
 		    blinks = True;
+		    screen->cursor_shape = CURSOR_BLOCK;
 		    break;
-		case 2:
-		    /* steady block */
-		    screen->cursor_underline = False;
+		case STEADY_BLOCK:
 		    blinks = False;
+		    screen->cursor_shape = CURSOR_BLOCK;
 		    break;
-		case 3:
-		    /* blinking underline */
-		    screen->cursor_underline = True;
+		case BLINK_UNDERLINE:
 		    blinks = True;
+		    screen->cursor_shape = CURSOR_UNDERLINE;
 		    break;
-		case 4:
-		    /* steady underline */
-		    screen->cursor_underline = True;
+		case STEADY_UNDERLINE:
 		    blinks = False;
+		    screen->cursor_shape = CURSOR_UNDERLINE;
+		    break;
+		case BLINK_BAR:
+		    blinks = True;
+		    screen->cursor_shape = CURSOR_BAR;
+		    break;
+		case STEADY_BAR:
+		    blinks = False;
+		    screen->cursor_shape = CURSOR_BAR;
 		    break;
 		default:
 		    change = False;
@@ -7204,7 +7208,10 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.blink_off);
     TScreenOf(wnew)->cursor_blink_res = TScreenOf(wnew)->cursor_blink;
 #endif
-    init_Bres(screen.cursor_underline);
+    /* resources allow for underline or block, not (yet) bar */
+    TScreenOf(wnew)->cursor_shape = request->screen.cursor_underline
+	? CURSOR_UNDERLINE
+	: CURSOR_BLOCK;
 #if OPT_BLINK_TEXT
     init_Ires(screen.blink_as_bold);
 #endif
@@ -9145,7 +9152,7 @@ ShowCursor(void)
      * whether the window has focus, since in that case we want just an
      * outline for the cursor.
      */
-    filled = (screen->select || screen->always_highlight) && !screen->cursor_underline;
+    filled = (screen->select || screen->always_highlight) && isCursorBlock(screen);
 #if OPT_HIGHLIGHT_COLOR
     use_selbg = isNotForeground(xw, fg_pix, bg_pix, selbg_pix);
     use_selfg = isNotBackground(xw, fg_pix, bg_pix, selfg_pix);
@@ -9239,19 +9246,20 @@ ShowCursor(void)
 	TRACE(("ShowCursor calling drawXtermText cur(%d,%d) %s-%s, set_at %d\n",
 	       screen->cur_row, screen->cur_col,
 	       (filled ? "filled" : "outline"),
-	       (screen->cursor_underline ? "underline" : "box"),
+	       (isCursorBlock(screen) ? "box" :
+		isCursorUnderline(screen) ? "underline" : "bar"),
 	       set_at));
 
 	currentGC = getCgsGC(xw, currentWin, currentCgs);
 	x = LineCursorX(screen, ld, cursor_col);
 	y = CursorY(screen, screen->cur_row);
 
-	if (screen->cursor_underline) {
+	if (!isCursorBlock(screen)) {
 	    /*
 	     * Overriding the combination of filled, reversed, in_selection is
-	     * too complicated since the underline and the text-cell use
+	     * too complicated since the underline or bar and the text-cell use
 	     * different rules.  Just redraw the text-cell, and draw the
-	     * underline on top of it.
+	     * underline or bar on top of it.
 	     */
 	    HideCursor();
 
@@ -9284,13 +9292,22 @@ ShowCursor(void)
 	if (outlineGC == 0)
 	    outlineGC = currentGC;
 
-	if (screen->cursor_underline) {
+	if (isCursorUnderline(screen)) {
 
 	    /*
 	     * Finally, draw the underline.
 	     */
 	    screen->box->x = (short) x;
 	    screen->box->y = (short) (y + FontHeight(screen) - 2);
+	    XDrawLines(screen->display, VWindow(screen), outlineGC,
+		       screen->box, NBOX, CoordModePrevious);
+	} else if (isCursorBar(screen)) {
+
+	    /*
+	     * Or draw the bar.
+	     */
+	    screen->box->x = (short) x;
+	    screen->box->y = (short) y;
 	    XDrawLines(screen->display, VWindow(screen), outlineGC,
 		       screen->box, NBOX, CoordModePrevious);
 	} else {
