@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $XTermId: 88colors2.pl,v 1.8 2012/09/19 08:32:49 tom Exp $
+# $XTermId: 88colors2.pl,v 1.11 2012/09/19 23:31:56 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -42,22 +42,26 @@
 use strict;
 
 use Getopt::Std;
+use Encode 'encode_utf8';
 
-our ($opt_8, $opt_d, $opt_h, $opt_q, $opt_r);
-&getopts('8dhqr') || die("Usage: $0 [-q] [-r]");
+our ($opt_8, $opt_c, $opt_d, $opt_h, $opt_q, $opt_r, $opt_u);
+&getopts('8cdhqru') || die("Usage: $0 [options]");
 die("Usage: $0 [options]\n
 Options:
   -8  use 8-bit controls
+  -c  use colons for separating parameter values in SGR 38/48
   -d  use rgb values rather than palette index
   -h  display this message
   -q  quieter output by merging all palette initialization
   -r  display the reverse of the usual palette
+  -u  use UTF-8 when emitting 8-bit controls
 ") if ( $opt_h);
 
+our $cube = 4;
 our (@steps);
 our ($red, $green, $blue);
 our ($gray, $level, $color);
-our ($csi, $osc, $st);
+our ($csi, $osc, $sep, $st);
 
 our @rgb;
 
@@ -83,15 +87,15 @@ sub define_color($$$$) {
 	printf(";%d;rgb:%2.2x/%2.2x/%2.2x", $index, $r, $g, $b);
 	printf("%s", $st) unless ($opt_q);
 
-	$rgb[$index] = sprintf "%d:%d:%d", $r, $g, $b;
+	$rgb[$index] = sprintf "%d%s%d%s%d", $r, $sep, $g, $sep, $b;
 }
 
 sub select_color($) {
 	my $index = $_[0];
 	if ( $opt_d and defined($rgb[$index]) ) {
-		printf "%s48;2:%sm  ", $csi, $rgb[$index];
+		printf "%s48;2%s%sm  ", $csi, $sep, $rgb[$index];
 	} else {
-		printf "%s48;5;%sm  ", $csi, $index;
+		printf "%s48;5%s%sm  ", $csi, $sep, $index;
 	}
 }
 
@@ -105,14 +109,26 @@ if ( $opt_8 ) {
 	$st = "\x1b\\";
 }
 
+if ( $opt_c ) {
+	$sep = ":";
+} else {
+	$sep = ";";
+}
+
+if ( $opt_8 and $opt_u ) {
+	my $lc_ctype=`locale 2>/dev/null | fgrep LC_CTYPE | sed -e 's/^.*=//'`;
+	if ( $lc_ctype =~ /utf.?8/i ) {
+		binmode(STDOUT, ":utf8");
+	}
+}
 # colors 16-79 are a 4x4x4 color cube
 @steps=(0,139,205,255);
 printf("%s4", $osc) if ($opt_q);
-for ($red = 0; $red < 4; $red++) {
-    for ($green = 0; $green < 4; $green++) {
-	for ($blue = 0; $blue < 4; $blue++) {
+for ($red = 0; $red < $cube; $red++) {
+    for ($green = 0; $green < $cube; $green++) {
+	for ($blue = 0; $blue < $cube; $blue++) {
 	    &define_color(
-		   16 + (map_cube($red) * 16) + (map_cube($green) * 4) + map_cube($blue),
+		   16 + (map_cube($red) * $cube * $cube) + (map_cube($green) * $cube) + map_cube($blue),
 		   int (@steps[$red]),
 		   int (@steps[$green]),
 		   int (@steps[$blue]));
@@ -144,11 +160,11 @@ for ($color = 8; $color < 16; $color++) {
 printf "%s0m\n\n", $csi;
 
 # now the color cube
-print "Color cube, 4x4x4:\n";
-for ($green = 0; $green < 4; $green++) {
-    for ($red = 0; $red < 4; $red++) {
-	for ($blue = 0; $blue < 4; $blue++) {
-	    $color = 16 + ($red * 16) + ($green * 4) + $blue;
+print "Color cube, ${cube}x${cube}x${cube}:\n";
+for ($green = 0; $green < $cube; $green++) {
+    for ($red = 0; $red < $cube; $red++) {
+	for ($blue = 0; $blue < $cube; $blue++) {
+	    $color = 16 + ($red * $cube * $cube) + ($green * $cube) + $blue;
 	    &select_color($color);
 	}
 	printf "%s0m ", $csi;
