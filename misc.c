@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.606 2012/09/19 09:41:53 tom Exp $ */
+/* $XTermId: misc.c,v 1.607 2012/09/20 09:15:20 Paul.Bolle Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -3832,14 +3832,16 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 #endif
 		strcat(reply, "m");
 	    } else if (!strcmp(cp, " q")) {	/* DECSCUSR */
-		int code = 0;
-		if (screen->cursor_underline != 0)
-		    code |= 2;
+		int code = STEADY_BLOCK;
+		if (isCursorUnderline(screen))
+		    code = STEADY_UNDERLINE;
+		else if (isCursorBar(screen))
+		    code = STEADY_BAR;
 #if OPT_BLINK_CURS
 		if (screen->cursor_blink_esc == 0)
-		    code |= 1;
+		    code -= 1;
 #endif
-		sprintf(reply, "%d%s", code + 1, cp);
+		sprintf(reply, "%d%s", code, cp);
 	    } else
 		okay = False;
 

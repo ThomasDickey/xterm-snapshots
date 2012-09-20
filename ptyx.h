@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.747 2012/09/19 00:58:21 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.748 2012/09/20 09:15:20 Paul.Bolle Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1615,6 +1615,26 @@ typedef struct {
 } TInput;
 #endif
 
+typedef enum {
+	CURSOR_BLOCK = 2
+	, CURSOR_UNDERLINE = 4
+	, CURSOR_BAR = 6
+} XtCursorShape;
+
+#define isCursorBlock(s)	((s)->cursor_shape == CURSOR_BLOCK)
+#define isCursorUnderline(s)	((s)->cursor_shape == CURSOR_UNDERLINE)
+#define isCursorBar(s)		((s)->cursor_shape == CURSOR_BAR)
+
+typedef enum {
+	DEFAULT_STYLE = 0
+	, BLINK_BLOCK
+	, STEADY_BLOCK
+	, BLINK_UNDERLINE
+	, STEADY_UNDERLINE
+	, BLINK_BAR
+	, STEADY_BAR
+} XtCursorStyle;
+
 typedef struct {
 /* These parameters apply to both windows */
 	Display		*display;	/* X display for screen		*/
@@ -1819,6 +1839,7 @@ typedef struct {
 	int		cursor_state;	/* ON, OFF, or BLINKED_OFF	*/
 	int		cursor_busy;	/* do not redraw...		*/
 	Boolean		cursor_underline; /* true if cursor is in underline mode */
+	XtCursorShape	cursor_shape;
 #if OPT_BLINK_CURS
 	Boolean		cursor_blink;	/* cursor blink enable		*/
 	Boolean		cursor_blink_res; /* initial cursor blink value	*/
