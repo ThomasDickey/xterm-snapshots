@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.136 2012/09/03 17:22:59 tom Exp $
+-- $XTermId: INSTALL,v 1.138 2012/09/22 12:22:47 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2011,2012 by Thomas E. Dickey
 --
@@ -393,6 +393,14 @@ The options (in alphabetic order):
   --enable-delete-is-del  set default deleteIsDEL resource (default: maybe)
 
 	This sets the default resource value, which is shown in the manpage.
+
+  --enable-double-buffer  enable double-buffering
+
+	Use experimental double-buffering for display to reduce flicker.
+
+	This option was introduced in patch #282; at that point it needs
+	further work because colors used for clearing the screen do not
+	match the expected behavior (see vttest for instance).
 
   --enable-exec-xterm     enable "spawn-new-terminal" action
 

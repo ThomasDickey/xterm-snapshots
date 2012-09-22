@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.466 2012/09/21 23:51:56 tom Exp $ */
+/* $XTermId: screen.c,v 1.468 2012/09/22 01:13:11 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1351,7 +1351,7 @@ ShowWrapMarks(XtermWidget xw, int row, LineData * ld)
 
     TRACE2(("ShowWrapMarks %d:%s\n", row, BtoS(set)));
 
-    XFillRectangle(screen->display, VWindow(screen),
+    XFillRectangle(screen->display, VDrawable(screen),
 		   getCgsGC(xw, currentWin, cgsId),
 		   x, y,
 		   (unsigned) screen->border,
@@ -1813,7 +1813,6 @@ ScreenResize(XtermWidget xw,
 #ifdef TTYSIZE_STRUCT
     TTYSIZE_STRUCT ts;
 #endif
-    Window tw = VWindow(screen);
 
     TRACE(("ScreenResize %dx%d border %d font %dx%d\n",
 	   height, width, border,
@@ -1826,16 +1825,30 @@ ScreenResize(XtermWidget xw,
 	/* clear the right and bottom internal border because of NorthWest
 	   gravity might have left junk on the right and bottom edges */
 	if (width >= (int) FullWidth(screen)) {
-	    XClearArea(screen->display, tw,
+#if OPT_DOUBLE_BUFFER
+	    XFillRectangle(screen->display, VDrawable(screen),
+			   ReverseGC(xw, screen),
+			   FullWidth(screen), 0,
+			   width - FullWidth(screen), height);
+#else
+	    XClearArea(screen->display, VDrawable(screen),
 		       FullWidth(screen), 0,	/* right edge */
 		       0, (unsigned) height,	/* from top to bottom */
 		       False);
+#endif
 	}
 	if (height >= (int) FullHeight(screen)) {
-	    XClearArea(screen->display, tw,
+#if OPT_DOUBLE_BUFFER
+	    XFillRectangle(screen->display, VDrawable(screen),
+			   ReverseGC(xw, screen),
+			   0, FullHeight(screen),
+			   width, height - FullHeight(screen));
+#else
+	    XClearArea(screen->display, VDrawable(screen),
 		       0, FullHeight(screen),	/* bottom */
 		       (unsigned) width, 0,	/* all across the bottom */
 		       False);
+#endif
 	}
     }
 
