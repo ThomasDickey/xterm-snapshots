@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1254 2012/09/20 09:15:20 Paul.Bolle Exp $ */
+/* $XTermId: charproc.c,v 1.1256 2012/09/21 23:01:58 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -407,6 +407,7 @@ static XtResource xterm_resources[] =
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, True),
     Bres(XtNbrokenSelections, XtCBrokenSelections, screen.brokenSelections, False),
     Bres(XtNc132, XtCC132, screen.c132, False),
+    Bres(XtNcdXtraScroll, XtCCdXtraScroll, misc.cdXtraScroll, False),
     Bres(XtNcurses, XtCCurses, screen.curses, False),
     Bres(XtNcutNewline, XtCCutNewline, screen.cutNewline, True),
     Bres(XtNcutToBeginningOfLine, XtCCutToBeginningOfLine,
@@ -2342,6 +2343,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_ED:
 	    TRACE(("CASE_ED - erase display\n"));
+	    do_cd_xtra_scroll(xw);
 	    do_erase_display(xw, zero_if_default(0), OFF_PROTECT);
 	    ResetState(sp);
 	    break;
@@ -5039,10 +5041,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 		    FromAlternate(xw);
 		    CursorRestore(xw);
 		}
-	    } else if (xw->misc.tiXtraScroll) {
-		if (IsSM()) {
-		    xtermScroll(xw, screen->max_row);
-		}
+	    } else if (IsSM()) {
+		do_ti_xtra_scroll(xw);
 	    }
 	    break;
 	case srm_OPT_ALTBUF:
@@ -5057,10 +5057,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 			ClearScreen(xw);
 		    FromAlternate(xw);
 		}
-	    } else if (xw->misc.tiXtraScroll) {
-		if (IsSM()) {
-		    xtermScroll(xw, screen->max_row);
-		}
+	    } else if (IsSM()) {
+		do_ti_xtra_scroll(xw);
 	    }
 	    break;
 	case srm_DECNKM:
@@ -5531,7 +5529,7 @@ restoremodes(XtermWidget xw)
 	    DoRM0(DP_X_X10MSE, screen->send_mouse_pos);
 	    really_set_mousemode(xw,
 				 screen->send_mouse_pos != MOUSE_OFF,
-				 screen->send_mouse_pos);
+				 (XtermMouseModes) screen->send_mouse_pos);
 	    break;
 #if OPT_TOOLBAR
 	case srm_RXVT_TOOLBAR:
@@ -5619,10 +5617,8 @@ restoremodes(XtermWidget xw)
 		else
 		    FromAlternate(xw);
 		/* update_altscreen done by ToAlt and FromAlt */
-	    } else if (xw->misc.tiXtraScroll) {
-		if (screen->save_modes[DP_X_ALTSCRN]) {
-		    xtermScroll(xw, screen->max_row);
-		}
+	    } else if (screen->save_modes[DP_X_ALTSCRN]) {
+		do_ti_xtra_scroll(xw);
 	    }
 	    break;
 	case srm_DECNKM:
@@ -5652,7 +5648,7 @@ restoremodes(XtermWidget xw)
 	    DoRM0(DP_X_MOUSE, screen->send_mouse_pos);
 	    really_set_mousemode(xw,
 				 screen->send_mouse_pos != MOUSE_OFF,
-				 screen->send_mouse_pos);
+				 (XtermMouseModes) screen->send_mouse_pos);
 	    break;
 #if OPT_FOCUS_EVENT
 	case srm_FOCUS_EVENT_MOUSE:
@@ -7422,6 +7418,7 @@ VTInitialize(Widget wrequest,
     init_Bres(misc.signalInhibit);
     init_Bres(misc.titeInhibit);
     init_Bres(misc.tiXtraScroll);
+    init_Bres(misc.cdXtraScroll);
     init_Bres(misc.dynamicColors);
     for (i = fontMenu_font1; i <= fontMenu_lastBuiltin; i++) {
 	init_Sres2(screen.MenuFontName, i);
