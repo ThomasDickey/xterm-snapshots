@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.536 2012/09/10 00:08:03 tom Exp $
+.\" $XTermId: xterm.man,v 1.537 2012/09/21 23:22:05 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1993,6 +1993,14 @@ The default is \*(``false\*(''.
 .B "cacheDoublesize (\fPclass\fB CacheDoublesize)"
 Tells whether to cache double-sized fonts by \fIxterm\fR.
 Set this to zero to disable double-sized fonts altogether.
+.TP 8
+.B "cdXtraScroll (\fPclass\fB CdXtraScroll)"
+Specifies whether \fIxterm\fP should scroll to a new page when clearing
+the whole screen.
+Like \fBtiXtraScroll\fP,
+the intent of this option is to provide a picture of the full-screen
+application's display on the scrollback before wiping out the text.
+The default for this resource is \*(``false\*(''.
 .TP 8
 .B "charClass (\fPclass\fB CharClass)"
 Specifies comma-separated lists of character class bindings of the form

@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.307 2012/09/09 21:37:54 tom Exp $ */
+/* $XTermId: menu.c,v 1.309 2012/09/21 10:39:29 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1911,6 +1911,31 @@ do_tekhide(Widget gw GCC_UNUSED,
 /*
  * public handler routines
  */
+int
+decodeToggle(XtermWidget xw, String * params, Cardinal nparams)
+{
+    int dir = toggleErr;
+
+    switch (nparams) {
+    case 0:
+	dir = toggleAll;
+	break;
+    case 1:
+	if (XmuCompareISOLatin1(params[0], "on") == 0)
+	    dir = toggleOn;
+	else if (XmuCompareISOLatin1(params[0], "off") == 0)
+	    dir = toggleOff;
+	else if (XmuCompareISOLatin1(params[0], "toggle") == 0)
+	    dir = toggleAll;
+	break;
+    }
+
+    if (dir == toggleErr) {
+	Bell(xw, XkbBI_MinorError, 0);
+    }
+
+    return dir;
+}
 
 static void
 handle_toggle(void (*proc) PROTO_XT_CALLBACK_ARGS,
@@ -1922,39 +1947,21 @@ handle_toggle(void (*proc) PROTO_XT_CALLBACK_ARGS,
 	      XtPointer data)
 {
     XtermWidget xw = term;
-    int dir = -2;
 
-    switch (nparams) {
-    case 0:
-	dir = -1;
-	break;
-    case 1:
-	if (XmuCompareISOLatin1(params[0], "on") == 0)
-	    dir = 1;
-	else if (XmuCompareISOLatin1(params[0], "off") == 0)
-	    dir = 0;
-	else if (XmuCompareISOLatin1(params[0], "toggle") == 0)
-	    dir = -1;
-	break;
-    }
+    switch (decodeToggle(xw, params, nparams)) {
 
-    switch (dir) {
-    case -2:
-	Bell(xw, XkbBI_MinorError, 0);
-	break;
-
-    case -1:
+    case toggleAll:
 	(*proc) (w, closure, data);
 	break;
 
-    case 0:
+    case toggleOff:
 	if (var)
 	    (*proc) (w, closure, data);
 	else
 	    Bell(xw, XkbBI_MinorError, 0);
 	break;
 
-    case 1:
+    case toggleOn:
 	if (!var)
 	    (*proc) (w, closure, data);
 	else

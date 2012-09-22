@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.589 2012/09/04 23:43:36 tom Exp $ */
+/* $XTermId: util.c,v 1.591 2012/09/21 23:20:19 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1857,6 +1857,61 @@ do_erase_display(XtermWidget xw, int param, int mode)
 	break;
     }
     screen->protected_mode = saved_mode;
+}
+
+static Boolean
+screen_has_data(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Boolean result = False;
+    LineData *ld;
+    int row, col;
+
+    for (row = 0; row < screen->max_row; ++row) {
+	if ((ld = getLineData(screen, row)) != 0) {
+	    for (col = 0; col < screen->max_col; ++col) {
+		if (ld->attribs[col] & CHARDRAWN) {
+		    result = True;
+		    break;
+		}
+	    }
+	}
+	if (result)
+	    break;
+    }
+    return result;
+}
+
+/*
+ * Like tiXtraScroll, perform a scroll up of the page contents.  In this case,
+ * it happens for the special case when erasing the whole display starting from
+ * the upper-left corner of the screen.
+ */
+void
+do_cd_xtra_scroll(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (xw->misc.cdXtraScroll
+	&& screen->cur_col == 0
+	&& screen->cur_row == 0
+	&& screen_has_data(xw)) {
+	xtermScroll(xw, screen->max_row);
+    }
+}
+
+/*
+ * Scroll the page up (saving it).  This is called when doing terminal
+ * initialization (ti) or exiting from that (te).
+ */
+void
+do_ti_xtra_scroll(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (xw->misc.tiXtraScroll) {
+	xtermScroll(xw, screen->max_row);
+    }
 }
 
 static void

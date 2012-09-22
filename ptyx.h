@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.748 2012/09/20 09:15:20 Paul.Bolle Exp $ */
+/* $XTermId: ptyx.h,v 1.750 2012/09/21 23:03:43 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1883,6 +1883,7 @@ typedef struct {
 	 * Working variables for getLineData().
 	 */
 	size_t		lineExtra;	/* extra space for combining chars */
+	Dimension	widestLine;	/* length of longest LineData	*/
 	/*
 	 * Pointer to the current visible buffer.
 	 */
@@ -2345,7 +2346,8 @@ typedef struct _Misc {
     Boolean useRight;
 #endif
     Boolean titeInhibit;
-    Boolean tiXtraScroll;
+    Boolean tiXtraScroll;	/* scroll on ti/te */
+    Boolean cdXtraScroll;	/* scroll on cd (clear-display) */
     Boolean appcursorDefault;
     Boolean appkeypadDefault;
 #if OPT_INPUT_METHOD

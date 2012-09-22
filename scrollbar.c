@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.186 2012/09/09 21:16:15 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.188 2012/09/21 10:39:10 tom Exp $ */
 
 /*
  * Copyright 2000-2011,2012 by Thomas E. Dickey
@@ -916,6 +916,7 @@ SetScrollLock(TScreen * screen, Bool enable)
 {
     if (screen->allowScrollLock) {
 	if (screen->scroll_lock != enable) {
+	    TRACE(("SetScrollLock %s\n", BtoS(enable)));
 	    screen->scroll_lock = (Boolean) enable;
 	    ShowScrollLock(screen, enable);
 	}
@@ -935,19 +936,17 @@ HandleScrollLock(Widget w,
 	TScreen *screen = TScreenOf(xw);
 
 	if (screen->allowScrollLock) {
-	    /*
-	     * The default action (used with KeyRelease event) is to cycle the
-	     * state on/off.
-	     */
-	    if (*param_count == 0) {
+
+	    switch (decodeToggle(xw, params, *param_count)) {
+	    case toggleOff:
+		SetScrollLock(screen, False);
+		break;
+	    case toggleOn:
+		SetScrollLock(screen, True);
+		break;
+	    case toggleAll:
 		SetScrollLock(screen, !screen->scroll_lock);
-		TRACE(("HandleScrollLock ->%d\n",
-		       screen->scroll_lock));
-	    } else {
-		SetScrollLock(screen, atoi(params[0]));
-		TRACE(("HandleScrollLock(%s) ->%d\n",
-		       params[0],
-		       screen->scroll_lock));
+		break;
 	    }
 	}
     }
