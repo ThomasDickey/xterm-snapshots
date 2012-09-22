@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.294 2012/08/25 23:00:40 tom Exp $
+dnl $XTermId: configure.in,v 1.296 2012/09/22 11:54:50 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -554,6 +554,23 @@ if test "$enable_exec_xterm" = yes ; then
 		AC_DEFINE_UNQUOTED(PROCFS_ROOT,"$cf_cv_procfs_cwd")
 		AC_DEFINE(OPT_EXEC_XTERM)
 	fi
+fi
+
+AC_MSG_CHECKING(if you want to use double-buffering)
+CF_ARG_ENABLE(double-buffer,
+	[  --enable-double-buffer  enable double-buffering],
+	[enable_double_bfr=yes],
+	[enable_double_bfr=no])
+AC_MSG_RESULT($enable_double_bfr)
+if test "$enable_double_bfr" = yes ; then
+	case "x$LIBS" in
+	*Xext*)
+		;;
+	*)
+		CF_X_EXT 
+		;;
+	esac
+	AC_DEFINE(OPT_DOUBLE_BUFFER,1)
 fi
 
 AC_MSG_CHECKING(if you want to use FreeType library)

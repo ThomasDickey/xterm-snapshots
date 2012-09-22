@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.750 2012/09/21 23:03:43 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.752 2012/09/22 00:32:04 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -392,8 +392,8 @@ typedef struct {
 } OptionHelp;
 
 typedef	struct {
-    	int	count;			/* number of values in params[]	*/
-    	int	has_subparams;		/* true if there are any sub's	*/
+	int	count;			/* number of values in params[]	*/
+	int	has_subparams;		/* true if there are any sub's	*/
 	int	is_sub[NPARAM];		/* true for subparam		*/
 	int	params[NPARAM];		/* parameter value		*/
 } PARAMS;
@@ -519,6 +519,10 @@ typedef struct {
 
 #ifndef OPT_DEC_SOFTFONT
 #define OPT_DEC_SOFTFONT 0 /* true if xterm is configured for VT220 softfonts */
+#endif
+
+#ifndef OPT_DOUBLE_BUFFER
+#define OPT_DOUBLE_BUFFER 0 /* true if using double-buffering */
 #endif
 
 #ifndef OPT_EBCDIC
@@ -1356,7 +1360,7 @@ typedef struct {
 	 * of widths.
 	 */
 typedef struct {
-    	Bool		mixed;
+	Bool		mixed;
 	Dimension	min_width;	/* nominal cell width for 0..255 */
 	Dimension	max_width;	/* maximum cell width */
 } FontMap;
@@ -1539,7 +1543,7 @@ typedef struct {
 } SavedCursor;
 
 typedef struct _SaveTitle {
-    	struct _SaveTitle *next;
+	struct _SaveTitle *next;
 	char		*iconName;
 	char		*windowName;
 } SaveTitle;
@@ -1577,6 +1581,9 @@ typedef struct {
 	int		f_ascent;	/* ascent of font in pixels	*/
 	int		f_descent;	/* descent of font in pixels	*/
 	SbInfo		sb_info;
+#if OPT_DOUBLE_BUFFER
+	Drawable	drawable;	/* X drawable id                */
+#endif
 #if OPT_TOOLBAR
 	Boolean		active;		/* true if toolbars are used	*/
 	TbInfo		tb_info;	/* toolbar information		*/
@@ -1796,6 +1803,7 @@ typedef struct {
 /* VT window parameters */
 	Boolean		Vshow;		/* VT window showing		*/
 	VTwin		fullVwin;
+	int		needSwap;
 #ifndef NO_ACTIVE_ICON
 	VTwin		iconVwin;
 	VTwin		*whichVwin;
@@ -2662,6 +2670,12 @@ typedef struct _TekWidgetRec {
 #define VShellWindow(xw)	XtWindow(SHELL_OF(xw))
 #define TWindow(screen)		WhichTWin(screen)->window
 #define TShellWindow		XtWindow(SHELL_OF(tekWidget))
+
+#if OPT_DOUBLE_BUFFER
+#define VDrawable(screen)	(((screen)->needSwap=1), WhichVWin(screen)->drawable)
+#else
+#define VDrawable(screen)	VWindow(screen)
+#endif
 
 #define Width(screen)		WhichVWin(screen)->width
 #define Height(screen)		WhichVWin(screen)->height

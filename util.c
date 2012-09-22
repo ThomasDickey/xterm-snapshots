@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.591 2012/09/21 23:20:19 tom Exp $ */
+/* $XTermId: util.c,v 1.592 2012/09/22 00:53:04 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1917,6 +1917,9 @@ do_ti_xtra_scroll(XtermWidget xw)
 static void
 CopyWait(XtermWidget xw)
 {
+#if OPT_DOUBLE_BUFFER
+    (void) xw;
+#else /* !OPT_DOUBLE_BUFFER */
     TScreen *screen = TScreenOf(xw);
     XEvent reply;
     XEvent *rep = &reply;
@@ -1951,6 +1954,7 @@ CopyWait(XtermWidget xw)
 	    break;
 	}
     }
+#endif /* OPT_DOUBLE_BUFFER */
 }
 
 /*
@@ -1983,7 +1987,7 @@ copy_area(XtermWidget xw,
 	screen->copy_dest_y = dest_y;
 
 	XCopyArea(screen->display,
-		  VWindow(screen), VWindow(screen),
+		  VDrawable(screen), VDrawable(screen),
 		  NormalGC(xw, screen),
 		  src_x, src_y, width, height, dest_x, dest_y);
     }
@@ -2164,11 +2168,20 @@ handle_translated_exposure(XtermWidget xw,
 	 x1 > Width(screen) ||
 	 y1 > Height(screen))) {
 	set_background(xw, -1);
+#if OPT_DOUBLE_BUFFER
+	XFillRectangle(screen->display, VDrawable(screen),
+		       ReverseGC(xw, screen),
+		       rect_x,
+		       rect_y,
+		       (unsigned) rect_width,
+		       (unsigned) rect_height);
+#else
 	XClearArea(screen->display, VWindow(screen),
 		   rect_x,
 		   rect_y,
 		   (unsigned) rect_width,
 		   (unsigned) rect_height, False);
+#endif
     }
     toprow = y0 / FontHeight(screen);
     if (toprow < 0)
@@ -2349,7 +2362,14 @@ xtermClear(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("xtermClear\n"));
+#if OPT_DOUBLE_BUFFER
+    XFillRectangle(screen->display, VDrawable(screen),
+		   ReverseGC(xw, screen),
+		   0, 0,
+		   FullWidth(screen), FullHeight(screen));
+#else
     XClearWindow(screen->display, VWindow(screen));
+#endif
 }
 
 void
@@ -2941,7 +2961,7 @@ xtermFillCells(XtermWidget xw,
 	    setCgsFore(xw, currentWin, dstId, bg);
 	    setCgsBack(xw, currentWin, dstId, fg);
 
-	    XFillRectangle(screen->display, VWindow(screen),
+	    XFillRectangle(screen->display, VDrawable(screen),
 			   getCgsGC(xw, currentWin, dstId),
 			   x, y,
 			   len * (Cardinal) FontWidth(screen),
@@ -2962,7 +2982,7 @@ xtermSetClipRectangles(Display * dpy,
 {
 #if 0
     TScreen *screen = TScreenOf(term);
-    Drawable draw = VWindow(screen);
+    Drawable draw = VDrawable(screen);
 
     XSetClipMask(dpy, gc, None);
     XDrawRectangle(screen->display, draw, gc,
@@ -3221,7 +3241,7 @@ drawXtermText(XtermWidget xw,
 
 	if (!screen->renderDraw) {
 	    int scr;
-	    Drawable draw = VWindow(screen);
+	    Drawable draw = VDrawable(screen);
 	    Visual *visual;
 
 	    scr = DefaultScreen(dpy);
@@ -3396,7 +3416,7 @@ drawXtermText(XtermWidget xw,
 	if ((flags & UNDERLINE) && screen->underline && !did_ul) {
 	    if (FontDescent(screen) > 1)
 		y++;
-	    XDrawLine(screen->display, VWindow(screen), gc,
+	    XDrawLine(screen->display, VDrawable(screen), gc,
 		      x, y,
 		      x + (int) underline_len * FontWidth(screen) - 1,
 		      y);
@@ -3698,19 +3718,19 @@ drawXtermText(XtermWidget xw,
 
 	if (flags & NOBACKGROUND) {
 	    XDrawString16(screen->display,
-			  VWindow(screen), gc,
+			  VDrawable(screen), gc,
 			  x, y + ascent_adjust,
 			  buffer, dst);
 	} else {
 	    XDrawImageString16(screen->display,
-			       VWindow(screen), gc,
+			       VDrawable(screen), gc,
 			       x, y + ascent_adjust,
 			       buffer, dst);
 	}
 
 	if ((flags & BOLDATTR(screen)) && screen->enbolden) {
 	    beginClipping(screen, gc, (Cardinal) font_width, len);
-	    XDrawString16(screen->display, VWindow(screen), gc,
+	    XDrawString16(screen->display, VDrawable(screen), gc,
 			  x + 1,
 			  y + ascent_adjust,
 			  buffer, dst);
@@ -3735,16 +3755,16 @@ drawXtermText(XtermWidget xw,
 #endif
 
 	if (flags & NOBACKGROUND) {
-	    XDrawString(screen->display, VWindow(screen), gc,
+	    XDrawString(screen->display, VDrawable(screen), gc,
 			x, y, buffer, length);
 	} else {
-	    XDrawImageString(screen->display, VWindow(screen), gc,
+	    XDrawImageString(screen->display, VDrawable(screen), gc,
 			     x, y, buffer, length);
 	}
 	underline_len = (Cardinal) length;
 	if ((flags & BOLDATTR(screen)) && screen->enbolden) {
 	    beginClipping(screen, gc, font_width, length);
-	    XDrawString(screen->display, VWindow(screen), gc,
+	    XDrawString(screen->display, VDrawable(screen), gc,
 			x + 1, y, buffer, length);
 	    endClipping(screen, gc);
 	}
@@ -3753,7 +3773,7 @@ drawXtermText(XtermWidget xw,
     if ((flags & UNDERLINE) && screen->underline && !did_ul) {
 	if (FontDescent(screen) > 1)
 	    y++;
-	XDrawLine(screen->display, VWindow(screen), gc,
+	XDrawLine(screen->display, VDrawable(screen), gc,
 		  x, y, (x + (int) underline_len * font_width - 1), y);
     }
 
@@ -4033,12 +4053,21 @@ ClearCurBackground(XtermWidget xw,
     if (VWindow(screen)) {
 	set_background(xw, xw->cur_background);
 
+#if OPT_DOUBLE_BUFFER
+	XFillRectangle(screen->display, VDrawable(screen),
+		       ReverseGC(xw, screen),
+		       CursorX2(screen, left, fw),
+		       CursorY(screen, top),
+		       (width * fw),
+		       (height * (unsigned) FontHeight(screen)));
+#else
 	XClearArea(screen->display, VWindow(screen),
 		   CursorX2(screen, left, fw),
 		   CursorY2(screen, top),
 		   (width * fw),
 		   (height * (unsigned) FontHeight(screen)),
 		   False);
+#endif
 
 	set_background(xw, -1);
     }

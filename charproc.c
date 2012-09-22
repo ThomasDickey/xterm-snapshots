@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1256 2012/09/21 23:01:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1257 2012/09/22 00:41:59 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -100,6 +100,10 @@
 #include <X11/XawPlus/XawImP.h>
 #endif
 
+#endif
+
+#if OPT_DOUBLE_BUFFER
+#include <X11/extensions/Xdbe.h>
 #endif
 
 #if OPT_WIDE_CHARS
@@ -4206,6 +4210,9 @@ in_put(XtermWidget xw)
     int i, time_select;
     int size;
     int update = VTbuffer->update;
+#if OPT_DOUBLE_BUFFER
+    int should_wait = 1;
+#endif
 
     static struct timeval select_timeout;
 
@@ -4237,7 +4244,21 @@ in_put(XtermWidget xw)
 		FD_CLR(screen->respond, &select_mask);
 		break;
 	    }
-#if defined(HAVE_SCHED_YIELD)
+#if OPT_DOUBLE_BUFFER
+	    if (should_wait) {
+		// wait 25 msec for potential extra data (avoids some bogus flickering)
+		// that's only 40 FPS but hey, it's still lower than the input lag on some consoles! :)
+		usleep(25000);
+		should_wait = 0;
+	    }
+	    select_timeout.tv_sec = 0;
+	    i = Select(max_plus1, &select_mask, &write_mask, 0,
+		       &select_timeout);
+	    if (i > 0)
+		continue;
+	    else
+		break;
+#elif defined(HAVE_SCHED_YIELD)
 	    /*
 	     * If we've read a full (small/fragment) buffer, let the operating
 	     * system have a turn, and we'll resume reading until we've either
@@ -4324,6 +4345,16 @@ in_put(XtermWidget xw)
 	}
 	if (need_cleanup)
 	    Cleanup(0);
+#if OPT_DOUBLE_BUFFER
+	if (screen->needSwap) {
+	    XdbeSwapInfo swap;
+	    swap.swap_window = VWindow(screen);
+	    swap.swap_action = XdbeCopied;
+	    XdbeSwapBuffers(XtDisplay(term), &swap, 1);
+	    XFlush(XtDisplay(xw));
+	    screen->needSwap = 0;
+	}
+#endif
 	i = Select(max_plus1, &select_mask, &write_mask, 0,
 		   (time_select ? &select_timeout : 0));
 	if (i < 0) {
@@ -6382,6 +6413,15 @@ SwitchBufs(XtermWidget xw, int toBuf)
 	if (screen->scroll_amt) {
 	    FlushScroll(xw);
 	}
+#if OPT_DOUBLE_BUFFER
+	XFillRectangle(screen->display,
+		       VDrawable(screen),
+		       ReverseGC(xw, screen),
+		       (int) OriginX(screen),
+		       (int) top * FontHeight(screen) + screen->border,
+		       (unsigned) Width(screen),
+		       (unsigned) ((rows - top) * FontHeight(screen)));
+#else
 	XClearArea(screen->display,
 		   VWindow(screen),
 		   (int) OriginX(screen),
@@ -6389,6 +6429,7 @@ SwitchBufs(XtermWidget xw, int toBuf)
 		   (unsigned) Width(screen),
 		   (unsigned) ((rows - top) * FontHeight(screen)),
 		   False);
+#endif
     }
     ScrnUpdate(xw, 0, 0, rows, MaxCols(screen), False);
 }
@@ -8421,6 +8462,26 @@ VTRealize(Widget w,
 		      (int) xw->core.depth,
 		      InputOutput, CopyFromParent,
 		      *valuemask | CWBitGravity, values);
+#if OPT_DOUBLE_BUFFER
+    screen->fullVwin.drawable = screen->fullVwin.window;
+
+    {
+	Window win = screen->fullVwin.window;
+	Drawable d;
+	int major, minor;
+	if (!XdbeQueryExtension(XtDisplay(xw), &major, &minor)) {
+	    fprintf(stderr, "XdbeQueryExtension returned zero!\n");
+	    exit(3);
+	}
+	d = XdbeAllocateBackBufferName(XtDisplay(xw), win, XdbeCopied);
+	if (d == None) {
+	    fprintf(stderr, "Couldn't allocate a back buffer!\n");
+	    exit(3);
+	}
+	screen->fullVwin.drawable = d;
+	screen->needSwap = 1;
+    }
+#endif /* OPT_DOUBLE_BUFFER */
     screen->event_mask = values->event_mask;
 
 #ifndef NO_ACTIVE_ICON
@@ -8492,6 +8553,9 @@ VTRealize(Widget w,
 			  InputOutput, CopyFromParent,
 			  *valuemask | CWBitGravity | CWBorderPixel,
 			  values);
+#if OPT_DOUBLE_BUFFER
+	screen->iconVwin.drawable = screen->iconVwin.window;
+#endif
 	XtVaSetValues(shell,
 		      XtNiconWindow, screen->iconVwin.window,
 		      (XtPointer) 0);
@@ -9296,7 +9360,7 @@ ShowCursor(void)
 	     */
 	    screen->box->x = (short) x;
 	    screen->box->y = (short) (y + FontHeight(screen) - 2);
-	    XDrawLines(screen->display, VWindow(screen), outlineGC,
+	    XDrawLines(screen->display, VDrawable(screen), outlineGC,
 		       screen->box, NBOX, CoordModePrevious);
 	} else if (isCursorBar(screen)) {
 
@@ -9331,7 +9395,7 @@ ShowCursor(void)
 	    if (!filled) {
 		screen->box->x = (short) x;
 		screen->box->y = (short) y;
-		XDrawLines(screen->display, VWindow(screen), outlineGC,
+		XDrawLines(screen->display, VDrawable(screen), outlineGC,
 			   screen->box, NBOX, CoordModePrevious);
 	    }
 	}
