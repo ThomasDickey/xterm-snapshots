@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.309 2012/09/21 10:39:29 tom Exp $ */
+/* $XTermId: menu.c,v 1.310 2012/09/22 14:53:45 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2857,7 +2857,7 @@ SetupMenus(Widget shell, Widget *forms, Widget *menus, Dimension * menu_high)
     if (shell == toplevel) {
 	XawSimpleMenuAddGlobalActions(app_con);
 	XtRegisterGrabAction(HandlePopupMenu, True,
-			     (ButtonPressMask | ButtonReleaseMask),
+			     (unsigned) (ButtonPressMask | ButtonReleaseMask),
 			     GrabModeAsync, GrabModeAsync);
     }
 #if OPT_TOOLBAR

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.607 2012/09/20 09:15:20 Paul.Bolle Exp $ */
+/* $XTermId: misc.c,v 1.608 2012/09/22 14:51:29 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4295,9 +4295,9 @@ x_find_icon(char **work, int *state, const char *suffix)
     case 1:
 	break;
     case 2:
-	if (!strncmp(filename, "/", 1) ||
-	    !strncmp(filename, "./", 2) ||
-	    !strncmp(filename, "../", 3))
+	if (!strncmp(filename, "/", (size_t) 1) ||
+	    !strncmp(filename, "./", (size_t) 2) ||
+	    !strncmp(filename, "../", (size_t) 3))
 	    goto giveup;
 	prefix = PIXMAP_ROOTDIR;
 	suffix = "";

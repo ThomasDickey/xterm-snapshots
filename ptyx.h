@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.752 2012/09/22 00:32:04 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.753 2012/09/25 08:34:06 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1826,7 +1826,7 @@ typedef struct {
 	Boolean		fnt_boxes;	/* true if font has box-chars	*/
 	Boolean		force_packed;	/* true to override proportional */
 #if OPT_BOX_CHARS
-	Boolean		force_box_chars;/* true if we assume that	*/
+	Boolean		force_box_chars;/* true if we assume no boxchars */
 	Boolean		force_all_chars;/* true to outline missing chars */
 	Boolean		allow_packing;	/* true to allow packed-fonts	*/
 #endif
