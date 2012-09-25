@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1257 2012/09/22 00:41:59 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1258 2012/09/22 14:52:33 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -8169,7 +8169,7 @@ getProperty(Display * dpy,
     if (XGetWindowProperty(dpy,
 			   w,
 			   property,
-			   0,
+			   0L,
 			   long_length,
 			   False,
 			   req_type,

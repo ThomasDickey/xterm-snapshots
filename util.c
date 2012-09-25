@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.592 2012/09/22 00:53:04 tom Exp $ */
+/* $XTermId: util.c,v 1.593 2012/09/25 09:29:29 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -3604,6 +3604,7 @@ drawXtermText(XtermWidget xw,
 	Bool needWide = False;
 	int ascent_adjust = 0;
 	int src, dst;
+	Bool useBoldFont;
 
 	BumpTypedBuffer(XChar2b, len);
 	buffer = BfBuf(XChar2b);
@@ -3663,6 +3664,47 @@ drawXtermText(XtermWidget xw,
 #endif /* OPT_MINI_LUIT */
 	    ++dst;
 	}
+
+	/*
+	 * Check for special case where the bold font lacks glyphs found in the
+	 * normal font, and drop down to normal fonts with overstriking to help
+	 * show the actual characters.
+	 */
+	useBoldFont = ((flags & BOLDATTR(screen)) != 0);
+	if ((flags & BOLDATTR(screen)) != 0) {
+	    XTermFonts *norm;
+	    XTermFonts *bold;
+	    Bool noBold, noNorm;
+
+	    if (needWide && okFont(BoldWFont(screen))) {
+		norm = WhichVFontData(screen, fnts[fWide]);
+		bold = WhichVFontData(screen, fnts[fWBold]);
+	    } else if (okFont(BoldFont(screen))) {
+		norm = WhichVFontData(screen, fnts[fNorm]);
+		bold = WhichVFontData(screen, fnts[fBold]);
+	    } else {
+		useBoldFont = False;
+	    }
+
+	    if (useBoldFont && FontIsIncomplete(bold)) {
+		for (src = 0; src < (int) len; src++) {
+		    IChar ch = text[src];
+
+		    if (ch == HIDDEN_CHAR)
+			continue;
+
+		    noBold = IsXtermMissingChar(screen, ch, bold);
+		    if (noBold) {
+			noNorm = IsXtermMissingChar(screen, ch, norm);
+			if (!noNorm) {
+			    useBoldFont = False;
+			    break;
+			}
+		    }
+		}
+	    }
+	}
+
 	/* FIXME This is probably wrong. But it works. */
 	underline_len = len;
 
@@ -3674,8 +3716,7 @@ drawXtermText(XtermWidget xw,
 	    Pixel fg = getCgsFore(xw, currentWin, gc);
 	    Pixel bg = getCgsBack(xw, currentWin, gc);
 
-	    if (needWide
-		&& (okFont(NormalWFont(screen)) || okFont(BoldWFont(screen)))) {
+	    if (needWide && okFont(BoldWFont(screen))) {
 		if ((flags & BOLDATTR(screen)) != 0
 		    && okFont(BoldWFont(screen))) {
 		    fntId = fWBold;
@@ -3685,7 +3726,8 @@ drawXtermText(XtermWidget xw,
 		    cgsId = gcWide;
 		}
 	    } else if ((flags & BOLDATTR(screen)) != 0
-		       && okFont(BoldFont(screen))) {
+		       && okFont(BoldFont(screen))
+		       && useBoldFont) {
 		fntId = fBold;
 		cgsId = gcBold;
 	    } else {
@@ -3728,7 +3770,7 @@ drawXtermText(XtermWidget xw,
 			       buffer, dst);
 	}
 
-	if ((flags & BOLDATTR(screen)) && screen->enbolden) {
+	if ((flags & BOLDATTR(screen)) && (screen->enbolden || !useBoldFont)) {
 	    beginClipping(screen, gc, (Cardinal) font_width, len);
 	    XDrawString16(screen->display, VDrawable(screen), gc,
 			  x + 1,

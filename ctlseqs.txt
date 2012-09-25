@@ -698,6 +698,8 @@ CSI Ps SP q
             Ps = 2  -> steady block.
             Ps = 3  -> blinking underline.
             Ps = 4  -> steady underline.
+            Ps = 5  -> blinking bar (xterm).
+            Ps = 6  -> steady bar (xterm).
 CSI Ps " q
           Select character protection attribute (DECSCA).  Valid values
           for the parameter:

@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1226 2012/09/22 12:01:32 tom Exp $
+  $XTermId: xterm.log.html,v 1.1228 2012/09/25 09:39:18 tom Exp $
   -->
 
 <html>
@@ -850,6 +850,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve rendering for the case when a Unicode character is
+    absent in the bold font but present in the normal font by
+    temporarily falling back to the normal font (Debian
+    #359006, Debian #408666).</li>
+
     <li>provide configure option
     <code>--enable-double-buffer</code> and ifdef's to allow
     comparisons with/without double-buffering. The default uses
