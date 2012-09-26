@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.753 2012/09/25 08:34:06 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.755 2012/09/26 00:39:38 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1401,6 +1401,7 @@ typedef struct {
 
 	/* indices into save_modes[] */
 typedef enum {
+	DP_ALTERNATE_SCROLL,
 	DP_ALT_SENDS_ESC,
 	DP_BELL_IS_URGENT,
 	DP_CRS_VISIBLE,
@@ -1916,6 +1917,7 @@ typedef struct {
 	size_t		save_len;	/* ...and its length		*/
 
 	int		scrolllines;	/* number of lines to button scroll */
+	Boolean		alternateScroll; /* scroll-actions become keys */
 	Boolean		scrollttyoutput; /* scroll to bottom on tty output */
 	Boolean		scrollkey;	/* scroll to bottom on key	*/
 	Boolean		cursor_moved;	/* scrolling makes cursor move	*/

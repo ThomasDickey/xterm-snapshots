@@ -381,6 +381,7 @@ CSI ? Pm h
             Ps = 1 0 0 4  -> Send FocusIn/FocusOut events.
             Ps = 1 0 0 5  -> Enable UTF-8 Mouse Mode.
             Ps = 1 0 0 6  -> Enable SGR Mouse Mode.
+            Ps = 1 0 0 7  -> Enable Alternate Scroll Mode.
             Ps = 1 0 1 0  -> Scroll to bottom on tty output (rxvt).
             Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).
@@ -476,6 +477,7 @@ CSI ? Pm l
             Ps = 1 0 0 4  -> Don't send FocusIn/FocusOut events.
             Ps = 1 0 0 5  -> Disable UTF-8 Mouse Mode.
             Ps = 1 0 0 6  -> Disable SGR Mouse Mode.
+            Ps = 1 0 0 7  -> Disable Alternate Scroll Mode.
             Ps = 1 0 1 0  -> Don't scroll to bottom on tty output
           (rxvt).
             Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
@@ -1442,6 +1444,8 @@ as follows:
                 #define SET_SGR_EXT_MODE_MOUSE      1006
                 #define SET_URXVT_EXT_MODE_MOUSE    1015
 
+                #define SET_ALTERNATE_SCROLL        1007
+
 The motion reporting modes are strictly xterm extensions, and are not
 part of any standard, though they are analogous to the DEC VT200 DECELR
 locator reports.
@@ -1480,7 +1484,12 @@ o   Cx and Cy are the x and y coordinates of the mouse event, encoded as
 Wheel mice may return buttons 4 and 5.  Those buttons are represented by
 the same event codes as buttons 1 and 2 respectively, except that 64 is
 added to the event code.  Release events for the wheel buttons are not
-reported.
+reported.  By default, the wheel mouse events are translated to scroll-
+back and scroll-forw actions.  Those actions normally scroll the whole
+window, as if the scrollbar was used.  However if Alternate Scroll mode
+is set, then cursor up/down controls are sent when the terminal is dis-
+playing the alternate screen.  The initial state of Alternate Scroll
+mode is set using the alternateScroll resource.
 
 Mouse highlight tracking notifies a program of a button press, receives
 a range of lines from the program, highlights the region covered by the

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.704 2012/09/22 00:16:27 tom Exp $ */
+/* $XTermId: xterm.h,v 1.706 2012/09/26 00:38:34 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -356,6 +356,7 @@ extern char **environ;
 #define XtNanswerbackString	"answerbackString"
 #define XtNappcursorDefault	"appcursorDefault"
 #define XtNappkeypadDefault	"appkeypadDefault"
+#define XtNalternateScroll	"alternateScroll"
 #define XtNautoWrap		"autoWrap"
 #define XtNawaitInput		"awaitInput"
 #define XtNbackarrowKey		"backarrowKey"

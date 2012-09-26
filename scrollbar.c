@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.190 2012/09/22 00:46:04 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.192 2012/09/26 08:42:38 tom Exp $ */
 
 /*
  * Copyright 2000-2011,2012 by Thomas E. Dickey
@@ -666,12 +666,15 @@ params_to_pixels(TScreen * screen, String * params, Cardinal n)
 	    mult = FontHeight(screen);
 	}
 	mult *= atoi(params[0]);
+	TRACE(("params_to_pixels(%s,%s) = %d\n", params[0], params[1], mult));
 	break;
     case 1:
 	mult = atoi(params[0]) * FontHeight(screen);	/* lines */
+	TRACE(("params_to_pixels(%s) = %d\n", params[0], mult));
 	break;
     default:
 	mult = screen->scrolllines * FontHeight(screen);
+	TRACE(("params_to_pixels() = %d\n", mult));
 	break;
     }
     return mult;
@@ -693,6 +696,32 @@ AmountToScroll(Widget w, String * params, Cardinal nparams)
     return result;
 }
 
+static void
+AlternateScroll(Widget w, long amount)
+{
+    XtermWidget xw = (XtermWidget) w;
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->alternateScroll && screen->whichBuf) {
+	ANSI reply;
+
+	amount /= FontHeight(screen);
+	memset(&reply, 0, sizeof(reply));
+	reply.a_type = ANSI_CSI;
+	if (amount > 0) {
+	    reply.a_final = 'B';
+	} else {
+	    amount = -amount;
+	    reply.a_final = 'A';
+	}
+	while (amount-- > 0) {
+	    unparseseq(xw, &reply);
+	}
+    } else {
+	ScrollTextUpDownBy(w, (XtPointer) 0, (XtPointer) amount);
+    }
+}
+
 /*ARGSUSED*/
 void
 HandleScrollForward(
@@ -704,7 +733,7 @@ HandleScrollForward(
     long amount;
 
     if ((amount = AmountToScroll(xw, params, *nparams)) != 0) {
-	ScrollTextUpDownBy(xw, (XtPointer) 0, (XtPointer) amount);
+	AlternateScroll(xw, amount);
     }
 }
 
@@ -719,7 +748,7 @@ HandleScrollBack(
     long amount;
 
     if ((amount = -AmountToScroll(xw, params, *nparams)) != 0) {
-	ScrollTextUpDownBy(xw, (XtPointer) 0, (XtPointer) amount);
+	AlternateScroll(xw, amount);
     }
 }
 
