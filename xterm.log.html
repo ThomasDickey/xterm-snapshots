@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1228 2012/09/25 09:39:18 tom Exp $
+  $XTermId: xterm.log.html,v 1.1230 2012/09/26 08:59:21 tom Exp $
   -->
 
 <html>
@@ -43,7 +43,7 @@
   <link rev="MADE" href="mailto:dickey@invisible-island.net">
   <meta http-equiv="Content-Type" content=
   "text/html; charset=us-ascii">
-  <link rel="SHORTCUT ICON" href="images/mini.xterm_48.png" type=
+  <link rel="SHORTCUT ICON" href="images/mini.xterm_48.ico" type=
   "image/x-icon">
 </head>
 
@@ -850,10 +850,16 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add <code>alternateScroll</code> resource and corresponding
+    control sequences which modify the <code>scroll-forw</code> and
+    <code>scroll-back</code> actions: when the alternate screen is
+    displayed, wheel mouse up/down will send cursor keys (Debian
+    #683942).</li>
+
     <li>improve rendering for the case when a Unicode character is
     absent in the bold font but present in the normal font by
-    temporarily falling back to the normal font (Debian
-    #359006, Debian #408666).</li>
+    temporarily falling back to the normal font (Debian #359006,
+    Debian #408666).</li>
 
     <li>provide configure option
     <code>--enable-double-buffer</code> and ifdef's to allow

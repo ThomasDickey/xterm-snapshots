@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.608 2012/09/22 14:51:29 tom Exp $ */
+/* $XTermId: misc.c,v 1.611 2012/09/26 08:56:19 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4165,6 +4165,9 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	case SET_URXVT_EXT_MODE_MOUSE:
 	    result = MdBool(screen->extend_coords == params[0]);
 	    break;
+	case SET_ALTERNATE_SCROLL:
+	    result = MdBool(screen->alternateScroll);
+	    break;
 	case 1010:		/* rxvt */
 	    result = MdBool(screen->scrollttyoutput);
 	    break;
@@ -4276,6 +4279,8 @@ udk_lookup(int keycode, int *len)
     return 0;
 }
 
+#ifdef HAVE_LIBXPM
+
 #ifndef PIXMAP_ROOTDIR
 #define PIXMAP_ROOTDIR "/usr/share/pixmaps/"
 #endif
@@ -4325,6 +4330,7 @@ x_find_icon(char **work, int *state, const char *suffix)
     }
     return result;
 }
+#endif /* HAVE_LIBXPM */
 
 /*
  * WM_ICON_SIZE should be honored if possible.

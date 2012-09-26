@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.537 2012/09/21 23:22:05 tom Exp $
+.\" $XTermId: xterm.man,v 1.538 2012/09/26 08:49:58 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1750,6 +1750,14 @@ combinations of ESC-prefix and 8-bit characters.
 The default is \*(``__alt_sends_esc__\*(''.
 \fIXterm\fP provides a menu option for toggling this resource.
 .TP 8
+.B "alternateScroll (\fPclass\fB ScrollCond)"
+If \*(``true\*('',
+the \fBscroll-back\fP and \fBscroll-forw\fP actions
+send cursor\-up and \-down keys when xterm is displaying the alternate screen.
+The default is \*(``false\*(''.
+.IP
+The \fBalternateScroll\fP state can also be set using a control sequence.
+.TP 8
 .B "alwaysBoldMode (\fPclass\fB AlwaysBoldMode)"
 Specifies whether \fIxterm\fP should check if the normal and bold
 fonts are distinct before deciding whether to use overstriking to
@@ -2582,8 +2590,8 @@ font resources to obtain a TrueType pointsize.
 If all of the \fBfaceSize\fP resources are set, then \fIxterm\fP
 will use this information to determine the next smaller/larger
 TrueType font for the
-\fIlarger-vt-font()\fP and
-\fIsmaller-vt-font()\fP actions.
+\fBlarger-vt-font()\fP and
+\fBsmaller-vt-font()\fP actions.
 If any are not set, \fIxterm\fP will use only the areas of the bitmap fonts.
 .TP 8
 .B "faceSize1 (\fPclass\fB FaceSize1)"
@@ -2866,7 +2874,7 @@ The default is \*(``nil2\*(''.
 .TP 8
 .B "initialFont (\fPclass\fB InitialFont)"
 Specifies which of the VT100 fonts to use initially.
-Values are the same as for the \fIset-vt-font\fP action.
+Values are the same as for the \fBset-vt-font\fP action.
 The default is \*(``d\*('', i.e., \*(``default\*(''.
 .TP 8
 .B "inputMethod (\fPclass\fB XtCInputMethod)"
@@ -3581,7 +3589,7 @@ The default is
 .TP 8
 .B "scrollLines (\fPclass\fB ScrollLines)"
 Specifies the number of lines that the \fIscroll-back\fP and
-\fIscroll-forw\fP actions should use as a default.
+\fBscroll-forw\fP actions should use as a default.
 The default value is 1.
 .TP 8
 .B "scrollTtyOutput (\fPclass\fB ScrollCond)"
@@ -3938,7 +3946,7 @@ Specifies the height of the Tektronix window in pixels.
 .TP 8
 .B "initialFont (\fPclass\fB InitialFont)"
 Specifies which of the four Tektronix fonts to use initially.
-Values are the same as for the \fIset-tek-text\fP action.
+Values are the same as for the \fBset-tek-text\fP action.
 The default is \*(``large\*(''.
 .TP 8
 .B "width (\fPclass\fB Width)"

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1258 2012/09/22 14:52:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1260 2012/09/26 00:39:14 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -402,6 +402,7 @@ static XtResource xterm_resources[] =
     Bres(XtNalwaysHighlight, XtCAlwaysHighlight, screen.always_highlight, False),
     Bres(XtNappcursorDefault, XtCAppcursorDefault, misc.appcursorDefault, False),
     Bres(XtNappkeypadDefault, XtCAppkeypadDefault, misc.appkeypadDefault, False),
+    Bres(XtNalternateScroll, XtCScrollCond, screen.alternateScroll, False),
     Bres(XtNautoWrap, XtCAutoWrap, misc.autoWrap, True),
     Bres(XtNawaitInput, XtCAwaitInput, screen.awaitInput, False),
     Bres(XtNfreeBoldBox, XtCFreeBoldBox, screen.free_bold_box, False),
@@ -4847,6 +4848,7 @@ typedef enum {
     ,srm_EXT_MODE_MOUSE = SET_EXT_MODE_MOUSE
     ,srm_SGR_EXT_MODE_MOUSE = SET_SGR_EXT_MODE_MOUSE
     ,srm_URXVT_EXT_MODE_MOUSE = SET_URXVT_EXT_MODE_MOUSE
+    ,srm_ALTERNATE_SCROLL = SET_ALTERNATE_SCROLL
     ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
     ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
     ,srm_EIGHT_BIT_META = 1034
@@ -5160,6 +5162,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 		screen->extend_coords = 0;
 	    }
 	    break;
+	case srm_ALTERNATE_SCROLL:
+	    set_bool_mode(screen->alternateScroll);
+	    break;
 	case srm_RXVT_SCROLL_TTY_OUTPUT:
 	    set_bool_mode(screen->scrollttyoutput);
 	    update_scrollttyoutput();
@@ -5401,6 +5406,9 @@ savemodes(XtermWidget xw)
 	    /* FALLTHRU */
 	case srm_URXVT_EXT_MODE_MOUSE:
 	    DoSM(DP_X_EXT_MOUSE, screen->extend_coords);
+	    break;
+	case srm_ALTERNATE_SCROLL:
+	    DoSM(DP_ALTERNATE_SCROLL, screen->alternateScroll);
 	    break;
 	case srm_RXVT_SCROLL_TTY_OUTPUT:
 	    DoSM(DP_RXVT_SCROLL_TTY_OUTPUT, screen->scrollttyoutput);
@@ -5697,6 +5705,9 @@ restoremodes(XtermWidget xw)
 	    if (!xw->misc.titeInhibit) {
 		CursorRestore(xw);
 	    }
+	    break;
+	case srm_ALTERNATE_SCROLL:
+	    DoRM(DP_ALTERNATE_SCROLL, screen->alternateScroll);
 	    break;
 	case srm_RXVT_SCROLL_TTY_OUTPUT:
 	    DoRM(DP_RXVT_SCROLL_TTY_OUTPUT, screen->scrollttyoutput);
@@ -7273,6 +7284,7 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.savelines);
     init_Ires(screen.scrollBarBorder);
     init_Ires(screen.scrolllines);
+    init_Bres(screen.alternateScroll);
     init_Bres(screen.scrollttyoutput);
     init_Bres(screen.scrollkey);
 
