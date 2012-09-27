@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.611 2012/09/26 08:56:19 tom Exp $ */
+/* $XTermId: misc.c,v 1.612 2012/09/26 09:29:37 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2651,7 +2651,9 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
     result = best_index;
 #else
     (void) xw;
-    (void) spec;
+    (void) find_red;
+    (void) find_green;
+    (void) find_blue;
 #endif
     return result;
 }

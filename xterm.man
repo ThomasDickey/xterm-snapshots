@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.538 2012/09/26 08:49:58 tom Exp $
+.\" $XTermId: xterm.man,v 1.539 2012/09/27 00:59:02 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1778,6 +1778,21 @@ true	false	same	overstrike
 true	false	different	use font
 true	true	ignored	overstrike
 .TE
+.RS
+.LP
+This resource is used only for bitmap fonts:
+.bP
+When using bitmap fonts, it is possible that the font server will 
+approximate the bold font by rescaling it from
+a different font size than expected.
+The \fBalwaysBoldMode\fP resource
+allows the user to override the (sometimes poor)
+resulting bold font with overstriking (which is at least consistent).
+.bP
+The problem does not occur with TrueType fonts (though there can be
+other unnecessary issues such as different coverage of the normal
+and bold fonts).
+.RE
 .IP
 As an alternative, setting the \fBallowBoldFonts\fP resource to false
 overrides both the \fBalwaysBoldMode\fP and the \fBboldMode\fP resources.
@@ -2121,6 +2136,8 @@ The default is \*(``false\*(''.
 This specifies the color to use to display bold characters if
 the \*(``colorBDMode\*('' resource is enabled.
 The default is \*(``XtDefaultForeground\*(''.
+.IP
+See also the \fBveryBoldColors\fP resource which allows combining bold and color.
 .TP 8
 .B "colorBDMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the bold attribute should be displayed in
@@ -2133,6 +2150,8 @@ The default is \*(``false\*(''.
 This specifies the color to use to display blink characters if
 the \*(``colorBLMode\*('' resource is enabled.
 The default is \*(``XtDefaultForeground\*(''.
+.IP
+See also the \fBveryBoldColors\fP resource which allows combining underline and color.
 .TP 8
 .B "colorBLMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the blink attribute should be displayed in
@@ -2149,6 +2168,8 @@ The default is \*(``true\*(''.
 This specifies the color to use to display reverse characters if
 the \*(``colorRVMode\*('' resource is enabled.
 The default is \*(``XtDefaultForeground\*(''.
+.IP
+See also the \fBveryBoldColors\fP resource which allows combining reverse and color.
 .TP 8
 .B "colorRVMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the reverse attribute should be displayed in
@@ -2160,6 +2181,8 @@ The default is \*(``false\*(''.
 This specifies the color to use to display underlined characters if
 the \*(``colorULMode\*('' resource is enabled.
 The default is \*(``XtDefaultForeground\*(''.
+.IP
+See also the \fBveryBoldColors\fP resource which allows combining underline and color.
 .TP 8
 .B "colorULMode (\fPclass\fB ColorAttrMode)"
 Specifies whether characters with the underline attribute should be displayed
