@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.593 2012/09/25 09:29:29 tom Exp $ */
+/* $XTermId: util.c,v 1.594 2012/09/27 10:56:07 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -3672,8 +3672,8 @@ drawXtermText(XtermWidget xw,
 	 */
 	useBoldFont = ((flags & BOLDATTR(screen)) != 0);
 	if ((flags & BOLDATTR(screen)) != 0) {
-	    XTermFonts *norm;
-	    XTermFonts *bold;
+	    XTermFonts *norm = 0;
+	    XTermFonts *bold = 0;
 	    Bool noBold, noNorm;
 
 	    if (needWide && okFont(BoldWFont(screen))) {
