@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1260 2012/09/26 00:39:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1262 2012/09/27 10:53:14 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -107,6 +107,7 @@
 #endif
 
 #if OPT_WIDE_CHARS
+#include <xutf8.h>
 #include <wcwidth.h>
 #include <precompose.h>
 #ifdef HAVE_LANGINFO_CODESET
@@ -4247,8 +4248,8 @@ in_put(XtermWidget xw)
 	    }
 #if OPT_DOUBLE_BUFFER
 	    if (should_wait) {
-		// wait 25 msec for potential extra data (avoids some bogus flickering)
-		// that's only 40 FPS but hey, it's still lower than the input lag on some consoles! :)
+		/* wait 25 msec for potential extra data (avoids some bogus flickering) */
+		/* that's only 40 FPS but hey, it's still lower than the input lag on some consoles! :) */
 		usleep(25000);
 		should_wait = 0;
 	    }
