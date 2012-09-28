@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.612 2012/09/26 09:29:37 tom Exp $ */
+/* $XTermId: misc.c,v 1.614 2012/09/27 20:49:55 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4350,10 +4350,11 @@ xtermLoadIcon(XtermWidget xw)
      * Use the compiled-in icon as a resource default.
      */
     {
-#  include <icons/xterm_48x48.xpm>
+#  include <icons/xterm.xpms>
+	size_t last = ((sizeof(xterm_xpms) / sizeof(xterm_xpms)) - 1);
 	if (XpmCreatePixmapFromData(dpy,
 				    DefaultRootWindow(dpy),
-				    (char **) xterm_48x48_xpm,
+				    (char **) xterm_xpms[last],
 				    &myIcon, 0, 0) != 0) {
 	    myIcon = 0;
 	}
@@ -4400,6 +4401,8 @@ xtermLoadIcon(XtermWidget xw)
     if (workname != 0)
 	free(workname);
 
+#else
+    (void) xw;
 #endif
 }
 

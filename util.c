@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.594 2012/09/27 10:56:07 tom Exp $ */
+/* $XTermId: util.c,v 1.596 2012/09/27 20:35:35 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2852,7 +2852,7 @@ ucs_workaround(XtermWidget xw,
 	IChar eqv = (IChar) AsciiEquivs(ch);
 
 	if (eqv != (IChar) ch) {
-	    int width = my_wcwidth((int) ch);
+	    int width = my_wcwidth((wchar_t) ch);
 
 	    do {
 		drawXtermText(xw,
@@ -3505,7 +3505,7 @@ drawXtermText(XtermWidget xw,
 		drewBoxes = True;
 		continue;
 	    }
-	    ch_width = my_wcwidth((int) ch);
+	    ch_width = my_wcwidth((wchar_t) ch);
 	    isMissing =
 		IsXtermMissingChar(screen, ch,
 				   ((on_wide || ch_width > 1)
@@ -3617,7 +3617,7 @@ drawXtermText(XtermWidget xw,
 
 	    if (!needWide
 		&& !IsIcon(screen)
-		&& ((on_wide || my_wcwidth((int) ch) > 1)
+		&& ((on_wide || my_wcwidth((wchar_t) ch) > 1)
 		    && okFont(NormalWFont(screen)))) {
 		needWide = True;
 	    }
@@ -4380,7 +4380,7 @@ systemWcwidthOk(int samplesize, int samplepass)
     int oops = 0;
 
     for (n = 21; n <= 25; ++n) {
-	int code = (int) dec2ucs((unsigned) n);
+	wchar_t code = (wchar_t) dec2ucs((unsigned) n);
 	int system_code = wcwidth(code);
 	int intern_code = mk_wcwidth(code);
 
