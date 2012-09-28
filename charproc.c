@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1262 2012/09/27 10:53:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1263 2012/09/27 20:38:55 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1697,7 +1697,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 	if (c >= 0x300
 	    && screen->wide_chars
-	    && my_wcwidth((int) c) == 0
+	    && my_wcwidth((wchar_t) c) == 0
 	    && !isWideControl(c)) {
 	    int prev, test;
 	    Boolean used = True;
@@ -1722,9 +1722,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		prev = (int) XTERM_CELL(use_row, use_col);
 		test = do_precomposition(prev, (int) c);
 		TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
-		       prev, my_wcwidth(prev),
-		       (int) c, my_wcwidth((int) c),
-		       test, my_wcwidth(test)));
+		       prev, my_wcwidth((wchar_t) prev),
+		       (int) c, my_wcwidth((wchar_t) c),
+		       test, my_wcwidth((wchar_t) test)));
 	    } else {
 		prev = -1;
 		test = -1;
@@ -1733,7 +1733,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    /* substitute combined character with precomposed character
 	     * only if it does not change the width of the base character
 	     */
-	    if (test != -1 && my_wcwidth(test) == my_wcwidth(prev)) {
+	    if (test != -1
+		&& my_wcwidth((wchar_t) test) == my_wcwidth((wchar_t) prev)) {
 		putXtermCell(screen, use_row, use_col, test);
 	    } else if (screen->char_was_written
 		       || getXtermCell(screen, use_row, use_col) > ' ') {
@@ -4526,7 +4527,7 @@ dotext(XtermWidget xw,
 		    || (screen->vt100_graphics && charset == '0')) {
 		    last_chomp = 1;
 		} else {
-		    last_chomp = my_wcwidth((int) buf[chars_chomped + offset]);
+		    last_chomp = my_wcwidth((wchar_t) buf[chars_chomped + offset]);
 		}
 		width_here += last_chomp;
 		chars_chomped++;
