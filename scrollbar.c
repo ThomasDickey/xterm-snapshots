@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.192 2012/09/26 08:42:38 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.193 2012/09/28 21:04:50 tom Exp $ */
 
 /*
  * Copyright 2000-2011,2012 by Thomas E. Dickey
@@ -66,11 +66,9 @@
 #include <X11/XawPlus/Scrollbar.h>
 #endif
 
-#if defined(HAVE_XKBQUERYEXTENSION) && defined(HAVE_X11_XKBLIB_H) && defined(HAVE_X11_EXTENSIONS_XKB_H)
+#if defined(HAVE_XKBQUERYEXTENSION)
 #include <X11/extensions/XKB.h>
 #include <X11/XKBlib.h>
-#else
-#undef HAVE_XKBQUERYEXTENSION
 #endif
 
 #include <data.h>

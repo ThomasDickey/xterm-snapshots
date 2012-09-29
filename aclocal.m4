@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.346 2012/09/03 17:21:43 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.348 2012/09/29 00:24:28 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3634,6 +3634,65 @@ AC_TRY_LINK([
 ],[cf_cv_xkb_bell_ext=yes],[cf_cv_xkb_bell_ext=no])
 ])
 test "$cf_cv_xkb_bell_ext" = yes && AC_DEFINE(HAVE_XKB_BELL_EXT)
+])
+dnl ---------------------------------------------------------------------------
+dnl CF_XKB_KEYCODE_TO_KEYSYM version: 2 updated: 2012/09/28 20:23:33
+dnl ------------------------
+dnl Some older vendor-unix systems made a practice of delivering fragments of
+dnl Xkb, requiring test-compiles.
+AC_DEFUN([CF_XKB_KEYCODE_TO_KEYSYM],[
+AC_CACHE_CHECK(if we can use XkbKeycodeToKeysym, cf_cv_xkb_keycode_to_keysym,[
+AC_TRY_COMPILE([
+#include <X11/Xlib.h>
+#include <X11/XKBlib.h>
+],[
+    KeySym keysym = XkbKeycodeToKeysym((Display *)0, 0, 0, 0);
+],[
+cf_cv_xkb_keycode_to_keysym=yes
+],[
+cf_cv_xkb_keycode_to_keysym=no
+])
+])
+
+if test $cf_cv_xkb_keycode_to_keysym = yes
+then
+	AC_CHECK_FUNCS(XkbKeycodeToKeysym)
+fi
+])
+dnl ---------------------------------------------------------------------------
+dnl CF_XKB_QUERY_EXTENSION version: 2 updated: 2012/09/28 20:23:46
+dnl ----------------------
+dnl see ifdef in scrollbar.c - iron out here
+AC_DEFUN([CF_XKB_QUERY_EXTENSION],[
+AC_CACHE_CHECK(if we can use XkbQueryExtension, cf_cv_xkb_query_extension,[
+AC_TRY_COMPILE([
+#include <X11/Xlib.h>
+#include <X11/extensions/XKB.h>
+#include <X11/XKBlib.h>
+],[
+	int xkbmajor = XkbMajorVersion;
+	int xkbminor = XkbMinorVersion;
+	int xkbopcode, xkbevent, xkberror;
+
+	if (XkbLibraryVersion(&xkbmajor, &xkbminor)
+	    && XkbQueryExtension((Display *)0,
+				 &xkbopcode,
+				 &xkbevent,
+				 &xkberror,
+				 &xkbmajor,
+				 &xkbminor))
+		 return 0;
+],[
+cf_cv_xkb_query_extension=yes
+],[
+cf_cv_xkb_query_extension=no
+])
+])
+
+if test $cf_cv_xkb_query_extension = yes
+then
+	AC_CHECK_FUNCS(XkbQueryExtension)
+fi
 ])
 dnl ---------------------------------------------------------------------------
 dnl CF_XOPEN_SOURCE version: 42 updated: 2012/01/07 08:26:49
