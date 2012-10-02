@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-282
+MANIFEST for xterm, version xterm-282a
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -124,6 +124,8 @@ icons/terminal_48x48.xcf        gimp-format of "terminal"
 icons/terminal_48x48.xpm        xpm-format of "terminal"
 icons/xterm-color.png           xterm-color 48x48, in png-format
 icons/xterm-color.svg           xterm-color icon
+icons/xterm-color.xpms          collection of color icons
+icons/xterm-color_16x16.xpm     16x16 color icon
 icons/xterm-color_32x32.xcf     gimp file for editing 32x32 icon
 icons/xterm-color_32x32.xpm     32x32 color icon
 icons/xterm-color_48x48.xcf     gimp file for editing 48x48 icon

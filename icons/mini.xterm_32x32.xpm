@@ -1,5 +1,5 @@
 /* XPM */
-static char * mini_xterm_xpm[] = {
+static char * mini_xterm_32x32_xpm[] = {
 "32 32 182 2",
 "  	c None",
 ". 	c #FF4D00",
