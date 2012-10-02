@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.539 2012/09/27 00:59:02 tom Exp $
+.\" $XTermId: xterm.man,v 1.540 2012/10/02 00:50:32 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1298,7 +1298,22 @@ If the \fBiconName\fP resource is given (or is set via the \fB\-n\fP option)
 possibly adding a \*(``.xpm\*('' suffix.
 If it is able to load that file, \fIxterm\fP sets the window manager
 hint for the icon-pixmap.
-If no pixmap file can be loaded, \fIxterm\fP uses a compiled-in pixmap.
+If no pixmap file can be loaded, \fIxterm\fP selects one
+of these compiled-in pixmaps:
+.RS
+.bP
+mini.xterm_16x16,
+mini.xterm_32x32,
+mini.xterm_48x48 or mini.xterm.
+.bP
+xterm_16x16
+xterm_32x32
+xterm_48x48 or xterm
+.bP
+xterm-color_16x16
+xterm-color_32x32
+xterm-color_48x48 or xterm-color.
+.RE
 .TP 8
 .B "keyboardType (\fPclass\fB KeyboardType)"
 Enables one (or none) of the various keyboard-type resources:
@@ -1782,7 +1797,7 @@ true	true	ignored	overstrike
 .LP
 This resource is used only for bitmap fonts:
 .bP
-When using bitmap fonts, it is possible that the font server will 
+When using bitmap fonts, it is possible that the font server will
 approximate the bold font by rescaling it from
 a different font size than expected.
 The \fBalwaysBoldMode\fP resource

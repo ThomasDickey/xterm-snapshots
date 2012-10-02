@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.614 2012/09/27 20:49:55 tom Exp $ */
+/* $XTermId: misc.c,v 1.615 2012/10/02 00:40:16 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4287,6 +4287,11 @@ udk_lookup(int keycode, int *len)
 #define PIXMAP_ROOTDIR "/usr/share/pixmaps/"
 #endif
 
+typedef struct {
+    const char *name;
+    const char *const *data;
+} XPM_DATA;
+
 static char *
 x_find_icon(char **work, int *state, const char *suffix)
 {
@@ -4332,6 +4337,36 @@ x_find_icon(char **work, int *state, const char *suffix)
     }
     return result;
 }
+
+static const XPM_DATA *
+BuiltInXPM(const XPM_DATA * table, Cardinal length)
+{
+    const char *find = resource.icon_name;
+    const XPM_DATA *result = 0;
+    if (!IsEmpty(find)) {
+	Cardinal n;
+	for (n = 0; n < length; ++n) {
+	    if (!x_strcasecmp(find, table[n].name)) {
+		result = table + n;
+		break;
+	    }
+	}
+
+	/*
+	 * As a fallback, check if the icon name matches without the lengths,
+	 * which are all _HHxWW format.
+	 */
+	if (result == 0) {
+	    const char *base = table[0].name;
+	    const char *last = strchr(base, '_');
+	    if (last != 0
+		&& !x_strncasecmp(find, base, (unsigned) (last - base))) {
+		result = table + length - 1;
+	    }
+	}
+    }
+    return result;
+}
 #endif /* HAVE_LIBXPM */
 
 /*
@@ -4343,22 +4378,13 @@ xtermLoadIcon(XtermWidget xw)
 #ifdef HAVE_LIBXPM
     Display *dpy = XtDisplay(xw);
     Pixmap myIcon = 0;
+    const XPM_DATA *myData = 0;
     char *workname = 0;
+#include <icons/mini.xterm.xpms>
+#include <icons/xterm.xpms>
+#include <icons/xterm-color.xpms>
 
     TRACE(("xtermLoadIcon %p:%s\n", (void *) xw, NonNull(resource.icon_name)));
-    /*
-     * Use the compiled-in icon as a resource default.
-     */
-    {
-#  include <icons/xterm.xpms>
-	size_t last = ((sizeof(xterm_xpms) / sizeof(xterm_xpms)) - 1);
-	if (XpmCreatePixmapFromData(dpy,
-				    DefaultRootWindow(dpy),
-				    (char **) xterm_xpms[last],
-				    &myIcon, 0, 0) != 0) {
-	    myIcon = 0;
-	}
-    }
 
     if (!IsEmpty(resource.icon_name)) {
 	int state = 0;
@@ -4380,6 +4406,26 @@ xtermLoadIcon(XtermWidget xw)
 		TRACE(("...success\n"));
 		break;
 	    }
+	}
+    }
+
+    /*
+     * If no external file was found, look for the name in the built-in table.
+     * If that fails, just use the biggest mini-icon.
+     */
+    if (myIcon == 0) {
+	myData = BuiltInXPM(mini_xterm_xpms, XtNumber(mini_xterm_xpms));
+	if (myData == 0)
+	    myData = BuiltInXPM(xterm_color_xpms, XtNumber(xterm_color_xpms));
+	if (myData == 0)
+	    myData = BuiltInXPM(xterm_xpms, XtNumber(xterm_xpms));
+	if (myData == 0)
+	    myData = &mini_xterm_xpms[XtNumber(mini_xterm_xpms) - 1];
+	if (XpmCreatePixmapFromData(dpy,
+				    DefaultRootWindow(dpy),
+				    (char **) myData->data,
+				    &myIcon, 0, 0) != 0) {
+	    myIcon = 0;
 	}
     }
 
