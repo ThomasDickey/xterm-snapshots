@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.615 2012/10/02 00:40:16 tom Exp $ */
+/* $XTermId: misc.c,v 1.616 2012/10/05 00:17:25 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4788,7 +4788,6 @@ SysReasonMsg(int code)
 	{ ERROR_SCALLOC,	"Alloc: calloc() failed on base" },
 	{ ERROR_SCALLOC2,	"Alloc: calloc() failed on rows" },
 	{ ERROR_SAVE_PTR,	"ScrnPointers: malloc/realloc() failed" },
-	{ ERROR_MMALLOC,	"my_memmove: malloc/realloc failed" },
     };
     /* *INDENT-ON* */
 

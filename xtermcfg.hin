@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.194 2012/09/22 01:11:48 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.196 2012/10/05 00:27:29 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -73,7 +73,6 @@
 #undef HAVE_SCHED_YIELD		/* AC_CHECK_FUNCS(sched_yield) */
 #undef HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
-#undef HAVE_STRERROR		/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_STRFTIME		/* AC_CHECK_FUNCS(strftime) */
 #undef HAVE_SYS_TIME_H		/* AC_HEADER_TIME */
 #undef HAVE_SYS_TTYDEFAULTS_H	/* AC_CHECK_HEADERS(sys/ttydefaults.h) */
@@ -167,8 +166,6 @@
 #undef TIME_WITH_SYS_TIME	/* AC_HEADER_TIME */
 #undef TTY_GROUP_NAME		/* CF_TTY_GROUP */
 #undef USE_LASTLOG		/* CF_LASTLOG */
-#undef USE_MY_MEMMOVE		/* CF_FUNC_MEMMOVE */
-#undef USE_OK_BCOPY		/* CF_FUNC_MEMMOVE */
 #undef USE_POSIX_WAIT		/* CF_POSIX_WAIT */
 #undef USE_STRUCT_LASTLOG	/* CF_STRUCT_LASTLOG */
 #undef USE_SYSV_UTMP		/* CF_UTMP */
@@ -180,12 +177,10 @@
 #undef USE_UTMP_SETGID		/* AC_ARG_WITH(utmp-setgid) */
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef XRENDERFONT		/* CF_X_FREETYPE */
-#undef const			/* AC_CONST */
 #undef gid_t			/* AC_TYPE_UID_T */
 #undef mode_t			/* AC_TYPE_MODE_T */
 #undef off_t			/* AC_TYPE_OFF_T */
 #undef pid_t			/* AC_TYPE_PID_T */
-#undef size_t			/* AC_TYPE_SIZE_T */
 #undef time_t			/* AC_CHECK_TYPE(time_t, long) */
 #undef uid_t			/* AC_TYPE_UID_T */
 #undef ut_name			/* CF_UTMP */
@@ -207,20 +202,6 @@
 #undef GCC_PRINTF
 #undef GCC_PRINTFLIKE
 #undef GCC_UNUSED
-#endif
-
-#ifdef USE_OK_BCOPY
-#define memmove(d,s,n) bcopy(s,d,n)
-#endif
-
-#ifdef USE_MY_MEMMOVE
-#define memmove(d,s,n) my_memmove(d,s,n)
-extern void * my_memmove(void * s1, void * s2, size_t n);
-#endif
-
-#ifndef HAVE_STRERROR
-#define strerror(n) my_strerror(n)
-extern char *my_strerror(int n);
 #endif
 
 #ifndef HAVE_X11_XPOLL_H

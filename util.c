@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.596 2012/09/27 20:35:35 tom Exp $ */
+/* $XTermId: util.c,v 1.598 2012/10/05 00:26:28 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4179,51 +4179,6 @@ getXtermCombining(TScreen * screen, int row, int col, int off)
     LineData *ld = getLineData(screen, row);
     return ld->combData[off][col];
 }
-#endif
-
-#ifdef HAVE_CONFIG_H
-#ifdef USE_MY_MEMMOVE
-void *
-my_memmove(void *s1, void *s2, size_t n)
-{
-    if (n != 0) {
-	char *p1 = (char *) s1;
-	char *p2 = (char *) s2;
-
-	if ((p1 + n > p2) && (p2 + n > p1)) {
-	    static char *bfr;
-	    static size_t length;
-	    size_t j;
-	    if (length < n) {
-		length = (n * 3) / 2;
-		bfr = ((bfr != 0)
-		       ? TypeRealloc(char, length, bfr)
-		       : TypeMallocN(char, length));
-		if (bfr == NULL)
-		    SysError(ERROR_MMALLOC);
-	    }
-	    for (j = 0; j < n; j++)
-		bfr[j] = p2[j];
-	    p2 = bfr;
-	}
-	while (n-- != 0)
-	    p1[n] = p2[n];
-    }
-    return s1;
-}
-#endif /* USE_MY_MEMMOVE */
-
-#ifndef HAVE_STRERROR
-char *
-my_strerror(int n)
-{
-    extern char *sys_errlist[];
-    extern int sys_nerr;
-    if (n > 0 && n < sys_nerr)
-	return sys_errlist[n];
-    return "?";
-}
-#endif
 #endif
 
 void
