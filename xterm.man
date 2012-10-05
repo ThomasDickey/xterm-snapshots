@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.540 2012/10/02 00:50:32 tom Exp $
+.\" $XTermId: xterm.man,v 1.541 2012/10/05 00:17:39 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -6402,11 +6402,6 @@ Alloc: calloc() failed on rows
 ERROR_SAVE_PTR
 .br
 ScrnPointers: malloc/realloc() failed
-.TP
-121
-ERROR_MMALLOC
-.br
-my_memmove: malloc/realloc failed
 .
 .
 .SH BUGS
