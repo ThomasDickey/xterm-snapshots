@@ -1,7 +1,7 @@
 #!/bin/sh
-# $XTermId: make-xpms,v 1.5 2012/10/02 00:22:22 tom Exp $
+# $XTermId: make-xpms,v 1.6 2012/10/07 22:50:56 tom Exp $
 # some files are generated from other icons...
-for name in mini.xterm xterm xterm-color
+for name in mini.xterm filled-xterm xterm xterm-color
 do
 	target=${name}.xpms
 	NAME=`echo "$target" | sed -e 's/[\.-]/_/g'`
