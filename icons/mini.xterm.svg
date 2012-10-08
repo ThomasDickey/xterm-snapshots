@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -12,9 +13,10 @@
    height="48px"
    id="svg2383"
    sodipodi:version="0.32"
-   inkscape:version="0.46"
+   inkscape:version="0.47 r22583"
    sodipodi:docname="mini.xterm.svg"
-   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   version="1.1">
   <defs
      id="defs2385">
     <inkscape:perspective
@@ -33,8 +35,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="9.8994949"
-     inkscape:cx="28.342309"
-     inkscape:cy="24"
+     inkscape:cx="26.678508"
+     inkscape:cy="23.385677"
      inkscape:current-layer="layer2"
      showgrid="true"
      inkscape:grid-bbox="true"
@@ -42,8 +44,9 @@
      gridtolerance="2"
      inkscape:window-width="1018"
      inkscape:window-height="771"
-     inkscape:window-x="40"
-     inkscape:window-y="24">
+     inkscape:window-x="49"
+     inkscape:window-y="22"
+     inkscape:window-maximized="0">
     <inkscape:grid
        type="xygrid"
        id="grid2397"
@@ -88,10 +91,11 @@
      id="layer1"
      inkscape:label="red"
      inkscape:groupmode="layer"
+     style="display:inline"
      sodipodi:insensitive="true">
     <text
        xml:space="preserve"
-       style="font-size:59.79689407px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ff0000;fill-opacity:1;stroke:#ff4d00;stroke-width:1.47000039;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;font-family:DejaVu Serif;-inkscape-font-specification:DejaVu Serif"
+       style="font-size:59.79689407px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ff5e00;fill-opacity:1;stroke:#ff0000;stroke-width:1.19999993;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:DejaVu Serif;-inkscape-font-specification:DejaVu Serif"
        x="2.2518597"
        y="46.207344"
        id="text2393"
@@ -101,16 +105,15 @@
          id="tspan2395"
          x="2.2518597"
          y="46.207344"
-         style="stroke-width:1.47000039;stroke-miterlimit:4;stroke-dasharray:none">X</tspan></text>
+         style="fill:#ff5e00;fill-opacity:1;stroke:#ff0000;stroke-width:1.19999993;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">X</tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="blue"
-     sodipodi:insensitive="true">
+     inkscape:label="blue">
     <text
        xml:space="preserve"
-       style="font-size:52.76168442px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#0000f1;fill-opacity:1;stroke:#00a2ff;stroke-width:1.36711109;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;font-family:URW Bookman L;-inkscape-font-specification:URW Bookman L"
+       style="font-size:52.76168442000000169px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#0000f1;fill-opacity:1;stroke:#00a2ff;stroke-width:0.6;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;font-family:URW Bookman L;-inkscape-font-specification:URW Bookman L"
        x="5.3948884"
        y="45.424522"
        id="text3153"
@@ -120,6 +123,6 @@
          id="tspan3155"
          x="5.3948884"
          y="45.424522"
-         style="stroke-width:1.36711109">T</tspan></text>
+         style="stroke-width:0.6;stroke-miterlimit:4;stroke-dasharray:none">T</tspan></text>
   </g>
 </svg>

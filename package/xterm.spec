@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.33 2012/10/02 00:45:27 tom Exp $
+# $XTermId: xterm.spec,v 1.34 2012/10/07 20:42:17 tom Exp $
 Summary: X terminal emulator (development version)
 Name: xterm-dev
 Version: 283
@@ -56,6 +56,9 @@ and its resource class, to avoid conflict with other packages.
 %define _iconsdir   %{_datadir}/icons
 %define _pixmapsdir %{_datadir}/pixmaps
 %define my_docdir   %{_datadir}/doc/xterm%{my_suffix}
+
+# no need for debugging symbols...
+%define debug_package %{nil}
 
 %setup -q -n xterm-%{version}
 

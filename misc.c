@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.616 2012/10/05 00:17:25 tom Exp $ */
+/* $XTermId: misc.c,v 1.619 2012/10/07 22:50:26 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4378,9 +4378,11 @@ xtermLoadIcon(XtermWidget xw)
 #ifdef HAVE_LIBXPM
     Display *dpy = XtDisplay(xw);
     Pixmap myIcon = 0;
+    Pixmap myMask = 0;
     const XPM_DATA *myData = 0;
     char *workname = 0;
 #include <icons/mini.xterm.xpms>
+#include <icons/filled-xterm.xpms>
 #include <icons/xterm.xpms>
 #include <icons/xterm-color.xpms>
 
@@ -4403,6 +4405,7 @@ xtermLoadIcon(XtermWidget xw)
 				    &shapemask,
 				    &attributes) == XpmSuccess) {
 		myIcon = resIcon;
+		myMask = shapemask;
 		TRACE(("...success\n"));
 		break;
 	    }
@@ -4416,6 +4419,8 @@ xtermLoadIcon(XtermWidget xw)
     if (myIcon == 0) {
 	myData = BuiltInXPM(mini_xterm_xpms, XtNumber(mini_xterm_xpms));
 	if (myData == 0)
+	    myData = BuiltInXPM(filled_xterm_xpms, XtNumber(filled_xterm_xpms));
+	if (myData == 0)
 	    myData = BuiltInXPM(xterm_color_xpms, XtNumber(xterm_color_xpms));
 	if (myData == 0)
 	    myData = BuiltInXPM(xterm_xpms, XtNumber(xterm_xpms));
@@ -4424,8 +4429,9 @@ xtermLoadIcon(XtermWidget xw)
 	if (XpmCreatePixmapFromData(dpy,
 				    DefaultRootWindow(dpy),
 				    (char **) myData->data,
-				    &myIcon, 0, 0) != 0) {
+				    &myIcon, &myMask, 0) != 0) {
 	    myIcon = 0;
+	    myMask = 0;
 	}
     }
 
@@ -4437,6 +4443,10 @@ xtermLoadIcon(XtermWidget xw)
 	if (hints) {
 	    hints->flags = IconPixmapHint;
 	    hints->icon_pixmap = myIcon;
+	    if (myMask) {
+		hints->flags |= IconMaskHint;
+		hints->icon_mask = myMask;
+	    }
 
 	    XSetWMHints(dpy, VShellWindow(xw), hints);
 	    XFree(hints);
