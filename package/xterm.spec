@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.34 2012/10/07 20:42:17 tom Exp $
+# $XTermId: xterm.spec,v 1.36 2012/10/09 00:31:06 tom Exp $
 Summary: X terminal emulator (development version)
 Name: xterm-dev
 Version: 283
@@ -193,9 +193,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_iconsdir}/hicolor/48x48/apps/xterm*.png
 %{_iconsdir}/hicolor/scalable/apps/xterm*.svg
 %endif
-%{_pixmapsdir}/xterm*.xpm
+%{_pixmapsdir}/*xterm*.xpm
 
 %changelog
+
+* Mon Oct 08 2012 Thomas E. Dickey
+- added to pixmapsdir
 
 * Fri Jun 15 2012 Thomas E. Dickey
 - modify to support icon theme

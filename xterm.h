@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.706 2012/09/26 00:38:34 tom Exp $ */
+/* $XTermId: xterm.h,v 1.707 2012/10/09 00:04:43 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -989,6 +989,7 @@ extern const char *SysReasonMsg (int /* n */);
 extern int ResetAnsiColorRequest (XtermWidget, char *, int);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, unsigned  /* mode */);
+extern int getVisualDepth (XtermWidget /* xw */);
 extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
@@ -1011,7 +1012,6 @@ extern void HandleSpawnTerminal        PROTO_XT_ACTIONS_ARGS;
 extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
 extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
-extern void ice_error (IceConn /* iceConn */);
 extern void ReverseOldColors (void);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
@@ -1024,6 +1024,7 @@ extern void end_tek_mode (void);
 extern void end_vt_mode (void);
 extern void hide_tek_window (void);
 extern void hide_vt_window (void);
+extern void ice_error (IceConn /* iceConn */);
 extern void reset_decudk (void);
 extern void set_tek_visibility (Bool  /* on */);
 extern void set_vt_visibility (Bool  /* on */);
