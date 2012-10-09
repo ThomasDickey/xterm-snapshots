@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1263 2012/09/27 20:38:55 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1264 2012/10/09 00:03:26 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -7597,21 +7597,9 @@ VTInitialize(Widget wrequest,
      * specific.
      */
     if (color_ok) {
-	Display *display = TScreenOf(wnew)->display;
-	XVisualInfo myTemplate, *visInfoPtr;
-	int numFound;
-
-	myTemplate.visualid = XVisualIDFromVisual(DefaultVisual(display,
-								XDefaultScreen(display)));
-	visInfoPtr = XGetVisualInfo(display, (long) VisualIDMask,
-				    &myTemplate, &numFound);
-	if (visInfoPtr == 0
-	    || numFound == 0
-	    || visInfoPtr->depth <= 1) {
+	if (getVisualDepth(wnew) <= 1) {
 	    TRACE(("disabling color since screen is monochrome\n"));
 	    color_ok = False;
-	} else {
-	    XFree(visInfoPtr);
 	}
     }
 

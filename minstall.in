@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.6 2012/06/05 00:37:13 tom Exp $
+# $XTermId: minstall.in,v 1.8 2012/10/08 23:02:57 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -41,6 +41,7 @@
 #	$3 = final installed-path
 #	$4 = app-defaults directory
 #	$5 = app-defaults class
+#	$6 = application name, normally "xterm"
 #
 # Other values correspond to definitions in xtermcfg.h, and cannot be directly
 # modified using "make".  They are substituted directly into this script.
@@ -69,6 +70,7 @@ OLD_FILE="$2"
 END_FILE="$3"
 APPS_DIR="$4"
 APP_TYPE="$5"
+APP_name="$6"
 
 suffix=`echo "$END_FILE" | sed -e 's%^.*\.%%'`
 NEW_FILE=temp$$
@@ -114,7 +116,12 @@ WTMP_PATH=$WTMP_PATH/$WTMP_NAME
 X_MANSECT=`man X 2>&1 | tr '\012' '\020' | sed -e 's/^[^0123456789]*\([^) ][^) ]*\).*/\1/'`
 test -z "$X_MANSECT" && X_MANSECT=$suffix
 
+# Provide for renaming in test-builds:
+APP_Name=`echo "$APP_name" | sed -e s/xterm/Xterm/`
+
 sed	-e 's%__vendorversion__%"X Window System"%' \
+	-e "s%^\.ds N Xterm%.ds n $APP_Name%" \
+	-e "s%^\.ds n xterm%.ds n $APP_name%" \
 	-e s%__default_termname__%@default_TERM@% \
 	-e s%__default_termid__%@default_termid@% \
 	-e s%__alt_sends_esc__%@alt_sends_esc@% \

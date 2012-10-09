@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.200 2012/08/27 01:11:07 tom Exp $
+## $XTermId: Makefile.in,v 1.204 2012/10/09 00:28:09 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -226,10 +226,10 @@ install-full ::
 install \
 install-man \
 install-full :: $(MANDIR)
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir) $(CLASS)
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir) $(CLASS)
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/uxterm.man   $(MANDIR)/$(actual_uxterm).$(manext) $(appsdir) $(CLASS)
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(appsdir) $(CLASS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir) $(CLASS) $(actual_xterm)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir) $(CLASS) $(actual_xterm)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/uxterm.man   $(MANDIR)/$(actual_uxterm).$(manext) $(appsdir) $(CLASS) $(actual_xterm)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(appsdir) $(CLASS) $(actual_xterm)
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
@@ -276,10 +276,13 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_pixmapdir@install \
 @no_pixmapdir@install-icon \
 @no_pixmapdir@install-full :: $(PIXMAPDIR)
-@no_pixmapdir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_32x32.xpm $(PIXMAPDIR)/$(actual_xterm)-color_32x32.xpm
-@no_pixmapdir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_48x48.xpm $(PIXMAPDIR)/$(actual_xterm)-color_48x48.xpm
-@no_pixmapdir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_32x32.xpm $(PIXMAPDIR)/$(actual_xterm)_32x32.xpm
-@no_pixmapdir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_48x48.xpm $(PIXMAPDIR)/$(actual_xterm)_48x48.xpm
+@no_pixmapdir@	ACTUAL_XTERM=$(actual_xterm) \
+@no_pixmapdir@	$(SHELL) -c 'for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
+@no_pixmapdir@		do \
+@no_pixmapdir@			l=`basename $$n`; \
+@no_pixmapdir@			r=`echo "$$l" | sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
+@no_pixmapdir@			$(INSTALL_DATA) $(srcdir)/icons/$$l $(PIXMAPDIR)/$$r; \
+@no_pixmapdir@		done'
 @no_pixmapdir@	@echo "... installed icons"
 
 install ::
@@ -353,10 +356,15 @@ uninstall-full ::
 @no_pixmapdir@uninstall \
 @no_pixmapdir@uninstall-icon \
 @no_pixmapdir@uninstall-full ::
-@no_pixmapdir@	-$(RM) $(PIXMAPDIR)/$(actual_xterm)-color_32x32.xpm
-@no_pixmapdir@	-$(RM) $(PIXMAPDIR)/$(actual_xterm)_32x32.xpm
-@no_pixmapdir@	-$(RM) $(PIXMAPDIR)/$(actual_xterm)-color_48x48.xpm
-@no_pixmapdir@	-$(RM) $(PIXMAPDIR)/$(actual_xterm)_48x48.xpm
+@no_pixmapdir@	ACTUAL_XTERM=$(actual_xterm) \
+@no_pixmapdir@	$(SHELL) -c 'for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
+@no_pixmapdir@		do \
+@no_pixmapdir@			l=`basename $$n`; \
+@no_pixmapdir@			r=`echo "$$l" | sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
+@no_pixmapdir@			echo removing $(PIXMAPDIR)/$$r; \
+@no_pixmapdir@			$(RM) $(PIXMAPDIR)/$$r; \
+@no_pixmapdir@		done'
+@no_pixmapdir@	@echo "... removed icons"
 ################################################################################
 # Desktop-utils does not provide an uninstall, and is not uniformly available.
 @desktop_utils@DESKTOP_FILES = $(srcdir)/xterm.desktop $(srcdir)/uxterm.desktop

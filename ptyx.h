@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.755 2012/09/26 00:39:38 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.756 2012/10/08 00:39:33 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -471,6 +471,10 @@ typedef struct {
 
 #ifndef OPT_BOX_CHARS
 #define OPT_BOX_CHARS	1 /* true if xterm can simulate box-characters */
+#endif
+
+#ifndef OPT_BUILTIN_XPMS
+#define OPT_BUILTIN_XPMS 0 /* true if all xpm data is compiled-in */
 #endif
 
 #ifndef OPT_BROKEN_OSC
