@@ -1,3 +1,10 @@
+xterm-dev (284) unstable; urgency=low
+
+  * fix documentation errata
+  * fix regression in --enable-regex
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 10 Oct 2012 18:17:35 -0400
+
 xterm-dev (283) unstable; urgency=low
 
   * Miscellaneous fixes.
