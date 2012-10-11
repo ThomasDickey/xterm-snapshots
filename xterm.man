@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.546 2012/10/08 22:58:12 tom Exp $
+.\" $XTermId: xterm.man,v 1.547 2012/10/10 22:37:14 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1721,7 +1721,7 @@ The default is \*(``false\*(''.
 Specifies whether control sequences that query the terminal's
 notion of its function-key strings, as termcap or terminfo capabilities
 should be allowed.
-The default is \*(``false\*(''.
+The default is \*(``true\*(''.
 .IP
 A few programs, e.g., \fIvim\fP, use this feature to get an accurate
 description of the terminal's capabilities,

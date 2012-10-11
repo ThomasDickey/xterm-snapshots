@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.138 2012/09/22 12:22:47 tom Exp $
+-- $XTermId: INSTALL,v 1.139 2012/10/10 23:33:29 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2011,2012 by Thomas E. Dickey
 --
@@ -359,7 +359,7 @@ The options (in alphabetic order):
 
 	This sets the default resource value, which is shown in the manpage.
 
-  --enable-backarrow-is-del  set default backarrowKey resource (default: true)
+  --enable-backarrow-key  set default backarrowKey resource (default: true)
 
 	This sets the default resource value, which is shown in the manpage.
 

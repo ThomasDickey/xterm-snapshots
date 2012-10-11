@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.305 2012/10/10 22:08:45 tom Exp $
+dnl $XTermId: configure.in,v 1.306 2012/10/10 23:32:47 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -302,7 +302,7 @@ AC_SUBST(default_TERM)
 ###############################################################################
 AC_MSG_CHECKING(if backarrow-key should be DEL)
 CF_ARG_DISABLE(backarrow-key,
-	[  --enable-backarrow-is-del  set default backarrowKey resource (default: true)],
+	[  --enable-backarrow-key  set default backarrowKey resource (default: true)],
 	[backarrow_is_del=$enableval],
 	[backarrow_is_del=yes])
 CF_XBOOL_RESULT(DEF_BACKARO_DEL,backarrow_is_del,[Define to 1 if backarrow-key should be DEL])

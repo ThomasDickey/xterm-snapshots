@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.8 2012/10/08 23:02:57 tom Exp $
+# $XTermId: minstall.in,v 1.9 2012/10/10 23:36:36 Miroslav.Lichvar Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -121,7 +121,7 @@ APP_Name=`echo "$APP_name" | sed -e s/xterm/Xterm/`
 
 sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e "s%^\.ds N Xterm%.ds n $APP_Name%" \
-	-e "s%^\.ds n xterm%.ds n $APP_name%" \
+	-e "s%^\.ds n xterm%.ds N $APP_name%" \
 	-e s%__default_termname__%@default_TERM@% \
 	-e s%__default_termid__%@default_termid@% \
 	-e s%__alt_sends_esc__%@alt_sends_esc@% \

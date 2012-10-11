@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1247 2012/10/10 22:15:49 tom Exp $
+  $XTermId: xterm.log.html,v 1.1250 2012/10/10 23:39:01 tom Exp $
   -->
 
 <html>
@@ -854,6 +854,22 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fix documentation errata (reports by Miroslav Lichvar):
+
+      <ul>
+        <li>correct manpage default for <code>allowTcapOps</code>
+        (see <a href="#xterm_243">patch #243</a></li>
+
+        <li>modify documentation for configure
+        <code>--enable-backarrow-key</code> to match the script
+        (see <a href="#xterm_280">patch #280</a>).</li>
+
+        <li>fix typo in <code>minstall.sh</code> in <a href=
+        "#xterm_283">patch #283</a>, which made the leading-cap
+        "Xterm" become "xterm" (patch by Miroslav).</li>
+      </ul>
+    </li>
+
     <li>fix two typos in configure.in; one broke the
     <code>--regex</code> configure option (report by H Merijn
     Brand).</li>
