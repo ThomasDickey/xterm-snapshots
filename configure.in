@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.304 2012/10/05 00:25:44 tom Exp $
+dnl $XTermId: configure.in,v 1.305 2012/10/10 22:08:45 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -384,7 +384,7 @@ CF_ARG_DISABLE(active-icon,
 	[enable_active_icon=yes])
 AC_MSG_RESULT($enable_active_icon)
 if test "$enable_active_icon" = no ; then
-	AC_DEFINE(NO_ACTIVE_ICON,0,[Define to 0 to disable X11R6.3 active-icon feature])
+	AC_DEFINE(NO_ACTIVE_ICON,1,[Define to 1 to disable X11R6.3 active-icon feature])
 fi
 
 AC_MSG_CHECKING(if you want ANSI color)
@@ -740,7 +740,7 @@ if test "$enable_regex" = yes ; then
 			AC_MSG_ERROR(Only POSIX or PCRE regular expressions are supported)
 		fi
 	fi
-	AC_DEFINE(OPT_SELECT_REGEX,0,[Define to 0 to disable regular-expression selections])
+	AC_DEFINE(OPT_SELECT_REGEX,1,[Define to 1 to enable regular-expression selections])
 fi
 
 AC_MSG_CHECKING(if you want support for right-scrollbar)
