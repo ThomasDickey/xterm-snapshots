@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.687 2012/08/24 15:28:59 tom Exp $ */
+/* $XTermId: main.c,v 1.688 2012/10/14 18:55:00 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -832,6 +832,7 @@ static XtResource application_resources[] =
 {
     Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
     Sres(XtNtitle, XtCTitle, title, NULL),
+    Sres(XtNiconHint, XtCIconHint, icon_hint, NULL),
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
     Sres("termName", "TermName", term_name, NULL),
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
@@ -2382,9 +2383,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	XtSetArg(args[0], XtNtitle, resource.title);
 	XtSetArg(args[1], XtNiconName, resource.icon_name);
 
-	TRACE(("setting:\n\ttitle \"%s\"\n\ticon \"%s\"\n\tbased on command \"%s\"\n",
+	TRACE(("setting:\n\ttitle \"%s\"\n\ticon \"%s\"\n\thint \"%s\"\n\tbased on command \"%s\"\n",
 	       resource.title,
 	       resource.icon_name,
+	       NonNull(resource.icon_hint),
 	       *command_to_exec));
 
 	XtSetValues(toplevel, args, 2);

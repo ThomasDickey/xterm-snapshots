@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.623 2012/10/09 00:24:42 tom Exp $ */
+/* $XTermId: misc.c,v 1.624 2012/10/14 18:53:14 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4295,7 +4295,7 @@ typedef struct {
 static char *
 x_find_icon(char **work, int *state, const char *suffix)
 {
-    const char *filename = resource.icon_name;
+    const char *filename = resource.icon_hint;
     const char *prefix = PIXMAP_ROOTDIR;
     const char *larger = "_48x48";
     char *result = 0;
@@ -4338,7 +4338,7 @@ x_find_icon(char **work, int *state, const char *suffix)
 static const XPM_DATA *
 BuiltInXPM(const XPM_DATA * table, Cardinal length)
 {
-    const char *find = resource.icon_name;
+    const char *find = resource.icon_hint;
     const XPM_DATA *result = 0;
     if (!IsEmpty(find)) {
 	Cardinal n;
@@ -4408,9 +4408,9 @@ xtermLoadIcon(XtermWidget xw)
 #include <icons/mini.xterm_48x48.xpm>
 #endif
 
-    TRACE(("xtermLoadIcon %p:%s\n", (void *) xw, NonNull(resource.icon_name)));
+    TRACE(("xtermLoadIcon %p:%s\n", (void *) xw, NonNull(resource.icon_hint)));
 
-    if (!IsEmpty(resource.icon_name)) {
+    if (!IsEmpty(resource.icon_hint)) {
 	int state = 0;
 	while (x_find_icon(&workname, &state, ".xpm") != 0) {
 	    Pixmap resIcon = 0;

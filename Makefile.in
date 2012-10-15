@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.204 2012/10/09 00:28:09 tom Exp $
+## $XTermId: Makefile.in,v 1.205 2012/10/14 19:58:03 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -223,13 +223,14 @@ install-full ::
 			ls -l \$$name @XTERM_SYMLINK@ ) ; \
 		fi"
 
+MINSTALL_ARGS = $(appsdir) $(CLASS) $(actual_xterm) $(pixmapdir)
 install \
 install-man \
 install-full :: $(MANDIR)
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir) $(CLASS) $(actual_xterm)
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir) $(CLASS) $(actual_xterm)
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/uxterm.man   $(MANDIR)/$(actual_uxterm).$(manext) $(appsdir) $(CLASS) $(actual_xterm)
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(appsdir) $(CLASS) $(actual_xterm)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/xterm.man        $(MANDIR)/$(actual_xterm).$(manext)  $(MINSTALL_ARGS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/resize.man       $(MANDIR)/$(actual_resize).$(manext) $(MINSTALL_ARGS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/uxterm.man       $(MANDIR)/$(actual_uxterm).$(manext) $(MINSTALL_ARGS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(MINSTALL_ARGS)
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"

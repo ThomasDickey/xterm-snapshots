@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.9 2012/10/10 23:36:36 Miroslav.Lichvar Exp $
+# $XTermId: minstall.in,v 1.10 2012/10/14 19:45:07 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -42,6 +42,7 @@
 #	$4 = app-defaults directory
 #	$5 = app-defaults class
 #	$6 = application name, normally "xterm"
+#	$7 = pixmap directory
 #
 # Other values correspond to definitions in xtermcfg.h, and cannot be directly
 # modified using "make".  They are substituted directly into this script.
@@ -71,6 +72,7 @@ END_FILE="$3"
 APPS_DIR="$4"
 APP_TYPE="$5"
 APP_name="$6"
+XPMS_DIR="$7"
 
 suffix=`echo "$END_FILE" | sed -e 's%^.*\.%%'`
 NEW_FILE=temp$$
@@ -133,6 +135,7 @@ sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e s%__apploaddir__%$APPS_DIR% \
 	-e s%__mansuffix__%$MY_MANSECT%g \
 	-e s%__miscmansuffix__%$X_MANSECT%g \
+	-e s%__pixmapsdir__%$XPMS_DIR% \
 	-e s%fIutmp'\\%fI'$UTMP_NAME'\\%g' \
 	-e s%/etc/utmp%$UTMP_PATH%g \
 	-e s%fIwtmp'\\%fI'$WTMP_NAME'\\%g' \
