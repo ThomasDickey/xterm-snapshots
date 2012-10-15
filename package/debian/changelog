@@ -1,3 +1,9 @@
+xterm-dev (285) unstable; urgency=low
+
+  * Miscellaneous fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 15 Oct 2012 06:57:38 -0400
+
 xterm-dev (284) unstable; urgency=low
 
   * fix documentation errata
