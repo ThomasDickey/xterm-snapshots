@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.341 2012/09/07 23:09:10 tom Exp $ */
+/* $XTermId: input.c,v 1.342 2012/10/22 20:57:52 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -383,6 +383,9 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 	} else if (IsMiscFunctionKey(kd->keysym)) {
 	    result = LegacyAllows(8);
 	}
+    }
+    if (xw->keyboard.modify_now.other_keys != 0) {
+	result = True;
     }
     return result;
 }
@@ -1988,8 +1991,8 @@ addTranslation(XtermWidget xw, const char *fromString, const char *toString)
 #endif
 
 #define SaveMask(name)	xw->work.name |= (unsigned) mask;\
-			TRACE(("SaveMask(%s) %#x (%#x is%s modifier)\n", \
-				#name, \
+			TRACE(("SaveMask(%#x -> %s) %#x (%#x is%s modifier)\n", \
+				(unsigned) keysym, #name, \
 				xw->work.name, (unsigned) mask, \
 				ModifierName((unsigned) mask)));
 /*
