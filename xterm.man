@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.548 2012/10/14 19:47:51 tom Exp $
+.\" $XTermId: xterm.man,v 1.549 2012/10/23 11:03:04 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -84,7 +84,7 @@
 .el       .ds `` ``
 .ie \n(.g .ds '' \(rq
 .el       .ds '' ''
-.TH XTERM 1 __vendorversion__
+.TH XTERM 1 "__app_date__" "__app_version__" "X Window System"
 .SH NAME
 \*n \- terminal emulator for X
 .SH SYNOPSIS
