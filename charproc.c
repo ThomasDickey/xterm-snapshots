@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1264 2012/10/09 00:03:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1265 2012/10/23 08:44:57 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -6735,38 +6735,66 @@ fill_Tres(XtermWidget target, XtermWidget source, int offset)
 {
     char *name;
     ScrnColors temp;
+    TScreen *src = TScreenOf(source);
+    TScreen *dst = TScreenOf(target);
 
-    TScreenOf(target)->Tcolors[offset] = TScreenOf(source)->Tcolors[offset];
-    TScreenOf(target)->Tcolors[offset].mode = False;
+    dst->Tcolors[offset] = src->Tcolors[offset];
+    dst->Tcolors[offset].mode = False;
 
-    if ((name = x_strtrim(TScreenOf(target)->Tcolors[offset].resource)) != 0)
-	TScreenOf(target)->Tcolors[offset].resource = name;
+    if ((name = x_strtrim(dst->Tcolors[offset].resource)) != 0)
+	dst->Tcolors[offset].resource = name;
 
     if (name == 0) {
-	TScreenOf(target)->Tcolors[offset].value = target->dft_foreground;
+	dst->Tcolors[offset].value = target->dft_foreground;
     } else if (isDefaultForeground(name)) {
-	TScreenOf(target)->Tcolors[offset].value =
-	    ((offset == TEXT_FG || offset == TEXT_BG)
-	     ? target->dft_foreground
-	     : TScreenOf(target)->Tcolors[TEXT_FG].value);
+	dst->Tcolors[offset].value = ((offset == TEXT_FG || offset == TEXT_BG)
+				      ? target->dft_foreground
+				      : dst->Tcolors[TEXT_FG].value);
     } else if (isDefaultBackground(name)) {
-	TScreenOf(target)->Tcolors[offset].value =
-	    ((offset == TEXT_FG || offset == TEXT_BG)
-	     ? target->dft_background
-	     : TScreenOf(target)->Tcolors[TEXT_BG].value);
+	dst->Tcolors[offset].value = ((offset == TEXT_FG || offset == TEXT_BG)
+				      ? target->dft_background
+				      : dst->Tcolors[TEXT_BG].value);
     } else {
 	memset(&temp, 0, sizeof(temp));
 	if (AllocateTermColor(target, &temp, offset, name, True)) {
 	    if (COLOR_DEFINED(&(temp), offset))
 		free(temp.names[offset]);
-	    TScreenOf(target)->Tcolors[offset].value = temp.colors[offset];
+	    dst->Tcolors[offset].value = temp.colors[offset];
+	} else if (offset == TEXT_FG || offset == TEXT_BG) {
+	    free(name);
+	    dst->Tcolors[offset].resource = 0;
 	}
     }
-    return TScreenOf(target)->Tcolors[offset].value;
+    return dst->Tcolors[offset].value;
+}
+
+/*
+ * If one or both of the foreground/background colors cannot be allocated,
+ * e.g., due to gross misconfiguration, recover by setting both to the
+ * display's default values.
+ */
+static void
+repairColors(XtermWidget target)
+{
+    TScreen *screen = TScreenOf(target);
+
+    if (screen->Tcolors[TEXT_FG].resource == 0 ||
+	screen->Tcolors[TEXT_BG].resource == 0) {
+	xtermWarning("unable to allocate fg/bg colors\n");
+	screen->Tcolors[TEXT_FG].resource = x_strdup(XtDefaultForeground);
+	screen->Tcolors[TEXT_BG].resource = x_strdup(XtDefaultBackground);
+	if (screen->Tcolors[TEXT_FG].resource == 0 ||
+	    screen->Tcolors[TEXT_BG].resource == 0) {
+	    Exit(1);
+	}
+	screen->Tcolors[TEXT_FG].value = target->dft_foreground;
+	screen->Tcolors[TEXT_BG].value = target->dft_background;
+    }
 }
 #else
 #define fill_Tres(target, source, offset) \
 	TScreenOf(target)->Tcolors[offset] = TScreenOf(source)->Tcolors[offset]
+#define repairColors(target)	/* nothing */
 #endif
 
 #if OPT_WIDE_CHARS
@@ -7219,6 +7247,7 @@ VTInitialize(Widget wrequest,
 
     init_Tres(TEXT_FG);
     init_Tres(TEXT_BG);
+    repairColors(wnew);
 
     wnew->old_foreground = T_COLOR(TScreenOf(wnew), TEXT_FG);
     wnew->old_background = T_COLOR(TScreenOf(wnew), TEXT_BG);
