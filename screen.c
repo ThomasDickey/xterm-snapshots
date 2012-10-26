@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.468 2012/09/22 01:13:11 tom Exp $ */
+/* $XTermId: screen.c,v 1.469 2012/10/25 23:12:20 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2812,23 +2812,22 @@ probe_netwm(Display * dpy, _Xconst char *propname)
     unsigned char *args;
     long *ldata;
     Boolean has_capability = False;
-    int rc;
+    Boolean rc;
 
     while (!has_capability) {
-	rc = XGetWindowProperty(dpy,
-				DefaultRootWindow(dpy),
-				atom_supported,
-				long_offset,
-				long_length,
-				False,	/* do not delete */
-				AnyPropertyType,	/* req_type */
-				&actual_type,	/* actual_type_return */
-				&actual_format,		/* actual_format_return */
-				&nitems,	/* nitems_return */
-				&bytes_after,	/* bytes_after_return */
-				&args	/* prop_return */
+	rc = xtermGetWinProp(dpy,
+			     DefaultRootWindow(dpy),
+			     atom_supported,
+			     long_offset,
+			     long_length,
+			     AnyPropertyType,	/* req_type */
+			     &actual_type,	/* actual_type_return */
+			     &actual_format,	/* actual_format_return */
+			     &nitems,	/* nitems_return */
+			     &bytes_after,	/* bytes_after_return */
+			     &args	/* prop_return */
 	    );
-	if (rc != Success
+	if (!rc
 	    || actual_type != XA_ATOM) {
 	    break;
 	}
