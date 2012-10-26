@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.708 2012/10/14 18:34:32 tom Exp $ */
+/* $XTermId: xterm.h,v 1.710 2012/10/25 23:18:58 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -974,6 +974,8 @@ extern void show_8bit_control  (Bool  /* value */);
 #define TIMESTAMP_LEN 20	/* length of TIMESTAMP_FMT */
 
 extern Bool AllocateTermColor(XtermWidget, ScrnColors *, int, const char *, Bool);
+extern Boolean xtermGetWinAttrs(Display * /* dpy */, Window /* win */, XWindowAttributes * /* attrs */);
+extern Boolean xtermGetWinProp(Display * /* dpy */, Window /* win */, Atom /* property */, long /* long_offset */, long /* long_length */, Atom /* req_type */, Atom * /* actual_type_return */, int * /* actual_format_return */, unsigned long * /* nitems_return */, unsigned long * /* bytes_after_return */, unsigned char ** /* prop_return */);
 extern Cursor make_colored_cursor (unsigned /* cursorindex */, unsigned long  /* fg */, unsigned long  /* bg */);
 extern OptionHelp * sortedOpts(OptionHelp *, XrmOptionDescRec *, Cardinal);
 extern String xtermEnvLocale (void);

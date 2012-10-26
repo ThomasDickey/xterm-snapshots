@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1265 2012/10/23 08:44:57 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1267 2012/10/25 23:12:20 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -6020,9 +6020,9 @@ window_ops(XtermWidget xw)
     case ewGetWinState:	/* Report the window's state */
 	if (AllowWindowOps(xw, ewGetWinState)) {
 	    TRACE(("...get window attributes\n"));
-	    XGetWindowAttributes(screen->display,
-				 VWindow(screen),
-				 &win_attrs);
+	    xtermGetWinAttrs(screen->display,
+			     VWindow(screen),
+			     &win_attrs);
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 1;
@@ -6038,9 +6038,9 @@ window_ops(XtermWidget xw)
     case ewGetWinPosition:	/* Report the window's position */
 	if (AllowWindowOps(xw, ewGetWinPosition)) {
 	    TRACE(("...get window position\n"));
-	    XGetWindowAttributes(screen->display,
-				 WMFrameWindow(xw),
-				 &win_attrs);
+	    xtermGetWinAttrs(screen->display,
+			     WMFrameWindow(xw),
+			     &win_attrs);
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
@@ -6056,17 +6056,10 @@ window_ops(XtermWidget xw)
     case ewGetWinSizePixels:	/* Report the window's size in pixels */
 	if (AllowWindowOps(xw, ewGetWinSizePixels)) {
 	    TRACE(("...get window size in pixels\n"));
-	    XGetWindowAttributes(screen->display,
-				 VWindow(screen),
-				 &win_attrs);
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 4;
-	    /*FIXME: find if dtterm uses
-	     *    win_attrs.height or Height
-	     *      win_attrs.width  or Width
-	     */
 	    reply.a_param[1] = (ParmType) Height(screen);
 	    reply.a_param[2] = (ParmType) Width(screen);
 	    reply.a_inters = 0;
@@ -6605,8 +6598,8 @@ RequestResize(XtermWidget xw, int rows, int cols, Bool text)
     if (askedHeight == 0
 	|| askedWidth == 0
 	|| xw->misc.limit_resize > 0) {
-	XGetWindowAttributes(XtDisplay(xw),
-			     RootWindowOfScreen(XtScreen(xw)), &attrs);
+	xtermGetWinAttrs(XtDisplay(xw),
+			 RootWindowOfScreen(XtScreen(xw)), &attrs);
     }
 
     if (text) {
@@ -8197,18 +8190,17 @@ getProperty(Display * dpy,
 	   req_type ? XGetAtomName(dpy, req_type) : "?"));
     property = XInternAtom(dpy, prop_name, False);
 
-    if (XGetWindowProperty(dpy,
-			   w,
-			   property,
-			   0L,
-			   long_length,
-			   False,
-			   req_type,
-			   &actual_return_type,
-			   &actual_format_return,
-			   &nitems_return,
-			   &bytes_after_return,
-			   &prop_return) != Success) {
+    if (!xtermGetWinProp(dpy,
+			 w,
+			 property,
+			 0L,
+			 long_length,
+			 req_type,
+			 &actual_return_type,
+			 &actual_format_return,
+			 &nitems_return,
+			 &bytes_after_return,
+			 &prop_return)) {
 	TRACE((".. Cannot get %s property.\n", prop_name));
     } else if (prop_return != 0) {
 

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.624 2012/10/14 18:53:14 tom Exp $ */
+/* $XTermId: misc.c,v 1.626 2012/10/25 23:12:20 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1513,12 +1513,12 @@ RequestMaximize(XtermWidget xw, int maximize)
      */
     if (maximize
 	&& QueryMaximize(xw, &root_width, &root_height)
-	&& XGetWindowAttributes(screen->display,
-				WMFrameWindow(xw),
-				&wm_attrs)
-	&& XGetWindowAttributes(screen->display,
-				VShellWindow(xw),
-				&vshell_attrs)) {
+	&& xtermGetWinAttrs(screen->display,
+			    WMFrameWindow(xw),
+			    &wm_attrs)
+	&& xtermGetWinAttrs(screen->display,
+			    VShellWindow(xw),
+			    &vshell_attrs)) {
 
 	if (screen->restore_data != True
 	    || screen->restore_width != root_width
@@ -5700,12 +5700,13 @@ catch_x11_error(Display * display, XErrorEvent * error_event)
     return 0;
 }
 
-static Boolean
-validWindow(Display * dpy, Window win, XWindowAttributes * attrs)
+Boolean
+xtermGetWinAttrs(Display * dpy, Window win, XWindowAttributes * attrs)
 {
     Boolean result = False;
     Status code;
 
+    memset(attrs, 0, sizeof(*attrs));
     if (win != None) {
 	XErrorHandler save = XSetErrorHandler(catch_x11_error);
 	x11_errors = 0;
@@ -5721,6 +5722,44 @@ validWindow(Display * dpy, Window win, XWindowAttributes * attrs)
     return result;
 }
 
+Boolean
+xtermGetWinProp(Display * display,
+		Window win,
+		Atom property,
+		long long_offset,
+		long long_length,
+		Atom req_type,
+		Atom * actual_type_return,
+		int *actual_format_return,
+		unsigned long *nitems_return,
+		unsigned long *bytes_after_return,
+		unsigned char **prop_return)
+{
+    Boolean result = True;
+
+    if (win != None) {
+	XErrorHandler save = XSetErrorHandler(catch_x11_error);
+	x11_errors = 0;
+	if (XGetWindowProperty(display,
+			       win,
+			       property,
+			       long_offset,
+			       long_length,
+			       False,
+			       req_type,
+			       actual_type_return,
+			       actual_format_return,
+			       nitems_return,
+			       bytes_after_return,
+			       prop_return) == Success
+	    && x11_errors == 0) {
+	    result = True;
+	}
+	XSetErrorHandler(save);
+    }
+    return result;
+}
+
 void
 xtermEmbedWindow(Window winToEmbedInto)
 {
@@ -5728,7 +5767,7 @@ xtermEmbedWindow(Window winToEmbedInto)
     XWindowAttributes attrs;
 
     TRACE(("checking winToEmbedInto %#lx\n", winToEmbedInto));
-    if (validWindow(dpy, winToEmbedInto, &attrs)) {
+    if (xtermGetWinAttrs(dpy, winToEmbedInto, &attrs)) {
 	XtermWidget xw = term;
 	TScreen *screen = TScreenOf(xw);
 

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.549 2012/10/23 11:03:04 tom Exp $
+.\" $XTermId: xterm.man,v 1.550 2012/10/25 23:25:26 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1674,7 +1674,8 @@ default (2)
 \fI\*n\fP checks at startup, and shows an active icon only for window
 managers which it can identify and which are known to support the feature.
 These are \fIfvwm\fP (full support), and \fIwindow maker\fP (limited).
-A few other windows managers (such as \fItwm\fP), support active icons,
+A few other windows managers (such as \fItwm\fP and \fIctwm\fP)
+support active icons,
 but do not support the extensions which allow \fI\*n\fP
 to identify the window manager.
 .TP 8
