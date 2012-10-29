@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.205 2012/10/14 19:58:03 tom Exp $
+## $XTermId: Makefile.in,v 1.206 2012/10/29 09:17:12 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -134,7 +134,7 @@ all :	$(PROGRAMS)
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
 .man.$(manext) :
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $(actual_xterm) $(pixmapdir)
 
 .$(manext).html :
 	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Thtml -man" >$@
