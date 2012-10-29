@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.141 2012/06/10 16:53:59 tom Exp $ */
+/* $XTermId: print.c,v 1.146 2012/10/29 01:06:40 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -454,16 +454,18 @@ charToPrinter(XtermWidget xw, unsigned chr)
 			exit(1);
 
 		    SPS.fp = popen(SPS.printer_command, "w");
-		    input = fdopen(my_pipe[0], "r");
-		    clearerr(input);
-		    while (!ferror(input) && !feof(input)) {
-			if ((c = fgetc(input)) == EOF)
-			    break;
-			fputc(c, SPS.fp);
-			if (isForm(c))
-			    fflush(SPS.fp);
+		    if (SPS.fp != 0) {
+			input = fdopen(my_pipe[0], "r");
+			clearerr(input);
+			while (!ferror(input) && !feof(input)) {
+			    if ((c = fgetc(input)) == EOF)
+				break;
+			    fputc(c, SPS.fp);
+			    if (isForm(c))
+				fflush(SPS.fp);
+			}
+			pclose(SPS.fp);
 		    }
-		    pclose(SPS.fp);
 		    exit(0);
 		} else {
 		    close(my_pipe[0]);	/* won't read from printer */
@@ -644,13 +646,32 @@ xtermPrinterControl(XtermWidget xw, int chr)
 
 /*
  * If there is no printer command, we will ignore printer controls.
+ *
+ * If we do have a printer command, we still have to verify that it will
+ * (perhaps) work if we pass it to popen().  At a minimum, the program
+ * must exist and be executable.  If not, warn and disable the feature.
  */
 Bool
 xtermHasPrinter(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
+    Bool result = SPS.printer_checked;
 
-    return (strlen(SPS.printer_command) != 0);
+    if (strlen(SPS.printer_command) != 0 && !result) {
+	char **argv = x_splitargs(SPS.printer_command);
+	if (argv && argv[0]) {
+	    if (xtermFindShell(argv[0], False) == 0) {
+		xtermWarning("No program found for printerCommand: %s\n", SPS.printer_command);
+		SPS.printer_command[0] = '\0';
+	    } else {
+		SPS.printer_checked = True;
+		result = True;
+	    }
+	}
+	TRACE(("xtermHasPrinter:%d\n", result));
+    }
+
+    return result;
 }
 
 #define showPrinterControlMode(mode) \

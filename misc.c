@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.626 2012/10/25 23:12:20 tom Exp $ */
+/* $XTermId: misc.c,v 1.627 2012/10/28 23:09:35 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1165,6 +1165,7 @@ HandleBellPropertyChange(Widget w GCC_UNUSED,
 void
 xtermWarning(const char *fmt,...)
 {
+    int save_err = errno;
     va_list ap;
 
     fprintf(stderr, "%s: ", ProgramName);
@@ -1173,11 +1174,13 @@ xtermWarning(const char *fmt,...)
     (void) fflush(stderr);
 
     va_end(ap);
+    errno = save_err;
 }
 
 void
 xtermPerror(const char *fmt,...)
 {
+    int save_err = errno;
     char *msg = strerror(errno);
     va_list ap;
 
@@ -1188,6 +1191,7 @@ xtermPerror(const char *fmt,...)
     (void) fflush(stderr);
 
     va_end(ap);
+    errno = save_err;
 }
 
 Window
