@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.146 2012/10/29 01:06:40 tom Exp $ */
+/* $XTermId: print.c,v 1.147 2012/10/29 10:41:53 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -662,7 +662,7 @@ xtermHasPrinter(XtermWidget xw)
 	if (argv && argv[0]) {
 	    if (xtermFindShell(argv[0], False) == 0) {
 		xtermWarning("No program found for printerCommand: %s\n", SPS.printer_command);
-		SPS.printer_command[0] = '\0';
+		SPS.printer_command = x_strdup("");
 	    } else {
 		SPS.printer_checked = True;
 		result = True;
