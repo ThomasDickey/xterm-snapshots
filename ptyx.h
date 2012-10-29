@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.756 2012/10/08 00:39:33 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.757 2012/10/29 00:48:16 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1514,6 +1514,7 @@ typedef struct {
 	FILE *	fp;			/* output file/pipe used	*/
 	Boolean isOpen;			/* output was opened/tried	*/
 	Boolean toFile;			/* true when directly to file	*/
+	Boolean printer_checked;	/* printer_command is checked	*/
 	String	printer_command;	/* pipe/shell command string	*/
 	Boolean printer_autoclose;	/* close printer when offline	*/
 	Boolean printer_extent;		/* print complete page		*/

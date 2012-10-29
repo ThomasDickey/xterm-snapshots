@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1267 2012/10/25 23:12:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1268 2012/10/29 00:50:03 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -7398,6 +7398,7 @@ VTInitialize(Widget wrequest,
 
     init_Sres(screen.answer_back);
 
+    wnew->SPS.printer_checked = False;
     init_Sres(SPS.printer_command);
     init_Bres(SPS.printer_autoclose);
     init_Bres(SPS.printer_extent);
