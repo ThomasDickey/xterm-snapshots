@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-285c
+MANIFEST for xterm, version xterm-278c
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -130,13 +130,17 @@ icons/xterm-color.png           xterm-color 48x48, in png-format
 icons/xterm-color.svg           xterm-color icon
 icons/xterm-color.xpms          collection of color icons
 icons/xterm-color_16x16.xpm     16x16 color icon
+icons/xterm-color_32x32.xcf     gimp file for editing 32x32 icon
 icons/xterm-color_32x32.xpm     32x32 color icon
+icons/xterm-color_48x48.xcf     gimp file for editing 48x48 icon
 icons/xterm-color_48x48.xpm     48x48 color icon
 icons/xterm.png                 xterm 48x48, in png-format
 icons/xterm.svg                 xterm icon
 icons/xterm.xpms                collection of icons
 icons/xterm_16x16.xpm           normal icon 16x16 pixmap
+icons/xterm_32x32.xcf           gimp file, for editing 32x32 icon
 icons/xterm_32x32.xpm           32x32 monochrome icon
+icons/xterm_48x48.xcf           gimp file, for editing 48x48 icon
 icons/xterm_48x48.xpm           48x48 monochrome icon
 package/debian                  subdirectory
 package/debian/changelog        build-script

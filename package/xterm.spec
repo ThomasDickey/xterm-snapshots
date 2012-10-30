@@ -1,10 +1,10 @@
-# $XTermId: xterm.spec,v 1.39 2012/10/25 10:55:22 tom Exp $
-Summary: X terminal emulator (development version)
+# $XTermId: xterm.spec,v 1.21 2012/03/15 00:32:52 tom Exp $
+Summary: A text-based Web browser
 Name: xterm-dev
-Version: 286
+Version: 279
 Release: 1
 License: X11
-Group: User Interface/X
+Group: Applications/Internet
 Source: xterm-%{version}.tgz
 # URL: http://invisible-island.net/xterm/
 Provides: x-terminal-emulator
@@ -41,9 +41,8 @@ and its resource class, to avoid conflict with other packages.
 %define my_class XTermDev
 
 %define desktop_vendor  dickey
+%define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo "yes" ; fi)
 
-%define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo 1 || echo 0 ; fi)
-%define icon_theme  %(test -d /usr/share/icons/hicolor && echo 1 || echo 0)
 %define apps_shared %(test -d /usr/share/X11/app-defaults && echo 1 || echo 0)
 %define apps_syscnf %(test -d /etc/X11/app-defaults && echo 1 || echo 0)
 
@@ -56,9 +55,6 @@ and its resource class, to avoid conflict with other packages.
 %define _iconsdir   %{_datadir}/icons
 %define _pixmapsdir %{_datadir}/pixmaps
 %define my_docdir   %{_datadir}/doc/xterm%{my_suffix}
-
-# no need for debugging symbols...
-%define debug_package %{nil}
 
 %setup -q -n xterm-%{version}
 
@@ -74,10 +70,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--program-suffix=%{my_suffix} \
 	--without-xterm-symlink \
 %endif
-%if "%{icon_theme}"
-	--with-icon-theme \
-	--with-icondir=%{_iconsdir} \
-%endif
 	--with-app-class=%{my_class} \
 	--enable-256-color \
 	--enable-88-color \
@@ -90,6 +82,7 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-logging \
 	--enable-mini-luit \
 	--enable-paste64 \
+	--enable-rectangles \
 	--enable-sco-fkeys \
 	--enable-tcap-fkeys \
 	--enable-tcap-query \
@@ -97,12 +90,10 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-wide-chars \
 	--enable-xmc-glitch \
 	--with-app-defaults=%{_xresdir} \
-	--with-pixmapdir=%{_pixmapsdir} \
+	--with-icondir=%{_pixmapsdir} \
 	--with-own-terminfo=%{_datadir}/terminfo \
 	--with-terminal-type=xterm-new \
-	--with-utempter \
-	--with-xpm
-	copy config.status /tmp/
+	--with-utempter
 make
 
 chmod u+w XTerm.ad
@@ -138,7 +129,7 @@ make install-bin install-man install-app install-icon \
 	# know that they do not depend on Perl packages.
 	chmod 644 $RPM_BUILD_ROOT%{my_docdir}/vttests/*
 
-%if "%{desktop_utils}"
+%if "%{desktop_utils}" == "yes"
 make install-desktop \
 	DESKTOP_FLAGS="--vendor='%{desktop_vendor}' --dir $RPM_BUILD_ROOT%{_datadir}/applications"
 
@@ -149,22 +140,6 @@ test -n "%{my_suffix}" && \
 		mv $p `basename $p .desktop`%{my_suffix}.desktop
 	done
 )
-%endif
-
-%post
-%if "%{icon_theme}"
-touch --no-create %{_iconsdir}/hicolor
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-  %{_bindir}/gtk-update-icon-cache %{_iconsdir}/hicolor || :
-fi
-%endif
-
-%postun
-%if "%{icon_theme}"
-touch --no-create %{_iconsdir}/hicolor
-if [ -x %{_bindir}/gtk-update-icon-cache ]; then
-  %{_bindir}/gtk-update-icon-cache %{_iconsdir}/hicolor || :
-fi
 %endif
 
 %clean
@@ -178,30 +153,19 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/resize%{my_suffix}
 %{_mandir}/*/*
 %{my_docdir}/*
+%{_pixmapsdir}/xterm*.xpm
 %{_xresdir}/*XTerm*
 
 %if "%{install_ti}" == "yes"
 %{_datadir}/terminfo/*
 %endif
 
-%if "%{desktop_utils}"
+%if "%{desktop_utils}" == "yes"
 %config(missingok) %{_datadir}/applications/%{desktop_vendor}-xterm%{my_suffix}.desktop
 %config(missingok) %{_datadir}/applications/%{desktop_vendor}-uxterm%{my_suffix}.desktop
 %endif
 
-%if "%{icon_theme}"
-%{_iconsdir}/hicolor/48x48/apps/xterm*.png
-%{_iconsdir}/hicolor/scalable/apps/xterm*.svg
-%endif
-%{_pixmapsdir}/*xterm*.xpm
-
 %changelog
-
-* Mon Oct 08 2012 Thomas E. Dickey
-- added to pixmapsdir
-
-* Fri Jun 15 2012 Thomas E. Dickey
-- modify to support icon theme
 
 * Fri Oct 22 2010 Thomas E. Dickey
 - initial version.

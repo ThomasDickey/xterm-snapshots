@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.81 2012/04/15 23:39:53 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.76 2011/09/11 14:59:40 tom Exp $ */
 
 /*
- * Copyright 1997-2011,2012 by Thomas E. Dickey
+ * Copyright 1997-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -60,8 +60,7 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
     /*
      * Ignore repetition.
      */
-    if (!IsLeftRightMode(xw)
-	&& (ld = getLineData(screen, currow)) != 0) {
+    if ((ld = getLineData(screen, currow)) != 0) {
 	unsigned oldChrSet = GetLineDblCS(ld);
 
 	if (oldChrSet != newChrSet) {
@@ -84,11 +83,10 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
 	     * single-size and double-size font.  So we paint our own.
 	     */
 	    ClearCurBackground(xw,
-			       currow,
-			       0,
-			       1,
-			       len,
-			       (unsigned) LineFontWidth(screen, ld));
+			       CursorY(screen, currow),
+			       LineCursorX(screen, ld, 0),
+			       (unsigned) FontHeight(screen),
+			       len * (unsigned) LineFontWidth(screen, ld));
 
 	    SetLineDblCS(ld, newChrSet);
 
@@ -133,34 +131,6 @@ xterm_DECDWL(XtermWidget xw GCC_UNUSED)
 {
 #if OPT_DEC_CHRSET
     repaint_line(xw, CSET_DWL);
-#endif
-}
-
-/*
- * Reset all lines on the screen to single-width/single-height.
- */
-void
-xterm_ResetDouble(XtermWidget xw)
-{
-#if OPT_DEC_CHRSET
-    TScreen *screen = TScreenOf(xw);
-    Boolean changed = False;
-    LineData *ld;
-    unsigned code;
-    int row;
-
-    for (row = 0; row < screen->max_row; ++row) {
-	if ((ld = getLineData(screen, ROW2INX(screen, row))) != 0) {
-	    code = GetLineDblCS(ld);
-	    if (code != CSET_SWL) {
-		SetLineDblCS(ld, CSET_SWL);
-		changed = True;
-	    }
-	}
-    }
-    if (changed) {
-	xtermRepaint(xw);
-    }
 #endif
 }
 

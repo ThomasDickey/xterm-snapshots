@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.193 2012/09/28 21:04:50 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.182 2011/09/03 12:13:42 tom Exp $ */
 
 /*
- * Copyright 2000-2011,2012 by Thomas E. Dickey
+ * Copyright 2000-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -66,9 +66,11 @@
 #include <X11/XawPlus/Scrollbar.h>
 #endif
 
-#if defined(HAVE_XKBQUERYEXTENSION)
+#if defined(HAVE_XKBQUERYEXTENSION) && defined(HAVE_X11_XKBLIB_H) && defined(HAVE_X11_EXTENSIONS_XKB_H)
 #include <X11/extensions/XKB.h>
 #include <X11/XKBlib.h>
+#else
+#undef HAVE_XKBQUERYEXTENSION
 #endif
 
 #include <data.h>
@@ -174,7 +176,7 @@ DoResizeScreen(XtermWidget xw)
     xw->hints.height = MaxRows(screen) * FontHeight(screen) + xw->hints.min_height;
 #if OPT_MAXIMIZE
     /* assure single-increment resize for fullscreen */
-    if (xw->work.ewmh[0].mode) {
+    if (screen->fullscreen) {
 	xw->hints.width_inc = 1;
 	xw->hints.height_inc = 1;
     }
@@ -188,7 +190,7 @@ DoResizeScreen(XtermWidget xw)
 
 #if OPT_MAXIMIZE
     /* compensate for fullscreen mode */
-    if (xw->work.ewmh[0].mode) {
+    if (screen->fullscreen) {
 	Screen *xscreen = DefaultScreenOfDisplay(xw->screen.display);
 	reqWidth = (Dimension) WidthOfScreen(xscreen);
 	reqHeight = (Dimension) HeightOfScreen(xscreen);
@@ -398,23 +400,14 @@ WindowScroll(XtermWidget xw, int top, Bool always GCC_UNUSED)
 
 	    ScrollSelection(screen, i, True);
 
-#if OPT_DOUBLE_BUFFER
-	    XFillRectangle(screen->display,
-			   VDrawable(screen),
-			   ReverseGC(xw, screen),
-			   OriginX(screen),
-			   OriginY(screen) + refreshtop * FontHeight(screen),
-			   (unsigned) Width(screen),
-			   (unsigned) (lines * FontHeight(screen)));
-#else
-	    XClearArea(screen->display,
-		       VWindow(screen),
-		       OriginX(screen),
-		       OriginY(screen) + refreshtop * FontHeight(screen),
-		       (unsigned) Width(screen),
-		       (unsigned) (lines * FontHeight(screen)),
-		       False);
-#endif
+	    XClearArea(
+			  screen->display,
+			  VWindow(screen),
+			  OriginX(screen),
+			  OriginY(screen) + refreshtop * FontHeight(screen),
+			  (unsigned) Width(screen),
+			  (unsigned) (lines * FontHeight(screen)),
+			  False);
 	    ScrnRefresh(xw, refreshtop, 0, lines, MaxCols(screen), False);
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
@@ -664,15 +657,12 @@ params_to_pixels(TScreen * screen, String * params, Cardinal n)
 	    mult = FontHeight(screen);
 	}
 	mult *= atoi(params[0]);
-	TRACE(("params_to_pixels(%s,%s) = %d\n", params[0], params[1], mult));
 	break;
     case 1:
 	mult = atoi(params[0]) * FontHeight(screen);	/* lines */
-	TRACE(("params_to_pixels(%s) = %d\n", params[0], mult));
 	break;
     default:
 	mult = screen->scrolllines * FontHeight(screen);
-	TRACE(("params_to_pixels() = %d\n", mult));
 	break;
     }
     return mult;
@@ -694,32 +684,6 @@ AmountToScroll(Widget w, String * params, Cardinal nparams)
     return result;
 }
 
-static void
-AlternateScroll(Widget w, long amount)
-{
-    XtermWidget xw = (XtermWidget) w;
-    TScreen *screen = TScreenOf(xw);
-
-    if (screen->alternateScroll && screen->whichBuf) {
-	ANSI reply;
-
-	amount /= FontHeight(screen);
-	memset(&reply, 0, sizeof(reply));
-	reply.a_type = ANSI_CSI;
-	if (amount > 0) {
-	    reply.a_final = 'B';
-	} else {
-	    amount = -amount;
-	    reply.a_final = 'A';
-	}
-	while (amount-- > 0) {
-	    unparseseq(xw, &reply);
-	}
-    } else {
-	ScrollTextUpDownBy(w, (XtPointer) 0, (XtPointer) amount);
-    }
-}
-
 /*ARGSUSED*/
 void
 HandleScrollForward(
@@ -731,7 +695,7 @@ HandleScrollForward(
     long amount;
 
     if ((amount = AmountToScroll(xw, params, *nparams)) != 0) {
-	AlternateScroll(xw, amount);
+	ScrollTextUpDownBy(xw, (XtPointer) 0, (XtPointer) amount);
     }
 }
 
@@ -746,7 +710,7 @@ HandleScrollBack(
     long amount;
 
     if ((amount = -AmountToScroll(xw, params, *nparams)) != 0) {
-	AlternateScroll(xw, amount);
+	ScrollTextUpDownBy(xw, (XtPointer) 0, (XtPointer) amount);
     }
 }
 
@@ -952,7 +916,6 @@ SetScrollLock(TScreen * screen, Bool enable)
 {
     if (screen->allowScrollLock) {
 	if (screen->scroll_lock != enable) {
-	    TRACE(("SetScrollLock %s\n", BtoS(enable)));
 	    screen->scroll_lock = (Boolean) enable;
 	    ShowScrollLock(screen, enable);
 	}
@@ -972,17 +935,19 @@ HandleScrollLock(Widget w,
 	TScreen *screen = TScreenOf(xw);
 
 	if (screen->allowScrollLock) {
-
-	    switch (decodeToggle(xw, params, *param_count)) {
-	    case toggleOff:
-		SetScrollLock(screen, False);
-		break;
-	    case toggleOn:
-		SetScrollLock(screen, True);
-		break;
-	    case toggleAll:
+	    /*
+	     * The default action (used with KeyRelease event) is to cycle the
+	     * state on/off.
+	     */
+	    if (*param_count == 0) {
 		SetScrollLock(screen, !screen->scroll_lock);
-		break;
+		TRACE(("HandleScrollLock ->%d\n",
+		       screen->scroll_lock));
+	    } else {
+		SetScrollLock(screen, atoi(params[0]));
+		TRACE(("HandleScrollLock(%s) ->%d\n",
+		       params[0],
+		       screen->scroll_lock));
 	    }
 	}
     }

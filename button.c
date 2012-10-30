@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.434 2012/05/10 11:06:10 tom Exp $ */
+/* $XTermId: button.c,v 1.431 2012/03/15 00:01:30 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2597,14 +2597,14 @@ ScrollSelection(TScreen * screen, int amount, Bool always)
 
 	adjust = ROW2INX(screen, screen->startH.row);
 	if (always
-	    || !ScrnHaveRowMargins(screen)
-	    || ScrnIsRowInMargins(screen, adjust)) {
+	    || !ScrnHaveLineMargins(screen)
+	    || ScrnIsLineInMargins(screen, adjust)) {
 	    scroll_update_one(&screen->startH);
 	}
 	adjust = ROW2INX(screen, screen->endH.row);
 	if (always
-	    || !ScrnHaveRowMargins(screen)
-	    || ScrnIsRowInMargins(screen, adjust)) {
+	    || !ScrnHaveLineMargins(screen)
+	    || ScrnIsLineInMargins(screen, adjust)) {
 	    scroll_update_one(&screen->endH);
 	}
     }
@@ -2730,7 +2730,7 @@ static int charClass[256] =
 {
 /* NUL  SOH  STX  ETX  EOT  ENQ  ACK  BEL */
     32,  1,    1,   1,   1,   1,   1,   1,
-/*  BS   HT   NL   VT   FF   CR   SO   SI */
+/*  BS   HT   NL   VT   NP   CR   SO   SI */
      1,  32,   1,   1,   1,   1,   1,   1,
 /* DLE  DC1  DC2  DC3  DC4  NAK  SYN  ETB */
      1,   1,   1,   1,   1,   1,   1,   1,
@@ -4673,7 +4673,8 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
 		buffer += sprintf(buffer, "%s48;5", delim);
 		delim = ";";
 	    }
-	    (void) sprintf(buffer, "%s%u", delim, bg);
+	    buffer += sprintf(buffer, "%s%u", delim, bg);
+	    delim = ";";
 	}
 #endif
     }

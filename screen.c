@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.469 2012/10/25 23:12:20 tom Exp $ */
+/* $XTermId: screen.c,v 1.440 2011/12/27 10:10:53 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2010,2011 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -78,8 +78,8 @@
 
 #define getMinRow(screen) ((xw->flags & ORIGIN) ? (screen)->top_marg : 0)
 #define getMaxRow(screen) ((xw->flags & ORIGIN) ? (screen)->bot_marg : (screen)->max_row)
-#define getMinCol(screen) ((xw->flags & ORIGIN) ? (screen)->lft_marg : 0)
-#define getMaxCol(screen) ((xw->flags & ORIGIN) ? (screen)->rgt_marg : (screen)->max_col)
+#define getMinCol(screen) 0
+#define getMaxCol(screen) ((screen)->max_col)
 
 #define MoveLineData(base, dst, src, len) \
 	memmove(scrnHeadAddr(screen, base, (unsigned) (dst)), \
@@ -442,10 +442,6 @@ Reallocate(XtermWidget xw,
 	return 0;
     }
 
-    if (screen->widestLine < ncol)
-	screen->widestLine = (Dimension) ncol;
-    ncol = screen->widestLine;
-
     oldBufData = *sbufaddr;
 
     TRACE(("Reallocate %dx%d -> %dx%d\n", oldrow, MaxCols(screen), nrow, ncol));
@@ -544,10 +540,6 @@ ReallocateBufOffsets(XtermWidget xw,
 
     assert(nrow != 0);
     assert(ncol != 0);
-
-    if (screen->widestLine < ncol)
-	screen->widestLine = (Dimension) ncol;
-    ncol = screen->widestLine;
 
     oldBufData = *sbufaddr;
     oldBufHead = *sbuf;
@@ -709,37 +701,6 @@ ChangeToWide(XtermWidget xw)
     TRACE(("...ChangeToWide\n"));
 }
 #endif
-
-/*
- * Clear cells, no side-effects.
- */
-void
-CopyCells(TScreen * screen, LineData * src, LineData * dst, int col, int len)
-{
-    if (len > 0) {
-	int n;
-	int last = col + len;
-
-	for (n = col; n < last; ++n) {
-	    dst->charData[n] = src->charData[n];
-	    dst->attribs[n] = src->attribs[n];
-	}
-
-	if_OPT_ISO_COLORS(screen, {
-	    for (n = col; n < last; ++n) {
-		dst->color[n] = src->color[n];
-	    }
-	});
-	if_OPT_WIDE_CHARS(screen, {
-	    size_t off;
-	    for (n = col; n < last; ++n) {
-		for_each_combData(off, src) {
-		    dst->combData[off][n] = src->combData[off][n];
-		}
-	    }
-	});
-    }
-}
 
 /*
  * Clear cells, no side-effects.
@@ -935,10 +896,10 @@ ScrnWriteText(XtermWidget xw,
 	    ld->color[screen->cur_col + (int) j] = (CellColor) cur_fg_bg;
     });
 
-#if OPT_WIDE_CHARS
-    screen->last_written_col = screen->cur_col + (int) real_width - 1;
-    screen->last_written_row = screen->cur_row;
-#endif
+    if_OPT_WIDE_CHARS(screen, {
+	screen->last_written_col = screen->cur_col + (int) real_width - 1;
+	screen->last_written_row = screen->cur_row;
+    });
 
     if_OPT_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);
@@ -1218,28 +1179,26 @@ void
 ScrnInsertChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = last; j >= (col + (int) n); --j) \
+    	for (j = last - 1; j >= (col + (int) n); --j) \
 	    data[j] = data[j - (int) n]
 
     TScreen *screen = TScreenOf(xw);
-    int first = ScrnLeftMargin(xw);
-    int last = ScrnRightMargin(xw);
+    int last = MaxCols(screen);
     int row = screen->cur_row;
     int col = screen->cur_col;
     int j;
     LineData *ld;
 
-    if (col < first || col > last) {
-	TRACE(("ScrnInsertChar - col %d outside [%d..%d]\n", col, first, last));
-	return;
-    } else if (last <= (col + (int) n)) {
+    if (last <= (col + (int) n)) {
+	if (last <= col)
+	    return;
 	n = (unsigned) (last - col);
     }
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
     assert(n > 0);
-    assert(last >= (int) n);
+    assert(last > (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
 	int xx = screen->cur_row;
@@ -1248,7 +1207,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
-	kr = last - (int) n + 1;
+	kr = screen->max_col - (int) n + 1;
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
@@ -1280,21 +1239,19 @@ void
 ScrnDeleteChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = col; j <= last - (int) n; ++j) \
+    	for (j = col; j < last - (int) n; ++j) \
 	    data[j] = data[j + (int) n]
 
     TScreen *screen = TScreenOf(xw);
-    int first = ScrnLeftMargin(xw);
-    int last = ScrnRightMargin(xw) + 1;
+    int last = MaxCols(screen);
     int row = screen->cur_row;
     int col = screen->cur_col;
     int j;
     LineData *ld;
 
-    if (col < first || col > last) {
-	TRACE(("ScrnDeleteChar - col %d outside [%d..%d]\n", col, first, last));
-	return;
-    } else if (last <= (col + (int) n)) {
+    if (last <= (col + (int) n)) {
+	if (last <= col)
+	    return;
 	n = (unsigned) (last - col);
     }
 
@@ -1351,7 +1308,7 @@ ShowWrapMarks(XtermWidget xw, int row, LineData * ld)
 
     TRACE2(("ShowWrapMarks %d:%s\n", row, BtoS(set)));
 
-    XFillRectangle(screen->display, VDrawable(screen),
+    XFillRectangle(screen->display, VWindow(screen),
 		   getCgsGC(xw, currentWin, cgsId),
 		   x, y,
 		   (unsigned) screen->border,
@@ -1813,6 +1770,7 @@ ScreenResize(XtermWidget xw,
 #ifdef TTYSIZE_STRUCT
     TTYSIZE_STRUCT ts;
 #endif
+    Window tw = VWindow(screen);
 
     TRACE(("ScreenResize %dx%d border %d font %dx%d\n",
 	   height, width, border,
@@ -1825,30 +1783,16 @@ ScreenResize(XtermWidget xw,
 	/* clear the right and bottom internal border because of NorthWest
 	   gravity might have left junk on the right and bottom edges */
 	if (width >= (int) FullWidth(screen)) {
-#if OPT_DOUBLE_BUFFER
-	    XFillRectangle(screen->display, VDrawable(screen),
-			   ReverseGC(xw, screen),
-			   FullWidth(screen), 0,
-			   width - FullWidth(screen), height);
-#else
-	    XClearArea(screen->display, VDrawable(screen),
+	    XClearArea(screen->display, tw,
 		       FullWidth(screen), 0,	/* right edge */
 		       0, (unsigned) height,	/* from top to bottom */
 		       False);
-#endif
 	}
 	if (height >= (int) FullHeight(screen)) {
-#if OPT_DOUBLE_BUFFER
-	    XFillRectangle(screen->display, VDrawable(screen),
-			   ReverseGC(xw, screen),
-			   0, FullHeight(screen),
-			   width, height - FullHeight(screen));
-#else
-	    XClearArea(screen->display, VDrawable(screen),
+	    XClearArea(screen->display, tw,
 		       0, FullHeight(screen),	/* bottom */
 		       (unsigned) width, 0,	/* all across the bottom */
 		       False);
-#endif
 	}
     }
 
@@ -2131,7 +2075,6 @@ ScreenResize(XtermWidget xw,
 
 	/* adjust scrolling region */
 	set_tb_margins(screen, 0, screen->max_row);
-	set_lr_margins(screen, 0, screen->max_col);
 	UIntClr(*flags, ORIGIN);
 
 	if (screen->cur_row > screen->max_row)
@@ -2232,7 +2175,7 @@ non_blank_line(TScreen * screen,
 }
 
 /*
- * Limit/map rectangle parameters.
+ * Rectangle parameters start from one.
  */
 #define minRectRow(screen) (getMinRow(screen) + 1)
 #define minRectCol(screen) (getMinCol(screen) + 1)
@@ -2240,43 +2183,34 @@ non_blank_line(TScreen * screen,
 #define maxRectCol(screen) (getMaxCol(screen) + 1)
 
 static int
-limitedParseRow(XtermWidget xw, int row)
+limitedParseRow(XtermWidget xw, TScreen * screen, int row)
 {
-    TScreen *screen = TScreenOf(xw);
     int min_row = minRectRow(screen);
     int max_row = maxRectRow(screen);
-
-    if (xw->flags & ORIGIN)
-	row += screen->top_marg;
 
     if (row < min_row)
 	row = min_row;
     else if (row > max_row)
 	row = max_row;
-
     return row;
 }
 
 static int
-limitedParseCol(XtermWidget xw, int col)
+limitedParseCol(XtermWidget xw, TScreen * screen, int col)
 {
-    TScreen *screen = TScreenOf(xw);
     int min_col = minRectCol(screen);
     int max_col = maxRectCol(screen);
 
-    if (xw->flags & ORIGIN)
-	col += screen->lft_marg;
-
+    (void) xw;
     if (col < min_col)
 	col = min_col;
     else if (col > max_col)
 	col = max_col;
-
     return col;
 }
 
 #define LimitedParse(num, func, dft) \
-	func(xw, (nparams > num) ? params[num] : dft)
+	func(xw, screen, (nparams > num) ? params[num] : dft)
 
 /*
  * Copy the rectangle boundaries into a struct, providing default values as
@@ -2347,7 +2281,8 @@ ScrnFillRectangle(XtermWidget xw,
 	    TRACE(("filling %d [%d..%d]\n", row, left, left + size));
 
 	    /*
-	     * Fill attributes, preserving colors.
+	     * Fill attributes, preserving "protected" flag, as well as
+	     * colors if asked.
 	     */
 	    for (col = (int) left; col < target->right; ++col) {
 		unsigned temp = ld->attribs[col];
@@ -2355,7 +2290,8 @@ ScrnFillRectangle(XtermWidget xw,
 		if (!keepColors) {
 		    UIntClr(temp, (FG_COLOR | BG_COLOR));
 		}
-		temp = attrs | (temp & (FG_COLOR | BG_COLOR)) | CHARDRAWN;
+		temp = attrs | (temp & (FG_COLOR | BG_COLOR | PROTECTED));
+		temp |= CHARDRAWN;
 		ld->attribs[col] = (Char) temp;
 #if OPT_ISO_COLORS
 		if (attrs & (FG_COLOR | BG_COLOR)) {
@@ -2402,9 +2338,6 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("copying rectangle\n"));
-
-    if (nparam > 4)
-	nparam = 4;
 
     if (validRect(xw, source)) {
 	XTermRect target;
@@ -2458,13 +2391,6 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 			    ld->attribs[col] |= CHARDRAWN;
 			}
 		    }
-#if OPT_BLINK_TEXT
-		    if (LineHasBlinking(screen, ld)) {
-			LineSetBlinked(ld);
-		    } else {
-			LineClrBlinked(ld);
-		    }
-#endif
 		}
 		free(cells);
 
@@ -2652,74 +2578,9 @@ ScrnWipeRectangle(XtermWidget xw,
 		   False);
     }
 }
-
-/*
- * Compute a checksum, ignoring the page number (since we have only one page).
- */
-void
-xtermCheckRect(XtermWidget xw,
-	       int nparam,
-	       int *params,
-	       int *result)
-{
-    TScreen *screen = TScreenOf(xw);
-    XTermRect target;
-    LineData *ld;
-
-    *result = 0;
-    if (nparam > 2) {
-	nparam -= 2;
-	params += 2;
-    }
-    xtermParseRect(xw, nparam, params, &target);
-    if (validRect(xw, &target)) {
-	int top = target.top - 1;
-	int bottom = target.bottom - 1;
-	int row, col;
-
-	for (row = top; row <= bottom; ++row) {
-	    int left = (target.left - 1);
-	    int right = (target.right - 1);
-
-	    ld = getLineData(screen, row);
-	    for (col = left; col <= right; ++col) {
-		if (ld->attribs[col] & CHARDRAWN) {
-		    *result += (int) ld->charData[col];
-		    if_OPT_WIDE_CHARS(screen, {
-			size_t off;
-			for_each_combData(off, ld) {
-			    *result += (int) ld->combData[off][col];
-			}
-		    })
-		}
-	    }
-	}
-    }
-}
 #endif /* OPT_DEC_RECTOPS */
 
 #if OPT_MAXIMIZE
-
-static _Xconst char *
-ewmhProperty(int mode)
-{
-    _Xconst char *result;
-    switch (mode) {
-    default:
-	result = 0;
-	break;
-    case 1:
-	result = "_NET_WM_STATE_FULLSCREEN";
-	break;
-    case 2:
-	result = "_NET_WM_STATE_MAXIMIZED_VERT";
-	break;
-    case 3:
-	result = "_NET_WM_STATE_MAXIMIZED_HORZ";
-	break;
-    }
-    return result;
-}
 
 static void
 set_resize_increments(XtermWidget xw)
@@ -2768,10 +2629,13 @@ unset_resize_increments(XtermWidget xw)
 }
 
 static void
-set_ewmh_hint(Display * dpy, Window window, int operation, _Xconst char *prop)
+netwm_fullscreen(XtermWidget xw, int operation)
 {
+    TScreen *screen = TScreenOf(xw);
     XEvent e;
-    Atom atom_fullscreen = XInternAtom(dpy, prop, False);
+    Display *dpy = screen->display;
+    Window window = VShellWindow(xw);
+    Atom atom_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
     Atom atom_state = XInternAtom(dpy, "_NET_WM_STATE", False);
 
     memset(&e, 0, sizeof(e));
@@ -2788,8 +2652,7 @@ set_ewmh_hint(Display * dpy, Window window, int operation, _Xconst char *prop)
 }
 
 /*
- * Check if the given property is supported on the root window.
- *
+ * Check if the "fullscreen" property is supported on the root window.
  * The XGetWindowProperty function returns a list of Atom's which corresponds
  * to the output of xprop.  The actual list (ignore the manpage, which refers
  * to an array of 32-bit values) is constructed by _XRead32, which uses long
@@ -2799,9 +2662,11 @@ set_ewmh_hint(Display * dpy, Window window, int operation, _Xconst char *prop)
  * window.
  */
 static Boolean
-probe_netwm(Display * dpy, _Xconst char *propname)
+probe_netwm_fullscreen_capability(XtermWidget xw)
 {
-    Atom atom_fullscreen = XInternAtom(dpy, propname, False);
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    Atom atom_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
     Atom atom_supported = XInternAtom(dpy, "_NET_SUPPORTED", False);
     Atom actual_type;
     int actual_format;
@@ -2811,36 +2676,37 @@ probe_netwm(Display * dpy, _Xconst char *propname)
     unsigned long nitems, bytes_after;
     unsigned char *args;
     long *ldata;
-    Boolean has_capability = False;
-    Boolean rc;
+    Boolean netwm_fullscreen_capability = False;
+    int rc;
 
-    while (!has_capability) {
-	rc = xtermGetWinProp(dpy,
-			     DefaultRootWindow(dpy),
-			     atom_supported,
-			     long_offset,
-			     long_length,
-			     AnyPropertyType,	/* req_type */
-			     &actual_type,	/* actual_type_return */
-			     &actual_format,	/* actual_format_return */
-			     &nitems,	/* nitems_return */
-			     &bytes_after,	/* bytes_after_return */
-			     &args	/* prop_return */
+    while (!netwm_fullscreen_capability) {
+	rc = XGetWindowProperty(dpy,
+				DefaultRootWindow(dpy),
+				atom_supported,
+				long_offset,
+				long_length,
+				False,	/* do not delete */
+				AnyPropertyType,	/* req_type */
+				&actual_type,	/* actual_type_return */
+				&actual_format,		/* actual_format_return */
+				&nitems,	/* nitems_return */
+				&bytes_after,	/* bytes_after_return */
+				&args	/* prop_return */
 	    );
-	if (!rc
+	if (rc != Success
 	    || actual_type != XA_ATOM) {
 	    break;
 	}
 	ldata = (long *) (void *) args;
 	for (i = 0; i < nitems; i++) {
 	    if ((Atom) ldata[i] == atom_fullscreen) {
-		has_capability = True;
+		netwm_fullscreen_capability = True;
 		break;
 	    }
 	}
 	XFree(ldata);
 
-	if (!has_capability) {
+	if (!netwm_fullscreen_capability) {
 	    if (bytes_after != 0) {
 		long remaining = (long) (bytes_after / sizeof(long));
 		if (long_length > remaining)
@@ -2852,61 +2718,40 @@ probe_netwm(Display * dpy, _Xconst char *propname)
 	}
     }
 
-    TRACE(("probe_netwm(%s) ->%d\n", propname, has_capability));
-    return has_capability;
+    return netwm_fullscreen_capability;
 }
 
 /*
- * Alter fullscreen mode for the xterm widget, if the window manager supports
- * that feature.
+ * Enable/disable fullscreen mode for the xterm widget, if the window manager
+ * supports that feature.
  */
 void
-FullScreen(XtermWidget xw, int new_ewmh_mode)
+FullScreen(XtermWidget xw, Bool enabled)
 {
     TScreen *screen = TScreenOf(xw);
-    Display *dpy = screen->display;
-    _Xconst char *oldprop = ewmhProperty(xw->work.ewmh[0].mode);
-    _Xconst char *newprop = ewmhProperty(new_ewmh_mode);
 
-    int which = 0;
-    Window window;
+    static Boolean initialized = False;
+    static Boolean netwm_fullscreen_capability = False;
 
-#if OPT_TEK4014
-    if (TEK4014_ACTIVE(xw)) {
-	which = 1;
-	window = TShellWindow;
-    } else
-#endif
-	window = VShellWindow(xw);
+    TRACE(("FullScreen %s\n", BtoS(enabled)));
 
-    TRACE(("FullScreen %d:%s\n", new_ewmh_mode, BtoS(new_ewmh_mode)));
-
-    if (new_ewmh_mode < 0 || new_ewmh_mode > MAX_EWMH_MODE) {
-	TRACE(("BUG: FullScreen %d\n", new_ewmh_mode));
-	return;
-    } else if (new_ewmh_mode == 0) {
-	xw->work.ewmh[which].checked[new_ewmh_mode] = True;
-	xw->work.ewmh[which].allowed[new_ewmh_mode] = True;
-    } else if (resource.fullscreen == esNever) {
-	xw->work.ewmh[which].checked[new_ewmh_mode] = True;
-	xw->work.ewmh[which].allowed[new_ewmh_mode] = False;
-    } else if (!xw->work.ewmh[which].checked[new_ewmh_mode]) {
-	xw->work.ewmh[which].checked[new_ewmh_mode] = True;
-	xw->work.ewmh[which].allowed[new_ewmh_mode] = probe_netwm(dpy, newprop);
+    if (resource.fullscreen == esNever) {
+	initialized = True;
+	netwm_fullscreen_capability = False;
+    } else if (!initialized) {
+	initialized = True;
+	netwm_fullscreen_capability = probe_netwm_fullscreen_capability(xw);
     }
 
-    if (xw->work.ewmh[which].allowed[new_ewmh_mode]) {
-	if (new_ewmh_mode && !xw->work.ewmh[which].mode) {
+    if (netwm_fullscreen_capability) {
+	if (enabled) {
 	    unset_resize_increments(xw);
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
-	} else if (xw->work.ewmh[which].mode && !new_ewmh_mode) {
-	    set_resize_increments(xw);
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
+	    netwm_fullscreen(xw, 1);
 	} else {
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_REMOVE, oldprop);
-	    set_ewmh_hint(dpy, window, _NET_WM_STATE_ADD, newprop);
+	    set_resize_increments(xw);
+	    netwm_fullscreen(xw, 0);
 	}
-	xw->work.ewmh[which].mode = new_ewmh_mode;
+	screen->fullscreen = (Boolean) enabled;
 	update_fullscreen();
     } else {
 	Bell(xw, XkbBI_MinorError, 100);
