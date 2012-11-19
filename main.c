@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.680 2012/03/16 09:48:56 tom Exp $ */
+/* $XTermId: main.c,v 1.689 2012/11/19 10:33:33 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -832,6 +832,7 @@ static XtResource application_resources[] =
 {
     Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
     Sres(XtNtitle, XtCTitle, title, NULL),
+    Sres(XtNiconHint, XtCIconHint, icon_hint, NULL),
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
     Sres("termName", "TermName", term_name, NULL),
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
@@ -874,6 +875,7 @@ static XtResource application_resources[] =
     Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
 #if OPT_ZICONBEEP
     Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
+    Sres("zIconTitleFormat", "ZIconTitleFormat", zIconFormat, "*** %s"),
 #endif
 #if OPT_PTY_HANDSHAKE
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
@@ -1519,26 +1521,31 @@ parseArg(int *num, char **argv, char **valuep)
 
     *valuep = 0;
     if (atbest >= 0) {
-	if (!exact && ambiguous1 >= 0 && ambiguous2 >= 0) {
-	    xtermWarning(
-			    "ambiguous option \"%s\" vs \"%s\"\n",
-			    ITEM(ambiguous1)->option,
-			    ITEM(ambiguous2)->option);
-	}
 	result = ITEM(atbest);
-	TRACE(("...result %s\n", result->option));
-	/* expand abbreviations */
-	if (result->argKind != XrmoptionStickyArg
-	    && strcmp(argv[*num], x_strdup(result->option))) {
-	    argv[*num] = x_strdup(result->option);
+	if (!exact) {
+	    if (ambiguous1 >= 0 && ambiguous2 >= 0) {
+		xtermWarning("ambiguous option \"%s\" vs \"%s\"\n",
+			     ITEM(ambiguous1)->option,
+			     ITEM(ambiguous2)->option);
+	    } else if (strlen(option) > strlen(result->option)) {
+		result = 0;
+	    }
 	}
+	if (result != 0) {
+	    TRACE(("...result %s\n", result->option));
+	    /* expand abbreviations */
+	    if (result->argKind != XrmoptionStickyArg
+		&& strcmp(argv[*num], x_strdup(result->option))) {
+		argv[*num] = x_strdup(result->option);
+	    }
 
-	/* adjust (*num) to skip option value */
-	(*num) += countArg(result);
-	TRACE(("...next %s\n", NonNull(argv[*num])));
-	if (result->argKind == XrmoptionSkipArg) {
-	    *valuep = argv[*num];
-	    TRACE(("...parameter %s\n", NonNull(*valuep)));
+	    /* adjust (*num) to skip option value */
+	    (*num) += countArg(result);
+	    TRACE(("...next %s\n", NonNull(argv[*num])));
+	    if (result->argKind == XrmoptionSkipArg) {
+		*valuep = argv[*num];
+		TRACE(("...parameter %s\n", NonNull(*valuep)));
+	    }
 	}
     }
 #undef ITEM
@@ -1847,7 +1854,7 @@ posix_signal(int signo, sigfunc func)
     return (oact.sa_handler);
 }
 
-#endif /* linux && _POSIX_SOURCE */
+#endif /* USE_POSIX_SIGNALS */
 
 #if defined(DISABLE_SETUID) || defined(USE_UTMP_SETGID)
 static void
@@ -2219,12 +2226,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    override_tty_modes = True;
 	}
     }
-#if OPT_ZICONBEEP
-    if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
-	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
-	xtermWarning("a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
-    }
-#endif /* OPT_ZICONBEEP */
+    initZIconBeep();
     hold_screen = resource.hold_screen ? 1 : 0;
     if (resource.icon_geometry != NULL) {
 	int scr, junk;
@@ -2386,9 +2388,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	XtSetArg(args[0], XtNtitle, resource.title);
 	XtSetArg(args[1], XtNiconName, resource.icon_name);
 
-	TRACE(("setting:\n\ttitle \"%s\"\n\ticon \"%s\"\n\tbased on command \"%s\"\n",
+	TRACE(("setting:\n\ttitle \"%s\"\n\ticon \"%s\"\n\thint \"%s\"\n\tbased on command \"%s\"\n",
 	       resource.title,
 	       resource.icon_name,
+	       NonNull(resource.icon_hint),
 	       *command_to_exec));
 
 	XtSetValues(toplevel, args, 2);
@@ -2598,7 +2601,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
 {
     int result = 1;
 
-#if defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME)
+#if defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME) && defined(HAVE_GRANTPT_PTY_ISATTY)
     if ((*pty = posix_openpt(O_RDWR)) >= 0) {
 	char *name = ptsname(*pty);
 	if (name != 0) {
@@ -3800,7 +3803,7 @@ spawnXTerm(XtermWidget xw)
 		/* input: nl->nl, don't ignore cr, cr->nl */
 		UIntClr(tio.c_iflag, (INLCR | IGNCR));
 		tio.c_iflag |= ICRNL;
-#if OPT_WIDE_CHARS && defined(linux) && defined(IUTF8)
+#if OPT_WIDE_CHARS && defined(IUTF8)
 #if OPT_LUIT_PROG
 		if (command_to_exec_with_luit == 0)
 #endif
@@ -4039,6 +4042,14 @@ spawnXTerm(XtermWidget xw)
 #endif
 
 	    xtermCopyEnv(environ);
+
+	    /*
+	     * standards.freedesktop.org/startup-notification-spec/
+	     * notes that this variable is used when a "reliable" mechanism is
+	     * not available; in practice it must be unset to avoid confusing
+	     * GTK applications.
+	     */
+	    xtermUnsetenv("DESKTOP_STARTUP_ID");
 
 	    xtermSetenv("TERM", resource.term_name);
 	    if (!resource.term_name)
@@ -5025,7 +5036,9 @@ remove_termcap_entry(char *buf, const char *str)
 		if (*buf != 0)
 		    buf++;
 	    }
-	    while ((*first++ = *buf++) != 0) ;
+	    while ((*first++ = *buf++) != 0) {
+		;
+	    }
 	    TRACE(("...removed_termcap_entry('%s', '%s')\n", str, base));
 	    return;
 	} else if (*buf == '\\') {
