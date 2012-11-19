@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.119 2011/07/12 08:37:24 tom Exp $ */
+/* $XTermId: data.h,v 1.121 2012/10/14 18:51:30 tom Exp $ */
 
 /*
- * Copyright 2002-2009,2011 by Thomas E. Dickey
+ * Copyright 2002-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -144,6 +144,7 @@ extern int mapstate;
 typedef struct XTERM_RESOURCE {
     char *icon_geometry;
     char *title;
+    char *icon_hint;
     char *icon_name;
     char *term_name;
     char *tty_modes;
@@ -192,6 +193,7 @@ typedef struct XTERM_RESOURCE {
     Boolean useInsertMode;
 #if OPT_ZICONBEEP
     int zIconBeep;		/* beep level when output while iconified */
+    char *zIconFormat;		/* format for icon name */
 #endif
 #if OPT_PTY_HANDSHAKE
     Boolean wait_for_map;
