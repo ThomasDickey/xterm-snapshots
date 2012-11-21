@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.6 2012/08/20 22:21:54 tom Exp $
+-- $XTermId: THANKS,v 1.7 2012/11/21 10:27:57 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -28,6 +28,7 @@ Ben Yoshino
 Bernhard R Link
 Bernhard Rosenkraenzer
 Bill Nottingham
+Blazs Keres
 Bob Maynard
 Bradd W Szonye
 Bram Moolenaar
@@ -101,6 +102,7 @@ Kean Johnston
 Keith Packard
 Ken Martin
 Kevin Buhr
+Kevin Ryde
 Kevin Schoedel
 Kiyokazu Suto
 Larry Riedel
@@ -131,9 +133,11 @@ Nelson Beebe
 Németh Márton
 Nicolas George
 Ovidiu Gheorghioiu
+Paul Bolle
 Paul Gilmartin
 Paul Giordano
 Paul Lampert
+Paul Maier
 Paul Vojta
 Paul Williams
 Pavel Roskin

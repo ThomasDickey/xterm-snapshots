@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.550 2012/10/25 23:25:26 tom Exp $
+.\" $XTermId: xterm.man,v 1.551 2012/11/21 10:10:59 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1295,6 +1295,9 @@ It is not necessarily obeyed by all window managers.
 Specifies a icon which will be added to the window manager hints.
 \fI\*n\fP provides no default value.
 .IP
+Set this resource to \*(``none\*('' to omit the hint entirely,
+using whatever the window manager may decide.
+.IP
 If the \fBiconHint\fP resource is given (or is set via the \fB\-n\fP option)
 \fI\*n\fP searches for a pixmap file with that name,
 in the current directory as well as in __pixmapsdir__.
@@ -1329,7 +1332,7 @@ In either case, \fI\*n\fP allows for adding a \*(``_48x48\*('' to specify the
 largest of the pixmaps as a default.
 That is, \*(``mini.\*n\*('' is the same as \*(``mini.\*n_48x48\*(''.
 .IP
-If no \fBiconHint\fP resource is given
+If no explicit \fBiconHint\fP resource is given
 (or if none of the compiled-in names matches),
 \*n uses \*(``mini.\*n\*('' (which is always compiled-in).
 .IP
@@ -1340,13 +1343,13 @@ Those are typically set via a \*(``.desktop\*('' file;
 The more capable desktop systems allow changing the icon on a per-user basis.
 .TP 8
 .B "iconName (\fPclass\fB IconName)"
-Specifies the icon name.
+Specifies a label for \fI\*n\fP when iconified.
 \fI\*n\fP provides no default value;
 some window managers may assume the application name, e.g., \*(``\*n\*(''.
 .IP
-Setting the \fBiconName\fP resource sets the window title
+Setting the \fBiconName\fP resource sets the icon label
 unless overridden by \fBzIconBeep\fP
-or the control sequences which change the window title.
+or the control sequences which change the window and icon labels.
 .TP 8
 .B "keyboardType (\fPclass\fB KeyboardType)"
 Enables one (or none) of the various keyboard-type resources:
