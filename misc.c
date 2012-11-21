@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.627 2012/10/28 23:09:35 tom Exp $ */
+/* $XTermId: misc.c,v 1.629 2012/11/21 09:59:58 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4369,6 +4369,26 @@ BuiltInXPM(const XPM_DATA * table, Cardinal length)
     return result;
 }
 #endif /* OPT_BUILTIN_XPMS */
+
+typedef enum {
+    eHintDefault = 0		/* use the largest builtin-icon */
+    ,eHintNone
+    ,eHintSearch
+} ICON_HINT;
+
+static ICON_HINT
+which_icon_hint(void)
+{
+    ICON_HINT result = eHintDefault;
+    if (!IsEmpty(resource.icon_hint)) {
+	if (!x_strcasecmp(resource.icon_hint, "none")) {
+	    result = eHintNone;
+	} else {
+	    result = eHintSearch;
+	}
+    }
+    return result;
+}
 #endif /* HAVE_LIBXPM */
 
 int
@@ -4403,6 +4423,7 @@ xtermLoadIcon(XtermWidget xw)
     Pixmap myIcon = 0;
     Pixmap myMask = 0;
     char *workname = 0;
+    ICON_HINT hint = which_icon_hint();
 #if OPT_BUILTIN_XPMS
 #include <icons/mini.xterm.xpms>
 #include <icons/filled-xterm.xpms>
@@ -4414,7 +4435,7 @@ xtermLoadIcon(XtermWidget xw)
 
     TRACE(("xtermLoadIcon %p:%s\n", (void *) xw, NonNull(resource.icon_hint)));
 
-    if (!IsEmpty(resource.icon_hint)) {
+    if (hint == eHintSearch) {
 	int state = 0;
 	while (x_find_icon(&workname, &state, ".xpm") != 0) {
 	    Pixmap resIcon = 0;
@@ -4442,7 +4463,7 @@ xtermLoadIcon(XtermWidget xw)
      * If no external file was found, look for the name in the built-in table.
      * If that fails, just use the biggest mini-icon.
      */
-    if (myIcon == 0) {
+    if (myIcon == 0 && hint != eHintNone) {
 	char **data;
 #if OPT_BUILTIN_XPMS
 	const XPM_DATA *myData = 0;
@@ -4474,7 +4495,7 @@ xtermLoadIcon(XtermWidget xw)
 	    hints = XAllocWMHints();
 
 	if (hints) {
-	    hints->flags = IconPixmapHint;
+	    hints->flags |= IconPixmapHint;
 	    hints->icon_pixmap = myIcon;
 	    if (myMask) {
 		hints->flags |= IconMaskHint;
