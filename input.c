@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.342 2012/10/22 20:57:52 tom Exp $ */
+/* $XTermId: input.c,v 1.344 2012/11/23 18:43:35 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -415,11 +415,7 @@ xtermParamToState(XtermWidget xw, unsigned param)
 {
     unsigned result = 0;
 #if OPT_NUM_LOCK
-    if (param > MOD_NONE
-	&& ((ShiftMask
-	     | ControlMask
-	     | xw->work.alt_mods
-	     | xw->work.meta_mods) & xw->work.other_mods) == 0) {
+    if (param > MOD_NONE) {
 	if ((param - MOD_NONE) & MOD_SHIFT)
 	    UIntSet(result, ShiftMask);
 	if ((param - MOD_NONE) & MOD_CTRL)
@@ -449,23 +445,21 @@ xtermStateToParam(XtermWidget xw, unsigned state)
 
     TRACE(("xtermStateToParam %#x\n", state));
 #if OPT_NUM_LOCK
-    if ((state & xw->work.other_mods) == 0) {
-	if (state & ShiftMask) {
-	    modify_parm += MOD_SHIFT;
-	    UIntClr(state, ShiftMask);
-	}
-	if (state & ControlMask) {
-	    modify_parm += MOD_CTRL;
-	    UIntClr(state, ControlMask);
-	}
-	if ((state & xw->work.alt_mods) != 0) {
-	    modify_parm += MOD_ALT;
-	    UIntClr(state, xw->work.alt_mods);
-	}
-	if ((state & xw->work.meta_mods) != 0) {
-	    modify_parm += MOD_META;
-	    UIntClr(state, xw->work.meta_mods);
-	}
+    if (state & ShiftMask) {
+	modify_parm += MOD_SHIFT;
+	UIntClr(state, ShiftMask);
+    }
+    if (state & ControlMask) {
+	modify_parm += MOD_CTRL;
+	UIntClr(state, ControlMask);
+    }
+    if ((state & xw->work.alt_mods) != 0) {
+	modify_parm += MOD_ALT;
+	UIntClr(state, xw->work.alt_mods);
+    }
+    if ((state & xw->work.meta_mods) != 0) {
+	modify_parm += MOD_META;
+	UIntClr(state, xw->work.meta_mods);
     }
     if (modify_parm == MOD_NONE)
 	modify_parm = 0;
@@ -605,11 +599,7 @@ ModifyOtherKeys(XtermWidget xw,
 	|| IsCursorKey(kd->keysym)
 	|| IsPFKey(kd->keysym)
 	|| IsMiscFunctionKey(kd->keysym)
-	|| IsPrivateKeypadKey(kd->keysym)
-#if OPT_NUM_LOCK
-	|| (state & xw->work.other_mods) != 0
-#endif
-	) {
+	|| IsPrivateKeypadKey(kd->keysym)) {
 	result = False;
     } else if (modify_parm != 0) {
 	if (IsBackarrowToggle(keyboard, kd->keysym, state)) {
@@ -856,6 +846,74 @@ xtermDeleteIsDEL(XtermWidget xw)
     return result;
 }
 
+static Boolean
+lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent * event)
+{
+    TScreen *screen = TScreenOf(xw);
+    TKeyboard *keyboard = &(xw->keyboard);
+    Boolean result = True;
+
+    TRACE(("%s %#x\n", visibleEventType(event->type), event->keycode));
+
+    kd->keysym = 0;
+    kd->is_fkey = False;
+#if OPT_TCAP_QUERY
+    if (screen->tc_query_code >= 0) {
+	kd->keysym = (KeySym) screen->tc_query_code;
+	kd->is_fkey = screen->tc_query_fkey;
+	if (kd->keysym != XK_BackSpace) {
+	    kd->nbytes = 0;
+	    kd->strbuf[0] = 0;
+	} else {
+	    kd->nbytes = 1;
+	    kd->strbuf[0] = 8;
+	}
+    } else
+#endif
+    {
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+	TInput *input = lookupTInput(xw, (Widget) xw);
+	if (input && input->xic) {
+	    Status status_return;
+#if OPT_WIDE_CHARS
+	    if (screen->utf8_mode) {
+		kd->nbytes = Xutf8LookupString(input->xic, event,
+					       kd->strbuf, (int) sizeof(kd->strbuf),
+					       &(kd->keysym), &status_return);
+	    } else
+#endif
+	    {
+		kd->nbytes = XmbLookupString(input->xic, event,
+					     kd->strbuf, (int) sizeof(kd->strbuf),
+					     &(kd->keysym), &status_return);
+	    }
+#if OPT_MOD_FKEYS
+	    /*
+	     * Fill-in some code useful with IsControlAlias():
+	     */
+	    if (status_return == XLookupBoth
+		&& kd->nbytes <= 1
+		&& !IsPredefinedKey(kd->keysym)
+		&& (keyboard->modify_now.other_keys > 1)
+		&& !IsControlInput(kd)) {
+		kd->nbytes = 1;
+		kd->strbuf[0] = (char) kd->keysym;
+	    }
+#endif /* OPT_MOD_FKEYS */
+	} else
+#endif /* OPT_I18N_SUPPORT */
+	{
+	    static XComposeStatus compose_status =
+	    {NULL, 0};
+	    kd->nbytes = XLookupString(event,
+				       kd->strbuf, (int) sizeof(kd->strbuf),
+				       &(kd->keysym), &compose_status);
+	}
+	kd->is_fkey = IsFunctionKey(kd->keysym);
+    }
+    return result;
+}
+
 void
 Input(XtermWidget xw,
       XKeyEvent * event,
@@ -880,61 +938,7 @@ Input(XtermWidget xw,
     if (keyboard->flags & MODE_KAM)
 	return;
 
-    kd.keysym = 0;
-    kd.is_fkey = False;
-#if OPT_TCAP_QUERY
-    if (screen->tc_query_code >= 0) {
-	kd.keysym = (KeySym) screen->tc_query_code;
-	kd.is_fkey = screen->tc_query_fkey;
-	if (kd.keysym != XK_BackSpace) {
-	    kd.nbytes = 0;
-	    kd.strbuf[0] = 0;
-	} else {
-	    kd.nbytes = 1;
-	    kd.strbuf[0] = 8;
-	}
-    } else
-#endif
-    {
-#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
-	TInput *input = lookupTInput(xw, (Widget) xw);
-	if (input && input->xic) {
-	    Status status_return;
-#if OPT_WIDE_CHARS
-	    if (screen->utf8_mode) {
-		kd.nbytes = Xutf8LookupString(input->xic, event,
-					      kd.strbuf, (int) sizeof(kd.strbuf),
-					      &kd.keysym, &status_return);
-	    } else
-#endif
-	    {
-		kd.nbytes = XmbLookupString(input->xic, event,
-					    kd.strbuf, (int) sizeof(kd.strbuf),
-					    &kd.keysym, &status_return);
-	    }
-#if OPT_MOD_FKEYS
-	    /*
-	     * Fill-in some code useful with IsControlAlias():
-	     */
-	    if (status_return == XLookupBoth
-		&& kd.nbytes <= 1
-		&& !IsPredefinedKey(kd.keysym)
-		&& (keyboard->modify_now.other_keys > 1)
-		&& !IsControlInput(&kd)) {
-		kd.nbytes = 1;
-		kd.strbuf[0] = (char) kd.keysym;
-	    }
-#endif /* OPT_MOD_FKEYS */
-	} else
-#endif /* OPT_I18N_SUPPORT */
-	{
-	    static XComposeStatus compose_status =
-	    {NULL, 0};
-	    kd.nbytes = XLookupString(event, kd.strbuf, (int) sizeof(kd.strbuf),
-				      &kd.keysym, &compose_status);
-	}
-	kd.is_fkey = IsFunctionKey(kd.keysym);
-    }
+    lookupKeyData(&kd, xw, event);
 
     memset(&reply, 0, sizeof(reply));
 
@@ -2075,23 +2079,6 @@ VTInitModifiers(XtermWidget xw)
 			    SaveMask(alt_mods);
 			} else if (keysym == XK_Meta_L || keysym == XK_Meta_R) {
 			    SaveMask(meta_mods);
-			} else if (mask == ShiftMask
-				   && (keysym == XK_Shift_L
-				       || keysym == XK_Shift_R)) {
-			    /* EMPTY */ ;
-			} else if (mask == ControlMask
-				   && (keysym == XK_Control_L
-				       || keysym == XK_Control_R)) {
-			    /* EMPTY */ ;
-			} else if (mask == LockMask
-				   && (keysym == XK_Caps_Lock)) {
-			    /* EMPTY */ ;
-			} else if (keysym == XK_Mode_switch
-#ifdef XK_ISO_Level3_Shift
-				   || keysym == XK_ISO_Level3_Shift
-#endif
-			    ) {
-			    SaveMask(other_mods);
 			}
 		    }
 		}

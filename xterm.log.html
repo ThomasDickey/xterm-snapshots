@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1272 2012/11/21 10:19:58 tom Exp $
+  $XTermId: xterm.log.html,v 1.1278 2012/11/23 18:59:07 tom Exp $
   -->
 
 <html>
@@ -860,6 +860,20 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>remove special case of modifiers for the
+    <code>Mode_switch</code> and <code>XK_ISO_Level3_Shift</code>
+    from <a href="#xterm_223">patch #223</a>. Verified that the
+    conflict which this was intended to resolve does not happen for
+    normal compose- or modeswitch-handling (prompted by patch by
+    Balazs Kezes, Debian #638694).</li>
+
+    <li>modify the handling of focus-change events to ignore those
+    whose detail is <code>NotifyPointer</code>, since those are
+    sent in addition to focus-change events directed to the old/new
+    windows having focus (prompted by patch by Balazs Kezes to
+    prevent the urgency-hint from being reset in this
+    scenario).</li>
+
     <li>modify description of <code>iconName</code> in manpage to
     make it clearer that this resource does not specify the
     filename of an icon (discussion with Ian Collier).</li>
@@ -1039,11 +1053,11 @@
 
     <li>add feature to optionally scroll current page before
     clearing, controlled by resource setting
-    <code>cdXtraScroll</code> (prompted by patch by Blazs
-    Keres):</li>
+    <code>cdXtraScroll</code> (prompted by patch by Balazs
+    Kezes):</li>
 
     <li>integrated patches from Arch Linux forum posting (patches
-    by Blazs Keres):
+    by Balazs Kezes):
 
       <ul>
         <li>modify reallocation limit of line-data when resizing

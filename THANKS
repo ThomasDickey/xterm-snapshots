@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.7 2012/11/21 10:27:57 tom Exp $
+-- $XTermId: THANKS,v 1.8 2012/11/21 23:47:03 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -24,11 +24,11 @@ Andrew Sumner
 Andrew Tipton
 Andries E Brouwer
 Anton Kovalenko
+Balazs Kezes
 Ben Yoshino
 Bernhard R Link
 Bernhard Rosenkraenzer
 Bill Nottingham
-Blazs Keres
 Bob Maynard
 Bradd W Szonye
 Bram Moolenaar

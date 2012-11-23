@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.551 2012/11/21 10:10:59 tom Exp $
+.\" $XTermId: xterm.man,v 1.554 2012/11/22 18:42:30 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -74,7 +74,6 @@
 .de NE
 .fi
 .ft P
-.sp
 .in -4
 ..
 .\" Escape single quotes in literal strings from groff's Unicode transform.
@@ -260,6 +259,7 @@ when an unknown option is used, e.g.,
 .NS
 \fB\*n \-z\fP
 .NE
+.PP
 If the logic for a particular option such as logging is not compiled
 into \fI\*n\fP, the help text for that option also is not displayed
 by the \fB\-help\fP option.
@@ -609,7 +609,7 @@ Given an X window identifier (an integer, which can be hexadecimal,
 octal or decimal according to whether it begins with "0x", "0" or neither),
 \fI\*n\fP will reparent its top-level shell widget to that window.
 This is used to embed \fI\*n\fP within other applications.
-.PP
+.IP
 For instance, there are scripts for Tcl/Tk and Gtk which can be used
 to demonstrate the feature.
 When using Gtk, there is a limitation of that toolkit which requires
@@ -734,6 +734,7 @@ may get away with something like
 .NS 15
 \*n \-e /bin/bash \-l \-c "my command here"
 .NE
+.IP
 Finally, \fB\-ls\fP is not completely ignored,
 because \fI\*n\ \-ls\ \-e\fP does write a \fI/etc/wtmp\fP entry
 (if configured to do so),
@@ -1115,11 +1116,13 @@ since the descriptor follows the last \*(``/\*(''):
 -S123/45
 -Sab34
 .NE
+.IP
 Note that \fI\*n\fP does not close any file descriptor
 which it did not open for its own use.
 It is possible (though probably not portable) to have an application
 which passes an open file descriptor down to \fI\*n\fP past the
 initialization or the \fB\-S\fP option to a process running in the \fI\*n\fP.
+.SS OLD OPTIONS
 .PP
 The following command line arguments are provided for compatibility with
 older versions.
@@ -1156,6 +1159,7 @@ It is equivalent to
 This option specifies the width in pixels of the border surrounding the window.
 It is equivalent to \fB\-borderwidth\fP or \fB\-bw\fP.
 .
+.SS X TOOLKIT OPTIONS
 .PP
 The following standard X Toolkit command line arguments are commonly used
 with \fI\*n\fP:
@@ -1393,7 +1397,7 @@ Specifies whether write access to the terminal is allowed initially.
 See
 .BR mesg (1).
 The default is \*(``true\*(''.
-.TP 9
+.TP 8
 .B "menuLocale (\fPclass\fB MenuLocale)"
 Specify the locale used for character-set computations when loading
 the popup menus.
@@ -1681,6 +1685,7 @@ A few other windows managers (such as \fItwm\fP and \fIctwm\fP)
 support active icons,
 but do not support the extensions which allow \fI\*n\fP
 to identify the window manager.
+.RE
 .TP 8
 .B "allowBoldFonts (\fPclass\fB AllowBoldFonts)"
 When set to \*(``false\*('', \fI\*n\fP will not use bold fonts.
@@ -1973,10 +1978,12 @@ For example
 .NS
 FontPath	"/usr/lib/X11/fonts/misc/"
 .NE
+.IP
 would become
 .NS
 FontPath	"/usr/lib/X11/fonts/misc/:unscaled"
 .NE
+.IP
 Depending on your configuration, the font server may have its own configuration
 file.
 The same \*(``:unscaled\*('' can be added to its configuration file at the
@@ -2620,6 +2627,7 @@ It is possible to select suitable bitmap fonts using a script such as this:
 \&FONT=`xfontsel -print`
 \&test -n "$FONT" && xfd -fn "$FONT"
 .NE
+.IP
 However (even though \fIxfd\fP accepts a \*(``\fB\-fa\fP\*('' option
 to denote FreeType fonts),
 \fIxfontsel\fP has not been similarly extended.
@@ -2627,6 +2635,7 @@ As a workaround, you may try
 .NS
 fc-list :scalable=true:spacing=mono: family
 .NE
+.IP
 to find a list of scalable fixed-pitch fonts
 which may be used for the \fBfaceName\fP resource value.
 .TP 8
@@ -2698,14 +2707,17 @@ NOTE: some resource files use patterns such as
 .NS
 *font: fixed
 .NE
+.IP
 which are overly broad, affecting both
 .NS
 xterm.vt100.font
 .NE
+.IP
 and
 .NS
 xterm.vt100.utf8Fonts.font
 .NE
+.IP
 which is probably not what you intended.
 .TP 8
 .B "fastScroll (\fPclass\fB FastScroll)"
@@ -3057,6 +3069,7 @@ you can add those after the command, e.g.,
 .NS
 *localeFilter: xterm-filter -p
 .NE
+.IP
 Alternatively,
 you may put those parameter within a shell script to execute the converter,
 and set this resource to point to the shell script.
@@ -4325,7 +4338,6 @@ and releasing the button.
 The selected text is highlighted and is saved in the global cut buffer
 and made the PRIMARY selection when the button is released.
 Normally (but see the discussion of \fBon2Clicks\fP, etc):
-.RS
 .bP
 Double-clicking selects by words.
 .bP
@@ -4333,7 +4345,6 @@ Triple-clicking
 selects by lines.
 .bP
 Quadruple-clicking goes back to characters, etc.
-.RE
 .PP
 Multiple-click is determined by the time from button up to
 button down, so you can change the selection unit in the middle of a selection.
@@ -5049,6 +5060,7 @@ and ISO-8859-1 encoded fonts:
 u\*n -class __default_class__
 .NE
 .RE
+.IP
 The fourth section allows you to enable or disable special operations
 which can be controlled by writing escape sequences to the terminal.
 These are disabled if the SendEvents feature is enabled:
@@ -5293,6 +5305,7 @@ static int charClass[256] = {
 /\(**  o/   u`   u\*(AQ   u^   u:   y\*(AQ    P   y: */
     48,  48,  48,  48,  48,  48,  48,  48};
 .NE
+.IP
 For example, the string \*(``33:48,37:48,45\-47:48,38:48\*('' indicates that the
 exclamation mark, percent sign, dash, period, slash, and ampersand characters
 should be treated the same way as characters and numbers.
@@ -5300,13 +5313,15 @@ This is useful
 for cutting and pasting electronic mailing addresses and filenames.
 .
 .
-.SH ACTIONS
+.SH KEY BINDINGS
+.PP
 It is possible to rebind keys (or sequences of keys) to arbitrary strings
 for input, by changing the \fBtranslations\fP resources
 for the vt100 or tek4014 widgets.
 Changing the \fBtranslations\fP resource
 for events other than key and button events is not expected,
 and will cause unpredictable behavior.
+.SS ACTIONS
 The following
 actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
@@ -6016,6 +6031,7 @@ The Tektronix window also has the following action:
 .B "gin-press(\fIl/L/m/M/r/R\fP)"
 This action sends the indicated graphics input code.
 .
+.SS DEFAULT KEY BINDINGS
 .PP
 The default bindings in the VT102 window use the SELECT token,
 which is set by the \fBselectToClipboard\fP resource:
@@ -6065,6 +6081,7 @@ which is set by the \fBselectToClipboard\fP resource:
                          <BtnUp>:select-end(SELECT, CUT_BUFFER0) \\n\\\&
                        <BtnDown>:ignore()
 .NE
+.PP
 The default bindings for the scrollbar widget
 are separate from the VT100 widget:
 .NS
@@ -6077,6 +6094,7 @@ are separate from the VT100 widget:
                       <Btn2Motion>: MoveThumb() NotifyThumb() \\n\\\&
                       <BtnUp>:    NotifyScroll(Proportional) EndScroll()
 .NE
+.PP
 The default bindings in the Tektronix window are:
 .NS
 .ta 2.5i
@@ -6097,6 +6115,7 @@ The default bindings in the Tektronix window are:
            Shift ~Meta<Btn3Down>: gin-press(R) \\n\\\&
                  ~Meta<Btn3Down>: gin-press(r)
 .NE
+.PP
 Here is an example which uses shifted select/paste to copy to the clipboard,
 and unshifted select/paste for the primary selection.
 In each case, a (different) cut buffer is
@@ -6115,6 +6134,7 @@ But you can still paste from the corresponding cut buffer.
     ~Shift<BtnUp>:       select-end(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift<BtnUp>:        select-end(CLIPBOARD, CUT_BUFFER1)
 .NE
+.PP
 Below is a sample of how the \fBkeymap()\fP action is used to add special
 keys for entering commonly-typed works:
 .NS
@@ -6127,6 +6147,7 @@ keys for entering commonly-typed works:
 	<Key>F19:	string("continue") string(0x0d) \\n\\\&
 	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
 .NE
+.PP
 Some people prefer using the left pointer button
 for dragging the scrollbar thumb.
 That can be setup by altering the translations resource, e.g.,

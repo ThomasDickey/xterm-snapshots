@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.757 2012/10/29 00:48:16 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.758 2012/11/23 18:41:19 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2421,7 +2421,6 @@ typedef struct _Work {
     unsigned num_lock;		/* modifier for Num_Lock */
     unsigned alt_mods;		/* modifier for Alt_L or Alt_R */
     unsigned meta_mods;		/* modifier for Meta_L or Meta_R */
-    unsigned other_mods;	/* conflicting modifiers, e.g., Mode_Switch */
 #endif
 #if OPT_RENDERFONT
     Boolean render_font;
