@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.629 2012/11/21 09:59:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.630 2012/11/22 20:20:19 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -915,14 +915,21 @@ HandleFocusChange(Widget w GCC_UNUSED,
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
 
-    TRACE(("HandleFocusChange type=%s, mode=%d, detail=%d\n",
+    TRACE(("HandleFocusChange type=%s, mode=%s, detail=%s\n",
 	   visibleEventType(event->type),
-	   event->mode,
-	   event->detail));
+	   visibleNotifyMode(event->mode),
+	   visibleNotifyDetail(event->detail)));
     TRACE_FOCUS(xw, event);
 
     if (screen->quiet_grab
 	&& (event->mode == NotifyGrab || event->mode == NotifyUngrab)) {
+	/* EMPTY */ ;
+    } else if ((event->type == FocusIn || event->type == FocusOut)
+	       && event->detail == NotifyPointer) {
+	/*
+	 * NotifyPointer is sent to the window where the pointer is, and is
+	 * in addition to events sent to the old/new focus-windows.
+	 */
 	/* EMPTY */ ;
     } else if (event->type == FocusIn) {
 	setXUrgency(xw, False);

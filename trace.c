@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.141 2012/10/14 18:54:05 tom Exp $ */
+/* $XTermId: trace.c,v 1.142 2012/11/22 20:19:54 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -375,6 +375,19 @@ visibleEventType(int type)
 }
 
 const char *
+visibleNotifyMode(int code)
+{
+    const char *result = "?";
+    switch (code) {
+	CASETYPE(NotifyNormal);
+	CASETYPE(NotifyGrab);
+	CASETYPE(NotifyUngrab);
+	CASETYPE(NotifyWhileGrabbed);
+    }
+    return result;
+}
+
+const char *
 visibleNotifyDetail(int code)
 {
     const char *result = "?";
@@ -585,7 +598,7 @@ TraceFocus(Widget w, XEvent * ev)
 	{
 	    XFocusChangeEvent *event = (XFocusChangeEvent *) ev;
 	    TRACE(("\tdetail: %s\n", visibleNotifyDetail(event->detail)));
-	    TRACE(("\tmode:   %d\n", event->mode));
+	    TRACE(("\tmode:   %s\n", visibleNotifyMode(event->mode)));
 	    TRACE(("\twindow: %#lx\n", event->window));
 	}
 	break;
@@ -594,7 +607,7 @@ TraceFocus(Widget w, XEvent * ev)
 	{
 	    XCrossingEvent *event = (XCrossingEvent *) ev;
 	    TRACE(("\tdetail:    %s\n", visibleNotifyDetail(event->detail)));
-	    TRACE(("\tmode:      %d\n", event->mode));
+	    TRACE(("\tmode:      %s\n", visibleNotifyMode(event->mode)));
 	    TRACE(("\twindow:    %#lx\n", event->window));
 	    TRACE(("\tfocus:     %d\n", event->focus));
 	    TRACE(("\troot:      %#lx\n", event->root));
