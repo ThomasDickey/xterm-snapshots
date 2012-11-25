@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.630 2012/11/22 20:20:19 tom Exp $ */
+/* $XTermId: misc.c,v 1.631 2012/11/25 16:05:51 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -204,7 +204,7 @@ unselectwindow(XtermWidget xw, int flag)
 
     TRACE(("unselectwindow(%d) flag=%d\n", screen->select, flag));
 
-    if (screen->hide_pointer) {
+    if (screen->hide_pointer && screen->pointer_mode < pFocused) {
 	screen->hide_pointer = False;
 	xtermDisplayCursor(xw);
     }
@@ -344,6 +344,7 @@ xtermShowPointer(XtermWidget xw, Bool enable)
 		enable = True;
 	    break;
 	case pAlways:
+	case pFocused:
 	    break;
 	}
     }
@@ -618,20 +619,28 @@ xevents(void)
 	 * mouse pointer back on.
 	 */
 	if (screen->hide_pointer) {
-	    switch (event.xany.type) {
-	    case KeyPress:
-	    case KeyRelease:
-	    case ButtonPress:
-	    case ButtonRelease:
-		/* also these... */
-	    case Expose:
-	    case NoExpose:
-	    case PropertyNotify:
-	    case ClientMessage:
-		break;
-	    default:
-		xtermShowPointer(xw, True);
-		break;
+	    if (screen->pointer_mode >= pFocused) {
+		switch (event.xany.type) {
+		case MotionNotify:
+		    xtermShowPointer(xw, True);
+		    break;
+		}
+	    } else {
+		switch (event.xany.type) {
+		case KeyPress:
+		case KeyRelease:
+		case ButtonPress:
+		case ButtonRelease:
+		    /* also these... */
+		case Expose:
+		case NoExpose:
+		case PropertyNotify:
+		case ClientMessage:
+		    break;
+		default:
+		    xtermShowPointer(xw, True);
+		    break;
+		}
 	    }
 	}
 

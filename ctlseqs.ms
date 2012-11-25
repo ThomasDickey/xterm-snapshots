@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.274 2012/09/26 08:51:31 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.276 2012/11/25 16:23:14 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
@@ -67,6 +67,11 @@
 .\"
 .\" Run this file through troff and use the -ms macro package.
 .\"
+.ds XT XTerm
+.ds xt xterm
+.ds LF Patch #287
+.ds RF 2012/11/25
+.\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
 .\" Start a list of controls
@@ -108,7 +113,7 @@
 .B
 ..
 .ds CH \" as nothing
-.ds LH Xterm Control Sequences
+.ds LH \*(XT Control Sequences
 .nr s 6*\n(PS/10
 .ds L \s\nsBEL\s0
 .ds E \s\nsESC\s0
@@ -306,7 +311,7 @@
 .el .nr LL 72m
 .if n .na
 .TL
-Xterm Control Sequences
+\*(XT Control Sequences
 .AU
 Edward Moy
 .AI
@@ -322,6 +327,7 @@ Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
 invisible-island.net (2006-2012)
+updated for \*(XT \*(LF (\*(RF)
 .AU
 .
 .am BT                  \" add page numbers after first page
@@ -656,7 +662,7 @@ and
 \fIxterm\fP responds with
 \*(Dc\*1\*+\*r\*(Pt\*s\*(ST
 for valid requests, adding to \*(Pt an \*=,
-and the value of the corresponding string that xterm would send,
+and the value of the corresponding string that \*(xt would send,
 or
 \*(Dc\*0\*+\*r\*(Pt\*s\*(ST
 for invalid requests.
@@ -1169,7 +1175,8 @@ hide the pointer cursor as the user types.
 Valid values for the parameter:
   \*(Ps = \*0 \(-> never hide the pointer.
   \*(Ps = \*1 \(-> hide if the mouse tracking mode is not enabled.
-  \*(Ps = \*2 \(-> always hide the pointer.
+  \*(Ps = \*2 \(-> always hide the pointer, except when leaving the window.
+  \*(Ps = \*3 \(-> always hide the pointer, even if leaving/entering the window.
 If no parameter is given, \fIxterm\fP uses the default,
 which is \*1.
 .
@@ -1435,7 +1442,7 @@ Request Locator Position (DECRQLP).
 Valid values for the parameter are:
   \*(Ps = \*0, 1 or omitted \(-> transmit a single DECLRP locator report.
 .sP
-If Locator Reporting has been enabled by a DECELR, xterm will respond
+If Locator Reporting has been enabled by a DECELR, \*(xt will respond
 with a DECLRP Locator Report.
 This report is also generated on button
 up and down events if they have been enabled with a DECSLE, or when
@@ -1448,7 +1455,7 @@ Parameters are [event;button;row;column;page].
 .br
 Valid values for the event:
   \*(Pe = \*0 \(-> locator unavailable - no other parameters sent.
-  \*(Pe = \*1 \(-> request - xterm received a DECRQLP.
+  \*(Pe = \*1 \(-> request - \*(xt received a DECRQLP.
   \*(Pe = \*2 \(-> left button down.
   \*(Pe = \*3 \(-> left button up.
   \*(Pe = \*4 \(-> middle button down.
@@ -1467,9 +1474,9 @@ Valid values for the event:
   \*(Pb & \*8 \(<- M4 button down.
 .br
 ``row'' and ``column'' parameters are the coordinates of the locator
-position in the xterm window, encoded as ASCII decimal.
+position in the \*(xt window, encoded as ASCII decimal.
 .br
-The ``page'' parameter is not used by xterm, and will be omitted.
+The ``page'' parameter is not used by \*(xt, and will be omitted.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*(Sp\\*}
 Insert \*(Ps Column(s) (default = 1) (DECIC), VT420 and up.
@@ -1506,7 +1513,7 @@ their bright versions 8-15,
 and if supported, the remainder of the 88-color or 256-color table.
 .sP
 If a "?" is given rather than a name or RGB specification,
-xterm replies with a control sequence of the same form which can be used
+\*(xt replies with a control sequence of the same form which can be used
 to set the corresponding color.
 Because more than one pair of color number and specification can
 be given in one control sequence, \fIxterm\fR can make more than one reply.
@@ -1536,7 +1543,7 @@ The value of \*(Ps tells the starting point in the list.
 The colors are specified by name or RGB specification as per \fIXParseColor\fP.
 .sP
 If a "?" is given rather than a name or RGB specification,
-xterm replies with a control sequence of the same form which can be used
+\*(xt replies with a control sequence of the same form which can be used
 to set the corresponding dynamic color.
 Because more than one pair of color number and specification can
 be given in one control sequence, \fIxterm\fR can make more than one reply.
