@@ -7,7 +7,7 @@
 
 
 
-                        Xterm Control Sequences
+                        XTerm Control Sequences
 
 
                                Edward Moy
@@ -21,6 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2012)
+               updated for XTerm Patch #287 (2012/11/25)
 
 
 
@@ -657,8 +658,11 @@ CSI > Ps p
           Valid values for the parameter:
             Ps = 0  -> never hide the pointer.
             Ps = 1  -> hide if the mouse tracking mode is not enabled.
-            Ps = 2  -> always hide the pointer.  If no parameter is
-          given, xterm uses the default, which is 1 .
+            Ps = 2  -> always hide the pointer, except when leaving the
+          window.
+            Ps = 3  -> always hide the pointer, even if leaving/entering
+          the window.  If no parameter is given, xterm uses the default,
+          which is 1 .
 CSI ! p   Soft terminal reset (DECSTR).
 CSI Ps $ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply is

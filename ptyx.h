@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.758 2012/11/23 18:41:19 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.759 2012/11/25 16:05:51 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2227,9 +2227,10 @@ typedef enum {
 } xtermKeyboardType;
 
 typedef enum {			/* legal values for screen.pointer_mode */
-    pNever = 0,
-    pNoMouse = 1,
-    pAlways = 2
+    pNever = 0
+    , pNoMouse = 1
+    , pAlways = 2
+    , pFocused = 3
 } pointerModeTypes;
 
 typedef enum {			/* legal values for screen.utf8_mode */
