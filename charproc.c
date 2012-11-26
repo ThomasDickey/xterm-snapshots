@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1269 2012/11/21 01:19:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1270 2012/11/25 19:25:10 Balazs.Kezes Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4257,7 +4257,7 @@ in_put(XtermWidget xw)
 	    select_timeout.tv_sec = 0;
 	    i = Select(max_plus1, &select_mask, &write_mask, 0,
 		       &select_timeout);
-	    if (i > 0)
+	    if (i > 0 && FD_ISSET(screen->respond, &select_mask))
 		continue;
 	    else
 		break;
@@ -4273,7 +4273,7 @@ in_put(XtermWidget xw)
 		select_timeout.tv_sec = 0;
 		i = Select(max_plus1, &select_mask, &write_mask, 0,
 			   &select_timeout);
-		if (i > 0) {
+		if (i > 0 && FD_ISSET(screen->respond, &select_mask)) {
 		    sched_yield();
 		} else
 		    break;
