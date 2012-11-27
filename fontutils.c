@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.383 2012/09/22 00:15:55 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.385 2012/11/27 01:24:26 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2012 by Thomas E. Dickey
@@ -515,7 +515,8 @@ xtermSpecialFont(TScreen * screen, unsigned atts, unsigned chrset)
 	old_props.res_x = res_x;
 	old_props.res_x = res_y;
 	old_props.pixel_size = pixel_size;
-	old_props.spacing = strcpy(old_spacing, props->spacing);
+	old_props.spacing = old_spacing;
+	sprintf(old_spacing, "%.*s", (int) sizeof(old_spacing) - 2, props->spacing);
     }
 #endif
 
@@ -1537,9 +1538,9 @@ HandleLoadVTFonts(Widget w,
 	char name_buf[80];
 	char class_buf[80];
 	String name = (String) ((*param_count > 0) ? params[0] : empty);
-	char *myName = (char *) MyStackAlloc(strlen(name), name_buf);
+	char *myName = (char *) MyStackAlloc(strlen(name) + 1, name_buf);
 	String convert = (String) ((*param_count > 1) ? params[1] : myName);
-	char *myClass = (char *) MyStackAlloc(strlen(convert), class_buf);
+	char *myClass = (char *) MyStackAlloc(strlen(convert) + 1, class_buf);
 	int n;
 
 	TRACE(("HandleLoadVTFonts(%d)\n", *param_count));
