@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.50 2012/03/30 10:54:12 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.52 2012/11/26 21:57:56 tom Exp $ */
 
 /*
  * Copyright 2000-2011,2012 by Thomas E. Dickey
@@ -303,6 +303,14 @@ x_skip_nonblanks(String s)
     return s;
 }
 
+static const char *
+skip_blanks(const char *s)
+{
+    while (isspace(CharOf(*s)))
+	++s;
+    return s;
+}
+
 /*
  * Split a command-string into an argv[]-style array.
  */
@@ -312,17 +320,18 @@ x_splitargs(const char *command)
     char **result = 0;
 
     if (command != 0) {
-	char *blob = x_strdup(command);
+	const char *first = skip_blanks(command);
+	char *blob = x_strdup(first);
 	size_t count;
 	size_t n;
 	int state;
 	int pass;
 
 	for (pass = 0; pass < 2; ++pass) {
-	    for (n = count = 0, state = 0; command[n] != '\0'; ++n) {
+	    for (n = count = 0, state = 0; first[n] != '\0'; ++n) {
 		switch (state) {
 		case 0:
-		    if (!isspace(CharOf(command[n]))) {
+		    if (!isspace(CharOf(first[n]))) {
 			state = 1;
 			if (pass)
 			    result[count] = blob + n;
@@ -332,7 +341,7 @@ x_splitargs(const char *command)
 		    }
 		    break;
 		case 1:
-		    if (isspace(CharOf(command[n]))) {
+		    if (isspace(CharOf(first[n]))) {
 			blob[n] = '\0';
 			state = 0;
 		    }
@@ -341,14 +350,29 @@ x_splitargs(const char *command)
 	    }
 	    if (!pass) {
 		result = TypeCallocN(char *, count + 1);
-		if (!result)
+		if (!result) {
+		    free(blob);
 		    break;
+		}
 	    }
 	}
     } else {
 	result = TypeCalloc(char *);
     }
     return result;
+}
+
+/*
+ * Free storage allocated by x_splitargs().
+ */
+void
+x_freeargs(char **argv)
+{
+    if (argv != 0) {
+	if (*argv != 0)
+	    free(*argv);
+	free(argv);
+    }
 }
 
 int

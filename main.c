@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.689 2012/11/19 10:33:33 tom Exp $ */
+/* $XTermId: main.c,v 1.694 2012/11/27 09:26:38 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -1532,11 +1532,16 @@ parseArg(int *num, char **argv, char **valuep)
 	    }
 	}
 	if (result != 0) {
+	    char *expanded;
+
 	    TRACE(("...result %s\n", result->option));
 	    /* expand abbreviations */
-	    if (result->argKind != XrmoptionStickyArg
-		&& strcmp(argv[*num], x_strdup(result->option))) {
-		argv[*num] = x_strdup(result->option);
+	    if (result->argKind != XrmoptionStickyArg) {
+		expanded = x_strdup(result->option);
+		if (strcmp(argv[*num], expanded))
+		    argv[*num] = expanded;
+		else
+		    free(expanded);
 	    }
 
 	    /* adjust (*num) to skip option value */
@@ -2178,7 +2183,7 @@ main(int argc, char *argv[]ENVP_ARG)
 					my_class,
 					optionDescList,
 					XtNumber(optionDescList),
-					&argc, argv,
+					&argc, (String *) argv,
 					fallback_resources,
 					sessionShellWidgetClass,
 					NULL, 0);

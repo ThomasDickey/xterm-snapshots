@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.631 2012/11/25 16:05:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.641 2012/11/27 09:25:44 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -844,13 +844,12 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    xtermWarning("exec of '%s': %s\n", child_exe, SysErrorMsg(errno));
 	}
 	_exit(0);
-    } else {
-	/* We are the parent; clean up */
-	if (child_cwd)
-	    free(child_cwd);
-	if (child_exe)
-	    free(child_exe);
     }
+
+    /* We are the parent; clean up */
+    if (child_cwd)
+	free(child_cwd);
+    free(child_exe);
 }
 #endif /* OPT_EXEC_XTERM */
 
@@ -1563,6 +1562,7 @@ RequestMaximize(XtermWidget xw, int maximize)
 	success = True;
     } else if (screen->restore_data) {
 	success = True;
+	maximize = 0;
     }
 
     if (success) {
@@ -2701,9 +2701,9 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
     };
 
     const char *base = buf;
-    char *used = x_strdup(base);
+    char *used;
     Cardinal j, n = 0;
-    String *select_args = 0;
+    String *select_args;
 
     TRACE(("Manipulate selection data\n"));
 
@@ -2716,46 +2716,57 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 
 	if (*base == '\0')
 	    base = "s0";
-	if ((select_args = TypeCallocN(String, 1 + strlen(base))) == 0)
-	    return;
-	while (*base != '\0') {
-	    for (j = 0; j < XtNumber(table); ++j) {
-		if (*base == table[j].given) {
-		    used[n] = *base;
-		    select_args[n++] = table[j].result;
-		    TRACE(("atom[%d] %s\n", n, table[j].result));
-		    break;
+
+	if ((used = x_strdup(base)) != 0) {
+	    if ((select_args = TypeCallocN(String, 2 + strlen(base))) != 0) {
+		while (*base != '\0') {
+		    for (j = 0; j < XtNumber(table); ++j) {
+			if (*base == table[j].given) {
+			    used[n] = *base;
+			    select_args[n++] = table[j].result;
+			    TRACE(("atom[%d] %s\n", n, table[j].result));
+			    break;
+			}
+		    }
+		    ++base;
 		}
+		used[n] = 0;
+
+		if (!strcmp(buf, "?")) {
+		    if (AllowWindowOps(xw, ewGetSelection)) {
+			TRACE(("Getting selection\n"));
+			unparseputc1(xw, ANSI_OSC);
+			unparseputs(xw, "52");
+			unparseputc(xw, ';');
+
+			unparseputs(xw, used);
+			unparseputc(xw, ';');
+
+			/* Tell xtermGetSelection data is base64 encoded */
+			screen->base64_paste = n;
+			screen->base64_final = final;
+
+			/* terminator will be written in this call */
+			xtermGetSelection((Widget) xw,
+					  (Time) 0,
+					  select_args, n,
+					  NULL);
+		    }
+		} else {
+		    if (AllowWindowOps(xw, ewSetSelection)) {
+			TRACE(("Setting selection with %s\n", buf));
+			ClearSelectionBuffer(screen);
+			while (*buf != '\0')
+			    AppendToSelectionBuffer(screen, CharOf(*buf++));
+			CompleteSelection(xw, select_args, n);
+		    }
+		}
+		while (n != 0) {
+		    free((void *) select_args[--n]);
+		}
+		free(select_args);
 	    }
-	    ++base;
-	}
-	used[n] = 0;
-
-	if (!strcmp(buf, "?")) {
-	    if (AllowWindowOps(xw, ewGetSelection)) {
-		TRACE(("Getting selection\n"));
-		unparseputc1(xw, ANSI_OSC);
-		unparseputs(xw, "52");
-		unparseputc(xw, ';');
-
-		unparseputs(xw, used);
-		unparseputc(xw, ';');
-
-		/* Tell xtermGetSelection data is base64 encoded */
-		screen->base64_paste = n;
-		screen->base64_final = final;
-
-		/* terminator will be written in this call */
-		xtermGetSelection((Widget) xw, (Time) 0, select_args, n, NULL);
-	    }
-	} else {
-	    if (AllowWindowOps(xw, ewSetSelection)) {
-		TRACE(("Setting selection with %s\n", buf));
-		ClearSelectionBuffer(screen);
-		while (*buf != '\0')
-		    AppendToSelectionBuffer(screen, CharOf(*buf++));
-		CompleteSelection(xw, select_args, n);
-	    }
+	    free(used);
 	}
     }
 }
@@ -3869,7 +3880,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 
 	    if (okay) {
 		unparseputc1(xw, ANSI_DCS);
-		unparseputc(xw, okay ? '1' : '0');
+		unparseputc(xw, '1');
 		unparseputc(xw, '$');
 		unparseputc(xw, 'r');
 		cp = reply;
@@ -4947,6 +4958,7 @@ Cleanup(int code)
 char *
 xtermFindShell(char *leaf, Bool warning)
 {
+    char *s0;
     char *s;
     char *d;
     char *tmp;
@@ -4969,7 +4981,7 @@ xtermFindShell(char *leaf, Bool warning)
 	}
     } else if (*result != '\0' && strchr("+/-", *result) == 0) {
 	/* find it in $PATH */
-	if ((s = x_getenv("PATH")) != 0) {
+	if ((s = s0 = x_getenv("PATH")) != 0) {
 	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 2)) != 0) {
 		Bool found = False;
 		while (*s != '\0') {
@@ -4990,14 +5002,13 @@ xtermFindShell(char *leaf, Bool warning)
 			    }
 			    break;
 			}
-			if (found)
-			    break;
 		    }
 		    if (found)
 			break;
 		}
 		free(tmp);
 	    }
+	    free(s0);
 	}
     }
     TRACE(("...xtermFindShell(%s)\n", result));
@@ -5006,6 +5017,7 @@ xtermFindShell(char *leaf, Bool warning)
 	|| access(result, X_OK) != 0) {
 	if (warning)
 	    xtermWarning("No absolute path found for shell: %s\n", result);
+	free(result);
 	result = 0;
     }
     return result;
@@ -5468,7 +5480,9 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 		    } else {
 			code = 0;
 		    }
-		    strcpy(temp, opt_array[j].desc);
+		    sprintf(temp, "%.*s",
+			    (int) sizeof(temp) - 2,
+			    opt_array[j].desc);
 		    if (x_strindex(temp, "inhibit") != 0)
 			code = -code;
 		    if (code != 0

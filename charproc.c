@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1270 2012/11/25 19:25:10 Balazs.Kezes Exp $ */
+/* $XTermId: charproc.c,v 1.1274 2012/11/27 01:05:36 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1768,7 +1768,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 #if OPT_VT52_MODE
 	if (sp->vt52_cup) {
-	    if (nparam < NPARAM) {
+	    if (nparam < NPARAM - 1) {
 		SetParam(nparam++, (int) (c & 0x7f) - 32);
 		parms.is_sub[nparam] = 0;
 	    }
@@ -5937,6 +5937,7 @@ window_ops(XtermWidget xw)
     unsigned root_height;
 #endif
     int code = zero_if_default(0);
+    char *label;
 
     TRACE(("window_ops %d\n", code));
     switch (code) {
@@ -6106,14 +6107,16 @@ window_ops(XtermWidget xw)
     case ewGetIconTitle:	/* Report the icon's label */
 	if (AllowWindowOps(xw, ewGetIconTitle)) {
 	    TRACE(("...get icon's label\n"));
-	    report_win_label(xw, 'L', get_icon_label(xw));
+	    report_win_label(xw, 'L', label = get_icon_label(xw));
+	    free(label);
 	}
 	break;
 
     case ewGetWinTitle:	/* Report the window's title */
 	if (AllowWindowOps(xw, ewGetWinTitle)) {
 	    TRACE(("...get window's label\n"));
-	    report_win_label(xw, 'l', get_window_label(xw));
+	    report_win_label(xw, 'l', label = get_window_label(xw));
+	    free(label);
 	}
 	break;
 
@@ -6309,7 +6312,7 @@ unparseputc(XtermWidget xw, int c)
     IChar *buf = screen->unparse_bfr;
     unsigned len;
 
-    if ((screen->unparse_len + 2) >= sizeof(screen->unparse_bfr))
+    if ((screen->unparse_len + 2) >= sizeof(screen->unparse_bfr) / sizeof(IChar))
 	unparse_end(xw);
 
     len = screen->unparse_len;
@@ -7963,8 +7966,8 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 
 #define TRACE_FREE_LEAK(name) \
 	if (name) { \
-	    free((void *) name); \
 	    TRACE(("freed " #name ": %p\n", (const void *) name)); \
+	    free((void *) name); \
 	    name = 0; \
 	}
 

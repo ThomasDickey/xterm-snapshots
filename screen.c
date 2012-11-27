@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.469 2012/10/25 23:12:20 tom Exp $ */
+/* $XTermId: screen.c,v 1.470 2012/11/26 22:15:29 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -2881,7 +2881,7 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
 
     TRACE(("FullScreen %d:%s\n", new_ewmh_mode, BtoS(new_ewmh_mode)));
 
-    if (new_ewmh_mode < 0 || new_ewmh_mode > MAX_EWMH_MODE) {
+    if (new_ewmh_mode < 0 || new_ewmh_mode >= MAX_EWMH_MODE) {
 	TRACE(("BUG: FullScreen %d\n", new_ewmh_mode));
 	return;
     } else if (new_ewmh_mode == 0) {

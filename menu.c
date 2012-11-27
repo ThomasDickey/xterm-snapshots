@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.310 2012/09/22 14:53:45 tom Exp $ */
+/* $XTermId: menu.c,v 1.311 2012/11/27 01:30:52 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -842,7 +842,7 @@ domenu(Widget w,
 	FindFontSelection(xw, NULL, True);
 	SetItemSensitivity(
 			      fontMenuEntries[fontMenu_fontsel].widget,
-			      (screen->menu_font_names[fontMenu_fontsel]
+			      (screen->menu_font_names[fontMenu_fontsel][fNorm]
 			       ? True : False));
 	break;
 

@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.435 2012/11/20 01:15:57 tom Exp $ */
+/* $XTermId: button.c,v 1.441 2012/11/27 09:24:28 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1437,6 +1437,7 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 			XtFree((char *) result);
 		    }
 		}
+		free(copied);
 	    } else {
 		TRACE(("Couldn't allocate copy of selection types\n"));
 	    }
@@ -1597,6 +1598,10 @@ MapSelections(XtermWidget xw, String * params, Cardinal num_params)
 					  : params[j]));
 		    if (result[j] == 0) {
 			UnmapSelections(xw);
+			while (j != 0) {
+			    free((void *) result[--j]);
+			}
+			free(result);
 			result = 0;
 			break;
 		    }
@@ -4502,6 +4507,7 @@ getDataFromScreen(XtermWidget xw, String method, CELL * start, CELL * finish)
     lookupSelectUnit(xw, 0, method);
     screen->selectUnit = screen->selectMap[0];
 
+    memset(start, 0, sizeof(*start));
     start->row = screen->cur_row;
     start->col = screen->cur_col;
     *finish = *start;
@@ -4903,11 +4909,14 @@ HandleInsertFormatted(Widget w,
 	    CELL start, finish;
 	    char *data;
 	    char *temp = x_strdup(params[0]);
+	    char *exps;
 
 	    data = getSelectionString(xw, w, event, params, num_params,
 				      &start, &finish);
-	    temp = expandFormat(xw, temp, data, &start, &finish);
-	    unparseputs(xw, temp);
+	    if ((exps = expandFormat(xw, temp, data, &start, &finish)) != 0) {
+		unparseputs(xw, exps);
+		free(exps);
+	    }
 	    free(data);
 	    free(temp);
 	}
@@ -4929,10 +4938,13 @@ HandleInsertSelectable(Widget w,
 	    CELL start, finish;
 	    char *data;
 	    char *temp = x_strdup(params[0]);
+	    char *exps;
 
 	    data = getDataFromScreen(xw, params[1], &start, &finish);
-	    temp = expandFormat(xw, temp, data, &start, &finish);
-	    unparseputs(xw, temp);
+	    if ((exps = expandFormat(xw, temp, data, &start, &finish)) != 0) {
+		unparseputs(xw, exps);
+		free(exps);
+	    }
 	    free(data);
 	    free(temp);
 	}
