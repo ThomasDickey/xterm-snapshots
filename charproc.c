@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1274 2012/11/27 01:05:36 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1279 2012/12/31 19:21:19 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -3932,11 +3932,16 @@ v_write(int f, const Char * data, unsigned len)
     int riten;
 
     TRACE2(("v_write(%d:%s)\n", len, visibleChars(data, len)));
-    if (v_bufstr == NULL && len > 0) {
-	v_buffer = (Char *) XtMalloc((Cardinal) len);
-	v_bufstr = v_buffer;
-	v_bufptr = v_buffer;
-	v_bufend = v_buffer + len;
+    if (v_bufstr == NULL) {
+	if (len > 0) {
+	    v_buffer = (Char *) XtMalloc((Cardinal) len);
+	    v_bufstr = v_buffer;
+	    v_bufptr = v_buffer;
+	    v_bufend = v_buffer + len;
+	}
+	if (v_bufstr == NULL) {
+	    return;
+	}
     }
 #ifdef DEBUG
     if (debug) {
@@ -10098,7 +10103,9 @@ DoSetSelectedFont(Widget w,
 {
     XtermWidget xw = getXtermWidget(w);
 
-    if ((xw == 0) || *type != XA_STRING || *format != 8) {
+    if (xw == 0) {
+	xtermWarning("unexpected widget in DoSetSelectedFont\n");
+    } else if (*type != XA_STRING || *format != 8) {
 	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	Boolean failed = False;
@@ -10130,6 +10137,7 @@ DoSetSelectedFont(Widget w,
 	       XLFD allows up to 255 characters and no control characters;
 	       we are a little more liberal here. */
 	    if (len < 1000
+		&& used != 0
 		&& !strchr(used, '\n')
 		&& (test = x_strdup(used)) != 0) {
 		TScreenOf(xw)->MenuFontName(fontMenu_fontsel) = test;
@@ -10162,7 +10170,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 {
     TScreen *screen = TScreenOf(xw);
     static AtomPtr *atoms;
-    unsigned int atomCount = 0;
+    static unsigned int atomCount = 0;
     AtomPtr *pAtom;
     unsigned a;
     Atom target;
@@ -10174,12 +10182,16 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
     TRACE(("FindFontSelection(%s)\n", atom_name));
 
     for (pAtom = atoms, a = atomCount; a; a--, pAtom++) {
-	if (strcmp(atom_name, XmuNameOfAtom(*pAtom)) == 0)
+	if (strcmp(atom_name, XmuNameOfAtom(*pAtom)) == 0) {
+	    TRACE(("...found atom %d:%s\n", a + 1, atom_name));
 	    break;
+	}
     }
     if (!a) {
 	atoms = TypeXtReallocN(AtomPtr, atoms, atomCount + 1);
 	*(pAtom = &atoms[atomCount]) = XmuMakeAtom(atom_name);
+	++atomCount;
+	TRACE(("...added atom %d:%s\n", atomCount, atom_name));
     }
 
     target = XmuInternAtom(XtDisplay(xw), *pAtom);
