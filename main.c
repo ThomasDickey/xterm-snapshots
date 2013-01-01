@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.712 2012/12/31 22:26:55 tom Exp $ */
+/* $XTermId: main.c,v 1.713 2013/01/01 12:10:59 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -90,6 +90,7 @@
 #define RES_OFFSET(field)	XtOffsetOf(XTERM_RESOURCE, field)
 
 #include <xterm.h>
+#include <version.h>
 
 #include <X11/cursorfont.h>
 #include <X11/Xlocale.h>

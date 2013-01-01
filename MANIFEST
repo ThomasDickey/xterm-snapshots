@@ -1,4 +1,4 @@
-MANIFEST for xterm, version xterm-287d
+MANIFEST for xterm, version xterm-287e
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -85,6 +85,7 @@ util.c                          miscellaneous utility functions for 'xterm'
 uxterm                          wrapper script to make unicode-xterm
 uxterm.desktop                  sample desktop file for uxterm
 uxterm.man                      manpage for uxterm, from Debian
+version.c                       xterm package version, used also in resize
 version.h                       version of xterm
 vms.c                           VMS version of xterm's spawn(), etc.
 vms.h                           system headers and definitions for vms.c

@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.209 2013/01/01 00:26:32 tom Exp $
+## $XTermId: Makefile.in,v 1.211 2013/01/01 13:05:54 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -102,16 +102,16 @@ EXTRAOBJ	= @EXTRAOBJS@
 	  	  data.c doublechr.c fontutils.c input.c \
 		  linedata.c main.c menu.c misc.c \
 		  print.c ptydata.c scrollback.c \
-		  screen.c scrollbar.c tabs.c util.c xstrings.c xtermcap.c \
-		  VTPrsTbl.c $(EXTRASRC)
+		  screen.c scrollbar.c tabs.c util.c version.c xstrings.c \
+		  xtermcap.c VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button$o cachedGCs$o charproc$o charsets$o cursor$o \
 	  	  data$o doublechr$o fontutils$o input$o \
 		  linedata$o main$o menu$o misc$o \
 		  print$o ptydata$o scrollback$o \
-		  screen$o scrollbar$o tabs$o util$o xstrings$o xtermcap$o \
-		  VTPrsTbl$o $(EXTRAOBJ)
-          SRCS2 = resize.c xstrings.c
-          OBJS2 = resize$o xstrings$o
+		  screen$o scrollbar$o tabs$o util$o version$o xstrings$o \
+		  xtermcap$o VTPrsTbl$o $(EXTRAOBJ)
+          SRCS2 = resize.c version.c xstrings.c
+          OBJS2 = resize$o version$o xstrings$o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
            HDRS = VTparse.h data.h error.h main.h menu.h \
@@ -226,11 +226,11 @@ install-full ::
 install \
 install-man \
 install-full :: $(MANDIR)
-	@-$(SHELL) -c 'for app in xterm resize uxterm koi8rxterm ; \
-	do \
-		actual=`echo $$app| sed '$(transform)'`; \
-		$(SHELL) ./minstall "$(INSTALL_DATA)" $(srcdir)/$$app.man  $(MANDIR)/$$actual.$(manext) $(appsdir) $(CLASS) $$app $$actual $(pixmapdir); \
-	done'
+	@-$(SHELL) -c "for app in xterm resize uxterm koi8rxterm ; \
+		do \
+			actual=\`echo \"\$$app\" | sed '@program_transform_name@'\`; \
+			$(SHELL) ./minstall \"$(INSTALL_DATA)\" $(srcdir)/\$$app.man  $(MANDIR)/\$$actual.$(manext) $(appsdir) $(CLASS) \$$app \$$actual $(pixmapdir); \
+		done"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"

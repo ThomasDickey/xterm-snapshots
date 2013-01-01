@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.651 2012/12/31 22:29:46 tom Exp $ */
+/* $XTermId: misc.c,v 1.652 2013/01/01 12:08:58 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -5604,45 +5604,6 @@ xtermEnvUTF8(void)
     return result;
 }
 #endif /* OPT_WIDE_CHARS */
-
-/*
- * Returns the version-string used in the "-v' message as well as a few other
- * places.  It is derived (when possible) from the __vendorversion__ symbol
- * that some newer imake configurations define.
- */
-char *
-xtermVersion(void)
-{
-    static char vendor_version[] = __vendorversion__;
-    static char *result;
-
-    if (result == 0) {
-	char *vendor = vendor_version;
-	char first[BUFSIZ];
-	char second[BUFSIZ];
-
-	result = CastMallocN(char, strlen(vendor) + 9);
-	if (result == 0)
-	    result = vendor;
-	else {
-	    /* some vendors leave trash in this string */
-	    for (;;) {
-		if (!strncmp(vendor, "Version ", (size_t) 8))
-		    vendor += 8;
-		else if (isspace(CharOf(*vendor)))
-		    ++vendor;
-		else
-		    break;
-	    }
-	    if (strlen(vendor) < BUFSIZ &&
-		sscanf(vendor, "%[0-9.] %[A-Za-z_0-9.]", first, second) == 2)
-		sprintf(result, "%s %s(%d)", second, first, XTERM_PATCH);
-	    else
-		sprintf(result, "%s(%d)", vendor, XTERM_PATCH);
-	}
-    }
-    return result;
-}
 
 /*
  * Check if the current widget, or any parent, is the VT100 "xterm" widget.

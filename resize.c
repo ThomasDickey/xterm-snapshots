@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.123 2012/12/31 22:49:00 tom Exp $ */
+/* $XTermId: resize.c,v 1.124 2013/01/01 12:25:27 tom Exp $ */
 
 /*
  * Copyright 2003-2011,2012 by Thomas E. Dickey
@@ -54,9 +54,11 @@
 
 /* resize.c */
 
-#include <xterm.h>
 #include <stdio.h>
 #include <ctype.h>
+
+#include <xterm.h>
+#include <version.h>
 #include <xstrings.h>
 #include <xtermcap.h>
 #include <xterm_io.h>
@@ -190,7 +192,7 @@ failed(const char *s)
     IGNORE_RC(write(2, ": ", 2));
     errno = save;
     perror(s);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 /* ARGSUSED */
@@ -204,7 +206,7 @@ onintr(int sig GCC_UNUSED)
 #else /* not USE_TERMIOS */
     (void) ioctl(tty, TIOCSETP, &sgorig);
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 static void
@@ -219,8 +221,8 @@ Usage(void)
 {
     fprintf(stderr, strcmp(myname, sunname) == 0 ?
 	    "Usage: %s [rows cols]\n" :
-	    "Usage: %s [-u] [-c] [-s [rows cols]]\n", myname);
-    exit(1);
+	    "Usage: %s [-v] [-u] [-c] [-s [rows cols]]\n", myname);
+    exit(EXIT_FAILURE);
 }
 
 #ifdef USE_TERMCAP
@@ -353,6 +355,9 @@ main(int argc, char **argv ENVP_ARG)
 	case 'c':		/* C shell */
 	    shell_type = SHELL_C;
 	    break;
+	case 'v':
+	    printf("%s\n", xtermVersion());
+	    exit(EXIT_SUCCESS);
 	default:
 	    Usage();		/* Never returns */
 	}
@@ -379,9 +384,11 @@ main(int argc, char **argv ENVP_ARG)
 	shell = x_basename(ptr);
 
 	/* now that we know, what kind is it? */
-	for (i = 0; shell_list[i].name; i++)
-	    if (!strcmp(shell_list[i].name, shell))
+	for (i = 0; shell_list[i].name; i++) {
+	    if (!strcmp(shell_list[i].name, shell)) {
 		break;
+	    }
+	}
 	shell_type = shell_list[i].type;
     }
 
@@ -390,13 +397,14 @@ main(int argc, char **argv ENVP_ARG)
 	    fprintf(stderr,
 		    "%s: Can't set window size under %s emulation\n",
 		    myname, emuname[emu]);
-	    exit(1);
+	    exit(EXIT_FAILURE);
 	}
-	if (!checkdigits(argv[0]) || !checkdigits(argv[1]))
+	if (!checkdigits(argv[0]) || !checkdigits(argv[1])) {
 	    Usage();		/* Never returns */
-    } else if (argc != 0)
+	}
+    } else if (argc != 0) {
 	Usage();		/* Never returns */
-
+    }
 #ifdef CANT_OPEN_DEV_TTY
     if ((name_of_tty = ttyname(fileno(stderr))) == NULL)
 #endif
@@ -405,27 +413,30 @@ main(int argc, char **argv ENVP_ARG)
     if ((ttyfp = fopen(name_of_tty, "r+")) == NULL) {
 	fprintf(stderr, "%s:  can't open terminal %s\n",
 		myname, name_of_tty);
-	exit(1);
+	exit(EXIT_FAILURE);
     }
     tty = fileno(ttyfp);
 #ifdef USE_TERMCAP
     if ((env = x_getenv("TERM")) == 0) {
 	env = DFT_TERMTYPE;
-	if (SHELL_BOURNE == shell_type)
+	if (SHELL_BOURNE == shell_type) {
 	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
-	else
+	} else {
 	    setname = "setenv TERM " DFT_TERMTYPE ";\n";
+	}
     }
     termcap[0] = 0;		/* ...just in case we've accidentally gotten terminfo */
-    if (tgetent(termcap, env) <= 0 || termcap[0] == 0)
+    if (tgetent(termcap, env) <= 0 || termcap[0] == 0) {
 	ok_tcap = 0;
+    }
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
     if (x_getenv("TERM") == 0) {
-	if (SHELL_BOURNE == shell_type)
+	if (SHELL_BOURNE == shell_type) {
 	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
-	else
+	} else {
 	    setname = "setenv TERM " DFT_TERMTYPE ";\n";
+	}
     }
 #endif /* USE_TERMINFO */
 
@@ -546,7 +557,7 @@ main(int argc, char **argv ENVP_ARG)
 	/* first do columns */
 	if ((ptr = x_strindex(termcap, "co#")) == NULL) {
 	    fprintf(stderr, "%s: No `co#'\n", myname);
-	    exit(1);
+	    exit(EXIT_FAILURE);
 	}
 
 	i = ptr - termcap + 3;
@@ -558,7 +569,7 @@ main(int argc, char **argv ENVP_ARG)
 	/* now do lines */
 	if ((ptr = x_strindex(newtc, "li#")) == NULL) {
 	    fprintf(stderr, "%s: No `li#'\n", myname);
-	    exit(1);
+	    exit(EXIT_FAILURE);
 	}
 
 	i = ptr - newtc + 3;
@@ -597,5 +608,5 @@ main(int argc, char **argv ENVP_ARG)
 	       setname, cols, rows);
 #endif /* USE_TERMINFO */
     }
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
