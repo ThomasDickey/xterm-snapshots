@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.385 2012/11/27 01:24:26 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.386 2012/12/31 20:51:54 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2012 by Thomas E. Dickey
@@ -88,8 +88,6 @@
 	} \
     } \
 }
-
-#define MAX_FONTNAME 200
 
 /*
  * A structure to hold the relevant properties from a font
@@ -243,9 +241,6 @@ check_fontname(const char *name)
     if (IsEmpty(name)) {
 	TRACE(("fontname missing\n"));
 	result = False;
-    } else if (strlen(name) >= MAX_FONTNAME - 1) {
-	TRACE(("fontname too large: %s\n", name));
-	result = False;
     }
     return result;
 }
@@ -258,7 +253,7 @@ check_fontname(const char *name)
  * or NULL on error.
  */
 static FontNameProperties *
-get_font_name_props(Display * dpy, XFontStruct * fs, char *result)
+get_font_name_props(Display * dpy, XFontStruct * fs, char **result)
 {
     static FontNameProperties props;
     static char *last_name;
@@ -294,7 +289,9 @@ get_font_name_props(Display * dpy, XFontStruct * fs, char *result)
     if (result != 0) {
 	if (!check_fontname(name))
 	    return 0;
-	strcpy(result, name);
+	if (*result != 0)
+	    free(*result);
+	*result = x_strdup(name);
     }
 
     /*
@@ -585,13 +582,14 @@ same_font_name(const char *pattern, const char *match)
 static int
 got_bold_font(Display * dpy, XFontStruct * fs, String requested)
 {
-    char actual[MAX_FONTNAME];
+    char *actual = 0;
     int got;
 
-    if (get_font_name_props(dpy, fs, actual) == 0)
+    if (get_font_name_props(dpy, fs, &actual) == 0)
 	got = 0;
     else
 	got = same_font_name(requested, actual);
+    free(actual);
     return got;
 }
 
@@ -877,7 +875,7 @@ xtermLoadFont(XtermWidget xw,
     Pixel new_normal;
     Pixel new_revers;
     char *tmpname = NULL;
-    char normal[MAX_FONTNAME];
+    char *normal = NULL;
     Boolean proportional = False;
     fontWarningTypes warn[fMAX];
     int j;
@@ -946,10 +944,10 @@ xtermLoadFont(XtermWidget xw,
 	goto bad;
     }
 
-    strcpy(normal, myfonts.f_n);
+    normal = x_strdup(myfonts.f_n);
     if (!check_fontname(myfonts.f_b)) {
 	warn[fBold] = fwAlways;
-	fp = get_font_name_props(screen->display, fnts[fNorm].fs, normal);
+	fp = get_font_name_props(screen->display, fnts[fNorm].fs, &normal);
 	if (fp != 0) {
 	    myfonts.f_b = bold_font_name(fp, fp->average_width);
 	    if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwAlways, False)) {
@@ -985,12 +983,12 @@ xtermLoadFont(XtermWidget xw,
      */
     if_OPT_WIDE_CHARS(screen, {
 	Boolean derived;
-	char bold[MAX_FONTNAME];
+	char *bold = NULL;
 
 	if (check_fontname(myfonts.f_w)) {
 	    cache_menu_font_name(screen, fontnum, fWide, myfonts.f_w);
 	} else if (screen->utf8_fonts && !is_double_width_font(fnts[fNorm].fs)) {
-	    fp = get_font_name_props(screen->display, fnts[fNorm].fs, normal);
+	    fp = get_font_name_props(screen->display, fnts[fNorm].fs, &normal);
 	    if (fp != 0) {
 		myfonts.f_w = wide_font_name(fp);
 		warn[fWide] = fwAlways;
@@ -1008,7 +1006,7 @@ xtermLoadFont(XtermWidget xw,
 
 	derived = False;
 	if (!check_fontname(myfonts.f_wb)) {
-	    fp = get_font_name_props(screen->display, fnts[fBold].fs, bold);
+	    fp = get_font_name_props(screen->display, fnts[fBold].fs, &bold);
 	    if (fp != 0) {
 		myfonts.f_wb = widebold_font_name(fp);
 		warn[fWBold] = fwAlways;
@@ -1059,6 +1057,8 @@ xtermLoadFont(XtermWidget xw,
 	    warn[fWBold] = fwAlways;
 	    TRACE(("...cannot load wide bold font, use wide %s\n", NonNull(myfonts.f_w)));
 	}
+
+	free(bold);
 
 	if (EmptyFont(fnts[fWBold].fs))
 	    goto bad;		/* can't use a 0-sized font */
@@ -1252,12 +1252,16 @@ xtermLoadFont(XtermWidget xw,
 	screen->menu_font_sizes[fontnum] = FontSize(fnts[fNorm].fs);
 #endif
     }
+    if (normal)
+	free(normal);
     set_cursor_gcs(xw);
     xtermUpdateFontInfo(xw, doresize);
     TRACE(("Success Cgs - xtermLoadFont\n"));
     return 1;
 
   bad:
+    if (normal)
+	free(normal);
     if (tmpname)
 	free(tmpname);
 

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.470 2012/11/26 22:15:29 tom Exp $ */
+/* $XTermId: screen.c,v 1.471 2012/12/31 19:26:58 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1865,7 +1865,9 @@ ScreenResize(XtermWidget xw,
 
     /* update buffers if the screen has changed size */
     if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
+#if !OPT_SAVE_LINES
 	int whichBuf = 0;
+#endif
 	int delta_rows = rows - MaxRows(screen);
 #if OPT_TRACE
 	int delta_cols = cols - MaxCols(screen);
@@ -2124,8 +2126,10 @@ ScreenResize(XtermWidget xw,
 		screen->cursorp.row += move_down_by;
 		ScrollSelection(screen, move_down_by, True);
 
+#if !OPT_SAVE_LINES
 		if (whichBuf)
 		    SwitchBufPtrs(screen, whichBuf);	/* put the pointers back */
+#endif
 	    }
 	}
 

@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.118 2011/09/11 20:19:19 tom Exp $ */
+/* $XTermId: resize.c,v 1.121 2012/12/31 22:12:18 tom Exp $ */
 
 /*
- * Copyright 2003-2010,2011 by Thomas E. Dickey
+ * Copyright 2003-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -186,11 +186,46 @@ static const char *wsize[EMULATIONS] =
 };
 #endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
 
-static SIGNAL_T onintr(int sig);
-static SIGNAL_T resize_timeout(int sig);
-static int checkdigits(char *str);
-static void Usage(void);
-static void readstring(FILE *fp, char *buf, const char *str);
+static void
+failed(const char *s)
+{
+    int save = errno;
+    IGNORE_RC(write(2, myname, strlen(myname)));
+    IGNORE_RC(write(2, ": ", 2));
+    errno = save;
+    perror(s);
+    exit(1);
+}
+
+/* ARGSUSED */
+static SIGNAL_T
+onintr(int sig GCC_UNUSED)
+{
+#ifdef USE_ANY_SYSV_TERMIO
+    (void) ioctl(tty, TCSETAW, &tioorig);
+#elif defined(USE_TERMIOS)
+    (void) tcsetattr(tty, TCSADRAIN, &tioorig);
+#else /* not USE_TERMIOS */
+    (void) ioctl(tty, TIOCSETP, &sgorig);
+#endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
+    exit(1);
+}
+
+static SIGNAL_T
+resize_timeout(int sig)
+{
+    fprintf(stderr, "\n%s: Time out occurred\r\n", myname);
+    onintr(sig);
+}
+
+static void
+Usage(void)
+{
+    fprintf(stderr, strcmp(myname, sunname) == 0 ?
+	    "Usage: %s [rows cols]\n" :
+	    "Usage: %s [-u] [-c] [-s [rows cols]]\n", myname);
+    exit(1);
+}
 
 #ifdef USE_TERMCAP
 static void
@@ -218,6 +253,58 @@ print_termcap(const char *termcap)
 }
 #endif /* USE_TERMCAP */
 
+static int
+checkdigits(char *str)
+{
+    while (*str) {
+	if (!isdigit(CharOf(*str)))
+	    return (0);
+	str++;
+    }
+    return (1);
+}
+
+static void
+readstring(FILE *fp, char *buf, const char *str)
+{
+    int last, c;
+#if !defined(USG) && !defined(__UNIXOS2__)
+    /* What is the advantage of setitimer() over alarm()? */
+    struct itimerval it;
+#endif
+
+    signal(SIGALRM, resize_timeout);
+#if defined(USG) || defined(__UNIXOS2__)
+    alarm(TIMEOUT);
+#else
+    memset((char *) &it, 0, sizeof(struct itimerval));
+    it.it_value.tv_sec = TIMEOUT;
+    setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
+#endif
+    if ((c = getc(fp)) == 0233) {	/* meta-escape, CSI */
+	c = ESCAPE("")[0];
+	*buf++ = (char) c;
+	*buf++ = '[';
+    } else {
+	*buf++ = (char) c;
+    }
+    if (c != *str) {
+	fprintf(stderr, "%s: unknown character, exiting.\r\n", myname);
+	onintr(0);
+    }
+    last = str[strlen(str) - 1];
+    while ((*buf++ = (char) getc(fp)) != last) {
+	;
+    }
+#if defined(USG) || defined(__UNIXOS2__)
+    alarm(0);
+#else
+    memset((char *) &it, 0, sizeof(struct itimerval));
+    setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
+#endif
+    *buf = 0;
+}
+
 /*
    resets termcap string to reflect current screen size
  */
@@ -231,6 +318,7 @@ main(int argc, char **argv ENVP_ARG)
     int emu = VT100;
     char *shell;
     int i;
+    int rc;
     int rows, cols;
 #ifdef USE_ANY_SYSV_TERMIO
     struct termio tio;
@@ -346,7 +434,7 @@ main(int argc, char **argv ENVP_ARG)
 #endif /* USE_TERMINFO */
 
 #ifdef USE_ANY_SYSV_TERMIO
-    ioctl(tty, TCGETA, &tioorig);
+    rc = ioctl(tty, TCGETA, &tioorig);
     tio = tioorig;
     UIntClr(tio.c_iflag, (ICRNL | IUCLC));
     UIntClr(tio.c_lflag, (ICANON | ECHO));
@@ -354,7 +442,7 @@ main(int argc, char **argv ENVP_ARG)
     tio.c_cc[VMIN] = 6;
     tio.c_cc[VTIME] = 1;
 #elif defined(USE_TERMIOS)
-    tcgetattr(tty, &tioorig);
+    rc = tcgetattr(tty, &tioorig);
     tio = tioorig;
     UIntClr(tio.c_iflag, ICRNL);
     UIntClr(tio.c_lflag, (ICANON | ECHO));
@@ -362,21 +450,27 @@ main(int argc, char **argv ENVP_ARG)
     tio.c_cc[VMIN] = 6;
     tio.c_cc[VTIME] = 1;
 #else /* not USE_TERMIOS */
-    ioctl(tty, TIOCGETP, &sgorig);
+    rc = ioctl(tty, TIOCGETP, &sgorig);
     sg = sgorig;
     sg.sg_flags |= RAW;
     UIntClr(sg.sg_flags, ECHO);
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
+    if (rc != 0)
+	failed("get tty settings");
+
     signal(SIGINT, onintr);
     signal(SIGQUIT, onintr);
     signal(SIGTERM, onintr);
+
 #ifdef USE_ANY_SYSV_TERMIO
-    ioctl(tty, TCSETAW, &tio);
+    rc = ioctl(tty, TCSETAW, &tio);
 #elif defined(USE_TERMIOS)
-    tcsetattr(tty, TCSADRAIN, &tio);
+    rc = tcsetattr(tty, TCSADRAIN, &tio);
 #else /* not USE_TERMIOS */
-    ioctl(tty, TIOCSETP, &sg);
+    rc = ioctl(tty, TIOCSETP, &sg);
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
+    if (rc != 0)
+	failed("set tty settings");
 
     if (argc == 2) {
 	char *tmpbuf = TypeMallocN(char,
@@ -437,12 +531,15 @@ main(int argc, char **argv ENVP_ARG)
 #endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
 
 #ifdef USE_ANY_SYSV_TERMIO
-    ioctl(tty, TCSETAW, &tioorig);
+    rc = ioctl(tty, TCSETAW, &tioorig);
 #elif defined(USE_TERMIOS)
-    tcsetattr(tty, TCSADRAIN, &tioorig);
+    rc = tcsetattr(tty, TCSADRAIN, &tioorig);
 #else /* not USE_TERMIOS */
-    ioctl(tty, TIOCSETP, &sgorig);
+    rc = ioctl(tty, TIOCSETP, &sgorig);
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
+    if (rc != 0)
+	failed("set tty settings");
+
     signal(SIGINT, SIG_DFL);
     signal(SIGQUIT, SIG_DFL);
     signal(SIGTERM, SIG_DFL);
@@ -505,86 +602,4 @@ main(int argc, char **argv ENVP_ARG)
 #endif /* USE_TERMINFO */
     }
     exit(0);
-}
-
-static int
-checkdigits(char *str)
-{
-    while (*str) {
-	if (!isdigit(CharOf(*str)))
-	    return (0);
-	str++;
-    }
-    return (1);
-}
-
-static void
-readstring(FILE *fp, char *buf, const char *str)
-{
-    int last, c;
-#if !defined(USG) && !defined(__UNIXOS2__)
-    /* What is the advantage of setitimer() over alarm()? */
-    struct itimerval it;
-#endif
-
-    signal(SIGALRM, resize_timeout);
-#if defined(USG) || defined(__UNIXOS2__)
-    alarm(TIMEOUT);
-#else
-    memset((char *) &it, 0, sizeof(struct itimerval));
-    it.it_value.tv_sec = TIMEOUT;
-    setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
-#endif
-    if ((c = getc(fp)) == 0233) {	/* meta-escape, CSI */
-	c = ESCAPE("")[0];
-	*buf++ = (char) c;
-	*buf++ = '[';
-    } else {
-	*buf++ = (char) c;
-    }
-    if (c != *str) {
-	fprintf(stderr, "%s: unknown character, exiting.\r\n", myname);
-	onintr(0);
-    }
-    last = str[strlen(str) - 1];
-    while ((*buf++ = (char) getc(fp)) != last) {
-	;
-    }
-#if defined(USG) || defined(__UNIXOS2__)
-    alarm(0);
-#else
-    memset((char *) &it, 0, sizeof(struct itimerval));
-    setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
-#endif
-    *buf = 0;
-}
-
-static void
-Usage(void)
-{
-    fprintf(stderr, strcmp(myname, sunname) == 0 ?
-	    "Usage: %s [rows cols]\n" :
-	    "Usage: %s [-u] [-c] [-s [rows cols]]\n", myname);
-    exit(1);
-}
-
-static SIGNAL_T
-resize_timeout(int sig)
-{
-    fprintf(stderr, "\n%s: Time out occurred\r\n", myname);
-    onintr(sig);
-}
-
-/* ARGSUSED */
-static SIGNAL_T
-onintr(int sig GCC_UNUSED)
-{
-#ifdef USE_ANY_SYSV_TERMIO
-    ioctl(tty, TCSETAW, &tioorig);
-#elif defined(USE_TERMIOS)
-    tcsetattr(tty, TCSADRAIN, &tioorig);
-#else /* not USE_TERMIOS */
-    ioctl(tty, TIOCSETP, &sgorig);
-#endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
-    exit(1);
 }

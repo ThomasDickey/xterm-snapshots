@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.441 2012/11/27 09:24:28 tom Exp $ */
+/* $XTermId: button.c,v 1.445 2012/12/31 18:05:09 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1345,7 +1345,6 @@ parseItem(char *value, char *nextc)
     }
     *nextc = *nextp;
     *nextp = '\0';
-    x_strtrim(value);
 
     return nextp;
 }
@@ -1404,30 +1403,32 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 		    count = 0;
 		    do {
 			char *nextp = parseItem(listp, &nextc);
-			size_t len = strlen(listp);
+			char *item = x_strtrim(listp);
+			size_t len = (item ? strlen(item) : 0);
 
 			if (len == 0) {
 			    /* EMPTY */ ;
 			}
 #if OPT_WIDE_CHARS
-			else if (sameItem(listp, "UTF8")) {
+			else if (sameItem(item, "UTF8")) {
 			    result[count++] = XA_UTF8_STRING(XtDisplay(w));
 			}
 #endif
-			else if (sameItem(listp, "I18N")) {
+			else if (sameItem(item, "I18N")) {
 			    if (screen->i18nSelections) {
 				result[count++] = XA_TEXT(XtDisplay(w));
 				result[count++] = XA_COMPOUND_TEXT(XtDisplay(w));
 			    }
-			} else if (sameItem(listp, "TEXT")) {
+			} else if (sameItem(item, "TEXT")) {
 			    result[count++] = XA_TEXT(XtDisplay(w));
-			} else if (sameItem(listp, "COMPOUND_TEXT")) {
+			} else if (sameItem(item, "COMPOUND_TEXT")) {
 			    result[count++] = XA_COMPOUND_TEXT(XtDisplay(w));
-			} else if (sameItem(listp, "STRING")) {
+			} else if (sameItem(item, "STRING")) {
 			    result[count++] = XA_STRING;
 			}
 			*nextp++ = nextc;
 			listp = nextp;
+			free(item);
 		    } while (nextc != '\0');
 		    if (count) {
 			result[count] = None;
@@ -4623,6 +4624,7 @@ tokenizeFormat(String format)
 	    if (!pass) {
 		result = TypeCallocN(char *, argc + 1);
 		if (result == 0) {
+		    free(blob);
 		    break;
 		}
 	    }

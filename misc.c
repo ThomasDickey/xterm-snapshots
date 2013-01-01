@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.641 2012/11/27 09:25:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.650 2012/12/31 20:21:49 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -125,6 +125,8 @@
 
 static Boolean xtermAllocColor(XtermWidget, XColor *, const char *);
 static Cursor make_hidden_cursor(XtermWidget);
+
+static char emptyString[] = "";
 
 #if OPT_EXEC_XTERM
 /* Like readlink(2), but returns a malloc()ed buffer, or NULL on
@@ -1945,8 +1947,34 @@ StartLog(XtermWidget xw)
 	static char *shell;
 	struct passwd pw;
 
-	if (pipe(p) < 0 || (pid = fork()) < 0)
+	if ((shell = x_getenv("SHELL")) == NULL) {
+
+	    if (x_getpwuid(screen->uid, &pw)) {
+		char *name = x_getlogin(screen->uid, &pw);
+		if (*(pw.pw_shell)) {
+		    shell = pw.pw_shell;
+		}
+		free(name);
+	    }
+	}
+
+	if (shell == 0) {
+	    static char dummy[] = "/bin/sh";
+	    shell = dummy;
+	}
+
+	if (access(shell, X_OK) != 0) {
+	    xtermPerror("Can't execute `%s'\n", shell);
 	    return;
+	}
+
+	if (pipe(p) < 0) {
+	    xtermPerror("Can't make a pipe connection\n");
+	    return;
+	} else if ((pid = fork()) < 0) {
+	    xtermPerror("Can't fork...\n");
+	    return;
+	}
 	if (pid == 0) {		/* child */
 	    /*
 	     * Close our output (we won't be talking back to the
@@ -1963,21 +1991,6 @@ StartLog(XtermWidget xw)
 	    close(ConnectionNumber(screen->display));
 	    close(screen->respond);
 
-	    if ((shell = x_getenv("SHELL")) == NULL) {
-
-		if (x_getpwuid(screen->uid, &pw)) {
-		    x_getlogin(screen->uid, &pw);
-		    if (*(pw.pw_shell)) {
-			shell = pw.pw_shell;
-		    }
-		}
-	    }
-
-	    if (shell == 0) {
-		static char dummy[] = "/bin/sh";
-		shell = dummy;
-	    }
-
 	    signal(SIGHUP, SIG_DFL);
 	    signal(SIGCHLD, SIG_DFL);
 
@@ -1985,9 +1998,12 @@ StartLog(XtermWidget xw)
 	    if (xtermResetIds(screen) < 0)
 		exit(ERROR_SETUID);
 
-	    execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
-
-	    xtermWarning("Can't exec `%s'\n", &screen->logfile[1]);
+	    if (access(shell, X_OK) == 0) {
+		execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
+		xtermWarning("Can't exec `%s'\n", &screen->logfile[1]);
+	    } else {
+		xtermWarning("Can't execute `%s'\n", shell);
+	    }
 	    exit(ERROR_LOGEXEC);
 	}
 	close(p[0]);
@@ -3634,7 +3650,7 @@ parse_decdld(ANSI * params, const char *string)
 			? Pcmw
 			: (Pcmw + 3)));
     int char_high = ((Pcmh == 0)
-		     ? ((Pcmw >= 2 || Pcmw <= 4)
+		     ? ((Pcmw >= 2 && Pcmw <= 4)
 			? 10
 			: 20)
 		     : Pcmh);
@@ -4549,7 +4565,6 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 #if OPT_WIDE_CHARS
     static Char *converted;	/* NO_LEAKS */
 #endif
-    static char empty[1];
 
     Arg args[1];
     Boolean changed = True;
@@ -4566,14 +4581,16 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	return;
 
     if (value == 0)
-	value = empty;
+	value = emptyString;
     if (IsTitleMode(xw, tmSetBase16)) {
 	const char *temp;
 	char *test;
 
 	value = x_decode_hex(value, &temp);
-	if (*temp != '\0')
+	if (*temp != '\0') {
+	    free(value);
 	    return;
+	}
 	for (test = value; *test != '\0'; ++test) {
 	    if (CharOf(*test) < 32) {
 		*test = '\0';
@@ -4679,13 +4696,12 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	    }
 #endif
 	}
-
-	free(my_attr);
-
-	if (IsTitleMode(xw, tmSetBase16))
-	    free(value);
-
     }
+    if (IsTitleMode(xw, tmSetBase16)) {
+	free(value);
+    }
+    free(my_attr);
+
     return;
 }
 
@@ -4693,8 +4709,7 @@ void
 ChangeIconName(XtermWidget xw, char *name)
 {
     if (name == 0) {
-	static char dummy[] = "";
-	name = dummy;
+	name = emptyString;
     }
     if (!showZIconBeep(xw, name))
 	ChangeGroup(xw, XtNiconName, name);

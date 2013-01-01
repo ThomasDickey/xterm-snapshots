@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.52 2012/11/26 21:57:56 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.54 2012/12/31 19:17:55 tom Exp $ */
 
 /*
  * Copyright 2000-2011,2012 by Thomas E. Dickey
@@ -168,6 +168,7 @@ login_alias(char *login_name, uid_t uid, struct passwd *in_out)
 		/* use the other passwd-data including shell */
 		alloc_pw(in_out, &pw2);
 	    } else {
+		free(login_name);
 		login_name = NULL;
 	    }
 	}
@@ -188,6 +189,7 @@ x_getlogin(uid_t uid, struct passwd *in_out)
 
     login_name = login_alias(x_getenv("LOGNAME"), uid, in_out);
     if (IsEmpty(login_name)) {
+	free(login_name);
 	login_name = login_alias(x_getenv("USER"), uid, in_out);
     }
 #ifdef HAVE_GETLOGIN
@@ -199,14 +201,15 @@ x_getlogin(uid_t uid, struct passwd *in_out)
      */
     if (IsEmpty(login_name)) {
 	TRACE2(("...try getlogin\n"));
-	login_name = login_alias(getlogin(), uid, in_out);
+	free(login_name);
+	login_name = login_alias(x_strdup(getlogin()), uid, in_out);
     }
 #endif
 
-    if (IsEmpty(login_name))
-	login_name = in_out->pw_name;
-    if (!IsEmpty(login_name))
-	login_name = x_strdup(login_name);
+    if (IsEmpty(login_name)) {
+	free(login_name);
+	login_name = x_strdup(in_out->pw_name);
+    }
 
     TRACE2(("x_getloginid ->%s\n", NonNull(login_name)));
     return login_name;
