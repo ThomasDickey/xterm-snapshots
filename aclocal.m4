@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.355 2012/10/07 20:40:26 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.358 2013/01/01 15:58:24 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2011,2012 by Thomas E. Dickey
+dnl Copyright 1997-2012,2013 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -933,7 +933,7 @@ rm -rf conftest*
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_GCC_VERSION version: 6 updated: 2012/10/06 18:38:34
+dnl CF_GCC_VERSION version: 7 updated: 2012/10/18 06:46:33
 dnl --------------
 dnl Find version of gcc
 AC_DEFUN([CF_GCC_VERSION],[
@@ -941,7 +941,7 @@ AC_REQUIRE([AC_PROG_CC])
 GCC_VERSION=none
 if test "$GCC" = yes ; then
 	AC_MSG_CHECKING(version of $CC)
-	GCC_VERSION="`${CC} --version 2>/dev/null | sed -e '2,$d' -e 's/^.*(\(GCC\|Debian\)[[^)]]*) //' -e 's/^[[^0-9.]]*//' -e 's/[[^0-9.]].*//'`"
+	GCC_VERSION="`${CC} --version 2>/dev/null | sed -e '2,$d' -e 's/^.*(GCC[[^)]]*) //' -e 's/^.*(Debian[[^)]]*) //' -e 's/^[[^0-9.]]*//' -e 's/[[^0-9.]].*//'`"
 	test -z "$GCC_VERSION" && GCC_VERSION=unknown
 	AC_MSG_RESULT($GCC_VERSION)
 fi
@@ -2968,7 +2968,7 @@ fi
 AC_SUBST(no_appsdir)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_DESKTOP_CATEGORY version: 2 updated: 2011/07/02 10:22:07
+dnl CF_WITH_DESKTOP_CATEGORY version: 4 updated: 2013/01/01 10:50:14
 dnl ------------------------
 dnl Taking into account the absence of standardization of desktop categories
 dnl take a look to see whether other applications on the current system are
@@ -2978,7 +2978,9 @@ dnl $1 = program name
 dnl $2 = case-pattern to match comparable desktop files to obtain category
 dnl      This pattern may contain wildcards.
 dnl $3 = suggested categories, also a case-pattern but without wildcards,
-dnl      since it doubles as a default value.
+dnl      since it doubles as a default value for a shell case-statement.
+dnl $4 = categories to use if no match is found on the build-machine for the
+dnl      --with-desktop-category "auto" setting.
 dnl
 dnl The macro tells the configure script to substitute the $DESKTOP_CATEGORY
 dnl value.
@@ -3040,9 +3042,27 @@ then
 			done
 			cf_desktop_want=`cat conftest.2 | tr '\n' ';'`
 		fi
+		if test -n "$cf_desktop_want"
+		then
+			if test "$cf_desktop_want" = auto
+			then
+				cf_desktop_want=
+			else
+				# do a sanity check on the semicolon-separated list, ignore on failure
+				cf_desktop_test=`echo "$cf_desktop_want" | sed -e 's/[[^;]]//g'`
+				test -z "$cf_desktop_test" && cf_desktop_want=
+				cf_desktop_test=`echo "$cf_desktop_want" | sed -e 's/^.*;$/./g'`
+				test -z "$cf_desktop_test" && cf_desktop_want=
+			fi
+		fi
+		if test -z "$cf_desktop_want"
+		then
+			cf_desktop_want="ifelse([$4],,ifelse([$3],,[Application;],[`echo "$3" | sed -e 's/\*//g' -e 's/|/;/g' -e 's/[[;]]*$/;/g'`]),[$4])"
+			CF_VERBOSE(no usable value found for desktop category, using $cf_desktop_want)
+		fi
 	fi
 	DESKTOP_CATEGORY=`echo "$cf_desktop_want" | sed -e 's/[[ ,]]/;/g'`
-	CF_VERBOSE(resulting category=$DESKTOP_CATEGORY)
+	CF_VERBOSE(will use Categories=$DESKTOP_CATEGORY)
 	AC_SUBST(DESKTOP_CATEGORY)
 fi
 ])

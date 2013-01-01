@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.139 2012/10/10 23:33:29 tom Exp $
+-- $XTermId: INSTALL,v 1.140 2013/01/01 15:53:19 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2011,2012 by Thomas E. Dickey
 --
@@ -571,7 +571,9 @@ The options (in alphabetic order):
 
 	The default value "auto" tells the configure script to look
 	at existing ".desktop" files for xterm and common terminal
-	emulators, to use those.
+	emulators, to use those.  If none are found, the script uses this
+	default:
+		System;TerminalEmulator;Utility;
 
   --with-freetype-config  configure script to use for FreeType
 

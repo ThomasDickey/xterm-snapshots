@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.712 2013/01/01 12:09:08 tom Exp $ */
+/* $XTermId: xterm.h,v 1.713 2013/01/01 13:32:39 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

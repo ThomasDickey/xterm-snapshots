@@ -1,7 +1,7 @@
-/* $XTermId: version.h,v 1.354 2013/01/01 12:07:50 tom Exp $ */
+/* $XTermId: version.h,v 1.355 2013/01/01 13:32:39 tom Exp $ */
 
 /*
- * Copyright 1998-2011,2012 by Thomas E. Dickey
+ * Copyright 1998-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
