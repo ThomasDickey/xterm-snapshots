@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.211 2013/01/01 13:05:54 tom Exp $
+## $XTermId: Makefile.in,v 1.212 2013/01/01 13:32:39 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2011,2012 by Thomas E. Dickey
+# Copyright 1997-2012,2013 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #

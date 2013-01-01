@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.124 2013/01/01 12:25:27 tom Exp $ */
+/* $XTermId: resize.c,v 1.125 2013/01/01 13:32:39 tom Exp $ */
 
 /*
- * Copyright 2003-2011,2012 by Thomas E. Dickey
+ * Copyright 2003-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
