@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.711 2012/12/31 21:12:50 tom Exp $ */
+/* $XTermId: main.c,v 1.712 2012/12/31 22:26:55 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -445,7 +445,7 @@ extern char *ptsname(int);
 #endif
 
 #ifndef VMS
-static SIGNAL_T reapchild(int /* n */ );
+static void reapchild(int /* n */ );
 static int spawnXTerm(XtermWidget /* xw */ );
 static void remove_termcap_entry(char *, const char *);
 #ifdef USE_PTY_SEARCH
@@ -2890,11 +2890,10 @@ static const char *vtterm[] =
 };
 
 /* ARGSUSED */
-static SIGNAL_T
+static void
 hungtty(int i GCC_UNUSED)
 {
     siglongjmp(env, 1);
-    SIGNAL_RETURN;
 }
 
 #if OPT_PTY_HANDSHAKE
@@ -4750,7 +4749,7 @@ spawnXTerm(XtermWidget xw)
     return 0;
 }				/* end spawnXTerm */
 
-SIGNAL_T
+void
 Exit(int n)
 {
     XtermWidget xw = term;
@@ -4768,7 +4767,7 @@ Exit(int n)
 
     /* don't do this more than once */
     if (xterm_exiting)
-	SIGNAL_RETURN;
+	return;
     xterm_exiting = True;
 
 #ifdef PUCC_PTYD
@@ -4925,7 +4924,6 @@ Exit(int n)
 #endif
 
     exit(n);
-    SIGNAL_RETURN;
 }
 
 /* ARGSUSED */
@@ -5016,7 +5014,7 @@ nonblocking_wait(void)
 #ifndef VMS
 
 /* ARGSUSED */
-static SIGNAL_T
+static void
 reapchild(int n GCC_UNUSED)
 {
     int olderrno = errno;
@@ -5043,7 +5041,6 @@ reapchild(int n GCC_UNUSED)
     } while ((pid = nonblocking_wait()) > 0);
 
     errno = olderrno;
-    SIGNAL_RETURN;
 }
 #endif /* !VMS */
 

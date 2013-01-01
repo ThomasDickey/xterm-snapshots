@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.121 2012/12/31 22:12:18 tom Exp $ */
+/* $XTermId: resize.c,v 1.123 2012/12/31 22:49:00 tom Exp $ */
 
 /*
  * Copyright 2003-2011,2012 by Thomas E. Dickey
@@ -60,10 +60,6 @@
 #include <xstrings.h>
 #include <xtermcap.h>
 #include <xterm_io.h>
-
-#ifdef APOLLO_SR9
-#define CANT_OPEN_DEV_TTY
-#endif
 
 #ifndef USE_TERMINFO		/* avoid conflict with configure script */
 #if defined(__QNX__) || defined(__SCO__) || defined(linux) || defined(__OpenBSD__) || defined(__UNIXWARE__)
@@ -198,7 +194,7 @@ failed(const char *s)
 }
 
 /* ARGSUSED */
-static SIGNAL_T
+static void
 onintr(int sig GCC_UNUSED)
 {
 #ifdef USE_ANY_SYSV_TERMIO
@@ -211,7 +207,7 @@ onintr(int sig GCC_UNUSED)
     exit(1);
 }
 
-static SIGNAL_T
+static void
 resize_timeout(int sig)
 {
     fprintf(stderr, "\n%s: Time out occurred\r\n", myname);

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.710 2012/10/25 23:18:58 tom Exp $ */
+/* $XTermId: xterm.h,v 1.711 2012/12/31 22:27:49 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -284,7 +284,21 @@ extern int errno;
 
 /***====================================================================***/
 
-#include <proto.h>
+#define PROTO_XT_ACTIONS_ARGS \
+	(Widget w, XEvent *event, String *params, Cardinal *num_params)
+
+#define PROTO_XT_CALLBACK_ARGS \
+	(Widget gw, XtPointer closure, XtPointer data)
+
+#define PROTO_XT_CVT_SELECT_ARGS \
+	(Widget w, Atom *selection, Atom *target, Atom *type, XtPointer *value, unsigned long *length, int *format)
+
+#define PROTO_XT_EV_HANDLER_ARGS \
+	(Widget w, XtPointer closure, XEvent *event, Boolean *cont)
+
+#define PROTO_XT_SEL_CB_ARGS \
+	(Widget w, XtPointer client_data, Atom *selection, Atom *type, XtPointer value, unsigned long *length, int *format)
+
 #include <ptyx.h>
 
 #if (XtSpecificationRelease >= 6) && !defined(NO_XPOLL_H) && !defined(sun)
@@ -951,9 +965,7 @@ extern void first_map_occurred (void);
 #define first_map_occurred() /* nothing */
 #endif
 
-#ifdef SIGNAL_T
-extern SIGNAL_T Exit (int  /* n */) GCC_NORETURN;
-#endif
+extern void Exit (int  /* n */) GCC_NORETURN;
 
 #ifndef SIG_ATOMIC_T
 #define SIG_ATOMIC_T int

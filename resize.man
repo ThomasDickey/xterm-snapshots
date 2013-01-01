@@ -1,6 +1,37 @@
-.\" $XTermId: resize.man,v 1.21 2012/10/23 23:26:20 tom Exp $
+.\" $XTermId: resize.man,v 1.23 2013/01/01 00:28:55 tom Exp $
+.\"
+.\" Copyright 1998-2011,2012 by Thomas E. Dickey
+.\"
+.\"                         All Rights Reserved
+.\"
+.\" Permission is hereby granted, free of charge, to any person obtaining a
+.\" copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be included
+.\" in all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+.\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\"
+.\" Except as contained in this notice, the name(s) of the above copyright
+.\" holders shall not be used in advertising or otherwise to promote the
+.\" sale, use or other dealings in this Software without prior written
+.\" authorization.
 .\"
 .\" updated by Thomas E. Dickey for XFree86, 1998-2006.
+.\"
+.ds N Resize
+.ds n resize
 .\"
 .\" Escape single quotes in literal strings from groff's Unicode transform.
 .ie \n(.g .ds AQ \(aq
@@ -13,14 +44,14 @@
 .SH NAME
 resize \- set environment and terminal settings to current xterm window size
 .SH SYNOPSIS
-.B resize
+.B \*n
 [ \fB\-u\fP | \fB\-c\fP ] [ \fB\-s\fP [ \fIrow col\fP ] ]
 .SH DESCRIPTION
-.I Resize
+.I \*N
 prints a shell command for setting the appropriate environment variables
 to indicate the current size of \fIxterm\fP window from which the command
 is run.
-For this output to take effect, \fIresize\fP must either be evaluated
+For this output to take effect, \fI\*n\fP must either be evaluated
 as part of the command line (usually done with a shell alias or function) or
 else redirected to a file which can then be read in.
 From the C shell (usually
@@ -28,7 +59,7 @@ known as \fI/bin/csh\fP), the following alias could be defined in the
 user's \fI.cshrc\fP:
 .sp
 .nf
-        %  alias rs \*(AQset noglob; eval \fC\`\fPresize\fC\`\fP\*(AQ
+        %  alias rs \*(AQset noglob; eval \fC\`\fP\*n\fC\`\fP\*(AQ
 .fi
 .sp
 After resizing the window, the user would type:
@@ -43,20 +74,20 @@ functions will need to send the output to a temporary file and then read it back
 in with the \*(``.\*('' command:
 .sp
 .nf
-        $  resize > /tmp/out
+        $  \*n > /tmp/out
         $  .\0/tmp/out
 .fi
 .PP
-.I Resize
+.I \*N
 determines the user's current shell by first checking if \fB$SHELL\fP
 is set, and using that.
 Otherwise it determines the user's shell by looking in the password file.
 Generally Bourne-shell variants (including \fIksh\fP)
 do not modify \fB$SHELL\fP,
-so it is possible for \fIresize\fP to be confused if one runs
-\fIresize\fP from a Bourne shell spawned from a C shell.
+so it is possible for \fI\*n\fP to be confused if one runs
+\fI\*n\fP from a Bourne shell spawned from a C shell.
 .SH OPTIONS
-The following options may be used with \fIresize\fP:
+The following options may be used with \fI\*n\fP:
 .TP 8
 .B \-u
 This option indicates that Bourne shell commands should be generated even if
@@ -70,14 +101,14 @@ user's current shell isn't \fI/bin/csh\fP.
 This option indicates that Sun console escape sequences will be used
 instead of the VT100-style \fIxterm\fP escape codes.
 If \fIrows\fP and
-\fIcolumns\fP are given, \fIresize\fP will ask the \fIxterm\fP to resize
+\fIcolumns\fP are given, \fI\*n\fP will ask the \fIxterm\fP to resize
 itself.
 However, the window manager may choose to disallow the change.
 .PP
 Note that the Sun console escape sequences are recognized
 by XFree86 \fIxterm\fP and
 by \fIdtterm\fP.
-The \fIresize\fP program may be installed as \fIsunsize\fP,
+The \fI\*n\fP program may be installed as \fIsunsize\fP,
 which causes makes it assume the \fB\-s\fP option.
 .PP
 The \fIrows\fP and
@@ -104,6 +135,8 @@ variables set on systems using terminfo
 csh(1), tset(1), xterm(__mansuffix__)
 .SH AUTHORS
 Mark Vandevoorde (MIT-Athena), Edward Moy (Berkeley)
+.br
+Thomas Dickey (invisible-island.net).
 .br
 Copyright (c) 1984, 1985 by X Consortium
 .br
