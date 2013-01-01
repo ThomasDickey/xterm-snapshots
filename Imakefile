@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.106 2012/12/31 22:24:02 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.107 2013/01/01 12:16:40 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -186,17 +186,17 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
           SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 		  data.c doublechr.c fontutils.c input.c \
 		  linedata.c menu.c misc.c print.c ptydata.c scrollback.c \
-		  screen.c scrollbar.c tabs.c util.c xstrings.c xtermcap.c \
-		  TekPrsTbl.c Tekproc.c VTPrsTbl.c \
+		  screen.c scrollbar.c tabs.c util.c version.c xstrings.c \
+		  xtermcap.c TekPrsTbl.c Tekproc.c VTPrsTbl.c \
 		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC) $(TRACESRC)
           OBJS1 = button.o cachedGCs.o charproc.o charsets.o cursor.o \
 		  data.o doublechr.o fontutils.o input.o \
 		  linedata.o menu.o misc.o print.o ptydata.o scrollback.o \
-		  screen.o scrollbar.o tabs.o util.o xstrings.o xtermcap.o \
-		  TekPrsTbl.o Tekproc.o VTPrsTbl.o \
+		  screen.o scrollbar.o tabs.o util.o version.o xstrings.o \
+		  xtermcap.o TekPrsTbl.o Tekproc.o VTPrsTbl.o \
 		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ) $(TRACEOBJ)
-          SRCS2 = resize.c xstrings.c
-          OBJS2 = resize.o xstrings.o
+          SRCS2 = resize.c version.c xstrings.c
+          OBJS2 = resize.o version.o xstrings.o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
        PROGRAMS = ProgramTargetName(resize) ProgramTargetName(xterm)

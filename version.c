@@ -1,7 +1,7 @@
-/* $XTermId: version.h,v 1.354 2013/01/01 12:07:50 tom Exp $ */
+/* $XTermId: version.c,v 1.1 2013/01/01 12:10:44 tom Exp $ */
 
 /*
- * Copyright 1998-2011,2012 by Thomas E. Dickey
+ * Copyright 2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -30,21 +30,45 @@
  * authorization.
  */
 
-#ifndef included_version_h
-#define included_version_h
+#include <ctype.h>
+#include <xterm.h>
+#include <version.h>
+
 /*
- * These definitions are used to build the string that's printed in response to
- * "xterm -version", or embedded in "xterm -help".  It usually indicates the
- * version of X to which this version of xterm has been built.  The resulting
- * number in parentheses is my patch number (Thomas E. Dickey).
+ * Returns the version-string used in the "-v' message as well as a few other
+ * places.  It is derived (when possible) from the __vendorversion__ symbol
+ * that some newer imake configurations define.
  */
-#define XTERM_PATCH   288
-#define XTERM_DATE    2013-01-01
+char *
+xtermVersion(void)
+{
+    static char vendor_version[] = __vendorversion__;
+    static char *result;
 
-#ifndef __vendorversion__
-#define __vendorversion__ "XTerm"
-#endif
+    if (result == 0) {
+	char *vendor = vendor_version;
+	char first[BUFSIZ];
+	char second[BUFSIZ];
 
-extern char *xtermVersion(void);
-
-#endif /* included_version_h */
+	result = CastMallocN(char, strlen(vendor) + 9);
+	if (result == 0)
+	    result = vendor;
+	else {
+	    /* some vendors leave trash in this string */
+	    for (;;) {
+		if (!strncmp(vendor, "Version ", (size_t) 8))
+		    vendor += 8;
+		else if (isspace(CharOf(*vendor)))
+		    ++vendor;
+		else
+		    break;
+	    }
+	    if (strlen(vendor) < BUFSIZ &&
+		sscanf(vendor, "%[0-9.] %[A-Za-z_0-9.]", first, second) == 2)
+		sprintf(result, "%s %s(%d)", second, first, XTERM_PATCH);
+	    else
+		sprintf(result, "%s(%d)", vendor, XTERM_PATCH);
+	}
+    }
+    return result;
+}
