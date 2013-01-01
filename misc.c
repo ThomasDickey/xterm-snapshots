@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.650 2012/12/31 20:21:49 tom Exp $ */
+/* $XTermId: misc.c,v 1.651 2012/12/31 22:29:46 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -1766,7 +1766,7 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
     int childstat = 0;
 #ifndef HAVE_WAITPID
     int waited;
-    SIGNAL_T(*chldfunc) (int);
+    void (*chldfunc) (int);
 
     chldfunc = signal(SIGCHLD, SIG_DFL);
 #endif /* HAVE_WAITPID */
@@ -1868,7 +1868,7 @@ xtermResetIds(TScreen * screen)
  */
 
 #ifdef ALLOWLOGFILEEXEC
-static SIGNAL_T
+static void
 logpipe(int sig GCC_UNUSED)
 {
     XtermWidget xw = term;
