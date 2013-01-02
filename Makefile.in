@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.212 2013/01/01 13:32:39 tom Exp $
+## $XTermId: Makefile.in,v 1.215 2013/01/02 01:29:59 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -134,10 +134,10 @@ all :	$(PROGRAMS)
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
 .man.$(manext) :
-	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $(actual_xterm) $(pixmapdir)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $* $* $(pixmapdir)
 
 .$(manext).html :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Thtml -man" >$@
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -P -o0 -I$*_ -Thtml -man" >$@
 
 .$(manext).ps :
 	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
@@ -146,7 +146,7 @@ all :	$(PROGRAMS)
 	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | nroff -Tascii -man | col -bx" >$@
 
 .ms.html :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -Thtml -ms" >$@
+	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -P -o0 -I$*_ -Thtml -ms" >$@
 
 .ms.ps :
 	$(SHELL) -c "tbl $< | groff -ms" >$@

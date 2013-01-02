@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.276 2012/11/25 16:23:14 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.281 2013/01/01 21:33:58 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2011,2012 by Thomas E. Dickey
+.\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #287
-.ds RF 2012/11/25
+.ds LF Patch #288
+.ds RF 2013/01/01
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1478,10 +1478,10 @@ position in the \*(xt window, encoded as ASCII decimal.
 .br
 The ``page'' parameter is not used by \*(xt, and will be omitted.
 .
-.IP \\*(Cs\\*(Pm\\*s\\*(Sp\\*}
+.IP \\*(Cs\\*(Pm\\*s\\*(qu\\*}
 Insert \*(Ps Column(s) (default = 1) (DECIC), VT420 and up.
 .
-.IP \\*(Cs\\*(Pm\\*s\\*(Sp\\*~
+.IP \\*(Cs\\*(Pm\\*s\\*(qu\\*~
 Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .
 .Ed
@@ -1679,12 +1679,15 @@ shift the key from codes 0-127 to 128-255 by adding 128.
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes \fBaltIsNotMeta\fP is set:
-.ne 23
-.TS
+.\" page-eject to work around grohtml bugs
+.if t .bp
+.TS H
 center;
-lf3	lf3	lf3	lf3
 lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c) .
 _
+.TH
+.T&
+l | l | l | l .
 key	altSendsEscape	metaSendsEscape	result
 _
 x	off	off	x
@@ -1721,13 +1724,14 @@ or by the "DECSET \*1\*0\*3\*5" control sequence.
 .lP
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the \fBDECCKM\fP escape sequence.
-.ne 10
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Normal	Application
 _
+.TH
+.T&
+l | l | l .
 Cursor Up	\*(Cs\*A	\*(S3\*A
 Cursor Down	\*(Cs\*(cB	\*(S3\*(cB
 Cursor Right	\*(Cs\*C	\*(S3\*C
@@ -1738,13 +1742,14 @@ The home- and end-keys
 (unlike PageUp and other keys also on the 6-key editing keypad)
 are considered "cursor keys" by \fIxterm\fP.
 Their mode is also controlled by the \fBDECCKM\fP escape sequence:
-.ne 8
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Normal	Application
 _
+.TH
+.T&
+l | l | l .
 Home	\*(Cs\*H	\*(S3\*H
 End	\*(Cs\*F	\*(S3\*F
 _
@@ -1756,13 +1761,14 @@ Use the NumLock key to override the application mode.
 .lP
 Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are supported by
 the program.
-.ne 30
-.TS
+.TS H
 center;
-cf3	cf3	cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Numeric	Application	Terminfo	Termcap
 _
+.TH
+.T&
+l | l | l | l | l .
 Space	\*(Sp	\*(S3\*(Sp	-	-
 Tab	\*(Ta	\*(S3\*I	-	-
 Enter	\*(Cr	\*(S3\*M	kent	@8
@@ -1791,13 +1797,14 @@ _
 .TE
 .br
 They also provide 12 function keys, as well as a few other special-purpose keys:
-.ne 18
-.TS
+.TS H
 center;
-cf3	cf3
 lf3w(2c)	lf3w(2c) .
 Key	Escape Sequence
 _
+.TH
+.T&
+l | l .
 F1	\*(S3\*P
 F2	\*(S3\*Q
 F3	\*(S3\*R
@@ -1817,13 +1824,14 @@ Older versions of \fIxterm\fP implement different escape sequences for F1 throug
 These can be activated by setting the \fBoldXtermFKeys\fP resource.
 However, since they do not correspond to any hardware terminal, they have been deprecated.
 (The DEC VT220 reserves F1 through F5 for local functions such as \fBSetup\fP).
-.ne 10
-.TS
+.TS H
 center;
-cf3	cf3
 lf3w(2c)	lf3w(2c) .
 Key	Escape Sequence
 _
+.TH
+.T&
+l | l .
 F1	\*(Cs\*1\*1\*(c~
 F2	\*(Cs\*1\*2\*(c~
 F3	\*(Cs\*1\*3\*(c~
@@ -1835,13 +1843,14 @@ when the \fBsunKeyboard\fP resource is false,
 \fIxterm\fP recognizes function key modifiers
 which are parameters appended before the final character
 of the control sequence.
-.ne 13
-.TS
+.TS H
 center;
-cf3	lf3
 cf3w(2c)	lf3w(2c) .
 Code	Modifiers
 _
+.TH
+.T&
+l | l .
 2	Shift
 3	Alt
 4	Shift + Alt
@@ -1864,13 +1873,14 @@ to act like a VT220 keyboard.
 .lP
 The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling keypad:
-.ne 32
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Numeric	Application
 _
+.TH
+.T&
+l | l | l .
 Space	\*(Sp	\*(S3\*(Sp
 Tab	\*(Ta	\*(S3\*I
 Enter	\*(Cr	\*(S3\*M
@@ -1900,13 +1910,14 @@ _
 The VT220 provides a 6-key editing keypad,
 which is analogous to that on the PC keyboard.
 It is not affected by \fBDECCKM\fP or \fBDECKPNM\fP/\fBDECKPAM\fP:
-.ne 12
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Normal	Application
 _
+.TH
+.T&
+l | l | l .
 \f1Insert\fP	\*(Cs\*2\*(c~	\*(Cs\*2\*(c~
 \f1Delete\fP	\*(Cs\*3\*(c~	\*(Cs\*3\*(c~
 \f1Home\fP	\*(Cs\*1\*(c~	\*(Cs\*1\*(c~
@@ -1918,13 +1929,14 @@ _
 .LP
 The VT220 provides 8 additional function keys.
 With a Sun/PC keyboard, access these keys by Control/F1 for F13, etc.
-.ne 16
-.TS
+.TS H
 center;
-cf3	cf3
 lf3w(2c)	lf3w(2c) .
 Key	Escape Sequence
 _
+.TH
+.T&
+l | l .
 F13	\*(Cs\*2\*5\*(c~
 F14	\*(Cs\*2\*6\*(c~
 F15	\*(Cs\*2\*8\*(c~
@@ -1940,13 +1952,14 @@ _
 A VT52 does not have function keys, but it does have a numeric keypad and cursor keys.
 They differ from the other emulations by the prefix.
 Also, the cursor keys do not change:
-.ne 13
-.TS
+.TS H
 center;
-cf3	cf3
 lf3w(2c)	lf3w(2c) .
 Key	Normal/Application
 _
+.TH
+.T&
+l | l .
 Cursor Up	\*(Es\*A
 Cursor Down	\*(Es\*(cB
 Cursor Right	\*(Es\*C
@@ -1954,13 +1967,14 @@ Cursor Left	\*(Es\*D
 _
 .TE
 The keypad is similar:
-.ne 33
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Numeric	Application
 _
+.TH
+.T&
+l | l | l .
 Space	\*(Sp	\*(Es\*?\*(Sp
 Tab	\*(Ta	\*(Es\*?\*I
 Enter	\*(Cr	\*(Es\*?\*M
