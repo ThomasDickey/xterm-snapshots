@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.759 2012/11/25 16:05:51 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.760 2013/01/06 14:58:13 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -231,11 +231,7 @@
 #ifdef __hpux
 #define PTYCHAR1	"zyxwvutsrqp"
 #else	/* !__hpux */
-#ifdef __UNIXOS2__
-#define PTYCHAR1	"pq"
-#else
 #define	PTYCHAR1	"pqrstuvwxyzPQRSTUVWXYZ"
-#endif  /* !__UNIXOS2__ */
 #endif	/* !__hpux */
 #endif	/* !PTYCHAR1 */
 

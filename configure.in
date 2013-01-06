@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.309 2013/01/01 15:58:31 tom Exp $
+dnl $XTermId: configure.in,v 1.311 2013/01/03 01:31:07 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -53,8 +53,8 @@ esac
 
 CF_PROG_CC
 AC_PROG_CPP
-AC_PROG_GCC_TRADITIONAL
 AC_PROG_AWK
+CF_PROG_GROFF
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_PROGRAM

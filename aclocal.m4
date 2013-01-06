@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.358 2013/01/01 15:58:24 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.359 2013/01/03 01:37:48 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -1791,6 +1791,25 @@ CF_ACVERSION_CHECK(2.52,
 	[AC_PROG_CC_STDC],
 	[CF_ANSI_CC_REQD])
 CF_CC_ENV_FLAGS 
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_PROG_GROFF version: 1 updated: 2013/01/02 20:37:18
+dnl -------------
+dnl Check if groff is available, for cases (such as html output) where nroff
+dnl is not enough.
+AC_DEFUN([CF_PROG_GROFF],[
+AC_PATH_PROG(GROFF_PATH,groff,no)
+if test "x$GROFF_PATH" = xno
+then
+	NROFF_NOTE=
+	GROFF_NOTE="#"
+else
+	NROFF_NOTE="#"
+	GROFF_NOTE=
+fi
+AC_SUBST(GROFF_PATH)
+AC_SUBST(GROFF_NOTE)
+AC_SUBST(NROFF_NOTE)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_REGEX version: 10 updated: 2012/10/04 20:12:20

@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.101 2011/09/11 14:59:38 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.102 2013/01/06 14:58:13 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -216,7 +216,7 @@ readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData * data)
 		Panic("input: read returned unexpected error (%d)\n", save_err);
 	    size = 0;
 	} else if (size == 0) {
-#if defined(__UNIXOS2__) || defined(__FreeBSD__)
+#if defined(__FreeBSD__)
 	    Cleanup(0);
 #else
 	    Panic("input: read returned zero\n", 0);

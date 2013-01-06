@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.125 2013/01/01 13:32:39 tom Exp $ */
+/* $XTermId: resize.c,v 1.128 2013/01/06 15:10:31 tom Exp $ */
 
 /*
  * Copyright 2003-2012,2013 by Thomas E. Dickey
@@ -138,14 +138,13 @@ static const char *getsize[EMULATIONS] =
     ESCAPE("7") ESCAPE("[r") ESCAPE("[999;999H") ESCAPE("[6n"),
     ESCAPE("[18t"),
 };
-#if defined(USE_STRUCT_TTYSIZE)
-#elif defined(USE_STRUCT_WINSIZE)
+#if defined(USE_STRUCT_WINSIZE)
 static const char *getwsize[EMULATIONS] =
 {				/* size in pixels */
     0,
     ESCAPE("[14t"),
 };
-#endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
+#endif /* USE_STRUCT_WINSIZE */
 static const char *restore[EMULATIONS] =
 {
     ESCAPE("8"),
@@ -175,14 +174,13 @@ static char sunname[] = "sunsize";
 static int tty;
 static FILE *ttyfp;
 
-#if defined(USE_STRUCT_TTYSIZE)
-#elif defined(USE_STRUCT_WINSIZE)
+#if defined(USE_STRUCT_WINSIZE)
 static const char *wsize[EMULATIONS] =
 {
     0,
     ESCAPE("[4;%hd;%hdt"),
 };
-#endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
+#endif /* USE_STRUCT_WINSIZE */
 
 static void
 failed(const char *s)
@@ -266,13 +264,13 @@ static void
 readstring(FILE *fp, char *buf, const char *str)
 {
     int last, c;
-#if !defined(USG) && !defined(__UNIXOS2__)
+#if !defined(USG)
     /* What is the advantage of setitimer() over alarm()? */
     struct itimerval it;
 #endif
 
     signal(SIGALRM, resize_timeout);
-#if defined(USG) || defined(__UNIXOS2__)
+#if defined(USG)
     alarm(TIMEOUT);
 #else
     memset((char *) &it, 0, sizeof(struct itimerval));
@@ -294,7 +292,7 @@ readstring(FILE *fp, char *buf, const char *str)
     while ((*buf++ = (char) getc(fp)) != last) {
 	;
     }
-#if defined(USG) || defined(__UNIXOS2__)
+#if defined(USG)
     alarm(0);
 #else
     memset((char *) &it, 0, sizeof(struct itimerval));
@@ -479,7 +477,7 @@ main(int argc, char **argv ENVP_ARG)
     if (rc != 0)
 	failed("set tty settings");
 
-    if (argc == 2) {
+    if (argc == 2) {		/* look for optional parameters of "-s" */
 	char *tmpbuf = TypeMallocN(char,
 				   strlen(setsize[emu]) +
 				   strlen(argv[0]) +
@@ -502,14 +500,7 @@ main(int argc, char **argv ENVP_ARG)
     }
     if (restore[emu])
 	IGNORE_RC(write(tty, restore[emu], strlen(restore[emu])));
-#if defined(USE_STRUCT_TTYSIZE)
-    /* finally, set the tty's window size */
-    if (ioctl(tty, TIOCGSIZE, &ts) != -1) {
-	TTYSIZE_ROWS(ts) = rows;
-	TTYSIZE_COLS(ts) = cols;
-	SET_TTYSIZE(tty, ts);
-    }
-#elif defined(USE_STRUCT_WINSIZE)
+#if defined(USE_STRUCT_WINSIZE)
     /* finally, set the tty's window size */
     if (getwsize[emu]) {
 	/* get the window size in pixels */
@@ -535,7 +526,7 @@ main(int argc, char **argv ENVP_ARG)
 	TTYSIZE_COLS(ts) = (ttySize_t) cols;
 	SET_TTYSIZE(tty, ts);
     }
-#endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
+#endif /* USE_STRUCT_WINSIZE */
 
 #ifdef USE_ANY_SYSV_TERMIO
     rc = ioctl(tty, TCSETAW, &tioorig);
