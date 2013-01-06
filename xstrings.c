@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.54 2012/12/31 19:17:55 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.55 2013/01/06 14:58:13 tom Exp $ */
 
 /*
- * Copyright 2000-2011,2012 by Thomas E. Dickey
+ * Copyright 2000-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -64,10 +64,6 @@ x_basename(char *name)
     char *cp;
 
     cp = strrchr(name, '/');
-#ifdef __UNIXOS2__
-    if (cp == 0)
-	cp = strrchr(name, '\\');
-#endif
     return (cp ? cp + 1 : name);
 }
 

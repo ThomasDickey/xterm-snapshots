@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.142 2012/11/22 20:19:54 tom Exp $ */
+/* $XTermId: trace.c,v 1.144 2013/01/06 16:28:21 tom Exp $ */
 
 /*
- * Copyright 1997-2011,2012 by Thomas E. Dickey
+ * Copyright 1997-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -35,6 +35,7 @@
  */
 
 #include <xterm.h>		/* for definition of GCC_UNUSED */
+#include <version.h>
 
 #if OPT_TRACE
 

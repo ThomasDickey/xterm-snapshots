@@ -1,4 +1,4 @@
-.\" $XTermId: resize.man,v 1.25 2013/01/01 13:32:39 tom Exp $
+.\" $XTermId: resize.man,v 1.30 2013/01/06 16:13:44 tom Exp $
 .\"
 .\" Copyright 1998-2012,2013 by Thomas E. Dickey
 .\"
@@ -33,6 +33,10 @@
 .ds N Resize
 .ds n resize
 .\"
+.\" Bulleted paragraph
+.de bP
+.IP \(bu 4
+..
 .\" Escape single quotes in literal strings from groff's Unicode transform.
 .ie \n(.g .ds AQ \(aq
 .el       .ds AQ '
@@ -51,7 +55,50 @@ resize \- set environment and terminal settings to current xterm window size
 prints a shell command for setting the appropriate environment variables
 to indicate the current size of \fIxterm\fP window from which the command
 is run.
-For this output to take effect, \fI\*n\fP must either be evaluated
+.PP
+.I \*N
+determines the command through several steps:
+.bP
+first, it finds the name of the user's shell program.
+It uses the \fBSHELL\fP variable if set,
+otherwise it uses the user's data from /etc/passwd.
+.bP
+then it decides whether to use Bourne shell syntax or C-Shell syntax.
+It uses a built-in table of known shells,
+which can be overridden by the \fB\-u\fP and \fB\-c\fP options.
+.bP
+then \fI\*n\fP asks the operating system for the terminal settings.
+This is the same information which can be manipulated using \fIstty\fP.
+.bP
+then \fI\*n\fP asks the terminal for its size in characters.
+Depending on whether the "\fB\-s\fP option is given,
+\fI\*n\fP uses a different escape sequence to ask for this information.
+.bP
+at this point, \fI\*n\fP attempts to update the terminal settings
+to reflect the terminal window's size in pixels:
+.RS
+.bP
+if the \fB\-s\fP option is used,
+\fI\*n\fP then asks the terminal for its size in pixels.
+.bP
+otherwise,
+\fI\*n\fP asks the operating system for the information
+and updates that after ensuring that the window's dimensions are
+a multiple of the character height and width.
+.bP
+in either case, the updated terminal settings are done
+using a different system call than used for \fIstty\fP.
+.RE
+.bP
+then \fI\*n\fP updates the terminal settings to reflect any altered
+values such as its size in rows or columns.
+This affects the values shown by \fIstty\fP.
+.bP
+finally, \fI\*n\fP writes the shell command for setting the
+environment variables to the standard output.
+.SH EXAMPLES
+For \*n's output to take effect,
+\fI\*n\fP must either be evaluated
 as part of the command line (usually done with a shell alias or function) or
 else redirected to a file which can then be read in.
 From the C shell (usually
@@ -77,15 +124,6 @@ in with the \*(``.\*('' command:
         $  \*n > /tmp/out
         $  .\0/tmp/out
 .fi
-.PP
-.I \*N
-determines the user's current shell by first checking if \fB$SHELL\fP
-is set, and using that.
-Otherwise it determines the user's shell by looking in the password file.
-Generally Bourne-shell variants (including \fIksh\fP)
-do not modify \fB$SHELL\fP,
-so it is possible for \fI\*n\fP to be confused if one runs
-\fI\*n\fP from a Bourne shell spawned from a C shell.
 .SH OPTIONS
 The following options may be used with \fI\*n\fP:
 .TP 8
@@ -97,9 +135,18 @@ user's current shell is not \fI/bin/csh\fP.
 This option indicates that Sun console escape sequences will be used
 instead of the VT100-style \fIxterm\fP escape codes.
 If \fIrows\fP and
-\fIcolumns\fP are given, \fI\*n\fP will ask the \fIxterm\fP to resize
-itself.
-However, the window manager may choose to disallow the change.
+\fIcolumns\fP are given,
+\fI\*n\fP will ask the \fIxterm\fP to resize itself using those values.
+.IP
+Both of the escape sequences used for this option
+(first to obtain the window size and
+second to modify it)
+are subject to \fIxterm\fP's \fBallowWindowOps\fP resource setting.
+The window manager may also choose to disallow the change.
+.IP
+The VT100-style escape sequence used to determine the
+screen size always works for VT100-compatible terminals.
+VT100s have no corresponding way to modify the screensize.
 .TP 8
 .B \-u
 This option indicates that Bourne shell commands should be generated even if
@@ -127,16 +174,39 @@ for the base termcap entry to modify.
 user's alias for the command.
 .SH ENVIRONMENT
 .TP 15
+SHELL
+.I \*N
+determines the user's current shell by first checking if \fB$SHELL\fP
+is set, and using that.
+Otherwise it determines the user's shell by looking in the password file
+(/etc/passwd).
+Generally Bourne-shell variants (including \fIksh\fP)
+do not modify \fB$SHELL\fP,
+so it is possible for \fI\*n\fP to be confused if one runs
+\fI\*n\fP from a Bourne shell spawned from a C shell.
+.TP 15
 TERM
-set to "__default_termname__" if not already set.
+.I \*N
+sets this to "__default_termname__" if not already set.
 .TP 15
 TERMCAP
-variable set on systems using termcap
+.I \*N
+sets this variable on systems using termcap,
+e.g., when \*n is linked with the \fItermcap\fP library
+rather than a \fIterminfo\fP library.
+The latter does not provide the complete text for a termcap entry.
 .TP 15
 COLUMNS, LINES
-variables set on systems using terminfo
+.I \*N
+sets these variables on systems using terminfo.
+Many applications (including the curses library) 
+use those variables when set to override their screensize.
 .SH "SEE ALSO"
-csh(1), tset(1), xterm(__mansuffix__)
+use_env(3)
+.br
+csh(1), stty(1), tset(1)
+.br
+xterm(__mansuffix__)
 .SH AUTHORS
 Mark Vandevoorde (MIT-Athena), Edward Moy (Berkeley)
 .br

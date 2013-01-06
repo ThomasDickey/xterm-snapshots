@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.713 2013/01/01 13:32:39 tom Exp $ */
+/* $XTermId: xterm.h,v 1.715 2013/01/06 15:15:38 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -123,7 +123,7 @@
 #define HAVE_TCGETATTR 1
 #endif
 
-#if defined(__UNIXOS2__) || defined(__SCO__) || defined(__UNIXWARE__)
+#if defined(__SCO__) || defined(__UNIXWARE__)
 #define USE_TERMCAP 1
 #endif
 
@@ -338,10 +338,6 @@ extern int errno;
 #endif /* USE_SYS_SELECT_H */
 
 #include <setjmp.h>
-
-#if defined(__UNIXOS2__) && !defined(XTERM_MAIN)
-#define environ gblenvp		/* circumvent a bug */
-#endif
 
 #if !defined(VMS) && !(defined(linux) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__)
 extern char **environ;
@@ -948,11 +944,7 @@ extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal
 extern void restoreCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
 
 /* main.c */
-#ifndef __UNIXOS2__
 #define ENVP_ARG /**/
-#else
-#define ENVP_ARG , char ** /* envp */
-#endif
 
 extern int main (int  /* argc */, char ** /* argv */ ENVP_ARG);
 extern int GetBytesAvailable (int  /* fd */);

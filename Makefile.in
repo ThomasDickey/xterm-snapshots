@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.215 2013/01/02 01:29:59 tom Exp $
+## $XTermId: Makefile.in,v 1.216 2013/01/03 01:33:29 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -120,7 +120,7 @@ EXTRAOBJ	= @EXTRAOBJS@
 
 all :	$(PROGRAMS)
 ################################################################################
-.SUFFIXES : .i .def .hin .html .$(manext) .ms .man .ps .pdf .txt
+.SUFFIXES : .i .def .hin .$(manext) .ms .man .txt @GROFF_NOTE@ .html .ps .pdf
 
 .c$o :
 	@RULE_CC@
@@ -136,26 +136,33 @@ all :	$(PROGRAMS)
 .man.$(manext) :
 	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $* $* $(pixmapdir)
 
-.$(manext).html :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -P -o0 -I$*_ -Thtml -man" >$@
+@NROFF_NOTE@.$(manext).txt :
+@NROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | nroff -man | col -bx" >$@
+@NROFF_NOTE@
+@NROFF_NOTE@.ms.txt :
+@NROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | nroff -ms | col -bx" >$@
+@NROFF_NOTE@
 
-.$(manext).ps :
-	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
-
-.$(manext).txt :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | nroff -Tascii -man | col -bx" >$@
-
-.ms.html :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -P -o0 -I$*_ -Thtml -ms" >$@
-
-.ms.ps :
-	$(SHELL) -c "tbl $< | groff -ms" >$@
-
-.ms.txt :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | nroff -Tascii -ms | col -bx" >$@
-
-.ps.pdf :
-	ps2pdf $*.ps
+@GROFF_NOTE@.$(manext).html :
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -P -o0 -I$*_ -Thtml -man" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.$(manext).ps :
+@GROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.$(manext).txt :
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Tascii -man | col -bx" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.ms.html :
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -P -o0 -I$*_ -Thtml -ms" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.ms.ps :
+@GROFF_NOTE@	$(SHELL) -c "tbl $< | groff -ms" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.ms.txt :
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -Tascii -ms | col -bx" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.ps.pdf :
+@GROFF_NOTE@	ps2pdf $*.ps
 ################################################################################
 main$o : main.h
 misc$o : version.h
@@ -406,50 +413,40 @@ terminfo.out : terminfo		; tic -a -I -1 terminfo >$@
 termcap.out : termcap		; tic -a -C -U termcap >$@
 ################################################################################
 docs-ctlseqs \
-docs :: ctlseqs.html \
-	ctlseqs.pdf \
-	ctlseqs.ps \
-	$(srcdir)/ctlseqs.txt
+docs :: \
+	$(srcdir)/ctlseqs.txt \
+@GROFF_NOTE@	ctlseqs.html \
+@GROFF_NOTE@	ctlseqs.pdf \
+@GROFF_NOTE@	ctlseqs.ps
+
 ctlseqs.html : $(srcdir)/ctlseqs.ms
 ctlseqs.pdf : ctlseqs.ps
 ctlseqs.ps : $(srcdir)/ctlseqs.ms
 ctlseqs.txt : $(srcdir)/ctlseqs.ms
 ################################################################################
 docs-resize \
-docs :: resize.html \
-	resize.pdf \
-	resize.ps \
-	resize.txt
+docs ::  resize.txt @GROFF_NOTE@ resize.html resize.pdf resize.ps
 resize.html : resize.$(manext)
 resize.pdf : resize.ps
 resize.ps : resize.$(manext)
 resize.txt : resize.$(manext)
 ################################################################################
 docs-xterm \
-docs :: xterm.html \
-	xterm.pdf \
-	xterm.ps \
-	xterm.txt
+docs ::  xterm.txt @GROFF_NOTE@ xterm.html xterm.pdf xterm.ps
 xterm.html : xterm.$(manext)
 xterm.pdf : xterm.ps
 xterm.ps : xterm.$(manext)
 xterm.txt : xterm.$(manext)
 ################################################################################
 docs-uxterm \
-docs :: uxterm.html \
-	uxterm.pdf \
-	uxterm.ps \
-	uxterm.txt
+docs ::  uxterm.txt @GROFF_NOTE@ uxterm.html uxterm.pdf uxterm.ps
 uxterm.html : uxterm.$(manext)
 uxterm.pdf : uxterm.ps
 uxterm.ps : uxterm.$(manext)
 uxterm.txt : uxterm.$(manext)
 ################################################################################
 docs-koi8rxterm \
-docs :: koi8rxterm.html \
-	koi8rxterm.pdf \
-	koi8rxterm.ps \
-	koi8rxterm.txt
+docs ::  koi8rxterm.txt @GROFF_NOTE@ koi8rxterm.html koi8rxterm.pdf koi8rxterm.ps
 koi8rxterm.html : koi8rxterm.$(manext)
 koi8rxterm.pdf : koi8rxterm.ps
 koi8rxterm.ps : koi8rxterm.$(manext)
