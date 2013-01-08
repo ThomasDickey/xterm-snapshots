@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1297 2013/01/06 16:15:20 tom Exp $
+  $XTermId: xterm.log.html,v 1.1300 2013/01/08 01:42:02 tom Exp $
   -->
 
 <html>
@@ -862,6 +862,17 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>fix a special case in <code>ShowCursor</code> where the
+    foreground and background colors of the current position are
+    the same. In that case, choose the further of the window's
+    foreground and background colors for the cursor color.</li>
+
+    <li>modify <code>alternateScroll</code> feature added in
+    <a href="#xterm_282">patch #282</a> to use either
+    <code>CSI</code> or <code>SS3</code> according to the cursor
+    keys application mode setting, to simplify using it in vi, etc.
+    (suggested by Dietar Roelants).</li>
+
     <li>revise manpage for <code>resize</code> to clarify the
     changes which <code>resize</code> may make to the terminal
     settings as well as to the terminal itself.</li>
@@ -897,7 +908,7 @@
     comparison, the incorrect "auto" value was passed into the
     generated desktop file (report by Julien Cristau).</li>
 
-    <li>modify sample build-scripts for disable check for
+    <li>modify sample build-scripts to disable check for
     <code>imake</code> due to code-rot in Xorg.</li>
 
     <li>add <code>-v</code> command-line option to

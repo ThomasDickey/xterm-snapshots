@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.128 2013/01/06 15:10:31 tom Exp $ */
+/* $XTermId: resize.c,v 1.129 2013/01/06 19:42:20 tom Exp $ */
 
 /*
  * Copyright 2003-2012,2013 by Thomas E. Dickey
@@ -187,7 +187,7 @@ failed(const char *s)
 {
     int save = errno;
     IGNORE_RC(write(2, myname, strlen(myname)));
-    IGNORE_RC(write(2, ": ", 2));
+    IGNORE_RC(write(2, ": ", (size_t) 2));
     errno = save;
     perror(s);
     exit(EXIT_FAILURE);

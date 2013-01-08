@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1279 2012/12/31 19:21:19 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1280 2013/01/08 01:37:28 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -9236,7 +9236,7 @@ ShowCursor(void)
      * If the cursor happens to be on blanks, and the foreground color is set
      * but not the background, do not treat it as a colored cell.
      */
-    if ((flags & TERM_COLOR_FLAGS(xw)) == BG_COLOR
+    if ((flags & TERM_COLOR_FLAGS(xw)) == FG_COLOR
 	&& base == ' ') {
 	flags &= ~TERM_COLOR_FLAGS(xw);
     }
@@ -9253,6 +9253,24 @@ ShowCursor(void)
 
     fg_pix = getXtermForeground(xw, flags, extract_fg(xw, fg_bg, flags));
     bg_pix = getXtermBackground(xw, flags, extract_bg(xw, fg_bg, flags));
+
+    /*
+     * If we happen to have the same foreground/background colors, choose
+     * a workable foreground color from which we can obtain a visible cursor.
+     */
+    if (fg_pix == bg_pix) {
+	long bg_diff = (long) (bg_pix - T_COLOR(TScreenOf(xw), TEXT_BG));
+	long fg_diff = (long) (bg_pix - T_COLOR(TScreenOf(xw), TEXT_FG));
+	if (bg_diff < 0)
+	    bg_diff = -bg_diff;
+	if (fg_diff < 0)
+	    fg_diff = -fg_diff;
+	if (bg_diff < fg_diff) {
+	    fg_pix = T_COLOR(TScreenOf(xw), TEXT_FG);
+	} else {
+	    fg_pix = T_COLOR(TScreenOf(xw), TEXT_BG);
+	}
+    }
 
     if (OutsideSelection(screen, screen->cur_row, screen->cur_col))
 	in_selection = False;

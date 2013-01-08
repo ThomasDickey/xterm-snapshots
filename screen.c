@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.471 2012/12/31 19:26:58 tom Exp $ */
+/* $XTermId: screen.c,v 1.472 2013/01/06 20:06:33 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -71,6 +71,10 @@
 
 #include <assert.h>
 #include <signal.h>
+
+#ifndef _Xconst
+#define _Xconst const		/* Solaris 7 workaround */
+#endif /* _Xconst */
 
 #define inSaveBuf(screen, buf, inx) \
 	((buf) == (screen)->saveBuf_index && \
