@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.653 2013/01/01 13:32:39 tom Exp $ */
+/* $XTermId: misc.c,v 1.655 2013/01/06 23:53:58 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -4978,6 +4978,7 @@ xtermFindShell(char *leaf, Bool warning)
     char *d;
     char *tmp;
     char *result = leaf;
+    Bool allocated = False;
 
     TRACE(("xtermFindShell(%s)\n", leaf));
 
@@ -4990,6 +4991,7 @@ xtermFindShell(char *leaf, Bool warning)
 	    if (getcwd(buffer, need) != 0) {
 		sprintf(buffer + strlen(buffer), "/%s", result);
 		result = buffer;
+		allocated = True;
 	    } else {
 		free(buffer);
 	    }
@@ -5014,6 +5016,7 @@ xtermFindShell(char *leaf, Bool warning)
 				&& access(tmp, X_OK) == 0) {
 				result = x_strdup(tmp);
 				found = True;
+				allocated = True;
 			    }
 			    break;
 			}
@@ -5032,9 +5035,13 @@ xtermFindShell(char *leaf, Bool warning)
 	|| access(result, X_OK) != 0) {
 	if (warning)
 	    xtermWarning("No absolute path found for shell: %s\n", result);
-	free(result);
+	if (allocated)
+	    free(result);
 	result = 0;
     }
+    /* be consistent, so that caller can always free the result */
+    if (result != 0 && !allocated)
+	result = x_strdup(result);
     return result;
 }
 #endif /* VMS */
