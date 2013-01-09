@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.55 2013/01/06 14:58:13 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.56 2013/01/09 01:43:09 tom Exp $ */
 
 /*
  * Copyright 2000-2012,2013 by Thomas E. Dickey
@@ -449,17 +449,19 @@ x_strtrim(const char *source)
 
     if (source != 0 && *source != '\0') {
 	char *t = x_strdup(source);
-	s = t;
-	d = s;
-	while (isspace(CharOf(*s)))
-	    ++s;
-	while ((*d++ = *s++) != '\0') {
-	    ;
-	}
-	if (*t != '\0') {
-	    s = t + strlen(t);
-	    while (s != t && isspace(CharOf(s[-1]))) {
-		*--s = '\0';
+	if (t != 0) {
+	    s = t;
+	    d = s;
+	    while (isspace(CharOf(*s)))
+		++s;
+	    while ((*d++ = *s++) != '\0') {
+		;
+	    }
+	    if (*t != '\0') {
+		s = t + strlen(t);
+		while (s != t && isspace(CharOf(s[-1]))) {
+		    *--s = '\0';
+		}
 	    }
 	}
 	result = t;
