@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.655 2013/01/06 23:53:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.657 2013/01/09 01:30:47 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -2777,9 +2777,6 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 			CompleteSelection(xw, select_args, n);
 		    }
 		}
-		while (n != 0) {
-		    free((void *) select_args[--n]);
-		}
 		free(select_args);
 	    }
 	    free(used);
@@ -3596,7 +3593,7 @@ parse_decudk(const char *cp)
 {
     while (*cp) {
 	const char *base = cp;
-	char *str = CastMallocN(char, strlen(cp) + 1);
+	char *str = CastMallocN(char, strlen(cp) + 2);
 	unsigned key = 0;
 	int lo, hi;
 	int len = 0;
@@ -3611,6 +3608,7 @@ parse_decudk(const char *cp)
 	    }
 	}
 	if (len > 0 && key < MAX_UDK) {
+	    str[len] = '\0';
 	    if (user_keys[key].str != 0)
 		free(user_keys[key].str);
 	    user_keys[key].str = str;

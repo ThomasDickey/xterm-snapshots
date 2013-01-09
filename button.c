@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.445 2012/12/31 18:05:09 tom Exp $ */
+/* $XTermId: button.c,v 1.446 2013/01/08 09:34:42 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -3777,8 +3777,10 @@ ConvertSelection(Widget w,
 
 	    *value = (XtPointer) targetP;
 
-	    while (*my_targets != None) {
-		*targetP++ = *my_targets++;
+	    if (my_targets != 0) {
+		while (*my_targets != None) {
+		    *targetP++ = *my_targets++;
+		}
 	    }
 	    *targetP++ = XA_LENGTH(dpy);
 	    *targetP++ = XA_LIST_LENGTH(dpy);
@@ -4854,13 +4856,14 @@ HandleExecFormatted(Widget w,
 
 	    data = getSelectionString(xw, w, event, params, num_params,
 				      &start, &finish);
-	    argv = tokenizeFormat(params[0]);
-	    blob = argv[0];
-	    for (argc = 0; argv[argc] != 0; ++argc) {
-		argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
+	    if ((argv = tokenizeFormat(params[0])) != 0) {
+		blob = argv[0];
+		for (argc = 0; argv[argc] != 0; ++argc) {
+		    argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
+		}
+		executeCommand(argv);
+		freeArgv(blob, argv);
 	    }
-	    executeCommand(argv);
-	    freeArgv(blob, argv);
 	}
     }
 }
@@ -4884,14 +4887,18 @@ HandleExecSelectable(Widget w,
 	    int argc;
 
 	    data = getDataFromScreen(xw, params[1], &start, &finish);
-	    argv = tokenizeFormat(params[0]);
-	    blob = argv[0];
-	    for (argc = 0; argv[argc] != 0; ++argc) {
-		argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
+	    if (data != 0) {
+		if ((argv = tokenizeFormat(params[0])) != 0) {
+		    blob = argv[0];
+		    for (argc = 0; argv[argc] != 0; ++argc) {
+			argv[argc] = expandFormat(xw, argv[argc], data,
+						  &start, &finish);
+		    }
+		    executeCommand(argv);
+		    freeArgv(blob, argv);
+		    free(data);
+		}
 	    }
-	    executeCommand(argv);
-	    freeArgv(blob, argv);
-	    free(data);
 	}
     }
 }
@@ -4943,12 +4950,15 @@ HandleInsertSelectable(Widget w,
 	    char *exps;
 
 	    data = getDataFromScreen(xw, params[1], &start, &finish);
-	    if ((exps = expandFormat(xw, temp, data, &start, &finish)) != 0) {
-		unparseputs(xw, exps);
-		free(exps);
+	    if (data != 0) {
+		exps = expandFormat(xw, temp, data, &start, &finish);
+		if (exps != 0) {
+		    unparseputs(xw, exps);
+		    free(exps);
+		}
+		free(data);
+		free(temp);
 	    }
-	    free(data);
-	    free(temp);
 	}
     }
 }
