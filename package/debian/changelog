@@ -1,3 +1,10 @@
+xterm-dev (289) unstable; urgency=low
+
+  * Miscellaneous fixes.
+  * Fix regression with XTERM_SHELL feature.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sun, 03 Feb 2013 13:59:20 -0500
+
 xterm-dev (288) unstable; urgency=low
 
   * Miscellaneous fixes.
