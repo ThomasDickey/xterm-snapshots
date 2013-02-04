@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.446 2013/01/08 09:34:42 tom Exp $ */
+/* $XTermId: button.c,v 1.447 2013/02/03 20:25:14 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -4957,8 +4957,8 @@ HandleInsertSelectable(Widget w,
 		    free(exps);
 		}
 		free(data);
-		free(temp);
 	    }
+	    free(temp);
 	}
     }
 }
