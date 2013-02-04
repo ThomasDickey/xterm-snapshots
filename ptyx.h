@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.760 2013/01/06 14:58:13 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.761 2013/02/04 01:35:47 Peder.Stray Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -862,13 +862,17 @@ typedef enum {
     , MOUSE_FG			/* mouse foreground */
     , MOUSE_BG			/* mouse background */
 #if OPT_TEK4014
-    , TEK_FG			/* tektronix foreground */
+    , TEK_FG = 5		/* tektronix foreground */
     , TEK_BG			/* tektronix background */
-    , TEK_CURSOR		/* tektronix cursor */
 #endif
 #if OPT_HIGHLIGHT_COLOR
-    , HIGHLIGHT_BG		/* highlight background */
-    , HIGHLIGHT_FG		/* highlight foreground */
+    , HIGHLIGHT_BG = 7		/* highlight background */
+#endif
+#if OPT_TEK4014
+    , TEK_CURSOR = 8		/* tektronix cursor */
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    , HIGHLIGHT_FG = 9		/* highlight foreground */
 #endif
     , NCOLORS			/* total number of colors */
 } TermColors;
