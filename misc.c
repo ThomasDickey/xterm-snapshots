@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.657 2013/01/09 01:30:47 tom Exp $ */
+/* $XTermId: misc.c,v 1.658 2013/02/03 23:18:38 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -553,7 +553,7 @@ xevents(void)
     XtInputMask input_mask;
 
     if (need_cleanup)
-	Cleanup(0);
+	NormalExit();
 
     if (screen->scroll_amt)
 	FlushScroll(xw);
@@ -1832,7 +1832,7 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
 	 */
 	do
 	    if (waited == TScreenOf(term)->pid)
-		Cleanup(0);
+		NormalExit();
 	while ((waited = nonblocking_wait()) > 0) ;
 #endif /* HAVE_WAITPID */
 #ifndef WIFEXITED
@@ -4919,44 +4919,48 @@ SysError(int code)
     Cleanup(code);
 }
 
+void
+NormalExit(void)
+{
+    static Bool cleaning;
+
+    /*
+     * Process "-hold" and session cleanup only for a normal exit.
+     */
+    if (cleaning) {
+	hold_screen = 0;
+	return;
+    }
+
+    cleaning = True;
+    need_cleanup = False;
+
+    if (hold_screen) {
+	hold_screen = 2;
+	while (hold_screen) {
+	    xevents();
+	    Sleep(10);
+	}
+    }
+#if OPT_SESSION_MGT
+    if (resource.sessionMgt) {
+	XtVaSetValues(toplevel,
+		      XtNjoinSession, False,
+		      (void *) 0);
+    }
+#endif
+    Cleanup(0);
+}
+
 /*
  * cleanup by sending SIGHUP to client processes
  */
 void
 Cleanup(int code)
 {
-    static Bool cleaning;
     TScreen *screen = TScreenOf(term);
 
-    /*
-     * Process "-hold" and session cleanup only for a normal exit.
-     */
-    if (code == 0) {
-	if (cleaning) {
-	    hold_screen = 0;
-	    return;
-	}
-
-	cleaning = True;
-	need_cleanup = False;
-
-	TRACE(("Cleanup %d\n", code));
-
-	if (hold_screen) {
-	    hold_screen = 2;
-	    while (hold_screen) {
-		xevents();
-		Sleep(10);
-	    }
-	}
-#if OPT_SESSION_MGT
-	if (resource.sessionMgt) {
-	    XtVaSetValues(toplevel,
-			  XtNjoinSession, False,
-			  (void *) 0);
-	}
-#endif
-    }
+    TRACE(("Cleanup %d\n", code));
 
     if (screen->pid > 1) {
 	(void) kill_process_group(screen->pid, SIGHUP);
@@ -5638,7 +5642,7 @@ die_callback(Widget w GCC_UNUSED,
 	     XtPointer client_data GCC_UNUSED,
 	     XtPointer call_data GCC_UNUSED)
 {
-    Cleanup(0);
+    NormalExit();
 }
 
 static void

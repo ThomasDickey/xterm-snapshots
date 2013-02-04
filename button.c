@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.447 2013/02/03 20:25:14 tom Exp $ */
+/* $XTermId: button.c,v 1.448 2013/02/03 22:25:36 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1320,10 +1320,11 @@ xtermUtf8ToTextList(XtermWidget xw,
 	    for (i = 0; i < (*text_list_count); ++i) {
 		data = (Char *) (*text_list)[i];
 		size = strlen((*text_list)[i]) + 1;
-		data = UTF8toLatin1(screen, data, size, &size);
-		memcpy(tmp, data, size + 1);
-		new_text_list[i] = tmp;
-		tmp += size + 1;
+		if ((data = UTF8toLatin1(screen, data, size, &size)) != 0) {
+		    memcpy(tmp, data, size + 1);
+		    new_text_list[i] = tmp;
+		    tmp += size + 1;
+		}
 	    }
 	    XFreeStringList((*text_list));
 	    *text_list = new_text_list;
@@ -4815,9 +4816,11 @@ expandFormat(XtermWidget xw,
 static void
 executeCommand(char **argv)
 {
-    if (fork() == 0) {
-	execvp(argv[0], argv);
-	exit(EXIT_FAILURE);
+    if (argv != 0 && argv[0] != 0) {
+	if (fork() == 0) {
+	    execvp(argv[0], argv);
+	    exit(EXIT_FAILURE);
+	}
     }
 }
 

@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.311 2012/11/27 01:30:52 tom Exp $ */
+/* $XTermId: menu.c,v 1.313 2013/02/03 21:53:58 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1639,6 +1639,7 @@ do_vtfont(Widget gw GCC_UNUSED,
     char *entryname = (char *) closure;
     int i;
 
+    TRACE(("do_vtfont(%s)\n", entryname));
     for (i = 0; i < NMENUFONTS; i++) {
 	if (strcmp(entryname, fontMenuEntries[i].name) == 0) {
 	    SetVTFont(xw, i, True, NULL);
