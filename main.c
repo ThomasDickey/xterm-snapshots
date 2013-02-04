@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.714 2013/01/01 13:32:39 tom Exp $ */
+/* $XTermId: main.c,v 1.715 2013/02/03 20:10:05 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -4517,7 +4517,6 @@ spawnXTerm(XtermWidget xw)
 		}
 	    } else {
 		xtermSetenv("SHELL", explicit_shname);
-		free(explicit_shname);
 	    }
 	    if (access(shell_path, X_OK) != 0) {
 		xtermPerror("Cannot use '%s' as shell", shell_path);
