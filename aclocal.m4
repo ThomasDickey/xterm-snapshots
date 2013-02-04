@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.359 2013/01/03 01:37:48 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.360 2013/02/03 19:30:21 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -72,31 +72,6 @@ ifdef([m4_version_compare],
 [CF_ACVERSION_COMPARE(
 AC_PREREQ_CANON(AC_PREREQ_SPLIT([$1])),
 AC_PREREQ_CANON(AC_PREREQ_SPLIT(AC_ACVERSION)), AC_ACVERSION, [$2], [$3])])])dnl
-dnl ---------------------------------------------------------------------------
-dnl CF_ACVERSION_CHECK version: 3 updated: 2012/10/03 18:39:53
-dnl ------------------
-dnl Conditionally generate script according to whether we're using a given autoconf.
-dnl
-dnl $1 = version to compare against
-dnl $2 = code to use if AC_ACVERSION is at least as high as $1.
-dnl $3 = code to use if AC_ACVERSION is older than $1.
-define([CF_ACVERSION_CHECK],
-[
-ifdef([m4_version_compare],
-[m4_if(m4_version_compare(m4_defn([AC_ACVERSION]), [$1]), -1, [$3], [$2])],
-[CF_ACVERSION_COMPARE(
-AC_PREREQ_CANON(AC_PREREQ_SPLIT([$1])),
-AC_PREREQ_CANON(AC_PREREQ_SPLIT(AC_ACVERSION)), AC_ACVERSION, [$2], [$3])])])dnl
-dnl ---------------------------------------------------------------------------
-dnl CF_ACVERSION_COMPARE version: 3 updated: 2012/10/03 18:39:53
-dnl --------------------
-dnl CF_ACVERSION_COMPARE(MAJOR1, MINOR1, TERNARY1,
-dnl                      MAJOR2, MINOR2, TERNARY2,
-dnl                      PRINTABLE2, not FOUND, FOUND)
-define([CF_ACVERSION_COMPARE],
-[ifelse(builtin([eval], [$2 < $5]), 1,
-[ifelse([$8], , ,[$8])],
-[ifelse([$9], , ,[$9])])])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_ACVERSION_COMPARE version: 3 updated: 2012/10/03 18:39:53
 dnl --------------------
@@ -498,6 +473,29 @@ AC_SUBST(ECHO_LD)
 AC_SUBST(RULE_CC)
 AC_SUBST(SHOW_CC)
 AC_SUBST(ECHO_CC)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_DISABLE_LEAKS version: 7 updated: 2012/10/02 20:55:03
+dnl ----------------
+dnl Combine no-leak checks with the libraries or tools that are used for the
+dnl checks.
+AC_DEFUN([CF_DISABLE_LEAKS],[
+
+AC_REQUIRE([CF_WITH_DMALLOC])
+AC_REQUIRE([CF_WITH_DBMALLOC])
+AC_REQUIRE([CF_WITH_VALGRIND])
+
+AC_MSG_CHECKING(if you want to perform memory-leak testing)
+AC_ARG_ENABLE(leaks,
+	[  --disable-leaks         test: free permanent memory, analyze leaks],
+	[if test "x$enableval" = xno; then with_no_leaks=yes; else with_no_leaks=no; fi],
+	: ${with_no_leaks:=no})
+AC_MSG_RESULT($with_no_leaks)
+
+if test "$with_no_leaks" = yes ; then
+	AC_DEFINE(NO_LEAKS,1,[Define to 1 if you want to perform memory-leak testing.])
+	AC_DEFINE(YY_NO_LEAKS,1,[Define to 1 if you want to perform memory-leak testing.])
+fi
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_DISABLE_RPATH_HACK version: 2 updated: 2011/02/13 13:31:33
@@ -1478,6 +1476,35 @@ dnl Write a debug message to config.log, along with the line number in the
 dnl configure script.
 AC_DEFUN([CF_MSG_LOG],[
 echo "${as_me:-configure}:__oline__: testing $* ..." 1>&AC_FD_CC
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_NO_LEAKS_OPTION version: 5 updated: 2012/10/02 20:55:03
+dnl ------------------
+dnl see CF_WITH_NO_LEAKS
+AC_DEFUN([CF_NO_LEAKS_OPTION],[
+AC_MSG_CHECKING(if you want to use $1 for testing)
+AC_ARG_WITH($1,
+	[$2],
+	[AC_DEFINE_UNQUOTED($3,1,"Define to 1 if you want to use $1 for testing.")ifelse([$4],,[
+	 $4
+])
+	: ${with_cflags:=-g}
+	: ${with_no_leaks:=yes}
+	 with_$1=yes],
+	[with_$1=])
+AC_MSG_RESULT(${with_$1:-no})
+
+case .$with_cflags in #(vi
+.*-g*)
+	case .$CFLAGS in #(vi
+	.*-g*) #(vi
+		;;
+	*)
+		CF_ADD_CFLAGS([-g])
+		;;
+	esac
+	;;
+esac
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_PATHSEP version: 6 updated: 2012/09/29 18:38:12
@@ -2987,6 +3014,21 @@ fi
 AC_SUBST(no_appsdir)
 ])dnl
 dnl ---------------------------------------------------------------------------
+dnl CF_WITH_DBMALLOC version: 7 updated: 2010/06/21 17:26:47
+dnl ----------------
+dnl Configure-option for dbmalloc.  The optional parameter is used to override
+dnl the updating of $LIBS, e.g., to avoid conflict with subsequent tests.
+AC_DEFUN([CF_WITH_DBMALLOC],[
+CF_NO_LEAKS_OPTION(dbmalloc,
+	[  --with-dbmalloc         test: use Conor Cahill's dbmalloc library],
+	[USE_DBMALLOC])
+
+if test "$with_dbmalloc" = yes ; then
+	AC_CHECK_HEADER(dbmalloc.h,
+		[AC_CHECK_LIB(dbmalloc,[debug_malloc]ifelse([$1],,[],[,$1]))])
+fi
+])dnl
+dnl ---------------------------------------------------------------------------
 dnl CF_WITH_DESKTOP_CATEGORY version: 4 updated: 2013/01/01 10:50:14
 dnl ------------------------
 dnl Taking into account the absence of standardization of desktop categories
@@ -3085,6 +3127,21 @@ then
 	AC_SUBST(DESKTOP_CATEGORY)
 fi
 ])
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_DMALLOC version: 7 updated: 2010/06/21 17:26:47
+dnl ---------------
+dnl Configure-option for dmalloc.  The optional parameter is used to override
+dnl the updating of $LIBS, e.g., to avoid conflict with subsequent tests.
+AC_DEFUN([CF_WITH_DMALLOC],[
+CF_NO_LEAKS_OPTION(dmalloc,
+	[  --with-dmalloc          test: use Gray Watson's dmalloc library],
+	[USE_DMALLOC])
+
+if test "$with_dmalloc" = yes ; then
+	AC_CHECK_HEADER(dmalloc.h,
+		[AC_CHECK_LIB(dmalloc,[dmalloc_debug]ifelse([$1],,[],[,$1]))])
+fi
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_ICONDIR version: 5 updated: 2012/07/22 09:18:02
 dnl ---------------
@@ -3461,6 +3518,14 @@ else
 	EXTRA_INSTALL_DIRS="$EXTRA_INSTALL_DIRS \$(PIXMAPDIR)"
 fi
 AC_SUBST(no_pixmapdir)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_VALGRIND version: 1 updated: 2006/12/14 18:00:21
+dnl ----------------
+AC_DEFUN([CF_WITH_VALGRIND],[
+CF_NO_LEAKS_OPTION(valgrind,
+	[  --with-valgrind         test: use valgrind],
+	[USE_VALGRIND])
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_XPM version: 3 updated: 2012/10/04 06:57:36

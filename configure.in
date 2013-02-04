@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.311 2013/01/03 01:31:07 tom Exp $
+dnl $XTermId: configure.in,v 1.312 2013/02/03 19:30:48 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -928,16 +928,7 @@ if test "$enable_trace" = yes ; then
 	EXTRAOBJS="$EXTRAOBJS trace.o"
 fi
 
-AC_MSG_CHECKING(if you want to test memory leaks)
-CF_ARG_DISABLE(leaks,
-	[  --disable-leaks         test: set to test memory leaks],
-	[disable_leaks=yes],
-	[disable_leaks=no])
-AC_MSG_RESULT($disable_leaks)
-if test "$disable_leaks" = yes ; then
-	AC_DEFINE(NO_LEAKS,1,[Define to 1 to test memory leaks])
-fi
-
+CF_DISABLE_LEAKS
 CF_DISABLE_ECHO
 
 AC_MSG_CHECKING(if you want magic cookie emulation)
