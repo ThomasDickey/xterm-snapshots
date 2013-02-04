@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.473 2013/01/08 23:42:52 tom Exp $ */
+/* $XTermId: screen.c,v 1.474 2013/02/03 23:19:45 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -328,7 +328,8 @@ allocScrnData(TScreen * screen, unsigned nrow, unsigned ncol)
 
     AlignValue(ncol);
     length = ((nrow + 1) * sizeofScrnRow(screen, ncol));
-    if ((result = (Char *) calloc(length, sizeof(Char))) == 0)
+    if (length == 0
+	|| (result = (Char *) calloc(length, sizeof(Char))) == 0)
 	SysError(ERROR_SCALLOC2);
 
     TRACE(("allocScrnData %ux%u -> %lu -> %p..%p\n",

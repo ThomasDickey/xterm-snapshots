@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.56 2013/01/09 01:43:09 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.57 2013/02/03 22:11:25 tom Exp $ */
 
 /*
  * Copyright 2000-2012,2013 by Thomas E. Dickey
@@ -326,32 +326,34 @@ x_splitargs(const char *command)
 	int state;
 	int pass;
 
-	for (pass = 0; pass < 2; ++pass) {
-	    for (n = count = 0, state = 0; first[n] != '\0'; ++n) {
-		switch (state) {
-		case 0:
-		    if (!isspace(CharOf(first[n]))) {
-			state = 1;
-			if (pass)
-			    result[count] = blob + n;
-			++count;
-		    } else {
-			blob[n] = '\0';
+	if (blob != 0) {
+	    for (pass = 0; pass < 2; ++pass) {
+		for (n = count = 0, state = 0; first[n] != '\0'; ++n) {
+		    switch (state) {
+		    case 0:
+			if (!isspace(CharOf(first[n]))) {
+			    state = 1;
+			    if (pass)
+				result[count] = blob + n;
+			    ++count;
+			} else {
+			    blob[n] = '\0';
+			}
+			break;
+		    case 1:
+			if (isspace(CharOf(first[n]))) {
+			    blob[n] = '\0';
+			    state = 0;
+			}
+			break;
 		    }
-		    break;
-		case 1:
-		    if (isspace(CharOf(first[n]))) {
-			blob[n] = '\0';
-			state = 0;
-		    }
-		    break;
 		}
-	    }
-	    if (!pass) {
-		result = TypeCallocN(char *, count + 1);
-		if (!result) {
-		    free(blob);
-		    break;
+		if (!pass) {
+		    result = TypeCallocN(char *, count + 1);
+		    if (!result) {
+			free(blob);
+			break;
+		    }
 		}
 	    }
 	}

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.715 2013/01/06 15:15:38 tom Exp $ */
+/* $XTermId: xterm.h,v 1.716 2013/02/03 23:21:00 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1007,7 +1007,7 @@ extern void ChangeGroup(XtermWidget /* xw */, const char * /* attribute */, char
 extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
 extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
 extern void ChangeXprop (char * /* name */);
-extern void Cleanup (int  /* code */);
+extern void Cleanup (int /* code */) GCC_NORETURN;
 extern void HandleBellPropertyChange   PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleEightBitKeyPressed   PROTO_XT_ACTIONS_ARGS;
 extern void HandleEnterWindow          PROTO_XT_EV_HANDLER_ARGS;
@@ -1017,6 +1017,7 @@ extern void HandleKeyPressed           PROTO_XT_ACTIONS_ARGS;
 extern void HandleLeaveWindow          PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleSpawnTerminal        PROTO_XT_ACTIONS_ARGS;
 extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
+extern void NormalExit (void);
 extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
 extern void ReverseOldColors (void);
