@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1282 2013/02/03 23:20:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1283 2013/02/05 01:47:58 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -7261,7 +7261,7 @@ VTInitialize(Widget wrequest,
     TRACE(("   Actual  foreground 0x%06lx\n", wnew->old_foreground));
     TRACE(("   Actual  background 0x%06lx\n", wnew->old_background));
 
-    TScreenOf(wnew)->mouse_button = -1;
+    TScreenOf(wnew)->mouse_button = 0;
     TScreenOf(wnew)->mouse_row = -1;
     TScreenOf(wnew)->mouse_col = -1;
 

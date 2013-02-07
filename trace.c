@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.144 2013/01/06 16:28:21 tom Exp $ */
+/* $XTermId: trace.c,v 1.145 2013/02/06 09:51:17 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -748,6 +748,29 @@ static int
 no_error(Display * dpy GCC_UNUSED, XErrorEvent * event GCC_UNUSED)
 {
     return 1;
+}
+
+const char *
+ModifierName(unsigned modifier)
+{
+    const char *s = "";
+    if (modifier & ShiftMask)
+	s = " Shift";
+    else if (modifier & LockMask)
+	s = " Lock";
+    else if (modifier & ControlMask)
+	s = " Control";
+    else if (modifier & Mod1Mask)
+	s = " Mod1";
+    else if (modifier & Mod2Mask)
+	s = " Mod2";
+    else if (modifier & Mod3Mask)
+	s = " Mod3";
+    else if (modifier & Mod4Mask)
+	s = " Mod4";
+    else if (modifier & Mod5Mask)
+	s = " Mod5";
+    return s;
 }
 
 void

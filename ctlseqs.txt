@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2012)
-               updated for XTerm Patch #288 (2013/01/01)
+               updated for XTerm Patch #289 (2013/02/06)
 
 
 
@@ -1460,6 +1460,7 @@ parameters in a single character as value+32.  For example, !  specifies
 the value 1.  The upper left character position on the terminal is
 denoted as 1,1.  This scheme dates back to X10, though the normal mouse-
 tracking (from X11) is more elaborate.
+X10 compatbility mode
 
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.  It is enabled by
@@ -1468,6 +1469,7 @@ CbCxCy (6 characters).
 o   Cb is button-1.
 o   Cx and Cy are the x and y coordinates of the mouse when the button
     was pressed.
+Normal tracking mode
 
 Normal tracking mode sends an escape sequence on both button press and
 release.  Modifier key (shift, ctrl, meta) information is also sent.  It
@@ -1484,6 +1486,7 @@ o   The next three bits encode the modifiers which were down when the
     the mod1 mask, and is not necessarily the "Meta" key (see xmodmap).
 o   Cx and Cy are the x and y coordinates of the mouse event, encoded as
     in X10 mode.
+Wheel mice
 
 Wheel mice may return buttons 4 and 5.  Those buttons are represented by
 the same event codes as buttons 1 and 2 respectively, except that 64 is
@@ -1494,6 +1497,7 @@ window, as if the scrollbar was used.  However if Alternate Scroll mode
 is set, then cursor up/down controls are sent when the terminal is dis-
 playing the alternate screen.  The initial state of Alternate Scroll
 mode is set using the alternateScroll resource.
+Highlight tracking
 
 Mouse highlight tracking notifies a program of a button press, receives
 a range of lines from the program, highlights the region covered by the
@@ -1525,6 +1529,7 @@ o   otherwise:
          character positions of the region.
     -    mousex and mousey give the location of the mouse at button up,
          which may not be over a character.
+Button-event tracking
 
 Button-event tracking is essentially the same as normal tracking, but
 xterm also reports button-motion events.  Motion events are reported
@@ -1539,14 +1544,17 @@ o   The other bits of the event code specify button and modifier keys as
     (motion indicator) ).  Similarly, motion with button 3 down is
     reported as CSI M B CxCy.  ( B  = 32 + 2 (button 3) + 32 (motion
     indicator) ).
+Any-event tracking
 
 Any-event mode is the same as button-event mode, except that all motion
 events are reported, even if no mouse button is down.  It is enabled by
 specifying 1003 to DECSET.
+FocusIn/FocusOut
 
 FocusIn/FocusOut can be combined with any of the mouse events since it
 uses a different protocol.  When set, it causes xterm to send CSI I
 when the terminal gains focus, and CSI O  when it loses focus.
+Extended coordinates
 
 The original X10 mouse protocol limits the Cx and Cy ordinates to 223
 (=255 - 32).  Xterm supports more than one scheme for extending this
@@ -1573,12 +1581,14 @@ SGR (1006)
           semicolon-separated encoded button value, the Cx and Cy ordi-
           nates and a final character which is M  for button press and m
           for button release.
-          The encoded button value in this case does not add 32 since
-          that was useful only in the X10 scheme for ensuring that the
-          byte containing the button value is a printable code.  The
-          modifiers are encoded in the same way.  A different final
-          character is used for button release to resolve the X10 ambi-
-          guity regarding which button was released.
+          o   The encoded button value in this case does not add 32
+              since that was useful only in the X10 scheme for ensuring
+              that the byte containing the button value is a printable
+              code.
+          o   The modifiers are encoded in the same way.
+          o   A different final character is used for button release to
+              resolve the X10 ambiguity regarding which button was
+              released.
           The highlight tracking responses are also modified to an SGR-
           like format, using the same SGR-style scheme and button-encod-
           ings.
