@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.281 2013/01/01 21:33:58 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.285 2013/02/07 01:59:09 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #288
-.ds RF 2013/01/01
+.ds LF Patch #289
+.ds RF 2013/02/06
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -111,6 +111,8 @@
 .de Ss
 .LP
 .B
+\\$*
+.br
 ..
 .ds CH \" as nothing
 .ds LH \*(XT Control Sequences
@@ -409,8 +411,7 @@ discussion of character sets.
 .
 .St
 .\"
-.Ss
-Single-character functions
+.Ss Single-character functions
 .\"
 .IP \\*(Be
 Bell (Ctrl-G).
@@ -453,8 +454,7 @@ Vertical Tab (Ctrl-K).  This is treated the same as LF.
 .\"
 .\"
 .St
-.Ss
-Controls beginning with \*(Es
+.Ss Controls beginning with \*(Es
 .LP
 This excludes controls where \*(Es is part of a 7-bit equivalent to 8-bit C1 controls, ordered by the final character(s).
 .\"
@@ -598,16 +598,14 @@ Invoke the G1 Character Set as GR (LS1R).
 .Ed
 .
 .St
-.Ss
-Application Program-Control functions
+.Ss Application Program-Control functions
 .IP \\*(AP\\*(Pt\\*s\\*(ST
 None.  \fIxterm\fP implements no \*(AP functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
 .Ed
 .
 .St
-.Ss
-Device-Control functions
+.Ss Device-Control functions
 .IP \\*(Dc\\*(Ps\\*;\\*(Ps\\*|\\*(Pt\\*s\\*(ST
 User-Defined Keys (DECUDK).
 The first parameter:
@@ -670,8 +668,7 @@ The strings are encoded in hexadecimal (2 digits per character).
 .Ed
 .\"
 .St
-.Ss
-Functions using \*(Cs, ordered by the final character(s)
+.Ss Functions using \*(Cs, ordered by the final character(s)
 .IP \\*(Cs\\*(Ps\\*s\\*@
 Insert \*(Ps (Blank) Character(s) (default = 1) (ICH).
 .
@@ -1487,8 +1484,7 @@ Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .Ed
 .
 .St
-.Ss
-Operating System Controls
+.Ss Operating System Controls
 .
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(Be
@@ -1639,8 +1635,7 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*8 \(-> Reset Tektronix cursor color.
 .
 .St
-.Ss
-Privacy Message
+.Ss Privacy Message
 .IP \\*(PM\\*(Pt\\*s\\*(ST
 \fIxterm\fP implements no \*(PM functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
@@ -2154,6 +2149,7 @@ For example, \*! specifies the value 1.
 The upper left character position on the terminal is denoted as 1,1.
 This scheme dates back to X10,
 though the normal mouse-tracking (from X11) is more elaborate.
+.Ss X10 compatbility mode
 .lP
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.
@@ -2165,6 +2161,7 @@ On button press, \fIxterm\fP sends
 .bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse when the
 button was pressed.
+.Ss Normal tracking mode
 .lP
 Normal tracking mode sends an escape sequence on both button press and
 release.
@@ -2186,6 +2183,7 @@ and is not necessarily the "Meta" key (see \fIxmodmap\fP).
 .bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse event, encoded as
 in X10 mode.
+.Ss Wheel mice
 .lP
 Wheel mice may return buttons 4 and 5.
 Those buttons are represented by the same event codes
@@ -2202,6 +2200,7 @@ then cursor up/down controls are sent when the terminal is displaying
 the alternate screen.
 The initial state of Alternate Scroll mode is set
 using the \fBalternateScroll\fP resource.
+.Ss Highlight tracking
 .lP
 Mouse highlight tracking notifies a program of a button press, receives a
 range of lines from the program, highlights the region covered by
@@ -2249,6 +2248,7 @@ ending character positions of the region.
 give the location of the mouse at button up, which may not be over a
 character.
 .RE
+.Ss Button-event tracking
 .lP
 Button-event tracking is essentially the same as normal tracking, but
 \fIxterm\fP also reports button-motion events.
@@ -2269,16 +2269,19 @@ down is reported as \*(Cs\*M\*@\*(Cx\*(Cy.
 Similarly, motion with button 3
 down is reported as \*(Cs\*M\*(cB\*(Cx\*(Cy.
 (\ \*(cB = 32 + 2 (button 3) + 32 (motion indicator)\ ).
+.Ss Any-event tracking
 .lP
 Any-event mode is the same as button-event mode, except that all motion
 events are reported, even if no mouse button is down.
 It is enabled by specifying 1003 to DECSET.
+.Ss FocusIn/FocusOut
 .lP
 FocusIn/FocusOut can be combined with any of the mouse events since
 it uses a different protocol.
 When set, it causes \fIxterm\fP to send
 \*(Cs\*I when the terminal gains focus, and
 \*(Cs\*O when it loses focus.
+.Ss Extended coordinates
 .lP
 The original X10 mouse protocol limits the \*(Cx and \*(Cy ordinates
 to 223 (=255\ -\ 32).
@@ -2309,13 +2312,17 @@ encoded button value,
 the \*(Cx and \*(Cy ordinates and a final character which
 is \*M for button press
 and \*m for button release.
-.IP
+.RS
+.bP
 The encoded button value in this case does not add 32 since
 that was useful only in the X10 scheme for ensuring that the 
 byte containing the button value is a printable code.
+.bP
 The modifiers are encoded in the same way.
+.bP
 A different final character is used for button release
 to resolve the X10 ambiguity regarding which button was released.
+.RE
 .IP
 The highlight tracking responses are also modified to an SGR-like format,
 using the same SGR-style scheme and button-encodings.
