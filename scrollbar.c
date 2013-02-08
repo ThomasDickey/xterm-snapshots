@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.194 2013/01/06 22:03:21 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.195 2013/02/07 10:04:38 tom Exp $ */
 
 /*
  * Copyright 2000-2011,2012 by Thomas E. Dickey
@@ -709,10 +709,10 @@ AlternateScroll(Widget w, long amount)
 			? ANSI_SS3
 			: ANSI_CSI);
 	if (amount > 0) {
-	    reply.a_final = 'A';
+	    reply.a_final = 'B';
 	} else {
 	    amount = -amount;
-	    reply.a_final = 'B';
+	    reply.a_final = 'A';
 	}
 	while (amount-- > 0) {
 	    unparseseq(xw, &reply);
