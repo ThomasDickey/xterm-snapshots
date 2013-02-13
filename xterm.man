@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.555 2012/12/31 23:36:19 tom Exp $
+.\" $XTermId: xterm.man,v 1.556 2013/02/13 00:47:18 tom Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -3785,7 +3785,7 @@ Set window/icon labels using hexadecimal
 Query window/icon labels using hexadecimal
 .TP 5
 2
-Set window/icon labels using UTF-8 (overrides \fButf8Titles\fP resource).
+Set window/icon labels using UTF-8 (overrides \fButf8Title\fP resource).
 .TP 5
 3
 Query window/icon labels using UTF-8

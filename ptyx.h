@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.761 2013/02/04 01:35:47 Peder.Stray Exp $ */
+/* $XTermId: ptyx.h,v 1.762 2013/02/13 00:42:21 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1897,7 +1897,6 @@ typedef struct {
 	 * Working variables for getLineData().
 	 */
 	size_t		lineExtra;	/* extra space for combining chars */
-	Dimension	widestLine;	/* length of longest LineData	*/
 	/*
 	 * Pointer to the current visible buffer.
 	 */

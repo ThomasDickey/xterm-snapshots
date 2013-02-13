@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.474 2013/02/03 23:19:45 tom Exp $ */
+/* $XTermId: screen.c,v 1.475 2013/02/13 00:42:30 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -447,10 +447,6 @@ Reallocate(XtermWidget xw,
 	return 0;
     }
 
-    if (screen->widestLine < ncol)
-	screen->widestLine = (Dimension) ncol;
-    ncol = screen->widestLine;
-
     oldBufData = *sbufaddr;
 
     TRACE(("Reallocate %dx%d -> %dx%d\n", oldrow, MaxCols(screen), nrow, ncol));
@@ -549,10 +545,6 @@ ReallocateBufOffsets(XtermWidget xw,
 
     assert(nrow != 0);
     assert(ncol != 0);
-
-    if (screen->widestLine < ncol)
-	screen->widestLine = (Dimension) ncol;
-    ncol = screen->widestLine;
 
     oldBufData = *sbufaddr;
     oldBufHead = *sbuf;
