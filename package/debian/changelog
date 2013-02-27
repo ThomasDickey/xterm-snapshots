@@ -1,3 +1,9 @@
+xterm-dev (291) unstable; urgency=low
+
+  * Fix a different #282 change (Redhat #874327).
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 26 Feb 2013 19:09:32 -0500
+
 xterm-dev (290) unstable; urgency=low
 
   * Fix incomplete revert of #282 change.
