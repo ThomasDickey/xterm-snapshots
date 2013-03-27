@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.716 2013/02/03 23:10:05 tom Exp $ */
+/* $XTermId: main.c,v 1.717 2013/03/26 22:50:34 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -3371,7 +3371,7 @@ spawnXTerm(XtermWidget xw)
 		initial_erase = sg.sg_erase;
 #endif /* TERMIO_STRUCT */
 		TRACE(("%s initial_erase:%d (from /dev/tty)\n",
-		       rc == 0 ? "OK" : "FAIL",
+		       (rc == 0) ? "OK" : "FAIL",
 		       initial_erase));
 	    }
 #endif
@@ -3391,17 +3391,23 @@ spawnXTerm(XtermWidget xw)
 	TRACE_TTYSIZE(screen->respond, "after get_pty");
 #if OPT_INITIAL_ERASE
 	if (resource.ptyInitialErase) {
+	    int perhaps_erase = initial_erase;
 #ifdef TERMIO_STRUCT
 	    TERMIO_STRUCT my_tio;
 	    rc = ttyGetAttr(screen->respond, &my_tio);
-	    if (rc == 0)
-		initial_erase = my_tio.c_cc[VERASE];
+	    perhaps_erase = my_tio.c_cc[VERASE];
 #else /* !TERMIO_STRUCT */
 	    struct sgttyb my_sg;
 	    rc = ioctl(screen->respond, TIOCGETP, (char *) &my_sg);
-	    if (rc == 0)
-		initial_erase = my_sg.sg_erase;
+	    perhaps_erase = my_sg.sg_erase;
 #endif /* TERMIO_STRUCT */
+	    /*
+	     * Even with a successful call, we may not have an erase character.
+	     * Double-check it.
+	     */
+	    if (rc == 0 && perhaps_erase != 0) {
+		initial_erase = perhaps_erase;
+	    }
 	    TRACE(("%s initial_erase:%d (from pty)\n",
 		   (rc == 0) ? "OK" : "FAIL",
 		   initial_erase));
