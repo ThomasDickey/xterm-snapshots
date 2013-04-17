@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.717 2013/03/26 22:50:34 tom Exp $ */
+/* $XTermId: main.c,v 1.719 2013/04/17 08:55:20 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -2605,7 +2605,9 @@ get_pty(int *pty, char *from GCC_UNUSED)
 {
     int result = 1;
 
-#if defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME) && defined(HAVE_GRANTPT_PTY_ISATTY)
+#if defined(USE_OPENPTY)
+    result = openpty(pty, &opened_tty, ttydev, NULL, NULL);
+#elif defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME) && defined(HAVE_GRANTPT_PTY_ISATTY)
     if ((*pty = posix_openpt(O_RDWR)) >= 0) {
 	char *name = ptsname(*pty);
 	if (name != 0) {
@@ -2619,19 +2621,11 @@ get_pty(int *pty, char *from GCC_UNUSED)
     }
 #endif
 #elif defined(PUCC_PTYD)
-
     result = ((*pty = openrpty(ttydev, ptydev,
 			       (resource.utmpInhibit ? OPTY_NOP : OPTY_LOGIN),
 			       save_ruid, from)) < 0);
-
-#elif defined(USE_OPENPTY)
-
-    result = openpty(pty, &opened_tty, ttydev, NULL, NULL);
-
 #elif defined(__QNXNTO__)
-
     result = pty_search(pty);
-
 #else
 #if defined(USE_USG_PTYS) || defined(__CYGWIN__)
 #ifdef __GLIBC__		/* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
@@ -2780,6 +2774,11 @@ get_pty(int *pty, char *from)
     } else {
 	result = -1;
     }
+    TRACE(("get_pty(ttydev=%s, ptydev=%s) %s fd=%d (utmp setgid)\n",
+	   ttydev != 0 ? ttydev : "?",
+	   ptydev != 0 ? ptydev : "?",
+	   result ? "FAIL" : "OK",
+	   pty != 0 ? *pty : -1));
     return result;
 }
 #endif
@@ -3053,7 +3052,7 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 
     TRACE_IDS;
     TRACE(("set_owner(%s, uid=%d, gid=%d, mode=%#o\n",
-	   device, uid, gid, (unsigned) mode));
+	   device, (int) uid, (int) gid, (unsigned) mode));
 
     if (chown(device, uid, gid) < 0) {
 	why = errno;
@@ -3076,7 +3075,7 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 			    (unsigned long) mode,
 			    (unsigned long) (sb.st_mode & 0777U));
 		TRACE(("...stat uid=%d, gid=%d, mode=%#o\n",
-		       sb.st_uid, sb.st_gid, (unsigned) sb.st_mode));
+		       (int) sb.st_uid, (int) sb.st_gid, (unsigned) sb.st_mode));
 	    }
 	}
 	TRACE(("...chmod failed: %s\n", strerror(why)));
@@ -3371,7 +3370,7 @@ spawnXTerm(XtermWidget xw)
 		initial_erase = sg.sg_erase;
 #endif /* TERMIO_STRUCT */
 		TRACE(("%s initial_erase:%d (from /dev/tty)\n",
-		       (rc == 0) ? "OK" : "FAIL",
+		       rc == 0 ? "OK" : "FAIL",
 		       initial_erase));
 	    }
 #endif
@@ -3391,23 +3390,17 @@ spawnXTerm(XtermWidget xw)
 	TRACE_TTYSIZE(screen->respond, "after get_pty");
 #if OPT_INITIAL_ERASE
 	if (resource.ptyInitialErase) {
-	    int perhaps_erase = initial_erase;
 #ifdef TERMIO_STRUCT
 	    TERMIO_STRUCT my_tio;
 	    rc = ttyGetAttr(screen->respond, &my_tio);
-	    perhaps_erase = my_tio.c_cc[VERASE];
+	    if (rc == 0)
+		initial_erase = my_tio.c_cc[VERASE];
 #else /* !TERMIO_STRUCT */
 	    struct sgttyb my_sg;
 	    rc = ioctl(screen->respond, TIOCGETP, (char *) &my_sg);
-	    perhaps_erase = my_sg.sg_erase;
+	    if (rc == 0)
+		initial_erase = my_sg.sg_erase;
 #endif /* TERMIO_STRUCT */
-	    /*
-	     * Even with a successful call, we may not have an erase character.
-	     * Double-check it.
-	     */
-	    if (rc == 0 && perhaps_erase != 0) {
-		initial_erase = perhaps_erase;
-	    }
 	    TRACE(("%s initial_erase:%d (from pty)\n",
 		   (rc == 0) ? "OK" : "FAIL",
 		   initial_erase));
@@ -3547,6 +3540,7 @@ spawnXTerm(XtermWidget xw)
 	   TTYSIZE_COLS(ts), i));
 #endif /* TTYSIZE_STRUCT */
 
+#if !defined(USE_OPENPTY)
 #if defined(USE_USG_PTYS) || defined(HAVE_POSIX_OPENPT)
     /*
      * utempter checks the ownership of the device; some implementations
@@ -3558,6 +3552,7 @@ spawnXTerm(XtermWidget xw)
     unlockpt(screen->respond);
     TRACE_TTYSIZE(screen->respond, "after unlockpt");
 #endif
+#endif /* !USE_OPENPTY */
 
     added_utmp_entry = False;
 #if defined(USE_UTEMPTER)

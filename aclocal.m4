@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.360 2013/02/03 19:30:21 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.362 2013/04/17 09:33:50 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -58,7 +58,7 @@ AC_DEFUN([AM_LANGINFO_CODESET],
   fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ACVERSION_CHECK version: 3 updated: 2012/10/03 18:39:53
+dnl CF_ACVERSION_CHECK version: 4 updated: 2013/03/04 19:52:56
 dnl ------------------
 dnl Conditionally generate script according to whether we're using a given autoconf.
 dnl
@@ -67,6 +67,7 @@ dnl $2 = code to use if AC_ACVERSION is at least as high as $1.
 dnl $3 = code to use if AC_ACVERSION is older than $1.
 define([CF_ACVERSION_CHECK],
 [
+ifdef([AC_ACVERSION], ,[m4_copy([m4_PACKAGE_VERSION],[AC_ACVERSION])])dnl
 ifdef([m4_version_compare],
 [m4_if(m4_version_compare(m4_defn([AC_ACVERSION]), [$1]), -1, [$3], [$2])],
 [CF_ACVERSION_COMPARE(
@@ -552,7 +553,7 @@ AC_DEFUN([CF_ERRNO],
 CF_CHECK_ERRNO(errno)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_FUNC_GRANTPT version: 9 updated: 2012/10/04 05:24:07
+dnl CF_FUNC_GRANTPT version: 10 updated: 2013/04/17 05:31:24
 dnl ---------------
 dnl Check for grantpt versus openpty, as well as functions that "should" be
 dnl available if grantpt is available.
@@ -664,9 +665,10 @@ dnl If we found grantpt, but no features, e.g., for streams or if we are not
 dnl able to use tcsetattr, then give openpty a try.  In particular, Darwin 10.7
 dnl has a more functional openpty than posix_openpt.
 dnl
-dnl There is no configure run-test for openpty, since its implementations do
-dnl not always run properly as a non-root user.
-if test "x$ac_cv_func_grantpt" != "xyes" || test -z "$cf_grantpt_opts" ; then
+dnl There is no configure run-test for openpty, since older implementations do
+dnl not always run properly as a non-root user.  For that reason, we also allow
+dnl the configure script to suppress this check entirely with $disable_openpty.
+if test "x$disable_openpty" != "xyes" || test -z "$cf_grantpt_opts" ; then
 	AC_CHECK_LIB(util, openpty, [cf_have_openpty=yes],[cf_have_openpty=no])
 	if test "$cf_have_openpty" = yes ; then
 		ac_cv_func_grantpt=no
@@ -683,6 +685,7 @@ fi
 dnl If we did not settle on using openpty, fill in the definitions for grantpt.
 if test "x$ac_cv_func_grantpt" != xno
 then
+	CF_VERBOSE(will rely upon grantpt)
 	AC_DEFINE(HAVE_WORKING_GRANTPT,1,[Define to 1 if the grantpt function seems to work])
 	for cf_feature in $cf_grantpt_opts
 	do
@@ -693,6 +696,8 @@ then
 elif test "x$cf_have_openpty" = xno
 then
 	CF_VERBOSE(will rely upon BSD-pseudoterminals)
+else
+	CF_VERBOSE(will rely upon openpty)
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
@@ -1285,7 +1290,7 @@ AC_TRY_LINK([
 [cf_cv_input_method=no])])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_INTEL_COMPILER version: 4 updated: 2010/05/26 05:38:42
+dnl CF_INTEL_COMPILER version: 5 updated: 2013/02/10 10:41:05
 dnl -----------------
 dnl Check if the given compiler is really the Intel compiler for Linux.  It
 dnl tries to imitate gcc, but does not return an error when it finds a mismatch
@@ -1299,6 +1304,7 @@ dnl $1 = GCC (default) or GXX
 dnl $2 = INTEL_COMPILER (default) or INTEL_CPLUSPLUS
 dnl $3 = CFLAGS (default) or CXXFLAGS
 AC_DEFUN([CF_INTEL_COMPILER],[
+AC_REQUIRE([AC_CANONICAL_HOST])
 ifelse([$2],,INTEL_COMPILER,[$2])=no
 
 if test "$ifelse([$1],,[$1],GCC)" = yes ; then
@@ -3203,7 +3209,7 @@ esac
 AC_MSG_RESULT($ICON_NAME)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICON_THEME version: 8 updated: 2012/08/07 20:14:58
+dnl CF_WITH_ICON_THEME version: 9 updated: 2013/04/17 05:31:24
 dnl ------------------
 dnl If asked, check for prerequisites and setup symbols to permit installing
 dnl one or more application icons in the Red Hat icon-theme directory
@@ -3252,7 +3258,7 @@ if test "x$ICON_THEME" = xno
 then
 	if test "x$ICONDIR" != xno
 	then
-		AC_MSG_WARN(ignoring icondir without theme)
+		CF_VERBOSE(ignoring icondir without theme)
 		no_icondir="#"
 	fi
 else
@@ -3670,7 +3676,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 42 updated: 2012/01/07 08:26:49
+dnl CF_XOPEN_SOURCE version: 43 updated: 2013/02/10 10:41:05
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -3680,6 +3686,7 @@ dnl Parameters:
 dnl	$1 is the nominal value for _XOPEN_SOURCE
 dnl	$2 is the nominal value for _POSIX_C_SOURCE
 AC_DEFUN([CF_XOPEN_SOURCE],[
+AC_REQUIRE([AC_CANONICAL_HOST])
 
 cf_XOPEN_SOURCE=ifelse([$1],,500,[$1])
 cf_POSIX_C_SOURCE=ifelse([$2],,199506L,[$2])
