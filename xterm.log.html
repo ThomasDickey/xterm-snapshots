@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1320 2013/03/26 23:05:33 tom Exp $
+  $XTermId: xterm.log.html,v 1.1327 2013/04/17 09:14:17 tom Exp $
   -->
 
 <html>
@@ -49,9 +49,9 @@
 
 <body>
   <hr>
-  <a href=
-  "http://invisible-island.net/">http://invisible-island.net/</a><a href="http://invisible-island.net/xterm/">xterm/</a><br>
-
+  <a href="http://invisible-island.net/" target=
+  "_top">http://invisible-island.net/</a><a href=
+  "http://invisible-island.net/xterm/" target="_top">xterm/</a><br>
   Copyright &copy; 1997-2012,2013 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a>
   <hr>
@@ -66,8 +66,8 @@
   Until mid-2006, most of these were summarized in the XFree86
   CHANGELOG (found in the unbundled tree,
   xc/programs/Xserver/hw/xfree86). <a href=
-  "http://invisible-island.net/xterm/xterm.log.html">Here</a> is
-  the latest version of this file.</p>
+  "http://invisible-island.net/xterm/xterm.log.html" target=
+  "_parent">Here</a> is the latest version of this file.</p>
 
   <ul>
     <li><a href="#xterm_dev">Development</a></li>
@@ -870,12 +870,15 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add configure option <code>--disable-openpty</code> to
+    control whether openpty() may be used in preference to
+    posix_openpt().</li>
+
     <li>improve workaround from <a href="#xterm_279">patch #279</a>
     for BSD systems which do not complete initialization until both
-    sides of the pseudoterminal are opened. In some cases, e.g.,
-    for the <code>ptyInitialErase</code> logic, the system returns
-    a zero for the erase character on success rather than a valid
-    erase character (report by Christian Weisgerber).</li>
+    sides of the pseudoterminal are opened, by preferring openpty()
+    function over posix_openpt() when available (report by
+    Christian Weisgerber).</li>
   </ul>
 
   <h1><a name="xterm_291" id="xterm_291">Patch #291 -
@@ -6703,7 +6706,7 @@ Klanderman).
     version (Egbert Eich).</li>
   </ul>
 
-  <h1><a name="xterm_166" id="xterm_166">Patch #166 - 2002/03/25 -
+  <h1><a name="xterm_166" id="xterm_166">Patch #166 - 2002/3/25 -
   XFree86 4.2.0</a></h1>
 
   <ul>
@@ -6777,7 +6780,7 @@ Klanderman).
     </li>
   </ul>
 
-  <h1><a name="xterm_165" id="xterm_165">Patch #165 - 2002/01/05 -
+  <h1><a name="xterm_165" id="xterm_165">Patch #165 - 2002/1/5 -
   XFree86 4.1.0</a></h1>
 
   <ul>
@@ -8678,15 +8681,15 @@ Klanderman).
     <li>add support for DEC Locator control sequences for xterm
     (integrated patch by Steve Wall):
       <pre>
-
                 DECEFR, "Enable Filter Rectangle"
                 DECELR, "Enable Locator Reports"
                 DECSLE, "Select Locator Events"
                 DECRQLP, "Request Locator Position"
-          
-</pre>This allows the xterm mouse to be used with applications that
-use the DEC Locator sequences, such as VAX Tpu, or SMG$ based
-applications.
+</pre>
+
+      <p>This allows the xterm mouse to be used with applications
+      that use the DEC Locator sequences, such as VAX Tpu, or SMG$
+      based applications.</p>
     </li>
 
     <li>improve print action (patch by Matthias Baake). From his
@@ -9828,7 +9831,7 @@ but looks good.
   </ul>
 
   <h1><a name="xterm_84" id="xterm_84">Patch #84 - 1998/10/9 -
-  XFree86 3.9Ni</a> and 3.3.2e</h1>
+  XFree86 3.9Ni and 3.3.2e</a></h1>
 
   <p>Several small fixes and enhancements, including a patch from
   Bjorn Helgaas:</p>
@@ -10709,14 +10712,15 @@ but looks good.
     receives a segmentation fault on &lt;Btn2Up&gt; after
     scrolling:
     <pre>
-
           *XTerm*VT100*translations:    #override \
               ~Shift~Ctrl&lt;Btn2Up&gt;: insert-selection(PRIMARY, CUT_BUFFER0)\n\
               Shift~Ctrl&lt;Btn2Up&gt;:  insert-selection(CLIPBOARD, CUT_BUFFER1)\n\
               ~Shift&lt;BtnUp&gt;:       select-end(PRIMARY, CUT_BUFFER0)\n\
               Shift&lt;BtnUp&gt;:        select-end(CLIPBOARD, CUT_BUFFER1)
-</pre>(The above resources intention is to be able to paste the
-latest selection even if the xterm was cleared.)
+</pre>
+
+    <p>(The above resources intention is to be able to paste the
+    latest selection even if the xterm was cleared.)</p>
 
     <p>And here is how it works (and a fix!): The widget given to
     the action handler as first argument is not guaranteed to be a

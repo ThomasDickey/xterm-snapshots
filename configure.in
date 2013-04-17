@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.312 2013/02/03 19:30:48 tom Exp $
+dnl $XTermId: configure.in,v 1.313 2013/04/17 09:06:45 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -146,6 +146,14 @@ test -n "$with_symlink" && \
 	test "$with_symlink" != $cf_name && \
 	XTERM_SYMLINK="$with_symlink"
 fi
+
+AC_MSG_CHECKING(if you want to disable openpty)
+CF_ARG_DISABLE(openpty,
+	[  --disable-openpty       disable openpty, prefer other interfaces],
+	[disable_openpty=yes],
+	[disable_openpty=no],
+	no)
+AC_MSG_RESULT($disable_openpty)
 
 AC_MSG_CHECKING(if you want to disable setuid)
 CF_ARG_DISABLE(setuid,
