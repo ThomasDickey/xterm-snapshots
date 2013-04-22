@@ -718,7 +718,7 @@ Compile/Install Options:
   --enable-narrowproto    enable narrow prototypes for X libraries
   --disable-imake         disable use of imake for definitions
 Terminal Configuration:
-  --with-terminal-id=V    set default decTerminalID (default: vt100)
+  --with-terminal-id=V    set default decTerminalID (default: vt420)
   --with-terminal-type=T  set default $TERM (default: xterm)
   --enable-backarrow-key  set default backarrowKey resource (default: true)
   --enable-backarrow-is-erase set default backarrowKeyIsErase resource (default: false)
@@ -13607,43 +13607,43 @@ cat >>confdefs.h <<EOF
 EOF
 
 ###############################################################################
-echo "$as_me:13610: checking if backarrow-key should be DEL" >&5
-echo $ECHO_N "checking if backarrow-key should be DEL... $ECHO_C" >&6
+echo "$as_me:13610: checking if backarrow-key should be BS" >&5
+echo $ECHO_N "checking if backarrow-key should be BS... $ECHO_C" >&6
 
 # Check whether --enable-backarrow-key or --disable-backarrow-key was given.
 if test "${enable_backarrow_key+set}" = set; then
   enableval="$enable_backarrow_key"
   test "$enableval" != no && enableval=yes
   if test "$enableval" != "yes" ; then
-    backarrow_is_del=$enableval
+    backarrow_is_bs=$enableval
   else
-    backarrow_is_del=yes
+    backarrow_is_bs=yes
   fi
 else
   enableval=yes
-  backarrow_is_del=yes
+  backarrow_is_bs=yes
 
 fi;
 
-echo "$as_me:13628: result: $backarrow_is_del" >&5
-echo "${ECHO_T}$backarrow_is_del" >&6
-case $backarrow_is_del in #(vi
+echo "$as_me:13628: result: $backarrow_is_bs" >&5
+echo "${ECHO_T}$backarrow_is_bs" >&6
+case $backarrow_is_bs in #(vi
 yes) #(vi
-	backarrow_is_del=true
+	backarrow_is_bs=true
 	;;
 no) #(vi
-	backarrow_is_del=false
+	backarrow_is_bs=false
 	;;
 esac
-cf_xbool1=`echo "$backarrow_is_del"|sed -e 's/^\(.\).*/\1/'`
+cf_xbool1=`echo "$backarrow_is_bs"|sed -e 's/^\(.\).*/\1/'`
 
 cf_xbool1=`echo "$cf_xbool1" | sed y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%`
 
-cf_xbool2=`echo "$backarrow_is_del"|sed -e 's/^.//'`
-backarrow_is_del=${cf_xbool1}${cf_xbool2}
+cf_xbool2=`echo "$backarrow_is_bs"|sed -e 's/^.//'`
+backarrow_is_bs=${cf_xbool1}${cf_xbool2}
 
 cat >>confdefs.h <<EOF
-#define DEF_BACKARO_DEL $backarrow_is_del
+#define DEF_BACKARO_BS $backarrow_is_bs
 EOF
 
 echo "$as_me:13649: checking if backarrow-key should be treated as erase" >&5
@@ -19095,7 +19095,7 @@ s,@IMAKE_CFLAGS@,$IMAKE_CFLAGS,;t t
 s,@IMAKE_LOADFLAGS@,$IMAKE_LOADFLAGS,;t t
 s,@default_termid@,$default_termid,;t t
 s,@default_TERM@,$default_TERM,;t t
-s,@backarrow_is_del@,$backarrow_is_del,;t t
+s,@backarrow_is_bs@,$backarrow_is_bs,;t t
 s,@backarrow_is_erase@,$backarrow_is_erase,;t t
 s,@delete_is_del@,$delete_is_del,;t t
 s,@alt_sends_esc@,$alt_sends_esc,;t t

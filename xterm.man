@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.556 2013/02/13 00:47:18 tom Exp $
+.\" $XTermId: xterm.man,v 1.557 2013/04/21 18:58:54 Andres.Perera Exp $
 .\"
 .\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
@@ -1247,7 +1247,7 @@ Tie the VTxxx \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
 together by setting the DECBKM state according to whether the initial value of
 \fIstty\fP erase is a backspace (8) or delete (127) character.
 A \*(``false\*('' value disables this feature.
-The default is \*(``__backarrow_key_erase__\*(''.
+The default is \*(``__backarrow_is_erase__\*(''.
 .TP 8
 .B "fullscreen (\fPclass\fB Fullscreen)"
 Specifies whether or not \fI\*n\fP should ask the window manager to
@@ -1903,7 +1903,7 @@ a backspace (8)
 or delete (127) character.
 This corresponds to the DECBKM control sequence.
 A \*(``true\*('' value specifies backspace.
-The default is \*(``__backarrow_key_is_del__\*(''.
+The default is \*(``__backarrow_is_bs__\*(''.
 Pressing the control key toggles this behavior.
 .TP 8
 .B "background (\fPclass\fB Background)"

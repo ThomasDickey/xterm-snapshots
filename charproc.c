@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1283 2013/02/05 01:47:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1284 2013/04/21 18:58:54 Andres.Perera Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -407,7 +407,7 @@ static XtResource xterm_resources[] =
     Bres(XtNautoWrap, XtCAutoWrap, misc.autoWrap, True),
     Bres(XtNawaitInput, XtCAwaitInput, screen.awaitInput, False),
     Bres(XtNfreeBoldBox, XtCFreeBoldBox, screen.free_bold_box, False),
-    Bres(XtNbackarrowKey, XtCBackarrowKey, screen.backarrow_key, DEF_BACKARO_DEL),
+    Bres(XtNbackarrowKey, XtCBackarrowKey, screen.backarrow_key, DEF_BACKARO_BS),
     Bres(XtNbellIsUrgent, XtCBellIsUrgent, screen.bellIsUrgent, False),
     Bres(XtNbellOnReset, XtCBellOnReset, screen.bellOnReset, True),
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, True),
