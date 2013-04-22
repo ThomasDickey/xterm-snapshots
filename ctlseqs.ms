@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.285 2013/02/07 01:59:09 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.287 2013/04/22 09:53:34 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #289
-.ds RF 2013/02/06
+.ds RF 2013/04/22
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1200,7 +1200,7 @@ and \*(Pm is the mode value:
 Request DEC private mode (DECRQM).
 For VT300 and up, reply is
 .br
-  \*(Cs\*?\*(Ps\*;\*(Pm\*$\*p
+  \*(Cs\*?\*(Ps\*;\*(Pm\*$\*y
 .br
 where \*(Ps is the mode number as in DECSET,
 \*(Pm is the mode value as in the ANSI DECRQM.
