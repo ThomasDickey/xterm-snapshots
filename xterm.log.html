@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1331 2013/04/22 09:47:25 tom Exp $
+  $XTermId: xterm.log.html,v 1.1332 2013/04/23 09:09:19 tom Exp $
   -->
 
 <html>
@@ -870,6 +870,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add <code>PasteControls</code> feature to
+    <code>allowWindowOps</code> which by default disallows pasting
+    control characters other than formatting such as carriage
+    return (discussion with Hayaki Saito).</li>
+
     <li>fix typo in ctlseqs.ms for DECRQM response (patch by
     Emanuele Giaquinta).</li>
 
