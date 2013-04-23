@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.451 2013/02/06 09:56:15 tom Exp $ */
+/* $XTermId: button.c,v 1.452 2013/04/23 08:32:25 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1963,6 +1963,47 @@ _WriteKey(TScreen * screen, const Char * in)
 }
 #endif /* OPT_READLINE */
 
+static size_t
+removeControls(XtermWidget xw, char *value)
+{
+    TScreen *screen = TScreenOf(xw);
+    size_t dst = 0;
+    size_t src = 0;
+
+    if (AllowWindowOps(xw, ewPasteControls)) {
+	dst = strlen(value);
+    } else {
+	while ((value[dst] = value[src]) != '\0') {
+	    int ch = CharOf(value[src++]);
+	    if (ch < 32) {
+		switch (ch) {
+		case '\b':
+		case '\t':
+		case '\n':
+		case '\r':
+		    ++dst;
+		    break;
+		default:
+		    continue;
+		}
+	    }
+#if OPT_WIDE_CHARS
+	    else if (screen->utf8_inparse)
+		++dst;
+#endif
+#if OPT_C1_PRINT || OPT_WIDE_CHARS
+	    else if (screen->c1_printable)
+		++dst;
+#endif
+	    else if (ch >= 128 && ch < 160)
+		continue;
+	    else
+		++dst;
+	}
+    }
+    return dst;
+}
+
 /* SelectionReceived: stuff received selection text into pty */
 
 /* ARGSUSED */
@@ -2068,7 +2109,7 @@ SelectionReceived(Widget w,
 	}
 #endif
 	for (i = 0; i < text_list_count; i++) {
-	    size_t len = strlen(text_list[i]);
+	    size_t len = removeControls(xw, text_list[i]);
 	    if (screen->selectToBuffer) {
 		size_t have = (screen->internal_select
 			       ? strlen(screen->internal_select)

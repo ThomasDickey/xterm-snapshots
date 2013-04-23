@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1284 2013/04/21 18:58:54 Andres.Perera Exp $ */
+/* $XTermId: charproc.c,v 1.1285 2013/04/23 09:12:37 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -7137,6 +7137,7 @@ VTInitialize(Widget wrequest,
 	,DATA(SetXprop)
 	,DATA(GetSelection)
 	,DATA(SetSelection)
+	,DATA(PasteControls)
     };
 #undef DATA
 
