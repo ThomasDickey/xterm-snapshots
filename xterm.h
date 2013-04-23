@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.716 2013/02/03 23:21:00 tom Exp $ */
+/* $XTermId: xterm.h,v 1.717 2013/04/23 09:50:23 Bertram.Felgenhauer Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1261,7 +1261,7 @@ extern void ChangeToWide(XtermWidget /* xw */);
 /* scrollback.c */
 extern LineData *getScrollback (TScreen * /* screen */, int /* row */);
 extern LineData *addScrollback (TScreen * /* screen */);
-extern void deleteScrollback (TScreen * /* screen */, int /* row */);
+extern void deleteScrollback (TScreen * /* screen */);
 
 /* scrollbar.c */
 extern void DoResizeScreen (XtermWidget /* xw */);

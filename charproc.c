@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1285 2013/04/23 09:12:37 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1286 2013/04/23 09:50:23 Bertram.Felgenhauer Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -8012,8 +8012,8 @@ VTDestroy(Widget w GCC_UNUSED)
 	XtDestroyWidget(screen->scrollWidget);
     }
 #if OPT_FIFO_LINES
-    while (screen->saved_fifo-- > 0) {
-	deleteScrollback(screen, 0);
+    while (screen->saved_fifo > 0) {
+	deleteScrollback(screen);
     }
 #endif
     while (screen->save_title != 0) {
