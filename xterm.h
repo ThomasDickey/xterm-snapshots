@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.717 2013/04/23 09:50:23 Bertram.Felgenhauer Exp $ */
+/* $XTermId: xterm.h,v 1.718 2013/04/24 08:55:50 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -353,6 +353,7 @@ extern char **environ;
 #define XtNallowC1Printable	"allowC1Printable"
 #define XtNallowColorOps	"allowColorOps"
 #define XtNallowFontOps		"allowFontOps"
+#define XtNallowPasteControls	"allowPasteControls"
 #define XtNallowScrollLock	"allowScrollLock"
 #define XtNallowSendEvents	"allowSendEvents"
 #define XtNallowTcapOps		"allowTcapOps"
@@ -538,6 +539,7 @@ extern char **environ;
 #define XtCAllowC1Printable	"AllowC1Printable"
 #define XtCAllowColorOps	"AllowColorOps"
 #define XtCAllowFontOps		"AllowFontOps"
+#define XtCAllowPasteControls	"AllowPasteControls"
 #define XtCAllowScrollLock	"AllowScrollLock"
 #define XtCAllowSendEvents	"AllowSendEvents"
 #define XtCAllowTcapOps		"AllowTcapOps"

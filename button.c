@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.452 2013/04/23 08:32:25 tom Exp $ */
+/* $XTermId: button.c,v 1.453 2013/04/24 08:57:58 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1963,6 +1963,9 @@ _WriteKey(TScreen * screen, const Char * in)
 }
 #endif /* OPT_READLINE */
 
+/*
+ * Unless enabled by the user, strip control characters other than formatting.
+ */
 static size_t
 removeControls(XtermWidget xw, char *value)
 {
@@ -1970,7 +1973,7 @@ removeControls(XtermWidget xw, char *value)
     size_t dst = 0;
     size_t src = 0;
 
-    if (AllowWindowOps(xw, ewPasteControls)) {
+    if (screen->allowPasteControls) {
 	dst = strlen(value);
     } else {
 	while ((value[dst] = value[src]) != '\0') {

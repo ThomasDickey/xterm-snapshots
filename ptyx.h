@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.763 2013/04/23 00:56:04 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.764 2013/04/24 08:57:46 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -970,7 +970,6 @@ typedef enum {
     , ewSetXprop
     , ewGetSelection
     , ewSetSelection
-    , ewPasteControls
     /* get the size of the array... */
     , ewLAST
 } WindowOps;
@@ -1771,6 +1770,7 @@ typedef struct {
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		poponbell;	/* pop on bell mode		*/
 
+	Boolean		allowPasteControls; /* PasteControls mode	*/
 	Boolean		allowColorOps;	/* ColorOps mode		*/
 	Boolean		allowFontOps;	/* FontOps mode			*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
@@ -2728,8 +2728,9 @@ typedef struct _TekWidgetRec {
 
 #define AllowTitleOps(w)	AllowXtermOps(w, allowTitleOps)
 
+#define SpecialWindowOps(w,name) (!TScreenOf(w)->disallow_win_ops[name])
 #define AllowWindowOps(w,name)	(AllowXtermOps(w, allowWindowOps) || \
-				 !TScreenOf(w)->disallow_win_ops[name])
+				 SpecialWindowOps(w,name))
 
 #if OPT_TOOLBAR
 #define ToolbarHeight(w)	((resource.toolBar) \
