@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.287 2013/04/22 09:53:34 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.288 2013/04/24 09:49:19 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #289
-.ds RF 2013/04/22
+.ds LF Patch #292
+.ds RF 2013/04/24
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND

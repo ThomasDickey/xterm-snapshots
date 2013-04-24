@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1286 2013/04/23 09:50:23 Bertram.Felgenhauer Exp $ */
+/* $XTermId: charproc.c,v 1.1287 2013/04/24 09:07:06 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -390,6 +390,8 @@ static XtActionsRec actionsList[] = {
 
 static XtResource xterm_resources[] =
 {
+    Bres(XtNallowPasteControls, XtCAllowPasteControls,
+	 screen.allowPasteControls, False),
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
     Bres(XtNallowColorOps, XtCAllowColorOps, screen.allowColorOp0, DEF_ALLOW_COLOR),
     Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, DEF_ALLOW_FONT),
@@ -7137,7 +7139,6 @@ VTInitialize(Widget wrequest,
 	,DATA(SetXprop)
 	,DATA(GetSelection)
 	,DATA(SetSelection)
-	,DATA(PasteControls)
     };
 #undef DATA
 
@@ -7428,6 +7429,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.alt_sends_esc);
     init_Bres(screen.meta_sends_esc);
 
+    init_Bres(screen.allowPasteControls);
     init_Bres(screen.allowSendEvent0);
     init_Bres(screen.allowColorOp0);
     init_Bres(screen.allowFontOp0);

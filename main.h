@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.60 2013/04/23 08:58:47 tom Exp $ */
+/* $XTermId: main.h,v 1.61 2013/04/24 08:52:20 tom Exp $ */
 
 /*
  * Copyright 2000-2012,2013 by Thomas E. Dickey
@@ -128,7 +128,7 @@
 #endif
 
 #ifndef DEF_DISALLOWED_WINDOW
-#define DEF_DISALLOWED_WINDOW	"20,21,SetXprop,SetSelection,PasteControls"
+#define DEF_DISALLOWED_WINDOW	"20,21,SetXprop,SetSelection"
 #endif
 
 #if OPT_BLINK_TEXT
