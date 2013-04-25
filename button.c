@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.453 2013/04/24 08:57:58 tom Exp $ */
+/* $XTermId: button.c,v 1.454 2013/04/25 01:05:41 Taketo.Kabe Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -2883,7 +2883,6 @@ class_of(LineData * ld, CELL * cell)
 	temp.col /= 2;
     }
 #endif
-
     assert(temp.col < (int) ld->lineSize);
     return CharacterClass((int) (ld->charData[temp.col]));
 }
@@ -2918,6 +2917,10 @@ okPosition(TScreen * screen,
 	    *ld = GET_LINEDATA(screen, ++cell->row);
 	    result = False;
 	}
+    }
+    if (cell->col > screen->max_col) {
+	/* Clicked on rightmost edge of the screen. Clamp to max_col */
+	cell->col = screen->max_col;
     }
     return result;
 }
@@ -3344,6 +3347,13 @@ ComputeSelect(XtermWidget xw,
 		&& MoreRows(endSel)) {
 		screen->endSel.col = 0;
 		NextRow(endSel);
+	    }
+	    /* Clicking on right edge will make endSel.col == screen->max_col,
+	     * so clamp it. Otherwise XTERM_CELL and friends will fail assertion
+	     */
+	    if (screen->endSel.col > screen->max_col) {
+		screen->endSel.col = screen->max_col;
+		TRACE(("Select_WORD endSel.col clamped to %d\n", screen->endSel.col));
 	    }
 	}
 #if OPT_WIDE_CHARS

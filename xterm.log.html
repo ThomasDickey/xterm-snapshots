@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1333 2013/04/23 09:48:32 tom Exp $
+  $XTermId: xterm.log.html,v 1.1334 2013/04/25 12:23:27 tom Exp $
   -->
 
 <html>
@@ -870,6 +870,11 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>add limit-check when double-click selects a word; if the
+    saved-lines were scrolled back and the word selected wrapped at
+    the screen's lower right corner, an assertion was triggered
+    (patch by Taketo Kabe).</li>
+
     <li>correct limit-check in <code>unsaveEditBufLines</code>,
     fixing a case where enlarging the terminal size could show a
     blank line where there actually is available text (patch by
