@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.454 2013/04/25 01:05:41 Taketo.Kabe Exp $ */
+/* $XTermId: button.c,v 1.455 2013/05/09 01:08:07 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -2877,14 +2877,16 @@ static int
 class_of(LineData * ld, CELL * cell)
 {
     CELL temp = *cell;
+    int result = 0;
 
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(GetLineDblCS(ld))) {
 	temp.col /= 2;
     }
 #endif
-    assert(temp.col < (int) ld->lineSize);
-    return CharacterClass((int) (ld->charData[temp.col]));
+    if (temp.col < (int) ld->lineSize)
+	result = CharacterClass((int) (ld->charData[temp.col]));
+    return result;
 }
 
 #if OPT_WIDE_CHARS
@@ -2917,10 +2919,6 @@ okPosition(TScreen * screen,
 	    *ld = GET_LINEDATA(screen, ++cell->row);
 	    result = False;
 	}
-    }
-    if (cell->col > screen->max_col) {
-	/* Clicked on rightmost edge of the screen. Clamp to max_col */
-	cell->col = screen->max_col;
     }
     return result;
 }
