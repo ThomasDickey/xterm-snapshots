@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.455 2013/05/09 01:08:07 tom Exp $ */
+/* $XTermId: button.c,v 1.456 2013/05/12 22:16:26 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1652,6 +1652,7 @@ CutBuffer(Atom code)
 	cutbuffer = -1;
 	break;
     }
+    TRACE(("CutBuffer(%d) = %d\n", (int) code, cutbuffer));
     return cutbuffer;
 }
 
@@ -1713,10 +1714,10 @@ xtermGetSelection(Widget w,
 	line = XFetchBuffer(XtDisplay(w), &inbytes, cutbuffer);
 	nbytes = (unsigned long) inbytes;
 
-	if (nbytes > 0)
+	if (nbytes > 0) {
 	    SelectionReceived(w, NULL, &selection, &type, (XtPointer) line,
 			      &nbytes, &fmt8);
-	else if (num_params > 1) {
+	} else if (num_params > 1) {
 	    xtermGetSelection(w, ev_time, params + 1, num_params - 1, NULL);
 	}
 #if OPT_PASTE64
@@ -1724,7 +1725,6 @@ xtermGetSelection(Widget w,
 	    FinishPaste64(xw);
 	}
 #endif
-	return;
     } else {
 	struct _SelectionList *list;
 
