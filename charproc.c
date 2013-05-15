@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1287 2013/04/24 09:07:06 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1288 2013/05/15 09:38:33 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -3945,15 +3945,13 @@ v_write(int f, const Char * data, unsigned len)
 	    return;
 	}
     }
-#ifdef DEBUG
-    if (debug) {
-	fprintf(stderr, "v_write called with %d bytes (%d left over)",
-		len, v_bufptr - v_bufstr);
+    if_DEBUG({
+	fprintf(stderr, "v_write called with %d bytes (%ld left over)",
+		len, (long) (v_bufptr - v_bufstr));
 	if (len > 1 && len < 10)
 	    fprintf(stderr, " \"%.*s\"", len, (const char *) data);
 	fprintf(stderr, "\n");
-    }
-#endif
+    });
 
 #ifdef VMS
     if ((1 << f) != pty_mask) {
@@ -3984,11 +3982,10 @@ v_write(int f, const Char * data, unsigned len)
 	    if (v_bufstr != v_buffer) {
 		/* there is unused space, move everything down */
 		/* possibly overlapping memmove here */
-#ifdef DEBUG
-		if (debug)
-		    fprintf(stderr, "moving data down %d\n",
-			    v_bufstr - v_buffer);
-#endif
+		if_DEBUG({
+		    fprintf(stderr, "moving data down %ld\n",
+			    (long) (v_bufstr - v_buffer));
+		});
 		memmove(v_buffer, v_bufstr, (size_t) (v_bufptr - v_bufstr));
 		v_bufptr -= v_bufstr - v_buffer;
 		v_bufstr = v_buffer;
@@ -3999,11 +3996,10 @@ v_write(int f, const Char * data, unsigned len)
 		unsigned size = (unsigned) (v_bufptr - v_buffer);
 		v_buffer = TypeRealloc(Char, size + len, v_buffer);
 		if (v_buffer) {
-#ifdef DEBUG
-		    if (debug)
+		    if_DEBUG({
 			fprintf(stderr, "expanded buffer to %d\n",
 				size + len);
-#endif
+		    });
 		    v_bufstr = v_buffer;
 		    v_bufptr = v_buffer + size;
 		    v_bufend = v_bufptr + len;
@@ -4054,19 +4050,18 @@ v_write(int f, const Char * data, unsigned len)
 	if (riten < 0)
 #endif /* VMS */
 	{
-#ifdef DEBUG
-	    if (debug)
+	    if_DEBUG({
 		perror("write");
-#endif
+	    });
 	    riten = 0;
 	}
-#ifdef DEBUG
-	if (debug)
-	    fprintf(stderr, "write called with %d, wrote %d\n",
-		    v_bufptr - v_bufstr <= MAX_PTY_WRITE ?
-		    v_bufptr - v_bufstr : MAX_PTY_WRITE,
+	if_DEBUG({
+	    fprintf(stderr, "write called with %ld, wrote %d\n",
+		    ((long) ((v_bufptr - v_bufstr) <= MAX_PTY_WRITE)
+		     ? (long) (v_bufptr - v_bufstr)
+		     : MAX_PTY_WRITE),
 		    riten);
-#endif
+	});
 	v_bufstr += riten;
 	if (v_bufstr >= v_bufptr)	/* we wrote it all */
 	    v_bufstr = v_bufptr = v_buffer;
@@ -4086,10 +4081,9 @@ v_write(int f, const Char * data, unsigned len)
 	    v_bufstr = v_buffer + start;
 	    v_bufptr = v_buffer + size;
 	    v_bufend = v_buffer + allocsize;
-#ifdef DEBUG
-	    if (debug)
+	    if_DEBUG({
 		fprintf(stderr, "shrunk buffer to %d\n", allocsize);
-#endif
+	    });
 	} else {
 	    /* should we print a warning if couldn't return memory? */
 	    v_buffer = v_bufstr - start;	/* restore clobbered pointer */
@@ -6531,10 +6525,9 @@ VTExpose(Widget w GCC_UNUSED,
 	 XEvent * event,
 	 Region region GCC_UNUSED)
 {
-#ifdef DEBUG
-    if (debug)
+    if_DEBUG({
 	fputs("Expose\n", stderr);
-#endif /* DEBUG */
+    });
     if (event->type == Expose)
 	HandleExposure(term, event);
 }
