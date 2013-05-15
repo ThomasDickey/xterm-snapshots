@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.719 2013/04/17 08:55:20 tom Exp $ */
+/* $XTermId: main.c,v 1.720 2013/05/15 09:36:34 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -1103,6 +1103,9 @@ static XrmOptionDescRec optionDescList[] = {
 {"-class",	NULL,		XrmoptionSkipArg,	(XPointer) NULL},
 {"-e",		NULL,		XrmoptionSkipLine,	(XPointer) NULL},
 {"-into",	NULL,		XrmoptionSkipArg,	(XPointer) NULL},
+#ifdef DEBUG
+{"-D",		NULL,		XrmoptionNoArg,		(XPointer) NULL},
+#endif
 /* bogus old compatibility stuff for which there are
    standard XtOpenApplication options now */
 {"%",		"*tekGeometry",	XrmoptionStickyArg,	(XPointer) NULL},
@@ -2435,18 +2438,15 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif
 
-#ifdef DEBUG
-    {
+    if_DEBUG({
 	/* Set up stderr properly.  Opening this log file cannot be
 	   done securely by a privileged xterm process (although we try),
 	   so the debug feature is disabled by default. */
 	char dbglogfile[TIMESTAMP_LEN + 20];
 	int i = -1;
-	if (debug) {
-	    timestamp_filename(dbglogfile, "xterm.debug.log.");
-	    if (creat_as(save_ruid, save_rgid, False, dbglogfile, 0600) > 0) {
-		i = open(dbglogfile, O_WRONLY | O_TRUNC);
-	    }
+	timestamp_filename(dbglogfile, "xterm.debug.log.");
+	if (creat_as(save_ruid, save_rgid, False, dbglogfile, 0600) > 0) {
+	    i = open(dbglogfile, O_WRONLY | O_TRUNC);
 	}
 	if (i >= 0) {
 	    dup2(i, 2);
@@ -2454,8 +2454,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    /* mark this file as close on exec */
 	    (void) fcntl(i, F_SETFD, 1);
 	}
-    }
-#endif /* DEBUG */
+    });
 
     spawnXTerm(term);
 
@@ -2534,10 +2533,9 @@ main(int argc, char *argv[]ENVP_ARG)
 		 : (1 + screen->respond));
 
 #endif /* !VMS */
-#ifdef DEBUG
-    if (debug)
+    if_DEBUG({
 	printf("debugging on\n");
-#endif /* DEBUG */
+    });
     XSetErrorHandler(xerror);
     XSetIOErrorHandler(xioerror);
     IceSetIOErrorHandler(ice_error);
@@ -5035,10 +5033,9 @@ reapchild(int n GCC_UNUSED)
 
     do {
 	if (pid == TScreenOf(term)->pid) {
-#ifdef DEBUG
-	    if (debug)
+	    if_DEBUG({
 		fputs("Exiting\n", stderr);
-#endif
+	    });
 	    if (!hold_screen)
 		need_cleanup = True;
 	}
