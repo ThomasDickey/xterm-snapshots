@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.562 2013/05/15 09:12:15 tom Exp $
+.\" $XTermId: xterm.man,v 1.564 2013/05/16 09:57:06 tom Exp $
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
@@ -3088,6 +3088,11 @@ you can add those after the command, e.g.,
 Alternatively,
 you may put those parameter within a shell script to execute the converter,
 and set this resource to point to the shell script.
+.IP
+When using a locale-filter, e.g., with the \fI\-e\fP option, or the shell,
+\fI\*n\fP first tries passing control via that filter.
+If it fails, \fI\*n\fP will retry without the locale-filter.
+\fI\*N\fP warns about the failure before retrying.
 .TP 8
 .B "loginShell (\fPclass\fB LoginShell)"
 Specifies whether or not the shell to be run in the window should be started
@@ -6229,6 +6234,10 @@ a reference.
 .TP 5
 WINDOWID
 is set to the X window id number of the \fI\*n\fP window.
+.TP 5
+XTERM_FILTER
+is set if a locale-filter is used.
+The value is the pathname of the filter.
 .TP 5
 XTERM_LOCALE
 shows the locale which was used by \fI\*n\fP on startup.

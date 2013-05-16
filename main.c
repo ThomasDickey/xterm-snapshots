@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.720 2013/05/15 09:36:34 tom Exp $ */
+/* $XTermId: main.c,v 1.721 2013/05/16 09:32:56 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -2435,6 +2435,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    x_appendargv(command_to_exec_with_luit, command_to_exec);
 	}
 	TRACE_ARGV("luit command", command_to_exec_with_luit);
+	xtermSetenv("XTERM_FILTER", *command_to_exec_with_luit);
     }
 #endif
 
