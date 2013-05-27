@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1288 2013/05/15 09:38:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1289 2013/05/26 21:18:52 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -6525,9 +6525,7 @@ VTExpose(Widget w GCC_UNUSED,
 	 XEvent * event,
 	 Region region GCC_UNUSED)
 {
-    if_DEBUG({
-	fputs("Expose\n", stderr);
-    });
+    DEBUG_MSG("Expose\n");
     if (event->type == Expose)
 	HandleExposure(term, event);
 }

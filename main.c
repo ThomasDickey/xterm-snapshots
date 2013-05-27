@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.721 2013/05/16 09:32:56 tom Exp $ */
+/* $XTermId: main.c,v 1.724 2013/05/26 22:54:50 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -1103,9 +1103,6 @@ static XrmOptionDescRec optionDescList[] = {
 {"-class",	NULL,		XrmoptionSkipArg,	(XPointer) NULL},
 {"-e",		NULL,		XrmoptionSkipLine,	(XPointer) NULL},
 {"-into",	NULL,		XrmoptionSkipArg,	(XPointer) NULL},
-#ifdef DEBUG
-{"-D",		NULL,		XrmoptionNoArg,		(XPointer) NULL},
-#endif
 /* bogus old compatibility stuff for which there are
    standard XtOpenApplication options now */
 {"%",		"*tekGeometry",	XrmoptionStickyArg,	(XPointer) NULL},
@@ -2535,7 +2532,7 @@ main(int argc, char *argv[]ENVP_ARG)
 
 #endif /* !VMS */
     if_DEBUG({
-	printf("debugging on\n");
+	TRACE(("debugging on pid %d\n", (int) getpid()));
     });
     XSetErrorHandler(xerror);
     XSetIOErrorHandler(xioerror);
@@ -2894,6 +2891,7 @@ static const char *vtterm[] =
 static void
 hungtty(int i GCC_UNUSED)
 {
+    DEBUG_MSG("handle:hungtty\n");
     siglongjmp(env, 1);
 }
 
@@ -4758,6 +4756,7 @@ Exit(int n)
     TScreen *screen = TScreenOf(xw);
 
 #ifdef USE_UTEMPTER
+    DEBUG_MSG("handle:Exit USE_UTEMPTER\n");
     if (!resource.utmpInhibit && added_utmp_entry) {
 	TRACE(("...calling removeFromUtmp\n"));
 	removeFromUtmp();
@@ -4767,6 +4766,7 @@ Exit(int n)
     struct UTMP_STR utmp;
     struct UTMP_STR *utptr;
 
+    DEBUG_MSG("handle:Exit USE_SYSV_UTMP\n");
     /* don't do this more than once */
     if (xterm_exiting) {
 	exit(n);
@@ -4840,6 +4840,7 @@ Exit(int n)
     int wfd;
     struct utmp utmp;
 
+    DEBUG_MSG("handle:Exit !USE_SYSV_UTMP\n");
     if (!resource.utmpInhibit && added_utmp_entry &&
 	(am_slave < 0 && tslot > 0)) {
 #if defined(USE_UTMP_SETGID)
@@ -5023,6 +5024,8 @@ reapchild(int n GCC_UNUSED)
     int olderrno = errno;
     int pid;
 
+    DEBUG_MSG("handle:reapchild\n");
+
     pid = wait(NULL);
 
 #ifdef USE_SYSV_SIGNALS
@@ -5034,9 +5037,7 @@ reapchild(int n GCC_UNUSED)
 
     do {
 	if (pid == TScreenOf(term)->pid) {
-	    if_DEBUG({
-		fputs("Exiting\n", stderr);
-	    });
+	    DEBUG_MSG("Exiting\n");
 	    if (!hold_screen)
 		need_cleanup = True;
 	}

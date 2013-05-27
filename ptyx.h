@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.765 2013/05/15 09:29:15 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.766 2013/05/26 21:19:44 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -2842,6 +2842,8 @@ typedef struct Tek_Link
 #else
 #define if_DEBUG(code) /*nothing*/
 #endif
+
+#define DEBUG_MSG(text) if_DEBUG({ write(2, text, sizeof(text) - 1); })
 
 /* *INDENT-ON* */
 
