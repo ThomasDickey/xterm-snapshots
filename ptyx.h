@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.767 2013/05/27 22:21:32 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.768 2013/05/28 16:53:32 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1439,6 +1439,7 @@ typedef enum {
 	DP_X_EXT_MOUSE,
 	DP_X_LOGGING,
 	DP_X_LRMM,
+	DP_DECSDM,
 	DP_X_MARGIN,
 	DP_X_MORE,
 	DP_X_MOUSE,
@@ -2090,6 +2091,7 @@ typedef struct {
 	Boolean		output_eight_bits;	/* honor all bits or strip */
 	Boolean		control_eight_bits;	/* send CSI as 8-bits */
 	Boolean		backarrow_key;		/* backspace/delete */
+	Boolean		sixel_scrolling;	/* sixel scrolling (inline display) */
 	Boolean		alt_is_not_meta;	/* use both Alt- and Meta-key */
 	Boolean		alt_sends_esc;		/* Alt-key sends ESC prefix */
 	Boolean		meta_sends_esc;		/* Meta-key sends ESC prefix */
@@ -2452,11 +2454,12 @@ extern WidgetClass tekWidgetClass;
 #endif
 
 /* define masks for keyboard.flags */
-#define MODE_KAM	xBIT(0)	/* keyboard action mode */
+#define MODE_KAM	xBIT(0)	/* mode 2: keyboard action mode */
 #define MODE_DECKPAM	xBIT(1)	/* keypad application mode */
-#define MODE_DECCKM	xBIT(2)	/* cursor keys */
-#define MODE_SRM	xBIT(3)	/* send-receive mode */
-#define MODE_DECBKM	xBIT(4)	/* backarrow */
+#define MODE_DECCKM	xBIT(2)	/* private mode 1: cursor keys */
+#define MODE_SRM	xBIT(3)	/* mode 12: send-receive mode */
+#define MODE_DECBKM	xBIT(4)	/* private mode 67: backarrow */
+#define MODE_DECSDM	xBIT(5)	/* private mode 80: sixel scrolling mode */
 
 
 #define N_MARGINBELL	10

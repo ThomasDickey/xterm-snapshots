@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.564 2013/05/16 09:57:06 tom Exp $
+.\" $XTermId: xterm.man,v 1.565 2013/05/28 16:53:32 Ross.Combs Exp $
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
@@ -971,7 +971,7 @@ Specify the name used by \fI\*n\fP to select the
 correct response to terminal ID queries.
 It also specifies the emulation level,
 used to determine the type of response to a DA control sequence.
-Valid values include vt52, vt100, vt101, vt102, and vt220
+Valid values include vt52, vt100, vt101, vt102, vt220, and vt240
 (the \*(``vt\*('' is optional).
 The default is \*(``vt__default_termid__\*(''.
 The term_id argument specifies the terminal ID to use.

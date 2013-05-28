@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.660 2013/05/26 21:16:20 tom Exp $ */
+/* $XTermId: misc.c,v 1.661 2013/05/28 16:53:32 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -58,6 +58,7 @@
 
 #include <sys/stat.h>
 #include <stdio.h>
+#include <math.h>
 #include <stdarg.h>
 #include <signal.h>
 #include <ctype.h>
@@ -95,6 +96,8 @@
 #include <xstrings.h>
 #include <xtermcap.h>
 #include <VTparse.h>
+#include <ptyx.h>
+#include <graphics.h>
 
 #include <assert.h>
 
@@ -534,8 +537,10 @@ xtermAppPending(void)
     while (result && XtAppPeekEvent(app_con, &this_event)) {
 	if (this_event.type == Expose) {
 	    result = mergeExposeEvents(&this_event);
+	    TRACE(("got merged expose events\n"));
 	} else if (this_event.type == ConfigureNotify) {
 	    result = mergeConfigureEvents(&this_event);
+	    TRACE(("got merged configure notify events\n"));
 	} else {
 	    TRACE(("pending %s\n", visibleEventType(this_event.type)));
 	    break;
@@ -2624,16 +2629,24 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 #define allocateExactRGB(xw, cmap, def) XAllocColor(TScreenOf(xw)->display, cmap, def)
 #endif /* OPT_ISO_COLORS */
 
+
+Boolean
+allocateBestRGB(XtermWidget xw, XColor *def)
+{
+    Colormap cmap = xw->core.colormap;
+
+    return allocateExactRGB(xw, cmap, def) || allocateClosestRGB(xw, cmap, def);
+}
+
 static Boolean
-xtermAllocColor(XtermWidget xw, XColor * def, const char *spec)
+xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
 {
     Boolean result = False;
     TScreen *screen = TScreenOf(xw);
     Colormap cmap = xw->core.colormap;
 
     if (XParseColor(screen->display, cmap, spec, def)
-	&& (allocateExactRGB(xw, cmap, def)
-	    || allocateClosestRGB(xw, cmap, def))) {
+	&& allocateBestRGB(xw, def)) {
 	TRACE(("xtermAllocColor -> %x/%x/%x\n",
 	       def->red, def->green, def->blue));
 	result = True;
@@ -3624,6 +3637,101 @@ parse_decudk(const char *cp)
     }
 }
 
+/*
+ * Parse numeric parameters.  Normally we use a state machine to simplify
+ * interspersing with control characters, but have the string already.
+ */
+static void
+parse_ansi_params(ANSI * params, const char **string)
+{
+    const char *cp = *string;
+    ParmType nparam = 0;
+    int last_empty = 1;
+
+    memset(params, 0, sizeof(*params));
+    while (*cp != '\0') {
+	Char ch = CharOf(*cp++);
+
+	if (isdigit(ch)) {
+	    last_empty = 0;
+	    if (nparam < NPARAM) {
+		params->a_param[nparam] =
+		    (ParmType) ((params->a_param[nparam] * 10)
+				+ (ch - '0'));
+	    }
+	} else if (ch == ';') {
+	    last_empty = 1;
+	    nparam++;
+	} else if (ch < 32) {
+	    /* EMPTY */ ;
+	} else {
+	    /* should be 0x30 to 0x7e */
+	    params->a_final = ch;
+	    break;
+	}
+    }
+
+    *string = cp;
+    if (!last_empty)
+        nparam++;
+    if (nparam > NPARAM)
+	params->a_nparam = NPARAM;
+    else
+	params->a_nparam = nparam;
+}
+
+/*
+ * Parse numeric parameters which have the operator as a prefix rather than a
+ * suffix as in ANSI format.
+ *
+ *  #             0
+ *  #1            1
+ *  #1;           1
+ *  "1;2;640;480  4
+ *  #1;2;0;0;0    5
+ */
+static void
+parse_prefixedtype_params(ANSI *params, const char **string)
+{
+    const char *cp = *string;
+    ParmType nparam = 0;
+    int last_empty = 1;
+
+    memset(params, 0, sizeof(*params));
+    params->a_final = CharOf(*cp);
+    if (*cp != '\0')
+	cp++;
+
+    while (*cp != '\0') {
+	Char ch = CharOf(*cp);
+
+	if (isdigit(ch)) {
+	    last_empty = 0;
+	    if (nparam < NPARAM) {
+		params->a_param[nparam] =
+		    (ParmType) ((params->a_param[nparam] * 10)
+				+ (ch - '0'));
+	    }
+	} else if (ch == ';') {
+	    last_empty = 1;
+	    nparam++;
+	} else if (ch == ' ' || ch == '\r' || ch == '\n') {
+	    /* EMPTY */ ;
+	} else {
+	    break;
+	}
+	cp++;
+    }
+
+    *string = cp;
+    if (!last_empty)
+	nparam++;
+    if (nparam > NPARAM)
+	params->a_nparam = NPARAM;
+    else
+	params->a_nparam = nparam;
+}
+
 #if OPT_TRACE
 #define SOFT_WIDE 10
 #define SOFT_HIGH 20
@@ -3737,40 +3845,6 @@ parse_decdld(ANSI * params, const char *string)
 #else
 #define parse_decdld(p,q)	/* nothing */
 #endif
-
-/*
- * Parse numeric parameters.  Normally we use a state machine to simplify
- * interspersing with control characters, but have the string already.
- */
-static void
-parse_ansi_params(ANSI * params, const char **string)
-{
-    const char *cp = *string;
-    ParmType nparam = 0;
-
-    memset(params, 0, sizeof(*params));
-    while (*cp != '\0') {
-	Char ch = CharOf(*cp++);
-
-	if (isdigit(ch)) {
-	    if (nparam < NPARAM) {
-		params->a_param[nparam] =
-		    (ParmType) ((params->a_param[nparam] * 10)
-				+ (ch - '0'));
-	    }
-	} else if (ch == ';') {
-	    if (++nparam < NPARAM)
-		params->a_nparam = nparam;
-	} else if (ch < 32) {
-	    /* EMPTY */ ;
-	} else {
-	    /* should be 0x30 to 0x7e */
-	    params->a_final = ch;
-	    break;
-	}
-    }
-    *string = cp;
-}
 
 void
 do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
@@ -3978,9 +4052,28 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	break;
 #endif
     default:
-	if (screen->vtXX_level >= 2) {	/* VT220 */
+	if (screen->terminal_id == 125 ||
+	    screen->vtXX_level >= 2) {       /* VT220 */
 	    parse_ansi_params(&params, &cp);
 	    switch (params.a_final) {
+	    case 'p':
+		if (screen->terminal_id == 125 ||
+		    screen->terminal_id == 240 ||
+		    screen->terminal_id == 241 ||
+		    screen->terminal_id == 330 ||
+		    screen->terminal_id == 340) {
+		    parse_regis(xw, &params, cp);
+		}
+		break;
+	    case 'q':
+		if (screen->terminal_id == 125 ||
+		    screen->terminal_id == 240 ||
+		    screen->terminal_id == 241 ||
+		    screen->terminal_id == 330 ||
+		    screen->terminal_id == 340) {
+		    parse_sixel(xw, &params, cp);
+		}
+		break;
 	    case '|':		/* DECUDK */
 		if (params.a_param[0] == 0)
 		    reset_decudk();
