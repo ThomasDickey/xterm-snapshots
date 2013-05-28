@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1289 2013/05/26 21:18:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1290 2013/05/28 16:53:32 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -136,6 +136,7 @@
 #include <xcharmouse.h>
 #include <charclass.h>
 #include <xstrings.h>
+#include <graphics.h>
 
 typedef void (*BitFunc) (unsigned * /* p */ ,
 			 unsigned /* mask */ );
@@ -272,6 +273,7 @@ static XtActionsRec actionsList[] = {
     { "set-autolinefeed",	HandleAutoLineFeed },
     { "set-autowrap",		HandleAutoWrap },
     { "set-backarrow",		HandleBackarrow },
+    { "set-sixelscrolling",	HandleSixelScrolling },
     { "set-bellIsUrgent",	HandleBellIsUrgent },
     { "set-cursesemul",		HandleCursesEmul },
     { "set-jumpscroll",		HandleJumpscroll },
@@ -410,6 +412,7 @@ static XtResource xterm_resources[] =
     Bres(XtNawaitInput, XtCAwaitInput, screen.awaitInput, False),
     Bres(XtNfreeBoldBox, XtCFreeBoldBox, screen.free_bold_box, False),
     Bres(XtNbackarrowKey, XtCBackarrowKey, screen.backarrow_key, DEF_BACKARO_BS),
+    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
     Bres(XtNbellIsUrgent, XtCBellIsUrgent, screen.bellIsUrgent, False),
     Bres(XtNbellOnReset, XtCBellOnReset, screen.bellOnReset, True),
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, True),
@@ -1983,7 +1986,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	}
 
 	DumpParams();
-	TRACE(("parse %04X -> %d %s\n", c, sp->nextstate, which_table(sp->parsestate)));
+	TRACE(("parse %04X -> %d %s (used=%lu)\n", c, sp->nextstate, which_table(sp->parsestate), (unsigned long)sp->string_used));
 
 	/*
 	 * If the parameter list has subparameters (tokens separated by ":")
@@ -2446,6 +2449,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 */
 		if (screen->terminal_id < 200) {
 		    switch (screen->terminal_id) {
+		    case 125:
+			reply.a_param[count++] = 12;	/* VT125 */
+			reply.a_param[count++] = 0|2|0;	/* no STP, AVO, no GPO (ReGIS) */
+			reply.a_param[count++] = 0;	/* no printer */
+			reply.a_param[count++] = XTERM_PATCH;	/* ROM version */
+			break;
 		    case 102:
 			reply.a_param[count++] = 6;	/* VT102 */
 			break;
@@ -2455,7 +2464,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			break;
 		    default:	/* VT100 */
 			reply.a_param[count++] = 1;	/* VT100 */
-			reply.a_param[count++] = 2;	/* AVO */
+			reply.a_param[count++] = 0|2|0;	/* no STP, AVO, no GPO (ReGIS) */
 			break;
 		    }
 		} else {
@@ -2464,6 +2473,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 							 / 100);
 		    reply.a_param[count++] = 1;		/* 132-columns */
 		    reply.a_param[count++] = 2;		/* printer */
+		    if (screen->terminal_id == 240 ||
+			screen->terminal_id == 241 ||
+			screen->terminal_id == 330 ||
+			screen->terminal_id == 340) {
+			//reply.a_param[count++] = 3;	/* ReGIS graphics */
+			reply.a_param[count++] = 4;		/* sixel graphics */
+		    }
 		    reply.a_param[count++] = 6;		/* selective-erase */
 #if OPT_SUNPC_KBD
 		    if (xw->keyboard.type == keyboardIsVT220)
@@ -3243,7 +3259,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_ST:
-	    TRACE(("CASE_ST: End of String (%lu bytes)\n", (unsigned long) sp->string_used));
+	    TRACE(("CASE_ST: End of String (%lu bytes) (mode=%d)\n", (unsigned long) sp->string_used, sp->string_mode));
 	    ResetState(sp);
 	    if (!sp->string_used)
 		break;
@@ -3263,6 +3279,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		break;
 	    case ANSI_SOS:
 		/* ignored */
+		break;
+	    default:
+		TRACE(("unknown mode\n"));
 		break;
 	    }
 	    break;
@@ -4840,6 +4859,7 @@ typedef enum {
     ,srm_DECNKM = 66
     ,srm_DECBKM = 67
     ,srm_DECLRMM = 69
+    ,srm_DECSDM = 80 /* Sixel Display Mode */
     ,srm_DECNCSM = 95
     ,srm_VT200_MOUSE = SET_VT200_MOUSE
     ,srm_VT200_HIGHLIGHT_MOUSE = SET_VT200_HIGHLIGHT_MOUSE
@@ -5119,6 +5139,15 @@ dpmodes(XtermWidget xw, BitFunc func)
 		CursorSet(screen, 0, 0, xw->flags);
 	    }
 	    break;
+	case srm_DECSDM:
+	    if (screen->terminal_id == 240 ||
+		screen->terminal_id == 241 ||
+		screen->terminal_id == 330 ||
+		screen->terminal_id == 340) {
+		(*func) (&xw->flags, MODE_DECSDM);
+		update_decsdm();
+	    }
+	    break;
 	case srm_DECNCSM:
 	    if (screen->vtXX_level >= 5) {	/* VT510 */
 		(*func) (&xw->flags, NOCLEAR_COLM);
@@ -5273,6 +5302,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    set_mouseflag(paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
+	default:
+	    TRACE(("DATA_ERROR: unknown private code %d\n", code));
+	    break;
 	}
     }
 }
@@ -5388,6 +5420,9 @@ savemodes(XtermWidget xw)
 	    break;
 	case srm_DECLRMM:	/* left-right */
 	    DoSM(DP_X_LRMM, LEFT_RIGHT);
+	    break;
+	case srm_DECSDM:	/* sixel scrolling */
+	    DoSM(DP_DECSDM, xw->keyboard.flags & MODE_DECSDM);
 	    break;
 	case srm_DECNCSM:	/* noclear */
 	    DoSM(DP_X_NCSM, NOCLEAR_COLM);
@@ -5679,6 +5714,10 @@ restoremodes(XtermWidget xw)
 		reset_lr_margins(screen);
 	    }
 	    CursorSet(screen, 0, 0, xw->flags);
+	    break;
+	case srm_DECSDM:	/* sixel scrolling */
+	    bitcpy(&xw->flags, screen->save_modes[DP_DECSDM], MODE_DECSDM);
+	    update_decbkm();
 	    break;
 	case srm_DECNCSM:	/* noclear */
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_NCSM], NOCLEAR_COLM);
@@ -7843,6 +7882,10 @@ VTInitialize(Widget wrequest,
 	wnew->keyboard.flags |= MODE_DECBKM;
     TRACE(("initialized DECBKM %s\n",
 	   BtoS(wnew->keyboard.flags & MODE_DECBKM)));
+    if (TScreenOf(wnew)->sixel_scrolling) /* FIXME: should this be off unconditionally here? */
+	wnew->keyboard.flags |= MODE_DECSDM;
+    TRACE(("initialized DECSDM %s\n",
+	   BtoS(wnew->keyboard.flags & MODE_DECSDM)));
 
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
@@ -9809,6 +9852,8 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     bitclr(&xw->flags, PROTECTED);
     screen->protected_mode = OFF_PROTECT;
 
+    reset_displayed_graphics();
+
     if (full) {			/* RIS */
 	if (screen->bellOnReset)
 	    Bell(xw, XkbBI_TerminalBell, 0);
@@ -9833,9 +9878,14 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 		xw->keyboard.flags |= MODE_DECBKM;
 	TRACE(("full reset DECBKM %s\n",
 	       BtoS(xw->keyboard.flags & MODE_DECBKM)));
+	if (TScreenOf(xw)->sixel_scrolling)
+	    xw->keyboard.flags |= MODE_DECSDM;
+	TRACE(("full reset DECSDM %s\n",
+	       BtoS(xw->keyboard.flags & MODE_DECSDM)));
 	update_appcursor();
 	update_appkeypad();
 	update_decbkm();
+	update_decsdm();
 	show_8bit_control(False);
 	reset_decudk();
 

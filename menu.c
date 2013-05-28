@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.313 2013/02/03 21:53:58 tom Exp $ */
+/* $XTermId: menu.c,v 1.314 2013/05/28 16:53:32 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -138,6 +138,7 @@ static void do_appkeypad       PROTO_XT_CALLBACK_ARGS;
 static void do_autolinefeed    PROTO_XT_CALLBACK_ARGS;
 static void do_autowrap        PROTO_XT_CALLBACK_ARGS;
 static void do_backarrow       PROTO_XT_CALLBACK_ARGS;
+static void do_sixelscrolling  PROTO_XT_CALLBACK_ARGS;
 static void do_bellIsUrgent    PROTO_XT_CALLBACK_ARGS;
 static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS;
 static void do_continue        PROTO_XT_CALLBACK_ARGS;
@@ -296,6 +297,7 @@ MenuEntry mainMenuEntries[] = {
     { "line2",		NULL,		NULL },
     { "8-bit control",	do_8bit_control,NULL },
     { "backarrow key",	do_backarrow,	NULL },
+    { "sixel scrolling",do_sixelscrolling,	NULL },
 #if OPT_NUM_LOCK
     { "num-lock",	do_num_lock,	NULL },
     { "alt-esc",	do_alt_esc,	NULL },
@@ -1160,6 +1162,15 @@ do_backarrow(Widget gw GCC_UNUSED,
 {
     term->keyboard.flags ^= MODE_DECBKM;
     update_decbkm();
+}
+
+static void
+do_sixelscrolling(Widget gw GCC_UNUSED,
+		  XtPointer closure GCC_UNUSED,
+		  XtPointer data GCC_UNUSED)
+{
+    term->keyboard.flags ^= MODE_DECSDM;
+    update_decsdm();
 }
 
 #if OPT_NUM_LOCK
@@ -2205,6 +2216,16 @@ update_fullscreen(void)
 
 #endif /* OPT_MAXIMIZE */
 
+void
+HandleSixelScrolling(Widget w,
+		     XEvent * event GCC_UNUSED,
+		     String * params,
+		     Cardinal *param_count)
+{
+    handle_vt_toggle(do_sixelscrolling, term->keyboard.flags & MODE_DECSDM,
+		     params, *param_count, w);
+}
+
 #if OPT_SUN_FUNC_KEYS
 void
 HandleSunFunctionKeys(Widget w,
@@ -3180,6 +3201,15 @@ update_decbkm(void)
 		   mainMenuEntries,
 		   mainMenu_backarrow,
 		   (term->keyboard.flags & MODE_DECBKM) != 0);
+}
+
+void
+update_decsdm(void)
+{
+    UpdateCheckbox("update_decsdm",
+		   mainMenuEntries,
+		   mainMenu_sixelscrolling,
+		   (term->keyboard.flags & MODE_DECSDM) != 0);
 }
 
 #if OPT_NUM_LOCK

@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.128 2012/09/21 10:39:10 tom Exp $ */
+/* $XTermId: menu.h,v 1.129 2013/05/28 16:53:32 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -130,6 +130,7 @@ extern void HandleSetSelect        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTekText       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetVisualBell    PROTO_XT_ACTIONS_ARGS;
+extern void HandleSixelScrolling   PROTO_XT_ACTIONS_ARGS;
 extern void HandleSoftReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSunFunctionKeys  PROTO_XT_ACTIONS_ARGS;
 extern void HandleSunKeyboard      PROTO_XT_ACTIONS_ARGS;
@@ -182,6 +183,7 @@ typedef enum {
     mainMenu_line2,
     mainMenu_8bit_ctrl,
     mainMenu_backarrow,
+    mainMenu_sixelscrolling,
 #if OPT_NUM_LOCK
     mainMenu_num_lock,
     mainMenu_alt_esc,
@@ -382,6 +384,7 @@ extern void update_write_error(void);
 extern void update_print_redir(void);
 extern void update_8bit_control(void);
 extern void update_decbkm(void);
+extern void update_decsdm(void);
 
 #if OPT_NUM_LOCK
 extern void update_num_lock(void);

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.718 2013/04/24 08:55:50 tom Exp $ */
+/* $XTermId: xterm.h,v 1.719 2013/05/28 16:53:32 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -505,6 +505,7 @@ extern char **environ;
 #define XtNshowMissingGlyphs	"showMissingGlyphs"
 #define XtNshowWrapMarks	"showWrapMarks"
 #define XtNsignalInhibit	"signalInhibit"
+#define XtNsixelScrolling	"sixelScrolling"
 #define XtNtekGeometry		"tekGeometry"
 #define XtNtekInhibit		"tekInhibit"
 #define XtNtekSmall		"tekSmall"
@@ -676,6 +677,7 @@ extern char **environ;
 #define XtCShowMissingGlyphs	"ShowMissingGlyphs"
 #define XtCShowWrapMarks	"ShowWrapMarks"
 #define XtCSignalInhibit	"SignalInhibit"
+#define XtCSixelScrolling	"SixelScrolling"
 #define XtCTekInhibit		"TekInhibit"
 #define XtCTekSmall		"TekSmall"
 #define XtCTekStartup		"TekStartup"
@@ -995,6 +997,7 @@ extern char *xtermEnvEncoding (void);
 extern char *xtermFindShell (char * /* leaf */, Bool  /* warning */);
 extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
+extern Boolean allocateBestRGB(XtermWidget /* xw */, XColor * /* def */);
 extern int ResetAnsiColorRequest (XtermWidget, char *, int);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, unsigned  /* mode */);

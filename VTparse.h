@@ -1,4 +1,4 @@
-/* $XTermId: VTparse.h,v 1.59 2012/09/10 23:27:03 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.60 2013/05/28 16:53:32 Ross.Combs Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -88,6 +88,8 @@ extern Const PARSE_T scs96table[];
 extern Const PARSE_T scstable[];
 extern Const PARSE_T sos_table[];
 extern Const PARSE_T csi_dec_dollar_table[];
+
+extern Const PARSE_T csi_question_table[];
 
 #if OPT_DEC_LOCATOR
 extern Const PARSE_T csi_tick_table[];
