@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.362 2013/04/17 09:33:50 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.365 2013/05/27 22:36:25 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3191,7 +3191,7 @@ fi
 AC_SUBST(no_icondir)
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_ICON_NAME version: 1 updated: 2012/08/25 19:05:08
+dnl CF_WITH_ICON_NAME version: 2 updated: 2013/05/27 18:34:42
 dnl -----------------
 dnl Allow a default icon-name to be overridden.
 dnl $1 = default icon name
@@ -3206,7 +3206,34 @@ xyes|xno|x)
 	ICON_NAME=$1
 	;;
 esac
+AC_SUBST(ICON_NAME)
 AC_MSG_RESULT($ICON_NAME)
+])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_WITH_ICON_SYMLINK version: 1 updated: 2013/05/27 18:34:42
+dnl --------------------
+dnl Workaround for systems which are (mis)configured to map all icon references
+dnl for xterm into "xterm" name.  For instance, recent (2013) KDE ignores both
+dnl the name given in the .desktop file (xterm-color) and the application name
+dnl (xterm-dev).
+dnl
+dnl $1 = default icon name to use if symlink is wanted
+AC_DEFUN([CF_WITH_ICON_SYMLINK],[
+AC_MSG_CHECKING(for icon symlink to use)
+AC_ARG_WITH(icon-symlink,
+	[  --with-icon-symlink=XXX make symbolic link for icon name (default: $1)],
+	[ICON_SYMLINK="$withval"],
+	[ICON_SYMLINK=NONE])
+case "x$ICON_SYMLINK" in
+xyes)
+	ICON_SYMLINK=$1
+	;;
+xno|x)
+	ICON_SYMLINK=NONE
+	;;
+esac
+AC_SUBST(ICON_SYMLINK)
+AC_MSG_RESULT($ICON_SYMLINK)
 ])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_WITH_ICON_THEME version: 9 updated: 2013/04/17 05:31:24

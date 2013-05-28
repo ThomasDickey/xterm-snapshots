@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.724 2013/05/26 22:54:50 tom Exp $ */
+/* $XTermId: main.c,v 1.727 2013/05/27 22:11:11 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -3189,7 +3189,7 @@ spawnXTerm(XtermWidget xw)
 #endif /* TERMIO_STRUCT */
 
     char *shell_path = 0;
-    char *ptr, *shname, *shname_minus;
+    char *shname, *shname_minus;
     int i;
 #if USE_NO_DEV_TTY
     int no_dev_tty = False;
@@ -3655,6 +3655,8 @@ spawnXTerm(XtermWidget xw)
 
 #if OPT_PTY_HANDSHAKE		/* warning, goes for a long ways */
 	    if (resource.ptyHandshake) {
+		char *ptr;
+
 		/* close parent's sides of the pipes */
 		close(cp_pipe[0]);
 		close(pc_pipe[1]);
@@ -4248,7 +4250,7 @@ spawnXTerm(XtermWidget xw)
 #else
 	    if (xw->misc.login_shell &&
 		(i = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
-		write(i, (char *) &utmp, sizeof(utmp));
+		IGNORE_RC(write(i, (char *) &utmp, sizeof(utmp)));
 		close(i);
 	    }
 #endif
@@ -4280,7 +4282,7 @@ spawnXTerm(XtermWidget xw)
 
 		    utmp.ut_time = time((time_t *) 0);
 		    lseek(i, (long) (tslot * sizeof(utmp)), 0);
-		    write(i, (char *) &utmp, sizeof(utmp));
+		    IGNORE_RC(write(i, (char *) &utmp, sizeof(utmp)));
 		    close(i);
 		    added_utmp_entry = True;
 #if defined(WTMP)
@@ -4295,7 +4297,7 @@ spawnXTerm(XtermWidget xw)
 			(i = open(_U_LASTLOG, O_WRONLY)) >= 0) {
 			lseek(i, (long) (screen->uid *
 					 sizeof(utmp)), 0);
-			write(i, (char *) &utmp, sizeof(utmp));
+			IGNORE_RC(write(i, (char *) &utmp, sizeof(utmp)));
 			close(i);
 		    }
 #endif /* WTMP or MNX_LASTLOG */
@@ -4338,7 +4340,7 @@ spawnXTerm(XtermWidget xw)
 		SetUtmpHost(lastlog.ll_host, screen);
 		lastlog.ll_time = time((time_t *) 0);
 		if (lseek(i, offset, 0) != (off_t) (-1)) {
-		    write(i, (char *) &lastlog, size);
+		    IGNORE_RC(write(i, (char *) &lastlog, size));
 		}
 		close(i);
 	    }
@@ -4820,7 +4822,7 @@ Exit(int n)
 		if (xw->misc.login_shell) {
 		    int fd;
 		    if ((fd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
-			write(fd, utptr, sizeof(*utptr));
+			IGNORE_RC(write(fd, utptr, sizeof(*utptr)));
 			close(fd);
 		    }
 		}
@@ -4850,7 +4852,7 @@ Exit(int n)
 	if ((wfd = open(etc_utmp, O_WRONLY)) >= 0) {
 	    memset(&utmp, 0, sizeof(utmp));
 	    lseek(wfd, (long) (tslot * sizeof(utmp)), 0);
-	    write(wfd, (char *) &utmp, sizeof(utmp));
+	    IGNORE_RC(write(wfd, (char *) &utmp, sizeof(utmp)));
 	    close(wfd);
 	}
 #ifdef WTMP
@@ -4860,7 +4862,7 @@ Exit(int n)
 			   my_pty_name(ttydev),
 			   sizeof(utmp.ut_line));
 	    utmp.ut_time = time((time_t *) 0);
-	    write(wfd, (char *) &utmp, sizeof(utmp));
+	    IGNORE_RC(write(wfd, (char *) &utmp, sizeof(utmp)));
 	    close(wfd);
 	}
 #endif /* WTMP */
