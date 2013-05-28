@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.216 2013/01/03 01:33:29 tom Exp $
+## $XTermId: Makefile.in,v 1.219 2013/05/27 19:39:59 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -83,11 +83,15 @@ pixmapdir	= @PIXMAPDIR@
 
 #### End of system configuration section. ####
 
+ICON_NAME	= @ICON_NAME@
+ICON_SYMLINK	= @ICON_SYMLINK@
+
 DESTDIR		=
 BINDIR		= $(DESTDIR)$(bindir)
 LIBDIR		= $(DESTDIR)$(libdir)
 MANDIR		= $(DESTDIR)$(mandir)
 APPSDIR		= $(DESTDIR)$(appsdir)
+
 @no_icondir@ICONDIR		= $(DESTDIR)$(icondir)
 @no_pixmapdir@PIXMAPDIR	= $(DESTDIR)$(pixmapdir)
 
@@ -267,17 +271,29 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_icondir@install-icon \
 @no_icondir@install-full :: $(ICONDIR)
 @no_icondir@	ACTUAL_XTERM=$(actual_xterm) \
-@no_icondir@	$(SHELL) -c 'for n in $(ICON_LIST); \
-@no_icondir@		do \
-@no_icondir@		x=$$ACTUAL_XTERM; \
-@no_icondir@		l=`echo "$$n" | cut -f1 -d:`; \
-@no_icondir@		r=`echo "$$n" | cut -f2 -d: |sed -e s,@ICON_NAME@,$$x-color,`; \
-@no_icondir@		test -z "$$r" && continue; \
+@no_icondir@	$(SHELL) -c '\
 @no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
-@no_icondir@		d=$$h/`echo "$$r" | sed -e "s,/[^/]*$$,,"`; \
-@no_icondir@		test -d "$$d" || mkdir -p "$$d"; \
-@no_icondir@		echo installing icon $$h/$$r; \
-@no_icondir@		$(INSTALL_DATA) $$l $$h/$$r; \
+@no_icondir@		for n in $(ICON_LIST); \
+@no_icondir@		do \
+@no_icondir@			x=$$ACTUAL_XTERM; \
+@no_icondir@			l=`echo "$$n" | cut -f1 -d:`; \
+@no_icondir@			r=`echo "$$n" | cut -f2 -d: |sed -e s,$(ICON_NAME),$$x-color,`; \
+@no_icondir@			test -z "$$r" && continue; \
+@no_icondir@			d=$$h/`echo "$$r" | sed -e "s,/[^/]*$$,,"`; \
+@no_icondir@			test -d "$$d" || mkdir -p "$$d"; \
+@no_icondir@			echo "installing icon $$h/$$r"; \
+@no_icondir@			$(INSTALL_DATA) $$l $$h/$$r; \
+@no_icondir@			s=`echo "$$r" | sed -e '"'s,^.*\.,.,'"'`; \
+@no_icondir@			t=$(ICON_SYMLINK)$$s; \
+@no_icondir@			b=`basename $$n $$s | sed -e "s,_[1-9][0-9]*x.*,,"`; \
+@no_icondir@			if test "$(ICON_SYMLINK)" != NONE ; then \
+@no_icondir@				if test "$$r" != "$$t" ; then \
+@no_icondir@					if test "x$$b" = "x$(ICON_NAME)" ; then \
+@no_icondir@						echo "linking $$r -> $$t"; \
+@no_icondir@						( cd $$h; rm -f $$t; $(LN_S) $$r $$t; ) \
+@no_icondir@					fi \
+@no_icondir@				fi \
+@no_icondir@			fi \
 @no_icondir@		done'
 @no_icondir@	@echo "... installed icons"
 
@@ -285,11 +301,25 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_pixmapdir@install-icon \
 @no_pixmapdir@install-full :: $(PIXMAPDIR)
 @no_pixmapdir@	ACTUAL_XTERM=$(actual_xterm) \
-@no_pixmapdir@	$(SHELL) -c 'for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
+@no_pixmapdir@	$(SHELL) -c '\
+@no_pixmapdir@		h=$(PIXMAPDIR); \
+@no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
 @no_pixmapdir@		do \
 @no_pixmapdir@			l=`basename $$n`; \
 @no_pixmapdir@			r=`echo "$$l" | sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
-@no_pixmapdir@			$(INSTALL_DATA) $(srcdir)/icons/$$l $(PIXMAPDIR)/$$r; \
+@no_pixmapdir@			echo "installing pixmap $$h/$$r"; \
+@no_pixmapdir@			$(INSTALL_DATA) $(srcdir)/icons/$$l $$h/$$r; \
+@no_pixmapdir@			s=`echo "$$r" | sed -e '"'s,^.*\.,.,'"'`; \
+@no_pixmapdir@			t=$(ICON_SYMLINK)$$s; \
+@no_pixmapdir@			b=`basename $$n $$s | sed -e "s,_[1-9][0-9]*x.*,,"`; \
+@no_pixmapdir@			if test "$(ICON_SYMLINK)" != NONE ; then \
+@no_pixmapdir@				if test "x$$r" != "$$t" ; then \
+@no_pixmapdir@					if test "x$$b" = "x$(ICON_NAME)" ; then \
+@no_pixmapdir@						echo "linking $$r -> $$t"; \
+@no_pixmapdir@						( cd $$h; rm -f $$t; $(LN_S) $$r $$t; ) \
+@no_pixmapdir@					fi \
+@no_pixmapdir@				fi \
+@no_pixmapdir@			fi \
 @no_pixmapdir@		done'
 @no_pixmapdir@	@echo "... installed icons"
 
