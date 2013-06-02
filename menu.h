@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.129 2013/05/28 16:53:32 Ross.Combs Exp $ */
+/* $XTermId: menu.h,v 1.130 2013/06/02 00:24:29 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -183,7 +183,6 @@ typedef enum {
     mainMenu_line2,
     mainMenu_8bit_ctrl,
     mainMenu_backarrow,
-    mainMenu_sixelscrolling,
 #if OPT_NUM_LOCK
     mainMenu_num_lock,
     mainMenu_alt_esc,
@@ -257,6 +256,7 @@ typedef enum {
     vtMenu_vthide,
 #endif
     vtMenu_altscreen,
+    vtMenu_sixelscrolling,
     vtMenu_LAST
 } vtMenuIndices;
 

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.661 2013/05/28 16:53:32 Ross.Combs Exp $ */
+/* $XTermId: misc.c,v 1.662 2013/06/02 00:24:29 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -4278,6 +4278,9 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    break;
 	case 69:		/* DECLRMM */
 	    result = MdFlag(xw->flags, LEFT_RIGHT);
+	    break;
+	case 80:		/* DECSDM */
+	    result = MdFlag(xw->keyboard.flags, MODE_DECSDM);
 	    break;
 	case 95:		/* DECNCSM */
 	    result = MdFlag(xw->flags, NOCLEAR_COLM);

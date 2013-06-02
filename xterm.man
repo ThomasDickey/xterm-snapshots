@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.565 2013/05/28 16:53:32 Ross.Combs Exp $
+.\" $XTermId: xterm.man,v 1.566 2013/06/02 00:24:29 Ross.Combs Exp $
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
@@ -4240,6 +4240,9 @@ This entry invokes the \fBset-visibility(vt,off)\fP action.
 .TP 8
 .B "altscreen (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-altscreen(toggle)\fP action.
+.TP 8
+.B "sixelScrolling (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-sixel-scrolling(toggle)\fP action.
 .
 .PP
 The \fIVT Fonts\fP menu (widget name \fIfontMenu\fP)
@@ -4908,6 +4911,21 @@ This corresponds to the
 option and the
 .B activeIcon
 resource.
+.
+.TP
+Sixel Scrolling (sixelScrolling)
+When enabled,
+sixel graphics are positioned at the current text cursor location, scroll
+the image vertically if larger than the screen, and leave the text cursor
+after the image when returning to text mode.
+When disabled,
+sixel graphics are positioned at the upper left of the screen, are
+cropped to fit the screen, and do not affect the text cursor location
+(this is the default).
+This corresponds to the
+.B sixelScrolling
+resource.
+There is no corresponding command-line option.
 .RE
 .
 .TP
@@ -5914,6 +5932,11 @@ It is also invoked by the \fBselectToClipboard\fP entry in \fIvtMenu\fP.
 .B "set-sco-function-keys(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
 It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
+.TP 8
+.B "set-sixel-scrolling(\fIon/off/toggle\fP)"
+This action toggles between inline (sixel scrolling) and absolute positioning.
+It can also be controlled via DEC private mode 80 (DECSDM) or from
+the \fBsixelScrolling\fP entry in the \fIbtMenu\fP.
 .TP 8
 .B "set-sun-function-keys(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBsunFunctionKeys\fP resource.
