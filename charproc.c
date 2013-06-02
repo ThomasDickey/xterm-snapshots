@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1290 2013/05/28 16:53:32 Ross.Combs Exp $ */
+/* $XTermId: charproc.c,v 1.1291 2013/06/02 00:24:29 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -273,7 +273,7 @@ static XtActionsRec actionsList[] = {
     { "set-autolinefeed",	HandleAutoLineFeed },
     { "set-autowrap",		HandleAutoWrap },
     { "set-backarrow",		HandleBackarrow },
-    { "set-sixelscrolling",	HandleSixelScrolling },
+    { "set-sixel-scrolling",	HandleSixelScrolling },
     { "set-bellIsUrgent",	HandleBellIsUrgent },
     { "set-cursesemul",		HandleCursesEmul },
     { "set-jumpscroll",		HandleJumpscroll },
@@ -412,7 +412,6 @@ static XtResource xterm_resources[] =
     Bres(XtNawaitInput, XtCAwaitInput, screen.awaitInput, False),
     Bres(XtNfreeBoldBox, XtCFreeBoldBox, screen.free_bold_box, False),
     Bres(XtNbackarrowKey, XtCBackarrowKey, screen.backarrow_key, DEF_BACKARO_BS),
-    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
     Bres(XtNbellIsUrgent, XtCBellIsUrgent, screen.bellIsUrgent, False),
     Bres(XtNbellOnReset, XtCBellOnReset, screen.bellOnReset, True),
     Bres(XtNboldMode, XtCBoldMode, screen.bold_mode, True),
@@ -455,6 +454,7 @@ static XtResource xterm_resources[] =
     Bres(XtNselectToClipboard, XtCSelectToClipboard,
 	 screen.selectToClipboard, False),
     Bres(XtNsignalInhibit, XtCSignalInhibit, misc.signalInhibit, False),
+    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
     Bres(XtNtiteInhibit, XtCTiteInhibit, misc.titeInhibit, False),
     Bres(XtNtiXtraScroll, XtCTiXtraScroll, misc.tiXtraScroll, False),
     Bres(XtNtrimSelection, XtCTrimSelection, screen.trim_selection, False),
@@ -2821,7 +2821,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		TRACE(("...request printer status\n"));
 		if (sp->private_function
 		    && screen->vtXX_level >= 2) {	/* VT220 */
-		    reply.a_param[count++] = 13;	/* implement printer */
+		    reply.a_param[count++] = 13;	/* no printer detected */
 		}
 		break;
 	    case 25:
@@ -2843,7 +2843,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    }
 		}
 		break;
-	    case 53:
+	    case 53: /* according to existing xterm handling */
+	    case 55: /* according to the VT330/VT340 Text Programming Manual */
 		TRACE(("...request locator status\n"));
 		if (sp->private_function
 		    && screen->vtXX_level >= 2) {	/* VT220 */
@@ -2851,6 +2852,18 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply.a_param[count++] = 50;	/* locator ready */
 #else
 		    reply.a_param[count++] = 53;	/* no locator */
+#endif
+		}
+		break;
+	    case 56:
+		TRACE(("...request locator type\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 3) {	/* VT330 (FIXME: what about VT220?) */
+		    reply.a_param[count++] = 57;
+#if OPT_DEC_LOCATOR
+		    reply.a_param[count++] = 1;	/* mouse */
+#else
+		    reply.a_param[count++] = 0;	/* unknown */
 #endif
 		}
 		break;
@@ -4924,6 +4937,7 @@ dpmodes(XtermWidget xw, BitFunc func)
     int i, j;
     unsigned myflags;
 
+    TRACE(("changing %d DEC private modes\n", nparam));
     for (i = 0; i < nparam; ++i) {
 	int code = GetParam(i);
 
@@ -5139,12 +5153,15 @@ dpmodes(XtermWidget xw, BitFunc func)
 		CursorSet(screen, 0, 0, xw->flags);
 	    }
 	    break;
-	case srm_DECSDM:
+	case srm_DECSDM: /* sixel scrolling */
 	    if (screen->terminal_id == 240 ||
 		screen->terminal_id == 241 ||
 		screen->terminal_id == 330 ||
 		screen->terminal_id == 340) {
-		(*func) (&xw->flags, MODE_DECSDM);
+		(*func) (&xw->keyboard.flags, MODE_DECSDM);
+	    TRACE(("DECSET/DECRST DECSDM %s (resource default is %d)\n",
+		   BtoS(xw->keyboard.flags & MODE_DECSDM),
+		   TScreenOf(xw)->sixel_scrolling));
 		update_decsdm();
 	    }
 	    break;
@@ -5415,7 +5432,7 @@ savemodes(XtermWidget xw)
 	case srm_DECNKM:
 	    DoSM(DP_DECKPAM, xw->keyboard.flags & MODE_DECKPAM);
 	    break;
-	case srm_DECBKM:
+	case srm_DECBKM: /* backarrow mapping */
 	    DoSM(DP_DECBKM, xw->keyboard.flags & MODE_DECBKM);
 	    break;
 	case srm_DECLRMM:	/* left-right */
@@ -5423,6 +5440,7 @@ savemodes(XtermWidget xw)
 	    break;
 	case srm_DECSDM:	/* sixel scrolling */
 	    DoSM(DP_DECSDM, xw->keyboard.flags & MODE_DECSDM);
+	    update_decsdm();
 	    break;
 	case srm_DECNCSM:	/* noclear */
 	    DoSM(DP_X_NCSM, NOCLEAR_COLM);
@@ -5702,7 +5720,7 @@ restoremodes(XtermWidget xw)
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECKPAM], MODE_DECKPAM);
 	    update_appkeypad();
 	    break;
-	case srm_DECBKM:
+	case srm_DECBKM: /* backarrow mapping */
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECBKM], MODE_DECBKM);
 	    update_decbkm();
 	    break;
@@ -5716,8 +5734,8 @@ restoremodes(XtermWidget xw)
 	    CursorSet(screen, 0, 0, xw->flags);
 	    break;
 	case srm_DECSDM:	/* sixel scrolling */
-	    bitcpy(&xw->flags, screen->save_modes[DP_DECSDM], MODE_DECSDM);
-	    update_decbkm();
+	    bitcpy(&xw->keyboard.flags, screen->save_modes[DP_DECSDM], MODE_DECSDM);
+	    update_decsdm();
 	    break;
 	case srm_DECNCSM:	/* noclear */
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_NCSM], NOCLEAR_COLM);
@@ -7882,10 +7900,13 @@ VTInitialize(Widget wrequest,
 	wnew->keyboard.flags |= MODE_DECBKM;
     TRACE(("initialized DECBKM %s\n",
 	   BtoS(wnew->keyboard.flags & MODE_DECBKM)));
+
+    init_Bres(screen.sixel_scrolling);
     if (TScreenOf(wnew)->sixel_scrolling) /* FIXME: should this be off unconditionally here? */
 	wnew->keyboard.flags |= MODE_DECSDM;
-    TRACE(("initialized DECSDM %s\n",
-	   BtoS(wnew->keyboard.flags & MODE_DECSDM)));
+    TRACE(("initialized DECSDM %s (resource default is %d)\n",
+	   BtoS(wnew->keyboard.flags & MODE_DECSDM),
+	   TScreenOf(wnew)->sixel_scrolling));
 
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
@@ -9878,10 +9899,11 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 		xw->keyboard.flags |= MODE_DECBKM;
 	TRACE(("full reset DECBKM %s\n",
 	       BtoS(xw->keyboard.flags & MODE_DECBKM)));
-	if (TScreenOf(xw)->sixel_scrolling)
+	if (TScreenOf(xw)->sixel_scrolling) /* FIXME: should this be off unconditionally here? */
 	    xw->keyboard.flags |= MODE_DECSDM;
-	TRACE(("full reset DECSDM %s\n",
-	       BtoS(xw->keyboard.flags & MODE_DECSDM)));
+	TRACE(("full reset DECSDM %s (resource default is %d)\n",
+	       BtoS(xw->keyboard.flags & MODE_DECSDM),
+	       TScreenOf(xw)->sixel_scrolling));
 	update_appcursor();
 	update_appkeypad();
 	update_decbkm();

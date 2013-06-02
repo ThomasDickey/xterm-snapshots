@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.1 2013/05/28 16:53:32 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.2 2013/06/02 00:24:29 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -71,7 +71,9 @@
  * - everything
  * sixel:
  * - erase graphic when erasing screen
+ * - erase graphic overwritten by other graphic
  * - erase text under graphics if bg not transparent
+ * - erase scrolled portions of all graphics on alt buffer
  * - delete graphic if scrolled past end of scrollback
  * - delete graphic if all pixels are transparent/erased
  * - dynamic memory allocation (and limits)
@@ -612,6 +614,24 @@ hls2rgb(short h, short l, short s, short *r, short *g, short *b)
 	*b = 100;
 }
 
+static void
+update_sixel_aspect(SixelGraphic *graphic)
+{
+    /* We want to keep the ratio accurate but would like every pixel to have
+     * the same size so keep these as whole numbers.
+     * FIXME: DEC terminals had pixels about twice as tall as they were wide,
+     * but it is not clear if this is exposed to the application.
+     */
+    if (graphic->aspect_numerator > graphic->aspect_denominator) {
+	graphic->pixw = 1;
+	graphic->pixh = (graphic->aspect_numerator * 1 + graphic->aspect_denominator - 1) / graphic->aspect_denominator;
+    } else {
+	graphic->pixw = (graphic->aspect_denominator + graphic->aspect_denominator - 1) / (graphic->aspect_numerator * 1);
+	graphic->pixh = 1;
+    }
+    TRACE(("aspect ratio: an=%d ad=%d pixw=%d pixh=%d\n", graphic->aspect_numerator, graphic->aspect_denominator, graphic->pixw, graphic->pixh));
+}
+
 /*
  * Interpret sixel graphics sequences.
  *
@@ -719,27 +739,13 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	 */
     }
 
-    /* We want to keep the ratio accurate but would like every pixel to have
-     * the same size so keep these as whole numbers.
-     * FIXME: DEC terminals had pixels about twice as tall as they were wide,
-     * but it is not clear if this is exposed to the application.
-     */
-    if (graphic->aspect_numerator > graphic->aspect_denominator) {
-	graphic->pixw = 1;
-	graphic->pixh = (graphic->aspect_numerator * 1 + graphic->aspect_denominator - 1) / graphic->aspect_denominator;
-    } else {
-	graphic->pixw = (graphic->aspect_denominator + graphic->aspect_denominator - 1) / (graphic->aspect_numerator * 1);
-	graphic->pixh = 1;
-    }
-
     if (xw->keyboard.flags & MODE_DECSDM) {
 	TRACE(("sixel scrolling enabled: inline positioning for graphic\n"));
         graphic->charrow = screen->cur_row;
         graphic->charcol = screen->cur_col;
     }
 
-    init_sixel_background(graphic);
-    graphic->valid = 1;
+    update_sixel_aspect(graphic);
 
     for (;;) {
 	ch = CharOf(*string);
@@ -749,6 +755,10 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	if (ch >= 0x3f && ch <= 0x7e) {
 	    int sixel = ch - 0x3f;
 	    TRACE(("sixel=%x (%c)\n", sixel, (char)ch));
+	    if (!graphic->valid) {
+		init_sixel_background(graphic);
+		graphic->valid = 1;
+	    }
 	    set_sixel(graphic, sixel);
 	    graphic->col++;
 	} else if (ch == '$') /* DECGCR */ {
@@ -816,6 +826,10 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    Pcount = atoi(start);
 	    sixel = ch - 0x3f;
 	    TRACE(("sixel repeat operator: sixel=%d (%c), count=%d\n", sixel, (char)ch, Pcount));
+	    if (!graphic->valid) {
+		init_sixel_background(graphic);
+		graphic->valid = 1;
+	    }
 	    for (i = 0; i < Pcount; i++) {
 		set_sixel(graphic, sixel);
 		graphic->col++;
@@ -892,6 +906,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		}
 		graphic->aspect_numerator = Pan;
 		graphic->aspect_denominator = Pad;
+		update_sixel_aspect(graphic);
 	    }
 
 	    if (raster_params.a_nparam >= 4) {

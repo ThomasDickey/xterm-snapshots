@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.314 2013/05/28 16:53:32 Ross.Combs Exp $ */
+/* $XTermId: menu.c,v 1.315 2013/06/02 00:24:29 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -138,7 +138,6 @@ static void do_appkeypad       PROTO_XT_CALLBACK_ARGS;
 static void do_autolinefeed    PROTO_XT_CALLBACK_ARGS;
 static void do_autowrap        PROTO_XT_CALLBACK_ARGS;
 static void do_backarrow       PROTO_XT_CALLBACK_ARGS;
-static void do_sixelscrolling  PROTO_XT_CALLBACK_ARGS;
 static void do_bellIsUrgent    PROTO_XT_CALLBACK_ARGS;
 static void do_clearsavedlines PROTO_XT_CALLBACK_ARGS;
 static void do_continue        PROTO_XT_CALLBACK_ARGS;
@@ -161,6 +160,7 @@ static void do_scrollkey       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
 static void do_selectClipboard PROTO_XT_CALLBACK_ARGS;
+static void do_sixelscrolling  PROTO_XT_CALLBACK_ARGS;
 static void do_softreset       PROTO_XT_CALLBACK_ARGS;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_terminate       PROTO_XT_CALLBACK_ARGS;
@@ -297,7 +297,6 @@ MenuEntry mainMenuEntries[] = {
     { "line2",		NULL,		NULL },
     { "8-bit control",	do_8bit_control,NULL },
     { "backarrow key",	do_backarrow,	NULL },
-    { "sixel scrolling",do_sixelscrolling,	NULL },
 #if OPT_NUM_LOCK
     { "num-lock",	do_num_lock,	NULL },
     { "alt-esc",	do_alt_esc,	NULL },
@@ -365,6 +364,7 @@ MenuEntry vtMenuEntries[] = {
     { "vthide",		do_vthide,	NULL },
 #endif
     { "altscreen",	do_altscreen,	NULL },
+    { "sixelScrolling",	do_sixelscrolling,	NULL },
     };
 
 MenuEntry fontMenuEntries[] = {
@@ -780,6 +780,7 @@ domenu(Widget w,
 	    update_bellIsUrgent();
 	    update_cursorblink();
 	    update_altscreen();
+	    update_decsdm();
 	    update_titeInhibit();
 #ifndef NO_ACTIVE_ICON
 	    update_activeicon();
@@ -1162,15 +1163,6 @@ do_backarrow(Widget gw GCC_UNUSED,
 {
     term->keyboard.flags ^= MODE_DECBKM;
     update_decbkm();
-}
-
-static void
-do_sixelscrolling(Widget gw GCC_UNUSED,
-		  XtPointer closure GCC_UNUSED,
-		  XtPointer data GCC_UNUSED)
-{
-    term->keyboard.flags ^= MODE_DECSDM;
-    update_decsdm();
 }
 
 #if OPT_NUM_LOCK
@@ -1562,6 +1554,15 @@ do_altscreen(Widget gw GCC_UNUSED,
 	     XtPointer data GCC_UNUSED)
 {
     ToggleAlternate(term);
+}
+
+static void
+do_sixelscrolling(Widget gw GCC_UNUSED,
+		  XtPointer closure GCC_UNUSED,
+		  XtPointer data GCC_UNUSED)
+{
+    term->keyboard.flags ^= MODE_DECSDM;
+    update_decsdm();
 }
 
 /* ARGSUSED */
@@ -2216,16 +2217,6 @@ update_fullscreen(void)
 
 #endif /* OPT_MAXIMIZE */
 
-void
-HandleSixelScrolling(Widget w,
-		     XEvent * event GCC_UNUSED,
-		     String * params,
-		     Cardinal *param_count)
-{
-    handle_vt_toggle(do_sixelscrolling, term->keyboard.flags & MODE_DECSDM,
-		     params, *param_count, w);
-}
-
 #if OPT_SUN_FUNC_KEYS
 void
 HandleSunFunctionKeys(Widget w,
@@ -2507,6 +2498,16 @@ HandleAltScreen(Widget w,
 {
     /* eventually want to see if sensitive or not */
     handle_vt_toggle(do_altscreen, TScreenOf(term)->whichBuf,
+		     params, *param_count, w);
+}
+
+void
+HandleSixelScrolling(Widget w,
+		     XEvent * event GCC_UNUSED,
+		     String * params,
+		     Cardinal *param_count)
+{
+    handle_vt_toggle(do_sixelscrolling, term->keyboard.flags & MODE_DECSDM,
 		     params, *param_count, w);
 }
 
@@ -3203,15 +3204,6 @@ update_decbkm(void)
 		   (term->keyboard.flags & MODE_DECBKM) != 0);
 }
 
-void
-update_decsdm(void)
-{
-    UpdateCheckbox("update_decsdm",
-		   mainMenuEntries,
-		   mainMenu_sixelscrolling,
-		   (term->keyboard.flags & MODE_DECSDM) != 0);
-}
-
 #if OPT_NUM_LOCK
 void
 update_num_lock(void)
@@ -3496,6 +3488,15 @@ update_altscreen(void)
 		   vtMenuEntries,
 		   vtMenu_altscreen,
 		   TScreenOf(term)->whichBuf);
+}
+
+void
+update_decsdm(void)
+{
+    UpdateCheckbox("update_decsdm",
+		   vtMenuEntries,
+		   vtMenu_sixelscrolling,
+		   (term->keyboard.flags & MODE_DECSDM) != 0);
 }
 
 void
