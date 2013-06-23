@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.315 2013/06/02 00:24:29 Ross.Combs Exp $ */
+/* $XTermId: menu.c,v 1.316 2013/06/23 08:57:13 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -149,6 +149,7 @@ static void do_keepSelection   PROTO_XT_CALLBACK_ARGS;
 static void do_kill            PROTO_XT_CALLBACK_ARGS;
 static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
+static void do_privatecolorregisters PROTO_XT_CALLBACK_ARGS;
 static void do_print           PROTO_XT_CALLBACK_ARGS;
 static void do_print_redir     PROTO_XT_CALLBACK_ARGS;
 static void do_quit            PROTO_XT_CALLBACK_ARGS;
@@ -365,6 +366,7 @@ MenuEntry vtMenuEntries[] = {
 #endif
     { "altscreen",	do_altscreen,	NULL },
     { "sixelScrolling",	do_sixelscrolling,	NULL },
+    { "privateColorRegisters", do_privatecolorregisters, NULL },
     };
 
 MenuEntry fontMenuEntries[] = {
@@ -780,11 +782,12 @@ domenu(Widget w,
 	    update_bellIsUrgent();
 	    update_cursorblink();
 	    update_altscreen();
-	    update_decsdm();
+	    update_decsdm(); /* Sixel Display Mode */
 	    update_titeInhibit();
 #ifndef NO_ACTIVE_ICON
 	    update_activeicon();
 #endif /* NO_ACTIVE_ICON */
+	    update_privatecolorregisters();
 	}
 	break;
 
@@ -1061,6 +1064,17 @@ do_poponbell(Widget gw GCC_UNUSED,
 
     ToggleFlag(screen->poponbell);
     update_poponbell();
+}
+
+static void
+do_privatecolorregisters(Widget gw GCC_UNUSED,
+			 XtPointer closure GCC_UNUSED,
+			 XtPointer data GCC_UNUSED)
+{
+    TScreen *screen = TScreenOf(term);
+
+    ToggleFlag(screen->privatecolorregisters);
+    update_privatecolorregisters();
 }
 
 #ifdef ALLOWLOGGING
@@ -2019,6 +2033,15 @@ HandleSetPopOnBell(Widget w,
 		   Cardinal *param_count)
 {
     HANDLE_VT_TOGGLE(poponbell);
+}
+
+void
+HandleSetPrivateColorRegisters(Widget w,
+			       XEvent * event GCC_UNUSED,
+			       String * params,
+			       Cardinal *param_count)
+{
+    HANDLE_VT_TOGGLE(privatecolorregisters);
 }
 
 #ifdef ALLOWLOGGING
@@ -3457,6 +3480,15 @@ update_poponbell(void)
 		   vtMenuEntries,
 		   vtMenu_poponbell,
 		   TScreenOf(term)->poponbell);
+}
+
+void
+update_privatecolorregisters(void)
+{
+    UpdateCheckbox("update_privatecolorregisters",
+		   vtMenuEntries,
+		   vtMenu_privatecolorregisters,
+		   TScreenOf(term)->privatecolorregisters);
 }
 
 #ifndef update_marginbell	/* 2007-3-7: no longer menu entry */

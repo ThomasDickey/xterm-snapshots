@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.478 2013/05/28 16:53:32 Ross.Combs Exp $ */
+/* $XTermId: screen.c,v 1.479 2013/06/23 08:57:13 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -940,7 +940,7 @@ ScrnWriteText(XtermWidget xw,
 #endif
 
     TRACE(("text erasing cur_col=%d cur_row=%d real_width=%d\n", screen->cur_col, screen->cur_row, real_width));
-    erase_displayed_graphics(xw, screen->cur_col, screen->cur_row, real_width, 1);
+    erase_displayed_graphics(screen, screen->cur_col, screen->cur_row, real_width, 1);
 
     if_OPT_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);
@@ -1014,7 +1014,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
     }
 
     TRACE(("clear lines erasing where=%d screen->savelines=%d n=%d screen->max_col=%d\n", where, screen->savelines, n, screen->max_col));
-    erase_displayed_graphics(xw, where + screen->savelines, 0, screen->max_col + 1, n);
+    erase_displayed_graphics(screen, where + screen->savelines, 0, screen->max_col + 1, n);
 }
 
 /*
@@ -1707,7 +1707,7 @@ ScrnRefresh(XtermWidget xw,
 	resetXtermGC(xw, flags, hilite);
     }
 
-    refresh_displayed_graphics(xw, leftcol, toprow + screen->topline, ncols, nrows);
+    refresh_displayed_graphics(screen, leftcol, toprow + screen->topline, ncols, nrows);
 
     /*
      * If we're in color mode, reset the various GC's to the current

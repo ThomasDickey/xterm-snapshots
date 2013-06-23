@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.2 2013/06/02 00:24:29 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.3 2013/06/23 08:57:13 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -78,10 +78,15 @@
  * - delete graphic if all pixels are transparent/erased
  * - dynamic memory allocation (and limits)
  * - fix drawing over window border areas
- * - base initial palette size and colors on the terminal id
  * - auto convert color graphics in VT330 mode
+ * - investigate second graphic framebuffer for ReGIS -- does this apply to text and sixel graphics?
+ * - fix problem where new_row < 0 during sixel parsing (see FIXME)
+ * - fix position of drawing of new graphic when terminal is displaying scrollback
  * VT55/VT105 waveform graphics
  * - everything
+ * escape sequences
+ * - way to query font size without "window ops" (or make "window ops" permissions more fine grained)
+ * - way to query and/or set the maximum number of color registers
  */
 
 
@@ -147,33 +152,36 @@ parse_prefixedtype_params(ANSI *params, const char **string)
 	params->a_nparam = nparam;
 }
 
-
 typedef struct {
     Pixel pix;
     short r, g, b;
     short allocated;
 } ColorRegister;
 
-typedef unsigned short SixelColor;
-
+#undef DEBUG_REFRESH
 #define MAX_COLOR_REGISTERS 256U
 #define COLOR_HOLE ((unsigned short)MAX_COLOR_REGISTERS)
 #define BUFFER_WIDTH 1000
-#define BUFFER_HEIGHT 1000
+#define BUFFER_HEIGHT 800
 typedef struct {
-    SixelColor pixels[BUFFER_HEIGHT*BUFFER_WIDTH];
-    ColorRegister color_registers[MAX_COLOR_REGISTERS];
+    RegisterNum pixels[BUFFER_HEIGHT*BUFFER_WIDTH];
+    ColorRegister private_color_registers[MAX_COLOR_REGISTERS];
+    ColorRegister *color_registers;
+    char color_registers_used[MAX_COLOR_REGISTERS];
+    XtermWidget xw;
     int max_width; /* largest image which can be stored */
     int max_height; /* largest image which can be stored */
-    SixelColor current_register;
+    RegisterNum current_register;
     int valid_registers; /* for wrap-around behavior */
-    int preserve_background; /* 0: set to color 0, 1: unchanged */
-    int aspect_numerator;
-    int aspect_denominator;
+    int device_background; /* 0: set to color 0, 1: unchanged */
+    int background; /* current background color */
+    int aspect_vertical;
+    int aspect_horizontal;
     int declared_width; /* size as reported by the application */
     int declared_height; /* size as reported by the application */
     int actual_width; /* size measured during parsing */
     int actual_height; /* size measured during parsing */
+    int private_colors; /* if not using the shared color registers */
     int charrow; /* upper left starting point in characters */
     int charcol; /* upper left starting point in characters */
     int pixw; /* width of graphic pixels in screen pixels */
@@ -182,9 +190,12 @@ typedef struct {
     int col; /* context used during parsing */
     int bufferid; /* which screen buffer the graphic is associated with */
     int valid; /* if the graphic has been initialized */
+    int dirty; /* if the graphic needs to be redrawn */
 } SixelGraphic;
 
-#define MAX_SIXEL_GRAPHICS 8U
+static ColorRegister shared_color_registers[MAX_COLOR_REGISTERS];
+
+#define MAX_SIXEL_GRAPHICS 16U
 static SixelGraphic sixel_graphics[MAX_SIXEL_GRAPHICS];
 
 /* sixel scrolling:
@@ -192,21 +203,17 @@ static SixelGraphic sixel_graphics[MAX_SIXEL_GRAPHICS];
  * VT125      unsupported
  * VT240      unsupported
  * VT241      unsupported
- * VT330      setting
- * VT340      setting
+ * VT330      mode setting
+ * VT340      mode setting
  * dxterm     ?
  */
 
 static void
 init_sixel_background(SixelGraphic *graphic)
 {
-    SixelColor bgcolor;
+    RegisterNum bgcolor;
     int r, c;
-
-    if (graphic->preserve_background)
-	bgcolor = COLOR_HOLE;
-    else
-	bgcolor = 0; /* FIXME: what is the default background register (per-model?) */
+    bgcolor = graphic->background;
 
     TRACE(("initializing sixel background to size=%dx%d bgcolor=%hu\n", graphic->declared_width, graphic->declared_height, bgcolor));
     for (r=0; r < graphic->max_height; r++)
@@ -217,11 +224,10 @@ init_sixel_background(SixelGraphic *graphic)
 		graphic->pixels[r * graphic->max_width + c] = COLOR_HOLE;
 }
 
-
 static void
 set_sixel(SixelGraphic *graphic, int sixel)
 {
-    SixelColor color;
+    RegisterNum color;
     int pix;
 
     color = graphic->current_register;
@@ -246,32 +252,126 @@ set_sixel(SixelGraphic *graphic, int sixel)
 	    TRACE(("sixel pixel %d out of bounds\n", pix));
 }
 
-
 static void
-make_sixel_color(SixelGraphic *graphic, SixelColor c, int r, int g, int b)
+set_sixel_color_register(ColorRegister *color_registers, RegisterNum color, short r, short g, short b)
 {
-    graphic->color_registers[c].r = r;
-    graphic->color_registers[c].g = g;
-    graphic->color_registers[c].b = b;
+    ColorRegister *reg = &color_registers[color];
+    reg->r = r;
+    reg->g = g;
+    reg->b = b;
+    reg->allocated = 0;
 }
 
+static void
+init_color_registers(ColorRegister *color_registers, int terminal_id)
+{
+    TRACE(("initializing colors for %d\n", terminal_id));
+    {
+	unsigned int i;
+
+	for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
+	    set_sixel_color_register(color_registers,  i,  0,  0,  0);
+	}
+    }
+
+    /*
+     * default color registers:
+     *     (mono) (color)
+     * VK100/GIGI (fixed)
+     * VT125:
+     *   0: 0%      0%
+     *   1: 33%     blue
+     *   2: 66%     red
+     *   3: 100%    green
+     * VT240:
+     *   0: 0%      0%
+     *   1: 33%     blue
+     *   2: 66%     red
+     *   3: 100%    green
+     * VT241:
+     *   0: 0%      0%
+     *   1: 33%     blue
+     *   2: 66%     red
+     *   3: 100%    green
+     * VT330:
+     *   0: 0%      0%              (bg for light on dark mode)
+     *   1: 33%     blue (red?)
+     *   2: 66%     red (green?)
+     *   3: 100%    green (yellow?) (fg for light on dark mode)
+     * VT340:
+     *   0: 0%      0%              (bg for light on dark mode)
+     *   1: 14%     blue
+     *   2: 29%     red
+     *   3: 43%     green
+     *   4: 57%     magenta
+     *   5: 71%     cyan
+     *   6: 86%     yellow
+     *   7: 100%    50%             (fg for light on dark mode)
+     *   8: 0%      25%
+     *   9: 14%     gray-blue
+     *  10: 29%     gray-red
+     *  11: 43%     gray-green
+     *  12: 57%     gray-magenta
+     *  13: 71%     gray-cyan
+     *  14: 86%     gray-yellow
+     *  15: 100%    75%
+     * dxterm:
+     *  ?
+     */
+    switch (terminal_id) {
+    case 125:
+    case 241:
+	set_sixel_color_register(color_registers,  0,   0,   0,   0);
+	set_sixel_color_register(color_registers,  1,   0,   0, 100);
+	set_sixel_color_register(color_registers,  2,   0, 100,   0);
+	set_sixel_color_register(color_registers,  3, 100,   0,   0);
+	break;
+    case 240:
+    case 330:
+	set_sixel_color_register(color_registers,  0,   0,   0,   0);
+	set_sixel_color_register(color_registers,  1,  33,  33,  33);
+	set_sixel_color_register(color_registers,  2,  66,  66,  66);
+	set_sixel_color_register(color_registers,  3, 100, 100, 100);
+	break;
+    case 340:
+    default:
+	set_sixel_color_register(color_registers,  0,  0,  0,  0);
+	set_sixel_color_register(color_registers,  1, 20, 20, 80);
+	set_sixel_color_register(color_registers,  2, 80, 13, 13);
+	set_sixel_color_register(color_registers,  3, 20, 80, 20);
+	set_sixel_color_register(color_registers,  4, 80, 20, 80);
+	set_sixel_color_register(color_registers,  5, 20, 80, 80);
+	set_sixel_color_register(color_registers,  6, 80, 80, 20);
+	set_sixel_color_register(color_registers,  7, 53, 53, 53);
+	set_sixel_color_register(color_registers,  8, 26, 26, 26);
+	set_sixel_color_register(color_registers,  9, 33, 33, 60);
+	set_sixel_color_register(color_registers, 10, 60, 26, 26);
+	set_sixel_color_register(color_registers, 11, 33, 60, 33);
+	set_sixel_color_register(color_registers, 12, 60, 33, 60);
+	set_sixel_color_register(color_registers, 13, 33, 60, 60);
+	set_sixel_color_register(color_registers, 14, 60, 60, 33);
+	set_sixel_color_register(color_registers, 15, 80, 80, 80);
+	break;
+    }
+}
 
 static void
-init_sixel_graphic(SixelGraphic *graphic)
+init_sixel_graphic(SixelGraphic *graphic, int terminal_id, int private_colors)
 {
     TRACE(("initializing sixel graphic\n"));
 
+    graphic->dirty = 1;
     memset(graphic->pixels, 0, sizeof(graphic->pixels));
-    memset(graphic->color_registers, 0, sizeof(graphic->color_registers));
+    memset(graphic->color_registers_used, 0, sizeof(graphic->color_registers_used));
 
     /*
      * dimensions (REGIS logical, physical):
      * VK100/GIGI  768x4??  768x2??
-     * VT125       768x460  768x230(+10status) (1:2 aspect ratio, REGIS halves vertical addresses)
-     * VT240       800x460  800x230(+10status) (1:2 aspect ratio, REGIS halves vertical addresses)
-     * VT241       800x460  800x230(+10status) (1:2 aspect ratio, REGIS halves vertical addresses)
-     * VT330       800x460  800x480(+?status)
-     * VT340       800x?    800x480(+?status)
+     * VT125       768x460  768x230(+10status) (1:2 aspect ratio, REGIS halves vertical addresses through "odd y emulation")
+     * VT240       800x460  800x230(+10status) (1:2 aspect ratio, REGIS halves vertical addresses through "odd y emulation")
+     * VT241       800x460  800x230(+10status) (1:2 aspect ratio, REGIS halves vertical addresses through "odd y emulation")
+     * VT330       800x480  800x480(+?status)
+     * VT340       800x480  800x480(+?status)
      * dxterm      ?x?      variable?
      */
     graphic->max_width = BUFFER_WIDTH;
@@ -294,11 +394,29 @@ When an application selects the color map: the terminal sets the 16 entries of t
      * VT125       2 planes (4 registers) colorspace is (64?) (color), ? (grayscale)
      * VT240       2 planes (4 registers) colorspace is ? shades (grayscale)
      * VT241       2 planes (4 registers) colorspace is ? (color), ? shades (grayscale)
-     * VT330       4 planes (16 registers) colorspace is 4 (64?) shades (grayscale)
+     * VT330       2 planes (4 registers) colorspace is 4 shades (grayscale)
      * VT340       4 planes (16 registers) colorspace is r16g16b16 (color), 16 shades (grayscale)
      * dxterm      ?
      */
-    graphic->valid_registers = 16;
+    switch (terminal_id) {
+    case 125:
+	graphic->valid_registers = 4;
+	break;
+    case 240:
+	graphic->valid_registers = 4;
+	break;
+    case 241:
+	graphic->valid_registers = 4;
+	break;
+    case 330:
+	graphic->valid_registers = 4;
+	break;
+    case 340:
+	graphic->valid_registers = 16;
+    default:
+	graphic->valid_registers = 64;  /* unknown graphics model -- might as well be generous */
+	break;
+    }
 
     /*
      * text and graphics interactions:
@@ -307,79 +425,29 @@ When an application selects the color map: the terminal sets the 16 entries of t
      * VT125                     graphics buffer overlaid on top of text in B&W display, text not present in color display
      */
 
-    /*
-     * default color registers:
-     * VK100/GIGI:
-     *  fixed
-     * VT125:
-     *  0: 0%      0%
-     *  1: 33%     blue
-     *  2: 66%     red
-     *  3: 100%    green
-     * VT240:
-     *  0: 0%      0%
-     *  1: 33%     blue
-     *  2: 66%     red
-     *  3: 100%    green
-     * VT241:
-     *  0: 0%      0%
-     *  1: 33%     blue
-     *  2: 66%     red
-     *  3: 100%    green
-     * VT330:
-     *  0: 0%      0%      (bg for light on dark mode)
-     *  1: 33%     red
-     *  2: 66%     green   (fg for light on dark mode)
-     *  3: 100%    yellow
-     * VT340:
-     *  0: 0%      0%
-     *  1: 13%     blue
-     *  2: 26%     red
-     *  3: 40%     green
-     *  4: 6%      magenta
-     *  5: 20%     cyan
-     *  6: 33%     yellow
-     *  7: 46%     50%
-     *  8: 0%      25%
-     *  9: 13%     gray-blue
-     * 10: 26%     gray-red
-     * 11: 40%     gray-green
-     * 12: 6%%     gray-magenta
-     * 13: 20%     gray-cyan
-     * 14: 33%     gray-yellow
-     * 15: 46%     75%
-     * dxterm:
-     * ?
-     */
-    make_sixel_color(graphic,  0,  0,  0,  0);
-    make_sixel_color(graphic,  1, 20, 20, 80);
-    make_sixel_color(graphic,  2, 80, 13, 13);
-    make_sixel_color(graphic,  3, 20, 80, 20);
-    make_sixel_color(graphic,  4, 80, 20, 80);
-    make_sixel_color(graphic,  5, 20, 80, 80);
-    make_sixel_color(graphic,  6, 80, 80, 20);
-    make_sixel_color(graphic,  7, 53, 53, 53);
-    make_sixel_color(graphic,  8, 26, 26, 26);
-    make_sixel_color(graphic,  9, 33, 33, 60);
-    make_sixel_color(graphic, 10, 60, 26, 26);
-    make_sixel_color(graphic, 11, 33, 60, 33);
-    make_sixel_color(graphic, 12, 60, 33, 60);
-    make_sixel_color(graphic, 13, 33, 60, 60);
-    make_sixel_color(graphic, 14, 60, 60, 33);
-    make_sixel_color(graphic, 15, 80, 80, 80);
-
-    graphic->preserve_background = 0; /* overwrite with current background */
+    /* FIXME: is this always zero?  what about in light background mode? */
+    graphic->device_background = 0; /* default background color register */
 
     /* pixel sizes seem to have differed by model and options */
     /* VT240 and VT340 defaulted to 2:1 ratio */
-    graphic->aspect_numerator = 2;
-    graphic->aspect_denominator = 1;
+    graphic->aspect_vertical = 2;
+    graphic->aspect_horizontal = 1;
 
     graphic->declared_width = 0;
     graphic->declared_height = 0;
 
     graphic->actual_width = 0;
     graphic->actual_height = 0;
+
+    graphic->private_colors = private_colors;
+    if (graphic->private_colors) {
+	TRACE(("sixel using private color registers\n"));
+	init_color_registers(graphic->private_color_registers, terminal_id);
+	graphic->color_registers = graphic->private_color_registers;
+    } else {
+	TRACE(("sixel using shared color registers\n"));
+	graphic->color_registers = shared_color_registers;
+    }
 
     graphic->charrow = 0;
     graphic->charcol = 0;
@@ -390,10 +458,13 @@ When an application selects the color map: the terminal sets the 16 entries of t
     graphic->valid = 0;
 }
 
-
 static SixelGraphic *
-get_sixel_graphic(int bufferid)
+get_sixel_graphic(XtermWidget xw)
 {
+    TScreen const *screen = TScreenOf(xw);
+    int bufferid = screen->whichBuf;
+    int terminal_id = screen->terminal_id;
+    int private_colors = screen->privatecolorregisters;
     SixelGraphic *graphic;
     unsigned int ii;
 
@@ -417,21 +488,23 @@ get_sixel_graphic(int bufferid)
 	graphic = min_graphic;
     }
 
+    graphic->xw = xw;
     graphic->bufferid = bufferid;
-    init_sixel_graphic(graphic);
+    init_sixel_graphic(graphic, terminal_id, private_colors);
     return graphic;
 }
-
 
 static void
 dump_sixel(SixelGraphic const *graphic)
 {
+#ifdef DUMP_SIXEL_BITMAP
     int r, c;
-    SixelColor color;
+    RegisterNum color;
     ColorRegister const *reg;
+#endif
 
     TRACE(("sixel stats: charrow=%d charcol=%d actual_width=%d actual_height=%d pixw=%d pixh=%d\n", graphic->charrow, graphic->charcol, graphic->actual_width, graphic->actual_height, graphic->pixw, graphic->pixh));
-#if 0
+#ifdef DUMP_SIXEL_BITMAP
     TRACE(("sixel dump:\n"));
     for (r=0; r < graphic->max_height; r++) {
 	for (c=0; c < graphic->max_width; c++) {
@@ -459,6 +532,27 @@ dump_sixel(SixelGraphic const *graphic)
     TRACE(("\n"));
 }
 
+static void
+set_shared_color_register(RegisterNum color, short r, short g, short b)
+{
+    SixelGraphic *graphic;
+    unsigned int ii;
+
+    assert(color < MAX_COLOR_REGISTERS);
+
+    set_sixel_color_register(shared_color_registers, color, r, g, b);
+
+    for (ii = 0U; ii < MAX_SIXEL_GRAPHICS; ii++) {
+	graphic = &sixel_graphics[ii];
+	if (graphic->private_colors)
+	    continue;
+
+	if (graphic->color_registers_used[ii]) {
+	    graphic->dirty = 1;
+	}
+    }
+}
+
 static Pixel
 sixel_register_to_xpixel(ColorRegister *reg, XtermWidget xw)
 {
@@ -480,17 +574,16 @@ sixel_register_to_xpixel(ColorRegister *reg, XtermWidget xw)
 }
 
 static void
-refresh_sixel_graphic(SixelGraphic *graphic, XtermWidget xw, int xbase, int ybase, int x, int y, int w, int h)
+refresh_sixel_graphic(TScreen const *screen, SixelGraphic *graphic, int xbase, int ybase, int x, int y, int w, int h)
 {
-    TScreen const *screen = TScreenOf(xw);
     Display *display = screen->display;
     Window vwindow = WhichVWin(screen)->window;
     GC graphics_gc;
     int r, c;
     int wx, wy;
     int pw, ph;
-    SixelColor color;
-    SixelColor old_fg;
+    RegisterNum color;
+    RegisterNum old_fg;
     XGCValues xgcv;
     XtGCMask mask;
     int holes, total;
@@ -529,13 +622,46 @@ refresh_sixel_graphic(SixelGraphic *graphic, XtermWidget xw, int xbase, int ybas
 	    }
 
 	    if (color != old_fg) {
-		xgcv.foreground = sixel_register_to_xpixel(&graphic->color_registers[color], xw);
+		xgcv.foreground = sixel_register_to_xpixel(&graphic->color_registers[color], graphic->xw);
 		XChangeGC(display, graphics_gc, mask, &xgcv);
 		old_fg = color;
 	    }
 
 	    XFillRectangle(display, vwindow, graphics_gc, wx, wy, pw, ph);
 	}
+#ifdef DEBUG_REFRESH
+{
+    XColor def;
+
+    def.red = (short)(1.0 * 65535.0);
+    def.green = (short)(0.1 * 65535.0);
+    def.blue = (short)(1.0 * 65535.0);
+    def.flags = DoRed | DoGreen | DoBlue;
+    if (allocateBestRGB(graphic->xw, &def)) {
+	xgcv.foreground = def.pixel;
+	XChangeGC(display, graphics_gc, mask, &xgcv);
+    }
+    XFillRectangle(display, vwindow, graphics_gc, xbase + 0, ybase + 0, pw, ph);
+    XFillRectangle(display, vwindow, graphics_gc, xbase + (graphic->actual_width - 1) * pw, ybase + (graphic->actual_height - 1) * ph, pw, ph);
+
+    def.red = (short)((1.0 - 0.1 * (rand() / (double)RAND_MAX) * 65535.0));
+    def.green = (short)((0.7 + 0.2 * (rand() / (double)RAND_MAX)) * 65535.0);
+    def.blue = (short)((0.1 + 0.1 * (rand() / (double)RAND_MAX)) * 65535.0);
+    def.flags = DoRed | DoGreen | DoBlue;
+    if (allocateBestRGB(graphic->xw, &def)) {
+	xgcv.foreground = def.pixel;
+	XChangeGC(display, graphics_gc, mask, &xgcv);
+    }
+    XDrawLine(display, vwindow, graphics_gc, xbase + x + 0    , ybase + y + 0    ,
+                                             xbase + x + w - 1, ybase + y + 0    );
+    XDrawLine(display, vwindow, graphics_gc, xbase + x + w - 1, ybase + y + 0    ,
+                                             xbase + x + 0    , ybase + y + h - 1);
+    XDrawLine(display, vwindow, graphics_gc, xbase + x + 0    , ybase + y + h - 1,
+                                             xbase + x + w - 1, ybase + y + h - 1);
+    XDrawLine(display, vwindow, graphics_gc, xbase + x + w - 1, ybase + y + h - 1,
+                                             xbase + x + 0    , ybase + y + 0    );
+}
+#endif
     XFlush(display);
     TRACE(("done refreshing sixel graphic: %d of %d refreshed pixels were holes\n", holes, total));
 
@@ -589,11 +715,11 @@ hls2rgb(short h, short l, short s, short *r, short *g, short *b)
 	r1 = c; g1 = 0.0; b1 = x;
 	break;
     default:
-        printf("BAD\n");
+	printf("BAD\n");
 	*r = (short)100;
 	*g = (short)100;
 	*b = (short)100;
-        return;
+	return;
     }
 
     *r = (short)((r1 + m) * 100.0 + 0.5);
@@ -619,17 +745,22 @@ update_sixel_aspect(SixelGraphic *graphic)
 {
     /* We want to keep the ratio accurate but would like every pixel to have
      * the same size so keep these as whole numbers.
-     * FIXME: DEC terminals had pixels about twice as tall as they were wide,
-     * but it is not clear if this is exposed to the application.
      */
-    if (graphic->aspect_numerator > graphic->aspect_denominator) {
+    /* FIXME: DEC terminals had pixels about twice as tall as they were wide,
+     * and it seems the VT125 and VT24x only used data from odd graphic rows.
+     * This means it basically cancels out if we ignore both, except that
+     * the even rows of pixels may not be written by the application such that
+     * they are suitable for display.  In practice this doesn't seem to be
+     * an issue but I have very few test files/programs.
+     */
+    if (graphic->aspect_vertical < graphic->aspect_horizontal) {
 	graphic->pixw = 1;
-	graphic->pixh = (graphic->aspect_numerator * 1 + graphic->aspect_denominator - 1) / graphic->aspect_denominator;
+	graphic->pixh = (graphic->aspect_vertical + graphic->aspect_horizontal - 1) / graphic->aspect_horizontal;
     } else {
-	graphic->pixw = (graphic->aspect_denominator + graphic->aspect_denominator - 1) / (graphic->aspect_numerator * 1);
+	graphic->pixw = (graphic->aspect_horizontal + graphic->aspect_vertical - 1) / graphic->aspect_vertical;
 	graphic->pixh = 1;
     }
-    TRACE(("aspect ratio: an=%d ad=%d pixw=%d pixh=%d\n", graphic->aspect_numerator, graphic->aspect_denominator, graphic->pixw, graphic->pixh));
+    TRACE(("sixel aspect ratio: an=%d ad=%d -> pixw=%d pixh=%d\n", graphic->aspect_vertical, graphic->aspect_horizontal, graphic->pixw, graphic->pixh));
 }
 
 /*
@@ -649,7 +780,7 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
     SixelGraphic *graphic;
     Char ch;
 
-    graphic = get_sixel_graphic(screen->whichBuf);
+    graphic = get_sixel_graphic(xw);
 
     {
 	int Pmacro = params->a_param[0];
@@ -668,8 +799,8 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		TRACE(("DATA_ERROR: invalid raster ratio %d/%d\n", Pan, Pad));
 		return;
 	    }
-	    graphic->aspect_numerator = Pan;
-	    graphic->aspect_denominator = Pad;
+	    graphic->aspect_vertical = Pan;
+	    graphic->aspect_horizontal = Pad;
 
 	    if (Ph == 0 || Pv == 0) {
 		TRACE(("DATA_ERROR: raster image dimensions are invalid %dx%d\n", Ph, Pv));
@@ -693,31 +824,31 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    switch (Pmacro) {
 	    case 0:
 	    case 1:
-		graphic->aspect_numerator = 2;
-		graphic->aspect_denominator = 1;
+		graphic->aspect_vertical = 5;
+		graphic->aspect_horizontal = 1;
 		break;
 	    case 2:
-		graphic->aspect_numerator = 2;
-		graphic->aspect_denominator = 1;
+		graphic->aspect_vertical = 3;
+		graphic->aspect_horizontal = 1;
 		break;
 	    case 3:
 	    case 4:
-		graphic->aspect_numerator = 2;
-		graphic->aspect_denominator = 1;
+		graphic->aspect_vertical = 2;
+		graphic->aspect_horizontal = 1;
 		break;
 	    case 5:
 	    case 6:
-		graphic->aspect_numerator = 2;
-		graphic->aspect_denominator = 1;
+		graphic->aspect_vertical = 2;
+		graphic->aspect_horizontal = 1;
 		break;
 	    case 7:
 	    case 8:
 	    case 9:
-		graphic->aspect_numerator = 2;
-		graphic->aspect_denominator = 1;
+		graphic->aspect_vertical = 1;
+		graphic->aspect_horizontal = 1;
 		break;
 	    default:
-		TRACE(("unknown sixel macro mode parameter\n"));
+		TRACE(("DATA_ERROR: unknown sixel macro mode parameter\n"));
 		return;
 	    }
 	    break;
@@ -728,21 +859,21 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    return;
 	}
 
-	graphic->preserve_background = (Pbgmode == 1);
+	if (Pbgmode == 1) {
+	    graphic->background = COLOR_HOLE;
+	} else {
+	    graphic->background = graphic->device_background;
+	}
 
-	/* ignore the grid parameter because it isn't clear what did real terminals did with it */
-
-	/* "Pan;Pad;Ph;Pv\n
-	 *  Pan and Pad define the pixel aspect ratio for the following sixel data string.
-	 *  The pixel aspect ratio defines the shape of the pixels the terminal uses to draw the sixel image.
-	 *  Ph and Pv define the horizontal and vertical size of the image (in pixels), respectively.
+	/* Ignore the grid parameter because it seems only printers paid attention to it.
+	 * The VT3xx was always 0.0195 cm.
 	 */
     }
 
     if (xw->keyboard.flags & MODE_DECSDM) {
 	TRACE(("sixel scrolling enabled: inline positioning for graphic\n"));
-        graphic->charrow = screen->cur_row;
-        graphic->charcol = screen->cur_col;
+	graphic->charrow = screen->cur_row;
+	graphic->charcol = screen->cur_col;
     }
 
     update_sixel_aspect(graphic);
@@ -841,10 +972,11 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    parse_prefixedtype_params(&color_params, &string);
 	    Pregister = color_params.a_param[0];
 	    if (Pregister >= graphic->valid_registers) {
-		TRACE(("DATA_ERROR: sixel color operator uses out-of-range register %d\n", Pregister));
+		TRACE(("DATA_WARNING: sixel color operator uses out-of-range register %d\n", Pregister));
 		/* FIXME: supposedly the DEC terminals wrapped register indicies */
 		while (Pregister >= graphic->valid_registers)
 		    Pregister -= graphic->valid_registers;
+		TRACE(("DATA_WARNING: converted to %d\n", Pregister));
 	    }
 
 	    if (color_params.a_nparam > 2 && color_params.a_nparam <= 5) {
@@ -852,33 +984,36 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		int Pc1 = color_params.a_param[2];
 		int Pc2 = color_params.a_param[3];
 		int Pc3 = color_params.a_param[4];
+		short r, g, b;
 
 		TRACE(("sixel set color register=%d space=%d color=[%d,%d,%d] (nparams=%d)\n", Pregister, Pspace, Pc1, Pc2, Pc3, color_params.a_nparam));
 
 		switch (Pspace) {
 		case 1: /* HLS */
 		    if (Pc1 > 360 || Pc2 > 100 || Pc3 > 100) {
-			TRACE(("DATA_ERROR: sixel set color operator uses out-of-range color coordinates\n"));
+			TRACE(("DATA_ERROR: sixel set color operator uses out-of-range HLS color coordinates %d,%d,%d\n", Pc1, Pc2, Pc3));
 			return;
 		    }
-		    hls2rgb(Pc1, Pc2, Pc3,
-			    &graphic->color_registers[Pregister].r,
-			    &graphic->color_registers[Pregister].g,
-			    &graphic->color_registers[Pregister].b);
+		    hls2rgb(Pc1, Pc2, Pc3, &r, &g, &b);
 		    break;
 		case 2: /* RGB */
 		    if (Pc1 > 100 || Pc2 > 100 || Pc3 > 100) {
-			TRACE(("DATA_ERROR: sixel set color operator uses out-of-range color coordinates\n"));
+			TRACE(("DATA_ERROR: sixel set color operator uses out-of-range RGB color coordinates %d,%d,%d\n", Pc1, Pc2, Pc3));
 			return;
 		    }
-		    graphic->color_registers[Pregister].r = Pc1;
-		    graphic->color_registers[Pregister].g = Pc2;
-		    graphic->color_registers[Pregister].b = Pc3;
+		    r = Pc1;
+		    g = Pc2;
+		    b = Pc3;
 		    break;
 		default: /* unknown */
 		    TRACE(("DATA_ERROR: sixel set color operator uses unknown color space %d\n", Pspace));
 		    return;
 		}
+		if (graphic->private_colors)
+		    set_sixel_color_register(graphic->private_color_registers, Pregister, r, g, b);
+		else
+		    set_shared_color_register(Pregister, r, g, b);
+		graphic->color_registers_used[Pregister] = 1;
 	    } else if (color_params.a_nparam == 1) {
 		TRACE(("sixel switch to color register=%d (nparams=%d)\n", Pregister, color_params.a_nparam));
 		graphic->current_register = Pregister;
@@ -904,8 +1039,8 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		    TRACE(("DATA_ERROR: invalid raster ratio %d/%d\n", Pan, Pad));
 		    return;
 		}
-		graphic->aspect_numerator = Pan;
-		graphic->aspect_denominator = Pad;
+		graphic->aspect_vertical = Pan;
+		graphic->aspect_horizontal = Pad;
 		update_sixel_aspect(graphic);
 	    }
 
@@ -964,34 +1099,25 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    TRACE(("bottom row was past screen.  new start row=%d, cursor row=%d\n", graphic->charrow, new_row));
 	}
 
-	set_cur_row(screen, new_row);
+	if (new_row < 0) {
+	    TRACE(("new row would have been be negative (%d), skipping!", new_row)); /* FIXME: this is not the right fix */
+	} else {
+	    set_cur_row(screen, new_row);
+	}
 	set_cur_col(screen, new_col <= screen->rgt_marg ? new_col : screen->rgt_marg);
     }
 
-    {
-	int nrows = ((graphic->actual_height * graphic->pixh)) / FontHeight(screen);
-	int ncols = ((graphic->actual_width * graphic->pixw) + FontWidth(screen) - 1) / FontWidth(screen);
-	int w = ncols * FontWidth(screen);
-	int h = nrows * FontHeight(screen);
+    refresh_modified_displayed_graphics(screen);
 
-	int xbase = screen->border + graphic->charcol * FontWidth(screen);
-	int ybase = screen->border + (graphic->charrow - screen->topline) * FontHeight(screen);
-
-	TRACE(("parse refresh: screen->topline=%d nrows=%d ncols=%d w=%d h=%d xbase=%d ybase=%d\n", screen->topline, nrows, ncols, w, h, xbase, ybase));
-	refresh_sixel_graphic(graphic, xw, xbase, ybase, 0, 0, w, h);
-    }
-
-    TRACE(("done parsing sixel data\n"));
+    TRACE(("DONE successfully parsed sixel data\n"));
     dump_sixel(graphic);
 }
-
 
 extern void
 parse_regis(XtermWidget xw, ANSI *params, char const *string)
 {
     TRACE(("ReGIS vector graphics mode, params=%d\n", params->a_nparam));
 }
-
 
 /* Erase the portion of any displayed graphic overlapping with a rectangle
  * of the given size and location in pixels.
@@ -1000,7 +1126,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 static void
 erase_sixel_graphic(SixelGraphic *graphic, int x, int y, int w, int h)
 {
-    SixelColor hole;
+    RegisterNum hole;
     int pw, ph;
     int r, c;
 
@@ -1023,11 +1149,9 @@ erase_sixel_graphic(SixelGraphic *graphic, int x, int y, int w, int h)
 	}
 }
 
-
 extern void
-refresh_displayed_graphics(XtermWidget xw, int leftcol, int toprow, int ncols, int nrows)
+refresh_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows)
 {
-    TScreen const *screen = TScreenOf(xw);
     SixelGraphic *graphic;
     unsigned int ii;
     int x, y, w, h;
@@ -1047,10 +1171,43 @@ refresh_displayed_graphics(XtermWidget xw, int leftcol, int toprow, int ncols, i
 	ybase = screen->border + (graphic->charrow - screen->topline) * FontHeight(screen);
 
 	TRACE(("graphics refresh: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d xbase=%d ybase=%d\n", screen->topline, leftcol, toprow, nrows, ncols, x, y, w, h, xbase, ybase));
-	refresh_sixel_graphic(graphic, xw, xbase, ybase, x, y, w, h);
+	refresh_sixel_graphic(screen, graphic, xbase, ybase, x, y, w, h);
     }
 }
 
+extern void
+refresh_modified_displayed_graphics(TScreen const *screen)
+{
+    SixelGraphic *graphic;
+    unsigned int ii;
+    int leftcol, toprow;
+    int nrows, ncols;
+    int x, y, w, h;
+    int xbase, ybase;
+
+    for (ii = 0U; ii < MAX_SIXEL_GRAPHICS; ii++) {
+	graphic = &sixel_graphics[ii];
+	if (!graphic->valid || graphic->bufferid != screen->whichBuf || !graphic->dirty)
+	    continue;
+
+	leftcol = graphic->charcol;
+	toprow = graphic->charrow;
+	nrows = ((graphic->actual_height * graphic->pixh) + FontHeight(screen) - 1) / FontHeight(screen);
+	ncols = ((graphic->actual_width * graphic->pixw) + FontWidth(screen) - 1) / FontWidth(screen);
+
+	x = (leftcol - graphic->charcol) * FontWidth(screen);
+	y = (toprow - graphic->charrow) * FontHeight(screen);
+	w = ncols * FontWidth(screen);
+	h = nrows * FontHeight(screen);
+
+	xbase = screen->border + graphic->charcol * FontWidth(screen);
+	ybase = screen->border + (graphic->charrow - screen->topline) * FontHeight(screen);
+
+	TRACE(("full graphics refresh: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d xbase=%d ybase=%d\n", screen->topline, leftcol, toprow, nrows, ncols, x, y, w, h, xbase, ybase));
+	refresh_sixel_graphic(screen, graphic, xbase, ybase, x, y, w, h);
+	graphic->dirty = 0;
+    }
+}
 
 extern void
 scroll_displayed_graphics(int rows)
@@ -1068,11 +1225,9 @@ scroll_displayed_graphics(int rows)
     }
 }
 
-
 extern void
-erase_displayed_graphics(XtermWidget xw, int leftcol, int toprow, int ncols, int nrows)
+erase_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows)
 {
-    TScreen const *screen = TScreenOf(xw);
     SixelGraphic *graphic;
     unsigned int ii;
     int x, y, w, h;
@@ -1092,13 +1247,13 @@ erase_displayed_graphics(XtermWidget xw, int leftcol, int toprow, int ncols, int
     }
 }
 
-
 extern void
-reset_displayed_graphics(void)
+reset_displayed_graphics(TScreen const *screen)
 {
     SixelGraphic *graphic;
     unsigned int ii;
 
+    init_color_registers(shared_color_registers, screen->terminal_id);
     TRACE(("resetting all sixel graphics\n"));
     for (ii = 0U; ii < MAX_SIXEL_GRAPHICS; ii++) {
 	graphic = &sixel_graphics[ii];

@@ -1,4 +1,4 @@
-! $XTermId: XTerm.ad,v 1.98 2013/06/02 00:24:29 Ross.Combs Exp $
+! $XTermId: XTerm.ad,v 1.99 2013/06/23 08:57:13 Ross.Combs Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
@@ -101,6 +101,7 @@
 *vtMenu*vthide*Label:  Hide VT Window
 *vtMenu*altscreen*Label:  Show Alternate Screen
 *vtMenu*sixelScrolling*Label:  Sixel Scrolling
+*vtMenu*privateColorRegisters*Label:  Private Color Registers
 
 *fontMenu.Label:  VT Fonts
 *fontMenu*fontdefault*Label:	Default

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.602 2013/05/28 16:53:32 Ross.Combs Exp $ */
+/* $XTermId: util.c,v 1.603 2013/06/23 08:57:13 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1489,7 +1489,7 @@ ClearAbove(XtermWidget xw)
 	    if ((height = screen->cur_row + top) > screen->max_row)
 		height = screen->max_row + 1;
 	    if ((height -= top) > 0) {
-		erase_displayed_graphics(xw, 0, top, MaxCols(screen), height);
+		erase_displayed_graphics(screen, 0, top, MaxCols(screen), height);
 
 		ClearCurBackground(xw,
 				   top,
@@ -1529,7 +1529,7 @@ ClearBelow(XtermWidget xw)
 	    if (screen->scroll_amt)
 		FlushScroll(xw);
 	    if (++top <= screen->max_row) {
-		erase_displayed_graphics(xw, 0, top, MaxCols(screen), (screen->max_row - top + 1));
+		erase_displayed_graphics(screen, 0, top, MaxCols(screen), (screen->max_row - top + 1));
 		ClearCurBackground(xw,
 				   top,
 				   0,
@@ -1756,7 +1756,7 @@ ClearScreen(XtermWidget xw)
     if ((top = INX2ROW(screen, 0)) <= screen->max_row) {
 	if (screen->scroll_amt)
 	    FlushScroll(xw);
-	erase_displayed_graphics(xw, 0, top, MaxCols(screen), (screen->max_row - top + 1));
+	erase_displayed_graphics(screen, 0, top, MaxCols(screen), (screen->max_row - top + 1));
 	ClearCurBackground(xw,
 			   top,
 			   0,
@@ -2086,10 +2086,10 @@ HandleExposure(XtermWidget xw, XEvent * event)
 #ifndef NO_ACTIVE_ICON
     if (reply->window == screen->iconVwin.window) {
 	WhichVWin(screen) = &screen->iconVwin;
-	TRACE(("HandleExposure - icon"));
+	TRACE(("HandleExposure - icon\n"));
     } else {
 	WhichVWin(screen) = &screen->fullVwin;
-	TRACE(("HandleExposure - normal"));
+	TRACE(("HandleExposure - normal\n"));
     }
     TRACE((" event %d,%d %dx%d\n",
 	   reply->y,

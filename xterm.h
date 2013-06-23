@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.719 2013/05/28 16:53:32 Ross.Combs Exp $ */
+/* $XTermId: xterm.h,v 1.720 2013/06/23 08:57:13 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -477,6 +477,7 @@ extern char **environ;
 #define XtNpointerMode		"pointerMode"
 #define XtNpointerShape		"pointerShape"
 #define XtNpopOnBell		"popOnBell"
+#define XtNprivateColorRegisters "privateColorRegisters"
 #define XtNprecompose		"precompose"
 #define XtNprintAttributes	"printAttributes"
 #define XtNprinterAutoClose	"printerAutoClose"
@@ -635,8 +636,8 @@ extern char **environ;
 #define XtCMenuBar		"MenuBar"
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
-#define XtCMkSamplePass 	"MkSamplePass"
-#define XtCMkSampleSize 	"MkSampleSize"
+#define XtCMkSamplePass		"MkSamplePass"
+#define XtCMkSampleSize		"MkSampleSize"
 #define XtCMkWidth		"MkWidth"
 #define XtCModifyCursorKeys	"ModifyCursorKeys"
 #define XtCModifyFunctionKeys	"ModifyFunctionKeys"
@@ -650,6 +651,7 @@ extern char **environ;
 #define XtCOldXtermFKeys	"OldXtermFKeys"
 #define XtCPointerMode		"PointerMode"
 #define XtCPopOnBell		"PopOnBell"
+#define XtCPrivateColorRegisters "PrivateColorRegisters"
 #define XtCPrecompose		"Precompose"
 #define XtCPrintAttributes	"PrintAttributes"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
