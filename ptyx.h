@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.769 2013/06/02 00:24:29 Ross.Combs Exp $ */
+/* $XTermId: ptyx.h,v 1.770 2013/06/23 08:57:13 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1465,6 +1465,7 @@ typedef enum {
 #if OPT_TOOLBAR
 	DP_TOOLBAR,
 #endif
+	DP_X_PRIVATE_COLOR_REGISTERS,
 	DP_LAST
 } SaveModes;
 
@@ -1953,11 +1954,12 @@ typedef struct {
 	BellVolume	marginVolume;	/* margin-bell volume           */
 	BellVolume	warningVolume;	/* warning-bell volume          */
 	Boolean		sixel_scrolling; /* sixel scrolling             */
+	Boolean		privatecolorregisters; /* private color registers for each graphic */
 	Boolean		multiscroll;	/* true if multi-scroll		*/
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/
 	SavedCursor	sc[SAVED_CURSORS]; /* data for restore cursor	*/
-	unsigned 	save_modes[DP_LAST]; /* save dec/xterm private modes */
+	unsigned int	save_modes[DP_LAST]; /* save dec/xterm private modes */
 
 	int		title_modes;	/* control set/get of titles	*/
 	SaveTitle	*save_title;

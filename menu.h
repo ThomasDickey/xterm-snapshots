@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.130 2013/06/02 00:24:29 Ross.Combs Exp $ */
+/* $XTermId: menu.h,v 1.131 2013/06/23 08:57:13 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -126,6 +126,7 @@ extern void HandleScrollbar        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSecure           PROTO_XT_ACTIONS_ARGS;
 extern void HandleSendSignal       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetPopOnBell     PROTO_XT_ACTIONS_ARGS;
+extern void HandleSetPrivateColorRegisters PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetSelect        PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTekText       PROTO_XT_ACTIONS_ARGS;
 extern void HandleSetTerminalType  PROTO_XT_ACTIONS_ARGS;
@@ -257,6 +258,7 @@ typedef enum {
 #endif
     vtMenu_altscreen,
     vtMenu_sixelscrolling,
+    vtMenu_privatecolorregisters,
     vtMenu_LAST
 } vtMenuIndices;
 
@@ -444,6 +446,7 @@ extern void update_cursesemul(void);
 extern void update_visualbell(void);
 extern void update_bellIsUrgent(void);
 extern void update_poponbell(void);
+extern void update_privatecolorregisters(void);
 
 #define update_marginbell() /* nothing */
 

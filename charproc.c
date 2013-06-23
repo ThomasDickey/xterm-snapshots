@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1291 2013/06/02 00:24:29 Ross.Combs Exp $ */
+/* $XTermId: charproc.c,v 1.1292 2013/06/23 08:57:13 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -273,7 +273,6 @@ static XtActionsRec actionsList[] = {
     { "set-autolinefeed",	HandleAutoLineFeed },
     { "set-autowrap",		HandleAutoWrap },
     { "set-backarrow",		HandleBackarrow },
-    { "set-sixel-scrolling",	HandleSixelScrolling },
     { "set-bellIsUrgent",	HandleBellIsUrgent },
     { "set-cursesemul",		HandleCursesEmul },
     { "set-jumpscroll",		HandleJumpscroll },
@@ -281,12 +280,14 @@ static XtActionsRec actionsList[] = {
     { "set-marginbell",		HandleMarginBell },
     { "set-old-function-keys",	HandleOldFunctionKeys },
     { "set-pop-on-bell",	HandleSetPopOnBell },
+    { "set-private-colors",	HandleSetPrivateColorRegisters },
     { "set-reverse-video",	HandleReverseVideo },
     { "set-reversewrap",	HandleReverseWrap },
     { "set-scroll-on-key",	HandleScrollKey },
     { "set-scroll-on-tty-output", HandleScrollTtyOutput },
     { "set-scrollbar",		HandleScrollbar },
     { "set-select",		HandleSetSelect },
+    { "set-sixel-scrolling",	HandleSixelScrolling },
     { "set-sun-keyboard",	HandleSunKeyboard },
     { "set-titeInhibit",	HandleTiteInhibit },
     { "set-visual-bell",	HandleSetVisualBell },
@@ -441,6 +442,7 @@ static XtResource xterm_resources[] =
     Bres(XtNmultiScroll, XtCMultiScroll, screen.multiscroll, False),
     Bres(XtNoldXtermFKeys, XtCOldXtermFKeys, screen.old_fkeys, False),
     Bres(XtNpopOnBell, XtCPopOnBell, screen.poponbell, False),
+    Bres(XtNprivateColorRegisters, XtCPrivateColorRegisters, screen.privatecolorregisters, True),
     Bres(XtNprinterAutoClose, XtCPrinterAutoClose, SPS.printer_autoclose, False),
     Bres(XtNprinterExtent, XtCPrinterExtent, SPS.printer_extent, False),
     Bres(XtNprinterFormFeed, XtCPrinterFormFeed, SPS.printer_formfeed, False),
@@ -4925,6 +4927,7 @@ typedef enum {
     ,srm_PASTE_QUOTE = SET_PASTE_QUOTE
     ,srm_PASTE_LITERAL_NL = SET_PASTE_LITERAL_NL
 #endif				/* OPT_READLINE */
+    ,srm_PRIVATE_COLOR_REGISTERS = 1070 /* FIXME: make sure this is an appropriate number */
 } DECSET_codes;
 
 /*
@@ -5159,9 +5162,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 		screen->terminal_id == 330 ||
 		screen->terminal_id == 340) {
 		(*func) (&xw->keyboard.flags, MODE_DECSDM);
-	    TRACE(("DECSET/DECRST DECSDM %s (resource default is %d)\n",
-		   BtoS(xw->keyboard.flags & MODE_DECSDM),
-		   TScreenOf(xw)->sixel_scrolling));
+		TRACE(("DECSET/DECRST DECSDM %s (resource default is %d)\n",
+		       BtoS(xw->keyboard.flags & MODE_DECSDM),
+		       TScreenOf(xw)->sixel_scrolling));
 		update_decsdm();
 	    }
 	    break;
@@ -5317,6 +5320,12 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 	case srm_PASTE_LITERAL_NL:
 	    set_mouseflag(paste_literal_nl);
+	    break;
+	case srm_PRIVATE_COLOR_REGISTERS: /* private color registers for each graphic */
+	    TRACE(("DECSET/DECRST PRIVATE_COLOR_REGISTERS %s\n",
+		   BtoS(screen->privatecolorregisters)));
+	    set_bool_mode(screen->privatecolorregisters);
+	    update_privatecolorregisters();
 	    break;
 #endif /* OPT_READLINE */
 	default:
@@ -5551,6 +5560,11 @@ savemodes(XtermWidget xw)
 	    SCREEN_FLAG_save(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
+	case srm_PRIVATE_COLOR_REGISTERS: /* private color registers for each graphic */
+	    TRACE(("save PRIVATE_COLOR_REGISTERS %s\n",
+		   BtoS(screen->privatecolorregisters)));
+	    DoSM(DP_X_PRIVATE_COLOR_REGISTERS, screen->privatecolorregisters);
+	    update_privatecolorregisters();
 	}
     }
 }
@@ -5859,6 +5873,11 @@ restoremodes(XtermWidget xw)
 	    SCREEN_FLAG_restore(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
+	case srm_PRIVATE_COLOR_REGISTERS: /* private color registers for each graphic */
+	    TRACE(("restore PRIVATE_COLOR_REGISTERS %s\n",
+		   BtoS(screen->privatecolorregisters)));
+	    DoRM(DP_X_PRIVATE_COLOR_REGISTERS, screen->privatecolorregisters);
+	    update_privatecolorregisters();
 	}
     }
 }
@@ -7908,6 +7927,10 @@ VTInitialize(Widget wrequest,
 	   BtoS(wnew->keyboard.flags & MODE_DECSDM),
 	   TScreenOf(wnew)->sixel_scrolling));
 
+    init_Bres(screen.privatecolorregisters); /* FIXME: should this be off unconditionally here? */
+    TRACE(("initialized PRIVATE_COLOR_REGISTERS to resource default %s\n",
+	   BtoS(TScreenOf(wnew)->privatecolorregisters)));
+
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
      */
@@ -9656,6 +9679,8 @@ HideCursor(void)
     screen->cursor_state = OFF;
     resetXtermGC(xw, flags, in_selection);
 
+    refresh_displayed_graphics(screen, screen->cursorp.col, screen->cursorp.row, 1, 1);
+
     return;
 }
 
@@ -9873,7 +9898,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     bitclr(&xw->flags, PROTECTED);
     screen->protected_mode = OFF_PROTECT;
 
-    reset_displayed_graphics();
+    reset_displayed_graphics(screen);
 
     if (full) {			/* RIS */
 	if (screen->bellOnReset)
