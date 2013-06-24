@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.479 2013/06/23 08:57:13 Ross.Combs Exp $ */
+/* $XTermId: screen.c,v 1.483 2013/06/23 22:13:30 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -58,7 +58,6 @@
 #include <xterm.h>
 #include <error.h>
 #include <data.h>
-#include <xcharmouse.h>
 #include <xterm_io.h>
 
 #include <X11/Xatom.h>
@@ -837,7 +836,7 @@ ScrnWriteText(XtermWidget xw,
     unsigned n;
     unsigned real_width = visual_width(str, length);
 
-    (void) cur_fg_bg;  /* why? */
+    (void) cur_fg_bg;		/* quiet compiler warnings when unused */
 
     if (real_width + (unsigned) screen->cur_col > (unsigned) MaxCols(screen)) {
 	real_width = (unsigned) (MaxCols(screen) - screen->cur_col);
@@ -939,8 +938,14 @@ ScrnWriteText(XtermWidget xw,
     screen->last_written_row = screen->cur_row;
 #endif
 
-    TRACE(("text erasing cur_col=%d cur_row=%d real_width=%d\n", screen->cur_col, screen->cur_row, real_width));
-    erase_displayed_graphics(screen, screen->cur_col, screen->cur_row, real_width, 1);
+    TRACE(("text erasing cur_col=%d cur_row=%d real_width=%d\n",
+	   screen->cur_col,
+	   screen->cur_row,
+	   real_width));
+    erase_displayed_graphics(screen,
+			     screen->cur_col,
+			     screen->cur_row,
+			     (int) real_width, 1);
 
     if_OPT_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);
@@ -1013,8 +1018,16 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	base = ScrnBufAddr(base, jump);
     }
 
-    TRACE(("clear lines erasing where=%d screen->savelines=%d n=%d screen->max_col=%d\n", where, screen->savelines, n, screen->max_col));
-    erase_displayed_graphics(screen, where + screen->savelines, 0, screen->max_col + 1, n);
+    TRACE(("clear lines erasing where=%d screen->savelines=%d n=%d screen->max_col=%d\n",
+	   where,
+	   screen->savelines,
+	   n,
+	   screen->max_col));
+    erase_displayed_graphics(screen,
+			     where + screen->savelines,
+			     0,
+			     screen->max_col + 1,
+			     (int) n);
 }
 
 /*
@@ -1707,7 +1720,11 @@ ScrnRefresh(XtermWidget xw,
 	resetXtermGC(xw, flags, hilite);
     }
 
-    refresh_displayed_graphics(screen, leftcol, toprow + screen->topline, ncols, nrows);
+    refresh_displayed_graphics(screen,
+			       leftcol,
+			       toprow + screen->topline,
+			       ncols,
+			       nrows);
 
     /*
      * If we're in color mode, reset the various GC's to the current

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1292 2013/06/23 08:57:13 Ross.Combs Exp $ */
+/* $XTermId: charproc.c,v 1.1299 2013/06/23 21:55:39 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -133,7 +133,6 @@
 #include <menu.h>
 #include <main.h>
 #include <fontutils.h>
-#include <xcharmouse.h>
 #include <charclass.h>
 #include <xstrings.h>
 #include <graphics.h>
@@ -280,14 +279,12 @@ static XtActionsRec actionsList[] = {
     { "set-marginbell",		HandleMarginBell },
     { "set-old-function-keys",	HandleOldFunctionKeys },
     { "set-pop-on-bell",	HandleSetPopOnBell },
-    { "set-private-colors",	HandleSetPrivateColorRegisters },
     { "set-reverse-video",	HandleReverseVideo },
     { "set-reversewrap",	HandleReverseWrap },
     { "set-scroll-on-key",	HandleScrollKey },
     { "set-scroll-on-tty-output", HandleScrollTtyOutput },
     { "set-scrollbar",		HandleScrollbar },
     { "set-select",		HandleSetSelect },
-    { "set-sixel-scrolling",	HandleSixelScrolling },
     { "set-sun-keyboard",	HandleSunKeyboard },
     { "set-titeInhibit",	HandleTiteInhibit },
     { "set-visual-bell",	HandleSetVisualBell },
@@ -367,6 +364,10 @@ static XtActionsRec actionsList[] = {
     { "larger-vt-font",		HandleLargerFont },
     { "smaller-vt-font",	HandleSmallerFont },
 #endif
+#if OPT_SIXEL_GRAPHICS
+    { "set-private-colors",	HandleSetPrivateColorRegisters },
+    { "set-sixel-scrolling",	HandleSixelScrolling },
+#endif
 #if OPT_SUN_FUNC_KEYS
     { "set-sun-function-keys",	HandleSunFunctionKeys },
 #endif
@@ -442,7 +443,6 @@ static XtResource xterm_resources[] =
     Bres(XtNmultiScroll, XtCMultiScroll, screen.multiscroll, False),
     Bres(XtNoldXtermFKeys, XtCOldXtermFKeys, screen.old_fkeys, False),
     Bres(XtNpopOnBell, XtCPopOnBell, screen.poponbell, False),
-    Bres(XtNprivateColorRegisters, XtCPrivateColorRegisters, screen.privatecolorregisters, True),
     Bres(XtNprinterAutoClose, XtCPrinterAutoClose, SPS.printer_autoclose, False),
     Bres(XtNprinterExtent, XtCPrinterExtent, SPS.printer_extent, False),
     Bres(XtNprinterFormFeed, XtCPrinterFormFeed, SPS.printer_formfeed, False),
@@ -456,7 +456,6 @@ static XtResource xterm_resources[] =
     Bres(XtNselectToClipboard, XtCSelectToClipboard,
 	 screen.selectToClipboard, False),
     Bres(XtNsignalInhibit, XtCSignalInhibit, misc.signalInhibit, False),
-    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
     Bres(XtNtiteInhibit, XtCTiteInhibit, misc.titeInhibit, False),
     Bres(XtNtiXtraScroll, XtCTiXtraScroll, misc.tiXtraScroll, False),
     Bres(XtNtrimSelection, XtCTrimSelection, screen.trim_selection, False),
@@ -670,6 +669,12 @@ static XtResource xterm_resources[] =
 
 #if OPT_SHIFT_FONTS
     Bres(XtNshiftFonts, XtCShiftFonts, misc.shift_fonts, True),
+#endif
+
+#if OPT_SIXEL_GRAPHICS
+    Bres(XtNprivateColorRegisters, XtCPrivateColorRegisters,
+	 screen.privatecolorregisters, True),
+    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
 #endif
 
 #if OPT_SUNPC_KBD
@@ -1988,7 +1993,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	}
 
 	DumpParams();
-	TRACE(("parse %04X -> %d %s (used=%lu)\n", c, sp->nextstate, which_table(sp->parsestate), (unsigned long)sp->string_used));
+	TRACE(("parse %04X -> %d %s (used=%lu)\n",
+	       c, sp->nextstate,
+	       which_table(sp->parsestate),
+	       (unsigned long) sp->string_used));
 
 	/*
 	 * If the parameter list has subparameters (tokens separated by ":")
@@ -2453,7 +2461,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    switch (screen->terminal_id) {
 		    case 125:
 			reply.a_param[count++] = 12;	/* VT125 */
-			reply.a_param[count++] = 0|2|0;	/* no STP, AVO, no GPO (ReGIS) */
+			reply.a_param[count++] = 0 | 2 | 0;	/* no STP, AVO, no GPO (ReGIS) */
 			reply.a_param[count++] = 0;	/* no printer */
 			reply.a_param[count++] = XTERM_PATCH;	/* ROM version */
 			break;
@@ -2466,7 +2474,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			break;
 		    default:	/* VT100 */
 			reply.a_param[count++] = 1;	/* VT100 */
-			reply.a_param[count++] = 0|2|0;	/* no STP, AVO, no GPO (ReGIS) */
+			reply.a_param[count++] = 0 | 2 | 0;	/* no STP, AVO, no GPO (ReGIS) */
 			break;
 		    }
 		} else {
@@ -2475,13 +2483,15 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 							 / 100);
 		    reply.a_param[count++] = 1;		/* 132-columns */
 		    reply.a_param[count++] = 2;		/* printer */
+#if OPT_SIXEL_GRAPHICS
 		    if (screen->terminal_id == 240 ||
 			screen->terminal_id == 241 ||
 			screen->terminal_id == 330 ||
 			screen->terminal_id == 340) {
-			//reply.a_param[count++] = 3;	/* ReGIS graphics */
-			reply.a_param[count++] = 4;		/* sixel graphics */
+			reply.a_param[count++] = 3;	/* ReGIS graphics */
+			reply.a_param[count++] = 4;	/* sixel graphics */
 		    }
+#endif
 		    reply.a_param[count++] = 6;		/* selective-erase */
 #if OPT_SUNPC_KBD
 		    if (xw->keyboard.type == keyboardIsVT220)
@@ -2845,8 +2855,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    }
 		}
 		break;
-	    case 53: /* according to existing xterm handling */
-	    case 55: /* according to the VT330/VT340 Text Programming Manual */
+	    case 53:		/* according to existing xterm handling */
+	    case 55:		/* according to the VT330/VT340 Text Programming Manual */
 		TRACE(("...request locator status\n"));
 		if (sp->private_function
 		    && screen->vtXX_level >= 2) {	/* VT220 */
@@ -2863,9 +2873,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    && screen->vtXX_level >= 3) {	/* VT330 (FIXME: what about VT220?) */
 		    reply.a_param[count++] = 57;
 #if OPT_DEC_LOCATOR
-		    reply.a_param[count++] = 1;	/* mouse */
+		    reply.a_param[count++] = 1;		/* mouse */
 #else
-		    reply.a_param[count++] = 0;	/* unknown */
+		    reply.a_param[count++] = 0;		/* unknown */
 #endif
 		}
 		break;
@@ -3274,7 +3284,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_ST:
-	    TRACE(("CASE_ST: End of String (%lu bytes) (mode=%d)\n", (unsigned long) sp->string_used, sp->string_mode));
+	    TRACE(("CASE_ST: End of String (%lu bytes) (mode=%d)\n",
+		   (unsigned long) sp->string_used,
+		   sp->string_mode));
 	    ResetState(sp);
 	    if (!sp->string_used)
 		break;
@@ -4831,106 +4843,6 @@ really_set_mousemode(XtermWidget xw,
 #endif
 
 /*
- * Use this enumerated type to check consistency among dpmodes(), savemodes()
- * and restoremodes().
- */
-typedef enum {
-    srm_DECCKM = 1
-    ,srm_DECANM = 2
-    ,srm_DECCOLM = 3
-    ,srm_DECSCLM = 4
-    ,srm_DECSCNM = 5
-    ,srm_DECOM = 6
-    ,srm_DECAWM = 7
-    ,srm_DECARM = 8
-    ,srm_X10_MOUSE = SET_X10_MOUSE
-#if OPT_TOOLBAR
-    ,srm_RXVT_TOOLBAR = 10
-#endif
-#if OPT_BLINK_CURS
-    ,srm_ATT610_BLINK = 12
-#endif
-    ,srm_DECPFF = 18
-    ,srm_DECPEX = 19
-    ,srm_DECTCEM = 25
-    ,srm_RXVT_SCROLLBAR = 30
-#if OPT_SHIFT_FONTS
-    ,srm_RXVT_FONTSIZE = 35
-#endif
-#if OPT_TEK4014
-    ,srm_DECTEK = 38
-#endif
-    ,srm_132COLS = 40
-    ,srm_CURSES_HACK = 41
-    ,srm_DECNRCM = 42
-    ,srm_MARGIN_BELL = 44
-    ,srm_REVERSEWRAP = 45
-#ifdef ALLOWLOGGING
-    ,srm_ALLOWLOGGING = 46
-#endif
-    ,srm_OPT_ALTBUF_CURSOR = 1049
-    ,srm_OPT_ALTBUF = 1047
-    ,srm_ALTBUF = 47
-    ,srm_DECNKM = 66
-    ,srm_DECBKM = 67
-    ,srm_DECLRMM = 69
-    ,srm_DECSDM = 80 /* Sixel Display Mode */
-    ,srm_DECNCSM = 95
-    ,srm_VT200_MOUSE = SET_VT200_MOUSE
-    ,srm_VT200_HIGHLIGHT_MOUSE = SET_VT200_HIGHLIGHT_MOUSE
-    ,srm_BTN_EVENT_MOUSE = SET_BTN_EVENT_MOUSE
-    ,srm_ANY_EVENT_MOUSE = SET_ANY_EVENT_MOUSE
-#if OPT_FOCUS_EVENT
-    ,srm_FOCUS_EVENT_MOUSE = SET_FOCUS_EVENT_MOUSE
-#endif
-    ,srm_EXT_MODE_MOUSE = SET_EXT_MODE_MOUSE
-    ,srm_SGR_EXT_MODE_MOUSE = SET_SGR_EXT_MODE_MOUSE
-    ,srm_URXVT_EXT_MODE_MOUSE = SET_URXVT_EXT_MODE_MOUSE
-    ,srm_ALTERNATE_SCROLL = SET_ALTERNATE_SCROLL
-    ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
-    ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
-    ,srm_EIGHT_BIT_META = 1034
-#if OPT_NUM_LOCK
-    ,srm_REAL_NUMLOCK = 1035
-    ,srm_META_SENDS_ESC = 1036
-#endif
-    ,srm_DELETE_IS_DEL = 1037
-#if OPT_NUM_LOCK
-    ,srm_ALT_SENDS_ESC = 1039
-#endif
-    ,srm_KEEP_SELECTION = 1040
-    ,srm_SELECT_TO_CLIPBOARD = 1041
-    ,srm_BELL_IS_URGENT = 1042
-    ,srm_POP_ON_BELL = 1043
-    ,srm_TITE_INHIBIT = 1048
-#if OPT_TCAP_FKEYS
-    ,srm_TCAP_FKEYS = 1050
-#endif
-#if OPT_SUN_FUNC_KEYS
-    ,srm_SUN_FKEYS = 1051
-#endif
-#if OPT_HP_FUNC_KEYS
-    ,srm_HP_FKEYS = 1052
-#endif
-#if OPT_SCO_FUNC_KEYS
-    ,srm_SCO_FKEYS = 1053
-#endif
-    ,srm_LEGACY_FKEYS = 1060
-#if OPT_SUNPC_KBD
-    ,srm_VT220_FKEYS = 1061
-#endif
-#if OPT_READLINE
-    ,srm_BUTTON1_MOVE_POINT = SET_BUTTON1_MOVE_POINT
-    ,srm_BUTTON2_MOVE_POINT = SET_BUTTON2_MOVE_POINT
-    ,srm_DBUTTON3_DELETE = SET_DBUTTON3_DELETE
-    ,srm_PASTE_IN_BRACKET = SET_PASTE_IN_BRACKET
-    ,srm_PASTE_QUOTE = SET_PASTE_QUOTE
-    ,srm_PASTE_LITERAL_NL = SET_PASTE_LITERAL_NL
-#endif				/* OPT_READLINE */
-    ,srm_PRIVATE_COLOR_REGISTERS = 1070 /* FIXME: make sure this is an appropriate number */
-} DECSET_codes;
-
-/*
  * process DEC private modes set, reset
  */
 static void
@@ -5156,7 +5068,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 		CursorSet(screen, 0, 0, xw->flags);
 	    }
 	    break;
-	case srm_DECSDM: /* sixel scrolling */
+#if OPT_SIXEL_GRAPHICS
+	case srm_DECSDM:	/* sixel scrolling */
 	    if (screen->terminal_id == 240 ||
 		screen->terminal_id == 241 ||
 		screen->terminal_id == 330 ||
@@ -5168,6 +5081,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 		update_decsdm();
 	    }
 	    break;
+#endif
 	case srm_DECNCSM:
 	    if (screen->vtXX_level >= 5) {	/* VT510 */
 		(*func) (&xw->flags, NOCLEAR_COLM);
@@ -5321,13 +5235,15 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_PASTE_LITERAL_NL:
 	    set_mouseflag(paste_literal_nl);
 	    break;
-	case srm_PRIVATE_COLOR_REGISTERS: /* private color registers for each graphic */
+#endif /* OPT_READLINE */
+#if OPT_SIXEL_GRAPHICS
+	case srm_PRIVATE_COLOR_REGISTERS:	/* private color registers for each graphic */
 	    TRACE(("DECSET/DECRST PRIVATE_COLOR_REGISTERS %s\n",
 		   BtoS(screen->privatecolorregisters)));
 	    set_bool_mode(screen->privatecolorregisters);
 	    update_privatecolorregisters();
 	    break;
-#endif /* OPT_READLINE */
+#endif
 	default:
 	    TRACE(("DATA_ERROR: unknown private code %d\n", code));
 	    break;
@@ -5441,16 +5357,18 @@ savemodes(XtermWidget xw)
 	case srm_DECNKM:
 	    DoSM(DP_DECKPAM, xw->keyboard.flags & MODE_DECKPAM);
 	    break;
-	case srm_DECBKM: /* backarrow mapping */
+	case srm_DECBKM:	/* backarrow mapping */
 	    DoSM(DP_DECBKM, xw->keyboard.flags & MODE_DECBKM);
 	    break;
 	case srm_DECLRMM:	/* left-right */
 	    DoSM(DP_X_LRMM, LEFT_RIGHT);
 	    break;
+#if OPT_SIXEL_GRAPHICS
 	case srm_DECSDM:	/* sixel scrolling */
 	    DoSM(DP_DECSDM, xw->keyboard.flags & MODE_DECSDM);
 	    update_decsdm();
 	    break;
+#endif
 	case srm_DECNCSM:	/* noclear */
 	    DoSM(DP_X_NCSM, NOCLEAR_COLM);
 	    break;
@@ -5560,11 +5478,14 @@ savemodes(XtermWidget xw)
 	    SCREEN_FLAG_save(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
-	case srm_PRIVATE_COLOR_REGISTERS: /* private color registers for each graphic */
+#if OPT_SIXEL_GRAPHICS
+	case srm_PRIVATE_COLOR_REGISTERS:	/* private color registers for each graphic */
 	    TRACE(("save PRIVATE_COLOR_REGISTERS %s\n",
 		   BtoS(screen->privatecolorregisters)));
 	    DoSM(DP_X_PRIVATE_COLOR_REGISTERS, screen->privatecolorregisters);
 	    update_privatecolorregisters();
+	    break;
+#endif
 	}
     }
 }
@@ -5734,7 +5655,7 @@ restoremodes(XtermWidget xw)
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECKPAM], MODE_DECKPAM);
 	    update_appkeypad();
 	    break;
-	case srm_DECBKM: /* backarrow mapping */
+	case srm_DECBKM:	/* backarrow mapping */
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECBKM], MODE_DECBKM);
 	    update_decbkm();
 	    break;
@@ -5747,10 +5668,12 @@ restoremodes(XtermWidget xw)
 	    }
 	    CursorSet(screen, 0, 0, xw->flags);
 	    break;
+#if OPT_SIXEL_GRAPHICS
 	case srm_DECSDM:	/* sixel scrolling */
 	    bitcpy(&xw->keyboard.flags, screen->save_modes[DP_DECSDM], MODE_DECSDM);
 	    update_decsdm();
 	    break;
+#endif
 	case srm_DECNCSM:	/* noclear */
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_NCSM], NOCLEAR_COLM);
 	    break;
@@ -5873,11 +5796,14 @@ restoremodes(XtermWidget xw)
 	    SCREEN_FLAG_restore(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
-	case srm_PRIVATE_COLOR_REGISTERS: /* private color registers for each graphic */
+#if OPT_SIXEL_GRAPHICS
+	case srm_PRIVATE_COLOR_REGISTERS:	/* private color registers for each graphic */
 	    TRACE(("restore PRIVATE_COLOR_REGISTERS %s\n",
 		   BtoS(screen->privatecolorregisters)));
 	    DoRM(DP_X_PRIVATE_COLOR_REGISTERS, screen->privatecolorregisters);
 	    update_privatecolorregisters();
+	    break;
+#endif
 	}
     }
 }
@@ -7920,16 +7846,18 @@ VTInitialize(Widget wrequest,
     TRACE(("initialized DECBKM %s\n",
 	   BtoS(wnew->keyboard.flags & MODE_DECBKM)));
 
+#if OPT_SIXEL_GRAPHICS
     init_Bres(screen.sixel_scrolling);
-    if (TScreenOf(wnew)->sixel_scrolling) /* FIXME: should this be off unconditionally here? */
+    if (TScreenOf(wnew)->sixel_scrolling)	/* FIXME: should this be off unconditionally here? */
 	wnew->keyboard.flags |= MODE_DECSDM;
     TRACE(("initialized DECSDM %s (resource default is %d)\n",
 	   BtoS(wnew->keyboard.flags & MODE_DECSDM),
 	   TScreenOf(wnew)->sixel_scrolling));
 
-    init_Bres(screen.privatecolorregisters); /* FIXME: should this be off unconditionally here? */
+    init_Bres(screen.privatecolorregisters);	/* FIXME: should this be off unconditionally here? */
     TRACE(("initialized PRIVATE_COLOR_REGISTERS to resource default %s\n",
 	   BtoS(TScreenOf(wnew)->privatecolorregisters)));
+#endif
 
     /* look for focus related events on the shell, because we need
      * to care about the shell's border being part of our focus.
@@ -9679,7 +9607,10 @@ HideCursor(void)
     screen->cursor_state = OFF;
     resetXtermGC(xw, flags, in_selection);
 
-    refresh_displayed_graphics(screen, screen->cursorp.col, screen->cursorp.row, 1, 1);
+    refresh_displayed_graphics(screen,
+			       screen->cursorp.col,
+			       screen->cursorp.row,
+			       1, 1);
 
     return;
 }
@@ -9924,11 +9855,13 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 		xw->keyboard.flags |= MODE_DECBKM;
 	TRACE(("full reset DECBKM %s\n",
 	       BtoS(xw->keyboard.flags & MODE_DECBKM)));
-	if (TScreenOf(xw)->sixel_scrolling) /* FIXME: should this be off unconditionally here? */
+#if OPT_SIXEL_GRAPHICS
+	if (TScreenOf(xw)->sixel_scrolling)	/* FIXME: should this be off unconditionally here? */
 	    xw->keyboard.flags |= MODE_DECSDM;
 	TRACE(("full reset DECSDM %s (resource default is %d)\n",
 	       BtoS(xw->keyboard.flags & MODE_DECSDM),
 	       TScreenOf(xw)->sixel_scrolling));
+#endif
 	update_appcursor();
 	update_appkeypad();
 	update_decbkm();

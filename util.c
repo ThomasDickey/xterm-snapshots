@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.603 2013/06/23 08:57:13 Ross.Combs Exp $ */
+/* $XTermId: util.c,v 1.604 2013/06/23 15:28:35 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1529,7 +1529,11 @@ ClearBelow(XtermWidget xw)
 	    if (screen->scroll_amt)
 		FlushScroll(xw);
 	    if (++top <= screen->max_row) {
-		erase_displayed_graphics(screen, 0, top, MaxCols(screen), (screen->max_row - top + 1));
+		erase_displayed_graphics(screen,
+					 0,
+					 top,
+					 MaxCols(screen),
+					 (screen->max_row - top + 1));
 		ClearCurBackground(xw,
 				   top,
 				   0,
@@ -1756,7 +1760,11 @@ ClearScreen(XtermWidget xw)
     if ((top = INX2ROW(screen, 0)) <= screen->max_row) {
 	if (screen->scroll_amt)
 	    FlushScroll(xw);
-	erase_displayed_graphics(screen, 0, top, MaxCols(screen), (screen->max_row - top + 1));
+	erase_displayed_graphics(screen,
+				 0,
+				 top,
+				 MaxCols(screen),
+				 (screen->max_row - top + 1));
 	ClearCurBackground(xw,
 			   top,
 			   0,
@@ -3213,7 +3221,7 @@ drawXtermText(XtermWidget xw,
 				  x, y, 0,
 				  text,
 				  len, on_wide);
-		x += (int) len * FontWidth(screen);
+		x += (int) len *FontWidth(screen);
 	    }
 
 	    TRACE(("drawtext [%4d,%4d]\n", y, x));
@@ -3431,7 +3439,7 @@ drawXtermText(XtermWidget xw,
 		      y);
 	}
 
-	x += (int) len * FontWidth(screen);
+	x += (int) len *FontWidth(screen);
 
 	return x;
     }
@@ -3825,7 +3833,7 @@ drawXtermText(XtermWidget xw,
 		  x, y, (x + (int) underline_len * font_width - 1), y);
     }
 
-    x += (int) real_length * FontWidth(screen);
+    x += (int) real_length *FontWidth(screen);
     return x;
 }
 

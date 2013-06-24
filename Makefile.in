@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.220 2013/05/28 16:53:32 Ross.Combs Exp $
+## $XTermId: Makefile.in,v 1.223 2013/06/23 23:40:18 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -63,7 +63,7 @@ EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
 EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
 
-CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ $(EXTRA_CPPFLAGS)
+CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ -DDEFCLASS=\"@APP_CLASS@\" $(EXTRA_CPPFLAGS)
 CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS)
 LDFLAGS		= @LDFLAGS@ @EXTRA_LDFLAGS@
 LIBS		= @LIBS@
@@ -103,13 +103,13 @@ EXTRASRC	= @EXTRASRCS@
 EXTRAOBJ	= @EXTRAOBJS@
 
           SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
-	  	  data.c doublechr.c fontutils.c graphics.c input.c \
+	  	  data.c doublechr.c fontutils.c input.c \
 		  linedata.c main.c menu.c misc.c \
 		  print.c ptydata.c scrollback.c \
 		  screen.c scrollbar.c tabs.c util.c version.c xstrings.c \
 		  xtermcap.c VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button$o cachedGCs$o charproc$o charsets$o cursor$o \
-	  	  data$o doublechr$o fontutils$o graphics$o input$o \
+	  	  data$o doublechr$o fontutils$o input$o \
 		  linedata$o main$o menu$o misc$o \
 		  print$o ptydata$o scrollback$o \
 		  screen$o scrollbar$o tabs$o util$o version$o xstrings$o \
@@ -118,7 +118,7 @@ EXTRAOBJ	= @EXTRAOBJS@
           OBJS2 = resize$o version$o xstrings$o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
-           HDRS = VTparse.h data.h error.h graphics.h main.h menu.h \
+           HDRS = VTparse.h data.h error.h main.h menu.h \
                   ptyx.h version.h xstrings.h xterm.h xtermcap.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
 
