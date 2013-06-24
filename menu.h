@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.131 2013/06/23 08:57:13 Ross.Combs Exp $ */
+/* $XTermId: menu.h,v 1.132 2013/06/23 20:52:38 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -257,8 +257,10 @@ typedef enum {
     vtMenu_vthide,
 #endif
     vtMenu_altscreen,
+#if OPT_SIXEL_GRAPHICS
     vtMenu_sixelscrolling,
     vtMenu_privatecolorregisters,
+#endif
     vtMenu_LAST
 } vtMenuIndices;
 
@@ -386,7 +388,6 @@ extern void update_write_error(void);
 extern void update_print_redir(void);
 extern void update_8bit_control(void);
 extern void update_decbkm(void);
-extern void update_decsdm(void);
 
 #if OPT_NUM_LOCK
 extern void update_num_lock(void);
@@ -446,7 +447,6 @@ extern void update_cursesemul(void);
 extern void update_visualbell(void);
 extern void update_bellIsUrgent(void);
 extern void update_poponbell(void);
-extern void update_privatecolorregisters(void);
 
 #define update_marginbell() /* nothing */
 
@@ -483,6 +483,14 @@ extern void update_font_packed(void);
 #else
 #define update_font_boxchars() /* nothing */
 #define update_font_packed() /* nothing */
+#endif
+
+#if OPT_SIXEL_GRAPHICS
+extern void update_decsdm(void);
+extern void update_privatecolorregisters(void);
+#else
+#define update_decsdm() /* nothing */
+#define update_privatecolorregisters() /* nothing */
 #endif
 
 #if OPT_DEC_SOFTFONT

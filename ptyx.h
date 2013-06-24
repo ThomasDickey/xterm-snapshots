@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.770 2013/06/23 08:57:13 Ross.Combs Exp $ */
+/* $XTermId: ptyx.h,v 1.776 2013/06/23 22:00:58 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -517,6 +517,10 @@ typedef struct {
 #define OPT_DEC_RECTOPS 0 /* true if xterm is configured for VT420 rectangles */
 #endif
 
+#ifndef OPT_SIXEL_GRAPHICS
+#define OPT_SIXEL_GRAPHICS 0 /* true if xterm supports VT220-style sixel graphics */
+#endif
+
 #ifndef OPT_DEC_SOFTFONT
 #define OPT_DEC_SOFTFONT 0 /* true if xterm is configured for VT220 softfonts */
 #endif
@@ -890,6 +894,112 @@ typedef enum {
 } TitleModes;
 
 #define IsTitleMode(xw,mode) (((xw)->screen.title_modes & mode) != 0)
+
+#include <xcharmouse.h>
+
+/*
+ * Use this enumerated type to check consistency among dpmodes(), savemodes()
+ * restoremodes() and do_decrpm().
+ */
+typedef enum {
+    srm_DECCKM = 1
+    ,srm_DECANM = 2
+    ,srm_DECCOLM = 3
+    ,srm_DECSCLM = 4
+    ,srm_DECSCNM = 5
+    ,srm_DECOM = 6
+    ,srm_DECAWM = 7
+    ,srm_DECARM = 8
+    ,srm_X10_MOUSE = SET_X10_MOUSE
+#if OPT_TOOLBAR
+    ,srm_RXVT_TOOLBAR = 10
+#endif
+#if OPT_BLINK_CURS
+    ,srm_ATT610_BLINK = 12
+#endif
+    ,srm_DECPFF = 18
+    ,srm_DECPEX = 19
+    ,srm_DECTCEM = 25
+    ,srm_RXVT_SCROLLBAR = 30
+#if OPT_SHIFT_FONTS
+    ,srm_RXVT_FONTSIZE = 35
+#endif
+#if OPT_TEK4014
+    ,srm_DECTEK = 38
+#endif
+    ,srm_132COLS = 40
+    ,srm_CURSES_HACK = 41
+    ,srm_DECNRCM = 42
+    ,srm_MARGIN_BELL = 44
+    ,srm_REVERSEWRAP = 45
+#ifdef ALLOWLOGGING
+    ,srm_ALLOWLOGGING = 46
+#endif
+    ,srm_OPT_ALTBUF_CURSOR = 1049
+    ,srm_OPT_ALTBUF = 1047
+    ,srm_ALTBUF = 47
+    ,srm_DECNKM = 66
+    ,srm_DECBKM = 67
+    ,srm_DECLRMM = 69
+#if OPT_SIXEL_GRAPHICS
+    ,srm_DECSDM = 80		/* Sixel Display Mode */
+#endif
+    ,srm_DECNCSM = 95
+    ,srm_VT200_MOUSE = SET_VT200_MOUSE
+    ,srm_VT200_HIGHLIGHT_MOUSE = SET_VT200_HIGHLIGHT_MOUSE
+    ,srm_BTN_EVENT_MOUSE = SET_BTN_EVENT_MOUSE
+    ,srm_ANY_EVENT_MOUSE = SET_ANY_EVENT_MOUSE
+#if OPT_FOCUS_EVENT
+    ,srm_FOCUS_EVENT_MOUSE = SET_FOCUS_EVENT_MOUSE
+#endif
+    ,srm_EXT_MODE_MOUSE = SET_EXT_MODE_MOUSE
+    ,srm_SGR_EXT_MODE_MOUSE = SET_SGR_EXT_MODE_MOUSE
+    ,srm_URXVT_EXT_MODE_MOUSE = SET_URXVT_EXT_MODE_MOUSE
+    ,srm_ALTERNATE_SCROLL = SET_ALTERNATE_SCROLL
+    ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
+    ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
+    ,srm_EIGHT_BIT_META = 1034
+#if OPT_NUM_LOCK
+    ,srm_REAL_NUMLOCK = 1035
+    ,srm_META_SENDS_ESC = 1036
+#endif
+    ,srm_DELETE_IS_DEL = 1037
+#if OPT_NUM_LOCK
+    ,srm_ALT_SENDS_ESC = 1039
+#endif
+    ,srm_KEEP_SELECTION = 1040
+    ,srm_SELECT_TO_CLIPBOARD = 1041
+    ,srm_BELL_IS_URGENT = 1042
+    ,srm_POP_ON_BELL = 1043
+    ,srm_TITE_INHIBIT = 1048
+#if OPT_TCAP_FKEYS
+    ,srm_TCAP_FKEYS = 1050
+#endif
+#if OPT_SUN_FUNC_KEYS
+    ,srm_SUN_FKEYS = 1051
+#endif
+#if OPT_HP_FUNC_KEYS
+    ,srm_HP_FKEYS = 1052
+#endif
+#if OPT_SCO_FUNC_KEYS
+    ,srm_SCO_FKEYS = 1053
+#endif
+    ,srm_LEGACY_FKEYS = 1060
+#if OPT_SUNPC_KBD
+    ,srm_VT220_FKEYS = 1061
+#endif
+#if OPT_SIXEL_GRAPHICS
+    ,srm_PRIVATE_COLOR_REGISTERS = 1070
+#endif
+#if OPT_READLINE
+    ,srm_BUTTON1_MOVE_POINT = SET_BUTTON1_MOVE_POINT
+    ,srm_BUTTON2_MOVE_POINT = SET_BUTTON2_MOVE_POINT
+    ,srm_DBUTTON3_DELETE = SET_DBUTTON3_DELETE
+    ,srm_PASTE_IN_BRACKET = SET_PASTE_IN_BRACKET
+    ,srm_PASTE_QUOTE = SET_PASTE_QUOTE
+    ,srm_PASTE_LITERAL_NL = SET_PASTE_LITERAL_NL
+#endif				/* OPT_READLINE */
+} DECSET_codes;
 
 /* indices for mapping multiple clicks to selection types */
 typedef enum {
@@ -1439,7 +1549,6 @@ typedef enum {
 	DP_X_EXT_MOUSE,
 	DP_X_LOGGING,
 	DP_X_LRMM,
-	DP_DECSDM,
 	DP_X_MARGIN,
 	DP_X_MORE,
 	DP_X_MOUSE,
@@ -1458,6 +1567,9 @@ typedef enum {
 #endif
 #if OPT_SHIFT_FONTS
 	DP_RXVT_FONTSIZE,
+#endif
+#if OPT_SIXEL_GRAPHICS
+	DP_DECSDM,
 #endif
 #if OPT_TEK4014
 	DP_DECTEK,
@@ -1953,8 +2065,6 @@ typedef struct {
 	int		bellArmed;	/* cursor below bell margin	*/
 	BellVolume	marginVolume;	/* margin-bell volume           */
 	BellVolume	warningVolume;	/* warning-bell volume          */
-	Boolean		sixel_scrolling; /* sixel scrolling             */
-	Boolean		privatecolorregisters; /* private color registers for each graphic */
 	Boolean		multiscroll;	/* true if multi-scroll		*/
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/
@@ -1997,6 +2107,11 @@ typedef struct {
 	Boolean		allowScrollLock0;/* initial ScrollLock mode	*/
 	Boolean		scroll_lock;	/* true to keep buffer in view	*/
 	Boolean		scroll_dirty;	/* scrolling makes screen dirty	*/
+#endif
+
+#if OPT_SIXEL_GRAPHICS
+	Boolean		sixel_scrolling; /* sixel scrolling             */
+	Boolean		privatecolorregisters; /* private color registers for each graphic */
 #endif
 
 #if OPT_VT52_MODE

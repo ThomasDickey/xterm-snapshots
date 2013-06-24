@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.288 2013/04/24 09:49:19 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.289 2013/06/24 00:06:12 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #292
-.ds RF 2013/04/24
+.ds LF Patch #294
+.ds RF 2013/06/23
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1153,6 +1153,12 @@ The last two parameters apply to VT400 & up, and denote keyboard ready and LK01 
   \*(Ps = \*5\*3 \(-> Report Locator status as
 \*(Cs\*?\*5\*3\*n Locator available, if compiled-in, or
 \*(Cs\*?\*5\*0\*n No Locator, if not.
+  \*(Ps = \*5\*5 \(-> Report Locator status as
+\*(Cs\*?\*5\*3\*n Locator available, if compiled-in, or
+\*(Cs\*?\*5\*0\*n No Locator, if not.
+  \*(Ps = \*5\*6 \(-> Report Locator type as
+\*(Cs\*?\*5\*7\*;\*1\*n Mouse, if compiled-in, or
+\*(Cs\*?\*5\*7\*;\*0\*n Cannot identify, if not.
   \*(Ps = \*6\*2 \(-> Report macro space (DECMSR) as
 \*(Cs\*(Pn\*s\\*\*s\*{
   \*(Ps = \*6\*3 \(-> Report memory checksum (DECCKSR) as

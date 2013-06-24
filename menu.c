@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.316 2013/06/23 08:57:13 Ross.Combs Exp $ */
+/* $XTermId: menu.c,v 1.320 2013/06/23 22:46:18 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -149,7 +149,6 @@ static void do_keepSelection   PROTO_XT_CALLBACK_ARGS;
 static void do_kill            PROTO_XT_CALLBACK_ARGS;
 static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
 static void do_poponbell       PROTO_XT_CALLBACK_ARGS;
-static void do_privatecolorregisters PROTO_XT_CALLBACK_ARGS;
 static void do_print           PROTO_XT_CALLBACK_ARGS;
 static void do_print_redir     PROTO_XT_CALLBACK_ARGS;
 static void do_quit            PROTO_XT_CALLBACK_ARGS;
@@ -161,7 +160,6 @@ static void do_scrollkey       PROTO_XT_CALLBACK_ARGS;
 static void do_scrollttyoutput PROTO_XT_CALLBACK_ARGS;
 static void do_securekbd       PROTO_XT_CALLBACK_ARGS;
 static void do_selectClipboard PROTO_XT_CALLBACK_ARGS;
-static void do_sixelscrolling  PROTO_XT_CALLBACK_ARGS;
 static void do_softreset       PROTO_XT_CALLBACK_ARGS;
 static void do_suspend         PROTO_XT_CALLBACK_ARGS;
 static void do_terminate       PROTO_XT_CALLBACK_ARGS;
@@ -228,6 +226,11 @@ static void do_font_renderfont PROTO_XT_CALLBACK_ARGS;
 
 #if OPT_SCO_FUNC_KEYS
 static void do_sco_fkeys       PROTO_XT_CALLBACK_ARGS;
+#endif
+
+#if OPT_SIXEL_GRAPHICS
+static void do_privatecolorregisters PROTO_XT_CALLBACK_ARGS;
+static void do_sixelscrolling  PROTO_XT_CALLBACK_ARGS;
 #endif
 
 #if OPT_SUN_FUNC_KEYS
@@ -365,8 +368,10 @@ MenuEntry vtMenuEntries[] = {
     { "vthide",		do_vthide,	NULL },
 #endif
     { "altscreen",	do_altscreen,	NULL },
+#if OPT_SIXEL_GRAPHICS
     { "sixelScrolling",	do_sixelscrolling,	NULL },
     { "privateColorRegisters", do_privatecolorregisters, NULL },
+#endif
     };
 
 MenuEntry fontMenuEntries[] = {
@@ -782,7 +787,7 @@ domenu(Widget w,
 	    update_bellIsUrgent();
 	    update_cursorblink();
 	    update_altscreen();
-	    update_decsdm(); /* Sixel Display Mode */
+	    update_decsdm();	/* Sixel Display Mode */
 	    update_titeInhibit();
 #ifndef NO_ACTIVE_ICON
 	    update_activeicon();
@@ -1064,17 +1069,6 @@ do_poponbell(Widget gw GCC_UNUSED,
 
     ToggleFlag(screen->poponbell);
     update_poponbell();
-}
-
-static void
-do_privatecolorregisters(Widget gw GCC_UNUSED,
-			 XtPointer closure GCC_UNUSED,
-			 XtPointer data GCC_UNUSED)
-{
-    TScreen *screen = TScreenOf(term);
-
-    ToggleFlag(screen->privatecolorregisters);
-    update_privatecolorregisters();
 }
 
 #ifdef ALLOWLOGGING
@@ -1570,15 +1564,6 @@ do_altscreen(Widget gw GCC_UNUSED,
     ToggleAlternate(term);
 }
 
-static void
-do_sixelscrolling(Widget gw GCC_UNUSED,
-		  XtPointer closure GCC_UNUSED,
-		  XtPointer data GCC_UNUSED)
-{
-    term->keyboard.flags ^= MODE_DECSDM;
-    update_decsdm();
-}
-
 /* ARGSUSED */
 static void
 do_titeInhibit(Widget gw GCC_UNUSED,
@@ -2035,15 +2020,6 @@ HandleSetPopOnBell(Widget w,
     HANDLE_VT_TOGGLE(poponbell);
 }
 
-void
-HandleSetPrivateColorRegisters(Widget w,
-			       XEvent * event GCC_UNUSED,
-			       String * params,
-			       Cardinal *param_count)
-{
-    HANDLE_VT_TOGGLE(privatecolorregisters);
-}
-
 #ifdef ALLOWLOGGING
 void
 HandleLogging(Widget w,
@@ -2239,6 +2215,65 @@ update_fullscreen(void)
 }
 
 #endif /* OPT_MAXIMIZE */
+
+#if OPT_SIXEL_GRAPHICS
+static void
+do_sixelscrolling(Widget gw GCC_UNUSED,
+		  XtPointer closure GCC_UNUSED,
+		  XtPointer data GCC_UNUSED)
+{
+    term->keyboard.flags ^= MODE_DECSDM;
+    update_decsdm();
+}
+
+static void
+do_privatecolorregisters(Widget gw GCC_UNUSED,
+			 XtPointer closure GCC_UNUSED,
+			 XtPointer data GCC_UNUSED)
+{
+    TScreen *screen = TScreenOf(term);
+
+    ToggleFlag(screen->privatecolorregisters);
+    update_privatecolorregisters();
+}
+
+void
+update_privatecolorregisters(void)
+{
+    UpdateCheckbox("update_privatecolorregisters",
+		   vtMenuEntries,
+		   vtMenu_privatecolorregisters,
+		   TScreenOf(term)->privatecolorregisters);
+}
+
+void
+update_decsdm(void)
+{
+    UpdateCheckbox("update_decsdm",
+		   vtMenuEntries,
+		   vtMenu_sixelscrolling,
+		   (term->keyboard.flags & MODE_DECSDM) != 0);
+}
+
+void
+HandleSetPrivateColorRegisters(Widget w,
+			       XEvent * event GCC_UNUSED,
+			       String * params,
+			       Cardinal *param_count)
+{
+    HANDLE_VT_TOGGLE(privatecolorregisters);
+}
+
+void
+HandleSixelScrolling(Widget w,
+		     XEvent * event GCC_UNUSED,
+		     String * params,
+		     Cardinal *param_count)
+{
+    handle_vt_toggle(do_sixelscrolling, term->keyboard.flags & MODE_DECSDM,
+		     params, *param_count, w);
+}
+#endif
 
 #if OPT_SUN_FUNC_KEYS
 void
@@ -2521,16 +2556,6 @@ HandleAltScreen(Widget w,
 {
     /* eventually want to see if sensitive or not */
     handle_vt_toggle(do_altscreen, TScreenOf(term)->whichBuf,
-		     params, *param_count, w);
-}
-
-void
-HandleSixelScrolling(Widget w,
-		     XEvent * event GCC_UNUSED,
-		     String * params,
-		     Cardinal *param_count)
-{
-    handle_vt_toggle(do_sixelscrolling, term->keyboard.flags & MODE_DECSDM,
 		     params, *param_count, w);
 }
 
@@ -3482,15 +3507,6 @@ update_poponbell(void)
 		   TScreenOf(term)->poponbell);
 }
 
-void
-update_privatecolorregisters(void)
-{
-    UpdateCheckbox("update_privatecolorregisters",
-		   vtMenuEntries,
-		   vtMenu_privatecolorregisters,
-		   TScreenOf(term)->privatecolorregisters);
-}
-
 #ifndef update_marginbell	/* 2007-3-7: no longer menu entry */
 void
 update_marginbell(void)
@@ -3520,15 +3536,6 @@ update_altscreen(void)
 		   vtMenuEntries,
 		   vtMenu_altscreen,
 		   TScreenOf(term)->whichBuf);
-}
-
-void
-update_decsdm(void)
-{
-    UpdateCheckbox("update_decsdm",
-		   vtMenuEntries,
-		   vtMenu_sixelscrolling,
-		   (term->keyboard.flags & MODE_DECSDM) != 0);
 }
 
 void
