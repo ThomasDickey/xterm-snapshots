@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.10 2013/06/23 21:48:31 tom Exp $ */
+/* $XTermId: graphics.c,v 1.11 2013/06/24 22:27:16 tom Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -417,6 +417,7 @@ init_sixel_graphic(SixelGraphic * graphic, int terminal_id, int private_colors)
 	break;
     case 340:
 	graphic->valid_registers = 16;
+	break;
     default:
 	graphic->valid_registers = 64;	/* unknown graphics model -- might as well be generous */
 	break;
