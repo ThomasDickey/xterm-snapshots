@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.457 2013/06/23 21:55:39 tom Exp $ */
+/* $XTermId: button.c,v 1.458 2013/07/01 00:50:20 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -3344,13 +3344,6 @@ ComputeSelect(XtermWidget xw,
 		&& MoreRows(endSel)) {
 		screen->endSel.col = 0;
 		NextRow(endSel);
-	    }
-	    /* Clicking on right edge will make endSel.col == screen->max_col,
-	     * so clamp it. Otherwise XTERM_CELL and friends will fail assertion
-	     */
-	    if (screen->endSel.col > screen->max_col) {
-		screen->endSel.col = screen->max_col;
-		TRACE(("Select_WORD endSel.col clamped to %d\n", screen->endSel.col));
 	    }
 	}
 #if OPT_WIDE_CHARS
