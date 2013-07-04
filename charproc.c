@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1299 2013/06/23 21:55:39 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1300 2013/07/04 15:19:32 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -151,8 +151,10 @@ static void RequestResize(XtermWidget /* xw */ ,
 			  int /* cols */ ,
 			  Bool /* text */ );
 static void SwitchBufs(XtermWidget /* xw */ ,
-		       int /* toBuf */ );
-static void ToAlternate(XtermWidget /* xw */ );
+		       int /* toBuf */ ,
+		       Bool /* clearFirst */ );
+static void ToAlternate(XtermWidget /* xw */ ,
+			Bool /* clearFirst */ );
 static void ansi_modes(XtermWidget termw,
 		       BitFunc /* func */ );
 static void bitclr(unsigned *p, unsigned mask);
@@ -5020,7 +5022,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM()) {
 		    CursorSave(xw);
-		    ToAlternate(xw);
+		    ToAlternate(xw, True);
 		    ClearScreen(xw);
 		} else {
 		    FromAlternate(xw);
@@ -5035,7 +5037,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	case srm_ALTBUF:	/* alternate buffer */
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM()) {
-		    ToAlternate(xw);
+		    ToAlternate(xw, False);
 		} else {
 		    if (screen->whichBuf
 			&& (code == 1047))
@@ -5643,7 +5645,7 @@ restoremodes(XtermWidget xw)
 	case srm_ALTBUF:	/* alternate buffer */
 	    if (!xw->misc.titeInhibit) {
 		if (screen->save_modes[DP_X_ALTSCRN])
-		    ToAlternate(xw);
+		    ToAlternate(xw, False);
 		else
 		    FromAlternate(xw);
 		/* update_altscreen done by ToAlt and FromAlt */
@@ -6367,11 +6369,11 @@ ToggleAlternate(XtermWidget xw)
     if (TScreenOf(xw)->whichBuf)
 	FromAlternate(xw);
     else
-	ToAlternate(xw);
+	ToAlternate(xw, False);
 }
 
 static void
-ToAlternate(XtermWidget xw)
+ToAlternate(XtermWidget xw, Bool clearFirst)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -6382,7 +6384,7 @@ ToAlternate(XtermWidget xw)
 						    (unsigned) MaxRows(screen),
 						    (unsigned) MaxCols(screen),
 						    &screen->editBuf_data[1]);
-	SwitchBufs(xw, 1);
+	SwitchBufs(xw, 1, clearFirst);
 	screen->whichBuf = 1;
 #if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
@@ -6401,7 +6403,7 @@ FromAlternate(XtermWidget xw)
 	if (screen->scroll_amt)
 	    FlushScroll(xw);
 	screen->whichBuf = 0;
-	SwitchBufs(xw, 0);
+	SwitchBufs(xw, 0, False);
 #if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
 #endif
@@ -6410,7 +6412,7 @@ FromAlternate(XtermWidget xw)
 }
 
 static void
-SwitchBufs(XtermWidget xw, int toBuf)
+SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
 {
     TScreen *screen = TScreenOf(xw);
     int rows, top;
@@ -6442,6 +6444,9 @@ SwitchBufs(XtermWidget xw, int toBuf)
 		   (unsigned) ((rows - top) * FontHeight(screen)),
 		   False);
 #endif
+	if (clearFirst) {
+	    ClearBufRows(xw, top, rows);
+	}
     }
     ScrnUpdate(xw, 0, 0, rows, MaxCols(screen), False);
 }
