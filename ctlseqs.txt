@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2012)
-               updated for XTerm Patch #294 (2013/06/23)
+                    invisible-island.net (2006-2013)
+               updated for XTerm Patch #294 (2013/07/04)
 
 
 
@@ -614,6 +614,20 @@ CSI Ps n  Device Status Report (DSR).
             Ps = 6  -> Report Cursor Position (CPR) [row;column].
           Result is
           CSI r ; c R
+
+          Note: it is possible for this sequence to be sent by a func-
+          tion key.  For example, with the default keyboard configura-
+          tion the shifted F1 key may send (with shift-, control-, alt-
+          modifiers)
+            CSI 1  ; 2  R , or
+            CSI 1  ; 5  R , or
+            CSI 1  ; 6  R , etc.
+          The second parameter encodes the modifiers; values range from
+          2 to 16.  See the section PC-Style Function Keys for the
+          codes.  The modifyFunctionKeys and modifyKeyboard resources
+          can change the form of the string sent from the modified F1
+          key.
+
 CSI > Ps n
           Disable modifiers which may be enabled via the CSI > Ps; Ps m
           sequence.  This corresponds to a resource value of "-1", which
@@ -1220,16 +1234,24 @@ In normal mode, i.e., a Sun/PC keyboard when the sunKeyboard resource is
 false, xterm recognizes function key modifiers which are parameters
 appended before the final character of the control sequence.
 
-                      Code     Modifiers
-                    ---------+-----------------------
-                    2        | Shift
-                    3        | Alt
-                    4        | Shift + Alt
-                    5        | Control
-                    6        | Shift + Control
-                    7        | Alt + Control
-                    8        | Shift + Alt + Control
-                    ---------+-----------------------
+                     Code     Modifiers
+                   ---------+--------------------------
+                      2     | Shift
+                      3     | Alt
+                      4     | Shift + Alt
+                      5     | Control
+                      6     | Shift + Control
+                      7     | Alt + Control
+                      8     | Shift + Alt + Control
+                      9     | Meta
+                      10    | Meta + Shift
+                      11    | Meta + Alt
+                      12    | Meta + Alt + Shift
+                      13    | Meta + Ctrl
+                      14    | Meta + Ctrl + Shift
+                      15    | Meta + Ctrl + Alt
+                      16    | Meta + Ctrl +Alt + Shift
+                   ---------+--------------------------
 
 For example, shift-F5 would be sent as CSI 1 5 ; 2 ~
 

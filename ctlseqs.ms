@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.289 2013/06/24 00:06:12 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.291 2013/07/05 00:50:51 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #294
-.ds RF 2013/06/23
+.ds RF 2013/07/04
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -328,7 +328,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2012)
+invisible-island.net (2006-2013)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -1114,6 +1114,21 @@ Device Status Report (DSR).
   \*(Ps = \*6 \(-> Report Cursor Position (CPR) [row;column].  Result is
 .br
 \*(Cs\*(Ir\*s\*;\*(Ic\*s\*R
+.sp
+\fBNote\fP:
+it is possible for this sequence to be sent by a function key.
+For example, with the default keyboard configuration
+the shifted F1 key may send (with shift-, control-, alt-modifiers)
+.br
+  \*(Cs\*1\*s\*;\*2\*s\*R, or
+  \*(Cs\*1\*s\*;\*5\*s\*R, or
+  \*(Cs\*1\*s\*;\*6\*s\*R, etc.
+.br
+The second parameter encodes the modifiers; values range from 2 to 16.
+See the section \fBPC-Style Function Keys\fP for the codes.
+The \fBmodifyFunctionKeys\fP and \fBmodifyKeyboard\fP resources
+can change the form of the string sent from the modified F1 key.
+.sp
 .
 .IP \\*(Cs\\*>\\*(Ps\\*s\\*n
 Disable modifiers which may be enabled via the
@@ -1851,7 +1866,7 @@ Code	Modifiers
 _
 .TH
 .T&
-l | l .
+c | l .
 2	Shift
 3	Alt
 4	Shift + Alt
@@ -1859,6 +1874,14 @@ l | l .
 6	Shift + Control
 7	Alt + Control
 8	Shift + Alt + Control
+9	Meta
+10	Meta + Shift
+11	Meta + Alt
+12	Meta + Alt + Shift
+13	Meta + Ctrl
+14	Meta + Ctrl + Shift
+15	Meta + Ctrl + Alt
+16	Meta + Ctrl +Alt + Shift
 _
 .TE
 For example, shift-F5 would be sent as
