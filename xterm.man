@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.567 2013/06/23 08:57:13 Ross.Combs Exp $
+.\" $XTermId: xterm.man,v 1.568 2013/07/04 23:47:53 tom Exp $
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
@@ -6125,7 +6125,6 @@ This action sends the indicated graphics input code.
 The default bindings in the VT102 window use the SELECT token,
 which is set by the \fBselectToClipboard\fP resource:
 .NS
-.ta 2.5i
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\\&
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\\&
          Shift <KeyPress> Select:select-cursor-start() \\\&
@@ -6174,7 +6173,6 @@ which is set by the \fBselectToClipboard\fP resource:
 The default bindings for the scrollbar widget
 are separate from the VT100 widget:
 .NS
-.ta 2.5i
                       <Btn5Down>: StartScroll(Forward) \\n\\\&
                       <Btn1Down>: StartScroll(Forward) \\n\\\&
                       <Btn2Down>: StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
@@ -6186,7 +6184,6 @@ are separate from the VT100 widget:
 .PP
 The default bindings in the Tektronix window are:
 .NS
-.ta 2.5i
                  ~Meta<KeyPress>: insert-seven-bit() \\n\\\&
                   Meta<KeyPress>: insert-eight-bit() \\n\\\&
                 !Ctrl <Btn1Down>: popup-menu(mainMenu) \\n\\\&
@@ -6216,7 +6213,6 @@ While \fI\*n\fP owns the selection, it highlights it.
 When it loses the selection, it removes the corresponding highlight.
 But you can still paste from the corresponding cut buffer.
 .NS
-.ta .5i 1.5i
 *VT100*translations:    #override \\n\\\&
     ~Shift~Ctrl<Btn2Up>: insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift~Ctrl<Btn2Up>:  insert-selection(CLIPBOARD, CUT_BUFFER1) \\n\\\&
@@ -6227,7 +6223,6 @@ But you can still paste from the corresponding cut buffer.
 Below is a sample of how the \fBkeymap()\fP action is used to add special
 keys for entering commonly-typed works:
 .NS
-.ta .5i 1.5i
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\\&
 	<Key>F14:	keymap(None) \\n\\\&
@@ -6241,7 +6236,6 @@ Some people prefer using the left pointer button
 for dragging the scrollbar thumb.
 That can be setup by altering the translations resource, e.g.,
 .NS
-.ta .5i 1.5i
 *VT100.scrollbar.translations:	#override \\n\\\&
 	<Btn5Down>:	StartScroll(Forward) \\n\\\&
 	<Btn1Down>:	StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
