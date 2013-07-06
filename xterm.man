@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.568 2013/07/04 23:47:53 tom Exp $
+.\" $XTermId: xterm.man,v 1.569 2013/07/05 20:35:30 tom Exp $
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
@@ -3540,6 +3540,13 @@ Controls whether a newline is sent to the printer at the end of a print
 page function.
 The default is \*(``true\*(''.
 .TP 8
+.B "privateColorRegisters (\fPclass\fB privateColorRegisters)"
+If true, allocate separate color registers for each sixel
+device control string, e.g., for DECGCI.
+If not true, color registers are allocated only once,
+when the terminal is reset.
+The default is \*(``true\*(''.
+.TP 8
 .B "quietGrab (\fPclass\fB QuietGrab)"
 Controls whether the cursor is repainted
 when \fINotifyGrab\fP and \fINotifyUngrab\fP
@@ -3741,6 +3748,11 @@ The mark shows which lines have the flag set.
 .B "signalInhibit (\fPclass\fB SignalInhibit)"
 Specifies whether or not the entries in the \*(``Main Options\*('' menu for sending
 signals to \fI\*n\fP should be disallowed.
+The default is \*(``false\*(''.
+.TP 8
+.B "sixelScrolling (\fPclass\fB SixelScrolling)"
+If true, graphics scroll up one line at a time when sixels would be written
+past the bottom line on the window.
 The default is \*(``false\*(''.
 .TP 8
 .B "tekGeometry (\fPclass\fB Geometry)"
@@ -5914,6 +5926,9 @@ This action toggles the state of the \fBnumLock\fP resource.
 This action sets, unsets or toggles the \fBpopOnBell\fP resource.
 It is also invoked by the \fBpoponbell\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set-private-colors(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBprivateColorRegisters\fP resource.
+.TP 8
 .B "set-render-font(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBrenderFont\fP resource.
 It is also invoked by the \fBrender-font\fP entry in \fIfontMenu\fP.
@@ -5938,13 +5953,13 @@ It is also invoked from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 This action sets, unsets or toggles the \fBscrollbar\fP resource.
 It is also invoked by the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-select(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBselectToClipboard\fP resource.
-It is also invoked by the \fBselectToClipboard\fP entry in \fIvtMenu\fP.
-.TP 8
 .B "set-sco-function-keys(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
 It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
+.TP 8
+.B "set-select(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBselectToClipboard\fP resource.
+It is also invoked by the \fBselectToClipboard\fP entry in \fIvtMenu\fP.
 .TP 8
 .B "set-sixel-scrolling(\fIon/off/toggle\fP)"
 This action toggles between inline (sixel scrolling) and absolute positioning.
