@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: plink.sh,v 1.8 2013/07/04 19:02:05 tom Exp $
+# $XTermId: plink.sh,v 1.9 2013/07/05 23:29:56 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -43,8 +43,15 @@ do
 		OPT=-Wl,-as-needed
 		if ( eval $LINKIT $OPT $* >/dev/null 2>/dev/null )
 		then
-			LINKIT="$LINKIT $OPT $*"
-			break
+			WARNED=`eval $LINKIT $OPT $* 2>&1`
+			case ".$WARNED" in
+			*Warning*|*nsupported*|*nrecognized*)
+				;;
+			*)
+				LINKIT="$LINKIT $OPT $*"
+				break
+				;;
+			esac
 		fi
 	fi
 
