@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: plink.sh,v 1.9 2013/07/05 23:29:56 tom Exp $
+# $XTermId: plink.sh,v 1.10 2013/07/07 01:20:48 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -45,7 +45,7 @@ do
 		then
 			WARNED=`eval $LINKIT $OPT $* 2>&1`
 			case ".$WARNED" in
-			*Warning*|*nsupported*|*nrecognized*)
+			*Warning*|*nsupported*|*nrecognized*|*nknown*)
 				;;
 			*)
 				LINKIT="$LINKIT $OPT $*"

@@ -1,11 +1,11 @@
-# $XTermId: xterm.spec,v 1.52 2013/06/23 22:16:40 tom Exp $
+# $XTermId: xterm.spec,v 1.53 2013/07/07 01:19:29 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 294
+Version: 295
 Release: 1
 License: X11
 Group: User Interface/X
