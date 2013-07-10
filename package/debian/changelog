@@ -1,3 +1,9 @@
+xterm-dev (296) unstable; urgency=low
+
+  * Build-fix for #295 changes
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 09 Jul 2013 21:20:04 -0400
+
 xterm-dev (295) unstable; urgency=low
 
   * Workaround for problem with ld --as-needed option
