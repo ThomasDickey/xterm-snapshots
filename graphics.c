@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.11 2013/06/24 22:27:16 tom Exp $ */
+/* $XTermId: graphics.c,v 1.12 2013/07/10 22:35:28 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #include <data.h>
 #include <VTparse.h>
@@ -51,17 +52,15 @@
  * - everything
  * sixel:
  * - erase graphic when erasing screen
- * - erase graphic overwritten by other graphic
+ * - maintain ordered list/array instead of qsort()
  * - erase text under graphics if bg not transparent
  * - erase scrolled portions of all graphics on alt buffer
  * - delete graphic if scrolled past end of scrollback
  * - delete graphic if all pixels are transparent/erased
- * - dynamic memory allocation (and limits)
- * - fix drawing over window border areas
+ * - dynamic memory allocation, add configurable limits
  * - auto convert color graphics in VT330 mode
  * - investigate second graphic framebuffer for ReGIS -- does this apply to text and sixel graphics?
  * - fix problem where new_row < 0 during sixel parsing (see FIXME)
- * - fix position of drawing of new graphic when terminal is displaying scrollback
  * VT55/VT105 waveform graphics
  * - everything
  * escape sequences
@@ -90,7 +89,7 @@
  *  #1;2;0;0;0    5
  */
 static void
-parse_prefixedtype_params(ANSI * params, const char **string)
+parse_prefixedtype_params(ANSI *params, const char **string)
 {
     const char *cp = *string;
     ParmType nparam = 0;
@@ -167,9 +166,12 @@ typedef struct {
     int row;			/* context used during parsing */
     int col;			/* context used during parsing */
     int bufferid;		/* which screen buffer the graphic is associated with */
+    unsigned int id;		/* sequential id used for preserving layering */
     int valid;			/* if the graphic has been initialized */
     int dirty;			/* if the graphic needs to be redrawn */
 } SixelGraphic;
+
+static unsigned int next_sixel_id = 0U;
 
 static ColorRegister shared_color_registers[MAX_COLOR_REGISTERS];
 
@@ -187,7 +189,7 @@ static SixelGraphic sixel_graphics[MAX_SIXEL_GRAPHICS];
  */
 
 static void
-init_sixel_background(SixelGraphic * graphic)
+init_sixel_background(SixelGraphic *graphic)
 {
     RegisterNum bgcolor = (RegisterNum) graphic->background;
     int r, c;
@@ -208,7 +210,7 @@ init_sixel_background(SixelGraphic * graphic)
 }
 
 static void
-set_sixel(SixelGraphic * graphic, int sixel)
+set_sixel(SixelGraphic *graphic, int sixel)
 {
     RegisterNum color;
     int pix;
@@ -247,7 +249,7 @@ set_sixel(SixelGraphic * graphic, int sixel)
 }
 
 static void
-set_sixel_color_register(ColorRegister * color_registers,
+set_sixel_color_register(ColorRegister *color_registers,
 			 RegisterNum color,
 			 short r,
 			 short g,
@@ -261,7 +263,7 @@ set_sixel_color_register(ColorRegister * color_registers,
 }
 
 static void
-init_color_registers(ColorRegister * color_registers, int terminal_id)
+init_color_registers(ColorRegister *color_registers, int terminal_id)
 {
     TRACE(("initializing colors for %d\n", terminal_id));
     {
@@ -354,7 +356,7 @@ init_color_registers(ColorRegister * color_registers, int terminal_id)
 }
 
 static void
-init_sixel_graphic(SixelGraphic * graphic, int terminal_id, int private_colors)
+init_sixel_graphic(SixelGraphic *graphic, int terminal_id, int private_colors)
 {
     TRACE(("initializing sixel graphic\n"));
 
@@ -380,14 +382,14 @@ init_sixel_graphic(SixelGraphic * graphic, int terminal_id, int private_colors)
 
     /*
      * When an application selects the monochrome map:  the terminal sets the
-     * 16 entries of the color map to the default monochrome gray level. 
+     * 16 entries of the color map to the default monochrome gray level.
      * Therefore, the original colors are lost when changing from the color map
      * to the monochrome map.
-     * 
+     *
      * If you change the color value (green, red, blue) using the Color Set-Up
      * screen or a ReGIS command, the VT340 sets the gray scale by using the
      * formula (2G + R)/3.
-     * 
+     *
      * When an application selects the color map:  the terminal sets the 16
      * entries of the color map to the default (color) color map.
      */
@@ -495,6 +497,7 @@ get_sixel_graphic(XtermWidget xw)
 
     graphic->xw = xw;
     graphic->bufferid = bufferid;
+    graphic->id = next_sixel_id++;
     init_sixel_graphic(graphic, terminal_id, private_colors);
     return graphic;
 }
@@ -567,17 +570,17 @@ set_shared_color_register(RegisterNum color, short r, short g, short b)
     }
 }
 
-#define SixelToPixel(s) (unsigned short) ((long)(s) * 65535 / 100)
+#define ScaleForXColor(s) (unsigned short) ((long)(s) * 65535 / 100)
 
 static Pixel
-sixel_register_to_xpixel(ColorRegister * reg, XtermWidget xw)
+sixel_register_to_xpixel(ColorRegister *reg, XtermWidget xw)
 {
     if (!reg->allocated) {
 	XColor def;
 
-	def.red = SixelToPixel(reg->r);
-	def.green = SixelToPixel(reg->g);
-	def.blue = SixelToPixel(reg->b);
+	def.red = ScaleForXColor(reg->r);
+	def.green = ScaleForXColor(reg->g);
+	def.blue = ScaleForXColor(reg->b);
 	def.flags = DoRed | DoGreen | DoBlue;
 	if (!allocateBestRGB(xw, &def)) {
 	    return 0UL;
@@ -586,12 +589,15 @@ sixel_register_to_xpixel(ColorRegister * reg, XtermWidget xw)
 	reg->allocated = 1;
     }
 
+    /* FIXME: with so many possible colors we need to determine
+     * when to free them to be nice to PseudoColor displays
+     */
     return reg->pix;
 }
 
 static void
 refresh_sixel_graphic(TScreen const *screen,
-		      SixelGraphic * graphic,
+		      SixelGraphic *graphic,
 		      int xbase,
 		      int ybase,
 		      int x,
@@ -660,9 +666,9 @@ refresh_sixel_graphic(TScreen const *screen,
 	    }
 
 	    if (color != old_fg) {
-		xgcv.foreground = sixel_register_to_xpixel(
-							      &graphic->color_registers[color],
-							      graphic->xw);
+		xgcv.foreground =
+		    sixel_register_to_xpixel(&graphic->color_registers[color],
+					     graphic->xw);
 		XChangeGC(display, graphics_gc, mask, &xgcv);
 		old_fg = color;
 	    }
@@ -809,7 +815,7 @@ hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 }
 
 static void
-update_sixel_aspect(SixelGraphic * graphic)
+update_sixel_aspect(SixelGraphic *graphic)
 {
     /* We want to keep the ratio accurate but would like every pixel to have
      * the same size so keep these as whole numbers.
@@ -849,7 +855,7 @@ update_sixel_aspect(SixelGraphic * graphic)
  *  ftp://ftp.cs.utk.edu/pub/shuford/terminal/all_about_sixels.txt
  */
 extern void
-parse_sixel(XtermWidget xw, ANSI * params, char const *string)
+parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 {
     TScreen *screen = TScreenOf(xw);
     SixelGraphic *graphic;
@@ -1065,7 +1071,7 @@ parse_sixel(XtermWidget xw, ANSI * params, char const *string)
 	    Pregister = color_params.a_param[0];
 	    if (Pregister >= graphic->valid_registers) {
 		TRACE(("DATA_WARNING: sixel color operator uses out-of-range register %d\n", Pregister));
-		/* FIXME: supposedly the DEC terminals wrapped register indicies */
+		/* FIXME: supposedly the DEC terminals wrapped register indicies -- verify */
 		while (Pregister >= graphic->valid_registers)
 		    Pregister -= graphic->valid_registers;
 		TRACE(("DATA_WARNING: converted to %d\n", Pregister));
@@ -1212,10 +1218,9 @@ parse_sixel(XtermWidget xw, ANSI * params, char const *string)
 	}
 
 	if (new_row < 0) {
-	    TRACE(("new row would have been be negative (%d), skipping!", new_row));	/* FIXME: this is not the right fix */
-	} else {
-	    set_cur_row(screen, new_row);
+	    TRACE(("new row is going to be negative (%d)!", new_row));	/* FIXME: this was triggering, now it isn't */
 	}
+	set_cur_row(screen, new_row);
 	set_cur_col(screen, new_col <= screen->rgt_marg ? new_col : screen->rgt_marg);
     }
 
@@ -1226,7 +1231,7 @@ parse_sixel(XtermWidget xw, ANSI * params, char const *string)
 }
 
 extern void
-parse_regis(XtermWidget xw, ANSI * params, char const *string)
+parse_regis(XtermWidget xw, ANSI *params, char const *string)
 {
     (void) xw;
     (void) string;
@@ -1240,16 +1245,14 @@ parse_regis(XtermWidget xw, ANSI * params, char const *string)
  * This is used to allow text to "erase" graphics underneath it.
  */
 static void
-erase_sixel_graphic(SixelGraphic * graphic, int x, int y, int w, int h)
+erase_sixel_graphic(SixelGraphic *graphic, int x, int y, int w, int h)
 {
-    RegisterNum hole;
+    RegisterNum hole = COLOR_HOLE;
     int pw, ph;
     int r, c;
 
     pw = graphic->pixw;
     ph = graphic->pixh;
-
-    hole = COLOR_HOLE;
 
     TRACE(("erasing sixel bitmap %d,%d %dx%d\n", x, y, w, h));
 
@@ -1266,6 +1269,20 @@ erase_sixel_graphic(SixelGraphic * graphic, int x, int y, int w, int h)
     }
 }
 
+static int
+compare_sixel_ids(const void *left, const void *right)
+{
+    const SixelGraphic *l = *(const SixelGraphic *const *) left;
+    const SixelGraphic *r = *(const SixelGraphic *const *) right;
+
+    if (!l->valid || !r->valid)
+	return 0;
+    if (l->id < r->id)
+	return -1;
+    else
+	return 1;
+}
+
 extern void
 refresh_displayed_graphics(TScreen const *screen,
 			   int leftcol,
@@ -1273,13 +1290,22 @@ refresh_displayed_graphics(TScreen const *screen,
 			   int ncols,
 			   int nrows)
 {
+    SixelGraphic *ordered_graphics[MAX_SIXEL_GRAPHICS];
     SixelGraphic *graphic;
     unsigned int ii;
     int x, y, w, h;
     int xbase, ybase;
 
     for (ii = 0U; ii < MAX_SIXEL_GRAPHICS; ii++) {
-	graphic = &sixel_graphics[ii];
+	ordered_graphics[ii] = &sixel_graphics[ii];
+    }
+    qsort(ordered_graphics,
+	  MAX_SIXEL_GRAPHICS,
+	  sizeof(ordered_graphics[0]),
+	  compare_sixel_ids);
+
+    for (ii = 0U; ii < MAX_SIXEL_GRAPHICS; ii++) {
+	graphic = ordered_graphics[ii];
 	if (!graphic->valid || graphic->bufferid != screen->whichBuf)
 	    continue;
 
@@ -1292,6 +1318,16 @@ refresh_displayed_graphics(TScreen const *screen,
 		 + graphic->charcol * FontWidth(screen));
 	ybase = (screen->border
 		 + (graphic->charrow - screen->topline) * FontHeight(screen));
+
+	if (xbase + x + w + screen->border > FullWidth(screen))
+	    w = FullWidth(screen) - (xbase + x + screen->border);
+	if (ybase + y + h + screen->border > FullHeight(screen))
+	    h = FullHeight(screen) - (ybase + y + screen->border);
+	else if (ybase + y < screen->border) {
+	    int diff = screen->border - (ybase + y);
+	    y += diff;
+	    h -= diff;
+	}
 
 	TRACE(("graphics refresh: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d xbase=%d ybase=%d\n",
 	       screen->topline,
@@ -1337,6 +1373,16 @@ refresh_modified_displayed_graphics(TScreen const *screen)
 	ybase = (screen->border
 		 + (graphic->charrow - screen->topline) * FontHeight(screen));
 
+	if (xbase + x + w + screen->border > FullWidth(screen))
+	    w = FullWidth(screen) - (xbase + x + screen->border);
+	if (ybase + y + h + screen->border > FullHeight(screen))
+	    h = FullHeight(screen) - (ybase + y + screen->border);
+	else if (ybase + y < screen->border) {
+	    int diff = screen->border - (ybase + y);
+	    y += diff;
+	    h -= diff;
+	}
+
 	TRACE(("full graphics refresh: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d xbase=%d ybase=%d\n",
 	       screen->topline,
 	       leftcol, toprow,
@@ -1365,33 +1411,53 @@ scroll_displayed_graphics(int rows)
 }
 
 extern void
-erase_displayed_graphics(TScreen const *screen,
-			 int leftcol,
-			 int toprow,
-			 int ncols,
-			 int nrows)
+pixelarea_clear_displayed_graphics(TScreen const *screen,
+				   int winx,
+				   int winy,
+				   int w,
+				   int h)
 {
     SixelGraphic *graphic;
     unsigned int ii;
-    int x, y, w, h;
+    int x, y;
 
     for (ii = 0U; ii < MAX_SIXEL_GRAPHICS; ii++) {
 	graphic = &sixel_graphics[ii];
 	if (!graphic->valid)
 	    continue;
 
-	x = (leftcol - graphic->charcol) * FontWidth(screen);
-	y = (toprow - graphic->charrow) * FontHeight(screen);
-	w = ncols * FontWidth(screen);
-	h = nrows * FontHeight(screen);
+	x = winx - graphic->charcol * FontWidth(screen);
+	y = winy - graphic->charrow * FontHeight(screen);
 
-	TRACE(("graphics erase: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d\n",
+	TRACE(("pixelarea graphics erase: screen->topline=%d winx=%d winy=%d w=%d h=%d x=%d y=%d\n",
 	       screen->topline,
-	       leftcol, toprow,
-	       nrows, ncols,
-	       x, y, w, h));
+	       winx, winy,
+	       w, h,
+	       x, y));
 	erase_sixel_graphic(graphic, x, y, w, h);
     }
+}
+
+extern void
+chararea_clear_displayed_graphics(TScreen const *screen,
+				  int leftcol,
+				  int toprow,
+				  int ncols,
+				  int nrows)
+{
+    int x, y, w, h;
+
+    x = leftcol * FontWidth(screen);
+    y = toprow * FontHeight(screen);
+    w = ncols * FontWidth(screen);
+    h = nrows * FontHeight(screen);
+
+    TRACE(("chararea clear graphics: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d\n",
+	   screen->topline,
+	   leftcol, toprow,
+	   nrows, ncols,
+	   x, y, w, h));
+    pixelarea_clear_displayed_graphics(screen, x, y, w, h);
 }
 
 extern void
