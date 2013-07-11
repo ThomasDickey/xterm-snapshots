@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.5 2013/06/23 19:43:59 tom Exp $ */
+/* $XTermId: graphics.h,v 1.6 2013/07/10 08:28:55 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -41,23 +41,27 @@
 
 typedef unsigned short RegisterNum;
 
-extern void parse_sixel(XtermWidget xw, ANSI *params, char const *string);
+extern void chararea_clear_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
 extern void parse_regis(XtermWidget xw, ANSI *params, char const *string);
+extern void parse_sixel(XtermWidget xw, ANSI *params, char const *string);
+extern void pixelarea_clear_displayed_graphics(TScreen const *screen, int winx, int winy, int w, int h);
 extern void refresh_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
 extern void refresh_modified_displayed_graphics(TScreen const *screen);
-extern void update_displayed_graphics_color_registers(TScreen const *screen, RegisterNum color, short r, short g, short b);
-extern void scroll_displayed_graphics(int rows);
-extern void erase_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
 extern void reset_displayed_graphics(TScreen const *screen);
+extern void scroll_displayed_graphics(int rows);
+extern void update_displayed_graphics_color_registers(TScreen const *screen, RegisterNum color, short r, short g, short b);
 
 #else
 
-#define erase_displayed_graphics(screen, leftcol, toprow, ncols, nrows) /* nothing */
+#define chararea_clear_displayed_graphics(screen, leftcol, toprow, ncols, nrows) /* nothing */
 #define parse_regis(xw, params, string) /* nothing */
 #define parse_sixel(xw, params, string) /* nothing */
+#define pixelarea_clear_displayed_graphics(screen, winx, winy, w, h) /* nothing */
 #define refresh_displayed_graphics(screen, leftcol, toprow, ncols, nrows) /* nothing */
+#define refresh_modified_displayed_graphics(screen) /* nothing */
 #define reset_displayed_graphics(screen) /* nothing */
 #define scroll_displayed_graphics(rows) /* nothing */
+#define update_displayed_graphics_color_registers(screen, color, r, g, b) /* nothing */
 
 #endif
 
