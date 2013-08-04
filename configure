@@ -775,10 +775,10 @@ Optional Features:
   --disable-tek4014       disable tek4014 emulation
   --enable-toolbar        compile-in toolbar for pulldown menus
   --disable-vt52          disable VT52 emulation
-  --enable-mini-luit      enable mini-luit (built-in Latin9 support)
-  --enable-luit           enable luit filter (Unicode translation)
-  --enable-wide-chars     enable wide-character support
+  --disable-wide-chars    disable wide-character support
   --enable-16bit-chars    enable 16-bit character support
+  --enable-mini-luit      enable mini-luit (built-in Latin9 support)
+  --disable-luit          enable luit filter (Unicode translation)
   --enable-dabbrev        enable dynamic-abbreviation support
   --enable-dec-locator    enable DECterm Locator support
   --enable-sixel-graphics enable sixel graphics support
@@ -16772,7 +16772,58 @@ cat >>confdefs.h <<\EOF
 #define OPT_VT52_MODE 0
 EOF
 
-echo "$as_me:16775: checking if you want to use mini-luit/Latin9 built-in support" >&5
+echo "$as_me:16775: checking if you want wide-character support" >&5
+echo $ECHO_N "checking if you want wide-character support... $ECHO_C" >&6
+
+# Check whether --enable-wide-chars or --disable-wide-chars was given.
+if test "${enable_wide_chars+set}" = set; then
+  enableval="$enable_wide_chars"
+  test "$enableval" != no && enableval=yes
+  if test "$enableval" != "yes" ; then
+    enable_wchar=no
+  else
+    enable_wchar=yes
+  fi
+else
+  enableval=yes
+  enable_wchar=yes
+
+fi;
+echo "$as_me:16792: result: $enable_wchar" >&5
+echo "${ECHO_T}$enable_wchar" >&6
+
+echo "$as_me:16795: checking if you want only 16-bit character support" >&5
+echo $ECHO_N "checking if you want only 16-bit character support... $ECHO_C" >&6
+
+# Check whether --enable-16bit-chars or --disable-16bit-chars was given.
+if test "${enable_16bit_chars+set}" = set; then
+  enableval="$enable_16bit_chars"
+  test "$enableval" != yes && enableval=no
+  if test "$enableval" != "no" ; then
+    enable_16bit_chars=yes
+  else
+    enable_16bit_chars=no
+  fi
+else
+  enableval=no
+  enable_16bit_chars=no
+
+fi;
+echo "$as_me:16812: result: $enable_16bit_chars" >&5
+echo "${ECHO_T}$enable_16bit_chars" >&6
+
+if test "$enable_16bit_chars" = yes ; then
+
+cat >>confdefs.h <<\EOF
+#define OPT_WIDER_ICHAR 0
+EOF
+
+	enable_wchar=yes
+fi
+
+if test "$enable_wchar" = yes ; then
+
+echo "$as_me:16826: checking if you want to use mini-luit/Latin9 built-in support" >&5
 echo $ECHO_N "checking if you want to use mini-luit/Latin9 built-in support... $ECHO_C" >&6
 
 # Check whether --enable-mini-luit or --disable-mini-luit was given.
@@ -16789,7 +16840,7 @@ else
   enable_mini_luit=no
 
 fi;
-echo "$as_me:16792: result: $enable_mini_luit" >&5
+echo "$as_me:16843: result: $enable_mini_luit" >&5
 echo "${ECHO_T}$enable_mini_luit" >&6
 if test "$enable_mini_luit" = yes ; then
 
@@ -16799,24 +16850,24 @@ EOF
 
 fi
 
-echo "$as_me:16802: checking if you want to use luit" >&5
+echo "$as_me:16853: checking if you want to use luit" >&5
 echo $ECHO_N "checking if you want to use luit... $ECHO_C" >&6
 
 # Check whether --enable-luit or --disable-luit was given.
 if test "${enable_luit+set}" = set; then
   enableval="$enable_luit"
-  test "$enableval" != yes && enableval=no
-  if test "$enableval" != "no" ; then
-    enable_luit=yes
+  test "$enableval" != no && enableval=yes
+  if test "$enableval" != "yes" ; then
+    enable_luit=no
   else
-    enable_luit=$enable_mini_luit
+    enable_luit=yes
   fi
 else
-  enableval=no
-  enable_luit=$enable_mini_luit
+  enableval=yes
+  enable_luit=yes
 
 fi;
-echo "$as_me:16819: result: $enable_luit" >&5
+echo "$as_me:16870: result: $enable_luit" >&5
 echo "${ECHO_T}$enable_luit" >&6
 if test "$enable_luit" = yes ; then
 
@@ -16829,7 +16880,7 @@ for ac_prog in $LUIT xterm-filter bluit luit
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
-echo "$as_me:16832: checking for $ac_word" >&5
+echo "$as_me:16883: checking for $ac_word" >&5
 echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
 if test "${ac_cv_path_LUIT+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -16846,7 +16897,7 @@ for ac_dir in $ac_dummy; do
   test -z "$ac_dir" && ac_dir=.
   if $as_executable_p "$ac_dir/$ac_word"; then
    ac_cv_path_LUIT="$ac_dir/$ac_word"
-   echo "$as_me:16849: found $ac_dir/$ac_word" >&5
+   echo "$as_me:16900: found $ac_dir/$ac_word" >&5
    break
 fi
 done
@@ -16857,10 +16908,10 @@ fi
 LUIT=$ac_cv_path_LUIT
 
 if test -n "$LUIT"; then
-  echo "$as_me:16860: result: $LUIT" >&5
+  echo "$as_me:16911: result: $LUIT" >&5
 echo "${ECHO_T}$LUIT" >&6
 else
-  echo "$as_me:16863: result: no" >&5
+  echo "$as_me:16914: result: no" >&5
 echo "${ECHO_T}no" >&6
 fi
 
@@ -16919,7 +16970,7 @@ IFS="$cf_save_ifs"
 
 if test -n "$cf_path_prog" ; then
 
-echo "${as_me:-configure}:16922: testing defining path for ${cf_path_prog} ..." 1>&5
+echo "${as_me:-configure}:16973: testing defining path for ${cf_path_prog} ..." 1>&5
 
 cat >>confdefs.h <<EOF
 #define LUIT_PATH "$cf_path_prog"
@@ -16933,57 +16984,6 @@ EOF
 fi
 
 fi
-
-echo "$as_me:16937: checking if you want wide-character support" >&5
-echo $ECHO_N "checking if you want wide-character support... $ECHO_C" >&6
-
-# Check whether --enable-wide-chars or --disable-wide-chars was given.
-if test "${enable_wide_chars+set}" = set; then
-  enableval="$enable_wide_chars"
-  test "$enableval" != no && enableval=yes
-  if test "$enableval" != "$enable_luit" ; then
-    enable_wchar=yes
-  else
-    enable_wchar=$enable_luit
-  fi
-else
-  enableval=$enable_luit
-  enable_wchar=$enable_luit
-
-fi;
-echo "$as_me:16954: result: $enable_wchar" >&5
-echo "${ECHO_T}$enable_wchar" >&6
-
-echo "$as_me:16957: checking if you want only 16-bit character support" >&5
-echo $ECHO_N "checking if you want only 16-bit character support... $ECHO_C" >&6
-
-# Check whether --enable-16bit-chars or --disable-16bit-chars was given.
-if test "${enable_16bit_chars+set}" = set; then
-  enableval="$enable_16bit_chars"
-  test "$enableval" != yes && enableval=no
-  if test "$enableval" != "no" ; then
-    enable_16bit_chars=yes
-  else
-    enable_16bit_chars=no
-  fi
-else
-  enableval=no
-  enable_16bit_chars=no
-
-fi;
-echo "$as_me:16974: result: $enable_16bit_chars" >&5
-echo "${ECHO_T}$enable_16bit_chars" >&6
-
-if test "$enable_16bit_chars" = yes ; then
-
-cat >>confdefs.h <<\EOF
-#define OPT_WIDER_ICHAR 0
-EOF
-
-	enable_wchar=yes
-fi
-
-if test "$enable_wchar" = yes ; then
 
 cat >>confdefs.h <<\EOF
 #define OPT_WIDE_CHARS 1
