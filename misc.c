@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.670 2013/06/23 22:11:54 tom Exp $ */
+/* $XTermId: misc.c,v 1.671 2013/08/04 14:33:40 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -712,7 +712,7 @@ make_colored_cursor(unsigned cursorindex,	/* index into font */
 void
 HandleKeyPressed(Widget w GCC_UNUSED,
 		 XEvent * event,
-		 String * params GCC_UNUSED,
+		 String *params GCC_UNUSED,
 		 Cardinal *nparams GCC_UNUSED)
 {
     TRACE(("Handle insert-seven-bit for %p\n", (void *) w));
@@ -723,7 +723,7 @@ HandleKeyPressed(Widget w GCC_UNUSED,
 void
 HandleEightBitKeyPressed(Widget w GCC_UNUSED,
 			 XEvent * event,
-			 String * params GCC_UNUSED,
+			 String *params GCC_UNUSED,
 			 Cardinal *nparams GCC_UNUSED)
 {
     TRACE(("Handle insert-eight-bit for %p\n", (void *) w));
@@ -734,7 +734,7 @@ HandleEightBitKeyPressed(Widget w GCC_UNUSED,
 void
 HandleStringEvent(Widget w GCC_UNUSED,
 		  XEvent * event GCC_UNUSED,
-		  String * params,
+		  String *params,
 		  Cardinal *nparams)
 {
 
@@ -779,7 +779,7 @@ HandleStringEvent(Widget w GCC_UNUSED,
 void
 HandleSpawnTerminal(Widget w GCC_UNUSED,
 		    XEvent * event GCC_UNUSED,
-		    String * params,
+		    String *params,
 		    Cardinal *nparams)
 {
     TScreen *screen = TScreenOf(term);
@@ -873,7 +873,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 void
 HandleInterpret(Widget w GCC_UNUSED,
 		XEvent * event GCC_UNUSED,
-		String * params,
+		String *params,
 		Cardinal *param_count)
 {
     if (*param_count == 1) {
@@ -897,7 +897,7 @@ void
 HandleEnterWindow(Widget w GCC_UNUSED,
 		  XtPointer eventdata GCC_UNUSED,
 		  XEvent * event GCC_UNUSED,
-		  Boolean * cont GCC_UNUSED)
+		  Boolean *cont GCC_UNUSED)
 {
     /* NOP since we handled it above */
     TRACE(("HandleEnterWindow ignored\n"));
@@ -909,7 +909,7 @@ void
 HandleLeaveWindow(Widget w GCC_UNUSED,
 		  XtPointer eventdata GCC_UNUSED,
 		  XEvent * event GCC_UNUSED,
-		  Boolean * cont GCC_UNUSED)
+		  Boolean *cont GCC_UNUSED)
 {
     /* NOP since we handled it above */
     TRACE(("HandleLeaveWindow ignored\n"));
@@ -921,7 +921,7 @@ void
 HandleFocusChange(Widget w GCC_UNUSED,
 		  XtPointer eventdata GCC_UNUSED,
 		  XEvent * ev,
-		  Boolean * cont GCC_UNUSED)
+		  Boolean *cont GCC_UNUSED)
 {
     XFocusChangeEvent *event = (XFocusChangeEvent *) ev;
     XtermWidget xw = term;
@@ -1121,7 +1121,7 @@ Bell(XtermWidget xw, int which, int percent)
 #define VB_DELAY screen->visualBellDelay
 
 static void
-flashWindow(TScreen * screen, Window window, GC visualGC, unsigned width, unsigned height)
+flashWindow(TScreen *screen, Window window, GC visualGC, unsigned width, unsigned height)
 {
     int y = 0;
     int x = 0;
@@ -1172,7 +1172,7 @@ void
 HandleBellPropertyChange(Widget w GCC_UNUSED,
 			 XtPointer data GCC_UNUSED,
 			 XEvent * ev,
-			 Boolean * more GCC_UNUSED)
+			 Boolean *more GCC_UNUSED)
 {
     TScreen *screen = TScreenOf(term);
 
@@ -1251,7 +1251,7 @@ WMFrameWindow(XtermWidget xw)
 #define MAXWLEN 1024		/* maximum word length as in tcsh */
 
 static int
-dabbrev_prev_char(TScreen * screen, CELL * cell, LineData ** ld)
+dabbrev_prev_char(TScreen *screen, CELL *cell, LineData **ld)
 {
     int result = -1;
     int firstLine = -(screen->savedlines);
@@ -1275,7 +1275,7 @@ dabbrev_prev_char(TScreen * screen, CELL * cell, LineData ** ld)
 }
 
 static char *
-dabbrev_prev_word(TScreen * screen, CELL * cell, LineData ** ld)
+dabbrev_prev_word(TScreen *screen, CELL *cell, LineData **ld)
 {
     static char ab[MAXWLEN];
 
@@ -1310,7 +1310,7 @@ dabbrev_prev_word(TScreen * screen, CELL * cell, LineData ** ld)
 }
 
 static int
-dabbrev_expand(TScreen * screen)
+dabbrev_expand(TScreen *screen)
 {
     int pty = screen->respond;	/* file descriptor of pty */
 
@@ -1412,7 +1412,7 @@ dabbrev_expand(TScreen * screen)
 void
 HandleDabbrevExpand(Widget w,
 		    XEvent * event GCC_UNUSED,
-		    String * params GCC_UNUSED,
+		    String *params GCC_UNUSED,
 		    Cardinal *nparams GCC_UNUSED)
 {
     XtermWidget xw;
@@ -1431,7 +1431,7 @@ HandleDabbrevExpand(Widget w,
 void
 HandleDeIconify(Widget w,
 		XEvent * event GCC_UNUSED,
-		String * params GCC_UNUSED,
+		String *params GCC_UNUSED,
 		Cardinal *nparams GCC_UNUSED)
 {
     XtermWidget xw;
@@ -1446,7 +1446,7 @@ HandleDeIconify(Widget w,
 void
 HandleIconify(Widget w,
 	      XEvent * event GCC_UNUSED,
-	      String * params GCC_UNUSED,
+	      String *params GCC_UNUSED,
 	      Cardinal *nparams GCC_UNUSED)
 {
     XtermWidget xw;
@@ -1613,7 +1613,7 @@ RequestMaximize(XtermWidget xw, int maximize)
 void
 HandleMaximize(Widget w,
 	       XEvent * event GCC_UNUSED,
-	       String * params GCC_UNUSED,
+	       String *params GCC_UNUSED,
 	       Cardinal *nparams GCC_UNUSED)
 {
     XtermWidget xw;
@@ -1627,7 +1627,7 @@ HandleMaximize(Widget w,
 void
 HandleRestoreSize(Widget w,
 		  XEvent * event GCC_UNUSED,
-		  String * params GCC_UNUSED,
+		  String *params GCC_UNUSED,
 		  Cardinal *nparams GCC_UNUSED)
 {
     XtermWidget xw;
@@ -1848,7 +1848,7 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
 #endif /* !VMS */
 
 int
-xtermResetIds(TScreen * screen)
+xtermResetIds(TScreen *screen)
 {
     int result = 0;
     if (setgid(screen->gid) == -1) {
@@ -2096,7 +2096,7 @@ ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
 }
 
 static void
-getColormapInfo(Display * display, unsigned *typep, unsigned *sizep)
+getColormapInfo(Display *display, unsigned *typep, unsigned *sizep)
 {
     int numFound;
     XVisualInfo myTemplate, *visInfoPtr;
@@ -2706,7 +2706,7 @@ xtermClosestColor(XtermWidget xw, int find_red, int find_green, int find_blue)
 
 #if OPT_PASTE64
 static void
-ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
+ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 {
 #define PDATA(a,b) { a, #b }
     static struct {
@@ -2800,7 +2800,7 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 #define IsSetUtf8Title(xw) (IsTitleMode(xw, tmSetUtf8) || (xw->screen.utf8_title))
 
 static Bool
-xtermIsPrintable(XtermWidget xw, Char ** bufp, Char * last)
+xtermIsPrintable(XtermWidget xw, Char **bufp, Char *last)
 {
     TScreen *screen = TScreenOf(xw);
     Bool result = False;
@@ -3125,7 +3125,7 @@ ResetColorsRequest(XtermWidget xw,
  * the corresponding menu font entry.
  */
 static int
-ParseShiftedFont(XtermWidget xw, String source, String * target)
+ParseShiftedFont(XtermWidget xw, String source, String *target)
 {
     TScreen *screen = TScreenOf(xw);
     int num = screen->menu_font_number;
@@ -3290,7 +3290,7 @@ ChangeFontRequest(XtermWidget xw, String buf)
 /***====================================================================***/
 
 void
-do_osc(XtermWidget xw, Char * oscbuf, size_t len, int final)
+do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 {
     TScreen *screen = TScreenOf(xw);
     int mode;
@@ -3638,7 +3638,7 @@ parse_decudk(const char *cp)
  * interspersing with control characters, but have the string already.
  */
 static void
-parse_ansi_params(ANSI * params, const char **string)
+parse_ansi_params(ANSI *params, const char **string)
 {
     const char *cp = *string;
     ParmType nparam = 0;
@@ -3681,7 +3681,7 @@ parse_ansi_params(ANSI * params, const char **string)
 #define SOFT_HIGH 20
 
 static void
-parse_decdld(ANSI * params, const char *string)
+parse_decdld(ANSI *params, const char *string)
 {
     char DscsName[8];
     int len;
@@ -3791,7 +3791,7 @@ parse_decdld(ANSI * params, const char *string)
 #endif
 
 void
-do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
+do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 {
     TScreen *screen = TScreenOf(xw);
     char reply[BUFSIZ];
@@ -5231,7 +5231,7 @@ xtermUnsetenv(const char *var)
 
 /*ARGSUSED*/
 int
-xerror(Display * d, XErrorEvent * ev)
+xerror(Display *d, XErrorEvent * ev)
 {
     xtermWarning("warning, error event received:\n");
     (void) XmuPrintDefaultErrorMessage(d, ev, stderr);
@@ -5252,7 +5252,7 @@ ice_error(IceConn iceConn)
 
 /*ARGSUSED*/
 int
-xioerror(Display * dpy)
+xioerror(Display *dpy)
 {
     int the_error = errno;
 
@@ -5292,7 +5292,7 @@ XStrCmp(char *s1, char *s2)
 
 #if OPT_TEK4014
 static void
-withdraw_window(Display * dpy, Window w, int scr)
+withdraw_window(Display *dpy, Window w, int scr)
 {
     TRACE(("withdraw_window %#lx\n", (long) w));
     (void) XmuUpdateMapHints(dpy, w, NULL);
@@ -5649,7 +5649,18 @@ xtermEnvUTF8(void)
 #ifdef HAVE_LANGINFO_CODESET
 	result = (strcmp(xtermEnvEncoding(), "UTF-8") == 0);
 #else
-	result = (strstr(xtermEnvLocale(), "UTF-8") != NULL);
+	{
+	    char *locale = x_strdup(xtermEnvLocale());
+	    int n;
+	    for (n = 0; locale[n] != 0; ++n) {
+		locale[n] = x_toupper(locale[n]);
+	    }
+	    if (strstr(locale, "UTF-8") != 0)
+		result = True;
+	    else if (strstr(locale, "UTF8") != 0)
+		result = True;
+	    free(locale);
+	}
 #endif
 	TRACE(("xtermEnvUTF8 ->%s\n", BtoS(result)));
     }
@@ -5736,8 +5747,8 @@ xtermOpenApplication(XtAppContext * app_context_return,
 		     XrmOptionDescRec * options,
 		     Cardinal num_options,
 		     int *argc_in_out,
-		     String * argv_in_out,
-		     String * fallback_resources,
+		     String *argv_in_out,
+		     String *fallback_resources,
 		     WidgetClass widget_class,
 		     ArgList args,
 		     Cardinal num_args)
@@ -5775,7 +5786,7 @@ xtermOpenApplication(XtAppContext * app_context_return,
 static int x11_errors;
 
 static int
-catch_x11_error(Display * display, XErrorEvent * error_event)
+catch_x11_error(Display *display, XErrorEvent * error_event)
 {
     (void) display;
     (void) error_event;
@@ -5784,7 +5795,7 @@ catch_x11_error(Display * display, XErrorEvent * error_event)
 }
 
 Boolean
-xtermGetWinAttrs(Display * dpy, Window win, XWindowAttributes * attrs)
+xtermGetWinAttrs(Display *dpy, Window win, XWindowAttributes * attrs)
 {
     Boolean result = False;
     Status code;
@@ -5806,7 +5817,7 @@ xtermGetWinAttrs(Display * dpy, Window win, XWindowAttributes * attrs)
 }
 
 Boolean
-xtermGetWinProp(Display * display,
+xtermGetWinProp(Display *display,
 		Window win,
 		Atom property,
 		long long_offset,
