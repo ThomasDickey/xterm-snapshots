@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.671 2013/08/04 14:33:40 tom Exp $ */
+/* $XTermId: misc.c,v 1.672 2013/08/05 08:25:55 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -2774,7 +2774,7 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 
 			/* terminator will be written in this call */
 			xtermGetSelection((Widget) xw,
-					  (Time) 0,
+					  XtLastTimestampProcessed(TScreenOf(xw)->display),
 					  select_args, n,
 					  NULL);
 		    }
