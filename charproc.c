@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1301 2013/08/07 22:07:16 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1302 2013/08/09 09:24:16 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -2823,8 +2823,18 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			: "CPR")));
 		/* CPR */
 		/* DECXCPR (with page=1) */
-		reply.a_param[count++] = (ParmType) (screen->cur_row + 1);
-		reply.a_param[count++] = (ParmType) (screen->cur_col + 1);
+		value = (screen->cur_row + 1);
+		if ((xw->flags & ORIGIN) != 0) {
+		    value -= screen->top_marg;
+		}
+		reply.a_param[count++] = (ParmType) value;
+
+		value = (screen->cur_col + 1);
+		if ((xw->flags & ORIGIN) != 0) {
+		    value -= screen->lft_marg;
+		}
+		reply.a_param[count++] = (ParmType) value;
+
 		if (sp->private_function
 		    && screen->vtXX_level >= 4) {	/* VT420 */
 		    reply.a_param[count++] = 1;
