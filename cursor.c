@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.67 2012/06/03 19:57:47 tom Exp $ */
+/* $XTermId: cursor.c,v 1.68 2013/08/08 08:16:40 Iwamoto.Kouichi Exp $ */
 
 /*
  * Copyright 2002-2010,2012 by Thomas E. Dickey
@@ -271,7 +271,7 @@ CarriageReturn(XtermWidget xw)
 
     if (xw->flags & ORIGIN) {
 	col = left;
-    } else if (screen->cur_col > left) {
+    } else if (screen->cur_col >= left) {
 	col = left;
     } else {
 	/*
