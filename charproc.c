@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1302 2013/08/09 09:24:16 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1303 2013/08/13 00:40:12 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -5077,7 +5077,6 @@ dpmodes(XtermWidget xw, BitFunc func)
 		} else {
 		    reset_lr_margins(screen);
 		}
-		CursorSet(screen, 0, 0, xw->flags);
 	    }
 	    break;
 #if OPT_SIXEL_GRAPHICS
@@ -5678,7 +5677,6 @@ restoremodes(XtermWidget xw)
 	    } else {
 		reset_lr_margins(screen);
 	    }
-	    CursorSet(screen, 0, 0, xw->flags);
 	    break;
 #if OPT_SIXEL_GRAPHICS
 	case srm_DECSDM:	/* sixel scrolling */
