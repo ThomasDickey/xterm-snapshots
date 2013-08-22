@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.776 2013/06/23 22:00:58 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.781 2013/08/21 10:48:19 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -896,6 +896,54 @@ typedef enum {
 #define IsTitleMode(xw,mode) (((xw)->screen.title_modes & mode) != 0)
 
 #include <xcharmouse.h>
+
+/*
+ * For readability...
+ */
+#define nrc_percent   100
+#define nrc_dquote    200
+#define nrc_ampersand 300
+typedef enum {
+    nrc_ASCII = 'B'
+    ,nrc_British = 'A'			/* vt100 */
+    ,nrc_British_Latin_1 = 'A'		/* vt3xx */
+    ,nrc_Cyrillic = nrc_ampersand + '4'	/* vt5xx */
+    ,nrc_DEC_Spec_Graphic = '0'		/* vt100 */
+    ,nrc_DEC_Alt_Chars = '1'		/* vt100 */
+    ,nrc_DEC_Alt_Graphics = '2'		/* vt100 */
+    ,nrc_DEC_Supp = '<'			/* vt2xx */
+    ,nrc_DEC_Supp_Graphic = nrc_percent + '5'	/* vt3xx */
+    ,nrc_DEC_Technical = '>'		/* vt3xx */
+    ,nrc_Dutch = '4'			/* vt2xx */
+    ,nrc_Finnish = '5'			/* vt2xx */
+    ,nrc_Finnish2 = 'C'			/* vt2xx */
+    ,nrc_French = 'R'			/* vt2xx */
+    ,nrc_French2 = 'f'			/* vt2xx */
+    ,nrc_French_Canadian = 'Q'		/* vt2xx */
+    ,nrc_French_Canadian2 = '9'		/* vt3xx */
+    ,nrc_German = 'K'			/* vt2xx */
+    ,nrc_Greek = nrc_dquote + '?'	/* vt5xx */
+    ,nrc_Greek_Supp = 'F'		/* vt5xx */
+    ,nrc_Hebrew = nrc_dquote + '4'	/* vt5xx */
+    ,nrc_Hebrew2 = nrc_percent + '='	/* vt5xx */
+    ,nrc_Hebrew_Supp = 'H'		/* vt5xx */
+    ,nrc_Italian = 'Y'			/* vt2xx */
+    ,nrc_Latin_5_Supp = 'M'		/* vt5xx */
+    ,nrc_Latin_Cyrillic = 'L'		/* vt5xx */
+    ,nrc_Norwegian_Danish = '`'		/* vt3xx */
+    ,nrc_Norwegian_Danish2 = 'E'	/* vt2xx */
+    ,nrc_Norwegian_Danish3 = '6'	/* vt2xx */
+    ,nrc_Portugese = nrc_percent + '6'	/* vt3xx */
+    ,nrc_Russian = nrc_ampersand + '5'	/* vt5xx */
+    ,nrc_SCS_NRCS = nrc_percent + '3'	/* vt5xx - probably Serbo/Croatian */
+    ,nrc_Spanish = 'Z'			/* vt2xx */
+    ,nrc_Swedish = '7'			/* vt2xx */
+    ,nrc_Swedish2 = 'H'			/* vt2xx */
+    ,nrc_Swiss = '='			/* vt2xx */
+    ,nrc_Turkish = nrc_percent + '0'	/* vt5xx */
+    ,nrc_Turkish2 = nrc_percent + '2'	/* vt5xx */
+    ,nrc_Unknown = '?'
+} DECNRCM_codes;
 
 /*
  * Use this enumerated type to check consistency among dpmodes(), savemodes()

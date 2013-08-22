@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.345 2013/02/06 09:51:33 tom Exp $ */
+/* $XTermId: input.c,v 1.346 2013/08/21 12:03:16 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -664,7 +664,7 @@ ModifyOtherKeys(XtermWidget xw,
  * for more information.
  */
 static Bool
-modifyOtherKey(ANSI * reply, int input_char, unsigned modify_parm, int format_keys)
+modifyOtherKey(ANSI *reply, int input_char, unsigned modify_parm, int format_keys)
 {
     Bool result = False;
 
@@ -687,7 +687,7 @@ modifyOtherKey(ANSI * reply, int input_char, unsigned modify_parm, int format_ke
 }
 
 static void
-modifyCursorKey(ANSI * reply, int modify, unsigned *modify_parm)
+modifyCursorKey(ANSI *reply, int modify, unsigned *modify_parm)
 {
     if (*modify_parm != 0) {
 	if (modify < 0) {
@@ -1347,7 +1347,8 @@ Input(XtermWidget xw,
 	    {
 		/* VT220 & up: National Replacement Characters */
 		if ((xw->flags & NATIONAL) != 0) {
-		    unsigned cmp = xtermCharSetIn(CharOf(kd.strbuf[0]),
+		    unsigned cmp = xtermCharSetIn(screen,
+						  CharOf(kd.strbuf[0]),
 						  screen->keyboard_dialect[0]);
 		    TRACE(("...input NRC %d, %s %d\n",
 			   CharOf(kd.strbuf[0]),
@@ -1381,7 +1382,7 @@ Input(XtermWidget xw,
 }
 
 void
-StringInput(XtermWidget xw, const Char * string, size_t nbytes)
+StringInput(XtermWidget xw, const Char *string, size_t nbytes)
 {
     TRACE(("InputString (%s,%lu)\n",
 	   visibleChars(string, (unsigned) nbytes),
@@ -1464,7 +1465,7 @@ decfuncvalue(KEY_DATA * kd)
 }
 
 static void
-hpfuncvalue(ANSI * reply, KEY_DATA * kd)
+hpfuncvalue(ANSI *reply, KEY_DATA * kd)
 {
 #if OPT_HP_FUNC_KEYS
     int result;
@@ -1521,7 +1522,7 @@ hpfuncvalue(ANSI * reply, KEY_DATA * kd)
 }
 
 static void
-scofuncvalue(ANSI * reply, KEY_DATA * kd)
+scofuncvalue(ANSI *reply, KEY_DATA * kd)
 {
 #if OPT_SCO_FUNC_KEYS
     int result;
@@ -1611,7 +1612,7 @@ scofuncvalue(ANSI * reply, KEY_DATA * kd)
 }
 
 static void
-sunfuncvalue(ANSI * reply, KEY_DATA * kd)
+sunfuncvalue(ANSI *reply, KEY_DATA * kd)
 {
 #if OPT_SUN_FUNC_KEYS
     ParmType result;
@@ -1746,7 +1747,7 @@ keyCanInsert(const char *parse)
 	} else if (ch == '\\') {
 	    escape = True;
 	} else if (ch == '"') {
-	    quoted = (Boolean) ! quoted;
+	    quoted = (Boolean) !quoted;
 	} else if (!quoted && isName(ch)) {
 	    const char *next = skipName(--parse);
 	    size_t need = (size_t) (next - parse);

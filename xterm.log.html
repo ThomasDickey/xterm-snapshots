@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1374 2013/08/13 00:45:51 tom Exp $
+  $XTermId: xterm.log.html,v 1.1383 2013/08/22 00:08:47 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -879,6 +879,37 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>review/extend DECNRCM support (prompted by report by Hayaki
+    Saito).
+
+      <ul>
+        <li>limit mode changes to VT220 and up.</li>
+
+        <li>ignore SCS for National Replacement Characters if
+        DECNRCM is not set.</li>
+
+        <li>add tables and logic to decode SCS controls ending with
+        "%" and one additional character. This expects the parsing
+        of SCS to VT320.</li>
+
+        <li>also added parsing for SCS of DEC Supplemental and DEC
+        Technical, which are for VT2xx and VT3xx respectively.</li>
+
+        <li>implement VT220 Multinational character set "GR" aka
+        "DEC Supplemental".</li>
+
+        <li>DEC Technical character set based on <a href=
+        "http://www.vt100.net/charsets/technical.html">vt100.net
+        description</a>.</li>
+
+        <li>implement Portuguese NRC.</li>
+      </ul>
+    </li>
+
+    <li>minor fix to assert's found while testing examples from
+    <a href="https://gist.github.com/ttdoda">ttdoda's
+    slrm-test1.txt</a>.</li>
+
     <li>modify <code>DECLRMM</code> to not update the cursor
     position (report by Iwamoto Kouichi forwarded by Hayaki
     Saito).</li>

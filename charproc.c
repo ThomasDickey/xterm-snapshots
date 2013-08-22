@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1303 2013/08/13 00:40:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1309 2013/08/19 23:08:58 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1074,10 +1074,10 @@ resetCharsets(TScreen *screen)
 {
     TRACE(("resetCharsets\n"));
 
-    screen->gsets[0] = 'B';	/* ASCII_G              */
-    screen->gsets[1] = 'B';	/* ASCII_G              */
-    screen->gsets[2] = 'B';	/* ASCII_G              */
-    screen->gsets[3] = 'B';	/* ASCII_G              */
+    screen->gsets[0] = nrc_ASCII;
+    screen->gsets[1] = nrc_ASCII;
+    screen->gsets[2] = nrc_ASCII;
+    screen->gsets[3] = nrc_ASCII;
 
     screen->curgl = 0;		/* G0 => GL.            */
     screen->curgr = 2;		/* G2 => GR.            */
@@ -1107,13 +1107,13 @@ set_ansi_conformance(TScreen *screen, int level)
 	case 1:
 	    /* FALLTHRU */
 	case 2:
-	    screen->gsets[0] = 'B';	/* G0 is ASCII */
-	    screen->gsets[1] = 'B';	/* G1 is ISO Latin-1 */
+	    screen->gsets[0] = nrc_ASCII;	/* G0 is ASCII */
+	    screen->gsets[1] = nrc_ASCII;	/* G1 is ISO Latin-1 */
 	    screen->curgl = 0;
 	    screen->curgr = 1;
 	    break;
 	case 3:
-	    screen->gsets[0] = 'B';	/* G0 is ASCII */
+	    screen->gsets[0] = nrc_ASCII;	/* G0 is ASCII */
 	    screen->curgl = 0;
 	    break;
 	}
@@ -1256,6 +1256,7 @@ which_table(Const PARSE_T * table)
 #endif
 #if OPT_WIDE_CHARS
     else WHICH_TABLE (esc_pct_table);
+    else WHICH_TABLE (scs_pct_table);
 #endif
 #if OPT_VT52_MODE
     else WHICH_TABLE (vt52_table);
@@ -1367,7 +1368,7 @@ init_groundtable(TScreen *screen, struct ParseState *sp)
 static void
 select_charset(struct ParseState *sp, int type, int size)
 {
-    TRACE(("select_charset %#x %d\n", type, size));
+    TRACE(("select_charset %d %d\n", type, size));
     sp->scstype = type;
     sp->scssize = size;
     if (size == 94) {
@@ -3041,8 +3042,38 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS:
 	    TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
-	    if (screen->vtXX_level != 0)
+	    if ((screen->vtXX_level >= 2) && (xw->flags & NATIONAL)) {
 		screen->gsets[sp->scstype] = CharOf(c);
+	    } else {
+		switch (CharOf(c)) {
+		case nrc_DEC_Alt_Graphics:
+		case nrc_DEC_Alt_Chars:
+		    /* vt100 only (no documented visible change) */
+		    if (screen->vtXX_level == 1)
+			screen->gsets[sp->scstype] = CharOf(c);
+		    break;
+		case nrc_DEC_Spec_Graphic:
+		case nrc_British:
+		case nrc_ASCII:
+		    screen->gsets[sp->scstype] = CharOf(c);
+		    break;
+		case nrc_DEC_Supp:
+		    if (screen->vtXX_level >= 2) {
+			screen->gsets[sp->scstype] = CharOf(c);
+			break;
+		    }
+		    /* FALLTHRU */
+		case nrc_DEC_Technical:
+		    if (screen->vtXX_level >= 3) {
+			screen->gsets[sp->scstype] = CharOf(c);
+			break;
+		    }
+		    /* FALLTHRU */
+		default:
+		    TRACE(("...unknown GSET\n"));
+		    break;
+		}
+	    }
 	    ResetState(sp);
 	    break;
 
@@ -3818,6 +3849,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 #if OPT_WIDE_CHARS
 	case CASE_ESC_PERCENT:
+	    TRACE(("CASE_ESC_PERCENT\n"));
 	    sp->parsestate = esc_pct_table;
 	    break;
 
@@ -3841,6 +3873,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		       (screen->utf8_mode == uAlways)
 		       ? "UTF-8 mode set from command-line"
 		       : "wideChars resource was not set"));
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_SCS_PERCENT:
+	    TRACE(("CASE_SCS_PERCENT\n"));
+	    sp->parsestate = scs_pct_table;
+	    break;
+
+	case CASE_GSETS_PERCENT:
+	    TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
+	    if ((screen->vtXX_level >= 2) && (xw->flags & NATIONAL)) {
+		screen->gsets[sp->scstype] = nrc_percent + CharOf(c);
 	    }
 	    ResetState(sp);
 	    break;
@@ -4527,11 +4572,7 @@ dotext(XtermWidget xw,
 	right = screen->max_col;
     }
 #if OPT_WIDE_CHARS
-    /* don't translate if we use UTF-8, and are not handling legacy support
-     * for line-drawing characters.
-     */
-    if ((screen->utf8_mode == uFalse)
-	|| (screen->vt100_graphics))
+    if (screen->vt100_graphics)
 #endif
 	if (!xtermCharSetOut(xw, buf, buf + len, charset))
 	    return;
@@ -4999,7 +5040,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    update_cursesemul();
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
-	    (*func) (&xw->flags, NATIONAL);
+	    if (screen->vtXX_level >= 2) {
+		(*func) (&xw->flags, NATIONAL);
+	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    set_bool_mode(screen->marginbell);
@@ -5345,7 +5388,9 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_X_MORE, screen->curses);
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
-	    DoSM(DP_DECNRCM, xw->flags & NATIONAL);
+	    if (screen->vtXX_level >= 2) {
+		DoSM(DP_DECNRCM, xw->flags & NATIONAL);
+	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    DoSM(DP_X_MARGIN, screen->marginbell);
@@ -5625,7 +5670,9 @@ restoremodes(XtermWidget xw)
 	    update_cursesemul();
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
-	    bitcpy(&xw->flags, screen->save_modes[DP_DECNRCM], NATIONAL);
+	    if (screen->vtXX_level >= 2) {
+		bitcpy(&xw->flags, screen->save_modes[DP_DECNRCM], NATIONAL);
+	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    if ((DoRM(DP_X_MARGIN, screen->marginbell)) == 0)
