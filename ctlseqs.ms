@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.295 2013/07/05 20:14:27 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.298 2013/08/22 09:21:50 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #294
-.ds RF 2013/07/05
+.ds LF Patch #297
+.ds RF 2013/08/22
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -505,17 +505,25 @@ Select UTF-8 character set (ISO 2022).
 Designate G0 Character Set (ISO 2022, VT100).
 .br
 Final character \*(Cc for designating 94-character sets.
-In this list, \*0, \*A and \*(cB apply to VT100 and up, the remainder to VT220 and up:
+In this list, \*0, \*A and \*(cB apply to VT100 and up, the remainder to VT220 and up.
+The VT220 characters sets, together with the Portuguese character set are activated by
+the National Replacement Character controls.  The \*A is a special case, since it is
+also activated by the VT300-control for British Latin-1 separately from the National
+Replacement Character controls.
   \*(Cc = \*0 \(-> DEC Special Character and Line Drawing Set.
+  \*(Cc = \*< \(-> DEC Supplementary (VT200).
+  \*(Cc = \*%\*5 \(-> DEC Supplementary Graphics (VT300).
+  \*(Cc = \*> \(-> DEC Technical (VT300).
   \*(Cc = \*A \(-> United Kingdom (UK).
   \*(Cc = \*(cB \(-> United States (USASCII).
   \*(Cc = \*4 \(-> Dutch.
   \*(Cc = \*C or \*5 \(-> Finnish.
-  \*(Cc = \*R \(-> French.
-  \*(Cc = \*Q \(-> French Canadian.
+  \*(Cc = \*R or \*f \(-> French.
+  \*(Cc = \*Q or \*9 \(-> French Canadian (VT200, VT300).
   \*(Cc = \*K \(-> German.
   \*(Cc = \*Y \(-> Italian.
-  \*(Cc = \*E or \*6 \(-> Norwegian/Danish.
+  \*(Cc = \*`, \*E or \*6 \(-> Norwegian/Danish.
+  \*(Cc = \*%\*6 \(-> Portuguese (VT300).
   \*(Cc = \*Z \(-> Spanish.
   \*(Cc = \*H or \*7 \(-> Swedish.
   \*(Cc = \*= \(-> Swiss.
@@ -792,7 +800,7 @@ VT220 parameters do, telling the host what features the terminal supports:
   \*(Ps = \*2 \(-> Printer.
   \*(Ps = \*6 \(-> Selective erase.
   \*(Ps = \*8 \(-> User-defined keys.
-  \*(Ps = \*9 \(-> National replacement character sets.
+  \*(Ps = \*9 \(-> National Replacement Character sets.
   \*(Ps = \*1\*5 \(-> Technical characters.
   \*(Ps = \*1\*8 \(-> User windows.
   \*(Ps = \*2\*1 \(-> Horizontal scrolling.
@@ -867,7 +875,7 @@ See the section \fBMouse Tracking\fP.
   \*(Ps = \*3\*8 \(-> Enter Tektronix Mode (DECTEK).
   \*(Ps = \*4\*0 \(-> Allow 80 \z\(<-\(-> 132 Mode.
   \*(Ps = \*4\*1 \(-> \fImore\fP(1) fix (see \fBcurses\fP resource).
-  \*(Ps = \*4\*2 \(-> Enable Nation Replacement Character sets (DECNRCM).
+  \*(Ps = \*4\*2 \(-> Enable National Replacement Character sets (DECNRCM).
   \*(Ps = \*4\*4 \(-> Turn On Margin Bell.
   \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode.
   \*(Ps = \*4\*6 \(-> Start Logging.
@@ -965,7 +973,7 @@ DEC Private Mode Reset (DECRST).
   \*(Ps = \*3\*5 \(-> Disable font-shifting functions (rxvt).
   \*(Ps = \*4\*0 \(-> Disallow 80 \z\(<-\(-> 132 Mode.
   \*(Ps = \*4\*1 \(-> No \fImore\fP(1) fix (see \fBcurses\fP resource).
-  \*(Ps = \*4\*2 \(-> Disable Nation Replacement Character sets (DECNRCM).
+  \*(Ps = \*4\*2 \(-> Disable National Replacement Character sets (DECNRCM).
   \*(Ps = \*4\*4 \(-> Turn Off Margin Bell.
   \*(Ps = \*4\*5 \(-> No Reverse-wraparound Mode.
   \*(Ps = \*4\*6 \(-> Stop Logging.
