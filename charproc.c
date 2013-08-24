@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1309 2013/08/19 23:08:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1310 2013/08/24 00:32:03 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1375,6 +1375,86 @@ select_charset(struct ParseState *sp, int type, int size)
 	sp->parsestate = scstable;
     } else {
 	sp->parsestate = scs96table;
+    }
+}
+
+static void
+decode_scs(XtermWidget xw, int which, int prefix, int suffix)
+{
+    /* *INDENT-OFF* */
+    static struct {
+	int result;
+	int prefix;
+	int suffix;
+	int min_level;
+	int max_level;
+	int need_nrc;
+    } table[] = {
+	{ nrc_ASCII,             0,   'B', 1, 9, 0 },
+	{ nrc_British,           0,   'A', 1, 9, 0 },
+	{ nrc_DEC_Spec_Graphic,  0,   '0', 1, 9, 0 },
+	{ nrc_DEC_Alt_Chars,     0,   '1', 1, 1, 0 },
+	{ nrc_DEC_Alt_Graphics,  0,   '2', 1, 1, 0 },
+	/* VT2xx */
+	{ nrc_DEC_Supp,          0,   '<', 2, 9, 0 },
+	{ nrc_Dutch,             0,   '4', 2, 9, 1 },
+	{ nrc_Finnish,           0,   '5', 2, 9, 1 },
+	{ nrc_Finnish2,          0,   'C', 2, 9, 1 },
+	{ nrc_French,            0,   'R', 2, 9, 1 },
+	{ nrc_French2,           0,   'f', 2, 9, 1 },
+	{ nrc_French_Canadian,   0,   'Q', 2, 9, 1 },
+	{ nrc_German,            0,   'K', 2, 9, 1 },
+	{ nrc_Italian,           0,   'Y', 2, 9, 1 },
+	{ nrc_Norwegian_Danish2, 0,   'E', 2, 9, 1 },
+	{ nrc_Norwegian_Danish3, 0,   '6', 2, 9, 1 },
+	{ nrc_Spanish,           0,   'Z', 2, 9, 1 },
+	{ nrc_Swedish,           0,   '7', 2, 9, 1 },
+	{ nrc_Swedish2,          0,   'H', 2, 9, 1 },
+	{ nrc_Swiss,             0,   '=', 2, 9, 1 },
+	/* VT3xx */
+	{ nrc_British_Latin_1,   0,   'A', 3, 9, 1 },
+	{ nrc_DEC_Supp_Graphic,  '%', '5', 3, 9, 0 },
+	{ nrc_DEC_Technical,     0,   '>', 3, 9, 0 },
+	{ nrc_French_Canadian2,  0,   '9', 3, 9, 1 },
+	{ nrc_Norwegian_Danish,  0,   '`', 3, 9, 1 },
+	{ nrc_Portugese,         '%', '6', 3, 9, 1 },
+#if 0
+	/* VT5xx (not implemented) */
+	{ nrc_Cyrillic,          '&', '4', 5, 9, 0 },
+	{ nrc_Greek,             '"', '?', 5, 9, 0 },
+	{ nrc_Greek_Supp,        0,   'F', 5, 9, 0 },
+	{ nrc_Hebrew,            '"', '4', 5, 9, 0 },
+	{ nrc_Hebrew2,           '%', '=', 5, 9, 1 },
+	{ nrc_Hebrew_Supp,       0,   'H', 5, 9, 0 },
+	{ nrc_Latin_5_Supp,      0,   'M', 5, 9, 0 },
+	{ nrc_Latin_Cyrillic,    0,   'L', 5, 9, 0 },
+	{ nrc_Russian,           '&', '5', 5, 9, 1 },
+	{ nrc_SCS_NRCS,          '%', '3', 5, 9, 0 },
+	{ nrc_Turkish,           '%', '0', 5, 9, 0 },
+	{ nrc_Turkish2,		 '%', '2', 5, 9, 1 },
+#endif
+    };
+    /* *INDENT-ON* */
+
+    TScreen *screen = TScreenOf(xw);
+    Cardinal n;
+    DECNRCM_codes result = nrc_Unknown;
+
+    suffix &= 0x7f;
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (prefix == table[n].prefix
+	    && suffix == table[n].suffix
+	    && screen->vtXX_level >= table[n].min_level
+	    && screen->vtXX_level <= table[n].max_level
+	    && (table[n].need_nrc == 0 || (xw->flags & NATIONAL) != 0)) {
+	    result = table[n].result;
+	    break;
+	}
+    }
+    if (result != nrc_Unknown) {
+	screen->gsets[which] = result;
+    } else {
+	TRACE(("...unknown GSET\n"));
     }
 }
 
@@ -3042,38 +3122,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS:
 	    TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
-	    if ((screen->vtXX_level >= 2) && (xw->flags & NATIONAL)) {
-		screen->gsets[sp->scstype] = CharOf(c);
-	    } else {
-		switch (CharOf(c)) {
-		case nrc_DEC_Alt_Graphics:
-		case nrc_DEC_Alt_Chars:
-		    /* vt100 only (no documented visible change) */
-		    if (screen->vtXX_level == 1)
-			screen->gsets[sp->scstype] = CharOf(c);
-		    break;
-		case nrc_DEC_Spec_Graphic:
-		case nrc_British:
-		case nrc_ASCII:
-		    screen->gsets[sp->scstype] = CharOf(c);
-		    break;
-		case nrc_DEC_Supp:
-		    if (screen->vtXX_level >= 2) {
-			screen->gsets[sp->scstype] = CharOf(c);
-			break;
-		    }
-		    /* FALLTHRU */
-		case nrc_DEC_Technical:
-		    if (screen->vtXX_level >= 3) {
-			screen->gsets[sp->scstype] = CharOf(c);
-			break;
-		    }
-		    /* FALLTHRU */
-		default:
-		    TRACE(("...unknown GSET\n"));
-		    break;
-		}
-	    }
+	    decode_scs(xw, sp->scstype, 0, (int) c);
 	    ResetState(sp);
 	    break;
 
@@ -3884,9 +3933,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS_PERCENT:
 	    TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
-	    if ((screen->vtXX_level >= 2) && (xw->flags & NATIONAL)) {
-		screen->gsets[sp->scstype] = nrc_percent + CharOf(c);
-	    }
+	    decode_scs(xw, sp->scstype, '%', (int) c);
 	    ResetState(sp);
 	    break;
 #endif

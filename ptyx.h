@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.781 2013/08/21 10:48:19 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.783 2013/08/24 01:05:23 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -904,45 +904,45 @@ typedef enum {
 #define nrc_dquote    200
 #define nrc_ampersand 300
 typedef enum {
-    nrc_ASCII = 'B'
-    ,nrc_British = 'A'			/* vt100 */
-    ,nrc_British_Latin_1 = 'A'		/* vt3xx */
-    ,nrc_Cyrillic = nrc_ampersand + '4'	/* vt5xx */
-    ,nrc_DEC_Spec_Graphic = '0'		/* vt100 */
-    ,nrc_DEC_Alt_Chars = '1'		/* vt100 */
-    ,nrc_DEC_Alt_Graphics = '2'		/* vt100 */
-    ,nrc_DEC_Supp = '<'			/* vt2xx */
-    ,nrc_DEC_Supp_Graphic = nrc_percent + '5'	/* vt3xx */
-    ,nrc_DEC_Technical = '>'		/* vt3xx */
-    ,nrc_Dutch = '4'			/* vt2xx */
-    ,nrc_Finnish = '5'			/* vt2xx */
-    ,nrc_Finnish2 = 'C'			/* vt2xx */
-    ,nrc_French = 'R'			/* vt2xx */
-    ,nrc_French2 = 'f'			/* vt2xx */
-    ,nrc_French_Canadian = 'Q'		/* vt2xx */
-    ,nrc_French_Canadian2 = '9'		/* vt3xx */
-    ,nrc_German = 'K'			/* vt2xx */
-    ,nrc_Greek = nrc_dquote + '?'	/* vt5xx */
-    ,nrc_Greek_Supp = 'F'		/* vt5xx */
-    ,nrc_Hebrew = nrc_dquote + '4'	/* vt5xx */
-    ,nrc_Hebrew2 = nrc_percent + '='	/* vt5xx */
-    ,nrc_Hebrew_Supp = 'H'		/* vt5xx */
-    ,nrc_Italian = 'Y'			/* vt2xx */
-    ,nrc_Latin_5_Supp = 'M'		/* vt5xx */
-    ,nrc_Latin_Cyrillic = 'L'		/* vt5xx */
-    ,nrc_Norwegian_Danish = '`'		/* vt3xx */
-    ,nrc_Norwegian_Danish2 = 'E'	/* vt2xx */
-    ,nrc_Norwegian_Danish3 = '6'	/* vt2xx */
-    ,nrc_Portugese = nrc_percent + '6'	/* vt3xx */
-    ,nrc_Russian = nrc_ampersand + '5'	/* vt5xx */
-    ,nrc_SCS_NRCS = nrc_percent + '3'	/* vt5xx - probably Serbo/Croatian */
-    ,nrc_Spanish = 'Z'			/* vt2xx */
-    ,nrc_Swedish = '7'			/* vt2xx */
-    ,nrc_Swedish2 = 'H'			/* vt2xx */
-    ,nrc_Swiss = '='			/* vt2xx */
-    ,nrc_Turkish = nrc_percent + '0'	/* vt5xx */
-    ,nrc_Turkish2 = nrc_percent + '2'	/* vt5xx */
-    ,nrc_Unknown = '?'
+    nrc_ASCII = 0
+    ,nrc_British		/* vt100 */
+    ,nrc_British_Latin_1	/* vt3xx */
+    ,nrc_Cyrillic		/* vt5xx */
+    ,nrc_DEC_Spec_Graphic	/* vt100 */
+    ,nrc_DEC_Alt_Chars		/* vt100 */
+    ,nrc_DEC_Alt_Graphics	/* vt100 */
+    ,nrc_DEC_Supp		/* vt2xx */
+    ,nrc_DEC_Supp_Graphic	/* vt3xx */
+    ,nrc_DEC_Technical		/* vt3xx */
+    ,nrc_Dutch			/* vt2xx */
+    ,nrc_Finnish		/* vt2xx */
+    ,nrc_Finnish2		/* vt2xx */
+    ,nrc_French			/* vt2xx */
+    ,nrc_French2		/* vt2xx */
+    ,nrc_French_Canadian	/* vt2xx */
+    ,nrc_French_Canadian2	/* vt3xx */
+    ,nrc_German			/* vt2xx */
+    ,nrc_Greek			/* vt5xx */
+    ,nrc_Greek_Supp		/* vt5xx */
+    ,nrc_Hebrew			/* vt5xx */
+    ,nrc_Hebrew2		/* vt5xx */
+    ,nrc_Hebrew_Supp		/* vt5xx */
+    ,nrc_Italian		/* vt2xx */
+    ,nrc_Latin_5_Supp		/* vt5xx */
+    ,nrc_Latin_Cyrillic		/* vt5xx */
+    ,nrc_Norwegian_Danish	/* vt3xx */
+    ,nrc_Norwegian_Danish2	/* vt2xx */
+    ,nrc_Norwegian_Danish3	/* vt2xx */
+    ,nrc_Portugese		/* vt3xx */
+    ,nrc_Russian		/* vt5xx */
+    ,nrc_SCS_NRCS		/* vt5xx - probably Serbo/Croatian */
+    ,nrc_Spanish		/* vt2xx */
+    ,nrc_Swedish		/* vt2xx */
+    ,nrc_Swedish2		/* vt2xx */
+    ,nrc_Swiss			/* vt2xx */
+    ,nrc_Turkish		/* vt5xx */
+    ,nrc_Turkish2		/* vt5xx */
+    ,nrc_Unknown
 } DECNRCM_codes;
 
 /*
@@ -1700,7 +1700,7 @@ typedef struct {
 	unsigned	flags;		/* VTxxx saves graphics rendition */
 	Char		curgl;
 	Char		curgr;
-	Char		gsets[4];
+	int		gsets[4];
 #if OPT_ISO_COLORS
 	int		cur_foreground; /* current foreground color	*/
 	int		cur_background; /* current background color	*/
@@ -2124,7 +2124,7 @@ typedef struct {
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
-	Char		gsets[4];	/* G0 through G3.		*/
+	int		gsets[4];	/* G0 through G3.		*/
 	Char		curgl;		/* Current GL setting.		*/
 	Char		curgr;		/* Current GR setting.		*/
 	Char		curss;		/* Current single shift.	*/
