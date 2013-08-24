@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.57 2013/08/22 00:06:28 tom Exp $ */
+/* $XTermId: charsets.c,v 1.58 2013/08/24 01:04:36 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2013 by Thomas E. Dickey
@@ -515,6 +515,8 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	    continue;
 
 	switch (cs) {
+	case nrc_British_Latin_1:
+	    /* FALLTHRU */
 	case nrc_British:	/* United Kingdom set (or Latin 1)      */
 	    if ((xw->flags & NATIONAL)
 		|| (screen->vtXX_level <= 1)) {
