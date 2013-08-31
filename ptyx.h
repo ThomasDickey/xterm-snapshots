@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.783 2013/08/24 01:05:23 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.784 2013/08/30 09:17:45 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1862,6 +1862,7 @@ typedef struct {
 	Boolean		normalized_c;	/* true to precompose to Form C */
 	char *		utf8_mode_s;	/* use UTF-8 decode/encode	*/
 	char *		utf8_fonts_s;	/* use UTF-8 decode/encode	*/
+	int		utf8_nrc_mode;	/* saved UTF-8 mode for DECNRCM */
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
 	int		utf8_fonts;	/* use UTF-8 decode/encode: 0-2	*/
 	int		max_combining;	/* maximum # of combining chars	*/

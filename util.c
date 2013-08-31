@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.606 2013/07/10 22:52:14 tom Exp $ */
+/* $XTermId: util.c,v 1.607 2013/08/30 21:35:13 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -3178,7 +3178,7 @@ drawXtermText(XtermWidget xw,
 		rect.width = (unsigned short) ((int) len * font_width);
 		rect.height = (unsigned short) (FontHeight(screen));
 
-		TRACE(("drawing %s\n", visibleChrsetName((unsigned) chrset)));
+		TRACE(("drawing %s\n", visibleDblChrset((unsigned) chrset)));
 		switch (chrset) {
 		case CSET_DHL_TOP:
 		    rect.y = (short) -(fs->ascent / 2);

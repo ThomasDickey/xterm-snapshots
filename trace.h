@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.68 2013/02/06 09:52:14 tom Exp $ */
+/* $XTermId: trace.h,v 1.69 2013/08/30 22:11:31 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -41,7 +41,7 @@
 
 #if OPT_TRACE
 
-extern	void	Trace ( const char *, ... ) GCC_PRINTFLIKE(1,2);
+extern	void	Trace ( const char *, ... )  GCC_PRINTFLIKE(1,2);
 
 #undef  TRACE
 #define TRACE(p) Trace p
@@ -58,10 +58,11 @@ extern	void	TraceClose (void);
 extern	char *	visibleChars (const Char * /* buf */, unsigned /* len */);
 extern	char *	visibleIChar (IChar *, unsigned);
 extern	char *	visibleIChars (IChar * /* buf */, unsigned /* len */);
-extern	const char * visibleChrsetName(unsigned /* chrset */);
+extern	const char * visibleDblChrset(unsigned /* chrset */);
 extern	const char * visibleEventType (int);
 extern	const char * visibleNotifyDetail(int /* code */);
 extern	const char * visibleNotifyMode (int /* code */);
+extern	const char * visibleScsCode(unsigned /* chrset */);
 extern	const char * visibleSelectionTarget(Display * /* d */, Atom /* a */);
 extern	const char * visibleXError (int /* code */);
 

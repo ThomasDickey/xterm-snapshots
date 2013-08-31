@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.298 2013/08/22 09:21:50 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.299 2013/08/22 09:21:50 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
@@ -506,7 +506,7 @@ Designate G0 Character Set (ISO 2022, VT100).
 .br
 Final character \*(Cc for designating 94-character sets.
 In this list, \*0, \*A and \*(cB apply to VT100 and up, the remainder to VT220 and up.
-The VT220 characters sets, together with the Portuguese character set are activated by
+The VT220 character sets, together with the Portuguese character set are activated by
 the National Replacement Character controls.  The \*A is a special case, since it is
 also activated by the VT300-control for British Latin-1 separately from the National
 Replacement Character controls.
