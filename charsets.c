@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.58 2013/08/24 01:04:36 tom Exp $ */
+/* $XTermId: charsets.c,v 1.62 2013/08/31 00:20:52 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2013 by Thomas E. Dickey
@@ -239,6 +239,29 @@
 	    UNI(0x77, 0x0153); \
 	    MAP(0x7d, 0xff); \
 	    XXX(0x7e, 0x2e2e); \
+	    default: dft; break; \
+	}
+
+#define map_SCS_DEC_Supp_Graphic(code,dft) \
+	switch (code) { \
+	    XXX(0x24, 0x2e2e); \
+	    XXX(0x26, 0x2e2e); \
+	    XXX(0x2c, 0x2e2e); \
+	    XXX(0x2d, 0x2e2e); \
+	    XXX(0x2e, 0x2e2e); \
+	    XXX(0x2f, 0x2e2e); \
+	    XXX(0x34, 0x2e2e); \
+	    XXX(0x38, 0x2e2e); \
+	    XXX(0x3e, 0x2e2e); \
+	    XXX(0x50, 0x2e2e); \
+	    UNI(0x57, 0x0152); \
+	    XXX(0x5e, 0x2e2e); \
+	    XXX(0x70, 0x2e2e); \
+	    UNI(0x77, 0x0153); \
+	    MAP(0x7d, 0xff); \
+	    XXX(0x7e, 0x2e2e); \
+	    XXX(0x7f, 0x2e2e); \
+	    default: dft; break; \
 	}
 
 	/* derived from http://www.vt100.net/charsets/technical.html */
@@ -353,7 +376,7 @@ xtermCharSetIn(TScreen *screen, unsigned code, int charset)
 #define MAP(to, from) case from: code = to; break
 
 #if OPT_WIDE_CHARS
-#define UNI(to, from) case from: if (screen->utf8_mode) code = to; break
+#define UNI(to, from) case from: if (screen->utf8_nrc_mode) code = to; break
 #else
 #define UNI(to, from) case from: break
 #endif
@@ -384,7 +407,7 @@ xtermCharSetIn(TScreen *screen, unsigned code, int charset)
 	    break;
 
 	case nrc_DEC_Supp_Graphic:
-	    /* FIXME */
+	    map_SCS_DEC_Supp_Graphic(code, code |= 0x80);
 	    break;
 
 	case nrc_DEC_Technical:
@@ -480,16 +503,16 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 #define MAP(from, to) case from: chr = to; break
 
 #if OPT_WIDE_CHARS
-#define UNI(from, to) case from: if (screen->utf8_mode) chr = to; break
+#define UNI(from, to) case from: if (screen->utf8_nrc_mode) chr = to; break
 #define XXX(from, to) UNI(from, to)
 #else
 #define UNI(old, new) chr = old; break
 #define XXX(from, to)		/* nothing */
 #endif
 
-    TRACE(("CHARSET GL=%c(G%d) GR=%c(G%d) SS%d\n\t%s\n",
-	   leftset, screen->curgl,
-	   rightset, screen->curgr,
+    TRACE(("CHARSET GL=%s(G%d) GR=%s(G%d) SS%d\n\t%s\n",
+	   visibleScsCode(leftset), screen->curgl,
+	   visibleScsCode(rightset), screen->curgr,
 	   screen->curss,
 	   visibleIChar(buf, (unsigned) (ptr - buf))));
 
@@ -506,7 +529,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	 * the replacement character and other non-8bit codes into bogus
 	 * 8bit codes.
 	 */
-	if (screen->utf8_mode) {
+	if (screen->utf8_mode || screen->utf8_nrc_mode) {
 	    if (*s > 255)
 		continue;
 	}
@@ -523,7 +546,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 		if (chr == 0x23) {
 		    chr = XTERM_POUND;
 #if OPT_WIDE_CHARS
-		    if (screen->utf8_mode) {
+		    if (screen->utf8_nrc_mode) {
 			chr = 0xa3;
 		    }
 #endif
@@ -544,7 +567,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	case nrc_DEC_Spec_Graphic:
 	    if (seven > 0x5f && seven <= 0x7e) {
 #if OPT_WIDE_CHARS
-		if (screen->utf8_mode)
+		if (screen->utf8_nrc_mode)
 		    chr = (int) dec2ucs((unsigned) (seven - 0x5f));
 		else
 #endif
@@ -559,7 +582,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	    break;
 
 	case nrc_DEC_Supp_Graphic:
-	    /* FIXME */
+	    map_SCS_DEC_Supp_Graphic(chr = seven, chr |= 0x80);
 	    break;
 
 	case nrc_DEC_Technical:

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1310 2013/08/24 00:32:03 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1312 2013/08/31 01:08:47 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -137,8 +137,8 @@
 #include <xstrings.h>
 #include <graphics.h>
 
-typedef void (*BitFunc) (unsigned * /* p */ ,
-			 unsigned /* mask */ );
+typedef int (*BitFunc) (unsigned * /* p */ ,
+			unsigned /* mask */ );
 
 static IChar doinput(void);
 static int set_character_class(char * /*s */ );
@@ -157,9 +157,9 @@ static void ToAlternate(XtermWidget /* xw */ ,
 			Bool /* clearFirst */ );
 static void ansi_modes(XtermWidget termw,
 		       BitFunc /* func */ );
-static void bitclr(unsigned *p, unsigned mask);
-static void bitcpy(unsigned *p, unsigned q, unsigned mask);
-static void bitset(unsigned *p, unsigned mask);
+static int bitclr(unsigned *p, unsigned mask);
+static int bitcpy(unsigned *p, unsigned q, unsigned mask);
+static int bitset(unsigned *p, unsigned mask);
 static void dpmodes(XtermWidget /* xw */ ,
 		    BitFunc /* func */ );
 static void restoremodes(XtermWidget /* xw */ );
@@ -1089,6 +1089,21 @@ resetCharsets(TScreen *screen)
 #endif
 }
 
+static void
+modified_DECNRCM(XtermWidget xw)
+{
+#if OPT_WIDE_CHARS
+    TScreen *screen = TScreenOf(xw);
+    if (screen->wide_chars && (screen->utf8_mode || screen->utf8_nrc_mode)) {
+	int enabled = ((xw->flags & NATIONAL) != 0);
+	int modefix;
+	EXCHANGE(screen->utf8_nrc_mode, screen->utf8_mode, modefix);
+	switchPtyData(screen, !enabled);
+	TRACE(("UTF8 mode temporarily %s\n", BtoS(!enabled)));
+    }
+#endif
+}
+
 /*
  * VT300 and up support three ANSI conformance levels, defined according to
  * the dpANSI X3.134.1 standard.  DEC's manuals equate levels 1 and 2, and
@@ -1383,7 +1398,7 @@ decode_scs(XtermWidget xw, int which, int prefix, int suffix)
 {
     /* *INDENT-OFF* */
     static struct {
-	int result;
+	DECNRCM_codes result;
 	int prefix;
 	int suffix;
 	int min_level;
@@ -5088,7 +5103,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
 	    if (screen->vtXX_level >= 2) {
-		(*func) (&xw->flags, NATIONAL);
+		if ((*func) (&xw->flags, NATIONAL)) {
+		    modified_DECNRCM(xw);
+		}
 	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
@@ -5718,7 +5735,8 @@ restoremodes(XtermWidget xw)
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
 	    if (screen->vtXX_level >= 2) {
-		bitcpy(&xw->flags, screen->save_modes[DP_DECNRCM], NATIONAL);
+		if (bitcpy(&xw->flags, screen->save_modes[DP_DECNRCM], NATIONAL))
+		    modified_DECNRCM(xw);
 	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
@@ -6300,29 +6318,35 @@ window_ops(XtermWidget xw)
 /*
  * set a bit in a word given a pointer to the word and a mask.
  */
-static void
+static int
 bitset(unsigned *p, unsigned mask)
 {
+    unsigned before = *p;
     *p |= mask;
+    return (before != *p);
 }
 
 /*
  * clear a bit in a word given a pointer to the word and a mask.
  */
-static void
+static int
 bitclr(unsigned *p, unsigned mask)
 {
+    unsigned before = *p;
     *p &= ~mask;
+    return (before != *p);
 }
 
 /*
  * Copy bits from one word to another, given a mask
  */
-static void
+static int
 bitcpy(unsigned *p, unsigned q, unsigned mask)
 {
+    unsigned before = *p;
     bitclr(p, mask);
     bitset(p, q & mask);
+    return (before != *p);
 }
 
 void
