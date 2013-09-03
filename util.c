@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.607 2013/08/30 21:35:13 tom Exp $ */
+/* $XTermId: util.c,v 1.609 2013/09/02 22:56:43 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -3345,11 +3345,16 @@ drawXtermText(XtermWidget xw,
 		     */
 		    if_OPT_WIDE_CHARS(screen, {
 			unsigned part = ucs2dec(ch);
-			if (xtermIsDecGraphic(part) &&
-			    (screen->force_box_chars
-			     || xtermXftMissing(xw, font, ch))) {
+			if (xtermIsDecGraphic(part)) {
+			    if (screen->force_box_chars
+				|| xtermXftMissing(xw, font, ch)) {
+				ch = part;
+				missing = True;
+			    }
+			} else if (xtermXftMissing(xw, font, ch)
+				   && (part = AsciiEquivs(ch)) != ch) {
 			    ch = part;
-			    missing = True;
+			    replace = True;
 			}
 		    });
 		}
