@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1312 2013/08/31 01:08:47 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1313 2013/09/07 13:23:10 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1468,6 +1468,7 @@ decode_scs(XtermWidget xw, int which, int prefix, int suffix)
     }
     if (result != nrc_Unknown) {
 	screen->gsets[which] = result;
+	TRACE(("setting G%d to %s\n", which, visibleScsCode(result)));
     } else {
 	TRACE(("...unknown GSET\n"));
     }
