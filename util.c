@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.609 2013/09/02 22:56:43 tom Exp $ */
+/* $XTermId: util.c,v 1.610 2013/09/06 23:12:18 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -3698,7 +3698,7 @@ drawXtermText(XtermWidget xw,
 	 * show the actual characters.
 	 */
 	useBoldFont = ((flags & BOLDATTR(screen)) != 0);
-	if ((flags & BOLDATTR(screen)) != 0) {
+	if (useBoldFont) {
 	    XTermFonts *norm = 0;
 	    XTermFonts *bold = 0;
 	    Bool noBold, noNorm;
@@ -3743,18 +3743,15 @@ drawXtermText(XtermWidget xw,
 	    Pixel fg = getCgsFore(xw, currentWin, gc);
 	    Pixel bg = getCgsBack(xw, currentWin, gc);
 
-	    if (needWide && okFont(BoldWFont(screen))) {
-		if ((flags & BOLDATTR(screen)) != 0
-		    && okFont(BoldWFont(screen))) {
-		    fntId = fWBold;
-		    cgsId = gcWBold;
-		} else {
-		    fntId = fWide;
-		    cgsId = gcWide;
-		}
-	    } else if ((flags & BOLDATTR(screen)) != 0
-		       && okFont(BoldFont(screen))
-		       && useBoldFont) {
+	    if (needWide
+		&& useBoldFont
+		&& okFont(BoldWFont(screen))) {
+		fntId = fWBold;
+		cgsId = gcWBold;
+	    } else if (needWide) {
+		fntId = fWide;
+		cgsId = gcWide;
+	    } else if (useBoldFont) {
 		fntId = fBold;
 		cgsId = gcBold;
 	    } else {
