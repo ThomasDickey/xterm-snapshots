@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.610 2013/09/06 23:12:18 tom Exp $ */
+/* $XTermId: util.c,v 1.611 2013/09/08 00:08:13 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1031,7 +1031,7 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 	   screen->topline,
 	   screen->cur_row,
 	   screen->cur_col,
-	   len, visibleIChar(str, len)));
+	   len, visibleIChars(str, len)));
 
     if (cells + (unsigned) screen->cur_col > (unsigned) MaxCols(screen)) {
 	cells = (unsigned) (MaxCols(screen) - screen->cur_col);

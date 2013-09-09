@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.62 2013/08/31 00:20:52 tom Exp $ */
+/* $XTermId: charsets.c,v 1.65 2013/09/09 00:15:55 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2013 by Thomas E. Dickey
@@ -383,105 +383,111 @@ xtermCharSetIn(TScreen *screen, unsigned code, int charset)
 
 #define XXX(to, from)		/* no defined mapping to 0..255 */
 
-    if (code >= 128 && code < 256) {
-	switch (charset) {
-	case nrc_British:	/* United Kingdom set (or Latin 1)      */
-	    if (code == XK_sterling)
-		code = 0x23;
-	    code &= 0x7f;
-	    break;
+    TRACE(("CHARSET-IN GL=%s(G%d) GR=%s(G%d) SS%d\n\t%s\n",
+	   visibleScsCode(screen->gsets[screen->curgl]), screen->curgl,
+	   visibleScsCode(screen->gsets[screen->curgr]), screen->curgr,
+	   screen->curss,
+	   visibleUChar(code)));
+
+    switch (charset) {
+    case nrc_British:		/* United Kingdom set (or Latin 1)      */
+	if (code == XK_sterling)
+	    code = 0x23;
+	code &= 0x7f;
+	break;
 
 #if OPT_XMC_GLITCH
-	case nrc_Unknown:
+    case nrc_Unknown:
 #endif
-	case nrc_DEC_Alt_Chars:
-	case nrc_DEC_Alt_Graphics:
-	case nrc_ASCII:
-	    break;
+    case nrc_DEC_Alt_Chars:
+    case nrc_DEC_Alt_Graphics:
+    case nrc_ASCII:
+	break;
 
-	case nrc_DEC_Spec_Graphic:
-	    break;
+    case nrc_DEC_Spec_Graphic:
+	break;
 
-	case nrc_DEC_Supp:
-	    map_SCS_DEC_Supp(code, code &= 0x7f);
-	    break;
+    case nrc_DEC_Supp:
+	map_SCS_DEC_Supp(code, code &= 0x7f);
+	break;
 
-	case nrc_DEC_Supp_Graphic:
-	    map_SCS_DEC_Supp_Graphic(code, code |= 0x80);
-	    break;
+    case nrc_DEC_Supp_Graphic:
+	map_SCS_DEC_Supp_Graphic(code, code |= 0x80);
+	break;
 
-	case nrc_DEC_Technical:
-	    map_SCS_DEC_Technical(code);
-	    break;
+    case nrc_DEC_Technical:
+	map_SCS_DEC_Technical(code);
+	break;
 
-	case nrc_Dutch:
-	    map_NRCS_Dutch(code);
-	    break;
+    case nrc_Dutch:
+	map_NRCS_Dutch(code);
+	break;
 
-	case nrc_Finnish:
-	case nrc_Finnish2:
-	    map_NRCS_Finnish(code);
-	    break;
+    case nrc_Finnish:
+    case nrc_Finnish2:
+	map_NRCS_Finnish(code);
+	break;
 
-	case nrc_French:
-	case nrc_French2:
-	    map_NRCS_French(code);
-	    break;
+    case nrc_French:
+    case nrc_French2:
+	map_NRCS_French(code);
+	break;
 
-	case nrc_French_Canadian:
-	    map_NRCS_French_Canadian(code);
-	    break;
+    case nrc_French_Canadian:
+	map_NRCS_French_Canadian(code);
+	break;
 
-	case nrc_German:
-	    map_NRCS_German(code);
-	    break;
+    case nrc_German:
+	map_NRCS_German(code);
+	break;
 
-	case nrc_Hebrew:
-	case nrc_Hebrew2:
-	    /* FIXME */
-	    break;
+    case nrc_Hebrew:
+    case nrc_Hebrew2:
+	/* FIXME */
+	break;
 
-	case nrc_Italian:
-	    map_NRCS_Italian(code);
-	    break;
+    case nrc_Italian:
+	map_NRCS_Italian(code);
+	break;
 
-	case nrc_Norwegian_Danish:
-	case nrc_Norwegian_Danish2:
-	case nrc_Norwegian_Danish3:
-	    map_NRCS_Norwegian_Danish(code);
-	    break;
+    case nrc_Norwegian_Danish:
+    case nrc_Norwegian_Danish2:
+    case nrc_Norwegian_Danish3:
+	map_NRCS_Norwegian_Danish(code);
+	break;
 
-	case nrc_Portugese:
-	    map_NRCS_Portuguese(code);
-	    break;
+    case nrc_Portugese:
+	map_NRCS_Portuguese(code);
+	break;
 
-	case nrc_SCS_NRCS:	/* vt5xx - probably Serbo/Croatian */
-	    /* FIXME */
-	    break;
+    case nrc_SCS_NRCS:		/* vt5xx - probably Serbo/Croatian */
+	/* FIXME */
+	break;
 
-	case nrc_Spanish:
-	    map_NRCS_Spanish(code);
-	    break;
+    case nrc_Spanish:
+	map_NRCS_Spanish(code);
+	break;
 
-	case nrc_Swedish2:
-	case nrc_Swedish:
-	    map_NRCS_Swedish(code);
-	    break;
+    case nrc_Swedish2:
+    case nrc_Swedish:
+	map_NRCS_Swedish(code);
+	break;
 
-	case nrc_Swiss:
-	    map_NRCS_Swiss(code);
-	    break;
+    case nrc_Swiss:
+	map_NRCS_Swiss(code);
+	break;
 
-	case nrc_Turkish:
-	case nrc_Turkish2:
-	    /* FIXME */
-	    break;
+    case nrc_Turkish:
+    case nrc_Turkish2:
+	/* FIXME */
+	break;
 
-	default:		/* any character sets we don't recognize */
-	    break;
-	}
-	code &= 0x7f;		/* NRC in any case is 7-bit */
+    default:			/* any character sets we don't recognize */
+	break;
     }
+    code &= 0x7f;		/* NRC in any case is 7-bit */
+    TRACE(("->\t%s\n",
+	   visibleUChar(code)));
     return code;
 #undef MAP
 #undef UNI
@@ -510,11 +516,11 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 #define XXX(from, to)		/* nothing */
 #endif
 
-    TRACE(("CHARSET GL=%s(G%d) GR=%s(G%d) SS%d\n\t%s\n",
+    TRACE(("CHARSET-OUT GL=%s(G%d) GR=%s(G%d) SS%d\n\t%s\n",
 	   visibleScsCode(leftset), screen->curgl,
 	   visibleScsCode(rightset), screen->curgr,
 	   screen->curss,
-	   visibleIChar(buf, (unsigned) (ptr - buf))));
+	   visibleIChars(buf, (unsigned) (ptr - buf))));
 
     for (s = buf; s < ptr; ++s) {
 	int eight = CharOf(E2A(*s));
@@ -668,7 +674,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
     }
     TRACE(("%d\t%s\n",
 	   count,
-	   visibleIChar(buf, (unsigned) (ptr - buf))));
+	   visibleIChars(buf, (unsigned) (ptr - buf))));
     return count;
 #undef MAP
 #undef UNI

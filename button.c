@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.459 2013/08/06 01:05:47 tom Exp $ */
+/* $XTermId: button.c,v 1.463 2013/09/09 00:29:26 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1825,11 +1825,75 @@ base64_flush(TScreen *screen)
 }
 #endif /* OPT_PASTE64 */
 
+/*
+ * Translate ISO-8859-1 or UTF-8 data to NRCS.
+ */
+static void
+ToNational(TScreen *screen, Char *buffer, unsigned *length)
+{
+    int gsetL = screen->gsets[screen->curgl];
+    int gsetR = screen->gsets[screen->curgr];
+    unsigned chr, out, gl, gr;
+    Char *p;
+
+#if OPT_WIDE_CHARS
+    if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
+	PtyData *data = TypeXtMallocX(PtyData, *length);
+
+	memset(data, 0, sizeof(*data));
+	data->next = data->buffer;
+	data->last = data->buffer + *length;
+	memcpy(data->buffer, buffer, *length);
+	p = buffer;
+	while (data->next < data->last) {
+	    if (!decodeUtf8(data)) {
+		data->utf_size = 1;
+		data->utf_data = data->next[0];
+	    }
+	    data->next += data->utf_size;
+	    chr = data->utf_data;
+	    out = chr;
+	    if ((gl = xtermCharSetIn(screen, chr, gsetL)) != chr) {
+		out = gl;
+	    } else if ((gr = xtermCharSetIn(screen, chr, gsetR)) != chr) {
+		out = gr;
+	    }
+	    *p++ = (Char) ((out < 256) ? out : ' ');
+	}
+	*length = (unsigned) (p - buffer);
+	free(data);
+    } else
+#endif
+    {
+	for (p = buffer; (p - buffer) < *length; ++p) {
+	    chr = *p;
+	    out = chr;
+	    if ((gl = xtermCharSetIn(screen, chr, gsetL)) != chr) {
+		out = gl;
+	    } else if ((gr = xtermCharSetIn(screen, chr, gsetR)) != chr) {
+		out = gr;
+	    }
+	    *p = (Char) out;
+	}
+    }
+}
+
 static void
 _qWriteSelectionData(XtermWidget xw, Char *lag, unsigned length)
 {
     TScreen *screen = TScreenOf(xw);
 
+    /*
+     * If we are pasting into a window which is using NRCS, we want to map
+     * the text from the normal encoding (ISO-8859-1 or UTF-8) into the coding
+     * that an application would use to write characters with NRCS.
+     *
+     * TODO: handle conversion from UTF-8, and adjust length.  This can be done
+     * in the same buffer because the target is always 8-bit.
+     */
+    if ((xw->flags & NATIONAL) && (length != 0)) {
+	ToNational(screen, lag, &length);
+    }
 #if OPT_PASTE64
     if (screen->base64_paste) {
 	/* Send data as base64 */
@@ -1991,7 +2055,7 @@ removeControls(XtermWidget xw, char *value)
 		}
 	    }
 #if OPT_WIDE_CHARS
-	    else if (screen->utf8_inparse)
+	    else if (screen->utf8_inparse || screen->utf8_nrc_mode)
 		++dst;
 #endif
 #if OPT_C1_PRINT || OPT_WIDE_CHARS
@@ -4166,7 +4230,7 @@ SaveText(TScreen *screen,
 	    /* Combining characters attached to double-width characters
 	       are in memory attached to the HIDDEN_CHAR */
 	    if_OPT_WIDE_CHARS(screen, {
-		if (screen->utf8_mode != uFalse) {
+		if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
 		    unsigned ch;
 		    size_t off;
 		    for_each_combData(off, ld) {
@@ -4180,7 +4244,7 @@ SaveText(TScreen *screen,
 	    continue;
 	}
 	previous = c;
-	if (screen->utf8_mode != uFalse) {
+	if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
 	    lp = convertToUTF8(lp, (c != 0) ? c : ' ');
 	    if_OPT_WIDE_CHARS(screen, {
 		unsigned ch;
