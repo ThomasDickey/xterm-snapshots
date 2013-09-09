@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.147 2013/08/30 22:11:31 tom Exp $ */
+/* $XTermId: trace.c,v 1.149 2013/09/09 00:15:00 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -130,7 +130,6 @@ TraceClose(void)
 	(void) fflush(stderr);
 	(void) visibleChars(NULL, 0);
 	(void) visibleIChars(NULL, 0);
-	(void) visibleIChar(NULL, 0);
 	trace_fp = 0;
     }
 }
@@ -184,7 +183,7 @@ formatAscii(char *dst, unsigned value)
 	break;
     default:
 	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
-	    sprintf(dst, "\\%03o", value);
+	    sprintf(dst, "\\%03o", value & 0xff);
 	else
 	    sprintf(dst, "%c", CharOf(value));
 	break;
@@ -333,38 +332,11 @@ visibleIChars(IChar *buf, unsigned len)
 }
 
 char *
-visibleIChar(IChar *buf, unsigned len)
+visibleUChar(unsigned chr)
 {
-    static char *result;
-    static unsigned used;
-
-    if (buf != 0) {
-	unsigned limit = ((len + 1) * 8) + 1;
-	char *dst;
-
-	if (limit > used) {
-	    used = limit;
-	    result = XtRealloc(result, used);
-	}
-	if (result != 0) {
-	    dst = result;
-	    while (len--) {
-		unsigned value = *buf++;
-#if OPT_WIDE_CHARS
-		if (value > 255)
-		    sprintf(dst, "\\u+%04X", value);
-		else
-#endif
-		    formatAscii(dst, value);
-		dst += strlen(dst);
-	    }
-	}
-    } else if (result != 0) {
-	free(result);
-	result = 0;
-	used = 0;
-    }
-    return result;
+    IChar buf[1];
+    buf[0] = chr;
+    return visibleIChars(buf, 1);
 }
 
 #define CASETYPE(name) case name: result = #name; break
