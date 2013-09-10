@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.12 2013/07/10 22:35:28 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.14 2013/09/10 18:38:12 tom Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -251,14 +251,14 @@ set_sixel(SixelGraphic *graphic, int sixel)
 static void
 set_sixel_color_register(ColorRegister *color_registers,
 			 RegisterNum color,
-			 short r,
-			 short g,
-			 short b)
+			 int r,
+			 int g,
+			 int b)
 {
     ColorRegister *reg = &color_registers[color];
-    reg->r = r;
-    reg->g = g;
-    reg->b = b;
+    reg->r = (short) r;
+    reg->g = (short) g;
+    reg->b = (short) b;
     reg->allocated = 0;
 }
 
@@ -550,7 +550,7 @@ dump_sixel(SixelGraphic const *graphic)
 }
 
 static void
-set_shared_color_register(RegisterNum color, short r, short g, short b)
+set_shared_color_register(RegisterNum color, int r, int g, int b)
 {
     SixelGraphic *graphic;
     unsigned int ii;
@@ -1300,7 +1300,7 @@ refresh_displayed_graphics(TScreen const *screen,
 	ordered_graphics[ii] = &sixel_graphics[ii];
     }
     qsort(ordered_graphics,
-	  MAX_SIXEL_GRAPHICS,
+	  (size_t) MAX_SIXEL_GRAPHICS,
 	  sizeof(ordered_graphics[0]),
 	  compare_sixel_ids);
 

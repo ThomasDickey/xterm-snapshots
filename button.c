@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.463 2013/09/09 00:29:26 tom Exp $ */
+/* $XTermId: button.c,v 1.464 2013/09/10 17:27:38 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1843,7 +1843,7 @@ ToNational(TScreen *screen, Char *buffer, unsigned *length)
 	memset(data, 0, sizeof(*data));
 	data->next = data->buffer;
 	data->last = data->buffer + *length;
-	memcpy(data->buffer, buffer, *length);
+	memcpy(data->buffer, buffer, (size_t) *length);
 	p = buffer;
 	while (data->next < data->last) {
 	    if (!decodeUtf8(data)) {

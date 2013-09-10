@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1314 2013/09/10 10:48:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1315 2013/09/10 17:27:51 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -7207,7 +7207,7 @@ trimSizeFromFace(char *face_name, float *face_size)
     } else {
 	first++;
     }
-    if (!strncmp(first, "size=", 5)) {
+    if (!strncmp(first, "size=", (size_t) 5)) {
 	char *last = strchr(first, ':');
 	char mark;
 	float value;
