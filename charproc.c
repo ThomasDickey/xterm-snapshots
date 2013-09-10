@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1313 2013/09/07 13:23:10 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1314 2013/09/10 10:48:50 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -557,6 +557,7 @@ static XtResource xterm_resources[] =
     Bres(XtNforceBoxChars, XtCForceBoxChars, screen.force_box_chars, False),
     Bres(XtNforcePackedFont, XtCForcePackedFont, screen.force_packed, True),
     Bres(XtNshowMissingGlyphs, XtCShowMissingGlyphs, screen.force_all_chars, False),
+    Bres(XtNassumeAllChars, XtCAssumeAllChars, screen.assume_all_chars, False),
 #endif
 
 #if OPT_BROKEN_OSC
@@ -7434,6 +7435,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.force_box_chars);
     init_Bres(screen.force_packed);
     init_Bres(screen.force_all_chars);
+    init_Bres(screen.assume_all_chars);
 #endif
     init_Bres(screen.free_bold_box);
     init_Bres(screen.allowBoldFonts);

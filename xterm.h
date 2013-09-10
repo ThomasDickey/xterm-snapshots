@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.721 2013/08/21 12:04:10 tom Exp $ */
+/* $XTermId: xterm.h,v 1.722 2013/09/10 10:55:04 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -368,6 +368,7 @@ extern char **environ;
 #define XtNanswerbackString	"answerbackString"
 #define XtNappcursorDefault	"appcursorDefault"
 #define XtNappkeypadDefault	"appkeypadDefault"
+#define XtNassumeAllChars	"assumeAllChars"
 #define XtNautoWrap		"autoWrap"
 #define XtNawaitInput		"awaitInput"
 #define XtNbackarrowKey		"backarrowKey"
@@ -477,7 +478,6 @@ extern char **environ;
 #define XtNpointerMode		"pointerMode"
 #define XtNpointerShape		"pointerShape"
 #define XtNpopOnBell		"popOnBell"
-#define XtNprivateColorRegisters "privateColorRegisters"
 #define XtNprecompose		"precompose"
 #define XtNprintAttributes	"printAttributes"
 #define XtNprinterAutoClose	"printerAutoClose"
@@ -486,6 +486,7 @@ extern char **environ;
 #define XtNprinterExtent	"printerExtent"
 #define XtNprinterFormFeed	"printerFormFeed"
 #define XtNprinterNewLine	"printerNewLine"
+#define XtNprivateColorRegisters "privateColorRegisters"
 #define XtNquietGrab		"quietGrab"
 #define XtNrenderFont		"renderFont"
 #define XtNresizeGravity	"resizeGravity"
@@ -555,6 +556,7 @@ extern char **environ;
 #define XtCAnswerbackString	"AnswerbackString"
 #define XtCAppcursorDefault	"AppcursorDefault"
 #define XtCAppkeypadDefault	"AppkeypadDefault"
+#define XtCAssumeAllChars	"AssumeAllChars"
 #define XtCAutoWrap		"AutoWrap"
 #define XtCAwaitInput		"AwaitInput"
 #define XtCBackarrowKey		"BackarrowKey"
@@ -651,7 +653,6 @@ extern char **environ;
 #define XtCOldXtermFKeys	"OldXtermFKeys"
 #define XtCPointerMode		"PointerMode"
 #define XtCPopOnBell		"PopOnBell"
-#define XtCPrivateColorRegisters "PrivateColorRegisters"
 #define XtCPrecompose		"Precompose"
 #define XtCPrintAttributes	"PrintAttributes"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
@@ -660,6 +661,7 @@ extern char **environ;
 #define XtCPrinterExtent	"PrinterExtent"
 #define XtCPrinterFormFeed	"PrinterFormFeed"
 #define XtCPrinterNewLine	"PrinterNewLine"
+#define XtCPrivateColorRegisters "PrivateColorRegisters"
 #define XtCQuietGrab		"QuietGrab"
 #define XtCRenderFont		"RenderFont"
 #define XtCResizeGravity	"ResizeGravity"

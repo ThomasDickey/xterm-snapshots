@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.611 2013/09/08 00:08:13 tom Exp $ */
+/* $XTermId: util.c,v 1.613 2013/09/10 11:03:58 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -3139,6 +3139,7 @@ drawXtermText(XtermWidget xw,
        the X font, and the width of the default font) */
     int font_width = ((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
     Bool did_ul = False;
+    XTermFonts *curFont;
 
 #if OPT_WIDE_CHARS
     if (text == 0)
@@ -3457,6 +3458,9 @@ drawXtermText(XtermWidget xw,
 	return x;
     }
 #endif /* OPT_RENDERFONT */
+    curFont = ((flags & BOLDATTR(screen))
+	       ? WhichVFontData(screen, fnts[fBold])
+	       : WhichVFontData(screen, fnts[fNorm]));
     /*
      * If we're asked to display a proportional font, do this with a fixed
      * pitch.  Yes, it's ugly.  But we cannot distinguish the use of xterm
@@ -3465,9 +3469,6 @@ drawXtermText(XtermWidget xw,
      */
     if (!IsIcon(screen) && !(flags & CHARBYCHAR) && screen->fnt_prop) {
 	int adj, width;
-	XTermFonts *font = ((flags & BOLDATTR(screen))
-			    ? WhichVFontData(screen, fnts[fBold])
-			    : WhichVFontData(screen, fnts[fNorm]));
 
 	while (len--) {
 	    int cells = WideCells(*text);
@@ -3478,7 +3479,7 @@ drawXtermText(XtermWidget xw,
 		continue;
 	    } else
 #endif
-	    if (IsXtermMissingChar(screen, *text, font)) {
+	    if (IsXtermMissingChar(screen, *text, curFont)) {
 		adj = 0;
 	    } else
 #endif
@@ -3487,12 +3488,12 @@ drawXtermText(XtermWidget xw,
 		    XChar2b temp[1];
 		    temp[0].byte2 = LO_BYTE(*text);
 		    temp[0].byte1 = HI_BYTE(*text);
-		    width = XTextWidth16(font->fs, temp, 1);
+		    width = XTextWidth16(curFont->fs, temp, 1);
 		}
 		, {
 		    char temp[1];
 		    temp[0] = (char) LO_BYTE(*text);
-		    width = XTextWidth(font->fs, temp, 1);
+		    width = XTextWidth(curFont->fs, temp, 1);
 		});
 		adj = (FontWidth(screen) - width) / 2;
 		if (adj < 0)
@@ -3508,17 +3509,27 @@ drawXtermText(XtermWidget xw,
 	return x;
     }
 #if OPT_BOX_CHARS
-    /* If the font is incomplete, draw some substitutions */
+    /*
+     * Draw some substitutions, if needed.  The font may not include the
+     * line-drawing set, or it may be incomplete (in which case we'll draw an
+     * empty space via xtermDrawBoxChar), or we may be told to force our
+     * line-drawing.
+     *
+     * The empty space is a special case which can be overridden with the
+     * showMissingGlyphs resource to produce an outline.  That is preferable
+     * to the haphazard treatment of fonts in "modern" (sic) X, which may
+     * use a thick outline or something like the replacement character.  If
+     * you really want that, you can set assumeAllChars.
+     */
     if (!IsIcon(screen)
 	&& !(flags & NOTRANSLATION)
-	&& (!screen->fnt_boxes || screen->force_box_chars)) {
+	&& (!screen->fnt_boxes
+	    || (FontIsIncomplete(curFont) && !screen->assume_all_chars)
+	    || screen->force_box_chars)) {
 	/* Fill in missing box-characters.
 	   Find regions without missing characters, and draw
 	   them calling ourselves recursively.  Draw missing
 	   characters via xtermDrawBoxChar(). */
-	XTermFonts *font = ((flags & BOLDATTR(screen))
-			    ? WhichVFontData(screen, fnts[fBold])
-			    : WhichVFontData(screen, fnts[fNorm]));
 	int last, first = 0;
 	Bool drewBoxes = False;
 
@@ -3545,9 +3556,9 @@ drawXtermText(XtermWidget xw,
 				   ((on_wide || ch_width > 1)
 				    && okFont(NormalWFont(screen)))
 				   ? WhichVFontData(screen, fnts[fWide])
-				   : font);
+				   : curFont);
 #else
-	    isMissing = IsXtermMissingChar(screen, ch, font);
+	    isMissing = IsXtermMissingChar(screen, ch, curFont);
 	    ch_width = 1;
 #endif
 	    /*
@@ -3559,11 +3570,14 @@ drawXtermText(XtermWidget xw,
 	     */
 	    if_OPT_WIDE_CHARS(screen, {
 		if (!isMissing
-		    && ch > 255
-		    && ucs2dec(ch) < 32
 		    && TScreenOf(xw)->force_box_chars) {
-		    ch = ucs2dec(ch);
-		    isMissing = True;
+		    if (ch > 255
+			&& ucs2dec(ch) < 32) {
+			ch = ucs2dec(ch);
+			isMissing = True;
+		    } else if (ch < 32) {
+			isMissing = True;
+		    }
 		}
 	    });
 
