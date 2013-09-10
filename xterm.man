@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.569 2013/07/05 20:35:30 tom Exp $
+.\" $XTermId: xterm.man,v 1.570 2013/09/10 11:30:33 tom Exp $
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
@@ -1893,6 +1893,11 @@ The default is \*(``false\*(''.
 .TP 8
 .B "appkeypadDefault (\fPclass\fB AppkeypadDefault)"
 If \*(``true\*('', the keypad keys are initially in application mode.
+The default is \*(``false\*(''.
+.TP 8
+.B "assumeAllChars (\fPclass\fB AssumeAllChars)"
+If \*(``true\*('', this enables a special case in bitmap fonts to
+allow the font server to choose how to display missing glyphs.
 The default is \*(``false\*(''.
 .TP 8
 .B "autoWrap (\fPclass\fB AutoWrap)"

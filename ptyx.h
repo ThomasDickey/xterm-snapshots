@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.784 2013/08/30 09:17:45 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.787 2013/09/10 10:41:36 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -316,7 +316,7 @@ typedef Char *UString;
 
 #define IsEmpty(s) ((s) == 0 || *(s) == '\0')
 
-#define CharOf(n) ((unsigned char)(n))
+#define CharOf(n) ((Char)(n))
 
 typedef struct {
     int row;
@@ -1527,13 +1527,15 @@ typedef struct {
 	Dimension	max_width;	/* maximum cell width */
 } FontMap;
 
+#define KNOWN_MISSING	256
+
 typedef struct {
 	unsigned	chrset;
 	unsigned	flags;
 	XFontStruct *	fs;
 	char *		fn;
 	FontMap		map;
-	Char		known_missing[256];
+	Char		known_missing[KNOWN_MISSING];
 } XTermFonts;
 
 #if OPT_RENDERFONT
@@ -1998,6 +2000,7 @@ typedef struct {
 #if OPT_BOX_CHARS
 	Boolean		force_box_chars;/* true if we assume no boxchars */
 	Boolean		force_all_chars;/* true to outline missing chars */
+	Boolean		assume_all_chars;/* true to allow missing chars */
 	Boolean		allow_packing;	/* true to allow packed-fonts	*/
 #endif
 	Dimension	fnt_wide;

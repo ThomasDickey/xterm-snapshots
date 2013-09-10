@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.387 2013/05/15 00:31:56 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.391 2013/09/09 22:36:53 tom Exp $ */
 
 /*
- * Copyright 1998-2011,2012 by Thomas E. Dickey
+ * Copyright 1998-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -59,22 +59,22 @@
 			     (((cs)->rbearing|(cs)->lbearing| \
 			       (cs)->ascent|(cs)->descent) == 0))
 
-#define CI_GET_CHAR_INFO_1D(fs,col,def,cs) \
+#define CI_GET_CHAR_INFO_1D(fs,col,cs) \
 { \
-    cs = def; \
+    cs = 0; \
     if (col >= fs->min_char_or_byte2 && col <= fs->max_char_or_byte2) { \
 	if (fs->per_char == NULL) { \
 	    cs = &fs->min_bounds; \
 	} else { \
 	    cs = &fs->per_char[(col - fs->min_char_or_byte2)]; \
-	    if (CI_NONEXISTCHAR(cs)) cs = def; \
 	} \
+	if (CI_NONEXISTCHAR(cs)) cs = 0; \
     } \
 }
 
-#define CI_GET_CHAR_INFO_2D(fs,row,col,def,cs) \
+#define CI_GET_CHAR_INFO_2D(fs,row,col,cs) \
 { \
-    cs = def; \
+    cs = 0; \
     if (row >= fs->min_byte1 && row <= fs->max_byte1 && \
 	col >= fs->min_char_or_byte2 && col <= fs->max_char_or_byte2) { \
 	if (fs->per_char == NULL) { \
@@ -84,8 +84,8 @@
 				(fs->max_char_or_byte2 - \
 				 fs->min_char_or_byte2 + 1)) + \
 			       (col - fs->min_char_or_byte2)]; \
-	    if (CI_NONEXISTCHAR(cs)) cs = def; \
 	} \
+	if (CI_NONEXISTCHAR(cs)) cs = 0; \
     } \
 }
 
@@ -253,7 +253,7 @@ check_fontname(const char *name)
  * or NULL on error.
  */
 static FontNameProperties *
-get_font_name_props(Display * dpy, XFontStruct * fs, char **result)
+get_font_name_props(Display *dpy, XFontStruct * fs, char **result)
 {
     static FontNameProperties props;
     static char *last_name;
@@ -465,7 +465,7 @@ widebold_font_name(FontNameProperties * props)
  * fonts we double the pixel-size and Y-resolution
  */
 char *
-xtermSpecialFont(TScreen * screen, unsigned atts, unsigned chrset)
+xtermSpecialFont(TScreen *screen, unsigned atts, unsigned chrset)
 {
 #if OPT_TRACE
     static char old_spacing[80];
@@ -580,7 +580,7 @@ same_font_name(const char *pattern, const char *match)
  * offset.
  */
 static int
-got_bold_font(Display * dpy, XFontStruct * fs, String requested)
+got_bold_font(Display *dpy, XFontStruct * fs, String requested)
 {
     char *actual = 0;
     int got;
@@ -661,7 +661,7 @@ is_double_width_font(XFontStruct * fs)
 #define FULL_WIDTH_CHAR2  0xAC00	/* Korean script syllable 'Ka' */
 
 static Bool
-is_double_width_font_xft(Display * dpy, XftFont * font)
+is_double_width_font_xft(Display *dpy, XftFont * font)
 {
     XGlyphInfo gi1, gi2;
     FcChar32 c1 = HALF_WIDTH_CHAR1, c2 = HALF_WIDTH_CHAR2;
@@ -726,7 +726,7 @@ xtermFontName(const char *normal)
 }
 
 static void
-cache_menu_font_name(TScreen * screen, int fontnum, int which, const char *name)
+cache_menu_font_name(TScreen *screen, int fontnum, int which, const char *name)
 {
     if (name != 0) {
 	char *last = (char *) screen->menu_font_names[fontnum][which];
@@ -1202,6 +1202,11 @@ xtermLoadFont(XtermWidget xw,
     {
 	unsigned ch;
 
+	TRACE(("normal font is %scomplete\n",
+	       FontIsIncomplete(&fnts[fNorm]) ? "in" : ""));
+	TRACE(("bold font is %scomplete\n",
+	       FontIsIncomplete(&fnts[fBold]) ? "in" : ""));
+
 	for (ch = 1; ch < 32; ch++) {
 	    unsigned n = ch;
 #if OPT_WIDE_CHARS
@@ -1530,7 +1535,7 @@ xtermLoadDefaultFonts(XtermWidget xw)
 void
 HandleLoadVTFonts(Widget w,
 		  XEvent * event GCC_UNUSED,
-		  String * params GCC_UNUSED,
+		  String *params GCC_UNUSED,
 		  Cardinal *param_count GCC_UNUSED)
 {
     static char empty[] = "";	/* appease strict compilers */
@@ -1580,7 +1585,7 @@ HandleLoadVTFonts(Widget w,
  * Set the limits for the box that outlines the cursor.
  */
 void
-xtermSetCursorBox(TScreen * screen)
+xtermSetCursorBox(TScreen *screen)
 {
     static XPoint VTbox[NBOX];
     XPoint *vp;
@@ -1795,7 +1800,7 @@ dimSquareRoot(double value)
  * rule.
  */
 static void
-setRenderFontsize(TScreen * screen, VTwin * win, XftFont * font, const char *tag)
+setRenderFontsize(TScreen *screen, VTwin * win, XftFont * font, const char *tag)
 {
     if (font != 0) {
 	int width, height, ascent, descent;
@@ -1852,7 +1857,7 @@ checkFontInfo(int value, const char *tag)
 
 #if OPT_RENDERFONT
 void
-xtermCloseXft(TScreen * screen, XTermXftFonts * pub)
+xtermCloseXft(TScreen *screen, XTermXftFonts * pub)
 {
     if (pub->font != 0) {
 	XftFontClose(screen->display, pub->font);
@@ -2142,7 +2147,7 @@ xtermComputeFontInfo(XtermWidget xw,
 
 /* save this information as a side-effect for double-sized characters */
 void
-xtermSaveFontInfo(TScreen * screen, XFontStruct * font)
+xtermSaveFontInfo(TScreen *screen, XFontStruct * font)
 {
     screen->fnt_wide = (Dimension) (font->max_bounds.width);
     screen->fnt_high = (Dimension) (font->ascent + font->descent);
@@ -2193,32 +2198,27 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 {
     Bool result = False;
     XFontStruct *fs = font->fs;
-    static XCharStruct dft, *tmp = &dft, *pc = 0;
+    XCharStruct *pc = 0;
 
     if (fs->max_byte1 == 0) {
 #if OPT_WIDE_CHARS
-	if (ch > 255) {
-	    TRACE(("xtermMissingChar %#04x (row)\n", ch));
-	    return True;
-	}
+	if (ch < 256)
 #endif
-	CI_GET_CHAR_INFO_1D(fs, E2A(ch), tmp, pc);
+	{
+	    CI_GET_CHAR_INFO_1D(fs, E2A(ch), pc);
+	}
     }
 #if OPT_WIDE_CHARS
     else {
-	CI_GET_CHAR_INFO_2D(fs, HI_BYTE(ch), LO_BYTE(ch), tmp, pc);
+	CI_GET_CHAR_INFO_2D(fs, HI_BYTE(ch), LO_BYTE(ch), pc);
     }
-#else
-
-    if (!pc)
-	return False;		/* Urgh! */
 #endif
 
-    if (CI_NONEXISTCHAR(pc)) {
+    if (pc == 0 || CI_NONEXISTCHAR(pc)) {
 	TRACE(("xtermMissingChar %#04x (!exists)\n", ch));
 	result = True;
     }
-    if (ch < 256) {
+    if (ch < KNOWN_MISSING) {
 	font->known_missing[ch] = (Char) (result ? 2 : 1);
     }
     return result;
@@ -2963,7 +2963,7 @@ lookupRelativeFontSize(XtermWidget xw, int old, int relative)
 void
 HandleLargerFont(Widget w GCC_UNUSED,
 		 XEvent * event GCC_UNUSED,
-		 String * params GCC_UNUSED,
+		 String *params GCC_UNUSED,
 		 Cardinal *param_count GCC_UNUSED)
 {
     XtermWidget xw;
@@ -2988,7 +2988,7 @@ HandleLargerFont(Widget w GCC_UNUSED,
 void
 HandleSmallerFont(Widget w GCC_UNUSED,
 		  XEvent * event GCC_UNUSED,
-		  String * params GCC_UNUSED,
+		  String *params GCC_UNUSED,
 		  Cardinal *param_count GCC_UNUSED)
 {
     XtermWidget xw;
@@ -3058,7 +3058,7 @@ xtermGetFont(const char *param)
 void
 HandleSetFont(Widget w GCC_UNUSED,
 	      XEvent * event GCC_UNUSED,
-	      String * params,
+	      String *params,
 	      Cardinal *param_count)
 {
     XtermWidget xw;
