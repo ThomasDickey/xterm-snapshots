@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.787 2013/09/10 10:41:36 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.788 2013/09/10 18:10:00 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -2170,7 +2170,7 @@ typedef struct {
 	Char		vt52_save_curgl;
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
-	Char		vt52_save_gsets[4];
+	int		vt52_save_gsets[4];
 #endif
 	/* Testing */
 #if OPT_XMC_GLITCH
