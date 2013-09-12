@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.727 2013/05/27 22:11:11 tom Exp $ */
+/* $XTermId: main.c,v 1.728 2013/09/11 21:29:29 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -1466,7 +1466,7 @@ parseArg(int *num, char **argv, char **valuep)
 
 	TRACE(("parseArg %s\n", option));
 	if ((value = argv[(*num) + 1]) != 0) {
-	    have_value = (Boolean) ! isOption(value);
+	    have_value = (Boolean) !isOption(value);
 	}
 	for (inlist = 0; inlist < limit; ++inlist) {
 	    XrmOptionDescRec *check = ITEM(inlist);
@@ -1632,7 +1632,7 @@ ConvertConsoleSelection(Widget w GCC_UNUSED,
 static void
 DeleteWindow(Widget w,
 	     XEvent * event GCC_UNUSED,
-	     String * params GCC_UNUSED,
+	     String *params GCC_UNUSED,
 	     Cardinal *num_params GCC_UNUSED)
 {
 #if OPT_TEK4014
@@ -1652,7 +1652,7 @@ DeleteWindow(Widget w,
 static void
 KeyboardMapping(Widget w GCC_UNUSED,
 		XEvent * event,
-		String * params GCC_UNUSED,
+		String *params GCC_UNUSED,
 		Cardinal *num_params GCC_UNUSED)
 {
     switch (event->type) {
@@ -1941,7 +1941,7 @@ main(int argc, char *argv[]ENVP_ARG)
     Dimension menu_high;
     TScreen *screen;
     int mode;
-    char *my_class = DEFCLASS;
+    char *my_class = x_strdup(DEFCLASS);
     Window winToEmbedInto = None;
 
     ProgramName = argv[0];
@@ -2024,6 +2024,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		Help();
 		quit = True;
 	    } else if (!strcmp(option_ptr->option, "-class")) {
+		free(my_class);
 		if ((my_class = x_strdup(option_value)) == 0) {
 		    Help();
 		    quit = True;

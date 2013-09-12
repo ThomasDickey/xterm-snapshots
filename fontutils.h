@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.87 2013/09/09 22:50:26 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.88 2013/09/11 21:19:50 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2013 by Thomas E. Dickey
@@ -57,12 +57,12 @@ extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsigned /* chrset */);
 #endif
 
-#if OPT_BOX_CHARS
-
 #define FontIsIncomplete(font) \
 	((font)->fs != 0 \
 	 && (font)->fs->per_char != 0 \
 	 && !(font)->fs->all_chars_exist)
+
+#if OPT_BOX_CHARS
 
 #define ForceBoxChars(screen,ch) \
 	(xtermIsDecGraphic(ch) \

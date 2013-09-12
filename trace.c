@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.149 2013/09/09 00:15:00 tom Exp $ */
+/* $XTermId: trace.c,v 1.150 2013/09/11 21:25:12 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -215,7 +215,7 @@ visibleDblChrset(unsigned chrset)
 #endif
 
 const char *
-visibleScsCode(unsigned chrset)
+visibleScsCode(int chrset)
 {
 #define MAP(to,from) case from: result = to; break
     const char *result = "<ERR>";
