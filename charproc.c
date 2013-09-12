@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1315 2013/09/10 17:27:51 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1317 2013/09/11 22:29:00 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1100,7 +1100,7 @@ modified_DECNRCM(XtermWidget xw)
 	int modefix;
 	EXCHANGE(screen->utf8_nrc_mode, screen->utf8_mode, modefix);
 	switchPtyData(screen, !enabled);
-	TRACE(("UTF8 mode temporarily %s\n", BtoS(!enabled)));
+	TRACE(("UTF8 mode temporarily %s\n", enabled ? "ON" : "OFF"));
     }
 #endif
 }

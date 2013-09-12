@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.613 2013/09/10 11:03:58 tom Exp $ */
+/* $XTermId: util.c,v 1.614 2013/09/11 21:22:18 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -2859,6 +2859,7 @@ AsciiEquivs(unsigned ch)
  * groff stomps on compatibility.  Still, if enough people get used to it,
  * this might someday become a quasi-standard.
  */
+#if OPT_BOX_CHARS
 static int
 ucs_workaround(XtermWidget xw,
 	       unsigned ch,
@@ -2899,7 +2900,8 @@ ucs_workaround(XtermWidget xw,
     }
     return fixed;
 }
-#endif
+#endif /* OPT_BOX_CHARS */
+#endif /* OPT_WIDE_CHARS */
 
 /*
  * Use this when the characters will not fill the cell area properly.  Fill the

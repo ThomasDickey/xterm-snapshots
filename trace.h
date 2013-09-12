@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.70 2013/09/08 00:09:57 tom Exp $ */
+/* $XTermId: trace.h,v 1.71 2013/09/11 21:25:23 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -62,7 +62,7 @@ extern	const char * visibleDblChrset(unsigned /* chrset */);
 extern	const char * visibleEventType (int);
 extern	const char * visibleNotifyDetail(int /* code */);
 extern	const char * visibleNotifyMode (int /* code */);
-extern	const char * visibleScsCode(unsigned /* chrset */);
+extern	const char * visibleScsCode(int /* chrset */);
 extern	const char * visibleSelectionTarget(Display * /* d */, Atom /* a */);
 extern	const char * visibleXError (int /* code */);
 
