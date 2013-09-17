@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.65 2013/09/09 00:15:55 tom Exp $ */
+/* $XTermId: charsets.c,v 1.66 2013/09/16 21:26:10 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2013 by Thomas E. Dickey
@@ -549,6 +549,9 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	case nrc_British:	/* United Kingdom set (or Latin 1)      */
 	    if ((xw->flags & NATIONAL)
 		|| (screen->vtXX_level <= 1)) {
+		if ((xw->flags & NATIONAL)) {
+		    chr = seven;
+		}
 		if (chr == 0x23) {
 		    chr = XTERM_POUND;
 #if OPT_WIDE_CHARS
