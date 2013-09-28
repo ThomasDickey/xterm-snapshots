@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.299 2013/08/22 09:21:50 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.301 2013/09/22 10:13:57 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #297
-.ds RF 2013/08/22
+.ds LF Patch #298
+.ds RF 2013/09/22
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -410,8 +410,8 @@ Where the function is specified by DEC or ISO 6429, the code assigned
 to it is given in parentheses.
 .LP
 The escape codes to designate and invoke
-character sets are specified by ISO 2022; see that document for a
-discussion of character sets.
+character sets are specified by ISO 2022 (see that document for a
+discussion of character sets).
 .LP
 Many of the features are optional;
 \fI\*(xt\fP can be configured and built without support for them.
@@ -2404,7 +2404,7 @@ additional codes:
 \fI\*(xt\fP has these additional private Set Mode values:
   \*(Ps = \*8\*0 \(-> SIXEL scrolling.
   \*(Ps = \*1\*0\*7\*0 \(-> use private color registers for each graphic.
-.IP \\*(Dc\\*(Pa\\*;\\*(Pb\\*;\\*(Ph\\*s\\*q\\*s\\*(Ps..\\*(Ps\fP\\*(ST
+.IP \\*(Dc\\*(Pa\\*;\\*(Pb\\*;\\*(Ph\\*s\\*q\\*s\\*(Ps..\\*(Ps\fP\\*s\\*(ST
 See
 .ID
 http://vt100.net/docs/vt3xx-gp/chapter14.html
