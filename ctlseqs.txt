@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2013)
-               updated for XTerm Patch #297 (2013/08/22)
+               updated for XTerm Patch #298 (2013/09/22)
 
 
 
@@ -95,7 +95,7 @@ tions, such as the scrollbar or window size.  Where the function is
 specified by DEC or ISO 6429, the code assigned to it is given in paren-
 theses.
 The escape codes to designate and invoke character sets are specified by
-ISO 2022; see that document for a discussion of character sets.
+ISO 2022 (see that document for a discussion of character sets).
 Many of the features are optional; xterm can be configured and built
 without support for them.
 
@@ -1654,7 +1654,7 @@ CSI ? Pm h
             Ps = 8 0  -> SIXEL scrolling.
             Ps = 1 0 7 0  -> use private color registers for each
           graphic.
-DCS Pa; Pb; Ph q  Ps..PsST
+DCS Pa; Pb; Ph q  Ps..Ps ST
           See
 
                http://vt100.net/docs/vt3xx-gp/chapter14.html

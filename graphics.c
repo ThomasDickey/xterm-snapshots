@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.14 2013/09/10 18:38:12 tom Exp $ */
+/* $XTermId: graphics.c,v 1.15 2013/09/27 21:37:43 tom Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -1314,17 +1314,17 @@ refresh_displayed_graphics(TScreen const *screen,
 	w = ncols * FontWidth(screen);
 	h = nrows * FontHeight(screen);
 
-	xbase = (screen->border
+	xbase = (OriginX(screen)
 		 + graphic->charcol * FontWidth(screen));
-	ybase = (screen->border
+	ybase = (OriginY(screen)
 		 + (graphic->charrow - screen->topline) * FontHeight(screen));
 
-	if (xbase + x + w + screen->border > FullWidth(screen))
-	    w = FullWidth(screen) - (xbase + x + screen->border);
-	if (ybase + y + h + screen->border > FullHeight(screen))
-	    h = FullHeight(screen) - (ybase + y + screen->border);
-	else if (ybase + y < screen->border) {
-	    int diff = screen->border - (ybase + y);
+	if (xbase + x + w + OriginX(screen) > FullWidth(screen))
+	    w = FullWidth(screen) - (xbase + x + OriginX(screen));
+	if (ybase + y + h + OriginY(screen) > FullHeight(screen))
+	    h = FullHeight(screen) - (ybase + y + OriginY(screen));
+	else if (ybase + y < OriginY(screen)) {
+	    int diff = OriginY(screen) - (ybase + y);
 	    y += diff;
 	    h -= diff;
 	}
@@ -1368,17 +1368,17 @@ refresh_modified_displayed_graphics(TScreen const *screen)
 	w = ncols * FontWidth(screen);
 	h = nrows * FontHeight(screen);
 
-	xbase = (screen->border
+	xbase = (OriginX(screen)
 		 + graphic->charcol * FontWidth(screen));
-	ybase = (screen->border
+	ybase = (OriginY(screen)
 		 + (graphic->charrow - screen->topline) * FontHeight(screen));
 
-	if (xbase + x + w + screen->border > FullWidth(screen))
-	    w = FullWidth(screen) - (xbase + x + screen->border);
-	if (ybase + y + h + screen->border > FullHeight(screen))
-	    h = FullHeight(screen) - (ybase + y + screen->border);
-	else if (ybase + y < screen->border) {
-	    int diff = screen->border - (ybase + y);
+	if (xbase + x + w + OriginX(screen) > FullWidth(screen))
+	    w = FullWidth(screen) - (xbase + x + OriginX(screen));
+	if (ybase + y + h + OriginY(screen) > FullHeight(screen))
+	    h = FullHeight(screen) - (ybase + y + OriginY(screen));
+	else if (ybase + y < OriginY(screen)) {
+	    int diff = OriginY(screen) - (ybase + y);
 	    y += diff;
 	    h -= diff;
 	}
