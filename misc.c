@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.672 2013/08/05 08:25:55 tom Exp $ */
+/* $XTermId: misc.c,v 1.673 2013/11/18 01:40:43 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -753,7 +753,7 @@ HandleStringEvent(Widget w GCC_UNUSED,
 	    value *= 16;
 	    if (c >= '0' && c <= '9')
 		value += (unsigned) (c - '0');
-	    else if ((xxxxxx = strchr(abcdef, c)) != 0)
+	    else if ((xxxxxx = (strchr) (abcdef, c)) != 0)
 		value += (unsigned) (xxxxxx - abcdef) + 10;
 	    else
 		break;
