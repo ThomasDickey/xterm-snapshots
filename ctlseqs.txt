@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2013)
-               updated for XTerm Patch #298 (2013/09/22)
+               updated for XTerm Patch #298 (2013/11/10)
 
 
 
@@ -361,7 +361,7 @@ CSI ? Pm h
             Ps = 7  -> Wraparound Mode (DECAWM).
             Ps = 8  -> Auto-repeat Keys (DECARM).
             Ps = 9  -> Send Mouse X & Y on button press.  See the sec-
-          tion Mouse Tracking.
+          tion Mouse Tracking.  This is the X10 xterm mouse protocol.
             Ps = 1 0  -> Show toolbar (rxvt).
             Ps = 1 2  -> Start Blinking Cursor (att610).
             Ps = 1 8  -> Print form feed (DECPFF).
@@ -387,7 +387,8 @@ CSI ? Pm h
             Ps = 9 5  -> Do not clear screen when DECCOLM is set/reset
           (DECNCSM), VT510 and up.
             Ps = 1 0 0 0  -> Send Mouse X & Y on button press and
-          release.  See the section Mouse Tracking.
+          release.  See the section Mouse Tracking.  This is the X11
+          xterm mouse protocol.
             Ps = 1 0 0 1  -> Use Hilite Mouse Tracking.
             Ps = 1 0 0 2  -> Use Cell Motion Mouse Tracking.
             Ps = 1 0 0 3  -> Use All Motion Mouse Tracking.
@@ -396,8 +397,8 @@ CSI ? Pm h
             Ps = 1 0 0 6  -> Enable SGR Mouse Mode.
             Ps = 1 0 0 7  -> Enable Alternate Scroll Mode.
             Ps = 1 0 1 0  -> Scroll to bottom on tty output (rxvt).
-            Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).
+            Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 3 4  -> Interpret "meta" key, sets eighth bit.
           (enables the eightBitInput resource).
             Ps = 1 0 3 5  -> Enable special modifiers for Alt and Num-
@@ -493,8 +494,8 @@ CSI ? Pm l
             Ps = 1 0 0 7  -> Disable Alternate Scroll Mode.
             Ps = 1 0 1 0  -> Don't scroll to bottom on tty output
           (rxvt).
-            Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Don't scroll to bottom on key press (rxvt).
+            Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
             Ps = 1 0 3 4  -> Don't interpret "meta" key.  (This disables
           the eightBitInput resource).
             Ps = 1 0 3 5  -> Disable special modifiers for Alt and Num-
