@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.614 2013/09/11 21:22:18 tom Exp $ */
+/* $XTermId: util.c,v 1.615 2013/11/19 23:27:40 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -3322,6 +3322,7 @@ drawXtermText(XtermWidget xw,
 		Boolean replace = False;
 		Boolean missing = False;
 		unsigned ch = (unsigned) text[last];
+		int filler = 0;
 		int nc;
 #if OPT_WIDE_CHARS
 
@@ -3356,6 +3357,7 @@ drawXtermText(XtermWidget xw,
 			    }
 			} else if (xtermXftMissing(xw, font, ch)
 				   && (part = AsciiEquivs(ch)) != ch) {
+			    filler = my_wcwidth((wchar_t) ch) - 1;
 			    ch = part;
 			    replace = True;
 			}
@@ -3416,6 +3418,19 @@ drawXtermText(XtermWidget xw,
 						  1);
 			curX += nc * FontWidth(screen);
 			underline_len += (Cardinal) nc;
+			if (filler) {
+			    ch2 = ' ';
+			    nc = drawClippedXftString(xw,
+						      flags,
+						      font,
+						      getXftColor(xw, values.foreground),
+						      curX,
+						      y,
+						      &ch2,
+						      1);
+			    curX += nc * FontWidth(screen);
+			    underline_len += (Cardinal) nc;
+			}
 		    }
 		    first = last + 1;
 		}
