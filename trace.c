@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.150 2013/09/11 21:25:12 tom Exp $ */
+/* $XTermId: trace.c,v 1.151 2013/11/20 23:58:47 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -104,6 +104,17 @@ Trace(const char *fmt,...)
 	sprintf(name, "Trace-%s.out", trace_who);
 #endif
 	trace_fp = fopen(name, "w");
+	/*
+	 * Try to put the trace-file in user's home-directory if the current
+	 * directory is not writable.
+	 */
+	if (trace_fp == 0) {
+	    char *home = getenv("HOME");
+	    if (home != 0) {
+		sprintf(name, "%s/Trace-%s.out", home, trace_who);
+		trace_fp = fopen(name, "w");
+	    }
+	}
 	if (trace_fp != 0) {
 	    fprintf(trace_fp, "%s\n", xtermVersion());
 	    TraceIds(NULL, 0);
