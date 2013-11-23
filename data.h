@@ -1,7 +1,7 @@
-/* $XTermId: data.h,v 1.121 2012/10/14 18:51:30 tom Exp $ */
+/* $XTermId: data.h,v 1.122 2013/11/22 21:47:59 tom Exp $ */
 
 /*
- * Copyright 2002-2011,2012 by Thomas E. Dickey
+ * Copyright 2002-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -140,6 +140,10 @@ extern Atom wm_delete_window;
  */
 extern int mapstate;
 #endif /* HANDLE_STRUCT_NOTIFY */
+
+#ifdef HAVE_LIB_XCURSOR
+extern char *xterm_cursor_theme;
+#endif
 
 typedef struct XTERM_RESOURCE {
     char *icon_geometry;

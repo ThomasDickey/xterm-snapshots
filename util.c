@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.617 2013/11/21 00:34:52 tom Exp $ */
+/* $XTermId: util.c,v 1.618 2013/11/23 00:24:42 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -2618,6 +2618,7 @@ recolor_cursor(TScreen *screen,
     XQueryColors(dpy, DefaultColormap(dpy, DefaultScreen(dpy)),
 		 colordefs, 2);
     XRecolorCursor(dpy, cursor, colordefs, colordefs + 1);
+    cleanup_colored_cursor();
     return;
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.728 2013/09/11 21:29:29 tom Exp $ */
+/* $XTermId: main.c,v 1.730 2013/11/23 00:27:12 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -2178,6 +2178,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	setEffectiveUser(save_ruid);
 	TRACE_IDS;
 #endif
+	init_colored_cursor();
 
 	toplevel = xtermOpenApplication(&app_con,
 					my_class,
@@ -4065,6 +4066,11 @@ spawnXTerm(XtermWidget xw)
 	     * GTK applications.
 	     */
 	    xtermUnsetenv("DESKTOP_STARTUP_ID");
+	    /*
+	     * We set this temporarily to work around poor design of Xcursor.
+	     * Unset it here to avoid confusion.
+	     */
+	    xtermUnsetenv("XCURSOR_PATH");
 
 	    xtermSetenv("TERM", resource.term_name);
 	    if (!resource.term_name)
@@ -4874,6 +4880,8 @@ Exit(int n)
     }
 #endif /* USE_SYSV_UTMP */
 #endif /* HAVE_UTMP */
+
+    cleanup_colored_cursor();
 
     /*
      * Flush pending data before releasing ownership, so nobody else can write

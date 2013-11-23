@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.319 2013/08/04 19:28:25 tom Exp $
+dnl $XTermId: configure.in,v 1.321 2013/11/22 21:42:13 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -91,6 +91,7 @@ AC_TYPE_OFF_T
 AC_CHECK_FUNCS( \
 	gethostname \
 	getlogin \
+	mkdtemp \
 	putenv \
 	unsetenv \
 	sched_yield \
@@ -258,6 +259,9 @@ CF_WITH_XPM
 CF_X_ATHENA
 CF_TYPE_FD_MASK
 CF_TERMIO_C_ISPEED
+
+# If we notice Xcursor, there is a workaround needed.
+AC_CHECK_LIB(Xcursor, XcursorGetTheme,[AC_DEFINE(HAVE_LIB_XCURSOR)])
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 
