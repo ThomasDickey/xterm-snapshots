@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.722 2013/09/10 10:55:04 tom Exp $ */
+/* $XTermId: xterm.h,v 1.724 2013/11/23 00:25:35 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1032,6 +1032,7 @@ extern void Redraw (void);
 extern void ReverseOldColors (void);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
+extern void cleanup_colored_cursor (void);
 extern void do_dcs (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */);
 extern void do_decrpm (XtermWidget /* xw */, int /* nparam */, int *  /* params */);
 extern void do_osc (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */, int  /* final */);
@@ -1042,6 +1043,7 @@ extern void end_vt_mode (void);
 extern void hide_tek_window (void);
 extern void hide_vt_window (void);
 extern void ice_error (IceConn /* iceConn */);
+extern void init_colored_cursor (void);
 extern void reset_decudk (void);
 extern void set_tek_visibility (Bool  /* on */);
 extern void set_vt_visibility (Bool  /* on */);

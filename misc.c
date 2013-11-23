@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.673 2013/11/18 01:40:43 tom Exp $ */
+/* $XTermId: misc.c,v 1.679 2013/11/23 00:58:34 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -690,6 +690,76 @@ make_hidden_cursor(XtermWidget xw)
     }
     TRACE(("XCreateGlyphCursor ->%#lx\n", c));
     return (c);
+}
+
+/*
+ * Xlib uses Xcursor to customize cursor coloring, which interferes with
+ * xterm's pointerColor resource.  Work around this by providing our own
+ * default theme.  Testing seems to show that we only have to provide this
+ * until the window is initialized.
+ */
+void
+init_colored_cursor(void)
+{
+#ifdef HAVE_LIB_XCURSOR
+    const char *theme = "index.theme";
+    const char *pattern = "xtermXXXXXX";
+    const char *tmp_dir;
+    char *filename;
+    size_t needed;
+    FILE *fp;
+
+    xterm_cursor_theme = 0;
+    if ((tmp_dir = getenv("TMPDIR")) == 0)
+	tmp_dir = P_tmpdir;
+    needed = strlen(tmp_dir) + 4 + strlen(theme) + strlen(pattern);
+    if ((filename = malloc(needed)) != 0) {
+	sprintf(filename, "%s/%s", tmp_dir, pattern);
+
+#ifdef HAVE_MKDTEMP
+	xterm_cursor_theme = mkdtemp(filename);
+#else
+	if (mktemp(filename) != 0
+	    && mkdir(filename, 0700) == 0) {
+	    xterm_cursor_theme = filename;
+	}
+#endif
+	/*
+	 * Actually, Xcursor does what _we_ want just by steering its search
+	 * path away from home.  We are setting up the complete theme just in
+	 * case the library ever acquires a maintainer.
+	 */
+	if (xterm_cursor_theme != 0) {
+	    char *leaf = xterm_cursor_theme + strlen(xterm_cursor_theme);
+	    strcat(leaf, "/");
+	    strcat(leaf, theme);
+	    if ((fp = fopen(xterm_cursor_theme, "w")) != 0) {
+		fprintf(fp, "[Icon Theme]\n");
+		fprintf(fp, "Inherits=\n");
+		fclose(fp);
+		*leaf = '\0';
+		xtermSetenv("XCURSOR_PATH", xterm_cursor_theme);
+		*leaf = '/';
+	    }
+	}
+    }
+#endif /* HAVE_LIB_XCURSOR */
+}
+
+/*
+ * Once done, discard the file and directory holding it.
+ */
+void
+cleanup_colored_cursor(void)
+{
+#ifdef HAVE_LIB_XCURSOR
+    if (xterm_cursor_theme != 0) {
+	unlink(xterm_cursor_theme);
+	rmdir(getenv("XCURSOR_PATH"));
+	free(xterm_cursor_theme);
+	xterm_cursor_theme = 0;
+    }
+#endif /* HAVE_LIB_XCURSOR */
 }
 
 Cursor
