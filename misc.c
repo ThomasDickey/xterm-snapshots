@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.679 2013/11/23 00:58:34 tom Exp $ */
+/* $XTermId: misc.c,v 1.680 2013/11/23 12:56:46 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -741,6 +741,7 @@ init_colored_cursor(void)
 		xtermSetenv("XCURSOR_PATH", xterm_cursor_theme);
 		*leaf = '/';
 	    }
+	    atexit(cleanup_colored_cursor);
 	}
     }
 #endif /* HAVE_LIB_XCURSOR */

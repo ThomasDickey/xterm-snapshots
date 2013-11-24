@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.618 2013/11/23 00:24:42 tom Exp $ */
+/* $XTermId: util.c,v 1.619 2013/11/23 13:02:58 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -3571,10 +3571,10 @@ drawXtermText(XtermWidget xw,
      * line-drawing.
      *
      * The empty space is a special case which can be overridden with the
-     * showMissingGlyphs resource to produce an outline.  That is preferable
-     * to the haphazard treatment of fonts in "modern" (sic) X, which may
-     * use a thick outline or something like the replacement character.  If
-     * you really want that, you can set assumeAllChars.
+     * showMissingGlyphs resource to produce an outline.  Not all fonts in
+     * "modern" (sic) X provide an empty space; some use a thick outline or
+     * something like the replacement character.  If you would rather not see
+     * that, you can set assumeAllChars.
      */
     if (!IsIcon(screen)
 	&& !(flags & NOTRANSLATION)
