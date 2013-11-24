@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.122 2013/11/22 21:47:59 tom Exp $ */
+/* $XTermId: data.h,v 1.123 2013/11/23 17:00:45 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -204,6 +204,9 @@ typedef struct XTERM_RESOURCE {
     Boolean wait_for_map0;	/* ...initial value of .wait_for_map */
     Boolean ptyHandshake;	/* use pty-handshaking */
     Boolean ptySttySize;	/* reset TTY size after pty handshake */
+#endif
+#if OPT_REPORT_FONTS
+    Boolean reportFonts;	/* show bitmap-font information as loaded */
 #endif
 #if OPT_SAME_NAME
     Boolean sameName;		/* Don't change the title or icon name if it is

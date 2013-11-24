@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.151 2013/11/20 23:58:47 tom Exp $ */
+/* $XTermId: trace.c,v 1.152 2013/11/23 17:01:08 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -914,6 +914,9 @@ TraceXtermResources(void)
     XRES_B(wait_for_map);
     XRES_B(ptyHandshake);
     XRES_B(ptySttySize);
+#endif
+#if OPT_REPORT_FONTS
+    XRES_B(reportFonts);
 #endif
 #if OPT_SAME_NAME
     XRES_B(sameName);

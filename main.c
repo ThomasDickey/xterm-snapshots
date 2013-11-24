@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.730 2013/11/23 00:27:12 tom Exp $ */
+/* $XTermId: main.c,v 1.731 2013/11/23 17:06:39 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -883,6 +883,9 @@ static XtResource application_resources[] =
     Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
     Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
 #endif
+#if OPT_REPORT_FONTS
+    Bres("reportFonts", "ReportFonts", reportFonts, False),
+#endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
 #endif
@@ -1017,6 +1020,9 @@ static XrmOptionDescRec optionDescList[] = {
 {"+s",		"*multiScroll",	XrmoptionNoArg,		(XPointer) "off"},
 {"-sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "on"},
 {"+sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "off"},
+#if OPT_REPORT_FONTS
+{"-report-fonts","*reportFonts", XrmoptionNoArg,	(XPointer) "on"},
+#endif
 #ifdef SCROLLBAR_RIGHT
 {"-leftbar",	"*rightScrollBar", XrmoptionNoArg,	(XPointer) "off"},
 {"-rightbar",	"*rightScrollBar", XrmoptionNoArg,	(XPointer) "on"},

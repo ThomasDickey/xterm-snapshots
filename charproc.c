@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1317 2013/09/11 22:29:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1318 2013/11/23 12:59:49 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -557,7 +557,7 @@ static XtResource xterm_resources[] =
     Bres(XtNforceBoxChars, XtCForceBoxChars, screen.force_box_chars, False),
     Bres(XtNforcePackedFont, XtCForcePackedFont, screen.force_packed, True),
     Bres(XtNshowMissingGlyphs, XtCShowMissingGlyphs, screen.force_all_chars, False),
-    Bres(XtNassumeAllChars, XtCAssumeAllChars, screen.assume_all_chars, False),
+    Bres(XtNassumeAllChars, XtCAssumeAllChars, screen.assume_all_chars, True),
 #endif
 
 #if OPT_BROKEN_OSC

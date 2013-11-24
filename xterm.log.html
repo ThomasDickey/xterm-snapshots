@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1400 2013/11/23 00:43:04 tom Exp $
+  $XTermId: xterm.log.html,v 1.1401 2013/11/23 17:26:41 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -881,6 +881,15 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>change default for <code>assumeAllChars</code> resource
+    (Debian #725682). There are unresolved issues with Terminus
+    fonts, e.g., Debian #722017.</li>
+
+    <li>add <code>-report-fonts</code> command-line option and
+    <code>reportFonts</code> resource to optionally report the
+    fonts which are loaded, and their metrics such as the number of
+    missing glyphs.</li>
+
     <li>work around <code>Xcursor</code> library to make
     <code>pointerColor</code> resource work as documented (Debian
     #466704, analysis by Vincent Lef&egrave;vre).</li>
