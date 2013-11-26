@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.397 2013/11/23 20:02:11 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.398 2013/11/24 00:16:13 tom Exp $ */
 
 /*
  * Copyright 1998-2012,2013 by Thomas E. Dickey
@@ -907,6 +907,7 @@ reportOneVTFont(const char *tag,
 	printf("\t\tlast char:     %u\n", last_char);
 	printf("\t\tmaximum-chars: %u\n", countGlyphs(fs));
 	printf("\t\tmissing-chars: %u\n", missing);
+	printf("\t\tpresent-chars: %u\n", countGlyphs(fs) - missing);
 	printf("\t\tmin_byte1:     %d\n", fs->min_byte1);
 	printf("\t\tmax_byte1:     %d\n", fs->max_byte1);
 	printf("\t\tproperties:    %d\n", fs->n_properties);
@@ -1814,25 +1815,30 @@ checkXft(XtermWidget xw, XTermXftFonts * data, XftFont * xft)
 }
 
 static void
-reportXftFonts(XtermWidget xw, XftFont * fp, const char *name, XftPattern * match)
+reportXftFonts(XtermWidget xw,
+	       XftFont * fp,
+	       const char *name,
+	       const char *tag,
+	       XftPattern * match)
 {
     if (resource.reportFonts) {
 	char buffer[1024];
-	FcChar32 first = xtermXftFirstChar(fp);
-	FcChar32 last = xtermXftLastChar(fp);
+	FcChar32 first_char = xtermXftFirstChar(fp);
+	FcChar32 last_char = xtermXftLastChar(fp);
 	FcChar32 ch;
 	unsigned missing = 0;
 
-	printf("Loaded XftFonts(%s)\n", name);
-	printf("\trange: %u .. %u\n", first, last);
+	printf("Loaded XftFonts(%s:%s)\n", name, tag);
 
-	for (ch = first; ch <= last; ++ch) {
+	for (ch = first_char; ch <= last_char; ++ch) {
 	    if (xtermXftMissing(xw, fp, ch)) {
 		++missing;
 	    }
 	}
-	printf("\tmissing: %u\n", missing);
-	printf("\tpresent: %u\n", (last - first) + 1 - missing);
+	printf("\t\tfirst char:    %u\n", first_char);
+	printf("\t\tlast char:     %u\n", last_char);
+	printf("\t\tmissing-chars: %u\n", missing);
+	printf("\t\tpresent-chars: %u\n", (last_char - first_char) + 1 - missing);
 
 	if (XftNameUnparse(match, buffer, sizeof(buffer))) {
 	    char *target;
@@ -1860,7 +1866,7 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern * pat, const char *tag
 	    result = XftFontOpenPattern(dpy, match);
 	    if (result != 0) {
 		TRACE(("...matched %s font\n", tag));
-		reportXftFonts(xw, result, name, match);
+		reportXftFonts(xw, result, name, tag, match);
 	    } else {
 		TRACE(("...could did not open %s font\n", tag));
 		XftPatternDestroy(match);
@@ -2323,7 +2329,9 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
     }
 #if OPT_WIDE_CHARS
     else {
-	CI_GET_CHAR_INFO_2D(fs, HI_BYTE(ch), LO_BYTE(ch), pc);
+	unsigned row = (ch >> 8);
+	unsigned col = (ch & 0xff);
+	CI_GET_CHAR_INFO_2D(fs, row, col, pc);
     }
 #endif
 

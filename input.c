@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.346 2013/08/21 12:03:16 tom Exp $ */
+/* $XTermId: input.c,v 1.348 2013/11/26 00:12:10 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -321,8 +321,6 @@ static Bool
 allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 {
     TKeyboard *keyboard = &(xw->keyboard);
-    TScreen *screen = TScreenOf(xw);
-    int keypad_mode = ((keyboard->flags & MODE_DECKPAM) != 0);
     int is_legacy = (keyboard->type == keyboardIsLegacy);
     Bool result = False;
 
@@ -331,17 +329,14 @@ allowModifierParm(XtermWidget xw, KEY_DATA * kd)
 	is_legacy = True;
 #endif
 
-    (void) screen;
 #if OPT_VT52_MODE
-    if (screen->vtXX_level != 0)
+    if (TScreenOf(xw)->vtXX_level != 0)
 #endif
     {
 	if (IsCursorKey(kd->keysym) || IsEditFunctionKey(xw, kd->keysym)) {
 	    result = LegacyAllows(2);
 	} else if (IsKeypadKey(kd->keysym)) {
-	    if (keypad_mode) {
-		result = LegacyAllows(1);
-	    }
+	    result = LegacyAllows(1);
 	} else if (IsFunctionKey(kd->keysym)) {
 	    result = LegacyAllows(4);
 	} else if (IsMiscFunctionKey(kd->keysym)) {
