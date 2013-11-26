@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.731 2013/11/23 17:06:39 tom Exp $ */
+/* $XTermId: main.c,v 1.732 2013/11/26 01:34:04 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -1509,6 +1509,10 @@ parseArg(int *num, char **argv, char **valuep)
 	    if (test > 0
 		&& ITEM(inlist)->argKind >= XrmoptionSkipArg) {
 		atbest = (int) inlist;
+		if (ITEM(inlist)->argKind == XrmoptionSkipNArgs) {
+		    /* in particular, silence a warning about ambiguity */
+		    exact = 1;
+		}
 		break;
 	    }
 	    if (test > best) {
