@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.464 2013/09/10 17:27:38 tom Exp $ */
+/* $XTermId: button.c,v 1.465 2013/11/27 00:43:43 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1865,7 +1865,7 @@ ToNational(TScreen *screen, Char *buffer, unsigned *length)
     } else
 #endif
     {
-	for (p = buffer; (p - buffer) < *length; ++p) {
+	for (p = buffer; (int) (p - buffer) < (int) *length; ++p) {
 	    chr = *p;
 	    out = chr;
 	    if ((gl = xtermCharSetIn(screen, chr, gsetL)) != chr) {
