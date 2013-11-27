@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.732 2013/11/26 01:34:04 tom Exp $ */
+/* $XTermId: main.c,v 1.735 2013/11/27 00:41:23 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -456,7 +456,7 @@ static int pty_search(int * /* pty */ );
 
 static int get_pty(int *pty, char *from);
 static void resize_termcap(XtermWidget xw);
-static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
+static void set_owner(char *device, unsigned uid, unsigned gid, unsigned mode);
 
 static Bool added_utmp_entry = False;
 
@@ -1209,6 +1209,9 @@ static OptionHelp xtermOptions[] = {
 { "-/+rw",                 "turn on/off reverse wraparound" },
 { "-/+s",                  "turn on/off multiscroll" },
 { "-/+sb",                 "turn on/off scrollbar" },
+#if OPT_REPORT_FONTS
+{ "-report-fonts",         "report fonts as loaded to stdout" },
+#endif
 #ifdef SCROLLBAR_RIGHT
 { "-rightbar",             "force scrollbar right (default left)" },
 { "-leftbar",              "force scrollbar left" },
@@ -2734,7 +2737,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
 }
 
 static void
-set_pty_permissions(uid_t uid, gid_t gid, mode_t mode)
+set_pty_permissions(uid_t uid, unsigned gid, unsigned mode)
 {
 #ifdef USE_TTY_GROUP
     struct group *ttygrp;
@@ -3055,7 +3058,7 @@ HsSysError(int error)
 
 #ifndef VMS
 static void
-set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
+set_owner(char *device, unsigned uid, unsigned gid, unsigned mode)
 {
     int why;
 
@@ -3693,8 +3696,7 @@ spawnXTerm(XtermWidget xw)
 		/* we don't need the socket, or the pty master anymore */
 		close(ConnectionNumber(screen->display));
 #ifndef __MVS__
-		if (screen->respond >= 0)
-		    close(screen->respond);
+		close(screen->respond);
 #endif /* __MVS__ */
 
 		/* Now is the time to set up our process group and

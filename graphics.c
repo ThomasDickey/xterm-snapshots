@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.15 2013/09/27 21:37:43 tom Exp $ */
+/* $XTermId: graphics.c,v 1.17 2013/11/26 22:15:21 tom Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -250,7 +250,7 @@ set_sixel(SixelGraphic *graphic, int sixel)
 
 static void
 set_sixel_color_register(ColorRegister *color_registers,
-			 RegisterNum color,
+			 int color,
 			 int r,
 			 int g,
 			 int b)
@@ -270,7 +270,7 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
 	unsigned int i;
 
 	for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
-	    set_sixel_color_register(color_registers, (RegisterNum) i, 0, 0, 0);
+	    set_sixel_color_register(color_registers, (int) i, 0, 0, 0);
 	}
     }
 
@@ -550,12 +550,12 @@ dump_sixel(SixelGraphic const *graphic)
 }
 
 static void
-set_shared_color_register(RegisterNum color, int r, int g, int b)
+set_shared_color_register(int color, int r, int g, int b)
 {
     SixelGraphic *graphic;
     unsigned int ii;
 
-    assert(color < MAX_COLOR_REGISTERS);
+    assert(color < (int) MAX_COLOR_REGISTERS);
 
     set_sixel_color_register(shared_color_registers, color, r, g, b);
 
@@ -1112,10 +1112,10 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		}
 		if (graphic->private_colors) {
 		    set_sixel_color_register(graphic->private_color_registers,
-					     (RegisterNum) Pregister,
+					     Pregister,
 					     r, g, b);
 		} else {
-		    set_shared_color_register((RegisterNum) Pregister, r, g, b);
+		    set_shared_color_register(Pregister, r, g, b);
 		}
 		graphic->color_registers_used[Pregister] = 1;
 	    } else if (color_params.a_nparam == 1) {

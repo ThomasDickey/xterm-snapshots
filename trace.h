@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.71 2013/09/11 21:25:23 tom Exp $ */
+/* $XTermId: trace.h,v 1.72 2013/09/11 21:25:23 tom Exp $ */
 
 /*
- * Copyright 1997-2011,2012 by Thomas E. Dickey
+ * Copyright 1997-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

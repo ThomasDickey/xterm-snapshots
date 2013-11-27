@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.398 2013/11/24 00:16:13 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.399 2013/11/26 20:12:00 tom Exp $ */
 
 /*
  * Copyright 1998-2012,2013 by Thomas E. Dickey
@@ -1840,7 +1840,7 @@ reportXftFonts(XtermWidget xw,
 	printf("\t\tmissing-chars: %u\n", missing);
 	printf("\t\tpresent-chars: %u\n", (last_char - first_char) + 1 - missing);
 
-	if (XftNameUnparse(match, buffer, sizeof(buffer))) {
+	if (XftNameUnparse(match, buffer, (int) sizeof(buffer))) {
 	    char *target;
 	    char *source = buffer;
 	    while ((target = strtok(source, ":")) != 0) {

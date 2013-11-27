@@ -1,7 +1,7 @@
-/* $XTermId: cursor.c,v 1.68 2013/08/08 08:16:40 Iwamoto.Kouichi Exp $ */
+/* $XTermId: cursor.c,v 1.69 2013/08/08 08:16:40 tom Exp $ */
 
 /*
- * Copyright 2002-2010,2012 by Thomas E. Dickey
+ * Copyright 2002-2012,2013 by Thomas E. Dickey
  * 
  *                         All Rights Reserved
  * 

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.152 2013/11/23 17:01:08 tom Exp $ */
+/* $XTermId: trace.c,v 1.153 2013/11/26 22:41:44 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -111,7 +111,9 @@ Trace(const char *fmt,...)
 	if (trace_fp == 0) {
 	    char *home = getenv("HOME");
 	    if (home != 0) {
-		sprintf(name, "%s/Trace-%s.out", home, trace_who);
+		sprintf(name, "%.*s/Trace-%.8s.out",
+			(BUFSIZ - 21), home,
+			trace_who);
 		trace_fp = fopen(name, "w");
 	    }
 	}

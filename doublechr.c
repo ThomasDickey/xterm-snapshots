@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.82 2013/08/30 21:35:13 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.83 2013/08/30 21:35:13 tom Exp $ */
 
 /*
- * Copyright 1997-2011,2012 by Thomas E. Dickey
+ * Copyright 1997-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

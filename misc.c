@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.680 2013/11/23 12:56:46 tom Exp $ */
+/* $XTermId: misc.c,v 1.681 2013/11/26 22:47:29 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -755,10 +755,16 @@ cleanup_colored_cursor(void)
 {
 #ifdef HAVE_LIB_XCURSOR
     if (xterm_cursor_theme != 0) {
-	unlink(xterm_cursor_theme);
-	rmdir(getenv("XCURSOR_PATH"));
-	free(xterm_cursor_theme);
-	xterm_cursor_theme = 0;
+	char *my_path = getenv("XCURSOR_PATH");
+	struct stat sb;
+	if (!IsEmpty(my_path)
+	    && stat(my_path, &sb) == 0
+	    && (sb.st_mode & S_IFMT) == S_IFDIR) {
+	    unlink(xterm_cursor_theme);
+	    rmdir(my_path);
+	    free(xterm_cursor_theme);
+	    xterm_cursor_theme = 0;
+	}
     }
 #endif /* HAVE_LIB_XCURSOR */
 }
