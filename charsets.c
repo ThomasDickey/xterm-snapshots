@@ -1,4 +1,4 @@
-/* $XTermId: charsets.c,v 1.66 2013/09/16 21:26:10 tom Exp $ */
+/* $XTermId: charsets.c,v 1.67 2013/12/01 16:38:13 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2013 by Thomas E. Dickey
@@ -576,7 +576,7 @@ xtermCharSetOut(XtermWidget xw, IChar *buf, IChar *ptr, int leftset)
 	case nrc_DEC_Spec_Graphic:
 	    if (seven > 0x5f && seven <= 0x7e) {
 #if OPT_WIDE_CHARS
-		if (screen->utf8_nrc_mode)
+		if (screen->utf8_mode || screen->utf8_nrc_mode)
 		    chr = (int) dec2ucs((unsigned) (seven - 0x5f));
 		else
 #endif
