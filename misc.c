@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.681 2013/11/26 22:47:29 tom Exp $ */
+/* $XTermId: misc.c,v 1.682 2013/12/03 23:24:48 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -735,7 +735,6 @@ init_colored_cursor(void)
 	    strcat(leaf, theme);
 	    if ((fp = fopen(xterm_cursor_theme, "w")) != 0) {
 		fprintf(fp, "[Icon Theme]\n");
-		fprintf(fp, "Inherits=\n");
 		fclose(fp);
 		*leaf = '\0';
 		xtermSetenv("XCURSOR_PATH", xterm_cursor_theme);

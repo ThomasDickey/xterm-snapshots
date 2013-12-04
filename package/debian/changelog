@@ -1,3 +1,9 @@
+xterm-dev (300) unstable; urgency=high
+
+  * fix a regression from #298 changes
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 03 Dec 2013 18:59:58 -0500
+
 xterm-dev (299) unstable; urgency=low
 
   * fix remaining regression from #297 changes
