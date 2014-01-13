@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.735 2013/11/27 00:41:23 tom Exp $ */
+/* $XTermId: main.c,v 1.736 2014/01/13 00:44:19 tom Exp $ */
 
 /*
- * Copyright 2002-2012,2013 by Thomas E. Dickey
+ * Copyright 2002-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3156,6 +3156,41 @@ find_utmp(struct UTMP_STR *tofind)
 #endif
 
 /*
+ * Only set $SHELL for paths found in the standard location.
+ */
+static Boolean
+validShell(const char *pathname)
+{
+    Boolean result = False;
+    const char *ok_shells = "/etc/shells";
+    char *blob;
+    struct stat sb;
+    FILE *fp;
+
+    if (stat(ok_shells, &sb) == 0
+	&& (sb.st_mode & S_IFMT) == S_IFREG
+	&& (sb.st_size != 0)
+	&& (blob = calloc(sb.st_size + 2, sizeof(char))) != 0) {
+	if ((fp = fopen(ok_shells, "r")) != 0) {
+	    if (fread(blob, sizeof(char), sb.st_size, fp) == (size_t) sb.st_size) {
+		char *p = blob;
+		char *q;
+		while ((q = strtok(p, "\n")) != 0) {
+		    if (!strcmp(q, pathname)) {
+			result = True;
+			break;
+		    }
+		    p = 0;
+		}
+	    }
+	    fclose(fp);
+	}
+	free(blob);
+    }
+    return result;
+}
+
+/*
  *  Inits pty and tty and forks a login process.
  *  Does not close fd Xsocket.
  *  If slave, the pty named in passedPty is already open for use
@@ -4532,11 +4567,11 @@ spawnXTerm(XtermWidget xw)
 			if (shell_path)
 			    free(shell_path);
 			shell_path = x_strdup("/bin/sh");
-		    } else if (shell_path != 0) {
+		    } else if (validShell(shell_path)) {
 			xtermSetenv("SHELL", shell_path);
 		    }
 		}
-	    } else {
+	    } else if (validShell(explicit_shname)) {
 		xtermSetenv("SHELL", explicit_shname);
 	    }
 	    if (access(shell_path, X_OK) != 0) {
