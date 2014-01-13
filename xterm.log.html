@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2012,2013 by Thomas E. Dickey                              *
+ * Copyright 1997-2013,2014 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1411 2013/12/09 12:57:08 tom Exp $
+  $XTermId: xterm.log.html,v 1.1412 2014/01/13 00:47:05 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -50,7 +50,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2012,2013 by <a href=
+  <p>Copyright &copy; 1997-2013,2014 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
   <hr>
 
@@ -887,6 +887,10 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>only set <code>SHELL</code> environment variable to
+    programs found in <code>/etc/shells</code> (prompted by
+    patch/report by Al Poole).</li>
+
     <li>build-fix, when <code>--disable-wide-chars</code>
     <code>--disable-boxchar</code> is used (prompted by patch by
     Andrey Panov).</li>
