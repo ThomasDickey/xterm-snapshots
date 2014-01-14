@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.736 2014/01/13 00:44:19 tom Exp $ */
+/* $XTermId: main.c,v 1.737 2014/01/13 09:09:39 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -3174,11 +3174,13 @@ validShell(const char *pathname)
 	if ((fp = fopen(ok_shells, "r")) != 0) {
 	    if (fread(blob, sizeof(char), sb.st_size, fp) == (size_t) sb.st_size) {
 		char *p = blob;
-		char *q;
-		while ((q = strtok(p, "\n")) != 0) {
-		    if (!strcmp(q, pathname)) {
-			result = True;
-			break;
+		char *q, *r;
+		while (!result && (q = strtok(p, "\n")) != 0) {
+		    if ((r = x_strtrim(q)) != 0) {
+			if (!strcmp(q, pathname)) {
+			    result = True;
+			}
+			free(r);
 		    }
 		    p = 0;
 		}
