@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.737 2014/01/13 09:09:39 tom Exp $ */
+/* $XTermId: main.c,v 1.738 2014/01/15 00:25:43 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -3167,7 +3167,9 @@ validShell(const char *pathname)
     struct stat sb;
     FILE *fp;
 
-    if (stat(ok_shells, &sb) == 0
+    if (!IsEmpty(pathname)
+	&& access(pathname, X_OK) == 0
+	&& stat(ok_shells, &sb) == 0
 	&& (sb.st_mode & S_IFMT) == S_IFREG
 	&& (sb.st_size != 0)
 	&& (blob = calloc(sb.st_size + 2, sizeof(char))) != 0) {
@@ -3189,7 +3191,20 @@ validShell(const char *pathname)
 	}
 	free(blob);
     }
+    TRACE(("validShell %s ->%d\n", NonNull(pathname), result));
     return result;
+}
+
+static char *
+resetShell(char *oldPath)
+{
+    char *newPath = x_strdup("/bin/sh");
+    char *envPath = getenv("SHELL");
+    if (oldPath != 0)
+	free(oldPath);
+    if (!IsEmpty(envPath))
+	xtermSetenv("SHELL", newPath);
+    return newPath;
 }
 
 /*
@@ -4555,31 +4570,34 @@ spawnXTerm(XtermWidget xw)
 	    signal(SIGHUP, SIG_DFL);
 
 	    /*
-	     * If we have an explicit program to run, make that set $SHELL.
+	     * If we have an explicit shell to run, make that set $SHELL.
 	     * Otherwise, if $SHELL is not set, determine it from the user's
 	     * password information, if possible.
 	     *
 	     * Incidentally, our setting of $SHELL tells luit to use that
 	     * program rather than choosing between $SHELL and "/bin/sh".
 	     */
-	    if ((shell_path = explicit_shname) == NULL) {
-		if ((shell_path = x_getenv("SHELL")) == NULL) {
-		    if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
-			|| *(shell_path = x_strdup(pw.pw_shell)) == 0) {
-			if (shell_path)
-			    free(shell_path);
-			shell_path = x_strdup("/bin/sh");
-		    } else if (validShell(shell_path)) {
-			xtermSetenv("SHELL", shell_path);
-		    }
-		}
-	    } else if (validShell(explicit_shname)) {
+	    if (validShell(explicit_shname)) {
 		xtermSetenv("SHELL", explicit_shname);
+		shell_path = explicit_shname;
+	    } else if (validShell(shell_path = x_getenv("SHELL"))) {
+		;		/* OK */
+	    } else if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
+		       || *(shell_path = x_strdup(pw.pw_shell)) == 0) {
+		shell_path = resetShell(shell_path);
+	    } else if (validShell(shell_path)) {
+		xtermSetenv("SHELL", shell_path);
+	    } else {
+		shell_path = resetShell(shell_path);
 	    }
-	    if (access(shell_path, X_OK) != 0) {
-		xtermPerror("Cannot use '%s' as shell", shell_path);
+
+	    /*
+	     * Set $XTERM_SHELL, which is not necessarily a valid shell, but
+	     * is executable.
+	     */
+	    if (explicit_shname != 0 && access(explicit_shname, X_OK) == 0) {
 		free(shell_path);
-		shell_path = x_strdup("/bin/sh");
+		shell_path = explicit_shname;
 	    }
 	    xtermSetenv("XTERM_SHELL", shell_path);
 
