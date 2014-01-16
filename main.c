@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.738 2014/01/15 00:25:43 tom Exp $ */
+/* $XTermId: main.c,v 1.741 2014/01/16 02:12:25 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -180,7 +180,6 @@ static void HsSysError(int) GCC_NORETURN;
 #if defined(__GLIBC__) && !defined(linux)
 #define USE_SYSV_PGRP
 #define WTMP
-#define HAS_BSD_GROUPS
 #endif
 
 #if defined(USE_TTY_GROUP) || defined(USE_UTMP_SETGID)
@@ -222,12 +221,7 @@ static void HsSysError(int) GCC_NORETURN;
 /*
  * now get system-specific includes
  */
-#ifdef CRAY
-#define HAS_BSD_GROUPS
-#endif
-
 #ifdef macII
-#define HAS_BSD_GROUPS
 #include <sys/ttychars.h>
 #undef USE_SYSV_ENVVARS
 #undef FIOCLEX
@@ -238,18 +232,15 @@ static void HsSysError(int) GCC_NORETURN;
 #endif
 
 #ifdef __hpux
-#define HAS_BSD_GROUPS
 #include <sys/ptyio.h>
 #endif /* __hpux */
 
 #ifdef __osf__
-#define HAS_BSD_GROUPS
 #undef  USE_SYSV_PGRP
 #define setpgrp setpgid
 #endif
 
 #ifdef __sgi
-#define HAS_BSD_GROUPS
 #include <sys/sysmacros.h>
 #endif /* __sgi */
 
@@ -290,9 +281,6 @@ ttyslot(void)
 #include <resource.h>
 #else
 #include <sys/resource.h>
-#endif
-#ifndef __INTERIX
-#define HAS_BSD_GROUPS
 #endif
 #endif /* !VMS */
 #endif /* !linux */
@@ -3165,6 +3153,7 @@ validShell(const char *pathname)
     const char *ok_shells = "/etc/shells";
     char *blob;
     struct stat sb;
+    size_t rc;
     FILE *fp;
 
     if (!IsEmpty(pathname)
@@ -3172,9 +3161,10 @@ validShell(const char *pathname)
 	&& stat(ok_shells, &sb) == 0
 	&& (sb.st_mode & S_IFMT) == S_IFREG
 	&& (sb.st_size != 0)
-	&& (blob = calloc(sb.st_size + 2, sizeof(char))) != 0) {
+	&& (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != 0) {
 	if ((fp = fopen(ok_shells, "r")) != 0) {
-	    if (fread(blob, sizeof(char), sb.st_size, fp) == (size_t) sb.st_size) {
+	    rc = fread(blob, sizeof(char), (size_t) sb.st_size, fp);
+	    if (rc == (size_t) sb.st_size) {
 		char *p = blob;
 		char *q, *r;
 		while (!result && (q = strtok(p, "\n")) != 0) {
@@ -4439,7 +4429,7 @@ spawnXTerm(XtermWidget xw)
 
 	    IGNORE_RC(setgid(screen->gid));
 	    TRACE_IDS;
-#ifdef HAS_BSD_GROUPS
+#ifdef HAVE_INITGROUPS
 	    if (geteuid() == 0 && OkPasswd(&pw)) {
 		if (initgroups(login_name, pw.pw_gid)) {
 		    perror("initgroups failed");
