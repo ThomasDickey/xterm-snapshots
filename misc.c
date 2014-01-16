@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.682 2013/12/03 23:24:48 tom Exp $ */
+/* $XTermId: misc.c,v 1.683 2014/01/15 20:56:11 tom Exp $ */
 
 /*
- * Copyright 1999-2012,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -706,41 +706,45 @@ init_colored_cursor(void)
     const char *pattern = "xtermXXXXXX";
     const char *tmp_dir;
     char *filename;
+    char *env = getenv("XCURSOR_THEME");
     size_t needed;
     FILE *fp;
 
     xterm_cursor_theme = 0;
-    if ((tmp_dir = getenv("TMPDIR")) == 0)
-	tmp_dir = P_tmpdir;
-    needed = strlen(tmp_dir) + 4 + strlen(theme) + strlen(pattern);
-    if ((filename = malloc(needed)) != 0) {
-	sprintf(filename, "%s/%s", tmp_dir, pattern);
+    if (IsEmpty(env)) {
+	if ((tmp_dir = getenv("TMPDIR")) == 0) {
+	    tmp_dir = P_tmpdir;
+	}
+	needed = strlen(tmp_dir) + 4 + strlen(theme) + strlen(pattern);
+	if ((filename = malloc(needed)) != 0) {
+	    sprintf(filename, "%s/%s", tmp_dir, pattern);
 
 #ifdef HAVE_MKDTEMP
-	xterm_cursor_theme = mkdtemp(filename);
+	    xterm_cursor_theme = mkdtemp(filename);
 #else
-	if (mktemp(filename) != 0
-	    && mkdir(filename, 0700) == 0) {
-	    xterm_cursor_theme = filename;
-	}
-#endif
-	/*
-	 * Actually, Xcursor does what _we_ want just by steering its search
-	 * path away from home.  We are setting up the complete theme just in
-	 * case the library ever acquires a maintainer.
-	 */
-	if (xterm_cursor_theme != 0) {
-	    char *leaf = xterm_cursor_theme + strlen(xterm_cursor_theme);
-	    strcat(leaf, "/");
-	    strcat(leaf, theme);
-	    if ((fp = fopen(xterm_cursor_theme, "w")) != 0) {
-		fprintf(fp, "[Icon Theme]\n");
-		fclose(fp);
-		*leaf = '\0';
-		xtermSetenv("XCURSOR_PATH", xterm_cursor_theme);
-		*leaf = '/';
+	    if (mktemp(filename) != 0
+		&& mkdir(filename, 0700) == 0) {
+		xterm_cursor_theme = filename;
 	    }
-	    atexit(cleanup_colored_cursor);
+#endif
+	    /*
+	     * Actually, Xcursor does what _we_ want just by steering its
+	     * search path away from home.  We are setting up the complete
+	     * theme just in case the library ever acquires a maintainer.
+	     */
+	    if (xterm_cursor_theme != 0) {
+		char *leaf = xterm_cursor_theme + strlen(xterm_cursor_theme);
+		strcat(leaf, "/");
+		strcat(leaf, theme);
+		if ((fp = fopen(xterm_cursor_theme, "w")) != 0) {
+		    fprintf(fp, "[Icon Theme]\n");
+		    fclose(fp);
+		    *leaf = '\0';
+		    xtermSetenv("XCURSOR_PATH", xterm_cursor_theme);
+		    *leaf = '/';
+		}
+		atexit(cleanup_colored_cursor);
+	    }
 	}
     }
 #endif /* HAVE_LIB_XCURSOR */
