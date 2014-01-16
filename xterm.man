@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.574 2014/01/15 23:39:57 tom Exp $
+.\" $XTermId: xterm.man,v 1.576 2014/01/16 01:19:19 tom Exp $
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
@@ -186,8 +186,7 @@ only if they were compiled in, though the most commonly-used are in the
 default configuration.
 .
 .SH "OTHER FEATURES"
-.I Xterm
-automatically highlights the text cursor when the
+\fI\*N\fP automatically highlights the text cursor when the
 pointer enters the window (selected) and unhighlights it when the pointer
 leaves the window (unselected).
 If the window is the focus window, then the text cursor is
@@ -221,8 +220,7 @@ sequences from \fIdtterm\fP, such as resizing the window, setting its location
 on the screen.
 .
 .PP
-.I Xterm
-allows character-based applications to receive mouse events (currently
+\fI\*N\fP allows character-based applications to receive mouse events (currently
 button-press and release events, and button-motion events)
 as keyboard control sequences.
 See \fIXterm Control Sequences\fP for details.
@@ -4644,8 +4642,7 @@ u,i,s
 .SH MENUS
 .
 .PP
-.I Xterm
-has four menus, named
+\fI\*N\fP has four menus, named
 .IR mainMenu ,
 .IR vtMenu ,
 .IR fontMenu ,
@@ -5551,7 +5548,7 @@ of \*(``dynamic abbreviation\*('' expansion in Emacs (bound there to M\-/).
 Here is a resource setting for \fI\*n\fP which will do the same thing:
 .NS
 *VT100*translations:    #override \\n\\\&
-	Meta <KeyPress> /:dabbrev-expand()
+        Meta <KeyPress> /:dabbrev-expand()
 .NE
 .TP 8
 .B "deiconify()"
@@ -6214,7 +6211,8 @@ This action sends the indicated graphics input code.
 .SS DEFAULT KEY BINDINGS
 .PP
 The default bindings in the VT102 window use the SELECT token,
-which is set by the \fBselectToClipboard\fP resource:
+which is set by the \fBselectToClipboard\fP resource.
+These are for the \fBvt100\fP widget:
 .NS
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\\&
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\\&
@@ -6261,19 +6259,8 @@ which is set by the \fBselectToClipboard\fP resource:
                        <BtnDown>:ignore()
 .NE
 .PP
-The default bindings for the scrollbar widget
-are separate from the VT100 widget:
-.NS
-                      <Btn5Down>: StartScroll(Forward) \\n\\\&
-                      <Btn1Down>: StartScroll(Forward) \\n\\\&
-                      <Btn2Down>: StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
-                      <Btn3Down>: StartScroll(Backward) \\n\\\&
-                      <Btn4Down>: StartScroll(Backward) \\n\\\&
-                      <Btn2Motion>: MoveThumb() NotifyThumb() \\n\\\&
-                      <BtnUp>:    NotifyScroll(Proportional) EndScroll()
-.NE
-.PP
-The default bindings in the Tektronix window are:
+The default bindings in the Tektronix window are analogous but less extensive.
+These are for the \fBtek4014\fP widget:
 .NS
                  ~Meta<KeyPress>: insert-seven-bit() \\n\\\&
                   Meta<KeyPress>: insert-eight-bit() \\n\\\&
@@ -6311,28 +6298,86 @@ But you can still paste from the corresponding cut buffer.
     Shift<BtnUp>:        select-end(CLIPBOARD, CUT_BUFFER1)
 .NE
 .PP
-Below is a sample of how the \fBkeymap()\fP action is used to add special
+In the example, the class name \fBVT100\fP is used rather than the widget name.
+These are different;
+the class name provides a more-specific match than the widget name.
+A leading \*(``*\*('' is used because the widget hierarchy above the
+\fBvt100\fP widget depends on
+whether the toolbar support is compiled into \fI\*n\fP.
+.PP
+Below is shown a sample of
+how the \fBkeymap()\fP action may be used to add special
 keys for entering commonly-typed works:
 .NS
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\\&
-	<Key>F14:	keymap(None) \\n\\\&
-	<Key>F17:	string("next") string(0x0d) \\n\\\&
-	<Key>F18:	string("step") string(0x0d) \\n\\\&
-	<Key>F19:	string("continue") string(0x0d) \\n\\\&
-	<Key>F20:	string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
+        <Key>F14:       keymap(None) \\n\\\&
+        <Key>F17:       string("next") string(0x0d) \\n\\\&
+        <Key>F18:       string("step") string(0x0d) \\n\\\&
+        <Key>F19:       string("continue") string(0x0d) \\n\\\&
+        <Key>F20:       string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
+.NE
+.SS DEFAULT SCROLLBAR BINDINGS
+.PP
+Key bindings are normally associated with the \fBvt100\fP or \fBtek4014\fP
+widgets which act as terminal emulators.
+\fI\*N\fP's scrollbar (and toolbar if it is configured) are separate widgets.
+Because all of these use the X Toolkit,
+they have corresponding \fBtranslations\fP resources.
+Those resources are distinct,
+and match different patterns, e.g., the differences in widget-name and
+number of levels of widgets which they may contain.
+.PP
+The \fBscrollbar\fP widget is a child of the \fBvt100\fP widget.
+It is positioned on top of the \fBvt100\fP widget.
+Toggling the scrollbar on and off causes the \fBvt100\fP widget to resize.
+.PP
+The default bindings for the scrollbar widget use only mouse-button events:
+.NS
+                      <Btn5Down>: StartScroll(Forward) \\n\\\&
+                      <Btn1Down>: StartScroll(Forward) \\n\\\&
+                      <Btn2Down>: StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
+                      <Btn3Down>: StartScroll(Backward) \\n\\\&
+                      <Btn4Down>: StartScroll(Backward) \\n\\\&
+                      <Btn2Motion>: MoveThumb() NotifyThumb() \\n\\\&
+                      <BtnUp>:    NotifyScroll(Proportional) EndScroll()
 .NE
 .PP
-Some people prefer using the left pointer button
+Events which the \fBscrollbar\fP widget does not recognize at all are lost.
+.PP
+However, at startup, \fI\*n\fP augments these translations with the default
+translations used for the \fBvt100\fP widget,
+together with the resource \*(``actions\*('' which those translations use.
+Because the \fBscrollbar\fP (or \fBmenubar\fP) widgets do not recognize these
+actions (but because it has a corresponding \fBtranslation\fP),
+they are passed on to the \fBvt100\fP widget.
+.PP
+This augmenting of the scrollbar's translations has a few limitations:
+.bP
+\fI\*N\fP knows what the default translations are,
+but there is no suitable library interface for determining what
+customizations a user may have added to the \fBvt100\fP widget.
+All that \fI\*n\fP can do is augment the \fBscrollbar\fP widget to
+give it the same starting point for further customization by the user.
+.bP
+Events in the gap between the widgets may be lost.
+.bP
+Compose sequences begun in one widget cannot be completed in the other,
+because the input methods for each widget do not share context information.
+.PP
+Most customizations of the scrollbar translations do not concern key bindings.
+Rather, users are generally more interested in changing the bindings of the
+mouse buttons.
+For example, some people prefer using the left pointer button
 for dragging the scrollbar thumb.
-That can be setup by altering the translations resource, e.g.,
+That can be set up by altering the translations resource, e.g.,
 .NS
-*VT100.scrollbar.translations:	#override \\n\\\&
-	<Btn5Down>:	StartScroll(Forward) \\n\\\&
-	<Btn1Down>:	StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
-	<Btn4Down>:	StartScroll(Backward) \\n\\\&
-	<Btn1Motion>:	MoveThumb() NotifyThumb() \\n\\\&
-	<BtnUp>:	NotifyScroll(Proportional) EndScroll()
+*VT100.scrollbar.translations:  #override \\n\\\&
+        <Btn5Down>:     StartScroll(Forward) \\n\\\&
+        <Btn1Down>:     StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
+        <Btn4Down>:     StartScroll(Backward) \\n\\\&
+        <Btn1Motion>:   MoveThumb() NotifyThumb() \\n\\\&
+        <BtnUp>:        NotifyScroll(Proportional) EndScroll()
 .NE
 .SH "CONTROL SEQUENCES AND KEYBOARD"
 The \fIXterm Control Sequences\fP document lists the control sequences which
@@ -6342,8 +6387,7 @@ terminals, or from more widely used standards such as ISO-6429.
 .
 .
 .SH ENVIRONMENT
-.I Xterm
-sets several environment variables:
+\fI\*N\fP sets several environment variables:
 .TP 5
 DISPLAY
 is the display name,
