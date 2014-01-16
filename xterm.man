@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.573 2014/01/15 00:26:58 tom Exp $
+.\" $XTermId: xterm.man,v 1.574 2014/01/15 23:39:57 tom Exp $
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
@@ -227,7 +227,7 @@ button-press and release events, and button-motion events)
 as keyboard control sequences.
 See \fIXterm Control Sequences\fP for details.
 .
-.
+.\" ***************************************************************************
 .SH OPTIONS
 The \fI\*n\fP terminal emulator
 accepts the standard X Toolkit command line options as well as
@@ -237,9 +237,7 @@ If the option begins with a
 instead of a
 .RB ` \- ',
 the option is restored to its default value.
-The \fB\-version\fP and \fB\-help\fP options are interpreted even if \fI\*n\fP
-cannot open the display, and are useful for testing and configuration scripts.
-Along with \fB\-class\fP, they are checked before other options.
+.\" ***************************************************************************
 .TP 8
 .B \-version
 This causes \fI\*n\fP to print a version number to the standard output,
@@ -259,11 +257,68 @@ when an unknown option is used, e.g.,
 .NS
 \fB\*n \-z\fP
 .NE
-.PP
+.IP
 If the logic for a particular option such as logging is not compiled
 into \fI\*n\fP, the help text for that option also is not displayed
 by the \fB\-help\fP option.
-.
+.\" ***************************************************************************
+.PP
+Most of the \fI\*n\fP options are actually parsed by the X Toolkit,
+which sets resource values.
+\fI\*N\fP provides the X Toolkit with a table of options.
+A few of these are marked, telling the X Toolkit to ignore them
+(\fB\-help\fP,
+\fB\-version\fP,
+\fB\-class\fP,
+\fB\-e\fP, and
+\fB\-into\fP).
+After the X Toolkit has parsed the command-line parameters,
+it removes those which it handles,
+leaving the specially-marked parameters for \fI\*n\fP to handle.
+.PP
+The \fB\-version\fP and \fB\-help\fP options are interpreted even if \fI\*n\fP
+cannot open the display, and are useful for testing and configuration scripts.
+Along with \fB\-class\fP, they are checked before other options.
+To do this, \fI\*n\fP has its own (much simpler) argument parser,
+along with a table of the X Toolkit's built-in list of options.
+.PP
+Relying upon the X Toolkit to parse the options and associated values
+has the advantages of simplicity and good integration with the X resource
+mechanism.
+There are a few drawbacks
+.bP
+\fI\*N\fP cannot tell easily whether a resource value was set by
+one of the external resource- or application-defaults files,
+or if it was set through the \fB\-xrm\fP option
+or via some directly relevant command-line option.
+\fI\*N\fP sees only the end-result:
+a value supplied when creating its widgets.
+.bP
+\fI\*N\fP does not know the order in which particular options and
+items in resource files are evaluated.
+Rather, it sees all of the values for a given widget at the same time.
+In the design of these options,
+some are deemed more important,
+and can override other options.
+.IP
+The X Toolkit uses patterns (constants and wildcards) to match resources.
+Once a particular pattern has been used,
+it will not modify it.
+To override a given setting,
+a more-specific pattern must be used,
+e.g., replacing \*(``*\*('' with \*(``.\*(''.
+Some poorly-designed resource files are too specific
+to allow the command-line options to affect the relevant widget values.
+.bP
+In a few cases,
+the X Toolkit combines its standard options in ways which do not work
+well with \fI\*n\fP.
+This happens with the color (\fB\-fg\fP, \fB\-B\fP) and reverse (\fB\-rv\fP)
+options.
+\fI\*N\fP makes a special case of these and
+adjusts its sense of \*(``reverse\*('' 
+to lessen user surprise.
+.\" ***************************************************************************
 .PP
 One parameter (after all options) may be given.
 That overrides \fI\*n\fP's built-in choice of shell program.
@@ -277,6 +332,7 @@ beginning with \*(``./\*('' or \*(``../\*('',
 In either case, it constructs an absolute path.
 The \fB\-e\fP option cannot be used with this parameter since
 it uses all parameters following the option.
+.\" ***************************************************************************
 .PP
 The other options are used to control the appearance and behavior.
 Not all options are necessarily configured into your copy of \fI\*n\fP:
