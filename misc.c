@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.683 2014/01/15 20:56:11 tom Exp $ */
+/* $XTermId: misc.c,v 1.686 2014/01/19 16:12:25 Egmont.Koblinger Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1267,6 +1267,7 @@ xtermWarning(const char *fmt,...)
     int save_err = errno;
     va_list ap;
 
+    TRACE(("xtermWarning fmt='%s'\n", fmt));
     fprintf(stderr, "%s: ", ProgramName);
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
@@ -1283,6 +1284,7 @@ xtermPerror(const char *fmt,...)
     char *msg = strerror(errno);
     va_list ap;
 
+    TRACE(("xtermPerror fmt='%s', msg='%s'\n", fmt, NonNull(msg)));
     fprintf(stderr, "%s: ", ProgramName);
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
@@ -3382,6 +3384,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     int ansi_colors = 0;
 #endif
     Bool need_data = True;
+    Bool optional_data = False;
 
     TRACE(("do_osc %s\n", oscbuf));
 
@@ -3465,6 +3468,9 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 #if OPT_ISO_COLORS
     case OSC_Reset(4):
     case OSC_Reset(5):
+	need_data = False;
+	optional_data = True;
+	break;
     case OSC_Reset(OSC_TEXT_FG):
     case OSC_Reset(OSC_TEXT_BG):
     case OSC_Reset(OSC_TEXT_CURSOR):
@@ -3497,8 +3503,8 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	}
 	temp[0] = '\0';
 	buf = temp;
-    } else if (!need_data) {
-	TRACE(("do_osc found found unwanted data\n"));
+    } else if (!need_data && !optional_data) {
+	TRACE(("do_osc found unwanted data\n"));
 	return;
     }
 
