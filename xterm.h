@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.726 2014/01/16 02:10:49 tom Exp $ */
+/* $XTermId: xterm.h,v 1.727 2014/01/16 19:34:54 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -214,7 +214,7 @@
 #define HAVE_POSIX_SAVED_IDS
 #endif
 
-#if defined(linux) || defined(__GLIBC__) || defined(CRAY) || defined(macII) || defined(__hpux) || defined(__osf__) || defined(__sgi) || (!defined(SYSV) && !defined(__QNX__) && !(defined(VMS) || defined(__INTERIX)))
+#if defined(linux) || defined(__GLIBC__) || (defined(SYSV) && (defined(CRAY) || defined(macII) || defined(__hpux) || defined(__osf__) || defined(__sgi))) || !(defined(SYSV) || defined(__QNX__) || defined(VMS) || defined(__INTERIX))
 #define HAVE_INITGROUPS
 #endif
 
