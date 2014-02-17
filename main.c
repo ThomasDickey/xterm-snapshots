@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.741 2014/01/16 02:12:25 tom Exp $ */
+/* $XTermId: main.c,v 1.743 2014/02/16 22:21:14 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -3169,6 +3169,7 @@ validShell(const char *pathname)
 		char *q, *r;
 		while (!result && (q = strtok(p, "\n")) != 0) {
 		    if ((r = x_strtrim(q)) != 0) {
+			TRACE(("...test \"%s\"\n", q));
 			if (!strcmp(q, pathname)) {
 			    result = True;
 			}
@@ -4569,7 +4570,6 @@ spawnXTerm(XtermWidget xw)
 	     */
 	    if (validShell(explicit_shname)) {
 		xtermSetenv("SHELL", explicit_shname);
-		shell_path = explicit_shname;
 	    } else if (validShell(shell_path = x_getenv("SHELL"))) {
 		;		/* OK */
 	    } else if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
