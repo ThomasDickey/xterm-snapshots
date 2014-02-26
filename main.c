@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.743 2014/02/16 22:21:14 tom Exp $ */
+/* $XTermId: main.c,v 1.744 2014/02/26 13:51:25 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -3145,6 +3145,7 @@ find_utmp(struct UTMP_STR *tofind)
 
 /*
  * Only set $SHELL for paths found in the standard location.
+ * ...or if $SHELL happens to give an absolute pathname to an executable.
  */
 static Boolean
 validShell(const char *pathname)
@@ -3156,8 +3157,7 @@ validShell(const char *pathname)
     size_t rc;
     FILE *fp;
 
-    if (!IsEmpty(pathname)
-	&& access(pathname, X_OK) == 0
+    if (validProgram(pathname)
 	&& stat(ok_shells, &sb) == 0
 	&& (sb.st_mode & S_IFMT) == S_IFREG
 	&& (sb.st_size != 0)
@@ -4562,6 +4562,7 @@ spawnXTerm(XtermWidget xw)
 
 	    /*
 	     * If we have an explicit shell to run, make that set $SHELL.
+	     * Next, allow an existing setting of $SHELL, for absolute paths.
 	     * Otherwise, if $SHELL is not set, determine it from the user's
 	     * password information, if possible.
 	     *
@@ -4570,8 +4571,8 @@ spawnXTerm(XtermWidget xw)
 	     */
 	    if (validShell(explicit_shname)) {
 		xtermSetenv("SHELL", explicit_shname);
-	    } else if (validShell(shell_path = x_getenv("SHELL"))) {
-		;		/* OK */
+	    } else if (validProgram(shell_path = x_getenv("SHELL"))) {
+		xtermSetenv("SHELL", shell_path);
 	    } else if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
 		       || *(shell_path = x_strdup(pw.pw_shell)) == 0) {
 		shell_path = resetShell(shell_path);

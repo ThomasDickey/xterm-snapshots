@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.686 2014/01/19 16:12:25 Egmont.Koblinger Exp $ */
+/* $XTermId: misc.c,v 1.688 2014/02/26 13:57:11 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -5097,6 +5097,27 @@ Cleanup(int code)
     Exit(code);
 }
 
+#ifndef S_IXOTH
+#define S_IXOTH 1
+#endif
+
+Boolean
+validProgram(const char *pathname)
+{
+    Boolean result = False;
+    struct stat sb;
+
+    if (!IsEmpty(pathname)
+	&& *pathname == '/'
+	&& strstr(pathname, "/..") == 0
+	&& stat(pathname, &sb) == 0
+	&& (sb.st_mode & S_IFMT) == S_IFREG
+	&& (sb.st_mode & S_IXOTH) != 0) {
+	result = True;
+    }
+    return result;
+}
+
 #ifndef VMS
 #ifndef PATH_MAX
 #define PATH_MAX 512		/* ... is not defined consistently in Xos.h */
@@ -5142,9 +5163,7 @@ xtermFindShell(char *leaf, Bool warning)
 			    if (skip)
 				++d;
 			    s += (d - tmp);
-			    if (*tmp == '/'
-				&& strstr(tmp, "..") == 0
-				&& access(tmp, X_OK) == 0) {
+			    if (validProgram(tmp)) {
 				result = x_strdup(tmp);
 				found = True;
 				allocated = True;
@@ -5161,9 +5180,7 @@ xtermFindShell(char *leaf, Bool warning)
 	}
     }
     TRACE(("...xtermFindShell(%s)\n", result));
-    if (*result != '/'
-	|| strstr(result, "..") != 0
-	|| access(result, X_OK) != 0) {
+    if (!validProgram(result)) {
 	if (warning)
 	    xtermWarning("No absolute path found for shell: %s\n", result);
 	if (allocated)

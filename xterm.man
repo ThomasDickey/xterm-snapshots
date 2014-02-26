@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.577 2014/02/25 09:24:37 tom Exp $
+.\" $XTermId: xterm.man,v 1.578 2014/02/26 14:17:21 tom Exp $
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
@@ -319,15 +319,24 @@ to lessen user surprise.
 .\" ***************************************************************************
 .PP
 One parameter (after all options) may be given.
-That overrides \fI\*n\fP's built-in choice of shell program.
-Normally \fI\*n\fP checks the \*(``SHELL\*('' variable.
-If that is not set, \fI\*n\fP tries to use the shell program specified
-in the password file.
-If that is not set, \fI\*n\fP uses \fI/bin/sh\fP.
+That overrides \fI\*n\fP's built-in choice of shell program:
+.bP
 If the parameter is not a relative path, i.e.,
 beginning with \*(``./\*('' or \*(``../\*('',
 \fI\*n\fP looks for the file in the user's PATH.
-In either case, it constructs an absolute path.
+In either case, this check fails
+if \fI\*n\fP cannot construct an absolute path.
+.bP
+If that check fails,
+\fI\*n\fP next checks the \*(``SHELL\*('' variable.
+.bP
+If \*(``SHELL\*('' is not set,
+\fI\*n\fP tries to use the shell program specified
+in the user's password file entry.
+.bP
+Finally, if the password file entry does not specify a shell,
+\fI\*n\fP uses \fI/bin/sh\fP.
+.PP
 The \fB\-e\fP option cannot be used with this parameter since
 it uses all parameters following the option.
 .\" ***************************************************************************
@@ -6448,6 +6457,10 @@ when \fI\*n\fP is configured to update utmp.
 SHELL
 when \fI\*n\fP is configured to update utmp.
 It is also set if you provide the shell name as the optional parameter.
+.IP
+\fI\*N\fP sets this to an absolute pathname.
+If you have set the variable to a relative pathname,
+\fI\*n\fP may set it to a different shell pathname.
 .TP 5
 TERMCAP
 the contents of the termcap entry corresponding to $TERM,
