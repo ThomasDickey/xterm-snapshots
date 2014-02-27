@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.60 2014/02/15 21:19:35 tom Exp $
+# $XTermId: xterm.spec,v 1.61 2014/02/26 21:19:20 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -142,7 +142,7 @@ make install-bin install-man install-app install-icon \
 
 	# The scripts are readable, but not executable, to let find-requires
 	# know that they do not depend on Perl packages.
-	chmod 644 $RPM_BUILD_ROOT%{my_docdir}/vttests/*
+	chmod 644 $RPM_BUILD_ROOT%{my_docdir}/vttests/*.pl
 
 %if "%{desktop_utils}"
 make install-desktop \
@@ -164,6 +164,8 @@ if [ -x %{_bindir}/gtk-update-icon-cache ]; then
   %{_bindir}/gtk-update-icon-cache %{_iconsdir}/hicolor || :
 fi
 %endif
+# find-requires does not care about at this point
+chmod +x %{my_docdir}/vttests/*.*
 
 %postun
 %if "%{icon_theme}"
