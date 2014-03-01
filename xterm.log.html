@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1428 2014/02/26 22:10:44 tom Exp $
+  $XTermId: xterm.log.html,v 1.1431 2014/03/01 00:39:45 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -892,6 +892,14 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>correct app-defaults location for CentOS-4 in
+    xterm.spec</li>
+
+    <li>improve check in <code>minstall.sh</code> for X manpage's
+    section number; add sample dependencies for the relevant
+    documentation package to packaging test-scripts (prompted by
+    Novell #779474).</li>
+
     <li>modify sample build-scripts for dpkg and rpm to ensure that
     <code>vttests</code> scripts are uncompressed and
     executable.</li>

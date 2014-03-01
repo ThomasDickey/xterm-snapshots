@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.61 2014/02/26 21:19:20 tom Exp $
+# $XTermId: xterm.spec,v 1.65 2014/02/28 21:41:43 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -10,8 +10,32 @@ Release: 1
 License: X11
 Group: User Interface/X
 Source: xterm-%{version}.tgz
-# URL: http://invisible-island.net/xterm/
+URL: ftp://invisible-island.net/xterm/
 Provides: x-terminal-emulator
+
+# This part (the build-requires) would be useful if the various distributions
+# had provided stable package-naming, or virtual packages to cover transitions. 
+# However, they have not done this in the past.
+%define use_x_manpage %(test "x$_use_x_manpage" = xyes && echo 1 || echo 0)
+%if "%{use_x_manpage}"
+
+%global is_mandriva %(test -f /etc/mandriva-release && echo %{use_x_manpage} || echo 0)
+%global is_redhat   %(test -f /etc/redhat-release && echo %{use_x_manpage} || echo 0)
+%global is_suse     %(test -f /etc/SuSE-release && echo %{use_x_manpage} || echo 0)
+
+%if %{is_mandriva}
+BuildRequires: x11-docs
+%else
+%if %{is_redhat}
+BuildRequires: xorg-x11-docs
+%else
+%if %{is_suse}
+BuildRequires: xorg-docs
+%endif
+%endif
+%endif
+
+%endif
 
 %description
 xterm is the standard terminal emulator for the X Window System.
@@ -46,13 +70,18 @@ for the program and its resource class, to avoid conflict with other packages.
 
 %define desktop_utils   %(if which desktop-file-install 2>&1 >/dev/null ; then echo 1 || echo 0 ; fi)
 %define icon_theme  %(test -d /usr/share/icons/hicolor && echo 1 || echo 0)
+%define apps_x11r6  %(test -d /usr/X11R6/lib/X11/app-defaults && echo 1 || echo 0)
 %define apps_shared %(test -d /usr/share/X11/app-defaults && echo 1 || echo 0)
 %define apps_syscnf %(test -d /etc/X11/app-defaults && echo 1 || echo 0)
 
+%if %{apps_x11r6}
+%define _xresdir    %{_prefix}/X11R6/lib/X11/app-defaults
+%else
 %if %{apps_shared}
 %define _xresdir    %{_datadir}/X11/app-defaults
 %else
 %define _xresdir    %{_sysconfdir}/X11/app-defaults
+%endif
 %endif
 
 %define _iconsdir   %{_datadir}/icons
