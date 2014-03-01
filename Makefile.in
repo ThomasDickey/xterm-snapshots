@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.223 2013/06/23 23:40:18 tom Exp $
+## $XTermId: Makefile.in,v 1.225 2014/03/01 15:15:26 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2012,2013 by Thomas E. Dickey
+# Copyright 1997-2013,2014 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -189,6 +189,21 @@ resize$x : $(OBJS2)
 	perl $(srcdir)/88colres.pl > $@
 
 charproc$o : main.h @CHARPROC_DEPS@
+
+misc$o : builtin_icons.h
+
+# do this to quiet gcc -Wcast-qual warnings 
+builtin_icons.h :
+	@echo "#if OPT_BUILTIN_XPMS" >$@
+	@echo "#include <icons/mini.xterm.xpms>" >>$@
+	@echo "#include <icons/filled-xterm.xpms>" >>$@
+	@echo "#include <icons/xterm.xpms>" >>$@
+	@echo "#include <icons/xterm-color.xpms>" >>$@
+	@echo "#else" >>$@
+	@sed -e 's/static char \* /static const char * /' $(srcdir)/icons/mini.xterm_48x48.xpm >>$@
+	@echo "#endif" >>$@
+	@echo "made $@"
+
 ################################################################################
 actual_xterm  = `echo xterm|        sed '$(transform)'`
 actual_resize = `echo resize|       sed '$(transform)'`
@@ -418,7 +433,7 @@ mostlyclean :
 	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
 clean : mostlyclean
-	-$(RM) $(PROGRAMS)
+	-$(RM) $(PROGRAMS) builtin_icons.h 
 
 distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h

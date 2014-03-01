@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.688 2014/02/26 13:57:11 tom Exp $ */
+/* $XTermId: misc.c,v 1.689 2014/03/01 14:22:27 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -4596,14 +4596,7 @@ xtermLoadIcon(XtermWidget xw)
     Pixmap myMask = 0;
     char *workname = 0;
     ICON_HINT hint = which_icon_hint();
-#if OPT_BUILTIN_XPMS
-#include <icons/mini.xterm.xpms>
-#include <icons/filled-xterm.xpms>
-#include <icons/xterm.xpms>
-#include <icons/xterm-color.xpms>
-#else
-#include <icons/mini.xterm_48x48.xpm>
-#endif
+#include <builtin_icons.h>
 
     TRACE(("xtermLoadIcon %p:%s\n", (void *) xw, NonNull(resource.icon_hint)));
 
