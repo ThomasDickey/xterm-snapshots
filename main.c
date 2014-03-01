@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.744 2014/02/26 13:51:25 tom Exp $ */
+/* $XTermId: main.c,v 1.745 2014/03/01 01:29:44 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -4572,7 +4572,9 @@ spawnXTerm(XtermWidget xw)
 	    if (validShell(explicit_shname)) {
 		xtermSetenv("SHELL", explicit_shname);
 	    } else if (validProgram(shell_path = x_getenv("SHELL"))) {
-		xtermSetenv("SHELL", shell_path);
+		if (!validShell(shell_path)) {
+		    xtermUnsetenv("SHELL");
+		}
 	    } else if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
 		       || *(shell_path = x_strdup(pw.pw_shell)) == 0) {
 		shell_path = resetShell(shell_path);
