@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.689 2014/03/01 14:22:27 tom Exp $ */
+/* $XTermId: misc.c,v 1.691 2014/03/02 14:04:15 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2723,11 +2723,28 @@ xtermAllocColor(XtermWidget xw, XColor * def, const char *spec)
     TScreen *screen = TScreenOf(xw);
     Colormap cmap = xw->core.colormap;
 
-    if (XParseColor(screen->display, cmap, spec, def)
-	&& allocateBestRGB(xw, def)) {
-	TRACE(("xtermAllocColor -> %x/%x/%x\n",
-	       def->red, def->green, def->blue));
-	result = True;
+    if (XParseColor(screen->display, cmap, spec, def)) {
+	XColor save_def;
+	if (resource.reportColors) {
+	    save_def = *def;
+	    printf("color  %04x/%04x/%04x = \"%s\"\n",
+		   def->red, def->green, def->blue,
+		   spec);
+	}
+	if (allocateBestRGB(xw, def)) {
+	    if (resource.reportColors) {
+		if (def->red != save_def.red ||
+		    def->green != save_def.green ||
+		    def->blue != save_def.blue) {
+		    printf("color  %04x/%04x/%04x ~ \"%s\"\n",
+			   def->red, def->green, def->blue,
+			   spec);
+		}
+	    }
+	    TRACE(("xtermAllocColor -> %x/%x/%x\n",
+		   def->red, def->green, def->blue));
+	    result = True;
+	}
     }
     return result;
 }
