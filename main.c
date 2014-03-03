@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.746 2014/03/02 11:58:56 tom Exp $ */
+/* $XTermId: main.c,v 1.748 2014/03/03 01:15:27 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -3173,6 +3173,7 @@ validShell(const char *pathname)
 	    if (rc == (size_t) sb.st_size) {
 		char *p = blob;
 		char *q, *r;
+		blob[rc] = '\0';
 		while (!result && (q = strtok(p, "\n")) != 0) {
 		    if ((r = x_strtrim(q)) != 0) {
 			TRACE(("...test \"%s\"\n", q));
@@ -4576,7 +4577,7 @@ spawnXTerm(XtermWidget xw)
 	     * program rather than choosing between $SHELL and "/bin/sh".
 	     */
 	    if (validShell(explicit_shname)) {
-		xtermSetenv("SHELL", explicit_shname);
+		xtermSetenv("SHELL", shell_path = explicit_shname);
 	    } else if (validProgram(shell_path = x_getenv("SHELL"))) {
 		if (!validShell(shell_path)) {
 		    xtermUnsetenv("SHELL");
@@ -4597,8 +4598,8 @@ spawnXTerm(XtermWidget xw)
 	    if (explicit_shname != 0 && access(explicit_shname, X_OK) == 0) {
 		free(shell_path);
 		shell_path = explicit_shname;
+		xtermSetenv("XTERM_SHELL", shell_path);
 	    }
-	    xtermSetenv("XTERM_SHELL", shell_path);
 
 	    shname = x_basename(shell_path);
 	    TRACE(("shell path '%s' leaf '%s'\n", shell_path, shname));

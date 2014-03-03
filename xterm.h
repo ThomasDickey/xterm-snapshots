@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.728 2014/02/26 13:29:37 tom Exp $ */
+/* $XTermId: xterm.h,v 1.729 2014/03/02 23:31:28 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1011,6 +1011,7 @@ extern int ResetAnsiColorRequest (XtermWidget, char *, int);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, unsigned  /* mode */);
 extern int getVisualDepth (XtermWidget /* xw */);
+extern int getVisualInfo (XtermWidget /* xw */);
 extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);

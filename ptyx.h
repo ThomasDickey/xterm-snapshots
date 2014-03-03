@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.792 2014/03/02 12:00:13 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.794 2014/03/02 22:38:51 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2659,6 +2659,8 @@ typedef unsigned Tabs [TAB_ARRAY_SIZE];
 typedef struct _XtermWidgetRec {
     CorePart	core;
     XSizeHints	hints;
+    XVisualInfo *visInfo;
+    int		numVisuals;
     Bool	init_menu;
     TKeyboard	keyboard;	/* terminal keyboard		*/
     TScreen	screen;		/* terminal screen		*/
