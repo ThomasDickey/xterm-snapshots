@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1320 2014/02/18 22:44:15 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1322 2014/03/02 23:32:05 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -7402,6 +7402,11 @@ VTInitialize(Widget wrequest,
      */
     TScreenOf(wnew)->display = wnew->core.screen->display;
 
+    /* prep getVisualInfo() */
+    wnew->visInfo = 0;
+    wnew->numVisuals = 0;
+    (void) getVisualInfo(wnew);
+
     /*
      * We use the default foreground/background colors to compare/check if a
      * color-resource has been set.
@@ -8339,14 +8344,16 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif
 
     if (screen->selection_atoms)
-	XtFree((char *) (screen->selection_atoms));
+	XtFree((void *) (screen->selection_atoms));
 
-    XtFree((char *) (screen->selection_data));
+    XtFree((void *) (screen->selection_data));
 
     TRACE_FREE_LEAK(xtermClassRec.core_class.tm_table);
     TRACE_FREE_LEAK(xw->keyboard.extra_translations);
     TRACE_FREE_LEAK(xw->keyboard.shell_translations);
     TRACE_FREE_LEAK(xw->keyboard.xterm_translations);
+
+    XtFree((void *) (xw->visInfo));
 
 #if OPT_WIDE_CHARS
     FreeTypedBuffer(XChar2b);

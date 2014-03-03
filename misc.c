@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.691 2014/03/02 14:04:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.701 2014/03/03 01:19:15 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2177,23 +2177,47 @@ ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
     }
 }
 
-static void
-getColormapInfo(Display *display, unsigned *typep, unsigned *sizep)
+int
+getVisualInfo(XtermWidget xw)
 {
-    int numFound;
-    XVisualInfo myTemplate, *visInfoPtr;
+    TScreen *screen = TScreenOf(xw);
+    Display *dpy = screen->display;
+    XVisualInfo myTemplate;
 
-    myTemplate.visualid = XVisualIDFromVisual(DefaultVisual(display,
-							    XDefaultScreen(display)));
-    visInfoPtr = XGetVisualInfo(display, (long) VisualIDMask,
-				&myTemplate, &numFound);
-    *typep = (numFound >= 1) ? (unsigned) visInfoPtr->class : 0;
-    *sizep = (numFound >= 1) ? (unsigned) visInfoPtr->colormap_size : 0;
+    if (xw->visInfo == 0 && xw->numVisuals == 0) {
+	myTemplate.visualid = XVisualIDFromVisual(DefaultVisual(dpy,
+								XDefaultScreen(dpy)));
+	xw->visInfo = XGetVisualInfo(dpy, (long) VisualIDMask,
+				     &myTemplate, &xw->numVisuals);
 
-    XFree((char *) visInfoPtr);
+	if ((xw->visInfo != 0) && (xw->numVisuals > 0)) {
+	    if (resource.reportColors) {
+		printf("getVisualInfo depth %d, type %d (%s), size %d\n",
+		       xw->visInfo->depth,
+		       xw->visInfo->class,
+		       ((xw->visInfo->class & 1) ? "dynamic" : "static"),
+		       xw->visInfo->colormap_size);
+	    }
+	    TRACE(("getVisualInfo depth %d, type %d (%s), size %d\n",
+		   xw->visInfo->depth,
+		   xw->visInfo->class,
+		   ((xw->visInfo->class & 1) ? "dynamic" : "static"),
+		   xw->visInfo->colormap_size));
+	}
+    }
+    return (xw->visInfo != 0) && (xw->numVisuals > 0);
+}
 
-    TRACE(("getColormapInfo type %d (%s), size %d\n",
-	   *typep, ((*typep & 1) ? "dynamic" : "static"), *sizep));
+static void
+getColormapInfo(XtermWidget xw, unsigned *typep, unsigned *sizep)
+{
+    if (getVisualInfo(xw)) {
+	*typep = (unsigned) xw->visInfo->class;
+	*sizep = (unsigned) xw->visInfo->colormap_size;
+    } else {
+	*typep = 0;
+	*sizep = 0;
+    }
 }
 
 #define MAX_COLORTABLE 4096
@@ -2207,9 +2231,9 @@ loadColorTable(XtermWidget xw, unsigned length)
     Colormap cmap = xw->core.colormap;
     TScreen *screen = TScreenOf(xw);
     unsigned i;
-    Boolean result = False;
+    Boolean result = (screen->cmap_data != 0);
 
-    if (screen->cmap_data == 0
+    if (!result
 	&& length != 0
 	&& length < MAX_COLORTABLE) {
 	screen->cmap_data = TypeMallocN(XColor, (size_t) length);
@@ -2258,7 +2282,7 @@ allocateClosestRGB(XtermWidget xw, Colormap cmap, XColor * def)
     unsigned cmap_size;
     unsigned i;
 
-    getColormapInfo(screen->display, &cmap_type, &cmap_size);
+    getColormapInfo(xw, &cmap_type, &cmap_size);
 
     if ((cmap_type & 1) != 0) {
 
@@ -2359,21 +2383,18 @@ static int
 simpleColors(XColor * colortable, unsigned length)
 {
     unsigned n;
-    int state = -1;
+    int state = 0;
     int check;
 
     for (n = 0; n < length; ++n) {
-	if (state == -1) {
-	    CheckColor(state, colortable[n]);
-	    if (state == 0)
-		state = -1;
-	}
 	if (state > 0) {
 	    CheckColor(check, colortable[n]);
 	    if (check > 0 && check != state) {
 		state = 0;
 		break;
 	    }
+	} else {
+	    CheckColor(state, colortable[n]);
 	}
     }
     switch (state) {
@@ -2433,7 +2454,7 @@ searchColors(XColor * colortable, unsigned length, unsigned color, int state)
  *     actual RGB values allocated.
  *
  * That is, XAllocColor() should suffice unless the color map is full.  In that
- * case, allocateClosesRGB() is useful for the dynamic display classes such as
+ * case, allocateClosestRGB() is useful for the dynamic display classes such as
  * PseudoColor.  It is not useful for TrueColor, since XQueryColors() does not
  * return regular RGB triples (unless a different scheme was used for
  * specifying the pixel values); only the blue value is filled in.  However, it
@@ -2451,18 +2472,18 @@ allocateExactRGB(XtermWidget xw, Colormap cmap, XColor * def)
     Boolean result = (Boolean) (XAllocColor(screen->display, cmap, def) != 0);
 
     /*
-     * If this is a statically allocated display, e.g., TrueColor, see if we
-     * can improve on the result by using the color values actually supported
-     * by the server.
+     * If this is a statically allocated display with too many items to store
+     * in our array, i.e., TrueColor, see if we can improve on the result by
+     * using the color values actually supported by the server.
      */
     if (result) {
 	unsigned cmap_type;
 	unsigned cmap_size;
 	int state;
 
-	getColormapInfo(screen->display, &cmap_type, &cmap_size);
+	getColormapInfo(xw, &cmap_type, &cmap_size);
 
-	if ((cmap_type & 1) == 0) {
+	if (cmap_type == TrueColor) {
 	    XColor temp = *def;
 
 	    if (loadColorTable(xw, cmap_size)
@@ -2724,9 +2745,8 @@ xtermAllocColor(XtermWidget xw, XColor * def, const char *spec)
     Colormap cmap = xw->core.colormap;
 
     if (XParseColor(screen->display, cmap, spec, def)) {
-	XColor save_def;
+	XColor save_def = *def;
 	if (resource.reportColors) {
-	    save_def = *def;
 	    printf("color  %04x/%04x/%04x = \"%s\"\n",
 		   def->red, def->green, def->blue,
 		   spec);
@@ -3159,12 +3179,13 @@ ChangeColorsRequest(XtermWidget xw,
 		if (names != NULL) {
 		    *names++ = '\0';
 		}
-		if (thisName != 0 && !strcmp(thisName, "?")) {
-		    ReportColorRequest(xw, ndx, final);
-		} else if (!pOldColors->names[ndx]
-			   || (thisName
-			       && strcmp(thisName, pOldColors->names[ndx]))) {
-		    AllocateTermColor(xw, &newColors, ndx, thisName, False);
+		if (thisName != 0) {
+		    if (!strcmp(thisName, "?")) {
+			ReportColorRequest(xw, ndx, final);
+		    } else if (!pOldColors->names[ndx]
+			       || strcmp(thisName, pOldColors->names[ndx])) {
+			AllocateTermColor(xw, &newColors, ndx, thisName, False);
+		    }
 		}
 	    }
 	}
@@ -4583,20 +4604,10 @@ which_icon_hint(void)
 int
 getVisualDepth(XtermWidget xw)
 {
-    Display *display = TScreenOf(xw)->display;
-    XVisualInfo myTemplate, *visInfoPtr;
-    int numFound;
     int result = 0;
 
-    myTemplate.visualid = XVisualIDFromVisual(DefaultVisual(display,
-							    XDefaultScreen(display)));
-    visInfoPtr = XGetVisualInfo(display, (long) VisualIDMask,
-				&myTemplate, &numFound);
-    if (visInfoPtr != 0) {
-	if (numFound != 0) {
-	    result = visInfoPtr->depth;
-	}
-	XFree(visInfoPtr);
+    if (getVisualInfo(xw)) {
+	result = xw->visInfo->depth;
     }
     return result;
 }
