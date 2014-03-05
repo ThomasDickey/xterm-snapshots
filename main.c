@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.748 2014/03/03 01:15:27 tom Exp $ */
+/* $XTermId: main.c,v 1.749 2014/03/04 22:48:01 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -1203,6 +1203,9 @@ static OptionHelp xtermOptions[] = {
 { "-/+rw",                 "turn on/off reverse wraparound" },
 { "-/+s",                  "turn on/off multiscroll" },
 { "-/+sb",                 "turn on/off scrollbar" },
+#if OPT_REPORT_COLORS
+{ "-report-colors",        "report colors as they are allocated" },
+#endif
 #if OPT_REPORT_FONTS
 { "-report-fonts",         "report fonts as loaded to stdout" },
 #endif

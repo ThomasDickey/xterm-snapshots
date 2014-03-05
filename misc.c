@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.701 2014/03/03 01:19:15 tom Exp $ */
+/* $XTermId: misc.c,v 1.702 2014/03/04 23:59:51 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2180,6 +2180,20 @@ ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
 int
 getVisualInfo(XtermWidget xw)
 {
+#define MYFMT "getVisualInfo \
+depth %d, \
+type %d (%s), \
+size %d \
+rgb masks (%04lx/%04lx/%04lx)\n"
+#define MYARG \
+       vi->depth,\
+       vi->class,\
+       ((vi->class & 1) ? "dynamic" : "static"),\
+       vi->colormap_size,\
+       vi->red_mask,\
+       vi->green_mask,\
+       vi->blue_mask
+
     TScreen *screen = TScreenOf(xw);
     Display *dpy = screen->display;
     XVisualInfo myTemplate;
@@ -2191,21 +2205,16 @@ getVisualInfo(XtermWidget xw)
 				     &myTemplate, &xw->numVisuals);
 
 	if ((xw->visInfo != 0) && (xw->numVisuals > 0)) {
+	    XVisualInfo *vi = xw->visInfo;
 	    if (resource.reportColors) {
-		printf("getVisualInfo depth %d, type %d (%s), size %d\n",
-		       xw->visInfo->depth,
-		       xw->visInfo->class,
-		       ((xw->visInfo->class & 1) ? "dynamic" : "static"),
-		       xw->visInfo->colormap_size);
+		printf(MYFMT, MYARG);
 	    }
-	    TRACE(("getVisualInfo depth %d, type %d (%s), size %d\n",
-		   xw->visInfo->depth,
-		   xw->visInfo->class,
-		   ((xw->visInfo->class & 1) ? "dynamic" : "static"),
-		   xw->visInfo->colormap_size));
+	    TRACE((MYFMT, MYARG));
 	}
     }
     return (xw->visInfo != 0) && (xw->numVisuals > 0);
+#undef MYFMT
+#undef MYARG
 }
 
 static void
@@ -2409,8 +2418,25 @@ simpleColors(XColor * colortable, unsigned length)
     return state;
 }
 
+/*
+ * Shift the mask left or right to put its most significant bit at the 16-bit
+ * mark.
+ */
 static unsigned
-searchColors(XColor * colortable, unsigned length, unsigned color, int state)
+normalizeMask(unsigned mask)
+{
+    while (mask < 0x8000) {
+	mask <<= 1;
+    }
+    while (mask >= 0x10000) {
+	mask >>= 1;
+    }
+    return mask;
+}
+
+static unsigned
+searchColors(XColor * colortable, unsigned mask, unsigned length, unsigned
+	     color, int state)
 {
     unsigned result = 0;
     unsigned n;
@@ -2418,9 +2444,10 @@ searchColors(XColor * colortable, unsigned length, unsigned color, int state)
     unsigned long diff;
     unsigned value;
 
+    mask = normalizeMask(mask);
     for (n = 0; n < length; ++n) {
 	SelectColor(state, colortable[n], value);
-	diff = (color - value);
+	diff = ((color & mask) - (value & mask));
 	diff *= diff;
 	if (diff < best) {
 #if 0
@@ -2488,7 +2515,12 @@ allocateExactRGB(XtermWidget xw, Colormap cmap, XColor * def)
 
 	    if (loadColorTable(xw, cmap_size)
 		&& (state = simpleColors(screen->cmap_data, cmap_size)) > 0) {
-#define SearchColors(which) temp.which = (unsigned short) searchColors(screen->cmap_data, cmap_size, save.which, state)
+#define SearchColors(which) \
+	temp.which = (unsigned short) searchColors(screen->cmap_data, \
+						   xw->visInfo->which##_mask,\
+						   cmap_size, \
+						   save.which, \
+						   state)
 		SearchColors(red);
 		SearchColors(green);
 		SearchColors(blue);
