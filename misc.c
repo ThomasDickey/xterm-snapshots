@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.702 2014/03/04 23:59:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.703 2014/03/07 01:43:32 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2517,7 +2517,7 @@ allocateExactRGB(XtermWidget xw, Colormap cmap, XColor * def)
 		&& (state = simpleColors(screen->cmap_data, cmap_size)) > 0) {
 #define SearchColors(which) \
 	temp.which = (unsigned short) searchColors(screen->cmap_data, \
-						   xw->visInfo->which##_mask,\
+						   (unsigned) xw->visInfo->which##_mask,\
 						   cmap_size, \
 						   save.which, \
 						   state)
