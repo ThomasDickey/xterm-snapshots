@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.579 2014/03/02 12:06:08 tom Exp $
+.\" $XTermId: xterm.man,v 1.580 2014/03/07 00:40:43 tom Exp $
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
@@ -123,21 +123,29 @@ autorepeat.
 Double-size characters are displayed properly if your font server supports
 scalable fonts.
 The VT220 emulation does not support soft fonts, it is otherwise complete.
-.IR Termcap (5)
-entries that work with
-.I \*n
-include
+.PP
+Terminal database (\fIterminfo\fP (5) or \fItermcap\fP (5))
+entries that work with \fI\*n\fP include
+.IP
 an optional platform-specific entry (\*(``__default_termname__\*(''),
+.br
 \*(``xterm\*('',
+.br
 \*(``vt102\*('',
+.br
 \*(``vt100\*('',
+.br
 \*(``ansi\*('' and
-\*(``dumb\*(''.
-.I \*n
-automatically searches the termcap file in this order for these entries and then
+.br
+\*(``dumb\*(''
+.PP
+\fI\*N\fP automatically searches the
+terminal database in this order for these entries and then
 sets the \*(``TERM\*('' and the \*(``TERMCAP\*('' environment variables.
 You may also use \*(``vt220\*('',  but must set the terminal emulation level
 with the \fBdecTerminalID\fP resource.
+On most systems, \fI\*n\fP will use the terminfo database.
+Some older systems use termcap.
 (The \*(``TERMCAP\*('' environment variable is not set if \fI\*n\fP is linked
 against a terminfo library, since the requisite information is not provided
 by the termcap emulation of terminfo libraries).
@@ -200,11 +208,7 @@ When activated, the current screen is saved and replaced with the alternate
 screen.
 Saving of lines scrolled off the top of the window is disabled until the
 normal screen is restored.
-The
-.IR termcap (5)
-entry for
-.I \*n
-allows the visual editor
+The usual terminal description for \fI\*n\fP allows the visual editor
 .IR vi (1)
 to switch to the alternate screen for editing and to restore the screen
 on exit.
@@ -327,18 +331,29 @@ beginning with \*(``./\*('' or \*(``../\*('',
 In either case, this check fails
 if \fI\*n\fP cannot construct an absolute path.
 .bP
-If that check fails,
+If that check fails (or if no such parameter is given),
 \fI\*n\fP next checks the \*(``SHELL\*('' variable.
+If that specifies an executable file,
+\fI\*n\fP will attempt to start that.
+However, \fI\*n\fP additionally checks if it is a valid shell,
+and will unset \*(``SHELL\*('' if it is not.
 .bP
-If \*(``SHELL\*('' is not set,
+If \*(``SHELL\*('' is not set to an executable file,
 \fI\*n\fP tries to use the shell program specified
 in the user's password file entry.
+As before, \fI\*n\fP verifies if this is a valid shell.
 .bP
-Finally, if the password file entry does not specify a shell,
+Finally, if the password file entry does not specify a valid shell,
 \fI\*n\fP uses \fI/bin/sh\fP.
 .PP
 The \fB\-e\fP option cannot be used with this parameter since
 it uses all parameters following the option.
+.PP
+\fI\*N\fP validates shell programs by finding their pathname in
+the text file \fB/etc/shells\fP.
+It treats the environment variable \*(``SHELL\*('' specially because
+(like \*(``TERM\*(''), \fI\*n\fP both reads and updates the variable,
+and because the program started by \fI\*n\fP is not necessarily a shell.
 .\" ***************************************************************************
 .PP
 The other options are used to control the appearance and behavior.
@@ -1012,17 +1027,24 @@ This option indicates that \fI\*n\fP should start in Tektronix mode, rather
 than in VT102 mode.
 Switching between the two windows is done using the
 \*(``Options\*('' menus.
-.IR Termcap (5)
-entries that work with
-.I \*n
+.IP
+Terminal database (\fIterminfo\fP (5) or \fItermcap\fP (5))
+entries that work with \fI\*n\fR are:
+.IP
 \*(``tek4014\*('',
+.br
 \*(``tek4015\*('',
+.br
 \*(``tek4012\*('',
+.br
 \*(``tek4013\*('',
+.br
 \*(``tek4010\*('', and
+.br
 \*(``dumb\*(''.
+.IP
 .I \*n
-automatically searches the termcap file in this order for these entries and then
+automatically searches the terminal database in this order for these entries and then
 sets the \*(``TERM\*('' and the \*(``TERMCAP\*('' environment variables.
 .TP 8
 .B +t
@@ -6415,8 +6437,13 @@ is the display name,
 pointing to the X server (see \fBDISPLAY NAMES\fP in X(__miscmansuffix__)).
 .TP 5
 TERM
-is set according to the termcap (or terminfo) entry which it is using as
+is set according to the terminfo (or termcap) entry which it is using as
 a reference.
+.IP
+On some systems, you may encounter situations where the shell which you
+use and \fI\*n\fP are built using libraries with different terminal databases.
+In that situation, \fI\*n\fP may choose a terminal description not known
+to the shell.
 .TP 5
 WINDOWID
 is set to the X window id number of the \fI\*n\fP window.
@@ -6461,11 +6488,14 @@ when \fI\*n\fP is configured to update utmp.
 .TP 5
 SHELL
 when \fI\*n\fP is configured to update utmp.
-It is also set if you provide the shell name as the optional parameter.
+It is also set if you provide a valid shell name as the optional parameter.
 .IP
 \fI\*N\fP sets this to an absolute pathname.
 If you have set the variable to a relative pathname,
 \fI\*n\fP may set it to a different shell pathname.
+.IP
+If you have set this to an pathname which does not correspond to a valid
+shell, \fI\*n\fP may unset it, to avoid confusion.
 .TP 5
 TERMCAP
 the contents of the termcap entry corresponding to $TERM,
@@ -6479,6 +6509,11 @@ may be defined to a nonstandard location in the configure script.
 .
 .SH FILES
 The actual pathnames given may differ on your system.
+.TP 5
+\fI/etc/shells\fP
+contains a list of valid shell programs,
+used by \fI\*n\fP to decide if the \*(``SHELL\*('' environment
+variable should be set for the process started by \fI\*n\fP.
 .TP 5
 \fI/etc/utmp\fP
 the system logfile, which records user logins.

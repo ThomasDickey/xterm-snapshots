@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1439 2014/03/05 00:01:53 tom Exp $
+  $XTermId: xterm.log.html,v 1.1441 2014/03/07 02:37:38 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -894,6 +894,17 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>improve check for <code>/etc/shells</code> to allow its
+    entries to be symbolic links.</li>
+
+    <li>fix a regression in <a href="#xterm_302">patch #302</a>
+    fixes relating to interaction of <code>SHELL</code> and
+    <code>XTERM_SHELL</code> variables (Debian #740919).</li>
+
+    <li>improve manpage discussion of use of
+    <code>/etc/shells</code> for validating the <code>SHELL</code>
+    environment variable.</li>
+
     <li>further improve the approximation for color map by ignoring
     bits which would not be applied by the rgb masks for the
     current visual (report by Joe Peterson).</li>

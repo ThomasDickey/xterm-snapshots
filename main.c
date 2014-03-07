@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.749 2014/03/04 22:48:01 tom Exp $ */
+/* $XTermId: main.c,v 1.751 2014/03/07 02:35:39 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -3152,9 +3152,37 @@ find_utmp(struct UTMP_STR *tofind)
 #define USE_NO_DEV_TTY 0
 #endif
 
+static int
+same_leaf(char *a, char *b)
+{
+    char *p = x_basename(a);
+    char *q = x_basename(b);
+    return !strcmp(p, q);
+}
+
+/*
+ * "good enough" (inode wouldn't port to Cygwin)
+ */
+static int
+same_file(const char *a, const char *b)
+{
+    struct stat asb;
+    struct stat bsb;
+    int result = 0;
+
+    if ((stat(a, &asb) == 0)
+	&& (stat(b, &bsb) == 0)
+	&& ((asb.st_mode & S_IFMT) == S_IFREG)
+	&& ((bsb.st_mode & S_IFMT) == S_IFREG)
+	&& (asb.st_mtime == bsb.st_mtime)
+	&& (asb.st_size == bsb.st_size)) {
+	result = 1;
+    }
+    return result;
+}
+
 /*
  * Only set $SHELL for paths found in the standard location.
- * ...or if $SHELL happens to give an absolute pathname to an executable.
  */
 static Boolean
 validShell(const char *pathname)
@@ -3181,6 +3209,9 @@ validShell(const char *pathname)
 		    if ((r = x_strtrim(q)) != 0) {
 			TRACE(("...test \"%s\"\n", q));
 			if (!strcmp(q, pathname)) {
+			    result = True;
+			} else if (same_leaf(q, (char *) pathname) &&
+				   same_file(q, pathname)) {
 			    result = True;
 			}
 			free(r);
@@ -4580,7 +4611,7 @@ spawnXTerm(XtermWidget xw)
 	     * program rather than choosing between $SHELL and "/bin/sh".
 	     */
 	    if (validShell(explicit_shname)) {
-		xtermSetenv("SHELL", shell_path = explicit_shname);
+		xtermSetenv("SHELL", explicit_shname);
 	    } else if (validProgram(shell_path = x_getenv("SHELL"))) {
 		if (!validShell(shell_path)) {
 		    xtermUnsetenv("SHELL");
@@ -4598,11 +4629,13 @@ spawnXTerm(XtermWidget xw)
 	     * Set $XTERM_SHELL, which is not necessarily a valid shell, but
 	     * is executable.
 	     */
-	    if (explicit_shname != 0 && access(explicit_shname, X_OK) == 0) {
-		free(shell_path);
+	    if (validProgram(explicit_shname)) {
 		shell_path = explicit_shname;
-		xtermSetenv("XTERM_SHELL", shell_path);
+	    } else if (shell_path == 0) {
+		/* this could happen if the explicit shname lost a race */
+		shell_path = resetShell(shell_path);
 	    }
+	    xtermSetenv("XTERM_SHELL", shell_path);
 
 	    shname = x_basename(shell_path);
 	    TRACE(("shell path '%s' leaf '%s'\n", shell_path, shname));
