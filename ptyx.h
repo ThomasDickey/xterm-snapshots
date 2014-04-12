@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.794 2014/03/02 22:38:51 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.796 2014/04/11 19:36:41 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -525,7 +525,15 @@ typedef struct {
 #endif
 
 #ifndef OPT_SIXEL_GRAPHICS
-#define OPT_SIXEL_GRAPHICS 0 /* true if xterm supports VT220-style sixel graphics */
+#define OPT_SIXEL_GRAPHICS 0 /* true if xterm supports VT240-style sixel graphics */
+#endif
+
+#ifndef OPT_REGIS_GRAPHICS
+#define OPT_REGIS_GRAPHICS 0 /* true if xterm supports VT125/VT240/VT330 ReGIS graphics */
+#endif
+
+#ifndef OPT_GRAPHICS
+#define OPT_GRAPHICS 0 /* true if xterm is configured for any type of graphics */
 #endif
 
 #ifndef OPT_DEC_SOFTFONT
@@ -1051,7 +1059,7 @@ typedef enum {
 #if OPT_SUNPC_KBD
     ,srm_VT220_FKEYS = 1061
 #endif
-#if OPT_SIXEL_GRAPHICS
+#if OPT_GRAPHICS
     ,srm_PRIVATE_COLOR_REGISTERS = 1070
 #endif
 #if OPT_READLINE
@@ -1844,6 +1852,7 @@ typedef struct {
 	uid_t		uid;		/* user id of actual person	*/
 	gid_t		gid;		/* group id of actual person	*/
 	ColorRes	Tcolors[NCOLORS]; /* terminal colors		*/
+	ScrnColors	*oldColors;
 #if OPT_HIGHLIGHT_COLOR
 	Boolean		hilite_color;	/* hilite colors override	*/
 	Boolean		hilite_reverse;	/* hilite overrides reverse	*/
@@ -2179,6 +2188,10 @@ typedef struct {
 
 #if OPT_SIXEL_GRAPHICS
 	Boolean		sixel_scrolling; /* sixel scrolling             */
+#endif
+
+#if OPT_GRAPHICS
+	int		numcolorregisters; /* number of supported color registers */
 	Boolean		privatecolorregisters; /* private color registers for each graphic */
 #endif
 

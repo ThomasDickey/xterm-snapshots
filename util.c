@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.620 2014/01/15 02:02:14 tom Exp $ */
+/* $XTermId: util.c,v 1.622 2014/04/11 19:36:41 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1756,6 +1756,8 @@ ClearScreen(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     int top;
 
+    TRACE(("ClearScreen\n"));
+
     if (screen->cursor_state)
 	HideCursor();
 
@@ -2598,7 +2600,7 @@ ReverseVideo(XtermWidget xw)
 	TekRepaint(tekWidget);
     }
 #endif
-    ReverseOldColors();
+    ReverseOldColors(xw);
     set_cursor_gcs(xw);
     update_reversevideo();
     TRACE(("...ReverseVideo\n"));

@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.703 2014/03/07 01:43:32 tom Exp $ */
+/* $XTermId: misc.c,v 1.705 2014/04/11 19:36:41 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -95,6 +95,8 @@
 #include <xtermcap.h>
 #include <VTparse.h>
 #include <graphics.h>
+#include <graphics_regis.h>
+#include <graphics_sixel.h>
 
 #include <assert.h>
 
@@ -3026,24 +3028,23 @@ typedef enum {
 #define OSC_RESET 100
 #define OSC_Reset(code) (code) + OSC_RESET
 
-static ScrnColors *pOldColors = NULL;
-
 static Bool
 GetOldColors(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
     int i;
-    if (pOldColors == NULL) {
-	pOldColors = TypeXtMalloc(ScrnColors);
-	if (pOldColors == NULL) {
+    if (screen->oldColors == NULL) {
+	screen->oldColors = TypeXtMalloc(ScrnColors);
+	if (screen->oldColors == NULL) {
 	    xtermWarning("allocation failure in GetOldColors\n");
 	    return (False);
 	}
-	pOldColors->which = 0;
+	screen->oldColors->which = 0;
 	for (i = 0; i < NCOLORS; i++) {
-	    pOldColors->colors[i] = 0;
-	    pOldColors->names[i] = NULL;
+	    screen->oldColors->colors[i] = 0;
+	    screen->oldColors->names[i] = NULL;
 	}
-	GetColors(xw, pOldColors);
+	GetColors(xw, screen->oldColors);
     }
     return (True);
 }
@@ -3090,6 +3091,7 @@ static void
 ReportColorRequest(XtermWidget xw, int ndx, int final)
 {
     if (AllowColorOps(xw, ecGetColor)) {
+	TScreen *screen = TScreenOf(xw);
 	XColor color;
 	Colormap cmap = xw->core.colormap;
 	char buffer[80];
@@ -3102,14 +3104,14 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 	int i = (xw->misc.re_verse) ? oppositeColor(ndx) : ndx;
 
 	GetOldColors(xw);
-	color.pixel = pOldColors->colors[ndx];
+	color.pixel = screen->oldColors->colors[ndx];
 	XQueryColor(TScreenOf(xw)->display, cmap, &color);
 	sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
 		color.red,
 		color.green,
 		color.blue);
 	TRACE(("ReportColorRequest #%d: 0x%06lx as %s\n",
-	       ndx, pOldColors->colors[ndx], buffer));
+	       ndx, screen->oldColors->colors[ndx], buffer));
 	unparseputc1(xw, ANSI_OSC);
 	unparseputs(xw, buffer);
 	unparseputc1(xw, final);
@@ -3120,6 +3122,7 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 static Bool
 UpdateOldColors(XtermWidget xw GCC_UNUSED, ScrnColors * pNew)
 {
+    TScreen *screen = TScreenOf(xw);
     int i;
 
     /* if we were going to free old colors, this would be the place to
@@ -3131,14 +3134,14 @@ UpdateOldColors(XtermWidget xw GCC_UNUSED, ScrnColors * pNew)
      */
     for (i = 0; i < NCOLORS; i++) {
 	if (COLOR_DEFINED(pNew, i)) {
-	    if (pOldColors->names[i] != NULL) {
-		XtFree(pOldColors->names[i]);
-		pOldColors->names[i] = NULL;
+	    if (screen->oldColors->names[i] != NULL) {
+		XtFree(screen->oldColors->names[i]);
+		screen->oldColors->names[i] = NULL;
 	    }
 	    if (pNew->names[i]) {
-		pOldColors->names[i] = pNew->names[i];
+		screen->oldColors->names[i] = pNew->names[i];
 	    }
-	    pOldColors->colors[i] = pNew->colors[i];
+	    screen->oldColors->colors[i] = pNew->colors[i];
 	}
     }
     return (True);
@@ -3191,6 +3194,7 @@ ChangeColorsRequest(XtermWidget xw,
     TRACE(("ChangeColorsRequest start=%d, names='%s'\n", start, names));
 
     if (GetOldColors(xw)) {
+	TScreen *screen = TScreenOf(xw);
 	newColors.which = 0;
 	for (i = 0; i < NCOLORS; i++) {
 	    newColors.names[i] = NULL;
@@ -3214,8 +3218,8 @@ ChangeColorsRequest(XtermWidget xw,
 		if (thisName != 0) {
 		    if (!strcmp(thisName, "?")) {
 			ReportColorRequest(xw, ndx, final);
-		    } else if (!pOldColors->names[ndx]
-			       || strcmp(thisName, pOldColors->names[ndx])) {
+		    } else if (!screen->oldColors->names[ndx]
+			       || strcmp(thisName, screen->oldColors->names[ndx])) {
 			AllocateTermColor(xw, &newColors, ndx, thisName, False);
 		    }
 		}
@@ -3244,6 +3248,8 @@ ResetColorsRequest(XtermWidget xw,
 
 #if OPT_COLOR_RES
     if (GetOldColors(xw)) {
+	TScreen *screen = TScreenOf(xw);
+
 	ndx = OscToColorIndex((OscTextColors) (code - OSC_RESET));
 	if (xw->misc.re_verse)
 	    ndx = oppositeColor(ndx);
@@ -3254,8 +3260,8 @@ ResetColorsRequest(XtermWidget xw,
 	newColors.names[ndx] = NULL;
 
 	if (thisName != 0
-	    && pOldColors->names[ndx] != 0
-	    && strcmp(thisName, pOldColors->names[ndx])) {
+	    && screen->oldColors->names[ndx] != 0
+	    && strcmp(thisName, screen->oldColors->names[ndx])) {
 	    AllocateTermColor(xw, &newColors, ndx, thisName, False);
 
 	    if (newColors.which != 0) {
@@ -4156,8 +4162,8 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    screen->vtXX_level >= 2) {	/* VT220 */
 	    parse_ansi_params(&params, &cp);
 	    switch (params.a_final) {
-#if OPT_SIXEL_GRAPHICS
 	    case 'p':
+#if OPT_REGIS_GRAPHICS
 		if (screen->terminal_id == 125 ||
 		    screen->terminal_id == 240 ||
 		    screen->terminal_id == 241 ||
@@ -4165,24 +4171,35 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    screen->terminal_id == 340) {
 		    parse_regis(xw, &params, cp);
 		}
+#else
+		TRACE(("ignoring ReGIS graphic\n"));
+#endif
 		break;
 	    case 'q':
+#if OPT_SIXEL_GRAPHICS
 		if (screen->terminal_id == 125 ||
 		    screen->terminal_id == 240 ||
 		    screen->terminal_id == 241 ||
 		    screen->terminal_id == 330 ||
-		    screen->terminal_id == 340) {
+		    screen->terminal_id == 340 ||
+		    screen->terminal_id == 382) {
 		    parse_sixel(xw, &params, cp);
 		}
-		break;
+#else
+		TRACE(("ignoring sixel graphic\n"));
 #endif
+		break;
 	    case '|':		/* DECUDK */
-		if (params.a_param[0] == 0)
-		    reset_decudk();
-		parse_decudk(cp);
+		if (screen->vtXX_level >= 2) {	/* VT220 */
+		    if (params.a_param[0] == 0)
+			reset_decudk();
+		    parse_decudk(cp);
+		}
 		break;
 	    case '{':		/* DECDLD (no '}' case though) */
-		parse_decdld(&params, cp);
+		if (screen->vtXX_level >= 2) {	/* VT220 */
+		    parse_decdld(&params, cp);
+		}
 		break;
 	    }
 	}
@@ -4936,9 +4953,10 @@ ChangeXprop(char *buf)
  * "dynamic" colors that might have been retrieved using OSC 10-18.
  */
 void
-ReverseOldColors(void)
+ReverseOldColors(XtermWidget xw)
 {
-    ScrnColors *pOld = pOldColors;
+    TScreen *screen = TScreenOf(xw);
+    ScrnColors *pOld = screen->oldColors;
     Pixel tmpPix;
     char *tmpName;
 
@@ -4947,7 +4965,7 @@ ReverseOldColors(void)
 	if (pOld->colors[TEXT_CURSOR] == pOld->colors[TEXT_FG]) {
 	    pOld->colors[TEXT_CURSOR] = pOld->colors[TEXT_BG];
 	    if (pOld->names[TEXT_CURSOR]) {
-		XtFree(pOldColors->names[TEXT_CURSOR]);
+		XtFree(screen->oldColors->names[TEXT_CURSOR]);
 		pOld->names[TEXT_CURSOR] = NULL;
 	    }
 	    if (pOld->names[TEXT_BG]) {

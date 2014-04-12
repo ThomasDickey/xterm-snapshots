@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.320 2013/06/23 22:46:18 tom Exp $ */
+/* $XTermId: menu.c,v 1.321 2014/04/12 00:05:21 Ross.Combs Exp $ */
 
 /*
- * Copyright 1999-2012,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -229,8 +229,11 @@ static void do_sco_fkeys       PROTO_XT_CALLBACK_ARGS;
 #endif
 
 #if OPT_SIXEL_GRAPHICS
-static void do_privatecolorregisters PROTO_XT_CALLBACK_ARGS;
 static void do_sixelscrolling  PROTO_XT_CALLBACK_ARGS;
+#endif
+
+#if OPT_GRAPHICS
+static void do_privatecolorregisters PROTO_XT_CALLBACK_ARGS;
 #endif
 
 #if OPT_SUN_FUNC_KEYS
@@ -370,6 +373,8 @@ MenuEntry vtMenuEntries[] = {
     { "altscreen",	do_altscreen,	NULL },
 #if OPT_SIXEL_GRAPHICS
     { "sixelScrolling",	do_sixelscrolling,	NULL },
+#endif
+#if OPT_GRAPHICS
     { "privateColorRegisters", do_privatecolorregisters, NULL },
 #endif
     };
@@ -2226,6 +2231,27 @@ do_sixelscrolling(Widget gw GCC_UNUSED,
     update_decsdm();
 }
 
+void
+update_decsdm(void)
+{
+    UpdateCheckbox("update_decsdm",
+		   vtMenuEntries,
+		   vtMenu_sixelscrolling,
+		   (term->keyboard.flags & MODE_DECSDM) != 0);
+}
+
+void
+HandleSixelScrolling(Widget w,
+		     XEvent * event GCC_UNUSED,
+		     String * params,
+		     Cardinal *param_count)
+{
+    handle_vt_toggle(do_sixelscrolling, term->keyboard.flags & MODE_DECSDM,
+		     params, *param_count, w);
+}
+#endif
+
+#if OPT_GRAPHICS
 static void
 do_privatecolorregisters(Widget gw GCC_UNUSED,
 			 XtPointer closure GCC_UNUSED,
@@ -2247,31 +2273,12 @@ update_privatecolorregisters(void)
 }
 
 void
-update_decsdm(void)
-{
-    UpdateCheckbox("update_decsdm",
-		   vtMenuEntries,
-		   vtMenu_sixelscrolling,
-		   (term->keyboard.flags & MODE_DECSDM) != 0);
-}
-
-void
 HandleSetPrivateColorRegisters(Widget w,
 			       XEvent * event GCC_UNUSED,
 			       String * params,
 			       Cardinal *param_count)
 {
     HANDLE_VT_TOGGLE(privatecolorregisters);
-}
-
-void
-HandleSixelScrolling(Widget w,
-		     XEvent * event GCC_UNUSED,
-		     String * params,
-		     Cardinal *param_count)
-{
-    handle_vt_toggle(do_sixelscrolling, term->keyboard.flags & MODE_DECSDM,
-		     params, *param_count, w);
 }
 #endif
 

@@ -1,7 +1,8 @@
-/* $XTermId: version.h,v 1.384 2014/04/10 00:27:40 tom Exp $ */
+/* $XTermId: graphics_sixel.h,v 1.1 2014/04/11 19:36:41 Ross.Combs Exp $ */
 
 /*
- * Copyright 1998-2013,2014 by Thomas E. Dickey
+ * Copyright 2014 by Ross Combs
+ * Copyright 2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -30,21 +31,18 @@
  * authorization.
  */
 
-#ifndef included_version_h
-#define included_version_h
-/*
- * These definitions are used to build the string that's printed in response to
- * "xterm -version", or embedded in "xterm -help".  It usually indicates the
- * version of X to which this version of xterm has been built.  The resulting
- * number in parentheses is my patch number (Thomas E. Dickey).
- */
-#define XTERM_PATCH   304
-#define XTERM_DATE    2014-04-09
+#ifndef included_graphics_sixel_h
+#define included_graphics_sixel_h
+/* *INDENT-OFF* */
 
-#ifndef __vendorversion__
-#define __vendorversion__ "XTerm"
+#include <ptyx.h>
+
+#if OPT_SIXEL_GRAPHICS
+extern void parse_sixel(XtermWidget xw, ANSI *params, char const *string);
+#else
+#define parse_sixel(xw, params, string) /* nothing */
 #endif
 
-extern char *xtermVersion(void);
+/* *INDENT-ON* */
 
-#endif /* included_version_h */
+#endif /* included_graphics_sixel_h */

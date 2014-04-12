@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1322 2014/03/02 23:32:05 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1323 2014/04/12 00:12:15 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -367,8 +367,10 @@ static XtActionsRec actionsList[] = {
     { "smaller-vt-font",	HandleSmallerFont },
 #endif
 #if OPT_SIXEL_GRAPHICS
-    { "set-private-colors",	HandleSetPrivateColorRegisters },
     { "set-sixel-scrolling",	HandleSixelScrolling },
+#endif
+#if OPT_GRAPHICS
+    { "set-private-colors",	HandleSetPrivateColorRegisters },
 #endif
 #if OPT_SUN_FUNC_KEYS
     { "set-sun-function-keys",	HandleSunFunctionKeys },
@@ -675,9 +677,14 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_SIXEL_GRAPHICS
+    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
+#endif
+
+#if OPT_GRAPHICS
+    Ires(XtNnumColorRegisters, XtCNumColorRegisters,
+	 screen.numcolorregisters, 0),
     Bres(XtNprivateColorRegisters, XtCPrivateColorRegisters,
 	 screen.privatecolorregisters, True),
-    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
 #endif
 
 #if OPT_SUNPC_KBD
@@ -2561,7 +2568,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    switch (screen->terminal_id) {
 		    case 125:
 			reply.a_param[count++] = 12;	/* VT125 */
+#if OPT_REGIS_GRAPHICS
+			reply.a_param[count++] = 0 | 2 | 1;	/* no STP, AVO, GPO (ReGIS) */
+#else
 			reply.a_param[count++] = 0 | 2 | 0;	/* no STP, AVO, no GPO (ReGIS) */
+#endif
 			reply.a_param[count++] = 0;	/* no printer */
 			reply.a_param[count++] = XTERM_PATCH;	/* ROM version */
 			break;
@@ -2583,12 +2594,21 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 							 / 100);
 		    reply.a_param[count++] = 1;		/* 132-columns */
 		    reply.a_param[count++] = 2;		/* printer */
-#if OPT_SIXEL_GRAPHICS
+#if OPT_REGIS_GRAPHICS
 		    if (screen->terminal_id == 240 ||
 			screen->terminal_id == 241 ||
 			screen->terminal_id == 330 ||
 			screen->terminal_id == 340) {
 			reply.a_param[count++] = 3;	/* ReGIS graphics */
+		    }
+#endif
+		    reply.a_param[count++] = 6;		/* selective-erase */
+#if OPT_SIXEL_GRAPHICS
+		    if (screen->terminal_id == 240 ||
+			screen->terminal_id == 241 ||
+			screen->terminal_id == 330 ||
+			screen->terminal_id == 340 ||
+			screen->terminal_id == 382) {
 			reply.a_param[count++] = 4;	/* sixel graphics */
 		    }
 #endif
@@ -5194,7 +5214,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 #if OPT_SIXEL_GRAPHICS
 	case srm_DECSDM:	/* sixel scrolling */
-	    if (screen->terminal_id == 240 ||
+	    if (screen->terminal_id == 240 ||	/* FIXME: VT24x did not scroll sixel graphics */
 		screen->terminal_id == 241 ||
 		screen->terminal_id == 330 ||
 		screen->terminal_id == 340) {
@@ -5360,7 +5380,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    set_mouseflag(paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
-#if OPT_SIXEL_GRAPHICS
+#if OPT_GRAPHICS
 	case srm_PRIVATE_COLOR_REGISTERS:	/* private color registers for each graphic */
 	    TRACE(("DECSET/DECRST PRIVATE_COLOR_REGISTERS %s\n",
 		   BtoS(screen->privatecolorregisters)));
@@ -5604,7 +5624,7 @@ savemodes(XtermWidget xw)
 	    SCREEN_FLAG_save(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
-#if OPT_SIXEL_GRAPHICS
+#if OPT_GRAPHICS
 	case srm_PRIVATE_COLOR_REGISTERS:	/* private color registers for each graphic */
 	    TRACE(("save PRIVATE_COLOR_REGISTERS %s\n",
 		   BtoS(screen->privatecolorregisters)));
@@ -5924,7 +5944,7 @@ restoremodes(XtermWidget xw)
 	    SCREEN_FLAG_restore(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
-#if OPT_SIXEL_GRAPHICS
+#if OPT_GRAPHICS
 	case srm_PRIVATE_COLOR_REGISTERS:	/* private color registers for each graphic */
 	    TRACE(("restore PRIVATE_COLOR_REGISTERS %s\n",
 		   BtoS(screen->privatecolorregisters)));
@@ -8037,7 +8057,12 @@ VTInitialize(Widget wrequest,
     TRACE(("initialized DECSDM %s (resource default is %d)\n",
 	   BtoS(wnew->keyboard.flags & MODE_DECSDM),
 	   TScreenOf(wnew)->sixel_scrolling));
+#endif
 
+#if OPT_GRAPHICS
+    init_Ires(screen.numcolorregisters);
+    TRACE(("initialized NUM_COLOR_REGISTERS to resource default %d\n",
+	   TScreenOf(wnew)->numcolorregisters));
     init_Bres(screen.privatecolorregisters);	/* FIXME: should this be off unconditionally here? */
     TRACE(("initialized PRIVATE_COLOR_REGISTERS to resource default %s\n",
 	   BtoS(TScreenOf(wnew)->privatecolorregisters)));
