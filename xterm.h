@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.729 2014/03/02 23:31:28 tom Exp $ */
+/* $XTermId: xterm.h,v 1.731 2014/04/11 19:36:41 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -475,6 +475,7 @@ extern char **environ;
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
+#define XtNnumColorRegisters	"numColorRegisters"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
 #define XtNpointerColor		"pointerColor"
@@ -653,6 +654,7 @@ extern char **environ;
 #define XtCModifyStringKeys	"ModifyStringKeys"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
+#define XtCNumColorRegisters	"NumColorRegisters"
 #define XtCNumLock		"NumLock"
 #define XtCOldXtermFKeys	"OldXtermFKeys"
 #define XtCPointerMode		"PointerMode"
@@ -1035,7 +1037,7 @@ extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
 extern void NormalExit (void);
 extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
-extern void ReverseOldColors (void);
+extern void ReverseOldColors (XtermWidget /* xw */);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
 extern void cleanup_colored_cursor (void);

@@ -1,8 +1,8 @@
-/* $XTermId: graphics.h,v 1.6 2013/07/10 08:28:55 Ross.Combs Exp $ */
+/* $XTermId: graphics.h,v 1.8 2014/04/12 00:57:10 tom Exp $ */
 
 /*
- * Copyright 2013 by Ross Combs
- * Copyright 2013 by Thomas E. Dickey
+ * Copyright 2013,2014 by Ross Combs
+ * Copyright 2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -37,13 +37,57 @@
 
 #include <ptyx.h>
 
-#if OPT_SIXEL_GRAPHICS
+#if OPT_GRAPHICS
+
+typedef struct {
+    Pixel pix;
+    short r, g, b;
+    short allocated;
+} ColorRegister;
 
 typedef unsigned short RegisterNum;
 
+#define MAX_COLOR_REGISTERS 256U
+#define COLOR_HOLE ((RegisterNum)MAX_COLOR_REGISTERS)
+
+#define MAX_GRAPHICS 16U
+
+#define BUFFER_WIDTH 1000
+#define BUFFER_HEIGHT 800
+
+typedef struct {
+    RegisterNum pixels[BUFFER_HEIGHT * BUFFER_WIDTH];
+    ColorRegister private_color_registers[MAX_COLOR_REGISTERS];
+    ColorRegister *color_registers;
+    char color_registers_used[MAX_COLOR_REGISTERS];
+    XtermWidget xw;
+    int max_width;              /* largest image which can be stored */
+    int max_height;             /* largest image which can be stored */
+    int valid_registers;        /* for wrap-around behavior */
+    int actual_width;           /* size of image before scaling */
+    int actual_height;          /* size of image before scaling */
+    int private_colors;         /* if not using the shared color registers */
+    int charrow;                /* upper left starting point in characters */
+    int charcol;                /* upper left starting point in characters */
+    int pixw;                   /* width of graphic pixels in screen pixels */
+    int pixh;                   /* height of graphic pixels in screen pixels */
+    int bufferid;               /* which screen buffer the graphic is associated with */
+    unsigned int type;          /* type of graphic 0==sixel, 1...NUM_REGIS_PAGES==ReGIS page */
+    unsigned int id;            /* sequential id used for preserving layering */
+    int valid;                  /* if the graphic has been initialized */
+    int dirty;                  /* if the graphic needs to be redrawn */
+} Graphic;
+
+extern Graphic *get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned int type);
+extern Graphic *get_new_or_matching_graphic(XtermWidget xw, int charrow, int charcol, int actual_width, int actual_height, unsigned int type);
+extern void draw_solid_pixel(Graphic *graphic, int x, int y, RegisterNum color);
+extern void draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterNum color);
+extern void draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterNum color);
+extern void hls2rgb(int h, int l, int s, short *r, short *g, short *b);
+extern void dump_graphic(Graphic const *graphic);
+extern void update_color_register(Graphic *graphic, RegisterNum color, short r, short g, short b);
+extern RegisterNum find_color_register(ColorRegister const *color_registers, short r, short g, short b);
 extern void chararea_clear_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
-extern void parse_regis(XtermWidget xw, ANSI *params, char const *string);
-extern void parse_sixel(XtermWidget xw, ANSI *params, char const *string);
 extern void pixelarea_clear_displayed_graphics(TScreen const *screen, int winx, int winy, int w, int h);
 extern void refresh_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
 extern void refresh_modified_displayed_graphics(TScreen const *screen);
@@ -53,9 +97,16 @@ extern void update_displayed_graphics_color_registers(TScreen const *screen, Reg
 
 #else
 
+#define get_new_graphic(xw, charrow, charcol, type) /* nothing */
+#define get_new_or_matching_graphic(xw, charrow, charcol, actual_width, actual_height, type) /* nothing */
+#define draw_solid_pixel(graphic, x, y, color) /* nothing */
+#define draw_solid_rectangle(graphic, x1, y1, x2, y2, color) /* nothing */
+#define draw_solid_line(graphic, x1, y1, x2, y2, color) /* nothing */
+#define hls2rgb(h, l, s, r, g, b) /* nothing */
+#define dump_graphic(graphic) /* nothing */
+#define update_color_register(graphic, color, r, g, b) /* nothing */
+#define find_color_register(color_registers, r, g, b) /* nothing */
 #define chararea_clear_displayed_graphics(screen, leftcol, toprow, ncols, nrows) /* nothing */
-#define parse_regis(xw, params, string) /* nothing */
-#define parse_sixel(xw, params, string) /* nothing */
 #define pixelarea_clear_displayed_graphics(screen, winx, winy, w, h) /* nothing */
 #define refresh_displayed_graphics(screen, leftcol, toprow, ncols, nrows) /* nothing */
 #define refresh_modified_displayed_graphics(screen) /* nothing */
