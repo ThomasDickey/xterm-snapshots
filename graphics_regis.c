@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.3 2014/04/12 00:39:08 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.5 2014/04/14 00:29:19 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -33,7 +33,6 @@
 #include <xterm.h>
 
 #include <stdio.h>
-#include <math.h>
 #include <ctype.h>
 #include <stdlib.h>
 
@@ -717,7 +716,7 @@ load_regis_colorspec(Graphic const *graphic, RegisDataFragment const *input, Reg
 	}
 	/* FIXME: check for trailing junk? */
 	*out = find_color_register(graphic->color_registers, r, g, b);
-	TRACE(("colorspec maps to closest register %u\n", val));
+	TRACE(("colorspec maps to closest register %u\n", *out));
 	return 1;
     }
 
@@ -2335,7 +2334,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
  * temporary write options
  * output position stack
  */
-extern void
+void
 parse_regis(XtermWidget xw, ANSI *params, char const *string)
 {
     TScreen *screen = TScreenOf(xw);
