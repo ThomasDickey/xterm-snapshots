@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.2 2014/04/12 00:39:53 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.3 2014/04/12 23:45:19 tom Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -33,7 +33,6 @@
 #include <xterm.h>
 
 #include <stdio.h>
-#include <math.h>
 #include <ctype.h>
 #include <stdlib.h>
 
@@ -220,7 +219,7 @@ update_sixel_aspect(SixelContext const *context, Graphic *graphic)
  *  ftp://ftp.cs.utk.edu/pub/shuford/terminal/sixel_graphics_news.txt
  *  ftp://ftp.cs.utk.edu/pub/shuford/terminal/all_about_sixels.txt
  */
-extern void
+void
 parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 {
     TScreen *screen = TScreenOf(xw);

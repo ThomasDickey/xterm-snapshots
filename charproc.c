@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1323 2014/04/12 00:12:15 Ross.Combs Exp $ */
+/* $XTermId: charproc.c,v 1.1324 2014/04/13 22:30:08 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2090,6 +2090,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		c = '?';
 	    }
 #endif
+	    if (sp->string_area != new_string) {
+		free(sp->string_area);
+	    }
 	    sp->string_area = new_string;
 	    sp->string_size = new_length;
 	    sp->string_area[(sp->string_used)++] = CharOf(c);

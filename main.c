@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.751 2014/03/07 02:35:39 tom Exp $ */
+/* $XTermId: main.c,v 1.752 2014/04/13 00:37:20 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -91,6 +91,7 @@
 
 #include <xterm.h>
 #include <version.h>
+#include <graphics.h>
 
 #include <X11/cursorfont.h>
 #include <X11/Xlocale.h>
@@ -5028,6 +5029,9 @@ Exit(int n)
 	sortedOpts(0, 0, 0);
 	noleaks_charproc();
 	noleaks_ptydata();
+#if OPT_GRAPHICS
+	noleaks_graphics();
+#endif
 #if OPT_WIDE_CHARS
 	noleaks_CharacterClass();
 #endif

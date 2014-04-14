@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.8 2014/04/12 00:57:10 tom Exp $ */
+/* $XTermId: graphics.h,v 1.11 2014/04/14 00:38:27 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -54,10 +54,11 @@ typedef unsigned short RegisterNum;
 
 #define BUFFER_WIDTH 1000
 #define BUFFER_HEIGHT 800
+#define MAX_PIXELS (BUFFER_HEIGHT * BUFFER_WIDTH)
 
 typedef struct {
-    RegisterNum pixels[BUFFER_HEIGHT * BUFFER_WIDTH];
-    ColorRegister private_color_registers[MAX_COLOR_REGISTERS];
+    RegisterNum *pixels;
+    ColorRegister *private_color_registers;
     ColorRegister *color_registers;
     char color_registers_used[MAX_COLOR_REGISTERS];
     XtermWidget xw;
@@ -94,6 +95,10 @@ extern void refresh_modified_displayed_graphics(TScreen const *screen);
 extern void reset_displayed_graphics(TScreen const *screen);
 extern void scroll_displayed_graphics(int rows);
 extern void update_displayed_graphics_color_registers(TScreen const *screen, RegisterNum color, short r, short g, short b);
+
+#if NO_LEAKS
+extern void noleaks_graphics(void);
+#endif
 
 #else
 
