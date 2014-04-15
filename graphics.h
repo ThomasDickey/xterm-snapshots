@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.11 2014/04/14 00:38:27 tom Exp $ */
+/* $XTermId: graphics.h,v 1.13 2014/04/14 21:41:24 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -81,6 +81,7 @@ typedef struct {
 
 extern Graphic *get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned int type);
 extern Graphic *get_new_or_matching_graphic(XtermWidget xw, int charrow, int charcol, int actual_width, int actual_height, unsigned int type);
+extern RegisterNum read_pixel(Graphic *graphic, int x, int y);
 extern void draw_solid_pixel(Graphic *graphic, int x, int y, RegisterNum color);
 extern void draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterNum color);
 extern void draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterNum color);
@@ -96,7 +97,7 @@ extern void reset_displayed_graphics(TScreen const *screen);
 extern void scroll_displayed_graphics(int rows);
 extern void update_displayed_graphics_color_registers(TScreen const *screen, RegisterNum color, short r, short g, short b);
 
-#if NO_LEAKS
+#ifdef NO_LEAKS
 extern void noleaks_graphics(void);
 #endif
 
@@ -104,6 +105,7 @@ extern void noleaks_graphics(void);
 
 #define get_new_graphic(xw, charrow, charcol, type) /* nothing */
 #define get_new_or_matching_graphic(xw, charrow, charcol, actual_width, actual_height, type) /* nothing */
+#define read_pixel(graphic, x, y) /* nothing */
 #define draw_solid_pixel(graphic, x, y, color) /* nothing */
 #define draw_solid_rectangle(graphic, x1, y1, x2, y2, color) /* nothing */
 #define draw_solid_line(graphic, x1, y1, x2, y2, color) /* nothing */

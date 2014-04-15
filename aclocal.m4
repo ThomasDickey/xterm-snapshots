@@ -1,8 +1,8 @@
-dnl $XTermId: aclocal.m4,v 1.372 2013/11/20 00:24:55 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.373 2014/04/14 19:16:55 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
-dnl Copyright 1997-2012,2013 by Thomas E. Dickey
+dnl Copyright 1997-2013,2014 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -1294,7 +1294,7 @@ AC_TRY_LINK([
 [cf_cv_input_method=no])])
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_INTEL_COMPILER version: 5 updated: 2013/02/10 10:41:05
+dnl CF_INTEL_COMPILER version: 6 updated: 2014/03/17 13:13:07
 dnl -----------------
 dnl Check if the given compiler is really the Intel compiler for Linux.  It
 dnl tries to imitate gcc, but does not return an error when it finds a mismatch
@@ -1323,7 +1323,7 @@ if test "$ifelse([$1],,[$1],GCC)" = yes ; then
 make an error
 #endif
 ],[ifelse([$2],,INTEL_COMPILER,[$2])=yes
-cf_save_CFLAGS="$cf_save_CFLAGS -we147 -no-gcc"
+cf_save_CFLAGS="$cf_save_CFLAGS -we147"
 ],[])
 		ifelse([$3],,CFLAGS,[$3])="$cf_save_CFLAGS"
 		AC_MSG_RESULT($ifelse([$2],,INTEL_COMPILER,[$2]))
@@ -1449,6 +1449,30 @@ AC_SUBST(ETAGS)
 AC_SUBST(MAKE_UPPER_TAGS)
 AC_SUBST(MAKE_LOWER_TAGS)
 ])dnl
+dnl ---------------------------------------------------------------------------
+dnl CF_MATH_LIB version: 8 updated: 2010/05/29 16:31:02
+dnl -----------
+dnl Checks for libraries.  At least one UNIX system, Apple Macintosh
+dnl Rhapsody 5.5, does not have -lm.  We cannot use the simpler
+dnl AC_CHECK_LIB(m,sin), because that fails for C++.
+AC_DEFUN([CF_MATH_LIB],
+[
+AC_CACHE_CHECK(if -lm needed for math functions,
+	cf_cv_need_libm,[
+	AC_TRY_LINK([
+	#include <stdio.h>
+	#include <math.h>
+	],
+	[double x = rand(); printf("result = %g\n", ]ifelse([$2],,sin(x),$2)[)],
+	[cf_cv_need_libm=no],
+	[cf_cv_need_libm=yes])])
+if test "$cf_cv_need_libm" = yes
+then
+ifelse($1,,[
+	CF_ADD_LIB(m)
+],[$1=-lm])
+fi
+])
 dnl ---------------------------------------------------------------------------
 dnl CF_MIXEDCASE_FILENAMES version: 6 updated: 2013/10/08 17:47:05
 dnl ----------------------
@@ -3727,7 +3751,7 @@ then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_XOPEN_SOURCE version: 45 updated: 2013/09/07 14:06:25
+dnl CF_XOPEN_SOURCE version: 46 updated: 2014/02/09 19:30:15
 dnl ---------------
 dnl Try to get _XOPEN_SOURCE defined properly that we can use POSIX functions,
 dnl or adapt to the vendor's definitions to get equivalent functionality,
@@ -3805,6 +3829,7 @@ sco*) #(vi
 	;;
 solaris2.*) #(vi
 	cf_xopen_source="-D__EXTENSIONS__"
+	cf_cv_xopen_source=broken
 	;;
 *)
 	CF_TRY_XOPEN_SOURCE

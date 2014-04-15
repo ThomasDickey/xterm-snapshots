@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.3 2014/04/12 23:45:19 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.5 2014/04/14 20:44:40 tom Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -312,9 +312,10 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	    break;
 	case 3:
 	case 2:
+	case 1:
 	    switch (Pmacro) {
 	    case 0:
-		/* keep default */
+		/* keep default aspect settings */
 		break;
 	    case 1:
 	    case 5:
@@ -576,13 +577,25 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	FlushScroll(xw);
 
     if (xw->keyboard.flags & MODE_DECSDM) {
-	int new_row = (graphic->charrow
-		       + ((graphic->actual_height * graphic->pixh)
-			  / FontHeight(screen)));
-	int new_col = (graphic->charcol
+	int new_row, new_col;
+
+	if (screen->sixel_scrolls_right) {
+	    new_row = (graphic->charrow
+		       + (((graphic->actual_height * graphic->pixh)
+			   + FontHeight(screen) - 1)
+			  / FontHeight(screen))
+		       - 1);
+	    new_col = (graphic->charcol
 		       + (((graphic->actual_width * graphic->pixw)
 			   + FontWidth(screen) - 1)
 			  / FontWidth(screen)));
+	} else {
+	    new_row = (graphic->charrow
+		       + (((graphic->actual_height * graphic->pixh)
+			   + FontHeight(screen) - 1)
+			  / FontHeight(screen)));
+	    new_col = 0;
+	}
 
 	TRACE(("setting text position after %dx%d graphic starting on row=%d col=%d: cursor new_row=%d new_col=%d\n",
 	       graphic->actual_width * graphic->pixw,

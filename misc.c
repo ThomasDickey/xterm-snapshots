@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.705 2014/04/11 19:36:41 Ross.Combs Exp $ */
+/* $XTermId: misc.c,v 1.707 2014/04/14 20:42:47 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -4172,7 +4172,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    parse_regis(xw, &params, cp);
 		}
 #else
-		TRACE(("ignoring ReGIS graphic\n"));
+		TRACE(("ignoring ReGIS graphic (compilation flag not enabled)\n"));
 #endif
 		break;
 	    case 'q':
@@ -4186,7 +4186,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    parse_sixel(xw, &params, cp);
 		}
 #else
-		TRACE(("ignoring sixel graphic\n"));
+		TRACE(("ignoring sixel graphic (compilation flag not enabled)\n"));
 #endif
 		break;
 	    case '|':		/* DECUDK */
@@ -4521,6 +4521,19 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
+#if OPT_SIXEL_GRAPHICS
+	case srm_PRIVATE_COLOR_REGISTERS:
+	    result = MdBool(screen->privatecolorregisters);
+	    break;
+#endif
+#if OPT_SIXEL_GRAPHICS
+	case srm_SIXEL_SCROLLS_RIGHT:
+	    result = MdBool(screen->sixel_scrolls_right);
+	    break;
+#endif
+	default:
+	    TRACE(("DATA_ERROR: requested report for unknown private mode %d\n",
+		   params[0]));
 	}
 	reply.a_param[count++] = (ParmType) params[0];
 	reply.a_param[count++] = (ParmType) result;
