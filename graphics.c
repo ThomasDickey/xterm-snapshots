@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.30 2014/04/14 00:44:17 tom Exp $ */
+/* $XTermId: graphics.c,v 1.33 2014/04/14 21:43:19 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -42,23 +42,26 @@
 #include <assert.h>
 #include <graphics.h>
 
-#define DUMP_BITMAP
+#undef DUMP_BITMAP
 #define DUMP_COLORS
+#undef DEBUG_PALETTE
 #undef DEBUG_PIXEL
 #undef DEBUG_REFRESH
 
 /* TODO:
  * ReGIS:
+ * - plane write control
  * - everything
  * - filling
- * - curves
+ * - fix interpolated curves to more closely match implementation
  * - text
  * - input and output cursors
  * - mouse input
  * - stacks
  * - enter/leave during a command
  * - command display mode
- * - investigate second graphic page for ReGIS -- does it also apply to text and sixel graphics?
+ * - investigate second graphic page for ReGIS -- does it also apply to text and sixel graphics? are the contents preserved?
+ * - scaling/re-rasterization to fit screen
  * sixel:
  * - fix problem where new_row < 0 during sixel parsing (see FIXME)
  * VT55/VT105 waveform graphics
@@ -78,19 +81,20 @@
  * - dynamic memory allocation of graphics buffers, add configurable limits
  * - auto convert color graphics in VT330 mode
  * - posturize requested colors to match hardware palettes (e.g. four possible shades on VT240)
- * escape sequences
+ * - color register report/restore
+ * escape sequences:
  * - way to query font size without "window ops" (or make "window ops" permissions more fine grained)
  * - way to query and/or set the maximum number of color registers
  * - way to query and set the number of graphics pages
  * ReGIS extensions:
  * - gradients
- * - line width (RLogin has this -- seems likely to be an extension)
+ * - line width (RLogin has this and it is mentioned in docs for the DEC ReGIS to Postscript converter)
+ * - F option for screen command (mentioned in docs for the DEC ReGIS to Postscript converter)
  * - transparency
  * - background color as stackable write control
  * - RGB triplets
- * - true color (color registers created upon lookup)
- * config:
- * - way to specify default number of color registers (16 is very limiting)
+ * - true color (virtual color registers created upon lookup)
+ * - anti-aliasing
  */
 
 /* font sizes:
@@ -180,6 +184,17 @@ deactivateSlot(unsigned n)
     if (n < MAX_GRAPHICS) {
 	displayed_graphics[n] = freeGraphic(displayed_graphics[n]);
     }
+}
+
+extern RegisterNum
+read_pixel(Graphic *graphic, int x, int y)
+{
+    if (x < 0 && x >= graphic->actual_width &&
+	y < 0 && y >= graphic->actual_height) {
+	return COLOR_HOLE;
+    }
+
+    return graphic->pixels[y * graphic->max_width + x];
 }
 
 void
@@ -382,9 +397,9 @@ find_color_register(ColorRegister const *color_registers, short r, short g, shor
     closest_index = MAX_COLOR_REGISTERS;
     closest_distance = 0U;
     for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
-	d = SQUARE(2 * (color_registers[i].r - r)) +
-	    SQUARE(3 * (color_registers[i].g - g)) +
-	    SQUARE(1 * (color_registers[i].b - b));
+	d = (unsigned) (SQUARE(2 * (color_registers[i].r - r)) +
+			SQUARE(3 * (color_registers[i].g - g)) +
+			SQUARE(1 * (color_registers[i].b - b)));
 	if (closest_index == MAX_COLOR_REGISTERS || d < closest_distance) {
 	    closest_index = i;
 	    closest_distance = d;
@@ -398,7 +413,7 @@ find_color_register(ColorRegister const *color_registers, short r, short g, shor
 	   color_registers[closest_index].r,
 	   color_registers[closest_index].g,
 	   color_registers[closest_index].b));
-    return closest_index;
+    return (RegisterNum) closest_index;
 }
 
 static void
@@ -498,6 +513,20 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
 	set_color_register(color_registers, 1, 100, 100, 100);
 	break;
     }
+
+#ifdef DEBUG_PALETTE
+    {
+	unsigned int i;
+
+	for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
+	    printf("initial value for register %03u: %d,%d,%d\n",
+		   i,
+		   color_registers[i].r,
+		   color_registers[i].g,
+		   color_registers[i].b);
+	}
+    }
+#endif
 }
 
 static void
@@ -909,7 +938,7 @@ hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 	b1 = x;
 	break;
     default:
-	printf("BAD\n");
+	TRACE(("Bad HLS input: [%d,%d,%d], returning white\n", h, l, s));
 	*r = (short) 100;
 	*g = (short) 100;
 	*b = (short) 100;
@@ -1237,7 +1266,7 @@ reset_displayed_graphics(TScreen const *screen)
     }
 }
 
-#if NO_LEAKS
+#ifdef NO_LEAKS
 void
 noleaks_graphics(void)
 {

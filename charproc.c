@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1324 2014/04/13 22:30:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1326 2014/04/14 19:32:00 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -677,7 +677,9 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_SIXEL_GRAPHICS
-    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, False),
+    Bres(XtNsixelScrolling, XtCSixelScrolling, screen.sixel_scrolling, True),
+    Bres(XtNsixelScrollsRight, XtCSixelScrollsRight,
+	 screen.sixel_scrolls_right, False),
 #endif
 
 #if OPT_GRAPHICS
@@ -5220,7 +5222,8 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    if (screen->terminal_id == 240 ||	/* FIXME: VT24x did not scroll sixel graphics */
 		screen->terminal_id == 241 ||
 		screen->terminal_id == 330 ||
-		screen->terminal_id == 340) {
+		screen->terminal_id == 340 ||
+		screen->terminal_id == 382) {
 		(*func) (&xw->keyboard.flags, MODE_DECSDM);
 		TRACE(("DECSET/DECRST DECSDM %s (resource default is %d)\n",
 		       BtoS(xw->keyboard.flags & MODE_DECSDM),
@@ -5385,10 +5388,25 @@ dpmodes(XtermWidget xw, BitFunc func)
 #endif /* OPT_READLINE */
 #if OPT_GRAPHICS
 	case srm_PRIVATE_COLOR_REGISTERS:	/* private color registers for each graphic */
-	    TRACE(("DECSET/DECRST PRIVATE_COLOR_REGISTERS %s\n",
-		   BtoS(screen->privatecolorregisters)));
+	    TRACE(("DECSET/DECRST PRIVATE_COLOR_REGISTERS to %s (resource default is %s)\n",
+		   BtoS(screen->privatecolorregisters),
+		   BtoS(TScreenOf(xw)->privatecolorregisters)));
 	    set_bool_mode(screen->privatecolorregisters);
 	    update_privatecolorregisters();
+	    break;
+#endif
+#if OPT_SIXEL_GRAPHICS
+	case srm_SIXEL_SCROLLS_RIGHT:	/* sixel scrolling moves cursor to right */
+	    if (screen->terminal_id == 240 ||	/* FIXME: VT24x did not scroll sixel graphics */
+		screen->terminal_id == 241 ||
+		screen->terminal_id == 330 ||
+		screen->terminal_id == 340 ||
+		screen->terminal_id == 382) {
+		set_bool_mode(screen->sixel_scrolls_right);
+		TRACE(("DECSET/DECRST SIXEL_SCROLLS_RIGHT to %s (resource default is %s)\n",
+		       BtoS(screen->sixel_scrolls_right),
+		       BtoS(TScreenOf(xw)->sixel_scrolls_right)));
+	    }
 	    break;
 #endif
 	default:
@@ -5633,6 +5651,13 @@ savemodes(XtermWidget xw)
 		   BtoS(screen->privatecolorregisters)));
 	    DoSM(DP_X_PRIVATE_COLOR_REGISTERS, screen->privatecolorregisters);
 	    update_privatecolorregisters();
+	    break;
+#endif
+#if OPT_SIXEL_GRAPHICS
+	case srm_SIXEL_SCROLLS_RIGHT:
+	    TRACE(("save SIXEL_SCROLLS_RIGHT %s\n",
+		   BtoS(screen->sixel_scrolls_right)));
+	    DoSM(DP_SIXEL_SCROLLS_RIGHT, screen->sixel_scrolls_right);
 	    break;
 #endif
 	}
@@ -5949,10 +5974,21 @@ restoremodes(XtermWidget xw)
 #endif /* OPT_READLINE */
 #if OPT_GRAPHICS
 	case srm_PRIVATE_COLOR_REGISTERS:	/* private color registers for each graphic */
-	    TRACE(("restore PRIVATE_COLOR_REGISTERS %s\n",
+	    TRACE(("restore PRIVATE_COLOR_REGISTERS before: %s\n",
 		   BtoS(screen->privatecolorregisters)));
 	    DoRM(DP_X_PRIVATE_COLOR_REGISTERS, screen->privatecolorregisters);
+	    TRACE(("restore PRIVATE_COLOR_REGISTERS after: %s\n",
+		   BtoS(screen->privatecolorregisters)));
 	    update_privatecolorregisters();
+	    break;
+#endif
+#if OPT_SIXEL_GRAPHICS
+	case srm_SIXEL_SCROLLS_RIGHT:
+	    TRACE(("restore SIXEL_SCROLLS_RIGHT before: %s\n",
+		   BtoS(screen->sixel_scrolls_right)));
+	    DoRM(DP_SIXEL_SCROLLS_RIGHT, screen->sixel_scrolls_right);
+	    TRACE(("restore SIXEL_SCROLLS_RIGHT after: %s\n",
+		   BtoS(screen->sixel_scrolls_right)));
 	    break;
 #endif
 	}
@@ -8048,6 +8084,7 @@ VTInitialize(Widget wrequest,
     wnew->cur_background = 0;
 
     wnew->keyboard.flags = MODE_SRM;
+
     if (TScreenOf(wnew)->backarrow_key)
 	wnew->keyboard.flags |= MODE_DECBKM;
     TRACE(("initialized DECBKM %s\n",
@@ -8055,20 +8092,26 @@ VTInitialize(Widget wrequest,
 
 #if OPT_SIXEL_GRAPHICS
     init_Bres(screen.sixel_scrolling);
-    if (TScreenOf(wnew)->sixel_scrolling)	/* FIXME: should this be off unconditionally here? */
+    if (TScreenOf(wnew)->sixel_scrolling)
 	wnew->keyboard.flags |= MODE_DECSDM;
-    TRACE(("initialized DECSDM %s (resource default is %d)\n",
-	   BtoS(wnew->keyboard.flags & MODE_DECSDM),
-	   TScreenOf(wnew)->sixel_scrolling));
+    TRACE(("initialized DECSDM %s\n",
+	   BtoS(wnew->keyboard.flags & MODE_DECSDM)));
 #endif
 
 #if OPT_GRAPHICS
     init_Ires(screen.numcolorregisters);
-    TRACE(("initialized NUM_COLOR_REGISTERS to resource default %d\n",
+    TRACE(("initialized NUM_COLOR_REGISTERS to resource default: %d\n",
 	   TScreenOf(wnew)->numcolorregisters));
+
     init_Bres(screen.privatecolorregisters);	/* FIXME: should this be off unconditionally here? */
-    TRACE(("initialized PRIVATE_COLOR_REGISTERS to resource default %s\n",
+    TRACE(("initialized PRIVATE_COLOR_REGISTERS to resource default: %s\n",
 	   BtoS(TScreenOf(wnew)->privatecolorregisters)));
+#endif
+
+#if OPT_SIXEL_GRAPHICS
+    init_Bres(screen.sixel_scrolls_right);
+    TRACE(("initialized SIXEL_SCROLLS_RIGHT to resource default: %s\n",
+	   BtoS(TScreenOf(wnew)->sixel_scrolls_right)));
 #endif
 
     /* look for focus related events on the shell, because we need
@@ -10069,13 +10112,29 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 		xw->keyboard.flags |= MODE_DECBKM;
 	TRACE(("full reset DECBKM %s\n",
 	       BtoS(xw->keyboard.flags & MODE_DECBKM)));
+
 #if OPT_SIXEL_GRAPHICS
-	if (TScreenOf(xw)->sixel_scrolling)	/* FIXME: should this be off unconditionally here? */
+	if (TScreenOf(xw)->sixel_scrolling)
 	    xw->keyboard.flags |= MODE_DECSDM;
-	TRACE(("full reset DECSDM %s (resource default is %d)\n",
+	TRACE(("full reset DECSDM to %s (resource default is %s)\n",
 	       BtoS(xw->keyboard.flags & MODE_DECSDM),
-	       TScreenOf(xw)->sixel_scrolling));
+	       BtoS(TScreenOf(xw)->sixel_scrolling)));
 #endif
+
+#if OPT_GRAPHICS
+	screen->privatecolorregisters = TScreenOf(xw)->privatecolorregisters;
+	TRACE(("full reset PRIVATE_COLOR_REGISTERS to %s (resource default is %s)\n",
+	       BtoS(screen->privatecolorregisters),
+	       BtoS(TScreenOf(xw)->privatecolorregisters)));
+#endif
+
+#if OPT_SIXEL_GRAPHICS
+	screen->sixel_scrolls_right = TScreenOf(xw)->sixel_scrolls_right;
+	TRACE(("full reset SIXEL_SCROLLS_RIGHT to %s (resource default is %s)\n",
+	       BtoS(screen->sixel_scrolls_right),
+	       BtoS(TScreenOf(xw)->sixel_scrolls_right)));
+#endif
+
 	update_appcursor();
 	update_appkeypad();
 	update_decbkm();

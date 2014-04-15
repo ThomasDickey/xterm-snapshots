@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.731 2014/04/11 19:36:41 Ross.Combs Exp $ */
+/* $XTermId: xterm.h,v 1.732 2014/04/14 18:42:54 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -513,6 +513,7 @@ extern char **environ;
 #define XtNshowWrapMarks	"showWrapMarks"
 #define XtNsignalInhibit	"signalInhibit"
 #define XtNsixelScrolling	"sixelScrolling"
+#define XtNsixelScrollsRight	"sixelScrollsRight"
 #define XtNtekGeometry		"tekGeometry"
 #define XtNtekInhibit		"tekInhibit"
 #define XtNtekSmall		"tekSmall"
@@ -688,6 +689,7 @@ extern char **environ;
 #define XtCShowWrapMarks	"ShowWrapMarks"
 #define XtCSignalInhibit	"SignalInhibit"
 #define XtCSixelScrolling	"SixelScrolling"
+#define XtCSixelScrollsRight	"SixelScrollsRight"
 #define XtCTekInhibit		"TekInhibit"
 #define XtCTekSmall		"TekSmall"
 #define XtCTekStartup		"TekStartup"

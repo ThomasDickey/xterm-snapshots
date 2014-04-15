@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.323 2014/04/11 19:36:41 Ross.Combs Exp $
+dnl $XTermId: configure.in,v 1.324 2014/04/14 19:17:15 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -921,6 +921,7 @@ if test "$enable_regis_graphics" = yes ; then
 	EXTRAHDRS="$EXTRAHDRS graphics_regis.h"
 	EXTRASRCS="$EXTRASRCS graphics_regis.c"
 	EXTRAOBJS="$EXTRAOBJS graphics_regis.o"
+	CF_MATH_LIB
 fi
 
 AC_MSG_CHECKING(if you want sixel graphics support)

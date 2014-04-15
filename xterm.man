@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.580 2014/03/07 00:40:43 tom Exp $
+.\" $XTermId: xterm.man,v 1.581 2014/04/14 18:42:54 Ross.Combs Exp $
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
@@ -5045,11 +5045,11 @@ Sixel Scrolling (sixelScrolling)
 When enabled,
 sixel graphics are positioned at the current text cursor location, scroll
 the image vertically if larger than the screen, and leave the text cursor
-after the image when returning to text mode.
+at the start of the next complete line after the image when returning to text
+mode (this is the default).
 When disabled,
 sixel graphics are positioned at the upper left of the screen, are
-cropped to fit the screen, and do not affect the text cursor location
-(this is the default).
+cropped to fit the screen, and do not affect the text cursor location.
 This corresponds to the
 .B sixelScrolling
 resource.

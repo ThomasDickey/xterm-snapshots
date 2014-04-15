@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.796 2014/04/11 19:36:41 Ross.Combs Exp $ */
+/* $XTermId: ptyx.h,v 1.797 2014/04/14 18:42:54 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1070,6 +1070,9 @@ typedef enum {
     ,srm_PASTE_QUOTE = SET_PASTE_QUOTE
     ,srm_PASTE_LITERAL_NL = SET_PASTE_LITERAL_NL
 #endif				/* OPT_READLINE */
+#if OPT_SIXEL_GRAPHICS
+    ,srm_SIXEL_SCROLLS_RIGHT = 8452
+#endif
 } DECSET_codes;
 
 /* indices for mapping multiple clicks to selection types */
@@ -1651,6 +1654,9 @@ typedef enum {
 	DP_TOOLBAR,
 #endif
 	DP_X_PRIVATE_COLOR_REGISTERS,
+#if OPT_SIXEL_GRAPHICS
+	DP_SIXEL_SCROLLS_RIGHT,
+#endif
 	DP_LAST
 } SaveModes;
 
@@ -2188,6 +2194,7 @@ typedef struct {
 
 #if OPT_SIXEL_GRAPHICS
 	Boolean		sixel_scrolling; /* sixel scrolling             */
+	Boolean		sixel_scrolls_right; /* sixel scrolling moves cursor to right */
 #endif
 
 #if OPT_GRAPHICS
@@ -2658,7 +2665,6 @@ extern WidgetClass tekWidgetClass;
 #define MODE_SRM	xBIT(3)	/* mode 12: send-receive mode */
 #define MODE_DECBKM	xBIT(4)	/* private mode 67: backarrow */
 #define MODE_DECSDM	xBIT(5)	/* private mode 80: sixel scrolling mode */
-
 
 #define N_MARGINBELL	10
 

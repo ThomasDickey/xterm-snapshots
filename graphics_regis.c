@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.5 2014/04/14 00:29:19 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.8 2014/04/14 20:41:05 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <math.h>
 #include <stdlib.h>
 
 #include <data.h>
@@ -44,30 +45,51 @@
 #include <graphics.h>
 #include <graphics_regis.h>
 
+/* get rid of shadowing warnings (we will not draw Bessel functions */
+#define y1 my_y1
+#define y0 my_y0
+
+#undef DEBUG_BEZIER
+#undef DEBUG_SPLINE_SEGMENTS
+#undef DEBUG_SPLINE_POINTS
+#undef DEBUG_SPLINE_WITH_ROTATION
+#undef DEBUG_SPLINE_WITH_OVERDRAW
+
+#define ITERATIONS_BEFORE_REFRESH 100U
+/* *INDENT-OFF* */
 typedef struct RegisWriteControls {
-    unsigned int pv_multiplier;
-    unsigned int pattern;
-    unsigned int pattern_multiplier;
-    unsigned int invert_pattern;
-    RegisterNum foreground;
-    unsigned int plane_mask;
-    unsigned int write_style;
-    unsigned int shading_enabled;
-    char shading_character;
-    int shading_reference;
-    unsigned int shading_reference_dim;
+    unsigned int        pv_multiplier;
+    unsigned int        pattern;
+    unsigned int        pattern_multiplier;
+    unsigned int        invert_pattern;
+    RegisterNum         foreground;
+    unsigned int        plane_mask;
+    unsigned int        write_style;
+    unsigned int        shading_enabled;
+    char                shading_character;
+    int                 shading_reference;
+    unsigned int        shading_reference_dim;
 } RegisWriteControls;
 
 typedef struct RegisDataFragment {
-    char const *start;
-    unsigned int pos;
-    unsigned int len;
+    char const          *start;
+    unsigned int        pos;
+    unsigned int        len;
 } RegisDataFragment;
 
 typedef enum RegisParseLevel {
     INPUT,
     OPTIONSET,
 } RegisParseLevel;
+/* *INDENT-ON* */
+
+#define CURVE_POSITION_ARC_EDGE     0U
+#define CURVE_POSITION_ARC_CENTER   1U
+#define CURVE_POSITION_OPEN_CURVE   2U
+#define CURVE_POSITION_CLOSED_CURVE 3U
+
+#define MAX_INPUT_CURVE_POINTS 16U
+#define MAX_CURVE_POINTS (MAX_INPUT_CURVE_POINTS + 4U)
 
 typedef struct RegisParseState {
     RegisDataFragment input;
@@ -77,6 +99,12 @@ typedef struct RegisParseState {
     RegisParseLevel level;
     char command;
     char option;
+    /* curve options */
+    int curve_mode;
+    int arclen;
+    int x_points[MAX_CURVE_POINTS];
+    int y_points[MAX_CURVE_POINTS];
+    unsigned int num_points;
 } RegisParseState;
 
 typedef struct RegisGraphicsContext {
@@ -87,6 +115,8 @@ typedef struct RegisGraphicsContext {
     RegisWriteControls temporary_write_controls;
     int graphics_output_cursor_x;
     int graphics_output_cursor_y;
+    unsigned int pattern_count;
+    unsigned int pattern_bit;
 } RegisGraphicsContext;
 
 #define MAX_PATTERN_BITS 8U
@@ -102,13 +132,90 @@ typedef struct RegisGraphicsContext {
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
 
 static void
+draw_patterned_pixel(RegisGraphicsContext *context, int x, int y)
+{
+    RegisterNum color = 0;
+
+    if (context->pattern_count >= context->temporary_write_controls.pattern_multiplier) {
+	context->pattern_count = 0U;
+	context->pattern_bit = ROT_LEFT(context->pattern_bit);
+    }
+    context->pattern_count++;
+
+    switch (context->temporary_write_controls.write_style) {
+    case WRITE_STYLE_OVERLAY:
+	/* update pixels with foreground when pattern is 1, unchanged when pattern is 0 */
+	if (!(context->temporary_write_controls.pattern & context->pattern_bit)) {
+	    return;
+	}
+
+	if (context->temporary_write_controls.invert_pattern) {
+	    color = context->background;
+	} else {
+	    color = context->temporary_write_controls.foreground;
+	}
+	break;
+
+    case WRITE_STYLE_REPLACE:
+	/* update pixels with foreground when pattern is 1, background when pattern is 0 */
+	{
+	    RegisterNum fg, bg;
+
+	    if (context->temporary_write_controls.invert_pattern) {
+		fg = context->background;
+		bg = context->temporary_write_controls.foreground;
+	    } else {
+		fg = context->temporary_write_controls.foreground;
+		bg = context->background;
+	    }
+	    color = ((context->temporary_write_controls.pattern &
+		      context->pattern_bit)
+		     ? fg
+		     : bg);
+	}
+	break;
+
+    case WRITE_STYLE_COMPLEMENT:
+	/* update pixels with background when pattern is 1, unchanged when pattern is 0 */
+	{
+	    RegisterNum valid_bits;
+
+	    if (!(context->temporary_write_controls.pattern & context->pattern_bit)) {
+		return;
+	    }
+
+	    /* generate a mask covering all valid register address bits (but not past 2**16) */
+	    valid_bits = context->graphic->valid_registers;
+	    valid_bits--;
+	    valid_bits |= 1U;
+	    valid_bits |= valid_bits >> 1U;
+	    valid_bits |= valid_bits >> 2U;
+	    valid_bits |= valid_bits >> 4U;
+	    valid_bits |= valid_bits >> 8U;
+
+	    color = read_pixel(context->graphic, x, y);
+	    if (color == COLOR_HOLE)
+		color = context->background;
+	    color = color ^ valid_bits;
+	}
+	break;
+
+    case WRITE_STYLE_ERASE:
+	/* update pixels with foreground */
+	if (context->temporary_write_controls.invert_pattern) {
+	    color = context->temporary_write_controls.foreground;
+	} else {
+	    color = context->background;
+	}
+	break;
+    }
+
+    draw_solid_pixel(context->graphic, x, y, color);
+}
+
+static void
 draw_patterned_line(RegisGraphicsContext *context, int x1, int y1, int x2, int y2)
 {
-    RegisterNum fg, bg, color;
-    unsigned int pattern;
-    unsigned int mult;
-    unsigned int count;
-    unsigned int bit;
     int x, y;
     int dx, dy;
     int dir, diff;
@@ -116,27 +223,11 @@ draw_patterned_line(RegisGraphicsContext *context, int x1, int y1, int x2, int y
     dx = abs(x1 - x2);
     dy = abs(y1 - y2);
 
-    if (context->temporary_write_controls.invert_pattern) {
-	fg = context->background;
-	bg = context->temporary_write_controls.foreground;
-    } else {
-	fg = context->temporary_write_controls.foreground;
-	bg = context->background;
-    }
-    pattern = context->temporary_write_controls.pattern;
-    mult = context->temporary_write_controls.pattern_multiplier;
-    count = 0U;
-    bit = 1U;
-
     if (dx > dy) {
 	if (x1 > x2) {
 	    int tmp;
-	    tmp = x1;
-	    x1 = x2;
-	    x2 = tmp;
-	    tmp = y1;
-	    y1 = y2;
-	    y2 = tmp;
+	    EXCHANGE(x1, x2, tmp);
+	    EXCHANGE(y1, y2, tmp);
 	}
 	if (y1 < y2)
 	    dir = 1;
@@ -153,23 +244,13 @@ draw_patterned_line(RegisGraphicsContext *context, int x1, int y1, int x2, int y
 		y += dir;
 	    }
 	    diff += dy;
-	    if (count >= mult) {
-		count = 0U;
-		bit = ROT_LEFT(bit);
-	    }
-	    count++;
-	    color = (pattern & bit) ? fg : bg;
-	    draw_solid_pixel(context->graphic, x, y, color);
+	    draw_patterned_pixel(context, x, y);
 	}
     } else {
 	if (y1 > y2) {
 	    int tmp;
-	    tmp = y1;
-	    y1 = y2;
-	    y2 = tmp;
-	    tmp = x1;
-	    x1 = x2;
-	    x2 = tmp;
+	    EXCHANGE(y1, y2, tmp);
+	    EXCHANGE(x1, x2, tmp);
 	}
 	if (x1 < x2)
 	    dir = 1;
@@ -186,15 +267,672 @@ draw_patterned_line(RegisGraphicsContext *context, int x1, int y1, int x2, int y
 		x += dir;
 	    }
 	    diff += dx;
-	    if (count >= mult) {
-		count = 0U;
-		bit = ROT_LEFT(bit);
-	    }
-	    count++;
-	    color = (pattern & bit) ? fg : bg;
-	    draw_solid_pixel(context->graphic, x, y, color);
+	    draw_patterned_pixel(context, x, y);
 	}
     }
+}
+
+typedef struct {
+    int dxx;
+    int dxy;
+    int dyx;
+    int dyy;
+} quadmap_coords;
+
+static void
+draw_patterned_arc(RegisGraphicsContext *context,
+		   int cx, int cy,
+		   int ex, int ey,
+		   int a_start, int a_length)
+{
+    const double third = hypot((cx - ex), (cy - ey));
+    const int radius = (int) third;
+    const int ra = radius;
+    const int rb = radius;
+    const quadmap_coords neg_quadmap[4] =
+    {
+	{-1, 0, 0, +1},
+	{0, -1, -1, 0},
+	{+1, 0, 0, -1},
+	{0, +1, +1, 0},
+    };
+    const quadmap_coords pos_quadmap[4] =
+    {
+	{-1, 0, 0, -1},
+	{0, -1, +1, 0},
+	{+1, 0, 0, +1},
+	{0, +1, -1, 0},
+    };
+    const quadmap_coords *quadmap;
+    int total_points;
+    int points_start, points_stop;
+    int points;
+    int iterations;
+    int quad;
+    long rx, ry;
+    long dx, dy;
+    long e2;
+    long error;
+
+    if (a_length == 0)
+	return;
+    if (a_length > 0) {
+	quadmap = pos_quadmap;
+    } else {
+	quadmap = neg_quadmap;
+	if (a_start != 0)
+	    a_start = 360 - a_start;
+    }
+
+    rx = -ra;
+    ry = 0;
+    e2 = rb;
+    dx = (2 * rx + 1) * e2 * e2;
+    dy = rx * rx;
+    error = dx + dy;
+    total_points = 0;
+    do {
+	total_points += 4;
+	e2 = 2 * error;
+	if (e2 >= dx) {
+	    rx++;
+	    dx += 2 * rb * rb;
+	    error += dx;
+	}
+	if (e2 <= dy) {
+	    ry++;
+	    dy += 2 * ra * ra;
+	    error += dy;
+	}
+    }
+    while (rx <= 0);
+    points_start = (total_points * a_start) / 360;
+    points_stop = (total_points * a_start +
+		   total_points * abs(a_length) + 359) / 360;
+    TRACE(("drawing arc with %d points from %d angle for %d degrees (from point %d to %d)\n",
+	   total_points, a_start, a_length, points_start, points_stop));
+
+    points = 0;
+    for (iterations = 0; iterations < 8; iterations++) {
+	quad = iterations & 0x3;
+
+	rx = -ra;
+	ry = 0;
+	e2 = rb;
+	dx = (2 * rx + 1) * e2 * e2;
+	dy = rx * rx;
+	error = dx + dy;
+	do {
+	    if (points >= points_start && points <= points_stop) {
+		draw_patterned_pixel(context,
+				     cx +
+				     quadmap[quad].dxx * rx +
+				     quadmap[quad].dxy * ry,
+				     cy +
+				     quadmap[quad].dyx * rx +
+				     quadmap[quad].dyy * ry);
+	    }
+	    points++;
+
+	    e2 = 2 * error;
+	    if (e2 >= dx) {
+		rx++;
+		dx += 2 * rb * rb;
+		error += dx;
+	    }
+	    if (e2 <= dy) {
+		ry++;
+		dy += 2 * ra * ra;
+		error += dy;
+	    }
+	}
+	while (rx <= 0);
+    }
+}
+
+/*
+ * The plot* functions are based on optimized rasterization primitves written by Zingl Alois.
+ * See http://members.chello.at/easyfilter/bresenham.html
+ */
+
+/*
+ * FIXME:
+ * This is a terrible temporary hack.  The plot functions below can be adapted
+ * to work like the other rasterization functions but there's no point in doing
+ * that until we know we don't have to write something completely different.
+ */
+static RegisGraphicsContext *global_context;
+static void
+setPixel(int x, int y)
+{
+    draw_patterned_pixel(global_context, x, y);
+}
+
+static void
+plotLine(int x0, int y0, int x1, int y1)
+{
+    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy, e2;	/* error value e_xy */
+
+    for (;;) {			/* loop */
+	setPixel(x0, y0);
+	e2 = 2 * err;
+	if (e2 >= dy) {		/* e_xy+e_x > 0 */
+	    if (x0 == x1)
+		break;
+	    err += dy;
+	    x0 += sx;
+	}
+	if (e2 <= dx) {		/* e_xy+e_y < 0 */
+	    if (y0 == y1)
+		break;
+	    err += dx;
+	    y0 += sy;
+	}
+    }
+}
+
+static void
+plotQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2)
+{				/* plot a limited quadratic Bezier segment */
+    int sx = x2 - x1;
+    int sy = y2 - y1;
+    long xx = x0 - x1;
+    long yy = y0 - y1, xy;	/* relative values for checks */
+    double dx, dy, err;
+    double cur = xx * sy - yy * sx;	/* curvature */
+
+    assert(xx * sx <= 0 && yy * sy <= 0);	/* sign of gradient must not change */
+
+    if (sx * (long) sx + sy * (long) sy > xx * xx + yy * yy) {	/* begin with longer part */
+	x2 = x0;
+	x0 = sx + x1;
+	y2 = y0;
+	y0 = sy + y1;
+	cur = -cur;		/* swap P0 P2 */
+    }
+    if (cur != 0) {		/* no straight line */
+	xx += sx;
+	xx *= sx = x0 < x2 ? 1 : -1;	/* x step direction */
+	yy += sy;
+	yy *= sy = y0 < y2 ? 1 : -1;	/* y step direction */
+	xy = 2 * xx * yy;
+	xx *= xx;
+	yy *= yy;		/* differences 2nd degree */
+	if (cur * sx * sy < 0) {	/* negated curvature? */
+	    xx = -xx;
+	    yy = -yy;
+	    xy = -xy;
+	    cur = -cur;
+	}
+	dx = 4.0 * sy * cur * (x1 - x0) + xx - xy;	/* differences 1st degree */
+	dy = 4.0 * sx * cur * (y0 - y1) + yy - xy;
+	xx += xx;
+	yy += yy;
+	err = dx + dy + xy;	/* error 1st step */
+	do {
+	    setPixel(x0, y0);	/* plot curve */
+	    if (x0 == x2 && y0 == y2)
+		return;		/* last pixel -> curve finished */
+	    y1 = 2 * err < dx;	/* save value for test of y step */
+	    if (2 * err > dy) {
+		x0 += sx;
+		dx -= xy;
+		err += dy += yy;
+	    }			/* x step */
+	    if (y1) {
+		y0 += sy;
+		dy -= xy;
+		err += dx += xx;
+	    }			/* y step */
+	} while (dy < 0 && dx > 0);	/* gradient negates -> algorithm fails */
+    }
+    plotLine(x0, y0, x2, y2);	/* plot remaining part to end */
+}
+
+#if 0
+static void
+plotQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2)
+{				/* plot any quadratic Bezier curve */
+    int x = x0 - x1;
+    int y = y0 - y1;
+    double t = x0 - 2 * x1 + x2;
+    double r;
+
+    if ((long) x * (x2 - x1) > 0) {	/* horizontal cut at P4? */
+	if ((long) y * (y2 - y1) > 0)	/* vertical cut at P6 too? */
+	    if (fabs((y0 - 2 * y1 + y2) / t * x) > abs(y)) {	/* which first? */
+		x0 = x2;
+		x2 = x + x1;
+		y0 = y2;
+		y2 = y + y1;	/* swap points */
+	    }			/* now horizontal cut at P4 comes first */
+	t = (x0 - x1) / t;
+	r = (1 - t) * ((1 - t) * y0 + 2.0 * t * y1) + t * t * y2;	/* By(t=P4) */
+	t = (x0 * x2 - x1 * x1) * t / (x0 - x1);	/* gradient dP4/dx=0 */
+	x = floor(t + 0.5);
+	y = floor(r + 0.5);
+	r = (y1 - y0) * (t - x0) / (x1 - x0) + y0;	/* intersect P3 | P0 P1 */
+	plotQuadBezierSeg(x0, y0, x, floor(r + 0.5), x, y);
+	r = (y1 - y2) * (t - x2) / (x1 - x2) + y2;	/* intersect P4 | P1 P2 */
+	x0 = x1 = x;
+	y0 = y;
+	y1 = floor(r + 0.5);	/* P0 = P4, P1 = P8 */
+    }
+    if ((long) (y0 - y1) * (y2 - y1) > 0) {	/* vertical cut at P6? */
+	t = y0 - 2 * y1 + y2;
+	t = (y0 - y1) / t;
+	r = (1 - t) * ((1 - t) * x0 + 2.0 * t * x1) + t * t * x2;	/* Bx(t=P6) */
+	t = (y0 * y2 - y1 * y1) * t / (y0 - y1);	/* gradient dP6/dy=0 */
+	x = floor(r + 0.5);
+	y = floor(t + 0.5);
+	r = (x1 - x0) * (t - y0) / (y1 - y0) + x0;	/* intersect P6 | P0 P1 */
+	plotQuadBezierSeg(x0, y0, floor(r + 0.5), y, x, y);
+	r = (x1 - x2) * (t - y2) / (y1 - y2) + x2;	/* intersect P7 | P1 P2 */
+	x0 = x;
+	x1 = floor(r + 0.5);
+	y0 = y1 = y;		/* P0 = P6, P1 = P7 */
+    }
+    plotQuadBezierSeg(x0, y0, x1, y1, x2, y2);	/* remaining part */
+}
+#endif
+
+static void
+plotCubicBezierSeg(int x0, int y0, float x1, float y1,
+		   float x2, float y2, int x3, int y3)
+{				/* plot limited cubic Bezier segment */
+    int f, fx, fy;
+    int leg = 1;
+    int sx = x0 < x3 ? 1 : -1;
+    int sy = y0 < y3 ? 1 : -1;	/* step direction */
+    float xc = -fabs(x0 + x1 - x2 - x3);
+    float xa = xc - 4 * sx * (x1 - x2);
+    float xb = sx * (x0 - x1 - x2 + x3);
+    float yc = -fabs(y0 + y1 - y2 - y3);
+    float ya = yc - 4 * sy * (y1 - y2);
+    float yb = sy * (y0 - y1 - y2 + y3);
+    double ab, ac, bc, cb, xx, xy, yy, dx, dy, ex, *pxy;
+    double EP = 0.01;
+    /* check for curve restrains */
+    /* slope P0-P1 == P2-P3    and  (P0-P3 == P1-P2      or   no slope change) */
+    assert((x1 - x0) * (x2 - x3) < EP &&
+	   ((x3 - x0) * (x1 - x2) < EP || xb * xb < xa * xc + EP));
+    assert((y1 - y0) * (y2 - y3) < EP &&
+	   ((y3 - y0) * (y1 - y2) < EP || yb * yb < ya * yc + EP));
+
+    if (xa == 0 && ya == 0) {	/* quadratic Bezier */
+	sx = floor((3 * x1 - x0 + 1) / 2);
+	sy = floor((3 * y1 - y0 + 1) / 2);	/* new midpoint */
+	return plotQuadBezierSeg(x0, y0, sx, sy, x3, y3);
+    }
+    x1 = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) + 1;	/* line lengths */
+    x2 = (x2 - x3) * (x2 - x3) + (y2 - y3) * (y2 - y3) + 1;
+    do {			/* loop over both ends */
+	ab = xa * yb - xb * ya;
+	ac = xa * yc - xc * ya;
+	bc = xb * yc - xc * yb;
+	ex = ab * (ab + ac - 3 * bc) + ac * ac;		/* P0 part of self-intersection loop? */
+	f = ex > 0 ? 1 : sqrt(1 + 1024 / x1);	/* calculate resolution */
+	ab *= f;
+	ac *= f;
+	bc *= f;
+	ex *= f * f;		/* increase resolution */
+	xy = 9 * (ab + ac + bc) / 8;
+	cb = 8 * (xa - ya);	/* init differences of 1st degree */
+	dx = 27 * (8 * ab * (yb * yb - ya * yc) +
+		   ex * (ya + 2 * yb + yc)) / 64 - ya * ya * (xy - ya);
+	dy = 27 * (8 * ab * (xb * xb - xa * xc) -
+		   ex * (xa + 2 * xb + xc)) / 64 - xa * xa * (xy + xa);
+	/* init differences of 2nd degree */
+	xx = 3 * (3 * ab * (3 * yb * yb - ya * ya - 2 * ya * yc) -
+		  ya * (3 * ac * (ya + yb) + ya * cb)) / 4;
+	yy = 3 * (3 * ab * (3 * xb * xb - xa * xa - 2 * xa * xc) -
+		  xa * (3 * ac * (xa + xb) + xa * cb)) / 4;
+	xy = xa * ya * (6 * ab + 6 * ac - 3 * bc + cb);
+	ac = ya * ya;
+	cb = xa * xa;
+	xy = 3 * (xy + 9 * f * (cb * yb * yc - xb * xc * ac) -
+		  18 * xb * yb * ab) / 8;
+
+	if (ex < 0) {		/* negate values if inside self-intersection loop */
+	    dx = -dx;
+	    dy = -dy;
+	    xx = -xx;
+	    yy = -yy;
+	    xy = -xy;
+	    ac = -ac;
+	    cb = -cb;
+	}			/* init differences of 3rd degree */
+	ab = 6 * ya * ac;
+	ac = -6 * xa * ac;
+	bc = 6 * ya * cb;
+	cb = -6 * xa * cb;
+	dx += xy;
+	ex = dx + dy;
+	dy += xy;		/* error of 1st step */
+
+	for (pxy = &xy, fx = fy = f; x0 != x3 && y0 != y3;) {
+	    setPixel(x0, y0);	/* plot curve */
+	    do {		/* move sub-steps of one pixel */
+		if (dx > *pxy || dy < *pxy)
+		    goto exit;	/* confusing values */
+		y1 = 2 * ex - dy;	/* save value for test of y step */
+		if (2 * ex >= dx) {	/* x sub-step */
+		    fx--;
+		    ex += dx += xx;
+		    dy += xy += ac;
+		    yy += bc;
+		    xx += ab;
+		}
+		if (y1 <= 0) {	/* y sub-step */
+		    fy--;
+		    ex += dy += yy;
+		    dx += xy += bc;
+		    xx += ac;
+		    yy += cb;
+		}
+	    } while (fx > 0 && fy > 0);		/* pixel complete? */
+	    if (2 * fx <= f) {
+		x0 += sx;
+		fx += f;
+	    }			/* x step */
+	    if (2 * fy <= f) {
+		y0 += sy;
+		fy += f;
+	    }			/* y step */
+	    if (pxy == &xy && dx < 0 && dy > 0)
+		pxy = &EP;	/* pixel ahead valid */
+	}
+      exit:xx = x0;
+	x0 = x3;
+	x3 = xx;
+	sx = -sx;
+	xb = -xb;		/* swap legs */
+	yy = y0;
+	y0 = y3;
+	y3 = yy;
+	sy = -sy;
+	yb = -yb;
+	x1 = x2;
+    } while (leg--);		/* try other end */
+    plotLine(x0, y0, x3, y3);	/* remaining part in case of cusp or crunode */
+}
+
+static void
+plotCubicBezier(int x0, int y0, int x1, int y1,
+		int x2, int y2, int x3, int y3)
+{				/* plot any cubic Bezier curve */
+    int n = 0, i = 0;
+    long xc = x0 + x1 - x2 - x3;
+    long xa = xc - 4 * (x1 - x2);
+    long xb = x0 - x1 - x2 + x3;
+    long xd = xb + 4 * (x1 + x2);
+    long yc = y0 + y1 - y2 - y3;
+    long ya = yc - 4 * (y1 - y2);
+    long yb = y0 - y1 - y2 + y3;
+    long yd = yb + 4 * (y1 + y2);
+    float fx0 = x0, fx1, fx2, fx3, fy0 = y0, fy1, fy2, fy3;
+    double t1 = xb * xb - xa * xc, t2, t[5];
+
+#ifdef DEBUG_BEZIER
+    printf("plotCubicBezier(%d,%d, %d,%d, %d,%d, %d,%d\n",
+	   x0, y0, x1, y1, x2, y2, x3, y3);
+#endif
+    /* sub-divide curve at gradient sign changes */
+    if (xa == 0) {		/* horizontal */
+	if (abs(xc) < 2 * abs(xb))
+	    t[n++] = xc / (2.0 * xb);	/* one change */
+    } else if (t1 > 0.0) {	/* two changes */
+	t2 = sqrt(t1);
+	t1 = (xb - t2) / xa;
+	if (fabs(t1) < 1.0)
+	    t[n++] = t1;
+	t1 = (xb + t2) / xa;
+	if (fabs(t1) < 1.0)
+	    t[n++] = t1;
+    }
+    t1 = yb * yb - ya * yc;
+    if (ya == 0) {		/* vertical */
+	if (abs(yc) < 2 * abs(yb))
+	    t[n++] = yc / (2.0 * yb);	/* one change */
+    } else if (t1 > 0.0) {	/* two changes */
+	t2 = sqrt(t1);
+	t1 = (yb - t2) / ya;
+	if (fabs(t1) < 1.0)
+	    t[n++] = t1;
+	t1 = (yb + t2) / ya;
+	if (fabs(t1) < 1.0)
+	    t[n++] = t1;
+    }
+    for (i = 1; i < n; i++)	/* bubble sort of 4 points */
+	if ((t1 = t[i - 1]) > t[i]) {
+	    t[i - 1] = t[i];
+	    t[i] = t1;
+	    i = 0;
+	}
+
+    t1 = -1.0;
+    t[n] = 1.0;			/* begin / end point */
+    for (i = 0; i <= n; i++) {	/* plot each segment separately */
+	t2 = t[i];		/* sub-divide at t[i-1], t[i] */
+	fx1 = (t1 * (t1 * xb - 2 * xc) -
+	       t2 * (t1 * (t1 * xa - 2 * xb) + xc) + xd) / 8 - fx0;
+	fy1 = (t1 * (t1 * yb - 2 * yc) -
+	       t2 * (t1 * (t1 * ya - 2 * yb) + yc) + yd) / 8 - fy0;
+	fx2 = (t2 * (t2 * xb - 2 * xc) -
+	       t1 * (t2 * (t2 * xa - 2 * xb) + xc) + xd) / 8 - fx0;
+	fy2 = (t2 * (t2 * yb - 2 * yc) -
+	       t1 * (t2 * (t2 * ya - 2 * yb) + yc) + yd) / 8 - fy0;
+	fx0 -= fx3 = (t2 * (t2 * (3 * xb - t2 * xa) - 3 * xc) + xd) / 8;
+	fy0 -= fy3 = (t2 * (t2 * (3 * yb - t2 * ya) - 3 * yc) + yd) / 8;
+	x3 = floor(fx3 + 0.5);
+	y3 = floor(fy3 + 0.5);	/* scale bounds to int */
+	if (fx0 != 0.0) {
+	    fx1 *= fx0 = (x0 - x3) / fx0;
+	    fx2 *= fx0;
+	}
+	if (fy0 != 0.0) {
+	    fy1 *= fy0 = (y0 - y3) / fy0;
+	    fy2 *= fy0;
+	}
+	if (x0 != x3 || y0 != y3)	/* segment t1 - t2 */
+	    plotCubicBezierSeg(x0, y0,
+			       x0 + fx1, y0 + fy1,
+			       x0 + fx2, y0 + fy2,
+			       x3, y3);
+	x0 = x3;
+	y0 = y3;
+	fx0 = fx3;
+	fy0 = fy3;
+	t1 = t2;
+    }
+}
+
+#if 0
+static void
+plotQuadSpline(int n, int x[], int y[], int skip_segments)
+{				/* plot quadratic spline, destroys input arrays x,y */
+#define M_MAX 12
+    float mi = 1, m[M_MAX];	/* diagonal constants of matrix */
+    int i, x0, y0, x1, y1, x2, y2;
+#ifdef DEBUG_SPLINE_SEGMENTS
+    int color = 0;
+#endif
+
+    assert(n > 1);		/* need at least 3 points P[0]..P[n] */
+
+#ifdef DEBUG_SPLINE_POINTS
+    {
+	int save_pattern;
+
+	i = 0;
+	global_context->temporary_write_controls.foreground = 11;
+	save_pattern = global_context->temporary_write_controls.pattern;
+	global_context->temporary_write_controls.pattern = 0xff;
+	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0, 360);
+	i++;
+	global_context->temporary_write_controls.foreground = 15;
+	for (; i < n; i++) {
+	    draw_patterned_arc(global_context,
+			       x[i], y[i],
+			       x[i] + 2, y[i],
+			       0, 360);
+	}
+	global_context->temporary_write_controls.foreground = 10;
+	draw_patterned_arc(global_context, x[i], y[n], x[i] + 2, y[i], 0, 360);
+	global_context->temporary_write_controls.pattern = save_pattern;
+    }
+#endif
+
+    x2 = x[n];
+    y2 = y[n];
+
+    x[1] = x0 = 8 * x[1] - 2 * x[0];	/* first row of matrix */
+    y[1] = y0 = 8 * y[1] - 2 * y[0];
+
+    for (i = 2; i < n; i++) {	/* forward sweep */
+	if (i - 2 < M_MAX)
+	    m[i - 2] = mi = 1.0 / (6.0 - mi);
+	x[i] = x0 = floor(8 * x[i] - x0 * mi + 0.5);	/* store yi */
+	y[i] = y0 = floor(8 * y[i] - y0 * mi + 0.5);
+    }
+    x1 = floor((x0 - 2 * x2) / (5.0 - mi) + 0.5);	/* correction last row */
+    y1 = floor((y0 - 2 * y2) / (5.0 - mi) + 0.5);
+
+    for (i = n - 2; i > 0; i--) {	/* back substitution */
+	if (i <= M_MAX)
+	    mi = m[i - 1];
+	x0 = floor((x[i] - x1) * mi + 0.5);	/* next corner */
+	y0 = floor((y[i] - y1) * mi + 0.5);
+#ifdef DEBUG_SPLINE_SEGMENTS
+	color++;
+	global_context->temporary_write_controls.foreground = color;
+#endif
+	if ((n - 2) - i < skip_segments)
+	    plotQuadBezier((x0 + x1) / 2, (y0 + y1) / 2, x1, y1, x2, y2);
+	x2 = (x0 + x1) / 2;
+	x1 = x0;
+	y2 = (y0 + y1) / 2;
+	y1 = y0;
+    }
+#ifdef DEBUG_SPLINE_SEGMENTS
+    color++;
+    global_context->temporary_write_controls.foreground = color;
+#endif
+    if (skip_segments > 0)
+	plotQuadBezier(x[0], y[0], x1, y1, x2, y2);
+}
+#endif
+
+static void
+plotCubicSpline(int n, int x[], int y[], int skip_first_last)
+{
+#define M_MAX 12
+    float mi = 0.25, m[M_MAX];	/* diagonal constants of matrix */
+    int x3, y3, x4, y4;
+    int i, x0, y0, x1, y1, x2, y2;
+#ifdef DEBUG_SPLINE_SEGMENTS
+    int color = 0;
+#endif
+
+    assert(n > 2);		/* need at least 4 points P[0]..P[n] */
+
+#ifdef DEBUG_SPLINE_POINTS
+    {
+	int save_pattern;
+
+	i = 0;
+	global_context->temporary_write_controls.foreground = 11;
+	save_pattern = global_context->temporary_write_controls.pattern;
+	global_context->temporary_write_controls.pattern = 0xff;
+	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0, 360);
+	i++;
+	global_context->temporary_write_controls.foreground = 15;
+	for (; i < n; i++) {
+	    draw_patterned_arc(global_context,
+			       x[i], y[i],
+			       x[i] + 2, y[i],
+			       0, 360);
+	}
+	global_context->temporary_write_controls.foreground = 10;
+	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0, 360);
+	global_context->temporary_write_controls.pattern = save_pattern;
+    }
+#endif
+
+    x3 = x[n - 1];
+    y3 = y[n - 1];
+    x4 = x[n];
+    y4 = y[n];
+
+    x[1] = x0 = 12 * x[1] - 3 * x[0];	/* first row of matrix */
+    y[1] = y0 = 12 * y[1] - 3 * y[0];
+
+    for (i = 2; i < n; i++) {	/* foreward sweep */
+	if (i - 2 < M_MAX)
+	    m[i - 2] = mi = 0.25 / (2.0 - mi);
+	x[i] = x0 = floor(12 * x[i] - 2 * x0 * mi + 0.5);
+	y[i] = y0 = floor(12 * y[i] - 2 * y0 * mi + 0.5);
+    }
+    x2 = floor((x0 - 3 * x4) / (7 - 4 * mi) + 0.5);	/* correct last row */
+    printf("y0=%d, y4=%d mi=%g\n", y0, y4, mi);
+    y2 = floor((y0 - 3 * y4) / (7 - 4 * mi) + 0.5);
+    printf("y2=%d, y3=%d, y4=%d\n", y2, y3, y4);
+#ifdef DEBUG_SPLINE_SEGMENTS
+    color++;
+    global_context->temporary_write_controls.foreground = color;
+#endif
+    if (!skip_first_last)
+	plotCubicBezier(x3, y3, (x2 + x4) / 2, (y2 + y4) / 2, x4, y4, x4, y4);
+
+    if (n - 3 < M_MAX)
+	mi = m[n - 3];
+    x1 = floor((x[n - 2] - 2 * x2) * mi + 0.5);
+    y1 = floor((y[n - 2] - 2 * y2) * mi + 0.5);
+    for (i = n - 3; i > 0; i--) {	/* back substitution */
+	if (i <= M_MAX)
+	    mi = m[i - 1];
+	x0 = floor((x[i] - 2 * x1) * mi + 0.5);
+	y0 = floor((y[i] - 2 * y1) * mi + 0.5);
+	x4 = floor((x0 + 4 * x1 + x2 + 3) / 6.0);	/* reconstruct P[i] */
+	y4 = floor((y0 + 4 * y1 + y2 + 3) / 6.0);
+#ifdef DEBUG_SPLINE_SEGMENTS
+	color++;
+	global_context->temporary_write_controls.foreground = color;
+#endif
+	plotCubicBezier(x4, y4,
+			floor((2 * x1 + x2) / 3 + 0.5),
+			floor((2 * y1 + y2) / 3 + 0.5),
+			floor((x1 + 2 * x2) / 3 + 0.5),
+			floor((y1 + 2 * y2) / 3 + 0.5),
+			x3, y3);
+	x3 = x4;
+	y3 = y4;
+	x2 = x1;
+	y2 = y1;
+	x1 = x0;
+	y1 = y0;
+    }
+    x0 = x[0];
+    x4 = floor((3 * x0 + 7 * x1 + 2 * x2 + 6) / 12.0);	/* reconstruct P[1] */
+    y0 = y[0];
+    y4 = floor((3 * y0 + 7 * y1 + 2 * y2 + 6) / 12.0);
+#ifdef DEBUG_SPLINE_SEGMENTS
+    global_context->temporary_write_controls.foreground = 4;
+#endif
+    plotCubicBezier(x4, y4,
+		    floor((2 * x1 + x2) / 3 + 0.5),
+		    floor((2 * y1 + y2) / 3 + 0.5),
+		    floor((x1 + 2 * x2) / 3 + 0.5),
+		    floor((y1 + 2 * y2) / 3 + 0.5),
+		    x3, y3);
+#ifdef DEBUG_SPLINE_SEGMENTS
+    color++;
+    global_context->temporary_write_controls.foreground = color;
+#endif
+    if (!skip_first_last)
+	plotCubicBezier(x0, y0, x0, y0, (x0 + x1) / 2, (y0 + y1) / 2, x4, y4);
 }
 
 static void
@@ -337,6 +1075,7 @@ static int
 extract_regis_num(RegisDataFragment *input, RegisDataFragment *output)
 {
     char ch = 0;
+    int has_digits = 0;
 
     assert(input);
     assert(output);
@@ -352,11 +1091,12 @@ extract_regis_num(RegisDataFragment *input, RegisDataFragment *output)
 	    ch != '8' && ch != '9') {
 	    break;
 	}
+	has_digits = 1;
     }
 
     /* FIXME: what degenerate forms should be accepted ("E10" "1E" "1e" "1." "1ee10")? */
     /* FIXME: the terminal is said to support "floating point values", truncating to int... what do these look like? */
-    if (output->len > 0U && ch == 'E') {
+    if (has_digits && ch == 'E') {
 	input->pos++;
 	output->len++;
 	for (; input->pos < input->len; input->pos++, output->len++) {
@@ -379,6 +1119,7 @@ static int
 extract_regis_pixelvector(RegisDataFragment *input, RegisDataFragment *output)
 {
     char ch;
+    int has_digits;
 
     assert(input);
     assert(output);
@@ -387,6 +1128,15 @@ extract_regis_pixelvector(RegisDataFragment *input, RegisDataFragment *output)
     output->len = 0U;
     output->pos = 0U;
 
+    if (input->pos < input->len) {
+	ch = input->start[input->pos];
+	if (ch == '+' || ch == '-') {
+	    input->pos++;
+	    output->len++;
+	}
+    }
+
+    has_digits = 0;
     for (; input->pos < input->len; input->pos++, output->len++) {
 	ch = input->start[input->pos];
 	if (ch != '0' && ch != '1' && ch != '2' && ch != '3' &&
@@ -395,7 +1145,7 @@ extract_regis_pixelvector(RegisDataFragment *input, RegisDataFragment *output)
 	}
     }
 
-    if (output->len < 1U)
+    if (!has_digits)
 	return 0;
 
     return 1;
@@ -566,10 +1316,14 @@ extract_regis_option(RegisDataFragment *input,
     /* FIXME: handle strings with parens, nested parens, etc. */
     for (; input->pos < input->len; input->pos++, output->len++) {
 	ch = input->start[input->pos];
+	TRACE(("looking at option char %c\n", ch));
 	/* FIXME: any special rules for commas?  any need to track parens? */
-	if (ch == '(')
+	if (ch == '(') {
+	    TRACE(("nesting++\n"));
 	    nesting++;
+	}
 	if (ch == ')') {
+	    TRACE(("nesting--\n"));
 	    nesting--;
 	    if (nesting < 0) {
 		TRACE(("DATA_ERROR: found ReGIS option has value with too many close parens \"%c\"\n", *option));
@@ -616,6 +1370,7 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
 	return 0;
     }
 
+    TRACE(("converting \"%s\" to an int\n", fragment_to_tempstr(input)));
     *out = atoi(fragment_to_tempstr(input));
     return 1;
 }
@@ -1344,15 +2099,18 @@ parse_regis_command(RegisParseState *state)
 	 *      # values; this option can not be nested)
 	 * (C)  # position is the center, current location is the
 	 *      # circumference (stays in effect until next command)
-	 * (E)  # end closed curve sequence (drawing is performed here)
-	 * (S)  # begin open curve sequence (FIXME: finish doc)
+	 * (E)  # end curve sequence (drawing is performed here)
+	 * (S)  # begin open curve sequence
 	 * (W)  # temporary write options (see write command)
 	 * [<center, circumference position>]  # center if (C), otherwise point on circumference
-	 * [<point in closed curve sequence>]...  # if between (B) and (E)
+	 * [<point in curve sequence>]...  # if between (B) and (E)
 	 * <pv>...  # if between (B) and (E)
 	 */
 	TRACE(("found ReGIS command \"%c\" (curve)\n", ch));
 	state->command = 'c';
+	state->curve_mode = CURVE_POSITION_ARC_EDGE;
+	state->arclen = 360;
+	state->num_points = 0U;
 	break;
     case 'F':
     case 'f':
@@ -1539,6 +2297,7 @@ parse_regis_command(RegisParseState *state)
 	state->option = '_';
 	return 0;
     }
+
     state->option = '_';
 
     return 1;
@@ -1574,33 +2333,170 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	switch (state->option) {
 	case 'A':
 	case 'a':
-	    TRACE(("found arc length \"%s\" FIXME\n",
-		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
+	    TRACE(("found arc length \"%s\"\n", fragment_to_tempstr(&optionarg)));
+	    {
+		RegisDataFragment arclen;
+
+		if (!extract_regis_num(&optionarg, &arclen)) {
+		    TRACE(("DATA_ERROR: expected int in curve arclen option: \"%s\"\n",
+			   fragment_to_tempstr(&arclen)));
+		    break;
+		}
+		TRACE(("arc length string %s\n", fragment_to_tempstr(&arclen)));
+		if (!regis_num_to_int(&arclen, &state->arclen)) {
+		    TRACE(("DATA_ERROR: unable to parse int in curve arclen option: \"%s\"\n",
+			   fragment_to_tempstr(&arclen)));
+		    break;
+		}
+		TRACE(("value of arc length is %d\n", state->arclen));
+		while (state->arclen < -360)
+		    state->arclen += 360;
+		while (state->arclen > 360)
+		    state->arclen -= 360;
+		TRACE(("using final arc length %d\n", state->arclen));
+	    }
 	    break;
 	case 'B':
 	case 'b':
-	    TRACE(("begin closed curve \"%s\" FIXME\n",
-		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
+	    TRACE(("begin closed curve \"%s\"\n", fragment_to_tempstr(&optionarg)));
+	    if (fragment_len(&optionarg) != 0) {
+		TRACE(("DATA_ERROR: invalid closed curve option \"%s\"\n",
+		       fragment_to_tempstr(&optionarg)));
+		break;
+	    }
+	    state->curve_mode = CURVE_POSITION_CLOSED_CURVE;
+	    state->num_points = 0U;
+	    state->x_points[state->num_points] = context->graphics_output_cursor_x;
+	    state->y_points[state->num_points] = context->graphics_output_cursor_y;
+	    state->num_points++;
 	    break;
 	case 'C':
 	case 'c':
-	    TRACE(("found center position \"%s\" FIXME\n",
+	    TRACE(("found center position mode \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
+	    if (fragment_len(&optionarg) != 0) {
+		TRACE(("DATA_ERROR: invalid center position option \"%s\"\n",
+		       fragment_to_tempstr(&optionarg)));
+		break;
+	    }
+	    state->curve_mode = CURVE_POSITION_ARC_CENTER;
 	    break;
 	case 'E':
 	case 'e':
-	    TRACE(("end closed curve \"%s\" FIXME\n",
-		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
+	    TRACE(("end curve \"%s\"\n", fragment_to_tempstr(&optionarg)));
+	    switch (state->curve_mode) {
+	    case CURVE_POSITION_CLOSED_CURVE:
+		{
+		    int i;
+
+#ifdef DEBUG_SPLINE_POINTS
+		    printf("points: \n");
+		    for (i = 0; i < state->num_points; i++)
+			printf("  %d,%d\n",
+			       state->x_points[i], state->y_points[i]);
+#endif
+
+#ifdef DEBUG_SPLINE_WITH_ROTATION
+		    {
+			static int shift = 0;
+			int temp_x[MAX_CURVE_POINTS], temp_y[MAX_CURVE_POINTS];
+			shift++;
+			shift = shift % state->num_points;
+			for (i = 0; i < state->num_points; i++) {
+			    temp_x[i] = state->x_points[i];
+			    temp_y[i] = state->y_points[i];
+			}
+			for (i = 0; i < state->num_points; i++) {
+			    state->x_points[i] = temp_x[(i + shift) % state->num_points];
+			    state->y_points[i] = temp_y[(i + shift) % state->num_points];
+			}
+
+#ifdef DEBUG_SPLINE_POINTS
+			printf("after shift %d: \n", shift);
+			for (i = 0; i < state->num_points; i++)
+			    printf("  %d,%d\n",
+				   state->x_points[i], state->y_points[i]);
+#endif
+		    }
+#endif
+
+		    for (i = state->num_points; i > 0; i--) {
+			state->x_points[i] = state->x_points[i - 1];
+			state->y_points[i] = state->y_points[i - 1];
+		    }
+		    state->x_points[0] = state->x_points[state->num_points];
+		    state->y_points[0] = state->y_points[state->num_points];
+		    state->num_points++;
+		    for (i = state->num_points; i > 0; i--) {
+			state->x_points[i] = state->x_points[i - 1];
+			state->y_points[i] = state->y_points[i - 1];
+		    }
+		    state->x_points[0] = state->x_points[state->num_points - 1];
+		    state->y_points[0] = state->y_points[state->num_points - 1];
+		    state->num_points++;
+		    state->x_points[state->num_points] = state->x_points[2];
+		    state->y_points[state->num_points] = state->y_points[2];
+		    state->num_points++;
+#ifdef DEBUG_SPLINE_WITH_OVERDRAW
+		    state->x_points[state->num_points] = state->x_points[3];
+		    state->y_points[state->num_points] = state->y_points[3];
+		    state->num_points++;
+		    state->x_points[state->num_points] = state->x_points[4];
+		    state->y_points[state->num_points] = state->y_points[4];
+		    state->num_points++;
+#endif
+#ifdef DEBUG_SPLINE_POINTS
+		    printf("after points added: \n");
+		    for (i = 0; i < state->num_points; i++)
+			printf("  %d,%d\n",
+			       state->x_points[i], state->y_points[i]);
+#endif
+		}
+		TRACE(("drawing closed spline\n"));
+		global_context = context;	/* FIXME: remove after updating spline code */
+		plotCubicSpline(state->num_points - 1,
+				state->x_points, state->y_points,
+				1);
+		break;
+	    case CURVE_POSITION_OPEN_CURVE:
+		TRACE(("drawing open spline\n"));
+#ifdef DEBUG_SPLINE_POINTS
+		{
+		    int i;
+
+		    printf("points: \n");
+		    for (i = 0; i < state->num_points; i++)
+			printf("  %d,%d\n",
+			       state->x_points[i], state->y_points[i]);
+		}
+#endif
+		global_context = context;	/* FIXME: remove after updating spline code */
+		plotCubicSpline(state->num_points - 1,
+				state->x_points, state->y_points,
+				1);
+		break;
+	    default:
+		TRACE(("DATA_ERROR: end curve option unexpected \"%s\"\n",
+		       fragment_to_tempstr(&optionarg)));
+		break;
+	    }
 	    break;
 	case 'S':
 	case 's':
-	    TRACE(("begin open curve \"%s\" FIXME\n",
-		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
+	    TRACE(("begin open curve \"%s\"\n", fragment_to_tempstr(&optionarg)));
+	    if (fragment_len(&optionarg) != 0) {
+		TRACE(("DATA_ERROR: invalid open curve option \"%s\"\n",
+		       fragment_to_tempstr(&optionarg)));
+		break;
+	    }
+	    state->curve_mode = CURVE_POSITION_OPEN_CURVE;
+	    state->num_points = 0U;
+	    state->x_points[state->num_points] = context->graphics_output_cursor_x;
+	    state->y_points[state->num_points] = context->graphics_output_cursor_y;
+	    state->num_points++;
+	    TRACE(("first point on curve with location %d,%d\n",
+		   context->graphics_output_cursor_x,
+		   context->graphics_output_cursor_y));
 	    break;
 	case 'W':
 	case 'w':
@@ -1611,6 +2507,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 					      &optionarg, &context->temporary_write_controls)) {
 		TRACE(("DATA_ERROR: invalid temporary write options \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
+		break;
 	    }
 	    break;
 	default:
@@ -1642,6 +2539,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 					      &optionarg, &context->temporary_write_controls)) {
 		TRACE(("DATA_ERROR: invalid temporary write options \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
+		break;
 	    }
 	    break;
 	default:
@@ -1832,6 +2730,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			    TRACE(("interpreting out of range register number %d as 0 FIXME\n", register_num));
 			    register_num = 0;
 			}
+			skip_regis_whitespace(&optionarg);
 			if (!extract_regis_optionset(&optionarg, &colorspec)) {
 			    TRACE(("DATA_ERROR: expected to find optionset after register number: \"%s\"\n",
 				   fragment_to_tempstr(&optionarg)));
@@ -1852,6 +2751,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			TRACE(("mapping register %d to color spec: \"%s\"\n",
 			       register_num, fragment_to_tempstr(&colorspec)));
 			if (fragment_len(&colorspec) == 1) {
+			    short l;
 			    ch = pop_fragment(&colorspec);
 
 			    TRACE(("got regis RGB colorspec pattern: \"%s\"\n",
@@ -1862,52 +2762,65 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 				r = 0;
 				g = 0;
 				b = 0;
+				l = 0;
 				break;
 			    case 'R':
 			    case 'r':
 				r = 100;
 				g = 0;
 				b = 0;
+				l = 46;
 				break;
 			    case 'G':
 			    case 'g':
 				r = 0;
 				g = 100;
 				b = 0;
+				l = 50;
 				break;
 			    case 'B':
 			    case 'b':
 				r = 0;
 				g = 0;
 				b = 100;
+				l = 50;
 				break;
 			    case 'C':
 			    case 'c':
 				r = 0;
 				g = 100;
 				b = 100;
+				l = 50;
 				break;
 			    case 'Y':
 			    case 'y':
 				r = 100;
 				g = 100;
 				b = 0;
+				l = 50;
 				break;
 			    case 'M':
 			    case 'm':
 				r = 100;
 				g = 0;
 				b = 100;
+				l = 50;
 				break;
 			    case 'W':
 			    case 'w':
 				r = 100;
 				g = 100;
 				b = 100;
+				l = 100;
 				break;
 			    default:
 				TRACE(("unknown RGB color name: \"%c\"\n", ch));
 				return 0;
+			    }
+			    if (context->terminal_id == 240 ||
+				context->terminal_id == 330) {
+				/* The VT240 and VT330 models force saturation to zero. */
+				hls2rgb(0, l, 0, &r, &g, &b);
 			    }
 			} else {
 			    short h, l, s;
@@ -1924,6 +2837,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 				    return 0;
 				}
 			    }
+			    if (context->terminal_id == 240 ||
+				context->terminal_id == 330) {
+				/* The VT240 and VT330 models force saturation to zero. */
+				h = 0;
+				s = 0;
+			    }
 			    hls2rgb(h, l, s, &r, &g, &b);
 			}
 
@@ -1931,8 +2850,6 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			    (context->terminal_id == 240 ||
 			     context->terminal_id == 330))
 			    continue;
-			/* FIXME: It is not clear how to handle a mixture of
-			 * monochrome and color mappings. */
 			update_color_register(context->graphic,
 					      (RegisterNum) register_num,
 					      r, g, b);
@@ -2095,7 +3012,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	       state->option, fragment_to_tempstr(&optionarg)));
 	if (!load_regis_write_control(state, context->graphic,
 				      context->graphics_output_cursor_x, context->graphics_output_cursor_y,
-				      state->option, &optionarg, &context->temporary_write_controls)) {
+				      state->option, &optionarg, &context->persistent_write_controls)) {
 	    TRACE(("DATA_ERROR: invalid write options \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	}
@@ -2134,8 +3051,78 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	TRACE(("found extent \"%s\"\n", fragment_to_tempstr(&item)));
 	switch (state->command) {
 	case 'c':
-	    /* FIXME: parse, handle */
-	    TRACE(("extent in curve command FIXME\n"));
+	    {
+		int orig_x, orig_y;
+		int new_x, new_y;
+
+		if (state->num_points > 0) {
+		    orig_x = state->x_points[state->num_points - 1];
+		    orig_y = state->y_points[state->num_points - 1];
+		} else {
+		    orig_x = context->graphics_output_cursor_x;
+		    orig_y = context->graphics_output_cursor_y;
+		}
+		if (!load_regis_extent(fragment_to_tempstr(&item),
+				       orig_x, orig_y,
+				       &new_x, &new_y)) {
+		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
+			   state->command, fragment_to_tempstr(&item)));
+		    break;
+		}
+
+		switch (state->curve_mode) {
+		case CURVE_POSITION_ARC_CENTER:
+		case CURVE_POSITION_ARC_EDGE:
+		    {
+			double radians;
+			int degrees;
+			int c_x, c_y;
+			int e_x, e_y;
+
+			if (state->curve_mode == CURVE_POSITION_ARC_CENTER) {
+			    c_x = new_x;
+			    c_y = new_y;
+			    e_x = orig_x;
+			    e_y = orig_y;
+			} else {
+			    c_x = orig_x;
+			    c_y = orig_y;
+			    e_x = new_x;
+			    e_y = new_y;
+			}
+
+			radians = atan2(new_y - orig_y, new_x - orig_x);
+			degrees = 360.0 * radians / (2.0 * M_PI);
+			if (degrees < 0)
+			    degrees += 360;
+
+			TRACE(("drawing arc centered at location %d,%d to location %d,%d from %d degrees for %d degrees\n",
+			       c_x, c_y,
+			       e_x, e_y,
+			       degrees, state->arclen));
+			draw_patterned_arc(context,
+					   c_x, c_y,
+					   e_x, e_y,
+					   degrees, state->arclen);
+		    }
+		    break;
+		case CURVE_POSITION_OPEN_CURVE:
+		case CURVE_POSITION_CLOSED_CURVE:
+		    if (state->num_points >= MAX_INPUT_CURVE_POINTS) {
+			TRACE(("DATA_ERROR: got curve point, but already have max points (%d)\n", state->num_points));
+			break;
+		    }
+		    state->x_points[state->num_points] = new_x;
+		    state->y_points[state->num_points] = new_y;
+		    state->num_points++;
+		    TRACE(("adding point to curve with location %d,%d\n",
+			   new_x, new_y));
+		    break;
+		default:
+		    TRACE(("ERROR: got position, but curve mode %d is unknown\n", state->curve_mode));
+		    break;
+		}
+	    }
 	    break;
 	case 'p':
 	    /* FIXME TRACE(("DATA_ERROR: ignoring pen command with no location\n")); */
@@ -2341,6 +3328,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     char ch;
     RegisGraphicsContext context;
     RegisParseState state;
+    unsigned int iterations;
 
     (void) xw;
     (void) string;
@@ -2365,6 +3353,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     context.graphic->dirty = 1;
     refresh_modified_displayed_graphics(screen);
 
+    iterations = 0U;
     for (;;) {
 	state.level = INPUT;
 	TRACE(("parsing at top level: %d of %d (next char %c)\n",
@@ -2373,14 +3362,27 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	       peek_fragment(&state.input)));
 	if (skip_regis_whitespace(&state.input))
 	    continue;
-	if (parse_regis_command(&state))
+	iterations++;
+	if (parse_regis_command(&state)) {
+	    if (iterations > ITERATIONS_BEFORE_REFRESH) {
+		iterations = 0U;
+		refresh_modified_displayed_graphics(screen);
+	    }
+	    context.graphic->dirty = 1;
+	    /* FIXME: verify that these are the things reset on a new command */
+	    copy_regis_write_controls(&context.persistent_write_controls, &context.temporary_write_controls);
+	    context.pattern_count = 0U;
+	    context.pattern_bit = 1U;
 	    continue;
+	}
 	if (parse_regis_optionset(&state)) {
 	    state.level = OPTIONSET;
 	    TRACE(("parsing at optionset level: %d of %d\n",
 		   state.optionset.pos,
 		   state.optionset.len));
 	    for (;;) {
+		TRACE(("looking at optionset character: \"%c\"\n",
+		       peek_fragment(&state.optionset)));
 		if (skip_regis_whitespace(&state.optionset))
 		    continue;
 		if (parse_regis_option(&state, &context))
@@ -2406,7 +3408,6 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
     free(state.temp);
 
-    context.graphic->dirty = 1;
     refresh_modified_displayed_graphics(screen);
     TRACE(("DONE! Successfully parsed ReGIS data.\n"));
 }
