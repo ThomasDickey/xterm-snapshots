@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1326 2014/04/14 19:32:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1327 2014/04/16 00:30:18 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -10140,7 +10140,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	update_decbkm();
 	update_decsdm();
 	show_8bit_control(False);
-	reset_decudk();
+	reset_decudk(xw);
 
 	FromAlternate(xw);
 	ClearScreen(xw);

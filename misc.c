@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.707 2014/04/14 20:42:47 tom Exp $ */
+/* $XTermId: misc.c,v 1.710 2014/04/16 08:00:21 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1332,7 +1332,6 @@ WMFrameWindow(XtermWidget xw)
  */
 
 #define IS_WORD_CONSTITUENT(x) ((x) != ' ' && (x) != '\0')
-#define MAXWLEN 1024		/* maximum word length as in tcsh */
 
 static int
 dabbrev_prev_char(TScreen *screen, CELL *cell, LineData **ld)
@@ -1359,13 +1358,12 @@ dabbrev_prev_char(TScreen *screen, CELL *cell, LineData **ld)
 }
 
 static char *
-dabbrev_prev_word(TScreen *screen, CELL *cell, LineData **ld)
+dabbrev_prev_word(XtermWidget xw, CELL *cell, LineData **ld)
 {
-    static char ab[MAXWLEN];
-
+    TScreen *screen = TScreenOf(xw);
     char *abword;
     int c;
-    char *ab_end = (ab + MAXWLEN - 1);
+    char *ab_end = (xw->work.dabbrev_data + MAX_DABBREV - 1);
     char *result = 0;
 
     abword = ab_end;
@@ -1373,7 +1371,7 @@ dabbrev_prev_word(TScreen *screen, CELL *cell, LineData **ld)
 
     while ((c = dabbrev_prev_char(screen, cell, ld)) >= 0 &&
 	   IS_WORD_CONSTITUENT(c)) {
-	if (abword > ab)	/* store only |MAXWLEN| last chars */
+	if (abword > xw->work.dabbrev_data)	/* store only the last chars */
 	    *(--abword) = (char) c;
     }
 
@@ -1394,8 +1392,9 @@ dabbrev_prev_word(TScreen *screen, CELL *cell, LineData **ld)
 }
 
 static int
-dabbrev_expand(TScreen *screen)
+dabbrev_expand(XtermWidget xw)
 {
+    TScreen *screen = TScreenOf(xw);
     int pty = screen->respond;	/* file descriptor of pty */
 
     static CELL cell;
@@ -1418,7 +1417,7 @@ dabbrev_expand(TScreen *screen)
 	if (dabbrev_hint != 0)
 	    free(dabbrev_hint);
 
-	if ((dabbrev_hint = dabbrev_prev_word(screen, &cell, &ld)) != 0) {
+	if ((dabbrev_hint = dabbrev_prev_word(xw, &cell, &ld)) != 0) {
 
 	    if (lastexpansion != 0)
 		free(lastexpansion);
@@ -1450,7 +1449,7 @@ dabbrev_expand(TScreen *screen)
 
     hint_len = strlen(dabbrev_hint);
     for (;;) {
-	if ((expansion = dabbrev_prev_word(screen, &cell, &ld)) == 0) {
+	if ((expansion = dabbrev_prev_word(xw, &cell, &ld)) == 0) {
 	    if (expansions >= 2) {
 		expansions = 0;
 		cell.col = screen->cur_col;
@@ -1503,8 +1502,7 @@ HandleDabbrevExpand(Widget w,
 
     TRACE(("Handle dabbrev-expand for %p\n", (void *) w));
     if ((xw = getXtermWidget(w)) != 0) {
-	TScreen *screen = TScreenOf(xw);
-	if (!dabbrev_expand(screen))
+	if (!dabbrev_expand(xw))
 	    Bell(xw, XkbBI_TerminalBell, 0);
     }
 }
@@ -2271,13 +2269,6 @@ loadColorTable(XtermWidget xw, unsigned length)
  * modified with ideas from David Tong's "noflash" library.
  * The code from Vim in turn was derived from FindClosestColor() in Tcl/Tk.
  *
- * These provide some introduction:
- *	http://en.wikipedia.org/wiki/YIQ
- *		for an introduction to YIQ weights.
- *	http://en.wikipedia.org/wiki/Luminance_(video)
- *		for a discussion of luma.
- *	http://en.wikipedia.org/wiki/YUV
- *
  * Return False if not able to find or allocate a color.
  */
 static Boolean
@@ -3031,20 +3022,19 @@ typedef enum {
 static Bool
 GetOldColors(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
     int i;
-    if (screen->oldColors == NULL) {
-	screen->oldColors = TypeXtMalloc(ScrnColors);
-	if (screen->oldColors == NULL) {
+    if (xw->work.oldColors == NULL) {
+	xw->work.oldColors = TypeXtMalloc(ScrnColors);
+	if (xw->work.oldColors == NULL) {
 	    xtermWarning("allocation failure in GetOldColors\n");
 	    return (False);
 	}
-	screen->oldColors->which = 0;
+	xw->work.oldColors->which = 0;
 	for (i = 0; i < NCOLORS; i++) {
-	    screen->oldColors->colors[i] = 0;
-	    screen->oldColors->names[i] = NULL;
+	    xw->work.oldColors->colors[i] = 0;
+	    xw->work.oldColors->names[i] = NULL;
 	}
-	GetColors(xw, screen->oldColors);
+	GetColors(xw, xw->work.oldColors);
     }
     return (True);
 }
@@ -3091,7 +3081,6 @@ static void
 ReportColorRequest(XtermWidget xw, int ndx, int final)
 {
     if (AllowColorOps(xw, ecGetColor)) {
-	TScreen *screen = TScreenOf(xw);
 	XColor color;
 	Colormap cmap = xw->core.colormap;
 	char buffer[80];
@@ -3104,14 +3093,14 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 	int i = (xw->misc.re_verse) ? oppositeColor(ndx) : ndx;
 
 	GetOldColors(xw);
-	color.pixel = screen->oldColors->colors[ndx];
+	color.pixel = xw->work.oldColors->colors[ndx];
 	XQueryColor(TScreenOf(xw)->display, cmap, &color);
 	sprintf(buffer, "%d;rgb:%04x/%04x/%04x", i + 10,
 		color.red,
 		color.green,
 		color.blue);
 	TRACE(("ReportColorRequest #%d: 0x%06lx as %s\n",
-	       ndx, screen->oldColors->colors[ndx], buffer));
+	       ndx, xw->work.oldColors->colors[ndx], buffer));
 	unparseputc1(xw, ANSI_OSC);
 	unparseputs(xw, buffer);
 	unparseputc1(xw, final);
@@ -3122,7 +3111,6 @@ ReportColorRequest(XtermWidget xw, int ndx, int final)
 static Bool
 UpdateOldColors(XtermWidget xw GCC_UNUSED, ScrnColors * pNew)
 {
-    TScreen *screen = TScreenOf(xw);
     int i;
 
     /* if we were going to free old colors, this would be the place to
@@ -3134,14 +3122,14 @@ UpdateOldColors(XtermWidget xw GCC_UNUSED, ScrnColors * pNew)
      */
     for (i = 0; i < NCOLORS; i++) {
 	if (COLOR_DEFINED(pNew, i)) {
-	    if (screen->oldColors->names[i] != NULL) {
-		XtFree(screen->oldColors->names[i]);
-		screen->oldColors->names[i] = NULL;
+	    if (xw->work.oldColors->names[i] != NULL) {
+		XtFree(xw->work.oldColors->names[i]);
+		xw->work.oldColors->names[i] = NULL;
 	    }
 	    if (pNew->names[i]) {
-		screen->oldColors->names[i] = pNew->names[i];
+		xw->work.oldColors->names[i] = pNew->names[i];
 	    }
-	    screen->oldColors->colors[i] = pNew->colors[i];
+	    xw->work.oldColors->colors[i] = pNew->colors[i];
 	}
     }
     return (True);
@@ -3194,7 +3182,6 @@ ChangeColorsRequest(XtermWidget xw,
     TRACE(("ChangeColorsRequest start=%d, names='%s'\n", start, names));
 
     if (GetOldColors(xw)) {
-	TScreen *screen = TScreenOf(xw);
 	newColors.which = 0;
 	for (i = 0; i < NCOLORS; i++) {
 	    newColors.names[i] = NULL;
@@ -3218,8 +3205,8 @@ ChangeColorsRequest(XtermWidget xw,
 		if (thisName != 0) {
 		    if (!strcmp(thisName, "?")) {
 			ReportColorRequest(xw, ndx, final);
-		    } else if (!screen->oldColors->names[ndx]
-			       || strcmp(thisName, screen->oldColors->names[ndx])) {
+		    } else if (!xw->work.oldColors->names[ndx]
+			       || strcmp(thisName, xw->work.oldColors->names[ndx])) {
 			AllocateTermColor(xw, &newColors, ndx, thisName, False);
 		    }
 		}
@@ -3248,8 +3235,6 @@ ResetColorsRequest(XtermWidget xw,
 
 #if OPT_COLOR_RES
     if (GetOldColors(xw)) {
-	TScreen *screen = TScreenOf(xw);
-
 	ndx = OscToColorIndex((OscTextColors) (code - OSC_RESET));
 	if (xw->misc.re_verse)
 	    ndx = oppositeColor(ndx);
@@ -3260,8 +3245,8 @@ ResetColorsRequest(XtermWidget xw,
 	newColors.names[ndx] = NULL;
 
 	if (thisName != 0
-	    && screen->oldColors->names[ndx] != 0
-	    && strcmp(thisName, screen->oldColors->names[ndx])) {
+	    && xw->work.oldColors->names[ndx] != 0
+	    && strcmp(thisName, xw->work.oldColors->names[ndx])) {
 	    AllocateTermColor(xw, &newColors, ndx, thisName, False);
 
 	    if (newColors.which != 0) {
@@ -3710,16 +3695,6 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     unparse_end(xw);
 }
 
-#ifdef SunXK_F36
-#define MAX_UDK 37
-#else
-#define MAX_UDK 35
-#endif
-static struct {
-    char *str;
-    int len;
-} user_keys[MAX_UDK];
-
 /*
  * Parse one nibble of a hex byte from the OSC string.  We have removed the
  * string-terminator (replacing it with a null), so the only other delimiter
@@ -3745,14 +3720,14 @@ udk_value(const char **cp)
 }
 
 void
-reset_decudk(void)
+reset_decudk(XtermWidget xw)
 {
     int n;
     for (n = 0; n < MAX_UDK; n++) {
-	if (user_keys[n].str != 0) {
-	    free(user_keys[n].str);
-	    user_keys[n].str = 0;
-	    user_keys[n].len = 0;
+	if (xw->work.user_keys[n].str != 0) {
+	    free(xw->work.user_keys[n].str);
+	    xw->work.user_keys[n].str = 0;
+	    xw->work.user_keys[n].len = 0;
 	}
     }
 }
@@ -3761,7 +3736,7 @@ reset_decudk(void)
  * Parse the data for DECUDK (user-defined keys).
  */
 static void
-parse_decudk(const char *cp)
+parse_decudk(XtermWidget xw, const char *cp)
 {
     while (*cp) {
 	const char *base = cp;
@@ -3781,10 +3756,10 @@ parse_decudk(const char *cp)
 	}
 	if (len > 0 && key < MAX_UDK) {
 	    str[len] = '\0';
-	    if (user_keys[key].str != 0)
-		free(user_keys[key].str);
-	    user_keys[key].str = str;
-	    user_keys[key].len = len;
+	    if (xw->work.user_keys[key].str != 0)
+		free(xw->work.user_keys[key].str);
+	    xw->work.user_keys[key].str = str;
+	    xw->work.user_keys[key].len = len;
 	} else {
 	    free(str);
 	}
@@ -4192,8 +4167,8 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    case '|':		/* DECUDK */
 		if (screen->vtXX_level >= 2) {	/* VT220 */
 		    if (params.a_param[0] == 0)
-			reset_decudk();
-		    parse_decudk(cp);
+			reset_decudk(xw);
+		    parse_decudk(xw, cp);
 		}
 		break;
 	    case '{':		/* DECDLD (no '}' case though) */
@@ -4548,11 +4523,11 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 #endif /* OPT_DEC_RECTOPS */
 
 char *
-udk_lookup(int keycode, int *len)
+udk_lookup(XtermWidget xw, int keycode, int *len)
 {
     if (keycode >= 0 && keycode < MAX_UDK) {
-	*len = user_keys[keycode].len;
-	return user_keys[keycode].str;
+	*len = xw->work.user_keys[keycode].len;
+	return xw->work.user_keys[keycode].str;
     }
     return 0;
 }
@@ -4968,8 +4943,7 @@ ChangeXprop(char *buf)
 void
 ReverseOldColors(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
-    ScrnColors *pOld = screen->oldColors;
+    ScrnColors *pOld = xw->work.oldColors;
     Pixel tmpPix;
     char *tmpName;
 
@@ -4978,7 +4952,7 @@ ReverseOldColors(XtermWidget xw)
 	if (pOld->colors[TEXT_CURSOR] == pOld->colors[TEXT_FG]) {
 	    pOld->colors[TEXT_CURSOR] = pOld->colors[TEXT_BG];
 	    if (pOld->names[TEXT_CURSOR]) {
-		XtFree(screen->oldColors->names[TEXT_CURSOR]);
+		XtFree(xw->work.oldColors->names[TEXT_CURSOR]);
 		pOld->names[TEXT_CURSOR] = NULL;
 	    }
 	    if (pOld->names[TEXT_BG]) {
