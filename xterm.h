@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.732 2014/04/14 18:42:54 Ross.Combs Exp $ */
+/* $XTermId: xterm.h,v 1.733 2014/04/16 00:31:01 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1004,7 +1004,7 @@ extern Window WMFrameWindow (XtermWidget /* termw */);
 extern XtInputMask xtermAppPending (void);
 extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget (Widget /* w */);
-extern char *udk_lookup (int /* keycode */, int * /* len */);
+extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermFindShell (char * /* leaf */, Bool  /* warning */);
 extern const char *SysErrorMsg (int /* n */);
@@ -1054,7 +1054,7 @@ extern void hide_tek_window (void);
 extern void hide_vt_window (void);
 extern void ice_error (IceConn /* iceConn */);
 extern void init_colored_cursor (void);
-extern void reset_decudk (void);
+extern void reset_decudk (XtermWidget /* xw */);
 extern void set_tek_visibility (Bool  /* on */);
 extern void set_vt_visibility (Bool  /* on */);
 extern void switch_modes (Bool  /* tovt */);

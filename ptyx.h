@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.797 2014/04/14 18:42:54 Ross.Combs Exp $ */
+/* $XTermId: ptyx.h,v 1.799 2014/04/16 00:32:33 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1858,7 +1858,6 @@ typedef struct {
 	uid_t		uid;		/* user id of actual person	*/
 	gid_t		gid;		/* group id of actual person	*/
 	ColorRes	Tcolors[NCOLORS]; /* terminal colors		*/
-	ScrnColors	*oldColors;
 #if OPT_HIGHLIGHT_COLOR
 	Boolean		hilite_color;	/* hilite colors override	*/
 	Boolean		hilite_reverse;	/* hilite overrides reverse	*/
@@ -2613,6 +2612,15 @@ typedef struct _Misc {
 
 typedef struct _Work {
     int dummy;
+#ifdef SunXK_F36
+#define MAX_UDK 37
+#else
+#define MAX_UDK 35
+#endif
+    struct {
+	char *str;
+	int len;
+    } user_keys[MAX_UDK];
 #ifndef NO_ACTIVE_ICON
     int active_icon;		/* use application icon window  */
 #endif /* NO_ACTIVE_ICON */
@@ -2633,6 +2641,11 @@ typedef struct _Work {
 #if OPT_RENDERFONT
     Boolean render_font;
 #endif
+#if OPT_DABBREV
+#define MAX_DABBREV	1024	/* maximum word length as in tcsh */
+    char dabbrev_data[MAX_DABBREV];
+#endif
+    ScrnColors *oldColors;
 } Work;
 
 typedef struct {int foo;} XtermClassPart, TekClassPart;
