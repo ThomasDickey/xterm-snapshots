@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.5 2014/04/14 20:44:40 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.6 2014/04/18 00:42:16 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -153,11 +153,11 @@ set_sixel(Graphic *graphic, SixelContext const *context, int sixel)
 	   color,
 	   color == COLOR_HOLE,
 	   ((color != COLOR_HOLE)
-	    ? (unsigned int) graphic->color_registers[color].r : 0U),
+	    ? (unsigned) graphic->color_registers[color].r : 0U),
 	   ((color != COLOR_HOLE)
-	    ? (unsigned int) graphic->color_registers[color].g : 0U),
+	    ? (unsigned) graphic->color_registers[color].g : 0U),
 	   ((color != COLOR_HOLE)
-	    ? (unsigned int) graphic->color_registers[color].b : 0U)));
+	    ? (unsigned) graphic->color_registers[color].b : 0U)));
     for (pix = 0; pix < 6; pix++) {
 	if (context->col < graphic->max_width &&
 	    context->row + pix < graphic->max_height) {
@@ -463,11 +463,11 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 
 	    parse_prefixedtype_params(&color_params, &string);
 	    Pregister = color_params.a_param[0];
-	    if (Pregister >= graphic->valid_registers) {
+	    if (Pregister >= (int) graphic->valid_registers) {
 		TRACE(("DATA_WARNING: sixel color operator uses out-of-range register %d\n", Pregister));
 		/* FIXME: supposedly the DEC terminals wrapped register indicies -- verify */
-		while (Pregister >= graphic->valid_registers)
-		    Pregister -= graphic->valid_registers;
+		while (Pregister >= (int) graphic->valid_registers)
+		    Pregister -= (int) graphic->valid_registers;
 		TRACE(("DATA_WARNING: converted to %d\n", Pregister));
 	    }
 

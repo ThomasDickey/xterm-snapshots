@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.305 2014/01/13 23:02:06 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.307 2014/04/18 00:49:09 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #301
-.ds RF 2014/01/13
+.ds RF 2014/04/17
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1902,7 +1902,7 @@ c | l .
 13	Meta + Ctrl
 14	Meta + Ctrl + Shift
 15	Meta + Ctrl + Alt
-16	Meta + Ctrl +Alt + Shift
+16	Meta + Ctrl + Alt + Shift
 _
 .TE
 For example, shift-F5 would be sent as
@@ -2398,20 +2398,22 @@ it is not an improvement over 1005.
 If \fI\*(xt\fP is configured as
 VT240,
 VT241,
-VT330 or
-VT340
+VT330,
+VT340 or
+VT382
 using the \fBdecTerminalID\fP resource,
-it supports Sixel Graphics controls, a subset of ReGIS graphics.
+it supports Sixel Graphics controls, a palleted bitmap graphics system
+using sets of six vertical pixels as the basic element.
 .St
 .IP \\*(Cs\\*(Ps\\*s\\*c
 \fI\*(xt\fP responds to Send Device Attributes (Primary DA) with these
 additional codes:
-  \*(Ps = \*3 \(-> ReGIS graphics.
-  \*(Ps = \*4 \(-> SIXEL graphics.
+  \*(Ps = \*4 \(-> Sixel graphics.
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*h
 \fI\*(xt\fP has these additional private Set Mode values:
-  \*(Ps = \*8\*0 \(-> SIXEL scrolling.
+  \*(Ps = \*8\*0 \(-> Sixel scrolling.
   \*(Ps = \*1\*0\*7\*0 \(-> use private color registers for each graphic.
+  \*(Ps = \*8\*4\*5\*2 \(-> Sixel scrolling leaves cursor to right of graphic.
 .IP \\*(Dc\\*(Pa\\*;\\*(Pb\\*;\\*(Ph\\*s\\*q\\*s\\*(Ps..\\*(Ps\fP\\*s\\*(ST
 See
 .ID
@@ -2423,6 +2425,37 @@ following the \*q with sixel data.
   \*(Pb \(-> background color option
   \*(Ph \(-> horizontal grid size (ignored).
   \*(Ps \(-> sixel data
+.Ed
+.
+.Sh "ReGIS Graphics"
+.LP
+If \fI\*(xt\fP is configured as
+VT125,
+VT240,
+VT241,
+VT330 or
+VT340
+using the \fBdecTerminalID\fP resource,
+it supports Remote Graphic Instruction Set, a graphics description language.
+.St
+.IP \\*(Cs\\*(Ps\\*s\\*c
+\fI\*(xt\fP responds to Send Device Attributes (Primary DA) with these
+additional codes:
+  \*(Ps = \*3 \(-> ReGIS graphics.
+.IP \\*(Cs\\*?\\*(Pm\\*s\\*h
+\fI\*(xt\fP has these additional private Set Mode values:
+  \*(Ps = \*1\*0\*7\*0 \(-> use private color registers for each graphic.
+.IP \\*(Dc\\*(Pm\\*s\\*p\\*(Pr..\\*(Pr\fP\\*s\\*(ST
+See
+.ID
+http://vt100.net/docs/vt3xx-gp/chapter1.html
+.DE
+The ReGIS data device control string has one positional parameter
+with four possible values:
+  \*(Pm = 0 \(-> resume command, use fullscreen mode
+  \*(Pm = 1 \(-> start new command, use fullscreen mode
+  \*(Pm = 2 \(-> resume command, use command display mode
+  \*(Pm = 3 \(-> start new command, use command display mode
 .Ed
 .
 .Sh "Tektronix 4014 Mode"

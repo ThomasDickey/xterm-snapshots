@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.15 2014/04/18 00:03:59 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.16 2014/04/18 00:42:16 Ross.Combs Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -58,23 +58,23 @@
 #define ITERATIONS_BEFORE_REFRESH 100U
 /* *INDENT-OFF* */
 typedef struct RegisWriteControls {
-    unsigned int        pv_multiplier;
-    unsigned int        pattern;
-    unsigned int        pattern_multiplier;
-    unsigned int        invert_pattern;
-    RegisterNum         foreground;
-    unsigned int        plane_mask;
-    unsigned int        write_style;
-    unsigned int        shading_enabled;
-    char                shading_character;
-    int                 shading_reference;
-    unsigned int        shading_reference_dim;
+    unsigned        pv_multiplier;
+    unsigned        pattern;
+    unsigned        pattern_multiplier;
+    unsigned        invert_pattern;
+    unsigned        plane_mask;
+    unsigned        write_style;
+    RegisterNum     foreground;
+    unsigned        shading_enabled;
+    char            shading_character;
+    int             shading_reference;
+    unsigned        shading_reference_dim;
 } RegisWriteControls;
 
 typedef struct RegisDataFragment {
-    char const          *start;
-    unsigned int        pos;
-    unsigned int        len;
+    char const     *start;
+    unsigned        pos;
+    unsigned        len;
 } RegisDataFragment;
 
 typedef enum RegisParseLevel {
@@ -95,7 +95,7 @@ typedef struct RegisParseState {
     RegisDataFragment input;
     RegisDataFragment optionset;
     char *temp;
-    unsigned int templen;
+    unsigned templen;
     RegisParseLevel level;
     char command;
     char option;
@@ -104,19 +104,20 @@ typedef struct RegisParseState {
     int arclen;
     int x_points[MAX_CURVE_POINTS];
     int y_points[MAX_CURVE_POINTS];
-    unsigned int num_points;
+    unsigned num_points;
 } RegisParseState;
 
 typedef struct RegisGraphicsContext {
     Graphic *graphic;
     int terminal_id;
+    unsigned all_planes;
     RegisterNum background;
     RegisWriteControls persistent_write_controls;
     RegisWriteControls temporary_write_controls;
     int graphics_output_cursor_x;
     int graphics_output_cursor_y;
-    unsigned int pattern_count;
-    unsigned int pattern_bit;
+    unsigned pattern_count;
+    unsigned pattern_bit;
 } RegisGraphicsContext;
 
 #define MAX_PATTERN_BITS 8U
@@ -191,27 +192,10 @@ draw_patterned_pixel(RegisGraphicsContext *context, int x, int y)
 
     case WRITE_STYLE_COMPLEMENT:
 	/* update pixels with background when pattern is 1, unchanged when pattern is 0 */
-	{
-	    unsigned valid_bits;
-
-	    if (!(context->temporary_write_controls.pattern & context->pattern_bit)) {
-		return;
-	    }
-
-	    /* generate a mask covering all valid register address bits (but not past 2**16) */
-	    valid_bits = (unsigned) context->graphic->valid_registers;
-	    valid_bits--;
-	    valid_bits |= 1U;
-	    valid_bits |= valid_bits >> 1U;
-	    valid_bits |= valid_bits >> 2U;
-	    valid_bits |= valid_bits >> 4U;
-	    valid_bits |= valid_bits >> 8U;
-
-	    color = read_pixel(context->graphic, x, y);
-	    if (color == COLOR_HOLE)
-		color = context->background;
-	    color = color ^ valid_bits;
-	}
+	color = read_pixel(context->graphic, x, y);
+	if (color == COLOR_HOLE)
+	    color = context->background;
+	color = color ^ context->all_planes;
 	break;
 
     case WRITE_STYLE_ERASE:
@@ -380,11 +364,11 @@ draw_patterned_arc(RegisGraphicsContext *context,
 	    if (points >= points_start && points <= points_stop) {
 		draw_patterned_pixel(context,
 				     (int) (cx +
-				     quadmap[quad].dxx * rx +
-				     quadmap[quad].dxy * ry),
+					    quadmap[quad].dxx * rx +
+					    quadmap[quad].dxy * ry),
 				     (int) (cy +
-				     quadmap[quad].dyx * rx +
-				     quadmap[quad].dyy * ry));
+					    quadmap[quad].dyx * rx +
+					    quadmap[quad].dyy * ry));
 	    }
 	    points++;
 
@@ -702,7 +686,7 @@ plotCubicBezier(int x0, int y0, int x1, int y1,
     /* sub-divide curve at gradient sign changes */
     if (xa == 0) {		/* horizontal */
 	if (labs(xc) < 2 * labs(xb))
-	    t[n++] = (double) xc / (2.0 * (double) xb);	/* one change */
+	    t[n++] = (double) xc / (2.0 * (double) xb);		/* one change */
     } else if (t1 > 0.0) {	/* two changes */
 	t2 = sqrt(t1);
 	t1 = ((double) xb - t2) / (double) xa;
@@ -715,7 +699,7 @@ plotCubicBezier(int x0, int y0, int x1, int y1,
     t1 = (double) (yb * yb - ya * yc);
     if (ya == 0) {		/* vertical */
 	if (labs(yc) < 2 * labs(yb))
-	    t[n++] = (double) yc / (2.0 * (double) yb);	/* one change */
+	    t[n++] = (double) yc / (2.0 * (double) yb);		/* one change */
     } else if (t1 > 0.0) {	/* two changes */
 	t2 = sqrt(t1);
 	t1 = ((double) yb - t2) / (double) ya;
@@ -737,15 +721,21 @@ plotCubicBezier(int x0, int y0, int x1, int y1,
     for (i = 0; i <= n; i++) {	/* plot each segment separately */
 	t2 = t[i];		/* sub-divide at t[i-1], t[i] */
 	fx1 = (t1 * (t1 * (double) xb - (double) (2 * xc)) -
-	       t2 * (t1 * (t1 * (double) xa - (double) (2 * xb)) + (double) xc) + (double) xd) / 8 - fx0;
+	       t2 * (t1 * (t1 * (double) xa - (double) (2 * xb)) + (double)
+		     xc) + (double) xd) / 8 - fx0;
 	fy1 = (t1 * (t1 * (double) yb - (double) (2 * yc)) -
-	       t2 * (t1 * (t1 * (double) ya - (double) (2 * yb)) + (double) yc) + (double) yd) / 8 - fy0;
+	       t2 * (t1 * (t1 * (double) ya - (double) (2 * yb)) + (double)
+		     yc) + (double) yd) / 8 - fy0;
 	fx2 = (t2 * (t2 * (double) xb - (double) (2 * xc)) -
-	       t1 * (t2 * (t2 * (double) xa - (double) (2 * xb)) + (double) xc) + (double) xd) / 8 - fx0;
+	       t1 * (t2 * (t2 * (double) xa - (double) (2 * xb)) + (double)
+		     xc) + (double) xd) / 8 - fx0;
 	fy2 = (t2 * (t2 * (double) yb - (double) (2 * yc)) -
-	       t1 * (t2 * (t2 * (double) ya - (double) (2 * yb)) + (double) yc) + (double) yd) / 8 - fy0;
-	fx0 -= fx3 = (t2 * (t2 * ((double) (3 * xb) - t2 * (double) xa) - (double) (3 * xc)) + (double) xd) / 8;
-	fy0 -= fy3 = (t2 * (t2 * ((double) (3 * yb) - t2 * (double) ya) - (double) (3 * yc)) + (double) yd) / 8;
+	       t1 * (t2 * (t2 * (double) ya - (double) (2 * yb)) + (double)
+		     yc) + (double) yd) / 8 - fy0;
+	fx0 -= fx3 = (t2 * (t2 * ((double) (3 * xb) - t2 * (double) xa) -
+			    (double) (3 * xc)) + (double) xd) / 8;
+	fy0 -= fy3 = (t2 * (t2 * ((double) (3 * yb) - t2 * (double) ya) -
+			    (double) (3 * yc)) + (double) yd) / 8;
 	x3 = ifloor(fx3 + 0.5);
 	y3 = ifloor(fy3 + 0.5);	/* scale bounds to int */
 	if (fx0 != 0.0) {
@@ -935,7 +925,7 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
 	y1 = y0;
     }
     x0 = x[0];
-    x4 = ifloor((3 * x0 + 7 * x1 + 2 * x2 + 6) / 12.0);	/* reconstruct P[1] */
+    x4 = ifloor((3 * x0 + 7 * x1 + 2 * x2 + 6) / 12.0);		/* reconstruct P[1] */
     y0 = y[0];
     y4 = ifloor((3 * y0 + 7 * y1 + 2 * y2 + 6) / 12.0);
 #ifdef DEBUG_SPLINE_SEGMENTS
@@ -991,7 +981,7 @@ pop_fragment(RegisDataFragment *fragment)
 
 #if 0
 static void
-skip_fragment_chars(RegisDataFragment *fragment, unsigned int count)
+skip_fragment_chars(RegisDataFragment *fragment, unsigned count)
 {
     fragment->pos += count;
     if (fragment->pos > fragment->len) {
@@ -1001,9 +991,9 @@ skip_fragment_chars(RegisDataFragment *fragment, unsigned int count)
 #endif
 
 static void
-fragment_to_string(RegisDataFragment const *fragment, char *out, unsigned int outlen)
+fragment_to_string(RegisDataFragment const *fragment, char *out, unsigned outlen)
 {
-    unsigned int minlen;
+    unsigned minlen;
 
     if (fragment->len < outlen) {
 	minlen = fragment->len;
@@ -1022,7 +1012,7 @@ fragment_to_tempstr(RegisDataFragment const *fragment)
     return tempstr;
 }
 
-static unsigned int
+static unsigned
 fragment_len(RegisDataFragment const *fragment)
 {
     return fragment->len - fragment->pos;
@@ -1196,12 +1186,12 @@ extract_regis_command(RegisDataFragment *input, char *command)
 }
 
 static int
-extract_regis_string(RegisDataFragment *input, char *out, unsigned int maxlen)
+extract_regis_string(RegisDataFragment *input, char *out, unsigned maxlen)
 {
     char first_ch;
     char ch;
     char prev_ch;
-    unsigned int outlen = 0U;
+    unsigned outlen = 0U;
 
     assert(input);
     assert(out);
@@ -1406,7 +1396,7 @@ load_regis_colorspec(Graphic const *graphic, RegisDataFragment const *input, Reg
     TRACE(("looking at colorspec pattern: \"%s\"\n", fragment_to_tempstr(&colorspec)));
 
     if (regis_num_to_int(&colorspec, &val)) {
-	if (val < 0 || val >= graphic->valid_registers) {	/* FIXME: wrap? */
+	if (val < 0 || val >= (int) graphic->valid_registers) {		/* FIXME: wrap? */
 	    TRACE(("DATA_ERROR: erase writing mode %d\n", val));
 	    return 0;
 	}
@@ -1552,7 +1542,7 @@ load_regis_extent(char const *extent, int origx, int origy, int *xloc, int *yloc
 
 static int
 load_regis_pixelvector(char const *pixelvector,
-		       unsigned int mul,
+		       unsigned mul,
 		       int origx, int origy,
 		       int *xloc, int *yloc)
 {
@@ -1621,11 +1611,12 @@ load_regis_write_control(RegisParseState *state,
 	       fragment_to_tempstr(arg)));
 	{
 	    int val;
-	    if (!regis_num_to_int(arg, &val) || val < 0 || val >= graphic->valid_registers) {
+	    if (!regis_num_to_int(arg, &val) ||
+		val < 0 || val >= (int) graphic->valid_registers) {
 		TRACE(("interpreting out of range value as 0 FIXME\n"));
 		out->plane_mask = 0U;
 	    } else {
-		out->plane_mask = (unsigned int) val;
+		out->plane_mask = (unsigned) val;
 	    }
 	}
 	break;
@@ -1649,7 +1640,7 @@ load_regis_write_control(RegisParseState *state,
 		TRACE(("interpreting out of range value as 1 FIXME\n"));
 		out->pv_multiplier = 1U;
 	    } else {
-		out->pv_multiplier = (unsigned int) val;
+		out->pv_multiplier = (unsigned) val;
 	    }
 	}
 	break;
@@ -1745,8 +1736,8 @@ load_regis_write_control(RegisParseState *state,
 		if (extract_regis_num(arg, &item)) {
 		    if (peek_fragment(&item) == '0' ||
 			peek_fragment(&item) == '1') {
-			unsigned int pattern = 0U;
-			unsigned int bitcount;
+			unsigned pattern = 0U;
+			unsigned bitcount;
 			char ch;
 
 			TRACE(("converting pattern bits \"%s\"\n",
@@ -1857,7 +1848,8 @@ load_regis_write_control(RegisParseState *state,
 	break;
     case 'S':
     case 's':
-	TRACE(("write control shading control \"%s\"\n", fragment_to_tempstr(arg)));
+	TRACE(("write control shading control \"%s\"\n",
+	       fragment_to_tempstr(arg)));
 	{
 	    RegisDataFragment suboptionset;
 	    RegisDataFragment suboptionarg;
@@ -1873,7 +1865,8 @@ load_regis_write_control(RegisParseState *state,
 
 		if (extract_regis_string(arg, state->temp, state->templen)) {
 		    TRACE(("found fill char \"%s\"\n", state->temp));
-		    if (strlen(state->temp) != 1) {	/* FIXME: allow strings?  should extra chars be ignored? */
+		    /* FIXME: allow longer strings ignoring extra chars? */
+		    if (strlen(state->temp) != 1) {
 			TRACE(("DATA_ERROR: expected exactly one char in fill string FIXME\n"));
 			return 0;
 		    }
@@ -1962,7 +1955,9 @@ load_regis_write_control(RegisParseState *state,
 					  : ref_y);
 		out->shading_character = shading_character;
 	    } else {
-		/* FIXME: confirm there is no effect if shading isn't enabled in the same command */
+		/* FIXME: confirm there is no effect if shading isn't enabled
+		 * in the same command
+		 */
 		out->shading_enabled = 0U;
 	    }
 	}
@@ -2032,30 +2027,28 @@ load_regis_write_control_set(RegisParseState *state,
 }
 
 static void
-init_regis_write_controls(int terminal_id, RegisWriteControls *controls)
+init_regis_write_controls(int terminal_id, unsigned all_planes, RegisWriteControls *controls)
 {
     controls->pv_multiplier = 1U;
     controls->pattern = 0xff;	/* solid */
     controls->pattern_multiplier = 2U;
     controls->invert_pattern = 0U;
+    controls->plane_mask = all_planes;
+    controls->write_style = WRITE_STYLE_OVERLAY;
     switch (terminal_id) {
     case 125:			/* FIXME */
     case 240:			/* FIXME */
     case 241:			/* FIXME */
     case 330:
 	controls->foreground = 3U;
-	controls->plane_mask = 3U;
 	break;
     case 340:
 	controls->foreground = 7U;
-	controls->plane_mask = 15U;
 	break;
     default:			/* FIXME */
-	controls->foreground = 64U;
-	controls->plane_mask = 63U;
+	controls->foreground = 63U;
 	break;
     }
-    controls->write_style = WRITE_STYLE_OVERLAY;
     controls->shading_enabled = 0U;
     controls->shading_character = '\0';
     controls->shading_reference = 0;	/* no meaning if shading is disabled */
@@ -2084,8 +2077,21 @@ static void
 init_regis_graphics_context(int terminal_id, RegisGraphicsContext *context)
 {
     context->terminal_id = terminal_id;
-    init_regis_write_controls(terminal_id, &context->persistent_write_controls);
+    /*
+     * Generate a mask covering all valid color register address bits
+     * (but don't bother past 2**16).
+     */
+    context->all_planes = (unsigned) context->graphic->valid_registers;
+    context->all_planes--;
+    context->all_planes |= 1U;
+    context->all_planes |= context->all_planes >> 1U;
+    context->all_planes |= context->all_planes >> 2U;
+    context->all_planes |= context->all_planes >> 4U;
+    context->all_planes |= context->all_planes >> 8U;
+
+    init_regis_write_controls(terminal_id, context->all_planes, &context->persistent_write_controls);
     copy_regis_write_controls(&context->persistent_write_controls, &context->temporary_write_controls);
+
     /* FIXME: coordinates */
     /* FIXME: scrolling */
     /* FIXME: output maps */
@@ -2748,7 +2754,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 				   fragment_to_tempstr(&regnum)));
 			    return 0;
 			}
-			if (register_num < 0 || register_num > context->graphic->valid_registers) {
+			if (register_num < 0 ||
+			    register_num > (int) context->graphic->valid_registers) {
 			    TRACE(("interpreting out of range register number %d as 0 FIXME\n", register_num));
 			    register_num = 0;
 			}
@@ -3350,7 +3357,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     char ch;
     RegisGraphicsContext context;
     RegisParseState state;
-    unsigned int iterations;
+    unsigned iterations;
 
     (void) xw;
     (void) string;
