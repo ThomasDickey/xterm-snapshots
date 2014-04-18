@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.34 2014/04/17 00:56:35 tom Exp $ */
+/* $XTermId: graphics.c,v 1.35 2014/04/18 00:42:16 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -50,18 +50,22 @@
 
 /* TODO:
  * ReGIS:
- * - plane write control
- * - everything
+ * - shading (pattern and letter)
  * - filling
- * - fix interpolated curves to more closely match implementation
+ * - plane write control
+ * - fix interpolated curves to more closely match implementation (identical despite direction and starting point)
  * - text
  * - input and output cursors
  * - mouse input
  * - stacks
+ * - investigate second graphic page for ReGIS -- does it also apply to text and sixel graphics? are the contents preserved?
+ * - font upload, italics, and other text attributes
  * - enter/leave during a command
  * - command display mode
- * - investigate second graphic page for ReGIS -- does it also apply to text and sixel graphics? are the contents preserved?
+ * - scrolling
+ * - custom coordinate systems
  * - scaling/re-rasterization to fit screen
+ * - macros
  * sixel:
  * - fix problem where new_row < 0 during sixel parsing (see FIXME)
  * VT55/VT105 waveform graphics
@@ -110,7 +114,7 @@
 
 static ColorRegister *shared_color_registers;
 static Graphic *displayed_graphics[MAX_GRAPHICS];
-static unsigned int next_graphic_id = 0U;
+static unsigned next_graphic_id = 0U;
 
 static ColorRegister *
 allocRegisters(void)
@@ -121,12 +125,14 @@ allocRegisters(void)
 static Graphic *
 freeGraphic(Graphic *obj)
 {
-    if (obj != 0) {
-	free(obj->pixels);
-	free(obj->private_color_registers);
+    if (obj) {
+	if (obj->pixels)
+	    free(obj->pixels);
+	if (obj->private_color_registers)
+	    free(obj->private_color_registers);
 	free(obj);
     }
-    return 0;
+    return NULL;
 }
 
 static Graphic *
@@ -134,9 +140,9 @@ allocGraphic(void)
 {
     Graphic *result = TypeCalloc(Graphic);
     if (result) {
-	if ((result->pixels = TypeCallocN(RegisterNum, MAX_PIXELS)) == 0) {
+	if (!(result->pixels = TypeCallocN(RegisterNum, MAX_PIXELS))) {
 	    result = freeGraphic(result);
-	} else if ((result->private_color_registers = allocRegisters()) == 0) {
+	} else if (!(result->private_color_registers = allocRegisters())) {
 	    result = freeGraphic(result);
 	}
     }
@@ -146,34 +152,32 @@ allocGraphic(void)
 static Graphic *
 getActiveSlot(unsigned n)
 {
-    Graphic *result = 0;
     if (n < MAX_GRAPHICS &&
 	displayed_graphics[n] &&
 	displayed_graphics[n]->valid) {
-	result = displayed_graphics[n];
+	return displayed_graphics[n];
     }
-    return result;
+    return NULL;
 }
 
 static Graphic *
 getInactiveSlot(unsigned n)
 {
-    Graphic *result = 0;
     if (n < MAX_GRAPHICS &&
 	(!displayed_graphics[n] ||
 	 !displayed_graphics[n]->valid)) {
-	if (displayed_graphics[n] == 0) {
+	if (!displayed_graphics[n]) {
 	    displayed_graphics[n] = allocGraphic();
 	}
-	result = displayed_graphics[n];
+	return displayed_graphics[n];
     }
-    return result;
+    return NULL;
 }
 
 static ColorRegister *
 getSharedRegisters(void)
 {
-    if (shared_color_registers == 0)
+    if (!shared_color_registers)
 	shared_color_registers = allocRegisters();
     return shared_color_registers;
 }
@@ -209,11 +213,11 @@ draw_solid_pixel(Graphic *graphic, int x, int y, unsigned color)
 	   color,
 	   COLOR_HOLE,
 	   ((color != COLOR_HOLE)
-	    ? (unsigned int) graphic->color_registers[color].r : 0U),
+	    ? (unsigned) graphic->color_registers[color].r : 0U),
 	   ((color != COLOR_HOLE)
-	    ? (unsigned int) graphic->color_registers[color].g : 0U),
+	    ? (unsigned) graphic->color_registers[color].g : 0U),
 	   ((color != COLOR_HOLE)
-	    ? (unsigned int) graphic->color_registers[color].b : 0U)));
+	    ? (unsigned) graphic->color_registers[color].b : 0U)));
 #endif
     if (x >= 0 && x < graphic->actual_width &&
 	y >= 0 && y < graphic->actual_height) {
@@ -339,14 +343,14 @@ static void
 set_shared_color_register(unsigned color, int r, int g, int b)
 {
     Graphic *graphic;
-    unsigned int ii;
+    unsigned ii;
 
     assert(color < MAX_COLOR_REGISTERS);
 
     set_color_register(getSharedRegisters(), color, r, g, b);
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getActiveSlot(ii)) == 0)
+	if (!(graphic = getActiveSlot(ii)))
 	    continue;
 	if (graphic->private_colors)
 	    continue;
@@ -383,10 +387,10 @@ update_color_register(Graphic *graphic,
 RegisterNum
 find_color_register(ColorRegister const *color_registers, int r, int g, int b)
 {
-    unsigned int i;
-    unsigned int d;
-    unsigned int closest_index;
-    unsigned int closest_distance;
+    unsigned i;
+    unsigned d;
+    unsigned closest_index;
+    unsigned closest_distance;
 
     /* I have no idea what algorithm DEC used for this.
      * The documentation warns that it is unpredictable, especially with values
@@ -421,7 +425,7 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
 {
     TRACE(("setting inital colors for terminal %d\n", terminal_id));
     {
-	unsigned int i;
+	unsigned i;
 
 	for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
 	    set_color_register(color_registers, (RegisterNum) i, 0, 0, 0);
@@ -516,7 +520,7 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
 
 #ifdef DEBUG_PALETTE
     {
-	unsigned int i;
+	unsigned i;
 
 	for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
 	    printf("initial value for register %03u: %d,%d,%d\n",
@@ -531,14 +535,14 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
 
 static void
 init_graphic(Graphic *graphic,
-	     unsigned int type,
+	     unsigned type,
 	     int terminal_id,
 	     int charrow,
 	     int charcol,
-	     int num_color_registers,
+	     unsigned num_color_registers,
 	     int private_colors)
 {
-    unsigned int i;
+    unsigned i;
 
     TRACE(("initializing graphic object\n"));
 
@@ -586,7 +590,7 @@ init_graphic(Graphic *graphic,
      * VT382       1 plane (two fixed colors: black and white)  FIXME: verify
      * dxterm      ?
      */
-    if (num_color_registers > 1) {
+    if (num_color_registers > 1U) {
 	graphic->valid_registers = num_color_registers;
 	if (graphic->valid_registers > (int) MAX_COLOR_REGISTERS)
 	    graphic->valid_registers = (int) (MAX_COLOR_REGISTERS - 1);
@@ -635,28 +639,28 @@ init_graphic(Graphic *graphic,
 }
 
 Graphic *
-get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned int type)
+get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 {
     TScreen const *screen = TScreenOf(xw);
     int bufferid = screen->whichBuf;
     int terminal_id = screen->terminal_id;
     Graphic *graphic;
-    unsigned int ii;
+    unsigned ii;
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getInactiveSlot(ii)) != 0) {
+	if ((graphic = getInactiveSlot(ii))) {
 	    TRACE(("using fresh graphic index=%u id=%u\n", ii, next_graphic_id));
 	    break;
 	}
     }
 
     /* if none are free, recycle the graphic scrolled back the farthest */
-    if (graphic == 0) {
+    if (!graphic) {
 	int min_charrow = 0;
 	Graphic *min_graphic = NULL;
 
 	FOR_EACH_SLOT(ii) {
-	    if ((graphic = getActiveSlot(ii)) == 0)
+	    if (!(graphic = getActiveSlot(ii)))
 		continue;
 	    if (!min_graphic || graphic->charrow < min_charrow) {
 		min_charrow = graphic->charrow;
@@ -667,7 +671,13 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned int type)
 	graphic = min_graphic;
     }
 
-    if (graphic != 0) {
+    if (graphic) {
+	unsigned num_registers;
+	if (screen->numcolorregisters >= 0) {
+	    num_registers = (unsigned) screen->numcolorregisters;
+	} else {
+	    num_registers = 0U;
+	}
 	graphic->xw = xw;
 	graphic->bufferid = bufferid;
 	graphic->id = next_graphic_id++;
@@ -676,7 +686,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned int type)
 		     terminal_id,
 		     charrow,
 		     charcol,
-		     screen->numcolorregisters,
+		     num_registers,
 		     screen->privatecolorregisters);
     }
     return graphic;
@@ -688,15 +698,15 @@ get_new_or_matching_graphic(XtermWidget xw,
 			    int charcol,
 			    int actual_width,
 			    int actual_height,
-			    unsigned int type)
+			    unsigned type)
 {
     TScreen const *screen = TScreenOf(xw);
     int bufferid = screen->whichBuf;
     Graphic *graphic;
-    unsigned int ii;
+    unsigned ii;
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getActiveSlot(ii)) != 0 &&
+	if ((graphic = getActiveSlot(ii)) &&
 	    graphic->type == type &&
 	    graphic->bufferid == bufferid &&
 	    graphic->charrow == charrow &&
@@ -709,7 +719,7 @@ get_new_or_matching_graphic(XtermWidget xw,
     }
 
     /* if no match get a new graphic */
-    if ((graphic = get_new_graphic(xw, charrow, charcol, type)) != 0) {
+    if ((graphic = get_new_graphic(xw, charrow, charcol, type))) {
 	graphic->actual_width = actual_width;
 	graphic->actual_height = actual_height;
     }
@@ -1077,13 +1087,13 @@ refresh_displayed_graphics(TScreen const *screen,
 {
     Graphic *ordered_graphics[MAX_GRAPHICS];
     Graphic *graphic;
-    unsigned int ii;
-    unsigned int jj = 0;
+    unsigned ii;
+    unsigned jj = 0;
     int x, y, w, h;
     int xbase, ybase;
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getActiveSlot(ii)) != 0) {
+	if ((graphic = getActiveSlot(ii))) {
 	    ordered_graphics[jj++] = graphic;
 	}
     }
@@ -1133,14 +1143,14 @@ void
 refresh_modified_displayed_graphics(TScreen const *screen)
 {
     Graphic *graphic;
-    unsigned int ii;
+    unsigned ii;
     int leftcol, toprow;
     int nrows, ncols;
     int x, y, w, h;
     int xbase, ybase;
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getActiveSlot(ii)) == 0)
+	if (!(graphic = getActiveSlot(ii)))
 	    continue;
 	if (graphic->bufferid != screen->whichBuf)
 	    continue;
@@ -1191,13 +1201,13 @@ void
 scroll_displayed_graphics(int rows)
 {
     Graphic *graphic;
-    unsigned int ii;
+    unsigned ii;
 
     TRACE(("graphics scroll: moving all up %d rows\n", rows));
     /* FIXME: VT125 ReGIS graphics are fixed at the upper left of the display; need to verify */
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getActiveSlot(ii)) == 0)
+	if (!(graphic = getActiveSlot(ii)))
 	    continue;
 
 	graphic->charrow -= rows;
@@ -1212,11 +1222,11 @@ pixelarea_clear_displayed_graphics(TScreen const *screen,
 				   int h)
 {
     Graphic *graphic;
-    unsigned int ii;
+    unsigned ii;
     int x, y;
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getActiveSlot(ii)) == 0)
+	if (!(graphic = getActiveSlot(ii)))
 	    continue;
 
 	x = winx - graphic->charcol * FontWidth(screen);
@@ -1256,7 +1266,7 @@ chararea_clear_displayed_graphics(TScreen const *screen,
 void
 reset_displayed_graphics(TScreen const *screen)
 {
-    unsigned int ii;
+    unsigned ii;
 
     init_color_registers(getSharedRegisters(), screen->terminal_id);
 

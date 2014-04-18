@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.14 2014/04/17 00:07:54 tom Exp $ */
+/* $XTermId: graphics.h,v 1.15 2014/04/18 00:42:16 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -64,7 +64,7 @@ typedef struct {
     XtermWidget xw;
     int max_width;              /* largest image which can be stored */
     int max_height;             /* largest image which can be stored */
-    int valid_registers;        /* for wrap-around behavior */
+    unsigned valid_registers;   /* for wrap-around behavior */
     int actual_width;           /* size of image before scaling */
     int actual_height;          /* size of image before scaling */
     int private_colors;         /* if not using the shared color registers */
@@ -73,14 +73,14 @@ typedef struct {
     int pixw;                   /* width of graphic pixels in screen pixels */
     int pixh;                   /* height of graphic pixels in screen pixels */
     int bufferid;               /* which screen buffer the graphic is associated with */
-    unsigned int type;          /* type of graphic 0==sixel, 1...NUM_REGIS_PAGES==ReGIS page */
-    unsigned int id;            /* sequential id used for preserving layering */
+    unsigned type;              /* type of graphic 0==sixel, 1...NUM_REGIS_PAGES==ReGIS page */
+    unsigned id;                /* sequential id used for preserving layering */
     int valid;                  /* if the graphic has been initialized */
     int dirty;                  /* if the graphic needs to be redrawn */
 } Graphic;
 
-extern Graphic *get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned int type);
-extern Graphic *get_new_or_matching_graphic(XtermWidget xw, int charrow, int charcol, int actual_width, int actual_height, unsigned int type);
+extern Graphic *get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type);
+extern Graphic *get_new_or_matching_graphic(XtermWidget xw, int charrow, int charcol, int actual_width, int actual_height, unsigned type);
 extern RegisterNum read_pixel(Graphic *graphic, int x, int y);
 extern void draw_solid_pixel(Graphic *graphic, int x, int y, unsigned color);
 extern void draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color);
