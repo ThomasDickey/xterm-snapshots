@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.13 2014/04/14 21:41:24 tom Exp $ */
+/* $XTermId: graphics.h,v 1.14 2014/04/17 00:07:54 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -82,20 +82,19 @@ typedef struct {
 extern Graphic *get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned int type);
 extern Graphic *get_new_or_matching_graphic(XtermWidget xw, int charrow, int charcol, int actual_width, int actual_height, unsigned int type);
 extern RegisterNum read_pixel(Graphic *graphic, int x, int y);
-extern void draw_solid_pixel(Graphic *graphic, int x, int y, RegisterNum color);
-extern void draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterNum color);
-extern void draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterNum color);
+extern void draw_solid_pixel(Graphic *graphic, int x, int y, unsigned color);
+extern void draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color);
+extern void draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color);
 extern void hls2rgb(int h, int l, int s, short *r, short *g, short *b);
 extern void dump_graphic(Graphic const *graphic);
-extern void update_color_register(Graphic *graphic, RegisterNum color, short r, short g, short b);
-extern RegisterNum find_color_register(ColorRegister const *color_registers, short r, short g, short b);
+extern void update_color_register(Graphic *graphic, unsigned color, int r, int g, int b);
+extern RegisterNum find_color_register(ColorRegister const *color_registers, int r, int g, int b);
 extern void chararea_clear_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
 extern void pixelarea_clear_displayed_graphics(TScreen const *screen, int winx, int winy, int w, int h);
 extern void refresh_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
 extern void refresh_modified_displayed_graphics(TScreen const *screen);
 extern void reset_displayed_graphics(TScreen const *screen);
 extern void scroll_displayed_graphics(int rows);
-extern void update_displayed_graphics_color_registers(TScreen const *screen, RegisterNum color, short r, short g, short b);
 
 #ifdef NO_LEAKS
 extern void noleaks_graphics(void);
@@ -119,7 +118,6 @@ extern void noleaks_graphics(void);
 #define refresh_modified_displayed_graphics(screen) /* nothing */
 #define reset_displayed_graphics(screen) /* nothing */
 #define scroll_displayed_graphics(rows) /* nothing */
-#define update_displayed_graphics_color_registers(screen, color, r, g, b) /* nothing */
 
 #endif
 
