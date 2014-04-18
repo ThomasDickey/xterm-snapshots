@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.8 2014/04/14 20:41:05 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.15 2014/04/18 00:03:59 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -79,7 +79,7 @@ typedef struct RegisDataFragment {
 
 typedef enum RegisParseLevel {
     INPUT,
-    OPTIONSET,
+    OPTIONSET
 } RegisParseLevel;
 /* *INDENT-ON* */
 
@@ -131,10 +131,24 @@ typedef struct RegisGraphicsContext {
 
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
 
+static int
+ifloor(double d)
+{
+    double dl = floor(d);
+    return (int) dl;
+}
+
+static int
+isqrt(double d)
+{
+    double dl = sqrt(d);
+    return (int) dl;
+}
+
 static void
 draw_patterned_pixel(RegisGraphicsContext *context, int x, int y)
 {
-    RegisterNum color = 0;
+    unsigned color = 0;
 
     if (context->pattern_count >= context->temporary_write_controls.pattern_multiplier) {
 	context->pattern_count = 0U;
@@ -159,7 +173,7 @@ draw_patterned_pixel(RegisGraphicsContext *context, int x, int y)
     case WRITE_STYLE_REPLACE:
 	/* update pixels with foreground when pattern is 1, background when pattern is 0 */
 	{
-	    RegisterNum fg, bg;
+	    unsigned fg, bg;
 
 	    if (context->temporary_write_controls.invert_pattern) {
 		fg = context->background;
@@ -178,14 +192,14 @@ draw_patterned_pixel(RegisGraphicsContext *context, int x, int y)
     case WRITE_STYLE_COMPLEMENT:
 	/* update pixels with background when pattern is 1, unchanged when pattern is 0 */
 	{
-	    RegisterNum valid_bits;
+	    unsigned valid_bits;
 
 	    if (!(context->temporary_write_controls.pattern & context->pattern_bit)) {
 		return;
 	    }
 
 	    /* generate a mask covering all valid register address bits (but not past 2**16) */
-	    valid_bits = context->graphic->valid_registers;
+	    valid_bits = (unsigned) context->graphic->valid_registers;
 	    valid_bits--;
 	    valid_bits |= 1U;
 	    valid_bits |= valid_bits >> 1U;
@@ -365,12 +379,12 @@ draw_patterned_arc(RegisGraphicsContext *context,
 	do {
 	    if (points >= points_start && points <= points_stop) {
 		draw_patterned_pixel(context,
-				     cx +
+				     (int) (cx +
 				     quadmap[quad].dxx * rx +
-				     quadmap[quad].dxy * ry,
-				     cy +
+				     quadmap[quad].dxy * ry),
+				     (int) (cy +
 				     quadmap[quad].dyx * rx +
-				     quadmap[quad].dyy * ry);
+				     quadmap[quad].dyy * ry));
 	    }
 	    points++;
 
@@ -438,10 +452,11 @@ plotQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2)
 {				/* plot a limited quadratic Bezier segment */
     int sx = x2 - x1;
     int sy = y2 - y1;
-    long xx = x0 - x1;
-    long yy = y0 - y1, xy;	/* relative values for checks */
+    long xx = (x0 - x1);	/* relative values for checks */
+    long yy = (y0 - y1);
+    long xy;
     double dx, dy, err;
-    double cur = xx * sy - yy * sx;	/* curvature */
+    double cur = (double) (xx * sy - yy * sx);	/* curvature */
 
     assert(xx * sx <= 0 && yy * sy <= 0);	/* sign of gradient must not change */
 
@@ -466,25 +481,28 @@ plotQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2)
 	    xy = -xy;
 	    cur = -cur;
 	}
-	dx = 4.0 * sy * cur * (x1 - x0) + xx - xy;	/* differences 1st degree */
-	dy = 4.0 * sx * cur * (y0 - y1) + yy - xy;
+	/* differences 1st degree */
+	dx = ((4.0 * sy * cur * (x1 - x0)) + (double) xx) - (double) xy;
+	dy = ((4.0 * sx * cur * (y0 - y1)) + (double) yy) - (double) xy;
 	xx += xx;
 	yy += yy;
-	err = dx + dy + xy;	/* error 1st step */
+	err = dx + dy + (double) xy;	/* error 1st step */
 	do {
 	    setPixel(x0, y0);	/* plot curve */
 	    if (x0 == x2 && y0 == y2)
 		return;		/* last pixel -> curve finished */
-	    y1 = 2 * err < dx;	/* save value for test of y step */
-	    if (2 * err > dy) {
+	    y1 = (2 * err) < dx;	/* save value for test of y step */
+	    if ((2 * err) > dy) {
 		x0 += sx;
-		dx -= xy;
-		err += dy += yy;
+		dx -= (double) xy;
+		dy += (double) yy;
+		err += dy;
 	    }			/* x step */
 	    if (y1) {
 		y0 += sy;
-		dy -= xy;
-		err += dx += xx;
+		dy -= (double) xy;
+		dx += (double) xx;
+		err += dx;
 	    }			/* y step */
 	} while (dy < 0 && dx > 0);	/* gradient negates -> algorithm fails */
     }
@@ -511,27 +529,27 @@ plotQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2)
 	t = (x0 - x1) / t;
 	r = (1 - t) * ((1 - t) * y0 + 2.0 * t * y1) + t * t * y2;	/* By(t=P4) */
 	t = (x0 * x2 - x1 * x1) * t / (x0 - x1);	/* gradient dP4/dx=0 */
-	x = floor(t + 0.5);
-	y = floor(r + 0.5);
+	x = ifloor(t + 0.5);
+	y = ifloor(r + 0.5);
 	r = (y1 - y0) * (t - x0) / (x1 - x0) + y0;	/* intersect P3 | P0 P1 */
-	plotQuadBezierSeg(x0, y0, x, floor(r + 0.5), x, y);
+	plotQuadBezierSeg(x0, y0, x, ifloor(r + 0.5), x, y);
 	r = (y1 - y2) * (t - x2) / (x1 - x2) + y2;	/* intersect P4 | P1 P2 */
 	x0 = x1 = x;
 	y0 = y;
-	y1 = floor(r + 0.5);	/* P0 = P4, P1 = P8 */
+	y1 = ifloor(r + 0.5);	/* P0 = P4, P1 = P8 */
     }
     if ((long) (y0 - y1) * (y2 - y1) > 0) {	/* vertical cut at P6? */
 	t = y0 - 2 * y1 + y2;
 	t = (y0 - y1) / t;
 	r = (1 - t) * ((1 - t) * x0 + 2.0 * t * x1) + t * t * x2;	/* Bx(t=P6) */
 	t = (y0 * y2 - y1 * y1) * t / (y0 - y1);	/* gradient dP6/dy=0 */
-	x = floor(r + 0.5);
-	y = floor(t + 0.5);
+	x = ifloor(r + 0.5);
+	y = ifloor(t + 0.5);
 	r = (x1 - x0) * (t - y0) / (y1 - y0) + x0;	/* intersect P6 | P0 P1 */
-	plotQuadBezierSeg(x0, y0, floor(r + 0.5), y, x, y);
+	plotQuadBezierSeg(x0, y0, ifloor(r + 0.5), y, x, y);
 	r = (x1 - x2) * (t - y2) / (y1 - y2) + x2;	/* intersect P7 | P1 P2 */
 	x0 = x;
-	x1 = floor(r + 0.5);
+	x1 = ifloor(r + 0.5);
 	y0 = y1 = y;		/* P0 = P6, P1 = P7 */
     }
     plotQuadBezierSeg(x0, y0, x1, y1, x2, y2);	/* remaining part */
@@ -539,19 +557,21 @@ plotQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2)
 #endif
 
 static void
-plotCubicBezierSeg(int x0, int y0, float x1, float y1,
-		   float x2, float y2, int x3, int y3)
+plotCubicBezierSeg(int x0, int y0,
+		   double x1, double y1,
+		   double x2, double y2,
+		   int x3, int y3)
 {				/* plot limited cubic Bezier segment */
-    int f, fx, fy;
+    int f, fx, fy, tt;
     int leg = 1;
     int sx = x0 < x3 ? 1 : -1;
     int sy = y0 < y3 ? 1 : -1;	/* step direction */
-    float xc = -fabs(x0 + x1 - x2 - x3);
-    float xa = xc - 4 * sx * (x1 - x2);
-    float xb = sx * (x0 - x1 - x2 + x3);
-    float yc = -fabs(y0 + y1 - y2 - y3);
-    float ya = yc - 4 * sy * (y1 - y2);
-    float yb = sy * (y0 - y1 - y2 + y3);
+    double xc = -fabs(x0 + x1 - x2 - x3);
+    double xa = xc - 4 * sx * (x1 - x2);
+    double xb = sx * (x0 - x1 - x2 + x3);
+    double yc = -fabs(y0 + y1 - y2 - y3);
+    double ya = yc - 4 * sy * (y1 - y2);
+    double yb = sy * (y0 - y1 - y2 + y3);
     double ab, ac, bc, cb, xx, xy, yy, dx, dy, ex, *pxy;
     double EP = 0.01;
     /* check for curve restrains */
@@ -562,9 +582,10 @@ plotCubicBezierSeg(int x0, int y0, float x1, float y1,
 	   ((y3 - y0) * (y1 - y2) < EP || yb * yb < ya * yc + EP));
 
     if (xa == 0 && ya == 0) {	/* quadratic Bezier */
-	sx = floor((3 * x1 - x0 + 1) / 2);
-	sy = floor((3 * y1 - y0 + 1) / 2);	/* new midpoint */
-	return plotQuadBezierSeg(x0, y0, sx, sy, x3, y3);
+	sx = ifloor((3 * x1 - x0 + 1) / 2);
+	sy = ifloor((3 * y1 - y0 + 1) / 2);	/* new midpoint */
+	plotQuadBezierSeg(x0, y0, sx, sy, x3, y3);
+	return;
     }
     x1 = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) + 1;	/* line lengths */
     x2 = (x2 - x3) * (x2 - x3) + (y2 - y3) * (y2 - y3) + 1;
@@ -573,7 +594,9 @@ plotCubicBezierSeg(int x0, int y0, float x1, float y1,
 	ac = xa * yc - xc * ya;
 	bc = xb * yc - xc * yb;
 	ex = ab * (ab + ac - 3 * bc) + ac * ac;		/* P0 part of self-intersection loop? */
-	f = ex > 0 ? 1 : sqrt(1 + 1024 / x1);	/* calculate resolution */
+	f = ((ex > 0.0)
+	     ? 1
+	     : isqrt(1 + 1024 / x1));	/* calculate resolution */
 	ab *= f;
 	ac *= f;
 	bc *= f;
@@ -644,14 +667,11 @@ plotCubicBezierSeg(int x0, int y0, float x1, float y1,
 	    if (pxy == &xy && dx < 0 && dy > 0)
 		pxy = &EP;	/* pixel ahead valid */
 	}
-      exit:xx = x0;
-	x0 = x3;
-	x3 = xx;
+      exit:
+	EXCHANGE(x0, x3, tt);
 	sx = -sx;
 	xb = -xb;		/* swap legs */
-	yy = y0;
-	y0 = y3;
-	y3 = yy;
+	EXCHANGE(y0, y3, tt);
 	sy = -sy;
 	yb = -yb;
 	x1 = x2;
@@ -672,8 +692,8 @@ plotCubicBezier(int x0, int y0, int x1, int y1,
     long ya = yc - 4 * (y1 - y2);
     long yb = y0 - y1 - y2 + y3;
     long yd = yb + 4 * (y1 + y2);
-    float fx0 = x0, fx1, fx2, fx3, fy0 = y0, fy1, fy2, fy3;
-    double t1 = xb * xb - xa * xc, t2, t[5];
+    double fx0 = x0, fx1, fx2, fx3, fy0 = y0, fy1, fy2, fy3;
+    double t1 = (double) (xb * xb - xa * xc), t2, t[5];
 
 #ifdef DEBUG_BEZIER
     printf("plotCubicBezier(%d,%d, %d,%d, %d,%d, %d,%d\n",
@@ -681,27 +701,27 @@ plotCubicBezier(int x0, int y0, int x1, int y1,
 #endif
     /* sub-divide curve at gradient sign changes */
     if (xa == 0) {		/* horizontal */
-	if (abs(xc) < 2 * abs(xb))
-	    t[n++] = xc / (2.0 * xb);	/* one change */
+	if (labs(xc) < 2 * labs(xb))
+	    t[n++] = (double) xc / (2.0 * (double) xb);	/* one change */
     } else if (t1 > 0.0) {	/* two changes */
 	t2 = sqrt(t1);
-	t1 = (xb - t2) / xa;
+	t1 = ((double) xb - t2) / (double) xa;
 	if (fabs(t1) < 1.0)
 	    t[n++] = t1;
-	t1 = (xb + t2) / xa;
+	t1 = ((double) xb + t2) / (double) xa;
 	if (fabs(t1) < 1.0)
 	    t[n++] = t1;
     }
-    t1 = yb * yb - ya * yc;
+    t1 = (double) (yb * yb - ya * yc);
     if (ya == 0) {		/* vertical */
-	if (abs(yc) < 2 * abs(yb))
-	    t[n++] = yc / (2.0 * yb);	/* one change */
+	if (labs(yc) < 2 * labs(yb))
+	    t[n++] = (double) yc / (2.0 * (double) yb);	/* one change */
     } else if (t1 > 0.0) {	/* two changes */
 	t2 = sqrt(t1);
-	t1 = (yb - t2) / ya;
+	t1 = ((double) yb - t2) / (double) ya;
 	if (fabs(t1) < 1.0)
 	    t[n++] = t1;
-	t1 = (yb + t2) / ya;
+	t1 = ((double) yb + t2) / (double) ya;
 	if (fabs(t1) < 1.0)
 	    t[n++] = t1;
     }
@@ -716,18 +736,18 @@ plotCubicBezier(int x0, int y0, int x1, int y1,
     t[n] = 1.0;			/* begin / end point */
     for (i = 0; i <= n; i++) {	/* plot each segment separately */
 	t2 = t[i];		/* sub-divide at t[i-1], t[i] */
-	fx1 = (t1 * (t1 * xb - 2 * xc) -
-	       t2 * (t1 * (t1 * xa - 2 * xb) + xc) + xd) / 8 - fx0;
-	fy1 = (t1 * (t1 * yb - 2 * yc) -
-	       t2 * (t1 * (t1 * ya - 2 * yb) + yc) + yd) / 8 - fy0;
-	fx2 = (t2 * (t2 * xb - 2 * xc) -
-	       t1 * (t2 * (t2 * xa - 2 * xb) + xc) + xd) / 8 - fx0;
-	fy2 = (t2 * (t2 * yb - 2 * yc) -
-	       t1 * (t2 * (t2 * ya - 2 * yb) + yc) + yd) / 8 - fy0;
-	fx0 -= fx3 = (t2 * (t2 * (3 * xb - t2 * xa) - 3 * xc) + xd) / 8;
-	fy0 -= fy3 = (t2 * (t2 * (3 * yb - t2 * ya) - 3 * yc) + yd) / 8;
-	x3 = floor(fx3 + 0.5);
-	y3 = floor(fy3 + 0.5);	/* scale bounds to int */
+	fx1 = (t1 * (t1 * (double) xb - (double) (2 * xc)) -
+	       t2 * (t1 * (t1 * (double) xa - (double) (2 * xb)) + (double) xc) + (double) xd) / 8 - fx0;
+	fy1 = (t1 * (t1 * (double) yb - (double) (2 * yc)) -
+	       t2 * (t1 * (t1 * (double) ya - (double) (2 * yb)) + (double) yc) + (double) yd) / 8 - fy0;
+	fx2 = (t2 * (t2 * (double) xb - (double) (2 * xc)) -
+	       t1 * (t2 * (t2 * (double) xa - (double) (2 * xb)) + (double) xc) + (double) xd) / 8 - fx0;
+	fy2 = (t2 * (t2 * (double) yb - (double) (2 * yc)) -
+	       t1 * (t2 * (t2 * (double) ya - (double) (2 * yb)) + (double) yc) + (double) yd) / 8 - fy0;
+	fx0 -= fx3 = (t2 * (t2 * ((double) (3 * xb) - t2 * (double) xa) - (double) (3 * xc)) + (double) xd) / 8;
+	fy0 -= fy3 = (t2 * (t2 * ((double) (3 * yb) - t2 * (double) ya) - (double) (3 * yc)) + (double) yd) / 8;
+	x3 = ifloor(fx3 + 0.5);
+	y3 = ifloor(fy3 + 0.5);	/* scale bounds to int */
 	if (fx0 != 0.0) {
 	    fx1 *= fx0 = (x0 - x3) / fx0;
 	    fx2 *= fx0;
@@ -754,7 +774,7 @@ static void
 plotQuadSpline(int n, int x[], int y[], int skip_segments)
 {				/* plot quadratic spline, destroys input arrays x,y */
 #define M_MAX 12
-    float mi = 1, m[M_MAX];	/* diagonal constants of matrix */
+    double mi = 1, m[M_MAX];	/* diagonal constants of matrix */
     int i, x0, y0, x1, y1, x2, y2;
 #ifdef DEBUG_SPLINE_SEGMENTS
     int color = 0;
@@ -794,17 +814,17 @@ plotQuadSpline(int n, int x[], int y[], int skip_segments)
     for (i = 2; i < n; i++) {	/* forward sweep */
 	if (i - 2 < M_MAX)
 	    m[i - 2] = mi = 1.0 / (6.0 - mi);
-	x[i] = x0 = floor(8 * x[i] - x0 * mi + 0.5);	/* store yi */
-	y[i] = y0 = floor(8 * y[i] - y0 * mi + 0.5);
+	x[i] = x0 = ifloor(8 * x[i] - x0 * mi + 0.5);	/* store yi */
+	y[i] = y0 = ifloor(8 * y[i] - y0 * mi + 0.5);
     }
-    x1 = floor((x0 - 2 * x2) / (5.0 - mi) + 0.5);	/* correction last row */
-    y1 = floor((y0 - 2 * y2) / (5.0 - mi) + 0.5);
+    x1 = ifloor((x0 - 2 * x2) / (5.0 - mi) + 0.5);	/* correction last row */
+    y1 = ifloor((y0 - 2 * y2) / (5.0 - mi) + 0.5);
 
     for (i = n - 2; i > 0; i--) {	/* back substitution */
 	if (i <= M_MAX)
 	    mi = m[i - 1];
-	x0 = floor((x[i] - x1) * mi + 0.5);	/* next corner */
-	y0 = floor((y[i] - y1) * mi + 0.5);
+	x0 = ifloor((x[i] - x1) * mi + 0.5);	/* next corner */
+	y0 = ifloor((y[i] - y1) * mi + 0.5);
 #ifdef DEBUG_SPLINE_SEGMENTS
 	color++;
 	global_context->temporary_write_controls.foreground = color;
@@ -829,7 +849,7 @@ static void
 plotCubicSpline(int n, int x[], int y[], int skip_first_last)
 {
 #define M_MAX 12
-    float mi = 0.25, m[M_MAX];	/* diagonal constants of matrix */
+    double mi = 0.25, m[M_MAX];	/* diagonal constants of matrix */
     int x3, y3, x4, y4;
     int i, x0, y0, x1, y1, x2, y2;
 #ifdef DEBUG_SPLINE_SEGMENTS
@@ -869,15 +889,15 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
     x[1] = x0 = 12 * x[1] - 3 * x[0];	/* first row of matrix */
     y[1] = y0 = 12 * y[1] - 3 * y[0];
 
-    for (i = 2; i < n; i++) {	/* foreward sweep */
+    for (i = 2; i < n; i++) {	/* forward sweep */
 	if (i - 2 < M_MAX)
 	    m[i - 2] = mi = 0.25 / (2.0 - mi);
-	x[i] = x0 = floor(12 * x[i] - 2 * x0 * mi + 0.5);
-	y[i] = y0 = floor(12 * y[i] - 2 * y0 * mi + 0.5);
+	x[i] = x0 = ifloor(12 * x[i] - 2 * x0 * mi + 0.5);
+	y[i] = y0 = ifloor(12 * y[i] - 2 * y0 * mi + 0.5);
     }
-    x2 = floor((x0 - 3 * x4) / (7 - 4 * mi) + 0.5);	/* correct last row */
+    x2 = ifloor((x0 - 3 * x4) / (7 - 4 * mi) + 0.5);	/* correct last row */
     printf("y0=%d, y4=%d mi=%g\n", y0, y4, mi);
-    y2 = floor((y0 - 3 * y4) / (7 - 4 * mi) + 0.5);
+    y2 = ifloor((y0 - 3 * y4) / (7 - 4 * mi) + 0.5);
     printf("y2=%d, y3=%d, y4=%d\n", y2, y3, y4);
 #ifdef DEBUG_SPLINE_SEGMENTS
     color++;
@@ -888,24 +908,24 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
 
     if (n - 3 < M_MAX)
 	mi = m[n - 3];
-    x1 = floor((x[n - 2] - 2 * x2) * mi + 0.5);
-    y1 = floor((y[n - 2] - 2 * y2) * mi + 0.5);
+    x1 = ifloor((x[n - 2] - 2 * x2) * mi + 0.5);
+    y1 = ifloor((y[n - 2] - 2 * y2) * mi + 0.5);
     for (i = n - 3; i > 0; i--) {	/* back substitution */
 	if (i <= M_MAX)
 	    mi = m[i - 1];
-	x0 = floor((x[i] - 2 * x1) * mi + 0.5);
-	y0 = floor((y[i] - 2 * y1) * mi + 0.5);
-	x4 = floor((x0 + 4 * x1 + x2 + 3) / 6.0);	/* reconstruct P[i] */
-	y4 = floor((y0 + 4 * y1 + y2 + 3) / 6.0);
+	x0 = ifloor((x[i] - 2 * x1) * mi + 0.5);
+	y0 = ifloor((y[i] - 2 * y1) * mi + 0.5);
+	x4 = ifloor((x0 + 4 * x1 + x2 + 3) / 6.0);	/* reconstruct P[i] */
+	y4 = ifloor((y0 + 4 * y1 + y2 + 3) / 6.0);
 #ifdef DEBUG_SPLINE_SEGMENTS
 	color++;
 	global_context->temporary_write_controls.foreground = color;
 #endif
 	plotCubicBezier(x4, y4,
-			floor((2 * x1 + x2) / 3 + 0.5),
-			floor((2 * y1 + y2) / 3 + 0.5),
-			floor((x1 + 2 * x2) / 3 + 0.5),
-			floor((y1 + 2 * y2) / 3 + 0.5),
+			ifloor((2 * x1 + x2) / 3 + 0.5),
+			ifloor((2 * y1 + y2) / 3 + 0.5),
+			ifloor((x1 + 2 * x2) / 3 + 0.5),
+			ifloor((y1 + 2 * y2) / 3 + 0.5),
 			x3, y3);
 	x3 = x4;
 	y3 = y4;
@@ -915,17 +935,17 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
 	y1 = y0;
     }
     x0 = x[0];
-    x4 = floor((3 * x0 + 7 * x1 + 2 * x2 + 6) / 12.0);	/* reconstruct P[1] */
+    x4 = ifloor((3 * x0 + 7 * x1 + 2 * x2 + 6) / 12.0);	/* reconstruct P[1] */
     y0 = y[0];
-    y4 = floor((3 * y0 + 7 * y1 + 2 * y2 + 6) / 12.0);
+    y4 = ifloor((3 * y0 + 7 * y1 + 2 * y2 + 6) / 12.0);
 #ifdef DEBUG_SPLINE_SEGMENTS
     global_context->temporary_write_controls.foreground = 4;
 #endif
     plotCubicBezier(x4, y4,
-		    floor((2 * x1 + x2) / 3 + 0.5),
-		    floor((2 * y1 + y2) / 3 + 0.5),
-		    floor((x1 + 2 * x2) / 3 + 0.5),
-		    floor((y1 + 2 * y2) / 3 + 0.5),
+		    ifloor((2 * x1 + x2) / 3 + 0.5),
+		    ifloor((2 * y1 + y2) / 3 + 0.5),
+		    ifloor((x1 + 2 * x2) / 3 + 0.5),
+		    ifloor((y1 + 2 * y2) / 3 + 0.5),
 		    x3, y3);
 #ifdef DEBUG_SPLINE_SEGMENTS
     color++;
@@ -939,7 +959,7 @@ static void
 init_fragment(RegisDataFragment *fragment, char const *str)
 {
     fragment->start = str;
-    fragment->len = strlen(str);
+    fragment->len = (unsigned) strlen(str);
     fragment->pos = 0U;
 }
 
@@ -1391,7 +1411,7 @@ load_regis_colorspec(Graphic const *graphic, RegisDataFragment const *input, Reg
 	    return 0;
 	}
 	TRACE(("colorspec contains index for register %u\n", val));
-	*out = val;
+	*out = (RegisterNum) val;
 	return 1;
     }
 
@@ -1696,7 +1716,7 @@ load_regis_write_control(RegisParseState *state,
 					TRACE(("interpreting out of range pattern multiplier as 2 FIXME\n"));
 					out->pattern_multiplier = 2U;
 				    } else {
-					out->pattern_multiplier = val;
+					out->pattern_multiplier = (unsigned) val;
 				    }
 				    skip_regis_whitespace(&suboptionarg);
 				    if (fragment_len(&suboptionarg)) {
@@ -1755,7 +1775,7 @@ load_regis_write_control(RegisParseState *state,
 			}
 
 			if (bitcount > 0U) {
-			    int extrabits;
+			    unsigned extrabits;
 
 			    for (extrabits = 0;
 				 bitcount + extrabits < MAX_PATTERN_BITS;
@@ -1844,7 +1864,7 @@ load_regis_write_control(RegisParseState *state,
 	    RegisDataFragment item;
 	    char suboption;
 	    char shading_character = '\0';
-	    int reference_dim = WRITE_SHADING_REF_Y;
+	    unsigned reference_dim = WRITE_SHADING_REF_Y;
 	    int ref_x = cur_x, ref_y = cur_y;
 	    int shading_enabled = 0;
 
@@ -1909,7 +1929,9 @@ load_regis_write_control(RegisParseState *state,
 			return 0;
 		    }
 		    TRACE(("shading reference = %d,%d (%s)\n", ref_x, ref_y,
-			   reference_dim == WRITE_SHADING_REF_X ? "X" : "Y"));
+			   ((reference_dim == WRITE_SHADING_REF_X)
+			    ? "X"
+			    : "Y")));
 		    continue;
 		}
 
@@ -2284,7 +2306,7 @@ parse_regis_command(RegisParseState *state)
 		TRACE(("expanding macrograph \"%c\" FIXME\n", ch));
 		/* FIXME: handle */
 	    } else {
-		TRACE(("DATA_ERROR: unknown macrograph subcommand \"\%c\"\n", ch));
+		TRACE(("DATA_ERROR: unknown macrograph subcommand \"%c\"\n", ch));
 	    }
 	    /* FIXME: parse, handle */
 	    break;
@@ -2391,7 +2413,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 #ifdef DEBUG_SPLINE_POINTS
 		    printf("points: \n");
-		    for (i = 0; i < state->num_points; i++)
+		    for (i = 0; i < (int) state->num_points; i++)
 			printf("  %d,%d\n",
 			       state->x_points[i], state->y_points[i]);
 #endif
@@ -2402,32 +2424,32 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			int temp_x[MAX_CURVE_POINTS], temp_y[MAX_CURVE_POINTS];
 			shift++;
 			shift = shift % state->num_points;
-			for (i = 0; i < state->num_points; i++) {
+			for (i = 0; i < (int) state->num_points; i++) {
 			    temp_x[i] = state->x_points[i];
 			    temp_y[i] = state->y_points[i];
 			}
-			for (i = 0; i < state->num_points; i++) {
+			for (i = 0; i < (int) state->num_points; i++) {
 			    state->x_points[i] = temp_x[(i + shift) % state->num_points];
 			    state->y_points[i] = temp_y[(i + shift) % state->num_points];
 			}
 
 #ifdef DEBUG_SPLINE_POINTS
 			printf("after shift %d: \n", shift);
-			for (i = 0; i < state->num_points; i++)
+			for (i = 0; i < (int) state->num_points; i++)
 			    printf("  %d,%d\n",
 				   state->x_points[i], state->y_points[i]);
 #endif
 		    }
 #endif
 
-		    for (i = state->num_points; i > 0; i--) {
+		    for (i = (int) state->num_points; i > 0; i--) {
 			state->x_points[i] = state->x_points[i - 1];
 			state->y_points[i] = state->y_points[i - 1];
 		    }
 		    state->x_points[0] = state->x_points[state->num_points];
 		    state->y_points[0] = state->y_points[state->num_points];
 		    state->num_points++;
-		    for (i = state->num_points; i > 0; i--) {
+		    for (i = (int) state->num_points; i > 0; i--) {
 			state->x_points[i] = state->x_points[i - 1];
 			state->y_points[i] = state->y_points[i - 1];
 		    }
@@ -2447,14 +2469,14 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 #endif
 #ifdef DEBUG_SPLINE_POINTS
 		    printf("after points added: \n");
-		    for (i = 0; i < state->num_points; i++)
+		    for (i = 0; i < (int) state->num_points; i++)
 			printf("  %d,%d\n",
 			       state->x_points[i], state->y_points[i]);
 #endif
 		}
 		TRACE(("drawing closed spline\n"));
 		global_context = context;	/* FIXME: remove after updating spline code */
-		plotCubicSpline(state->num_points - 1,
+		plotCubicSpline((int) state->num_points - 1,
 				state->x_points, state->y_points,
 				1);
 		break;
@@ -2465,13 +2487,13 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    int i;
 
 		    printf("points: \n");
-		    for (i = 0; i < state->num_points; i++)
+		    for (i = 0; i < (int) state->num_points; i++)
 			printf("  %d,%d\n",
 			       state->x_points[i], state->y_points[i]);
 		}
 #endif
 		global_context = context;	/* FIXME: remove after updating spline code */
-		plotCubicSpline(state->num_points - 1,
+		plotCubicSpline((int) state->num_points - 1,
 				state->x_points, state->y_points,
 				1);
 		break;
@@ -3092,7 +3114,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 			}
 
 			radians = atan2(new_y - orig_y, new_x - orig_x);
-			degrees = 360.0 * radians / (2.0 * M_PI);
+			degrees = (int) (360.0 * radians / (2.0 * M_PI));
 			if (degrees < 0)
 			    degrees += 360;
 

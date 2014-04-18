@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.33 2014/04/14 21:43:19 tom Exp $ */
+/* $XTermId: graphics.c,v 1.34 2014/04/17 00:56:35 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -198,7 +198,7 @@ read_pixel(Graphic *graphic, int x, int y)
 }
 
 void
-draw_solid_pixel(Graphic *graphic, int x, int y, RegisterNum color)
+draw_solid_pixel(Graphic *graphic, int x, int y, unsigned color)
 {
     assert(color <= MAX_COLOR_REGISTERS);
 
@@ -217,7 +217,7 @@ draw_solid_pixel(Graphic *graphic, int x, int y, RegisterNum color)
 #endif
     if (x >= 0 && x < graphic->actual_width &&
 	y >= 0 && y < graphic->actual_height) {
-	graphic->pixels[y * graphic->max_width + x] = color;
+	graphic->pixels[y * graphic->max_width + x] = (RegisterNum) color;
 	if (color < MAX_COLOR_REGISTERS)
 	    graphic->color_registers_used[color] = 1;
     } else {
@@ -226,7 +226,7 @@ draw_solid_pixel(Graphic *graphic, int x, int y, RegisterNum color)
 }
 
 void
-draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterNum color)
+draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color)
 {
     int x, y;
     int tmp;
@@ -250,7 +250,7 @@ draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterN
 }
 
 void
-draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterNum color)
+draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color)
 {
     int x, y;
     int dx, dy;
@@ -320,10 +320,10 @@ draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, RegisterNum co
 
 static void
 set_color_register(ColorRegister *color_registers,
-		   RegisterNum color,
-		   short r,
-		   short g,
-		   short b)
+		   unsigned color,
+		   int r,
+		   int g,
+		   int b)
 {
     ColorRegister *reg = &color_registers[color];
     reg->r = (short) r;
@@ -336,7 +336,7 @@ set_color_register(ColorRegister *color_registers,
  * device-wide color palette.
  */
 static void
-set_shared_color_register(RegisterNum color, short r, short g, short b)
+set_shared_color_register(unsigned color, int r, int g, int b)
 {
     Graphic *graphic;
     unsigned int ii;
@@ -359,10 +359,10 @@ set_shared_color_register(RegisterNum color, short r, short g, short b)
 
 void
 update_color_register(Graphic *graphic,
-		      RegisterNum color,
-		      short r,
-		      short g,
-		      short b)
+		      unsigned color,
+		      int r,
+		      int g,
+		      int b)
 {
     assert(color < MAX_COLOR_REGISTERS);
 
@@ -381,7 +381,7 @@ update_color_register(Graphic *graphic,
 #define SQUARE(X) ( (X) * (X) )
 
 RegisterNum
-find_color_register(ColorRegister const *color_registers, short r, short g, short b)
+find_color_register(ColorRegister const *color_registers, int r, int g, int b)
 {
     unsigned int i;
     unsigned int d;
