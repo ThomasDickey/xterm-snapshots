@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1327 2014/04/16 00:30:18 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1329 2014/04/25 23:28:46 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -765,7 +765,7 @@ static Boolean VTSetValues(Widget cur, Widget request, Widget new_arg,
 			   ArgList args, Cardinal *num_args);
 static void VTClassInit(void);
 static void VTDestroy(Widget w);
-static void VTExpose(Widget w, XEvent * event, Region region);
+static void VTExpose(Widget w, XEvent *event, Region region);
 static void VTInitialize(Widget wrequest, Widget new_arg, ArgList args,
 			 Cardinal *num_args);
 static void VTRealize(Widget w, XtValueMask * valuemask,
@@ -1523,6 +1523,27 @@ subparam_index(int p, int s)
 }
 
 /*
+ * Check if the given item in the parameter array has subparameters.
+ * If so, return the number of subparameters to use as a loop limit, etc.
+ */
+static int
+param_has_subparams(int item)
+{
+    int result = 0;
+    if (parms.has_subparams) {
+	int n = subparam_index(item, 0);
+	if (n >= 0 && parms.is_sub[n]) {
+	    while (n++ < nparam && parms.is_sub[n - 1] < parms.is_sub[n]) {
+		result++;
+	    }
+	}
+    }
+    TRACE(("...param_has_subparams(%d) ->%d\n", item, result));
+    return result;
+}
+
+#if OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
+/*
  * Given an index into the parameter array, return the corresponding parameter
  * number (starting from zero).
  */
@@ -1558,27 +1579,6 @@ get_subparam(int p, int s)
     return result;
 }
 
-/*
- * Check if the given item in the parameter array has subparameters.
- * If so, return the number of subparameters to use as a loop limit, etc.
- */
-static int
-param_has_subparams(int item)
-{
-    int result = 0;
-    if (parms.has_subparams) {
-	int n = subparam_index(item, 0);
-	if (n >= 0 && parms.is_sub[n]) {
-	    while (n++ < nparam && parms.is_sub[n - 1] < parms.is_sub[n]) {
-		result++;
-	    }
-	}
-    }
-    TRACE(("...param_has_subparams(%d) ->%d\n", item, result));
-    return result;
-}
-
-#if OPT_256_COLORS || OPT_88_COLORS || OPT_ISO_COLORS
 /*
  * Some background -
  *
@@ -3417,6 +3417,69 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
+	case CASE_GRAPHICS_ATTRIBUTES:
+#if OPT_GRAPHICS
+	    TRACE(("CASE_GRAPHICS_ATTRIBUTES\n"));
+	    {
+		/* request: item, action, value */
+		/* reply: item, status, value */
+		if (nparam != 3) {
+		    TRACE(("DATA_ERROR: malformed CASE_GRAPHICS_ATTRIBUTES request with %d parameters\n", nparam));
+		} else {
+		    int status = 3;
+		    int result = 0;
+
+		    TRACE(("CASE_GRAPHICS_ATTRIBUTES request: %d, %d, %d\n",
+			   GetParam(0), GetParam(1), GetParam(2)));
+		    switch (GetParam(0)) {
+		    case 1:	/* color register count */
+			switch (GetParam(1)) {
+			case 1:	/* read */
+			    status = 0;
+			    result = (int) get_color_register_count(screen);
+			    break;
+			case 2:	/* reset */
+			    screen->numcolorregisters = 0;
+			    status = 0;
+			    result = (int) get_color_register_count(screen);
+			    break;
+			case 3:	/* set */
+			    if (GetParam(2) > 1 &&
+				(unsigned) GetParam(2) <= MAX_COLOR_REGISTERS) {
+				screen->numcolorregisters = GetParam(2);
+				status = 0;
+				result = (int) get_color_register_count(screen);
+			    }
+			    break;
+			default:
+			    TRACE(("DATA_ERROR: CASE_GRAPHICS_ATTRIBUTES color register count request with unknown action parameter: %d\n",
+				   GetParam(1)));
+			    status = 2;
+			    break;
+			}
+			break;
+		    default:
+			TRACE(("DATA_ERROR: CASE_GRAPHICS_ATTRIBUTES request with unknown item parameter: %d\n",
+			       GetParam(0)));
+			status = 1;
+			break;
+		    }
+
+		    init_reply(ANSI_CSI);
+		    reply.a_pintro = '?';
+		    reply.a_nparam = 3;
+		    reply.a_param[0] = (ParmType) GetParam(0);
+		    reply.a_param[1] = (ParmType) status;
+		    reply.a_param[2] = (ParmType) result;
+		    reply.a_inters = 0;
+		    reply.a_final = 'S';
+		    unparseseq(xw, &reply);
+		}
+	    }
+#endif
+	    ResetState(sp);
+	    break;
+
 	case CASE_ST:
 	    TRACE(("CASE_ST: End of String (%lu bytes) (mode=%d)\n",
 		   (unsigned long) sp->string_used,
@@ -4826,7 +4889,7 @@ visual_width(IChar *str, Cardinal len)
 static void
 HandleStructNotify(Widget w GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
-		   XEvent * event,
+		   XEvent *event,
 		   Boolean *cont GCC_UNUSED)
 {
     XtermWidget xw = term;
@@ -6720,7 +6783,7 @@ VTRun(XtermWidget xw)
 /*ARGSUSED*/
 static void
 VTExpose(Widget w GCC_UNUSED,
-	 XEvent * event,
+	 XEvent *event,
 	 Region region GCC_UNUSED)
 {
     DEBUG_MSG("Expose\n");
@@ -6729,7 +6792,7 @@ VTExpose(Widget w GCC_UNUSED,
 }
 
 static void
-VTGraphicsOrNoExpose(XEvent * event)
+VTGraphicsOrNoExpose(XEvent *event)
 {
     TScreen *screen = TScreenOf(term);
     if (screen->incopy <= 0) {
@@ -6755,7 +6818,7 @@ VTGraphicsOrNoExpose(XEvent * event)
 static void
 VTNonMaskableEvent(Widget w GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
-		   XEvent * event,
+		   XEvent *event,
 		   Boolean *cont GCC_UNUSED)
 {
     switch (event->type) {
@@ -8224,7 +8287,7 @@ releaseCursorGCs(XtermWidget xw)
 }
 
 void
-releaseWindowGCs(XtermWidget xw, VTwin * win)
+releaseWindowGCs(XtermWidget xw, VTwin *win)
 {
     int n;
 
@@ -8445,6 +8508,7 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif /* defined(NO_LEAKS) */
 }
 
+#ifndef NO_ACTIVE_ICON
 static void *
 getProperty(Display *dpy,
 	    Window w,
@@ -8559,6 +8623,7 @@ getWindowManagerName(XtermWidget xw)
     TRACE(("... window manager name is %s\n", result));
     return result;
 }
+#endif
 
 /*ARGSUSED*/
 static void
@@ -10046,7 +10111,9 @@ RestartBlinking(TScreen *screen GCC_UNUSED)
 static void
 ReallyReset(XtermWidget xw, Bool full, Bool saved)
 {
+#if OPT_ISO_COLORS
     static char empty[1];
+#endif
 
     TScreen *screen = TScreenOf(xw);
 
@@ -10317,7 +10384,7 @@ set_character_class(char *s)
 /* ARGSUSED */
 static void
 HandleKeymapChange(Widget w,
-		   XEvent * event GCC_UNUSED,
+		   XEvent *event GCC_UNUSED,
 		   String *params,
 		   Cardinal *param_count)
 {
@@ -10370,7 +10437,7 @@ HandleKeymapChange(Widget w,
 /* ARGSUSED */
 static void
 HandleBell(Widget w GCC_UNUSED,
-	   XEvent * event GCC_UNUSED,
+	   XEvent *event GCC_UNUSED,
 	   String *params,	/* [0] = volume */
 	   Cardinal *param_count)	/* 0 or 1 */
 {
@@ -10382,7 +10449,7 @@ HandleBell(Widget w GCC_UNUSED,
 /* ARGSUSED */
 static void
 HandleVisualBell(Widget w GCC_UNUSED,
-		 XEvent * event GCC_UNUSED,
+		 XEvent *event GCC_UNUSED,
 		 String *params GCC_UNUSED,
 		 Cardinal *param_count GCC_UNUSED)
 {
@@ -10392,7 +10459,7 @@ HandleVisualBell(Widget w GCC_UNUSED,
 /* ARGSUSED */
 static void
 HandleIgnore(Widget w,
-	     XEvent * event,
+	     XEvent *event,
 	     String *params GCC_UNUSED,
 	     Cardinal *param_count GCC_UNUSED)
 {
@@ -10410,8 +10477,8 @@ HandleIgnore(Widget w,
 static void
 DoSetSelectedFont(Widget w,
 		  XtPointer client_data GCC_UNUSED,
-		  Atom * selection GCC_UNUSED,
-		  Atom * type,
+		  Atom *selection GCC_UNUSED,
+		  Atom *type,
 		  XtPointer value,
 		  unsigned long *length,
 		  int *format)

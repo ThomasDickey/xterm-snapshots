@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.799 2014/04/16 00:32:33 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.800 2014/04/25 23:19:04 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1463,7 +1463,7 @@ typedef unsigned short CellColor;
 typedef Char CellColor;
 #endif
 #else
-typedef int CellColor;
+typedef unsigned CellColor;
 #endif
 
 #define BITS2MASK(b)          ((1 << b) - 1)

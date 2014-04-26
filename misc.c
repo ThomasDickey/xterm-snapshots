@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.710 2014/04/16 08:00:21 tom Exp $ */
+/* $XTermId: misc.c,v 1.711 2014/04/25 23:27:45 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2153,30 +2153,6 @@ FlushLog(XtermWidget xw)
 
 /***====================================================================***/
 
-#if OPT_ISO_COLORS
-static void
-ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
-{
-    if (AllowColorOps(xw, ecGetAnsiColor)) {
-	XColor color;
-	Colormap cmap = xw->core.colormap;
-	char buffer[80];
-
-	TRACE(("ReportAnsiColorRequest %d\n", colornum));
-	color.pixel = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[colornum]);
-	XQueryColor(TScreenOf(xw)->display, cmap, &color);
-	sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
-		colornum,
-		color.red,
-		color.green,
-		color.blue);
-	unparseputc1(xw, ANSI_OSC);
-	unparseputs(xw, buffer);
-	unparseputc1(xw, final);
-	unparse_end(xw);
-    }
-}
-
 int
 getVisualInfo(XtermWidget xw)
 {
@@ -2215,6 +2191,30 @@ rgb masks (%04lx/%04lx/%04lx)\n"
     return (xw->visInfo != 0) && (xw->numVisuals > 0);
 #undef MYFMT
 #undef MYARG
+}
+
+#if OPT_ISO_COLORS
+static void
+ReportAnsiColorRequest(XtermWidget xw, int colornum, int final)
+{
+    if (AllowColorOps(xw, ecGetAnsiColor)) {
+	XColor color;
+	Colormap cmap = xw->core.colormap;
+	char buffer[80];
+
+	TRACE(("ReportAnsiColorRequest %d\n", colornum));
+	color.pixel = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[colornum]);
+	XQueryColor(TScreenOf(xw)->display, cmap, &color);
+	sprintf(buffer, "4;%d;rgb:%04x/%04x/%04x",
+		colornum,
+		color.red,
+		color.green,
+		color.blue);
+	unparseputc1(xw, ANSI_OSC);
+	unparseputs(xw, buffer);
+	unparseputc1(xw, final);
+	unparse_end(xw);
+    }
 }
 
 static void
@@ -3227,9 +3227,11 @@ ResetColorsRequest(XtermWidget xw,
 		   int code)
 {
     Bool result = False;
+#if OPT_COLOR_RES
     const char *thisName;
     ScrnColors newColors;
     int ndx;
+#endif
 
     TRACE(("ResetColorsRequest code=%d\n", code));
 
@@ -5930,6 +5932,9 @@ xtermOpenApplication(XtAppContext * app_context_return,
 			       num_args);
     IceAddConnectionWatch(icewatch, NULL);
 #else
+    (void) widget_class;
+    (void) args;
+    (void) num_args;
     result = XtAppInitialize(app_context_return,
 			     my_class,
 			     options,
