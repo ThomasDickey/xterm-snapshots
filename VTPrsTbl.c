@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.73 2013/08/21 23:50:44 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.74 2014/04/25 21:31:57 Ross.Combs Exp $ */
 
 /*
- * Copyright 1999-2012,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3110,7 +3110,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GRAPHICS_ATTRIBUTES,
 /*	T		U		V		W	*/
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -3270,7 +3270,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GRAPHICS_ATTRIBUTES,
 /*      Ocircumflex     Otilde          Odiaeresis      multiply        */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,

@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.15 2014/04/18 00:42:16 Ross.Combs Exp $ */
+/* $XTermId: graphics.h,v 1.16 2014/04/25 21:30:23 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -87,6 +87,7 @@ extern void draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y
 extern void draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color);
 extern void hls2rgb(int h, int l, int s, short *r, short *g, short *b);
 extern void dump_graphic(Graphic const *graphic);
+extern unsigned get_color_register_count(TScreen const *screen);
 extern void update_color_register(Graphic *graphic, unsigned color, int r, int g, int b);
 extern RegisterNum find_color_register(ColorRegister const *color_registers, int r, int g, int b);
 extern void chararea_clear_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
@@ -110,6 +111,7 @@ extern void noleaks_graphics(void);
 #define draw_solid_line(graphic, x1, y1, x2, y2, color) /* nothing */
 #define hls2rgb(h, l, s, r, g, b) /* nothing */
 #define dump_graphic(graphic) /* nothing */
+#define get_color_register_count(screen) /* nothing */
 #define update_color_register(graphic, color, r, g, b) /* nothing */
 #define find_color_register(color_registers, r, g, b) /* nothing */
 #define chararea_clear_displayed_graphics(screen, leftcol, toprow, ncols, nrows) /* nothing */

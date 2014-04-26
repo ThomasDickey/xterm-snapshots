@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.622 2014/04/11 19:36:41 Ross.Combs Exp $ */
+/* $XTermId: util.c,v 1.623 2014/04/25 23:22:38 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1384,7 +1384,7 @@ InsertChar(XtermWidget xw, unsigned n)
 	ClearCurBackground(xw,
 			   INX2ROW(screen, screen->cur_row),
 			   screen->cur_col,
-			   1,
+			   1U,
 			   n,
 			   (unsigned) LineFontWidth(screen, ld));
     }
@@ -1453,7 +1453,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 	ClearCurBackground(xw,
 			   INX2ROW(screen, screen->cur_row),
 			   col,
-			   1,
+			   1U,
 			   n,
 			   (unsigned) LineFontWidth(screen, ld));
     }
@@ -1628,7 +1628,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 	ClearCurBackground(xw,
 			   INX2ROW(screen, row),
 			   col,
-			   1,
+			   1U,
 			   len,
 			   (unsigned) LineFontWidth(screen, ld));
     }

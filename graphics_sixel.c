@@ -1,7 +1,7 @@
-/* $XTermId: graphics_sixel.c,v 1.6 2014/04/18 00:42:16 Ross.Combs Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.7 2014/04/25 21:32:33 Ross.Combs Exp $ */
 
 /*
- * Copyright 2013 by Ross Combs
+ * Copyright 2014 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -590,6 +590,12 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 			   + FontWidth(screen) - 1)
 			  / FontWidth(screen)));
 	} else {
+	    /* FIXME: At least of the VT382 the vertical position appears to be
+	     * truncated (rounded toward zero after converting to character row.
+	     * This code rounds up, which seems more useful, but it would be
+	     * better to be compatible.  Verify this is true on a VT3[34]0 as
+	     * well.
+	     */
 	    new_row = (graphic->charrow
 		       + (((graphic->actual_height * graphic->pixh)
 			   + FontHeight(screen) - 1)

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.16 2014/04/18 00:42:16 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.c,v 1.20 2014/04/25 21:30:23 Ross.Combs Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -1153,12 +1153,10 @@ extract_regis_pixelvector(RegisDataFragment *input, RegisDataFragment *output)
 	    ch != '4' && ch != '5' && ch != '6' && ch != '7') {
 	    break;
 	}
+	has_digits = 1;
     }
 
-    if (!has_digits)
-	return 0;
-
-    return 1;
+    return has_digits;
 }
 
 static int
@@ -1637,7 +1635,7 @@ load_regis_write_control(RegisParseState *state,
 	{
 	    int val;
 	    if (!regis_num_to_int(arg, &val) || val <= 0) {
-		TRACE(("interpreting out of range value as 1 FIXME\n"));
+		TRACE(("interpreting out of range value %d as 1 FIXME\n", val));
 		out->pv_multiplier = 1U;
 	    } else {
 		out->pv_multiplier = (unsigned) val;
@@ -1655,7 +1653,7 @@ load_regis_write_control(RegisParseState *state,
 	    }
 	    switch (val) {
 	    default:
-		TRACE(("interpreting out of range value as 0 FIXME\n"));
+		TRACE(("interpreting out of range value %d as 0 FIXME\n", val));
 		out->invert_pattern = 0U;
 		break;
 	    case 0:
@@ -1786,7 +1784,8 @@ load_regis_write_control(RegisParseState *state,
 
 			TRACE(("converting pattern id \"%s\"\n",
 			       fragment_to_tempstr(&item)));
-			regis_num_to_int(&item, &val);
+			if (!regis_num_to_int(&item, &val))
+			    val = -1;
 			switch (val) {	/* FIXME: exponential allowed? */
 			case 0:
 			    out->pattern = 0x00;	/* solid bg */
@@ -3358,6 +3357,9 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     RegisGraphicsContext context;
     RegisParseState state;
     unsigned iterations;
+    int charrow = 0;
+    int charcol = 1;
+    unsigned type = 1;		/* FIXME: use page number */
 
     (void) xw;
     (void) string;
@@ -3376,8 +3378,13 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     state.command = '_';
     state.option = '_';
 
+    memset(&context, 0, sizeof(context));
+
+    context.graphic = get_new_or_matching_graphic(xw,
+						  charrow, charcol,
+						  800, 480,
+						  type);
     init_regis_graphics_context(screen->terminal_id, &context);
-    context.graphic = get_new_or_matching_graphic(xw, 0, 0, 800, 480, 1U);	/* FIXME: use page number */
     context.graphic->valid = 1;
     context.graphic->dirty = 1;
     refresh_modified_displayed_graphics(screen);

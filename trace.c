@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.154 2014/03/02 12:01:26 tom Exp $ */
+/* $XTermId: trace.c,v 1.155 2014/04/25 21:30:23 Ross.Combs Exp $ */
 
 /*
  * Copyright 1997-2013,2014 by Thomas E. Dickey
@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
@@ -86,7 +87,7 @@ Trace(const char *fmt,...)
     trace_out = trace_who;
 
     if (!trace_fp) {
-	unsigned oldmask = umask(077);
+	unsigned oldmask = (unsigned) umask(077);
 	char name[BUFSIZ];
 #if 0				/* usually I do not want unique names */
 	int unique;

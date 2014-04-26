@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.35 2014/04/18 00:42:16 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.37 2014/04/25 21:30:51 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -43,7 +43,7 @@
 #include <graphics.h>
 
 #undef DUMP_BITMAP
-#define DUMP_COLORS
+#undef DUMP_COLORS
 #undef DEBUG_PALETTE
 #undef DEBUG_PIXEL
 #undef DEBUG_REFRESH
@@ -410,7 +410,7 @@ find_color_register(ColorRegister const *color_registers, int r, int g, int b)
 	}
     }
 
-    TRACE(("found closest color register to %hd,%hd,%hd: %u (distance %u value %hd,%hd,%hd)\n",
+    TRACE(("found closest color register to %d,%d,%d: %u (distance %u value %d,%d,%d)\n",
 	   r, g, b,
 	   closest_index,
 	   closest_distance,
@@ -533,6 +533,53 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
 #endif
 }
 
+unsigned
+get_color_register_count(TScreen const *screen)
+{
+    unsigned num_color_registers;
+
+    if (screen->numcolorregisters >= 0) {
+	num_color_registers = (unsigned) screen->numcolorregisters;
+    } else {
+	num_color_registers = 0U;
+    }
+
+    if (num_color_registers > 1U) {
+	if (num_color_registers > MAX_COLOR_REGISTERS)
+	    return MAX_COLOR_REGISTERS;
+	return num_color_registers;
+    }
+
+    /*
+     * color capabilities:
+     * VK100/GIGI  1 plane (12x1 pixel attribute blocks) colorspace is 8 fixed colors (black, white, red, green, blue, cyan, yellow, magenta)
+     * VT125       2 planes (4 registers) colorspace is (64?) (color), ? (grayscale)
+     * VT240       2 planes (4 registers) colorspace is 4 shades (grayscale)
+     * VT241       2 planes (4 registers) colorspace is ? (color), ? shades (grayscale)
+     * VT330       2 planes (4 registers) colorspace is 4 shades (grayscale)
+     * VT340       4 planes (16 registers) colorspace is r16g16b16 (color), 16 shades (grayscale)
+     * VT382       1 plane (two fixed colors: black and white)  FIXME: verify
+     * dxterm      ?
+     */
+    switch (screen->terminal_id) {
+    case 125:
+	return 4U;
+    case 240:
+	return 4U;
+    case 241:
+	return 4U;
+    case 330:
+	return 4U;
+    case 340:
+	return 16U;
+    case 382:
+	return 2U;
+    default:
+	/* unknown graphics model -- might as well be generous */
+	return MAX_COLOR_REGISTERS;
+    }
+}
+
 static void
 init_graphic(Graphic *graphic,
 	     unsigned type,
@@ -561,7 +608,7 @@ init_graphic(Graphic *graphic,
 
     /*
      * dimensions (ReGIS logical, physical):
-     * VK100/GIGI  768x4??  768x2??
+     * VK100/GIGI  768x4??  768x240(status?)
      * VT125       768x460  768x230(+10status) (1:2 aspect ratio, ReGIS halves vertical addresses through "odd y emulation")
      * VT240       800x460  800x230(+10status) (1:2 aspect ratio, ReGIS halves vertical addresses through "odd y emulation")
      * VT241       800x460  800x230(+10status) (1:2 aspect ratio, ReGIS halves vertical addresses through "odd y emulation")
@@ -579,47 +626,7 @@ init_graphic(Graphic *graphic,
     graphic->pixw = 1;
     graphic->pixh = 1;
 
-    /*
-     * color capabilities:
-     * VK100/GIGI  1 plane (12x1 pixel attribute blocks) colorspace is 8 fixed colors (black, white, red, green, blue, cyan, yellow, magenta)
-     * VT125       2 planes (4 registers) colorspace is (64?) (color), ? (grayscale)
-     * VT240       2 planes (4 registers) colorspace is 4 shades (grayscale)
-     * VT241       2 planes (4 registers) colorspace is ? (color), ? shades (grayscale)
-     * VT330       2 planes (4 registers) colorspace is 4 shades (grayscale)
-     * VT340       4 planes (16 registers) colorspace is r16g16b16 (color), 16 shades (grayscale)
-     * VT382       1 plane (two fixed colors: black and white)  FIXME: verify
-     * dxterm      ?
-     */
-    if (num_color_registers > 1U) {
-	graphic->valid_registers = num_color_registers;
-	if (graphic->valid_registers > (int) MAX_COLOR_REGISTERS)
-	    graphic->valid_registers = (int) (MAX_COLOR_REGISTERS - 1);
-    } else {
-	switch (terminal_id) {
-	case 125:
-	    graphic->valid_registers = 4;
-	    break;
-	case 240:
-	    graphic->valid_registers = 4;
-	    break;
-	case 241:
-	    graphic->valid_registers = 4;
-	    break;
-	case 330:
-	    graphic->valid_registers = 4;
-	    break;
-	case 340:
-	    graphic->valid_registers = 16;
-	    break;
-	case 382:
-	    graphic->valid_registers = 2;
-	    break;
-	default:
-	    graphic->valid_registers = 64;	/* unknown graphics model -- might as well be generous */
-	    break;
-	}
-    }
-
+    graphic->valid_registers = num_color_registers;
     TRACE(("%d color registers\n", graphic->valid_registers));
 
     graphic->private_colors = private_colors;
@@ -672,12 +679,8 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
     }
 
     if (graphic) {
-	unsigned num_registers;
-	if (screen->numcolorregisters >= 0) {
-	    num_registers = (unsigned) screen->numcolorregisters;
-	} else {
-	    num_registers = 0U;
-	}
+	unsigned num_color_registers;
+	num_color_registers = get_color_register_count(screen);
 	graphic->xw = xw;
 	graphic->bufferid = bufferid;
 	graphic->id = next_graphic_id++;
@@ -686,7 +689,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 		     terminal_id,
 		     charrow,
 		     charcol,
-		     num_registers,
+		     num_color_registers,
 		     screen->privatecolorregisters);
     }
     return graphic;

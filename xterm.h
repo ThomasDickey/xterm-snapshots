@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.733 2014/04/16 00:31:01 tom Exp $ */
+/* $XTermId: xterm.h,v 1.734 2014/04/25 23:41:09 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1419,12 +1419,12 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 		    VDrawable(TScreenOf(xw)), \
 		    CursorX2(TScreenOf(xw), left, fw), \
 		    CursorY(TScreenOf(xw), top), \
-		    width * fw, \
-		    height * FontHeight(TScreenOf(xw)), \
+		    ((width) * (unsigned) fw), \
+		    ((height) * (unsigned) FontHeight(TScreenOf(xw))), \
 		    False)
 
-#define extract_fg(xw, color, flags) (xw)->cur_foreground
-#define extract_bg(xw, color, flags) (xw)->cur_background
+#define extract_fg(xw, color, flags) (unsigned) (xw)->cur_foreground
+#define extract_bg(xw, color, flags) (unsigned) (xw)->cur_background
 
 		/* FIXME: Reverse-Video? */
 #define T_COLOR(v,n) (v)->Tcolors[n]
