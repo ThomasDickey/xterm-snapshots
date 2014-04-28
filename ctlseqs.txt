@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2013)
-               updated for XTerm Patch #301 (2014/04/17)
+               updated for XTerm Patch #304 (2014/04/27)
 
 
 
@@ -1091,6 +1091,7 @@ OSC Ps ; Pt BEL
             Ps = 1 1 6  -> Reset Tektronix background color.
             Ps = 1 1 7  -> Reset highlight color.
             Ps = 1 1 8  -> Reset Tektronix cursor color.
+            Ps = 1 1 9  -> Reset highlight foreground color.
 
 Privacy Message
 PM Pt ST  xterm implements no PM  functions; Pt is ignored.  Pt need not

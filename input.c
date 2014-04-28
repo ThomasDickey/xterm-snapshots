@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.350 2014/04/16 08:05:56 tom Exp $ */
+/* $XTermId: input.c,v 1.351 2014/04/27 23:50:36 Matthieu.Herrb Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2004,7 +2004,7 @@ VTInitModifiers(XtermWidget xw)
 		if (theMap[i] == XF86XK_Paste) {
 		    TRACE(("keyboard has XF86XK_Paste\n"));
 		    addTranslation(xw,
-				   "<KeyPress> XF86Paste",
+				   ":<KeyPress> XF86Paste",
 				   "insert-selection(SELECT, CUT_BUFFER0)");
 		}
 #endif
@@ -2012,7 +2012,7 @@ VTInitModifiers(XtermWidget xw)
 		if (theMap[i] == SunXK_Paste) {
 		    TRACE(("keyboard has SunXK_Paste\n"));
 		    addTranslation(xw,
-				   "<KeyPress> SunPaste",
+				   ":<KeyPress> SunPaste",
 				   "insert-selection(SELECT, CUT_BUFFER0)");
 		}
 #endif
