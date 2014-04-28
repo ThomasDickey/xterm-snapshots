@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.307 2014/04/18 00:49:09 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.309 2014/04/28 00:04:54 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #301
-.ds RF 2014/04/17
+.ds LF Patch #304
+.ds RF 2014/04/27
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1673,6 +1673,7 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*6 \(-> Reset Tektronix background color.
   \*(Ps = \*1\*1\*7 \(-> Reset highlight color.
   \*(Ps = \*1\*1\*8 \(-> Reset Tektronix cursor color.
+  \*(Ps = \*1\*1\*9 \(-> Reset highlight foreground color.
 .
 .St
 .Ss Privacy Message
@@ -2367,7 +2368,7 @@ and \*m for button release.
 .RS
 .bP
 The encoded button value in this case does not add 32 since
-that was useful only in the X10 scheme for ensuring that the 
+that was useful only in the X10 scheme for ensuring that the
 byte containing the button value is a printable code.
 .bP
 The modifiers are encoded in the same way.
