@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.37 2014/04/25 21:30:51 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.38 2014/04/27 21:24:02 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -50,8 +50,8 @@
 
 /* TODO:
  * ReGIS:
- * - shading (pattern and letter)
- * - filling
+ * - shading with text
+ * - polygon filling
  * - plane write control
  * - fix interpolated curves to more closely match implementation (identical despite direction and starting point)
  * - text

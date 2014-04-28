@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.20 2014/04/25 21:30:23 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.c,v 1.21 2014/04/27 12:47:46 Ross.Combs Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -45,7 +45,7 @@
 #include <graphics.h>
 #include <graphics_regis.h>
 
-/* get rid of shadowing warnings (we will not draw Bessel functions */
+/* get rid of shadowing warnings (we will not draw Bessel functions) */
 #define y1 my_y1
 #define y0 my_y0
 
@@ -130,6 +130,7 @@ typedef struct RegisGraphicsContext {
 #define WRITE_SHADING_REF_Y 0U
 #define WRITE_SHADING_REF_X 1U
 
+#define ROT_LEFT_N(V, N) ( (((V) << ((N) & 3U )) & 255U) | ((V) >> (8U - ((N) & 3U))) )
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
 
 static int
@@ -147,15 +148,9 @@ isqrt(double d)
 }
 
 static void
-draw_patterned_pixel(RegisGraphicsContext *context, int x, int y)
+draw_regis_pixel(RegisGraphicsContext *context, int x, int y)
 {
     unsigned color = 0;
-
-    if (context->pattern_count >= context->temporary_write_controls.pattern_multiplier) {
-	context->pattern_count = 0U;
-	context->pattern_bit = ROT_LEFT(context->pattern_bit);
-    }
-    context->pattern_count++;
 
     switch (context->temporary_write_controls.write_style) {
     case WRITE_STYLE_OVERLAY:
@@ -209,6 +204,52 @@ draw_patterned_pixel(RegisGraphicsContext *context, int x, int y)
     }
 
     draw_solid_pixel(context->graphic, x, y, color);
+}
+
+static void
+fill_to_pixel(RegisGraphicsContext *context, int x, int y)
+{
+    unsigned dim = context->temporary_write_controls.shading_reference_dim;
+    int ref = context->temporary_write_controls.shading_reference;
+
+    if (dim == WRITE_SHADING_REF_X) {
+	int delta = x > ref ? 1 : -1;
+	int curr_x;
+
+	context->pattern_bit = 1U << (((unsigned) y) & 7U);
+	for (curr_x = ref; curr_x != x + delta; curr_x += delta) {
+	    draw_regis_pixel(context, curr_x, y);
+	}
+    } else {
+	int delta = y > ref ? 1 : -1;
+	int curr_y;
+
+	for (curr_y = ref; curr_y != y + delta; curr_y += delta) {
+	    context->pattern_bit = 1U << (((unsigned) curr_y) & 7U);
+	    draw_regis_pixel(context, x, curr_y);
+	}
+    }
+}
+
+static void
+draw_patterned_pixel(RegisGraphicsContext *context, int x, int y)
+{
+    if (context->temporary_write_controls.shading_enabled) {
+	if (context->temporary_write_controls.shading_character != '\0') {
+	    /* FIXME: handle character fills */
+	    TRACE(("pixel shaded with character\n"));
+	} else {
+	    fill_to_pixel(context, x, y);
+	}
+    } else {
+	if (context->pattern_count >= context->temporary_write_controls.pattern_multiplier) {
+	    context->pattern_count = 0U;
+	    context->pattern_bit = ROT_LEFT(context->pattern_bit);
+	}
+	context->pattern_count++;
+
+	draw_regis_pixel(context, x, y);
+    }
 }
 
 static void
@@ -993,10 +1034,12 @@ skip_fragment_chars(RegisDataFragment *fragment, unsigned count)
 static void
 fragment_to_string(RegisDataFragment const *fragment, char *out, unsigned outlen)
 {
+    unsigned remaininglen;
     unsigned minlen;
 
-    if (fragment->len < outlen) {
-	minlen = fragment->len;
+    remaininglen = fragment->len - fragment->pos;
+    if (remaininglen < outlen) {
+	minlen = remaininglen;
     } else {
 	minlen = outlen;
     }
@@ -1360,7 +1403,7 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
 {
     char ch;
 
-    /* FIXME: handle exponential notation */
+    /* FIXME: handle exponential notation and rounding */
     /* FIXME: check for junk after the number */
     ch = peek_fragment(input);
     if (ch != '0' &&
@@ -1395,7 +1438,7 @@ load_regis_colorspec(Graphic const *graphic, RegisDataFragment const *input, Reg
 
     if (regis_num_to_int(&colorspec, &val)) {
 	if (val < 0 || val >= (int) graphic->valid_registers) {		/* FIXME: wrap? */
-	    TRACE(("DATA_ERROR: erase writing mode %d\n", val));
+	    TRACE(("DATA_ERROR: colorspec value %d\n", val));
 	    return 0;
 	}
 	TRACE(("colorspec contains index for register %u\n", val));
@@ -1596,6 +1639,8 @@ load_regis_write_control(RegisParseState *state,
 			 RegisDataFragment *arg,
 			 RegisWriteControls *out)
 {
+    TRACE(("checking write control option \"%c\" with arg \"%s\"\n",
+	   option, fragment_to_tempstr(arg)));
     switch (option) {
     case 'E':
     case 'e':
@@ -1677,7 +1722,6 @@ load_regis_write_control(RegisParseState *state,
 
 	    while (arg->pos < arg->len) {
 		skip_regis_whitespace(arg);
-
 		TRACE(("looking for option in \"%s\"\n", fragment_to_tempstr(arg)));
 		if (extract_regis_optionset(arg, &suboptionset)) {
 		    TRACE(("got regis write pattern suboptionset: \"%s\"\n",
@@ -1697,19 +1741,24 @@ load_regis_write_control(RegisParseState *state,
 				TRACE(("found pattern multiplier \"%s\"\n",
 				       fragment_to_tempstr(&suboptionarg)));
 				{
+				    RegisDataFragment num;
 				    int val;
 
 				    skip_regis_whitespace(&suboptionarg);
-				    if (!regis_num_to_int(&suboptionarg, &val)
-					|| val < 1) {
-					TRACE(("interpreting out of range pattern multiplier as 2 FIXME\n"));
-					out->pattern_multiplier = 2U;
-				    } else {
-					out->pattern_multiplier = (unsigned) val;
+				    if (extract_regis_num(&suboptionarg, &num)) {
+					if (!regis_num_to_int(&num, &val)
+					    || val < 1) {
+					    TRACE(("interpreting out of range pattern multiplier \"%s\" as 2 FIXME\n",
+						   fragment_to_tempstr(&num)));
+					    out->pattern_multiplier = 2U;
+					} else {
+					    out->pattern_multiplier =
+						(unsigned) val;
+					}
 				    }
 				    skip_regis_whitespace(&suboptionarg);
 				    if (fragment_len(&suboptionarg)) {
-					TRACE(("DATA_ERROR: unknown content after patern multiplier \"%s\"\n",
+					TRACE(("DATA_ERROR: unknown content after pattern multiplier \"%s\"\n",
 					       fragment_to_tempstr(&suboptionarg)));
 					return 0;
 				    }
@@ -3041,8 +3090,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	if (!load_regis_write_control(state, context->graphic,
 				      context->graphics_output_cursor_x, context->graphics_output_cursor_y,
 				      state->option, &optionarg, &context->persistent_write_controls)) {
-	    TRACE(("DATA_ERROR: invalid write options \"%s\"\n",
-		   fragment_to_tempstr(&optionarg)));
+	    TRACE(("DATA_ERROR: invalid write options"));
 	}
 	break;
     default:
@@ -3358,7 +3406,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     RegisParseState state;
     unsigned iterations;
     int charrow = 0;
-    int charcol = 1;
+    int charcol = 0;
     unsigned type = 1;		/* FIXME: use page number */
 
     (void) xw;
@@ -3417,10 +3465,16 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		   state.optionset.pos,
 		   state.optionset.len));
 	    for (;;) {
+		if (state.optionset.pos >= state.optionset.len)
+		    break;
 		TRACE(("looking at optionset character: \"%c\"\n",
 		       peek_fragment(&state.optionset)));
 		if (skip_regis_whitespace(&state.optionset))
 		    continue;
+		if (peek_fragment(&state.optionset) == ',') {
+		    pop_fragment(&state.optionset);
+		    continue;
+		}
 		if (parse_regis_option(&state, &context))
 		    continue;
 		if (parse_regis_items(&state, &context))
