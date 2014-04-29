@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.21 2014/04/27 12:47:46 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.c,v 1.22 2014/04/29 00:39:29 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -324,7 +324,7 @@ draw_patterned_arc(RegisGraphicsContext *context,
 		   int ex, int ey,
 		   int a_start, int a_length)
 {
-    const double third = hypot((cx - ex), (cy - ey));
+    const double third = hypot((double) (cx - ex), (double) (cy - ey));
     const int radius = (int) third;
     const int ra = radius;
     const int rb = radius;
@@ -1043,7 +1043,7 @@ fragment_to_string(RegisDataFragment const *fragment, char *out, unsigned outlen
     } else {
 	minlen = outlen;
     }
-    strncpy(out, &fragment->start[fragment->pos], minlen);
+    strncpy(out, &fragment->start[fragment->pos], (size_t) minlen);
     out[minlen] = '\0';
 }
 
@@ -1635,7 +1635,7 @@ static int
 load_regis_write_control(RegisParseState *state,
 			 Graphic const *graphic,
 			 int cur_x, int cur_y,
-			 char option,
+			 int option,
 			 RegisDataFragment *arg,
 			 RegisWriteControls *out)
 {
@@ -3167,7 +3167,8 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 			    e_y = new_y;
 			}
 
-			radians = atan2(new_y - orig_y, new_x - orig_x);
+			radians = atan2((double) (new_y - orig_y),
+					(double) (new_x - orig_x));
 			degrees = (int) (360.0 * radians / (2.0 * M_PI));
 			if (degrees < 0)
 			    degrees += 360;
@@ -3419,7 +3420,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     init_fragment(&state.optionset, "");
     state.level = INPUT;
     state.templen = (unsigned) strlen(string) + 1U;
-    if (!(state.temp = malloc(state.templen))) {
+    if (!(state.temp = malloc((size_t) state.templen))) {
 	TRACE(("Unable to allocate temporary buffer of size %u\n", state.templen));
 	return;
     }

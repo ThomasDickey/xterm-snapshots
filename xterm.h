@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.734 2014/04/25 23:41:09 tom Exp $ */
+/* $XTermId: xterm.h,v 1.735 2014/04/29 00:08:23 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -103,6 +103,17 @@
 #define USE_POSIX_TERMIOS 1
 #endif
 
+#ifdef __FreeBSD__
+#if __FreeBSD_version >= 900000	
+#define USE_SYSV_UTMP 1
+#define UTMPX_FOR_UTMP 1
+#define HAVE_UTMP_UT_HOST 1
+#define HAVE_UTMP_UT_XTIME 1
+#define ut_name ut_user
+#define ut_xtime ut_tv.tv_sec
+#endif
+#endif
+
 #ifdef __NetBSD__
 #if __NetBSD_Version__ >= 106030000	/* 1.6C */
 #define BSD_UTMPX 1
@@ -139,11 +150,11 @@
 #define HAVE_UTMP_UT_HOST 1
 #endif
 
-#if defined(UTMPX_FOR_UTMP) && !(defined(__MVS__) || defined(__hpux))
+#if defined(UTMPX_FOR_UTMP) && !(defined(__MVS__) || defined(__hpux) || defined(__FreeBSD__))
 #define HAVE_UTMP_UT_SESSION 1
 #endif
 
-#if !(defined(linux) && (!defined(__GLIBC__) || (__GLIBC__ < 2))) && !defined(SVR4)
+#if !(defined(linux) && (!defined(__GLIBC__) || (__GLIBC__ < 2))) && !defined(SVR4) && !defined(__FreeBSD__)
 #define ut_xstatus ut_exit.e_exit
 #endif
 
@@ -158,6 +169,7 @@
 #elif defined(BSD) && (BSD >= 199103)
 #ifdef BSD_UTMPX
 #define USE_LASTLOGX
+#elif defined(USE_SYSV_UTMP)
 #else
 #define USE_LASTLOG
 #define USE_STRUCT_LASTLOG
