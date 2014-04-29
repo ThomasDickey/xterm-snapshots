@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.38 2014/04/27 21:24:02 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.39 2014/04/29 00:39:29 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -1102,7 +1102,7 @@ refresh_displayed_graphics(TScreen const *screen,
     }
     if (jj > 1) {
 	qsort(ordered_graphics,
-	      jj,
+	      (size_t) jj,
 	      sizeof(ordered_graphics[0]),
 	      compare_graphic_ids);
     }
