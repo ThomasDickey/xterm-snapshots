@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.403 2014/04/22 00:47:24 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.404 2014/04/28 21:31:26 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -1354,7 +1354,15 @@ xtermLoadFont(XtermWidget xw,
 	free(tmpname);
 
 #if OPT_RENDERFONT
-    if (x_strcasecmp(myfonts.f_n, DEFFONT)) {
+    if (fontnum == fontMenu_fontsel) {
+	int old_fontnum = screen->menu_font_number;
+#if OPT_TOOLBAR
+	SetItemSensitivity(fontMenuEntries[fontnum].widget, True);
+#endif
+	Bell(xw, XkbBI_MinorError, 0);
+	myfonts.f_n = screen->MenuFontName(old_fontnum);
+	return xtermLoadFont(xw, &myfonts, doresize, old_fontnum);
+    } else if (x_strcasecmp(myfonts.f_n, DEFFONT)) {
 	int code;
 
 	myfonts.f_n = DEFFONT;
