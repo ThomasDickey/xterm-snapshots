@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1453 2014/04/29 00:13:54 tom Exp $
+  $XTermId: xterm.log.html,v 1.1454 2014/04/30 19:48:18 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -896,6 +896,9 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>handle utmp/utmpx strings consistently with new function
+    that null-pads unused locations.</li>
+
     <li>build-fix for imake configuration with FreeBSD 9 and later,
     to account for replacing <code>utmp</code> with
     <code>utmpx</code>.</li>
