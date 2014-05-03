@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.22 2014/04/29 00:39:29 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.23 2014/05/03 12:44:53 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -1020,45 +1020,25 @@ pop_fragment(RegisDataFragment *fragment)
     return '\0';
 }
 
-#if 0
-static void
-skip_fragment_chars(RegisDataFragment *fragment, unsigned count)
-{
-    fragment->pos += count;
-    if (fragment->pos > fragment->len) {
-	fragment->pos = fragment->len;
-    }
-}
-#endif
-
-static void
-fragment_to_string(RegisDataFragment const *fragment, char *out, unsigned outlen)
-{
-    unsigned remaininglen;
-    unsigned minlen;
-
-    remaininglen = fragment->len - fragment->pos;
-    if (remaininglen < outlen) {
-	minlen = remaininglen;
-    } else {
-	minlen = outlen;
-    }
-    strncpy(out, &fragment->start[fragment->pos], (size_t) minlen);
-    out[minlen] = '\0';
-}
-
-static char const *
-fragment_to_tempstr(RegisDataFragment const *fragment)
-{
-    static char tempstr[1024];
-    fragment_to_string(fragment, tempstr, 1024);
-    return tempstr;
-}
-
-static unsigned
+static size_t
 fragment_len(RegisDataFragment const *fragment)
 {
     return fragment->len - fragment->pos;
+}
+
+#define MAX_FRAG 1024
+static char const *
+fragment_to_tempstr(RegisDataFragment const *fragment)
+{
+    static char tempstr[MAX_FRAG + 1];
+    size_t remaininglen = fragment_len(fragment);
+    size_t minlen = ((remaininglen < MAX_FRAG)
+		     ? remaininglen
+		     : MAX_FRAG);
+
+    (void) strncpy(tempstr, &fragment->start[fragment->pos], minlen);
+    tempstr[minlen] = '\0';
+    return tempstr;
 }
 
 static int
@@ -1072,8 +1052,7 @@ skip_regis_whitespace(RegisDataFragment *input)
     for (; input->pos < input->len; input->pos++) {
 	/* FIXME: the semicolon isn't whitespace -- it also terminates the current command even if inside of an optionset or extent */
 	ch = input->start[input->pos];
-	if (ch != ',' && ch != ';' &&
-	    ch != ' ' && ch != '\b' && ch != '\t' && ch != '\r' && ch != '\n') {
+	if (ch != ',' && ch != ';' && !IsSpace(ch)) {
 	    break;
 	}
 	if (ch == '\n') {
@@ -1940,7 +1919,7 @@ load_regis_write_control(RegisParseState *state,
 			    case 'x':
 				TRACE(("found vertical shading suboption \"%s\"\n",
 				       fragment_to_tempstr(&suboptionarg)));
-				if (fragment_len(&suboptionarg) > 0U) {
+				if (fragment_len(&suboptionarg)) {
 				    TRACE(("DATA_ERROR: unexpected value to vertical shading suboption FIXME\n"));
 				    return 0;
 				}
@@ -2435,7 +2414,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'B':
 	case 'b':
 	    TRACE(("begin closed curve \"%s\"\n", fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg) != 0) {
+	    if (fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: invalid closed curve option \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		break;
@@ -2450,7 +2429,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'c':
 	    TRACE(("found center position mode \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg) != 0) {
+	    if (fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: invalid center position option \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		break;
@@ -2560,7 +2539,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'S':
 	case 's':
 	    TRACE(("begin open curve \"%s\"\n", fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg) != 0) {
+	    if (fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: invalid open curve option \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		break;
@@ -2729,7 +2708,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found address definition \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
-	    if (fragment_len(&optionarg) < 1U) {
+	    if (!fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 0;
@@ -2740,7 +2719,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found cursor control \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
-	    if (fragment_len(&optionarg) < 1U) {
+	    if (!fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen cursor control option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 0;
@@ -2749,7 +2728,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'E':
 	case 'e':
 	    TRACE(("found erase request \"%s\"\n", fragment_to_tempstr(&optionarg)));
-	    if (fragment_len(&optionarg) > 0U) {
+	    if (fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring unexpected argument to ReGIS screen erase option \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 0;
@@ -2764,7 +2743,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found hardcopy control \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
-	    if (fragment_len(&optionarg) < 1U) {
+	    if (!fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen hardcopy control option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 0;
@@ -2789,7 +2768,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		RegisDataFragment colorspec;
 		char ch;
 
-		while (fragment_len(&optionarg) > 0U) {
+		while (fragment_len(&optionarg)) {
 		    if (skip_regis_whitespace(&optionarg))
 			continue;
 		    if (extract_regis_num(&optionarg, &regnum)) {
@@ -2933,8 +2912,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			continue;
 		    }
 
-		    ch = pop_fragment(&optionarg);
-		    TRACE(("DATA_ERROR: ignoring unexpected character in ReGIS screen color register mapping value \"%c\"\n", ch));
+		    TRACE(("DATA_ERROR: ignoring unexpected character in ReGIS screen color register mapping value \"%c\"\n",
+			   pop_fragment(&optionarg)));
 		    return 0;
 		}
 	    }
@@ -2944,7 +2923,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found graphics page request \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
-	    if (fragment_len(&optionarg) < 1U) {
+	    if (!fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen graphics page option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 0;
@@ -2954,7 +2933,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 't':
 	    TRACE(("found time delay \"%s\" FIXME\n", fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
-	    if (fragment_len(&optionarg) < 1U) {
+	    if (!fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen time delay option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 0;
@@ -2964,7 +2943,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'w':
 	    TRACE(("found PV \"%s\" FIXME\n", fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
-	    if (fragment_len(&optionarg) < 1U) {
+	    if (!fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen PV option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 0;
@@ -2979,7 +2958,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
     case 't':
 	TRACE(("inspecting text option \"%c\" with value \"%s\"\n",
 	       state->option, fragment_to_tempstr(&optionarg)));
-	if (fragment_len(&optionarg) < 1U) {
+	if (!fragment_len(&optionarg)) {
 	    TRACE(("DATA_ERROR: ignoring malformed ReGIS text command option value \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    return 0;
@@ -3402,7 +3381,6 @@ void
 parse_regis(XtermWidget xw, ANSI *params, char const *string)
 {
     TScreen *screen = TScreenOf(xw);
-    char ch;
     RegisGraphicsContext context;
     RegisParseState state;
     unsigned iterations;
@@ -3482,8 +3460,8 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		    continue;
 		if (state.optionset.pos >= state.optionset.len)
 		    break;
-		ch = pop_fragment(&state.optionset);
-		TRACE(("DATA_ERROR: skipping unknown token in optionset: \"%c\"\n", ch));
+		TRACE(("DATA_ERROR: skipping unknown token in optionset: \"%c\"\n",
+		       pop_fragment(&state.optionset)));
 		/* FIXME: suboptions */
 	    }
 	    state.option = '_';
@@ -3493,8 +3471,8 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	    continue;
 	if (state.optionset.pos >= state.optionset.len)
 	    break;
-	ch = pop_fragment(&state.input);
-	TRACE(("DATA_ERROR: skipping unknown token at top level: \"%c\"\n", ch));
+	TRACE(("DATA_ERROR: skipping unknown token at top level: \"%c\"\n",
+	       pop_fragment(&state.input)));
     }
 
     free(state.temp);

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.736 2014/05/02 20:20:18 tom Exp $ */
+/* $XTermId: xterm.h,v 1.737 2014/05/03 19:30:17 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -358,6 +358,10 @@ extern int errno;
 #if !defined(VMS) && !(defined(linux) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__)
 extern char **environ;
 #endif
+
+#ifndef _Xconst
+#define _Xconst const		/* Solaris 7 workaround */
+#endif /* _Xconst */
 
 #define XK_Fn(n)	(XK_F1 + (n) - 1)
 

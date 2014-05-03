@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.754 2014/04/30 19:58:41 tom Exp $ */
+/* $XTermId: main.c,v 1.757 2014/05/03 17:17:00 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -3092,13 +3092,12 @@ set_owner(char *device, unsigned uid, unsigned gid, unsigned mode)
     }
 }
 
-#if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP) && !defined(USE_UTEMPTER)
 /*
  * utmp data may not be null-terminated; even if it is, there may be garbage
  * after the null.  This fills the unused part of the result with nulls.
  */
 static void
-copy_filled(char *target, char *source, size_t len)
+copy_filled(char *target, const char *source, size_t len)
 {
     size_t used = 0;
     while (used < len) {
@@ -3111,6 +3110,7 @@ copy_filled(char *target, char *source, size_t len)
     }
 }
 
+#if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP) && !defined(USE_UTEMPTER)
 /*
  * getutid() only looks at ut_type and ut_id.
  * But we'll also check ut_line in find_utmp().

@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.39 2014/04/29 00:39:29 tom Exp $ */
+/* $XTermId: graphics.c,v 1.42 2014/05/03 14:26:57 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -238,14 +238,10 @@ draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned 
     assert(color <= MAX_COLOR_REGISTERS);
 
     if (x1 > x2) {
-	tmp = x1;
-	x1 = x2;
-	x2 = tmp;
+	EXCHANGE(x1, x2, tmp);
     }
     if (y1 > y2) {
-	tmp = y1;
-	y1 = y2;
-	y2 = tmp;
+	EXCHANGE(y1, y2, tmp);
     }
 
     for (y = y1; y <= y2; y++)
@@ -268,12 +264,8 @@ draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color
     if (dx > dy) {
 	if (x1 > x2) {
 	    int tmp;
-	    tmp = x1;
-	    x1 = x2;
-	    x2 = tmp;
-	    tmp = y1;
-	    y1 = y2;
-	    y2 = tmp;
+	    EXCHANGE(x1, x2, tmp);
+	    EXCHANGE(y1, y2, tmp);
 	}
 	if (y1 < y2)
 	    dir = 1;
@@ -295,12 +287,8 @@ draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color
     } else {
 	if (y1 > y2) {
 	    int tmp;
-	    tmp = y1;
-	    y1 = y2;
-	    y2 = tmp;
-	    tmp = x1;
-	    x1 = x2;
-	    x2 = tmp;
+	    EXCHANGE(x1, x2, tmp);
+	    EXCHANGE(y1, y2, tmp);
 	}
 	if (x1 < x2)
 	    dir = 1;
@@ -769,8 +757,8 @@ refresh_graphic(TScreen const *screen,
     Window vwindow = WhichVWin(screen)->window;
     GC graphics_gc;
     int r, c;
-    int wx, wy;
     int pw, ph;
+    int rbase, cbase;
     RegisterNum color;
     RegisterNum old_fg;
     XGCValues xgcv;
@@ -807,16 +795,25 @@ refresh_graphic(TScreen const *screen,
 
     old_fg = COLOR_HOLE;
     holes = total = 0;
-    for (r = 0; r < graphic->actual_height; r++)
-	for (c = 0; c < graphic->actual_width; c++) {
-	    if (r * ph + ph - 1 < y ||
-		r * ph > y + h - 1 ||
-		c * pw + pw - 1 < x ||
-		c * pw > x + w - 1)
-		continue;
+    rbase = 0;
+    for (r = 0; r < graphic->actual_height; r++) {
+	int rtest = rbase;
 
-	    wy = ybase + r * ph;
-	    wx = xbase + c * pw;
+	rbase += ph;
+	if (rtest + ph - 1 < y)
+	    continue;
+	if (rtest > y + h - 1)
+	    continue;
+
+	cbase = 0;
+	for (c = 0; c < graphic->actual_width; c++) {
+	    int ctest = cbase;
+
+	    cbase += pw;
+	    if (ctest + pw - 1 < x)
+		continue;
+	    if (ctest > x + w - 1)
+		continue;
 
 	    total++;
 	    color = graphic->pixels[r * graphic->max_width + c];
@@ -834,8 +831,12 @@ refresh_graphic(TScreen const *screen,
 	    }
 
 	    XFillRectangle(display, vwindow, graphics_gc,
-			   wx, wy, (unsigned) pw, (unsigned) ph);
+			   xbase + ctest,
+			   ybase + rtest,
+			   (unsigned) pw,
+			   (unsigned) ph);
 	}
+    }
 
 #ifdef DEBUG_REFRESH
     {
@@ -1048,22 +1049,27 @@ erase_graphic(Graphic *graphic, int x, int y, int w, int h)
     RegisterNum hole = COLOR_HOLE;
     int pw, ph;
     int r, c;
+    int rbase, cbase;
 
     pw = graphic->pixw;
     ph = graphic->pixh;
 
     TRACE(("erasing graphic %d,%d %dx%d\n", x, y, w, h));
 
+    rbase = 0;
     for (r = 0; r < graphic->actual_height; r++) {
-	for (c = 0; c < graphic->actual_width; c++) {
-	    if (r * ph + ph - 1 < y ||
-		r * ph > y + h - 1 ||
-		c * pw + pw - 1 < x ||
-		c * pw > x + w - 1)
-		continue;
-
-	    graphic->pixels[r * graphic->max_width + c] = hole;
+	if (rbase + ph - 1 >= y
+	    && rbase <= y + h - 1) {
+	    cbase = 0;
+	    for (c = 0; c < graphic->actual_width; c++) {
+		if (cbase + pw - 1 >= x
+		    && cbase <= x + w - 1) {
+		    graphic->pixels[r * graphic->max_width + c] = hole;
+		}
+		cbase += pw;
+	    }
 	}
+	rbase += ph;
     }
 }
 

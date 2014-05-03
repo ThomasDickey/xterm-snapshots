@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.323 2014/04/28 22:21:44 tom Exp $ */
+/* $XTermId: menu.c,v 1.324 2014/05/03 10:53:43 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2875,8 +2875,7 @@ InitPopup(Widget gw,
 
     domenu(gw, (XEvent *) 0, params, &count);
 
-    if (gw)
-	XtRemoveCallback(gw, XtNpopupCallback, InitPopup, closure);
+    XtRemoveCallback(gw, XtNpopupCallback, InitPopup, closure);
 }
 
 static Dimension
