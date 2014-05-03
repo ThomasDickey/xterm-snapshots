@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2013)
-               updated for XTerm Patch #304 (2014/04/27)
+               updated for XTerm Patch #304 (2014/05/02)
 
 
 
@@ -270,6 +270,21 @@ CSI Ps L  Insert Ps Line(s) (default = 1) (IL).
 CSI Ps M  Delete Ps Line(s) (default = 1) (DL).
 CSI Ps P  Delete Ps Character(s) (default = 1) (DCH).
 CSI Ps S  Scroll up Ps lines (default = 1) (SU).
+CSI ? Pi; Pa; Pv S
+          If configured to support either Sixel Graphics or ReGIS Graph-
+          ics, xterm accepts a three-parameter control sequence, where
+          Pi, Pa and Pv are the item, action and value.
+            Pi = 1  -> item (color registers)
+            Pa = 1  -> read the number of color registers
+            Pa = 2  -> reset the number of color registers
+            Pa = 3  -> set the number of color registers to the value Pv
+          The control sequence returns a response using the same form:
+
+               CSI ? Pi; Ps; Pv S
+
+          where Ps is the status:
+            Ps = 0  -> success
+            Ps = 3  -> failure
 CSI Ps T  Scroll down Ps lines (default = 1) (SD).
 CSI Ps ; Ps ; Ps ; Ps ; Ps T
           Initiate highlight mouse tracking.  Parameters are

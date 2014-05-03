@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.623 2014/04/25 23:22:38 tom Exp $ */
+/* $XTermId: util.c,v 1.624 2014/05/02 20:24:05 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2096,7 +2096,7 @@ scrolling_copy_area(XtermWidget xw,
  * Returns 1 iff the area where the cursor was got refreshed.
  */
 int
-HandleExposure(XtermWidget xw, XEvent * event)
+HandleExposure(XtermWidget xw, XEvent *event)
 {
     TScreen *screen = TScreenOf(xw);
     XExposeEvent *reply = (XExposeEvent *) event;
@@ -2521,7 +2521,7 @@ reallySwapColors(XtermWidget xw, ToSwap * list, int count)
 }
 
 static void
-swapVTwinGCs(XtermWidget xw, VTwin * win)
+swapVTwinGCs(XtermWidget xw, VTwin *win)
 {
     swapCgs(xw, win, gcNorm, gcNormReverse);
     swapCgs(xw, win, gcBold, gcBoldReverse);
@@ -2774,8 +2774,8 @@ getNormXftFont(XtermWidget xw,
 static int
 xtermXftDrawString(XtermWidget xw,
 		   unsigned flags GCC_UNUSED,
-		   XftColor * color,
-		   XftFont * font,
+		   XftColor *color,
+		   XftFont *font,
 		   int x,
 		   int y,
 		   IChar *text,
@@ -3132,8 +3132,8 @@ xtermSetClipRectangles(Display *dpy,
 static int
 drawClippedXftString(XtermWidget xw,
 		     unsigned flags,
-		     XftFont * font,
-		     XftColor * fg_color,
+		     XftFont *font,
+		     XftColor *fg_color,
 		     int x,
 		     int y,
 		     IChar *text,
@@ -3934,7 +3934,7 @@ drawXtermText(XtermWidget xw,
  * Allocate buffer - workaround for wide-character interfaces.
  */
 void
-allocXtermChars(ScrnPtr * buffer, Cardinal length)
+allocXtermChars(ScrnPtr *buffer, Cardinal length)
 {
     if (*buffer == 0) {
 	*buffer = (ScrnPtr) XtMalloc(length);
@@ -4533,7 +4533,7 @@ decode_wcwidth(XtermWidget xw)
  * which will be mapped into true/false.
  */
 int
-extendedBoolean(const char *value, FlagList * table, Cardinal limit)
+extendedBoolean(const char *value, const FlagList * table, Cardinal limit)
 {
     int result = -1;
     long check;
