@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.800 2014/04/25 23:19:04 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.802 2014/05/03 12:58:37 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -322,6 +322,7 @@ typedef Char *UString;
 #endif
 
 #define IsEmpty(s) ((s) == 0 || *(s) == '\0')
+#define IsSpace(c) ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
 
 #define CharOf(n) ((Char)(n))
 

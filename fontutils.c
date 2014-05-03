@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.404 2014/04/28 21:31:26 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.405 2014/05/03 10:49:26 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -372,7 +372,10 @@ alloca_fontname(char **result, size_t next)
     if (want >= have) {
 	want = ALLOCHUNK(want);
 	if (last != 0) {
+	    char *save = *result;
 	    *result = TypeRealloc(char, want, *result);
+	    if (*result == 0)
+		free(save);
 	} else {
 	    if ((*result = TypeMallocN(char, want)) != 0)
 		**result = '\0';
