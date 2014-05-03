@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1329 2014/04/25 23:28:46 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1332 2014/05/02 21:48:33 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1246,51 +1246,90 @@ set_mod_fkeys(XtermWidget xw, int which, int what, Bool enabled)
 #endif /* OPT_MOD_FKEYS */
 
 #if OPT_TRACE
+#define DATA(name) { name, #name }
+static const struct {
+    Const PARSE_T *table;
+    const char *name;
+} all_tables[] = {
+
+    DATA(ansi_table)
+	,DATA(cigtable)
+	,DATA(csi2_table)
+	,DATA(csi_ex_table)
+	,DATA(csi_quo_table)
+	,DATA(csi_table)
+	,DATA(dec2_table)
+	,DATA(dec3_table)
+	,DATA(dec_table)
+	,DATA(eigtable)
+	,DATA(esc_sp_table)
+	,DATA(esc_table)
+	,DATA(scrtable)
+	,DATA(scs96table)
+	,DATA(scstable)
+	,DATA(sos_table)
+#if OPT_BLINK_CURS
+	,DATA(csi_sp_table)
+#endif
+#if OPT_DEC_LOCATOR
+	,DATA(csi_tick_table)
+#endif
+#if OPT_DEC_RECTOPS
+	,DATA(csi_dollar_table)
+	,DATA(csi_star_table)
+	,DATA(csi_dec_dollar_table)
+#endif
+#if OPT_WIDE_CHARS
+	,DATA(esc_pct_table)
+	,DATA(scs_pct_table)
+#endif
+#if OPT_VT52_MODE
+	,DATA(vt52_table)
+	,DATA(vt52_esc_table)
+	,DATA(vt52_ignore_table)
+#endif
+#undef DATA
+};
+
 #define WHICH_TABLE(name) if (table == name) result = #name
 static const char *
 which_table(Const PARSE_T * table)
 {
     const char *result = "?";
-    /* *INDENT-OFF* */
-    WHICH_TABLE (ansi_table);
-    else WHICH_TABLE (cigtable);
-    else WHICH_TABLE (csi2_table);
-    else WHICH_TABLE (csi_ex_table);
-    else WHICH_TABLE (csi_quo_table);
-    else WHICH_TABLE (csi_table);
-    else WHICH_TABLE (dec2_table);
-    else WHICH_TABLE (dec3_table);
-    else WHICH_TABLE (dec_table);
-    else WHICH_TABLE (eigtable);
-    else WHICH_TABLE (esc_sp_table);
-    else WHICH_TABLE (esc_table);
-    else WHICH_TABLE (scrtable);
-    else WHICH_TABLE (scs96table);
-    else WHICH_TABLE (scstable);
-    else WHICH_TABLE (sos_table);
-#if OPT_BLINK_CURS
-    else WHICH_TABLE (csi_sp_table);
-#endif
-#if OPT_DEC_LOCATOR
-    else WHICH_TABLE (csi_tick_table);
-#endif
-#if OPT_DEC_RECTOPS
-    else WHICH_TABLE (csi_dollar_table);
-    else WHICH_TABLE (csi_star_table);
-    else WHICH_TABLE (csi_dec_dollar_table);
-#endif
-#if OPT_WIDE_CHARS
-    else WHICH_TABLE (esc_pct_table);
-    else WHICH_TABLE (scs_pct_table);
-#endif
-#if OPT_VT52_MODE
-    else WHICH_TABLE (vt52_table);
-    else WHICH_TABLE (vt52_esc_table);
-    else WHICH_TABLE (vt52_ignore_table);
-#endif
-    /* *INDENT-ON* */
+    Cardinal n;
+    for (n = 0; n < XtNumber(all_tables); ++n) {
+	if (table == all_tables[n].table) {
+	    result = all_tables[n].name;
+	    break;
+	}
+    }
 
     return result;
+}
+
+static void
+check_tables(void)
+{
+    Cardinal n;
+    int ch;
+
+    TRACE(("** check_tables\n"));
+    for (n = 0; n < XtNumber(all_tables); ++n) {
+	Const PARSE_T *table = all_tables[n].table;
+	TRACE(("*** %s\n", all_tables[n].name));
+	for (ch = 32; ch < 127; ++ch) {
+	    PARSE_T st_l = table[ch];
+	    PARSE_T st_r = table[ch + 128];
+	    if (st_l != st_r) {
+		if (st_r == CASE_IGNORE &&
+		    !strncmp(all_tables[n].name, "vt52", 4)) {
+		    ;
+		} else {
+		    TRACE(("  %3d: %d vs %d\n", ch, st_l, st_r));
+		}
+	    }
+	}
+    }
 }
 #endif
 
@@ -7278,7 +7317,7 @@ ParseList(const char **source)
 static void
 set_flags_from_list(char *target,
 		    const char *source,
-		    FlagList * list,
+		    const FlagList * list,
 		    Cardinal limit)
 {
     Cardinal n;
@@ -7376,7 +7415,7 @@ VTInitialize(Widget wrequest,
 #define DftBg(name) isDefaultBackground(Kolor(name))
 
 #define DATA(name) { #name, ec##name }
-    static FlagList tblColorOps[] =
+    static const FlagList tblColorOps[] =
     {
 	DATA(SetColor)
 	,DATA(GetColor)
@@ -7385,7 +7424,7 @@ VTInitialize(Widget wrequest,
 #undef DATA
 
 #define DATA(name) { #name, ef##name }
-    static FlagList tblFontOps[] =
+    static const FlagList tblFontOps[] =
     {
 	DATA(SetFont)
 	,DATA(GetFont)
@@ -7393,7 +7432,7 @@ VTInitialize(Widget wrequest,
 #undef DATA
 
 #define DATA(name) { #name, et##name }
-    static FlagList tblTcapOps[] =
+    static const FlagList tblTcapOps[] =
     {
 	DATA(SetTcap)
 	,DATA(GetTcap)
@@ -7401,7 +7440,7 @@ VTInitialize(Widget wrequest,
 #undef DATA
 
 #define DATA(name) { #name, ew##name }
-    static FlagList tblWindowOps[] =
+    static const FlagList tblWindowOps[] =
     {
 	DATA(RestoreWin)
 	,DATA(MinimizeWin)
@@ -7435,7 +7474,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_RENDERFONT
 #define DATA(name) { #name, er##name }
-    static FlagList tblRenderFont[] =
+    static const FlagList tblRenderFont[] =
     {
 	DATA(Default)
     };
@@ -7444,7 +7483,7 @@ VTInitialize(Widget wrequest,
 
 #if OPT_WIDE_CHARS
 #define DATA(name) { #name, u##name }
-    static FlagList tblUtf8Mode[] =
+    static const FlagList tblUtf8Mode[] =
     {
 	DATA(Always)
 	,DATA(Default)
@@ -7454,7 +7493,7 @@ VTInitialize(Widget wrequest,
 
 #ifndef NO_ACTIVE_ICON
 #define DATA(name) { #name, ei##name }
-    static FlagList tblAIconOps[] =
+    static const FlagList tblAIconOps[] =
     {
 	DATA(Default)
     };
@@ -7462,7 +7501,7 @@ VTInitialize(Widget wrequest,
 #endif
 
 #define DATA(name) { #name, eb##name }
-    static FlagList tbl8BitMeta[] =
+    static const FlagList tbl8BitMeta[] =
     {
 	DATA(Never)
 	,DATA(Locale)
@@ -7489,6 +7528,10 @@ VTInitialize(Widget wrequest,
 #endif
     };
 #endif /* OPT_COLOR_RES2 */
+
+#if OPT_TRACE
+    check_tables();
+#endif
 
     TRACE(("VTInitialize wnew %p, %d / %d resources\n",
 	   (void *) wnew, XtNumber(xterm_resources), MAXRESOURCES));

@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.309 2014/04/28 00:04:54 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.310 2014/05/03 00:27:29 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #304
-.ds RF 2014/04/27
+.ds RF 2014/05/02
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -750,6 +750,24 @@ Delete \*(Ps Character(s) (default = 1) (DCH).
 .
 .IP \\*(Cs\\*(Ps\\*s\\*S
 Scroll up \*(Ps lines (default = 1) (SU).
+.
+.IP \\*(Cs\\*?\\*(Pi\\*;\\*(Pa\\*;\\*(Pv\\*s\\*S
+If configured to support either \fBSixel Graphics\fP or \fBReGIS Graphics\fP,
+\fIxterm\fP accepts a three-parameter control sequence, where \*(Pi,
+\*(Pa and \*(Pv are the \fIitem\fP, \fIaction\fP and \fIvalue\fP.
+  \*(Pi = \*1 \(-> item (color registers)
+  \*(Pa = \*1 \(-> read the number of color registers
+  \*(Pa = \*2 \(-> reset the number of color registers
+  \*(Pa = \*3 \(-> set the number of color registers to the value \*(Pv
+.br
+The control sequence returns a response using the same form:
+.ID
+\*(Cs\*?\*(Pi\*;\*(Ps\*;\*(Pv\*s\*S
+.DE
+.br
+where \*(Ps is the status:
+  \*(Ps = \*0 \(-> success
+  \*(Ps = \*3 \(-> failure
 .
 .IP \\*(Cs\\*(Ps\\*s\\*T
 Scroll down \*(Ps lines (default = 1) (SD).

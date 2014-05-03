@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.7 2014/04/25 21:32:33 Ross.Combs Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.8 2014/05/02 22:53:20 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -626,11 +626,13 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 
 	if (new_row < 0) {
 	    TRACE(("new row is going to be negative (%d)!", new_row));	/* FIXME: this was triggering, now it isn't */
+	    goto finis;
 	}
 	set_cur_row(screen, new_row);
 	set_cur_col(screen, new_col <= screen->rgt_marg ? new_col : screen->rgt_marg);
     }
 
+  finis:
     refresh_modified_displayed_graphics(screen);
 
     TRACE(("DONE successfully parsed sixel data\n"));
