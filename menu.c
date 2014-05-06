@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.324 2014/05/03 10:53:43 tom Exp $ */
+/* $XTermId: menu.c,v 1.325 2014/05/05 21:47:35 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1109,7 +1109,7 @@ do_write_now(Widget gw GCC_UNUSED,
 
     xtermPrintImmediately(xw,
 			  (IsEmpty(resource.printFileNow)
-			   ? "XTerm"
+			   ? (String) "XTerm"
 			   : resource.printFileNow),
 			  resource.printOptsNow,
 			  resource.printModeNow);
