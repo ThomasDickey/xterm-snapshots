@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.467 2014/04/22 00:50:10 tom Exp $ */
+/* $XTermId: button.c,v 1.468 2014/05/05 21:44:55 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3229,8 +3229,8 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 			if (regexec(&preg,
 				    search + indexed[col],
 				    (size_t) 1, &match, 0) == 0) {
-			    int start_inx = match.rm_so + indexed[col];
-			    int finis_inx = match.rm_eo + indexed[col];
+			    int start_inx = (int) (match.rm_so + indexed[col]);
+			    int finis_inx = (int) (match.rm_eo + indexed[col]);
 			    int start_col = indexToCol(indexed, len, start_inx);
 			    int finis_col = indexToCol(indexed, len, finis_inx);
 

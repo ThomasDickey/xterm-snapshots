@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.23 2014/05/03 12:44:53 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.25 2014/05/05 21:46:48 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -54,6 +54,9 @@
 #undef DEBUG_SPLINE_POINTS
 #undef DEBUG_SPLINE_WITH_ROTATION
 #undef DEBUG_SPLINE_WITH_OVERDRAW
+#undef DEBUG_ARC_CENTER
+#undef DEBUG_ARC_START
+#undef DEBUG_ARC_END
 
 #define ITERATIONS_BEFORE_REFRESH 100U
 /* *INDENT-OFF* */
@@ -322,7 +325,8 @@ static void
 draw_patterned_arc(RegisGraphicsContext *context,
 		   int cx, int cy,
 		   int ex, int ey,
-		   int a_start, int a_length)
+		   int a_start, int a_length,
+		   int *ex_final, int *ey_final)
 {
     const double third = hypot((double) (cx - ex), (double) (cy - ey));
     const int radius = (int) third;
@@ -346,13 +350,15 @@ draw_patterned_arc(RegisGraphicsContext *context,
     int total_points;
     int points_start, points_stop;
     int points;
-    int iterations;
+    unsigned iterations;
     int quad;
     long rx, ry;
     long dx, dy;
+    int x, y;
     long e2;
     long error;
 
+    TRACE(("a_length=%d a_start=%d\n", a_length, a_start));
     if (a_length == 0)
 	return;
     if (a_length > 0) {
@@ -388,11 +394,11 @@ draw_patterned_arc(RegisGraphicsContext *context,
     points_start = (total_points * a_start) / 360;
     points_stop = (total_points * a_start +
 		   total_points * abs(a_length) + 359) / 360;
-    TRACE(("drawing arc with %d points from %d angle for %d degrees (from point %d to %d)\n",
-	   total_points, a_start, a_length, points_start, points_stop));
+    TRACE(("drawing arc with %d points from %d angle for %d degrees (from point %d to %d out of %d)\n",
+	   total_points, a_start, a_length, points_start, points_stop, total_points));
 
     points = 0;
-    for (iterations = 0; iterations < 8; iterations++) {
+    for (iterations = 0U; iterations < 8U; iterations++) {
 	quad = iterations & 0x3;
 
 	rx = -ra;
@@ -403,13 +409,17 @@ draw_patterned_arc(RegisGraphicsContext *context,
 	error = dx + dy;
 	do {
 	    if (points >= points_start && points <= points_stop) {
-		draw_patterned_pixel(context,
-				     (int) (cx +
-					    quadmap[quad].dxx * rx +
-					    quadmap[quad].dxy * ry),
-				     (int) (cy +
-					    quadmap[quad].dyx * rx +
-					    quadmap[quad].dyy * ry));
+		x = (int) (cx +
+			   quadmap[quad].dxx * rx +
+			   quadmap[quad].dxy * ry);
+		y = (int) (cy +
+			   quadmap[quad].dyx * rx +
+			   quadmap[quad].dyy * ry);
+		draw_patterned_pixel(context, x, y);
+		if (ex_final)
+		    *ex_final = x;
+		if (ey_final)
+		    *ey_final = y;
 	    }
 	    points++;
 
@@ -821,17 +831,19 @@ plotQuadSpline(int n, int x[], int y[], int skip_segments)
 	global_context->temporary_write_controls.foreground = 11;
 	save_pattern = global_context->temporary_write_controls.pattern;
 	global_context->temporary_write_controls.pattern = 0xff;
-	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0, 360);
+	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0,
+			   360, NULL, NULL);
 	i++;
 	global_context->temporary_write_controls.foreground = 15;
 	for (; i < n; i++) {
 	    draw_patterned_arc(global_context,
 			       x[i], y[i],
 			       x[i] + 2, y[i],
-			       0, 360);
+			       0, 360, NULL, NULL);
 	}
 	global_context->temporary_write_controls.foreground = 10;
-	draw_patterned_arc(global_context, x[i], y[n], x[i] + 2, y[i], 0, 360);
+	draw_patterned_arc(global_context, x[i], y[n], x[i] + 2, y[i], 0,
+			   360, NULL, NULL);
 	global_context->temporary_write_controls.pattern = save_pattern;
     }
 #endif
@@ -897,17 +909,19 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
 	global_context->temporary_write_controls.foreground = 11;
 	save_pattern = global_context->temporary_write_controls.pattern;
 	global_context->temporary_write_controls.pattern = 0xff;
-	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0, 360);
+	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0,
+			   360, NULL, NULL);
 	i++;
 	global_context->temporary_write_controls.foreground = 15;
 	for (; i < n; i++) {
 	    draw_patterned_arc(global_context,
 			       x[i], y[i],
 			       x[i] + 2, y[i],
-			       0, 360);
+			       0, 360, NULL, NULL);
 	}
 	global_context->temporary_write_controls.foreground = 10;
-	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0, 360);
+	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0,
+			   360, NULL, NULL);
 	global_context->temporary_write_controls.pattern = save_pattern;
     }
 #endif
@@ -1116,6 +1130,12 @@ extract_regis_num(RegisDataFragment *input, RegisDataFragment *output)
     output->len = 0U;
     output->pos = 0U;
 
+    if (input->start[input->pos] == '-' ||
+	input->start[input->pos] == '+') {
+	input->pos++;
+	output->len++;
+    }
+
     for (; input->pos < input->len; input->pos++, output->len++) {
 	ch = input->start[input->pos];
 	if (ch != '0' && ch != '1' && ch != '2' && ch != '3' &&
@@ -1141,10 +1161,7 @@ extract_regis_num(RegisDataFragment *input, RegisDataFragment *output)
 	}
     }
 
-    if (output->len < 1U)
-	return 0;
-
-    return 1;
+    return has_digits;
 }
 
 static int
@@ -1196,7 +1213,7 @@ extract_regis_command(RegisDataFragment *input, char *command)
     if (ch == '\0' || ch == ';') {
 	return 0;
     }
-    if (!islower(ch) && !isupper(ch)) {
+    if (!islower(CharOf(ch)) && !isupper(CharOf(ch))) {
 	return 0;
     }
     *command = ch;
@@ -1335,7 +1352,7 @@ extract_regis_option(RegisDataFragment *input,
     }
 
     ch = input->start[input->pos];
-    if (ch == ';' || ch == ',' || ch == '(' || ch == ')' || isdigit(ch)) {
+    if (ch == ';' || ch == ',' || ch == '(' || ch == ')' || isdigit(CharOf(ch))) {
 	return 0;
     }
     *option = ch;
@@ -1712,6 +1729,7 @@ load_regis_write_control(RegisParseState *state,
 			    continue;
 			}
 			if (extract_regis_option(&suboptionset, &suboption, &suboptionarg)) {
+			    skip_regis_whitespace(&suboptionarg);
 			    TRACE(("inspecting write pattern suboption \"%c\" with value \"%s\"\n",
 				   suboption, fragment_to_tempstr(&suboptionarg)));
 			    switch (suboption) {
@@ -1723,7 +1741,6 @@ load_regis_write_control(RegisParseState *state,
 				    RegisDataFragment num;
 				    int val;
 
-				    skip_regis_whitespace(&suboptionarg);
 				    if (extract_regis_num(&suboptionarg, &num)) {
 					if (!regis_num_to_int(&num, &val)
 					    || val < 1) {
@@ -1903,10 +1920,12 @@ load_regis_write_control(RegisParseState *state,
 		}
 
 		if (extract_regis_optionset(arg, &suboptionset)) {
+		    skip_regis_whitespace(&suboptionset);
 		    TRACE(("got regis shading control suboptionset: \"%s\"\n",
 			   fragment_to_tempstr(&suboptionset)));
 		    while (suboptionset.pos < suboptionset.len) {
-			skip_regis_whitespace(&suboptionset);
+			if (skip_regis_whitespace(&suboptionset))
+			    continue;
 			if (peek_fragment(&suboptionset) == ',') {
 			    pop_fragment(&suboptionset);
 			    continue;
@@ -2028,6 +2047,7 @@ load_regis_write_control_set(RegisParseState *state,
 		    continue;
 		}
 		if (extract_regis_option(&optionset, &option, &arg)) {
+		    skip_regis_whitespace(&arg);
 		    TRACE(("got regis write control option and value: \"%c\" \"%s\"\n",
 			   option, fragment_to_tempstr(&arg)));
 		    if (!load_regis_write_control(state, graphic,
@@ -2197,6 +2217,7 @@ parse_regis_command(RegisParseState *state)
 	 * P
 	 * (B)  # begin bounded position stack (last point returns to first)
 	 * (E)  # end position stack
+	 * (P)  # select graphics page for the input and output cursors
 	 * (S)  # begin unbounded position stack
 	 * (W)  # temporary write options (see write command)
 	 * <pv>  # move: 0 == right, 1 == upper right, ..., 7 == lower right
@@ -2377,6 +2398,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
     if (!extract_regis_option(&state->optionset, &state->option, &optionarg))
 	return 0;
+    skip_regis_whitespace(&optionarg);
 
     TRACE(("found ReGIS option \"%c\": \"%s\"\n",
 	   state->option, fragment_to_tempstr(&optionarg)));
@@ -2394,7 +2416,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		if (!extract_regis_num(&optionarg, &arclen)) {
 		    TRACE(("DATA_ERROR: expected int in curve arclen option: \"%s\"\n",
-			   fragment_to_tempstr(&arclen)));
+			   fragment_to_tempstr(&optionarg)));
 		    break;
 		}
 		TRACE(("arc length string %s\n", fragment_to_tempstr(&arclen)));
@@ -2633,6 +2655,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'E':
 	case 'e':
 	    TRACE(("found end position stack \"%s\" FIXME\n",
+		   fragment_to_tempstr(&optionarg)));
+	    /* FIXME: handle */
+	    break;
+	case 'P':
+	case 'p':
+	    TRACE(("found graphics page \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
 	    break;
@@ -3064,12 +3092,13 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	}
 	break;
     case 'w':
+	skip_regis_whitespace(&optionarg);
 	TRACE(("inspecting write option \"%c\" with value \"%s\"\n",
 	       state->option, fragment_to_tempstr(&optionarg)));
 	if (!load_regis_write_control(state, context->graphic,
 				      context->graphics_output_cursor_x, context->graphics_output_cursor_y,
 				      state->option, &optionarg, &context->persistent_write_controls)) {
-	    TRACE(("DATA_ERROR: invalid write options"));
+	    TRACE(("DATA_ERROR: invalid write options\n"));
 	}
 	break;
     default:
@@ -3133,6 +3162,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 			int degrees;
 			int c_x, c_y;
 			int e_x, e_y;
+			int e_x_final = 0, e_y_final = 0;
 
 			if (state->curve_mode == CURVE_POSITION_ARC_CENTER) {
 			    c_x = new_x;
@@ -3146,20 +3176,60 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 			    e_y = new_y;
 			}
 
-			radians = atan2((double) (new_y - orig_y),
-					(double) (new_x - orig_x));
+			radians = atan2(c_y - e_y, e_x - c_x);
 			degrees = (int) (360.0 * radians / (2.0 * M_PI));
 			if (degrees < 0)
 			    degrees += 360;
 
-			TRACE(("drawing arc centered at location %d,%d to location %d,%d from %d degrees for %d degrees\n",
+			TRACE(("drawing arc centered at location %d,%d to location %d,%d from %d degrees (%g radians) for %d degrees\n",
 			       c_x, c_y,
 			       e_x, e_y,
-			       degrees, state->arclen));
+			       degrees, radians, state->arclen));
 			draw_patterned_arc(context,
 					   c_x, c_y,
 					   e_x, e_y,
-					   degrees, state->arclen);
+					   degrees, state->arclen,
+					   &e_x_final, &e_y_final);
+
+#ifdef DEBUG_ARC_CENTER
+			draw_solid_pixel(context->graphic, c_x + 1, c_y, 3U);
+			draw_solid_pixel(context->graphic, c_x - 1, c_y, 3U);
+			draw_solid_pixel(context->graphic, c_x, c_y + 1, 3U);
+			draw_solid_pixel(context->graphic, c_x, c_y - 1, 3U);
+			draw_solid_pixel(context->graphic, c_x, c_y, 3U);
+#endif
+
+#ifdef DEBUG_ARC_START
+			draw_solid_pixel(context->graphic, e_x + 1, e_y, 2U);
+			draw_solid_pixel(context->graphic, e_x - 1, e_y, 2U);
+			draw_solid_pixel(context->graphic, e_x, e_y + 1, 2U);
+			draw_solid_pixel(context->graphic, e_x, e_y - 1, 2U);
+			draw_solid_pixel(context->graphic, e_x, e_y, 2U);
+#endif
+
+#ifdef DEBUG_ARC_END
+			draw_solid_pixel(context->graphic, e_x_final + 1,
+					 e_y_final + 1, 1U);
+			draw_solid_pixel(context->graphic, e_x_final + 1,
+					 e_y_final - 1, 1U);
+			draw_solid_pixel(context->graphic, e_x_final - 1,
+					 e_y_final + 1, 1U);
+			draw_solid_pixel(context->graphic, e_x_final - 1,
+					 e_y_final - 1, 1U);
+			draw_solid_pixel(context->graphic, e_x_final,
+					 e_y_final, 1U);
+#endif
+
+			if (state->curve_mode == CURVE_POSITION_ARC_CENTER) {
+			    TRACE(("moving cursor to final point on arc %d,%d\n",
+				   e_x_final, e_y_final));
+			    if (state->num_points > 0) {
+				state->x_points[state->num_points - 1] = e_x_final;
+				state->y_points[state->num_points - 1] = e_y_final;
+			    }
+			    context->graphics_output_cursor_x = e_x_final;
+			    context->graphics_output_cursor_y = e_y_final;
+			}
 		    }
 		    break;
 		case CURVE_POSITION_OPEN_CURVE:
