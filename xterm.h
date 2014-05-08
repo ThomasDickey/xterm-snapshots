@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.737 2014/05/03 19:30:17 tom Exp $ */
+/* $XTermId: xterm.h,v 1.739 2014/05/08 01:07:58 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -952,7 +952,7 @@ extern void xterm_DECDWL (XtermWidget /* xw */);
 extern void xterm_ResetDouble(XtermWidget /* xw */);
 #if OPT_DEC_CHRSET
 extern int xterm_Double_index(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* flags */);
-extern GC xterm_DoubleGC(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* flags */, GC  /* old_gc */, int * /* inxp */);
+extern GC xterm_DoubleGC(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* attr_flags */, unsigned  /* draw_flags */, GC  /* old_gc */, int * /* inxp */);
 #endif
 
 /* input.c */
@@ -1333,7 +1333,7 @@ extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned 
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
-extern int drawXtermText (XtermWidget /* xw */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
+extern int drawXtermText (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
 extern int extendedBoolean(const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);

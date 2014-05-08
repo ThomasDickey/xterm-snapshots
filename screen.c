@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.488 2014/05/03 19:32:51 tom Exp $ */
+/* $XTermId: screen.c,v 1.490 2014/05/08 00:55:42 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1617,7 +1617,10 @@ ScrnRefresh(XtermWidget xw,
 		test = flags;
 		checkVeryBoldColors(test, fg);
 
-		x = drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
+		x = drawXtermText(xw,
+				  test & DRAWX_MASK,
+				  test & DRAWX_MASK,
+				  gc, x, y,
 				  GetLineDblCS(ld),
 				  &chars[lastind],
 				  (unsigned) (col - lastind), 0);
@@ -1638,8 +1641,8 @@ ScrnRefresh(XtermWidget xw,
 
 			    if (com_off[i] != 0)
 				drawXtermText(xw,
-					      (test & DRAWX_MASK)
-					      | NOBACKGROUND,
+					      (test & DRAWX_MASK),
+					      NOBACKGROUND,
 					      gc, my_x, y,
 					      GetLineDblCS(ld),
 					      com_off + i,
@@ -1682,7 +1685,10 @@ ScrnRefresh(XtermWidget xw,
 	test = flags;
 	checkVeryBoldColors(test, fg);
 
-	drawXtermText(xw, test & DRAWX_MASK, gc, x, y,
+	drawXtermText(xw,
+		      test & DRAWX_MASK,
+		      test & DRAWX_MASK,
+		      gc, x, y,
 		      GetLineDblCS(ld),
 		      &chars[lastind],
 		      (unsigned) (col - lastind), 0);
@@ -1703,8 +1709,8 @@ ScrnRefresh(XtermWidget xw,
 
 		    if (com_off[i] != 0)
 			drawXtermText(xw,
-				      (test & DRAWX_MASK)
-				      | NOBACKGROUND,
+				      (test & DRAWX_MASK),
+				      NOBACKGROUND,
 				      gc, my_x, y,
 				      GetLineDblCS(ld),
 				      com_off + i,
