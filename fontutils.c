@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.405 2014/05/03 10:49:26 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.408 2014/05/08 01:09:25 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -470,7 +470,7 @@ widebold_font_name(FontNameProperties *props)
  * fonts we double the pixel-size and Y-resolution
  */
 char *
-xtermSpecialFont(TScreen *screen, unsigned atts, unsigned chrset)
+xtermSpecialFont(TScreen *screen, unsigned atts, unsigned draw_flags, unsigned chrset)
 {
 #if OPT_TRACE
     static char old_spacing[80];
@@ -508,7 +508,8 @@ xtermSpecialFont(TScreen *screen, unsigned atts, unsigned chrset)
 	|| old_props.res_x != res_y
 	|| old_props.pixel_size != pixel_size
 	|| strcmp(old_props.spacing, props->spacing)) {
-	TRACE(("xtermSpecialFont(atts = %#x, chrset = %#x)\n", atts, chrset));
+	TRACE(("xtermSpecialFont(atts = %#x, draw = %#x, chrset = %#x)\n",
+	       atts, draw_flags, chrset));
 	TRACE(("res_x      = %d\n", res_x));
 	TRACE(("res_y      = %d\n", res_y));
 	TRACE(("point_size = %s\n", props->point_size));
@@ -2390,7 +2391,8 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
 void
 xtermDrawBoxChar(XtermWidget xw,
 		 unsigned ch,
-		 unsigned flags,
+		 unsigned attr_flags,
+		 unsigned draw_flags,
 		 GC gc,
 		 int x,
 		 int y,
@@ -2575,8 +2577,10 @@ xtermDrawBoxChar(XtermWidget xw,
     CgsEnum cgsId = (ch == 2) ? gcDots : gcLine;
     VTwin *cgsWin = WhichVWin(screen);
     const short *p;
-    unsigned font_width = (unsigned) (((flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide);
-    unsigned font_height = (unsigned) (((flags & DOUBLEHFONT) ? 2 : 1) * screen->fnt_high);
+    unsigned font_width = (unsigned) (((draw_flags & DOUBLEWFONT) ? 2 : 1)
+				      * screen->fnt_wide);
+    unsigned font_height = (unsigned) (((draw_flags & DOUBLEHFONT) ? 2 : 1)
+				       * screen->fnt_high);
 
     if (cells > 1)
 	font_width *= (unsigned) cells;
@@ -2595,7 +2599,7 @@ xtermDrawBoxChar(XtermWidget xw,
 	unsigned n;
 	for (n = 1; n < 32; n++) {
 	    if (dec2ucs(n) == ch
-		&& !((flags & BOLD)
+		&& !((attr_flags & BOLD)
 		     ? IsXtermMissingChar(screen, n, &screen->fnts[fBold])
 		     : IsXtermMissingChar(screen, n, &screen->fnts[fNorm]))) {
 		TRACE(("...use xterm-style linedrawing\n"));
@@ -2623,7 +2627,7 @@ xtermDrawBoxChar(XtermWidget xw,
     }
     gc2 = getCgsGC(xw, cgsWin, cgsId);
 
-    if (!(flags & NOBACKGROUND)) {
+    if (!(draw_flags & NOBACKGROUND)) {
 	XFillRectangle(screen->display, VDrawable(screen), gc2, x, y,
 		       font_width,
 		       font_height);
@@ -2635,7 +2639,7 @@ xtermDrawBoxChar(XtermWidget xw,
     gc2 = getCgsGC(xw, cgsWin, cgsId);
 
     XSetLineAttributes(screen->display, gc2,
-		       (flags & BOLD)
+		       (attr_flags & BOLD)
 		       ? ((font_height > 12)
 			  ? font_height / 12
 			  : 1)

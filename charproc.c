@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1332 2014/05/02 21:48:33 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1334 2014/05/08 00:55:00 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -9817,7 +9817,9 @@ ShowCursor(void)
 		       screen->box, NBOX, CoordModePrevious);
 	} else {
 
-	    drawXtermText(xw, flags & DRAWX_MASK,
+	    drawXtermText(xw,
+			  flags & DRAWX_MASK,
+			  flags & DRAWX_MASK,
 			  currentGC, x, y,
 			  LineCharSet(screen, ld),
 			  &base, 1, 0);
@@ -9827,7 +9829,9 @@ ShowCursor(void)
 		for_each_combData(off, ld) {
 		    if (!(ld->combData[off][my_col]))
 			break;
-		    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
+		    drawXtermText(xw,
+				  (flags & DRAWX_MASK),
+				  NOBACKGROUND,
 				  currentGC, x, y,
 				  LineCharSet(screen, ld),
 				  ld->combData[off] + my_col,
@@ -9951,7 +9955,9 @@ HideCursor(void)
     x = LineCursorX(screen, ld, cursor_col);
     y = CursorY(screen, screen->cursorp.row);
 
-    drawXtermText(xw, flags & DRAWX_MASK,
+    drawXtermText(xw,
+		  flags & DRAWX_MASK,
+		  flags & DRAWX_MASK,
 		  currentGC, x, y,
 		  LineCharSet(screen, ld),
 		  &base, 1, 0);
@@ -9961,7 +9967,9 @@ HideCursor(void)
 	for_each_combData(off, ld) {
 	    if (!(ld->combData[off][my_col]))
 		break;
-	    drawXtermText(xw, (flags & DRAWX_MASK) | NOBACKGROUND,
+	    drawXtermText(xw,
+			  (flags & DRAWX_MASK),
+			  NOBACKGROUND,
 			  currentGC, x, y,
 			  LineCharSet(screen, ld),
 			  ld->combData[off] + my_col,

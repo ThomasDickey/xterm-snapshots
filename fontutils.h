@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.89 2013/12/09 12:18:01 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.91 2014/05/08 01:04:12 tom Exp $ */
 
 /*
- * Copyright 1998-2011,2013 by Thomas E. Dickey
+ * Copyright 1998-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -54,7 +54,7 @@ extern void xtermSetCursorBox (TScreen * /* screen */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 
 #if OPT_DEC_CHRSET
-extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsigned /* chrset */);
+extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
 #endif
 
 #define FontIsIncomplete(font) \
@@ -88,7 +88,7 @@ extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsig
 	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
 	   || ForceBoxChars(screen, ch)))
 
-extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
+extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
 #else
 #define IsXtermMissingChar(screen, ch, font) False
 #endif

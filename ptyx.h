@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.802 2014/05/03 12:58:37 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.803 2014/05/08 00:27:08 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2735,7 +2735,6 @@ typedef struct _TekWidgetRec {
  */
 
 #define AttrBIT(n)	xBIT(n)		/* text-attributes */
-#define DrawBIT(n)	xBIT(n + 8)	/* drawXtermText flags */
 #define MiscBIT(n)	xBIT(n + 16)	/* miscellaneous state flags */
 
 /* global flags and character flags (visible character attributes) */
@@ -2753,17 +2752,6 @@ typedef struct _TekWidgetRec {
 					   the screen.  Used to distinguish
 					   blanks from empty parts of the
 					   screen when selecting */
-
-/* The following attributes are used in the argument of drawXtermText()  */
-#define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
-#define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
-#define DOUBLEWFONT	DrawBIT(2)	/* The actual X-font is double-width */
-#define DOUBLEHFONT	DrawBIT(3)	/* The actual X-font is double-height */
-#define CHARBYCHAR	DrawBIT(4)	/* Draw chars one-by-one */
-
-/* The following attribute is used in the argument of xtermSpecialFont etc */
-#define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
-
 /*
  * Other flags
  */
@@ -2779,6 +2767,18 @@ typedef struct _TekWidgetRec {
 #define NATIONAL        MiscBIT(9)	/* true if writing national charset */
 #define LEFT_RIGHT      MiscBIT(10)	/* true if left/right margin mode */
 #define NOCLEAR_COLM    MiscBIT(11)	/* true if no clear on DECCOLM change */
+
+#define DrawBIT(n)	xBIT(n + 8)	/* drawXtermText flags */
+/* The following attributes are used in the argument of drawXtermText()  */
+#define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
+#define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
+#define DOUBLEWFONT	DrawBIT(2)	/* The actual X-font is double-width */
+#define DOUBLEHFONT	DrawBIT(3)	/* The actual X-font is double-height */
+#define CHARBYCHAR	DrawBIT(4)	/* Draw chars one-by-one */
+
+/* The following attribute is used in the argument of xtermSpecialFont etc */
+#define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
+
 
 /*
  * Groups of attributes
