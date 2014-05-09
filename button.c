@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.468 2014/05/05 21:44:55 tom Exp $ */
+/* $XTermId: button.c,v 1.470 2014/05/08 20:05:23 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2821,7 +2821,7 @@ static int
 LastTextCol(TScreen *screen, LineData *ld, int row)
 {
     int i = -1;
-    Char *ch;
+    IAttr *ch;
 
     if (ld != 0) {
 	if (okScrnRow(screen, row)) {
@@ -4784,7 +4784,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL *cell)
 
     *buffer = '\0';
     if (ld != 0 && cell->col < (int) ld->lineSize) {
-	Char attribs = ld->attribs[cell->col];
+	IAttr attribs = ld->attribs[cell->col];
 	const char *delim = "";
 
 	if (attribs & INVERSE) {

@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.150 2014/04/11 19:36:41 Ross.Combs Exp $
+-- $XTermId: INSTALL,v 1.151 2014/05/08 07:58:06 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2012,2013 by Thomas E. Dickey
+-- Copyright 1997-2013,2014 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -338,6 +338,14 @@ The options (in alphabetic order):
   	Do not compile-in code to support vt52 emulation.
 
 	A genuine vt100 emulates a vt52.
+
+  --disable-wide-attrs    disable wide-attribute support
+
+	Xterm's base attributes include all of those used in DEC terminals.
+	ISO 6429 defines a few more which historically have found little use.
+	Some people find these amusing.
+
+	This is normally enabled.
 
   --disable-wide-chars    disable wide-character support
 

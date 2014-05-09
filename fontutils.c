@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.408 2014/05/08 01:09:25 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.410 2014/05/08 22:49:27 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -470,7 +470,7 @@ widebold_font_name(FontNameProperties *props)
  * fonts we double the pixel-size and Y-resolution
  */
 char *
-xtermSpecialFont(TScreen *screen, unsigned atts, unsigned draw_flags, unsigned chrset)
+xtermSpecialFont(TScreen *screen, unsigned attr_flags, unsigned draw_flags, unsigned chrset)
 {
 #if OPT_TRACE
     static char old_spacing[80];
@@ -490,7 +490,7 @@ xtermSpecialFont(TScreen *screen, unsigned atts, unsigned draw_flags, unsigned c
     pixel_size = props->pixel_size;
     res_x = props->res_x;
     res_y = props->res_y;
-    if (atts & BOLD)
+    if (attr_flags & BOLD)
 	weight = "bold";
     else
 	weight = props->weight;
@@ -509,7 +509,7 @@ xtermSpecialFont(TScreen *screen, unsigned atts, unsigned draw_flags, unsigned c
 	|| old_props.pixel_size != pixel_size
 	|| strcmp(old_props.spacing, props->spacing)) {
 	TRACE(("xtermSpecialFont(atts = %#x, draw = %#x, chrset = %#x)\n",
-	       atts, draw_flags, chrset));
+	       attr_flags, draw_flags, chrset));
 	TRACE(("res_x      = %d\n", res_x));
 	TRACE(("res_y      = %d\n", res_y));
 	TRACE(("point_size = %s\n", props->point_size));
@@ -530,8 +530,8 @@ xtermSpecialFont(TScreen *screen, unsigned atts, unsigned draw_flags, unsigned c
     append_fontname_str(&result, props->add_style);
     append_fontname_num(&result, pixel_size);
     append_fontname_str(&result, props->point_size);
-    append_fontname_num(&result, (atts & NORESOLUTION) ? -1 : res_x);
-    append_fontname_num(&result, (atts & NORESOLUTION) ? -1 : res_y);
+    append_fontname_num(&result, (draw_flags & NORESOLUTION) ? -1 : res_x);
+    append_fontname_num(&result, (draw_flags & NORESOLUTION) ? -1 : res_y);
     append_fontname_str(&result, props->spacing);
     append_fontname_str(&result, 0);
     append_fontname_str(&result, props->end);

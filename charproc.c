@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1334 2014/05/08 00:55:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1335 2014/05/08 08:29:02 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2954,6 +2954,31 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			setExtendedBG(xw);
 		    });
 		    break;
+#if OPT_WIDE_ATTRS
+		case 2:	/* faint, decreased intensity or second colour */
+		    TRACE(("FIXME - not implemented\n"));
+		    break;
+		case 3:	/* italicized */
+		    TRACE(("FIXME - not implemented\n"));
+		    break;
+		case 9:	/* crossed-out characters */
+		    TRACE(("FIXME - not implemented\n"));
+		    break;
+		case 21:	/* doubly-underlined */
+		    TRACE(("FIXME - not implemented\n"));
+		    break;
+#if 0
+		case 22:	/* normal colour or normal intensity (neither bold nor faint) */
+		    TRACE(("FIXME - not implemented\n"));
+		    break;
+#endif
+		case 23:	/* not italicized */
+		    TRACE(("FIXME - not implemented\n"));
+		    break;
+		case 29:	/* not crossed out */
+		    TRACE(("FIXME - not implemented\n"));
+		    break;
+#endif
 		}
 	    }
 	    ResetState(sp);
