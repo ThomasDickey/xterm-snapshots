@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.630 2014/05/08 01:06:24 tom Exp $ */
+/* $XTermId: util.c,v 1.633 2014/05/09 00:10:56 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1583,7 +1583,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
      */
     if (screen->protected_mode != OFF_PROTECT) {
 	unsigned n;
-	Char *attrs = getLineData(screen, row)->attribs + col;
+	IAttr *attrs = getLineData(screen, row)->attribs + col;
 	int saved_mode = screen->protected_mode;
 	Bool done;
 
@@ -3729,9 +3729,19 @@ drawXtermText(XtermWidget xw,
      * characters in the range 1-31 (either we were not asked to ignore them,
      * or the caller made sure that there is none).
      */
-    TRACE(("drawtext%c[%4d,%4d] (%d) %d:%s\n",
+#if OPT_WIDE_ATTRS
+#define AttrFlags() attr_flags
+#define DrawFlags() draw_flags
+#else
+#define AttrFlags() (attr_flags & DRAWX_MASK)
+#define DrawFlags() (draw_flags & ~DRAWX_MASK)
+#endif
+    TRACE(("drawtext%c[%4d,%4d] {%#x,%#x} (%d) %d:%s\n",
 	   screen->cursor_state == OFF ? ' ' : '*',
-	   y, x, chrset, len,
+	   y, x,
+	   AttrFlags,
+	   DrawFlags,
+	   chrset, len,
 	   visibleIChars(text, len)));
     if (screen->scale_height != 1.0) {
 	xtermFillCells(xw, draw_flags, gc, x, y, (Cardinal) len);
