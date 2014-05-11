@@ -1,4 +1,4 @@
-/* $XTermId: testxmc.c,v 1.50 2014/05/08 23:57:48 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.52 2014/05/11 14:05:38 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2014 by Thomas E. Dickey
@@ -208,7 +208,7 @@ Resolve_XMC(XtermWidget xw)
 	    break;
 	if ((ld->attribs[col] & my_attrs) != start) {
 	    ld->attribs[col] =
-		CharOf(start | (ld->attribs[col] & ~my_attrs));
+		(IAttr) (start | (ld->attribs[col] & ~my_attrs));
 	    changed = True;
 	}
     }

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.633 2014/05/09 00:10:56 tom Exp $ */
+/* $XTermId: util.c,v 1.637 2014/05/11 19:24:21 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3171,6 +3171,49 @@ drawClippedXftString(XtermWidget xw,
 				(&((screen)->name))
 #endif
 
+static int
+drawUnderline(XtermWidget xw,
+	      GC gc,
+	      unsigned attr_flags,
+	      unsigned underline_len,
+	      int font_width,
+	      int x,
+	      int y,
+	      Bool did_ul)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (screen->underline && !did_ul) {
+	int repeat = 0;
+	int descent = FontDescent(screen);
+
+#if OPT_WIDE_ATTRS
+	if ((attr_flags & ATR_STRIKEOUT)) {
+	    int where = y - ((3 * FontAscent(screen)) / 8);
+	    XDrawLine(screen->display, VDrawable(screen), gc,
+		      x, where,
+		      x + (int) underline_len * font_width - 1,
+		      where);
+	}
+	if ((attr_flags & ATR_DBL_UNDER)) {
+	    repeat = 2;
+	} else
+#endif
+	if ((attr_flags & UNDERLINE)) {
+	    repeat = 1;
+	}
+	while (repeat-- > 0) {
+	    if (descent-- > 0)
+		y++;
+	    XDrawLine(screen->display, VDrawable(screen), gc,
+		      x, y,
+		      x + (int) underline_len * font_width - 1,
+		      y);
+	}
+    }
+    return y;
+}
+
 /*
  * Draws text with the specified combination of bold/underline.  The return
  * value is the updated x position.
@@ -3530,14 +3573,14 @@ drawXtermText(XtermWidget xw,
 	}
 #endif /* OPT_BOX_CHARS */
 
-	if ((attr_flags & UNDERLINE) && screen->underline && !did_ul) {
-	    if (FontDescent(screen) > 1)
-		y++;
-	    XDrawLine(screen->display, VDrawable(screen), gc,
-		      x, y,
-		      x + (int) underline_len * FontWidth(screen) - 1,
-		      y);
-	}
+	y = drawUnderline(xw,
+			  gc,
+			  attr_flags,
+			  underline_len,
+			  FontWidth(screen),
+			  x,
+			  y,
+			  did_ul);
 
 	x += (int) len *FontWidth(screen);
 
@@ -3739,8 +3782,8 @@ drawXtermText(XtermWidget xw,
     TRACE(("drawtext%c[%4d,%4d] {%#x,%#x} (%d) %d:%s\n",
 	   screen->cursor_state == OFF ? ' ' : '*',
 	   y, x,
-	   AttrFlags,
-	   DrawFlags,
+	   AttrFlags(),
+	   DrawFlags(),
 	   chrset, len,
 	   visibleIChars(text, len)));
     if (screen->scale_height != 1.0) {
@@ -3960,14 +4003,16 @@ drawXtermText(XtermWidget xw,
 	}
     }
 
-    if ((attr_flags & UNDERLINE) && screen->underline && !did_ul) {
-	if (FontDescent(screen) > 1)
-	    y++;
-	XDrawLine(screen->display, VDrawable(screen), gc,
-		  x, y, (x + (int) underline_len * font_width - 1), y);
-    }
+    y = drawUnderline(xw,
+		      gc,
+		      attr_flags,
+		      underline_len,
+		      font_width,
+		      x,
+		      y,
+		      did_ul);
 
-    x += (int) real_length *FontWidth(screen);
+    x += ((int) real_length) * FontWidth(screen);
     return x;
 }
 
