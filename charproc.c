@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1335 2014/05/08 08:29:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1339 2014/05/11 16:14:50 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -907,14 +907,14 @@ CheckBogusForeground(TScreen *screen, const char *tag)
 	    LineData *ld = getLineData(screen, row)->;
 
 	    if (ld != 0) {
-		Char *attribs = ld->attribs;
+		IAttr *attribs = ld->attribs;
 
 		col = (row == screen->cur_row) ? screen->cur_col : 0;
 		for (; isClear && (col <= screen->max_col); ++col) {
 		    unsigned flags = attribs[col];
 		    if (pass) {
 			flags &= ~FG_COLOR;
-			attribs[col] = (Char) flags;
+			attribs[col] = (IAttr) flags;
 		    } else if ((flags & BG_COLOR)) {
 			isClear = False;
 		    } else if ((flags & FG_COLOR)) {
@@ -2803,41 +2803,44 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case DEFAULT:
 		case 0:
 		    UIntClr(xw->flags,
-			    (INVERSE | BOLD | BLINK | UNDERLINE | INVISIBLE));
+			    (SGR_MASK | SGR_MASK2 | INVISIBLE));
 		    if_OPT_ISO_COLORS(screen, {
 			reset_SGR_Colors(xw);
 		    });
 		    break;
 		case 1:	/* Bold                 */
-		    xw->flags |= BOLD;
+		    UIntSet(xw->flags, BOLD);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
 		    break;
 		case 5:	/* Blink                */
-		    xw->flags |= BLINK;
+		    UIntSet(xw->flags, BLINK);
 		    StartBlinking(screen);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
 		    break;
 		case 4:	/* Underscore           */
-		    xw->flags |= UNDERLINE;
+		    UIntSet(xw->flags, UNDERLINE);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
 		    break;
 		case 7:
-		    xw->flags |= INVERSE;
+		    UIntSet(xw->flags, INVERSE);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedBG(xw);
 		    });
 		    break;
 		case 8:
-		    xw->flags |= INVISIBLE;
+		    UIntSet(xw->flags, INVISIBLE);
 		    break;
 		case 22:	/* reset 'bold' */
 		    UIntClr(xw->flags, BOLD);
+#if OPT_WIDE_ATTRS
+		    UIntClr(xw->flags, ATR_FAINT);
+#endif
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
@@ -2956,27 +2959,22 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    break;
 #if OPT_WIDE_ATTRS
 		case 2:	/* faint, decreased intensity or second colour */
-		    TRACE(("FIXME - not implemented\n"));
+		    UIntSet(xw->flags, ATR_FAINT);
 		    break;
 		case 3:	/* italicized */
-		    TRACE(("FIXME - not implemented\n"));
+		    UIntSet(xw->flags, ATR_ITALIC);
 		    break;
 		case 9:	/* crossed-out characters */
-		    TRACE(("FIXME - not implemented\n"));
+		    UIntSet(xw->flags, ATR_STRIKEOUT);
 		    break;
 		case 21:	/* doubly-underlined */
-		    TRACE(("FIXME - not implemented\n"));
+		    UIntSet(xw->flags, ATR_DBL_UNDER);
 		    break;
-#if 0
-		case 22:	/* normal colour or normal intensity (neither bold nor faint) */
-		    TRACE(("FIXME - not implemented\n"));
-		    break;
-#endif
 		case 23:	/* not italicized */
-		    TRACE(("FIXME - not implemented\n"));
+		    UIntClr(xw->flags, ATR_ITALIC);
 		    break;
 		case 29:	/* not crossed out */
-		    TRACE(("FIXME - not implemented\n"));
+		    UIntClr(xw->flags, ATR_STRIKEOUT);
 		    break;
 #endif
 		}

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.493 2014/05/08 23:55:19 tom Exp $ */
+/* $XTermId: screen.c,v 1.495 2014/05/11 14:06:18 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2394,7 +2394,7 @@ ScrnFillRectangle(XtermWidget xw,
 		    UIntClr(temp, (FG_COLOR | BG_COLOR));
 		}
 		temp = attrs | (temp & (FG_COLOR | BG_COLOR)) | CHARDRAWN;
-		ld->attribs[col] = (Char) temp;
+		ld->attribs[col] = (IAttr) temp;
 #if OPT_ISO_COLORS
 		if (attrs & (FG_COLOR | BG_COLOR)) {
 		    if_OPT_ISO_COLORS(screen, {
@@ -2629,7 +2629,7 @@ ScrnMarkRectangle(XtermWidget xw,
 		    TRACE(("first mask-change is %#x\n",
 			   ld->attribs[col] ^ flags));
 #endif
-		ld->attribs[col] = (Char) flags;
+		ld->attribs[col] = (IAttr) flags;
 	    }
 	}
 	ScrnRefresh(xw,

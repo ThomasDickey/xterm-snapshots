@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.806 2014/05/08 20:31:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.807 2014/05/09 08:01:03 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2766,6 +2766,17 @@ typedef struct _TekWidgetRec {
 					   the screen.  Used to distinguish
 					   blanks from empty parts of the
 					   screen when selecting */
+
+#if OPT_WIDE_ATTRS
+#define ATR_FAINT	AttrBIT(8)
+#define ATR_ITALIC	AttrBIT(9)
+#define ATR_STRIKEOUT	AttrBIT(10)
+#define ATR_DBL_UNDER	AttrBIT(11)
+#define SGR_MASK2       (ATR_FAINT | ATR_ITALIC | ATR_STRIKEOUT | ATR_DBL_UNDER)
+#else
+#define SGR_MASK2       0
+#endif
+
 /*
  * Other flags
  */
@@ -2801,7 +2812,7 @@ typedef struct _TekWidgetRec {
 #define SGR_MASK	(BOLD | BLINK | UNDERLINE | INVERSE)
 
 			/* mask: user-visible attributes */
-#define	ATTRIBUTES	(SGR_MASK | BG_COLOR | FG_COLOR | INVISIBLE | PROTECTED)
+#define	ATTRIBUTES	(SGR_MASK | SGR_MASK2 | BG_COLOR | FG_COLOR | INVISIBLE | PROTECTED)
 
 /* The toplevel-call to drawXtermText() should have text-attributes guarded: */
 #define DRAWX_MASK	(ATTRIBUTES | CHARDRAWN)
