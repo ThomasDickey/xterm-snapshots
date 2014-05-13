@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.91 2014/05/08 01:04:12 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.92 2014/05/13 00:58:30 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -57,10 +57,14 @@ extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
 #endif
 
+#define FontLacksMetrics(font) \
+	((font)->fs != 0 \
+	 && ((font)->fs->per_char == 0))
+
 #define FontIsIncomplete(font) \
 	((font)->fs != 0 \
-	 && (font)->fs->per_char != 0 \
-	 && !(font)->fs->all_chars_exist)
+	 && ((font)->fs->per_char == 0 \
+	     || !(font)->fs->all_chars_exist))
 
 #if OPT_BOX_CHARS
 
@@ -85,7 +89,8 @@ extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* attr_flags */,
 #define IsXtermMissingChar(screen, ch, font) \
 	 (CheckedKnownMissing(font, ch) \
 	  ? ((font)->known_missing[(Char)(ch)] > 1) \
-	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
+	  : (FontLacksMetrics(font) \
+	   || (FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
 	   || ForceBoxChars(screen, ch)))
 
 extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);

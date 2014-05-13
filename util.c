@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.637 2014/05/11 19:24:21 tom Exp $ */
+/* $XTermId: util.c,v 1.643 2014/05/12 20:12:04 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1022,7 +1022,7 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
     LineData *ld = 0;
     int fg;
     unsigned test;
-    unsigned flags = xw->flags;
+    unsigned attr_flags = xw->flags;
     CellColor fg_bg = makeColorPair(xw->cur_foreground, xw->cur_background);
     unsigned cells = visual_width(str, len);
     GC currentGC;
@@ -1043,7 +1043,7 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
     }
 
     /* if we are in insert-mode, reserve space for the new cells */
-    if (flags & INSERT) {
+    if (attr_flags & INSERT) {
 	InsertChar(xw, cells);
     }
 
@@ -1063,7 +1063,7 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	});
 
-	if (flags & INVISIBLE) {
+	if (attr_flags & INVISIBLE) {
 	    Cardinal n;
 	    for (n = 0; n < cells; ++n)
 		str[n] = ' ';
@@ -1074,10 +1074,10 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 	       screen->cur_col,
 	       screen->cur_row));
 
-	test = flags;
+	test = attr_flags;
 #if OPT_ISO_COLORS
 	if (screen->colorAttrMode) {
-	    fg = MapToColorMode(xw->cur_foreground, screen, flags);
+	    fg = MapToColorMode(xw->cur_foreground, screen, attr_flags);
 	} else {
 	    fg = xw->cur_foreground;
 	}
@@ -1085,7 +1085,7 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 #endif
 
 	/* make sure that the correct GC is current */
-	currentGC = updatedXtermGC(xw, flags, fg_bg, False);
+	currentGC = updatedXtermGC(xw, attr_flags, fg_bg, False);
 
 	drawXtermText(xw,
 		      test & DRAWX_MASK,
@@ -1096,10 +1096,10 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 		      LineCharSet(screen, ld),
 		      str, len, 0);
 
-	resetXtermGC(xw, flags, False);
+	resetXtermGC(xw, attr_flags, False);
     }
 
-    ScrnWriteText(xw, str, flags, fg_bg, len);
+    ScrnWriteText(xw, str, attr_flags, fg_bg, len);
     CursorForward(xw, (int) cells);
     setZIconBeep(xw);
     return;
@@ -2705,21 +2705,27 @@ getXftColor(XtermWidget xw, Pixel pixel)
 #if OPT_RENDERWIDE
 static XftFont *
 getWideXftFont(XtermWidget xw,
-	       unsigned flags)
+	       unsigned attr_flags)
 {
     TScreen *screen = TScreenOf(xw);
     int fontnum = screen->menu_font_number;
     XftFont *wfont;
 
-#if OPT_ISO_COLORS
-    if ((flags & UNDERLINE)
-	&& !screen->colorULMode
-	&& screen->italicULMode
+#if OPT_WIDE_ATTRS
+    if ((attr_flags & ATR_ITALIC)
 	&& XFT_FONT(renderWideItal[fontnum])) {
 	wfont = XFT_FONT(renderWideItal[fontnum]);
     } else
 #endif
-	if ((flags & BOLDATTR(screen))
+#if OPT_ISO_COLORS
+	if ((attr_flags & UNDERLINE)
+	    && !screen->colorULMode
+	    && screen->italicULMode
+	    && XFT_FONT(renderWideItal[fontnum])) {
+	wfont = XFT_FONT(renderWideItal[fontnum]);
+    } else
+#endif
+	if ((attr_flags & BOLDATTR(screen))
 	    && UseBoldFont(screen)
 	    && XFT_FONT(renderWideBold[fontnum])) {
 	wfont = XFT_FONT(renderWideBold[fontnum]);
@@ -2732,23 +2738,29 @@ getWideXftFont(XtermWidget xw,
 
 static XftFont *
 getNormXftFont(XtermWidget xw,
-	       unsigned flags,
+	       unsigned attr_flags,
 	       Bool *did_ul)
 {
     TScreen *screen = TScreenOf(xw);
     int fontnum = screen->menu_font_number;
     XftFont *font;
 
-#if OPT_ISO_COLORS
-    if ((flags & UNDERLINE)
-	&& !screen->colorULMode
-	&& screen->italicULMode
+#if OPT_WIDE_ATTRS
+    if ((attr_flags & ATR_ITALIC)
 	&& XFT_FONT(renderFontItal[fontnum])) {
+	font = XFT_FONT(renderFontItal[fontnum]);
+    } else
+#endif
+#if OPT_ISO_COLORS
+	if ((attr_flags & UNDERLINE)
+	    && !screen->colorULMode
+	    && screen->italicULMode
+	    && XFT_FONT(renderFontItal[fontnum])) {
 	font = XFT_FONT(renderFontItal[fontnum]);
 	*did_ul = True;
     } else
 #endif
-	if ((flags & BOLDATTR(screen))
+	if ((attr_flags & BOLDATTR(screen))
 	    && UseBoldFont(screen)
 	    && XFT_FONT(renderFontBold[fontnum])) {
 	font = XFT_FONT(renderFontBold[fontnum]);
@@ -2776,7 +2788,7 @@ getNormXftFont(XtermWidget xw,
  */
 static int
 xtermXftDrawString(XtermWidget xw,
-		   unsigned flags GCC_UNUSED,
+		   unsigned attr_flags GCC_UNUSED,
 		   XftColor *color,
 		   XftFont *font,
 		   int x,
@@ -2791,7 +2803,7 @@ xtermXftDrawString(XtermWidget xw,
     if (len != 0) {
 #if OPT_RENDERWIDE
 	XftCharSpec *sbuf;
-	XftFont *wfont = getWideXftFont(xw, flags);
+	XftFont *wfont = getWideXftFont(xw, attr_flags);
 	Cardinal src, dst;
 	XftFont *lastFont = 0;
 	XftFont *currFont = 0;
@@ -2857,8 +2869,8 @@ xtermXftDrawString(XtermWidget xw,
     }
     return ncells;
 }
-#define xtermXftWidth(xw, flags, color, font, x, y, chars, len) \
-   xtermXftDrawString(xw, flags, color, font, x, y, chars, len, False)
+#define xtermXftWidth(xw, attr_flags, color, font, x, y, chars, len) \
+   xtermXftDrawString(xw, attr_flags, color, font, x, y, chars, len, False)
 #endif /* OPT_RENDERFONT */
 
 #if OPT_WIDE_CHARS
@@ -2915,7 +2927,8 @@ AsciiEquivs(unsigned ch)
 static int
 ucs_workaround(XtermWidget xw,
 	       unsigned ch,
-	       unsigned flags,
+	       unsigned attr_flags,
+	       unsigned draw_flags,
 	       GC gc,
 	       int x,
 	       int y,
@@ -2933,8 +2946,8 @@ ucs_workaround(XtermWidget xw,
 
 	    do {
 		drawXtermText(xw,
-			      flags,
-			      flags,
+			      attr_flags,
+			      draw_flags,
 			      gc,
 			      x,
 			      y,
@@ -3135,7 +3148,7 @@ xtermSetClipRectangles(Display *dpy,
 #if OPT_RENDERFONT
 static int
 drawClippedXftString(XtermWidget xw,
-		     unsigned flags,
+		     unsigned attr_flags,
 		     XftFont *font,
 		     XftColor *fg_color,
 		     int x,
@@ -3143,7 +3156,7 @@ drawClippedXftString(XtermWidget xw,
 		     IChar *text,
 		     Cardinal len)
 {
-    int ncells = xtermXftWidth(xw, flags,
+    int ncells = xtermXftWidth(xw, attr_flags,
 			       fg_color,
 			       font, x, y,
 			       text,
@@ -3151,7 +3164,7 @@ drawClippedXftString(XtermWidget xw,
     TScreen *screen = TScreenOf(xw);
 
     beginXftClipping(screen, x, y, ncells);
-    xtermXftDrawString(xw, flags,
+    xtermXftDrawString(xw, attr_flags,
 		       fg_color,
 		       font, x, y,
 		       text,
@@ -3730,7 +3743,10 @@ drawXtermText(XtermWidget xw,
 		 */
 		if (ch_width <= 0)
 		    ch_width = 1;
-		if (!ucs_workaround(xw, ch, attr_flags, gc, x, y, chrset, on_wide)) {
+		if (!ucs_workaround(xw, ch,
+				    attr_flags,
+				    draw_flags,
+				    gc, x, y, chrset, on_wide)) {
 		    xtermDrawBoxChar(xw, ch,
 				     attr_flags,
 				     draw_flags,
@@ -4083,15 +4099,15 @@ getXtermSizeHints(XtermWidget xw)
  * current screen foreground and background colors.
  */
 GC
-updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
+updatedXtermGC(XtermWidget xw, unsigned attr_flags, unsigned fg_bg, Bool hilite)
 {
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
     CgsEnum cgsId = gcMAX;
-    unsigned my_fg = extract_fg(xw, fg_bg, flags);
-    unsigned my_bg = extract_bg(xw, fg_bg, flags);
-    Pixel fg_pix = getXtermForeground(xw, flags, my_fg);
-    Pixel bg_pix = getXtermBackground(xw, flags, my_bg);
+    unsigned my_fg = extract_fg(xw, fg_bg, attr_flags);
+    unsigned my_bg = extract_bg(xw, fg_bg, attr_flags);
+    Pixel fg_pix = getXtermForeground(xw, attr_flags, my_fg);
+    Pixel bg_pix = getXtermBackground(xw, attr_flags, my_bg);
     Pixel xx_pix;
 #if OPT_HIGHLIGHT_COLOR
     Pixel selbg_pix = T_COLOR(screen, HIGHLIGHT_BG);
@@ -4110,10 +4126,10 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
     /*
      * Discard video attributes overridden by colorXXXMode's.
      */
-    checkVeryBoldColors(flags, my_fg);
+    checkVeryBoldColors(attr_flags, my_fg);
 
-    if (ReverseOrHilite(screen, flags, hilite)) {
-	if (flags & BOLDATTR(screen)) {
+    if (ReverseOrHilite(screen, attr_flags, hilite)) {
+	if (attr_flags & BOLDATTR(screen)) {
 	    cgsId = gcBoldReverse;
 	} else {
 	    cgsId = gcNormReverse;
@@ -4148,7 +4164,7 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 	}
 #endif
     } else {
-	if (flags & BOLDATTR(screen)) {
+	if (attr_flags & BOLDATTR(screen)) {
 	    cgsId = gcBold;
 	} else {
 	    cgsId = gcNorm;
@@ -4166,7 +4182,9 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
 #endif
 
 #if OPT_BLINK_TEXT
-    if ((screen->blink_state == ON) && (!screen->blink_as_bold) && (flags & BLINK)) {
+    if ((screen->blink_state == ON) &&
+	(!screen->blink_as_bold) &&
+	(attr_flags & BLINK)) {
 	fg_pix = bg_pix;
     }
 #endif
@@ -4182,18 +4200,18 @@ updatedXtermGC(XtermWidget xw, unsigned flags, unsigned fg_bg, Bool hilite)
  * duplicates some logic, but only modifies 1/4 as many GC's.
  */
 void
-resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
+resetXtermGC(XtermWidget xw, unsigned attr_flags, Bool hilite)
 {
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
     CgsEnum cgsId = gcMAX;
-    Pixel fg_pix = getXtermForeground(xw, flags, xw->cur_foreground);
-    Pixel bg_pix = getXtermBackground(xw, flags, xw->cur_background);
+    Pixel fg_pix = getXtermForeground(xw, attr_flags, xw->cur_foreground);
+    Pixel bg_pix = getXtermBackground(xw, attr_flags, xw->cur_background);
 
-    checkVeryBoldColors(flags, xw->cur_foreground);
+    checkVeryBoldColors(attr_flags, xw->cur_foreground);
 
-    if (ReverseOrHilite(screen, flags, hilite)) {
-	if (flags & BOLDATTR(screen)) {
+    if (ReverseOrHilite(screen, attr_flags, hilite)) {
+	if (attr_flags & BOLDATTR(screen)) {
 	    cgsId = gcBoldReverse;
 	} else {
 	    cgsId = gcNormReverse;
@@ -4203,7 +4221,7 @@ resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
 	setCgsBack(xw, win, cgsId, fg_pix);
 
     } else {
-	if (flags & BOLDATTR(screen)) {
+	if (attr_flags & BOLDATTR(screen)) {
 	    cgsId = gcBold;
 	} else {
 	    cgsId = gcNorm;
@@ -4220,13 +4238,13 @@ resetXtermGC(XtermWidget xw, unsigned flags, Bool hilite)
  * If we've got BOLD or UNDERLINE color-mode active, those will be used.
  */
 unsigned
-extract_fg(XtermWidget xw, unsigned color, unsigned flags)
+extract_fg(XtermWidget xw, unsigned color, unsigned attr_flags)
 {
     unsigned fg = ExtractForeground(color);
 
     if (TScreenOf(xw)->colorAttrMode
 	|| (fg == ExtractBackground(color))) {
-	fg = MapToColorMode(fg, TScreenOf(xw), flags);
+	fg = MapToColorMode(fg, TScreenOf(xw), attr_flags);
     }
     return fg;
 }
@@ -4236,13 +4254,13 @@ extract_fg(XtermWidget xw, unsigned color, unsigned flags)
  * If we've got INVERSE color-mode active, that will be used.
  */
 unsigned
-extract_bg(XtermWidget xw, unsigned color, unsigned flags)
+extract_bg(XtermWidget xw, unsigned color, unsigned attr_flags)
 {
     unsigned bg = ExtractBackground(color);
 
     if (TScreenOf(xw)->colorAttrMode
 	|| (bg == ExtractForeground(color))) {
-	if (TScreenOf(xw)->colorRVMode && (flags & INVERSE))
+	if (TScreenOf(xw)->colorRVMode && (attr_flags & INVERSE))
 	    bg = COLOR_RV;
     }
     return bg;
@@ -4309,6 +4327,49 @@ ClearCurBackground(XtermWidget xw,
     }
 }
 #endif /* OPT_ISO_COLORS */
+
+Pixel
+getXtermBackground(XtermWidget xw, unsigned attr_flags, int color)
+{
+    Pixel result = T_COLOR(TScreenOf(xw), TEXT_BG);
+#if OPT_ISO_COLORS
+    if ((attr_flags & BG_COLOR) && (color >= 0 && color < MAXCOLORS)) {
+	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
+    }
+#endif
+    return result;
+}
+
+Pixel
+getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
+{
+    Pixel result = T_COLOR(TScreenOf(xw), TEXT_FG);
+#if OPT_ISO_COLORS
+    if ((attr_flags & FG_COLOR) && (color >= 0 && color < MAXCOLORS)) {
+	result = GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]);
+    }
+#endif
+#if OPT_WIDE_ATTRS
+#define DIM_IT(n) work.n = (2 * work.n) / 3
+    if ((attr_flags & ATR_FAINT)) {
+	static Pixel last;
+	if (result != last) {
+	    XColor work;
+	    work.pixel = result;
+	    last = result;
+	    if (XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &work)) {
+		DIM_IT(red);
+		DIM_IT(green);
+		DIM_IT(blue);
+		if (allocateBestRGB(xw, &work)) {
+		    result = work.pixel;
+		}
+	    }
+	}
+    }
+#endif
+    return result;
+}
 
 /*
  * Returns a single base character for the given cell.

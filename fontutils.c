@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.410 2014/05/08 22:49:27 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.411 2014/05/11 23:11:38 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -2110,6 +2110,16 @@ xtermComputeFontInfo(XtermWidget xw,
 	    XFT_SLANT, XftTypeInteger, XFT_SLANT_ITALIC, \
 	    XFT_CHAR_WIDTH, XftTypeInteger, norm->max_advance_width
 
+#if OPT_WIDE_ATTRS
+#define HAVE_ITALICS 1
+#define FIND_ITALICS ((pat = XftNameParse(face_name)) != 0)
+#elif OPT_ISO_COLORS
+#define HAVE_ITALICS 1
+#define FIND_ITALICS (screen->italicULMode && (pat = XftNameParse(face_name)) != 0)
+#else
+#define HAVE_ITALICS 0
+#endif
+
 	    if ((pat = XftNameParse(face_name)) != 0) {
 #define OPEN_XFT(tag) xtermOpenXft(xw, face_name, pat, tag)
 		XftPatternBuild(pat,
@@ -2123,16 +2133,15 @@ xtermComputeFontInfo(XtermWidget xw,
 				    (void *) 0);
 		    bold = OPEN_XFT("bold");
 
-#if OPT_ISO_COLORS
-		    if (screen->italicULMode
-			&& (pat = XftNameParse(face_name)) != 0) {
+#if HAVE_ITALICS
+		    if (FIND_ITALICS) {
 			XftPatternBuild(pat,
 					NormXftPattern,
 					ItalXftPattern(norm),
 					(void *) 0);
 			ital = OPEN_XFT("italic");
 		    }
-#endif /* OPT_ISO_COLORS */
+#endif
 #undef OPEN_XFT
 
 		    /*
@@ -2194,9 +2203,8 @@ xtermComputeFontInfo(XtermWidget xw,
 					(void *) 0);
 			wbold = OPEN_XFT("wide-bold");
 
-#if OPT_ISO_COLORS
-			if (screen->italicULMode
-			    && (pat = XftNameParse(face_name)) != 0) {
+#if HAVE_ITALICS
+			if (FIND_ITALICS) {
 			    XftPatternBuild(pat,
 					    WideXftPattern,
 					    ItalXftPattern(wnorm),

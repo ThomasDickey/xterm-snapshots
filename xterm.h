@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.739 2014/05/08 01:07:58 tom Exp $ */
+/* $XTermId: xterm.h,v 1.740 2014/05/12 08:19:13 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1330,6 +1330,8 @@ extern void TabZonk (Tabs  /* tabs */);
 extern Boolean isDefaultBackground(const char * /* name */);
 extern Boolean isDefaultForeground(const char * /* name */);
 extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned /* fg_bg */, Bool  /* hilite */);
+extern Pixel getXtermBackground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
+extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
@@ -1377,16 +1379,6 @@ extern CellColor makeColorPair (int  /* fg */, int  /* bg */);
 extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* left */, unsigned  /* height */, unsigned  /* width */, unsigned /* fw */);
 
 #define xtermColorPair(xw) makeColorPair(xw->sgr_foreground, xw->sgr_background)
-
-#define getXtermForeground(xw, flags, color) \
-	(((flags) & FG_COLOR) && ((int)(color) >= 0 && (color) < MAXCOLORS) \
-			? GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]) \
-			: T_COLOR(TScreenOf(xw), TEXT_FG))
-
-#define getXtermBackground(xw, flags, color) \
-	(((flags) & BG_COLOR) && ((int)(color) >= 0 && (color) < MAXCOLORS) \
-			? GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]) \
-			: T_COLOR(TScreenOf(xw), TEXT_BG))
 
 #if OPT_COLOR_RES
 #define GET_COLOR_RES(xw, res) xtermGetColorRes(xw, &(res))
@@ -1444,8 +1436,6 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 
 		/* FIXME: Reverse-Video? */
 #define T_COLOR(v,n) (v)->Tcolors[n]
-#define getXtermBackground(xw, flags, color) T_COLOR(TScreenOf(xw), TEXT_BG)
-#define getXtermForeground(xw, flags, color) T_COLOR(TScreenOf(xw), TEXT_FG)
 #define makeColorPair(fg, bg) 0
 #define xtermColorPair(xw) 0
 

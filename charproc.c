@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1339 2014/05/11 16:14:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1340 2014/05/11 23:46:56 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2814,15 +2814,23 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			setExtendedFG(xw);
 		    });
 		    break;
-		case 5:	/* Blink                */
-		    UIntSet(xw->flags, BLINK);
-		    StartBlinking(screen);
+#if OPT_WIDE_ATTRS
+		case 2:	/* faint, decreased intensity or second colour */
+		    UIntSet(xw->flags, ATR_FAINT);
+		    break;
+		case 3:	/* italicized */
+		    UIntSet(xw->flags, ATR_ITALIC);
+		    break;
+#endif
+		case 4:	/* Underscore           */
+		    UIntSet(xw->flags, UNDERLINE);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
 		    break;
-		case 4:	/* Underscore           */
-		    UIntSet(xw->flags, UNDERLINE);
+		case 5:	/* Blink                */
+		    UIntSet(xw->flags, BLINK);
+		    StartBlinking(screen);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
@@ -2836,6 +2844,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 8:
 		    UIntSet(xw->flags, INVISIBLE);
 		    break;
+#if OPT_WIDE_ATTRS
+		case 9:	/* crossed-out characters */
+		    UIntSet(xw->flags, ATR_STRIKEOUT);
+		    break;
+#endif
+#if OPT_WIDE_ATTRS
+		case 21:	/* doubly-underlined */
+		    UIntSet(xw->flags, ATR_DBL_UNDER);
+		    break;
+#endif
 		case 22:	/* reset 'bold' */
 		    UIntClr(xw->flags, BOLD);
 #if OPT_WIDE_ATTRS
@@ -2845,8 +2863,16 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			setExtendedFG(xw);
 		    });
 		    break;
+#if OPT_WIDE_ATTRS
+		case 23:	/* not italicized */
+		    UIntClr(xw->flags, ATR_ITALIC);
+		    break;
+#endif
 		case 24:
 		    UIntClr(xw->flags, UNDERLINE);
+#if OPT_WIDE_ATTRS
+		    UIntClr(xw->flags, ATR_DBL_UNDER);
+#endif
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
 		    });
@@ -2866,6 +2892,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 28:
 		    UIntClr(xw->flags, INVISIBLE);
 		    break;
+#if OPT_WIDE_ATTRS
+		case 29:	/* not crossed out */
+		    UIntClr(xw->flags, ATR_STRIKEOUT);
+		    break;
+#endif
 		case 30:
 		case 31:
 		case 32:
@@ -2957,26 +2988,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			setExtendedBG(xw);
 		    });
 		    break;
-#if OPT_WIDE_ATTRS
-		case 2:	/* faint, decreased intensity or second colour */
-		    UIntSet(xw->flags, ATR_FAINT);
-		    break;
-		case 3:	/* italicized */
-		    UIntSet(xw->flags, ATR_ITALIC);
-		    break;
-		case 9:	/* crossed-out characters */
-		    UIntSet(xw->flags, ATR_STRIKEOUT);
-		    break;
-		case 21:	/* doubly-underlined */
-		    UIntSet(xw->flags, ATR_DBL_UNDER);
-		    break;
-		case 23:	/* not italicized */
-		    UIntClr(xw->flags, ATR_ITALIC);
-		    break;
-		case 29:	/* not crossed out */
-		    UIntClr(xw->flags, ATR_STRIKEOUT);
-		    break;
-#endif
 		}
 	    }
 	    ResetState(sp);
