@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.471 2014/05/26 10:42:09 tom Exp $ */
+/* $XTermId: button.c,v 1.472 2014/05/26 14:37:18 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1235,7 +1235,7 @@ UTF8toLatin1(TScreen *screen, Char *s, unsigned long len, unsigned long *result)
 	PtyData data;
 
 	fakePtyData(&data, s, s + len);
-	while (decodeUtf8(&data)) {
+	while (decodeUtf8(screen, &data)) {
 	    Bool fails = False;
 	    Bool extra = False;
 	    IChar value = skipPtyData(&data);
@@ -1846,7 +1846,7 @@ ToNational(TScreen *screen, Char *buffer, unsigned *length)
 	memcpy(data->buffer, buffer, (size_t) *length);
 	p = buffer;
 	while (data->next < data->last) {
-	    if (!decodeUtf8(data)) {
+	    if (!decodeUtf8(screen, data)) {
 		data->utf_size = 1;
 		data->utf_data = data->next[0];
 	    }
