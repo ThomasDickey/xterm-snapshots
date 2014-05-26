@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.470 2014/05/08 20:05:23 tom Exp $ */
+/* $XTermId: button.c,v 1.471 2014/05/26 10:42:09 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -4225,23 +4225,27 @@ SaveText(TScreen *screen,
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
 	 * wide character.
 	 */
-	if (c == HIDDEN_CHAR && isWide((int) previous)) {
-	    previous = c;
-	    /* Combining characters attached to double-width characters
-	       are in memory attached to the HIDDEN_CHAR */
-	    if_OPT_WIDE_CHARS(screen, {
-		if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
-		    unsigned ch;
-		    size_t off;
-		    for_each_combData(off, ld) {
-			ch = ld->combData[off][i];
-			if (ch == 0)
-			    break;
-			lp = convertToUTF8(lp, ch);
+	if (c == HIDDEN_CHAR) {
+	    if (isWide((int) previous)) {
+		previous = c;
+		/* Combining characters attached to double-width characters
+		   are in memory attached to the HIDDEN_CHAR */
+		if_OPT_WIDE_CHARS(screen, {
+		    if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
+			unsigned ch;
+			size_t off;
+			for_each_combData(off, ld) {
+			    ch = ld->combData[off][i];
+			    if (ch == 0)
+				break;
+			    lp = convertToUTF8(lp, ch);
+			}
 		    }
-		}
-	    });
-	    continue;
+		});
+		continue;
+	    } else {
+		c = ' ';	/* should not happen, but just in case... */
+	    }
 	}
 	previous = c;
 	if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
