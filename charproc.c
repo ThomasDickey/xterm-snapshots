@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1341 2014/05/13 18:56:48 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1342 2014/05/26 13:32:57 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1317,6 +1317,28 @@ check_tables(void)
     for (n = 0; n < XtNumber(all_tables); ++n) {
 	Const PARSE_T *table = all_tables[n].table;
 	TRACE(("*** %s\n", all_tables[n].name));
+	/*
+	 * Most of the tables should use the same codes in 0..31, 128..159
+	 * as the "ansi" table.
+	 */
+	if (strncmp(all_tables[n].name, "ansi", 4) &&
+	    strncmp(all_tables[n].name, "sos_", 4) &&
+	    strncmp(all_tables[n].name, "vt52", 4)) {
+	    for (ch = 0; ch < 32; ++ch) {
+		int c1 = ch + 128;
+		PARSE_T st_l = table[ch];
+		PARSE_T st_r = table[c1];
+		if (st_l != ansi_table[ch]) {
+		    TRACE(("  %3d: %d vs %d\n", ch, st_l, ansi_table[ch]));
+		}
+		if (st_r != ansi_table[c1]) {
+		    TRACE(("  %3d: %d vs %d\n", c1, st_r, ansi_table[c1]));
+		}
+	    }
+	}
+	/*
+	 * All of the tables should have their GL/GR parts encoded the same.
+	 */
 	for (ch = 32; ch < 127; ++ch) {
 	    PARSE_T st_l = table[ch];
 	    PARSE_T st_r = table[ch + 128];

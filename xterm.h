@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.740 2014/05/12 08:19:13 tom Exp $ */
+/* $XTermId: xterm.h,v 1.741 2014/05/26 14:37:18 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1162,7 +1162,7 @@ extern void xtermPrintOnXError (XtermWidget /* xw */, int /* n */);
 #define PtySelect fd_set
 #endif
 
-extern Bool decodeUtf8 (PtyData * /* data */);
+extern Bool decodeUtf8 (TScreen * /* screen */, PtyData * /* data */);
 extern int readPtyData (XtermWidget /* xw */, PtySelect * /* select_mask */, PtyData * /* data */);
 extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, int  /* length */);
 extern void initPtyData (PtyData ** /* data */);
@@ -1183,7 +1183,7 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 #define morePtyData(screen,data) \
 	(((data)->last > (data)->next) \
 	 ? (((screen)->utf8_inparse && !(data)->utf_size) \
-	    ? decodeUtf8(data) \
+	    ? decodeUtf8(screen, data) \
 	    : True) \
 	 : False)
 #else
