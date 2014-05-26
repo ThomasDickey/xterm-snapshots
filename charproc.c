@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1340 2014/05/11 23:46:56 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1341 2014/05/13 18:56:48 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -9659,8 +9659,8 @@ ShowCursor(void)
 	fg_bg = ld->color[cursor_col];
     });
 
-    fg_pix = getXtermForeground(xw, flags, extract_fg(xw, fg_bg, flags));
-    bg_pix = getXtermBackground(xw, flags, extract_bg(xw, fg_bg, flags));
+    fg_pix = getXtermForeground(xw, flags, (int) extract_fg(xw, fg_bg, flags));
+    bg_pix = getXtermBackground(xw, flags, (int) extract_bg(xw, fg_bg, flags));
 
     /*
      * If we happen to have the same foreground/background colors, choose

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.643 2014/05/12 20:12:04 tom Exp $ */
+/* $XTermId: util.c,v 1.645 2014/05/26 12:29:50 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2628,42 +2628,65 @@ recolor_cursor(TScreen *screen,
 }
 
 #if OPT_RENDERFONT
+#define XFT_CACHE_LIMIT ((unsigned)(~0) >> 1)
+#define XFT_CACHE_SIZE  16
+typedef struct {
+    XftColor color;
+    unsigned use;
+} XftColorCache;
+
+static int
+compare_xft_color_cache(const void *a, const void *b)
+{
+    return (int) (((const XftColorCache *) a)->use -
+		  ((const XftColorCache *) b)->use);
+}
+
 static XftColor *
 getXftColor(XtermWidget xw, Pixel pixel)
 {
-#define CACHE_SIZE  4
-    static struct {
-	XftColor color;
-	int use;
-    } cache[CACHE_SIZE];
-    static int use;
+    static XftColorCache cache[XFT_CACHE_SIZE];
+    static unsigned latest_use;
     int i;
-    int oldest, oldestuse;
+    int oldest;
+    unsigned oldest_use;
     XColor color;
+    Boolean found = False;
 
-    oldestuse = 0x7fffffff;
+    oldest_use = XFT_CACHE_LIMIT;
     oldest = 0;
-    for (i = 0; i < CACHE_SIZE; i++) {
-	if (cache[i].use) {
-	    if (cache[i].color.pixel == pixel) {
-		cache[i].use = ++use;
-		return &cache[i].color;
+    if (latest_use == XFT_CACHE_LIMIT) {
+	latest_use = 0;
+	qsort(cache, XFT_CACHE_SIZE, sizeof(XftColorCache), compare_xft_color_cache);
+	for (i = 0; i < XFT_CACHE_SIZE; i++) {
+	    if (cache[i].use) {
+		cache[i].use = ++latest_use;
 	    }
 	}
-	if (cache[i].use < oldestuse) {
-	    oldestuse = cache[i].use;
+    }
+    for (i = 0; i < XFT_CACHE_SIZE; i++) {
+	if (cache[i].use) {
+	    if (cache[i].color.pixel == pixel) {
+		found = True;
+		break;
+	    }
+	}
+	if (cache[i].use < oldest_use) {
+	    oldest_use = cache[i].use;
 	    oldest = i;
 	}
     }
-    i = oldest;
-    color.pixel = pixel;
-    XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &color);
-    cache[i].color.color.red = color.red;
-    cache[i].color.color.green = color.green;
-    cache[i].color.color.blue = color.blue;
-    cache[i].color.color.alpha = 0xffff;
-    cache[i].color.pixel = pixel;
-    cache[i].use = ++use;
+    if (!found) {
+	i = oldest;
+	color.pixel = pixel;
+	XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &color);
+	cache[i].color.color.red = color.red;
+	cache[i].color.color.green = color.green;
+	cache[i].color.color.blue = color.blue;
+	cache[i].color.color.alpha = 0xffff;
+	cache[i].color.pixel = pixel;
+    }
+    cache[i].use = ++latest_use;
     return &cache[i].color;
 }
 
@@ -4106,8 +4129,8 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, unsigned fg_bg, Bool hilite)
     CgsEnum cgsId = gcMAX;
     unsigned my_fg = extract_fg(xw, fg_bg, attr_flags);
     unsigned my_bg = extract_bg(xw, fg_bg, attr_flags);
-    Pixel fg_pix = getXtermForeground(xw, attr_flags, my_fg);
-    Pixel bg_pix = getXtermBackground(xw, attr_flags, my_bg);
+    Pixel fg_pix = getXtermForeground(xw, attr_flags, (int) my_fg);
+    Pixel bg_pix = getXtermBackground(xw, attr_flags, (int) my_bg);
     Pixel xx_pix;
 #if OPT_HIGHLIGHT_COLOR
     Pixel selbg_pix = T_COLOR(screen, HIGHLIGHT_BG);
@@ -4350,7 +4373,7 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
     }
 #endif
 #if OPT_WIDE_ATTRS
-#define DIM_IT(n) work.n = (2 * work.n) / 3
+#define DIM_IT(n) work.n = (unsigned short) ((2 * work.n) / 3)
     if ((attr_flags & ATR_FAINT)) {
 	static Pixel last;
 	if (result != last) {
