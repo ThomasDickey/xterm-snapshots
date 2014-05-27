@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1342 2014/05/26 13:32:57 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1346 2014/05/26 20:23:12 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1078,6 +1078,28 @@ reset_SGR_Colors(XtermWidget xw)
     reset_SGR_Background(xw);
 }
 #endif /* OPT_ISO_COLORS */
+
+#if OPT_WIDE_ATTRS
+/*
+ * Call this before changing the state of ATR_ITALIC, to update the GC fonts.
+ */
+static void
+setItalicFont(XtermWidget xw, Bool enable)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (enable) {
+	if ((xw->flags & ATR_ITALIC) == 0) {
+	    xtermLoadItalics(xw);
+	    TRACE(("setItalicFont: enabling Italics\n"));
+	    xtermUpdateFontGCs(xw, screen->ifnts);
+	}
+    } else if ((xw->flags & ATR_ITALIC) != 0) {
+	TRACE(("setItalicFont: disabling Italics\n"));
+	xtermUpdateFontGCs(xw, screen->fnts);
+    }
+}
+#endif
 
 void
 resetCharsets(TScreen *screen)
@@ -2824,6 +2846,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		switch (op) {
 		case DEFAULT:
 		case 0:
+#if OPT_WIDE_ATTRS
+		    setItalicFont(xw, False);
+#endif
 		    UIntClr(xw->flags,
 			    (SGR_MASK | SGR_MASK2 | INVISIBLE));
 		    if_OPT_ISO_COLORS(screen, {
@@ -2841,6 +2866,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    UIntSet(xw->flags, ATR_FAINT);
 		    break;
 		case 3:	/* italicized */
+		    setItalicFont(xw, True);
 		    UIntSet(xw->flags, ATR_ITALIC);
 		    break;
 #endif
@@ -2887,6 +2913,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    break;
 #if OPT_WIDE_ATTRS
 		case 23:	/* not italicized */
+		    setItalicFont(xw, False);
 		    UIntClr(xw->flags, ATR_ITALIC);
 		    break;
 #endif
@@ -8428,7 +8455,7 @@ VTDestroy(Widget w GCC_UNUSED)
 #ifdef NO_LEAKS
     XtermWidget xw = (XtermWidget) w;
     TScreen *screen = TScreenOf(xw);
-    Cardinal n;
+    Cardinal n, k;
 
     StopBlinking(screen);
 
@@ -8508,6 +8535,7 @@ VTDestroy(Widget w GCC_UNUSED)
 	XFreeCursor(screen->display, screen->hidden_cursor);
 
     xtermCloseFonts(xw, screen->fnts);
+    xtermCloseFonts(xw, screen->ifnts);
     noleaks_cachedCgs(xw);
 
     TRACE_FREE_LEAK(screen->selection_targets_8bit);
@@ -8569,6 +8597,18 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.face_wide_name);
     TRACE_FREE_LEAK(xw->misc.render_font_s);
 #endif
+
+    for (n = 0; n < NMENUFONTS; ++n) {
+	for (k = 0; k < fMAX; ++k) {
+	    TRACE_FREE_LEAK(screen->menu_font_names[n][k]);
+	}
+    }
+
+    for (n = fontMenu_default; n <= fontMenu_lastBuiltin; ++n) {
+	for (k = 0; k < fMAX; ++k) {
+	    TRACE_FREE_LEAK(screen->cacheVTFonts.menu_font_names[n][k]);
+	}
+    }
 
 #if OPT_SELECT_REGEX
     for (n = 0; n < NSELECTUNITS; ++n) {

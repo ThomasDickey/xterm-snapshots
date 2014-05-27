@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.495 2014/05/11 14:06:18 tom Exp $ */
+/* $XTermId: screen.c,v 1.496 2014/05/26 17:54:45 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1380,6 +1380,22 @@ ShowWrapMarks(XtermWidget xw, int row, LineData *ld)
 		   (unsigned) FontHeight(screen));
 }
 
+#if OPT_WIDE_ATTRS
+static unsigned
+refreshFontGCs(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if ((new_attrs & ATR_ITALIC) && !(old_attrs & ATR_ITALIC)) {
+	xtermLoadItalics(xw);
+	xtermUpdateFontGCs(xw, screen->ifnts);
+    } else if (!(new_attrs & ATR_ITALIC) && (old_attrs & ATR_ITALIC)) {
+	xtermUpdateFontGCs(xw, screen->fnts);
+    }
+    return new_attrs;
+}
+#endif
+
 /*
  * Repaints the area enclosed by the parameters.
  * Requires: (toprow, leftcol), (toprow + nrows, leftcol + ncols) are
@@ -1406,6 +1422,9 @@ ScrnRefresh(XtermWidget xw,
     static char first_time = 1;
 #endif
     static int recurse = 0;
+#if OPT_WIDE_ATTRS
+    unsigned old_attrs = 0;
+#endif
 
     TRACE(("ScrnRefresh top %d (%d,%d) - (%d,%d)%s {{\n",
 	   screen->topline, toprow, leftcol,
@@ -1596,6 +1615,9 @@ ScrnRefresh(XtermWidget xw,
 	    bg = extract_bg(xw, fg_bg, flags);
 	});
 
+#if OPT_WIDE_ATTRS
+	old_attrs = refreshFontGCs(xw, flags, old_attrs);
+#endif
 	gc = updatedXtermGC(xw, flags, fg_bg, hilite);
 	gc_changes |= (flags & (FG_COLOR | BG_COLOR));
 
@@ -1676,6 +1698,9 @@ ScrnRefresh(XtermWidget xw,
 		    wideness = isWide((int) chars[col]);
 		});
 
+#if OPT_WIDE_ATTRS
+		old_attrs = refreshFontGCs(xw, flags, old_attrs);
+#endif
 		gc = updatedXtermGC(xw, flags, fg_bg, hilite);
 		gc_changes |= (flags & (FG_COLOR | BG_COLOR));
 	    }
