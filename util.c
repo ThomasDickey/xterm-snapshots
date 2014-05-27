@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.645 2014/05/26 12:29:50 tom Exp $ */
+/* $XTermId: util.c,v 1.646 2014/05/27 00:17:14 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2657,7 +2657,7 @@ getXftColor(XtermWidget xw, Pixel pixel)
     oldest = 0;
     if (latest_use == XFT_CACHE_LIMIT) {
 	latest_use = 0;
-	qsort(cache, XFT_CACHE_SIZE, sizeof(XftColorCache), compare_xft_color_cache);
+	qsort(cache, (size_t) XFT_CACHE_SIZE, sizeof(XftColorCache), compare_xft_color_cache);
 	for (i = 0; i < XFT_CACHE_SIZE; i++) {
 	    if (cache[i].use) {
 		cache[i].use = ++latest_use;
