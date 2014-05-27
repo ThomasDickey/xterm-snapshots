@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.92 2014/05/13 00:58:30 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.93 2014/05/26 16:48:15 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -52,6 +52,7 @@ extern void xtermFreeFontInfo (XTermFonts * /* target */);
 extern void xtermSaveFontInfo (TScreen * /* screen */, XFontStruct */* font */);
 extern void xtermSetCursorBox (TScreen * /* screen */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
+extern void xtermUpdateFontGCs (XtermWidget /* xw */, XTermFonts * /* fnts */);
 
 #if OPT_DEC_CHRSET
 extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
@@ -123,6 +124,10 @@ extern String getFaceName(XtermWidget /* xw */, Bool /* wideName */);
 extern void HandleLargerFont PROTO_XT_ACTIONS_ARGS;
 extern void HandleSmallerFont PROTO_XT_ACTIONS_ARGS;
 extern void setFaceName(XtermWidget /* xw */, const char * /*value */);
+#endif
+
+#if OPT_WIDE_ATTRS
+extern void xtermLoadItalics(XtermWidget /* xw */);
 #endif
 
 #if OPT_WIDE_CHARS

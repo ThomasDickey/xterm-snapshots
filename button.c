@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.472 2014/05/26 14:37:18 tom Exp $ */
+/* $XTermId: button.c,v 1.473 2014/05/26 17:12:51 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -4086,7 +4086,7 @@ _OwnSelection(XtermWidget xw,
 			     screen->selection_length, cutbuffer);
 	    } else {
 		/* This used to just use the UTF-8 data, which was totally
-		 * broken as not even the corresponding paste code in Xterm
+		 * broken as not even the corresponding paste code in xterm
 		 * understood this!  So now it converts to Latin1 first.
 		 *   Robert Brady, 2000-09-05
 		 */

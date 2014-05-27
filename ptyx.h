@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.807 2014/05/09 08:01:03 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.808 2014/05/26 15:32:29 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2054,6 +2054,10 @@ typedef struct {
 	XTermFonts	fnts[fMAX];	/* normal/bold/etc for terminal	*/
 	Boolean		free_bold_box;	/* same_font_size's austerity	*/
 	Boolean		allowBoldFonts;	/* do we use bold fonts at all? */
+#if OPT_WIDE_ATTRS
+	XTermFonts	ifnts[fMAX];	/* normal/bold/etc italic fonts */
+	Boolean		ifnts_ok;	/* true if ifnts[] is cached	*/
+#endif
 #ifndef NO_ACTIVE_ICON
 	XTermFonts	fnt_icon;	/* icon font			*/
 	String		icon_fontname;	/* name of icon font		*/

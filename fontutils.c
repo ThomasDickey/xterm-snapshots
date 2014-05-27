@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.411 2014/05/11 23:11:38 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.420 2014/05/26 22:55:35 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -88,6 +88,10 @@
 	if (CI_NONEXISTCHAR(cs)) cs = 0; \
     } \
 }
+
+#define FREE_FNAME(field) \
+	    if (fonts == 0 || myfonts.field != fonts->field) \
+		free ((char *) myfonts.field)
 
 /*
  * A structure to hold the relevant properties from a font
@@ -443,6 +447,16 @@ bold_font_name(FontNameProperties *props, int use_average_width)
 {
     return derive_font_name(props, "bold", use_average_width, props->end);
 }
+
+#if OPT_WIDE_ATTRS
+static char *
+italic_font_name(FontNameProperties *props, int use_average_width)
+{
+    FontNameProperties myprops = *props;
+    myprops.slant = "o";
+    return derive_font_name(&myprops, props->weight, use_average_width, props->end);
+}
+#endif
 
 #if OPT_WIDE_CHARS
 #define derive_wide_font(props, weight) \
@@ -944,6 +958,48 @@ reportVTFontInfo(XtermWidget xw, int fontnum)
 }
 #endif
 
+void
+xtermUpdateFontGCs(XtermWidget xw, XTermFonts * fnts)
+{
+    TScreen *screen = TScreenOf(xw);
+    VTwin *win = WhichVWin(screen);
+    Pixel new_normal = getXtermForeground(xw, xw->flags, xw->cur_foreground);
+    Pixel new_revers = getXtermBackground(xw, xw->flags, xw->cur_background);
+
+    setCgsFore(xw, win, gcNorm, new_normal);
+    setCgsBack(xw, win, gcNorm, new_revers);
+    setCgsFont(xw, win, gcNorm, &(fnts[fNorm]));
+
+    copyCgs(xw, win, gcBold, gcNorm);
+    setCgsFont(xw, win, gcBold, &(fnts[fBold]));
+
+    setCgsFore(xw, win, gcNormReverse, new_revers);
+    setCgsBack(xw, win, gcNormReverse, new_normal);
+    setCgsFont(xw, win, gcNormReverse, &(fnts[fNorm]));
+
+    copyCgs(xw, win, gcBoldReverse, gcNormReverse);
+    setCgsFont(xw, win, gcBoldReverse, &(fnts[fBold]));
+
+    if_OPT_WIDE_CHARS(screen, {
+	if (fnts[fWide].fs != 0
+	    && fnts[fWBold].fs != 0) {
+	    setCgsFore(xw, win, gcWide, new_normal);
+	    setCgsBack(xw, win, gcWide, new_revers);
+	    setCgsFont(xw, win, gcWide, &(fnts[fWide]));
+
+	    copyCgs(xw, win, gcWBold, gcWide);
+	    setCgsFont(xw, win, gcWBold, &(fnts[fWBold]));
+
+	    setCgsFore(xw, win, gcWideReverse, new_revers);
+	    setCgsBack(xw, win, gcWideReverse, new_normal);
+	    setCgsFont(xw, win, gcWideReverse, &(fnts[fWide]));
+
+	    copyCgs(xw, win, gcWBoldReverse, gcWideReverse);
+	    setCgsFont(xw, win, gcWBoldReverse, &(fnts[fWBold]));
+	}
+    });
+}
+
 int
 xtermLoadFont(XtermWidget xw,
 	      const VTFontNames * fonts,
@@ -956,8 +1012,6 @@ xtermLoadFont(XtermWidget xw,
     VTFontNames myfonts;
     FontNameProperties *fp;
     XTermFonts fnts[fMAX];
-    Pixel new_normal;
-    Pixel new_revers;
     char *tmpname = NULL;
     char *normal = NULL;
     Boolean proportional = False;
@@ -1033,8 +1087,10 @@ xtermLoadFont(XtermWidget xw,
 	warn[fBold] = fwAlways;
 	fp = get_font_name_props(screen->display, fnts[fNorm].fs, &normal);
 	if (fp != 0) {
+	    FREE_FNAME(f_b);
 	    myfonts.f_b = bold_font_name(fp, fp->average_width);
 	    if (!xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwAlways, False)) {
+		FREE_FNAME(f_b);
 		myfonts.f_b = bold_font_name(fp, -1);
 		xtermOpenFont(xw, myfonts.f_b, &fnts[fBold], fwAlways, False);
 	    }
@@ -1215,6 +1271,10 @@ xtermLoadFont(XtermWidget xw,
      * XLoadQueryFont call allocates a new XFontStruct.
      */
     xtermCloseFonts(xw, screen->fnts);
+#if OPT_WIDE_ATTRS
+    xtermCloseFonts(xw, screen->ifnts);
+    screen->ifnts_ok = False;
+#endif
 
     xtermCopyFontInfo(&(screen->fnts[fNorm]), &fnts[fNorm]);
     xtermCopyFontInfo(&(screen->fnts[fBold]), &fnts[fBold]);
@@ -1225,41 +1285,7 @@ xtermLoadFont(XtermWidget xw,
     xtermCopyFontInfo(&(screen->fnts[fWBold]), &fnts[fWBold]);
 #endif
 
-    new_normal = getXtermForeground(xw, xw->flags, xw->cur_foreground);
-    new_revers = getXtermBackground(xw, xw->flags, xw->cur_background);
-
-    setCgsFore(xw, win, gcNorm, new_normal);
-    setCgsBack(xw, win, gcNorm, new_revers);
-    setCgsFont(xw, win, gcNorm, &(screen->fnts[fNorm]));
-
-    copyCgs(xw, win, gcBold, gcNorm);
-    setCgsFont(xw, win, gcBold, &(screen->fnts[fBold]));
-
-    setCgsFore(xw, win, gcNormReverse, new_revers);
-    setCgsBack(xw, win, gcNormReverse, new_normal);
-    setCgsFont(xw, win, gcNormReverse, &(screen->fnts[fNorm]));
-
-    copyCgs(xw, win, gcBoldReverse, gcNormReverse);
-    setCgsFont(xw, win, gcBoldReverse, &(screen->fnts[fBold]));
-
-    if_OPT_WIDE_CHARS(screen, {
-	if (screen->fnts[fWide].fs != 0
-	    && screen->fnts[fWBold].fs != 0) {
-	    setCgsFore(xw, win, gcWide, new_normal);
-	    setCgsBack(xw, win, gcWide, new_revers);
-	    setCgsFont(xw, win, gcWide, &(screen->fnts[fWide]));
-
-	    copyCgs(xw, win, gcWBold, gcWide);
-	    setCgsFont(xw, win, gcWBold, &(screen->fnts[fWBold]));
-
-	    setCgsFore(xw, win, gcWideReverse, new_revers);
-	    setCgsBack(xw, win, gcWideReverse, new_normal);
-	    setCgsFont(xw, win, gcWideReverse, &(screen->fnts[fWide]));
-
-	    copyCgs(xw, win, gcWBoldReverse, gcWideReverse);
-	    setCgsFont(xw, win, gcWBoldReverse, &(screen->fnts[fWBold]));
-	}
-    });
+    xtermUpdateFontGCs(xw, screen->fnts);
 
 #if OPT_BOX_CHARS
     screen->allow_packing = proportional;
@@ -1270,7 +1296,7 @@ xtermLoadFont(XtermWidget xw,
 
 #if OPT_BOX_CHARS
     /*
-     * Xterm uses character positions 1-31 of a font for the line-drawing
+     * xterm uses character positions 1-31 of a font for the line-drawing
      * characters.  Check that they are all present.  The null character
      * (0) is special, and is not used.
      */
@@ -1349,6 +1375,30 @@ xtermLoadFont(XtermWidget xw,
 #if OPT_REPORT_FONTS
     reportVTFontInfo(xw, fontnum);
 #endif
+    if (myfonts.f_n == myfonts.f_b) {
+	FREE_FNAME(f_n);
+    } else {
+	FREE_FNAME(f_n);
+	FREE_FNAME(f_b);
+    }
+#if OPT_WIDE_CHARS
+    if (myfonts.f_w == myfonts.f_wb) {
+	FREE_FNAME(f_w);
+    } else {
+	FREE_FNAME(f_w);
+	FREE_FNAME(f_wb);
+    }
+#endif
+    if (fnts[fNorm].fn == fnts[fBold].fn) {
+	free(fnts[fNorm].fn);
+    } else {
+	free(fnts[fNorm].fn);
+	free(fnts[fBold].fn);
+    }
+#if OPT_WIDE_CHARS
+    free(fnts[fWide].fn);
+    free(fnts[fWBold].fn);
+#endif
     return 1;
 
   bad:
@@ -1389,6 +1439,44 @@ xtermLoadFont(XtermWidget xw,
     TRACE(("Fail Cgs - xtermLoadFont\n"));
     return 0;
 }
+
+#if OPT_WIDE_ATTRS
+/*
+ * (Attempt to) load matching italics for the current normal/bold/etc fonts.
+ * If the attempt fails for a given style, use the non-italic font.
+ */
+void
+xtermLoadItalics(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    FontNameProperties *fp;
+    char *name;
+    int n;
+
+    if (!screen->ifnts_ok) {
+	screen->ifnts_ok = True;
+	for (n = 0; n < fMAX; ++n) {
+	    /*
+	     * FIXME - need to handle font-leaks
+	     */
+	    screen->ifnts[n].fs = 0;
+	    if (screen->fnts[n].fs != 0 &&
+		(fp = get_font_name_props(screen->display,
+					  screen->fnts[n].fs,
+					  0)) != 0) {
+		if ((name = italic_font_name(fp, fp->average_width)) != 0) {
+		    (void) xtermOpenFont(xw,
+					 name,
+					 &(screen->ifnts[n]),
+					 fwResource,
+					 False);
+		    free(name);
+		}
+	    }
+	}
+    }
+}
+#endif
 
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
 /*
@@ -3352,6 +3440,12 @@ SetVTFont(XtermWidget xw,
 			      doresize, oldFont);
 		Bell(xw, XkbBI_MinorError, 0);
 	    }
+	    FREE_FNAME(f_n);
+	    FREE_FNAME(f_b);
+#if OPT_WIDE_CHARS
+	    FREE_FNAME(f_w);
+	    FREE_FNAME(f_wb);
+#endif
 	}
     } else {
 	Bell(xw, XkbBI_MinorError, 0);
