@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.25 2014/05/05 21:46:48 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.26 2014/05/27 00:18:05 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -3176,7 +3176,8 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 			    e_y = new_y;
 			}
 
-			radians = atan2(c_y - e_y, e_x - c_x);
+			radians = atan2((double) (c_y - e_y),
+					(double) (e_x - c_x));
 			degrees = (int) (360.0 * radians / (2.0 * M_PI));
 			if (degrees < 0)
 			    degrees += 360;
