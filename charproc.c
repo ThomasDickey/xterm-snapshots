@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1346 2014/05/26 20:23:12 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1354 2014/05/28 20:32:41 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -7484,6 +7484,14 @@ trimSizeFromFace(char *face_name, float *face_size)
 }
 #endif
 
+static void
+initializeKeyboardType(XtermWidget xw)
+{
+    xw->keyboard.type = TScreenOf(xw)->old_fkeys
+	? keyboardIsLegacy
+	: keyboardIsDefault;
+}
+
 /* ARGSUSED */
 static void
 VTInitialize(Widget wrequest,
@@ -7725,9 +7733,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.fastscroll);
     init_Bres(screen.old_fkeys);
     init_Bres(screen.delete_is_del);
-    wnew->keyboard.type = TScreenOf(wnew)->old_fkeys
-	? keyboardIsLegacy
-	: keyboardIsDefault;
+    initializeKeyboardType(wnew);
 #ifdef ALLOWLOGGING
     init_Bres(misc.logInhibit);
     init_Bres(misc.log_on);
@@ -10276,6 +10282,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
     /* make cursor visible */
     screen->cursor_set = ON;
+    screen->cursor_shape = CURSOR_BLOCK;
 
     /* reset scrolling region */
     reset_margins(screen);
@@ -10317,6 +10324,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
 	TabReset(xw->tabs);
 	xw->keyboard.flags = MODE_SRM;
+	initializeKeyboardType(xw);
 #if OPT_INITIAL_ERASE
 	if (xw->keyboard.reset_DECBKM == 1)
 	    xw->keyboard.flags |= MODE_DECBKM;
@@ -10327,6 +10335,11 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	TRACE(("full reset DECBKM %s\n",
 	       BtoS(xw->keyboard.flags & MODE_DECBKM)));
 
+#if OPT_SCROLL_LOCK
+	xtermClearLEDs(screen);
+#endif
+	screen->title_modes = DEF_TITLE_MODES;
+	screen->pointer_mode = DEF_POINTER_MODE;
 #if OPT_SIXEL_GRAPHICS
 	if (TScreenOf(xw)->sixel_scrolling)
 	    xw->keyboard.flags |= MODE_DECSDM;
@@ -10370,6 +10383,18 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
 	screen->jumpscroll = (Boolean) (!(xw->flags & SMOOTHSCROLL));
 	update_jumpscroll();
+
+#if OPT_DEC_RECTOPS
+	screen->cur_decsace = 0;
+#endif
+#if OPT_READLINE
+	screen->click1_moves = OFF;
+	screen->paste_moves = OFF;
+	screen->dclick3_deletes = OFF;
+	screen->paste_brackets = OFF;
+	screen->paste_quotes = OFF;
+	screen->paste_literal_nl = OFF;
+#endif /* OPT_READLINE */
 
 	if (screen->c132 && (xw->flags & IN132COLUMNS)) {
 	    Dimension reqWidth = (Dimension) (80 * FontWidth(screen)
