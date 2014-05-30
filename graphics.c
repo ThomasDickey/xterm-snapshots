@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.42 2014/05/03 14:26:57 tom Exp $ */
+/* $XTermId: graphics.c,v 1.43 2014/05/28 22:27:07 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -411,7 +411,7 @@ find_color_register(ColorRegister const *color_registers, int r, int g, int b)
 static void
 init_color_registers(ColorRegister *color_registers, int terminal_id)
 {
-    TRACE(("setting inital colors for terminal %d\n", terminal_id));
+    TRACE(("setting initial colors for terminal %d\n", terminal_id));
     {
 	unsigned i;
 
