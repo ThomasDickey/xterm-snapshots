@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.420 2014/05/26 22:55:35 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.427 2014/05/30 08:29:56 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -51,6 +51,12 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#define ALLOC_STRING(name) \
+	if (name != 0) \
+	    name = x_strdup(name)
+#define FREE_STRING(name) \
+	    free_string(name)
+
 #define SetFontWidth(screen,dst,src)  (dst)->f_width = (src)
 #define SetFontHeight(screen,dst,src) (dst)->f_height = dimRound((screen)->scale_height * (float) (src))
 
@@ -90,8 +96,10 @@
 }
 
 #define FREE_FNAME(field) \
-	    if (fonts == 0 || myfonts.field != fonts->field) \
-		free ((char *) myfonts.field)
+	    if (fonts == 0 || myfonts.field != fonts->field) { \
+		FREE_STRING(myfonts.field); \
+		myfonts.field = 0; \
+	    }
 
 /*
  * A structure to hold the relevant properties from a font
@@ -117,6 +125,12 @@ typedef struct {
     /* charset registry, charset encoding */
     char *end;
 } FontNameProperties;
+
+static void
+free_string(String value)
+{
+    free((void *) value);
+}
 
 #if OPT_RENDERFONT
 static void fillInFaceSize(XtermWidget, int);
@@ -215,16 +229,18 @@ n_fields(char **source, int start, int stop)
     /*
      * find the start-1th dash
      */
-    for (i = start - 1, str = *source; i; i--, str++)
+    for (i = start - 1, str = *source; i; i--, str++) {
 	if ((str = strchr(str, '-')) == 0)
 	    return 0;
+    }
 
     /*
      * find the stopth dash
      */
-    for (i = stop - start + 1, str1 = str; i; i--, str1++)
+    for (i = stop - start + 1, str1 = str; i; i--, str1++) {
 	if ((str1 = strchr(str1, '-')) == 0)
 	    return 0;
+    }
 
     /*
      * put a \0 at the end of the fields
@@ -453,7 +469,7 @@ static char *
 italic_font_name(FontNameProperties *props, int use_average_width)
 {
     FontNameProperties myprops = *props;
-    myprops.slant = "o";
+    myprops.slant = (char *) "o";
     return derive_font_name(&myprops, props->weight, use_average_width, props->end);
 }
 #endif
@@ -738,8 +754,7 @@ const VTFontNames *
 xtermFontName(const char *normal)
 {
     static VTFontNames data;
-    if (data.f_n)
-	free((void *) data.f_n);
+    FREE_STRING(data.f_n);
     memset(&data, 0, sizeof(data));
     data.f_n = x_strdup(normal);
     return &data;
@@ -1128,6 +1143,7 @@ xtermLoadFont(XtermWidget xw,
 	if (check_fontname(myfonts.f_w)) {
 	    cache_menu_font_name(screen, fontnum, fWide, myfonts.f_w);
 	} else if (screen->utf8_fonts && !is_double_width_font(fnts[fNorm].fs)) {
+	    FREE_FNAME(f_w);
 	    fp = get_font_name_props(screen->display, fnts[fNorm].fs, &normal);
 	    if (fp != 0) {
 		myfonts.f_w = wide_font_name(fp);
@@ -1169,14 +1185,15 @@ xtermLoadFont(XtermWidget xw,
 		xtermCloseFont(xw, &fnts[fWBold]);
 	    }
 	    if (fnts[fWBold].fs == 0) {
+		FREE_FNAME(f_wb);
 		if (IsEmpty(myfonts.f_w)) {
-		    myfonts.f_wb = myfonts.f_b;
+		    myfonts.f_wb = x_strdup(myfonts.f_b);
 		    warn[fWBold] = fwAlways;
 		    xtermCopyFontInfo(&fnts[fWBold], &fnts[fBold]);
 		    TRACE(("...cannot load wide-bold, use bold %s\n",
 			   NonNull(myfonts.f_b)));
 		} else {
-		    myfonts.f_wb = myfonts.f_w;
+		    myfonts.f_wb = x_strdup(myfonts.f_w);
 		    warn[fWBold] = fwAlways;
 		    xtermCopyFontInfo(&fnts[fWBold], &fnts[fWide]);
 		    TRACE(("...cannot load wide-bold, use wide %s\n",
@@ -1357,7 +1374,7 @@ xtermLoadFont(XtermWidget xw,
     set_menu_font(True);
     if (tmpname) {		/* if setting escape or sel */
 	if (screen->MenuFontName(fontnum))
-	    free((void *) screen->MenuFontName(fontnum));
+	    FREE_STRING(screen->MenuFontName(fontnum));
 	screen->MenuFontName(fontnum) = tmpname;
 	if (fontnum == fontMenu_fontescape) {
 	    SetItemSensitivity(fontMenuEntries[fontMenu_fontescape].widget,
@@ -1375,19 +1392,11 @@ xtermLoadFont(XtermWidget xw,
 #if OPT_REPORT_FONTS
     reportVTFontInfo(xw, fontnum);
 #endif
-    if (myfonts.f_n == myfonts.f_b) {
-	FREE_FNAME(f_n);
-    } else {
-	FREE_FNAME(f_n);
-	FREE_FNAME(f_b);
-    }
+    FREE_FNAME(f_n);
+    FREE_FNAME(f_b);
 #if OPT_WIDE_CHARS
-    if (myfonts.f_w == myfonts.f_wb) {
-	FREE_FNAME(f_w);
-    } else {
-	FREE_FNAME(f_w);
-	FREE_FNAME(f_wb);
-    }
+    FREE_FNAME(f_w);
+    FREE_FNAME(f_wb);
 #endif
     if (fnts[fNorm].fn == fnts[fBold].fn) {
 	free(fnts[fNorm].fn);
@@ -1485,7 +1494,7 @@ xtermLoadItalics(XtermWidget xw)
 #define MERGE_SUBFONT(src,dst,name) \
 	if (IsEmpty(dst.name)) { \
 	    TRACE(("MERGE_SUBFONT " #dst "." #name " merge %s\n", NonNull(src.name))); \
-	    dst.name = src.name; \
+	    dst.name = x_strdup(src.name); \
 	} else { \
 	    TRACE(("MERGE_SUBFONT " #dst "." #name " found %s\n", NonNull(dst.name))); \
 	}
@@ -1498,14 +1507,27 @@ xtermLoadItalics(XtermWidget xw)
 	    TRACE(("INFER_SUBFONT " #dst "." #name " found %s\n", NonNull(dst.name))); \
 	}
 
+#define FREE_MENU_FONTS(dst) \
+	TRACE(("FREE_MENU_FONTS " #dst "\n")); \
+	for (n = fontMenu_default; n <= fontMenu_lastBuiltin; ++n) { \
+	    for (m = 0; m < fMAX; ++m) { \
+		FREE_STRING(dst.menu_font_names[n][m]); \
+		dst.menu_font_names[n][m] = 0; \
+	    } \
+	}
+
 #define COPY_MENU_FONTS(src,dst) \
 	TRACE(("COPY_MENU_FONTS " #src " to " #dst "\n")); \
 	for (n = fontMenu_default; n <= fontMenu_lastBuiltin; ++n) { \
 	    for (m = 0; m < fMAX; ++m) { \
+		FREE_STRING(dst.menu_font_names[n][m]); \
 		dst.menu_font_names[n][m] = x_strdup(src.menu_font_names[n][m]); \
 	    } \
 	    TRACE((".. " #dst ".menu_fonts_names[%d] = %s\n", n, dst.menu_font_names[n][fNorm])); \
 	}
+
+#define COPY_DEFAULT_FONTS(target, source) \
+	target.default_font = source.default_font
 
 void
 xtermSaveVTFonts(XtermWidget xw)
@@ -1517,7 +1539,7 @@ xtermSaveVTFonts(XtermWidget xw)
 
 	screen->savedVTFonts = True;
 	TRACE(("xtermSaveVTFonts saving original\n"));
-	screen->cacheVTFonts.default_font = xw->misc.default_font;
+	COPY_DEFAULT_FONTS(screen->cacheVTFonts, xw->misc);
 	COPY_MENU_FONTS(xw->screen, screen->cacheVTFonts);
     }
 }
@@ -1593,11 +1615,9 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 
     if (IsEmpty(myName)) {
 	TRACE(("xtermLoadVTFonts restoring original\n"));
-	xw->misc.default_font = screen->cacheVTFonts.default_font;
+	COPY_DEFAULT_FONTS(xw->misc, screen->cacheVTFonts);
+	FREE_MENU_FONTS(xw->screen);
 	COPY_MENU_FONTS(screen->cacheVTFonts, xw->screen);
-	for (n = 0; n < XtNumber(screen->cacheVTFonts.menu_font_names); ++n) {
-	    screen->MenuFontName(n) = screen->cacheVTFonts.MenuFontName(n);
-	}
     } else {
 	TRACE(("xtermLoadVTFonts(%s, %s)\n", myName, myClass));
 
@@ -1619,6 +1639,20 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	    screen->mergedVTFonts = True;
 
 	    /*
+	     * To make it simple, reallocate the strings returned by
+	     * XtGetSubresources.  We can free our own strings, but not theirs.
+	     */
+	    ALLOC_STRING(subresourceRec.default_font.f_n);
+	    ALLOC_STRING(subresourceRec.default_font.f_b);
+#if OPT_WIDE_CHARS
+	    ALLOC_STRING(subresourceRec.default_font.f_w);
+	    ALLOC_STRING(subresourceRec.default_font.f_wb);
+#endif
+	    for (n = fontMenu_font1; n <= fontMenu_lastBuiltin; ++n) {
+		ALLOC_STRING(subresourceRec.MenuFontName(n));
+	    }
+
+	    /*
 	     * If a particular resource value was not found, use the original.
 	     */
 	    MERGE_SUBFONT(xw->misc, subresourceRec, default_font.f_n);
@@ -1627,20 +1661,39 @@ xtermLoadVTFonts(XtermWidget xw, String myName, String myClass)
 	    INFER_SUBFONT(xw->misc, subresourceRec, default_font.f_w);
 	    INFER_SUBFONT(xw->misc, subresourceRec, default_font.f_wb);
 #endif
-	    for (n = fontMenu_font1; n <= fontMenu_lastBuiltin; ++n)
+	    for (n = fontMenu_font1; n <= fontMenu_lastBuiltin; ++n) {
 		MERGE_SUBFONT(xw->screen, subresourceRec, MenuFontName(n));
+	    }
 
 	    /*
 	     * Finally, copy the subresource data to the widget.
 	     */
-	    xw->misc.default_font = subresourceRec.default_font;
+	    COPY_DEFAULT_FONTS(xw->misc, subresourceRec);
+	    FREE_MENU_FONTS(xw->screen);
 	    COPY_MENU_FONTS(subresourceRec, xw->screen);
+
+	    FREE_STRING(screen->MenuFontName(fontMenu_default));
+	    FREE_STRING(screen->menu_font_names[0][fBold]);
 	    screen->MenuFontName(fontMenu_default) = x_strdup(xw->misc.default_font.f_n);
 	    screen->menu_font_names[0][fBold] = x_strdup(xw->misc.default_font.f_b);
 #if OPT_WIDE_CHARS
+	    FREE_STRING(screen->menu_font_names[0][fWide]);
+	    FREE_STRING(screen->menu_font_names[0][fWBold]);
 	    screen->menu_font_names[0][fWide] = x_strdup(xw->misc.default_font.f_w);
 	    screen->menu_font_names[0][fWBold] = x_strdup(xw->misc.default_font.f_wb);
 #endif
+	    /*
+	     * And remove our copies of strings.
+	     */
+	    FREE_STRING(subresourceRec.default_font.f_n);
+	    FREE_STRING(subresourceRec.default_font.f_b);
+#if OPT_WIDE_CHARS
+	    FREE_STRING(subresourceRec.default_font.f_w);
+	    FREE_STRING(subresourceRec.default_font.f_wb);
+#endif
+	    for (n = fontMenu_font1; n <= fontMenu_lastBuiltin; ++n) {
+		FREE_STRING(subresourceRec.MenuFontName(n));
+	    }
 	} else {
 	    TRACE(("...no resources found\n"));
 	    status = False;
@@ -1750,8 +1803,9 @@ HandleLoadVTFonts(Widget w,
 	    int font_number = screen->menu_font_number;
 	    if (font_number > fontMenu_lastBuiltin)
 		font_number = fontMenu_lastBuiltin;
-	    for (n = 0; n < NMENUFONTS; ++n)
+	    for (n = 0; n < NMENUFONTS; ++n) {
 		screen->menu_font_sizes[n] = 0;
+	    }
 	    SetVTFont(xw, font_number, True,
 		      ((font_number == fontMenu_default)
 		       ? &(xw->misc.default_font)
@@ -1811,7 +1865,7 @@ xtermXftFirstChar(XftFont *xft)
     int i;
 
     first = FcCharSetFirstPage(xft->charset, map, &next);
-    for (i = 0; i < FC_CHARSET_MAP_SIZE; i++)
+    for (i = 0; i < FC_CHARSET_MAP_SIZE; i++) {
 	if (map[i]) {
 	    FcChar32 bits = map[i];
 	    first += (FcChar32) i *32;
@@ -1821,6 +1875,7 @@ xtermXftFirstChar(XftFont *xft)
 	    }
 	    break;
 	}
+    }
     return first;
 }
 
@@ -1834,7 +1889,7 @@ xtermXftLastChar(XftFont *xft)
     while ((this = FcCharSetNextPage(xft->charset, map, &next)) != FC_CHARSET_DONE)
 	last = this;
     last &= (FcChar32) ~ 0xff;
-    for (i = FC_CHARSET_MAP_SIZE - 1; i >= 0; i--)
+    for (i = FC_CHARSET_MAP_SIZE - 1; i >= 0; i--) {
 	if (map[i]) {
 	    FcChar32 bits = map[i];
 	    last += (FcChar32) i *32 + 31;
@@ -1844,6 +1899,7 @@ xtermXftLastChar(XftFont *xft)
 	    }
 	    break;
 	}
+    }
     return (long) last;
 }
 
@@ -3411,6 +3467,7 @@ SetVTFont(XtermWidget xw,
 		 || strcmp(screen->menu_font_names[which][name], myfonts.field)) { \
 		    TRACE(("updating menu_font_names[%d][" #name "] to %s\n", \
 			   which, myfonts.field)); \
+		    FREE_STRING(screen->menu_font_names[which][name]); \
 		    screen->menu_font_names[which][name] = x_strdup(myfonts.field); \
 		} \
 	    }

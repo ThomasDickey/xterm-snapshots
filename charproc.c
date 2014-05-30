@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1354 2014/05/28 20:32:41 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1357 2014/05/29 23:47:15 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -8529,6 +8529,7 @@ VTDestroy(Widget w GCC_UNUSED)
     releaseCursorGCs(xw);
     releaseWindowGCs(xw, &(screen->fullVwin));
 #ifndef NO_ACTIVE_ICON
+    XFreeFont(screen->display, screen->fnt_icon.fs);
     releaseWindowGCs(xw, &(screen->iconVwin));
 #endif
     XtUninstallTranslations((Widget) xw);
@@ -8604,15 +8605,22 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.render_font_s);
 #endif
 
+    TRACE_FREE_LEAK(xw->misc.default_font.f_n);
+    TRACE_FREE_LEAK(xw->misc.default_font.f_b);
+#if OPT_WIDE_CHARS
+    TRACE_FREE_LEAK(xw->misc.default_font.f_w);
+    TRACE_FREE_LEAK(xw->misc.default_font.f_wb);
+#endif
+
     for (n = 0; n < NMENUFONTS; ++n) {
 	for (k = 0; k < fMAX; ++k) {
-	    TRACE_FREE_LEAK(screen->menu_font_names[n][k]);
-	}
-    }
-
-    for (n = fontMenu_default; n <= fontMenu_lastBuiltin; ++n) {
-	for (k = 0; k < fMAX; ++k) {
-	    TRACE_FREE_LEAK(screen->cacheVTFonts.menu_font_names[n][k]);
+	    if (screen->menu_font_names[n][k] !=
+		screen->cacheVTFonts.menu_font_names[n][k]) {
+		TRACE_FREE_LEAK(screen->menu_font_names[n][k]);
+		TRACE_FREE_LEAK(screen->cacheVTFonts.menu_font_names[n][k]);
+	    } else {
+		TRACE_FREE_LEAK(screen->menu_font_names[n][k]);
+	    }
 	}
     }
 
