@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.646 2014/05/27 00:17:14 tom Exp $ */
+/* $XTermId: util.c,v 1.648 2014/06/03 23:39:08 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1089,7 +1089,7 @@ WriteText(XtermWidget xw, IChar *str, Cardinal len)
 
 	drawXtermText(xw,
 		      test & DRAWX_MASK,
-		      test & DRAWX_MASK,
+		      0,
 		      currentGC,
 		      LineCursorX(screen, ld, screen->cur_col),
 		      CursorY(screen, screen->cur_row),
@@ -4375,11 +4375,12 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 #if OPT_WIDE_ATTRS
 #define DIM_IT(n) work.n = (unsigned short) ((2 * work.n) / 3)
     if ((attr_flags & ATR_FAINT)) {
-	static Pixel last;
-	if (result != last) {
+	static Pixel last_in;
+	static Pixel last_out;
+	if (result != last_in) {
 	    XColor work;
 	    work.pixel = result;
-	    last = result;
+	    last_in = result;
 	    if (XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &work)) {
 		DIM_IT(red);
 		DIM_IT(green);
@@ -4388,6 +4389,9 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 		    result = work.pixel;
 		}
 	    }
+	    last_out = result;
+	} else {
+	    result = last_out;
 	}
     }
 #endif

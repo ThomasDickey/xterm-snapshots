@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1357 2014/05/29 23:47:15 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1359 2014/06/03 23:38:02 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2864,6 +2864,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #if OPT_WIDE_ATTRS
 		case 2:	/* faint, decreased intensity or second colour */
 		    UIntSet(xw->flags, ATR_FAINT);
+		    if_OPT_ISO_COLORS(screen, {
+			setExtendedFG(xw);
+		    });
 		    break;
 		case 3:	/* italicized */
 		    setItalicFont(xw, True);
@@ -9929,7 +9932,7 @@ ShowCursor(void)
 
 	    drawXtermText(xw,
 			  flags & DRAWX_MASK,
-			  flags & DRAWX_MASK,
+			  0,
 			  currentGC, x, y,
 			  LineCharSet(screen, ld),
 			  &base, 1, 0);
@@ -10067,7 +10070,7 @@ HideCursor(void)
 
     drawXtermText(xw,
 		  flags & DRAWX_MASK,
-		  flags & DRAWX_MASK,
+		  0,
 		  currentGC, x, y,
 		  LineCharSet(screen, ld),
 		  &base, 1, 0);
