@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.427 2014/05/30 08:29:56 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.433 2014/06/08 23:03:10 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -630,6 +630,36 @@ got_bold_font(Display *dpy, XFontStruct *fs, String requested)
 }
 
 /*
+ * Check normal/bold (or wide/wide-bold) font pairs to see if we will be able
+ * to check for missing glyphs in a comparable manner.
+ */
+static int
+comparable_metrics(XFontStruct *normal, XFontStruct *bold)
+{
+#define DATA "comparable_metrics: "
+    int result = 0;
+
+    if (normal->all_chars_exist) {
+	if (bold->all_chars_exist) {
+	    result = 1;
+	} else {
+	    TRACE((DATA "all chars exist in normal font, but not in bold\n"));
+	}
+    } else if (normal->per_char != 0) {
+	if (bold->per_char != 0) {
+	    result = 1;
+	} else {
+	    TRACE((DATA "normal font has per-char metrics, but not bold\n"));
+	}
+    } else {
+	TRACE((DATA "normal font is not very good!\n"));
+	result = 1;		/* give in (we're not going in reverse) */
+    }
+    return result;
+#undef DATA
+}
+
+/*
  * If the font server tries to adjust another font, it may not adjust it
  * properly.  Check that the bounding boxes are compatible.  Otherwise we'll
  * leave trash on the display when we mix normal and bold fonts.
@@ -913,7 +943,6 @@ reportOneVTFont(const char *tag,
 {
     if (!IsEmpty(fnt->fn)) {
 	XFontStruct *fs = fnt->fs;
-	unsigned missing = 0;
 	unsigned first_char = 0;
 	unsigned last_char = 0;
 	unsigned ch;
@@ -926,12 +955,6 @@ reportOneVTFont(const char *tag,
 	    last_char = (fs->max_byte1 * 256) + fs->max_char_or_byte2;
 	}
 
-	for (ch = first_char; ch <= last_char; ++ch) {
-	    if (xtermMissingChar(ch, fnt)) {
-		++missing;
-	    }
-	}
-
 	printf("\t%s: %s\n", tag, NonNull(fnt->fn));
 	printf("\t\tall chars:     %s\n", fs->all_chars_exist ? "yes" : "no");
 	printf("\t\tdefault char:  %d\n", fs->default_char);
@@ -941,8 +964,19 @@ reportOneVTFont(const char *tag,
 	printf("\t\tfirst char:    %u\n", first_char);
 	printf("\t\tlast char:     %u\n", last_char);
 	printf("\t\tmaximum-chars: %u\n", countGlyphs(fs));
-	printf("\t\tmissing-chars: %u\n", missing);
-	printf("\t\tpresent-chars: %u\n", countGlyphs(fs) - missing);
+	if (FontLacksMetrics(fnt)) {
+	    printf("\t\tmissing-chars: ?\n");
+	    printf("\t\tpresent-chars: ?\n");
+	} else {
+	    unsigned missing = 0;
+	    for (ch = first_char; ch <= last_char; ++ch) {
+		if (xtermMissingChar(ch, fnt)) {
+		    ++missing;
+		}
+	    }
+	    printf("\t\tmissing-chars: %u\n", missing);
+	    printf("\t\tpresent-chars: %u\n", countGlyphs(fs) - missing);
+	}
 	printf("\t\tmin_byte1:     %d\n", fs->min_byte1);
 	printf("\t\tmax_byte1:     %d\n", fs->max_byte1);
 	printf("\t\tproperties:    %d\n", fs->n_properties);
@@ -1014,6 +1048,24 @@ xtermUpdateFontGCs(XtermWidget xw, XTermFonts * fnts)
 	}
     });
 }
+
+#if OPT_TRACE
+static void
+show_font_misses(const char *name, XTermFonts * fp)
+{
+    if (fp->fs != 0) {
+	if (FontLacksMetrics(fp)) {
+	    TRACE(("%s font lacks metrics\n", name));
+	} else if (FontIsIncomplete(fp)) {
+	    TRACE(("%s font is incomplete\n", name));
+	} else {
+	    TRACE(("%s font is complete\n", name));
+	}
+    } else {
+	TRACE(("%s font is missing\n", name));
+    }
+}
+#endif
 
 int
 xtermLoadFont(XtermWidget xw,
@@ -1114,7 +1166,8 @@ xtermLoadFont(XtermWidget xw,
 	if (fp == 0 || fnts[fBold].fs == 0) {
 	    xtermCopyFontInfo(&fnts[fBold], &fnts[fNorm]);
 	    TRACE(("...cannot load a matching bold font\n"));
-	} else if (same_font_size(xw, fnts[fNorm].fs, fnts[fBold].fs)
+	} else if (comparable_metrics(fnts[fNorm].fs, fnts[fBold].fs)
+		   && same_font_size(xw, fnts[fNorm].fs, fnts[fBold].fs)
 		   && got_bold_font(screen->display, fnts[fBold].fs, myfonts.f_b)) {
 	    TRACE(("...got a matching bold font\n"));
 	    cache_menu_font_name(screen, fontnum, fBold, myfonts.f_b);
@@ -1241,8 +1294,10 @@ xtermLoadFont(XtermWidget xw,
     if_OPT_WIDE_CHARS(screen, {
 	if (fnts[fWide].fs != 0
 	    && fnts[fWBold].fs != 0
-	    && !same_font_size(xw, fnts[fWide].fs, fnts[fWBold].fs)
-	    && (is_fixed_font(fnts[fWide].fs) && is_fixed_font(fnts[fWBold].fs))) {
+	    && (!comparable_metrics(fnts[fWide].fs, fnts[fWBold].fs)
+		|| (!same_font_size(xw, fnts[fWide].fs, fnts[fWBold].fs)
+		    && is_fixed_font(fnts[fWide].fs)
+		    && is_fixed_font(fnts[fWBold].fs)))) {
 	    TRACE(("...ignoring mismatched normal/bold wide fonts\n"));
 	    xtermCloseFont(xw, &fnts[fWBold]);
 	    xtermCopyFontInfo(&fnts[fWBold], &fnts[fWide]);
@@ -1329,10 +1384,15 @@ xtermLoadFont(XtermWidget xw,
     {
 	unsigned ch;
 
-	TRACE(("normal font is %scomplete\n",
-	       FontIsIncomplete(&fnts[fNorm]) ? "in" : ""));
-	TRACE(("bold font is %scomplete\n",
-	       FontIsIncomplete(&fnts[fBold]) ? "in" : ""));
+#if OPT_TRACE
+#define TRACE_MISS(index) show_font_misses(#index, &fnts[index])
+	TRACE_MISS(fNorm);
+	TRACE_MISS(fBold);
+#if OPT_WIDE_CHARS
+	TRACE_MISS(fWide);
+	TRACE_MISS(fWBold);
+#endif
+#endif
 
 	for (ch = 1; ch < 32; ch++) {
 	    unsigned n = ch;
