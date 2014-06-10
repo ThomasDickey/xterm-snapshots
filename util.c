@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.648 2014/06/03 23:39:08 tom Exp $ */
+/* $XTermId: util.c,v 1.649 2014/06/09 23:43:18 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3222,13 +3222,14 @@ drawUnderline(XtermWidget xw,
     if (screen->underline && !did_ul) {
 	int repeat = 0;
 	int descent = FontDescent(screen);
+	int length = x + (int) underline_len * font_width - 1;
 
 #if OPT_WIDE_ATTRS
 	if ((attr_flags & ATR_STRIKEOUT)) {
 	    int where = y - ((3 * FontAscent(screen)) / 8);
 	    XDrawLine(screen->display, VDrawable(screen), gc,
 		      x, where,
-		      x + (int) underline_len * font_width - 1,
+		      length,
 		      where);
 	}
 	if ((attr_flags & ATR_DBL_UNDER)) {
@@ -3239,11 +3240,11 @@ drawUnderline(XtermWidget xw,
 	    repeat = 1;
 	}
 	while (repeat-- > 0) {
-	    if (descent-- > 0)
+	    if (descent-- > 1)
 		y++;
 	    XDrawLine(screen->display, VDrawable(screen), gc,
 		      x, y,
-		      x + (int) underline_len * font_width - 1,
+		      length,
 		      y);
 	}
     }

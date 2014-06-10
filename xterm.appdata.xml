@@ -2,7 +2,8 @@
 <!-- Copyright 2014 Thomas Dickey <dickey@invisible-island.net> -->
 <application>
  <id type="desktop">xterm.desktop</id>
- <licence>X11</licence>
+ <metadata_license>CC-BY-3.0</metadata_license>
+ <project_license>X11</project_license>
  <name>XTerm</name>
  <summary>Terminal emulator for the X Window System</summary>
  <description>
