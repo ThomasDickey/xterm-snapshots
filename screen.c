@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.496 2014/05/26 17:54:45 tom Exp $ */
+/* $XTermId: screen.c,v 1.497 2014/06/10 19:19:31 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -62,7 +62,7 @@
 
 #include <X11/Xatom.h>
 
-#if OPT_WIDE_CHARS
+#if OPT_WIDE_ATTRS || OPT_WIDE_CHARS
 #include <fontutils.h>
 #endif
 
