@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.497 2014/06/10 19:19:31 tom Exp $ */
+/* $XTermId: screen.c,v 1.498 2014/06/11 00:56:57 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1766,6 +1766,9 @@ ScrnRefresh(XtermWidget xw,
      * screen foreground and background so that other functions (e.g.,
      * ClearRight) will get the correct colors.
      */
+#if OPT_WIDE_ATTRS
+    (void) refreshFontGCs(xw, xw->flags, old_attrs);
+#endif
     if_OPT_ISO_COLORS(screen, {
 	if (gc_changes & FG_COLOR)
 	    SGR_Foreground(xw, xw->cur_foreground);
