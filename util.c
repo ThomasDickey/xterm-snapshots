@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.649 2014/06/09 23:43:18 tom Exp $ */
+/* $XTermId: util.c,v 1.651 2014/06/10 23:17:17 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3276,6 +3276,10 @@ drawXtermText(XtermWidget xw,
     int font_width = ((draw_flags & DOUBLEWFONT) ? 2 : 1) * screen->fnt_wide;
     Bool did_ul = False;
     XTermFonts *curFont;
+#if OPT_WIDE_ATTRS || OPT_WIDE_CHARS
+    int need_clipping = 0;
+    int ascent_adjust = 0;
+#endif
 
 #if OPT_WIDE_CHARS
     if (text == 0)
@@ -3836,7 +3840,6 @@ drawXtermText(XtermWidget xw,
     if (screen->wide_chars || screen->unicode_font) {
 	XChar2b *buffer;
 	Bool needWide = False;
-	int ascent_adjust = 0;
 	int src, dst;
 	Bool useBoldFont;
 
@@ -4027,6 +4030,44 @@ drawXtermText(XtermWidget xw,
 	char *buffer = (char *) text;
 #endif
 
+	/*
+	 * As a special case, we are currently allowing italic fonts to be
+	 * inexact matches for the normal font's size.  That introduces a
+	 * problem: either the ascent or descent may be shorter, leaving a
+	 * gap that has to be filled in.  Or they may be larger, requiring
+	 * clipping.  Check for both cases.
+	 */
+#if OPT_WIDE_ATTRS
+	if (attr_flags & ATR_ITALIC) {
+	    VTwin *cgsWin = WhichVWin(screen);
+	    XFontStruct *realFp = curFont->fs;
+	    XFontStruct *thisFp = getCgsFont(xw, cgsWin, gc)->fs;
+	    int need_filling = 0;
+
+	    if (thisFp->ascent > realFp->ascent)
+		need_clipping = 1;
+	    else if (thisFp->ascent < realFp->ascent)
+		need_filling = 1;
+
+	    if (thisFp->descent > realFp->descent)
+		need_clipping = 1;
+	    else if (thisFp->descent < realFp->descent)
+		need_filling = 1;
+
+	    if (need_clipping) {
+		beginClipping(screen, gc, font_width, length);
+	    }
+	    if (need_filling) {
+		xtermFillCells(xw,
+			       draw_flags,
+			       gc,
+			       x,
+			       y - realFp->ascent,
+			       len);
+	    }
+	}
+#endif
+
 	if (draw_flags & NOBACKGROUND) {
 	    XDrawString(screen->display, VDrawable(screen), gc,
 			x, y, buffer, length);
@@ -4034,6 +4075,14 @@ drawXtermText(XtermWidget xw,
 	    XDrawImageString(screen->display, VDrawable(screen), gc,
 			     x, y, buffer, length);
 	}
+
+#if OPT_WIDE_ATTRS
+	if (attr_flags & ATR_ITALIC) {
+	    if (need_clipping) {
+		endClipping(screen, gc);
+	    }
+	}
+#endif
 	underline_len = (Cardinal) length;
 	if ((attr_flags & BOLDATTR(screen)) && screen->enbolden) {
 	    beginClipping(screen, gc, font_width, length);

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1359 2014/06/03 23:38:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1360 2014/06/10 19:26:07 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -8545,7 +8545,9 @@ VTDestroy(Widget w GCC_UNUSED)
 	XFreeCursor(screen->display, screen->hidden_cursor);
 
     xtermCloseFonts(xw, screen->fnts);
+#if OPT_WIDE_ATTRS
     xtermCloseFonts(xw, screen->ifnts);
+#endif
     noleaks_cachedCgs(xw);
 
     TRACE_FREE_LEAK(screen->selection_targets_8bit);
@@ -8615,6 +8617,7 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.default_font.f_wb);
 #endif
 
+#if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
     for (n = 0; n < NMENUFONTS; ++n) {
 	for (k = 0; k < fMAX; ++k) {
 	    if (screen->menu_font_names[n][k] !=
@@ -8626,6 +8629,7 @@ VTDestroy(Widget w GCC_UNUSED)
 	    }
 	}
     }
+#endif
 
 #if OPT_SELECT_REGEX
     for (n = 0; n < NSELECTUNITS; ++n) {
