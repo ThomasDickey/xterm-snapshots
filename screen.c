@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.498 2014/06/11 00:56:57 tom Exp $ */
+/* $XTermId: screen.c,v 1.499 2014/06/11 18:40:34 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1423,7 +1423,7 @@ ScrnRefresh(XtermWidget xw,
 #endif
     static int recurse = 0;
 #if OPT_WIDE_ATTRS
-    unsigned old_attrs = 0;
+    unsigned old_attrs = xw->flags;
 #endif
 
     TRACE(("ScrnRefresh top %d (%d,%d) - (%d,%d)%s {{\n",
