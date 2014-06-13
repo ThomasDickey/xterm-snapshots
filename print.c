@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.151 2014/05/11 10:55:11 tom Exp $ */
+/* $XTermId: print.c,v 1.152 2014/06/13 00:36:51 tom Exp $ */
 
 /*
  * Copyright 1997-2013,2014 by Thomas E. Dickey
@@ -379,6 +379,12 @@ send_SGR(XtermWidget xw, unsigned attr, unsigned fg, unsigned bg)
     strcpy(msg, "\033[0");
     if (attr & BOLD)
 	strcat(msg, ";1");
+#if OPT_WIDE_ATTRS
+    if (attr & ATR_FAINT)
+	strcat(msg, ";2");
+    if (attr & ATR_ITALIC)
+	strcat(msg, ";3");
+#endif
     if (attr & UNDERLINE)
 	strcat(msg, ";4");	/* typo? DEC documents this as '2' */
     if (attr & BLINK)

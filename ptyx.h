@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.808 2014/05/26 15:32:29 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.809 2014/06/13 00:53:35 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2027,6 +2027,7 @@ typedef struct {
 #endif /* NO_ACTIVE_ICON */
 
 	int		pointer_mode;	/* when to use hidden_cursor	*/
+	int		pointer_mode0;	/* ...initial value             */
 	Boolean 	hide_pointer;	/* true to use "hidden_cursor"  */
 	Cursor		pointer_cursor;	/* pointer cursor in window	*/
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
@@ -2173,6 +2174,7 @@ typedef struct {
 	IFlags		save_modes[DP_LAST]; /* save dec/xterm private modes */
 
 	int		title_modes;	/* control set/get of titles	*/
+	int		title_modes0;	/* ...initial value         	*/
 	SaveTitle	*save_title;
 
 	/* Improved VT100 emulation stuff.				*/
@@ -2193,6 +2195,7 @@ typedef struct {
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
 	Boolean		fastscroll;	/* whether we should fastscroll */
 	Boolean		old_fkeys;	/* true for compatible fkeys	*/
+	Boolean		old_fkeys0;	/* ...initial value         	*/
 	Boolean		underline;	/* whether to underline text	*/
 
 #if OPT_MAXIMIZE
