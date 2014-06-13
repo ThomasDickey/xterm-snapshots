@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1362 2014/06/13 00:04:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1363 2014/06/13 00:53:14 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -7734,7 +7734,10 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.border);
     init_Bres(screen.jumpscroll);
     init_Bres(screen.fastscroll);
+
     init_Bres(screen.old_fkeys);
+    wnew->screen.old_fkeys0 = wnew->screen.old_fkeys;
+
     init_Bres(screen.delete_is_del);
     initializeKeyboardType(wnew);
 #ifdef ALLOWLOGGING
@@ -7784,6 +7787,8 @@ VTInitialize(Widget wrequest,
     TScreenOf(wnew)->vtXX_level = (TScreenOf(wnew)->terminal_id / 100);
 
     init_Ires(screen.title_modes);
+    wnew->screen.title_modes0 = wnew->screen.title_modes;
+
     init_Bres(screen.visualbell);
     init_Bres(screen.flash_line);
     init_Ires(screen.visualBellDelay);
@@ -7837,6 +7842,7 @@ VTInitialize(Widget wrequest,
 
     TScreenOf(wnew)->pointer_cursor = TScreenOf(request)->pointer_cursor;
     init_Ires(screen.pointer_mode);
+    wnew->screen.pointer_mode0 = wnew->screen.pointer_mode;
 
     init_Sres(screen.answer_back);
 
@@ -10402,7 +10408,10 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
 	TabReset(xw->tabs);
 	xw->keyboard.flags = MODE_SRM;
+
+	screen->old_fkeys = screen->old_fkeys0;
 	initializeKeyboardType(xw);
+
 #if OPT_INITIAL_ERASE
 	if (xw->keyboard.reset_DECBKM == 1)
 	    xw->keyboard.flags |= MODE_DECBKM;
@@ -10416,8 +10425,8 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 #if OPT_SCROLL_LOCK
 	xtermClearLEDs(screen);
 #endif
-	screen->title_modes = DEF_TITLE_MODES;
-	screen->pointer_mode = DEF_POINTER_MODE;
+	screen->title_modes = screen->title_modes0;
+	screen->pointer_mode = screen->pointer_mode0;
 #if OPT_SIXEL_GRAPHICS
 	if (TScreenOf(xw)->sixel_scrolling)
 	    xw->keyboard.flags |= MODE_DECSDM;
