@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1360 2014/06/10 19:26:07 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1362 2014/06/13 00:04:02 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -9933,6 +9933,28 @@ ShowCursor(void)
 	    XDrawLines(screen->display, VWindow(screen), outlineGC,
 		       screen->box, NBOX, CoordModePrevious);
 	} else {
+#if OPT_WIDE_ATTRS
+	    int italics_on = ((ld->attribs[cursor_col] & ATR_ITALIC) != 0);
+	    int italics_off = ((xw->flags & ATR_ITALIC) != 0);
+	    int fix_italics = (italics_on != italics_off);
+	    int which_font = (xw->flags & BOLD ? fBold : fNorm);
+
+	    if_OPT_WIDE_CHARS(screen, {
+		if (isWide((int) base)) {
+		    which_font = (xw->flags & BOLD ? fWBold : fWide);
+		}
+	    });
+
+	    if (fix_italics) {
+		xtermLoadItalics(xw);
+		if (italics_on) {
+		    setCgsFont(xw, currentWin, currentCgs, &screen->ifnts[which_font]);
+		} else {
+		    setCgsFont(xw, currentWin, currentCgs, &screen->fnts[which_font]);
+		}
+	    }
+	    currentGC = getCgsGC(xw, currentWin, currentCgs);
+#endif /* OPT_WIDE_ATTRS */
 
 	    drawXtermText(xw,
 			  flags & DRAWX_MASK,
@@ -9963,6 +9985,15 @@ ShowCursor(void)
 		XDrawLines(screen->display, VDrawable(screen), outlineGC,
 			   screen->box, NBOX, CoordModePrevious);
 	    }
+#if OPT_WIDE_ATTRS
+	    if (fix_italics) {
+		if (italics_on) {
+		    setCgsFont(xw, currentWin, currentCgs, &screen->fnts[which_font]);
+		} else {
+		    setCgsFont(xw, currentWin, currentCgs, &screen->ifnts[which_font]);
+		}
+	    }
+#endif
 	}
     }
     screen->cursor_state = ON;
@@ -9990,6 +10021,10 @@ HideCursor(void)
 #endif
     int cursor_col;
     LineData *ld = 0;
+#if OPT_WIDE_ATTRS
+    unsigned attr_flags;
+    int which_font = fNorm;
+#endif
 
     if (screen->cursor_state == OFF)
 	return;
@@ -10064,6 +10099,24 @@ HideCursor(void)
     else
 	in_selection = True;
 
+#if OPT_WIDE_ATTRS
+    attr_flags = ld->attribs[cursor_col];
+    if ((attr_flags & ATR_ITALIC) ^ (xw->flags & ATR_ITALIC)) {
+	which_font = (attr_flags & BOLD ? fBold : fNorm);
+
+	if_OPT_WIDE_CHARS(screen, {
+	    if (isWide((int) base)) {
+		which_font = (attr_flags & BOLD ? fWBold : fWide);
+	    }
+	});
+	setCgsFont(xw, WhichVWin(screen),
+		   whichXtermCgs(xw, attr_flags, in_selection),
+		   ((attr_flags & ATR_ITALIC)
+		    ? &screen->ifnts[which_font]
+		    : &screen->fnts[which_font]));
+    }
+#endif
+
     currentGC = updatedXtermGC(xw, flags, fg_bg, in_selection);
 
     TRACE(("HideCursor calling drawXtermText cur(%d,%d)\n",
@@ -10095,6 +10148,16 @@ HideCursor(void)
     });
 #endif
     screen->cursor_state = OFF;
+
+#if OPT_WIDE_ATTRS
+    if ((attr_flags & ATR_ITALIC) ^ (xw->flags & ATR_ITALIC)) {
+	setCgsFont(xw, WhichVWin(screen),
+		   whichXtermCgs(xw, xw->flags, in_selection),
+		   ((xw->flags & ATR_ITALIC)
+		    ? &screen->ifnts[which_font]
+		    : &screen->fnts[which_font]));
+    }
+#endif
     resetXtermGC(xw, flags, in_selection);
 
     refresh_displayed_graphics(screen,
