@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.651 2014/06/10 23:17:17 tom Exp $ */
+/* $XTermId: util.c,v 1.653 2014/06/12 23:41:05 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -4166,6 +4166,28 @@ getXtermSizeHints(XtermWidget xw)
     TRACE_HINTS(&(xw->hints));
 }
 
+CgsEnum
+whichXtermCgs(XtermWidget xw, unsigned attr_flags, Bool hilite)
+{
+    TScreen *screen = TScreenOf(xw);
+    CgsEnum cgsId = gcMAX;
+
+    if (ReverseOrHilite(screen, attr_flags, hilite)) {
+	if (attr_flags & BOLDATTR(screen)) {
+	    cgsId = gcBoldReverse;
+	} else {
+	    cgsId = gcNormReverse;
+	}
+    } else {
+	if (attr_flags & BOLDATTR(screen)) {
+	    cgsId = gcBold;
+	} else {
+	    cgsId = gcNorm;
+	}
+    }
+    return cgsId;
+}
+
 /*
  * Returns a GC, selected according to the font (reverse/bold/normal) that is
  * required for the current position (implied).  The GC is updated with the
@@ -4176,7 +4198,7 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, unsigned fg_bg, Bool hilite)
 {
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
-    CgsEnum cgsId = gcMAX;
+    CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
     unsigned my_fg = extract_fg(xw, fg_bg, attr_flags);
     unsigned my_bg = extract_bg(xw, fg_bg, attr_flags);
     Pixel fg_pix = getXtermForeground(xw, attr_flags, (int) my_fg);
@@ -4202,12 +4224,6 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, unsigned fg_bg, Bool hilite)
     checkVeryBoldColors(attr_flags, my_fg);
 
     if (ReverseOrHilite(screen, attr_flags, hilite)) {
-	if (attr_flags & BOLDATTR(screen)) {
-	    cgsId = gcBoldReverse;
-	} else {
-	    cgsId = gcNormReverse;
-	}
-
 #if OPT_HIGHLIGHT_COLOR
 	if (!screen->hilite_color) {
 	    if (selbg_pix != T_COLOR(screen, TEXT_FG)
@@ -4236,12 +4252,6 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, unsigned fg_bg, Bool hilite)
 	    }
 	}
 #endif
-    } else {
-	if (attr_flags & BOLDATTR(screen)) {
-	    cgsId = gcBold;
-	} else {
-	    cgsId = gcNorm;
-	}
     }
 #if OPT_HIGHLIGHT_COLOR
     if (!screen->hilite_color || !screen->hilite_reverse) {
@@ -4277,29 +4287,16 @@ resetXtermGC(XtermWidget xw, unsigned attr_flags, Bool hilite)
 {
     TScreen *screen = TScreenOf(xw);
     VTwin *win = WhichVWin(screen);
-    CgsEnum cgsId = gcMAX;
+    CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
     Pixel fg_pix = getXtermForeground(xw, attr_flags, xw->cur_foreground);
     Pixel bg_pix = getXtermBackground(xw, attr_flags, xw->cur_background);
 
     checkVeryBoldColors(attr_flags, xw->cur_foreground);
 
     if (ReverseOrHilite(screen, attr_flags, hilite)) {
-	if (attr_flags & BOLDATTR(screen)) {
-	    cgsId = gcBoldReverse;
-	} else {
-	    cgsId = gcNormReverse;
-	}
-
 	setCgsFore(xw, win, cgsId, bg_pix);
 	setCgsBack(xw, win, cgsId, fg_pix);
-
     } else {
-	if (attr_flags & BOLDATTR(screen)) {
-	    cgsId = gcBold;
-	} else {
-	    cgsId = gcNorm;
-	}
-
 	setCgsFore(xw, win, cgsId, fg_pix);
 	setCgsBack(xw, win, cgsId, bg_pix);
     }
