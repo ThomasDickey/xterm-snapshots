@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.433 2014/06/08 23:03:10 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.436 2014/06/15 20:29:33 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -1534,11 +1534,26 @@ xtermLoadItalics(XtermWidget xw)
 					  screen->fnts[n].fs,
 					  0)) != 0) {
 		if ((name = italic_font_name(fp, fp->average_width)) != 0) {
+		    TRACE(("xtermLoadItalics #%d %s\n", n, name));
 		    (void) xtermOpenFont(xw,
 					 name,
 					 &(screen->ifnts[n]),
 					 fwResource,
 					 False);
+#if OPT_TRACE
+		    {
+			XFontStruct *fs =
+			screen->ifnts[n].fs;
+			if (fs != 0) {
+			    TRACE(("...actual size %dx%d (ascent %d, descent %d)\n",
+				   fs->ascent +
+				   fs->descent,
+				   fs->max_bounds.width,
+				   fs->ascent,
+				   fs->descent));
+			}
+		    }
+#endif
 		    free(name);
 		}
 	    }
@@ -1587,7 +1602,18 @@ xtermLoadItalics(XtermWidget xw)
 	}
 
 #define COPY_DEFAULT_FONTS(target, source) \
-	target.default_font = source.default_font
+	xtermCopyVTFontNames(&target.default_font, &source.default_font)
+
+static void
+xtermCopyVTFontNames(VTFontNames * target, VTFontNames * source)
+{
+    target->f_n = x_strdup(source->f_n);
+    target->f_b = x_strdup(source->f_b);
+#if OPT_WIDE_CHARS
+    target->f_w = x_strdup(source->f_w);
+    target->f_wb = x_strdup(source->f_wb);
+#endif
+}
 
 void
 xtermSaveVTFonts(XtermWidget xw)

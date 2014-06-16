@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.653 2014/06/12 23:41:05 tom Exp $ */
+/* $XTermId: util.c,v 1.655 2014/06/15 21:43:23 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3251,6 +3251,55 @@ drawUnderline(XtermWidget xw,
     return y;
 }
 
+#if OPT_WIDE_ATTRS
+/*
+ * As a special case, we are currently allowing italic fonts to be inexact
+ * matches for the normal font's size.  That introduces a problem:  either the
+ * ascent or descent may be shorter, leaving a gap that has to be filled in. 
+ * Or they may be larger, requiring clipping.  Check for both cases.
+ */
+static int
+fixupItalics(XtermWidget xw,
+	     unsigned draw_flags,
+	     GC gc,
+	     XTermFonts * curFont,
+	     int y, int x,
+	     int font_width,
+	     int len
+)
+{
+    TScreen *screen = TScreenOf(xw);
+    VTwin *cgsWin = WhichVWin(screen);
+    XFontStruct *realFp = curFont->fs;
+    XFontStruct *thisFp = getCgsFont(xw, cgsWin, gc)->fs;
+    int need_clipping = 0;
+    int need_filling = 0;
+
+    if (thisFp->ascent > realFp->ascent)
+	need_clipping = 1;
+    else if (thisFp->ascent < realFp->ascent)
+	need_filling = 1;
+
+    if (thisFp->descent > realFp->descent)
+	need_clipping = 1;
+    else if (thisFp->descent < realFp->descent)
+	need_filling = 1;
+
+    if (need_clipping) {
+	beginClipping(screen, gc, font_width, len);
+    }
+    if (need_filling) {
+	xtermFillCells(xw,
+		       draw_flags,
+		       gc,
+		       x,
+		       y - realFp->ascent,
+		       len);
+    }
+    return need_clipping;
+}
+#endif
+
 /*
  * Draws text with the specified combination of bold/underline.  The return
  * value is the updated x position.
@@ -3342,6 +3391,7 @@ drawXtermText(XtermWidget xw,
 		if (nr) {
 		    xtermSetClipRectangles(screen->display, gc2,
 					   x, y, rp, nr, YXBanded);
+		    xtermFillCells(xw, draw_flags, gc, x, y + rect.y, len * 2);
 		} else {
 		    XSetClipMask(screen->display, gc2, None);
 		}
@@ -3973,6 +4023,12 @@ drawXtermText(XtermWidget xw,
 	    setCgsBack(xw, currentWin, cgsId, bg);
 	    gc = getCgsGC(xw, currentWin, cgsId);
 
+#if OPT_WIDE_ATTRS
+	    if (attr_flags & ATR_ITALIC) {
+		need_clipping = fixupItalics(xw, draw_flags, gc, curFont,
+					     y, x, font_width, len);
+	    }
+#endif
 	    if (fntId != fNorm) {
 		XFontStruct *thisFp = WhichVFont(screen, fnts[fntId].fs);
 		ascent_adjust = (thisFp->ascent
@@ -4003,6 +4059,13 @@ drawXtermText(XtermWidget xw,
 			       x, y + ascent_adjust,
 			       buffer, dst);
 	}
+#if OPT_WIDE_ATTRS
+	if (attr_flags & ATR_ITALIC) {
+	    if (need_clipping) {
+		endClipping(screen, gc);
+	    }
+	}
+#endif
 
 	if ((attr_flags & BOLDATTR(screen)) && (screen->enbolden || !useBoldFont)) {
 	    beginClipping(screen, gc, (Cardinal) font_width, len);
@@ -4030,41 +4093,10 @@ drawXtermText(XtermWidget xw,
 	char *buffer = (char *) text;
 #endif
 
-	/*
-	 * As a special case, we are currently allowing italic fonts to be
-	 * inexact matches for the normal font's size.  That introduces a
-	 * problem: either the ascent or descent may be shorter, leaving a
-	 * gap that has to be filled in.  Or they may be larger, requiring
-	 * clipping.  Check for both cases.
-	 */
 #if OPT_WIDE_ATTRS
 	if (attr_flags & ATR_ITALIC) {
-	    VTwin *cgsWin = WhichVWin(screen);
-	    XFontStruct *realFp = curFont->fs;
-	    XFontStruct *thisFp = getCgsFont(xw, cgsWin, gc)->fs;
-	    int need_filling = 0;
-
-	    if (thisFp->ascent > realFp->ascent)
-		need_clipping = 1;
-	    else if (thisFp->ascent < realFp->ascent)
-		need_filling = 1;
-
-	    if (thisFp->descent > realFp->descent)
-		need_clipping = 1;
-	    else if (thisFp->descent < realFp->descent)
-		need_filling = 1;
-
-	    if (need_clipping) {
-		beginClipping(screen, gc, font_width, length);
-	    }
-	    if (need_filling) {
-		xtermFillCells(xw,
-			       draw_flags,
-			       gc,
-			       x,
-			       y - realFp->ascent,
-			       len);
-	    }
+	    need_clipping = fixupItalics(xw, draw_flags, gc, curFont,
+					 y, x, font_width, len);
 	}
 #endif
 
