@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.657 2014/06/17 21:54:28 tom Exp $ */
+/* $XTermId: util.c,v 1.658 2014/06/17 23:20:43 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3663,14 +3663,14 @@ drawXtermText(XtermWidget xw,
 	}
 #endif /* OPT_BOX_CHARS */
 
-	y = drawUnderline(xw,
-			  gc,
-			  attr_flags,
-			  underline_len,
-			  FontWidth(screen),
-			  x,
-			  y,
-			  did_ul);
+	(void) drawUnderline(xw,
+			     gc,
+			     attr_flags,
+			     underline_len,
+			     FontWidth(screen),
+			     x,
+			     y,
+			     did_ul);
 
 	x += (int) len *FontWidth(screen);
 
@@ -4115,14 +4115,14 @@ drawXtermText(XtermWidget xw,
 	}
     }
 
-    y = drawUnderline(xw,
-		      gc,
-		      attr_flags,
-		      underline_len,
-		      font_width,
-		      x,
-		      y,
-		      did_ul);
+    (void) drawUnderline(xw,
+			 gc,
+			 attr_flags,
+			 underline_len,
+			 font_width,
+			 x,
+			 y,
+			 did_ul);
 
     x += ((int) real_length) * FontWidth(screen);
     return x;
