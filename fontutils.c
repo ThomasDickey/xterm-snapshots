@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.436 2014/06/15 20:29:33 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.439 2014/06/17 20:38:27 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -107,20 +107,20 @@
  */
 typedef struct {
     /* registry, foundry, family */
-    char *beginning;
+    const char *beginning;
     /* weight */
-    char *weight;
+    const char *weight;
     /* slant */
-    char *slant;
+    const char *slant;
     /* wideness */
-    char *wideness;
+    const char *wideness;
     /* add style */
-    char *add_style;
+    const char *add_style;
     int pixel_size;
-    char *point_size;
+    const char *point_size;
     int res_x;
     int res_y;
-    char *spacing;
+    const char *spacing;
     int average_width;
     /* charset registry, charset encoding */
     char *end;
@@ -215,7 +215,7 @@ setupPackedFonts(XtermWidget xw)
 
 /*
  * Returns the fields from start to stop in a dash- separated string.  This
- * function will modify the source, putting '\0's in the appropiate place and
+ * function will modify the source, putting '\0's in the appropriate place and
  * moving the beginning forward to after the '\0'
  *
  * This will NOT work for the last field (but we won't need it).
@@ -469,7 +469,7 @@ static char *
 italic_font_name(FontNameProperties *props, int use_average_width)
 {
     FontNameProperties myprops = *props;
-    myprops.slant = (char *) "o";
+    myprops.slant = "o";
     return derive_font_name(&myprops, props->weight, use_average_width, props->end);
 }
 #endif
@@ -794,10 +794,10 @@ static void
 cache_menu_font_name(TScreen *screen, int fontnum, int which, const char *name)
 {
     if (name != 0) {
-	char *last = (char *) screen->menu_font_names[fontnum][which];
+	String last = screen->menu_font_names[fontnum][which];
 	if (last != 0) {
 	    if (strcmp(last, name)) {
-		free(last);
+		FREE_STRING(last);
 		TRACE(("caching menu fontname %d.%d %s\n", fontnum, which, name));
 		screen->menu_font_names[fontnum][which] = x_strdup(name);
 	    }

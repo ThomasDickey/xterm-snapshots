@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.655 2014/06/15 21:43:23 tom Exp $ */
+/* $XTermId: util.c,v 1.657 2014/06/17 21:54:28 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3265,8 +3265,7 @@ fixupItalics(XtermWidget xw,
 	     XTermFonts * curFont,
 	     int y, int x,
 	     int font_width,
-	     int len
-)
+	     Cardinal len)
 {
     TScreen *screen = TScreenOf(xw);
     VTwin *cgsWin = WhichVWin(screen);
@@ -3286,7 +3285,7 @@ fixupItalics(XtermWidget xw,
 	need_filling = 1;
 
     if (need_clipping) {
-	beginClipping(screen, gc, font_width, len);
+	beginClipping(screen, gc, font_width, (int) len);
     }
     if (need_filling) {
 	xtermFillCells(xw,
@@ -4024,10 +4023,8 @@ drawXtermText(XtermWidget xw,
 	    gc = getCgsGC(xw, currentWin, cgsId);
 
 #if OPT_WIDE_ATTRS
-	    if (attr_flags & ATR_ITALIC) {
-		need_clipping = fixupItalics(xw, draw_flags, gc, curFont,
-					     y, x, font_width, len);
-	    }
+	    need_clipping = fixupItalics(xw, draw_flags, gc, curFont,
+					 y, x, font_width, len);
 #endif
 	    if (fntId != fNorm) {
 		XFontStruct *thisFp = WhichVFont(screen, fnts[fntId].fs);
@@ -4060,10 +4057,8 @@ drawXtermText(XtermWidget xw,
 			       buffer, dst);
 	}
 #if OPT_WIDE_ATTRS
-	if (attr_flags & ATR_ITALIC) {
-	    if (need_clipping) {
-		endClipping(screen, gc);
-	    }
+	if (need_clipping) {
+	    endClipping(screen, gc);
 	}
 #endif
 
@@ -4094,10 +4089,8 @@ drawXtermText(XtermWidget xw,
 #endif
 
 #if OPT_WIDE_ATTRS
-	if (attr_flags & ATR_ITALIC) {
-	    need_clipping = fixupItalics(xw, draw_flags, gc, curFont,
-					 y, x, font_width, len);
-	}
+	need_clipping = fixupItalics(xw, draw_flags, gc, curFont,
+				     y, x, font_width, len);
 #endif
 
 	if (draw_flags & NOBACKGROUND) {
@@ -4109,10 +4102,8 @@ drawXtermText(XtermWidget xw,
 	}
 
 #if OPT_WIDE_ATTRS
-	if (attr_flags & ATR_ITALIC) {
-	    if (need_clipping) {
-		endClipping(screen, gc);
-	    }
+	if (need_clipping) {
+	    endClipping(screen, gc);
 	}
 #endif
 	underline_len = (Cardinal) length;
