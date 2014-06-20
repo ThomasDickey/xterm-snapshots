@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.658 2014/06/17 23:20:43 tom Exp $ */
+/* $XTermId: util.c,v 1.659 2014/06/19 21:05:55 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -4023,7 +4023,8 @@ drawXtermText(XtermWidget xw,
 	    gc = getCgsGC(xw, currentWin, cgsId);
 
 #if OPT_WIDE_ATTRS
-	    need_clipping = fixupItalics(xw, draw_flags, gc, curFont,
+	    need_clipping = fixupItalics(xw, draw_flags, gc,
+					 getCgsFont(xw, currentWin, gc),
 					 y, x, font_width, len);
 #endif
 	    if (fntId != fNorm) {

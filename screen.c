@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.499 2014/06/11 18:40:34 tom Exp $ */
+/* $XTermId: screen.c,v 1.500 2014/06/19 21:09:11 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1431,6 +1431,8 @@ ScrnRefresh(XtermWidget xw,
 	   nrows, ncols,
 	   force ? " force" : ""));
 
+    ++recurse;
+
     if (screen->cursorp.col >= leftcol
 	&& screen->cursorp.col <= (leftcol + ncols - 1)
 	&& screen->cursorp.row >= ROW2INX(screen, toprow)
@@ -1510,7 +1512,7 @@ ScrnRefresh(XtermWidget xw,
 		    col = leftcol;
 		}
 	    } else {
-		xtermWarning("This should not happen. Why is it so?\n");
+		xtermWarning("Unexpected recursion drawing hidden characters.\n");
 	    }
 	});
 
@@ -1549,13 +1551,11 @@ ScrnRefresh(XtermWidget xw,
 	} else {
 	    /* row intersects selection; split into pieces of single type */
 	    if (row == screen->startH.row && col < screen->startH.col) {
-		recurse++;
 		ScrnRefresh(xw, row, col, 1, screen->startH.col - col,
 			    force);
 		col = screen->startH.col;
 	    }
 	    if (row == screen->endH.row && maxcol >= screen->endH.col) {
-		recurse++;
 		ScrnRefresh(xw, row, screen->endH.col, 1,
 			    maxcol - screen->endH.col + 1, force);
 		maxcol = screen->endH.col - 1;
