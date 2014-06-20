@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.659 2014/06/19 21:05:55 tom Exp $ */
+/* $XTermId: util.c,v 1.660 2014/06/19 22:15:20 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -4023,9 +4023,12 @@ drawXtermText(XtermWidget xw,
 	    gc = getCgsGC(xw, currentWin, cgsId);
 
 #if OPT_WIDE_ATTRS
-	    need_clipping = fixupItalics(xw, draw_flags, gc,
-					 getCgsFont(xw, currentWin, gc),
-					 y, x, font_width, len);
+#if OPT_DEC_CHRSET
+	    if (!(CSET_DOUBLE(chrset) || (draw_flags & DOUBLEWFONT)))
+#endif
+		need_clipping = fixupItalics(xw, draw_flags, gc,
+					     getCgsFont(xw, currentWin, gc),
+					     y, x, font_width, len);
 #endif
 	    if (fntId != fNorm) {
 		XFontStruct *thisFp = WhichVFont(screen, fnts[fntId].fs);
@@ -4090,8 +4093,11 @@ drawXtermText(XtermWidget xw,
 #endif
 
 #if OPT_WIDE_ATTRS
-	need_clipping = fixupItalics(xw, draw_flags, gc, curFont,
-				     y, x, font_width, len);
+#if OPT_DEC_CHRSET
+	if (!(CSET_DOUBLE(chrset) || (draw_flags & DOUBLEWFONT)))
+#endif
+	    need_clipping = fixupItalics(xw, draw_flags, gc, curFont,
+					 y, x, font_width, len);
 #endif
 
 	if (draw_flags & NOBACKGROUND) {
