@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1363 2014/06/13 00:53:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1366 2014/06/28 20:53:02 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -544,7 +544,7 @@ static XtResource xterm_resources[] =
 #if OPT_BLINK_CURS
     Bres(XtNcursorBlink, XtCCursorBlink, screen.cursor_blink, False),
 #endif
-    Bres(XtNcursorUnderline, XtCCursorUnderline, screen.cursor_underline, False),
+    Bres(XtNcursorUnderLine, XtCCursorUnderLine, screen.cursor_underline, False),
 
 #if OPT_BLINK_TEXT
     Bres(XtNshowBlinkAsBold, XtCCursorBlink, screen.blink_as_bold, DEFBLINKASBOLD),
@@ -3394,7 +3394,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    change = False;
 		    break;
 		}
-
+		TRACE(("cursor_shape:%d blinks:%s\n",
+		       screen->cursor_shape, BtoS(blinks)));
 		if (change) {
 		    xtermSetCursorBox(screen);
 		    screen->cursor_blink_esc = blinks;
@@ -7495,6 +7496,11 @@ initializeKeyboardType(XtermWidget xw)
 	: keyboardIsDefault;
 }
 
+#define InitCursorShape(target, source) \
+    target->cursor_shape = source->cursor_underline \
+	? CURSOR_UNDERLINE \
+	: CURSOR_BLOCK
+
 /* ARGSUSED */
 static void
 VTInitialize(Widget wrequest,
@@ -7724,10 +7730,12 @@ VTInitialize(Widget wrequest,
     init_Ires(screen.blink_off);
     TScreenOf(wnew)->cursor_blink_res = TScreenOf(wnew)->cursor_blink;
 #endif
+    init_Bres(screen.cursor_underline);
     /* resources allow for underline or block, not (yet) bar */
-    TScreenOf(wnew)->cursor_shape = request->screen.cursor_underline
-	? CURSOR_UNDERLINE
-	: CURSOR_BLOCK;
+    InitCursorShape(TScreenOf(wnew), TScreenOf(request));
+    TRACE(("cursor_shape:%d blinks:%s\n",
+	   TScreenOf(wnew)->cursor_shape,
+	   BtoS(TScreenOf(wnew)->cursor_blink)));
 #if OPT_BLINK_TEXT
     init_Ires(screen.blink_as_bold);
 #endif
@@ -10366,7 +10374,10 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 
     /* make cursor visible */
     screen->cursor_set = ON;
-    screen->cursor_shape = CURSOR_BLOCK;
+    InitCursorShape(screen, screen);
+    TRACE(("cursor_shape:%d blinks:%s\n",
+	   screen->cursor_shape,
+	   BtoS(screen->cursor_blink)));
 
     /* reset scrolling region */
     reset_margins(screen);
