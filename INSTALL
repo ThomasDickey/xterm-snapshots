@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.151 2014/05/08 07:58:06 tom Exp $
+-- $XTermId: INSTALL,v 1.152 2014/07/12 22:40:36 Steve.Wall Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2013,2014 by Thomas E. Dickey
 --
@@ -461,7 +461,7 @@ The options (in alphabetic order):
 
   --enable-narrowproto    enable narrow prototypes for X libraries
 
-	Originally xterm was built using imake rather than a configure script. 
+	Originally xterm was built using imake rather than a configure script.
 	One feature of imake that is not possible to guess within the
 	configure script is the wide-prototype compile-time definition
 	NARROWPROTO.  When this is not set properly, the Athena widget
@@ -540,6 +540,10 @@ The options (in alphabetic order):
 
   	Look for, compile and link with the Xaw 3d widget library.
 
+  --with-Xaw3dxft         link with Xaw 3d xft library
+
+	Look for, compile and link with the Xaw 3d xft widget library.
+
   --with-XawPlus          link with Athena-Plus library
 
   	Look for, compile and link with the Xaw Plus widget library.
@@ -601,7 +605,7 @@ The options (in alphabetic order):
 	just one of the variations:
 
 	"pkg*", e.g., pkg-config or pkgconfig uses whatever pkg-config
-		script was found. 
+		script was found.
 
 	otherwise, the parameter value is used as the name of the script
 	to try, using --cflags and --libs options.
@@ -724,7 +728,7 @@ The options (in alphabetic order):
 
 	If xterm is installed setuid'd to root, change the group of the tty
 	device to the given value on startup.  Three cases are possible:
-	
+
 	a) If this option is not given, the configure script will attempt to
 	   find a suitable value (usually "tty"), and verify that it exists in
 	   the group database.

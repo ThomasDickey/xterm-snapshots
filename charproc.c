@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1366 2014/06/28 20:53:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1367 2014/07/12 22:49:54 Steve.Wall Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -94,6 +94,8 @@
 #include <X11/Xaw/XawImP.h>
 #elif defined(HAVE_LIB_XAW3D)
 #include <X11/Xaw3d/XawImP.h>
+#elif defined(HAVE_LIB_XAW3DXFT)
+#include <X11/Xaw3dxft/XawImP.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/XawImP.h>
 #elif defined(HAVE_LIB_XAWPLUS)

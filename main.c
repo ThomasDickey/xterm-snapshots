@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.758 2014/05/26 00:01:25 tom Exp $ */
+/* $XTermId: main.c,v 1.760 2014/07/12 22:50:07 Steve.Wall Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -102,6 +102,8 @@
 #include <X11/Xaw/Form.h>
 #elif defined(HAVE_LIB_XAW3D)
 #include <X11/Xaw3d/Form.h>
+#elif defined(HAVE_LIB_XAW3DXFT)
+#include <X11/Xaw3dxft/Form.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/Form.h>
 #elif defined(HAVE_LIB_XAWPLUS)
@@ -2550,7 +2552,9 @@ main(int argc, char *argv[]ENVP_ARG)
     });
     XSetErrorHandler(xerror);
     XSetIOErrorHandler(xioerror);
+#if OPT_SESSION_MGT
     IceSetIOErrorHandler(ice_error);
+#endif
 
     initPtyData(&VTbuffer);
 #ifdef ALLOWLOGGING
