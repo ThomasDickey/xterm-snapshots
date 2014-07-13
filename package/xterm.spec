@@ -1,4 +1,4 @@
-# $XTermId: xterm.spec,v 1.73 2014/06/28 14:34:28 tom Exp $
+# $XTermId: xterm.spec,v 1.74 2014/07/13 15:29:11 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
@@ -123,6 +123,7 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-logging \
 	--enable-mini-luit \
 	--enable-paste64 \
+	--enable-regis-graphics \
 	--enable-sco-fkeys \
 	--enable-sixel-graphics \
 	--enable-tcap-fkeys \
