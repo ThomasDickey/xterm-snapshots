@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.325 2014/05/05 21:47:35 tom Exp $ */
+/* $XTermId: menu.c,v 1.326 2014/07/12 22:50:28 Steve.Wall Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -87,6 +87,18 @@
 #if OPT_TOOLBAR
 #include <X11/Xaw3d/MenuButton.h>
 #include <X11/Xaw3d/Form.h>
+#endif
+
+#elif defined(HAVE_LIB_XAW3DXFT)
+
+#include <X11/Xaw3dxft/SimpleMenu.h>
+#include <X11/Xaw3dxft/Box.h>
+#include <X11/Xaw3dxft/SmeBSB.h>
+#include <X11/Xaw3dxft/SmeLine.h>
+
+#if OPT_TOOLBAR
+#include <X11/Xaw3dxft/MenuButton.h>
+#include <X11/Xaw3dxft/Form.h>
 #endif
 
 #elif defined(HAVE_LIB_NEXTAW)
