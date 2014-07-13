@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.439 2014/06/17 20:38:27 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.440 2014/07/13 00:34:40 Ross.Combs Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -2072,7 +2072,7 @@ reportXftFonts(XtermWidget xw,
 	FcChar32 ch;
 	unsigned missing = 0;
 
-	printf("Loaded XftFonts(%s:%s)\n", name, tag);
+	printf("Loaded XftFonts(%s[%s])\n", name, tag);
 
 	for (ch = first_char; ch <= last_char; ++ch) {
 	    if (xtermXftMissing(xw, fp, ch)) {
