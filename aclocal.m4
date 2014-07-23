@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.376 2014/07/13 18:36:02 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.377 2014/07/22 19:59:00 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -84,7 +84,7 @@ define([CF_ACVERSION_COMPARE],
 [ifelse([$8], , ,[$8])],
 [ifelse([$9], , ,[$9])])])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_ADD_CFLAGS version: 10 updated: 2010/05/26 05:38:42
+dnl CF_ADD_CFLAGS version: 11 updated: 2014/07/22 05:32:57
 dnl -------------
 dnl Copy non-preprocessor flags to $CFLAGS, preprocessor flags to $CPPFLAGS
 dnl The second parameter if given makes this macro verbose.
@@ -109,7 +109,7 @@ no)
 		-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[[^=]]*='\''\"[[^"]]*//'`
 
-			test "${cf_add_cflags}" != "${cf_tst_cflags}" \
+			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
 				&& test -z "${cf_tst_cflags}" \
 				&& cf_fix_cppflags=yes
 
@@ -146,7 +146,7 @@ yes)
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[[^"]]*"'\''//'`
 
-	test "${cf_add_cflags}" != "${cf_tst_cflags}" \
+	test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
 		&& test -z "${cf_tst_cflags}" \
 		&& cf_fix_cppflags=no
 	;;
@@ -315,7 +315,7 @@ if test ".$system_name" != ".$cf_cv_system_name" ; then
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_CHECK_CFLAGS version: 2 updated: 2001/12/30 19:09:58
+dnl CF_CHECK_CFLAGS version: 3 updated: 2014/07/22 05:32:57
 dnl ---------------
 dnl Conditionally add to $CFLAGS and $CPPFLAGS values which are derived from
 dnl a build-configuration such as imake.  These have the pitfall that they
@@ -327,10 +327,10 @@ CF_VERBOSE(checking additions to CFLAGS)
 cf_check_cflags="$CFLAGS"
 cf_check_cppflags="$CPPFLAGS"
 CF_ADD_CFLAGS($1,yes)
-if test "$cf_check_cflags" != "$CFLAGS" ; then
+if test "x$cf_check_cflags" != "x$CFLAGS" ; then
 AC_TRY_LINK([#include <stdio.h>],[printf("Hello world");],,
 	[CF_VERBOSE(test-compile failed.  Undoing change to \$CFLAGS)
-	 if test "$cf_check_cppflags" != "$CPPFLAGS" ; then
+	 if test "x$cf_check_cppflags" != "x$CPPFLAGS" ; then
 		 CF_VERBOSE(but keeping change to \$CPPFLAGS)
 	 fi
 	 CFLAGS="$cf_check_flags"])
