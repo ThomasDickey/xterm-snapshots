@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.744 2014/07/22 22:31:35 tom Exp $ */
+/* $XTermId: xterm.h,v 1.745 2014/07/24 22:47:09 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -99,7 +99,7 @@
 #define HAVE_PUTENV 1
 #endif
 
-#if defined(CSRG_BASED) || defined(__GNU__) || defined(MINIX3)
+#if defined(CSRG_BASED) || defined(__GNU__) || defined(__minix)
 #define USE_POSIX_TERMIOS 1
 #endif
 
@@ -134,7 +134,7 @@
 #define HAVE_TCGETATTR 1
 #endif
 
-#if defined(__SCO__) || defined(__UNIXWARE__) || defined(MINIX3)
+#if defined(__SCO__) || defined(__UNIXWARE__) || defined(__minix)
 #define USE_TERMCAP 1
 #endif
 

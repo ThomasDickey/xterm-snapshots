@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.761 2014/07/22 22:29:17 tom Exp $ */
+/* $XTermId: main.c,v 1.762 2014/07/24 22:47:09 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -2509,7 +2509,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif
 #endif
-#if defined(USE_ANY_SYSV_TERMIO) || defined(__MVS__) || defined(MINIX3)
+#if defined(USE_ANY_SYSV_TERMIO) || defined(__MVS__) || defined(__minix)
     if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
 	SysError(ERROR_F_GETFL);
 #ifdef O_NDELAY
@@ -5373,7 +5373,7 @@ qsetlogin(char *login, char *ttyname)
 }
 #endif
 
-#ifdef MINIX3
+#ifdef __minix
 int
 setpgrp(void)
 {
