@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.440 2014/07/13 00:34:40 Ross.Combs Exp $ */
+/* $XTermId: fontutils.c,v 1.441 2014/09/01 23:35:11 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -1145,7 +1145,9 @@ xtermLoadFont(XtermWidget xw,
 		       &fnts[fNorm],
 		       warn[fNorm],
 		       (fontnum == fontMenu_default))) {
-	SetItemSensitivity(fontMenuEntries[fontnum].widget, False);
+	if (fontnum != fontMenu_fontsel) {
+	    SetItemSensitivity(fontMenuEntries[fontnum].widget, False);
+	}
 	goto bad;
     }
 
@@ -1477,7 +1479,7 @@ xtermLoadFont(XtermWidget xw,
 	free(tmpname);
 
 #if OPT_RENDERFONT
-    if (fontnum == fontMenu_fontsel) {
+    if ((fontnum == fontMenu_fontsel) && (fontnum != screen->menu_font_number)) {
 	int old_fontnum = screen->menu_font_number;
 #if OPT_TOOLBAR
 	SetItemSensitivity(fontMenuEntries[fontnum].widget, True);
@@ -1492,8 +1494,10 @@ xtermLoadFont(XtermWidget xw,
 	TRACE(("...recovering for TrueType fonts\n"));
 	code = xtermLoadFont(xw, &myfonts, doresize, fontnum);
 	if (code) {
-	    SetItemSensitivity(fontMenuEntries[fontnum].widget,
-			       UsingRenderFont(xw));
+	    if (fontnum != fontMenu_fontsel) {
+		SetItemSensitivity(fontMenuEntries[fontnum].widget,
+				   UsingRenderFont(xw));
+	    }
 	    TRACE(("...recovered size %dx%d\n",
 		   FontHeight(screen),
 		   FontWidth(screen)));
