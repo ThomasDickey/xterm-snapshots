@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1367 2014/07/12 22:49:54 Steve.Wall Exp $ */
+/* $XTermId: charproc.c,v 1.1368 2014/09/02 08:40:24 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -10830,7 +10830,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
     Atom target;
 
     if (!atom_name)
-	atom_name = (screen->mappedSelect
+	atom_name = ((screen->mappedSelect && atomCount)
 		     ? screen->mappedSelect[0]
 		     : "PRIMARY");
     TRACE(("FindFontSelection(%s)\n", atom_name));
