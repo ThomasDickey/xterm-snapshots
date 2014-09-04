@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.809 2014/06/13 00:53:35 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.810 2014/09/02 22:09:59 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2328,6 +2328,8 @@ typedef struct {
 	String		initial_font;
 	String		menu_font_names[NMENUFONTS][fMAX];
 #define MenuFontName(n) menu_font_names[n][fNorm]
+#define EscapeFontName() MenuFontName(fontMenu_fontescape)
+#define SelectFontName() MenuFontName(fontMenu_fontsel)
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS
