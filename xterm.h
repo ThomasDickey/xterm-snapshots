@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.745 2014/07/24 22:47:09 tom Exp $ */
+/* $XTermId: xterm.h,v 1.746 2014/09/03 23:58:49 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -366,6 +366,12 @@ extern char **environ;
 #define XK_Fn(n)	(XK_F1 + (n) - 1)
 
 #define Maybe		2
+
+#define ALLOC_STRING(name) \
+	if (name != 0) \
+	    name = x_strdup(name)
+#define FREE_STRING(name) \
+	    free_string(name)
 
 /***====================================================================***/
 
@@ -1066,6 +1072,7 @@ extern void do_rpm (XtermWidget /* xw */, int /* nparam */, int *  /* params */)
 extern void do_xevents (void);
 extern void end_tek_mode (void);
 extern void end_vt_mode (void);
+extern void free_string(String value);
 extern void hide_tek_window (void);
 extern void hide_vt_window (void);
 extern void ice_error (IceConn /* iceConn */);

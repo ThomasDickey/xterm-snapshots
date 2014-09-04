@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.441 2014/09/01 23:35:11 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.443 2014/09/03 23:58:53 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -50,12 +50,6 @@
 
 #include <stdio.h>
 #include <ctype.h>
-
-#define ALLOC_STRING(name) \
-	if (name != 0) \
-	    name = x_strdup(name)
-#define FREE_STRING(name) \
-	    free_string(name)
 
 #define SetFontWidth(screen,dst,src)  (dst)->f_width = (src)
 #define SetFontHeight(screen,dst,src) (dst)->f_height = dimRound((screen)->scale_height * (float) (src))
@@ -125,12 +119,6 @@ typedef struct {
     /* charset registry, charset encoding */
     char *end;
 } FontNameProperties;
-
-static void
-free_string(String value)
-{
-    free((void *) value);
-}
 
 #if OPT_RENDERFONT
 static void fillInFaceSize(XtermWidget, int);
@@ -1439,8 +1427,7 @@ xtermLoadFont(XtermWidget xw,
 	    FREE_STRING(screen->MenuFontName(fontnum));
 	screen->MenuFontName(fontnum) = tmpname;
 	if (fontnum == fontMenu_fontescape) {
-	    SetItemSensitivity(fontMenuEntries[fontMenu_fontescape].widget,
-			       True);
+	    update_font_escape();
 	}
 #if OPT_SHIFT_FONTS
 	screen->menu_font_sizes[fontnum] = FontSize(fnts[fNorm].fs);
