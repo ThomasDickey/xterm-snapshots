@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.43 2014/09/07 23:21:11 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.c,v 1.44 2014/09/17 08:35:49 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -4777,8 +4777,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 					      (RegisterNum) register_num,
 					      r, g, b);
 			continue;
-		    }
-		     {
+		    } {
 			char skip;
 
 			skip = pop_fragment(&optionarg);
@@ -5055,8 +5054,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("size multiplier: %s\n",
 		       fragment_to_tempstr(&sizemultiplierarg)));
-		load_regis_extent(fragment_to_tempstr(&sizemultiplierarg),
-				  0, 0, &ww, &hh);
+		if (!load_regis_extent(fragment_to_tempstr(&sizemultiplierarg),
+				       0, 0, &ww, &hh)) {
+		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
+			   state->option, fragment_to_tempstr(&sizemultiplierarg)));
+		    break;
+		}
 		if (!regis_num_to_int(&sizemultiplierarg, &sizemultiplier)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in size multiplier option: \"%s\"\n",
 			   fragment_to_tempstr(&sizemultiplierarg)));
@@ -5200,8 +5203,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("unitsize cell size: %s\n",
 		       fragment_to_tempstr(&unitsizearg)));
-		load_regis_extent(fragment_to_tempstr(&unitsizearg), 0, 0,
-				  &unit_w, &unit_h);
+		if (!load_regis_extent(fragment_to_tempstr(&unitsizearg), 0, 0,
+				       &unit_w, &unit_h)) {
+		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
+			   state->option, fragment_to_tempstr(&unitsizearg)));
+		    break;
+		}
 		if (!regis_num_to_int(&unitsizearg, &unitsize)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in text unit cell size option: \"%s\"\n",
 			   fragment_to_tempstr(&unitsizearg)));
