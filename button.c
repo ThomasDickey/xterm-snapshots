@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.476 2014/09/17 00:53:52 tom Exp $ */
+/* $XTermId: button.c,v 1.481 2014/09/18 00:17:35 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3227,7 +3227,7 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
     char *search;
     int *indexed;
 
-    TRACE(("Select_REGEX:%s\n", NonNull(expr)));
+    TRACE(("Select_REGEX[%d]:%s\n", inx, NonNull(expr)));
     if (okPosition(screen, &ld, startc) && expr != 0) {
 	if (regcomp(&preg, expr, REG_EXTENDED) == 0) {
 	    int firstRow = firstRowOfLine(screen, startc->row, True);
@@ -3257,7 +3257,7 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 			    int start_col = indexToCol(indexed, len, start_inx);
 			    int finis_col = indexToCol(indexed, len, finis_inx);
 
-			    if (start_col <= actual &&
+			    if (start_col >= actual &&
 				actual < finis_col) {
 				int test = finis_col - start_col;
 				if (best_len < test) {
@@ -4628,10 +4628,13 @@ getDataFromScreen(XtermWidget xw, String method, CELL *start, CELL *finish)
     int save_firstValidRow = screen->firstValidRow;
     int save_lastValidRow = screen->lastValidRow;
 
+    const Cardinal noClick = 0;
+    int save_numberOfClicks = screen->numberOfClicks;
+
     SelectUnit saveUnits = screen->selectUnit;
-    SelectUnit saveMap = screen->selectMap[0];
+    SelectUnit saveMap = screen->selectMap[noClick];
 #if OPT_SELECT_REGEX
-    char *saveExpr = screen->selectExpr[0];
+    char *saveExpr = screen->selectExpr[noClick];
 #endif
 
     Char *save_selection_data = screen->selection_data;
@@ -4646,13 +4649,15 @@ getDataFromScreen(XtermWidget xw, String method, CELL *start, CELL *finish)
     screen->selection_size = 0;
     screen->selection_length = 0;
 
-    lookupSelectUnit(xw, 0, method);
-    screen->selectUnit = screen->selectMap[0];
+    screen->numberOfClicks = 1;
+    lookupSelectUnit(xw, noClick, method);
+    screen->selectUnit = screen->selectMap[noClick];
 
     memset(start, 0, sizeof(*start));
     start->row = screen->cur_row;
     start->col = screen->cur_col;
-    *finish = *start;
+    finish->row = screen->cur_row;
+    finish->col = screen->max_col;
 
     ComputeSelect(xw, start, finish, False);
     SaltTextAway(xw, &(screen->startSel), &(screen->endSel));
@@ -4679,10 +4684,11 @@ getDataFromScreen(XtermWidget xw, String method, CELL *start, CELL *finish)
     screen->firstValidRow = save_firstValidRow;
     screen->lastValidRow = save_lastValidRow;
 
+    screen->numberOfClicks = save_numberOfClicks;
     screen->selectUnit = saveUnits;
-    screen->selectMap[0] = saveMap;
+    screen->selectMap[noClick] = saveMap;
 #if OPT_SELECT_REGEX
-    screen->selectExpr[0] = saveExpr;
+    screen->selectExpr[noClick] = saveExpr;
 #endif
 
     screen->selection_data = save_selection_data;
@@ -5101,6 +5107,7 @@ HandleInsertSelectable(Widget w,
 		exps = expandFormat(xw, temp, data, &start, &finish);
 		if (exps != 0) {
 		    unparseputs(xw, exps);
+		    unparse_end(xw);
 		    free(exps);
 		}
 		free(data);
