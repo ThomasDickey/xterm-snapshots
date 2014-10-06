@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1370 2014/09/15 23:39:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1371 2014/10/06 09:28:00 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -10180,7 +10180,7 @@ HideCursor(void)
 #endif
     resetXtermGC(xw, flags, in_selection);
 
-    refresh_displayed_graphics(screen,
+    refresh_displayed_graphics(xw,
 			       screen->cursorp.col,
 			       screen->cursorp.row,
 			       1, 1);

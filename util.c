@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.660 2014/06/19 22:15:20 tom Exp $ */
+/* $XTermId: util.c,v 1.661 2014/10/06 09:28:00 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -687,7 +687,7 @@ xtermScroll(XtermWidget xw, int amount)
 	}
     }
 
-    scroll_displayed_graphics(amount);
+    scroll_displayed_graphics(xw, amount);
 
     if (refreshheight > 0) {
 	ScrnRefresh(xw,
