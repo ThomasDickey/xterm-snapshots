@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.17 2014/07/13 00:56:45 Ross.Combs Exp $ */
+/* $XTermId: graphics.h,v 1.18 2014/10/06 09:28:00 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -39,10 +39,10 @@
 
 #if OPT_GRAPHICS
 
+#define CHANNEL_MAX 100
+
 typedef struct {
-    Pixel pix;
     short r, g, b;
-    short allocated;
 } ColorRegister;
 
 typedef unsigned short RegisterNum;
@@ -93,10 +93,10 @@ extern void update_color_register(Graphic *graphic, unsigned color, int r, int g
 extern RegisterNum find_color_register(ColorRegister const *color_registers, int r, int g, int b);
 extern void chararea_clear_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
 extern void pixelarea_clear_displayed_graphics(TScreen const *screen, int winx, int winy, int w, int h);
-extern void refresh_displayed_graphics(TScreen const *screen, int leftcol, int toprow, int ncols, int nrows);
-extern void refresh_modified_displayed_graphics(TScreen const *screen);
+extern void refresh_displayed_graphics(XtermWidget xw, int leftcol, int toprow, int ncols, int nrows);
+extern void refresh_modified_displayed_graphics(XtermWidget xw);
 extern void reset_displayed_graphics(TScreen const *screen);
-extern void scroll_displayed_graphics(int rows);
+extern void scroll_displayed_graphics(XtermWidget xw, int rows);
 
 #ifdef NO_LEAKS
 extern void noleaks_graphics(void);
@@ -118,10 +118,10 @@ extern void noleaks_graphics(void);
 #define find_color_register(color_registers, r, g, b) /* nothing */
 #define chararea_clear_displayed_graphics(screen, leftcol, toprow, ncols, nrows) /* nothing */
 #define pixelarea_clear_displayed_graphics(screen, winx, winy, w, h) /* nothing */
-#define refresh_displayed_graphics(screen, leftcol, toprow, ncols, nrows) /* nothing */
-#define refresh_modified_displayed_graphics(screen) /* nothing */
+#define refresh_displayed_graphics(xw, leftcol, toprow, ncols, nrows) /* nothing */
+#define refresh_modified_displayed_graphics(xw) /* nothing */
 #define reset_displayed_graphics(screen) /* nothing */
-#define scroll_displayed_graphics(rows) /* nothing */
+#define scroll_displayed_graphics(xw, rows) /* nothing */
 
 #endif
 

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.44 2014/09/17 08:35:49 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.45 2014/10/06 09:32:44 Ross.Combs Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -36,6 +36,10 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
+
+#if OPT_DOUBLE_BUFFER
+#include <X11/extensions/Xdbe.h>
+#endif
 
 #include <data.h>
 #include <VTparse.h>
@@ -224,6 +228,8 @@ typedef struct RegisGraphicsContext {
 
 #define WRITE_SHADING_REF_Y 0U
 #define WRITE_SHADING_REF_X 1U
+
+/* keypress event example: http://iraf.net/forum/viewtopic.php?showtopic=61692 */
 
 #define ROT_LEFT_N(V, N) ( (((V) << ((N) & 3U )) & 255U) | \
 			   ((V) >> (8U - ((N) & 3U))) )
@@ -3582,7 +3588,7 @@ copy_regis_write_controls(RegisWriteControls const *src,
 }
 
 static void
-init_regis_text_controls(RegisTextControls * controls)
+init_regis_text_controls(RegisTextControls *controls)
 {
     controls->alphabet = 0U;	/* built-in */
     controls->character_set_l = 0U;	/* ASCII */
@@ -3599,7 +3605,7 @@ init_regis_text_controls(RegisTextControls * controls)
 }
 
 static void
-copy_regis_text_controls(RegisTextControls const *src, RegisTextControls * dst)
+copy_regis_text_controls(RegisTextControls const *src, RegisTextControls *dst)
 {
     dst->alphabet = src->alphabet;
     dst->character_set_l = src->character_set_l;
@@ -5989,6 +5995,12 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
     memset(&context, 0, sizeof(context));
 
+    /* Update the screen scrolling and do a refresh.
+     * The refresh may not cover the whole graphic.
+     */
+    if (screen->scroll_amt)
+	FlushScroll(xw);
+
     context.graphic = get_new_or_matching_graphic(xw,
 						  charrow, charcol,
 						  800, 480,
@@ -6003,7 +6015,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
     X_GETTIMEOFDAY(&prev_tv);
     iterations = 0U;
-    refresh_modified_displayed_graphics(screen);
+    refresh_modified_displayed_graphics(xw);
 
     for (;;) {
 	if (skip_regis_whitespace(&state.input))
@@ -6027,7 +6039,17 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		    /* FIXME: pre-ANSI compilers need memcpy() */
 		    prev_tv = curr_tv;
 		    iterations = 0U;
-		    refresh_modified_displayed_graphics(screen);
+		    refresh_modified_displayed_graphics(xw);
+#if OPT_DOUBLE_BUFFER
+		    {
+			XdbeSwapInfo swap;
+
+			swap.swap_window = VWindow(screen);
+			swap.swap_action = XdbeCopied;
+			XdbeSwapBuffers(XtDisplay(term), &swap, 1);
+			XFlush(XtDisplay(xw));
+		    }
+#endif
 		}
 	    }
 	    continue;
@@ -6039,6 +6061,6 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
     free(state.temp);
 
-    refresh_modified_displayed_graphics(screen);
+    refresh_modified_displayed_graphics(xw);
     TRACE(("DONE! Successfully parsed ReGIS data.\n"));
 }

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.501 2014/07/30 08:06:23 tom Exp $ */
+/* $XTermId: screen.c,v 1.502 2014/10/06 09:28:00 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1027,6 +1027,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	   screen->savelines,
 	   n,
 	   screen->max_col));
+    /* FIXME: this looks wrong -- rcombs */
     chararea_clear_displayed_graphics(screen,
 				      where + screen->savelines,
 				      0,
@@ -1755,11 +1756,7 @@ ScrnRefresh(XtermWidget xw,
 	resetXtermGC(xw, flags, hilite);
     }
 
-    refresh_displayed_graphics(screen,
-			       leftcol,
-			       toprow + screen->topline,
-			       ncols,
-			       nrows);
+    refresh_displayed_graphics(xw, leftcol, toprow, ncols, nrows);
 
     /*
      * If we're in color mode, reset the various GC's to the current
@@ -2207,7 +2204,7 @@ ScreenResize(XtermWidget xw,
 	screen->fullVwin.height = height - border;
 	screen->fullVwin.width = width - border - screen->fullVwin.sb_info.width;
 
-	scroll_displayed_graphics(-move_down_by);
+	scroll_displayed_graphics(xw, -move_down_by);
     } else if (FullHeight(screen) == height && FullWidth(screen) == width)
 	return (0);		/* nothing has changed at all */
 
