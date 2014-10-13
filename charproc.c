@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1371 2014/10/06 09:28:00 Ross.Combs Exp $ */
+/* $XTermId: charproc.c,v 1.1372 2014/10/12 23:56:25 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -6767,7 +6767,6 @@ ToAlternate(XtermWidget xw, Bool clearFirst)
 						    (unsigned) MaxCols(screen),
 						    &screen->editBuf_data[1]);
 	SwitchBufs(xw, 1, clearFirst);
-	screen->whichBuf = 1;
 #if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
 #endif
@@ -6784,7 +6783,6 @@ FromAlternate(XtermWidget xw)
 	TRACE(("FromAlternate\n"));
 	if (screen->scroll_amt)
 	    FlushScroll(xw);
-	screen->whichBuf = 0;
 	SwitchBufs(xw, 0, False);
 #if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
@@ -6799,6 +6797,7 @@ SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
     TScreen *screen = TScreenOf(xw);
     int rows, top;
 
+    screen->whichBuf = toBuf;
     if (screen->cursor_state)
 	HideCursor();
 
