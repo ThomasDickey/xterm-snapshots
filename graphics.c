@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.48 2014/10/06 09:32:44 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.50 2014/10/12 23:57:28 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -86,8 +86,8 @@
  * - invalidate graphics under graphic if same origin, at least as big, and bg not transparent
  * - invalidate graphic if scrolled past end of scrollback
  * - invalidate graphic if all pixels are transparent/erased
- * - erase scrolled portions of all graphics on alt buffer
- * - hide portion of non-alt graphics overlapping alt buffer if the alt buffer has been cleared
+ * - erase scrolled portions of all graphics on alt buffer (or at least avoid drawing them)
+ * - hide botom portion of non-alt graphics when they partially overlap the alt buffer
  * - auto-convert color graphics in VT330 mode
  * - posturize requested colors to match hardware palettes (e.g. only four possible shades on VT240)
  * - color register report/restore
@@ -1294,10 +1294,29 @@ refresh_graphics(XtermWidget xw,
 	Graphic *graphic;
 	if (!(graphic = getActiveSlot(ii)))
 	    continue;
-	if (screen->whichBuf == 0 && graphic->bufferid != 0) {
-	    TRACE(("skipping graphic from wrong buffer graphic=%d screen=%d\n",
-		   graphic->bufferid, screen->whichBuf));
-	    continue;
+	TRACE(("refreshing graphic %d on buffer %d, current buffer %d\n",
+	       graphic->id, graphic->bufferid, screen->whichBuf));
+	if (screen->whichBuf == 0) {
+	    if (graphic->bufferid != 0) {
+		TRACE(("skipping graphic %d from alt buffer (%d) when drawing screen=%d\n",
+		       graphic->id, graphic->bufferid, screen->whichBuf));
+		continue;
+	    }
+	} else {
+	    if (graphic->bufferid == 0 &&
+		graphic->charrow >= 0) {
+		TRACE(("skipping graphic %d from normal buffer (%d) when drawing screen=%d because it is not in scrollback area\n",
+		       graphic->id, graphic->bufferid, screen->whichBuf));
+		continue;
+	    }
+	    if (graphic->bufferid == 1 &&
+		graphic->charrow + (graphic->actual_height +
+				    FontHeight(screen) - 1) /
+		FontHeight(screen) < 0) {
+		TRACE(("skipping graphic %d from alt buffer (%d) when drawing screen=%d because it is completely in scrollback area\n",
+		       graphic->id, graphic->bufferid, screen->whichBuf));
+		continue;
+	    }
 	}
 	ordered_graphics[active_count++] = graphic;
     }
@@ -1431,7 +1450,8 @@ refresh_graphics(XtermWidget xw,
     if (holes > 0U) {
 	GC graphics_gc;
 	XGCValues xgcv;
-	ColorRegister old_color;
+	ColorRegister last_color;
+	ColorRegister gc_color;
 	int run;
 
 	memset(&xgcv, 0, sizeof(xgcv));
@@ -1443,51 +1463,63 @@ refresh_graphics(XtermWidget xw,
 	    return;
 	}
 
-	old_color.r = -1;
-	old_color.g = -1;
-	old_color.b = -1;
+	last_color.r = -1;
+	last_color.g = -1;
+	last_color.b = -1;
+	gc_color.r = -1;
+	gc_color.g = -1;
+	gc_color.b = -1;
+	run = 0;
 	for (yy = draw_y_min - refresh_y; yy <= draw_y_max - refresh_y; yy++) {
-	    run = 0;
 	    for (xx = draw_x_min - refresh_x; xx <= draw_x_max - refresh_x;
 		 xx++) {
 		const ColorRegister color = buffer[yy * refresh_w + xx];
 
 		if (color.r < 0 || color.g < 0 || color.b < 0) {
+		    last_color = color;
 		    if (run > 0) {
 			XDrawLine(display, drawable, graphics_gc,
-				  OriginX(screen) + refresh_x + (xx - (run - 1)),
+				  OriginX(screen) + refresh_x + xx - run,
 				  (OriginY(screen) - scroll_y) + refresh_y + yy,
-				  OriginX(screen) + refresh_x + xx,
+				  OriginX(screen) + refresh_x + xx - 1,
 				  (OriginY(screen) - scroll_y) + refresh_y + yy);
 			run = 0;
 		    }
 		    continue;
 		}
 
-		if (color.r != old_color.r ||
-		    color.g != old_color.g ||
-		    color.b != old_color.b) {
+		if (color.r != last_color.r ||
+		    color.g != last_color.g ||
+		    color.b != last_color.b) {
+		    last_color = color;
 		    if (run > 0) {
 			XDrawLine(display, drawable, graphics_gc,
-				  OriginX(screen) + refresh_x + (xx - (run - 1)),
+				  OriginX(screen) + refresh_x + xx - run,
 				  (OriginY(screen) - scroll_y) + refresh_y + yy,
-				  OriginX(screen) + refresh_x + xx,
+				  OriginX(screen) + refresh_x + xx - 1,
 				  (OriginY(screen) - scroll_y) + refresh_y + yy);
 			run = 0;
 		    }
-		    xgcv.foreground =
-			color_register_to_xpixel(&color, xw);
-		    XChangeGC(display, graphics_gc, GCForeground, &xgcv);
-		    old_color = color;
+
+		    if (color.r != gc_color.r ||
+			color.g != gc_color.g ||
+			color.b != gc_color.b) {
+			xgcv.foreground =
+			    color_register_to_xpixel(&color, xw);
+			XChangeGC(display, graphics_gc, GCForeground, &xgcv);
+			gc_color = color;
+		    }
 		}
 		run++;
 	    }
 	    if (run > 0) {
-		xx--;
+		last_color.r = -1;
+		last_color.g = -1;
+		last_color.b = -1;
 		XDrawLine(display, drawable, graphics_gc,
-			  OriginX(screen) + refresh_x + (xx - (run - 1)),
+			  OriginX(screen) + refresh_x + xx - run,
 			  (OriginY(screen) - scroll_y) + refresh_y + yy,
-			  OriginX(screen) + refresh_x + xx,
+			  OriginX(screen) + refresh_x + xx - 1,
 			  (OriginY(screen) - scroll_y) + refresh_y + yy);
 		run = 0;
 	    }
@@ -1537,6 +1569,7 @@ refresh_graphics(XtermWidget xw,
 	}
 	image->data = imgdata;
 
+	fg = 0U;
 	old_color.r = -1;
 	old_color.g = -1;
 	old_color.b = -1;
