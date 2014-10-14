@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.50 2014/10/12 23:57:28 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.52 2014/10/13 21:40:15 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -1654,8 +1654,9 @@ pixelarea_clear_displayed_graphics(TScreen const *screen,
     FOR_EACH_SLOT(ii) {
 	Graphic *graphic;
 	/* FIXME: are these coordinates (scrolled) screen-relative? */
-	int const scroll_y = screen->whichBuf == 0 ?
-	screen->topline * FontHeight(screen) : 0;
+	int const scroll_y = (screen->whichBuf == 0
+			      ? screen->topline * FontHeight(screen)
+			      : 0);
 	int graph_x;
 	int graph_y;
 	int x, y;
@@ -1686,12 +1687,10 @@ chararea_clear_displayed_graphics(TScreen const *screen,
 				  int ncols,
 				  int nrows)
 {
-    int x, y, w, h;
-
-    x = leftcol * FontWidth(screen);
-    y = toprow * FontHeight(screen);
-    w = ncols * FontWidth(screen);
-    h = nrows * FontHeight(screen);
+    int const x = leftcol * FontWidth(screen);
+    int const y = toprow * FontHeight(screen);
+    int const w = ncols * FontWidth(screen);
+    int const h = nrows * FontHeight(screen);
 
     TRACE(("chararea clear graphics: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d\n",
 	   screen->topline,
