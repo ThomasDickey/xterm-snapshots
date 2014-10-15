@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.225 2014/03/01 15:15:26 tom Exp $
+## $XTermId: Makefile.in,v 1.229 2014/10/15 00:43:18 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -181,11 +181,11 @@ resize$x : $(OBJS2)
 	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(LIBS)
 
 256colres.h :
-	-rm -f $@
+	-$(RM) $@
 	perl $(srcdir)/256colres.pl > $@
 
 88colres.h :
-	-rm -f $@
+	-$(RM) $@
 	perl $(srcdir)/88colres.pl > $@
 
 charproc$o : main.h @CHARPROC_DEPS@
@@ -224,42 +224,69 @@ install-full :: xterm$x resize$x $(BINDIR)
 
 EDIT_SCRIPT = sed -e s,=xterm,=\$$name, -e s,XTerm,$(CLASS),
 
+InstallLink = \
+		if test \$$source != NONE \
+		&& test \$$source != \$$target ; then \
+			cd \$$TARGET && ( \
+				$(RM) \$$source ; \
+				$(LN_S) \$$target \$$source ; \
+				echo \"... created symbolic link:\" ; \
+				ls -l \$$target \$$source ) ; \
+		fi
+
+InstallBinLink = TARGET=$(BINDIR); $(InstallLink)
+InstallManLink = TARGET=$(MANDIR); $(InstallLink)
+
+InstallScript = \
+		echo \"... installing $(BINDIR)/\$$target\"; \
+		$(EDIT_SCRIPT) $(srcdir)/\$$source >\$$source.tmp; \
+		$(INSTALL_SCRIPT) -m  755 \$$source.tmp $(BINDIR)/\$$target; \
+		$(RM) \$$source.tmp
+
 install \
 install-bin \
 install-scripts \
-install-full ::
-	@$(SHELL) -c "name=\"$(binary_xterm)\"; \
-		dest=\"$(binary_uxterm)\"; \
-		echo \"... installing $(BINDIR)/\$$dest\"; \
-		$(EDIT_SCRIPT) $(srcdir)/uxterm >uxterm.tmp; \
-		$(INSTALL_SCRIPT) -m  755 uxterm.tmp $(BINDIR)/\$$dest; \
-		rm -f uxterm.tmp"
-	@$(SHELL) -c "name=\"$(binary_xterm)\"; \
-		dest=\"$(binary_k8term)\"; \
-		echo \"... installing $(BINDIR)/\$$dest\"; \
-		$(EDIT_SCRIPT) $(srcdir)/koi8rxterm >k8term.tmp; \
-		$(INSTALL_SCRIPT) -m  755 k8term.tmp $(BINDIR)/\$$dest; \
-		rm -f k8term.tmp"
-	@-$(SHELL) -c "name=\"$(binary_xterm)\"; \
-		if test @XTERM_SYMLINK@ != NONE ; then \
-		cd $(BINDIR) && ( \
-			rm -f @XTERM_SYMLINK@ ; \
-			$(LN_S) \$$name @XTERM_SYMLINK@ ; \
-			echo \"... created symbolic link:\" ; \
-			ls -l \$$name @XTERM_SYMLINK@ ) ; \
-		fi"
+install-full :: $(BINDIR)
+	@$(SHELL) -c "source=\"@XTERM_SYMLINK@\"; \
+		target=\"$(binary_xterm)\"; \
+		$(InstallBinLink)"
+	@$(SHELL) -c "source=\"resize\"; \
+		target=\"$(binary_resize)\"; \
+		$(InstallBinLink)"
+	@$(SHELL) -c "source=\"uxterm\"; \
+		target=\"$(binary_uxterm)\"; \
+		$(InstallScript); \
+		$(InstallBinLink)"
+	@$(SHELL) -c "source=\"koi8rxterm\"; \
+		target=\"$(binary_k8term)\"; \
+		$(InstallScript); \
+		$(InstallBinLink)"
 
 install \
 install-man \
 install-full :: $(MANDIR)
-	@-$(SHELL) -c "for app in xterm resize uxterm koi8rxterm ; \
+	@-$(SHELL) -c "for source in xterm resize uxterm koi8rxterm ; \
 		do \
-			actual=\`echo \"\$$app\" | sed '@program_transform_name@'\`; \
-			$(SHELL) ./minstall \"$(INSTALL_DATA)\" $(srcdir)/\$$app.man  $(MANDIR)/\$$actual.$(manext) $(appsdir) $(CLASS) \$$app \$$actual $(pixmapdir); \
+			target=\`echo \"\$$source\" | sed '@program_transform_name@'\`; \
+			$(SHELL) ./minstall \"$(INSTALL_DATA)\" \
+				$(srcdir)/\$$source.man  \
+				$(MANDIR)/\$$target.$(manext) \
+				$(appsdir) \
+				$(CLASS) \
+				\$$source \
+				\$$target \
+				$(pixmapdir); \
 		done"
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext) ; fi"
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then \
+		source=$(actual_xterm).$(manext); \
+		target=@XTERM_SYMLINK@.$(manext); \
+		cd $(MANDIR) && ( \
+			$(RM) \$$target ; \
+			$(LN_S) \$$source \$$target ; \
+			echo '... created symbolic link:' ; \
+			ls -l \$$source \$$target ; \
+			) \
+		fi"
 
 APP_NAMES = XTerm UXTerm KOI8RXTerm
 
@@ -277,7 +304,7 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_appsdir@		sed -e s/XTerm/$$d/ $(srcdir)/XTerm-col.ad >XTerm.tmp; \
 @no_appsdir@		$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$$d-color; \
 @no_appsdir@	done'
-@no_appsdir@	@rm -f XTerm.tmp
+@no_appsdir@	@$(RM) XTerm.tmp
 @no_icondir@	@echo "... installed app-defaults"
 
 @no_icondir@ICON_LIST = @ICON_LIST@
@@ -305,7 +332,7 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_icondir@				if test "$$r" != "$$t" ; then \
 @no_icondir@					if test "x$$b" = "x$(ICON_NAME)" ; then \
 @no_icondir@						echo "linking $$r -> $$t"; \
-@no_icondir@						( cd $$h; rm -f $$t; $(LN_S) $$r $$t; ) \
+@no_icondir@						( cd $$h; $(RM) $$t; $(LN_S) $$r $$t; ) \
 @no_icondir@					fi \
 @no_icondir@				fi \
 @no_icondir@			fi \
@@ -331,7 +358,7 @@ APP_NAMES = XTerm UXTerm KOI8RXTerm
 @no_pixmapdir@				if test "x$$r" != "$$t" ; then \
 @no_pixmapdir@					if test "x$$b" = "x$(ICON_NAME)" ; then \
 @no_pixmapdir@						echo "linking $$r -> $$t"; \
-@no_pixmapdir@						( cd $$h; rm -f $$t; $(LN_S) $$r $$t; ) \
+@no_pixmapdir@						( cd $$h; $(RM) $$t; $(LN_S) $$r $$t; ) \
 @no_pixmapdir@					fi \
 @no_pixmapdir@				fi \
 @no_pixmapdir@			fi \
@@ -356,28 +383,64 @@ install-tc ::
 
 installdirs : $(INSTALL_DIRS)
 ################################################################################
+
+UninstallLink = \
+	if test \$$source != NONE \
+	&& test \$$source != \$$target \
+	&& test -h \$$TARGET/\$$source ; then \
+		echo \"... removing \$$TARGET/\$$source\"; \
+		cd \$$TARGET && \
+		$(RM) \$$source; \
+	fi
+
+UninstallBinLink = TARGET=$(BINDIR); $(UninstallLink)
+UninstallManLink = TARGET=$(MANDIR); $(UninstallLink)
+
+UninstallBinary = \
+	echo \"... removing $(BINDIR)/\$$target\"; \
+	$(RM) $(BINDIR)/\$$target
+
 uninstall \
 uninstall-bin \
 uninstall-full ::
-	-$(RM) $(BINDIR)/$(binary_xterm)
-	-$(RM) $(BINDIR)/$(binary_resize)
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@; fi"
+	@-$(SHELL) -c "source=\"@XTERM_SYMLINK@\"; \
+		target=\"$(binary_xterm)\"; \
+		$(UninstallBinLink); \
+		$(UninstallBinary)"
+	@-$(SHELL) -c "source=\"resize\"; \
+		target=\"$(binary_resize)\"; \
+		$(UninstallBinLink); \
+		$(UninstallBinary)"
 
 uninstall \
 uninstall-bin \
 uninstall-scripts \
 uninstall-full ::
-	-$(RM) $(BINDIR)/$(binary_uxterm)
-	-$(RM) $(BINDIR)/$(binary_k8term)
+	@-$(SHELL) -c "source=\"uxterm\"; \
+		target=\"$(binary_uxterm)\"; \
+		$(UninstallBinLink); \
+		$(UninstallBinary)"
+	@-$(SHELL) -c "source=\"koi8rxterm\"; \
+		target=\"$(binary_k8term)\"; \
+		$(UninstallBinLink); \
+		$(UninstallBinary)"
 
 uninstall \
 uninstall-man \
 uninstall-full ::
-	-$(RM) $(MANDIR)/$(actual_xterm).$(manext)
-	-$(RM) $(MANDIR)/$(actual_resize).$(manext)
-	-$(RM) $(MANDIR)/$(actual_uxterm).$(manext)
-	-$(RM) $(MANDIR)/$(actual_k8term).$(manext)
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext); fi"
+	@-$(SHELL) -c "\
+		source=@XTERM_SYMLINK@.$(manext); \
+		target=$(actual_xterm).$(manext); \
+		$(UninstallManLink)"
+	@-$(SHELL) -c "for source in \
+		$(actual_xterm).$(manext) \
+		$(actual_resize).$(manext) \
+		$(actual_uxterm).$(manext) \
+		$(actual_k8term).$(manext); \
+		do \
+			echo \"... removing $(MANDIR)/\$$source\"; \
+			$(RM) $(MANDIR)/\$$source; \
+		done"
 
 @no_appsdir@uninstall \
 @no_appsdir@uninstall-app \

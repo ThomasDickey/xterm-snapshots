@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.152 2014/07/12 22:40:36 Steve.Wall Exp $
+-- $XTermId: INSTALL,v 1.153 2014/10/15 00:49:56 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2013,2014 by Thomas E. Dickey
 --
@@ -765,6 +765,9 @@ The options (in alphabetic order):
 
 	Use --without-xterm-symlink to disable a link to "xterm" if none
 	is wanted.
+
+	Corresponding links are also made for "resize", "uxterm" and
+	"koi8rxterm", as well as the xterm manpage.
 
   --with-terminal-id[=V]  set default decTerminalID (default: vt100)
 
