@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.229 2014/10/15 00:43:18 tom Exp $
+## $XTermId: Makefile.in,v 1.231 2014/10/23 00:21:17 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -225,23 +225,25 @@ install-full :: xterm$x resize$x $(BINDIR)
 EDIT_SCRIPT = sed -e s,=xterm,=\$$name, -e s,XTerm,$(CLASS),
 
 InstallLink = \
-		if test \$$source != NONE \
-		&& test \$$source != \$$target ; then \
-			cd \$$TARGET && ( \
-				$(RM) \$$source ; \
-				$(LN_S) \$$target \$$source ; \
-				echo \"... created symbolic link:\" ; \
-				ls -l \$$target \$$source ) ; \
-		fi
+	if test @XTERM_SYMLINK@ != NONE \
+	&& test \$$source != NONE \
+	&& test \$$source != \$$target ; then \
+		cd \$$TARGET && ( \
+			$(RM) \$$source ; \
+			$(LN_S) \$$target \$$source ; \
+			echo \"... created symbolic link:\" ; \
+			ls -l \$$target \$$source ) ; \
+	fi
 
 InstallBinLink = TARGET=$(BINDIR); $(InstallLink)
 InstallManLink = TARGET=$(MANDIR); $(InstallLink)
 
 InstallScript = \
-		echo \"... installing $(BINDIR)/\$$target\"; \
-		$(EDIT_SCRIPT) $(srcdir)/\$$source >\$$source.tmp; \
-		$(INSTALL_SCRIPT) -m  755 \$$source.tmp $(BINDIR)/\$$target; \
-		$(RM) \$$source.tmp
+	echo \"... installing $(BINDIR)/\$$target\"; \
+	name=$(binary_xterm); \
+	$(EDIT_SCRIPT) $(srcdir)/\$$source >\$$source.tmp; \
+	$(INSTALL_SCRIPT) -m  755 \$$source.tmp $(BINDIR)/\$$target; \
+	$(RM) \$$source.tmp
 
 install \
 install-bin \
@@ -385,7 +387,8 @@ installdirs : $(INSTALL_DIRS)
 ################################################################################
 
 UninstallLink = \
-	if test \$$source != NONE \
+	if test @XTERM_SYMLINK@ != NONE \
+	&& test \$$source != NONE \
 	&& test \$$source != \$$target \
 	&& test -h \$$TARGET/\$$source ; then \
 		echo \"... removing \$$TARGET/\$$source\"; \
