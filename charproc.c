@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1372 2014/10/12 23:56:25 Ross.Combs Exp $ */
+/* $XTermId: charproc.c,v 1.1373 2014/10/30 08:11:58 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -5024,12 +5024,12 @@ HandleStructNotify(Widget w GCC_UNUSED,
 
     switch (event->type) {
     case MapNotify:
-	TRACE(("HandleStructNotify(MapNotify)\n"));
+	TRACE(("HandleStructNotify(MapNotify) %#lx\n", event->xmap.window));
 	resetZIconBeep(xw);
 	mapstate = !IsUnmapped;
 	break;
     case UnmapNotify:
-	TRACE(("HandleStructNotify(UnmapNotify)\n"));
+	TRACE(("HandleStructNotify(UnmapNotify) %#lx\n", event->xunmap.window));
 	mapstate = IsUnmapped;
 	break;
     case ConfigureNotify:
@@ -5040,7 +5040,8 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	    height = event->xconfigure.height;
 	    width = event->xconfigure.width;
 #endif
-	    TRACE(("HandleStructNotify(ConfigureNotify) %d,%d %dx%d\n",
+	    TRACE(("HandleStructNotify(ConfigureNotify) %#lx %d,%d %dx%d\n",
+		   event->xconfigure.window,
 		   event->xconfigure.y, event->xconfigure.x,
 		   event->xconfigure.height, event->xconfigure.width));
 
@@ -5090,11 +5091,12 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	}
 	break;
     case ReparentNotify:
-	TRACE(("HandleStructNotify(ReparentNotify)\n"));
+	TRACE(("HandleStructNotify(ReparentNotify) %#lx\n", event->xreparent.window));
 	break;
     default:
-	TRACE(("HandleStructNotify(event %s)\n",
-	       visibleEventType(event->type)));
+	TRACE(("HandleStructNotify(event %s) %#lx\n",
+	       visibleEventType(event->type),
+	       event->xany.window));
 	break;
     }
 }
