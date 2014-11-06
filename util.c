@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.661 2014/10/06 09:28:00 Ross.Combs Exp $ */
+/* $XTermId: util.c,v 1.662 2014/10/30 00:08:16 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1950,8 +1950,7 @@ CopyWait(XtermWidget xw)
     XEvent *rep = &reply;
 
     for (;;) {
-	XWindowEvent(screen->display, VWindow(screen),
-		     ExposureMask, &reply);
+	XWindowEvent(screen->display, VWindow(screen), ExposureMask, &reply);
 	switch (reply.type) {
 	case Expose:
 	    HandleExposure(xw, &reply);
