@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1373 2014/10/30 08:11:58 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1376 2014/11/13 01:00:26 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -906,7 +906,7 @@ CheckBogusForeground(TScreen *screen, const char *tag)
     for (pass = 0; pass < 2; ++pass) {
 	row = screen->cur_row;
 	for (; isClear && (row <= screen->max_row); ++row) {
-	    LineData *ld = getLineData(screen, row)->;
+	    CLineData *ld = getLineData(screen, row);
 
 	    if (ld != 0) {
 		IAttr *attribs = ld->attribs;
@@ -4791,7 +4791,7 @@ PreeditPosition(XtermWidget xw)
 {
     TInput *input = lookupTInput(xw, (Widget) xw);
     TScreen *screen = TScreenOf(xw);
-    LineData *ld;
+    CLineData *ld;
     XPoint spot;
     XVaNestedList list;
 
@@ -4958,7 +4958,7 @@ dotext(XtermWidget xw,
 
     for (offset = 0; offset < len; offset += (Cardinal) this_col) {
 #if OPT_DEC_CHRSET
-	LineData *ld = getLineData(screen, screen->cur_row);
+	CLineData *ld = getLineData(screen, screen->cur_row);
 #endif
 
 	last_col = LineMaxCol(screen, ld);
@@ -4994,7 +4994,7 @@ dotext(XtermWidget xw,
 
 #if OPT_WIDE_CHARS
 unsigned
-visual_width(IChar *str, Cardinal len)
+visual_width(const IChar *str, Cardinal len)
 {
     /* returns the visual width of a string (doublewide characters count
        as 2, normalwide characters count as 1) */
@@ -9677,7 +9677,7 @@ ShowCursor(void)
     int my_col = 0;
 #endif
     int cursor_col;
-    LineData *ld = 0;
+    CLineData *ld = 0;
 
     if (screen->cursor_state == BLINKED_OFF)
 	return;
@@ -10041,7 +10041,7 @@ HideCursor(void)
     int my_col = 0;
 #endif
     int cursor_col;
-    LineData *ld = 0;
+    CLineData *ld = 0;
 #if OPT_WIDE_ATTRS
     unsigned attr_flags;
     int which_font = fNorm;
@@ -10220,7 +10220,7 @@ StopBlinking(TScreen *screen)
 
 #if OPT_BLINK_TEXT
 Bool
-LineHasBlinking(TScreen *screen, LineData *ld)
+LineHasBlinking(TScreen *screen, CLineData *ld)
 {
     int col;
     Bool result = False;
@@ -10333,7 +10333,7 @@ RestartBlinking(TScreen *screen GCC_UNUSED)
 	    int row;
 
 	    for (row = screen->max_row; row >= 0; row--) {
-		LineData *ld = getLineData(screen, ROW2INX(screen, row));
+		CLineData *ld = getLineData(screen, ROW2INX(screen, row));
 
 		if (ld != 0 && LineTstBlinked(ld)) {
 		    if (LineHasBlinking(screen, ld)) {

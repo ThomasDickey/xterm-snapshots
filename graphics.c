@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.52 2014/10/13 21:40:15 tom Exp $ */
+/* $XTermId: graphics.c,v 1.53 2014/11/12 11:06:25 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -1263,6 +1263,29 @@ compare_graphic_ids(const void *left, const void *right)
 	return 1;
 }
 
+static void
+clip_area(int *orig_x, int *orig_y, int *orig_w, int *orig_h,
+          int clip_x, int clip_y, int clip_w, int clip_h)
+{
+    if (*orig_x < clip_x) {
+	const int diff = clip_x - *orig_x;
+	*orig_x += diff;
+	*orig_w -= diff;
+    }
+    if (*orig_w > 0 && *orig_x + *orig_w > clip_x + clip_w) {
+	*orig_w -= (*orig_x + *orig_w) - (clip_x + clip_w);
+    }
+
+    if (*orig_y < clip_y) {
+	const int diff = clip_y - *orig_y;
+	*orig_y += diff;
+	*orig_h -= diff;
+    }
+    if (*orig_h > 0 && *orig_y + *orig_h > clip_y + clip_h) {
+	*orig_h -= (*orig_y + *orig_h) - (clip_y + clip_h);
+    }
+}
+
 /* the coordinates are relative to the screen */
 static void
 refresh_graphics(XtermWidget xw,
@@ -1285,7 +1308,7 @@ refresh_graphics(XtermWidget xw,
     Graphic *ordered_graphics[MAX_GRAPHICS];
     unsigned ii, jj;
     unsigned active_count;
-    unsigned holes;
+    unsigned holes, non_holes;
     int xx, yy;
     ColorRegister *buffer;
 
@@ -1303,8 +1326,7 @@ refresh_graphics(XtermWidget xw,
 		continue;
 	    }
 	} else {
-	    if (graphic->bufferid == 0 &&
-		graphic->charrow >= 0) {
+	    if (graphic->bufferid == 0 && graphic->charrow >= 0) {
 		TRACE(("skipping graphic %d from normal buffer (%d) when drawing screen=%d because it is not in scrollback area\n",
 		       graphic->id, graphic->bufferid, screen->whichBuf));
 		continue;
@@ -1368,57 +1390,77 @@ refresh_graphics(XtermWidget xw,
 	   refresh_x, refresh_y,
 	   refresh_w, refresh_h));
 
-    draw_x_min = refresh_x + refresh_w;
-    draw_x_max = refresh_x - 1;
-    draw_y_min = refresh_y + refresh_h;
-    draw_y_max = refresh_y - 1;
-    for (jj = 0; jj < active_count; ++jj) {
-	Graphic *graphic = ordered_graphics[jj];
-	int draw_x = graphic->charcol * FontWidth(screen);
-	int draw_y = graphic->charrow * FontHeight(screen);
-	int draw_w = graphic->actual_width;
-	int draw_h = graphic->actual_height;
+    {
+	int const altarea_x = 0;
+	int const altarea_y = 0;
+	int const altarea_w = Width(screen) * FontWidth(screen);
+	int const altarea_h = Height(screen) * FontHeight(screen);
 
-	if (draw_x < refresh_x) {
-	    int diff = refresh_x - draw_x;
-	    draw_x += diff;
-	    draw_w -= diff;
-	}
-	if (draw_w > 0 && draw_x + draw_w > refresh_x + refresh_w) {
-	    draw_w -= (draw_x + draw_w) - (refresh_x + refresh_w);
-	}
+	int const scrollarea_x = 0;
+	int const scrollarea_y = scroll_y;
+	int const scrollarea_w = Width(screen) * FontWidth(screen);
+	int const scrollarea_h = -scroll_y;
 
-	if (draw_y < refresh_y) {
-	    int diff = refresh_y - draw_y;
-	    draw_y += diff;
-	    draw_h -= diff;
-	}
-	if (draw_h > 0 && draw_y + draw_h > refresh_y + refresh_h) {
-	    draw_h -= (draw_y + draw_h) - (refresh_y + refresh_h);
-	}
+	int const mainarea_x = 0;
+	int const mainarea_y = scroll_y;
+	int const mainarea_w = Width(screen) * FontWidth(screen);
+	int const mainarea_h = -scroll_y + Height(screen) * FontHeight(screen);
 
-	TRACE(("refresh: graph=%u\n", jj));
-	TRACE(("         refresh_x=%d refresh_y=%d refresh_w=%d refresh_h=%d\n",
-	       refresh_x, refresh_y, refresh_w, refresh_h));
-	TRACE(("         draw_x=%d draw_y=%d draw_w=%d draw_h=%d\n",
-	       draw_x, draw_y, draw_w, draw_h));
+	draw_x_min = refresh_x + refresh_w;
+	draw_x_max = refresh_x - 1;
+	draw_y_min = refresh_y + refresh_h;
+	draw_y_max = refresh_y - 1;
+	for (jj = 0; jj < active_count; ++jj) {
+	    Graphic *graphic = ordered_graphics[jj];
+	    int draw_x = graphic->charcol * FontWidth(screen);
+	    int draw_y = graphic->charrow * FontHeight(screen);
+	    int draw_w = graphic->actual_width;
+	    int draw_h = graphic->actual_height;
 
-	if (draw_w > 0 && draw_h > 0) {
-	    refresh_graphic(screen, graphic, buffer,
-			    refresh_x, refresh_y,
-			    refresh_w, refresh_h,
-			    draw_x, draw_y,
-			    draw_w, draw_h);
-	    if (draw_x < draw_x_min)
-		draw_x_min = draw_x;
-	    if (draw_x + draw_w - 1 > draw_x_max)
-		draw_x_max = draw_x + draw_w - 1;
-	    if (draw_y < draw_y_min)
-		draw_y_min = draw_y;
-	    if (draw_y + draw_h - 1 > draw_y_max)
-		draw_y_max = draw_y + draw_h - 1;
+	    if (screen->whichBuf != 0) {
+		if (graphic->bufferid != 0) {
+		    /* clip to alt buffer */
+		    clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
+			      altarea_x, altarea_y, altarea_w, altarea_h);
+		} else if (graphic->bufferid == 0) {
+		    /* clip to scrollback area */
+		    clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
+			      scrollarea_x, scrollarea_y,
+			      scrollarea_w, scrollarea_h);
+		}
+	    } else {
+		/* clip to scrollback + normal area */
+		clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
+			  mainarea_x, mainarea_y,
+			  mainarea_w, mainarea_h);
+	    }
+
+	    clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
+		      refresh_x, refresh_y, refresh_w, refresh_h);
+
+	    TRACE(("refresh: graph=%u\n", jj));
+	    TRACE(("         refresh_x=%d refresh_y=%d refresh_w=%d refresh_h=%d\n",
+		   refresh_x, refresh_y, refresh_w, refresh_h));
+	    TRACE(("         draw_x=%d draw_y=%d draw_w=%d draw_h=%d\n",
+		   draw_x, draw_y, draw_w, draw_h));
+
+	    if (draw_w > 0 && draw_h > 0) {
+		refresh_graphic(screen, graphic, buffer,
+				refresh_x, refresh_y,
+				refresh_w, refresh_h,
+				draw_x, draw_y,
+				draw_w, draw_h);
+		if (draw_x < draw_x_min)
+		    draw_x_min = draw_x;
+		if (draw_x + draw_w - 1 > draw_x_max)
+		    draw_x_max = draw_x + draw_w - 1;
+		if (draw_y < draw_y_min)
+		    draw_y_min = draw_y;
+		if (draw_y + draw_h - 1 > draw_y_max)
+		    draw_y_max = draw_y + draw_h - 1;
+	    }
+	    graphic->dirty = 0;
 	}
-	graphic->dirty = 0;
     }
 
     if (draw_x_max < refresh_x ||
@@ -1430,13 +1472,22 @@ refresh_graphics(XtermWidget xw,
     }
 
     holes = 0U;
+    non_holes = 0U;
     for (yy = draw_y_min - refresh_y; yy <= draw_y_max - refresh_y; yy++) {
 	for (xx = draw_x_min - refresh_x; xx <= draw_x_max - refresh_x; xx++) {
 	    const ColorRegister color = buffer[yy * refresh_w + xx];
 	    if (color.r < 0 || color.g < 0 || color.b < 0) {
 		holes++;
+	    } else {
+		non_holes++;
 	    }
 	}
+    }
+
+    if (non_holes < 1U) {
+	TRACE(("refresh: visible graphics areas are erased; nothing to do\n"));
+	free(buffer);
+	return;
     }
 
     /*
