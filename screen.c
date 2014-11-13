@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.502 2014/10/06 09:28:00 Ross.Combs Exp $ */
+/* $XTermId: screen.c,v 1.505 2014/11/13 01:04:40 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -402,7 +402,7 @@ unsaveEditBufLines(TScreen *screen, ScrnBuf sb, unsigned n)
 	int extra = (int) (n - j);
 	LineData *dst = (LineData *) scrnHeadAddr(screen, sb, j);
 #if OPT_FIFO_LINES
-	LineData *src;
+	CLineData *src;
 
 	if (extra > screen->saved_fifo || extra > screen->savelines) {
 	    TRACE(("...FIXME: must clear text!\n"));
@@ -411,8 +411,8 @@ unsaveEditBufLines(TScreen *screen, ScrnBuf sb, unsigned n)
 	src = getScrollback(screen, -extra);
 #else
 	unsigned k = (screen->savelines - extra);
-	LineData *src = (LineData *) scrnHeadAddr(screen,
-						  screen->saveBuf_index, k);
+	CLineData *src = CLineData *scrnHeadAddr(screen,
+						 screen->saveBuf_index, k);
 #endif
 	copyLineData(dst, src);
     }
@@ -1363,7 +1363,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
  * its line-wrapping state.
  */
 void
-ShowWrapMarks(XtermWidget xw, int row, LineData *ld)
+ShowWrapMarks(XtermWidget xw, int row, CLineData *ld)
 {
     TScreen *screen = TScreenOf(xw);
     Boolean set = (Boolean) LineTstWrapped(ld);
@@ -1400,7 +1400,7 @@ refreshFontGCs(XtermWidget xw, unsigned new_attrs, unsigned old_attrs)
 /*
  * Repaints the area enclosed by the parameters.
  * Requires: (toprow, leftcol), (toprow + nrows, leftcol + ncols) are
- * 	     coordinates of characters in screen;
+ *	     coordinates of characters in screen;
  *	     nrows and ncols positive.
  *	     all dimensions are based on single-characters.
  */
@@ -1413,7 +1413,7 @@ ScrnRefresh(XtermWidget xw,
 	    Bool force)		/* ... leading/trailing spaces */
 {
     TScreen *screen = TScreenOf(xw);
-    LineData *ld;
+    CLineData *ld;
     int y = toprow * FontHeight(screen) + screen->border;
     int row;
     int maxrow = toprow + nrows - 1;
@@ -1450,7 +1450,7 @@ ScrnRefresh(XtermWidget xw,
 #endif
 #define BLANK_CEL(cell) (chars[cell] == ' ')
 	IChar *chars;
-	IAttr *attrs;
+	const IAttr *attrs;
 	int col = leftcol;
 	int maxcol = leftcol + ncols - 1;
 	int hi_col = maxcol;
@@ -1867,7 +1867,7 @@ ScreenResize(XtermWidget xw,
 {
     TScreen *screen = TScreenOf(xw);
     int code, rows, cols;
-    int border = 2 * screen->border;
+    const int border = 2 * screen->border;
     int move_down_by = 0;
 #ifdef TTYSIZE_STRUCT
     TTYSIZE_STRUCT ts;

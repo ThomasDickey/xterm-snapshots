@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.45 2014/10/06 09:32:44 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.c,v 1.47 2014/11/13 00:56:17 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -1395,7 +1395,7 @@ dump_bitmap_pixels(unsigned char const *pixels, unsigned w, unsigned h)
 
 #if OPT_RENDERFONT && defined(HAVE_TYPE_FCCHAR32)
 static int
-copy_bitmap_from_xft_font(Display *display, XftFont *font, char ch,
+copy_bitmap_from_xft_font(Display *display, XftFont *font, FcChar32 ch,
 			  unsigned char *pixels, unsigned w, unsigned h,
 			  unsigned xmin, unsigned ymin)
 {
@@ -1404,7 +1404,6 @@ copy_bitmap_from_xft_font(Display *display, XftFont *font, char ch,
      * - the bitmap for the last M characters and target dimensions
      * - resuse the pixmap object where possible
      */
-    const FcChar32 ch32 = (FcChar32) ch;	/* FIXME: convert correctly */
     XftColor bg, fg;
     Pixmap bitmap;
     XftDraw *draw;
@@ -1443,7 +1442,7 @@ copy_bitmap_from_xft_font(Display *display, XftFont *font, char ch,
 
     XftDrawRect(draw, &bg, 0, 0, bmw, bmh);
     XftDrawString32(draw, &fg, font, 0, font->ascent - (int) ymin,
-		    &ch32, 1);
+		    &ch, 1);
 
     image = XGetImage(display, bitmap, (int) xmin, 0, w, h, 1, XYPixmap);
     if (!image) {
@@ -1509,6 +1508,7 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
 	return;
     }
 
+    /* FIXME: ch is in UCS32 -- try to support non-ASCII characters */
     char_count = 0U;
     real_minx = workw - 1U;
     real_maxx = 0U;
@@ -1520,7 +1520,7 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
 	if (!FcCharSetHasChar(font->charset, ch))
 	    continue;
 
-	copy_bitmap_from_xft_font(display, font, (char) ch, pixels,
+	copy_bitmap_from_xft_font(display, font, ch, pixels,
 				  workw, workh, 0U, 0U);
 
 	pixel_count = 0U;
@@ -1644,7 +1644,7 @@ find_best_xft_font_size(Display *display, Screen * screen, unsigned maxw,
 	 *    doesn't appear to matter).
 	 *
 	 * In those two cases it literally drops pixels, sometimes whole
-	 * columns, making the glyphs unreadable and ugly even readable.
+	 * columns, making the glyphs unreadable and ugly even when readable.
 	 */
 	/*
 	 * FIXME:
@@ -1661,7 +1661,7 @@ find_best_xft_font_size(Display *display, Screen * screen, unsigned maxw,
 
 	    font = NULL;
 	    /* FIXME: make this name configurable.  In practice it may not be
-	     * useful -- there are few fonts which meet the other requirements.
+	     * useful -- there are few fonts which meet all the requirements.
 	     */
 	    if ((pat = XftNameParse(""))) {
 		XftPatternBuild(pat,
@@ -1821,7 +1821,7 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context, char ch,
 	return 0;
     }
 
-    if (!copy_bitmap_from_xft_font(display, font, ch, pixels, *w, *h,
+    if (!copy_bitmap_from_xft_font(display, font, CharOf(ch), pixels, *w, *h,
 				   xmin, ymin)) {
 	TRACE(("Unable to create bitmap for '%c'\n", ch));
 	XftFontClose(display, font);

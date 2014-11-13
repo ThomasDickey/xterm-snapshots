@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.746 2014/09/03 23:58:49 tom Exp $ */
+/* $XTermId: xterm.h,v 1.748 2014/11/13 01:00:26 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -906,7 +906,7 @@ extern void ToggleCursorBlink(TScreen * /* screen */);
 #endif
 
 #if OPT_BLINK_TEXT
-extern Bool LineHasBlinking(TScreen * /* screen */, LineData * /* ld */);
+extern Bool LineHasBlinking(TScreen * /* screen */, CLineData * /* ld */);
 #endif
 
 #if OPT_INPUT_METHOD
@@ -974,12 +974,12 @@ extern void VTInitModifiers(XtermWidget /* xw */);
 
 /* linedata.c */
 extern LineData *getLineData(TScreen * /* screen */, int /* row */);
-extern void copyLineData(LineData * /* dst */, LineData * /* src */);
+extern void copyLineData(LineData * /* dst */, CLineData * /* src */);
 extern void initLineData(XtermWidget /* xw */);
 
 extern CellData *newCellData(XtermWidget /* xw */, Cardinal /* count */);
-extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
-extern void restoreCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
+extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, CLineData * /* ld */, int /* column */);
+extern void restoreCellData(TScreen * /* screen */, const CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
 
 /* main.c */
 #define ENVP_ARG /**/
@@ -1234,7 +1234,7 @@ extern void ScrnInsertLine (XtermWidget /* xw */, ScrnBuf /* sb */, int  /* last
 extern void ScrnRefresh (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnUpdate (XtermWidget /* xw */, int  /* toprow */, int  /* leftcol */, int  /* nrows */, int  /* ncols */, Bool  /* force */);
 extern void ScrnWriteText (XtermWidget /* xw */, IChar * /* str */, unsigned  /* flags */, unsigned /* cur_fg_bg */, unsigned  /* length */);
-extern void ShowWrapMarks (XtermWidget /* xw */, int /* row */, LineData * /* ld */);
+extern void ShowWrapMarks (XtermWidget /* xw */, int /* row */, CLineData * /* ld */);
 extern void setupLineData (TScreen * /* screen */, ScrnBuf /* base */, Char * /* data */, unsigned /* nrow */, unsigned /* ncol */);
 extern void xtermParseRect (XtermWidget /* xw */, int, int *, XTermRect *);
 
@@ -1343,7 +1343,7 @@ extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int 
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
-extern int drawXtermText (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
+extern int drawXtermText (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, const IChar * /* text */, Cardinal /* len */, int /* on_wide */);
 extern int extendedBoolean(const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
@@ -1497,7 +1497,7 @@ extern void Resolve_XMC (XtermWidget /* xw */);
 #endif
 
 #if OPT_WIDE_CHARS
-unsigned visual_width(IChar * /* str */, Cardinal  /* len */);
+unsigned visual_width(const IChar * /* str */, Cardinal  /* len */);
 #else
 #define visual_width(a, b) (b)
 #endif
