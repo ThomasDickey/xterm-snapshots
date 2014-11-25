@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.53 2014/11/12 11:06:25 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.56 2014/11/25 09:35:42 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -48,7 +48,9 @@
 #undef DEBUG_PIXEL
 #undef DEBUG_REFRESH
 
-/* TODO:
+/*
+ * graphics TODO list
+ *
  * ReGIS:
  * - find a suitable default alphabet zero font instead of scaling Xft fonts
  * - input and output cursors
@@ -84,15 +86,13 @@
  * - handle graphic updates in scroll regions (verify effect on graphics)
  * - handle rectangular area copies (verify they work with graphics)
  * - invalidate graphics under graphic if same origin, at least as big, and bg not transparent
- * - invalidate graphic if scrolled past end of scrollback
+ * - invalidate graphic if completely scrolled past end of scrollback
  * - invalidate graphic if all pixels are transparent/erased
- * - erase scrolled portions of all graphics on alt buffer (or at least avoid drawing them)
- * - hide botom portion of non-alt graphics when they partially overlap the alt buffer
- * - auto-convert color graphics in VT330 mode
+ * - invalidate graphic if completely scrolled out of alt buffer
  * - posturize requested colors to match hardware palettes (e.g. only four possible shades on VT240)
  * - color register report/restore
  * - ability to select/copy graphics for pasting in other programs
- * - ability to show non-scrolled sixel graphics in a separate window
+ * - ability to show non-scroll-mode sixel graphics in a separate window
  * - ability to show ReGIS graphics in a separate window
  * - ability to show Tektronix graphics in VT100 window
  * - truncate graphics at bottom edge of window?
@@ -105,20 +105,17 @@
  * - non-integer text scaling
  * - free distortionless text rotation
  * - font characteristics: bold/underline/italic
- * - load command extension to load by font name (via Xft)
  * - remove/increase arbitrary limits (pattern size, pages, alphabets, stack size, font names, etc.)
  * - comment command
  * - shade/fill with borders
  * - sprites (copy portion of page into/out of buffer with scaling and rotation)
  * - ellipses
  * - 2D patterns
- * - option to set actual size (not just coordinate range)
+ * - option to set actual graphic size (not just coordinate range)
  * - gradients (for lines and fills)
  * - line width (RLogin has this and it is mentioned in docs for the DEC ReGIS to Postscript converter)
- * - F option for screen command (mentioned in docs for the DEC ReGIS to Postscript converter)
  * - transparency
  * - background color as stackable write control
- * - RGB triplets
  * - true color (virtual color registers created upon lookup)
  * - anti-aliasing
  */
@@ -489,7 +486,7 @@ find_color_register(ColorRegister const *color_registers, int r, int g, int b)
     /* I have no idea what algorithm DEC used for this.
      * The documentation warns that it is unpredictable, especially with values
      * far away from any allocated color so it is probably a very simple
-     * hueristic rather than something fancy like finding the minimum distance
+     * heuristic rather than something fancy like finding the minimum distance
      * in a linear perceptive color space.
      */
     closest_index = MAX_COLOR_REGISTERS;
@@ -1070,27 +1067,25 @@ outline_refresh(TScreen const *screen,
 void
 hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 {
-    double hs = (h + 240) % 360;
-    double hv = hs / 360.0;
-    double lv = l / 100.0;
-    double sv = s / 100.0;
+    const int hs = ((h + 240) / 60) % 6;
+    const double lv = l / 100.0;
+    const double sv = s / 100.0;
     double c, x, m, c2;
     double r1, g1, b1;
-    int hpi;
 
     if (s == 0) {
 	*r = *g = *b = (short) l;
 	return;
     }
 
-    if ((c2 = ((2.0 * lv) - 1.0)) < 0.0)
+    c2 = (2.0 * lv) - 1.0;
+    if (c2 < 0.0)
 	c2 = -c2;
     c = (1.0 - c2) * sv;
-    hpi = (int) (hv * 6.0);
-    x = (hpi & 1) ? c : 0.0;
+    x = (hs & 1) ? c : 0.0;
     m = lv - 0.5 * c;
 
-    switch (hpi) {
+    switch (hs) {
     case 0:
 	r1 = c;
 	g1 = x;
@@ -1265,7 +1260,7 @@ compare_graphic_ids(const void *left, const void *right)
 
 static void
 clip_area(int *orig_x, int *orig_y, int *orig_w, int *orig_h,
-          int clip_x, int clip_y, int clip_w, int clip_h)
+	  int clip_x, int clip_y, int clip_w, int clip_h)
 {
     if (*orig_x < clip_x) {
 	const int diff = clip_x - *orig_x;

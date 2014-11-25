@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.18 2014/10/06 09:28:00 Ross.Combs Exp $ */
+/* $XTermId: graphics.h,v 1.19 2014/11/25 09:24:26 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -47,7 +47,7 @@ typedef struct {
 
 typedef unsigned short RegisterNum;
 
-#define MAX_COLOR_REGISTERS 256U
+#define MAX_COLOR_REGISTERS 1024U
 #define COLOR_HOLE ((RegisterNum)MAX_COLOR_REGISTERS)
 
 #define MAX_GRAPHICS 16U
