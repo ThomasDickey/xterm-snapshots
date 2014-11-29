@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.56 2014/11/25 09:35:42 tom Exp $ */
+/* $XTermId: graphics.c,v 1.58 2014/11/28 21:00:04 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -164,11 +164,12 @@ freeGraphic(Graphic *obj)
 }
 
 static Graphic *
-allocGraphic(void)
+allocGraphic(const TScreen *screen)
 {
     Graphic *result = TypeCalloc(Graphic);
     if (result) {
-	if (!(result->pixels = TypeCallocN(RegisterNum, MAX_PIXELS))) {
+	size_t max_pixels = (size_t) (screen->regis_max_wide * screen->regis_max_high);
+	if (!(result->pixels = TypeCallocN(RegisterNum, max_pixels))) {
 	    result = freeGraphic(result);
 	} else if (!(result->private_color_registers = allocRegisters())) {
 	    result = freeGraphic(result);
@@ -189,13 +190,13 @@ getActiveSlot(unsigned n)
 }
 
 static Graphic *
-getInactiveSlot(unsigned n)
+getInactiveSlot(const TScreen *screen, unsigned n)
 {
     if (n < MAX_GRAPHICS &&
 	(!displayed_graphics[n] ||
 	 !displayed_graphics[n]->valid)) {
 	if (!displayed_graphics[n]) {
-	    displayed_graphics[n] = allocGraphic();
+	    displayed_graphics[n] = allocGraphic(screen);
 	}
 	return displayed_graphics[n];
     }
@@ -672,7 +673,8 @@ get_color_register_count(TScreen const *screen)
 }
 
 static void
-init_graphic(Graphic *graphic,
+init_graphic(const TScreen *screen,
+	     Graphic *graphic,
 	     unsigned type,
 	     int terminal_id,
 	     int charrow,
@@ -680,12 +682,13 @@ init_graphic(Graphic *graphic,
 	     unsigned num_color_registers,
 	     int private_colors)
 {
+    size_t max_pixels = (size_t) (screen->regis_max_wide * screen->regis_max_high);
     unsigned i;
 
     TRACE(("initializing graphic object\n"));
 
     graphic->dirty = 1;
-    for (i = 0U; i < MAX_PIXELS; i++)
+    for (i = 0U; i < max_pixels; i++)
 	graphic->pixels[i] = COLOR_HOLE;
     memset(graphic->color_registers_used, 0, sizeof(graphic->color_registers_used));
 
@@ -708,8 +711,8 @@ init_graphic(Graphic *graphic,
      * VT382       960x750  sixel only
      * dxterm      ?x? ?x?  variable?
      */
-    graphic->max_width = BUFFER_WIDTH;
-    graphic->max_height = BUFFER_HEIGHT;
+    graphic->max_width = screen->regis_max_wide;
+    graphic->max_height = screen->regis_max_high;
 
     graphic->actual_width = 0;
     graphic->actual_height = 0;
@@ -746,7 +749,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
     unsigned ii;
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getInactiveSlot(ii))) {
+	if ((graphic = getInactiveSlot(screen, ii))) {
 	    TRACE(("using fresh graphic index=%u id=%u\n", ii, next_graphic_id));
 	    break;
 	}
@@ -775,7 +778,8 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 	graphic->xw = xw;
 	graphic->bufferid = bufferid;
 	graphic->id = next_graphic_id++;
-	init_graphic(graphic,
+	init_graphic(screen,
+		     graphic,
 		     type,
 		     terminal_id,
 		     charrow,

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1376 2014/11/13 01:00:26 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1379 2014/11/28 22:27:20 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -672,6 +672,11 @@ static XtResource xterm_resources[] =
 
 #if OPT_PRINT_COLORS
     Ires(XtNprintAttributes, XtCPrintAttributes, SPS.print_attributes, 1),
+#endif
+
+#if OPT_REGIS_GRAPHICS
+    Sres(XtNregisScreenSize, XtCRegisScreenSize, screen.regis_screensize,
+	 "800x1000"),
 #endif
 
 #if OPT_SHIFT_FONTS
@@ -8321,6 +8326,58 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.privatecolorregisters);	/* FIXME: should this be off unconditionally here? */
     TRACE(("initialized PRIVATE_COLOR_REGISTERS to resource default: %s\n",
 	   BtoS(TScreenOf(wnew)->privatecolorregisters)));
+#endif
+
+#if OPT_REGIS_GRAPHICS
+    init_Sres(screen.regis_screensize);
+    TScreenOf(wnew)->regis_max_high = 800;
+    TScreenOf(wnew)->regis_max_wide = 1000;
+    if (!x_strcasecmp(TScreenOf(wnew)->regis_screensize, "auto")) {
+	TRACE(("setting ReGIS screensize based on terminal_id %d\n",
+	       TScreenOf(wnew)->terminal_id));
+	switch (TScreenOf(wnew)->terminal_id) {
+	case 125:
+	    TScreenOf(wnew)->regis_max_high = 768;
+	    TScreenOf(wnew)->regis_max_wide = 460;
+	    break;
+	case 240:
+	    TScreenOf(wnew)->regis_max_high = 800;
+	    TScreenOf(wnew)->regis_max_wide = 460;
+	    break;
+	case 241:
+	    TScreenOf(wnew)->regis_max_high = 800;
+	    TScreenOf(wnew)->regis_max_wide = 460;
+	    break;
+	case 330:
+	    TScreenOf(wnew)->regis_max_high = 800;
+	    TScreenOf(wnew)->regis_max_wide = 480;
+	    break;
+	case 340:
+	    TScreenOf(wnew)->regis_max_high = 800;
+	    TScreenOf(wnew)->regis_max_wide = 480;
+	    break;
+	case 382:
+	    TScreenOf(wnew)->regis_max_high = 960;
+	    TScreenOf(wnew)->regis_max_wide = 750;
+	    break;
+	}
+    } else {
+	int max_high;
+	int max_wide;
+	char ignore;
+
+	if (sscanf(TScreenOf(wnew)->regis_screensize,
+		   "%dx%d%c",
+		   &max_high,
+		   &max_wide,
+		   &ignore) == 2) {
+	    TScreenOf(wnew)->regis_max_high = (Dimension) max_high;
+	    TScreenOf(wnew)->regis_max_wide = (Dimension) max_wide;
+	}
+    }
+    TRACE(("maximum ReGIS screensize %dx%d\n",
+	   (int) TScreenOf(wnew)->regis_max_high,
+	   (int) TScreenOf(wnew)->regis_max_wide));
 #endif
 
 #if OPT_SIXEL_GRAPHICS
