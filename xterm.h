@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.748 2014/11/13 01:00:26 tom Exp $ */
+/* $XTermId: xterm.h,v 1.749 2014/11/28 19:30:12 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -515,6 +515,7 @@ extern char **environ;
 #define XtNprinterNewLine	"printerNewLine"
 #define XtNprivateColorRegisters "privateColorRegisters"
 #define XtNquietGrab		"quietGrab"
+#define XtNregisScreenSize	"regisScreenSize"
 #define XtNrenderFont		"renderFont"
 #define XtNresizeGravity	"resizeGravity"
 #define XtNretryInputMethod	"retryInputMethod"
@@ -692,6 +693,7 @@ extern char **environ;
 #define XtCPrinterNewLine	"PrinterNewLine"
 #define XtCPrivateColorRegisters "PrivateColorRegisters"
 #define XtCQuietGrab		"QuietGrab"
+#define XtCRegisScreenSize	"RegisScreenSize"
 #define XtCRenderFont		"RenderFont"
 #define XtCResizeGravity	"ResizeGravity"
 #define XtCRetryInputMethod	"RetryInputMethod"

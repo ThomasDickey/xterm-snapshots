@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.51 2014/11/25 09:41:51 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.52 2014/11/28 20:37:24 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -5026,8 +5026,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 						  r, g, b);
 			}
 			continue;
-		    }
-		     {
+		    } {
 			char skip;
 
 			skip_regis_whitespace(&optionarg);
@@ -6250,7 +6249,8 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
     context.graphic = get_new_or_matching_graphic(xw,
 						  charrow, charcol,
-						  800, 480,
+						  screen->regis_max_wide,
+						  screen->regis_max_high,
 						  type);
     /*
      * FIXME: Don't initialize parameters for continued command mode,
