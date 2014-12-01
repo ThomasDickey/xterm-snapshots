@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.52 2014/11/28 20:37:24 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.55 2014/12/01 10:17:53 Ross.Combs Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -209,6 +209,8 @@ typedef struct RegisParseState {
 typedef struct RegisGraphicsContext {
     Graphic *graphic;
     int terminal_id;
+    int x_off, y_off;
+    int width, height;
     unsigned all_planes;
     RegisterNum background;
     RegisAlphabet alphabets[MAX_REGIS_ALPHABETS];
@@ -227,6 +229,8 @@ typedef struct RegisGraphicsContext {
     unsigned fill_point_count;
 } RegisGraphicsContext;
 
+static RegisGraphicsContext persistent_context;
+
 #define MAX_PATTERN_BITS 8U
 
 #define WRITE_STYLE_OVERLAY 1U
@@ -242,6 +246,13 @@ typedef struct RegisGraphicsContext {
 #define ROT_LEFT_N(V, N) ( (((V) << ((N) & 3U )) & 255U) | \
 			   ((V) >> (8U - ((N) & 3U))) )
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
+
+#define READ_PIXEL(C, X, Y) \
+    read_pixel((C)->graphic, (X) - (C)->x_off, (Y) - (C)->y_off)
+#define DRAW_PIXEL(C, X, Y, COL) \
+    draw_solid_pixel((C)->graphic, (X) - (C)->x_off, (Y) - (C)->y_off, (COL))
+#define DRAW_ALL(C, COL) \
+    draw_solid_rectangle((C)->graphic, 0, 0, (C)->width, (C)->height, (COL))
 
 static unsigned get_shade_character_pixel(unsigned char const *pixels,
 					  unsigned w, unsigned h,
@@ -318,7 +329,7 @@ draw_regis_pixel(RegisGraphicsContext *context, int x, int y,
 	    return;
 	}
 
-	color = read_pixel(context->graphic, x, y);
+	color = READ_PIXEL(context, x, y);
 	if (color == COLOR_HOLE)
 	    color = context->background;
 	color = color ^ context->all_planes;
@@ -334,7 +345,7 @@ draw_regis_pixel(RegisGraphicsContext *context, int x, int y,
 	break;
     }
 
-    draw_solid_pixel(context->graphic, x, y, color);
+    DRAW_PIXEL(context, x, y, color);
 }
 
 static void
@@ -1915,7 +1926,7 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
     assert(context);
     assert(pixels);
 
-    if (!context->alphabets[alphabet_index].loaded[(unsigned) ch]) {
+    if (!context->alphabets[alphabet_index].loaded[(unsigned char) ch]) {
 	TRACE(("in alphabet %u with alphabet index %u user glyph for '%c' not loaded\n",
 	       context->current_text_controls->alphabet_num, alphabet_index,
 	       ch));
@@ -1925,7 +1936,7 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
     w = context->alphabets[alphabet_index].pixw;
     h = context->alphabets[alphabet_index].pixh;
     glyph = &context->alphabets[alphabet_index]
-	.bytes[(unsigned) ch * GLYPH_WIDTH_BYTES(w) * h];
+	.bytes[(unsigned char) ch * GLYPH_WIDTH_BYTES(w) * h];
 
     for (yy = 0U; yy < h; yy++) {
 	for (xx = 0U; xx < w; xx++) {
@@ -3425,7 +3436,9 @@ load_regis_write_control(RegisParseState *state,
 	    char suboption;
 
 	    while (arg->pos < arg->len) {
-		skip_regis_whitespace(arg);
+		if (skip_regis_whitespace(arg))
+		    continue;
+
 		TRACE(("looking for option in \"%s\"\n",
 		       fragment_to_tempstr(arg)));
 		if (extract_regis_parenthesized_data(arg, &suboptionset)) {
@@ -3612,7 +3625,8 @@ load_regis_write_control(RegisParseState *state,
 	    int shading_enabled = 0;
 
 	    while (arg->pos < arg->len) {
-		skip_regis_whitespace(arg);
+		if (skip_regis_whitespace(arg))
+		    continue;
 
 		if (extract_regis_string(arg, state->temp, state->templen)) {
 		    TRACE(("found fill char \"%s\"\n", state->temp));
@@ -3750,7 +3764,8 @@ load_regis_write_control_set(RegisParseState *state,
     char option;
 
     while (controls->pos < controls->len) {
-	skip_regis_whitespace(controls);
+	if (skip_regis_whitespace(controls))
+	    continue;
 
 	if (extract_regis_parenthesized_data(controls, &optionset)) {
 	    TRACE(("got write control optionset: \"%s\"\n",
@@ -3884,14 +3899,21 @@ init_regis_alphabets(RegisGraphicsContext *context)
 }
 
 static void
-init_regis_graphics_context(int terminal_id, RegisGraphicsContext *context)
+init_regis_graphics_context(XtermWidget xw,
+			    unsigned max_colors,
+			    RegisGraphicsContext *context)
 {
-    context->terminal_id = terminal_id;
+    context->graphic = NULL;
+    context->terminal_id = TScreenOf(xw)->terminal_id;
+    context->width = TScreenOf(xw)->regis_max_wide;
+    context->height = TScreenOf(xw)->regis_max_high;
+    context->x_off = 0;
+    context->y_off = 0;
     /*
      * Generate a mask covering all valid color register address bits
      * (but don't bother past 2**16).
      */
-    context->all_planes = (unsigned) context->graphic->valid_registers;
+    context->all_planes = max_colors;
     context->all_planes--;
     context->all_planes |= 1U;
     context->all_planes |= context->all_planes >> 1U;
@@ -3899,7 +3921,7 @@ init_regis_graphics_context(int terminal_id, RegisGraphicsContext *context)
     context->all_planes |= context->all_planes >> 4U;
     context->all_planes |= context->all_planes >> 8U;
 
-    init_regis_write_controls(terminal_id, context->all_planes,
+    init_regis_write_controls(context->terminal_id, context->all_planes,
 			      &context->persistent_write_controls);
     copy_regis_write_controls(&context->persistent_write_controls,
 			      &context->temporary_write_controls);
@@ -4525,6 +4547,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		if (skip_regis_whitespace(&optionarg))
 		    continue;
+
 		if (extract_regis_extent(&optionarg, &sizearg)) {
 		    int w, h;
 		    unsigned size;
@@ -4886,13 +4909,106 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	switch (state->option) {
 	case 'A':
 	case 'a':
-	    TRACE(("found address definition \"%s\" FIXME\n",
+	    TRACE(("found address definition \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
-	    if (!fragment_len(&optionarg)) {
-		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition option value \"%s\"\n",
-		       fragment_to_tempstr(&optionarg)));
-		return 1;
+	    {
+		RegisDataFragment address_extent;
+		int got_ul = 0;
+		int got_lr = 0;
+		int ulx = 0, uly = 0, lrx = 0, lry = 0;
+
+		while (fragment_len(&optionarg)) {
+		    if (skip_regis_whitespace(&optionarg))
+			continue;
+
+		    if (extract_regis_extent(&optionarg, &address_extent)) {
+			int x, y;
+
+			/* FIXME: are relative values supposed to be handled? */
+			if (!load_regis_extent(fragment_to_tempstr(&address_extent),
+					       0, 0, &x, &y)) {
+			    TRACE(("DATA_ERROR: unable to parse extent in address definition: \"%s\"\n",
+				   fragment_to_tempstr(&address_extent)));
+			    break;
+			}
+
+			if (!got_ul) {
+			    ulx = x;
+			    uly = y;
+			    got_ul = 1;
+			} else if (!got_lr) {
+			    lrx = x;
+			    lry = y;
+			    got_lr = 1;
+			} else {
+			    TRACE(("DATA_ERROR: ignoring extra extent argument in address definition: \"%s\"\n",
+				   fragment_to_tempstr(&address_extent)));
+			}
+			continue;
+		    }
+
+		    TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition: expected extent argument but found: \"%s\"\n",
+			   fragment_to_tempstr(&optionarg)));
+		    return 1;
+		}
+
+		if (!got_ul || !got_lr) {
+		    TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition: one or both locations missing in definition\n"));
+		    return 1;
+		}
+		if (ulx == lrx || uly == lry) {
+		    TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition: one or both dimensions is zero: ul=%d,%d lr=%d,%d\n",
+			   ulx, uly, lrx, lry));
+		    return 1;
+		}
+
+		if (ulx > lrx) {
+		    int tmp;
+
+		    tmp = ulx;
+		    ulx = lrx;
+		    lrx = tmp;
+
+		    TRACE(("DATA_ERROR: FIXME: inverted axis is not currently supported; converted to: ul=%d,%d lr=%d,%d\n",
+			   ulx, uly, lrx, lry));
+		}
+		if (uly > lry) {
+		    int tmp;
+
+		    tmp = uly;
+		    uly = lry;
+		    lry = tmp;
+
+		    TRACE(("DATA_ERROR: FIXME: inverted axis is not currently supported; converted to: ul=%d,%d lr=%d,%d\n",
+			   ulx, uly, lrx, lry));
+		}
+
+		if (lrx + 1 - ulx > context->width) {
+		    int width = lrx + 1 - ulx;
+
+		    (void) width;
+		    lrx = ulx + context->width - 1;
+		    TRACE(("DATA_ERROR: x address range %d exceeds maximum %d; converted to: ul=%d,%d lr=%d,%d\n",
+			   width, context->width, ulx, uly, lrx, lry));
+		}
+		if (lry + 1 - uly > context->height) {
+		    int height = lry + 1 - uly;
+
+		    (void) height;
+		    lry = uly + context->height - 1;
+		    TRACE(("DATA_ERROR: x address range %d exceeds maximum %d; converted to: ul=%d,%d lr=%d,%d\n",
+			   height, context->height, ulx, uly, lrx, lry));
+		}
+
+		/* FIXME: handle scaling */
+		TRACE(("custom screen address: ul=%d,%d lr=%d,%d\n",
+		       ulx, uly, lrx, lry));
+		context->width = lrx + 1 - ulx;
+		context->height = lry + 1 - uly;
+		context->x_off = ulx;
+		context->y_off = uly;
+		context->graphic->actual_width = context->width;
+		context->graphic->actual_height = context->height;
 	    }
 	    break;
 	case 'C':
@@ -4915,10 +5031,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		       fragment_to_tempstr(&optionarg)));
 		return 1;
 	    }
-	    draw_solid_rectangle(context->graphic, 0, 0,
-				 context->graphic->actual_width,
-				 context->graphic->actual_height,
-				 context->background);
+	    DRAW_ALL(context, context->background);
 	    break;
 	case 'F':
 	case 'f':
@@ -4930,10 +5043,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		return 1;
 	    }
 	    /* We aren't going to print anything so no need to deduplicate. */
-	    draw_solid_rectangle(context->graphic, 0, 0,
-				 context->graphic->actual_width,
-				 context->graphic->actual_height,
-				 context->background);
+	    DRAW_ALL(context, context->background);
 	    break;
 	case 'H':
 	case 'h':
@@ -4968,6 +5078,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		while (fragment_len(&optionarg)) {
 		    if (skip_regis_whitespace(&optionarg))
 			continue;
+
 		    if (extract_regis_num(&optionarg, &regnum)) {
 			int register_num;
 			int color_only;
@@ -5695,32 +5806,27 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 					   &e_x_final, &e_y_final);
 
 #ifdef DEBUG_ARC_CENTER
-			draw_solid_pixel(context->graphic, c_x + 1, c_y, 3U);
-			draw_solid_pixel(context->graphic, c_x - 1, c_y, 3U);
-			draw_solid_pixel(context->graphic, c_x, c_y + 1, 3U);
-			draw_solid_pixel(context->graphic, c_x, c_y - 1, 3U);
-			draw_solid_pixel(context->graphic, c_x, c_y, 3U);
+			DRAW_PIXEL(context, c_x + 1, c_y, 3U);
+			DRAW_PIXEL(context, c_x - 1, c_y, 3U);
+			DRAW_PIXEL(context, c_x, c_y + 1, 3U);
+			DRAW_PIXEL(context, c_x, c_y - 1, 3U);
+			DRAW_PIXEL(context, c_x, c_y, 3U);
 #endif
 
 #ifdef DEBUG_ARC_START
-			draw_solid_pixel(context->graphic, e_x + 1, e_y, 2U);
-			draw_solid_pixel(context->graphic, e_x - 1, e_y, 2U);
-			draw_solid_pixel(context->graphic, e_x, e_y + 1, 2U);
-			draw_solid_pixel(context->graphic, e_x, e_y - 1, 2U);
-			draw_solid_pixel(context->graphic, e_x, e_y, 2U);
+			DRAW_PIXEL(context, e_x + 1, e_y, 2U);
+			DRAW_PIXEL(context, e_x - 1, e_y, 2U);
+			DRAW_PIXEL(context, e_x, e_y + 1, 2U);
+			DRAW_PIXEL(context, e_x, e_y - 1, 2U);
+			DRAW_PIXEL(context, e_x, e_y, 2U);
 #endif
 
 #ifdef DEBUG_ARC_END
-			draw_solid_pixel(context->graphic, e_x_final + 1,
-					 e_y_final + 1, 1U);
-			draw_solid_pixel(context->graphic, e_x_final + 1,
-					 e_y_final - 1, 1U);
-			draw_solid_pixel(context->graphic, e_x_final - 1,
-					 e_y_final + 1, 1U);
-			draw_solid_pixel(context->graphic, e_x_final - 1,
-					 e_y_final - 1, 1U);
-			draw_solid_pixel(context->graphic, e_x_final,
-					 e_y_final, 1U);
+			DRAW_PIXEL(context, e_x_final + 1, e_y_final + 1, 1U);
+			DRAW_PIXEL(context, e_x_final + 1, e_y_final - 1, 1U);
+			DRAW_PIXEL(context, e_x_final - 1, e_y_final + 1, 1U);
+			DRAW_PIXEL(context, e_x_final - 1, e_y_final - 1, 1U);
+			DRAW_PIXEL(context, e_x_final, e_y_final, 1U);
 #endif
 
 			if (state->curve_mode == CURVE_POSITION_ARC_CENTER) {
@@ -5784,16 +5890,19 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
 		}
-		TRACE(("scrolling image to location %d,%d\n", new_x, new_y));
-		/* FIXME: does any write mode (like mode) affect background? */
+		TRACE(("scrolling image to coordinates %d,%d\n", new_x, new_y));
+		new_x -= context->x_off;
+		new_y -= context->y_off;
+		TRACE(("scrolling image to buffer location %d,%d\n", new_x, new_y));
+		/* FIXME: does any write mode affect background? */
 		if (new_y < 0)
-		    copy_h = context->graphic->actual_height - new_y;
+		    copy_h = context->height - new_y;
 		else
-		    copy_h = context->graphic->actual_height;
+		    copy_h = context->height;
 		if (new_x < 0)
-		    copy_w = context->graphic->actual_width - new_x;
+		    copy_w = context->width - new_x;
 		else
-		    copy_w = context->graphic->actual_width;
+		    copy_w = context->width;
 		copy_overlapping_area(context->graphic, 0, 0, new_x, new_y,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
@@ -5880,16 +5989,19 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
 		}
-		TRACE(("scrolling image to location %d,%d\n", new_x, new_y));
-		/* FIXME: does any write mode (like mode) affect background? */
+		TRACE(("scrolling image to coordinates %d,%d\n", new_x, new_y));
+		new_x -= context->x_off;
+		new_y -= context->y_off;
+		TRACE(("scrolling image to buffer location %d,%d\n", new_x, new_y));
+		/* FIXME: does any write mode affect background? */
 		if (new_y < 0)
-		    copy_h = context->graphic->actual_height - new_y;
+		    copy_h = context->height - new_y;
 		else
-		    copy_h = context->graphic->actual_height;
+		    copy_h = context->height;
 		if (new_x < 0)
-		    copy_w = context->graphic->actual_width - new_x;
+		    copy_w = context->width - new_x;
 		else
-		    copy_w = context->graphic->actual_width;
+		    copy_w = context->width;
 		copy_overlapping_area(context->graphic, 0, 0, new_x, new_y,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
@@ -6215,7 +6327,7 @@ void
 parse_regis(XtermWidget xw, ANSI *params, char const *string)
 {
     TScreen *screen = TScreenOf(xw);
-    RegisGraphicsContext context;
+    RegisGraphicsContext *context = &persistent_context;
     RegisParseState state;
     struct timeval prev_tv;
     struct timeval curr_tv;
@@ -6223,9 +6335,15 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     int charrow = 0;
     int charcol = 0;
     unsigned type = 1;		/* FIXME: use page number */
+    int Pmode;
 
-    (void) params;		/* ..only used here in a trace */
-    TRACE(("ReGIS vector graphics mode, params=%d\n", params->a_nparam));
+    if (params->a_nparam > 0)
+	Pmode = params->a_param[0];
+    else
+	Pmode = 0;
+
+    TRACE(("ReGIS vector graphics mode, param_count=%d mode=%d\n",
+	   params->a_nparam, Pmode));
 
     init_fragment(&state.input, string);
     state.templen = (unsigned) strlen(string) + 1U;
@@ -6239,26 +6357,27 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     state.stack_next = 0U;
     state.load_index = MAX_REGIS_ALPHABETS;
 
-    memset(&context, 0, sizeof(context));
-
     /* Update the screen scrolling and do a refresh.
      * The refresh may not cover the whole graphic.
      */
     if (screen->scroll_amt)
 	FlushScroll(xw);
 
-    context.graphic = get_new_or_matching_graphic(xw,
-						  charrow, charcol,
-						  screen->regis_max_wide,
-						  screen->regis_max_high,
-						  type);
-    /*
-     * FIXME: Don't initialize parameters for continued command mode,
-     * or when reusing the same graphic.
-     */
-    init_regis_graphics_context(screen->terminal_id, &context);
-    context.graphic->valid = 1;
-    context.graphic->dirty = 1;
+    /* Only reset on the first ReGIS image unless it is being requested. */
+    if ((context->width == 0 && context->height == 0) ||
+	(Pmode == 1 || Pmode == 3)) {
+	init_regis_graphics_context(xw,
+				    get_color_register_count(screen),
+				    context);
+    }
+
+    context->graphic = get_new_or_matching_graphic(xw,
+						   charrow, charcol,
+						   context->width,
+						   context->height,
+						   type);
+    context->graphic->valid = 1;
+    context->graphic->dirty = 1;
 
     X_GETTIMEOFDAY(&prev_tv);
     iterations = 0U;
@@ -6268,7 +6387,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	if (skip_regis_whitespace(&state.input))
 	    continue;
 	iterations++;
-	if (parse_regis_toplevel(&state, &context)) {
+	if (parse_regis_toplevel(&state, context)) {
 	    if (iterations > MIN_ITERATIONS_BEFORE_REFRESH) {
 		int need_refresh = 0;
 
