@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.749 2014/11/28 19:30:12 tom Exp $ */
+/* $XTermId: xterm.h,v 1.750 2014/12/12 09:47:29 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -482,6 +482,7 @@ extern char **environ;
 #define XtNloginShell		"loginShell"
 #define XtNmarginBell		"marginBell"
 #define XtNmaximized		"maximized"
+#define XtNmaxGraphicSize	"maxGraphicSize"
 #define XtNmenuBar		"menuBar"
 #define XtNmenuHeight		"menuHeight"
 #define XtNmetaSendsEscape	"metaSendsEscape"
@@ -664,6 +665,7 @@ extern char **environ;
 #define XtCLoginShell		"LoginShell"
 #define XtCMarginBell		"MarginBell"
 #define XtCMaximized		"Maximized"
+#define XtCMaxGraphicSize	"MaxGraphicSize"
 #define XtCMenuBar		"MenuBar"
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"

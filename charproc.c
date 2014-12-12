@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1379 2014/11/28 22:27:20 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1381 2014/12/12 09:59:15 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -675,8 +675,13 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_REGIS_GRAPHICS
-    Sres(XtNregisScreenSize, XtCRegisScreenSize, screen.regis_screensize,
-	 "800x1000"),
+    Sres(XtNregisScreenSize, XtCRegisScreenSize,
+	 screen.graphics_regis_screensize, "800x1000"),
+#endif
+
+#if OPT_GRAPHICS
+    Sres(XtNmaxGraphicSize, XtCMaxGraphicSize, screen.graphics_max_size,
+	 "1000x1000"),
 #endif
 
 #if OPT_SHIFT_FONTS
@@ -8328,56 +8333,129 @@ VTInitialize(Widget wrequest,
 	   BtoS(TScreenOf(wnew)->privatecolorregisters)));
 #endif
 
-#if OPT_REGIS_GRAPHICS
-    init_Sres(screen.regis_screensize);
-    TScreenOf(wnew)->regis_max_high = 800;
-    TScreenOf(wnew)->regis_max_wide = 1000;
-    if (!x_strcasecmp(TScreenOf(wnew)->regis_screensize, "auto")) {
-	TRACE(("setting ReGIS screensize based on terminal_id %d\n",
-	       TScreenOf(wnew)->terminal_id));
+#if OPT_GRAPHICS
+    {
+	int native_w, native_h;
+
 	switch (TScreenOf(wnew)->terminal_id) {
 	case 125:
-	    TScreenOf(wnew)->regis_max_high = 768;
-	    TScreenOf(wnew)->regis_max_wide = 460;
+	    native_w = 768;
+	    native_h = 460;
 	    break;
 	case 240:
-	    TScreenOf(wnew)->regis_max_high = 800;
-	    TScreenOf(wnew)->regis_max_wide = 460;
+	    native_w = 800;
+	    native_h = 460;
 	    break;
 	case 241:
-	    TScreenOf(wnew)->regis_max_high = 800;
-	    TScreenOf(wnew)->regis_max_wide = 460;
+	    native_w = 800;
+	    native_h = 460;
 	    break;
 	case 330:
-	    TScreenOf(wnew)->regis_max_high = 800;
-	    TScreenOf(wnew)->regis_max_wide = 480;
+	    native_w = 800;
+	    native_h = 480;
 	    break;
 	case 340:
-	    TScreenOf(wnew)->regis_max_high = 800;
-	    TScreenOf(wnew)->regis_max_wide = 480;
+	default:
+	    native_w = 800;
+	    native_h = 480;
 	    break;
 	case 382:
-	    TScreenOf(wnew)->regis_max_high = 960;
-	    TScreenOf(wnew)->regis_max_wide = 750;
+	    native_w = 960;
+	    native_h = 750;
 	    break;
 	}
-    } else {
-	int max_high;
-	int max_wide;
-	char ignore;
 
-	if (sscanf(TScreenOf(wnew)->regis_screensize,
-		   "%dx%d%c",
-		   &max_high,
-		   &max_wide,
-		   &ignore) == 2) {
-	    TScreenOf(wnew)->regis_max_high = (Dimension) max_high;
-	    TScreenOf(wnew)->regis_max_wide = (Dimension) max_wide;
+# if OPT_REGIS_GRAPHICS
+	init_Sres(screen.graphics_regis_screensize);
+	TScreenOf(wnew)->graphics_regis_def_high = 800;
+	TScreenOf(wnew)->graphics_regis_def_wide = 1000;
+	if (!x_strcasecmp(TScreenOf(wnew)->graphics_regis_screensize, "auto")) {
+	    TRACE(("setting default ReGIS screensize based on terminal_id %d\n",
+		   TScreenOf(wnew)->terminal_id));
+	    TScreenOf(wnew)->graphics_regis_def_high = (Dimension) native_w;
+	    TScreenOf(wnew)->graphics_regis_def_wide = (Dimension) native_h;
+	} else {
+	    int conf_high;
+	    int conf_wide;
+	    char ignore;
+
+	    if (sscanf(TScreenOf(wnew)->graphics_regis_screensize,
+		       "%dx%d%c",
+		       &conf_wide,
+		       &conf_high,
+		       &ignore) == 2) {
+		if (conf_high > 0 && conf_wide > 0) {
+		    TScreenOf(wnew)->graphics_regis_def_high =
+			(Dimension) conf_high;
+		    TScreenOf(wnew)->graphics_regis_def_wide =
+			(Dimension) conf_wide;
+		} else {
+		    TRACE(("ignoring invalid regisScreenSize %s\n",
+			   TScreenOf(wnew)->graphics_regis_screensize));
+		}
+	    } else {
+		TRACE(("ignoring invalid regisScreenSize %s\n",
+		       TScreenOf(wnew)->graphics_regis_screensize));
+	    }
 	}
+	printf("default ReGIS graphics screensize %dx%d\n",
+	       (int) TScreenOf(wnew)->graphics_regis_def_high,
+	       (int) TScreenOf(wnew)->graphics_regis_def_wide);
+	TRACE(("default ReGIS graphics screensize %dx%d\n",
+	       (int) TScreenOf(wnew)->graphics_regis_def_high,
+	       (int) TScreenOf(wnew)->graphics_regis_def_wide));
+# endif
+
+	init_Sres(screen.graphics_max_size);
+	TScreenOf(wnew)->graphics_max_high = 1000;
+	TScreenOf(wnew)->graphics_max_wide = 1000;
+	if (!x_strcasecmp(TScreenOf(wnew)->graphics_max_size, "auto")) {
+	    TRACE(("setting max graphics screensize based on terminal_id %d\n",
+		   TScreenOf(wnew)->terminal_id));
+	    TScreenOf(wnew)->graphics_max_high = (Dimension) native_w;
+	    TScreenOf(wnew)->graphics_max_wide = (Dimension) native_h;
+	} else {
+	    int conf_high;
+	    int conf_wide;
+	    char ignore;
+
+	    if (sscanf(TScreenOf(wnew)->graphics_max_size,
+		       "%dx%d%c",
+		       &conf_wide,
+		       &conf_high,
+		       &ignore) == 2) {
+		if (conf_high > 0 && conf_wide > 0) {
+		    TScreenOf(wnew)->graphics_max_high = (Dimension) conf_high;
+		    TScreenOf(wnew)->graphics_max_wide = (Dimension) conf_wide;
+		} else {
+		    TRACE(("ignoring invalid maxGraphicSize %s\n",
+			   TScreenOf(wnew)->graphics_regis_screensize));
+		}
+	    } else {
+		TRACE(("ignoring invalid maxGraphicSize %s\n",
+		       TScreenOf(wnew)->graphics_regis_screensize));
+	    }
+	}
+# if OPT_REGIS_GRAPHICS
+	/* Make sure the max is large enough for the default ReGIS size. */
+	if (TScreenOf(wnew)->graphics_regis_def_high >
+	    TScreenOf(wnew)->graphics_max_high) {
+	    TScreenOf(wnew)->graphics_max_high =
+		TScreenOf(wnew)->graphics_regis_def_high;
+	}
+	if (TScreenOf(wnew)->graphics_regis_def_wide >
+	    TScreenOf(wnew)->graphics_max_wide) {
+	    TScreenOf(wnew)->graphics_max_wide =
+		TScreenOf(wnew)->graphics_regis_def_wide;
+	}
+# endif
+	TRACE(("max graphics screensize %dx%d\n",
+	       (int) TScreenOf(wnew)->graphics_max_high,
+	       (int) TScreenOf(wnew)->graphics_max_wide));
+	printf("max graphics screensize %dx%d\n",
+	       (int) TScreenOf(wnew)->graphics_max_high,
+	       (int) TScreenOf(wnew)->graphics_max_wide);
     }
-    TRACE(("maximum ReGIS screensize %dx%d\n",
-	   (int) TScreenOf(wnew)->regis_max_high,
-	   (int) TScreenOf(wnew)->regis_max_wide));
 #endif
 
 #if OPT_SIXEL_GRAPHICS
