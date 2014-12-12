@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.816 2014/11/28 19:31:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.817 2014/12/12 09:47:29 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2228,10 +2228,16 @@ typedef struct {
 	unsigned	restore_height;
 #endif
 
-#if OPT_SIXEL_GRAPHICS
-	String		regis_screensize; /* ReGIS given screensize	*/
-	Dimension	regis_max_high;	/* ...corresponding height	*/
-	Dimension	regis_max_wide;	/* ...and width			*/
+#if OPT_REGIS_GRAPHICS
+	String		graphics_regis_screensize; /* given a size in pixels */
+	Dimension	graphics_regis_def_wide; /* ...corresponding width   */
+	Dimension	graphics_regis_def_high; /* ...and height            */
+#endif
+
+#if OPT_GRAPHICS
+	String		graphics_max_size;	/* given a size in pixels */
+	Dimension	graphics_max_wide;	/* ...corresponding width */
+	Dimension	graphics_max_high;	/* ...and height          */
 #endif
 
 #if OPT_SCROLL_LOCK

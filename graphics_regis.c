@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.55 2014/12/01 10:17:53 Ross.Combs Exp $ */
+/* $XTermId: graphics_regis.c,v 1.57 2014/12/12 10:01:06 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -3899,14 +3899,14 @@ init_regis_alphabets(RegisGraphicsContext *context)
 }
 
 static void
-init_regis_graphics_context(XtermWidget xw,
+init_regis_graphics_context(int terminal_id, int width, int height,
 			    unsigned max_colors,
 			    RegisGraphicsContext *context)
 {
     context->graphic = NULL;
-    context->terminal_id = TScreenOf(xw)->terminal_id;
-    context->width = TScreenOf(xw)->regis_max_wide;
-    context->height = TScreenOf(xw)->regis_max_high;
+    context->terminal_id = terminal_id;
+    context->width = width;
+    context->height = height;
     context->x_off = 0;
     context->y_off = 0;
     /*
@@ -3921,7 +3921,7 @@ init_regis_graphics_context(XtermWidget xw,
     context->all_planes |= context->all_planes >> 4U;
     context->all_planes |= context->all_planes >> 8U;
 
-    init_regis_write_controls(context->terminal_id, context->all_planes,
+    init_regis_write_controls(terminal_id, context->all_planes,
 			      &context->persistent_write_controls);
     copy_regis_write_controls(&context->persistent_write_controls,
 			      &context->temporary_write_controls);
@@ -4981,34 +4981,36 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		    TRACE(("DATA_ERROR: FIXME: inverted axis is not currently supported; converted to: ul=%d,%d lr=%d,%d\n",
 			   ulx, uly, lrx, lry));
+		} {
+		    int width, height;
+
+		    width = lrx + 1 - ulx;
+		    height = lry + 1 - uly;
+
+		    if (height > context->graphic->max_height) {
+			lry = uly + context->graphic->max_height - 1;
+			TRACE(("DATA_ERROR: y address range %d exceeds maximum %d; converted to: ul=%d,%d lr=%d,%d\n",
+			       height, context->graphic->max_height, ulx,
+			       uly, lrx, lry));
+		    }
+
+		    if (width > context->graphic->max_width) {
+			lrx = ulx + context->graphic->max_width - 1;
+			TRACE(("DATA_ERROR: x address range %d exceeds maximum %d; converted to: ul=%d,%d lr=%d,%d\n",
+			       width, context->graphic->max_width, ulx, uly,
+			       lrx, lry));
+		    }
+
+		    /* FIXME: handle scaling */
+		    TRACE(("custom screen address: ul=%d,%d lr=%d,%d\n",
+			   ulx, uly, lrx, lry));
+		    context->width = width;
+		    context->height = height;
+		    context->x_off = ulx;
+		    context->y_off = uly;
+		    context->graphic->actual_width = context->width;
+		    context->graphic->actual_height = context->height;
 		}
-
-		if (lrx + 1 - ulx > context->width) {
-		    int width = lrx + 1 - ulx;
-
-		    (void) width;
-		    lrx = ulx + context->width - 1;
-		    TRACE(("DATA_ERROR: x address range %d exceeds maximum %d; converted to: ul=%d,%d lr=%d,%d\n",
-			   width, context->width, ulx, uly, lrx, lry));
-		}
-		if (lry + 1 - uly > context->height) {
-		    int height = lry + 1 - uly;
-
-		    (void) height;
-		    lry = uly + context->height - 1;
-		    TRACE(("DATA_ERROR: x address range %d exceeds maximum %d; converted to: ul=%d,%d lr=%d,%d\n",
-			   height, context->height, ulx, uly, lrx, lry));
-		}
-
-		/* FIXME: handle scaling */
-		TRACE(("custom screen address: ul=%d,%d lr=%d,%d\n",
-		       ulx, uly, lrx, lry));
-		context->width = lrx + 1 - ulx;
-		context->height = lry + 1 - uly;
-		context->x_off = ulx;
-		context->y_off = uly;
-		context->graphic->actual_width = context->width;
-		context->graphic->actual_height = context->height;
 	    }
 	    break;
 	case 'C':
@@ -6366,7 +6368,9 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     /* Only reset on the first ReGIS image unless it is being requested. */
     if ((context->width == 0 && context->height == 0) ||
 	(Pmode == 1 || Pmode == 3)) {
-	init_regis_graphics_context(xw,
+	init_regis_graphics_context(screen->terminal_id,
+				    screen->graphics_regis_def_wide,
+				    screen->graphics_regis_def_high,
 				    get_color_register_count(screen),
 				    context);
     }
