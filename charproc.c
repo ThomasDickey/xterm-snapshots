@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1381 2014/12/12 09:59:15 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1382 2014/12/14 23:08:23 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -676,7 +676,7 @@ static XtResource xterm_resources[] =
 
 #if OPT_REGIS_GRAPHICS
     Sres(XtNregisScreenSize, XtCRegisScreenSize,
-	 screen.graphics_regis_screensize, "800x1000"),
+	 screen.graphics_regis_screensize, "auto"),
 #endif
 
 #if OPT_GRAPHICS
@@ -8398,12 +8398,9 @@ VTInitialize(Widget wrequest,
 		       TScreenOf(wnew)->graphics_regis_screensize));
 	    }
 	}
-	printf("default ReGIS graphics screensize %dx%d\n",
-	       (int) TScreenOf(wnew)->graphics_regis_def_high,
-	       (int) TScreenOf(wnew)->graphics_regis_def_wide);
 	TRACE(("default ReGIS graphics screensize %dx%d\n",
-	       (int) TScreenOf(wnew)->graphics_regis_def_high,
-	       (int) TScreenOf(wnew)->graphics_regis_def_wide));
+	       (int) TScreenOf(wnew)->graphics_regis_def_wide,
+	       (int) TScreenOf(wnew)->graphics_regis_def_high));
 # endif
 
 	init_Sres(screen.graphics_max_size);
@@ -8450,11 +8447,8 @@ VTInitialize(Widget wrequest,
 	}
 # endif
 	TRACE(("max graphics screensize %dx%d\n",
-	       (int) TScreenOf(wnew)->graphics_max_high,
-	       (int) TScreenOf(wnew)->graphics_max_wide));
-	printf("max graphics screensize %dx%d\n",
-	       (int) TScreenOf(wnew)->graphics_max_high,
-	       (int) TScreenOf(wnew)->graphics_max_wide);
+	       (int) TScreenOf(wnew)->graphics_max_wide,
+	       (int) TScreenOf(wnew)->graphics_max_high));
     }
 #endif
 
