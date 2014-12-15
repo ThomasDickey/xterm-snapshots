@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.57 2014/12/12 10:01:06 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.58 2014/12/14 23:08:38 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -210,6 +210,7 @@ typedef struct RegisGraphicsContext {
     Graphic *graphic;
     int terminal_id;
     int x_off, y_off;
+    int x_div, y_div;
     int width, height;
     unsigned all_planes;
     RegisterNum background;
@@ -247,10 +248,13 @@ static RegisGraphicsContext persistent_context;
 			   ((V) >> (8U - ((N) & 3U))) )
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
 
-#define READ_PIXEL(C, X, Y) \
-    read_pixel((C)->graphic, (X) - (C)->x_off, (Y) - (C)->y_off)
-#define DRAW_PIXEL(C, X, Y, COL) \
-    draw_solid_pixel((C)->graphic, (X) - (C)->x_off, (Y) - (C)->y_off, (COL))
+#define SCALE_XCOORD(C, X) ( ( (X) * ((C)->width  - 1) ) / (C)->x_div )
+#define SCALE_YCOORD(C, Y) ( ( (Y) * ((C)->height - 1) ) / (C)->y_div )
+#define TRANSLATE_XCOORD(C, X) SCALE_XCOORD((C), (X) - (C)->x_off )
+#define TRANSLATE_YCOORD(C, Y) SCALE_YCOORD((C), (Y) - (C)->y_off )
+
+#define READ_PIXEL(C, X, Y) read_pixel((C)->graphic, (X), (Y))
+#define DRAW_PIXEL(C, X, Y, COL) draw_solid_pixel((C)->graphic, (X), (Y), (COL))
 #define DRAW_ALL(C, COL) \
     draw_solid_rectangle((C)->graphic, 0, 0, (C)->width, (C)->height, (COL))
 
@@ -728,7 +732,8 @@ draw_patterned_arc(RegisGraphicsContext *context,
     points_stop = (total_points * a_start +
 		   total_points * abs(a_length) + 359) / 360;
     TRACE(("drawing arc with %d points from %d angle for %d degrees (from point %d to %d out of %d)\n",
-	   total_points, a_start, a_length, points_start, points_stop, total_points));
+	   total_points, a_start, a_length, points_start, points_stop,
+	   total_points));
 
     points = 0;
     for (iterations = 0U; iterations < 8U; iterations++) {
@@ -2084,11 +2089,11 @@ draw_character(RegisGraphicsContext *context, char ch,
 	       int rot_shear_y, int x_sign_x, int x_sign_y,
 	       int y_sign_x, int y_sign_y)
 {
+    const unsigned xmaxd = context->current_text_controls->character_display_w;
+    const unsigned ymaxd = context->current_text_controls->character_display_h;
+    const unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
+    const unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
     unsigned w, h;
-    unsigned xmaxd = context->current_text_controls->character_display_w;
-    unsigned ymaxd = context->current_text_controls->character_display_h;
-    unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
-    unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
     unsigned xscale, yscale;
     unsigned fx, fy;
     unsigned px, py;
@@ -3224,8 +3229,8 @@ load_regis_regnum_or_colorspec(RegisGraphicsContext const *context,
 }
 
 static int
-load_regis_extent(char const *extent, int origx, int origy,
-		  int *xloc, int *yloc)
+load_regis_raw_extent(char const *extent, int *relx, int *rely,
+		      int *xloc, int *yloc)
 {
     int xsign, ysign;
     char const *xpart;
@@ -3258,18 +3263,86 @@ load_regis_extent(char const *extent, int origx, int origy,
     }
 
     if (xpart[0] == '\0' || xpart[0] == ',') {
-	*xloc = origx;
+	*relx = 1;
+	*xloc = 0;
     } else if (xsign == 0) {
+	*relx = 0;
 	*xloc = atoi(xpart);
     } else {
-	*xloc = origx + xsign * atoi(xpart);
+	*relx = 1;
+	*xloc = xsign * atoi(xpart);
     }
     if (ypart[0] == '\0') {
-	*yloc = origy;
+	*rely = 1;
+	*yloc = 0;
     } else if (ysign == 0) {
+	*rely = 0;
 	*yloc = atoi(ypart);
     } else {
-	*yloc = origy + ysign * atoi(ypart);
+	*rely = 1;
+	*yloc = ysign * atoi(ypart);
+    }
+
+    return 1;
+}
+
+static int
+load_regis_pixel_extent(char const *extent, int origx, int origy,
+			int *xloc, int *yloc)
+{
+    int ret;
+    int relx, rely;
+    int px, py;
+
+    ret = load_regis_raw_extent(extent, &relx, &rely, &px, &py);
+    if (ret != 1)
+	return ret;
+
+    *xloc = px;
+    *yloc = py;
+
+    if (relx)
+	*xloc += origx;
+    if (rely)
+	*yloc += origy;
+
+    return 1;
+}
+
+static int
+load_regis_coord_extent(RegisGraphicsContext const *context, char const *extent,
+			int origx, int origy, int *xloc, int *yloc)
+{
+    int ret;
+    int relx, rely;
+    int ux, uy;
+    int px, py;
+
+    ret = load_regis_raw_extent(extent, &relx, &rely, &ux, &uy);
+    if (ret != 1)
+	return ret;
+
+    if (relx) {
+	px = SCALE_XCOORD(context, ux);
+	TRACE(("converted relative X coord %d to relative pixel coord %d (width=%d xoff=%d xdiv=%d)\n",
+	       ux, px, context->width, context->x_off, context->x_div));
+	*xloc = origx + px;
+    } else {
+	px = TRANSLATE_XCOORD(context, ux);
+	TRACE(("converted absolute X coord %d to absolute pixel coord %d\n",
+	       ux, px));
+	*xloc = px;
+    }
+    if (rely) {
+	py = SCALE_YCOORD(context, uy);
+	TRACE(("converted relative Y coord %d to relative pixel coord %d (height=%d, yoff=%d, ydiv=%d)\n",
+	       uy, py, context->height, context->y_off, context->y_div));
+	*yloc = origy + py;
+    } else {
+	py = TRANSLATE_YCOORD(context, uy);
+	TRACE(("converted absolute Y coord %d to absolute pixel coord %d\n",
+	       uy, py));
+	*yloc = py;
     }
 
     return 1;
@@ -3684,9 +3757,10 @@ load_regis_write_control(RegisParseState *state,
 		}
 
 		if (extract_regis_extent(arg, &item)) {
-		    if (!load_regis_extent(fragment_to_tempstr(&item),
-					   ref_x, ref_y,
-					   &ref_x, &ref_y)) {
+		    if (!load_regis_coord_extent(context,
+						 fragment_to_tempstr(&item),
+						 ref_x, ref_y,
+						 &ref_x, &ref_y)) {
 			TRACE(("DATA_ERROR: unable to parse extent in write shading option '%c': \"%s\"\n",
 			       option, fragment_to_tempstr(&item)));
 			return 0;
@@ -3909,6 +3983,8 @@ init_regis_graphics_context(int terminal_id, int width, int height,
     context->height = height;
     context->x_off = 0;
     context->y_off = 0;
+    context->x_div = width - 1;
+    context->y_div = height - 1;
     /*
      * Generate a mask covering all valid color register address bits
      * (but don't bother past 2**16).
@@ -4554,8 +4630,10 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		    TRACE(("glyph size: %s\n",
 			   fragment_to_tempstr(&sizearg)));
-		    if (!load_regis_extent(fragment_to_tempstr(&sizearg), 0, 0,
-					   &w, &h)) {
+		    /* FIXME: verify this is in pixels, not user coordinates */
+		    if (!load_regis_pixel_extent(fragment_to_tempstr(&sizearg),
+						 0, 0,
+						 &w, &h)) {
 			TRACE(("DATA_ERROR: unable to parse extent in glyph size option: \"%s\"\n",
 			       fragment_to_tempstr(&sizearg)));
 			break;
@@ -4925,8 +5003,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			int x, y;
 
 			/* FIXME: are relative values supposed to be handled? */
-			if (!load_regis_extent(fragment_to_tempstr(&address_extent),
-					       0, 0, &x, &y)) {
+			if (!load_regis_pixel_extent(fragment_to_tempstr(&address_extent),
+						     0, 0, &x, &y)) {
 			    TRACE(("DATA_ERROR: unable to parse extent in address definition: \"%s\"\n",
 				   fragment_to_tempstr(&address_extent)));
 			    break;
@@ -4957,59 +5035,56 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    return 1;
 		}
 		if (ulx == lrx || uly == lry) {
-		    TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition: one or both dimensions is zero: ul=%d,%d lr=%d,%d\n",
+		    TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition: one or both dimensions are zero: ul=%d,%d lr=%d,%d\n",
 			   ulx, uly, lrx, lry));
 		    return 1;
-		}
-
-		if (ulx > lrx) {
-		    int tmp;
-
-		    tmp = ulx;
-		    ulx = lrx;
-		    lrx = tmp;
-
-		    TRACE(("DATA_ERROR: FIXME: inverted axis is not currently supported; converted to: ul=%d,%d lr=%d,%d\n",
-			   ulx, uly, lrx, lry));
-		}
-		if (uly > lry) {
-		    int tmp;
-
-		    tmp = uly;
-		    uly = lry;
-		    lry = tmp;
-
-		    TRACE(("DATA_ERROR: FIXME: inverted axis is not currently supported; converted to: ul=%d,%d lr=%d,%d\n",
-			   ulx, uly, lrx, lry));
 		} {
+		    const int cw = abs(ulx - lrx) + 1;
+		    const int ch = abs(uly - lry) + 1;
+		    int scale;
 		    int width, height;
 
-		    width = lrx + 1 - ulx;
-		    height = lry + 1 - uly;
+		    width = cw;
+		    height = ch;
 
-		    if (height > context->graphic->max_height) {
-			lry = uly + context->graphic->max_height - 1;
-			TRACE(("DATA_ERROR: y address range %d exceeds maximum %d; converted to: ul=%d,%d lr=%d,%d\n",
-			       height, context->graphic->max_height, ulx,
-			       uly, lrx, lry));
+#if 1
+		    /* FIXME: Scaling up is not so great because we don't
+		     * support non-integer coordinates, so some pixels will not
+		     * be addressable.
+		     */
+		    scale = 1;
+		    while (width * scale < 100 ||
+			   height * scale < 100) {
+			scale++;
 		    }
+		    width *= scale;
+		    height *= scale;
+#endif
 
-		    if (width > context->graphic->max_width) {
-			lrx = ulx + context->graphic->max_width - 1;
-			TRACE(("DATA_ERROR: x address range %d exceeds maximum %d; converted to: ul=%d,%d lr=%d,%d\n",
-			       width, context->graphic->max_width, ulx, uly,
-			       lrx, lry));
+		    scale = 1;
+		    while (width / scale > context->graphic->max_width ||
+			   height / scale > context->graphic->max_height) {
+			scale++;
 		    }
+		    width /= scale;
+		    height /= scale;
 
-		    /* FIXME: handle scaling */
 		    TRACE(("custom screen address: ul=%d,%d lr=%d,%d\n",
 			   ulx, uly, lrx, lry));
-		    context->width = width;
-		    context->height = height;
+
 		    context->x_off = ulx;
 		    context->y_off = uly;
-		    context->graphic->actual_width = context->width;
-		    context->graphic->actual_height = context->height;
+		    context->x_div = lrx - ulx;
+		    context->y_div = lry - uly;
+		    context->width = width;
+		    context->height = height;
+		    context->graphic->actual_width = width;
+		    context->graphic->actual_height = height;
+
+		    TRACE(("conversion factors: off=%+d,%+d div=%+d,%+d width=%d, height=%d\n",
+			   context->x_off, context->y_off,
+			   context->x_div, context->y_div,
+			   context->width, context->height));
 		}
 	    }
 	    break;
@@ -5417,8 +5492,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("size multiplier: %s\n",
 		       fragment_to_tempstr(&sizemultiplierarg)));
-		if (!load_regis_extent(fragment_to_tempstr(&sizemultiplierarg),
-				       0, 0, &ww, &hh)) {
+		/* FIXME: verify this is in pixels, not user coordinates */
+		if (!load_regis_pixel_extent(fragment_to_tempstr(&sizemultiplierarg),
+					     0, 0, &ww, &hh)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->option, fragment_to_tempstr(&sizemultiplierarg)));
 		    break;
@@ -5467,8 +5543,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		    TRACE(("custom display size: %s\n",
 			   fragment_to_tempstr(&displaysizearg)));
-		    if (!load_regis_extent(fragment_to_tempstr(&displaysizearg),
-					   0, 0, &disp_w, &disp_h)) {
+		    /* FIXME: verify this is in pixels, not user coordinates */
+		    if (!load_regis_pixel_extent(fragment_to_tempstr(&displaysizearg),
+						 0, 0, &disp_w, &disp_h)) {
 			TRACE(("DATA_ERROR: unable to parse extent in text display size option: \"%s\"\n",
 			       fragment_to_tempstr(&displaysizearg)));
 			break;
@@ -5566,8 +5643,10 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("unitsize cell size: %s\n",
 		       fragment_to_tempstr(&unitsizearg)));
-		if (!load_regis_extent(fragment_to_tempstr(&unitsizearg), 0, 0,
-				       &unit_w, &unit_h)) {
+		/* FIXME: verify this is in pixels, not user coordinates */
+		if (!load_regis_pixel_extent(fragment_to_tempstr(&unitsizearg),
+					     0, 0,
+					     &unit_w, &unit_h)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->option, fragment_to_tempstr(&unitsizearg)));
 		    break;
@@ -5761,9 +5840,10 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		    orig_x = context->graphics_output_cursor_x;
 		    orig_y = context->graphics_output_cursor_y;
 		}
-		if (!load_regis_extent(fragment_to_tempstr(&item),
-				       orig_x, orig_y,
-				       &new_x, &new_y)) {
+		if (!load_regis_coord_extent(context,
+					     fragment_to_tempstr(&item),
+					     orig_x, orig_y,
+					     &new_x, &new_y)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
@@ -5867,11 +5947,12 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    break;
 	case 'p':
 	    /* FIXME TRACE(("DATA_ERROR: ignoring pen command with no location\n")); */
-	    if (!load_regis_extent(fragment_to_tempstr(&item),
-				   context->graphics_output_cursor_x,
-				   context->graphics_output_cursor_y,
-				   &context->graphics_output_cursor_x,
-				   &context->graphics_output_cursor_y)) {
+	    if (!load_regis_coord_extent(context,
+					 fragment_to_tempstr(&item),
+					 context->graphics_output_cursor_x,
+					 context->graphics_output_cursor_y,
+					 &context->graphics_output_cursor_x,
+					 &context->graphics_output_cursor_y)) {
 		TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 		       state->command, fragment_to_tempstr(&item)));
 		break;
@@ -5886,8 +5967,9 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		int new_x, new_y;
 		int copy_w, copy_h;
 
-		if (!load_regis_extent(fragment_to_tempstr(&item),
-				       0, 0, &new_x, &new_y)) {
+		if (!load_regis_coord_extent(context,
+					     fragment_to_tempstr(&item),
+					     0, 0, &new_x, &new_y)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
@@ -5911,10 +5993,11 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    }
 	    break;
 	case 't':
-	    if (!load_regis_extent(fragment_to_tempstr(&item),
-				   0, 0,
-				   &context->current_text_controls->character_inc_x,
-				   &context->current_text_controls->character_inc_y)) {
+	    /* FIXME: verify this is in pixels, not user coordinates */
+	    if (!load_regis_pixel_extent(fragment_to_tempstr(&item),
+					 0, 0,
+					 &context->current_text_controls->character_inc_x,
+					 &context->current_text_controls->character_inc_y)) {
 		TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 		       state->command, fragment_to_tempstr(&item)));
 		break;
@@ -5929,10 +6012,11 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 
 		orig_x = context->graphics_output_cursor_x;
 		orig_y = context->graphics_output_cursor_y;
-		if (!load_regis_extent(fragment_to_tempstr(&item),
-				       orig_x, orig_y,
-				       &context->graphics_output_cursor_x,
-				       &context->graphics_output_cursor_y)) {
+		if (!load_regis_coord_extent(context,
+					     fragment_to_tempstr(&item),
+					     orig_x, orig_y,
+					     &context->graphics_output_cursor_x,
+					     &context->graphics_output_cursor_y)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
@@ -6329,7 +6413,7 @@ void
 parse_regis(XtermWidget xw, ANSI *params, char const *string)
 {
     TScreen *screen = TScreenOf(xw);
-    RegisGraphicsContext *context = &persistent_context;
+    RegisGraphicsContext *const context = &persistent_context;
     RegisParseState state;
     struct timeval prev_tv;
     struct timeval curr_tv;
@@ -6366,8 +6450,8 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	FlushScroll(xw);
 
     /* Only reset on the first ReGIS image unless it is being requested. */
-    if ((context->width == 0 && context->height == 0) ||
-	(Pmode == 1 || Pmode == 3)) {
+    if (context->width == 0 || context->height == 0 ||
+	Pmode == 1 || Pmode == 3) {
 	init_regis_graphics_context(screen->terminal_id,
 				    screen->graphics_regis_def_wide,
 				    screen->graphics_regis_def_high,
