@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.762 2014/07/24 22:47:09 tom Exp $ */
+/* $XTermId: main.c,v 1.763 2014/12/15 09:51:34 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -779,7 +779,8 @@ static char etc_wtmp[] = WTMP_FILENAME;
 static char bin_login[] = LOGIN_FILENAME;
 #endif
 
-static char passedPty[PTYCHARLEN + 1];	/* name if pty if slave */
+static char noPassedPty[2];
+static char *passedPty = noPassedPty;	/* name if pty if slave */
 
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 static int Console;
@@ -1760,6 +1761,7 @@ ParseSccn(char *option)
     char *leaf = x_basename(option);
     Bool code = False;
 
+    passedPty = x_strdup(option);
     if (leaf != option) {
 	if (leaf - option > 0
 	    && isdigit(CharOf(*leaf))
@@ -1771,13 +1773,13 @@ ParseSccn(char *option)
 	     * the /dev/pts/XXX value, but since we do not need to reopen it,
 	     * it is useful mainly for display in a "ps -ef".
 	     */
-	    strncpy(passedPty, option, len);
 	    passedPty[len] = 0;
 	    code = True;
 	}
     } else {
 	code = (sscanf(option, "%c%c%d",
 		       passedPty, passedPty + 1, &am_slave) == 3);
+	passedPty[2] = '\0';
     }
     TRACE(("ParseSccn(%s) = '%s' %d (%s)\n", option,
 	   passedPty, am_slave, code ? "OK" : "ERR"));
