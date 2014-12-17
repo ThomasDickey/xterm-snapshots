@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.763 2014/12/15 09:51:34 tom Exp $ */
+/* $XTermId: main.c,v 1.764 2014/12/17 09:29:20 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -960,6 +960,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"-fa",		"*faceName",	XrmoptionSepArg,	(XPointer) NULL},
 {"-fd",		"*faceNameDoublesize", XrmoptionSepArg,	(XPointer) NULL},
 {"-fs",		"*faceSize",	XrmoptionSepArg,	(XPointer) NULL},
+#endif
+#if OPT_WIDE_ATTRS
+{"-itc",	"*colorITMode",	XrmoptionNoArg,		(XPointer) "off"},
+{"+itc",	"*colorITMode",	XrmoptionNoArg,		(XPointer) "on"},
 #endif
 #if OPT_WIDE_CHARS
 {"-fw",		"*wideFont",	XrmoptionSepArg,	(XPointer) NULL},

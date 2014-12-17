@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1382 2014/12/14 23:08:23 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1385 2014/12/17 09:39:55 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -401,7 +401,7 @@ static XtActionsRec actionsList[] = {
 static XtResource xterm_resources[] =
 {
     Bres(XtNallowPasteControls, XtCAllowPasteControls,
-	 screen.allowPasteControls, False),
+	 screen.allowPasteControl0, False),
     Bres(XtNallowSendEvents, XtCAllowSendEvents, screen.allowSendEvent0, False),
     Bres(XtNallowColorOps, XtCAllowColorOps, screen.allowColorOp0, DEF_ALLOW_COLOR),
     Bres(XtNallowFontOps, XtCAllowFontOps, screen.allowFontOp0, DEF_ALLOW_FONT),
@@ -611,6 +611,9 @@ static XtResource xterm_resources[] =
     Bres(XtNcolorRVMode, XtCColorAttrMode, screen.colorRVMode, False),
     Bres(XtNcolorULMode, XtCColorAttrMode, screen.colorULMode, False),
     Bres(XtNitalicULMode, XtCColorAttrMode, screen.italicULMode, False),
+#if OPT_WIDE_ATTRS
+    Bres(XtNcolorULMode, XtCColorAttrMode, screen.colorITMode, False),
+#endif
 
     COLOR_RES("0", screen.Acolors[COLOR_0], DFT_COLOR("black")),
     COLOR_RES("1", screen.Acolors[COLOR_1], DFT_COLOR("red3")),
@@ -632,6 +635,10 @@ static XtResource xterm_resources[] =
     COLOR_RES("BL", screen.Acolors[COLOR_BL], DFT_COLOR(XtDefaultForeground)),
     COLOR_RES("UL", screen.Acolors[COLOR_UL], DFT_COLOR(XtDefaultForeground)),
     COLOR_RES("RV", screen.Acolors[COLOR_RV], DFT_COLOR(XtDefaultForeground)),
+
+#if OPT_WIDE_ATTRS
+    COLOR_RES("IT", screen.Acolors[COLOR_IT], DFT_COLOR(XtDefaultForeground)),
+#endif
 
 #if !OPT_COLOR_RES2
 #if OPT_256_COLORS
@@ -7888,7 +7895,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.alt_sends_esc);
     init_Bres(screen.meta_sends_esc);
 
-    init_Bres(screen.allowPasteControls);
+    init_Bres(screen.allowPasteControl0);
     init_Bres(screen.allowSendEvent0);
     init_Bres(screen.allowColorOp0);
     init_Bres(screen.allowFontOp0);
@@ -7935,6 +7942,7 @@ VTInitialize(Widget wrequest,
 #endif
 
     /* make a copy so that editres cannot change the resource after startup */
+    TScreenOf(wnew)->allowPasteControls = TScreenOf(wnew)->allowPasteControl0;
     TScreenOf(wnew)->allowSendEvents = TScreenOf(wnew)->allowSendEvent0;
     TScreenOf(wnew)->allowColorOps = TScreenOf(wnew)->allowColorOp0;
     TScreenOf(wnew)->allowFontOps = TScreenOf(wnew)->allowFontOp0;
@@ -8031,6 +8039,10 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.colorULMode);
     init_Bres(screen.italicULMode);
     init_Bres(screen.colorRVMode);
+
+#if OPT_WIDE_ATTRS
+    init_Bres(screen.colorITMode);
+#endif
 
 #if OPT_COLOR_RES2
     TRACE(("...will fake resources for color%d to color%d\n",

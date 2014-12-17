@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.817 2014/12/12 09:47:29 Ross.Combs Exp $ */
+/* $XTermId: ptyx.h,v 1.819 2014/12/17 09:39:01 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1229,7 +1229,14 @@ typedef enum {
 #define COLOR_UL	(NUM_ANSI_COLORS+1)	/* UNDERLINE */
 #define COLOR_BL	(NUM_ANSI_COLORS+2)	/* BLINK */
 #define COLOR_RV	(NUM_ANSI_COLORS+3)	/* REVERSE */
+
+#if OPT_WIDE_ATTRS
+#define COLOR_IT	(NUM_ANSI_COLORS+4)	/* ITALIC */
+#define MAXCOLORS	(NUM_ANSI_COLORS+5)
+#else
 #define MAXCOLORS	(NUM_ANSI_COLORS+4)
+#endif
+
 #ifndef DFT_COLORMODE
 #define DFT_COLORMODE True	/* default colorMode resource */
 #endif
@@ -1912,6 +1919,9 @@ typedef struct {
 	Boolean		colorBLMode;	/* use color for blink?		*/
 	Boolean		colorRVMode;	/* use color for reverse?	*/
 	Boolean		colorAttrMode;	/* prefer colorUL/BD to SGR	*/
+#if OPT_WIDE_ATTRS
+	Boolean		colorITMode;	/* use color for italics?	*/
+#endif
 #endif
 #if OPT_DEC_CHRSET
 	Boolean		font_doublesize;/* enable font-scaling		*/
@@ -2010,6 +2020,7 @@ typedef struct {
 	Boolean		allowTitleOps;	/* TitleOps mode		*/
 	Boolean		allowWindowOps;	/* WindowOps mode		*/
 
+	Boolean		allowPasteControl0; /* PasteControls mode	*/
 	Boolean		allowColorOp0;	/* initial ColorOps mode	*/
 	Boolean		allowFontOp0;	/* initial FontOps mode		*/
 	Boolean		allowSendEvent0;/* initial SendEvent mode	*/

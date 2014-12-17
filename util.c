@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.665 2014/11/13 00:54:35 tom Exp $ */
+/* $XTermId: util.c,v 1.666 2014/12/17 09:34:40 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2735,6 +2735,7 @@ getWideXftFont(XtermWidget xw,
 
 #if OPT_WIDE_ATTRS
     if ((attr_flags & ATR_ITALIC)
+	&& !screen->colorITMode
 	&& XFT_FONT(renderWideItal[fontnum])) {
 	wfont = XFT_FONT(renderWideItal[fontnum]);
     } else

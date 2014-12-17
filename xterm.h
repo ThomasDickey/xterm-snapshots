@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.750 2014/12/12 09:47:29 Ross.Combs Exp $ */
+/* $XTermId: xterm.h,v 1.752 2014/12/17 09:55:09 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -415,6 +415,7 @@ extern char **environ;
 #define XtNcolorAttrMode	"colorAttrMode"
 #define XtNcolorBDMode		"colorBDMode"
 #define XtNcolorBLMode		"colorBLMode"
+#define XtNcolorITMode		"colorITMode"
 #define XtNcolorMode		"colorMode"
 #define XtNcolorRVMode		"colorRVMode"
 #define XtNcolorULMode		"colorULMode"
@@ -1408,6 +1409,15 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 #define ExtractForeground(color) (unsigned) GetCellColorFG(color)
 #define ExtractBackground(color) (unsigned) GetCellColorBG(color)
 
+#if OPT_WIDE_ATTRS
+#define MapToWideColorMode(fg, screen, flags) \
+	(((screen)->colorITMode && ((flags) & ATR_ITALIC)) \
+	 ? COLOR_IT \
+	 : fg)
+#else
+#define MapToWideColorMode(fg, screen, flags) fg
+#endif
+
 #define MapToColorMode(fg, screen, flags) \
 	(((screen)->colorBLMode && ((flags) & BLINK)) \
 	 ? COLOR_BL \
@@ -1415,7 +1425,7 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 	    ? COLOR_BD \
 	    : (((screen)->colorULMode && ((flags) & UNDERLINE)) \
 	       ? COLOR_UL \
-	       : fg)))
+	       : MapToWideColorMode(fg, screen, flags))))
 
 #define checkVeryBoldAttr(flags, fg, code, attr) \
 	if ((flags & FG_COLOR) != 0 \
@@ -1424,11 +1434,19 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 	 && (fg == code)) \
 		 UIntClr(flags, attr)
 
+#if OPT_WIDE_ATTRS
+#define checkVeryBoldWideAttr(flags, fg, it, atr) \
+	    checkVeryBoldAttr(flags, fg, it, atr)
+#else
+#define checkVeryBoldWideAttr(flags, fg, it, atr) (void) flags
+#endif
+
 #define checkVeryBoldColors(flags, fg) \
 	checkVeryBoldAttr(flags, fg, COLOR_RV, INVERSE); \
 	checkVeryBoldAttr(flags, fg, COLOR_UL, UNDERLINE); \
 	checkVeryBoldAttr(flags, fg, COLOR_BD, BOLD); \
-	checkVeryBoldAttr(flags, fg, COLOR_BL, BLINK)
+	checkVeryBoldAttr(flags, fg, COLOR_BL, BLINK); \
+	checkVeryBoldWideAttr(flags, fg, COLOR_IT, ATR_ITALIC)
 
 #else /* !OPT_ISO_COLORS */
 
