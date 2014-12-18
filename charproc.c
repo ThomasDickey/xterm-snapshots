@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1385 2014/12/17 09:39:55 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1386 2014/12/18 00:05:50 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -612,7 +612,7 @@ static XtResource xterm_resources[] =
     Bres(XtNcolorULMode, XtCColorAttrMode, screen.colorULMode, False),
     Bres(XtNitalicULMode, XtCColorAttrMode, screen.italicULMode, False),
 #if OPT_WIDE_ATTRS
-    Bres(XtNcolorULMode, XtCColorAttrMode, screen.colorITMode, False),
+    Bres(XtNcolorITMode, XtCColorAttrMode, screen.colorITMode, False),
 #endif
 
     COLOR_RES("0", screen.Acolors[COLOR_0], DFT_COLOR("black")),
