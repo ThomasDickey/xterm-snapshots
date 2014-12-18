@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.764 2014/12/17 09:29:20 tom Exp $ */
+/* $XTermId: main.c,v 1.765 2014/12/17 23:56:07 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -961,7 +961,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"-fd",		"*faceNameDoublesize", XrmoptionSepArg,	(XPointer) NULL},
 {"-fs",		"*faceSize",	XrmoptionSepArg,	(XPointer) NULL},
 #endif
-#if OPT_WIDE_ATTRS
+#if OPT_WIDE_ATTRS && OPT_ISO_COLORS
 {"-itc",	"*colorITMode",	XrmoptionNoArg,		(XPointer) "off"},
 {"+itc",	"*colorITMode",	XrmoptionNoArg,		(XPointer) "on"},
 #endif
@@ -1257,6 +1257,9 @@ static OptionHelp xtermOptions[] = {
 #endif
 { "-/+vb",                 "turn on/off visual bell" },
 { "-/+pob",                "turn on/off pop on bell" },
+#if OPT_WIDE_ATTRS && OPT_ISO_COLORS
+{ "-/+itc",                "turn off/on display of italic as color"},
+#endif
 #if OPT_WIDE_CHARS
 { "-/+wc",                 "turn on/off wide-character mode" },
 { "-/+mk_width",           "turn on/off simple width convention" },
