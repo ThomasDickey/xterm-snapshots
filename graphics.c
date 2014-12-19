@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.60 2014/12/12 09:58:30 tom Exp $ */
+/* $XTermId: graphics.c,v 1.61 2014/12/19 01:18:40 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -55,7 +55,6 @@
  * - find a suitable default alphabet zero font instead of scaling Xft fonts
  * - input and output cursors
  * - mouse input
- * - custom coordinate systems
  * - investigate second graphic page for ReGIS -- does it also apply to text and sixel graphics? are the contents preserved?
  * - fix interpolated curves to more closely match implementation (identical despite direction and starting point)
  * - non-ASCII alphabets
