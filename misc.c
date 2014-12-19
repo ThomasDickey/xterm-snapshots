@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.715 2014/10/29 00:54:25 tom Exp $ */
+/* $XTermId: misc.c,v 1.717 2014/12/18 01:51:57 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3601,6 +3601,57 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case 4:
 	if (ChangeAnsiColorRequest(xw, buf, ansi_colors, final))
 	    xw->misc.palette_changed = True;
+	break;
+    case 6:
+	TRACE(("parse colorXXMode:%s\n", buf));
+	while (*buf != '\0') {
+	    long which = 0;
+	    long value = 0;
+	    char *next;
+	    if (*buf == ';') {
+		++buf;
+	    } else {
+		which = strtol(buf, &next, 10);
+		if (next == 0)
+		    break;
+		buf = next;
+		if (*buf == ';')
+		    ++buf;
+	    }
+	    if (*buf == ';') {
+		++buf;
+	    } else {
+		value = strtol(buf, &next, 10);
+		if (next == 0)
+		    break;
+		buf = next;
+		if (*buf == ';')
+		    ++buf;
+	    }
+	    TRACE(("updating colorXXMode which=%ld, value=%ld\n", which, value));
+	    switch (which) {
+	    case 0:
+		screen->colorBDMode = (value != 0);
+		break;
+	    case 1:
+		screen->colorULMode = (value != 0);
+		break;
+	    case 2:
+		screen->colorBLMode = (value != 0);
+		break;
+	    case 3:
+		screen->colorRVMode = (value != 0);
+		break;
+#if OPT_WIDE_ATTRS
+	    case 4:
+		screen->colorITMode = (value != 0);
+		break;
+#endif
+	    default:
+		TRACE(("...unknown colorXXMode\n"));
+		break;
+	    }
+	}
 	break;
     case OSC_Reset(5):
 	ansi_colors = NUM_ANSI_COLORS;

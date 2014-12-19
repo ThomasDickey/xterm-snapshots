@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1386 2014/12/18 00:05:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1389 2014/12/19 00:33:02 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2888,8 +2888,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    });
 		    break;
 		case 3:	/* italicized */
-		    setItalicFont(xw, True);
+		    setItalicFont(xw, !screen->colorITMode);
 		    UIntSet(xw->flags, ATR_ITALIC);
+		    if_OPT_ISO_COLORS(screen, {
+			setExtendedFG(xw);
+		    });
 		    break;
 #endif
 		case 4:	/* Underscore           */
@@ -2937,6 +2940,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		case 23:	/* not italicized */
 		    setItalicFont(xw, False);
 		    UIntClr(xw->flags, ATR_ITALIC);
+		    if_OPT_ISO_COLORS(screen, {
+			setExtendedFG(xw);
+		    });
 		    break;
 #endif
 		case 24:
@@ -10107,7 +10113,7 @@ ShowCursor(void)
 		}
 	    });
 
-	    if (fix_italics) {
+	    if (fix_italics && !screen->colorITMode) {
 		xtermLoadItalics(xw);
 		if (italics_on) {
 		    setCgsFont(xw, currentWin, currentCgs, &screen->ifnts[which_font]);
@@ -10148,7 +10154,7 @@ ShowCursor(void)
 			   screen->box, NBOX, CoordModePrevious);
 	    }
 #if OPT_WIDE_ATTRS
-	    if (fix_italics) {
+	    if (fix_italics && !screen->colorITMode) {
 		if (italics_on) {
 		    setCgsFont(xw, currentWin, currentCgs, &screen->fnts[which_font]);
 		} else {
@@ -10273,7 +10279,7 @@ HideCursor(void)
 	});
 	setCgsFont(xw, WhichVWin(screen),
 		   whichXtermCgs(xw, attr_flags, in_selection),
-		   ((attr_flags & ATR_ITALIC)
+		   (((attr_flags & ATR_ITALIC) && !screen->colorITMode)
 		    ? &screen->ifnts[which_font]
 		    : &screen->fnts[which_font]));
     }
@@ -10315,7 +10321,7 @@ HideCursor(void)
     if ((attr_flags & ATR_ITALIC) ^ (xw->flags & ATR_ITALIC)) {
 	setCgsFont(xw, WhichVWin(screen),
 		   whichXtermCgs(xw, xw->flags, in_selection),
-		   ((xw->flags & ATR_ITALIC)
+		   (((xw->flags & ATR_ITALIC) && !screen->colorITMode)
 		    ? &screen->ifnts[which_font]
 		    : &screen->fnts[which_font]));
     }
