@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.667 2014/12/17 23:36:48 tom Exp $ */
+/* $XTermId: util.c,v 1.668 2014/12/18 09:27:49 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2772,6 +2772,9 @@ getNormXftFont(XtermWidget xw,
 
 #if OPT_WIDE_ATTRS
     if ((attr_flags & ATR_ITALIC)
+#if OPT_ISO_COLORS
+	&& !screen->colorITMode
+#endif
 	&& XFT_FONT(renderFontItal[fontnum])) {
 	font = XFT_FONT(renderFontItal[fontnum]);
     } else
