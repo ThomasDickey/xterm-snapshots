@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1546 2014/12/17 09:30:15 tom Exp $
+  $XTermId: xterm.log.html,v 1.1547 2014/12/19 01:20:47 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -924,7 +924,8 @@
         set via <code>OSC&nbsp;5</code>, without changing the color
         assignments (prompted by patch by Ingo Br&uuml;ckl).</li>
 
-	<li>add command-line option <code>-itc</code> for italics.
+        <li>add command-line option <code>-itc</code> for
+        italics.</li>
 
         <li>add <code>colorIT</code> and <code>colorITMode</code>
         for italics, like <code>colorBD</code>, etc.</li>
@@ -941,6 +942,12 @@
     <li>improve ReGIS graphics initialization (Ross Combs):
 
       <ul>
+        <li>enables use of fractional values in coordinates (which
+        in turn allows setting the coordinates to something like
+        [0,1][1,0])</li>
+
+        <li>doubles the minimum ReGIS graphic to 200x200</li>
+
         <li>set the default ReGIS image size to "auto"</li>
 
         <li>fix some swapped width/height parameters in TRACE

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.58 2014/12/14 23:08:38 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.60 2014/12/19 01:24:04 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -248,10 +248,10 @@ static RegisGraphicsContext persistent_context;
 			   ((V) >> (8U - ((N) & 3U))) )
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
 
-#define SCALE_XCOORD(C, X) ( ( (X) * ((C)->width  - 1) ) / (C)->x_div )
-#define SCALE_YCOORD(C, Y) ( ( (Y) * ((C)->height - 1) ) / (C)->y_div )
-#define TRANSLATE_XCOORD(C, X) SCALE_XCOORD((C), (X) - (C)->x_off )
-#define TRANSLATE_YCOORD(C, Y) SCALE_YCOORD((C), (Y) - (C)->y_off )
+#define SCALE_XCOORD(C, X, S) ( ( (X) * ((C)->width  - 1) ) / ( (C)->x_div * (S) ) )
+#define SCALE_YCOORD(C, Y, S) ( ( (Y) * ((C)->height - 1) ) / ( (C)->y_div * (S) ) )
+#define TRANSLATE_XCOORD(C, X, S) SCALE_XCOORD((C), (X) - (C)->x_off * (S), (S) )
+#define TRANSLATE_YCOORD(C, Y, S) SCALE_YCOORD((C), (Y) - (C)->y_off * (S), (S) )
 
 #define READ_PIXEL(C, X, Y) read_pixel((C)->graphic, (X), (Y))
 #define DRAW_PIXEL(C, X, Y, COL) draw_solid_pixel((C)->graphic, (X), (Y), (COL))
@@ -3229,8 +3229,45 @@ load_regis_regnum_or_colorspec(RegisGraphicsContext const *context,
 }
 
 static int
+to_scaled_int(char const *num, int scale, int *value)
+{
+    unsigned long whole, frac;
+    char *end;
+
+    /* FIXME: handle whitespace? how about trailing junk? */
+    whole = strtoul(num, &end, 10);
+    if (end[0] == '.') {
+	char temp[5] = "0000";
+
+	if (end[1] != '\0') {
+	    temp[0] = end[1];
+	    if (end[2] != '\0') {
+		temp[1] = end[2];
+		if (end[3] != '\0') {
+		    temp[2] = end[3];
+		    if (end[4] != '\0') {
+			temp[3] = end[4];
+		    }
+		}
+	    }
+	}
+	frac = strtoul(temp, NULL, 10);
+    } else if (end[0] == '\0' || end[0] == ',') {
+	frac = 0;
+    } else {
+	TRACE(("unexpected character %c in number %s\n", end[0], num));
+	return 0;
+    }
+
+    *value = (int) (whole * (unsigned long) scale
+		    + (frac * (unsigned long) scale) / 10000);
+
+    return 1;
+}
+
+static int
 load_regis_raw_extent(char const *extent, int *relx, int *rely,
-		      int *xloc, int *yloc)
+		      int *xloc, int *yloc, int scale)
 {
     int xsign, ysign;
     char const *xpart;
@@ -3266,21 +3303,37 @@ load_regis_raw_extent(char const *extent, int *relx, int *rely,
 	*relx = 1;
 	*xloc = 0;
     } else if (xsign == 0) {
+	int val;
+
+	if (!to_scaled_int(xpart, scale, &val))
+	    return 0;
 	*relx = 0;
-	*xloc = atoi(xpart);
+	*xloc = val;
     } else {
+	int val;
+
+	if (!to_scaled_int(xpart, scale, &val))
+	    return 0;
 	*relx = 1;
-	*xloc = xsign * atoi(xpart);
+	*xloc = xsign * val;
     }
     if (ypart[0] == '\0') {
 	*rely = 1;
 	*yloc = 0;
     } else if (ysign == 0) {
+	int val;
+
+	if (!to_scaled_int(ypart, scale, &val))
+	    return 0;
 	*rely = 0;
-	*yloc = atoi(ypart);
+	*yloc = val;
     } else {
+	int val;
+
+	if (!to_scaled_int(ypart, scale, &val))
+	    return 0;
 	*rely = 1;
-	*yloc = ysign * atoi(ypart);
+	*yloc = ysign * val;
     }
 
     return 1;
@@ -3290,13 +3343,13 @@ static int
 load_regis_pixel_extent(char const *extent, int origx, int origy,
 			int *xloc, int *yloc)
 {
-    int ret;
     int relx, rely;
     int px, py;
 
-    ret = load_regis_raw_extent(extent, &relx, &rely, &px, &py);
-    if (ret != 1)
-	return ret;
+    if (!load_regis_raw_extent(extent, &relx, &rely, &px, &py, 1)) {
+	TRACE(("invalid coordinates in extent %s\n", extent));
+	return 0;
+    }
 
     *xloc = px;
     *yloc = py;
@@ -3309,39 +3362,42 @@ load_regis_pixel_extent(char const *extent, int origx, int origy,
     return 1;
 }
 
+#define COORD_SCALE 1000
+
 static int
 load_regis_coord_extent(RegisGraphicsContext const *context, char const *extent,
 			int origx, int origy, int *xloc, int *yloc)
 {
-    int ret;
     int relx, rely;
     int ux, uy;
-    int px, py;
 
-    ret = load_regis_raw_extent(extent, &relx, &rely, &ux, &uy);
-    if (ret != 1)
-	return ret;
+    if (!load_regis_raw_extent(extent, &relx, &rely, &ux, &uy, COORD_SCALE)) {
+	TRACE(("invalid coordinates in extent %s\n", extent));
+	return 0;
+    }
 
     if (relx) {
-	px = SCALE_XCOORD(context, ux);
-	TRACE(("converted relative X coord %d to relative pixel coord %d (width=%d xoff=%d xdiv=%d)\n",
-	       ux, px, context->width, context->x_off, context->x_div));
+	const int px = SCALE_XCOORD(context, ux, COORD_SCALE);
+	TRACE(("converted relative X coord %.03f to relative pixel coord %d (width=%d xoff=%d xdiv=%d)\n",
+	       ux / (double) COORD_SCALE, px, context->width,
+	       context->x_off, context->x_div));
 	*xloc = origx + px;
     } else {
-	px = TRANSLATE_XCOORD(context, ux);
-	TRACE(("converted absolute X coord %d to absolute pixel coord %d\n",
-	       ux, px));
+	const int px = TRANSLATE_XCOORD(context, ux, COORD_SCALE);
+	TRACE(("converted absolute X coord %.03f to absolute pixel coord %d\n",
+	       ux / (double) COORD_SCALE, px));
 	*xloc = px;
     }
     if (rely) {
-	py = SCALE_YCOORD(context, uy);
-	TRACE(("converted relative Y coord %d to relative pixel coord %d (height=%d, yoff=%d, ydiv=%d)\n",
-	       uy, py, context->height, context->y_off, context->y_div));
+	const int py = SCALE_YCOORD(context, uy, COORD_SCALE);
+	TRACE(("converted relative Y coord %.03f to relative pixel coord %d (height=%d, yoff=%d, ydiv=%d)\n",
+	       uy / (double) COORD_SCALE, py, context->height,
+	       context->y_off, context->y_div));
 	*yloc = origy + py;
     } else {
-	py = TRANSLATE_YCOORD(context, uy);
-	TRACE(("converted absolute Y coord %d to absolute pixel coord %d\n",
-	       uy, py));
+	const int py = TRANSLATE_YCOORD(context, uy, COORD_SCALE);
+	TRACE(("converted absolute Y coord %.03f to absolute pixel coord %d\n",
+	       uy / (double) COORD_SCALE, py));
 	*yloc = py;
     }
 
@@ -5047,19 +5103,13 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    width = cw;
 		    height = ch;
 
-#if 1
-		    /* FIXME: Scaling up is not so great because we don't
-		     * support non-integer coordinates, so some pixels will not
-		     * be addressable.
-		     */
 		    scale = 1;
-		    while (width * scale < 100 ||
-			   height * scale < 100) {
+		    while (width * scale < 200 ||
+			   height * scale < 200) {
 			scale++;
 		    }
 		    width *= scale;
 		    height *= scale;
-#endif
 
 		    scale = 1;
 		    while (width / scale > context->graphic->max_width ||
