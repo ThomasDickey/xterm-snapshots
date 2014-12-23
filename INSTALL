@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.153 2014/10/15 00:49:56 tom Exp $
+-- $XTermId: INSTALL,v 1.154 2014/12/22 10:16:18 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2013,2014 by Thomas E. Dickey
 --
@@ -675,6 +675,19 @@ The options (in alphabetic order):
 	the .desktop files to use that theme.  If no theme name is given,
 	the default is "hicolor".  If this option is not given, the desktop
 	file will use the pixmap files.
+
+  --with-man2html[=XXX]   use XXX rather than groff
+
+	Specify an alternative program to use for converting manpages and
+	control sequences document to html.  If the option is given, its
+	default value is "man2html", otherwise it is "groff" with groff's
+	special options.  The "man2html" script reads formatted nroff output
+	from its standard input, and writes html to its standard output.  Other
+	input/output conventions are not currently supported.
+
+	See
+		http://invisible-island.net/scripts
+	for an up-to-date version of "man2html".
 
   --with-neXtaw           link with neXT Athena library
 

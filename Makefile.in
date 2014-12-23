@@ -1,4 +1,4 @@
-## $XTermId: Makefile.in,v 1.231 2014/10/23 00:21:17 tom Exp $
+## $XTermId: Makefile.in,v 1.233 2014/12/22 22:36:43 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -124,7 +124,7 @@ EXTRAOBJ	= @EXTRAOBJS@
 
 all :	$(PROGRAMS)
 ################################################################################
-.SUFFIXES : .i .def .hin .$(manext) .ms .man .txt @GROFF_NOTE@ .html .ps .pdf
+.SUFFIXES : .i .def .hin .$(manext) .ms .man .txt @MAN2HTML_NOTE@ .html @GROFF_NOTE@ .ps .pdf
 
 .c$o :
 	@RULE_CC@
@@ -147,18 +147,18 @@ all :	$(PROGRAMS)
 @NROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | nroff -ms | col -bx" >$@
 @NROFF_NOTE@
 
-@GROFF_NOTE@.$(manext).html :
-@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -P -o0 -I$*_ -Thtml -man" >$@
-@GROFF_NOTE@
+@MAN2HTML_NOTE@.$(manext).html :
+@MAN2HTML_NOTE@	./@MAN2HTML_TEMP@ $* $(manext) man >$@
+@MAN2HTML_NOTE@
 @GROFF_NOTE@.$(manext).ps :
 @GROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
 @GROFF_NOTE@
 @GROFF_NOTE@.$(manext).txt :
 @GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Tascii -man | col -bx" >$@
 @GROFF_NOTE@
-@GROFF_NOTE@.ms.html :
-@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -P -o0 -I$*_ -Thtml -ms" >$@
-@GROFF_NOTE@
+@MAN2HTML_NOTE@.ms.html :
+@MAN2HTML_NOTE@	./@MAN2HTML_TEMP@ $* ms ms >$@
+@MAN2HTML_NOTE@
 @GROFF_NOTE@.ms.ps :
 @GROFF_NOTE@	$(SHELL) -c "tbl $< | groff -ms" >$@
 @GROFF_NOTE@
@@ -507,7 +507,7 @@ distclean :: clean
 
 distclean \
 docs-clean ::
-	-$(RM) *.ps *.pdf *.png
+	-$(RM) *.ps *.pdf *.png man2html.tmp
 	-$(SHELL) -c 'for p in xterm resize uxterm koi8rxterm; \
 	do \
 		$(RM) $$p.html $$p.$(manext) $$p.txt; \
@@ -524,11 +524,7 @@ terminfo.out : terminfo		; tic -a -I -1 terminfo >$@
 termcap.out : termcap		; tic -a -C -U termcap >$@
 ################################################################################
 docs-ctlseqs \
-docs :: \
-	$(srcdir)/ctlseqs.txt \
-@GROFF_NOTE@	ctlseqs.html \
-@GROFF_NOTE@	ctlseqs.pdf \
-@GROFF_NOTE@	ctlseqs.ps
+docs :: $(srcdir)/ctlseqs.txt @MAN2HTML_NOTE@ ctlseqs.html @GROFF_NOTE@ ctlseqs.pdf ctlseqs.ps
 
 ctlseqs.html : $(srcdir)/ctlseqs.ms
 ctlseqs.pdf : ctlseqs.ps
@@ -536,28 +532,28 @@ ctlseqs.ps : $(srcdir)/ctlseqs.ms
 ctlseqs.txt : $(srcdir)/ctlseqs.ms
 ################################################################################
 docs-resize \
-docs ::  resize.txt @GROFF_NOTE@ resize.html resize.pdf resize.ps
+docs ::  resize.txt @MAN2HTML_NOTE@ resize.html @GROFF_NOTE@ resize.pdf resize.ps
 resize.html : resize.$(manext)
 resize.pdf : resize.ps
 resize.ps : resize.$(manext)
 resize.txt : resize.$(manext)
 ################################################################################
 docs-xterm \
-docs ::  xterm.txt @GROFF_NOTE@ xterm.html xterm.pdf xterm.ps
+docs ::  xterm.txt @MAN2HTML_NOTE@ xterm.html @GROFF_NOTE@ xterm.pdf xterm.ps
 xterm.html : xterm.$(manext)
 xterm.pdf : xterm.ps
 xterm.ps : xterm.$(manext)
 xterm.txt : xterm.$(manext)
 ################################################################################
 docs-uxterm \
-docs ::  uxterm.txt @GROFF_NOTE@ uxterm.html uxterm.pdf uxterm.ps
+docs ::  uxterm.txt @MAN2HTML_NOTE@ uxterm.html @GROFF_NOTE@ uxterm.pdf uxterm.ps
 uxterm.html : uxterm.$(manext)
 uxterm.pdf : uxterm.ps
 uxterm.ps : uxterm.$(manext)
 uxterm.txt : uxterm.$(manext)
 ################################################################################
 docs-koi8rxterm \
-docs ::  koi8rxterm.txt @GROFF_NOTE@ koi8rxterm.html koi8rxterm.pdf koi8rxterm.ps
+docs ::  koi8rxterm.txt @MAN2HTML_NOTE@ koi8rxterm.html @GROFF_NOTE@ koi8rxterm.pdf koi8rxterm.ps
 koi8rxterm.html : koi8rxterm.$(manext)
 koi8rxterm.pdf : koi8rxterm.ps
 koi8rxterm.ps : koi8rxterm.$(manext)
