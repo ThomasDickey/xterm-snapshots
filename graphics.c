@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.61 2014/12/19 01:18:40 tom Exp $ */
+/* $XTermId: graphics.c,v 1.62 2014/12/23 00:08:58 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -60,7 +60,7 @@
  * - non-ASCII alphabets
  * - enter/leave during a command
  * - command display mode
- * - scaling/re-rasterization to fit screen
+ * - re-rasterization on resize
  * - macros
  * - improved fills for narrow angles (track actual lines not just pixels)
  *
@@ -117,6 +117,7 @@
  * - background color as stackable write control
  * - true color (virtual color registers created upon lookup)
  * - anti-aliasing
+ * - variable-width text
  */
 
 /* font sizes:

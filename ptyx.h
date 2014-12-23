@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.819 2014/12/17 09:39:01 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.820 2014/12/23 00:08:58 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2240,6 +2240,8 @@ typedef struct {
 #endif
 
 #if OPT_REGIS_GRAPHICS
+	String		graphics_regis_default_font; /* font for "builtin" */
+
 	String		graphics_regis_screensize; /* given a size in pixels */
 	Dimension	graphics_regis_def_wide; /* ...corresponding width   */
 	Dimension	graphics_regis_def_high; /* ...and height            */

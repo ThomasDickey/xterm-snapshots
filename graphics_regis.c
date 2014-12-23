@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.60 2014/12/19 01:24:04 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.62 2014/12/23 01:39:00 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -79,6 +79,7 @@
 
 #define SCALE_FIXED_POINT 16U
 
+#undef DEBUG_ALPHABETS
 #undef DEBUG_BEZIER
 #undef DEBUG_SPLINE_SEGMENTS
 #undef DEBUG_SPLINE_POINTS
@@ -90,6 +91,7 @@
 #undef DEBUG_SPECIFIC_CHAR_METRICS
 #define IS_DEBUG_CHAR(CH) ((CH) == 'W')		/* glyphs to dump to terminal */
 #undef DEBUG_COMPUTED_FONT_METRICS
+#undef DEBUG_FONT_NAME
 #undef DEBUG_FONT_SIZE_SEARCH
 #undef DEBUG_XFT_GLYPH
 #undef DEBUG_LOAD
@@ -138,6 +140,9 @@ typedef struct RegisTextControls {
     int       character_rotation;
     int       slant; /* for italic/oblique */
 } RegisTextControls;
+
+#define FixedCopy(dst, src, len) strncpy(dst, src, len - 1)[len - 1] = '\0'
+#define CopyFontname(dst, src) FixedCopy(dst, src, REGIS_FONTNAME_LEN)
 
 #define MAX_REGIS_ALPHABETS 8U
 #define REGIS_ALPHABET_NAME_LEN 11U
@@ -214,6 +219,7 @@ typedef struct RegisGraphicsContext {
     int width, height;
     unsigned all_planes;
     RegisterNum background;
+    char const *builtin_font;
     RegisAlphabet alphabets[MAX_REGIS_ALPHABETS];
     RegisWriteControls persistent_write_controls;
     RegisWriteControls temporary_write_controls;
@@ -243,6 +249,11 @@ static RegisGraphicsContext persistent_context;
 #define WRITE_SHADING_REF_X 1U
 
 /* keypress event example: http://iraf.net/forum/viewtopic.php?showtopic=61692 */
+
+#define MIN2(X, Y) ( (X) < (Y) ? (X) : (Y) )
+#define MIN3(X, Y, Z) ( MIN2(MIN2((X), (Y)), MIN2((Y), (Z))) )
+#define MAX2(X, Y) ( (X) > (Y) ? (X) : (Y) )
+#define MAX3(X, Y, Z) ( MAX2(MAX2((X), (Y)), MAX2((Y), (Z))) )
 
 #define ROT_LEFT_N(V, N) ( (((V) << ((N) & 3U )) & 255U) | \
 			   ((V) >> (8U - ((N) & 3U))) )
@@ -1235,14 +1246,14 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
     int x3, y3, x4, y4;
     int i, x0, y0, x1, y1, x2, y2;
 #ifdef DEBUG_SPLINE_SEGMENTS
-    int color = 0;
+    RegisterNum color = 0;
 #endif
 
     assert(n > 2);		/* need at least 4 points P[0]..P[n] */
 
 #ifdef DEBUG_SPLINE_POINTS
     {
-	int save_pattern;
+	unsigned save_pattern;
 
 	i = 0;
 	global_context->temporary_write_controls.foreground = 11;
@@ -1627,7 +1638,7 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
  * maxw and maxh without overstepping either dimension.
  */
 static XftFont *
-find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
+find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
 			unsigned maxw, unsigned maxh, unsigned max_pixels,
 			unsigned *w, unsigned *h,
 			unsigned *xmin, unsigned *ymin)
@@ -1636,6 +1647,7 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
     unsigned targeth;
     unsigned ii, cacheindex;
     static struct {
+	char fontname[REGIS_FONTNAME_LEN];
 	unsigned maxw, maxh, max_pixels;
 	unsigned targeth;
 	unsigned w, h;
@@ -1643,10 +1655,19 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
 	unsigned ymin;
     } cache[FONT_SIZE_CACHE_SIZE];
 
+    assert(display);
+    assert(screen);
+    assert(fontname);
+    assert(w);
+    assert(h);
+    assert(xmin);
+    assert(ymin);
+
     cacheindex = FONT_SIZE_CACHE_SIZE;
     for (ii = 0U; ii < FONT_SIZE_CACHE_SIZE; ii++) {
 	if (cache[ii].maxw == maxw && cache[ii].maxh == maxh &&
-	    cache[ii].max_pixels == max_pixels) {
+	    cache[ii].max_pixels == max_pixels &&
+	    strcmp(cache[ii].fontname, fontname) == 0) {
 	    cacheindex = ii;
 	    break;
 	}
@@ -1722,14 +1743,15 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
 	    char buffer[1024];
 
 	    if (XftNameUnparse(font->pattern, buffer, (int) sizeof(buffer))) {
-		printf("Using font named \"%s\"\n", buffer);
+		printf("Testing font named \"%s\"\n", buffer);
 	    } else {
-		printf("Using unknown font\n");
+		printf("Testing unknown font\n");
 	    }
 	}
 #endif
 
-	if (cacheindex < sizeof(cache) / sizeof(cache[0])) {
+	if (cacheindex < FONT_SIZE_CACHE_SIZE &&
+	    targeth == cache[cacheindex].targeth) {
 	    *w = cache[cacheindex].w;
 	    *h = cache[cacheindex].h;
 	    *xmin = cache[cacheindex].xmin;
@@ -1791,11 +1813,25 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
 	    }
 	    continue;
 	}
+#ifdef DEBUG_FONT_NAME
+	{
+	    char buffer[1024];
+
+	    if (XftNameUnparse(font->pattern, buffer, (int) sizeof(buffer))) {
+		printf("Final font for \"%s\" max %dx%d is \"%s\"\n",
+		       fontname, maxw, maxh, buffer);
+	    } else {
+		printf("Final font for \"%s\" max %dx%d is unknown\n",
+		       fontname, maxw, maxh);
+	    }
+	}
+#endif
 
 	if (cacheindex == FONT_SIZE_CACHE_SIZE) {
 	    for (ii = 0U; ii < FONT_SIZE_CACHE_SIZE; ii++) {
 		if (cache[ii].maxw == 0U || cache[ii].maxh == 0U ||
 		    cache[ii].max_pixels == 0U) {
+		    CopyFontname(cache[ii].fontname, fontname);
 		    cache[ii].maxw = maxw;
 		    cache[ii].maxh = maxh;
 		    cache[ii].max_pixels = max_pixels;
@@ -1809,6 +1845,7 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
 	    }
 	    if (ii == FONT_SIZE_CACHE_SIZE) {
 		ii = targeth % FONT_SIZE_CACHE_SIZE;
+		CopyFontname(cache[ii].fontname, fontname);
 		cache[ii].maxw = maxw;
 		cache[ii].maxh = maxh;
 		cache[ii].max_pixels = max_pixels;
@@ -1907,11 +1944,14 @@ find_best_alphabet_index(RegisGraphicsContext const *context,
 	}
     }
 
-    TRACE(("found alphabet %u at index %u size %ux%u font=%s\n",
-	   context->current_text_controls->alphabet_num, bestmatch,
-	   bestw, besth,
-	   context->alphabets[bestmatch].use_font ?
-	   context->alphabets[bestmatch].fontname : "(none)"));
+    if (bestmatch < MAX_REGIS_ALPHABETS) {
+	TRACE(("found alphabet %u at index %u size %ux%u font=%s\n",
+	       context->current_text_controls->alphabet_num, bestmatch,
+	       bestw, besth,
+	       context->alphabets[bestmatch].use_font ?
+	       context->alphabets[bestmatch].fontname : "(none)"));
+    }
+
     return bestmatch;
 }
 
@@ -1938,6 +1978,8 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
 	return 0;
     }
 
+    assert(context->alphabets[alphabet_index].bytes);
+
     w = context->alphabets[alphabet_index].pixw;
     h = context->alphabets[alphabet_index].pixh;
     glyph = &context->alphabets[alphabet_index]
@@ -1956,8 +1998,8 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
 
 /*
  * alphabets
- *  0                          built-in
- *  1-(MAX_REGIS_ALPHABETS-1)  custom (max is 3 on VT3X0)
+ *  0    built-in
+ *  1-N  custom (max is 3 on VT3X0 -- up to MAX_REGIS_ALPHABETS with xterm)
  *
  * built-in 7-bit charsets
  *  (B    ASCII
@@ -1993,54 +2035,61 @@ get_bitmap_of_character(RegisGraphicsContext const *context, char ch,
 			unsigned maxw, unsigned maxh, unsigned char *pixels,
 			unsigned *w, unsigned *h, unsigned max_pixels)
 {
-    char const *fontname;
     unsigned bestmatch;
+    char const *fontname = NULL;
+
+    if (context->current_text_controls->alphabet_num == 0) {
+	fontname = context->builtin_font;
+    }
 
     *w = 0U;
     *h = 0U;
 
     bestmatch = find_best_alphabet_index(context, 1U, 1U, maxw, maxh,
 					 max_pixels);
-    if (bestmatch < MAX_REGIS_ALPHABETS &&
-	get_user_bitmap_of_character(context, ch, bestmatch, pixels)) {
-	*w = context->alphabets[bestmatch].pixw;
-	*h = context->alphabets[bestmatch].pixh;
-	return;
-    }
-
-    fontname = NULL;
     if (bestmatch < MAX_REGIS_ALPHABETS) {
 	RegisAlphabet const *alpha = &context->alphabets[bestmatch];
-	if (alpha && alpha->use_font)
+
+	if (!alpha->use_font &&
+	    get_user_bitmap_of_character(context, ch, bestmatch, pixels)) {
+	    TRACE(("found user glyph for alphabet number %d (index %u)\n\n",
+		   context->current_text_controls->alphabet_num, bestmatch));
+	    *w = alpha->pixw;
+	    *h = alpha->pixh;
+	    return;
+	}
+
+	if (alpha->use_font)
 	    fontname = alpha->fontname;
     }
-    if (!fontname && context->current_text_controls->alphabet_num == 0) {
-	fontname = "";
-    }
 
-    if (fontname && get_xft_bitmap_of_character(context, fontname, ch,
-						maxw, maxh, pixels,
-						max_pixels, w, h)) {
-	if (*w > maxw) {
-	    TRACE(("BUG: Xft glyph is too wide: %ux%u but max is %ux%u\n",
-		   *w, *h, maxw, maxh));
-	} else if (*h > maxh) {
-	    TRACE(("BUG: Xft glyph is too tall: %ux%u but max is %ux%u\n",
-		   *w, *h, maxw, maxh));
-	} else if (*w * *h > max_pixels) {
-	    TRACE(("BUG: Xft glyph has too many pixels: %u but max is %u\n",
-		   *w * *h, max_pixels));
-	} else {
+    if (fontname) {
+	if (get_xft_bitmap_of_character(context, fontname, ch,
+					maxw, maxh, pixels,
+					max_pixels, w, h)) {
+	    if (*w > maxw) {
+		TRACE(("BUG: Xft glyph is too wide: %ux%u but max is %ux%u\n",
+		       *w, *h, maxw, maxh));
+	    } else if (*h > maxh) {
+		TRACE(("BUG: Xft glyph is too tall: %ux%u but max is %ux%u\n",
+		       *w, *h, maxw, maxh));
+	    } else if (*w * *h > max_pixels) {
+		TRACE(("BUG: Xft glyph has too many pixels: %u but max is %u\n",
+		       *w * *h, max_pixels));
+	    } else {
+		TRACE(("got glyph from \"%s\" for alphabet number %d\n",
+		       fontname, context->current_text_controls->alphabet_num));
 #ifdef DEBUG_SPECIFIC_CHAR_METRICS
-	    if (IS_DEBUG_CHAR(ch)) {
-		printf("got %ux%u Xft bitmap for '%c' target size %ux%u:\n",
-		       *w, *h,
-		       ch, maxw, maxh);
-		dump_bitmap_pixels(pixels, *w, *h);
-		printf("\n");
-	    }
+		if (IS_DEBUG_CHAR(ch)) {
+		    printf("got %ux%u Xft bitmap for '%c' target size %ux%u:\n",
+			   *w, *h,
+			   ch, maxw, maxh);
+		    dump_bitmap_pixels(pixels, *w, *h);
+		    printf("\n");
+		}
 #endif
-	    return;
+		return;
+	    }
 	}
     }
 
@@ -2051,10 +2100,10 @@ get_bitmap_of_character(RegisGraphicsContext const *context, char ch,
     {
 	unsigned xx, yy;
 
-	*w = 8U;
-	*h = 10U;
-	for (yy = 0U; yy < 10U; yy++)
-	    for (xx = 0U; xx < 8U; xx++)
+	*w = MIN2(8U, maxh);
+	*h = MIN2(10U, maxw);
+	for (yy = 0U; yy < *h; yy++)
+	    for (xx = 0U; xx < *w; xx++)
 		pixels[yy * *w + xx] = '\0';
     }
 }
@@ -2173,6 +2222,25 @@ draw_text(RegisGraphicsContext *context, char const *str)
     int begin_x, begin_y;
     int rx, ry;
     int ox, oy;
+
+#ifdef DEBUG_ALPHABETS
+    {
+	unsigned n;
+
+	for (n = 0U; n < MAX_REGIS_ALPHABETS; n++) {
+	    printf("alphabet index %u\n", n);
+	    if (context->alphabets[n].alphabet_num != INVALID_ALPHABET_NUM) {
+		printf(" alphabet_num=%u\n", context->alphabets[n].alphabet_num);
+		printf(" pixw=%d\n", context->alphabets[n].pixw);
+		printf(" pixh=%d\n", context->alphabets[n].pixh);
+		printf(" name=\"%s\"\n", context->alphabets[n].name);
+		printf(" use_font=%d\n", context->alphabets[n].use_font);
+		printf(" fontname=\"%s\"\n", context->alphabets[n].fontname);
+		printf(" bytes=%p\n", context->alphabets[n].bytes);
+	    }
+	}
+    }
+#endif
 
     if (context->current_text_controls->slant <= -75 ||
 	context->current_text_controls->slant >= +75) {
@@ -2940,11 +3008,6 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
     return 1;
 }
 
-#define MIN2(X, Y) ( (X) < (Y) ? (X) : (Y) )
-#define MIN3(X, Y, Z) ( MIN2(MIN2((X), (Y)), MIN2((Y), (Z))) )
-#define MAX2(X, Y) ( (X) > (Y) ? (X) : (Y) )
-#define MAX3(X, Y, Z) ( MAX2(MAX2((X), (Y)), MAX2((Y), (Z))) )
-
 static int
 load_regis_colorspec(RegisGraphicsContext const *context,
 		     RegisDataFragment const *input,
@@ -3259,8 +3322,8 @@ to_scaled_int(char const *num, int scale, int *value)
 	return 0;
     }
 
-    *value = (int) (whole * (unsigned long) scale
-		    + (frac * (unsigned long) scale) / 10000);
+    *value = (int) (whole * (unsigned) scale +
+		    (frac * (unsigned) scale) / 10000);
 
     return 1;
 }
@@ -4030,7 +4093,7 @@ init_regis_alphabets(RegisGraphicsContext *context)
 
 static void
 init_regis_graphics_context(int terminal_id, int width, int height,
-			    unsigned max_colors,
+			    unsigned max_colors, const char *builtin_font,
 			    RegisGraphicsContext *context)
 {
     context->graphic = NULL;
@@ -4052,6 +4115,8 @@ init_regis_graphics_context(int terminal_id, int width, int height,
     context->all_planes |= context->all_planes >> 2U;
     context->all_planes |= context->all_planes >> 4U;
     context->all_planes |= context->all_planes >> 8U;
+
+    context->builtin_font = builtin_font;
 
     init_regis_write_controls(terminal_id, context->all_planes,
 			      &context->persistent_write_controls);
@@ -4405,26 +4470,26 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    switch (state->curve_mode) {
 	    case CURVE_POSITION_CLOSED_CURVE:
 		{
-		    int i;
+		    unsigned i;
 
 #ifdef DEBUG_SPLINE_POINTS
 		    printf("points: \n");
-		    for (i = 0; i < (int) state->num_points; i++)
+		    for (i = 0; i < state->num_points; i++)
 			printf("  %d,%d\n",
 			       state->x_points[i], state->y_points[i]);
 #endif
 
 #ifdef DEBUG_SPLINE_WITH_ROTATION
 		    {
-			static int shift = 0;
+			static unsigned shift = 0;
 			int temp_x[MAX_CURVE_POINTS], temp_y[MAX_CURVE_POINTS];
 			shift++;
 			shift = shift % state->num_points;
-			for (i = 0; i < (int) state->num_points; i++) {
+			for (i = 0; i < state->num_points; i++) {
 			    temp_x[i] = state->x_points[i];
 			    temp_y[i] = state->y_points[i];
 			}
-			for (i = 0; i < (int) state->num_points; i++) {
+			for (i = 0; i < state->num_points; i++) {
 			    state->x_points[i] =
 				temp_x[(i + shift) % state->num_points];
 			    state->y_points[i] =
@@ -4433,21 +4498,21 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 #ifdef DEBUG_SPLINE_POINTS
 			printf("after shift %d: \n", shift);
-			for (i = 0; i < (int) state->num_points; i++)
+			for (i = 0; i < state->num_points; i++)
 			    printf("  %d,%d\n",
 				   state->x_points[i], state->y_points[i]);
 #endif
 		    }
 #endif
 
-		    for (i = (int) state->num_points; i > 0; i--) {
+		    for (i = state->num_points; i > 0; i--) {
 			state->x_points[i] = state->x_points[i - 1];
 			state->y_points[i] = state->y_points[i - 1];
 		    }
 		    state->x_points[0] = state->x_points[state->num_points];
 		    state->y_points[0] = state->y_points[state->num_points];
 		    state->num_points++;
-		    for (i = (int) state->num_points; i > 0; i--) {
+		    for (i = state->num_points; i != 0; i--) {
 			state->x_points[i] = state->x_points[i - 1];
 			state->y_points[i] = state->y_points[i - 1];
 		    }
@@ -4467,7 +4532,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 #endif
 #ifdef DEBUG_SPLINE_POINTS
 		    printf("after points added: \n");
-		    for (i = 0; i < (int) state->num_points; i++)
+		    for (i = 0; i < state->num_points; i++)
 			printf("  %d,%d\n",
 			       state->x_points[i], state->y_points[i]);
 #endif
@@ -6506,6 +6571,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 				    screen->graphics_regis_def_wide,
 				    screen->graphics_regis_def_high,
 				    get_color_register_count(screen),
+				    screen->graphics_regis_default_font,
 				    context);
     }
 
