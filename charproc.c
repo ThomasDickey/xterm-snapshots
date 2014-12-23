@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1389 2014/12/19 00:33:02 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1391 2014/12/23 00:17:32 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -682,6 +682,8 @@ static XtResource xterm_resources[] =
 #endif
 
 #if OPT_REGIS_GRAPHICS
+    Sres(XtNregisDefaultFont, XtCRegisDefaultFont,
+	 screen.graphics_regis_default_font, ""),
     Sres(XtNregisScreenSize, XtCRegisScreenSize,
 	 screen.graphics_regis_screensize, "auto"),
 #endif
@@ -8384,6 +8386,10 @@ VTInitialize(Widget wrequest,
 	}
 
 # if OPT_REGIS_GRAPHICS
+	init_Sres(screen.graphics_regis_default_font);
+	TRACE(("default ReGIS font: %s\n",
+	       TScreenOf(wnew)->graphics_regis_default_font));
+
 	init_Sres(screen.graphics_regis_screensize);
 	TScreenOf(wnew)->graphics_regis_def_high = 800;
 	TScreenOf(wnew)->graphics_regis_def_wide = 1000;

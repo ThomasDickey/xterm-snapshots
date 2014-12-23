@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1548 2014/12/22 10:17:34 tom Exp $
+  $XTermId: xterm.log.html,v 1.1549 2014/12/23 00:14:31 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -945,6 +945,12 @@
     <li>improve ReGIS graphics initialization (Ross Combs):
 
       <ul>
+        <li>add a new string resource to set the default ReGIS
+        font.</li>
+
+        <li>fix a caching problem where the font name wasn't taken
+        into consideration when looking up cached metrics.</li>
+
         <li>enables use of fractional values in coordinates (which
         in turn allows setting the coordinates to something like
         [0,1][1,0])</li>
