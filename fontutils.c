@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.443 2014/09/03 23:58:53 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.444 2014/12/25 22:00:49 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -1589,7 +1589,7 @@ xtermLoadItalics(XtermWidget xw)
 		FREE_STRING(dst.menu_font_names[n][m]); \
 		dst.menu_font_names[n][m] = x_strdup(src.menu_font_names[n][m]); \
 	    } \
-	    TRACE((".. " #dst ".menu_fonts_names[%d] = %s\n", n, dst.menu_font_names[n][fNorm])); \
+	    TRACE((".. " #dst ".menu_fonts_names[%d] = %s\n", n, NonNull(dst.menu_font_names[n][fNorm]))); \
 	}
 
 #define COPY_DEFAULT_FONTS(target, source) \
