@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.717 2014/12/18 01:51:57 tom Exp $ */
+/* $XTermId: misc.c,v 1.718 2014/12/26 01:35:16 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2916,6 +2916,12 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 					  XtLastTimestampProcessed(TScreenOf(xw)->display),
 					  select_args, n,
 					  NULL);
+			/*
+			 * select_args is used via SelectionReceived, cannot
+			 * free it here.
+			 */
+		    } else {
+			free(select_args);
 		    }
 		} else {
 		    if (AllowWindowOps(xw, ewSetSelection)) {
@@ -2925,8 +2931,8 @@ ManipulateSelectionData(XtermWidget xw, TScreen *screen, char *buf, int final)
 			    AppendToSelectionBuffer(screen, CharOf(*buf++));
 			CompleteSelection(xw, select_args, n);
 		    }
+		    free(select_args);
 		}
-		free(select_args);
 	    }
 	    free(used);
 	}
