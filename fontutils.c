@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.444 2014/12/25 22:00:49 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.445 2014/12/28 22:52:30 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -3569,9 +3569,9 @@ SetVTFont(XtermWidget xw,
 		SAVE_FNAME(f_wb, fWBold);
 #endif
 	    } else {
-		xtermLoadFont(xw,
-			      xtermFontName(screen->MenuFontName(oldFont)),
-			      doresize, oldFont);
+		(void) xtermLoadFont(xw,
+				     xtermFontName(screen->MenuFontName(oldFont)),
+				     doresize, oldFont);
 		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	    FREE_FNAME(f_n);

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1391 2014/12/23 00:17:32 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1393 2014/12/28 22:12:39 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2852,6 +2852,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if (param_has_subparams(item)) {
 		    switch (op) {
 		    case 38:
+			/* FALLTHRU */
 		    case 48:
 			if_OPT_ISO_COLORS(screen, {
 			    break;
@@ -2866,6 +2867,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 		switch (op) {
 		case DEFAULT:
+		    /* FALLTHRU */
 		case 0:
 #if OPT_WIDE_ATTRS
 		    setItalicFont(xw, False);
@@ -2890,7 +2892,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    });
 		    break;
 		case 3:	/* italicized */
-		    setItalicFont(xw, !screen->colorITMode);
+		    setItalicFont(xw, UseItalicFont(screen));
 		    UIntSet(xw->flags, ATR_ITALIC);
 		    if_OPT_ISO_COLORS(screen, {
 			setExtendedFG(xw);
@@ -2977,12 +2979,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    break;
 #endif
 		case 30:
+		    /* FALLTHRU */
 		case 31:
+		    /* FALLTHRU */
 		case 32:
+		    /* FALLTHRU */
 		case 33:
+		    /* FALLTHRU */
 		case 34:
+		    /* FALLTHRU */
 		case 35:
+		    /* FALLTHRU */
 		case 36:
+		    /* FALLTHRU */
 		case 37:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_foreground = (op - 30);
@@ -3008,12 +3017,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    });
 		    break;
 		case 40:
+		    /* FALLTHRU */
 		case 41:
+		    /* FALLTHRU */
 		case 42:
+		    /* FALLTHRU */
 		case 43:
+		    /* FALLTHRU */
 		case 44:
+		    /* FALLTHRU */
 		case 45:
+		    /* FALLTHRU */
 		case 46:
+		    /* FALLTHRU */
 		case 47:
 		    if_OPT_ISO_COLORS(screen, {
 			xw->sgr_background = (op - 40);
@@ -3034,12 +3050,19 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    });
 		    break;
 		case 90:
+		    /* FALLTHRU */
 		case 91:
+		    /* FALLTHRU */
 		case 92:
+		    /* FALLTHRU */
 		case 93:
+		    /* FALLTHRU */
 		case 94:
+		    /* FALLTHRU */
 		case 95:
+		    /* FALLTHRU */
 		case 96:
+		    /* FALLTHRU */
 		case 97:
 		    if_OPT_AIX_COLORS(screen, {
 			xw->sgr_foreground = (op - 90 + 8);
@@ -3056,11 +3079,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    break;
 #endif
 		case 101:
+		    /* FALLTHRU */
 		case 102:
+		    /* FALLTHRU */
 		case 103:
+		    /* FALLTHRU */
 		case 104:
+		    /* FALLTHRU */
 		case 105:
+		    /* FALLTHRU */
 		case 106:
+		    /* FALLTHRU */
 		case 107:
 		    if_OPT_AIX_COLORS(screen, {
 			xw->sgr_background = (op - 100 + 8);
@@ -3143,6 +3172,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		}
 		break;
 	    case 53:		/* according to existing xterm handling */
+		/* FALLTHRU */
 	    case 55:		/* according to the VT330/VT340 Text Programming Manual */
 		TRACE(("...request locator status\n"));
 		if (sp->private_function
@@ -3227,6 +3257,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_HP_MEM_LOCK:
+	    /* FALLTHRU */
 	case CASE_HP_MEM_UNLOCK:
 	    TRACE(("%s\n", ((sp->parsestate[c] == CASE_HP_MEM_LOCK)
 			    ? "CASE_HP_MEM_LOCK"
@@ -3349,6 +3380,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_ANSI_RC:
+	    /* FALLTHRU */
 	case CASE_DECRC:
 	    TRACE(("CASE_%sRC - restore cursor\n",
 		   (sp->nextstate == CASE_DECRC) ? "DEC" : "ANSI_"));
@@ -3392,7 +3424,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 		switch (GetParam(0)) {
 		case DEFAULT:
+		    /* FALLTHRU */
 		case DEFAULT_STYLE:
+		    /* FALLTHRU */
 		case BLINK_BLOCK:
 		    blinks = True;
 		    screen->cursor_shape = CURSOR_BLOCK;
@@ -3445,14 +3479,18 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			xtermClearLEDs(screen);
 			break;
 		    case 1:
+			/* FALLTHRU */
 		    case 2:
+			/* FALLTHRU */
 		    case 3:
 			xtermShowLED(screen,
 				     (Cardinal) op,
 				     True);
 			break;
 		    case 21:
+			/* FALLTHRU */
 		    case 22:
+			/* FALLTHRU */
 		    case 23:
 			xtermShowLED(screen,
 				     (Cardinal) (op - 20),
@@ -4268,13 +4306,18 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECSWBV\n"));
 	    switch (zero_if_default(0)) {
 	    case 2:
+		/* FALLTHRU */
 	    case 3:
+		/* FALLTHRU */
 	    case 4:
 		screen->warningVolume = bvLow;
 		break;
 	    case 5:
+		/* FALLTHRU */
 	    case 6:
+		/* FALLTHRU */
 	    case 7:
+		/* FALLTHRU */
 	    case 8:
 		screen->warningVolume = bvHigh;
 		break;
@@ -4290,14 +4333,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECSMBV\n"));
 	    switch (zero_if_default(0)) {
 	    case 2:
+		/* FALLTHRU */
 	    case 3:
+		/* FALLTHRU */
 	    case 4:
 		screen->marginVolume = bvLow;
 		break;
 	    case 0:
+		/* FALLTHRU */
 	    case 5:
+		/* FALLTHRU */
 	    case 6:
+		/* FALLTHRU */
 	    case 7:
+		/* FALLTHRU */
 	    case 8:
 		screen->marginVolume = bvHigh;
 		break;
@@ -5758,8 +5807,11 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_X_NCSM, NOCLEAR_COLM);
 	    break;
 	case srm_VT200_MOUSE:	/* mouse bogus sequence         */
+	    /* FALLTHRU */
 	case srm_VT200_HIGHLIGHT_MOUSE:
+	    /* FALLTHRU */
 	case srm_BTN_EVENT_MOUSE:
+	    /* FALLTHRU */
 	case srm_ANY_EVENT_MOUSE:
 	    DoSM(DP_X_MOUSE, screen->send_mouse_pos);
 	    break;
@@ -6072,8 +6124,11 @@ restoremodes(XtermWidget xw)
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_NCSM], NOCLEAR_COLM);
 	    break;
 	case srm_VT200_MOUSE:	/* mouse bogus sequence         */
+	    /* FALLTHRU */
 	case srm_VT200_HIGHLIGHT_MOUSE:
+	    /* FALLTHRU */
 	case srm_BTN_EVENT_MOUSE:
+	    /* FALLTHRU */
 	case srm_ANY_EVENT_MOUSE:
 	    DoRM0(DP_X_MOUSE, screen->send_mouse_pos);
 	    really_set_mousemode(xw,
@@ -6686,8 +6741,11 @@ unparseseq(XtermWidget xw, ANSI *ap)
 	}
 	switch (ap->a_type) {
 	case ANSI_DCS:
+	    /* FALLTHRU */
 	case ANSI_OSC:
+	    /* FALLTHRU */
 	case ANSI_PM:
+	    /* FALLTHRU */
 	case ANSI_APC:
 	    unparseputc1(xw, ANSI_ST);
 	    break;
@@ -6977,6 +7035,7 @@ VTNonMaskableEvent(Widget w GCC_UNUSED,
 {
     switch (event->type) {
     case GraphicsExpose:
+	/* FALLTHRU */
     case NoExpose:
 	VTGraphicsOrNoExpose(event);
 	break;
@@ -7328,6 +7387,7 @@ VTInitialize_locale(XtermWidget xw)
     if (screen->utf8_fonts == uDefault) {
 	switch (screen->utf8_mode) {
 	case uFalse:
+	    /* FALLTHRU */
 	case uTrue:
 	    screen->utf8_fonts = screen->utf8_mode;
 	    break;
@@ -8375,6 +8435,7 @@ VTInitialize(Widget wrequest,
 	    native_h = 480;
 	    break;
 	case 340:
+	    /* FALLTHRU */
 	default:
 	    native_w = 800;
 	    native_h = 480;
@@ -8665,7 +8726,9 @@ VTDestroy(Widget w GCC_UNUSED)
 	switch (n) {
 #if OPT_TEK4014
 	case TEK_BG:
+	    /* FALLTHRU */
 	case TEK_FG:
+	    /* FALLTHRU */
 	case TEK_CURSOR:
 	    break;
 #endif
@@ -10119,7 +10182,7 @@ ShowCursor(void)
 		}
 	    });
 
-	    if (fix_italics && !screen->colorITMode) {
+	    if (fix_italics && UseItalicFont(screen)) {
 		xtermLoadItalics(xw);
 		if (italics_on) {
 		    setCgsFont(xw, currentWin, currentCgs, &screen->ifnts[which_font]);
@@ -10160,7 +10223,7 @@ ShowCursor(void)
 			   screen->box, NBOX, CoordModePrevious);
 	    }
 #if OPT_WIDE_ATTRS
-	    if (fix_italics && !screen->colorITMode) {
+	    if (fix_italics && UseItalicFont(screen)) {
 		if (italics_on) {
 		    setCgsFont(xw, currentWin, currentCgs, &screen->fnts[which_font]);
 		} else {
@@ -10285,7 +10348,7 @@ HideCursor(void)
 	});
 	setCgsFont(xw, WhichVWin(screen),
 		   whichXtermCgs(xw, attr_flags, in_selection),
-		   (((attr_flags & ATR_ITALIC) && !screen->colorITMode)
+		   (((attr_flags & ATR_ITALIC) && UseItalicFont(screen))
 		    ? &screen->ifnts[which_font]
 		    : &screen->fnts[which_font]));
     }
@@ -10327,7 +10390,7 @@ HideCursor(void)
     if ((attr_flags & ATR_ITALIC) ^ (xw->flags & ATR_ITALIC)) {
 	setCgsFont(xw, WhichVWin(screen),
 		   whichXtermCgs(xw, xw->flags, in_selection),
-		   (((xw->flags & ATR_ITALIC) && !screen->colorITMode)
+		   (((xw->flags & ATR_ITALIC) && UseItalicFont(screen))
 		    ? &screen->ifnts[which_font]
 		    : &screen->fnts[which_font]));
     }
