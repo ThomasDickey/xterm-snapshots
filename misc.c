@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.718 2014/12/26 01:35:16 tom Exp $ */
+/* $XTermId: misc.c,v 1.719 2014/12/28 22:17:58 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3808,6 +3808,9 @@ parse_decudk(XtermWidget xw, const char *cp)
 	unsigned key = 0;
 	int lo, hi;
 	int len = 0;
+
+	if (str == NULL)
+	    break;
 
 	while (isdigit(CharOf(*cp)))
 	    key = (key * 10) + (unsigned) (*cp++ - '0');

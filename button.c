@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.490 2014/12/26 02:25:05 tom Exp $ */
+/* $XTermId: button.c,v 1.491 2014/12/28 22:15:03 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3906,6 +3906,7 @@ _ConvertSelectionHelper(Widget w,
 		return True;
 	    }
 	}
+	free(result);
     }
     return False;
 }

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.765 2014/12/17 23:56:07 tom Exp $ */
+/* $XTermId: main.c,v 1.767 2014/12/29 00:17:32 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -4700,9 +4700,13 @@ spawnXTerm(XtermWidget xw)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    shname_minus = CastMallocN(char, strlen(shname) + 2);
-	    (void) strcpy(shname_minus, "-");
-	    (void) strcat(shname_minus, shname);
+	    if ((shname_minus = CastMallocN(char, strlen(shname) + 2)) != 0) {
+		(void) strcpy(shname_minus, "-");
+		(void) strcat(shname_minus, shname);
+	    } else {
+		static char default_minus[] = "-sh";
+		shname_minus = default_minus;
+	    }
 #ifndef TERMIO_STRUCT
 	    ldisc = (!XStrCmp("csh", shname + strlen(shname) - 3)
 		     ? NTTYDISC

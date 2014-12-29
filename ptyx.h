@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.820 2014/12/23 00:08:58 Ross.Combs Exp $ */
+/* $XTermId: ptyx.h,v 1.821 2014/12/28 21:50:14 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1241,6 +1241,8 @@ typedef enum {
 #define DFT_COLORMODE True	/* default colorMode resource */
 #endif
 
+#define UseItalicFont(screen) (!(screen)->colorITMode)
+
 #define ReverseOrHilite(screen,flags,hilite) \
 		(( screen->colorRVMode && hilite ) || \
 		    ( !screen->colorRVMode && \
@@ -1257,6 +1259,7 @@ typedef enum {
 
 #define TERM_COLOR_FLAGS(xw) 0
 
+#define UseItalicFont(screen) True
 #define ReverseOrHilite(screen,flags,hilite) \
 		      (( (flags & INVERSE) && !hilite) || \
 		       (!(flags & INVERSE) &&  hilite))
