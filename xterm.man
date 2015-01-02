@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.587 2014/12/17 10:10:02 tom Exp $
+.\" $XTermId: xterm.man,v 1.590 2015/01/02 12:52:32 tom Exp $
 .\"
-.\" Copyright 1996-2013,2014 by Thomas E. Dickey
+.\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -695,7 +695,7 @@ that \fI\*n\fP's \fBallowSendEvents\fP resource is enabled.
 .TP 8
 .B "\-itc"
 Set the \fIvt100\fP resource \fBcolorITMode\fR to \*(``false\*('',
-disabling the display of characters with italic attribute as italic.
+disabling the display of characters with italic attribute as color.
 .TP 8
 .B "+itc"
 Set the \fIvt100\fP resource \fBcolorITMode\fR to \*(``true\*('',
@@ -2371,7 +2371,7 @@ Note that:
 .bP
 Setting \fBcolorMode\fR off disables all colors, including italic.
 .bP
-The \fBitalicULMode\fP resource overrides \fBcolorITMode\fP. 
+The \fBitalicULMode\fP resource overrides \fBcolorITMode\fP.
 .RE
 .TP 8
 .B "colorMode (\fPclass\fB ColorMode)"
@@ -3674,7 +3674,7 @@ The default is \*(``0\*(''.
 .TP 8
 .B "printerExtent (\fPclass\fB PrinterExtent)"
 Controls whether a print page function will print the entire page (true), or
-only the the portion within the scrolling margins (false).
+only the portion within the scrolling margins (false).
 The default is \*(``false\*(''.
 .TP 8
 .B "printerFormFeed (\fPclass\fB PrinterFormFeed)"
@@ -4676,7 +4676,7 @@ The PRIMARY token is a standard X feature, documented in the ICCCM
 which states
 .RS
 .PP
-The selection named by the atom PRIMARY is used for all commands that take only a single argument and is the principal means of communication between clients that use the selection mechanism. 
+The selection named by the atom PRIMARY is used for all commands that take only a single argument and is the principal means of communication between clients that use the selection mechanism.
 .RE
 .PP
 However, many applications use CLIPBOARD in imitation of other windowing
@@ -4884,7 +4884,7 @@ It corresponds to more than one resource setting:
 .BR "sunKeyboard" ","
 .BR "sunFunctionKeys" ","
 .BR "scoFunctionKeys" " and"
-.BR "hpFunctionKeys "."
+.BR "hpFunctionKeys" "."
 .RE
 .TP
 Commands for process signalling:
@@ -4913,7 +4913,7 @@ suspending the process.
 Quit (quit)
 Stop processing X events except to support the \fB-hold\fP option,
 and then send a SIGHUP signal to the
-the process group of the process running under
+process group of the process running under
 .I \*n
 (usually the shell).
 .RE
@@ -5489,7 +5489,7 @@ of the \fBcharClass\fP (class \fICharClass\fP) resource.
 .PP
 This resource is a
 series of comma-separated
-of \fIrange\fP:\fIvalue\fP pairs.
+\fIrange\fP:\fIvalue\fP pairs.
 The
 \fIrange\fP is either a single number or \fIlow\fP-\fIhigh\fP in the range of 0
 to 65535, corresponding to the code for the character or characters to be
@@ -5766,7 +5766,7 @@ using the same convention as \*(``%V\*(''.
 .IP
 After constructing the command-string,
 \fI\*n\fP forks a subprocess and executes the command,
-which completes independently of \*n.
+which completes independently of \fI\*n\fP.
 .TP 8
 .B "exec-selectable(\fIformat\fP, \fIonClicks\fP)"
 Execute an external command,
@@ -5800,7 +5800,7 @@ Cut buffers are
 typically named \fICUT_BUFFER0\fP through \fICUT_BUFFER7\fP.
 .TP 8
 .B "insert-seven-bit()"
-This action is a synonym for \fBinsert()\fP
+This action is a synonym for \fBinsert()\fP.
 The term \*(``seven-bit\*('' is misleading:
 it only implies that \fI\*n\fP does not try to add 128 to the key's value
 as in \fBinsert-eight-bit()\fP.
@@ -6415,7 +6415,7 @@ whether the toolbar support is compiled into \fI\*n\fP.
 .PP
 Below is shown a sample of
 how the \fBkeymap()\fP action may be used to add special
-keys for entering commonly-typed works:
+keys for entering commonly-typed words:
 .NS
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\\&
