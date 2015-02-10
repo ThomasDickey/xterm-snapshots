@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.154 2014/12/22 10:16:18 tom Exp $
+-- $XTermId: INSTALL,v 1.155 2015/02/10 10:10:00 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2013,2014 by Thomas E. Dickey
+-- Copyright 1997-2014,2015 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -391,6 +391,18 @@ The options (in alphabetic order):
 	palette control strings without checking.  The result makes xterm
 	appear to freeze.  This workaround makes xterm ignore the strings,
 	and is compiled-in by default for Linux.
+
+  --enable-builtin-xpms   allow broken Linux OSC-strings],
+
+	Compile-in X pixmap data for these icons:
+		filled-xterm
+		mini.xterm
+		xterm-color
+		xterm
+	at these sizes
+		16x16
+		32x32
+		48x48
 
   --enable-dabbrev        enable dynamic-abbreviation support
 
