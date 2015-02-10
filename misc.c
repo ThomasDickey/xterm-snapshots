@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.719 2014/12/28 22:17:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.720 2015/02/10 09:59:56 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -4773,7 +4773,7 @@ xtermLoadIcon(XtermWidget xw)
 	    myData = BuiltInXPM(xterm_xpms, XtNumber(xterm_xpms));
 	if (myData == 0)
 	    myData = &mini_xterm_xpms[XtNumber(mini_xterm_xpms) - 1];
-	data = (char **) myData->data,
+	data = (char **) myData->data;
 #else
 	data = (char **) &mini_xterm_48x48_xpm;
 #endif

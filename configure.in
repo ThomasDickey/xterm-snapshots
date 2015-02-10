@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.327 2014/12/20 02:27:59 tom Exp $
+dnl $XTermId: configure.in,v 1.328 2015/02/10 10:07:32 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2013,2014 by Thomas E. Dickey
+dnl Copyright 1997-2014,2015 by Thomas E. Dickey
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -485,6 +485,14 @@ CF_ARG_ENABLE(broken-st,
 	[enable_broken_st=yes])
 AC_MSG_RESULT($enable_broken_st)
 test "$enable_broken_st" = no && AC_DEFINE(OPT_BROKEN_ST,0,[Define to 0 to disallow broken string-terminators])
+
+AC_MSG_CHECKING(if you want to compile-in icon data)
+CF_ARG_ENABLE(broken-st,
+	[  --enable-builtin-xpms   compile-in icon data],
+	[enable_builtin_xpms=no],
+	[enable_builtin_xpms=yes])
+AC_MSG_RESULT($enable_builtin_xpms)
+test "$enable_builtin_xpms" = yes && AC_DEFINE(OPT_BUILTIN_XPMS,1,[Define to 1 to compile-in icon data])
 
 AC_MSG_CHECKING(if you want printable 128-159)
 CF_ARG_DISABLE(c1-print,
