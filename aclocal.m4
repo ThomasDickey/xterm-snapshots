@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.386 2015/02/10 09:59:01 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.398 2015/02/15 17:47:56 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3544,7 +3544,7 @@ else
 fi
 ])dnl
 dnl ---------------------------------------------------------------------------
-dnl CF_WITH_MAN2HTML version: 1 updated: 2014/12/22 05:08:33
+dnl CF_WITH_MAN2HTML version: 2 updated: 2015/02/15 12:45:44
 dnl ----------------
 dnl Check for man2html and groff.  Optionally prefer man2html over groff.
 dnl Generate a shell script which hides the differences between the two.
@@ -3561,12 +3561,15 @@ AC_ARG_WITH(man2html,
 	[cf_man2html=$withval],
 	[cf_man2html=$GROFF_PATH])
 
+cf_with_groff=no
+
 case $cf_man2html in #(vi
 yes) #(vi
 	AC_MSG_RESULT(man2html)
 	AC_PATH_PROG(cf_man2html,man2html,no)
 	;;
-no) #(vi
+no|groff|*/groff*) #(vi
+	cf_with_groff=yes
 	cf_man2html=$GROFF_PATH
 	AC_MSG_RESULT($cf_man2html)
 	;;
@@ -3590,21 +3593,82 @@ ROOT=\[$]1
 TYPE=\[$]2
 MACS=\[$]3
 
+unset LANG
+unset LC_ALL
+unset LC_CTYPE
+unset LANGUAGE
+GROFF_NO_SGR=stupid
+export GROFF_NO_SGR
+
 CF_EOF
 
-if test "x$cf_man2html" = xno
+if test "x$cf_with_groff" = xyes
 then
-	MAN2HTML_NOTE="#"
+	MAN2HTML_NOTE="$GROFF_NOTE"
 	MAN2HTML_PATH="$GROFF_PATH"
 	cat >>$MAN2HTML_TEMP <<CF_EOF
-GROFF_NO_SGR=stupid /bin/sh -c "tbl \${ROOT}.\${TYPE} | $GROFF_PATH -P -o0 -I\${ROOT}_ -Thtml -\${MACS}"
+/bin/sh -c "tbl \${ROOT}.\${TYPE} | $GROFF_PATH -P -o0 -I\${ROOT}_ -Thtml -\${MACS}"
 CF_EOF
 else
 	MAN2HTML_NOTE=""
 	CF_PATH_SYNTAX(cf_man2html)
 	MAN2HTML_PATH="$cf_man2html"
+	AC_MSG_CHECKING(for $cf_man2html top/bottom margins)
+
+	# for this example, expect 3 lines of content, the remainder is head/foot
+	cat >conftest.in <<CF_EOF
+.TH HEAD1 HEAD2 HEAD3 HEAD4 HEAD5
+.SH SECTION
+MARKER
+CF_EOF
+
+	LC_ALL=C LC_CTYPE=C LANG=C LANGUAGE=C nroff -man conftest.in >conftest.out
+
+	cf_man2html_1st=`fgrep -n MARKER conftest.out |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
+	cf_man2html_top=`expr $cf_man2html_1st - 2`
+	cf_man2html_bot=`wc -l conftest.out |sed -e 's/[[^0-9]]//g'`
+	cf_man2html_bot=`expr $cf_man2html_bot - 2 - $cf_man2html_top`
+	cf_man2html_top_bot="-topm=$cf_man2html_top -botm=$cf_man2html_bot"
+
+	AC_MSG_RESULT($cf_man2html_top_bot)
+
+	AC_MSG_CHECKING(for pagesize to use)
+	for cf_block in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+	do
+	cat >>conftest.in <<CF_EOF
+.nf
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+CF_EOF
+	done
+
+	LC_ALL=C LC_CTYPE=C LANG=C LANGUAGE=C nroff -man conftest.in >conftest.out
+	cf_man2html_page=`fgrep -n HEAD1 conftest.out |tail -n 1 |sed -e 's/^[[^0-9]]*://' -e 's/:.*//'`
+	test -z "$cf_man2html_page" && cf_man2html_page=99999
+	test "$cf_man2html_page" -gt 100 && cf_man2html_page=99999
+
+	rm -rf conftest*
+	AC_MSG_RESULT($cf_man2html_page)
+
 	cat >>$MAN2HTML_TEMP <<CF_EOF
-tbl \${ROOT}.\${TYPE} | nroff -\${MACS} | $MAN2HTML_PATH 
+: \${MAN2HTML_PATH=$MAN2HTML_PATH}
+MAN2HTML_OPTS="\$MAN2HTML_OPTS -index -title="\$ROOT\(\$TYPE\)" -compress -pgsize $cf_man2html_page"
+case \${TYPE} in #(vi
+ms) #(vi
+	tbl \${ROOT}.\${TYPE} | nroff -\${MACS} | \$MAN2HTML_PATH -topm=0 -botm=0 \$MAN2HTML_OPTS
+	;;
+*)
+	tbl \${ROOT}.\${TYPE} | nroff -\${MACS} | \$MAN2HTML_PATH $cf_man2html_top_bot \$MAN2HTML_OPTS
+	;;
+esac
 CF_EOF
 fi
 

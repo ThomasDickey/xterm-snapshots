@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.315 2014/12/17 10:16:03 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.316 2015/02/15 14:17:54 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2013,2014 by Thomas E. Dickey
+.\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #314
-.ds RF 2014/12/17
+.ds LF Patch #315
+.ds RF 2015/02/15
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -330,7 +330,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2013)
+invisible-island.net (2006-2015)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
