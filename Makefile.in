@@ -1,8 +1,8 @@
-## $XTermId: Makefile.in,v 1.233 2014/12/22 22:36:43 tom Exp $
+## $XTermId: Makefile.in,v 1.234 2015/02/12 09:31:30 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1997-2013,2014 by Thomas E. Dickey
+# Copyright 1997-2014,2015 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -507,12 +507,15 @@ distclean :: clean
 
 distclean \
 docs-clean ::
-	-$(RM) *.ps *.pdf *.png man2html.tmp
+	-$(RM) *.ps *.pdf *.png
 	-$(SHELL) -c 'for p in xterm resize uxterm koi8rxterm; \
 	do \
 		$(RM) $$p.html $$p.$(manext) $$p.txt; \
 	done'
 	-$(RM) ctlseqs.html ctlseqs.$(manext)
+
+distclean ::
+	-$(RM) man2html.tmp
 
 realclean : distclean
 	-$(RM) tags TAGS

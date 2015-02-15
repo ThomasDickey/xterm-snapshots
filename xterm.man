@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.590 2015/01/02 12:52:32 tom Exp $
+.\" $XTermId: xterm.man,v 1.596 2015/02/15 17:11:17 tom Exp $
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
+.\" Updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .\"
 .ds N Xterm
 .ds n xterm
@@ -443,7 +443,7 @@ Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to \*(``true\*(''.
 .B "\-cc \fIcharacterclassrange\fP:\fIvalue\fP[,...]"
 This sets classes indicated by the given ranges for using in selecting by
 words.
-See the section specifying character classes.
+See the section specifying character classes
 and discussion of the \fIcharClass\fP resource.
 .TP 8
 .B "\-cjk_width"
@@ -1233,7 +1233,7 @@ which it did not open for its own use.
 It is possible (though probably not portable) to have an application
 which passes an open file descriptor down to \fI\*n\fP past the
 initialization or the \fB\-S\fP option to a process running in the \fI\*n\fP.
-.SS OLD OPTIONS
+.SS Old Options
 .PP
 The following command line arguments are provided for compatibility with
 older versions.
@@ -1270,7 +1270,7 @@ It is equivalent to
 This option specifies the width in pixels of the border surrounding the window.
 It is equivalent to \fB\-borderwidth\fP or \fB\-bw\fP.
 .
-.SS X TOOLKIT OPTIONS
+.SS X Toolkit Options
 .PP
 The following standard X Toolkit command line arguments are commonly used
 with \fI\*n\fP:
@@ -1352,13 +1352,85 @@ useful for setting resources that do not have separate command line options.
 .SH RESOURCES
 The program understands all of the core X Toolkit resource names and classes.
 Application specific resources (e.g., \*(``\fB__default_class__.\fP\fINAME\fP\*('') follow:
+.SS Application Resources
 .TP 8
 .B "backarrowKeyIsErase (\fPclass\fB BackarrowKeyIsErase)"
 Tie the VTxxx \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
-together by setting the DECBKM state according to whether the initial value of
-\fIstty\fP erase is a backspace (8) or delete (127) character.
+together by setting the DECBKM state according to whether
+the \fIinitial erase\fP character is a backspace (8) or delete (127) character.
 A \*(``false\*('' value disables this feature.
 The default is \*(``__backarrow_is_erase__\*(''.
+.IP
+Here are tables showing how the initial settings for
+.RS
+.bP
+\fBbackarrowKeyIsErase\fP (BKIE),
+.bP
+\fBbackarrowKey\fP (BK), and
+.bP
+\fBptyInitialErase\fP (PIE), along with the
+.bP
+\fIstty\fP erase character (^H for backspace, ^? for delete)
+.RE
+.IP
+will affect DECBKM.  First, \fI\*n\fP obtains the initial \fIerase\fP character:
+.RS
+.bP
+\fI\*n\fP's internal value is ^H
+.bP
+\fI\*n\fP asks the operating system for the value which \fBstty\fP shows
+.bP
+the \fBttyModes\fP resource may override \fIerase\fP
+.bP
+if \fBptyInitialErase\fP is false, \fI\*n\fP will look in the terminal database
+.RE
+.IP
+Summarizing that as a table:
+.TS
+l l l l
+_ _ _ _
+l c c c.
+\fBPIE\fR	\fBstty\fR	\fBtermcap\fR	\fIerase\fP
+false	^H	^H	^H
+false	^H	^?	^?
+false	^?	^H	^H
+false	^?	^?	^?
+true	^H	^H	^H
+true	^H	^?	^H
+true	^?	^H	^?
+true	^?	^?	^?
+.TE
+.IP
+Using that \fIerase\fP character, \fI\*n\fP allows further choices:
+.RS
+.bP
+if \fBbackarrowKeyIsErase\fP is true, \fI\*n\fP uses the \fIerase\fP
+character for the initial state of \fBDECBKM\fP
+.bP
+if \fBbackarrowKeyIsErase\fP is false, \fI\*n\fP sets \fBDECBKM\fP
+to 2 (internal).  This ties together \fBbackarrowKey\fP
+and the control sequence for \fBDECBKM\fP
+.bP
+applications can send a control sequence to set/reset \fBDECBKM\fP control set
+.bP
+the \*(``Backarrow Key (BS/DEL)\*('' menu entry toggles \fBDECBKM\fP
+.RE
+.IP
+Summarizing the initialization details:
+.TS
+l l l l l
+_ _ _ _ _
+c l l c c.
+\fIerase\fR	\fBBKIE\fR	\fBBK\fR	\fBDECBKM\fP	\fIresult\fP
+^?	false	false	2	^H
+^?	false	true	2	^?
+^?	true	false	0	^?
+^?	true	true	1	^?
+^H	false	false	2	^H
+^H	false	true	2	^?
+^H	true	false	0	^H
+^H	true	true	1	^H
+.TE
 .TP 8
 .B "fullscreen (\fPclass\fB Fullscreen)"
 Specifies whether or not \fI\*n\fP should ask the window manager to
@@ -1560,8 +1632,8 @@ a reference, if available.
 In either case, the result is applied to the TERMCAP variable
 which \fI\*n\fP sets.
 .IP
-See also the \fBttyModes\fP resource, which may modify this.
-The default is \*(``false\*(''.
+See also the \fBttyModes\fP resource, which may override this.
+The default is \*(``__initial_erase__\*(''.
 .TP 8
 .B "ptySttySize (\fPclass\fB PtySttySize)
 If \*(``true\*('', \fI\*n\fP will reset the screen size after
@@ -1824,7 +1896,7 @@ The default is \*(``true\*(''.
 .B "allowFontOps (\fPclass\fB AllowFontOps)"
 Specifies whether control sequences that set/query the font should be allowed.
 The default is \*(``true\*(''.
-.TP 5
+.TP 8
 .B "allowPasteControls (\fPclass\fB AllowPasteControls)"
 If true, allow control characters such as BEL and CAN to be pasted.
 Formatting characters (tab, newline) are always allowed.
@@ -4155,7 +4227,7 @@ If set to zero, no visual bell is displayed.
 This is useful for very slow displays, e.g., an LCD display on a laptop.
 .TP 8
 .B "visualBellLine (\fPclass\fB VisualBellLine)"
-Specifies whether to flash only the current line when displaying a visual bell.
+Specifies whether to flash only the current line when displaying a visual bell
 rather than flashing the entire screen:
 The default is \*(``false\*('',
 which tells \fI\*n\fP to flash the entire screen.
@@ -4542,7 +4614,7 @@ Once the VT102 window is created,
 .I \*n
 allows you to select text and copy it within the same or other windows.
 .
-.SS "SELECTION"
+.SS "Selection"
 .PP
 The selection functions are invoked when the pointer buttons are used with no
 modifiers, and when they are used with the \*(``shift\*('' key.
@@ -4607,7 +4679,7 @@ you may regard each as a \*(``file\*('' whose contents you know.
 The terminal emulator and other text programs should be treating it as if it
 were a text file, i.e., the text is delimited by new lines.
 .
-.SS "SCROLLING"
+.SS "Scrolling"
 .PP
 The scroll region displays the position and amount of text currently showing
 in the window (highlighted) relative to the amount of text actually saved.
@@ -4626,7 +4698,7 @@ pointer position.
 Clicking button two moves the display to a position in the saved text
 that corresponds to the pointer's position in the scrollbar.
 .
-.SS "TEKTRONIX POINTER"
+.SS "Tektronix Pointer"
 .PP
 Unlike the VT102 window, the Tektronix window does not allow the copying of
 text.
@@ -4648,7 +4720,7 @@ for details).
 .SH SELECT/PASTE
 X clients provide select and paste support by responding to requests conveyed
 by the server.
-.SS PRIMARY
+.SS Primary
 When configured to use the primary selection,
 (the default) \fI\*n\fP can
 provide the selection data in ways which help to retain character
@@ -4665,7 +4737,7 @@ asserted ownership, it relies on cut-buffers to pass the data.
 But cut-buffers handle only ISO-8859-1 data
 (officially \- some clients ignore the rules).
 .
-.SS CLIPBOARD
+.SS Clipboard
 When configured to use the clipboard (see resource \fBselectToClipboard\fP),
 the problem with persistence of ownership is bypassed.
 Otherwise, there is no difference regarding the data which can be
@@ -4689,7 +4761,7 @@ Without using this feature, one can use workarounds such as the
 \fIxclip\fP program to show the contents of the X clipboard within an
 \fI\*n\fP window.
 .
-.SS SELECTION TARGETS
+.SS Selection Targets
 The different types of data which are passed depend on what the receiving
 client asks for.
 These are termed \fIselection targets\fP.
@@ -5317,7 +5389,7 @@ subresources, then the checkmark also is disabled.
 .IP
 The standard \fB__default_class__\fP app-defaults file defines both sets of fonts,
 while the \fBU__default_class__\fP app-defaults file defines only one set.
-assuming the standard app-defaults files,
+Assuming the standard app-defaults files,
 this command will launch \fI\*n\fP able to switch between UTF-8
 and ISO-8859-1 encoded fonts:
 .NS
@@ -5585,7 +5657,7 @@ for the vt100 or tek4014 widgets.
 Changing the \fBtranslations\fP resource
 for events other than key and button events is not expected,
 and will cause unpredictable behavior.
-.SS ACTIONS
+.SS Actions
 The following
 actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
@@ -6316,7 +6388,7 @@ The Tektronix window also has the following action:
 .B "gin-press(\fIl/L/m/M/r/R\fP)"
 This action sends the indicated graphics input code.
 .
-.SS DEFAULT KEY BINDINGS
+.SS Default Key Bindings
 .PP
 The default bindings in the VT102 window use the SELECT token,
 which is set by the \fBselectToClipboard\fP resource.
@@ -6425,7 +6497,7 @@ keys for entering commonly-typed words:
         <Key>F19:       string("continue") string(0x0d) \\n\\\&
         <Key>F20:       string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
 .NE
-.SS DEFAULT SCROLLBAR BINDINGS
+.SS Default Scrollbar Bindings
 .PP
 Key bindings are normally associated with the \fBvt100\fP or \fBtek4014\fP
 widgets which act as terminal emulators.
