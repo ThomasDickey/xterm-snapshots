@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.596 2015/02/15 17:11:17 tom Exp $
+.\" $XTermId: xterm.man,v 1.597 2015/02/15 19:24:23 tom Exp $
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
@@ -1316,6 +1316,10 @@ This is the same as \fB\-fn\fP.
 .B \-geometry \fIgeometry\fP
 This option specifies the preferred size and position of the VT102 window;
 see \fIX(__miscmansuffix__)\fP.
+.IP
+The normal geometry specification can be suffixed with \fB@\fP followed by a
+Xinerama screen specification; it can be either \fBg\fP for the global
+screen (default), \fBc\fP for the current screen or a screen number.
 .TP 8
 .B \-iconic
 This option indicates that \fI\*n\fP should ask the window manager to
