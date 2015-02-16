@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1395 2015/02/15 19:26:14 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1399 2015/02/16 00:03:15 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -2711,7 +2711,6 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			reply.a_param[count++] = 3;	/* ReGIS graphics */
 		    }
 #endif
-		    reply.a_param[count++] = 6;		/* selective-erase */
 #if OPT_SIXEL_GRAPHICS
 		    if (screen->terminal_id == 240 ||
 			screen->terminal_id == 241 ||
@@ -3204,7 +3203,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		    reply.a_radix[count] = 16;	/* no data */
 		    reply.a_param[count++] = 0;		/* no space for macros */
 		    reply.a_inters = '*';
-		    reply.a_final = '{';
+		    reply.a_final = L_CURL;
 		}
 		break;
 	    case 63:
@@ -3869,12 +3868,12 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    sp->parsestate = csi_ex_table;
 	    break;
 
-#if OPT_DEC_LOCATOR
 	case CASE_CSI_TICK_STATE:
 	    /* csi tick (') */
 	    sp->parsestate = csi_tick_table;
 	    break;
 
+#if OPT_DEC_LOCATOR
 	case CASE_DECEFR:
 	    TRACE(("CASE_DECEFR - Enable Filter Rectangle\n"));
 	    if (screen->send_mouse_pos == DEC_LOCATOR) {
@@ -6551,7 +6550,10 @@ window_ops(XtermWidget xw)
     case ewGetScreenSizeChars:	/* Report the screen's size, in characters */
 	if (AllowWindowOps(xw, ewGetScreenSizeChars)) {
 	    TRACE(("...get screen size in characters\n"));
-	    (void) QueryMaximize(xw, &root_height, &root_width);
+	    TRACE(("...using font size %dx%d\n",
+		   FontHeight(screen),
+		   FontWidth(screen)));
+	    (void) QueryMaximize(xw, &root_width, &root_height);
 	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
@@ -10439,13 +10441,15 @@ StopBlinking(TScreen *screen)
 Bool
 LineHasBlinking(TScreen *screen, CLineData *ld)
 {
-    int col;
     Bool result = False;
+    if (ld != 0) {
+	int col;
 
-    for (col = 0; col < MaxCols(screen); ++col) {
-	if (ld->attribs[col] & BLINK) {
-	    result = True;
-	    break;
+	for (col = 0; col < MaxCols(screen); ++col) {
+	    if (ld->attribs[col] & BLINK) {
+		result = True;
+		break;
+	    }
 	}
     }
     return result;

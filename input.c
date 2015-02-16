@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.351 2014/04/27 23:50:36 Matthieu.Herrb Exp $ */
+/* $XTermId: input.c,v 1.352 2015/02/16 00:10:30 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -806,7 +806,7 @@ xtermDeleteIsDEL(XtermWidget xw)
 }
 
 static Boolean
-lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent * event)
+lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent *event)
 {
     TScreen *screen = TScreenOf(xw);
     TKeyboard *keyboard = &(xw->keyboard);
@@ -875,7 +875,7 @@ lookupKeyData(KEY_DATA * kd, XtermWidget xw, XKeyEvent * event)
 
 void
 Input(XtermWidget xw,
-      XKeyEvent * event,
+      XKeyEvent *event,
       Bool eightbit)
 {
     Char *string;
@@ -1571,7 +1571,7 @@ scofuncvalue(ANSI *reply, KEY_DATA * kd)
 	    MAP(XK_Fn(45), '^');
 	    MAP(XK_Fn(46), '_');
 	    MAP(XK_Fn(47), '`');
-	    MAP(XK_Fn(48), '{');	/* no matching '}' */
+	    MAP(XK_Fn(48), L_CURL);
 	default:
 	    result = -1;
 	    break;
