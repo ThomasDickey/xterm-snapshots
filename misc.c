@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.720 2015/02/10 09:59:56 tom Exp $ */
+/* $XTermId: misc.c,v 1.721 2015/02/16 00:03:06 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -4238,7 +4238,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    parse_decudk(xw, cp);
 		}
 		break;
-	    case '{':		/* DECDLD (no '}' case though) */
+	    case L_CURL:	/* DECDLD */
 		if (screen->vtXX_level >= 2) {	/* VT220 */
 		    parse_decdld(&params, cp);
 		}

@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.505 2014/11/13 01:04:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.506 2015/02/15 22:45:40 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2503,6 +2503,8 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 		}
 		for (row = target.top - 1; row < target.bottom; ++row) {
 		    ld = getLineData(screen, row);
+		    if (ld == 0)
+			continue;
 		    j = (Cardinal) (row - (target.top - 1));
 		    for (col = target.left - 1; col < target.right; ++col) {
 			k = (Cardinal) (col - (target.left - 1));
