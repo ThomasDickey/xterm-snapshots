@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.753 2014/12/23 00:08:58 Ross.Combs Exp $ */
+/* $XTermId: xterm.h,v 1.755 2015/02/15 19:26:40 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1385,6 +1385,18 @@ extern void xtermRepaint (XtermWidget /* xw */);
 extern void xtermScroll (XtermWidget /* xw */, int /* amount */);
 extern void xtermScrollLR (XtermWidget /* xw */, int /* amount */, Bool /* toLeft */);
 extern void xtermSizeHints (XtermWidget  /* xw */, int /* scrollbarWidth */);
+
+struct Xinerama_geometry {
+    int x;
+    int y;
+    unsigned w;
+    unsigned h;
+    int scr_x;
+    int scr_y;
+    int scr_w;
+    int scr_h;
+};
+extern int XParseXineramaGeometry(Display * /* display */, char * /* parsestring */, struct Xinerama_geometry * /* ret */);
 
 #if OPT_ISO_COLORS
 

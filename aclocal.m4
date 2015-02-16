@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.398 2015/02/15 17:47:56 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.401 2015/02/15 20:19:47 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -3833,6 +3833,20 @@ $2=${cf_xbool1}${cf_xbool2}
 AC_DEFINE_UNQUOTED($1,[$]$2,$3)
 AC_SUBST($2)
 ])
+dnl ---------------------------------------------------------------------------
+dnl CF_XINERAMA version: 2 updated: 2015/02/15 15:18:41
+dnl -----------
+AC_DEFUN([CF_XINERAMA],[
+CF_TRY_PKG_CONFIG(xinerama,[
+	AC_DEFINE(HAVE_X11_EXTENSIONS_XINERAMA_H)],[
+	AC_CHECK_LIB(Xinerama,XineramaQueryScreens,
+		[CF_ADD_LIB(Xinerama)
+		 AC_CHECK_HEADERS( \
+			X11/extensions/Xinerama.h \
+			)
+		])
+	])
+])dnl
 dnl ---------------------------------------------------------------------------
 dnl CF_XKB_BELL_EXT version: 4 updated: 2012/10/04 20:12:20
 dnl ---------------

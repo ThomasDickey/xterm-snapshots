@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.668 2014/12/18 09:27:49 tom Exp $ */
+/* $XTermId: util.c,v 1.670 2015/02/15 19:26:29 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -63,6 +63,7 @@
 #include <xstrings.h>
 
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include <assert.h>
 
@@ -72,6 +73,10 @@
 #endif
 #include <wcwidth.h>
 #endif
+
+#ifdef HAVE_X11_EXTENSIONS_XINERAMA_H
+#include <X11/extensions/Xinerama.h>
+#endif /* HAVE_X11_EXTENSIONS_XINERAMA_H */
 
 #include <graphics.h>
 
@@ -4838,4 +4843,110 @@ dimRound(double value)
     if (result < value)
 	++result;
     return result;
+}
+
+/*
+ * Find the geometry of the specified Xinerama screen
+ */
+static void
+find_xinerama_screen(Display *display, int screen, struct Xinerama_geometry *ret)
+{
+#ifdef HAVE_X11_EXTENSIONS_XINERAMA_H
+    XineramaScreenInfo *screens;
+    int nb_screens;
+
+    if (screen == -1)		/* already inited */
+	return;
+    screens = XineramaQueryScreens(display, &nb_screens);
+    if (screen >= nb_screens) {
+	xtermWarning("Xinerama screen %d does not exist\n", screen);
+	return;
+    }
+    if (screen == -2) {
+	int ptr_x, ptr_y;
+	int dummy_int, i;
+	unsigned dummy_uint;
+	Window dummy_win;
+	if (nb_screens == 0)
+	    return;
+	XQueryPointer(display, DefaultRootWindow(display),
+		      &dummy_win, &dummy_win,
+		      &ptr_x, &ptr_y,
+		      &dummy_int, &dummy_int, &dummy_uint);
+	for (i = 0; i < nb_screens; i++) {
+	    if ((ptr_x - screens[i].x_org) < screens[i].width &&
+		(ptr_y - screens[i].y_org) < screens[i].height) {
+		screen = i;
+		break;
+	    }
+	}
+	if (screen < 0) {
+	    xtermWarning("Mouse not in any Xinerama screen, using 0\n");
+	    screen = 0;
+	}
+    }
+    ret->scr_x = screens[screen].x_org;
+    ret->scr_y = screens[screen].y_org;
+    ret->scr_w = screens[screen].width;
+    ret->scr_h = screens[screen].height;
+#else /* HAVE_X11_EXTENSIONS_XINERAMA_H */
+    (void) display;
+    (void) ret;
+    if (screen > 0)
+	xtermWarning("Xinerama support not enabled\n");
+#endif /* HAVE_X11_EXTENSIONS_XINERAMA_H */
+}
+
+/*
+ * Parse the screen code after the @ in a geometry string.
+ */
+static void
+parse_xinerama_screen(Display *display, const char *str, struct Xinerama_geometry *ret)
+{
+    int screen = -1;
+    char *end;
+
+    if (*str == 'g') {
+	screen = -1;
+	str++;
+    } else if (*str == 'c') {
+	screen = -2;
+	str++;
+    } else {
+	long s = strtol(str, &end, 0);
+	if (end > str && (int) s >= 0) {
+	    screen = (int) s;
+	    str = end;
+	}
+    }
+    if (*str) {
+	xtermWarning("invalid Xinerama specification '%s'\n", str);
+	return;
+    }
+    if (screen == -1)		/* already done */
+	return;
+    find_xinerama_screen(display, screen, ret);
+}
+
+/*
+ * Parse a geometry string with extra Xinerama specification:
+ * <w>x<h>+<x>+<y>@<screen>.
+ */
+int
+XParseXineramaGeometry(Display *display, char *parsestring, struct Xinerama_geometry *ret)
+{
+    char *at, buf[128];
+
+    ret->scr_x = 0;
+    ret->scr_y = 0;
+    ret->scr_w = DisplayWidth(display, DefaultScreen(display));
+    ret->scr_h = DisplayHeight(display, DefaultScreen(display));
+    at = strchr(parsestring, '@');
+    if (at != NULL && (size_t) (at - parsestring) < sizeof(buf) - 1) {
+	memcpy(buf, parsestring, (size_t) (at - parsestring));
+	buf[at - parsestring] = 0;
+	parsestring = buf;
+	parse_xinerama_screen(display, at + 1, ret);
+    }
+    return XParseGeometry(parsestring, &ret->x, &ret->y, &ret->w, &ret->h);
 }

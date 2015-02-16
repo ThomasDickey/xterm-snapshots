@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.207 2015/02/11 10:06:58 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.208 2015/02/15 18:00:55 tom Exp $ */
 
 /*
  * Copyright 1997-2014,2015 by Thomas E. Dickey
@@ -102,6 +102,7 @@
 #undef HAVE_WCSWIDTH		/* AC_CHECK_FUNCS(wcswidth) */
 #undef HAVE_WCWIDTH		/* AC_CHECK_FUNCS(wcwidth) */
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
+#undef HAVE_X11_EXTENSIONS_XINERAMA_H /* AC_CHECK_HEADERS(X11/extensions/Xinerama.h) */
 #undef HAVE_X11_EXTENSIONS_XKB_H /* AC_CHECK_HEADERS(X11/extensions/XKB.h) */
 #undef HAVE_X11_SUNKEYSYM_H	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
 #undef HAVE_X11_XF86KEYSYM_H	/* AC_CHECK_HEADERS(X11/XF86keysym.h) */

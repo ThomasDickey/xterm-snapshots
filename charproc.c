@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.1393 2014/12/28 22:12:39 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1395 2015/02/15 19:26:14 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -9028,8 +9028,8 @@ VTRealize(Widget w,
     TScreen *screen = TScreenOf(xw);
 
     const VTFontNames *myfont;
-    unsigned width, height;
-    int xpos, ypos, pr;
+    struct Xinerama_geometry pos;
+    int pr;
     Atom pid_atom;
     int i;
 
@@ -9113,22 +9113,21 @@ VTRealize(Widget w,
     }
 
     /* set defaults */
-    xpos = 1;
-    ypos = 1;
-    width = 80;
-    height = 24;
+    pos.x = 1;
+    pos.y = 1;
+    pos.w = 80;
+    pos.h = 24;
 
     TRACE(("parsing geo_metry %s\n", NonNull(xw->misc.geo_metry)));
-    pr = XParseGeometry(xw->misc.geo_metry, &xpos, &ypos,
-			&width, &height);
-    TRACE(("... position %d,%d size %dx%d\n", ypos, xpos, height, width));
+    pr = XParseXineramaGeometry(screen->display, xw->misc.geo_metry, &pos);
+    TRACE(("... position %d,%d size %dx%d\n", pos.y, pos.x, pos.h, pos.w));
 
-    set_max_col(screen, (int) (width - 1));	/* units in character cells */
-    set_max_row(screen, (int) (height - 1));	/* units in character cells */
+    set_max_col(screen, (int) (pos.w - 1));	/* units in character cells */
+    set_max_row(screen, (int) (pos.h - 1));	/* units in character cells */
     xtermUpdateFontInfo(xw, False);
 
-    width = screen->fullVwin.fullwidth;
-    height = screen->fullVwin.fullheight;
+    pos.w = screen->fullVwin.fullwidth;
+    pos.h = screen->fullVwin.fullheight;
 
     TRACE(("... border widget %d parent %d shell %d\n",
 	   BorderWidth(xw),
@@ -9136,15 +9135,17 @@ VTRealize(Widget w,
 	   BorderWidth(SHELL_OF(xw))));
 
     if ((pr & XValue) && (XNegative & pr)) {
-	xpos += (DisplayWidth(screen->display, DefaultScreen(screen->display))
-		 - (int) width
-		 - (BorderWidth(XtParent(xw)) * 2));
+	pos.x = (Position) (pos.x + (pos.scr_w
+				     - (int) pos.w
+				     - (BorderWidth(XtParent(xw)) * 2)));
     }
     if ((pr & YValue) && (YNegative & pr)) {
-	ypos += (DisplayHeight(screen->display, DefaultScreen(screen->display))
-		 - (int) height
-		 - (BorderWidth(XtParent(xw)) * 2));
+	pos.y = (Position) (pos.y + (pos.scr_h
+				     - (int) pos.h
+				     - (BorderWidth(XtParent(xw)) * 2)));
     }
+    pos.x = (Position) (pos.x + pos.scr_x);
+    pos.y = (Position) (pos.y + pos.scr_y);
 
     /* set up size hints for window manager; min 1 char by 1 char */
     getXtermSizeHints(xw);
@@ -9153,8 +9154,8 @@ VTRealize(Widget w,
 			   + BorderWidth(screen->scrollWidget))
 			: 0));
 
-    xw->hints.x = xpos;
-    xw->hints.y = ypos;
+    xw->hints.x = pos.x;
+    xw->hints.y = pos.y;
 #if OPT_MAXIMIZE
     /* assure single-increment resize for fullscreen */
     if (term->work.ewmh[0].mode) {
@@ -9198,7 +9199,7 @@ VTRealize(Widget w,
      * is for the vt100 widget.  They are not the same size.
      */
     (void) REQ_RESIZE((Widget) xw,
-		      (Dimension) width, (Dimension) height,
+		      (Dimension) pos.w, (Dimension) pos.h,
 		      &xw->core.width, &xw->core.height);
 
     /* XXX This is bogus.  We are parsing geometries too late.  This

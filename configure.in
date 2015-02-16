@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.330 2015/02/11 23:38:37 tom Exp $
+dnl $XTermId: configure.in,v 1.331 2015/02/15 19:12:34 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -985,6 +985,8 @@ CF_ARG_DISABLE(ziconbeep,
 AC_MSG_RESULT($enable_ziconbeep)
 test "$enable_ziconbeep" = no && AC_DEFINE(OPT_ZICONBEEP,0,[Define to 0 to disable -ziconbeep option])
 
+###############################################################################
+CF_XINERAMA
 ###############################################################################
 CF_HELP_MESSAGE(Testing/development Options:)
 
