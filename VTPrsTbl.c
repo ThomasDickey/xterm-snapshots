@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.80 2015/02/16 00:10:47 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.81 2015/02/16 01:51:51 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -460,7 +460,7 @@ CASE_CSI_EX_STATE,
 CASE_CSI_QUOTE_STATE,
 CASE_CSI_IGNORE,
 /*	$		%		&		'	*/
-CASE_CSI_IGNORE,
+CASE_CSI_DOLLAR_STATE,
 CASE_CSI_IGNORE,
 CASE_CSI_IGNORE,
 CASE_CSI_TICK_STATE,
@@ -620,7 +620,7 @@ CASE_CSI_EX_STATE,
 CASE_CSI_QUOTE_STATE,
 CASE_CSI_IGNORE,
 /*      currency        yen             brokenbar       section         */
-CASE_CSI_IGNORE,
+CASE_CSI_DOLLAR_STATE,
 CASE_CSI_IGNORE,
 CASE_CSI_IGNORE,
 CASE_CSI_TICK_STATE,

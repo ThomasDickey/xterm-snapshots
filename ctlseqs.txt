@@ -896,7 +896,7 @@ CSI Ps * x
 CSI Pi ; Pg ; Pt; Pl; Pb; Pr * y
           Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
           Response is
-          DCS Pt ! x x x x ST
+          DCS Pi ! x x x x ST
             Pi is the request id.
             Pg is the page number.
             Pt; Pl; Pb; Pr denotes the rectangle.

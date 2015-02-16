@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.316 2015/02/15 14:17:54 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.317 2015/02/16 00:51:23 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
@@ -1464,7 +1464,7 @@ Select Attribute Change Extent (DECSACE).
 Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
 Response is
 .br
-\*(Dc\*(Pt\*s\*!x\*sx\*sx\*sx\*s\*(ST
+\*(Dc\*(Pi\*s\*!x\*sx\*sx\*sx\*s\*(ST
 .br
   \*(Pi is the request id.
   \*(Pg is the page number.

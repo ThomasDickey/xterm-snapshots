@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1399 2015/02/16 00:03:15 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1402 2015/02/16 01:31:09 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -3769,8 +3769,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECDC:
 	    TRACE(("CASE_DC - delete column\n"));
-	    if (screen->vtXX_level >= 4
-		&& IsLeftRightMode(xw)) {
+	    if (screen->vtXX_level >= 4) {
 		xtermColScroll(xw, one_if_default(0), True, screen->cur_col);
 	    }
 	    ResetState(sp);
@@ -3778,8 +3777,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECIC:
 	    TRACE(("CASE_IC - insert column\n"));
-	    if (screen->vtXX_level >= 4
-		&& IsLeftRightMode(xw)) {
+	    if (screen->vtXX_level >= 4) {
 		xtermColScroll(xw, one_if_default(0), False, screen->cur_col);
 	    }
 	    ResetState(sp);
