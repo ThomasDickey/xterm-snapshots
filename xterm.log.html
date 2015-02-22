@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1571 2015/02/16 01:55:13 tom Exp $
+  $XTermId: xterm.log.html,v 1.1573 2015/02/22 01:58:57 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -918,6 +918,13 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>correct logic of <code>DECSCL</code>, which always set
+    8-bit controls as a side-effect (report by George
+    Nachman).</li>
+
+    <li>correct loop limit for <code>DECSED&nbsp;1</code>, when
+    <code>DECSCA</code> is enabled (report by George Nachman).</li>
+
     <li>fix a entry in csi_table for &ldquo;<code>$</code>&rdquo;,
     needed for <code><em>CSI</em>&nbsp;[&nbsp;$&nbsp;z</code>
     (report by George Nachman).</li>
