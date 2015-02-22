@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.670 2015/02/15 19:26:29 tom Exp $ */
+/* $XTermId: util.c,v 1.671 2015/02/21 15:13:00 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -1484,8 +1484,9 @@ ClearAbove(XtermWidget xw)
 	unsigned len = (unsigned) MaxCols(screen);
 
 	assert(screen->max_col >= 0);
-	for (row = 0; row <= screen->max_row; row++)
+	for (row = 0; row < screen->cur_row; row++)
 	    ClearInLine(xw, row, 0, len);
+	ClearInLine(xw, screen->cur_row, 0, screen->cur_col);
     } else {
 	int top, height;
 

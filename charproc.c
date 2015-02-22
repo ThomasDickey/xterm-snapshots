@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1402 2015/02/16 01:31:09 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1403 2015/02/22 01:53:31 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -3557,6 +3557,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		 */
 		if (GetParam(0) >= 61
 		    && GetParam(0) <= 60 + (screen->terminal_id / 100)) {
+		    int new_vtXX_level = GetParam(0) - 60;
+		    int case_value = zero_if_default(1);
 		    /*
 		     * VT300, VT420, VT520 manuals claim that DECSCL does a
 		     * hard reset (RIS).  VT220 manual states that it is a soft
@@ -3565,9 +3567,9 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		     */
 		    ReallyReset(xw, False, False);
 		    init_parser(xw, sp);
-		    screen->vtXX_level = GetParam(0) - 60;
-		    if (GetParam(0) > 61) {
-			switch (zero_if_default(1)) {
+		    screen->vtXX_level = new_vtXX_level;
+		    if (new_vtXX_level > 1) {
+			switch (case_value) {
 			case 1:
 			    show_8bit_control(False);
 			    break;
