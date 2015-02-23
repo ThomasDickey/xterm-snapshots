@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.506 2015/02/15 22:45:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.509 2015/02/23 01:40:19 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -1119,8 +1119,10 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
     TRACE(("ScrnInsertLine(last %d, where %d, n %d, size %d)\n",
 	   last, where, n, size));
 
+    if ((int) n > last)
+	n = (unsigned) last;
+
     assert(where >= 0);
-    assert(last >= (int) n);
     assert(last >= where);
 
     assert((int) n > 0);
@@ -1246,7 +1248,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 
     TScreen *screen = TScreenOf(xw);
     int first = ScrnLeftMargin(xw);
-    int last = ScrnRightMargin(xw);
+    int last = ScrnRightMargin(xw) + 1;
     int row = screen->cur_row;
     int col = screen->cur_col;
     int j;
@@ -1256,7 +1258,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	TRACE(("ScrnInsertChar - col %d outside [%d..%d]\n", col, first, last));
 	return;
     } else if (last < (col + (int) n)) {
-	n = (unsigned) (last + 1 - col);
+	n = (unsigned) (last - col);
     }
 
     assert(screen->cur_col >= 0);
@@ -1271,7 +1273,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
-	kr = last - (int) n + 1;
+	kr = last - (int) n;
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
@@ -1324,7 +1326,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
     assert((int) n >= 0);
-    assert(last > (int) n);
+    assert(last >= (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
 	int kl;
@@ -1353,7 +1355,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    ShowWrapMarks(xw, row, ld);
 	}
     }
-    ClearCells(xw, 0, n, row, (last - (int) n));
+    ClearCells(xw, 0, n, row, (last + 1 - (int) n));
 
 #undef MemMove
 }
