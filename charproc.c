@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1403 2015/02/22 01:53:31 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1404 2015/02/22 18:46:49 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -4999,7 +4999,11 @@ dotext(XtermWidget xw,
 		}
 		width_here -= last_chomp;
 		if (chars_chomped > 0) {
-		    need_wrap = True;
+		    if (!(xw->flags & WRAPAROUND)) {
+			buf[chars_chomped + offset - 1] = buf[len - 1];
+		    } else {
+			need_wrap = True;
+		    }
 		}
 	    } else if (width_here == width_available) {
 		need_wrap = True;

@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.671 2015/02/21 15:13:00 tom Exp $ */
+/* $XTermId: util.c,v 1.673 2015/02/23 01:55:08 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -1220,8 +1220,7 @@ DeleteLine(XtermWidget xw, int n)
 					  && screen->cur_row == 0);
 
     if (!ScrnIsRowInMargins(screen, screen->cur_row)
-	|| screen->cur_col < left
-	|| screen->cur_col > right)
+	|| ScrnIsColInMargins(screen, screen->cur_col))
 	return;
 
     TRACE(("DeleteLine count=%d\n", n));
@@ -1412,11 +1411,14 @@ DeleteChar(XtermWidget xw, unsigned n)
     CLineData *ld;
     unsigned limit;
     int row = INX2ROW(screen, screen->cur_row);
-    int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
 
     if (screen->cursor_state)
 	HideCursor();
+
+    if (!ScrnIsRowInMargins(screen, screen->cur_row)
+	|| ScrnIsColInMargins(screen, screen->cur_col))
+	return;
 
     TRACE(("DeleteChar count=%d\n", n));
 
@@ -1431,10 +1433,8 @@ DeleteChar(XtermWidget xw, unsigned n)
     if (n > limit)
 	n = limit;
 
-    if (screen->cur_col < left || screen->cur_col > right) {
-	n = 0;
-    } else if (AddToVisible(xw)
-	       && (ld = getLineData(screen, screen->cur_row)) != 0) {
+    if (AddToVisible(xw)
+	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
 	int col = right + 1 - (int) n;
 
 	/*
@@ -1486,7 +1486,7 @@ ClearAbove(XtermWidget xw)
 	assert(screen->max_col >= 0);
 	for (row = 0; row < screen->cur_row; row++)
 	    ClearInLine(xw, row, 0, len);
-	ClearInLine(xw, screen->cur_row, 0, screen->cur_col);
+	ClearInLine(xw, screen->cur_row, 0, (unsigned) screen->cur_col);
     } else {
 	int top, height;
 
