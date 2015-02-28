@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.721 2015/02/16 00:03:06 tom Exp $ */
+/* $XTermId: misc.c,v 1.722 2015/02/23 09:41:49 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -4108,7 +4108,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		else if (isCursorBar(screen))
 		    code = STEADY_BAR;
 #if OPT_BLINK_CURS
-		if (screen->cursor_blink_esc == 0)
+		if (screen->cursor_blink_esc != 0)
 		    code -= 1;
 #endif
 		sprintf(reply, "%d%s", code, cp);
