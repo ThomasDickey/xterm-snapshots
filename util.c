@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.675 2015/02/27 23:40:44 tom Exp $ */
+/* $XTermId: util.c,v 1.676 2015/02/28 14:48:32 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -732,7 +732,7 @@ xtermColIndex(XtermWidget xw, Bool toLeft)
 	if (screen->cur_col > margin) {
 	    CursorBack(xw, 1);
 	} else if (screen->cur_col == margin ||
-		   screen->cur_col == 0) {
+		   screen->cur_col != 0) {
 	    xtermColScroll(xw, 1, False, screen->cur_col);
 	} else {
 	    CursorBack(xw, 1);
@@ -742,7 +742,7 @@ xtermColIndex(XtermWidget xw, Bool toLeft)
 	if (screen->cur_col < margin) {
 	    CursorForward(xw, 1);
 	} else if (screen->cur_col == margin ||
-		   screen->cur_col == screen->max_col) {
+		   screen->cur_col != screen->max_col) {
 	    xtermColScroll(xw, 1, True, ScrnLeftMargin(xw));
 	} else {
 	    CursorForward(xw, 1);
