@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.318 2015/02/23 09:21:50 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.319 2015/02/28 01:43:29 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #315
-.ds RF 2015/02/23
+.ds RF 2015/02/27
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1609,17 +1609,7 @@ to these codes in an \*(Os\*4 control:
 .in -2n
 .sP
   \*(Ps = \*6\*;\fIc\fP\*;\fIf\fP \(-> Enable/disable Special Color Number \fIc\fP.
-The second parameter tells \fIxterm\fP to enable the corresponding color
-mode if nonzero, disable it if zero.
-.sP
-.in +2n
-  \*(Pc = \*0 \(<- resource \fBcolorBDMode\fP (BOLD).
-  \*(Pc = \*1 \(<- resource \fBcolorULMode\fP (UNDERLINE).
-  \*(Pc = \*2 \(<- resource \fBcolorBLMode\fP (BLINK).
-  \*(Pc = \*3 \(<- resource \fBcolorRVMode\fP (REVERSE).
-  \*(Pc = \*4 \(<- resource \fBcolorITMode\fP (ITALIC).
-  \*(Pc = \*5 \(<- resource \fBcolorAttrMode\fP (Override ANSI).
-.in -2n
+\*(Os\*6 is the same as \*(Os\*1\*0\*6.
 .sP
 The 10 colors (below) which may be set or queried
 using \*1\*0 through \*1\*9 are
@@ -1717,6 +1707,19 @@ Any number of \fIc\fP parameters may be given.
 These parameters correspond to the special colors which can be set
 using an \*(Os\*5 control (or by adding the maximum number of colors
 using an \*(Os\*4 control).
+.sP
+  \*(Ps = \*1\*0\*6\*;\fIc\fP\*;\fIf\fP \(-> Enable/disable Special Color Number \fIc\fP.
+The second parameter tells \fIxterm\fP to enable the corresponding color
+mode if nonzero, disable it if zero.
+.sP
+.in +2n
+  \*(Pc = \*0 \(<- resource \fBcolorBDMode\fP (BOLD).
+  \*(Pc = \*1 \(<- resource \fBcolorULMode\fP (UNDERLINE).
+  \*(Pc = \*2 \(<- resource \fBcolorBLMode\fP (BLINK).
+  \*(Pc = \*3 \(<- resource \fBcolorRVMode\fP (REVERSE).
+  \*(Pc = \*4 \(<- resource \fBcolorITMode\fP (ITALIC).
+  \*(Pc = \*5 \(<- resource \fBcolorAttrMode\fP (Override ANSI).
+.in -2n
 .sP
 The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*0 \(-> Reset VT100 text foreground color.

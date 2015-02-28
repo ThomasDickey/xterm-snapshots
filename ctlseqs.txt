@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2015)
-               updated for XTerm Patch #315 (2015/02/23)
+               updated for XTerm Patch #315 (2015/02/27)
 
 
 
@@ -1018,16 +1018,8 @@ OSC Ps ; Pt BEL
               Pc = 3  <- resource colorRV (REVERSE).
               Pc = 4  <- resource colorIT (ITALIC).
 
-            Ps = 6 ; c; f -> Enable/disable Special Color Number c.  The
-          second parameter tells xterm to enable the corresponding color
-          mode if nonzero, disable it if zero.
-
-              Pc = 0  <- resource colorBDMode (BOLD).
-              Pc = 1  <- resource colorULMode (UNDERLINE).
-              Pc = 2  <- resource colorBLMode (BLINK).
-              Pc = 3  <- resource colorRVMode (REVERSE).
-              Pc = 4  <- resource colorITMode (ITALIC).
-              Pc = 5  <- resource colorAttrMode (Override ANSI).
+            Ps = 6 ; c; f -> Enable/disable Special Color Number c.  OSC
+          6  is the same as OSC 1 0 6 .
 
           The 10 colors (below) which may be set or queried using 1 0
           through 1 9  are denoted dynamic colors, since the correspond-
@@ -1109,6 +1101,17 @@ OSC Ps ; Pt BEL
           spond to the special colors which can be set using an OSC 5
           control (or by adding the maximum number of colors using an
           OSC 4  control).
+
+            Ps = 1 0 6 ; c; f -> Enable/disable Special Color Number c.
+          The second parameter tells xterm to enable the corresponding
+          color mode if nonzero, disable it if zero.
+
+              Pc = 0  <- resource colorBDMode (BOLD).
+              Pc = 1  <- resource colorULMode (UNDERLINE).
+              Pc = 2  <- resource colorBLMode (BLINK).
+              Pc = 3  <- resource colorRVMode (REVERSE).
+              Pc = 4  <- resource colorITMode (ITALIC).
+              Pc = 5  <- resource colorAttrMode (Override ANSI).
 
           The dynamic colors can also be reset to their default
           (resource) values:

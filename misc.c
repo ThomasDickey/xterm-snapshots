@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.722 2015/02/23 09:41:49 tom Exp $ */
+/* $XTermId: misc.c,v 1.723 2015/02/28 01:46:42 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -3609,6 +3609,8 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	    xw->misc.palette_changed = True;
 	break;
     case 6:
+	/* FALLTHRU */
+    case OSC_Reset(6):
 	TRACE(("parse colorXXMode:%s\n", buf));
 	while (*buf != '\0') {
 	    long which = 0;
