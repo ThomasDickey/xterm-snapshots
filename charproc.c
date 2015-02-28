@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1404 2015/02/22 18:46:49 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1405 2015/02/27 23:38:52 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -1154,6 +1154,8 @@ modified_DECNRCM(XtermWidget xw)
 	switchPtyData(screen, !enabled);
 	TRACE(("UTF8 mode temporarily %s\n", enabled ? "ON" : "OFF"));
     }
+#else
+    (void) xw;
 #endif
 }
 
@@ -5039,8 +5041,8 @@ dotext(XtermWidget xw,
 #endif
 
 	last_col = LineMaxCol(screen, ld);
-	if (last_col > (right + 1))
-	    last_col = right + 1;
+	if (last_col > right)
+	    last_col = right;
 	this_col = last_col - screen->cur_col + 1;
 	if (this_col <= 1) {
 	    if (screen->do_wrap) {
