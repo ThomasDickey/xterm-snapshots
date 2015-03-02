@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.755 2015/02/15 19:26:40 tom Exp $ */
+/* $XTermId: xterm.h,v 1.756 2015/03/02 01:25:59 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -1538,7 +1538,8 @@ unsigned visual_width(const IChar * /* str */, Cardinal  /* len */);
 #define visual_width(a, b) (b)
 #endif
 
-#define BtoS(b)    (((b) == Maybe) ? "maybe" : ((b) ? "on" : "off"))
+#define BtoS(b)    ((b) ? "on" : "off")
+#define MtoS(b)    (((b) == Maybe) ? "maybe" : BtoS(b))
 #define NonNull(s) ((s) ? (s) : "<null>")
 
 #define UIntSet(dst,bits) dst = dst | (unsigned) (bits)

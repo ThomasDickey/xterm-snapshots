@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1405 2015/02/27 23:38:52 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1406 2015/03/02 01:54:08 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -1154,8 +1154,6 @@ modified_DECNRCM(XtermWidget xw)
 	switchPtyData(screen, !enabled);
 	TRACE(("UTF8 mode temporarily %s\n", enabled ? "ON" : "OFF"));
     }
-#else
-    (void) xw;
 #endif
 }
 
@@ -5041,8 +5039,8 @@ dotext(XtermWidget xw,
 #endif
 
 	last_col = LineMaxCol(screen, ld);
-	if (last_col > right)
-	    last_col = right;
+	if (last_col > (right + 1))
+	    last_col = right + 1;
 	this_col = last_col - screen->cur_col + 1;
 	if (this_col <= 1) {
 	    if (screen->do_wrap) {
@@ -7842,7 +7840,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.old_fkeys);
     wnew->screen.old_fkeys0 = wnew->screen.old_fkeys;
 
-    init_Bres(screen.delete_is_del);
+    init_Mres(screen.delete_is_del);
     initializeKeyboardType(wnew);
 #ifdef ALLOWLOGGING
     init_Bres(misc.logInhibit);
@@ -8229,7 +8227,7 @@ VTInitialize(Widget wrequest,
     init_Tres(HIGHLIGHT_BG);
     init_Tres(HIGHLIGHT_FG);
     init_Bres(screen.hilite_reverse);
-    init_Bres(screen.hilite_color);
+    init_Mres(screen.hilite_color);
     if (TScreenOf(wnew)->hilite_color == Maybe) {
 	TScreenOf(wnew)->hilite_color = False;
 #if OPT_COLOR_RES
