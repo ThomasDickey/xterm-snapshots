@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.327 2014/09/03 23:35:52 tom Exp $ */
+/* $XTermId: menu.c,v 1.329 2015/03/02 02:00:32 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -978,7 +978,7 @@ UpdateMenuItem(
 				     : None);
 	XtSetValues(mi, &menuArgs, (Cardinal) 1);
     }
-    TRACE(("%s(%d): %s\n", func, which, BtoS(val)));
+    TRACE(("%s(%d): %s\n", func, which, MtoS(val)));
 }
 
 void

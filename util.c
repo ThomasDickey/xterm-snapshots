@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.676 2015/02/28 14:48:32 tom Exp $ */
+/* $XTermId: util.c,v 1.677 2015/03/02 01:59:58 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -731,21 +731,15 @@ xtermColIndex(XtermWidget xw, Bool toLeft)
 	margin = ScrnLeftMargin(xw);
 	if (screen->cur_col > margin) {
 	    CursorBack(xw, 1);
-	} else if (screen->cur_col == margin ||
-		   screen->cur_col != 0) {
+	} else if (screen->cur_col == margin) {
 	    xtermColScroll(xw, 1, False, screen->cur_col);
-	} else {
-	    CursorBack(xw, 1);
 	}
     } else {
 	margin = ScrnRightMargin(xw);
 	if (screen->cur_col < margin) {
 	    CursorForward(xw, 1);
-	} else if (screen->cur_col == margin ||
-		   screen->cur_col != screen->max_col) {
+	} else if (screen->cur_col == margin) {
 	    xtermColScroll(xw, 1, True, ScrnLeftMargin(xw));
-	} else {
-	    CursorForward(xw, 1);
 	}
     }
 }
@@ -1225,8 +1219,8 @@ DeleteLine(XtermWidget xw, int n)
 					  && !screen->whichBuf
 					  && screen->cur_row == 0);
 
-    if (!ScrnIsRowInMargins(screen, screen->cur_row)
-	|| ScrnIsColInMargins(screen, screen->cur_col))
+    if (!ScrnIsRowInMargins(screen, screen->cur_row) ||
+	!ScrnIsColInMargins(screen, screen->cur_col))
 	return;
 
     TRACE(("DeleteLine count=%d\n", n));
@@ -1422,8 +1416,8 @@ DeleteChar(XtermWidget xw, unsigned n)
     if (screen->cursor_state)
 	HideCursor();
 
-    if (!ScrnIsRowInMargins(screen, screen->cur_row)
-	|| ScrnIsColInMargins(screen, screen->cur_col))
+    if (!ScrnIsRowInMargins(screen, screen->cur_row) ||
+	!ScrnIsColInMargins(screen, screen->cur_col))
 	return;
 
     TRACE(("DeleteChar count=%d\n", n));
@@ -3343,8 +3337,6 @@ drawXtermText(XtermWidget xw,
     XTermFonts *curFont;
 #if OPT_WIDE_ATTRS || OPT_WIDE_CHARS
     int need_clipping = 0;
-#endif
-#if OPT_WIDE_CHARS
     int ascent_adjust = 0;
 #endif
 
