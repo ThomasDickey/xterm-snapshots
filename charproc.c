@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1406 2015/03/02 01:54:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1407 2015/03/02 11:46:32 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -3321,8 +3321,10 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		dpmodes(xw, bitset);
 	    ResetState(sp);
 #if OPT_TEK4014
-	    if (TEK4014_ACTIVE(xw))
+	    if (TEK4014_ACTIVE(xw)) {
+		TRACE(("Tek4014 is now active...\n"));
 		return False;
+	    }
 #endif
 	    break;
 
@@ -5390,6 +5392,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    if (IsSM() && !(screen->inhibit & I_TEK)) {
 		FlushLog(xw);
 		TEK4014_ACTIVE(xw) = True;
+		TRACE(("Tek4014 is now active...\n"));
 		update_vttekmode();
 	    }
 	    break;

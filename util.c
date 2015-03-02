@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.677 2015/03/02 01:59:58 tom Exp $ */
+/* $XTermId: util.c,v 1.678 2015/03/02 12:58:55 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -3446,22 +3446,25 @@ drawXtermText(XtermWidget xw,
 	} else {		/* simulate double-sized characters */
 	    unsigned need = 2 * len;
 	    IChar *temp = TypeMallocN(IChar, need);
-	    unsigned n = 0;
 
-	    while (len--) {
-		temp[n++] = *text++;
-		temp[n++] = ' ';
+	    if (temp != 0) {
+		unsigned n = 0;
+
+		while (len--) {
+		    temp[n++] = *text++;
+		    temp[n++] = ' ';
+		}
+		x = drawXtermText(xw,
+				  attr_flags,
+				  draw_flags,
+				  gc,
+				  x, y,
+				  0,
+				  temp,
+				  n,
+				  on_wide);
+		free(temp);
 	    }
-	    x = drawXtermText(xw,
-			      attr_flags,
-			      draw_flags,
-			      gc,
-			      x, y,
-			      0,
-			      temp,
-			      n,
-			      on_wide);
-	    free(temp);
 	}
 	return x;
     }
