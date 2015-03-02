@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.445 2014/12/28 22:52:30 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.448 2015/03/02 13:19:36 tom Exp $ */
 
 /*
- * Copyright 1998-2013,2014 by Thomas E. Dickey
+ * Copyright 1998-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1860,37 +1860,42 @@ HandleLoadVTFonts(Widget w,
 	char name_buf[80];
 	char class_buf[80];
 	String name = (String) ((*param_count > 0) ? params[0] : empty);
-	char *myName = (char *) MyStackAlloc(strlen(name) + 1, name_buf);
-	String convert = (String) ((*param_count > 1) ? params[1] : myName);
-	char *myClass = (char *) MyStackAlloc(strlen(convert) + 1, class_buf);
-	int n;
+	char *myName = MyStackAlloc(strlen(name) + 1, name_buf);
 
 	TRACE(("HandleLoadVTFonts(%d)\n", *param_count));
-	strcpy(myName, name);
-	strcpy(myClass, convert);
-	if (*param_count == 1)
-	    myClass[0] = x_toupper(myClass[0]);
+	if (myName != 0) {
+	    String convert = (String) ((*param_count > 1) ? params[1] : myName);
+	    char *myClass = MyStackAlloc(strlen(convert) + 1, class_buf);
+	    int n;
 
-	if (xtermLoadVTFonts(xw, myName, myClass)) {
-	    /*
-	     * When switching fonts, try to preserve the font-menu selection, since
-	     * it is less surprising to do that (if the font-switching can be
-	     * undone) than to switch to "Default".
-	     */
-	    int font_number = screen->menu_font_number;
-	    if (font_number > fontMenu_lastBuiltin)
-		font_number = fontMenu_lastBuiltin;
-	    for (n = 0; n < NMENUFONTS; ++n) {
-		screen->menu_font_sizes[n] = 0;
+	    strcpy(myName, name);
+	    if (myClass != 0) {
+		strcpy(myClass, convert);
+		if (*param_count == 1)
+		    myClass[0] = x_toupper(myClass[0]);
+
+		if (xtermLoadVTFonts(xw, myName, myClass)) {
+		    /*
+		     * When switching fonts, try to preserve the font-menu
+		     * selection, since it is less surprising to do that (if
+		     * the font-switching can be undone) than to switch to
+		     * "Default".
+		     */
+		    int font_number = screen->menu_font_number;
+		    if (font_number > fontMenu_lastBuiltin)
+			font_number = fontMenu_lastBuiltin;
+		    for (n = 0; n < NMENUFONTS; ++n) {
+			screen->menu_font_sizes[n] = 0;
+		    }
+		    SetVTFont(xw, font_number, True,
+			      ((font_number == fontMenu_default)
+			       ? &(xw->misc.default_font)
+			       : NULL));
+		}
+		MyStackFree(myClass, class_buf);
 	    }
-	    SetVTFont(xw, font_number, True,
-		      ((font_number == fontMenu_default)
-		       ? &(xw->misc.default_font)
-		       : NULL));
+	    MyStackFree(myName, name_buf);
 	}
-
-	MyStackFree(myName, name_buf);
-	MyStackFree(myClass, class_buf);
     }
 }
 #endif /* OPT_LOAD_VTFONTS */

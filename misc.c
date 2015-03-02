@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.723 2015/02/28 01:46:42 tom Exp $ */
+/* $XTermId: misc.c,v 1.724 2015/03/02 13:01:43 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -915,16 +915,19 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	} else {
 	    unsigned myargc = *nparams + 1;
 	    char **myargv = TypeMallocN(char *, myargc + 1);
-	    unsigned n = 0;
 
-	    myargv[n++] = child_exe;
+	    if (myargv != 0) {
+		unsigned n = 0;
 
-	    while (n < myargc) {
-		myargv[n++] = (char *) *params++;
+		myargv[n++] = child_exe;
+
+		while (n < myargc) {
+		    myargv[n++] = (char *) *params++;
+		}
+
+		myargv[n] = 0;
+		execv(child_exe, myargv);
 	    }
-
-	    myargv[n] = 0;
-	    execv(child_exe, myargv);
 
 	    /* If we get here, we've failed */
 	    xtermWarning("exec of '%s': %s\n", child_exe, SysErrorMsg(errno));
