@@ -14503,7 +14503,7 @@ echo "$as_me:14502: checking if you want narrow prototypes for X libraries" >&5
 echo $ECHO_N "checking if you want narrow prototypes for X libraries... $ECHO_C" >&6
 
 case `$ac_config_guess` in #(vi
-*cygwin*|*freebsd*|*gnu*|*irix5*|*irix6*|*linux-gnu*|*netbsd*|*openbsd*|*qnx*|*sco*|*sgi*) #(vi
+*freebsd*|*gnu*|*irix5*|*irix6*|*linux-gnu*|*netbsd*|*openbsd*|*qnx*|*sco*|*sgi*) #(vi
 	cf_default_narrowproto=yes
 	;;
 *)
