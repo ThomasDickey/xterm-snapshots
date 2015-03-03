@@ -1,4 +1,4 @@
-dnl $XTermId: aclocal.m4,v 1.401 2015/02/15 20:19:47 tom Exp $
+dnl $XTermId: aclocal.m4,v 1.402 2015/03/02 23:51:14 tom Exp $
 dnl
 dnl ---------------------------------------------------------------------------
 dnl
@@ -536,7 +536,7 @@ if test "$cf_disable_rpath_hack" = no ; then
 fi
 ])
 dnl ---------------------------------------------------------------------------
-dnl CF_ENABLE_NARROWPROTO version: 3 updated: 2006/02/12 17:46:00
+dnl CF_ENABLE_NARROWPROTO version: 4 updated: 2015/03/02 18:49:48
 dnl ---------------------
 dnl If this is not set properly, Xaw's scrollbars will not work.
 dnl The so-called "modular" configuration for X.org omits most of the
@@ -547,7 +547,7 @@ AC_DEFUN([CF_ENABLE_NARROWPROTO],
 AC_MSG_CHECKING(if you want narrow prototypes for X libraries)
 
 case `$ac_config_guess` in #(vi
-*cygwin*|*freebsd*|*gnu*|*irix5*|*irix6*|*linux-gnu*|*netbsd*|*openbsd*|*qnx*|*sco*|*sgi*) #(vi
+*freebsd*|*gnu*|*irix5*|*irix6*|*linux-gnu*|*netbsd*|*openbsd*|*qnx*|*sco*|*sgi*) #(vi
 	cf_default_narrowproto=yes
 	;;
 *)
