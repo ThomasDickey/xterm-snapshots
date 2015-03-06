@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.331 2015/02/15 19:12:34 tom Exp $
+dnl $XTermId: configure.in,v 1.332 2015/03/05 20:54:36 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -342,7 +342,7 @@ AC_MSG_CHECKING(for default pty initial erase setting)
 AC_ARG_ENABLE(initial-erase,
 	[  --enable-initial-erase  set default ptyInitialErase resource (default: maybe)],
 	[initial_erase=$enableval],
-	[initial_erase=maybe])
+	[initial_erase=False])
 CF_XBOOL_RESULT(DEF_INITIAL_ERASE,initial_erase,[Define to 1 if default pty initial erase setting is TRUE])
 
 AC_MSG_CHECKING(if alt should send ESC)

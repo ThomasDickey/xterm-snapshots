@@ -15390,7 +15390,7 @@ if test "${enable_initial_erase+set}" = set; then
   enableval="$enable_initial_erase"
   initial_erase=$enableval
 else
-  initial_erase=maybe
+  initial_erase=False
 fi;
 
 echo "$as_me:15396: result: $initial_erase" >&5
