@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.509 2015/02/23 01:40:19 tom Exp $ */
+/* $XTermId: screen.c,v 1.510 2015/03/07 01:19:23 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -1355,7 +1355,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 	    ShowWrapMarks(xw, row, ld);
 	}
     }
-    ClearCells(xw, 0, n, row, (last + 1 - (int) n));
+    ClearCells(xw, 0, n, row, (last - (int) n));
 
 #undef MemMove
 }
@@ -2495,6 +2495,8 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 
 		for (row = source->top - 1; row < source->bottom; ++row) {
 		    ld = getLineData(screen, row);
+		    if (ld == 0)
+			continue;
 		    j = (Cardinal) (row - (source->top - 1));
 		    for (col = source->left - 1; col < source->right; ++col) {
 			k = (Cardinal) (col - (source->left - 1));
