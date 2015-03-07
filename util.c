@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.678 2015/03/02 12:58:55 tom Exp $ */
+/* $XTermId: util.c,v 1.679 2015/03/07 15:46:37 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -1416,8 +1416,7 @@ DeleteChar(XtermWidget xw, unsigned n)
     if (screen->cursor_state)
 	HideCursor();
 
-    if (!ScrnIsRowInMargins(screen, screen->cur_row) ||
-	!ScrnIsColInMargins(screen, screen->cur_col))
+    if (!ScrnIsColInMargins(screen, screen->cur_col))
 	return;
 
     TRACE(("DeleteChar count=%d\n", n));
