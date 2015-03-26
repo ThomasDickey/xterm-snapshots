@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.597 2015/02/15 19:24:23 tom Exp $
+.\" $XTermId: xterm.man,v 1.609 2015/03/26 09:28:28 tom Exp $
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
@@ -6564,10 +6564,176 @@ That can be set up by altering the translations resource, e.g.,
         <BtnUp>:        NotifyScroll(Proportional) EndScroll()
 .NE
 .SH "CONTROL SEQUENCES AND KEYBOARD"
-The \fIXterm Control Sequences\fP document lists the control sequences which
+Applications can send sequences of characters to the terminal to change its
+behavior.
+Often they are referred to as
+\*(``ANSI escape sequences\*('' or just plain
+\*(``escape sequences\*('' but both terms are misleading:
+.bP
+ANSI x3.64 (obsolete) which was replaced by ISO 6429 (ECMA-48) gave rules
+for the \fIformat\fP of these sequences of characters.
+.bP
+While the original VT100 was claimed to be ANSI-compatible (against x3.64),
+there is no freely available version of the ANSI standard to show where
+the VT100 differs.
+Most of the documents which mention the ANSI standard have
+additions not found in the original (such as those
+based on \fBansi.sys\fP).
+So this discussion focuses on the ISO standards.
+.bP
+The standard describes only sequences sent from the host to the terminal.
+There is no standard for sequences sent by special keys from the terminal
+to the host.
+By convention (and referring to existing terminals), the format of those
+sequences usually conforms to the host-to-terminal standard.
+.bP
+Some of \fI\*n\fP's sequences do not fit into the standard scheme.
+Technically those are \*(``unspecified\*(''.
+As an example,
+DEC Screen Alignment Test (DECALN) is this three-character sequence:
+.NS
+\fIESC\fP # 8
+.NE
+.PP
+.bP
+Some sequences fit into the standard format,
+but are not listed in the standard.
+These include the sequences used for setting up scrolling margins
+and doing forward/reverse scrolling.
+.bP
+Some of the sequences (in particular, the single-character functions
+such as tab and backspace)
+do not include the \fIescape\fP character.
+.PP
+With all of that in mind, the standard refers to these sequences of
+characters as \*(``control sequences\*(''.
+.PP
+The \fI\*N Control Sequences\fP document lists the control sequences which
 an application can send \fI\*n\fP to make it perform various operations.
 Most of these operations are standardized, from either the DEC or Tektronix
 terminals, or from more widely used standards such as ISO-6429.
+.PP
+A few examples of usage are given in this section.
+.SS Window Titles
+.PP
+Some scripts use \fBecho\fP with options \fB\-e\fP and \fB\-n\fP to tell
+the shell to interpret the string \*(``\\e\*('' as the \fIescape\fP character and
+to suppress a trailing newline on output.
+Those are not portable, not recommended.
+Instead, use \fBprintf\fP (POSIX).
+.PP
+For example, to set the \fIwindow title\fP to \*(``Hello world!\*('',
+you could use one of these commands in a script:
+.NS
+printf '\\033]2;Hello world!\\033\\'
+printf '\\033]2;Hello world!\\007'
+printf '\\033]2;%s\\033\\' "Hello world!"
+printf '\\033]2;%s\\007' "Hello world!"
+.NE
+.PP
+The \fBprintf\fP command interprets the octal value \*(``\\033\*('' for
+\fIescape\fP, and (since it was not given in the format) omits a trailing
+newline from the output.
+.PP
+Some programs (such as \fBscreen\fP(1)) set both window- and icon-titles
+at the same time, using a slightly different control sequence.
+.
+.SS Special Keys
+.PP
+\fI\*N\fP, like any VT100-compatible terminal emulator,
+has two modes for the \fIspecial keys\fP (cursor-keys, numeric keypad,
+and certain function-keys):
+.bP
+\fInormal mode\fP, which makes the special keys transmit 
+\*(``useful\*('' sequences such as the control sequence for cursor-up
+when pressing the up-arrow, and
+.bP
+\fIapplication mode\fP,
+which uses a different control sequence that cannot be mistaken for
+the 
+\*(``useful\*('' sequences.
+.PP
+The main difference between the two modes is that normal mode sequences
+start with \fICSI\fP (\fIescape\ [\fP) and application mode sequences
+start with \fISS3\fP (\fIescape\ O\fP).
+.PP
+The terminal is initialized into one of these two modes (usually the
+normal mode), based on the terminal description (termcap or terminfo).
+The terminal description also has capabilities (strings) defined for
+the keypad mode used in curses applications.
+.PP
+There is a problem in using the terminal description for applications
+that are not intended to be full-screen curses applications:
+the definitions of special keys are only correct for this keypad mode.
+For example, some shells
+(unlike \fBksh\fP(1), which appears to be hard-coded, not even using termcap)
+allow their users to customize key-bindings,
+assigning shell actions to special keys.
+.bP
+\fBbash\fP(1) allows \fIconstant\fP strings to be assigned
+to functions.
+This is only successful if the terminal is initialized to application
+mode by default,
+because \fBbash\fP lacks flexibility in this area.
+It uses a (less expressive than \fBbash\fP's)
+\fBreadline\fP scripting language for setting up key bindings,
+which relies upon the user to statically enumerate the possible bindings for
+given values of $TERM.
+.bP
+\fBzsh\fP(1) provides an analogous feature,
+but it accepts runtime expressions,
+as well as providing a \fB$terminfo\fP array for scripts.
+In particular, one can use the terminal database,
+transforming when defining a key-binding.
+By transforming the output so that \fICSI\fP and \fISS3\fP are equated,
+\fBzsh\fP can use the terminal database to obtain useful definitions
+for its command-line use regardless of whether the terminal uses
+normal or application mode initially.
+Here is an example:
+.NS
+[[ "$terminfo[kcuu1]" == "^[O"* ]] && \\
+bindkey -M viins "${terminfo[kcuu1]/O/[}" \\
+vi-up-line-or-history
+.NE
+.
+.
+.SS Changing Colors
+.PP
+A few shell programs provide the ability for users to add color and other
+video attributes to the shell prompt strings.
+Users can do this by setting $PS1 (the primary prompt string).
+Again, \fBbash\fP and \fBzsh\fP have provided features not found in \fBksh\fP.
+There is a problem, however: the prompt's width on the screen will not
+necessarily be the same as the number of characters.
+Because there is no guidance in the POSIX standard, each shell addresses
+the problem in a different way:
+.bP
+\fBbash\fP treats characters within 
+\*(``\\[\*('' and
+\*(``\\]\*(''
+as nonprinting (using no width on the screen).
+.bP
+\fBzsh\fP treats characters within 
+\*(``%{\*('' and
+\*(``%}\*(''
+as nonprinting.
+.PP
+In addition to the difference in syntax,
+the shells provide different methods for obtaining useful escape sequences:
+.bP
+As noted in \fISpecial Keys\fP, \fBzsh\fP initializes the $terminfo array
+with the terminal capabilities.
+.IP
+It also provides a function \fBechoti\fP which works like \fBtput\fP(1)
+to convert a terminal capability with its parameters into a string
+that can be written to the terminal.
+.bP
+Shells lacking a comparable feature (such as \fBbash\fP) can always
+use the program \fBtput\fP to do this transformation.
+.PP
+Hard-coded escape sequences are supported by each shell,
+but are not recommended because those rely upon particular configurations
+and cannot be easily moved between different user environments.
 .
 .
 .SH ENVIRONMENT
@@ -6936,6 +7102,8 @@ tty(4)
 http://invisible-island.net/xterm/xterm.html
 .br
 http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+.br
+http://invisible-island.net/xterm/xterm.faq.html
 .
 .
 .SH AUTHORS
