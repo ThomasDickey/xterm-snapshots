@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.609 2015/03/26 09:28:28 tom Exp $
+.\" $XTermId: xterm.man,v 1.610 2015/03/27 00:22:23 tom Exp $
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
@@ -5750,52 +5750,6 @@ by echoing the event's position
 ^X ESC G <line+\*(`` \*(''> <col+\*(`` \*(''>
 .in -8
 .TP 8
-.B "fullscreen(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBfullscreen\fP resource.
-.TP 8
-.B "iconify()"
-Iconifies the window.
-.TP 8
-.B "hard-reset()"
-This action resets the scrolling region, tabs, window size, and cursor keys
-and clears the screen.
-It is also invoked from the \fBhardreset\fP
-entry in \fIvtMenu\fP.
-.TP 8
-.B "ignore()"
-This action ignores the event but checks for special pointer position
-escape sequences.
-.TP 8
-.B "insert()"
-This action inserts the character or string associated with
-the key that was pressed.
-.TP 8
-.B "insert-eight-bit()"
-This action inserts an eight-bit (Meta) version of the character or string
-associated with the key that was pressed.
-Only single-byte values are treated specially.
-The exact action depends on the value of
-the \fBaltSendsEscape\fP and
-the \fBmetaSendsEscape\fP and
-the \fBeightBitInput\fP resources.
-The \fBmetaSendsEscape\fP resource is tested first.
-See the \fBeightBitInput\fP resource for a full discussion.
-.IP
-The term \*(``eight-bit\*('' is misleading:
-\fI\*n\fP checks if the key is in the range 128 to 255
-(the eighth bit is set).
-If the value is in that range,
-depending on the resource values,
-\fI\*n\fP may then do one of the following:
-.RS
-.bP
-add 128 to the value, setting its eighth bit,
-.bP
-send an ESC byte before the key, or
-.bP
-send the key unaltered.
-.RE
-.TP 8
 .B "exec-formatted(\fIformat\fP, \fIsourcename\fP [, ...])"
 Execute an external command,
 using the current selection for part of the command's parameters.
@@ -5843,6 +5797,14 @@ using the same convention as \*(``%V\*(''.
 After constructing the command-string,
 \fI\*n\fP forks a subprocess and executes the command,
 which completes independently of \fI\*n\fP.
+.IP
+For example, this translation would invoke a new \fI\*n\fP process
+to view a file whose name is selected while holding the shift key down.
+The new process is started when the mouse button is released:
+.NS
+*VT100*translations: #override Shift \\
+    <Btn1Up>: exec-formatted("xterm -e view '%t'", SELECT)
+.NE
 .TP 8
 .B "exec-selectable(\fIformat\fP, \fIonClicks\fP)"
 Execute an external command,
@@ -5851,6 +5813,52 @@ The first parameter, \fIformat\fP gives
 the basic command as in \fBexec-formatted\fP.
 The second parameter specifies the method for copying
 the data as in the \fBonClicks\fP resource.
+.TP 8
+.B "fullscreen(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBfullscreen\fP resource.
+.TP 8
+.B "iconify()"
+Iconifies the window.
+.TP 8
+.B "hard-reset()"
+This action resets the scrolling region, tabs, window size, and cursor keys
+and clears the screen.
+It is also invoked from the \fBhardreset\fP
+entry in \fIvtMenu\fP.
+.TP 8
+.B "ignore()"
+This action ignores the event but checks for special pointer position
+escape sequences.
+.TP 8
+.B "insert()"
+This action inserts the character or string associated with
+the key that was pressed.
+.TP 8
+.B "insert-eight-bit()"
+This action inserts an eight-bit (Meta) version of the character or string
+associated with the key that was pressed.
+Only single-byte values are treated specially.
+The exact action depends on the value of
+the \fBaltSendsEscape\fP and
+the \fBmetaSendsEscape\fP and
+the \fBeightBitInput\fP resources.
+The \fBmetaSendsEscape\fP resource is tested first.
+See the \fBeightBitInput\fP resource for a full discussion.
+.IP
+The term \*(``eight-bit\*('' is misleading:
+\fI\*n\fP checks if the key is in the range 128 to 255
+(the eighth bit is set).
+If the value is in that range,
+depending on the resource values,
+\fI\*n\fP may then do one of the following:
+.RS
+.bP
+add 128 to the value, setting its eighth bit,
+.bP
+send an ESC byte before the key, or
+.bP
+send the key unaltered.
+.RE
 .TP 8
 .B "insert-formatted(\fIformat\fP, \fIsourcename\fP [, ...])"
 Insert the current selection or data related to it, formatted.
