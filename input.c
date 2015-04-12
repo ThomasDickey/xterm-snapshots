@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.352 2015/02/16 00:10:30 tom Exp $ */
+/* $XTermId: input.c,v 1.354 2015/04/10 10:50:21 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -130,13 +130,13 @@ typedef struct {
 } KEY_DATA;
 
 static
-const char *kypd_num = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
-/*                      0123456789 abc def0123456789abcdef0123456789abcdef0123456789abcd */
+const char kypd_num[] = " XXXXXXXX\tXXX\rXXXxxxxXXXXXXXXXXXXXXXXXXXXX*+,-./0123456789XXX=";
+/*                       0123456789 abc def0123456789abcdef0123456789abcdef0123456789abcd */
 static
-const char *kypd_apl = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
-/*                      0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd */
+const char kypd_apl[] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ??????abcdefghijklmnopqrstuvwxyzXXX";
+/*                       0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd */
 static
-const char *curfinal = "HDACB  FE";
+const char curfinal[] = "HDACB  FE";
 
 static int decfuncvalue(KEY_DATA *);
 static void sunfuncvalue(ANSI *, KEY_DATA *);
@@ -1726,7 +1726,7 @@ keyCanInsert(const char *parse)
     Boolean escape = False;
     Boolean quoted = False;
 
-    static const char *table[] =
+    static const char *const table[] =
     {
 	"insert",
 	"insert-seven-bit",
@@ -1854,26 +1854,14 @@ stripTranslations(const char *s, Bool onlyInsert)
 static Bool
 TranslationsUseKeyword(Widget w, char **cache, const char *keyword, Bool onlyInsert)
 {
-    static String data;
-    static XtResource key_resources[] =
-    {
-	{XtNtranslations, XtCTranslations, XtRString,
-	 sizeof(data), 0, XtRString, (XtPointer) NULL}
-    };
     Bool result = False;
     char *copy;
     char *test;
 
     if ((test = stripTranslations(keyword, onlyInsert)) != 0) {
 	if (*cache == 0) {
-	    XtGetSubresources(w,
-			      (XtPointer) &data,
-			      "vt100",
-			      "VT100",
-			      key_resources,
-			      XtNumber(key_resources),
-			      NULL,
-			      (Cardinal) 0);
+	    String data = 0;
+	    getKeymapResources(w, "vt100", "VT100", XtRString, &data, sizeof(data));
 	    if (data != 0 && (copy = stripTranslations(data, onlyInsert)) != 0) {
 		*cache = copy;
 	    }

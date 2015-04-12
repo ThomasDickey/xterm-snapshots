@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.724 2015/03/02 13:01:43 tom Exp $ */
+/* $XTermId: misc.c,v 1.726 2015/04/10 08:27:17 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -704,8 +704,8 @@ void
 init_colored_cursor(void)
 {
 #ifdef HAVE_LIB_XCURSOR
-    const char *theme = "index.theme";
-    const char *pattern = "xtermXXXXXX";
+    static const char theme[] = "index.theme";
+    static const char pattern[] = "xtermXXXXXX";
     const char *tmp_dir;
     char *filename;
     char *env = getenv("XCURSOR_THEME");
@@ -2008,7 +2008,7 @@ StartLog(XtermWidget xw)
 	    if ((log_default = x_strdup(log_def_name)) == NULL)
 		return;
 #else
-	    const char *log_def_name = "XtermLog.XXXXXX";
+	    static const char log_def_name[] = "XtermLog.XXXXXX";
 	    if ((log_default = x_strdup(log_def_name)) == NULL)
 		return;
 
@@ -5100,7 +5100,7 @@ Panic(const char *s GCC_UNUSED, int a GCC_UNUSED)
 const char *
 SysErrorMsg(int code)
 {
-    static char unknown[] = "unknown error";
+    static const char unknown[] = "unknown error";
     char *s = strerror(code);
     return s ? s : unknown;
 }

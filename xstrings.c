@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.60 2014/05/03 12:46:53 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.61 2015/04/10 00:23:33 Ross.Combs Exp $ */
 
 /*
- * Copyright 2000-2013,2014 by Thomas E. Dickey
+ * Copyright 2000-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -485,7 +485,7 @@ x_toupper(int ch)
 
     if (result == '\0') {
 	unsigned n;
-	const char *s = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	static const char s[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 	for (n = 0; n < sizeof(table); ++n) {
 	    table[n] = (char) n;

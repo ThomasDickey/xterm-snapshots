@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.491 2014/12/28 22:15:03 tom Exp $ */
+/* $XTermId: button.c,v 1.492 2015/04/10 10:16:19 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3853,8 +3853,9 @@ _ConvertSelectionHelper(Widget w,
 	char *the_data = (char *) screen->selection_data;
 	char *the_next;
 
-	TRACE(("converting %ld:'%s'\n", screen->selection_length,
-	       visibleChars(screen->selection_data, screen->selection_length)));
+	TRACE(("converting %ld:'%s'\n",
+	       (long) screen->selection_length,
+	       visibleChars(screen->selection_data, (unsigned) screen->selection_length)));
 	/*
 	 * For most selections, we can convert in one pass.  It is possible
 	 * that some applications contain embedded nulls, e.g., using xterm's
@@ -4165,7 +4166,7 @@ _OwnSelection(XtermWidget xw,
 
     TRACE(("_OwnSelection count %d, length %ld value %s\n", count,
 	   screen->selection_length,
-	   visibleChars(screen->selection_data, screen->selection_length)));
+	   visibleChars(screen->selection_data, (unsigned) screen->selection_length)));
     selections = MapSelections(xw, selections, count);
 
     if (count > screen->sel_atoms_size) {
