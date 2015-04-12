@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.679 2015/03/07 15:46:37 tom Exp $ */
+/* $XTermId: util.c,v 1.681 2015/04/10 08:31:02 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -113,7 +113,7 @@ int (*my_wcwidth) (wchar_t);
 int
 DamagedCells(TScreen *screen, unsigned n, int *klp, int *krp, int row, int col)
 {
-    LineData *ld = getLineData(screen, row);
+    CLineData *ld = getLineData(screen, row);
     int result = False;
 
     assert(ld);
@@ -898,6 +898,20 @@ initZIconBeep(void)
     }
 }
 
+static char *
+getIconName(void)
+{
+    static char *icon_name;
+    static Arg args[] =
+    {
+	{XtNiconName, (XtArgVal) & icon_name}
+    };
+
+    icon_name = NULL;
+    XtGetValues(toplevel, args, XtNumber(args));
+    return icon_name;
+}
+
 static void
 setZIconBeep(XtermWidget xw)
 {
@@ -906,15 +920,7 @@ setZIconBeep(XtermWidget xw)
     /* Flag icon name with "***"  on window output when iconified.
      */
     if (resource.zIconBeep && mapstate == IsUnmapped && !screen->zIconBeep_flagged) {
-	static char *icon_name;
-	static Arg args[] =
-	{
-	    {XtNiconName, (XtArgVal) & icon_name}
-	};
-
-	icon_name = NULL;
-	XtGetValues(toplevel, args, XtNumber(args));
-
+	char *icon_name = getIconName();
 	if (icon_name != NULL) {
 	    screen->zIconBeep_flagged = True;
 	    ChangeIconName(xw, icon_name);
@@ -966,17 +972,12 @@ showZIconBeep(XtermWidget xw, char *name)
 void
 resetZIconBeep(XtermWidget xw)
 {
-    static char *icon_name;
-    static Arg args[] =
-    {
-	{XtNiconName, (XtArgVal) & icon_name}
-    };
+    char *icon_name;
     TScreen *screen = TScreenOf(xw);
 
     if (screen->zIconBeep_flagged) {
 	screen->zIconBeep_flagged = False;
-	icon_name = NULL;
-	XtGetValues(toplevel, args, XtNumber(args));
+	icon_name = getIconName();
 	if (icon_name != NULL) {
 	    char *buf = CastMallocN(char, strlen(icon_name));
 	    if (buf == NULL) {

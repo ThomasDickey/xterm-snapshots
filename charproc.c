@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1407 2015/03/02 11:46:32 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1409 2015/04/12 16:57:00 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -7422,7 +7422,7 @@ void
 lookupSelectUnit(XtermWidget xw, Cardinal item, String value)
 {
     /* *INDENT-OFF* */
-    static struct {
+    static const struct {
 	const char *	name;
 	SelectUnit	code;
     } table[] = {
@@ -10886,6 +10886,26 @@ set_character_class(char *s)
 #undef FMT
 }
 
+void
+getKeymapResources(Widget w,
+		   const char *mapName,
+		   const char *mapClass,
+		   const char *type,
+		   void *result,
+		   size_t size)
+{
+    XtResource key_resources[1];
+    key_resources[0].resource_name = XtNtranslations;
+    key_resources[0].resource_class = XtCTranslations;
+    key_resources[0].resource_type = (char *) type;
+    key_resources[0].resource_size = (Cardinal) size;
+    key_resources[0].resource_offset = 0;
+    key_resources[0].default_type = key_resources[0].resource_type;
+    key_resources[0].default_addr = 0;
+    XtGetSubresources(w, (XtPointer) result, mapName, mapClass,
+		      key_resources, (Cardinal) 1, NULL, (Cardinal) 0);
+}
+
 /* ARGSUSED */
 static void
 HandleKeymapChange(Widget w,
@@ -10894,48 +10914,56 @@ HandleKeymapChange(Widget w,
 		   Cardinal *param_count)
 {
     static XtTranslations keymap, original;
-    static XtResource key_resources[] =
-    {
-	{XtNtranslations, XtCTranslations, XtRTranslationTable,
-	 sizeof(XtTranslations), 0, XtRTranslationTable, (XtPointer) NULL}
-    };
     char mapName[1000];
     char mapClass[1000];
     char *pmapName;
     char *pmapClass;
     size_t len;
 
+    TRACE(("HandleKeymapChange(%#lx, %s)\n",
+	   w,
+	   (*param_count
+	    ? params[0]
+	    : "missing")));
+
     if (*param_count != 1)
 	return;
 
-    if (original == NULL)
+    if (original == NULL) {
+	TRACE(("...saving original keymap-translations\n"));
 	original = w->core.tm.translations;
-
-    if (strcmp(params[0], "None") == 0) {
-	XtOverrideTranslations(w, original);
-	return;
     }
 
-    len = strlen(params[0]) + 7;
-
-    pmapName = (char *) MyStackAlloc(len, mapName);
-    pmapClass = (char *) MyStackAlloc(len, mapClass);
-    if (pmapName == NULL
-	|| pmapClass == NULL) {
-	SysError(ERROR_KMMALLOC1);
+    if (strcmp(params[0], "None") == 0) {
+	TRACE(("...restoring original keymap-translations\n"));
+	XtOverrideTranslations(w, original);
     } else {
 
-	(void) sprintf(pmapName, "%sKeymap", params[0]);
-	(void) strcpy(pmapClass, pmapName);
-	if (islower(CharOf(pmapClass[0])))
-	    pmapClass[0] = x_toupper(pmapClass[0]);
-	XtGetSubresources(w, (XtPointer) &keymap, pmapName, pmapClass,
-			  key_resources, (Cardinal) 1, NULL, (Cardinal) 0);
-	if (keymap != NULL)
-	    XtOverrideTranslations(w, keymap);
+	len = strlen(params[0]) + 7;
 
-	MyStackFree(pmapName, mapName);
-	MyStackFree(pmapClass, mapClass);
+	pmapName = (char *) MyStackAlloc(len, mapName);
+	pmapClass = (char *) MyStackAlloc(len, mapClass);
+	if (pmapName == NULL
+	    || pmapClass == NULL) {
+	    SysError(ERROR_KMMALLOC1);
+	} else {
+
+	    (void) sprintf(pmapName, "%sKeymap", params[0]);
+	    (void) strcpy(pmapClass, pmapName);
+	    if (islower(CharOf(pmapClass[0])))
+		pmapClass[0] = x_toupper(pmapClass[0]);
+	    getKeymapResources(w, pmapName, pmapClass, XtRTranslationTable,
+			       &keymap, sizeof(keymap));
+	    if (keymap != NULL) {
+		TRACE(("...applying keymap \"%s\"\n", pmapName));
+		XtOverrideTranslations(w, keymap);
+	    } else {
+		TRACE(("...found no match for keymap \"%s\"\n", pmapName));
+	    }
+
+	    MyStackFree(pmapName, mapName);
+	    MyStackFree(pmapClass, mapClass);
+	}
     }
 }
 

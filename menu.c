@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.329 2015/03/02 02:00:32 tom Exp $ */
+/* $XTermId: menu.c,v 1.331 2015/04/10 01:11:52 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -465,7 +465,7 @@ typedef struct {
 } MenuHeader;
 
     /* This table is ordered to correspond with MenuIndex */
-static MenuHeader menu_names[] = {
+static const MenuHeader menu_names[] = {
     { "mainMenu", mainMenuEntries, XtNumber(mainMenuEntries) },
     { "vtMenu",   vtMenuEntries,   XtNumber(vtMenuEntries)   },
     { "fontMenu", fontMenuEntries, XtNumber(fontMenuEntries) },
@@ -642,7 +642,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
     {XtNcallback, (XtArgVal) cb};
 
     TScreen *screen = TScreenOf(xw);
-    MenuHeader *data = &menu_names[num];
+    const MenuHeader *data = &menu_names[num];
     MenuList *list = select_menu(w, num);
     struct _MenuEntry *entries = data->entry_list;
     Cardinal nentries = data->entry_len;
@@ -2118,7 +2118,7 @@ HandleSendSignal(Widget w,
 		 Cardinal *param_count)
 {
     /* *INDENT-OFF* */
-    static struct sigtab {
+    static const struct sigtab {
 	const char *name;
 	int sig;
     } signals[] = {
@@ -2141,7 +2141,7 @@ HandleSendSignal(Widget w,
     /* *INDENT-ON* */
 
     if (*param_count == 1) {
-	struct sigtab *st;
+	const struct sigtab *st;
 
 	for (st = signals; st->name; st++) {
 	    if (XmuCompareISOLatin1(st->name, params[0]) == 0) {
