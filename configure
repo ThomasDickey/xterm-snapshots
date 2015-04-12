@@ -1209,11 +1209,11 @@ fi
 ###	checks for alternative programs
 
 case "$host_os" in
-openedition)	: ${CFLAGS="-O2 -Wc,dll -Wl,EDIT=NO"}
+(openedition)	: ${CFLAGS="-O2 -Wc,dll -Wl,EDIT=NO"}
 		: ${CPPFLAGS="-D_ALL_SOURCE"}
 		: ${LIBS="/usr/lib/Xaw.x /usr/lib/SM.x /usr/lib/ICE.x /usr/lib/X11.x"}
 		: ${CC=c89};;
-darwin*)
+(darwin*)
 		: ${LDFLAGS}="${LDFLAGS} -Wl,-bind_at_load";;
 esac
 
@@ -2021,8 +2021,8 @@ esac
 
 echo "$as_me:2022: checking \$CC variable" >&5
 echo $ECHO_N "checking \$CC variable... $ECHO_C" >&6
-case "$CC" in #(vi
-*[\ \	]-[IUD]*)
+case "$CC" in
+(*[\ \	]-[IUD]*)
 	echo "$as_me:2026: result: broken" >&5
 echo "${ECHO_T}broken" >&6
 	{ echo "$as_me:2028: WARNING: your environment misuses the CC variable to hold CFLAGS/CPPFLAGS options" >&5
@@ -2039,11 +2039,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_flags
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -2060,11 +2060,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -2077,12 +2077,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -2110,7 +2110,7 @@ if test -n "$cf_new_extra_cppflags" ; then
 fi
 
 	;;
-*)
+(*)
 	echo "$as_me:2114: result: ok" >&5
 echo "${ECHO_T}ok" >&6
 	;;
@@ -2494,21 +2494,21 @@ cf_XOPEN_SOURCE=500
 cf_POSIX_C_SOURCE=199506L
 cf_xopen_source=
 
-case $host_os in #(vi
-aix[4-7]*) #(vi
+case $host_os in
+(aix[4-7]*)
 	cf_xopen_source="-D_ALL_SOURCE"
 	;;
-cygwin|msys) #(vi
+(cygwin|msys)
 	cf_XOPEN_SOURCE=600
 	;;
-darwin[0-8].*) #(vi
+(darwin[0-8].*)
 	cf_xopen_source="-D_APPLE_C_SOURCE"
 	;;
-darwin*) #(vi
+(darwin*)
 	cf_xopen_source="-D_DARWIN_C_SOURCE"
 	cf_XOPEN_SOURCE=
 	;;
-freebsd*|dragonfly*) #(vi
+(freebsd*|dragonfly*)
 	# 5.x headers associate
 	#	_XOPEN_SOURCE=600 with _POSIX_C_SOURCE=200112L
 	#	_XOPEN_SOURCE=500 with _POSIX_C_SOURCE=199506L
@@ -2516,17 +2516,17 @@ freebsd*|dragonfly*) #(vi
 	cf_XOPEN_SOURCE=600
 	cf_xopen_source="-D_BSD_TYPES -D__BSD_VISIBLE -D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE -D_XOPEN_SOURCE=$cf_XOPEN_SOURCE"
 	;;
-hpux11*) #(vi
+(hpux11*)
 	cf_xopen_source="-D_HPUX_SOURCE -D_XOPEN_SOURCE=500"
 	;;
-hpux*) #(vi
+(hpux*)
 	cf_xopen_source="-D_HPUX_SOURCE"
 	;;
-irix[56].*) #(vi
+(irix[56].*)
 	cf_xopen_source="-D_SGI_SOURCE"
 	cf_XOPEN_SOURCE=
 	;;
-linux*|gnu*|mint*|k*bsd*-gnu) #(vi
+(linux*|gnu*|mint*|k*bsd*-gnu)
 
 echo "$as_me:2531: checking if we must define _GNU_SOURCE" >&5
 echo $ECHO_N "checking if we must define _GNU_SOURCE... $ECHO_C" >&6
@@ -2612,10 +2612,10 @@ echo "${ECHO_T}$cf_cv_gnu_source" >&6
 test "$cf_cv_gnu_source" = yes && CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
 
 	;;
-minix*) #(vi
+(minix*)
 	cf_xopen_source="-D_NETBSD_SOURCE" # POSIX.1-2001 features are ifdef'd with this...
 	;;
-mirbsd*) #(vi
+(mirbsd*)
 	# setting _XOPEN_SOURCE or _POSIX_SOURCE breaks <sys/select.h> and other headers which use u_int / u_short types
 	cf_XOPEN_SOURCE=
 
@@ -2672,15 +2672,15 @@ else
   echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
 cf_want_posix_source=no
-	 case .$cf_POSIX_C_SOURCE in #(vi
-	 .[12]??*) #(vi
+	 case .$cf_POSIX_C_SOURCE in
+	 (.[12]??*)
 		cf_cv_posix_c_source="-D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE"
 		;;
-	 .2) #(vi
+	 (.2)
 		cf_cv_posix_c_source="-D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE"
 		cf_want_posix_source=yes
 		;;
-	 .*)
+	 (.*)
 		cf_want_posix_source=yes
 		;;
 	 esac
@@ -2784,11 +2784,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_cv_posix_c_source
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -2805,11 +2805,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -2822,12 +2822,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -2857,35 +2857,35 @@ fi
 fi
 
 	;;
-netbsd*) #(vi
+(netbsd*)
 	cf_xopen_source="-D_NETBSD_SOURCE" # setting _XOPEN_SOURCE breaks IPv6 for lynx on NetBSD 1.6, breaks xterm, is not needed for ncursesw
 	;;
-openbsd[4-9]*) #(vi
+(openbsd[4-9]*)
 	# setting _XOPEN_SOURCE lower than 500 breaks g++ compile with wchar.h, needed for ncursesw
 	cf_xopen_source="-D_BSD_SOURCE"
 	cf_XOPEN_SOURCE=600
 	;;
-openbsd*) #(vi
+(openbsd*)
 	# setting _XOPEN_SOURCE breaks xterm on OpenBSD 2.8, is not needed for ncursesw
 	;;
-osf[45]*) #(vi
+(osf[45]*)
 	cf_xopen_source="-D_OSF_SOURCE"
 	;;
-nto-qnx*) #(vi
+(nto-qnx*)
 	cf_xopen_source="-D_QNX_SOURCE"
 	;;
-sco*) #(vi
+(sco*)
 	# setting _XOPEN_SOURCE breaks Lynx on SCO Unix / OpenServer
 	;;
-solaris2.*) #(vi
+(solaris2.*)
 	cf_xopen_source="-D__EXTENSIONS__"
 	cf_cv_xopen_source=broken
 	;;
-sysv4.2uw2.*) # Novell/SCO UnixWare 2.x (tested on 2.1.2)
+(sysv4.2uw2.*) # Novell/SCO UnixWare 2.x (tested on 2.1.2)
 	cf_XOPEN_SOURCE=
 	cf_POSIX_C_SOURCE=
 	;;
-*)
+(*)
 
 echo "$as_me:2890: checking if we should define _XOPEN_SOURCE" >&5
 echo $ECHO_N "checking if we should define _XOPEN_SOURCE... $ECHO_C" >&6
@@ -2997,11 +2997,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_temp_xopen_source
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -3018,11 +3018,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -3035,12 +3035,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -3122,15 +3122,15 @@ else
   echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
 cf_want_posix_source=no
-	 case .$cf_POSIX_C_SOURCE in #(vi
-	 .[12]??*) #(vi
+	 case .$cf_POSIX_C_SOURCE in
+	 (.[12]??*)
 		cf_cv_posix_c_source="-D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE"
 		;;
-	 .2) #(vi
+	 (.2)
 		cf_cv_posix_c_source="-D_POSIX_C_SOURCE=$cf_POSIX_C_SOURCE"
 		cf_want_posix_source=yes
 		;;
-	 .*)
+	 (.*)
 		cf_want_posix_source=yes
 		;;
 	 esac
@@ -3234,11 +3234,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_cv_posix_c_source
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -3255,11 +3255,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -3272,12 +3272,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -3319,11 +3319,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_xopen_source
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -3340,11 +3340,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -3357,12 +3357,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -3592,11 +3592,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_temp_xopen_source
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -3613,11 +3613,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -3630,12 +3630,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -4972,13 +4972,13 @@ fi
 echo "$as_me:4972: result: $cf_cv_have_utmp_ut_name" >&5
 echo "${ECHO_T}$cf_cv_have_utmp_ut_name" >&6
 
-case $cf_cv_have_utmp_ut_name in #(vi
-no) #(vi
+case $cf_cv_have_utmp_ut_name in
+(no)
 	{ { echo "$as_me:4977: error: Cannot find declaration for ut.ut_name" >&5
 echo "$as_me: error: Cannot find declaration for ut.ut_name" >&2;}
    { (exit 1); exit 1; }; }
 	;;
-ut_user)
+(ut_user)
 
 cat >>confdefs.h <<\EOF
 #define ut_name ut_user
@@ -5519,10 +5519,10 @@ cf_TERMVAR=vt100
 if test -n "$TERMCAP"
 then
 	cf_TERMCAP=`echo "$TERMCAP" | tr '\n' ' ' | sed -e 's/^..|//' -e 's/|.*//'`
-	case "$cf_TERMCAP" in #(vi
-	screen*.*) #(vi
+	case "$cf_TERMCAP" in
+	(screen*.*)
 		;;
-	*)
+	(*)
 		cf_TERMVAR="$cf_TERMCAP"
 		;;
 	esac
@@ -5896,15 +5896,15 @@ else
   APP_CLASS=XTerm
 fi;
 
-case x$APP_CLASS in #(vi
-*[/@,%]*) #(vi
+case x$APP_CLASS in
+(*[/@,%]*)
 	{ echo "$as_me:5901: WARNING: X applications class cannot contain punctuation" >&5
 echo "$as_me: WARNING: X applications class cannot contain punctuation" >&2;}
 	APP_CLASS=XTerm
 	;;
-x[A-Z]*) #(vi
+(x[A-Z]*)
 	;;
-*)
+(*)
 	{ echo "$as_me:5908: WARNING: X applications class must start with capital, ignoring $APP_CLASS" >&5
 echo "$as_me: WARNING: X applications class must start with capital, ignoring $APP_CLASS" >&2;}
 	APP_CLASS=XTerm
@@ -5959,25 +5959,25 @@ else
   cf_path_syntax="$ac_default_prefix"
 fi
 
-case ".$cf_path" in #(vi
-.\$\(*\)*|.\'*\'*) #(vi
+case ".$cf_path" in
+(.\$\(*\)*|.\'*\'*)
   ;;
-..|./*|.\\*) #(vi
+(..|./*|.\\*)
   ;;
-.[a-zA-Z]:[\\/]*) #(vi OS/2 EMX
+(.[a-zA-Z]:[\\/]*) # OS/2 EMX
   ;;
-.\${*prefix}*|.\${*dir}*) #(vi
+(.\${*prefix}*|.\${*dir}*)
   eval cf_path="$cf_path"
-  case ".$cf_path" in #(vi
-  .NONE/*)
+  case ".$cf_path" in
+  (.NONE/*)
     cf_path=`echo $cf_path | sed -e s%NONE%$cf_path_syntax%`
     ;;
   esac
-  ;; #(vi
-.no|.NONE/*)
+  ;;
+(.no|.NONE/*)
   cf_path=`echo $cf_path | sed -e s%NONE%$cf_path_syntax%`
   ;;
-*)
+(*)
   { { echo "$as_me:5981: error: expected a pathname, not \"$cf_path\"" >&5
 echo "$as_me: error: expected a pathname, not \"$cf_path\"" >&2;}
    { (exit 1); exit 1; }; }
@@ -6008,7 +6008,7 @@ else
   ICON_NAME=xterm-color
 fi;
 case "x$ICON_NAME" in
-xyes|xno|x)
+(xyes|xno|x)
 	ICON_NAME=xterm-color
 	;;
 esac
@@ -6027,10 +6027,10 @@ else
   ICON_SYMLINK=NONE
 fi;
 case "x$ICON_SYMLINK" in
-xyes)
+(xyes)
 	ICON_SYMLINK=xterm
 	;;
-xno|x)
+(xno|x)
 	ICON_SYMLINK=NONE
 	;;
 esac
@@ -6070,25 +6070,25 @@ else
   cf_path_syntax="$ac_default_prefix"
 fi
 
-case ".$cf_path" in #(vi
-.\$\(*\)*|.\'*\'*) #(vi
+case ".$cf_path" in
+(.\$\(*\)*|.\'*\'*)
   ;;
-..|./*|.\\*) #(vi
+(..|./*|.\\*)
   ;;
-.[a-zA-Z]:[\\/]*) #(vi OS/2 EMX
+(.[a-zA-Z]:[\\/]*) # OS/2 EMX
   ;;
-.\${*prefix}*|.\${*dir}*) #(vi
+(.\${*prefix}*|.\${*dir}*)
   eval cf_path="$cf_path"
-  case ".$cf_path" in #(vi
-  .NONE/*)
+  case ".$cf_path" in
+  (.NONE/*)
     cf_path=`echo $cf_path | sed -e s%NONE%$cf_path_syntax%`
     ;;
   esac
-  ;; #(vi
-.no|.NONE/*)
+  ;;
+(.no|.NONE/*)
   cf_path=`echo $cf_path | sed -e s%NONE%$cf_path_syntax%`
   ;;
-*)
+(*)
   { { echo "$as_me:6092: error: expected a pathname, not \"$cf_path\"" >&5
 echo "$as_me: error: expected a pathname, not \"$cf_path\"" >&2;}
    { (exit 1); exit 1; }; }
@@ -6139,25 +6139,25 @@ else
   cf_path_syntax="$ac_default_prefix"
 fi
 
-case ".$cf_path" in #(vi
-.\$\(*\)*|.\'*\'*) #(vi
+case ".$cf_path" in
+(.\$\(*\)*|.\'*\'*)
   ;;
-..|./*|.\\*) #(vi
+(..|./*|.\\*)
   ;;
-.[a-zA-Z]:[\\/]*) #(vi OS/2 EMX
+(.[a-zA-Z]:[\\/]*) # OS/2 EMX
   ;;
-.\${*prefix}*|.\${*dir}*) #(vi
+(.\${*prefix}*|.\${*dir}*)
   eval cf_path="$cf_path"
-  case ".$cf_path" in #(vi
-  .NONE/*)
+  case ".$cf_path" in
+  (.NONE/*)
     cf_path=`echo $cf_path | sed -e s%NONE%$cf_path_syntax%`
     ;;
   esac
-  ;; #(vi
-.no|.NONE/*)
+  ;;
+(.no|.NONE/*)
   cf_path=`echo $cf_path | sed -e s%NONE%$cf_path_syntax%`
   ;;
-*)
+(*)
   { { echo "$as_me:6161: error: expected a pathname, not \"$cf_path\"" >&5
 echo "$as_me: error: expected a pathname, not \"$cf_path\"" >&2;}
    { (exit 1); exit 1; }; }
@@ -6187,10 +6187,10 @@ else
   ICON_THEME=no
 fi;
 
-case "x$ICON_THEME" in #(vi
-xno) #(vi
+case "x$ICON_THEME" in
+(xno)
 	;;
-x|xyes)
+(x|xyes)
 	ICON_THEME=hicolor
 	;;
 esac
@@ -6258,12 +6258,12 @@ echo "${as_me:-configure}:6237: testing using $ICON_FORMAT ..." 1>&5
 		then
 			cf_base=`basename $cf_left`
 			cf_trim=`echo "$cf_base" | sed -e 's/_[0-9][0-9]x[0-9][0-9]\././'`
-			case "x${cf_base}" in #(vi
-			*:*) #(vi
+			case "x${cf_base}" in
+			(*:*)
 				cf_next=$cf_base
 				# user-defined mapping
 				;;
-			*.png) #(vi
+			(*.png)
 				cf_size=`file "$cf_left"|sed -e 's/^[^:]*://' -e 's/^.*[^0-9]\([0-9][0-9]* x [0-9][0-9]*\)[^0-9].*$/\1/' -e 's/ //g'`
 				if test -z "$cf_size"
 				then
@@ -6273,17 +6273,17 @@ echo "$as_me: WARNING: cannot determine size of $cf_left" >&2;}
 				fi
 				cf_next="$cf_size/apps/$cf_trim"
 				;;
-			*.svg) #(vi
+			(*.svg)
 				cf_next="scalable/apps/$cf_trim"
 				;;
-			*.xpm)
+			(*.xpm)
 				test -n "$verbose" && echo "	ignored XPM file in icon theme" 1>&6
 
 echo "${as_me:-configure}:6282: testing ignored XPM file in icon theme ..." 1>&5
 
 				continue
 				;;
-			*_[0-9][0-9]*x[0-9][0-9]*.*) #(vi
+			(*_[0-9][0-9]*x[0-9][0-9]*.*)
 				cf_size=`echo "$cf_left"|sed -e 's/^.*_\([0-9][0-9]*x[0-9][0-9]*\)\..*$/\1/'`
 				cf_left=`echo "$cf_left"|sed -e 's/^\(.*\)_\([0-9][0-9]*x[0-9][0-9]*\)\(\..*\)$/\1\3/'`
 				cf_next="$cf_size/apps/$cf_base"
@@ -6415,8 +6415,8 @@ echo "${ECHO_T}$cf_desktop_want" >&6
 					read cf_desktop_path
 					test -z "$cf_desktop_path" && break
 					cf_desktop_name=`basename $cf_desktop_path .desktop`
-					case $cf_desktop_name in #(vi
-					xterm|*-xterm|*rxvt*|konsole|*-terminal)
+					case $cf_desktop_name in
+					(xterm|*-xterm|*rxvt*|konsole|*-terminal)
 						test -n "$verbose" && echo "	inspect $cf_desktop_path" 1>&6
 
 echo "${as_me:-configure}:6422: testing inspect $cf_desktop_path ..." 1>&5
@@ -6437,10 +6437,10 @@ echo "${as_me:-configure}:6422: testing inspect $cf_desktop_path ..." 1>&5
 			do
 				read cf_desktop_this
 				test -z "$cf_desktop_this" && break
-				case $cf_desktop_this in #(vi
-				Qt*|GTK*|KDE*|GNOME*|*XFCE*|*Xfce*) #(vi
+				case $cf_desktop_this in
+				(Qt*|GTK*|KDE*|GNOME*|*XFCE*|*Xfce*)
 					;;
-				System|TerminalEmulator|Utility|*)
+				(System|TerminalEmulator|Utility|*)
 					test "x$cf_desktop_last" != "x$cf_desktop_this" && echo $cf_desktop_this >>conftest.2
 					;;
 				esac
@@ -6495,8 +6495,8 @@ with_full_paths=yes
 	echo "$as_me:6495: checking for PATH separator" >&5
 echo $ECHO_N "checking for PATH separator... $ECHO_C" >&6
 	case $cf_cv_system_name in
-	os2*)	PATH_SEPARATOR=';'  ;;
-	*)	${PATH_SEPARATOR:=':'}  ;;
+	(os2*)	PATH_SEPARATOR=';'  ;;
+	(*)	${PATH_SEPARATOR:=':'}  ;;
 	esac
 
 	echo "$as_me:6502: result: $PATH_SEPARATOR" >&5
@@ -6560,25 +6560,25 @@ else
   cf_path_syntax="$ac_default_prefix"
 fi
 
-case ".$cf_temp" in #(vi
-.\$\(*\)*|.\'*\'*) #(vi
+case ".$cf_temp" in
+(.\$\(*\)*|.\'*\'*)
   ;;
-..|./*|.\\*) #(vi
+(..|./*|.\\*)
   ;;
-.[a-zA-Z]:[\\/]*) #(vi OS/2 EMX
+(.[a-zA-Z]:[\\/]*) # OS/2 EMX
   ;;
-.\${*prefix}*|.\${*dir}*) #(vi
+(.\${*prefix}*|.\${*dir}*)
   eval cf_temp="$cf_temp"
-  case ".$cf_temp" in #(vi
-  .NONE/*)
+  case ".$cf_temp" in
+  (.NONE/*)
     cf_temp=`echo $cf_temp | sed -e s%NONE%$cf_path_syntax%`
     ;;
   esac
-  ;; #(vi
-.no|.NONE/*)
+  ;;
+(.no|.NONE/*)
   cf_temp=`echo $cf_temp | sed -e s%NONE%$cf_path_syntax%`
   ;;
-*)
+(*)
   break
   ;;
 esac
@@ -7098,11 +7098,11 @@ fi
 
 if test -z "$cf_cv_tty_group_name"
 then
-case $host_os in #(vi
-osf*) #(vi
+case $host_os in
+(osf*)
 	cf_cv_tty_group_name="terminal"
 	;;
-*)
+(*)
 	cf_cv_tty_group_name="unknown"
 	if ( egrep '^tty:' /etc/group 2>/dev/null 1>/dev/null ) then
 		cf_cv_tty_group_name="tty"
@@ -8890,11 +8890,11 @@ fi;
 echo "$as_me:8890: result: $cf_pkg_config" >&5
 echo "${ECHO_T}$cf_pkg_config" >&6
 
-case $cf_pkg_config in #(vi
-no) #(vi
+case $cf_pkg_config in
+(no)
 	PKG_CONFIG=none
 	;;
-yes) #(vi
+(yes)
 
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
@@ -8981,7 +8981,7 @@ else
 fi
 
 	;;
-*)
+(*)
 	PKG_CONFIG=$withval
 	;;
 esac
@@ -8995,25 +8995,25 @@ else
   cf_path_syntax="$ac_default_prefix"
 fi
 
-case ".$PKG_CONFIG" in #(vi
-.\$\(*\)*|.\'*\'*) #(vi
+case ".$PKG_CONFIG" in
+(.\$\(*\)*|.\'*\'*)
   ;;
-..|./*|.\\*) #(vi
+(..|./*|.\\*)
   ;;
-.[a-zA-Z]:[\\/]*) #(vi OS/2 EMX
+(.[a-zA-Z]:[\\/]*) # OS/2 EMX
   ;;
-.\${*prefix}*|.\${*dir}*) #(vi
+(.\${*prefix}*|.\${*dir}*)
   eval PKG_CONFIG="$PKG_CONFIG"
-  case ".$PKG_CONFIG" in #(vi
-  .NONE/*)
+  case ".$PKG_CONFIG" in
+  (.NONE/*)
     PKG_CONFIG=`echo $PKG_CONFIG | sed -e s%NONE%$cf_path_syntax%`
     ;;
   esac
-  ;; #(vi
-.no|.NONE/*)
+  ;;
+(.no|.NONE/*)
   PKG_CONFIG=`echo $PKG_CONFIG | sed -e s%NONE%$cf_path_syntax%`
   ;;
-*)
+(*)
   { { echo "$as_me:9017: error: expected a pathname, not \"$PKG_CONFIG\"" >&5
 echo "$as_me: error: expected a pathname, not \"$PKG_CONFIG\"" >&2;}
    { (exit 1); exit 1; }; }
@@ -9057,11 +9057,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -9078,11 +9078,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -9095,12 +9095,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -9174,11 +9174,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -9195,11 +9195,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -9212,12 +9212,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -9291,11 +9291,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -9312,11 +9312,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -9329,12 +9329,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -9408,11 +9408,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -9429,11 +9429,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -9446,12 +9446,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -9529,11 +9529,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -9550,11 +9550,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -9567,12 +9567,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -9615,10 +9615,10 @@ do
 done
 LIBS="$cf_add_libs"
 
-	case "x$LIBS" in #(vi
-	*-lX11*) #(vi
+	case "x$LIBS" in
+	(*-lX11*)
 		;;
-	*)
+	(*)
 # we have an "xt" package, but it may omit Xt's dependency on X11
 echo "$as_me:9623: checking for usable X dependency" >&5
 echo $ECHO_N "checking for usable X dependency... $ECHO_C" >&6
@@ -9698,11 +9698,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -9719,11 +9719,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -9736,12 +9736,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -9851,12 +9851,12 @@ echo "${ECHO_T}$cf_cv_xt_ice_compat" >&6
 	if test "$cf_cv_xt_ice_compat" = no
 	then
 		# workaround for broken ".pc" files used for X Toolkit.
-		case "x$X_PRE_LIBS" in #(vi
-		*-lICE*)
-			case "x$LIBS" in #(vi
-			*-lICE*) #(vi
+		case "x$X_PRE_LIBS" in
+		(*-lICE*)
+			case "x$LIBS" in
+			(*-lICE*)
 				;;
-			*)
+			(*)
 				test -n "$verbose" && echo "	work around broken ICE dependency" 1>&6
 
 echo "${as_me:-configure}:9862: testing work around broken ICE dependency ..." 1>&5
@@ -9884,11 +9884,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -9905,11 +9905,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -9922,12 +9922,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -9993,11 +9993,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -10014,11 +10014,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -10031,12 +10031,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -10130,11 +10130,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $X_CFLAGS
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -10151,11 +10151,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -10168,12 +10168,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -10814,11 +10814,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -10835,11 +10835,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -10852,12 +10852,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -10911,7 +10911,7 @@ EOF
 	for cf_trim_lib in Xmu Xt X11
 	do
 		case "$LIBS" in
-		*-l$cf_trim_lib\ *-l$cf_trim_lib*)
+		(*-l$cf_trim_lib\ *-l$cf_trim_lib*)
 			LIBS=`echo "$LIBS " | sed -e 's/  / /g' -e 's%-l'"$cf_trim_lib"' %%' -e 's/ $//'`
 			test -n "$verbose" && echo "	..trimmed $LIBS" 1>&6
 
@@ -10969,10 +10969,10 @@ echo "${ECHO_T}$cf_cv_xaw_compat" >&6
 			if test "$cf_cv_xaw_compat" = no
 			then
 				# workaround for broken ".pc" files...
-				case "$cf_x_athena_lib" in #(vi
-				*-lXmu*) #(vi
+				case "$cf_x_athena_lib" in
+				(*-lXmu*)
 					;;
-				*)
+				(*)
 					test -n "$verbose" && echo "	work around broken package" 1>&6
 
 echo "${as_me:-configure}:10978: testing work around broken package ..." 1>&5
@@ -11003,11 +11003,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -11024,11 +11024,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -11041,12 +11041,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -11118,7 +11118,7 @@ fi
 	for cf_trim_lib in Xmu Xt X11
 	do
 		case "$LIBS" in
-		*-l$cf_trim_lib\ *-l$cf_trim_lib*)
+		(*-l$cf_trim_lib\ *-l$cf_trim_lib*)
 			LIBS=`echo "$LIBS " | sed -e 's/  / /g' -e 's%-l'"$cf_trim_lib"' %%' -e 's/ $//'`
 			test -n "$verbose" && echo "	..trimmed $LIBS" 1>&6
 
@@ -11167,11 +11167,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -11188,11 +11188,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -11205,12 +11205,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -11361,11 +11361,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -11382,11 +11382,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -11399,12 +11399,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -11478,11 +11478,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -11499,11 +11499,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -11516,12 +11516,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -11595,11 +11595,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -11616,11 +11616,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -11633,12 +11633,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -11712,11 +11712,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -11733,11 +11733,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -11750,12 +11750,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -11833,11 +11833,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -11854,11 +11854,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -11871,12 +11871,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -11919,10 +11919,10 @@ do
 done
 LIBS="$cf_add_libs"
 
-	case "x$LIBS" in #(vi
-	*-lX11*) #(vi
+	case "x$LIBS" in
+	(*-lX11*)
 		;;
-	*)
+	(*)
 # we have an "xt" package, but it may omit Xt's dependency on X11
 echo "$as_me:11927: checking for usable X dependency" >&5
 echo $ECHO_N "checking for usable X dependency... $ECHO_C" >&6
@@ -12002,11 +12002,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -12023,11 +12023,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -12040,12 +12040,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -12155,12 +12155,12 @@ echo "${ECHO_T}$cf_cv_xt_ice_compat" >&6
 	if test "$cf_cv_xt_ice_compat" = no
 	then
 		# workaround for broken ".pc" files used for X Toolkit.
-		case "x$X_PRE_LIBS" in #(vi
-		*-lICE*)
-			case "x$LIBS" in #(vi
-			*-lICE*) #(vi
+		case "x$X_PRE_LIBS" in
+		(*-lICE*)
+			case "x$LIBS" in
+			(*-lICE*)
 				;;
-			*)
+			(*)
 				test -n "$verbose" && echo "	work around broken ICE dependency" 1>&6
 
 echo "${as_me:-configure}:12166: testing work around broken ICE dependency ..." 1>&5
@@ -12188,11 +12188,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -12209,11 +12209,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -12226,12 +12226,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -12297,11 +12297,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -12318,11 +12318,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -12335,12 +12335,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -12434,11 +12434,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $X_CFLAGS
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -12455,11 +12455,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -12472,12 +12472,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -13442,10 +13442,10 @@ fi
 done
 
 cf_func_grantpt="grantpt ptsname"
-case $host_os in #(vi
-darwin[0-9].*) #(vi
+case $host_os in
+(darwin[0-9].*)
 	;;
-*)
+(*)
 	cf_func_grantpt="$cf_func_grantpt posix_openpt"
 	;;
 esac
@@ -13900,23 +13900,23 @@ if { (eval echo "$as_me:13892: \"$ac_link\"") >&5
   echo "$as_me:13900: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-				case $cf_pty_next in #(vi
-				1) #(vi - streams
+				case $cf_pty_next in
+				(1) # - streams
 					cf_pty_feature=ptem
 					;;
-				2) #(vi - streams
+				(2) # - streams
 					cf_pty_feature=ldterm
 					;;
-				3) #(vi - streams
+				(3) # - streams
 					cf_pty_feature=ttcompat
 					;;
-				4) #(vi
+				(4)
 					cf_pty_feature=pty_isatty
 					;;
-				5) #(vi
+				(5)
 					cf_pty_feature=pty_tcsetattr
 					;;
-				6) #(vi
+				(6)
 					cf_pty_feature=tty_tcsetattr
 					;;
 				esac
@@ -13926,8 +13926,8 @@ else
 echo "$as_me: failed program was:" >&5
 cat conftest.$ac_ext >&5
 
-				case $cf_pty_next in #(vi
-				1|2|3)
+				case $cf_pty_next in
+				(1|2|3)
 
 echo "${as_me:-configure}:13932: testing skipping remaining streams features $cf_pty_this..2 ..." 1>&5
 
@@ -14502,11 +14502,11 @@ done
 echo "$as_me:14502: checking if you want narrow prototypes for X libraries" >&5
 echo $ECHO_N "checking if you want narrow prototypes for X libraries... $ECHO_C" >&6
 
-case `$ac_config_guess` in #(vi
-*freebsd*|*gnu*|*irix5*|*irix6*|*linux-gnu*|*netbsd*|*openbsd*|*qnx*|*sco*|*sgi*) #(vi
+case `$ac_config_guess` in
+(*freebsd*|*gnu*|*irix5*|*irix6*|*linux-gnu*|*netbsd*|*openbsd*|*qnx*|*sco*|*sgi*)
 	cf_default_narrowproto=yes
 	;;
-*)
+(*)
 	cf_default_narrowproto=no
 	;;
 esac
@@ -14594,15 +14594,15 @@ done
 
 if test -n "$IMAKE" ; then
 
-case $IMAKE in # (vi
-*/imake)
-	cf_imake_opts="-DUseInstalled=YES" # (vi
+case $IMAKE in
+(*/imake)
+	cf_imake_opts="-DUseInstalled=YES"
 	;;
-*/util/xmkmf)
+(*/util/xmkmf)
 	# A single parameter tells xmkmf where the config-files are:
-	cf_imake_opts="`echo $IMAKE|sed -e s,/config/util/xmkmf,,`" # (vi
+	cf_imake_opts="`echo $IMAKE|sed -e s,/config/util/xmkmf,,`"
 	;;
-*)
+(*)
 	cf_imake_opts=
 	;;
 esac
@@ -14651,8 +14651,8 @@ echo "${as_me:-configure}:14648: testing Using $IMAKE $cf_imake_opts ..." 1>&5
 		# sometimes imake doesn't have the config path compiled in.  Find it.
 		cf_config=
 		for cf_libpath in $X_LIBS $LIBS ; do
-			case $cf_libpath in # (vi
-			-L*)
+			case $cf_libpath in
+			(-L*)
 				cf_libpath=`echo .$cf_libpath | sed -e 's/^...//'`
 				cf_libpath=$cf_libpath/X11/config
 				if test -d $cf_libpath ; then
@@ -14700,13 +14700,13 @@ echo "$as_me: WARNING: Cannot run $IMAKE" >&2;}
 		for cf_opt in $IMAKE_CFLAGS
 		do
 		    case "$cf_opt" in
-		    -nostdinc) #(vi
+		    (-nostdinc)
 			cf_nostdinc="$cf_opt"
 			;;
-		    -I/usr/include) #(vi
+		    (-I/usr/include)
 			cf_std_incl="$cf_opt"
 			;;
-		    *) #(vi
+		    (*)
 			cf_cpp_opts="$cf_cpp_opts $cf_opt"
 			;;
 		    esac
@@ -14729,9 +14729,9 @@ fi
 # Some imake configurations define PROJECTROOT with an empty value.  Remove
 # the empty definition.
 case $IMAKE_CFLAGS in
-*-DPROJECTROOT=/*)
+(*-DPROJECTROOT=/*)
 	;;
-*)
+(*)
 	IMAKE_CFLAGS=`echo "$IMAKE_CFLAGS" |sed -e "s,-DPROJECTROOT=[ 	], ,"`
 	;;
 esac
@@ -14758,11 +14758,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $IMAKE_CFLAGS
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -14779,11 +14779,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -14796,12 +14796,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -14839,16 +14839,16 @@ echo "${as_me:-configure}:14836: testing make fallback definitions ..." 1>&5
 	# inconsistent results with uname (AIX for instance).  However,
 	# config.guess is not always consistent either.
 	case $host_os in
-	*[0-9].[0-9]*)
+	(*[0-9].[0-9]*)
 		UNAME_RELEASE="$host_os"
 		;;
-	*)
+	(*)
 		UNAME_RELEASE=`(uname -r) 2>/dev/null` || UNAME_RELEASE=unknown
 		;;
 	esac
 
 	case .$UNAME_RELEASE in
-	*[0-9].[0-9]*)
+	(*[0-9].[0-9]*)
 		OSMAJORVERSION=`echo "$UNAME_RELEASE" |sed -e 's/^[^0-9]*//' -e 's/\..*//'`
 		OSMINORVERSION=`echo "$UNAME_RELEASE" |sed -e 's/^[^0-9]*//' -e 's/^[^.]*\.//' -e 's/\..*//' -e 's/[^0-9].*//' `
 		test -z "$OSMAJORVERSION" && OSMAJORVERSION=1
@@ -14868,11 +14868,11 @@ echo "${as_me:-configure}:14836: testing make fallback definitions ..." 1>&5
 
 	# Other special definitions:
 	case $host_os in
-	aix*)
+	(aix*)
 		# imake on AIX 5.1 defines AIXV3.  really.
 		IMAKE_CFLAGS="-DAIXV3 -DAIXV4 $IMAKE_CFLAGS"
 		;;
-	irix[56].*) #(vi
+	(irix[56].*)
 		# these are needed to make SIGWINCH work in xterm
 		IMAKE_CFLAGS="-DSYSV -DSVR4 $IMAKE_CFLAGS"
 		;;
@@ -14886,11 +14886,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $IMAKE_CFLAGS
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -14907,11 +14907,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -14924,12 +14924,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -15018,8 +15018,8 @@ fi;
 
 cf_with_groff=no
 
-case $cf_man2html in #(vi
-yes) #(vi
+case $cf_man2html in
+(yes)
 	echo "$as_me:15023: result: man2html" >&5
 echo "${ECHO_T}man2html" >&6
 	# Extract the first word of "man2html", so it can be a program name with args.
@@ -15061,13 +15061,13 @@ echo "${ECHO_T}no" >&6
 fi
 
 	;;
-no|groff|*/groff*) #(vi
+(no|groff|*/groff*)
 	cf_with_groff=yes
 	cf_man2html=$GROFF_PATH
 	echo "$as_me:15067: result: $cf_man2html" >&5
 echo "${ECHO_T}$cf_man2html" >&6
 	;;
-*)
+(*)
 	echo "$as_me:15071: result: $cf_man2html" >&5
 echo "${ECHO_T}$cf_man2html" >&6
 	;;
@@ -15113,25 +15113,25 @@ else
   cf_path_syntax="$ac_default_prefix"
 fi
 
-case ".$cf_man2html" in #(vi
-.\$\(*\)*|.\'*\'*) #(vi
+case ".$cf_man2html" in
+(.\$\(*\)*|.\'*\'*)
   ;;
-..|./*|.\\*) #(vi
+(..|./*|.\\*)
   ;;
-.[a-zA-Z]:[\\/]*) #(vi OS/2 EMX
+(.[a-zA-Z]:[\\/]*) # OS/2 EMX
   ;;
-.\${*prefix}*|.\${*dir}*) #(vi
+(.\${*prefix}*|.\${*dir}*)
   eval cf_man2html="$cf_man2html"
-  case ".$cf_man2html" in #(vi
-  .NONE/*)
+  case ".$cf_man2html" in
+  (.NONE/*)
     cf_man2html=`echo $cf_man2html | sed -e s%NONE%$cf_path_syntax%`
     ;;
   esac
-  ;; #(vi
-.no|.NONE/*)
+  ;;
+(.no|.NONE/*)
   cf_man2html=`echo $cf_man2html | sed -e s%NONE%$cf_path_syntax%`
   ;;
-*)
+(*)
   { { echo "$as_me:15135: error: expected a pathname, not \"$cf_man2html\"" >&5
 echo "$as_me: error: expected a pathname, not \"$cf_man2html\"" >&2;}
    { (exit 1); exit 1; }; }
@@ -15191,11 +15191,11 @@ echo "${ECHO_T}$cf_man2html_page" >&6
 	cat >>$MAN2HTML_TEMP <<CF_EOF
 : \${MAN2HTML_PATH=$MAN2HTML_PATH}
 MAN2HTML_OPTS="\$MAN2HTML_OPTS -index -title="\$ROOT\(\$TYPE\)" -compress -pgsize $cf_man2html_page"
-case \${TYPE} in #(vi
-ms) #(vi
+case \${TYPE} in
+(ms)
 	tbl \${ROOT}.\${TYPE} | nroff -\${MACS} | \$MAN2HTML_PATH -topm=0 -botm=0 \$MAN2HTML_OPTS
 	;;
-*)
+(*)
 	tbl \${ROOT}.\${TYPE} | nroff -\${MACS} | \$MAN2HTML_PATH $cf_man2html_top_bot \$MAN2HTML_OPTS
 	;;
 esac
@@ -15209,7 +15209,7 @@ chmod 700 $MAN2HTML_TEMP
 # imake-file.
 if test "x$cf_cv_lib_tgetent" != xno || test "x$cf_cv_lib_part_tgetent" != xno ; then
 	case "$IMAKE_CFLAGS" in
-	*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
+	(*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
 
 	test -n "$verbose" && echo "	removing terminfo flags from IMAKE_CFLAGS" 1>&6
 
@@ -15246,7 +15246,7 @@ fi;
 echo "$as_me:15246: result: $default_termid" >&5
 echo "${ECHO_T}$default_termid" >&6
 case $default_termid in
-vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
+(vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
 	;;
 esac
 
@@ -15292,11 +15292,11 @@ fi;
 
 echo "$as_me:15293: result: $backarrow_is_bs" >&5
 echo "${ECHO_T}$backarrow_is_bs" >&6
-case $backarrow_is_bs in #(vi
-yes) #(vi
+case $backarrow_is_bs in
+(yes)
 	backarrow_is_bs=true
 	;;
-no) #(vi
+(no)
 	backarrow_is_bs=false
 	;;
 esac
@@ -15331,11 +15331,11 @@ fi;
 
 echo "$as_me:15332: result: $backarrow_is_erase" >&5
 echo "${ECHO_T}$backarrow_is_erase" >&6
-case $backarrow_is_erase in #(vi
-yes) #(vi
+case $backarrow_is_erase in
+(yes)
 	backarrow_is_erase=true
 	;;
-no) #(vi
+(no)
 	backarrow_is_erase=false
 	;;
 esac
@@ -15363,11 +15363,11 @@ fi;
 
 echo "$as_me:15364: result: $delete_is_del" >&5
 echo "${ECHO_T}$delete_is_del" >&6
-case $delete_is_del in #(vi
-yes) #(vi
+case $delete_is_del in
+(yes)
 	delete_is_del=true
 	;;
-no) #(vi
+(no)
 	delete_is_del=false
 	;;
 esac
@@ -15395,11 +15395,11 @@ fi;
 
 echo "$as_me:15396: result: $initial_erase" >&5
 echo "${ECHO_T}$initial_erase" >&6
-case $initial_erase in #(vi
-yes) #(vi
+case $initial_erase in
+(yes)
 	initial_erase=true
 	;;
-no) #(vi
+(no)
 	initial_erase=false
 	;;
 esac
@@ -15434,11 +15434,11 @@ fi;
 
 echo "$as_me:15435: result: $alt_sends_esc" >&5
 echo "${ECHO_T}$alt_sends_esc" >&6
-case $alt_sends_esc in #(vi
-yes) #(vi
+case $alt_sends_esc in
+(yes)
 	alt_sends_esc=true
 	;;
-no) #(vi
+(no)
 	alt_sends_esc=false
 	;;
 esac
@@ -15473,11 +15473,11 @@ fi;
 
 echo "$as_me:15474: result: $meta_sends_esc" >&5
 echo "${ECHO_T}$meta_sends_esc" >&6
-case $meta_sends_esc in #(vi
-yes) #(vi
+case $meta_sends_esc in
+(yes)
 	meta_sends_esc=true
 	;;
-no) #(vi
+(no)
 	meta_sends_esc=false
 	;;
 esac
@@ -15738,10 +15738,10 @@ EOF
 echo "$as_me:15738: checking if you want to ignore Linux's broken palette-strings" >&5
 echo $ECHO_N "checking if you want to ignore Linux's broken palette-strings... $ECHO_C" >&6
 
-case $host_os in #(vi
-linux*)
-	assume_broken_osc=yes ;; #(vi
-*)
+case $host_os in
+(linux*)
+	assume_broken_osc=yes ;;
+(*)
 	assume_broken_osc=no ;;
 esac
 
@@ -16075,9 +16075,9 @@ echo "$as_me:16074: result: $enable_double_bfr" >&5
 echo "${ECHO_T}$enable_double_bfr" >&6
 if test "$enable_double_bfr" = yes ; then
 	case "x$LIBS" in
-	*Xext*)
+	(*Xext*)
 		;;
-	*)
+	(*)
 
 if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists Xext; then
 	test -n "$verbose" && echo "	found package Xext" 1>&6
@@ -16102,11 +16102,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -16123,11 +16123,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -16140,12 +16140,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -16316,7 +16316,7 @@ echo "$as_me:16315: result: $cf_cv_x_freetype_cfgs" >&5
 echo "${ECHO_T}$cf_cv_x_freetype_cfgs" >&6
 
 case $cf_cv_x_freetype_cfgs in
-none) #(vi
+(none)
 	echo "$as_me:16320: checking if you specified -D/-I options for FreeType" >&5
 echo $ECHO_N "checking if you specified -D/-I options for FreeType... $ECHO_C" >&6
 
@@ -16343,7 +16343,7 @@ fi;
 	echo "$as_me:16343: result: $cf_cv_x_freetype_libs" >&5
 echo "${ECHO_T}$cf_cv_x_freetype_libs" >&6
 	;;
-auto) #(vi
+(auto)
 	if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists xft; then
 		FREETYPE_CONFIG=$PKG_CONFIG
 		FREETYPE_PARAMS=xft
@@ -16434,7 +16434,7 @@ fi
 		fi
 	fi
 	;;
-pkg*) #(vi
+(pkg*)
 	if test "$PKG_CONFIG" != none && "$PKG_CONFIG" --exists xft; then
 		FREETYPE_CONFIG=$cf_cv_x_freetype_cfgs
 		FREETYPE_PARAMS=xft
@@ -16443,7 +16443,7 @@ pkg*) #(vi
 echo "$as_me: WARNING: cannot find pkg-config for Xft" >&2;}
 	fi
 	;;
-*) #(vi
+(*)
 	# Extract the first word of "$cf_cv_x_freetype_cfgs", so it can be a program name with args.
 set dummy $cf_cv_x_freetype_cfgs; ac_word=$2
 echo "$as_me:16449: checking for $ac_word" >&5
@@ -16613,11 +16613,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_cv_x_freetype_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -16634,11 +16634,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -16651,12 +16651,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -16821,10 +16821,10 @@ echo "${ECHO_T}$cf_cv_xft_compat" >&6
 if test "$cf_cv_xft_compat" = no
 then
 	# workaround for broken ".pc" files used for Xft.
-	case "$cf_cv_x_freetype_libs" in #(vi
-	*-lfontconfig*) #(vi
+	case "$cf_cv_x_freetype_libs" in
+	(*-lfontconfig*)
 		;;
-	*)
+	(*)
 		test -n "$verbose" && echo "	work around broken package" 1>&6
 
 echo "${as_me:-configure}:16830: testing work around broken package ..." 1>&5
@@ -16854,11 +16854,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -16875,11 +16875,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -16892,12 +16892,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -16948,11 +16948,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -16969,11 +16969,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -16986,12 +16986,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -17584,11 +17584,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -17605,11 +17605,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -17622,12 +17622,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -17743,10 +17743,10 @@ cat >>confdefs.h <<\EOF
 #define HAVE_LIB_PCRE 1
 EOF
 
-		case $LIBS in #(vi
-		*pcreposix*) #(vi
+		case $LIBS in
+		(*pcreposix*)
 			;;
-		*)
+		(*)
 			echo "$as_me:17750: checking for pcreposix_regcomp in -lpcreposix" >&5
 echo $ECHO_N "checking for pcreposix_regcomp in -lpcreposix... $ECHO_C" >&6
 if test "${ac_cv_lib_pcreposix_pcreposix_regcomp+set}" = set; then
@@ -17907,8 +17907,8 @@ fi
 cf_regex_func=no
 
 cf_regex_libs="regex re"
-case $host_os in #(vi
-mingw*)
+case $host_os in
+(mingw*)
 	cf_regex_libs="gnurx $cf_regex_libs"
 	;;
 esac
@@ -18202,8 +18202,8 @@ if test "${cf_cv_regex_hdrs+set}" = set; then
 else
 
 cf_cv_regex_hdrs=no
-case $cf_regex_func in #(vi
-compile) #(vi
+case $cf_regex_func in
+(compile)
 	for cf_regex_hdr in regexp.h regexpr.h
 	do
 		cat >conftest.$ac_ext <<_ACEOF
@@ -18244,7 +18244,7 @@ fi
 rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
 	done
 	;;
-*)
+(*)
 	for cf_regex_hdr in regex.h
 	do
 		cat >conftest.$ac_ext <<_ACEOF
@@ -18294,20 +18294,20 @@ fi
 echo "$as_me:18294: result: $cf_cv_regex_hdrs" >&5
 echo "${ECHO_T}$cf_cv_regex_hdrs" >&6
 
-case $cf_cv_regex_hdrs in #(vi
-    no)	       { echo "$as_me:18298: WARNING: no regular expression header found" >&5
-echo "$as_me: WARNING: no regular expression header found" >&2;} ;; #(vi
-    regex.h)
+case $cf_cv_regex_hdrs in
+    (no)	    { echo "$as_me:18298: WARNING: no regular expression header found" >&5
+echo "$as_me: WARNING: no regular expression header found" >&2;} ;;
+    (regex.h)
 cat >>confdefs.h <<\EOF
 #define HAVE_REGEX_H_FUNCS 1
 EOF
- ;; #(vi
-    regexp.h)
+ ;;
+    (regexp.h)
 cat >>confdefs.h <<\EOF
 #define HAVE_REGEXP_H_FUNCS 1
 EOF
- ;; #(vi
-    regexpr.h)
+ ;;
+    (regexpr.h)
 cat >>confdefs.h <<\EOF
 #define HAVE_REGEXPR_H_FUNCS 1
 EOF
@@ -18741,25 +18741,25 @@ else
   cf_path_syntax="$ac_default_prefix"
 fi
 
-case ".$cf_temp" in #(vi
-.\$\(*\)*|.\'*\'*) #(vi
+case ".$cf_temp" in
+(.\$\(*\)*|.\'*\'*)
   ;;
-..|./*|.\\*) #(vi
+(..|./*|.\\*)
   ;;
-.[a-zA-Z]:[\\/]*) #(vi OS/2 EMX
+(.[a-zA-Z]:[\\/]*) # OS/2 EMX
   ;;
-.\${*prefix}*|.\${*dir}*) #(vi
+(.\${*prefix}*|.\${*dir}*)
   eval cf_temp="$cf_temp"
-  case ".$cf_temp" in #(vi
-  .NONE/*)
+  case ".$cf_temp" in
+  (.NONE/*)
     cf_temp=`echo $cf_temp | sed -e s%NONE%$cf_path_syntax%`
     ;;
   esac
-  ;; #(vi
-.no|.NONE/*)
+  ;;
+(.no|.NONE/*)
   cf_temp=`echo $cf_temp | sed -e s%NONE%$cf_path_syntax%`
   ;;
-*)
+(*)
   break
   ;;
 esac
@@ -19068,11 +19068,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in $cf_pkgconfig_incs
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -19089,11 +19089,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -19106,12 +19106,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -19334,12 +19334,12 @@ fi;
 echo "$as_me:19334: result: ${with_dmalloc:-no}" >&5
 echo "${ECHO_T}${with_dmalloc:-no}" >&6
 
-case .$with_cflags in #(vi
-.*-g*)
-	case .$CFLAGS in #(vi
-	.*-g*) #(vi
+case .$with_cflags in
+(.*-g*)
+	case .$CFLAGS in
+	(.*-g*)
 		;;
-	*)
+	(*)
 
 cf_fix_cppflags=no
 cf_new_cflags=
@@ -19349,11 +19349,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in -g
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -19370,11 +19370,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -19387,12 +19387,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -19546,12 +19546,12 @@ fi;
 echo "$as_me:19546: result: ${with_dbmalloc:-no}" >&5
 echo "${ECHO_T}${with_dbmalloc:-no}" >&6
 
-case .$with_cflags in #(vi
-.*-g*)
-	case .$CFLAGS in #(vi
-	.*-g*) #(vi
+case .$with_cflags in
+(.*-g*)
+	case .$CFLAGS in
+	(.*-g*)
 		;;
-	*)
+	(*)
 
 cf_fix_cppflags=no
 cf_new_cflags=
@@ -19561,11 +19561,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in -g
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -19582,11 +19582,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -19599,12 +19599,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -19758,12 +19758,12 @@ fi;
 echo "$as_me:19758: result: ${with_valgrind:-no}" >&5
 echo "${ECHO_T}${with_valgrind:-no}" >&6
 
-case .$with_cflags in #(vi
-.*-g*)
-	case .$CFLAGS in #(vi
-	.*-g*) #(vi
+case .$with_cflags in
+(.*-g*)
+	case .$CFLAGS in
+	(.*-g*)
 		;;
-	*)
+	(*)
 
 cf_fix_cppflags=no
 cf_new_cflags=
@@ -19773,11 +19773,11 @@ cf_new_extra_cppflags=
 for cf_add_cflags in -g
 do
 case $cf_fix_cppflags in
-no)
-	case $cf_add_cflags in #(vi
-	-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C) #(vi
+(no)
+	case $cf_add_cflags in
+	(-undef|-nostdinc*|-I*|-D*|-U*|-E|-P|-C)
 		case $cf_add_cflags in
-		-D*)
+		(-D*)
 			cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^-D[^=]*='\''\"[^"]*//'`
 
 			test "x${cf_add_cflags}" != "x${cf_tst_cflags}" \
@@ -19794,11 +19794,11 @@ no)
 			;;
 		esac
 		case "$CPPFLAGS" in
-		*$cf_add_cflags) #(vi
+		(*$cf_add_cflags)
 			;;
-		*) #(vi
-			case $cf_add_cflags in #(vi
-			-D*)
+		(*)
+			case $cf_add_cflags in
+			(-D*)
 				cf_tst_cppflags=`echo "x$cf_add_cflags" | sed -e 's/^...//' -e 's/=.*//'`
 
 CPPFLAGS=`echo "$CPPFLAGS" | \
@@ -19811,12 +19811,12 @@ CPPFLAGS=`echo "$CPPFLAGS" | \
 			;;
 		esac
 		;;
-	*)
+	(*)
 		cf_new_cflags="$cf_new_cflags $cf_add_cflags"
 		;;
 	esac
 	;;
-yes)
+(yes)
 	cf_new_extra_cppflags="$cf_new_extra_cppflags $cf_add_cflags"
 
 	cf_tst_cflags=`echo ${cf_add_cflags} |sed -e 's/^[^"]*"'\''//'`
@@ -20154,20 +20154,20 @@ cf_ATTRIBUTE=`echo "$cf_attribute" | sed y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFG
 		cf_directive="__attribute__(($cf_attribute))"
 		echo "checking for $CC $cf_directive" 1>&5
 
-		case $cf_attribute in #(vi
-		printf) #(vi
+		case $cf_attribute in
+		(printf)
 			cf_printf_attribute=yes
 			cat >conftest.h <<EOF
 #define GCC_$cf_ATTRIBUTE 1
 EOF
 			;;
-		scanf) #(vi
+		(scanf)
 			cf_scanf_attribute=yes
 			cat >conftest.h <<EOF
 #define GCC_$cf_ATTRIBUTE 1
 EOF
 			;;
-		*) #(vi
+		(*)
 			cat >conftest.h <<EOF
 #define GCC_$cf_ATTRIBUTE $cf_directive
 EOF
@@ -20182,15 +20182,15 @@ EOF
 			test -n "$verbose" && echo "$as_me:20182: result: ... $cf_attribute" >&5
 echo "${ECHO_T}... $cf_attribute" >&6
 			cat conftest.h >>confdefs.h
-			case $cf_attribute in #(vi
-			noreturn) #(vi
+			case $cf_attribute in
+			(noreturn)
 
 cat >>confdefs.h <<EOF
 #define GCC_NORETURN $cf_directive
 EOF
 
 				;;
-			printf) #(vi
+			(printf)
 				cf_value='/* nothing */'
 				if test "$cf_printf_attribute" != no ; then
 					cf_value='__attribute__((format(printf,fmt,var)))'
@@ -20206,7 +20206,7 @@ cat >>confdefs.h <<EOF
 EOF
 
 				;;
-			scanf) #(vi
+			(scanf)
 				cf_value='/* nothing */'
 				if test "$cf_scanf_attribute" != no ; then
 					cf_value='__attribute__((format(scanf,fmt,var)))'
@@ -20222,7 +20222,7 @@ cat >>confdefs.h <<EOF
 EOF
 
 				;;
-			unused) #(vi
+			(unused)
 
 cat >>confdefs.h <<EOF
 #define GCC_UNUSED $cf_directive
@@ -20242,7 +20242,7 @@ INTEL_COMPILER=no
 
 if test "$GCC" = yes ; then
 	case $host_os in
-	linux*|gnu*)
+	(linux*|gnu*)
 		echo "$as_me:20246: checking if this is really Intel C compiler" >&5
 echo $ECHO_N "checking if this is really Intel C compiler... $ECHO_C" >&6
 		cf_save_CFLAGS="$CFLAGS"
@@ -20419,13 +20419,13 @@ echo "$as_me: checking for $CC warning options..." >&6;}
   (exit $ac_status); }; then
 			test -n "$verbose" && echo "$as_me:20420: result: ... -$cf_opt" >&5
 echo "${ECHO_T}... -$cf_opt" >&6
-			case $cf_opt in #(vi
-			Wcast-qual) #(vi
+			case $cf_opt in
+			(Wcast-qual)
 				CPPFLAGS="$CPPFLAGS -DXTSTRINGDEFINES"
 				;;
-			Winline) #(vi
+			(Winline)
 				case $GCC_VERSION in
-				[34].*)
+				([34].*)
 					test -n "$verbose" && echo "	feature is broken in gcc $GCC_VERSION" 1>&6
 
 echo "${as_me:-configure}:20431: testing feature is broken in gcc $GCC_VERSION ..." 1>&5
@@ -20433,9 +20433,9 @@ echo "${as_me:-configure}:20431: testing feature is broken in gcc $GCC_VERSION .
 					continue;;
 				esac
 				;;
-			Wpointer-arith) #(vi
+			(Wpointer-arith)
 				case $GCC_VERSION in
-				[12].*)
+				([12].*)
 					test -n "$verbose" && echo "	feature is broken in gcc $GCC_VERSION" 1>&6
 
 echo "${as_me:-configure}:20441: testing feature is broken in gcc $GCC_VERSION ..." 1>&5
@@ -20498,11 +20498,11 @@ if test "${cf_cv_mixedcase+set}" = set; then
 else
 
 if test "$cross_compiling" = yes ; then
-	case $target_alias in #(vi
-	*-os2-emx*|*-msdosdjgpp*|*-cygwin*|*-msys*|*-mingw*|*-uwin*) #(vi
+	case $target_alias in
+	(*-os2-emx*|*-msdosdjgpp*|*-cygwin*|*-msys*|*-mingw*|*-uwin*)
 		cf_cv_mixedcase=no
 		;;
-	*)
+	(*)
 		cf_cv_mixedcase=yes
 		;;
 	esac
@@ -20685,40 +20685,40 @@ fi
 LD_RPATH_OPT=
 echo "$as_me:20686: checking for an rpath option" >&5
 echo $ECHO_N "checking for an rpath option... $ECHO_C" >&6
-case $cf_cv_system_name in #(vi
-irix*) #(vi
+case $cf_cv_system_name in
+(irix*)
 	if test "$GCC" = yes; then
 		LD_RPATH_OPT="-Wl,-rpath,"
 	else
 		LD_RPATH_OPT="-rpath "
 	fi
 	;;
-linux*|gnu*|k*bsd*-gnu) #(vi
+(linux*|gnu*|k*bsd*-gnu)
 	LD_RPATH_OPT="-Wl,-rpath,"
 	;;
-openbsd[2-9].*|mirbsd*) #(vi
+(openbsd[2-9].*|mirbsd*)
 	LD_RPATH_OPT="-Wl,-rpath,"
 	;;
-dragonfly*|freebsd*) #(vi
+(dragonfly*|freebsd*)
 	LD_RPATH_OPT="-rpath "
 	;;
-netbsd*) #(vi
+(netbsd*)
 	LD_RPATH_OPT="-Wl,-rpath,"
 	;;
-osf*|mls+*) #(vi
+(osf*|mls+*)
 	LD_RPATH_OPT="-rpath "
 	;;
-solaris2*) #(vi
+(solaris2*)
 	LD_RPATH_OPT="-R"
 	;;
-*)
+(*)
 	;;
 esac
 echo "$as_me:20717: result: $LD_RPATH_OPT" >&5
 echo "${ECHO_T}$LD_RPATH_OPT" >&6
 
-case "x$LD_RPATH_OPT" in #(vi
-x-R*)
+case "x$LD_RPATH_OPT" in
+(x-R*)
 	echo "$as_me:20722: checking if we need a space after rpath option" >&5
 echo $ECHO_N "checking if we need a space after rpath option... $ECHO_C" >&6
 	cf_save_LIBS="$LIBS"
@@ -20918,8 +20918,8 @@ echo "${as_me:-configure}:20916: testing ...checking LDFLAGS $LDFLAGS ..." 1>&5
 cf_rpath_dst=
 for cf_rpath_src in $LDFLAGS
 do
-	case $cf_rpath_src in #(vi
-	-L*) #(vi
+	case $cf_rpath_src in
+	(-L*)
 
 		# check if this refers to a directory which we will ignore
 		cf_rpath_skip=no
@@ -20972,8 +20972,8 @@ echo "${as_me:-configure}:20970: testing ...checking LIBS $LIBS ..." 1>&5
 cf_rpath_dst=
 for cf_rpath_src in $LIBS
 do
-	case $cf_rpath_src in #(vi
-	-L*) #(vi
+	case $cf_rpath_src in
+	(-L*)
 
 		# check if this refers to a directory which we will ignore
 		cf_rpath_skip=no

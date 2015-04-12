@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.332 2015/03/05 20:54:36 tom Exp $
+dnl $XTermId: configure.in,v 1.333 2015/04/12 19:10:40 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -44,11 +44,11 @@ CF_CHECK_CACHE
 dnl Only add to this case statement when a system has a compiler that is not
 dnl detected by AC_PROG_CC.
 case "$host_os" in
-openedition)	: ${CFLAGS="-O2 -Wc,dll -Wl,EDIT=NO"}
+(openedition)	: ${CFLAGS="-O2 -Wc,dll -Wl,EDIT=NO"}
 		: ${CPPFLAGS="-D_ALL_SOURCE"}
 		: ${LIBS="/usr/lib/Xaw.x /usr/lib/SM.x /usr/lib/ICE.x /usr/lib/X11.x"}
 		: ${CC=c89};;
-darwin*)
+(darwin*)
 		: ${LDFLAGS}="${LDFLAGS} -Wl,-bind_at_load";;
 esac
 
@@ -285,7 +285,7 @@ CF_WITH_MAN2HTML
 # imake-file.
 if test "x$cf_cv_lib_tgetent" != xno || test "x$cf_cv_lib_part_tgetent" != xno ; then
 	case "$IMAKE_CFLAGS" in
-	*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
+	(*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
 		CF_UNDO_CFLAGS(IMAKE_CFLAGS,terminfo,[-DUSE_TERMINFO[[ 	]]*-DHAVE_TIGETSTR[[ 	]]*])
 		CF_UNDO_CFLAGS(CPPFLAGS,terminfo,[-DUSE_TERMINFO[[ 	]]*-DHAVE_TIGETSTR[[ 	]]*])
 		;;
@@ -301,7 +301,7 @@ AC_ARG_WITH(terminal-id,
 	[default_termid=vt420])
 AC_MSG_RESULT($default_termid)
 case $default_termid in
-vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
+(vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
 	;;
 esac
 AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid",[default terminal-id])
@@ -465,10 +465,10 @@ test "$enable_blink_curs" = no && AC_DEFINE(OPT_BLINK_CURS,0,[Define to 0 to dis
 
 AC_MSG_CHECKING(if you want to ignore Linux's broken palette-strings)
 
-case $host_os in #(vi
-linux*)
-	assume_broken_osc=yes ;; #(vi
-*)
+case $host_os in
+(linux*)
+	assume_broken_osc=yes ;;
+(*)
 	assume_broken_osc=no ;;
 esac
 
@@ -584,9 +584,9 @@ CF_ARG_ENABLE(double-buffer,
 AC_MSG_RESULT($enable_double_bfr)
 if test "$enable_double_bfr" = yes ; then
 	case "x$LIBS" in
-	*Xext*)
+	(*Xext*)
 		;;
-	*)
+	(*)
 		CF_X_EXT 
 		;;
 	esac
