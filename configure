@@ -726,7 +726,7 @@ Terminal Configuration:
   --enable-backarrow-key  set default backarrowKey resource (default: true)
   --enable-backarrow-is-erase set default backarrowKeyIsErase resource (default: false)
   --enable-delete-is-del  set default deleteIsDEL resource (default: maybe)
-  --enable-initial-erase  set default ptyInitialErase resource (default: maybe)
+  --enable-pty-erase      set default ptyInitialErase resource (default: maybe)
   --enable-alt-sends-esc  set default altSendsEscape resource (default: no)
   --enable-meta-sends-esc set default metaSendsEscape resource (default: no)
   --with-own-terminfo=P   set default $TERMINFO (default: from environment)
@@ -15385,9 +15385,9 @@ EOF
 echo "$as_me:15385: checking for default pty initial erase setting" >&5
 echo $ECHO_N "checking for default pty initial erase setting... $ECHO_C" >&6
 
-# Check whether --enable-initial-erase or --disable-initial-erase was given.
-if test "${enable_initial_erase+set}" = set; then
-  enableval="$enable_initial_erase"
+# Check whether --enable-pty-erase or --disable-pty-erase was given.
+if test "${enable_pty_erase+set}" = set; then
+  enableval="$enable_pty_erase"
   initial_erase=$enableval
 else
   initial_erase=False
@@ -15802,9 +15802,9 @@ EOF
 echo "$as_me:15802: checking if you want to compile-in icon data" >&5
 echo $ECHO_N "checking if you want to compile-in icon data... $ECHO_C" >&6
 
-# Check whether --enable-broken-st or --disable-broken-st was given.
-if test "${enable_broken_st+set}" = set; then
-  enableval="$enable_broken_st"
+# Check whether --enable-builtin-xpms or --disable-builtin-xpms was given.
+if test "${enable_builtin_xpms+set}" = set; then
+  enableval="$enable_builtin_xpms"
   test "$enableval" != yes && enableval=no
   if test "$enableval" != "no" ; then
     enable_builtin_xpms=no

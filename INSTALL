@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.156 2015/02/11 10:17:08 tom Exp $
+-- $XTermId: INSTALL,v 1.157 2015/04/12 20:44:43 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2014,2015 by Thomas E. Dickey
 --
@@ -444,10 +444,6 @@ The options (in alphabetic order):
 
   	Compile-in code to support HP-style function keys.
 
-  --enable-initial-erase  set default ptyInitialErase resource (default: false)
-
-	This sets the default resource value, which is shown in the manpage.
-
   --enable-load-vt-fonts  enable load-vt-fonts() action
 
   	Compile-in code that allows user to define load different VT-font
@@ -492,6 +488,10 @@ The options (in alphabetic order):
 	For instance
 
 		configure --disable-imake --disable-narrowproto
+
+  --enable-pty-erase      set default ptyInitialErase resource (default: false)
+
+	This sets the default resource value, which is shown in the manpage.
 
   --enable-readline-mouse enable support for mouse in readline applications
 

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.610 2015/03/27 00:22:23 tom Exp $
+.\" $XTermId: xterm.man,v 1.611 2015/04/12 20:21:20 tom Exp $
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
@@ -1506,16 +1506,16 @@ mini.\*n_16x16,
 mini.\*n_32x32,
 mini.\*n_48x48
 .bP
-filled-\*n_16x16
-filled-\*n_32x32
+filled-\*n_16x16,
+filled-\*n_32x32,
 filled-\*n_48x48
 .bP
-\*n_16x16
-\*n_32x32
+\*n_16x16,
+\*n_32x32,
 \*n_48x48
 .bP
-\*n-color_16x16
-\*n-color_32x32
+\*n-color_16x16,
+\*n-color_32x32,
 \*n-color_48x48
 .RE
 .IP
