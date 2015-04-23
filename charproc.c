@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1409 2015/04/12 16:57:00 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1410 2015/04/23 01:03:55 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -10921,7 +10921,7 @@ HandleKeymapChange(Widget w,
     size_t len;
 
     TRACE(("HandleKeymapChange(%#lx, %s)\n",
-	   w,
+	   (unsigned long) w,
 	   (*param_count
 	    ? params[0]
 	    : "missing")));

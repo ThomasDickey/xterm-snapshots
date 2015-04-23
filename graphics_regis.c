@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.62 2014/12/23 01:39:00 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.69 2015/04/23 01:03:24 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -144,6 +144,8 @@ typedef struct RegisTextControls {
 #define FixedCopy(dst, src, len) strncpy(dst, src, len - 1)[len - 1] = '\0'
 #define CopyFontname(dst, src) FixedCopy(dst, src, REGIS_FONTNAME_LEN)
 
+#define MAX_REGIS_PAGES 8U
+
 #define MAX_REGIS_ALPHABETS 8U
 #define REGIS_ALPHABET_NAME_LEN 11U
 #define REGIS_FONTNAME_LEN 256U
@@ -212,7 +214,8 @@ typedef struct RegisParseState {
 } RegisParseState;
 
 typedef struct RegisGraphicsContext {
-    Graphic *graphic;
+    Graphic *destination_graphic;
+    Graphic *display_graphic;
     int terminal_id;
     int x_off, y_off;
     int x_div, y_div;
@@ -234,9 +237,13 @@ typedef struct RegisGraphicsContext {
     int fill_mode;
     RegisPoint fill_points[MAX_FILL_POINTS];
     unsigned fill_point_count;
+    unsigned destination_page;
+    unsigned display_page;
+    int force_refresh;
 } RegisGraphicsContext;
 
 static RegisGraphicsContext persistent_context;
+static RegisParseState persistent_state;
 
 #define MAX_PATTERN_BITS 8U
 
@@ -264,10 +271,10 @@ static RegisGraphicsContext persistent_context;
 #define TRANSLATE_XCOORD(C, X, S) SCALE_XCOORD((C), (X) - (C)->x_off * (S), (S) )
 #define TRANSLATE_YCOORD(C, Y, S) SCALE_YCOORD((C), (Y) - (C)->y_off * (S), (S) )
 
-#define READ_PIXEL(C, X, Y) read_pixel((C)->graphic, (X), (Y))
-#define DRAW_PIXEL(C, X, Y, COL) draw_solid_pixel((C)->graphic, (X), (Y), (COL))
+#define READ_PIXEL(C, X, Y) read_pixel((C)->destination_graphic, (X), (Y))
+#define DRAW_PIXEL(C, X, Y, COL) draw_solid_pixel((C)->destination_graphic, (X), (Y), (COL))
 #define DRAW_ALL(C, COL) \
-    draw_solid_rectangle((C)->graphic, 0, 0, (C)->width, (C)->height, (COL))
+    draw_solid_rectangle((C)->destination_graphic, 0, 0, (C)->width, (C)->height, (COL))
 
 static unsigned get_shade_character_pixel(unsigned char const *pixels,
 					  unsigned w, unsigned h,
@@ -1709,9 +1716,6 @@ find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
 	    XftResult status;
 
 	    font = NULL;
-	    /* FIXME: make this name configurable.  In practice it may not be
-	     * useful -- there are few fonts which meet all the requirements.
-	     */
 	    if ((pat = XftNameParse(fontname))) {
 		XftPatternBuild(pat,
 		/* arbitrary value */
@@ -1876,8 +1880,8 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context,
      * - resuse the font where possible
      */
 #ifdef XRENDERFONT
-    Display *display = XtDisplay(context->graphic->xw);
-    Screen *screen = XtScreen(context->graphic->xw);
+    Display *display = XtDisplay(context->destination_graphic->xw);
+    Screen *screen = XtScreen(context->destination_graphic->xw);
     XftFont *font;
     unsigned xmin = 0U, ymin = 0U;
 
@@ -2530,6 +2534,17 @@ pop_fragment(RegisDataFragment *fragment)
     return '\0';
 }
 
+static char
+get_fragment(RegisDataFragment const *fragment, unsigned pos)
+{
+    assert(fragment);
+
+    if (fragment->pos + pos < fragment->len) {
+	return fragment->start[fragment->pos + pos];
+    }
+    return '\0';
+}
+
 static size_t
 fragment_len(RegisDataFragment const *fragment)
 {
@@ -3021,7 +3036,8 @@ load_regis_colorspec(RegisGraphicsContext const *context,
     TRACE(("colorspec option: \"%s\"\n", fragment_to_tempstr(&colorspec)));
 
     skip_regis_whitespace(&colorspec);
-    if (fragment_len(&colorspec) == 1) {
+    if (fragment_len(&colorspec) == 1 ||
+	(fragment_len(&colorspec) > 1 && get_fragment(&colorspec, 1) == ' ')) {		/* FIXME: other whitespace */
 	char ch = pop_fragment(&colorspec);
 
 	TRACE(("got ReGIS RGB colorspec pattern '%c' with arguments: \"%s\"\n",
@@ -3208,10 +3224,10 @@ load_regis_colorspec(RegisGraphicsContext const *context,
     *g_out = g;
     *b_out = b;
 
+    skip_regis_whitespace(&colorspec);
     if (colorspec.pos < colorspec.len) {
 	char skip;
 
-	skip_regis_whitespace(&colorspec);
 	skip = pop_fragment(&colorspec);
 	(void) skip;		/* variable needed only if tracing */
 	TRACE(("DATA_ERROR: ignoring unexpected character in ReGIS colorspec \"%c\"\n",
@@ -3248,20 +3264,20 @@ load_regis_regnum_or_colorspec(RegisGraphicsContext const *context,
 	    TRACE(("DATA_ERROR: ignoring negative colorspec value: %d\n", val));
 	    return 0;
 	}
-	if (val >= (int) context->graphic->valid_registers) {
+	if (val >= (int) context->destination_graphic->valid_registers) {
 	    /* FIXME: error, truncate, wrap, ...? */
 	    TRACE(("DATA_ERROR: colorspec value %d is too big; wrapping\n",
 		   val));
-	    val %= (int) context->graphic->valid_registers;
+	    val %= (int) context->destination_graphic->valid_registers;
 	}
 
 	TRACE(("colorspec contains index for register %u\n", val));
 	*out = (RegisterNum) val;
 
+	skip_regis_whitespace(&colorspec);
 	if (colorspec.pos < colorspec.len) {
 	    char skip;
 
-	    skip_regis_whitespace(&colorspec);
 	    skip = pop_fragment(&colorspec);
 	    (void) skip;	/* variable needed only if tracing */
 	    TRACE(("DATA_ERROR: unexpected character after register \"%c\"\n",
@@ -3280,7 +3296,8 @@ load_regis_regnum_or_colorspec(RegisGraphicsContext const *context,
 	    return 0;
 	}
 
-	*out = find_color_register(context->graphic->color_registers, r, g, b);
+	*out = find_color_register(context->destination_graphic->color_registers,
+				   r, g, b);
 	TRACE(("colorspec maps to closest register %u\n", *out));
 
 	return 1;
@@ -3315,7 +3332,7 @@ to_scaled_int(char const *num, int scale, int *value)
 	    }
 	}
 	frac = strtoul(temp, NULL, 10);
-    } else if (end[0] == '\0' || end[0] == ',') {
+    } else if (end[0] == '\0' || end[0] == ',' || end[0] == ' ') {	/* FIXME: other whitespace */
 	frac = 0;
     } else {
 	TRACE(("unexpected character %c in number %s\n", end[0], num));
@@ -3342,6 +3359,11 @@ load_regis_raw_extent(char const *extent, int *relx, int *rely,
     } else {
 	ypart = "";
     }
+
+    while (xpart[0] == ' ')
+	xpart++;		/* FIXME: other whitespace */
+    while (ypart[0] == ' ')
+	ypart++;		/* FIXME: other whitespace */
 
     if (xpart[0] == '-') {
 	xsign = -1;
@@ -3547,7 +3569,7 @@ load_regis_write_control(RegisParseState *state,
 	{
 	    int val;
 	    if (!regis_num_to_int(arg, &val) ||
-		val < 0 || val >= (int) context->graphic->valid_registers) {
+		val < 0 || val >= (int) context->destination_graphic->valid_registers) {
 		TRACE(("interpreting out of range value as 0 FIXME\n"));
 		out->plane_mask = 0U;
 	    } else {
@@ -3664,8 +3686,8 @@ load_regis_write_control(RegisParseState *state,
 					    out->pattern_multiplier =
 						(unsigned) val;
 					}
+					skip_regis_whitespace(&suboptionarg);
 				    }
-				    skip_regis_whitespace(&suboptionarg);
 
 				    if (fragment_len(&suboptionarg)) {
 					TRACE(("DATA_ERROR: unknown content after pattern multiplier \"%s\"\n",
@@ -4003,15 +4025,18 @@ init_regis_write_controls(int terminal_id, unsigned all_planes,
     controls->plane_mask = all_planes;
     controls->write_style = WRITE_STYLE_OVERLAY;
     switch (terminal_id) {
-    case 125:			/* FIXME */
-    case 240:			/* FIXME */
-    case 241:			/* FIXME */
+    case 125:			/* FIXME: verify */
+    case 240:			/* FIXME: verify */
+    case 241:			/* FIXME: verify */
     case 330:
 	controls->foreground = 3U;
 	break;
     case 340:
     default:
 	controls->foreground = 7U;
+	break;
+    case 382:
+	controls->foreground = 1U;	/* FIXME: verify */
 	break;
     }
     controls->shading_enabled = 0U;
@@ -4020,6 +4045,65 @@ init_regis_write_controls(int terminal_id, unsigned all_planes,
     controls->shading_reference_dim = WRITE_SHADING_REF_Y;
     controls->line_width = 1U;
     /* FIXME: add the rest */
+}
+
+static void
+map_regis_graphics_pages(XtermWidget xw, RegisGraphicsContext *context)
+{
+    const int charrow = 0;
+    const int charcol = 0;
+    unsigned old_display_id = ~0U;
+
+    if (context->destination_graphic)
+	context->destination_graphic->hidden = 1;
+    if (context->display_graphic) {
+	context->display_graphic->hidden = 1;
+	old_display_id = context->display_graphic->id;
+    }
+
+    context->destination_graphic = get_new_or_matching_graphic(xw,
+							       charrow, charcol,
+							       context->width,
+							       context->height,
+							       context->destination_page);
+    if (context->destination_graphic) {
+	context->destination_graphic->hidden = 1;
+	context->destination_graphic->valid = 1;
+    }
+
+    context->display_graphic = get_new_or_matching_graphic(xw,
+							   charrow, charcol,
+							   context->width,
+							   context->height,
+							   context->display_page);
+    if (context->display_graphic) {
+	context->display_graphic->hidden = 0;
+	if (old_display_id != context->display_graphic->id) {
+	    if (!context->display_graphic->valid) {
+		draw_solid_rectangle(context->display_graphic, 0, 0,
+				     context->width, context->height,
+				     context->background);
+	    }
+	    context->display_graphic->dirty = 1;
+	    context->force_refresh = 1;
+	    /* FIXME: This isn't really enough.  If there are holes in the new
+	     * graphic they should be cleared and set to the text from the same
+	     * page.  But we don't have pages for text in xterm (the alt buffer
+	     * is similar though).
+	     */
+	}
+	context->display_graphic->valid = 1;
+    }
+
+    printf("using graphics destination=[%d -> %u] display=[%d -> %u]\n",
+	   context->destination_page,
+	   (context->destination_graphic
+	    ? context->destination_graphic->id
+	    : 0U),
+	   context->display_page,
+	   (context->display_graphic
+	    ? context->display_graphic->id
+	    : 0U));
 }
 
 static void
@@ -4096,14 +4180,20 @@ init_regis_graphics_context(int terminal_id, int width, int height,
 			    unsigned max_colors, const char *builtin_font,
 			    RegisGraphicsContext *context)
 {
-    context->graphic = NULL;
+    context->destination_graphic = NULL;
+    context->display_graphic = NULL;
+    context->display_page = 0U;
+    context->destination_page = 0U;
     context->terminal_id = terminal_id;
+
+    /* reset addressing / clear user coordinates */
     context->width = width;
     context->height = height;
     context->x_off = 0;
     context->y_off = 0;
     context->x_div = width - 1;
     context->y_div = height - 1;
+
     /*
      * Generate a mask covering all valid color register address bits
      * (but don't bother past 2**16).
@@ -4136,6 +4226,8 @@ init_regis_graphics_context(int terminal_id, int width, int height,
     context->graphics_output_cursor_x = 0;
     context->graphics_output_cursor_y = 0;
     /* FIXME: output cursor style */
+
+    context->force_refresh = 0;
 }
 
 static int
@@ -4429,6 +4521,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    state->arclen -= 360;
 		TRACE(("using final arc length %d\n", state->arclen));
 
+		skip_regis_whitespace(&optionarg);
 		if (fragment_len(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in arc length option \"%s\"\n",
 			   fragment_to_tempstr(&optionarg)));
@@ -4749,8 +4842,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    int w, h;
 		    unsigned size;
 
-		    TRACE(("glyph size: %s\n",
-			   fragment_to_tempstr(&sizearg)));
+		    TRACE(("glyph size: %s\n", fragment_to_tempstr(&sizearg)));
 		    /* FIXME: verify this is in pixels, not user coordinates */
 		    if (!load_regis_pixel_extent(fragment_to_tempstr(&sizearg),
 						 0, 0,
@@ -4844,9 +4936,33 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    break;
 	case 'P':
 	case 'p':
-	    TRACE(("found graphics page \"%s\" FIXME\n",
+	    TRACE(("found graphics page destination option \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
+	    {
+		RegisDataFragment pagearg;
+		int page;
+
+		if (!extract_regis_num(&optionarg, &pagearg)) {
+		    TRACE(("DATA_ERROR: expected int in page destination option: \"%s\"\n",
+			   fragment_to_tempstr(&optionarg)));
+		    break;
+		}
+		TRACE(("page option arg: %s\n", fragment_to_tempstr(&pagearg)));
+		if (!regis_num_to_int(&pagearg, &page)) {
+		    TRACE(("DATA_ERROR: unable to parse int in page destination option: \"%s\"\n",
+			   fragment_to_tempstr(&pagearg)));
+		    break;
+		}
+		if (page < 0 || (unsigned) page >= MAX_REGIS_PAGES) {
+		    TRACE(("DATA_ERROR: invalid page: \"%d\"\n", page));
+		    break;
+		}
+
+		TRACE(("using destination page number: %d\n", page));
+		context->destination_page = (unsigned) page;
+		map_regis_graphics_pages(context->destination_graphic->xw,
+					 context);
+	    }
 	    break;
 	case 'S':
 	case 's':
@@ -4906,8 +5022,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		/* FIXME: verify no CSI */
 		/* FIXME: implement after adding error tracking */
 		sprintf(reply, "\"%u, %u\"\r", 0U, 0U);
-		unparseputs(context->graphic->xw, reply);
-		unparse_end(context->graphic->xw);
+		unparseputs(context->display_graphic->xw, reply);
+		unparse_end(context->display_graphic->xw);
 	    }
 	    break;
 	case 'I':
@@ -4936,7 +5052,10 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    break;
 		}
 
-		TRACE(("using input mode: %d\n", mode));
+		TRACE(("using input mode: %d (%s)\n", mode,
+		       (mode == 0)
+		       ? "one-shot"
+		       : "multiple"));
 		context->multi_input_mode = mode;
 		if (context->multi_input_mode) {
 		    TRACE(("ERROR: multi-mode input not implemented FIXME\n"));
@@ -4945,8 +5064,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    /* disable input cursor, don't track mouse clicks */
 		}
 
-		unparseputs(context->graphic->xw, "\r");
-		unparse_end(context->graphic->xw);
+		unparseputs(context->display_graphic->xw, "\r");
+		unparse_end(context->display_graphic->xw);
 
 		skip_regis_whitespace(&optionarg);
 		if (fragment_len(&optionarg) > 0U) {
@@ -4966,15 +5085,18 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    }
 	    if (state->load_index == MAX_REGIS_ALPHABETS) {
 		TRACE(("DATA_ERROR: unable to report alphabet name because no alphabet is loading\n"));
+		/* FIXME: how should errors be handled? */
+		unparseputs(context->display_graphic->xw, "\033A''\r");
+		unparse_end(context->display_graphic->xw);
 		break;
 	    }
 
 	    /* FIXME: also send CSI here? */
-	    unparseputs(context->graphic->xw, "\033A'");
-	    unparseputs(context->graphic->xw,
+	    unparseputs(context->display_graphic->xw, "\033A'");
+	    unparseputs(context->display_graphic->xw,
 			context->alphabets[state->load_index].name);
-	    unparseputs(context->graphic->xw, "'\r");
-	    unparse_end(context->graphic->xw);
+	    unparseputs(context->display_graphic->xw, "'\r");
+	    unparse_end(context->display_graphic->xw);
 	    break;
 	case 'M':
 	case 'm':
@@ -5017,16 +5139,16 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		    TRACE(("got report macrograph storage\n"));
 		    /* FIXME: verify no CSI */
-		    /* FIXME: implement after adding macros */
+		    /* FIXME: implement when macrographs are supported */
 		    sprintf(reply, "\"%u, %u\"\r", 1000U, 1000U);
-		    unparseputs(context->graphic->xw, reply);
-		    unparse_end(context->graphic->xw);
+		    unparseputs(context->display_graphic->xw, reply);
+		    unparse_end(context->display_graphic->xw);
 		} else {
 		    TRACE(("got report macrograph name '%c'\n", name));
-		    /* FIXME: implement when macrographs are supported (and allow it to be disabled) */
+		    /* FIXME: implement when macrographs are supported (and allow it to be disabled for security reasons) */
 		    /* FIXME: also send CSI here? */
-		    unparseputs(context->graphic->xw, "@;\r");
-		    unparse_end(context->graphic->xw);
+		    unparseputs(context->display_graphic->xw, "@;\r");
+		    unparse_end(context->display_graphic->xw);
 		}
 	    }
 	    break;
@@ -5070,18 +5192,20 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    break;
 		}
 
-		TRACE(("got report cursor position output=%d\n", output));
+		TRACE(("got report cursor position (output=%d)\n", output));
 
+		/* FIXME: look into supporting ANSI locator reports (DECLRP) */
 		if (output == 1) {
 		    char reply[64];
 
 		    /* FIXME: verify no leading char or button sequence */
-		    /* FIXME: should we ever send and eight-bit CSI? */
+		    /* FIXME: should we ever send an eight-bit CSI? */
+		    /* FIXME: verify in absolute, not user, coordinates */
 		    sprintf(reply, "\033[[%d,%d]\r",
 			    context->graphics_output_cursor_x,
 			    context->graphics_output_cursor_y);
-		    unparseputs(context->graphic->xw, reply);
-		    unparse_end(context->graphic->xw);
+		    unparseputs(context->display_graphic->xw, reply);
+		    unparse_end(context->display_graphic->xw);
 		} else {
 		    if (context->multi_input_mode) {
 			/* send CSI240~[x,y]\r with current input cursor location */
@@ -5177,8 +5301,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    height *= scale;
 
 		    scale = 1;
-		    while (width / scale > context->graphic->max_width ||
-			   height / scale > context->graphic->max_height) {
+		    while (width / scale > context->destination_graphic->max_width
+			   || height / scale > context->destination_graphic->max_height) {
 			scale++;
 		    }
 		    width /= scale;
@@ -5193,8 +5317,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    context->y_div = lry - uly;
 		    context->width = width;
 		    context->height = height;
-		    context->graphic->actual_width = width;
-		    context->graphic->actual_height = height;
+		    context->destination_graphic->actual_width = width;
+		    context->destination_graphic->actual_height = height;
+		    /*
+		     * FIXME: should we attempt to resize existing contents because we are actually
+		     * changing the output size but terminals just changed coordinates?
+		     */
 
 		    TRACE(("conversion factors: off=%+d,%+d div=%+d,%+d width=%d, height=%d\n",
 			   context->x_off, context->y_off,
@@ -5242,6 +5370,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found hardcopy control \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
 	    /* FIXME: handle */
+	    /* screen S(H), area to (input?/output?) cursor S(H[X,Y]), or area S(H[X,Y][X,Y]) */
 	    if (!fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen hardcopy control option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
@@ -5282,7 +5411,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			    return 1;
 			}
 			if (register_num < 0 ||
-			    register_num > (int) context->graphic->valid_registers) {
+			    register_num > (int) context->destination_graphic->valid_registers) {
 			    TRACE(("interpreting out of range register number %d as 0 FIXME\n",
 				   register_num));
 			    register_num = 0;
@@ -5324,7 +5453,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			} else {
 			    TRACE(("setting color register %d to %hd,%hd,%hd\n",
 				   register_num, r, g, b));
-			    update_color_register(context->graphic,
+			    update_color_register(context->destination_graphic,
 						  (RegisterNum) register_num,
 						  r, g, b);
 			}
@@ -5344,20 +5473,38 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    break;
 	case 'P':
 	case 'p':
-	    TRACE(("found graphics page display request \"%s\" FIXME\n",
+	    TRACE(("found graphics page display option \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
-	    if (!fragment_len(&optionarg)) {
-		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen graphics page display option value \"%s\"\n",
-		       fragment_to_tempstr(&optionarg)));
-		return 1;
+	    {
+		RegisDataFragment pagearg;
+		int page;
+
+		if (!extract_regis_num(&optionarg, &pagearg)) {
+		    TRACE(("DATA_ERROR: expected int in page display option: \"%s\"\n",
+			   fragment_to_tempstr(&optionarg)));
+		    break;
+		}
+		TRACE(("page option arg: %s\n", fragment_to_tempstr(&pagearg)));
+		if (!regis_num_to_int(&pagearg, &page)) {
+		    TRACE(("DATA_ERROR: unable to parse int in page display option: \"%s\"\n",
+			   fragment_to_tempstr(&pagearg)));
+		    break;
+		}
+		if (page < 0 || (unsigned) page >= MAX_REGIS_PAGES) {
+		    TRACE(("DATA_ERROR: invalid page: \"%d\"\n", page));
+		    break;
+		}
+
+		TRACE(("using display page number: %d\n", page));
+		context->display_page = (unsigned) page;
+		map_regis_graphics_pages(context->display_graphic->xw, context);
 	    }
 	    break;
 	case 'T':
 	case 't':
 	    TRACE(("found time delay \"%s\" FIXME\n",
 		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
+	    /* FIXME: handle (maybe -- might not be worth it, plus it is an easy DoS vector) */
 	    if (!fragment_len(&optionarg)) {
 		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen time delay option value \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
@@ -5366,12 +5513,17 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    break;
 	case 'W':
 	case 'w':
-	    TRACE(("found PV \"%s\" FIXME\n", fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
-	    if (!fragment_len(&optionarg)) {
-		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen PV option value \"%s\"\n",
+	    /* Only M (pixel vector multiplier) is useful -- for the scrolling multiplier. */
+	    TRACE(("found temporary write options \"%s\"\n",
+		   fragment_to_tempstr(&optionarg)));
+	    if (!load_regis_write_control_set(state, context,
+					      context->graphics_output_cursor_x,
+					      context->graphics_output_cursor_y,
+					      &optionarg,
+					      &context->temporary_write_controls)) {
+		TRACE(("DATA_ERROR: invalid temporary write options \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
-		return 1;
+		break;
 	    }
 	    break;
 	default:
@@ -5417,6 +5569,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		TRACE(("using alphabet number: %d\n", alphabet));
 		context->current_text_controls->alphabet_num = (unsigned) alphabet;
 
+		skip_regis_whitespace(&optionarg);
 		if (fragment_len(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text alphabet option \"%s\"\n",
 			   fragment_to_tempstr(&alphabetarg)));
@@ -5484,6 +5637,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    state->string_rot_set = 1;
 		}
 
+		skip_regis_whitespace(&optionarg);
 		if (fragment_len(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text tilt option \"%s\"\n",
 			   fragment_to_tempstr(&rotationarg)));
@@ -5532,6 +5686,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		context->current_text_controls->character_display_h = height;
 		context->current_text_controls->character_unit_cell_h = height;
 
+		skip_regis_whitespace(&optionarg);
 		if (fragment_len(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text multiplier option \"%s\"\n",
 			   fragment_to_tempstr(&multiarg)));
@@ -5584,6 +5739,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		TRACE(("using italic angle: %d\n", italic));
 		context->current_text_controls->slant = italic;
 
+		skip_regis_whitespace(&optionarg);
 		if (fragment_len(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text italic option \"%s\"\n",
 			   fragment_to_tempstr(&italicarg)));
@@ -5639,6 +5795,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		context->current_text_controls->character_unit_cell_h =
 		    (unsigned) hh *20U;
 
+		skip_regis_whitespace(&optionarg);
 		if (fragment_len(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text unit cell size option \"%s\"\n",
 			   fragment_to_tempstr(&sizemultiplierarg)));
@@ -5653,6 +5810,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    for (;;) {
 		RegisDataFragment displaysizearg;
 
+		skip_regis_whitespace(&optionarg);
 		if (extract_regis_extent(&optionarg, &displaysizearg)) {
 		    int disp_w, disp_h;
 
@@ -5784,6 +5942,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		context->current_text_controls->character_unit_cell_h =
 		    (unsigned) unit_h;
 
+		skip_regis_whitespace(&optionarg);
 		if (fragment_len(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text unit cell size option \"%s\"\n",
 			   fragment_to_tempstr(&unitsizearg)));
@@ -6061,7 +6220,6 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    }
 	    break;
 	case 'p':
-	    /* FIXME TRACE(("DATA_ERROR: ignoring pen command with no location\n")); */
 	    if (!load_regis_coord_extent(context,
 					 fragment_to_tempstr(&item),
 					 context->graphics_output_cursor_x,
@@ -6093,7 +6251,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		new_x -= context->x_off;
 		new_y -= context->y_off;
 		TRACE(("scrolling image to buffer location %d,%d\n", new_x, new_y));
-		/* FIXME: does any write mode affect background? */
+		/* FIXME: does any write mode affect revealed background? */
 		if (new_y < 0)
 		    copy_h = context->height - new_y;
 		else
@@ -6102,7 +6260,9 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		    copy_w = context->width - new_x;
 		else
 		    copy_w = context->width;
-		copy_overlapping_area(context->graphic, 0, 0, new_x, new_y,
+		/* FIXME: verify this applies to output page, not display page */
+		copy_overlapping_area(context->destination_graphic, 0, 0,
+				      new_x, new_y,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
 	    }
@@ -6160,7 +6320,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    /* FIXME: parse, handle */
 	    TRACE(("pixelvector in curve command FIXME\n"));
 	    break;
-	    /* FIXME: not sure if 'f' supports pvs */
+	    /* FIXME: not sure if 'f' supports PVs */
 	case 'p':
 	    /* FIXME: error checking */
 	    if (!load_regis_pixelvector(fragment_to_tempstr(&item),
@@ -6194,7 +6354,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		new_x -= context->x_off;
 		new_y -= context->y_off;
 		TRACE(("scrolling image to buffer location %d,%d\n", new_x, new_y));
-		/* FIXME: does any write mode affect background? */
+		/* FIXME: does any write mode affect revealed background? */
 		if (new_y < 0)
 		    copy_h = context->height - new_y;
 		else
@@ -6203,7 +6363,9 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		    copy_w = context->width - new_x;
 		else
 		    copy_w = context->width;
-		copy_overlapping_area(context->graphic, 0, 0, new_x, new_y,
+		/* FIXME: verify this applies to write page, not display page */
+		copy_overlapping_area(context->destination_graphic, 0, 0,
+				      new_x, new_y,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
 	    }
@@ -6275,7 +6437,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    draw_text(context, state->temp);
 	    break;
 	default:
-	    TRACE(("DATA_ERROR: unexpected string in \"%c\" command: \"%s\"\n",
+	    TRACE(("DATA_ERROR: unexpected string argument to \"%c\" command: \"%s\"\n",
 		   state->command, state->temp));
 	    break;
 	}
@@ -6415,7 +6577,7 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
     if (state->command != 'l' || !IS_HEX_DIGIT(ch)) {
 	TRACE(("checking for top level command...\n"));
 	if (parse_regis_command(state)) {
-	    context->graphic->dirty = 1;
+	    context->destination_graphic->dirty = 1;
 
 	    /* FIXME: verify that these are the things reset on a new command */
 	    TRACE(("resetting temporary write controls and pattern state\n"));
@@ -6524,18 +6686,24 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
     return 0;
 }
 
+static void
+init_regis_parse_state(RegisParseState *state)
+{
+    state->command = '_';
+    state->option = '_';
+    state->stack_next = 0U;
+    state->load_index = MAX_REGIS_ALPHABETS;
+}
+
 void
 parse_regis(XtermWidget xw, ANSI *params, char const *string)
 {
     TScreen *screen = TScreenOf(xw);
     RegisGraphicsContext *const context = &persistent_context;
-    RegisParseState state;
+    RegisParseState *const state = &persistent_state;
     struct timeval prev_tv;
     struct timeval curr_tv;
     unsigned iterations;
-    int charrow = 0;
-    int charcol = 0;
-    unsigned type = 1;		/* FIXME: use page number */
     int Pmode;
 
     if (params->a_nparam > 0)
@@ -6546,17 +6714,13 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     TRACE(("ReGIS vector graphics mode, param_count=%d mode=%d\n",
 	   params->a_nparam, Pmode));
 
-    init_fragment(&state.input, string);
-    state.templen = (unsigned) strlen(string) + 1U;
-    if (!(state.temp = malloc((size_t) state.templen))) {
+    init_fragment(&state->input, string);
+    state->templen = (unsigned) strlen(string) + 1U;
+    if (!(state->temp = malloc((size_t) state->templen))) {
 	TRACE(("Unable to allocate temporary buffer of size %u\n",
-	       state.templen));
+	       state->templen));
 	return;
     }
-    state.command = '_';
-    state.option = '_';
-    state.stack_next = 0U;
-    state.load_index = MAX_REGIS_ALPHABETS;
 
     /* Update the screen scrolling and do a refresh.
      * The refresh may not cover the whole graphic.
@@ -6567,6 +6731,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     /* Only reset on the first ReGIS image unless it is being requested. */
     if (context->width == 0 || context->height == 0 ||
 	Pmode == 1 || Pmode == 3) {
+	init_regis_parse_state(state);
 	init_regis_graphics_context(screen->terminal_id,
 				    screen->graphics_regis_def_wide,
 				    screen->graphics_regis_def_high,
@@ -6575,28 +6740,24 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 				    context);
     }
 
-    context->graphic = get_new_or_matching_graphic(xw,
-						   charrow, charcol,
-						   context->width,
-						   context->height,
-						   type);
-    context->graphic->valid = 1;
-    context->graphic->dirty = 1;
+    map_regis_graphics_pages(xw, context);
 
     X_GETTIMEOFDAY(&prev_tv);
     iterations = 0U;
     refresh_modified_displayed_graphics(xw);
 
     for (;;) {
-	if (skip_regis_whitespace(&state.input))
+	if (skip_regis_whitespace(&state->input))
 	    continue;
 	iterations++;
-	if (parse_regis_toplevel(&state, context)) {
+	if (parse_regis_toplevel(state, context)) {
 	    if (iterations > MIN_ITERATIONS_BEFORE_REFRESH) {
 		int need_refresh = 0;
 
 		X_GETTIMEOFDAY(&curr_tv);
-		if (curr_tv.tv_sec > prev_tv.tv_sec + 1U) {
+		if (context->force_refresh) {
+		    need_refresh = 1;
+		} else if (curr_tv.tv_sec > prev_tv.tv_sec + 1U) {
 		    need_refresh = 1;
 		} else {
 #define DiffTime(tv) (tv.tv_sec * 1000L + tv.tv_usec / 1000L)
@@ -6625,11 +6786,11 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	    continue;
 	}
 
-	if (state.input.pos >= state.input.len)
+	if (state->input.pos >= state->input.len)
 	    break;
     }
 
-    free(state.temp);
+    free(state->temp);
 
     refresh_modified_displayed_graphics(xw);
     TRACE(("DONE! Successfully parsed ReGIS data.\n"));
