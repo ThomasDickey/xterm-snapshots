@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.69 2015/04/23 01:03:24 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.70 2015/05/11 18:44:43 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -105,7 +105,7 @@
 #define ENABLE_VARIABLE_ITALICS
 
 #define MIN_ITERATIONS_BEFORE_REFRESH 20U
-#define MIN_MS_BEFORE_REFRESH 30
+#define MIN_MS_BEFORE_REFRESH 33
 /* *INDENT-OFF* */
 typedef struct RegisPoint {
     int  x, y;
@@ -607,6 +607,8 @@ draw_filled_polygon(RegisGraphicsContext *context)
 	old_x = new_x;
 	old_y = new_y;
     }
+
+    context->destination_graphic->dirty = 1;
 }
 
 static void
@@ -667,6 +669,8 @@ draw_patterned_line(RegisGraphicsContext *context, int x1, int y1,
 	    draw_or_save_patterned_pixel(context, x, y);
 	}
     }
+
+    context->destination_graphic->dirty = 1;
 }
 
 typedef struct {
@@ -793,6 +797,8 @@ draw_patterned_arc(RegisGraphicsContext *context,
 	}
 	while (rx <= 0);
     }
+
+    context->destination_graphic->dirty = 1;
 }
 
 /*
@@ -2365,6 +2371,7 @@ draw_text(RegisGraphicsContext *context, char const *str)
     context->graphics_output_cursor_x = begin_x + ox;
     context->graphics_output_cursor_y = begin_y + oy;
 
+    context->destination_graphic->dirty = 1;
     return;
 }
 
@@ -2744,7 +2751,7 @@ extract_regis_command(RegisDataFragment *input, char *command)
     if (ch == '\0' || ch == ';') {
 	return 0;
     }
-    if (!islower(CharOf(ch)) && !isupper(CharOf(ch))) {
+    if (!islower(CharOf(ch)) && !isupper(CharOf(ch)) && ch != '@') {
 	return 0;
     }
     *command = ch;
@@ -2961,20 +2968,22 @@ extract_regis_option(RegisDataFragment *input,
 		return 0;
 	    }
 	}
-	/*
-	 * Top-level commas indicate the end of this option and the start of
-	 * another.
-	 */
-	if (paren_level == 0 && bracket_level == 0 && ch == ',')
-	    break;
-	/*
-	 * Top-level command/option/suboption names also indicate the end of
-	 * this option.  "E" is valid as the exponent indicator in a numeric
-	 * parameter.
-	 */
-	if (paren_level == 0 && bracket_level == 0 && ch != 'E' && ch != 'e' &&
-	    ((ch > 'A' && ch < 'Z') || (ch > 'a' && ch < 'z')))
-	    break;
+	if (paren_level == 0 && bracket_level == 0) {
+	    /*
+	     * Top-level commas indicate the end of this option and the start of
+	     * another.
+	     */
+	    if (ch == ',')
+		break;
+	    /*
+	     * Top-level command/option/suboption names also indicate the end of
+	     * this option.  "E" is valid as the exponent indicator in a numeric
+	     * parameter.
+	     */
+	    if (ch != 'E' && ch != 'e' &&
+		((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')))
+		break;
+	}
 	if (ch == ';')
 	    break;
     }
@@ -3031,13 +3040,21 @@ load_regis_colorspec(RegisGraphicsContext const *context,
     RegisDataFragment colorspec;
     short r = -1, g = -1, b = -1;
     short h = -1, l = -1, s = -1;
+    int simple;
 
     copy_fragment(&colorspec, input);
     TRACE(("colorspec option: \"%s\"\n", fragment_to_tempstr(&colorspec)));
 
     skip_regis_whitespace(&colorspec);
-    if (fragment_len(&colorspec) == 1 ||
-	(fragment_len(&colorspec) > 1 && get_fragment(&colorspec, 1) == ' ')) {		/* FIXME: other whitespace */
+    simple = 0;
+    if (fragment_len(&colorspec) == 1) {
+	simple = 1;
+    } else if (fragment_len(&colorspec) > 1) {
+	char after = get_fragment(&colorspec, 1);
+	if (IsSpace(after))
+	    simple = 1;
+    }
+    if (simple) {
 	char ch = pop_fragment(&colorspec);
 
 	TRACE(("got ReGIS RGB colorspec pattern '%c' with arguments: \"%s\"\n",
@@ -3332,7 +3349,7 @@ to_scaled_int(char const *num, int scale, int *value)
 	    }
 	}
 	frac = strtoul(temp, NULL, 10);
-    } else if (end[0] == '\0' || end[0] == ',' || end[0] == ' ') {	/* FIXME: other whitespace */
+    } else if (end[0] == '\0' || end[0] == ',' || IsSpace(end[0])) {
 	frac = 0;
     } else {
 	TRACE(("unexpected character %c in number %s\n", end[0], num));
@@ -3360,10 +3377,10 @@ load_regis_raw_extent(char const *extent, int *relx, int *rely,
 	ypart = "";
     }
 
-    while (xpart[0] == ' ')
-	xpart++;		/* FIXME: other whitespace */
-    while (ypart[0] == ' ')
-	ypart++;		/* FIXME: other whitespace */
+    while (IsSpace(xpart[0]))
+	xpart++;
+    while (IsSpace(ypart[0]))
+	ypart++;
 
     if (xpart[0] == '-') {
 	xsign = -1;
@@ -4095,7 +4112,7 @@ map_regis_graphics_pages(XtermWidget xw, RegisGraphicsContext *context)
 	context->display_graphic->valid = 1;
     }
 
-    printf("using graphics destination=[%d -> %u] display=[%d -> %u]\n",
+    TRACE(("using graphics destination=[%d -> %u] display=[%d -> %u]\n",
 	   context->destination_page,
 	   (context->destination_graphic
 	    ? context->destination_graphic->id
@@ -4103,7 +4120,7 @@ map_regis_graphics_pages(XtermWidget xw, RegisGraphicsContext *context)
 	   context->display_page,
 	   (context->display_graphic
 	    ? context->display_graphic->id
-	    : 0U));
+	    : 0U)));
 }
 
 static void
@@ -4448,8 +4465,29 @@ parse_regis_command(RegisParseState *state)
 	    /* FIXME: handle */
 	    break;
 	case ':':
-	    TRACE(("defining macrograph FIXME\n"));
-	    /* FIXME: parse, handle  :<name> */
+	    TRACE(("defining macrograph\n"));
+	    /* FIXME: what about whitespace before the name? */
+	    if (fragment_len(&state->input) < 1) {
+		TRACE(("DATA_ERROR: macrograph definition without name, ignoring\n"));
+		return 0;
+	    } {
+		char name;
+
+		name = pop_fragment(&state->input);
+		TRACE(("defining macrgraph for \"%c\"\n", name));
+		for (;;) {
+		    char next = peek_fragment(&state->input);
+		    if (next == ';') {
+			/* FIXME: parse, handle  :<name><definition>; */
+			pop_fragment(&state->input);
+			break;
+		    } else if (next == '\0') {
+			TRACE(("DATA_ERROR: macrograph definition ends before semicolon\n"));
+			break;
+		    }
+		    pop_fragment(&state->input);
+		}
+	    }
 	    break;
 	case ';':
 	    TRACE(("DATA_ERROR: found extraneous terminator for macrograph definition\n"));
@@ -4465,6 +4503,7 @@ parse_regis_command(RegisParseState *state)
 	    /* FIXME: parse, handle */
 	    break;
 	}
+	state->command = '@';
 	break;
     default:
 	TRACE(("DATA_ERROR: unknown ReGIS command %04x (%c), setting to '_'\n",
@@ -5286,8 +5325,14 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		} {
 		    const int cw = abs(ulx - lrx) + 1;
 		    const int ch = abs(uly - lry) + 1;
-		    int scale;
 		    int width, height;
+
+		    /*
+		     * FIXME: should we attempt to resize existing contents because we are actually
+		     * changing the output size but terminals just changed coordinates?
+		     */
+#if 1
+		    int scale;
 
 		    width = cw;
 		    height = ch;
@@ -5307,6 +5352,10 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    }
 		    width /= scale;
 		    height /= scale;
+#else
+		    width = context->width;
+		    height = context->height;
+#endif
 
 		    TRACE(("custom screen address: ul=%d,%d lr=%d,%d\n",
 			   ulx, uly, lrx, lry));
@@ -5319,10 +5368,6 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    context->height = height;
 		    context->destination_graphic->actual_width = width;
 		    context->destination_graphic->actual_height = height;
-		    /*
-		     * FIXME: should we attempt to resize existing contents because we are actually
-		     * changing the output size but terminals just changed coordinates?
-		     */
 
 		    TRACE(("conversion factors: off=%+d,%+d div=%+d,%+d width=%d, height=%d\n",
 			   context->x_off, context->y_off,
@@ -5500,6 +5545,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		map_regis_graphics_pages(context->display_graphic->xw, context);
 	    }
 	    break;
+
 	case 'T':
 	case 't':
 	    TRACE(("found time delay \"%s\" FIXME\n",
@@ -6577,8 +6623,6 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
     if (state->command != 'l' || !IS_HEX_DIGIT(ch)) {
 	TRACE(("checking for top level command...\n"));
 	if (parse_regis_command(state)) {
-	    context->destination_graphic->dirty = 1;
-
 	    /* FIXME: verify that these are the things reset on a new command */
 	    TRACE(("resetting temporary write controls and pattern state\n"));
 	    copy_regis_write_controls(&context->persistent_write_controls,
@@ -6749,40 +6793,48 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     for (;;) {
 	if (skip_regis_whitespace(&state->input))
 	    continue;
-	iterations++;
 	if (parse_regis_toplevel(state, context)) {
-	    if (iterations > MIN_ITERATIONS_BEFORE_REFRESH) {
-		int need_refresh = 0;
+	    int need_refresh = 0;
 
+	    /* FIXME: move refresh logic out so that long sequences of filled
+	     * drawing commands can be refreshed before the end
+	     */
+	    iterations++;
+	    if (context->force_refresh) {
 		X_GETTIMEOFDAY(&curr_tv);
-		if (context->force_refresh) {
-		    need_refresh = 1;
-		} else if (curr_tv.tv_sec > prev_tv.tv_sec + 1U) {
+		need_refresh = 1;
+	    } else if (iterations > MIN_ITERATIONS_BEFORE_REFRESH) {
+		X_GETTIMEOFDAY(&curr_tv);
+		if (curr_tv.tv_sec > prev_tv.tv_sec + 1U) {
 		    need_refresh = 1;
 		} else {
-#define DiffTime(tv) (tv.tv_sec * 1000L + tv.tv_usec / 1000L)
+#define DiffTime(TV) (TV.tv_sec * 1000L + TV.tv_usec / 1000L)
 		    long diff = (long) (DiffTime(curr_tv) - DiffTime(prev_tv));
 		    if (diff > MIN_MS_BEFORE_REFRESH) {
 			need_refresh = 1;
+		    } else {
 		    }
-		}
-		if (need_refresh) {
-		    /* FIXME: pre-ANSI compilers need memcpy() */
-		    prev_tv = curr_tv;
-		    iterations = 0U;
-		    refresh_modified_displayed_graphics(xw);
-#if OPT_DOUBLE_BUFFER
-		    {
-			XdbeSwapInfo swap;
-
-			swap.swap_window = VWindow(screen);
-			swap.swap_action = XdbeCopied;
-			XdbeSwapBuffers(XtDisplay(term), &swap, 1);
-			XFlush(XtDisplay(xw));
-		    }
-#endif
 		}
 	    }
+
+	    if (need_refresh) {
+		context->force_refresh = 0;
+		/* FIXME: pre-ANSI compilers need memcpy() */
+		prev_tv = curr_tv;
+		iterations = 0U;
+		refresh_modified_displayed_graphics(xw);
+#if OPT_DOUBLE_BUFFER
+		{
+		    XdbeSwapInfo swap;
+
+		    swap.swap_window = VWindow(screen);
+		    swap.swap_action = XdbeCopied;
+		    XdbeSwapBuffers(XtDisplay(term), &swap, 1);
+		    XFlush(XtDisplay(xw));
+		}
+#endif
+	    }
+
 	    continue;
 	}
 
