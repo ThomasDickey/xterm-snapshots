@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.66 2015/04/23 01:01:47 tom Exp $ */
+/* $XTermId: graphics.c,v 1.67 2015/06/11 09:10:58 Ross.Combs Exp $ */
 
 /*
- * Copyright 2013,2014 by Ross Combs
+ * Copyright 2013-2014,2015 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -52,7 +52,7 @@
  * graphics TODO list
  *
  * ReGIS:
- * - find a suitable default alphabet zero font instead of scaling Xft fonts
+ * - ship a default alphabet zero font instead of scaling Xft fonts
  * - input and output cursors
  * - mouse input
  * - fix graphic pages for ReGIS -- they should also apply to text and sixel graphics
