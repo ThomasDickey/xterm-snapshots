@@ -1,7 +1,7 @@
-/* $XTermId: graphics_regis.c,v 1.70 2015/05/11 18:44:43 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.73 2015/06/11 09:25:34 tom Exp $ */
 
 /*
- * Copyright 2014 by Ross Combs
+ * Copyright 2014,2015 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -79,12 +79,15 @@
 
 #define SCALE_FIXED_POINT 16U
 
+#undef DEBUG_PARSING
+#undef DEBUG_ALPHABET_LOOKUP
 #undef DEBUG_ALPHABETS
 #undef DEBUG_BEZIER
 #undef DEBUG_SPLINE_SEGMENTS
 #undef DEBUG_SPLINE_POINTS
 #undef DEBUG_SPLINE_WITH_ROTATION
 #undef DEBUG_SPLINE_WITH_OVERDRAW
+#undef DEBUG_ARC_POINTS
 #undef DEBUG_ARC_CENTER
 #undef DEBUG_ARC_START
 #undef DEBUG_ARC_END
@@ -94,6 +97,7 @@
 #undef DEBUG_FONT_NAME
 #undef DEBUG_FONT_SIZE_SEARCH
 #undef DEBUG_XFT_GLYPH
+#undef DEBUG_USER_GLYPH
 #undef DEBUG_LOAD
 
 /* controls for extensions over VT3x0 limitations */
@@ -254,6 +258,7 @@ static RegisParseState persistent_state;
 
 #define WRITE_SHADING_REF_Y 0U
 #define WRITE_SHADING_REF_X 1U
+#define WRITE_SHADING_REF_NONE 2U
 
 /* keypress event example: http://iraf.net/forum/viewtopic.php?showtopic=61692 */
 
@@ -386,7 +391,7 @@ shade_pattern_to_pixel(RegisGraphicsContext *context, unsigned dim, int ref,
 		context->pattern_bit;
 	    draw_regis_pixel(context, curr_x, y, value);
 	}
-    } else {
+    } else if (dim == WRITE_SHADING_REF_Y) {
 	int delta = y > ref ? 1 : -1;
 	int curr_y;
 
@@ -396,6 +401,8 @@ shade_pattern_to_pixel(RegisGraphicsContext *context, unsigned dim, int ref,
 		context->pattern_bit;
 	    draw_regis_pixel(context, x, curr_y, value);
 	}
+    } else {
+	TRACE(("ERROR: shading requested, but there is no reference axis\n"));
     }
 }
 
@@ -428,7 +435,7 @@ shade_char_to_pixel(RegisGraphicsContext *context, unsigned char const *pixels,
 					      curr_x, y);
 	    draw_regis_pixel(context, curr_x, y, value);
 	}
-    } else {
+    } else if (dim == WRITE_SHADING_REF_Y) {
 	int delta = y > ref ? 1 : -1;
 	int curr_y;
 
@@ -437,6 +444,8 @@ shade_char_to_pixel(RegisGraphicsContext *context, unsigned char const *pixels,
 					      curr_y);
 	    draw_regis_pixel(context, x, curr_y, value);
 	}
+    } else {
+	TRACE(("ERROR: shading requested, but there is no reference axis\n"));
     }
 }
 
@@ -707,6 +716,7 @@ draw_patterned_arc(RegisGraphicsContext *context,
     };
     const quadmap_coords *quadmap;
     int total_points;
+    int half_degree;
     int points_start, points_stop;
     int points;
     unsigned iterations;
@@ -717,7 +727,7 @@ draw_patterned_arc(RegisGraphicsContext *context,
     long e2;
     long error;
 
-    TRACE(("a_length=%d a_start=%d\n", a_length, a_start));
+    TRACE(("orig a_length=%d a_start=%d\n", a_length, a_start));
     if (a_length == 0)
 	return;
     if (a_length > 0) {
@@ -725,8 +735,10 @@ draw_patterned_arc(RegisGraphicsContext *context,
     } else {
 	quadmap = neg_quadmap;
 	if (a_start != 0)
-	    a_start = 360 - a_start;
+	    a_start = 3600 - a_start;
+	a_length = abs(a_length);
     }
+    TRACE(("positive a_length=%d a_start=%d\n", a_length, a_start));
 
     rx = -ra;
     ry = 0;
@@ -750,13 +762,20 @@ draw_patterned_arc(RegisGraphicsContext *context,
 	}
     }
     while (rx <= 0);
-    points_start = (total_points * a_start) / 360;
+
+    /* FIXME: This is apparently not accurate enough because some arcs start or
+     * end a few pixels off.  Maybe compare line slopes in the loop below
+     * instead?
+     */
+    half_degree = total_points * 5;
+    points_start = (total_points * a_start - half_degree) / 3600;
     points_stop = (total_points * a_start +
-		   total_points * abs(a_length) + 359) / 360;
-    TRACE(("drawing arc with %d points from %d angle for %d degrees (from point %d to %d out of %d)\n",
-	   total_points, a_start, a_length, points_start, points_stop,
+		   total_points * a_length + half_degree) / 3600;
+    TRACE(("drawing arc with %d points clockwise from %g degrees for %g degrees (from point %d to %d out of %d)\n",
+	   total_points, a_start / 10.0, a_length / 10.0, points_start, points_stop,
 	   total_points));
 
+    /* FIXME: The four pixels at the cardinal directions are double-drawn. */
     points = 0;
     for (iterations = 0U; iterations < 8U; iterations++) {
 	quad = iterations & 0x3;
@@ -768,6 +787,17 @@ draw_patterned_arc(RegisGraphicsContext *context,
 	dy = rx * rx;
 	error = dx + dy;
 	do {
+#ifdef DEBUG_ARC_POINTS
+	    double rad = atan2(
+				  (double) (quadmap[quad].dyx * rx +
+					    quadmap[quad].dyy * ry),
+				  (double) (quadmap[quad].dxx * rx +
+					    quadmap[quad].dxy * ry));
+	    double deg = (360.0 * rad / (2.0 * M_PI));
+	    if (deg < 0.0)
+		deg += 360.0;
+#endif
+
 	    if (points >= points_start && points <= points_stop) {
 		x = (int) (cx +
 			   quadmap[quad].dxx * rx +
@@ -775,11 +805,22 @@ draw_patterned_arc(RegisGraphicsContext *context,
 		y = (int) (cy +
 			   quadmap[quad].dyx * rx +
 			   quadmap[quad].dyy * ry);
+#ifdef DEBUG_ARC_POINTS
+		TRACE(("drawing point %u at %d,%d (%.5g deg)\n",
+		       points, x, y, deg));
+#endif
 		draw_or_save_patterned_pixel(context, x, y);
 		if (ex_final)
 		    *ex_final = x;
 		if (ey_final)
 		    *ey_final = y;
+	    } else {
+#ifdef DEBUG_ARC_POINTS
+		x = (int) (cx + quadmap[quad].dxx * rx + quadmap[quad].dxy * ry);
+		y = (int) (cy + quadmap[quad].dyx * rx + quadmap[quad].dyy * ry);
+		TRACE(("skipping point %u at %d,%d which is outside of range (%.5g deg)\n",
+		       points, x, y, deg));
+#endif
 	    }
 	    points++;
 
@@ -1195,18 +1236,18 @@ plotQuadSpline(int n, int x[], int y[], int skip_segments)
 	save_pattern = global_context->temporary_write_controls.pattern;
 	global_context->temporary_write_controls.pattern = 0xff;
 	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0,
-			   360, NULL, NULL);
+			   3600, NULL, NULL);
 	i++;
 	global_context->temporary_write_controls.foreground = 15;
 	for (; i < n; i++) {
 	    draw_patterned_arc(global_context,
 			       x[i], y[i],
 			       x[i] + 2, y[i],
-			       0, 360, NULL, NULL);
+			       0, 3600, NULL, NULL);
 	}
 	global_context->temporary_write_controls.foreground = 10;
 	draw_patterned_arc(global_context, x[i], y[n], x[i] + 2, y[i], 0,
-			   360, NULL, NULL);
+			   3600, NULL, NULL);
 	global_context->temporary_write_controls.pattern = save_pattern;
     }
 #endif
@@ -1273,18 +1314,18 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
 	save_pattern = global_context->temporary_write_controls.pattern;
 	global_context->temporary_write_controls.pattern = 0xff;
 	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0,
-			   360, NULL, NULL);
+			   3600, NULL, NULL);
 	i++;
 	global_context->temporary_write_controls.foreground = 15;
 	for (; i < n; i++) {
 	    draw_patterned_arc(global_context,
 			       x[i], y[i],
 			       x[i] + 2, y[i],
-			       0, 360, NULL, NULL);
+			       0, 3600, NULL, NULL);
 	}
 	global_context->temporary_write_controls.foreground = 10;
 	draw_patterned_arc(global_context, x[i], y[i], x[i] + 2, y[i], 0,
-			   360, NULL, NULL);
+			   3600, NULL, NULL);
 	global_context->temporary_write_controls.pattern = save_pattern;
     }
 #endif
@@ -1745,7 +1786,7 @@ find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
 	    }
 	}
 	if (!font) {
-	    TRACE(("Unable to open a monospaced Xft font."));
+	    TRACE(("Unable to open a monospaced Xft font.\n"));
 	    return NULL;
 	}
 #ifdef DEBUG_FONT_SIZE_SEARCH
@@ -1954,6 +1995,7 @@ find_best_alphabet_index(RegisGraphicsContext const *context,
 	}
     }
 
+#ifdef DEBUG_ALPHABET_LOOKUP
     if (bestmatch < MAX_REGIS_ALPHABETS) {
 	TRACE(("found alphabet %u at index %u size %ux%u font=%s\n",
 	       context->current_text_controls->alphabet_num, bestmatch,
@@ -1961,6 +2003,7 @@ find_best_alphabet_index(RegisGraphicsContext const *context,
 	       context->alphabets[bestmatch].use_font ?
 	       context->alphabets[bestmatch].fontname : "(none)"));
     }
+#endif
 
     return bestmatch;
 }
@@ -2062,8 +2105,10 @@ get_bitmap_of_character(RegisGraphicsContext const *context, char ch,
 
 	if (!alpha->use_font &&
 	    get_user_bitmap_of_character(context, ch, bestmatch, pixels)) {
+#ifdef DEBUG_USER_GLYPH
 	    TRACE(("found user glyph for alphabet number %d (index %u)\n\n",
 		   context->current_text_controls->alphabet_num, bestmatch));
+#endif
 	    *w = alpha->pixw;
 	    *h = alpha->pixh;
 	    return;
@@ -3852,6 +3897,7 @@ load_regis_write_control(RegisParseState *state,
 	    char suboption;
 	    char shading_character = '\0';
 	    unsigned reference_dim = WRITE_SHADING_REF_Y;
+	    /* FIXME: are relative offsets additive? */
 	    int ref_x = cur_x, ref_y = cur_y;
 	    int shading_enabled = 0;
 
@@ -3866,7 +3912,6 @@ load_regis_write_control(RegisParseState *state,
 			TRACE(("DATA_ERROR: expected exactly one char in fill string FIXME\n"));
 			return 0;
 		    }
-		    /* FIXME: should this turn shading on also? */
 		    shading_character = state->temp[0];
 		    shading_enabled = 1;
 		    TRACE(("shading character is: '%c' (%d)\n",
@@ -3879,9 +3924,8 @@ load_regis_write_control(RegisParseState *state,
 		    TRACE(("got shading control suboptionset: \"%s\"\n",
 			   fragment_to_tempstr(&suboptionset)));
 		    while (suboptionset.pos < suboptionset.len) {
-			if (skip_regis_whitespace(&suboptionset)) {
+			if (skip_regis_whitespace(&suboptionset))
 			    continue;
-			}
 			if (extract_regis_option(&suboptionset, &suboption,
 						 &suboptionarg)) {
 			    TRACE(("inspecting write shading suboption \"%c\" with value \"%s\"\n",
@@ -3890,13 +3934,14 @@ load_regis_write_control(RegisParseState *state,
 			    switch (suboption) {
 			    case 'X':
 			    case 'x':
-				TRACE(("found vertical shading suboption \"%s\"\n",
+				TRACE(("found horizontal shading suboption \"%s\"\n",
 				       fragment_to_tempstr(&suboptionarg)));
 				if (fragment_len(&suboptionarg)) {
-				    TRACE(("DATA_ERROR: unexpected value to vertical shading suboption FIXME\n"));
+				    TRACE(("DATA_ERROR: unexpected value to horizontal shading suboption FIXME\n"));
 				    return 0;
 				}
 				reference_dim = WRITE_SHADING_REF_X;
+				shading_enabled = 1;
 				break;
 			    default:
 				TRACE(("DATA_ERROR: unknown ReGIS write pattern suboption '%c' arg \"%s\"\n",
@@ -3915,6 +3960,8 @@ load_regis_write_control(RegisParseState *state,
 		}
 
 		if (extract_regis_extent(arg, &item)) {
+		    TRACE(("found extent in shading option curr=%d,%d ref=%d,%d\n",
+			   cur_x, cur_y, ref_x, ref_y));
 		    if (!load_regis_coord_extent(context,
 						 fragment_to_tempstr(&item),
 						 ref_x, ref_y,
@@ -3961,11 +4008,15 @@ load_regis_write_control(RegisParseState *state,
 					  ? ref_x
 					  : ref_y);
 		out->shading_character = shading_character;
+		TRACE(("final shading state: enabled, dim=%d ref=%d, char=%c\n",
+		       out->shading_reference_dim, out->shading_reference,
+		       out->shading_character));
 	    } else {
 		/* FIXME: confirm there is no effect if shading isn't enabled
 		 * in the same command
 		 */
 		out->shading_enabled = 0U;
+		TRACE(("final shading state: shading disabled\n"));
 	    }
 	}
 	break;
@@ -4059,7 +4110,7 @@ init_regis_write_controls(int terminal_id, unsigned all_planes,
     controls->shading_enabled = 0U;
     controls->shading_character = '\0';
     controls->shading_reference = 0;	/* no meaning if shading is disabled */
-    controls->shading_reference_dim = WRITE_SHADING_REF_Y;
+    controls->shading_reference_dim = WRITE_SHADING_REF_NONE;
     controls->line_width = 1U;
     /* FIXME: add the rest */
 }
@@ -4475,6 +4526,7 @@ parse_regis_command(RegisParseState *state)
 
 		name = pop_fragment(&state->input);
 		TRACE(("defining macrgraph for \"%c\"\n", name));
+		(void) name;	/* This will be used in the future. */
 		for (;;) {
 		    char next = peek_fragment(&state->input);
 		    if (next == ';') {
@@ -4598,7 +4650,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    break;
 	case 'E':
 	case 'e':
-	    TRACE(("end curve \"%s\"\n", fragment_to_tempstr(&optionarg)));
+	    TRACE(("found end curve \"%s\"\n", fragment_to_tempstr(&optionarg)));
+	    if (fragment_len(&optionarg) > 0U) {
+		TRACE(("DATA_ERROR: ignoring unexpected arguments to curve option '%c' arg \"%s\"\n",
+		       state->option, fragment_to_tempstr(&optionarg)));
+	    }
+
 	    switch (state->curve_mode) {
 	    case CURVE_POSITION_CLOSED_CURVE:
 		{
@@ -4669,28 +4726,54 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			       state->x_points[i], state->y_points[i]);
 #endif
 		}
+
 		TRACE(("drawing closed spline\n"));
+		TRACE(("output location was: %d,%d\n",
+		       context->graphics_output_cursor_x,
+		       context->graphics_output_cursor_y));
 		global_context = context;	/* FIXME: remove after updating spline code */
 		plotCubicSpline((int) state->num_points - 1,
 				state->x_points, state->y_points,
 				1);
+		TRACE(("output location now: %d,%d\n",
+		       context->graphics_output_cursor_x,
+		       context->graphics_output_cursor_y));
+		TRACE(("output location finally: %d,%d\n",
+		       context->graphics_output_cursor_x,
+		       context->graphics_output_cursor_y));
+		state->num_points = 0U;
 		break;
 	    case CURVE_POSITION_OPEN_CURVE:
-		TRACE(("drawing open spline\n"));
 #ifdef DEBUG_SPLINE_POINTS
 		{
-		    int i;
+		    unsigned i;
 
 		    printf("points: \n");
-		    for (i = 0; i < (int) state->num_points; i++)
+		    for (i = 0U; i < state->num_points; i++)
 			printf("  %d,%d\n",
 			       state->x_points[i], state->y_points[i]);
 		}
 #endif
+		TRACE(("drawing open spline\n"));
+		TRACE(("output location was: %d,%d\n",
+		       context->graphics_output_cursor_x,
+		       context->graphics_output_cursor_y));
 		global_context = context;	/* FIXME: remove after updating spline code */
 		plotCubicSpline((int) state->num_points - 1,
 				state->x_points, state->y_points,
 				1);
+		TRACE(("output location now: %d,%d\n",
+		       context->graphics_output_cursor_x,
+		       context->graphics_output_cursor_y));
+
+		context->graphics_output_cursor_x =
+		    state->x_points[state->num_points - 1];
+		context->graphics_output_cursor_y =
+		    state->y_points[state->num_points - 1];
+		TRACE(("output location finally: %d,%d\n",
+		       context->graphics_output_cursor_x,
+		       context->graphics_output_cursor_y));
+		state->num_points = 0U;
 		break;
 	    default:
 		TRACE(("DATA_ERROR: end curve option unexpected \"%s\"\n",
@@ -4935,7 +5018,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
 	    if (fragment_len(&optionarg) > 0U) {
-		TRACE(("DATA_ERROR: ignoring unexpected arguments to end position option '%c' arg \"%s\"\n",
+		TRACE(("DATA_ERROR: ignoring unexpected arguments to position option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
 	    if (state->stack_next >= POSITION_STACK_SIZE) {
@@ -4943,6 +5026,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		TRACE(("unable to push position to full stack\n"));
 		break;
 	    }
+	    TRACE(("pushing location: %d,%d\n",
+		   context->graphics_output_cursor_x,
+		   context->graphics_output_cursor_y));
 
 	    state->stack_x[state->stack_next] =
 		context->graphics_output_cursor_x;
@@ -4956,7 +5042,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
 	    if (fragment_len(&optionarg) > 0U) {
-		TRACE(("DATA_ERROR: ignoring unexpected arguments to end position option '%c' arg \"%s\"\n",
+		TRACE(("DATA_ERROR: ignoring unexpected arguments to position option '%c' arg \"%s\"\n",
 		       state->option, fragment_to_tempstr(&optionarg)));
 	    }
 	    if (state->stack_next == 0U) {
@@ -4971,6 +5057,11 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    state->stack_x[state->stack_next];
 		context->graphics_output_cursor_y =
 		    state->stack_y[state->stack_next];
+		TRACE(("popped location: %d,%d\n",
+		       context->graphics_output_cursor_x,
+		       context->graphics_output_cursor_y));
+	    } else {
+		TRACE(("not popping location\n"));
 	    }
 	    break;
 	case 'P':
@@ -5018,6 +5109,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		break;
 	    }
 
+	    TRACE(("pushing dummy positions instead of %d,%d\n",
+		   context->graphics_output_cursor_x,
+		   context->graphics_output_cursor_y));
 	    state->stack_x[state->stack_next] = DUMMY_STACK_X;
 	    state->stack_y[state->stack_next] = DUMMY_STACK_Y;
 	    state->stack_next++;
@@ -6034,6 +6128,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		TRACE(("unable to push position to full stack\n"));
 		break;
 	    }
+	    TRACE(("pushing location: %d,%d\n",
+		   context->graphics_output_cursor_x,
+		   context->graphics_output_cursor_y));
 
 	    state->stack_x[state->stack_next] =
 		context->graphics_output_cursor_x;
@@ -6043,7 +6140,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    break;
 	case 'E':
 	case 'e':
-	    TRACE(("found end position stack \"%s\"\n",
+	    TRACE(("found end vector position stack \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    skip_regis_whitespace(&optionarg);
 	    if (fragment_len(&optionarg) > 0U) {
@@ -6066,14 +6163,17 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    state->stack_x[state->stack_next];
 		context->graphics_output_cursor_y =
 		    state->stack_y[state->stack_next];
-
-		TRACE(("drawing line to popped location %d,%d\n",
+		TRACE(("popped location: %d,%d\n",
 		       context->graphics_output_cursor_x,
 		       context->graphics_output_cursor_y));
+
+		TRACE(("drawing line to popped location\n"));
 		draw_patterned_line(context,
 				    orig_x, orig_y,
 				    context->graphics_output_cursor_x,
 				    context->graphics_output_cursor_y);
+	    } else {
+		TRACE(("not popping location\n"));
 	    }
 	    break;
 	case 'S':
@@ -6091,6 +6191,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		break;
 	    }
 
+	    TRACE(("pushing dummy vector positions instead of %d,%d\n",
+		   context->graphics_output_cursor_x,
+		   context->graphics_output_cursor_y));
 	    state->stack_x[state->stack_next] = DUMMY_STACK_X;
 	    state->stack_y[state->stack_next] = DUMMY_STACK_Y;
 	    state->stack_next++;
@@ -6174,11 +6277,14 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		case CURVE_POSITION_ARC_EDGE:
 		    {
 			double radians;
-			int degrees;
+			int tenthdegs;
 			int c_x, c_y;
 			int e_x, e_y;
 			int e_x_final = 0, e_y_final = 0;
 
+			TRACE(("drawing arc: curve_mode=%d\n", state->curve_mode));
+			TRACE(("drawing arc: new=%d,%d orig=%d,%d\n",
+			       new_x, new_y, orig_x, orig_y));
 			if (state->curve_mode == CURVE_POSITION_ARC_CENTER) {
 			    c_x = new_x;
 			    c_y = new_y;
@@ -6193,18 +6299,18 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 
 			radians = atan2((double) (c_y - e_y),
 					(double) (e_x - c_x));
-			degrees = (int) (360.0 * radians / (2.0 * M_PI));
-			if (degrees < 0)
-			    degrees += 360;
+			tenthdegs = (int) (0.5 + 3600.0 * radians / (2.0 * M_PI));
+			if (tenthdegs < 0)
+			    tenthdegs += 3600;
 
-			TRACE(("drawing arc centered at location %d,%d to location %d,%d from %d degrees (%g radians) for %d degrees\n",
+			TRACE(("drawing arc centered at location %d,%d to location %d,%d from %g degrees (%g radians) for %d degrees\n",
 			       c_x, c_y,
 			       e_x, e_y,
-			       degrees, radians, state->arclen));
+			       tenthdegs / 10., radians, state->arclen));
 			draw_patterned_arc(context,
 					   c_x, c_y,
 					   e_x, e_y,
-					   degrees, state->arclen,
+					   tenthdegs, state->arclen * 10,
 					   &e_x_final, &e_y_final);
 
 #ifdef DEBUG_ARC_CENTER
@@ -6311,6 +6417,8 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 				      new_x, new_y,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
+		context->destination_graphic->dirty = 1;
+		context->force_refresh = 1;
 	    }
 	    break;
 	case 't':
@@ -6604,10 +6712,12 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
     RegisDataFragment parenthesized;
     char ch;
 
+#ifdef DEBUG_PARSING
     TRACE(("parsing top level: char %d of %d (next char '%c')\n",
 	   state->input.pos,
 	   state->input.len,
 	   peek_fragment(&state->input)));
+#endif
     if (skip_regis_whitespace(&state->input))
 	return 0;
     /* FIXME: the semicolon terminates the current command even if inside of an optionset or extent */
@@ -6621,7 +6731,9 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
     /* Load statements contain hex values which may look like commands. */
     ch = peek_fragment(&state->input);
     if (state->command != 'l' || !IS_HEX_DIGIT(ch)) {
+#ifdef DEBUG_PARSING
 	TRACE(("checking for top level command...\n"));
+#endif
 	if (parse_regis_command(state)) {
 	    /* FIXME: verify that these are the things reset on a new command */
 	    TRACE(("resetting temporary write controls and pattern state\n"));
@@ -6636,7 +6748,9 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 	    return 1;
 	}
     }
+#ifdef DEBUG_PARSING
     TRACE(("checking for top level parentheses...\n"));
+#endif
     if (extract_regis_parenthesized_data(&state->input, &parenthesized)) {
 	RegisDataFragment orig_input;
 
@@ -6713,7 +6827,9 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 	if (parse_regis_items(state, context))
 	    return 1;
     } else {
+#ifdef DEBUG_PARSING
 	TRACE(("checking for top level items...\n"));
+#endif
 	if (parse_regis_items(state, context))
 	    return 1;
     }
@@ -6818,6 +6934,9 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	    }
 
 	    if (need_refresh) {
+		TRACE(("refreshing after %u iterations and %ldms\n",
+		       iterations,
+		       DiffTime(curr_tv) - DiffTime(prev_tv)));
 		context->force_refresh = 0;
 		/* FIXME: pre-ANSI compilers need memcpy() */
 		prev_tv = curr_tv;
