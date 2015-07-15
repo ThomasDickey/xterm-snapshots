@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.448 2015/03/02 13:19:36 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.449 2015/07/13 21:21:36 tom Exp $ */
 
 /*
  * Copyright 1998-2014,2015 by Thomas E. Dickey
@@ -534,7 +534,7 @@ xtermSpecialFont(TScreen *screen, unsigned attr_flags, unsigned draw_flags, unsi
 	TRACE(("pixel_size = %d\n", pixel_size));
 	TRACE(("spacing    = %s\n", props->spacing));
 	old_props.res_x = res_x;
-	old_props.res_x = res_y;
+	old_props.res_y = res_y;
 	old_props.pixel_size = pixel_size;
 	old_props.spacing = old_spacing;
 	sprintf(old_spacing, "%.*s", (int) sizeof(old_spacing) - 2, props->spacing);
