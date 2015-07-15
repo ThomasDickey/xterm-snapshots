@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.73 2015/06/11 09:25:34 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.76 2015/07/13 22:52:29 tom Exp $ */
 
 /*
  * Copyright 2014,2015 by Ross Combs
@@ -108,7 +108,7 @@
 #define ENABLE_USER_FONT_SIZE
 #define ENABLE_VARIABLE_ITALICS
 
-#define MIN_ITERATIONS_BEFORE_REFRESH 20U
+#define MIN_ITERATIONS_BEFORE_REFRESH 10U
 #define MIN_MS_BEFORE_REFRESH 33
 /* *INDENT-OFF* */
 typedef struct RegisPoint {
@@ -271,10 +271,19 @@ static RegisParseState persistent_state;
 			   ((V) >> (8U - ((N) & 3U))) )
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
 
+/* convert user coordinates to absolute pixel coordinates */
 #define SCALE_XCOORD(C, X, S) ( ( (X) * ((C)->width  - 1) ) / ( (C)->x_div * (S) ) )
 #define SCALE_YCOORD(C, Y, S) ( ( (Y) * ((C)->height - 1) ) / ( (C)->y_div * (S) ) )
 #define TRANSLATE_XCOORD(C, X, S) SCALE_XCOORD((C), (X) - (C)->x_off * (S), (S) )
 #define TRANSLATE_YCOORD(C, Y, S) SCALE_YCOORD((C), (Y) - (C)->y_off * (S), (S) )
+
+#if 0
+/* convert absolute pixel coordinate to user coordinates */
+#define SCALE_XPIX(C, X, S) ( ( (X) * ((C)->x_div * (S) ) ) / ((C)->width  - 1) )
+#define SCALE_YPIX(C, Y, S) ( ( (Y) * ((C)->y_div * (S) ) ) / ((C)->height - 1) )
+#define TRANSLATE_XPIX(C, X, S) ( SCALE_XPIX((C), (X), (S) ) + (C)->x_off * (S) )
+#define TRANSLATE_YPIX(C, Y, S) ( SCALE_YPIX((C), (Y), (S) ) + (C)->y_off * (S) )
+#endif
 
 #define READ_PIXEL(C, X, Y) read_pixel((C)->destination_graphic, (X), (Y))
 #define DRAW_PIXEL(C, X, Y, COL) draw_solid_pixel((C)->destination_graphic, (X), (Y), (COL))
@@ -1370,11 +1379,12 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
 	color++;
 	global_context->temporary_write_controls.foreground = color;
 #endif
+#define CB_PARM(num) ifloor((num) / 3.0 + 0.5)
 	plotCubicBezier(x4, y4,
-			ifloor((2 * x1 + x2) / 3 + 0.5),
-			ifloor((2 * y1 + y2) / 3 + 0.5),
-			ifloor((x1 + 2 * x2) / 3 + 0.5),
-			ifloor((y1 + 2 * y2) / 3 + 0.5),
+			CB_PARM(2 * x1 + x2),
+			CB_PARM(2 * y1 + y2),
+			CB_PARM(x1 + 2 * x2),
+			CB_PARM(y1 + 2 * y2),
 			x3, y3);
 	x3 = x4;
 	y3 = y4;
@@ -1391,10 +1401,10 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
     global_context->temporary_write_controls.foreground = 4;
 #endif
     plotCubicBezier(x4, y4,
-		    ifloor((2 * x1 + x2) / 3 + 0.5),
-		    ifloor((2 * y1 + y2) / 3 + 0.5),
-		    ifloor((x1 + 2 * x2) / 3 + 0.5),
-		    ifloor((y1 + 2 * y2) / 3 + 0.5),
+		    CB_PARM(2 * x1 + x2),
+		    CB_PARM(2 * y1 + y2),
+		    CB_PARM(x1 + 2 * x2),
+		    CB_PARM(y1 + 2 * y2),
 		    x3, y3);
 #ifdef DEBUG_SPLINE_SEGMENTS
     color++;
@@ -3525,25 +3535,25 @@ load_regis_coord_extent(RegisGraphicsContext const *context, char const *extent,
 
     if (relx) {
 	const int px = SCALE_XCOORD(context, ux, COORD_SCALE);
-	TRACE(("converted relative X coord %.03f to relative pixel coord %d (width=%d xoff=%d xdiv=%d)\n",
+	TRACE(("converted relative user X coord %.03f to relative pixel X coord %d (width=%d xoff=%d xdiv=%d)\n",
 	       ux / (double) COORD_SCALE, px, context->width,
 	       context->x_off, context->x_div));
 	*xloc = origx + px;
     } else {
 	const int px = TRANSLATE_XCOORD(context, ux, COORD_SCALE);
-	TRACE(("converted absolute X coord %.03f to absolute pixel coord %d\n",
+	TRACE(("converted absolute user X coord %.03f to absolute pixel X coord %d\n",
 	       ux / (double) COORD_SCALE, px));
 	*xloc = px;
     }
     if (rely) {
 	const int py = SCALE_YCOORD(context, uy, COORD_SCALE);
-	TRACE(("converted relative Y coord %.03f to relative pixel coord %d (height=%d, yoff=%d, ydiv=%d)\n",
+	TRACE(("converted relative user Y coord %.03f to relative pixel Y coord %d (height=%d yoff=%d ydiv=%d)\n",
 	       uy / (double) COORD_SCALE, py, context->height,
 	       context->y_off, context->y_div));
 	*yloc = origy + py;
     } else {
 	const int py = TRANSLATE_YCOORD(context, uy, COORD_SCALE);
-	TRACE(("converted absolute Y coord %.03f to absolute pixel coord %d\n",
+	TRACE(("converted absolute user Y coord %.03f to absolute pixel Y coord %d\n",
 	       uy / (double) COORD_SCALE, py));
 	*yloc = py;
     }
@@ -3552,53 +3562,137 @@ load_regis_coord_extent(RegisGraphicsContext const *context, char const *extent,
 }
 
 static int
-load_regis_pixelvector(char const *pixelvector,
-		       unsigned mul,
-		       int origx, int origy,
-		       int *xloc, int *yloc)
+load_regis_raw_pixelvector_digit(char const *pixelvector,
+				 unsigned *offset,
+				 int *dx, int *dy, int mul)
 {
-    int dx = 0, dy = 0;
-    int i;
-
-    for (i = 0; pixelvector[i] != '\0'; i++) {
-	switch (pixelvector[i]) {
-	case '0':
-	    dx += 1;
-	    break;
-	case '1':
-	    dx += 1;
-	    dy -= 1;
-	    break;
-	case '2':
-	    dy -= 1;
-	    break;
-	case '3':
-	    dx -= 1;
-	    dy -= 1;
-	    break;
-	case '4':
-	    dx -= 1;
-	    break;
-	case '5':
-	    dx -= 1;
-	    dy += 1;
-	    break;
-	case '6':
-	    dy += 1;
-	    break;
-	case '7':
-	    dx += 1;
-	    dy += 1;
-	    break;
-	default:
-	    break;
-	}
+    switch (pixelvector[*offset]) {
+    case '0':
+	*dx += mul;
+	break;
+    case '1':
+	*dx += mul;
+	*dy -= mul;
+	break;
+    case '2':
+	*dy -= mul;
+	break;
+    case '3':
+	*dx -= mul;
+	*dy -= mul;
+	break;
+    case '4':
+	*dx -= mul;
+	break;
+    case '5':
+	*dx -= mul;
+	*dy += mul;
+	break;
+    case '6':
+	*dy += mul;
+	break;
+    case '7':
+	*dx += mul;
+	*dy += mul;
+	break;
+    default:
+	return 0;
     }
 
-    *xloc = origx + dx * (int) mul;
-    *yloc = origy + dy * (int) mul;
-
+    (*offset)++;
     return 1;
+}
+
+static int
+load_regis_pixel_pixelvector(char const *pixelvector,
+			     int mul,
+			     int origx, int origy,
+			     int *xloc, int *yloc)
+{
+    int found = 0;
+    int px = 0, py = 0;
+    unsigned offset = 0U;
+    while (load_regis_raw_pixelvector_digit(pixelvector, &offset,
+					    &px, &py,
+					    mul))
+	found = 1;
+    if (pixelvector[offset] != '\0') {
+	TRACE(("DATA_ERROR: ignoring unknown pixel vector digits: \"%s\"\n",
+	       &pixelvector[offset]));
+    }
+
+    *xloc = origx + px;
+    *yloc = origy + py;
+
+    return found;
+}
+
+static int
+load_regis_coord_pixelvector(RegisGraphicsContext const *context,
+			     char const *pixelvector,
+			     int origx, int origy,
+			     int *xloc, int *yloc)
+{
+    const int mul = (int) (context->temporary_write_controls.pv_multiplier * COORD_SCALE);
+    int found = 0;
+    int ux = 0, uy = 0;
+    unsigned offset = 0U;
+    while (load_regis_raw_pixelvector_digit(pixelvector, &offset,
+					    &ux, &uy,
+					    mul))
+	found = 1;
+    if (pixelvector[offset] != '\0') {
+	TRACE(("DATA_ERROR: ignoring unknown pixel vector digits: \"%s\"\n",
+	       &pixelvector[offset]));
+    } {
+	const int px = SCALE_XCOORD(context, ux, COORD_SCALE);
+	const int py = SCALE_YCOORD(context, uy, COORD_SCALE);
+
+	TRACE(("converted relative X coord %.03f to relative pixel X coord %d (width=%d xoff=%d xdiv=%d)\n",
+	       ux / (double) COORD_SCALE, px, context->width,
+	       context->x_off, context->x_div));
+	*xloc = origx + px;
+
+	TRACE(("converted relative Y coord %.03f to relative pixel Y coord %d (height=%d yoff=%d ydiv=%d)\n",
+	       uy / (double) COORD_SCALE, py, context->height,
+	       context->y_off, context->y_div));
+	*yloc = origy + py;
+    }
+
+    return found;
+}
+
+static int
+load_regis_coord_pixelvector_step(RegisGraphicsContext const *context,
+				  char const *pixelvector,
+				  unsigned *offset,
+				  int origx, int origy,
+				  int *xloc, int *yloc)
+{
+    const int mul = (int) (context->temporary_write_controls.pv_multiplier * COORD_SCALE);
+    int found = 0;
+    int ux = 0, uy = 0;
+    if (load_regis_raw_pixelvector_digit(pixelvector, offset, &ux, &uy, mul))
+	found = 1;
+    if (!found && pixelvector[*offset] != '\0') {
+	TRACE(("DATA_ERROR: ignoring unknown pixel vector digits: \"%s\"\n",
+	       &pixelvector[*offset]));
+    } {
+	const int px = SCALE_XCOORD(context, ux, COORD_SCALE);
+	const int py = SCALE_YCOORD(context, uy, COORD_SCALE);
+
+	TRACE(("converted relative X coord %.03f to relative pixel X coord %d (width=%d xoff=%d xdiv=%d)\n",
+	       ux / (double) COORD_SCALE, px, context->width,
+	       context->x_off, context->x_div));
+	*xloc = origx + px;
+
+	TRACE(("converted relative Y coord %.03f to relative pixel Y coord %d (height=%d yoff=%d ydiv=%d)\n",
+	       uy / (double) COORD_SCALE, py, context->height,
+	       context->y_off, context->y_div));
+	*yloc = origy + py;
+    }
+
+    return found;
 }
 
 static int
@@ -5427,6 +5521,10 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		     */
 #if 1
 		    int scale;
+		    const int mw = context->destination_graphic->max_width;
+		    const int mh = context->destination_graphic->max_height;
+
+		    TRACE(("custom screen size pre scaling: %dx%d\n", cw, ch));
 
 		    width = cw;
 		    height = ch;
@@ -5440,8 +5538,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    height *= scale;
 
 		    scale = 1;
-		    while (width / scale > context->destination_graphic->max_width
-			   || height / scale > context->destination_graphic->max_height) {
+		    while (width / scale > mw ||
+			   height / scale > mh) {
 			scale++;
 		    }
 		    width /= scale;
@@ -5462,6 +5560,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    context->height = height;
 		    context->destination_graphic->actual_width = width;
 		    context->destination_graphic->actual_height = height;
+		    context->destination_graphic->dirty = 1;
 
 		    TRACE(("conversion factors: off=%+d,%+d div=%+d,%+d width=%d, height=%d\n",
 			   context->x_off, context->y_off,
@@ -5491,6 +5590,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		return 1;
 	    }
 	    DRAW_ALL(context, context->background);
+	    context->destination_graphic->dirty = 1;
+	    context->force_refresh = 1;
 	    break;
 	case 'F':
 	case 'f':
@@ -5503,6 +5604,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    }
 	    /* We aren't going to print anything so no need to deduplicate. */
 	    DRAW_ALL(context, context->background);
+	    context->destination_graphic->dirty = 1;
+	    context->force_refresh = 1;
 	    break;
 	case 'H':
 	case 'h':
@@ -5639,7 +5742,6 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		map_regis_graphics_pages(context->display_graphic->xw, context);
 	    }
 	    break;
-
 	case 'T':
 	case 't':
 	    TRACE(("found time delay \"%s\" FIXME\n",
@@ -6387,34 +6489,42 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		   context->graphics_output_cursor_y));
 	    break;
 	case 's':
-	    TRACE(("extent in screen command\n"));
+	    TRACE(("extent scroll argument to screen command: \"%s\"\n",
+		   fragment_to_tempstr(&item)));
 	    {
-		int new_x, new_y;
+		int old_ul_x, old_ul_y;
+		int new_ul_x, new_ul_y;
 		int copy_w, copy_h;
 
+		old_ul_x = 0;
+		old_ul_y = 0;
+		TRACE(("current upper-left coordinate in pixel coordinates: %d,%d\n",
+		       old_ul_x, old_ul_y));
+		/* FIXME: verify this is in user coordinates, not pixels */
 		if (!load_regis_coord_extent(context,
 					     fragment_to_tempstr(&item),
-					     0, 0, &new_x, &new_y)) {
+					     old_ul_x, old_ul_y,
+					     &new_ul_x, &new_ul_y)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
 		}
-		TRACE(("scrolling image to coordinates %d,%d\n", new_x, new_y));
-		new_x -= context->x_off;
-		new_y -= context->y_off;
-		TRACE(("scrolling image to buffer location %d,%d\n", new_x, new_y));
+		TRACE(("scrolling image to updated upper-left coordinate in pixel coordinates: %d,%d\n",
+		       new_ul_x, new_ul_y));
+
 		/* FIXME: does any write mode affect revealed background? */
-		if (new_y < 0)
-		    copy_h = context->height - new_y;
-		else
-		    copy_h = context->height;
-		if (new_x < 0)
-		    copy_w = context->width - new_x;
+		if (new_ul_x > 0)
+		    copy_w = context->width - new_ul_x;
 		else
 		    copy_w = context->width;
-		/* FIXME: verify this applies to output page, not display page */
-		copy_overlapping_area(context->destination_graphic, 0, 0,
-				      new_x, new_y,
+		if (new_ul_y > 0)
+		    copy_h = context->height - new_ul_y;
+		else
+		    copy_h = context->height;
+		/* FIXME: verify this applies to write page, not display page */
+		copy_overlapping_area(context->destination_graphic,
+				      new_ul_x, new_ul_y,
+				      0, 0,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
 		context->destination_graphic->dirty = 1;
@@ -6477,12 +6587,12 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    /* FIXME: not sure if 'f' supports PVs */
 	case 'p':
 	    /* FIXME: error checking */
-	    if (!load_regis_pixelvector(fragment_to_tempstr(&item),
-					context->temporary_write_controls.pv_multiplier,
-					context->graphics_output_cursor_x,
-					context->graphics_output_cursor_y,
-					&context->graphics_output_cursor_x,
-					&context->graphics_output_cursor_y)) {
+	    if (!load_regis_coord_pixelvector(context,
+					      fragment_to_tempstr(&item),
+					      context->graphics_output_cursor_x,
+					      context->graphics_output_cursor_y,
+					      &context->graphics_output_cursor_x,
+					      &context->graphics_output_cursor_y)) {
 		TRACE(("DATA_ERROR: unable to parse pixel vector in '%c' command: \"%s\"\n",
 		       state->command, fragment_to_tempstr(&item)));
 		break;
@@ -6492,44 +6602,58 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		   context->graphics_output_cursor_y));
 	    break;
 	case 's':
-	    TRACE(("pixelvector in screen command\n"));
+	    TRACE(("pixelvector scroll argument to screen command: \"%s\"\n",
+		   fragment_to_tempstr(&item)));
 	    {
-		int new_x, new_y;
+		int old_ul_x, old_ul_y;
+		int new_ul_x, new_ul_y;
 		int copy_w, copy_h;
 
-		if (!load_regis_pixelvector(fragment_to_tempstr(&item),
-					    context->temporary_write_controls.pv_multiplier,
-					    0, 0, &new_x, &new_y)) {
+		old_ul_x = 0;
+		old_ul_y = 0;
+		TRACE(("current upper-left coordinate in pixel coordinates: %d,%d\n",
+		       old_ul_x, old_ul_y));
+		/* FIXME: verify this is in user coordinates, not pixels */
+		/* FIXME: verify that multiple PV digits result in a single
+		 * copy (this changes the contents of any exposed edge)
+		 */
+		if (!load_regis_coord_pixelvector(context,
+						  fragment_to_tempstr(&item),
+						  old_ul_x, old_ul_y,
+						  &new_ul_x, &new_ul_y)) {
 		    TRACE(("DATA_ERROR: unable to parse pixel vector in '%c' command: \"%s\"\n",
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
 		}
-		TRACE(("scrolling image to coordinates %d,%d\n", new_x, new_y));
-		new_x -= context->x_off;
-		new_y -= context->y_off;
-		TRACE(("scrolling image to buffer location %d,%d\n", new_x, new_y));
+		TRACE(("scrolling image to updated upper-left coordinate in pixel coordinates: %d,%d\n",
+		       new_ul_x, new_ul_y));
+
 		/* FIXME: does any write mode affect revealed background? */
-		if (new_y < 0)
-		    copy_h = context->height - new_y;
-		else
-		    copy_h = context->height;
-		if (new_x < 0)
-		    copy_w = context->width - new_x;
+		if (new_ul_x > 0)
+		    copy_w = context->width - new_ul_x;
 		else
 		    copy_w = context->width;
+		if (new_ul_y > 0)
+		    copy_h = context->height - new_ul_y;
+		else
+		    copy_h = context->height;
 		/* FIXME: verify this applies to write page, not display page */
-		copy_overlapping_area(context->destination_graphic, 0, 0,
-				      new_x, new_y,
+		copy_overlapping_area(context->destination_graphic,
+				      new_ul_x, new_ul_y,
+				      0, 0,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
+		context->destination_graphic->dirty = 1;
+		context->force_refresh = 1;
 	    }
 	    break;
 	case 't':
 	    {
 		int dx, dy;
 
-		if (!load_regis_pixelvector(fragment_to_tempstr(&item), 1,
-					    0, 0, &dx, &dy)) {
+		/* FIXME: verify this does not use user coordinates */
+		if (!load_regis_pixel_pixelvector(fragment_to_tempstr(&item),
+						  1, 0, 0, &dx, &dy)) {
 		    TRACE(("DATA_ERROR: unable to parse pixel vector in '%c' command: \"%s\"\n",
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
@@ -6547,27 +6671,30 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    }
 	    break;
 	case 'v':
-	    /* FIXME: error checking */
 	    {
+		char const *const pixelvector = fragment_to_tempstr(&item);
+		unsigned offset;
 		int orig_x, orig_y;
 
-		orig_x = context->graphics_output_cursor_x;
-		orig_y = context->graphics_output_cursor_y;
-		if (!load_regis_pixelvector(fragment_to_tempstr(&item),
-					    context->temporary_write_controls.pv_multiplier,
-					    orig_x, orig_y,
-					    &context->graphics_output_cursor_x,
-					    &context->graphics_output_cursor_y)) {
-		    TRACE(("DATA_ERROR: unable to parse pixel vector in '%c' command: \"%s\"\n",
-			   state->command, fragment_to_tempstr(&item)));
-		    break;
+		for (offset = 0U; pixelvector[offset] != '\0';) {
+		    orig_x = context->graphics_output_cursor_x;
+		    orig_y = context->graphics_output_cursor_y;
+		    if (!load_regis_coord_pixelvector_step(context, pixelvector,
+							   &offset,
+							   orig_x, orig_y,
+							   &context->graphics_output_cursor_x,
+							   &context->graphics_output_cursor_y)) {
+			TRACE(("DATA_ERROR: unable to parse pixel vector in '%c' command: \"%s\"\n",
+			       state->command, fragment_to_tempstr(&item)));
+			break;
+		    }
+		    TRACE(("drawing line to location %d,%d\n",
+			   context->graphics_output_cursor_x,
+			   context->graphics_output_cursor_y));
+		    draw_patterned_line(context, orig_x, orig_y,
+					context->graphics_output_cursor_x,
+					context->graphics_output_cursor_y);
 		}
-		TRACE(("drawing line to location %d,%d\n",
-		       context->graphics_output_cursor_x,
-		       context->graphics_output_cursor_y));
-		draw_patterned_line(context, orig_x, orig_y,
-				    context->graphics_output_cursor_x,
-				    context->graphics_output_cursor_y);
 	    }
 	    break;
 	default:
@@ -6711,6 +6838,12 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 {
     RegisDataFragment parenthesized;
     char ch;
+#if 0
+    TRACE(("reference line: shading=%d ref=%u loc=%d\n",
+	   context->temporary_write_controls.shading_enabled,
+	   context->temporary_write_controls.shading_reference_dim,
+	   context->temporary_write_controls.shading_reference));
+#endif
 
 #ifdef DEBUG_PARSING
     TRACE(("parsing top level: char %d of %d (next char '%c')\n",
@@ -6912,8 +7045,9 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	if (parse_regis_toplevel(state, context)) {
 	    int need_refresh = 0;
 
-	    /* FIXME: move refresh logic out so that long sequences of filled
-	     * drawing commands can be refreshed before the end
+	    /* FIXME: Move refresh logic out of the top level so that long
+	     * sequences of filled drawing commands can be refreshed before the
+	     * end of the fill command.
 	     */
 	    iterations++;
 	    if (context->force_refresh) {
@@ -6926,10 +7060,8 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		} else {
 #define DiffTime(TV) (TV.tv_sec * 1000L + TV.tv_usec / 1000L)
 		    long diff = (long) (DiffTime(curr_tv) - DiffTime(prev_tv));
-		    if (diff > MIN_MS_BEFORE_REFRESH) {
+		    if (diff > MIN_MS_BEFORE_REFRESH)
 			need_refresh = 1;
-		    } else {
-		    }
 		}
 	    }
 

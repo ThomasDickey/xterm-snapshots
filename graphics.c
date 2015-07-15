@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.67 2015/06/11 09:10:58 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.68 2015/07/13 08:58:48 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013-2014,2015 by Ross Combs
@@ -833,10 +833,10 @@ get_new_or_matching_graphic(XtermWidget xw,
     if ((graphic = get_new_graphic(xw, charrow, charcol, type))) {
 	graphic->actual_width = actual_width;
 	graphic->actual_height = actual_height;
-	printf("no match; created graphic at %d,%d %dx%d bufferid=%d type=%u\n",
+	TRACE(("no match; created graphic at %d,%d %dx%d bufferid=%d type=%u\n",
 	       graphic->charrow, graphic->charcol,
 	       graphic->actual_width, graphic->actual_height,
-	       graphic->bufferid, graphic->type);
+	       graphic->bufferid, graphic->type));
     }
     return graphic;
 }
