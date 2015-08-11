@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.449 2015/07/13 21:21:36 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.450 2015/07/29 08:43:06 Thomas.Klausner Exp $ */
 
 /*
  * Copyright 1998-2014,2015 by Thomas E. Dickey
@@ -3091,7 +3091,7 @@ dec2ucs(unsigned ch)
 
 #endif /* OPT_WIDE_CHARS */
 
-#if OPT_SHIFT_FONTS
+#if OPT_RENDERFONT || OPT_SHIFT_FONTS
 static int
 lookupOneFontSize(XtermWidget xw, int fontnum)
 {
@@ -3133,6 +3133,7 @@ lookupFontSizes(XtermWidget xw)
 	(void) lookupOneFontSize(xw, n);
     }
 }
+#endif /* OPT_RENDERFONT || OPT_SHIFT_FONTS */
 
 #if OPT_RENDERFONT
 static double
@@ -3268,6 +3269,7 @@ useFaceSizes(XtermWidget xw)
 }
 #endif /* OPT_RENDERFONT */
 
+#if OPT_SHIFT_FONTS
 /*
  * Find the index of a larger/smaller font (according to the sign of 'relative'
  * and its magnitude), starting from the 'old' index.
@@ -3391,7 +3393,7 @@ HandleSmallerFont(Widget w GCC_UNUSED,
 	}
     }
 }
-#endif
+#endif /* OPT_SHIFT_FONTS */
 
 int
 xtermGetFont(const char *param)
