@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.157 2015/04/12 20:44:43 tom Exp $
+-- $XTermId: INSTALL,v 1.158 2015/08/10 23:38:32 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2014,2015 by Thomas E. Dickey
 --
@@ -385,14 +385,14 @@ The options (in alphabetic order):
 
 	This sets the default resource value, which is shown in the manpage.
 
-  --enable-broken-osc     allow broken Linux OSC-strings],
+  --enable-broken-osc     allow broken Linux OSC-strings
 
 	Compile-in code to accommodate scripts that write Linux's malformed
 	palette control strings without checking.  The result makes xterm
 	appear to freeze.  This workaround makes xterm ignore the strings,
 	and is compiled-in by default for Linux.
 
-  --enable-builtin-xpms   allow broken Linux OSC-strings],
+  --enable-builtin-xpms   compile-in icon data
 
 	Compile-in X pixmap data for these icons:
 		filled-xterm
