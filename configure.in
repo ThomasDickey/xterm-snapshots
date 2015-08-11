@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.335 2015/04/12 20:41:52 tom Exp $
+dnl $XTermId: configure.in,v 1.336 2015/08/10 23:45:36 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -495,8 +495,8 @@ test "$enable_broken_st" = no && AC_DEFINE(OPT_BROKEN_ST,0,[Define to 0 to disal
 AC_MSG_CHECKING(if you want to compile-in icon data)
 CF_ARG_ENABLE(builtin-xpms,
 	[  --enable-builtin-xpms   compile-in icon data],
-	[enable_builtin_xpms=no],
-	[enable_builtin_xpms=yes])
+	[enable_builtin_xpms=yes],
+	[enable_builtin_xpms=no])
 AC_MSG_RESULT($enable_builtin_xpms)
 test "$enable_builtin_xpms" = yes && AC_DEFINE(OPT_BUILTIN_XPMS,1,[Define to 1 to compile-in icon data])
 

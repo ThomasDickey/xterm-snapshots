@@ -15807,13 +15807,13 @@ if test "${enable_builtin_xpms+set}" = set; then
   enableval="$enable_builtin_xpms"
   test "$enableval" != yes && enableval=no
   if test "$enableval" != "no" ; then
-    enable_builtin_xpms=no
-  else
     enable_builtin_xpms=yes
+  else
+    enable_builtin_xpms=no
   fi
 else
   enableval=no
-  enable_builtin_xpms=yes
+  enable_builtin_xpms=no
 
 fi;
 echo "$as_me:15819: result: $enable_builtin_xpms" >&5

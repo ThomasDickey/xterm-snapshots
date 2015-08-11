@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.208 2015/02/15 18:00:55 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.209 2015/08/10 23:40:17 tom Exp $ */
 
 /*
  * Copyright 1997-2014,2015 by Thomas E. Dickey
@@ -124,6 +124,7 @@
 #undef OPT_BOX_CHARS		/* CF_ARG_DISABLE(boxchars) */
 #undef OPT_BROKEN_OSC		/* CF_ARG_ENABLE(broken-osc) */
 #undef OPT_BROKEN_ST		/* CF_ARG_DISABLE(broken-st) */
+#undef OPT_BUILTIN_XPMS		/* CF_ARG_ENABLE(builtin-xpms) */
 #undef OPT_C1_PRINT		/* CF_ARG_DISABLE(c1-print) */
 #undef OPT_COLOR_CLASS		/* CF_ARG_DISABLE(color-class) */
 #undef OPT_DABBREV		/* CF_ARG_ENABLE(dabbrev) */
