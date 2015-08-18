@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.450 2015/07/29 08:43:06 Thomas.Klausner Exp $ */
+/* $XTermId: fontutils.c,v 1.451 2015/08/18 00:55:19 tom Exp $ */
 
 /*
  * Copyright 1998-2014,2015 by Thomas E. Dickey
@@ -865,25 +865,36 @@ xtermCloseFont(XtermWidget xw, XTermFonts * fnt)
 }
 
 /*
+ * Close and free the font (as well as any aliases).
+ */
+static void
+xtermCloseFont2(XtermWidget xw, XTermFonts * fnts, int which)
+{
+    XFontStruct *thisFont = fnts[which].fs;
+    int k;
+
+    if (thisFont != 0) {
+	xtermCloseFont(xw, &fnts[which]);
+	for (k = 0; k < fMAX; ++k) {
+	    if (k != which) {
+		if (thisFont == fnts[k].fs) {
+		    xtermFreeFontInfo(&fnts[k]);
+		}
+	    }
+	}
+    }
+}
+
+/*
  * Close the listed fonts, noting that some may use copies of the pointer.
  */
 void
 xtermCloseFonts(XtermWidget xw, XTermFonts * fnts)
 {
-    int j, k;
+    int j;
 
     for (j = 0; j < fMAX; ++j) {
-	/*
-	 * Need to save the pointer since xtermCloseFont zeroes it
-	 */
-	XFontStruct *thisFont = fnts[j].fs;
-	if (thisFont != 0) {
-	    xtermCloseFont(xw, &fnts[j]);
-	    for (k = j + 1; k < fMAX; ++k) {
-		if (thisFont == fnts[k].fs)
-		    xtermFreeFontInfo(&fnts[k]);
-	    }
-	}
+	xtermCloseFont2(xw, fnts, j);
     }
 }
 
@@ -1162,7 +1173,7 @@ xtermLoadFont(XtermWidget xw,
 	    TRACE(("...got a matching bold font\n"));
 	    cache_menu_font_name(screen, fontnum, fBold, myfonts.f_b);
 	} else {
-	    xtermCloseFont(xw, &fnts[fBold]);
+	    xtermCloseFont2(xw, fnts, fBold);
 	    fnts[fBold] = fnts[fNorm];
 	    TRACE(("...did not get a matching bold font\n"));
 	}
@@ -1225,7 +1236,7 @@ xtermLoadFont(XtermWidget xw,
 
 	    if (derived
 		&& !compatibleWideCounts(fnts[fWide].fs, fnts[fWBold].fs)) {
-		xtermCloseFont(xw, &fnts[fWBold]);
+		xtermCloseFont2(xw, fnts, fWBold);
 	    }
 	    if (fnts[fWBold].fs == 0) {
 		FREE_FNAME(f_wb);
@@ -1277,7 +1288,7 @@ xtermLoadFont(XtermWidget xw,
     if (!same_font_size(xw, fnts[fNorm].fs, fnts[fBold].fs)
 	&& (is_fixed_font(fnts[fNorm].fs) && is_fixed_font(fnts[fBold].fs))) {
 	TRACE(("...ignoring mismatched normal/bold fonts\n"));
-	xtermCloseFont(xw, &fnts[fBold]);
+	xtermCloseFont2(xw, fnts, fBold);
 	xtermCopyFontInfo(&fnts[fBold], &fnts[fNorm]);
     }
 
@@ -1289,7 +1300,7 @@ xtermLoadFont(XtermWidget xw,
 		    && is_fixed_font(fnts[fWide].fs)
 		    && is_fixed_font(fnts[fWBold].fs)))) {
 	    TRACE(("...ignoring mismatched normal/bold wide fonts\n"));
-	    xtermCloseFont(xw, &fnts[fWBold]);
+	    xtermCloseFont2(xw, fnts, fWBold);
 	    xtermCopyFontInfo(&fnts[fWBold], &fnts[fWide]);
 	}
     });

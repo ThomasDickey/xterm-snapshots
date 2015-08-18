@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.770 2015/08/10 22:48:04 tom Exp $ */
+/* $XTermId: main.c,v 1.771 2015/08/16 21:43:29 tom Exp $ */
 
 /*
  * Copyright 2002-2014,2015 by Thomas E. Dickey
@@ -3393,6 +3393,7 @@ spawnXTerm(XtermWidget xw)
 	    ttyfd = -1;
 	    errno = ENXIO;
 	}
+	shell_path = 0;
 	memset(&pw, 0, sizeof(pw));
 #if OPT_PTY_HANDSHAKE
 	got_handshake_size = False;
