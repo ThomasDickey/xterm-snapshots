@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1612 2015/08/18 01:03:20 tom Exp $
+  $XTermId: xterm.log.html,v 1.1614 2015/08/19 00:31:34 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -926,6 +926,17 @@
   <h1><a name="xterm_dev" id="xterm_dev">Development</a></h1>
 
   <ul>
+    <li>modify check for cursor-theme from <a href=
+    "#xterm_301">patch #301</a> to also check if the resource
+    <code>Xcursor.theme</code> is set to a nonempty value before
+    fallback to xterm's own dummy theme (request by Robert
+    Kloefkorn).</li>
+
+    <li>explain in <code>ctlseqs.ms</code> that some keys which
+    normally send SS3-prefixes are changed to CSI-prefixes if
+    key-modifiers are passed as parameters (report by George
+    Nachman).</li>
+
     <li>correct double-free of font information when multiple
     problems are found, particularly for the wide fonts loaded via
     the <code>-wc</code> option (report/testcase by Nelson
