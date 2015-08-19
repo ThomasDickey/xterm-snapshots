@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.320 2015/04/12 20:55:48 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.321 2015/08/18 23:41:11 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
@@ -70,7 +70,7 @@
 .ds XT XTerm
 .ds xt xterm
 .ds LF Patch #318
-.ds RF 2015/04/12
+.ds RF 2015/08/18
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1916,9 +1916,13 @@ F12	\*(Cs\*2\*4\*(c~
 _
 .TE
 .sP
-Older versions of \fIxterm\fP implement different escape sequences for F1 through F4.
+Note that F1 through F4 are prefixed with \*(S3,
+while the other keys are prefixed with \*(Cs.
+Older versions of \fIxterm\fP implement different escape sequences
+for F1 through F4, with a \*(Cs prefix.
 These can be activated by setting the \fBoldXtermFKeys\fP resource.
-However, since they do not correspond to any hardware terminal, they have been deprecated.
+However, since they do not correspond to any hardware terminal,
+they have been deprecated.
 (The DEC VT220 reserves F1 through F5 for local functions such as \fBSetup\fP).
 .TS H
 center;
@@ -1935,10 +1939,14 @@ F4	\*(Cs\*1\*4\*(c~
 _
 .TE
 In normal mode, i.e., a Sun/PC keyboard
-when the \fBsunKeyboard\fP resource is false,
-\fIxterm\fP recognizes function key modifiers
-which are parameters appended before the final character
-of the control sequence.
+when the \fBsunKeyboard\fP resource is false
+(and none of the other keyboard resources
+such as \fBoldXtermFKeys\fP resource is set),
+\fIxterm\fP encodes function key modifiers
+as parameters appended before the \fIfinal\fP character of the control sequence.
+As a special case,
+the \*(S3 sent before F1 through F4 is altered to \*(Cs when sending
+a function key modifier as a parameter.
 .TS H
 center;
 cf3w(2c)	lf3w(2c) .

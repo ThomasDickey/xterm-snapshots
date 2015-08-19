@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.771 2015/08/16 21:43:29 tom Exp $ */
+/* $XTermId: main.c,v 1.772 2015/08/19 00:25:35 tom Exp $ */
 
 /*
  * Copyright 2002-2014,2015 by Thomas E. Dickey
@@ -2201,8 +2201,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	setEffectiveUser(save_ruid);
 	TRACE_IDS;
 #endif
-	init_colored_cursor();
-
 	toplevel = xtermOpenApplication(&app_con,
 					my_class,
 					optionDescList,

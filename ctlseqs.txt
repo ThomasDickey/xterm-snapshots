@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2015)
-               updated for XTerm Patch #318 (2015/04/12)
+               updated for XTerm Patch #318 (2015/08/18)
 
 
 
@@ -1267,11 +1267,12 @@ pose keys:
                        ---------+-----------------
 
 
-Older versions of xterm implement different escape sequences for F1
-through F4.  These can be activated by setting the oldXtermFKeys
-resource.  However, since they do not correspond to any hardware termi-
-nal, they have been deprecated.  (The DEC VT220 reserves F1 through F5
-for local functions such as Setup).
+Note that F1 through F4 are prefixed with SS3 , while the other keys are
+prefixed with CSI .  Older versions of xterm implement different escape
+sequences for F1 through F4, with a CSI  prefix.  These can be activated
+by setting the oldXtermFKeys resource.  However, since they do not cor-
+respond to any hardware terminal, they have been deprecated.  (The DEC
+VT220 reserves F1 through F5 for local functions such as Setup).
 
                        Key        Escape Sequence
                        ---------+-----------------
@@ -1282,8 +1283,11 @@ for local functions such as Setup).
                        ---------+-----------------
 
 In normal mode, i.e., a Sun/PC keyboard when the sunKeyboard resource is
-false, xterm recognizes function key modifiers which are parameters
-appended before the final character of the control sequence.
+false (and none of the other keyboard resources such as oldXtermFKeys
+resource is set), xterm encodes function key modifiers as parameters
+appended before the final character of the control sequence.  As a spe-
+cial case, the SS3  sent before F1 through F4 is altered to CSI  when
+sending a function key modifier as a parameter.
 
                     Code     Modifiers
                   ---------+---------------------------
