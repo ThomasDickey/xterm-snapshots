@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.772 2015/08/19 00:25:35 tom Exp $ */
+/* $XTermId: main.c,v 1.773 2015/08/26 23:39:36 tom Exp $ */
 
 /*
  * Copyright 2002-2014,2015 by Thomas E. Dickey
@@ -3679,7 +3679,7 @@ spawnXTerm(XtermWidget xw)
     added_utmp_entry = False;
 #if defined(USE_UTEMPTER)
 #undef UTMP
-    if (xw->misc.login_shell && !resource.utmpInhibit) {
+    if ((xw->misc.login_shell || !command_to_exec) && !resource.utmpInhibit) {
 	struct UTMP_STR dummy;
 
 	/* Note: utempter may trim it anyway */
