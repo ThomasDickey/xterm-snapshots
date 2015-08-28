@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.615 2015/08/28 00:36:11 tom Exp $
+.\" $XTermId: xterm.man,v 1.617 2015/08/28 08:48:38 tom Exp $
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
@@ -678,6 +678,7 @@ a reference, if available.
 Turn on the \fBuseInsertMode\fP resource,
 which forces use of insert mode by adding appropriate entries to the TERMCAP
 environment variable.
+(This option is ignored on most systems, because TERMCAP is not used).
 .TP 8
 .B +im
 Turn off the \fBuseInsertMode\fP resource.
@@ -1787,6 +1788,7 @@ i.e., \fI\*n\fP initializes the terminal to match that value.
 Force use of insert mode by adding appropriate entries to the TERMCAP
 environment variable.
 This is useful if the system termcap is broken.
+(This resource is ignored on most systems, because TERMCAP is not used).
 The default is \*(``false\*(''.
 .TP 8
 .B "utmpDisplayId (\fPclass\fB UtmpDisplayId)"
@@ -7131,6 +7133,7 @@ Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
 Jason Bacon,
+Ross Combs,
 Stephen P. Wall,
 David Wexelblat, and
 Thomas Dickey (invisible-island.net).
